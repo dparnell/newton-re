@@ -19,5 +19,5 @@ sys.path.insert(0, os.path.join(HERE, ".."))
 from newtonrom import ghidra_import  # noqa: E402
 
 build_dir = askDirectory("Directory containing rom.bin, layout.json and symbols.json", "Select")  # noqa: F821
-layout, symbols, rom = ghidra_import.load_inputs(str(build_dir))
-ghidra_import.apply(currentProgram, layout, symbols, rom, monitor, println)  # noqa: F821
+layout, symbols, rom, types = ghidra_import.load_inputs(str(build_dir))
+ghidra_import.apply(currentProgram, layout, symbols, rom, monitor, println, types)  # noqa: F821

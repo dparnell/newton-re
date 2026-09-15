@@ -124,17 +124,26 @@ def create_jump_table_block(program, jt: dict, rom: bytes, monitor, log: Log) ->
 # --------------------------------------------------------------------------
 
 class TypeMapper:
-    """Turn the demangler's JSON types into Ghidra data types."""
+    """Turn JSON types (from the demangler or the DDK headers) into Ghidra data types.
 
-    def __init__(self, program, classes: Dict[str, object], stats: Stats):
+    Named types resolve in this order: C builtin, DDK typedef, DDK record,
+    DDK enum, then a class struct (for a class named by some symbol) or an
+    opaque zero-length struct in /Newton/types.
+    """
+
+    def __init__(self, program, classes: Dict[str, object], stats: Stats, header=None):
         from ghidra.program.model.data import CategoryPath
         self.program = program
         self.dtm = program.getDataTypeManager()
         self.classes = classes            # class name -> GhidraClass
         self.stats = stats
+        self.header = header              # newtonrom.headers.HeaderTypes or None
         self.types_cat = CategoryPath("/Newton/types")
         self.func_cat = CategoryPath("/Newton/functions")
+        self.ddk_cat = CategoryPath("/Newton/DDK")
         self._struct_cache: Dict[str, object] = {}
+        self._typedef_cache: Dict[str, object] = {}
+        self._enum_cache: Dict[str, object] = {}
         self._funcdef_cache: Dict[str, object] = {}
         self.pointer_size = program.getDefaultPointerSize()
 
@@ -143,14 +152,26 @@ class TypeMapper:
         cls = getattr(gd, BUILTIN_TYPES[name])
         return cls.dataType
 
+    def has_record(self, name: str) -> bool:
+        return self.header is not None and name in self.header.records
+
     def class_struct(self, name: str):
-        """Structure standing for a C++ class (empty until members are recovered)."""
-        from ghidra.program.model.data import StructureDataType
+        """Structure for a class/struct name: DDK-defined if known, else a placeholder."""
+        from ghidra.program.model.data import StructureDataType, UnionDataType
         from ghidra.program.model.listing import VariableUtilities
         if name in self._struct_cache:
             return self._struct_cache[name]
+        rec = self.header.records.get(name) if self.header else None
         if name in self.classes:
             dt = VariableUtilities.findOrCreateClassStruct(self.classes[name], self.dtm)
+            if rec is not None and dt.getLength() != rec["size"]:
+                dt.replaceWith(StructureDataType(name, rec["size"]))
+        elif rec is not None:
+            dt = self.dtm.getDataType(self.ddk_cat, name)
+            if dt is None:
+                shell = (UnionDataType(self.ddk_cat, name, self.dtm) if rec["kind"] == "union"
+                         else StructureDataType(self.ddk_cat, name, rec["size"], self.dtm))
+                dt = self.dtm.addDataType(shell, None)
         else:
             dt = self.dtm.getDataType(self.types_cat, name)
             if dt is None:
@@ -159,14 +180,55 @@ class TypeMapper:
         self._struct_cache[name] = dt
         return dt
 
+    def typedef(self, name: str):
+        from ghidra.program.model.data import TypedefDataType
+        if name in self._typedef_cache:
+            return self._typedef_cache[name]
+        dt = self.dtm.getDataType(self.ddk_cat, name)
+        if dt is None:
+            target, _ = self.convert(self.header.typedefs[name])
+            dt = self.dtm.addDataType(TypedefDataType(self.ddk_cat, name, target, self.dtm), None)
+            self.stats.bump("typedefs created")
+        self._typedef_cache[name] = dt
+        return dt
+
+    def enum(self, name: str):
+        from ghidra.program.model.data import EnumDataType
+        if name in self._enum_cache:
+            return self._enum_cache[name]
+        dt = self.dtm.getDataType(self.ddk_cat, name)
+        if dt is None:
+            e = self.header.enums[name]
+            dt = EnumDataType(self.ddk_cat, name, max(e["size"], 1), self.dtm)
+            for vname, value in e["values"]:
+                try:
+                    dt.add(vname, value)
+                except Exception:  # noqa: BLE001 - duplicate names/values in odd enums
+                    pass
+            dt = self.dtm.addDataType(dt, None)
+            self.stats.bump("enums created")
+        self._enum_cache[name] = dt
+        return dt
+
+    def named(self, name: str):
+        """(DataType, sizeless) for a named type."""
+        if name in BUILTIN_TYPES:
+            return self.builtin(name), False
+        if self.header is not None:
+            if name in self.header.typedefs:
+                return self.typedef(name), False
+            if name in self.header.records:
+                return self.class_struct(name), False
+            if name in self.header.enums:
+                return self.enum(name), False
+        return self.class_struct(name), True
+
     def convert(self, t: dict):
-        """Return (DataType, by_value_unknown) - flag set when a sizeless struct is passed by value."""
+        """Return (DataType, sizeless) - flag set when an unknown struct is used by value."""
         from ghidra.program.model.data import ArrayDataType, PointerDataType
         k = t["k"]
         if k == "named":
-            if t["name"] in BUILTIN_TYPES:
-                return self.builtin(t["name"]), False
-            return self.class_struct(t["name"]), True
+            return self.named(t["name"])
         if k in ("ptr", "ref"):
             inner, _ = self.convert(t["t"])
             return PointerDataType(inner, self.pointer_size, self.dtm), False
@@ -198,7 +260,7 @@ class TypeMapper:
             self._funcdef_cache[name] = existing
             return existing
         fd = FunctionDefinitionDataType(self.func_cat, name, self.dtm)
-        ret, _ = self.convert(t["ret"]) if t["ret"] else (self.builtin("void"), False)
+        ret, _ = self.convert(t["ret"]) if t.get("ret") else (self.builtin("void"), False)
         fd.setReturnType(ret)
         args = []
         for i, p in enumerate(t["params"]):
@@ -208,10 +270,89 @@ class TypeMapper:
             dt, _ = self.convert(p)
             args.append(ParameterDefinitionImpl(f"param_{i + 1}", dt, None))
         fd.setArguments(args)
+        if t.get("variadic"):
+            fd.setVarArgs(True)
         fd = self.dtm.addDataType(fd, None)
         self._funcdef_cache[name] = fd
         self.stats.bump("function pointer types created")
         return fd
+
+
+def create_header_types(program, mapper: TypeMapper, log: Log, stats: Stats) -> None:
+    """Create every DDK record/enum/typedef, then fill in struct members."""
+    from ghidra.program.model.data import PointerDataType, StructureDataType, UnionDataType, VoidDataType
+
+    header = mapper.header
+    # 1. shells with the right sizes, so members of struct type get correct lengths
+    for name in header.records:
+        mapper.class_struct(name)
+    for name in header.enums:
+        mapper.enum(name)
+    for name in header.typedefs:
+        try:
+            mapper.typedef(name)
+        except Exception as e:  # noqa: BLE001
+            log(f"  typedef {name}: {e}")
+    # 2. members
+    void_ptr = PointerDataType(VoidDataType.dataType, mapper.pointer_size, mapper.dtm)
+    for name, rec in header.records.items():
+        existing = mapper.class_struct(name)
+        origin = f"{rec['file']}:{rec['line']}"
+        if rec["kind"] == "union":
+            built = UnionDataType(existing.getCategoryPath(), name, mapper.dtm)
+            for f in rec["fields"]:
+                dt, _ = mapper.convert(f["type"])
+                if dt.getLength() > 0:
+                    built.add(dt, f["name"], None)
+            existing.replaceWith(built)
+            existing.setDescription(f"DDK {origin}")
+            stats.bump("DDK unions filled")
+            continue
+        built = StructureDataType(existing.getCategoryPath(), name, rec["size"], mapper.dtm)
+        notes = "; ".join(rec.get("warnings", []))
+        if rec["introduces_vptr"]:
+            built.replaceAtOffset(0, void_ptr, mapper.pointer_size, "__vptr", "vtable pointer")
+        for b in rec["bases"]:
+            base = header.records.get(b["name"])
+            if base is None or b.get("offset") is None or (base["size"] <= 1 and not base["fields"]):
+                continue
+            bdt = mapper.class_struct(b["name"])
+            if bdt.getLength() > 0:
+                _place(built, b["offset"], bdt, "_base_" + b["name"], "base class", log, name)
+        for f in rec["fields"]:
+            dt, sizeless = mapper.convert(f["type"])
+            if "bit_width" in f:
+                _place_bitfield(built, f, dt, log, name)
+                continue
+            if sizeless or dt.getLength() <= 0:
+                log(f"  {name}.{f['name']}: sizeless type, left undefined")
+                continue
+            _place(built, f["offset"], dt, f["name"], None, log, name)
+        existing.replaceWith(built)
+        existing.setDescription(f"DDK {origin}" + (f" ({notes})" if notes else ""))
+        stats.bump("DDK structs filled")
+    log(f"DDK types: {stats.get('DDK structs filled', 0)} structs, {stats.get('enums created', 0)} enums, "
+        f"{stats.get('typedefs created', 0)} typedefs")
+
+
+def _place(struct, offset: int, dt, name: str, comment, log: Log, owner: str) -> None:
+    try:
+        struct.replaceAtOffset(offset, dt, dt.getLength(), name, comment)
+    except Exception as e:  # noqa: BLE001
+        log(f"  {owner}.{name} at {offset}: {e}")
+
+
+def _place_bitfield(struct, f: dict, dt, log: Log, owner: str) -> None:
+    """clang reports big-endian bit offsets from the MSB of the record; Ghidra wants
+    the offset from the LSB of the container.  Unverified against the ROM (see README)."""
+    width = max(dt.getLength(), 1)
+    bits = width * 8
+    byte_offset = (f["bit_offset"] // bits) * width
+    lsb_offset = bits - (f["bit_offset"] % bits) - f["bit_width"]
+    try:
+        struct.insertBitFieldAt(byte_offset, width, lsb_offset, dt, f["bit_width"], f["name"], None)
+    except Exception as e:  # noqa: BLE001
+        log(f"  {owner}.{f['name']} bitfield: {e}")
 
 
 def _type_signature(t: dict) -> str:
@@ -343,7 +484,7 @@ def _pick_primary(recs: List[dict]) -> dict:
 
 
 def apply_names(program, names_at: Dict[int, List[dict]], entries, classes: Dict[str, object],
-                jt: dict, monitor, log: Log, stats: Stats) -> None:
+                jt: dict, mapper: TypeMapper, monitor, log: Log, stats: Stats) -> None:
     from ghidra.program.model.symbol import SourceType
     from ghidra.util.exception import DuplicateNameException, InvalidInputException
 
@@ -352,7 +493,7 @@ def apply_names(program, names_at: Dict[int, List[dict]], entries, classes: Dict
     mem = program.getMemory()
     space = program.getAddressFactory().getDefaultAddressSpace()
     global_ns = program.getGlobalNamespace()
-    mapper = TypeMapper(program, classes, stats)
+    header = mapper.header
     slot_addrs = {v for v, _ in jt["entries"]}
 
     def namespace_for(d: Optional[dict]):
@@ -385,8 +526,24 @@ def apply_names(program, names_at: Dict[int, List[dict]], entries, classes: Dict
             except (DuplicateNameException, InvalidInputException) as e:
                 log(f"  {a:#x} {name}: {e}")
             if d:
-                _apply_signature(program, func, d, mapper, log, stats)
+                proto = None
+                if header is not None and d["kind"] != "data":
+                    if d["scope"]:
+                        proto = header.find_method(d["scope"][-1], d["name"], d["params"], d["static"])
+                    else:
+                        proto = header.find_function(d["name"], d["params"])
+                _apply_signature(program, func, d, mapper, log, stats, proto)
                 func.setComment(d["signature"] + "\n" + primary["name"])
+            elif header is not None:
+                proto = header.find_function(primary["name"])
+                if proto is not None:
+                    # C-linkage function declared in the DDK: the header is the whole prototype
+                    cd = {"scope": [], "kind": "function", "static": True,
+                          "params": [p["type"] for p in proto["params"]]}
+                    if proto.get("variadic"):
+                        cd["params"].append({"k": "named", "name": "..."})
+                    _apply_signature(program, func, cd, mapper, log, stats, proto)
+                    func.setComment(f"{proto['file']}:{proto['line']}")
             stats.bump("functions named")
         else:
             try:
@@ -410,8 +567,13 @@ def apply_names(program, names_at: Dict[int, List[dict]], entries, classes: Dict
                 pass
 
 
-def _apply_signature(program, func, d: dict, mapper: TypeMapper, log: Log, stats: Stats) -> None:
-    """Set parameters from the demangled type list when every type is representable."""
+def _apply_signature(program, func, d: dict, mapper: TypeMapper, log: Log, stats: Stats,
+                     proto: Optional[dict] = None) -> None:
+    """Set parameters from the demangled type list when every type is representable.
+
+    `proto` is the matching DDK declaration, if any; it supplies parameter names
+    and the return type, which the mangled name does not encode.
+    """
     from ghidra.program.model.listing import Function, ParameterImpl
     from ghidra.program.model.data import PointerDataType
     from ghidra.program.model.symbol import SourceType
@@ -419,6 +581,11 @@ def _apply_signature(program, func, d: dict, mapper: TypeMapper, log: Log, stats
     params = []
     by_value_unknown = False
     varargs = False
+    names = [p["name"] for p in proto["params"]] if proto else []
+    # the header's (typedef'd) spellings are equivalent and read better than the
+    # mangled underlying types: ULong/Boolean instead of ulong/uchar
+    header_types = [p["type"] for p in proto["params"]] if proto else []
+    used = {"this"}
     if d["scope"] and d["kind"] != "data" and not d["static"]:
         this_dt = PointerDataType(mapper.class_struct(d["scope"][-1]), mapper.pointer_size, mapper.dtm)
         params.append(ParameterImpl("this", this_dt, program, SourceType.IMPORTED))
@@ -427,13 +594,15 @@ def _apply_signature(program, func, d: dict, mapper: TypeMapper, log: Log, stats
             varargs = True
             continue
         try:
-            dt, unknown = mapper.convert(p)
+            dt, unknown = mapper.convert(header_types[i] if i < len(header_types) else p)
         except Exception as e:  # noqa: BLE001 - keep going, this is best effort
             log(f"  {func.getName()}: cannot map parameter {i + 1}: {e}")
             stats.bump("signatures skipped (type error)")
             return
         by_value_unknown |= unknown
-        params.append(ParameterImpl(f"param_{i + 1}", dt, program, SourceType.IMPORTED))
+        name = names[i] if i < len(names) and names[i] and names[i] not in used else f"param_{i + 1}"
+        used.add(name)
+        params.append(ParameterImpl(name, dt, program, SourceType.IMPORTED))
     if by_value_unknown:
         # A class passed by value has an unknown size; a wrong size would shift
         # every later parameter, so leave the prototype for analysis to infer.
@@ -452,6 +621,16 @@ def _apply_signature(program, func, d: dict, mapper: TypeMapper, log: Log, stats
     except Exception as e:  # noqa: BLE001
         log(f"  {func.getName()}: replaceParameters failed: {e}")
         stats.bump("signatures skipped (ghidra error)")
+        return
+    if proto is not None:
+        try:
+            ret = proto.get("ret")
+            if ret is not None and d["kind"] not in ("ctor", "dtor"):
+                dt, _ = mapper.convert(ret)
+                func.setReturnType(dt, SourceType.IMPORTED)
+            stats.bump("prototypes from DDK headers")
+        except Exception as e:  # noqa: BLE001
+            log(f"  {func.getName()}: return type: {e}")
 
 
 def create_thunks(program, jt: dict, names_at: Dict[int, List[dict]], monitor, log: Log, stats: Stats) -> None:
@@ -484,8 +663,13 @@ def create_thunks(program, jt: dict, names_at: Dict[int, List[dict]], monitor, l
 # Driver
 # --------------------------------------------------------------------------
 
-def apply(program, layout: dict, symbols: dict, rom: bytes, monitor, log: Log = print) -> Stats:
-    """Run the whole import against an open program inside a transaction."""
+def apply(program, layout: dict, symbols: dict, rom: bytes, monitor, log: Log = print,
+          types: Optional[dict] = None) -> Stats:
+    """Run the whole import against an open program inside a transaction.
+
+    `types` is the optional types.json from parse_headers.py; with it, DDK
+    structs/enums/typedefs are created and header prototypes are applied.
+    """
     stats = Stats()
     jt = symbols["jumptable"]
     rom_size = sum(r["size"] for r in layout["regions"] if r["kind"] == "rom")
@@ -495,10 +679,17 @@ def apply(program, layout: dict, symbols: dict, rom: bytes, monitor, log: Log = 
 
     classes = create_classes(program, symbols["symbols"], log, stats)
     log(f"classes: {stats.get('classes created', 0)}")
+    header = None
+    if types is not None:
+        from .headers import HeaderTypes
+        header = HeaderTypes(types)
+    mapper = TypeMapper(program, classes, stats, header)
+    if header is not None:
+        create_header_types(program, mapper, log, stats)
 
     entries, names_at = choose_function_entries(symbols["symbols"], jt, rom, rom_size, stats)
     create_functions(program, entries, monitor, log)
-    apply_names(program, names_at, entries, classes, jt, monitor, log, stats)
+    apply_names(program, names_at, entries, classes, jt, mapper, monitor, log, stats)
     create_thunks(program, jt, names_at, monitor, log, stats)
 
     for key in sorted(stats):
@@ -514,4 +705,9 @@ def load_inputs(build_dir: str):
         symbols = json.load(f)
     with open(os.path.join(build_dir, "rom.bin"), "rb") as f:
         rom = f.read()
-    return layout, symbols, rom
+    types = None
+    types_path = os.path.join(build_dir, "types.json")
+    if os.path.exists(types_path):
+        with open(types_path) as f:
+            types = json.load(f)
+    return layout, symbols, rom, types

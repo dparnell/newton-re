@@ -1,0 +1,2 @@
+libclang==18.1.1
+# pyghidra is installed from the wheels bundled with Ghidra, see README.md

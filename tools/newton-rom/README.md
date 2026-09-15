@@ -2,12 +2,14 @@
 
 Tools for turning an Apple Newton MP2x00 *debug ROM* image into an annotated
 Ghidra project: a ROM image laid out as the CPU sees it, all ~52,000 debug
-symbols demangled, and a Ghidra program with functions, C++ class namespaces,
-parameter lists and jump-table thunks already in place.
+symbols demangled, the struct/class/enum definitions from the Newton DDK
+headers, and a Ghidra program with functions, C++ class namespaces, typed
+prototypes and jump-table thunks already in place.
 
-Everything here is plain Python 3 (3.9+) with no third-party dependencies,
-except the final Ghidra step which uses the `pyghidra` package that ships with
-Ghidra 11.3 or newer (developed and tested with Ghidra 12.1.3 and Python 3.13).
+Everything here is plain Python 3 (3.9+). Two steps have dependencies: the
+header extraction uses `libclang` (pip, pinned in `requirements.txt`) and the
+Ghidra step uses the `pyghidra` package that ships with Ghidra 11.3 or newer
+(developed and tested with Ghidra 12.1.3 and Python 3.13).
 
 ```
 tools/newton-rom/
@@ -17,14 +19,17 @@ tools/newton-rom/
     rex.py                ROM Extension (REx) block parser
     jumptable.py          patchable jump table decoder / virtual layout
     demangle.py           cfront/ARM C++ demangler (structured output)
-    ghidra_import.py      applies layout + symbols to a Ghidra program
+    headers.py            DDK header extraction with libclang + prototype matching
+    ghidra_import.py      applies layout + symbols + types to a Ghidra program
   extract_rom.py        step 1: rom.bin + layout.json
   dump_symbols.py       step 2: symbols.json (+ text listing)
+  parse_headers.py      step 3: types.json from headers/
   ghidra_scripts/
-    import_rom.py         step 3: headless project creation + import + analysis
+    import_rom.py         step 4: headless project creation + import + analysis
     NewtonROMImport.py    same import, as a Script Manager (GUI) script
     check_import.py       report/spot-check an imported project
-  pipeline.py           steps 1-3 in one command
+  pipeline.py           steps 1-4 in one command
+  requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
 
@@ -33,12 +38,13 @@ tools/newton-rom/
 ```powershell
 # from the repository root
 python -m venv build\venv
+build\venv\Scripts\pip install -r tools\newton-rom\requirements.txt
 build\venv\Scripts\pip install --no-index --find-links "D:\apps\ghidra_12.1.3_PUBLIC\Ghidra\Features\PyGhidra\pypkg\dist" pyghidra
 
 build\venv\Scripts\python tools\newton-rom\pipeline.py "DebugRom\MP2100 D" -o build\MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
 ```
 
-This writes `build/MP2100D/{rom.bin,layout.json,symbols.json,symbols.txt}` and
+This writes `build/MP2100D/{rom.bin,layout.json,symbols.json,symbols.txt,types.json}` and
 creates the Ghidra project `build/ghidra/MP2100D.gpr` (≈ 30 s for the import,
 ≈ 3 minutes more for auto-analysis on a current desktop). Open the project in Ghidra
 normally afterwards. `build/` is git-ignored; everything in it is regenerated
@@ -49,8 +55,9 @@ Steps individually:
 ```powershell
 python tools\newton-rom\extract_rom.py "DebugRom\MP2100 D\Senior DCirrusNoDebug image" --rex "DebugRom\MP2100 D\Senior DCirrusNoDebug high" -o build\MP2100D
 python tools\newton-rom\dump_symbols.py "DebugRom\MP2100 D\Senior DCirrusNoDebug image" -o build\MP2100D\symbols.json --text build\MP2100D\symbols.txt
+build\venv\Scripts\python tools\newton-rom\parse_headers.py headers -o build\MP2100D\types.json
 build\venv\Scripts\python tools\newton-rom\ghidra_scripts\import_rom.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
-build\venv\Scripts\python tools\newton-rom\ghidra_scripts\check_import.py --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --lookup Init DebugStr
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\check_import.py --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --lookup InitIdler --type TAEventHandler
 ```
 
 GUI alternative for step 3: import `rom.bin` in Ghidra with the *Binary*
@@ -63,6 +70,7 @@ Tests (the oracle test needs the US ROM and the mpdumper output present):
 ```
 python tools/newton-rom/tests/test_demangle.py
 python tools/newton-rom/tests/test_rom.py
+build/venv/Scripts/python tools/newton-rom/tests/test_headers.py     # needs libclang
 ```
 
 ## What the debug ROM contains
@@ -132,6 +140,36 @@ demangler inside `tools/mpdumper`, whose pre-generated output for the US ROM
 is checked in): all 52,751 symbols agree exactly, and we additionally demangle
 40 symbols that libiberty gives up on (the nested back-reference cases).
 
+## Types from the DDK headers
+
+`headers/` (the Newton Driver Developer Kit) declares ~250 classes and
+structs, 60 enums and 190 typedefs, plus 540 C functions and 1,300 methods.
+`parse_headers.py` normalises the files (Mac Roman, CR line endings) into a
+flat include directory, parses them as one C++98 translation unit with
+libclang configured for the MP2100 D build (`forQ` -> hasVoyager/hasCirrus/
+forSenior, `forGerman`, `__arm`; V1 headers superseded by their V2 versions and
+the NewtonScript `.f.h` files are excluded), and writes `types.json`.
+
+Memory layout is taken from clang (`--target=armeb-none-eabi -mabi=apcs-gnu`).
+Before trusting it we checked the ROM: `TAEventHandler::TAEventHandler`
+allocates 0x14 bytes, stores the vtable pointer at offset 0 and its four
+fields at 4..0x10, and `TUObject::fId` is at offset 0 - i.e. Apple's ARM C++
+put the vptr first and gave empty bases (`SingleObject`) no space, exactly
+clang's Itanium-style layout. (cfront proper put the vptr last; this compiler
+did not.) Base-class offsets are computed with the same rules and checked
+against the first field. Bit-field positions follow clang's big-endian
+convention and are *not* yet verified against the ROM.
+
+In Ghidra every record becomes a structure (class structures for classes
+named by symbols, `/Newton/DDK` for the rest) with `__vptr`, `_base_X`
+subobjects and named members; enums and typedefs go to `/Newton/DDK`.
+Header declarations are then matched to symbols - by class, name and
+parameter types after typedef resolution, so `Boolean` matches the mangled
+`Uc` and `RefArg` matches `RC6RefVar` - and a unique match supplies what the
+mangled name cannot: the return type and parameter names, with the header's
+typedef spellings. C-linkage functions (`extern "C"`) have no mangling, so a
+plain symbol whose name is declared in the DDK gets the whole prototype.
+
 ## What the Ghidra import does
 
 Given `rom.bin` imported with the Binary loader at 0 (`ARM:BE:32:v4`: the
@@ -151,9 +189,10 @@ spec `apcs`, the ABI of the ARM SDT toolchain of the period):
    namespace; C++ overloads coexist. Where every parameter type is
    representable, the demangled parameter list is applied with an explicit
    `this` (under APCS `this` is simply r0, so no special calling convention is
-   used). Functions taking a class *by value* keep their name but not the
-   prototype, because the class size is unknown and a wrong size would shift
-   every following parameter; the full signature is in the function comment.
+   used), completed from the DDK declaration when one matches. Functions
+   taking an *unknown* class by value keep their name but not the prototype,
+   because a wrong size would shift every following parameter; the full
+   signature is in the function comment.
 4. **Thunks** — all jump-table slots.
 5. **Labels** — everything else, including RAM variables and constants; the ~10
    symbols that fall outside any memory block are skipped and counted.

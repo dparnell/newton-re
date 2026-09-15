@@ -2,7 +2,7 @@
 """Report what a Ghidra project produced by import_rom.py contains.
 
 Usage:
-    python check_import.py --project <dir> --name MP2100D [--ghidra <dir>] [--lookup NAME ...]
+    python check_import.py --project <dir> --name MP2100D [--ghidra <dir>] [--lookup NAME ...] [--type NAME ...]
 
 Prints memory blocks, function / thunk / class / label counts and, for each
 --lookup name, the matching symbols with their address, namespace and
@@ -22,6 +22,7 @@ def main(argv=None) -> int:
     ap.add_argument("--name", default="NewtonROM")
     ap.add_argument("--ghidra", default=os.environ.get("GHIDRA_INSTALL_DIR"))
     ap.add_argument("--lookup", nargs="*", default=[], help="symbol names to show")
+    ap.add_argument("--type", nargs="*", default=[], help="data type names to show (structure members)")
     args = ap.parse_args(argv)
     if not args.ghidra:
         ap.error("Ghidra install dir not given (--ghidra or GHIDRA_INSTALL_DIR)")
@@ -47,6 +48,17 @@ def main(argv=None) -> int:
             with_params = sum(1 for f in funcs if not f.isThunk() and f.getParameterCount() > 0)
             print(f"functions: {len(funcs)} ({thunks} thunks, {with_params} with parameters)")
             print(f"classes: {classes}   labels: {labels}")
+            dtm = program.getDataTypeManager()
+            for name in args.type:
+                found = list(dtm.getAllDataTypes())
+                found = [t for t in found if t.getName() == name]
+                if not found:
+                    print(f"type {name}: not found")
+                for t in found:
+                    print(f"type {t.getPathName()} length {t.getLength()}  {t.getDescription() or ''}")
+                    if hasattr(t, "getComponents"):
+                        for c in t.getComponents():
+                            print(f"   {c.getOffset():#06x} {c.getDataType().getName():28s} {c.getFieldName()}")
             for name in args.lookup:
                 syms = list(st.getSymbols(name))
                 if not syms:

@@ -3,12 +3,13 @@
 
 Usage:
     python pipeline.py "DebugRom/MP2100 D" -o build/MP2100D [--ghidra <dir>] [--name MP2100D]
-                       [--project build/ghidra] [--no-ghidra] [--no-analyze]
+                       [--project build/ghidra] [--no-headers] [--no-ghidra] [--no-analyze]
 
 Steps (each can also be run on its own, see README.md):
     1. extract_rom.py   -> <out>/rom.bin, <out>/layout.json
     2. dump_symbols.py  -> <out>/symbols.json, <out>/symbols.txt
-    3. ghidra_scripts/import_rom.py -> <project>/<name>.gpr   (needs pyghidra)
+    3. parse_headers.py -> <out>/types.json                    (needs libclang; skipped with --no-headers)
+    4. ghidra_scripts/import_rom.py -> <project>/<name>.gpr   (needs pyghidra)
 
 The ROM directory must contain exactly one "* image" and one "* high" file.
 """
@@ -31,7 +32,9 @@ def main(argv=None) -> int:
     ap.add_argument("--name", default=None, help="Ghidra program name (default: derived from rom_dir)")
     ap.add_argument("--project", default=None, help="Ghidra project dir (default: <out>/../ghidra)")
     ap.add_argument("--ghidra", default=os.environ.get("GHIDRA_INSTALL_DIR"))
-    ap.add_argument("--no-ghidra", action="store_true", help="stop after symbols.json")
+    ap.add_argument("--headers", default=None, help="DDK header directory (default: <repo>/headers)")
+    ap.add_argument("--no-headers", action="store_true", help="skip the DDK header types")
+    ap.add_argument("--no-ghidra", action="store_true", help="stop before the Ghidra import")
     ap.add_argument("--no-analyze", action="store_true", help="skip Ghidra auto-analysis")
     args = ap.parse_args(argv)
 
@@ -51,6 +54,9 @@ def main(argv=None) -> int:
     run(py, os.path.join(HERE, "extract_rom.py"), image, "--rex", high, "-o", args.out)
     run(py, os.path.join(HERE, "dump_symbols.py"), image, "-o", os.path.join(args.out, "symbols.json"),
         "--text", os.path.join(args.out, "symbols.txt"))
+    if not args.no_headers:
+        hdr = args.headers or os.path.join(os.path.dirname(HERE), "..", "headers")
+        run(py, os.path.join(HERE, "parse_headers.py"), os.path.normpath(hdr), "-o", os.path.join(args.out, "types.json"))
     if args.no_ghidra:
         return 0
     if not args.ghidra:
