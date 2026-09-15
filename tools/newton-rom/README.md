@@ -41,6 +41,7 @@ tools/newton-rom/
     xrefs.py              who references a symbol (finds who initialises a global)
     memobj_tables.py      the memory object tables -> docs/os600/memobj-tables.md and src/os600/kernel/MemObjTables.cpp
     exception_names.py    the exception name strings -> src/os600/user/ExceptionNames.cpp
+    vtable.py             the entries of a vtable (slot -> method), from rom.bin + symbols.json
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -237,7 +238,13 @@ add  pc,r12,#slot*4   ; branch into the table
 Ghidra treats `add pc,...` as a terminal jump, which silently truncated every
 function after its first virtual call (18 % of the code region was left
 undefined). The importer now marks the 2,975 such sites as call-with-return
-and keeps disassembling (`fix_virtual_calls`).
+and keeps disassembling (`fix_virtual_calls`). The *decompiler* still gives
+up at the call in many functions, showing a `return` right after it (the
+loop in `TTimerQueue::Check`, the dispatch in `TAppWorld::AEDispatch`): when
+a decompiled function has a virtual call, read the disassembly (`disasm.py`)
+for what follows it. `analysis/vtable.py build/MP2100D 0x2073c` lists a
+vtable's slots by method name (the address is the literal a constructor
+stores at `[this,#0]`), which is how a `add pc,r12,#0x50` is resolved.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class

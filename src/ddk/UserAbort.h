@@ -38,4 +38,4 @@ public:
 
 
 
-#endif __USERABORT_H
+#endif /* __USERABORT_H */

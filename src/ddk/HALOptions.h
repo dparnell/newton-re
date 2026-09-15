@@ -286,5 +286,5 @@ class THMOSerialPCMCIAHardware : public TOption
 	ULong 		fHWLocationID;		// 1336176 kHWLocPCMCIASlot1, kHWLocPCMCIASlot2, etc. (valid if Length() >= 0x1c)
 };
 
-#endif	__HALOPTIONS_H
+#endif /* __HALOPTIONS_H */
 

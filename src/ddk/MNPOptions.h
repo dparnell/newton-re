@@ -210,5 +210,5 @@ class TCMOMNPDebugConnect : public TOption
 
 
 
-#endif  __MNPOPTIONS_H
+#endif /* __MNPOPTIONS_H */
 

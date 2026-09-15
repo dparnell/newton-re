@@ -55,4 +55,4 @@ class TUPhys : public TUObject {
 		long		Base(PAddr& paddr);			// the physical address of the base of this phys
 };
 
-#endif __USERPHYS_H
+#endif /* __USERPHYS_H */

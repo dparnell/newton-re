@@ -7,7 +7,8 @@ Usage:
 Copies every header into one flat directory (the DDK's includes are flat),
 converting Mac Roman text and CR line endings to UTF-8/LF, and applies the
 small list of PATCHES below - things the 1990s ARM compiler accepted but a
-modern C++ compiler rejects.  Each patch is exact-match and must apply, so a
+modern C++ compiler rejects - plus one general tidy-up (a name after #endif
+becomes a comment).  Each patch is exact-match and must apply, so a
 change in the originals is noticed.  The output is committed; re-run this
 after touching headers/ or PATCHES.
 """
@@ -15,6 +16,7 @@ after touching headers/ or PATCHES.
 from __future__ import annotations
 
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -51,9 +53,8 @@ PATCHES = {
     ],
     # UserPorts.h: the ROM's Sleep() and TUTaskWorld::StartTask use TUPort's private
     # Send*Goo like SleepTill does, but only SleepTill is a friend in the DDK's header
-    # UserDomain.h: tokens after #endif; the include is spelt in the wrong case
+    # UserDomain.h: the include is spelt in the wrong case
     "UserDomain.h": [
-        ("#endif __USERDOMAIN__", "#endif /* __USERDOMAIN__ */"),
         ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
     ],
     # DynamicArray.h: pointer arithmetic through a long truncates 64-bit host pointers
@@ -82,6 +83,18 @@ def main(argv=None) -> int:
         if os.path.exists(os.path.join(out, n)):
             os.remove(os.path.join(out, n))
     patched = 0
+    # `#endif __FOO_H` (a name where a comment belongs) is in several headers
+    endif_tokens = re.compile(r"^(#endif)[ \t]+(\w+)[ \t]*$", re.M)
+    for name in names:
+        path = os.path.join(out, name)
+        if not os.path.exists(path):
+            continue
+        text = open(path, encoding="utf-8").read()
+        fixed = endif_tokens.sub(r"\1 /* \2 */", text)
+        if fixed != text:
+            with open(path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(fixed)
+            patched += 1
     for name, edits in PATCHES.items():
         path = os.path.join(out, name)
         text = open(path, encoding="utf-8").read()

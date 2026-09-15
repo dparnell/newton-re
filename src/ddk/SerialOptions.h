@@ -28,7 +28,7 @@
 #include "LongTime.h"			// for TTimeout
 #endif
 
-#endif notFRAM
+#endif /* notFRAM */
 
 //--------------------------------------------------------------------------------
 //		This stuff must be FRAM-able!
@@ -1014,7 +1014,7 @@ class TCMOIrDAConnectAttrName : public TOption
 		UChar			fName[60];			// attr name (defaults to "IrDA:IrLMP:LsapSel")
 };
 
-#endif notFRAM
+#endif /* notFRAM */
 
-#endif	__SERIALOPTIONS_H
+#endif /* __SERIALOPTIONS_H */
 

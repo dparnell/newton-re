@@ -136,4 +136,4 @@ class CMemObject : public SingleObject
 
 
 
-#endif __MEMOBJECT_H
+#endif /* __MEMOBJECT_H */

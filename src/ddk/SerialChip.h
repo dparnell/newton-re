@@ -128,4 +128,4 @@ PROTOCOL TSerialChip : public TProtocol
 	// ** called with interrupts disabled...
 };
 
-#endif __SERIALCHIP_H
+#endif /* __SERIALCHIP_H */

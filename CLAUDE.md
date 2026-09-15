@@ -54,7 +54,7 @@ Organised by functional area (`os600/kernel`, `os600/user`, `hal/`, `utility/`, 
 
 The host runs the OS with one thread per task, only `gCurrentTask`'s running; system-call stubs (`os600/user/host/SWI.cpp`) call the kernel glue and then `HostSWIExit` (`os600/kernel/host/TaskRuntime.cpp`), the C form of SWIBoot's exit path — see `docs/host-runtime.md` before touching either. Task registers are `TRegister` (pointer-sized); read ids/selectors out of them with a `(ULong)` cast.
 
-Build/test: `cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=$PWD/src/cmake/zig-toolchain.cmake && cmake --build build/host && ctest --test-dir build/host`. Decompile for study with `tools/newton-rom/analysis/decompile.py --project build/ghidra --name MP2100D --ghidra <ghidra> --class TFoo [--asm] [--callers]`. Raw disassembly of a range (SWI cases, hand-written assembly the decompiler cannot see as a function): `analysis/disasm.py ... --start 0x38abf8 --end 0x38ad60`.
+Build/test: `cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=$PWD/src/cmake/zig-toolchain.cmake && cmake --build build/host && ctest --test-dir build/host`. Decompile for study with `tools/newton-rom/analysis/decompile.py --project build/ghidra --name MP2100D --ghidra <ghidra> --class TFoo [--asm] [--callers]`. Raw disassembly of a range (SWI cases, hand-written assembly the decompiler cannot see as a function): `analysis/disasm.py ... --start 0x38abf8 --end 0x38ad60`. **The decompiler often stops at a virtual call** (`add pc,r12,#slot`) and shows a `return` there — for any function with a virtual call, check the disassembly for what follows; `analysis/vtable.py build/MP2100D <vtable addr>` names the slots.
 
 ## Reverse-engineering notes
 

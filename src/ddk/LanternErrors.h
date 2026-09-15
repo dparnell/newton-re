@@ -56,4 +56,4 @@
 // the user if a NTK MapError function is provided in the newtonscript world.
 #define LANTERN_DEVICE_ERRBASE				(LANTERN_ERRBASE - 900)
 
-#endif __LANTERNERRORS_H
+#endif /* __LANTERNERRORS_H */

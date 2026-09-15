@@ -37,7 +37,10 @@ src/
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer,
-                TTimerQueue/TTimerElement/TTimerPort
+                TTimerQueue/TTimerElement/TTimerPort, and the task frameworks
+                the services are written in: TForkWorld, TAppWorld with
+                TAEventHandler/TAEvent (AppWorld.h is ours; the DDK has no
+                header for the worlds)
   frames/       NewtonScript object system (to come)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```

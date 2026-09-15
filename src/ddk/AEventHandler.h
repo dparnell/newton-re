@@ -253,4 +253,4 @@ inline TAEventHandler* TAEHandlerIterator::NextHandler(void)
 }
 
 
-#endif __AEVENTHANDLER_H
+#endif /* __AEVENTHANDLER_H */

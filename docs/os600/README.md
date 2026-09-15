@@ -188,7 +188,30 @@ over the utility containers (`src/utility`: `CDynamicArray`,
 queue of timers a task polls between receives, over the time calls
 `GetGlobalTime`/`GetTaskTime`/`TimeFromNow` and `TTime`'s unit arithmetic
 (user/UserTime.cpp; the clock is asked for with GenericSWI's kGetTaskTime,
-task 0) and the toolbox's `CompMul`/`CompDiv`/`CompShift`).
+task 0) and the toolbox's `CompMul`/`CompDiv`/`CompShift`); the task
+frameworks `TForkWorld` and `TAppWorld`/`TAppWorldState` with the event
+classes and handlers of AEvents.h/AEventHandler.h (`src/utility/AppWorld.h`,
+ForkWorld.cpp, AppWorld.cpp, AEventHandler.cpp).
+
+Application worlds, as established: a `TForkWorld` (0x30) is a
+`TUTaskWorld` whose task may spawn forks - tasks on copies of the object
+sharing one mutex (`TForkMutex`, a `TULockingSemaphore` with two counts),
+so only one of the family runs its main code at a time; the main world
+runs PreMain/TheMain/PostMain under the mutex.  A `TAppWorld` (0x70; vtable
+of 21 slots, `analysis/vtable.py 0x2073c`) is a `TForkWorld` whose TheMain
+is an event loop over a `TAppWorldState` (0x134: port, the message token,
+sizes, filter, a 256-byte event buffer): fire the `TTimerQueue`, receive
+with the next timer as timeout, `AEDispatch` the `TAEvent` received - a
+completion of the world's own asynchronous send goes to the handler in the
+message's refcon, an event with id '****' to every handler, otherwise to the
+`TAEventHandler` chain for its (class, id) found in a `CSortedList` by
+`TAEventComparer` - and reply with what the handler set unless it deferred.
+`GetGlobals()` is the world object (the task's object copy follows its
+TaskGlobals block), which is how handlers reach their world.  The world's
+name is registered with the name server as "<name>"/"TUPort" when asked.
+ROM bug found: `TAppWorldState`'s destructor deletes its port even when
+the port was lent (a nested event loop's state is lent the world's) -
+DEVIATION: only an owned port is deleted.
 
 The name server, as established: `InitialKSRVTask` spawns it as a
 `TUTaskWorld` named 'name' (6000-byte stack, priority 10); its port becomes

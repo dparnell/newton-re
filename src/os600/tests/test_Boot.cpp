@@ -20,9 +20,11 @@
 #include "UserTasks.h"
 #include "UserSemaphore.h"
 #include "NameServer.h"
+#include "UCErrors.h"
 #include "SystemEvents.h"
 #include "NewtonGestalt.h"
 #include "TimerQueue.h"
+#include "AppWorld.h"
 #include "host/TaskRuntime.h"
 #include "hal/Timer.h"
 #include "MemObjManager.h"
@@ -69,6 +71,10 @@ static Boolean timerCancelled = false;
 static long timedReceiveErr = -1;
 static Boolean timedReceiveGot = false;
 static ULong timeUnitsMs = 0, timeConverted = 0;
+static long appWorldInit = -1, appWorldLookup = -1, appWorldRPC = -1, appWorldNoHandler = -1, appWorldIdles = 0, appWorldSysEvents = 0, appWorldDone = 0;
+static ULong appWorldReplySize = 0;
+static TObjectId appWorldTaskId = 0, appWorldRegisteredPort = 0;
+static char appWorldSeen[16], appWorldReply[16];
 
 // a database lookup after the run (the user-mode calls are refused then)
 static Boolean FindId(MemObjType type, ULong name, TObjectId* outId)
@@ -206,6 +212,97 @@ TTestTimer::Timeout()
 		static char done[] = "done";		// the buffer must outlive this call: the receiver copies it later
 		timerPortForWake->Send(&timerWake, done, sizeof(done));
 	}
+}
+
+
+// --- an application world: a handler that answers 'tst1' events, an idler,
+// a system event handler, and a 'stop' event that ends the loop
+
+class TTestEvent : public TAEvent
+{
+	public:
+						TTestEvent(AEEventID id) { fAEventID = id; }
+		char			fText[12];
+};
+
+class TTestHandler : public TAEventHandler
+{
+	public:
+		virtual void	AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event);
+		virtual void	IdleProc(TUMsgToken* token, ULong* size, TAEvent* event);
+};
+
+void
+TTestHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* event)
+{
+	TTestEvent* request = (TTestEvent*) event;
+	strcpy(appWorldSeen, request->fText);
+	for (char* c = request->fText; *c; c++)
+		if (*c >= 'a' && *c <= 'z')
+			*c -= 'a' - 'A';
+	SetReply(sizeof(TTestEvent), request);		// the event, upper-cased, is the reply
+}
+
+void
+TTestHandler::IdleProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*event*/)
+{
+	appWorldIdles++;
+	if (appWorldIdles < 3)
+		StartIdle();
+}
+
+class TStopHandler : public TAEventHandler
+{
+	public:
+		virtual void	AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event);
+};
+
+void
+TStopHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*event*/)
+{
+	appWorldDone++;
+	((TAppWorld*) GetGlobals())->AETerminateLoop();
+}
+
+class TTestSysEventHandler : public TSystemEventHandler
+{
+	public:
+		virtual void	AnySystemEvents(TAEvent* event)		{ appWorldSysEvents++; }
+};
+
+class TTestWorld : public TAppWorld
+{
+	public:
+		virtual ULong	GetSizeOf()			{ return sizeof(TTestWorld); }
+		virtual long	MainConstructor();
+		virtual void	MainDestructor();
+
+		TTestHandler*			fHandler;
+		TStopHandler*			fStopHandler;
+		TTestSysEventHandler*	fSysEventHandler;
+};
+
+long
+TTestWorld::MainConstructor()
+{
+	long err = TAppWorld::MainConstructor();
+	if (err != noErr)
+		return err;
+	appWorldTaskId = gCurrentTaskId;
+	fHandler = new TTestHandler;
+	fHandler->Init('tst1');
+	fHandler->InitIdler(5 * kMilliseconds);
+	fStopHandler = new TStopHandler;
+	fStopHandler->Init('stop');
+	fSysEventHandler = new TTestSysEventHandler;
+	return fSysEventHandler->Init('tsev');
+}
+
+void
+TTestWorld::MainDestructor()
+{
+	// (the world deletes the handlers it holds)
+	TAppWorld::MainDestructor();
 }
 
 
@@ -370,6 +467,38 @@ static void KernelServicesScenario()
 		timeConverted = (later - now).ConvertTo(kMilliseconds);
 	}
 
+	// --- an app world: found by name, sent an RPC event, a system event, and told to stop
+	{
+		TTestWorld* world = new TTestWorld;
+		appWorldInit = world->Init('test', true, 0x2000);
+		TUNameServer nameServer;
+		ULong spec = 0;
+		appWorldLookup = nameServer.Lookup((char*) "test", (char*) kTUPort, &appWorldRegisteredPort, &spec);
+		if (appWorldLookup == noErr)
+		{
+			TUPort worldPort(appWorldRegisteredPort);
+			TTestEvent request('tst1');
+			strcpy(request.fText, "event");
+			TTestEvent reply('----');
+			memset(appWorldReply, 0, sizeof(appWorldReply));
+			appWorldRPC = worldPort.SendRPC(&appWorldReplySize, &request, sizeof(request), &reply, sizeof(reply));
+			strcpy(appWorldReply, reply.fText);
+			TTestEvent unknown('none');
+			appWorldNoHandler = worldPort.SendRPC(&appWorldReplySize, &unknown, sizeof(unknown), &reply, sizeof(reply));
+			TSendSystemEvent sysEvent('tsev');
+			if (sysEvent.Init() == noErr)
+			{
+				TAESystemEvent payload('tsev');
+				sysEvent.SendSystemEvent(&payload, sizeof(payload));
+			}
+			Sleep(20 * kMilliseconds);				// the idler fires three times
+			TTestEvent stop('stop');
+			worldPort.Send(&stop, sizeof(stop));
+			Sleep(5 * kMilliseconds);				// the world winds down
+		}
+		delete world;
+	}
+
 	delete echo;
 	objectsAfter = CountObjects();
 	HostStopTasks();
@@ -434,10 +563,14 @@ int main()
 	EXPECT(timedReceiveErr == noErr && timedReceiveGot);
 	EXPECT(timerEnd.lo - timerStart.lo >= 30 * kMilliseconds);
 	EXPECT(timeUnitsMs == kMilliseconds && timeConverted == 3);
+	EXPECT(appWorldInit == noErr && appWorldTaskId != 0 && appWorldLookup == noErr && appWorldRegisteredPort != 0);
+	EXPECT(appWorldRPC == noErr && strcmp(appWorldSeen, "event") == 0 && strcmp(appWorldReply, "EVENT") == 0 && appWorldReplySize == sizeof(TTestEvent));
+	EXPECT(appWorldNoHandler == eNoHandler);
+	EXPECT(appWorldIdles == 3 && appWorldSysEvents == 1 && appWorldDone == 1);
 	// what the scenario leaves behind: the echo task and the monitor's task
 	// (each a task and its two shared memory objects) await the scavenger,
 	// and the monitor itself is not deleted
-	EXPECT(objectsAfter <= objectsBefore + 7 + 6);		// plus the waiter and listener tasks
+	EXPECT(objectsAfter <= objectsBefore + 7 + 9);		// plus the waiter, listener and app world tasks
 	EXPECT(gNumberOfTaskSwaps >= 10);
 
 	if (failures == 0)

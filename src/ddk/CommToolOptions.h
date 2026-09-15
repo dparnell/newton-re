@@ -140,6 +140,6 @@ class TCMOPassiveState : public TOption
 		Boolean		fPassiveState;		// If set, indicates resource useage state is passive (in passive state, they can be given up)
 };
 
-#endif notFRAM
+#endif /* notFRAM */
 
-#endif __COMMTOOLOPTIONS_H
+#endif /* __COMMTOOLOPTIONS_H */
