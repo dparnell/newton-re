@@ -190,7 +190,7 @@ int main()
 	int refCon;
 	SMemMsgSetUserRefConKernelGlue(snd->fId, &refCon);
 	SMemMsgGetUserRefConKernelGlue(snd->fId);
-	EXPECT(client->fRegister[1] == (ULong) (uintptr_t) &refCon);
+	EXPECT(client->fRegister[1] == (TRegister) &refCon);
 	SMemMsgGetSenderTaskIdKernelGlue(snd->fId);
 	EXPECT(client->fRegister[1] == client->fId);
 

@@ -29,6 +29,14 @@
 #include "DoubleQ.h"
 #endif
 
+#include <stdint.h>
+
+// A machine register as saved in a task.  The ROM's are 32 bits; a host
+// build widens them to its pointer size so that a pointer or a code address
+// passed through a register survives (docs/host-runtime.md).  Kernel code
+// that reads a register as an id or a selector casts it to ULong.
+typedef uintptr_t TRegister;
+
 class TTask;
 class TTaskQueue;
 class TEnvironment;
@@ -104,7 +112,7 @@ class TTask : public TKernelObject
 
 		void			SetBequeathId(TObjectId id);
 
-		ULong			fRegister[16];		// +0x10  r0-r15 as saved on a context switch; r13 = stack pointer,
+		TRegister		fRegister[16];		// +0x10  r0-r15 as saved on a context switch; r13 = stack pointer,
 											//        r14 = BadExit, r15 = task entry point when the task is new
 		ULong			fPSR;				// +0x50  0x10 (user mode) for a new task
 		ULong			fUnknown54[5];		// +0x54
@@ -131,7 +139,7 @@ class TTask : public TKernelObject
 		TDoubleQItem	fMonitorQItem;		// +0xc8  link in a TMonitor's queue of callers (+0xd0 = that queue)
 		TObjectId		fInsideMonitorId;	// +0xd4  the monitor this task is calling, while inside it (ObjectScavenger defers its death)
 		TObjectId		fMonitorId;			// +0xd8  the monitor this task serves, if it is a monitor task
-		ULong			fCopySavedPC;		// +0xdc  a shared-memory copy in progress: pc to resume at,
+		TRegister		fCopySavedPC;		// +0xdc  a shared-memory copy in progress: pc to resume at,
 		long			fCopyResult;		// +0xe0  result to report (kError_Size_To_Large_Copy_Truncated or 0),
 		ULong			fCopySize;			// +0xe4  size to report in r1,
 		TObjectId		fCopyMemId;			// +0xe8  the TSharedMem being copied,

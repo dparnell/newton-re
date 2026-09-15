@@ -109,7 +109,7 @@ int main()
 	t2->fRegister[15] = 0x1000;
 	table.Remove(groupId);
 	DeleteSemGroup(group);
-	EXPECT((t2->fState & kTaskState_Scheduled) && t2->fRegister[0] == (ULong) kError_Semaphore_Group_No_Longer_Exists);
+	EXPECT((t2->fState & kTaskState_Scheduled) && (long) t2->fRegister[0] == kError_Semaphore_Group_No_Longer_Exists);
 	EXPECT(t2->fRegister[15] == 0x1004);
 
 	DeleteSemList(acquire);

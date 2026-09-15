@@ -46,7 +46,7 @@ static void Run(TTask* t)
 static Boolean IsScheduled(TTask* t)	{ return (t->fState & kTaskState_Scheduled) != 0; }
 static Boolean IsBlocked(TTask* t)		{ return !IsScheduled(t) && gCurrentTask != t; }
 
-static ULong Reg(const void* p)			{ return (ULong) (uintptr_t) p; }
+static TRegister Reg(const void* p)		{ return (TRegister) p; }
 
 static void MonitorProc(void*, ULong, void*) {}
 
@@ -122,7 +122,7 @@ int main()
 	EXPECT(a->fInsideMonitorId == 0 && m->fQueueCount == 1);
 	EXPECT(m->fCaller == b && IsScheduled(mt) && mt->fRegister[1] == 8 && mt->fMonitorCaller == b);
 	EXPECT(Exit(m, -1) == noErr);
-	EXPECT(IsScheduled(b) && b->fRegister[0] == (ULong) -1 && m->fCaller == nil && m->fQueueCount == 0);
+	EXPECT(IsScheduled(b) && (long) b->fRegister[0] == -1 && m->fCaller == nil && m->fQueueCount == 0);
 	EXPECT(!IsScheduled(mt));
 
 	// --- bad ids and registers ------------------------------------------------
@@ -174,7 +174,7 @@ int main()
 	EXPECT(m->Aquire() == noErr);
 	TSharedMemMsg* msg;
 	EXPECT(ConvertIdToObj(kSharedMemMsgType, m->fMsgId, &msg) == noErr);
-	EXPECT(msg->fBuffer == &a->fRegister[0] && msg->fSize == 100 && msg->fFlags == kSMemReadOnly);
+	EXPECT(msg->fBuffer == &a->fRegister[0] && msg->fSize == kFaultRegisterBlockSize && msg->fFlags == kSMemReadOnly);
 	EXPECT(mt->fRegister[1] == (ULong) kMonitorFaultSelector);
 	EXPECT(Exit(m, 0) == noErr);
 	EXPECT(IsScheduled(a) && a->fRegister[0] == 0xabc);				// 0: r0 untouched

@@ -30,8 +30,9 @@
 #ifndef __SHAREDMEM_H
 #include "SharedMem.h"
 #endif
-
-class TTask;
+#ifndef __TASK_H
+#include "Task.h"
+#endif
 
 const ULong kSMemMsgTimer_SenderTimeout = 0x00000080;	// TSharedMemMsg::fTimerFlags: the timeout belongs to a send
 const ULong kSMemMsgTimer_DeferredSend = 0x00000020;	// TSharedMemMsg::fTimerFlags: a send from interrupt level wants a delay
@@ -69,7 +70,7 @@ void		SMemMsgSetUserRefConKernelGlue(TObjectId msgId, void* refCon);			// SWI 20
 void		SMemMsgGetUserRefConKernelGlue(TObjectId msgId);						// SWI 21
 void		SMemMsgCheckForDoneKernelGlue(TObjectId msgId, ULong flags);			// SWI 22
 NewtonErr	SMemMsgMsgDoneKernelGlue(TObjectId msgId, long result, ULong sequence);	// SWI 23
-NewtonErr	LowLevelCopyDoneFromKernelGlue(NewtonErr result, TTask* task, ULong pc);	// SWI 26
+NewtonErr	LowLevelCopyDoneFromKernelGlue(NewtonErr result, TTask* task, TRegister pc);	// SWI 26
 
 // deferred work run from the scheduler path
 void		DeferredNotify();				// messages whose timer fired (gTimerDeferred)

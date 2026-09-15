@@ -29,14 +29,11 @@
 // register numbers in TTask::fRegister
 enum { kcR0 = 0, kcR1, kcR2, kcR3, kcR11 = 11, kcSP = 13, kcPC = 15 };
 
-// the registers a fault monitor sees through fMsgId: r0-r15, the PSR and the
-// words up to and including the state, 100 bytes in the ROM
-const ULong kFaultRegisterBlockSize = offsetof(TTask, fUnknown70) + sizeof(ULong) - offsetof(TTask, fRegister);
 
 const ULong kPSRModeMask = 0x1f;
 const ULong kUserMode = 0x10;
 
-static inline ULong RegisterFromPointer(const void* p)	{ return (ULong) (uintptr_t) p; }
+static inline TRegister RegisterFromPointer(const void* p)	{ return (TRegister) p; }
 
 
 static void
@@ -88,7 +85,7 @@ TMonitor::FlushTasksOnMonitor()
 
 // ROM 0x00121890 SetCallerRegister__8TMonitorFiUl
 void
-TMonitor::SetCallerRegister(int reg, ULong value)
+TMonitor::SetCallerRegister(int reg, TRegister value)
 {
 	if (fCaller != nil)
 		fCaller->fRegister[reg] = value;
@@ -98,7 +95,7 @@ TMonitor::SetCallerRegister(int reg, ULong value)
 // ROM 0x00121a78 SetResult__8TMonitorFP5TTaskl
 // A fault monitor answering 0 leaves the faulting task's r0 as it was.
 void
-TMonitor::SetResult(TTask* task, long result)
+TMonitor::SetResult(TTask* task, TRegister result)
 {
 	if ((task->fState & kTaskState_FaultMonitorCall) && result == 0)
 		return;
@@ -149,7 +146,7 @@ TMonitor::SetUpEntry(TTask* caller)
 {
 	if ((caller->fState & kTaskState_FaultMonitorCall) == 0)
 	{
-		if (caller->fRegister[kcR1] == (ULong) kSuspendMonitor)
+		if ((ULong) caller->fRegister[kcR1] == (ULong) kSuspendMonitor)
 		{
 			SetResult(caller, noErr);
 			fQueueCount--;
@@ -201,7 +198,7 @@ TMonitor::Aquire()
 	if (fSuspended & (kMonitor_Suspended | kMonitor_SuspendRequested))
 		return kError_No_Such_Monitor;
 
-	if ((caller->fState & kTaskState_FaultMonitorCall) == 0 && caller->fRegister[kcR1] == (ULong) kSuspendMonitor)
+	if ((caller->fState & kTaskState_FaultMonitorCall) == 0 && (ULong) caller->fRegister[kcR1] == (ULong) kSuspendMonitor)
 	{
 		if (caller->fOwnerId != fOwnerId)
 			return kError_Object_Not_Owned_By_Task;
@@ -229,7 +226,7 @@ TMonitor::Aquire()
 // (SetUpEntry, inlined in the ROM).  A reboot that waited for this
 // reboot-protected call happens here.
 Boolean
-TMonitor::Release(long result)
+TMonitor::Release(TRegister result)
 {
 	EnterAtomic();
 	if (fRebootProtected && --gRebootProtectCount == 0 && gWantReboot)
@@ -237,12 +234,12 @@ TMonitor::Release(long result)
 	ExitAtomic();
 
 	TTask* caller = fCaller;
-	ULong resumePC = caller->fRegister[kcPC];
+	TRegister resumePC = caller->fRegister[kcPC];
 	if (caller->fState & (kTaskState_KillPending | kTaskState_KilledSelf))
 		resumePC = RegisterFromPointer((void*) TaskKillSelf);
-	else if ((caller->fState & kTaskState_FaultMonitorCall) && result == kFaultMonitorResult_Kill)
+	else if ((caller->fState & kTaskState_FaultMonitorCall) && result == (TRegister) kFaultMonitorResult_Kill)
 		resumePC = RegisterFromPointer((void*) TaskKillSelf);
-	else if ((caller->fState & kTaskState_FaultMonitorCall) && result == kFaultMonitorResult_BlockOnMemory)
+	else if ((caller->fState & kTaskState_FaultMonitorCall) && result == (TRegister) kFaultMonitorResult_BlockOnMemory)
 		gBlockedOnMemory->Add(caller);
 	else
 	{
@@ -281,7 +278,7 @@ NewtonErr
 MonitorDispatchKernelGlue()
 {
 	TMonitor* monitor;
-	NewtonErr err = ConvertIdToObj(kMonitorType, gCurrentTask->fRegister[kcR0], &monitor);
+	NewtonErr err = ConvertIdToObj(kMonitorType, (ULong) gCurrentTask->fRegister[kcR0], &monitor);
 	if (err == noErr)
 	{
 		gCurrentTask->fState &= ~kTaskState_FaultMonitorCall;
@@ -318,7 +315,7 @@ MonitorThrowKernelGlue(char* name, void* data, void (*destructor)(void*))
 	if (err != noErr)
 		return err;
 
-	long result = (long) RegisterFromPointer(name);
+	TRegister result = (TRegister) name;			// Throw's first argument rides in r0
 	if (!monitor->fCallerIsCopying)
 	{
 		if ((monitor->fCaller->fPSR & kPSRModeMask) != kUserMode)
@@ -333,7 +330,7 @@ MonitorThrowKernelGlue(char* name, void* data, void (*destructor)(void*))
 	else
 	{
 		LowLevelCopyDoneFromKernelGlue(kError_UnResolvedFault, monitor->fCaller, monitor->fCaller->fRegister[kcPC]);
-		result = kError_UnResolvedFault;
+		result = (TRegister) (long) kError_UnResolvedFault;
 	}
 	monitor->Release(result);
 	return noErr;

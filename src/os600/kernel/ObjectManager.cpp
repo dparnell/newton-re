@@ -204,7 +204,7 @@ ObjectGetRegister(ObjectMessage* msg, ULong size, ULong* outValue)
 	if (msg->fRegister.fNumber > 15)
 		return kError_Bad_Register_Number;
 	EnterAtomic();
-	*outValue = task->fRegister[msg->fRegister.fNumber];
+	*outValue = (ULong) task->fRegister[msg->fRegister.fNumber];
 	ExitAtomic();
 	return noErr;
 }

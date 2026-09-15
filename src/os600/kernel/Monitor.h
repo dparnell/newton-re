@@ -41,12 +41,18 @@
 #include "SharedTypes.h"		// MonitorProcPtr, kSuspendMonitor, kMonitorFaultSelector
 #endif
 
+#include <stddef.h>
+
 // TMonitor::fSuspended bits
 enum
 {
 	kMonitor_Suspended			= 1,	// ~TMonitor / DeleteMonitor: refuse all calls, fail the queue
 	kMonitor_SuspendRequested	= 2		// a kSuspendMonitor call is pending or done
 };
+
+// the registers a fault monitor sees through fMsgId: r0-r15, the PSR and the
+// words up to and including the state, 100 bytes in the ROM
+const ULong kFaultRegisterBlockSize = offsetof(TTask, fUnknown70) + sizeof(ULong) - offsetof(TTask, fRegister);
 
 // results a fault monitor's proc can return, interpreted by TMonitor::Release;
 // anything else is handed to the faulting task as r0 (0: leave r0 alone)
@@ -64,12 +70,12 @@ class TMonitor : public TKernelObject
 		// it follows with the memory system.
 
 		NewtonErr		Aquire();						// [sic] enter from gCurrentTask; blocks it
-		Boolean			Release(long result);			// leave: resume the caller, dispatch the next
+		Boolean			Release(TRegister result);		// leave: resume the caller, dispatch the next (result: a register's worth, `long` in the ROM)
 		Boolean			Suspend(ULong flags);			// true when no call is in progress
 		void			FlushTasksOnMonitor();			// let all waiters go, unanswered
-		void			SetCallerRegister(int reg, ULong value);
+		void			SetCallerRegister(int reg, TRegister value);
 
-		void			SetResult(TTask* task, long result);
+		void			SetResult(TTask* task, TRegister result);
 		Boolean			SetUpEntry(TTask* caller);		// false if the entry was answered without running the proc
 		void			DeleteTaskOnMonitorQ(TTask* task);	// fQueue's destructor: a waiter died
 

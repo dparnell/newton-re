@@ -444,7 +444,7 @@ CheckCopyTask()
 // be abandoned).  The task gets its result in r0, the size in r1 and resumes
 // at the pc saved when the copy was set up.
 NewtonErr
-LowLevelCopyDoneFromKernelGlue(NewtonErr result, TTask* task, ULong pc)
+LowLevelCopyDoneFromKernelGlue(NewtonErr result, TTask* task, TRegister pc)
 {
 	if (!gCopyTasks->RemoveFromQueue(task))
 	{
@@ -709,11 +709,11 @@ SMemGetSizeKernelGlue(TObjectId id)
 		}
 		owner = task->fBequeathId;
 	}
-	gCurrentTask->fRegister[2] = ownsIt ? (ULong) (uintptr_t) mem->fBuffer : 0;
+	gCurrentTask->fRegister[2] = ownsIt ? (TRegister) mem->fBuffer : 0;
 
 	TSharedMemMsg* msg;
 	if (ConvertIdToObj(kSharedMemMsgType, id, &msg) == noErr)
-		gCurrentTask->fRegister[3] = (ULong) (uintptr_t) msg->fUserRefCon;
+		gCurrentTask->fRegister[3] = (TRegister) msg->fUserRefCon;
 	else
 		gCurrentTask->fRegister[3] = 0;
 	return noErr;
@@ -781,7 +781,7 @@ SMemMsgGetUserRefConKernelGlue(TObjectId msgId)
 {
 	TSharedMemMsg* msg;
 	if (ConvertIdToObj(kSharedMemMsgType, msgId, &msg) == noErr)
-		gCurrentTask->fRegister[1] = (ULong) (uintptr_t) msg->fUserRefCon;
+		gCurrentTask->fRegister[1] = (TRegister) msg->fUserRefCon;
 }
 
 
