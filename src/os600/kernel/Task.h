@@ -43,7 +43,10 @@ enum KernelObjectState
 												// a monitor caller with it set resumes in TaskKillSelf (TMonitor::Release)
 	kTaskState_FaultMonitorCall	= 0x00800000,	// the pending monitor call is a fault (set by the abort handler, cleared
 												// by MonitorDispatchKernelGlue): the caller's registers are the message
-	kTaskState_Unknown0002		= 0x00000002,	// treated like KillPending by TMonitor::Release; origin not yet traced
+	kTaskState_KilledSelf		= 0x00000002,	// the task asked the object manager to delete it (TaskKillSelf);
+												// TMonitor::Release never resumes it, the next request removes it
+	kTaskState_Unknown0008		= 0x00000008,	// ObjectSuspend refuses a task without it (kError_Cannot_Suspend_Blocked_Task);
+												// nothing found yet that sets it
 	kTaskState_StackFromNewStack= 0x02000000	// stack came from NewStack (freed via the stack manager), not malloc
 };
 

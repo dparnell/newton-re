@@ -238,7 +238,7 @@ TMonitor::Release(long result)
 
 	TTask* caller = fCaller;
 	ULong resumePC = caller->fRegister[kcPC];
-	if (caller->fState & (kTaskState_KillPending | kTaskState_Unknown0002))
+	if (caller->fState & (kTaskState_KillPending | kTaskState_KilledSelf))
 		resumePC = RegisterFromPointer((void*) TaskKillSelf);
 	else if ((caller->fState & kTaskState_FaultMonitorCall) && result == kFaultMonitorResult_Kill)
 		resumePC = RegisterFromPointer((void*) TaskKillSelf);

@@ -21,6 +21,7 @@ class TScheduler;
 class TTimerEngine;
 class TDoubleQContainer;
 class TUObject;
+class TMonitor;
 struct InterruptObject;
 struct SGlobalsThatLiveAcrossReboot;
 
@@ -53,7 +54,7 @@ extern TDoubleQContainer* gDeferredSends;			// 0x0c10112c  sends made from inter
 extern Boolean			gCopyDone;					// 0x0c101130  the current task's copy finished (checked by the SWI handler)
 extern TUObject*		gNullPort;					// 0x0c1010bc  the well-known ports GetPortInfo hands out
 extern TUObject*		gNameServer;				// 0x0c101654
-extern TUObject*		gTheObjectManagerMonitor;	// 0x0c101794
+extern TMonitor*		gTheObjectManagerMonitor;	// 0x0c101794  the monitor that makes and destroys kernel objects (ObjectManager.h)
 
 // monitors and reboot
 extern TObjectId		gCurrentMonitorId;			// 0x0c101148  monitor whose task is running (MonitorExit/Throw act on it)
@@ -61,5 +62,9 @@ extern TDoubleQContainer* gBlockedOnMemory;			// 0x0c101128  tasks parked by a f
 extern ULong			gRebootProtectCount;		// 0x0c10113c  reboot-protected monitor calls in progress
 extern Boolean			gWantReboot;				// 0x0c101140  a safe Reboot is waiting for them to finish
 extern SGlobalsThatLiveAcrossReboot gGlobalsThatLiveAcrossReboot;	// 0x0c103490
+
+// object manager
+extern Boolean			gTaskDestroyed;				// 0x0c10178c  a task was deleted: scavenge what it owned (TObjectManager::MonitorProc)
+extern ULong			gMonitorTaskPriority;		// 0x0c101624  priority of monitor tasks (TMonitor::Init)
 
 #endif	/* __KERNELGLOBALS_H */

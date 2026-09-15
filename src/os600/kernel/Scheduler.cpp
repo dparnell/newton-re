@@ -12,6 +12,7 @@
 #include "Scheduler.h"
 #include "KernelGlobals.h"
 #include "hal/Interrupts.h"
+#include "hal/Atomic.h"
 
 
 /* -------------------------------------------------------------------------------
@@ -188,6 +189,29 @@ WantSchedule()
 		gSchedule = true;
 	else
 		gScheduleRequested = true;
+}
+
+
+// ROM 0x001cebf4 HoldSchedule__Fv
+void
+HoldSchedule()
+{
+	gHoldScheduleLevel++;
+}
+
+
+// ROM 0x001cec0c AllowSchedule__Fv
+// Releasing the last hold acts on a reschedule that was requested meanwhile.
+void
+AllowSchedule()
+{
+	EnterAtomic();
+	if (--gHoldScheduleLevel == 0 && gScheduleRequested)
+	{
+		gScheduleRequested = false;
+		gSchedule = true;
+	}
+	ExitAtomic();
 }
 
 

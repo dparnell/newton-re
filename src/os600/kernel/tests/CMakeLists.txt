@@ -29,3 +29,7 @@ add_test(NAME os600.kernel.Monitor COMMAND test_Monitor)
 add_executable(test_Environment test_Environment.cpp)
 target_link_libraries(test_Environment PRIVATE os600_kernel)
 add_test(NAME os600.kernel.Environment COMMAND test_Environment)
+
+add_executable(test_ObjectManager test_ObjectManager.cpp)
+target_link_libraries(test_ObjectManager PRIVATE os600_kernel)
+add_test(NAME os600.kernel.ObjectManager COMMAND test_ObjectManager)

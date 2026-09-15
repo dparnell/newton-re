@@ -44,6 +44,11 @@ src/
   genuine bug in the ROM that would corrupt memory or crash on a host: it is
   fixed, marked `DEVIATION:` in the code with a description of the original
   behaviour, and listed in the subsystem's notes under docs/.
+* A function is only written when it can be written whole. Where a switch or
+  dispatcher has to exist before every branch can (the object manager's
+  requests, say), the missing branch is marked `NOT YET RECONSTRUCTED:` with
+  the ROM address of what belongs there and returns
+  `kError_Call_Not_Implemented`; `grep` for the marker to find the gaps.
 * New code is C++17. The DDK headers are C++98-era and are compiled as-is
   (with `host/host_compat.h` pre-included on host builds).
 * Each unit gets a host unit test under `tests/` next to it, exercising the

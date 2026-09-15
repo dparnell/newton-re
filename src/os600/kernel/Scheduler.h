@@ -57,6 +57,8 @@ class TScheduler : public TKernelObject, public TTaskContainer
 void	ScheduleTask(TTask* task);				// GenericSWI 26
 void	UnScheduleTask(TTask* task);
 void	WantSchedule();							// ask for a reschedule at the next opportunity
+void	HoldSchedule();							// defer reschedules until the matching AllowSchedule
+void	AllowSchedule();
 void	StartScheduler();						// arm the time-slice interrupt
 void	StopScheduler();
 

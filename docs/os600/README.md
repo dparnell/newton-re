@@ -116,7 +116,11 @@ GenericSWI 67), `NotifySend`/`NotifyTimeout`/`DeferredNotify`/
 (Port.*); `LocalToGlobalId`/`ConvertIdToObj`/`ConvertMemOrMsgIdToObj`
 (KernelObjects.*); `TMonitor` with `Aquire`/`Release`/`Suspend`/
 `SetUpEntry`/`FlushTasksOnMonitor` and the monitor system calls (SWI 27,
-28, 29, 32), `DeleteMonitor` (Monitor.*); `Reboot`/`Restart`/
+28, 29, 32), `DeleteMonitor` (Monitor.*); `TObjectManager::MonitorProc`
+with `ObjectDestroy`/`ObjectStart`/`ObjectSuspend`/`ObjectGetRegister`/
+`ObjectSetRegister`/`GetObjectContent`/`SetDomainFaultMonitor` and
+`ObjectScavenger` (ObjectManager.*), `HoldSchedule`/`AllowSchedule`
+(Scheduler.*); `Reboot`/`Restart`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
@@ -141,6 +145,24 @@ a 16-entry fault-monitor table at 0x0c1030b8 (unnamed in the symbol table)
 that the abort handler uses to find the monitor for a fault. ROM bug found:
 `TMemArchManager::RemoveEnvironment` never advances along its list (see
 the `DEVIATION` note).
+
+Object manager, as established: user code makes, destroys and manipulates
+kernel objects through one monitor, `gTheObjectManagerMonitor` ('OBJM',
+`TObjectManager::MonitorProc`), with an `ObjectMessage` (size, then the
+object type or id at +0x08, then per-request fields - see
+`src/os600/ObjectMessage.h`) and a selector: alloc, destroy (owners only),
+start/suspend a task, get/set one of its registers, add/remove a domain in an
+environment, read a task's accounting figures, set a domain's fault monitor.
+The object table's scavenge proc is `ObjectScavenger`: it maps each object
+type to its `Delete*` destructor, defers a task that is inside a monitor
+(marking it kill-pending) and a monitor with a call in progress (suspending
+it), and never scavenges environments or domains. `TaskKillSelf` asks the
+monitor with selector 0xff: the caller is marked (state bit 0x2), never
+resumed by `TMonitor::Release`, and removed at the next request; every
+request ends with `ScavengeAll` if a task was destroyed (`gTaskDestroyed`).
+Still to come there: `ObjectAlloc` (waits for `TTask::Init`,
+`TMonitor::Init`, `TKDomain::Init`, `TPhys`), `DeleteTask` (waits for
+`~TTask`), the external page trackers.
 
 Monitors, as established: a `TMonitor` (0x48 bytes) owns a task at
 `gMonitorTaskPriority` and a `TSharedMemMsg`. `MonitorDispatchSWI` saves all

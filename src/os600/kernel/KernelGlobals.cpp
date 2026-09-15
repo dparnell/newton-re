@@ -10,7 +10,7 @@
 TObjectTable*	gObjectTable = nil;
 TObjectTable*	gTheMemArchObjTbl = nil;
 TTask*			gCurrentTask = nil;
-ULong			gNextGlobalUniqueId = 0;
+ULong			gNextGlobalUniqueId = 0x100;		// as in the ROM image: ids below (0x100 << 4) are never handed out
 Boolean			gWrappedGlobalUniqueId = false;
 
 TScheduler*		gKernelScheduler = nil;
@@ -33,10 +33,13 @@ TDoubleQContainer* gDeferredSends = nil;
 Boolean			gCopyDone = false;
 TUObject*		gNullPort = nil;
 TUObject*		gNameServer = nil;
-TUObject*		gTheObjectManagerMonitor = nil;
+TMonitor*		gTheObjectManagerMonitor = nil;
 
 TObjectId		gCurrentMonitorId = 0;
 TDoubleQContainer* gBlockedOnMemory = nil;
 ULong			gRebootProtectCount = 0;
 Boolean			gWantReboot = false;
 SGlobalsThatLiveAcrossReboot gGlobalsThatLiveAcrossReboot;
+
+Boolean			gTaskDestroyed = false;
+ULong			gMonitorTaskPriority = kKernelTaskPriority;	// 20 in the ROM image

@@ -11,6 +11,7 @@
 */
 
 #include "Port.h"
+#include "Monitor.h"
 #include "Task.h"
 #include "Scheduler.h"
 #include "TimerEngine.h"

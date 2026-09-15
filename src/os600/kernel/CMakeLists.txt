@@ -6,6 +6,7 @@ add_library(os600_kernel STATIC
     KernelObjects.cpp
     MemArchManager.cpp
     Monitor.cpp
+    ObjectManager.cpp
     ObjectTable.cpp
     Port.cpp
     Reboot.cpp
