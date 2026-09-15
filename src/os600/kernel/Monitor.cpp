@@ -21,6 +21,7 @@
 #include "OSErrors.h"
 #include "hal/Atomic.h"
 #include "MonitorGlue.h"
+#include "NewtonExceptions.h"
 
 #include <stddef.h>
 #include <stdint.h>

@@ -15,10 +15,8 @@
 				TaskKillSelf		0x0038ad2c	asks the object manager monitor
 										(GetPortInfo(0), selector 0xff, r2 = own
 										task id) to delete the calling task.
-				Throw				(jump table 0x01bdff88)	the C++ exception
-										throw; MonitorThrowKernelGlue makes a
-										caller resume here so an exception thrown
-										inside a monitor unwinds in the caller.
+				(Throw, which MonitorThrowKernelGlue makes a caller resume at, is
+				the exception system's: user/Exceptions.cpp.)
 
 				The host build supplies bodies that only report they were reached:
 				a task's saved registers are never actually resumed on the host yet.
@@ -34,7 +32,6 @@
 extern "C" {
 void	MonitorEntryGlue(void);
 void	TaskKillSelf(void);
-void	Throw(char* name, void* data, void (*destructor)(void*));		// NewtonExceptions.h
 void	BadExit(void);				// where a task proc that returns ends up: TaskKillSelf (0x003a4ad8, a branch)
 }
 

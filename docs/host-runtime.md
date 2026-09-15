@@ -59,13 +59,15 @@ kernel source is unchanged.
 * **The saved pc is a resume address.** A stub sets `fRegister[kcPC]` to a
   marker of its own before the call. When the task is resumed and the pc is
   no longer that marker the kernel redirected it: the stub throws
-  `TTaskRedirect`, caught by the thread's trampoline, which calls the
-  function at the new pc with the saved r0-r3 as its arguments, as the ARM
-  would enter it (`Throw(name, data, destructor)`; `TaskKillSelf` and
-  `MonitorEntryGlue` ignore them and read `gCurrentTask->fRegister`). A
-  fresh thread starts the same way, at the pc `TTask::Init` set; a task proc
-  that returns goes to `BadExit`, which is `TaskKillSelf`. The semaphore
-  stub's "+4" is a marker one word higher.
+  no longer that marker the kernel redirected it. A function that never
+  returns is entered in place, with the stack as it is - the way the ARM
+  resumes it: `Throw(name, data, destructor)` (which longjmps into a
+  handler on that stack) and `TaskKillSelf`. `MonitorEntryGlue` needs the
+  stack empty, so for it the stub throws `TTaskRedirect`, caught by the
+  thread's trampoline, which calls it. Either way the function gets the
+  saved r0-r3 as its arguments. A fresh thread starts the same way, at the
+  pc `TTask::Init` set; a task proc that returns goes to `BadExit`, which
+  is `TaskKillSelf`. The semaphore stub's "+4" is a marker one word higher.
 * **Interrupts are delivered by whoever holds the baton, at safe points.**
   The idle task's host body (`HostIdleTask`) waits for the next timer
   deadline - the timer engine's alarm or the scheduler's time slice - then
@@ -124,5 +126,6 @@ host (see `host_compat.h`).
 
 Known limits of this first runtime: no pre-emption between system calls
 (see above); a deleted task's thread is left parked (`gTaskDeletedHook` →
-`HostTaskDeleted` forgets it); `Throw` is still a stub; the run ends by
-leaving parked threads to the process exit.
+`HostTaskDeleted` forgets it); a `Reset` (an unhandled exception reboots)
+ends the run through `gHostResetHook`; the run ends by leaving parked
+threads to the process exit.

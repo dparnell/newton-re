@@ -118,6 +118,25 @@ Trampoline(TTask* task)
 }
 
 
+// The kernel changed the task's pc while it was blocked.  A function that
+// never returns (Throw longjmps to a handler on this stack, TaskKillSelf
+// ends the task) is entered here, with the stack as it is - as the ARM would
+// resume it; MonitorEntryGlue needs the stack empty, so for it the stub is
+// unwound to the trampoline, which calls it.
+static void
+Redirect(TTask* self)
+{
+	TRegister pc = self->fRegister[kcPC];
+	if (pc == (TRegister) MonitorEntryGlue)
+		throw TTaskRedirect{ pc };
+	typedef void (*EntryProc)(TRegister, TRegister, TRegister, TRegister);
+	TRegister* r = self->fRegister;
+	((EntryProc) pc)(r[kcR0], r[kcR1], r[kcR2], r[kcR3]);
+	fprintf(stderr, "[host] a redirected task entry returned\n");
+	abort();
+}
+
+
 // Hands the baton to `next` and waits until `self` has it again.
 static void
 SwitchTo(TTask* self, TTask* next)
@@ -168,7 +187,7 @@ HostSWIExit(TTask* self, TRegister marker)
 	SwitchTo(self, next);
 	Resume(self);
 	if (self->fRegister[kcPC] != marker)
-		throw TTaskRedirect{ self->fRegister[kcPC] };
+		Redirect(self);
 	return true;
 }
 
@@ -217,11 +236,19 @@ SleepTask()
 }
 
 
+static void
+ResetEndsTheRun()
+{
+	HostStopTasks();
+}
+
+
 void
 HostRunTasks(TTask* idle)
 {
 	gStopRequested = false;
 	gHostTasksStopping = false;
+	gHostResetHook = ResetEndsTheRun;
 	gCurrentTask = idle;
 	idle->fRegister[kcPC] = (TRegister) HostIdleTask;
 	std::unique_lock<std::mutex> lock(gBaton);

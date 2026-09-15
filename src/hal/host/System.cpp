@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 ULong	gHostResetCount = 0;
+void	(*gHostResetHook)(void) = nil;
 Boolean	gHostPoweredOff = false;
 
 extern "C" NewtonErr
@@ -17,6 +18,8 @@ Reset(void)
 {
 	gHostResetCount++;
 	fprintf(stderr, "[host] machine reset requested\n");
+	if (gHostResetHook != nil)
+		gHostResetHook();
 	return 0;
 }
 
@@ -45,4 +48,11 @@ extern "C" ULong
 GetRamSize(void)
 {
 	return 4 * 1024 * 1024;
+}
+
+// The host runs everything as a user-mode task.
+extern "C" ULong
+GetCPUMode(void)
+{
+	return 0x10;
 }

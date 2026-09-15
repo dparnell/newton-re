@@ -55,17 +55,3 @@ BadExit(void)
 {
 	TaskKillSelf();
 }
-
-
-// Throw (jump table 0x01bdff88): the exception name, data and destructor
-// arrive in r0-r2 when a caller is redirected here by MonitorThrowKernelGlue
-// (the runtime enters a redirected function with r0-r3 as its arguments).
-// The Newton exception system (NewtonExceptions.h) is not reconstructed yet.
-extern "C" void
-Throw(char* name, void* data, void (*destructor)(void*))
-{
-	(void) data;
-	(void) destructor;
-	fprintf(stderr, "Throw(%s): the exception system is not reconstructed yet\n", name ? name : "");
-	abort();
-}

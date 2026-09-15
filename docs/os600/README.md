@@ -166,7 +166,10 @@ generated `MemObjTables.cpp` (MemObjManager.*); `TSingleQContainer`
 `src/os600/user/UserEnvironment.h` declares it), `InitDomainsAndEnvironments`
 with `BuildDomainsAndHeaps` (plain domains only - the heap domains' areas
 and heaps are the paged memory system, NOT YET) and `BuildEnvironments`
-(user/BuildEnvironments.cpp); `Reboot`/`Restart`/
+(user/BuildEnvironments.cpp); the exception system - `Throw`, `ThrowMsg`,
+`Subexception`, `AddExceptionHandler`/`RemoveExceptionHandler`/
+`SetExceptionHandler`/`GetExceptionHandler`, `ExitHandler`, `NextHandler` -
+and the generated exception names (user/Exceptions.cpp, ExceptionNames.cpp); `Reboot`/`Restart`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
@@ -217,6 +220,21 @@ dual-mode: in user mode the request goes through GenericSWI 0x2c with its
 selector, arguments and answer in the first 0x30 bytes of the caller's task
 globals block (`MemObjRequest`) - `PrimGetMemObjInfo` serves it.  On the
 host `IsSuperMode()` is false, so this path is the one exercised.
+
+Exceptions, as established: `NewtonExceptions.h`'s try/catch is a chain
+of `CatchHeader`s (try handlers with a setjmp buffer, `unwind_protect`
+cleanups, boundary markers) hanging off `gFirstCatch`, the last word of the
+task globals, in user mode - or off one global each for FIQ and IRQ mode
+(0x0c100d1c/0x0c100d20; `GetCPUMode`'s low bits pick). `Throw` runs the
+cleanups on its way to the first try handler, unlinks it, fills in the
+exception and longjmps into it; `ExitHandler` at `end_try` either destroys
+a caught exception's data or unlinks a handler that ended normally. With no
+handler left, a task inside a monitor passes the exception to its caller
+(`MonitorThrowSWI`: the caller is resumed at `Throw`), and otherwise the
+machine warm-reboots with `kError_Sorry_System_Error` after "Unhandled
+exception %s". Names are dotted paths matched by prefix (`Subexception`;
+';' separates alternatives); the 35 the ROM defines are generated into
+`ExceptionNames.cpp` by `analysis/exception_names.py`.
 
 Object manager, as established: user code makes, destroys and manipulates
 kernel objects through one monitor, `gTheObjectManagerMonitor` ('OBJM',

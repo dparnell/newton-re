@@ -43,6 +43,8 @@ static Int64 beforeSleep, afterSleep;
 static long semErr = -1;
 static Boolean semHeld = false;
 static ULong objectsBefore = 0, objectsAfter = 0;
+static long caughtData = 0, caughtMsg = 0, cleanupRan = 0, monitorCaught = 0, monitorProcRan = 0;
+static Boolean afterThrowReached = false;
 
 // a database lookup after the run (the user-mode calls are refused then)
 static Boolean FindId(MemObjType type, ULong name, TObjectId* outId)
@@ -61,6 +63,20 @@ static ULong CountObjects()
 	while (iter.GetNextTableId() != 0)
 		n++;
 	return n;
+}
+
+
+static void Cleanup(void* what)
+{
+	cleanupRan += *(int*) what;
+}
+
+// a monitor whose proc throws: the exception must land in the caller
+static long ThrowingMonitorProc(void*, ULong selector, void*)
+{
+	monitorProcRan++;
+	Throw((ExceptionName) "evt.ex.monitor", (void*) (uintptr_t) selector, nil);
+	return -1;
 }
 
 
@@ -133,6 +149,54 @@ static void KernelServicesScenario()
 		sem.Release();
 	}
 
+	// --- exceptions: try/catch, a message, an unwind_protect, and one thrown inside a monitor
+	newton_try
+	{
+		Throw((ExceptionName) "evt.ex.test.deep", (void*) 42, nil);
+		afterThrowReached = true;
+	}
+	newton_catch("evt.ex.other")
+	{
+		caughtData = -1;
+	}
+	newton_catch("evt.ex.test")
+	{
+		caughtData = (long) (uintptr_t) CurrentException()->data;
+	}
+	end_try;
+	newton_try
+	{
+		int mark = 5;
+		unwind_protect
+		{
+			ThrowMsg((char*) "boom");
+		}
+		on_unwind
+		{
+			Cleanup(&mark);
+		}
+		end_unwind;
+	}
+	newton_catch(exMsgException)
+	{
+		caughtMsg = strcmp((const char*) CurrentException()->data, "boom") == 0;
+	}
+	end_try;
+	TUMonitor thrower;
+	if (thrower.Init((MonitorProcPtr) ThrowingMonitorProc, 0x1000) == noErr)
+	{
+		newton_try
+		{
+			thrower.InvokeRoutine(7, nil);
+			monitorCaught = -1;
+		}
+		newton_catch("evt.ex.monitor")
+		{
+			monitorCaught = (long) (uintptr_t) CurrentException()->data;
+		}
+		end_try;
+	}
+
 	delete echo;
 	objectsAfter = CountObjects();
 	HostStopTasks();
@@ -180,7 +244,10 @@ int main()
 	EXPECT(replySize == 13 && strcmp(reply, "HELLO NEWTON") == 0);
 	EXPECT(afterSleep.lo - beforeSleep.lo >= 10 * kMilliseconds);
 	EXPECT(semErr == noErr && semHeld);
-	EXPECT(objectsAfter <= objectsBefore + 1);			// the echo task (owned by nobody, awaiting scavenge) may remain
+	EXPECT(caughtData == 42 && !afterThrowReached);
+	EXPECT(caughtMsg == 1 && cleanupRan == 5);
+	EXPECT(monitorProcRan == 1 && monitorCaught == 7);
+	EXPECT(objectsAfter <= objectsBefore + 5);			// the echo and monitor tasks (owned by nobody, awaiting scavenge) may remain
 	EXPECT(gNumberOfTaskSwaps >= 10);
 
 	if (failures == 0)

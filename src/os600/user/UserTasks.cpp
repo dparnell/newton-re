@@ -281,3 +281,12 @@ SleepTill(TTime* futureTime)
 {
 	gUNullPort->SendGoo(kBuiltInSMemMsgId, 0, nil, 0, 0, 0, false, kTimeOutImmediate, futureTime);
 }
+
+
+// ROM 0x00259930 GetGlobals
+// The running task's globals pointer (the end of its TaskGlobals block).
+extern "C" void*
+GetGlobals(void)
+{
+	return gCurrentGlobals;
+}

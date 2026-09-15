@@ -40,6 +40,7 @@ tools/newton-rom/
     globals.py            initial values of globals from the ROM's read-write init area
     xrefs.py              who references a symbol (finds who initialises a global)
     memobj_tables.py      the memory object tables -> docs/os600/memobj-tables.md and src/os600/kernel/MemObjTables.cpp
+    exception_names.py    the exception name strings -> src/os600/user/ExceptionNames.cpp
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```

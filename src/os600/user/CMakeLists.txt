@@ -12,6 +12,7 @@ add_library(os600_user STATIC
     UserEnvironment.cpp
     BuildEnvironments.cpp
     Exceptions.cpp
+    ExceptionNames.cpp
     UserBoot.cpp
     host/StackManager.cpp
     host/MonitorGlue.cpp

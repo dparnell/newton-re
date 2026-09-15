@@ -22,6 +22,7 @@ extern Boolean	gHostInterruptEnabled;
 extern Boolean	gHostTimeSliceArmed;
 extern Int64	gHostTimeSliceDeadline;
 extern ULong	gHostResetCount;
+extern void	(*gHostResetHook)(void);			// run by Reset() after recording it; the task runtime ends the run with it
 extern ULong	gHostDomainAccess;
 extern Boolean	gHostPoweredOff;
 
