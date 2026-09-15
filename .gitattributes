@@ -1,0 +1,15 @@
+# Line endings: normalise text to LF in the repository; shell scripts must be LF
+# in the working copy too (Linux), Windows batch files CRLF.
+* text=auto
+*.sh text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# The DDK originals keep their classic Mac CR line endings untouched.
+headers/** -text
+
+# Binary payloads
+DebugRom/** binary
+*.pdf binary
+*.exe binary
+*.dll binary
