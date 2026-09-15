@@ -101,7 +101,7 @@ the symbol table.
 | `TTimerEngine` | 0x14 | — | 9 | — |
 | `TTimerQueue` | 0x10 | — | 7 | TimerQueue.h |
 | `TTimerElement` | 0x18 | yes | 4 | TimerQueue.h |
-| `TNameServer` | ? | — | 21 | — |
+| `TNameServer` | 0x1a8 | — | 21 | — (NameServerImpl.h) |
 | `TDoubleQContainer` | 0x14 | — | 13 | — |
 | `TDoubleQItem` | 0xc | — | 1 | — |
 | `TObjectHeap` | 0x34 | — | 36 | — |
@@ -177,7 +177,39 @@ points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
 constructor, `SetFaultMonitor`, `Intersects`), the domain access control
 word helpers and the fault monitor table (Domain.*), `TMemArchManager`
 (MemArchManager.*), `TEnvironment` with the environment system calls
-(GenericSWI 0x23-0x27) (Environment.*).
+(GenericSWI 0x23-0x27) (Environment.*); the name server - `TNameServer`
+with `TObjectNameList`/`TObjectNameEntry`, the system-event registrations
+and `Gestalt`, `InitNameServer` (user/NameServer.cpp, NameServerImpl.h),
+its clients `TUNameServer` (UserNameServer.cpp), `TSystemEvent`/
+`TSendSystemEvent` (SystemEvents.cpp) and `TUGestalt` (UserGestalt.cpp) -
+over the utility containers (`src/utility`: `CDynamicArray`,
+`CArrayIterator`, `CList`, `CListIterator`, `CSortedList`, `CItemTester`/
+`CItemComparer`).
+
+The name server, as established: `InitialKSRVTask` spawns it as a
+`TUTaskWorld` named 'name' (6000-byte stack, priority 10); its port becomes
+the kernel's `gNameServer`, the well-known port `GetPortSWI(2)` hands out,
+and every client (`TUNameServer`, `TSystemEvent`, `TUGestalt`) is an RPC
+to it with a `TNameServerRequest` (NameServer.h: the command word, then the
+request's fields; the name and type strings travel in two shared-memory
+objects the client keeps). Names hash (byte sum mod 16) into
+`TObjectNameList` buckets of `TObjectNameEntry` (name, type, thing, spec);
+`WaitForRegister`/`WaitForUnregister` callers are parked in the bucket
+(their message tokens kept) and answered when the name appears or goes -
+`TObjectNameList::Remove` matches on the name alone, a ROM quirk kept.
+System events: per event an `EventMasterListItem` holds a `CSortedList` of
+(port, timeout, filter) registrants; `SendSystemEvent` delivers the
+sender's message to them one at a time by asynchronous send collected back
+on the server's port (refcon `TRPCInfo`), taking no further event sends
+meanwhile (filter `~1`), and replies to the sender when all have had it.
+Gestalt: system selectors are answered from the kernel's globals
+(`kGestalt_SystemInfo` and `kGestalt_RexInfo` NOT YET - they need the
+display, tablet and ROM-extension code); registered ones are names
+"<selector in hex>" of type "GSLT" whose thing is the block's address, and
+`TUGestalt` copies the block itself. Resource arbitration (the comm tools'
+claim/unclaim of a registered resource, `TResArbitrationInfo`,
+0x00131498-0x00131b50) is NOT YET RECONSTRUCTED: the server answers
+`kError_Call_Not_Implemented`.
 
 Memory architecture, as established so far: a `TKDomain` (0x24 bytes) is a
 1 MB-aligned range of virtual space tied to one of the ARM MMU's 16

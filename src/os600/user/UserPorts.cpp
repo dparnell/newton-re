@@ -304,6 +304,16 @@ TUAsyncMessage::operator=(const TUMsgToken& copy)
 }
 
 
+// ROM 0x0025828c SetCollectorPort__14TUAsyncMessageFUl
+// The port that receives the message (as a collected sender) when the
+// asynchronous call completes: the same SWI as SetMsgAvailPort.
+long
+TUAsyncMessage::SetCollectorPort(TObjectId portId)
+{
+	return SMemMsgSetMsgAvailPortSWI(fMsg, portId);
+}
+
+
 // ROM 0x00258244 Init__14TUAsyncMessageFUc
 long
 TUAsyncMessage::Init(Boolean forSendRPC)

@@ -18,6 +18,9 @@
 #include "UserPorts.h"
 #include "UserTasks.h"
 #include "UserSemaphore.h"
+#include "NameServer.h"
+#include "SystemEvents.h"
+#include "NewtonGestalt.h"
 #include "host/TaskRuntime.h"
 #include "hal/Timer.h"
 #include "MemObjManager.h"
@@ -45,6 +48,18 @@ static Boolean semHeld = false;
 static ULong objectsBefore = 0, objectsAfter = 0;
 static long caughtData = 0, caughtMsg = 0, cleanupRan = 0, monitorCaught = 0, monitorProcRan = 0;
 static Boolean afterThrowReached = false;
+static long nsMissing = 0, nsRegister = 0, nsDuplicate = 0, nsLookup = 0, nsUnregister = 0, nsGone = 0;
+static ULong nsThing = 0, nsSpec = 0;
+static TObjectId scenarioPortId = 0;
+static long waiterErr = -1;
+static ULong waiterThing = 0, waiterSpec = 0;
+static TObjectId waiterTaskId = 0;
+static long sysEventRegister = 0, sysEventDuplicate = 0, sysEventSend = 0, sysEventNobody = 0, sysEventUnregister = 0;
+static char sysEventSeen[16];
+static int sysEventListened = 0;
+static long gestaltErr = -1, gestaltRegErr = -1, gestaltReplaceErr = -1, gestaltMineErr = -1;
+static ULong gestaltVersion = 0, gestaltMineSize = 0;
+static ULong gestaltMine[2] = { 0, 0 };
 
 // a database lookup after the run (the user-mode calls are refused then)
 static Boolean FindId(MemObjType type, ULong name, TObjectId* outId)
@@ -119,6 +134,48 @@ TEchoServer::TaskMain()
 }
 
 
+// a task world that waits for a name to be registered
+class TWaiter : public TUTaskWorld
+{
+	public:
+		virtual ULong	GetSizeOf()			{ return sizeof(TWaiter); }
+		virtual void	TaskMain();
+};
+
+void
+TWaiter::TaskMain()
+{
+	waiterTaskId = gCurrentTaskId;
+	TUNameServer nameServer;
+	waiterErr = nameServer.WaitForRegister((char*) "late", (char*) "test", &waiterThing, &waiterSpec);
+}
+
+// a task world that takes one system event on its port and answers it
+class TListener : public TUTaskWorld
+{
+	public:
+						TListener(TObjectId portId) : fPortId(portId) {}
+		virtual ULong	GetSizeOf()			{ return sizeof(TListener); }
+		virtual void	TaskMain();
+
+		TObjectId		fPortId;
+};
+
+void
+TListener::TaskMain()
+{
+	TUPort port(fPortId);
+	ULong size = 0;
+	TUMsgToken token;
+	memset(sysEventSeen, 0, sizeof(sysEventSeen));
+	if (port.Receive(&size, sysEventSeen, sizeof(sysEventSeen), &token) == noErr)
+	{
+		sysEventListened++;
+		token.ReplyRPC(nil, 0, noErr);
+	}
+}
+
+
 static void KernelServicesScenario()
 {
 	ksrvRan = true;
@@ -128,6 +185,7 @@ static void KernelServicesScenario()
 
 	TUPort port;
 	portInitErr = port.Init();
+	scenarioPortId = port;
 
 	TEchoServer* echo = new TEchoServer(port);
 	spawnErr = echo->StartTask(true, false, kNoTimeout, 0x1000, kUserTaskPriority, 'echo');
@@ -197,6 +255,61 @@ static void KernelServicesScenario()
 		end_try;
 	}
 
+	// --- the name server: register/lookup/unregister, a waiter released by a registration
+	{
+		TUNameServer nameServer;
+		nsMissing = nameServer.Lookup((char*) "echo", (char*) kTUPort, &nsThing, &nsSpec);
+		nsRegister = nameServer.RegisterName((char*) "echo", (char*) kTUPort, port, 0x5eC);
+		nsDuplicate = nameServer.RegisterName((char*) "echo", (char*) kTUPort, 1, 2);
+		nsLookup = nameServer.Lookup((char*) "echo", (char*) kTUPort, &nsThing, &nsSpec);
+		nsUnregister = nameServer.UnRegisterName((char*) "echo", (char*) kTUPort);
+		nsGone = nameServer.Lookup((char*) "echo", (char*) kTUPort, &nsThing, &nsSpec);
+
+		TWaiter* waiter = new TWaiter;
+		if (waiter->StartTask(true, false, kNoTimeout, 0x1000, kUserTaskPriority, 'wait') == noErr)
+		{
+			Sleep(5 * kMilliseconds);					// let it get to WaitForRegister
+			nameServer.RegisterName((char*) "late", (char*) "test", 0x1a7e, 0x5bec);
+			Sleep(5 * kMilliseconds);					// let it hear
+		}
+		delete waiter;
+	}
+
+	// --- system events: a listener registers its port, a sender's message reaches it
+	{
+		TUPort listenerPort;
+		listenerPort.Init();
+		TListener* listener = new TListener(listenerPort);
+		TSystemEvent event('test');
+		sysEventNobody = event.RegisterForSystemEvent(listenerPort) == noErr ? event.UnRegisterForSystemEvent(listenerPort) : -1;
+		if (listener->StartTask(true, false, kNoTimeout, 0x1000, kUserTaskPriority, 'lstn') == noErr)
+		{
+			sysEventRegister = event.RegisterForSystemEvent(listenerPort);
+			sysEventDuplicate = event.RegisterForSystemEvent(listenerPort);
+			TSendSystemEvent sender('test');
+			if (sender.Init() == noErr)
+			{
+				char payload[] = "ping";
+				sysEventSend = sender.SendSystemEvent(payload, sizeof(payload));
+			}
+			sysEventUnregister = event.UnRegisterForSystemEvent(listenerPort);
+		}
+		delete listener;
+	}
+
+	// --- gestalt: a system selector, and one of our own registered with the name server
+	{
+		TUGestalt gestalt;
+		TGestaltVersion version;
+		gestaltErr = gestalt.Gestalt(kGestalt_Version, &version, sizeof(version));
+		gestaltVersion = version.fVersion;
+		ULong mine[2] = { 0xCAFE, 0xF00D };
+		gestaltRegErr = gestalt.RegisterGestalt(0x03000001, mine, sizeof(mine));
+		gestaltReplaceErr = gestalt.ReplaceGestalt(kGestalt_SystemInfo, mine, sizeof(mine));	// a system selector: refused
+		gestaltMineSize = sizeof(gestaltMine);
+		gestaltMineErr = gestalt.Gestalt(0x03000001, gestaltMine, &gestaltMineSize);
+	}
+
 	delete echo;
 	objectsAfter = CountObjects();
 	HostStopTasks();
@@ -247,7 +360,20 @@ int main()
 	EXPECT(caughtData == 42 && !afterThrowReached);
 	EXPECT(caughtMsg == 1 && cleanupRan == 5);
 	EXPECT(monitorProcRan == 1 && monitorCaught == 7);
-	EXPECT(objectsAfter <= objectsBefore + 5);			// the echo and monitor tasks (owned by nobody, awaiting scavenge) may remain
+	EXPECT(nsMissing == kError_Not_Registered && nsRegister == noErr && nsDuplicate == kError_Already_Registered);
+	EXPECT(nsLookup == noErr && nsThing == scenarioPortId && nsSpec == 0x5eC);
+	EXPECT(nsUnregister == noErr && nsGone == kError_Not_Registered);
+	EXPECT(waiterTaskId != 0 && waiterErr == noErr && waiterThing == 0x1a7e && waiterSpec == 0x5bec);
+	EXPECT(sysEventNobody == noErr && sysEventRegister == noErr && sysEventDuplicate == kError_Already_Registered);
+	EXPECT(sysEventSend == noErr && sysEventListened == 1 && strcmp(sysEventSeen, "ping") == 0);
+	EXPECT(sysEventUnregister == noErr);
+	EXPECT(gestaltErr == noErr && gestaltVersion == 1);
+	EXPECT(gestaltRegErr == noErr && gestaltReplaceErr == kError_Bad_Parameters);
+	EXPECT(gestaltMineErr == noErr && gestaltMine[0] == 0xCAFE && gestaltMine[1] == 0xF00D && gestaltMineSize == sizeof(gestaltMine));
+	// what the scenario leaves behind: the echo task and the monitor's task
+	// (each a task and its two shared memory objects) await the scavenger,
+	// and the monitor itself is not deleted
+	EXPECT(objectsAfter <= objectsBefore + 7 + 6);		// plus the waiter and listener tasks
 	EXPECT(gNumberOfTaskSwaps >= 10);
 
 	if (failures == 0)

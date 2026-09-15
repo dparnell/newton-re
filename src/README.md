@@ -22,7 +22,9 @@ src/
     user/         user-mode side: the TU* classes of the DDK (UserObjects,
                   UserPorts, UserSharedMem, UserSemaphore, UserMonitor,
                   UserTasks), UserBoot, over the syscall interface (the *SWI
-                  stubs of UserGlobals.h)
+                  stubs of UserGlobals.h); the kernel services that run as
+                  user tasks (the name server, with its clients TUNameServer,
+                  TSystemEvent, TUGestalt)
       host/         the stubs as direct calls into the kernel through the
                     runtime; MonitorEntryGlue, TaskKillSelf, Throw
     tests/        tests spanning kernel, user side and runtime

@@ -14,10 +14,14 @@ add_library(os600_user STATIC
     Exceptions.cpp
     ExceptionNames.cpp
     UserBoot.cpp
+    NameServer.cpp
+    UserNameServer.cpp
+    SystemEvents.cpp
+    UserGestalt.cpp
     host/StackManager.cpp
     host/MonitorGlue.cpp
     host/SWI.cpp
     host/GenericSWIStub.cpp
 )
-target_link_libraries(os600_user PUBLIC newton_config os600_kernel)
+target_link_libraries(os600_user PUBLIC newton_config os600_kernel utility)
 target_include_directories(os600_user PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

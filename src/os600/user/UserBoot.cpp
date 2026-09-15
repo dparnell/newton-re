@@ -17,6 +17,7 @@
 #include "KernelGlobals.h"
 #include "Task.h"
 #include "MemObjManager.h"
+#include "NameServerImpl.h"
 #include "OSErrors.h"
 
 #include <stdio.h>
@@ -70,9 +71,12 @@ long
 InitialKSRVTask()
 {
 	// NOT YET RECONSTRUCTED: StartupProtocolRegistry(); InitStdIO();
-	// InitNameServer(); RegisterROMDomainManager();
+	InitNameServer();
+	// NOT YET RECONSTRUCTED: RegisterROMDomainManager();
 	// InitializePackageManager(FindEnvironmentId('prot'));
-	// TAppWorld('drvl').Init(...) in FindEnvironmentId('user')
+	// TAppWorld('drvl').Init(true, 6000, 10, FindEnvironmentId('user'))
+	// (kError_Object_Not_Found, kSchedulerExitReason 0x2e, if 'user' is not
+	// in the memory object database)
 	if (gHostKernelServicesTask != nil)
 		gHostKernelServicesTask();
 	return noErr;
