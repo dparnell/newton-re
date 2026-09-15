@@ -156,7 +156,11 @@ and `DomainAccessFor`, `OsBoot` with `InitGlobalWorld`,
 and in `src/os600/user/`: `TUObject`, `TUSharedMem(Msg)`, `TUPort`,
 `TUMsgToken`, `TUAsyncMessage`, the semaphore classes, `TUMonitor`, `TUTask`,
 `TUTaskWorld`, `UserInit`/`UserBoot`/`InitialKSRVTask`, the task helpers
-(`Sleep`, `Yield`, `TaskGiveObject`, ...), `InitializeExceptionGlobals`; `Reboot`/`Restart`/
+(`Sleep`, `Yield`, `TaskGiveObject`, ...), `InitializeExceptionGlobals`;
+`MemObjManager` with `DomainInfo`/`EnvironmentInfo`/`PersistentDBEntry`,
+`BuildMemObjDatabase`, `PrimGetMemObjInfo` (GenericSWI 0x2c) and the
+generated `MemObjTables.cpp` (MemObjManager.*); `TSingleQContainer`
+(SingleQ.cpp); `Reboot`/`Restart`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
@@ -181,6 +185,24 @@ a 16-entry fault-monitor table at 0x0c1030b8 (unnamed in the symbol table)
 that the abort handler uses to find the monitor for a fault. ROM bug found:
 `TMemArchManager::RemoveEnvironment` never advances along its list (see
 the `DEVIATION` note).
+
+The memory object database (`MemObjManager`, docs/os600/memobj-tables.md
+for the tables): the machine's memory layout is data - a domain table
+(`g1MegDomainTable`/`g4MegDomainTable`, chosen by `InitCGlobals` from the RAM
+size: name, 1 MB-aligned base and size, heap and handle-heap sizes, flags),
+the environment table (`gEnvTable`: each environment's default heap and
+heap/stack domains and its lists of client and manager domains) and the
+data-area table (`DataAreaTable`, ROM 0x40: where a domain's initialised
+globals come from and go). `BuildMemObjDatabase` lays four tables of entries
+out in RAM (`gMemObjHeap`): domain ids, heap addresses, persistent-heap
+records (`PersistentDBEntry`, plus ten spare 'emty' slots) and environment
+ids, all 0 until the kernel makes the objects and registers them
+(`RegisterEnvironmentId`, `RegisterDomainId`, `RegisterHeapRef`).
+`FindEnvironmentId('krnl')` & co. read them. The public calls are
+dual-mode: in user mode the request goes through GenericSWI 0x2c with its
+selector, arguments and answer in the first 0x30 bytes of the caller's task
+globals block (`MemObjRequest`) - `PrimGetMemObjInfo` serves it.  On the
+host `IsSuperMode()` is false, so this path is the one exercised.
 
 Object manager, as established: user code makes, destroys and manipulates
 kernel objects through one monitor, `gTheObjectManagerMonitor` ('OBJM',

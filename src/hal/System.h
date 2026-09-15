@@ -19,6 +19,8 @@ extern "C" {
 NewtonErr	Reset(void);				// reboot the machine; does not return on hardware
 void		DisableAllInterrupts(void);
 void		IOPowerOffAll(void);
+Boolean		IsSuperMode(void);			// in supervisor mode (ROM 0x0038ad90: the CPSR mode bits); a host never is
+ULong		GetRamSize(void);			// bytes of RAM fitted (ROM: TRAMTable::GetRamSize 0x001206ec)
 }
 
 #endif	/* __HAL_SYSTEM_H */

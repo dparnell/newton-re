@@ -38,6 +38,8 @@ tools/newton-rom/
     coverage.py           which ROM functions src/ cites, and that the citations are right
     symbols.py            search the symbol table by regex (address, mangled name, signature)
     globals.py            initial values of globals from the ROM's read-write init area
+    xrefs.py              who references a symbol (finds who initialises a global)
+    memobj_tables.py      the memory object tables -> docs/os600/memobj-tables.md and src/os600/kernel/MemObjTables.cpp
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```

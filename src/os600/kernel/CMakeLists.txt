@@ -6,6 +6,8 @@ add_library(os600_kernel STATIC
     GenericSWI.cpp
     KernelGlobals.cpp
     KernelObjects.cpp
+    MemObjManager.cpp
+    MemObjTables.cpp
     MemArchManager.cpp
     Monitor.cpp
     ObjectManager.cpp
@@ -14,6 +16,7 @@ add_library(os600_kernel STATIC
     Reboot.cpp
     Scheduler.cpp
     Semaphore.cpp
+    SingleQ.cpp
     SharedMem.cpp
     TimerEngine.cpp
     Task.cpp

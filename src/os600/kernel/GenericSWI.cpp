@@ -20,6 +20,7 @@
 #include "Port.h"
 #include "Environment.h"
 #include "Reboot.h"
+#include "MemObjManager.h"
 #include "OSErrors.h"
 #include "CompMath.h"
 #include "hal/Atomic.h"
@@ -148,6 +149,8 @@ GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 	case kGeneric_PortReset:
 		PortResetKernelGlue(p1, p2, p3);
 		return (long) r[0];
+	case kGeneric_GetMemObjInfo:
+		return PrimGetMemObjInfo();
 	case kGeneric_GetTaskStackInfo:
 		{
 			TTask* task = gCurrentTask;
@@ -207,7 +210,6 @@ GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 		// NOT YET RECONSTRUCTED: PrimRegisterDelayedFunction / PrimRemoveDelayedFunction
 		return kError_Call_Not_Implemented;
 	case kGeneric_RealTimeClockDispatch:
-	case kGeneric_GetMemObjInfo:
 	case kGeneric_GetNetworkPersistentInfo:
 	case kGeneric_GetPatchInfo:
 	case kGeneric_ResetRebootReason:
@@ -225,7 +227,7 @@ GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 	case kGeneric_PowerOffSystem:
 	case kGeneric_PauseSystem:
 		// NOT YET RECONSTRUCTED: platform and debugger services - 0x000d9adc
-		// cases 0x2b-0x2d, 0x2f, 0x30, 0x32-0x38, 0x3b, 0x40-0x42, 0x44, 0x45
+		// cases 0x2b, 0x2d, 0x2f, 0x30, 0x32-0x38, 0x3b, 0x40-0x42, 0x44, 0x45
 		return kError_Call_Not_Implemented;
 	default:
 		return kGenericSWI_UnknownSelector;

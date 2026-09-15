@@ -16,6 +16,7 @@
 #include "UserSemaphore.h"
 #include "KernelGlobals.h"
 #include "Task.h"
+#include "MemObjManager.h"
 #include "OSErrors.h"
 
 #include <stdio.h>
@@ -53,8 +54,8 @@ UserBoot()
 	// NOT YET RECONSTRUCTED: srand(TURealTimeAlarm::Time().ConvertTo(kSeconds))
 	srand(1);
 	TUTask ksrv;
-	TObjectId ksrvEnvId = 0;		// NOT YET RECONSTRUCTED: MemObjManager::FindEnvironmentId('ksrv'); 0 = this task's
-	if (ksrv.Init((TaskProcPtr) InitialKSRVTask, 0x6800, 0, nil, kUserTaskPriority, 'ksrv', ksrvEnvId) == noErr)
+	TObjectId ksrvEnvId = 0;
+	if (MemObjManager::FindEnvironmentId('ksrv', &ksrvEnvId) == noErr && ksrv.Init((TaskProcPtr) InitialKSRVTask, 0x6800, 0, nil, kUserTaskPriority, 'ksrv', ksrvEnvId) == noErr)
 		ksrv.Start();
 	SetBequeathId(gIdleTask->fId);
 }

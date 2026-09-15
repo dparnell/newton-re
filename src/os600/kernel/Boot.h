@@ -8,7 +8,8 @@
 				task ('user', running UserBoot), starts the clocks and becomes the
 				idle task (SleepTask).
 
-	Reconstructed from:	OsBoot 0x00149c1c, InitGlobalWorld 0x000fb658,
+	Reconstructed from:	OsBoot 0x00149c1c, InitCGlobals 0x00045c84 (the memory object
+				database), InitGlobalWorld 0x000fb658,
 				InitKernelDomainAndEnvironment 0x000ea698, InitMemArchCore 0x0011e660,
 				StartTime 0x0013ec34, RestartTimerOverflowDetect 0x0013ebac,
 				TaskInCopyKilled 0x001e22c8, InitSMemManager 0x001e2804,
@@ -30,8 +31,8 @@ void		InitKernelDomainAndEnvironment();
 void		InitMemArchCore();
 void		StartTime();
 void		SleepTask();							// the idle loop
+void		InitMemObjDatabase(ULong ramSize);		// InitCGlobals's part: pick the domain table, build the database
 
-extern TEnvironment*	gKernelEnvironment;			// 0x0c101134
 extern void*			gKernelHeap;				// 0x0c101170
 extern TObjectId		gKernelDomainId;			// 0x0c101260
 

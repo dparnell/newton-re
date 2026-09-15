@@ -37,3 +37,7 @@ add_test(NAME os600.kernel.ObjectManager COMMAND test_ObjectManager)
 add_executable(test_TaskSwitch test_TaskSwitch.cpp)
 target_link_libraries(test_TaskSwitch PRIVATE os600_kernel)
 add_test(NAME os600.kernel.TaskSwitch COMMAND test_TaskSwitch)
+
+add_executable(test_MemObjManager test_MemObjManager.cpp)
+target_link_libraries(test_MemObjManager PRIVATE os600_kernel)
+add_test(NAME os600.kernel.MemObjManager COMMAND test_MemObjManager)

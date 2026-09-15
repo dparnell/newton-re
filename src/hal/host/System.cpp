@@ -31,3 +31,18 @@ IOPowerOffAll(void)
 	gHostPoweredOff = true;
 	fprintf(stderr, "[host] power off requested\n");
 }
+
+// Every call on the host takes the user-mode path (the system-call stubs),
+// so the dual-mode ROM routines exercise it.
+extern "C" Boolean
+IsSuperMode(void)
+{
+	return false;
+}
+
+// A MessagePad 2100 has 4 MB of DRAM.
+extern "C" ULong
+GetRamSize(void)
+{
+	return 4 * 1024 * 1024;
+}

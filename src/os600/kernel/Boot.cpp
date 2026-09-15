@@ -24,16 +24,19 @@
 #include "Domain.h"
 #include "MemArchManager.h"
 #include "TaskSwitch.h"
+#include "MemObjManager.h"
+#include "os600/TaskGlobals.h"
 #include "OSErrors.h"
 #include "hal/Atomic.h"
 #include "hal/Interrupts.h"
 #include "hal/Timer.h"
+#include "hal/System.h"
 #include "UserBoot.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 
 
-TEnvironment*	gKernelEnvironment = nil;
 void*			gKernelHeap = nil;
 TObjectId		gKernelDomainId = 0;
 
@@ -74,7 +77,9 @@ InitGlobalWorld()
 	gBlockedOnMemory = new TDoubleQContainer(offsetof(TTask, fMonitorQItem));
 	gDeferredSends = new TDoubleQContainer(offsetof(TSharedMemMsg, fTimerQItem));
 	InitSMemManager();
-	InitObjectManager(gKernelEnvironment);		// the ROM looks 'krnl' up in the memory object database
+	TObjectId kernelEnvId = 0;
+	MemObjManager::FindEnvironmentId('krnl', &kernelEnvId);
+	InitObjectManager(ObjectType(kernelEnvId) == kEnvironmentType ? (TEnvironment*) gObjectTable->Get(kernelEnvId) : nil);
 	TPort* nullPort = new TPort;
 	gNullPort = nullPort;
 	if (nullPort != nil)
@@ -95,16 +100,32 @@ InitKernelDomainAndEnvironment()
 	TKDomain* domain = new TKDomain;
 	TObjectId domainId;
 	RegisterObject(domain, kDomainType, 1, &domainId);
-	// NOT YET RECONSTRUCTED: MemObjManager::GetDomainInfoByName('krnl') and
-	// TKDomain::InitWithDomainNumber(0, base, size, 2) - the domain's range
-	// and its MMU setup; the domain is added to the manager with number 2
+	DomainInfo info;
+	MemObjManager::GetDomainInfoByName('krnl', &info);
+	// NOT YET RECONSTRUCTED: TKDomain::InitWithDomainNumber(0, info.Base(),
+	// info.Size(), 2) - the MMU setup; the range and the number are recorded
+	domain->fBase = info.Base();
+	domain->fSize = info.Size();
 	gTheMemArchManager->AddDomainWithDomainNumber(domain, 2);
 	env->Add(domain, false, false, false);
-	// NOT YET RECONSTRUCTED: MemObjManager::RegisterEnvironmentId /
-	// RegisterDomainId('krnl', ...); the environment is kept in
-	// gKernelEnvironment instead
-	gKernelEnvironment = env;
+	MemObjManager::RegisterEnvironmentId('krnl', envId);
+	MemObjManager::RegisterDomainId('krnl', domainId);
 	gKernelDomainId = domainId;
+}
+
+
+// ROM 0x00045c84 InitCGlobals +0x374 (the memory object database)
+// InitCGlobals, before OsBoot, picks the domain table for the RAM fitted and
+// lays the memory object database out in RAM (gMemObjHeap, at a computed
+// address); here the database is allocated.
+void
+InitMemObjDatabase(ULong ramSize)
+{
+	SelectDomainTable(ramSize);
+	ULong size;
+	ComputeMemObjDatabaseSize(&size);
+	gMemObjHeap = malloc(size);
+	BuildMemObjDatabase();
 }
 
 
@@ -159,19 +180,22 @@ OsBoot()
 {
 	TTask bootTask;
 	TEnvironment bootEnvironment;
-	ULong bootGlobals[0x60 / sizeof(ULong)];
+	TaskGlobals bootGlobals;					// the ROM's 0x58-byte scratch below its globals pointer
 	bootTask.fPriority = 0x15;
 	gCurrentTask = &bootTask;
 	bootTask.fEnvironment = &bootEnvironment;
-	gCurrentGlobals = bootGlobals;
+	gCurrentGlobals = &bootGlobals + 1;
 
+	InitMemObjDatabase(GetRamSize());			// InitCGlobals's work, done before OsBoot on the MessagePad
 	HInitInterrupts();
 	InitInterruptTables();
 	gObjectTable = new TObjectTable;
 	gObjectTable->Init();
 	InitMemArchCore();
 	InitKernelDomainAndEnvironment();
-	TEnvironment* kernelEnv = gKernelEnvironment;	// the ROM: MemObjManager::FindEnvironmentId('krnl')
+	TObjectId kernelEnvId = 0;
+	MemObjManager::FindEnvironmentId('krnl', &kernelEnvId);
+	TEnvironment* kernelEnv = ObjectType(kernelEnvId) == kEnvironmentType ? (TEnvironment*) gObjectTable->Get(kernelEnvId) : nil;
 
 	EnterFIQAtomic();
 	InitGlobalWorld();
