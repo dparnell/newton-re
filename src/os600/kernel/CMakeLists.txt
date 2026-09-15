@@ -1,7 +1,10 @@
 add_library(os600_kernel STATIC
+    Domain.cpp
     DoubleQ.cpp
+    Environment.cpp
     KernelGlobals.cpp
     KernelObjects.cpp
+    MemArchManager.cpp
     Monitor.cpp
     ObjectTable.cpp
     Port.cpp

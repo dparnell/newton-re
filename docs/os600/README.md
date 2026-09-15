@@ -120,7 +120,27 @@ GenericSWI 67), `NotifySend`/`NotifyTimeout`/`DeferredNotify`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
-(`src/os600/user/MonitorGlue.h`, host stand-ins).
+(`src/os600/user/MonitorGlue.h`, host stand-ins); `TKDomain` (layout,
+constructor, `SetFaultMonitor`, `Intersects`), the domain access control
+word helpers and the fault monitor table (Domain.*), `TMemArchManager`
+(MemArchManager.*), `TEnvironment` with the environment system calls
+(GenericSWI 0x23-0x27) (Environment.*).
+
+Memory architecture, as established so far: a `TKDomain` (0x24 bytes) is a
+1 MB-aligned range of virtual space tied to one of the ARM MMU's 16
+protection domains; `gTheMemArchManager` (`TMemArchManager`, 0xc bytes)
+hands out domain numbers from a DACR-shaped bitmap (never number 15; the
+default word 5 reserves 0 and 1 for the kernel), keeps a list of domains
+that must not overlap and a list of environments. A `TEnvironment` (0x2c
+bytes, no constructor) is a domain access control word - two bits per
+domain, 01 client, 11 manager - plus the ids of its heap and stack domains
+and a reference count of the tasks running in it; `SetEnvironment` moves
+the current task between environments, and an environment removed from the
+manager frees itself when its last user lets go. A domain's number indexes
+a 16-entry fault-monitor table at 0x0c1030b8 (unnamed in the symbol table)
+that the abort handler uses to find the monitor for a fault. ROM bug found:
+`TMemArchManager::RemoveEnvironment` never advances along its list (see
+the `DEVIATION` note).
 
 Monitors, as established: a `TMonitor` (0x48 bytes) owns a task at
 `gMonitorTaskPriority` and a `TSharedMemMsg`. `MonitorDispatchSWI` saves all
