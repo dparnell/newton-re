@@ -18,5 +18,7 @@ extern Boolean	gHostAlarmArmed;
 extern Int64	gHostAlarmTime;
 extern Boolean	gHostInterruptEnabled;
 extern ULong	gHostTimeSliceAlarm;
+extern ULong	gHostResetCount;
+extern Boolean	gHostPoweredOff;
 
 #endif	/* __HAL_HOST_H */

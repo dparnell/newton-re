@@ -114,7 +114,42 @@ port and shared-memory system calls (SWI 0, 1, 2, 13, 14, 17-23, 26, 33,
 GenericSWI 67), `NotifySend`/`NotifyTimeout`/`DeferredNotify`/
 `PortDeferredSendNotify`, `CheckCopyTask` and the `Delete*` destructors
 (Port.*); `LocalToGlobalId`/`ConvertIdToObj`/`ConvertMemOrMsgIdToObj`
-(KernelObjects.*); the `TMonitor` layout (Monitor.h).
+(KernelObjects.*); `TMonitor` with `Aquire`/`Release`/`Suspend`/
+`SetUpEntry`/`FlushTasksOnMonitor` and the monitor system calls (SWI 27,
+28, 29, 32), `DeleteMonitor` (Monitor.*); `Reboot`/`Restart`/
+`CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
+DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
+points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
+(`src/os600/user/MonitorGlue.h`, host stand-ins).
+
+Monitors, as established: a `TMonitor` (0x48 bytes) owns a task at
+`gMonitorTaskPriority` and a `TSharedMemMsg`. `MonitorDispatchSWI` saves all
+of the caller's registers, then `Aquire` takes the caller off the run queues
+and either dispatches at once (`SetUpEntry`: the monitor task's r0-r3 become
+monitor object, selector, user object and proc, its pc `MonitorEntryGlue`,
+its sp the top of its stack, and it is scheduled) or queues the caller
+through `TTask::fMonitorQItem`. `MonitorEntryGlue` calls the proc in user
+mode and issues `MonitorExitSWI` with the result; `Release` writes it into
+the caller's r0, makes the caller the scheduler's preferred task, stops the
+monitor task and dispatches the next waiter. A caller killed meanwhile
+(state 0x400000 or 0x2) resumes in `TaskKillSelf` instead. Fault monitors
+are entered by the abort handler (state bit 0x800000): the monitor's message
+is pointed at the caller's saved registers (100 bytes from r0), the selector
+is `kMonitorFaultSelector`, and the result chooses resume (0 keeps r0), kill
+(4) or park on `gBlockedOnMemory` (5). `MonitorThrowSWI` makes the caller
+resume in `Throw` with the exception (or, if it was copying shared memory,
+fails the copy with `kError_UnResolvedFault`); a caller not in user mode
+means `CantThrowInUndefinedModeReboot`. `kSuspendMonitor` (-1) from the
+owner marks the monitor suspended without running the proc; later callers
+get `kError_No_Such_Monitor` and the destructor fails the waiters. A
+reboot-protected monitor holds `gRebootProtectCount` during each call, and
+`Reboot(..., safe)` only sets `gWantReboot` while it is non-zero - `Release`
+restarts when the last such call ends, and `SetUpEntry` dispatches nothing
+more. `Reboot` records the reason in `gGlobalsThatLiveAcrossReboot`
+(`kError_Reboot_Calibration_Missing` is sticky), and after more than 12
+unsuccessful boots powers the machine off instead of resetting. Noted, not
+fixed: `Release` does not reschedule a queued `kSuspendMonitor` caller when
+its turn comes (`Aquire` does for an idle monitor).
 
 IPC, as established: a port holds two `TDoubleQContainer`s of messages
 (senders waiting for a receiver, receivers waiting for a sender, both linked
@@ -180,7 +215,7 @@ state bits at +0x6c (0x20000 = scheduled, 0x400000 = kill pending,
 0x2000000 = stack from NewStack), environment +0x74, priority +0x80,
 name +0x84, stack top/base +0x88/+0x8c, container +0x90, queue links +0x94,
 globals +0xa0, run time +0xa4, memory accounting +0xb0, two TDoubleQItems
-at +0xbc/+0xc8, monitor +0xd4/+0xd8, shared mem/msg ids +0xf0/+0xf4,
+at +0xbc/+0xc8, monitor being called / served +0xd4/+0xd8, monitor caller +0x7c, shared mem/msg ids +0xf0/+0xf4,
 initial sp +0xf8, bequeath ids +0xfc/+0x100. Kernel "local ids" 1, 2, 3
 (`LocalToGlobalId`) stand for the current task's shared-memory message,
 shared memory, and the current monitor's caller.

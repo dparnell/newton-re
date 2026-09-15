@@ -17,7 +17,8 @@ src/
     kernel/       privileged side: object table, tasks, scheduler, ports,
                   monitors, semaphores, shared memory, domains, timers, queues
     user/         user-mode side: the TU* API from the DDK, over the syscall
-                  interface (to come)
+                  interface (so far: the entry points the kernel points a
+                  task at - MonitorEntryGlue, TaskKillSelf, Throw)
   hal/          hardware abstraction (Voyager/Cirrus chipset for the MP2x00,
                 a host implementation for running on Linux) (to come)
   bootstrap/    reset and boot code (to come)

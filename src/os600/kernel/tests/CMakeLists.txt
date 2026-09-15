@@ -21,3 +21,7 @@ add_test(NAME os600.kernel.TimerEngine COMMAND test_TimerEngine)
 add_executable(test_Port test_Port.cpp)
 target_link_libraries(test_Port PRIVATE os600_kernel)
 add_test(NAME os600.kernel.Port COMMAND test_Port)
+
+add_executable(test_Monitor test_Monitor.cpp)
+target_link_libraries(test_Monitor PRIVATE os600_kernel)
+add_test(NAME os600.kernel.Monitor COMMAND test_Monitor)

@@ -39,7 +39,11 @@ class TEnvironment;
 enum KernelObjectState
 {
 	kTaskState_Scheduled		= 0x00020000,	// in a TScheduler bucket, ready to run (TTaskQueue::Add from TScheduler)
-	kTaskState_KillPending		= 0x00400000,	// ObjectScavenger: task removal deferred while fMonitor != nil
+	kTaskState_KillPending		= 0x00400000,	// ObjectScavenger: task removal deferred while fInsideMonitorId != 0;
+												// a monitor caller with it set resumes in TaskKillSelf (TMonitor::Release)
+	kTaskState_FaultMonitorCall	= 0x00800000,	// the pending monitor call is a fault (set by the abort handler, cleared
+												// by MonitorDispatchKernelGlue): the caller's registers are the message
+	kTaskState_Unknown0002		= 0x00000002,	// treated like KillPending by TMonitor::Release; origin not yet traced
 	kTaskState_StackFromNewStack= 0x02000000	// stack came from NewStack (freed via the stack manager), not malloc
 };
 
@@ -106,7 +110,7 @@ class TTask : public TKernelObject
 		ULong			fUnknown70;			// +0x70
 		TEnvironment*	fEnvironment;		// +0x74  the environment (domains) the task runs in
 		TEnvironment*	fCopyEnvironment;	// +0x78  environment a shared-memory copy switches to (SMemCopyTo/From)
-		ULong			fUnknown7c;			// +0x7c
+		TTask*			fMonitorCaller;		// +0x7c  monitor task: the caller it is currently serving (TMonitor::SetUpEntry)
 		ULong			fPriority;			// +0x80  0..kNumberOfPriorities-1
 		ULong			fName;				// +0x84  four-character name, e.g. 'UNAM'
 		VAddr			fStackTop;			// +0x88  end of the stack allocation
@@ -122,7 +126,7 @@ class TTask : public TKernelObject
 		ULong			fMaxMemoryUsed;		// +0xb8
 		TDoubleQItem	fCopyQItem;			// +0xbc  link in gCopyTasks while doing a shared-memory copy
 		TDoubleQItem	fMonitorQItem;		// +0xc8  link in a TMonitor's queue of callers (+0xd0 = that queue)
-		void*			fMonitor;			// +0xd4  non-nil while the task is inside a monitor (ObjectScavenger)
+		TObjectId		fInsideMonitorId;	// +0xd4  the monitor this task is calling, while inside it (ObjectScavenger defers its death)
 		TObjectId		fMonitorId;			// +0xd8  the monitor this task serves, if it is a monitor task
 		ULong			fCopySavedPC;		// +0xdc  a shared-memory copy in progress: pc to resume at,
 		long			fCopyResult;		// +0xe0  result to report (kError_Size_To_Large_Copy_Truncated or 0),

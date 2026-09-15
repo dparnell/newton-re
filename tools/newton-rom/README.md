@@ -31,6 +31,11 @@ tools/newton-rom/
     NewtonROMImport.py    the import, as a Script Manager (GUI) script
     check_import.py       report/spot-check an imported project
   pipeline.py           steps 1-6 in one command
+  analysis/             study tools over the finished project:
+    decompile.py          decompilation (+ disassembly, callers) by class / name / address
+    disasm.py             raw disassembly of an address range (SWI cases, vectors, glue)
+    swi_table.py          the system-call table -> docs/os600/swi-table.md
+    coverage.py           which ROM functions src/ cites, and that the citations are right
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```

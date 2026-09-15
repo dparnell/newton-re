@@ -5,6 +5,7 @@
 */
 
 #include "KernelGlobals.h"
+#include "VirtualMemory.h"
 
 TObjectTable*	gObjectTable = nil;
 TObjectTable*	gTheMemArchObjTbl = nil;
@@ -33,3 +34,9 @@ Boolean			gCopyDone = false;
 TUObject*		gNullPort = nil;
 TUObject*		gNameServer = nil;
 TUObject*		gTheObjectManagerMonitor = nil;
+
+TObjectId		gCurrentMonitorId = 0;
+TDoubleQContainer* gBlockedOnMemory = nil;
+ULong			gRebootProtectCount = 0;
+Boolean			gWantReboot = false;
+SGlobalsThatLiveAcrossReboot gGlobalsThatLiveAcrossReboot;

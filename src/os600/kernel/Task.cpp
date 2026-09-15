@@ -173,7 +173,7 @@ TTaskQueue::Peek()
 // clears are listed in its order.
 TTask::TTask()
 {
-	fMonitor = nil;
+	fInsideMonitorId = 0;
 	fCopySavedPC = 0;
 	fCopyResult = 0;
 	fCopySize = 0;
@@ -194,7 +194,7 @@ TTask::TTask()
 	fGlobalsBase = 0;
 	fEnvironment = nil;
 	fCopyEnvironment = nil;
-	fUnknown7c = 0;
+	fMonitorCaller = nil;
 	fBequeathId = 0;
 	fInheritedId = 0;
 	fPriority = 0;

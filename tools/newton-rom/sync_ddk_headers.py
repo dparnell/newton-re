@@ -29,6 +29,10 @@ PATCHES = {
         ("TULockingSemaphore(TObjectId id = 0) : TUSemaphoreGroup(id) { GetRefCon(&fSem); }",
          "TULockingSemaphore(TObjectId id = 0) : TUSemaphoreGroup(id) { GetRefCon((void**)&fSem); }"),
     ],
+    # UserTasks.h: the include is spelt in the wrong case for a case-sensitive file system
+    "UserTasks.h": [
+        ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
+    ],
 }
 
 
