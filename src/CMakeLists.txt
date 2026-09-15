@@ -12,8 +12,10 @@ target_include_directories(newton_config INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/d
 target_compile_definitions(newton_config INTERFACE forQ=1 forGerman=1)
 target_compile_options(newton_config INTERFACE
     -include ${CMAKE_CURRENT_SOURCE_DIR}/host/host_compat.h
-    -Wall -Wno-unknown-pragmas -Wno-return-type-c-linkage -Wno-mismatched-tags)
+    -Wall -Wno-unknown-pragmas -Wno-return-type-c-linkage -Wno-mismatched-tags
+    -Wno-invalid-offsetof)   # intrusive queues take offsetof() of non-POD kernel objects by design
 
 enable_testing()
+add_subdirectory(toolbox)
 add_subdirectory(hal)
 add_subdirectory(os600)

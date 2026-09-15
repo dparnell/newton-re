@@ -21,3 +21,8 @@ ULong			gHoldScheduleLevel = 0;
 Boolean			gWantSchedulerToRun = false;
 Boolean			gSchedulerRunning = false;
 InterruptObject* gSchedulerIntObj = nil;
+
+TTimerEngine*	gTimerEngine = nil;
+TDoubleQContainer* gTimerDeferred = nil;
+Boolean			gWantDeferred = false;
+ULong			gTimerInterruptCount = 0;

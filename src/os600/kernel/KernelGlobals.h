@@ -18,6 +18,8 @@
 class TObjectTable;
 class TTask;
 class TScheduler;
+class TTimerEngine;
+class TDoubleQContainer;
 struct InterruptObject;
 
 extern TObjectTable*	gObjectTable;				// 0x0c1010b8  the kernel object table
@@ -36,5 +38,11 @@ extern ULong			gHoldScheduleLevel;			// 0x0c1010c8  nesting count of "no resched
 extern Boolean			gWantSchedulerToRun;		// 0x0c101c08  the time-slice timer should be (re)started
 extern Boolean			gSchedulerRunning;			// 0x0c101c0c  the time-slice timer is armed
 extern InterruptObject*	gSchedulerIntObj;			// 0x0c100f58  its interrupt source
+
+// timers
+extern TTimerEngine*	gTimerEngine;				// 0x0c1010cc  (address per literal pool use)
+extern TDoubleQContainer* gTimerDeferred;			// 0x0c101138  expired messages awaiting completion by the scheduler path
+extern Boolean			gWantDeferred;				// 0x0c101118  gTimerDeferred is not empty
+extern ULong			gTimerInterruptCount;		// 0x0c101150  statistics
 
 #endif	/* __KERNELGLOBALS_H */
