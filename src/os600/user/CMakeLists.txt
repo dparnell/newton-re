@@ -8,6 +8,9 @@ add_library(os600_user STATIC
     UserSemaphore.cpp
     UserMonitor.cpp
     UserTasks.cpp
+    UserDomain.cpp
+    UserEnvironment.cpp
+    BuildEnvironments.cpp
     Exceptions.cpp
     UserBoot.cpp
     host/StackManager.cpp

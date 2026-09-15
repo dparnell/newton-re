@@ -20,8 +20,8 @@ NewtonErr
 TEnvironment::Init(void* heap)
 {
 	fHeap = heap;
-	fHeapDomainId = 0;
 	fStackDomainId = 0;
+	fHeapDomainId = 0;
 	fRefCount = 0;
 	fRemoved = false;
 	gTheMemArchManager->AddEnvironment(this);
@@ -38,16 +38,16 @@ TEnvironment::~TEnvironment()
 
 // ROM 0x000b05f4 Add__12TEnvironmentFP8TKDomainUcN22
 NewtonErr
-TEnvironment::Add(TKDomain* domain, Boolean isManager, Boolean isHeap, Boolean isStack)
+TEnvironment::Add(TKDomain* domain, Boolean isManager, Boolean isStack, Boolean isHeap)
 {
 	if (isManager)
 		fDomainAccess = AddManagerToDCR(fDomainAccess, domain->fNumber);
 	else
 		fDomainAccess = AddClientToDCR(fDomainAccess, domain->fNumber);
-	if (isHeap)
-		fHeapDomainId = domain->fId;
 	if (isStack)
 		fStackDomainId = domain->fId;
+	if (isHeap)
+		fHeapDomainId = domain->fId;
 	return noErr;
 }
 
@@ -161,7 +161,7 @@ AddDomainToEnvironment(TObjectId envId, TObjectId domainId, ULong flags)
 	TKDomain* domain = DomainFromId(domainId);
 	if (env == nil || domain == nil)
 		return kError_Bad_Parameters;
-	return env->Add(domain, (flags & kEnvDomain_IsManager) != 0, (flags & kEnvDomain_IsHeap) != 0, (flags & kEnvDomain_IsStack) != 0);
+	return env->Add(domain, (flags & kEnvDomain_IsManager) != 0, (flags & kEnvDomain_IsStack) != 0, (flags & kEnvDomain_IsHeap) != 0);
 }
 
 

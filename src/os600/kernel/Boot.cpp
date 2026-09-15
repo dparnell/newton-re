@@ -87,6 +87,9 @@ InitGlobalWorld()
 }
 
 
+const long kKernelDomainNumber = 2;			// VirtualMemory.h: kKernelDomainHeapDomainNumber
+
+
 // ROM 0x000ea698 InitKernelDomainAndEnvironment__Fv
 // The kernel's environment ('krnl') on the kernel heap, and its domain -
 // number 2, covering the range the memory object database gives for 'krnl'.
@@ -102,11 +105,7 @@ InitKernelDomainAndEnvironment()
 	RegisterObject(domain, kDomainType, 1, &domainId);
 	DomainInfo info;
 	MemObjManager::GetDomainInfoByName('krnl', &info);
-	// NOT YET RECONSTRUCTED: TKDomain::InitWithDomainNumber(0, info.Base(),
-	// info.Size(), 2) - the MMU setup; the range and the number are recorded
-	domain->fBase = info.Base();
-	domain->fSize = info.Size();
-	gTheMemArchManager->AddDomainWithDomainNumber(domain, 2);
+	domain->InitWithDomainNumber(0, info.Base(), info.Size(), kKernelDomainNumber);
 	env->Add(domain, false, false, false);
 	MemObjManager::RegisterEnvironmentId('krnl', envId);
 	MemObjManager::RegisterDomainId('krnl', domainId);

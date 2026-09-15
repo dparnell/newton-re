@@ -14,3 +14,13 @@ SetDomainAccessControl(ULong access)
 {
 	gHostDomainAccess = access;
 }
+
+extern "C" void
+SetDomainRange(ULong /*base*/, ULong /*size*/, ULong /*domainNumber*/)
+{
+}
+
+extern "C" void
+ClearDomainRange(ULong /*base*/, ULong /*size*/)
+{
+}

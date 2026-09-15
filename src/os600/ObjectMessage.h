@@ -82,8 +82,8 @@ struct ObjectMessage
 		struct {						// kObjectMgr_AddDomain
 			TObjectId		fDomainId;		// +0x0c
 			Boolean			fIsManager;		// +0x10
-			Boolean			fIsHeap;		// +0x11
-			Boolean			fIsStack;		// +0x12
+			Boolean			fIsStack;		// +0x11
+			Boolean			fIsHeap;		// +0x12
 		} fEnvDomain;
 		struct {						// kObjectSemList, size 0x10 + 4 * fCount
 			ULong			fCount;			// +0x0c

@@ -28,7 +28,7 @@ struct TaskGlobals
 {
 	ULong				fUnknown00[12];		// +0x00  not written by TTask::Init
 	ULong				fUnknown30;			// +0x30  0
-	TObjectId			fStackDomainId;		// +0x34  the environment's stack domain
+	TObjectId			fHeapDomainId;		// +0x34  the environment's heap domain
 	VAddr				fStackTop;			// +0x38
 	VAddr				fStackBase;			// +0x3c
 	TObjectId			fTaskId;			// +0x40

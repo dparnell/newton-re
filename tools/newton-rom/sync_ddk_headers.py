@@ -47,6 +47,10 @@ PATCHES = {
     ],
     # UserPorts.h: the ROM's Sleep() and TUTaskWorld::StartTask use TUPort's private
     # Send*Goo like SleepTill does, but only SleepTill is a friend in the DDK's header
+    # UserDomain.h: tokens after #endif
+    "UserDomain.h": [
+        ("#endif __USERDOMAIN__", "#endif /* __USERDOMAIN__ */"),
+    ],
     "UserPorts.h": [
         ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",
          "\t\tfriend void SleepTill(TTime* futureTimeToSend);\n\t\tfriend void Sleep(TTimeout timeout);\n\t\tfriend class TUTaskWorld;"),

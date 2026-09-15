@@ -20,6 +20,9 @@
 #include "UserSemaphore.h"
 #include "host/TaskRuntime.h"
 #include "hal/Timer.h"
+#include "MemObjManager.h"
+#include "Environment.h"
+#include "Domain.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -30,6 +33,7 @@ static int failures = 0;
 // what the scenario observed
 static Boolean ksrvRan = false;
 static TObjectId ksrvTaskId = 0;
+static TObjectId ksrvEnvironmentId = 0;
 static long portInitErr = -1, spawnErr = -1, rpcErr = -1;
 static char reply[32];
 static ULong replySize = 0;
@@ -39,6 +43,16 @@ static Int64 beforeSleep, afterSleep;
 static long semErr = -1;
 static Boolean semHeld = false;
 static ULong objectsBefore = 0, objectsAfter = 0;
+
+// a database lookup after the run (the user-mode calls are refused then)
+static Boolean FindId(MemObjType type, ULong name, TObjectId* outId)
+{
+	MemObjEntry entry;
+	if (MemObjManager::PrimGetEntryByName(type, name, &entry) != noErr)
+		return false;
+	*outId = (TObjectId) entry.fValue;
+	return true;
+}
 
 static ULong CountObjects()
 {
@@ -93,6 +107,7 @@ static void KernelServicesScenario()
 {
 	ksrvRan = true;
 	ksrvTaskId = gCurrentTaskId;
+	ksrvEnvironmentId = gCurrentTask->fEnvironment->fId;
 	objectsBefore = CountObjects();
 
 	TUPort port;
@@ -134,6 +149,31 @@ int main()
 	EXPECT(gUObjectMgrMonitor != nil && gUObjectMgrMonitor->fId == gTheObjectManagerMonitor->fId);
 	EXPECT(gUNullPort != nil && gUNullPort->fId == gNullPort->fId);
 	EXPECT(gOSIsRunning);
+	// the memory object database is populated: every domain and environment of
+	// the tables exists (the run is over, so the kernel-mode primitives are used)
+	TObjectId id = 0;
+	for (int i = 0; i < 9; i++)
+	{
+		DomainInfo dinfo;
+		EXPECT(MemObjManager::PrimGetDomainInfo(i, &dinfo) == noErr && FindId(kMemObjDomain, dinfo.Name(), &id) && ObjectType(id) == kDomainType);
+		TKDomain* d = (TKDomain*) gObjectTable->Get(id);
+		EXPECT(d != nil && d->fBase == dinfo.Base() && d->fSize == dinfo.Size() && d->fNumber >= 0);
+		if (dinfo.Name() == 'krnl')
+			EXPECT(d->fNumber == 2);
+	}
+	EXPECT(FindId(kMemObjEnvironment, 'ksrv', &id) && id == ksrvEnvironmentId);	// 'ksrv' ran in its environment
+	EXPECT(FindId(kMemObjEnvironment, 'user', &id) && ObjectType(id) == kEnvironmentType);
+	TEnvironment* user = (TEnvironment*) gObjectTable->Get(id);
+	TObjectId userDomainId = 0;
+	FindId(kMemObjDomain, 'user', &userDomainId);
+	EXPECT(user != nil && user->fHeapDomainId == userDomainId && user->fStackDomainId == userDomainId);
+	EXPECT(FindId(kMemObjEnvironment, 'prot', &id));
+	TEnvironment* prot = (TEnvironment*) gObjectTable->Get(id);
+	TObjectId protDomainId = 0;
+	FindId(kMemObjDomain, 'prot', &protDomainId);
+	TKDomain* protDomain = (TKDomain*) gObjectTable->Get(protDomainId);
+	EXPECT(prot != nil && protDomain != nil && ((prot->fDomainAccess >> (2 * protDomain->fNumber)) & 3) == 3);	// manages 'prot'
+	EXPECT(((user->fDomainAccess >> (2 * protDomain->fNumber)) & 3) == 1);								// 'user' is a client of it
 	EXPECT(portInitErr == noErr);
 	EXPECT(spawnErr == noErr && echoConstructedIn != 0 && echoConstructedIn != ksrvTaskId && echoTaskId == echoConstructedIn);
 	EXPECT(rpcErr == noErr && echoServed == 1);

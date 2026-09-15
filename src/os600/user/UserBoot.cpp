@@ -47,9 +47,10 @@ UserBoot()
 {
 	TULockingSemaphore::StaticInit();
 	TURdWrSemaphore::StaticInit();
-	// NOT YET RECONSTRUCTED: AddSemaphoreToHeap(GetHeap()); InitMemArchObjs();
-	// InitDomainsAndEnvironments(); MemObjManager::FindHeapRef('user',
-	// &SkiaHeapBase); InitROMDomainManager()
+	// NOT YET RECONSTRUCTED: AddSemaphoreToHeap(GetHeap()); InitMemArchObjs()
+	InitDomainsAndEnvironments();
+	// NOT YET RECONSTRUCTED: MemObjManager::FindHeapRef('user', &SkiaHeapBase);
+	// InitROMDomainManager()
 	gOSIsRunning = true;
 	// NOT YET RECONSTRUCTED: srand(TURealTimeAlarm::Time().ConvertTo(kSeconds))
 	srand(1);

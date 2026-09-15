@@ -10,6 +10,8 @@
 #include "Domain.h"
 #include "OSErrors.h"
 #include "hal/Atomic.h"
+#include "hal/MMU.h"
+#include "MemArchManager.h"
 
 
 SFaultMonitorEntry gFaultMonitorTable[kNumberOfDomains];
@@ -152,4 +154,65 @@ Boolean
 TKDomain::Intersects(VAddr base, VAddr end)
 {
 	return fBase < end && base < fBase + fSize;
+}
+
+
+// The range must be 1 MB aligned in base and size and overlap no other
+// domain; kError_Ill_Formed_Domain otherwise.  base + size - 1 is what the
+// manager's overlap check takes.
+static Boolean
+RangeIsWellFormed(VAddr base, ULong size)
+{
+	VAddr end = base + size - 1;
+	if (base > end)
+		return false;
+	if ((base & 0xfffff) != 0 || (size & 0xfffff) != 0)		// the ROM tests base << 12 == 0
+		return false;
+	return gTheMemArchManager->DomainRangeIsFree(base, end);
+}
+
+
+// ROM 0x000b02d4 Init__8TKDomainFUlN21
+// A domain on the next free number: its primary page table entries are set
+// up and its fault monitor registered.
+NewtonErr
+TKDomain::Init(TObjectId faultMonitorId, VAddr base, ULong size)
+{
+	fBase = base;
+	fSize = size;
+	if (!RangeIsWellFormed(base, size))
+		return kError_Ill_Formed_Domain;
+	NewtonErr err = gTheMemArchManager->AddDomain(this);
+	SetDomainRange((ULong) base, size, fNumber);		// InitDomainPrimaryTable
+	SetFaultMonitor(faultMonitorId);
+	return err;
+}
+
+
+// ROM 0x000b0238 InitWithDomainNumber__8TKDomainFUlN31
+// The same on a given number (the kernel's own domain); the page table is
+// left as the boot set it up.
+NewtonErr
+TKDomain::InitWithDomainNumber(TObjectId faultMonitorId, VAddr base, ULong size, long domainNumber)
+{
+	fBase = base;
+	fSize = size;
+	if (!RangeIsWellFormed(base, size))
+		return kError_Ill_Formed_Domain;
+	NewtonErr err = gTheMemArchManager->AddDomainWithDomainNumber(this, domainNumber);
+	SetFaultMonitor(faultMonitorId);
+	return err;
+}
+
+
+// ROM 0x000b0758 __dt__8TKDomainFv
+// DEVIATION: the ROM deregisters the fault monitor for fNumber even when
+// the domain never got a number (-1), writing two words before the table;
+// a domain without a number has nothing registered, so it is skipped.
+TKDomain::~TKDomain()
+{
+	if (fNumber != kNoDomainNumber)
+		DeregisterFaultMonitorByDomainNumber(fNumber);
+	ClearDomainRange((ULong) fBase, fSize);			// ClearDomainPrimaryTable
+	gTheMemArchManager->RemoveDomain(this);
 }

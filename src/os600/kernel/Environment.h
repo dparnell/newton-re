@@ -34,8 +34,8 @@ class TKDomain;
 // AddDomainToEnvironment flags
 enum
 {
-	kEnvDomain_IsStack		= 1,
-	kEnvDomain_IsHeap		= 2,
+	kEnvDomain_IsHeap		= 1,		// the environment's heap lives in this domain
+	kEnvDomain_IsStack		= 2,		// its tasks' stacks come from this domain (NewStack)
 	kEnvDomain_IsManager	= 4
 };
 
@@ -48,7 +48,7 @@ class TEnvironment : public TKernelObject
 		NewtonErr		Init(void* heap);
 						~TEnvironment();
 
-		NewtonErr		Add(TKDomain* domain, Boolean isManager, Boolean isHeap, Boolean isStack);
+		NewtonErr		Add(TKDomain* domain, Boolean isManager, Boolean isStack, Boolean isHeap);
 		NewtonErr		Remove(TKDomain* domain);
 		void			IncrRefCount();
 		Boolean			DecrRefCount();					// true: no users left and removed - delete it
@@ -56,8 +56,8 @@ class TEnvironment : public TKernelObject
 
 		ULong			fDomainAccess;		// +0x10  domain access control word (loaded into the DACR on a task switch)
 		void*			fHeap;				// +0x14  the environment's heap (Init's argument); a new task starts with it as its current heap
-		TObjectId		fHeapDomainId;		// +0x18
-		TObjectId		fStackDomainId;		// +0x1c
+		TObjectId		fStackDomainId;		// +0x18  where its tasks' stacks are made (TTask::Init: NewStack)
+		TObjectId		fHeapDomainId;		// +0x1c  where its heap lives (a task's globals record it)
 		long			fRefCount;			// +0x20  tasks running in it (SetEnvironment, TTask::Init/~TTask)
 		Boolean			fRemoved;			// +0x24  taken out of gTheMemArchManager: free when fRefCount reaches 0
 		TEnvironment*	fNext;				// +0x28  TMemArchManager's list

@@ -13,9 +13,8 @@
 				removal) for a task inside a monitor or a monitor with a call in
 				progress.
 
-				Not yet reconstructed: the domain and physical-memory objects in
-				ObjectAlloc (TKDomain::Init, TPhys need the MMU) and the external
-				page tracker requests (TExtPageTrackerMgr).
+				Not yet reconstructed: the physical-memory objects in ObjectAlloc
+				(TPhys) and the external page tracker requests (TExtPageTrackerMgr).
 
 	Reconstructed from:	TObjectManager 0x0014ad58-0x0014ad88, ObjectScavenger 0x0014a508,
 				the Object* handlers 0x0014a5e0-0x0014b4ac

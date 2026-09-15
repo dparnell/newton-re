@@ -18,6 +18,13 @@
 
 extern "C" {
 void	SetDomainAccessControl(ULong access);		// two bits per domain: 01 client, 11 manager (see os600/kernel/Domain.h)
+
+// the primary (level 1) page table: mark a 1 MB-aligned range as belonging to
+// a domain, or clear it (ROM: PrimSetDomainRange / PrimClearDomainRange, the
+// kernel bodies behind GenericSWI 0x21/0x22; InitDomainPrimaryTable 0x00165630
+// and ClearDomainPrimaryTable 0x0016562c are the names TKDomain uses)
+void	SetDomainRange(ULong base, ULong size, ULong domainNumber);
+void	ClearDomainRange(ULong base, ULong size);
 }
 
 #endif	/* __HAL_MMU_H */

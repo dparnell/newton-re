@@ -109,7 +109,7 @@ TObjectManager::MonitorProc(long selector, ObjectMessage* msg)
 			if (env == nil)
 				break;
 			if (selector == kObjectMgr_AddDomain)
-				env->Add(domain, msg->fEnvDomain.fIsManager, msg->fEnvDomain.fIsHeap, msg->fEnvDomain.fIsStack);
+				env->Add(domain, msg->fEnvDomain.fIsManager, msg->fEnvDomain.fIsStack, msg->fEnvDomain.fIsHeap);
 			else
 				env->Remove(domain);
 			err = noErr;
@@ -229,10 +229,32 @@ ObjectAlloc(ObjectMessage* msg, ULong size, TObjectId requesterId, TObjectId* ou
 		break;
 
 	case kObjectDomain:
-		// NOT YET RECONSTRUCTED: TKDomain::Init 0x000b02d4 needs the MMU's
-		// primary page table (0x0014a768 case 3: checks the fault monitor is
-		// one, adds the domain to the table first, Inits, removes on failure)
-		return kError_Call_Not_Implemented;
+		{
+			if (size != kObjectMessage_DomainSize)
+				return kError_Bad_Parameters;
+			TObjectId monitorId = msg->fDomain.fMonitorId;
+			if (monitorId != 0)
+			{
+				TMonitor* monitor = ObjectType(monitorId) == kMonitorType ? (TMonitor*) gObjectTable->Get(monitorId) : nil;
+				if (monitor == nil)
+					return kError_Bad_ObjectId;
+				if (!monitor->fFaultMonitor)
+					return kError_Not_A_Fault_Monitor;
+			}
+			TKDomain* domain = new TKDomain;
+			if (domain == nil)
+				return kError_Could_Not_Create_Object;
+			TObjectId id = gObjectTable->Add(domain, kDomainType, requesterId);
+			err = domain->Init(monitorId, msg->fDomain.fBase, msg->fDomain.fSize);
+			if (err != noErr)
+			{
+				gObjectTable->Remove(id);
+				delete domain;
+				return err;
+			}
+			*outId = id;
+			return noErr;
+		}
 
 	case kObjectSemList:
 		{

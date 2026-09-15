@@ -23,6 +23,9 @@
 #endif
 
 void	UserInit();
+void	InitDomainsAndEnvironments();
+NewtonErr	BuildDomainsAndHeaps(TObjectId kernelEnvId);
+NewtonErr	BuildEnvironments();
 void	UserBoot();
 long	InitialKSRVTask();
 

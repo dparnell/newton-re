@@ -268,7 +268,7 @@ TTask::Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, U
 	else
 	{
 		fState |= kTaskState_StackFromNewStack;
-		err = NewStack(environment->fHeapDomainId, stackSize + topSize, fId, &fStackTop, &fStackBase);
+		err = NewStack(environment->fStackDomainId, stackSize + topSize, fId, &fStackTop, &fStackBase);
 		if (err != noErr)
 		{
 			fStackBase = 0;
@@ -311,7 +311,7 @@ TTask::Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, U
 	globals.fStackTop = fGlobalsBase + topSize;
 	globals.fStackBase = fStackBase;
 	globals.fCurrentHeap = environment->fHeap;
-	globals.fStackDomainId = environment->fStackDomainId;
+	globals.fHeapDomainId = environment->fHeapDomainId;
 	TUSharedMem stack(fSharedMemId);
 	if ((err = stack.SetBuffer((void*) fGlobalsBase, topSize, kSMemReadWrite)) != noErr)
 		return err;

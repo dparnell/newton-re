@@ -160,7 +160,13 @@ and in `src/os600/user/`: `TUObject`, `TUSharedMem(Msg)`, `TUPort`,
 `MemObjManager` with `DomainInfo`/`EnvironmentInfo`/`PersistentDBEntry`,
 `BuildMemObjDatabase`, `PrimGetMemObjInfo` (GenericSWI 0x2c) and the
 generated `MemObjTables.cpp` (MemObjManager.*); `TSingleQContainer`
-(SingleQ.cpp); `Reboot`/`Restart`/
+(SingleQ.cpp); `TKDomain::Init`/`InitWithDomainNumber`/`~TKDomain` over
+`hal/MMU.h`'s `SetDomainRange`/`ClearDomainRange`, the domain case of
+`ObjectAlloc`; `TUDomain`, `TUEnvironment` (the DDK lacks its header;
+`src/os600/user/UserEnvironment.h` declares it), `InitDomainsAndEnvironments`
+with `BuildDomainsAndHeaps` (plain domains only - the heap domains' areas
+and heaps are the paged memory system, NOT YET) and `BuildEnvironments`
+(user/BuildEnvironments.cpp); `Reboot`/`Restart`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
@@ -198,7 +204,15 @@ out in RAM (`gMemObjHeap`): domain ids, heap addresses, persistent-heap
 records (`PersistentDBEntry`, plus ten spare 'emty' slots) and environment
 ids, all 0 until the kernel makes the objects and registers them
 (`RegisterEnvironmentId`, `RegisterDomainId`, `RegisterHeapRef`).
-`FindEnvironmentId('krnl')` & co. read them. The public calls are
+`FindEnvironmentId('krnl')` & co. read them. `UserBoot`'s
+`InitDomainsAndEnvironments` walks the tables: a kernel domain for every
+entry (heap domains get their heaps and globals areas there too - not yet
+reconstructed) and an environment for every entry with its domains added
+as client or manager and its stack and heap domains flagged. A correction
+established on the way: `TEnvironment` +0x18 is the *stack* domain
+(`TTask::Init` takes new stacks from it) and +0x1c the *heap* domain;
+`AddDomainToEnvironment`'s flag bits are 1 heap, 2 stack, 4 manager, and
+`TEnvironment::Add`'s arguments run (manager, stack, heap). The public calls are
 dual-mode: in user mode the request goes through GenericSWI 0x2c with its
 selector, arguments and answer in the first 0x30 bytes of the caller's task
 globals block (`MemObjRequest`) - `PrimGetMemObjInfo` serves it.  On the

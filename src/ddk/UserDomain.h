@@ -40,4 +40,4 @@ class TUDomain: public TUObject
 		long		Size(ULong& size);
 };
 
-#endif __USERDOMAIN__
+#endif /* __USERDOMAIN__ */

@@ -59,11 +59,9 @@ class TKDomain : public TKernelObject
 {
 	public:
 						TKDomain();
-		// Init 0x000b02d4, InitWithDomainNumber 0x000b0238 and the destructor
-		// 0x000b0758 set up and clear the domain's part of the primary page
-		// table (InitDomainPrimaryTable / ClearDomainPrimaryTable); they
-		// follow with the MMU.
-
+						~TKDomain();
+		NewtonErr		Init(TObjectId faultMonitorId, VAddr base, ULong size);							// next free domain number
+		NewtonErr		InitWithDomainNumber(TObjectId faultMonitorId, VAddr base, ULong size, long domainNumber);
 		NewtonErr		SetFaultMonitor(TObjectId monitorId);
 		Boolean			Intersects(VAddr base, VAddr end);		// [base, end) overlaps this domain?
 
