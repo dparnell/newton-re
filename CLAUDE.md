@@ -48,6 +48,10 @@ Key facts the code relies on (all asserted by `tests/test_rom.py`; details in `t
 - Ghidra: language `ARM:BE:32:v4`, compiler `apcs`; there is no `__thiscall` on ARM, so member functions get an explicit `this` parameter. Unknown classes passed by value make the prototype unsafe, so those functions get name + comment only.
 - Don't name a directory `ghidra` anywhere on `sys.path` — it shadows the Java `ghidra` package under PyGhidra (hence `ghidra_scripts/`).
 
+## Reverse-engineering notes
+
+RE findings go under `docs/<subsystem>/` (kernel: `docs/os600/`). Tables derived from the ROM must be produced by a script in `tools/newton-rom/analysis/` (e.g. `swi_table.py` → `docs/os600/swi-table.md`) and say so in their header, so they can be regenerated after a re-import; hand-written pages state how each fact was established. Kernel-side classes (`TTask`, `TPort`, `TObjectTable`, …) have no DDK headers; only the user-side `TU*` API does.
+
 ## Working with the repository files
 
 - **Header files use classic Mac CR-only line endings (`\r`).** `grep`/`head`/`sed` see one giant line; pipe through `tr '\r' '\n'` first, e.g. `tr '\r' '\n' < headers/OS600/ROMExtension.h | grep kRExSignature`.
