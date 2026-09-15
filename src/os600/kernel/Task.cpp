@@ -174,7 +174,11 @@ TTaskQueue::Peek()
 TTask::TTask()
 {
 	fMonitor = nil;
-	fUnknowndc[0] = fUnknowndc[1] = fUnknowndc[2] = fUnknowndc[3] = fUnknowndc[4] = 0;
+	fCopySavedPC = 0;
+	fCopyResult = 0;
+	fCopySize = 0;
+	fCopyMemId = 0;
+	fCopyMsgId = 0;
 	fSharedMemId = 0;
 	fSharedMemMsgId = 0;
 	fGlobals = nil;
@@ -185,11 +189,11 @@ TTask::TTask()
 	fHandlesUsed = 0;
 	fMaxMemoryUsed = 0;
 	fStackBase = 0;
-	fUnknownd8 = 0;
+	fMonitorId = 0;
 	fState = 0;
 	fGlobalsBase = 0;
 	fEnvironment = nil;
-	fUnknown78 = 0;
+	fCopyEnvironment = nil;
 	fUnknown7c = 0;
 	fBequeathId = 0;
 	fInheritedId = 0;

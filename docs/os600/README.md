@@ -103,7 +103,51 @@ Reconstructed in `src/os600/kernel/` (with host tests): `TDoubleQItem` /
 `hal/Interrupts.h` (interrupt enable/disable and the time-slice alarm);
 `TSemaphore` / `TSemaphoreGroup` / `TSemaphoreOpList` with `DoSemaphoreOp`
 (SWI 11), `SemGroupSetRefCon`/`GetRefCon` (GenericSWI 40/41), `DeleteSemList`
-/ `DeleteSemGroup` and `MarkMessageDone` (Semaphore.*).
+/ `DeleteSemGroup` and `MarkMessageDone` (Semaphore.*); `CompAdd`/`CompSub`/
+`CompCompare` (toolbox/CompMath.cpp); `hal/Timer.h` (GetClock, SetAlarm,
+DisableAlarm1 - a controllable clock on the host); `TSharedMem` /
+`TSharedMemMsg` layouts (SharedMem.*); `TTimerEngine` with the alarm
+interrupt, `SetAlarmAtomic`/`ClearAlarmAtomic` and `QueueNotify`
+(TimerEngine.*); `TPort` with `Send`/`Receive`/`Reset`/`ResetFilter`,
+message completion (`CompleteMsg`/`CompleteSender`/`CompleteReceiver`), the
+port and shared-memory system calls (SWI 0, 1, 2, 13, 14, 17-23, 26, 33,
+GenericSWI 67), `NotifySend`/`NotifyTimeout`/`DeferredNotify`/
+`PortDeferredSendNotify`, `CheckCopyTask` and the `Delete*` destructors
+(Port.*); `LocalToGlobalId`/`ConvertIdToObj`/`ConvertMemOrMsgIdToObj`
+(KernelObjects.*); the `TMonitor` layout (Monitor.h).
+
+IPC, as established: a port holds two `TDoubleQContainer`s of messages
+(senders waiting for a receiver, receivers waiting for a sender, both linked
+through `TSharedMemMsg::fPortQItem` at +0x80). A receive meets the first
+sender whose message type matches its filter (`kMsgType_MatchAll` = any);
+`CompleteReceiver` records the sender's id/reply memory/type in the receive
+message, queues the sender on the receiver's own `fSenders` list with a
+sequence number, and `CompleteMsg` delivers: for a task notify target it
+writes r0 = result, r1 = sender msg id, r2 = reply mem id, r3 = msg type,
+r4 = sequence into the task's saved registers, makes it the scheduler's
+preferred task and schedules it; for a port notify target (asynchronous
+calls) it re-sends the message to that port flagged
+`kSMemMsgFlags_CompleteTo{Receiver,Sender}Port`, to be collected by
+`SMemMsgCheckForDone`. The receiver answers with `MsgDone(senderMsgId,
+result, sequence)` (the `TUMsgToken`), which completes the sender the same
+way. Synchronous calls block the caller with `UnScheduleTask`
+(`kPortFlags_CanRemoveTask`). Timeouts and delayed sends go through the
+timer engine: expired messages are moved to `gTimerDeferred` from the
+interrupt and completed later by `DeferredNotify` on the scheduler path.
+Shared-memory copies (SWI 15/16) are set up in the calling task's registers
+and performed by the SWI handler in the caller's environment; `gCopyTasks`
+tracks them and `LowLevelCopyDone` (SWI 26) finishes them. The kernel's
+time base is a 64-bit tick count whose high word counts wraps of the
+32-bit counter at 0x0F181800 (`GetClock`); the timer engine's alarm is
+"alarm 1" (`SetAlarm1` 0x003a3d10, interrupt bit 0x20 in the controller at
+0x0F184000), while the scheduler's 20 ms slice uses match register
+0x0F182C00.
+
+Two host-layout lessons: intrusive queues must take their item offset from
+`offsetof()` rather than the ROM's literal (the ROM passes 0x80 for
+`TSharedMemMsg::fPortQItem`, which is not where it lands on a 64-bit host),
+and the running task is never in a scheduler bucket - `Schedule()` dequeues
+it and a blocking call leaves `gCurrentTask` nil.
 
 Semaphores: a group is an array of counting semaphores (0x28 bytes each:
 `TKernelObject`, vptr, value, two `TTaskQueue`s for tasks waiting on zero /

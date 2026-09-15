@@ -3,6 +3,7 @@ add_library(os600_kernel STATIC
     KernelGlobals.cpp
     KernelObjects.cpp
     ObjectTable.cpp
+    Port.cpp
     Scheduler.cpp
     Semaphore.cpp
     SharedMem.cpp

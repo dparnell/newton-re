@@ -20,6 +20,7 @@ class TTask;
 class TScheduler;
 class TTimerEngine;
 class TDoubleQContainer;
+class TUObject;
 struct InterruptObject;
 
 extern TObjectTable*	gObjectTable;				// 0x0c1010b8  the kernel object table
@@ -43,6 +44,14 @@ extern InterruptObject*	gSchedulerIntObj;			// 0x0c100f58  its interrupt source
 extern TTimerEngine*	gTimerEngine;				// 0x0c1010cc  (address per literal pool use)
 extern TDoubleQContainer* gTimerDeferred;			// 0x0c101138  expired messages awaiting completion by the scheduler path
 extern Boolean			gWantDeferred;				// 0x0c101118  gTimerDeferred is not empty
-extern ULong			gTimerInterruptCount;		// 0x0c101150  statistics
+extern ULong			gTimerInterruptCount;		// 0x0c101664  statistics
+
+// ports and shared memory
+extern TDoubleQContainer* gCopyTasks;				// 0x0c101124  tasks in the middle of a shared-memory copy (TTask::fCopyQItem)
+extern TDoubleQContainer* gDeferredSends;			// 0x0c10112c  sends made from interrupt level (TSharedMemMsg::fTimerQItem)
+extern Boolean			gCopyDone;					// 0x0c101130  the current task's copy finished (checked by the SWI handler)
+extern TUObject*		gNullPort;					// 0x0c1010bc  the well-known ports GetPortInfo hands out
+extern TUObject*		gNameServer;				// 0x0c101654
+extern TUObject*		gTheObjectManagerMonitor;	// 0x0c101794
 
 #endif	/* __KERNELGLOBALS_H */

@@ -11,6 +11,8 @@
 #include "SharedMem.h"
 #include "NewtErrors.h"
 
+#include <stddef.h>
+
 
 // ROM 0x001e1e6c Init__10TSharedMemFP12TEnvironment
 NewtonErr
@@ -26,9 +28,9 @@ TSharedMem::Init(TEnvironment* environment)
 
 // ROM 0x001e2594 __ct__13TSharedMemMsgFv
 // The queue items construct themselves; fSenders links messages through
-// their fPortQItem (+0x80).
+// their fPortQItem (the ROM passes the literal offset 0x80).
 TSharedMemMsg::TSharedMemMsg()
-	: fSenders(0x80)
+	: fSenders(offsetof(TSharedMemMsg, fPortQItem))
 {
 }
 
@@ -42,12 +44,12 @@ TSharedMemMsg::Init(TEnvironment* environment)
 	fExpiryTime.hi = 0;
 	fExpiryTime.lo = 0;
 	fTimerFlags = 0;
-	fUnknown40 = 0;
+	fPortId = 0;
 	fStatus = 0;
 	fUserRefCon = nil;
 	fReplyMemId = 0;
 	fMsgFlags = 0;
-	fUnknown54 = 0;
+	fFilter = 0;
 	fSenderMsgId = 0;
 	fSenderReplyMemId = 0;
 	fSenderMsgFlags = 0;

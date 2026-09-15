@@ -26,3 +26,10 @@ TTimerEngine*	gTimerEngine = nil;
 TDoubleQContainer* gTimerDeferred = nil;
 Boolean			gWantDeferred = false;
 ULong			gTimerInterruptCount = 0;
+
+TDoubleQContainer* gCopyTasks = nil;
+TDoubleQContainer* gDeferredSends = nil;
+Boolean			gCopyDone = false;
+TUObject*		gNullPort = nil;
+TUObject*		gNameServer = nil;
+TUObject*		gTheObjectManagerMonitor = nil;

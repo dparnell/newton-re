@@ -17,3 +17,7 @@ add_test(NAME os600.kernel.Semaphore COMMAND test_Semaphore)
 add_executable(test_TimerEngine test_TimerEngine.cpp)
 target_link_libraries(test_TimerEngine PRIVATE os600_kernel)
 add_test(NAME os600.kernel.TimerEngine COMMAND test_TimerEngine)
+
+add_executable(test_Port test_Port.cpp)
+target_link_libraries(test_Port PRIVATE os600_kernel)
+add_test(NAME os600.kernel.Port COMMAND test_Port)

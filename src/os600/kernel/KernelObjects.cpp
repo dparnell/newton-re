@@ -14,15 +14,70 @@
 #include "KernelObjects.h"
 #include "ObjectTable.h"
 #include "KernelGlobals.h"
+#include "Task.h"
+#include "Monitor.h"
+#include "SharedMem.h"
 #include "OSErrors.h"
 
 
-// The id of the running task.  gCurrentTask points at a TTask, which starts
-// with a TKernelObject; TTask itself is reconstructed separately.
 static inline TObjectId
 CurrentTaskId()
 {
-	return ((TKernelObject*) gCurrentTask)->fId;
+	return gCurrentTask->fId;
+}
+
+
+// ROM 0x00193ea0 LocalToGlobalId__FUl
+TObjectId
+LocalToGlobalId(TObjectId id)
+{
+	switch (id)
+	{
+	case kBuiltInSMemMsgId:
+		if (gCurrentTask != nil)
+			id = gCurrentTask->fSharedMemMsgId;
+		break;
+	case kBuiltInSMemId:
+		if (gCurrentTask != nil)
+			id = gCurrentTask->fSharedMemId;
+		break;
+	case kBuiltInSMemMonitorFaultId:
+		{
+			TObjectId monitorId = gCurrentTask->fMonitorId;
+			if (ObjectType(monitorId) == kMonitorType)
+			{
+				TMonitor* monitor = (TMonitor*) gObjectTable->Get(monitorId);
+				if (monitor != nil)
+					id = monitor->fMsgId;
+			}
+		}
+		break;
+	}
+	return id;
+}
+
+
+// ROM 0x00193f34 ConvertIdToObj__F11KernelTypesUlPv
+NewtonErr
+ConvertIdToObj(KernelTypes type, TObjectId id, void* outObject)
+{
+	id = LocalToGlobalId(id);
+	TKernelObject* object = (ObjectType(id) == type) ? gObjectTable->Get(id) : nil;
+	if (outObject != nil)
+		*(TKernelObject**) outObject = object;
+	return (object == nil) ? kError_Bad_ObjectId : noErr;
+}
+
+
+// ROM 0x001e2b6c ConvertMemOrMsgIdToObj__FUlPP10TSharedMem
+NewtonErr
+ConvertMemOrMsgIdToObj(TObjectId id, TSharedMem** outObject)
+{
+	TSharedMem* object = (TSharedMem*) gObjectTable->Get(LocalToGlobalId(id));
+	*outObject = object;
+	if (object == nil || (ObjectType(object->fId) != kSharedMemType && ObjectType(object->fId) != kSharedMemMsgType))
+		return kError_Bad_ObjectId;
+	return noErr;
 }
 
 

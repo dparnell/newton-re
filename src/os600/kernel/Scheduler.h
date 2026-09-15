@@ -47,7 +47,9 @@ class TScheduler : public TKernelObject, public TTaskContainer
 		ULong			fCurrentBucket;					// +0x14  highest priority with a ready task
 		ULong			fPriorityMask;					// +0x18  bit n set when fQueue[n] is not empty
 		TTaskQueue		fQueue[kNumberOfPriorities];	// +0x1c
+	public:
 		TTask*			fPreferredTask;					// +0x11c task to run next, if it is at the current priority
+														//        (set directly by message completion, TSharedMemMsg::CompleteMsg)
 };
 
 

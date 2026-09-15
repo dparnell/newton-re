@@ -84,12 +84,13 @@ class TSharedMemMsg : public TSharedMem
 		Int64			fExpiryTime;	// +0x28  absolute time the timer engine fires
 		TDoubleQItem	fTimerQItem;	// +0x30  link in TTimerEngine / gTimerDeferred
 		ULong			fTimerFlags;	// +0x3c  kSMemMsgTimer_*
-		ULong			fUnknown40;		// +0x40
+		TObjectId		fPortId;		// +0x40  port the message was sent to (for delayed sends)
 		long			fStatus;		// +0x44  kSMemMsgStatus_InProgress, or the completion result
 		void*			fUserRefCon;	// +0x48
 		ULong			fReplyMemId;	// +0x4c  handed to the receiver as fSenderReplyMemId
 		ULong			fMsgFlags;		// +0x50  kPortSend_* / kSMemMsgFlags_* / kSMemMsgFlags_CompleteTo*
-		ULong			fUnknown54;		// +0x54
+		ULong			fFilter;		// +0x54  receive: message types accepted (kMsgType_MatchAll = any);
+										//        delayed send: the send flags to use when the delay is up
 		TObjectId		fSenderMsgId;	// +0x58  receiver side: id of the message that was received
 		ULong			fSenderReplyMemId;	// +0x5c  receiver side: the sender's fReplyMemId
 		ULong			fSenderMsgFlags;	// +0x60  receiver side: the sender's fMsgFlags

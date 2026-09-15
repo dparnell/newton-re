@@ -105,7 +105,7 @@ class TTask : public TKernelObject
 		ULong			fState;				// +0x6c  KernelObjectState bits
 		ULong			fUnknown70;			// +0x70
 		TEnvironment*	fEnvironment;		// +0x74  the environment (domains) the task runs in
-		ULong			fUnknown78;			// +0x78
+		TEnvironment*	fCopyEnvironment;	// +0x78  environment a shared-memory copy switches to (SMemCopyTo/From)
 		ULong			fUnknown7c;			// +0x7c
 		ULong			fPriority;			// +0x80  0..kNumberOfPriorities-1
 		ULong			fName;				// +0x84  four-character name, e.g. 'UNAM'
@@ -120,11 +120,15 @@ class TTask : public TKernelObject
 		ULong			fPtrsUsed;			// +0xb0  memory accounting (Scheduler)
 		ULong			fHandlesUsed;		// +0xb4
 		ULong			fMaxMemoryUsed;		// +0xb8
-		TDoubleQItem	fTimerQItem;		// +0xbc  a second queue link (its container at +0xc4 is left on destruction)
-		TDoubleQItem	fMonitorQItem;		// +0xc8  ditto (container at +0xd0)
+		TDoubleQItem	fCopyQItem;			// +0xbc  link in gCopyTasks while doing a shared-memory copy
+		TDoubleQItem	fMonitorQItem;		// +0xc8  link in a TMonitor's queue of callers (+0xd0 = that queue)
 		void*			fMonitor;			// +0xd4  non-nil while the task is inside a monitor (ObjectScavenger)
-		ULong			fUnknownd8;			// +0xd8
-		ULong			fUnknowndc[5];		// +0xdc
+		TObjectId		fMonitorId;			// +0xd8  the monitor this task serves, if it is a monitor task
+		ULong			fCopySavedPC;		// +0xdc  a shared-memory copy in progress: pc to resume at,
+		long			fCopyResult;		// +0xe0  result to report (kError_Size_To_Large_Copy_Truncated or 0),
+		ULong			fCopySize;			// +0xe4  size to report in r1,
+		TObjectId		fCopyMemId;			// +0xe8  the TSharedMem being copied,
+		TObjectId		fCopyMsgId;			// +0xec  the message it belongs to (fCopyingTaskId points back)
 		TObjectId		fSharedMemId;		// +0xf0  TSharedMem the task's stack/globals are exposed through
 		TObjectId		fSharedMemMsgId;	// +0xf4  TSharedMemMsg registered for the task
 		VAddr			fGlobalsBase;		// +0xf8  initial stack pointer / start of the 0x54-byte globals block
