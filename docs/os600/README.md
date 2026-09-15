@@ -90,6 +90,22 @@ elsewhere. The user-side classes are all in the DDK; the ROM confirmed their
 layouts (`TUPort` 8 bytes, `TUNameServer` 0x10, `TUAsyncMessage` 0x10,
 `TUTaskWorld` 0x18, ...).
 
+## Reconstruction status
+
+Reconstructed in `src/os600/kernel/` (with host tests): `TDoubleQItem` /
+`TDoubleQContainer` (DoubleQ.*), `TKernelObject` (KernelObject.h),
+`TObjectTable` / `TObjectTableIterator` (ObjectTable.*), `RegisterObject` /
+`GiveObject` / `AcceptObject` (KernelObjects.*), and the first HAL interface,
+`hal/Atomic.h` (EnterAtomic & co., host implementation in `hal/host`).
+
+Layouts established on the way: `TKernelObject` {fId, fNext, fOwnerId,
+fAssignedOwnerId}; `TObjectTable` = scavenge proc + cursor + 128 buckets
+(0x210 bytes); ids are `(unique << 4) | KernelTypes` with the bucket
+`(id >> 4) & 0x7f`. Ownership: an object is alive while its owner exists
+(or it owns itself); `Scavenge` walks one bucket per call removing the rest
+through the scavenge proc's destructor. Oddity kept as found: `GiveObject`
+refuses a target task that exists and is alive.
+
 ## Kernel globals
 
 The kernel keeps its state in RAM at 0x0C100800-0x0C104EDB (`RAM_RW` and

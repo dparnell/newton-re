@@ -15,4 +15,5 @@ target_compile_options(newton_config INTERFACE
     -Wall -Wno-unknown-pragmas -Wno-return-type-c-linkage -Wno-mismatched-tags)
 
 enable_testing()
+add_subdirectory(hal)
 add_subdirectory(os600)
