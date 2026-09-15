@@ -5,5 +5,6 @@ add_library(hal_host STATIC
     host/Interrupts.cpp
     host/Timer.cpp
     host/System.cpp
+    host/MMU.cpp
 )
 target_link_libraries(hal_host PUBLIC newton_config toolbox)

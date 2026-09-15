@@ -24,6 +24,10 @@ void	ExitAtomic(void);
 void	EnterFIQAtomic(void);
 void	ExitFIQAtomic(void);
 
+// true while any Enter*Atomic is outstanding (the SWI exit path skips
+// scheduling then; the ROM reads the four gAtomic*NestCount globals)
+Boolean	InAtomicSection(void);
+
 // atomic exchange (the ARM swp / swpb instructions; ROM 0x003a4b84, 0x003a4b8c)
 ULong	Swap(ULong* address, ULong value);
 UChar	SwapByte(UChar* address, UChar value);

@@ -18,6 +18,8 @@
 #include "CompMath.h"
 #include "hal/Atomic.h"
 #include "hal/Timer.h"
+#include "hal/MMU.h"
+#include "Environment.h"
 
 
 // ROM 0x001ce5c0 Scheduler
@@ -78,6 +80,52 @@ Scheduler()
 		gCurrentTimedTask = task;
 	}
 	return task;
+}
+
+
+// ROM 0x003a4018 SWIBoot +0xb8 (the common SWI exit, assembly)
+// Nothing is scheduled from inside an atomic section.  Otherwise the work
+// interrupt level deferred is done, and if a reschedule is due Scheduler()
+// picks; the time slice is armed if StartScheduler was asked for (twice in
+// the ROM when the pick is the same task - harmless).  The pick becomes
+// gCurrentTask; the caller switches to it if it is not the task that was
+// running, loading DomainAccessFor(pick) into the MMU on the way.
+TTask*
+SWIExitSchedule()
+{
+	if (!InAtomicSection())
+	{
+		if (gWantDeferred)
+			DoDeferrals();
+		if (gSchedule)
+		{
+			TTask* next = Scheduler();
+			if (gWantSchedulerToRun)
+				StartScheduler();
+			gCurrentTask = next;
+		}
+	}
+	if (gWantSchedulerToRun)
+		StartScheduler();
+	return gCurrentTask;
+}
+
+
+// ROM 0x003a4018 SWIBoot +0x364 (the exit path's domain access computation, assembly)
+// A task may touch its environment's domains, those of the environment a
+// shared-memory copy switched it to, and - for a monitor task - those of
+// every task in the chain of callers it is serving.
+ULong
+DomainAccessFor(TTask* task)
+{
+	ULong access = 0;
+	if (task->fEnvironment != nil)
+		access |= task->fEnvironment->fDomainAccess;
+	if (task->fCopyEnvironment != nil)
+		access |= task->fCopyEnvironment->fDomainAccess;
+	for (TTask* caller = task->fMonitorCaller; caller != nil && caller->fEnvironment != nil; caller = caller->fMonitorCaller)
+		access |= caller->fEnvironment->fDomainAccess;
+	return access;
 }
 
 

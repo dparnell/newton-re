@@ -2,14 +2,19 @@
 	File:		hal/host/Interrupts.cpp
 
 	Contains:	Interrupt control for a host build.  There is no interrupt
-				controller; the calls record what the kernel asked for so tests
-				(and, later, a host scheduler thread) can act on it.
+				controller; the calls record what the kernel asked for, and the
+				task runtime (os600/kernel/host/TaskRuntime.cpp) fires the
+				time-slice handler when the deadline passes.
 */
 
 #include "hal/Interrupts.h"
+#include "hal/Timer.h"
+#include "hal/host/Host.h"
+#include "CompMath.h"
 
-Boolean	gHostInterruptEnabled = false;		// state of the (only) interrupt object
-ULong	gHostTimeSliceAlarm = 0;			// last alarm programmed, in ticks
+Boolean	gHostInterruptEnabled = false;		// state of the (only) interrupt object, the scheduler's
+Boolean	gHostTimeSliceArmed = false;
+Int64	gHostTimeSliceDeadline = {0, 0};
 
 extern "C" void
 DisableInterrupt(InterruptObject* /*interrupt*/)
@@ -26,5 +31,8 @@ QuickEnableInterrupt(InterruptObject* /*interrupt*/)
 extern "C" void
 SetTimeSliceAlarm(ULong ticksFromNow)
 {
-	gHostTimeSliceAlarm = ticksFromNow;
+	Int64 delta = {0, ticksFromNow};
+	GetClock(&gHostTimeSliceDeadline);
+	CompAdd(&delta, &gHostTimeSliceDeadline);
+	gHostTimeSliceArmed = true;
 }

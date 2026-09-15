@@ -88,11 +88,26 @@ kernel source is unchanged.
 | `SWIBoot` dispatch cases (save registers, call glue) | `src/os600/user/host/SWI.cpp` |
 | exit path decisions (deferrals, `Scheduler()`, `StartScheduler`) | `SWIExitSchedule` in `src/os600/kernel/TaskSwitch.cpp` (C, cites 0x003a40d0) |
 | exit path domain access word | `DomainAccessFor` in `TaskSwitch.cpp` |
-| register save / restore, `movs pc,lr` | `src/hal/host/TaskRuntime.cpp` (threads, baton) |
-| `MonitorEntryGlue`, `TaskKillSelf` (user-side assembly) | `src/os600/user/host/MonitorGlue.cpp` |
+| register save / restore, `movs pc,lr` | `src/os600/kernel/host/TaskRuntime.cpp` (threads, baton) |
+| `MonitorEntryGlue`, `TaskKillSelf`, `BadExit` (user-side assembly) | `src/os600/user/host/MonitorGlue.cpp`, the trampoline |
+| `GenericSWIHandler` | `src/os600/kernel/GenericSWI.cpp` (C, as in the ROM) |
 | `SleepTask` (the idle loop, wait for interrupt) | `HostIdleTask` in `TaskRuntime.cpp` |
 | IRQ entry for the timers | `HostDeliverInterrupts` in `TaskRuntime.cpp` |
 
 An ARM build of the same tree would supply `SWIBoot` in assembly and use
 `SWIExitSchedule`/`DomainAccessFor` from it; nothing in `os600/kernel`
 knows which it is running on.
+
+## Trying it
+
+`src/os600/tests/test_HostRuntime.cpp` builds a port, a monitor and three
+tasks by hand (object creation is not reconstructed yet), starts the runtime
+and lets a client task send three messages to a server task, call the
+monitor twice and time a receive out through the timer engine - all through
+the stubs, on threads, scheduled by the real kernel.  `ctest -R HostRuntime`.
+
+Known limits of this first runtime: no pre-emption between system calls
+(see above); a task's thread is never destroyed (`~TTask` is not
+reconstructed yet - `HostTaskDeleted` is there for it); `Throw` and
+`SMemCopyTo/FromShared` are still stubs; the run ends by leaving parked
+threads to the process exit.

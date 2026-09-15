@@ -10,7 +10,7 @@ static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 extern Boolean gHostInterruptEnabled;
-extern ULong gHostTimeSliceAlarm;
+extern Boolean gHostTimeSliceArmed;
 
 static TTask* MakeTask(ULong priority)
 {
@@ -113,7 +113,7 @@ int main()
 	// the time-slice timer is armed once and stopped
 	gWantSchedulerToRun = true;
 	StartScheduler();
-	EXPECT(gSchedulerRunning && gHostInterruptEnabled && gHostTimeSliceAlarm == kSchedulerTimeSlice && !gWantSchedulerToRun);
+	EXPECT(gSchedulerRunning && gHostInterruptEnabled && gHostTimeSliceArmed && !gWantSchedulerToRun);
 	StopScheduler();
 	EXPECT(!gSchedulerRunning && !gHostInterruptEnabled);
 

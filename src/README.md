@@ -16,9 +16,13 @@ src/
   os600/        the kernel layer
     kernel/       privileged side: object table, tasks, scheduler, ports,
                   monitors, semaphores, shared memory, domains, timers, queues
+      host/         the host task runtime: threads standing in for SWIBoot's
+                    context switch (docs/host-runtime.md)
     user/         user-mode side: the TU* API from the DDK, over the syscall
-                  interface (so far: the entry points the kernel points a
-                  task at - MonitorEntryGlue, TaskKillSelf, Throw)
+                  interface (the *SWI stubs of UserGlobals.h)
+      host/         the stubs as direct calls into the kernel through the
+                    runtime; MonitorEntryGlue, TaskKillSelf, Throw
+    tests/        tests spanning kernel, user side and runtime
   hal/          hardware abstraction (Voyager/Cirrus chipset for the MP2x00,
                 a host implementation for running on Linux) (to come)
   bootstrap/    reset and boot code (to come)
@@ -33,7 +37,9 @@ src/
   without its prefix where the DDK does the same (`SingleQ.h` declares
   `TSingleQItem`/`TSingleQContainer`, so ours is `DoubleQ.h`).
 * Every reconstructed function carries a comment giving its ROM address and
-  mangled name, e.g. `// ROM 0x0009d914 AddBefore__17TDoubleQContainerFPvT1`.
+  mangled name, e.g. `// ROM 0x0009d914 AddBefore__17TDoubleQContainerFPvT1`;
+  code lifted from the middle of an assembly routine cites the routine plus
+  an offset, `// ROM 0x003a4018 SWIBoot +0xb8`.
   Class declarations cite the ROM-observed size. This is what ties the source
   to the evidence, and what the coverage tooling reads.
 * Original names are kept: Apple's identifiers (`fHead`, `TDoubleQContainer`,

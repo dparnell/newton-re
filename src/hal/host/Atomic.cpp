@@ -45,6 +45,12 @@ ExitFIQAtomic(void)
 	gAtomicLock.unlock();
 }
 
+extern "C" Boolean
+InAtomicSection(void)
+{
+	return gAtomicNestCount != 0 || gAtomicFIQNestCount != 0;
+}
+
 extern "C" ULong
 Swap(ULong* address, ULong value)
 {

@@ -233,6 +233,19 @@ StartScheduler()
 }
 
 
+// ROM 0x001ce834 PreEmptiveTimerInterruptHandler
+// The slice is up: reschedule (whoever was preferred has had its chance) and
+// arm the next slice.  The ROM writes match register 0x0F182C00 = counter +
+// 0x11ff8 directly; the HAL does that.
+void
+PreEmptiveTimerInterruptHandler()
+{
+	WantSchedule();
+	gKernelScheduler->fPreferredTask = nil;
+	SetTimeSliceAlarm(kSchedulerTimeSlice);
+}
+
+
 // ROM 0x001ce8e8 StopScheduler__Fv
 void
 StopScheduler()

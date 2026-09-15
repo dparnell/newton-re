@@ -13,7 +13,10 @@ src/**/*.h and compares it with symbols.json:
     (--by-class), counting each ROM function once.
 
 Only real function bodies count (not jump-table slots).  Data symbols cited
-with the same syntax are checked but not counted.
+with the same syntax are checked but not counted.  Code reconstructed from
+the middle of a larger assembly routine (a case of SWIBoot, say) cites the
+routine and adds the offset: `// ROM 0x003a4018 SWIBoot +0xb8`; the routine
+is checked, the offset is documentation.
 """
 
 from __future__ import annotations
@@ -25,7 +28,7 @@ import os
 import re
 import sys
 
-CITE = re.compile(r"//\s*ROM\s+(0x[0-9A-Fa-f]+)\s+(\S+)")
+CITE = re.compile(r"//\s*ROM\s+(0x[0-9A-Fa-f]+)\s+([^\s+]\S*)(?:\s+\+0x[0-9A-Fa-f]+)?")
 
 
 def main(argv=None) -> int:

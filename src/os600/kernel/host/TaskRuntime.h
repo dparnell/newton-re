@@ -1,0 +1,55 @@
+/*
+	File:		kernel/host/TaskRuntime.h
+
+	Contains:	The host's stand-in for SWIBoot's context switch and for the idle
+				task's wait-for-interrupt (docs/host-runtime.md).
+
+				One host thread per TTask; only the thread of gCurrentTask runs.
+				A system-call stub calls the kernel glue, then HostSWIExit: the
+				exit path's decisions (SWIExitSchedule) and, if another task was
+				picked, the hand-over to its thread.  Interrupts (the timer
+				engine's alarm, the scheduler's time slice) are taken at those
+				points and in the idle task, never concurrently.
+
+				Started with HostRunTasks(idle) from the main thread, which
+				returns when a task calls HostStopTasks.  Threads of tasks still
+				parked then are left where they are; the process exit reaps them.
+
+	ROM:		SWIBoot 0x003a4018-0x003a44c0 (assembly), SleepTask 0x001ce924,
+				MonitorEntryGlue 0x0038ac98 (the redirect convention)
+*/
+
+#ifndef __HOST_TASKRUNTIME_H
+#define __HOST_TASKRUNTIME_H
+
+#ifndef __TASK_H
+#include "Task.h"
+#endif
+
+// Thrown out of a stub when the task is resumed at a pc the kernel changed
+// (Throw, TaskKillSelf, MonitorEntryGlue); the task's thread trampoline
+// catches it and calls the function at fRegister[kcPC] with r0-r3 as its
+// arguments, as the ARM would enter it.
+struct TTaskRedirect
+{
+	TRegister		fPC;
+};
+
+enum { kcR0 = 0, kcR1, kcR2, kcR3, kcR4, kcR11 = 11, kcSP = 13, kcLR = 14, kcPC = 15 };
+
+// A stub's resume marker: any value no host function lives at.  A stub that
+// wants "skip the retry" semantics (semaphores) uses marker + 4 as well.
+const TRegister kResumeInStub = 0x100;
+
+void		HostRunTasks(TTask* idle);				// main thread: run until HostStopTasks; `idle` is gIdleTask's stand-in entry
+void		HostStopTasks();						// from a task: end HostRunTasks
+Boolean		HostSWIExit(TTask* self, TRegister marker);	// after the glue: deliver due interrupts, exit path, switch if picked;
+													// true if a switch happened (results are then in self's registers).
+													// Throws TTaskRedirect if the pc is no longer `marker` on resume.
+void		HostDeliverInterrupts();				// run the handlers of due alarms (called with the baton)
+void		HostIdleTask();							// the idle task's body: wait for the next deadline, deliver, reschedule
+void		HostTaskDeleted(TTask* task);			// ~TTask: forget the task's thread
+
+extern Boolean	gHostTasksStopping;
+
+#endif	/* __HOST_TASKRUNTIME_H */

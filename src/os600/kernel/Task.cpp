@@ -4,11 +4,13 @@
 	Contains:	TTask construction and the task queues.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	TTask::Init, FreeStack, ~TTask and SetBequeathId depend on the memory
-	system, environments and monitors and follow with those.
+	TTask::Init, FreeStack and ~TTask depend on the memory system and the
+	stack manager and follow with those.
 */
 
 #include "Task.h"
+#include "KernelObjects.h"
+#include "OSErrors.h"
 
 
 /* -------------------------------------------------------------------------------
@@ -198,4 +200,17 @@ TTask::TTask()
 	fBequeathId = 0;
 	fInheritedId = 0;
 	fPriority = 0;
+}
+
+
+// ROM 0x00250330 SetBequeathId__5TTaskFUl
+// Our objects go to task `id` when we die (DeleteTask), and it remembers
+// whom it inherits from.
+void
+TTask::SetBequeathId(TObjectId id)
+{
+	fBequeathId = id;
+	TTask* heir;
+	if (ConvertIdToObj(kTaskType, id, &heir) == noErr)
+		heir->fInheritedId = fId;
 }

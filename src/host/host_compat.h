@@ -5,7 +5,9 @@
 	NewtonTypes.h guards both `typedef unsigned char Boolean` and an
 	`enum { false, true }` behind __boolean_defined__; the enum is illegal in
 	C++, so we define Boolean ourselves and set the guard.  stdlib.h would
-	typedef the wchar_t keyword unless __wchar_t is set.
+	typedef the wchar_t keyword unless __wchar_t is set.  NewtonExceptions.h
+	redefines the try/catch/throw keywords to its setjmp-based handlers unless
+	told the compiler has real exceptions (the flag it sets for MSVC itself).
 */
 #ifndef __HOST_COMPAT_H
 #define __HOST_COMPAT_H
@@ -13,5 +15,6 @@
 typedef unsigned char Boolean;
 #define __boolean_defined__ 1
 #define __wchar_t 1
+#define hasCppExceptions 1
 
 #endif /* __HOST_COMPAT_H */

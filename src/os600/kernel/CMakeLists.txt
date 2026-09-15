@@ -2,6 +2,7 @@ add_library(os600_kernel STATIC
     Domain.cpp
     DoubleQ.cpp
     Environment.cpp
+    GenericSWI.cpp
     KernelGlobals.cpp
     KernelObjects.cpp
     MemArchManager.cpp
@@ -16,6 +17,7 @@ add_library(os600_kernel STATIC
     TimerEngine.cpp
     Task.cpp
     TaskSwitch.cpp
+    host/TaskRuntime.cpp
 )
 target_link_libraries(os600_kernel PUBLIC newton_config hal_host toolbox os600_user)
 target_include_directories(os600_kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

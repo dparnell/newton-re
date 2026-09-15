@@ -61,5 +61,6 @@ void	HoldSchedule();							// defer reschedules until the matching AllowSchedule
 void	AllowSchedule();
 void	StartScheduler();						// arm the time-slice interrupt
 void	StopScheduler();
+void	PreEmptiveTimerInterruptHandler();		// the time-slice interrupt: ask for a reschedule, re-arm
 
 #endif	/* __SCHEDULER_H */
