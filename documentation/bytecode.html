@@ -1,0 +1,1881 @@
+<html>
+  <head>
+<BASE HREF="http://archive.dstc.edu.au/AU/staff/david-arnold/newton/bytecode.html">
+
+    <title>NewtonScript Byte Code Specification</title>
+  </head>
+
+  <body bgcolor=#ffffff>
+    <hr>
+    <h1>NewtonScript ByteCode</h1>
+    <address>
+      Matthew Faupel, Draft 1, 17 Nov 1994<br>
+      David Arnold, HTML conversion, 8 Aug 1997
+    </address>
+
+    <hr>
+
+    <h3>Contents</h3>
+
+    <dl compact>
+    <dt>1
+    <dd>Background to ByteCode
+
+    <dt>1.1
+    <dd>The Representation of Compiled NewtonScript
+
+    <dt>1.2
+    <dd>How Values are Encoded in NewtonScript
+
+    <dt>2
+    <dd>ByteCode
+
+    <dt>2.1
+    <dd>The General Format of ByteCode
+
+    <dt>2.2
+    <dd>Explanation of the Description of Individual ByteCodes
+
+    <dt>2.3
+    <dd>ByteCode Descriptions
+
+    </dl>
+
+    <hr>
+    <h3 align=center>Abstract</h3>
+
+    <blockquote>
+    <p>
+      This technical report details my discoveries about NewtonScript
+      bytecode.  It is not an official Apple document and as the
+      information was discovered by observation only, it may be
+      neither accurate nor complete.  This document is distributed in
+      the hope that it will be useful, but without any warranty;
+      without even the implied warranty of merchantability or fitness
+      for a particular purpose.
+    </p>
+
+    <p>
+      The discoveries detailed in this technical report cover how
+      compiled NewtonScript is represented on the Apple MessagePad
+      platform, how values are encoded, the general format of
+      bytecode, and the behaviour of individual bytecodes.
+    </p>
+
+    <p>
+      The author is indebted to Jason Harper for his ViewFrame Demo
+      program, which made me realise that bytecode might not be as
+      impenetrable as I first thought.  Any omissions or errors in
+      this document are though, entirely my responsibility.
+    </p>
+
+    </blockquote>
+
+    <hr>
+
+    <a name="1">
+      <h2>1 Background to ByteCode</h2>
+    </a>
+    <p>
+      In order to understand fully the description of NewtonScript bytecode
+      given in the second section of this report a number of things first
+      need to be made clear.
+    </p>
+
+    <a name="1.1">
+      <h3>1.1 The Representation of Compiled NewtonScript</h3>
+    </a>
+
+    <p>
+      A compiled NewtonScript function is represented on the MessagePad as a
+      frame with the following fixed format:
+    </p>
+
+    <blockquote>
+    <xmp>
+{
+	class: 'CodeBlock,
+	instructions: <bytecode of type 'instructions>,
+	literals: [...],
+	argFrame: {
+		_nextArgFrame: {}
+		_Parent: {},
+		_implementor: {},
+		...
+		},
+	numArgs: <integer>
+}
+    </xmp>
+    </blockquote>
+
+    <ul>
+      <li>class is always set to the symbol 'CodeBlock.
+      <li>instructions is a block of bytecode bytes, the meaning of
+          which we will get to a little later.
+      <li>literals is an array of all the literal values used in the
+          NewtonScriptfunction (symbols, staticly defined frames,
+          sub-functions and so on).
+      <li>numArgs is the number of arguments to the function.
+      <li>argFrame consists of three sections:
+          <ul>
+	    <li>The first three items are always the fixed slots
+	        _nextArgFrame, _Parent and _implementor.
+	    <li>The next numArgs slots (i.e. possibly none if numArgs
+	        is zero) are arguments of the function in the order
+	        that they appear in the source code.
+	    <li>Any remaining slots (again possibly none) represent
+	        the local variables declared within the function.
+	  </ul>
+    </ul>
+
+    <p>
+      To give a concrete example, here is a short NewtonScript
+      function and the frame that represents it:
+    </p>
+
+    <blockquote>
+      <xmp>
+func( foo, bar ) {
+	begin
+		class: 'CodeBlock,
+		local fred := '[];
+		instructions: <instructions>,  
+		              /* 18 A5 7D 02 is
+			      return fred */
+		literals: [ '[] ],
+	end
+
+	argFrame: {
+		_nextArgFrame: {},
+		_Parent: {},
+		_implementor: {},
+		foo: NIL,
+		bar: NIL,
+		fred: NIL
+	},
+
+	numArgs: 2
+}
+      </xmp>
+    </blockquote>
+
+    <a name="1.2">
+      <h3>1.2 How Values are Encoded in NewtonScript</h3>
+    </a>
+
+    <p>
+      A knowledge of how NewtonScript encodes values is useful for
+      understanding some of the bytecodes.  Certain simple values such as
+      integers, and the constants True and Nil are encoded as immediate
+      values.  More complex values such as floats, icons, frames and arrays
+      are encoded as separate data blocks and then referred to via a
+      pointer.
+    </p>
+
+    <p>
+      NewtonScript has a uniform way of encoding both the simple values and
+      the pointers to more complex values within a 32 bit field.  It
+      achieves this by using the lowest two bits of the field as a type
+      identifier.  What the value means for each of the four possible types
+      is as follows:
+    </p>
+
+    <div align=center>
+    <table border=1 width=80%>
+      <tr>
+        <td valign=top>00</td>
+        <td colspan=2>
+	  The field represents a signed integer in the range -229 to
+	  +229-1.  i.e. if the low two bits of the 32 bit value are
+	  zero, the integer value that it represents can be obtained
+	  by performing value >> 2.
+	</td>
+      </tr>
+
+      <tr>
+        <td valign=top>01</td>
+	<td colspan=2>
+          The field represents a pointer to a complex structure.  The pointer 
+	  value can be obtained by performing value & 0xFFFFFFFC.
+	</td>
+      </tr>
+
+      <tr>
+        <td rowspan=4 valign=top>10</td>
+	<td colspan=2>
+	  The field represents a unique system value.  As far as I'm
+	  aware the possible values are:
+	</td>
+      </tr>
+
+      <tr>
+        <td>0x00000002</td>
+	<td>Nil</td>
+      </tr>
+
+      <tr>
+        <td>0x0000001A</td>
+	<td>True</td>
+      </tr>
+
+      <tr>
+        <td>0x000UUUU6</td>
+	<td>
+	  The Unicode character \uUUUU, e.g. the NewtonScript constant
+	  $A translates to the immediate value 0x00000496.
+	</td>
+      </tr>
+
+      <tr>
+        <td valign=top>11</td>
+	<td colspan=2>
+          The field represents a magic pointer.  These are the constants 
+          that are reperesented as @<number> and have names beginning
+          with ROM_ in the NTK definitions file.  The number is encoded
+          in the top 30 bits of the field.  As an example,
+          ROM_asciishift (@7) is encoded as 0x0000001F, 
+          i.e. ....000111	11.	
+	</td>
+      </tr>
+    </table>
+    </div>
+
+    <a name="2">
+      <h2>2 ByteCode</h2>
+    </a>
+
+    <a name="2.1">
+      <h3>2.1 The General Format of ByteCode</h3>
+    </a>
+
+    <p>
+      All NewtonScript bytecodes are either one or three bytes long.  If the
+      low three bits of the first byte in the sequence are all 1 then the
+      following two bytes are also part of the instruction, otherwise it is
+      a single byte instruction.  The following are all examples of valid
+      byte codes (shown in hexadecimal):
+    </p>
+
+    <xmp>
+	00
+	73
+	5F 02 15
+	37 00 10
+    </xmp>
+
+    <p>
+      Very often (but not always) the low three bits are used as a count
+      value and if the required value exceeds 6 then all three bits are set
+      and the following two bytes are used instead for the value.  Hence
+      this initially rather odd seeming format is actually quite useful for
+      keeping bytecode compact.  The use of this count field is explained in
+      more detail below.
+    </p>
+
+    <a name="2.2">
+      <h3>2.2 Explanation of the Description of Individual ByteCodes</h3>
+    </a>
+
+    <p>
+      All of the bytecode descriptions given below follow the same
+      format:
+    </p>
+
+    <blockquote>
+      <table width=80% border=1>
+        <tr>
+          <td rowspan=3 valign=top>Name</td>
+          <td>Octal</td>
+          <td>Hex</td>
+          <td>Binary</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>Stack behaviour</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>Longer description</td>
+	</tr>
+      </table>
+    </blockquote>
+
+    <p>
+      The bytecodes are given as octal values first, because this makes it
+      easier to show the low three bits of the code as a separate digit.  As
+      mentioned above, these three bits often act as a count field.  When
+      this is the case, the letter `N' will be used instead of a digit and
+      the role played by the count field will be explained in the stack
+      behaviour and description sections.  Remember that any bytecode listed
+      as xxN can be either one or three bytes long!
+    </p>
+
+    <p>
+      The hex value of the bytecode is also given as tools such as ViewFrame
+      tend to show raw data in hex format rather than octal.  In the case of
+      bytecodes with a count field, the hex value given will be with the
+      count set to zero.
+    </p>
+
+    <p>
+      Bytecode is executed on a virtual machine that uses a stack of
+      NewtonScript values (see section 1.2), hence how each instruction
+      modifies the stack important.  The stack behaviour is shown as:
+    </p>
+
+    <xmp>
+      {items removed from stack} -> {items placed on stack}
+    </xmp>
+
+    <p>      
+      The items are listed in the order that they are pushed onto the
+      stack, i.e. the leftmost is the first item pushed and the
+      rightmost the last. Repetition of items is indicated by braces
+      (...) followed by a repetition count.  If an item on the stack
+      must be of a certain type, the description says so, otherwise
+      placeholders such as <#007F>X" are used.  References to arrays,
+      frames and symbols are indicated by [], {} and ' respectively.
+      An empty stack is indicated by the symbol *.
+    </p>
+
+    <a name="2.3">
+      <h3>2.3 ByteCode Descriptions</h3>
+    </a>
+
+    <table width=100% border=1>
+        <tr>
+          <td rowspan=3 valign=top>Name</td>
+          <td>Octal</td>
+          <td>Hex</td>
+          <td>Binary</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>Stack behaviour</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>Longer description</td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>pop</td>
+          <td>000</td>
+          <td>00</td>
+          <td>0000 0000</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>Removes the top item from the stack</td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>dup</td>
+          <td>001</td>
+          <td>01</td>
+          <td>0000 0001</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> X, X</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>Duplicates the top item on the stack</td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>return</td>
+          <td>002</td>
+          <td>02</td>
+          <td>0000 0010</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Exits from a routine.  By convention, the top item on the
+            stack is the return value of the routine.  It is possible
+            to return from a routine with more items on the stack (or
+            none at all), however the current Apple NewtonScript
+            compiler ensures that the functions that it produces
+            always leave one and only one value on the stack.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>self</td>
+          <td>003</td>
+          <td>03</td>
+          <td>0000 0011</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> self</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Pushes a reference to the frame containing the current
+            function onto the stack.  In other words this pushes the
+            value represented by the NewtonScript value self.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>create closure(?)</td>
+          <td>004</td>
+          <td>04</td>
+          <td>0000 0100</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>CodeBlock -> CodeBlock</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This bytecode is inserted by the compiler whenever it has
+            just pushed a CodeBlock frame either as a parameter to a
+            function call or message send, or as the target of a
+            call...with statement.  My guess is that this initialises
+            the three reserved fields in the argFrame of the CodeBlock
+            (see 1.1), but I haven't yet attempted to verify this.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>foreach next</td>
+          <td>005</td>
+          <td>05</td>
+          <td>0000 0101</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>[iterator] -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Steps to next item in iteration.  See 307 000 021 -
+            foreach for a full explanation.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>foreach complete</td>
+          <td>006</td>
+          <td>06</td>
+          <td>0000 0110</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>[iterator] -> boolean</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Checks if iteration is complete. See 307 000 021 - foreach
+            for a full explanation.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>end exception handling(?)</td>
+          <td>007 000 007</td>
+          <td>07 00 07</td>
+          <td>0000 0111 0000 0000 0000 0111</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    See on exception for full explanation.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top><em>unused</em>(?)</td>
+          <td>01N</td>
+          <td>08 through 0F</td>
+          <td>0000 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>-</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    Apparently unused.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top><em>unused</em>(?)</td>
+          <td>02N</td>
+          <td>10 through 17</td>
+          <td>0001 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>-</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    Apparently unused.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>push literal</td>
+          <td>03N</td>
+          <td>18 through 1F</td>
+          <td>0001 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> literal N</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Pushes the literal which is element N of the literals
+            array of this code block onto the stack.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>push immediate</td>
+          <td>04N</td>
+          <td>20 through 27</td>
+          <td>0010 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> N</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            N here is treated as an immediate value as described in
+            section 1.2.  This instruction is used to push any
+            immediate value that can be represented in 16 (sign
+            extended) bits or less.  Values that require the full 32
+            bits are stored as literals and pushed using 03N.
+            <p>
+
+            Some examples of the use of this instruction:
+
+	    <xmp>
+20	push 0
+22	push Nil
+23	push @0
+24	push 1
+27 00 1A	push True
+27 02 86	push $(
+27 FF F8	push -2
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>call global</td>
+          <td>05N</td>
+          <td>28 through 2F</td>
+          <td>0010 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>argument x N, 'FunctionSymbol -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            N arguments to the function are expected on the stack
+            (pushed in the same order that they are listed in the
+            function parameter list), followed by a reference to the
+            symbol that represents the name of the function (this is
+            stored in the literals array and pushed using 03N).
+            Although the stack description indicates that the
+            instruction itself pushes nothing onto the stack, remember
+            that all NewtonScript functions conventionally push a
+            single item onto the stack before returning.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+max( foo, bar ) translates to:
+
+7B	push foo (assuming it to be the first
+        parameter of the function)
+7C	push bar (assuming it to be the second)
+18	push 'max (assuming it to be the first
+        literal in the function)
+2A	Call a global function with two arguments.
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>call with</td>
+          <td>06N</td>
+          <td>30 through 37</td>
+          <td>0011 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>argument x N, CodeBlock -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This directly translates the NewtonScript
+	    <tt>call&nbsp;...&nbsp;with()</tt> construct.  N arguments
+	    to the function are expected on the stack (pushed in the
+	    same order that they are listed in the function parameter
+	    list), followed by a reference to a CodeBlock frame that
+	    has had the <tt>create closure</tt> instruction called on
+	    it.  As before, remember that all NewtonScript functions
+	    conventionally push a single item onto the stack before
+	    returning.
+	    <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+call func(foo) return foo with (1) translates to:
+
+24	push 1
+18	push func (assuming it to be the first
+        literal in the containing function).  Note
+        that inline function definitions like this
+        are encoded as a CodeBlock frame in the
+        literals array of the containing function.
+04	Form a closure for the func
+31	Call ... with passing one argument.
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>send message</td>
+          <td>07N</td>
+          <td>38 through 3F</td>
+          <td>0011 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>argument x N, {Receiver}, 'Message -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This directly translates the NewtonScript ":" construct.
+            N arguments to the message are expected on the stack
+            (pushed in the same order that they are listed in the
+            function parameter list), followed by a reference to the
+            receiving frame and then the symbol of the message.
+            Again, remember that all NewtonScript functions
+            conventionally push a single item onto the stack before
+            returning.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+:Open() translates to:
+
+03	push self
+18	push 'Open (assuming it to be the first
+        literal in the function)
+38	Send message with zero parameters.
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>conditional send message</td>
+          <td>10N</td>
+          <td>40 through 47</td>
+          <td>0100 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>argument x N, {Receiver}, 'Message -> * or Nil</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This directly translates the NewtonScript ":?"  construct.
+            N arguments to the message are expected on the stack
+            (pushed in the same order that they are listed in the
+            function parameter list), followed by a reference to the
+            receiving frame and then the symbol of the message to be
+            sent if the given function exists.  If the function
+            doesn't exist, Nil is placed on the stack else it's left
+            up to the function to put something there.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+child:?DoItIfYouCan() translates to:
+
+7B	push child (assuming it to be the first
+        parameter of the function)
+18	push 'DoItIfYouCan (assuming it to be the
+        first literal in the function)
+40	Send message with zero parameters if possible.
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>inherited send message</td>
+          <td>11N</td>
+          <td>48 through 4F</td>
+          <td>0100 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>argument x N, 'Message -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This directly translates the NewtonScript "inherited:"
+            construct.  N arguments to the message are expected on the
+            stack (pushed in the same order that they are listed in
+            the function parameter list), followed by the symbol of
+            the message.  Again, remember that all NewtonScript
+            functions conventionally push a single item onto the stack
+            before returning.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+inherited:Open() translates to:
+
+18	push 'Open (assuming it to be the first
+        literal in the function)
+48	Send message with zero parameters to
+        inheritance parent.
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>conditional inherited send message</td>
+          <td>12N</td>
+          <td>50 through 57</td>
+          <td>0101 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>argument x N, 'Message -> * or Nil</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This directly translates the NewtonScript "inherited:?"
+            construct.  N arguments to the message are expected on the
+            stack (pushed in the same order that they are listed in
+            the function parameter list), followed by the symbol of
+            the message to be sent if the given function exists.  If
+            the function doesn't exist, Nil is placed on the stack
+            else it's left up to the function to put something there.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+inherited:?DoItIfYouCan() translates to:
+
+18	push 'DoItIfYouCan (assuming it to be the
+        first literal in the function)
+50	Send message with zero parameters to
+        inheritance parent (if possible).
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>goto</td>
+          <td>13N</td>
+          <td>58 through 5F</td>
+          <td>0101 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This instruction causes execution to pass to location N,
+            where N is the offset from the start of the block of
+            bytecode (i.e. gotos are absolute, not relative).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>goto if not Nil</td>
+          <td>14N</td>
+          <td>60 through 67</td>
+          <td>0110 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            X is removed from the stack and examined.  If it is Nil,
+            execution continues with the next instruction in sequence.
+            If it is not Nil, execution passes to location N where N
+            is the offset from the start of the block of bytecode.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>goto if Nil</td>
+          <td>15N</td>
+          <td>68 through 6F</td>
+          <td>0110 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            X is removed from the stack and examined.  If it is not
+            Nil, execution continues with the next instruction in
+            sequence.  If it is Nil, execution passes to location N
+            where N is the offset from the start of the block of
+            bytecode.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>push external variable</td>
+          <td>16N</td>
+          <td>06</td>
+          <td>0111 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> literal index N</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This bytecode pushes onto the stack the value contained in
+            a variable or slot from outside of the function.  The name
+            of the variable to push is given by literal N in the
+            function's literals array; this literal should be a symbol
+            reference.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+length( functions ) translates to:
+
+70	        push value of functions 
+                (assuming 'functions is the first
+                entry in the literals array of the
+		containing CodeBlock)
+C7 00 12	Return the length of functions.
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>push local variable</td>
+          <td>17N</td>
+          <td>78 through 7F</td>
+          <td>0111 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>* -> value of slot N of argFrame</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This bytecode pushes onto the stack the value contained in
+            the Nth slot of the CodeBlock's argFrame frame.  In other
+            words, this bytecode is commonly used to push either the
+            value of an argument to the function or that of a local
+            variable.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+func( foo ) return foo translates to:
+
+73	push value of foo (remember argument
+        slots start after the three fixed
+	slots in argFrame, hence the index is
+	3 not 0).
+02	Return
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>create frame</td>
+          <td>20N</td>
+          <td>80 through 87</td>
+          <td>1000 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>value x N, [frameMap] -> {frame}</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This bytecode creates a frame given N slot values on the
+            stack plus a frame map describing the slots in the frame.
+            The frame map is an array whose first item is Nil and then
+            each subsequent item is a reference to a symbol giving the
+            name of the corresponding slot in the frame being created.
+            The values are pushed onto the stack in the order of the
+            slot names in the frame map.  If this is as clear as mud,
+            maybe the example will help:
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+local fr := { size: 4, count: 7 } translates to:
+
+27 00 10	push 4
+27 00 1C	push 7
+18	        push frame map (assuming it to be
+                the first literal in the CodeBlock). 
+		The frame map is an array thus: 
+		[Nil, 'size, 'count]. 
+82	        Create a frame with two slots
+A6	        Store in fr (assumed to be the 6th
+                slot in argFrame)
+            </xmp>
+
+            A final NB.  The frame map array isn't a normal array of
+            class Array.  Its class is a small integer, whose value
+            seems to be made up from three possible flags.  I'm
+            investigating the meaning of these flags at the moment.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>create array</td>
+          <td>21N</td>
+          <td>88 through 8F</td>
+          <td>1000 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>
+	    element x N, 'Class -> [Class: ...]
+	    <em>or</em> <br>
+	    integer, 'Class -> [Class: ...]
+	  </td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This bytecode creates an array given N element values on
+            the stack plus a reference to a symbol defining the class
+            of the array.  The class of the array is specified in
+            NewtonScript with an initial "<class>:" inside the array,
+            e.g.: [stepChildren:].  If no class is specified, then the
+            default class of Array is used.
+            <p>
+
+            In the special case of N being 0xFFFF, the instruction
+            takes a single NewtonScript integer from the stack instead
+            of N element values and creates an empty array (i.e. each
+            element is Nil) with the given number of elements.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+local foo := [ 4, 7 ] translates to:
+
+27 00 10	push 4
+27 00 1C	push 7
+18	        push 'Array (assuming it to be
+                the first literal in the CodeBlock) 
+8A	        Create an array with two elements
+A5	        Store in foo (assumed to be the 5th
+                slot in argFrame)
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>push slot value</td>
+          <td>221</td>
+          <td>91</td>
+          <td>1001 0001</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>{frame}, 'SlotName -> slot value</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This takes a frame and the name of a slot in that frame
+            and pushes the value contained in the slot.  If the slot
+            name is a single name then it is represented by a symbol
+            reference.  If the slot name is a path expression
+            (e.g. foo.bar) then it is represented by an array of class
+            pathExpr with one element per section of the path.  Each
+            element is then a reference to the symbol for that part of
+            the path.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+return self.foo.bar translates to:
+
+03	push self
+18	push '[pathExpr: 'foo, 'bar] (assuming it
+        to be the first literal)
+91	Get slot value
+02	Return
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>assign to slot</td>
+          <td>230</td>
+          <td>98</td>
+          <td>1001 1000</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>{X}, 'SlotName, Y -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This assigns the value Y to the slot SlotName of frame X,
+            i.e. X.SlotName := Y.  As with <tt>push slot value</tt>
+            the slot name is represented either by a simple symbol
+            reference or a pathExpr array for a complex path
+            expression.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>assign to slot and push result</td>
+          <td>231</td>
+          <td>99</td>
+          <td>1001 1001</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>{X}, 'SlotName, Y -> Y</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Identical to <tt>assign to slot</tt> except that the value
+            assigned to the slot is also pushed onto the stack.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>assign to local variable</td>
+          <td>24N</td>
+          <td>06</td>
+          <td>1010 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Value X is assigned to the Nth slot of the CodeBlock's
+            argFrame frame.  In other words, this bytecode is usually
+            used to set the value of a local variable.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+local x := '[] translates to:
+
+18	        push '[] (assuming it to be the
+                first literal)
+A7 00 10	Assign to x (assuming it to be 16th
+                slot in argFrame)
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>assign to external variable</td>
+          <td>25N</td>
+          <td>A8 through AF</td>
+          <td>1010 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            Value X is assigned to a variable or slot from outside of
+            the function.  The name of the variable to assign to is
+            given by literal N in the function's literals array; this
+            literal should be a symbol reference.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>increment local variable</td>
+          <td>26N</td>
+          <td></td>
+          <td>1011 0???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>
+	    Increment -> Increment, local variable N + Increment
+	  </td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This bytecode adds the given integer increment to the
+            local variable in the Nth slot of the CodeBlock's argFrame
+            and the returns both the increment and the new value of
+            the local variable.  This instruction is used internally
+            as part of the coding of for loops.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>for loop goto</td>
+          <td>27N</td>
+          <td>B8 through BF</td>
+          <td>1011 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>Increment, value, limit -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This instruction is placed at the end of a for loop
+            construct.  It takes the increment, current value of the
+            counter (after having been incremented by <tt>increment
+            local variable</tt> and the limit value of the loop.  If
+            the counter value now exceeds the loop limit, execution
+            continues with the next instruction in sequence.  If it
+            does not, execution passes to location N where N is the
+            offset from the start of the block of bytecode.  This
+            instruction is used internally as part of the coding of
+            for loops.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>add</td>
+          <td>300</td>
+          <td>C0</td>
+          <td>1100 0000</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> X+Y</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            The 30N bytecode series encodes a number of different
+            low-level system function calls.  Any NewtonScript
+            operator or built-in function not explicitly mentioned
+            here is implemented by using a standard function call
+            (bytecode 05N).  This first bytecode of the series
+            implements addition (of integers or floats).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>subtract</td>
+          <td>301</td>
+          <td>C1</td>
+          <td>1100 0001</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> X-Y</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>Subtraction of integers or floats.</td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>dereference array object</td>
+          <td>302</td>
+          <td>C2</td>
+          <td>1100 0010</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>[X], Y -> X[Y]</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This pushes the array element Y of array X.  Y should be
+	    an integer.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>assign to array element and push</td>
+          <td>303</td>
+          <td>C3</td>
+          <td>1100 0011</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>[X], Y, Z -> Z</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This assignes value Z to the pushes the array element Y of
+	    array X i.e.  X[Y] := Z.  Y should be an integer.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>compare equal</td>
+          <td>304</td>
+          <td>C4</td>
+          <td>1100 0100</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Boolean (X=Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This compares X and Y for equality and pushes a Boolean
+	    result (True or Nil).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>not</td>
+          <td>305</td>
+          <td>C5</td>
+          <td>1100 0101</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> Boolean (not X)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This takes any value X and returns not X.  Not Nil is
+	    True, not anything else is Nil.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>compare not equal</td>
+          <td>306</td>
+          <td>C6</td>
+          <td>1100 0110</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Boolean (X<>Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This compares X and Y for inequality and pushes a Boolean
+	    result (True or Nil).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>multiply</td>
+          <td>307 000 007</td>
+          <td>C7 00 07</td>
+          <td>1100 0111 0000 0000 0000 0111</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> X*Y</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements multiplication (of integers or floats.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>divide with float result</td>
+          <td>307 000 010</td>
+          <td>C7 00 08</td>
+          <td>1100 0111 0000 0000 0000 1000</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Float (X/Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements division (of integers or floats) with a
+	    float result, i.e.  it corresponds to the "/" operator in
+	    NewtonScript. 
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>divide with integer result</td>
+          <td>307 000 011</td>
+          <td>C7 00 09</td>
+          <td>1100 0111 0000 0000 0000 1001</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Integer (X div Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements division of integers with an integer
+	    result, i.e. it corresponds to the <#007F>div" operator in
+	    NewtonScript. 
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>compare less than</td>
+          <td>307 000 012</td>
+          <td>C7 00 0A</td>
+          <td>1100 0111 0000 0000 0000 1010</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Boolean (X < Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This checks if X is less than Y and pushes a Boolean
+	    result (True or Nil). 
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>compare greater than</td>
+          <td>307 000 013</td>
+          <td>C7 00 0B</td>
+          <td>1100 0111 0000 0000 0000 1011</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Boolean (X > Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This checks if X is greater than Y and pushes a Boolean
+	    result (True or Nil).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>compare greater or equal</td>
+          <td>307 000 014</td>
+          <td>C7 00 0C</td>
+          <td>1100 0111 0000 0000 0000 1100</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Boolean (X >= Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This checks if X is greater than or equal to Y and pushes
+	    a Boolean result (True or Nil).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>compare less or equal</td>
+          <td>307 000 015</td>
+          <td>C7 00 0D</td>
+          <td>1100 0111 0000 0000 0000 1101</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Y -> Boolean (X <= Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This checks if X is less than or equal to Y and pushes a
+	    Boolean result (True or Nil).
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>binary and</td>
+          <td>307 000 016</td>
+          <td>C7 00 0E</td>
+          <td>1100 0111 0000 0000 0000 1110</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>Integer X, integer Y -> Integer band(X,Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This performs a binary and of the two integers X and Y.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>binary or</td>
+          <td>307 000 017</td>
+          <td>C7 00 0F</td>
+          <td>1100 0111 0000 0000 0000 1111</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>Integer X, integer Y -> Integer bor(X,Y)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This performs a binary or of the two integers X and Y.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>binary not</td>
+          <td>307 000 020</td>
+          <td>C7 00 10</td>
+          <td>1100 0111 0000 0000 0001 0000</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>Integer X -> Integer bnot(X)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This performs a binary not of the integer X.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>foreach</td>
+          <td>307 000 021</td>
+          <td>C7 00 11</td>
+          <td>1100 0111 0000 0000 0001 0001</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, Boolean  -> [Iterator]</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This is the fundamental instruction used to implement all
+            NewtonScript foreach loops.  If the Boolean is Nil it
+            begins a normal foreach loop and if it is True it begins a
+            foreach deeply loop.  The iterator returned is then passed
+            to the other two related instructions 005 (foreach next)
+            and 006 (foreach complete).  The iterator itself is an
+            array containing various useful state information about
+            what is being iterated over and how far the iteration has
+            progressed.
+	    <p>
+            
+            <tt>foreach next</tt> takes the iterator and modifies it
+            so that the next item in the iteration becomes the current
+            item.  <tt>foreach complete</tt> checks the state of the
+            iterator and returns True if all items have been iterated
+            over and Nil if not.
+	    <p>
+            
+            So, a foreach loop is implemented in bytecode as:
+	    <p>
+
+	    <xmp>
+??	        push thing being iterated over
+27 00 1A/22	push True or Nil (for deeply or not)
+C7 00 11	Create foreach iterator
+A?	        Assign it to a local variable.
+...	        Perform other initialisation
+                (depends on the loop type)
+5F ?? ??	Goto end of loop check (Y:)
+X: ...	        Code executed each time round the
+                iteration.
+7?	        Push the local variable referencing
+                the iterator
+05	        And move to the next thing to be
+                iterated
+Y: 7?	        Push the iterator again
+06	        And check if we've finished iterating
+6F ?? ??	Go round the loop again if not (X:)
+            </xmp>
+          </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>length</td>
+          <td>307 000 022</td>
+          <td>C7 00 12</td>
+          <td>1100 0111 0000 0000 0001 0010</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> Integer length(X)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements the length function.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>clone</td>
+          <td>307 000 023</td>
+          <td>C7 00 13</td>
+          <td>1100 0111 0000 0000 0001 0011</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> clone(X)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements the clone function.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>set class</td>
+          <td>307 000 024</td>
+          <td>C7 00 14</td>
+          <td>1100 0111 0000 0000 0001 0100</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X, 'Symbol -> modified X</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements the SetClass function e.g. SetClass( data,
+	    'Binary ). X is a complex data structure (frame, array or
+	    data block); SetClass sets the class of that structure and
+	    then returns a reference to the now modified structure.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>add array slot</td>
+          <td>307 000 025</td>
+          <td>C7 00 15</td>
+          <td>1100 0111 0000 0000 0001 0101</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>[X], Y -> Y</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements the AddArraySlot function
+	    e.g. AddArraySlot( foo, 2 ).  Y is added as the last
+	    element of the array X. 
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>make string</td>
+          <td>307 000 026</td>
+          <td>C7 00 16</td>
+          <td>1100 0111 0000 0000 0001 0110</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>[Array of strings] -> String</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This takes an array of strings and combines them into a
+            single string.  This function is used to implement the
+            NewtonScript operators "&" and "&&".  "&&" is currently
+            done by inserting an extra single space string into the
+            array of strings to be translated.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+fred && "me" translates to:
+
+70	        push value of fred ('fred is
+                the first literal)
+19 1A 1B	push " " (second), "me" (third)
+                and 'Array (fourth)
+8B	        Make an array from 3 parameters
+                and a class symbol
+C7 00 16	Make a string from the array
+            </xmp>
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>slot exists</td>
+          <td>307 000 027</td>
+          <td>C7 00 17</td>
+          <td>1100 0111 0000 0000 0001 0111</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>
+	    {X}, 'SlotName -> Boolean (True if X contains the given
+	    slot)
+	  </td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements the exists operator, but only when
+	    checking for the existance of a slot in a frame
+	    (e.g. foo.bar exists).  When checking for the existance of
+	    a variable, a function call (bytecode 05N) to the function
+	    HasVar is used instead. 
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>class of</td>
+          <td>307 000 030</td>
+          <td>C7 00 18</td>
+          <td>1100 0111 0000 0000 0001 1000</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>X -> ClassOf(X)</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+	    This implements the ClassOf function.
+	  </td>
+	</tr>
+
+
+        <tr>
+          <td rowspan=3 valign=top>on exception</td>
+          <td>31N</td>
+          <td>C8 through CF</td>
+          <td>1100 1???</td>
+	</tr>
+	
+	<tr>
+	  <td colspan=3>('Exception, byte offset)N -> *</td>
+	</tr>
+
+	<tr>
+	  <td colspan=3>
+            This takes N pairs of an exception symbol and an offset
+            into the bytecode to jump to if that exception occurs.
+            This is used to encode the high level try ... onexception
+            construct.  Note that unlike all the goto bytecodes, the
+            offset is encoded as a standard NewtonScript integer.  At
+            the end of both the normal and the exception code, the
+            bytecode 007 000 007 is executed - I guess it clears
+            whatever state was set up.
+            <p>
+
+            Example:
+	    <p>
+
+	    <xmp>
+try 1/0 onexception |evt.ex.div0| do nil becomes:
+
+18	        push '|evt.ex.div0| (first literal)
+27 00 40	push integer 16
+C9	        onexception '|evt.ex.div0| goto 16
+24	        push 1
+20              push 0
+C7 00 08	1/0
+07 00 07	End exception block (?)
+5F 00 14	Goto 20 (i.e. the end of this block)
+16: 22          Push Nil
+07 00 07	End exception block (?)
+            </xmp>  
+	  </td>
+	</tr>
+
+
+    </table>
+
+    <p>
+    <hr>
+    <h6>
+      Apple and Newton are trademarks of Apple Computer, Inc., registered in
+      the United States and other countries.  MessagePad, NewtonScript and
+      Newton ToolKit are trademarks of Apple Computer, Inc.  ViewFrame is a
+      trademark of Jason Harper.
+    </h6>
+
+  </body>
+
+<SCRIPT language="Javascript">
+<!--
+
+// FILE ARCHIVED ON 20000304014401 AND RETRIEVED FROM THE
+// INTERNET ARCHIVE ON 20040227004800.
+// JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
+// ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT (17 U.S.C.
+// SECTION 108(a)(3)).
+
+   var sWayBackCGI = "http://web.archive.org/web/20000304014401/";
+
+   function xLateUrl(aCollection, sProp) {
+      var i = 0;
+      for(i = 0; i < aCollection.length; i++)
+         if (aCollection[i][sProp].indexOf("mailto:") == -1 &&
+             aCollection[i][sProp].indexOf("javascript:") == -1)
+            aCollection[i][sProp] = sWayBackCGI + aCollection[i][sProp];
+   }
+
+   if (document.links)  xLateUrl(document.links, "href");
+   if (document.images) xLateUrl(document.images, "src");
+   if (document.embeds) xLateUrl(document.embeds, "src");
+
+   if (document.body && document.body.background)
+      document.body.background = sWayBackCGI + document.body.background;
+
+//-->
+
+</SCRIPT>
+</html>
+
