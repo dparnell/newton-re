@@ -348,6 +348,7 @@ so on. `SWIBoot` reads several of them on every SWI (see its head at
 
 ```
 build\venv\Scripts\python tools\newton-rom\analysis\swi_table.py build\MP2100D --project build\ghidra --name MP2100D --ghidra <ghidra> -o docs\os600\swi-table.md
+build\venv\Scripts\python tools\newton-rom\analysis\memobj_tables.py build\MP2100D -o docs\os600\memobj-tables.md --cpp src\os600\kernel\MemObjTables.cpp
 ```
 
 ## Open questions (next steps)
