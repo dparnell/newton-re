@@ -102,14 +102,27 @@ knows which it is running on.
 
 ## Trying it
 
-`src/os600/tests/test_HostRuntime.cpp` builds a port, a monitor and three
-tasks by hand (object creation is not reconstructed yet), starts the runtime
-and lets a client task send three messages to a server task, call the
-monitor twice and time a receive out through the timer engine - all through
-the stubs, on threads, scheduled by the real kernel.  `ctest -R HostRuntime`.
+`src/os600/tests/test_Boot.cpp` boots the OS the way the ROM does: `OsBoot`
+builds the kernel and the first task, `UserBoot` spawns the kernel services
+task, and that task (given a scenario through `gHostKernelServicesTask`,
+the hook standing in for the services not reconstructed yet) spawns a
+`TUTaskWorld` echo server through the object manager, RPCs it over a
+`TUPort`, sleeps through the null port and the timer engine and takes a
+`TULockingSemaphore` - every object made by the object manager monitor,
+every call through the real stubs.  `ctest -R Boot`.
+
+`src/os600/tests/test_HostRuntime.cpp` is the lower-level check: a port, a
+monitor and three tasks built by hand, a client/server exchange, monitor
+calls and a timeout.  `ctest -R HostRuntime`.
+
+Task stacks on the host come from `NewStack` in
+`src/os600/user/host/StackManager.cpp`, a stand-in for the paged stack
+manager (plain allocations; locking is a no-op); before `gOSIsRunning` they
+come from `malloc`, as in the ROM.  Because a stack, the task's globals block
+and the copy of its object are host memory, `VAddr` is pointer-sized on the
+host (see `host_compat.h`).
 
 Known limits of this first runtime: no pre-emption between system calls
-(see above); a task's thread is never destroyed (`~TTask` is not
-reconstructed yet - `HostTaskDeleted` is there for it); `Throw` and
-`SMemCopyTo/FromShared` are still stubs; the run ends by leaving parked
-threads to the process exit.
+(see above); a deleted task's thread is left parked (`gTaskDeletedHook` →
+`HostTaskDeleted` forgets it); `Throw` is still a stub; the run ends by
+leaving parked threads to the process exit.

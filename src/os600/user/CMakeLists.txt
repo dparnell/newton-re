@@ -2,6 +2,15 @@
 # interface.  On a host the system calls are direct calls into the kernel
 # through the task runtime (docs/host-runtime.md).
 add_library(os600_user STATIC
+    UserObjects.cpp
+    UserSharedMem.cpp
+    UserPorts.cpp
+    UserSemaphore.cpp
+    UserMonitor.cpp
+    UserTasks.cpp
+    Exceptions.cpp
+    UserBoot.cpp
+    host/StackManager.cpp
     host/MonitorGlue.cpp
     host/SWI.cpp
     host/GenericSWIStub.cpp

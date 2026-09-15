@@ -20,6 +20,8 @@
 #include "OSErrors.h"
 #include "hal/Atomic.h"
 #include "hal/System.h"
+#include "KernelObjects.h"
+#include "MonitorGlue.h"
 
 
 TObjectManager*	gTheObjectManager = nil;
@@ -66,9 +68,12 @@ TObjectManager::MonitorProc(long selector, ObjectMessage* msg)
 	switch (selector)
 	{
 	case kObjectMgr_Alloc:
-		// NOT YET RECONSTRUCTED: ObjectAlloc 0x0014a768 (needs the object
-		// Inits); the ROM stores the new id in msg->fSize on success
-		err = kError_Call_Not_Implemented;
+		{
+			TObjectId id;
+			err = ObjectAlloc(msg, size, callerId, &id);
+			if (err == noErr)
+				msg->fSize = id;
+		}
 		break;
 	case kObjectMgr_Destroy:
 		err = ObjectDestroy(msg, size, callerId);
@@ -141,6 +146,191 @@ static TTask*
 TaskFromId(TObjectId id)
 {
 	return ObjectType(id) == kTaskType ? (TTask*) gObjectTable->Get(id) : nil;
+}
+
+
+// The environment a request names, or the requester's own when it names none.
+static NewtonErr
+EnvironmentForRequest(TObjectId envId, TObjectId requesterId, TEnvironment** outEnv)
+{
+	if (envId == 0)
+	{
+		TTask* requester = TaskFromId(requesterId);
+		if (requester == nil)
+			return kError_Bad_ObjectId;
+		*outEnv = requester->fEnvironment;
+		return noErr;
+	}
+	*outEnv = ObjectType(envId) == kEnvironmentType ? (TEnvironment*) gObjectTable->Get(envId) : nil;
+	return *outEnv != nil ? noErr : kError_Bad_ObjectId;
+}
+
+
+// ROM 0x0014a768 ObjectAlloc__FP13ObjectMessageUlT2PUl
+// Makes the object the message asks for and enters it in the object table
+// owned by the requester - except a task, which is owned by nobody (1) and
+// only assigned to the requester (TaskAcceptObject makes it theirs), and a
+// domain, entered before Init so the domain has an id to register its fault
+// monitor under.  A task's registers point it at its proc with itself as
+// the task-id argument; its lr is BadExit.
+NewtonErr
+ObjectAlloc(ObjectMessage* msg, ULong size, TObjectId requesterId, TObjectId* outId)
+{
+	if (size < kObjectMessage_HeaderSize)
+		return kError_Bad_Parameters;
+	TKernelObject* object = nil;
+	KernelTypes type = kNoType;
+	TEnvironment* env;
+	NewtonErr err;
+	switch (msg->fType)
+	{
+	case kObjectPort:
+		if (size != kObjectMessage_HeaderSize)
+			return kError_Bad_Parameters;
+		object = new TPort;
+		type = kPortType;
+		break;
+
+	case kObjectTask:
+		{
+			if (size != kObjectMessage_TaskSize)
+				return kError_Bad_Parameters;
+			if ((err = EnvironmentForRequest(msg->fTask.fEnvironmentId, requesterId, &env)) != noErr)
+				return err;
+			TTask* task = new TTask;
+			if (task == nil)
+				return kError_Could_Not_Create_Object;
+			TObjectId id = gObjectTable->Add(task, kTaskType, 1);
+			err = task->Init(msg->fTask.fProc, msg->fTask.fStackSize, (void*) (uintptr_t) id, msg->fTask.fDataId, msg->fTask.fPriority, msg->fTask.fName, env);
+			if (err != noErr)
+			{
+				gObjectTable->Remove(id);
+				return kError_Could_Not_Create_Object;
+			}
+			task->fAssignedOwnerId = requesterId;
+			task->fRegister[14] = (TRegister) BadExit;
+			*outId = id;
+			return noErr;
+		}
+
+	case kObjectEnvironment:
+		{
+			if (size != kObjectMessage_EnvironmentSize)
+				return kError_Bad_Parameters;
+			TEnvironment* newEnv = new TEnvironment;
+			if (newEnv != nil && newEnv->Init(msg->fEnvironment.fHeap) != noErr)
+			{
+				delete newEnv;
+				return kError_Could_Not_Create_Object;
+			}
+			object = newEnv;
+			type = kEnvironmentType;
+		}
+		break;
+
+	case kObjectDomain:
+		// NOT YET RECONSTRUCTED: TKDomain::Init 0x000b02d4 needs the MMU's
+		// primary page table (0x0014a768 case 3: checks the fault monitor is
+		// one, adds the domain to the table first, Inits, removes on failure)
+		return kError_Call_Not_Implemented;
+
+	case kObjectSemList:
+		{
+			if (size < kObjectMessage_SemListSize || msg->fSemList.fCount * sizeof(ULong) + kObjectMessage_SemListSize != size)
+				return kError_Bad_Parameters;
+			TSemaphoreOpList* list = new TSemaphoreOpList;
+			if (list != nil && list->Init(msg->fSemList.fCount, msg->fSemList.fOps) != noErr)
+			{
+				delete list;
+				return kError_Could_Not_Create_Object;
+			}
+			object = list;
+			type = kSemListType;
+		}
+		break;
+
+	case kObjectSemGroup:
+		{
+			if (size != kObjectMessage_SemGroupSize)
+				return kError_Bad_Parameters;
+			TSemaphoreGroup* group = new TSemaphoreGroup;
+			if (group != nil && group->Init(msg->fSemGroup.fCount) != noErr)
+			{
+				delete group;
+				return kError_Could_Not_Create_Object;
+			}
+			object = group;
+			type = kSemGroupType;
+		}
+		break;
+
+	case kObjectSharedMem:
+		{
+			if (size != kObjectMessage_HeaderSize)
+				return kError_Bad_Parameters;
+			if ((err = EnvironmentForRequest(0, requesterId, &env)) != noErr)
+				return err;
+			TSharedMem* mem = new TSharedMem;
+			if (mem != nil && mem->Init(env) != noErr)
+			{
+				delete mem;
+				return kError_Could_Not_Create_Object;
+			}
+			object = mem;
+			type = kSharedMemType;
+		}
+		break;
+
+	case kObjectSharedMemMsg:
+		{
+			if (size != kObjectMessage_HeaderSize)
+				return kError_Bad_Parameters;
+			if ((err = EnvironmentForRequest(0, requesterId, &env)) != noErr)
+				return err;
+			TSharedMemMsg* smsg = new TSharedMemMsg;
+			if (smsg != nil && smsg->Init(env) != noErr)
+			{
+				delete smsg;
+				return kError_Could_Not_Create_Object;
+			}
+			object = smsg;
+			type = kSharedMemMsgType;
+		}
+		break;
+
+	case kObjectMonitor:
+		{
+			if (size != kObjectMessage_MonitorSize)
+				return kError_Bad_Parameters;
+			TMonitor* monitor = new TMonitor;
+			if (monitor == nil)
+				return kError_Could_Not_Create_Object;
+			if ((err = EnvironmentForRequest(msg->fMonitor.fEnvironmentId, requesterId, &env)) != noErr)
+				return err;
+			TObjectId id = gObjectTable->Add(monitor, kMonitorType, requesterId);
+			err = monitor->Init(msg->fMonitor.fProc, msg->fMonitor.fStackSize, msg->fMonitor.fMonitorObject, env, msg->fMonitor.fFaultMonitor, msg->fMonitor.fName, msg->fMonitor.fRebootProtected);
+			if (err != noErr)
+			{
+				gObjectTable->Remove(id);
+				return kError_Could_Not_Create_Object;
+			}
+			*outId = id;
+			return noErr;
+		}
+
+	case kObjectPhys:
+		// NOT YET RECONSTRUCTED: TPhys / TLittlePhys (0x0014a768 case 9)
+		return kError_Call_Not_Implemented;
+
+	default:
+		return kError_Bad_Parameters;
+	}
+
+	*outId = 0;
+	if (object == nil)
+		return kError_Could_Not_Create_Object;
+	*outId = gObjectTable->Add(object, type, requesterId);
+	return noErr;
 }
 
 
@@ -301,8 +491,7 @@ ObjectScavenger(TKernelObject* object, ULong /*unused*/)
 				task->fState |= kTaskState_KillPending;
 				return nil;
 			}
-			// NOT YET RECONSTRUCTED: DeleteTask 0x0014b5e8 (needs ~TTask)
-			return nil;
+			return (ObjectDestructorProcPtr) DeleteTask;
 		}
 	case kSemListType:
 		return (ObjectDestructorProcPtr) DeleteSemList;
@@ -322,4 +511,54 @@ ObjectScavenger(TKernelObject* object, ULong /*unused*/)
 	default:
 		return nil;
 	}
+}
+
+
+// ROM 0x0014b5e8 DeleteTask__FP5TTask
+// The task's bequeath chain is spliced (whoever bequeathed to it now
+// bequeaths to its heir), it is forgotten as the scheduler's preferred task,
+// destroyed, its objects handed to the heir, and every copy in progress whose
+// shared memory no longer has a live owner is failed.
+void
+DeleteTask(TTask* task)
+{
+	TObjectId heirId = task->fBequeathId;
+	TObjectId id = task->fId;
+	if (task->fInheritedId != 0)
+	{
+		TTask* benefactor;
+		if (ConvertIdToObj(kTaskType, task->fInheritedId, &benefactor) == noErr && benefactor->fBequeathId == id)
+			benefactor->SetBequeathId(heirId);
+	}
+	if (gKernelScheduler->fPreferredTask == task)
+		gKernelScheduler->fPreferredTask = nil;
+	delete task;
+	gObjectTable->ReassignOwnership(id, heirId);
+	gTaskDestroyed = true;
+
+	TTask* copier = (TTask*) gCopyTasks->Peek();
+	while (copier != nil)
+	{
+		TTask* next = (TTask*) gCopyTasks->GetNext(copier);
+		TKernelObject* mem = gObjectTable->Get(copier->fCopyMemId);
+		Boolean alive = mem != nil && (mem->fOwnerId == mem->fId || gObjectTable->Exists(mem->fOwnerId));
+		if (!alive)
+			LowLevelCopyDoneFromKernelGlue(kError_Bad_ObjectId, copier, 0);
+		copier = next;
+	}
+}
+
+
+// ROM 0x0014b0a0 InitObjectManager__Fv
+// The ROM looks the kernel environment ('krnl') up in the memory object
+// manager; the caller passes it here.  The monitor is owned by nobody (1).
+void
+InitObjectManager(TEnvironment* environment)
+{
+	gTheObjectManager = new TObjectManager;
+	gTheObjectManagerMonitor = new TMonitor;
+	TObjectId id;
+	RegisterObject(gTheObjectManagerMonitor, kMonitorType, 1, &id);
+	gTheObjectManagerMonitor->Init(TObjectManager::MonitorProcGlue, 0x800, gTheObjectManager, environment, false, 'OBJM', false);
+	gObjectTable->SetScavengeProc(ObjectScavenger);
 }

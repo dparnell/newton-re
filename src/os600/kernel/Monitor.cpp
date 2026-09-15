@@ -31,7 +31,6 @@ enum { kcR0 = 0, kcR1, kcR2, kcR3, kcR11 = 11, kcSP = 13, kcPC = 15 };
 
 
 const ULong kPSRModeMask = 0x1f;
-const ULong kUserMode = 0x10;
 
 static inline TRegister RegisterFromPointer(const void* p)	{ return (TRegister) p; }
 
@@ -55,6 +54,35 @@ TMonitor::TMonitor()
 	fSuspended = 0;
 	fMonitorTaskId = 0;
 	fCallerIsCopying = false;
+}
+
+
+// ROM 0x00121900 Init__8TMonitorFPFPvUlT1_vUlPvP12TEnvironmentUcT2T5
+// Makes the monitor's task (owned by nobody, at gMonitorTaskPriority,
+// starting in MonitorEntryGlue) and its message (the one a fault monitor
+// reads the faulting registers through).
+NewtonErr
+TMonitor::Init(MonitorProcPtr proc, ULong stackSize, void* monitorObject, TEnvironment* environment, Boolean faultMonitor, ULong name, Boolean rebootProtected)
+{
+	fFaultMonitor = faultMonitor;
+	fRebootProtected = rebootProtected;
+	fProc = proc;
+	fMonitorTask = new TTask;
+	if (fMonitorTask == nil)
+		return kError_Could_Not_Create_Object;
+	fMonitorTaskId = gObjectTable->Add(fMonitorTask, kTaskType, 1);
+	if (fMonitorTask->Init((TaskProcPtr) MonitorEntryGlue, stackSize, (void*) (uintptr_t) fMonitorTaskId, 0, gMonitorTaskPriority, name, environment) != noErr)
+		return kError_Could_Not_Create_Object;
+	fMonitorTask->fMonitorId = fId;
+	fMonitorObject = monitorObject;
+	TSharedMemMsg* msg = new TSharedMemMsg;
+	if (msg != nil && msg->Init(environment) != noErr)
+	{
+		delete msg;
+		msg = nil;
+	}
+	RegisterObject(msg, kSharedMemMsgType, fId, &fMsgId);
+	return fMsgId != 0 ? noErr : kError_Could_Not_Create_Object;
 }
 
 
@@ -318,7 +346,7 @@ MonitorThrowKernelGlue(char* name, void* data, void (*destructor)(void*))
 	TRegister result = (TRegister) name;			// Throw's first argument rides in r0
 	if (!monitor->fCallerIsCopying)
 	{
-		if ((monitor->fCaller->fPSR & kPSRModeMask) != kUserMode)
+		if ((monitor->fCaller->fPSR & kPSRModeMask) != TTask::kUserMode)
 		{
 			CantThrowInUndefinedModeReboot();
 			return noErr;

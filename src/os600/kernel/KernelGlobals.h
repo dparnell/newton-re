@@ -22,6 +22,7 @@ class TTimerEngine;
 class TDoubleQContainer;
 class TUObject;
 class TMonitor;
+class TPort;
 struct InterruptObject;
 struct SGlobalsThatLiveAcrossReboot;
 
@@ -52,7 +53,7 @@ extern ULong			gTimerInterruptCount;		// 0x0c101664  statistics
 extern TDoubleQContainer* gCopyTasks;				// 0x0c101124  tasks in the middle of a shared-memory copy (TTask::fCopyQItem)
 extern TDoubleQContainer* gDeferredSends;			// 0x0c10112c  sends made from interrupt level (TSharedMemMsg::fTimerQItem)
 extern Boolean			gCopyDone;					// 0x0c101130  the current task's copy finished (checked by the SWI handler)
-extern TUObject*		gNullPort;					// 0x0c1010bc  the well-known ports GetPortInfo hands out
+extern TPort*			gNullPort;					// 0x0c1010bc  the well-known ports GetPortInfo hands out; the null port never receives
 extern TUObject*		gNameServer;				// 0x0c101654
 extern TMonitor*		gTheObjectManagerMonitor;	// 0x0c101794  the monitor that makes and destroys kernel objects (ObjectManager.h)
 
@@ -83,6 +84,9 @@ extern ULong			gFIQInterruptOverHead;		// 0x0c100f38  ticks spent in interrupt h
 extern ULong			gIRQInterruptOverHead;		// 0x0c100f3c
 extern ULong			gFIQAccumulatedIntOverHead;	// 0x0c101c1c  ...and altogether
 extern ULong			gIRQAccumulatedIntOverHead;	// 0x0c101c18
+
+// boot
+extern Boolean			gOSIsRunning;				// 0x0c10111c  set by UserBoot once the stack manager and heaps exist (TTask::Init)
 
 // object manager
 extern Boolean			gTaskDestroyed;				// 0x0c10178c  a task was deleted: scavenge what it owned (TObjectManager::MonitorProc)

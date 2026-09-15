@@ -28,6 +28,8 @@ extern "C" {
 void	DisableInterrupt(InterruptObject* interrupt);
 void	QuickEnableInterrupt(InterruptObject* interrupt);
 void	SetTimeSliceAlarm(ULong ticksFromNow);		// the timer interrupt that pre-empts the running task
+void	HInitInterrupts(void);						// boot: the interrupt controller (ROM 0x000e6e0c)
+void	InitInterruptTables(void);					// boot: the handler tables (ROM 0x000e7ffc)
 }
 
 #endif	/* __HAL_INTERRUPTS_H */

@@ -43,11 +43,35 @@ registers, memory test, `CopyRAMTableToKernelArea`, `InitTheMMUTables`,
 special stacks, `InitCGlobals` (0x45C84: kernel heap area, kernel globals
 page, jump tables, FPE, REx config, internal flash + patch installation),
 `PostCGlobalsHWInit`, then assembly (`FUN_00018b78`: FIQ/IRQ stack setup)
-that continues into the kernel start. `UserBoot` (0x2D1860) is the first
-user-mode code: static semaphores, `InitMemArchObjs`,
-`InitDomainsAndEnvironments`, `InitROMDomainManager`, then it creates and
-starts the first `TUTask`. The hand-off between the two still has to be
-traced.
+that continues into the kernel start, `OsBoot` (0x149C1C).
+
+`OsBoot` (reconstructed, Boot.cpp) runs with a `TTask` and `TEnvironment` on
+its own stack as the current ones: `HInitInterrupts`, `InitInterruptTables`,
+the object table, `InitMemArchCore` (the memory architecture's object table
+and manager, the page managers, the fault-monitor table),
+`InitKernelDomainAndEnvironment` (the 'krnl' environment on the kernel heap
+with domain 2), then with FIQs off `InitGlobalWorld` (scheduler, the copy /
+blocked-on-memory / deferred-send queues, `InitObjectManager`, the null
+port), `InitTime`, the real-time clock, `UserInit` (the user side's handles
+on the object manager monitor and null port). The idle task is made out of
+the boot context (`TTask::Init` with `OsBoot` as its proc, then
+`SwapInGlobals`), the first task 'user' (priority 20, 0x800 stack) is made
+to run `UserBoot`, `StartTime` starts the timer engine and the hourly
+overflow detector, `TabBoot` the tablet, time accounting is switched on, the
+scheduler's time slice armed, the 'user' task added, and the boot context
+becomes the idle loop (`SleepTask`: `PauseSystem` forever).
+
+`UserBoot` (0x2D1860, user side) is the first user-mode code: the semaphore
+classes' shared op lists, the kernel heap's semaphore, `InitMemArchObjs`
+(page manager and page-table manager monitors, the stack manager),
+`InitDomainsAndEnvironments` (from the memory object database),
+`InitROMDomainManager`, `gOSIsRunning = true`, seed `rand` from the
+real-time clock, then it makes and starts the kernel services task 'ksrv'
+(0x6800 stack, priority 10, environment 'ksrv') running `InitialKSRVTask` -
+protocol registry, stdio, the name server, the ROM domain manager, the
+package manager, and the first `TAppWorld` ('drvl') - and leaves its own
+objects to the idle task.  On the host `test_Boot` boots this way and lets
+the 'ksrv' task run a scenario with the real `TU*` classes.
 
 ## Kernel classes
 
@@ -122,7 +146,17 @@ with `ObjectDestroy`/`ObjectStart`/`ObjectSuspend`/`ObjectGetRegister`/
 `ObjectScavenger` (ObjectManager.*), `HoldSchedule`/`AllowSchedule`
 (Scheduler.*); `Scheduler()`, `SwapInGlobals`, `DoDeferrals`,
 `ResetAccountTimeKernelGlue`/`GetNextTaskIdKernelGlue` (GenericSWI 5/6)
-(TaskSwitch.*); `Swap`/`SwapByte` in hal/Atomic.h; `Reboot`/`Restart`/
+(TaskSwitch.*); `Swap`/`SwapByte` in hal/Atomic.h; `TTask::Init`/`FreeStack`/
+`~TTask`/`SetBequeathId`, `TMonitor::Init`, `ObjectAlloc`, `DeleteTask`,
+`InitObjectManager`, `SMemCopyTo/FromKernelGlue` (SWI 15/16),
+`GenericSWIHandler` (GenericSWI.*), the SWI exit path as `SWIExitSchedule`
+and `DomainAccessFor`, `OsBoot` with `InitGlobalWorld`,
+`InitKernelDomainAndEnvironment`, `InitMemArchCore`, `StartTime`, `InitTime`
+(Boot.*, TimerEngine.*); the per-task globals block (`os600/TaskGlobals.h`);
+and in `src/os600/user/`: `TUObject`, `TUSharedMem(Msg)`, `TUPort`,
+`TUMsgToken`, `TUAsyncMessage`, the semaphore classes, `TUMonitor`, `TUTask`,
+`TUTaskWorld`, `UserInit`/`UserBoot`/`InitialKSRVTask`, the task helpers
+(`Sleep`, `Yield`, `TaskGiveObject`, ...), `InitializeExceptionGlobals`; `Reboot`/`Restart`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
@@ -296,8 +330,9 @@ build\venv\Scripts\python tools\newton-rom\analysis\swi_table.py build\MP2100D -
 
 ## Open questions (next steps)
 
-1. Trace the boot hand-off from the assembly after `PostCGlobalsHWInit` to
-   the first task, and document `SWIBoot`'s non-SWI paths.
+1. Trace the assembly between `PostCGlobalsHWInit` and `OsBoot` (stack
+   setup, `InitCGlobals`), and document `SWIBoot`'s non-SWI paths (aborts,
+   the copy engines).
 2. Recover the kernel object layouts (`TTask`, `TPort`, `TObjectTable`,
    `TSharedMemMsg`, `TMonitor`, `TSemaphore*`, `TDomain`, `TEnvironment`) from
    their methods; feed them back as Ghidra structures.

@@ -1,4 +1,5 @@
 add_library(os600_kernel STATIC
+    Boot.cpp
     Domain.cpp
     DoubleQ.cpp
     Environment.cpp

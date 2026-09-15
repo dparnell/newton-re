@@ -14,6 +14,7 @@
 #include "Task.h"
 #include "GenericSWI.h"
 #include "host/TaskRuntime.h"
+#include "OSErrors.h"
 
 #include <stdarg.h>
 
@@ -27,6 +28,8 @@ GenericSWI(ULong selector, ...)
 	ULong p3 = va_arg(args, ULong);
 	ULong p4 = va_arg(args, ULong);
 	va_end(args);
+	if (gHostTasksStopping)
+		return kError_Call_Aborted;
 	TTask* self = gCurrentTask;
 	self->fRegister[kcPC] = kResumeInStub;
 	long result = GenericSWIHandler(selector, p1, p2, p3, p4);

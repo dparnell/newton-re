@@ -45,7 +45,7 @@ enum
 class TEnvironment : public TKernelObject
 {
 	public:
-		NewtonErr		Init(void* unknown);
+		NewtonErr		Init(void* heap);
 						~TEnvironment();
 
 		NewtonErr		Add(TKDomain* domain, Boolean isManager, Boolean isHeap, Boolean isStack);
@@ -55,7 +55,7 @@ class TEnvironment : public TKernelObject
 		void			HasDomain(TKDomain* domain, Boolean* outHasDomain, Boolean* outIsManager);
 
 		ULong			fDomainAccess;		// +0x10  domain access control word (loaded into the DACR on a task switch)
-		void*			fUnknown14;			// +0x14  Init's argument (TUEnvironment::Init(void*)); use not yet traced
+		void*			fHeap;				// +0x14  the environment's heap (Init's argument); a new task starts with it as its current heap
 		TObjectId		fHeapDomainId;		// +0x18
 		TObjectId		fStackDomainId;		// +0x1c
 		long			fRefCount;			// +0x20  tasks running in it (SetEnvironment, TTask::Init/~TTask)

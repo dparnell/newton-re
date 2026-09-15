@@ -55,19 +55,30 @@ class TPort : public TKernelObject
 };
 
 
-// system calls (results go into gCurrentTask's saved r0-r4)
+// system calls.  A glue returning void leaves its result in gCurrentTask's
+// saved r0 (r1-r4 for the rest); one returning NewtonErr hands it back in r0
+// directly - in the ROM these are void C functions whose last call's result
+// happens to be left in r0, and the SWI stubs rely on it.
 TObjectId	GetPortInfo(ULong which);												// SWI 0
 void		PortSendKernelGlue(TObjectId portId, TObjectId msgId, TObjectId replyMemId, ULong msgType, ULong flags);	// SWI 1
 void		PortReceiveKernelGlue(TObjectId portId, TObjectId msgId, ULong filter, ULong flags);	// SWI 2
 void		PortResetFilterKernelGlue(TObjectId portId, TObjectId msgId, ULong filter);	// SWI 33
 void		PortResetKernelGlue(TObjectId portId, ULong senderFlags, ULong receiverFlags);	// GenericSWI 67
-void		SMemSetBufferKernelGlue(TObjectId id, void* buffer, ULong size, ULong permissions);	// SWI 13
+NewtonErr	SMemSetBufferKernelGlue(TObjectId id, void* buffer, ULong size, ULong permissions);	// SWI 13
 NewtonErr	SMemGetSizeKernelGlue(TObjectId id);									// SWI 14
+
+// SWI 15/16: set a copy up in the calling task's registers (r0 = destination,
+// r1 = source, r2 = bytes) and return kSMemCopy_Words / kSMemCopy_Bytes for the
+// SWI handler to run the copy loop as the task, ending in LowLevelCopyDone
+// (SWI 26); 0 when there is nothing to copy (r2 = 0), else an error.
+enum { kSMemCopy_Bytes = 1, kSMemCopy_Words = 4 };
+long		SMemCopyToKernelGlue(TObjectId id, void* buffer, ULong size, ULong offset, TObjectId sendersMsgId, ULong signature);
+long		SMemCopyFromKernelGlue(TObjectId id, void* buffer, ULong size, ULong offset, TObjectId sendersMsgId, ULong signature);
 NewtonErr	SMemMsgSetTimerParmsKernelGlue(TObjectId msgId, ULong timeout, ULong delayLo, ULong delayHi);	// SWI 17
-void		SMemMsgSetMsgAvailPortKernelGlue(TObjectId msgId, TObjectId portId);	// SWI 18
-void		SMemMsgGetSenderTaskIdKernelGlue(TObjectId msgId);						// SWI 19
-void		SMemMsgSetUserRefConKernelGlue(TObjectId msgId, void* refCon);			// SWI 20
-void		SMemMsgGetUserRefConKernelGlue(TObjectId msgId);						// SWI 21
+NewtonErr	SMemMsgSetMsgAvailPortKernelGlue(TObjectId msgId, TObjectId portId);	// SWI 18
+NewtonErr	SMemMsgGetSenderTaskIdKernelGlue(TObjectId msgId);						// SWI 19
+NewtonErr	SMemMsgSetUserRefConKernelGlue(TObjectId msgId, void* refCon);			// SWI 20
+NewtonErr	SMemMsgGetUserRefConKernelGlue(TObjectId msgId);						// SWI 21
 void		SMemMsgCheckForDoneKernelGlue(TObjectId msgId, ULong flags);			// SWI 22
 NewtonErr	SMemMsgMsgDoneKernelGlue(TObjectId msgId, long result, ULong sequence);	// SWI 23
 NewtonErr	LowLevelCopyDoneFromKernelGlue(NewtonErr result, TTask* task, TRegister pc);	// SWI 26

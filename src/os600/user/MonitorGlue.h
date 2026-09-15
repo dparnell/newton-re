@@ -35,6 +35,7 @@ extern "C" {
 void	MonitorEntryGlue(void);
 void	TaskKillSelf(void);
 void	Throw(char* name, void* data, void (*destructor)(void*));		// NewtonExceptions.h
+void	BadExit(void);				// where a task proc that returns ends up: TaskKillSelf (0x003a4ad8, a branch)
 }
 
 #endif	/* __MONITORGLUE_H */

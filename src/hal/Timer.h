@@ -26,6 +26,7 @@ extern "C" {
 void	GetClock(Int64* outTime);				// current time in ticks
 Boolean	SetAlarm(const TTime* time);			// true if armed; false if the time has already passed (or is negative)
 void	DisableAlarm1(void);					// disarm
+void	UpdateClock(void);						// sample the counter so a wrap is not missed (ROM 0x003a3dc0)
 }
 
 #endif	/* __HAL_TIMER_H */

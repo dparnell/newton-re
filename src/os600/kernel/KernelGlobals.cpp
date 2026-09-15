@@ -31,7 +31,7 @@ ULong			gTimerInterruptCount = 0;
 TDoubleQContainer* gCopyTasks = nil;
 TDoubleQContainer* gDeferredSends = nil;
 Boolean			gCopyDone = false;
-TUObject*		gNullPort = nil;
+TPort*			gNullPort = nil;
 TUObject*		gNameServer = nil;
 TMonitor*		gTheObjectManagerMonitor = nil;
 
@@ -61,5 +61,6 @@ ULong			gIRQInterruptOverHead = 0;
 ULong			gFIQAccumulatedIntOverHead = 0;
 ULong			gIRQAccumulatedIntOverHead = 0;
 
+Boolean			gOSIsRunning = false;
 Boolean			gTaskDestroyed = false;
 ULong			gMonitorTaskPriority = kKernelTaskPriority;	// 20 in the ROM image

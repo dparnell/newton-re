@@ -8,6 +8,9 @@
 	typedef the wchar_t keyword unless __wchar_t is set.  NewtonExceptions.h
 	redefines the try/catch/throw keywords to its setjmp-based handlers unless
 	told the compiler has real exceptions (the flag it sets for MSVC itself).
+	VAddr, a 32-bit virtual address on the MessagePad, holds a host pointer
+	here (hostVAddrIsPointerSized, see sync_ddk_headers.py) because task stacks
+	and shared-memory buffers are host memory.
 */
 #ifndef __HOST_COMPAT_H
 #define __HOST_COMPAT_H
@@ -16,5 +19,7 @@ typedef unsigned char Boolean;
 #define __boolean_defined__ 1
 #define __wchar_t 1
 #define hasCppExceptions 1
+#define hostVAddrIsPointerSized 1
+#include <stdint.h>
 
 #endif /* __HOST_COMPAT_H */

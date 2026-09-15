@@ -38,6 +38,7 @@ class TTimerEngine : public TDoubleQContainer
 };
 
 
+void	InitTime();						// boot: make gTimerEngine and gTimerDeferred
 void	TimerInterruptHandler();		// the alarm interrupt: TTimerEngine::Alarm on gTimerEngine
 Boolean	SetAlarmAtomic(const TTime* time);
 void	ClearAlarmAtomic();

@@ -132,6 +132,7 @@ class TUTaskWorld : public SingleObject
 		virtual	void	TaskMain() = 0;				// spawned task called here to begin running
 
 		void			TaskEntry(ULong, TObjectId taskId);	// low level entry for spawned task (only in base class)
+		static void		TaskEntryProc(void* theObject, ULong size, TObjectId taskId);	// the TaskProcPtr that calls TaskEntry (reconstruction)
 
 		// these instance vars are used by the task creator (the parent)
 		Boolean			fIsSpawned;					// this indicates if this object is running a new task

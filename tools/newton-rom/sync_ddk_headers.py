@@ -29,9 +29,27 @@ PATCHES = {
         ("TULockingSemaphore(TObjectId id = 0) : TUSemaphoreGroup(id) { GetRefCon(&fSem); }",
          "TULockingSemaphore(TObjectId id = 0) : TUSemaphoreGroup(id) { GetRefCon((void**)&fSem); }"),
     ],
-    # UserTasks.h: the include is spelt in the wrong case for a case-sensitive file system
+    # NewtonTypes.h: a virtual address is a 32-bit word on the MessagePad; a host build
+    # (host_compat.h defines hostVAddrIsPointerSized) keeps whole host pointers in it,
+    # since task stacks and the buffers behind shared memory are host memory there
+    "NewtonTypes.h": [
+        ("typedef ULong\tVAddr;",
+         "#ifdef hostVAddrIsPointerSized\ntypedef uintptr_t\tVAddr;\n#else\ntypedef ULong\tVAddr;\n#endif"),
+    ],
+    # UserTasks.h: the include is spelt in the wrong case for a case-sensitive file system;
+    # TUTaskWorld's spawned task starts at a member function in the ROM (its address is
+    # passed as the TaskProcPtr), which C++ forbids - a static trampoline stands in
     "UserTasks.h": [
         ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
+        ("\t\tvoid\t\t\tTaskEntry(ULong, TObjectId taskId);\t// low level entry for spawned task (only in base class)",
+         "\t\tvoid\t\t\tTaskEntry(ULong, TObjectId taskId);\t// low level entry for spawned task (only in base class)\n"
+         "\t\tstatic void\t\tTaskEntryProc(void* theObject, ULong size, TObjectId taskId);\t// the TaskProcPtr that calls TaskEntry (reconstruction)"),
+    ],
+    # UserPorts.h: the ROM's Sleep() and TUTaskWorld::StartTask use TUPort's private
+    # Send*Goo like SleepTill does, but only SleepTill is a friend in the DDK's header
+    "UserPorts.h": [
+        ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",
+         "\t\tfriend void SleepTill(TTime* futureTimeToSend);\n\t\tfriend void Sleep(TTimeout timeout);\n\t\tfriend class TUTaskWorld;"),
     ],
 }
 

@@ -16,6 +16,7 @@
 #include "KernelGlobals.h"
 #include "OSErrors.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,6 +28,7 @@ static TScheduler scheduler;
 static TMemArchManager memArch;
 static TObjectManager manager;
 static TMonitor monitor;
+static TDoubleQContainer copyTasks(offsetof(TTask, fCopyQItem));
 
 static TTask* MakeTask(ULong priority, TObjectId owner = 1)
 {
@@ -63,6 +65,7 @@ int main()
 	gTheMemArchManager = &memArch;
 	gTheObjectManager = &manager;
 	gTheObjectManagerMonitor = &monitor;
+	gCopyTasks = &copyTasks;
 	TTask* idle = MakeTask(0);
 	gIdleTask = idle;
 	gCurrentTask = idle;
@@ -184,7 +187,7 @@ int main()
 	m = Msg(kObjectMessage_HeaderSize, group->fId);
 	EXPECT(Request(owner, kObjectMgr_Destroy, m) == noErr);				// the next request removes it
 	EXPECT(manager.fTaskToDelete == 0);
-	EXPECT(table.Get(dying->fId) == dying);								// stays until DeleteTask is reconstructed
+	EXPECT(table.Get(dying->fId) == nil && gTaskDestroyed == false);	// deleted, and the scavenge that followed cleared the flag
 
 	// --- a destroyed task's leftovers are scavenged at the end of the request ------------------
 	gTaskDestroyed = true;

@@ -66,8 +66,7 @@ class TMonitor : public TKernelObject
 	public:
 						TMonitor();
 						~TMonitor();
-		// Init 0x00121900 (creates the monitor task and message) needs TTask::Init;
-		// it follows with the memory system.
+		NewtonErr		Init(MonitorProcPtr proc, ULong stackSize, void* monitorObject, TEnvironment* environment, Boolean faultMonitor, ULong name, Boolean rebootProtected);
 
 		NewtonErr		Aquire();						// [sic] enter from gCurrentTask; blocks it
 		Boolean			Release(TRegister result);		// leave: resume the caller, dispatch the next (result: a register's worth, `long` in the ROM)

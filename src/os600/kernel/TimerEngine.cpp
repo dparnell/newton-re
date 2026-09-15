@@ -257,3 +257,12 @@ TTimerEngine::Remove(TSharedMemMsg* msg)
 	msg->fTimerFlags &= ~kSMemMsgTimer_Generic;
 	ExitAtomic();
 }
+
+
+// ROM 0x0013eb6c InitTime
+void
+InitTime()
+{
+	gTimerDeferred = new TDoubleQContainer(offsetof(TSharedMemMsg, fTimerQItem));
+	gTimerEngine = new TTimerEngine;
+}

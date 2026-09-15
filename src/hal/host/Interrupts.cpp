@@ -36,3 +36,13 @@ SetTimeSliceAlarm(ULong ticksFromNow)
 	CompAdd(&delta, &gHostTimeSliceDeadline);
 	gHostTimeSliceArmed = true;
 }
+
+extern "C" void
+HInitInterrupts(void)
+{
+}
+
+extern "C" void
+InitInterruptTables(void)
+{
+}

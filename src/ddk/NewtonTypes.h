@@ -182,7 +182,11 @@ typedef struct FRect FRect;
 
 
 /* Newton memory architecture types */
+#ifdef hostVAddrIsPointerSized
+typedef uintptr_t	VAddr;
+#else
 typedef ULong	VAddr;
+#endif
 typedef ULong	PAddr;
 typedef ULong	LAddr;
 

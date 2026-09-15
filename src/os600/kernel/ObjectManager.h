@@ -13,10 +13,9 @@
 				removal) for a task inside a monitor or a monitor with a call in
 				progress.
 
-				Not yet reconstructed, waiting on TTask::Init / TMonitor::Init /
-				TKDomain::Init / TPhys: ObjectAlloc 0x0014a768 (kObjectMgr_Alloc),
-				InitObjectManager 0x0014b0a0, DeleteTask 0x0014b5e8, and the
-				external page tracker requests (TExtPageTrackerMgr).
+				Not yet reconstructed: the domain and physical-memory objects in
+				ObjectAlloc (TKDomain::Init, TPhys need the MMU) and the external
+				page tracker requests (TExtPageTrackerMgr).
 
 	Reconstructed from:	TObjectManager 0x0014ad58-0x0014ad88, ObjectScavenger 0x0014a508,
 				the Object* handlers 0x0014a5e0-0x0014b4ac
@@ -34,6 +33,7 @@
 
 class TTask;
 class TMonitor;
+class TEnvironment;
 
 
 // ROM size 0x04
@@ -51,6 +51,7 @@ class TObjectManager
 extern TObjectManager*	gTheObjectManager;		// 0x0c101790
 
 // the request handlers; each checks the message size
+NewtonErr	ObjectAlloc(ObjectMessage* msg, ULong size, TObjectId requesterId, TObjectId* outId);
 NewtonErr	ObjectDestroy(ObjectMessage* msg, ULong size, TObjectId requesterId);	// requesterId 0: skip the ownership check
 NewtonErr	ObjectStart(ObjectMessage* msg, ULong size);
 NewtonErr	ObjectSuspend(ObjectMessage* msg, ULong size);
@@ -60,5 +61,8 @@ NewtonErr	GetObjectContent(ObjectMessage* msg, ULong size, ObjectMessage* reply)
 NewtonErr	SetDomainFaultMonitor(ObjectMessage* msg, ULong size, ObjectMessage* reply);
 
 ObjectDestructorProcPtr	ObjectScavenger(TKernelObject* object, ULong unused);
+void		DeleteTask(TTask* task);
+
+void		InitObjectManager(TEnvironment* environment);		// makes gTheObjectManager and its monitor, installs ObjectScavenger
 
 #endif	/* __OBJECTMANAGER_H */

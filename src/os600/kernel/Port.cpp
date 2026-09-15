@@ -669,17 +669,19 @@ PortResetKernelGlue(TObjectId portId, ULong senderFlags, ULong receiverFlags)
 
 // ROM 0x001e2300 SMemSetBufferKernelGlue
 // SWI 13.
-void
+NewtonErr
 SMemSetBufferKernelGlue(TObjectId id, void* buffer, ULong size, ULong permissions)
 {
 	TSharedMem* mem;
-	if (ConvertMemOrMsgIdToObj(id, &mem) == noErr)
+	NewtonErr err = ConvertMemOrMsgIdToObj(id, &mem);
+	if (err == noErr)
 	{
 		mem->fBuffer = buffer;
 		mem->fSize = size;
 		mem->fCurSize = size;
 		mem->fFlags = permissions;
 	}
+	return err;
 }
 
 
@@ -720,6 +722,115 @@ SMemGetSizeKernelGlue(TObjectId id)
 }
 
 
+// The checks a copy makes on the message it is done under (if any): the
+// caller must hold the message's current sequence and the message must be
+// in progress with no other copy under way.  Returns the message.
+static NewtonErr
+CopyMessageCheck(TObjectId sendersMsgId, ULong signature, TSharedMemMsg** outMsg)
+{
+	*outMsg = nil;
+	if (sendersMsgId == 0)
+		return noErr;
+	TSharedMemMsg* msg;
+	NewtonErr err = ConvertIdToObj(kSharedMemMsgType, sendersMsgId, &msg);
+	if (err != noErr)
+		return err;
+	if (msg->fCopyingTaskId != 0)
+		return kError_Call_Already_In_Progress;
+	if (msg->fStatus != kSMemMsgStatus_InProgress)
+		return kError_Call_Not_In_Progress;
+	if (msg->fCurrentSequence != signature)
+		return kError_Bad_Signature;
+	*outMsg = msg;
+	return noErr;
+}
+
+
+// Records a copy in the calling task: its registers carry the addresses and
+// size for the copy loop, the fCopy* fields what to report when it is done
+// (LowLevelCopyDone), and the task joins gCopyTasks.  Word copy if everything
+// is aligned.
+static long
+SetUpCopy(TSharedMem* mem, TSharedMemMsg* msg, TObjectId memId, TObjectId msgId, void* destination, const void* source, ULong size, long result, ULong reportSize)
+{
+	TTask* task = gCurrentTask;
+	if (msg != nil)
+		msg->fCopyingTaskId = task->fId;
+	task->fCopyMsgId = msgId;
+	task->fCopySavedPC = task->fRegister[15];
+	task->fCopySize = reportSize;
+	task->fRegister[2] = size;
+	task->fRegister[1] = (TRegister) source;
+	task->fRegister[0] = (TRegister) destination;
+	task->fCopyEnvironment = mem->fEnvironment;
+	gCopyTasks->Add(task);
+	task->fCopyResult = result;
+	task->fCopyMemId = memId;
+	Boolean aligned = (task->fRegister[2] & 3) == 0 && (task->fRegister[1] & 3) == 0 && (task->fRegister[0] & 3) == 0;
+	return aligned ? kSMemCopy_Words : kSMemCopy_Bytes;
+}
+
+
+// ROM 0x001e1e88 SMemCopyToKernelGlue
+// SWI 15: copy the caller's buffer into the shared memory at offset.  A
+// read-only memory refuses; a copy past the end is truncated
+// (kError_Size_To_Large_Copy_Truncated) and, unless
+// kSMemNoSizeChangeOnCopyTo, the size in use grows to what was written.
+long
+SMemCopyToKernelGlue(TObjectId id, void* buffer, ULong size, ULong offset, TObjectId sendersMsgId, ULong signature)
+{
+	gCurrentTask->fRegister[2] = 0;
+	TSharedMem* mem;
+	NewtonErr err = ConvertMemOrMsgIdToObj(id, &mem);
+	if (err != noErr)
+		return err;
+	if (mem->fFlags & kSMemReadOnly)
+		return kError_SMem_Mode_Violation;
+	TSharedMemMsg* msg;
+	if ((err = CopyMessageCheck(sendersMsgId, signature, &msg)) != noErr)
+		return err;
+
+	long result = noErr;
+	if (mem->fSize < size + offset)
+	{
+		result = kError_Size_To_Large_Copy_Truncated;
+		size = mem->fSize - offset;
+		if ((mem->fFlags & kSMemNoSizeChangeOnCopyTo) == 0)
+			mem->fCurSize = mem->fSize;
+	}
+	else if ((mem->fFlags & kSMemNoSizeChangeOnCopyTo) == 0)
+		mem->fCurSize = size + offset;
+	if (size == 0)
+		return result;
+	return SetUpCopy(mem, msg, id, sendersMsgId, (char*) mem->fBuffer + offset, buffer, size, result, 0);
+}
+
+
+// ROM 0x001e205c SMemCopyFromKernelGlue
+// SWI 16: copy out of the shared memory from offset into the caller's
+// buffer, no more than is in use; the size copied is reported in r1.
+long
+SMemCopyFromKernelGlue(TObjectId id, void* buffer, ULong size, ULong offset, TObjectId sendersMsgId, ULong signature)
+{
+	gCurrentTask->fRegister[2] = 0;
+	TSharedMem* mem;
+	NewtonErr err = ConvertMemOrMsgIdToObj(id, &mem);
+	if (err != noErr)
+		return err;
+	TSharedMemMsg* msg;
+	if ((err = CopyMessageCheck(sendersMsgId, signature, &msg)) != noErr)
+		return err;
+
+	if (size != 0 && offset >= mem->fCurSize)
+		return noErr;
+	if (mem->fCurSize < size + offset)
+		size = mem->fCurSize - offset;
+	if (size == 0)
+		return noErr;
+	return SetUpCopy(mem, msg, id, sendersMsgId, buffer, (char*) mem->fBuffer + offset, size, noErr, size);
+}
+
+
 // ROM 0x001e2458 SMemMsgSetTimerParmsKernelGlue
 // SWI 17.  Refused while the message is on the timer queue.
 NewtonErr
@@ -740,48 +851,56 @@ SMemMsgSetTimerParmsKernelGlue(TObjectId msgId, ULong timeout, ULong delayLo, UL
 
 // ROM 0x001e24c4 SMemMsgSetMsgAvailPortKernelGlue
 // SWI 18.
-void
+NewtonErr
 SMemMsgSetMsgAvailPortKernelGlue(TObjectId msgId, TObjectId portId)
 {
 	TSharedMemMsg* msg;
-	if (ConvertIdToObj(kSharedMemMsgType, msgId, &msg) != noErr)
-		return;
-	if (portId != 0 && ConvertIdToObj(kPortType, portId, nil) != noErr)
-		return;
+	NewtonErr err = ConvertIdToObj(kSharedMemMsgType, msgId, &msg);
+	if (err != noErr)
+		return err;
+	if (portId != 0 && (err = ConvertIdToObj(kPortType, portId, nil)) != noErr)
+		return err;
 	msg->fMsgAvailPortId = portId;
+	return noErr;
 }
 
 
 // ROM 0x001e251c SMemMsgGetSenderTaskIdKernelGlue
 // SWI 19: r1 = sender task.
-void
+NewtonErr
 SMemMsgGetSenderTaskIdKernelGlue(TObjectId msgId)
 {
 	TSharedMemMsg* msg;
-	if (ConvertIdToObj(kSharedMemMsgType, msgId, &msg) == noErr)
+	NewtonErr err = ConvertIdToObj(kSharedMemMsgType, msgId, &msg);
+	if (err == noErr)
 		gCurrentTask->fRegister[1] = msg->fSenderTaskId;
+	return err;
 }
 
 
 // ROM 0x001e2560 SMemMsgSetUserRefConKernelGlue
 // SWI 20.
-void
+NewtonErr
 SMemMsgSetUserRefConKernelGlue(TObjectId msgId, void* refCon)
 {
 	TSharedMemMsg* msg;
-	if (ConvertIdToObj(kSharedMemMsgType, msgId, &msg) == noErr)
+	NewtonErr err = ConvertIdToObj(kSharedMemMsgType, msgId, &msg);
+	if (err == noErr)
 		msg->fUserRefCon = refCon;
+	return err;
 }
 
 
 // ROM 0x001e25dc SMemMsgGetUserRefConKernelGlue
 // SWI 21: r1 = ref con.
-void
+NewtonErr
 SMemMsgGetUserRefConKernelGlue(TObjectId msgId)
 {
 	TSharedMemMsg* msg;
-	if (ConvertIdToObj(kSharedMemMsgType, msgId, &msg) == noErr)
+	NewtonErr err = ConvertIdToObj(kSharedMemMsgType, msgId, &msg);
+	if (err == noErr)
 		gCurrentTask->fRegister[1] = (TRegister) msg->fUserRefCon;
+	return err;
 }
 
 

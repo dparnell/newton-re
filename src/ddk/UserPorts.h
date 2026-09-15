@@ -150,6 +150,8 @@ class TUPort : public TUObject
 		long		SendRPCGoo(TObjectId msgId, TObjectId replyId, ULong* returnSize, void* content, ULong size, ULong msgType, ULong flags, Boolean urgent,
 								void* replyBuf, ULong replySize, TTimeout timeout, TTime* futureTimeToSend);
 		friend void SleepTill(TTime* futureTimeToSend);
+		friend void Sleep(TTimeout timeout);
+		friend class TUTaskWorld;
 		long		SendForSleepTill(TTime* futureTimeToSend)
 								{ return SendGoo(kBuiltInSMemMsgId, 0, nil, 0, 0, 0, false, kTimeOutImmediate, futureTimeToSend); }
 

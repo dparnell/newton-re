@@ -28,6 +28,9 @@
 #ifndef __DOUBLEQ_H
 #include "DoubleQ.h"
 #endif
+#ifndef __SHAREDTYPES_H
+#include "SharedTypes.h"		// TaskProcPtr
+#endif
 
 #include <stdint.h>
 
@@ -107,9 +110,11 @@ class TTask : public TKernelObject
 						TTask();
 						~TTask();
 
-		// TTask::Init 0x00250368 and FreeStack 0x00250308 need the memory
-		// system (NewStack, LockHeapRange, TSharedMem); they follow with it.
+		// the PSR mode bits of a task in user mode
+		enum { kUserMode = 0x10 };
 
+		NewtonErr		Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, ULong priority, ULong name, TEnvironment* environment);
+		void			FreeStack();
 		void			SetBequeathId(TObjectId id);
 
 		TRegister		fRegister[16];		// +0x10  r0-r15 as saved on a context switch; r13 = stack pointer,
@@ -150,5 +155,9 @@ class TTask : public TKernelObject
 		TObjectId		fBequeathId;		// +0xfc  task to hand our objects to when we die
 		TObjectId		fInheritedId;		// +0x100 task that bequeathed to us (SetBequeathId on the other task)
 };
+
+// A host runtime may ask to hear when a task is destroyed (its thread goes
+// with it); nil on the MessagePad.
+extern void (*gTaskDeletedHook)(TTask* task);
 
 #endif	/* __TASK_H */

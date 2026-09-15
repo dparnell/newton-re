@@ -4,13 +4,34 @@
 	Contains:	TTask construction and the task queues.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	TTask::Init, FreeStack and ~TTask depend on the memory system and the
-	stack manager and follow with those.
+
+	TTask::Init builds the new task's stack.  Above the stack proper sits the
+	task's globals block (TaskGlobals) and above that a copy of the object the
+	task was given, so that the object lives in the task's own memory; the
+	copying goes through the user-side shared-memory API (TUSharedMem) because
+	the memory may belong to another environment.  Stacks come from the stack
+	manager (NewStack, VirtualMemory.h) once the OS is running and from the
+	heap before that.
 */
 
 #include "Task.h"
 #include "KernelObjects.h"
+#include "KernelGlobals.h"
+#include "ObjectTable.h"
+#include "Scheduler.h"
+#include "SharedMem.h"
+#include "Environment.h"
 #include "OSErrors.h"
+#include "CompMath.h"
+#include "os600/TaskGlobals.h"
+#include "UserSharedMem.h"
+#include "VirtualMemory.h"
+#include "MonitorGlue.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+void (*gTaskDeletedHook)(TTask* task) = nil;
 
 
 /* -------------------------------------------------------------------------------
@@ -213,4 +234,164 @@ TTask::SetBequeathId(TObjectId id)
 	TTask* heir;
 	if (ConvertIdToObj(kTaskType, id, &heir) == noErr)
 		heir->fInheritedId = fId;
+}
+
+
+// ROM 0x00250368 Init__5TTaskFPFPvUlT2_vUlPvN32P12TEnvironment
+// taskId is the task's own id (passed to proc as its third argument, so it
+// arrives as a void*); dataId a shared memory holding the object to copy.
+// The stack allocation is stack | TaskGlobals | object; sp starts at the
+// globals block, r0 points at the object, r1 is its size, r2 the id.
+NewtonErr
+TTask::Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, ULong priority, ULong name, TEnvironment* environment)
+{
+	TUSharedMem data(dataId);
+	ULong dataSize = 0;
+	NewtonErr err;
+	if (dataId != 0 && (err = data.GetSize(&dataSize, nil)) != noErr)
+		return err;
+	fRegister[2] = (TRegister) taskId;
+	fRegister[1] = dataSize;
+	dataSize = (dataSize + 3) & ~3;
+	stackSize = (stackSize + 3) & ~3;
+	ULong topSize = dataSize + kTaskGlobalsSize;
+
+	if (!gOSIsRunning)
+	{
+		fState &= ~kTaskState_StackFromNewStack;
+		fStackBase = (VAddr) malloc(stackSize + topSize);
+		if (fStackBase == 0)
+			return kError_Could_Not_Create_Object;
+		fGlobalsBase = fStackBase + stackSize;
+		fStackTop = fGlobalsBase + topSize;
+	}
+	else
+	{
+		fState |= kTaskState_StackFromNewStack;
+		err = NewStack(environment->fHeapDomainId, stackSize + topSize, fId, &fStackTop, &fStackBase);
+		if (err != noErr)
+		{
+			fStackBase = 0;
+			return err;
+		}
+		fGlobalsBase = fStackTop - topSize;
+		if ((err = LockHeapRange(fGlobalsBase, fStackTop, false)) != noErr)
+			return err;
+		if ((err = LockHeapRange(fGlobalsBase, fGlobalsBase + 0x30, false)) != noErr)
+			return err;
+	}
+
+	// the task's own shared memory and message
+	TSharedMem* mem = new TSharedMem;
+	if (mem != nil && mem->Init(environment) != noErr)
+	{
+		delete mem;
+		mem = nil;
+	}
+	RegisterObject(mem, kSharedMemType, fId, &fSharedMemId);
+	TSharedMemMsg* msg = new TSharedMemMsg;
+	if (msg != nil && msg->Init(environment) != noErr)
+	{
+		delete msg;
+		msg = nil;
+	}
+	RegisterObject(msg, kSharedMemMsgType, fId, &fSharedMemMsgId);
+	if (fSharedMemId == 0 || fSharedMemMsgId == 0)
+		return kError_Could_Not_Create_Object;
+
+	// the globals block and the object, copied in through the shared memory
+	fGlobals = (void*) (fGlobalsBase + kTaskGlobalsSize);
+	TaskGlobals globals;
+	memset(&globals, 0, sizeof(globals));
+	InitializeExceptionGlobals(&globals.fExceptionGlobals);
+	globals.fTaskId = fId;
+	globals.fUnknown30 = 0;
+	globals.fUnknown48 = 0;
+	globals.fTaskName = name;
+	globals.fStackTop = fGlobalsBase + topSize;
+	globals.fStackBase = fStackBase;
+	globals.fCurrentHeap = environment->fHeap;
+	globals.fStackDomainId = environment->fStackDomainId;
+	TUSharedMem stack(fSharedMemId);
+	if ((err = stack.SetBuffer((void*) fGlobalsBase, topSize, kSMemReadWrite)) != noErr)
+		return err;
+	if ((err = stack.CopyToShared(&globals, kTaskGlobalsSize, 0, nil)) != noErr)
+		return err;
+	VAddr end = fGlobalsBase + topSize;
+	for (VAddr addr = end - dataSize; addr < end; addr += 0x100)
+	{
+		char chunk[0x100];
+		ULong size = end - addr;
+		if (size > sizeof(chunk))
+			size = sizeof(chunk);
+		ULong offset = addr - fGlobalsBase;
+		ULong got;
+		if ((err = data.CopyFromShared(&got, chunk, size, offset - kTaskGlobalsSize, nil)) != noErr)
+			return err;
+		if ((err = stack.CopyToShared(chunk, size, offset, nil)) != noErr)
+			return err;
+	}
+	if (fState & kTaskState_StackFromNewStack)
+		UnlockHeapRange(fGlobalsBase, fStackTop);
+
+	fStackSize = fStackTop - fGlobalsBase;
+	fUnknown68 = fId;
+	fRegister[13] = fGlobalsBase;
+	fRegister[0] = (TRegister) fGlobals;
+	fContainer = nil;
+	fPSR = kUserMode;
+	fRegister[15] = (TRegister) proc;
+	fRegister[10] = 0;
+	fRegister[11] = 0;
+	fRegister[12] = 0;
+	fRegister[4] = 0;
+	fRegister[6] = 0;
+	fRegister[7] = 0;
+	fRegister[8] = 0;
+	fRegister[9] = 0;
+	fRegister[14] = (TRegister) BadExit;
+	fRegister[5] = (TRegister) this;
+	fPriority = priority;
+	fEnvironment = environment;
+	fName = name;
+	environment->IncrRefCount();
+	return noErr;
+}
+
+
+// ROM 0x00250308 FreeStack__5TTaskFv
+// A stack from the stack manager goes back to it (the ROM asks the stack
+// manager's monitor directly, request 4: FreePagedMem); one from the heap is
+// freed.
+void
+TTask::FreeStack()
+{
+	if (fStackBase == 0)
+		return;
+	if (fState & kTaskState_StackFromNewStack)
+		FreePagedMem(fStackBase);
+	else
+		free((void*) fStackBase);
+}
+
+
+// ROM 0x0025079c __dt__5TTaskFv
+// Leaves whatever queues the task is in, returns its stack, adds its run
+// time to the dead tasks' total, lets go of its environment (deleting it if
+// that was its last user) and removes its shared memory and message.
+TTask::~TTask()
+{
+	if (fMonitorQItem.fContainer != nil)
+		fMonitorQItem.fContainer->DeleteFromQueue(this);
+	if (fCopyQItem.fContainer != nil)
+		fCopyQItem.fContainer->DeleteFromQueue(this);
+	UnScheduleTask(this);
+	FreeStack();
+	CompAdd(&fTaskTime, &gDeadTaskTime);
+	if (fEnvironment != nil && fEnvironment->DecrRefCount())
+		delete fEnvironment;
+	gObjectTable->Remove(fSharedMemId);
+	gObjectTable->Remove(fSharedMemMsgId);
+	if (gTaskDeletedHook != nil)
+		gTaskDeletedHook(this);
 }

@@ -99,3 +99,9 @@ DisableAlarm1(void)
 {
 	gHostAlarmArmed = false;
 }
+
+// the host clock is 64 bits wide: nothing to catch up on
+extern "C" void
+UpdateClock(void)
+{
+}

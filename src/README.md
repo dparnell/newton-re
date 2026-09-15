@@ -15,11 +15,14 @@ src/
                 DDK headers and to stand in for the hardware
   os600/        the kernel layer
     kernel/       privileged side: object table, tasks, scheduler, ports,
-                  monitors, semaphores, shared memory, domains, timers, queues
+                  monitors, semaphores, shared memory, domains, timers, queues,
+                  the object manager, GenericSWI, the boot (OsBoot)
       host/         the host task runtime: threads standing in for SWIBoot's
                     context switch (docs/host-runtime.md)
-    user/         user-mode side: the TU* API from the DDK, over the syscall
-                  interface (the *SWI stubs of UserGlobals.h)
+    user/         user-mode side: the TU* classes of the DDK (UserObjects,
+                  UserPorts, UserSharedMem, UserSemaphore, UserMonitor,
+                  UserTasks), UserBoot, over the syscall interface (the *SWI
+                  stubs of UserGlobals.h)
       host/         the stubs as direct calls into the kernel through the
                     runtime; MonitorEntryGlue, TaskKillSelf, Throw
     tests/        tests spanning kernel, user side and runtime

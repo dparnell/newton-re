@@ -49,6 +49,14 @@ TaskKillSelf(void)
 }
 
 
+// ROM 0x003a4ad8 BadExit
+extern "C" void
+BadExit(void)
+{
+	TaskKillSelf();
+}
+
+
 // Throw (jump table 0x01bdff88): the exception name, data and destructor
 // arrive in r0-r2 when a caller is redirected here by MonitorThrowKernelGlue
 // (the runtime enters a redirected function with r0-r3 as its arguments).

@@ -27,6 +27,8 @@
 #include "host/TaskRuntime.h"
 #include "OSErrors.h"
 
+#include <string.h>
+
 
 // The exit for a glue that left the result in the caller's saved r0.
 static inline long
@@ -48,9 +50,12 @@ ExitWithResult(TTask* self, long result)
 }
 
 
+// nil once the run has ended (static destructors, say): the call is refused
 static inline TTask*
 Enter()
 {
+	if (gHostTasksStopping)
+		return nil;
 	TTask* self = gCurrentTask;
 	self->fRegister[kcPC] = kResumeInStub;
 	return self;
@@ -66,6 +71,8 @@ extern "C" ULong
 GetPortSWI(ULong what)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return 0;
 	return (ULong) ExitWithResult(self, (long) GetPortInfo(what));
 }
 
@@ -75,6 +82,8 @@ extern "C" long
 PortSendSWI(ULong portId, ULong msgId, ULong replyId, ULong msgType, ULong flags)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	PortSendKernelGlue(portId, msgId, replyId, msgType, flags);
 	return ExitWithSavedResult(self);
 }
@@ -85,6 +94,8 @@ extern "C" long
 PortReceiveSWI(ULong portId, ULong msgId, ULong msgFilter, ULong flags, ULong* senderMsgId, ULong* replyMemId, ULong* returnMsgType, ULong* signature)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	PortReceiveKernelGlue(portId, msgId, msgFilter, flags);
 	long result = ExitWithSavedResult(self);
 	if (result == noErr)
@@ -103,6 +114,8 @@ extern "C" long
 PortResetFilterSWI(ULong portId, ULong msgId, ULong msgFilter)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	PortResetFilterKernelGlue(portId, msgId, msgFilter);
 	return ExitWithSavedResult(self);
 }
@@ -117,8 +130,9 @@ extern "C" long
 SMemSetBufferSWI(ULong id, void* buffer, ULong size, ULong permissions)
 {
 	TTask* self = Enter();
-	SMemSetBufferKernelGlue(id, buffer, size, permissions);
-	return ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	return ExitWithResult(self, SMemSetBufferKernelGlue(id, buffer, size, permissions));
 }
 
 
@@ -127,8 +141,9 @@ extern "C" long
 SMemGetSizeSWI(ULong id, ULong* returnSize, void** returnBuffer, ULong* refConPtr)
 {
 	TTask* self = Enter();
-	SMemGetSizeKernelGlue(id);
-	long result = ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	long result = ExitWithResult(self, SMemGetSizeKernelGlue(id));
 	if (result == noErr)
 	{
 		if (returnSize != nil)		*returnSize = (ULong) self->fRegister[kcR1];
@@ -139,20 +154,41 @@ SMemGetSizeSWI(ULong id, ULong* returnSize, void** returnBuffer, ULong* refConPt
 }
 
 
-// SWI 15, 16
-extern "C" long
-SMemCopyToSharedSWI(ULong /*id*/, void* /*buffer*/, ULong /*size*/, ULong /*offset*/, ULong /*sendersMsgId*/, ULong /*signature*/)
+// SWI 15, 16 (0x0038aa40, 0x0038aaa0): the glue sets the copy up in the
+// task's registers; the ROM then returns into a copy loop in user mode that
+// ends with SWI 26 (LowLevelCopyDone), which puts the result in r0, the size
+// in r1 and the pc back where the stub was called.  Here the loop is a memcpy.
+static long
+RunCopy(TTask* self, long setup, ULong* returnSize)
 {
-	// NOT YET RECONSTRUCTED: SMemCopyToKernelGlue 0x001e2540 and the copy
-	// performed by the SWI handler in the caller's environment
-	return kError_Call_Not_Implemented;
+	if (setup == kSMemCopy_Words || setup == kSMemCopy_Bytes)
+	{
+		memcpy((void*) self->fRegister[kcR0], (const void*) self->fRegister[kcR1], (size_t) self->fRegister[kcR2]);
+		LowLevelCopyDoneFromKernelGlue(noErr, self, kResumeInStub);
+		gCopyDone = false;
+		setup = (long) self->fRegister[kcR0];
+	}
+	if (returnSize != nil)
+		*returnSize = (ULong) self->fRegister[kcR1];
+	return ExitWithResult(self, setup);
 }
 
 extern "C" long
-SMemCopyFromSharedSWI(ULong /*id*/, void* /*buffer*/, ULong /*size*/, ULong /*offset*/, ULong /*sendersMsgId*/, ULong /*signature*/, ULong* /*returnSize*/)
+SMemCopyToSharedSWI(ULong id, void* buffer, ULong size, ULong offset, ULong sendersMsgId, ULong signature)
 {
-	// NOT YET RECONSTRUCTED: SMemCopyFromKernelGlue 0x001e2620
-	return kError_Call_Not_Implemented;
+	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
+	return RunCopy(self, SMemCopyToKernelGlue(id, buffer, size, offset, sendersMsgId, signature), nil);
+}
+
+extern "C" long
+SMemCopyFromSharedSWI(ULong id, void* buffer, ULong size, ULong offset, ULong sendersMsgId, ULong signature, ULong* returnSize)
+{
+	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
+	return RunCopy(self, SMemCopyFromKernelGlue(id, buffer, size, offset, sendersMsgId, signature), returnSize);
 }
 
 
@@ -161,8 +197,9 @@ extern "C" long
 SMemMsgSetTimerParmsSWI(ULong msgId, ULong timeout, ULong timeLow, ULong timeHigh)
 {
 	TTask* self = Enter();
-	SMemMsgSetTimerParmsKernelGlue(msgId, timeout, timeLow, timeHigh);
-	return ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	return ExitWithResult(self, SMemMsgSetTimerParmsKernelGlue(msgId, timeout, timeLow, timeHigh));
 }
 
 
@@ -171,8 +208,9 @@ extern "C" long
 SMemMsgSetMsgAvailPortSWI(ULong msgId, ULong availPort)
 {
 	TTask* self = Enter();
-	SMemMsgSetMsgAvailPortKernelGlue(msgId, availPort);
-	return ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	return ExitWithResult(self, SMemMsgSetMsgAvailPortKernelGlue(msgId, availPort));
 }
 
 
@@ -181,8 +219,9 @@ extern "C" long
 SMemMsgGetSenderTaskIdSWI(ULong msgId, void* senderTaskId)
 {
 	TTask* self = Enter();
-	SMemMsgGetSenderTaskIdKernelGlue(msgId);
-	long result = ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	long result = ExitWithResult(self, SMemMsgGetSenderTaskIdKernelGlue(msgId));
 	if (result == noErr && senderTaskId != nil)
 		*(ULong*) senderTaskId = (ULong) self->fRegister[kcR1];
 	return result;
@@ -194,8 +233,9 @@ extern "C" long
 SMemMsgSetUserRefConSWI(ULong msgId, ULong refCon)
 {
 	TTask* self = Enter();
-	SMemMsgSetUserRefConKernelGlue(msgId, (void*) (uintptr_t) refCon);
-	return ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	return ExitWithResult(self, SMemMsgSetUserRefConKernelGlue(msgId, (void*) (uintptr_t) refCon));
 }
 
 
@@ -204,8 +244,9 @@ extern "C" long
 SMemMsgGetUserRefConSWI(ULong msgId, ULong* refConPtr)
 {
 	TTask* self = Enter();
-	SMemMsgGetUserRefConKernelGlue(msgId);
-	long result = ExitWithSavedResult(self);
+	if (self == nil)
+		return kError_Call_Aborted;
+	long result = ExitWithResult(self, SMemMsgGetUserRefConKernelGlue(msgId));
 	if (result == noErr && refConPtr != nil)
 		*refConPtr = (ULong) self->fRegister[kcR1];
 	return result;
@@ -217,6 +258,8 @@ extern "C" long
 SMemMsgCheckForDoneSWI(ULong msgId, ULong flags, ULong* sentById, ULong* replyMemId, ULong* msgType, ULong* signature)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	SMemMsgCheckForDoneKernelGlue(msgId, flags);
 	long result = ExitWithSavedResult(self);
 	if (result == noErr)
@@ -235,6 +278,8 @@ extern "C" long
 SMemMsgMsgDoneSWI(ULong msgId, long result, ULong signature)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	return ExitWithResult(self, SMemMsgMsgDoneKernelGlue(msgId, result, signature));
 }
 
@@ -249,6 +294,8 @@ extern "C" long
 MonitorDispatchSWI(ULong monitorId, long selector, void* userObject)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	self->fRegister[kcR0] = monitorId;
 	self->fRegister[kcR1] = (TRegister) selector;
 	self->fRegister[kcR2] = (TRegister) userObject;
@@ -262,6 +309,8 @@ extern "C" long
 MonitorExitSWI(long monitorResult, void* /*continuationPC*/)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	return ExitWithResult(self, MonitorExitKernelGlue(monitorResult));
 }
 
@@ -271,6 +320,8 @@ extern "C" long
 MonitorThrowSWI(char* name, void* data, void* destructor)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	return ExitWithResult(self, MonitorThrowKernelGlue(name, data, (void (*)(void*)) destructor));
 }
 
@@ -280,6 +331,8 @@ extern "C" long
 MonitorFlushSWI(ULong monitorId)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	return ExitWithResult(self, MonitorFlushKernelGlue(monitorId));
 }
 
@@ -298,6 +351,8 @@ SemaphoreOpGlue(ULong groupId, ULong listId, ULong flags)
 	for (;;)
 	{
 		TTask* self = Enter();
+		if (self == nil)
+			return kError_Call_Aborted;
 		long result = DoSemaphoreOp(groupId, listId, (SemFlags) flags, self);
 		if (!HostSWIExit(self, kResumeInStub))
 			return result;
@@ -318,6 +373,8 @@ extern "C" long
 GenericWithReturnSWI(ULong selector, ULong p1, ULong p2, ULong p3, ULong* rp1, ULong* rp2, ULong* rp3)
 {
 	TTask* self = Enter();
+	if (self == nil)
+		return kError_Call_Aborted;
 	long result = ExitWithResult(self, GenericSWIHandler(selector, p1, p2, p3, 0));
 	if (rp1 != nil)	*rp1 = (ULong) self->fRegister[kcR1];
 	if (rp2 != nil)	*rp2 = (ULong) self->fRegister[kcR2];

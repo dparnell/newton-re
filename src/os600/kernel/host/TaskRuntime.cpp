@@ -23,6 +23,7 @@
 #include <thread>
 
 #include "TaskRuntime.h"
+#include "Boot.h"
 #include "TaskSwitch.h"
 #include "Scheduler.h"
 #include "TimerEngine.h"
@@ -105,9 +106,9 @@ Trampoline(TTask* task)
 			EntryProc entry = (EntryProc) task->fRegister[kcPC];
 			TRegister* r = task->fRegister;
 			entry(r[kcR0], r[kcR1], r[kcR2], r[kcR3]);
-			// a task proc that returns goes to BadExit = TaskKillSelf (the
-			// ROM sets lr to it in TTask::Init)
-			task->fRegister[kcPC] = (TRegister) TaskKillSelf;
+			// a task proc that returns goes to BadExit (the ROM sets lr to it
+			// in TTask::Init)
+			task->fRegister[kcPC] = (TRegister) BadExit;
 		}
 		catch (TTaskRedirect&)
 		{
@@ -202,6 +203,17 @@ HostIdleTask()
 		}
 		HostSWIExit(self, self->fRegister[kcPC]);
 	}
+}
+
+
+// ROM 0x001ce924 SleepTask__Fv
+// The idle loop: on the MessagePad `for (;;) PauseSystem();`, waking for each
+// interrupt; here the boot thread hands over to the runtime, whose idle task
+// body does the waiting.  Returns when the run ends (the ROM's never does).
+void
+SleepTask()
+{
+	HostRunTasks(gIdleTask);
 }
 
 

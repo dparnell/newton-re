@@ -17,9 +17,9 @@
 
 // ROM 0x000b01f4 Init__12TEnvironmentFPv
 NewtonErr
-TEnvironment::Init(void* unknown)
+TEnvironment::Init(void* heap)
 {
-	fUnknown14 = unknown;
+	fHeap = heap;
 	fHeapDomainId = 0;
 	fStackDomainId = 0;
 	fRefCount = 0;

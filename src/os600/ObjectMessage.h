@@ -72,7 +72,7 @@ struct ObjectMessage
 			TObjectId		fEnvironmentId;	// +0x24  0: the requester's
 		} fTask;
 		struct {						// kObjectEnvironment, size 0x10
-			void*			fUnknown;		// +0x0c  TEnvironment::Init's argument
+			void*			fHeap;			// +0x0c  the environment's heap (TEnvironment::Init's argument)
 		} fEnvironment;
 		struct {						// kObjectDomain, size 0x18; also kObjectMgr_AddDomain (0x14),
 			TObjectId		fMonitorId;		// +0x0c    RemoveDomain (0x10), SetFaultMonitor (0x14), where +0x0c is
