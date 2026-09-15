@@ -96,7 +96,11 @@ Reconstructed in `src/os600/kernel/` (with host tests): `TDoubleQItem` /
 `TDoubleQContainer` (DoubleQ.*), `TKernelObject` (KernelObject.h),
 `TObjectTable` / `TObjectTableIterator` (ObjectTable.*), `RegisterObject` /
 `GiveObject` / `AcceptObject` (KernelObjects.*), and the first HAL interface,
-`hal/Atomic.h` (EnterAtomic & co., host implementation in `hal/host`).
+`hal/Atomic.h` (EnterAtomic & co., host implementation in `hal/host`);
+`TTaskQItem` / `TTaskQueue` / `TTaskContainer` and the `TTask` layout
+(Task.*), `TScheduler` with `ScheduleTask` / `UnScheduleTask` /
+`WantSchedule` / `StartScheduler` / `StopScheduler` (Scheduler.*), and
+`hal/Interrupts.h` (interrupt enable/disable and the time-slice alarm).
 
 Layouts established on the way: `TKernelObject` {fId, fNext, fOwnerId,
 fAssignedOwnerId}; `TObjectTable` = scavenge proc + cursor + 128 buckets
@@ -105,6 +109,23 @@ fAssignedOwnerId}; `TObjectTable` = scavenge proc + cursor + 128 buckets
 (or it owns itself); `Scavenge` walks one bucket per call removing the rest
 through the scavenge proc's destructor. Oddity kept as found: `GiveObject`
 refuses a target task that exists and is alive.
+
+Scheduling: 32 priority buckets of FIFO `TTaskQueue`s in `TScheduler`
+(0x120 bytes: `TKernelObject`, vptr at +0x10, fCurrentBucket, fPriorityMask,
+32 queues, fPreferredTask); `Schedule()` re-queues the running task at the
+back of its bucket and takes the head of the highest non-empty bucket, or
+the idle task. `StartScheduler` arms a 20 ms (0x12000-tick) time slice on
+the Voyager timer (match register 0x0F182C00 from counter 0x0F181800) through
+`gSchedulerIntObj`; `WantSchedule` is deferred while `gHoldScheduleLevel`
+is non-zero. `TTask` is 0x104 bytes: `TKernelObject`, r0-r15 + PSR at +0x10,
+state bits at +0x6c (0x20000 = scheduled, 0x400000 = kill pending,
+0x2000000 = stack from NewStack), environment +0x74, priority +0x80,
+name +0x84, stack top/base +0x88/+0x8c, container +0x90, queue links +0x94,
+globals +0xa0, run time +0xa4, memory accounting +0xb0, two TDoubleQItems
+at +0xbc/+0xc8, monitor +0xd4/+0xd8, shared mem/msg ids +0xf0/+0xf4,
+initial sp +0xf8, bequeath ids +0xfc/+0x100. Kernel "local ids" 1, 2, 3
+(`LocalToGlobalId`) stand for the current task's shared-memory message,
+shared memory, and the current monitor's caller.
 
 ## Kernel globals
 

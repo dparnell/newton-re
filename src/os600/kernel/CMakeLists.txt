@@ -3,6 +3,8 @@ add_library(os600_kernel STATIC
     KernelGlobals.cpp
     KernelObjects.cpp
     ObjectTable.cpp
+    Scheduler.cpp
+    Task.cpp
 )
 target_link_libraries(os600_kernel PUBLIC newton_config hal_host)
 target_include_directories(os600_kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -13,7 +13,14 @@ the vtable pointer stored at offset 0 and empty base classes (`SingleObject`)
 taking no space, e.g. `TAEventHandler::TAEventHandler` allocates 0x14 bytes and
 writes the vtable at [r0,#0] and its four fields at 4..0x10 - exactly clang's
 layout.  Only base-class offsets are not available through libclang; they are
-computed here with the same rules and checked against the first field.
+computed here and checked against the first field.  One difference from the
+Itanium ABI showed up in the kernel: TScheduler (0x001ce518) keeps a 16-byte
+non-polymorphic base at offset 0 and its vptr at +0x10, so this compiler lays
+bases out in declaration order and puts the vptr after them, where clang
+would put the vptr first and the base after it.  No DDK class has a
+non-empty non-polymorphic base together with virtual functions (or multiple
+inheritance), so the DDK layouts are unaffected; `_place_bases` follows the
+ROM's rule.
 
 Types are encoded with the same JSON schema as `demangle.type_to_json`
 ({"k": "named"|"ptr"|"ref"|"qual"|"array"|"func"|"memptr", ...}) so both
@@ -211,9 +218,8 @@ def _record(c, records: Dict[str, dict]) -> dict:
 
 
 def _place_bases(rec: dict, records: Dict[str, dict]) -> None:
-    """Compute base subobject offsets (Itanium rules: primary base at 0, EBO)."""
-    off = 4 if rec["introduces_vptr"] else 0
-    primary_done = False
+    """Compute base subobject offsets: declaration order, empty bases take no space."""
+    off = 0
     for b in rec["bases"]:
         base = records.get(b["name"])
         if base is None:
@@ -223,15 +229,12 @@ def _place_bases(rec: dict, records: Dict[str, dict]) -> None:
         if base["size"] <= 1 and not base["fields"] and not base["polymorphic"]:
             b["offset"] = 0          # empty base optimisation
             continue
-        if base["polymorphic"] and not primary_done:
-            b["offset"] = 0          # primary base shares the vptr
-            primary_done = True
-            off = max(off, base["size"])
-            continue
         align = max(base["align"], 1)
         off = (off + align - 1) // align * align
         b["offset"] = off
         off += base["size"]
+    if rec["introduces_vptr"]:
+        off += 4                     # the vptr follows the bases
     if rec["fields"]:
         first = min(f["offset"] for f in rec["fields"])
         if first < off:
