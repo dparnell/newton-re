@@ -35,6 +35,10 @@ PATCHES = {
     "NewtonTypes.h": [
         ("typedef ULong\tVAddr;",
          "#ifdef hostVAddrIsPointerSized\ntypedef uintptr_t\tVAddr;\n#else\ntypedef ULong\tVAddr;\n#endif"),
+        # ULong/Long are the ARM's 32-bit word, which also carries pointers (refcons, task
+        # arguments); a host build makes them pointer-sized, as an LP64 Linux does anyway
+        ("typedef long\t\t\tLong;\t\t\t/* In ANSI C long is signed long */\ntypedef signed long\t\tSLong;\ntypedef unsigned long\tULong;\n\ntypedef signed long\t\tFastInt;",
+         "#ifdef hostLongIsPointerSized\ntypedef intptr_t\t\tLong;\ntypedef intptr_t\t\tSLong;\ntypedef uintptr_t\t\tULong;\ntypedef intptr_t\t\tFastInt;\n#else\ntypedef long\t\t\tLong;\t\t\t/* In ANSI C long is signed long */\ntypedef signed long\t\tSLong;\ntypedef unsigned long\tULong;\n\ntypedef signed long\t\tFastInt;\n#endif"),
     ],
     # UserTasks.h: the include is spelt in the wrong case for a case-sensitive file system;
     # TUTaskWorld's spawned task starts at a member function in the ROM (its address is

@@ -69,11 +69,18 @@ typedef short			Short;			/* In ANSI C short is signed short */
 typedef signed short	SShort;
 typedef unsigned short	UShort;
 
+#ifdef hostLongIsPointerSized
+typedef intptr_t		Long;
+typedef intptr_t		SLong;
+typedef uintptr_t		ULong;
+typedef intptr_t		FastInt;
+#else
 typedef long			Long;			/* In ANSI C long is signed long */
 typedef signed long		SLong;
 typedef unsigned long	ULong;
 
 typedef signed long		FastInt;
+#endif
 
 #define FASTINT_MIN		(~0x7fffffff)	/* -2147483648 and 0x80000000 are unsigned */
     									/* minimum value for an object of type FastInt */

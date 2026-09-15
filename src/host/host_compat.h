@@ -10,7 +10,10 @@
 	told the compiler has real exceptions (the flag it sets for MSVC itself).
 	VAddr, a 32-bit virtual address on the MessagePad, holds a host pointer
 	here (hostVAddrIsPointerSized, see sync_ddk_headers.py) because task stacks
-	and shared-memory buffers are host memory.
+	and shared-memory buffers are host memory; so do ULong and Long
+	(hostLongIsPointerSized), the ARM's word, which the OS uses for refcons and
+	task arguments that carry pointers - on an LP64 Linux they are already,
+	this makes Windows (LLP64) agree.
 */
 #ifndef __HOST_COMPAT_H
 #define __HOST_COMPAT_H
@@ -20,6 +23,7 @@ typedef unsigned char Boolean;
 #define __wchar_t 1
 #define hasCppExceptions 1
 #define hostVAddrIsPointerSized 1
+#define hostLongIsPointerSized 1
 #include <stdint.h>
 
 #endif /* __HOST_COMPAT_H */
