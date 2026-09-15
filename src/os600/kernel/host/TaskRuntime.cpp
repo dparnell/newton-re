@@ -249,6 +249,7 @@ HostRunTasks(TTask* idle)
 	gStopRequested = false;
 	gHostTasksStopping = false;
 	gHostResetHook = ResetEndsTheRun;
+	gTaskDeletedHook = HostTaskDeleted;
 	gCurrentTask = idle;
 	idle->fRegister[kcPC] = (TRegister) HostIdleTask;
 	std::unique_lock<std::mutex> lock(gBaton);
@@ -273,11 +274,13 @@ HostStopTasks()
 }
 
 
+// A task is being deleted (gTaskDeletedHook, from ~TTask).  Its thread, if
+// any, is parked in WaitForBaton and never runs again; its context stays
+// allocated for it, only the task is forgotten - a new TTask at the same
+// address must get a context (and thread) of its own.
 void
 HostTaskDeleted(TTask* task)
 {
 	std::unique_lock<std::mutex> lock(gBaton);
-	// the thread, if any, is parked in WaitForBaton and never runs again; its
-	// context stays allocated for it, only the task is forgotten
 	gContexts.erase(task);
 }

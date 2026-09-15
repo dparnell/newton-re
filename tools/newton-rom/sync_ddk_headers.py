@@ -47,9 +47,15 @@ PATCHES = {
     ],
     # UserPorts.h: the ROM's Sleep() and TUTaskWorld::StartTask use TUPort's private
     # Send*Goo like SleepTill does, but only SleepTill is a friend in the DDK's header
-    # UserDomain.h: tokens after #endif
+    # UserDomain.h: tokens after #endif; the include is spelt in the wrong case
     "UserDomain.h": [
         ("#endif __USERDOMAIN__", "#endif /* __USERDOMAIN__ */"),
+        ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
+    ],
+    # DynamicArray.h: pointer arithmetic through a long truncates 64-bit host pointers
+    "DynamicArray.h": [
+        ("{ return (void*)((long)fArrayBlock + (fElementSize * index)); }",
+         "{ return (void*)((char*)fArrayBlock + (fElementSize * index)); }"),
     ],
     "UserPorts.h": [
         ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",

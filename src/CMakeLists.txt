@@ -18,4 +18,5 @@ target_compile_options(newton_config INTERFACE
 enable_testing()
 add_subdirectory(toolbox)
 add_subdirectory(hal)
+add_subdirectory(utility)
 add_subdirectory(os600)

@@ -26,10 +26,15 @@ src/
       host/         the stubs as direct calls into the kernel through the
                     runtime; MonitorEntryGlue, TaskKillSelf, Throw
     tests/        tests spanning kernel, user side and runtime
-  hal/          hardware abstraction (Voyager/Cirrus chipset for the MP2x00,
-                a host implementation for running on Linux) (to come)
+  hal/          hardware abstraction (interfaces in hal/*.h; the host
+                implementation in hal/host is the only port so far - the
+                Voyager/Cirrus chipset of the MP2x00 is to come)
+  toolbox/      the toolbox: CompMath (64-bit arithmetic); toolbox/host holds
+                a stand-in for the memory manager's pointer API (NewPtr...)
+                until the heap manager is reconstructed
   bootstrap/    reset and boot code (to come)
-  utility/      UtilityClasses: CDynamicArray, CList, ... (to come)
+  utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
+                CListIterator, CSortedList, CItemTester/CItemComparer
   frames/       NewtonScript object system (to come)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```

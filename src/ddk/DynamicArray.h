@@ -103,7 +103,7 @@ inline Boolean CDynamicArray::IsEmpty()
 	{ return (fSize == 0); }
 
 inline void* CDynamicArray::ElementPtrAt(ArrayIndex index)
-	{ return (void*)((long)fArrayBlock + (fElementSize * index)); }
+	{ return (void*)((char*)fArrayBlock + (fElementSize * index)); }
 
 inline Size CDynamicArray::ComputeByteCount(ArrayIndex count)
 	{ return (fElementSize * count); }
