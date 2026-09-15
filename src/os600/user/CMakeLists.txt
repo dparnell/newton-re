@@ -18,6 +18,7 @@ add_library(os600_user STATIC
     UserNameServer.cpp
     SystemEvents.cpp
     UserGestalt.cpp
+    UserTime.cpp
     host/StackManager.cpp
     host/MonitorGlue.cpp
     host/SWI.cpp

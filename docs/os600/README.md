@@ -184,7 +184,11 @@ its clients `TUNameServer` (UserNameServer.cpp), `TSystemEvent`/
 `TSendSystemEvent` (SystemEvents.cpp) and `TUGestalt` (UserGestalt.cpp) -
 over the utility containers (`src/utility`: `CDynamicArray`,
 `CArrayIterator`, `CList`, `CListIterator`, `CSortedList`, `CItemTester`/
-`CItemComparer`).
+`CItemComparer`, and `TTimerQueue`/`TTimerElement`/`TTimerPort` - the delta
+queue of timers a task polls between receives, over the time calls
+`GetGlobalTime`/`GetTaskTime`/`TimeFromNow` and `TTime`'s unit arithmetic
+(user/UserTime.cpp; the clock is asked for with GenericSWI's kGetTaskTime,
+task 0) and the toolbox's `CompMul`/`CompDiv`/`CompShift`).
 
 The name server, as established: `InitialKSRVTask` spawns it as a
 `TUTaskWorld` named 'name' (6000-byte stack, priority 10); its port becomes

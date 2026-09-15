@@ -9,8 +9,9 @@ add_library(utility STATIC
     ListIterator.cpp
     SortedList.cpp
     ItemTester.cpp
+    TimerQueue.cpp
 )
-target_link_libraries(utility PUBLIC newton_config toolbox)
+target_link_libraries(utility PUBLIC newton_config toolbox os600_user)
 target_include_directories(utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

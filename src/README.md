@@ -36,7 +36,8 @@ src/
                 until the heap manager is reconstructed
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
-                CListIterator, CSortedList, CItemTester/CItemComparer
+                CListIterator, CSortedList, CItemTester/CItemComparer,
+                TTimerQueue/TTimerElement/TTimerPort
   frames/       NewtonScript object system (to come)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```

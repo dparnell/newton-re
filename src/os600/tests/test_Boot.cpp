@@ -2,7 +2,8 @@
 // hands over to the runtime; UserBoot spawns 'ksrv', which here runs a
 // scenario with the real user-side classes: a TUTaskWorld echo server spawned
 // through the object manager, an RPC to it over a TUPort, a Sleep through the
-// null port and the timer engine, and a TULockingSemaphore.  Nothing is built
+// null port and the timer engine, a TULockingSemaphore, exceptions, the name
+// server, system events, gestalt and a timer queue.  Nothing is built
 // by hand: every object comes from the object manager monitor.
 
 #include "Boot.h"
@@ -21,6 +22,7 @@
 #include "NameServer.h"
 #include "SystemEvents.h"
 #include "NewtonGestalt.h"
+#include "TimerQueue.h"
 #include "host/TaskRuntime.h"
 #include "hal/Timer.h"
 #include "MemObjManager.h"
@@ -60,6 +62,13 @@ static int sysEventListened = 0;
 static long gestaltErr = -1, gestaltRegErr = -1, gestaltReplaceErr = -1, gestaltMineErr = -1;
 static ULong gestaltVersion = 0, gestaltMineSize = 0;
 static ULong gestaltMine[2] = { 0, 0 };
+static int timerFired[3] = { 0, 0, 0 };
+static int timerOrder = 0;
+static Int64 timerStart, timerEnd;
+static Boolean timerCancelled = false;
+static long timedReceiveErr = -1;
+static Boolean timedReceiveGot = false;
+static ULong timeUnitsMs = 0, timeConverted = 0;
 
 // a database lookup after the run (the user-mode calls are refused then)
 static Boolean FindId(MemObjType type, ULong name, TObjectId* outId)
@@ -172,6 +181,30 @@ TListener::TaskMain()
 	{
 		sysEventListened++;
 		token.ReplyRPC(nil, 0, noErr);
+	}
+}
+
+
+// a timer that notes when, and in what order, it fired; the last one sends
+// the port a message so that the timed receive has something to return
+static TUPort* timerPortForWake = nil;
+static TUAsyncMessage timerWake;
+
+class TTestTimer : public TTimerElement
+{
+	public:
+						TTestTimer(TTimerQueue* q, ULong refCon) : TTimerElement(q, refCon) {}
+		virtual void	Timeout();
+};
+
+void
+TTestTimer::Timeout()
+{
+	timerFired[GetRefCon()] = ++timerOrder;
+	if (GetRefCon() == 0)
+	{
+		static char done[] = "done";		// the buffer must outlive this call: the receiver copies it later
+		timerPortForWake->Send(&timerWake, done, sizeof(done));
 	}
 }
 
@@ -310,6 +343,33 @@ static void KernelServicesScenario()
 		gestaltMineErr = gestalt.Gestalt(0x03000001, gestaltMine, &gestaltMineSize);
 	}
 
+	// --- the timer queue: three timers, one cancelled, over a timed receive
+	{
+		TTimerPort timerPort;
+		if (timerPort.Init() == noErr && timerWake.Init(false) == noErr)
+		{
+			timerPortForWake = &timerPort;
+			TTestTimer late(timerPort.GetQueue(), 0), early(timerPort.GetQueue(), 1), never(timerPort.GetQueue(), 2);
+			GetClock(&timerStart);
+			late.Prime(30 * kMilliseconds);
+			never.Prime(20 * kMilliseconds);
+			early.Prime(10 * kMilliseconds);
+			timerCancelled = never.Cancel() && !never.IsPrimed() && late.IsPrimed();
+			// the receive waits through the two timeouts and returns with the
+			// message the last timer sends
+			ULong size = 0;
+			char buffer[8];
+			timedReceiveErr = timerPort.TimedReceive(&size, buffer, sizeof(buffer), nil, nil, kMsgType_MatchAll, false, false);
+			timedReceiveGot = size == 5 && strcmp(buffer, "done") == 0;
+			GetClock(&timerEnd);
+		}
+		TTime ms(1, kMilliseconds);
+		timeUnitsMs = ms;
+		TTime later = TimeFromNow(3 * kMilliseconds);
+		TTime now = GetGlobalTime();
+		timeConverted = (later - now).ConvertTo(kMilliseconds);
+	}
+
 	delete echo;
 	objectsAfter = CountObjects();
 	HostStopTasks();
@@ -370,6 +430,10 @@ int main()
 	EXPECT(gestaltErr == noErr && gestaltVersion == 1);
 	EXPECT(gestaltRegErr == noErr && gestaltReplaceErr == kError_Bad_Parameters);
 	EXPECT(gestaltMineErr == noErr && gestaltMine[0] == 0xCAFE && gestaltMine[1] == 0xF00D && gestaltMineSize == sizeof(gestaltMine));
+	EXPECT(timerCancelled && timerFired[1] == 1 && timerFired[0] == 2 && timerFired[2] == 0);
+	EXPECT(timedReceiveErr == noErr && timedReceiveGot);
+	EXPECT(timerEnd.lo - timerStart.lo >= 30 * kMilliseconds);
+	EXPECT(timeUnitsMs == kMilliseconds && timeConverted == 3);
 	// what the scenario leaves behind: the echo task and the monitor's task
 	// (each a task and its two shared memory objects) await the scavenger,
 	// and the monitor itself is not deleted
