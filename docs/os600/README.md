@@ -69,9 +69,15 @@ classes' shared op lists, the kernel heap's semaphore, `InitMemArchObjs`
 real-time clock, then it makes and starts the kernel services task 'ksrv'
 (0x6800 stack, priority 10, environment 'ksrv') running `InitialKSRVTask` -
 protocol registry, stdio, the name server, the ROM domain manager, the
-package manager, and the first `TAppWorld` ('drvl') - and leaves its own
-objects to the idle task.  On the host `test_Boot` boots this way and lets
-the 'ksrv' task run a scenario with the real `TU*` classes.
+package manager, and the loader world `TLoader` ('drvl', a `TAppWorld` in
+the 'user' environment; user/Loader.cpp) - and leaves its own objects to
+the idle task.  `TLoader::TheMain` is not an event loop: it loads the
+drivers and starts the events, alert manager, sound, comm manager, card
+services, store and power managers (all NOT YET), then the 'main' task
+running `UserMain` - the NewtonScript world (NOT YET; a host hook
+`gHostUserMain` stands in) - and kills itself.  On the host `test_Boot`
+boots this way and lets the 'ksrv' task run a scenario with the real `TU*`
+classes.
 
 ## Kernel classes
 

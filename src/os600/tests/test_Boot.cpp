@@ -25,6 +25,7 @@
 #include "NewtonGestalt.h"
 #include "TimerQueue.h"
 #include "AppWorld.h"
+#include "Loader.h"
 #include "host/TaskRuntime.h"
 #include "hal/Timer.h"
 #include "MemObjManager.h"
@@ -71,6 +72,8 @@ static Boolean timerCancelled = false;
 static long timedReceiveErr = -1;
 static Boolean timedReceiveGot = false;
 static ULong timeUnitsMs = 0, timeConverted = 0;
+static TObjectId mainTaskId = 0, mainEnvironmentId = 0;
+static ULong mainTaskName = 0;
 static long appWorldInit = -1, appWorldLookup = -1, appWorldRPC = -1, appWorldNoHandler = -1, appWorldIdles = 0, appWorldSysEvents = 0, appWorldDone = 0;
 static ULong appWorldReplySize = 0;
 static TObjectId appWorldTaskId = 0, appWorldRegisteredPort = 0;
@@ -306,6 +309,15 @@ TTestWorld::MainDestructor()
 }
 
 
+// what the 'main' task (UserMain) would be: the NewtonScript world
+static void MainTaskScenario()
+{
+	mainTaskId = gCurrentTaskId;
+	mainTaskName = gCurrentTask->fName;
+	mainEnvironmentId = gCurrentTask->fEnvironment->fId;
+}
+
+
 static void KernelServicesScenario()
 {
 	ksrvRan = true;
@@ -508,6 +520,7 @@ static void KernelServicesScenario()
 int main()
 {
 	gHostKernelServicesTask = KernelServicesScenario;
+	gHostUserMain = MainTaskScenario;
 	OsBoot();
 
 	EXPECT(ksrvRan && ksrvTaskId != 0);
@@ -566,6 +579,8 @@ int main()
 	EXPECT(appWorldInit == noErr && appWorldTaskId != 0 && appWorldLookup == noErr && appWorldRegisteredPort != 0);
 	EXPECT(appWorldRPC == noErr && strcmp(appWorldSeen, "event") == 0 && strcmp(appWorldReply, "EVENT") == 0 && appWorldReplySize == sizeof(TTestEvent));
 	EXPECT(appWorldNoHandler == eNoHandler);
+	// the loader world ran in the 'user' environment and started the 'main' task there
+	EXPECT(mainTaskId != 0 && mainTaskName == 'main' && FindId(kMemObjEnvironment, 'user', &id) && id == mainEnvironmentId);
 	EXPECT(appWorldIdles == 3 && appWorldSysEvents == 1 && appWorldDone == 1);
 	// what the scenario leaves behind: the echo task and the monitor's task
 	// (each a task and its two shared memory objects) await the scavenger,

@@ -18,6 +18,7 @@
 #include "Task.h"
 #include "MemObjManager.h"
 #include "NameServerImpl.h"
+#include "Loader.h"
 #include "OSErrors.h"
 
 #include <stdio.h>
@@ -66,18 +67,25 @@ UserBoot()
 // ROM 0x002d1954 InitialKSRVTask__Fv
 // The kernel services: protocol registry, stdio, the name server, the ROM
 // domain manager, the package manager (in the 'prot' environment) and the
-// first application world ('drvl', in the 'user' environment).
+// loader world ('drvl', in the 'user' environment), which starts the rest;
+// this task's objects go to the idle task when it ends.
 long
 InitialKSRVTask()
 {
-	// NOT YET RECONSTRUCTED: StartupProtocolRegistry(); InitStdIO();
+	// NOT YET RECONSTRUCTED: StartupProtocolRegistry (0x0005d4e4); InitStdIO
 	InitNameServer();
-	// NOT YET RECONSTRUCTED: RegisterROMDomainManager();
-	// InitializePackageManager(FindEnvironmentId('prot'));
-	// TAppWorld('drvl').Init(true, 6000, 10, FindEnvironmentId('user'))
-	// (kError_Object_Not_Found, kSchedulerExitReason 0x2e, if 'user' is not
-	// in the memory object database)
+	// NOT YET RECONSTRUCTED: RegisterROMDomainManager
+	TObjectId envId;
+	if (MemObjManager::FindEnvironmentId('prot', &envId) == noErr)
+	{
+		// NOT YET RECONSTRUCTED: InitializePackageManager(envId)
+	}
+	if (MemObjManager::FindEnvironmentId('user', &envId) == noErr)
+	{
+		TLoader loader;
+		loader.Init('drvl', true, kSpawnedTaskStackSize, kUserTaskPriority, envId);
+	}
 	if (gHostKernelServicesTask != nil)
 		gHostKernelServicesTask();
-	return noErr;
+	return SetBequeathId(gIdleTask->fId);
 }

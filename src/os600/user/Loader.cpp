@@ -1,0 +1,83 @@
+/*
+	File:		user/Loader.cpp
+
+	Contains:	TLoader (Loader.h): the 'drvl' world's start-up of the system,
+				and UserMain.
+
+	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	The services TheMain starts are each NOT YET RECONSTRUCTED, marked in
+	place with their ROM addresses.
+*/
+
+#include "Loader.h"
+#include "UserTasks.h"
+#include "UserEnvironment.h"
+#include "UserGlobals.h"
+#include "MonitorGlue.h"
+#include "KernelGlobals.h"
+#include "Task.h"
+#include "MemObjManager.h"
+#include "OSErrors.h"
+
+void (*gHostUserMain)() = nil;
+
+
+// ROM 0x00115328 GetSizeOf__7TLoaderFv
+ULong
+TLoader::GetSizeOf()
+{
+	return sizeof(TLoader);
+}
+
+
+// ROM 0x00115320 MainConstructor__7TLoaderFv
+long
+TLoader::MainConstructor()
+{
+	return TAppWorld::MainConstructor();
+}
+
+
+// ROM 0x00115324 MainDestructor__7TLoaderFv
+void
+TLoader::MainDestructor()
+{
+	TAppWorld::MainDestructor();
+}
+
+
+// ROM 0x00115690 TheMain__7TLoaderFv
+// Not an event loop: the drivers, the events, the alert manager, sound,
+// the communications manager, card services, the store (PSS) manager and
+// the power manager are started, then the 'main' task, and this task ends.
+void
+TLoader::TheMain()
+{
+	// NOT YET RECONSTRUCTED: RegisterVoyagerMiscIntf (0x01a6845c),
+	// LoadHighROMDriverPackages (0x01b0f78c), InitLicenseeDomain (0x01b0e720),
+	// LoadStartupDriver (0x01b139b4), LoadPlatformDriver (0x01b36b30);
+	// gGPIInterruptAsyncMessage.Init(false) and the 'newt'/'idle'/'ext '
+	// message at 0x0c101160 (the GPI interrupt event); InitEvents
+	// (0x002b6404), InitAlertManager (0x01afbd84), InitializeSound
+	// (0x01b74a68), InitializeCommManager (0x01a06350), InitCardServices
+	// (0x01b2f7fc), InitTestAgent when gNewtTests & 0x800, ZapInternalStoreCheck
+	// (0x01b10874); InitPowerManager (in the 'rams' environment/domain,
+	// with the monitor task priority set to gTmuxTaskPriority) and
+	// InitPSSManager(user env, rams domain).
+	TUTask mainTask;
+	if (mainTask.Init((TaskProcPtr) UserMain, 0x6800, 0, nil, kUserTaskPriority, 'main') == noErr)
+		mainTask.Start();
+	SetBequeathId(gIdleTask->fId);
+	TaskKillSelf();
+}
+
+
+// ROM 0x002e6894 UserMain__Fv
+// NOT YET RECONSTRUCTED: the NewtonScript world - the object system, the
+// stores, the view system and the application layer.
+void
+UserMain()
+{
+	if (gHostUserMain != nil)
+		gHostUserMain();
+}
