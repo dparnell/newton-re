@@ -48,6 +48,17 @@ def main(argv=None) -> int:
             with_params = sum(1 for f in funcs if not f.isThunk() and f.getParameterCount() > 0)
             print(f"functions: {len(funcs)} ({thunks} thunks, {with_params} with parameters)")
             print(f"classes: {classes}   labels: {labels}")
+            # code coverage: undefined bytes between the first and last function in ROM_RO
+            ro = program.getMemory().getBlock("ROM_RO")
+            if ro is not None:
+                entries = [f.getEntryPoint() for f in funcs
+                           if ro.contains(f.getEntryPoint()) and not f.getName().startswith("FUN_")]
+                if entries:
+                    lo, hi = min(entries), max(entries)
+                    span = program.getAddressFactory().getAddressSet(lo, hi)
+                    undefined = sum(r.getLength() for r in program.getListing().getUndefinedRanges(span, False, None))
+                    print(f"code region {lo}-{hi}: {undefined:#x} undefined bytes of {span.getNumAddresses():#x} "
+                          f"({100.0 * undefined / span.getNumAddresses():.1f}%)")
             dtm = program.getDataTypeManager()
             for name in args.type:
                 found = list(dtm.getAllDataTypes())

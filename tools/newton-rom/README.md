@@ -25,10 +25,12 @@ tools/newton-rom/
   dump_symbols.py       step 2: symbols.json (+ text listing)
   parse_headers.py      step 3: types.json from headers/
   ghidra_scripts/
-    import_rom.py         step 4: headless project creation + import + analysis
-    NewtonROMImport.py    same import, as a Script Manager (GUI) script
+    import_rom.py         step 4: headless project creation + import
+    verify_types.py       step 5: check types against the ROM, recover sizes/vtables -> romfacts.json
+    apply_romfacts.py     step 6: apply romfacts.json to the project (+ auto-analysis)
+    NewtonROMImport.py    the import, as a Script Manager (GUI) script
     check_import.py       report/spot-check an imported project
-  pipeline.py           steps 1-4 in one command
+  pipeline.py           steps 1-6 in one command
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -44,9 +46,10 @@ build\venv\Scripts\pip install --no-index --find-links "D:\apps\ghidra_12.1.3_PU
 build\venv\Scripts\python tools\newton-rom\pipeline.py "DebugRom\MP2100 D" -o build\MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
 ```
 
-This writes `build/MP2100D/{rom.bin,layout.json,symbols.json,symbols.txt,types.json}` and
-creates the Ghidra project `build/ghidra/MP2100D.gpr` (≈ 30 s for the import,
-≈ 3 minutes more for auto-analysis on a current desktop). Open the project in Ghidra
+This writes `build/MP2100D/{rom.bin,layout.json,symbols.json,symbols.txt,types.json,romfacts.json,verify-report.txt}`
+and creates the Ghidra project `build/ghidra/MP2100D.gpr` (≈ 40 s for the
+import, ≈ 1 minute for verification, ≈ 4 minutes for auto-analysis on a
+current desktop). Open the project in Ghidra
 normally afterwards. `build/` is git-ignored; everything in it is regenerated
 by the tools.
 
@@ -56,7 +59,9 @@ Steps individually:
 python tools\newton-rom\extract_rom.py "DebugRom\MP2100 D\Senior DCirrusNoDebug image" --rex "DebugRom\MP2100 D\Senior DCirrusNoDebug high" -o build\MP2100D
 python tools\newton-rom\dump_symbols.py "DebugRom\MP2100 D\Senior DCirrusNoDebug image" -o build\MP2100D\symbols.json --text build\MP2100D\symbols.txt
 build\venv\Scripts\python tools\newton-rom\parse_headers.py headers -o build\MP2100D\types.json
-build\venv\Scripts\python tools\newton-rom\ghidra_scripts\import_rom.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\import_rom.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --no-analyze
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\verify_types.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\apply_romfacts.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --analyze
 build\venv\Scripts\python tools\newton-rom\ghidra_scripts\check_import.py --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --lookup InitIdler --type TAEventHandler
 ```
 
@@ -158,7 +163,11 @@ put the vptr first and gave empty bases (`SingleObject`) no space, exactly
 clang's Itanium-style layout. (cfront proper put the vptr last; this compiler
 did not.) Base-class offsets are computed with the same rules and checked
 against the first field. Bit-field positions follow clang's big-endian
-convention and are *not* yet verified against the ROM.
+convention (first declared bit = most significant), which the ROM confirms:
+`TCardPCMCIA::AddFuncSpecificCIS` copies the flags with masks 0x80000000,
+0x40000000, 0x20000000, 0x04000000, 0x02000000, 0x01000000 (`fNoAttrMem`,
+`fBadCIS`, `fAttrMemWrable`, `f16BitOnlyCard`, `f8BitOnlyCard`, `fNoCIS`) and
+sets 0x00400000, the tenth declared bit, `fFuncSpecificCIS`.
 
 In Ghidra every record becomes a structure (class structures for classes
 named by symbols, `/Newton/DDK` for the rest) with `__vptr`, `_base_X`
@@ -169,6 +178,64 @@ parameter types after typedef resolution, so `Boolean` matches the mangled
 mangled name cannot: the return type and parameter names, with the header's
 typedef spellings. C-linkage functions (`extern "C"`) have no mangling, so a
 plain symbol whose name is declared in the DDK gets the whole prototype.
+
+## Verification against the ROM (`verify_types.py`)
+
+Constructors compiled by this toolchain are self-allocating and regular:
+
+```
+teq  r0,#0            (or: movs r4,r0)
+bne  have_object
+mov  r0,#<sizeof>     ; the true size of the class
+bl   operator new
+...
+ldr  r1,[literal]     ; the class's vtable
+str  r1,[this,#0]
+str  ...,[this,#off]  ; member initialisers
+```
+
+`verify_types.py` walks every constructor in the program (655 classes) and
+checks each DDK class for: allocation size == clang's size; a vtable stored at
+offset 0 iff the header says the class is polymorphic; the vtable entries
+naming the header's virtual methods in declaration order; and every store to
+`this` landing on a declared member (recursing into embedded objects and
+bases). Results for the MP2100 D (`build/MP2100D/verify-report.txt`):
+129/131 sizes, 131/132 vptr checks, 9/9 vtables and 131/132 field checks
+agree. The three genuine differences, i.e. places where the DDK header is
+not the ROM's version of the class:
+
+| Class | ROM | DDK header |
+|---|---|---|
+| `TCardDevice` | 0x20 bytes, members at 0x1A/0x1B | 0x1C bytes |
+| `TObjectIterator` | 0x30 bytes, not polymorphic | 0x20 bytes, virtual methods |
+| `TCMOSerialChipSpec` | byte stores into the two `UShort`s at 0x1C | (probably `UChar` pairs) |
+
+`CBufferList`, `CBufferSegment` and `TCardSocket` are declared without
+members in the DDK; the ROM gives their sizes (0x20, 0x28, 0x84).
+
+**Vtables.** They are not tables of pointers: each entry is a `B` instruction
+to the method (pure virtuals branch to `__pvfn`), entries follow declaration
+order with the destructor first and base-class entries first, and all vtables
+are packed together (about 0x1B000-0x1F000 in the German ROM). A virtual call is
+
+```
+ldr  r12,[this]       ; vtable
+mov  lr,pc
+add  pc,r12,#slot*4   ; branch into the table
+```
+
+Ghidra treats `add pc,...` as a terminal jump, which silently truncated every
+function after its first virtual call (18 % of the code region was left
+undefined). The importer now marks the 2,975 such sites as call-with-return
+and keeps disassembling (`fix_virtual_calls`).
+
+`verify_types.py` writes what it observed to `romfacts.json`: the allocation
+size of every class (655), the vtable address of every polymorphic class
+(224), and functions only reachable through vtable slots. `apply_romfacts.py`
+(or the next `import_rom.py`) sets the class structure sizes from it, labels
+each vtable (`TFoo::vtable`), makes each entry a thunk of its method, and
+types `__vptr` as a pointer to a `TFoo_vtbl` structure whose members are
+named after the methods, so a virtual call decompiles to a named slot.
 
 ## What the Ghidra import does
 

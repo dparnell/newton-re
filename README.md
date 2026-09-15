@@ -30,7 +30,9 @@ Result: `build/ghidra/MP2100D.gpr`, a Ghidra project of the ROM as the CPU sees
 it, with ~35,000 functions named and placed in ~1,050 C++ class namespaces,
 16,000+ prototypes (1,500 of them complete with return types and parameter
 names from the DDK headers), the DDK's ~250 structs/classes and 60 enums as
-Ghidra data types, and the patchable jump table resolved to thunks. Details,
+Ghidra data types, class sizes and vtables recovered from the constructors
+(and checked against the headers), and the patchable jump table resolved to
+thunks. Details,
 the memory layout, and the analysis behind it are in
 [tools/newton-rom/README.md](tools/newton-rom/README.md).
 

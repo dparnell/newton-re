@@ -450,7 +450,7 @@ def choose_function_entries(symbols: List[dict], jt: dict, rom: bytes, rom_size:
     return entries, names_at
 
 
-def create_functions(program, entries, monitor, log: Log) -> None:
+def create_functions(program, entries, monitor, log: Log, stats: Stats) -> None:
     from ghidra.app.cmd.disassemble import DisassembleCommand
     from ghidra.app.cmd.function import CreateFunctionCmd
     from ghidra.program.model.address import AddressSet
@@ -461,9 +461,54 @@ def create_functions(program, entries, monitor, log: Log) -> None:
     for a in entries:
         entry_set.add(space.getAddress(a))
     log(f"disassembling from {len(entries)} entry points ...")
-    DisassembleCommand(entry_set, None, True).applyTo(program, monitor)
+    cmd = DisassembleCommand(entry_set, None, True)
+    cmd.applyTo(program, monitor)
+    fix_virtual_calls(program, monitor, log, stats, cmd.getDisassembledAddressSet())
     log("creating functions ...")
     CreateFunctionCmd(entry_set, SourceType.IMPORTED).applyTo(program, monitor)
+
+
+def fix_virtual_calls(program, monitor, log: Log, stats: Stats, fresh=None) -> None:
+    """Keep disassembling past virtual calls.
+
+    A virtual call is `ldr rN,[this] / mov lr,pc / add pc,rN,#slot*4` (the
+    vtable is an array of B instructions, see verify_types.py).  Ghidra treats
+    `add pc,...` as a terminal jump and stops disassembling, truncating every
+    function after its first virtual call.  Mark those instructions as
+    call-with-return and continue at the next instruction, repeating until no
+    new sites appear (newly disassembled code contains more virtual calls).
+    """
+    from ghidra.app.cmd.disassemble import DisassembleCommand
+    from ghidra.program.model.address import AddressSet
+    from ghidra.program.model.listing import FlowOverride
+
+    listing = program.getListing()
+    rounds = 0
+    while True:
+        starts = AddressSet()
+        prev = None
+        # only the code disassembled since the last round needs scanning
+        scan = listing.getInstructions(fresh, True) if fresh is not None else listing.getInstructions(True)
+        for ins in scan:
+            if monitor.isCancelled():
+                raise RuntimeError("cancelled")
+            text = str(ins)
+            if (text.startswith("add pc,") and prev is not None and str(prev) == "mov lr,pc"
+                    and prev.getAddress().add(4) == ins.getAddress()
+                    and ins.getFlowOverride() != FlowOverride.CALL_RETURN):
+                ins.setFlowOverride(FlowOverride.CALL_RETURN)
+                stats.bump("virtual call sites marked call-return")
+                nxt = ins.getAddress().add(4)
+                if listing.getInstructionAt(nxt) is None:
+                    starts.add(nxt)
+            prev = ins
+        rounds += 1
+        if starts.isEmpty() or rounds > 50:
+            break
+        cmd = DisassembleCommand(starts, None, True)
+        cmd.applyTo(program, monitor)
+        fresh = cmd.getDisassembledAddressSet()
+    log(f"virtual calls: {stats.get('virtual call sites marked call-return', 0)} sites, {rounds} rounds")
 
 
 def ghidra_name(d: Optional[dict], raw: str) -> str:
@@ -660,15 +705,135 @@ def create_thunks(program, jt: dict, names_at: Dict[int, List[dict]], monitor, l
 
 
 # --------------------------------------------------------------------------
+# ROM facts recovered by verify_types.py (class sizes, vtables)
+# --------------------------------------------------------------------------
+
+def apply_romfacts(program, facts: dict, mapper: TypeMapper, classes: Dict[str, object],
+                   monitor, log: Log, stats: Stats) -> None:
+    """Apply romfacts.json: true class sizes, vtable labels/types, recovered names."""
+    from ghidra.app.cmd.function import CreateFunctionCmd
+    from ghidra.program.model.address import AddressSet
+    from ghidra.program.model.data import CategoryPath, PointerDataType, StructureDataType, UnsignedIntegerDataType
+    from ghidra.program.model.symbol import SourceType
+    from ghidra.util.exception import DuplicateNameException, InvalidInputException
+
+    st = program.getSymbolTable()
+    fm = program.getFunctionManager()
+    mem = program.getMemory()
+    space = program.getAddressFactory().getDefaultAddressSpace()
+    addr = space.getAddress
+
+    # 1. sizes: the constructor's allocation is the truth
+    for cls, size in facts.get("sizes", {}).items():
+        if cls not in classes and not mapper.has_record(cls):
+            continue
+        dt = mapper.class_struct(cls)
+        cur = dt.getLength()
+        if cur == size or size <= 0:
+            continue
+        if dt.getNumDefinedComponents() == 0 or cur <= 1:
+            dt.replaceWith(StructureDataType(cls, size))
+            stats.bump("class sizes set from ROM")
+        elif size > cur:
+            dt.growStructure(size - cur)
+            dt.setDescription((dt.getDescription() or "") + f" [ROM allocates {size:#x}, header {cur:#x}]")
+            stats.bump("class sizes grown to ROM size")
+        else:
+            dt.setDescription((dt.getDescription() or "") + f" [ROM allocates {size:#x}, header {cur:#x}]")
+            stats.bump("class sizes smaller in ROM (kept header)")
+
+    # 2. vtables: label, entry thunks, a struct type naming the slots
+    vt_cat = CategoryPath("/Newton/vtables")
+    all_vt = sorted({a for addrs in facts.get("vtables", {}).values() for a in addrs})
+    next_vt = {a: (all_vt[i + 1] if i + 1 < len(all_vt) else None) for i, a in enumerate(all_vt)}
+    ro_end = mem.getBlock("ROM_RO").getEnd().getOffset()
+    slot_dt = UnsignedIntegerDataType.dataType
+    entry_set = AddressSet()
+    entry_targets = {}
+    for cls, addrs in facts.get("vtables", {}).items():
+        ns = classes.get(cls)
+        for n, vt in enumerate(sorted(addrs)):
+            label = "vtable" if n == 0 else f"vtable_{n + 1}"
+            try:
+                st.createLabel(addr(vt), label, ns or program.getGlobalNamespace(), SourceType.IMPORTED)
+            except (DuplicateNameException, InvalidInputException):
+                pass
+            # entries run until the next known vtable or the first non-branch word
+            limit = next_vt.get(vt) or ro_end
+            names = []
+            a = vt
+            while a < limit and len(names) < 256:
+                w = mem.getInt(addr(a)) & 0xFFFFFFFF
+                if w >> 24 != 0xEA:
+                    break
+                imm = w & 0xFFFFFF
+                imm -= 0x1000000 if imm & 0x800000 else 0
+                target = a + 8 + imm * 4
+                fn = fm.getFunctionAt(addr(target))
+                if fn is not None and fn.isThunk():
+                    fn = fn.getThunkedFunction(True)
+                names.append(fn.getName() if fn is not None else f"slot_{len(names)}")
+                entry_set.add(addr(a))
+                entry_targets[a] = target
+                a += 4
+            if not names:
+                continue
+            vt_name = f"{cls}_vtbl" if n == 0 else f"{cls}_vtbl_{n + 1}"
+            vtbl = mapper.dtm.getDataType(vt_cat, vt_name)
+            if vtbl is None:
+                vtbl = StructureDataType(vt_cat, vt_name, 0, mapper.dtm)
+                used = set()
+                for i, name in enumerate(names):
+                    field = name if name not in used else f"{name}_{i}"
+                    used.add(field)
+                    vtbl.add(slot_dt, 4, field, f"slot {i}: B {name}")
+                vtbl.setDescription(f"vtable of {cls} at {vt:#x} ({len(names)} entries, B instructions)")
+                vtbl = mapper.dtm.addDataType(vtbl, None)
+            if n == 0 and (cls in classes or mapper.has_record(cls)):
+                cdt = mapper.class_struct(cls)
+                if cdt.getLength() >= 4:
+                    cdt.replaceAtOffset(0, PointerDataType(vtbl, mapper.pointer_size, mapper.dtm),
+                                        mapper.pointer_size, "__vptr", "vtable pointer")
+            stats.bump("vtables labelled")
+    if not entry_set.isEmpty():
+        CreateFunctionCmd(entry_set, SourceType.IMPORTED).applyTo(program, monitor)
+        for a, target in entry_targets.items():
+            slot = fm.getFunctionAt(addr(a))
+            tgt = fm.getFunctionAt(addr(target))
+            if slot is not None and tgt is not None and slot != tgt:
+                slot.setThunkedFunction(tgt)
+                stats.bump("vtable entry thunks")
+
+    # 3. functions named through vtable slots (no symbol of their own)
+    for a_text, qualified in facts.get("functions", {}).items():
+        a = int(a_text, 0)
+        fn = fm.getFunctionAt(addr(a))
+        if fn is None:
+            continue
+        cls, _, name = qualified.rpartition("::")
+        try:
+            fn.setName(name, SourceType.IMPORTED)
+            if cls in classes:
+                fn.setParentNamespace(classes[cls])
+            stats.bump("functions named from vtables")
+        except (DuplicateNameException, InvalidInputException):
+            pass
+    log(f"ROM facts: {stats.get('class sizes set from ROM', 0)} sizes set, "
+        f"{stats.get('vtables labelled', 0)} vtables, {stats.get('vtable entry thunks', 0)} entry thunks")
+
+
+# --------------------------------------------------------------------------
 # Driver
 # --------------------------------------------------------------------------
 
 def apply(program, layout: dict, symbols: dict, rom: bytes, monitor, log: Log = print,
-          types: Optional[dict] = None) -> Stats:
+          types: Optional[dict] = None, romfacts: Optional[dict] = None) -> Stats:
     """Run the whole import against an open program inside a transaction.
 
     `types` is the optional types.json from parse_headers.py; with it, DDK
     structs/enums/typedefs are created and header prototypes are applied.
+    `romfacts` is the optional romfacts.json from verify_types.py (class
+    sizes and vtables observed in the ROM).
     """
     stats = Stats()
     jt = symbols["jumptable"]
@@ -688,9 +853,11 @@ def apply(program, layout: dict, symbols: dict, rom: bytes, monitor, log: Log = 
         create_header_types(program, mapper, log, stats)
 
     entries, names_at = choose_function_entries(symbols["symbols"], jt, rom, rom_size, stats)
-    create_functions(program, entries, monitor, log)
+    create_functions(program, entries, monitor, log, stats)
     apply_names(program, names_at, entries, classes, jt, mapper, monitor, log, stats)
     create_thunks(program, jt, names_at, monitor, log, stats)
+    if romfacts is not None:
+        apply_romfacts(program, romfacts, mapper, classes, monitor, log, stats)
 
     for key in sorted(stats):
         log(f"  {key}: {stats[key]}")
@@ -705,9 +872,13 @@ def load_inputs(build_dir: str):
         symbols = json.load(f)
     with open(os.path.join(build_dir, "rom.bin"), "rb") as f:
         rom = f.read()
-    types = None
+    types = romfacts = None
     types_path = os.path.join(build_dir, "types.json")
     if os.path.exists(types_path):
         with open(types_path) as f:
             types = json.load(f)
-    return layout, symbols, rom, types
+    facts_path = os.path.join(build_dir, "romfacts.json")
+    if os.path.exists(facts_path):
+        with open(facts_path) as f:
+            romfacts = json.load(f)
+    return layout, symbols, rom, types, romfacts

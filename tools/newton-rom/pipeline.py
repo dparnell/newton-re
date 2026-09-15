@@ -10,6 +10,8 @@ Steps (each can also be run on its own, see README.md):
     2. dump_symbols.py  -> <out>/symbols.json, <out>/symbols.txt
     3. parse_headers.py -> <out>/types.json                    (needs libclang; skipped with --no-headers)
     4. ghidra_scripts/import_rom.py -> <project>/<name>.gpr   (needs pyghidra)
+    5. ghidra_scripts/verify_types.py -> <out>/romfacts.json, <out>/verify-report.txt
+    6. ghidra_scripts/apply_romfacts.py (+ auto-analysis unless --no-analyze)
 
 The ROM directory must contain exactly one "* image" and one "* high" file.
 """
@@ -61,10 +63,20 @@ def main(argv=None) -> int:
         return 0
     if not args.ghidra:
         ap.error("Ghidra install dir not given (--ghidra or GHIDRA_INSTALL_DIR)")
-    cmd = [py, os.path.join(HERE, "ghidra_scripts", "import_rom.py"), args.out, "--project", project,
-           "--name", name, "--ghidra", args.ghidra]
-    if args.no_analyze:
-        cmd.append("--no-analyze")
+    gs = os.path.join(HERE, "ghidra_scripts")
+    run(py, os.path.join(gs, "import_rom.py"), args.out, "--project", project, "--name", name,
+        "--ghidra", args.ghidra, "--no-analyze")
+    # verification needs a program to read; its findings (sizes, vtables) then go back in
+    verify = subprocess.run([py, os.path.join(gs, "verify_types.py"), args.out, "--project", project,
+                             "--name", name, "--ghidra", args.ghidra])
+    if verify.returncode not in (0, 1):
+        verify.check_returncode()
+    if verify.returncode == 1:
+        print("note: verify_types.py reported header/ROM differences; see verify-report.txt", flush=True)
+    cmd = [py, os.path.join(gs, "apply_romfacts.py"), args.out, "--project", project, "--name", name,
+           "--ghidra", args.ghidra]
+    if not args.no_analyze:
+        cmd.append("--analyze")
     run(*cmd)
     return 0
 

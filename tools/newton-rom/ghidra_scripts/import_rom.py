@@ -62,8 +62,9 @@ def main(argv=None) -> int:
     pyghidra.start(install_dir=args.ghidra)
     from newtonrom import ghidra_import
 
-    layout, symbols, rom, types = ghidra_import.load_inputs(args.build_dir)
+    layout, symbols, rom, types, romfacts = ghidra_import.load_inputs(args.build_dir)
     log("DDK types: " + ("types.json loaded" if types else "no types.json, skipping header types"))
+    log("ROM facts: " + ("romfacts.json loaded" if romfacts else "no romfacts.json (run verify_types.py to create it)"))
     project_dir = os.path.abspath(args.project)
     os.makedirs(project_dir, exist_ok=True)
     project = pyghidra.open_project(project_dir, args.name, create=True)
@@ -81,7 +82,7 @@ def main(argv=None) -> int:
 
         with pyghidra.program_context(project, "/" + args.name) as program:
             with pyghidra.transaction(program, "Newton ROM symbols"):
-                ghidra_import.apply(program, layout, symbols, rom, monitor, log, types)
+                ghidra_import.apply(program, layout, symbols, rom, monitor, log, types, romfacts)
             program.save("Newton ROM symbols", monitor)
             if not args.no_analyze:
                 log("running auto-analysis (this takes a while) ...")
