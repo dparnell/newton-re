@@ -12,6 +12,7 @@ of Newton OS.
 | `headers/` | C/C++ headers from the Newton Driver Developer Kit (DDK): kernel (OS600), Frames object model, CommAPI, PCMCIA, QD, UtilityClasses, … — the primary source of struct/class layouts for reconstruction (classic Mac CR line endings) |
 | `documentation/` | Newton Programmer's Guide / Reference, NewtonScript language and bytecode specs |
 | `tools/newton-rom/` | **Our tooling**: ROM extraction, demangling, Ghidra import — see its [README](tools/newton-rom/README.md) |
+| `src/` | The reconstruction itself, organised by functional area and buildable on a host — see [src/README.md](src/README.md) |
 | `docs/` | Reverse-engineering notes per subsystem, starting with the kernel ([docs/os600](docs/os600/README.md)); generated tables are marked as such |
 | `tools/mpdumper/` | Alexey Danilchenko's 2004 symbol dumper (libiberty demangler) and its pre-generated symbol listings for the US ROM; used as the reference oracle for our demangler |
 
