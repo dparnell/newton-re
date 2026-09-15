@@ -9,3 +9,7 @@ add_test(NAME os600.kernel.ObjectTable COMMAND test_ObjectTable)
 add_executable(test_Scheduler test_Scheduler.cpp)
 target_link_libraries(test_Scheduler PRIVATE os600_kernel)
 add_test(NAME os600.kernel.Scheduler COMMAND test_Scheduler)
+
+add_executable(test_Semaphore test_Semaphore.cpp)
+target_link_libraries(test_Semaphore PRIVATE os600_kernel)
+add_test(NAME os600.kernel.Semaphore COMMAND test_Semaphore)

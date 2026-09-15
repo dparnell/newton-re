@@ -100,7 +100,21 @@ Reconstructed in `src/os600/kernel/` (with host tests): `TDoubleQItem` /
 `TTaskQItem` / `TTaskQueue` / `TTaskContainer` and the `TTask` layout
 (Task.*), `TScheduler` with `ScheduleTask` / `UnScheduleTask` /
 `WantSchedule` / `StartScheduler` / `StopScheduler` (Scheduler.*), and
-`hal/Interrupts.h` (interrupt enable/disable and the time-slice alarm).
+`hal/Interrupts.h` (interrupt enable/disable and the time-slice alarm);
+`TSemaphore` / `TSemaphoreGroup` / `TSemaphoreOpList` with `DoSemaphoreOp`
+(SWI 11), `SemGroupSetRefCon`/`GetRefCon` (GenericSWI 40/41), `DeleteSemList`
+/ `DeleteSemGroup` and `MarkMessageDone` (Semaphore.*).
+
+Semaphores: a group is an array of counting semaphores (0x28 bytes each:
+`TKernelObject`, vptr, value, two `TTaskQueue`s for tasks waiting on zero /
+on increment); an op list is `MAKESEMLISTITEM(sem, delta)` words applied
+all-or-nothing, unwinding and blocking the task (state bit 0x100000,
+`fContainer` = the semaphore) when an op cannot proceed. Destroying a group
+resumes its waiters with `kError_Semaphore_Group_No_Longer_Exists` in r0
+and their saved pc advanced past the retry. Two ROM quirks: `SemOp` accepts
+semaphore index == count (one past the array), and `TSemaphore::Remove`
+unlinks through the wrong queue for tasks waiting on increment (see the
+`DEVIATION` note in Semaphore.cpp).
 
 Layouts established on the way: `TKernelObject` {fId, fNext, fOwnerId,
 fAssignedOwnerId}; `TObjectTable` = scavenge proc + cursor + 128 buckets

@@ -4,6 +4,7 @@ add_library(os600_kernel STATIC
     KernelObjects.cpp
     ObjectTable.cpp
     Scheduler.cpp
+    Semaphore.cpp
     Task.cpp
 )
 target_link_libraries(os600_kernel PUBLIC newton_config hal_host)

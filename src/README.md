@@ -39,7 +39,10 @@ src/
   `NewtonErr`, `ULong`), the DDK's types from `src/ddk`, and the original
   member order and layout (Ghidra-verified). Behaviour is reproduced exactly,
   including quirks, with a comment when something looks odd; cleaning up
-  comes later, once tests pin the behaviour down.
+  comes later, once tests pin the behaviour down. The one exception is a
+  genuine bug in the ROM that would corrupt memory or crash on a host: it is
+  fixed, marked `DEVIATION:` in the code with a description of the original
+  behaviour, and listed in the subsystem's notes under docs/.
 * New code is C++17. The DDK headers are C++98-era and are compiled as-is
   (with `host/host_compat.h` pre-included on host builds).
 * Each unit gets a host unit test under `tests/` next to it, exercising the
