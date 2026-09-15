@@ -33,3 +33,7 @@ add_test(NAME os600.kernel.Environment COMMAND test_Environment)
 add_executable(test_ObjectManager test_ObjectManager.cpp)
 target_link_libraries(test_ObjectManager PRIVATE os600_kernel)
 add_test(NAME os600.kernel.ObjectManager COMMAND test_ObjectManager)
+
+add_executable(test_TaskSwitch test_TaskSwitch.cpp)
+target_link_libraries(test_TaskSwitch PRIVATE os600_kernel)
+add_test(NAME os600.kernel.TaskSwitch COMMAND test_TaskSwitch)

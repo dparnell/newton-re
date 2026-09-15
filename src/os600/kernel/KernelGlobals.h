@@ -63,6 +63,27 @@ extern ULong			gRebootProtectCount;		// 0x0c10113c  reboot-protected monitor cal
 extern Boolean			gWantReboot;				// 0x0c101140  a safe Reboot is waiting for them to finish
 extern SGlobalsThatLiveAcrossReboot gGlobalsThatLiveAcrossReboot;	// 0x0c103490
 
+// the running task and its accounts (TaskSwitch.*)
+extern TObjectId		gCurrentTaskId;				// 0x0c101144  set by SwapInGlobals
+extern void*			gCurrentGlobals;			// 0x0c10114c  the running task's globals block (TTask::fGlobals)
+extern TTask*			gCurrentMemCountTask;		// 0x0c1010f0  task being charged for heap use
+extern ULong			gPtrsUsed;					// 0x0c101104  the heap's running totals (memory manager)
+extern ULong			gHandlesUsed;				// 0x0c101100
+extern ULong			gSavedPtrsUsed;				// 0x0c10110c  ...as they were at the last task swap
+extern ULong			gSavedHandlesUsed;			// 0x0c101108
+extern ULong			gNumberOfTaskSwaps;			// 0x0c101c10
+extern Boolean			gCountTaskTime;				// 0x0c1010f8  account run time per task (off in the ROM image)
+extern TTask*			gCurrentTimedTask;			// 0x0c1010ec  task being charged for time
+extern Int64			gTaskTimeStart;				// 0x0c101110  when it started running
+extern Int64			gLastTaskEndTime;			// 0x0c101fb4
+extern Int64			gFirstTaskEndTime;			// 0x0c101fac
+extern Boolean			gTaskEndTimeInvalid;		// 0x0c101c14  true until the first swap has been timed
+extern Int64			gDeadTaskTime;				// 0x0c101fa4  run time of tasks that no longer exist (~TTask)
+extern ULong			gFIQInterruptOverHead;		// 0x0c100f38  ticks spent in interrupt handlers since the last swap
+extern ULong			gIRQInterruptOverHead;		// 0x0c100f3c
+extern ULong			gFIQAccumulatedIntOverHead;	// 0x0c101c1c  ...and altogether
+extern ULong			gIRQAccumulatedIntOverHead;	// 0x0c101c18
+
 // object manager
 extern Boolean			gTaskDestroyed;				// 0x0c10178c  a task was deleted: scavenge what it owned (TObjectManager::MonitorProc)
 extern ULong			gMonitorTaskPriority;		// 0x0c101624  priority of monitor tasks (TMonitor::Init)

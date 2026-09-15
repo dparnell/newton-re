@@ -14,11 +14,19 @@
 #ifndef __HAL_ATOMIC_H
 #define __HAL_ATOMIC_H
 
+#ifndef __NEWTON_H
+#include "Newton.h"
+#endif
+
 extern "C" {
 void	EnterAtomic(void);
 void	ExitAtomic(void);
 void	EnterFIQAtomic(void);
 void	ExitFIQAtomic(void);
+
+// atomic exchange (the ARM swp / swpb instructions; ROM 0x003a4b84, 0x003a4b8c)
+ULong	Swap(ULong* address, ULong value);
+UChar	SwapByte(UChar* address, UChar value);
 }
 
 #endif	/* __HAL_ATOMIC_H */

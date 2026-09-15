@@ -120,7 +120,9 @@ GenericSWI 67), `NotifySend`/`NotifyTimeout`/`DeferredNotify`/
 with `ObjectDestroy`/`ObjectStart`/`ObjectSuspend`/`ObjectGetRegister`/
 `ObjectSetRegister`/`GetObjectContent`/`SetDomainFaultMonitor` and
 `ObjectScavenger` (ObjectManager.*), `HoldSchedule`/`AllowSchedule`
-(Scheduler.*); `Reboot`/`Restart`/
+(Scheduler.*); `Scheduler()`, `SwapInGlobals`, `DoDeferrals`,
+`ResetAccountTimeKernelGlue`/`GetNextTaskIdKernelGlue` (GenericSWI 5/6)
+(TaskSwitch.*); `Swap`/`SwapByte` in hal/Atomic.h; `Reboot`/`Restart`/
 `CantThrowInUndefinedModeReboot` (Reboot.*) over `hal/System.h` (Reset,
 DisableAllInterrupts, IOPowerOffAll); the user-mode entry points the kernel
 points tasks at, `MonitorEntryGlue`/`TaskKillSelf`/`Throw`
@@ -163,6 +165,20 @@ request ends with `ScavengeAll` if a task was destroyed (`gTaskDestroyed`).
 Still to come there: `ObjectAlloc` (waits for `TTask::Init`,
 `TMonitor::Init`, `TKDomain::Init`, `TPhys`), `DeleteTask` (waits for
 `~TTask`), the external page trackers.
+
+Task switching, as established: the SWI exit path (0x003a40d0, assembly)
+runs `DoDeferrals` if interrupt level asked for it, then `Scheduler()` when
+`gSchedule` is set; `Scheduler()` takes `TScheduler::Schedule`'s pick and
+charges the outgoing task for heap growth since the last swap (`gPtrsUsed`/
+`gHandlesUsed` against the saved totals, `gNumberOfTaskSwaps`) and, when
+`gCountTaskTime` is on, for run time (the clock advance less the
+interrupt-handler time accumulated in `gIRQInterruptOverHead`/
+`gFIQInterruptOverHead`, atomically swapped out). The exit path stores the
+pick in `gCurrentTask`, and `SwapInGlobals` sets `gCurrentTaskId`,
+`gCurrentGlobals` (the task's globals block) and `gCurrentMonitorId`. The
+glue's r0 is what the caller sees unless a switch intervenes, in which case
+its saved r0 is. `TaskKillSelf` is `GetPortInfo(0)` (the object manager
+monitor's id) then a monitor call with selector 0xff.
 
 Monitors, as established: a `TMonitor` (0x48 bytes) owns a task at
 `gMonitorTaskPriority` and a `TSharedMemMsg`. `MonitorDispatchSWI` saves all

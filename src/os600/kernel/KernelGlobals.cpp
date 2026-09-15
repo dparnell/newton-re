@@ -41,5 +41,25 @@ ULong			gRebootProtectCount = 0;
 Boolean			gWantReboot = false;
 SGlobalsThatLiveAcrossReboot gGlobalsThatLiveAcrossReboot;
 
+TObjectId		gCurrentTaskId = 0;
+void*			gCurrentGlobals = nil;
+TTask*			gCurrentMemCountTask = nil;
+ULong			gPtrsUsed = 0;
+ULong			gHandlesUsed = 0;
+ULong			gSavedPtrsUsed = 0;
+ULong			gSavedHandlesUsed = 0;
+ULong			gNumberOfTaskSwaps = 0;
+Boolean			gCountTaskTime = false;
+TTask*			gCurrentTimedTask = nil;
+Int64			gTaskTimeStart = { 0, 0 };
+Int64			gLastTaskEndTime = { 0, 0 };
+Int64			gFirstTaskEndTime = { 0, 0 };
+Boolean			gTaskEndTimeInvalid = true;
+Int64			gDeadTaskTime = { 0, 0 };
+ULong			gFIQInterruptOverHead = 0;
+ULong			gIRQInterruptOverHead = 0;
+ULong			gFIQAccumulatedIntOverHead = 0;
+ULong			gIRQAccumulatedIntOverHead = 0;
+
 Boolean			gTaskDestroyed = false;
 ULong			gMonitorTaskPriority = kKernelTaskPriority;	// 20 in the ROM image

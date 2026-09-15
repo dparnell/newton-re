@@ -9,9 +9,9 @@
 				gAtomicFIQNestCount in the ROM.
 */
 
-#include "hal/Atomic.h"
+#include <mutex>				// before the DDK headers, whose macros upset libc++
 
-#include <mutex>
+#include "hal/Atomic.h"
 
 static std::recursive_mutex	gAtomicLock;
 static int					gAtomicNestCount = 0;
@@ -43,4 +43,16 @@ ExitFIQAtomic(void)
 {
 	gAtomicFIQNestCount--;
 	gAtomicLock.unlock();
+}
+
+extern "C" ULong
+Swap(ULong* address, ULong value)
+{
+	return __atomic_exchange_n(address, value, __ATOMIC_SEQ_CST);
+}
+
+extern "C" UChar
+SwapByte(UChar* address, UChar value)
+{
+	return __atomic_exchange_n(address, value, __ATOMIC_SEQ_CST);
 }
