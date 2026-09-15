@@ -124,7 +124,7 @@ documented at the top of `newtonrom/demangle.py`; the one non-obvious part is
 how `T<n>`/`N<count><n>` back-references are numbered inside nested function
 pointer types. The rule implemented (a nested list inherits the enclosing
 list's entries so far, appends its own, and discards them when it closes) was
-derived from the ROM symbols and checked against the Apple header
+derived from the ROM symbols and checked against the Newton DDK header
 declarations, e.g. `TMonitor::Init` in `headers/OS600/UserMonitor.h`.
 
 `tests/test_demangle.py` compares our output with GNU libiberty's (the

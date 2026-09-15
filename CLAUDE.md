@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-A reverse-engineering project for the Apple Newton MessagePad 2100 D (ARM StrongARM SA-110, big-endian, NewtonOS 2.x), aiming eventually at a retargetable re-implementation. It holds the ROM images, Apple's internal SDK headers, documentation, and our own tooling under `tools/newton-rom/` that extracts the ROM, demangles the debug symbols and builds an annotated Ghidra project.
+A reverse-engineering project for the Apple Newton MessagePad 2100 D (ARM StrongARM SA-110, big-endian, NewtonOS 2.x), aiming eventually at a retargetable re-implementation. It holds the ROM images, the Newton Driver Developer Kit (DDK) headers (`headers/` — struct and class declarations to use when reconstructing types), documentation, and our own tooling under `tools/newton-rom/` that extracts the ROM, demangles the debug symbols and builds an annotated Ghidra project.
 
 **Project rule (from the owner):** every tool used in the process must live in this repo, be fully documented (purpose, inputs, outputs, exact invocation) and be reproducible by others from a clean checkout. Don't leave analysis in scratch scripts â€” promote it into `tools/` or record the finding in a README/test.
 

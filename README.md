@@ -9,7 +9,7 @@ of Newton OS.
 | Path | What it is |
 |---|---|
 | `DebugRom/` | Debug ROM images (`... image`, AIF format with symbol table) and ROM extensions (`... high`) for the MP2100 D (2001) and MP2x00 US (1997) |
-| `headers/` | Apple's internal NewtonOS C/C++ SDK headers (classic Mac CR line endings) |
+| `headers/` | C/C++ headers from the Newton Driver Developer Kit (DDK): kernel (OS600), Frames object model, CommAPI, PCMCIA, QD, UtilityClasses, … — the primary source of struct/class layouts for reconstruction (classic Mac CR line endings) |
 | `documentation/` | Newton Programmer's Guide / Reference, NewtonScript language and bytecode specs |
 | `tools/newton-rom/` | **Our tooling**: ROM extraction, demangling, Ghidra import â€” see its [README](tools/newton-rom/README.md) |
 | `tools/mpdumper/` | Alexey Danilchenko's 2004 symbol dumper (libiberty demangler) and its pre-generated symbol listings for the US ROM; used as the reference oracle for our demangler |
