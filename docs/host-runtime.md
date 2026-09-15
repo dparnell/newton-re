@@ -60,10 +60,12 @@ kernel source is unchanged.
   marker of its own before the call. When the task is resumed and the pc is
   no longer that marker the kernel redirected it: the stub throws
   `TTaskRedirect`, caught by the thread's trampoline, which calls the
-  function at the new pc (`Throw`, `TaskKillSelf`, `MonitorEntryGlue` -
-  the host versions read their arguments from `gCurrentTask->fRegister`).
-  A fresh thread starts the same way, at the pc `TTask::Init` set. The
-  semaphore stub's "+4" is a marker one word higher.
+  function at the new pc with the saved r0-r3 as its arguments, as the ARM
+  would enter it (`Throw(name, data, destructor)`; `TaskKillSelf` and
+  `MonitorEntryGlue` ignore them and read `gCurrentTask->fRegister`). A
+  fresh thread starts the same way, at the pc `TTask::Init` set; a task proc
+  that returns goes to `BadExit`, which is `TaskKillSelf`. The semaphore
+  stub's "+4" is a marker one word higher.
 * **Interrupts are delivered by whoever holds the baton, at safe points.**
   The idle task's host body (`HostIdleTask`) waits for the next timer
   deadline - the timer engine's alarm or the scheduler's time slice - then
