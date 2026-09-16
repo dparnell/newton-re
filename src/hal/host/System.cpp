@@ -8,6 +8,11 @@
 #include "hal/System.h"
 
 #include <stdio.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 ULong	gHostResetCount = 0;
 void	(*gHostResetHook)(void) = nil;
@@ -55,4 +60,27 @@ extern "C" ULong
 GetCPUMode(void)
 {
 	return 0x10;
+}
+
+// The host thread's stack, from the operating system.
+extern "C" void
+GetStackBounds(const void** low, const void** high)
+{
+#ifdef _WIN32
+	ULONG_PTR lowLimit, highLimit;
+	GetCurrentThreadStackLimits(&lowLimit, &highLimit);
+	*low = (const void*) lowLimit;
+	*high = (const void*) highLimit;
+#else
+	pthread_attr_t attr;
+	void* base = nil;
+	size_t size = 0;
+	if (pthread_getattr_np(pthread_self(), &attr) == 0)
+	{
+		pthread_attr_getstack(&attr, &base, &size);
+		pthread_attr_destroy(&attr);
+	}
+	*low = base;
+	*high = (const char*) base + size;
+#endif
 }

@@ -35,12 +35,14 @@
 	#include "OSErrors.h"		// for kError_No_Memory
 #endif
 
+typedef Long Ref;		/* the ARM's word: pointer-sized on a host (sync_ddk_headers.py) */
+
 const long kRefTagBits = 2;
 const long kRefValueBits = 30;
-const long kRefValueMask = -1 << kRefTagBits;
-const long kRefTagMask = ~kRefValueMask;
+const Ref kRefValueMask = (Ref) (~(ULong) 0 << kRefTagBits);
+const Ref kRefTagMask = ~kRefValueMask;
 const long kRefImmedBits = 2;
-const long kRefImmedMask = -1 << kRefImmedBits;
+const Ref kRefImmedMask = (Ref) (~(ULong) 0 << kRefImmedBits);
 
 enum {
 	kTagInteger,
@@ -53,13 +55,11 @@ enum {
 	kImmedReserved
 };
 
-typedef long Ref;
-
-#define	MAKEINT(i)			(((long) (i)) << kRefTagBits)
-#define	MAKEIMMED(t, v)		((((((long) (v)) << kRefImmedBits) | ((long) (t))) << kRefTagBits) | kTagImmed)
+#define	MAKEINT(i)			((Ref) (((ULong) (Ref) (i)) << kRefTagBits))
+#define	MAKEIMMED(t, v)		((((((Ref) (v)) << kRefImmedBits) | ((Ref) (t))) << kRefTagBits) | kTagImmed)
 #define	MAKECHAR(c)			MAKEIMMED(kImmedChar, (unsigned) c)
 #define	MAKEBOOLEAN(b)		(b ? TRUEREF : FALSEREF)
-#define MAKEMAGICPTR(index)	((Ref) (((long) (index)) << kRefTagBits) | kTagMagicPtr)
+#define MAKEMAGICPTR(index)	((Ref) (((Ref) (index)) << kRefTagBits) | kTagMagicPtr)
 
 const Ref	NILREF = MAKEIMMED(kImmedSpecial, 0);
 const Ref	TRUEREF = MAKEIMMED(kImmedBoolean, 1);
@@ -118,7 +118,7 @@ class RefVar {
 	RefVar(const RefVar& o);
 	RefVar&	operator=(const RefVar& o);
 	RefVar&	operator=(const Ref r);
-	operator long() const;
+	operator Ref() const;
 #else
 	inline	RefVar();
 	inline	~RefVar();
@@ -126,7 +126,7 @@ class RefVar {
 	inline	RefVar(const RefVar& o);
 	RefVar&	operator=(const RefVar& o)	{ h->ref = o.h->ref; return *this; }
 	RefVar&	operator=(const Ref r)		{ h->ref = r; return *this; }
-	operator long() const				{ return h->ref; }
+	operator Ref() const				{ return h->ref; }
 #endif
 
 	inline	long	Length()											const;
@@ -486,7 +486,7 @@ class RefStruct : public RefVar {
 	RefStruct&	operator=(const Ref r);
 	RefStruct&	operator=(const RefVar& o);
 	RefStruct&	operator=(const RefStruct& o);
-	operator long() const;
+	operator Ref() const;
 #else
 	inline	RefStruct();
 			~RefStruct()							{ }
@@ -496,7 +496,7 @@ class RefStruct : public RefVar {
 			RefStruct&	operator=(const Ref r)		{ h->ref = r; return *this; }
 			RefStruct&	operator=(const RefVar& o)	{ h->ref = o.h->ref; return *this; }
 			RefStruct&	operator=(const RefStruct& o)	{ return operator=((const RefVar&) o); }
-			operator long() const					{ return h->ref; }
+			operator Ref() const					{ return h->ref; }
 #endif
 };
 
@@ -545,6 +545,7 @@ class TObjectIterator : public SingleObject {
 	long		fIndex;
 	long		fLength;
 	RefStruct	fMapRef;	// NILREF indicates an Array iterator
+	ExceptionCleanup	fCleanup;	// +0x20 (ROM; not in the DDK header - sync_ddk_headers.py)
 };
 
 class TFramesObjectPtr : public SingleObject {
@@ -586,7 +587,7 @@ void	ThrowBadTypeWithFrameData(NewtonErr errorCode, RefArg value);
 inline void OutOfMemory(char* = 0)
 	{ throw2(exOutOfMemory, (void*) kError_No_Memory); }
 #else
-inline void OutOfMemory(char* msg = "out of memory")
+inline void OutOfMemory(const char* msg = "out of memory")
 	{ throw2(exOutOfMemory, msg); }
 #endif
 

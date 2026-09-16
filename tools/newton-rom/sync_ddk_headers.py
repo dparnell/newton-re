@@ -21,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from newtonrom.headers import prepare  # noqa: E402
+from newtonrom.headers import prepare, write_text  # noqa: E402
 
 CLIBRARY = ["limits.h", "New.h", "setjmp.h", "stdarg.h", "stddef.h", "stdio.h", "stdlib.h", "string.h"]
 
@@ -73,6 +73,36 @@ PATCHES = {
         ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",
          "\t\tfriend void SleepTill(TTime* futureTimeToSend);\n\t\tfriend void Sleep(TTimeout timeout);\n\t\tfriend class TUTaskWorld;"),
     ],
+    # objects.h: a Ref is the ARM's 32-bit word, a tagged integer or a tagged pointer;
+    # on a host it has to be pointer-sized (Long), and the DDK's `long` casts and
+    # conversions would truncate it there
+    "objects.h": [
+        ("const long kRefTagBits = 2;",
+         "typedef Long Ref;\t\t/* the ARM's word: pointer-sized on a host (sync_ddk_headers.py) */\n\nconst long kRefTagBits = 2;"),
+        ("typedef long Ref;\n\n", ""),
+        ("#define\tMAKEINT(i)\t\t\t(((long) (i)) << kRefTagBits)",
+         "#define\tMAKEINT(i)\t\t\t((Ref) (((ULong) (Ref) (i)) << kRefTagBits))"),		# (shifted unsigned: a negative shifted left is undefined)
+        ("#define\tMAKEIMMED(t, v)\t\t((((((long) (v)) << kRefImmedBits) | ((long) (t))) << kRefTagBits) | kTagImmed)",
+         "#define\tMAKEIMMED(t, v)\t\t((((((Ref) (v)) << kRefImmedBits) | ((Ref) (t))) << kRefTagBits) | kTagImmed)"),
+        ("#define MAKEMAGICPTR(index)\t((Ref) (((long) (index)) << kRefTagBits) | kTagMagicPtr)",
+         "#define MAKEMAGICPTR(index)\t((Ref) (((Ref) (index)) << kRefTagBits) | kTagMagicPtr)"),
+        ("const long kRefValueMask = -1 << kRefTagBits;", "const Ref kRefValueMask = (Ref) (~(ULong) 0 << kRefTagBits);"),
+        ("const long kRefTagMask = ~kRefValueMask;", "const Ref kRefTagMask = ~kRefValueMask;"),
+        ("const long kRefImmedMask = -1 << kRefImmedBits;", "const Ref kRefImmedMask = (Ref) (~(ULong) 0 << kRefImmedBits);"),
+        ("\toperator long() const;\n#else\n\tinline\tRefVar();", "\toperator Ref() const;\n#else\n\tinline\tRefVar();"),
+        ("\toperator long() const\t\t\t\t{ return h->ref; }", "\toperator Ref() const\t\t\t\t{ return h->ref; }"),
+        ("\toperator long() const;\n#else\n\tinline\tRefStruct();", "\toperator Ref() const;\n#else\n\tinline\tRefStruct();"),
+        ("\t\t\toperator long() const\t\t\t\t\t{ return h->ref; }", "\t\t\toperator Ref() const\t\t\t\t\t{ return h->ref; }"),
+        # the ROM's TObjectIterator (0x30 bytes) ends with an ExceptionCleanup
+        # (verify-report.txt: header 0x24 vs ROM 0x30): a stack iterator
+        # registers it so that a Throw unwinding past it frees its RefHandles
+        # a string literal is const on a host compiler
+        ('inline void OutOfMemory(char* msg = "out of memory")\n\t{ throw2(exOutOfMemory, msg); }',
+         'inline void OutOfMemory(const char* msg = "out of memory")\n\t{ throw2(exOutOfMemory, msg); }'),
+        ("\tRefStruct\tfMapRef;\t// NILREF indicates an Array iterator\n};",
+         "\tRefStruct\tfMapRef;\t// NILREF indicates an Array iterator\n"
+         "\tExceptionCleanup\tfCleanup;\t// +0x20 (ROM; not in the DDK header - sync_ddk_headers.py)\n};"),
+    ],
 }
 
 
@@ -100,8 +130,7 @@ def main(argv=None) -> int:
         text = open(path, encoding="utf-8").read()
         fixed = endif_tokens.sub(r"\1 /* \2 */", text)
         if fixed != text:
-            with open(path, "w", encoding="utf-8", newline="\n") as f:
-                f.write(fixed)
+            write_text(path, fixed)
             patched += 1
     for name, edits in PATCHES.items():
         path = os.path.join(out, name)
@@ -112,8 +141,7 @@ def main(argv=None) -> int:
                 return 1
             text = text.replace(old, new)
             patched += 1
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
+        write_text(path, text)
     print(f"wrote {len(names)} headers to {out}, {patched} patches applied")
     return 0
 

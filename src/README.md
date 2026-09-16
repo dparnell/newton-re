@@ -59,7 +59,12 @@ src/
                 the services are written in: TForkWorld, TAppWorld with
                 TAEventHandler/TAEvent (AppWorld.h is ours; the DDK has no
                 header for the worlds)
-  frames/       NewtonScript object system (to come)
+  frames/       the NewtonScript object system: refs, the object heap and
+                its collector (ObjectHeap.h), symbols, binaries, arrays,
+                frames and their maps, paths, clones, classes - the DDK's
+                objects.h (Frames.h for clients); the ROM's RSSYM symbol
+                constants generated into RSSymbols.h/RSSymbolTable.cpp
+                (docs/frames/README.md)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 
