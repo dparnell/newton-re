@@ -34,6 +34,15 @@ extern long	gObjectHeapSize;			// host: the size InitObjects gives the object he
 
 // beyond objects.h
 Ref		AllocateMapWithTags(RefArg superMap, RefArg tags);
+
+// a frame's tag with the index of its slot (GetFrameMapTags: the stores sort them)
+struct SortedMapTag
+{
+	Ref		fTag;			// +0x00
+	long	fIndex;			// +0x04
+};
+long	GetMapTags(Ref map, SortedMapTag* tags);
+void	GetFrameMapTags(Ref frame, SortedMapTag* tags, Boolean sorted);
 Ptr		LockedBinaryPtr(RefArg obj);
 void	LockRefArg(RefArg obj);
 void	UnlockRefArg(RefArg obj);

@@ -102,11 +102,65 @@ it for large binaries written piecemeal.
   and `TPackageStore` in the protocol registry; `test_Store` exercises both
   through `TStore::New` by name.
 
+## The frames layer's view of a store (`src/stores/StoreWrapper.h`)
+
+`TStoreWrapper` (ROM 0x00328790-0x003299fc; 0x98 bytes) is what the frames
+code holds for a store: the `TStore`, two `TStoreHashTable`s - the *map
+table* and the *symbol table* - with caches of the last eight maps and
+sixteen symbols read back, the `TNodeCache` of the store's soup indexes,
+the dirty flag and (NOT YET) the ephemeral tracker.  `Dirty` locks the
+store and asks for the flush task (`AskForFlush`), `SparklingClean` unlocks
+it; `LockStore`/`UnlockStore`/`Abort` pass to the store, Abort also
+clearing the node cache and re-reading both tables' buckets.
+
+A frame goes to the store as a **map reference** plus its slot values in
+a canonical order: `FrameToMapReference` sorts the frame's tags by symbol
+(`GetFrameMapTags`: hash, then name - except a function's or an argFrame's
+slots, which keep their order), drops `_proto` (and, for soup entries,
+`_uniqueID` and `_modTime`), packs the names (2-byte count, then NUL
+terminated names) and enters them in the map table under a hash of the
+names (`AddMap`: each name's hash rotated into the running value by the
+count so far); it hands back `indexes[]`, the frame slot each stored slot
+comes from.  `ReferenceToMap` rebuilds the frame map (`AllocateMapWithTags`
+of the interned names).  A symbol goes as a **symbol reference** into the
+symbol table (`SymbolToReference`: its name under its hash) and comes back
+interned (`ReferenceToSymbol`).  `StartCopyMaps_Symbols`/`CopyMap`/
+`CopySymbol`/`EndCopyMaps_Symbols` translate references when a store's
+objects are copied to another store, remembering the last 16 maps and 32
+symbols.
+
+`TStoreHashTable` (0x00328158-0x0032859c) is the on-store hash table both
+tables are: a 256-byte table object of 64 bucket ids (`Create` makes one),
+each bucket an object of `[2-byte length][bytes]` entries.  `Insert(hash,
+bytes)` looks through bucket `hash & 63` (through a `TCachedReadStore`)
+and appends the entry when new; the *reference* it answers is
+`bucket << 16 | offset`, which `Get` reads back; `TStoreHashTableIterator`
+walks every entry; `Abort` re-reads the bucket ids after the store aborted.
+`TCachedReadStore` (0x003299fc-0x00329ce4) reads an object once into a
+1 KB buffer (or one of the object's size) and answers pointers into it.
+
+The store's **root object** is a `StoreRootData`: `'WALY'`, version 4, the
+map table id, the symbol table id, the root frame id (`ReadStoreRootData`
+0x00326dac reads it; `MakeStoreObject` 0x00328fdc writes it when a store is
+first used - NOT YET, it needs the object writer and the soup name index).
+On-store words are 32-bit (`ULong32`, `StorePSSId`) where the host's
+`ULong` is pointer-sized.
+
+`TNodeCache` (`NodeCache.h`, 0x002c3ad8-0x002c4174; 0x10 bytes) caches the
+B-tree nodes the soup indexes read: a handle of entries (node id, its
+512-byte buffer, duplicate-node and dirty flags, a use stamp, the index it
+belongs to, in-use), growing when every entry is in use and reusing the
+least recently used otherwise; `Commit` writes an index's dirty nodes back
+through it and trims the cache to eight entries (with `DeleteNode`, in the
+index unit to come).  `test_StoreWrapper` runs the tables, the wrapper and
+the cache over a `THostStore`.
+
 ## Not yet
 
-`TStoreWrapper` (the frames layer's view of a store: its symbol table and
-map table, `TStoreHashTable`, the object reader/writer and pipes that
-turn frames into store objects, ephemerals), `TSoupIndex` and
+The object reader/writer and pipes that turn frames into store objects
+(`TStoreObjectWriter`/`Reader`, `TStoreWritePipe`/`ReadPipe`,
+`TPrecedentsForWriting`/`Reading`), `MakeStoreObject` and the store
+frames, `TEphemeralTracker`, `TSoupIndex` and
 `TUnionSoupIndex` (the B-tree indexes with `TNodeCache`), the entry cache
 and fault blocks, `TCursor`/`TCollectCursor`, the NewtonScript
 store/soup/entry/cursor functions, `TPSSManager` and the card store

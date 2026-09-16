@@ -32,6 +32,7 @@
 #endif
 
 typedef ULong PSSId;					// an object's id within its store; 0 is never one
+typedef ULong32 StorePSSId;				// a PSSId as it lies in store data (a 32-bit word)
 
 // TStore::Init's flags
 const ULong kStoreIsCard = 0x01;		// a card store (pssInfo is the card's TCardHandler info)

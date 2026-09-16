@@ -26,4 +26,10 @@ typedef unsigned char Boolean;
 #define hostLongIsPointerSized 1
 #include <stdint.h>
 
+// the ARM's 32-bit word where its width is what matters: data laid out in
+// the ROM image, in packages or on a store (ULong and Long being
+// pointer-sized here)
+typedef uint32_t	ULong32;
+typedef int32_t		Long32;
+
 #endif /* __HOST_COMPAT_H */

@@ -34,7 +34,7 @@
 #include "objects.h"
 #endif
 
-typedef unsigned int	ULong32;			// the ROM's 32-bit word where its width matters (symbol hashes)
+// ULong32 (host_compat.h): the ROM's 32-bit word where its width matters (symbol hashes)
 
 
 /* -------------------------------------------------------------------------------

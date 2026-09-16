@@ -53,8 +53,11 @@ src/
                 ROM (LZTables.cpp, UnicodeTables.cpp)
   stores/       the persistent store system: the TStore object store
                 protocol (Store.h), the ROM's read-only TPackageStore over a
-                package's soup part, and the host's in-memory THostStore in
-                place of the flash store (host/) (docs/stores/README.md)
+                package's soup part, the host's in-memory THostStore in
+                place of the flash store (host/), and the frames layer's
+                view of a store - its symbol and map tables, the soup
+                indexes' node cache (StoreWrapper.h, NodeCache.h)
+                (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

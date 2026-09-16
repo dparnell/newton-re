@@ -23,9 +23,9 @@
 // object i is the bytes [fOffsets[i], fOffsets[i + 1]).
 struct SPackageStoreData
 {
-	PSSId	fRootId;				// +0x00
-	ULong	fNumObjects;			// +0x04
-	ULong	fOffsets[1];			// +0x08  fNumObjects + 1 of them
+	StorePSSId	fRootId;			// +0x00
+	ULong32		fNumObjects;		// +0x04
+	ULong32		fOffsets[1];		// +0x08  fNumObjects + 1 of them
 };
 
 

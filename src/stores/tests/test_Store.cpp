@@ -233,10 +233,10 @@ static void
 TestPackageStore()
 {
 	// a soup part with three objects: "abc", "", "hello"
-	ULong words[12];
+	ULong32 words[12];
 	words[0] = 2;				// root id
 	words[1] = 3;				// objects
-	ULong dataStart = 6 * sizeof(ULong);
+	ULong32 dataStart = 6 * sizeof(ULong32);
 	words[2] = dataStart;
 	words[3] = dataStart + 3;
 	words[4] = dataStart + 3;

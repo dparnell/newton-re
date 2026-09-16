@@ -14,6 +14,7 @@
 	friends) the wrapper calls it.
 */
 
+#include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "REPTranslators.h"
@@ -26,6 +27,7 @@
 #include "Unicode.h"
 
 #include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 long	gObjectHeapSize = 0x100000;		// host: the object heap's size (the ROM sizes it by InternalRAMInfo)
@@ -339,6 +341,50 @@ ComputeMapSize(RefArg map)
 	if ((Ref) superMap != NILREF)
 		size += ComputeMapSize(superMap);
 	return size;
+}
+
+
+// ROM 0x002fb104 GetMapTags__FlP12SortedMapTag
+// The tags of a map and its supermaps, outermost first, each with the
+// index of its slot; ==> how many.
+long
+GetMapTags(Ref map, SortedMapTag* tags)
+{
+	ObjHeader* o = OBJ(map);
+	long index = 0;
+	if (MapSuperMap(o) != NILREF)
+	{
+		index = GetMapTags(MapSuperMap(o), tags);
+		tags += index;
+	}
+	long count = MapTagCount(o);
+	Ref* tag = MapTags(o);
+	for (long i = 0; i < count; i++)
+	{
+		tags[i].fTag = tag[i];
+		tags[i].fIndex = index++;
+	}
+	return index;
+}
+
+
+// ROM 0x002fb178 CompareSymbols_qsort__FPCvT1
+static int
+CompareSymbols_qsort(const void* a, const void* b)
+{
+	return SymbolCompare(((const SortedMapTag*) a)->fTag, ((const SortedMapTag*) b)->fTag);
+}
+
+
+// ROM 0x002fb184 GetFrameMapTags__FlP12SortedMapTagUc
+// A frame's tags with their slot indexes, sorted by symbol (hash, then
+// name) when asked - the order a store keeps a frame's slots in.
+void
+GetFrameMapTags(Ref frame, SortedMapTag* tags, Boolean sorted)
+{
+	long count = GetMapTags(ObjClass(OBJ(frame)), tags);
+	if (sorted)
+		qsort(tags, count, sizeof(SortedMapTag), CompareSymbols_qsort);
 }
 
 
