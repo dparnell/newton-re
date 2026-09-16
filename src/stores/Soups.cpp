@@ -9,6 +9,7 @@
 */
 
 #include "Soups.h"
+#include "Cursors.h"
 #include "StoreObject.h"
 #include "Frames.h"
 #include "Interpreter.h"
@@ -55,7 +56,9 @@ InitQueries(void)
 	gPackageStores = AllocateArray(RSSYMarray, 0);
 	InitEntries();
 	RegisterSoupNatives();
+	RegisterCursorNatives();
 	InitSoupPrototypes();
+	InitCursorPrototype();
 }
 
 
@@ -132,6 +135,8 @@ static const PrototypeMethod gPlainSoupMethods[] = {
 	{ "GetIndexesModTime", (void*) SoupGetIndexesModTime, 0 },
 	{ "GetInfoModTime", (void*) SoupGetInfoModTime, 0 },
 	{ "flush", (void*) PlainSoupFlush, 0 },
+	{ "Query", (void*) CommonSoupQuery, 1 },
+	{ "collect", (void*) SoupCollect, 1 },
 	{ nil, nil, 0 }
 };
 
@@ -422,7 +427,7 @@ static void
 ThrowIndexError(int result)
 {
 	if (result != kIndexOK)
-		Throw(exStoreError, (void*) (long) (result > 0 ? kNSErrKeySizeTooBig : result), nil);
+		Throw(exStoreError, (void*) (Long) (result > 0 ? kNSErrKeySizeTooBig : result), nil);
 }
 
 
@@ -1073,7 +1078,7 @@ StoreErase(RefArg rcvr)
 	RemoveTStore(store);
 	NewtonErr err = store->Format();
 	if (err != noErr)
-		Throw(exStoreError, (void*) (long) err, nil);
+		Throw(exStoreError, (void*) (Long) err, nil);
 	RefVar storeObject(RegisterTStore(store));
 	if (slot != -1)
 	{
@@ -1181,28 +1186,10 @@ StoreGetObjectSize(RefArg rcvr, RefArg id)
 
 
 /*------------------------------------------------------------------------------
-	C u r s o r s   a n d   u n i o n   s o u p s
-	NOT YET RECONSTRUCTED: TCursor and TUnionSoupIndex.  A soup's cursors
-	array holds nothing yet, so there is nothing to tell.
+	U n i o n   s o u p s
+	NOT YET RECONSTRUCTED: TUnionSoupIndex over several soups is there
+	(Cursors.h) but the union soup frames are not.
 ------------------------------------------------------------------------------*/
-
-// ROM 0x002a913c EachSoupCursorDo__FRC6RefVarl
-void
-EachSoupCursorDo(RefArg /*soup*/, int /*op*/)
-{ }
-
-
-// ROM 0x002a919c EachSoupCursorDo__FRC6RefVarlT1
-void
-EachSoupCursorDo(RefArg /*soup*/, int /*op*/, RefArg /*arg*/)
-{ }
-
-
-// ROM 0x002a8ff0 EachSoupCursorDo__FRC6RefVarlN21
-void
-EachSoupCursorDo(RefArg /*soup*/, int /*op*/, RefArg /*arg1*/, RefArg /*arg2*/)
-{ }
-
 
 // ROM 0x00335404 AddToUnionSoup__FRC6RefVarT1
 void
@@ -2619,7 +2606,7 @@ PlainSoupRemoveAllEntries(RefArg rcvr)
 		TSoupIndex* uniqueIdIndex = GetSoupIndexObject(rcvr, 0);
 		int result = uniqueIdIndex->Search(true, nil, nil, RemoveEntryStopFn, wrapper, nil, nil);
 		if (result < 0)
-			Throw(exStoreError, (void*) (long) result, nil);
+			Throw(exStoreError, (void*) (Long) result, nil);
 		RefVar indexes(GetFrameSlotRef(persistent, RSSYMindexes));
 		long count = Length(indexes);
 		for (long i = 0; i < count; i++)
@@ -2760,7 +2747,7 @@ PlainSoupGetSize(RefArg rcvr)
 	info.fSize = 0;
 	int result = GetSoupIndexObject(rcvr, 0)->Search(true, nil, nil, GetSizeStopFn, &info, nil, nil);
 	if (result < 0)
-		Throw(exStoreError, (void*) (long) result, nil);
+		Throw(exStoreError, (void*) (Long) result, nil);
 	RefVar sizes(PlainSoupIndexSizes(rcvr));
 	for (long i = Length(sizes) - 1; i >= 0; i--)
 		info.fSize += RINT(GetArraySlotRef(sizes, i));

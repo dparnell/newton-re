@@ -240,24 +240,35 @@ IndexInfoFromStore(const UByte* bytes, long size, IndexInfo* info)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x002c41c4 FindPrior__18TAbstractSoupIndexFP4SKeyN21UcT4
-// Find the key; when it is not there, the key before it (prior) or after
-// it; when it is there, the one before or after it.  ==> Find's result.
+// The last entry at or before key (before it when exclusive): the key's
+// last duplicate when it is there (the entry before it when exclusive);
+// not there, the entry before where it would be (kIndexNotFound); past
+// the end, the last entry.
 int
-TAbstractSoupIndex::FindPrior(SKey* key, SKey* outKey, SKey* outData, Boolean exact, Boolean prior)
+TAbstractSoupIndex::FindPrior(SKey* key, SKey* outKey, SKey* outData, Boolean exact, Boolean exclusive)
 {
 	int result = Find(key, outKey, outData, exact);
 	if (result == kIndexOK)
 	{
-		if (prior)
-			Prior(outKey, outData, false, outKey, outData);
+		if (exclusive)
+			return Prior(outKey, outData, false, outKey, outData);
+		if (Next(outKey, outData, kIndexNextKey, outKey, outData) == kIndexEnd)
+			Last(outKey, outData);
 		else
-			Next(outKey, outData, kIndexNextKey, outKey, outData);
+			Prior(outKey, outData, false, outKey, outData);
+		return kIndexOK;
 	}
-	else if (result == kIndexNotFound)
-		Prior(outKey, outData, false, outKey, outData);
-	else if (result == kIndexEnd)
-		Last(outKey, outData);
-	return result;
+	if (result == kIndexNotFound)
+	{
+		result = Prior(outKey, outData, false, outKey, outData);
+		return result != kIndexOK ? result : kIndexNotFound;
+	}
+	if (result != kIndexEnd)
+		return result;
+	result = Last(outKey, outData);
+	if (result == kIndexOK)
+		return kIndexNotFound;
+	return result == kIndexNotFound ? kIndexEnd : result;
 }
 
 

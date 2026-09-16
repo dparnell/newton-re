@@ -164,13 +164,15 @@ TestLongKeys()
 	EXPECT(index.Find(&key, &key, &data, true) == kIndexEnd);
 	// FindPrior
 	key = -1L;
-	EXPECT(index.FindPrior(&key, &key, &data, true, true) == kIndexNotFound && (long) key == 0);	// nothing before key 0: it stays
+	EXPECT(index.FindPrior(&key, &key, &data, true, true) == kIndexEnd && (long) key == 0);	// nothing before key 0: it stays
 	key = n + 5;
-	EXPECT(index.FindPrior(&key, &key, &data, true, true) == kIndexEnd && (long) key == n - 1);
+	EXPECT(index.FindPrior(&key, &key, &data, true, true) == kIndexNotFound && (long) key == n - 1);	// past the end: the last
 	key = 100L;
-	EXPECT(index.FindPrior(&key, &key, &data, true, true) == kIndexOK && (long) key == 99);
+	EXPECT(index.FindPrior(&key, &key, &data, true, true) == kIndexOK && (long) key == 99);		// exclusive: the one before
 	key = 100L;
-	EXPECT(index.FindPrior(&key, &key, &data, true, false) == kIndexOK && (long) key == 101);
+	EXPECT(index.FindPrior(&key, &key, &data, true, false) == kIndexOK && (long) key == 100);	// inclusive: the key's last datum
+	key = 1001L;
+	EXPECT(index.FindPrior(&key, &key, &data, true, false) == kIndexOK && (long) key == 1001);
 
 	// Next/Prior from a key that is not there
 	key = 1000L; data = 0L;

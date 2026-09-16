@@ -6,10 +6,12 @@
 // indexes added and removed; the store re-registered over the same bytes
 // finding the soup and its entries again; soup renaming, info, removal
 // and the store's soup names; the same through NewtonScript sends to the
-// prototype frames' methods.  Runs over a standalone kernel heap and
-// object heap.
+// prototype frames' methods; cursors over the soup's indexes (key
+// bounds, tests, moves, counting, following changes and removals, the
+// collect cursor).  Runs over a standalone kernel heap and object heap.
 
 #include "Soups.h"
+#include "Cursors.h"
 #include "Entries.h"
 #include "StoreObject.h"
 #include "Compiler.h"
@@ -51,6 +53,7 @@ NewStore(ULong size = 0x80000)
 static Ref
 Eval(const char* source)
 {
+	if (getenv("EVAL_TRACE")) fprintf(stderr, "eval: %s\n", source);
 	RefVar fn(ParseString(RefVar(MakeString(source))));
 	return InterpretBlock(fn, RefVar(gVarFrame));
 }
@@ -461,6 +464,216 @@ TestSoups()
 }
 
 
+static long
+WalkCursor(RefArg cursor, long* firstAge, long* lastAge)
+{
+	TCursor* c = CursorObj(cursor);
+	long count = 0;
+	RefVar entry(c->Reset());
+	long prior = -1;
+	while ((Ref) entry != NILREF)
+	{
+		long age = RINT(GetFrameSlotRef(entry, SYMBOL("age")));
+		if (count == 0)
+		{
+			if (firstAge != nil)
+				*firstAge = age;
+		}
+		else
+			EXPECT(age >= prior);
+		prior = age;
+		count++;
+		entry = c->Move(1);
+	}
+	if (lastAge != nil)
+		*lastAge = prior;
+	return count;
+}
+
+
+static void
+TestCursors()
+{
+	TStore* store = NewStore();
+	RefVar storeObject(RegisterTStore(store));
+	RefVar specs(AllocateArray(RSSYMarray, 2));
+	SetArraySlotRef(specs, 0, IndexSpec("name", "string"));
+	SetArraySlotRef(specs, 1, IndexSpec("age", "int"));
+	RefVar soup(StoreCreateSoup(storeObject, RefVar(MakeString("People")), specs));
+	static const char* names[] = { "Ann", "Bob", "Cid", "Dee", "Eve", "Fay", "Gus", "Hal", "Ivy", "Jon" };
+	for (long i = 0; i < 10; i++)
+		SoupAdd(soup, RefVar(Person(names[i], 20 + i * 5)));		// ages 20..65
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("theSoup")), soup);
+
+	// the whole soup by age
+	RefVar spec(AllocateFrame());
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	RefVar cursor(SoupQuery(soup, spec));
+	EXPECT(IsFrame(cursor));
+	TCursor* c = CursorObj(cursor);
+	EXPECT(c != nil && EQRef(c->fSoup, soup));
+	RefVar entry(c->Entry());
+	EXPECT(IsFaultBlock(entry) && RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 20);
+	EXPECT(RINT(c->EntryKey()) == 20);
+	EXPECT(c->IsParked() == NILREF);
+	long first, last;
+	EXPECT(WalkCursor(cursor, &first, &last) == 10 && first == 20 && last == 65);
+	EXPECT(c->IsParked() == RSSYMend);
+	EXPECT(c->CountEntries() == 10);
+	EXPECT(c->IsParked() == RSSYMend);				// the count leaves the position alone
+	entry = c->Move(-1);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 65);
+	entry = c->Move(-3);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 50);
+	entry = c->Move(2);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 60);
+	entry = c->ResetToEnd();
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 65);
+	EXPECT(c->Move(1) == NILREF && c->IsParked() == RSSYMend);
+	EXPECT(c->Move(1) == NILREF);
+	entry = c->Move(-1);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 65);
+	entry = c->GotoKey(RefVar(MAKEINT(40)));
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 40);
+	entry = c->GotoKey(RefVar(MAKEINT(42)));		// no such key: the one after
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 45);
+	EXPECT(c->GotoKey(RefVar(MAKEINT(99))) == NILREF && c->IsParked() == RSSYMend);
+	RefVar bob(GetEntry(soup, FaultBlockId(RefVar(c->GotoKey(RefVar(MAKEINT(25)))))));
+	EXPECT(c->GotoEntry(bob) == TRUEREF && EQRef(c->Entry(), bob));
+	entry = c->Move(1);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 30);
+	// a clone walks on its own
+	RefVar cloned(c->Clone());
+	TCursor* c2 = CursorObj(cloned);
+	EXPECT(c2 != c && RINT(GetFrameSlotRef(RefVar(c2->Entry()), SYMBOL("age"))) == 30);
+	c2->Move(2);
+	EXPECT(RINT(GetFrameSlotRef(RefVar(c2->Entry()), SYMBOL("age"))) == 40);
+	EXPECT(RINT(GetFrameSlotRef(RefVar(c->Entry()), SYMBOL("age"))) == 30);
+	EXPECT(Length(RefVar(GetFrameSlotRef(soup, RSSYMcursors))) >= 2);
+
+	// key bounds
+	spec = AllocateFrame();
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	SetFrameSlot(spec, RSSYMbeginkey, RefVar(MAKEINT(30)));
+	SetFrameSlot(spec, RSSYMendkey, RefVar(MAKEINT(50)));
+	cursor = SoupQuery(soup, spec);
+	c = CursorObj(cursor);
+	EXPECT(WalkCursor(cursor, &first, &last) == 5 && first == 30 && last == 50);
+	EXPECT(c->CountEntries() == 5);
+	c->ResetToEnd();
+	EXPECT(RINT(c->EntryKey()) == 50);
+	EXPECT(c->Move(-5) == NILREF && c->IsParked() == RSSYMbegin);
+	entry = c->GotoKey(RefVar(MAKEINT(10)));			// before the bounds: reset
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 30);
+	entry = c->GotoKey(RefVar(MAKEINT(60)));			// past them: to the end
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 50);
+	spec = AllocateFrame();
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	SetFrameSlot(spec, RSSYMbeginexclkey, RefVar(MAKEINT(30)));
+	SetFrameSlot(spec, RSSYMendexclkey, RefVar(MAKEINT(50)));
+	cursor = SoupQuery(soup, spec);
+	EXPECT(WalkCursor(cursor, &first, &last) == 3 && first == 35 && last == 45);
+	// a start key
+	SetFrameSlot(spec, RSSYMstartkey, RefVar(MAKEINT(40)));
+	cursor = SoupQuery(soup, spec);
+	c = CursorObj(cursor);
+	EXPECT(RINT(c->EntryKey()) == 40);
+	EXPECT(c->CountEntries() == 2);					// counted from the start key, as the ROM does (40, 45)
+	EXPECT(RINT(c->EntryKey()) == 40);
+	// string keys, collated
+	spec = AllocateFrame();
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("name")));
+	SetFrameSlot(spec, RSSYMbeginkey, RefVar(MakeString("d")));
+	SetFrameSlot(spec, RSSYMendkey, RefVar(MakeString("g")));
+	cursor = SoupQuery(soup, spec);
+	c = CursorObj(cursor);
+	EXPECT(StringIs(RefVar(GetFrameSlotRef(RefVar(c->Entry()), RSSYMname)), "Dee"));
+	EXPECT(StringIs(RefVar(c->EntryKey()), "Dee"));
+	EXPECT(c->CountEntries() == 3);					// Dee, Eve, Fay
+	entry = c->Move(2);
+	EXPECT(StringIs(RefVar(GetFrameSlotRef(entry, RSSYMname)), "Fay"));
+	EXPECT(c->Move(1) == NILREF);
+
+	// tests through NewtonScript
+	RefVar q(Eval("theSoup:Query({indexPath: 'age, validTest: func(e) e.age mod 10 = 0})"));
+	EXPECT(WalkCursor(q, &first, &last) == 5 && first == 20 && last == 60);
+	q = Eval("theSoup:Query({indexPath: 'age, indexValidTest: func(k) k < 40})");
+	EXPECT(WalkCursor(q, &first, &last) == 4 && first == 20 && last == 35);
+	q = Eval("theSoup:Query({indexPath: 'age, endTest: func(e) e.age > 35})");
+	EXPECT(WalkCursor(q, &first, &last) == 4 && first == 20 && last == 35);
+	EXPECT(RINT(Eval("theSoup:Query({indexPath: 'age, beginKey: 45}):CountEntries()")) == 5);
+	q = Eval("theSoup:Query({indexPath: 'name})");
+	EXPECT(StringIs(RefVar(Eval("call func(c) begin c:Next(); c:Next(); c:Entry().name end with (theSoup:Query({indexPath: 'name}))")), "Cid"));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("q")), q);
+	EXPECT(StringIs(RefVar(Eval("q:Entry().name")), "Ann"));
+	EXPECT(StringIs(RefVar(Eval("q:Move(3).name")), "Dee"));
+	EXPECT(Eval("q:Prev().name") != NILREF);
+	EXPECT(RINT(Eval("q:CountEntries()")) == 10);
+	EXPECT(Eval("q:WhichEnd()") == NILREF);
+	EXPECT(Eval("q:ResetToEnd().name") != NILREF && Eval("q:Next()") == NILREF && EQRef(Eval("q:WhichEnd()"), RSSYMend));
+	EXPECT(EQRef(Eval("q:Soup()"), soup) && EQRef(Eval("q:IndexPath()"), SYMBOL("name")));
+	EXPECT(EQRef(Eval("q:Status()"), RSSYMvalid));
+	EXPECT(StringIs(RefVar(Eval("q:GotoKey(\"e\").name")), "Eve"));
+	EXPECT(StringIs(RefVar(Eval("q:EntryKey()")), "Eve"));
+	EXPECT(StringIs(RefVar(Eval("q:Clone():Next().name")), "Fay"));
+	EXPECT(StringIs(RefVar(Eval("q:Entry().name")), "Eve"));
+
+	// the cursor follows changes: a key change, a removal
+	spec = AllocateFrame();
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	cursor = SoupQuery(soup, spec);
+	c = CursorObj(cursor);
+	entry = c->GotoKey(RefVar(MAKEINT(40)));			// Eve
+	SetFrameSlot(entry, RefVar(SYMBOL("age")), RefVar(MAKEINT(70)));
+	EntryChange(entry);
+	EXPECT(EQRef(c->Entry(), entry) && RINT(c->EntryKey()) == 70);
+	EXPECT(c->Move(1) == NILREF);						// now the last
+	entry = c->Move(-1);
+	EXPECT(RINT(c->EntryKey()) == 70);
+	c->Reset();
+	entry = c->GotoKey(RefVar(MAKEINT(25)));			// Bob
+	EntryRemoveFromSoup(entry);
+	EXPECT(EQRef(c->Entry(), RSSYMdeleted));			// stands in for the removed one
+	entry = c->Move(1);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 30);
+	EXPECT(c->CountEntries() == 9);
+	// the last entry removed while the cursor is on it
+	c->ResetToEnd();
+	entry = c->Entry();
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 70);
+	EntryRemoveFromSoup(entry);
+	EXPECT(c->Entry() == NILREF && c->IsParked() == RSSYMend);
+	EXPECT(c->CountEntries() == 8);
+	// an index removed invalidates the cursor
+	SoupRemoveIndex(soup, RefVar(SYMBOL("age")));
+	EXPECT(c->fSoupInfo == nil && c->Move(1) == NILREF);
+	// a collect cursor
+	SoupAddIndex(soup, RefVar(IndexSpec("age", "int")));
+	spec = AllocateFrame();
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	SetFrameSlot(spec, RSSYMbeginkey, RefVar(MAKEINT(35)));
+	cursor = SoupCollect(soup, spec);
+	c = CursorObj(cursor);
+	EXPECT(c->CountEntries() == 6);					// 35, 45, 50, 55, 60, 65
+	EXPECT(RINT(GetFrameSlotRef(RefVar(c->Entry()), SYMBOL("age"))) == 35);	// collected, on the first
+	entry = c->Move(1);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 45);
+	entry = c->Move(3);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 60);
+	EXPECT(c->GotoEntry(entry) == TRUEREF);
+	EntryRemoveFromSoup(entry);
+	EXPECT(c->CountEntries() == 5 && RINT(GetFrameSlotRef(RefVar(c->Entry()), SYMBOL("age"))) == 65);
+	entry = c->Move(-10);
+	EXPECT((Ref) entry == NILREF && c->IsParked() == RSSYMbegin);
+	EXPECT(RINT(Eval("theSoup:collect({indexPath: 'age}):CountEntries()")) == 7);
+	// the soup removed: the cursors invalidated
+	SoupRemoveFromStore(soup);
+	EXPECT(c->Move(1) == NILREF && CursorObj(q)->Move(1) == NILREF);
+	RemoveTStore(store);
+	store->Delete();
+}
+
+
 int
 main()
 {
@@ -472,6 +685,7 @@ main()
 	{
 		TestStoreFrame();
 		TestSoups();
+		TestCursors();
 	}
 	newton_catch_all
 	{

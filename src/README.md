@@ -62,7 +62,9 @@ src/
                 precedents), the soup index B-tree (SoupIndex.h:
                 SKey, key fields, nodes), soup entries (Entries.h: fault
                 blocks, the entry cache, the entry operations) and the
-                store and soup frames with their methods (Soups.h)
+                store and soup frames with their methods (Soups.h), and
+                the cursors and queries (Cursors.h: TUnionSoupIndex,
+                TCursor, TCollectCursor)
                 (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

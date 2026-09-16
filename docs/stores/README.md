@@ -360,15 +360,91 @@ and `RegisterSoupNatives`, which binds every store, soup and entry native
 to the ROM's function objects by symbol (both tables of
 `ROMNatives.cpp`).
 
+## Cursors and queries (`src/stores/Cursors.h`)
+
+`TUnionSoupIndex` (0x002c2f78-0x002c3bf8) is the index a query walks: the
+same-path `TSoupIndex` of each of the union soup's soups (one soup is the
+common case), each with its `UnionIndexData` - the index, a state
+(invalid / valid / exhausted), the `IndexState` and key field the last
+step left, and the node cache's modification count that state was taken
+at (`IsValidState` re-finds the position when the index changed since).
+`Find`/`First`/`Last` position every soup and take the lowest (highest)
+key as current; `Search(forward, key, data, stopFn, refCon, ...)` steps
+the current soup's index (`TSoupIndex::Search`, the stop function called
+for each key) and `MoveToNextSoup` picks the next soup's key when it is
+exhausted; `Next` and `Prior` are one-step searches; `CurrentSoupGone`
+re-positions when the current soup is removed from the union.  Every
+operation is a node-cache transaction (`Commit` on success).
+
+`TCursor` (0xc0 bytes; 0x002a8ef4-0x002ac890) is a query's position: the
+soup (`fSoup`), the cursor frame (`fCursor`, a clone of
+`cursorPrototype` with the `TCursor` in a C-object binary in its
+`TCursor` slot), the query's parts as flags and Refs (`indexPath`, the
+begin/end keys inclusive or exclusive as `SKey`s, `startKey`, `secOrder`,
+`indexValidTest` of the key, `validTest` and `endTest` of the entry;
+`tagSpec`, `words`/`entireWords` and `text` NOT YET RECONSTRUCTED), the
+per-soup info (`CursorSoupInfo`: the soup and its tags bits), the
+`TUnionSoupIndex`, and the position - `fKey`, `fEntryData` (the entry's
+store object id as the index datum; the ROM keeps a 4-byte id, the host
+an `SKey` so the 4-byte big-endian datum writes fit), `fEntry` (the fault
+block, nil when *parked* before the first or past the last entry,
+`fParkedAtEnd`) and `fEntryRemoved` (`Entry` answers `'deleted`).
+`Init(cursor, soup, querySpec)` reads the spec (`BuildSoupsInfo`,
+`CreateIndexes`: a soup without the index is `fMissingIndex`), and the
+cursor registers in the soup's `cursors` cache so `EachSoupCursorDo`
+reaches it.
+
+`Move(count)` (0x002aa164) follows the ROM's assembly: `ExitParking`
+when parked (`Find` the begin key, or `First`; backwards `FindPrior` the
+end key, or `Last`), else `Next`/`Prior` (one step fewer after a
+removal), then `Search` in the direction with `CursorStopFn` counting
+the valid entries (`ValidTest`: `KeyBoundsValidTest`, the index valid
+test of the key, the valid and end tests of the entry - the entry made
+on the way is kept) until the count is reached or the bounds are left;
+arrived, the entry's fault block is made (`MakeEntryFaultBlock`), else
+the cursor parks at that end.  `GotoKey(key)` finds the key (or the next
+one; pinned into the bounds by `PinCurrentKey`), `GotoEntry(entry)`
+positions on an entry of one of the query's soups (`GetEntryKey`, then
+a `Next` of mode 0 that accepts the datum) and answers whether it is
+there; `Reset` goes to the start key (or the first entry), `ResetToEnd`
+to the last; `CountEntries` counts from the reset position - from the
+start key when there is one, as the ROM does - and puts the position
+back (`GetState`/`SetState`, `CursorState`); `Clone` makes a cursor at
+the same position; `EntryKey`, `IsParked` (`WhichEnd`: `'begin`/`'end`),
+`Status` (`'valid`, `'missingIndex`, `'invalid`), `Soup`, `IndexPath`.
+The soup's notifications (`EachSoupCursorDo`, `Soups.h`): `EntryRemoved`
+(the position stands, `fEntryRemoved`), `EntryChanged` (the key
+re-read; keys or tags changed), `EntryReadded`, `EntrySoupChanged`,
+`SoupAdded`/`SoupRemoved`/`SetSoup` of a union soup, `IndexRemoved`
+(the query's index: `Invalidate`, the cursor answers nil for good),
+`IndexObjectsChanged` and `SoupTagsChanged` (`RebuildInfo`).
+
+`TCollectCursor` (0x002a8f5c, 0x002ac6a0-0x002ace44) collects the matching entries up
+front (`Collect`: the union index searched from the start, `[id, soup
+index]` pairs in `fEntries`, the cursor left on the first) and walks
+the list (`Move`, `DefineCurrentEntry`, `FindEntry`, `GotoEntry`;
+`EntryRemoved` takes the pair out).  `CommonSoupQuery` (0x00322d98, the
+soups' `Query` method) makes a cursor through `DefineCursor` (an
+errored union soup queries its last soup) and resets it; `SoupCollect`
+(`collect`) makes a collect cursor, a plain query when memory runs out.
+The cursor natives (`CursorMove`, ... 0x002ab76c-0x002abd44) are the
+`cursorPrototype` methods (`Next`, `Prev`, `Move`, `Entry`, `GoTo`,
+`GotoKey`, `Reset`, `ResetToEnd`, `Clone`, `CountEntries`, `WhichEnd`,
+`Soup`, `IndexPath`, `EntryKey`, `Status`); `InitCursorPrototype`
+builds the frame on a host without ROM objects and `RegisterCursorNatives`
+binds them.  `test_Soups` (`TestCursors`) walks a plain, a bounded, an
+exclusive and a start-key query, a collated string query, the tests
+through NewtonScript, the cursor following a key change and removals,
+an index removed, and a collect cursor.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
-(`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`), `TEphemeralTracker`,
-`TUnionSoupIndex` and the union soups (`AddToUnionSoup`, `GetUnionSoup`),
-`TSortingTable`/`TSortTables` (the sort ids are all 0), tags indexes
-(`AlterTagsIndex`, `EncodeTags`, the tag methods), `TCursor`/
-`TCollectCursor` and the queries (`CommonSoupQuery`, `DefineCursor`;
-`EachSoupCursorDo` does nothing), `CopyEntries`, the XMit methods, store
-passwords, the cursor and union soup functions, `TPSSManager` and the card
-store mounting, the package store part handler, `TMuxStore`, `TFlashStore`.
+(`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
+and `text`), `TEphemeralTracker`, the union soups (`AddToUnionSoup`,
+`GetUnionSoup`, the union soup methods), `TSortingTable`/`TSortTables`
+(the sort ids are all 0; `secOrder`), tags indexes (`AlterTagsIndex`,
+`EncodeTags`, a query's `tagSpec`, the tag methods), `CopyEntries`, the
+XMit methods, store passwords, `TPSSManager` and the card store mounting,
+the package store part handler, `TMuxStore`, `TFlashStore`.

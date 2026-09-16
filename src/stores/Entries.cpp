@@ -367,7 +367,7 @@ EntryChangeCommon(RefArg entry, int flags)
 	end_try;
 	wrapper->UnlockStore();
 	if (indexesChanged || tagsChanged)
-		EachSoupCursorDo(soup, kSoupCursorEntryChanged, entry, RefVar(MAKEINT((indexesChanged ? 1 : 0) | (tagsChanged ? 2 : 0))));
+		EachSoupCursorEntryChanged(soup, entry, indexesChanged, tagsChanged);
 	if (flags & kEntryChangeVerbatim)
 		FaultBlockSlots(entry)[kFaultBlockObjectSlot] = NILREF;
 }

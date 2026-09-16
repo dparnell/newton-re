@@ -258,13 +258,14 @@ typedef int (*IndexStopProcPtr)(SKey* key, SKey* data, void* refCon);
 class TAbstractSoupIndex
 {
 public:
+	virtual		~TAbstractSoupIndex()	{ }		// (host: the ROM has no virtual destructor here)
 	virtual int	Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact) = 0;
 	virtual int	First(SKey* outKey, SKey* outData) = 0;
 	virtual int	Last(SKey* outKey, SKey* outData) = 0;
 	virtual int	Next(SKey* key, SKey* data, int mode, SKey* outKey, SKey* outData) = 0;
 	virtual int	Prior(SKey* key, SKey* data, Boolean skipDups, SKey* outKey, SKey* outData) = 0;
 
-	int			FindPrior(SKey* key, SKey* outKey, SKey* outData, Boolean exact, Boolean prior);
+	int			FindPrior(SKey* key, SKey* outKey, SKey* outData, Boolean exact, Boolean exclusive);
 };
 
 // Next's mode

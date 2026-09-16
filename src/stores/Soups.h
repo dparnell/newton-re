@@ -21,10 +21,10 @@
 	index (index description 0: long keys to store object ids); every
 	other index maps keys to _uniqueIDs' store object ids as well.
 
-	NOT YET RECONSTRUCTED here: cursors (TCursor; EachSoupCursorDo does
-	nothing), union soups (gUnionSoups stays empty), tags indexes, the
-	sort tables (every sort id is 0), passwords, large binaries, the
-	XMit (synchronising) methods, package stores' part handler.
+	NOT YET RECONSTRUCTED here: union soups (gUnionSoups stays empty),
+	tags indexes, the sort tables (every sort id is 0), passwords, large
+	binaries, the XMit (synchronising) methods, package stores' part
+	handler.  The cursors are Cursors.h.
 
 	Reconstructed from the MP2100 D ROM (0x0031c7c4-0x00323300,
 	0x00313750-0x00313ffc, 0x00325834-0x0032a570); each function cites
@@ -118,12 +118,14 @@ Ref		StoreGetObjectSize(RefArg rcvr, RefArg id);								// FGetStoreObjectSize
 	S o u p s
 ------------------------------------------------------------------------------*/
 
-// what EachSoupCursorDo tells a soup's cursors (NOT YET RECONSTRUCTED)
+// what EachSoupCursorDo tells a soup's cursors (Cursors.cpp)
 enum
 {
+	kSoupCursorSoupAdded = 0,		// the soup joined a union soup
 	kSoupCursorSoupRemoved = 1,		// the soup itself
 	kSoupCursorEntryRemoved = 2,	// the entry
-	kSoupCursorEntryChanged = 3,	// (TCursor::EntryChanged) the entry, and whether its keys / tags changed
+	kSoupCursorSetSoup = 3,			// the cursor's soup
+	kSoupCursorTagsChanged = 4,
 	kSoupCursorIndexesChanged = 5,
 	kSoupCursorEntryMoved = 6,		// the entry, the entry frame it became
 	kSoupCursorEntryReadded = 7,	// the entry, the fault block it was
@@ -133,6 +135,7 @@ enum
 void	EachSoupCursorDo(RefArg soup, int op);
 void	EachSoupCursorDo(RefArg soup, int op, RefArg arg);
 void	EachSoupCursorDo(RefArg soup, int op, RefArg arg1, RefArg arg2);
+void	EachSoupCursorEntryChanged(RefArg soup, RefArg entry, Boolean keysChanged, Boolean tagsChanged);
 void	AddToUnionSoup(RefArg name, RefArg soup);			// NOT YET
 void	RemoveFromUnionSoup(RefArg name, RefArg soup);		// NOT YET
 
