@@ -199,18 +199,40 @@ a count (873) then the refs, which the MMU also maps at 0x01d80000 in the
 jump table's diagonal page layout (`ResolveMagicPtr` reads it there).
 
 `ImportROMObjects` reads the area out of a ROM image (`rom.bin` or the AIF
-image in `DebugRom/`) into a host area outside the object heap, one host
-object per ROM object (ARM layout in, host layout out), then translates
-every ref (a pointer into the area becomes the host object's; integers,
-immediates and magic pointers are the same on both) and the binary data
-the host reads as words - symbol hashes, `'real`s and the UniChars of
-`'string`s; other binaries (bitmaps, bytecode, sounds) keep their
-persistent big-endian format for their readers.  It then sets the symbol
-table (`gROMSymbolTableRef`, which `InitSymbols` takes over), magic
-pointer table 0, `gROMBuiltinFunctions`, and every `R`/`RSSYM` constant.
-Objects there count as ROM (`InROMObjectArea`): read-only, never moved,
-their symbols unique.  `test_ROMImport` runs the object system over the
-MP2100 D image in the repository.
+image in `DebugRom/`) with the object area importer
+(`ObjectAreaImport.h`, `TImportedObjectArea::Import`): into a host area
+outside the object heap, one host object per ROM object (ARM layout in,
+host layout out), then every ref translated (a pointer into the area
+becomes the host object's; a pointer elsewhere goes to the caller's
+translator - none for the ROM; integers, immediates and magic pointers
+are the same on both) and the binary data the host reads as words -
+symbol hashes, `'real`s and the UniChars of `'string`s; other binaries
+(bitmaps, bytecode, sounds) keep their persistent big-endian format for
+their readers.  It then sets the symbol table (`gROMSymbolTableRef`,
+which `InitSymbols` takes over), magic pointer table 0,
+`gROMBuiltinFunctions`, and every `R`/`RSSYM` constant.  Objects there
+count as ROM (`InROMObjectArea`): read-only, never moved, their symbols
+unique.  `test_ROMImport` runs the object system over the MP2100 D image
+in the repository.
+
+## Frames parts (`FramesPart.cpp`)
+
+A package part of kind `kFrames` (`docs/packages/README.md`) is an object
+area in the same layout whose first object is an array holding the
+part's top-level frame (`FramePartToplevelFrame`, 0x000d2898: NTK's
+partFrame - `{installScript, removeScript, partData, _ImportTable,
+_ExportTable}` for an `'auto` part, `{app, text, icon, theForm, ...}` for a
+`'form` part), its pointer refs the addresses the objects have once the
+package is loaded (a package built into the ROM extension is linked at
+its ROM address; NTK's are relative to the package's start, relocated at
+load).  The MessagePad uses the part where it lies; the host imports it
+first (`ImportFramesPart(part, size, refBase)`, the same importer, refs
+to ROM objects translated to the imported ROM's, the part's own symbols
+kept - `EQRef` and the slot lookups compare symbols by hash and name) and
+`RemoveFramesPart` declaws the heap's refs to it
+(`RegisterRangeForDeclawing`, `kDeclawedRef`) as the ROM does for a
+removed package.  `test_FramesPart` imports the Names application's part
+from the ROM extension and runs NewtonScript over its frame.
 
 ## The interpreter (`Interpreter.cpp`, `VariableLookup.cpp`)
 

@@ -13,6 +13,8 @@ add_library(frames STATIC
     RSSymbolTable.cpp
     ROMConstants.cpp
     ROMImport.cpp
+    ObjectAreaImport.cpp
+    FramesPart.cpp
     Interpreter.cpp
     ScriptBuiltins.cpp
     VariableLookup.cpp

@@ -74,7 +74,8 @@ src/
                 (PackageIterator.h: TPrivatePackageIterator over memory,
                 TPackageIterator over memory or a CPipe); the loader, the
                 package manager and the part handlers to come
-                (docs/packages/README.md)
+                (docs/packages/README.md); frames parts are imported into
+                host object areas by frames/FramesPart.h
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

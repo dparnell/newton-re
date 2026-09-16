@@ -62,6 +62,14 @@ and the WorldData soup package (a raw part read by `TPackageStore`,
 `src/stores/PackageStore.h`).  `packages.py --extract DIR` writes them out
 as `.pkg` files.
 
+## Frames parts
+
+A part of kind `kFrames` is an object area (`docs/frames/README.md`,
+"Frames parts"): its first object an array holding the top-level frame
+(`FramePartToplevelFrame`), its refs the addresses the objects have when
+the package is loaded.  `src/frames/FramesPart.h` imports one into a
+host object area; the frames part handler that installs it is not yet.
+
 ## Not yet
 
 The package loader (`TPackageLoader`, `TPackageBlock`), the package

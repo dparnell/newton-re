@@ -8,8 +8,9 @@
 				(32-bit big-endian words, 4-byte rounding).  On the MessagePad
 				they are used in place; the host reads them out of a ROM image
 				into a read-only object area of its own in the host layout
-				(ObjHeader.h), translating every ref, and fills in the
-				constants the C++ names (ROMConstants.h, RSSymbols.h).
+				(ObjHeader.h) through the object area importer
+				(ObjectAreaImport.h), and fills in the constants the C++
+				names (ROMConstants.h, RSSymbols.h).
 
 	Not a reconstruction: the ROM has nothing to import.  A host stand-in
 	for the ROM being mapped at address 0.  ImportROMObjects must run
@@ -22,6 +23,9 @@
 
 #ifndef __NEWTON_H
 #include "Newton.h"
+#endif
+#ifndef __OBJECTS_H
+#include "objects.h"
 #endif
 
 // rom is the ROM as it appears at address 0 (build/MP2100D/rom.bin) or the
@@ -36,5 +40,6 @@ NewtonErr	ImportROMObjectsFromFile(const char* path);
 
 Boolean		ROMObjectsImported(void);
 long		ROMObjectCount(void);
+Ref			TranslateROMRef(ULong32 ref);		// a ROM ref as a host ref (nil: a pointer that is not a ROM object's)
 
 #endif	/* __ROMIMPORT_H */
