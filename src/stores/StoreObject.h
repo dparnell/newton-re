@@ -307,5 +307,7 @@ TCallbackDecompressor*	NewDecompressor(CompressionType compression, Decompressor
 Ref		LoadPermObject(TStoreWrapper* wrapper, PSSId id, CDynamicArray** largeBinaries);
 void	StorePermObject(RefArg obj, TStoreWrapper* wrapper, PSSId& id, CDynamicArray* largeBinaries, Boolean* duplicatedLargeBinary);
 void	DeletePermObject(TStoreWrapper* wrapper, PSSId id);
+PSSId	CopyPermObject(PSSId id, TStoreWrapper* from, TStoreWrapper* to);		// as it lies, the references translated
+void	CopyObjectReferences(TStoreReadPipe& pipe, TStoreWrapper* from, TStoreWrapper* to);
 
 #endif	/* __STOREOBJECT_H */

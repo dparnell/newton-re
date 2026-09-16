@@ -1196,6 +1196,127 @@ LoadPermObject(TStoreWrapper* wrapper, PSSId id, CDynamicArray** largeBinaries)
 }
 
 
+// ROM 0x002b976c CopyObjectReferences__FR14TStoreReadPipeP13TStoreWrapperT2
+// One object of the stream (recursively its parts) skipped through, its
+// map and symbol references translated in place from the store from to
+// the store to (the pipe reads memory: the three reference bytes just
+// read are overwritten).  A large binary cannot be copied this way.
+void
+CopyObjectReferences(TStoreReadPipe& pipe, TStoreWrapper* from, TStoreWrapper* to)
+{
+	UByte tag;
+	pipe >> tag;
+	long length;
+	switch (tag)
+	{
+	case kSOImmediate:
+	case kSOPrecedent:
+		{
+			UByte b;
+			pipe >> b;
+			if (b == 0xff)
+				pipe.Skip(4);
+		}
+		break;
+	case kSOChar:
+		pipe.SkipUByte();
+		break;
+	case kSOUniChar:
+		pipe.Skip(2);
+		break;
+	case kSOBinary:
+		pipe >> length;
+		CopyObjectReferences(pipe, from, to);
+		pipe.Skip(length);
+		break;
+	case kSOArray:
+	case kSOPlainArray:
+		pipe >> length;
+		if (tag != kSOPlainArray)
+			CopyObjectReferences(pipe, from, to);
+		for (long i = 0; i < length; i++)
+			CopyObjectReferences(pipe, from, to);
+		break;
+	case kSOFrame:
+		{
+			long reference = ReadReference(pipe);
+			long count;
+			reference = to->CopyMap(reference, from, &count);
+			WriteReference(pipe.fData + (pipe.fObjectOffset - (pipe.fBufferEnd - pipe.fBufferPos)) - 3, reference);
+			for (long i = 0; i < count; i++)
+				CopyObjectReferences(pipe, from, to);
+		}
+		break;
+	case kSOSymbol:
+		{
+			long reference = ReadReference(pipe);
+			reference = to->CopySymbol(reference, from);
+			WriteReference(pipe.fData + (pipe.fObjectOffset - (pipe.fBufferEnd - pipe.fBufferPos)) - 3, reference);
+		}
+		break;
+	case kSOString:
+		{
+			UByte b;
+			pipe >> b;
+			if (b == 0xff)
+				pipe.Skip(4);
+			CopyObjectReferences(pipe, from, to);		// the class; the text is in the text object
+		}
+		break;
+	case kSONil:
+		break;
+	case kSOSmallRect:
+		pipe.Skip(4);
+		break;
+	default:
+		Throw(exStoreError, (void*) (Long) kNSErrBadStoreObject, nil);
+	}
+}
+
+
+// ROM 0x002b99ec CopyPermObject__FUlP13TStoreWrapperT2
+// Store object id of the store from copied to the store to as it lies
+// (the text object copied, its id patched into the header; the map and
+// symbol references translated); one with large binaries is read and
+// written as a frames object.  ==> the new object's id.
+PSSId
+CopyPermObject(PSSId id, TStoreWrapper* from, TStoreWrapper* to)
+{
+	char headerBytes[kStoreObjectHeaderSize];
+	OSErrIf(from->Store()->Read(id, 0, headerBytes, kStoreObjectHeaderSize));
+	StoreObjectHeader header;
+	header.ReadFrom(headerBytes);
+	if (header.fFlags & kSOFlagsHasLargeBinaries)
+	{
+		RefVar obj(LoadPermObject(from, id, nil));
+		PSSId newId = (PSSId) -1;
+		StorePermObject(obj, to, newId, nil, nil);
+		return newId;
+	}
+	PSSId newId = (PSSId) -1;
+	TCachedReadStore cache;
+	PSSId newTextId = 0;
+	if (header.fTextBlockId != 0)
+	{
+		cache.Init(from->Store(), header.fTextBlockId, -1);
+		void* text;
+		OSErrIf(cache.GetDataPtr(0, cache.fSize, &text));
+		OSErrIf(to->Store()->NewObject((char*) text, cache.fSize, &newTextId));
+	}
+	cache.Init(from->Store(), id, -1);
+	long size = cache.fSize;
+	void* data;
+	OSErrIf(cache.GetDataPtr(0, size, &data));
+	if (newTextId != 0)
+		PutBigEndianWord((char*) data + 8, newTextId);
+	TStoreReadPipe pipe((char*) data, size);
+	pipe.Skip(header.fNumHints * kStoreObjectHintChunkSize + kStoreObjectHeaderSize);
+	CopyObjectReferences(pipe, from, to);
+	OSErrIf(to->Store()->NewObject((char*) data, size, &newId));
+	return newId;
+}
+
+
 // ROM 0x002b9c10 StorePermObject__FRC6RefVarP13TStoreWrapperRUlP13CDynamicArrayPUc
 // obj written to the store as object id (-1: a new one, whose id comes
 // back in id); the store must be writable.

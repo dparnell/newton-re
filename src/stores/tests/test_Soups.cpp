@@ -992,6 +992,107 @@ TestTags()
 }
 
 
+/*------------------------------------------------------------------------------
+	CopyEntries: the fast path (an empty target with the same indexes: the
+	store objects copied as they lie) and the slow one, with a callback.
+------------------------------------------------------------------------------*/
+
+static void
+TestCopyEntries()
+{
+	TStore* store1 = NewStore();
+	RefVar storeObject1(RegisterTStore(store1));
+	TStore* store2 = NewStore();
+	RefVar storeObject2(RegisterTStore(store2));
+	RefVar tagsSpec(IndexSpec("labels", "tags"));
+	SetFrameSlot(tagsSpec, RSSYMtags, RefVar(Symbols("home", "work")));
+	RefVar specs(AllocateArray(RSSYMarray, 3));
+	SetArraySlotRef(specs, 0, IndexSpec("name", "string"));
+	SetArraySlotRef(specs, 1, IndexSpec("age", "int"));
+	SetArraySlotRef(specs, 2, tagsSpec);
+	RefVar soup1(StoreCreateSoup(storeObject1, RefVar(MakeString("People")), specs));
+	static const char* names[] = { "Ann", "Bob", "Cid", "Dee", "Eve" };
+	RefVar entry;
+	for (long i = 0; i < 5; i++)
+	{
+		entry = Person(names[i], 20 + i * 10);
+		SetFrameSlot(entry, RefVar(SYMBOL("labels")), RefVar(SYMBOL(i % 2 == 0 ? "home" : "work")));
+		SetFrameSlot(entry, RefVar(SYMBOL("notes")), RefVar(MakeString("some text about this person")));
+		SoupAdd(soup1, entry);
+	}
+	EntryRemoveFromSoup(RefVar(GetEntry(soup1, FaultBlockId(RefVar(CursorObj(RefVar(SoupQuery(soup1, RefVar(AllocateFrame()))))->GotoKey(RefVar(MAKEINT(1))))))));	// Bob (uid 1) removed: a gap in the ids
+
+	// the fast path: the same indexes, an empty soup
+	RefVar soup2(StoreCreateSoup(storeObject2, RefVar(MakeString("People")), specs));
+	EXPECT(PlainSoupCopyEntries(soup1, soup2) == NILREF);
+	RefVar spec(AllocateFrame());
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	RefVar cursor(SoupQuery(soup2, spec));
+	long first, last;
+	EXPECT(WalkCursor(cursor, &first, &last) == 4 && first == 20 && last == 60);
+	entry = CursorObj(cursor)->GotoKey(RefVar(MAKEINT(40)));
+	EXPECT(StringIs(RefVar(GetFrameSlotRef(entry, RSSYMname)), "Cid") && RINT(GetFrameSlotRef(entry, RSSYM_uniqueid)) == 2);
+	EXPECT(StringIs(RefVar(GetFrameSlotRef(entry, SYMBOL("notes"))), "some text about this person"));
+	EXPECT(EQRef(GetFrameSlotRef(entry, SYMBOL("labels")), SYMBOL("home")));
+	EXPECT(RINT(GetFrameSlotRef(soup2, RSSYMindexnextuid)) == 5);
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("name")));
+	cursor = SoupQuery(soup2, spec);
+	EXPECT(CursorObj(cursor)->CountEntries() == 4 && StringIs(RefVar(CursorObj(cursor)->EntryKey()), "Ann"));
+	EXPECT(CountTagged(soup2, "any", RefVar(SYMBOL("home"))) == 3 && CountTagged(soup2, "any", RefVar(SYMBOL("work"))) == 1);
+	entry = SoupAdd(soup2, RefVar(Person("Fay", 70)));
+	EXPECT(RINT(GetFrameSlotRef(entry, RSSYM_uniqueid)) == 5);		// the ids carry on past the copied ones
+
+	// the slow path: different indexes, a callback
+	RefVar specs2(AllocateArray(RSSYMarray, 1));
+	SetArraySlotRef(specs2, 0, IndexSpec("age", "int"));
+	RefVar soup3(StoreCreateSoup(storeObject2, RefVar(MakeString("Others")), specs2));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("calls")), RefVar(MAKEINT(0)));
+	RefVar callback(Eval("func() calls := calls + 1"));
+	EXPECT(PlainSoupCopyEntriesWithCallBack(soup1, soup3, callback, RefVar(MAKEINT(1))) == NILREF);	// every millisecond: at most once per entry
+	EXPECT(RINT(GetFrameSlotRef(RefVar(gVarFrame), SYMBOL("calls"))) <= 4);
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	cursor = SoupQuery(soup3, spec);
+	EXPECT(WalkCursor(cursor, &first, &last) == 4 && first == 20 && last == 60);
+	entry = CursorObj(cursor)->GotoKey(RefVar(MAKEINT(60)));
+	EXPECT(StringIs(RefVar(GetFrameSlotRef(entry, RSSYMname)), "Eve") && RINT(GetFrameSlotRef(entry, RSSYM_uniqueid)) == 4);
+	EXPECT(RINT(GetFrameSlotRef(soup3, RSSYMindexnextuid)) == 5);
+	entry = SoupAdd(soup3, RefVar(Person("Yan", 98)));
+	EXPECT(RINT(GetFrameSlotRef(entry, RSSYM_uniqueid)) == 5);
+	// the _uniqueIDs are kept: copying into a soup that has them collides
+	Boolean threw = false;
+	newton_try
+	{
+		PlainSoupCopyEntries(soup1, soup3);
+	}
+	newton_catch(exStoreError)
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+	// through NewtonScript, and not to a union soup
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("soup1")), soup1);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("soup4")), RefVar(StoreCreateSoup(storeObject2, RefVar(MakeString("Fourth")), specs2)));
+	Eval("soup1:CopyEntries(soup4)");
+	EXPECT(RINT(Eval("soup4:Query({indexPath: 'age}):CountEntries()")) == 4);
+	threw = false;
+	newton_try
+	{
+		Eval("soup1:CopyEntries(GetUnionSoup(\"People\"))");
+	}
+	newton_catch(exStoreError)
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+	RemoveTStore(store2);
+	store2->Delete();
+	RemoveTStore(store1);
+	store1->Delete();
+}
+
+
 int
 main()
 {
@@ -1009,6 +1110,7 @@ main()
 		TestCursors();
 		TestUnionSoups();
 		TestTags();
+		TestCopyEntries();
 	}
 	newton_catch_all
 	{

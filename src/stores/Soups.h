@@ -252,6 +252,10 @@ Ref		PlainSoupRemoveFromStore(RefArg rcvr);
 Ref		PlainSoupDirty(RefArg rcvr);
 Ref		PlainSoupFlush(RefArg rcvr);
 Ref		PlainSoupGetSize(RefArg rcvr);
+Ref		PlainSoupCopyEntries(RefArg rcvr, RefArg toSoup);							// CopyEntries.cpp
+Ref		PlainSoupCopyEntriesWithCallBack(RefArg rcvr, RefArg toSoup, RefArg callback, RefArg interval);
+Ref		SlowCopyEntries(RefArg fromSoup, RefArg toSoup, RefArg callback, ULong interval);
+Boolean	CompareSoupIndexes(RefArg soupPersistent1, RefArg soupPersistent2);
 Ref		PlainSoupIndexSizes(RefArg rcvr);
 Ref		PlainSoupGetIndexes(RefArg rcvr);
 Ref		PlainSoupMakeKey(RefArg rcvr, RefArg key, RefArg path);

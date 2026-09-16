@@ -134,6 +134,8 @@ static const PrototypeMethod gPlainSoupMethods[] = {
 	{ "RemoveAllEntries", (void*) PlainSoupRemoveAllEntries, 0 },
 	{ "RemoveFromStore", (void*) PlainSoupRemoveFromStore, 0 },
 	{ "GetSize", (void*) PlainSoupGetSize, 0 },
+	{ "CopyEntries", (void*) PlainSoupCopyEntries, 1 },
+	{ "CopyEntriesWithCallback", (void*) PlainSoupCopyEntriesWithCallBack, 3 },
 	{ "MakeKey", (void*) PlainSoupMakeKey, 2 },
 	{ "IsValid", (void*) SoupIsValid, 0 },
 	{ "GetIndexesModTime", (void*) SoupGetIndexesModTime, 0 },

@@ -495,6 +495,8 @@ RegisterSoupNatives(void)
 	RegisterNativeFunction("PlainSoupRemoveAllEntries", (void*) PlainSoupRemoveAllEntries, 0);
 	RegisterNativeFunction("PlainSoupRemoveFromStore", (void*) PlainSoupRemoveFromStore, 0);
 	RegisterNativeFunction("PlainSoupGetSize", (void*) PlainSoupGetSize, 0);
+	RegisterNativeFunction("PlainSoupCopyEntries", (void*) PlainSoupCopyEntries, 1);
+	RegisterNativeFunction("PlainSoupCopyEntriesWithCallBack", (void*) PlainSoupCopyEntriesWithCallBack, 3);
 	RegisterNativeFunction("PlainSoupMakeKey", (void*) PlainSoupMakeKey, 2);
 	RegisterNativeFunction("SoupIsValid", (void*) SoupIsValid, 0);
 	RegisterNativeFunction("SoupGetIndexesModTime", (void*) SoupGetIndexesModTime, 0);

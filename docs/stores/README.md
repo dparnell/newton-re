@@ -516,13 +516,38 @@ a tags query and in the soup's array - the bit stays), `HasTags`,
 bits, every mode, a cursor following tag changes, the methods and the
 index removed.
 
+## Copying entries (`src/stores/CopyEntries.cpp`)
+
+`CopyEntries(toSoup)` and `CopyEntriesWithCallback(toSoup, callback,
+interval)` (0x003223e4; never to a union soup) copy a soup's entries
+keeping their `_uniqueID`s (so they collide with a target that has
+them).  An empty target with indexes on the same paths
+(`CompareSoupIndexes`) takes the fast path: under the target wrapper's
+`StartCopyMaps_Symbols` every store object is copied as it lies
+(`CopyPermObject`, 0x002b99ec: the text object copied and its id patched
+into the header, the frame maps and symbols re-hashed into the target
+store's tables by `CopyObjectReferences`, 0x002b976c, which walks the
+stream and overwrites the three-byte references in place; an object with
+large binaries is read and re-stored instead), each old id mapped to the
+new (`PSSIDMapping`, sorted for `bsearch`), then every index copied key
+by key with the ids translated in one transaction each
+(`CopySoupIndexes`, `CopyIndexStopFn`: the id is the datum, or the key of
+the tags index) and the `_uniqueID` state carried over.  Otherwise
+`SlowCopyEntries` (0x00321b28) reads, stores and indexes each entry and
+moves the target's next `_uniqueID` past the largest copied (its
+`lastUID` cleared).  The callback (a function of no arguments) is called
+when `interval` milliseconds have passed since the last call - per entry
+copied, per hundred index keys; 0 never.  `test_Soups`
+(`TestCopyEntries`) runs both paths, the ids and text objects checked,
+the collision and the union soup refused.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
 (`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
 and `text`), `TEphemeralTracker`, `TSortingTable`/`TSortTables` (the sort
-ids are all 0; `secOrder`), `CopyEntries`,
+ids are all 0; `secOrder`),
 the XMit methods and `XmitSoupChangeNow` (the soup change broadcasts), the
 store prototype's NewtonScript methods (`SetName`, `Erase`, `SetInfo`, ...
 wrap the natives with broadcasts), store passwords, `TPSSManager` and the
