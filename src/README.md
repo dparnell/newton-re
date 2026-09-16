@@ -89,8 +89,10 @@ src/
                 (Rects.h), regions and their operations (Regions.h),
                 ports, pens, patterns and pixel maps (Ports.h), drawing
                 rectangles and regions and the blitter (Draw.h), lines,
-                ovals, round rectangles and arcs (Shapes.h); polygons,
-                pictures and text to come (docs/qd/README.md)
+                ovals, round rectangles and arcs (Shapes.h), fonts and
+                styles (Fonts.h: the 'sfnt' bitmap fonts of the font
+                family frames), text drawn and measured (Text.h);
+                polygons and pictures to come (docs/qd/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

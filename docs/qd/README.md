@@ -230,9 +230,73 @@ host stamps the pen (its size hanging below and right of each point, its
 mode and pattern) along a Bresenham walk, clipped by the port's regions
 - the odd diagonal pixel may differ (`DEVIATION`).
 
+## Fonts (`src/qd/Fonts.h`)
+
+A font family is a NewtonScript frame: the ROM has four in
+`Rromfontlist` (0x63465d: espy, "Kräftig" = New York, "Einfach" =
+Geneva, "Plakativ" = Handwriting; the packed font spec's family index)
+and the boot puts them, by `screenSym`, into `vars.fonts`, where
+`GetFontFamily`/`SearchFont` 0x002bc358 look them up (the system font,
+`Rsystemfont` = `'espy`, when nothing matches).  A family holds `name`,
+`macFontID`, `encoding` and `plainData`/`boldData`/`italicData`/
+`boldItalicData`: each an `'sfnt` binary - a TrueType container whose
+tables are `cmap`, `head`, `hhea`, `hmtx`, `hsty` and, for a screen font,
+the bitmap strikes `bloc`/`bdat` (Apple's bitmap-only TrueType: a
+bitmapSizeTable of 0x30 bytes per strike with its line metrics, glyph
+range and ppem; index subtables mapping glyphs to `bdat` offsets; glyph
+images of format 1 - small metrics, five bytes: height, width, bearing
+x and y, advance - or 6 - big metrics, eight bytes - before byte-aligned
+rows).  Times Roman has only widths (`hmtx`, for the printer).  espy
+has strikes at 9, 10, 12 and 18 (`userSizes`) plus a bold data.
+
+A `StyleRecord` (0x20 bytes: the family, the size in 16.16, the face,
+a pattern) comes from a font spec (`CreateTextStyleRecord` 0x0025f980):
+a packed integer - family index bits 0-9, size 10-19, face 20-29 - or a
+frame `{family, size, face, color}`; no family means the user's
+`userFont` preference, then the system font.  `OpenFont` 0x002bc514
+(the ROM keeps four open fonts in a cache, `gFontGlobals`; NOT YET) calls
+`SFNTOpenFont` 0x000af124: the data for the face (`ChooseStrike`
+0x000af46c: bold italic, italic, bold, plain, in that order of what the
+family has), the `cmap` subtable for the family's `encoding` (platform
+id) and its mapping (`MapFormat0/4/6` 0x000af7ac..), the one-bit strike
+nearest the size (`LocateEntry` 0x000afde4) with its line metrics, or
+the widths font's metrics scaled from `head`'s units per em
+(`SetupWidthsFont` 0x000af580), all into a `FontEngineInfo` (0xc4 bytes,
+`FindSFNT` 0x000afe60) with the glyph functions `SFNTGetGlyphInfo`
+0x000afb50 (the advance, through the index subtables; the missing glyph
+0 for a glyph the strike lacks) and `SFNTGetGlyph` 0x000afc50 (the
+metrics and bitmap).  The faces the data lacks are synthesised through
+the style table at 0x00377324 (three bytes per face bit: an adjustment
+index, the amount, the extra width): bold smears a pixel right and
+widens by one, italic shears (NOT YET drawn), underline takes an offset
+and thickness, outline and shadow widen; superscript and subscript take
+four fifths of the size and shift the baseline by three eighths of the
+ascent.  `GetStyleFontInfo` 0x002bc17c answers ascent, descent, leading
+and the widest glyph (espy 12: 12, 4, 0, 15).
+
+## Text (`src/qd/Text.h`)
+
+The ROM draws text through *text objects* (`NewText` 0x00330e68: 0x50
+bytes - the text, length, styles and run lengths, location, options,
+flags and cached widths), laid out (`MeasureGlyphWidths`, `JustifyText`)
+and drawn a chunk at a time into a one-bit slab that is blitted
+(`DrText` 0x003313d4, `DrTextChunk` 0x00331794).  `DrawTextOnce`/
+`MeasureTextOnce` 0x0032eec8/0x0032ef18 make one for a single use
+(`DoTextOnce` 0x0032f2bc) and fill a `TextBoundsInfo` (0x1c bytes: left,
+top, right, bottom, baseline, width, height in 16.16; `MeasureOnce`
+0x0025fd08 answers the width rounded).  The host draws each glyph as a
+region from its bitmap through `DrawRgn` at its bearing from the
+baseline, advancing by the glyph's width, in the pen's mode with the
+style's or the port's pattern - the same pixels for an unscaled strike
+(`test_Text` pins "Hello Wg!" in espy 12, the bold strike underlined,
+and Geneva 10 bold smeared).  The NewtonScript `FontAscent`/`FontDescent`
+/`FontLeading`/`FontHeight` (0x001efeb4..) and `StrFontWidth` 0x001f2648
+are here.  NOT YET: justification and `TextOptions`, ink words, scaled
+glyphs, persistent text objects, `StdText` recording.
+
 ## Not yet
 
 Arcs of less than a full turn, polygons, pictures, `OpenRgn`/`CloseRgn`,
 `ScrollRect`, `ZoomRect`, the screen (`InitScreen`, `QDStartDrawing`),
-the per-task globals, `StretchBits` proper, text and fonts, the
-`TQDLibraryDriver` protocol.
+the per-task globals, `StretchBits` proper, the font cache, text layout
+(justification, wrapping), the `TQDLibraryDriver` protocol.
