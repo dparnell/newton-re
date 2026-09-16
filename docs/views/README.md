@@ -266,18 +266,24 @@ than the room leaves (`RealDraw` 0x0025090c); else wrapped into the
 bounds by `TextBox`.  The transfer mode is viewTransferMode (srcOr when
 none).
 
+**TPictureView** (`PictureView.h`, clPictureView 76): its `icon` slot (a
+bitmap frame, `GetValue` through the chains) drawn into the bounds by
+the viewJustify bits - centred both ways for a template without one - in
+the viewTransferMode (`DrawUsingRect` 0x0018bd00 through `DrawPicture`).
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
 map: the structure, every justification, the round trip through
 `DejustifyBounds`, the formats pixel by pixel, overlapping windows and
-their clippers, scripts, ties, the errors, a title and a button's text.
+their clippers, scripts, ties, the errors, a title and a button's text,
+a picture view's icon.
 
 ## Not yet
 
 Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
 drag and drop, the recognition commands (`RealDoCommand`), the animation
 effects (`TAnimate`), the idlers, `SyncScroll`, the clipboards, the popup
-and modal dialog machinery, the other subclasses (`TPictureView`,
-`TListView`, `TPickView`, `TParagraphView`, ...), the application (`TApplication`,
+and modal dialog machinery, the other subclasses (`TListView`,
+`TPickView`, `TParagraphView`, ...), the application (`TApplication`,
 `gApplication`) and its command dispatch.

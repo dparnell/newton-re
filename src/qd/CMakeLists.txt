@@ -14,6 +14,7 @@ add_library(qd STATIC
     Shapes.cpp
     Fonts.cpp
     Text.cpp
+    Pictures.cpp
 )
 target_link_libraries(qd PUBLIC newton_config memory toolbox frames)
 target_include_directories(qd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

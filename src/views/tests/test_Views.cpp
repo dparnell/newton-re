@@ -24,6 +24,8 @@
 #include "ROMConstants.h"
 #include "Fonts.h"
 #include "Text.h"
+#include "Pictures.h"
+#include "ByteOrder.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -548,6 +550,79 @@ TestTextView()
 }
 
 
+// a bitmap frame: an 8 x 4 one-bit picture with the given rows (a 'bits
+// binary is a persistent format: its halfwords big-endian)
+static Ref
+MakeBitmap(const unsigned char* rows, long width, long height)
+{
+	long rowBytes = ((width + 31) / 32) * 4;
+	RefVar bits(AllocateBinary(RefVar(Intern((char*) "bits")), kFramBitmapHeaderSize + rowBytes * height));
+	unsigned char* data = (unsigned char*) BinaryData(bits);
+	memset(data, 0, kFramBitmapHeaderSize + rowBytes * height);
+	PutBigEndianHalf(data + 4, (unsigned short) rowBytes);
+	PutBigEndianHalf(data + 8, 0);						// top
+	PutBigEndianHalf(data + 10, 0);						// left
+	PutBigEndianHalf(data + 12, (unsigned short) height);
+	PutBigEndianHalf(data + 14, (unsigned short) width);
+	for (long y = 0; y < height; y++)
+		data[kFramBitmapHeaderSize + y * rowBytes] = rows[y];
+	RefVar frame(AllocateFrame());
+	Rect bounds;
+	SetRect(&bounds, 0, 0, width, height);
+	SetFrameSlot(frame, RSSYMbounds, RefVar(ToObject(bounds)));
+	SetFrameSlot(frame, RSSYMbits, bits);
+	return frame;
+}
+
+
+static void
+TestPictureView()
+{
+	// a picture view: the icon centred in the bounds
+	static const unsigned char kRows[4] = { 0xf0, 0x90, 0x90, 0xf0 };		// a hollow 4 x 4 box in an 8 wide row
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "pict")), RefVar(MakeBitmap(kRows, 8, 4)));
+	TView* p = ViewOf("ctxP := AddView(GetRoot(), {viewClass: 76, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 60, bottom: 30}, icon: pict})");
+	EXPECT(p != nil && p->ClassID() == clPictureView && p->DerivedFrom(clView));
+	Eval("ctxP:Dirty()");
+	Refresh();
+	// centred: the 8 x 4 picture at (36, 18)
+	EXPECT(Pixel(36, 18) == 1 && Pixel(39, 18) == 1 && Pixel(36, 21) == 1 && Pixel(37, 19) == 0 && Pixel(40, 18) == 0 && Pixel(35, 18) == 0);
+	EXPECT(Pixel(36, 17) == 0 && Pixel(36, 22) == 0);
+	// at the top left with a viewJustify of 0
+	Eval("ctxP:Close()");
+	p = ViewOf("ctxP := AddView(GetRoot(), {viewClass: 76, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 60, bottom: 30}, viewJustify: 0, icon: pict})");
+	Eval("ctxP:Dirty()");
+	Refresh();
+	EXPECT(Pixel(20, 10) == 1 && Pixel(23, 13) == 1 && Pixel(36, 18) == 0);
+	// at the bottom right
+	Eval("ctxP:Close()");
+	p = ViewOf("ctxP := AddView(GetRoot(), {viewClass: 76, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 60, bottom: 30}, viewJustify: 9, icon: pict})");
+	Eval("ctxP:Dirty()");
+	Refresh();
+	EXPECT(Pixel(52, 26) == 1 && Pixel(55, 29) == 1 && Pixel(20, 10) == 0);
+	// the picture drawn straight: DrawPicture with the box the picture's size
+	Eval("ctxP:Close()");
+	Refresh();
+	Rect box;
+	SetRect(&box, 100, 50, 108, 54);
+	DrawPicture(RefVar(Eval("pict")), box, 0, srcCopy);
+	EXPECT(Pixel(100, 50) == 1 && Pixel(107, 50) == 0 && Pixel(103, 53) == 1);
+	// the bounds of the picture; a box of no size takes them
+	EXPECT(ShapeBounds(RefVar(Eval("pict")), &box) && box.right == 8 && box.bottom == 4);
+	SetRect(&box, 3, 3, 3, 3);
+	Justify(&box, box, 0);
+	EXPECT(box.left == 3 && box.right == 3);
+	Rect pictBox;
+	SetRect(&pictBox, 0, 0, 8, 4);
+	SetRect(&box, 10, 10, 10, 10);
+	Justify(&pictBox, box, 0);
+	EXPECT(pictBox.left == 10 && pictBox.top == 10 && pictBox.right == 18 && pictBox.bottom == 14);
+	Eval("GetRoot():Dirty()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "pictures gone"));
+}
+
+
 int
 main()
 {
@@ -605,6 +680,7 @@ main()
 		TestJustify();
 		TestScripts();
 		TestTextView();
+		TestPictureView();
 	}
 	newton_catch_all
 	{

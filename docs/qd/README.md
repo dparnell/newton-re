@@ -310,9 +310,29 @@ move the box down by the room left.  The NewtonScript `TextBox` is here.
 NOT YET: ink words, scaled glyphs, persistent text objects, `StdText`
 recording, tabs.
 
+## Pictures (`src/qd/Pictures.h`)
+
+A NewtonScript picture is a *bitmap frame* `{bounds, bits, mask,
+colorData}`: `bits` (and `mask`) a `'bits` binary, the ROM's `FramBitmap`
+- the pixel map header without its base address (a word, unused; the
+row bytes; a pad; the bounds - halfwords big-endian) and the rows from
+byte 0x10 - `colorData` a frame `{bitDepth, cBits, colorTable}` or an
+array of them, one per depth.  `TPixelObj` 0x0003e868 (0x50 bytes) holds
+the frame locked and the pixel map over its bits (`FramBitMapToPixMap`
+0x00041d40; `GetFramBitmap` 0x000419a4 picks the `colorData` entry of the
+port's depth, else the nearest); `DrawBitmap` 0x0003ea68 copies it into a
+rectangle (a rectangle of no width takes the bits' size); `Justify`
+0x0018b5f0 places a picture's bounds in a box by the viewJustify bits (a
+box of no size takes the picture's; centring never goes above or left of
+the box); `DrawPicture` 0x0018b82c draws a bitmap frame so - mode 8
+(patCopy) meaning the mask in srcBic then the bits in srcOr, a negative
+mode the mask itself.  NOT YET: `'picture` binaries (QuickDraw pictures,
+`DrawPicture` 0x0030e270), shapes (`DrawShape` 0x000e0a68, `ShapeBounds`
+0x000e21cc), the colour tables as gray tables.
+
 ## Not yet
 
-Arcs of less than a full turn, polygons, pictures, `OpenRgn`/`CloseRgn`,
+Arcs of less than a full turn, polygons, QuickDraw pictures and shapes, `OpenRgn`/`CloseRgn`,
 `ScrollRect`, `ZoomRect`, the screen (`InitScreen`, `QDStartDrawing`),
 the per-task globals, `StretchBits` proper, the font cache, text layout
 (justification, wrapping), the `TQDLibraryDriver` protocol.
