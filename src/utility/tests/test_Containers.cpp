@@ -2,7 +2,7 @@
 // CArrayIterator, CList, CListIterator, CSortedList, CItemComparer.
 // Exercises the reconstructed behaviour: chunked growth, insertion and
 // removal with live iterators following the elements, searching, and the
-// sorted list's bisection.
+// sorted list's bisection; and the NArray family (NSortedArray, NIterator).
 
 #include "DynamicArray.h"
 #include "ArrayIterator.h"
@@ -10,6 +10,7 @@
 #include "ListIterator.h"
 #include "ItemComparer.h"
 #include "SortedList.h"
+#include "NArray.h"
 #include "UCErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -227,6 +228,82 @@ static void TestSortedList()
 	EXPECT(empty.Search(&comparer, index) == nil && index == 0);
 }
 
+// NArray / NSortedArray / NIterator: chunked growth that only shrinks by
+// whole chunks, sorted insertion after equals, and the iterator ring.
+class LongComparator : public NComparator
+{
+public:
+	int CompareKeys(const void* a, const void* b) const
+	{
+		long x = *(const long*) a, y = *(const long*) b;
+		return x < y ? -1 : (x > y ? 1 : 0);
+	}
+};
+
+static void TestNArray()
+{
+	NArray a;
+	EXPECT(a.fCount == 0 && a.fArray == nil && a.fShrink);
+	EXPECT(a.Init(sizeof(long), 4, 1, true) == noErr);
+	EXPECT(a.fPhysicalCount == 4 && a.fArray != nil);			// rounded up to a chunk
+	long v[6] = { 10, 20, 30, 40, 50, 60 };
+	EXPECT(a.InsertElements(0, 3, v) == noErr && a.fCount == 3);
+	EXPECT(a.InsertElements(99, 3, v + 3) == noErr && a.fCount == 6);		// past the end: appended
+	EXPECT(a.fPhysicalCount == 8);
+	EXPECT(*(long*) a.At(0) == 10 && *(long*) a.At(5) == 60 && a.At(6) == nil && a.At(-1) == nil);
+	long key = 40;
+	EXPECT(a.Contains(&key) == 3);
+	key = 41;
+	EXPECT(a.Contains(&key) == -1);
+	EXPECT(a.Where(&key) == 6);
+	long mid[2] = { 25, 26 };
+	EXPECT(a.InsertElements(2, 2, mid) == noErr && *(long*) a.At(2) == 25 && *(long*) a.At(4) == 30 && a.fCount == 8);
+	EXPECT(a.RemoveElements(1, 3) == noErr && a.fCount == 5 && *(long*) a.At(1) == 30);
+	EXPECT(a.RemoveElements(4, 2) == eRangeCheck);
+	EXPECT(a.InsertElements(-1, 1, v) == eRangeCheck && a.InsertElements(0, 0, nil) == noErr);
+	EXPECT(a.fPhysicalCount == 8);				// 5 of 8: less than a chunk free, kept
+	EXPECT(a.SetCount(1) == noErr && a.fPhysicalCount == 4);	// a whole chunk went
+	EXPECT(a.SetCount(0) == noErr && a.fArray == nil && a.fPhysicalCount == 0);
+
+	NArray keep;
+	EXPECT(keep.Init(sizeof(long), 4, 8, false) == noErr && keep.fPhysicalCount == 8);
+	EXPECT(keep.InsertElements(0, 6, v) == noErr && keep.SetCount(1) == noErr && keep.fPhysicalCount == 8);	// no shrinking
+
+	// sorted: equal keys go after the ones already there
+	LongComparator comparator;
+	NSortedArray s;
+	EXPECT(s.Init(nil, sizeof(long), 4, 4, true) == -1);
+	EXPECT(s.Init(&comparator, sizeof(long), 4, 4, true) == noErr);
+	long order[7] = { 50, 10, 30, 30, 20, 60, 30 };
+	for (long x : order)
+		EXPECT(s.InsertElements(s.Where(&x), 1, &x) == noErr);
+	long expect[7] = { 10, 20, 30, 30, 30, 50, 60 };
+	for (int i = 0; i < 7; i++)
+		EXPECT(*(long*) s.At(i) == expect[i]);
+	key = 30;
+	EXPECT(s.Where(&key) == 5 && s.Contains(&key) == 4);
+	key = 40;
+	EXPECT(s.Where(&key) == 5 && s.Contains(&key) == -1);
+	key = 5;
+	EXPECT(s.Where(&key) == 0 && s.Contains(&key) == -1);
+	key = 70;
+	EXPECT(s.Where(&key) == 7);
+
+	// an iterator ring of two keeps positions in step
+	NIterator i1, i2;
+	i1.fArray = &s; i1.fCurrent = 3; i1.fLow = 0; i1.fHigh = 6; i1.fReverse = false; i1.fNext = &i2;
+	i2.fArray = &s; i2.fCurrent = 3; i2.fLow = 2; i2.fHigh = 6; i2.fReverse = true; i2.fNext = &i1;
+	s.fIterators = &i1;
+	key = 15;
+	EXPECT(s.InsertElements(s.Where(&key), 1, &key) == noErr);		// at 1: before both
+	EXPECT(i1.fCurrent == 4 && i1.fHigh == 7 && i1.fLow == 0 && i2.fCurrent == 4 && i2.fLow == 3);
+	EXPECT(s.RemoveElements(4, 1) == noErr);							// at the current position
+	EXPECT(i1.fCurrent == 4 && i2.fCurrent == 3);					// forward stays, reverse steps back
+	EXPECT(i1.fHigh == 6 && i2.fHigh == 6);
+	s.fIterators = nil;
+}
+
+
 int main()
 {
 	InitHostStandaloneHeap();		// the containers live in NewPtr blocks
@@ -234,6 +311,7 @@ int main()
 	TestIterator();
 	TestList();
 	TestSortedList();
+	TestNArray();
 	if (failures == 0)
 		printf("test_Containers: all passed\n");
 	return failures != 0;

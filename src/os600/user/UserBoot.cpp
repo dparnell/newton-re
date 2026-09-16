@@ -19,6 +19,7 @@
 #include "MemObjManager.h"
 #include "NameServerImpl.h"
 #include "Loader.h"
+#include "Protocols.h"
 #include "OSErrors.h"
 
 #include <stdio.h>
@@ -72,7 +73,8 @@ UserBoot()
 long
 InitialKSRVTask()
 {
-	// NOT YET RECONSTRUCTED: StartupProtocolRegistry (0x0005d4e4); InitStdIO
+	StartupProtocolRegistry();
+	// NOT YET RECONSTRUCTED: InitStdIO
 	InitNameServer();
 	// NOT YET RECONSTRUCTED: RegisterROMDomainManager
 	TObjectId envId;

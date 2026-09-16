@@ -42,6 +42,8 @@ tools/newton-rom/
     memobj_tables.py      the memory object tables -> docs/os600/memobj-tables.md and src/os600/kernel/MemObjTables.cpp
     exception_names.py    the exception name strings -> src/os600/user/ExceptionNames.cpp
     vtable.py             the entries of a vtable (slot -> method), from rom.bin + symbols.json
+    classinfo.py          decode protocol class-info tables (names, dispatch slots, monitor selectors);
+                          --all -> docs/protocols/classinfos.md
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -245,6 +247,15 @@ a decompiled function has a virtual call, read the disassembly (`disasm.py`)
 for what follows it. `analysis/vtable.py build/MP2100D 0x2073c` lists a
 vtable's slots by method name (the address is the literal a constructor
 stores at `[this,#0]`), which is how a `add pc,r12,#0x50` is resolved.
+
+Protocol implementations (ProtocolGen output) dispatch through a second kind
+of table Ghidra leaves as undefined data: the `TClassInfo` (self-relative
+offsets to the names, `B` instructions to the code, then the dispatch table
+and the monitor entry).  `analysis/classinfo.py build/MP2100D --name
+TSerialChipVoyager` decodes one - names, version, instance size, every
+dispatch slot and monitor selector by method name - from `rom.bin` and
+`symbols.json` alone; `--all` lists the 101 implementations in the ROM
+(`docs/protocols/README.md` explains the mechanism).
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class

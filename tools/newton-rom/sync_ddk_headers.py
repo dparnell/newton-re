@@ -25,6 +25,13 @@ from newtonrom.headers import prepare  # noqa: E402
 
 CLIBRARY = ["limits.h", "New.h", "setjmp.h", "stdarg.h", "stddef.h", "stdio.h", "stdlib.h", "string.h"]
 
+# Headers the reconstruction replaces with its own (same name, same public
+# interface): OS600/Protocols.h describes TClassInfo as a table of ARM branch
+# instructions and self-relative offsets that ProtocolGen's glue dispatches
+# through; src/protocols/Protocols.h re-expresses it with virtual functions
+# and function pointers (its comment says how).
+REPLACED = {"Protocols.h": "ARM-specific protocol glue; src/protocols/Protocols.h re-expresses it"}
+
 PATCHES = {
     # UserSemaphore.h: GetRefCon takes void**, fSem is a ULong* -> needs a cast in C++
     "UserSemaphore.h": [
@@ -77,9 +84,10 @@ def main(argv=None) -> int:
     # The DDK's CLibrary headers describe Newton's own C library (stddef.h,
     # stdlib.h, ...).  They would shadow the host's, so a host build does not
     # get them; the reconstruction uses the host C library instead.
-    names = prepare(src, out, excludes={n: "CLibrary header, host C library used instead" for n in CLIBRARY},
-                    write_all_cpp=False)
-    for n in CLIBRARY:            # prepare() copies everything; drop the excluded ones
+    excludes = {n: "CLibrary header, host C library used instead" for n in CLIBRARY}
+    excludes.update(REPLACED)
+    names = prepare(src, out, excludes=excludes, write_all_cpp=False)
+    for n in excludes:            # prepare() copies everything; drop the excluded ones
         if os.path.exists(os.path.join(out, n)):
             os.remove(os.path.join(out, n))
     patched = 0

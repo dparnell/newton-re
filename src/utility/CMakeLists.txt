@@ -1,5 +1,5 @@
 # UtilityClasses: the container and helper classes (CDynamicArray, CList,
-# CSortedList, the iterators, CItemTester/CItemComparer), the timer queue
+# CSortedList, the iterators, CItemTester/CItemComparer, the NArray family), the timer queue
 # and the task frameworks (TForkWorld, TAppWorld with TAEventHandler) that
 # the OS services and the higher layers are built on.
 add_library(utility STATIC
@@ -9,6 +9,7 @@ add_library(utility STATIC
     ListIterator.cpp
     SortedList.cpp
     ItemTester.cpp
+    NArray.cpp
     TimerQueue.cpp
     AEventHandler.cpp
     ForkWorld.cpp

@@ -38,9 +38,16 @@ src/
                 pointers, compaction, VM heap growth) and the page-based safe
                 heap the kernel uses (SafeHeap.h); memory/host gives the
                 kernel a Skia heap until the page manager exists
+  protocols/    protocols, Newton's interface/implementation mechanism:
+                TProtocol, TClassInfo, NewByName and the protocol registry
+                monitor (TClassInfoRegistryImpl).  Protocols.h here replaces
+                the DDK's, whose TClassInfo is ARM glue: interface methods
+                are virtual functions, class infos hold function pointers
+                (docs/protocols/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
-                CListIterator, CSortedList, CItemTester/CItemComparer,
+                CListIterator, CSortedList, CItemTester/CItemComparer, the
+                NArray family (NArray, NSortedArray, NComparator, NIterator),
                 TTimerQueue/TTimerElement/TTimerPort, and the task frameworks
                 the services are written in: TForkWorld, TAppWorld with
                 TAEventHandler/TAEvent (AppWorld.h is ours; the DDK has no
@@ -68,6 +75,13 @@ src/
   genuine bug in the ROM that would corrupt memory or crash on a host: it is
   fixed, marked `DEVIATION:` in the code with a description of the original
   behaviour, and listed in the subsystem's notes under docs/.
+* Where the ROM's mechanism *is* ARM (the protocol dispatch tables of
+  branch instructions, the monitor-call glue), the reconstruction
+  re-expresses it in portable C++ with the same names and behaviour and
+  says so at the top of the header (`protocols/Protocols.h` is the model:
+  virtual functions for dispatch slots, function pointers for branches);
+  the generated glue (a protocol interface's `New(char*)`/`Delete()`, a
+  monitor's entry) is written by hand from the interface declaration.
 * A function is only written when it can be written whole. Where a switch or
   dispatcher has to exist before every branch can (the object manager's
   requests, say), the missing branch is marked `NOT YET RECONSTRUCTED:` with

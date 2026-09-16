@@ -83,6 +83,11 @@ running `UserMain` - the NewtonScript world (NOT YET; a host hook
 boots this way and lets the 'ksrv' task run a scenario with the real `TU*`
 classes.
 
+Of `InitialKSRVTask`'s services the protocol registry (`StartupProtocolRegistry`,
+`docs/protocols/README.md`) and the name server are reconstructed;
+`InitStdIO`, `RegisterROMDomainManager` and `InitializePackageManager` are
+still to come.
+
 ## Kernel classes
 
 None of the kernel-side classes are declared in the DDK (it only ships the
