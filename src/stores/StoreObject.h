@@ -237,6 +237,14 @@ public:
 };
 
 
+// the shared sets (0x0c102a30, 0x0c102a34, 0x0c102a28, 0x0c102a2d): a writer or
+// reader takes the shared one when it is free, else makes its own
+extern TPrecedentsForWriting*	gPrecedentsForWriting;
+extern Boolean					gPrecedentsForWritingUsed;
+extern TPrecedentsForReading*	gPrecedentsForReading;
+extern Boolean					gPrecedentsForReadingUsed;
+
+
 /* -------------------------------------------------------------------------------
 	The writer and the reader
 ------------------------------------------------------------------------------- */

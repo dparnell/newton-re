@@ -17,3 +17,8 @@ add_executable(test_Soups test_Soups.cpp)
 target_link_libraries(test_Soups PRIVATE stores)
 add_test(NAME stores.Soups COMMAND test_Soups)
 set_tests_properties(stores.Soups PROPERTIES TIMEOUT 120)
+
+add_executable(test_ObjectStreamer test_ObjectStreamer.cpp)
+target_link_libraries(test_ObjectStreamer PRIVATE stores)
+add_test(NAME stores.ObjectStreamer COMMAND test_ObjectStreamer)
+set_tests_properties(stores.ObjectStreamer PROPERTIES TIMEOUT 60)

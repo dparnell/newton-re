@@ -541,6 +541,33 @@ copied, per hundred index keys; 0 never.  `test_Soups`
 (`TestCopyEntries`) runs both paths, the ids and text objects checked,
 the collision and the union soup refused.
 
+## NSOF, the streamed object format (`src/stores/ObjectStreamer.h`)
+
+`TObjectWriter(obj, pipe, includeProto)` (0x0032b0e0) streams an object
+graph to a `CPipe` (`utility/Pipes.h`) and `TObjectReader(pipe)`
+(0x0032c1cc) reads one back; packages' frames parts, the connection
+protocols and the clipboard use them.  The stream is the version byte 2
+then one object, each object a tag and its parts: 0 immediate (an xlong
+of the ref: one byte for 0..254, else 0xff and four bytes), 1 character
+(a byte), 2 unicodeCharacter (two bytes), 3 binaryObject (xlong length,
+the class, the data), 4 array (xlong length, the class, the elements), 5
+plainArray (no class), 6 frame (xlong count, the slot symbols, the
+values), 7 symbol (xlong length, the name), 8 string (xlong bytes, the
+UniChars high byte first), 9 precedent (xlong index), 10 nil, 11
+smallRect (four bytes: top, left, bottom, right), 12 largeBinary (NOT
+YET RECONSTRUCTED: the reader throws, the writer streams the immediate
+0x52 the ROM uses for an unstreamable one).  Every pointer object is a
+*precedent* as it is met (a frame and a large binary before their parts,
+a binary before its class), so shared and cyclic references stream once;
+the writer's precedents are the store object writer's
+`TPrecedentsForWriting`, the reader's `TPrecedentsForReading` (a shared
+set each, a private one when it is busy).  `Size()` prescans the bytes;
+`Write()` streams; a frame's `_proto` slot is left out unless
+`includeProto`; `SetAllowFunctions(false)` makes the reader refuse a
+function.  `test_ObjectStreamer` checks the bytes of small streams
+against the format and round-trips a graph of every kind, shared and
+cyclic references, `_proto`, functions and the errors.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,

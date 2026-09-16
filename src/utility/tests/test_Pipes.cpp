@@ -2,10 +2,10 @@
 // Pipes.h): CBufferSegment over its own and a given block (get and put,
 // bulk copies, seeking, hiding), and CBufferPipe reading and writing
 // through a concrete pipe whose Overflow grows the write segment and
-// whose Underflow reports the end (CMemoryPipe, this test's), with the
+// whose Underflow reports the end (CMemoryPipe, MemoryPipe.h), with the
 // big-endian scalar operators and the eof reporting of ReadChunk.
 
-#include "Pipes.h"
+#include "MemoryPipe.h"
 #include "NewtonExceptions.h"
 #include "UCErrors.h"
 #include "memory/host/KernelHeap.h"
@@ -19,38 +19,6 @@ static int failures = 0;
 extern const ExceptionName exPipeException;
 
 
-// A pipe over memory: what is written to its write segment can be read
-// back through its read segment (Rewind); the write segment grows when
-// full, the read segment has nothing more when empty.
-class CMemoryPipe : public CBufferPipe
-{
-public:
-					CMemoryPipe(long size)		{ Init(0, size); fOverflows = 0; fUnderflows = 0; }
-
-	virtual void	FlushRead(void)				{ }
-	virtual void	FlushWrite(void)			{ }
-	virtual void	Overflow(void)
-	{
-		fOverflows++;
-		long position = fWriteBuffer->Position();
-		fWriteBuffer->SetPhysicalSize(fWriteBuffer->GetPhysicalSize() * 2);
-		fWriteBuffer->Seek(position, kSeekFromBeginning);
-	}
-	virtual void	Underflow(long /*count*/, Boolean& eof)	{ fUnderflows++; eof = true; }
-
-	// what was written becomes what is read
-	void			Rewind(void)
-	{
-		long written = fWriteBuffer->Position();
-		if (fReadBuffer == nil)
-			fReadBuffer = new CBufferSegment;
-		fReadBuffer->Init(fWriteBuffer->fBuffer, written, false);
-		fReadHitEOF = false;
-	}
-
-	long			fOverflows;
-	long			fUnderflows;
-};
 
 
 static void

@@ -65,8 +65,10 @@ src/
                 store and soup frames with their methods (Soups.h), and
                 the cursors and queries (Cursors.h: TUnionSoupIndex,
                 TCursor, TCollectCursor), the union soups
-                (UnionSoups.cpp), the tags indexes (Tags.h) and
-                CopyEntries (CopyEntries.cpp)
+                (UnionSoups.cpp), the tags indexes (Tags.h),
+                CopyEntries (CopyEntries.cpp) and NSOF, the streamed
+                object format (ObjectStreamer.h: TObjectWriter and
+                TObjectReader over a CPipe)
                 (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
