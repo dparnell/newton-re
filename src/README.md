@@ -31,7 +31,9 @@ src/
   hal/          hardware abstraction (interfaces in hal/*.h; the host
                 implementation in hal/host is the only port so far - the
                 Voyager/Cirrus chipset of the MP2x00 is to come)
-  toolbox/      the toolbox: CompMath (64-bit arithmetic)
+  toolbox/      the toolbox: CompMath (64-bit arithmetic); ByteOrder.h for
+                the words of persistent formats, which are big-endian
+                whatever the host
   memory/       the memory manager: the NewtonMemory.h API (NewPtr/NewHandle,
                 heaps, semaphores, the memory-manager breaks), the "Skia"
                 relocating heap it is built on (SkiaHeap.h: blocks, master
@@ -46,8 +48,9 @@ src/
                 (docs/protocols/README.md)
   compression/  the compression protocols (TCompressor, TDecompressor and
                 the callback forms) and the ROM's coders: LZ (stores and
-                packages; Zippy, arithmetic and Unicode to come), with the
-                coding tables generated from the ROM (LZTables.cpp)
+                packages), Zippy (pointer-rich words), arithmetic and
+                Unicode text, with the coding tables generated from the
+                ROM (LZTables.cpp, UnicodeTables.cpp)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

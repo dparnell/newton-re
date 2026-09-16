@@ -10,6 +10,9 @@
 
 #include "Compression.h"
 #include "LZCompression.h"
+#include "ZippyCompression.h"
+#include "ArithmeticCompression.h"
+#include "UnicodeCompression.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 
@@ -151,8 +154,8 @@ InitLZDecompression(void)
 void
 InitArithmeticCompression(void)
 {
-	// NOT YET RECONSTRUCTED: TArithmeticCompressor::ClassInfo()->Register();
-	// TArithmeticDecompressor::ClassInfo()->Register()
+	TArithmeticCompressor::ClassInfo()->Register();
+	TArithmeticDecompressor::ClassInfo()->Register();
 }
 
 
@@ -160,8 +163,8 @@ InitArithmeticCompression(void)
 void
 InitUnicodeCompression(void)
 {
-	// NOT YET RECONSTRUCTED: TUnicodeCompressor::ClassInfo()->Register();
-	// TUnicodeDecompressor::ClassInfo()->Register()
+	TUnicodeCompressor::ClassInfo()->Register();
+	TUnicodeDecompressor::ClassInfo()->Register();
 }
 
 
@@ -169,8 +172,9 @@ InitUnicodeCompression(void)
 void
 InitZippyCompression(void)
 {
-	// NOT YET RECONSTRUCTED: TZippyCallbackCompressor, TZippyCompressor and
-	// TZippyDecompressor ::ClassInfo()->Register()
+	TZippyCallbackCompressor::ClassInfo()->Register();
+	TZippyCompressor::ClassInfo()->Register();
+	TZippyDecompressor::ClassInfo()->Register();
 }
 
 
@@ -178,7 +182,7 @@ InitZippyCompression(void)
 void
 InitZippyDecompression(void)
 {
-	// NOT YET RECONSTRUCTED: TZippyDecompressor::ClassInfo()->Register()
+	TZippyDecompressor::ClassInfo()->Register();
 }
 
 
@@ -193,6 +197,7 @@ InitializeCompression(void)
 	InitLZDecompression();
 	InitArithmeticCompression();
 	InitUnicodeCompression();
-	// NOT YET RECONSTRUCTED: TZippyCallbackCompressor, TZippyCompressor and
-	// TZippyDecompressor ::ClassInfo()->Register()
+	TZippyCallbackCompressor::ClassInfo()->Register();
+	TZippyCompressor::ClassInfo()->Register();
+	TZippyDecompressor::ClassInfo()->Register();
 }

@@ -65,8 +65,66 @@ The compressor (0x00100110) builds a suffix-tree-like index per block
 first byte, siblings moved to the front on a hit, insertions stop when the
 pool is used up) and emits a codeword per match or per 63 literals.
 
+## Zippy (`ZippyCompression.h`)
+
+A word-oriented cache compressor (the WK kind) for data made of pointers
+and small integers, 0x400 bytes a block. An 8-byte header - total length,
+then 0x10000 for coded or 0x1000000 for stored - and a bit stream, most
+significant bit first, one code per 32-bit source word (a trailing partial
+word is dropped): `00` the word is zero; `10 iiii` cache entry i; `01 iiii
+b(11)` entry i with bits 13-3 replaced; `11 w(32)` a new word. The cache
+holds 16 words with a use counter (`CacheAndCompress`, 0x0028305c: the
+first entry matching exactly or partly, in index order, wins; a new word
+replaces the least recently used). The last byte is padded with ones, which
+read as an impossible new-word code at the end (`ExpandValue`,
+0x002835ec). `StuffBits`/`ExpandValue` juggle big-endian byte windows in
+the ROM; the reconstruction writes the bit-string operations they amount
+to.
+
+## Arithmetic (`ArithmeticCompression.h`)
+
+Witten-Neal-Cleary adaptive arithmetic coding of bytes with 32-bit
+low/range arithmetic, as callback compressor/decompressor. Symbols 1-256
+are the bytes, 257 the end. There is no division: `NarrowRegion`
+(0x00037bf8) scales by a 5-bit quotient of range / (total · 16), and the
+decoder's `FindSymbol` (0x000376c0) divides value - low by that quotient
+bit by bit while narrowing the symbol. The model (`StartModel`, 0x00036d30)
+starts flat with an increment of 2^18 per symbol, keeps the symbols
+ordered by frequency (index/char tables swapped on update) and halves
+itself when the total exceeds 2^27. Bits leave least-significant first
+within each byte; the compressor buffers 128 bytes for its write proc, the
+decompressor reads 128 at a time (`ReadByte`, 0x00037878: `NewtonErr
+(*)(void* refCon, void* into, long* size, Boolean* underflow)`) and supplies
+zeros for four bytes past the end before throwing the end of data. Proc
+errors travel as `evt.ex.comp` exceptions with the error as data. A fixed
+model (`ArithmeticModel`: the four tables and an adaptive flag) can be
+given to `Init` instead of nil.
+
+Quirks kept: `TArithmeticCompressor::Delete` frees nothing (the tables are
+`Cleanup`'s); the decompressor's `Delete` frees the tables whenever the
+model is adaptive, whoever owns them. Two `DEVIATION`s zero flags the ROM
+leaves uninitialised in a fresh instance (`fOwnsTables`; the Unicode
+decompressor's `fRunCount`/`fSourceDone`).
+
+## Unicode text (`UnicodeCompression.h`)
+
+`TUnicodeCompressor`/`TUnicodeDecompressor` (callback) shorten UniChar
+text: a run of characters from one 256-character block goes out as the
+high byte, a count (at most 255) and the low bytes; characters from other
+blocks go out as their two bytes. Which blocks are run-coded is
+`gUnicodeLookupTable` (0x00371008, a 32-byte bitmap: 0x00, 0x02-0x06,
+0x09-0x0e, 0x10). Write-proc errors are ignored by the compressor (the
+ROM's), the decompressor keeps the read proc's underflow flag to know the
+end.
+
+## Byte order
+
+The ROM writes words big-endian; so do these coders on any host
+(`toolbox/ByteOrder.h`), so that data made by a real Newton reads back
+byte for byte: the LZ chunk length, the Zippy header and the words Zippy
+codes.
+
 ## Not yet
 
-Zippy (`TZippyCompressor`, 0x00282da8), arithmetic (`TArithmeticCompressor`,
-0x00036d04) and Unicode (`TUnicodeCompressor`, 0x00254d28) coding, and
-`InitializeStoreDecompressors`.
+`InitializeStoreDecompressors` (the store companders and package stores
+over these coders).

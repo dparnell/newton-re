@@ -11,6 +11,7 @@
 */
 
 #include "LZCompression.h"
+#include "ByteOrder.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 
@@ -716,8 +717,8 @@ TLZCompressor::SetHeader(void* header, ULong headerSize)
 {
 	if (headerSize < 8)
 		return kError_Bad_Parameters;
-	((ULong32*) header)[0] = 0x80000004;
-	((ULong32*) header)[1] = 0;
+	PutBigEndianWord(header, 0x80000004);
+	PutBigEndianWord((char*) header + 4, 0);
 	return noErr;
 }
 
@@ -732,8 +733,8 @@ TLZCompressor::Finish(void* header, ULong headerSize)
 		return noErr;
 	if (headerSize < 8)
 		return kError_Bad_Parameters;
-	((ULong32*) header)[0] = 0x80000004;
-	((ULong32*) header)[1] = 0;
+	PutBigEndianWord(header, 0x80000004);
+	PutBigEndianWord((char*) header + 4, 0);
 	return noErr;
 }
 
@@ -802,7 +803,7 @@ TLZCompressor::CompressChunk(ULong* outSize, void* dst, ULong dstSize, void* src
 		if (last)
 		{
 			*outSize = total;
-			*(ULong32*) dst = total;
+			PutBigEndianWord(dst, total);
 			return noErr;
 		}
 	}
@@ -1118,7 +1119,7 @@ TLZDecompressor::DecompressChunk(ULong* outSize, void* dst, ULong dstSize, void*
 		if (first)
 		{
 			first = false;
-			fRemaining = *(ULong32*) src - 4;
+			fRemaining = GetBigEndianWord(src) - 4;
 			srcSize = fRemaining + 4;
 			if (fRemaining > 0)
 				DecompressBlock(&blockOut, out, dstSize, block, fRemaining);
