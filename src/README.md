@@ -103,8 +103,11 @@ src/
                 views built from templates (BuildView.cpp), the
                 NewtonScript view functions and methods (ViewNatives.cpp),
                 the text view of titles and buttons (TextView.h), the
-                picture view (PictureView.h); the other subclasses
-                (paragraphs, lists, ...) to come (docs/views/README.md)
+                picture view (PictureView.h), the paragraph view of
+                styled text (ParagraphView.h, display only, over
+                DataView.h; the style runs in StyleRuns.h); the other
+                subclasses (lists, pickers, editing) to come
+                (docs/views/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

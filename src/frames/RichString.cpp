@@ -336,3 +336,14 @@ CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength
 {
 	return CompareUnicodeText(a, aLength, b, bLength, false);
 }
+
+
+// ROM 0x000dd3c0 IsInkWord__FRC6RefVar
+// Whether the object is an ink word: a binary of class 'inkWord.
+Boolean
+IsInkWord(RefArg obj)
+{
+	if (!IsBinary(obj))
+		return false;
+	return EQRef(ClassOf(obj), RSSYMinkword);
+}

@@ -271,13 +271,49 @@ bitmap frame, `GetValue` through the chains) drawn into the bounds by
 the viewJustify bits - centred both ways for a template without one - in
 the viewTransferMode (`DrawUsingRect` 0x0018bd00 through `DrawPicture`).
 
+**TParagraphView** (`ParagraphView.h`, clParagraphView 81, on
+`TDataView` 83 - `DataView.h`, only the class identity yet):
+protoStaticText and every editable paragraph, display only.  The `text`
+slot (`Text` 0x00183034 = `GetValue(text, string)`) is wrapped into the
+bounds a line at a time (`FillAllCaches` 0x0016dc68: the ROM's
+`LineLoop` breaks the lines and makes a text object per run of each; the
+host measures each line with `DoTextOnce` over the style runs and cuts it
+back at a word boundary as `DrawSimpleLine` does), each line the height
+its fonts need or `GetInterLineSpacing` 0x0016b490 (viewLineSpacing when
+a single style's font fits it: the font's height between 0.8 x the
+spacing and the spacing + 3), a line whose midline falls below the bottom
+dropped (`TestLineOverlap` 0x000a41fc) unless the view has
+vCalculateBounds (the ROM then grows the view; the host keeps every line
+and the bounds as they are), the lines moved down by the vertical text
+bits when the text is shorter than the view; the lines are cached as
+`LineInfo` records (the ROM's 0x24-byte ones: start and end offsets, the
+first and last text object, whether the line ends in white space - a line
+keeps the space that ends it - and its box), moved along when the view
+moves (`OffsetCachedBounds` 0x0016b94c) and rebuilt when it is resized.
+`RealDraw` 0x0016b14c draws the lines and an ellipsis (U+2026, the ROM's
+Mac Roman 0xc9) after the last when the text goes on past it and the
+view does not calculate its bounds.  The `styles` slot is the style runs
+(`StyleRuns.h`: `[length, style, ...]`; `CorrectAnyBadStyleRuns`
+0x0017c92c stretches or cuts them to the text's length through
+`RunsInsert`/`RunsDelete` 0x0012aa28/0x0012a938; `GetStyles` 0x00183134
+answers a single run's style itself, or `GetDefaultViewStyle` 0x0017a9ec
+- viewFont from the protos, a read-only view's from the parents too, else
+the userFont preference - when there are none).  `SetupDone` 0x00181608
+reads viewTransferMode, viewLineSpacing, the text flags
+(`GetInputViewTextFlags` 0x0025fdf4), the locale's break tables, and
+builds the caches.  NOT YET: editing, hilites, the caret, ink, tabs (drawn
+as characters), the text objects, the parents' bounds narrowing the
+lines, the empty last line after a final carriage return.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
 map: the structure, every justification, the round trip through
 `DejustifyBounds`, the formats pixel by pixel, overlapping windows and
 their clippers, scripts, ties, the errors, a title and a button's text,
-a picture view's icon.
+a picture view's icon, paragraphs (the wrapped lines and their offsets,
+the ellipsis, vCalculateBounds, style runs, viewLineSpacing, justified
+and moved paragraphs, the style runs' corrections).
 
 ## Not yet
 
@@ -285,5 +321,5 @@ Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
 drag and drop, the recognition commands (`RealDoCommand`), the animation
 effects (`TAnimate`), the idlers, `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
-`TPickView`, `TParagraphView`, ...), the application (`TApplication`,
+`TPickView`, `TEditView`, ...), editing in `TParagraphView`, the application (`TApplication`,
 `gApplication`) and its command dispatch.

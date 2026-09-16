@@ -70,6 +70,8 @@ public:
 
 // the collation compare the string functions use: < 0, 0, > 0; exact
 // compares cases, else letters are folded
+Boolean	IsInkWord(RefArg obj);				// an 'inkWord binary (the ink of a word not yet recognised)
+
 int		CompareUnicodeText(const UniChar* a, long aLength, const UniChar* b, long bLength, Boolean exact);
 int		CompareStringNoCase(const UniChar* a, const UniChar* b);
 int		CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength);

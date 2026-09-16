@@ -13,6 +13,7 @@
 #include "RootView.h"
 #include "TextView.h"
 #include "PictureView.h"
+#include "ParagraphView.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
@@ -128,12 +129,12 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // The C++ object for the context's viewClass, constructed under the
 // parent; a Throw in the Constructor removes the view again.  NOT YET
 // RECONSTRUCTED: the subclasses - every class gets a TView (the ROM makes
-// TEditView, TKeyboardView, TMonthView, TParagraphView,
-// TPolygonView, TMathExpView, TMathOpView, TMathLineView, TRemoteView,
-// TPickView, TGaugeView, TPrintView, TMeetingView, TSliderView,
-// TListView, TClipboard, TOutline, THelpOutline, TXView for classes
-// 75-108, and -8501 for any other); TTextView (97, 98) and TPictureView
-// (75, 76) are here.
+// TEditView, TKeyboardView, TMonthView, TPolygonView, TMathExpView,
+// TMathOpView, TMathLineView, TRemoteView, TPickView, TGaugeView,
+// TPrintView, TMeetingView, TSliderView, TListView, TClipboard, TOutline,
+// THelpOutline, TXView for classes 75-108, and -8501 for any other);
+// TTextView (97, 98), TPictureView (75, 76), TParagraphView (81) and
+// TDataView (83) are here.
 TView*
 BuildView(TView* parent, RefArg context)
 {
@@ -145,9 +146,8 @@ BuildView(TView* parent, RefArg context)
 	case clEditView:
 	case clContainerView: case clKeyboardView:
 	case clMonthView:
-	case clParagraphView:
 	case clPolygonView:
-	case clDataView: case clMathExpView:
+	case clMathExpView:
 	case clMathOpView:
 	case clMathLineView:
 	case clRemoteView - 1: case clRemoteView:
@@ -168,6 +168,12 @@ BuildView(TView* parent, RefArg context)
 		break;
 	case clPictureView - 1: case clPictureView:
 		view = new TPictureView;
+		break;
+	case clParagraphView:
+		view = new TParagraphView;
+		break;
+	case clDataView:
+		view = new TDataView;
 		break;
 	default:
 		break;

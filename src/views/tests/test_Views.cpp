@@ -12,6 +12,8 @@
 // the fonts of the text views).
 #include "RootView.h"
 #include "TextView.h"
+#include "ParagraphView.h"
+#include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "Draw.h"
@@ -623,6 +625,115 @@ TestPictureView()
 }
 
 
+static void
+TestParagraphView()
+{
+	// the style runs: made to cover the text
+	Eval("runs := [2, espy12]");
+	CorrectAnyBadStyleRuns(RefVar(Eval("runs")), 5);
+	EXPECT(RINT(Eval("runs[0]")) == 5 && TotalRunLength(RefVar(Eval("runs"))) == 5);
+	Eval("runs := [3, espy12, 4, espy12]");
+	CorrectAnyBadStyleRuns(RefVar(Eval("runs")), 5);
+	EXPECT(RINT(Eval("runs[2]")) == 2 && RINT(Eval("Length(runs)")) == 4);
+	CorrectAnyBadStyleRuns(RefVar(Eval("runs")), 3);
+	EXPECT(RINT(Eval("Length(runs)")) == 2 && RINT(Eval("runs[0]")) == 3);
+	RunsInsert(RefVar(Eval("runs")), 1, 4);
+	EXPECT(RINT(Eval("runs[0]")) == 7);
+	RunsDelete(RefVar(Eval("runs")), 0, 7);
+	EXPECT(RINT(Eval("Length(runs)")) == 0);
+
+	// a static text: three words wrapped into a narrow view, one below the other
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 70}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\"})");
+	EXPECT(p != nil && p->ClassID() == clParagraphView && p->DerivedFrom(clDataView) && p->DerivedFrom(clView));
+	EXPECT(p->fTransferMode == srcOr && p->fTextFlags != -1 && !p->fCalculateBounds);
+	EXPECT(p->LineCount() == 3);
+	if (p->LineCount() == 3)
+	{
+		EXPECT(p->Line(0).fStart == 0 && p->Line(0).fEnd == 6 && p->Line(1).fStart == 6 && p->Line(1).fEnd == 12 && p->Line(2).fStart == 12 && p->Line(2).fEnd == 17);	// a line keeps the space that ends it (LineInfo's endsWithSpace)
+		EXPECT(p->Line(0).fEndsWithSpace && !p->Line(2).fEndsWithSpace);
+		EXPECT(p->Line(0).fHeight == p->fLineHeight && p->Line(1).fBounds.top == 10 + p->Line(0).fHeight && p->Line(0).fBounds.left == 20);
+		EXPECT(p->TextBounds().top == 10 && p->TextBounds().bottom == 10 + 3 * p->Line(0).fHeight);
+	}
+	EXPECT(EQRef(p->GetStyles(), Eval("espy12")));
+	Eval("ctxQ:Dirty()");
+	Refresh();
+	long inkLeft, inkRight;
+	long lineHeight = p->Line(0).fHeight;
+	InkExtent(10, 10 + lineHeight, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight == 46);								// "Hello" as the text view drew it
+	InkExtent(10 + lineHeight, 10 + 2 * lineHeight, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight > 40);								// "World"
+	InkExtent(10 + 2 * lineHeight, 10 + 3 * lineHeight, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight > 40);								// "again"
+	InkExtent(10 + 3 * lineHeight, 70, &inkLeft, &inkRight);
+	EXPECT(inkRight == 0);
+	Eval("ctxQ:Close()");
+
+	// a paragraph too short for its text: one line and the ellipsis after it
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 100, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\"})");
+	EXPECT(p->LineCount() == 1 && p->Line(0).fEnd == 12);
+	Eval("ctxQ:Dirty()");
+	Refresh();
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	long textRight = p->Line(0).fBounds.right;
+	EXPECT(inkLeft == 20 && inkRight > textRight && inkRight <= 100);		// the ellipsis after "Hello World"
+	Eval("ctxQ:Close()");
+
+	// the same with vCalculateBounds: every line is kept, no ellipsis
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 11, viewBounds: {left: 20, top: 10, right: 100, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\"})");
+	EXPECT(p->fCalculateBounds && p->LineCount() == 2 && p->Line(1).fEnd == 17);
+	Eval("ctxQ:Close()");
+
+	// style runs: the second word in a bigger font makes its line taller
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "espy18")), RefVar(MAKEINT(PackFont(0, 18, 0))));
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\", styles: [6, espy12, 6, espy18, 5, espy12]})");
+	EXPECT(p->LineCount() == 3);
+	if (p->LineCount() == 3)
+	{
+		EXPECT(p->Line(1).fHeight > p->Line(0).fHeight && p->Line(2).fHeight == p->Line(0).fHeight);
+		EXPECT(p->Line(1).fFirstObj == 1 && p->Line(0).fFirstObj == 0 && p->Line(2).fFirstObj == 2);
+	}
+	EXPECT(IsArray(p->GetStyles()));
+	Eval("ctxQ:Dirty()");
+	Refresh();
+	InkExtent(10 + p->Line(0).fHeight, 10 + p->Line(0).fHeight + p->Line(1).fHeight, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight > 46);								// "World" in espy 18 is wider than "Hello" in 12
+	Eval("ctxQ:Close()");
+
+	// viewLineSpacing: the lines that far apart when the font fits it
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 0, viewFont: espy12, viewLineSpacing: 18, text: \"Hello World\"})");
+	EXPECT(p->fLineSpacing == 18 && p->GetInterLineSpacing() == 18 && p->LineCount() == 2 && p->Line(1).fBounds.top == 28);
+	Eval("ctxQ:Close()");
+
+	// justified: flush right and at the bottom
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9, viewFont: espy12, text: \"Hello\"})");
+	EXPECT(p->LineCount() == 1 && p->Line(0).fBounds.bottom == 90);
+	Eval("ctxQ:Dirty()");
+	Refresh();
+	InkExtent(10, 90, &inkLeft, &inkRight);
+	EXPECT(inkRight == 69 && inkLeft == 43);								// flush right: the advance's last pixel is blank
+	InkExtent(10, 90 - p->Line(0).fHeight, &inkLeft, &inkRight);
+	EXPECT(inkRight == 0);
+	// moved: the cached lines move along
+	Eval("ctxQ:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "paragraphs closed"));
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hi\"})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
+	Eval("SetValue(ctxQ, 'viewBounds, {left: 60, top: 50, right: 110, bottom: 70})");
+	Refresh();
+	EXPECT(p->Line(0).fBounds.left == 60 && p->Line(0).fBounds.top == 50 && p->fCachedBounds.left == 60);
+	InkExtent(50, 70, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 60);
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkRight == 0);
+	Eval("ctxQ:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "paragraph closed"));
+}
+
+
 int
 main()
 {
@@ -681,6 +792,7 @@ main()
 		TestScripts();
 		TestTextView();
 		TestPictureView();
+		TestParagraphView();
 	}
 	newton_catch_all
 	{
