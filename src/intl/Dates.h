@@ -21,8 +21,8 @@
 	Reconstructed from the MP2100 D ROM (0x0008ad1c-0x0008bc98,
 	0x0008d8b0-0x0008fb18); each function cites its origin.  NOT YET
 	RECONSTRUCTED: reading a date or time out of a string
-	(StringToDateFields: the recognition system's lexical dictionaries),
-	the meeting and repeat functions.
+	(StringToDateFields: the recognition system's lexical dictionaries).
+	The meeting and repeat functions are Meetings.h.
 */
 
 #ifndef __DATES_H

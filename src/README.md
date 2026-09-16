@@ -78,7 +78,9 @@ src/
                 host object areas by frames/FramesPart.h
   intl/         the international utilities: the locale bundles and
                 the locale cache (Locale.h), TDate and the date and time
-                strings and their NewtonScript functions (Dates.h)
+                strings and their NewtonScript functions (Dates.h), the
+                repeating meetings (Meetings.h: the Dates application's
+                repeat templates stepped and collected over the soups)
                 (docs/intl/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

@@ -10,6 +10,7 @@
 
 #include "Locale.h"
 #include "Dates.h"
+#include "Meetings.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -223,6 +224,7 @@ InitInternationalUtils(void)
 		return kError_No_Memory;
 	RegisterLocaleNatives();
 	RegisterDateNatives();
+	RegisterMeetingNatives();
 	InstallHostNatives();						// host: into the function frame when there are no ROM objects
 	if (GetCurrentLocale() != NILREF && CacheLocaleAttributes())
 		return noErr;

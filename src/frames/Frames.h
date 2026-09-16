@@ -34,6 +34,7 @@ extern long	gObjectHeapSize;			// host: the size InitObjects gives the object he
 
 // beyond objects.h
 Ref		AllocateMapWithTags(RefArg superMap, RefArg tags);
+Ref		MakeArray(long length);				// an array of class 'Array
 
 // a frame's tag with the index of its slot (GetFrameMapTags: the stores sort them)
 struct SortedMapTag
@@ -55,6 +56,9 @@ Ref		MakeSymbol(char* name);
 TObjectIterator*	NewTObjectIterator(RefArg obj);
 void	DeleteTObjectIterator(TObjectIterator* iterator);
 Boolean	RegisterRangeForDeclawing(ULong start, ULong end);
+
+// the sorted-array natives (ArrayNatives.cpp) other units call: BInsert(array, element, test, keyPath, uniqueOnly)
+Ref		FBInsert(RefArg rcvr, RefArg array, RefArg element, RefArg test, RefArg keyPath, RefArg uniqueOnly);
 
 // large binaries (NOT YET RECONSTRUCTED: never one; objects.h declares it under hasLargeObjects)
 Boolean	IsLargeBinary(RefArg ref);

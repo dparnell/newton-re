@@ -133,6 +133,15 @@ AllocateArray(RefArg theClass, long length)
 }
 
 
+// ROM 0x0012ad2c MakeArray__Fl
+// An array of class 'Array (the same length checks as the heap's).
+Ref
+MakeArray(long length)
+{
+	return gHeap->AllocateArray(RSSYMarray, length);
+}
+
+
 // ROM 0x002f6ba8 AllocateFrame__Fv
 Ref
 AllocateFrame(void)

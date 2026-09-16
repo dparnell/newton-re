@@ -127,10 +127,69 @@ frame (`Rcanonicaldate`: year, month, date, dayOfWeek, hour, minute,
 second, daysInMonth); `TotalMinutes` accepts a partial
 frame (missing slots are 1904/1/1 0:00).
 
+## Repeating meetings (`src/intl/Meetings.h`)
+
+The ROM keeps the Dates application's repeating-meeting engine next to
+`TDate` (0x0008bc98-0x0008d910).  A *repeat template* is an entry of the
+repeating-meeting soup: `mtgStartDate` (the first instance; its time of
+day is every instance's), `mtgDuration`, `repeatType`, `mtgInfo`,
+`mtgStopDate` (0x1fffffff: forever) and `exceptions`, an array of
+`[date, entry]` pairs - the instance at `date` is deleted (`entry` nil)
+or replaced by `entry`, a meeting of its own.  `repeatType` selects the
+stepper and says what `mtgInfo` encodes (read out of `NextMeeting`
+0x0008d5fc, a switch that inlines them):
+
+| repeatType | mtgInfo | stepper |
+|---|---|---|
+| 0 kDayOfWeek, 1 kWeekInMonth | day-of-week bits 0x800 Sunday .. 0x20 Saturday, week-of-month bits 0x10 first .. 0x01 last (0x1f every week) | `NextDayOfWeek` 0x0008bc98 |
+| 2 kDateInMonth | the date in the low 6 bits | `NextDateOfMonth` 0x0008bdcc |
+| 3 kDateInYear | `(month << 8) \| date` | `NextDateOfYear` 0x0008ceb4 |
+| 4 kPeriod | `(first instance's TotalDays << 8) \| period in days` | `NextPeriod` 0x0008d5a0 |
+| 5 kNever, 6 | - | the date is left alone |
+| 7 kWeekInYear | `(month << 12) \|` the day-of-week and week bits | `NextDateByWeekInYear` 0x0008d4dc |
+
+Each stepper moves a `TDate` forward to the next instance on or after it
+(the same day counts), leaving the time of day alone; `NextDayOfWeek`
+first finds the next wanted weekday, then the next wanted week of the
+month (the last-week bit is the month's last such day), stepping into the
+next month when needed.  `NextDateOfMonth` has a ROM bug: the day-of-week
+shift is uninitialised when the wanted date is past the month's end
+(harmless - every caller normalises the date afterwards; the host computes
+it, `DEVIATION`).  `simplePrevMeeting` 0x0008cc90 goes back a month, a
+year or two weeks and forward again to the next instance.
+
+`FNextMeeting` 0x0008cf14 (`NextMeeting(startTime, template)`) steps from
+`max(startTime, mtgStartDate)` at the template's time of day (the day
+after when that time is already past on the start day), skipping the
+instances that are exceptions, until it finds one; a replacement meeting
+between start and the instance is the answer instead
+(`FindExceptionMeetingInRange` 0x0008cb68); 0 past `mtgStopDate`.
+`FPrevMeeting` 0x0008d174 steps back with `simplePrevMeeting` and refines
+forward with `NextMeeting` so that exceptions are honoured.
+`GetNextMeetingTime(template, startTime)` 0x0008d494 is `NextMeeting`
+with the arguments swapped.  A template whose slots cannot be read makes
+these repair it (`FixupRepeatFrame` 0x0008be64: integer slots defaulted,
+the first malformed exception dropped, the entry written back) and return
+0.
+
+`GetAllMeetings(meetingSoup, repeatSoup, start, end)` 0x0008c908 (`end`
+nil: a day; `GetAllMeetingsUnique` 0x0008caec stops at the first instance
+of each template) queries the meeting soup by `mtgStartDate`
+(`dateQuerySpec` 0x6297e1, `beginKey`/`endExclKey` the range) and the
+repeating-meeting soup by `mtgStopDate` (`repeatQuerySpec` 0x62e551,
+templates not yet stopped), generates each template's instances in the
+range (`GetRepeatingMeetings` 0x0008c374) as clones of
+`protoInstanceOfRepeatingMeeting` 0x50f82d (`viewStationery
+'RepeatingMeeting`, `class 'meeting`, `mtgStartDate`, `repeatTemplate`
+the entry; a cribNote template's instances are cribNotes, `viewBounds`
+carried) and merges them with the template's exceptions
+(`MergeMeetingLists` 0x0008c180: an exception at an instance's time
+replaces it, replacement meetings in the range are added, everything
+kept in `mtgStartDate` order with `BInsert`); nil when there is nothing.
+
 ## Not yet reconstructed
 
 - Reading dates and times out of strings (`StringToDateFields`, the
   AirusA lexical dictionaries `dateDictionary`, `timeDictionary`, ...).
-- The meeting and repeat functions (0x0008bc98-0x0008d8b0).
 - Number formatting (`numberformat`, `_IntlNumberMunge`) and the
   recognition dictionaries the locale cache rebuilds.
