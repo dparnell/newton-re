@@ -70,6 +70,11 @@ src/
                 object format (ObjectStreamer.h: TObjectWriter and
                 TObjectReader over a CPipe)
                 (docs/stores/README.md)
+  packages/     the package format: the directory and its readers
+                (PackageIterator.h: TPrivatePackageIterator over memory,
+                TPackageIterator over memory or a CPipe); the loader, the
+                package manager and the part handlers to come
+                (docs/packages/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

@@ -50,6 +50,8 @@ tools/newton-rom/
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
                           --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots)
+    packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files),
+                          --doc docs/packages/rex-packages.md
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
   requirements.txt      libclang pin
@@ -302,7 +304,11 @@ docs/frames/grammar.md` reads the NewtonScript compiler's Berkeley yacc
 tables (`yylhs`..`yycheck`), token names (`yyname`), rule texts (`yyrule`)
 and the lexer's reserved-word table out of the ROM into `ParserTables.h`
 (the token enum and the parser's constants) and `ParserTables.cpp`, and
-writes the grammar rule by rule as markdown.
+writes the grammar rule by rule as markdown.  `analysis/packages.py
+build/MP2100D --parts` lists the ten packages built into the ROM extension
+(the REx's `pkgl` entry: their directories, parts, flags and infos, the
+format described in the script), `--extract DIR` writes each as a `.pkg`
+file and `--doc docs/packages/rex-packages.md` the listing as markdown.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class
