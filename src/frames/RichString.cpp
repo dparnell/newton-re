@@ -318,3 +318,21 @@ TRichString::Verify(void) const
 	ReleasePtr();
 	return result;
 }
+
+
+// ROM 0x00255750 CompareStringNoCase__FPUsT1
+// Two C strings collated, case folded (the sort table the ROM passes is 1:
+// the default table - NOT YET RECONSTRUCTED).
+int
+CompareStringNoCase(const UniChar* a, const UniChar* b)
+{
+	return CompareUnicodeText(a, Ustrlen(a), b, Ustrlen(b), false);
+}
+
+
+// ROM 0x002557a4 CompareTextNoCase__FPUslT1T2
+int
+CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength)
+{
+	return CompareUnicodeText(a, aLength, b, bLength, false);
+}

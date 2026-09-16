@@ -16,7 +16,7 @@
 	says sub-key n is missing; bit 7 sorts a shorter key after a longer
 	one), byte 1 the size of the data in bytes.  Fixed-size key types
 	(long 4, char 2, double 8) have no header: the SKey is the raw
-	value; string keys are UniChars, the terminator included; a multi-key
+	value; string keys are big-endian UniChars, no terminator; a multi-key
 	is the sub-keys' SKeys one after the other, each padded to an even
 	size.
 

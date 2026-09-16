@@ -1,0 +1,229 @@
+/*
+	File:		stores/Soups.h
+
+	Contains:	The frames layer's stores and soups: the store frame
+				(storePrototype over a TStoreWrapper, its persistent frame
+				{name, signature, nameIndex, ephemerals} a fault block on the
+				store's root object; gStores holds the registered ones), the
+				plain soup frame (plainSoupPrototype: tStore, storeObj,
+				theName, cache, cursors, indexObjects, indexNextUID; its
+				persistent frame {class, lastUID, signature, indexes, flags,
+				indexesModTime, infoModTime, info} a fault block), the index
+				descriptions ({structure, path, type, index: the TSoupIndex
+				info object; multiSlot ones with arrays of paths and types,
+				order}) and their keys, and the methods of both prototypes,
+				which are the ROM's native functions the prototype frames
+				hold (bound by symbol through NativeFunctions.h).
+
+	The store's soups are found through its name index: a TSoupIndex of
+	string keys (the soup names, no terminator) to the ids of the soups'
+	persistent frames.  The soup's entries are found through its _uniqueID
+	index (index description 0: long keys to store object ids); every
+	other index maps keys to _uniqueIDs' store object ids as well.
+
+	NOT YET RECONSTRUCTED here: cursors (TCursor; EachSoupCursorDo does
+	nothing), union soups (gUnionSoups stays empty), tags indexes, the
+	sort tables (every sort id is 0), passwords, large binaries, the
+	XMit (synchronising) methods, package stores' part handler.
+
+	Reconstructed from the MP2100 D ROM (0x0031c7c4-0x00323300,
+	0x00313750-0x00313ffc, 0x00325834-0x0032a570); each function cites
+	its origin.
+*/
+
+#ifndef __SOUPS_H
+#define __SOUPS_H
+
+#ifndef __ENTRIES_H
+#include "Entries.h"
+#endif
+#ifndef __SOUPINDEX_H
+#include "SoupIndex.h"
+#endif
+
+// the registered stores (store frames), the union soups and the package
+// stores' frames
+extern Ref	gStores;
+extern Ref	gUnionSoups;
+extern Ref	gPackageStores;
+
+void	InitQueries(void);					// the globals; the package store's part handler is NOT YET
+void	InitSoupPrototypes(void);			// host: the prototype frames when no ROM objects are imported
+
+
+/*------------------------------------------------------------------------------
+	S t o r e s
+------------------------------------------------------------------------------*/
+
+Ref		GetStores(void);
+Ref		MakeStoreObject(TStore* store);		// the store frame (the root object formatted when empty)
+Ref		RegisterTStore(TStore* store);		// added to gStores (and the union soups)
+void	RemoveTStore(TStore* store);
+Ref		ToObject(TStore* store);			// the store frame; nil when not registered
+Boolean	IsValidStore(const TStore* store);	// registered
+TStore*	GetInternalStore(void);				// NOT YET: nil
+const TClassInfo*	GetStoreClassInfo(const TStore* store);
+TStoreWrapper*	GetStoreWrapper(RefArg storeObject);		// throws when the frame has been killed
+TStore*	StoreFromWrapper(RefArg storeObject);
+void	CheckWriteProtect(TStore* store);	// throws for a ROM or read-only store
+void	CheckWriteProtect(RefArg storeObject);
+void	KillStoreObject(RefArg storeObject);
+Ref		FlushSoupList(RefArg soups);
+long	GetRandomSignature(void);
+void	AskForFlush(Boolean ask);
+NewtonErr	GetStoreVersion(TStore* store, long* version);
+const TSortingTable*	StoreGetDirSortTable(RefArg storeObject);	// NOT YET: nil
+void	StoreSaveSortTable(RefArg storeObject, long sortId);			// NOT YET
+void	StoreRemoveSortTable(RefArg storeObject, long sortId);			// NOT YET
+void	LargeBinariesStoreRemoved(TStoreWrapper* wrapper);				// NOT YET
+void	AbortLargeBinaries(RefArg entry);								// NOT YET
+
+// the store frame's methods (the receiver is the store frame)
+Ref		StoreGetName(RefArg rcvr);
+Ref		StoreSetName(RefArg rcvr, RefArg name);
+Ref		StoreGetKind(RefArg rcvr);
+Ref		StoreGetSignature(RefArg rcvr);
+Ref		StoreSetSignature(RefArg rcvr, RefArg signature);
+Ref		StoreGetInfo(RefArg rcvr, RefArg tag);
+Ref		StoreSetInfo(RefArg rcvr, RefArg tag, RefArg value);
+Ref		StoreGetAllInfo(RefArg rcvr);
+Ref		StoreSetAllInfo(RefArg rcvr, RefArg info);
+Ref		StoreGetSoup(RefArg rcvr, RefArg name);
+Ref		StoreHasSoup(RefArg rcvr, RefArg name);
+PSSId	StoreGetSoupId(RefArg rcvr, RefArg name);
+Ref		StoreCreateSoup(RefArg rcvr, RefArg name, RefArg indexes);
+Ref		StoreGetSoupNames(RefArg rcvr);
+Ref		StoreTotalSize(RefArg rcvr);
+Ref		StoreUsedSize(RefArg rcvr);
+Ref		StoreOverhead(RefArg rcvr);
+Ref		StoreIsReadOnly(RefArg rcvr);
+Ref		StoreIsValid(RefArg rcvr);
+Ref		StoreLock(RefArg rcvr);
+Ref		StoreUnlock(RefArg rcvr);
+Ref		StoreAbort(RefArg rcvr);
+Ref		StoreDirty(RefArg rcvr);
+Ref		StoreFlush(RefArg rcvr);
+Ref		StoreErase(RefArg rcvr);
+Ref		StoreCheckWriteProtect(RefArg rcvr);
+Ref		StoreReadObject(RefArg rcvr, RefArg id);								// FReadStoreObject
+Ref		StoreWriteObject(RefArg rcvr, RefArg id, RefArg offset, RefArg data);	// FWriteStoreObject
+Ref		StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data);				// FWriteEntireStoreObject
+Ref		StoreNewObject(RefArg rcvr, RefArg size);								// FNewStoreObject
+Ref		StoreDeleteObject(RefArg rcvr, RefArg id);								// FDeleteStoreObject
+Ref		StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size);				// FSetStoreObjectSize
+Ref		StoreGetObjectSize(RefArg rcvr, RefArg id);								// FGetStoreObjectSize
+
+
+/*------------------------------------------------------------------------------
+	S o u p s
+------------------------------------------------------------------------------*/
+
+// what EachSoupCursorDo tells a soup's cursors (NOT YET RECONSTRUCTED)
+enum
+{
+	kSoupCursorSoupRemoved = 1,		// the soup itself
+	kSoupCursorEntryRemoved = 2,	// the entry
+	kSoupCursorEntryChanged = 3,	// (TCursor::EntryChanged) the entry, and whether its keys / tags changed
+	kSoupCursorIndexesChanged = 5,
+	kSoupCursorEntryMoved = 6,		// the entry, the entry frame it became
+	kSoupCursorEntryReadded = 7,	// the entry, the fault block it was
+	kSoupCursorIndexRemoved = 8		// the index description
+};
+
+void	EachSoupCursorDo(RefArg soup, int op);
+void	EachSoupCursorDo(RefArg soup, int op, RefArg arg);
+void	EachSoupCursorDo(RefArg soup, int op, RefArg arg1, RefArg arg2);
+void	AddToUnionSoup(RefArg name, RefArg soup);			// NOT YET
+void	RemoveFromUnionSoup(RefArg name, RefArg soup);		// NOT YET
+
+// the messages a soup (plain or union) answers
+Ref		SoupQuery(RefArg soup, RefArg querySpec);
+Ref		SoupGetName(RefArg soup);
+Ref		SoupGetSignature(RefArg soup);
+Ref		SoupSetName(RefArg soup, RefArg name);
+Ref		SoupSetSignature(RefArg soup, long signature);
+Ref		SoupGetInfo(RefArg soup, RefArg tag);
+Ref		SoupSetInfo(RefArg soup, RefArg tag, RefArg value);
+Ref		SoupGetAllInfo(RefArg soup);
+Ref		SoupSetAllInfo(RefArg soup, RefArg info);
+Ref		SoupCopyEntries(RefArg soup, RefArg toSoup);
+Ref		SoupRemoveAllEntries(RefArg soup);
+Ref		SoupRemoveFromStore(RefArg soup);
+Ref		SoupFlush(RefArg soup);
+Ref		SoupGetStore(RefArg soup);
+Ref		SoupAddIndex(RefArg soup, RefArg indexSpec);
+Ref		SoupRemoveIndex(RefArg soup, RefArg path);
+Ref		SoupGetIndexes(RefArg soup);
+Ref		SoupGetNextUID(RefArg soup);
+Ref		SoupAdd(RefArg soup, RefArg entry);
+Ref		SoupAddWithUniqueID(RefArg soup, RefArg entry);
+Boolean	PathsEqual(RefArg a, RefArg b);
+
+// the plain soup's persistent frame
+Ref		SoupPersistent(RefArg soup);			// throws kNSErrSoupRemoved when nil
+void	SoupChanged(RefArg soupPersistent, Boolean write);	// its flags say changed (bits 0 and 1); written when asked
+Ref		GetTagsIndexDesc(RefArg soupPersistent);
+
+// index descriptions and keys
+Boolean	IndexPathsEqual(RefArg a, RefArg b);
+Ref		IndexPathToIndexDesc(RefArg soupPersistent, RefArg path, long* index);
+const TSortingTable*	GetIndexSortTable(RefArg indexDesc);
+void	IndexDescToIndexInfo(RefArg indexDesc, IndexInfo* info);
+Ref		NewIndexDesc(RefArg soupPersistent, RefArg storeObject, RefArg indexSpec);
+Ref		AddNewSoupIndexes(RefArg soupPersistent, RefArg storeObject, RefArg indexSpecs);
+void	CreateSoupIndexObjects(RefArg soup);
+TSoupIndex*	GetSoupIndexObject(RefArg soup, PSSId infoId);		// 0: the _uniqueID index
+void	IndexEntries(RefArg soup, RefArg indexDesc);
+void	KeyToSKey(RefArg key, RefArg type, SKey* outKey, short* outSize, Boolean* outIsVariable);
+Ref		SKeyToKey(const SKey& key, RefArg type, short* outSize);
+void	MultiKeyToSKey(RefArg key, RefArg types, SKey* outKey);
+void	RichStringToSKey(RefArg string, SKey* outKey);
+Ref		GetEntryKey(RefArg entry, RefArg path);
+Boolean	GetEntrySKey(RefArg entry, RefArg indexDesc, SKey* outKey, Boolean* outIsVariable);
+void	AlterIndexes(Boolean add, RefArg soup, RefArg entry, PSSId id);
+Boolean	UpdateIndexes(RefArg soup, RefArg newEntry, RefArg oldEntry, PSSId id, Boolean* tagsChanged);
+void	AbortSoupIndexes(RefArg soup);
+
+// adding entries (flags: SafeEntryAdd)
+enum
+{
+	kSoupAddVerbatim = 1,		// the frame as it is (not made internal)
+	kSoupAddSetModTime = 2,
+	kSoupAddSetUniqueID = 4		// the soup's next _uniqueID given to it
+};
+Ref		SafeEntryAdd(RefArg soup, RefArg entry, RefArg uniqueId, int flags);
+Ref		CommonSoupAddEntry(RefArg soup, RefArg entry, int flags, Boolean unused);
+
+// the plain soup's methods (the receiver is the soup frame)
+Ref		PlainSoupGetStore(RefArg rcvr);
+Ref		PlainSoupAdd(RefArg rcvr, RefArg entry);
+Ref		SoupAddFlushed(RefArg rcvr, RefArg entry);
+Ref		PlainSoupAddWithUniqueID(RefArg rcvr, RefArg entry);
+Ref		SoupAddFlushedWithUniqueId(RefArg rcvr, RefArg entry);
+Ref		PlainSoupAddIndex(RefArg rcvr, RefArg indexSpec);
+Ref		PlainSoupRemoveIndex(RefArg rcvr, RefArg path);
+Ref		PlainSoupSetName(RefArg rcvr, RefArg name);
+Ref		PlainSoupGetSignature(RefArg rcvr);
+Ref		PlainSoupSetSignature(RefArg rcvr, RefArg signature);
+Ref		PlainSoupGetNextUID(RefArg rcvr);
+Ref		PlainSoupGetInfo(RefArg rcvr, RefArg tag);
+Ref		PlainSoupSetInfo(RefArg rcvr, RefArg tag, RefArg value);
+Ref		PlainSoupGetAllInfo(RefArg rcvr);
+Ref		PlainSoupSetAllInfo(RefArg rcvr, RefArg info);
+Ref		SoupGetFlags(RefArg rcvr);
+Ref		SoupSetFlags(RefArg rcvr, RefArg flags);
+Ref		PlainSoupRemoveAllEntries(RefArg rcvr);
+Ref		PlainSoupRemoveFromStore(RefArg rcvr);
+Ref		PlainSoupDirty(RefArg rcvr);
+Ref		PlainSoupFlush(RefArg rcvr);
+Ref		PlainSoupGetSize(RefArg rcvr);
+Ref		PlainSoupIndexSizes(RefArg rcvr);
+Ref		PlainSoupGetIndexes(RefArg rcvr);
+Ref		PlainSoupMakeKey(RefArg rcvr, RefArg key, RefArg path);
+Ref		SoupIsValid(RefArg rcvr);
+Ref		SoupGetIndexesModTime(RefArg rcvr);
+Ref		SoupGetInfoModTime(RefArg rcvr);
+Ref		CommonSoupGetName(RefArg rcvr);
+void	SoupCacheRemoveAllEntries(RefArg soup);
+
+#endif	/* __SOUPS_H */

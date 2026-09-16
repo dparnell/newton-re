@@ -2198,3 +2198,13 @@ InitObjects(void)
 	AddGCRoot(gPackageStores);
 	gPackageStores = AllocateArray(RSSYMarray, 0);
 }
+
+
+// ROM 0x001027fc IsLargeBinary__FRC6RefVar
+// An indirect binary whose procedures are the large binaries' (NOT YET
+// RECONSTRUCTED: large binaries - never).
+Boolean
+IsLargeBinary(RefArg /*ref*/)
+{
+	return false;
+}

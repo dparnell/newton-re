@@ -303,6 +303,7 @@ ObjHeader*	ResolveMagicPtr(Ref r);
 Ref			ForwardReference(Ref r);
 Boolean		IsFaultBlock(Ref r);
 Ref			FollowFaultBlock(RefArg faultBlock);
+extern Ref	(*gFollowFaultBlockProc)(RefArg faultBlock);	// the stores layer's reader (stores/Entries.cpp)
 void		DirtyObject(Ref obj);
 void		UndirtyObject(Ref obj);
 Boolean		InROMSymbolSpace(Ref r);				// symbols there are unique: compare by identity

@@ -255,13 +255,114 @@ them again, walks 300 duplicates through the field and dup nodes both
 ways, tries each key type and the multi-key, and re-reads an index from
 the store.
 
+## Entries (`src/stores/Entries.h`)
+
+A soup entry in memory is a *fault block* (0x002ba74c `MakeFaultBlock`):
+a four-slot frame of class `kFaultBlockClass` (0x22) - the entry's
+handler (its soup), the `TStoreWrapper*` (0: the store is gone; nil: a
+*proxy* entry whose handler answers for it), the store object id and
+the entry frame once it has been read.  `ObjectPtr` on a fault block
+reads the entry (`FollowFaultBlock`, 0x002ba450: `LoadPermObject`, or
+the handler's `EntryAccess` for a proxy; the frames layer calls it
+through `gFollowFaultBlockProc`); `WriteFaultBlock` writes the frame
+back, `InvalFaultBlock` cuts it off when the store goes,
+`UncacheIfFaultBlock` drops the frame from memory.  The persistent
+frames of stores and soups are fault blocks with a nil handler.
+
+A soup keeps the entries it has handed out in an *entry cache*
+(`MakeEntryCache`: a weak array grown by 8; `FindEntryInCache`,
+`PutEntryIntoCache`, `DeleteEntryFromCache`, `InvalidateCacheEntries`);
+a store keeps its soup frames the same way and `FindSoupInCache` finds
+one by name, case-insensitively.  `GetEntry(soup, id)` answers the cached
+block or a new one.
+
+The operations (0x002b3ff4-0x002b5600): `EntryChangeCommon(entry, flags)`
+writes the frame back (made internal unless verbatim, its `_modTime` set,
+a changed `_uniqueID` reinstated, as the flags say), updates the soup's
+indexes from the old keys to the new (`UpdateIndexes`), tells the cursors
+(NOT YET) and drops the frame when verbatim - `EntryChange` (7),
+`EntryChangeWithModTime` (5), `EntryChangeVerbatim` (4), `EntryFlush`
+(15) and `EntryFlushWithModTime` (13) are its flag combinations;
+`EntryRemoveFromSoup` takes the keys out of the indexes, deletes the
+store object, replaces the block by the plain frame and puts the soup's
+`lastUID` back when it was the last; `EntryReplace` swaps in another
+frame; `EntryUndoChanges` drops the frame; `EntryCopy` adds a clone to
+another soup; `EntryMove` adds the frame to another soup and removes the
+old entry (the block then stands for the new entry); `EntryDirty` walks
+the frame for `kObjDirty`; `EntrySize`/`EntryTextSize`/`EntryUniqueID`/
+`EntryModTime` read the store object header without reading the frame.
+Proxy entries forward every operation to their handler as a message
+(`ForwardEntryMessage`).  `SetupEphemeralTracker` (large objects created
+and not committed) does nothing for a store without the `LOBJ`
+capability, which the host store is; `TEphemeralTracker` is NOT YET.
+
+## Stores and soups as frames (`src/stores/Soups.h`)
+
+`MakeStoreObject(store)` (0x00328fdc) makes a store's frame: a
+`TStoreWrapper` over it; an empty root object is formatted - the
+persistent frame (`storePersistent`: `nameIndex` a new `TSoupIndex` of
+string keys, `name` "Untitled", `signature` a random number, `ephemerals`)
+stored, the map and symbol tables made, the root data (`'WALY'`, version
+4, the three ids) written - otherwise the root data is checked and the
+persistent frame loaded.  The frame is a clone of `storePrototype` with
+`_proto` the persistent frame's fault block, `store` the wrapper (a raw
+pointer in a slot, as the ROM keeps it), `soups` an entry cache and
+`version`.  `RegisterTStore` puts it in `gStores` (and the union soups:
+NOT YET), `RemoveTStore` takes it out and `KillStoreObject` cuts the
+frame and its soups off (`_proto` nil, entries invalidated); `StoreErase`
+formats and re-registers.  `InitQueries` makes `gStores`, `gUnionSoups`,
+`gPackageStores` (the package store part handler: NOT YET) and, on a
+host without the ROM's objects, the prototype frames themselves
+(`InitSoupPrototypes`, the same slots and methods as the ROM's
+0x005d00e1 `storePrototype`, 0x005d013d `storePersistent`, 0x005d3ffd
+`plainSoupPrototype`, 0x005d4159 `plainSoupPersistent`, 0x005d41a1
+`indexDescPrototype`: `nsfunctions.py --natives` lists the ROM's).
+
+A soup's persistent frame (`plainSoupPersistent`: `class` `'DiskSoup`,
+`lastUID`, `signature`, `indexes`, `flags`, `indexesModTime`,
+`infoModTime`, `info`) is a store object whose id the store's name index
+maps the soup's name to (the key: the name's UniChars, no terminator).
+`StoreCreateSoup` makes one with the `_uniqueID` index description
+(`indexDescPrototype`) and one per index spec (`NewIndexDesc`: the spec
+total-cloned and checked, its B-tree created - `IndexDescToIndexInfo`
+maps `type` to the key type, a `multiSlot` index to the multi-key's
+sub-key types and ascending bits, `order` to descending);
+`StoreGetSoup` clones `plainSoupPrototype` over it (`_proto` the fault
+block, `tStore` the wrapper, `storeObj`, `theName`, `cache` and
+`cursors` entry caches, `indexObjects` a C-object binary of the soup's
+`TSoupIndex` objects (`CreateSoupIndexObjects`, `GetSoupIndexObject`),
+`indexNextUID` from `lastUID`) and caches it in the store's `soups`.
+Adding (`PlainSoupAdd` and its Flushed/WithUniqueID forms through
+`CommonSoupAddEntry` and `SafeEntryAdd`): the frame made internal, its
+`_modTime` and `_uniqueID` set, stored (`StorePermObject`), its keys put
+in every index (`AlterIndexes`, the datum the store object id), the
+frame replaced by a fault block in the soup's cache; `PlainSoupAddIndex`
+/`RemoveIndex` change the persistent frame's `indexes` and re-index
+(`IndexEntries` walks the `_uniqueID` index through one re-pointed fault
+block); `RemoveAllEntries` deletes every entry's object and destroys the
+indexes; `RemoveFromStore` deletes the indexes' info objects, the name
+index entry and the persistent frame; `SetName` moves the name index
+entry; `GetSize` sums the entries' store objects and the indexes.  Keys:
+`KeyToSKey` (string: UniChars without terminator, a rich string's plain
+characters; int: a long; real: a double; char: a short; symbol: the
+name bytes; an array of types: `MultiKeyToSKey`), `SKeyToKey` back,
+`GetEntryKey` = `GetFramePath` (an array of paths gives an array).  The
+C++ side sends soups messages (`SoupAdd` = `DoMessage(soup, 'Add, ...)`
+and the like), so plain and union soups look alike.  `test_Soups` runs
+the store frame, a soup with string and int indexes, entries through
+their fault blocks, changes, removal, moves, index changes, a store
+re-registered over the same bytes, and the same through NewtonScript.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
-`CommitLargeBinary`, `LBData`), the word hints (`TWordHintsHandler`,
-`GetWordsHints`, `TestObjHints`), `MakeStoreObject` and the store frames,
-`TEphemeralTracker`, `TUnionSoupIndex` (the index over a union soup's
-soups), `TSortingTable`, the entry cache
-and fault blocks, `TCursor`/`TCollectCursor`, the NewtonScript
-store/soup/entry/cursor functions, `TPSSManager` and the card store
-mounting, `TMuxStore`, `TFlashStore`.
+`CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
+(`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`), `TEphemeralTracker`,
+`TUnionSoupIndex` and the union soups (`AddToUnionSoup`, `GetUnionSoup`),
+`TSortingTable`/`TSortTables` (the sort ids are all 0), tags indexes
+(`AlterTagsIndex`, `EncodeTags`, the tag methods), `TCursor`/
+`TCollectCursor` and the queries (`CommonSoupQuery`, `DefineCursor`;
+`EachSoupCursorDo` does nothing), entry aliases, `CopyEntries`, the XMit
+methods, store passwords, the NewtonScript store/soup/entry/cursor
+functions (`GetStores`, `EntryChange`, ...), `TPSSManager` and the card
+store mounting, the package store part handler, `TMuxStore`, `TFlashStore`.

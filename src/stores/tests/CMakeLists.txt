@@ -12,3 +12,8 @@ add_executable(test_SoupIndex test_SoupIndex.cpp)
 target_link_libraries(test_SoupIndex PRIVATE stores)
 add_test(NAME stores.SoupIndex COMMAND test_SoupIndex)
 set_tests_properties(stores.SoupIndex PROPERTIES TIMEOUT 120)
+
+add_executable(test_Soups test_Soups.cpp)
+target_link_libraries(test_Soups PRIVATE stores)
+add_test(NAME stores.Soups COMMAND test_Soups)
+set_tests_properties(stores.Soups PROPERTIES TIMEOUT 120)

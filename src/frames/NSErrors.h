@@ -60,6 +60,7 @@
 #define kNSErrUnexpectedBinaryObject	(ERRBASE_FRAMES - 417)
 #define kNSErrUnexpectedImmediate		(ERRBASE_FRAMES - 418)	// Length of a non-pointer
 #define kNSErrNotAnArrayOrString		(ERRBASE_FRAMES - 419)
+#define kNSErrNotAPlainString			(ERRBASE_FRAMES - 426)	// a rich string where a plain one is needed (soup names)
 
 // evt.ex.fr.intrp (the interpreter, Throw(exInterpreter, code)) and
 // evt.ex.fr.intrp;type.ref.frame (ThrowExInterpreterWithSymbol: {errorCode, symbol})
@@ -110,5 +111,24 @@
 #define kNSErrBadStoreObject			(ERRBASE_FRAMES - 5)	// TStoreObjectReader: a tag that is none of the format's
 #define kNSErrEntryStoreGone			(ERRBASE_FRAMES - 7)	// FollowFaultBlock: the entry's store is gone (the ROM's 0xffff4479)
 #define kNSErrInvalidStore				(ERRBASE_FRAMES - 17)	// GetStoreWrapper: the store frame has been killed (no _proto)
+#define kNSErrNotAProxyEntry			(ERRBASE_FRAMES + 7)	// CheckProxyEntry (the ROM's -0xbb89: above the base)
+#define kNSErrNotAFaultBlock			(ERRBASE_FRAMES - 8)	// WriteFaultBlock/InvalFaultBlock of something else (0xffff4478)
+#define kNSErrNotASoupEntry				(ERRBASE_FRAMES - 9)	// an entry operation on something that is not a fault block (0xffff4477)
+#define kNSErrStoreNotRegistered		(ERRBASE_FRAMES - 10)	// RemoveTStore: no store frame for the store (0xffff4476)
+#define kNSErrBadIndexType				(ERRBASE_FRAMES - 11)	// an index type that is none of string/int/real/char/symbol/tags (0xffff4475)
+#define kNSErrBadIndexStructure			(ERRBASE_FRAMES - 12)	// an index structure that is neither slot nor multiSlot (0xffff4474)
+#define kNSErrIndexNotFound				(ERRBASE_FRAMES - 13)	// no index on that path (0xffff4473)
+#define kNSErrDuplicateSoupName			(ERRBASE_FRAMES - 14)	// the store has a soup of that name (0xffff4472)
+#define kNSErrSoupRemoved				(ERRBASE_FRAMES - 16)	// the soup has been removed from its store (no _proto; 0xffff4470)
+#define kNSErrSoupGone					(ERRBASE_FRAMES - 18)	// the entry's soup has no persistent frame / store (0xffff446e)
+#define kNSErrKeyTypeMismatch			(ERRBASE_FRAMES - 19)	// KeyToSKey: the key is not of the index's type (0xffff446d)
+#define kNSErrStoreIsROM				(ERRBASE_FRAMES - 20)	// CheckWriteProtect: a ROM (package) store (0xffff446c)
+#define kNSErrIndexExists				(ERRBASE_FRAMES - 21)	// NewIndexDesc: an index on that path already (0xffff446b)
+#define kNSErrKeySizeTooBig				(ERRBASE_FRAMES - 22)	// TSoupIndex: a key field over 100 bytes (0xffff446a)
+#define kNSErrCantRemoveUniqueIDIndex	(ERRBASE_FRAMES - 23)	// RemoveIndex of the _uniqueID index (0xffff4469)
+#define kNSErrNoLargeObjectsOnStore		(ERRBASE_FRAMES - 29)	// the store cannot hold large objects (the ROM's -0xbb9d)
+#define kNSErrBadMultiSlotIndex			(ERRBASE_FRAMES - 32)	// a multiSlot index whose path/type arrays disagree or exceed 6 (0xffff4460)
+#define kNSErrLargeBinaryAsKey			(ERRBASE_FRAMES - 33)	// KeyToSKey of a large binary (0xffff445f)
+#define kNSErrSoupNameTooLong			(ERRBASE_FRAMES - 34)	// over 39 characters ({errorCode, value}; the ROM's -0x2ee88 >> 2)
 
 #endif	/* __NSERRORS_H */

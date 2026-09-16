@@ -20,12 +20,13 @@
 
 
 // ROM 0x0013ec68 GetGlobalTime
-// Dual-mode: the kernel reads the clock, a task asks for it.
+// Dual-mode: the kernel reads the clock, a task asks for it (host: so does
+// code running with no task at all, as the standalone tests do).
 extern "C" TTime
 GetGlobalTime(void)
 {
 	TTime now;
-	if (IsSuperMode())
+	if (IsSuperMode() || gCurrentTask == nil)
 		GetClock(&now.time);
 	else
 	{
@@ -105,4 +106,48 @@ TTime::ConvertTo(TimeUnits units)
 	if (remainder >= (long) units)
 		result++;
 	return result;
+}
+
+
+/* -------------------------------------------------------------------------------
+	The real-time clock (seconds and minutes since 1 Jan 1904).
+	NOT YET RECONSTRUCTED: TURealTimeAlarm (the RTC hardware) and the
+	GMT/daylight-saving offsets - the host keeps a settable base and adds
+	the global clock's seconds to it.
+------------------------------------------------------------------------------- */
+
+static ULong	gRealClockBase = 0;				// seconds at boot (SetRealClockSeconds)
+
+
+// ROM 0x00253630 RealClockSeconds__Fv
+ULong
+RealClockSeconds(void)
+{
+	TTime now = GetGlobalTime();
+	return gRealClockBase + now.ConvertTo(kSeconds);
+}
+
+
+// ROM 0x00253670 SetRealClockSeconds__FUl
+void
+SetRealClockSeconds(ULong seconds)
+{
+	TTime now = GetGlobalTime();
+	gRealClockBase = seconds - now.ConvertTo(kSeconds);
+}
+
+
+// ROM 0x002536ac RealClock__Fv
+ULong
+RealClock(void)
+{
+	return RealClockSeconds() / 60;
+}
+
+
+// ROM 0x002536cc SetRealClock__FUl
+void
+SetRealClock(ULong minutes)
+{
+	SetRealClockSeconds(minutes * 60);
 }

@@ -945,15 +945,17 @@ IsFaultBlock(Ref r)
 
 // ROM 0x002ba450 FollowFaultBlock__FRC6RefVar
 // Read the entry a fault block stands for: from its store when it has one,
-// else by sending its handler EntryAccess.
-// NOT YET RECONSTRUCTED: stores (LoadPermObject) and the interpreter's
-// DoMessage - throws the store error the ROM throws for a missing store.
+// else by sending its handler EntryAccess.  The stores layer (which has
+// LoadPermObject and the entries) does it through gFollowFaultBlockProc
+// (stores/Entries.cpp); without it, the store error the ROM throws for a
+// missing store.
+Ref (*gFollowFaultBlockProc)(RefArg faultBlock) = nil;
+
 Ref
 FollowFaultBlock(RefArg faultBlock)
 {
-	ObjHeader* o = NoFaultObjectPtr(faultBlock);
-	if (ObjArraySlots(o)[kFaultBlockStoreSlot] == 0)
-		Throw(exStoreError, (void*) kNSErrEntryStoreGone, nil);
+	if (gFollowFaultBlockProc != nil)
+		return gFollowFaultBlockProc(faultBlock);
 	Throw(exStoreError, (void*) kNSErrEntryStoreGone, nil);
 	return NILREF;
 }

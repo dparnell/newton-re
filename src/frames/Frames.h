@@ -56,4 +56,7 @@ TObjectIterator*	NewTObjectIterator(RefArg obj);
 void	DeleteTObjectIterator(TObjectIterator* iterator);
 Boolean	RegisterRangeForDeclawing(ULong start, ULong end);
 
+// large binaries (NOT YET RECONSTRUCTED: never one; objects.h declares it under hasLargeObjects)
+Boolean	IsLargeBinary(RefArg ref);
+
 #endif	/* __FRAMES_H */

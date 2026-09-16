@@ -27,7 +27,6 @@
 
 extern const ExceptionName exStoreError;		// "evt.ex.fr.store"
 
-#define kNSErrKeySizeTooBig		(ERRBASE_FRAMES - 22)		// the ROM's 0xffff446a: a key field over 100 bytes
 
 
 // the key types' compare functions and fixed sizes

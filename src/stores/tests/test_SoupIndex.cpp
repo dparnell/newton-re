@@ -421,11 +421,11 @@ TestDuplicates()
 }
 
 
-// a string key's text: big-endian UniChars from ASCII, the terminator included
+// a string key's text: big-endian UniChars from ASCII, no terminator
 static void
 SetStringKey(SKey* key, const char* text)
 {
-	long len = strlen(text) + 1;
+	long len = strlen(text);
 	UniChar chars[32];
 	for (long i = 0; i < len; i++)
 		chars[i] = (UniChar) text[i];
@@ -443,6 +443,7 @@ GetStringKey(const SKey* key, char* text)
 	SwapUniChars(chars, len);
 	for (long i = 0; i < len; i++)
 		text[i] = (char) chars[i];
+	text[len] = 0;
 }
 
 
