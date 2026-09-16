@@ -54,6 +54,7 @@ InitQueries(void)
 	gUnionSoups = MakeEntryCache();
 	gPackageStores = AllocateArray(RSSYMarray, 0);
 	InitEntries();
+	RegisterSoupNatives();
 	InitSoupPrototypes();
 }
 
@@ -1028,20 +1029,11 @@ StoreUnlock(RefArg rcvr)
 
 
 // ROM 0x0032a368 FStoreAbort
-// The store's transaction aborted (its soups' indexes and caches too).
+// The store's transaction aborted.
 Ref
 StoreAbort(RefArg rcvr)
 {
-	TStoreWrapper* wrapper = GetStoreWrapper(rcvr);
-	RefVar soups(GetFrameSlotRef(rcvr, RSSYMsoups));
-	RefVar soup;
-	for (long i = Length(soups) - 1; i >= 0; i--)
-	{
-		soup = GetArraySlotRef(soups, i);
-		if ((Ref) soup != NILREF)
-			AbortSoupIndexes(soup);
-	}
-	OSErrIf(wrapper->Abort());
+	OSErrIf(StoreFromWrapper(rcvr)->Abort());
 	return NILREF;
 }
 

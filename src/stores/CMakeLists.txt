@@ -15,6 +15,7 @@ add_library(stores STATIC
     SoupIndex.cpp
     Entries.cpp
     Soups.cpp
+    SoupNatives.cpp
 )
 target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression)
 target_include_directories(stores PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -352,6 +352,13 @@ and the like), so plain and union soups look alike.  `test_Soups` runs
 the store frame, a soup with string and int indexes, entries through
 their fault blocks, changes, removal, moves, index changes, a store
 re-registered over the same bytes, and the same through NewtonScript.
+`SoupNatives.cpp` has the NewtonScript functions (`GetStores`, `Query`,
+`IsSoupEntry`, `EntryChange`, `EntryUniqueID`, ... `IsSameEntry`), the
+entry aliases (`MakeEntryAlias`: `[nil, soup signature, _uniqueID, soup
+name]` of class `'alias`; `ResolveEntryAlias` looks through the stores)
+and `RegisterSoupNatives`, which binds every store, soup and entry native
+to the ROM's function objects by symbol (both tables of
+`ROMNatives.cpp`).
 
 ## Not yet
 
@@ -362,7 +369,6 @@ Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `TSortingTable`/`TSortTables` (the sort ids are all 0), tags indexes
 (`AlterTagsIndex`, `EncodeTags`, the tag methods), `TCursor`/
 `TCollectCursor` and the queries (`CommonSoupQuery`, `DefineCursor`;
-`EachSoupCursorDo` does nothing), entry aliases, `CopyEntries`, the XMit
-methods, store passwords, the NewtonScript store/soup/entry/cursor
-functions (`GetStores`, `EntryChange`, ...), `TPSSManager` and the card
+`EachSoupCursorDo` does nothing), `CopyEntries`, the XMit methods, store
+passwords, the cursor and union soup functions, `TPSSManager` and the card
 store mounting, the package store part handler, `TMuxStore`, `TFlashStore`.

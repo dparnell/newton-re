@@ -159,6 +159,15 @@ Ref		SoupAdd(RefArg soup, RefArg entry);
 Ref		SoupAddWithUniqueID(RefArg soup, RefArg entry);
 Boolean	PathsEqual(RefArg a, RefArg b);
 
+// entry aliases ([nil, soup signature, _uniqueID, soup name] of class 'alias)
+Ref		MakeEntryAlias(RefArg entry);
+Boolean	IsEntryAlias(RefArg object);
+Ref		ResolveEntryAliasInStores(RefArg alias, RefArg stores);
+Ref		ResolveEntryAlias(RefArg alias);
+Boolean	CompareAliasAndEntry(RefArg alias, RefArg entry);
+Boolean	IsSameEntry(RefArg a, RefArg b);
+void	RegisterSoupNatives(void);				// the NewtonScript functions and the prototypes' methods bound
+
 // the plain soup's persistent frame
 Ref		SoupPersistent(RefArg soup);			// throws kNSErrSoupRemoved when nil
 void	SoupChanged(RefArg soupPersistent, Boolean write);	// its flags say changed (bits 0 and 1); written when asked

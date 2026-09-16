@@ -326,6 +326,33 @@ TestSoups()
 	EXPECT(Length(RefVar(Eval("theSoup:GetIndexes()"))) == 2);
 	EXPECT(Length(RefVar(Eval("theStore:GetSoupNames()"))) == 1);
 	EXPECT(CountEntries(soup) == 4);
+	// the NewtonScript functions
+	EXPECT(EQRef(Eval("GetStores()[0]"), storeObject));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("dave")), added);
+	EXPECT(Eval("IsSoupEntry(dave)") == TRUEREF && Eval("IsSoupEntry(theSoup)") == NILREF);
+	EXPECT(RINT(Eval("EntryUniqueID(dave)")) == 3);
+	EXPECT(EQRef(Eval("EntrySoup(dave)"), soup) && EQRef(Eval("EntryStore(dave)"), storeObject));
+	EXPECT(Eval("EntryValid(dave)") == TRUEREF && Eval("EntryIsResident(dave)") == TRUEREF);
+	Eval("dave.age := 41; EntryChange(dave)");
+	EXPECT(RINT(GetFrameSlotRef(RefVar(LoadPermObject(wrapper, FaultBlockId(added), nil)), SYMBOL("age"))) == 41);
+	Eval("EntryFlush(dave)");
+	EXPECT(Eval("EntryIsResident(dave)") == NILREF);
+	RefVar alias(Eval("MakeEntryAlias(dave)"));
+	EXPECT(Eval("IsEntryAlias(dave)") == NILREF);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("theAlias")), alias);
+	EXPECT(Eval("IsEntryAlias(theAlias)") == TRUEREF);
+	EXPECT(EQRef(Eval("ResolveEntryAlias(theAlias)"), added));
+	EXPECT(Eval("IsSameEntry(theAlias, dave)") == TRUEREF && Eval("IsSameEntry(dave, theAlias)") == TRUEREF);
+	EXPECT(Eval("IsSameEntry(theAlias, MakeEntryAlias(dave))") == TRUEREF);
+	EXPECT(RINT(Eval("EntrySize(dave)")) > 0x10);
+	EXPECT(IsFaultBlock(RefVar(Eval("EntryCopy(dave, theSoup)"))));
+	EXPECT(CountEntries(soup) == 5);
+	Eval("EntryRemoveFromSoup(dave)");
+	EXPECT(CountEntries(soup) == 4 && Eval("IsSoupEntry(dave)") == NILREF);
+	EXPECT(Eval("ResolveEntryAlias(theAlias)") == NILREF);
+	Eval("theSoup:AddWithUniqueID(dave)");
+	EXPECT(CountEntries(soup) == 5 && EQRef(Eval("ResolveEntryAlias(theAlias)"), added));
+	Eval("EntryRemoveFromSoup(dave)");
 
 	// removal: the entry becomes a plain frame, out of the indexes
 	EntryRemoveFromSoup(entry2);
@@ -334,17 +361,14 @@ TestSoups()
 	EXPECT(CountEntries(soup) == 3);
 	KeyToSKey(RefVar(MakeString("alice")), RSSYMstring, &key, nil, nil);
 	EXPECT(nameIndex->Find(&key, &key, &data, true) != kIndexOK);
-	// the last entry removed gives its _uniqueID back
-	EntryRemoveFromSoup(added);
-	EXPECT(RINT(SoupGetNextUID(soup)) == 4);		// (the soup's next stays; lastUID on the store is set)
-	EXPECT(RINT(GetFrameSlotRef(persistent, RSSYMlastuid)) == 4);
+	EXPECT(RINT(SoupGetNextUID(soup)) == 5);
 	// a copy and a move to another soup
 	RefVar soup2(StoreCreateSoup(storeObject, RefVar(MakeString("Others")), RefVar(NILREF)));
 	RefVar copy(EntryCopy(entry3, soup2));
 	EXPECT(IsFaultBlock(copy) && EQRef(EntrySoup(copy), soup2));
-	EXPECT(CountEntries(soup2) == 1 && CountEntries(soup) == 2);
+	EXPECT(CountEntries(soup2) == 1 && CountEntries(soup) == 3);
 	EntryMove(entry, soup2);
-	EXPECT(CountEntries(soup2) == 2 && CountEntries(soup) == 1);
+	EXPECT(CountEntries(soup2) == 2 && CountEntries(soup) == 2);
 	EXPECT(IsFaultBlock(entry) && EQRef(EntrySoup(entry), soup2));		// the block now stands for the moved entry
 	EXPECT(StringIs(RefVar(GetFrameSlotRef(entry, RSSYMname)), "Robert"));
 	KeyToSKey(RefVar(MakeString("Robert")), RSSYMstring, &key, nil, nil);
@@ -399,11 +423,11 @@ TestSoups()
 	soup = StoreGetSoup(storeObject, RefVar(MakeString("people")));
 	EXPECT((Ref) soup != NILREF);
 	EXPECT(StringIs(RefVar(SoupGetName(soup)), "People"));
-	EXPECT(RINT(SoupGetNextUID(soup)) == 5);
+	EXPECT(RINT(SoupGetNextUID(soup)) == 6);		// one past the last _uniqueID (Eve's 5)
 	EXPECT(Length(RefVar(SoupGetIndexes(soup))) == 2);
 	EXPECT(RINT(SoupGetInfo(soup, RefVar(SYMBOL("version")))) == 2);
 	long firstUID = -1;
-	EXPECT(CountEntries(soup, &firstUID) == 2 && firstUID == 2);		// Carol and Eve
+	EXPECT(CountEntries(soup, &firstUID) == 3 && firstUID == 2);		// Carol, the copy of Dave, Eve
 	RefVar carol(GetEntry(soup, (PSSId) (long) data));
 	key = 35L;
 	EXPECT(ageIndex != GetSoupIndexObject(soup, 0));
