@@ -3,9 +3,11 @@
 
 Usage:
     python decompile.py --project <dir> --name MP2100D [--ghidra <dir>]
-                        (--class TObjectTable | --function Name | --address 0x...) [--asm] [--callers]
+                        (--class TObjectTable | --function Name | --address 0x... | --range 0x... 0x...) [--asm] [--callers]
 
-Selects functions by class namespace, by name (any namespace) or by address,
+Selects functions by class namespace, by name (any namespace), by address or
+by address range (every function starting in it - one Ghidra start for a
+whole subsystem),
 and prints Ghidra's decompiler output for each, with the function's ROM
 address and mangled name in the header so the source we write can cite it.
 `--asm` adds the disassembly, `--callers` lists calling functions (thunks and
@@ -27,6 +29,7 @@ def main(argv=None) -> int:
     ap.add_argument("--class", dest="cls", action="append", default=[], help="all functions of this class")
     ap.add_argument("--function", action="append", default=[], help="functions with this name")
     ap.add_argument("--address", action="append", default=[], help="function at this address")
+    ap.add_argument("--range", nargs=2, metavar=("START", "END"), help="every function with its entry in [START, END)")
     ap.add_argument("--asm", action="store_true", help="also print the disassembly")
     ap.add_argument("--callers", action="store_true", help="list callers of each function")
     ap.add_argument("--timeout", type=int, default=60, help="decompiler timeout per function (s)")
@@ -71,6 +74,13 @@ def main(argv=None) -> int:
                     print(f"no function at {a}", file=sys.stderr)
                 else:
                     funcs.append(f)
+            if args.range:
+                start, end = (int(x, 0) for x in args.range)
+                for f in fm.getFunctions(space.getAddress(start), True):
+                    if f.getEntryPoint().getOffset() >= end:
+                        break
+                    if not f.isThunk():
+                        funcs.append(f)
             funcs = sorted({f.getEntryPoint().getOffset(): f for f in funcs}.values(),
                            key=lambda f: f.getEntryPoint().getOffset())
 

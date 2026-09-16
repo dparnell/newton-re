@@ -45,6 +45,7 @@ tools/newton-rom/
     classinfo.py          decode protocol class-info tables (names, dispatch slots, monitor selectors);
                           --all -> docs/protocols/classinfos.md
     romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp)
+    rssymbols.py          the ROM's RSSYM symbol constants -> src/frames/RSSymbols.h + RSSymbolTable.cpp
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -245,7 +246,9 @@ and keeps disassembling (`fix_virtual_calls`). The *decompiler* still gives
 up at the call in many functions, showing a `return` right after it (the
 loop in `TTimerQueue::Check`, the dispatch in `TAppWorld::AEDispatch`): when
 a decompiled function has a virtual call, read the disassembly (`disasm.py`)
-for what follows it. `analysis/vtable.py build/MP2100D 0x2073c` lists a
+for what follows it. (One Ghidra process at a time: the project is locked while a script runs, so
+run the analysis tools sequentially; `decompile.py --range START END` does a
+whole subsystem in one start.)  `analysis/vtable.py build/MP2100D 0x2073c` lists a
 vtable's slots by method name (the address is the literal a constructor
 stores at `[this,#0]`), which is how a `add pc,r12,#0x50` is resolved.
 
@@ -257,6 +260,15 @@ TSerialChipVoyager` decodes one - names, version, instance size, every
 dispatch slot and monitor selector by method name - from `rom.bin` and
 `symbols.json` alone; `--all` lists the 101 implementations in the ROM
 (`docs/protocols/README.md` explains the mechanism).
+
+Tables of the ROM go into the source through scripts, never by hand:
+`analysis/romtable.py build/MP2100D NAME[:type[:count]]... -o file.cpp`
+emits data symbols as C++ arrays (the compression coders' tables), and
+`analysis/rssymbols.py build/MP2100D -o src/frames` emits the 1765 `RSSYM`
+constants - the NewtonScript symbols the ROM's C++ names - reading each
+symbol's real name and hash from the object the constant refers to
+(`docs/frames/README.md`).  Both write a header naming the command that
+made them.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class

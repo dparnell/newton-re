@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import fnmatch
 import os
+import time
 from typing import Dict, List, Optional
 
 # Product configuration for the MP2100 D ROM: hasVoyager (-> hasCirrus,
@@ -62,6 +63,21 @@ BUILTIN_SPELLING = {
 }
 
 
+def write_text(path: str, text: str) -> None:
+    """Write a UTF-8/LF text file, retrying: on Windows another process (an
+    indexer, an editor) holding the file open makes the open fail with EINVAL
+    or EACCES for a moment."""
+    for attempt in range(5):
+        try:
+            with open(path, "w", encoding="utf-8", newline="\n") as out:
+                out.write(text)
+            return
+        except OSError:
+            if attempt == 4:
+                raise
+            time.sleep(0.2 * (attempt + 1))
+
+
 def prepare(src_dir: str, out_dir: str, excludes: Optional[Dict[str, str]] = None,
             write_all_cpp: bool = True) -> List[str]:
     """Copy headers into a flat UTF-8/LF include directory; return the names to include."""
@@ -79,8 +95,7 @@ def prepare(src_dir: str, out_dir: str, excludes: Optional[Dict[str, str]] = Non
             with open(os.path.join(root, f), "rb") as src:
                 raw = src.read()
             text = raw.decode("mac-roman").replace("\r\n", "\n").replace("\r", "\n")
-            with open(os.path.join(out_dir, f), "w", encoding="utf-8", newline="\n") as out:
-                out.write(text)
+            write_text(os.path.join(out_dir, f), text)
             if not any(fnmatch.fnmatch(f, pat) for pat in excludes):
                 names.append(f)
     ordered = [n for n in INCLUDE_FIRST if n in names] + sorted(n for n in names if n not in INCLUDE_FIRST)
