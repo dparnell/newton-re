@@ -59,7 +59,8 @@ src/
                 indexes' node cache (StoreWrapper.h, NodeCache.h), and how
                 a frames object is written to and read from a store
                 (StoreObject.h: the tagged stream, the pipes, the
-                precedents) (docs/stores/README.md)
+                precedents), and the soup index B-tree (SoupIndex.h:
+                SKey, key fields, nodes) (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

@@ -151,9 +151,9 @@ B-tree nodes the soup indexes read: a handle of entries (node id, its
 512-byte buffer, duplicate-node and dirty flags, a use stamp, the index it
 belongs to, in-use), growing when every entry is in use and reusing the
 least recently used otherwise; `Commit` writes an index's dirty nodes back
-through it and trims the cache to eight entries (with `DeleteNode`, in the
-index unit to come).  `test_StoreWrapper` runs the tables, the wrapper and
-the cache over a `THostStore`.
+through it and trims the cache to eight entries; `DeleteNode` deletes a
+node's object (both in `SoupIndex.cpp`).  `test_StoreWrapper` runs the
+tables, the wrapper and the cache over a `THostStore`.
 
 ## Store objects (`src/stores/StoreObject.h`)
 
@@ -204,13 +204,64 @@ rebuilt after a collection).  `test_StoreWrapper` round-trips objects of
 every kind, shared references, entries, rewrites in place, a 300-element
 array with text past the pipes' buffers, and the errors.
 
+## Soup indexes (`src/stores/SoupIndex.h`)
+
+A soup index is a B-tree of keys with their data (an entry's unique id,
+usually) in 512-byte nodes on the store: `TSoupIndex` (0x002c0a10-0x002c7370,
+0x44 bytes; the pure interface `TAbstractSoupIndex` above it is what the
+cursors use).  The formats, from the node and key-field primitives (`kf*`,
+`KeyFieldAdr`, `LeftNodeNo`, `PutKeyIntoNode`, `DeleteKeyFromNode`,
+`InitNode`, `ReadANode`, `UpdateNode`):
+
+| Thing | Layout |
+| --- | --- |
+| `SKey` (0x50) | byte 0 flags (multi-key: bit *n* = sub-key *n* missing; bit 7 = a shorter key sorts after a longer one), byte 1 the data size, then up to 0x4e bytes of data.  Fixed-size key types (long 4, char 2, double 8) have no header: the `SKey` is the raw value.  Strings are UniChars with the terminator; a multi-key is the sub-keys' `SKey`s in turn, each padded even. |
+| key field | 2-byte header (top 2 bits flags: 1 = has duplicates; low 14 bits the size), the key (padded even), the data entries (each padded even); a field with duplicates ends with a 2-byte count of the data in the field and the 4-byte id of its first dup node.  At most 100 bytes (`kfAssembleKeyField` throws -48022 for key + data + 4 > 100). |
+| `NodeHeader` | id, parent id, bytes remaining (short), number of keys (short), numKeys + 1 offsets (shorts) to the key fields, which are packed at the end of the node, each preceded by the 4-byte id of the child to its left; the last offset is to an empty field whose left child is the rightmost child.  A new node has bytesRemaining = size - 0x14.  On the store the node is compact (header, offsets, then the key data; `UpdateNode`), expanded when read (the key data moved to the end, the gap zeroed; `ReadANode`).  `RoomInNode`: field + 6 < remaining; `NodeUnderflow`: remaining > size / 2. |
+| `DupNodeHeader` | id, next dup node id, bytes remaining, count, the offset of the end of the data, 0; the data from 0x10. |
+| `IndexInfo` (0x1c, the object `fInfoId`) | root node id (0: none), node size (0x200), key type, data type, duplicates (0 unique keys, 1 likewise, 2 allowed - `IndexDescToIndexInfo` at 0x0031dbcc gives 0 for the `_uniqueID` index), the multi-key's sub-key types (4 bits each, lowest first; unused 0xf), its ascending bits (a bit per sub-key; clear = that sub-key descends), a descending byte for the whole index. |
+
+Key types (`fKeyCompareFns` at 0x0c102508, `fKeySizes` at 0x0c102524): 0
+string (`CompareUnicodeText` with the index's `TSortingTable` - NOT YET
+RECONSTRUCTED, letters are folded), 1 long, 2 char, 3 double, 4 ASCII
+(case-folded bytes), 5 raw (`memcmp`, the shorter less), 6 multi (sub-key
+by sub-key; a missing sub-key is less; a key that runs out is less unless
+its flag bit 7 is set; each sub-key's order reversed unless its ascending
+bit is set).  `CompareKeys` reverses the result for a descending index.
+
+The operations: `Add`/`AddInTransaction` (`_BTEnterKey`: `InsertKey` down to
+the leaf, `PutKeyIntoNode` on the way up while nodes split -
+`SplitANode` moves keys from the end of the node into a new one until it is
+half full and pushes the boundary key up - `CreateNewRoot` when the root
+splits; a key already there gets its datum added by `InsertDupData`:
+`CheckForDupData`, the field converted to one with duplicates,
+`StoreDupData` into the field while it stays under 100 bytes, else into
+the chain of dup nodes), `Delete` (`_BTRemoveKey`: `DeleteKey` - a datum
+removed by `DeleteTheKey`; an interior key with no other data is replaced
+by the leftmost leaf key to its right (`GetLeafKey`,
+`InsertAfterDelete`); an underflowing node is merged or balanced with a
+sibling (`BalanceTwoNodes`, `MergeTwoNodes`); an emptied root gives way
+to its child), `Find` (0 found, 2 not found - the key after is
+answered, 3 nothing follows), `First`/`Last`, `Next` (mode 0 the key's
+next datum then the next key, 1 the next key, 2 the next datum only),
+`Prior`, `Search` (forwards or backwards from a key calling a stop
+function per entry), `Destroy`, `TotalSize`; the cursors' iteration by
+`IndexState` (`FindAndGetState`, `MoveAndGetState`, `MoveUsingState`).
+Every operation is a node cache transaction: `TNodeCache::Commit` when it
+succeeds, `Abort` when it throws.  Three static 100-byte key fields
+(`theKeyField`, `savedKey`, `leafKey`) are the ROM's working buffers.
+`test_SoupIndex` adds 2000 long keys in a scrambled order and deletes
+them again, walks 300 duplicates through the field and dup nodes both
+ways, tries each key type and the multi-key, and re-reads an index from
+the store.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `CommitLargeBinary`, `LBData`), the word hints (`TWordHintsHandler`,
 `GetWordsHints`, `TestObjHints`), `MakeStoreObject` and the store frames,
-`TEphemeralTracker`, `TSoupIndex` and
-`TUnionSoupIndex` (the B-tree indexes with `TNodeCache`), the entry cache
+`TEphemeralTracker`, `TUnionSoupIndex` (the index over a union soup's
+soups), `TSortingTable`, the entry cache
 and fault blocks, `TCursor`/`TCollectCursor`, the NewtonScript
 store/soup/entry/cursor functions, `TPSSManager` and the card store
 mounting, `TMuxStore`, `TFlashStore`.

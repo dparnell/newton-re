@@ -7,3 +7,8 @@ add_executable(test_StoreWrapper test_StoreWrapper.cpp)
 target_link_libraries(test_StoreWrapper PRIVATE stores)
 add_test(NAME stores.StoreWrapper COMMAND test_StoreWrapper)
 set_tests_properties(stores.StoreWrapper PROPERTIES TIMEOUT 60)
+
+add_executable(test_SoupIndex test_SoupIndex.cpp)
+target_link_libraries(test_SoupIndex PRIVATE stores)
+add_test(NAME stores.SoupIndex COMMAND test_SoupIndex)
+set_tests_properties(stores.SoupIndex PROPERTIES TIMEOUT 120)
