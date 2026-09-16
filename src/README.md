@@ -62,8 +62,9 @@ src/
   frames/       the NewtonScript object system: refs, the object heap and
                 its collector (ObjectHeap.h), symbols, binaries, arrays,
                 frames and their maps, paths, clones, classes - the DDK's
-                objects.h (Frames.h for clients); the ROM's RSSYM symbol
-                constants generated into RSSymbols.h/RSSymbolTable.cpp
+                objects.h (Frames.h for clients); the ROM's constants
+                generated into RSSymbols.h/ROMConstants.h, and ROMImport,
+                which reads the ROM's own objects out of a ROM image
                 (docs/frames/README.md)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```

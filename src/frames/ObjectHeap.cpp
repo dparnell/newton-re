@@ -34,15 +34,13 @@ Ref				gPackageStores = NILREF;
 int				gVerboseGC = 0;
 Ref				gROMBuiltinFunctions = NILREF;
 
-// Magic pointer tables (ResolveMagicPtr): table 0 is the ROM's, table 1 the
-// two specials, even tables 2-8 the four REx export tables and odd tables
-// 3-9 the RAM tables their imports are resolved into (InitRExMagicPointerTables,
-// 0x000d218c).  In the ROM the ROM table is at 0x01d80000 in the jump
-// table's diagonal page layout and the REx tables at 0x01ee0000 + n * 0x100000;
-// here they are plain arrays the ROM/REx importer fills in.
-const long		kMagicPointerTables = 10;
-Ref*			gMagicPointerTables[kMagicPointerTables] = { nil };			// gRExImportTables (0x0c104c8c) for the odd ones
-long			gMagicPointerTableCounts[kMagicPointerTables] = { 0 };		// gRExExportTableCounts (0x0c104cac) for the even ones
+// The magic pointer tables (ObjectHeap.h).  In the ROM table 0 is at
+// 0x01d80000 in the jump table's diagonal page layout (physically
+// gROMMagicPointerTable, 0x003a5000) and the REx tables at 0x01ee0000 +
+// n * 0x100000 (InitRExMagicPointerTables, 0x000d218c); here they are plain
+// arrays the ROM importer (ROMImport.cpp) and, later, the REx reader fill.
+Ref*			gMagicPointerTables[kMagicPointerTables] = { nil };
+long			gMagicPointerTableCounts[kMagicPointerTables] = { 0 };
 
 
 /* -------------------------------------------------------------------------------

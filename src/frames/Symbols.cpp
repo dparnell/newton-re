@@ -154,12 +154,12 @@ IsSymbol(RefArg obj)
 
 
 // The ROM knows a symbol below its RExBlock (0x006f2e9c, the end of the
-// ROM's symbols) is the only one of its name; here that is the host's
-// read-only symbol space.
+// ROM's symbols) is the only one of its name; here that is the ROM's
+// object area read by ROMImport, or the host's small symbol space.
 Boolean
 InROMSymbolSpace(Ref r)
 {
-	return (char*) r >= gROMSymbolSpaceStart && (char*) r < gROMSymbolSpaceEnd;
+	return ((char*) r >= gROMSymbolSpaceStart && (char*) r < gROMSymbolSpaceEnd) || InROMObjectArea(r);
 }
 
 
@@ -573,8 +573,8 @@ InitROMSymbols(void)
 
 // ROM 0x0032d97c InitSymbols__Fv
 // The RAM table (128 slots, a GC root the collector treats specially) over
-// the ROM's.  NOT YET RECONSTRUCTED: the ROM's table (Slots(0x0053eba1))
-// comes with the ROM object importer; InitROMSymbols stands in.
+// the ROM's (the array at 0x0053eba1 - here the one ROMImport read, or
+// InitROMSymbols' small stand-in when no ROM image was imported).
 void
 InitSymbols(void)
 {
@@ -582,5 +582,14 @@ InitSymbols(void)
 	gSymbolTableHashShift = 0x19;
 	gSymbolTable = AllocateArray(RefVar(NILREF), gSymbolTableSize);
 	AddGCRoot(gSymbolTable);
-	InitROMSymbols();
+	if (gROMSymbolTableRef == NILREF)
+	{
+		InitROMSymbols();
+		return;
+	}
+	gROMSymbolTable = Slots(gROMSymbolTableRef);
+	gROMSymbolTableSize = Length(gROMSymbolTableRef);
+	gROMSymbolTableHashShift = 0x1f;
+	for (long size = 2; size < gROMSymbolTableSize; size *= 2)
+		gROMSymbolTableHashShift--;
 }

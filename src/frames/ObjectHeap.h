@@ -257,6 +257,14 @@ extern Ref			gUnionSoups;			// 0x0c1027c4
 extern Ref			gPackageStores;			// 0x0c1017d0
 extern int			gVerboseGC;				// 0x0c1024f4
 extern Ref			gROMBuiltinFunctions;	// the ROM's frame of built-in functions (magic pointer 1.2, the ROM's object 0x0062418d)
+extern Ref			gROMSymbolTableRef;		// host: the ROM's symbol table once ROMImport has read the ROM's objects (NILREF else)
+
+// the magic pointer tables (ResolveMagicPtr): table 0 the ROM's, 1 the two
+// specials, even 2-8 the REx export tables, odd 3-9 the RAM tables of their
+// imports (gRExImportTables 0x0c104c8c, gRExExportTableCounts 0x0c104cac)
+const long			kMagicPointerTables = 10;
+extern Ref*			gMagicPointerTables[kMagicPointerTables];
+extern long			gMagicPointerTableCounts[kMagicPointerTables];
 
 // the exception names the object system throws (user/ExceptionNames.cpp)
 extern const ExceptionName exFrames;						// "evt.ex.fr"
@@ -297,6 +305,7 @@ Ref			FollowFaultBlock(RefArg faultBlock);
 void		DirtyObject(Ref obj);
 void		UndirtyObject(Ref obj);
 Boolean		InROMSymbolSpace(Ref r);				// symbols there are unique: compare by identity
+Boolean		InROMObjectArea(Ref r);					// host: an object read from the ROM image (ROMImport)
 
 // frames and maps
 long		FindOffset(Ref map, Ref tag);

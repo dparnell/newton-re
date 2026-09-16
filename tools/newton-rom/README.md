@@ -45,7 +45,8 @@ tools/newton-rom/
     classinfo.py          decode protocol class-info tables (names, dispatch slots, monitor selectors);
                           --all -> docs/protocols/classinfos.md
     romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp)
-    rssymbols.py          the ROM's RSSYM symbol constants -> src/frames/RSSymbols.h + RSSymbolTable.cpp
+    romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
+                          -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -264,11 +265,12 @@ dispatch slot and monitor selector by method name - from `rom.bin` and
 Tables of the ROM go into the source through scripts, never by hand:
 `analysis/romtable.py build/MP2100D NAME[:type[:count]]... -o file.cpp`
 emits data symbols as C++ arrays (the compression coders' tables), and
-`analysis/rssymbols.py build/MP2100D -o src/frames` emits the 1765 `RSSYM`
-constants - the NewtonScript symbols the ROM's C++ names - reading each
-symbol's real name and hash from the object the constant refers to
-(`docs/frames/README.md`).  Both write a header naming the command that
-made them.
+`analysis/romconstants.py build/MP2100D -o src/frames` emits the ROM's
+frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
+name and hash from the object the constant refers to), the 1102 `R`/`RS`
+object constants, and where the ROM's object area and tables are, for the
+ROM object importer (`docs/frames/README.md`).  Both write a header naming
+the command that made them.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class
