@@ -1,0 +1,143 @@
+/*
+	File:		views/GaugeView.cpp
+
+	Contains:	TGaugeView: a bar filled to its value, with a knob when editable.
+
+	Reconstructed from the MP2100 D ROM; each function cites its origin.
+*/
+
+#include "GaugeView.h"
+#include "Rects.h"
+#include "Draw.h"
+#include "Shapes.h"
+#include "Polygons.h"
+#include "RegionVars.h"
+#include "ObjectHeap.h"
+
+
+// ROM 0x0018ada4 ClassID__10TGaugeViewCFv
+long
+TGaugeView::ClassID(void) const
+{
+	return clGaugeView;
+}
+
+
+// ROM 0x0018adac DerivedFrom__10TGaugeViewCFl
+Boolean
+TGaugeView::DerivedFrom(long id) const
+{
+	return id == clGaugeView || TView::DerivedFrom(id);
+}
+
+
+// ROM 0x0018ade0 Constructor__10TGaugeViewFRC6RefVarP5TView
+// The maximum from maxValue (100 without one), the minimum from minValue
+// (0).
+void
+TGaugeView::Constructor(RefArg context, TView* parent)
+{
+	TView::Constructor(context, parent);
+	fMaxValue = 100;
+	RefVar value(GetValue(RSSYMmaxvalue, RefVar(NILREF)));
+	if (NOTNIL(value))
+		fMaxValue = RINT(value);
+	fMinValue = 0;
+	value = GetValue(RSSYMminvalue, RefVar(NILREF));
+	if (NOTNIL(value))
+		fMinValue = RINT(value);
+}
+
+
+// ROM 0x0018aed4 SetValue__10TGaugeViewFRC6RefVarT1
+// maxValue and minValue set the limits; then as TView::SetValue (whose
+// body the ROM repeats here).
+void
+TGaugeView::SetValue(RefArg slot, RefArg value)
+{
+	if (EQRef(slot, RSSYMmaxvalue))
+		fMaxValue = RINT(value);
+	else if (EQRef(slot, RSSYMminvalue))
+		fMinValue = RINT(value);
+	TView::SetValue(slot, value);
+}
+
+
+// ROM 0x0018af84 RealDraw__10TGaugeViewFR5TRect
+// The bar: viewValue pinned to the limits; the bounds made an odd height
+// (a pixel off the bottom); an editable gauge keeps a knob's width (the
+// height) out of the range; the filled part runs from the left to half
+// the knob plus the value's share of the range, inset two from the top
+// and bottom, painted black.  With gaugeDrawLimits the rest of the bar
+// (a pixel narrower top and bottom) is painted light gray (NOT YET
+// RECONSTRUCTED: the ROM's solid gray pattern on a port deeper than a
+// bit).  The knob: a diamond the height wide, two pixels taller than the
+// bar at each end, centred on the filled part's right, painted and its
+// inside (a pixel in) erased.  The pen pattern is left black.
+void
+TGaugeView::RealDraw(Rect& /*bounds*/)
+{
+	long value = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
+	if (value <= fMinValue)
+		value = fMinValue;
+	if (value > fMaxValue)
+		value = fMaxValue;
+	Rect r = viewBounds;
+	long height = r.bottom - r.top;
+	if ((height & 1) == 0)
+	{
+		height--;
+		r.bottom--;
+	}
+	Boolean editable = (fFlags & vReadOnly) == 0;
+	long knob = editable ? height : 0;
+	long range = (r.right - r.left) - knob;
+	long pos = ((value - fMinValue) * range) / (fMaxValue - fMinValue);
+	r.right = (short) (r.left + knob / 2 + pos);
+	InsetRect(&r, 0, 2);
+	PenNormal();
+	PaintRect(&r);
+	if (NOTNIL(GetProto(RSSYMgaugedrawlimits)))
+	{
+		SetPattern(2);
+		Rect limits;
+		limits.top = (short) (r.top + 1);
+		limits.left = r.right;
+		limits.bottom = (short) (r.bottom - 1);
+		limits.right = viewBounds.right;
+		PaintRect(&limits);
+	}
+	PenNormal();
+	if (editable)
+	{
+		Rect knobBox;
+		knobBox.top = (short) (r.top - 2);
+		knobBox.bottom = (short) (r.bottom + 2);
+		knobBox.left = (short) (r.right - height / 2);
+		knobBox.right = (short) (knobBox.left + height);
+		Point mid = MidPoint(knobBox);
+		TRegionVar diamond;
+		OpenRgn();
+		MoveTo(mid.h, knobBox.top);
+		LineTo(knobBox.right, mid.v);
+		LineTo(mid.h, knobBox.bottom);
+		LineTo(knobBox.left - 1, mid.v);
+		LineTo(mid.h, knobBox.top);
+		CloseRgn(diamond);
+		PaintRgn(diamond);
+		InsetRgn(diamond, 1, 1);
+		EraseRgn(diamond);
+	}
+	SetPattern(5);
+}
+
+
+// ROM 0x0018b2d0 RealDoCommand__10TGaugeViewFRC6RefVar
+// aeClick on an editable gauge tracks the pen to set the value
+// (TrackSetValue 0x0018b344: NOT YET RECONSTRUCTED - the strokes); then
+// as TView.
+Boolean
+TGaugeView::RealDoCommand(RefArg cmd)
+{
+	return TView::RealDoCommand(cmd);
+}

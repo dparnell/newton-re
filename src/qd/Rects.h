@@ -41,6 +41,7 @@ void	MapRect(Rect* r, const Rect* src, const Rect* dst);
 void	ScalePt(Point* pt, const Rect* src, const Rect* dst);
 
 inline Point	MakePoint(long h, long v)		{ Point p; p.v = (short) v; p.h = (short) h; return p; }
+inline Point	MidPoint(const Rect& r)			{ return MakePoint((r.left + r.right) / 2, (r.top + r.bottom) / 2); }		// ROM 0x00199ed0 MidPoint__5TRectCFv
 inline Boolean	EqualPt(Point a, Point b)		{ return a.v == b.v && a.h == b.h; }
 
 #endif	/* __RECTS_H */

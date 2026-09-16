@@ -366,6 +366,8 @@ Boolean		ProtoEQ(RefArg a, RefArg b);							// ROM 0x00262a98 ProtoEQ__FRC6RefVa
 Ref			GetCacheContext(RefArg templ);							// ROM 0x0025c598 GetCacheContext__FRC6RefVar
 void		OuterBounds1(Rect* bounds, ULong viewFormat);			// ROM 0x00262114 OuterBounds1__FP5TRectUl
 void		BadWickedNaughtyNoot(long which);						// ROM 0x001f18dc BadWickedNaughtyNoot__Fl
+Boolean		SetPattern(long index);									// ROM 0x000e4aa0 SetPattern__Fl - the pen pattern from a viewFormat pattern index
+void		DisposeFgPattern(void);									// ROM 0x00303b70 DisposeFgPattern__Fv
 
 void		InitViewPrototypes(void);		// host: the canonical context, data context and rect frames when no ROM is imported
 void		InitViewSystem(void);			// host: the slot cache table, the prototypes, the root view (with the current port) - after InitObjects and InitGraf

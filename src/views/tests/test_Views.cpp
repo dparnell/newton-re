@@ -13,6 +13,7 @@
 #include "RootView.h"
 #include "TextView.h"
 #include "ParagraphView.h"
+#include "GaugeView.h"
 #include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -734,6 +735,57 @@ TestParagraphView()
 }
 
 
+static void
+TestGaugeView()
+{
+	// a read-only gauge (protoGauge): the bar filled to the value
+	TGaugeView* g = (TGaugeView*) ViewOf("ctxG := AddView(GetRoot(), {viewClass: 92, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 120, bottom: 20}, viewValue: 25})");
+	EXPECT(g != nil && g->ClassID() == clGaugeView && g->DerivedFrom(clView) && g->fMaxValue == 100 && g->fMinValue == 0);
+	Eval("ctxG:Dirty()");
+	Refresh();
+	// height 10 made 9 (bottom 19), inset 2: rows 12-16; the range 100, 25 of it: 20-45
+	long inkLeft, inkRight;
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight == 45);
+	EXPECT(Pixel(20, 12) == 1 && Pixel(44, 16) == 1 && Pixel(20, 11) == 0 && Pixel(20, 17) == 0 && Pixel(45, 14) == 0);
+	// the value changed through SetValue: the view is dirtied and redrawn
+	Eval("SetValue(ctxG, 'viewValue, 50)");
+	Refresh();
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight == 70);
+	// pinned to the limits; the limits from the slots
+	Eval("SetValue(ctxG, 'viewValue, 200)");
+	Refresh();
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkRight == 120);
+	Eval("SetValue(ctxG, 'maxValue, 400)");
+	EXPECT(g->fMaxValue == 400);
+	Refresh();
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkRight == 70);
+	Eval("ctxG:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "gauge closed"));
+
+	// an editable gauge (protoSlider) with gaugeDrawLimits: the knob and the gray rest
+	g = (TGaugeView*) ViewOf("ctxG := AddView(GetRoot(), {viewClass: 92, viewFlags: 1, viewBounds: {left: 20, top: 30, right: 120, bottom: 40}, viewValue: 0, gaugeDrawLimits: true})");
+	Eval("ctxG:Dirty()");
+	Refresh();
+	// the bar 9 high (rows 30-38), inset 2: rows 32-36; the knob 9 wide keeps 9 out of the range, so the
+	// filled part ends at 20 + 4 = 24 and the knob's box is 20..29 x 30..39: a hollow diamond centred at (24, 34)
+	EXPECT(Pixel(24, 30) == 1 && Pixel(24, 38) == 1 && Pixel(28, 34) == 1 && Pixel(20, 34) == 1 && Pixel(24, 34) == 0 && Pixel(24, 29) == 0 && Pixel(29, 34) == 0 && Pixel(24, 39) == 0);
+	// the rest of the bar light gray (one pixel in four): rows 33-35 from the filled part's end to the right
+	long grayCount = 0;
+	for (long x = 40; x < 120; x++)
+		for (long y = 32; y < 37; y++)
+			grayCount += Pixel(x, y);
+	EXPECT(grayCount == 60 && Pixel(119, 32) == 0 && Pixel(119, 36) == 0);
+	Eval("ctxG:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "slider closed"));
+}
+
+
 int
 main()
 {
@@ -793,6 +845,7 @@ main()
 		TestTextView();
 		TestPictureView();
 		TestParagraphView();
+		TestGaugeView();
 	}
 	newton_catch_all
 	{

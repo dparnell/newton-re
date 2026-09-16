@@ -106,8 +106,9 @@ src/
                 the text view of titles and buttons (TextView.h), the
                 picture view (PictureView.h), the paragraph view of
                 styled text (ParagraphView.h, display only, over
-                DataView.h; the style runs in StyleRuns.h); the other
-                subclasses (lists, pickers, editing) to come
+                DataView.h; the style runs in StyleRuns.h), the gauge
+                (GaugeView.h); the other subclasses (lists, pickers,
+                editing) to come
                 (docs/views/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

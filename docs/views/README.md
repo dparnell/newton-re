@@ -305,6 +305,18 @@ builds the caches.  NOT YET: editing, hilites, the caret, ink, tabs (drawn
 as characters), the text objects, the parents' bounds narrowing the
 lines, the empty last line after a final carriage return.
 
+**TGaugeView** (`GaugeView.h`, clGaugeView 92: protoGauge, protoSlider):
+a bar filled black from the left in proportion to `viewValue` between
+`minValue` and `maxValue` (0 and 100 without them; `Constructor`
+0x0018ade0, `SetValue` 0x0018aed4 keeps the limits) - `RealDraw`
+0x0018af84: the bounds made an odd height, the filled part inset two
+from the top and bottom; an editable gauge (vReadOnly clear) keeps a
+knob's width (the height) out of the range and draws a hollow diamond
+(a region from four lines, painted, inset a pixel and erased) centred on
+the filled part's end; `gaugeDrawLimits` paints the rest of the bar
+light gray.  NOT YET: tracking the pen (`TrackSetValue` 0x0018b344 on
+aeClick).
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -313,7 +325,8 @@ map: the structure, every justification, the round trip through
 their clippers, scripts, ties, the errors, a title and a button's text,
 a picture view's icon, paragraphs (the wrapped lines and their offsets,
 the ellipsis, vCalculateBounds, style runs, viewLineSpacing, justified
-and moved paragraphs, the style runs' corrections).
+and moved paragraphs, the style runs' corrections), gauges (the bar, the
+value through SetValue, the limits, the knob and the gray rest).
 
 ## Not yet
 
