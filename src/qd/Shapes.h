@@ -4,7 +4,7 @@
 	Contains:	Lines, ovals, round rectangles and arcs.  A line is drawn
 				from the pen's location with the pen's size, mode and
 				pattern (LineTo, Line; StdLine records into an open polygon
-				or region, NOT YET); ovals and round rectangles are one
+				or region - Polygons.h); ovals and round rectangles are one
 				shape - an oval of the corners' width and height inside the
 				rectangle (OvalRec: the ROM's incremental rasteriser in 16.16
 				and 64-bit arithmetic, InitOval/BumpOval, PutOval writing

@@ -93,7 +93,8 @@ src/
                 styles (Fonts.h: the 'sfnt' bitmap fonts of the font
                 family frames), text drawn and measured (Text.h), the
                 region holders (RegionVars.h), bitmap frames drawn
-                (Pictures.h); polygons and QuickDraw pictures to come
+                (Pictures.h), polygons and the recording of lines into
+                regions (Polygons.h); QuickDraw pictures to come
                 (docs/qd/README.md)
   views/        the view system: TView (View.h), the C++ object behind
                 every NewtonScript view - its context frame and slot

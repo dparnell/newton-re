@@ -15,6 +15,7 @@
 */
 
 #include "Shapes.h"
+#include "Polygons.h"
 #include "CompMath.h"
 #include "FixedMath.h"
 #include "OSErrors.h"
@@ -454,15 +455,12 @@ DrawLine(Point from, Point to)
 
 // ROM 0x002d1eac StdLine
 // The standard line proc: the line from the pen's location to the point,
-// which becomes the pen's location.  NOT YET RECONSTRUCTED: recording
-// into an open picture, polygon or region.
+// which becomes the pen's location - recorded into an open polygon or
+// region (DoLine).  NOT YET RECONSTRUCTED: recording into an open picture.
 void
 StdLine(Point to)
 {
-	GrafPort* port = GetCurrentPort();
-	Point from = port->pnLoc;
-	DrawLine(from, to);
-	port->pnLoc = to;
+	DoLine(to);
 }
 
 

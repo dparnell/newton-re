@@ -222,9 +222,9 @@ shape inset by the pen; arcs of less than a full turn are NOT YET.
 magnitudes, rounding half up, saturation) are `src/toolbox/FixedMath.cpp`.
 
 Lines: `LineTo` 0x002d1e20 and `Line` 0x002d1e7c go through the port's
-`lineProc` or `StdLine` 0x002d1eac, which records into an open picture,
-polygon or region (NOT YET), draws with `DrawLine` 0x002d277c and moves
-the pen.  The ROM's `DrawLine` rasterises row by row from a fixed-point
+`lineProc` or `StdLine` 0x002d1eac, which records into an open picture
+(NOT YET), polygon or region (`DoLine` 0x002d1f98, below), draws with
+`DrawLine` 0x002d277c and moves the pen.  The ROM's `DrawLine` rasterises row by row from a fixed-point
 slope (`FastLine` 0x002d209c for a one-pixel black or white pen); the
 host stamps the pen (its size hanging below and right of each point, its
 mode and pattern) along a Bresenham walk, clipped by the port's regions
@@ -330,9 +330,38 @@ mode the mask itself.  NOT YET: `'picture` binaries (QuickDraw pictures,
 `DrawPicture` 0x0030e270), shapes (`DrawShape` 0x000e0a68, `ShapeBounds`
 0x000e21cc), the colour tables as gray tables.
 
+## Polygons and recording (`src/qd/Polygons.h`)
+
+`OpenRgn` 0x003150f4 makes a point buffer (the globals' `fRgnHandle`,
+`fRgnOffset`, `fRgnSize` at 0x0c104e80-0x0c104e88, the port's `rgnSave`)
+and hides the pen; every line drawn until `CloseRgn` 0x003154e4 goes
+through `PutLine` 0x002d30a0, which appends the line's *inversion points*:
+a horizontal line its two ends, any other its x on every row it crosses
+(the slope in 16.16 from half a pixel in - a slope under 1.0 added once
+more, one under -1.0 a pixel over), a pair (row, old x) (row, new x)
+wherever the x steps and one for the lower end when it is not the last
+x.  `CloseRgn` sorts and culls the points (a pair at one place cancels:
+the outline's corners meet) and packs them (`PackRgn`), so a polygon's
+region holds the pixels whose centres fall inside the outline - the
+classic QuickDraw shapes; `test_Shapes` pins a diamond and a triangle.
+Ovals record through `PutOval` the same way.
+
+A polygon is a handle to `Polygon` {polySize, filler, polyBBox, points}:
+`OpenPoly` 0x0030ff38 makes it (`fPolyHandle`/`fPolySize`, the port's
+`polySave`) and hides the pen, `DoLine` appends the pen's location (first)
+and each line's end, `ClosePoly` 0x0030ffa4 finds the bounds and cuts
+the handle to size.  The verbs `FramePoly`/`PaintPoly`/`ErasePoly`/
+`InvertPoly`/`FillPoly` 0x003102fc-0x0031032c go through `CallPoly`
+0x0031010c to the port's `polyProc` or `StdPoly` 0x00310364: framed, the
+outline as lines (`FrPoly` 0x0031014c - in an xor pen mode the ROM draws
+every point's line twice, from the first, as reconstructed); otherwise
+`DrawPoly` 0x00310204 records the closed outline into a region and
+`DrawRgn`s it.  `OffsetPoly` 0x0031027c, `MapPoly` 0x00310084, `KillPoly`
+0x00310278.
+
 ## Not yet
 
-Arcs of less than a full turn, polygons, QuickDraw pictures and shapes, `OpenRgn`/`CloseRgn`,
+Arcs of less than a full turn, QuickDraw pictures and shapes,
 `ScrollRect`, `ZoomRect`, the screen (`InitScreen`, `QDStartDrawing`),
 the per-task globals, `StretchBits` proper, the font cache, text layout
 (justification, wrapping), the `TQDLibraryDriver` protocol.

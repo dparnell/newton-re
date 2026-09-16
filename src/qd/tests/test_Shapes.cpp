@@ -2,8 +2,11 @@
 // (the pictures pinned: the ROM's oval rasteriser gives the classic
 // QuickDraw shapes, the 8 by 8 circle among them), the oval region's
 // format, lines in every direction with pens of several sizes, and the
-// pen location LineTo/Line leave.  Runs over a standalone kernel heap.
+// pen location LineTo/Line leave, regions recorded from lines and
+// polygons.  Runs over a standalone kernel heap.
 #include "Shapes.h"
+#include "Polygons.h"
+#include "Draw.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
 
@@ -331,6 +334,88 @@ TestLines()
 }
 
 
+static void
+TestPolygons()
+{
+	// a region from lines: a diamond
+	Clear();
+	RgnHandle rgn = NewRgn();
+	OpenRgn();
+	MoveTo(4, 0);
+	LineTo(8, 4);
+	LineTo(4, 8);
+	LineTo(0, 4);
+	LineTo(4, 0);
+	CloseRgn(rgn);
+	EXPECT(gPort.rgnSave == nil && gPort.pnVis == 0);
+	EXPECT(PictureIs(9, 9, ".........\n.........\n.........\n.........\n.........\n.........\n.........\n.........\n.........\n", "recording draws nothing"));
+	EXPECT((*rgn)->rgnBBox.top == 0 && (*rgn)->rgnBBox.left == 1 && (*rgn)->rgnBBox.bottom == 8 && (*rgn)->rgnBBox.right == 8);
+	PaintRgn(rgn);
+	// (the rows the ROM's PutLine gives: the pixels whose centres lie inside the outline, the classic QuickDraw shape)
+	EXPECT(PictureIs(9, 9,
+		"....#....\n"
+		"...###...\n"
+		"..#####..\n"
+		".#######.\n"
+		".#######.\n"
+		"..#####..\n"
+		"...###...\n"
+		"....#....\n"
+		".........\n", "diamond region"));
+	// a rectangle from lines is the rectangle
+	Clear();
+	OpenRgn();
+	MoveTo(1, 1);
+	LineTo(6, 1);
+	LineTo(6, 4);
+	LineTo(1, 4);
+	LineTo(1, 1);
+	CloseRgn(rgn);
+	Rect box;
+	SetRect(&box, 1, 1, 6, 4);
+	RgnHandle rect = NewRgn();
+	RectRgn(rect, &box);
+	EXPECT(EqualRgn(rgn, rect));
+	DisposeRgn(rect);
+	DisposeRgn(rgn);
+
+	// a polygon: recorded, bounded, painted; framed as its lines
+	Clear();
+	PolyHandle poly = OpenPoly();
+	MoveTo(2, 1);
+	LineTo(8, 1);
+	LineTo(5, 7);
+	ClosePoly();
+	EXPECT(gPort.polySave == nil && gPort.pnVis == 0);
+	EXPECT(PolyPointCount(*poly) == 3 && (*poly)->polyPoints[0].h == 2 && (*poly)->polyPoints[2].v == 7);
+	EXPECT((*poly)->polyBBox.left == 2 && (*poly)->polyBBox.top == 1 && (*poly)->polyBBox.right == 8 && (*poly)->polyBBox.bottom == 7);
+	EXPECT(PictureIs(9, 9, ".........\n.........\n.........\n.........\n.........\n.........\n.........\n.........\n.........\n", "recording the polygon draws nothing"));
+	PaintPoly(poly);
+	EXPECT(PictureIs(10, 8,
+		"..........\n"
+		"...#####..\n"
+		"...####...\n"
+		"....###...\n"
+		"....##....\n"
+		".....#....\n"
+		"..........\n"
+		"..........\n", "painted triangle"));
+	Clear();
+	FramePoly(poly);
+	EXPECT(GetPixel(&gMap, 2, 1) && GetPixel(&gMap, 8, 1) && GetPixel(&gMap, 5, 7) && !GetPixel(&gMap, 5, 3) && !GetPixel(&gMap, 5, 4));
+	Clear();
+	ErasePoly(poly);
+	EXPECT(PictureIs(10, 8, "..........\n..........\n..........\n..........\n..........\n..........\n..........\n..........\n", "erased triangle"));
+	OffsetPoly(poly, 10, 0);
+	EXPECT((*poly)->polyBBox.left == 12 && (*poly)->polyPoints[1].h == 18);
+	Rect from, to;
+	SetRect(&from, 12, 1, 18, 7);
+	SetRect(&to, 12, 1, 24, 13);
+	MapPoly(poly, &from, &to);
+	EXPECT((*poly)->polyBBox.right == 24 && (*poly)->polyPoints[2].v == 13 && (*poly)->polyPoints[1].h == 24);
+	KillPoly(poly);
+}
+
 int
 main()
 {
@@ -352,6 +437,7 @@ main()
 	TestOvals();
 	TestRoundRects();
 	TestLines();
+	TestPolygons();
 	ClosePort(&gPort);
 	if (failures == 0)
 		printf("test_Shapes: all passed\n");
