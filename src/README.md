@@ -44,6 +44,10 @@ src/
                 the DDK's, whose TClassInfo is ARM glue: interface methods
                 are virtual functions, class infos hold function pointers
                 (docs/protocols/README.md)
+  compression/  the compression protocols (TCompressor, TDecompressor and
+                the callback forms) and the ROM's coders: LZ (stores and
+                packages; Zippy, arithmetic and Unicode to come), with the
+                coding tables generated from the ROM (LZTables.cpp)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

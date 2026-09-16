@@ -44,6 +44,7 @@ tools/newton-rom/
     vtable.py             the entries of a vtable (slot -> method), from rom.bin + symbols.json
     classinfo.py          decode protocol class-info tables (names, dispatch slots, monitor selectors);
                           --all -> docs/protocols/classinfos.md
+    romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp)
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
