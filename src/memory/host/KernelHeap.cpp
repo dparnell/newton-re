@@ -27,12 +27,18 @@ InitHostKernelHeap(void)
 
 
 void
-InitHostStandaloneHeap(void)
+InitHostStandaloneHeap(Size kernelHeapSize)
 {
 	static TaskGlobals globals;
 	memset(&globals, 0, sizeof(globals));
 	gCurrentGlobals = (char*) &globals + kTaskGlobalsSize;
 	gOSIsRunning = true;
-	InitHostKernelHeap();
+	if (kernelHeapSize == 0)
+		InitHostKernelHeap();
+	else
+	{
+		void* area = malloc(kernelHeapSize);
+		gKernelHeap = NewHeap(area, kernelHeapSize, 0x1000);
+	}
 	SetHeap(gKernelHeap);
 }

@@ -349,6 +349,65 @@ string functions and the conversions to and from 8-bit text are
 `ConvertFromUnicode` as the ROM does them before `InitUnicode` installs
 the encoding tables - NOT YET).
 
+## The compiler (`Compiler.cpp`, `Parser.cpp`, `Lexer.cpp`)
+
+`TCompiler` turns NewtonScript source into a function object: `ParseString`
+compiles a string's forms into one function of no arguments, `ParseFile`
+compiles and runs a file form by form (the NTK's way of loading a text
+file), `FCompile` is the `Compile` native.  The lexer (`TCompiler::GetToken`,
+`yylex0`) reads UniChars from a `TInputStream` (a string or a stdio file;
+the file's line feeds become the Newton's carriage returns) and answers
+the tokens `ParserTables.h` names, with `NIL`/`TRUE` constants, the
+reserved words (the ROM's table, `gReservedWords`), `|symbols|`, numbers
+(0x hex, reals with fraction or exponent), `"strings"` with `\n \t \\`
+and the `\u` hex mode, `$chars`, `@n` magic pointers and `#line`
+directives; a `;` before `end`, `else`, `)`, `]`, `}`, `,`, `until` or
+`onexception` and a `,` before `]` or `}` are dropped by a one-token
+lookahead.
+
+The parser is the ROM's Berkeley yacc parser: its tables (`yylhs` ...
+`yycheck`), token names and rule texts are read out of the ROM by
+`tools/newton-rom/analysis/nsgrammar.py` into `ParserTables.cpp` (and the
+grammar into `grammar.md`), and `TCompiler::Parser` is byacc's skeleton
+with the grammar's 151 actions building a parse tree of arrays
+`[MAKEINT(kind), children...]` whose kind is the construct's token
+(`'+'`, `tokenIF`, ...).  The value stack is an object (`'yaccStack`,
+locked), so the tree survives collections; in interactive mode the parser
+returns after each command so the REP can run one at a time.
+
+The code generator walks the tree three times.  Declarations
+(`DeclarationWalker`) collect each function's locals, constants and loop
+variables (`i|limit`, `i|incr`; `v|iter`, and for `collect` `v|index`,
+`v|result`) and give each nested `func` a `TFunctionState` (kept in the
+node's slot 5).  Closures (`ClosureWalker`, `ComputeArgFrame`) decide where
+variables live: with `compilerCompatibility` 1 (the default) arguments and
+locals go on the value stack (`fVarLocs`: name to index) and only the
+variables an inner function reaches into the argFrame (`'closed`), which
+is left out altogether when nothing is closed over and `self`/`inherited`
+are unused; with 0 every variable goes into the argFrame and the result
+is a 1.x `'CodeBlock`.  Code (`WalkForCode`) emits the bytecodes through
+`TFunctionState::Emit` (`push`/`push-constant` for literals - an
+immediate that fits 16 bits or a magic pointer under 0x1000 is a
+constant - `get-var`/`set-var` for stack variables, `find-var`/
+`set-find-var` for the rest, `freq-func` for the 25 frequent functions
+with the right argument count, `call`/`invoke`/`send`/`resend`, the
+loops with `branch-if-loop-not-done` and `incr-var` (stack: incr, index,
+limit), `new-handlers`/`pop-handlers` for `try`, `make-frame`/`make-array`,
+`set-lex-scope` after a nested function with an argFrame) and warns about
+statements without effect and `=` where `:=` was meant.  `MakeCodeBlock`
+clones the code block prototype (`CodeBlock::fgPrototype`, the debug one
+when names are kept) and fills instructions, literals, argFrame, `numArgs
+| numLocals << 16` and the `'dbg1` variable names.  `TCompiler::Error`
+throws `evt.ex.fr.comp;type.ref.frame` with `{errorCode, value, filename,
+linenumber}` (`NSErrors.h` -48601..-48628).
+
+The REP's input side is `PStdioInTranslator` (a line at a time, compiled
+by `ParseString`) and `REPAcceptLine`; `host/newtonscript.cpp` builds the
+`newtonscript` program: the object system over the ROM image, files
+loaded with `ParseFile`, `-e` for an expression, stdin as the REP.
+`test_Compiler` compiles and runs source for every construct, both
+function kinds, the errors, `ParseFile` and the `Compile` native.
+
 ## Not yet
 
 The interpreter's FastRun1 (the inlined, trace-free copy of SlowRun),
@@ -356,9 +415,11 @@ tracing and breakpoints (`TInterpreter::Trace...`, `HandleBreakPoints`),
 running 1.x CodeBlocks and binary natives, the natives not bound yet
 (134 of the 869 are) (`Sleep`, the strings' `TRichString` functions, printing,
 stores, views, ...), `TRichString` (the mungers treat strings as plain
-UniChars), the interpreter's `GetTaskStackInfo`, the REP's input side (`REPAcceptLine`
-needs the compiler), the stack trace (`TNSDebugAPI`, `SearchForObjectName`),
-the Hammer, serial and NTK translators; then the object system's: stores
+UniChars), the interpreter's `GetTaskStackInfo`, the stack trace (`TNSDebugAPI`,
+`SearchForObjectName`), the Hammer, serial and NTK translators, the
+compiler's rich-string ink in `Stringer` and the encoding of source
+text (`IsFirstByteOf2Byte`), `TCompiler::Simplify` (nothing in this ROM);
+then the object system's: stores
 (`FollowFaultBlock`, `FIsValid`, large binaries, `NoTouchObjectPtr`'s
 large-object check), the Unicode encoders (`MakeString` and `Intern` widen
 and narrow bytes as they are), `AllocateCObjectBinary`'s procedure table,

@@ -18,6 +18,7 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "Compiler.h"
 #include "Unicode.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
@@ -26,6 +27,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 PInTranslator*	gREPin = nil;			// 0x0c10190c
@@ -303,6 +305,71 @@ void				PNullOutTranslator::ExceptionNotify(Exception*)	{ }
 
 
 /* -------------------------------------------------------------------------------
+	PStdioInTranslator
+------------------------------------------------------------------------------- */
+
+PROTOCOL_IMPL_SOURCE_MACRO(PStdioInTranslator)
+PROTOCOL_CLASSINFO(PStdioInTranslator, "PInTranslator", "", 0, 0, nil)
+
+// ROM 0x001f6f9c New__18PStdioInTranslatorFv
+PStdioInTranslator*
+PStdioInTranslator::New()
+{
+	fInput = nil;
+	fBuffer = nil;
+	return this;
+}
+
+// ROM 0x001f6fac Delete__18PStdioInTranslatorFv
+void
+PStdioInTranslator::Delete()
+{
+	if (fBuffer != nil)
+		free(fBuffer);
+	fBuffer = nil;
+}
+
+// ROM 0x001f6fbc Init__18PStdioInTranslatorFPv
+long
+PStdioInTranslator::Init(void* context)
+{
+	StdioInTranslatorContext* c = (StdioInTranslatorContext*) context;
+	fInput = c->fInput;
+	fUnused = c->fUnused;
+	fBufferSize = c->fBufferSize;
+	fBuffer = (char*) malloc(fBufferSize);
+	if (fBuffer == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	return noErr;
+}
+
+// ROM 0x001f7004 Idle__18PStdioInTranslatorFv
+long
+PStdioInTranslator::Idle()
+{
+	return 0;
+}
+
+// ROM 0x001f700c FrameAvailable__18PStdioInTranslatorFv
+Boolean
+PStdioInTranslator::FrameAvailable()
+{
+	return fInput != nil && !feof(fInput);
+}
+
+// ROM 0x001f7040 ProduceFrame__18PStdioInTranslatorFi
+// The next line, compiled (nil at the end of the input).
+Ref
+PStdioInTranslator::ProduceFrame(int /*level*/)
+{
+	RefVar fn;
+	if (fInput != nil && fgets(fBuffer, (int) fBufferSize, fInput) != nil)
+		fn = ParseString(RefVar(MakeString(fBuffer)));
+	return fn;
+}
+
+
+/* -------------------------------------------------------------------------------
 	PStdioOutTranslator
 ------------------------------------------------------------------------------- */
 
@@ -431,6 +498,7 @@ RegisterREPTranslators(void)
 		return;
 	PNullInTranslator::ClassInfo()->Register();
 	PNullOutTranslator::ClassInfo()->Register();
+	PStdioInTranslator::ClassInfo()->Register();
 	PStdioOutTranslator::ClassInfo()->Register();
 }
 
@@ -537,11 +605,22 @@ REPInit(void)
 // serial debugger replaces it).  A translator InitPrinter installed is
 // replaced.
 void
-HostInitREP(FILE* out)
+HostInitREP(FILE* out, FILE* in)
 {
 	RegisterREPTranslators();
-	if (gREPin == nil)
+	if (gREPin != nil)
+	{
+		gREPin->Delete();
+		gREPin = nil;
+	}
+	if (in == nil)
 		gREPin = InitREPIn();
+	else
+	{
+		gREPin = (PInTranslator*) NewTranslator("PInTranslator", "PStdioInTranslator", PStdioInTranslator::ClassInfo());
+		StdioInTranslatorContext context = { in, nil, 4096 };
+		gREPin->Init(&context);
+	}
 	if (gREPout != nil)
 	{
 		gREPout->Delete();
@@ -555,6 +634,74 @@ HostInitREP(FILE* out)
 		gREPout->Init(&out);
 	}
 	REPInit();
+}
+
+
+// ROM 0x0019d4b0 REPAcceptLine__Fv
+// A form the in translator has: printed when showCodeBlocks is set, run
+// in the REP's context, its result printed as "#addr value"; an
+// exception is reported by the out translator.  The ref handles the
+// form used are cleared afterwards.
+void
+REPAcceptLine(void)
+{
+	IncrementCurrentStackPos();
+	newton_try
+	{
+		if (gREPin->FrameAvailable())
+		{
+			RefVar result(NILREF);
+			RefVar form(gREPin->ProduceFrame(0));
+			if (GetFrameSlotRef(gVarFrame, Intern((char*) "showCodeBlocks")) != NILREF)
+				gREPout->ConsumeFrame(form, 0, 0);
+			if ((Ref) form != NILREF)
+			{
+				result = InterpretBlock(form, RefVar(gREPContext));
+				long indent = gREPout->Print("#%-8lX ", (long) (Ref) result);
+				gREPout->ConsumeFrame(result, 0, indent);
+				gREPout->Putc('\r');
+			}
+			gREPout->Prompt(gREPLevel);
+			gREPout->Flush();
+		}
+	}
+	newton_catch_all
+	{
+		gREPout->ExceptionNotify(&_info.exception);
+		gREPout->Prompt(gREPLevel);
+		gREPout->Flush();
+	}
+	end_try;
+	DecrementCurrentStackPos();
+	ClearRefHandles();
+}
+
+
+// ROM 0x0019d668 REPIdle__Fv
+// (the ROM repeats REPAcceptLine's body after idling the translators)
+void
+REPIdle(void)
+{
+	gREPin->Idle();
+	gREPout->Idle();
+	REPAcceptLine();
+}
+
+
+// ROM 0x0019d454 REPTime__Fv
+// The sooner of the translators' idle times, 0 for never.
+long
+REPTime(void)
+{
+	if (gREPin == nil || gREPout == nil)
+		return 0;
+	long inTime = gREPin->Idle();
+	long outTime = gREPout->Idle();
+	if (inTime == 0)
+		return outTime;
+	if (outTime != 0 && outTime <= inTime)
+		return outTime;
+	return inTime;
 }
 
 

@@ -123,6 +123,38 @@ public:
 
 
 /* -------------------------------------------------------------------------------
+	PStdioInTranslator: reads forms a line at a time from a C stdio stream
+	and compiles them (Init's context is a StdioInTranslatorContext)
+------------------------------------------------------------------------------- */
+
+struct StdioInTranslatorContext
+{
+	FILE*		fInput;
+	FILE*		fUnused;			// (the ROM's context has a second stream it does not use)
+	size_t		fBufferSize;		// of a line
+};
+
+PROTOCOL PStdioInTranslator : public PInTranslator
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PStdioInTranslator);
+
+	PStdioInTranslator*	New();
+	void			Delete();
+
+	long			Init(void* context);
+	long			Idle();
+	Boolean			FrameAvailable();
+	Ref				ProduceFrame(int level);
+
+	FILE*			fInput;				// +0x10
+	FILE*			fUnused;			// +0x14
+	char*			fBuffer;			// +0x18
+	size_t			fBufferSize;		// +0x1c
+};
+
+
+/* -------------------------------------------------------------------------------
 	PStdioOutTranslator: prints to a C stdio stream (Init's context is a
 	FILE**; nil prints nothing)
 ------------------------------------------------------------------------------- */
@@ -168,9 +200,13 @@ void			RegisterREPTranslators(void);		// host: their class infos in the registry
 
 void	REPInit(void);
 // host: what TNewtWorld::MainConstructor does around REPInit - the
-// translators registered, a null in translator, an out translator on the
-// stdio stream (a null one for nil), then REPInit
-void	HostInitREP(FILE* out);
+// translators registered, an in translator on the stdio stream (a null
+// one for nil), an out translator on the other (a null one for nil),
+// then REPInit
+void	HostInitREP(FILE* out, FILE* in = nil);
+void	REPAcceptLine(void);				// one form read, compiled, run and its result printed
+void	REPIdle(void);						// the translators idled, then REPAcceptLine
+long	REPTime(void);						// when to idle next (0: never)
 void	REPprintf(const char* format, ...);
 void	REPflush(void);
 void	REPExceptionNotify(Exception* exception);
@@ -202,6 +238,7 @@ void	PrintFramesErrorMsg(const char* message, RefArg data);
 // when the object has a text
 Boolean	StringObject(RefArg obj, UniChar* buffer, long& length, long maxLength);
 Ref		SPrintObject(RefArg obj);
+Ref		Stringer(RefArg array);					// the objects of an array as one string (&)
 Boolean	IsRichString(RefArg str);
 long	GetStringFormat(RefArg str);
 void	IntegerString(long i, UniChar* str);
@@ -211,6 +248,8 @@ void	NumberString(double d, UniChar* str, long maxLength, const char* format);
 Ref		FPrint(RefArg rcvr, RefArg obj);
 Ref		FDisplay(RefArg rcvr, RefArg obj);
 Ref		FSPrintObject(RefArg rcvr, RefArg obj);
+Ref		FFramesStringer(RefArg rcvr, RefArg array);
+Ref		FEvalStringer(RefArg rcvr, RefArg array);
 void	RegisterPrinterNatives(void);
 
 #endif	/* __REPTRANSLATORS_H */

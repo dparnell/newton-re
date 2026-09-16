@@ -41,5 +41,22 @@ void		Umemset(UniChar* dest, UniChar c, long n);
 void	ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n);
 // UniChars to 8-bit characters (a 0 ends the output), at most n
 void	ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n);
+// one character each way (the compiler's)
+UniChar	U_CONST_CHAR(unsigned char c);
+char	A_CONST_CHAR(UniChar c);
+
+// character classes (the ROM's UnicodeUtils; NOT YET RECONSTRUCTED: the
+// case tables UppercaseNoDiacriticsText and LowercaseText - letters and
+// cases are Latin-1's here)
+Boolean	IsAlphabet(UniChar c);
+Boolean	IsDigit(UniChar c);
+Boolean	IsHexDigit(UniChar c);
+Boolean	IsAlphaNumeric(UniChar c);
+Boolean	IsWhiteSpace(UniChar c);
+Boolean	IsSpace(UniChar c);
+Boolean	IsTab(UniChar c);
+Boolean	IsBreaker(UniChar c);
+UniChar	UToLower(UniChar c);
+UniChar	UToUpper(UniChar c);
 
 #endif	/* __UNICODE_H */

@@ -71,7 +71,13 @@ src/
                 and the built-in functions bound to the ROM's native
                 function table (NativeFunctions.h, Builtins.cpp, Munger.cpp,
                 ROMNatives.cpp generated); the object printer and the REP's
-                translators (REPTranslators.h, Printer.cpp) (docs/frames/README.md)
+                translators (REPTranslators.h, Printer.cpp); the NewtonScript
+                compiler - lexer, the ROM's yacc parser over its tables
+                (ParserTables.h/.cpp generated), code generation (Compiler.h,
+                Lexer.cpp, Parser.cpp, Compiler.cpp) (docs/frames/README.md,
+                docs/frames/grammar.md)
+  host/         host programs: newtonscript, the compiler, interpreter and
+                REP on the host over a ROM image (newtonscript.cpp)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 

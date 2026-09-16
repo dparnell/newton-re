@@ -767,9 +767,155 @@ SPrintObject(RefArg obj)
 }
 
 
+// ROM 0x00291910 StringerStringObject__FRC6RefVarPcPlT2T3
+// The text of one object for Stringer: its UniChars into text (nil: only
+// the length, in bytes) and, for a rich string, its ink data into
+// inkData (inkLength).  A string, nil (nothing), a character, an
+// integer, a real (%g, "0.0" for zero) or a symbol; ==> false for
+// anything else.  NOT YET RECONSTRUCTED: TRichString::DoStringerStuff -
+// a rich string's ink is not carried over (its characters are).
+static Boolean
+StringerStringObject(RefArg obj, char* text, long* length, char* /*inkData*/, long* inkLength)
+{
+	*inkLength = 0;
+	if (IsString(obj))
+	{
+		long count = Ustrlen((const UniChar*) BinaryData(obj));
+		*length = count * sizeof(UniChar);
+		if (text != nil)
+			BlockMove(BinaryData(obj), text, *length);
+		return true;
+	}
+	Ref ref = obj;
+	char buffer[32];
+	if (ref == NILREF)
+	{
+		*length = 0;
+		return true;
+	}
+	if (ISCHAR(ref))
+	{
+		*length = sizeof(UniChar);
+		if (text != nil)
+			*(UniChar*) text = RCHAR(ref);
+		return true;
+	}
+	if (ISINT(ref))
+		*length = snprintf(buffer, sizeof(buffer), "%ld", (long) RVALUE(ref)) * sizeof(UniChar);
+	else if (ISREAL(ref))
+	{
+		double d = CDouble(obj);
+		if (d == 0.0)
+			strcpy(buffer, "0.0");
+		else
+			snprintf(buffer, sizeof(buffer), "%g", d);
+		*length = strlen(buffer) * sizeof(UniChar);
+	}
+	else if (IsSymbol(obj))
+	{
+		const char* name = SymbolName(obj);
+		*length = strlen(name) * sizeof(UniChar);
+		if (text != nil)
+			ConvertToUnicode(name, (UniChar*) text, kMacRomanEncoding, strlen(name));
+		return true;
+	}
+	else
+	{
+		*length = 0;
+		return false;
+	}
+	if (text != nil)
+		ConvertToUnicode(buffer, (UniChar*) text, kMacRomanEncoding, strlen(buffer));
+	return true;
+}
+
+
+// ROM 0x00291b3c Stringer__FRC6RefVar
+// The objects of an array as one string (the & operator's).  With ink
+// data among them the string is a rich one: the text, padding, the ink
+// and a trailer word (text length << 4 | 1).
+Ref
+Stringer(RefArg array)
+{
+	long count = Length(array);
+	long textLength = 0;
+	long inkLength = 0;
+	RefVar element;
+	for (long i = 0; i < count; i++)
+	{
+		element = GetArraySlotRef(array, i);
+		long length, ink;
+		StringerStringObject(element, nil, &length, nil, &ink);
+		textLength += length;
+		inkLength += ink;
+	}
+	long inkOffset = 0;
+	long size;
+	if (inkLength == 0)
+		size = textLength + sizeof(UniChar);
+	else
+	{
+		inkOffset = (textLength + 5) & ~3;
+		size = inkOffset + inkLength + 4;
+	}
+	RefVar str(AllocateBinary(RSSYMstring, size));
+	TBinaryDataPtr locked(str);
+	char* text = (char*) locked;
+	char* ink = text + inkOffset;
+	for (long i = 0; i < count; i++)
+	{
+		element = GetArraySlotRef(array, i);
+		long length, inkSize;
+		StringerStringObject(element, text, &length, ink, &inkSize);
+		text += length;
+		ink += inkSize;
+	}
+	if (inkLength > 0)
+	{
+		unsigned char* trailer = (unsigned char*) (char*) locked + size - 4;
+		ULong word = (textLength / 2) << 4;
+		trailer[0] = (unsigned char) (word >> 24);
+		trailer[1] = (unsigned char) (word >> 16);
+		trailer[2] = (unsigned char) (word >> 8);
+		trailer[3] = (unsigned char) (word | 1);
+	}
+	return str;
+}
+
+
 /* -------------------------------------------------------------------------------
 	Natives
 ------------------------------------------------------------------------------- */
+
+// ROM 0x00291d00 FFramesStringer
+Ref
+FFramesStringer(RefArg /*rcvr*/, RefArg array)
+{
+	return Stringer(array);
+}
+
+
+// ROM 0x00291d08 FEvalStringer
+// Each symbol among the elements stands for the receiver's variable of
+// that name.
+Ref
+FEvalStringer(RefArg rcvr, RefArg array)
+{
+	long count = Length(array);
+	RefVar parts(Clone(array));
+	RefVar element;
+	for (long i = 0; i < count; i++)
+	{
+		element = GetArraySlotRef(array, i);
+		if (EQRef(ClassOf(element), RSSYMsymbol))
+		{
+			element = GetVariable(rcvr, element, nil, 0);
+			SetArraySlotRef(parts, i, element);
+		}
+	}
+	return Stringer(parts);
+}
+
 
 // ROM 0x00292fb4 FPrint
 Ref
@@ -819,4 +965,6 @@ RegisterPrinterNatives(void)
 	RegisterNativeFunction("FPrint", (void*) FPrint, 1);
 	RegisterNativeFunction("FDisplay", (void*) FDisplay, 1);
 	RegisterNativeFunction("FSPrintObject__FRC6RefVarT1", (void*) FSPrintObject, 1);
+	RegisterNativeFunction("FFramesStringer", (void*) FFramesStringer, 1);
+	RegisterNativeFunction("FEvalStringer", (void*) FEvalStringer, 1);
 }

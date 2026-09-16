@@ -21,7 +21,8 @@ void	InitHostKernelHeap(void);		// makes gKernelHeap; before the first task exis
 // For host tests that use the memory manager without booting the kernel:
 // the memory manager keeps the current heap and MemError in the task
 // globals, so a test stands as a task with globals of its own, the OS
-// marked running, and the kernel heap current.
-void	InitHostStandaloneHeap(void);
+// marked running, and the kernel heap current (of the given size, or
+// the kernel's usual 4 MB).
+void	InitHostStandaloneHeap(Size kernelHeapSize = 0);
 
 #endif	/* __HOSTKERNELHEAP_H */

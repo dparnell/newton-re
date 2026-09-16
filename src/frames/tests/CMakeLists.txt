@@ -19,3 +19,8 @@ add_executable(test_Printer test_Printer.cpp)
 target_link_libraries(test_Printer PRIVATE frames)
 target_compile_definitions(test_Printer PRIVATE "NEWTON_ROM_IMAGE=\"${CMAKE_SOURCE_DIR}/../DebugRom/MP2100 D/Senior DCirrusNoDebug image\"")
 add_test(NAME frames.Printer COMMAND test_Printer)
+
+add_executable(test_Compiler test_Compiler.cpp)
+target_link_libraries(test_Compiler PRIVATE frames)
+target_compile_definitions(test_Compiler PRIVATE "NEWTON_ROM_IMAGE=\"${CMAKE_SOURCE_DIR}/../DebugRom/MP2100 D/Senior DCirrusNoDebug image\"")
+add_test(NAME frames.Compiler COMMAND test_Compiler)

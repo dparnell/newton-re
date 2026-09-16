@@ -157,3 +157,120 @@ ConvertFromUnicode(const UniChar* src, void* dest, long /*encoding*/, long n)
 	}
 	*d = 0;
 }
+
+
+/* -------------------------------------------------------------------------------
+	Characters
+------------------------------------------------------------------------------- */
+
+// ROM 0x002553d4 U_CONST_CHAR
+UniChar
+U_CONST_CHAR(unsigned char c)
+{
+	UniChar u[2];
+	unsigned char a[2] = { c, 0 };
+	ConvertToUnicode(a, u, kMacRomanEncoding, 1);
+	return u[0];
+}
+
+
+// ROM 0x002553f0 A_CONST_CHAR
+char
+A_CONST_CHAR(UniChar c)
+{
+	UniChar u[2] = { c, 0 };
+	char a[2];
+	ConvertFromUnicode(u, a, kMacRomanEncoding, 1);
+	return a[0];
+}
+
+
+// ROM 0x00255a54 UToLower__FUs
+// NOT YET RECONSTRUCTED: LowercaseText's tables; ASCII and Latin-1 letters.
+UniChar
+UToLower(UniChar c)
+{
+	if ((c >= 'A' && c <= 'Z') || (c >= 0xc0 && c <= 0xde && c != 0xd7))
+		return c + 0x20;
+	return c;
+}
+
+
+// (host: the one-character form of UppercaseText, 0x0025587c)
+UniChar
+UToUpper(UniChar c)
+{
+	if ((c >= 'a' && c <= 'z') || (c >= 0xe0 && c <= 0xfe && c != 0xf7))
+		return c - 0x20;
+	return c;
+}
+
+
+// ROM 0x00255428 IsAlphabet__FUs
+// A letter: uppercased without diacriticals it is A-Z (or the German sharp
+// s, 0xdf, which has no upper case).  NOT YET RECONSTRUCTED:
+// UppercaseNoDiacriticsText; Latin-1's letters are taken.
+Boolean
+IsAlphabet(UniChar c)
+{
+	UniChar u = UToUpper(c);
+	if (u >= 0xc0 && u <= 0xde && u != 0xd7)
+		return true;
+	return (u >= 'A' && u <= 'Z') || u == 0xdf;
+}
+
+
+// ROM 0x00255494 IsDigit__FUs
+Boolean
+IsDigit(UniChar c)
+{
+	return c >= '0' && c <= '9';
+}
+
+
+// ROM 0x002554bc IsHexDigit__FUs
+Boolean
+IsHexDigit(UniChar c)
+{
+	return IsDigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+}
+
+
+// ROM 0x00255514 IsAlphaNumeric__FUs
+Boolean
+IsAlphaNumeric(UniChar c)
+{
+	return IsDigit(c) || IsAlphabet(c);
+}
+
+
+// ROM 0x002555b4 IsSpace__FUs
+Boolean
+IsSpace(UniChar c)
+{
+	return c == ' ';
+}
+
+
+// ROM 0x002555d0 IsTab__FUs
+Boolean
+IsTab(UniChar c)
+{
+	return c == '\t';
+}
+
+
+// ROM 0x00255658 IsBreaker__FUs
+Boolean
+IsBreaker(UniChar c)
+{
+	return c == '\n' || c == '\r';
+}
+
+
+// ROM 0x0025555c IsWhiteSpace__FUs
+Boolean
+IsWhiteSpace(UniChar c)
+{
+	return IsSpace(c) || IsTab(c) || IsBreaker(c);
+}

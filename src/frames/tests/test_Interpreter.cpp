@@ -185,10 +185,10 @@ TestLoops()
 	a.pushInt(1).op(kBCSetVar, 5);												// i := 1
 	a.op(kBCGetVar, 3).op(kBCSetVar, 6);										// limit := n
 	a.pushInt(1).op(kBCSetVar, 7);												// incr := 1
-	a.op(kBCGetVar, 5).op(kBCGetVar, 6).op(kBCGetVar, 7).branch(kBCBranchIfLoopNotDone, body);
+	a.op(kBCGetVar, 7).op(kBCGetVar, 5).op(kBCGetVar, 6).branch(kBCBranchIfLoopNotDone, body);	// incr, index, limit
 	a.branch(kBCBranch, done);
 	a.label(body).op(kBCGetVar, 4).op(kBCGetVar, 5).freq(kFFAdd).op(kBCSetVar, 4);	// s := s + i
-	a.op(kBCGetVar, 7).op(kBCIncrVar, 5).op(kBCGetVar, 6).op(kBCGetVar, 7).branch(kBCBranchIfLoopNotDone, body);
+	a.op(kBCGetVar, 7).op(kBCIncrVar, 5).op(kBCGetVar, 6).branch(kBCBranchIfLoopNotDone, body);	// incr-var leaves incr, index
 	a.label(done).op(kBCGetVar, 4).simple(kBCReturn);
 	RefVar fn(a.function(1, 4));
 	EXPECT(RINT(NSCall(fn, RefVar(MAKEINT(10)))) == 55);

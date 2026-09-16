@@ -1223,11 +1223,11 @@ TInterpreter::SlowRun(long baseDepth)
 				break;
 			}
 
-			case kBCBranchIfLoopNotDone:							// for loop: incr, limit, index on the stack
+			case kBCBranchIfLoopNotDone:							// for loop: incr, index, limit on the stack
 			{
-				long incr = RINT(fValueStack.fTop[-1]);
-				long limit = RINT(fValueStack.fTop[-2]);
-				long index = RINT(fValueStack.fTop[-3]);
+				long limit = RINT(fValueStack.fTop[-1]);
+				long index = RINT(fValueStack.fTop[-2]);
+				long incr = RINT(fValueStack.fTop[-3]);
 				fValueStack.fTop -= 3;
 				if ((incr > 0 && index <= limit) || (incr < 0 && index >= limit))
 					fPC = b;
@@ -2276,13 +2276,48 @@ NSCallGlobalFnWithArgArray(RefArg name, RefArg args)
 	Start-up
 ------------------------------------------------------------------------------- */
 
+// the prototype of the compiler's code blocks when the ROM's is not
+// imported: {class: 'CodeBlock, instructions, literals, argFrame, numArgs
+// (, DebuggerInfo)}, the slots in the order the interpreter indexes them
+static Ref
+MakeCodeBlockPrototype(Boolean debug)
+{
+	RefVar tags(AllocateArray(RSSYMarray, debug ? 6 : 5));
+	SetArraySlotRef(tags, 0, RSSYMclass);
+	SetArraySlotRef(tags, 1, RSSYMinstructions);
+	SetArraySlotRef(tags, 2, RSSYMliterals);
+	SetArraySlotRef(tags, 3, Intern((char*) "argFrame"));
+	SetArraySlotRef(tags, 4, RSSYMnumargs);
+	if (debug)
+		SetArraySlotRef(tags, 5, RSSYMdebuggerinfo);
+	RefVar map(AllocateMapWithTags(RefVar(NILREF), tags));
+	RefVar prototype(AllocateFrameWithMap(map));
+	SetArraySlotRef(prototype, 0, RSSYMcodeblock);
+	return prototype;
+}
+
+
 // ROM 0x002901d8 InitFunctions__Fv
-// The global function frame, and the prototypes of 1.x code blocks (ROM
-// frames: NOT YET RECONSTRUCTED until named by the ROM constants).
+// The global function frame, and the prototypes of code blocks
+// (CodeBlock::fgPrototype and DebugCodeBlock::fgPrototype: the ROM's
+// frames Rcodeblockprototype/Rdebugcodeblockprototype, made here when
+// the ROM's objects are not imported).
 void
 InitFunctions(void)
 {
 	gFunctionFrame = AllocateFrame();
+	AddGCRoot(gCodeBlockPrototype);
+	AddGCRoot(gDebugCodeBlockPrototype);
+	if (Rcodeblockprototype != NILREF)
+	{
+		gCodeBlockPrototype = Rcodeblockprototype;
+		gDebugCodeBlockPrototype = Rdebugcodeblockprototype;
+	}
+	else
+	{
+		gCodeBlockPrototype = MakeCodeBlockPrototype(false);
+		gDebugCodeBlockPrototype = MakeCodeBlockPrototype(true);
+	}
 }
 
 

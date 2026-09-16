@@ -50,6 +50,8 @@ tools/newton-rom/
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
                           --disasm NAME (bytecode disassembly)
+    nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
+                          -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -283,6 +285,12 @@ src/frames/ROMNatives.cpp` emits the table the host binds its native
 implementations through (name, jump-table address, target function and its
 symbol), and `--disasm NAME` disassembles a NewtonScript function's
 bytecode as `TInterpreter::SlowRun` decodes it.
+`analysis/nsgrammar.py build/MP2100D -o src/frames --doc
+docs/frames/grammar.md` reads the NewtonScript compiler's Berkeley yacc
+tables (`yylhs`..`yycheck`), token names (`yyname`), rule texts (`yyrule`)
+and the lexer's reserved-word table out of the ROM into `ParserTables.h`
+(the token enum and the parser's constants) and `ParserTables.cpp`, and
+writes the grammar rule by rule as markdown.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class

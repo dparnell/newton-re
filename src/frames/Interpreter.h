@@ -308,6 +308,8 @@ extern Boolean			gFramesBreakPointsEnabled;	// 0x0c102554
 extern long				gAccurateStackTrace;	// 0x0c10255c
 extern Boolean			gUseCFunctionDocStrings;	// 0x0c102548
 extern Ref				gCFunctionPrototype;	// 0x0c102564 CFunction::fgPrototype
+extern Ref				gCodeBlockPrototype;	// CodeBlock::fgPrototype (the ROM's 0x005cecc1)
+extern Ref				gDebugCodeBlockPrototype;	// DebugCodeBlock::fgPrototype (0x005cf119)
 
 void		InitInterpreter(void);
 void		InitFunctions(void);

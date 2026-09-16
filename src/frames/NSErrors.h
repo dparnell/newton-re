@@ -76,8 +76,32 @@
 // host: a ROM native function whose implementation is not reconstructed yet
 #define kNSErrNativeNotReconstructed	(ERRBASE_FRAMES - 899)
 
-// evt.ex.fr.comp (the compiler and the REP)
+// evt.ex.fr.comp;type.ref.frame (the compiler: TCompiler::Error throws
+// {errorCode, value, filename, linenumber}) and the REP
 #define kNSErrNoREPTranslators			(ERRBASE_FRAMES - 600)	// REPInit with no in or out translator (the ROM's 0xffff4228)
+#define kNSErrSyntaxError				(ERRBASE_FRAMES - 601)	// value: the message ("syntax error--read X, but wanted ...")
+#define kNSErrAssignToConstant			(ERRBASE_FRAMES - 603)	// value: the constant's name
+#define kNSErrBadExistsSubexpr			(ERRBASE_FRAMES - 604)	// exists of something not a variable, path or message
+#define kNSErrGlobalConstantConflict	(ERRBASE_FRAMES - 606)	// a global declared over a constant, or a constant over a global
+#define kNSErrConstantRedefined			(ERRBASE_FRAMES - 607)
+#define kNSErrLocalIsConstant			(ERRBASE_FRAMES - 608)	// a local or constant declared over the other
+#define kNSErrNonConstantInitializer	(ERRBASE_FRAMES - 609)	// constant x := not a constant expression
+#define kNSErrEOFInString				(ERRBASE_FRAMES - 610)	// the end of the text inside a string or |symbol|
+#define kNSErrOddHexDigits				(ERRBASE_FRAMES - 611)	// \u ended with a character's digits incomplete
+#define kNSErrEscapeInHex				(ERRBASE_FRAMES - 612)	// a \ escape inside \u hex mode
+#define kNSErrBadHexDigit				(ERRBASE_FRAMES - 613)	// value: the character that is not a hex digit
+#define kNSErrBadLineDirective			(ERRBASE_FRAMES - 614)	// #l not followed by "ine "
+#define kNSErrBadLineNumber				(ERRBASE_FRAMES - 615)
+#define kNSErrBadLineFilename			(ERRBASE_FRAMES - 616)
+#define kNSErrBadUnicodeEscape			(ERRBASE_FRAMES - 617)	// $\u not followed by four hex digits
+#define kNSErrBadCharEscape				(ERRBASE_FRAMES - 618)	// $\ not followed by two hex digits
+#define kNSErrBadCharacter				(ERRBASE_FRAMES - 619)	// value: a character no token starts with
+#define kNSErrIntegerTooLarge			(ERRBASE_FRAMES - 620)	// value: the text; 30 bits at most
+#define kNSErrRealTooLarge				(ERRBASE_FRAMES - 621)	// value: the text
+#define kNSErrBadPathInAssignment		(ERRBASE_FRAMES - 623)	// value: the expression WalkForPath cannot take apart
+#define kNSErrNumberTooLong				(ERRBASE_FRAMES - 625)	// over 255 characters
+#define kNSErrBadDirective				(ERRBASE_FRAMES - 626)	// # not followed by line
+#define kNSErrBadMagicPointerRef		(ERRBASE_FRAMES - 628)	// @ not followed by digits
 
 // evt.ex.fr.store
 #define kNSErrEntryStoreGone			(ERRBASE_FRAMES - 7)	// FollowFaultBlock: the entry's store is gone (the ROM's 0xffff4479)

@@ -20,6 +20,7 @@
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "REPTranslators.h"
+#include "Compiler.h"
 #include "Unicode.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
@@ -1331,6 +1332,7 @@ RegisterBuiltinNatives(void)
 {
 	RegisterMungerNatives();
 	RegisterPrinterNatives();
+	RegisterCompilerNatives();
 	NATIVE("FAdd", FAdd, 2);
 	NATIVE("FSubtract", FSubtract, 2);
 	NATIVE("FMultiply", FMultiply, 2);
