@@ -51,6 +51,10 @@ src/
                 packages), Zippy (pointer-rich words), arithmetic and
                 Unicode text, with the coding tables generated from the
                 ROM (LZTables.cpp, UnicodeTables.cpp)
+  stores/       the persistent store system: the TStore object store
+                protocol (Store.h), the ROM's read-only TPackageStore over a
+                package's soup part, and the host's in-memory THostStore in
+                place of the flash store (host/) (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the
