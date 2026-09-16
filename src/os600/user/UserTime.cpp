@@ -137,6 +137,16 @@ SetRealClockSeconds(ULong seconds)
 }
 
 
+// ROM 0x002531b0 Ticks__Fv
+// The time in Macintosh ticks (sixtieths of a second), 31 bits.
+ULong
+Ticks(void)
+{
+	TTime now = GetGlobalTime();
+	return now.ConvertTo(kMacTicks) & 0x7fffffff;
+}
+
+
 // ROM 0x002536ac RealClock__Fv
 ULong
 RealClock(void)

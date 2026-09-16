@@ -13,6 +13,40 @@
 #include "Unicode.h"
 
 
+// ROM 0x002544a4 Ustrcpy
+UniChar*
+Ustrcpy(UniChar* dest, const UniChar* src)
+{
+	UniChar* d = dest;
+	while ((*d++ = *src++) != 0)
+		;
+	return dest;
+}
+
+
+// ROM 0x002544cc Ustrncpy
+// At most n UniChars of the string, and a terminator after them when
+// the string is longer (dest holds n + 1).
+UniChar*
+Ustrncpy(UniChar* dest, const UniChar* src, long n)
+{
+	UniChar* d = dest;
+	for (;;)
+	{
+		if (n-- == 0)
+		{
+			*d = 0;
+			break;
+		}
+		UniChar c = *src++;
+		*d++ = c;
+		if (c == 0)
+			break;
+	}
+	return dest;
+}
+
+
 // ROM 0x002547ec Ustrcat
 UniChar*
 Ustrcat(UniChar* dest, const UniChar* src)

@@ -27,6 +27,8 @@ const long	kASCIIEncoding = 0;
 const long	kMacRomanEncoding = 1;
 
 extern "C" {
+UniChar*	Ustrcpy(UniChar* dest, const UniChar* src);
+UniChar*	Ustrncpy(UniChar* dest, const UniChar* src, long n);		// at most n, always terminated (dest holds n + 1)
 UniChar*	Ustrcat(UniChar* dest, const UniChar* src);
 UniChar*	Ustrncat(UniChar* dest, const UniChar* src, long n);
 long		Ustrlen(const UniChar* s);

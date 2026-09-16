@@ -248,7 +248,11 @@ def function_kind(rom: ROM, fn: int):
     """('native', funcPtr, numArgs) or ('script', numArgs, numLocals) or ('other', class)."""
     if not rom.is_ptr(fn):
         return ("other", fn, 0)
+    if rom.flags(fn) & 3 == 0:
+        return ("other", rom.cls(fn), 0)
     s = rom.slots(fn)
+    if len(s) < 3:
+        return ("other", s[0] if s else 0, 0)
     if s[0] == 0x132:
         return ("native", s[1], s[2] >> 2)
     if s[0] == 0x32:
@@ -374,7 +378,7 @@ def main(argv=None) -> int:
             out.append("%s (%#x): %s" % (name, ref, rom.describe(ref)))
     for name in args.disasm:
         n, f = name, None
-        if "." in name and not name.lower().startswith("0x"):
+        if "." in name:
             obj, slot = name.rsplit(".", 1)
             ref = resolve(rom, obj)
             if ref is not None and rom.is_ptr(ref) and rom.flags(ref) & 3 == 3:
