@@ -195,9 +195,44 @@ depth-conversion tables are NOT YET (the host samples nearest-neighbour).
 `test_Draw` checks every verb, mode, clip and depth pixel by pixel on
 offscreen maps.
 
+## Shapes (`src/qd/Shapes.h`)
+
+Ovals, round rectangles and arcs are one shape: an oval `ovalWidth` by
+`ovalHeight` set into the corners of a rectangle (`StdOval` 0x002fb2bc
+passes the rectangle's own size, `StdRRect` 0x00318eac the corner size -
+`CallRRect` 0x00318fcc turns square corners into a rectangle - and
+`StdArc` 0x00285df8 adds the angles).  The ROM's rasteriser is `OvalRec`
+(0x34 bytes) with `InitOval` 0x002fb7c8 and `BumpOval` 0x002fb698: the
+row's left and right ends in 16.16 start at the flat top edge, half the
+oval's width in from each side; an accumulator with first and second
+differences - the squared height/width ratio (`FixedDivide`, `CompMul`)
+and its double - is compared against a decision term that falls by
+`4 * (row + 1)` per row (`row` from `1 - height` by two), the ends
+widening by half a pixel while the accumulator is below it and narrowing
+while above.  `PutOval` 0x002fb3e8 writes the shape's change points (the
+row's ends wherever they move, a duplicate cancelling the point before
+it) for an open region; the ROM's `DrawArc` 0x00285f50 draws the same
+rows straight into the bits (the pen's inner oval for a frame, the
+angles' slopes for an arc, the clip regions' masks).  The host packs
+`PutOval`'s points into a region (`OvalRgn`) and draws it through
+`DrawRgn` - the same pixels, the classic QuickDraw ovals (`test_Shapes`
+pins the 8x8 circle and others) - and frames as the shape less the same
+shape inset by the pen; arcs of less than a full turn are NOT YET.
+`FixedMultiply` 0x0038b008 and `FixedDivide` 0x0038af20 (fplib assembly:
+magnitudes, rounding half up, saturation) are `src/toolbox/FixedMath.cpp`.
+
+Lines: `LineTo` 0x002d1e20 and `Line` 0x002d1e7c go through the port's
+`lineProc` or `StdLine` 0x002d1eac, which records into an open picture,
+polygon or region (NOT YET), draws with `DrawLine` 0x002d277c and moves
+the pen.  The ROM's `DrawLine` rasterises row by row from a fixed-point
+slope (`FastLine` 0x002d209c for a one-pixel black or white pen); the
+host stamps the pen (its size hanging below and right of each point, its
+mode and pattern) along a Bresenham walk, clipped by the port's regions
+- the odd diagonal pixel may differ (`DEVIATION`).
+
 ## Not yet
 
-Lines (`StdLine`, `LineTo`), ovals, round rectangles, arcs, polygons,
-pictures, `OpenRgn`/`CloseRgn`, `ScrollRect`, `ZoomRect`, the screen
-(`InitScreen`, `QDStartDrawing`), the per-task globals, `StretchBits`
-proper, text and fonts, the `TQDLibraryDriver` protocol.
+Arcs of less than a full turn, polygons, pictures, `OpenRgn`/`CloseRgn`,
+`ScrollRect`, `ZoomRect`, the screen (`InitScreen`, `QDStartDrawing`),
+the per-task globals, `StretchBits` proper, text and fonts, the
+`TQDLibraryDriver` protocol.
