@@ -11,80 +11,14 @@
 */
 
 #include "RootView.h"
+#include "TextView.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "NativeFunctions.h"
 #include "ROMConstants.h"
 #include "NewtonExceptions.h"
-
-
-// ROM 0x0012ad3c AddressToRef__FPv
-// A pointer as an integer Ref (pointers are word aligned: the tag bits
-// are free).
-Ref
-AddressToRef(void* p)
-{
-	return (Ref) ((uintptr_t) p & ~(uintptr_t) 3);
-}
-
-
-// ROM 0x0012ad48 RefToAddress__Fl
-void*
-RefToAddress(Ref r)
-{
-	if (!ISINT(r))
-		_RINTError(r);
-	return (void*) ((uintptr_t) r & ~(uintptr_t) 3);
-}
-
-
-// ROM 0x0012b0d4 SetBoundsRect__FRC6RefVarRC5TRect
-// The rect into the frame's left, top, right and bottom slots.
-Ref
-SetBoundsRect(RefArg frame, const Rect& r)
-{
-	SetFrameSlot(frame, RSSYMleft, RefVar(MAKEINT(r.left)));
-	SetFrameSlot(frame, RSSYMtop, RefVar(MAKEINT(r.top)));
-	SetFrameSlot(frame, RSSYMright, RefVar(MAKEINT(r.right)));
-	SetFrameSlot(frame, RSSYMbottom, RefVar(MAKEINT(r.bottom)));
-	return frame;
-}
-
-
-// ROM 0x0012b1b8 ToObject__FRC5TRect
-// A bounds frame (a clone of canonicalRect) for the rect.
-Ref
-ToObject(const Rect& r)
-{
-	RefVar frame(Clone(RefVar(Rcanonicalrect)));
-	return SetBoundsRect(frame, r);
-}
-
-
-// ROM 0x0012a61c FromObject__FRC6RefVarRs
-// An integer Ref into a short; ==> whether it was one.
-static Boolean
-FromObject(RefArg obj, short& value)
-{
-	if (!ISINT(obj))
-		return false;
-	value = (short) RVALUE(obj);
-	return true;
-}
-
-
-// ROM 0x0012b200 FromObject__FRC6RefVarR5TRect
-// The rect from a bounds frame's top, left, bottom and right; ==> whether
-// all four are integers.
-Boolean
-FromObject(RefArg obj, Rect& r)
-{
-	return FromObject(RefVar(GetFrameSlotRef(obj, RSSYMtop)), r.top)
-		&& FromObject(RefVar(GetFrameSlotRef(obj, RSSYMleft)), r.left)
-		&& FromObject(RefVar(GetFrameSlotRef(obj, RSSYMbottom)), r.bottom)
-		&& FromObject(RefVar(GetFrameSlotRef(obj, RSSYMright)), r.right);
-}
 
 
 // ROM 0x001f18dc BadWickedNaughtyNoot__Fl
@@ -196,8 +130,8 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // TPictureView, TEditView, TKeyboardView, TMonthView, TParagraphView,
 // TPolygonView, TMathExpView, TMathOpView, TMathLineView, TRemoteView,
 // TPickView, TGaugeView, TPrintView, TMeetingView, TSliderView,
-// TTextView, TListView, TClipboard, TOutline, THelpOutline, TXView for
-// classes 75-108, and -8501 for any other).
+// TListView, TClipboard, TOutline, THelpOutline, TXView for classes
+// 75-108, and -8501 for any other); TTextView (97, 98) is here.
 TView*
 BuildView(TView* parent, RefArg context)
 {
@@ -221,13 +155,15 @@ BuildView(TView* parent, RefArg context)
 	case clPrintView - 1: case clPrintView:
 	case clMeetingView:
 	case clSliderView:
-	case clTextView - 1: case clTextView:
 	case clListView:
 	case clClipboard - 1: case clClipboard:
 	case clOutline - 3: case clOutline - 2: case clOutline - 1: case clOutline:
 	case clHelpOutline - 1: case clHelpOutline:
 	case clTXView:
 		view = new TView;
+		break;
+	case clTextView - 1: case clTextView:
+		view = new TTextView;
 		break;
 	default:
 		break;
@@ -473,37 +409,42 @@ InitViewPrototypes(void)
 }
 
 
-// ROM 0x001f3c40 InitScriptGlobals__Fv (the part that fills slotCacheRefs)
-// and the root view's making (the ROM's boot: the root template from
-// the ROM's 'rootView form).  The view system needs the object system,
-// QuickDraw and a current port (the screen); the root's template is
-// {viewFlags: vVisible + vApplication, viewFormat: vfFillWhite,
-// viewBounds: the port} when vars has no rootView... the host makes it
-// so, with the port's rectangle as the bounds.
+// ROM 0x001f3c40 InitScriptGlobals__Fv (the part that keeps the slot cache table)
+// and the root view's making (the ROM's boot: the root template is the
+// ROM's Rviewroot, whose viewSetupFormScript 0x00438a65 makes
+// vars.displayParams and takes its viewBounds from the params'
+// rootBounds).  The view system needs the object system, QuickDraw and a
+// current port (the screen); the host's root template is {viewClass 75,
+// viewFlags vVisible + vApplication, viewFormat vfFillWhite, the same
+// setup form script as source, _proto the view methods} and its display
+// params are the port's rectangle (the application area the whole of it).
 void
 InitViewSystem(void)
 {
 	InitViewPrototypes();
-	if (slotCacheRefs == nil)
-		slotCacheRefs = Slots(Rslotcachetable);
+	if (gSlotCacheTable == nil)
+		gSlotCacheTable = new RefStruct(Rslotcachetable);
 	if (gRootView != nil)
 		return;
 	GrafPort* port = GetCurrentPort();
-	RefVar templ(AllocateFrame());
-	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clRootView)));
-	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
-	SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
-	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
-	SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
 	if (ISNIL(GetFrameSlotRef(gVarFrame, RSSYMdisplayparams)))
 	{
 		RefVar params(AllocateFrame());
+		SetFrameSlot(params, RefVar(Intern((char*) "rootBounds")), RefVar(ToObject(port->portRect)));	// (no RSSYM: the ROM interns it at boot)
 		SetFrameSlot(params, RSSYMappareagloballeft, RefVar(MAKEINT(port->portRect.left)));
 		SetFrameSlot(params, RSSYMappareaglobaltop, RefVar(MAKEINT(port->portRect.top)));
 		SetFrameSlot(params, RSSYMappareawidth, RefVar(MAKEINT(port->portRect.right - port->portRect.left)));
 		SetFrameSlot(params, RSSYMappareaheight, RefVar(MAKEINT(port->portRect.bottom - port->portRect.top)));
 		SetFrameSlot(RefVar(gVarFrame), RSSYMdisplayparams, params);
 	}
+	RefVar templ(AllocateFrame());
+	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clRootView)));
+	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
+	SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
+	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
+	// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
+	SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
+	SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
 	TRootView* root = new TRootView;
 	gRootView = root;
 	root->Constructor(templ);

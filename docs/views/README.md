@@ -257,17 +257,27 @@ the root context resolves to the root view (`RealOpenX` then does
 nothing): the ROM's own applications name a `preallocatedContext`, and a
 context from `BuildContext` has its own nil `viewCObject`.
 
-`test_Views` runs without the ROM's objects (the canonical context, rect
-and slot cache frames are built by `InitViewPrototypes`), over a
-160 x 100 one-bit map: the structure, every justification, the round trip
-through `DejustifyBounds`, the formats pixel by pixel, overlapping
-windows and their clippers, scripts, ties, the errors.
+**TTextView** (`TextView.h`, clTextView 98: protoTitle, protoTextButton
+and the like): its text slot in its viewFont - a single line
+(viewJustify's `oneLineOnly` 0x800000) laid across the bounds' width by
+the horizontal text bits, the baseline the ascent below the top (or
+viewLineSpacing below it), centred, or at the bottom, one pixel lower
+than the room leaves (`RealDraw` 0x0025090c); else wrapped into the
+bounds by `TextBox`.  The transfer mode is viewTransferMode (srcOr when
+none).
+
+`test_Views` runs with the ROM's objects imported (for the text views'
+fonts; the canonical context, rect and slot cache frames come from the
+ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
+map: the structure, every justification, the round trip through
+`DejustifyBounds`, the formats pixel by pixel, overlapping windows and
+their clippers, scripts, ties, the errors, a title and a button's text.
 
 ## Not yet
 
 Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
 drag and drop, the recognition commands (`RealDoCommand`), the animation
 effects (`TAnimate`), the idlers, `SyncScroll`, the clipboards, the popup
-and modal dialog machinery, the subclasses (`TPictureView`, `TListView`,
-`TPickView`, the text views, ...), the application (`TApplication`,
+and modal dialog machinery, the other subclasses (`TPictureView`,
+`TListView`, `TPickView`, `TParagraphView`, ...), the application (`TApplication`,
 `gApplication`) and its command dispatch.

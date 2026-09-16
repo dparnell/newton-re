@@ -29,7 +29,7 @@
 TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101a1c gEmptyViewList__5TView
 long		TView::gViewIdCounter = 0;			// ROM 0x0c102050
 TRootView*	gRootView = nil;					// ROM 0x0c101a20 gRootView
-Ref*		slotCacheRefs = nil;				// ROM 0x0c10204c slotCacheRefs
+RefStruct*	gSlotCacheTable = nil;				// ROM 0x0c10204c slotCacheRefs (the array, not a pointer into it: the host's heap compacts)
 Boolean		gSkipVisRegions = false;			// ROM 0x0c102054 gSkipVisRegions
 Boolean		gOutlineViews = false;				// ROM 0x0c101a28 gOutlineViews
 long		gSlowMotion = 0;					// ROM 0x0c101a2c gSlowMotion
@@ -1535,6 +1535,14 @@ TView::SetDataSlot(RefArg slot, RefArg value)
 }
 
 
+// the slot symbol of a cache index (the ROM indexes slotCacheRefs)
+Ref
+SlotCacheRef(long index)
+{
+	return GetArraySlotRef(*gSlotCacheTable, index);
+}
+
+
 // ROM 0x0025d474 GetCacheProto__5TViewFl
 // The cached slot along the proto chain: nil at once when the view's mask
 // says the slot is not there; the bit is cleared when the lookup finds
@@ -1546,7 +1554,7 @@ TView::GetCacheProto(long index)
 	ULong bit = 1UL << (index < 32 ? index : index - 32);
 	if ((*mask & bit) == 0)
 		return NILREF;
-	Ref value = GetProto(RefVar(slotCacheRefs[index]));
+	Ref value = GetProto(RefVar(SlotCacheRef(index)));
 	if (ISNIL(value))
 		*mask &= ~bit;
 	else
@@ -1564,7 +1572,7 @@ TView::GetCacheVariable(long index)
 	ULong bit = 1UL << (index < 32 ? index : index - 32);
 	if ((*mask & bit) == 0)
 		return NILREF;
-	Ref value = GetVar(RefVar(slotCacheRefs[index]));
+	Ref value = GetVar(RefVar(SlotCacheRef(index)));
 	if (ISNIL(value))
 		*mask &= ~bit;
 	else
@@ -1626,7 +1634,7 @@ TView::RunCacheScript(long index, RefArg args, Boolean lookupVars, Boolean* ran)
 			Ref script = lookupVars ? GetCacheVariable(index) : GetCacheProto(index);
 			if (NOTNIL(script))
 			{
-				RefVar tag(slotCacheRefs[index]);
+				RefVar tag(SlotCacheRef(index));
 				result = lookupVars ? DoMessage(fContext, tag, args) : DoProtoMessage(fContext, tag, args);
 				did = true;
 			}

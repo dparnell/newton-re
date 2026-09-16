@@ -24,6 +24,7 @@
 #include "OSErrors.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "ROMConstants.h"
 #include "hal/System.h"
 #include "Unicode.h"
 
@@ -139,6 +140,74 @@ Ref
 MakeArray(long length)
 {
 	return gHeap->AllocateArray(RSSYMarray, length);
+}
+
+
+// ROM 0x0012ad3c AddressToRef__FPv
+// A pointer as an integer Ref (pointers are word aligned: the tag bits
+// are free).
+Ref
+AddressToRef(void* p)
+{
+	return (Ref) ((uintptr_t) p & ~(uintptr_t) 3);
+}
+
+
+// ROM 0x0012ad48 RefToAddress__Fl
+void*
+RefToAddress(Ref r)
+{
+	if (!ISINT(r))
+		_RINTError(r);
+	return (void*) ((uintptr_t) r & ~(uintptr_t) 3);
+}
+
+
+// ROM 0x0012b0d4 SetBoundsRect__FRC6RefVarRC5TRect
+// The rect into the frame's left, top, right and bottom slots.
+Ref
+SetBoundsRect(RefArg frame, const Rect& r)
+{
+	SetFrameSlot(frame, RSSYMleft, RefVar(MAKEINT(r.left)));
+	SetFrameSlot(frame, RSSYMtop, RefVar(MAKEINT(r.top)));
+	SetFrameSlot(frame, RSSYMright, RefVar(MAKEINT(r.right)));
+	SetFrameSlot(frame, RSSYMbottom, RefVar(MAKEINT(r.bottom)));
+	return frame;
+}
+
+
+// ROM 0x0012b1b8 ToObject__FRC5TRect
+// A bounds frame (a clone of canonicalRect) for the rect.
+Ref
+ToObject(const Rect& r)
+{
+	RefVar frame(Clone(RefVar(Rcanonicalrect)));
+	return SetBoundsRect(frame, r);
+}
+
+
+// ROM 0x0012a61c FromObject__FRC6RefVarRs
+// An integer Ref into a short; ==> whether it was one.
+static Boolean
+FromObject(RefArg obj, short& value)
+{
+	if (!ISINT(obj))
+		return false;
+	value = (short) RVALUE(obj);
+	return true;
+}
+
+
+// ROM 0x0012b200 FromObject__FRC6RefVarR5TRect
+// The rect from a bounds frame's top, left, bottom and right; ==> whether
+// all four are integers.
+Boolean
+FromObject(RefArg obj, Rect& r)
+{
+	return FromObject(RefVar(GetFrameSlotRef(obj, RSSYMtop)), r.top)
+		&& FromObject(RefVar(GetFrameSlotRef(obj, RSSYMleft)), r.left)
+		&& FromObject(RefVar(GetFrameSlotRef(obj, RSSYMbottom)), r.bottom)
+		&& FromObject(RefVar(GetFrameSlotRef(obj, RSSYMright)), r.right);
 }
 
 

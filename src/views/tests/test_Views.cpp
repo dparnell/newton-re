@@ -8,8 +8,10 @@
 // viewSetupDoneScript, viewDrawScript, viewShowScript, viewHideScript,
 // viewQuitScript, viewChangedScript, viewTie); SetValue syncing the
 // bounds, Show/Hide/Close, MoveBehind, SetOrigin, the update regions.
-// Runs over a standalone kernel heap without the ROM's objects.
+// Runs over a standalone kernel heap with the ROM's objects imported (for
+// the fonts of the text views).
 #include "RootView.h"
+#include "TextView.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "Draw.h"
@@ -18,6 +20,10 @@
 #include "Compiler.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
+#include "ROMImport.h"
+#include "ROMConstants.h"
+#include "Fonts.h"
+#include "Text.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -483,17 +489,93 @@ TestScripts()
 }
 
 
+// the extent of the set pixels in a row band of the map
+static void
+InkExtent(long top, long bottom, long* left, long* right)
+{
+	*left = kWidth;
+	*right = 0;
+	for (long y = top; y < bottom; y++)
+		for (long x = 0; x < kWidth; x++)
+			if (Pixel(x, y))
+			{
+				if (x < *left) *left = x;
+				if (x + 1 > *right) *right = x + 1;
+			}
+}
+
+
+static void
+TestTextView()
+{
+	// a title: one line, centred (protoTitle's viewJustify: vjCenterH + vjCenterV + oneLineOnly)
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "espy12")), RefVar(MAKEINT(PackFont(0, 12, 0))));
+	TView* t = ViewOf("ctxT := AddView(GetRoot(), {viewClass: 98, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 120, bottom: 30}, viewJustify: 0x800006, viewFont: espy12, text: \"Hello\"})");
+	EXPECT(t != nil && t->ClassID() == clTextView && t->DerivedFrom(clView) && ((TTextView*) t)->fTransferMode == srcOr);
+	Eval("ctxT:Dirty()");
+	Refresh();
+	long inkLeft, inkRight;
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 57 && inkRight == 83);		// "Hello" advances 27 in espy 12 (26 of ink): centred at 20 + 36.5, the half rounding up
+	InkExtent(0, 10, &inkLeft, &inkRight);
+	EXPECT(inkRight == 0);
+	// the baseline: ascent 12, descent 4 in a 20 high view - centred one lower than the room leaves
+	long inkTop = kHeight;
+	for (long y = 10; y < 30; y++)
+		for (long x = 20; x < 120; x++)
+			if (Pixel(x, y) && y < inkTop)
+				inkTop = y;
+	EXPECT(inkTop == 15);		// the baseline at top + ascent - 1 + (20 - 16) / 2 + 1 = 24, the H 9 high above it
+	// a button: text flush right, at the top with a line spacing
+	Eval("SetValue(ctxT, 'viewJustify, 0x800001)");
+	Eval("ctxT.viewLineSpacing := 14");
+	Eval("ctxT:Dirty()");
+	Refresh();
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkRight == 119 && inkLeft == 93);		// flush right: the advance's last pixel is blank
+	// wrapped: two lines in a narrow view
+	Eval("ctxT:Close()");
+	t = ViewOf("ctxT := AddView(GetRoot(), {viewClass: 98, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 60, bottom: 50}, viewJustify: 0, viewFont: espy12, text: \"Hello World\"})");
+	Eval("ctxT:Dirty()");
+	Refresh();
+	InkExtent(10, 26, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight == 46);
+	InkExtent(26, 42, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight > 20);
+	Eval("ctxT:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "text closed"));
+}
+
+
 int
 main()
 {
 	InitHostStandaloneHeap();
+	if (ImportROMObjectsFromFile(NEWTON_ROM_BIN) != noErr)
+	{
+		printf("test_Views: cannot import %s\n", NEWTON_ROM_BIN);
+		return 1;
+	}
 	gObjectHeapSize = 0x200000;
 	InitObjects();
 	InitGraf();
+	InitFonts();
+	RegisterTextNatives();
 	RegisterViewNatives();
 	InstallHostNatives();
 	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfunctions, RefVar(gFunctionFrame));
+	// what the boot makes: vars.fonts, the ROM's font families by symbol
+	RefVar fonts(AllocateFrame());
+	RefVar list(Rromfontlist);
+	for (long i = 0; i < Length(list); i++)
+	{
+		RefVar family(GetArraySlotRef(list, i));
+		SetFrameSlot(fonts, RefVar(GetFrameSlotRef(family, Intern((char*) "screenSym"))), family);
+	}
+	SetFrameSlot(RefVar(gVarFrame), RSSYMfonts, fonts);
+	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));
 	gMap.baseAddr = (Ptr) gBits;
 	gMap.rowBytes = kWidth / 8;
 	SetRect(&gMap.bounds, 0, 0, kWidth, kHeight);
@@ -522,6 +604,7 @@ main()
 		TestDrawing();
 		TestJustify();
 		TestScripts();
+		TestTextView();
 	}
 	newton_catch_all
 	{

@@ -100,8 +100,9 @@ src/
                 children, scripts, drawing through QuickDraw (viewFormat)
                 - the root view with its update regions (RootView.h),
                 views built from templates (BuildView.cpp), the
-                NewtonScript view functions and methods (ViewNatives.cpp);
-                the subclasses (text, pictures, lists, ...) to come
+                NewtonScript view functions and methods (ViewNatives.cpp),
+                the text view of titles and buttons (TextView.h); the
+                other subclasses (paragraphs, pictures, lists, ...) to come
                 (docs/views/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

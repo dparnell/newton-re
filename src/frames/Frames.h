@@ -29,12 +29,20 @@
 #ifndef __NSERRORS_H
 #include "NSErrors.h"
 #endif
+#ifndef __NEWTQD_H
+#include "NewtQD.h"
+#endif
 
 extern long	gObjectHeapSize;			// host: the size InitObjects gives the object heap (the ROM asks InternalRAMInfo)
 
 // beyond objects.h
 Ref		AllocateMapWithTags(RefArg superMap, RefArg tags);
 Ref		MakeArray(long length);				// an array of class 'Array
+Ref		AddressToRef(void* p);				// a pointer as an integer Ref (the ROM's "magic" C objects: views, clippers)
+void*	RefToAddress(Ref r);
+Ref		ToObject(const Rect& r);			// a bounds frame {left, top, right, bottom} (a clone of canonicalRect)
+Boolean	FromObject(RefArg obj, Rect& r);	// the rect of a bounds frame; ==> whether its four slots are integers
+Ref		SetBoundsRect(RefArg frame, const Rect& r);
 
 // a frame's tag with the index of its slot (GetFrameMapTags: the stores sort them)
 struct SortedMapTag

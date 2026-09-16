@@ -347,7 +347,8 @@ public:
 };
 
 extern TRootView*	gRootView;				// 0x0c101a20
-extern Ref*			slotCacheRefs;			// 0x0c10204c  the 34 slot symbols of Rslotcachetable
+extern RefStruct*	gSlotCacheTable;		// 0x0c10204c slotCacheRefs: the ROM keeps a pointer to the 34 slot symbols of Rslotcachetable; the host the array (SlotCacheRef)
+Ref			SlotCacheRef(long index);		// the slot symbol of a cache index
 extern Boolean		gSkipVisRegions;		// 0x0c102054  Draw does not clip to the visible regions
 extern Boolean		gOutlineViews;			// 0x0c101a28  Draw frames every view in light gray
 extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET: unused)
@@ -363,16 +364,11 @@ TView*		DataExists(TViewList* list, RefArg data);				// ROM 0x0025f84c DataExist
 Boolean		SoupEQ(RefArg a, RefArg b);								// ROM 0x002638e4 SoupEQ__FRC6RefVarT1
 Boolean		ProtoEQ(RefArg a, RefArg b);							// ROM 0x00262a98 ProtoEQ__FRC6RefVarT1
 Ref			GetCacheContext(RefArg templ);							// ROM 0x0025c598 GetCacheContext__FRC6RefVar
-Ref			AddressToRef(void* p);									// ROM 0x0012ad3c AddressToRef__FPv
-void*		RefToAddress(Ref r);									// ROM 0x0012ad48 RefToAddress__Fl
-Ref			ToObject(const Rect& r);								// ROM 0x0012b1b8 ToObject__FRC5TRect  ({left, top, right, bottom})
-Boolean		FromObject(RefArg obj, Rect& r);						// ROM 0x0012b200 FromObject__FRC6RefVarR5TRect
-Ref			SetBoundsRect(RefArg frame, const Rect& r);				// ROM 0x0012b0d4 SetBoundsRect__FRC6RefVarRC5TRect
 void		OuterBounds1(Rect* bounds, ULong viewFormat);			// ROM 0x00262114 OuterBounds1__FP5TRectUl
 void		BadWickedNaughtyNoot(long which);						// ROM 0x001f18dc BadWickedNaughtyNoot__Fl
 
 void		InitViewPrototypes(void);		// host: the canonical context, data context and rect frames when no ROM is imported
-void		InitViewSystem(void);			// host: slotCacheRefs, the prototypes, the root view (with the current port) - after InitObjects and InitGraf
+void		InitViewSystem(void);			// host: the slot cache table, the prototypes, the root view (with the current port) - after InitObjects and InitGraf
 void		RegisterViewNatives(void);		// the NewtonScript view functions (ViewNatives.cpp)
 Ref			MakeViewMethods(void);			// the methods a view inherits from the root template (Rviewroot's), as a frame
 

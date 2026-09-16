@@ -1,13 +1,17 @@
 /*
 	File:		qd/Text.cpp
 
-	Contains:	Drawing and measuring text.
+	Contains:	Drawing and measuring text, and laying it out: the options
+				(a width to fit, alignment, justification) and paragraphs
+				wrapped into a rectangle.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
 	The ROM composes a chunk's glyphs into a one-bit slab (DrTextChunk
 	0x00331794) and blits it; the host draws each glyph as a region
 	through DrawRgn - the same pixels for an unscaled strike (DEVIATION:
-	the code).
+	the code).  The ROM's text object (NewText 0x00330e68: the text, its
+	length, styles, runs, location, options, and the measured widths) is
+	the layout's working state here, on the stack (DEVIATION: no object).
 */
 
 #include "Text.h"
@@ -18,8 +22,14 @@
 #include "NativeFunctions.h"
 #include "RichString.h"
 #include "Unicode.h"
+#include "Locale.h"
 #include "OSErrors.h"
+#include "NewtonExceptions.h"
 #include <string.h>
+
+// the ROM's characters
+const UniChar kCarriageReturn = 0x0d;
+const UniChar kSpace = 0x20;
 
 
 // the glyph's set bits as a region at (left, top) - each row's runs
@@ -63,20 +73,150 @@ GlyphRgn(const FontEngineInfo* info, long left, long top)
 }
 
 
+// the layout of a text: each character's advance and its run
+struct TextLayout
+{
+	Fixed*	fAdvances;		// per character, 16.16 (the justification added)
+	long*	fRuns;			// per character, the run it is in
+	long	fCount;
+	Fixed	fWidth;			// the advances' sum
+	long	fSpaces;
+};
+
+
+// ROM 0x00330948 MeasureGlyphWidths__Fl
+// Every character's advance in its run's font; with a width to fit, the
+// text is cut before the first character that would cross it, the width
+// so far kept in the options.  ==> the count that fits.
+static long
+MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port)
+{
+	long fitted = length;
+	Fixed limit = (options != nil) ? options->fWidth : 0;
+	if (options != nil)
+		options->fFittedWidth = 0;
+	Fixed width = 0;
+	long done = 0;
+	long run = 0;
+	layout->fSpaces = 0;
+	while (done < length)
+	{
+		long count = (runLengths != nil) ? runLengths[run] : length;
+		if (count > length - done)
+			count = length - done;
+		FontEngineInfo info;
+		Boolean opened = OpenFont(&port->portBits, styles[run], 0x10000, 0x10000, &info) != 3;
+		for (long i = 0; i < count; i++)
+		{
+			long index = done + i;
+			layout->fRuns[index] = run;
+			Fixed advance = 0;
+			if (opened)
+			{
+				info.fGetGlyphInfo(chars[index], 0, &info);
+				advance = info.fGlyphAdvance;
+			}
+			layout->fAdvances[index] = advance;
+			if (limit != 0 && index < fitted && width + advance > limit)
+				fitted = index;
+			width += advance;
+			if (chars[index] == kSpace)
+				layout->fSpaces++;
+		}
+		if (opened)
+			CloseFont(&info);
+		done += count;
+		run++;
+	}
+	if (options != nil)
+		options->fFittedWidth = width;
+	layout->fCount = length;
+	layout->fWidth = width;
+	return fitted;
+}
+
+
+// ROM 0x0033057c JustifyText__Fl
+// The slack (the width to fit less the text's width) times the options'
+// justification spread over the characters but the last: a space gets
+// nine shares, another character one - or, for a text wider than the
+// width, every character the same.  ==> the offset of the text's start:
+// the slack times the alignment.
+static Fixed
+JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout)
+{
+	if (options == nil || options->fWidth == 0)
+		return 0;
+	Fixed slack = options->fWidth - layout->fWidth;
+	if (options->fJustification != 0 && length > 1)
+	{
+		Fixed extra = (options->fJustification == 0x10000) ? slack : FixedMultiply(slack, options->fJustification);
+		long spaces = 0;
+		for (long i = 0; i < length; i++)
+			if (chars[i] == kSpace)
+				spaces++;
+		Fixed perChar;
+		Fixed perSpace;
+		if (extra < 0)
+		{
+			perChar = FixedDivide(extra, (Fixed) ((length - 1) << 16));
+			perSpace = perChar;
+		}
+		else
+		{
+			perChar = FixedDivide(extra, (Fixed) ((length + spaces * 8 - 1) << 16));
+			perSpace = FixedMultiply(perChar, 0x90000);
+		}
+		for (long i = 0; i < length - 1; i++)
+			layout->fAdvances[i] += (chars[i] == kSpace) ? perSpace : perChar;
+		layout->fWidth += extra;
+		slack -= extra;
+	}
+	if (options->fAlignment == 0)
+		return 0;
+	return (options->fAlignment == 0x10000) ? slack : FixedMultiply(slack, options->fAlignment);
+}
+
+
 // ROM 0x0032f2bc DoTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfoUc
-// The text as one text object: drawn when asked, its bounds calculated
-// when wanted.  Each run (runLengths, or the whole text for one style)
-// is drawn with its style's font from the pen position: every glyph at
-// its bearing from the baseline, advancing by its width; the pen's mode
+// The text as one text object: measured (MeasureGlyphWidths: the
+// characters that fit the options' width), laid out (JustifyText) and
+// drawn when asked, its bounds calculated when wanted.  Each run
+// (runLengths, or the whole text for one style) is drawn with its
+// style's font from the pen position: every glyph at its bearing from
+// the baseline, advancing by its width; the options' or the pen's mode
 // and the style's pattern (else the port's); bold smeared a pixel to the
 // right, an underline the font's offset below the baseline for the run's
-// width.  ==> the length.
+// width.  ==> the length drawn.
 long
-DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* /*options*/, TextBoundsInfo* bounds, Boolean draw)
+DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw)
 {
 	GrafPort* port = GetCurrentPort();
 	const UniChar* chars = (const UniChar*) text;
-	Fixed x = where.x;
+	if (length < 0)
+		length = 0;
+	Fixed* advances = (Fixed*) QDNewTempPtr((length + 1) * sizeof(Fixed));
+	long* runs = (long*) QDNewTempPtr((length + 1) * sizeof(long));
+	if (advances == nil || runs == nil)
+	{
+		QDDisposeTempPtr(advances);
+		QDDisposeTempPtr(runs);
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	}
+	TextLayout layout;
+	layout.fAdvances = advances;
+	layout.fRuns = runs;
+	long fitted = MeasureGlyphWidths(chars, length, styles, runLengths, options, &layout, port);
+	if (fitted < length)
+	{
+		// the characters beyond the width are dropped from the layout
+		layout.fWidth = 0;
+		for (long i = 0; i < fitted; i++)
+			layout.fWidth += advances[i];
+		length = fitted;
+	}
+	Fixed x = where.x + JustifyText(chars, length, options, &layout);
+	Fixed start = x;
 	Fixed y = where.y;
 	long baseline = (short) ((y + 0x8000) >> 16);
 	long maxAscent = 0;
@@ -92,6 +232,8 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 		FontEngineInfo info;
 		if (OpenFont(&port->portBits, style, 0x10000, 0x10000, &info) == 3)
 		{
+			for (long i = 0; i < count; i++)
+				x += advances[done + i];
 			done += count;
 			run++;
 			continue;
@@ -100,29 +242,40 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 			maxAscent = info.fAscent;
 		if (info.fDescent > maxDescent)
 			maxDescent = info.fDescent;
-		long mode = (style->fTransferMode != 0) ? style->fTransferMode : port->pnMode;
+		long mode = (options != nil && options->fTransferMode != 0) ? options->fTransferMode
+				  : (style->fTransferMode != 0) ? style->fTransferMode : port->pnMode;
 		PatternHandle pattern = (style->fPattern != nil) ? style->fPattern : port->fgPat;
+		if ((mode & 8) == 0)
+		{
+			// a source mode (srcOr, ...): the ROM blits the glyphs' slab as the
+			// source; the host's regions take the pattern mode with black
+			mode |= 8;
+			pattern = GetStdPattern(blackPat);
+		}
 		Fixed runStart = x;
 		for (long i = 0; i < count; i++)
 		{
-			info.fGetGlyph(chars[done + i], 0, &info);
-			if (draw && info.fGlyphBits != nil && port->pnVis >= 0)
+			if (draw && port->pnVis >= 0)
 			{
-				long left = (short) ((x + 0x8000) >> 16) + info.fGlyphBearingX;
-				long top = baseline - info.fGlyphBearingY;
-				RgnHandle glyph = GlyphRgn(&info, left, top);
-				if (glyph != nil)
+				info.fGetGlyph(chars[done + i], 0, &info);
+				if (info.fGlyphBits != nil)
 				{
-					DrawRgn(glyph, mode, pattern);
-					if (info.fStyleAdjust[0] != 0)
+					long left = (short) ((x + 0x8000) >> 16) + info.fGlyphBearingX;
+					long top = baseline - info.fGlyphBearingY;
+					RgnHandle glyph = GlyphRgn(&info, left, top);
+					if (glyph != nil)
 					{
-						OffsetRgn(glyph, info.fStyleAdjust[0], 0);
 						DrawRgn(glyph, mode, pattern);
+						if (info.fStyleAdjust[0] != 0)
+						{
+							OffsetRgn(glyph, info.fStyleAdjust[0], 0);
+							DrawRgn(glyph, mode, pattern);
+						}
+						DisposeRgn(glyph);
 					}
-					DisposeRgn(glyph);
 				}
 			}
-			x += info.fGlyphAdvance;
+			x += advances[done + i];
 		}
 		if (draw && info.fStyleAdjust[3] != 0 && port->pnVis >= 0)
 		{
@@ -136,14 +289,16 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 	}
 	if (bounds != nil)
 	{
-		bounds->fLeft = where.x;
+		bounds->fLeft = start;
 		bounds->fRight = x;
 		bounds->fTop = y - (Fixed) (maxAscent << 16);
 		bounds->fBottom = y + (Fixed) (maxDescent << 16);
 		bounds->fBaseline = y;
-		bounds->fWidth = x - where.x;
+		bounds->fWidth = x - start;
 		bounds->fHeight = (Fixed) ((maxAscent + maxDescent) << 16);
 	}
+	QDDisposeTempPtr(advances);
+	QDDisposeTempPtr(runs);
 	return length;
 }
 
@@ -186,6 +341,241 @@ MeasureOnceFont(const UniChar* text, long length, RefArg fontSpec)
 	long width = MeasureOnce(text, length, &style);
 	DisposeStyleRecord(&style);
 	return width;
+}
+
+
+/*------------------------------------------------------------------------------
+	R i c h   s t r i n g s
+------------------------------------------------------------------------------*/
+
+// ROM 0x0032f008 DoRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfoUc
+// The rich string's characters from start, as one text.  NOT YET
+// RECONSTRUCTED: the ink words (the ROM makes a style and a run for each
+// ink word and text run between them); the text is drawn as it is.
+long
+DoRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw)
+{
+	UniChar* text = rich.GrabPtr();
+	StyleRecord* styles[1] = { style };
+	long drawn = DoTextOnce(text + start, length, styles, nil, where, options, bounds, draw);
+	rich.ReleasePtr();
+	return drawn;
+}
+
+
+// ROM 0x0032ef68 DrawRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
+void
+DrawRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
+{
+	DoRichString(rich, start, length, style, where, options, bounds, true);
+}
+
+
+// ROM 0x0032efb8 MeasureRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
+void
+MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
+{
+	DoRichString(rich, start, length, style, where, options, bounds, false);
+}
+
+
+/*------------------------------------------------------------------------------
+	P a r a g r a p h s
+------------------------------------------------------------------------------*/
+
+// ROM 0x0017f0a0 ConvertToQDFlush__FUlPl
+// The viewJustify text bits as a QD flush: vjLeftH 0, vjRightH 1.0,
+// vjCenterH 0.5; vjFullH is flush left with full justification.
+Fixed
+ConvertToQDFlush(ULong justify, Fixed* justification)
+{
+	*justification = 0;
+	switch (justify & 3)
+	{
+	case 1:		return 0x10000;
+	case 2:		return 0x8000;
+	case 3:		*justification = 0x10000;
+				return 0;
+	default:	return 0;
+	}
+}
+
+
+// ROM 0x000ed674 FindWordBreaks__FPUsUlT2Uc6RefVarPUlT6
+// The word around the offset: wordStart and wordEnd (offsets into the
+// text).  The ROM classifies the characters through the locale's
+// lineBreakTable (a binary: a class per character, a state machine for
+// breaking before and after); the host breaks at spaces and carriage
+// returns (DEVIATION: the table).  Not forward: the character before the
+// offset is the one looked at.
+void
+FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward, RefArg /*breakTable*/, ULong* wordStart, ULong* wordEnd)
+{
+	if (text == nil || length == 0)
+	{
+		*wordStart = 0;
+		*wordEnd = 0;
+		return;
+	}
+	if (!forward && offset > 0)
+		offset--;
+	if (offset >= length)
+	{
+		*wordStart = length;
+		*wordEnd = length;
+		return;
+	}
+	ULong start = offset;
+	while (start > 0 && text[start - 1] != kSpace && text[start - 1] != kCarriageReturn)
+		start--;
+	ULong end = offset;
+	while (end < length && text[end] != kSpace && text[end] != kCarriageReturn)
+		end++;
+	*wordStart = start;
+	*wordEnd = end;
+}
+
+
+// ROM 0x0017ec24 SkipUpToTwoSpacesAndCR__FPUsT1
+// After a line: up to two spaces, then a carriage return, are skipped.
+const UniChar*
+SkipUpToTwoSpacesAndCR(const UniChar* text, const UniChar* end)
+{
+	for (long i = 0; i < 2 && text < end && *text == kSpace; i++)
+		text++;
+	if (text < end && *text == kCarriageReturn)
+		text++;
+	return text;
+}
+
+
+// ROM 0x0017e0e4 DrawSimpleLine__FR11TRichStringUlP6FPointPP11StyleRecordP11TextOptionsRC6RefVarPlUc
+// One line of the paragraph from start: the text up to the carriage
+// return (a return alone is an empty line), as many characters as fit the
+// options' width, cut back to the start of the word the width falls in
+// (FindWordBreaks) unless it falls at a space; drawn when asked, its
+// width answered.  ==> where the next line starts: after the spaces and
+// return that end this one.
+ULong
+DrawSimpleLine(TRichString& rich, ULong start, FPoint* where, StyleRecord** style, TextOptions* options, RefArg breakTable, long* lineWidth, Boolean draw)
+{
+	UniChar* text = rich.GrabPtr();
+	ULong total = rich.Length();
+	UniChar* line = text + start;
+	if (*line == kCarriageReturn)
+	{
+		*lineWidth = 0;
+		rich.ReleasePtr();
+		return start + 1;
+	}
+	long lineLength = 0;
+	while (line[lineLength] != 0 && line[lineLength] != kCarriageReturn)
+		lineLength++;
+	TextBoundsInfo bounds;
+	long fitted = DoTextOnce(line, lineLength, style, nil, *where, options, &bounds, false);
+	if (fitted < lineLength)
+	{
+		if (line[fitted - 1] != kSpace && line[fitted] != kSpace)
+		{
+			ULong wordStart;
+			ULong wordEnd;
+			FindWordBreaks(line, total - start, fitted, true, breakTable, &wordStart, &wordEnd);
+			if (wordStart != 0)
+				fitted = wordStart;
+		}
+		DoTextOnce(line, fitted, style, nil, *where, options, &bounds, false);
+	}
+	*lineWidth = (short) ((bounds.fWidth + 0x8000) >> 16);
+	if (draw)
+		DoTextOnce(line, fitted, style, nil, *where, options, nil, true);
+	const UniChar* next = line + fitted;
+	next = SkipUpToTwoSpacesAndCR(next, text + total);
+	rich.ReleasePtr();
+	return start + (ULong) (next - line);
+}
+
+
+// ROM 0x0017de74 DrawSimpleParagraph__FR11TRichStringRC6RefVarP5TRectlUcT4
+// The rich string wrapped into the box's width (any width for a box 0
+// wide) line by line, the lines the font's height (ascent + descent +
+// leading) apart from the box's top, as many as fit its height (any
+// number for a box 0 high), drawn when asked in the transfer mode; a box
+// 0 wide or high gets the text's width or height.
+void
+DrawSimpleParagraph(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify, Boolean draw, long transferMode)
+{
+	long width = box->right - box->left;
+	long height = box->bottom - box->top;
+	long maxHeight = height > 0 ? height : 10000;
+	StyleRecord style;
+	CreateTextStyleRecord(fontSpec, &style);
+	StyleRecord* styles = &style;
+	FontInfo fontInfo;
+	GetStyleFontInfo(&style, &fontInfo);
+	long lineHeight = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
+	FPoint where;
+	where.x = (Fixed) box->left << 16;
+	where.y = (Fixed) (box->top + fontInfo.ascent) << 16;
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fAlignment = ConvertToQDFlush(hJustify, &options.fJustification);
+	options.fWidth = width > 0 ? (Fixed) width << 16 : 0;
+	options.fTransferMode = transferMode;
+	RefVar breakTable;
+	if (NOTNIL(IntlResources()))				// (the host without a locale: FindWordBreaks needs no table)
+		breakTable = GetLocaleSlot(RSSYMlinebreaktable);
+	long textHeight = 0;
+	long textWidth = 0;
+	ULong offset = 0;
+	ULong length = rich.Length();
+	while (offset < length)
+	{
+		if (textHeight > maxHeight)
+			break;
+		textHeight += lineHeight;
+		long lineWidth = 0;
+		offset = DrawSimpleLine(rich, offset, &where, &styles, &options, breakTable, &lineWidth, draw);
+		where.y += (Fixed) lineHeight << 16;
+		if (lineWidth > textWidth)
+			textWidth = lineWidth;
+	}
+	if (height <= 0)
+		box->bottom = (short) (box->top + textHeight);
+	if (width <= 0)
+		box->right = (short) (box->left + textWidth);
+	DisposeStyleRecord(&style);
+}
+
+
+// ROM 0x0017de44 TextBounds__FR11TRichStringRC6RefVarP5TRectl
+void
+TextBounds(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify)
+{
+	DrawSimpleParagraph(rich, fontSpec, box, hJustify, false, 1);
+}
+
+
+// ROM 0x0017dd5c TextBox__FR11TRichStringRC6RefVarRC5TRectlN24
+// The rich string drawn in the box: with a vertical justification the
+// text is measured first (in a copy of the box with no height) and the
+// box moved down by the room left (half of it for vjCenterV, all for
+// vjBottomV).
+void
+TextBox(TRichString& rich, RefArg fontSpec, const Rect& box, long hJustify, long vJustify, long transferMode)
+{
+	Rect r = box;
+	if (vJustify != 0)
+	{
+		r.bottom = r.top;
+		DrawSimpleParagraph(rich, fontSpec, &r, hJustify, false, 1);
+		long room = (box.bottom - box.top) - (r.bottom - r.top);
+		r = box;
+		if (vJustify == 4)
+			OffsetRect(&r, 0, room / 2);
+		else if (vJustify == 8)
+			OffsetRect(&r, 0, room);
+	}
+	DrawSimpleParagraph(rich, fontSpec, &r, hJustify, true, transferMode);
 }
 
 
@@ -265,6 +655,39 @@ FStrFontWidth(RefArg /*rcvr*/, RefArg str, RefArg fontSpec)
 }
 
 
+// ROM 0x000e4808 FTextBox
+// view:TextBox(string, {font, justification}, bounds): the string drawn
+// in the bounds (relative to the view: its top left added), in the
+// style's font, aligned 'left, 'right or 'center.  DEVIATION: the ROM
+// takes the receiver's view (FailGetView) for the top left; the host reads
+// the receiver's viewBounds frame, and draws at the bounds as they are
+// for a receiver without one.
+static Ref
+FTextBox(RefArg rcvr, RefArg str, RefArg style, RefArg bounds)
+{
+	if (ISNIL(str) || ISNIL(style))
+		return NILREF;
+	RefVar font(GetFrameSlotRef(style, RSSYMfont));
+	RefVar justification(GetFrameSlotRef(style, RSSYMjustification));
+	long hJustify = EQRef(justification, RSSYMleft) ? 0 : EQRef(justification, RSSYMcenter) ? 2 : 1;
+	Rect origin;
+	SetRect(&origin, 0, 0, 0, 0);
+	if (IsFrame(rcvr))
+	{
+		RefVar viewBounds(GetProtoVariable(rcvr, RSSYMviewbounds, nil));
+		if (IsFrame(viewBounds))
+			FromObject(viewBounds, origin);
+	}
+	Rect box;
+	if (!IsFrame(bounds) || !FromObject(bounds, box))
+		return NILREF;
+	OffsetRect(&box, origin.left, origin.top);
+	TRichString rich(str);
+	TextBox(rich, font, box, hJustify, 0, 1);
+	return NILREF;
+}
+
+
 void
 RegisterTextNatives(void)
 {
@@ -273,4 +696,5 @@ RegisterTextNatives(void)
 	RegisterNativeFunction("FFontLeading__FRC6RefVarT1", (void*) FFontLeading, 1);
 	RegisterNativeFunction("FFontHeight__FRC6RefVarT1", (void*) FFontHeight, 1);
 	RegisterNativeFunction("FStrFontWidth__FRC6RefVarN21", (void*) FStrFontWidth, 2);
+	RegisterNativeFunction("FTextBox", (void*) FTextBox, 3);
 }

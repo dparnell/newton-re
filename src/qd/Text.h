@@ -14,6 +14,16 @@
 				a line below the baseline, italic and outline NOT YET).
 				MeasureOnce/MeasureOnceFont answer a string's width, the
 				NewtonScript StrFontWidth and Font* functions are here too.
+				A TextOptions asks for layout: the characters that fit a
+				width (the rest are dropped, as the ROM's MeasureGlyphWidths
+				cuts a text object's length), the slack before the text (the
+				alignment: a QD flush) and spread between the characters
+				(full justification, spaces nine times a character's share:
+				JustifyText).  TextBox wraps a rich string into a rectangle
+				line by line (DrawSimpleParagraph/DrawSimpleLine: each line
+				what fits, cut back to a word boundary - FindWordBreaks, the
+				host breaking at spaces where the ROM reads the locale's
+				lineBreakTable), aligned by the viewJustify text bits.
 
 	The ROM lays text out into a text object (0x50 bytes: the text, its
 	length, styles and run lengths, the location, options, flags, cached
@@ -25,8 +35,9 @@
 	recording into a picture (StdText).
 
 	Reconstructed from the MP2100 D ROM (0x0025fd08-0x0025fdf4,
-	0x0032eec8-0x0032f3f0, 0x003301d0, 0x001efeb4-0x001f0084,
-	0x001f2648); each function cites its origin.
+	0x0032eec8-0x0032f3f0, 0x003301d0, 0x0033057c, 0x00330948,
+	0x0017dd5c-0x0017e2c0, 0x0017f0a0, 0x000ed674, 0x000e4808,
+	0x001efeb4-0x001f0084, 0x001f2648); each function cites its origin.
 */
 
 #ifndef __TEXT_H
@@ -48,14 +59,45 @@ struct TextBoundsInfo
 	Fixed		fHeight;		// +0x18  ascent and descent
 };
 
-struct TextOptions;				// NOT YET RECONSTRUCTED (justification, a width to fit, alignment)
+// the layout options of a text object (the ROM's 0x1c bytes): a width to
+// fit, the alignment within it (a QD flush: the fraction of the slack put
+// before the text) and the justification (the fraction of the slack spread
+// between the characters - spaces nine times as much - for full
+// justification)
+struct TextOptions
+{
+	Fixed	fJustification;		// +0x00  0 none, 1.0 full (JustifyText)
+	Fixed	fAlignment;			// +0x04  0 left, 0.5 centred, 1.0 right
+	Fixed	fWidth;				// +0x08  the width to fit; 0 for none
+	long	fReserved;			// +0x0c
+	long	fTransferMode;		// +0x10  0 for the port's
+	Fixed	fFittedWidth;		// +0x14  ==> the width of the text that fit
+	long	fReserved2;			// +0x18
+};
 
 void	DrawTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds);
 void	MeasureTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds);
-long	DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw);
+long	DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw);	// ==> the characters drawn (those that fit the options' width)
 long	MeasureOnce(const UniChar* text, long length, StyleRecord* style);		// the width in pixels
 long	MeasureOnceFont(const UniChar* text, long length, RefArg fontSpec);
 
-void	RegisterTextNatives(void);		// StrFontWidth, FontAscent, FontDescent, FontLeading, FontHeight
+// rich strings (frames/RichString.h): the text's characters (ink NOT YET)
+class TRichString;
+void	DrawRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds);
+void	MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds);
+long	DoRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw);
+
+// paragraphs: a rich string wrapped into lines of a rectangle's width in a
+// font spec, aligned by the viewJustify text bits (vjLeftH..vjFullH,
+// vjTopV..vjBottomV) and drawn in a transfer mode
+Fixed	ConvertToQDFlush(ULong justify, Fixed* justification);				// the alignment for the text bits, and the full justification
+void	TextBox(TRichString& rich, RefArg fontSpec, const Rect& box, long hJustify, long vJustify, long transferMode);
+void	TextBounds(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify);	// the box's right/bottom (when 0 wide/high) set to the text's
+void	DrawSimpleParagraph(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify, Boolean draw, long transferMode);
+ULong	DrawSimpleLine(TRichString& rich, ULong start, FPoint* where, StyleRecord** style, TextOptions* options, RefArg breakTable, long* lineWidth, Boolean draw);	// ==> where the next line starts
+void	FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward, RefArg breakTable, ULong* wordStart, ULong* wordEnd);
+const UniChar*	SkipUpToTwoSpacesAndCR(const UniChar* text, const UniChar* end);
+
+void	RegisterTextNatives(void);		// StrFontWidth, FontAscent, FontDescent, FontLeading, FontHeight, TextBox
 
 #endif	/* __TEXT_H */

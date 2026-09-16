@@ -59,7 +59,7 @@ Transfer(long op, long dst, long src, long maxValue)
 // (any number of scan states, nil for none); the source read a row ahead
 // when it is the destination map, and bottom up when it lies above.
 static void
-BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, const Rect* clipped, long mode, PatternHandle pattern, RgnState** masks, long maskCount)
+BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, const Rect* clipped, long mode, PatternHandle pattern, RgnState** masks, long maskCount, long* row)
 {
 	long depth = PixelMapDepth(dst);
 	long maxValue = (1 << depth) - 1;
@@ -70,10 +70,7 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 	long dh = srcRect->left - dstRect->left;			// the source pixel for a destination pixel
 	long dv = srcRect->top - dstRect->top;
 	long width = clipped->right - clipped->left;
-	if (width <= 0 || clipped->top >= clipped->bottom)
-		return;
-	long* row = (long*) QDNewTempPtr(width * sizeof(long));
-	if (row == nil)
+	if (width <= 0 || clipped->top >= clipped->bottom || row == nil)
 		return;
 	Boolean sameBits = !usePattern && GetPixelMapBits(src) == GetPixelMapBits(dst);
 	Boolean upward = sameBits && dv < 0;				// the source above: copy the bottom rows first
@@ -107,7 +104,6 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 				SetPixel(dst, x, y, Transfer(op, GetPixel(dst, x, y), row[i], maxValue));
 		}
 	}
-	QDDisposeTempPtr(row);
 }
 
 
@@ -117,7 +113,12 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 void
 BitBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, PatternHandle pattern)
 {
-	BlitPixels(src, dst, srcRect, dstRect, dstRect, mode, pattern, nil, 0);
+	long width = dstRect->right - dstRect->left;
+	if (width <= 0)
+		return;
+	long* row = (long*) QDNewTempPtr(width * sizeof(long));
+	BlitPixels(src, dst, srcRect, dstRect, dstRect, mode, pattern, nil, 0, row);
+	QDDisposeTempPtr(row);
 }
 
 
@@ -161,20 +162,24 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 	RgnState* masks[3];
 	char* scans[3] = { nil, nil, nil };
 	long count = 0;
+	// every buffer first: the states point into the regions' blocks, which
+	// an allocation may move (the heap compacts handles)
+	long* row = (long*) QDNewTempPtr((clipped.right - clipped.left) * sizeof(long));
+	for (long i = 0; i < 3; i++)
+		if (which & (2 << i))
+			scans[i] = (char*) QDNewTempPtr(words * sizeof(ULong32));
 	for (long i = 0; i < 3; i++)
 	{
-		if (!(which & (2 << i)))
+		if (!(which & (2 << i)) || scans[i] == nil)
 			continue;
-		scans[i] = (char*) QDNewTempPtr(words * sizeof(ULong32));
-		if (scans[i] == nil)
-			break;
 		InitRgn(*clips[i], &states[i], clipped.left, clipped.right, clipped.left, scans[i]);
 		masks[count++] = &states[i];
 	}
-	BlitPixels(src, dst, srcRect, dstRect, &clipped, mode, pattern, masks, count);
+	BlitPixels(src, dst, srcRect, dstRect, &clipped, mode, pattern, masks, count, row);
 	for (long i = 0; i < 3; i++)
 		if (scans[i] != nil)
 			QDDisposeTempPtr(scans[i]);
+	QDDisposeTempPtr(row);
 }
 
 

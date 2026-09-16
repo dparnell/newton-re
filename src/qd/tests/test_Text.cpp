@@ -16,6 +16,7 @@
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "Unicode.h"
+#include "RichString.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -231,6 +232,114 @@ TestNatives()
 }
 
 
+// the extent of the set pixels in a row band of the map
+static void
+InkExtent(long top, long bottom, long* left, long* right)
+{
+	*left = kWidth;
+	*right = 0;
+	for (long y = top; y < bottom; y++)
+		for (long x = 0; x < kWidth; x++)
+			if (GetPixel(&gMap, x, y))
+			{
+				if (x < *left) *left = x;
+				if (x + 1 > *right) *right = x + 1;
+			}
+}
+
+
+static void
+TestLayout()
+{
+	UniChar text[32];
+	ConvertToUnicode("Hello World", text, kMacRomanEncoding, 31);
+	StyleRecord style;
+	CreateTextStyleRecord(RefVar(MAKEINT(PackFont(kEspy, 12, 0))), &style);
+	StyleRecord* styles[1] = { &style };
+	long width = MeasureOnce(text, 11, &style);
+	// the options: a width to fit, the text aligned in it
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fWidth = 100 << 16;
+	options.fAlignment = 0x8000;			// centred
+	TextBoundsInfo bounds;
+	FPoint where = { 10 << 16, 14 << 16 };
+	MeasureTextOnce(text, 11, styles, nil, where, &options, &bounds);
+	EXPECT(((bounds.fLeft + 0x8000) >> 16) == 10 + (100 - width) / 2 && ((bounds.fWidth + 0x8000) >> 16) == width);
+	EXPECT(((options.fFittedWidth + 0x8000) >> 16) == width);
+	options.fAlignment = 0x10000;			// flush right
+	MeasureTextOnce(text, 11, styles, nil, where, &options, &bounds);
+	EXPECT(((bounds.fRight + 0x8000) >> 16) == 110);
+	// drawn centred: the ink sits where the bounds say
+	Clear();
+	options.fAlignment = 0x8000;
+	DrawTextOnce(text, 11, styles, nil, where, &options, &bounds);
+	long inkLeft, inkRight;
+	InkExtent(0, kHeight, &inkLeft, &inkRight);
+	EXPECT(inkLeft == ((bounds.fLeft + 0x8000) >> 16) && inkRight <= ((bounds.fRight + 0x8000) >> 16));
+	// full justification spreads the slack: the ink reaches the right edge
+	Clear();
+	options.fAlignment = 0;
+	options.fJustification = 0x10000;
+	DrawTextOnce(text, 11, styles, nil, where, &options, &bounds);
+	InkExtent(0, kHeight, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 10 && inkRight >= 108 && inkRight <= 110);
+	// a width too narrow: only the characters that fit are drawn
+	options.fJustification = 0;
+	options.fWidth = 30 << 16;
+	long drawn = DoTextOnce(text, 11, styles, nil, where, &options, &bounds, false);
+	EXPECT(drawn == 6 && ((bounds.fWidth + 0x8000) >> 16) == 30);		// "Hello " is 30 wide, the W would cross
+	DisposeStyleRecord(&style);
+
+	// a paragraph wrapped into a box: "Hello World" in 40 pixels is two lines
+	RefVar str(MakeString((char*) "Hello World"));
+	TRichString rich(str);
+	Rect box;
+	SetRect(&box, 0, 0, 40, 0);
+	TextBounds(rich, RefVar(MAKEINT(PackFont(kEspy, 12, 0))), &box, 0);
+	EXPECT(box.bottom == 32 && box.right == 40);
+	SetRect(&box, 0, 0, 0, 0);
+	TextBounds(rich, RefVar(MAKEINT(PackFont(kEspy, 12, 0))), &box, 0);
+	EXPECT(box.bottom == 16 && box.right == width);
+	// a carriage return breaks a line; a line too long for the box is cut at a word
+	RefVar three(MakeString((char*) "one\rtwo three four"));
+	TRichString rich3(three);
+	SetRect(&box, 0, 0, 60, 0);
+	TextBounds(rich3, RefVar(MAKEINT(PackFont(kEspy, 12, 0))), &box, 0);
+	EXPECT(box.bottom == 48);
+	// drawn centred in a 40 wide box: "Hello " (its space counted) then "World"
+	Clear();
+	SetRect(&box, 0, 0, 40, 32);
+	TextBox(rich, RefVar(MAKEINT(PackFont(kEspy, 12, 0))), box, 2, 0, 1);
+	InkExtent(0, 16, &inkLeft, &inkRight);
+	EXPECT(inkLeft == (40 - 30) / 2 && inkRight <= 40);
+	InkExtent(16, 32, &inkLeft, &inkRight);
+	EXPECT(inkLeft == (40 - (width - 30)) / 2 && inkRight <= 40);
+	// vertically centred in a box 48 high (the map is 32): the first line
+	// starts 8 lower; at the bottom of a 40 high box, 4 lower
+	Clear();
+	SetRect(&box, 0, 0, 40, 48);
+	TextBox(rich, RefVar(MAKEINT(PackFont(kEspy, 12, 0))), box, 0, 4, 1);
+	InkExtent(0, 8, &inkLeft, &inkRight);
+	EXPECT(inkRight == 0);
+	InkExtent(8, 24, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 0 && inkRight > 0);
+	Clear();
+	SetRect(&box, 0, 0, 40, 40);
+	TextBox(rich, RefVar(MAKEINT(PackFont(kEspy, 12, 0))), box, 0, 8, 1);
+	InkExtent(0, 4, &inkLeft, &inkRight);
+	EXPECT(inkRight == 0);
+	InkExtent(4, 20, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 0 && inkRight > 0);
+	// the NewtonScript TextBox
+	Clear();
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "viewBounds")), RefVar(ToObject(box)));
+	Eval("TextBox(\"Hi\", {font: espy12, justification: 'right}, {left: 0, top: 0, right: 60, bottom: 16})");
+	InkExtent(0, 16, &inkLeft, &inkRight);
+	EXPECT(inkRight == 60 || inkRight == 59);
+}
+
+
 int
 main()
 {
@@ -274,6 +383,7 @@ main()
 		TestFonts();
 		TestDrawing();
 		TestNatives();
+		TestLayout();
 	}
 	newton_catch_all
 	{

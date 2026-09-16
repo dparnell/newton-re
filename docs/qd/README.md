@@ -291,8 +291,24 @@ style's or the port's pattern - the same pixels for an unscaled strike
 (`test_Text` pins "Hello Wg!" in espy 12, the bold strike underlined,
 and Geneva 10 bold smeared).  The NewtonScript `FontAscent`/`FontDescent`
 /`FontLeading`/`FontHeight` (0x001efeb4..) and `StrFontWidth` 0x001f2648
-are here.  NOT YET: justification and `TextOptions`, ink words, scaled
-glyphs, persistent text objects, `StdText` recording.
+are here.  A `TextOptions` (0x1c bytes: the justification - the fraction
+of the slack spread between the characters, spaces nine shares to a
+character's one (`JustifyText` 0x0033057c) - the alignment - the fraction
+of the slack before the text: a QD flush (`ConvertToQDFlush` 0x0017f0a0
+maps the viewJustify text bits: vjRightH 1.0, vjCenterH 0.5, vjFullH
+full justification) - the width to fit, a transfer mode, and the width
+of what fit) lays a text out: `MeasureGlyphWidths` 0x00330948 cuts the
+text object's length before the first character that would cross the
+width.  Paragraphs: `TextBox` 0x0017dd5c/`TextBounds`/`DrawSimpleParagraph`
+0x0017de74 wrap a rich string into a rectangle line by line
+(`DrawSimpleLine` 0x0017e0e4: the text up to a carriage return, as many
+characters as fit, cut back to a word boundary - `FindWordBreaks`
+0x000ed674, the ROM's through the locale's lineBreakTable, the host's at
+spaces - then `SkipUpToTwoSpacesAndCR`), the lines the font's height
+apart, a box of no width or height taking the text's; the vertical bits
+move the box down by the room left.  The NewtonScript `TextBox` is here.
+NOT YET: ink words, scaled glyphs, persistent text objects, `StdText`
+recording, tabs.
 
 ## Not yet
 
