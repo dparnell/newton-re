@@ -9,7 +9,7 @@
 // their signatures from there.
 
 #include "PackageIterator.h"
-#include "../../utility/tests/MemoryPipe.h"
+#include "../../utility/tests/TestPipe.h"
 #include "OSErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -156,7 +156,7 @@ TestPipe()
 		return;
 	// the whole of ScreenDrivers (a small one) through a pipe
 	PackageDirectory* dir = (PackageDirectory*) gPackages[7];
-	CMemoryPipe pipe(dir->Size());
+	CTestPipe pipe(dir->Size());
 	pipe.WriteChunk(gPackages[7], dir->Size(), false);
 	pipe.Rewind();
 	TPackageIterator it(&pipe);
@@ -172,7 +172,7 @@ TestPipe()
 	EXPECT(info.data == 176);										// a pipe source: the offset
 	EXPECT(pipe.ReadPosition() == 176);								// the directory has been consumed; the parts follow
 	// a pipe that runs dry in the directory
-	CMemoryPipe shortPipe(64);
+	CTestPipe shortPipe(64);
 	shortPipe.WriteChunk(gPackages[7], 0x40, false);
 	shortPipe.Rewind();
 	TPackageIterator shortIt(&shortPipe);

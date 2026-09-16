@@ -2,10 +2,10 @@
 // Pipes.h): CBufferSegment over its own and a given block (get and put,
 // bulk copies, seeking, hiding), and CBufferPipe reading and writing
 // through a concrete pipe whose Overflow grows the write segment and
-// whose Underflow reports the end (CMemoryPipe, MemoryPipe.h), with the
+// whose Underflow reports the end (CTestPipe, TestPipe.h), with the
 // big-endian scalar operators and the eof reporting of ReadChunk.
 
-#include "MemoryPipe.h"
+#include "TestPipe.h"
 #include "NewtonExceptions.h"
 #include "UCErrors.h"
 #include "memory/host/KernelHeap.h"
@@ -80,7 +80,7 @@ TestSegment()
 static void
 TestPipe()
 {
-	CMemoryPipe pipe(8);
+	CTestPipe pipe(8);
 	EXPECT(pipe.WritePosition() == 0);
 	pipe << (long) 0x01020304 << (unsigned short) 0xabcd << (char) 'x' << (unsigned char) 0xff;
 	EXPECT(pipe.WritePosition() == 8 && pipe.fOverflows == 0);
@@ -124,7 +124,7 @@ TestPipe()
 	EXPECT(us == 0xabcd);
 	EXPECT(pipe.ReadSeek(-2, kSeekFromCurrentPos) == 4);
 	// a pipe without a read segment
-	CMemoryPipe writeOnly(4);
+	CTestPipe writeOnly(4);
 	Boolean threw = false;
 	newton_try
 	{

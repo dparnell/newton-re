@@ -7,8 +7,10 @@
 				the scalar types (big-endian, as in the ROM's memory); a
 				pipe that runs dry asks its Underflow, one that fills up its
 				Overflow.  CBufferPipe is a pipe over two CBufferSegments (one
-				read, one written); PipeCallBack is what a pipe user gives to
-				be told of progress.
+				read, one written); CMemoryPipe and MemoryPipe are the pipes
+				over memory (the object streamer's and the frames part
+				handler's); PipeCallBack is what a pipe user gives to be told
+				of progress.
 
 				There is no DDK header for these (the Communications DDK's
 				Pipes.h is not in the repository); the layouts are the ROM's:
@@ -16,7 +18,8 @@
 				virtuals in the ROM's vtable order.
 
 	Reconstructed from the MP2100 D ROM (0x0018c444-0x0018c97c,
-	0x0004738c-0x00047cc4); each function cites its origin.
+	0x0004738c-0x00047cc4, 0x002b37a8, 0x000d093c-0x000d2840); each
+	function cites its origin.
 */
 
 #ifndef __PIPES_H
@@ -134,6 +137,42 @@ public:
 	CBufferSegment*	fWriteBuffer;		// +0x08
 	Boolean			fOwnsBuffers;		// +0x0c  deleted with the pipe
 	Boolean			fReadHitEOF;		// +0x0d  Underflow said the source is exhausted
+};
+
+
+/*------------------------------------------------------------------------------
+	C M e m o r y P i p e
+	A buffer pipe over memory that is all there is: running out of data is
+	the end, running out of room an error.
+------------------------------------------------------------------------------*/
+
+class CMemoryPipe : public CBufferPipe
+{
+public:
+	virtual void	FlushRead(void);
+	virtual void	FlushWrite(void);
+	virtual void	Overflow(void);
+	virtual void	Underflow(long count, Boolean& eof);
+};
+
+
+/*------------------------------------------------------------------------------
+	M e m o r y P i p e
+	The frames part handler's pipe over a part in memory: the write
+	segment is reused when full, reading past the end waits for nothing.
+------------------------------------------------------------------------------*/
+
+class MemoryPipe : public CBufferPipe
+{
+public:
+					MemoryPipe();
+	virtual			~MemoryPipe();
+
+	virtual void	FlushRead(void);
+	virtual void	FlushWrite(void);
+	virtual void	Reset(void);
+	virtual void	Overflow(void);
+	virtual void	Underflow(long count, Boolean& eof);
 };
 
 #endif	/* __PIPES_H */

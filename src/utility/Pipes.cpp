@@ -475,3 +475,99 @@ CBufferPipe::Put(int dataByte)
 {
 	return Required(fWriteBuffer)->Put(dataByte);
 }
+
+
+/*------------------------------------------------------------------------------
+	C M e m o r y P i p e
+------------------------------------------------------------------------------*/
+
+// ROM 0x002b37a8 FlushRead__11CMemoryPipeFv
+void
+CMemoryPipe::FlushRead(void)
+{ }
+
+
+// ROM 0x002b37ac FlushWrite__11CMemoryPipeFv
+void
+CMemoryPipe::FlushWrite(void)
+{ }
+
+
+// ROM 0x002b37b0 Overflow__11CMemoryPipeFv
+// The memory is full: an error.
+void
+CMemoryPipe::Overflow(void)
+{
+	Throw(exPipeException, (void*) -1, nil);
+}
+
+
+// ROM 0x002b37c8 Underflow__11CMemoryPipeFlRUc
+// The memory is read: the end.
+void
+CMemoryPipe::Underflow(long /*count*/, Boolean& eof)
+{
+	eof = true;
+}
+
+
+/*------------------------------------------------------------------------------
+	M e m o r y P i p e
+------------------------------------------------------------------------------*/
+
+// ROM 0x000d093c __ct__10MemoryPipeFv
+MemoryPipe::MemoryPipe()
+{ }
+
+
+// ROM 0x000d097c __dt__10MemoryPipeFv
+MemoryPipe::~MemoryPipe()
+{ }
+
+
+// ROM 0x000d0c24 FlushRead__10MemoryPipeFv
+// The read segment's position to its end.
+void
+MemoryPipe::FlushRead(void)
+{
+	if (fReadBuffer != nil)
+		fReadBuffer->Seek(0, kSeekFromEnd);
+}
+
+
+// ROM 0x000d1a6c FlushWrite__10MemoryPipeFv
+void
+MemoryPipe::FlushWrite(void)
+{
+	if (fWriteBuffer != nil)
+		fWriteBuffer->Reset();
+}
+
+
+// ROM 0x000d2824 Reset__10MemoryPipeFv
+void
+MemoryPipe::Reset(void)
+{
+	CBufferPipe::Reset();
+	if (fReadBuffer != nil)
+		fReadBuffer->Seek(0, kSeekFromBeginning);
+}
+
+
+// ROM 0x000d2768 Overflow__10MemoryPipeFv
+// The write segment written over again.
+void
+MemoryPipe::Overflow(void)
+{
+	if (fWriteBuffer != nil)
+		fWriteBuffer->Reset();
+}
+
+
+// ROM 0x000d2818 Underflow__10MemoryPipeFlRUc
+// Nothing more comes, but it is not the end.
+void
+MemoryPipe::Underflow(long /*count*/, Boolean& eof)
+{
+	eof = false;
+}

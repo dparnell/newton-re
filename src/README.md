@@ -87,8 +87,8 @@ src/
                 (BufferSegment.h: CMinBuffer, CBuffer, CBufferSegment - the
                 ROM's classes, replacing the DDK's interface-only header)
                 and the pipes streams flow through (Pipes.h: CPipe with its
-                big-endian scalar operators, CBufferPipe, PipeCallBack; no
-                DDK header)
+                big-endian scalar operators, CBufferPipe, the memory pipes
+                CMemoryPipe and MemoryPipe, PipeCallBack; no DDK header)
   frames/       the NewtonScript object system: refs, the object heap and
                 its collector (ObjectHeap.h), symbols, binaries, arrays,
                 frames and their maps, paths, clones, classes - the DDK's
