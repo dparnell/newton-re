@@ -46,7 +46,11 @@ page, jump tables, FPE, REx config, internal flash + patch installation),
 that continues into the kernel start, `OsBoot` (0x149C1C).
 
 `OsBoot` (reconstructed, Boot.cpp) runs with a `TTask` and `TEnvironment` on
-its own stack as the current ones: `HInitInterrupts`, `InitInterruptTables`,
+its own stack as the current ones. On the host it first does the part of
+`InitCGlobals` that lays out the memory object database and, where the ROM's
+`VMemInit` would build the kernel heap as a safe heap over the page manager's
+pages, gives the kernel a Skia heap (`memory/host/KernelHeap.cpp`; the memory
+manager is described in `docs/memory/README.md`). Then: `HInitInterrupts`, `InitInterruptTables`,
 the object table, `InitMemArchCore` (the memory architecture's object table
 and manager, the page managers, the fault-monitor table),
 `InitKernelDomainAndEnvironment` (the 'krnl' environment on the kernel heap

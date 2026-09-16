@@ -29,8 +29,8 @@
 #include "ListIterator.h"
 #include "SortedList.h"
 #include "OSErrors.h"
+#include "NewtonMemory.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 // a content pointer of all ones (kPortSend_BufferAlreadySet) means "leave the
@@ -92,8 +92,8 @@ TObjectNameList::Add(char* name, char* type, ULong thing, ULong spec)
 			else
 				prev->fNext = waiter->fNext;
 			TNameServerQueuedRequest* next = waiter->fNext;
-			free(waiter->fName);		// (the ROM's operator delete and DisposPtr are the same free)
-			free(waiter->fType);
+			DisposPtr(waiter->fName);
+			DisposPtr(waiter->fType);
 			delete waiter;
 			waiter = next;
 		}
@@ -152,8 +152,8 @@ TObjectNameList::Remove(char* name, char* type)
 			else
 				prevWaiter->fNext = waiter->fNext;
 			TNameServerQueuedRequest* next = waiter->fNext;
-			free(waiter->fName);
-			free(waiter->fType);
+			DisposPtr(waiter->fName);
+			DisposPtr(waiter->fType);
 			delete waiter;
 			waiter = next;
 		}
@@ -163,8 +163,8 @@ TObjectNameList::Remove(char* name, char* type)
 			waiter = waiter->fNext;
 		}
 	}
-	free(entry->fName);
-	free(entry->fType);
+	DisposPtr(entry->fName);
+	DisposPtr(entry->fType);
 	delete entry;
 	return true;
 }
@@ -311,14 +311,14 @@ TNameServer::BuildNameAndType(TObjectId nameId, TObjectId typeId)
 	NewtonErr err = nameMem.GetSize(&size, nil);
 	if (err == noErr)
 	{
-		fName = (char*) malloc(size);
+		fName = NewPtr(size);		// the ROM's malloc is NewPtr
 		if (fName == nil)
 			return kError_No_Memory;
 		err = nameMem.CopyFromShared(&size, fName, size, 0, nil);
 	}
 	if (err == noErr && (err = typeMem.GetSize(&size, nil)) == noErr)
 	{
-		fType = (char*) malloc(size);
+		fType = NewPtr(size);
 		err = kError_No_Memory;
 		if (fType != nil)
 			err = typeMem.CopyFromShared(&size, fType, size, 0, nil);
@@ -328,13 +328,13 @@ TNameServer::BuildNameAndType(TObjectId nameId, TObjectId typeId)
 
 
 // ROM 0x00130fa4 DeleteNameAndType__11TNameServerFv
-// (both strings are freed; the ROM inlines the memory manager's free for the second)
+// (both strings are freed; the ROM inlines DisposPtr for the second)
 void
 TNameServer::DeleteNameAndType()
 {
-	free(fName);
+	DisposPtr(fName);
 	if (fType != nil)
-		free(fType);
+		DisposPtr(fType);
 }
 
 

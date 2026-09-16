@@ -1,8 +1,7 @@
 # UtilityClasses: the container and helper classes (CDynamicArray, CList,
 # CSortedList, the iterators, CItemTester/CItemComparer), the timer queue
 # and the task frameworks (TForkWorld, TAppWorld with TAEventHandler) that
-# the OS services and the higher layers are built on.  Over the memory manager's
-# pointer API (NewPtr etc., a host stand-in in toolbox/host for now).
+# the OS services and the higher layers are built on.
 add_library(utility STATIC
     DynamicArray.cpp
     ArrayIterator.cpp
@@ -15,7 +14,7 @@ add_library(utility STATIC
     ForkWorld.cpp
     AppWorld.cpp
 )
-target_link_libraries(utility PUBLIC newton_config toolbox os600_user)
+target_link_libraries(utility PUBLIC newton_config toolbox os600_user memory)
 target_include_directories(utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

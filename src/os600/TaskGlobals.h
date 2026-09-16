@@ -33,7 +33,7 @@ struct TaskGlobals
 	VAddr				fStackBase;			// +0x3c
 	TObjectId			fTaskId;			// +0x40
 	void*				fCurrentHeap;		// +0x44  the environment's heap; the memory manager's SetHeap changes it
-	ULong				fUnknown48;			// +0x48  0; the memory manager clears it after a free
+	NewtonErr			fMemError;			// +0x48  the result of the task's last memory manager call (MemError)
 	ULong				fTaskName;			// +0x4c
 	ExceptionGlobals	fExceptionGlobals;	// +0x50  firstCatch
 };

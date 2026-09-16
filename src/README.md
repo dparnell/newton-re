@@ -31,9 +31,13 @@ src/
   hal/          hardware abstraction (interfaces in hal/*.h; the host
                 implementation in hal/host is the only port so far - the
                 Voyager/Cirrus chipset of the MP2x00 is to come)
-  toolbox/      the toolbox: CompMath (64-bit arithmetic); toolbox/host holds
-                a stand-in for the memory manager's pointer API (NewPtr...)
-                until the heap manager is reconstructed
+  toolbox/      the toolbox: CompMath (64-bit arithmetic)
+  memory/       the memory manager: the NewtonMemory.h API (NewPtr/NewHandle,
+                heaps, semaphores, the memory-manager breaks), the "Skia"
+                relocating heap it is built on (SkiaHeap.h: blocks, master
+                pointers, compaction, VM heap growth) and the page-based safe
+                heap the kernel uses (SafeHeap.h); memory/host gives the
+                kernel a Skia heap until the page manager exists
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer,
@@ -102,3 +106,7 @@ python tools/newton-rom/analysis/coverage.py build/MP2100D --by-class --check
 
 reads the `// ROM 0x... name` citations, verifies them against the symbol
 table, and reports how many of the ROM's functions have been reconstructed.
+Code lifted from the middle of an assembly routine cites it with an offset
+(`// ROM 0x003a4018 SWIBoot +0xb8`); a static function the symbol table does
+not name is cited as `// ROM 0x002ebce8 (unnamed)` (the address is checked
+to be ROM code without a symbol).

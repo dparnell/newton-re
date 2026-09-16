@@ -11,6 +11,7 @@
 #include "ItemComparer.h"
 #include "SortedList.h"
 #include "UCErrors.h"
+#include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
 
@@ -228,6 +229,7 @@ static void TestSortedList()
 
 int main()
 {
+	InitHostStandaloneHeap();		// the containers live in NewPtr blocks
 	TestDynamicArray();
 	TestIterator();
 	TestList();

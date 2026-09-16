@@ -17,6 +17,13 @@ with the same syntax are checked but not counted.  Code reconstructed from
 the middle of a larger assembly routine (a case of SWIBoot, say) cites the
 routine and adds the offset: `// ROM 0x003a4018 SWIBoot +0xb8`; the routine
 is checked, the offset is documentation.
+
+A few static functions have no debug symbol at all (the ROM's symbol table
+only names externally visible functions and the static ones the linker
+happened to keep).  These are cited as `// ROM 0x002ebce8 (unnamed)`; the
+address must lie in the ROM and must *not* carry a symbol (otherwise cite
+the symbol).  They are counted as citations but not as reconstructed
+functions, since the function total comes from the symbol table.
 """
 
 from __future__ import annotations
@@ -41,6 +48,8 @@ def main(argv=None) -> int:
 
     with open(os.path.join(args.build_dir, "symbols.json")) as f:
         data = json.load(f)
+    with open(os.path.join(args.build_dir, "layout.json")) as f:
+        rom_size = json.load(f)["rom_size"]
     by_addr = collections.defaultdict(set)
     functions = {}          # address -> (class, signature) for real C++/C function bodies
     for s in data["symbols"]:
@@ -67,7 +76,14 @@ def main(argv=None) -> int:
                         continue
                     addr, name = int(m.group(1), 16), m.group(2)
                     where = f"{os.path.relpath(path, args.src)}:{lineno}"
-                    if addr not in by_addr:
+                    if name == "(unnamed)":
+                        if addr in by_addr:
+                            errors.append(f"{where}: {addr:#x} has a symbol ({', '.join(sorted(by_addr[addr]))}); cite it")
+                        elif addr >= rom_size or addr % 4:
+                            errors.append(f"{where}: {addr:#x} is not a ROM code address")
+                        else:
+                            cited.setdefault(addr, where)
+                    elif addr not in by_addr:
                         errors.append(f"{where}: no symbol at {addr:#x}")
                     elif name not in by_addr[addr]:
                         errors.append(f"{where}: {name} is not at {addr:#x} (there: {', '.join(sorted(by_addr[addr]))})")

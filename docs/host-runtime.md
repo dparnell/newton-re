@@ -119,8 +119,9 @@ calls and a timeout.  `ctest -R HostRuntime`.
 
 Task stacks on the host come from `NewStack` in
 `src/os600/user/host/StackManager.cpp`, a stand-in for the paged stack
-manager (plain allocations; locking is a no-op); before `gOSIsRunning` they
-come from `malloc`, as in the ROM.  Because a stack, the task's globals block
+manager (page-aligned host allocations; locking is a no-op); before
+`gOSIsRunning` they come from `NewPtr` in the kernel heap, as in the ROM
+(whose `malloc` at 0x001e5068 *is* `NewPtr`).  Because a stack, the task's globals block
 and the copy of its object are host memory, `VAddr` is pointer-sized on the
 host (see `host_compat.h`).
 

@@ -27,8 +27,8 @@
 #include "UserSharedMem.h"
 #include "VirtualMemory.h"
 #include "MonitorGlue.h"
+#include "NewtonMemory.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 void (*gTaskDeletedHook)(TTask* task) = nil;
@@ -259,7 +259,8 @@ TTask::Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, U
 	if (!gOSIsRunning)
 	{
 		fState &= ~kTaskState_StackFromNewStack;
-		fStackBase = (VAddr) malloc(stackSize + topSize);
+		// the ROM's malloc (0x001e5068) is NewPtr: the kernel heap
+		fStackBase = (VAddr) NewPtr(stackSize + topSize);
 		if (fStackBase == 0)
 			return kError_Could_Not_Create_Object;
 		fGlobalsBase = fStackBase + stackSize;
@@ -306,7 +307,7 @@ TTask::Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, U
 	InitializeExceptionGlobals(&globals.fExceptionGlobals);
 	globals.fTaskId = fId;
 	globals.fUnknown30 = 0;
-	globals.fUnknown48 = 0;
+	globals.fMemError = noErr;
 	globals.fTaskName = name;
 	globals.fStackTop = fGlobalsBase + topSize;
 	globals.fStackBase = fStackBase;
@@ -371,7 +372,7 @@ TTask::FreeStack()
 	if (fState & kTaskState_StackFromNewStack)
 		FreePagedMem(fStackBase);
 	else
-		free((void*) fStackBase);
+		DisposPtr((Ptr) fStackBase);		// the ROM's free (0x001e506c)
 }
 
 

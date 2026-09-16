@@ -101,8 +101,8 @@ PersistentDBEntry::Init(ULong name, Boolean reset, ULong domainIndex)
 	{
 		fHeap = nil;
 		fName = name;
-		fUnknown08 = 0;
-		fUnknown0c = 0;
+		fStart = 0;
+		fSize = 0;
 		fUnknown10 = 0;
 		fQueue.Init(kPersistentQueueItemOffset);
 		fFlags = (fFlags & 0xFFFF00FF) | kPersistent_Unknown80 | ((domainIndex & 0xFF) << kPersistent_IndexShift) | kPersistent_InUse;

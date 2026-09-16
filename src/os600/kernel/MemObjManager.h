@@ -165,8 +165,8 @@ class PersistentDBEntry
 
 		ULong		fName;				// +0x00
 		void*		fHeap;				// +0x04  the heap's address (FindHeapRef reads it)
-		ULong		fUnknown08;			// +0x08
-		ULong		fUnknown0c;			// +0x0c
+		VAddr		fStart;				// +0x08  the heap area (NewPersistentVMHeap)
+		ULong		fSize;				// +0x0c
 		ULong		fUnknown10;			// +0x10
 		TSingleQContainer fQueue;		// +0x14
 		TObjectId	fDomainId;			// +0x1c  the domain's kernel object, -1 when unknown

@@ -36,12 +36,18 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "memory/host/KernelHeap.h"
+
 
 void*			gKernelHeap = nil;
 TObjectId		gKernelDomainId = 0;
 
 // the message the timer engine's overflow detector rides on
-static TSharedMemMsg	gOverflowDetectMsg;		// 0x0c101668
+// 0x0c101668: a static message the ROM never destroys.  On the host it is
+// made once and never deleted, so no destructor runs at process exit (a
+// TSharedMemMsg's destructor talks to the timer engine and the scheduler,
+// which are gone by then).
+static TSharedMemMsg&	gOverflowDetectMsg = *new TSharedMemMsg;
 
 
 // ROM 0x001e22c8 TaskInCopyKilled__FPvP5TTask
@@ -125,6 +131,10 @@ InitMemObjDatabase(ULong ramSize)
 	ComputeMemObjDatabaseSize(&size);
 	gMemObjHeap = malloc(size);
 	BuildMemObjDatabase();
+	// NOT YET RECONSTRUCTED: PersistentRecovery's VMemInit (0x0025be7c) - the
+	// page tracker over the RAM's pages, and the kernel heap as a safe heap
+	// over them.  The host's kernel heap stands in.
+	InitHostKernelHeap();
 }
 
 
@@ -183,9 +193,11 @@ OsBoot()
 	bootTask.fPriority = 0x15;
 	gCurrentTask = &bootTask;
 	bootTask.fEnvironment = &bootEnvironment;
+	memset(&bootGlobals, 0, sizeof(bootGlobals));
 	gCurrentGlobals = &bootGlobals + 1;
 
 	InitMemObjDatabase(GetRamSize());			// InitCGlobals's work, done before OsBoot on the MessagePad
+	bootGlobals.fCurrentHeap = gKernelHeap;		// what the boot context allocates from (the pre-OS task stacks)
 	HInitInterrupts();
 	InitInterruptTables();
 	gObjectTable = new TObjectTable;
