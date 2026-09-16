@@ -9,6 +9,7 @@
 
 #include "Frames.h"
 #include "ObjectHeap.h"
+#include "Interpreter.h"
 #include "memory/host/KernelHeap.h"
 #include "NewtonMemory.h"
 
@@ -529,6 +530,21 @@ TestExceptions()
 }
 
 
+// Without the ROM's objects the interpreter still starts (InitObjects
+// starts it): the bound natives get function objects in gFunctionFrame
+// and the frequently called functions are found among them.
+static void
+TestHostNatives()
+{
+	EXPECT(gInterpreter != nil && gROMBuiltinFunctions == NILREF);
+	EXPECT(Length(gFreqFuncs) == kNumFreqFuncs && IsFunction(GetArraySlot(gFreqFuncs, kFFLength)));
+	RefVar arr(AllocateArray(RSSYMarray, 3));
+	EXPECT(RINT(NSCallGlobalFn(RefVar(Intern((char*) "Length")), arr)) == 3);
+	EXPECT(RINT(NSCallGlobalFn(RefVar(Intern((char*) "Max")), RefVar(MAKEINT(2)), RefVar(MAKEINT(5)))) == 5);
+	EXPECT(gInterpreter->ValuePosition() == -1);
+}
+
+
 int
 main()
 {
@@ -544,6 +560,7 @@ main()
 	TestClones();
 	TestGC();
 	TestExceptions();
+	TestHostNatives();
 	if (failures == 0)
 		printf("test_Frames: all passed\n");
 	else

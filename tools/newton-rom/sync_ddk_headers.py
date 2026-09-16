@@ -96,6 +96,12 @@ PATCHES = {
         # the ROM's TObjectIterator (0x30 bytes) ends with an ExceptionCleanup
         # (verify-report.txt: header 0x24 vs ROM 0x30): a stack iterator
         # registers it so that a Throw unwinding past it frees its RefHandles
+        # the object header's two words are pointer-sized on the host, like a
+        # Ref (frames/ObjHeader.h explains); the DDK leaves it eight opaque bytes
+        ("#ifndef DEFINED_OBJHEADER\n#define DEFINED_OBJHEADER\nstruct ObjHeader {\n\tchar\t_[8];\n};\n#endif",
+         "#ifndef DEFINED_OBJHEADER\n#define DEFINED_OBJHEADER\nstruct ObjHeader {\t\t/* the ROM's two 32-bit words, pointer-sized here (sync_ddk_headers.py; frames/ObjHeader.h) */\n"
+         "\tULong\tfSizeAndFlags;\t/* size << 8 | flags */\n"
+         "\tULong\tfGCStuff;\t\t/* lock count in bits 24-31; the collector's slot index or forwarding address */\n};\n#endif"),
         # a string literal is const on a host compiler
         ('inline void OutOfMemory(char* msg = "out of memory")\n\t{ throw2(exOutOfMemory, msg); }',
          'inline void OutOfMemory(const char* msg = "out of memory")\n\t{ throw2(exOutOfMemory, msg); }'),

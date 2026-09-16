@@ -272,6 +272,7 @@ extern const ExceptionName exFramesWithFrameData;			// "evt.ex.fr;type.ref.frame
 extern const ExceptionName exBadTypeWithFrameData;			// "evt.ex.fr.type;type.ref.frame"
 extern const ExceptionName exInterpreterWithFrameData;		// "evt.ex.fr.intrp;type.ref.frame"
 extern const ExceptionName exStoreError;					// "evt.ex.fr.store"
+extern const ExceptionName exInterpreter;					// "evt.ex.fr.intrp"
 
 // GC hooks (GC.cpp)
 extern Handle		gGCRoots;				// 0x0c1024f8  Ref* entries
@@ -321,10 +322,12 @@ Ref			GetTag(RefArg map, long index, long* baseIndex);
 long		ComputeMapSize(RefArg map);
 Ref			SharedFrameMap(RefArg frame);
 Ref			GetProtoVariable(RefArg context, RefArg name, long* exists);
+void		SetFramePathFor1XFunctions(RefArg obj, RefArg thePath, RefArg value);
 Ref			GlobalFunctionLookup(Ref name);
 Ref			UnsafeGetFrameSlot(Ref frame, Ref tag, long* exists);
 
 // symbols
+Ref			Intern(UniChar* name);
 ULong32		SymbolHashFunction(const char* name);
 int			SymbolCompare(Ref sym1, Ref sym2);
 Boolean		UnsafeSymbolEqual(Ref sym1, Ref sym2, ULong32 hash);

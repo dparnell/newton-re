@@ -212,15 +212,112 @@ Objects there count as ROM (`InROMObjectArea`): read-only, never moved,
 their symbols unique.  `test_ROMImport` runs the object system over the
 MP2100 D image in the repository.
 
+## The interpreter (`Interpreter.cpp`, `VariableLookup.cpp`)
+
+`TInterpreter` (0x80 bytes; `Interpreter.h` lists the fields) runs
+NewtonScript bytecode over two stacks of refs: the value stack (operands,
+and a function's arguments and locals) and the control stack, whose
+entries are pointer-stack RefHandles grouped six at a time into a
+`VMState` - pc, function, locals, implementor, receiver and the
+stack-frame word `MAKEINT(base << 6 | flags)` (flag 1: locals on the
+value stack from index `base`, 2: entered by a send).  `fExceptionContext`
+chains the handler records (`new-handlers`); `fLiterals`, `fInstructions`
+and `fPC` cache the running function.  As in the ROM, `Run` loops
+`AlternatingLoops` (FastRun/SlowRun; FastRun runs SlowRun here, the ROM's
+FastRun1 is its inlined copy for functions without tracing) until the
+control stack is back at the depth the call was made at.
+
+Bytecodes (as `SlowRun` 0x002cc66c decodes them; `Interpreter.h`
+`kBC...`): an instruction byte is `a << 3 | b`, and `b == 7` means a
+16-bit big-endian operand follows.  `a == 0`: pop, dup, return, push-self,
+set-lex-scope, iter-next, iter-done, pop-handlers.  Then push (literal),
+push-constant (the operand is the ref, 16-bit signed), call (the global
+function named by the symbol on the stack), invoke (the function on the
+stack), send, send-if-defined, resend, resend-if-defined, branch,
+branch-if-true, branch-if-false, find-var, get-var (a local: 0-2 are
+hidden, arguments from 3), make-frame (its map on the stack), make-array
+(its class on the stack; b == 0xffff: the length too), get-path, set-path,
+set-var, find-and-set-var, incr-var, branch-if-loop-not-done (incr, limit,
+index), freq-func (0-6 inline: `+ - aref setAref = not <>`; the rest of
+the 25 through `gFreqFuncs`, the function objects named in
+`gFreqFuncInfo`) and new-handlers (b pairs of symbol and pc on the
+stack).  Operand order on the stack is `args... name` for call, `args...
+receiver name` for send and `args... name` for resend
+(`tools/newton-rom/analysis/nsfunctions.py --disasm` prints the ROM's
+functions this way).
+
+Function objects: a NewtonScript function is `[class 0x32, instructions,
+literals, argFrame, numArgs | numLocals << 16]`; its arguments stay on the
+value stack and the locals are pushed after them, and its `argFrame`
+(`{_nextArgFrame, _parent, _implementor, captured variables...}`) is
+cloned on entry when there is one - `set-lex-scope` makes a closure by
+cloning the function and pointing the clone's argFrame at the running
+function's, so `find-var` walks `_nextArgFrame` chains before the
+receiver's `_proto` and `_parent` chains.  A native function is `[class
+0x132, funcPtr, numArgs(, docString)]`.  1.x CodeBlocks (`'CodeBlock`
+frames, everything in the cloned argFrame) and binary natives (0x232 /
+`'binCFunction`, ARM code in a binary) are recognised but not run.
+
+Variable lookup (`VariableLookup.cpp`) is the ROM's: `XGetVariable`
+(locals, then the receiver's `_proto` chain, then each `_parent`'s),
+`XFindImplementor`/`XFindProtoImplementor` (sends and resends),
+`SetVariableOrGlobal`, all through the four `TICache`s (`gGetVarCache`,
+`gFindImpCache`, `gProtoCache` and `gROProtoCache` for frames in the ROM
+area), which `SetFrameSlot`/`AddSlot`/`RemoveSlot` invalidate
+(`ICacheClear...`).
+
+Exceptions: a NewtonScript `try` pushes a handler record (an array: next,
+value depth, control depth, function, receiver, implementor, the
+(symbol, pc) pairs, the current exception, locals); `Run` catches every
+`Throw`, unwinds the stacks to the innermost record whose symbol
+`Subexception` matches, translates the exception into the frame
+`CurrentException()` returns (`{name, error|data|message}`) and resumes
+at the handler's pc; nothing matching resets the stacks and rethrows to
+C++.  Calls from C++ (`NSCall...`, `NSSend...`, `NSCallGlobalFn...`,
+`DoCall`/`DoSend`/`DoBlock`/`DoScript`, `DoMessage...`) push the
+arguments, `Call`/`Send`, `Run` and pop the result; an exception out of
+them unwinds the control states and, as in the ROM, leaves the arguments
+on the value stack.
+
+### Natives on the host (`NativeFunctions.cpp`, `Builtins.cpp`, `Munger.cpp`)
+
+The ROM's native function objects hold jump-table addresses of its C
+functions (`FLength`, `FAdd`, ...).  `nsfunctions.py --natives` lists the
+869 of the built-in functions frame in `ROMNatives.cpp` (name, jump-table
+address, target, argument count, C symbol); `RegisterNativeFunction("FLength",
+fn, n)` binds a host implementation to that symbol and `CallCFuncPtr`
+resolves a funcPtr below `kROMCodeLimit` (0x02000000) through the
+bindings - an unbound one throws `kNSErrNativeNotReconstructed` (-48899).
+A funcPtr above the limit is a host function pointer (`MakeCFunction`).
+`InitInterpreter` (which `InitObjects` calls, as in the ROM) binds the
+reconstructed built-ins first (`RegisterBuiltinNatives`: arithmetic,
+comparison and bit operations, objects, slots and paths, arrays and
+strings' mungers, variables, apply/perform, exceptions, the foreach
+iterator, symbols) and, when no ROM image is imported, gives each a
+function object in `gFunctionFrame` (`InstallHostNatives`) so that the
+frequently called functions exist.  `test_Interpreter` runs assembled
+bytecode and the ROM's own NewtonScript functions (`GetGlobalVar`,
+`DefGlobalVar`, `IsNameRef`, ...) over the MP2100 D image; `test_Frames`
+runs the natives without one.
+
+`DEVIATION`s: the value stacks throw `exOutOfStack` when full (the ROM
+runs off the end); `FDiv`/`FMod` throw `exDivideByZero` on zero (an ARM
+trap in the ROM); `GlobalFunctionLookup` accepts a missing built-in
+functions frame.
+
 ## Not yet
 
-The interpreter's lookup caches (`TICache`: `ICacheClear`,
-`GetProtoVariable`'s proto caches and `TInterpreter::TraceGet`), stores
+The interpreter's FastRun1 (the inlined, trace-free copy of SlowRun),
+tracing and breakpoints (`TInterpreter::Trace...`, `HandleBreakPoints`),
+running 1.x CodeBlocks and binary natives, the natives not bound yet
+(134 of the 869 are) (`Sleep`, the strings' `TRichString` functions, printing,
+stores, views, ...), `TRichString` (the mungers treat strings as plain
+UniChars), the interpreter's `GetTaskStackInfo`; then the object
+system's: stores
 (`FollowFaultBlock`, `FIsValid`, large binaries, `NoTouchObjectPtr`'s
 large-object check), the Unicode encoders (`MakeString` and `Intern` widen
 and narrow bytes as they are), `AllocateCObjectBinary`'s procedure table,
 the heap dump `Uriah` (the printer), the REx magic pointer tables
 (`InitRExMagicPointerTables`), the frames function profiler hooks in
-`GC`, and
-what `InitObjects` starts after the classes: `InitPrinter`,
-`InitInterpreter`, `MakeEntryCache`, the package store part handler.
+`GC`, and what `InitObjects` starts around the interpreter:
+`InitPrinter`, `MakeEntryCache`, the package store part handler.

@@ -29,7 +29,8 @@ def main(argv=None) -> int:
     ap.add_argument("--class", dest="cls", action="append", default=[], help="all functions of this class")
     ap.add_argument("--function", action="append", default=[], help="functions with this name")
     ap.add_argument("--address", action="append", default=[], help="function at this address")
-    ap.add_argument("--range", nargs=2, metavar=("START", "END"), help="every function with its entry in [START, END)")
+    ap.add_argument("--range", nargs=2, metavar=("START", "END"), action="append", default=[],
+                    help="every function with its entry in [START, END) (repeatable)")
     ap.add_argument("--asm", action="store_true", help="also print the disassembly")
     ap.add_argument("--callers", action="store_true", help="list callers of each function")
     ap.add_argument("--timeout", type=int, default=60, help="decompiler timeout per function (s)")
@@ -74,8 +75,8 @@ def main(argv=None) -> int:
                     print(f"no function at {a}", file=sys.stderr)
                 else:
                     funcs.append(f)
-            if args.range:
-                start, end = (int(x, 0) for x in args.range)
+            for rng in args.range:
+                start, end = (int(x, 0) for x in rng)
                 for f in fm.getFunctions(space.getAddress(start), True):
                     if f.getEntryPoint().getOffset() >= end:
                         break

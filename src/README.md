@@ -64,8 +64,12 @@ src/
                 frames and their maps, paths, clones, classes - the DDK's
                 objects.h (Frames.h for clients); the ROM's constants
                 generated into RSSymbols.h/ROMConstants.h, and ROMImport,
-                which reads the ROM's own objects out of a ROM image
-                (docs/frames/README.md)
+                which reads the ROM's own objects out of a ROM image; the
+                NewtonScript interpreter (Interpreter.h: TInterpreter, the
+                bytecodes, NSCall/NSSend, variable lookup and its caches)
+                and the built-in functions bound to the ROM's native
+                function table (NativeFunctions.h, Builtins.cpp, Munger.cpp,
+                ROMNatives.cpp generated) (docs/frames/README.md)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 

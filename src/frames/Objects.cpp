@@ -15,6 +15,7 @@
 */
 
 #include "ObjectHeap.h"
+#include "Interpreter.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
@@ -105,30 +106,6 @@ ThrowOutOfBounds(Ref array, long index)
 	SetFrameSlot(frame, RSSYMindex, RefVar(MAKEINT(index)));
 	ThrowRefException(exFramesWithFrameData, frame);
 }
-
-
-/* -------------------------------------------------------------------------------
-	Interpreter caches
-	SetFrameSlot, AddSlot and RemoveSlot invalidate the interpreter's
-	variable lookup caches (TICache: gGetVarCache, gFindImpCache, gProtoCache,
-	gROProtoCache).  NOT YET RECONSTRUCTED: the interpreter and its caches;
-	these do nothing until it is.
-------------------------------------------------------------------------------- */
-
-// ROM 0x002d9c1c ICacheClear__Fv
-void
-ICacheClear(void)
-{ }
-
-
-void
-ICacheClearFrame(Ref /*frame*/)
-{ }
-
-
-void
-ICacheClearSymbol(Ref /*sym*/, ULong32 /*hash*/)
-{ }
 
 
 /* -------------------------------------------------------------------------------
@@ -966,7 +943,9 @@ GlobalFunctionLookup(Ref name)
 	if (!FrameHasSlotRef(functions, name))
 	{
 		gFunctionFrame = functions;
-		result = GetFrameSlotRef(gROMBuiltinFunctions, name);
+		// DEVIATION: the host may run without the ROM's objects, and then
+		// there is no built-in functions frame (the ROM always has one)
+		result = (gROMBuiltinFunctions == NILREF) ? NILREF : GetFrameSlotRef(gROMBuiltinFunctions, name);
 	}
 	else
 	{
@@ -2159,9 +2138,10 @@ InitMagicPointerTables(void)
 
 // ROM 0x002f7304 InitObjects__Fv
 // The heap (its size from InternalRAMInfo in the ROM, gObjectHeapSize
-// here), the global frames, symbols and classes.  NOT YET RECONSTRUCTED:
-// InitPrinter, InitInterpreter, the union soup entry cache (MakeEntryCache)
-// and the package store's part handler (TPackageStore, TPackageStorePartHandler).
+// here), the global frames, symbols, classes and the interpreter.
+// NOT YET RECONSTRUCTED: InitPrinter, the union soup entry cache
+// (MakeEntryCache) and the package store's part handler (TPackageStore,
+// TPackageStorePartHandler).
 void
 InitObjects(void)
 {
@@ -2174,6 +2154,7 @@ InitObjects(void)
 	FindOffsetCacheClear();
 	InitSymbols();
 	InitClasses();
+	InitInterpreter();
 	gStores = AllocateArray(RSSYMarray, 0);
 	AddGCRoot(gStores);
 	AddGCRoot(gUnionSoups);

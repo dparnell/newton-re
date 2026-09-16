@@ -9,3 +9,8 @@ target_link_libraries(test_ROMImport PRIVATE frames)
 target_compile_definitions(test_ROMImport PRIVATE "NEWTON_ROM_IMAGE=\"${CMAKE_SOURCE_DIR}/../DebugRom/MP2100 D/Senior DCirrusNoDebug image\"")
 add_test(NAME frames.ROMImport COMMAND test_ROMImport)
 set_tests_properties(frames.ROMImport PROPERTIES TIMEOUT 120)
+
+add_executable(test_Interpreter test_Interpreter.cpp)
+target_link_libraries(test_Interpreter PRIVATE frames)
+target_compile_definitions(test_Interpreter PRIVATE "NEWTON_ROM_IMAGE=\"${CMAKE_SOURCE_DIR}/../DebugRom/MP2100 D/Senior DCirrusNoDebug image\"")
+add_test(NAME frames.Interpreter COMMAND test_Interpreter)

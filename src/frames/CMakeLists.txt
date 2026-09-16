@@ -12,6 +12,12 @@ add_library(frames STATIC
     RSSymbolTable.cpp
     ROMConstants.cpp
     ROMImport.cpp
+    Interpreter.cpp
+    VariableLookup.cpp
+    NativeFunctions.cpp
+    ROMNatives.cpp
+    Builtins.cpp
+    Munger.cpp
 )
 target_link_libraries(frames PUBLIC newton_config memory os600_user hal_host toolbox)
 target_include_directories(frames PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

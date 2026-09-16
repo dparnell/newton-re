@@ -59,9 +59,22 @@
 #define kNSErrUnexpectedFrame			(ERRBASE_FRAMES - 416)	// SetLength of a frame
 #define kNSErrUnexpectedBinaryObject	(ERRBASE_FRAMES - 417)
 #define kNSErrUnexpectedImmediate		(ERRBASE_FRAMES - 418)	// Length of a non-pointer
+#define kNSErrNotAnArrayOrString		(ERRBASE_FRAMES - 419)
 
-// evt.ex.fr.intrp;type.ref.frame (ThrowExInterpreterWithSymbol)
-#define kNSErrNilContext				(ERRBASE_FRAMES - 811)	// GetProtoVariable of NILREF (the ROM's -0xbeab)
+// evt.ex.fr.intrp (the interpreter, Throw(exInterpreter, code)) and
+// evt.ex.fr.intrp;type.ref.frame (ThrowExInterpreterWithSymbol: {errorCode, symbol})
+#define kNSErrTooManyArgs				(ERRBASE_FRAMES - 802)	// a native function of more than six arguments
+#define kNSErrWrongNumberOfArgs			(ERRBASE_FRAMES - 803)
+#define kNSErrZeroForLoopIncr			(ERRBASE_FRAMES - 804)
+#define kNSErrUndefinedBytecode			(ERRBASE_FRAMES - 805)
+#define kNSErrNoCurrentException		(ERRBASE_FRAMES - 806)	// Rethrow outside a handler
+#define kNSErrUndefinedVariable			(ERRBASE_FRAMES - 807)
+#define kNSErrUndefinedGlobalFunction	(ERRBASE_FRAMES - 808)
+#define kNSErrUndefinedMethod			(ERRBASE_FRAMES - 809)
+#define kNSErrNoProtoForResend			(ERRBASE_FRAMES - 810)	// inherited: the implementor has no _proto
+#define kNSErrNilContext				(ERRBASE_FRAMES - 811)	// a variable of NILREF (the ROM's -0xbeab)
+// host: a ROM native function whose implementation is not reconstructed yet
+#define kNSErrNativeNotReconstructed	(ERRBASE_FRAMES - 899)
 
 // evt.ex.fr.store
 #define kNSErrEntryStoreGone			(ERRBASE_FRAMES - 7)	// FollowFaultBlock: the entry's store is gone (the ROM's 0xffff4479)

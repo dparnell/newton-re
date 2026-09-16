@@ -156,8 +156,9 @@ inline int EQRefArg(RefArg a, RefArg b) { return EQRef(a, b); }
 
 #ifndef DEFINED_OBJHEADER
 #define DEFINED_OBJHEADER
-struct ObjHeader {
-	char	_[8];
+struct ObjHeader {		/* the ROM's two 32-bit words, pointer-sized here (sync_ddk_headers.py; frames/ObjHeader.h) */
+	ULong	fSizeAndFlags;	/* size << 8 | flags */
+	ULong	fGCStuff;		/* lock count in bits 24-31; the collector's slot index or forwarding address */
 };
 #endif
 

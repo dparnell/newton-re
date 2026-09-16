@@ -47,6 +47,8 @@ tools/newton-rom/
     romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp)
     romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
+    nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
+                          --disasm NAME (bytecode disassembly)
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -270,7 +272,13 @@ frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
 name and hash from the object the constant refers to), the 1102 `R`/`RS`
 object constants, and where the ROM's object area and tables are, for the
 ROM object importer (`docs/frames/README.md`).  Both write a header naming
-the command that made them.
+the command that made them.  `analysis/nsfunctions.py build/MP2100D
+--list` lists the 1352 functions of the ROM's built-in functions frame
+(native or NewtonScript, argument counts), `--natives -o
+src/frames/ROMNatives.cpp` emits the table the host binds its native
+implementations through (name, jump-table address, target function and its
+symbol), and `--disasm NAME` disassembles a NewtonScript function's
+bytecode as `TInterpreter::SlowRun` decodes it.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class
