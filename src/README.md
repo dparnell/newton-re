@@ -91,8 +91,18 @@ src/
                 rectangles and regions and the blitter (Draw.h), lines,
                 ovals, round rectangles and arcs (Shapes.h), fonts and
                 styles (Fonts.h: the 'sfnt' bitmap fonts of the font
-                family frames), text drawn and measured (Text.h);
-                polygons and pictures to come (docs/qd/README.md)
+                family frames), text drawn and measured (Text.h), the
+                region holders (RegionVars.h); polygons and pictures to
+                come (docs/qd/README.md)
+  views/        the view system: TView (View.h), the C++ object behind
+                every NewtonScript view - its context frame and slot
+                cache, bounds justified against the parent (viewJustify),
+                children, scripts, drawing through QuickDraw (viewFormat)
+                - the root view with its update regions (RootView.h),
+                views built from templates (BuildView.cpp), the
+                NewtonScript view functions and methods (ViewNatives.cpp);
+                the subclasses (text, pictures, lists, ...) to come
+                (docs/views/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

@@ -1,0 +1,4 @@
+add_executable(test_Views test_Views.cpp)
+target_link_libraries(test_Views PRIVATE views)
+add_test(NAME views.Views COMMAND test_Views)
+set_tests_properties(views.Views PROPERTIES TIMEOUT 120)

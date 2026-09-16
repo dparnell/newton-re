@@ -1,11 +1,9 @@
 # The view system
 
 Reverse-engineering notes on Newton's view system - the C++ `TView`
-hierarchy behind every NewtonScript view frame - and the plan for
-reconstructing it in `src/views/`.  Nothing is reconstructed yet; what is
-here was established while building QuickDraw (`docs/qd/README.md`),
-which the views draw through.  How each fact was established is stated
-with it.
+hierarchy behind every NewtonScript view frame - and its reconstruction
+in `src/views/`.  How each fact was established is stated with it; the
+reconstruction cites the ROM function each of its functions comes from.
 
 ## What the ROM has
 
@@ -116,27 +114,160 @@ number maps to among 78/83; the NTK constants `clView` 74,
 `clRemoteView` 88, `clPickView` 91, `clGaugeView` 92, `clOutline` 105
 agree with the switch.)
 
-## Plan
+## The reconstruction (`src/views/`)
 
-1. `src/views/View.h`: `TView` with the ROM's layout (fields from the
-   constructor, the methods in vtable order from `analysis/vtable.py`),
-   the slot cache, `BuildContext`/`Constructor`/`SetupForm`/`SetupDone`,
-   the child list (`TViewList`, `AddView`/`RemoveView`/`ReorderView`),
-   bounds (`viewBounds` with `viewJustify`, `JustifyBounds`/
-   `DejustifyBounds` 0x00262224/0x00262b1c, `OuterBounds`, `SetBounds`,
-   `Move`), flags (`SetFlags`/`ClearFlags`, `vVisible`, ...), `Show`/
-   `Hide`/`Dirty`, `RunScript`/`RunCacheScript` (the view scripts),
-   `GetValue`/`SetValue` (`viewValue` slot changes with redraw), `Delete`.
-2. Drawing: `Draw`/`Update`/`DrawChildren` 0x00265b54.. with the
-   `visRgn` per view (`SetupVisRgn` 0x00265a3c, `Clipper`), `PreDraw`/
-   `RealDraw`/`PostDraw` (the `viewFormat` word: frame styles, fill
-   patterns, rounded corners, shadows - `vfFillWhite`, `vfFrameBlack`,
-   `vfRound...`), the `viewDrawScript`, hilites.
-3. `TRootView`: the screen's port, the update region, `RefreshViews`,
-   idle, the view with the caret, `gRootView`.
-4. The NewtonScript view natives (`src/views/ViewNatives.cpp`) and the
-   host test: a root view over an offscreen map, templates built in
-   NewtonScript (`{viewClass: clView, viewBounds: {...}, viewFlags: ...,
-   viewFormat: ...}`), opened, drawn and checked pixel by pixel.
-5. The subclasses as they are needed: `TContainerView`, `TPictureView`,
-   `TPolygonView`, `TListView`/`TPickView`, then the text views.
+`View.h` declares `TView` with the ROM's fields at their offsets and its
+methods in the vtable's order (`analysis/vtable.py build/MP2100D 0x1f75c`),
+over `TResponder` and `TxObject` (`TxObject::operator new` clears the
+memory - NewPtrClear - so a fresh view's fields are zero).  `ViewFlags.h`
+has the constants: the viewFlags bits (the names TView::Dump 0x0025e33c
+prints; `vIsInSetupForm` 0x10000000, `vHasIdlerHint` 0x20000000,
+`vIsMarked` 0x40000000 and `vIsInSetup2` 0x80000000 are the private ones
+above the 28 bits the context's viewFlags slot holds), the viewJustify
+bits as JustifyBounds uses them (below), the viewFormat fields as
+PreDraw/PostDraw draw them, the class numbers (each class's `ClassID`),
+the slot cache indices and the -85xx errors.
+
+**Making a view.**  `TView::BuildContext(template, force)` 0x0025c634 and
+`BuildView(parent, context)` 0x0025ca18 are as described above; the
+host's `BuildView` makes a `TView` for every class number (the
+subclasses are NOT YET; an unknown number is -8501).  `Constructor`
+0x00264430: the context linked (`_parent`, `viewCObject`), the
+`allocateContext`/`stepAllocateContext` pairs built, `vIsInSetupForm`
+set around `SetupForm` (the `viewSetupFormScript`; a script that closes
+the view marks it `vIsBeingDeleted` and the Constructor throws -8501),
+the flags and format read, a child of the root view given a `TClipper`
+(kept in the context's `viewclipper` slot as an address), the parent's
+`AddView(TView*)` 0x0025d994 (in front of the floaters), then, under a
+handler that takes the view out again on a Throw: `SetBounds` from
+`viewBounds` (-8505 without one; an application hanging below the screen
+moved up), `declareSelf`, `AddViews(false)` 0x00260cd4 (`viewChildren` and
+`stepChildren`, after the `viewSetupChildrenScript`; a `vjReflow` view
+stops at the first child below its bottom), the `vjChildrenLasso` sizing
+(the union of the children at the view's origin, written back through
+`DejustifyBounds`), `SetupDone`.  `AddView(RefArg)` 0x0025d274 is
+`BuildContext` + `BuildView` (a template naming a `preallocatedContext`
+takes that variable as its context).  Nothing draws a newly added view:
+the caller dirties or shows it (the NewtonScript `AddView` says so too).
+`Delete` 0x0026564c runs the `viewQuitScript` (answering `'postQuit`
+asks for the `viewPostQuitScript` after the children are gone), removes
+the children, frees the clipper, tells the root view (`ForgetAboutView`)
+and deletes the object; `RemoveView`/`RemoveChildView` 0x0025da28/34
+hide first and free the list when empty.
+
+**The context.**  `GetProto` 0x00269074 is `GetProtoVariable` on the
+context, `GetVar` 0x00269080 `GetVariable` (the proto chain, then the
+parent chain); `SetContextSlot` sets the context's own slot, `SetDataSlot`
+the data frame's (`realData` for a data view, else the context).  The
+slot cache: `GetCacheProto/GetCacheVariable(index)` 0x0025d474/0x0025d3e4
+answer nil at once when the view's mask bit is clear, and clear it when
+a lookup finds nil; `InvalidateSlotCache` sets it again (`Sync` does for
+viewJustify, `SetOrigin` for the origins).  `RunScript(tag, args,
+lookupVars)` 0x00261dc8 sends the script to the context with
+`DoProtoMessage` (or `DoMessage` when the parent chain counts) unless
+`vNoScripts`; `RunCacheScript(index, ...)` 0x00261c84 the same for a cached
+slot.  `SetFlags`/`ClearFlags` 0x0025d360/0x00268c78 write `viewFlags` back
+to the context when `vVisible` or `vSelected` change.  `SetValue`
+0x00268ab4 sets the slot, keeps `fFlags`/`fViewFormat` for viewFlags and
+viewFormat, syncs for viewBounds/viewFormat/viewJustify/viewFont and sends
+`Changed` 0x00268d08 (the `viewTie` pairs told, the `viewChangedScript`
+run - even for a `vNoScripts` view - and the view dirtied); `GetValue`
+0x002688d0 converts to a `'string` (SPrintObject) or `'int` (a char or
+boolean) when asked.  `Sync` 0x0025d730 runs `SetupForm` again for a view
+that is set up, re-reads viewBounds and viewJustify, and moves the view
+(`Offset`) when its size is unchanged, else dirties, re-sets and dirties
+again.
+
+**Justification** (`JustifyBounds` 0x00262224, read from the assembly;
+`DejustifyBounds` 0x00262b1c its inverse).  The template's viewBounds are
+offset by a *base*: the parent's contents origin (its top left less
+`viewOriginX/Y`; the top left itself for `vjParentClip` 0x100) - the
+application area of `vars.displayParams` for a child of the root view.
+The sibling bits place the view against the previous sibling instead
+(H: 0x200 centred, 0x400 after its right, 0x600 full - the bounds added
+to the sibling's, 0x800 at its left; V: 0x1000 centred, 0x2000 below,
+0x3000 full, 0x4000 at its top); the ratio bits (`vjLeftRatio` 0x4000000,
+`vjRightRatio` 0x8000000, `vjTopRatio` 0x10000000, `vjBottomRatio`
+0x20000000) scale the bounds by a hundredth of the sibling's (else the
+parent's) size; the parent bits (H: 0x10 centred - the bounds an offset
+from the centred place - 0x20 from the right edge, 0x30 full; V: 0x40,
+0x80, 0xc0) apply where no sibling bit does.  (The NPG's `vjParentCenterH`
+= 16, `vjParentRightH` = 32 agree with the code; `vjParentClip`,
+`vjChildrenLasso` 0x8000 and `vjReflow` 0x10000 are named from memory of
+the NTK's constants.)  The ROM keeps two private bits above the
+justification: 0x40000000 marks the modal view (`SetModalView`
+0x002e8b18).
+
+**Drawing** (`ViewDraw.cpp`).  The port is the current one; a view draws
+where the port's `visRgn` lets it.  `Draw(rgn, force)` 0x00265b90 (from
+the assembly: the decompiler stops at its virtual calls): nothing for an
+invisible view unless forced, or when the outer bounds miss the region
+(or the clipper's visible region does); `SetupVisRgn` 0x00265a3c narrows
+the port's visRgn for a child of the root view (each ancestor's clipper
+region, the bounds of a `vClipping` view, less the front mask
+0x00263b4c: the filled or windowed siblings in front); then `PreDraw`
+0x00266370 (the fill as a round rectangle in its pattern, the lines
+`viewLineSpacing` apart in `patOr` - both columns and rows for a
+`'squareGrid` viewGrid), `RealDraw` (nothing for `TView`), the
+`viewDrawScript` (its `evt.ex` errors dropped), the children (a
+`vClipping` view cuts the visRgn to its bounds for them), `PostDraw`
+0x002666c0 (the frame in its pattern and pen *outside* the bounds - the
+outer bounds grow by pen + inset - round when the corners are; the
+hilite/drag-shadow frames a gray frame with a black one inside; the drop
+shadow; the default button's marks).  `SetPattern` 0x000e4aa0 maps a
+format's pattern index (1 white ... 5 black, 14 the custom
+`viewFillPattern`/`viewLinePattern`/`viewFramePattern` through
+`GetPattern` 0x0019a378).  `Dirty(rect)` 0x00268ee8 cuts the outer bounds
+to each `vClipping` ancestor and the window's clipper region and gives
+it to the root view's update regions with the first filled ancestor as
+the *filler*; `TRootView::Invalidate(rgn, filler)` 0x001b4524 keeps up to
+three regions, merging under a common parent (the filler paints the
+background: `TView::Update` 0x00266050 erases only when it has no fill);
+`TRootView::Update` 0x001b4914 redraws them (the part outside the port's
+visRgn stays pending).  The clipper of a child of the root view
+(`TClipper` 0x00066bf8: the full region from the outer bounds, rounded
+when the format is; the visible region less what is in front,
+`RecalcVisible`) is made by `SetBounds` and recomputed by
+`ViewVisibleChanged` 0x00263d48 (Show, Hide, Constructor, a reorder), so a
+viewFormat changed on an open window does not grow its region - as in
+the ROM.  `Show`/`Hide` 0x00263f48/0x0026404c run the `viewShowScript`/
+`viewHideScript` (the ROM's animation effects and stroke blocking are
+NOT YET); `ReorderView` 0x0025eda0 (`MoveBehind`, `BringToFront`)
+invalidates what the siblings between the two places overlap of the
+view.  `TRegionVar` (`qd/RegionVars.h`) registers an exception cleanup
+like the ROM's, so a Throw through a drawing scope gives the region back.
+
+**NewtonScript** (`ViewNatives.cpp`).  The globals are bound by ROM
+symbol (`FAddView__FRC6RefVarN21`, ...: `AddView`, `AddStepView`,
+`RemoveView`, `RemoveStepView`, `SetValue`, `GetDynamicValue` (the ROM's
+name for `FGetValue`), `RelBounds`, `SetBounds`, `RefreshViews`, `GetView`,
+`GetViewFlags`, `BuildContext`, `GetRoot`, and `Visible` as source); the
+methods a view inherits are slots of the ROM's root template `Rviewroot`
+(`Dirty`, `show`, `Hide`, `_Open`, `close`, `_Toggle`, `Parent`,
+`ChildViewFrames`, `SyncView`, `SyncChildren`, `RedoChildren`,
+`MoveBehind`, `GlobalBox`, `LocalBox`, `GlobalOuterBox`, `VisibleBox`,
+`GetDrawBox`, `SetOrigin`, and the scripts `Open`, `Toggle`) - the host's
+`MakeViewMethods` builds that frame and `InitViewSystem` makes it the
+root template's `_proto`.  The ROM's `Show`/`Hide`/`Open`/`Close`
+dispatch `aeShow`/`aeHide`/`aeAddChild`/`aeDropChild` through the
+application to the views; the host calls the views directly (DEVIATION,
+noted in the file).  `GetView(context)` 0x0025f4c4 finds `viewCObject`
+through the proto *and parent* chains, so a template whose `_parent` is
+the root context resolves to the root view (`RealOpenX` then does
+nothing): the ROM's own applications name a `preallocatedContext`, and a
+context from `BuildContext` has its own nil `viewCObject`.
+
+`test_Views` runs without the ROM's objects (the canonical context, rect
+and slot cache frames are built by `InitViewPrototypes`), over a
+160 x 100 one-bit map: the structure, every justification, the round trip
+through `DejustifyBounds`, the formats pixel by pixel, overlapping
+windows and their clippers, scripts, ties, the errors.
+
+## Not yet
+
+Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
+drag and drop, the recognition commands (`RealDoCommand`), the animation
+effects (`TAnimate`), the idlers, `SyncScroll`, the clipboards, the popup
+and modal dialog machinery, the subclasses (`TPictureView`, `TListView`,
+`TPickView`, the text views, ...), the application (`TApplication`,
+`gApplication`) and its command dispatch.

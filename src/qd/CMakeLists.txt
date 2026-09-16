@@ -2,12 +2,13 @@
 # the ARM.  Rectangles and points (Rects.h), regions (Regions.h), ports,
 # pens, patterns and pixel maps (Ports.h), drawing rectangles and regions
 # and the blitter (Draw.h), lines, ovals, round rectangles and arcs
-# (Shapes.h), fonts and styles (Fonts.h: the 'sfnt' bitmap fonts of the
+# (Shapes.h), the region holders (RegionVars.h), fonts and styles (Fonts.h: the 'sfnt' bitmap fonts of the
 # font family frames), text drawn and measured (Text.h); polygons and
 # pictures to come.
 add_library(qd STATIC
     Rects.cpp
     Regions.cpp
+    RegionVars.cpp
     Ports.cpp
     Draw.cpp
     Shapes.cpp
