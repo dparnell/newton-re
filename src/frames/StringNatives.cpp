@@ -20,6 +20,8 @@
 #include "REPTranslators.h"
 #include "RichString.h"
 #include "Unicode.h"
+#include "NumberFormat.h"
+#include "ROMConstants.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "NewtonExceptions.h"
@@ -585,20 +587,63 @@ FStringToNumber(RefArg /*rcvr*/, RefArg str)
 }
 
 
+// ROM 0x001f9f04 FIsFiniteNumber__FRC6RefVarT1
+// An integer, or a real that is finite.
+static Ref
+FIsFiniteNumber(RefArg /*rcvr*/, RefArg number)
+{
+	Ref ref = number;
+	if (ISINT(ref))
+		return TRUEREF;
+	if (!ISREAL(ref) || !isfinite(CDouble(number)))
+		return NILREF;
+	return TRUEREF;
+}
+
+
+// Host: the ROM's error strings (this ROM's German ones) when its objects
+// are not imported.
+static Ref
+ErrorString(Ref& romString, const char* text)
+{
+	if (romString == NILREF)
+	{
+		AddGCRoot(romString);
+		romString = MakeString(text);
+	}
+	return Clone(RefVar(romString));
+}
+
+
 // ROM 0x001f9f74 FFormattedNumberStr__FRC6RefVarN21
-// A real formatted by a printf format ("%.2f"); NOT YET RECONSTRUCTED: the
-// locale's number munging.
+// A number formatted in the locale: by a printf format string (NumberString)
+// or a format spec integer (IntegerStringSpec/NumberStringSpec: the
+// kFormat... bits); the error strings for a number that is not finite,
+// too large or too small, nil for a string that does not fit.
 Ref
 FFormattedNumberStr(RefArg /*rcvr*/, RefArg number, RefArg format)
 {
-	if (!IsString(format))
-		ThrowBadTypeWithFrameData(kNSErrNotAString, format);
-	char fmt[64];
-	ConvertFromUnicode(GetCString(format), fmt, kMacRomanEncoding, sizeof(fmt) - 1);
-	double value = ISINT((Ref) number) ? (double) RINT(number) : CDouble(number);
-	char text[128];
-	snprintf(text, sizeof(text), fmt, value);
-	return MakeString(text);
+	if (FIsFiniteNumber(RefVar(NILREF), number) == NILREF)
+		return ErrorString(Rerrnotanumber, "Keine Zahl");
+	UniChar text[64];
+	long result;
+	if (IsString(format))
+	{
+		char fmt[16];
+		ConvertFromUnicode(GetCString(format), fmt, kMacRomanEncoding, 15);
+		result = NumberString(CoerceToDouble(number), text, 63, fmt);
+	}
+	else if (ISINT((Ref) number))
+		result = IntegerStringSpec(RINT(number), text, 63, RINT(format));
+	else
+		result = NumberStringSpec(CoerceToDouble(number), text, 63, RINT(format));
+	if (result == 0)
+		return MakeString(text);
+	if (result == kNumberTooLarge)
+		return ErrorString(Rerrnumbertoolarge, "Zahl zu gro\xdf");
+	if (result == kNumberTooSmall)
+		return ErrorString(Rerrnumbertoosmall, "Zahl zu klein");
+	return NILREF;
 }
 
 

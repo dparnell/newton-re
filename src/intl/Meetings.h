@@ -71,7 +71,7 @@ void	GetInstanceMeetings(RefArg meetings, RefArg cursor);
 void	GetRepeatingMeetings(RefArg meetings, RefArg cursor, ULong start, ULong end, Boolean unique);
 Ref		GetAllMeetings(RefArg meetingSoup, RefArg repeatSoup, long start, long end, Boolean unique);
 
-void	RegisterMeetingNatives(void);
+void	RegisterMeetingNatives(void);		// (a separate library over the stores: the host's boot registers them after InitQueries)
 void	InitMeetingPrototypes(void);		// host: the query specs and the instance prototype when no ROM objects are imported
 
 #endif	/* __MEETINGS_H */

@@ -80,8 +80,11 @@ src/
                 the locale cache (Locale.h), TDate and the date and time
                 strings and their NewtonScript functions (Dates.h), the
                 repeating meetings (Meetings.h: the Dates application's
-                repeat templates stepped and collected over the soups)
-                (docs/intl/README.md)
+                repeat templates stepped and collected over the soups;
+                its own library, intl_meetings, over stores/), numbers as
+                text (NumberFormat.h: NumberString, the format specs of
+                FormattedNumberStr, ParamString; frames/ prints numbers
+                through it) (docs/intl/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

@@ -5,6 +5,6 @@ add_test(NAME intl.Dates COMMAND test_Dates)
 set_tests_properties(intl.Dates PROPERTIES TIMEOUT 120)
 
 add_executable(test_Meetings test_Meetings.cpp)
-target_link_libraries(test_Meetings PRIVATE intl stores)
+target_link_libraries(test_Meetings PRIVATE intl_meetings)
 add_test(NAME intl.Meetings COMMAND test_Meetings)
 set_tests_properties(intl.Meetings PROPERTIES TIMEOUT 120)

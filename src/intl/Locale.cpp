@@ -10,7 +10,7 @@
 
 #include "Locale.h"
 #include "Dates.h"
-#include "Meetings.h"
+#include "NumberFormat.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -182,7 +182,12 @@ ROMCacheLocaleAttributes(void)
 	RefVar minusSuffix(GetProtoVariable(numberFormat, RSSYMminussuffix, nil));
 	RefVar currencyPrefix(GetProtoVariable(numberFormat, RSSYMcurrencyprefix, nil));
 	RefVar currencySuffix(GetProtoVariable(numberFormat, RSSYMcurrencysuffix, nil));
-	RINT(GetProtoVariable(numberFormat, RSSYMgroupwidth, nil));
+	long groupWidth = RINT(GetProtoVariable(numberFormat, RSSYMgroupwidth, nil));
+	// DEVIATION: the ROM reads groupWidth a second time here (a slip: the
+	// register holding the symbol was reused), so its gNumberLeadingZero
+	// is whether the group width is 0; decimalLeadingZ is what was meant
+	// (0: put a zero before the decimal point, like the other ...LeadingZ)
+	long decimalLeadingZ = RINT(GetProtoVariable(numberFormat, RefVar(Intern((char*) "decimalLeadingZ")), nil));		// (no RSSYM: the ROM never uses it)
 	if ((Ref) decimalPoint == NILREF || (Ref) groupSepStr == NILREF || (Ref) minusPrefix == NILREF || (Ref) minusSuffix == NILREF)
 		return false;
 	// NOT YET RECONSTRUCTED: ReplaceDictionaryHandle(gTimeLexDictionary, 'timeDictionary),
@@ -199,17 +204,34 @@ ROMCacheLocaleAttributes(void)
 	gLocaleCache->fMinusSuffix = minusSuffix;
 	gLocaleCache->fCurrencyPrefix = currencyPrefix;
 	gLocaleCache->fCurrencySuffix = currencySuffix;
+	gNumberGroupWidth = groupWidth;
+	gNumberLeadingZero = decimalLeadingZ == 0;
+	if (gPositiveNumProto != nil)
+	{
+		DisposPtr((Ptr) gPositiveNumProto);
+		gPositiveNumProto = nil;
+	}
+	if (gNegativeNumProto != nil)
+	{
+		DisposPtr((Ptr) gNegativeNumProto);
+		gNegativeNumProto = nil;
+	}
 	return true;
 }
 
 
 // ROM 0x000ee3e0 CacheLocaleAttributes__Fv
-// The attributes cached, and the number prototype strings remade
-// (NOT YET RECONSTRUCTED: NegativeNumberProtoStr, PositiveNumberProtoStr).
+// The attributes cached, and the number prototype strings remade.
 Boolean
 CacheLocaleAttributes(void)
 {
-	return ROMCacheLocaleAttributes();
+	Boolean cached = ROMCacheLocaleAttributes();
+	if (cached)
+	{
+		NegativeNumberProtoStr();
+		PositiveNumberProtoStr();
+	}
+	return cached;
 }
 
 
@@ -224,7 +246,6 @@ InitInternationalUtils(void)
 		return kError_No_Memory;
 	RegisterLocaleNatives();
 	RegisterDateNatives();
-	RegisterMeetingNatives();
 	InstallHostNatives();						// host: into the function frame when there are no ROM objects
 	if (GetCurrentLocale() != NILREF && CacheLocaleAttributes())
 		return noErr;

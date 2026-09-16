@@ -127,6 +127,48 @@ frame (`Rcanonicaldate`: year, month, date, dayOfWeek, hour, minute,
 second, daysInMonth); `TotalMinutes` accepts a partial
 frame (missing slots are 1904/1/1 0:00).
 
+## Numbers (`src/intl/NumberFormat.h`)
+
+The locale's `numberformat` frame (Germany 0x3bef0d: `decimalpoint` ",",
+`groupSepStr` ".", `groupWidth` 3, `minusPrefix` "-", `minusSuffix` "",
+`currencyPrefix` "", `currencySuffix` " DM", `decimalLeadingZ` 0) is
+cached with the date names; `ROMCacheLocaleAttributes` also sets
+`gNumberGroupWidth` (0x0c10108c) and `gNumberLeadingZero` (0x0c101090)
+and drops the *prototype strings* so that they are remade for the new
+locale: `PositiveIntProtoStr` 0x000ed530 "^0", `PositiveNumberProtoStr`
+0x000ed358 "^0" + decimal point + "^1", and the negative ones
+(0x000ed584, 0x000ed440) wrapped in the minus prefix and suffix.
+`ParamString` 0x000ef0d8 fills such a prototype: each `^digit` is replaced
+by a UniChar string argument (the arguments taken in the order the markers
+appear, the digit choosing among them), within a maximum length.  The ROM
+has a slip here: `gNumberLeadingZero` is set from a second read of
+`groupWidth` instead of `decimalLeadingZ` (the register holding the
+symbol was reused); the host reads `decimalLeadingZ` (`DEVIATION`).
+
+Two paths put a number into text.  `NumberString` 0x000eec44 (what
+`NumberStr`, `StringObject` and a `FormattedNumberStr` with a format
+*string* use) prints |d| with the caller's printf format, then localises
+the result: the integer digits are grouped (`gNumberGroupWidth` from the
+right), the sign becomes the minus prefix and suffix through the negative
+prototype, the fraction follows the locale's decimal point; whatever the
+format put before the first digit (a width's spaces) and after the number
+is carried over; an exponent form (`1e+21`) only gets its decimal point
+replaced.  It answers -2 `kNumberTooLarge`/-3 `kNumberTooSmall` beyond the
+doubles or when the text would not fit a positive/negative number.
+
+`IntegerStringSpec` 0x000eea4c and `NumberStringSpec` 0x000eeae0 (a
+`FormattedNumberStr` with an *integer* spec) print the digits themselves
+(the ROM with its C library's `_fp_display`: 17 significant digits, the
+rest `<`/`>` markers turned into zeros; the host with snprintf) and hand
+them to `_IntlNumberMunge` 0x000ee5a4 with the spec's bits, which the ROM
+symbols do not name: 0x0f the decimal places, 0x10 the currency prefix and
+suffix, 0x20 group the digits, 0x40 parentheses instead of the minus
+prefix and suffix, 0x80 a real with the low bits' decimal places (an
+integer is converted; without it a real gets six places with the trailing
+zeros dropped), 0x100 times 100 with a `%`, 0x200 trailing zeros dropped.
+More than twenty digits is `kNumberTooLarge` (`FormattedNumberStr` returns
+the ROM's "Zahl zu groß"), a text longer than the caller's room -10 (nil).
+
 ## Repeating meetings (`src/intl/Meetings.h`)
 
 The ROM keeps the Dates application's repeating-meeting engine next to
@@ -191,5 +233,6 @@ kept in `mtgStartDate` order with `BInsert`); nil when there is nothing.
 
 - Reading dates and times out of strings (`StringToDateFields`, the
   AirusA lexical dictionaries `dateDictionary`, `timeDictionary`, ...).
-- Number formatting (`numberformat`, `_IntlNumberMunge`) and the
-  recognition dictionaries the locale cache rebuilds.
+- Reading numbers out of strings (`StringToNumber` uses the C library's
+  strtod; the ROM's `TNumberParser` honours the locale's separators) and
+  the recognition dictionaries the locale cache rebuilds.

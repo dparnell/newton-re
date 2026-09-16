@@ -13,6 +13,7 @@
 */
 
 #include "REPTranslators.h"
+#include "NumberFormat.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
@@ -667,19 +668,6 @@ IntegerString(long i, UniChar* str)
 	char buffer[32];
 	snprintf(buffer, sizeof(buffer), "%ld", i);
 	ConvertToUnicode(buffer, str, kMacRomanEncoding, sizeof(buffer));
-}
-
-
-// ROM 0x000eec44 NumberString__FdPUsUlPc
-// NOT YET RECONSTRUCTED: the international number munging
-// (_IntlNumberMunge: the locale's decimal and thousands separators);
-// the C library's formatting.
-void
-NumberString(double d, UniChar* str, long maxLength, const char* format)
-{
-	char buffer[64];
-	snprintf(buffer, sizeof(buffer), format, d);
-	ConvertToUnicode(buffer, str, kMacRomanEncoding, maxLength);
 }
 
 

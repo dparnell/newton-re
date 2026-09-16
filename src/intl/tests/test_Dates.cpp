@@ -9,6 +9,7 @@
 
 #include "Dates.h"
 #include "Locale.h"
+#include "NumberFormat.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "ROMImport.h"
@@ -237,6 +238,64 @@ TestStrings()
 }
 
 
+// the German number format: decimal point ",", group separator ".", minus
+// prefix "-", currency suffix " DM"
+static void
+TestNumbers()
+{
+	UniChar str[64];
+	// a printf format localised
+	EXPECT(NumberString(1234.5, str, 63, "%.15g") == 0 && UStringIs(str, "1.234,5"));
+	EXPECT(NumberString(-42.0, str, 63, "%.15g") == 0 && UStringIs(str, "-42"));
+	EXPECT(NumberString(0.5, str, 63, "%.15g") == 0 && UStringIs(str, "0,5"));
+	EXPECT(NumberString(1234567.0, str, 63, "%.15g") == 0 && UStringIs(str, "1.234.567"));
+	EXPECT(NumberString(-1234567.891, str, 63, "%.2f") == 0 && UStringIs(str, "-1.234.567,89"));
+	EXPECT(NumberString(7.0, str, 63, "%6.1f") == 0 && UStringIs(str, "   7,0"));			// the width's spaces precede
+	EXPECT(NumberString(1e21, str, 63, "%.15g") == 0 && UStringIs(str, "1e+21"));			// an exponent form: only the point is localised
+	EXPECT(NumberString(-1.5e21, str, 63, "%.15g") == 0 && UStringIs(str, "-1,5e+21"));
+	EXPECT(NumberString(1234.5, str, 6, "%.15g") == kNumberTooLarge);					// no room
+	EXPECT(NumberString(-1234.5, str, 6, "%.15g") == kNumberTooSmall);
+	// format specs
+	EXPECT(IntegerStringSpec(1234567, str, 63, 0) == 0 && UStringIs(str, "1234567"));
+	EXPECT(IntegerStringSpec(1234567, str, 63, kFormatGroupDigits) == 0 && UStringIs(str, "1.234.567"));
+	EXPECT(IntegerStringSpec(-1234567, str, 63, kFormatGroupDigits | kFormatCurrency) == 0 && UStringIs(str, "-1.234.567 DM"));
+	EXPECT(IntegerStringSpec(-5, str, 63, kFormatParenthesizeNegative) == 0 && UStringIs(str, "(5)"));
+	EXPECT(IntegerStringSpec(5, str, 63, kFormatPercent) == 0 && UStringIs(str, "500%"));
+	EXPECT(IntegerStringSpec(5, str, 63, kFormatDecimalPlaces | 2) == 0 && UStringIs(str, "5,00"));
+	EXPECT(NumberStringSpec(3.14159, str, 63, 0) == 0 && UStringIs(str, "3,14159"));
+	EXPECT(NumberStringSpec(2.5, str, 63, 0) == 0 && UStringIs(str, "2,5"));
+	EXPECT(NumberStringSpec(3.14159, str, 63, kFormatDecimalPlaces | 2) == 0 && UStringIs(str, "3,14"));
+	EXPECT(NumberStringSpec(2.5, str, 63, kFormatDecimalPlaces | 3) == 0 && UStringIs(str, "2,500"));
+	EXPECT(NumberStringSpec(2.5, str, 63, kFormatDecimalPlaces | kFormatSignificant | 3) == 0 && UStringIs(str, "2,5"));
+	EXPECT(NumberStringSpec(-1234.5, str, 63, kFormatGroupDigits | kFormatDecimalPlaces | 1) == 0 && UStringIs(str, "-1.234,5"));
+	EXPECT(NumberStringSpec(0.125, str, 63, kFormatPercent | kFormatDecimalPlaces | 1) == 0 && UStringIs(str, "12,5%"));
+	EXPECT(NumberStringSpec(1e21, str, 63, 0) == kNumberTooLarge);							// more than twenty digits
+	EXPECT(NumberStringSpec(1234.5, str, 4, 0) == kNumberStringTooLong);						// (the room check leaves the decimal point out)
+	// ParamString
+	const UniChar* proto = PositiveNumberProtoStr();
+	EXPECT(UStringIs(proto, "^0,^1"));
+	EXPECT(UStringIs(NegativeIntProtoStr(), "-^0"));
+	UniChar a[4], b[4];
+	ConvertToUnicode("12", a, kMacRomanEncoding, 2);
+	ConvertToUnicode("34", b, kMacRomanEncoding, 2);
+	ParamString(str, 63, proto, a, b);
+	EXPECT(UStringIs(str, "12,34"));
+	ParamString(str, 3, proto, a, b);
+	EXPECT(UStringIs(str, "12,"));
+	ParamString(str, 63, proto, a, (const UniChar*) nil);
+	EXPECT(UStringIs(str, "12,"));
+	// from NewtonScript
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1234.5678, \"%.2f\")")), "1.234,57"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1234567, 0x20)")), "1.234.567"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(-19.99, 0x10 + 0x80 + 2)")), "-19,99 DM"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(0.5, 0x100)")), "50%"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1.0e21, 0)")), "Zahl zu gro\xdf"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1.0 / 0.0, 0)")), "Keine Zahl"));
+	EXPECT(StringIs(RefVar(Eval("NumberStr(1234.5)")), "1.234,5"));
+	EXPECT(StringIs(RefVar(Eval("NumberStr(-7)")), "-7"));
+}
+
+
 int
 main()
 {
@@ -262,6 +321,7 @@ main()
 	{
 		TestCalendar();
 		TestStrings();
+		TestNumbers();
 	}
 	newton_catch_all
 	{
