@@ -24,6 +24,14 @@ happened to keep).  These are cited as `// ROM 0x002ebce8 (unnamed)`; the
 address must lie in the ROM and must *not* carry a symbol (otherwise cite
 the symbol).  They are counted as citations but not as reconstructed
 functions, since the function total comes from the symbol table.
+
+NewtonScript functions the ROM keeps as objects (the script methods of its
+prototype frames, its script built-ins) have no symbol either; code that
+re-expresses one as NewtonScript source cites the object's ref:
+`// ROM 0x006278bd (object) unionSoupPrototype.Add` (nsfunctions.py
+--disasm unionsoupprototype.Add shows the bytecode).  The ref must be a
+pointer (low bits 01) into the ROM's object area (gROMSoupData); counted as
+a citation, not as a function.
 """
 
 from __future__ import annotations
@@ -51,6 +59,11 @@ def main(argv=None) -> int:
     with open(os.path.join(args.build_dir, "layout.json")) as f:
         rom_size = json.load(f)["rom_size"]
     by_addr = collections.defaultdict(set)
+    by_name = {s["name"]: s["address"] for s in data["symbols"] if "jt_index" not in s}
+    with open(os.path.join(args.build_dir, "rom.bin"), "rb") as f:
+        f.seek(by_name["gROMSoupDataSize"])
+        soup_size = int.from_bytes(f.read(4), "big")
+    soup_area = (by_name["gROMSoupData"], by_name["gROMSoupData"] + soup_size)
     functions = {}          # address -> (class, signature) for real C++/C function bodies
     for s in data["symbols"]:
         if "jt_index" in s:
@@ -81,6 +94,11 @@ def main(argv=None) -> int:
                             errors.append(f"{where}: {addr:#x} has a symbol ({', '.join(sorted(by_addr[addr]))}); cite it")
                         elif addr >= rom_size or addr % 4:
                             errors.append(f"{where}: {addr:#x} is not a ROM code address")
+                        else:
+                            cited.setdefault(addr, where)
+                    elif name == "(object)":
+                        if addr % 4 != 1 or not (soup_area[0] <= addr < soup_area[1]):
+                            errors.append(f"{where}: {addr:#x} is not a ref into the ROM's object area")
                         else:
                             cited.setdefault(addr, where)
                     elif addr not in by_addr:

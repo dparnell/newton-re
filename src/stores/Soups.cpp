@@ -57,8 +57,11 @@ InitQueries(void)
 	InitEntries();
 	RegisterSoupNatives();
 	RegisterCursorNatives();
+	RegisterUnionSoupNatives();
+	InstallHostNatives();						// host: into the function frame when there are no ROM objects
 	InitSoupPrototypes();
 	InitCursorPrototype();
+	InitUnionSoupPrototype();
 }
 
 
@@ -371,7 +374,7 @@ AbortLargeBinaries(RefArg /*entry*/)
 
 // The soup name index of a store: a TSoupIndex over the persistent
 // frame's nameIndex info object, with the directory sorting table.
-static void
+void
 InitNameIndex(TSoupIndex* index, RefArg storeObject)
 {
 	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
@@ -541,7 +544,7 @@ MakeStoreObject(TStore* store)
 
 // ROM 0x00329a98 RegisterTStore__FP6TStore
 // The store's frame made and added to gStores; each union soup gets the
-// store's soup of its name (NOT YET RECONSTRUCTED: union soups).
+// store's soup of its name.
 Ref
 RegisterTStore(TStore* store)
 {
@@ -1183,24 +1186,6 @@ StoreGetObjectSize(RefArg rcvr, RefArg id)
 	OSErrIf(store->GetObjectSize((PSSId) RINT(id), &size));
 	return MAKEINT(size);
 }
-
-
-/*------------------------------------------------------------------------------
-	U n i o n   s o u p s
-	NOT YET RECONSTRUCTED: TUnionSoupIndex over several soups is there
-	(Cursors.h) but the union soup frames are not.
-------------------------------------------------------------------------------*/
-
-// ROM 0x00335404 AddToUnionSoup__FRC6RefVarT1
-void
-AddToUnionSoup(RefArg /*name*/, RefArg /*soup*/)
-{ }
-
-
-// ROM 0x00335538 RemoveFromUnionSoup__FRC6RefVarT1
-void
-RemoveFromUnionSoup(RefArg /*name*/, RefArg /*soup*/)
-{ }
 
 
 /*------------------------------------------------------------------------------

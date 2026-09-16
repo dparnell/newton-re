@@ -437,14 +437,63 @@ exclusive and a start-key query, a collated string query, the tests
 through NewtonScript, the cursor following a key change and removals,
 an index removed, and a collect cursor.
 
+## Union soups (`src/stores/UnionSoups.cpp`)
+
+A union soup is the soup of a name across the registered stores: a clone
+of `unionSoupPrototype` (`class` `'UnionSoup`, `soupList` the stores'
+soups of that name in `gStores` order, `theName`, `cursors` an entry
+cache of the cursors over it), kept in `gUnionSoups` (an entry cache;
+`FindSoupInCache` by name).  `GetUnionSoup(name)` (0x003350a0) answers
+the cached one or makes it from the stores that have the soup (nil when
+none has), `GetUnionSoupAlways` one with no soups yet; `AddToUnionSoup`
+(0x00335404: `StoreCreateSoup`, `RegisterTStore`, a soup renamed) and
+`RemoveFromUnionSoup` (0x00335538: `RemoveFromStore`, `RemoveTStore`)
+keep `soupList` and tell the cursors (`SoupAdded`, `SoupRemoved`; or
+`SetSoup` when the soups' sort tables disagree - `CheckSoupsSortTables`,
+the union soup's `errorCode` `kNSErrSortTablesMismatch` - which the host
+never has: every sort id is 0).  `StoreCheckUnion` and
+`StoreConvertSoupSortTables` (store methods `CheckUnion`,
+`ConvertSoupSortTables`) find and repair such soups.  The natives:
+`UnionSoupAddIndex`/`RemoveIndex` (every soup's, after
+`CheckStoresWriteProtect`), `NaughtyFlush` (`UnionSoupFlush`),
+`UnionSoupGetSize`, and the common `GetName`, `Query`, `collect`; the
+tag methods (`AddTags`, `GetTags`, `RemoveTags`, `ModifyTag`, native
+`UnionSoupHasTags`) wait for the tags indexes.
+
+The ROM's other union soup methods are NewtonScript (`nsfunctions.py
+--object unionsoupprototype`, `--disasm unionsoupprototype.Add`) and are
+re-expressed as source in `UnionSoups.cpp`, compiled into the host's
+prototype (`InitUnionSoupPrototype`): `GetSoupList` (a clone),
+`GetMember(store)` (the store's soup of the name, created from its
+*soupDef* when missing), `AddToStore(entry, store)`,
+`AddToDefaultStore` (`GetDefaultStore`: the store of the user
+configuration's `defaultStoreSig`, else the first), `Add` and `flush`
+(discontinued: they warn through `BadWickedNaughtyNoot` and use the first
+store / `NaughtyFlush`), `HasTags`.  With them the NewtonScript built-ins
+they rest on: `UnionSoupRegistry` (a global: `{soupDef, apps}` sorted by
+the soupDef's name, `BFetch`/`BInsert`/`BDelete`), `RegUnionSoup(app,
+soupDef)` and `UnRegUnionSoup(name, app)`, `GetSoupDef(name)` (the
+registry's, else a soup's `soupDef` info), `CreateUSoupMember`,
+`CreateSoupFromSoupDef` (the soup created with the soupDef's indexes, its
+`soupDef` info set, the `initHook` called - a function, or a message to
+the `ownerApp` under the root view), `SupplantSoupDef`,
+`GetSoupIndexesFromSoupDef`, `GetUserConfig`, and `XmitSoupChange`
+(DEVIATION: the deferred call to `XmitSoupChangeNow` is NOT YET, so
+nothing is broadcast).  `test_Soups` (`TestUnionSoups`) runs a union over
+two stores with a cursor following the second store's soup as it is
+created and the store removed, the methods, the registry and a soupDef
+creating the member soup with its hook.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
 (`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
-and `text`), `TEphemeralTracker`, the union soups (`AddToUnionSoup`,
-`GetUnionSoup`, the union soup methods), `TSortingTable`/`TSortTables`
-(the sort ids are all 0; `secOrder`), tags indexes (`AlterTagsIndex`,
-`EncodeTags`, a query's `tagSpec`, the tag methods), `CopyEntries`, the
-XMit methods, store passwords, `TPSSManager` and the card store mounting,
-the package store part handler, `TMuxStore`, `TFlashStore`.
+and `text`), `TEphemeralTracker`, `TSortingTable`/`TSortTables` (the sort
+ids are all 0; `secOrder`), tags indexes (`AlterTagsIndex`, `EncodeTags`,
+a query's `tagSpec`, the plain and union soup tag methods), `CopyEntries`,
+the XMit methods and `XmitSoupChangeNow` (the soup change broadcasts), the
+store prototype's NewtonScript methods (`SetName`, `Erase`, `SetInfo`, ...
+wrap the natives with broadcasts), store passwords, `TPSSManager` and the
+card store mounting, the package store part handler, `TMuxStore`,
+`TFlashStore`.

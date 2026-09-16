@@ -6,6 +6,7 @@ Usage:
     python nsfunctions.py build/MP2100D --list
     python nsfunctions.py build/MP2100D --natives -o src/frames/ROMNatives.cpp
     python nsfunctions.py build/MP2100D --disasm Max --disasm ArrayInsert
+    python nsfunctions.py build/MP2100D --object unionsoupprototype --disasm unionsoupprototype.Add
 
 The built-in functions frame (Rbuiltinfunctions, the ROM's object
 0x0062418d) maps function names to function objects of two kinds: native
@@ -20,7 +21,12 @@ object area (the methods of the store, soup, cursor and entry prototype
 frames and the like), each named by the frame slot that holds it;
 --disasm prints a NewtonScript function's bytecode (Newton Formats, the
 instruction set of the NewtonScript interpreter, as TInterpreter::SlowRun
-0x002cc66c executes it).
+0x002cc66c executes it); --object prints the slots of a ROM frame or array
+with each function's kind.  An object is named by the ROM's Ref symbol
+(Rfoo or foo, whose word holds the ref), a built-in function's name, or
+0x address of the ref (a magic pointer is resolved through
+gROMMagicPointerTable); a function to disassemble may also be object.slot,
+the slot found through _proto and _parent as a method lookup would.
 
 The ROM's objects are read as they are in the image (big-endian, the ARM
 layout); a NewtonScript function in the ROM is an array whose first slot
@@ -66,12 +72,24 @@ class ROM:
             if "jt_index" not in s:
                 self.symbols.setdefault(s["address"], s["name"])
                 by_name.setdefault(s["name"], s["address"])
+        self.by_name = by_name
+        self.mp_table = by_name["gROMMagicPointerTable"]
         self.soup = by_name["gROMSoupData"]
         self.soup_size = self.word(by_name["gROMSoupDataSize"])
         self.jump = {int(v): int(t) for v, t in data["jumptable"]["entries"]} if "jumptable" in data else {}
 
     def word(self, a: int) -> int:
         return struct.unpack(">I", self.rom[a:a + 4])[0]
+
+    def resolve_magic(self, ref: int) -> int:
+        """A magic pointer (@n, table 0) resolved through gROMMagicPointerTable
+        (the count, then the refs); other refs unchanged."""
+        if ref & 3 != 3:
+            return ref
+        index = ref >> 2
+        if index >= self.word(self.mp_table):
+            return ref
+        return self.word(self.mp_table + 4 + 4 * index)
 
     def is_ptr(self, ref: int) -> bool:
         return ref & 3 == 1
@@ -110,10 +128,28 @@ class ROM:
         tags = self.map_tags(self.cls(ref))
         return list(zip((self.symname(t) for t in tags), self.slots(ref)))
 
-    def frame_get(self, ref: int, name: str):
-        for tag, value in self.frame_slots(ref):
-            if tag.lower() == name.lower():
-                return value
+    def frame_get(self, ref: int, name: str, inherited: bool = False):
+        """A frame's slot by name; inherited: looked up through _proto and
+        _parent as NewtonScript's method lookup does."""
+        while ref is not None and self.is_ptr(ref) and self.flags(ref) & 3 == 3:
+            proto = None
+            parent = None
+            for tag, value in self.frame_slots(ref):
+                if tag is None:
+                    continue
+                if tag.lower() == name.lower():
+                    return value
+                if tag == "_proto":
+                    proto = self.resolve_magic(value)
+                elif tag == "_parent":
+                    parent = self.resolve_magic(value)
+            if not inherited:
+                return None
+            if proto is not None and proto != 2 and self.is_ptr(proto):
+                found = self.frame_get(proto, name, True)
+                if found is not None:
+                    return found
+            ref = parent
         return None
 
     def describe(self, ref: int) -> str:
@@ -183,6 +219,31 @@ def other_natives(rom: ROM):
     return [(names.get(fn, ""), fn) for fn in natives]
 
 
+def resolve(rom: ROM, name: str):
+    """A ROM object ref from an address (0x...), the name of a ROM Ref (an
+    R... symbol, whose word holds the ref) or a built-in function's name."""
+    if name.lower().startswith("0x"):
+        return rom.resolve_magic(int(name, 16))
+    if name in rom.by_name:
+        return rom.resolve_magic(rom.word(rom.by_name[name]))
+    if "R" + name in rom.by_name:
+        return rom.resolve_magic(rom.word(rom.by_name["R" + name]))
+    for n, fn in builtins(rom):
+        if n.lower() == name.lower():
+            return fn
+    return None
+
+
+def describe_slot(rom: ROM, value: int) -> str:
+    kind, x, y = function_kind(rom, value)
+    if kind == "native":
+        target = rom.jump.get(x, x)
+        return "native %d args  %#x -> %#x %s" % (y, x, target, rom.symbols.get(target, "?"))
+    if kind == "script":
+        return "script %d args, %d locals (%#x)" % (x, y, value)
+    return rom.describe(value)
+
+
 def function_kind(rom: ROM, fn: int):
     """('native', funcPtr, numArgs) or ('script', numArgs, numLocals) or ('other', class)."""
     if not rom.is_ptr(fn):
@@ -240,7 +301,8 @@ def main(argv=None) -> int:
     ap.add_argument("build_dir")
     ap.add_argument("--list", action="store_true", help="list every built-in function")
     ap.add_argument("--natives", action="store_true", help="emit the native function table as C++")
-    ap.add_argument("--disasm", action="append", default=[], help="disassemble this NewtonScript function")
+    ap.add_argument("--object", action="append", default=[], help="print the slots of this ROM frame or array (a name or 0x address)")
+    ap.add_argument("--disasm", action="append", default=[], help="disassemble this NewtonScript function (a built-in's name, object.slot or 0x address)")
     ap.add_argument("-o", "--output")
     args = ap.parse_args(argv)
 
@@ -294,12 +356,34 @@ def main(argv=None) -> int:
         ]
         count = emit(sorted(other_natives(rom), key=lambda p: (p[0].lower(), p[1])))
         out += ["};", "", "const long gROMMethodCount = %d;" % count, ""]
-    for name in args.disasm:
-        matches = [(n, f) for n, f in fns if n.lower() == name.lower()]
-        if not matches:
-            print("no built-in function %s" % name, file=sys.stderr)
+    for name in args.object:
+        ref = resolve(rom, name)
+        if ref is None or not rom.is_ptr(ref):
+            print("no ROM object %s" % name, file=sys.stderr)
             return 1
-        n, f = matches[0]
+        flags = rom.flags(ref)
+        if flags & 3 == 3:
+            out.append("%s (%#x): frame" % (name, ref))
+            for tag, value in rom.frame_slots(ref):
+                out.append("  %-24s %s" % (tag, describe_slot(rom, value)))
+        elif flags & 1:
+            out.append("%s (%#x): array of %s" % (name, ref, rom.describe(rom.cls(ref))))
+            for i, value in enumerate(rom.slots(ref)):
+                out.append("  %-24d %s" % (i, describe_slot(rom, value)))
+        else:
+            out.append("%s (%#x): %s" % (name, ref, rom.describe(ref)))
+    for name in args.disasm:
+        n, f = name, None
+        if "." in name and not name.lower().startswith("0x"):
+            obj, slot = name.rsplit(".", 1)
+            ref = resolve(rom, obj)
+            if ref is not None and rom.is_ptr(ref) and rom.flags(ref) & 3 == 3:
+                f = rom.frame_get(ref, slot, True)
+        else:
+            f = resolve(rom, name)
+        if f is None:
+            print("no function %s" % name, file=sys.stderr)
+            return 1
         kind, x, y = function_kind(rom, f)
         if kind != "script":
             print("%s is not a NewtonScript function" % name, file=sys.stderr)

@@ -499,5 +499,4 @@ RegisterSoupNatives(void)
 	RegisterNativeFunction("SoupGetIndexesModTime", (void*) SoupGetIndexesModTime, 0);
 	RegisterNativeFunction("SoupGetInfoModTime", (void*) SoupGetInfoModTime, 0);
 	RegisterNativeFunction("PlainSoupFlush", (void*) PlainSoupFlush, 0);
-	InstallHostNatives();						// host: into the function frame when there are no ROM objects
 }

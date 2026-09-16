@@ -17,6 +17,7 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "NativeFunctions.h"
 #include "REPTranslators.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
@@ -2192,6 +2193,7 @@ InitObjects(void)
 	InitPrinter();
 	InitClasses();
 	InitInterpreter();
+	InstallHostScriptBuiltins();
 	gStores = AllocateArray(RSSYMarray, 0);
 	AddGCRoot(gStores);
 	AddGCRoot(gUnionSoups);

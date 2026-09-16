@@ -21,8 +21,15 @@
 	index (index description 0: long keys to store object ids); every
 	other index maps keys to _uniqueIDs' store object ids as well.
 
-	NOT YET RECONSTRUCTED here: union soups (gUnionSoups stays empty),
-	tags indexes, the sort tables (every sort id is 0), passwords, large
+	Union soups (UnionSoups.cpp): a clone of unionSoupPrototype {class
+	'UnionSoup, soupList: the stores' soups of the name, theName, cursors}
+	kept in gUnionSoups; GetUnionSoup/GetUnionSoupAlways make them,
+	AddToUnionSoup/RemoveFromUnionSoup follow the soups as stores come
+	and go.  Their methods are natives here and the ROM's NewtonScript
+	methods re-expressed as source.
+
+	NOT YET RECONSTRUCTED here: tags indexes (and the union soup tag
+	methods), the sort tables (every sort id is 0), passwords, large
 	binaries, the XMit (synchronising) methods, package stores' part
 	handler.  The cursors are Cursors.h.
 
@@ -49,6 +56,8 @@ extern Ref	gPackageStores;
 
 void	InitQueries(void);					// the globals; the package store's part handler is NOT YET
 void	InitSoupPrototypes(void);			// host: the prototype frames when no ROM objects are imported
+void	InitUnionSoupPrototype(void);		// host: unionSoupPrototype, its NewtonScript methods compiled, the built-ins they call
+void	RegisterUnionSoupNatives(void);
 
 
 /*------------------------------------------------------------------------------
@@ -73,6 +82,7 @@ long	GetRandomSignature(void);
 void	AskForFlush(Boolean ask);
 NewtonErr	GetStoreVersion(TStore* store, long* version);
 const TSortingTable*	StoreGetDirSortTable(RefArg storeObject);	// NOT YET: nil
+void	InitNameIndex(TSoupIndex* index, RefArg storeObject);		// the store's soup name index
 void	StoreSaveSortTable(RefArg storeObject, long sortId);			// NOT YET
 void	StoreRemoveSortTable(RefArg storeObject, long sortId);			// NOT YET
 void	LargeBinariesStoreRemoved(TStoreWrapper* wrapper);				// NOT YET
@@ -136,8 +146,22 @@ void	EachSoupCursorDo(RefArg soup, int op);
 void	EachSoupCursorDo(RefArg soup, int op, RefArg arg);
 void	EachSoupCursorDo(RefArg soup, int op, RefArg arg1, RefArg arg2);
 void	EachSoupCursorEntryChanged(RefArg soup, RefArg entry, Boolean keysChanged, Boolean tagsChanged);
-void	AddToUnionSoup(RefArg name, RefArg soup);			// NOT YET
-void	RemoveFromUnionSoup(RefArg name, RefArg soup);		// NOT YET
+
+// union soups (UnionSoups.cpp)
+Ref		GetUnionSoup(RefArg name);							// nil when no store has the soup
+Ref		GetUnionSoupAlways(RefArg name);
+void	AddToUnionSoup(RefArg nameOrUnionSoup, RefArg soup);
+void	RemoveFromUnionSoup(RefArg nameOrUnionSoup, RefArg soup);
+void	CheckStoresWriteProtect(RefArg unionSoup);
+Ref		CheckSoupsSortTables(RefArg soupPersistent1, RefArg soupPersistent2);
+Boolean	StoreHasSortTables(RefArg storeObject);
+Ref		StoreCheckUnion(RefArg rcvr);
+Ref		StoreConvertSoupSortTables(RefArg rcvr, RefArg name);
+Ref		UnionSoupAdd(RefArg rcvr, RefArg entry);
+Ref		UnionSoupAddIndex(RefArg rcvr, RefArg indexSpec);
+Ref		UnionSoupRemoveIndex(RefArg rcvr, RefArg path);
+Ref		UnionSoupFlush(RefArg rcvr);
+Ref		UnionSoupGetSize(RefArg rcvr);
 
 // the messages a soup (plain or union) answers
 Ref		SoupQuery(RefArg soup, RefArg querySpec);

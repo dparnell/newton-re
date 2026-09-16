@@ -49,7 +49,7 @@ tools/newton-rom/
     romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
-                          --disasm NAME (bytecode disassembly)
+                          --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots)
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
   requirements.txt      libclang pin
@@ -286,7 +286,17 @@ implementations through (name, jump-table address, target function and its
 symbol: the built-in functions, then every other native function object in
 the object area - the prototype frames' methods - named by the frame slot
 holding it), and `--disasm NAME` disassembles a NewtonScript function's
-bytecode as `TInterpreter::SlowRun` decodes it.
+bytecode as `TInterpreter::SlowRun` decodes it.  `--object NAME` prints
+the slots of a ROM frame or array with each function's kind (`--object
+unionsoupprototype`: NAME is the `R...` constant's name, a built-in's name
+or the `0x` address of the ref, a magic pointer resolved through
+`gROMMagicPointerTable`), and `--disasm object.slot` disassembles a
+prototype's method (the slot found through `_proto`/`_parent` as a method
+lookup would) - how the ROM's NewtonScript methods are read before being
+re-expressed as source (`src/frames/ScriptBuiltins.cpp`).  `coverage.py`
+accepts such a re-expression's citation of the function object,
+`// ROM 0x006278bd (object) unionSoupPrototype.Add` (a ref into the
+object area).
 `analysis/nsgrammar.py build/MP2100D -o src/frames --doc
 docs/frames/grammar.md` reads the NewtonScript compiler's Berkeley yacc
 tables (`yylhs`..`yycheck`), token names (`yyname`), rule texts (`yyrule`)

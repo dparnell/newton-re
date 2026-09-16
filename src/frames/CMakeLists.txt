@@ -14,6 +14,7 @@ add_library(frames STATIC
     ROMConstants.cpp
     ROMImport.cpp
     Interpreter.cpp
+    ScriptBuiltins.cpp
     VariableLookup.cpp
     NativeFunctions.cpp
     ROMNatives.cpp

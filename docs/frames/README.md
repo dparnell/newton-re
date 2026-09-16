@@ -305,6 +305,19 @@ bytecode and the ROM's own NewtonScript functions (`GetGlobalVar`,
 `DefGlobalVar`, `IsNameRef`, ...) over the MP2100 D image; `test_Frames`
 runs the natives without one.
 
+Some of the ROM's built-ins are NewtonScript, not native (`nsfunctions.py
+--list` marks them `script`: `GlobalFnExists`, `GetGlobalFn`, the union
+soup registry's `RegUnionSoup`, ...), as are some methods of its
+prototype frames (`unionSoupPrototype`'s `Add`, `GetMember`, ...).  These
+are re-expressed as NewtonScript source read from their bytecode
+(`--disasm NAME`, `--disasm object.slot`), each citing the function
+object (`// ROM 0x005d206d (object) GlobalFnExists`), and compiled on a
+host without the ROM's objects: `ScriptBuiltins.cpp` has the
+interpreter's own (`InstallHostScriptBuiltins`, after
+`InstallHostNatives`) and `InstallScriptFunctions(table)` /
+`CompileScriptFunction(source)` for the other areas' tables
+(`stores/UnionSoups.cpp`).
+
 `DEVIATION`s: the value stacks throw `exOutOfStack` when full (the ROM
 runs off the end); `FDiv`/`FMod` throw `exDivideByZero` on zero (an ARM
 trap in the ROM); `GlobalFunctionLookup` accepts a missing built-in

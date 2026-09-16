@@ -674,6 +674,146 @@ TestCursors()
 }
 
 
+/*------------------------------------------------------------------------------
+	Union soups: the soup of a name across the stores, a cursor over it
+	following stores as they come and go, the NewtonScript methods and the
+	registry.
+------------------------------------------------------------------------------*/
+
+static void
+TestUnionSoups()
+{
+	TStore* store1 = NewStore();
+	RefVar storeObject1(RegisterTStore(store1));
+	RefVar specs(AllocateArray(RSSYMarray, 2));
+	SetArraySlotRef(specs, 0, IndexSpec("name", "string"));
+	SetArraySlotRef(specs, 1, IndexSpec("age", "int"));
+	RefVar soup1(StoreCreateSoup(storeObject1, RefVar(MakeString("People")), specs));
+	SoupAdd(soup1, RefVar(Person("Ann", 20)));
+	SoupAdd(soup1, RefVar(Person("Cid", 40)));
+	SoupAdd(soup1, RefVar(Person("Eve", 60)));
+
+	// no store has it: nil, or an empty union soup when it must exist
+	EXPECT(GetUnionSoup(RefVar(MakeString("Nothing"))) == NILREF);
+	RefVar empty(GetUnionSoupAlways(RefVar(MakeString("Nothing"))));
+	EXPECT(IsFrame(empty) && Length(RefVar(GetFrameSlotRef(empty, RSSYMsouplist))) == 0);
+	EXPECT(EQRef(GetUnionSoup(RefVar(MakeString("Nothing"))), empty));		// cached now
+	EXPECT(StringIs(RefVar(SoupGetName(empty)), "Nothing"));
+
+	// the union of one soup; cached, by name case-insensitively
+	RefVar unionSoup(GetUnionSoup(RefVar(MakeString("People"))));
+	EXPECT(IsFrame(unionSoup) && EQRef(GetFrameSlotRef(unionSoup, RSSYMclass), SYMBOL("UnionSoup")));
+	RefVar soupList(GetFrameSlotRef(unionSoup, RSSYMsouplist));
+	EXPECT(Length(soupList) == 1 && EQRef(GetArraySlotRef(soupList, 0), soup1));
+	EXPECT(EQRef(GetUnionSoup(RefVar(MakeString("people"))), unionSoup));
+	EXPECT(StringIs(RefVar(SoupGetName(unionSoup)), "People"));
+	EXPECT(GetFrameSlotRef(unionSoup, RSSYMerrorcode) == NILREF);
+
+	// a cursor over the union; a second store's soup joins it
+	RefVar spec(AllocateFrame());
+	SetFrameSlot(spec, RSSYMindexpath, RefVar(SYMBOL("age")));
+	RefVar cursor(SoupQuery(unionSoup, spec));
+	long first, last;
+	EXPECT(WalkCursor(cursor, &first, &last) == 3 && first == 20 && last == 60);
+	TStore* store2 = NewStore();
+	RefVar storeObject2(RegisterTStore(store2));
+	RefVar soup2(StoreCreateSoup(storeObject2, RefVar(MakeString("People")), specs));
+	EXPECT(Length(soupList) == 2 && EQRef(GetArraySlotRef(soupList, 1), soup2));
+	SoupAdd(soup2, RefVar(Person("Bob", 30)));
+	SoupAdd(soup2, RefVar(Person("Dee", 50)));
+	SoupAdd(soup2, RefVar(Person("Fay", 70)));
+	TCursor* c = CursorObj(cursor);
+	c->Reset();
+	EXPECT(WalkCursor(cursor, &first, &last) == 6 && first == 20 && last == 70);	// merged in key order
+	EXPECT(c->CountEntries() == 6);
+	RefVar entry(c->Move(-2));
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 60);
+	entry = c->Move(-1);
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 50 && EQRef(FaultBlockHandler(entry), soup2));
+	entry = c->GotoKey(RefVar(MAKEINT(30)));
+	EXPECT(RINT(GetFrameSlotRef(entry, SYMBOL("age"))) == 30);
+	// the cursor's soup is the union soup; the entry's soup its member
+	EXPECT(EQRef(c->fSoup, unionSoup));
+	// a fresh cursor sees both soups from the start
+	RefVar cursor2(SoupQuery(unionSoup, spec));
+	EXPECT(WalkCursor(cursor2, &first, &last) == 6);
+	EXPECT(RINT(Eval("GetUnionSoup(\"People\"):Query({indexPath: 'age, beginKey: 45}):CountEntries()")) == 3);
+
+	// the union soup's methods
+	RefVar unionSize(UnionSoupGetSize(unionSoup));
+	EXPECT(RINT(unionSize) == RINT(PlainSoupGetSize(soup1)) + RINT(PlainSoupGetSize(soup2)));
+	UnionSoupAddIndex(unionSoup, RefVar(IndexSpec("shoe", "int")));
+	EXPECT(Length(RefVar(SoupGetIndexes(soup1))) == 3 && Length(RefVar(SoupGetIndexes(soup2))) == 3);	// (GetIndexes leaves out _uniqueID)
+	UnionSoupRemoveIndex(unionSoup, RefVar(SYMBOL("shoe")));
+	EXPECT(Length(RefVar(SoupGetIndexes(soup1))) == 2 && Length(RefVar(SoupGetIndexes(soup2))) == 2);
+	EXPECT(UnionSoupFlush(unionSoup) == NILREF);
+
+	// the NewtonScript methods: GetSoupList, GetMember, AddToStore, AddToDefaultStore
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("u")), unionSoup);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("store1")), storeObject1);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("store2")), storeObject2);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("userConfiguration")), RefVar(AllocateFrame()));
+	RefVar list(Eval("u:GetSoupList()"));
+	EXPECT(IsArray(list) && Length(list) == 2 && !EQRef(list, soupList));		// a clone
+	EXPECT(EQRef(Eval("u:GetMember(store2)"), soup2));
+	EXPECT(EQRef(Eval("u:GetName()"), GetFrameSlotRef(unionSoup, RSSYMthename)));
+	entry = Eval("u:AddToStore({name: \"Gus\", age: 80}, store2)");
+	EXPECT(IsFaultBlock(entry) && EQRef(FaultBlockHandler(entry), soup2));
+	entry = Eval("u:AddToDefaultStore({name: \"Hal\", age: 10})");		// no defaultStoreSig: the first store
+	EXPECT(IsFaultBlock(entry) && EQRef(FaultBlockHandler(entry), soup1));
+	EXPECT(RINT(Eval("u:Query({indexPath: 'age}):CountEntries()")) == 8);
+	EXPECT(RINT(Eval("GetDefaultStore():GetSignature()")) == RINT(StoreGetSignature(storeObject1)));
+
+	// the registry: a soupDef creates the member soup on a store that lacks it
+	EXPECT(Eval("GetSoupDef(\"Pets\")") == NILREF);
+	RefVar pets(Eval("RegUnionSoup('testApp, {name: \"Pets\", indexes: [{structure: 'slot, path: 'kind, type: 'string}], initHook: func(soup, def) soup:SetInfo('hooked, def.name)})"));
+	EXPECT(IsFrame(pets) && Length(RefVar(GetFrameSlotRef(pets, RSSYMsouplist))) == 0);
+	EXPECT(Length(RefVar(Eval("UnionSoupRegistry"))) == 1);
+	EXPECT(StringIs(RefVar(Eval("GetSoupDef(\"Pets\").name")), "Pets"));
+	EXPECT(Length(RefVar(Eval("GetSoupIndexesFromSoupDef(\"Pets\")"))) == 1);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("pets")), pets);
+	RefVar petSoup(Eval("pets:GetMember(store1)"));
+	EXPECT(IsFrame(petSoup) && StoreHasSoup(storeObject1, RefVar(MakeString("Pets"))) != NILREF);
+	EXPECT(Length(RefVar(GetFrameSlotRef(pets, RSSYMsouplist))) == 1);			// joined the union as it was created
+	EXPECT(StringIs(RefVar(Eval("pets:GetMember(store1):GetInfo('soupDef).name")), "Pets"));
+	EXPECT(StringIs(RefVar(Eval("pets:GetMember(store1):GetInfo('hooked)")), "Pets"));	// the initHook ran
+	EXPECT(Length(RefVar(SoupGetIndexes(petSoup))) == 1);
+	entry = Eval("pets:AddToStore({kind: \"cat\"}, store2)");
+	EXPECT(Length(RefVar(GetFrameSlotRef(pets, RSSYMsouplist))) == 2);
+	EXPECT(RINT(Eval("pets:Query({indexPath: 'kind}):CountEntries()")) == 1);
+	EXPECT(StringIs(RefVar(Eval("GetSoupDef(\"Pets\").name")), "Pets"));
+	Eval("UnRegUnionSoup(\"Pets\", 'testApp)");
+	EXPECT(Length(RefVar(Eval("UnionSoupRegistry"))) == 0);
+	EXPECT(StringIs(RefVar(Eval("GetSoupDef(\"Pets\").name")), "Pets"));	// still: from the soups' soupDef info
+	// no soupDef at all: CreateUSoupMember throws
+	Boolean threw = false;
+	newton_try
+	{
+		Eval("GetUnionSoupAlways(\"Ghosts\"):GetMember(store1)");
+	}
+	newton_catch("evt.ex.nosoupdef")
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+
+	// a store removed: its soup leaves the union; the cursor follows
+	c->Reset();
+	RemoveTStore(store2);
+	store2->Delete();
+	EXPECT(Length(soupList) == 1 && EQRef(GetArraySlotRef(soupList, 0), soup1));
+	EXPECT(WalkCursor(cursor, &first, &last) == 4 && first == 10 && last == 60);
+	// the last soup gone too: the union soup stays, empty
+	SoupRemoveFromStore(soup1);
+	EXPECT(Length(soupList) == 0);
+	EXPECT(c->Move(1) == NILREF);
+	EXPECT(EQRef(GetUnionSoup(RefVar(MakeString("People"))), unionSoup));
+	RemoveTStore(store1);
+	store1->Delete();
+}
+
+
 int
 main()
 {
@@ -681,11 +821,15 @@ main()
 	gObjectHeapSize = 0x200000;
 	InitObjects();
 	InitQueries();
+	// the globals the REP defines (REPInit) that the NewtonScript built-ins use
+	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMfunctions, RefVar(gFunctionFrame));
 	newton_try
 	{
 		TestStoreFrame();
 		TestSoups();
 		TestCursors();
+		TestUnionSoups();
 	}
 	newton_catch_all
 	{

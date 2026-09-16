@@ -64,7 +64,8 @@ src/
                 blocks, the entry cache, the entry operations) and the
                 store and soup frames with their methods (Soups.h), and
                 the cursors and queries (Cursors.h: TUnionSoupIndex,
-                TCursor, TCollectCursor)
+                TCursor, TCollectCursor) and the union soups
+                (UnionSoups.cpp)
                 (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
@@ -167,4 +168,6 @@ table, and reports how many of the ROM's functions have been reconstructed.
 Code lifted from the middle of an assembly routine cites it with an offset
 (`// ROM 0x003a4018 SWIBoot +0xb8`); a static function the symbol table does
 not name is cited as `// ROM 0x002ebce8 (unnamed)` (the address is checked
-to be ROM code without a symbol).
+to be ROM code without a symbol); a NewtonScript function of the ROM's
+object area re-expressed as source cites its object, `// ROM 0x006278bd
+(object) unionSoupPrototype.Add` (checked to be a ref into the object area).

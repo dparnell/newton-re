@@ -65,4 +65,16 @@ void	RegisterBuiltinNatives(void);
 // gFunctionFrame for every bound native, under its NewtonScript name
 void	InstallHostNatives(void);
 
+// the ROM's built-in functions that are NewtonScript (ScriptBuiltins.cpp):
+// re-expressed as source, compiled into gFunctionFrame on a host without
+// the ROM's objects
+struct ScriptFunctionEntry
+{
+	const char*	fName;
+	const char*	fSource;		// a func expression
+};
+Ref		CompileScriptFunction(const char* source);
+void	InstallScriptFunctions(const ScriptFunctionEntry* table);	// nil-terminated
+void	InstallHostScriptBuiltins(void);
+
 #endif	/* __NATIVEFUNCTIONS_H */

@@ -24,7 +24,6 @@
 
 extern const ExceptionName exStoreError;
 
-#define kNSErrNoTagsIndex		(ERRBASE_FRAMES - 27)		// a tagSpec query on a soup with no tags index (0xffff4465)
 #define kNSErrCantQueryTagsIndex (ERRBASE_FRAMES - 32)		// the query's indexPath is the tags index (0xffff4460)
 
 // ROM 0x0c10244c: the text cache the words/text tests keep (NOT YET)
