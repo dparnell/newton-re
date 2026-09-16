@@ -104,7 +104,11 @@
 #define kNSErrBadDirective				(ERRBASE_FRAMES - 626)	// # not followed by line
 #define kNSErrBadMagicPointerRef		(ERRBASE_FRAMES - 628)	// @ not followed by digits
 
-// evt.ex.fr.store
+// evt.ex.fr.store (the names are inferred from the uses; the DDK has none)
+#define kNSErrUnknownStoreVersion		(ERRBASE_FRAMES - 1)	// MakeStoreObject: the root object's signature is not 'WALY'
+#define kNSErrNewerStoreVersion			(ERRBASE_FRAMES - 3)	// MakeStoreObject: the root object's version is past this ROM's
+#define kNSErrBadStoreObject			(ERRBASE_FRAMES - 5)	// TStoreObjectReader: a tag that is none of the format's
 #define kNSErrEntryStoreGone			(ERRBASE_FRAMES - 7)	// FollowFaultBlock: the entry's store is gone (the ROM's 0xffff4479)
+#define kNSErrInvalidStore				(ERRBASE_FRAMES - 17)	// GetStoreWrapper: the store frame has been killed (no _proto)
 
 #endif	/* __NSERRORS_H */

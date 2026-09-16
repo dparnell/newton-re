@@ -8,6 +8,10 @@
 // object heap (no boot: the stores are made from their class info).
 
 #include "StoreWrapper.h"
+#include "StoreObject.h"
+#include "Compiler.h"
+#include "ByteOrder.h"
+#include "REPTranslators.h"
 #include "host/HostStore.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -263,7 +267,7 @@ TestSymbolsAndMaps()
 	root.fMapTableId = wrapper.fMapTable->fId;
 	root.fSymbolTableId = wrapper.fSymbolTable->fId;
 	root.fRootFrameId = 0;
-	EXPECT(store->ReplaceObject(kHostStoreRootId, (char*) &root, kStoreRootDataSize) == noErr);
+	WriteStoreRootData(store, kHostStoreRootId, &root);
 	StoreRootData back;
 	back.fExtra = 99;
 	ReadStoreRootData(store, 0, &back, &size);
@@ -310,6 +314,223 @@ TestNodeCache()
 }
 
 
+// a wrapper with fresh tables over a new store (the caller deletes both)
+static TStoreWrapper*
+NewWrapper(TStore** storeOut)
+{
+	TStore* store = NewStore();
+	TStoreWrapper* wrapper = new TStoreWrapper(store);
+	wrapper->fMapTable = new TStoreHashTable(store, TStoreHashTable::Create(store));
+	wrapper->fSymbolTable = new TStoreHashTable(store, TStoreHashTable::Create(store));
+	*storeOut = store;
+	return wrapper;
+}
+
+
+// the same object, structurally: immediates and symbols EQ, binaries the
+// same class and bytes, arrays and frames the same class, length and parts
+static Boolean
+DeepEqual(RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ra == rb)
+		return true;
+	if (!ISPTR(ra) || !ISPTR(rb))
+		return false;
+	if (IsSymbol(ra) || IsSymbol(rb))
+		return false;
+	if (!EQ(ClassOf(a), ClassOf(b)) || Length(a) != Length(b))
+		return false;
+	ULong flags = ObjectFlags(ra);
+	if ((ObjectFlags(rb) & 3) != (flags & 3))
+		return false;
+	if ((flags & kObjSlotted) == 0)
+		return memcmp(BinaryData(ra), BinaryData(rb), Length(a)) == 0;
+	if ((flags & kObjFrame) == 0)
+	{
+		for (long i = 0; i < Length(a); i++)
+			if (!DeepEqual(RefVar(GetArraySlot(a, i)), RefVar(GetArraySlot(b, i))))
+				return false;
+		return true;
+	}
+	TObjectIterator iter(a);
+	for (; !iter.Done(); iter.Next())
+	{
+		if (!FrameHasSlot(b, iter.fTag))
+			return false;
+		if (!DeepEqual(iter.fValue, RefVar(GetFrameSlot(b, iter.fTag))))
+			return false;
+	}
+	return true;
+}
+
+
+static Ref
+Eval(const char* source)
+{
+	RefVar fn(ParseString(RefVar(MakeString(source))));
+	return InterpretBlock(fn, RefVar(gVarFrame));
+}
+
+
+static void
+TestStoreObjects()
+{
+	TStore* store;
+	TStoreWrapper* wrapper = NewWrapper(&store);
+
+	// a frame with every kind of object goes to the store and comes back the same
+	RefVar obj(Eval("local b := MakeBinary(5, 'bytes); StuffByte(b, 2, 0x55); {name: \"Hello, world\", count: 42, neg: -7, big: 100000, flag: true, none: nil, "
+		"ch: $a, uch: $\\u263A, sym: 'foo, real: 1.5, arr: [1, \"two\", 'three], "
+		"plain: [4, 5], typed: [foo: 1], inner: {x: 1, y: \"why\"}, "
+		"rect: {top: 1, left: 2, bottom: 3, right: 4}, bigrect: {top: 1, left: 2, bottom: 300, right: 4}, "
+		"empty: \"\", data: b}"));
+	PSSId id = (PSSId) -1;
+	StorePermObject(obj, wrapper, id, nil, nil);
+	EXPECT(id != 0 && id != (PSSId) -1);
+	StoreObjectHeader header;
+	char headerBytes[kStoreObjectHeaderSize];
+	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
+	header.ReadFrom(headerBytes);
+	EXPECT(header.fUniqueId == -1 && header.fModTime == (ULong32) -1 && header.fNumHints == 0);
+	EXPECT(header.fTextBlockId != 0 && header.TextSize() == (long) (13 + 4 + 4 + 1) * 2);		// the strings' bytes
+	RefVar back(LoadPermObject(wrapper, id, nil));
+	EXPECT(IsFrame(back));
+	EXPECT(DeepEqual(obj, back));
+	EXPECT(!FrameHasSlot(back, RSSYM_uniqueid) && !FrameHasSlot(back, RSSYM_modtime));
+	// the shape survives: strings are strings, the symbol is EQ, the real is a real
+	EXPECT(IsString(RefVar(GetFrameSlot(back, SYMBOL("name")))));
+	EXPECT(EQ(GetFrameSlot(back, SYMBOL("sym")), SYMBOL("foo")));
+	EXPECT(ISREAL(GetFrameSlot(back, SYMBOL("real"))) && CDouble(RefVar(GetFrameSlot(back, SYMBOL("real")))) == 1.5);
+	EXPECT(EQ(ClassOf(RefVar(GetFrameSlot(back, SYMBOL("typed")))), SYMBOL("foo")));
+	EXPECT(GetFrameSlot(back, SYMBOL("uch")) == MAKECHAR(0x263a));
+	EXPECT(GetFrameSlot(back, SYMBOL("big")) == MAKEINT(100000));
+	EXPECT(GetFrameSlot(back, SYMBOL("neg")) == MAKEINT(-7));
+	EXPECT(Length(RefVar(GetFrameSlot(back, SYMBOL("rect")))) == 4 && RINT(GetFrameSlot(RefVar(GetFrameSlot(back, SYMBOL("rect"))), RSSYMbottom)) == 3);
+	EXPECT(RINT(GetFrameSlot(RefVar(GetFrameSlot(back, SYMBOL("bigrect"))), RSSYMbottom)) == 300);
+
+	// shared references come back shared (precedents)
+	RefVar shared(Eval("local s := \"same\"; local f := {a: 1}; {p: s, q: s, r: f, t: f, u: [s, f]}"));
+	id = (PSSId) -1;
+	StorePermObject(shared, wrapper, id, nil, nil);
+	back = LoadPermObject(wrapper, id, nil);
+	EXPECT(DeepEqual(shared, back));
+	EXPECT(GetFrameSlot(back, SYMBOL("p")) == GetFrameSlot(back, SYMBOL("q")));
+	EXPECT(GetFrameSlot(back, SYMBOL("r")) == GetFrameSlot(back, SYMBOL("t")));
+	EXPECT(GetArraySlot(RefVar(GetFrameSlot(back, SYMBOL("u"))), 1) == GetFrameSlot(back, SYMBOL("r")));
+
+	// an entry: _uniqueID and _modTime travel in the header, not the map
+	RefVar entry(Eval("{_uniqueID: 17, _modTime: 12345, title: \"note\", _proto: {fromProto: true}}"));
+	id = (PSSId) -1;
+	StorePermObject(entry, wrapper, id, nil, nil);
+	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
+	header.ReadFrom(headerBytes);
+	EXPECT(header.fUniqueId == 17 && header.fModTime == 12345);
+	back = LoadPermObject(wrapper, id, nil);
+	EXPECT(RINT(GetFrameSlot(back, RSSYM_uniqueid)) == 17 && RINT(GetFrameSlot(back, RSSYM_modtime)) == 12345);
+	EXPECT(Length(back) == 3);						// title, _uniqueID, _modTime: no _proto
+	EXPECT(!FrameHasSlot(back, RSSYM_proto));
+
+	// rewriting in place keeps the id; the text object is reused
+	long before, after;
+	store->GetStoreSizes(&before, &after);
+	SetFrameSlot(entry, RefVar(SYMBOL("title")), RefVar(MakeString("a longer note than before")));
+	PSSId same = id;
+	StorePermObject(entry, wrapper, same, nil, nil);
+	EXPECT(same == id);
+	back = LoadPermObject(wrapper, id, nil);
+	EXPECT(DeepEqual(RefVar(GetFrameSlot(entry, SYMBOL("title"))), RefVar(GetFrameSlot(back, SYMBOL("title")))));
+	StoreObjectHeader header2;
+	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
+	header2.ReadFrom(headerBytes);
+	EXPECT(header2.fTextBlockId != 0);
+	// ... and to one without text
+	RefVar plain(Eval("{n: 5}"));
+	StorePermObject(plain, wrapper, same, nil, nil);
+	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
+	header2.ReadFrom(headerBytes);
+	EXPECT(header2.fTextBlockId == 0);
+	EXPECT(!store->OwnsObject(header.fTextBlockId));		// the old text object is gone
+	EXPECT(DeepEqual(plain, RefVar(LoadPermObject(wrapper, id, nil))));
+
+	// a large object (more than the pipes' buffers)
+	RefVar wide(Eval("local a := []; for i := 0 to 300 do AddArraySlot(a, {index: i, text: \"item \" & NumberStr(i), data: MakeBinary(i, 'raw)}); a"));
+	id = (PSSId) -1;
+	StorePermObject(wide, wrapper, id, nil, nil);
+	back = LoadPermObject(wrapper, id, nil);
+	EXPECT(Length(back) == 301);
+	EXPECT(DeepEqual(RefVar(GetArraySlot(wide, 300)), RefVar(GetArraySlot(back, 300))));
+	EXPECT(DeepEqual(RefVar(GetArraySlot(wide, 7)), RefVar(GetArraySlot(back, 7))));
+	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
+	header.ReadFrom(headerBytes);
+	EXPECT(header.TextSize() > 0x200 && header.fTextBlockId != 0);
+	long textSize;
+	EXPECT(store->GetObjectSize(header.fTextBlockId, &textSize) == noErr && textSize < header.TextSize() * 3 / 4);		// compressed
+	// a string wider than a byte-length long
+	RefVar longString(Eval("local s := \"\"; for i := 1 to 60 do s := s & \"abcde\"; {s: s}"));
+	id = (PSSId) -1;
+	StorePermObject(longString, wrapper, id, nil, nil);
+	EXPECT(DeepEqual(longString, RefVar(LoadPermObject(wrapper, id, nil))));
+
+	// deletion takes the text object too
+	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
+	header.ReadFrom(headerBytes);
+	DeletePermObject(wrapper, id);
+	EXPECT(!store->OwnsObject(id) && !store->OwnsObject(header.fTextBlockId));
+
+	// a store that has objects written and read back after an abort of its transaction
+	store->LockStore();
+	id = (PSSId) -1;
+	StorePermObject(plain, wrapper, id, nil, nil);
+	wrapper->Abort();
+	EXPECT(!store->OwnsObject(id));
+
+	// errors
+	{
+		Boolean threw = false;
+		PSSId none = (PSSId) -1;
+		newton_try { StorePermObject(plain, nil, none, nil, nil); } newton_catch(exStoreError) { threw = (long) (Long) _info.exception.data == kNSErrEntryStoreGone; } end_try;
+		EXPECT(threw);
+		threw = false;
+		store->LockReadOnly();
+		newton_try { StorePermObject(plain, wrapper, none, nil, nil); } newton_catch(exStoreError) { threw = (long) (Long) _info.exception.data == kSError_WriteProtected; } end_try;
+		EXPECT(threw);
+		store->UnlockReadOnly(true);
+		// a corrupt stream
+		threw = false;
+		char bad[kStoreObjectHeaderSize + 1];
+		memset(bad, 0, sizeof(bad));
+		bad[kStoreObjectHeaderSize] = 0x40;
+		PSSId badId;
+		EXPECT(store->NewObject(bad, sizeof(bad), &badId) == noErr);
+		newton_try { LoadPermObject(wrapper, badId, nil); } newton_catch(exStoreError) { threw = (long) (Long) _info.exception.data == kNSErrBadStoreObject; } end_try;
+		EXPECT(threw);
+	}
+
+	// the pipes and small rects on their own
+	{
+		long packed = 0;
+		EXPECT(PackSmallRect(GetFrameSlot(obj, SYMBOL("rect")), &packed) && packed == 0x01020304);
+		EXPECT(!PackSmallRect(GetFrameSlot(obj, SYMBOL("bigrect")), &packed));
+		EXPECT(!PackSmallRect(GetFrameSlot(obj, SYMBOL("inner")), &packed));
+		RefVar rect(UnpackSmallRect(0x0a0b0c0d));
+		EXPECT(RINT(GetFrameSlot(rect, RSSYMtop)) == 10 && RINT(GetFrameSlot(rect, RSSYMright)) == 13);
+		char bytes[16] = { 0, 5, (char) 0xff, 0, 1, 0, 0, 7, 'x' };
+		TStoreReadPipe pipe(bytes, 9);
+		UByte b; long l;
+		pipe >> b >> l;
+		EXPECT(b == 0 && l == 5);
+		pipe >> l;
+		EXPECT(l == 0x10000);
+		pipe >> l >> b;
+		EXPECT(l == 7 && b == 'x');
+	}
+
+	delete wrapper;
+	store->Delete();
+}
+
+
 int
 main()
 {
@@ -321,6 +542,7 @@ main()
 		TestHashTable();
 		TestSymbolsAndMaps();
 		TestNodeCache();
+		TestStoreObjects();
 	}
 	newton_catch_all
 	{

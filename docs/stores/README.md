@@ -155,12 +155,61 @@ through it and trims the cache to eight entries (with `DeleteNode`, in the
 index unit to come).  `test_StoreWrapper` runs the tables, the wrapper and
 the cache over a `THostStore`.
 
+## Store objects (`src/stores/StoreObject.h`)
+
+A frames object lives on a store as a *store object* that
+`TStoreObjectWriter` (ROM 0x002b7a30-0x002b8b8c) writes and
+`TStoreObjectReader` (0x002b8b8c-0x002b9500) reads, through
+`StorePermObject`/`LoadPermObject`/`DeletePermObject`
+(0x002b96cc-0x002b9dcc): a 16-byte header (`_uniqueID`, `_modTime`, the id
+of the text object, the number of 8-byte hint chunks, flags, the text's
+size), the hint chunks (the word hints soup queries test with
+`TestObjHints`; NOT YET: none are written) and a tagged byte stream:
+
+| tag | object | what follows |
+|---|---|---|
+| 0 | an immediate (integer, true, magic pointer) | the ref itself as a long |
+| 1, 2 | a character | 1 or 2 bytes |
+| 3 | a binary | length, the class (an object), the data |
+| 4, 5 | an array (5: of class `array`) | length, [the class], the elements |
+| 6 | a frame | a 3-byte map reference, the slots in the map's (sorted) order |
+| 7 | a symbol | a 3-byte symbol reference |
+| 8 | a string | length, the class; the text goes to the text object |
+| 9 | a precedent (an object already written) | its index |
+| 10 | nil | |
+| 11 | a small rect (`{top, left, bottom, right}` 0..255) | 4 bytes |
+| 12 | a large binary | id, size (NOT YET) |
+
+A long is one byte for 0..254, else 0xff and four bytes; every word is
+big-endian, the MessagePad's order (the host converts the header's words
+and the strings' UniChars - `toolbox/ByteOrder.h`).  Every pointer object
+is entered in the precedent table in the order met (`Prescan` first, to
+size the stream and the text; `Scan` to write), so shared references
+come back shared; an entry's `_uniqueID` and `_modTime` go in the header
+and `_proto` is never written.  The strings' text is gathered in a second
+object compressed by `TUnicodeCompressor` (`CompressionType` 2; the
+stream itself is type 1, uncompressed).
+
+`TStoreWritePipe` (0x002b6d4c-0x002b7394) assembles a small object whole
+in a buffer (the object is made from it at `Complete`) and writes a large
+one as its 512-byte buffer fills; with a compressor its output goes to
+the object.  `TStoreReadPipe` (0x002b74a8-0x002b7998) reads through a
+256-byte buffer, or through the decompressor.  `TBucketArray`
+(0x0032a574) holds elements in buckets of 64 so that they never move;
+`TPrecedentsForReading` is one of refs, `TPrecedentsForWriting` one of
+refs the ROM searches with a PATRICIA trie over the ref bits (DEVIATION:
+a hash table here; the stream is the same).  Both register with the
+collector (their refs are marked and updated; the writing table is
+rebuilt after a collection).  `test_StoreWrapper` round-trips objects of
+every kind, shared references, entries, rewrites in place, a 300-element
+array with text past the pipes' buffers, and the errors.
+
 ## Not yet
 
-The object reader/writer and pipes that turn frames into store objects
-(`TStoreObjectWriter`/`Reader`, `TStoreWritePipe`/`ReadPipe`,
-`TPrecedentsForWriting`/`Reading`), `MakeStoreObject` and the store
-frames, `TEphemeralTracker`, `TSoupIndex` and
+Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
+`CommitLargeBinary`, `LBData`), the word hints (`TWordHintsHandler`,
+`GetWordsHints`, `TestObjHints`), `MakeStoreObject` and the store frames,
+`TEphemeralTracker`, `TSoupIndex` and
 `TUnionSoupIndex` (the B-tree indexes with `TNodeCache`), the entry cache
 and fault blocks, `TCursor`/`TCollectCursor`, the NewtonScript
 store/soup/entry/cursor functions, `TPSSManager` and the card store

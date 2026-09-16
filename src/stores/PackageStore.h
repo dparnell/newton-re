@@ -17,7 +17,8 @@
 #include "Store.h"
 #endif
 
-// The data a package store is initialised over: the root object's id,
+// The data a package store is initialised over (big-endian words, as a
+// package lies): the root object's id,
 // the number of objects, then one offset (from the start of this
 // structure) per object and one more for the end of the last, so that
 // object i is the bytes [fOffsets[i], fOffsets[i + 1]).

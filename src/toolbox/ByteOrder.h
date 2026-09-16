@@ -50,4 +50,30 @@ PutBigEndianHalf(void* p, unsigned short value)
 	b[1] = (unsigned char) value;
 }
 
+// whether the host keeps its words most significant byte first (the
+// MessagePad does): when it does not, UniChar text and other halfword
+// data must be swapped on its way to and from a persistent format
+inline bool
+HostIsBigEndian()
+{
+	const unsigned short one = 1;
+	return *(const unsigned char*) &one == 0;
+}
+
+// count UniChars (2n bytes) swapped between the host's and the big-endian
+// order, in place; nothing on a big-endian host
+inline void
+SwapUniChars(void* text, long count)
+{
+	if (HostIsBigEndian())
+		return;
+	unsigned char* b = (unsigned char*) text;
+	for (long i = 0; i < count; i++, b += 2)
+	{
+		unsigned char t = b[0];
+		b[0] = b[1];
+		b[1] = t;
+	}
+}
+
 #endif	/* __BYTEORDER_H */

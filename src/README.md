@@ -56,8 +56,10 @@ src/
                 package's soup part, the host's in-memory THostStore in
                 place of the flash store (host/), and the frames layer's
                 view of a store - its symbol and map tables, the soup
-                indexes' node cache (StoreWrapper.h, NodeCache.h)
-                (docs/stores/README.md)
+                indexes' node cache (StoreWrapper.h, NodeCache.h), and how
+                a frames object is written to and read from a store
+                (StoreObject.h: the tagged stream, the pipes, the
+                precedents) (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

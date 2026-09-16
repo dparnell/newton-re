@@ -18,6 +18,7 @@
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
+#include "ByteOrder.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -76,12 +77,23 @@ TStoreHashTable::Create(TStore* store)
 }
 
 
+// the 64 bucket ids read (they lie big-endian on the store)
+static void
+ReadBuckets(TStore* store, PSSId id, StorePSSId* buckets)
+{
+	char bytes[kStoreHashTableSize];
+	OSErrIf(store->Read(id, 0, bytes, kStoreHashTableSize));
+	for (long i = 0; i < kStoreHashTableBuckets; i++)
+		buckets[i] = GetBigEndianWord(bytes + i * 4);
+}
+
+
 // ROM 0x003281a0 __ct__15TStoreHashTableFP6TStoreUl
 TStoreHashTable::TStoreHashTable(TStore* store, PSSId id)
 {
 	fId = id;
 	fStore = store;
-	OSErrIf(store->Read(id, 0, (char*) fBuckets, kStoreHashTableSize));
+	ReadBuckets(store, id, fBuckets);
 }
 
 
@@ -90,7 +102,7 @@ TStoreHashTable::TStoreHashTable(TStore* store, PSSId id)
 void
 TStoreHashTable::Abort(void)
 {
-	OSErrIf(fStore->Read(fId, 0, (char*) fBuckets, kStoreHashTableSize));
+	ReadBuckets(fStore, fId, fBuckets);
 }
 
 
@@ -109,8 +121,9 @@ TStoreHashTable::Insert(ULong hash, char* data, long size)
 	{
 		// the first entry: the bucket object made and recorded in the table
 		OSErrIf(fStore->NewObject(entrySize, &bucketId));
-		StorePSSId stored = (StorePSSId) bucketId;
-		OSErrIf(fStore->Write(fId, bucket * sizeof(StorePSSId), (char*) &stored, sizeof(StorePSSId)));
+		char stored[4];
+		PutBigEndianWord(stored, (ULong32) bucketId);
+		OSErrIf(fStore->Write(fId, bucket * sizeof(StorePSSId), stored, sizeof(StorePSSId)));
 	}
 	else
 	{
@@ -755,5 +768,29 @@ ReadStoreRootData(TStore* store, PSSId rootId, StoreRootData* data, long* size)
 		data->fExtra = 0;
 	else
 		*size = sizeof(StoreRootData);
-	store->Read(rootId, 0, (char*) data, *size);
+	char bytes[sizeof(StoreRootData)];
+	if (store->Read(rootId, 0, bytes, *size) != noErr)
+		return;
+	data->fSignature = GetBigEndianWord(bytes);
+	data->fVersion = (Long32) GetBigEndianWord(bytes + 4);
+	data->fMapTableId = GetBigEndianWord(bytes + 8);
+	data->fSymbolTableId = GetBigEndianWord(bytes + 12);
+	data->fRootFrameId = GetBigEndianWord(bytes + 16);
+	if (*size >= (long) sizeof(StoreRootData))
+		data->fExtra = GetBigEndianWord(bytes + 20);
+}
+
+
+// the root data as it lies on the store (the host's name for what
+// MakeStoreObject does inline)
+void
+WriteStoreRootData(TStore* store, PSSId rootId, const StoreRootData* data)
+{
+	char bytes[kStoreRootDataSize];
+	PutBigEndianWord(bytes, data->fSignature);
+	PutBigEndianWord(bytes + 4, (ULong32) data->fVersion);
+	PutBigEndianWord(bytes + 8, data->fMapTableId);
+	PutBigEndianWord(bytes + 12, data->fSymbolTableId);
+	PutBigEndianWord(bytes + 16, data->fRootFrameId);
+	OSErrIf(store->ReplaceObject(rootId, bytes, kStoreRootDataSize));
 }

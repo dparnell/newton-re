@@ -191,5 +191,6 @@ void	AskForFlush(Boolean ask);
 void	ThrowOSErr(NewtonErr err);				// the ROM's _OSErr: exStoreError with the error
 inline void	OSErrIf(NewtonErr err)				{ if (err != noErr) ThrowOSErr(err); }
 void	ReadStoreRootData(TStore* store, PSSId rootId, StoreRootData* data, long* size);
+void	WriteStoreRootData(TStore* store, PSSId rootId, const StoreRootData* data);
 
 #endif	/* __STOREWRAPPER_H */

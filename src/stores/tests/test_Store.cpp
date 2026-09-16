@@ -13,6 +13,7 @@
 #include "UserBoot.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "ByteOrder.h"
 #include "host/TaskRuntime.h"
 
 #include <stdio.h>
@@ -234,13 +235,13 @@ TestPackageStore()
 {
 	// a soup part with three objects: "abc", "", "hello"
 	ULong32 words[12];
-	words[0] = 2;				// root id
-	words[1] = 3;				// objects
 	ULong32 dataStart = 6 * sizeof(ULong32);
-	words[2] = dataStart;
-	words[3] = dataStart + 3;
-	words[4] = dataStart + 3;
-	words[5] = dataStart + 8;
+	PutBigEndianWord(&words[0], 2);				// root id
+	PutBigEndianWord(&words[1], 3);				// objects
+	PutBigEndianWord(&words[2], dataStart);
+	PutBigEndianWord(&words[3], dataStart + 3);
+	PutBigEndianWord(&words[4], dataStart + 3);
+	PutBigEndianWord(&words[5], dataStart + 8);
 	memcpy((char*) words + dataStart, "abchello", 8);
 	TStore* store = TStore::New("TPackageStore");
 	EXPECT(store != nil);

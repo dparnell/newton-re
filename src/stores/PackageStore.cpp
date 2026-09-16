@@ -10,6 +10,7 @@
 #include "PackageStore.h"
 #include "OSErrors.h"
 #include "NewtonMemory.h"
+#include "ByteOrder.h"
 
 
 PROTOCOL_CLASSINFO(TPackageStore, "TStore", "", 0, 0, nil)	// ROM 0x0037aa20 ClassInfo__13TPackageStoreSFv
@@ -72,7 +73,7 @@ TPackageStore::Format()
 NewtonErr
 TPackageStore::GetRootId(PSSId* rootId)
 {
-	*rootId = fData->fRootId;
+	*rootId = GetBigEndianWord(&fData->fRootId);
 	return noErr;
 }
 
@@ -114,9 +115,9 @@ TPackageStore::SetObjectSize(PSSId /*id*/, long /*size*/)
 NewtonErr
 TPackageStore::GetObjectSize(PSSId id, long* size)
 {
-	if (id >= fData->fNumObjects)
+	if (id >= GetBigEndianWord(&fData->fNumObjects))
 		return kSError_BadPSSID;
-	*size = (long) (fData->fOffsets[id + 1] - fData->fOffsets[id]);
+	*size = (long) (GetBigEndianWord(&fData->fOffsets[id + 1]) - GetBigEndianWord(&fData->fOffsets[id]));
 	return noErr;
 }
 
@@ -135,10 +136,10 @@ TPackageStore::Write(PSSId /*id*/, long /*offset*/, char* /*buffer*/, long /*cou
 NewtonErr
 TPackageStore::Read(PSSId id, long offset, char* buffer, long count)
 {
-	if (id >= fData->fNumObjects)
+	if (id >= GetBigEndianWord(&fData->fNumObjects))
 		return kSError_BadPSSID;
-	long start = (long) fData->fOffsets[id];
-	long size = (long) fData->fOffsets[id + 1] - start;
+	long start = (long) GetBigEndianWord(&fData->fOffsets[id]);
+	long size = (long) GetBigEndianWord(&fData->fOffsets[id + 1]) - start;
 	NewtonErr err = kSError_ObjectOverRun;
 	if (offset >= 0 && offset < size)
 	{
