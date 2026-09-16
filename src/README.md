@@ -85,6 +85,10 @@ src/
                 text (NumberFormat.h: NumberString, the format specs of
                 FormattedNumberStr, ParamString; frames/ prints numbers
                 through it) (docs/intl/README.md)
+  qd/           QuickDraw, the graphics library: rectangles and points
+                (Rects.h), regions and their operations (Regions.h);
+                ports, bitmaps, drawing and text to come
+                (docs/qd/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

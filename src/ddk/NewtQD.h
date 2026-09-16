@@ -186,6 +186,7 @@
 	typedef struct Region
 		{
 		StructSizeType	rgnSize;
+		short			filler;		/* APCS word alignment of the Rect (sync_ddk_headers.py) */
 		Rect	rgnBBox;
 		} Region;
 	typedef Region* RgnPtr;
@@ -194,6 +195,7 @@
 	typedef struct Picture
 		{
 		StructSizeType	picSize;
+		short			filler;		/* APCS word alignment of the Rect (sync_ddk_headers.py) */
 		Rect	picFrame;
 		} Picture;
 	typedef Picture* PicPtr;
@@ -202,6 +204,7 @@
 	typedef struct Polygon
 		{
 		StructSizeType	polySize;
+		short			filler;		/* APCS word alignment of the Rect (sync_ddk_headers.py) */
 		Rect	polyBBox;
 		Point	polyPoints[1];
 		} Polygon;

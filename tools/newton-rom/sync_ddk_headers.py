@@ -76,6 +76,18 @@ PATCHES = {
         ("{ return (void*)((long)fArrayBlock + (fElementSize * index)); }",
          "{ return (void*)((char*)fArrayBlock + (fElementSize * index)); }"),
     ],
+    # NewtQD.h: APCS aligns every structure to a word, so the ROM's Region, Picture
+    # and Polygon have their Rect at offset 4 (a rectangular region's rgnSize is 12,
+    # its rows start at 12; NewRgn 0x003150b0 zeroes the Rect at +4); a host
+    # compiler packs the shorts, so the two bytes of padding are spelt out
+    "NewtQD.h": [
+        ("\t\tStructSizeType\trgnSize;\n\t\tRect\trgnBBox;\n\t\t} Region;",
+         "\t\tStructSizeType\trgnSize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\trgnBBox;\n\t\t} Region;"),
+        ("\t\tStructSizeType\tpicSize;\n\t\tRect\tpicFrame;\n\t\t} Picture;",
+         "\t\tStructSizeType\tpicSize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpicFrame;\n\t\t} Picture;"),
+        ("\t\tStructSizeType\tpolySize;\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;",
+         "\t\tStructSizeType\tpolySize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;"),
+    ],
     "UserPorts.h": [
         ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",
          "\t\tfriend void SleepTill(TTime* futureTimeToSend);\n\t\tfriend void Sleep(TTimeout timeout);\n\t\tfriend class TUTaskWorld;"),
