@@ -479,6 +479,56 @@ TestComparisons()
 }
 
 
+static void
+TestMath()
+{
+	EXPECT_TRUE("acosh(1.0) = 0.0");
+	EXPECT_TRUE("asinh(0) = 0.0");
+	EXPECT_TRUE("atanh(0) = 0.0");
+	EXPECT_TRUE("expm1(0) = 0.0");
+	EXPECT_TRUE("log1p(0) = 0.0");
+	EXPECT_TRUE("ldexp(1.5, 3) = 12.0");
+	EXPECT_TRUE("scalb(3, 2) = 12.0");
+	EXPECT_TRUE("logb(8.0) = 3.0");
+	EXPECT_TRUE("erf(0) = 0.0");
+	EXPECT_TRUE("erfc(0) = 1.0");
+	EXPECT_TRUE("gamma(5) = 24.0");
+	EXPECT_TRUE("lgamma(1) = 0.0");
+	EXPECT_TRUE("rint(2.5) = 2.0");
+	EXPECT_TRUE("nearbyint(3.5) = 4.0");
+	EXPECT_INT("rinttol(2.5)", 2);
+	EXPECT_INT("rinttol(3.5)", 4);
+	EXPECT_TRUE("remainder(7, 2) = -1.0");
+	EXPECT_TRUE("copysign(3, -1) = -3.0");
+	EXPECT_TRUE("nextafterd(1.0, 2.0) > 1.0");
+	EXPECT_TRUE("isnormal(1.0)");
+	EXPECT_NIL("isnormal(0.0)");
+	EXPECT_TRUE("isfinite(1)");
+	EXPECT_TRUE("IsFiniteNumber(1.5)");
+	EXPECT_NIL("isnan(1.0)");
+	EXPECT_TRUE("isnan(nan)");
+	EXPECT_NIL("isfinite(nan)");
+	EXPECT_INT("signbit(-2.0)", 1);
+	EXPECT_INT("signbit(2.0)", 0);
+	EXPECT_TRUE("fdim(5, 3) = 2.0");
+	EXPECT_TRUE("fdim(3, 5) = 0.0");
+	EXPECT_TRUE("compound(0.5, 2) = 2.25");
+	EXPECT_TRUE("fabs(annuity(0.1, 2) - 1.7355371900826446) < 0.000000000001");
+	EXPECT_PRINTS("remquo(7, 2)", "[-1.00000, 4]");
+	EXPECT_PRINTS("randomx(1)", "[16807.0, 16807.0]");
+	EXPECT_TRUE("local r := Random(3, 7); r >= 3 and r <= 7");
+	EXPECT_INT("Random(5, 5)", 5);
+	EXPECT_THROWS("Random(7, 3)", kNSErrBadArgs);
+	EXPECT_TRUE("local s := GetRandomState(); local a := Random(0, 1000000); SetRandomState(s); Random(0, 1000000) = a");
+	EXPECT_TRUE("ClassOf(GetRandomState()) = 'randomState");
+	EXPECT_TRUE("local rounding := fegetround(); fesetround(rounding); fegetround() = rounding");
+	EXPECT_INT("feclearexcept(fegetexcept(-1)); fetestexcept(-1)", 0);
+	EXPECT_TRUE("local env := fegetenv(); fesetenv(env); fegetenv() = env");
+	EXPECT_INT("GetFunctionArgCount(func(a, b) nil)", 2);
+	EXPECT_INT("GetFunctionArgCount(func() nil)", 0);
+}
+
+
 int
 main()
 {
@@ -508,6 +558,7 @@ main()
 		TestSets();
 		TestBinaries();
 		TestComparisons();
+		TestMath();
 	}
 	newton_catch_all
 	{

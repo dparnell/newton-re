@@ -27,6 +27,7 @@
 #include "OSErrors.h"
 
 #include <math.h>
+#include <fenv.h>
 #include <string.h>
 
 #define NSBOOL(b)	((b) ? TRUEREF : NILREF)
@@ -1425,6 +1426,326 @@ REAL_FUNCTION(Ftrunc, trunc)		// ROM 0x00293b54 Ftrunc
 REAL_FUNCTION(Fround, round)		// ROM 0x00293b24 Fround
 REAL_FUNCTION2(Ffmax, fmax)			// ROM 0x00293dcc Fmax
 REAL_FUNCTION2(Ffmin, fmin)			// ROM 0x00293e20 Fmin
+REAL_FUNCTION(Facosh, acosh)		// ROM 0x00293740 Facosh
+REAL_FUNCTION(Fasinh, asinh)		// ROM 0x00293770 Fasinh
+REAL_FUNCTION(Fatanh, atanh)		// ROM 0x002937a0 Fatanh
+REAL_FUNCTION(Fexpm1, expm1)		// ROM 0x002937d0 Fexpm1
+REAL_FUNCTION(Flog1p, log1p)		// ROM 0x00293890 Flog1p
+REAL_FUNCTION(Flogb, logb)			// ROM 0x002938c0 Flogb
+REAL_FUNCTION(Ferf, erf)			// ROM 0x00293998 Ferf
+REAL_FUNCTION(Ferfc, erfc)			// ROM 0x002939c8 Ferfc
+REAL_FUNCTION(Fgamma, tgamma)		// ROM 0x002939f8 Fgamma  (the ROM's gamma is the true gamma)
+REAL_FUNCTION(Flgamma, lgamma)		// ROM 0x00293a28 Flgamma
+REAL_FUNCTION(Frint, rint)			// ROM 0x00293a58 Frint
+REAL_FUNCTION(Fnearbyint, nearbyint)	// ROM 0x00293acc Fnearbyint
+REAL_FUNCTION2(Fremainder, remainder)	// ROM 0x00293b84 Fremainder
+REAL_FUNCTION2(Fcopysign, copysign)	// ROM 0x00293bd8 Fcopysign
+REAL_FUNCTION2(Fnextafterd, nextafter)	// ROM 0x00293c2c Fnextafterd
+REAL_FUNCTION2(Fdim, fdim)			// ROM 0x00293d78 Fdim
+
+
+// ROM 0x0029383c Fldexp
+Ref
+Fldexp(RefArg /*rcvr*/, RefArg x, RefArg n)
+{
+	return MakeReal(ldexp(CoerceToDouble(x), (int) RINT(n)));
+}
+
+
+// ROM 0x002938f0 Fscalb
+Ref
+Fscalb(RefArg /*rcvr*/, RefArg x, RefArg n)
+{
+	return MakeReal(scalbn(CoerceToDouble(x), (int) RINT(n)));
+}
+
+
+// ROM 0x00293afc Frinttol
+// The nearest integer (in the current rounding direction).
+Ref
+Frinttol(RefArg /*rcvr*/, RefArg x)
+{
+	return MAKEINT(lrint(CoerceToDouble(x)));
+}
+
+
+// ROM 0x00293c80 Fisnormal
+Ref
+Fisnormal(RefArg /*rcvr*/, RefArg x)
+{
+	return NSBOOL(isnormal(CoerceToDouble(x)));
+}
+
+
+// ROM 0x00293cb0 Fisfinite
+Ref
+Fisfinite(RefArg /*rcvr*/, RefArg x)
+{
+	return NSBOOL(isfinite(CoerceToDouble(x)));
+}
+
+
+// ROM 0x00293ce0 Fisnan
+Ref
+Fisnan(RefArg /*rcvr*/, RefArg x)
+{
+	return NSBOOL(isnan(CoerceToDouble(x)));
+}
+
+
+// ROM 0x00293d50 Fsignbit
+// ==> non-zero for a negative sign (the sign bit as an integer).
+Ref
+Fsignbit(RefArg /*rcvr*/, RefArg x)
+{
+	return MAKEINT(signbit(CoerceToDouble(x)) ? 1 : 0);
+}
+
+
+// ROM 0x00293e74 Fcompound
+// (1 + rate) ^ periods (SANE's compound, 0x002a2904).
+Ref
+Fcompound(RefArg /*rcvr*/, RefArg rate, RefArg periods)
+{
+	return MakeReal(pow(1.0 + CoerceToDouble(rate), CoerceToDouble(periods)));
+}
+
+
+// ROM 0x00293ec8 Fannuity
+// (1 - (1 + rate) ^ -periods) / rate (SANE's annuity, 0x00285ae0).
+Ref
+Fannuity(RefArg /*rcvr*/, RefArg rate, RefArg periods)
+{
+	double r = CoerceToDouble(rate);
+	double n = CoerceToDouble(periods);
+	if (r == 0.0)
+		return MakeReal(n);
+	return MakeReal((1.0 - pow(1.0 + r, -n)) / r);
+}
+
+
+// ROM 0x00293f1c Fremquo
+// ==> [remainder, quotient]
+Ref
+Fremquo(RefArg /*rcvr*/, RefArg x, RefArg y)
+{
+	RefVar result(AllocateArray(RSSYMarray, 2));
+	int quotient = 0;
+	double remainder = remquo(CoerceToDouble(x), CoerceToDouble(y), &quotient);
+	SetArraySlotRef(result, 0, MakeReal(remainder));
+	SetArraySlotRef(result, 1, MAKEINT(quotient));
+	return result;
+}
+
+
+// ROM 0x00293ff4 Frandomx
+// SANE's randomx (0x00313ffc): the next value of the Lehmer sequence
+// x' = 7^5 x mod (2^31 - 1); ==> [value, seed] (both x').
+Ref
+Frandomx(RefArg /*rcvr*/, RefArg x)
+{
+	double seed = CoerceToDouble(x);
+	seed = fmod(16807.0 * seed, 2147483647.0);
+	RefVar result(AllocateArray(RSSYMarray, 2));
+	SetArraySlotRef(result, 0, MakeReal(seed));
+	SetArraySlotRef(result, 1, MakeReal(seed));
+	return result;
+}
+
+
+/* -------------------------------------------------------------------------------
+	The floating-point environment (<fenv.h>).  DEVIATION: the exception and
+	rounding-mode values are the host's, not the ARM FPE's.
+------------------------------------------------------------------------------- */
+
+// ROM 0x00294098 Ffeclearexcept
+Ref
+Ffeclearexcept(RefArg /*rcvr*/, RefArg excepts)
+{
+	feclearexcept((int) RINT(excepts));
+	return NILREF;
+}
+
+
+// ROM 0x002940c8 Ffegetexcept
+// The flags raised among excepts (fegetexceptflag).
+Ref
+Ffegetexcept(RefArg /*rcvr*/, RefArg excepts)
+{
+	fexcept_t flags = 0;
+	fegetexceptflag(&flags, (int) RINT(excepts));
+	return MAKEINT((long) flags);
+}
+
+
+// ROM 0x00294120 Fferaiseexcept
+Ref
+Fferaiseexcept(RefArg /*rcvr*/, RefArg excepts)
+{
+	feraiseexcept((int) RINT(excepts));
+	return NILREF;
+}
+
+
+// ROM 0x00294150 Ffesetexcept
+Ref
+Ffesetexcept(RefArg /*rcvr*/, RefArg flags, RefArg excepts)
+{
+	fexcept_t f = (fexcept_t) RINT(flags);
+	fesetexceptflag(&f, (int) RINT(excepts));
+	return NILREF;
+}
+
+
+// ROM 0x002941ac Ffetestexcept
+Ref
+Ffetestexcept(RefArg /*rcvr*/, RefArg excepts)
+{
+	return MAKEINT(fetestexcept((int) RINT(excepts)));
+}
+
+
+// ROM 0x002941dc Ffegetround
+Ref
+Ffegetround(RefArg /*rcvr*/)
+{
+	return MAKEINT(fegetround());
+}
+
+
+// ROM 0x002941f4 Ffesetround
+Ref
+Ffesetround(RefArg /*rcvr*/, RefArg mode)
+{
+	return MAKEINT(fesetround((int) RINT(mode)));
+}
+
+
+// the environment as one integer: the raised flags with the rounding mode
+// (the ROM's fenv_t is one word)
+static long
+EnvironmentWord(void)
+{
+	return fetestexcept(FE_ALL_EXCEPT) | (fegetround() << 16);
+}
+
+
+static void
+SetEnvironmentWord(long env)
+{
+	feclearexcept(FE_ALL_EXCEPT);
+	feraiseexcept((int) (env & 0xffff));
+	fesetround((int) (env >> 16));
+}
+
+
+// ROM 0x00294224 Ffegetenv
+Ref
+Ffegetenv(RefArg /*rcvr*/)
+{
+	return MAKEINT(EnvironmentWord());
+}
+
+
+// ROM 0x00294248 Ffeholdexcept
+// ==> the environment saved; the flags cleared.
+Ref
+Ffeholdexcept(RefArg /*rcvr*/, RefArg /*env*/)
+{
+	long env = EnvironmentWord();
+	feclearexcept(FE_ALL_EXCEPT);
+	return MAKEINT(env);
+}
+
+
+// ROM 0x00294284 Ffesetenv
+Ref
+Ffesetenv(RefArg /*rcvr*/, RefArg env)
+{
+	SetEnvironmentWord(RINT(env));
+	return NILREF;
+}
+
+
+// ROM 0x002942c0 Ffeupdateenv
+// The environment restored, the flags raised meanwhile raised again.
+Ref
+Ffeupdateenv(RefArg /*rcvr*/, RefArg env)
+{
+	int raised = fetestexcept(FE_ALL_EXCEPT);
+	SetEnvironmentWord(RINT(env));
+	feraiseexcept(raised);
+	return NILREF;
+}
+
+
+/* -------------------------------------------------------------------------------
+	Random numbers.  The ROM's Random uses its C library's rand() (srand at
+	UserBoot with the time), whose state GetRandomState/SetRandomState
+	save and restore as a 'randomState binary; NOT YET RECONSTRUCTED: that
+	library's generator - the host keeps the ANSI C example generator
+	(state one 32-bit word) so that states round-trip.
+------------------------------------------------------------------------------- */
+
+static ULong gRandomSeed = 1;		// the C library's rand() state
+
+static int
+NewtonRand(void)
+{
+	gRandomSeed = gRandomSeed * 1103515245 + 12345;
+	return (int) ((gRandomSeed >> 16) & 0x7fff);
+}
+
+
+// the seed from the time, as UserBoot's srand
+void
+SeedRandom(ULong seed)
+{
+	gRandomSeed = seed;
+}
+
+
+// ROM 0x0029458c FRandom
+// An integer from low to high inclusive.
+Ref
+FRandom(RefArg /*rcvr*/, RefArg low, RefArg high)
+{
+	long lo = RINT(low);
+	long hi = RINT(high);
+	if (hi < lo)
+		Throw(exFrames, (void*) kNSErrBadArgs, nil);
+	long r = NewtonRand();
+	return MAKEINT(lo + r % (hi - lo + 1));
+}
+
+
+// ROM 0x00294618 FGetRandomState
+Ref
+FGetRandomState(RefArg /*rcvr*/)
+{
+	RefVar state(AllocateBinary(RSSYMrandomstate, sizeof(gRandomSeed)));
+	memcpy(BinaryData(state), &gRandomSeed, sizeof(gRandomSeed));
+	return state;
+}
+
+
+// ROM 0x002946b8 FSetRandomState
+Ref
+FSetRandomState(RefArg /*rcvr*/, RefArg state)
+{
+	if (!IsBinary(state) || Length(state) < (long) sizeof(gRandomSeed))
+		ThrowBadTypeWithFrameData(kNSErrNotABinaryObject, state);
+	memcpy(&gRandomSeed, BinaryData(state), sizeof(gRandomSeed));
+	return NILREF;
+}
+
+
+// ROM 0x002d1844 FGetFunctionArgCount
+Ref
+FGetFunctionArgCount(RefArg /*rcvr*/, RefArg fn)
+{
+	return MAKEINT(GetFunctionArgCount(fn));
+}
 
 
 // ROM 0x00292df4 FForLoop
@@ -1514,6 +1835,48 @@ RegisterBuiltinNatives(void)
 	NATIVE("FLessOrGreater", FLessOrGreater, 2);
 	NATIVE("FLessEqualOrGreater", FLessEqualOrGreater, 2);
 	NATIVE("FForLoop", FForLoop, 3);
+	NATIVE("Facosh", Facosh, 1);
+	NATIVE("Fasinh", Fasinh, 1);
+	NATIVE("Fatanh", Fatanh, 1);
+	NATIVE("Fexpm1", Fexpm1, 1);
+	NATIVE("Fldexp", Fldexp, 2);
+	NATIVE("Flog1p", Flog1p, 1);
+	NATIVE("Flogb", Flogb, 1);
+	NATIVE("Fscalb", Fscalb, 2);
+	NATIVE("Ferf", Ferf, 1);
+	NATIVE("Ferfc", Ferfc, 1);
+	NATIVE("Fgamma", Fgamma, 1);
+	NATIVE("Flgamma", Flgamma, 1);
+	NATIVE("Frint", Frint, 1);
+	NATIVE("Fnearbyint", Fnearbyint, 1);
+	NATIVE("Frinttol", Frinttol, 1);
+	NATIVE("Fremainder", Fremainder, 2);
+	NATIVE("Fcopysign", Fcopysign, 2);
+	NATIVE("Fnextafterd", Fnextafterd, 2);
+	NATIVE("Fisnormal", Fisnormal, 1);
+	NATIVE("Fisfinite", Fisfinite, 1);
+	NATIVE("Fisnan", Fisnan, 1);
+	NATIVE("Fsignbit", Fsignbit, 1);
+	NATIVE("Fdim", Fdim, 2);
+	NATIVE("Fcompound", Fcompound, 2);
+	NATIVE("Fannuity", Fannuity, 2);
+	NATIVE("Fremquo", Fremquo, 2);
+	NATIVE("Frandomx", Frandomx, 1);
+	NATIVE("Ffeclearexcept", Ffeclearexcept, 1);
+	NATIVE("Ffegetexcept", Ffegetexcept, 1);
+	NATIVE("Fferaiseexcept", Fferaiseexcept, 1);
+	NATIVE("Ffesetexcept", Ffesetexcept, 2);
+	NATIVE("Ffetestexcept", Ffetestexcept, 1);
+	NATIVE("Ffegetround", Ffegetround, 0);
+	NATIVE("Ffesetround", Ffesetround, 1);
+	NATIVE("Ffegetenv", Ffegetenv, 0);
+	NATIVE("Ffeholdexcept", Ffeholdexcept, 1);
+	NATIVE("Ffesetenv", Ffesetenv, 1);
+	NATIVE("Ffeupdateenv", Ffeupdateenv, 1);
+	NATIVE("FRandom", FRandom, 2);
+	NATIVE("FGetRandomState", FGetRandomState, 0);
+	NATIVE("FSetRandomState", FSetRandomState, 1);
+	NATIVE("FGetFunctionArgCount", FGetFunctionArgCount, 1);
 	NATIVE("FGetSiblingSlot", FGetSiblingSlot, 2);
 	NATIVE("FHasSiblingSlot", FHasSiblingSlot, 2);
 	NATIVE("FMin", FMin, 2);

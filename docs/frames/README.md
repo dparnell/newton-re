@@ -354,7 +354,13 @@ through `BoundsCheck`/`BoundsWriteCheck` (`kNSErrBadArgs` past the end,
 bounds, as the ROM does).  `Builtins.cpp` gained the unordered
 comparisons (`UnorderedOrGreater`, ..., `LessEqualOrGreater`: the IEEE
 relation with NaN unordered), `forLoop` and `getSiblingSlot`/
-`hasSiblingSlot`.  `test_Strings` runs them all from NewtonScript source.
+`hasSiblingSlot`, the rest of the real functions (`acosh` ... `fdim`,
+`compound`/`annuity`, `remquo` and `randomx` answering pairs), the
+floating-point environment natives over `<fenv.h>` (DEVIATION: the host's
+flag and rounding values), `Random`/`GetRandomState`/`SetRandomState`
+(over a host generator whose one-word state round-trips; the ROM's C
+library `rand` is not here) and `GetFunctionArgCount`.  `test_Strings`
+runs them all from NewtonScript source.
 
 ## The printer and the REP (`Printer.cpp`, `REPTranslators.cpp`)
 
@@ -464,7 +470,7 @@ function kinds, the errors, `ParseFile` and the `Compile` native.
 The interpreter's FastRun1 (the inlined, trace-free copy of SlowRun),
 tracing and breakpoints (`TInterpreter::Trace...`, `HandleBreakPoints`),
 running 1.x CodeBlocks and binary natives, the natives not bound yet
-(219 of the 869 are) (`Sleep`, printing, stores, views, ...),
+(261 of the 869 are) (`Sleep`, printing, stores, views, ...),
 `TRichString`'s ink (`MakeRichString`, `StripInk`, the ink words in
 `MungeRange`; the mungers treat strings as plain UniChars), the Unicode
 case, break and sort tables (`UppercaseText`, `IsDelimiter`,
