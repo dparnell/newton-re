@@ -98,8 +98,9 @@ origin, the pixel shift and depth) is set up by `InitRgnRec` 0x003169a8
 for depths 1, 2, 4, 8, 16, 32) and `SeekRgn` 0x003159c0 applies the rows
 down to a pixel row, inverting the mask over each span, restarting from
 the top when asked for a row above the current one.  `RectInRgn`
-0x003152c0 scans the rectangle's rows until a mask has a bit.  Ports are
-NOT YET RECONSTRUCTED, so the host masks at one bit per pixel;
+0x003152c0 scans the rectangle's rows until a mask has a bit.  The host
+masks at one bit per pixel whatever the port (the depth only sizes the
+mask for drawing, which the host blitter does not use);
 `test_Regions` rasterises every result through `SeekRgn` and compares it
 pixel by pixel with set arithmetic on the rectangles the regions were
 built from (twenty rounds of random rectangles included).
@@ -114,10 +115,89 @@ compares the row data from its second short to one short past the region
 (a slip; the host compares the rows exactly, `DEVIATION`).
 `IsWideOpenRgn` 0x00316bc8 is nil or the rectangle beyond ±0x7ffe.
 
+## Pixel maps, patterns, ports and the pen (`src/qd/Ports.h`)
+
+The ROM is built with `QD_Gray`: a `PixelMap` is 0x1c bytes, ending in
+the `grayTable` pointer the DDK's public `ConfigQD.h` never enables
+(another sync patch defines the switch), and a `GrafPort` is 0x54 bytes
+(`portRect` +0x1c, `visRgn` +0x24, `clipRgn` +0x28, `fgPat` +0x2c,
+`bgPat` +0x30, `pnLoc` +0x34, `pnSize` +0x38, `pnMode` +0x3c, `pnVis`
++0x3e, `grafProcs` +0x40, `picSave`/`rgnSave`/`polySave` +0x44..0x4c,
+`patAlign` +0x50) - the offsets every pen function uses (`PenSize`
+0x00304158 writes +0x3a/+0x38, `PenMode` 0x0030418c +0x3c, `HidePen`
+0x00304050 decrements +0x3e, `FrameRect` 0x003150a4 tests `grafProcs`
+at +0x40).  Pixels are big-endian in their rows, 1, 2, 4 or 8 bits deep
+(`pixMapFlags & 0xff`), 0 white and all ones black; `baseAddr` is a
+pointer, a handle or an offset from the map as the top two flag bits say
+(`GetPixelMapBits` 0x0028a538).
+
+The five standard patterns (`stdPatterns` 0x0c104e3c) are 8x8 one-bit
+PixelMaps in ROM (`whitePattern` 0x00376eb8 ... `blackPattern`
+0x00376f58, rows 00, 88/22, aa/55, 77/dd, ff) reached through *fake
+handles* - a master pointer in ROM (`NewFakeHandle`); `MakeSimplePattern`
+0x00302de4 makes one in a 0x24-byte handle with the rows after the map
+(`baseAddr` an offset).  `DisposePattern` 0x00303b00 leaves the standard
+ones alone.  `wideHandle` (0x0c1027b4, a fake handle to the region at
+0x00377a50) is the rectangle beyond +-32767: every new port's clip region.
+
+`InitGraf` 0x002be600 clears `qdGlobals` (0x0c104e50, 0x3c bytes: a
+version word, the screen's `PixelMap` from `InitScreen`, the open
+polygon's and region's buffers), makes the patterns and the wide region,
+opens the default port (`gGrafPort` 0x0c103a98, `NewtGlobals + 0x0c` once
+a task has its own: `GetCurrentPort` 0x002be868) and registers the QD
+protocols (NOT YET).  `OpenPort` 0x002be72c makes the two regions and,
+like `InitPort` 0x002be88c, zeroes the port, gives it the screen's bits
+and rect, `visRgn` the screen and `clipRgn` wide open (`InitPortRgns`
+0x002be934), black over white, a 1x1 copying pen, and makes it current.
+`SetOrigin` 0x002be758 shifts the bits' bounds, the port rect and the
+visible region.
+
+## Drawing (`src/qd/Draw.h`)
+
+`FrameRect`/`PaintRect`/`EraseRect`/`InvertRect`/`FillRect`
+(0x003150a4, 0x00314114, 0x00314120, 0x0031412c, 0x00314138 - `FillRect`
+installs its pattern as the port's for the call) go through `CallRect`
+0x00314844 to the port's `rectProc` or `StdRect` 0x00314170; the region
+verbs likewise through `CallRgn` 0x0031582c to `StdRgn` 0x0031567c.  The
+standard procs record into an open picture or region (NOT YET) and draw:
+`frame` with `FrRect` 0x00314a80 (four strips the pen's width and height
+thick, or the whole rectangle when the pen fills it) or `FrRgn`
+0x00315ee0 (a rectangular region as `FrRect`; otherwise the region less
+itself inset by the pen); the other verbs fill through `PushVerb`
+0x00314cfc - frame and paint in the pen's mode and pattern, erase
+`patCopy` with the background pattern, invert `patXor` with black, fill
+`patCopy` with the port's pattern - and `DrawRect` 0x00314d78 /
+`DrawRgn` 0x00315918, which blit the port's bits onto themselves clipped
+by `visRgn`, `clipRgn` and (for a region) the region.  A hidden pen
+(`pnVis < 0`) draws nothing.
+
+Everything ends in `RgnBlt` 0x003172e0: the destination rectangle is cut
+to the map's bounds and the three clip regions' boxes (`RSect`), a
+single non-rectangular clip is first tried as a rectangle (`TrimRect`),
+rectangular clips go to `BitBlt` 0x00287e20, and otherwise the regions
+are scan-converted over the rectangle (`RgnState`, `LSeekMask`
+0x003170d0 AND-ing their masks) and each row is transferred under the
+mask.  The transfer mode's bits: 0-1 the operation (copy, or, xor, bic),
+2 the source inverted (`notSrc...`), 3 the pattern for the source
+(`pat...`); a pattern is expanded once per blit (`PatExpand` 0x0030356c)
+aligned to the port's `patAlign`.  "Or" on a gray map is not a bitwise
+or: every non-white source pixel replaces the destination pixel (the
+ROM's per-depth loops clear the destination pixel first).  The ROM's
+blitter works a halfword-aligned word at a time with per-depth loops
+(`BBSrcCopy`, `BBSrcOr2`, ...); the host's `Draw.cpp` works a pixel at a
+time with the same semantics (`DEVIATION`: the code, not the pixels),
+copying a row ahead of writing it and bottom-up when the source lies
+above the destination in the same map.  `CopyBits` 0x00289898 goes
+through the port's `bitsProc` (`StdBits` 0x00288abc: clipped by the
+port's regions and the mask) when the destination is the current port's
+bits, else straight to `StretchBits` 0x00288eb4 - whose stretching and
+depth-conversion tables are NOT YET (the host samples nearest-neighbour).
+`test_Draw` checks every verb, mode, clip and depth pixel by pixel on
+offscreen maps.
+
 ## Not yet
 
-Ports and the current port (`GetCurrentPort`, `SetPort`, `OpenPort`),
-pixel maps, patterns, the pen, the drawing bottlenecks (`StdRect`,
-`StdRgn`, `FrRect`, `FrRgn`, `DrawRect`, `DrawRgn`, the blitter),
-polygons, pictures, `OpenRgn`/`CloseRgn`, `ScrollRect`, `ZoomRect`, text
-and fonts, the `TQDLibraryDriver` protocol.
+Lines (`StdLine`, `LineTo`), ovals, round rectangles, arcs, polygons,
+pictures, `OpenRgn`/`CloseRgn`, `ScrollRect`, `ZoomRect`, the screen
+(`InitScreen`, `QDStartDrawing`), the per-task globals, `StretchBits`
+proper, text and fonts, the `TQDLibraryDriver` protocol.

@@ -38,6 +38,8 @@
 
 	#define QD_SupportUnicode
 
+	#define QD_Gray			/* the MP2100 ROM's PixelMap has the grayTable (sync_ddk_headers.py) */
+
 	#ifdef forVirtualNewt
 		#define QD_IncludeRenameFile
 	#endif

@@ -1,0 +1,388 @@
+// QuickDraw drawing test: a port over an offscreen one-bit map - rectangles
+// painted, framed (pen sizes), erased, inverted and filled with patterns,
+// regions painted and framed, clipping by the clip region and by a
+// complex region, the pen state, the origin; CopyBits between maps in the
+// source modes and between depths; a four-bit gray map and the ROM's gray
+// "or".  Every result is checked pixel by pixel.  Runs over a standalone
+// kernel heap.
+#include "Draw.h"
+#include "memory/host/KernelHeap.h"
+
+#include <stdio.h>
+#include <string.h>
+
+static int failures = 0;
+#define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+
+const long kSize = 64;
+
+
+// an offscreen map of the size, depth and origin, cleared
+static PixelMap
+MakeMap(unsigned char* bits, long depth, long left = 0, long top = 0)
+{
+	PixelMap pm;
+	pm.baseAddr = (Ptr) bits;
+	pm.rowBytes = (short) (kSize * depth / 8);
+	SetRect(&pm.bounds, left, top, left + kSize, top + kSize);
+	pm.pixMapFlags = kPixMapPtr | depth;
+	pm.deviceRes.v = kDefaultDPI;
+	pm.deviceRes.h = kDefaultDPI;
+	pm.grayTable = nil;
+	memset(bits, 0, kSize * kSize);
+	return pm;
+}
+
+
+// every pixel of the map against a predicate; the first difference reported
+typedef long (*Expected)(long x, long y);
+
+static Boolean
+MapIs(const PixelMap* pm, Expected expected, const char* what)
+{
+	long wrong = 0;
+	for (long y = pm->bounds.top; y < pm->bounds.bottom; y++)
+		for (long x = pm->bounds.left; x < pm->bounds.right; x++)
+		{
+			long value = GetPixel(pm, x, y);
+			long want = expected(x, y);
+			if (value != want)
+			{
+				if (wrong == 0)
+					fprintf(stderr, "  %s: first difference at (%ld, %ld): pixel %ld, expected %ld\n", what, x, y, value, want);
+				wrong++;
+			}
+		}
+	return wrong == 0;
+}
+
+static Boolean In(long x, long y, long l, long t, long r, long b) { return l <= x && x < r && t <= y && y < b; }
+
+static long	ExpRect(long x, long y)			{ return In(x, y, 10, 10, 30, 20); }
+static long	ExpFrame1(long x, long y)		{ return In(x, y, 10, 10, 30, 20) && !In(x, y, 11, 11, 29, 19); }
+static long	ExpFrame21(long x, long y)		{ return In(x, y, 10, 10, 30, 20) && !In(x, y, 12, 11, 28, 19); }
+static long	ExpFrameThin(long x, long y)	{ return In(x, y, 10, 10, 14, 20); }
+static long	ExpErased(long x, long y)		{ return In(x, y, 10, 10, 30, 20) && !In(x, y, 15, 12, 20, 18); }
+static long	ExpInverted(long x, long y)		{ return In(x, y, 10, 10, 30, 20) != In(x, y, 20, 15, 40, 25); }
+static long	ExpGray(long x, long y)			{ return In(x, y, 0, 0, 16, 16) ? ((x + y) & 1) == 0 : 0; }
+static long	ExpClipped(long x, long y)		{ return In(x, y, 0, 0, 64, 64) && In(x, y, 8, 8, 24, 24); }
+static long	ExpTwoRects(long x, long y)		{ return In(x, y, 4, 4, 20, 20) || In(x, y, 12, 12, 40, 30); }
+static long	ExpRgnFrame(long x, long y)		{ return ExpTwoRects(x, y) && !(In(x, y, 5, 5, 19, 19) || In(x, y, 13, 13, 39, 29)); }
+static long	ExpRgnClipped(long x, long y)	{ return ExpTwoRects(x, y) && In(x, y, 0, 0, 64, 16); }
+static long	ExpOrigin(long x, long y)		{ return In(x, y, 100, 200, 110, 205); }
+
+
+static void
+TestRects()
+{
+	static unsigned char bits[kSize * kSize];
+	PixelMap pm = MakeMap(bits, 1);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(&pm);
+	port.portRect = pm.bounds;
+	RectRgn(port.visRgn, &pm.bounds);
+	Rect r;
+	SetRect(&r, 10, 10, 30, 20);
+	PaintRect(&r);
+	EXPECT(MapIs(&pm, ExpRect, "PaintRect"));
+	EXPECT(PtInPixelMap(&pm, 10, 10) && !PtInPixelMap(&pm, 9, 10) && !PtInPixelMap(&pm, 70, 10));
+	// erased inside, inverted across the edge
+	Rect hole;
+	SetRect(&hole, 15, 12, 20, 18);
+	EraseRect(&hole);
+	EXPECT(MapIs(&pm, ExpErased, "EraseRect"));
+	PaintRect(&hole);
+	Rect across;
+	SetRect(&across, 20, 15, 40, 25);
+	InvertRect(&across);
+	EXPECT(MapIs(&pm, ExpInverted, "InvertRect"));
+	InvertRect(&across);
+	EXPECT(MapIs(&pm, ExpRect, "InvertRect back"));
+	// frames: a one-pixel pen, a 2 by 1 pen, and a pen too fat for the width
+	EraseRect(&pm.bounds);
+	FrameRect(&r);
+	EXPECT(MapIs(&pm, ExpFrame1, "FrameRect"));
+	EraseRect(&pm.bounds);
+	PenSize(2, 1);
+	FrameRect(&r);
+	EXPECT(MapIs(&pm, ExpFrame21, "FrameRect 2x1"));
+	EraseRect(&pm.bounds);
+	PenSize(2, 1);
+	Rect thin;
+	SetRect(&thin, 10, 10, 14, 20);
+	FrameRect(&thin);
+	EXPECT(MapIs(&pm, ExpFrameThin, "FrameRect thin"));
+	PenNormal();
+	EXPECT(port.pnSize.h == 1 && port.pnSize.v == 1 && port.pnMode == patCopy && port.fgPat == stdPatterns[blackPat]);
+	// a pattern: the gray checkerboard (pattern row y: 0xaa on even rows)
+	EraseRect(&pm.bounds);
+	Rect square;
+	SetRect(&square, 0, 0, 16, 16);
+	FillRect(&square, GetStdPattern(grayPat));
+	EXPECT(MapIs(&pm, ExpGray, "FillRect gray"));
+	EXPECT(port.fgPat == stdPatterns[blackPat]);
+	// clipping
+	EraseRect(&pm.bounds);
+	Rect clip;
+	SetRect(&clip, 8, 8, 24, 24);
+	ClipRect(&clip);
+	PaintRect(&pm.bounds);
+	EXPECT(MapIs(&pm, ExpClipped, "ClipRect"));
+	RgnHandle wide = NewRgn();
+	CopyRgn(wideHandle, wide);
+	SetClip(wide);
+	RgnHandle got = NewRgn();
+	GetClip(got);
+	EXPECT(EqualRgn(got, wideHandle));
+	// the pen hidden draws nothing
+	EraseRect(&pm.bounds);
+	HidePen();
+	PaintRect(&r);
+	ShowPen();
+	Boolean blank = true;
+	for (long i = 0; i < kSize * kSize; i++)
+		if (bits[i] != 0)
+			blank = false;
+	EXPECT(blank);
+	// the pen
+	MoveTo(5, 7);
+	Move(2, -3);
+	Point pen;
+	GetPen(&pen);
+	EXPECT(pen.h == 7 && pen.v == 4);
+	PenState state;
+	GetPenState(&state);
+	PenSize(3, 3);
+	PenMode(patXor);
+	SetPenState(&state);
+	EXPECT(port.pnSize.h == 1 && port.pnMode == patCopy);
+	DisposeRgn(wide);
+	DisposeRgn(got);
+	ClosePort(&port);
+}
+
+
+static void
+TestRegions()
+{
+	static unsigned char bits[kSize * kSize];
+	PixelMap pm = MakeMap(bits, 1);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(&pm);
+	port.portRect = pm.bounds;
+	RectRgn(port.visRgn, &pm.bounds);
+	RgnHandle rgn = NewRgn();
+	RgnHandle other = NewRgn();
+	SetRectRgn(rgn, 4, 4, 20, 20);
+	SetRectRgn(other, 12, 12, 40, 30);
+	UnionRgn(rgn, other, rgn);
+	PaintRgn(rgn);
+	EXPECT(MapIs(&pm, ExpTwoRects, "PaintRgn"));
+	EraseRgn(rgn);
+	Boolean blank = true;
+	for (long i = 0; i < kSize * kSize; i++)
+		if (bits[i] != 0)
+			blank = false;
+	EXPECT(blank);
+	FrameRgn(rgn);
+	EXPECT(MapIs(&pm, ExpRgnFrame, "FrameRgn"));
+	EraseRect(&pm.bounds);
+	InvertRgn(rgn);
+	EXPECT(MapIs(&pm, ExpTwoRects, "InvertRgn"));
+	// a rectangle painted through a complex clip region
+	EraseRect(&pm.bounds);
+	SetClip(rgn);
+	Rect top;
+	SetRect(&top, 0, 0, 64, 16);
+	PaintRect(&top);
+	EXPECT(MapIs(&pm, ExpRgnClipped, "PaintRect clipped by a region"));
+	// a region filled through a rectangular clip
+	EraseRect(&pm.bounds);
+	ClipRect(&top);
+	FillRgn(rgn, stdPatterns[blackPat]);
+	EXPECT(MapIs(&pm, ExpRgnClipped, "FillRgn clipped"));
+	DisposeRgn(rgn);
+	DisposeRgn(other);
+	ClosePort(&port);
+}
+
+
+static long	ExpCopied(long x, long y)		{ return In(x, y, 30, 30, 50, 40); }
+static long	ExpOred(long x, long y)			{ return In(x, y, 30, 30, 50, 40) || In(x, y, 40, 35, 60, 45); }
+static long	ExpXored(long x, long y)		{ return In(x, y, 30, 30, 50, 40) != In(x, y, 40, 35, 60, 45); }
+static long	ExpBic(long x, long y)			{ return In(x, y, 40, 35, 60, 45) && !In(x, y, 30, 30, 50, 40); }
+static long	ExpNotCopied(long x, long y)	{ return In(x, y, 30, 30, 50, 40) ? 0 : (In(x, y, 30, 30, 60, 45) ? 1 : 0); }
+static long	ExpScrolled(long x, long y)		{ return In(x, y, 11, 11, 31, 21) ? (((x + y) & 1) == 0) : (In(x, y, 10, 10, 30, 20) ? (((x + y) & 1) == 0) : 0); }
+static long	ExpScrolledBack(long x, long y)	{ return In(x, y, 10, 10, 30, 20) ? (((x + y) & 1) == 0) : (In(x, y, 11, 11, 31, 21) ? (((x + y) & 1) == 0) : 0); }
+static long	ExpStretched(long x, long y)	{ return In(x, y, 0, 0, 40, 20); }
+
+static void
+TestBits()
+{
+	static unsigned char srcBits[kSize * kSize], dstBits[kSize * kSize];
+	PixelMap src = MakeMap(srcBits, 1);
+	PixelMap dst = MakeMap(dstBits, 1);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(&dst);
+	port.portRect = dst.bounds;
+	RectRgn(port.visRgn, &dst.bounds);
+	// a 20x10 block in the source at (10, 10), copied to (30, 30)
+	Rect block;
+	SetRect(&block, 10, 10, 30, 20);
+	for (long y = 10; y < 20; y++)
+		for (long x = 10; x < 30; x++)
+			SetPixel(&src, x, y, 1);
+	Rect to;
+	SetRect(&to, 30, 30, 50, 40);
+	CopyBits(&src, &dst, &block, &to, srcCopy, nil);
+	EXPECT(MapIs(&dst, ExpCopied, "CopyBits srcCopy"));
+	// the modes over a painted rectangle
+	Rect painted;
+	SetRect(&painted, 40, 35, 60, 45);
+	EraseRect(&dst.bounds);
+	PaintRect(&painted);
+	CopyBits(&src, &dst, &block, &to, srcOr, nil);
+	EXPECT(MapIs(&dst, ExpOred, "CopyBits srcOr"));
+	EraseRect(&dst.bounds);
+	PaintRect(&painted);
+	CopyBits(&src, &dst, &block, &to, srcXor, nil);
+	EXPECT(MapIs(&dst, ExpXored, "CopyBits srcXor"));
+	EraseRect(&dst.bounds);
+	PaintRect(&painted);
+	CopyBits(&src, &dst, &block, &to, srcBic, nil);
+	EXPECT(MapIs(&dst, ExpBic, "CopyBits srcBic"));
+	Rect wider;
+	SetRect(&wider, 30, 30, 60, 45);
+	EraseRect(&dst.bounds);
+	PaintRect(&wider);
+	CopyBits(&src, &dst, &block, &to, notSrcCopy, nil);
+	EXPECT(MapIs(&dst, ExpNotCopied, "CopyBits notSrcCopy"));
+	// through a mask region
+	EraseRect(&dst.bounds);
+	RgnHandle mask = NewRgn();
+	SetRectRgn(mask, 40, 35, 60, 45);
+	CopyBits(&src, &dst, &block, &to, srcCopy, mask);
+	Rect both;
+	EXPECT(SectRect(&to, &(*mask)->rgnBBox, &both) && MapIs(&dst, [](long x, long y) -> long { return In(x, y, 40, 35, 50, 40); }, "CopyBits masked"));
+	DisposeRgn(mask);
+	// within one map, overlapping: a checkerboard block moved right by one
+	// and down by one keeps its phase (a copy in the wrong direction smears)
+	EraseRect(&dst.bounds);
+	Rect from;
+	SetRect(&from, 10, 10, 30, 20);
+	FillRect(&from, GetStdPattern(grayPat));
+	Rect moved = from;
+	OffsetRect(&moved, 1, 1);
+	CopyBits(&dst, &dst, &from, &moved, srcCopy, nil);
+	EXPECT(MapIs(&dst, ExpScrolled, "CopyBits overlapping"));
+	CopyBits(&dst, &dst, &moved, &from, srcCopy, nil);
+	EXPECT(MapIs(&dst, ExpScrolledBack, "CopyBits overlapping back"));
+	// stretched to twice the size (nearest neighbour)
+	EraseRect(&dst.bounds);
+	Rect twice;
+	SetRect(&twice, 0, 0, 40, 20);
+	CopyBits(&src, &dst, &block, &twice, srcCopy, nil);
+	EXPECT(MapIs(&dst, ExpStretched, "CopyBits stretched"));
+	ClosePort(&port);
+}
+
+
+static long	ExpGrayPaint(long x, long y)	{ return In(x, y, 10, 10, 30, 20) ? 15 : 0; }
+static long	ExpGrayPattern(long x, long y)	{ return In(x, y, 0, 0, 16, 16) ? (((x + y) & 1) == 0 ? 15 : 0) : 0; }
+static long	ExpGrayOr(long x, long y)		{ return In(x, y, 10, 10, 30, 20) ? (In(x, y, 20, 10, 40, 20) ? 5 : 15) : (In(x, y, 20, 10, 40, 20) ? 5 : 0); }
+
+static void
+TestGray()
+{
+	static unsigned char bits[kSize * kSize];
+	PixelMap pm = MakeMap(bits, 4);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(&pm);
+	port.portRect = pm.bounds;
+	RectRgn(port.visRgn, &pm.bounds);
+	Rect r;
+	SetRect(&r, 10, 10, 30, 20);
+	PaintRect(&r);
+	EXPECT(MapIs(&pm, ExpGrayPaint, "PaintRect gray"));
+	EXPECT(GetPixel(&pm, 10, 10) == 15 && bits[10 * 32 + 5] == 0xff);
+	Rect square;
+	SetRect(&square, 0, 0, 16, 16);
+	EraseRect(&pm.bounds);
+	FillRect(&square, GetStdPattern(grayPat));
+	EXPECT(MapIs(&pm, ExpGrayPattern, "FillRect gray pattern on a gray map"));
+	// the ROM's "or": a source pixel of 5 replaces 15, white source pixels leave the destination
+	static unsigned char srcBits[kSize * kSize];
+	PixelMap src = MakeMap(srcBits, 4);
+	for (long y = 10; y < 20; y++)
+		for (long x = 20; x < 40; x++)
+			SetPixel(&src, x, y, 5);
+	EraseRect(&pm.bounds);
+	PaintRect(&r);
+	Rect strip;
+	SetRect(&strip, 20, 10, 40, 20);
+	CopyBits(&src, &pm, &strip, &strip, srcOr, nil);
+	EXPECT(MapIs(&pm, ExpGrayOr, "CopyBits srcOr gray"));
+	// a one-bit source is black on the gray map
+	static unsigned char oneBits[kSize * kSize];
+	PixelMap one = MakeMap(oneBits, 1);
+	for (long y = 10; y < 20; y++)
+		for (long x = 10; x < 30; x++)
+			SetPixel(&one, x, y, 1);
+	EraseRect(&pm.bounds);
+	CopyBits(&one, &pm, &r, &r, srcCopy, nil);
+	EXPECT(MapIs(&pm, ExpGrayPaint, "CopyBits one bit to gray"));
+	ClosePort(&port);
+}
+
+
+static void
+TestOrigin()
+{
+	static unsigned char bits[kSize * kSize];
+	PixelMap pm = MakeMap(bits, 1);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(&pm);
+	port.portRect = pm.bounds;
+	RectRgn(port.visRgn, &pm.bounds);
+	SetOrigin(100, 200);
+	EXPECT(port.portRect.left == 100 && port.portRect.top == 200 && port.portBits.bounds.left == 100 && (*port.visRgn)->rgnBBox.top == 200);
+	Rect r;
+	SetRect(&r, 100, 200, 110, 205);
+	PaintRect(&r);
+	EXPECT(MapIs(&port.portBits, ExpOrigin, "PaintRect after SetOrigin"));
+	EXPECT(bits[0] == 0xff && bits[1] == 0xc0 && bits[5 * 8] == 0);
+	SetOrigin(0, 0);
+	EXPECT(port.portRect.left == 0 && port.portBits.bounds.top == 0);
+	ClosePort(&port);
+}
+
+
+int
+main()
+{
+	InitHostStandaloneHeap();
+	InitGraf();
+	EXPECT(gQDRunning && GetCurrentPort() == &gGrafPort && IsWideOpenRgn(wideHandle));
+	EXPECT((*stdPatterns[grayPat])->rowBytes == 1 && ((unsigned char*) GetPixelMapBits(*stdPatterns[grayPat]))[0] == 0xaa);
+	EXPECT(GetStdPattern(9) == stdPatterns[blackPat]);
+	PatternHandle mine = MakeSimplePattern(1, 2, 3, 4, 5, 6, 7, 8);
+	EXPECT(((unsigned char*) GetPixelMapBits(*mine))[7] == 8 && GetPixelMapSize(*mine) == 0x18);		// (no version bits: the size before the gray table)
+	DisposePattern(mine);
+	DisposePattern(stdPatterns[whitePat]);
+	EXPECT(stdPatterns[whitePat] != nil && (*stdPatterns[whitePat])->rowBytes == 1);
+	TestRects();
+	TestRegions();
+	TestBits();
+	TestGray();
+	TestOrigin();
+	if (failures == 0)
+		printf("test_Draw: all passed\n");
+	else
+		printf("test_Draw: %d failures\n", failures);
+	return failures == 0 ? 0 : 1;
+}

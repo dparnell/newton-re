@@ -88,6 +88,14 @@ PATCHES = {
         ("\t\tStructSizeType\tpolySize;\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;",
          "\t\tStructSizeType\tpolySize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;"),
     ],
+    # ConfigQD.h: the MP2100 ROM is built with QD_Gray - its PixelMap has the
+    # grayTable field (0x1c bytes: a GrafPort is 0x54 bytes with portRect at
+    # 0x1c, clipRgn at 0x28, grafProcs at 0x40 - SetClip 0x002be7cc, FrameRect
+    # 0x003150a4, OpenPort 0x002be72c); the DDK never defines the switch
+    "ConfigQD.h": [
+        ("\t#define QD_SupportUnicode\n",
+         "\t#define QD_SupportUnicode\n\n\t#define QD_Gray\t\t\t/* the MP2100 ROM's PixelMap has the grayTable (sync_ddk_headers.py) */\n"),
+    ],
     "UserPorts.h": [
         ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",
          "\t\tfriend void SleepTill(TTime* futureTimeToSend);\n\t\tfriend void Sleep(TTimeout timeout);\n\t\tfriend class TUTaskWorld;"),
