@@ -14,6 +14,7 @@
 #include "TextView.h"
 #include "ParagraphView.h"
 #include "GaugeView.h"
+#include "DrawShape.h"
 #include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -611,7 +612,10 @@ TestPictureView()
 	DrawPicture(RefVar(Eval("pict")), box, 0, srcCopy);
 	EXPECT(Pixel(100, 50) == 1 && Pixel(107, 50) == 0 && Pixel(103, 53) == 1);
 	// the bounds of the picture; a box of no size takes them
-	EXPECT(ShapeBounds(RefVar(Eval("pict")), &box) && box.right == 8 && box.bottom == 4);
+	// its bounds as a shape's (a bitmap frame with the class)
+	Eval("pict.class := 'bitmap");
+	ShapeBounds(RefVar(Eval("pict")), &box);
+	EXPECT(box.right == 8 && box.bottom == 4);
 	SetRect(&box, 3, 3, 3, 3);
 	Justify(&box, box, 0);
 	EXPECT(box.left == 3 && box.right == 3);
@@ -786,6 +790,115 @@ TestGaugeView()
 }
 
 
+// the ink in a box of the map
+static long
+InkIn(long left, long top, long right, long bottom)
+{
+	long count = 0;
+	for (long y = top; y < bottom; y++)
+		for (long x = left; x < right; x++)
+			count += Pixel(x, y);
+	return count;
+}
+
+
+static void
+TestShapes()
+{
+	// the shape objects
+	EXPECT(EQRef(ClassOf(Eval("MakeRect(10, 10, 30, 20)")), RSSYMrectangle) && RINT(Eval("Length(MakeRect(10, 10, 30, 20))")) == 8);
+	EXPECT(RINT(Eval("ShapeBounds(MakeRect(10, 10, 30, 20)).right")) == 30 && RINT(Eval("ShapeBounds(MakeRect(10, 10, 30, 20)).top")) == 10);
+	EXPECT(RINT(Eval("ShapeBounds(MakeLine(30, 20, 10, 12)).left")) == 10 && RINT(Eval("ShapeBounds(MakeLine(30, 20, 10, 12)).bottom")) == 20);
+	EXPECT(RINT(Eval("ShapeBounds(MakeLine(5, 7, 20, 7)).bottom")) == 8);
+	EXPECT(EQRef(ClassOf(Eval("MakeOval(0, 0, 8, 8)")), RSSYMoval) && RINT(Eval("Length(MakeRoundRect(0, 0, 8, 8, 4))")) == 12);
+	EXPECT(EQRef(ClassOf(Eval("MakePolygon([0, 0, 10, 0, 5, 8])")), RSSYMpolygon) && RINT(Eval("ShapeBounds(MakePolygon([0, 0, 10, 0, 5, 8])).right")) == 11);
+	EXPECT(EQRef(ClassOf(Eval("MakeText(\"Hi\", 0, 0, 40, 20)")), RSSYMtext) && EQRef(ClassOf(Eval("MakeText(\"Hi\", 0, 0, 40, 20).data")), RSSYMtextdata));
+	EXPECT(EQRef(ClassOf(Eval("MakeTextBox(\"Hi there\", 0, 0, 40, 40).data")), Intern((char*) "TextBox")));
+	EXPECT(NOTNIL(Eval("IsPrimShape(MakeRect(0, 0, 1, 1))")) && ISNIL(Eval("IsPrimShape([MakeRect(0, 0, 1, 1)])")) && ISNIL(Eval("IsPrimShape({})")));
+	EXPECT(RINT(Eval("ShapeBounds([MakeRect(10, 10, 30, 20), {fillPattern: 5}, MakeOval(20, 15, 50, 40)]).right")) == 50);
+	EXPECT(RINT(Eval("ShapeBounds(OffsetShape(MakeRect(10, 10, 30, 20), 5, -3)).left")) == 15 && RINT(Eval("ShapeBounds(OffsetShape([MakeRect(10, 10, 30, 20)], 5, -3)[0]).top")) == 7);
+	EXPECT(RINT(Eval("ShapeBounds(OffsetShape(MakePolygon([0, 0, 10, 0, 5, 8]), 4, 4)).left")) == 4);
+	EXPECT(EQRef(ClassOf(Eval("MakeRegion(MakeRect(2, 2, 6, 6))")), RSSYMregion) && RINT(Eval("ShapeBounds(MakeRegion(MakeRect(2, 2, 6, 6))).right")) == 6);
+
+	// drawn from a view's viewDrawScript: the origin is the view's top left
+	Eval("shapes := nil; shapeStyle := nil");
+	TView* v = ViewOf("ctxS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 120, bottom: 90}, viewDrawScript: func() :DrawShape(shapes, shapeStyle)})");
+	EXPECT(v != nil);
+	// a filled rectangle: fillPattern 5 is black; the frame (the pen) lies inside it
+	Eval("shapes := MakeRect(2, 2, 12, 8); shapeStyle := {fillPattern: 5}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(22, 12, 32, 18) == 60 && InkIn(0, 0, kWidth, kHeight) == 60);
+	// no pen: the outline is not drawn; a gray fill
+	Eval("shapeStyle := {penPattern: 0, fillPattern: 3}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(22, 12, 32, 18) == 30);
+	// the pen alone: the outline, a pixel wide
+	Eval("shapeStyle := nil");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(22, 12, 32, 18) == 28 && Pixel(22, 12) == 1 && Pixel(31, 17) == 1 && Pixel(25, 14) == 0);
+	// a wider pen
+	Eval("shapeStyle := {penSize: 2}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(22, 12, 32, 18) == 48 && Pixel(25, 14) == 0 && Pixel(23, 13) == 1);
+	// a line
+	Eval("shapes := MakeLine(0, 0, 9, 9); shapeStyle := nil");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(Pixel(20, 10) == 1 && Pixel(29, 19) == 1 && Pixel(25, 15) == 1 && Pixel(25, 16) == 0 && InkIn(0, 0, kWidth, kHeight) == 10);
+	// an oval and a polygon, filled
+	Eval("shapes := [MakeOval(0, 0, 8, 8), MakePolygon([20, 0, 30, 0, 25, 10])]; shapeStyle := {fillPattern: 5}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(20, 10, 28, 18) > 40 && Pixel(20, 10) == 0 && Pixel(23, 13) == 1);
+	EXPECT(Pixel(45, 10) == 1 && Pixel(45, 18) == 1 && Pixel(40, 19) == 0 && InkIn(40, 10, 51, 21) > 40);
+	// a style in a list applies to what follows; a nested list keeps its style to itself
+	// (penPattern 0 - vfNone - is no outline, as the ROM's own style frames have it; a nil slot is not looked at)
+	Eval("shapes := [MakeRect(0, 0, 10, 10), {penPattern: 0, fillPattern: 5}, MakeRect(20, 0, 30, 10), [{penPattern: 0, fillPattern: 1}, MakeRect(40, 0, 50, 10)], MakeRect(60, 0, 70, 10)]; shapeStyle := nil");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(20, 10, 30, 20) == 36);		// the outline
+	EXPECT(InkIn(40, 10, 50, 20) == 100);		// filled
+	EXPECT(InkIn(60, 10, 70, 20) == 0);			// white, no pen
+	EXPECT(InkIn(80, 10, 90, 20) == 100);		// filled again: the nested list's style is gone
+	// text: MakeText draws a line in the style's font from the bounds' top; MakeTextBox wraps
+	Eval("shapes := MakeText(\"Hello\", 0, 0, 60, 20); shapeStyle := {font: espy12}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	long inkLeft, inkRight;
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight == 46);	// "Hello" as the text view drew it, its baseline the ascent below the top
+	Eval("shapeStyle := {font: espy12, justification: 'right}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	InkExtent(10, 30, &inkLeft, &inkRight);
+	EXPECT(inkRight == 79 && inkLeft == 53);
+	Eval("shapes := MakeTextBox(\"Hello World\", 0, 0, 40, 40); shapeStyle := {font: espy12}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	InkExtent(10, 26, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight == 46);
+	InkExtent(26, 42, &inkLeft, &inkRight);
+	EXPECT(inkLeft == 20 && inkRight > 20);
+	// clipping: the style's clipping shape limits what is drawn
+	Eval("shapes := MakeRect(0, 0, 20, 20); shapeStyle := {penPattern: 0, fillPattern: 5, clipping: MakeRect(5, 5, 10, 10)}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(0, 0, kWidth, kHeight) == 25 && Pixel(25, 15) == 1 && Pixel(24, 15) == 0);
+	// a region shape drawn
+	Eval("shapes := MakeRegion(MakeOval(0, 0, 8, 8)); shapeStyle := {penPattern: 0, fillPattern: 5}");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	EXPECT(InkIn(20, 10, 28, 18) > 40 && Pixel(20, 10) == 0 && Pixel(23, 13) == 1);
+	Eval("ctxS:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "shapes closed"));
+}
+
+
 int
 main()
 {
@@ -804,13 +917,15 @@ main()
 	InstallHostNatives();
 	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfunctions, RefVar(gFunctionFrame));
-	// what the boot makes: vars.fonts, the ROM's font families by symbol
+	// what the boot makes: vars.fonts, the ROM's font families by their
+	// family symbols ('espy, 'newYork, 'geneva, 'handwriting: the ROM's
+	// globals template has fonts: {_proto: {espy: @80, ...}})
 	RefVar fonts(AllocateFrame());
 	RefVar list(Rromfontlist);
 	for (long i = 0; i < Length(list); i++)
 	{
 		RefVar family(GetArraySlotRef(list, i));
-		SetFrameSlot(fonts, RefVar(GetFrameSlotRef(family, Intern((char*) "screenSym"))), family);
+		SetFrameSlot(fonts, RefVar(FamilyNumToSym(i)), family);
 	}
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfonts, fonts);
 	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));
@@ -846,6 +961,7 @@ main()
 		TestPictureView();
 		TestParagraphView();
 		TestGaugeView();
+		TestShapes();
 	}
 	newton_catch_all
 	{

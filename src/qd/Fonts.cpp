@@ -758,6 +758,70 @@ MakeSimpleStyle(StyleRecord* style, RefArg fontFamily, long size, long face)
 }
 
 
+// ROM 0x0017be98 FamilyNumToSym__Fl
+// The packed family numbers' symbols.
+Ref
+FamilyNumToSym(long family)
+{
+	switch (family)
+	{
+	case 0:		return RSSYMespy;
+	case 1:		return RSSYMnewyork;
+	case 2:		return RSSYMgeneva;
+	case 3:		return RSSYMhandwriting;
+	default:	return NILREF;
+	}
+}
+
+
+// ROM 0x0017ccd8 GetFontSize__FRC6RefVar
+// The size of a packed font spec, or a font frame's size slot (an
+// integer, else type.ref.frame); 0 for anything else (an ink word NOT
+// YET RECONSTRUCTED: the ROM measures its glyph).
+long
+GetFontSize(RefArg fontSpec)
+{
+	if (ISINT(fontSpec))
+		return PackedFontSize(RVALUE(fontSpec));
+	if (!IsFrame(fontSpec))
+		return 0;
+	RefVar size(GetFrameSlotRef(fontSpec, RSSYMsize));
+	if (!ISINT(size))
+		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, size);
+	return RVALUE(size);
+}
+
+
+// ROM 0x0017dbf4 GetFontFace__FRC6RefVar
+// The face likewise (the face slot).
+long
+GetFontFace(RefArg fontSpec)
+{
+	if (ISINT(fontSpec))
+		return PackedFontFace(RVALUE(fontSpec));
+	if (!IsFrame(fontSpec))
+		return 0;
+	RefVar face(GetFrameSlotRef(fontSpec, RSSYMface));
+	if (!ISINT(face))
+		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, face);
+	return RVALUE(face);
+}
+
+
+// ROM 0x0017edd4 GetFontFamilySym__FRC6RefVar
+// The family symbol: a packed spec's number's, a font frame's family
+// slot; nil for anything else.
+Ref
+GetFontFamilySym(RefArg fontSpec)
+{
+	if (ISINT(fontSpec))
+		return FamilyNumToSym(PackedFontFamily(RVALUE(fontSpec)));
+	if (!IsFrame(fontSpec))
+		return NILREF;
+	return GetFrameSlotRef(fontSpec, RSSYMfamily);
+}
+
+
 // the family frame for a packed font spec's family index (the ROM font
 // list; the user's font, the system font, beyond it)
 static Ref

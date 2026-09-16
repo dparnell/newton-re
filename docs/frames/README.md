@@ -531,7 +531,11 @@ linenumber}` (`NSErrors.h` -48601..-48628).
 The REP's input side is `PStdioInTranslator` (a line at a time, compiled
 by `ParseString`) and `REPAcceptLine`; `host/newtonscript.cpp` builds the
 `newtonscript` program: the object system over the ROM image, files
-loaded with `ParseFile`, `-e` for an expression, stdin as the REP.
+loaded with `ParseFile`, `-e` for an expression, stdin as the REP, and
+the host function `ROMConstant("name")` giving a ROM R constant by name
+(`ROMConstant("canonicalTextShape")`; the magic pointers print as `@n`,
+so `@547` is the ROM's globals template with `fonts`, `international`,
+the registries).
 `test_Compiler` compiles and runs source for every construct, both
 function kinds, the errors, `ParseFile` and the `Compile` native.
 

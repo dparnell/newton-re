@@ -317,6 +317,45 @@ the filled part's end; `gaugeDrawLimits` paints the rest of the bar
 light gray.  NOT YET: tracking the pen (`TrackSetValue` 0x0018b344 on
 aeClick).
 
+**Shapes** (`DrawShape.h`): the NewtonScript shapes and `DrawShape`.  A
+shape is a `'rectangle`, `'oval` or `'line` binary (8 bytes: the rect,
+a line's two ends - `MakeRect` 0x000ddb34, `MakeOval` 0x000decb0,
+`MakeLine` 0x000dfb00 through `MakeRectShape` 0x000e260c), a
+`'roundRectangle` or `'wedge` binary (12 bytes: the rect and the
+diameter, or the angles), or a frame: `'polygon` (`MakePolygon`
+0x000e4d30: `data` a Polygon of the `[x, y, ...]` points), `'region`
+(`MakeRegion` 0x000e446c: the shape drawn into an open region),
+`'text`/`'TextBox` (`MakeText`/`MakeTextBox` 0x000de268/0x000de334:
+`bounds` a `'boundsRect` binary, `data` the string as `'textData` or
+`'textBox`), `'bitmap`, `'picture`, `'ink`.  `ShapeBounds` 0x000e21cc
+gives a shape's or a list's bounds (a line's ends put in order and at
+least a pixel wide, a polygon's box a pixel wider), `OffsetShape`
+0x000ded00 moves one in place, `IsPrimShape` 0x000deac8 tells a single
+shape from a list.
+
+`DrawShape` 0x000e0a68 (`view:DrawShape(shape, style)` - `FDrawShape`
+0x000ddae4 is a slot of the ROM's root template, drawing from the
+view's top left) draws a shape or an array of them with a style frame
+through `TStyleSave` (0x0019a86c: the state a style sets - `SetStyle`
+0x0019aab8 reads `fillPattern`, `penPattern` (0, vfNone, draws no
+outline; the pen is on when the slot is nil or absent - the ROM's own
+style frames say `penPattern: 0`), `penSize` (an integer or `[h, v]`),
+`transferMode` (8 draws as srcOr), `font`, `justification` (`'center`,
+`'right`), `textPattern`, `clipping` (a shape the port's clip is
+narrowed to, undone when the list ends), `selection`; `transform`
+scaling is NOT YET).  `DrawShapeList` 0x000e0d5c: a style frame in a
+list applies to the shapes after it; a nested list draws in its own
+level and the style before it is put back; `DrawOneShape` 0x000e0fa0
+paints (fill) then frames (pen) a rectangle, oval, round rectangle or
+wedge, draws a line, offsets and paints/frames a polygon's or region's
+data, draws a bitmap (`DrawBitmap`, the mask first for patCopy), a text
+shape as a line from its bounds' top plus the ascent aligned by the
+justification, a TextBox wrapped and clipped into its bounds.  NOT YET:
+`'picture` and `'ink` shapes, `MakeShape`/`MakePict`/`ScaleShape`/
+`MungeShape`, the hit testing (`HitShape`, `FindShape`,
+`PointInShape`), `GetShapeInfo`, `WedgeBox`.  The bounds binaries hold
+the host's Rect (DEVIATION: the ROM's are big-endian shorts).
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -326,7 +365,9 @@ their clippers, scripts, ties, the errors, a title and a button's text,
 a picture view's icon, paragraphs (the wrapped lines and their offsets,
 the ellipsis, vCalculateBounds, style runs, viewLineSpacing, justified
 and moved paragraphs, the style runs' corrections), gauges (the bar, the
-value through SetValue, the limits, the knob and the gray rest).
+value through SetValue, the limits, the knob and the gray rest), shapes
+(the objects, their bounds, every kind drawn from a viewDrawScript with
+fills, pens, styles in lists, nested lists, text, clipping).
 
 ## Not yet
 

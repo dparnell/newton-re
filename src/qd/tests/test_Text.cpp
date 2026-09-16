@@ -118,7 +118,7 @@ TestFonts()
 	// a frame spec, and the packed spec's size and face
 	EXPECT(PackedFontFamily(PackFont(2, 10, 5)) == 2 && PackedFontSize(PackFont(2, 10, 5)) == 10 && PackedFontFace(PackFont(2, 10, 5)) == 5);
 	RefVar spec(AllocateFrame());
-	SetFrameSlot(spec, RSSYMfamily, RefVar(Intern((char*) "genevaFont")));
+	SetFrameSlot(spec, RSSYMfamily, RefVar(Intern((char*) "geneva")));
 	SetFrameSlot(spec, RSSYMsize, RefVar(MAKEINT(10)));
 	SetFrameSlot(spec, RSSYMface, RefVar(MAKEINT(kBoldFace)));
 	CreateTextStyleRecord(spec, &style);
@@ -228,7 +228,7 @@ TestNatives()
 	EXPECT(RINT(Eval("FontHeight(espy12)")) == 16);
 	EXPECT(RINT(Eval("StrFontWidth(\"Hello\", espy12)")) == 27);
 	EXPECT(RINT(Eval("StrFontWidth(\"\", espy12)")) == 0);
-	EXPECT(RINT(Eval("StrFontWidth(\"Hello\", {family: 'genevaFont, size: 10, face: 0})")) == 25);
+	EXPECT(RINT(Eval("StrFontWidth(\"Hello\", {family: 'geneva, size: 10, face: 0})")) == 25);
 }
 
 
@@ -357,13 +357,15 @@ main()
 	InstallHostNatives();
 	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfunctions, RefVar(gFunctionFrame));
-	// what the boot makes: vars.fonts, the ROM's font families by symbol
+	// what the boot makes: vars.fonts, the ROM's font families by their
+	// family symbols ('espy, 'newYork, 'geneva, 'handwriting: the ROM's
+	// globals template has fonts: {_proto: {espy: @80, ...}})
 	RefVar fonts(AllocateFrame());
 	RefVar list(Rromfontlist);
 	for (long i = 0; i < Length(list); i++)
 	{
 		RefVar family(GetArraySlotRef(list, i));
-		SetFrameSlot(fonts, RefVar(GetFrameSlotRef(family, Intern((char*) "screenSym"))), family);
+		SetFrameSlot(fonts, RefVar(FamilyNumToSym(i)), family);
 	}
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfonts, fonts);
 	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));

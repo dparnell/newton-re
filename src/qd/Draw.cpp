@@ -343,14 +343,16 @@ FrRect(const Rect* r)
 
 
 // ROM 0x00314170 StdRect
-// The standard rect proc: frame draws the frame (and records into an open
-// region, NOT YET), the other verbs fill.  NOT YET RECONSTRUCTED:
-// recording into an open picture.
+// The standard rect proc: frame records the rectangle into an open
+// region (PutRect) and draws the frame, the other verbs fill.  NOT YET
+// RECONSTRUCTED: recording into an open picture.
 void
 StdRect(GrafVerb verb, Rect* r)
 {
 	if (verb == frame)
 	{
+		if (GetCurrentPort()->rgnSave != nil)
+			PutRect(r, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 		FrRect(r);
 		return;
 	}

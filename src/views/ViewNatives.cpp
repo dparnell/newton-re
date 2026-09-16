@@ -19,6 +19,7 @@
 */
 
 #include "RootView.h"
+#include "DrawShape.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
@@ -598,6 +599,7 @@ static const char* const kToggleSource = "func() if not viewCObject or not Visib
 void
 RegisterViewNatives(void)
 {
+	RegisterShapeNatives();
 	RegisterNativeFunction("FGetView__FRC6RefVarT1", (void*) FGetView, 1);
 	RegisterNativeFunction("FGetRoot", (void*) FGetRoot, 0);
 	RegisterNativeFunction("FGetFlags__FRC6RefVarT1", (void*) FGetFlags, 1);
@@ -651,6 +653,7 @@ MakeViewMethods(void)
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
+		{ "DrawShape", (void*) FDrawShape, 2 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)

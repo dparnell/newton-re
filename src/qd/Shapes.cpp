@@ -254,11 +254,14 @@ DrawArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mod
 
 
 // ROM 0x002fb2bc StdOval
-// The standard oval proc: the oval fills its rectangle.  NOT YET
-// RECONSTRUCTED: recording into an open picture or region.
+// The standard oval proc: the oval fills its rectangle; frame records it
+// into an open region (PutOval).  NOT YET RECONSTRUCTED: recording into
+// an open picture.
 void
 StdOval(GrafVerb verb, Rect* r)
 {
+	if (verb == frame && GetCurrentPort()->rgnSave != nil)
+		PutOval(r, r->right - r->left, r->bottom - r->top, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 	long mode;
 	PatternHandle pattern;
 	PushVerb(verb, &mode, &pattern);
@@ -299,11 +302,13 @@ FillOval(const Rect* r, PatternHandle pattern)
 
 
 // ROM 0x00318eac StdRRect
-// The standard round-rectangle proc.  NOT YET RECONSTRUCTED: recording
-// into an open picture or region.
+// The standard round-rectangle proc; frame records the shape into an
+// open region.  NOT YET RECONSTRUCTED: recording into an open picture.
 void
 StdRRect(GrafVerb verb, Rect* r, long ovalWidth, long ovalHeight)
 {
+	if (verb == frame && GetCurrentPort()->rgnSave != nil)
+		PutOval(r, ovalWidth, ovalHeight, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 	long mode;
 	PatternHandle pattern;
 	PushVerb(verb, &mode, &pattern);

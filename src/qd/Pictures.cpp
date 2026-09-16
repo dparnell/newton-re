@@ -266,23 +266,6 @@ Justify(Rect* r, const Rect& box, ULong justify)
 }
 
 
-// ROM 0x000e21cc ShapeBounds__FRC6RefVarP5TRect
-// A bitmap frame's bounds.  NOT YET RECONSTRUCTED: the shapes (rectangles,
-// ovals, polygons, text shapes and lists of them).
-Boolean
-ShapeBounds(RefArg shape, Rect* bounds)
-{
-	if (IsFrame(shape))
-	{
-		RefVar frame(GetFrameSlotRef(shape, RSSYMbounds));
-		if (NOTNIL(frame) && FromObject(frame, *bounds))
-			return true;
-	}
-	SetEmptyRect(bounds);
-	return false;
-}
-
-
 // ROM 0x0018b82c DrawPicture__FRC6RefVarRC5TRectUll
 // A bitmap frame (one with bits or colorData) drawn in the box: its
 // bounds justified into the box ("bad pictBounds frame" without proper

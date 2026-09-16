@@ -145,6 +145,12 @@ void		CopyStyle(StyleRecord* style);							// (ROM: the style's pattern re-made 
 Boolean		EqualStyle(const StyleRecord* a, const StyleRecord* b);
 void		DisposeStyleRecord(StyleRecord* style);				// host: the pattern CreateTextStyleRecord made
 
+// a font spec's parts: a packed integer's fields, a font frame's slots
+long		GetFontSize(RefArg fontSpec);						// (an ink word NOT YET: 0)
+long		GetFontFace(RefArg fontSpec);
+Ref			GetFontFamilySym(RefArg fontSpec);					// nil when there is none
+Ref			FamilyNumToSym(long family);						// 'espy, 'newYork, 'geneva, 'handwriting; nil beyond
+
 // the ROM's font list and the system font
 Ref			GetROMFontList(void);
 Ref			GetFontFamily(RefArg familySymbol);					// through vars.fonts

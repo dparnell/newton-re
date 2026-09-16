@@ -67,7 +67,6 @@ public:
 
 void	DrawBitmap(RefArg bitmap, Rect* box, long mode);					// the bitmap copied into the box (sized to the bits when 0 wide)
 void	Justify(Rect* r, const Rect& box, ULong justify);					// r placed in the box by the viewJustify bits
-Boolean	ShapeBounds(RefArg shape, Rect* bounds);							// a bitmap frame's bounds (NOT YET: shapes)
 void	DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode);	// a bitmap frame drawn in the box, justified
 
 #endif	/* __PICTURES_H */

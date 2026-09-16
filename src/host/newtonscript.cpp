@@ -17,7 +17,11 @@
 	the MP2100 D image in DebugRom/ next to the source tree (NEWTON_ROM
 	overrides); without a readable image the object system runs without
 	the ROM's objects (its built-in NewtonScript functions are then
-	missing, the reconstructed natives are not).
+	missing, the reconstructed natives are not).  The host adds the global
+	function ROMConstant(name): the ROM's R constant of that name (a
+	string or symbol, case as in ROMConstants.h without the R:
+	ROMConstant("canonicalTextShape")), nil for none - for looking at the
+	ROM's objects from the REP.
 */
 
 #include "Frames.h"
@@ -26,6 +30,8 @@
 #include "Compiler.h"
 #include "REPTranslators.h"
 #include "ROMImport.h"
+#include "ROMConstants.h"
+#include "NativeFunctions.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -35,6 +41,19 @@
 #ifndef NEWTON_DEFAULT_ROM_IMAGE
 #define NEWTON_DEFAULT_ROM_IMAGE "DebugRom/MP2100 D/Senior DCirrusNoDebug image"
 #endif
+
+
+// Host: ROMConstant(name) - the ROM's R constant by name
+static Ref
+FROMConstant(RefArg /*rcvr*/, RefArg name)
+{
+	RefVar sym(IsSymbol(name) ? (Ref) name : Intern((UniChar*) BinaryData(name)));
+	const char* wanted = SymbolName(sym);
+	for (long i = 0; i < gROMConstantCount; i++)
+		if (symcmp((char*) gROMConstantEntries[i].fName, (char*) wanted) == 0)
+			return *gROMConstantEntries[i].fRef;
+	return NILREF;
+}
 
 
 static int
@@ -77,6 +96,7 @@ main(int argc, char** argv)
 	gObjectHeapSize = heapSize;
 	InitObjects();
 	HostInitREP(stdout, stdin);
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
 
 	for (int i = first; i < argc; i++)
 	{

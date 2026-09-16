@@ -107,7 +107,8 @@ src/
                 picture view (PictureView.h), the paragraph view of
                 styled text (ParagraphView.h, display only, over
                 DataView.h; the style runs in StyleRuns.h), the gauge
-                (GaugeView.h); the other subclasses (lists, pickers,
+                (GaugeView.h), the NewtonScript shapes and DrawShape
+                (DrawShape.h); the other subclasses (lists, pickers,
                 editing) to come
                 (docs/views/README.md)
   bootstrap/    reset and boot code (to come)

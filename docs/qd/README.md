@@ -235,9 +235,14 @@ mode and pattern) along a Bresenham walk, clipped by the port's regions
 A font family is a NewtonScript frame: the ROM has four in
 `Rromfontlist` (0x63465d: espy, "Kräftig" = New York, "Einfach" =
 Geneva, "Plakativ" = Handwriting; the packed font spec's family index)
-and the boot puts them, by `screenSym`, into `vars.fonts`, where
-`GetFontFamily`/`SearchFont` 0x002bc358 look them up (the system font,
-`Rsystemfont` = `'espy`, when nothing matches).  A family holds `name`,
+and `vars.fonts` holds them by their family symbols - the ROM's globals
+template (magic pointer 547) has `fonts: {_proto: {espy: @80, newYork:
+@131, geneva: @104, handwriting: @571}}` (`FamilyNumToSym` 0x0017be98
+names the packed family numbers; a family's `screenSym`, `'espyFont`,
+is the font picker's) - where `GetFontFamily`/`SearchFont` 0x002bc358
+look them up (the system font, `Rsystemfont` = `'espy`, when nothing
+matches).  `GetFontSize`/`GetFontFace`/`GetFontFamilySym`
+0x0017ccd8/0x0017dbf4/0x0017edd4 take a font spec apart.  A family holds `name`,
 `macFontID`, `encoding` and `plainData`/`boldData`/`italicData`/
 `boldItalicData`: each an `'sfnt` binary - a TrueType container whose
 tables are `cmap`, `head`, `hhea`, `hmtx`, `hsty` and, for a screen font,
@@ -344,7 +349,9 @@ x.  `CloseRgn` sorts and culls the points (a pair at one place cancels:
 the outline's corners meet) and packs them (`PackRgn`), so a polygon's
 region holds the pixels whose centres fall inside the outline - the
 classic QuickDraw shapes; `test_Shapes` pins a diamond and a triangle.
-Ovals record through `PutOval` the same way.
+`StdRect`, `StdOval` and `StdRRect` record their frame verb into the
+open region likewise (`PutRect`, `PutOval`), so a rectangle or oval
+framed between OpenRgn and CloseRgn becomes the region of its inside.
 
 A polygon is a handle to `Polygon` {polySize, filler, polyBBox, points}:
 `OpenPoly` 0x0030ff38 makes it (`fPolyHandle`/`fPolySize`, the port's
