@@ -30,7 +30,14 @@ CLIBRARY = ["limits.h", "New.h", "setjmp.h", "stdarg.h", "stddef.h", "stdio.h", 
 # instructions and self-relative offsets that ProtocolGen's glue dispatches
 # through; src/protocols/Protocols.h re-expresses it with virtual functions
 # and function pointers (its comment says how).
-REPLACED = {"Protocols.h": "ARM-specific protocol glue; src/protocols/Protocols.h re-expresses it"}
+REPLACED = {
+    "Protocols.h": "ARM-specific protocol glue; src/protocols/Protocols.h re-expresses it",
+    # BufferSegment.h is the external interface only (a private constructor, no
+    # virtuals, "to prevent external code from knowing the size of the object");
+    # src/utility/BufferSegment.h has the ROM's classes CMinBuffer, CBuffer and
+    # CBufferSegment with their virtuals and layout
+    "BufferSegment.h": "external interface only; src/utility/BufferSegment.h has the ROM's classes",
+}
 
 PATCHES = {
     # UserSemaphore.h: GetRefCon takes void**, fSem is a ULong* -> needs a cast in C++
