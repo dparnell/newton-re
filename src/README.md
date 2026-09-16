@@ -64,8 +64,8 @@ src/
                 blocks, the entry cache, the entry operations) and the
                 store and soup frames with their methods (Soups.h), and
                 the cursors and queries (Cursors.h: TUnionSoupIndex,
-                TCursor, TCollectCursor) and the union soups
-                (UnionSoups.cpp)
+                TCursor, TCollectCursor), the union soups
+                (UnionSoups.cpp) and the tags indexes (Tags.h)
                 (docs/stores/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

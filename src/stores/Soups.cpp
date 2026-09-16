@@ -10,6 +10,7 @@
 
 #include "Soups.h"
 #include "Cursors.h"
+#include "Tags.h"
 #include "StoreObject.h"
 #include "Frames.h"
 #include "Interpreter.h"
@@ -138,6 +139,11 @@ static const PrototypeMethod gPlainSoupMethods[] = {
 	{ "GetIndexesModTime", (void*) SoupGetIndexesModTime, 0 },
 	{ "GetInfoModTime", (void*) SoupGetInfoModTime, 0 },
 	{ "flush", (void*) PlainSoupFlush, 0 },
+	{ "AddTags", (void*) PlainSoupAddTags, 1 },
+	{ "RemoveTags", (void*) PlainSoupRemoveTags, 1 },
+	{ "ModifyTag", (void*) PlainSoupModifyTag, 2 },
+	{ "HasTags", (void*) PlainSoupHasTags, 0 },
+	{ "GetTags", (void*) PlainSoupGetTags, 0 },
 	{ "Query", (void*) CommonSoupQuery, 1 },
 	{ "collect", (void*) SoupCollect, 1 },
 	{ nil, nil, 0 }
@@ -1734,7 +1740,7 @@ GetSoupIndexObject(RefArg soup, PSSId infoId)
 // ROM 0x0031deb8 IndexEntries__FRC6RefVarT1
 // Every entry of the soup (walked through the _uniqueID index, read
 // through one fault block re-pointed at each) put into a new index in
-// one transaction (a tags index: NOT YET).
+// one transaction (a tags index: each entry's tags in its own).
 void
 IndexEntries(RefArg soup, RefArg indexDesc)
 {
@@ -1748,13 +1754,25 @@ IndexEntries(RefArg soup, RefArg indexDesc)
 	data.Clear();
 	if (uniqueIdIndex->First(&key, &data) != kIndexOK)
 		return;
+	RefVar tags;
+	RefVar path;
+	if (isTags)
+	{
+		tags = GetFrameSlotRef(indexDesc, RSSYMtags);
+		path = GetFrameSlotRef(indexDesc, RSSYMpath);
+	}
 	RefVar entry(MakeFaultBlock(soup, wrapper, 0));
+	RefVar entryTags;
 	do {
 		Ref* slots = FaultBlockSlots(entry);
 		slots[kFaultBlockIdSlot] = MAKEINT((long) data);
 		slots[kFaultBlockObjectSlot] = NILREF;
 		if (isTags)
-			;												// NOT YET RECONSTRUCTED: AlterTagsIndex
+		{
+			entryTags = GetEntryKey(entry, path);
+			if ((Ref) entryTags != NILREF)
+				AlterTagsIndex(true, *index, (PSSId) (long) data, entryTags, soup, tags);
+		}
 		else
 		{
 			SKey entryKey;
@@ -2034,7 +2052,8 @@ GetEntrySKey(RefArg entry, RefArg indexDesc, SKey* outKey, Boolean* outIsVariabl
 
 // ROM 0x0031c930 AlterIndexes__FUcRC6RefVarT2Ul
 // The entry's keys added to (or deleted from) every index of the soup
-// with store object id as their datum (a tags index: NOT YET).
+// with store object id as their datum (the tags index: the entry's tags
+// as bits under the id).
 void
 AlterIndexes(Boolean add, RefArg soup, RefArg entry, PSSId id)
 {
@@ -2046,7 +2065,12 @@ AlterIndexes(Boolean add, RefArg soup, RefArg entry, PSSId id)
 		indexDesc = GetArraySlotRef(indexes, i);
 		TSoupIndex* index = GetSoupIndexObject(soup, (PSSId) RINT(GetFrameSlotRef(indexDesc, RSSYMindex)));
 		if (EQRef(GetFrameSlotRef(indexDesc, RSSYMtype), RSSYMtags))
-			continue;										// NOT YET RECONSTRUCTED: AlterTagsIndex
+		{
+			RefVar entryTags(GetEntryKey(entry, RefVar(GetFrameSlotRef(indexDesc, RSSYMpath))));
+			if ((Ref) entryTags != NILREF)
+				AlterTagsIndex(add, *index, id, entryTags, soup, RefVar(GetFrameSlotRef(indexDesc, RSSYMtags)));
+			continue;
+		}
 		SKey key;
 		memset(&key, 0, sizeof(key));
 		if (GetEntrySKey(entry, indexDesc, &key, nil))
@@ -2062,8 +2086,8 @@ AlterIndexes(Boolean add, RefArg soup, RefArg entry, PSSId id)
 // ROM 0x0031d078 UpdateIndexes__FRC6RefVarN21UlPUc
 // The indexes brought from oldEntry's keys to newEntry's: a key that has
 // changed is deleted and added (equal ints/reals/keys are left alone);
-// tagsChanged asks for the tags index too (NOT YET) and says whether it
-// changed.  ==> whether any index changed.
+// tagsChanged asks for the tags index too and says whether it changed.
+// ==> whether any other index changed.
 Boolean
 UpdateIndexes(RefArg soup, RefArg newEntry, RefArg oldEntry, PSSId id, Boolean* tagsChanged)
 {
@@ -2081,7 +2105,7 @@ UpdateIndexes(RefArg soup, RefArg newEntry, RefArg oldEntry, PSSId id, Boolean* 
 		if (EQRef(type, RSSYMtags))
 		{
 			if (*tagsChanged)
-				*tagsChanged = false;						// NOT YET RECONSTRUCTED: UpdateTagsIndex
+				*tagsChanged = UpdateTagsIndex(soup, indexDesc, oldEntry, newEntry, id);
 			continue;
 		}
 		SKey newKey;

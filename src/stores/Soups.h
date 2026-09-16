@@ -28,10 +28,9 @@
 	and go.  Their methods are natives here and the ROM's NewtonScript
 	methods re-expressed as source.
 
-	NOT YET RECONSTRUCTED here: tags indexes (and the union soup tag
-	methods), the sort tables (every sort id is 0), passwords, large
-	binaries, the XMit (synchronising) methods, package stores' part
-	handler.  The cursors are Cursors.h.
+	NOT YET RECONSTRUCTED here: the sort tables (every sort id is 0),
+	passwords, large binaries, the XMit (synchronising) methods, package
+	stores' part handler.  The cursors are Cursors.h, the tags Tags.h.
 
 	Reconstructed from the MP2100 D ROM (0x0031c7c4-0x00323300,
 	0x00313750-0x00313ffc, 0x00325834-0x0032a570); each function cites

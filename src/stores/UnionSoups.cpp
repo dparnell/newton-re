@@ -19,8 +19,8 @@
 				prototype, together with the ROM's NewtonScript built-ins the
 				union soups rest on (GetSoupDef, CreateUSoupMember,
 				CreateSoupFromSoupDef, RegUnionSoup, UnRegUnionSoup, ...).
-				The tag methods (AddTags, GetTags, RemoveTags, ModifyTag) wait
-				for the tags indexes: NOT YET RECONSTRUCTED.
+				The tag methods (AddTags, GetTags, RemoveTags, ModifyTag,
+				the native HasTags) go to every soup (Tags.h).
 
 	Reconstructed from the MP2100 D ROM, 0x00334170-0x00335824 and the
 	unionSoupPrototype's objects (nsfunctions.py --object unionsoupprototype).
@@ -28,6 +28,7 @@
 
 #include "Soups.h"
 #include "Cursors.h"
+#include "Tags.h"
 #include "StoreObject.h"
 #include "Interpreter.h"
 #include "Compiler.h"
@@ -441,6 +442,111 @@ UnionSoupRemoveIndex(RefArg rcvr, RefArg path)
 }
 
 
+// ROM 0x00334698 UnionSoupHasTags
+// Whether every soup has a tags index (none: no).
+Ref
+UnionSoupHasTags(RefArg rcvr)
+{
+	RefVar soupList(GetFrameSlotRef(rcvr, RSSYMsouplist));
+	RefVar soup;
+	long count = Length(soupList);
+	if (count == 0)
+		return NILREF;
+	for (long i = 0; i < count; i++)
+	{
+		soup = GetArraySlotRef(soupList, i);
+		if (PlainSoupHasTags(soup) == NILREF)
+			return NILREF;
+	}
+	return TRUEREF;
+}
+
+
+// The union soup's soups must all have tags indexes for the tag methods.
+static void
+CheckUnionHasTags(RefArg rcvr)
+{
+	if (UnionSoupHasTags(rcvr) == NILREF)
+		Throw(exStoreError, (void*) kNSErrNoTagsIndex, nil);
+}
+
+
+// ROM 0x003345dc UnionSoupAddTags
+Ref
+UnionSoupAddTags(RefArg rcvr, RefArg tagOrTags)
+{
+	CheckStoresWriteProtect(rcvr);
+	CheckUnionHasTags(rcvr);
+	RefVar soupList(GetFrameSlotRef(rcvr, RSSYMsouplist));
+	RefVar soup;
+	for (long i = Length(soupList) - 1; i >= 0; i--)
+	{
+		soup = GetArraySlotRef(soupList, i);
+		PlainSoupAddTags(soup, tagOrTags);
+	}
+	return NILREF;
+}
+
+
+// ROM 0x00334764 UnionSoupGetTags
+// The union of the soups' tags; nil when one has none.
+Ref
+UnionSoupGetTags(RefArg rcvr)
+{
+	RefVar soupList(GetFrameSlotRef(rcvr, RSSYMsouplist));
+	RefVar soup;
+	RefVar result;
+	RefVar tags;
+	long count = Length(soupList);
+	for (long i = 0; i < count; i++)
+	{
+		soup = GetArraySlotRef(soupList, i);
+		tags = PlainSoupGetTags(soup);
+		if ((Ref) tags == NILREF)
+			return NILREF;
+		if ((Ref) result == NILREF)
+			result = tags;
+		else
+			result = FSetUnion(RefVar(NILREF), result, tags, RefVar(TRUEREF));
+	}
+	return result;
+}
+
+
+// ROM 0x003348cc UnionSoupRemoveTags
+Ref
+UnionSoupRemoveTags(RefArg rcvr, RefArg tags)
+{
+	CheckStoresWriteProtect(rcvr);
+	CheckUnionHasTags(rcvr);
+	RefVar soupList(GetFrameSlotRef(rcvr, RSSYMsouplist));
+	RefVar soup;
+	for (long i = Length(soupList) - 1; i >= 0; i--)
+	{
+		soup = GetArraySlotRef(soupList, i);
+		PlainSoupRemoveTags(soup, tags);
+	}
+	return NILREF;
+}
+
+
+// ROM 0x00334988 UnionSoupModifyTag
+Ref
+UnionSoupModifyTag(RefArg rcvr, RefArg oldTag, RefArg newTag)
+{
+	CheckStoresWriteProtect(rcvr);
+	CheckUnionHasTags(rcvr);
+	RefVar soupList(GetFrameSlotRef(rcvr, RSSYMsouplist));
+	RefVar soup;
+	for (long i = Length(soupList) - 1; i >= 0; i--)
+	{
+		soup = GetArraySlotRef(soupList, i);
+		PlainSoupModifyTag(soup, oldTag, newTag);
+	}
+	return NILREF;
+}
+
+
 // ROM 0x00334a4c UnionSoupFlush
 // The NaughtyFlush method: every soup flushed.
 Ref
@@ -668,6 +774,10 @@ static const NativeMethod gUnionSoupNatives[] = {
 	{ "AddIndex", (void*) UnionSoupAddIndex, 1 },
 	{ "RemoveIndex", (void*) UnionSoupRemoveIndex, 1 },
 	{ "NaughtyFlush", (void*) UnionSoupFlush, 0 },
+	{ "AddTags", (void*) UnionSoupAddTags, 1 },
+	{ "GetTags", (void*) UnionSoupGetTags, 0 },
+	{ "RemoveTags", (void*) UnionSoupRemoveTags, 1 },
+	{ "ModifyTag", (void*) UnionSoupModifyTag, 2 },
 	{ nil, nil, 0 }
 };
 
@@ -718,6 +828,11 @@ RegisterUnionSoupNatives(void)
 	RegisterNativeFunction("UnionSoupRemoveIndex", (void*) UnionSoupRemoveIndex, 1);
 	RegisterNativeFunction("UnionSoupFlush", (void*) UnionSoupFlush, 0);
 	RegisterNativeFunction("UnionSoupGetSize", (void*) UnionSoupGetSize, 0);
+	RegisterNativeFunction("UnionSoupAddTags", (void*) UnionSoupAddTags, 1);
+	RegisterNativeFunction("UnionSoupHasTags", (void*) UnionSoupHasTags, 0);
+	RegisterNativeFunction("UnionSoupGetTags", (void*) UnionSoupGetTags, 0);
+	RegisterNativeFunction("UnionSoupRemoveTags", (void*) UnionSoupRemoveTags, 1);
+	RegisterNativeFunction("UnionSoupModifyTag", (void*) UnionSoupModifyTag, 2);
 	RegisterNativeFunction("StoreCheckUnion", (void*) StoreCheckUnion, 0);
 	RegisterNativeFunction("StoreConvertSoupSortTables", (void*) StoreConvertSoupSortTables, 1);
 }

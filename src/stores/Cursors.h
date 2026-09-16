@@ -101,7 +101,7 @@ struct CursorSoupInfo
 				CursorSoupInfo();
 
 	Ref			fSoup;			// +0x00
-	Ref			fTagsBits;		// +0x04  the query's tags encoded for this soup (NOT YET)
+	Ref			fTagsBits;		// +0x04  the query's tagSpec encoded against this soup's tags (EncodeQueryTags)
 };
 
 struct CursorState				// 0x60
@@ -174,7 +174,7 @@ public:
 	CursorSoupInfo*	fSoupInfo;		// +0x14  [fNumSoups]
 	TUnionSoupIndex*	fIndex;		// +0x18
 	Ref			fTagSpec;			// +0x1c
-	TSoupIndex**	fTagsIndexes;	// +0x20  [fNumSoups] (NOT YET)
+	TSoupIndex**	fTagsIndexes;	// +0x20  [fNumSoups] the soups' tags indexes, for a tagSpec query
 	Ref			fIndexPath;			// +0x24
 	Ref			fIndexType;			// +0x28
 	Boolean		fSecOrder;			// +0x2c
@@ -228,6 +228,13 @@ public:
 
 TCursor*	CursorObj(RefArg cursor);
 Ref			CursorMove(RefArg cursor, long count);
+Ref			CursorNext(RefArg cursor);
+Ref			CursorPrev(RefArg cursor);
+Ref			CursorReset(RefArg cursor);
+Ref			CursorEntry(RefArg cursor);
+Ref			CursorClone(RefArg cursor);
+Ref			CursorGoto(RefArg cursor, RefArg entry);
+Ref			CursorGotoKey(RefArg cursor, RefArg key);
 Ref			CommonSoupQuery(RefArg rcvr, RefArg querySpec);
 Ref			SoupCollect(RefArg rcvr, RefArg querySpec);
 void		DefineCursor(RefArg soup, RefArg querySpec, RefArg cursor);

@@ -484,14 +484,45 @@ two stores with a cursor following the second store's soup as it is
 created and the store removed, the methods, the registry and a soupDef
 creating the member soup with its hook.
 
+## Tags (`src/stores/Tags.h`)
+
+A soup's *tags index* is an index description of type `'tags` whose
+`tags` array holds the tag symbols; an entry's tags are the symbol or
+array of symbols in the slot on the index's path, and the index maps the
+entry's store object id (a long key) to its `TagsBits` (0x002abd78: an
+SKey whose data is a bitmap, bit n for the nth tag of the array, as many
+bytes as the highest tag needs).  `EncodeTags` (0x002ac0a4) turns tags
+into bits through `FSetContains`; a tag the soup does not know is added
+to its array (`PlainSoupAddTags`, at most 624; `AddTag` reuses the nil
+slot of a removed tag so the other tags keep their bits) when an entry
+arrives with it (`AlterTagsIndex`, 0x00323580, from `AlterIndexes` and
+`IndexEntries`) or changes to it (`UpdateTagsIndex`, 0x0031ce04, from
+`UpdateIndexes` when `EntryChangeCommon` has the `kEntryChangeUpdateTags`
+flag).  A query's `tagSpec` `{equal, all, any, none}` is encoded against
+each soup's tags as `[mode, bits binary]` pairs (`EncodeQueryTags`,
+0x002ac330; nil when an `equal`/`all` tag is unknown to the soup, so no
+entry can match; an error with no mode) in `TCursor::BuildSoupsInfo`
+(re-encoded by `SoupTagsChanged`), and `TagsValidTest` (0x002ac49c)
+tests an entry's bits from the index in every mode without reading the
+entry (`TagsBits::ValidTest`: `equal` the same bits, `all` every query
+bit, `any` some, `none` no query bit; an entry absent from the index
+passes only a lone `none` or an empty `equal`).  The plain soup's tag
+methods: `AddTags`, `RemoveTags` (every entry with any of them changed:
+the tags out of the slot's array, the slot removed when none are left;
+the soup's slots left nil), `ModifyTag` (renamed in every entry through
+a tags query and in the soup's array - the bit stays), `HasTags`,
+`GetTags` (the nil slots left out); the union soup's go to every soup
+(`GetTags` the set union).  `test_Soups` (`TestTags`) runs the index's
+bits, every mode, a cursor following tag changes, the methods and the
+index removed.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
 (`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
 and `text`), `TEphemeralTracker`, `TSortingTable`/`TSortTables` (the sort
-ids are all 0; `secOrder`), tags indexes (`AlterTagsIndex`, `EncodeTags`,
-a query's `tagSpec`, the plain and union soup tag methods), `CopyEntries`,
+ids are all 0; `secOrder`), `CopyEntries`,
 the XMit methods and `XmitSoupChangeNow` (the soup change broadcasts), the
 store prototype's NewtonScript methods (`SetName`, `Erase`, `SetInfo`, ...
 wrap the natives with broadcasts), store passwords, `TPSSManager` and the

@@ -10,6 +10,7 @@
 */
 
 #include "Cursors.h"
+#include "Tags.h"
 #include "Frames.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -789,7 +790,7 @@ TCursor::Init(RefArg cursor, const TCursor* other)
 // first soup's index type is the cursor's; a tags index cannot be
 // queried); the begin and end keys become SKeys (an exclusive begin key
 // or inclusive end key of a multiSlot index sorts after shorter keys);
-// the tags query is encoded per soup (NOT YET).
+// the tags query is encoded against each soup's tags.
 void
 TCursor::BuildSoupsInfo(void)
 {
@@ -860,7 +861,7 @@ TCursor::BuildSoupsInfo(void)
 				tagsDesc = GetTagsIndexDesc(persistent);
 				if ((Ref) tagsDesc == NILREF)
 					Throw(exStoreError, (void*) kNSErrNoTagsIndex, nil);
-				Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);		// NOT YET: EncodeQueryTags
+				fSoupInfo[i].fTagsBits = EncodeQueryTags(tagsDesc, RefVar(fTagSpec));
 			}
 		}
 	}
@@ -1059,7 +1060,11 @@ TCursor::ValidTest(const SKey& key, PSSId id, Boolean atEnd, Boolean* entryMade,
 		return false;
 	}
 	if (fTagsIndexes != nil)
-		Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);	// NOT YET: TagsValidTest
+	{
+		long current = fIndex->fCurrentSoup;
+		if (!TagsValidTest(*fTagsIndexes[current], RefVar(fSoupInfo[current].fTagsBits), id))
+			return false;
+	}
 	if ((fFlags & kQueryWords) && !WordsValidTest(id))
 		return false;
 	if ((fFlags & kQueryText) && !TextValidTest(id))
@@ -1478,14 +1483,17 @@ TCursor::IndexObjectsChanged(void)
 
 
 // ROM 0x002aab98 SoupTagsChanged__7TCursorFRC6RefVar
-// NOT YET RECONSTRUCTED: EncodeQueryTags (a tags query never gets here).
+// The soup's tags changed: the query's tags re-encoded for it.
 void
 TCursor::SoupTagsChanged(RefArg soup)
 {
 	if (fTagSpec == NILREF)
 		return;
-	if (GetSoupInfoIndex(soup) < 0)
+	long i = GetSoupInfoIndex(soup);
+	if (i < 0)
 		return;
+	RefVar tagsDesc(GetTagsIndexDesc(RefVar(GetFrameSlotRef(soup, RSSYM_proto))));
+	fSoupInfo[i].fTagsBits = EncodeQueryTags(tagsDesc, RefVar(fTagSpec));
 }
 
 
@@ -2102,6 +2110,62 @@ Ref
 CursorMove(RefArg cursor, long count)
 {
 	return CursorObj(cursor)->Move(count);
+}
+
+
+// ROM 0x002abd64 CursorNext__FRC6RefVar
+Ref
+CursorNext(RefArg cursor)
+{
+	return CursorObj(cursor)->Move(1);
+}
+
+
+// ROM 0x002abd68 CursorPrev__FRC6RefVar
+Ref
+CursorPrev(RefArg cursor)
+{
+	return CursorObj(cursor)->Move(-1);
+}
+
+
+// ROM 0x002abd6c CursorReset__FRC6RefVar
+Ref
+CursorReset(RefArg cursor)
+{
+	return CursorObj(cursor)->Reset();
+}
+
+
+// ROM 0x002abd70 CursorEntry__FRC6RefVar
+Ref
+CursorEntry(RefArg cursor)
+{
+	return CursorObj(cursor)->Entry();
+}
+
+
+// ROM 0x002abd74 CursorClone__FRC6RefVar
+Ref
+CursorClone(RefArg cursor)
+{
+	return CursorObj(cursor)->Clone();
+}
+
+
+// ROM 0x002abd5c CursorGoto__FRC6RefVarT1
+Ref
+CursorGoto(RefArg cursor, RefArg entry)
+{
+	return CursorObj(cursor)->GotoEntry(entry);
+}
+
+
+// ROM 0x002abd60 CursorGotoKey__FRC6RefVarT1
+Ref
+CursorGotoKey(RefArg cursor, RefArg key)
+{
+	return CursorObj(cursor)->GotoKey(key);
 }
 
 

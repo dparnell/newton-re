@@ -11,6 +11,7 @@
 */
 
 #include "Soups.h"
+#include "Tags.h"
 #include "Frames.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -499,4 +500,9 @@ RegisterSoupNatives(void)
 	RegisterNativeFunction("SoupGetIndexesModTime", (void*) SoupGetIndexesModTime, 0);
 	RegisterNativeFunction("SoupGetInfoModTime", (void*) SoupGetInfoModTime, 0);
 	RegisterNativeFunction("PlainSoupFlush", (void*) PlainSoupFlush, 0);
+	RegisterNativeFunction("PlainSoupAddTags", (void*) PlainSoupAddTags, 1);
+	RegisterNativeFunction("PlainSoupRemoveTags", (void*) PlainSoupRemoveTags, 1);
+	RegisterNativeFunction("PlainSoupModifyTag", (void*) PlainSoupModifyTag, 2);
+	RegisterNativeFunction("PlainSoupHasTags", (void*) PlainSoupHasTags, 0);
+	RegisterNativeFunction("PlainSoupGetTags", (void*) PlainSoupGetTags, 0);
 }

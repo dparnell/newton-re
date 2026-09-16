@@ -12,6 +12,7 @@
 
 #include "Soups.h"
 #include "Cursors.h"
+#include "Tags.h"
 #include "Entries.h"
 #include "StoreObject.h"
 #include "Compiler.h"
@@ -814,6 +815,183 @@ TestUnionSoups()
 }
 
 
+/*------------------------------------------------------------------------------
+	Tags: a tags index, entries' tags encoded into it, tagSpec queries,
+	the tag methods and a cursor following tag changes.
+------------------------------------------------------------------------------*/
+
+static Ref
+Note(const char* name, RefArg labels)
+{
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RSSYMname, RefVar(MakeString(name)));
+	if ((Ref) labels != NILREF)
+		SetFrameSlot(frame, RefVar(SYMBOL("labels")), labels);
+	return frame;
+}
+
+
+static Ref
+Symbols(const char* a, const char* b = nil)
+{
+	RefVar array(AllocateArray(RSSYMarray, 0));
+	AddArraySlot(array, RefVar(SYMBOL(a)));
+	if (b != nil)
+		AddArraySlot(array, RefVar(SYMBOL(b)));
+	return array;
+}
+
+
+static long
+CountTagged(RefArg soup, const char* mode, RefArg tags)
+{
+	RefVar tagSpec(AllocateFrame());
+	SetFrameSlot(tagSpec, RefVar(SYMBOL(mode)), tags);
+	RefVar spec(AllocateFrame());
+	SetFrameSlot(spec, RSSYMtagspec, tagSpec);
+	return CursorObj(RefVar(SoupQuery(soup, spec)))->CountEntries();
+}
+
+
+static void
+TestTags()
+{
+	TStore* store = NewStore();
+	RefVar storeObject(RegisterTStore(store));
+	RefVar tagsSpec(IndexSpec("labels", "tags"));
+	SetFrameSlot(tagsSpec, RSSYMtags, RefVar(Symbols("home", "work")));
+	RefVar specs(AllocateArray(RSSYMarray, 2));
+	SetArraySlotRef(specs, 0, IndexSpec("name", "string"));
+	SetArraySlotRef(specs, 1, tagsSpec);
+	RefVar soup(StoreCreateSoup(storeObject, RefVar(MakeString("Notes")), specs));
+	EXPECT(PlainSoupHasTags(soup) == TRUEREF);
+	RefVar tags(PlainSoupGetTags(soup));
+	EXPECT(Length(tags) == 2 && EQRef(GetArraySlotRef(tags, 0), SYMBOL("home")));
+
+	// entries with tags; an unknown tag joins the soup's
+	RefVar home(SoupAdd(soup, RefVar(Note("chores", RefVar(SYMBOL("home"))))));
+	RefVar both(SoupAdd(soup, RefVar(Note("taxes", RefVar(Symbols("home", "work"))))));
+	RefVar work(SoupAdd(soup, RefVar(Note("report", RefVar(SYMBOL("work"))))));
+	RefVar none(SoupAdd(soup, RefVar(Note("idea", RefVar(NILREF)))));
+	RefVar fun(SoupAdd(soup, RefVar(Note("party", RefVar(Symbols("fun"))))));
+	tags = PlainSoupGetTags(soup);
+	EXPECT(Length(tags) == 3 && EQRef(GetArraySlotRef(tags, 2), SYMBOL("fun")));
+	// the tags index holds each entry's bits
+	TSoupIndex* tagsIndex = GetSoupIndexObject(soup, (PSSId) RINT(GetFrameSlotRef(RefVar(GetTagsIndexDesc(RefVar(GetFrameSlotRef(soup, RSSYM_proto)))), RSSYMindex)));
+	SKey key;
+	key.Clear();
+	key = (long) FaultBlockId(both);
+	TagsBits bits;
+	bits.Clear();
+	EXPECT(tagsIndex->Find(&key, &key, &bits, true) == kIndexOK && bits.Size() == 1 && bits.Data()[0] == 3);
+	key = (long) FaultBlockId(fun);
+	EXPECT(tagsIndex->Find(&key, &key, &bits, true) == kIndexOK && bits.Data()[0] == 4);
+	key = (long) FaultBlockId(none);
+	EXPECT(tagsIndex->Find(&key, &key, &bits, true) != kIndexOK);
+
+	// the tagSpec modes
+	EXPECT(CountTagged(soup, "any", RefVar(SYMBOL("home"))) == 2);
+	EXPECT(CountTagged(soup, "any", RefVar(Symbols("home", "fun"))) == 3);
+	EXPECT(CountTagged(soup, "all", RefVar(Symbols("home", "work"))) == 1);
+	EXPECT(CountTagged(soup, "all", RefVar(SYMBOL("work"))) == 2);
+	EXPECT(CountTagged(soup, "equal", RefVar(Symbols("home", "work"))) == 1);
+	EXPECT(CountTagged(soup, "equal", RefVar(SYMBOL("home"))) == 1);
+	EXPECT(CountTagged(soup, "none", RefVar(SYMBOL("home"))) == 3);			// work, idea, party
+	EXPECT(CountTagged(soup, "none", RefVar(Symbols("home", "work"))) == 2);	// idea, party
+	EXPECT(CountTagged(soup, "any", RefVar(SYMBOL("nothing"))) == 0);		// no such tag
+	EXPECT(CountTagged(soup, "all", RefVar(Symbols("home", "nothing"))) == 0);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("notes")), soup);
+	EXPECT(RINT(Eval("notes:Query({tagSpec: {any: 'work}}):CountEntries()")) == 2);
+	EXPECT(RINT(Eval("notes:Query({tagSpec: {any: 'work, none: 'home}}):CountEntries()")) == 1);
+	EXPECT(RINT(Eval("notes:Query({indexPath: 'name, tagSpec: {none: ['home, 'work]}}):CountEntries()")) == 2);
+	EXPECT(StringIs(RefVar(Eval("notes:Query({indexPath: 'name, tagSpec: {all: ['home, 'work]}}):Entry().name")), "taxes"));
+	Boolean threw = false;
+	newton_try
+	{
+		Eval("notes:Query({tagSpec: {}})");			// no mode at all
+	}
+	newton_catch(exStoreError)
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+
+	// a cursor follows an entry's tags changing
+	RefVar tagSpec(AllocateFrame());
+	SetFrameSlot(tagSpec, RSSYMany, RefVar(SYMBOL("home")));
+	RefVar spec(AllocateFrame());
+	SetFrameSlot(spec, RSSYMtagspec, tagSpec);
+	RefVar cursor(SoupQuery(soup, spec));
+	TCursor* c = CursorObj(cursor);
+	EXPECT(EQRef(c->Entry(), home));
+	SetFrameSlot(work, RefVar(SYMBOL("labels")), RefVar(Symbols("work", "home")));
+	EntryChange(work);
+	EXPECT(c->CountEntries() == 3);
+	SetFrameSlot(home, RefVar(SYMBOL("labels")), RefVar(SYMBOL("fun")));
+	EntryChange(home);									// the cursor's entry no longer matches
+	EXPECT(c->CountEntries() == 2 && !EQRef(c->Entry(), home));
+	EXPECT(CountTagged(soup, "any", RefVar(SYMBOL("fun"))) == 2);
+
+	// the tag methods
+	PlainSoupAddTags(soup, RefVar(Symbols("urgent", "fun")));
+	tags = PlainSoupGetTags(soup);
+	EXPECT(Length(tags) == 4 && EQRef(GetArraySlotRef(tags, 3), SYMBOL("urgent")));
+	PlainSoupRemoveTags(soup, RefVar(Symbols("home")));
+	tags = PlainSoupGetTags(soup);
+	EXPECT(Length(tags) == 3 && EQRef(GetArraySlotRef(tags, 0), SYMBOL("work")));
+	RefVar labels(GetFrameSlotRef(work, RefVar(SYMBOL("labels"))));
+	EXPECT(IsArray(labels) && Length(labels) == 1 && EQRef(GetArraySlotRef(labels, 0), SYMBOL("work")));
+	EXPECT(CountTagged(soup, "any", RefVar(SYMBOL("work"))) == 2);		// taxes, report
+	EXPECT(CountTagged(soup, "any", RefVar(SYMBOL("home"))) == 0);
+	PlainSoupModifyTag(soup, RefVar(SYMBOL("work")), RefVar(SYMBOL("office")));
+	tags = PlainSoupGetTags(soup);
+	EXPECT(EQRef(GetArraySlotRef(tags, 0), SYMBOL("office")));
+	labels = GetFrameSlotRef(work, RefVar(SYMBOL("labels")));
+	EXPECT(EQRef(GetArraySlotRef(labels, 0), SYMBOL("office")));
+	EXPECT(CountTagged(soup, "any", RefVar(SYMBOL("office"))) == 2);
+	threw = false;
+	newton_try
+	{
+		PlainSoupModifyTag(soup, RefVar(SYMBOL("fun")), RefVar(SYMBOL("office")));	// exists already
+	}
+	newton_catch(exStoreError)
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+	EXPECT(RINT(Eval("Length(notes:GetTags())")) == 3);
+	Eval("notes:AddTags('later)");
+	EXPECT(RINT(Eval("Length(notes:GetTags())")) == 4);
+
+	// a union soup's tags
+	RefVar unionSoup(GetUnionSoup(RefVar(MakeString("Notes"))));
+	EXPECT(UnionSoupHasTags(unionSoup) == TRUEREF);
+	EXPECT(Length(RefVar(UnionSoupGetTags(unionSoup))) == 4);
+	UnionSoupAddTags(unionSoup, RefVar(SYMBOL("shared")));
+	EXPECT(Length(RefVar(PlainSoupGetTags(soup))) == 5);
+	EXPECT(CountTagged(unionSoup, "any", RefVar(SYMBOL("office"))) == 2);
+
+	// the tags index removed: no tags
+	SoupRemoveIndex(soup, RefVar(SYMBOL("labels")));
+	EXPECT(PlainSoupHasTags(soup) == NILREF && PlainSoupGetTags(soup) == NILREF);
+	threw = false;
+	newton_try
+	{
+		CountTagged(soup, "any", RefVar(SYMBOL("office")));
+	}
+	newton_catch(exStoreError)
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+	RemoveTStore(store);
+	store->Delete();
+}
+
+
 int
 main()
 {
@@ -830,6 +1008,7 @@ main()
 		TestSoups();
 		TestCursors();
 		TestUnionSoups();
+		TestTags();
 	}
 	newton_catch_all
 	{

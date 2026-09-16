@@ -74,7 +74,7 @@ enum
 {
 	kEntryChangeKeepUniqueID = 1,		// the store's _uniqueID is reinstated if the frame's differs
 	kEntryChangeSetModTime = 2,			// _modTime is set to now
-	kEntryChangeUpdateTags = 4,			// the tags index is updated (NOT YET RECONSTRUCTED)
+	kEntryChangeUpdateTags = 4,			// the tags index is updated
 	kEntryChangeVerbatim = 8			// the frame is written as it is (not made internal) and dropped from memory after
 };
 
