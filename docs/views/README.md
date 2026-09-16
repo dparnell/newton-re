@@ -72,6 +72,50 @@ itself is the context's `_proto`; a template whose `viewFlags` lacks bit
 the constructor sets the real parent.  Errors: `evt.ex` -8502 (no view
 class), -8503 (no such stationery), -8504 (no viewFlags).
 
+## Making a view (`BuildView` 0x0025ca18)
+
+`TView::AddView(template)` 0x0025d274 builds the context (unless the
+template has a `preallocatedContext`) and calls `BuildView(parent,
+context)`, the factory: a switch on the context's `viewClass` number
+allocates the C++ object (`TxObject::operator new`, the size below),
+sets its vtable (every view's first vtable slot is `ClassID`: `TView`
+derives from `TResponder`, which derives from `TxObject`), allocates the
+RefStructs among its fields (the context at +0x24 for all; more for the
+subclasses) and calls `Constructor`.  The classes, their numbers and
+sizes as the switch has them:
+
+| viewClass | class | size |
+|---|---|---|
+| 74 (0x4a) | `TView` | 0x30 |
+| 75, 76 | `TPictureView` | 0x30 |
+| 77 | `TEditView` | 0x50 |
+| 78, 79 | `TKeyboardView` (on `TView`) | 0x94 |
+| 80 | `TMonthView` (on `TView`) | 0x94 |
+| 81 | `TParagraphView` (on `TDataView`) | 0xd0 |
+| 82 | `TPolygonView` | 0x30 |
+| 83, 84 | `TMathExpView` (on `TContainerView`, 0x44, RefStruct at +0x38) | 0x44 |
+| 85 | `TMathOpView` | 0x34 |
+| 86 | `TMathLineView` | 0x38 |
+| 87, 88 | `TRemoteView` | 0x58 |
+| 89-91 | `TPickView` (on `TView`; RefStructs at +0x34, +0x54, +0xa4, +0xac) | 0xbc |
+| 92 | `TGaugeView` | 0x38 |
+| 93, 94 | `TPrintView` | 0x48 |
+| 95 | `TMeetingView` | 0x3c |
+| 96 | `TSliderView` | 0x4c |
+| 97, 98 | `TTextView` | 0x34 |
+| 99 | `TListView` | 0x5c |
+| 100, 101 | `TClipboard` (on `TView`; RefStructs at +0x30, +0x34, +0x40) | 0x44 |
+| 102-105 | `TOutline` (on `TView`; RefStructs at +0x30, +0x60, +0x64) | 0x68 |
+| 106, 107 | `THelpOutline` (on `TView`) | 0x68 |
+| 108 | `TXView` (on `TView`) | 0x60 |
+
+(`TContainerView` itself, 0x44 bytes, is what `clContainerView`'s
+number maps to among 78/83; the NTK constants `clView` 74,
+`clPictureView` 76, `clEditView` 77, `clKeyboardView` 79,
+`clMonthView` 80, `clParagraphView` 81, `clPolygonView` 82,
+`clRemoteView` 88, `clPickView` 91, `clGaugeView` 92, `clOutline` 105
+agree with the switch.)
+
 ## Plan
 
 1. `src/views/View.h`: `TView` with the ROM's layout (fields from the
