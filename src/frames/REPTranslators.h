@@ -191,6 +191,7 @@ extern PInTranslator*	gREPin;			// 0x0c10190c
 extern POutTranslator*	gREPout;		// 0x0c101910
 extern Ref				gREPContext;	// 0x0c101900  the frame top-level forms run in (gVarFrame)
 extern long				gREPLevel;		// 0x0c101904  the break loop level
+extern Boolean*			gBreakLoopDone;	// 0x0c10226c  the running break loop's done flag (nil: none)
 
 NewtonErr		CreateNullInTranslator(PInTranslator** translator);
 NewtonErr		CreateNullOutTranslator(POutTranslator** translator);

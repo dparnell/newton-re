@@ -1735,36 +1735,6 @@ SetLexScope(RefArg fn, RefArg locals, RefArg receiver, RefArg implementor)
 	The current call, seen from natives
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002aef4c GetLocalFromStack__12TInterpreterFRC6RefVarT1
-// NOT YET RECONSTRUCTED: the debugger's access to a frame's locals by name.
-Ref
-TInterpreter::GetLocalFromStack(RefArg /*frameIndex*/, RefArg /*name*/)
-{
-	return NILREF;
-}
-
-
-// ROM 0x002af000 SetLocalOnStack__12TInterpreterFRC6RefVarN21
-void
-TInterpreter::SetLocalOnStack(RefArg /*frameIndex*/, RefArg /*name*/, RefArg /*value*/)
-{ }
-
-
-// ROM 0x002af0b8 GetSelfFromStack__12TInterpreterFRC6RefVar
-Ref
-TInterpreter::GetSelfFromStack(RefArg /*frameIndex*/)
-{
-	return NILREF;
-}
-
-
-// ROM 0x002aef38 StackTrace__12TInterpreterFv
-// NOT YET RECONSTRUCTED: gREPout's StackTrace.
-void
-TInterpreter::StackTrace(void)
-{ }
-
-
 // ROM 0x002cc10c StackTrace__Fv
 void
 StackTrace(void)

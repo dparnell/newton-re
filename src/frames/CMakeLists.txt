@@ -21,6 +21,7 @@ add_library(frames STATIC
     RichString.cpp
     StringNatives.cpp
     ArrayNatives.cpp
+    DebugAPI.cpp
     Printer.cpp
     PrintLiterals.cpp
     REPTranslators.cpp

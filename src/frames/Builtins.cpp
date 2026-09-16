@@ -1799,6 +1799,7 @@ FHasSiblingSlot(RefArg /*rcvr*/, RefArg context, RefArg name)
 void	RegisterMungerNatives(void);		// Munger.cpp
 void	RegisterStringNatives(void);		// StringNatives.cpp
 void	RegisterArrayNatives(void);			// ArrayNatives.cpp
+void	RegisterDebugNatives(void);			// DebugAPI.cpp
 
 void
 RegisterBuiltinNatives(void)
@@ -1806,6 +1807,7 @@ RegisterBuiltinNatives(void)
 	RegisterMungerNatives();
 	RegisterStringNatives();
 	RegisterArrayNatives();
+	RegisterDebugNatives();
 	RegisterPrinterNatives();
 	RegisterCompilerNatives();
 	NATIVE("FAdd", FAdd, 2);

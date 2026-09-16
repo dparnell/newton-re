@@ -406,6 +406,36 @@ string functions and the conversions to and from 8-bit text are
 `ConvertFromUnicode` as the ROM does them before `InitUnicode` installs
 the encoding tables - NOT YET).
 
+### The debugger's view of the stack (`DebugAPI.cpp`)
+
+`TNSDebugAPI` (one word: the interpreter) reads and writes the call stack
+through the six-ref `VMState`s on the control stack: `NumStackFrames`
+(`(depth - 1) / 6`), `Function`/`PC`/`Receiver`/`Implementor` of call *i*
+(0 the outermost; a native call's pc is -1), `Locals` and `GetVar`/`SetVar`
+(a 2.x function's arguments and locals are on the value stack from the
+frame's base + 3, a native's arguments from the base, a CodeBlock's in its
+argFrame after the three hidden slots), `FindVar`/`SetFindVar` by name
+through the argFrame, `StackStart`/`NumTemps`/`TempValue` for the
+temporaries above the variables (`FunctionStackSize`: how many slots the
+variables take, -1 for a CodeBlock).  On it: `REPStackTrace` (what the
+REP prints for `StackTrace()` - each call's function by its slot in the
+implementor, its well-known name or its address, the pc or `[native]`, the
+receiver and the variables with arguments marked, at the globals'
+`stackTracePrintDepth`, 0 by default, with a warning unless `SetDebugMode`
+has made the stack accurate), `NTKStackFrameInfo` (the NTK's `{codeBlock,
+programCounter, receiver, implementor}` from the `stackFrameInfo`
+prototype; names from `'DebuggerInfo`/`'debug` slots, `GetNameFromDebugHash`
+asking the global `DebugHashToName` when defined), `SearchForObjectName`/
+`CheckForObjectName` (`"vars"`, `"vars.foo"`, `"functions.bar"`, the
+built-in functions) and `PrintWellKnownObject`; the natives `StackTrace`,
+`SetDebugMode`, `BreakLoop` (a nested REP in the receiver's context, run by
+`REPBreakLoop`/`BreakLoop` until `ExitBreakLoop` sets the done flag),
+`Write`, `Load` (`ParseFile`) and `stats`.  `TInterpreter::GetLocalFromStack`,
+`SetLocalOnStack` and `GetSelfFromStack` go through it.  NOT YET
+RECONSTRUCTED: `TNSDebugAPI::Return` (unwinding to a call), `NTKStackTrace`,
+`Uriah` (the heap dump).  `test_Printer` inspects the stack from a native
+and checks the trace.
+
 ## The compiler (`Compiler.cpp`, `Parser.cpp`, `Lexer.cpp`)
 
 `TCompiler` turns NewtonScript source into a function object: `ParseString`
@@ -475,8 +505,8 @@ running 1.x CodeBlocks and binary natives, the natives not bound yet
 `MungeRange`; the mungers treat strings as plain UniChars), the Unicode
 case, break and sort tables (`UppercaseText`, `IsDelimiter`,
 `CompareUnicodeText`), `TNumberParser` and the number formats,
-the interpreter's `GetTaskStackInfo`, the stack trace (`TNSDebugAPI`,
-`SearchForObjectName`), the Hammer, serial and NTK translators, the
+the interpreter's `GetTaskStackInfo`, `TNSDebugAPI::Return`, `NTKStackTrace`
+and `Uriah`, the Hammer, serial and NTK translators, the
 compiler's rich-string ink in `Stringer` and the encoding of source
 text (`IsFirstByteOf2Byte`), `TCompiler::Simplify` (nothing in this ROM);
 then the object system's: stores

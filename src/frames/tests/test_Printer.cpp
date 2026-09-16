@@ -10,6 +10,10 @@
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "REPTranslators.h"
+#include "Compiler.h"
+#include "DebugAPI.h"
+#include "NativeFunctions.h"
+#include "NSErrors.h"
 #include "ROMImport.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
@@ -339,6 +343,118 @@ TestREP()
 }
 
 
+// a native that looks at the stack through TNSDebugAPI while a function
+// runs: ==> [numFrames, function of the innermost NewtonScript call, its
+// pc, its receiver, its locals, its temps, GetVar 0, FindVar of a name]
+static Ref
+FInspectStack(RefArg /*rcvr*/, RefArg name)
+{
+	TNSDebugAPI api(gInterpreter);
+	long n = api.NumStackFrames();
+	long i = n - 2;			// the call below this native's
+	RefVar result(AllocateArray(RSSYMarray, 8));
+	SetArraySlotRef(result, 0, MAKEINT(n));
+	SetArraySlotRef(result, 1, api.Function(i));
+	SetArraySlotRef(result, 2, MAKEINT(api.PC(i)));
+	SetArraySlotRef(result, 3, api.Receiver(i));
+	SetArraySlotRef(result, 4, api.Locals(i));
+	SetArraySlotRef(result, 5, MAKEINT(api.NumTemps(i)));
+	SetArraySlotRef(result, 6, api.GetVar(i, 0));
+	if ((Ref) name != NILREF)
+		SetArraySlotRef(result, 7, api.FindVar(i, name));
+	// the native's own frame
+	EXPECT(IsNativeFunction(RefVar(api.Function(n - 1))));
+	EXPECT(api.PC(n - 1) == -1);
+	EXPECT(Length(RefVar(api.Locals(n - 1))) == 1);
+	return result;
+}
+
+
+// source compiled and run at the top level
+static Ref
+Eval(const char* source)
+{
+	RefVar fn(ParseString(RefVar(MakeString(source))));
+	return InterpretBlock(fn, RefVar(gVarFrame));
+}
+
+
+static void
+TestDebugAPI()
+{
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(SYMBOL("InspectStack")), RefVar(MakeCFunction((void*) FInspectStack, 1, nil)));
+	// a 2.x function: args and locals on the value stack
+	RefVar r(Eval("local f := func(a, b) begin local c := a + b; InspectStack(nil) end; call f with (1, 2)"));
+	EXPECT(IsArray(r) && RINT(GetArraySlot(r, 0)) == 3);
+	EXPECT(IsFunction(RefVar(GetArraySlot(r, 1))) && GetFunctionArgCount(RefVar(GetArraySlot(r, 1))) == 2);
+	EXPECT(RINT(GetArraySlot(r, 2)) > 0);
+	EXPECT(GetArraySlot(r, 3) == NILREF);
+	EXPECT(strcmp(Text(RefVar(GetArraySlot(r, 4))), "[1, 2, 3]") == 0);
+	EXPECT(RINT(GetArraySlot(r, 6)) == 1);
+	// a method: its receiver; a closed-over variable found by name
+	r = Eval("local o := {m: func(x) begin local g := func() x; InspectStack('x) end}; o:m(5)");
+	EXPECT(IsFrame(RefVar(GetArraySlot(r, 3))) && FrameHasSlot(RefVar(GetArraySlot(r, 3)), SYMBOL("m")));
+	EXPECT(RINT(GetArraySlot(r, 7)) == 5);
+	// a 1.x code block: variables in the argFrame
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("compilerCompatibility")), RefVar(MAKEINT(0)));
+	r = Eval("local f := func(p) begin local q := p * 2; InspectStack('q) end; call f with (4)");
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("compilerCompatibility")), RefVar(MAKEINT(1)));
+	EXPECT(EQ(ClassOf(RefVar(GetArraySlot(r, 1))), RSSYMcodeblock));
+	EXPECT(strcmp(Text(RefVar(GetArraySlot(r, 4))), "[4, 8]") == 0);
+	EXPECT(RINT(GetArraySlot(r, 7)) == 8);
+	EXPECT(RINT(GetArraySlot(r, 6)) == 4);
+	// the stack trace
+	Printed();
+	Eval("DefGlobalFn('traced, func(a, b) begin local c := a + b; StackTrace(); c end); traced(1, 2)");
+	const char* trace = Printed();
+	EXPECT(strstr(trace, "\nStack trace:\n") != nil);
+	EXPECT(strstr(trace, "   2 : (functions.StackTrace) [native]\n") != nil);
+	EXPECT(strstr(trace, "   1 : (functions.traced) : ") != nil);
+	EXPECT(strstr(trace, "       0 [arg 0]: 1\n       1 [arg 1]: 2\n       2: 3\n") != nil);
+	EXPECT(strstr(trace, "may be inaccurate") != nil);
+	EXPECT(RINT(GetFrameSlot(RefVar(gVarFrame), RSSYMprintdepth)) == 3);		// restored
+	Eval("SetDebugMode(true)");
+	Eval("local o := {name: \"thing\", m: func(x) StackTrace()}; o:m(9)");
+	trace = Printed();
+	EXPECT(strstr(trace, "may be inaccurate") == nil);
+	EXPECT(strstr(trace, ".m : ") != nil);
+	EXPECT(strstr(trace, "       Receiver: (#") != nil);
+	EXPECT(strstr(trace, "       0 [arg 0]: 9\n") != nil);
+	EXPECT(Eval("SetDebugMode(nil)") == TRUEREF);
+	// well-known names
+	EXPECT(strcmp(Text(RefVar(SearchForObjectName(RefVar(gVarFrame)))), "\"vars\"") == 0);
+	EXPECT(strcmp(Text(RefVar(SearchForObjectName(RefVar(gFunctionFrame)))), "\"vars.functions\"") == 0);		// vars first
+	Eval("DefGlobalVar('wellKnown, {a: 1})");
+	EXPECT(strcmp(Text(RefVar(SearchForObjectName(RefVar(GetFrameSlot(RefVar(gVarFrame), SYMBOL("wellKnown")))))), "\"vars.wellKnown\"") == 0);
+	EXPECT(SearchForObjectName(RefVar(AllocateFrame())) == NILREF);
+	Printed();
+	PrintWellKnownObject(RefVar(GetFrameSlot(RefVar(gVarFrame), SYMBOL("wellKnown"))), 0);
+	EXPECT_PRINTED("(vars.wellKnown)");
+	// NTKStackFrameInfo
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(SYMBOL("FrameInfo")), RefVar(MakeCFunction((void*) (NativeFn0) [](RefArg) -> Ref {
+		TNSDebugAPI api(gInterpreter);
+		return NTKStackFrameInfo(api, api.NumStackFrames() - 2);
+	}, 0, nil)));
+	r = Eval("DefGlobalFn('infoFn, func(a) FrameInfo()); infoFn(1)");
+	EXPECT(IsFrame(r) && strcmp(Text(RefVar(GetFrameSlot(r, RSSYMcodeblock))), "\"functions.infoFn\"") == 0);
+	EXPECT(ISINT(GetFrameSlot(r, RSSYMprogramcounter)));
+	r = Eval("local o := {debug: 'myObj, m: func(a) FrameInfo()}; o:m(1)");
+	EXPECT(EQ(GetFrameSlot(r, RSSYMreceiver), SYMBOL("myObj")));
+	// Write, stats, ExitBreakLoop outside a loop
+	Printed();
+	Eval("Write(\"hi\"); Write($!); Write(42)");
+	EXPECT_PRINTED("hi!42");
+	Eval("stats()");
+	EXPECT(strncmp(Printed(), "Free: ", 6) == 0);
+	{
+		Boolean threw = false;
+		newton_try { Eval("ExitBreakLoop()"); } newton_catch_all { threw = (long) (Long) _info.exception.data == kNSErrNotInBreakLoop; } end_try;
+		EXPECT(threw);
+		gInterpreter->fValueStack.Reset(0);
+	}
+}
+
+
 int
 main()
 {
@@ -366,11 +482,18 @@ main()
 		TestFunctions();
 		TestStrings();
 		TestREP();
+		TestDebugAPI();
 	}
 	newton_catch_all
 	{
 		failures++;
 		fprintf(stderr, "FAIL: unhandled exception %s\n", _info.exception.name);
+		if (Subexception((ExceptionName) _info.exception.name, (ExceptionName) "type.ref"))
+		{
+			RefStruct* data = (RefStruct*) _info.exception.data;
+			PrintObject(*data, 0);
+			fprintf(stderr, "%s\n", Printed());
+		}
 	}
 	end_try;
 	fclose(gOutput);

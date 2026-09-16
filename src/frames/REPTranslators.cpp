@@ -807,12 +807,3 @@ REPExceptionNotify(Exception* exception)
 }
 
 
-// ROM 0x002ae830 REPStackTrace__FPv
-// NOT YET RECONSTRUCTED: the debugger's view of the interpreter's stacks
-// (TNSDebugAPI: NumStackFrames, Function, Receiver, Locals, FindVar) and
-// SearchForObjectName; the trace prints its heading only.
-void
-REPStackTrace(void* /*interpreter*/)
-{
-	gREPout->Print("\rStack trace:\r");
-}

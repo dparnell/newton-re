@@ -63,6 +63,7 @@
 
 // evt.ex.fr.intrp (the interpreter, Throw(exInterpreter, code)) and
 // evt.ex.fr.intrp;type.ref.frame (ThrowExInterpreterWithSymbol: {errorCode, symbol})
+#define kNSErrNotInBreakLoop			(ERRBASE_FRAMES - 800)	// ExitBreakLoop outside one
 #define kNSErrTooManyArgs				(ERRBASE_FRAMES - 802)	// a native function of more than six arguments
 #define kNSErrWrongNumberOfArgs			(ERRBASE_FRAMES - 803)
 #define kNSErrZeroForLoopIncr			(ERRBASE_FRAMES - 804)

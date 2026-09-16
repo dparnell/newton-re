@@ -587,23 +587,6 @@ FindSlotName(RefArg context, RefArg value)
 }
 
 
-// ROM 0x002ae378 PrintWellKnownObject__FRC6RefVarl
-// An aggregate by its name when it has one, else by its address and
-// contents.  NOT YET RECONSTRUCTED: SearchForObjectName (the names of the
-// ROM's well-known frames); every aggregate prints by address.
-void
-PrintWellKnownObject(RefArg obj, long indent)
-{
-	if (IsAggregate(obj))
-	{
-		long n = gREPout->Print("(#%lX) ", (long) (Ref) obj);
-		PrintObject(obj, indent + n);
-	}
-	else
-		gREPout->ConsumeFrame(obj, 0, indent);
-}
-
-
 // ROM 0x0029a474 GetFramesErrorString__Fl
 // The message of a frames error code; this ROM has none.
 const char*

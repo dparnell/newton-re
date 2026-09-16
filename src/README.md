@@ -77,7 +77,9 @@ src/
                 Lexer.cpp, Parser.cpp, Compiler.cpp); the string, array,
                 sorting, searching, set and binary-access functions over
                 TRichString (RichString.h, StringNatives.cpp,
-                ArrayNatives.cpp) (docs/frames/README.md, docs/frames/grammar.md)
+                ArrayNatives.cpp); the debugger's view of the stack and
+                the REP's stack trace (DebugAPI.h/.cpp)
+                (docs/frames/README.md, docs/frames/grammar.md)
   host/         host programs: newtonscript, the compiler, interpreter and
                 REP on the host over a ROM image (newtonscript.cpp)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
