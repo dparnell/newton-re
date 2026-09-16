@@ -19,6 +19,8 @@
 
 #include "Interpreter.h"
 #include "NativeFunctions.h"
+#include "REPTranslators.h"
+#include "Unicode.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
@@ -1029,7 +1031,6 @@ FCollect(RefArg /*rcvr*/, RefArg obj, RefArg fn)
 ------------------------------------------------------------------------------- */
 
 // the C string of a NewtonScript string, for an exception's message
-// (NOT YET RECONSTRUCTED: ConvertFromUnicode - the low bytes are taken)
 static char*
 ExceptionMessage(RefArg str)
 {
@@ -1040,10 +1041,7 @@ ExceptionMessage(RefArg str)
 	char* text = new char[length + 1];
 	if (text == nil)
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
-	long i;
-	for (i = 0; i < length && s[i] != 0; i++)
-		text[i] = (char) s[i];
-	text[i] = 0;
+	ConvertFromUnicode(s, text, kMacRomanEncoding, length);
 	return text;
 }
 
@@ -1332,6 +1330,7 @@ void
 RegisterBuiltinNatives(void)
 {
 	RegisterMungerNatives();
+	RegisterPrinterNatives();
 	NATIVE("FAdd", FAdd, 2);
 	NATIVE("FSubtract", FSubtract, 2);
 	NATIVE("FMultiply", FMultiply, 2);

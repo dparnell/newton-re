@@ -58,7 +58,8 @@ src/
                 TTimerQueue/TTimerElement/TTimerPort, and the task frameworks
                 the services are written in: TForkWorld, TAppWorld with
                 TAEventHandler/TAEvent (AppWorld.h is ours; the DDK has no
-                header for the worlds)
+                header for the worlds); the UniChar string functions and
+                the Unicode conversions (Unicode.h, ours too)
   frames/       the NewtonScript object system: refs, the object heap and
                 its collector (ObjectHeap.h), symbols, binaries, arrays,
                 frames and their maps, paths, clones, classes - the DDK's
@@ -69,7 +70,8 @@ src/
                 bytecodes, NSCall/NSSend, variable lookup and its caches)
                 and the built-in functions bound to the ROM's native
                 function table (NativeFunctions.h, Builtins.cpp, Munger.cpp,
-                ROMNatives.cpp generated) (docs/frames/README.md)
+                ROMNatives.cpp generated); the object printer and the REP's
+                translators (REPTranslators.h, Printer.cpp) (docs/frames/README.md)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 

@@ -4,13 +4,18 @@
 Usage:
     python romtable.py <build_dir> NAME[:TYPE[:COUNT]]... -o <file.cpp> [--namespace-comment TEXT]
     python romtable.py build/MP2100D O10 O9 CopyValue:u8 LZCopyBits:u8 -o src/compression/LZTables.cpp
+    python romtable.py build/MP2100D gPrintLiterals:cstr:35 -o src/frames/PrintLiterals.cpp
 
 Each NAME is a data symbol of the ROM (symbols.json; the debug table marks
 most data as code, so no class check is made).  TYPE is u8, u16, u32, i8,
-i16 or i32 (default u32; the ROM is big-endian).  COUNT defaults to the
-number of elements between the symbol and the next symbol after it, which
-is right when tables follow one another (the LZ coder's do); give it when
-the table is followed by something unnamed.
+i16 or i32 (default u32; the ROM is big-endian), or cstr: a table of
+pointers to C strings in the ROM, emitted as `const char*` literals (a 0
+pointer becomes nil).  COUNT defaults to the number of elements between
+the symbol and the next symbol after it, which is right when tables follow
+one another (the LZ coder's do); give it when the table is followed by
+something unnamed.  A table in the initialised RAM area (a global at
+0x0C100800-, such as the interpreter's opcode names gPrintLiterals) is read
+from the ROM's copy of that area (layout.json's ROM_RWINIT).
 
 The output file declares each table `extern const <type> NAME[]` and
 defines it with its ROM address as the citation, so coverage.py checks the
@@ -30,7 +35,16 @@ TYPES = {
     "u8": ("unsigned char", 1, "B"), "i8": ("signed char", 1, "b"),
     "u16": ("unsigned short", 2, ">H"), "i16": ("short", 2, ">h"),
     "u32": ("unsigned int", 4, ">I"), "i32": ("int", 4, ">i"),
+    "cstr": ("char*", 4, ">I"),
 }
+
+
+def c_string(rom: bytes, addr: int) -> str:
+    """The C string at addr, as a C++ literal."""
+    end = rom.index(b"\0", addr)
+    text = rom[addr:end].decode("latin-1")
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+    return '"' + escaped + '"'
 
 
 def main(argv=None) -> int:
@@ -45,6 +59,18 @@ def main(argv=None) -> int:
         rom = f.read()
     with open(os.path.join(args.build_dir, "symbols.json"), encoding="utf-8") as f:
         data = json.load(f)
+    with open(os.path.join(args.build_dir, "layout.json"), encoding="utf-8") as f:
+        layout = json.load(f)
+    # the initialised RAM area, as the ROM holds it
+    rwinit = next(r for r in layout["regions"] if r["name"] == "ROM_RWINIT")
+    data_base = layout["aif_header"]["data_base"]
+    rw_size = layout["aif_header"]["rw_area_size"]
+
+    def read(addr: int, size: int) -> bytes:
+        if data_base <= addr < data_base + rw_size:
+            off = rwinit["rom_offset"] + (addr - data_base)
+            return rom[off:off + size]
+        return rom[addr:addr + size]
     by_name = {}
     addresses = []
     for s in data["symbols"]:
@@ -85,7 +111,12 @@ def main(argv=None) -> int:
             count = int(parts[2], 0)
         else:
             count = (next_symbol_after(addr) - addr) // size
-        values = [struct.unpack(fmt, rom[addr + i * size:addr + (i + 1) * size])[0] for i in range(count)]
+        values = [struct.unpack(fmt, read(addr + i * size, size))[0] for i in range(count)]
+        if typ == "cstr":
+            decls.append(f"extern const char* const\t{name}[{count}];")
+            lines = ["\t" + (c_string(rom, v) if v != 0 else "0") + "," for v in values]
+            defs.append(f"// ROM 0x{addr:08x} {name}\nconst char* const\t{name}[{count}] = {{\n" + "\n".join(lines) + "\n};\n")
+            continue
         decls.append(f"extern const {ctype}\t{name}[{count}];")
         width = 4 if size == 1 else (6 if size == 2 else 10)
         per_line = 16 if size == 1 else 8

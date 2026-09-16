@@ -16,12 +16,14 @@
 
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "REPTranslators.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "hal/System.h"
+#include "Unicode.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -1793,19 +1795,10 @@ IsReal(RefArg ref)
 /* -------------------------------------------------------------------------------
 	Strings and reals
 	Strings are binaries of class string holding UniChars with a terminating
-	0.  NOT YET RECONSTRUCTED: ConvertToUnicode/ConvertFromUnicode (the
-	Unicode encoders) - characters are widened and narrowed as they are.
+	0 (utility/Unicode.h has the UniChar functions and the conversions,
+	whose encoding tables are NOT YET RECONSTRUCTED - characters are
+	widened and narrowed as they are).
 ------------------------------------------------------------------------------- */
-
-static long
-Ustrlen(const UniChar* s)
-{
-	long n = 0;
-	while (s[n] != 0)
-		n++;
-	return n;
-}
-
 
 // ROM 0x002f6ee0 MakeString__FPCc
 Ref
@@ -1851,16 +1844,13 @@ CString(RefArg str)
 
 
 // ROM 0x002f6fe0 ASCIIString__FRC6RefVar
-// An asciiString of the string's characters (their low bytes).
+// An asciiString of the string's characters, narrowed.
 Ref
 ASCIIString(RefArg str)
 {
 	long length = Length(str) / 2;
 	RefVar s(AllocateBinary(RSSYMasciistring, length));
-	char* dst = BinaryData(s);
-	const UniChar* src = (const UniChar*) BinaryData(str);
-	for (long i = 0; i < length; i++)
-		dst[i] = (char) src[i];
+	ConvertFromUnicode((const UniChar*) BinaryData(str), BinaryData(s), kMacRomanEncoding, 0x7fffffff);
 	return s;
 }
 
@@ -2138,8 +2128,8 @@ InitMagicPointerTables(void)
 
 // ROM 0x002f7304 InitObjects__Fv
 // The heap (its size from InternalRAMInfo in the ROM, gObjectHeapSize
-// here), the global frames, symbols, classes and the interpreter.
-// NOT YET RECONSTRUCTED: InitPrinter, the union soup entry cache
+// here), the global frames, symbols, the printer, classes and the
+// interpreter.  NOT YET RECONSTRUCTED: the union soup entry cache
 // (MakeEntryCache) and the package store's part handler (TPackageStore,
 // TPackageStorePartHandler).
 void
@@ -2153,6 +2143,7 @@ InitObjects(void)
 	InitMagicPointerTables();
 	FindOffsetCacheClear();
 	InitSymbols();
+	InitPrinter();
 	InitClasses();
 	InitInterpreter();
 	gStores = AllocateArray(RSSYMarray, 0);

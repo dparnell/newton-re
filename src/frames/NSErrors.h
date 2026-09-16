@@ -76,6 +76,9 @@
 // host: a ROM native function whose implementation is not reconstructed yet
 #define kNSErrNativeNotReconstructed	(ERRBASE_FRAMES - 899)
 
+// evt.ex.fr.comp (the compiler and the REP)
+#define kNSErrNoREPTranslators			(ERRBASE_FRAMES - 600)	// REPInit with no in or out translator (the ROM's 0xffff4228)
+
 // evt.ex.fr.store
 #define kNSErrEntryStoreGone			(ERRBASE_FRAMES - 7)	// FollowFaultBlock: the entry's store is gone (the ROM's 0xffff4479)
 

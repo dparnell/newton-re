@@ -19,6 +19,7 @@
 */
 
 #include "ObjectHeap.h"
+#include "Unicode.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
@@ -474,17 +475,12 @@ Intern(char* name)
 
 
 // ROM 0x0032d810 Intern__FPUs
-// NOT YET RECONSTRUCTED: ConvertFromUnicode (the Unicode encoders); the
-// low bytes of the characters are taken.
 Ref
 Intern(UniChar* name)
 {
-	long length = 0;
-	while (name[length] != 0)
-		length++;
+	long length = Ustrlen(name);
 	char* ascii = new char[length + 1];
-	for (long i = 0; i <= length; i++)
-		ascii[i] = (char) name[i];
+	ConvertFromUnicode(name, ascii, kMacRomanEncoding, length);
 	RefVar sym(Intern(ascii));
 	delete[] ascii;
 	return sym;

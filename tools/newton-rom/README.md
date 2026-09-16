@@ -44,7 +44,8 @@ tools/newton-rom/
     vtable.py             the entries of a vtable (slot -> method), from rom.bin + symbols.json
     classinfo.py          decode protocol class-info tables (names, dispatch slots, monitor selectors);
                           --all -> docs/protocols/classinfos.md
-    romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp)
+    romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp,
+                          src/frames/PrintLiterals.cpp); u8..i32 or cstr elements, RAM tables too
     romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
@@ -266,7 +267,10 @@ dispatch slot and monitor selector by method name - from `rom.bin` and
 
 Tables of the ROM go into the source through scripts, never by hand:
 `analysis/romtable.py build/MP2100D NAME[:type[:count]]... -o file.cpp`
-emits data symbols as C++ arrays (the compression coders' tables), and
+emits data symbols as C++ arrays (the compression coders' tables; type
+`cstr` for a table of pointers to C strings, such as the interpreter's
+opcode names `gPrintLiterals`, which lives in the initialised RAM area
+and is read from the ROM's copy of it), and
 `analysis/romconstants.py build/MP2100D -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
 name and hash from the object the constant refers to), the 1102 `R`/`RS`
