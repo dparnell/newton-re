@@ -26,13 +26,13 @@ static long				gNativeBindingCapacity = 0;
 
 
 // Bind the host implementation of the ROM function named symbol to the
-// funcPtr of every built-in that reaches it.
+// funcPtr of every built-in (or prototype method) that reaches it.
 void
 RegisterNativeFunction(const char* symbol, void* fn, long numArgs)
 {
-	for (long i = 0; i < gROMNativeCount; i++)
+	for (long i = 0; i < gROMNativeCount + gROMMethodCount; i++)
 	{
-		const ROMNativeEntry& entry = gROMNativeEntries[i];
+		const ROMNativeEntry& entry = i < gROMNativeCount ? gROMNativeEntries[i] : gROMMethodEntries[i - gROMNativeCount];
 		if (strcmp(entry.fSymbol, symbol) != 0)
 			continue;
 		Boolean bound = false;

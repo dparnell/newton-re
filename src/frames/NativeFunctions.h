@@ -45,6 +45,12 @@ struct ROMNativeEntry
 extern const ROMNativeEntry	gROMNativeEntries[];
 extern const long			gROMNativeCount;
 
+// the other native function objects in the ROM's object area: the methods
+// of the store, soup, cursor and entry prototype frames and the like, each
+// named by the frame slot that holds it (bound the same way, by symbol)
+extern const ROMNativeEntry	gROMMethodEntries[];
+extern const long			gROMMethodCount;
+
 // addresses below this are the ROM's (its code and jump table), looked up;
 // above it, host function pointers, called
 const ULong	kROMCodeLimit = 0x02000000;

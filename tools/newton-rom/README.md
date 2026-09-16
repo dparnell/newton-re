@@ -281,9 +281,11 @@ ROM object importer (`docs/frames/README.md`).  Both write a header naming
 the command that made them.  `analysis/nsfunctions.py build/MP2100D
 --list` lists the 1352 functions of the ROM's built-in functions frame
 (native or NewtonScript, argument counts), `--natives -o
-src/frames/ROMNatives.cpp` emits the table the host binds its native
+src/frames/ROMNatives.cpp` emits the tables the host binds its native
 implementations through (name, jump-table address, target function and its
-symbol), and `--disasm NAME` disassembles a NewtonScript function's
+symbol: the built-in functions, then every other native function object in
+the object area - the prototype frames' methods - named by the frame slot
+holding it), and `--disasm NAME` disassembles a NewtonScript function's
 bytecode as `TInterpreter::SlowRun` decodes it.
 `analysis/nsgrammar.py build/MP2100D -o src/frames --doc
 docs/frames/grammar.md` reads the NewtonScript compiler's Berkeley yacc

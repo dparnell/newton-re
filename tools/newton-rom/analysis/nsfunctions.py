@@ -14,7 +14,10 @@ of a C function) and NewtonScript functions (class 0x32: [instructions,
 literals, argFrame, numArgs | numLocals << 16]).  --list prints them all
 with their kind and argument count; --natives emits a C++ table of the
 native ones (name, jump-table address, the ROM function it reaches and its
-symbol) for frames/NativeFunctions.cpp to bind host implementations to;
+symbol) for frames/NativeFunctions.cpp to bind host implementations to,
+and a second table of every other native function object in the ROM's
+object area (the methods of the store, soup, cursor and entry prototype
+frames and the like), each named by the frame slot that holds it;
 --disasm prints a NewtonScript function's bytecode (Newton Formats, the
 instruction set of the NewtonScript interpreter, as TInterpreter::SlowRun
 0x002cc66c executes it).
@@ -58,9 +61,13 @@ class ROM:
         with open(os.path.join(build_dir, "symbols.json"), encoding="utf-8") as f:
             data = json.load(f)
         self.symbols = {}
+        by_name = {}
         for s in data["symbols"]:
             if "jt_index" not in s:
                 self.symbols.setdefault(s["address"], s["name"])
+                by_name.setdefault(s["name"], s["address"])
+        self.soup = by_name["gROMSoupData"]
+        self.soup_size = self.word(by_name["gROMSoupDataSize"])
         self.jump = {int(v): int(t) for v, t in data["jumptable"]["entries"]} if "jumptable" in data else {}
 
     def word(self, a: int) -> int:
@@ -142,6 +149,38 @@ class ROM:
 def builtins(rom: ROM):
     """(name, function ref) pairs of the built-in functions frame, in slot order."""
     return rom.frame_slots(BUILTIN_FUNCTIONS)
+
+
+def objects(rom: ROM):
+    """Every object ref in the ROM's object area, in address order."""
+    a = rom.soup
+    end = rom.soup + rom.soup_size
+    while a < end:
+        yield a + 1
+        a += (rom.size(a + 1) + 3) & ~3
+
+
+def other_natives(rom: ROM):
+    """(slot name, function ref) pairs of the native function objects that are
+    not in the built-in functions frame, named by the (first) frame slot that
+    holds each; unreferenced ones are named ""."""
+    in_builtins = {fn for _, fn in builtins(rom)}
+    natives = []
+    frames = []
+    for ref in objects(rom):
+        f = rom.flags(ref)
+        if f & 3 != 0 and rom.size(ref) == 24 and rom.slots(ref)[0] == 0x132:
+            if ref not in in_builtins:
+                natives.append(ref)
+        elif f & 3 == 3 and rom.is_ptr(rom.cls(ref)):
+            frames.append(ref)
+    names = {}
+    for frame in frames:
+        for tag, value in rom.frame_slots(frame):
+            if value in names or not rom.is_ptr(value) or tag is None:
+                continue
+            names[value] = tag
+    return [(names.get(fn, ""), fn) for fn in natives]
 
 
 def function_kind(rom: ROM, fn: int):
@@ -232,16 +271,29 @@ def main(argv=None) -> int:
             "",
             "const ROMNativeEntry gROMNativeEntries[] = {",
         ]
-        count = 0
-        for name, fn in sorted(fns, key=lambda p: p[0].lower()):
-            kind, x, y = function_kind(rom, fn)
-            if kind != "native":
-                continue
-            target = rom.jump.get(x, x)
-            sym = rom.symbols.get(target, "")
-            out.append('\t{ "%s", 0x%08x, 0x%08x, %d, "%s" },' % (name, x, target, y, sym))
-            count += 1
+        def emit(pairs):
+            count = 0
+            seen = set()
+            for name, fn in pairs:
+                kind, x, y = function_kind(rom, fn)
+                if kind != "native" or x in seen:
+                    continue
+                seen.add(x)
+                target = rom.jump.get(x, x)
+                sym = rom.symbols.get(target, "")
+                out.append('\t{ "%s", 0x%08x, 0x%08x, %d, "%s" },' % (name, x, target, y, sym))
+                count += 1
+            return count
+        count = emit(sorted(fns, key=lambda p: p[0].lower()))
         out += ["};", "", "const long gROMNativeCount = %d;" % count, ""]
+        out += [
+            "// The other native function objects in the ROM's object area (the methods",
+            "// of the store, soup, cursor and entry prototype frames and the like),",
+            "// each named by the frame slot that holds it; bound the same way.",
+            "const ROMNativeEntry gROMMethodEntries[] = {",
+        ]
+        count = emit(sorted(other_natives(rom), key=lambda p: (p[0].lower(), p[1])))
+        out += ["};", "", "const long gROMMethodCount = %d;" % count, ""]
     for name in args.disasm:
         matches = [(n, f) for n, f in fns if n.lower() == name.lower()]
         if not matches:

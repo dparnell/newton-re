@@ -284,8 +284,13 @@ on the value stack.
 The ROM's native function objects hold jump-table addresses of its C
 functions (`FLength`, `FAdd`, ...).  `nsfunctions.py --natives` lists the
 869 of the built-in functions frame in `ROMNatives.cpp` (name, jump-table
-address, target, argument count, C symbol); `RegisterNativeFunction("FLength",
-fn, n)` binds a host implementation to that symbol and `CallCFuncPtr`
+address, target, argument count, C symbol) and, in a second table, the 457
+other native function objects of the ROM's object area - the methods of
+the store, soup, cursor and entry prototype frames (`storePrototype`'s
+`GetName` -> `StoreGetName`, `plainSoupPrototype`'s `Add` ->
+`PlainSoupAdd`, ...), each named by the slot that holds it;
+`RegisterNativeFunction("FLength", fn, n)` binds a host implementation to
+that symbol in either table and `CallCFuncPtr`
 resolves a funcPtr below `kROMCodeLimit` (0x02000000) through the
 bindings - an unbound one throws `kNSErrNativeNotReconstructed` (-48899).
 A funcPtr above the limit is a host function pointer (`MakeCFunction`).
