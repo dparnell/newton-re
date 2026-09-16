@@ -305,6 +305,57 @@ runs off the end); `FDiv`/`FMod` throw `exDivideByZero` on zero (an ARM
 trap in the ROM); `GlobalFunctionLookup` accepts a missing built-in
 functions frame.
 
+### Strings and arrays (`RichString.cpp`, `StringNatives.cpp`, `ArrayNatives.cpp`)
+
+`TRichString` (the ROM's, 0x28 bytes; no DDK header) is the view the string
+functions work through: a string object (locked while its text is in
+use) or a C UniChar string, its length in characters and its format - a
+rich string keeps ink words after the text and ends in a trailer word
+(`text length << 4 | 1`, the low two bits of the last UniChar say the
+format); `MungeRange` replaces a range of characters from another
+TRichString, growing or shrinking the object (the ink is NOT YET
+RECONSTRUCTED: a munged rich string comes out plain), and
+`CompareSubStringCommon` compares a range with `CompareUnicodeText`
+(cases folded unless exact; the ROM's sort tables are not here).
+`StringNatives.cpp` has the string functions over it - `StrLen`,
+`StrConcat`, `SubStr`, `StrEqual`/`StrExactCompare`/`StrCompare`,
+`BeginsWith`/`EndsWith`, `Upcase`/`Downcase`/`Capitalize`/`CapitalizeWords`
+(over `UToUpper`/`UToLower`; the ROM's case tables are not here),
+`TrimString`, `CharPos`/`StrPos`/`StrReplace`, `GetChar`/`SetChar`,
+`FindStringInArray`, `FindStringInFrame` (each string looked for at the
+start of words in a frame's strings to ten levels, `true`/`nil` or an array
+of `[string, path, position]`), `NumberStr`/`StringToNumber`/
+`FormattedNumberStr` (with `strtod` and `snprintf`: `TNumberParser` and
+the locale's number format are not here) and `ParamStr` (`^0`..`^9`
+substituted in three passes then `^^`/`^|` stripped; `^?N<yes>|<no>|`
+by whether parameter N is present).
+
+`ArrayNatives.cpp` has `TGeneralizedTestFnVar`, the comparison object
+behind the sorts, searches and ordered set operations: a test symbol
+(`'|<|` `'|>|` numbers, `'|str<|` `'|str>|` strings, `'|chr<|` `'|chr>|`
+characters, `'|sym<|` `'|sym>|` symbols; in a search also `'|=|` and
+`'|str=|`) or a two-argument function answering an integer, and a key
+(nil, a slot symbol, path or index taken with `GetFramePath`, or a
+function of the element).  `Sort`/`QuickSort` is the ROM's iterative
+median-of-three quicksort finished by insertion (`QSUtil`), `ShellSort`
+and `InsertionSort` share `ShellSortUtil`, `StableSort` is `MergeSort`
+(blocks merged through a temporary array as large as half the array or
+as memory allows); `LSearch`/`LFetch` scan from an index, `BSearchLeft`/
+`BSearchRight` bisect a sorted array to the first not-less or last
+not-greater element, and `BFind`/`BFetch`/`BInsert`/`BDelete` (and their
+`Right` forms) build on them; `BMerge`/`BIntersect`/`BDifference` walk two
+sorted arrays through `GenOrderedSetOp` with an action function per
+comparison (advance/copy/skip-duplicates bits), `SetUnion`/`SetDifference`/
+`SetOverlaps` are the unordered ones.  The binary accessors
+`ExtractByte`/`Word`/`Long`/`XLong`/`Char`/`UniChar`/`CString`/`PString`/
+`Bytes` and their `Stuff...` partners read and write big-endian data
+through `BoundsCheck`/`BoundsWriteCheck` (`kNSErrBadArgs` past the end,
+`kNSErrObjectReadOnly` for a read-only object; `StuffLong` checks only the
+bounds, as the ROM does).  `Builtins.cpp` gained the unordered
+comparisons (`UnorderedOrGreater`, ..., `LessEqualOrGreater`: the IEEE
+relation with NaN unordered), `forLoop` and `getSiblingSlot`/
+`hasSiblingSlot`.  `test_Strings` runs them all from NewtonScript source.
+
 ## The printer and the REP (`Printer.cpp`, `REPTranslators.cpp`)
 
 The read-eval-print loop reads forms through a `PInTranslator` and prints
@@ -413,9 +464,12 @@ function kinds, the errors, `ParseFile` and the `Compile` native.
 The interpreter's FastRun1 (the inlined, trace-free copy of SlowRun),
 tracing and breakpoints (`TInterpreter::Trace...`, `HandleBreakPoints`),
 running 1.x CodeBlocks and binary natives, the natives not bound yet
-(134 of the 869 are) (`Sleep`, the strings' `TRichString` functions, printing,
-stores, views, ...), `TRichString` (the mungers treat strings as plain
-UniChars), the interpreter's `GetTaskStackInfo`, the stack trace (`TNSDebugAPI`,
+(219 of the 869 are) (`Sleep`, printing, stores, views, ...),
+`TRichString`'s ink (`MakeRichString`, `StripInk`, the ink words in
+`MungeRange`; the mungers treat strings as plain UniChars), the Unicode
+case, break and sort tables (`UppercaseText`, `IsDelimiter`,
+`CompareUnicodeText`), `TNumberParser` and the number formats,
+the interpreter's `GetTaskStackInfo`, the stack trace (`TNSDebugAPI`,
 `SearchForObjectName`), the Hammer, serial and NTK translators, the
 compiler's rich-string ink in `Stringer` and the encoding of source
 text (`IsFirstByteOf2Byte`), `TCompiler::Simplify` (nothing in this ROM);

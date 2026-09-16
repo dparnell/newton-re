@@ -18,6 +18,9 @@ add_library(frames STATIC
     ROMNatives.cpp
     Builtins.cpp
     Munger.cpp
+    RichString.cpp
+    StringNatives.cpp
+    ArrayNatives.cpp
     Printer.cpp
     PrintLiterals.cpp
     REPTranslators.cpp

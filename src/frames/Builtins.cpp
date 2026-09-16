@@ -311,6 +311,114 @@ FUnorderedLessOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
+// the IEEE relation of two numbers as doubles (the ROM's relation()):
+// 0 less, 1 greater, 2 equal, 3 unordered (a NaN)
+static int
+NumberRelation(RefArg a, RefArg b)
+{
+	double da = CoerceToDouble(a);
+	double db = CoerceToDouble(b);
+	if (da < db)
+		return 0;
+	if (da > db)
+		return 1;
+	if (da == db)
+		return 2;
+	return 3;
+}
+
+
+// ROM 0x002902c4 FUnorderedOrGreater
+Ref
+FUnorderedOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NSBOOL(RVALUE(ra) > RVALUE(rb));
+	int relation = NumberRelation(a, b);
+	return NSBOOL(relation != 0 && relation != 2);
+}
+
+
+// ROM 0x00290354 FUnorderedGreaterOrEqual
+Ref
+FUnorderedGreaterOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NSBOOL(RVALUE(ra) >= RVALUE(rb));
+	return NSBOOL(NumberRelation(a, b) != 0);
+}
+
+
+// ROM 0x002903e4 FUnorderedOrLess
+Ref
+FUnorderedOrLess(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NSBOOL(RVALUE(ra) < RVALUE(rb));
+	int relation = NumberRelation(a, b);
+	return NSBOOL(relation != 1 && relation != 2);
+}
+
+
+// ROM 0x00290474 FUnorderedLessOrEqual
+Ref
+FUnorderedLessOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NSBOOL(RVALUE(ra) <= RVALUE(rb));
+	return NSBOOL(NumberRelation(a, b) != 1);
+}
+
+
+// ROM 0x00290504 FUnorderedOrEqual
+Ref
+FUnorderedOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NSBOOL(RVALUE(ra) == RVALUE(rb));
+	int relation = NumberRelation(a, b);
+	return NSBOOL(relation == 2 || relation == 3);
+}
+
+
+// ROM 0x00295184 FUnordered
+Ref
+FUnordered(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NILREF;
+	return NSBOOL(NumberRelation(a, b) == 3);
+}
+
+
+// ROM 0x002951fc FLessOrGreater
+Ref
+FLessOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return NSBOOL(RVALUE(ra) != RVALUE(rb));
+	return NSBOOL(NumberRelation(a, b) < 2);
+}
+
+
+// ROM 0x0029528c FLessEqualOrGreater
+Ref
+FLessEqualOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	Ref ra = a, rb = b;
+	if (ISINT(ra) && ISINT(rb))
+		return TRUEREF;
+	return NSBOOL(NumberRelation(a, b) != 3);
+}
+
+
 // ROM 0x00290594 FMin
 Ref
 FMin(RefArg rcvr, RefArg a, RefArg b)
@@ -1319,6 +1427,48 @@ REAL_FUNCTION2(Ffmax, fmax)			// ROM 0x00293dcc Fmax
 REAL_FUNCTION2(Ffmin, fmin)			// ROM 0x00293e20 Fmin
 
 
+// ROM 0x00292df4 FForLoop
+// fn called with each integer from start to end (a 1.x helper).
+Ref
+FForLoop(RefArg /*rcvr*/, RefArg start, RefArg end, RefArg fn)
+{
+	if (!ISINT((Ref) start))
+		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, start);
+	if (!ISINT((Ref) end))
+		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, end);
+	long last = RINT(end);
+	RefVar args(AllocateArray(RSSYMarray, 1));
+	for (long i = RINT(start); i <= last; i++)
+	{
+		SetArraySlotRef(args, 0, MAKEINT(i));
+		DoBlock(fn, args);
+	}
+	return NILREF;
+}
+
+
+// ROM 0x00290600 FGetSiblingSlot
+// A slot looked up along the _proto chain only (GetProtoVariable).
+Ref
+FGetSiblingSlot(RefArg /*rcvr*/, RefArg context, RefArg name)
+{
+	if ((Ref) context == NILREF)
+		ThrowExInterpreterWithSymbol(kNSErrNilContext, name);
+	long exists;
+	return GetProtoVariable(context, name, &exists);
+}
+
+
+// ROM 0x00290610 FHasSiblingSlot
+Ref
+FHasSiblingSlot(RefArg /*rcvr*/, RefArg context, RefArg name)
+{
+	long exists;
+	GetProtoVariable(context, name, &exists);
+	return NSBOOL(exists);
+}
+
+
 /* -------------------------------------------------------------------------------
 	Registration
 ------------------------------------------------------------------------------- */
@@ -1326,11 +1476,15 @@ REAL_FUNCTION2(Ffmin, fmin)			// ROM 0x00293e20 Fmin
 #define NATIVE(symbol, fn, n)	RegisterNativeFunction(symbol, (void*) (NativeFn##n) fn, n)
 
 void	RegisterMungerNatives(void);		// Munger.cpp
+void	RegisterStringNatives(void);		// StringNatives.cpp
+void	RegisterArrayNatives(void);			// ArrayNatives.cpp
 
 void
 RegisterBuiltinNatives(void)
 {
 	RegisterMungerNatives();
+	RegisterStringNatives();
+	RegisterArrayNatives();
 	RegisterPrinterNatives();
 	RegisterCompilerNatives();
 	NATIVE("FAdd", FAdd, 2);
@@ -1351,6 +1505,17 @@ RegisterBuiltinNatives(void)
 	NATIVE("FGreaterOrEqual", FGreaterOrEqual, 2);
 	NATIVE("FEqual", FEqual, 2);
 	NATIVE("FUnorderedLessOrGreater", FUnorderedLessOrGreater, 2);
+	NATIVE("FUnorderedOrGreater", FUnorderedOrGreater, 2);
+	NATIVE("FUnorderedGreaterOrEqual", FUnorderedGreaterOrEqual, 2);
+	NATIVE("FUnorderedOrLess", FUnorderedOrLess, 2);
+	NATIVE("FUnorderedLessOrEqual", FUnorderedLessOrEqual, 2);
+	NATIVE("FUnorderedOrEqual", FUnorderedOrEqual, 2);
+	NATIVE("FUnordered", FUnordered, 2);
+	NATIVE("FLessOrGreater", FLessOrGreater, 2);
+	NATIVE("FLessEqualOrGreater", FLessEqualOrGreater, 2);
+	NATIVE("FForLoop", FForLoop, 3);
+	NATIVE("FGetSiblingSlot", FGetSiblingSlot, 2);
+	NATIVE("FHasSiblingSlot", FHasSiblingSlot, 2);
 	NATIVE("FMin", FMin, 2);
 	NATIVE("FMax", FMax, 2);
 	NATIVE("FNot", FNot, 1);
