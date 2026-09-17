@@ -73,10 +73,10 @@ enum
 void	AddPtToRect(const FPoint* pt, FRect* rect, Boolean first);	// ROM 0x001a66f4 AddPtToRect - the rect grown to the point (set to it when first)
 void	SetRectangleEmpty(FRect* rect);						// ROM 0x001a6934 SetRectangleEmpty
 void	SetRectanglePoint(FRect* rect, const FPoint* pt);	// ROM 0x001a694c SetRectanglePoint
-void	RectangleCenter(const FRect* rect, FPoint* center);	// ROM 0x001a6960 RectangleCenter
+void	RectangleCenter(const FRect* rect, FPoint* center);	// ROM 0x001a66a8 RectangleCenter
 void	UnfixRect(const FRect* src, Rect* dst);				// ROM 0x001a64c4 UnfixRect - rounded to pixels
-void	GetMapper(const FRect* src, const FRect* dst);		// ROM 0x001a65c0 GetMapper (nothing: the mapping is the rects)
-void	MapPoint(FPoint* pt, const FRect* src, const FRect* dst);	// ROM 0x001a65c4 MapPoint - the point moved from the src rect to the dst rect
+void	GetMapper(const FRect* src, const FRect* dst);		// ROM 0x001a67a4 GetMapper - the dst rect kept in the src rect's proportions
+void	MapPoint(FPoint* pt, const FRect* src, const FRect* dst);	// ROM 0x001a6864 MapPoint - the point moved from the src rect to the dst rect
 
 class TStroke : public TDArray
 {
