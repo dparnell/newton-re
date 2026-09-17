@@ -1859,6 +1859,59 @@ TestEffects()
 }
 
 
+// the key view chain: tab moves the caret along the visible, editable
+// views in the tab order (BuildKeyChildList), wrapping around; NextKeyView
+// answers the next/previous of a kind
+static void
+TestKeyChain()
+{
+	const ULong kGermanyBundle = 0x003c10ed;
+	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	RefVar intl(AllocateFrame());
+	RefVar keyboard(AllocateFrame());
+	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
+	SetFrameSlot(intl, RSSYMkeyboard, keyboard);
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, bundle);
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	ClearHardKeymap();
+	// a slip with three editable fields (textFlags 0x8000 marks a tab stop),
+	// a read-only field between them (skipped) and a plain box (skipped)
+	Eval("ctxKC := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 150, bottom: 90}, viewFormat: 1, viewChildren: ["
+		"{viewClass: 81, viewFlags: 1, viewBounds: {left: 4, top: 2, right: 130, bottom: 14}, textFlags: 0x8000, viewFont: espy12, text: \"one\", debug: 'f1},"
+		"{viewClass: 74, viewFlags: 1, viewBounds: {left: 4, top: 16, right: 20, bottom: 28}, viewFormat: 1, debug: 'box},"
+		"{viewClass: 81, viewFlags: 3, viewBounds: {left: 4, top: 30, right: 130, bottom: 42}, textFlags: 0x8000, viewFont: espy12, text: \"ro\", debug: 'ro},"
+		"{viewClass: 81, viewFlags: 1, viewBounds: {left: 4, top: 44, right: 130, bottom: 56}, textFlags: 0x8000, viewFont: espy12, text: \"two\", debug: 'f2},"
+		"{viewClass: 81, viewFlags: 1, viewBounds: {left: 4, top: 58, right: 130, bottom: 70}, textFlags: 0x8000, viewFont: espy12, text: \"three\", debug: 'f3}]})");
+	Eval("ctxKC:Dirty()");
+	Refresh();
+	TView* f1 = GetView(RefVar(Eval("ctxKC:ChildViewFrames()[0]")));
+	TView* f2 = GetView(RefVar(Eval("ctxKC:ChildViewFrames()[3]")));
+	TView* f3 = GetView(RefVar(Eval("ctxKC:ChildViewFrames()[4]")));
+	// NextKeyView walks the three fields in order, wrapping both ways; the
+	// box and the read-only field are not in the chain
+	EXPECT(f1->NextKeyView(f1, 1, 0) == f2 && f2->NextKeyView(f2, 1, 0) == f3 && f3->NextKeyView(f3, 1, 0) == f1);
+	EXPECT(f1->NextKeyView(f1, -1, 0) == f3 && f3->NextKeyView(f3, -1, 0) == f2 && f2->NextKeyView(f2, -1, 0) == f1);
+	// the NewtonScript native answers the context of the next view
+	EXPECT(EQRef(Eval("NextKeyView(ctxKC:ChildViewFrames()[0], 1, 0)"), (Ref) f2->fContext));
+	EXPECT(EQRef(Eval("NextKeyView(ctxKC:ChildViewFrames()[3], -1, 0)"), (Ref) f1->fContext));
+	// tab from the first field moves the caret to the second, shift-tab back
+	gKeyboardConnected = true;
+	Eval("SetKeyView(ctxKC:ChildViewFrames()[0], 0)");
+	EXPECT(gRootView->fCaretView == f1);
+	TypeKey(0x30);		// tab
+	EXPECT(gRootView->fCaretView == f2);
+	TypeKey(0x30);
+	EXPECT(gRootView->fCaretView == f3);
+	TypeKey(0x30);		// wraps to the first
+	EXPECT(gRootView->fCaretView == f1);
+	Eval("SetKeyView(nil, nil)");
+	gKeyboardConnected = false;
+	Eval("RemoveView(GetRoot(), ctxKC); RemoveSlot(vars, 'international)");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "key chain closed"));
+}
+
+
 int
 main()
 {
@@ -1928,6 +1981,7 @@ main()
 		TestKeyboard();
 		TestCaret();
 		TestTyping();
+		TestKeyChain();
 		TestIdlers();
 		TestPickView();
 		TestClicks();

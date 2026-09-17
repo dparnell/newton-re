@@ -285,6 +285,7 @@ public:
 	Ref			ChildViewFrames(void);									// ROM 0x0025f328 ChildViewFrames__5TViewFv
 	Ref			Children(void);											// ROM 0x00268758 Children__5TViewFv
 	TView*		GetWindowView(void);									// ROM 0x00263d10 GetWindowView__5TViewFv
+	TView*		NextKeyView(TView* focus, long direction, long kind);	// ROM 0x002683a0 NextKeyView__5TViewFP5TViewlT2 - the next (direction 1) or previous (-1) key view in the tab order
 	Boolean		ProtoedFrom(RefArg proto);								// ROM 0x00268200 ProtoedFrom__5TViewFRC6RefVar
 	TClipper*	Clipper(void) const;									// ROM 0x00268830 Clipper__5TViewCFv
 	Boolean		HasVisRgn(void) const;									// ROM 0x00268898 HasVisRgn__5TViewCFv

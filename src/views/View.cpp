@@ -22,6 +22,7 @@
 #include "RegionVars.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "ROMConstants.h"
 #include "REPTranslators.h"
 #include "Fonts.h"
 #include "Locale.h"
@@ -1321,10 +1322,130 @@ TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return nil; }
 
 
 // ROM 0x00268290 BuildKeyChildList__5TViewFP9TViewListlT2
-// NOT YET RECONSTRUCTED: the ROM asks the first visible child.
+// The key views under this one, front to back, appended to the list: each
+// visible child asked to add its own (recursing), then the child itself
+// added when it is not read-only - for the plain tab order (kind 0), when
+// its textFlags say it wants keys (bit 0x8000) or it is a protoInputLine;
+// for the command-key order (kind 1), when it is a paragraph that is not
+// protoStaticText.
 void
-TView::BuildKeyChildList(TViewList* /*list*/, long /*arg1*/, long /*arg2*/)
-{ }
+TView::BuildKeyChildList(TViewList* list, long direction, long kind)
+{
+	TListLoop loop(fChildren);
+	for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+	{
+		if ((child->fFlags & vVisible) == 0)
+			continue;
+		child->BuildKeyChildList(list, direction, kind);
+		if (child->fFlags & vReadOnly)
+			continue;
+		if (kind == 0)
+		{
+			if ((child->TextFlags() & 0x8000) != 0 || child->ProtoedFrom(Rprotoinputline))
+				list->InsertLast(child);
+		}
+		else if (kind == 1)
+		{
+			if (child->DerivedFrom(clParagraphView) && !child->ProtoedFrom(Rprotostatictext))
+				list->InsertLast(child);
+		}
+	}
+}
+
+
+// ROM 0x002683a0 NextKeyView__5TViewFP5TViewlT2
+// The key view that follows (direction 1) or precedes (-1) the focus in
+// the tab order, for the given kind.  An explicit order comes first: from
+// this view up to the one that holds a _tabChildren array (a plain view
+// with no _tabParent starts the search one level up), whose entries are
+// frame paths from that view's context to its key views; the focus's path
+// is found and the entry `direction` further on (wrapping) is the answer
+// (a _tabChildren that does not name the focus throws kViewErrNoKeyView).
+// Failing that, the automatic order: from this view up to the container
+// (a vApplication view, a protoContainerView, or one with a _tabParent),
+// whose BuildKeyChildList gives the key views front to back; the one
+// after the focus is the next (wrapping to the first), the one before it
+// the previous (nil when the focus is not in the list).
+TView*
+TView::NextKeyView(TView* focus, long direction, long kind)
+{
+	TView* start = this;
+	if ((fFlags & vApplication) == 0 && !ProtoedFrom(Rprotocontainerview) && ISNIL(GetProto(RSSYM_tabparent)))
+	{
+		if (this != gRootView && fParent != gRootView)
+			start = fParent;
+	}
+
+	// the explicit _tabChildren order
+	if (kind != 1)
+	{
+		TView* holder = start;
+		while (ISNIL(holder->GetProto(RSSYM_tabchildren)))
+		{
+			if (holder == gRootView)
+				goto automatic;
+			holder = holder->fParent;
+		}
+		RefVar tabChildren(holder->GetProto(RSSYM_tabchildren));
+		long count = Length(tabChildren);
+		RefVar focusContext(focus->fContext);
+		RefVar holderContext(holder->fContext);
+		long i = 0;
+		for ( ; i < count; i++)
+		{
+			RefVar path(GetArraySlotRef(tabChildren, i));
+			if (EQRef(focusContext, RefVar(GetFramePath(holderContext, path))))
+				break;
+		}
+		if (i >= count)
+			Throw(exRootException, (void*) kViewErrNoKeyView, nil);
+		long slot = (count + i + direction) % count;
+		RefVar path(GetArraySlotRef(tabChildren, slot));
+		return GetView(RefVar(GetFramePath(holderContext, path)));
+	}
+
+automatic:
+	TView* container = start;
+	while ((container->fFlags & vApplication) == 0 && !container->ProtoedFrom(Rprotocontainerview)
+		&& ISNIL(container->GetProto(RSSYM_tabparent)) && container != gRootView)
+		container = container->fParent;
+
+	TViewList* list = TViewList::Make();
+	container->BuildKeyChildList(list, direction, kind);
+	TView* after = nil;			// the first key view seen (the forward-wrap target)
+	TView* prev = (list->Count() > 1) ? list->At(list->Count() - 1) : nil;	// the view before the current (backward answer), pre-seeded with the last for the first-view wrap
+	Boolean sawFocus = false;
+	TListLoop loop(list);
+	TView* cur = (TView*) loop.Next();
+	for (;;)
+	{
+		TView* thisCur = cur;
+		cur = after;
+		if (thisCur == nil)
+			break;
+		if (thisCur == focus)
+		{
+			if (direction == -1)
+				break;
+			sawFocus = true;
+			thisCur = prev;
+		}
+		else
+		{
+			cur = thisCur;
+			if (sawFocus)
+				break;
+			if (after == nil)
+				after = thisCur;
+		}
+		cur = (TView*) loop.Next();
+		prev = thisCur;
+	}
+	if (direction >= 0)
+		prev = cur;
+	delete list;
+	return prev;
+}
 
 
 /*------------------------------------------------------------------------------

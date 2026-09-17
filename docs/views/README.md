@@ -669,9 +669,36 @@ The natives: `SetKeyView(view, offsetOrInfo)`, `GetKeyView`,
 `RegisterKeyboard` 0x001b6a3c), `KeyboardConnected`,
 `CommandKeyboardConnected`, `SetRemoteWriting`/`GetRemoteWriting` (the
 `remoteWriting` preference).  NOT YET: the caret's tap (`DoCaretClick`),
-the key view chain (`NextKeyView`, tabbing), `SetCaretInfo`/
-`PositionCaret`, `HoldPendingKeyView`'s users, the hilites a selection
-means, typing into the paragraph.
+`SetCaretInfo`/`PositionCaret`, `HoldPendingKeyView`'s users, the hilites
+a selection means, typing into the paragraph.
+
+### The key view chain (`NextKeyView`, `BuildKeyChildList`)
+
+`TView::NextKeyView(focus, direction, kind)` 0x002683a0 answers the view
+that follows (direction 1) or precedes (-1) the focus in the tab order.
+An explicit order comes first: from the view up to the one that holds a
+`_tabChildren` array (a plain view with no `_tabParent` starts one level
+up), whose entries are frame paths from that view's context to its key
+views; the focus's path is found in it (`GetFramePath`) and the entry
+`direction` further on (wrapping with a modulo) is the answer - a
+`_tabChildren` that does not name the focus throws `kViewErrNoKeyView`
+(-8500).  Failing that, the automatic order: from the view up to the
+container (a `vApplication` view, a `protoContainerView`, or one with a
+`_tabParent`), whose `BuildKeyChildList(list, direction, kind)`
+0x00268290 gathers the key views front to back - each visible child asked
+to add its own (recursing), then the child itself when it is not
+read-only and, for the plain order (kind 0), its `textFlags` slot has bit
+0x8000 or it is a `protoInputLine`, or, for the command-key order (kind
+1), it is a paragraph that is not `protoStaticText`.  The view after the
+focus is the next (wrapping to the first), the one before it the previous
+(the last when the focus is the first).  Tab in a paragraph
+(`RealDoCommand`, `ch == 9`, unless it calculates its bounds) moves the
+caret to the next key view (backward with the shift modifier);
+DEVIATION: the ROM selects the whole target when it is a paragraph
+(`MakeHilite`, the data hilites NOT YET) - the reconstruction puts the
+caret at its end.  `NextKeyView(view, direction, kind)` is the
+NewtonScript native.  (Tested by `test_Views`'s `TestKeyChain`: tab
+cycles a slip's fields, skipping a read-only one and a plain box.)
 
 ### Typing into a paragraph (`ParagraphView.h`, `StyleRuns.h`)
 
@@ -905,7 +932,7 @@ The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
 the rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
-key view chain (`NextKeyView`), the key help, the keyboard tool and the
+the key help, the keyboard tool and the
 on-screen keyboards, drag and drop (`DragAndDrop`, `TDragInfo`), the
 sounds, `SyncScroll`, the clipboards, the popup and modal dialog
 machinery, the other subclasses (`TListView`, `TEditView`, ...), editing

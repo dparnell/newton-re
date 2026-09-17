@@ -383,6 +383,21 @@ FGetKeyView(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x001f03c0 FNextKeyView
+// NextKeyView(view, direction, kind): the context of the view that follows
+// (direction 1) or precedes (-1) the given view in the tab order of the
+// kind; nil when there is none.
+static Ref
+FNextKeyView(RefArg /*rcvr*/, RefArg viewRef, RefArg direction, RefArg kind)
+{
+	TView* view = FailGetView(viewRef);
+	if (view == nil)
+		return NILREF;
+	TView* next = view->NextKeyView(view, RINT(direction), RINT(kind));
+	return next != nil ? (Ref) next->fContext : NILREF;
+}
+
+
 // ROM 0x001f0444 FGetCaretBox
 // The caret's rectangle as a bounds frame with the key view and its
 // offset (-1 for a selection); nil when no caret shows.
@@ -1047,6 +1062,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);
 	RegisterNativeFunction("FSetKeyView__FRC6RefVarN21", (void*) FSetKeyView, 2);
 	RegisterNativeFunction("FGetKeyView", (void*) FGetKeyView, 0);
+	RegisterNativeFunction("FNextKeyView", (void*) FNextKeyView, 3);
 	RegisterNativeFunction("FGetCaretBox", (void*) FGetCaretBox, 0);
 	RegisterNativeFunction("FGetCaretInfo", (void*) FGetCaretInfo, 0);
 	RegisterNativeFunction("FSetRemoteWriting", (void*) FSetRemoteWriting, 1);

@@ -1428,7 +1428,18 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		}
 		if ((fFlags & vCalculateBounds) == 0 && ch == 9)
 		{
-			// NOT YET RECONSTRUCTED: NextKeyView (the tab chain)
+			// tab moves along the key view chain: forward, or back when
+			// the shift modifier is set (0x4000000) without the cancelling
+			// one (0x1000000)
+			long direction = ((parameter & 0x4000000) == 0 || (parameter & 0x1000000) != 0) ? 1 : -1;
+			TView* next = NextKeyView(this, direction, 0);
+			if (next != nil)
+			{
+				// (the ROM selects the whole target when it is a paragraph,
+				// MakeHilite(next, 0, 999999); DEVIATION: the caret is put
+				// at its end - the data hilites are NOT YET RECONSTRUCTED)
+				gRootView->SetKeyView(next, 999999, 0, false);
+			}
 			return true;
 		}
 		// NOT YET RECONSTRUCTED: FirstHilite - a selection replaced by the key
