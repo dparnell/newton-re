@@ -45,6 +45,7 @@ public:
 	long		Width(void) const			{ return fLandscape ? fHeight : fWidth; }
 	long		Height(void) const			{ return fLandscape ? fWidth : fHeight; }
 	unsigned char	Gray(long x, long y) const;										// 0 white .. 255 black
+	const unsigned char*	Pixels(void) const		{ return fPixels; }			// the grays, Width() per row
 	Boolean		WritePGM(const char* path) const;								// the display as a binary PGM (P5)
 	Boolean		WritePBM(const char* path) const;								// ... as a PBM (P4): gray from half black is black
 	long		fBlits;				// how many Blits came (tests)

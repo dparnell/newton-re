@@ -38,5 +38,6 @@ void				HostRegisterViewFunctions(void);		// the NewtonScript functions above (H
 // the toolbox
 void				HostConfigureNewtWorld(const char* romImage, long heapSize, long width, long height, long depth);
 void				HostBootNewtWorld(void);
+THostScreenDriver*	HostDisplay(void);						// the display made (nil before)
 
 #endif	/* __HOSTVIEWS_H */

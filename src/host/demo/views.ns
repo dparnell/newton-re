@@ -45,7 +45,7 @@ slip:Dirty();
 // (a keyboard connected), and a key typed goes in at the caret
 para := AddView(GetRoot(), {
 	viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 400, right: 300, bottom: 430},
-	viewFormat: 0x111, viewFont: kBold12, text: "Type here" });
+	viewFormat: 0x151, viewFont: kBold12, text: "Type here" });
 para:Dirty();
 KeyboardConnect(true);
 SetKeyView(para, 4);

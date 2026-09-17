@@ -23,7 +23,7 @@ THostScreenDriver::New()
 	fLandscape = false;
 	fContrast = 0;
 	fBacklight = 0;
-	fOrientation = 1;
+	fOrientation = 0;			// portrait (1 and 3 are the landscape orientations)
 	fPowered = false;
 	fPixels = nil;
 	fBlits = 0;

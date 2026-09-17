@@ -162,6 +162,17 @@ timer, a 'keyb event typed into a paragraph (the repeat rates replied),
 a 'draw event, and a 'host/'quit event of the test's own that ends the
 loop.
 
+`host/newton.cpp` runs it all interactively: `OsBoot`, the world booted
+over the host display with `--script` as the boot test script, a Win32
+window (`host/win32/HostWindow.cpp`) showing the display thirty times a
+second, its mouse the pen (records into the tablet buffer, read by the
+host inker task `HostInkerStart` every tick) and its keys the keyboard
+(`host/HostKeyboard.cpp`: a task sending 'keyb events to the newt port
+like the ROM's keyboard tool, the keyboard connected first); closing the
+window ends the run.  `--headless seconds` runs without the window
+(`host.Newton` test: `demo/newton.ns`, which writes the display half a
+second in through a delayed action).
+
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
 and the extras soup, activateStorePackages, the boot test script, the

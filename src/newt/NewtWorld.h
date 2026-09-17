@@ -13,7 +13,7 @@
 				loop then dispatches the 'newt events (AEDispatch: under an
 				exception handler that shows the exception, the delayed
 				actions run after each).  TNewtEventHandler takes the 'newt
-				events: 'idle (the application's Run, then the idle timer
+				events: 'idle (nothing of its own: every event ends in the application's Run, then the idle timer
 				re-armed for the next delayed action), 'keyb (a keyboard
 				event: HandleKeyEvent, the key repeat rates from the
 				preferences replied), 'draw (a rectangle of the screen
@@ -161,6 +161,9 @@ void	HandleRunScriptEvent(TRunScriptEvent* event);		// ROM 0x002e62a0 HandleRunS
 // object system (the ROM image read in), the screen, the fonts and its
 // natives (host/HostViews.h: HostBootNewtWorld); nil to do the ROM's
 extern void	(*gNewtHostBoot)(void);
+// host: the boot test script's path (the ROM's PreMain runs the file
+// "bootTestScript" when there is one); nil for none
+extern const char*	gNewtBootTestScript;
 void	NewtUserMain(void);									// ROM 0x002e6894 UserMain__Fv - the 'main' task: a TNewtWorld made and run (installed as the loader's gHostUserMain by NewtInstallUserMain)
 void	NewtInstallUserMain(void);							// host: the loader's 'main' task runs NewtUserMain
 

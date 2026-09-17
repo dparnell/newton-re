@@ -15,6 +15,7 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "Compiler.h"
 #include "REPTranslators.h"
 #include "Locale.h"
 #include "Fonts.h"
@@ -34,6 +35,7 @@ TTime			gLastWakeupTime;			// ROM 0x0c101d40 gLastWakeupTime
 TTime			gTickleTime;				// ROM 0x0c100d00 gTickleTime
 Boolean			gGoingToSleep = false;		// ROM 0x0c102614 gGoingToSleep
 void			(*gNewtHostBoot)(void) = nil;
+const char*		gNewtBootTestScript = nil;
 static const Int64	kZero = { 0, 0 };
 
 // the keyboard tool's reply to a 'keyb event: the repeat rates (over the
@@ -216,7 +218,22 @@ TNewtWorld::PreMain()
 	gStrokeWorld.BlockStrokes();
 	gLastWakeupTime = GetGlobalTime();
 	gApplication->Run();
+	if (gNewtBootTestScript != nil)		// (the ROM: a "bootTestScript" file, with the REP's output to files)
+	{
+		newton_try
+		{
+			ParseFile(gNewtBootTestScript);
+		}
+		newton_catch_all
+		{
+			ExceptionNotify(CurrentException());
+			if (gREPout != nil)
+				gREPout->ExceptionNotify(CurrentException());
+		}
+		end_try;
+	}
 	gNewtIsAliveAndWell = true;
+	gRootView->Dirty(nil);			// DEVIATION: the splash the root drew while booting goes at the next update (the ROM's boot scripts redraw)
 	gStrokeWorld.UnblockStrokes();
 	fHandler->SetWakeupTime(1);
 	return err;
@@ -312,8 +329,9 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 // 'rstr, 'powr, 'pwch, 'ic  , 'irMC, 'dead, 'bats, 'scp!, 'xnwt (NOT YET
 // RECONSTRUCTED).  Every event but 'keyb and 'idle is replied to as it
 // came; a 'powr event more than a second after the last wakeup runs the
-// root's GotoSleep.  Then the application is idled and the idle timer
-// re-armed for the next delayed action (stopped when there is none).
+// root's GotoSleep.  Then the application is Run (the idle passes and the
+// root view's update) and the idle timer re-armed for the next delayed
+// action (stopped when there is none).
 void
 TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 {
@@ -368,7 +386,7 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 			ReplyImmed();
 		// NOT YET RECONSTRUCTED: 'powr (GotoSleep after a second awake), 'stor (StorageCardInserted)
 	}
-	gApplication->Idle();
+	gApplication->Run();
 	TTime next = gApplication->NextDelayedActionTime(gApplication->fNextIdleTime);
 	if (CompCompare(&next.time, &kZero) == 0)
 		StopIdle();

@@ -8,6 +8,9 @@
 #include "TabletBuffer.h"
 #include "StrokeQueue.h"
 #include "UserBoot.h"
+#include "UserTasks.h"
+#include "KernelGlobals.h"
+#include <atomic>
 
 struct HostTabletRecord
 {
@@ -147,4 +150,48 @@ HostTabletWait(ULong ticks)
 	for (ULong i = 0; i < ticks; i++)
 		HostTabletPump();
 	StrokeTime();
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   i n k e r ' s   s t a n d - i n
+------------------------------------------------------------------------------*/
+
+static std::atomic<bool>	gInkerStop(false);
+static Boolean				gInkerRunning = false;
+
+// the task: every tick the queued records (a test's) and the buffer read
+// into the stroke queue
+static void
+HostInkerMain(void)
+{
+	while (!gInkerStop.load())
+	{
+		Wait(1);
+		HostTabletPump();
+		StrokeTime();
+	}
+	gInkerRunning = false;
+}
+
+
+Boolean
+HostInkerStart(void)
+{
+	if (!gOSIsRunning || gCurrentTask == nil || gInkerRunning)
+		return false;
+	gInkerStop.store(false);
+	TUTask task;
+	if (task.Init((TaskProcPtr) HostInkerMain, 0x2000, 0, nil, kUserTaskPriority, 'inkr') != noErr)
+		return false;
+	gInkerRunning = true;
+	task.Start();
+	return true;
+}
+
+
+void
+HostInkerStop(void)
+{
+	gInkerStop.store(true);
 }

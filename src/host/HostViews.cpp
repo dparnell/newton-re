@@ -222,6 +222,13 @@ HostStartViews(long width, long height, long depth)
 }
 
 
+THostScreenDriver*
+HostDisplay(void)
+{
+	return gHostDisplay;
+}
+
+
 // the display the newt world is to boot over (HostBootNewtWorld)
 static long	gNewtDisplayWidth = 320;
 static long	gNewtDisplayHeight = 480;

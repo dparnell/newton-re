@@ -177,7 +177,13 @@ src/
                 (HostViews.cpp: ScreenSnapshot writes the picture) - the
                 demo/views.ns script draws a slip, a paragraph, gauges,
                 shapes and a popup menu into build/views-demo.pgm
-                (tools/imaging/pgm2png.py turns it into a PNG)
+                (tools/imaging/pgm2png.py turns it into a PNG); and
+                newton (newton.cpp), the OS booted and the NewtonScript
+                world run over a window on the host display (Windows:
+                win32/HostWindow.cpp), the mouse the pen and the keys the
+                keyboard (HostKeyboard.cpp, the keyboard tool's stand-in)
+                - demo/newton.ns is its boot script; --headless runs it
+                without a window
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 

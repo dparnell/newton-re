@@ -117,12 +117,14 @@ TNotebook::InitOffscreenBitmaps(void)
 
 // ROM 0x00148800 InitInker__9TNotebookFv
 // The inker (a TInker, 'inkr, over the Newt port) started as a fork.
-// NOT YET RECONSTRUCTED: TInker.  Host: the tablet's stand-in reads the
-// tablet buffer as the application waits (hal/host/HostTablet.h).
+// NOT YET RECONSTRUCTED: TInker.  Host: the tablet's stand-in - a task
+// reading the tablet buffer into the stroke queue every tick when the OS
+// runs, the wait hook otherwise (hal/host/HostTablet.h).
 void
 TNotebook::InitInker(void)
 {
 	HostTabletInit();
+	HostInkerStart();
 }
 
 

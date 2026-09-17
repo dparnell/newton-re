@@ -1,0 +1,56 @@
+// The newt world's boot script for the newton program: what the ROM's
+// boot would build from the ROM's root template, here a slip, buttons and
+// a paragraph to click, tap and type into with the mouse and the keyboard
+// in the host window.  Run from the repository root:
+//
+//   build/host/host/newton --rom build/MP2100D/rom.bin --script src/host/demo/newton.ns
+//
+// (or --headless 2 to run it without a window and write build/newton-demo.pgm)
+
+constant kBold12 := 0x3000;			// espy, 12 point, bold (the packed font spec: family 0, size << 10, face << 20)
+
+slip := AddView(GetRoot(), {
+	viewClass: 74,
+	viewFlags: 1,
+	viewBounds: {left: 20, top: 30, right: 300, bottom: 200},
+	viewFormat: 0x4000451,				// white fill, black frame 4 wide, rounded 4
+	viewChildren: [
+		{ viewClass: 98, viewFlags: 1,
+		  viewBounds: {left: 0, top: 4, right: 280, bottom: 24},
+		  viewJustify: 0x800006, viewFont: 0x4800, text: "Newton OS on the host" },
+		{ viewClass: 81, viewFlags: 3,
+		  viewBounds: {left: 12, top: 34, right: 268, bottom: 150},
+		  viewFont: 0x3000, viewLineSpacing: 16,
+		  text: "The OS is booted: the kernel, the loader, the NewtonScript world with its event loop. The mouse is the pen - tap the buttons, drag on the slider - and the keys type at the caret below." },
+		{ viewClass: 92, viewFlags: 1,		// a slider: drag its knob
+		  viewBounds: {left: 12, top: 156, right: 268, bottom: 166},
+		  viewValue: 25, gaugeDrawLimits: true },
+	]});
+slip:Dirty();
+
+// buttons: each tracks the press and counts its taps
+taps := 0;
+button := AddView(GetRoot(), {
+	viewClass: 98, viewFlags: 1 + 0x200 + 0x800, viewBounds: {left: 40, top: 230, right: 150, bottom: 252},
+	viewFormat: 0x4000551, viewJustify: 0x800006, viewFont: kBold12, text: "Tap me",
+	viewClickScript: func(unit) begin :TrackButton(unit); true end,
+	buttonClickScript: func() begin taps := taps + 1; SetValue(self, 'text, "Tapped " & taps) end });
+button:Dirty();
+clearButton := AddView(GetRoot(), {
+	viewClass: 98, viewFlags: 1 + 0x200 + 0x800, viewBounds: {left: 170, top: 230, right: 280, bottom: 252},
+	viewFormat: 0x4000551, viewJustify: 0x800006, viewFont: kBold12, text: "Clear",
+	viewClickScript: func(unit) begin :TrackButton(unit); true end,
+	buttonClickScript: func() begin SetValue(para, 'text, ""); SetKeyView(para, 0) end });
+clearButton:Dirty();
+
+// a paragraph made the key view: what is typed goes in at the caret
+para := AddView(GetRoot(), {
+	viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 280, right: 300, bottom: 340},
+	viewFormat: 0x151, viewFont: kBold12, viewLineSpacing: 16, text: "Type here" });
+para:Dirty();
+SetKeyView(para, 9);
+
+// a picture of the display half a second on - a delayed action, run by
+// the world's event loop once the boot is over and the screen redrawn
+AddDelayedCall(func() begin ScreenSnapshot("build/newton-demo.pgm"); Print("written build/newton-demo.pgm") end, [], 500);
+Print("newton: the world is up");
