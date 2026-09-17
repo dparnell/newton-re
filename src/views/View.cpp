@@ -13,6 +13,8 @@
 
 #include "View.h"
 #include "RootView.h"
+#include "Commands.h"
+#include "Application.h"
 #include "Rects.h"
 #include "Shapes.h"
 #include "ObjectHeap.h"
@@ -541,15 +543,302 @@ TView::Delete(void)
 }
 
 
-// ROM 0x00266e00 RealDoCommand__5TViewFRC6RefVar
-// NOT YET RECONSTRUCTED: the ROM dispatches the application's commands
-// (aeAddChild 0x29: AddChild then aeShow; aeDropChild 0x2a: the child
-// hidden and removed; aeHide 0x2b; aeShow 0x2c; the click, key, scrub and
-// hilite commands).  The host's natives call the methods directly.
-Boolean
-TView::RealDoCommand(RefArg /*cmd*/)
+// the script commands' arguments: [the unit (the parameter as a Ref)]
+static Ref
+UnitArgs(RefArg cmd)
 {
-	return false;
+	RefVar args(MakeArray(1));
+	Long unit = CommandParameter(cmd);
+	SetArraySlotRef(args, 0, unit != 0 ? AddressToRef((void*) unit) : NILREF);	// (host: no unit is nil - the ROM's units are never 0)
+	return args;
+}
+
+
+// a script's result as a command result: handled unless it answered nil
+static Boolean
+ScriptHandled(RefArg cmd, Ref result)
+{
+	Boolean handled = NOTNIL(result);
+	CommandSetResult(cmd, handled);
+	return handled;
+}
+
+
+// ROM 0x00266e00 RealDoCommand__5TViewFRC6RefVar
+// The commands a view answers (their ids Commands.h): the scripts -
+// aeClick runs viewClickScript(unit) on a clickable view ('skip: the
+// result 0, the click passed on), aeStroke viewStrokeScript(unit),
+// aeScrub/aeCaret/aeLine and the other gestures viewGestureScript(unit,
+// kind), aeWord viewWordScript(unit), aeRawInk viewRawInkScript(strokes),
+// aeInkWord viewInkWordScript(strokes), aeScrollUp/Down and aeOverview
+// their scripts (vars.lastTextChanged cleared after) - each handled
+// unless the script answered nil; the key events (HandleKeyEvent: NOT
+// YET RECONSTRUCTED); the structure - aeAddChild adds the frame
+// parameter's view and shows it (aeShow with the parameter, dispatched),
+// aeDropChild hides and removes the parameter's view, aeHide hides,
+// aeShow shows (under a modal dialog a view outside it is shown
+// ModalSafeShow - NOT YET: shown), aeAddData puts the frame parameter in
+// the soup as a child (posting aeRemoveData as its undo), aeRemoveData
+// takes the child of the parameter's id out (posting aeAddData with its
+// data), aeMoveData moves by params[0], [1] (posting the reverse as
+// aeMoveChild to the parent), aeScaleData scales by params[0..3]
+// (Scale, NOT YET), aeAddHilite appends the frame parameter (a hilite,
+// or a frame's hilite slot) to hilites, aeRemoveHilite removes one,
+// aeRemoveAllHilites all, aeToChildren sends the command to every child
+// and aeToHilitedChildren to the hilited ones, aeMoveChild sends
+// aeMoveData to the child of the parameter's id.  ==> whether handled.
+Boolean
+TView::RealDoCommand(RefArg cmd)
+{
+	Boolean handled = false;
+	long id = CommandID(cmd);
+	switch (id)
+	{
+	case aeClick:
+		if (fFlags & vClickable)
+		{
+			RefVar result(RunCacheScript(kIndexViewClickScript, RefVar(UnitArgs(cmd)), true));
+			if (EQRef(result, RSSYMskip))
+			{
+				CommandSetResult(cmd, 0);
+				handled = true;		// (the ROM's 2: taken, but passed on)
+			}
+			else
+				handled = ScriptHandled(cmd, result);
+		}
+		break;
+
+	case aeStroke:
+		handled = ScriptHandled(cmd, RunScript(RSSYMviewstrokescript, RefVar(UnitArgs(cmd)), true));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+		break;
+
+	case aeScrub:
+	case aeCaret:
+	case aeLine:
+	case aeGesture2f:
+	case aeGesture31:
+	case aeGesture32:
+		{
+			RefVar args(MakeArray(2));
+			Long unit = CommandParameter(cmd);
+			SetArraySlotRef(args, 0, unit != 0 ? AddressToRef((void*) unit) : NILREF);
+			SetArraySlotRef(args, 1, MAKEINT(id));
+			handled = ScriptHandled(cmd, RunScript(RSSYMviewgesturescript, args, true));
+			if (handled)
+				gRootView->fDirtyFlag = true;
+		}
+		break;
+
+	case aeWord:
+		handled = ScriptHandled(cmd, RunScript(RSSYMviewwordscript, RefVar(UnitArgs(cmd)), true));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+		break;
+
+	case aeRawInk:
+	case aeInkWord:
+		{
+			RefVar args(MakeArray(1));
+			SetArraySlotRef(args, 0, GetStrokeBundleFromCommand(cmd));
+			handled = ScriptHandled(cmd, RunCacheScript(id == aeRawInk ? kIndexViewRawInkScript : kIndexViewInkWordScript, args, true));
+		}
+		break;
+
+	case aeKeyDown:
+	case aeKeyUp:
+	case aeKeyRepeat:
+	case aeKeyString:
+		// NOT YET RECONSTRUCTED: HandleKeyEvent(cmd, id, nil)
+		handled = true;
+		break;
+
+	case aeAddChild:
+		{
+			TView* child = AddChild(RefVar(CommandFrameParameter(cmd)));
+			RefVar show(MakeCommand(aeShow, child, CommandParameter(cmd)));
+			gApplication->DispatchCommand(show);
+			handled = true;
+		}
+		break;
+
+	case aeDropChild:
+		{
+			TView* child = (TView*) CommandParameter(cmd);
+			child->Hide();
+			RemoveChildView(child);
+		}
+		break;
+
+	case aeHide:
+		Hide();
+		break;
+
+	case aeShow:
+		Show();
+		handled = true;
+		break;
+
+	case aeScrollUp:
+		RunScript(RSSYMviewscrollupscript, RefVar(NILREF), true);
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+		handled = true;
+		break;
+
+	case aeScrollDown:
+		RunScript(RSSYMviewscrolldownscript, RefVar(NILREF), true);
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+		handled = true;
+		break;
+
+	case aeOverview:
+		RunScript(RSSYMviewoverviewscript, RefVar(NILREF), true);
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+		handled = true;
+		break;
+
+	case aeRemoveAllHilites:
+		RemoveAllHilites();
+		handled = true;
+		break;
+
+	case aeAddData:
+		{
+			TView* child = AddToSoup(RefVar(CommandFrameParameter(cmd)));
+			if (child != nil)
+			{
+				long wantedId = CommandParameter(cmd);
+				if (wantedId != kNoParameter)
+					child->fId = wantedId;
+				CommandSetParameter(cmd, (Long) child);
+				gApplication->PostUndoCommand(aeRemoveData, this, child->fId);
+				child->Dirty(nil);
+			}
+			else
+				CommandSetParameter(cmd, 0);
+			SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+			handled = true;
+		}
+		break;
+
+	case aeRemoveData:
+		{
+			TView* child = FindID(CommandParameter(cmd));
+			if (child != nil)
+			{
+				long childId = child->fId;
+				RefVar data(child->DataFrame());
+				RemoveFromSoup(child);
+				RefVar undo(MakeCommand(aeAddData, this, childId));
+				CommandSetFrameParameter(undo, data);
+				gApplication->PostUndoCommand(undo);
+			}
+			SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+			handled = true;
+		}
+		break;
+
+	case aeMoveData:
+		{
+			Point delta;
+			delta.h = (short) CommandIndexParameter(cmd, 0);
+			delta.v = (short) CommandIndexParameter(cmd, 1);
+			Move(delta);
+			RefVar undo(MakeCommand(aeMoveChild, fParent, fId));
+			CommandSetIndexParameter(undo, 0, -delta.h);
+			CommandSetIndexParameter(undo, 1, -delta.v);
+			gApplication->PostUndoCommand(undo);
+			SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+			handled = true;
+		}
+		break;
+
+	case aeScaleData:
+		if ((fFlags & (vReadOnly | vWriteProtected)) == 0)
+		{
+			Rect src, dst;
+			src.left = (short) CommandIndexParameter(cmd, 0);
+			src.top = (short) CommandIndexParameter(cmd, 1);
+			dst.left = (short) CommandIndexParameter(cmd, 2);
+			dst.top = (short) CommandIndexParameter(cmd, 3);
+			src.right = dst.right = 0;
+			src.bottom = dst.bottom = 0;
+			Scale(src, dst);
+			RefVar undo(MakeCommand(aeScaleData, this, kNoParameter));
+			CommandSetIndexParameter(undo, 0, dst.left);
+			CommandSetIndexParameter(undo, 1, dst.top);
+			CommandSetIndexParameter(undo, 2, src.left);
+			CommandSetIndexParameter(undo, 3, src.top);
+			gApplication->PostUndoCommand(undo);
+			fParent->Dirty(nil);
+		}
+		break;
+
+	case aeAddHilite:
+		{
+			RefVar hilite(CommandFrameParameter(cmd));
+			if (IsFrame(hilite))
+				hilite = GetFrameSlotRef(hilite, RSSYMhilite);
+			RefVar hilites(GetFrameSlotRef(fContext, RSSYMhilites));
+			if (ISNIL(hilites))
+			{
+				hilites = MakeArray(0);
+				SetFrameSlot(fContext, RSSYMhilites, hilites);
+			}
+			AddArraySlot(hilites, hilite);
+			Dirty(nil);
+			handled = true;
+		}
+		break;
+
+	case aeRemoveHilite:
+		RemoveHilite(RefVar(CommandFrameParameter(cmd)));
+		handled = true;
+		break;
+
+	case aeToChildren:
+		{
+			TViewLoop loop(fChildren);
+			for (TView* child = loop.Next(); child != nil; child = loop.Next())
+				child->RealDoCommand(cmd);
+			gRootView->fDirtyFlag = true;
+			handled = true;
+		}
+		break;
+
+	case aeToHilitedChildren:
+		{
+			CList* hilited = CList::Make();
+			if (hilited != nil)
+			{
+				TViewLoop loop(fChildren);
+				for (TView* child = loop.Next(); child != nil; child = loop.Next())
+					if (child->Hilited())
+						hilited->Insert(child);
+				TListLoop hilitedLoop(hilited);
+				for (TView* child = (TView*) hilitedLoop.Next(); child != nil; child = (TView*) hilitedLoop.Next())
+					child->RealDoCommand(cmd);
+				delete hilited;
+			}
+			gRootView->fDirtyFlag = true;
+		}
+		break;
+
+	case aeMoveChild:
+		{
+			TView* child = FindID(CommandParameter(cmd));
+			if (child != nil)
+			{
+				CommandSetID(cmd, aeMoveData);
+				child->RealDoCommand(cmd);
+			}
+			SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+		}
+		break;
+
+	default:
+		break;
+	}
+	return handled;
 }
 
 

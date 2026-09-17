@@ -74,6 +74,7 @@ public:
 	TView*			fPopup;				// +0x50  the popup view
 	RefStruct		fClipboardIcon;		// +0x54  (NOT YET)
 	RefStruct		fSelectionStack;	// +0x60  the saved key view selections (NOT YET)
+	Boolean			fDirtyFlag;			// +0x5c  a gesture or a command to the children changed something (the ROM's event loop looks)
 	TView*			fCaretView;			// +0x68  the key view with the caret (NOT YET)
 	TView*			fDefaultButton;		// +0x74  drawn with its marks; three pixels of outer bounds
 	TView*			fCaretSlip;			// +0x78  the view whose hilite frame is thick

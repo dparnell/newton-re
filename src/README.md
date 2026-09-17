@@ -108,8 +108,11 @@ src/
                 styled text (ParagraphView.h, display only, over
                 DataView.h; the style runs in StyleRuns.h), the gauge
                 (GaugeView.h), the NewtonScript shapes and DrawShape
-                (DrawShape.h); the other subclasses (lists, pickers,
-                editing) to come
+                (DrawShape.h), the command frames (Commands.h) and the
+                application that dispatches them, with the undo stacks
+                and the delayed actions (Application.h); the other
+                subclasses (lists, pickers, editing) and the event loop
+                to come
                 (docs/views/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

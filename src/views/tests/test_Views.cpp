@@ -15,6 +15,8 @@
 #include "ParagraphView.h"
 #include "GaugeView.h"
 #include "DrawShape.h"
+#include "Commands.h"
+#include "Application.h"
 #include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -899,6 +901,116 @@ TestShapes()
 }
 
 
+static void
+TestCommands()
+{
+	// the command frames
+	EXPECT(gApplication != nil && gApplication->ClassID() == clApplication);
+	TView* root = gRootView;
+	RefVar cmd(MakeCommand(aeShow, root, 42));
+	EXPECT(CommandID(cmd) == aeShow && CommandParameter(cmd) == 42 && CommandReceiver(cmd) == root && CommandResult(cmd) == 0);
+	EXPECT(EQRef(GetFrameSlotRef(cmd, RSSYMreceiver), root->fContext));
+	CommandSetIndexParameter(cmd, 2, 7);
+	EXPECT(CommandIndexParameter(cmd, 2) == 7 && CommandIndexParameter(cmd, 0) == 0 && CommandIndexParameter(cmd, 5) == 0 && RINT(Eval("Length(GetRoot().viewChildren)")) >= 0);
+	EXPECT(!IsUndoCommand(cmd));
+	MarkUndoCommand(cmd);
+	EXPECT(IsUndoCommand(cmd));
+	cmd = MakeCommand(aeUndo, gApplication, kNoParameter);
+	EXPECT(CommandReceiver(cmd) == gApplication && EQRef(GetFrameSlotRef(cmd, RSSYMreceiver), RSSYMapplication));
+
+	// aeShow/aeHide through the application to a view; the result answers
+	TView* v = ViewOf("ctxC := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 10, top: 10, right: 30, bottom: 30}, viewFormat: 5, clicks: 0, viewClickScript: func(unit) begin clicks := clicks + 1; if clicks = 2 then 'skip else true end})");
+	Eval("ctxC:Dirty()");
+	Refresh();
+	EXPECT(Pixel(15, 15) == 1);
+	Eval("PostCommand(ctxC, 0x2b)");			// aeHide
+	Refresh();
+	EXPECT(Pixel(15, 15) == 0 && (v->fFlags & vVisible) == 0);
+	Eval("PostCommand(ctxC, 0x2c)");			// aeShow
+	Refresh();
+	EXPECT(Pixel(15, 15) == 1 && (v->fFlags & vVisible) != 0);
+	// aeClick runs viewClickScript on a clickable view; 'skip leaves the result 0
+	cmd = MakeCommand(aeClick, v, 0);
+	EXPECT(gApplication->DispatchCommand(cmd) == 1 && RINT(Eval("ctxC.clicks")) == 1);
+	cmd = MakeCommand(aeClick, v, 0);
+	EXPECT(gApplication->DispatchCommand(cmd) == 0 && RINT(Eval("ctxC.clicks")) == 2);
+	// a command nobody takes: the result 0, the root told (Notify defined here)
+	Eval("GetRoot().notified := nil; GetRoot().Notify := func(kind, err, x) notified := [kind, err]");
+	cmd = MakeCommand(0x66, v, 0);
+	EXPECT(gApplication->DispatchCommand(cmd) == 0 && ISNIL(Eval("GetRoot().notified")));
+	// PostCommandParam with a frame parameter: aeAddHilite appends to the view's hilites
+	Eval("PostCommandParam(ctxC, 0x47, {hilite: 'h1})");
+	EXPECT(RINT(Eval("Length(ctxC.hilites)")) == 1 && EQRef(Eval("ctxC.hilites[0]"), Intern((char*) "h1")));
+	// aeMoveData moves the view and posts its undo; Undo moves it back
+	Eval("ClearUndoStacks()");
+	gApplication->Idle();
+	cmd = MakeCommand(aeMoveData, v, kNoParameter);
+	CommandSetIndexParameter(cmd, 0, 20);
+	CommandSetIndexParameter(cmd, 1, 5);
+	gApplication->DispatchCommand(cmd);
+	Refresh();
+	EXPECT(BoundsAre(v, 30, 15, 50, 35) && Pixel(35, 20) == 1 && Pixel(15, 15) == 0);
+	EXPECT(Length(gApplication->GetUndoStack(0)) == 1 && EQRef(gApplication->GetUndoState(), RSSYMundo));
+	Eval("Undo()");
+	Refresh();
+	EXPECT(BoundsAre(v, 10, 10, 30, 30) && Pixel(15, 15) == 1 && Pixel(35, 20) == 0);
+	// without the undoRedo preference the undo stack is now the batch before (none): a second Undo does nothing
+	EXPECT(Length(gApplication->GetUndoStack(0)) == 0);
+	Eval("Undo()");
+	Refresh();
+	EXPECT(BoundsAre(v, 10, 10, 30, 30));
+	// with the preference the undone command's inverse stays: Undo again redoes the move
+	Eval("userConfiguration.undoRedo := true");
+	gApplication->Idle();
+	cmd = MakeCommand(aeMoveData, v, kNoParameter);
+	CommandSetIndexParameter(cmd, 0, 20);
+	CommandSetIndexParameter(cmd, 1, 5);
+	gApplication->DispatchCommand(cmd);
+	Eval("Undo()");
+	Refresh();
+	EXPECT(BoundsAre(v, 10, 10, 30, 30) && Length(gApplication->GetUndoStack(0)) == 1 && EQRef(gApplication->GetUndoState(), RSSYMundoredo));
+	Eval("Undo()");
+	Refresh();
+	EXPECT(BoundsAre(v, 30, 15, 50, 35) && EQRef(gApplication->GetUndoState(), RSSYMundo));
+	Eval("userConfiguration.undoRedo := nil");
+	// AddUndoAction: a script run on the view by Undo
+	Eval("ClearUndoStacks()");
+	gApplication->Idle();
+	Eval("ctxC.undone := nil; ctxC:AddUndoAction('SetUndone, [3])");
+	Eval("ctxC.SetUndone := func(n) undone := n");
+	Eval("Undo()");
+	EXPECT(RINT(Eval("ctxC.undone")) == 3);
+	// AddUndoCall and AddUndoSend
+	gApplication->Idle();
+	Eval("called := nil; AddUndoCall(func(a) called := a, [5]); AddUndoSend(ctxC, 'SetUndone, [6])");
+	EXPECT(Length(gApplication->GetUndoStack(0)) == 2);
+	Eval("Undo()");
+	EXPECT(RINT(Eval("called")) == 5 && RINT(Eval("ctxC.undone")) == 6);
+	// delayed actions: deferred ones run at the next RunDelayedActions, delayed ones when due
+	Eval("ran := []; AddDeferredCall(func(a) AddArraySlot(ran, a), ['x]); AddDeferredSend(ctxC, 'SetUndone, [9]); AddDeferredAction(func(a) AddArraySlot(ran, a), ['y])");
+	EXPECT(RINT(Eval("Length(ran)")) == 0);
+	Eval("RunDelayedActions()");
+	EXPECT(RINT(Eval("Length(ran)")) == 2 && EQRef(Eval("ran[0]"), Intern((char*) "x")) && EQRef(Eval("ran[1]"), Intern((char*) "y")) && RINT(Eval("ctxC.undone")) == 9);
+	Eval("AddDelayedCall(func() AddArraySlot(ran, 'later), [], 100000)");
+	Eval("RunDelayedActions()");
+	EXPECT(RINT(Eval("Length(ran)")) == 2);
+	EXPECT(NOTNIL(gApplication->fDelayedActions) && Length(gApplication->fDelayedActions) == 4);
+	gApplication->fDelayedActions = NILREF;
+	// aeAddChild/aeDropChild through the application
+	Eval("PostCommandParam(ctxC, 0x29, {viewClass: 74, viewFlags: 1, viewBounds: {left: 2, top: 2, right: 8, bottom: 8}, viewFormat: 5})");
+	EXPECT(v->fChildren->Count() == 1);
+	TView* child = v->fChildren->At(0);
+	EXPECT(BoundsAre(child, 32, 17, 38, 23));
+	cmd = MakeCommand(aeDropChild, v, (Long) child);
+	gApplication->DispatchCommand(cmd);
+	EXPECT(v->fChildren->Count() == 0);
+	Refresh();
+	Eval("ctxC:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "commands closed"));
+}
+
+
 int
 main()
 {
@@ -962,6 +1074,7 @@ main()
 		TestParagraphView();
 		TestGaugeView();
 		TestShapes();
+		TestCommands();
 	}
 	newton_catch_all
 	{

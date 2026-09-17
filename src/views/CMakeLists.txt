@@ -6,7 +6,9 @@
 # the text, picture and paragraph views (TextView.h, PictureView.h,
 # ParagraphView.h over DataView.h, the style runs in StyleRuns.h); the
 # gauge (GaugeView.h), the NewtonScript shapes and DrawShape
-# (DrawShape.h); the other subclasses (lists, pickers, ...) to come.
+# (DrawShape.h), the command frames (Commands.h) and the application
+# that dispatches them and keeps the undo stacks and delayed actions
+# (Application.h); the other subclasses (lists, pickers, ...) to come.
 add_library(views STATIC
     View.cpp
     ViewDraw.cpp
@@ -20,6 +22,8 @@ add_library(views STATIC
     ParagraphView.cpp
     GaugeView.cpp
     DrawShape.cpp
+    Commands.cpp
+    Application.cpp
 )
 target_link_libraries(views PUBLIC newton_config qd frames intl utility)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

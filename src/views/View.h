@@ -32,8 +32,8 @@
 				NOT YET RECONSTRUCTED: hilites and selection (THilite,
 				HiliteLoop, the DrawHilit* methods draw nothing), drag and
 				drop, keys and the key view chain (BuildKeyChildList,
-				NextKeyView, HandleKeyEvent), the commands RealDoCommand
-				dispatches beyond show/hide/add/drop, the animation effects
+				NextKeyView, HandleKeyEvent; RealDoCommand answers the other
+				commands - Commands.h), the animation effects
 				(TAnimate: Show and Hide draw at once), the stroke world, the
 				sound effects, gSlowMotion, the idler list, SyncScroll, and
 				the subclasses (BuildView makes a TView for every class).

@@ -14,6 +14,7 @@
 #include "TextView.h"
 #include "PictureView.h"
 #include "ParagraphView.h"
+#include "Application.h"
 #include "GaugeView.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -430,7 +431,8 @@ InitViewPrototypes(void)
 // current port (the screen); the host's root template is {viewClass 75,
 // viewFlags vVisible + vApplication, viewFormat vfFillWhite, the same
 // setup form script as source, _proto the view methods} and its display
-// params are the port's rectangle (the application area the whole of it).
+// params are the port's rectangle (the application area the whole of it);
+// the application (gApplication, a plain TApplication) is made first.
 void
 InitViewSystem(void)
 {
@@ -458,6 +460,11 @@ InitViewSystem(void)
 	// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
 	SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
 	SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
+	if (gApplication == nil)
+	{
+		gApplication = new TApplication;
+		gApplication->Constructor();
+	}
 	TRootView* root = new TRootView;
 	gRootView = root;
 	root->Constructor(templ);

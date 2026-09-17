@@ -356,6 +356,65 @@ justification, a TextBox wrapped and clipped into its bounds.  NOT YET:
 `PointInShape`), `GetShapeInfo`, `WedgeBox`.  The bounds binaries hold
 the host's Rect (DEVIATION: the ROM's are big-endian shorts).
 
+**Commands and the application** (`Commands.h`, `Application.h`).  A
+command is a frame cloned from the ROM's `protoCommand` `{id, result,
+parameter, receiver, frameParameter, params, undo}` (`MakeCommand`
+0x00070dc4; the accessors 0x00070e88-0x0007130c): the receiver a view's
+context or `'application`, the parameter an integer of the ROM's word
+size (a recognition unit's pointer, a view id, a delta; 0x8000000 for
+none), `params` an array by index.  `TApplication` (class 67,
+0x00033b58-0x000345c0; `gApplication`, the ROM's is the `TNotebook`
+subclass whose `Run` is the event loop) dispatches a command to its
+receiver's `DoCommand` (`DispatchCommand` 0x00034128; no receiver:
+`ErrorNotify` -8003, `root:Notify(3, -8003, nil)`) and answers the
+result; keeps the undo stacks (`PostUndoCommand` 0x00034450: a command
+marked `undo` on the stack, the first after an `Idle` starting a batch
+- the stack so far kept as the previous batch without the `undoRedo`
+user preference, dropped with it; `Undo` 0x00034178 dispatches the
+stack newest first while a fresh stack collects the inverses the
+commands post: without the preference the previous batch then becomes
+the undo stack (Undo, Undo undoes two actions), with it the inverses do
+(Undo, Undo redoes - `GetUndoState` answers `'undoRedo`); `ClearUndo`)
+and the delayed actions (`AddDelayedAction` 0x00033ba0: [receiver,
+message or function, args, due time] quadruples - the time a `'time`
+binary of the global time the delay milliseconds on, nil for the next
+idle; `RunNextDelayedAction` 0x00033d48 runs the due ones - a function
+`DoBlock`, a symbol `DoMessage`, a function on a receiver `DoScript`;
+the idle timer's re-arming NOT YET, the host's `RunDelayedActions()`
+global runs them).  `TApplication::DoCommand` 0x00034744 answers
+aeAppIdle, aeRunScript ([script, args, context] run on the context's
+view; an `'undo` array from `MakeUndoCommand` sends the message or
+calls the function) and aeUndo.
+
+`TView::RealDoCommand` 0x00266e00 is the views' side (the ids as
+`Commands.h` names them - from what each does, the NTK's names not
+being in the ROM): the scripts (aeClick 0x0b: `viewClickScript(unit)`
+on a vClickable view, `'skip` leaving the result 0; aeStroke 0x0c,
+the gestures 0x0d/0x0f/0x10/0x2f/0x31/0x32 `viewGestureScript(unit,
+kind)`, aeWord 0x12, aeRawInk 0x15 and aeInkWord 0x18 with the stroke
+bundle, aeScrollUp/Down 0x2d/0x2e, aeOverview 0x33 - `vars.lastTextChanged`
+cleared after the text ones), the key events 0x1f-0x23 (`HandleKeyEvent`
+NOT YET), the structure (aeAddChild 0x29 adds the frame parameter's
+view and dispatches aeShow to it, aeDropChild 0x2a hides and removes the
+parameter's view, aeHide 0x2b, aeShow 0x2c - under a modal dialog
+`ModalSafeShow`, NOT YET), the data (aeAddData 0x3d `AddToSoup`, posting
+aeRemoveData 0x3f as its undo, which `RemoveFromSoup`s the child of the
+id and posts aeAddData with its data; aeMoveData 0x40 `Move` by
+params[0], [1], posting aeMoveChild 0x4c to the parent with the id and
+the reverse delta; aeScaleData 0x42), the hilites (aeAddHilite 0x47
+appends the frame parameter - or a frame's `hilite` slot - to `hilites`,
+aeRemoveHilite 0x48, aeRemoveAllHilites 0x30) and the relays
+(aeToChildren 0x49 to every child, aeToHilitedChildren 0x4b).  The
+NewtonScript side: `PostCommand(receiver, id)`, `PostCommandParam`
+(an integer or a frame parameter), `PostAndDo(cmd)`,
+`AddDelayedAction/Call/Send`, `AddDeferredAction/Call/Send`,
+`AddUndoAction` (a view method too)/`AddUndoCall`/`AddUndoSend`,
+`ClearUndoStacks`, `GetUndoState`, and the host's `Undo()` and
+`RunDelayedActions()` (the ROM's undo is the Undo button's aeUndo, its
+delayed actions the event loop's idle - DEVIATION: globals for the
+tests).  The command parameter is `Long` (pointer-sized) on the host,
+so a view pointer fits it as on the ARM.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -367,13 +426,17 @@ the ellipsis, vCalculateBounds, style runs, viewLineSpacing, justified
 and moved paragraphs, the style runs' corrections), gauges (the bar, the
 value through SetValue, the limits, the knob and the gray rest), shapes
 (the objects, their bounds, every kind drawn from a viewDrawScript with
-fills, pens, styles in lists, nested lists, text, clipping).
+fills, pens, styles in lists, nested lists, text, clipping), commands
+(the frames, show/hide/click through the application, the undo stacks
+both ways, AddUndoAction/Call/Send, the delayed actions, aeAddChild and
+aeDropChild).
 
 ## Not yet
 
 Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
-drag and drop, the recognition commands (`RealDoCommand`), the animation
+drag and drop, the key events (`HandleKeyEvent`), the animation
 effects (`TAnimate`), the idlers, `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
-`TPickView`, `TEditView`, ...), editing in `TParagraphView`, the application (`TApplication`,
-`gApplication`) and its command dispatch.
+`TPickView`, `TEditView`, ...), editing in `TParagraphView`, the
+recogniser's units behind the click and gesture commands, the event
+loop (`TNotebook::Run`) and the idle timer.
