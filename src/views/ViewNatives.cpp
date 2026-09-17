@@ -21,6 +21,8 @@
 #include "DrawShape.h"
 #include "Application.h"
 #include "Commands.h"
+#include "NewtonTime.h"
+#include "CompMath.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
@@ -327,6 +329,37 @@ RealOpenX(RefArg context, Boolean modal)
 }
 
 
+// ROM 0x001ee9e8 FSetupIdleX
+// :SetupIdle(milliseconds): the view's idler set (0 removes it) - its
+// viewIdleScript runs when the time comes, its answer the next delay.
+static Ref
+FSetupIdleX(RefArg rcvr, RefArg delay)
+{
+	TView* view = GetView(rcvr);
+	if (view != nil)
+		gRootView->AddIdler(view, (ULong) RINT(delay), 0);
+	return NILREF;
+}
+
+
+// host: IdleViews() - the due idlers run (the ROM's event loop does this;
+// DEVIATION: a global for the tests); ==> the next idle time in
+// milliseconds from now, nil for none
+static Ref
+FIdleViews(RefArg /*rcvr*/)
+{
+	TTime next = gRootView->IdleViews();
+	if (next.time.hi == 0 && next.time.lo == 0)
+		return NILREF;
+	TTime now = GetGlobalTime();
+	Int64 left = next.time;
+	CompSub(&now.time, &left);
+	if (left.hi < 0)
+		return MAKEINT(0);
+	return MAKEINT((long) (left.lo / kMilliseconds));
+}
+
+
 // ROM 0x001f3b54 FOpenX
 static Ref
 FOpenX(RefArg rcvr)
@@ -610,6 +643,8 @@ static const char* const kToggleSource = "func() if not viewCObject or not Visib
 void
 RegisterViewNatives(void)
 {
+	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();
 	RegisterApplicationNatives();
 	RegisterNativeFunction("FGetView__FRC6RefVarT1", (void*) FGetView, 1);
@@ -665,7 +700,7 @@ MakeViewMethods(void)
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
-		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 },
+		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)

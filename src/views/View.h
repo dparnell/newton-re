@@ -35,7 +35,7 @@
 				NextKeyView, HandleKeyEvent; RealDoCommand answers the other
 				commands - Commands.h), the animation effects
 				(TAnimate: Show and Hide draw at once), the stroke world, the
-				sound effects, gSlowMotion, the idler list, SyncScroll, and
+				sound effects, gSlowMotion, SyncScroll, and
 				the subclasses (BuildView makes a TView for every class).
 
 	Reconstructed from the MP2100 D ROM (0x0025c598-0x00269200,

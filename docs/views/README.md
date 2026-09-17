@@ -414,6 +414,24 @@ delayed actions the event loop's idle - DEVIATION: globals for the
 tests).  The command parameter is `Long` (pointer-sized) on the host,
 so a view pointer fits it as on the ARM.
 
+**Idlers** (`RootView.h`): `view:SetupIdle(ms)` (`FSetupIdleX`
+0x001ee9e8) gives the root view an idler for the view (`AddIdler`
+0x001b4f8c: an `IdlerRecord` {view, arg, due time} in the root's array
+at +0x40, an existing one for the view and arg re-timed; the view gets
+vHasIdlerHint, the application's next idle time is brought forward; 0
+removes it - `RemoveIdler` 0x001b5124 answers the time it had left,
+`RemoveAllIdlers` 0x001b5238 clears a view's when it goes,
+`ForgetAboutView`).  `IdleViews` 0x001b4bf4 (the event loop's idle; the
+host's `IdleViews()` global runs it) runs the idlers due within 10 ms:
+the view's `Idle(arg)` (`viewIdleScript`, 0x00266c04) answers the next
+delay in milliseconds - the idler re-timed from when it was due (from
+now when that is past), 0 removing it; a view whose Idle is running is
+on the `IdlingView` list linked through the stack (+0x4c), so an idler
+removed (or a view deleted) during its own Idle is not touched after;
+==> the earliest due time (zero for none).  The children and idler
+arrays are re-made (`MoveLow` 0x001b4b60) when they shrank below their
+high-water marks.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -428,13 +446,14 @@ value through SetValue, the limits, the knob and the gray rest), shapes
 fills, pens, styles in lists, nested lists, text, clipping), commands
 (the frames, show/hide/click through the application, the undo stacks
 both ways, AddUndoAction/Call/Send, the delayed actions, aeAddChild and
-aeDropChild).
+aeDropChild), idlers (SetupIdle, the idle script re-timing and stopping
+its idler, removal with the view).
 
 ## Not yet
 
 Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
 drag and drop, the key events (`HandleKeyEvent`), the animation
-effects (`TAnimate`), the idlers, `SyncScroll`, the clipboards, the popup
+effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
 `TPickView`, `TEditView`, ...), editing in `TParagraphView`, the
 recogniser's units behind the click and gesture commands, the event

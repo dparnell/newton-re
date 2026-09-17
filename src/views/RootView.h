@@ -27,6 +27,9 @@
 #ifndef __VIEW_H
 #include "View.h"
 #endif
+#ifndef __NEWTONTIME_H
+#include "NewtonTime.h"
+#endif
 
 class CDynamicArray;
 
@@ -35,6 +38,23 @@ struct TUpdateRegion
 {
 	TView*			fFiller;		// +0x00  nil: the slot is free
 	TRegionStruct	fRegion;		// +0x04
+};
+
+// an idler: a view told to Idle(arg) when its time comes (16 bytes in
+// the root's fIdlers array)
+struct IdlerRecord
+{
+	TView*		fView;			// +0x00
+	long		fArg;			// +0x04
+	TTime		fTime;			// +0x08  when it is due
+};
+
+// the views whose Idle is running, linked through the stack (so a view
+// that removes its idler, or goes, while idling is noticed)
+struct IdlingView
+{
+	IdlingView*	fNext;
+	TView*		fView;
 };
 
 class TRootView : public TView
@@ -64,13 +84,22 @@ public:
 	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b7bb0 SetPopup__9TRootViewFP5TViewUc
 	TView*		GetClipboard(TView* view);								// ROM 0x001b7e6c GetClipboard__9TRootViewFP5TView
 	void		SetModalView(TView* view);								// ROM 0x002e8b18 SetModalView__FP5TView
+	TTime		IdleViews(void);										// ROM 0x001b4bf4 IdleViews__9TRootViewFv - the due idlers run; ==> the next idle time (zero: none)
+	ULong		AddIdler(TView* view, ULong delay, long arg);			// ROM 0x001b4f8c AddIdler__9TRootViewFP5TViewUll - delay 0 removes; ==> the time left
+	ULong		RemoveIdler(TView* view, long arg);						// ROM 0x001b5124 RemoveIdler__9TRootViewFP5TViewl
+	void		RemoveAllIdlers(TView* view);							// ROM 0x001b5238 RemoveAllIdlers__9TRootViewFP5TView
+	IdlingView*	GetIdlingView(TView* view);								// ROM 0x001b50d0 GetIdlingView__9TRootViewFP5TView
+	void		UnlinkIdleView(TView* view);							// ROM 0x001b5100 UnlinkIdleView__9TRootViewFP5TView
 	long		ScreenWidth(void) const;								// host: the port's width (the ROM's screenWidth global)
 	long		ScreenHeight(void) const;
 
 	TView*			fHiliter;			// +0x30  the view owning the hilites (NOT YET)
 	TUpdateRegion*	fUpdateRegions;		// +0x34  three of them
 	Rect			fDirtyScreen;		// +0x38  what the screen must show again (SmartScreenDirty; NOT YET: the screen)
-	CDynamicArray*	fIdlers;			// +0x40  the idling views (NOT YET)
+	CDynamicArray*	fIdlers;			// +0x40  the IdlerRecords
+	long			fChildrenHighWater;	// +0x44  the children list packed (MoveLow) when it shrank below this
+	long			fIdlersHighWater;	// +0x48
+	IdlingView*		fIdlingViews;		// +0x4c  the views whose Idle is running
 	TView*			fPopup;				// +0x50  the popup view
 	RefStruct		fClipboardIcon;		// +0x54  (NOT YET)
 	RefStruct		fSelectionStack;	// +0x60  the saved key view selections (NOT YET)

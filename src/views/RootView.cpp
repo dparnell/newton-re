@@ -8,6 +8,7 @@
 */
 
 #include "RootView.h"
+#include "Application.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "Draw.h"
@@ -55,7 +56,10 @@ TRootView::Constructor(RefArg templ)
 		SetEmptyRgn(fUpdateRegions[i].fRegion);
 	}
 	SetEmptyRect(&fDirtyScreen);
-	fIdlers = new CDynamicArray(sizeof(void*), 4);
+	fIdlers = new CDynamicArray(sizeof(IdlerRecord), 4);
+	fChildrenHighWater = 0;
+	fIdlersHighWater = 0;
+	fIdlingViews = nil;
 	fPopup = nil;
 	fCaretView = nil;
 	fDefaultButton = nil;
@@ -386,14 +390,17 @@ TRootView::Update(Rect* rect)
 
 // ROM 0x001b42e4 ForgetAboutView__9TRootViewFP5TView
 // A view is going: the pointers to it are dropped (the hiliter, the caret
-// view, the popup, the caret slip or default button, the modal view), a
-// filler that was it becomes its parent.  NOT YET RECONSTRUCTED: its
-// keyboard unregistered, its idlers removed, the modal dialog exited.
+// view, the popup, the caret slip or default button, the modal view), its
+// idlers removed (when it has the hint), a filler that was it becomes its
+// parent.  NOT YET RECONSTRUCTED: its keyboard unregistered, the modal
+// dialog exited.
 void
 TRootView::ForgetAboutView(TView* view)
 {
 	if (fHiliter == view)
 		fHiliter = nil;
+	if (view->fFlags & vHasIdlerHint)
+		RemoveAllIdlers(view);
 	if (fCaretView == view)
 		CaretViewGone();
 	if (fPopup == view)
@@ -485,4 +492,222 @@ TRootView::SetModalView(TView* view)
 	fModalView = view;
 	Rect bounds;
 	view->OuterBounds(&bounds);
+}
+
+
+/*------------------------------------------------------------------------------
+	I d l e r s
+------------------------------------------------------------------------------*/
+
+// ROM 0x001b4b60 MoveLow__FP13CDynamicArray
+// An array's storage re-made at its size (the ROM moves it low in the
+// heap: the block freed and allocated again, its contents kept; the host
+// copies the elements out and back).
+static void
+MoveLow(CDynamicArray* array, Size elementSize)
+{
+	ArrayIndex count = array->GetArraySize();
+	if (count == 0)
+		return;
+	Size size = count * elementSize;
+	Ptr copy = NewPtr(size);
+	if (copy == nil)
+		return;
+	array->GetElementsAt(0, copy, count);
+	array->SetArraySize(0);
+	array->SetArraySize(count);
+	array->ReplaceElementsAt(0, copy, count);
+	DisposPtr(copy);
+}
+
+
+// ROM 0x001b50d0 GetIdlingView__9TRootViewFP5TView
+// The idling record of a view whose Idle is running, nil when it is not.
+IdlingView*
+TRootView::GetIdlingView(TView* view)
+{
+	for (IdlingView* idling = fIdlingViews; idling != nil; idling = idling->fNext)
+		if (idling->fView == view)
+			return idling;
+	return nil;
+}
+
+
+// ROM 0x001b5100 UnlinkIdleView__9TRootViewFP5TView
+// A view's idling record taken out of the list (its idler was removed
+// while its Idle ran: IdleViews must not touch the entry again).
+void
+TRootView::UnlinkIdleView(TView* view)
+{
+	IdlingView** link = &fIdlingViews;
+	for (IdlingView* idling = fIdlingViews; idling != nil; link = &idling->fNext, idling = idling->fNext)
+		if (idling->fView == view)
+		{
+			*link = idling->fNext;
+			return;
+		}
+}
+
+
+// ROM 0x001b4f8c AddIdler__9TRootViewFP5TViewUll
+// An idler set for the view: due delay milliseconds from now, with the
+// arg its Idle gets - an existing one for the view and arg re-timed, a
+// new one appended, the view given the hint and the application's next
+// idle time brought forward.  A delay of 0 removes the idler (as
+// RemoveIdler).  ==> 0 (removing: the time that was left).
+ULong
+TRootView::AddIdler(TView* view, ULong delay, long arg)
+{
+	if (delay == 0)
+		return RemoveIdler(view, arg);
+	TTime due(delay, kMilliseconds);
+	TTime now = GetGlobalTime();
+	CompAdd(&now.time, &due.time);
+	for (ArrayIndex i = 0; i < fIdlers->GetArraySize(); i++)
+	{
+		IdlerRecord* idler = (IdlerRecord*) fIdlers->SafeElementPtrAt(i);
+		if (idler->fView == view && idler->fArg == arg)
+		{
+			idler->fTime = due;
+			view->SetFlags(vHasIdlerHint);
+			gApplication->UpdateNextIdleTime(due);
+			return 0;
+		}
+	}
+	IdlerRecord record;
+	record.fView = view;
+	record.fArg = arg;
+	record.fTime = due;
+	fIdlers->InsertElementsBefore(fIdlers->GetArraySize(), &record, 1);
+	view->SetFlags(vHasIdlerHint);
+	gApplication->UpdateNextIdleTime(due);
+	return 0;
+}
+
+
+// ROM 0x001b5124 RemoveIdler__9TRootViewFP5TViewl
+// The view's idler with the arg removed; ==> the time it had left, in
+// the clock's units (0 when it was due).
+ULong
+TRootView::RemoveIdler(TView* view, long arg)
+{
+	ULong left = 0;
+	for (ArrayIndex i = 0; i < fIdlers->GetArraySize(); )
+	{
+		IdlerRecord* idler = (IdlerRecord*) fIdlers->SafeElementPtrAt(i);
+		if (idler->fView == view && idler->fArg == arg)
+		{
+			TTime now = GetGlobalTime();
+			Int64 remaining = idler->fTime.time;
+			CompSub(&now.time, &remaining);
+			Int64 zero = { 0, 0 };
+			if (CompCompare(&remaining, &zero) > 0)
+				left = remaining.lo;
+			fIdlers->RemoveElementsAt(i, 1);
+			UnlinkIdleView(view);
+			continue;
+		}
+		i++;
+	}
+	return left;
+}
+
+
+// ROM 0x001b5238 RemoveAllIdlers__9TRootViewFP5TView
+// Every idler of the view removed, and its hint cleared.
+void
+TRootView::RemoveAllIdlers(TView* view)
+{
+	for (ArrayIndex i = 0; i < fIdlers->GetArraySize(); )
+	{
+		IdlerRecord* idler = (IdlerRecord*) fIdlers->SafeElementPtrAt(i);
+		if (idler->fView == view)
+		{
+			fIdlers->RemoveElementsAt(i, 1);
+			UnlinkIdleView(view);
+			continue;
+		}
+		i++;
+	}
+	view->ClearFlags(vHasIdlerHint);
+}
+
+
+// ROM 0x001b4bf4 IdleViews__9TRootViewFv
+// The idlers whose time has come (within 10 ms) run: each view's
+// Idle(arg) while it is on the idling list - the delay it answers (in
+// milliseconds) re-times its idler from the time it was due (from now
+// when that is past), 0 removes it; a view that removed the idler as
+// it ran (or went) is left alone.  The children and idler arrays are
+// packed when they shrank.  ==> the earliest time an idler is due, now
+// when the caret must blink (CaretValid NOT YET: no caret), zero when
+// there is nothing to wait for.
+TTime
+TRootView::IdleViews(void)
+{
+	if ((long) fChildren->Count() < fChildrenHighWater)
+		MoveLow(fChildren, sizeof(TView*));
+	fChildrenHighWater = fChildren->Count();
+	if ((long) fIdlers->GetArraySize() < fIdlersHighWater)
+		MoveLow(fIdlers, sizeof(IdlerRecord));
+	fIdlersHighWater = fIdlers->GetArraySize();
+	TTime now = GetGlobalTime();
+	TTime next;
+	next.time.hi = 0x7fffffff;
+	next.time.lo = 0;
+	TTime soon(10, kMilliseconds);
+	IdlingView idling;
+	idling.fNext = fIdlingViews;
+	idling.fView = nil;
+	fIdlingViews = &idling;
+	for (ArrayIndex i = 0; i < fIdlers->GetArraySize(); i++)
+	{
+		IdlerRecord* idler = (IdlerRecord*) fIdlers->SafeElementPtrAt(i);
+		if (GetIdlingView(idler->fView) != nil)
+			continue;
+		Int64 due = idler->fTime.time;
+		CompSub(&soon.time, &due);
+		if (CompCompare(&now.time, &due) < 0)
+		{
+			if (CompCompare(&idler->fTime.time, &next.time) < 0)
+				next = idler->fTime;
+			continue;
+		}
+		idling.fView = idler->fView;
+		long delay = 0;
+		newton_try
+		{
+			delay = idler->fView->Idle(idler->fArg);
+		}
+		newton_catch_all
+		{
+			delay = 0;
+		}
+		end_try;
+		idler = (IdlerRecord*) fIdlers->SafeElementPtrAt(i);
+		if (GetIdlingView(idling.fView) == nil)
+			continue;
+		if (delay == 0)
+		{
+			fIdlers->RemoveElementsAt(i, 1);
+			i--;
+			continue;
+		}
+		TTime step(delay, kMilliseconds);
+		CompAdd(&step.time, &idler->fTime.time);
+		if (CompCompare(&idler->fTime.time, &now.time) < 0)
+		{
+			idler->fTime = now;
+			CompAdd(&step.time, &idler->fTime.time);
+		}
+		if (CompCompare(&idler->fTime.time, &next.time) < 0)
+			next = idler->fTime;
+	}
+	UnlinkIdleView(idling.fView);
+	if (next.time.hi == 0x7fffffff && next.time.lo == 0)
+	{
+		next.time.hi = 0;
+		next.time.lo = 0;
+	}
+	return next;
 }

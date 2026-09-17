@@ -1011,6 +1011,40 @@ TestCommands()
 }
 
 
+static void
+TestIdlers()
+{
+	// an idler: the viewIdleScript runs when the time comes, its answer re-times it, 0 stops it
+	TView* v = ViewOf("ctxI := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 30, bottom: 30}, ticks: 0, viewIdleScript: func() begin ticks := ticks + 1; if ticks < 3 then 1 else 0 end})");
+	EXPECT((v->fFlags & vHasIdlerHint) == 0);
+	Eval("ctxI:SetupIdle(1)");
+	EXPECT((v->fFlags & vHasIdlerHint) != 0 && gRootView->fIdlers->GetArraySize() == 1);
+	// not due yet: nothing runs, the wait is what is left
+	TTime next = gRootView->IdleViews();
+	EXPECT(RINT(Eval("ctxI.ticks")) <= 1);
+	// spin until it has run three times and stopped
+	long spins = 0;
+	while (gRootView->fIdlers->GetArraySize() > 0 && spins < 200000)
+	{
+		gRootView->IdleViews();
+		spins++;
+	}
+	EXPECT(RINT(Eval("ctxI.ticks")) == 3 && gRootView->fIdlers->GetArraySize() == 0);
+	next = gRootView->IdleViews();
+	EXPECT(next.time.hi == 0 && next.time.lo == 0 && ISNIL(Eval("IdleViews()")));
+	// SetupIdle(0) removes; a view going takes its idlers with it
+	Eval("ctxI:SetupIdle(1000)");
+	EXPECT(gRootView->fIdlers->GetArraySize() == 1 && RINT(Eval("IdleViews()")) > 0);
+	Eval("ctxI:SetupIdle(0)");
+	EXPECT(gRootView->fIdlers->GetArraySize() == 0 && gRootView->RemoveIdler(v, 0) == 0);
+	Eval("ctxI:SetupIdle(1000)");
+	Eval("ctxI:Close()");
+	EXPECT(gRootView->fIdlers->GetArraySize() == 0);
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "idlers closed"));
+}
+
+
 int
 main()
 {
@@ -1075,6 +1109,7 @@ main()
 		TestGaugeView();
 		TestShapes();
 		TestCommands();
+		TestIdlers();
 	}
 	newton_catch_all
 	{
