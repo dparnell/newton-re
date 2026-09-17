@@ -22,3 +22,8 @@ add_executable(test_ObjectStreamer test_ObjectStreamer.cpp)
 target_link_libraries(test_ObjectStreamer PRIVATE stores)
 add_test(NAME stores.ObjectStreamer COMMAND test_ObjectStreamer)
 set_tests_properties(stores.ObjectStreamer PROPERTIES TIMEOUT 60)
+
+add_executable(test_StoreCompander test_StoreCompander.cpp)
+target_link_libraries(test_StoreCompander PRIVATE stores os600_kernel os600_user)
+add_test(NAME stores.StoreCompander COMMAND test_StoreCompander)
+set_tests_properties(stores.StoreCompander PROPERTIES TIMEOUT 60)

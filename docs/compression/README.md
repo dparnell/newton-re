@@ -27,8 +27,11 @@ decompressors that read its output), `TZippyCompressor`,
 `TZippyDecompressor`, `TZippyCallbackCompressor`, `TArithmeticCompressor`
 /`Decompressor` (callback), `TUnicodeCompressor`/`Decompressor` (callback).
 `InitializeCompression` (0x00100ac8, called from `RegisterROMDomainManager`)
-registers them all; the store decompressors and package stores are
-registered next by `InitializeStoreDecompressors` (not yet reconstructed).
+registers them all; the store companders that keep a store's data in
+compressed blocks over these coders are `stores/StoreCompander.h`
+(`docs/stores/README.md`), and the read-only store decompressors and
+package stores are registered next by `InitializeStoreDecompressors`
+(the decompressors and package stores not yet reconstructed).
 
 ## The LZ format (`LZCompression.h`)
 

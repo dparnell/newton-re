@@ -568,6 +568,34 @@ function.  `test_ObjectStreamer` checks the bytes of small streams
 against the format and round-trips a graph of every kind, shared and
 cyclic references, `_proto`, functions and the errors.
 
+## The store companders
+
+`StoreCompander.h`/`StoreCompander.cpp` reconstruct the compression layer
+a store keeps its large data behind (`TStoreCompander`, the interface at
+ROM 0x0037dbfc).  A soup's or package's data is held as fixed 0x400-byte
+*blocks*, one store object per block; a *chunk table* object holds those
+block objects' ids (one `StorePSSId` per block), and the compander's small
+root object (a `PackageRoot`, whose first word is the chunk-table id)
+points at it.  A byte offset maps to its block by `offset >> 10`, and the
+compander reads or writes that block's object.  `TSimpleStoreCompander`
+keeps the blocks uncompressed; `TLZStoreCompander` compresses each with
+the LZ coder (`compression/LZCompression.h`) on `Write` and expands it on
+`Read`, an empty block object reading back as zeroes.  Either may own its
+own compressor/decompressor or borrow the shared pair
+(`GetSharedLZObjects`).  Both are made by name
+(`TStoreCompander::New("TLZStoreCompander")`) once `InitializeStoreCompanders`
+has registered them (a host subset of the ROM's
+`InitializeStoreDecompressors`, 0x001f824c).  `test_StoreCompander` formats
+a `THostStore`, gives it a chunk table of empty block objects, and
+round-trips blocks of text, runs and noise through each compander,
+checking an unwritten block reads as zeroes and a rewrite replaces.
+
+NOT YET: the read-only `TStoreDecompressor`/`TSimpleStoreDecompressor`/
+`TLZStoreDecompressor` path and `TStoreCompanderWrapper` that drives it -
+they relocate the NewtonScript frames of an expanded package page
+(`RelocateFramesInPage`, 0x000d2ca4), a separate unit; the Zippy and reloc
+variants, `TXIPStoreCompander` and `TPixelMapCompander`.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
