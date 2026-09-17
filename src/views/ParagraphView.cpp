@@ -633,23 +633,29 @@ TParagraphView::GetSelection(void)
 
 
 // ROM 0x001811a8 SetSelection__14TParagraphViewFRC6RefVarPlT2
-// The selection from a caret info frame's offset and length (nil length:
-// 0) through SetCaretOffset; a nil frame means no selection - the
-// hilites removed (RemoveAllHilites) and the offset and length 0.
+// The selection restored from a caret info frame's offset and length (nil
+// length: 0): SetCaretOffset, then no length removes the hilites, a
+// length re-hilites the range (MakeHilite).  A nil frame means no
+// selection - the hilites removed and the offset and length 0.  NOT YET
+// RECONSTRUCTED: the edit view's hilite-view redirection.
 void
 TParagraphView::SetSelection(RefArg selection, long* offset, long* length)
 {
-	if (NOTNIL(selection))
+	if (ISNIL(selection))
 	{
-		*offset = RINT(GetProtoVariable(selection, RSSYMoffset, nil));
-		Ref len = GetProtoVariable(selection, RSSYMlength, nil);
-		*length = ISNIL(len) ? 0 : RINT(len);
-		SetCaretOffset(offset, length);
+		*offset = 0;
+		*length = 0;
+		RemoveAllHilites();
 		return;
 	}
-	*offset = 0;
-	*length = 0;
-	RemoveAllHilites();
+	*offset = RINT(GetProtoVariable(selection, RSSYMoffset, nil));
+	Ref len = GetProtoVariable(selection, RSSYMlength, nil);
+	*length = ISNIL(len) ? 0 : RINT(len);
+	SetCaretOffset(offset, length);
+	if (*length == 0)
+		RemoveAllHilites();
+	else
+		MakeHilite(*offset, *offset + *length, false);
 }
 
 

@@ -2043,7 +2043,15 @@ TestSelection()
 	EXPECT(gRootView->fCaretView == q && RINT(GetFrameSlotRef(RefVar(q->FirstHilite()), RSSYMend)) == 5);
 	TypeKey(0x30);		// tab again: back to the first, and the second's selection removed (its ActivateSelection(false))
 	EXPECT(gRootView->fCaretView == q0 && NOTNIL(q0->FirstHilite()) && ISNIL(q->FirstHilite()));
-	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxS2); RemoveSlot(vars, 'international)");
+	// the selection stack: select in the first field, move the key view
+	// away (the selection pushed), then RestoreKeyView brings it back
+	q0->MakeHilite(0, 3, false);							// select "aaa" in the first
+	EXPECT(RINT(GetFrameSlotRef(RefVar(q0->FirstHilite()), RSSYMend)) == 3);
+	gRootView->SetKeyView(nil, 0, 0, false);				// focus away: q0's selection pushed, its hilite deactivated
+	EXPECT(gRootView->fCaretView == nil && ISNIL(q0->FirstHilite()));
+	EXPECT(gRootView->RestoreKeyView(GetView(RefVar(Eval("ctxS2")))));	// restore within the container
+	EXPECT(gRootView->fCaretView == q0 && NOTNIL(q0->FirstHilite()) && RINT(GetFrameSlotRef(RefVar(q0->FirstHilite()), RSSYMend)) == 3);
+	Eval("SetKeyView(nil, nil); SetLength(GetSelectionStack(), 0); RemoveView(GetRoot(), ctxS2); RemoveSlot(vars, 'international)");
 	gKeyboardConnected = false;
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "tab selection closed"));
