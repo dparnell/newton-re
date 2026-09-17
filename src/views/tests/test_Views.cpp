@@ -1949,6 +1949,9 @@ TestSelection()
 	// extending the selection unions the ranges
 	p->MakeHilite(5, 8, false);
 	EXPECT(RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 0 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 8);
+	// RemoveHilite drops the one hilite (the array emptied)
+	p->RemoveHilite(RefVar(p->FirstHilite()));
+	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0);
 	// typing over a selection replaces it in one edit
 	gKeyboardConnected = true;
 	Eval("ClearUndoStacks()");

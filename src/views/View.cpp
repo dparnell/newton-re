@@ -1311,7 +1311,21 @@ void	TView::DrawHilites(Boolean)									{ }		// ROM 0x0025ff5c DrawHilites__5TV
 Boolean	TView::IsCompletelyHilited(RefArg)							{ return false; }	// ROM 0x002600c8 IsCompletelyHilited__5TViewFRC6RefVar
 void	TView::HiliteAll(void)										{ }		// ROM 0x002600d0 HiliteAll__5TViewFv
 void	TView::DeleteHilited(RefArg)								{ }		// ROM 0x002601cc DeleteHilited__5TViewFRC6RefVar
-void	TView::RemoveHilite(RefArg)									{ }		// ROM 0x0025ff60 RemoveHilite__5TViewFRC6RefVar
+// ROM 0x0025ff60 RemoveHilite__5TViewFRC6RefVar
+// The hilite dropped from the hilites array and its area invalidated (the
+// ROM disposes the C++ TParagraphHilite and invalidates its stored area
+// rect; the host keeps a frame and dirties the view), the root's hilited
+// view forgotten when it was ours.
+void
+TView::RemoveHilite(RefArg hilite)
+{
+	RefVar hilites(Hilites());
+	if (NOTNIL(hilites))
+		ArrayRemove(hilites, hilite);
+	Dirty(nil);
+	if (gRootView->fHiliter == this)
+		gRootView->fHiliter = nil;
+}
 void	TView::RemoveAllHilites(void)								{ }		// ROM 0x0026002c RemoveAllHilites__5TViewFv
 void	TView::GlobalHiliteBounds(Rect* bounds)						{ SetEmptyRect(bounds); }	// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
 void	TView::GlobalHiliteResizeBounds(Rect* bounds)				{ SetEmptyRect(bounds); }	// ROM 0x002604dc GlobalHiliteResizeBounds__5TViewFP5TRect

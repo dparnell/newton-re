@@ -791,8 +791,10 @@ When
 the key view moves away, `CommonSetKeyView` deactivates the old view -
 `TParagraphView::ActivateSelection(false)` 0x00181308 removes its (or its
 hilite view's) hilites, so a selection clears when its field loses the
-caret.  NOT YET: `AdjustHilites` (moving a selection past an edit),
-`RemoveHilite` (dropping one hilite), the selection stack,
+caret.  `RemoveHilite` 0x0025ff60 drops one hilite from the array and
+invalidates (the ROM disposes the C++ hilite and invalidates its area;
+the host dirties the view).  NOT YET: `AdjustHilites` (moving a selection
+past an edit), the selection stack,
 `ActivateSelection`'s soft-keyboard shift, the container and edit views'
 hilites.
 
