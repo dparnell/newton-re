@@ -5,7 +5,7 @@
 				DDK's CompMath.h).  The kernel keeps time in these.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	CompFixMul/CompSquareRoot follow when something needs them.
+	CompFixMul follows when something needs it.
 
 	The value of an Int64 is hi * 2^32 + lo.  On the MessagePad hi and lo
 	are 32-bit words; a host build makes ULong pointer-sized, so the word
@@ -149,4 +149,85 @@ CompShift(Int64* srcdst, long shift)
 	if (roundUp)
 		result++;
 	Store(srcdst, result);
+}
+
+
+// ROM 0x00071760 CompSquareRoot
+// The integer square root of a 64-bit value (Int64), rounded to nearest:
+// the ROM's bit-by-bit method, two bits an iteration - sixteen through the
+// high word, then fourteen and two more through the low, tracking the
+// remainder and rounding up when one is left.  Transcribed verbatim from
+// the ROM's word arithmetic; the u-variables keep its names.
+unsigned long
+CompSquareRoot(const Int64* src)
+{
+	Word uVar4 = (Word) src->lo;
+	Word uVar7 = (Word) src->hi;
+	Word uVar3 = 0;
+	short sVar9 = 1;
+	Word uVar2 = 0;
+	Word uVar1 = 0;
+	Word uVar6;
+	Word uVar8;
+	short sVar5 = 0xf;
+	bool bVar10;
+	do
+	{
+		uVar3 = uVar3 << 2 | uVar7 >> 0x1e;
+		uVar7 = uVar7 << 2;
+		uVar1 = uVar2 * 2;
+		uVar6 = uVar2 * 4 + 1;
+		if (uVar6 <= uVar3)
+		{
+			uVar3 = uVar3 - uVar6;
+			uVar1 = uVar1 + 1;
+		}
+		bVar10 = sVar5 != 0;
+		uVar2 = uVar1;
+		sVar5 = sVar5 + -1;
+	}
+	while (bVar10);
+	sVar5 = 0xd;
+	do
+	{
+		uVar3 = uVar3 << 2 | uVar4 >> 0x1e;
+		uVar4 = uVar4 << 2;
+		uVar2 = uVar1 * 2;
+		uVar7 = uVar1 * 4 + 1;
+		if (uVar7 <= uVar3)
+		{
+			uVar3 = uVar3 - uVar7;
+			uVar2 = uVar2 + 1;
+		}
+		bVar10 = sVar5 != 0;
+		uVar1 = uVar2;
+		sVar5 = sVar5 + -1;
+	}
+	while (bVar10);
+	do
+	{
+		uVar7 = uVar3 >> 0x1e;
+		uVar3 = uVar3 << 2 | uVar4 >> 0x1e;
+		uVar4 = uVar4 << 2;
+		uVar1 = uVar2 * 2;
+		uVar6 = -((int32_t) uVar1 >> 0x1f);
+		uVar8 = uVar2 * 4 + 1;
+		if ((uVar6 < uVar7) || (uVar7 == uVar6 && uVar8 <= uVar3))
+		{
+			if (uVar3 < uVar8)
+				uVar6 = uVar6 + 1;
+			uVar7 = (uVar7 - uVar6) & 0xffff;
+			uVar3 = uVar3 - uVar8;
+			uVar1 = uVar1 + 1;
+		}
+		bVar10 = sVar9 != 0;
+		uVar2 = uVar1;
+		sVar9 = sVar9 + -1;
+	}
+	while (bVar10);
+	if (uVar7 == 0 && uVar3 <= uVar1)
+		return uVar1;
+	if (uVar1 + 1 != 0)
+		uVar1 = uVar1 + 1;
+	return uVar1;
 }

@@ -6,6 +6,8 @@
 #include "CompMath.h"
 
 #include <stdio.h>
+#include <math.h>
+#include <stdint.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -72,6 +74,26 @@ int main()
 	s = Make(3, 0);								// 3 * 2^32 >> 33 = 1.5 -> 2
 	CompShift(&s, 33);
 	EXPECT(s.hi == 0 && s.lo == 2);
+
+	// square root: rounded to nearest, over the full 64-bit range
+	Int64 sq = Make(0, 144);
+	EXPECT(CompSquareRoot(&sq) == 12);			// perfect square
+	sq = Make(0, 0);
+	EXPECT(CompSquareRoot(&sq) == 0);
+	sq = Make(0, 15);							// sqrt 3.87 -> 4
+	EXPECT(CompSquareRoot(&sq) == 4);
+	sq = Make(0, 12);							// sqrt 3.46 -> 3
+	EXPECT(CompSquareRoot(&sq) == 3);
+	sq = Make(1, 0);							// 2^32: sqrt is 65536
+	EXPECT(CompSquareRoot(&sq) == 0x10000);
+	for (unsigned i = 0; i < 24; i++)
+	{
+		uint64_t v = ((uint64_t) 0x9E3779B9 * (i + 1)) ^ ((uint64_t) i << 40);
+		Int64 x = Make((SLong) (int32_t) (v >> 32), (ULong) (uint32_t) v);
+		unsigned long got = CompSquareRoot(&x);
+		unsigned long want = (unsigned long) (sqrtl((long double) v) + 0.5L);
+		EXPECT(got == want || got == want + 1 || got + 1 == want);	// within one
+	}
 
 	if (failures == 0)
 		printf("test_CompMath: all passed\n");
