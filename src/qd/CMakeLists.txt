@@ -5,8 +5,8 @@
 # (Shapes.h), polygons and the recording of lines into regions
 # (Polygons.h), the region holders (RegionVars.h), fonts and styles
 # (Fonts.h: the 'sfnt' bitmap fonts of the font family frames), text drawn
-# and measured (Text.h), bitmap frames (Pictures.h); QuickDraw pictures to
-# come.
+# and measured (Text.h), bitmap frames (Pictures.h), the screen pixel map
+# and its driver protocol (Screen.h); QuickDraw pictures to come.
 add_library(qd STATIC
     Rects.cpp
     Regions.cpp
@@ -18,8 +18,9 @@ add_library(qd STATIC
     Fonts.cpp
     Text.cpp
     Pictures.cpp
+    Screen.cpp
 )
-target_link_libraries(qd PUBLIC newton_config memory toolbox frames)
+target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols)
 target_include_directories(qd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

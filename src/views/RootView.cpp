@@ -12,6 +12,7 @@
 #include "Rects.h"
 #include "Ports.h"
 #include "Draw.h"
+#include "Screen.h"
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
 #include "DynamicArray.h"
@@ -352,11 +353,12 @@ TRootView::NeedsUpdate(void)
 
 
 // ROM 0x001b4914 Update__9TRootViewFP5TRect
-// The update regions redrawn (a rect given is invalidated first): each
-// slot's region, less what the port cannot show (which stays pending),
-// drawn through TView::Update with its filler.  NOT YET RECONSTRUCTED:
-// the caret hidden and redrawn, the screen's dirty rect flushed
-// (StartDrawing/StopDrawing).
+// The update regions redrawn (a rect given is invalidated first) under
+// one StartDrawing/StopDrawing (the display shows it all at the end, not
+// in slow motion): what the screen was told is dirty (fDirtyScreen, the
+// inker's) flushed first, then each slot's region, less what the port
+// cannot show (which stays pending), drawn through TView::Update with
+// its filler.  NOT YET RECONSTRUCTED: the caret hidden and redrawn.
 void
 TRootView::Update(Rect* rect)
 {
@@ -367,6 +369,13 @@ TRootView::Update(Rect* rect)
 	}
 	if (!NeedsUpdate())
 		return;
+	if (!gSlowMotion)
+		StartDrawing(nil, nil);
+	if (!EmptyRect(&fDirtyScreen))
+	{
+		StartDrawing(nil, &fDirtyScreen);
+		StopDrawing(nil, &fDirtyScreen);
+	}
 	SetEmptyRect(&fDirtyScreen);
 	TRegionVar pending;
 	for (long i = 0; i < kUpdateRegionCount; i++)
@@ -385,6 +394,8 @@ TRootView::Update(Rect* rect)
 		DisposeCachedRgn(dirty);
 		pending.Take(NewCachedRgn());
 	}
+	if (!gSlowMotion)
+		StopDrawing(nil, nil);
 }
 
 

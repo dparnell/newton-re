@@ -72,7 +72,7 @@ TTextView::RealDraw(Rect& /*bounds*/)
 	FPoint where;
 	where.x = (Fixed) viewBounds.left << 16;
 	where.y = (Fixed) (viewBounds.top + fontInfo.ascent - 1) << 16;
-	Fixed extra = (Fixed) ((viewBounds.bottom - viewBounds.top) - (fontInfo.descent + fontInfo.ascent)) << 16;
+	Fixed extra = (Fixed) (((viewBounds.bottom - viewBounds.top) - (fontInfo.descent + fontInfo.ascent)) * 0x10000);
 	switch (justify & vjVMask)
 	{
 	case vjTopV:

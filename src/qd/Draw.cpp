@@ -13,6 +13,7 @@
 */
 
 #include "Draw.h"
+#include "Screen.h"
 #include "OSErrors.h"
 #include <string.h>
 
@@ -150,11 +151,13 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 		if (trimmed == 0)
 			which = 0;
 	}
+	QDStartDrawing(dst, &clipped);					// (the screen: the rectangle drawn goes to the display when the drawing ends)
 	if (which == 0)
 	{
 		Rect source = *srcRect;
 		OffsetRect(&source, clipped.left - dstRect->left, clipped.top - dstRect->top);
 		BitBlt(src, dst, &source, &clipped, mode, pattern);
+		QDStopDrawing(dst, &clipped);
 		return;
 	}
 	long words = ((clipped.right - clipped.left) >> 5) + 2;
@@ -180,6 +183,7 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 		if (scans[i] != nil)
 			QDDisposeTempPtr(scans[i]);
 	QDDisposeTempPtr(row);
+	QDStopDrawing(dst, &clipped);
 }
 
 

@@ -18,3 +18,8 @@ target_link_libraries(test_Text PRIVATE qd)
 target_compile_definitions(test_Text PRIVATE "NEWTON_ROM_BIN=\"${CMAKE_SOURCE_DIR}/../build/MP2100D/rom.bin\"")
 add_test(NAME qd.Text COMMAND test_Text)
 set_tests_properties(qd.Text PROPERTIES TIMEOUT 120)
+
+add_executable(test_Screen test_Screen.cpp)
+target_link_libraries(test_Screen PRIVATE qd hal_host_display)
+add_test(NAME qd.Screen COMMAND test_Screen ${CMAKE_BINARY_DIR}/test_Screen.pgm)
+set_tests_properties(qd.Screen PROPERTIES TIMEOUT 60)

@@ -8,7 +8,7 @@
 				the ROM's REP runs over its stdio translators.
 
 	Usage:
-		newtonscript [--rom <image>] [--heap <bytes>] [-e <source>] [file.ns ...]
+		newtonscript [--rom <image>] [--heap <bytes>] [--display <w>x<h>[x<depth>]] [-e <source>] [file.ns ...]
 
 	Each file is loaded with ParseFile (each form compiled and run, as the
 	NTK loads a text file); -e compiles and runs a string; with no files
@@ -21,7 +21,11 @@
 	function ROMConstant(name): the ROM's R constant of that name (a
 	string or symbol, case as in ROMConstants.h without the R:
 	ROMConstant("canonicalTextShape")), nil for none - for looking at the
-	ROM's objects from the REP.
+	ROM's objects from the REP.  --display starts the view system over a
+	host display of the size (and depth, 1 by default: 320x480 is the
+	MessagePad's, 4 deep): AddView(GetRoot(), template), :Open(),
+	RefreshViews() and ScreenSnapshot("file.pgm") then draw a view
+	hierarchy into an image (host/HostViews.h).
 */
 
 #include "Frames.h"
@@ -32,6 +36,7 @@
 #include "ROMImport.h"
 #include "ROMConstants.h"
 #include "NativeFunctions.h"
+#include "HostViews.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -71,6 +76,7 @@ main(int argc, char** argv)
 	if (romImage == nil)
 		romImage = NEWTON_DEFAULT_ROM_IMAGE;
 	long heapSize = 0x400000;
+	long displayWidth = 0, displayHeight = 0, displayDepth = 1;
 	Boolean interactive = false;
 	Boolean ranSomething = false;
 	int first = 1;
@@ -86,6 +92,16 @@ main(int argc, char** argv)
 			heapSize = strtol(argv[first + 1], nil, 0);
 			first += 2;
 		}
+		else if (strcmp(argv[first], "--display") == 0 && first + 1 < argc)
+		{
+			char* rest;
+			displayWidth = strtol(argv[first + 1], &rest, 0);
+			displayHeight = *rest == 'x' ? strtol(rest + 1, &rest, 0) : 0;
+			displayDepth = *rest == 'x' ? strtol(rest + 1, &rest, 0) : 1;
+			if (displayWidth <= 0 || displayHeight <= 0)
+				return Usage();
+			first += 2;
+		}
 		else
 			return Usage();
 	}
@@ -97,6 +113,19 @@ main(int argc, char** argv)
 	InitObjects();
 	HostInitREP(stdout, stdin);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
+	if (displayWidth > 0)
+	{
+		newton_try
+		{
+			HostStartViews(displayWidth, displayHeight, displayDepth);
+		}
+		newton_catch_all
+		{
+			gREPout->ExceptionNotify(&_info.exception);
+			return 1;
+		}
+		end_try;
+	}
 
 	for (int i = first; i < argc; i++)
 	{

@@ -368,9 +368,41 @@ every point's line twice, from the first, as reconstructed); otherwise
 `DrawRgn`s it.  `OffsetPoly` 0x0031027c, `MapPoly` 0x00310084, `KillPoly`
 0x00310278.
 
+## The screen (`src/qd/Screen.h`)
+
+The screen is the QD globals' `fScreenBits` PixelMap (0x0c104e54), set
+up by `InitScreen` 0x001cec68 from the screen driver's `ScreenInfo`
+(`SetupScreenPixelMap` 0x001ceee4: height, width, depth, resolution; the
+row bytes the width rounded up to a 64-bit word's pixels times the depth;
+the bits allocated once, big enough for either orientation).  The driver
+is the `TScreenDriver` protocol (0x0037ee40-0x0037eee0: ScreenSetup,
+GetScreenInfo, PowerInit/On/Off, Blit, Get/SetFeature - 0 contrast, 2
+backlight, 4 orientation - AutoAdjustFeatures, DoubleBlit, Enter/
+ExitIdleMode), the ROM's `TMainDisplayDriver` from the ROM extension
+driving the LCD; the host's `THostScreenDriver` (`hal/host/HostScreen.h`)
+keeps gray bytes and writes them out (`WritePGM`, `WritePBM`).  Drawing
+to the screen is bracketed: the blitter's `QDStartDrawing`/`QDStopDrawing`
+0x001cf1e0/0x001cf228 (called by `RgnBlt`, `DrawLine`, `DrawArc`,
+`StretchBits`, the text - the host's from `RgnBlt`, where everything
+ends up) lock the screen RAM and add the rectangle drawn to
+`gScreenDirtyRect`; the views' `StartDrawing`/`StopDrawing`
+0x001cf6b8/0x001cf704 (`TRootView::Update` around an update) hold the
+lock across many, so the display is updated once, by
+`UpdateHardwareScreen` 0x001cf35c blitting the dirty rectangle through
+the driver (`BlitToScreens` 0x001cf3b8).  The ROM's screen update task
+(`ScreenUpdateTask` 0x001cf4f0) does that every 33 ms when the LCD
+semaphores say so; the host does it when the last bracket closes (the
+semaphores stand in as a count).  `GetGrafInfo` 0x001cf828 answers the
+screen's map, resolution, depth and the driver's features; `SetGrafInfo`
+0x001cedb0 sets contrast and orientation (the map re-made, its bits
+cleared); `SetOrientation` 0x0020040c turns the screen and re-makes the
+default port and the `screenWidth`/`screenHeight` globals (the tablet
+and the gestalt NOT YET).  `test_Screen` drives it over a 64 x 48 host
+display.
+
 ## Not yet
 
 Arcs of less than a full turn, QuickDraw pictures and shapes,
-`ScrollRect`, `ZoomRect`, the screen (`InitScreen`, `QDStartDrawing`),
-the per-task globals, `StretchBits` proper, the font cache, text layout
+`ScrollRect`, `ZoomRect`, the screen update task and the alert screen
+info, the per-task globals, `StretchBits` proper, the font cache, text layout
 (justification, wrapping), the `TQDLibraryDriver` protocol.

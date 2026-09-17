@@ -30,7 +30,10 @@ src/
     tests/        tests spanning kernel, user side and runtime
   hal/          hardware abstraction (interfaces in hal/*.h; the host
                 implementation in hal/host is the only port so far - the
-                Voyager/Cirrus chipset of the MP2x00 is to come)
+                Voyager/Cirrus chipset of the MP2x00 is to come); the
+                display is a TScreenDriver (qd/Screen.h), the host's
+                (hal/host/HostScreen.h, library hal_host_display) a buffer
+                of gray bytes it writes out as a PGM/PBM image
   toolbox/      the toolbox: CompMath (64-bit arithmetic); ByteOrder.h for
                 the words of persistent formats, which are big-endian
                 whatever the host
@@ -149,7 +152,11 @@ src/
                 the REP's stack trace (DebugAPI.h/.cpp)
                 (docs/frames/README.md, docs/frames/grammar.md)
   host/         host programs: newtonscript, the compiler, interpreter and
-                REP on the host over a ROM image (newtonscript.cpp)
+                REP on the host over a ROM image (newtonscript.cpp); with
+                --display it starts the view system over a host display
+                (HostViews.cpp: ScreenSnapshot writes the picture) - the
+                demo/views.ns script draws a slip, a paragraph, gauges,
+                shapes and a popup menu into build/views-demo.pgm
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 
