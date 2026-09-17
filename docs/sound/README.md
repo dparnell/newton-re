@@ -45,7 +45,27 @@ ROM, big-endian, keeps those samples big-endian in memory, but the values
 are the same, and the compressed stream's bytes are kept exactly as the
 ROM lays them, so the two interoperate.
 
-## Mu-law (`MuLaw.h`)
+## The sample converters (`SampleConvert.h`)
+
+Two 8-bit codings that 16-bit linear sound is turned into and back from, a
+sample or a block at a time.  The sound DMA channel picks a pair by the
+formats at the two ends of a buffer, and the filtered resampler calls them
+for every sample it reads and writes.
+
+### "Standard" 8-bit
+
+Offset binary: the sample's top eight bits with 0x80 added, so silence is
+0x80.  `SampleConvertLin16ToStd8` (ROM 0x001e980c) adds 255 to a negative
+sample before the shift, so the division rounds toward zero;
+`SampleConvertStd8ToLin16` (ROM 0x001ea21c) dithers the eight bits the
+coding dropped with five bits of QuickDraw's `Random`.  The block forms are
+ROM 0x001e9828 and 0x001ea260.
+
+The dither is OR'd in whatever the sign, so it always moves the value up,
+while the coder rounds toward zero: a negative code decoded and coded again
+can come back one step higher.  That is the ROM's arithmetic, kept.
+
+### Mu-law
 
 Eight-bit sampled sound is companded: a sign bit, a three-bit exponent and a
 four-bit mantissa, stored complemented so that silence is `0xFF` and the
@@ -86,6 +106,8 @@ bugs as expectations.
 
 ## Sample-rate conversion (`Resample.h`)
 
+### The plain converter
+
 `Resample` (ROM 0x001e9978) is what the sound DMA channel puts a buffer
 through when the sound's rate is not the hardware's
 (`TDMAChannel::SetupNode` fills a `SampleSpec` and calls it).  It is
@@ -102,9 +124,36 @@ and sample size, the same three for the source, and a sample converter:
 bytes.  The counts are in and out: each comes back as how far its side got,
 so a caller can carry on where the smaller of the two stopped.
 
+### The filtered converter
+
+`ResampleFiltered` (ROM 0x001e9eec, and ROM 0x001e9de8 for the form that
+takes everything from the state) is the good one.  `kResampleFilter`
+(`ResampleTables.cpp`, generated from ROM 0x0036dbe8 by `romtable.py`) is a
+windowed sinc of 261 points in 16.16 Fixed, its peak 1.0 in the middle and
+thirteen points to a zero crossing, so it spans ten input samples either
+side.  An output walks the table from 0 to its end in steps of thirteen,
+reading it at a fractional position and interpolating between neighbouring
+points, and multiplies each step by the input sample that far back.
+
+Going down, the step is scaled by the rate ratio, which stretches the filter
+and drops its cut-off to the output's Nyquist limit; the tap count is then
+20 / the ratio rather than 20, and the sum is scaled back by the ratio.
+Because thirteen points is exactly one input sample, at the same rate in and
+out every tap but the middle one lands on a zero of the sinc, so the
+conversion is an exact identity delayed by ten samples - which is what
+`test_ResampleFiltered` checks it against.
+
+The state (`ResampleState`, field names ours) carries the rate ratio, the
+tap count, the phase and a 160-entry history: the samples before the
+buffer's start come from the tail the last call left behind, so a stream
+converted in pieces comes out the same as one converted whole.
+`InitResampleState` (ROM 0x001e9cd8) works the ratio, the tap count, the
+sample strides and the converters out of the rates, sample sizes and formats
+already in the state; `GetSample` and `PutSample` (ROM 0x001e9e30,
+0x001e9e8c) are the one-sample reads and writes that go through them.
+
 ## Not yet
 
-`TMuLawCodec`, `ResampleFiltered` (the filtered converter, over a
-`ResampleState` with a 160-entry history and its own rate ratio in Fixed),
-and the sound-server streaming layer (`TSoundCodec`, `TIMACodec`,
-`TSoundServer`/`TSoundChannel`, `CodecBlock`, `Produce`/`Consume`).
+`TMuLawCodec` and the sound-server streaming layer (`TSoundCodec`,
+`TIMACodec`, `TSoundServer`/`TSoundChannel`, `CodecBlock`,
+`Produce`/`Consume`).

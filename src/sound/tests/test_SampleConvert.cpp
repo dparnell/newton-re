@@ -1,4 +1,5 @@
-// Host unit test for the mu-law conversions (src/sound/MuLaw.h).
+// Host unit test for the sample converters (src/sound/SampleConvert.h):
+// mu-law, and the offset-binary "standard" 8-bit coding.
 //
 // The ROM's variant is not the standard G.711 one (a 14-bit magnitude biased
 // by 33, not a 13-bit one biased by 132), so there is no outside oracle to
@@ -17,10 +18,14 @@
 //  * the two ways the loudest samples overflow the exponent search, the ROM
 //    never having clamped them (bugs the reconstruction keeps).
 //
+// "Standard" 8-bit, being a plain shift, is checked directly: silence, the
+// two extremes, the rounding toward zero, and that every code decodes within
+// its own step and codes back to itself.
+//
 // Decoding dithers the two low bits with QuickDraw's Random, so the test
 // seeds it and compares values only above those two bits where it matters.
 
-#include "MuLaw.h"
+#include "SampleConvert.h"
 #include "Ports.h"
 
 #include <stdio.h>
@@ -194,18 +199,100 @@ TestTheLoudSampleBugs()
 }
 
 
+// "Standard" 8-bit is offset binary: the sample's top eight bits with 0x80
+// added, so silence is 0x80, full positive 0xFF and full negative 0x00.  The
+// decoder dithers the eight bits the coding dropped with five bits of
+// Random, so a decoded sample is within 0x1F of the code's own value.
+static void
+TestStd8()
+{
+	UByte code;
+	short sample;
+
+	sample = 0;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0x80);						// silence
+	sample = 32767;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0xFF);
+	sample = -32768;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0x00);
+
+	// the shift rounds toward zero, so the values either side of silence are
+	// the codes either side of 0x80 only once they reach a whole step
+	sample = 255;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0x80);
+	sample = 256;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0x81);
+	sample = -255;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0x80);						// toward zero, not down
+	sample = -256;
+	SampleConvertLin16ToStd8(&code, &sample);
+	EXPECT(code == 0x7F);
+
+	// Every code decodes into its own step, and codes back to itself - except
+	// that the dither always moves the value up, while the coder rounds
+	// toward zero, so a negative code can come back one step higher.  That is
+	// the ROM's arithmetic, not a slip in the reconstruction: the decoder ORs
+	// its five random bits in whatever the sign.
+	for (int c = 0; c <= 0xFF; c++)
+	{
+		UByte in = (UByte) c;
+		SampleConvertStd8ToLin16(&sample, &in);
+		long expected = ((long) c << 8) - 0x8000;
+		EXPECT(sample >= expected && sample <= expected + 0x1F);	// the dither, and nothing more
+		SampleConvertLin16ToStd8(&code, &sample);
+		if (c < 0x80)
+			EXPECT(code == (UByte) c || code == (UByte) (c + 1));
+		else
+			EXPECT(code == (UByte) c);
+	}
+
+	// the block forms match, and answer the smaller of the two counts
+	static const short samples[6] = { 0, 8000, -8000, 32767, -32768, 300 };
+	UByte codes[6];
+	UByte oneAtATime[6];
+	for (int i = 0; i < 6; i++)
+	{
+		short one = samples[i];
+		SampleConvertLin16ToStd8(&oneAtATime[i], &one);
+	}
+	long dstCount = 6, srcCount = 6;
+	BlockConvertLin16ToStd8(codes, &dstCount, (void*) samples, &srcCount);
+	EXPECT(dstCount == 6 && srcCount == 6);
+	EXPECT(memcmp(codes, oneAtATime, sizeof(codes)) == 0);
+
+	short out[6];
+	dstCount = 4;
+	srcCount = 6;
+	out[4] = 0x1234;
+	BlockConvertStd8ToLin16(out, &dstCount, oneAtATime, &srcCount);
+	EXPECT(dstCount == 4 && srcCount == 4 && out[4] == 0x1234);
+	for (int i = 0; i < 4; i++)
+	{
+		SampleConvertLin16ToStd8(&code, &out[i]);
+		EXPECT(code == oneAtATime[i] || code == (UByte) (oneAtATime[i] + 1));
+	}
+}
+
+
 int
 main()
 {
 	SetRandSeed(1);
+	TestStd8();
 	TestRoundTripOfEveryCode();
 	TestCompandingCurve();
 	TestRampRoundTrip();
 	TestBlockConversion();
 	TestTheLoudSampleBugs();
 	if (failures == 0)
-		printf("test_MuLaw: all passed\n");
+		printf("test_SampleConvert: all passed\n");
 	else
-		printf("test_MuLaw: %d failures\n", failures);
+		printf("test_SampleConvert: %d failures\n", failures);
 	return failures != 0;
 }

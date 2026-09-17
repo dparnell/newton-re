@@ -2,12 +2,16 @@
 """Emit constant tables from the ROM as C++ source.
 
 Usage:
-    python romtable.py <build_dir> NAME[:TYPE[:COUNT]]... -o <file.cpp> [--namespace-comment TEXT]
+    python romtable.py <build_dir> NAME[@ADDR][:TYPE[:COUNT]]... -o <file.cpp>
     python romtable.py build/MP2100D O10 O9 CopyValue:u8 LZCopyBits:u8 -o src/compression/LZTables.cpp
     python romtable.py build/MP2100D gPrintLiterals:cstr:35 -o src/frames/PrintLiterals.cpp
+    python romtable.py build/MP2100D kResampleFilter@0x0036dbe8:i32:262 -o src/sound/ResampleTables.cpp
 
 Each NAME is a data symbol of the ROM (symbols.json; the debug table marks
-most data as code, so no class check is made).  TYPE is u8, u16, u32, i8,
+most data as code, so no class check is made).  A table the debug symbols do
+not name is given its address instead, as NAME@ADDR - the name is then ours
+and the citation says `(unnamed)`, which is how coverage.py expects an
+unnamed thing to be cited.  TYPE is u8, u16, u32, i8,
 i16 or i32 (default u32; the ROM is big-endian), or cstr: a table of
 pointers to C strings in the ROM, emitted as `const char*` literals (a 0
 pointer becomes nil).  COUNT defaults to the number of elements between
@@ -47,10 +51,18 @@ def c_string(rom: bytes, addr: int) -> str:
     return '"' + escaped + '"'
 
 
+def citation(addr: int, name: str, given_address) -> str:
+    """The `// ROM ...` line above a table: its symbol, or `(unnamed)` and our
+    name for it when the debug symbols do not name it."""
+    if given_address is None:
+        return f"// ROM 0x{addr:08x} {name}"
+    return f"// ROM 0x{addr:08x} (unnamed) - {name}"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("build_dir")
-    ap.add_argument("tables", nargs="+", help="NAME[:TYPE[:COUNT]]")
+    ap.add_argument("tables", nargs="+", help="NAME[@ADDR][:TYPE[:COUNT]]")
     ap.add_argument("-o", "--output", required=True)
     ap.add_argument("--include", action="append", default=[], help="a header to #include (repeatable)")
     args = ap.parse_args(argv)
@@ -98,15 +110,22 @@ def main(argv=None) -> int:
     for spec in args.tables:
         parts = spec.split(":")
         name = parts[0]
+        given_address = None
+        if "@" in name:
+            name, _, where = name.partition("@")
+            given_address = int(where, 0)
         typ = parts[1] if len(parts) > 1 and parts[1] else "u32"
         if typ not in TYPES:
             print(f"error: unknown type {typ}", file=sys.stderr)
             return 1
         ctype, size, fmt = TYPES[typ]
-        if name not in by_name:
-            print(f"error: no symbol {name}", file=sys.stderr)
+        if given_address is not None:
+            addr = given_address
+        elif name in by_name:
+            addr = by_name[name]
+        else:
+            print(f"error: no symbol {name} (give its address as {name}@0x...)", file=sys.stderr)
             return 1
-        addr = by_name[name]
         if len(parts) > 2:
             count = int(parts[2], 0)
         else:
@@ -115,16 +134,21 @@ def main(argv=None) -> int:
         if typ == "cstr":
             decls.append(f"extern const char* const\t{name}[{count}];")
             lines = ["\t" + (c_string(rom, v) if v != 0 else "0") + "," for v in values]
-            defs.append(f"// ROM 0x{addr:08x} {name}\nconst char* const\t{name}[{count}] = {{\n" + "\n".join(lines) + "\n};\n")
+            defs.append(f"{citation(addr, name, given_address)}\nconst char* const\t{name}[{count}] = {{\n" + "\n".join(lines) + "\n};\n")
             continue
         decls.append(f"extern const {ctype}\t{name}[{count}];")
         width = 4 if size == 1 else (6 if size == 2 else 10)
         per_line = 16 if size == 1 else 8
+        signed_type = typ.startswith("i")	# a signed table reads better in decimal
+        signed_width = max((len(str(v)) for v in values), default=1) if signed_type else 0
         lines = []
         for i in range(0, count, per_line):
             chunk = values[i:i + per_line]
-            lines.append("\t" + " ".join(f"{v:#0{width}x}," if v >= 0 else f"{v}," for v in chunk))
-        defs.append(f"// ROM 0x{addr:08x} {name}\nconst {ctype}\t{name}[{count}] = {{\n" + "\n".join(lines) + "\n};\n")
+            if signed_type:
+                lines.append("\t" + " ".join(f"{v:>{signed_width}}," for v in chunk))
+            else:
+                lines.append("\t" + " ".join(f"{v:#0{width}x}," if v >= 0 else f"{v}," for v in chunk))
+        defs.append(f"{citation(addr, name, given_address)}\nconst {ctype}\t{name}[{count}] = {{\n" + "\n".join(lines) + "\n};\n")
     out.extend(decls)
     out.append("")
     out.append("\n".join(defs))

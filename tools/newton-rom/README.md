@@ -274,11 +274,14 @@ dispatch slot and monitor selector by method name - from `rom.bin` and
 (`docs/protocols/README.md` explains the mechanism).
 
 Tables of the ROM go into the source through scripts, never by hand:
-`analysis/romtable.py build/MP2100D NAME[:type[:count]]... -o file.cpp`
-emits data symbols as C++ arrays (the compression coders' tables; type
-`cstr` for a table of pointers to C strings, such as the interpreter's
-opcode names `gPrintLiterals`, which lives in the initialised RAM area
-and is read from the ROM's copy of it), and
+`analysis/romtable.py build/MP2100D NAME[@addr][:type[:count]]... -o
+file.cpp` emits data symbols as C++ arrays (the compression coders'
+tables; type `cstr` for a table of pointers to C strings, such as the
+interpreter's opcode names `gPrintLiterals`, which lives in the
+initialised RAM area and is read from the ROM's copy of it; a table the
+debug symbols do not name is given its address instead and the name is
+ours, as `kResampleFilter@0x0036dbe8:i32:262` for the resampler's sinc,
+which is then cited `(unnamed)`), and
 `analysis/romconstants.py build/MP2100D -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
 name and hash from the object the constant refers to), the 1102 `R`/`RS`

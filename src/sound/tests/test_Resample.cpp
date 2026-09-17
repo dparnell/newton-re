@@ -9,7 +9,7 @@
 // that the sample converter and the byte-copy paths both work.
 
 #include "Resample.h"
-#include "MuLaw.h"
+#include "SampleConvert.h"
 #include "Ports.h"
 
 #include <stdio.h>
