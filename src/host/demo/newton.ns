@@ -51,10 +51,13 @@ slipButton := AddView(GetRoot(), {		// the slip hidden and shown with its effect
 	buttonClickScript: func() if Visible(slip) then slip:Hide() else slip:Show() });
 slipButton:Dirty();
 
-// a paragraph made the key view: what is typed goes in at the caret
+// a paragraph made the key view: what is typed goes in at the caret; a
+// tap on the caret pops up its _caretPopup (a pick inserts the word)
 para := AddView(GetRoot(), {
 	viewClass: 81, viewFlags: 1 + 0x200 + 0x800 + 0x1000, viewBounds: {left: 20, top: 280, right: 300, bottom: 340},		// clickable + gestures: a tap moves the caret
-	viewFormat: 0x151, viewFont: kBold12, viewLineSpacing: 16, text: "Type here" });
+	viewFormat: 0x151, viewFont: kBold12, viewLineSpacing: 16, text: "Type here",
+	_caretPopup: {popup: ["Newton", "hello", "world"],
+		pickActionScript: func(i) SetValue(para, 'text, para.text & " " & ["Newton", "hello", "world"][i])} });
 para:Dirty();
 SetKeyView(para, 9);
 
