@@ -6,14 +6,15 @@
 				magnitudes, round to nearest and saturate on overflow.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	NOT YET RECONSTRUCTED: FractSin/FractCos (xFracSin/xFracCos, a separate
-	implementation), FixedASin/FixedACos (the same arctangent polynomial as
-	FixedAtan2, but undeclared in the DDK), and FixMul32 (0x000b310c, a
-	different fixed format).
+	FixedASin/FixedACos are declared in FixedMathExtra.h (the DDK omits
+	them).  NOT YET RECONSTRUCTED: FractSin/FractCos (xFracSin/xFracCos, a
+	separate implementation) and FixMul32 (0x000b310c, a different fixed
+	format).
 */
 
 #include "FixedMath.h"
 #include "CompMath.h"
+#include "FixedMathExtra.h"
 #include <stdint.h>
 
 const Fixed kFixedMax = 0x7fffffff;
@@ -330,4 +331,71 @@ FractSineCosine(Fixed degrees, Fract* cosine)
 	}
 	*cosine = sLastCosine;
 	return sLastSine;
+}
+
+
+// ROM 0x00253210 FixedASin__Fl
+// The arcsine of a Fract (2.30, -1..1), in 16.16 radians: atan2 of x and
+// sqrt(1 - x^2) through the arctangent polynomial (asin x = atan(x /
+// sqrt(1 - x^2))).  When |x| >= 1 it answers +/- pi/2.
+Fixed
+FixedASin(Fract x)
+{
+	Fract x2 = FractMultiply(x, x);
+	if (0x40000000 - x2 < 1)					// |x| >= 1
+		return x < 1 ? -kFixedHalfPi : kFixedHalfPi;
+	Fixed root = FractSquareRoot(0x40000000 - x2);
+	Boolean negRoot = false;					// FractSquareRoot is never negative,
+	Boolean negX = false;						// so this branch is dead - kept as the ROM has it
+	if (root < 0)
+	{
+		negRoot = true;
+		root = -root;
+		if (root == (Fixed) 0x80000000)
+			root = 0x7fffffff;
+	}
+	if (x < 0)
+	{
+		negX = true;
+		x = -x;
+		if (x == (Fixed) 0x80000000)
+			x = 0x7fffffff;
+	}
+	Fixed hi = root;
+	Fixed lo = x;
+	if (root < x)
+	{
+		hi = x;
+		lo = root;
+	}
+	Fixed angle = 0;
+	if (hi != 0)
+	{
+		Fract ratio = FractDivide(lo, hi);
+		Fract r2 = FractMultiply(ratio, ratio);
+		Fract acc = kAtanCoeffs[5];
+		for (int i = 4; i >= 0; i--)
+		{
+			acc = FractMultiply(acc, r2);
+			acc = kAtanCoeffs[i] + acc;
+		}
+		acc = FractMultiply(acc, ratio);
+		angle = ((acc >> 13) & 1) + (acc >> 14);
+	}
+	if (root < x)
+		angle = kFixedHalfPi - angle;
+	if (negRoot)
+		angle = kFixedPi - angle;
+	if (negX)
+		angle = -angle;
+	return angle;
+}
+
+
+// ROM 0x0025325c FixedACos__Fl
+// The arccosine: pi/2 - arcsine.
+Fixed
+FixedACos(Fract x)
+{
+	return kFixedHalfPi - FixedASin(x);
 }

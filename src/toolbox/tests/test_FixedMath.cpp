@@ -4,6 +4,7 @@
 // functions - no OS boot.
 
 #include "FixedMath.h"
+#include "FixedMathExtra.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -156,6 +157,28 @@ TestSinCos()
 }
 
 
+// FixedASin/FixedACos take a Fract (2.30) in -1..1 and answer 16.16
+// radians, checked against the C library.
+static void
+TestAsinAcos()
+{
+	EXPECT(FixedASin((Fract) 0x40000000) == 0x19220);		// asin(1) = pi/2
+	EXPECT(FixedASin((Fract) 0xc0000000) == -0x19220);		// asin(-1) = -pi/2
+	EXPECT(FixedASin(0) == 0);
+	EXPECT(FixedACos((Fract) 0x40000000) == 0);				// acos(1) = 0
+	EXPECT(Near(FixedACos(0), M_PI / 2 * kFix));			// acos(0) = pi/2
+	for (int i = -9; i <= 9; i++)
+	{
+		double xd = i / 10.0;								// -0.9 .. 0.9
+		Fract x = (Fract) (xd * kFrac);
+		double diff_a = (double) FixedASin(x) - asin(xd) * kFix;
+		double diff_c = (double) FixedACos(x) - acos(xd) * kFix;
+		EXPECT(diff_a > -40.0 && diff_a < 40.0);
+		EXPECT(diff_c > -40.0 && diff_c < 40.0);
+	}
+}
+
+
 int main()
 {
 	TestFixedMul();
@@ -166,6 +189,7 @@ int main()
 	TestMultiplyDivide();
 	TestAtan2();
 	TestSinCos();
+	TestAsinAcos();
 	if (failures == 0)
 		printf("test_FixedMath: all passed\n");
 	else
