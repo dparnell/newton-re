@@ -260,9 +260,10 @@ TView::GetFrontMask(void) const
 
 // ROM 0x002639d4 NarrowVisByIntersectingObscuringSiblingsAndUncles__5TViewFP5TViewP5TRect
 // The port's visRgn less the filled or windowed views in front of this
-// one and of each ancestor up to upTo (the root view for nil).
+// one and of each ancestor up to upTo (the root view for nil) - only
+// those whose outer bounds meet the rectangle, when one is given.
 void
-TView::NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* /*bounds*/)
+TView::NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* bounds)
 {
 	if (upTo == nil)
 		upTo = gRootView;
@@ -274,6 +275,13 @@ TView::NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* /*bo
 		TBackwardViewListLoop loop(view->fParent->fChildren);
 		for (TView* sibling = loop.Next(); sibling != nil && sibling != view; sibling = loop.Next())
 		{
+			if (bounds != nil)
+			{
+				Rect outer, met;
+				sibling->OuterBounds(&outer);
+				if (!SectRect(&outer, bounds, &met))
+					continue;
+			}
 			if ((sibling->fViewFormat & vfFillMask) != 0 || sibling->HasVisRgn())
 			{
 				TClipper* clipper = sibling->Clipper();

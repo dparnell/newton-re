@@ -24,6 +24,7 @@ class TDataView : public TView
 public:
 	virtual long	ClassID(void) const;								// ROM 0x000a41c0 ClassID__9TDataViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x000a41c8 DerivedFrom__9TDataViewCFl
+	virtual TView*	GetHiliteView(void);								// ROM 0x000a43bc GetHiliteView__9TDataViewFv (vtable +0x140)
 };
 
 #endif	/* __DATAVIEW_H */

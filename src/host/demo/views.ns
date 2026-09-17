@@ -53,6 +53,15 @@ picker := AddView(GetRoot(), {
 	pickActionScript: func(index) Print("picked " & index) });
 picker:Open();
 
+// an editable paragraph made the key view: the caret shows under its text
+// (a keyboard connected)
+para := AddView(GetRoot(), {
+	viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 400, right: 300, bottom: 430},
+	viewFormat: 0x111, viewFont: kBold12, text: "Type here" });
+para:Dirty();
+KeyboardConnect(true);
+SetKeyView(para, 4);
+
 RefreshViews();
 ScreenSnapshot("build/views-demo.pgm");
 Print("written build/views-demo.pgm");

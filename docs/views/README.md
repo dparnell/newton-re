@@ -585,6 +585,76 @@ pairs (flags: 1 shows the modifiers, 2 hears `viewCaretChangedScript`, 4
 active), `+0x64` a keyboard passed through a soft one
 (`ConnectPassthruKeyboard` 0x001b6df4), `+0x7c` the selection stack.
 
+### The key view and the caret (`RootView.h`, `Bits.h`)
+
+The root view keeps the key view - the view typed into - at `+0x68`
+with the caret's character offset (`+0x6c`) and the selection's length
+(`+0x70`).  `SetKeyView(view, offset, length, flushWord)` 0x001b608c
+pushes a usable old key view's selection (`GetSelection`, a caret info
+frame) on the selection stack (`+0x7c`: `[context, info]` pairs;
+`PushSelection` 0x001b69a8 cleans it of gone views and trims it to
+twenty entries; `PopSelection` 0x001b6868, `FindRestorableKeyView`
+0x001b66d4 and `RestoreKeyView` 0x001b678c bring one back - the ROM
+leaves a restored entry in place), asks the new view to fix the offset
+and length (`SetCaretOffset`; a paragraph's 0x00181008 clamps them to
+its text) and goes on to `CommonSetKeyView` 0x001b6174; `SetKeyViewSelection`
+0x001b5fbc does the same from a caret info frame through the view's
+`SetSelection` (a paragraph's 0x001811a8 reads `offset` and `length`).
+`CommonSetKeyView` stores the three, tells an old view
+`ActivateSelection(false)` and the new one `ActivateSelection(true)`
+(`TView`'s 0x0026876c runs the `viewCaretActivateScript`; not between
+two paragraphs of the same hilite view), makes the hiliter the view for
+a selection, sets the on-screen keyboards' shift for the view when no
+keyboard is connected (`DoAutoShift` 0x001b5f24 after white space), and
+tells the registered keyboards' `viewCaretChangedScript`.  When the key
+view goes (`ForgetAboutView` → `CaretViewGone` 0x001b420c) the newest
+stacked selection takes over.
+
+The caret is the ROM's two caret bitmaps (`Rcaretbitsoutside`,
+`Rcaretbitsinside`: a 12 x 11 triangle) drawn under the insertion point:
+`GetCaretPoint` 0x001b72a0 asks the key view's `OffsetToCaret` (a
+paragraph's 0x00173b04: the character's left edge, a pixel in, kept
+inside the view; host: the line found and the text measured up to the
+offset - `OffsetToBounds` 0x00179f50 - where the ROM asks its text
+objects) and takes the rect's left and bottom (the baseline);
+`CaretPointToRect` 0x001b7210 puts the 12 x 11 rect from 5 left of the
+point and down from it.  `DrawCaret` 0x001b745c saves the screen under
+the rect in a `TBits` (`+0x84`), narrows the port's visible region to
+the key view's less what obscures it up to its clip view
+(`GetCaretClipView` 0x001b73dc: the paragraph's window), draws the bits
+(`DrawCaretBits` 0x001b7344) and remembers the caret as showing
+(`+0x88`) at the point (`+0x8c`) for the view (`+0x90`);
+`RestoreBitsUnderCaret` 0x001b7698 puts the saved bits back.
+`CaretEnabled` 0x001b707c wants a key view without a selection and a way
+to type (remote writing, a keyboard, an active on-screen keyboard);
+`CaretValid` 0x001b70cc says whether what shows is right (always while
+`HideCaret` 0x001b7adc's count (`+0x94`) holds - `ShowCaret` 0x001b7b0c
+lets it go; `DirtyCaret` 0x001b7b6c invalidates its rect).
+`TRootView::Update` 0x001b4914 takes an invalid caret (or one under a
+dirty region) off the screen before painting and draws it again after;
+`NeedsUpdate` 0x001b4870 counts an invalid caret and a changed default
+button or caret slip (`FindDefaultButtonAndCaretSlip` 0x001b6bac: the
+`_defaultButton` variable and the first hilite- or drag-shadow-framed
+ancestor; `UpdateDefaultButtonAndCaretSlip` 0x001b6c60 dirties the one
+that changed).  `PointToCaret` (a paragraph's 0x001736f8, over
+`PointToOffset` 0x00179550: the nearest character on the line under the
+point) places the caret for a tap.  `TBits` (`Bits.h`, 0x00042b7c-
+0x00045bcc) is a `PixelMap` over a handle of the screen's depth for a
+rectangle (`InitBitMap` 0x00042e84: 32-bit rows) with `CopyFromScreen`,
+`Draw`, `CopyIntoBitmap` and `Fill`; the drag image and animation
+sprites use it too (NOT YET: `TBitsPort`, `BeginDrawing`).
+
+The natives: `SetKeyView(view, offsetOrInfo)`, `GetKeyView`,
+`GetCaretBox` (the rect with `view` and `offset`), `GetCaretInfo`,
+`RestoreKeyView`, `GetSelectionStack`, `ViewContainsCaretView`,
+`RegisterOpenKeyboard`/`UnregisterOpenKeyboard` (the keyboards array:
+`RegisterKeyboard` 0x001b6a3c), `KeyboardConnected`,
+`CommandKeyboardConnected`, `SetRemoteWriting`/`GetRemoteWriting` (the
+`remoteWriting` preference).  NOT YET: the caret's tap (`DoCaretClick`),
+the key view chain (`NextKeyView`, tabbing), `SetCaretInfo`/
+`PositionCaret`, `HoldPendingKeyView`'s users, the hilites a selection
+means, typing into the paragraph.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -606,7 +676,10 @@ HiliteUnique, the viewHiliteScript, a hidden view), the keyboard (the
 German mapping's tables, a dead key, the key maps and modifiers through
 KeyIn, key events to a key view's scripts, a repeat, key commands with
 the command key, one found up at the root, PostKeyString and
-HandleKeyEvents, the natives), idlers (SetupIdle,
+HandleKeyEvents, the natives), the caret (TBits, a paragraph made the
+key view showing the caret under its text at the offset, hidden and
+shown, moved, a tap's offset, the selection stack pushed and restored,
+the natives), idlers (SetupIdle,
 the idle script re-timing and stopping its idler, removal with the
 view), pickers from the ROM's protoPicker
 (the rows, the placement below and above, the separator, marks, an
@@ -615,8 +688,9 @@ icon, a cut item, the item under a point, a pick closing the picker).
 ## Not yet
 
 The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
-the pen tracking behind `TrackHilite` (strokes), the caret and key views
-(`SetKeyView`, `NextKeyView`), the key help, the keyboard tool and the
+the pen tracking behind `TrackHilite` (strokes), typing into a
+paragraph (its `RealDoCommand`'s keys: `InsertStyledText`), the key
+view chain (`NextKeyView`), the key help, the keyboard tool and the
 on-screen keyboards, drag and drop, the animation
 effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,

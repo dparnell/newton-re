@@ -75,6 +75,7 @@ void
 TParagraphView::Constructor(RefArg context, TView* parent)
 {
 	fTextFlags = -1;
+	fCaretOffset = 0;
 	TView::Constructor(context, parent);
 }
 
@@ -563,6 +564,266 @@ TParagraphView::OffsetCachedBounds(Point& delta)
 		OffsetRect(&fLines[i].fBounds, delta.h, delta.v);
 	OffsetRect(&fTextBounds, delta.h, delta.v);
 	OffsetRect(&fCachedBounds, delta.h, delta.v);
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   c a r e t
+------------------------------------------------------------------------------*/
+
+// the text's characters
+long
+TParagraphView::TextLength(void)
+{
+	RefVar text(Text());
+	return ISNIL(text) ? 0 : (Length(text) - 2) / 2;
+}
+
+
+// ROM 0x00181008 SetCaretOffset__14TParagraphViewFPlT1
+// The caret offset kept: -1 or past the text means its end; the length
+// cut to what is left.
+void
+TParagraphView::SetCaretOffset(long* offset, long* length)
+{
+	long textLength = TextLength();
+	if (*offset == -1 || *offset > textLength)
+		*offset = textLength;
+	if (*offset + *length > textLength)
+		*length = textLength - *offset;
+	fCaretOffset = *offset;
+}
+
+
+// ROM 0x00181080 GetSelection__14TParagraphViewFv
+// A paragraph caret info frame ({offset, length}): the first hilite's
+// range, or the caret offset with no length.
+Ref
+TParagraphView::GetSelection(void)
+{
+	RefVar info(Clone(RefVar(Rcanonicalparacaretinfo)));
+	// NOT YET RECONSTRUCTED: FirstHilite's range (the hilites)
+	SetFrameSlot(info, RSSYMoffset, RefVar(MAKEINT(fCaretOffset)));
+	SetFrameSlot(info, RSSYMlength, RefVar(MAKEINT(0)));
+	return info;
+}
+
+
+// ROM 0x001811a8 SetSelection__14TParagraphViewFRC6RefVarPlT2
+// The selection from a caret info frame's offset and length (nil length:
+// 0) through SetCaretOffset; a nil frame means no selection - the
+// hilites removed (RemoveAllHilites) and the offset and length 0.
+void
+TParagraphView::SetSelection(RefArg selection, long* offset, long* length)
+{
+	if (NOTNIL(selection))
+	{
+		*offset = RINT(GetProtoVariable(selection, RSSYMoffset, nil));
+		Ref len = GetProtoVariable(selection, RSSYMlength, nil);
+		*length = ISNIL(len) ? 0 : RINT(len);
+		SetCaretOffset(offset, length);
+		return;
+	}
+	*offset = 0;
+	*length = 0;
+	RemoveAllHilites();
+}
+
+
+// ROM 0x00181308 ActivateSelection__14TParagraphViewFUc
+// TView's (the viewCaretActivateScript); losing the caret also asks the
+// hilite view (GetHiliteView - NOT YET: the ROM goes on to its hilites).
+void
+TParagraphView::ActivateSelection(Boolean on)
+{
+	TView::ActivateSelection(on);
+	if (!on)
+		GetHiliteView();
+}
+
+
+// ROM 0x00176cac FlushWordAtCaret__14TParagraphViewFv
+// NOT YET RECONSTRUCTED: the word being typed at the caret handed to the
+// recogniser's dictionaries (the auto-add words).
+void
+TParagraphView::FlushWordAtCaret(void)
+{ }
+
+
+// ROM 0x0017a728 FindLineContainingCharOffset__14TParagraphViewFl
+// The line the offset is on: the first whose end is past it, the last
+// for an offset at or past the text's end; -1 without lines.
+long
+TParagraphView::FindLineContainingCharOffset(long offset)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	if (fLineCount == 0)
+		return -1;
+	for (long i = 0; i < fLineCount; i++)
+		if (offset < fLines[i].fEnd)
+			return i;
+	return fLineCount - 1;
+}
+
+
+// the width of a line's characters from its start to the offset (host:
+// measured; the ROM's text objects know their character boxes)
+static long
+LineWidthTo(TParagraphView* view, const UniChar* text, const LineInfo& line, long offset, StyleRecord** runStyles, const short* runLengths, long runCount)
+{
+	if (offset <= line.fStart)
+		return 0;
+	StyleRecord** styles = (StyleRecord**) NewPtrClear(runCount * sizeof(StyleRecord*));
+	short* lengths = (short*) NewPtrClear(runCount * sizeof(short));
+	long firstRun;
+	RunsOfRange(runStyles, runLengths, runCount, line.fStart, offset - line.fStart, styles, lengths, &firstRun);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	FPoint where;
+	where.x = 0;
+	where.y = 0;
+	TextBoundsInfo info;
+	MeasureTextOnce(text + line.fStart, offset - line.fStart, styles, lengths, where, &options, &info);
+	DisposPtr((Ptr) styles);
+	DisposPtr((Ptr) lengths);
+	(void) view;
+	return (info.fRight - info.fLeft) >> 16;
+}
+
+
+// ROM 0x00179f50 OffsetToBounds__14TParagraphViewFlP5TRect
+// The box of the character at the offset (its left edge is what the
+// caret wants): the line found, the text up to the offset measured for
+// the left, the line's top and baseline for the top and bottom; without
+// lines (no text) the view's top-left in the default style's height.
+void
+TParagraphView::OffsetToBounds(long offset, Rect* bounds)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	long textLength = TextLength();
+	if (offset < 0)
+		offset = 0;
+	else if (offset > textLength)
+		offset = textLength;
+	long index = FindLineContainingCharOffset(offset);
+	if (index < 0 || fLineCount == 0)
+	{
+		bounds->left = viewBounds.left;
+		bounds->top = viewBounds.top;
+		bounds->right = bounds->left;
+		long height = fLineHeight != 0 ? fLineHeight : (fLineSpacing != 0 ? fLineSpacing : 12);
+		bounds->bottom = bounds->top + height;
+		return;
+	}
+	const LineInfo& line = fLines[index];
+	RefVar textRef(Text());
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	long width = LineWidthTo(this, text, line, offset, fRunStyles, fRunLengths, fRunCount);
+	rich.ReleasePtr();
+	bounds->left = line.fBounds.left + width;
+	bounds->right = bounds->left;
+	bounds->top = line.fBounds.top;
+	bounds->bottom = line.fBounds.top + line.fAscent;		// the baseline
+}
+
+
+// ROM 0x00173b04 OffsetToCaret__14TParagraphViewFlP5TRect
+// Where the caret goes for the offset: the character's box (OffsetToBounds)
+// - past the last line's end the caret stays at that end (an offset on a
+// trailing return goes to the next line's start, NOT YET) - its left a
+// pixel in, kept inside the view's sides and its bottom (the baseline)
+// inside the view unless it calculates its bounds; the rect is 2 wide.
+// Empty when the offset is outside the cached range.
+void
+TParagraphView::OffsetToCaret(long offset, Rect* caret)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	long textLength = TextLength();
+	if (offset < 0 || offset > textLength)
+	{
+		SetEmptyRect(caret);
+		return;
+	}
+	if (fLineCount > 0)
+	{
+		long lastEnd = fLines[fLineCount - 1].fEnd;
+		if (offset > lastEnd)
+			offset = lastEnd;
+	}
+	OffsetToBounds(offset, caret);
+	long left = caret->left - 1;
+	if (left < viewBounds.left)
+		left = viewBounds.left;
+	if (left > viewBounds.right - 3)
+		left = viewBounds.right - 3;
+	caret->left = (short) left;
+	caret->right = (short) (left + 2);
+	if (!fCalculateBounds && caret->bottom > viewBounds.bottom)
+		caret->bottom = viewBounds.bottom;
+}
+
+
+// ROM 0x00179550 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc
+// The character offset for a point: the line whose box holds the point's
+// v (the last for a point below, the first for one above), and within it
+// the character boundary nearest the point's h (host: the prefixes
+// measured; the ROM walks its text objects).
+long
+TParagraphView::PointToOffset(const Point& pt)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	if (fLineCount == 0)
+		return 0;
+	long index = fLineCount - 1;
+	for (long i = 0; i < fLineCount; i++)
+		if (pt.v < fLines[i].fBounds.bottom)
+		{
+			index = i;
+			break;
+		}
+	const LineInfo& line = fLines[index];
+	RefVar textRef(Text());
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	long best = line.fStart;
+	long bestDistance = 0x7fffffff;
+	long end = line.fEnd;
+	if (end > line.fStart && line.fEndsWithSpace)
+		end--;
+	for (long offset = line.fStart; offset <= end; offset++)
+	{
+		long x = line.fBounds.left + LineWidthTo(this, text, line, offset, fRunStyles, fRunLengths, fRunCount);
+		long distance = x > pt.h ? x - pt.h : pt.h - x;
+		if (distance < bestDistance)
+		{
+			bestDistance = distance;
+			best = offset;
+		}
+	}
+	rich.ReleasePtr();
+	return best;
+}
+
+
+// ROM 0x001736f8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
+// The caret rect for a tap: OffsetToCaret(0) for an empty text, else the
+// caret at the character nearest the point (PointToOffset; the ROM's
+// PointToWordBoundary, and a point below the paragraph puts the caret
+// on a new line when the view calculates its bounds - NOT YET).
+void
+TParagraphView::PointToCaret(Point& pt, Rect* caret, Rect* /*bounds*/)
+{
+	if (TextLength() == 0)
+	{
+		OffsetToCaret(0, caret);
+		return;
+	}
+	OffsetToCaret(PointToOffset(pt), caret);
 }
 
 

@@ -8,7 +8,9 @@
 				vars.userConfiguration, vars.displayParams) and the root view
 				made over the screen; the NewtonScript functions
 				ScreenSnapshot(path) (the display written as a PGM, or a PBM
-				for a .pbm path), ScreenWidth(), ScreenHeight().  What
+				for a .pbm path), ScreenWidth(), ScreenHeight(),
+				KeyEvent(keyCode, isDown) and KeyboardConnect(connected) (the
+				hardware keyboard's events, as the keyboard tool sends them).  What
 				TNotebook::InitToolbox and the boot's NewtonScript do on the
 				MessagePad; the event loop is NOT YET.
 */

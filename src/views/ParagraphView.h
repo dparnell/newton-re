@@ -13,9 +13,13 @@
 				ROM's object is 0xd0 bytes and caches the lines (LineInfo)
 				and the drawn text objects; the host keeps the lines.
 
-				Display only.  NOT YET RECONSTRUCTED: editing (the caret,
-				insertion, the hilites, ink words, the recogniser's word
-				and gesture handling, the edit commands), the tab stops
+				Display, and the caret: the paragraph can be the key view -
+				SetCaretOffset keeps its caret offset (fCaretOffset), and
+				OffsetToCaret/PointToCaret place the caret from the line
+				cache (host: the text measured up to the offset; the ROM
+				asks its text objects - CharBounds).  NOT YET RECONSTRUCTED:
+				editing (insertion, the hilites, ink words, the recogniser's
+				word and gesture handling, the edit commands), the tab stops
 				(tabs draw as characters), the text objects (each line is
 				laid out from the text when drawn), the bounds recalculation
 				of vCalculateBounds paragraphs (the lines are all laid out;
@@ -66,6 +70,12 @@ public:
 	virtual void	SetupDone(void);									// ROM 0x00181608 SetupDone__14TParagraphViewFv
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016b14c RealDraw__14TParagraphViewFR5TRect
 	virtual void	SetBounds(const Rect& bounds);						// ROM 0x00180418 SetBounds__14TParagraphViewFRC5TRect
+	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x00181008 SetCaretOffset__14TParagraphViewFPlT1
+	virtual Ref		GetSelection(void);									// ROM 0x00181080 GetSelection__14TParagraphViewFv
+	virtual void	SetSelection(RefArg selection, long* offset, long* length);	// ROM 0x001811a8 SetSelection__14TParagraphViewFRC6RefVarPlT2
+	virtual void	ActivateSelection(Boolean on);						// ROM 0x00181308 ActivateSelection__14TParagraphViewFUc
+	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00173b04 OffsetToCaret__14TParagraphViewFlP5TRect
+	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001736f8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
 	Ref			Text(void);												// ROM 0x00183034 Text__14TParagraphViewFv
 	Ref			Styles(void);											// ROM 0x00183478 Styles__14TParagraphViewFv
@@ -78,6 +88,11 @@ public:
 	void		RefillAllCaches(void);									// ROM 0x0016e28c RefillAllCaches__14TParagraphViewFv
 	void		FillAllCaches(void);									// ROM 0x0016dc68 FillAllCaches__14TParagraphViewFPs
 	void		OffsetCachedBounds(Point& delta);						// ROM 0x0016b94c OffsetCachedBounds__14TParagraphViewFR6TPoint
+	long		FindLineContainingCharOffset(long offset);				// ROM 0x0017a728 FindLineContainingCharOffset__14TParagraphViewFl (host: the line's index, -1 for none)
+	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00179f50 OffsetToBounds__14TParagraphViewFlP5TRect
+	long		PointToOffset(const Point& pt);							// ROM 0x00179550 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc (host: the nearest character)
+	void		FlushWordAtCaret(void);									// ROM 0x00176cac FlushWordAtCaret__14TParagraphViewFv
+	long		TextLength(void);										// the text's characters (host)
 
 	long		LineCount(void) const				{ return fLineCount; }
 	const LineInfo&	Line(long index) const			{ return fLines[index]; }
@@ -89,6 +104,7 @@ public:
 	long		fLineHeight;		// +0x3c  the default style's height (ascent + descent + leading), then the last line's
 	Rect		fCachedBounds;		// +0x40  the bounds the lines were laid out in
 	Boolean		fCalculateBounds;	// +0x58  vCalculateBounds is set
+	long		fCaretOffset;		// +0x60  the caret's character offset (SetCaretOffset)
 	RefStruct	fWordBreakTable;	// +0x64  the locale's
 	RefStruct	fLineBreakTable;	// +0x68
 	LineInfo*	fLines;				// +0x74  the line cache (nil until made)

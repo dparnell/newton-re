@@ -22,6 +22,7 @@
 #include "Application.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "ROMConstants.h"
 #include "NewtonTime.h"
 #include "CompMath.h"
 #include "Rects.h"
@@ -340,6 +341,154 @@ FSetPopupX(RefArg rcvr)
 	if (view != nil)
 		gRootView->SetPopup(view, true);
 	return NILREF;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   k e y   v i e w
+------------------------------------------------------------------------------*/
+
+// ROM 0x001f0288 FSetKeyView__FRC6RefVarN21
+// SetKeyView(view, offsetOrInfo): the view (a name from the context; nil
+// clears the key view) made the key view with a paragraph caret info of
+// the offset (nil: 0) and no length, or with the caret info frame given.
+static Ref
+FSetKeyView(RefArg rcvr, RefArg name, RefArg offsetOrInfo)
+{
+	TView* view = nil;
+	if (NOTNIL(name))
+		view = GetView(rcvr, name);
+	if (ISINT(offsetOrInfo) || ISNIL(offsetOrInfo))
+	{
+		RefVar info(Clone(RefVar(Rcanonicalparacaretinfo)));
+		SetFrameSlot(info, RSSYMoffset, RefVar(MAKEINT(ISNIL(offsetOrInfo) ? 0 : RINT(offsetOrInfo))));
+		SetFrameSlot(info, RSSYMlength, RefVar(MAKEINT(0)));
+		gRootView->SetKeyViewSelection(view, info, true);
+	}
+	else
+		gRootView->SetKeyViewSelection(view, offsetOrInfo, true);
+	return NILREF;
+}
+
+
+// ROM 0x001f039c FGetKeyView
+static Ref
+FGetKeyView(RefArg /*rcvr*/)
+{
+	return gRootView->fCaretView != nil ? (Ref) gRootView->fCaretView->fContext : NILREF;
+}
+
+
+// ROM 0x001f0444 FGetCaretBox
+// The caret's rectangle as a bounds frame with the key view and its
+// offset (-1 for a selection); nil when no caret shows.
+static Ref
+FGetCaretBox(RefArg /*rcvr*/)
+{
+	TView* view = gRootView->fCaretView;
+	Rect box;
+	gRootView->GetCaretRect(&box);
+	if (view == nil || EmptyRect(&box))
+		return NILREF;
+	RefVar result(ToObject(box));
+	SetFrameSlot(result, RSSYMview, view->fContext);
+	SetFrameSlot(result, RSSYMoffset, RefVar(MAKEINT(gRootView->fCaretLength == 0 ? gRootView->fCaretOffset : -1)));
+	return result;
+}
+
+
+// ROM 0x001f12ac FGetCaretInfo
+// {view: the key view's context, info: its selection}; nil for none.
+static Ref
+FGetCaretInfo(RefArg /*rcvr*/)
+{
+	TView* view = gRootView->fCaretView;
+	if (view == nil)
+		return NILREF;
+	RefVar info(Clone(RefVar(Rcanonicalcaretinfo)));
+	SetFrameSlot(info, RSSYMview, view->fContext);
+	SetFrameSlot(info, RSSYMinfo, RefVar(view->GetSelection()));
+	return info;
+}
+
+
+// ROM 0x001f0500 FSetRemoteWriting
+static Ref
+FSetRemoteWriting(RefArg /*rcvr*/, RefArg on)
+{
+	gRootView->SetRemoteWriting(NOTNIL(on));
+	return NILREF;
+}
+
+
+// ROM 0x001f0534 FGetRemoteWriting
+static Ref
+FGetRemoteWriting(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gRootView->GetRemoteWriting());
+}
+
+
+// ROM 0x001f0560 FKeyboardConnected
+static Ref
+FKeyboardConnected(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gRootView->KeyboardConnected());
+}
+
+
+// ROM 0x001f058c FCommandKeyboardConnected
+static Ref
+FCommandKeyboardConnected(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gRootView->CommandKeyboardConnected());
+}
+
+
+// ROM 0x001b6830 FRestoreKeyView
+// RestoreKeyView(view): the newest stacked key view within it made the key view again
+static Ref
+FRestoreKeyView(RefArg /*rcvr*/, RefArg context)
+{
+	TView* view = GetView(context);
+	return MAKEBOOLEAN(gRootView->RestoreKeyView(view));
+}
+
+
+// ROM 0x001b66c4 FGetSelectionStack
+static Ref
+FGetSelectionStack(RefArg /*rcvr*/)
+{
+	return gRootView->GetSelectionStack();
+}
+
+
+// ROM 0x001f05b8 FRegisterOpenKeyboard
+// RegisterOpenKeyboard(flags): the context registered as an on-screen keyboard
+static Ref
+FRegisterOpenKeyboard(RefArg rcvr, RefArg flags)
+{
+	gRootView->RegisterKeyboard(rcvr, RINT(flags));
+	return NILREF;
+}
+
+
+// ROM 0x001f0600 FUnregisterOpenKeyboard
+static Ref
+FUnregisterOpenKeyboard(RefArg rcvr)
+{
+	return MAKEBOOLEAN(gRootView->UnregisterKeyboard(rcvr));
+}
+
+
+// ROM 0x001f1348 FViewContainsCaretView
+static Ref
+FViewContainsCaretView(RefArg /*rcvr*/, RefArg context)
+{
+	if (ISNIL(context))
+		return NILREF;
+	TView* view = FailGetView(context);
+	return MAKEBOOLEAN(gRootView->ViewContainsCaretView(view));
 }
 
 
@@ -754,6 +903,19 @@ RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
 	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);
+	RegisterNativeFunction("FSetKeyView__FRC6RefVarN21", (void*) FSetKeyView, 2);
+	RegisterNativeFunction("FGetKeyView", (void*) FGetKeyView, 0);
+	RegisterNativeFunction("FGetCaretBox", (void*) FGetCaretBox, 0);
+	RegisterNativeFunction("FGetCaretInfo", (void*) FGetCaretInfo, 0);
+	RegisterNativeFunction("FSetRemoteWriting", (void*) FSetRemoteWriting, 1);
+	RegisterNativeFunction("FGetRemoteWriting", (void*) FGetRemoteWriting, 0);
+	RegisterNativeFunction("FKeyboardConnected", (void*) FKeyboardConnected, 0);
+	RegisterNativeFunction("FCommandKeyboardConnected", (void*) FCommandKeyboardConnected, 0);
+	RegisterNativeFunction("FRestoreKeyView", (void*) FRestoreKeyView, 1);
+	RegisterNativeFunction("FGetSelectionStack", (void*) FGetSelectionStack, 0);
+	RegisterNativeFunction("FRegisterOpenKeyboard", (void*) FRegisterOpenKeyboard, 1);
+	RegisterNativeFunction("FUnregisterOpenKeyboard", (void*) FUnregisterOpenKeyboard, 0);
+	RegisterNativeFunction("FViewContainsCaretView", (void*) FViewContainsCaretView, 1);
 	RegisterNativeFunction("FTrackHiliteX", (void*) FTrackHiliteX, 1);
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);

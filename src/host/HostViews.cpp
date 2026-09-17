@@ -11,6 +11,8 @@
 #include "Fonts.h"
 #include "Text.h"
 #include "RootView.h"
+#include "Keyboard.h"
+#include "Commands.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
@@ -57,10 +59,33 @@ FScreenHeight(RefArg /*rcvr*/)
 }
 
 
+// KeyEvent(keyCode, isDown): a key of the hardware keyboard, as the
+// keyboard tool would send it (the keyboard becomes connected)
+static Ref
+FKeyEvent(RefArg /*rcvr*/, RefArg keyCode, RefArg isDown)
+{
+	KeyboardEvent event(NOTNIL(isDown) ? aeKeyDown : aeKeyUp, RINT(keyCode));
+	HandleKeyEvent(&event);
+	return NILREF;
+}
+
+
+// KeyboardConnect(connected): a keyboard plugged in or pulled out
+static Ref
+FKeyboardConnect(RefArg /*rcvr*/, RefArg connected)
+{
+	KeyboardEvent event(aeKeyboardConnected, NOTNIL(connected) ? 1 : 0);
+	HandleKeyEvent(&event);
+	return NILREF;
+}
+
+
 void
 HostRegisterViewFunctions(void)
 {
 	RefVar functions(gFunctionFrame);
+	SetFrameSlot(functions, RefVar(Intern((char*) "KeyEvent")), RefVar(MakeCFunction((void*) FKeyEvent, 2, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "KeyboardConnect")), RefVar(MakeCFunction((void*) FKeyboardConnect, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenSnapshot")), RefVar(MakeCFunction((void*) FScreenSnapshot, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenWidth")), RefVar(MakeCFunction((void*) FScreenWidth, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenHeight")), RefVar(MakeCFunction((void*) FScreenHeight, 0, nil)));

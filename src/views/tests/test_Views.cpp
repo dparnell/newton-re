@@ -18,6 +18,7 @@
 #include "DrawShape.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "Bits.h"
 #include "Application.h"
 #include "StyleRuns.h"
 #include "Rects.h"
@@ -1238,6 +1239,117 @@ TestKeyboard()
 }
 
 
+// The key view and the caret: a paragraph made the key view shows the
+// caret below its baseline at the offset; HideCaret/ShowCaret, the caret
+// moved, the selection stack, the natives, TBits.
+static void
+TestCaret()
+{
+	// TBits: the screen under a rectangle saved and put back
+	Rect box;
+	SetRect(&box, 10, 10, 22, 21);
+	Eval("ctxB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 12, top: 12, right: 20, bottom: 18}, viewFormat: 0x151})");
+	Eval("ctxB:Dirty()");
+	Refresh();
+	long inked = InkIn(10, 10, 22, 21);
+	EXPECT(inked > 0);
+	TBits bits;
+	Rect dst;
+	SetRect(&dst, 0, 0, 12, 11);		// the bits' own coordinates (as the caret's are made)
+	EXPECT(bits.Constructor(dst) && bits.rowBytes == 4 && bits.bounds.right == 12);
+	bits.CopyFromScreen(box, dst, 0, nil);
+	EXPECT(GetPixel(&bits, 1, 1) == 1 && GetPixel(&bits, 5, 5) == 0);		// the frame, a pixel outside the bounds
+	Rect all;
+	SetRect(&all, 0, 0, kWidth, kHeight);
+	EraseRect(&all);
+	EXPECT(InkIn(10, 10, 22, 21) == 0);
+	bits.Draw(dst, box, 0, nil);
+	EXPECT(InkIn(10, 10, 22, 21) == inked);
+	Eval("ctxB:Close()");
+	Refresh();
+	// a paragraph as the key view: no caret without a keyboard, then the caret at the offset
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxC2 := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 120, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"Hello World\"})");
+	Eval("ctxC2:Dirty()");
+	Refresh();
+	EXPECT(gRootView->fCaretView == nil && !gRootView->fCaretShowing);
+	gKeyboardConnected = false;
+	Eval("SetKeyView(ctxC2, 5)");
+	EXPECT(gRootView->fCaretView == p && gRootView->fCaretOffset == 5 && p->fCaretOffset == 5 && !gRootView->CaretEnabled());
+	Refresh();
+	EXPECT(!gRootView->fCaretShowing && ISNIL(Eval("GetCaretBox()")));
+	gKeyboardConnected = true;
+	EXPECT(gRootView->CaretEnabled() && !gRootView->CaretValid(nil) && gRootView->NeedsUpdate());
+	long textInk = InkIn(20, 10, 120, 22);
+	Refresh();
+	EXPECT(gRootView->fCaretShowing && gRootView->fCaretDrawnView == p && gRootView->CaretValid(nil));
+	Rect caret;
+	gRootView->GetCaretRect(&caret);
+	Rect caretBox;
+	p->OffsetToCaret(5, &caretBox);
+	EXPECT(!EmptyRect(&caret) && caret.right - caret.left == 12 && caret.bottom - caret.top == 11 && caret.left == caretBox.left - 5 && caret.top == caretBox.bottom);
+	EXPECT(caretBox.left > 40 && caretBox.left < 60 && caretBox.bottom > 18 && caretBox.bottom < 24);		// after "Hello" in espy 12, on the baseline
+	EXPECT(InkIn(caret.left, caret.top, caret.right, caret.bottom) > 10);		// the caret's triangle
+	EXPECT(InkIn(20, 10, 120, 22) == textInk);									// the text untouched
+	RefVar caretFrame(Eval("GetCaretBox()"));
+	EXPECT(NOTNIL(caretFrame) && RINT(GetFrameSlotRef(caretFrame, RSSYMleft)) == caret.left && RINT(GetFrameSlotRef(caretFrame, RSSYMoffset)) == 5 && EQRef(GetFrameSlotRef(caretFrame, RSSYMview), p->fContext));
+	EXPECT(EQRef(Eval("GetKeyView()"), p->fContext) && RINT(Eval("GetCaretInfo().info.offset")) == 5 && EQRef(Eval("GetCaretInfo().view"), p->fContext));
+	// hidden: the bits under it back; shown again by the next update
+	long caretInk = InkIn(caret.left, caret.top, caret.right, caret.bottom);
+	gRootView->HideCaret();
+	EXPECT(!gRootView->fCaretShowing && InkIn(caret.left, caret.top, caret.right, caret.bottom) == 0 && gRootView->CaretValid(nil));
+	Refresh();
+	EXPECT(!gRootView->fCaretShowing);
+	gRootView->ShowCaret();
+	EXPECT(!gRootView->CaretValid(nil));
+	Refresh();
+	EXPECT(gRootView->fCaretShowing && InkIn(caret.left, caret.top, caret.right, caret.bottom) == caretInk);
+	// moved to the start: the old place restored, the new one drawn
+	Eval("SetKeyView(ctxC2, 0)");
+	EXPECT(gRootView->fCaretOffset == 0 && !gRootView->CaretValid(nil));
+	Refresh();
+	Rect caret0;
+	gRootView->GetCaretRect(&caret0);
+	EXPECT(caret0.left == 20 - 1 - 5 + 0 || caret0.left == 20 - 5);		// the caret's left a pixel in from the text's left, kept inside the view
+	EXPECT(caret0.left < caret.left && InkIn(caret.left + 6, caret.top, caret.right, caret.bottom) == 0);
+	// a point to the caret: the character nearest a tap
+	Point pt;
+	pt.h = caretBox.left;
+	pt.v = 16;
+	Rect tapped;
+	p->PointToCaret(pt, &tapped, nil);
+	EXPECT(tapped.left == caretBox.left && p->PointToOffset(pt) == 5);
+	pt.h = 22;
+	EXPECT(p->PointToOffset(pt) == 0);
+	pt.h = 119;
+	EXPECT(p->PointToOffset(pt) == 11);
+	// the selection stack: the old key view pushed when another takes over, and restored
+	TParagraphView* q = (TParagraphView*) ViewOf("ctxC3 := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 50, right: 120, bottom: 70}, viewJustify: 0, viewFont: espy12, text: \"Second\", activated: [], viewCaretActivateScript: func(on) AddArraySlot(activated, on)})");
+	Eval("ctxC3:Dirty()");
+	Eval("SetKeyView(ctxC3, 3)");
+	EXPECT(gRootView->fCaretView == q && RINT(Eval("Length(GetSelectionStack())")) == 2 && EQRef(Eval("GetSelectionStack()[0]"), p->fContext) && RINT(Eval("GetSelectionStack()[1].offset")) == 0);
+	EXPECT(RINT(Eval("Length(ctxC3.activated)")) == 1 && NOTNIL(Eval("ctxC3.activated[0]")));
+	Refresh();
+	gRootView->GetCaretRect(&caret);
+	EXPECT(gRootView->fCaretShowing && caret.top > 50);
+	Eval("SetKeyView(nil, nil)");
+	EXPECT(gRootView->fCaretView == nil && RINT(Eval("Length(GetSelectionStack())")) == 4 && RINT(Eval("Length(ctxC3.activated)")) == 2 && ISNIL(Eval("ctxC3.activated[1]")));
+	Refresh();
+	EXPECT(!gRootView->fCaretShowing && InkIn(caret.left, caret.top, caret.right, caret.bottom) == 0);
+	EXPECT(NOTNIL(Eval("RestoreKeyView(ctxC3)")) && gRootView->fCaretView == q && gRootView->fCaretOffset == 3 && RINT(Eval("Length(GetSelectionStack())")) == 4);		// (the ROM leaves the entry)
+	EXPECT(NOTNIL(Eval("ViewContainsCaretView(ctxC3)")) && ISNIL(Eval("ViewContainsCaretView(ctxC2)")));
+	// closing the key view forgets it (CaretViewGone: the stacked one comes back)
+	Eval("ctxC3:Close()");
+	Refresh();
+	EXPECT(gRootView->fCaretView == p && gRootView->fCaretOffset == 0);
+	Eval("SetKeyView(nil, nil)");
+	Eval("ctxC2:Close()");
+	Refresh();
+	gKeyboardConnected = false;
+	Eval("SetLength(GetSelectionStack(), 0)");
+	EXPECT(MapIs(ExpWhite, "caret closed"));
+}
+
+
 static void
 TestIdlers()
 {
@@ -1423,6 +1535,7 @@ main()
 		TestCommands();
 		TestHilite();
 		TestKeyboard();
+		TestCaret();
 		TestIdlers();
 		TestPickView();
 	}

@@ -5,10 +5,16 @@
 				update regions - up to three dirty regions, each with the
 				view that will paint its background (the "filler": a filled
 				view, or the common parent of the views that dirtied it) -
-				and redraws them (Update); the caret, key view, popup,
-				default button and modal view (mostly NOT YET RECONSTRUCTED:
-				the pointers are kept and cleared); the idlers (NOT YET); the
-				clipboards (NOT YET: none).  gRootView is the one instance;
+				and redraws them (Update); the key view and its caret (the
+				view SetKeyView names, with a character offset and a
+				selection length; the caret - the ROM's caret bitmaps - is
+				drawn at the offset (the view's OffsetToCaret) over the
+				screen with the bits under it saved in a TBits, and taken
+				away and put back by Update, HideCaret/ShowCaret and
+				RestoreBitsUnderCaret; the selection stack of the earlier
+				key views), the popup, default button and modal view; the
+				idlers; the clipboards (NOT YET: none).  gRootView is the one
+				instance;
 				its context is a clone of Rrootcontext with the root template
 				as its _proto.
 
@@ -32,6 +38,7 @@
 #endif
 
 class CDynamicArray;
+class TBits;
 
 // a dirty region and the view that paints its background
 struct TUpdateRegion
@@ -83,6 +90,36 @@ public:
 	Boolean		ViewContainsCaretView(TView* view);						// ROM 0x002635d0 ViewContainsCaretView__FP5TView
 	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b7bb0 SetPopup__9TRootViewFP5TViewUc
 	TView*		GetClipboard(TView* view);								// ROM 0x001b7e6c GetClipboard__9TRootViewFP5TView
+	// the key view and the caret
+	void		SetKeyView(TView* view, long offset, long length, Boolean noSelection);	// ROM 0x001b608c SetKeyView__9TRootViewFP5TViewlT2Uc
+	void		SetKeyViewSelection(TView* view, RefArg selection, Boolean check);	// ROM 0x001b5fbc SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
+	void		CommonSetKeyView(TView* view, long offset, long length);	// ROM 0x001b6174 CommonSetKeyView__9TRootViewFP5TViewlT2
+	void		HoldPendingKeyView(RefArg view, RefArg info);			// ROM 0x001b4198 HoldPendingKeyView__9TRootViewFRC6RefVarT1
+	void		ActivatePendingKeyView(void);							// ROM 0x001b41bc ActivatePendingKeyView__9TRootViewFv
+	void		PushSelection(TView* view, RefArg info);				// ROM 0x001b69a8 PushSelection__9TRootViewFP5TViewRC6RefVar
+	Ref			PopSelection(void);										// ROM 0x001b6868 PopSelection__9TRootViewFv
+	void		CleanSelectionStack(TView* view, Boolean trim);			// ROM 0x001b6588 CleanSelectionStack__9TRootViewFP5TViewUc
+	Ref			GetSelectionStack(void);								// ROM 0x001b66b8 GetSelectionStack__9TRootViewFv
+	TView*		FindRestorableKeyView(TView* view, ULong* index);		// ROM 0x001b66d4 FindRestorableKeyView__9TRootViewFP5TViewPUl
+	Boolean		RestoreKeyView(TView* view);							// ROM 0x001b678c RestoreKeyView__9TRootViewFP5TView
+	Boolean		GetPreserveHilites(void);								// ROM 0x001b6a34 GetPreserveHilites__9TRootViewFv
+	void		SetPreserveHilites(Boolean preserve);					// ROM 0x001b6a20 SetPreserveHilites__9TRootViewFUc
+	Boolean		GetRemoteWriting(void);									// ROM 0x001b6f44 GetRemoteWriting__9TRootViewFv
+	void		SetRemoteWriting(Boolean on);							// ROM 0x001b6f6c SetRemoteWriting__9TRootViewFUc
+	Boolean		CaretEnabled(void);										// ROM 0x001b707c CaretEnabled__9TRootViewFv
+	Boolean		CaretValid(Point* pt);									// ROM 0x001b70cc CaretValid__9TRootViewFP6TPoint
+	void		GetCaretPoint(Point* pt);								// ROM 0x001b72a0 GetCaretPoint__9TRootViewFP6TPoint
+	void		GetCaretRect(Rect* rect);								// ROM 0x001b7314 GetCaretRect__9TRootViewFP5TRect
+	void		DrawCaret(Point pt);									// ROM 0x001b745c DrawCaret__9TRootViewF6TPoint
+	void		RestoreBitsUnderCaret(void);							// ROM 0x001b7698 RestoreBitsUnderCaret__9TRootViewFv
+	void		HideCaret(void);										// ROM 0x001b7adc HideCaret__9TRootViewFv
+	void		ShowCaret(void);										// ROM 0x001b7b0c ShowCaret__9TRootViewFv
+	void		DirtyCaret(void);										// ROM 0x001b7b6c DirtyCaret__9TRootViewFv
+	void		FindDefaultButtonAndCaretSlip(TView* view, TView** button, TView** slip);	// ROM 0x001b6bac
+	void		UpdateDefaultButtonAndCaretSlip(void);					// ROM 0x001b6c60 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
+	long		GetKeyboardIndex(RefArg context);						// ROM 0x001b6d5c GetKeyboardIndex__9TRootViewFRC6RefVar
+	void		RegisterKeyboard(RefArg context, ULong flags);			// ROM 0x001b6a3c RegisterKeyboard__9TRootViewFRC6RefVarUl
+	Boolean		UnregisterKeyboard(RefArg context);						// ROM 0x001b6b44 UnregisterKeyboard__9TRootViewFRC6RefVar
 	Boolean		KeyboardConnected(void);								// ROM 0x001b6fac KeyboardConnected__9TRootViewFv
 	Boolean		CommandKeyboardConnected(void);							// ROM 0x001b6fd4 CommandKeyboardConnected__9TRootViewFv
 	Boolean		KeyboardActive(void);									// ROM 0x001b6fe4 KeyboardActive__9TRootViewFv
@@ -111,10 +148,20 @@ public:
 	Boolean			fDirtyFlag;			// +0x5c  a gesture or a command to the children changed something (the ROM's event loop looks)
 	RefStruct		fKeyboards;			// +0x60  the registered on-screen keyboards: [context, flags] pairs (flags: 1 shows the modifiers, 2 hears viewCaretChangedScript, 4 active) - the registry NOT YET
 	Boolean			fPassthruKeyboard;	// +0x64  a keyboard connected through a soft keyboard (ConnectPassthruKeyboard)
-	TView*			fCaretView;			// +0x68  the key view with the caret (NOT YET)
+	TView*			fCaretView;			// +0x68  the key view
+	long			fCaretOffset;		// +0x6c  the caret's character offset in it
+	long			fCaretLength;		// +0x70  the selection's length (the caret shows only for 0)
 	TView*			fDefaultButton;		// +0x74  drawn with its marks; three pixels of outer bounds
 	TView*			fCaretSlip;			// +0x78  the view whose hilite frame is thick
-	RefStruct		fSelectionStack;	// +0x7c  the saved key view selections (NOT YET)
+	RefStruct		fSelectionStack;	// +0x7c  the earlier key views' [context, caret info] pairs
+	Boolean			fPreserveHilites;	// +0x80  a key view change keeps the old view's hilites
+	TBits*			fCaretBits;			// +0x84  the screen under the caret
+	Boolean			fCaretShowing;		// +0x88  the caret is on the screen
+	Point			fCaretPoint;		// +0x8c  where (h = -0x8000: nowhere)
+	TView*			fCaretDrawnView;	// +0x90  the view it was drawn for
+	long			fCaretHidden;		// +0x94  HideCarets outstanding
+	RefStruct		fPendingKeyView;	// +0x98  a key view to activate later (HoldPendingKeyView)
+	RefStruct		fPendingKeyInfo;	// +0x9c  ... and its caret info
 	TView*			fModalView;			// host: SetModalView's view (the ROM keeps it in the modal dialog code)
 };
 

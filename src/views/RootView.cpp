@@ -9,6 +9,13 @@
 
 #include "RootView.h"
 #include "Keyboard.h"
+#include "Bits.h"
+#include "ParagraphView.h"
+#include "Pictures.h"
+#include "Regions.h"
+#include "Unicode.h"
+#include "Locale.h"
+#include "Interpreter.h"
 #include "Commands.h"
 #include "Application.h"
 #include "Rects.h"
@@ -46,8 +53,7 @@ TRootView::DerivedFrom(long id) const
 // the shared empty view list, the selection stack and keyboard arrays,
 // the context (a clone of Rrootcontext protoed to the template) built as
 // a view whose parent is itself, and the whole screen dirtied.  NOT YET
-// RECONSTRUCTED: the recognition's InitCorrection, the keyboard gestalt,
-// the caret's saved bits (TBits).
+// RECONSTRUCTED: the recognition's InitCorrection, the keyboard gestalt.
 void
 TRootView::Constructor(RefArg templ)
 {
@@ -66,6 +72,18 @@ TRootView::Constructor(RefArg templ)
 	fPopup = nil;
 	fPassthruKeyboard = false;
 	fCaretView = nil;
+	fCaretOffset = 0;
+	fCaretLength = 0;
+	fPreserveHilites = false;
+	fCaretBits = new TBits;
+	Rect caretBox;
+	SetRect(&caretBox, 0, 0, 12, 11);
+	fCaretBits->Constructor(caretBox);
+	fCaretShowing = false;
+	fCaretPoint.h = -0x8000;
+	fCaretPoint.v = 0;
+	fCaretDrawnView = nil;
+	fCaretHidden = 0;
 	fDefaultButton = nil;
 	fCaretSlip = nil;
 	fModalView = nil;
@@ -210,6 +228,18 @@ TRootView::RemoveAllViews(void)
 	fPopup = nil;
 	fPassthruKeyboard = false;
 	fCaretView = nil;
+	fCaretOffset = 0;
+	fCaretLength = 0;
+	fPreserveHilites = false;
+	fCaretBits = new TBits;
+	Rect caretBox;
+	SetRect(&caretBox, 0, 0, 12, 11);
+	fCaretBits->Constructor(caretBox);
+	fCaretShowing = false;
+	fCaretPoint.h = -0x8000;
+	fCaretPoint.v = 0;
+	fCaretDrawnView = nil;
+	fCaretHidden = 0;
 	fDefaultButton = nil;
 	fCaretSlip = nil;
 	fHiliter = nil;
@@ -444,13 +474,19 @@ TRootView::SmartScreenDirty(const Rect& rect)
 
 
 // ROM 0x001b4870 NeedsUpdate__9TRootViewFv
-// Whether Update has anything to do: a dirty screen rect or an update
-// region (NOT YET: the caret's validity, the default button and caret
-// slip having changed).
+// Whether Update has anything to do: a dirty screen rect, the caret
+// wrong, the default button or caret slip changed, or an update region.
 Boolean
 TRootView::NeedsUpdate(void)
 {
 	if (!EmptyRect(&fDirtyScreen))
+		return true;
+	if (!CaretValid(nil))
+		return true;
+	TView* button;
+	TView* slip;
+	FindDefaultButtonAndCaretSlip(fCaretView, &button, &slip);
+	if (fCaretSlip != slip || fDefaultButton != button)
 		return true;
 	for (long i = 0; i < kUpdateRegionCount; i++)
 		if (fUpdateRegions[i].fFiller != nil)
@@ -460,12 +496,13 @@ TRootView::NeedsUpdate(void)
 
 
 // ROM 0x001b4914 Update__9TRootViewFP5TRect
-// The update regions redrawn (a rect given is invalidated first) under
-// one StartDrawing/StopDrawing (the display shows it all at the end, not
-// in slow motion): what the screen was told is dirty (fDirtyScreen, the
-// inker's) flushed first, then each slot's region, less what the port
-// cannot show (which stays pending), drawn through TView::Update with
-// its filler.  NOT YET RECONSTRUCTED: the caret hidden and redrawn.
+// The screen brought up to date: the rectangle (when given) invalidated
+// first; the caret checked (CaretValid) - it is taken off the screen
+// when it is wrong or a dirty region covers it - and the default button
+// and caret slip found; then, under one drawing bracket, the dirty
+// screen rectangle shown (SmartScreenDirty's) and each update region
+// less the port's visible region (the ROM: clipRgn) painted by its
+// filler; the caret drawn again at its point when it was taken away.
 void
 TRootView::Update(Rect* rect)
 {
@@ -476,8 +513,25 @@ TRootView::Update(Rect* rect)
 	}
 	if (!NeedsUpdate())
 		return;
+	Point caretPt;
+	Boolean caretInvalid = !CaretValid(&caretPt);
+	UpdateDefaultButtonAndCaretSlip();
 	if (!gSlowMotion)
 		StartDrawing(nil, nil);
+	if (!caretInvalid && fCaretShowing)
+	{
+		// the caret is where it should be, unless a dirty region covers it
+		Rect caretRect;
+		GetCaretRect(&caretRect);
+		for (long i = 0; i < kUpdateRegionCount; i++)
+			if (fUpdateRegions[i].fFiller != nil && RectInRgn(&caretRect, fUpdateRegions[i].fRegion))
+			{
+				caretInvalid = true;
+				break;
+			}
+	}
+	if (fCaretShowing && caretInvalid)
+		RestoreBitsUnderCaret();
 	if (!EmptyRect(&fDirtyScreen))
 	{
 		StartDrawing(nil, &fDirtyScreen);
@@ -501,6 +555,8 @@ TRootView::Update(Rect* rect)
 		DisposeCachedRgn(dirty);
 		pending.Take(NewCachedRgn());
 	}
+	if (caretInvalid && CaretEnabled())
+		DrawCaret(caretPt);
 	if (!gSlowMotion)
 		StopDrawing(nil, nil);
 }
@@ -535,13 +591,736 @@ TRootView::ForgetAboutView(TView* view)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   k e y   v i e w   a n d   t h e   c a r e t
+------------------------------------------------------------------------------*/
+
+// the caret's rectangle from its point: 12 wide from 5 left of the
+// point, 11 down from it
+// ROM 0x001b7210 CaretPointToRect__FR6TPointP5TRect
+static void
+CaretPointToRect(const Point& pt, Rect* rect)
+{
+	if (pt.h == -0x8000)
+	{
+		SetEmptyRect(rect);
+		return;
+	}
+	rect->left = pt.h - 5;
+	rect->right = rect->left + 12;
+	rect->top = pt.v;
+	rect->bottom = rect->top + 11;
+}
+
+
+// the caret's own no-place point
+static const short kNoCaret = -0x8000;
+
+// the old key view is usable: there and not being deleted
+static inline Boolean
+KeyViewUsable(TView* view)
+{
+	return view != nil && (view->fFlags & vIsBeingDeleted) != vIsBeingDeleted;
+}
+
+
+// ROM 0x001b5f24 DoAutoShift__FP14TParagraphViewl
+// The soft keyboards' shift set for a paragraph's caret: down at the
+// start of the text or after white space, up otherwise (KeyIn(shift) when
+// that changes it); ==> the character KeyIn answered.
+static UniChar
+DoAutoShift(TParagraphView* view, long offset)
+{
+	Boolean shifted = KeyDown(kShiftKey, false);
+	Boolean wantShift = offset == 0;
+	if (offset != 0)
+	{
+		RefVar text(view->Text());
+		const UniChar* chars = (const UniChar*) BinaryData(text);
+		if (IsWhiteSpace(chars[offset - 1]))
+			wantShift = true;
+	}
+	if (wantShift != shifted)
+		return KeyIn(kShiftKey, wantShift, nil);
+	return shifted;
+}
+
+
+// ROM 0x001b608c SetKeyView__9TRootViewFP5TViewlT2Uc
+// The key view set with a caret offset and selection length: a usable
+// old key view (there, not being deleted) that is not the new one has
+// its selection (GetSelection) pushed on the selection stack; the new
+// view, when there is one, has the offset and length fixed by its
+// SetCaretOffset (and with flushWord an old paragraph's word at the
+// caret is flushed first); then CommonSetKeyView.
+void
+TRootView::SetKeyView(TView* view, long offset, long length, Boolean flushWord)
+{
+	TView* old = fCaretView;
+	Boolean usable = KeyViewUsable(old);
+	if (usable && old != view)
+		PushSelection(old, RefVar(old->GetSelection()));
+	if (view != nil)
+	{
+		if (flushWord && usable && old->DerivedFrom(clParagraphView))
+			((TParagraphView*) old)->FlushWordAtCaret();
+		view->SetCaretOffset(&offset, &length);
+	}
+	CommonSetKeyView(view, offset, length);
+}
+
+
+// ROM 0x001b5fbc SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
+// The key view set from a caret info frame ({offset, length} for a
+// paragraph; the view's SetSelection reads it): with pushOld a usable
+// old key view that is not the new one has its selection pushed; nil
+// clears the key view.
+void
+TRootView::SetKeyViewSelection(TView* view, RefArg selection, Boolean pushOld)
+{
+	TView* old = fCaretView;
+	if (pushOld && KeyViewUsable(old) && old != view)
+		PushSelection(old, RefVar(old->GetSelection()));
+	long offset = 0;
+	long length = 0;
+	if (view != nil)
+		view->SetSelection(selection, &offset, &length);
+	CommonSetKeyView(view, offset, length);
+}
+
+
+// ROM 0x001b6174 CommonSetKeyView__9TRootViewFP5TViewlT2
+// The key view, offset and length stored.  When the view changes: unless
+// hilites are being preserved, a usable old view is told
+// ActivateSelection(false) - except when old and new are paragraphs of
+// the same hilite (edit) view, or one is the other's hilite view; the
+// new view is told ActivateSelection(true).  The hiliter becomes the
+// view (a paragraph's hilite view when it has one) for a selection, nil
+// for none.  Without a keyboard connected and without a selection, the
+// soft keyboards' shift follows the view: a vCapsRequired edit view
+// presses it, a vCapsRequired paragraph gets DoAutoShift, another
+// paragraph releases it.  The registered keyboards that listen (flags
+// bit 1) get viewCaretChangedScript([context, offset, length]) (an
+// array of nils for no view).
+void
+TRootView::CommonSetKeyView(TView* view, long offset, long length)
+{
+	TView* old = fCaretView;
+	fCaretView = view;
+	fCaretOffset = offset;
+	fCaretLength = length;
+	if (view != old)
+	{
+		if (!fPreserveHilites && KeyViewUsable(old))
+		{
+			Boolean deactivate = true;
+			if (view != nil)
+			{
+				Boolean viewIsPara = view->DerivedFrom(clParagraphView);
+				Boolean oldIsPara = old->DerivedFrom(clParagraphView);
+				if (viewIsPara && oldIsPara)
+				{
+					TView* h1 = ((TDataView*) old)->GetHiliteView();
+					TView* h2 = ((TDataView*) view)->GetHiliteView();
+					if (h1 != nil && h2 != nil && h1 == h2)
+						deactivate = false;
+				}
+				if (deactivate && viewIsPara && ((TDataView*) view)->GetHiliteView() == old)
+					deactivate = false;
+				if (deactivate && oldIsPara && ((TDataView*) old)->GetHiliteView() == view)
+					deactivate = false;
+			}
+			if (deactivate)
+				old->ActivateSelection(false);
+		}
+		if (view != nil)
+			view->ActivateSelection(true);
+	}
+	if (view == nil || length == 0)
+		fHiliter = nil;
+	else if (length > 0)
+	{
+		TView* hiliter = view;
+		if (view->DerivedFrom(clParagraphView))
+		{
+			TView* h = ((TDataView*) view)->GetHiliteView();
+			if (h != nil)
+				hiliter = h;
+		}
+		fHiliter = hiliter;
+	}
+	if (view != nil && !KeyboardConnected() && length == 0)
+	{
+		if (view->fFlags & vCapsRequired)
+		{
+			if (view->DerivedFrom(clEditView))
+			{
+				if (!KeyDown(kShiftKey, false))
+					KeyIn(kShiftKey, true, nil);
+			}
+			else if (view->DerivedFrom(clParagraphView))
+				DoAutoShift((TParagraphView*) view, offset);
+		}
+		else if (view->DerivedFrom(clParagraphView) && KeyDown(kShiftKey, false))
+			KeyIn(kShiftKey, false, nil);
+	}
+	if (NOTNIL(fKeyboards))
+	{
+		RefVar args;
+		long count = Length(fKeyboards) / 2;
+		for (long i = 0; i < count; i++)
+		{
+			if ((RINT(GetArraySlotRef(fKeyboards, i * 2 + 1)) & 2) == 0)
+				continue;
+			if (ISNIL(args))
+			{
+				args = AllocateArray(RSSYMarray, 3);
+				if (view != nil)
+				{
+					SetArraySlotRef(args, 0, view->fContext);
+					SetArraySlotRef(args, 1, MAKEINT(offset));
+					SetArraySlotRef(args, 2, MAKEINT(length));
+				}
+			}
+			RefVar keyboard(GetArraySlotRef(fKeyboards, i * 2));
+			DoProtoMessageIfDefined(keyboard, RSSYMviewcaretchangedscript, args, nil);
+		}
+	}
+}
+
+
+// ROM 0x001b4198 HoldPendingKeyView__9TRootViewFRC6RefVarT1
+void
+TRootView::HoldPendingKeyView(RefArg view, RefArg info)
+{
+	fPendingKeyView = view;
+	fPendingKeyInfo = info;
+}
+
+
+// ROM 0x001b41bc ActivatePendingKeyView__9TRootViewFv
+// The held key view made the key view (with its caret info), and
+// forgotten.
+void
+TRootView::ActivatePendingKeyView(void)
+{
+	TView* view = GetView(fPendingKeyView);
+	if (view != nil)
+		SetKeyViewSelection(view, fPendingKeyInfo, true);
+	fPendingKeyView = NILREF;
+	fPendingKeyInfo = NILREF;
+}
+
+
+// ROM 0x001b6588 CleanSelectionStack__9TRootViewFP5TViewUc
+// The selection stack's entries for views that are gone (no viewCObject)
+// or for the view given removed; with trim a stack of twenty or more
+// loses its oldest ten.
+void
+TRootView::CleanSelectionStack(TView* view, Boolean trim)
+{
+	RefVar context;
+	if (view != nil)
+		context = view->fContext;
+	for (long i = 0; i < Length(fSelectionStack); )
+	{
+		RefVar entry(GetArraySlotRef(fSelectionStack, i));
+		if (ISNIL(GetProtoVariable(entry, RSSYMviewcobject, nil)) || EQRef(entry, context))
+			ArrayRemoveCount(fSelectionStack, i, 2);
+		else
+			i += 2;
+	}
+	if (trim && Length(fSelectionStack) > 19)
+		ArrayRemoveCount(fSelectionStack, 0, 10);
+}
+
+
+// ROM 0x001b69a8 PushSelection__9TRootViewFP5TViewRC6RefVar
+// The view's context and caret info pushed (the stack cleaned first).
+void
+TRootView::PushSelection(TView* view, RefArg info)
+{
+	CleanSelectionStack(view, true);
+	long count = Length(fSelectionStack);
+	SetLength(fSelectionStack, count + 2);
+	SetArraySlotRef(fSelectionStack, count, view->fContext);
+	SetArraySlot(fSelectionStack, count + 1, info);
+}
+
+
+// ROM 0x001b6868 PopSelection__9TRootViewFv
+// The newest entry (after cleaning) as a caret info frame {view, info};
+// nil for none.
+Ref
+TRootView::PopSelection(void)
+{
+	if (Length(fSelectionStack) == 0)
+		return NILREF;
+	CleanSelectionStack(nil, false);
+	RefVar result;
+	long count = Length(fSelectionStack);
+	if (count > 0)
+	{
+		result = Clone(RefVar(Rcanonicalcaretinfo));
+		SetFrameSlot(result, RSSYMview, RefVar(GetArraySlotRef(fSelectionStack, count - 2)));
+		SetFrameSlot(result, RSSYMinfo, RefVar(GetArraySlotRef(fSelectionStack, count - 1)));
+		ArrayRemoveCount(fSelectionStack, count - 2, 2);
+	}
+	return result;
+}
+
+
+// ROM 0x001b66b8 GetSelectionStack__9TRootViewFv
+Ref
+TRootView::GetSelectionStack(void)
+{
+	return fSelectionStack;
+}
+
+
+// ROM 0x001b66d4 FindRestorableKeyView__9TRootViewFP5TViewPUl
+// The newest stacked key view within the view (the view itself or a
+// descendant); index: its place in the stack.
+TView*
+TRootView::FindRestorableKeyView(TView* view, ULong* index)
+{
+	for (long i = Length(fSelectionStack) - 2; i >= 0; i -= 2)
+	{
+		TView* stacked = GetView(RefVar(GetArraySlotRef(fSelectionStack, i)));
+		if (stacked == nil || stacked == gRootView)
+			continue;
+		for (TView* v = stacked; v != gRootView; v = v->fParent)
+			if (v == view)
+			{
+				if (index != nil)
+					*index = i;
+				return stacked;
+			}
+	}
+	return nil;
+}
+
+
+// ROM 0x001b678c RestoreKeyView__9TRootViewFP5TView
+// The newest stacked key view within the view made the key view again
+// with its caret info; ==> whether there was one.
+Boolean
+TRootView::RestoreKeyView(TView* view)
+{
+	ULong index;
+	TView* stacked = FindRestorableKeyView(view, &index);
+	if (stacked == nil)
+		return false;
+	SetKeyViewSelection(stacked, RefVar(GetArraySlotRef(fSelectionStack, index + 1)), true);
+	return true;
+}
+
+
+// ROM 0x001b6a34 GetPreserveHilites__9TRootViewFv
+Boolean
+TRootView::GetPreserveHilites(void)
+{
+	return fPreserveHilites;
+}
+
+
+// ROM 0x001b6a20 SetPreserveHilites__9TRootViewFUc
+void
+TRootView::SetPreserveHilites(Boolean preserve)
+{
+	fPreserveHilites = preserve;
+}
+
+
+// ROM 0x001b6f44 GetRemoteWriting__9TRootViewFv
+// The remoteWriting preference (a keyboard elsewhere writing here).
+Boolean
+TRootView::GetRemoteWriting(void)
+{
+	return NOTNIL(GetPreference(RSSYMremotewriting));
+}
+
+
+// ROM 0x001b6f6c SetRemoteWriting__9TRootViewFUc
+void
+TRootView::SetRemoteWriting(Boolean on)
+{
+	SetPreference(RSSYMremotewriting, RefVar(MAKEBOOLEAN(on)));
+}
+
+
+// ROM 0x001b707c CaretEnabled__9TRootViewFv
+// A caret shows for a key view without a selection when something can
+// type: remote writing, a keyboard connected, or an active on-screen
+// keyboard (flags bit 2).
+Boolean
+TRootView::CaretEnabled(void)
+{
+	if (fCaretView == nil || fCaretLength != 0)
+		return false;
+	if (GetRemoteWriting())
+		return true;
+	if (KeyboardConnected())
+		return true;
+	if (NOTNIL(fKeyboards))
+	{
+		long count = Length(fKeyboards) / 2;
+		for (long i = 0; i < count; i++)
+			if (RINT(GetArraySlotRef(fKeyboards, i * 2 + 1)) & 4)
+				return true;
+	}
+	return false;
+}
+
+
+// ROM 0x001b70cc CaretValid__9TRootViewFP6TPoint
+// Whether the caret on the screen is right: always while hidden; when no
+// caret should show, right when none shows; else the caret's point (pt
+// answers it) must be the shown caret's for the same view - a point
+// nowhere is right when nothing shows or the shown one is nowhere, and a
+// key view not visible needs nothing.
+Boolean
+TRootView::CaretValid(Point* pt)
+{
+	if (pt != nil)
+	{
+		pt->h = kNoCaret;
+		pt->v = 0;
+	}
+	if (fCaretHidden > 0)
+		return true;
+	if (!CaretEnabled())
+		return !fCaretShowing;
+	Point caret;
+	GetCaretPoint(&caret);
+	if (pt != nil)
+		*pt = caret;
+	if (caret.h == kNoCaret)
+	{
+		if (!fCaretShowing || fCaretPoint.h == kNoCaret)
+			return true;
+	}
+	if (!fCaretView->VisibleDeep())
+		return true;
+	if (fCaretShowing && fCaretDrawnView == fCaretView && fCaretPoint.h == caret.h && fCaretPoint.v == caret.v)
+		return true;
+	return false;
+}
+
+
+// ROM 0x001b72a0 GetCaretPoint__9TRootViewFP6TPoint
+// The caret's point from the key view's OffsetToCaret: the rectangle's
+// left and bottom (nowhere: h = -0x8000, as an empty rect gives).
+void
+TRootView::GetCaretPoint(Point* pt)
+{
+	Rect caret;
+	fCaretView->OffsetToCaret(fCaretOffset, &caret);
+	pt->h = caret.left;
+	pt->v = caret.bottom;
+}
+
+
+// ROM 0x001b7314 GetCaretRect__9TRootViewFP5TRect
+// Where the caret is drawn (empty when it is not).
+void
+TRootView::GetCaretRect(Rect* rect)
+{
+	if (!fCaretShowing)
+	{
+		SetEmptyRect(rect);
+		return;
+	}
+	CaretPointToRect(fCaretPoint, rect);
+}
+
+
+// ROM 0x001b7344 DrawCaretBits__FR5TRectUc
+// The caret: the outside bitmap in the rectangle (mode 3 - drawn; 1 -
+// erased), the inside one a pixel in with the other mode.
+static void
+DrawCaretBits(const Rect& rect, Boolean erase)
+{
+	Rect inside = rect;
+	InsetRect(&inside, 1, 1);
+	StartDrawing(nil, nil);
+	Rect outer = rect;
+	DrawBitmap(RefVar(Rcaretbitsoutside), &outer, erase ? 1 : 3);
+	DrawBitmap(RefVar(Rcaretbitsinside), &inside, erase ? 3 : 1);
+	StopDrawing(nil, nil);
+}
+
+
+// ROM 0x001b73dc GetCaretClipView__FP5TView
+// The view the caret is clipped to: a view that is not a paragraph, or a
+// paragraph's hilite view (its edit view, NOT YET: GetHiliteView), else
+// the paragraph's window - the first ancestor below the root that is an
+// application or floats.
+static TView*
+GetCaretClipView(TView* view)
+{
+	if (!view->DerivedFrom(clParagraphView))
+		return view;
+	// NOT YET RECONSTRUCTED: view->GetHiliteView() (TDataView: the enclosing edit view)
+	TView* v = view;
+	for ( ; ; )
+	{
+		TView* parent = v->fParent;
+		if (parent == gRootView)
+			return v;
+		if (v->fFlags & (vApplication | vFloating))
+			return v;
+		v = parent;
+	}
+}
+
+
+// ROM 0x001b745c DrawCaret__9TRootViewF6TPoint
+// The caret drawn at the point for the key view (unless a selection or
+// HideCaret): the screen under its rectangle (clipped to the port's
+// bounds) saved in fCaretBits, the port's visible region narrowed to the
+// key view's (SetupVisRgn) less what is in front of it up to its clip
+// view (NarrowVisByIntersectingObscuringSiblingsAndUncles), the bits
+// drawn, the caret remembered as showing at the point for the view; a
+// point nowhere is remembered as not showing.
+void
+TRootView::DrawCaret(Point pt)
+{
+	if (fCaretView == nil)
+		return;
+	if (fCaretLength != 0 || fCaretHidden != 0)
+		return;
+	if (pt.h == kNoCaret)
+	{
+		fCaretShowing = false;
+		fCaretPoint = pt;
+		fCaretDrawnView = fCaretView;
+		return;
+	}
+	Rect caretRect;
+	CaretPointToRect(pt, &caretRect);
+	Rect saved = caretRect;
+	GrafPort* port;
+	GetPort(&port);
+	Rect onScreen;
+	SectRect(&port->portBits.bounds, &caretRect, &onScreen);
+	if (!EmptyRect(&onScreen))
+	{
+		Rect dst = onScreen;
+		OffsetRect(&dst, -saved.left, -saved.top);		// where in the bits (the bits' bounds are 0,0-based)
+		fCaretBits->CopyFromScreen(onScreen, dst, 0, nil);
+	}
+	TView* clipView = GetCaretClipView(fCaretView);
+	TRegion savedRgn(fCaretView->SetupVisRgn());
+	TRegionVar savedVis(savedRgn);
+	fCaretView->NarrowVisByIntersectingObscuringSiblingsAndUncles(clipView, &caretRect);
+	DrawCaretBits(caretRect, false);
+	fCaretShowing = true;
+	fCaretPoint = pt;
+	fCaretDrawnView = fCaretView;
+	GetPort(&port);
+	CopyRgn(savedVis, port->visRgn);
+}
+
+
+// ROM 0x001b7698 RestoreBitsUnderCaret__9TRootViewFv
+// The saved bits put back where the caret was (the port clipped to the
+// whole screen for it); the caret no longer showing.
+void
+TRootView::RestoreBitsUnderCaret(void)
+{
+	if (!fCaretShowing)
+		return;
+	Rect caretRect;
+	GetCaretRect(&caretRect);
+	Rect src;
+	SetRect(&src, 0, 0, 12, 11);
+	GrafPort* port;
+	GetPort(&port);
+	RgnHandle savedClip = port->clipRgn;
+	RgnHandle screenRgn = NewRgn();
+	RectRgn(screenRgn, &port->portBits.bounds);		// the ROM: GetGrafInfo's screen map (the port's map here: the tests draw offscreen)
+	port->clipRgn = screenRgn;
+	fCaretBits->Draw(src, caretRect, 0, nil);
+	GetPort(&port);
+	port->clipRgn = savedClip;
+	DisposeRgn(screenRgn);
+	fCaretShowing = false;
+}
+
+
+// ROM 0x001b7adc HideCaret__9TRootViewFv
+// The caret taken off the screen and kept off (a count).
+void
+TRootView::HideCaret(void)
+{
+	if (fCaretShowing)
+		RestoreBitsUnderCaret();
+	fCaretHidden++;
+}
+
+
+// ROM 0x001b7b0c ShowCaret__9TRootViewFv
+// One HideCaret undone (the caret comes back with the next Update).
+void
+TRootView::ShowCaret(void)
+{
+	if (--fCaretHidden < 0)
+		fCaretHidden = 0;
+}
+
+
+// ROM 0x001b7b6c DirtyCaret__9TRootViewFv
+// The caret's rectangle to be redrawn, the caret no longer counted as
+// showing.
+void
+TRootView::DirtyCaret(void)
+{
+	if (!fCaretShowing)
+		return;
+	Rect caretRect;
+	GetCaretRect(&caretRect);
+	SmartInvalidate(caretRect);
+	fCaretShowing = false;
+}
+
+
+// ROM 0x001b6bac FindDefaultButtonAndCaretSlip__9TRootViewFP5TViewPP5TViewT2
+// For a key view, with a keyboard connected: the view its _defaultButton
+// variable names, and the slip - the first ancestor (the view itself
+// included) with a hilite or drag-shadow frame, or the root's child.
+void
+TRootView::FindDefaultButtonAndCaretSlip(TView* view, TView** button, TView** slip)
+{
+	TView* theButton = nil;
+	TView* theSlip = nil;
+	if (view != nil && CommandKeyboardConnected())
+	{
+		TView* named = GetView(RefVar(GetVariable(view->fContext, RSSYM_defaultbutton, nil, 0)));
+		if (named != nil)
+			theButton = named;
+		TView* v = view;
+		while (v != this)
+		{
+			theSlip = v;
+			ULong frame = v->fViewFormat & vfFrameMask;
+			if (frame == vfFrameHilite || frame == vfFrameDragShadow)
+				break;
+			v = v->fParent;
+			if (v == this)
+				break;
+		}
+		if (v == this && view == this)
+			theSlip = nil;
+	}
+	*button = theButton;
+	*slip = theSlip;
+}
+
+
+// ROM 0x001b6c60 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
+// The default button and caret slip found for the key view; a change
+// dirties the old view (when there was one) or the new (the ROM does
+// one thing per call: the old one dirtied first, the new one taken on
+// the next).
+void
+TRootView::UpdateDefaultButtonAndCaretSlip(void)
+{
+	TView* button;
+	TView* slip;
+	FindDefaultButtonAndCaretSlip(fCaretView, &button, &slip);
+	if (fDefaultButton != button)
+	{
+		if (fDefaultButton != nil)
+		{
+			fDefaultButton->Dirty(nil);
+			return;
+		}
+		fDefaultButton = button;
+		if (button != nil)
+		{
+			button->Dirty(nil);
+			return;
+		}
+	}
+	if (fCaretSlip != slip)
+	{
+		if (fCaretSlip != nil)
+		{
+			fCaretSlip->Dirty(nil);
+			return;
+		}
+		fCaretSlip = slip;
+		if (slip != nil)
+			slip->Dirty(nil);
+	}
+}
+
+
+// ROM 0x001b6d5c GetKeyboardIndex__9TRootViewFRC6RefVar
+// Where the context is in the keyboards array; -1 for not.
+long
+TRootView::GetKeyboardIndex(RefArg context)
+{
+	long count = Length(fKeyboards);
+	for (long i = 0; i < count; i += 2)
+		if (EQRef(GetArraySlotRef(fKeyboards, i), context))
+			return i;
+	return -1;
+}
+
+
+// ROM 0x001b6a3c RegisterKeyboard__9TRootViewFRC6RefVarUl
+// An on-screen keyboard's context and flags added (or its flags set).
+void
+TRootView::RegisterKeyboard(RefArg context, ULong flags)
+{
+	long index = GetKeyboardIndex(context);
+	if (index == -1)
+	{
+		index = Length(fKeyboards);
+		SetLength(fKeyboards, index + 2);
+		SetArraySlot(fKeyboards, index, context);
+	}
+	SetArraySlotRef(fKeyboards, index + 1, MAKEINT(flags));
+}
+
+
+// ROM 0x001b6b44 UnregisterKeyboard__9TRootViewFRC6RefVar
+// The keyboard removed; the caret's view asked whether it goes on
+// (CheckForCaretRemoval without a key view, the key view's DerivedFrom
+// otherwise, NOT YET); ==> whether it was registered.
+Boolean
+TRootView::UnregisterKeyboard(RefArg context)
+{
+	long index = GetKeyboardIndex(context);
+	if (index == -1)
+		return false;
+	ArrayRemoveCount(fKeyboards, index, 2);
+	if (fCaretView == nil)
+	{
+		CheckForCaretRemoval();
+		return true;
+	}
+	fCaretView->DerivedFrom(clParagraphView);
+	return true;
+}
+
+
 // ROM 0x001b420c CaretViewGone__9TRootViewFv
-// NOT YET RECONSTRUCTED: the ROM restores the key view selection the
-// selection stack holds.
+// The key view has gone: the newest stacked selection (PopSelection)
+// becomes the key view again, or there is none.
 void
 TRootView::CaretViewGone(void)
 {
-	fCaretView = nil;
+	RefVar saved(PopSelection());
+	if (ISNIL(saved))
+		SetKeyViewSelection(nil, RefVar(NILREF), false);
+	else
+	{
+		TView* view = GetView(RefVar(GetFrameSlotRef(saved, RSSYMview)));
+		SetKeyViewSelection(view, RefVar(GetFrameSlotRef(saved, RSSYMinfo)), false);
+	}
 }
 
 

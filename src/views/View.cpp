@@ -1213,9 +1213,14 @@ TView::GetSelection(void)
 
 
 // ROM 0x0026876c ActivateSelection__5TViewFUc
+// The view gains or loses the caret: its viewCaretActivateScript(on).
 void
-TView::ActivateSelection(Boolean /*on*/)
-{ }
+TView::ActivateSelection(Boolean on)
+{
+	RefVar args(AllocateArray(RSSYMarray, 1));
+	SetArraySlotRef(args, 0, MAKEBOOLEAN(on));
+	RunCacheScript(kIndexViewCaretActivateScript, args);
+}
 
 
 // ROM 0x0009f9ec DoEditCommand__5TViewFl
