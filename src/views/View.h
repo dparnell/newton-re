@@ -293,6 +293,8 @@ public:
 
 	// the context and its slots
 	Ref			DataFrame(void);										// ROM 0x00269038 DataFrame__5TViewFv
+	Ref			Hilites(void);											// ROM 0x0025fe3c Hilites__5TViewFv - the hilites slot (the view's selections)
+	Ref			FirstHilite(void);										// ROM 0x0025fef8 FirstHilite__5TViewFv - the first, or nil
 	Ref			GetProto(RefArg slot) const;							// ROM 0x00269074 GetProto__5TViewCFRC6RefVar
 	Ref			GetVar(RefArg slot) const;								// ROM 0x00269080 GetVar__5TViewCFRC6RefVar
 	Ref			GetWriteableProtoVariable(RefArg slot);					// ROM 0x00269090 GetWriteableProtoVariable__5TViewFRC6RefVar
@@ -360,6 +362,7 @@ extern TRootView*	gRootView;				// 0x0c101a20
 extern RefStruct*	gSlotCacheTable;		// 0x0c10204c slotCacheRefs: the ROM keeps a pointer to the 34 slot symbols of Rslotcachetable; the host the array (SlotCacheRef)
 Ref			SlotCacheRef(long index);		// the slot symbol of a cache index
 extern Boolean		gSkipVisRegions;		// 0x0c102054  Draw does not clip to the visible regions
+extern Boolean		gDontDrawHilites;		// 0x0c100cb8  the selection hilites are not drawn (an effect in progress)
 extern Boolean		gOutlineViews;			// 0x0c101a28  Draw frames every view in light gray
 extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET: unused)
 

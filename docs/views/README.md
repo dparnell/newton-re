@@ -763,6 +763,33 @@ shrank).  `GetStyleAtOffset` 0x0017f8dc, `GetStylesOfRange` 0x0017fa94,
 `GetWriteableTextStylesArray` 0x0017b278 makes the styles slot a runs
 array when it was a single spec.
 
+### Selecting text (`TParagraphView::MakeHilite` 0x0016c4cc)
+
+A range of a paragraph's text is selected by `MakeHilite(start, end,
+caretOnEmpty)`: the offsets clamped to the text and unioned with the
+existing selection (removed first, so a drag extends it); an empty range
+with `caretOnEmpty` just moves the caret; else a hilite is added
+(`aeAddHilite`: `TView::RealDoCommand` appends it to the `hilites` slot)
+and the key view set to the range - the caret is off for a selection
+(`CaretEnabled` fails when the caret length is not zero) and the
+selection drawn.  DEVIATION: the ROM's hilite is a C++ `TParagraphHilite`
+(0x1c bytes: a `THilite`, the start and end offsets, the selected text, a
+region for its area) referenced from the slot through `AddressToRef`;
+the reconstruction stores a `{start, end}` frame instead.
+`DrawHilites` 0x0016cefc inverts each hilite's region over the text -
+the ROM fills the regions into offscreen `TBits` and XORs them onto the
+view in `PostDraw` 0x0016cc84, the host inverts the region directly (the
+same on one bit); `SelectionRegion` builds the region as the union, over
+the lines the selection touches, of the box from the first selected
+character to the last (`OffsetToBounds`).  Tab into a paragraph selects
+it whole (`RealDoCommand`, `ch == 9`).  `gDontDrawHilites` suppresses
+the drawing during an effect.  (Tested by `test_Views`'s `TestSelection`:
+a range inverted, extended, removed, and a tab selecting a field.)  NOT
+YET: `AdjustHilites` (moving a selection past an edit), a selection
+replaced by a key, `RemoveHilite`/`GetSelection` returning the range, the
+selection stack, `ActivateSelection`'s soft-keyboard shift, the container
+and edit views' hilites.
+
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 
 The ROM's protoPicker's `viewKeyDownScript` is the native

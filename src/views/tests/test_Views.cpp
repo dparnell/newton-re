@@ -1912,6 +1912,70 @@ TestKeyChain()
 }
 
 
+// text selection: a hilited range of a paragraph drawn inverted, made by
+// MakeHilite (and by tab into a paragraph, which selects it all)
+static void
+TestSelection()
+{
+	const ULong kGermanyBundle = 0x003c10ed;
+	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	RefVar intl(AllocateFrame());
+	RefVar keyboard(AllocateFrame());
+	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
+	SetFrameSlot(intl, RSSYMkeyboard, keyboard);
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, bundle);
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	ClearHardKeymap();
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxS := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 140, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hello World\"})");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	// select "Hello" (offsets 0..5): its box on the line is inverted
+	Rect box0, box5;
+	p->OffsetToBounds(0, &box0);
+	p->OffsetToBounds(5, &box5);
+	long before = InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom);
+	p->MakeHilite(0, 5, false);
+	Refresh();
+	EXPECT(RINT(Eval("Length(ctxS.hilites)")) == 1 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 0 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 5);
+	long after = InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom);
+	EXPECT(after != before);		// the region is inverted (mostly-white text becomes mostly-black)
+	EXPECT(gRootView->fCaretView == p && gRootView->fCaretLength == 5 && !gRootView->fCaretShowing);	// a selection, no caret
+	// the ink outside the selection ("World") is untouched
+	Rect box6, box11;
+	p->OffsetToBounds(6, &box6);
+	p->OffsetToBounds(11, &box11);
+	long worldInk = InkIn(box6.left, p->Line(0).fBounds.top, box11.left, p->Line(0).fBounds.bottom);
+	EXPECT(worldInk > 0 && worldInk < (box11.left - box6.left) * (p->Line(0).fBounds.bottom - p->Line(0).fBounds.top));	// plain text, not a solid block
+	// extending the selection unions the ranges
+	p->MakeHilite(5, 8, false);
+	EXPECT(RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 0 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 8);
+	// removing the hilites restores the plain text
+	p->RemoveAllHilites();
+	Refresh();
+	EXPECT(ISNIL(Eval("ctxS.hilites")) && InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom) == before);
+	Eval("SetKeyView(nil, nil)");
+	Eval("ctxS:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "selection closed"));
+
+	// tab into a paragraph selects it whole
+	gKeyboardConnected = true;
+	Eval("ctxS2 := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 150, bottom: 60}, viewFormat: 1, viewChildren: ["
+		"{viewClass: 81, viewFlags: 1, viewBounds: {left: 4, top: 2, right: 130, bottom: 14}, textFlags: 0x8000, viewFont: espy12, text: \"aaa\"},"
+		"{viewClass: 81, viewFlags: 1, viewBounds: {left: 4, top: 16, right: 130, bottom: 28}, textFlags: 0x8000, viewFont: espy12, text: \"bbbbb\"}]})");
+	Eval("ctxS2:Dirty()");
+	Refresh();
+	TParagraphView* q = (TParagraphView*) GetView(RefVar(Eval("ctxS2:ChildViewFrames()[1]")));
+	Eval("SetKeyView(ctxS2:ChildViewFrames()[0], 0)");
+	TypeKey(0x30);		// tab
+	EXPECT(gRootView->fCaretView == q && RINT(GetFrameSlotRef(RefVar(q->FirstHilite()), RSSYMend)) == 5);
+	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxS2); RemoveSlot(vars, 'international)");
+	gKeyboardConnected = false;
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "tab selection closed"));
+}
+
+
 int
 main()
 {
@@ -1982,6 +2046,7 @@ main()
 		TestCaret();
 		TestTyping();
 		TestKeyChain();
+		TestSelection();
 		TestIdlers();
 		TestPickView();
 		TestClicks();

@@ -14,6 +14,10 @@
 #include "Commands.h"
 #include "Keyboard.h"
 #include "Rects.h"
+#include "Regions.h"
+#include "RegionVars.h"
+#include "Draw.h"
+#include "Ports.h"
 #include "Fonts.h"
 #include "RichString.h"
 #include "Frames.h"
@@ -1014,6 +1018,140 @@ TParagraphView::AdjustHilites(long /*offset*/, long /*delta*/)
 { }
 
 
+// host: the region covering the characters a hilite selects, in the view's
+// coordinates - the union, over the lines the hilite touches, of the box
+// from the first selected character's left edge to the last's (or the
+// line's right when the selection runs on past it).  ==> whether it is
+// non-empty.
+Boolean
+TParagraphView::SelectionRegion(RefArg hilite, RgnHandle rgn)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	SetEmptyRgn(rgn);
+	long start = RINT(GetFrameSlotRef(hilite, RSSYMstart));
+	long end = RINT(GetFrameSlotRef(hilite, RSSYMend));
+	if (end <= start)
+		return false;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		const LineInfo& line = fLines[i];
+		long selStart = start > line.fStart ? start : line.fStart;
+		long selEnd = end < line.fEnd ? end : line.fEnd;
+		if (selEnd <= selStart)
+			continue;
+		Rect leftBox;
+		OffsetToBounds(selStart, &leftBox);
+		long right;
+		if (end >= line.fEnd)
+			right = line.fBounds.right;
+		else
+		{
+			Rect rightBox;
+			OffsetToBounds(selEnd, &rightBox);
+			right = rightBox.left;
+		}
+		Rect box;
+		box.left = leftBox.left;
+		box.top = line.fBounds.top;
+		box.right = (short) right;
+		box.bottom = line.fBounds.bottom;
+		if (box.right > box.left)
+		{
+			TRegionVar lineRgn;
+			RectRgn(lineRgn, &box);
+			UnionRgn(rgn, lineRgn, rgn);
+		}
+	}
+	return !EmptyRgn(rgn);
+}
+
+
+// ROM 0x0016cefc DrawHilites__14TParagraphViewFUc
+// The hilited text inverted (the ROM fills each hilite's region into
+// offscreen bits and XORs them onto the view - PostDraw 0x0016cc84; the
+// host inverts the region over the current port directly, the same on one
+// bit).  Nothing when the hilites are being suppressed (gDontDrawHilites)
+// or a scaled draw is asked for.
+void
+TParagraphView::DrawHilites(Boolean scaled)
+{
+	if (scaled || gDontDrawHilites)
+		return;
+	RefVar hilites(Hilites());
+	long count = NOTNIL(hilites) ? Length(hilites) : 0;
+	for (long i = 0; i < count; i++)
+	{
+		TRegionVar rgn;
+		if (SelectionRegion(RefVar(GetArraySlotRef(hilites, i)), rgn))
+			InvertRgn(rgn);
+	}
+}
+
+
+// host: the hilites slot cleared and the view redrawn (the ROM's
+// TView::RemoveAllHilites 0x0026002c removes each hilite through RemoveHilite).
+void
+TParagraphView::RemoveAllHilites(void)
+{
+	if (NOTNIL(GetFrameSlotRef(fContext, RSSYMhilites)))
+	{
+		SetFrameSlot(fContext, RSSYMhilites, RefVar(NILREF));
+		Dirty(nil);
+	}
+}
+
+
+// ROM 0x0016c4cc MakeHilite__14TParagraphViewFlT1Uc
+// The characters between the offsets selected: clamped to the text, and
+// unioned with the existing selection (which is removed first) so a drag
+// extends it; an empty range with caretOnEmpty just moves the caret.
+// Else a hilite is added (aeAddHilite, a `{start, end}` frame - DEVIATION:
+// the ROM makes a C++ TParagraphHilite that carries the selected text and
+// its area region) and the key view set to the range, so the caret is off
+// (a selection) and DrawHilites paints it.
+void
+TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	long length = TextLength();
+	if (end > length)
+		end = length;
+	if (start < 0)
+		start = 0;
+	if (start > length)
+		start = length;
+	if (end < start)
+		end = start;
+	RefVar first(FirstHilite());
+	if (NOTNIL(first))
+	{
+		long s0 = RINT(GetFrameSlotRef(first, RSSYMstart));
+		long e0 = RINT(GetFrameSlotRef(first, RSSYMend));
+		if (s0 < start)
+			start = s0;
+		if (e0 > end)
+			end = e0;
+		RemoveAllHilites();
+	}
+	if (end == start && caretOnEmpty)
+	{
+		gRootView->SetKeyView(this, start, 0, false);
+		return;
+	}
+	RefVar hilite(AllocateFrame());
+	SetFrameSlot(hilite, RSSYMstart, RefVar(MAKEINT(start)));
+	SetFrameSlot(hilite, RSSYMend, RefVar(MAKEINT(end)));
+	RefVar param(AllocateFrame());
+	SetFrameSlot(param, RSSYMhilite, hilite);
+	RefVar cmd(MakeCommand(aeAddHilite, this, 0x8000000));
+	CommandSetFrameParameter(cmd, param);
+	gApplication->DispatchCommand(cmd);
+	gRootView->SetKeyView(this, start, end - start, false);
+}
+
+
 // ROM 0x00182d14 ProcessStyles__14TParagraphViewFUc
 // The styles checked for ink words to recognise (CheckStyles; the
 // recogniser then runs over the text).  NOT YET RECONSTRUCTED: ink -
@@ -1435,10 +1573,10 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			TView* next = NextKeyView(this, direction, 0);
 			if (next != nil)
 			{
-				// (the ROM selects the whole target when it is a paragraph,
-				// MakeHilite(next, 0, 999999); DEVIATION: the caret is put
-				// at its end - the data hilites are NOT YET RECONSTRUCTED)
-				gRootView->SetKeyView(next, 999999, 0, false);
+				if (next->DerivedFrom(clParagraphView))
+					((TParagraphView*) next)->MakeHilite(0, 999999, true);		// select the whole target
+				else
+					gRootView->SetKeyView(next, 999999, 0, false);
 			}
 			return true;
 		}
@@ -1596,4 +1734,6 @@ TParagraphView::RealDraw(Rect& /*bounds*/)
 		DrawLine(text, line, ellipsis);
 	}
 	rich.ReleasePtr();
+	// the selection over the text (the ROM does this in PostDraw)
+	DrawHilites(false);
 }

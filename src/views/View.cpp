@@ -37,6 +37,7 @@ long		TView::gViewIdCounter = 0;			// ROM 0x0c102050
 TRootView*	gRootView = nil;					// ROM 0x0c101a20 gRootView
 RefStruct*	gSlotCacheTable = nil;				// ROM 0x0c10204c slotCacheRefs (the array, not a pointer into it: the host's heap compacts)
 Boolean		gSkipVisRegions = false;			// ROM 0x0c102054 gSkipVisRegions
+Boolean		gDontDrawHilites = false;			// ROM 0x0c100cb8 gDontDrawHilites
 Boolean		gOutlineViews = false;				// ROM 0x0c101a28 gOutlineViews
 long		gSlowMotion = 0;					// ROM 0x0c101a2c gSlowMotion
 
@@ -1289,6 +1290,23 @@ void	TView::DrawHilitedData(void)								{ }		// ROM 0x00265224 DrawHilitedData_
 Boolean	TView::HandleHilite(TUnitPublic*, long, Boolean)			{ return false; }	// ROM 0x00260218 HandleHilite__5TViewFP11TUnitPubliclUc
 Boolean	TView::HandleScrub(const Rect&, long, TUnitPublic*, Boolean)	{ return false; }	// ROM 0x002605f0 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
 Boolean	TView::Hilited(void)										{ return false; }	// ROM 0x0025feac Hilited__5TViewFv
+// ROM 0x0025fe3c Hilites__5TViewFv
+// The view's selections: the `hilites` slot of the context.
+Ref		TView::Hilites(void)		{ return GetProto(RSSYMhilites); }
+
+
+// ROM 0x0025fef8 FirstHilite__5TViewFv
+// The first hilite, or nil.
+Ref
+TView::FirstHilite(void)
+{
+	RefVar hilites(Hilites());
+	if (NOTNIL(hilites) && Length(hilites) != 0)
+		return GetArraySlotRef(hilites, 0);
+	return NILREF;
+}
+
+
 void	TView::DrawHilites(Boolean)									{ }		// ROM 0x0025ff5c DrawHilites__5TViewFUc
 Boolean	TView::IsCompletelyHilited(RefArg)							{ return false; }	// ROM 0x002600c8 IsCompletelyHilited__5TViewFRC6RefVar
 void	TView::HiliteAll(void)										{ }		// ROM 0x002600d0 HiliteAll__5TViewFv
