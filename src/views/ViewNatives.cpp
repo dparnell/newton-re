@@ -10,10 +10,9 @@
 				SyncChildren, MoveBehind, GlobalBox, LocalBox, GlobalOuterBox,
 				VisibleBox, GetDrawBox, SetOrigin, RedoChildren; the scripts
 				Open, Toggle and the global Visible re-expressed as source).
-				The ROM's Show/Hide/Open/Close natives dispatch aeShow/aeHide/
-				aeAddChild/aeDropChild commands through the application to
-				the views; the host calls the views (DEVIATION: no
-				application, no delayed actions).
+				Show/Hide/Open/Close dispatch aeShow/aeHide/aeAddChild/
+				aeDropChild commands through the application (Application.h)
+				to the views, as the ROM does.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
 */
@@ -21,6 +20,7 @@
 #include "RootView.h"
 #include "DrawShape.h"
 #include "Application.h"
+#include "Commands.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
@@ -265,7 +265,7 @@ FDirtyBoxX(RefArg rcvr, RefArg bounds)
 
 
 // ROM 0x001ec99c FShowX
-// :Show() (the ROM: aeShow dispatched to the view).
+// :Show(): aeShow dispatched to the view through the application.
 static Ref
 FShowX(RefArg rcvr)
 {
@@ -273,13 +273,17 @@ FShowX(RefArg rcvr)
 	if ((view->fFlags & vIsBeingDeleted) == vIsBeingDeleted)
 		BadWickedNaughtyNoot(0x126e);
 	else
-		view->Show();
+	{
+		RefVar cmd(MakeCommand(aeShow, view, kNoParameter));
+		gApplication->DispatchCommand(cmd);
+	}
 	return NILREF;
 }
 
 
 // ROM 0x001eca14 FHideX
-// :Hide() (the ROM: aeHide dispatched to the view).
+// :Hide(): aeHide dispatched to the view (NOT YET RECONSTRUCTED: the
+// modal-safe views list under a modal dialog, RemoveModalSafeView).
 static Ref
 FHideX(RefArg rcvr)
 {
@@ -287,30 +291,36 @@ FHideX(RefArg rcvr)
 	if ((view->fFlags & vIsBeingDeleted) == vIsBeingDeleted)
 		BadWickedNaughtyNoot(0x126f);
 	else
-		view->Hide();
+	{
+		RefVar cmd(MakeCommand(aeHide, view, kNoParameter));
+		gApplication->DispatchCommand(cmd);
+	}
 	return NILREF;
 }
 
 
 // ROM 0x001f3a50 RealOpenX__FRC6RefVarUc
-// The view opened: made under its _parent's view (aeAddChild) and shown
-// when there is none, shown when it is hidden; ==> whether anything was
-// done.
+// The view opened: aeAddChild dispatched to its _parent's view (with
+// the template as the frame parameter) when there is none, aeShow to it
+// when it is hidden - the parameter kNoModalCheck for a modal one; ==>
+// whether anything was done.
 static Ref
-RealOpenX(RefArg context, Boolean /*modal*/)
+RealOpenX(RefArg context, Boolean modal)
 {
 	TView* view = GetView(context);
+	Long parameter = modal ? kNoModalCheck : kNoParameter;
 	if (view == nil)
 	{
 		TView* parent = FailGetView(RefVar(GetProtoVariable(context, RSSYM_parent, nil)));
-		view = parent->AddChild(context);
-		if (view != nil)
-			view->Show();
+		RefVar cmd(MakeCommand(aeAddChild, parent, parameter));
+		CommandSetFrameParameter(cmd, context);
+		gApplication->DispatchCommand(cmd);
 		return TRUEREF;
 	}
 	if ((view->fFlags & vVisible) == 0)
 	{
-		view->Show();
+		RefVar cmd(MakeCommand(aeShow, view, parameter));
+		gApplication->DispatchCommand(cmd);
 		return TRUEREF;
 	}
 	return NILREF;
@@ -326,9 +336,9 @@ FOpenX(RefArg rcvr)
 
 
 // ROM 0x001f3b70 FCloseX
-// :Close() (the ROM: aeDropChild dispatched to the parent): the view
-// hidden and removed; a view still being set up is marked for deletion
-// instead (the Constructor throws -8501).
+// :Close(): aeDropChild dispatched to the parent - the view hidden and
+// removed; a view still being set up is marked for deletion instead
+// (the Constructor throws -8501).
 static Ref
 FCloseX(RefArg rcvr)
 {
@@ -345,8 +355,8 @@ FCloseX(RefArg rcvr)
 		BadWickedNaughtyNoot(0x126b);
 		return NILREF;
 	}
-	view->Hide();
-	view->fParent->RemoveChildView(view);
+	RefVar cmd(MakeCommand(aeDropChild, view->fParent, (Long) view));
+	gApplication->DispatchCommand(cmd);
 	return NILREF;
 }
 

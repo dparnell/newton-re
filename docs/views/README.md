@@ -248,10 +248,9 @@ methods a view inherits are slots of the ROM's root template `Rviewroot`
 `MoveBehind`, `GlobalBox`, `LocalBox`, `GlobalOuterBox`, `VisibleBox`,
 `GetDrawBox`, `SetOrigin`, and the scripts `Open`, `Toggle`) - the host's
 `MakeViewMethods` builds that frame and `InitViewSystem` makes it the
-root template's `_proto`.  The ROM's `Show`/`Hide`/`Open`/`Close`
-dispatch `aeShow`/`aeHide`/`aeAddChild`/`aeDropChild` through the
-application to the views; the host calls the views directly (DEVIATION,
-noted in the file).  `GetView(context)` 0x0025f4c4 finds `viewCObject`
+root template's `_proto`.  `Show`/`Hide`/`Open`/`Close` dispatch
+`aeShow`/`aeHide`/`aeAddChild`/`aeDropChild` through the application to
+the views (Commands and the application, below).  `GetView(context)` 0x0025f4c4 finds `viewCObject`
 through the proto *and parent* chains, so a template whose `_parent` is
 the root context resolves to the root view (`RealOpenX` then does
 nothing): the ROM's own applications name a `preallocatedContext`, and a
