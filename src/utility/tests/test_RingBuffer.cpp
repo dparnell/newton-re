@@ -1,13 +1,21 @@
-// CRingBuffer test (RingBuffer.h): a byte ring buffer over a fixed
-// external buffer - fill and empty, the full/empty edges, wrap-around, the
-// bulk CopyIn/CopyOut across the wrap, Peek/Next/Skip and GetnAt.  No OS
-// boot: Init(buffer, ...) takes a caller's buffer, so no allocation.
+// CRingBuffer and CRingPipe test (RingBuffer.h): a byte ring buffer over a
+// fixed external buffer - fill and empty, the full/empty edges, wrap-around,
+// the bulk CopyIn/CopyOut across the wrap, Peek/Next/Skip and GetnAt - the
+// CopyIn that pulls straight from a CPipe, and the pipe over a ring buffer,
+// whose Underflow refills it and whose Overflow drains it.  No OS boot: a
+// host heap is enough for the allocating parts.
 
 #include "RingBuffer.h"
+#include "TestPipe.h"
+#include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "UCErrors.h"
+#include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
 #include <string.h>
+
+extern const ExceptionName exPipeException;
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -117,12 +125,173 @@ TestPeekNextSkipAt()
 }
 
 
+
+/*------------------------------------------------------------------------------
+	C R i n g B u f f e r : : C o p y I n ( C P i p e * )
+------------------------------------------------------------------------------*/
+
+// The pipe reads its chunks into the buffer's own free runs, so a fill that
+// crosses the wrap is two ReadChunk calls and no intermediate copy.
+static void
+TestCopyInFromPipe()
+{
+	UByte storage[8];					// capacity 7
+	CRingBuffer rb;
+	rb.Init(storage, sizeof(storage), false, 0, 0);
+	for (int i = 0; i < 5; i++)			// move both pointers to offset 5
+		rb.Put(0xEE);
+	for (int i = 0; i < 5; i++)
+		rb.Get();
+	EXPECT(rb.IsEmpty() && rb.FreeCount() == 7);
+
+	UByte source[7] = { 1, 2, 3, 4, 5, 6, 7 };
+	CTestPipe pipe(8);
+	pipe.WriteChunk(source, sizeof(source), false);
+	pipe.Rewind();
+
+	long count = sizeof(source);
+	EXPECT(rb.CopyIn(&pipe, count) == -1);		// -1: the buffer is full now
+	EXPECT(count == 0);
+	EXPECT(rb.DataCount() == 7 && rb.IsFull());
+
+	UByte out[7];
+	EXPECT(rb.Getn(out, 7) == 7);
+	EXPECT(memcmp(out, source, sizeof(source)) == 0);	// the wrap did not reorder them
+}
+
+
+/*------------------------------------------------------------------------------
+	C R i n g P i p e
+------------------------------------------------------------------------------*/
+
+// A ring pipe with somewhere for the bytes to come from and go to: Underflow
+// tops the ring up from a source array and says when the source's last bytes
+// have gone in; Overflow (and FlushWrite) empty the ring into a sink.  A read
+// past the end of the source throws, as a real subclass's does - the ROM's
+// ReadChunk loops until the count is met, so an Underflow that supplies
+// nothing and merely reports the end would spin for ever.
+class CTestRingPipe : public CRingPipe
+{
+public:
+					CTestRingPipe(long size)
+						: fSource(nil), fSourceLeft(0), fSinkLen(0), fOverflows(0), fUnderflows(0), fFlushes(0)
+						{ Init(size); }
+
+	virtual void	FlushRead(void)		{ }
+	virtual void	FlushWrite(void)	{ fFlushes++; Drain(); }
+
+	virtual void	Overflow(void)		{ fOverflows++; Drain(); }
+
+	virtual void	Underflow(long count, Boolean& eof)
+	{
+		fUnderflows++;
+		if (fSourceLeft == 0)
+			Throw(exPipeException, (void*) (Long) eNoMemory, nil);
+		long room = fBuffer->FreeCount();
+		long n = (fSourceLeft < room) ? fSourceLeft : room;
+		fBuffer->Putn(fSource, n);
+		fSource += n;
+		fSourceLeft -= n;
+		if (fSourceLeft == 0)
+			eof = true;
+	}
+
+	void			SetSource(const UByte* data, long len)	{ fSource = data; fSourceLeft = len; }
+	void			Drain(void)
+	{
+		long n = fBuffer->DataCount();
+		if (n > 0)
+			fSinkLen += fBuffer->Getn(fSink + fSinkLen, n);
+	}
+
+	const UByte*	fSource;
+	long			fSourceLeft;
+	UByte			fSink[64];
+	long			fSinkLen;
+	long			fOverflows;
+	long			fUnderflows;
+	long			fFlushes;
+};
+
+
+static void
+TestRingPipeRead()
+{
+	static const UByte source[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	CTestRingPipe pipe(4);					// a ring that holds four bytes
+	pipe.SetSource(source, sizeof(source));
+
+	UByte out[10];
+	long count = sizeof(out);
+	Boolean eof = false;
+	pipe.ReadChunk(out, count, eof);
+	EXPECT(count == 10);
+	EXPECT(memcmp(out, source, sizeof(source)) == 0);
+	EXPECT(eof);							// the source ran out on the last refill
+	EXPECT(pipe.fUnderflows == 3);			// 4 + 4 + 2 bytes
+
+	// the flag is answered once and then forgotten: given more source, a read
+	// that leaves some of it reports no end
+	static const UByte more[8] = { 11, 12, 13, 14, 15, 16, 17, 18 };
+	pipe.SetSource(more, sizeof(more));
+	count = 2;
+	pipe.ReadChunk(out, count, eof);
+	EXPECT(count == 2 && out[0] == 11 && out[1] == 12);
+	EXPECT(!eof);							// four bytes of the source are still to come
+
+	count = 6;
+	pipe.ReadChunk(out, count, eof);
+	EXPECT(count == 6 && out[0] == 13 && out[5] == 18);
+	EXPECT(eof);
+
+	// and a read past the end of the source is the subclass's to refuse
+	Boolean threw = false;
+	newton_try
+	{
+		count = 1;
+		pipe.ReadChunk(out, count, eof);
+	}
+	newton_catch(exPipeException)
+	{
+		threw = (NewtonErr) (Long) CurrentException()->data == eNoMemory;
+	}
+	end_try;
+	EXPECT(threw);
+}
+
+
+static void
+TestRingPipeWrite()
+{
+	static const UByte source[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	CTestRingPipe pipe(4);
+
+	pipe.WriteChunk(source, sizeof(source), true);
+	EXPECT(pipe.fOverflows == 2);			// the ring filled twice on the way
+	EXPECT(pipe.fFlushes == 1);
+	EXPECT(pipe.fSinkLen == 10);
+	EXPECT(memcmp(pipe.fSink, source, sizeof(source)) == 0);
+
+	// the pipe does not seek, and Reset empties the ring
+	EXPECT(pipe.ReadPosition() == 0 && pipe.WritePosition() == 0);
+	EXPECT(pipe.ReadSeek(4, kSeekFromBeginning) == 0 && pipe.WriteSeek(4, kSeekFromBeginning) == 0);
+	pipe.WriteChunk(source, 2, false);
+	EXPECT(pipe.fBuffer->DataCount() == 2);
+	pipe.Reset();
+	EXPECT(pipe.fBuffer->DataCount() == 0);
+}
+
+
 int main()
 {
+	InitHostStandaloneHeap();
 	TestFillAndDrain();
 	TestWrap();
 	TestBulk();
 	TestPeekNextSkipAt();
+	TestCopyInFromPipe();
+	TestRingPipeRead();
+	TestRingPipeWrite();
 	if (failures == 0)
 		printf("test_RingBuffer: all passed\n");
 	else

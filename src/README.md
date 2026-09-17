@@ -152,7 +152,12 @@ src/
                 ROM's classes, replacing the DDK's interface-only header)
                 and the pipes streams flow through (Pipes.h: CPipe with its
                 big-endian scalar operators, CBufferPipe, the memory pipes
-                CMemoryPipe and MemoryPipe, PipeCallBack; no DDK header)
+                CMemoryPipe and MemoryPipe, PipeCallBack; no DDK header);
+                the byte ring buffer the serial and comm code streams
+                through and the pipe over it (RingBuffer.h:
+                CBaseRingBuffer, CRingBuffer, CRingPipe), and the two
+                CRC-16 accumulators framed data is checked with
+                (CRC16.h)
   frames/       the NewtonScript object system: refs, the object heap and
                 its collector (ObjectHeap.h), symbols, binaries, arrays,
                 frames and their maps, paths, clones, classes - the DDK's
