@@ -51,6 +51,23 @@ KeyboardConnect(true);
 SetKeyView(para, 4);
 KeyEvent(2, true); KeyEvent(2, nil);		// the d key (the ROM's German layout) typed at the caret: "Typed here"
 
+// the pen: a tap on a button (before the picker opens: a click outside a
+// popup closes it instead) - aeClick to its viewClickScript, which tracks
+// the press (the button inverted while the pen is down) and runs the
+// buttonClickScript when the pen lifts inside; the tap gesture follows a
+// click nobody claimed
+tapped := AddView(GetRoot(), {
+	viewClass: 98, viewFlags: 1 + 0x200 + 0x800, viewBounds: {left: 180, top: 300, right: 300, bottom: 320},
+	viewFormat: 0x4000551, viewJustify: 0x800006, viewFont: kBold12, text: "Tap me",
+	viewClickScript: func(unit) begin :TrackButton(unit); true end,
+	buttonClickScript: func() begin SetValue(self, 'text, "Tapped!"); Print("the button was tapped") end,
+	viewGestureScript: func(unit, kind) Print("gesture " & kind) });
+tapped:Dirty();
+PenDown(240, 310);
+PenMove(241, 310);
+PenUp();
+IdleStrokes();
+
 // a popup menu, as the ROM's protoPicker lays it out, below a "button"
 // (opened last: while it is up the keys go to it - the arrows move its
 // pick, return picks, escape closes it)

@@ -19,6 +19,11 @@
 #include "NativeFunctions.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
+#include "Recognizer.h"
+#include "StrokeCentral.h"
+#include "UnitPublic.h"
+#include "HostTablet.h"
+#include "hal/host/Host.h"
 #include <string.h>
 
 static THostScreenDriver*	gHostDisplay = nil;
@@ -80,6 +85,48 @@ FKeyboardConnect(RefArg /*rcvr*/, RefArg connected)
 }
 
 
+// PenDown(x, y), PenMove(x, y), PenUp(): the pen on the tablet (queued,
+// a record per tick of the waits the views' tracking loops make);
+// IdleStrokes(): the stroke world run, as the application's idle would -
+// the queued pen records go in as it waits, the clicks and taps reach
+// the views under them
+static Ref
+FPenDown(RefArg /*rcvr*/, RefArg x, RefArg y)
+{
+	HostTabletQueuePenDown(RINT(x), RINT(y), 0);
+	return NILREF;
+}
+
+
+static Ref
+FPenMove(RefArg /*rcvr*/, RefArg x, RefArg y)
+{
+	HostTabletQueuePenMove(RINT(x), RINT(y));
+	return NILREF;
+}
+
+
+static Ref
+FPenUp(RefArg /*rcvr*/)
+{
+	HostTabletQueuePenUp(0);
+	return NILREF;
+}
+
+
+static Ref
+FIdleStrokes(RefArg /*rcvr*/)
+{
+	while (HostTabletQueued() > 0)
+	{
+		HostTabletPump();
+		IdleStrokes();
+	}
+	IdleStrokes();
+	return NILREF;
+}
+
+
 void
 HostRegisterViewFunctions(void)
 {
@@ -89,6 +136,10 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenSnapshot")), RefVar(MakeCFunction((void*) FScreenSnapshot, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenWidth")), RefVar(MakeCFunction((void*) FScreenWidth, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenHeight")), RefVar(MakeCFunction((void*) FScreenHeight, 0, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "PenDown")), RefVar(MakeCFunction((void*) FPenDown, 2, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "PenMove")), RefVar(MakeCFunction((void*) FPenMove, 2, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "PenUp")), RefVar(MakeCFunction((void*) FPenUp, 0, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "IdleStrokes")), RefVar(MakeCFunction((void*) FIdleStrokes, 0, nil)));
 }
 
 
@@ -96,8 +147,8 @@ HostRegisterViewFunctions(void)
 // screen, the fonts (vars.fonts: the ROM font list's families by their
 // symbols, as the ROM's globals template has them), an empty
 // userConfiguration, vars.international from the globals template (the
-// locale and the keyboard mapping), the text, view and host functions,
-// the root view.
+// locale and the keyboard mapping), the text, view, unit and host
+// functions, the root view, the recognition system and the pen.
 THostScreenDriver*
 HostStartViews(long width, long height, long depth)
 {
@@ -133,6 +184,16 @@ HostStartViews(long width, long height, long depth)
 			SetFrameSlot(vars, RSSYMinternational, RefVar(Clone(intl)));
 	}
 	HostRegisterViewFunctions();
+	RegisterUnitNatives();
 	InitViewSystem();
+	// the recognition system at the clicks level, the stroke world and the
+	// host's pen; the ink is let out by the user's pen size
+	gRecognition.Init(1);
+	gStrokeWorld.Init();
+	HostTabletInit();
+	HostAdvanceClock(60 * 60 * 0xf000);		// a minute on the clock (0xf000 clock ticks a Mac tick): the ROM boots for longer, and a click in the first half second is dropped as a tap after writing
+	RefVar config(GetFrameSlotRef(vars, RSSYMuserconfiguration));
+	if (ISNIL(GetFrameSlotRef(config, RSSYMuserpensize)))
+		SetFrameSlot(config, RSSYMuserpensize, RefVar(MAKEINT(1)));
 	return gHostDisplay;
 }
