@@ -20,6 +20,7 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "NativeFunctions.h"
+#include "Interpreter.h"
 #include "RichString.h"
 #include "Unicode.h"
 #include "Locale.h"
@@ -30,6 +31,7 @@
 // the ROM's characters
 const UniChar kCarriageReturn = 0x0d;
 const UniChar kSpace = 0x20;
+const UniChar kEllipsis = 0x2026;
 
 
 // the glyph's set bits as a region at (left, top) - each row's runs
@@ -372,10 +374,63 @@ DrawRichString(TRichString& rich, ULong start, long length, StyleRecord* style, 
 
 
 // ROM 0x0032efb8 MeasureRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
-void
+long
 MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
 {
-	DoRichString(rich, start, length, style, where, options, bounds, false);
+	return DoRichString(rich, start, length, style, where, options, bounds, false);
+}
+
+
+// ROM 0x001ecf64 FStyledStrTruncate__FRC6RefVarN31
+// The string cut to the width in the font: when it does not fit, the
+// characters that fit beside an ellipsis are kept and the ellipsis put
+// after them (in place).  ==> the string.
+Ref
+StyledStrTruncate(RefArg str, long width, RefArg fontSpec)
+{
+	TRichString rich(str);
+	long length = rich.Length();
+	StyleRecord style;
+	CreateTextStyleRecord(fontSpec, &style);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fTransferMode = srcOr;
+	options.fWidth = (Fixed) width << 16;
+	FPoint origin;
+	origin.x = 0;
+	origin.y = 0;
+	TextBoundsInfo bounds;
+	long fitted = MeasureRichString(rich, 0, length, &style, origin, &options, &bounds);
+	if (fitted < length)
+	{
+		options.fWidth = 0;
+		UniChar ellipsis = kEllipsis;
+		StyleRecord* styles[1] = { &style };
+		MeasureTextOnce(&ellipsis, 1, styles, nil, origin, &options, &bounds);
+		options.fWidth = ((Fixed) width << 16) - bounds.fWidth;
+		fitted = MeasureRichString(rich, 0, length, &style, origin, &options, &bounds);
+		rich.DeleteRange(fitted + 1, rich.Length() - (fitted + 1));
+		rich.SetChar(fitted, kEllipsis);
+	}
+	DisposeStyleRecord(&style);
+	return str;
+}
+
+
+// ROM 0x001ec784 FStrTruncate__FRC6RefVarN21
+// StrTruncate(str, width): in the receiver's viewFont.
+static Ref
+FStrTruncate(RefArg rcvr, RefArg str, RefArg width)
+{
+	RefVar font(GetVariable(rcvr, RSSYMviewfont, nil, 0));
+	return StyledStrTruncate(str, RINT(width), font);
+}
+
+
+static Ref
+FStyledStrTruncate(RefArg /*rcvr*/, RefArg str, RefArg width, RefArg fontSpec)
+{
+	return StyledStrTruncate(str, RINT(width), fontSpec);
 }
 
 
@@ -697,4 +752,6 @@ RegisterTextNatives(void)
 	RegisterNativeFunction("FFontHeight__FRC6RefVarT1", (void*) FFontHeight, 1);
 	RegisterNativeFunction("FStrFontWidth__FRC6RefVarN21", (void*) FStrFontWidth, 2);
 	RegisterNativeFunction("FTextBox", (void*) FTextBox, 3);
+	RegisterNativeFunction("FStrTruncate__FRC6RefVarN21", (void*) FStrTruncate, 2);
+	RegisterNativeFunction("FStyledStrTruncate__FRC6RefVarN31", (void*) FStyledStrTruncate, 3);
 }

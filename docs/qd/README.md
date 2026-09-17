@@ -312,6 +312,8 @@ characters as fit, cut back to a word boundary - `FindWordBreaks`
 spaces - then `SkipUpToTwoSpacesAndCR`), the lines the font's height
 apart, a box of no width or height taking the text's; the vertical bits
 move the box down by the room left.  The NewtonScript `TextBox` is here.
+`StyledStrTruncate` 0x001ecf64 (the NewtonScript `StrTruncate` and
+`StyledStrTruncate`) cuts a string to a width with an ellipsis.
 NOT YET: ink words, scaled glyphs, persistent text objects, `StdText`
 recording, tabs.
 

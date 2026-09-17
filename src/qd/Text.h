@@ -84,7 +84,8 @@ long	MeasureOnceFont(const UniChar* text, long length, RefArg fontSpec);
 // rich strings (frames/RichString.h): the text's characters (ink NOT YET)
 class TRichString;
 void	DrawRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds);
-void	MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds);
+long	MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds);	// ==> the characters that fit
+Ref		StyledStrTruncate(RefArg str, long width, RefArg fontSpec);		// the string cut to the width with an ellipsis, in place
 long	DoRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw);
 
 // paragraphs: a rich string wrapped into lines of a rectangle's width in a
@@ -98,6 +99,6 @@ ULong	DrawSimpleLine(TRichString& rich, ULong start, FPoint* where, StyleRecord*
 void	FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward, RefArg breakTable, ULong* wordStart, ULong* wordEnd);
 const UniChar*	SkipUpToTwoSpacesAndCR(const UniChar* text, const UniChar* end);
 
-void	RegisterTextNatives(void);		// StrFontWidth, FontAscent, FontDescent, FontLeading, FontHeight, TextBox
+void	RegisterTextNatives(void);		// StrFontWidth, FontAscent, FontDescent, FontLeading, FontHeight, TextBox, StrTruncate, StyledStrTruncate
 
 #endif	/* __TEXT_H */

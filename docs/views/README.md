@@ -432,6 +432,43 @@ removed (or a view deleted) during its own Idle is not touched after;
 arrays are re-made (`MoveLow` 0x001b4b60) when they shrank below their
 high-water marks.
 
+**TPickView** (`PickView.h`, clPickView 89-91: protoPicker, the popup
+menus).  `SetupForm` 0x00187350 lays the `pickItems` out: each a row -
+a string `pickTextItemHeight` high and its measured width (a text wider
+than `pickMaxWidth` is cut with an ellipsis, `StyledStrTruncate`
+0x001ecf64, the length kept negative in the item's flags), plus its
+`icon`'s width (or the frame item's `indent`) and height; the symbols
+`'pickSeparator`/`'pickSolidSeparator` 6 high; a bitmap or picture
+frame its bounds plus `pickTopMargin`/`pickBottomMargin` (with a
+`width`/`height` slot a grid of cells, `GetGridInfo` 0x00185690); an
+item's `fixedHeight` for it and the rest.  The bottoms accumulate in a
+handle at +0x38, the flags (the `mark` character, the pickable bit, the
+length) in one at +0x3c, the grids at +0x40.  The width is
+`pickLeftMargin` (+ `pickMarkWidth` when any item has a mark) + the
+widest + `pickRightMargin` (+19 with the `scrollers` child shown, when
+the list is taller than the application area).  The view is then placed
+from the template's `bounds`: below them (above, with the viewEffect
+0x182000, when it would run off the bottom from the lower half) at
+their left, or - when the bounds carry an `info` view - beside that
+view's window by `AdjustPopupInRect` 0x00186e84; shifted into the area,
+written as viewBounds relative to the area's origin.  `RealDraw`
+0x001885e0 draws the rows from the child origin (the text column, the
+icon centred in its row, the mark in its column, the separators as a
+gray or a two-pixel black line three down), the picked item inverted.
+`Item`/`PickableItem` 0x001895b8/0x0018966c find the row (and grid
+cell) under a point, an unpickable row sending the search up; `PickItem`
+0x00189a7c runs `pickActionScript(index + topItem)` (a grid cell as a
+protoGridItem `{index, x, y}`) on the `callbackContext` or the view,
+hiding an autoclose picker first; `Hide` 0x00188fa4 of an unpicked
+autoclose picker runs `pickCancelledScript`; `RealDoCommand` 0x001890f4
+answers the pick command 0x36 (the PickStuff as a binary, or the
+parameter as the index) and drops an autoclose picker from its parent.
+`Scroll` 0x0018718c moves the child origin a view's height to an item's
+top.  NOT YET: the pen tracking on aeClick (`TrackStroke`), the key
+commands and type-select, ink items, the pickable test inside a masked
+grid picture, the item flash's waits.  The ROM's protoPicker has
+viewFlags without vVisible: it is opened with `:Open()`.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -447,7 +484,9 @@ fills, pens, styles in lists, nested lists, text, clipping), commands
 (the frames, show/hide/click through the application, the undo stacks
 both ways, AddUndoAction/Call/Send, the delayed actions, aeAddChild and
 aeDropChild), idlers (SetupIdle, the idle script re-timing and stopping
-its idler, removal with the view).
+its idler, removal with the view), pickers from the ROM's protoPicker
+(the rows, the placement below and above, the separator, marks, an
+icon, a cut item, the item under a point, a pick closing the picker).
 
 ## Not yet
 
@@ -455,6 +494,7 @@ Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
 drag and drop, the key events (`HandleKeyEvent`), the animation
 effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
-`TPickView`, `TEditView`, ...), editing in `TParagraphView`, the
+`TEditView`, ...), editing in `TParagraphView`, the picker's pen
+tracking and keys, the
 recogniser's units behind the click and gesture commands, the event
 loop (`TNotebook::Run`) and the idle timer.

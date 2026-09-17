@@ -8,7 +8,7 @@
 # gauge (GaugeView.h), the NewtonScript shapes and DrawShape
 # (DrawShape.h), the command frames (Commands.h) and the application
 # that dispatches them and keeps the undo stacks and delayed actions
-# (Application.h); the other subclasses (lists, pickers, ...) to come.
+# (Application.h), the picker of popup menus (PickView.h); the other subclasses (lists, pickers, ...) to come.
 add_library(views STATIC
     View.cpp
     ViewDraw.cpp
@@ -24,6 +24,7 @@ add_library(views STATIC
     DrawShape.cpp
     Commands.cpp
     Application.cpp
+    PickView.cpp
 )
 target_link_libraries(views PUBLIC newton_config qd frames intl utility)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

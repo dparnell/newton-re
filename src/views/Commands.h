@@ -56,6 +56,7 @@ enum
 	aeGesture31				= 0x31,
 	aeGesture32				= 0x32,
 	aeOverview				= 0x33,		// viewOverviewScript
+	aePickItem				= 0x36,		// a picker's item picked (TPickView: the PickStuff as a binary frame parameter)
 	aeAddData				= 0x3d,		// the frameParameter added to the receiver's soup (the undo of aeRemoveData)
 	aeRemoveData			= 0x3f,		// the child of the parameter's id removed from the soup
 	aeMoveData				= 0x40,		// the receiver moved by params[0], params[1] (undone by the reverse)

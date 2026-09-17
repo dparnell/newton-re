@@ -14,6 +14,7 @@
 #include "TextView.h"
 #include "ParagraphView.h"
 #include "GaugeView.h"
+#include "PickView.h"
 #include "DrawShape.h"
 #include "Commands.h"
 #include "Application.h"
@@ -1045,6 +1046,91 @@ TestIdlers()
 }
 
 
+static void
+TestPickView()
+{
+	// a picker from the ROM's protoPicker: three text items and a separator, popped below a button's bounds
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "protoPicker")), RefVar(Rprotopicker));
+	Eval("picked := nil");
+	TPickView* p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, pickItems: [\"Alpha\", \"Beta\", 'pickSeparator, \"Gamma\"], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) picked := index})");
+	EXPECT(p != nil && p->ClassID() == clPickView && p->DerivedFrom(clView));
+	EXPECT(p->fItemCount == 4 && p->fTextItemHeight == 13 && p->fAutoClose && !p->fHasMarks);
+	EXPECT(p->ItemTop(0) == 0 && p->ItemBottom(0) == 13 && p->ItemBottom(1) == 26 && p->ItemBottom(2) == 32 && p->ItemBottom(3) == 45);
+	EXPECT(p->IsItemNoPickable(0) && !p->IsItemNoPickable(2) && p->GetItemLength(0) == 5 && p->GetItemLength(3) == 5);	// (the ROM's IsItemNoPickable answers the pickable bit)
+	EXPECT(p->fTextLeft == 4 && p->fMarkLeft == 4 && p->fRightMargin == 5);
+	// placed below the bounds, at its left; the height the items', the width the widest plus the margins
+	EXPECT(p->viewBounds.top == 35 && p->viewBounds.left == 30 && p->viewBounds.bottom == 80);
+	long widest = 0;
+	for (long i = 0; i < 4; i++)
+	{
+		RefVar text(p->GetItemNoText(i));
+		if (NOTNIL(text))
+		{
+			long width = RINT(Eval(i == 0 ? "StrFontWidth(\"Alpha\", protoPicker.viewFont)" : i == 1 ? "StrFontWidth(\"Beta\", protoPicker.viewFont)" : "StrFontWidth(\"Gamma\", protoPicker.viewFont)"));
+			if (width > widest)
+				widest = width;
+		}
+	}
+	EXPECT(p->viewBounds.right == 30 + 4 + widest + 5);
+	EXPECT(ISNIL(p->GetItemNoText(2)) && IsString(p->GetItemNoText(1)));
+	Eval("ctxK:Open()");
+	Refresh();
+	// the rows: text in the first two and the last, the gray separator line in the third
+	long right = p->viewBounds.right;
+	EXPECT(InkIn(30, 37, 34, 48) == 0 && InkIn(34, 35, right, 48) > 0 && InkIn(right - 5, 37, right, 48) == 0);	// the text from the text column, short of the right margin
+	EXPECT(InkIn(30, 48, 34, 61) == 0 && InkIn(34, 48, 40, 61) > 0);
+	EXPECT(Pixel(31, 64) + Pixel(32, 64) == 1 && Pixel(31, 63) == 0 && Pixel(31, 65) == 0);	// the separator: gray at top + 3
+	EXPECT(InkIn(30, 67, 34, 78) == 0 && InkIn(34, 67, 40, 80) > 0);
+	// the frame (pen 4, rounded) lies outside the bounds
+	EXPECT(Pixel(29, 50) == 1 && Pixel(28, 50) == 1 && Pixel(27, 50) == 0 && Pixel(40, 34) == 1 && Pixel(40, 33) == 1 && Pixel(40, 32) == 0);
+	// the item under a point; a separator sends the search up
+	PickStuff stuff;
+	Point pt = MakePoint(40, 55);
+	p->Item(pt, &stuff);
+	EXPECT(stuff.fItem == 1 && !stuff.fIsGrid);
+	pt = MakePoint(40, 63);
+	p->PickableItem(pt, &stuff);
+	EXPECT(stuff.fItem == 1);
+	pt = MakePoint(40, 70);
+	p->PickableItem(pt, &stuff);
+	EXPECT(stuff.fItem == 3);
+	pt = MakePoint(5, 5);
+	p->Item(pt, &stuff);
+	EXPECT(stuff.fItem == -1);
+	Rect r;
+	stuff.fItem = 3;
+	p->GetItemRect(&stuff, &r);
+	EXPECT(r.top == 67 && r.bottom == 80 && r.left == 30 && r.right == p->viewBounds.right);
+	// picking: the pick command runs pickActionScript with the index and closes the autoclose picker
+	{
+		RefVar cmd(MakeCommand(aePickItem, p, 3));
+		gApplication->DispatchCommand(cmd);
+	}
+	EXPECT(RINT(Eval("picked")) == 3 && gRootView->fChildren->Count() == 0);
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "picker closed"));
+
+	// marks, an icon, a truncated item, and the placement flipping above from the lower half
+	static const unsigned char kRows[4] = { 0xf0, 0x90, 0x90, 0xf0 };
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "pict")), RefVar(MakeBitmap(kRows, 8, 4)));
+	p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, pickItems: [{item: \"One\", mark: $x}, {item: \"Two\", icon: pict}, \"A very long item that must be cut down to the maximum width of the picker\"], pickMaxWidth: 60, bounds: {left: 30, top: 85, right: 80, bottom: 95}, pickActionScript: func(index) picked := index})");
+	EXPECT(p->fHasMarks && p->fTextLeft == 14 && p->fMarkLeft == 4);
+	EXPECT(p->GetItemLength(2) < 0 && -p->GetItemLength(2) < 70);
+	EXPECT(p->viewBounds.right == 30 + 14 + 60 + 5 && p->viewBounds.bottom == 85 && p->viewBounds.top == 85 - 39);
+	EXPECT(RINT(Eval("ctxK.viewEffect")) == 0x182000);
+	Eval("ctxK:Open()");
+	Refresh();
+	long top = p->viewBounds.top;
+	EXPECT(InkIn(34, top, 44, top + 13) > 0 && InkIn(44, top, 60, top + 13) > 0);		// the mark in its column, the text after it
+	EXPECT(InkIn(34, top + 13, 44, top + 26) == 0);									// no mark on the second
+	EXPECT(Pixel(44, top + 17) == 1 && Pixel(47, top + 17) == 1 && Pixel(44, top + 20) == 1 && Pixel(45, top + 18) == 0);	// the icon (8 x 4 hollow box) at the text column's left, centred in the row
+	EXPECT(InkIn(30, top + 26, 44, top + 37) == 0 && InkIn(44, top + 26, 44 + 60, top + 39) > 0 && InkIn(44 + 64, top + 26, p->viewBounds.right, top + 37) == 0);	// cut to the width, the ellipsis after
+	Eval("ctxK:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "picker closed again"));
+}
+
+
 int
 main()
 {
@@ -1110,6 +1196,7 @@ main()
 		TestShapes();
 		TestCommands();
 		TestIdlers();
+		TestPickView();
 	}
 	newton_catch_all
 	{

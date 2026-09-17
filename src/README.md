@@ -110,9 +110,9 @@ src/
                 (GaugeView.h), the NewtonScript shapes and DrawShape
                 (DrawShape.h), the command frames (Commands.h) and the
                 application that dispatches them, with the undo stacks
-                and the delayed actions (Application.h); the other
-                subclasses (lists, pickers, editing) and the event loop
-                to come
+                and the delayed actions (Application.h), the picker of
+                popup menus (PickView.h); the other subclasses (lists,
+                editing) and the event loop to come
                 (docs/views/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,

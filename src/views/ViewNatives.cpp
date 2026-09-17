@@ -329,6 +329,19 @@ RealOpenX(RefArg context, Boolean modal)
 }
 
 
+// ROM 0x001b7cbc FSetPopupX
+// :SetPopup(): the view made the root's popup (a picker: closed by a tap
+// elsewhere, NOT YET).
+static Ref
+FSetPopupX(RefArg rcvr)
+{
+	TView* view = GetView(rcvr);
+	if (view != nil)
+		gRootView->SetPopup(view, true);
+	return NILREF;
+}
+
+
 // ROM 0x001ee9e8 FSetupIdleX
 // :SetupIdle(milliseconds): the view's idler set (0 removes it) - its
 // viewIdleScript runs when the time comes, its answer the next delay.
@@ -644,6 +657,7 @@ void
 RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
+	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();
 	RegisterApplicationNatives();
@@ -700,7 +714,7 @@ MakeViewMethods(void)
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
-		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 },
+		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)
