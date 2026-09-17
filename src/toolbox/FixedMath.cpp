@@ -6,9 +6,10 @@
 				magnitudes, round to nearest and saturate on overflow.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	NOT YET RECONSTRUCTED: FractSineCosine and FixedAtan2 (a polynomial
-	over coefficients in the initialised RAM area), and FixMul32
-	(0x000b310c, a different fixed format).
+	NOT YET RECONSTRUCTED: FractSineCosine (a CORDIC over a RAM-area table),
+	FractSin/FractCos (xFracSin/xFracCos), FixedASin/FixedACos (the same
+	arctangent polynomial as FixedAtan2, but undeclared in the DDK), and
+	FixMul32 (0x000b310c, a different fixed format).
 */
 
 #include "FixedMath.h"
@@ -150,4 +151,75 @@ FractSquareRoot(Fract param_1)
 	}
 	while (iVar3 != 0);
 	return (Fract) ((uVar2 & 1) + (uVar2 >> 1));
+}
+
+
+// The arctangent minimax polynomial's coefficients (2.30): atan(r) is
+// r * (c0 + c1*r^2 + c2*r^4 + ... + c5*r^10), evaluated by Horner.  They
+// live in the initialised RAM area at 0x0c100db8 and have no symbol, so
+// they are written here from the ROM's RW-init copy (cited at that copy's
+// address) rather than through romtable.py.
+// ROM 0x006f10a0 (unnamed) - the RW-init copy of RAM 0x0c100db8
+static const Fract kAtanCoeffs[6] =
+{
+	(Fract) 0x3fffa073, (Fract) 0xeab64ebe, (Fract) 0x0c62f72c,
+	(Fract) 0xf88c77f2, (Fract) 0x035e92fe, (Fract) 0xff3ffe62
+};
+
+const Fixed kFixedHalfPi = 0x19220;			// pi/2 in 16.16 (radians)
+const Fixed kFixedPi     = 0x32440;			// pi   in 16.16
+
+
+// ROM 0x000bec4c FixedAtan2
+// The angle (16.16 radians, -pi..pi) of the vector (x, y): atan2(y, x).
+// It works on the magnitudes, uses the smaller-over-larger ratio through
+// the arctangent polynomial (so the argument stays in 0..1), then folds
+// the octant and quadrant back with the sign flags.
+extern "C" Fixed
+FixedAtan2(Fixed x, Fixed y)
+{
+	Boolean negX = false;
+	Boolean negY = false;
+	if (x < 0)
+	{
+		negX = true;
+		x = -x;
+		if (x == (Fixed) 0x80000000)
+			x = 0x7fffffff;
+	}
+	if (y < 0)
+	{
+		negY = true;
+		y = -y;
+		if (y == (Fixed) 0x80000000)
+			y = 0x7fffffff;
+	}
+	Fixed hi = x;
+	Fixed lo = y;
+	if (x < y)
+	{
+		hi = y;
+		lo = x;
+	}
+	Fixed angle = 0;
+	if (hi != 0)
+	{
+		Fract ratio = FractDivide(lo, hi);
+		Fract r2 = FractMultiply(ratio, ratio);
+		Fract acc = kAtanCoeffs[5];
+		for (int i = 4; i >= 0; i--)
+		{
+			acc = FractMultiply(acc, r2);
+			acc = kAtanCoeffs[i] + acc;
+		}
+		acc = FractMultiply(acc, ratio);
+		angle = ((acc >> 13) & 1) + (acc >> 14);	// 2.30 Fract -> 16.16 Fixed, rounded
+	}
+	if (x < y)
+		angle = kFixedHalfPi - angle;		// > 45 degrees: the complement
+	if (negX)
+		angle = kFixedPi - angle;			// x < 0: reflect across the y axis
+	if (negY)
+		angle = -angle;						// y < 0: below the x axis
+	return angle;
 }

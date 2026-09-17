@@ -7,6 +7,9 @@
 
 #include <stdio.h>
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <stdint.h>
 
 static int failures = 0;
@@ -101,6 +104,32 @@ TestMultiplyDivide()
 }
 
 
+// FixedAtan2(x, y) is the angle of the vector, i.e. atan2(y, x), in 16.16
+// radians.  Checked against the C library over the eight octants.
+static void
+TestAtan2()
+{
+	EXPECT(FixedAtan2(0x10000, 0) == 0);						// (1,0): 0
+	EXPECT(Near(FixedAtan2(0, 0x10000), M_PI / 2 * kFix));		// (0,1): pi/2
+	EXPECT(Near(FixedAtan2(0x10000, 0x10000), M_PI / 4 * kFix));	// (1,1): pi/4
+	EXPECT(Near(FixedAtan2((Fixed) 0xffff0000, 0), M_PI * kFix));	// (-1,0): pi
+	static const struct { double x, y; } pts[] = {
+		{ 3, 1 }, { 1, 3 }, { -2, 1 }, { -1, 2 }, { -3, -1 },
+		{ -1, -4 }, { 2, -3 }, { 5, -1 }, { 1.5, 0.25 }, { -0.5, 0.75 },
+	};
+	for (unsigned i = 0; i < sizeof(pts) / sizeof(pts[0]); i++)
+	{
+		Fixed fx = (Fixed) (pts[i].x * kFix);
+		Fixed fy = (Fixed) (pts[i].y * kFix);
+		double want = atan2(pts[i].y, pts[i].x) * kFix;
+		// the 16.16 polynomial loses a little; a few LSBs of slack
+		double got = FixedAtan2(fx, fy);
+		double diff = got - want;
+		EXPECT(diff > -40.0 && diff < 40.0);
+	}
+}
+
+
 int main()
 {
 	TestFixedMul();
@@ -109,6 +138,7 @@ int main()
 	TestFractDiv();
 	TestFractSqrt();
 	TestMultiplyDivide();
+	TestAtan2();
 	if (failures == 0)
 		printf("test_FixedMath: all passed\n");
 	else
