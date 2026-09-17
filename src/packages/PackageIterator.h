@@ -195,6 +195,7 @@ public:
 					~TPackageIterator();
 
 	NewtonErr		Init(void);
+	TPackageIterator*	InitFields(void)	{ return this; }	// ROM 0x0015efbc InitFields__16TPackageIteratorFv - a no-op in this ROM
 	void			DisposeDirectory(void);
 	NewtonErr		ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& dataSize);
 	NewtonErr		SetupRelocationData(ULong directoryOffset, ULong* relocationSize);
@@ -212,10 +213,10 @@ public:
 	Boolean			ForDispatchOnly(void);
 	Boolean			CopyProtected(void);
 	const UniChar*	Copyright(void);
-	const UniChar*	PackageName(void)		{ return TPrivatePackageIterator::PackageName(); }
+	const UniChar*	PackageName(void)		{ return TPrivatePackageIterator::PackageName(); }	// ROM 0x0015efb4 PackageName__16TPackageIteratorFv - forwards to TPrivatePackageIterator
 	void			GetPartInfo(ULong partIndex, PartInfo* const info);
 	ULong			ProcessorTypeOfPart(ULong partIndex);
-	ULong			GetPartDataOffset(ULong partIndex)	{ return TPrivatePackageIterator::GetPartDataOffset(partIndex); }
+	ULong			GetPartDataOffset(ULong partIndex)	{ return TPrivatePackageIterator::GetPartDataOffset(partIndex); }	// ROM 0x0015efb8 GetPartDataOffset__16TPackageIteratorFUl - forwards to TPrivatePackageIterator
 	// NOT YET RECONSTRUCTED: Store(TStore*, ULong, TCallbackCompressor*, TLOCallback*) - the package as a large object on a store
 
 	Boolean			fFromPipe;				// +0x20
