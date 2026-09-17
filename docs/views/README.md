@@ -763,6 +763,24 @@ shrank).  `GetStyleAtOffset` 0x0017f8dc, `GetStylesOfRange` 0x0017fa94,
 `GetWriteableTextStylesArray` 0x0017b278 makes the styles slot a runs
 array when it was a single spec.
 
+### Tapping a paragraph (`HandleTap` 0x001772f4, the double tap)
+
+A tap on a paragraph (aeTap) is deferred by the double-tap interval so a
+second tap can be a double tap instead: `RealDoCommand`'s aeTap case
+stores the point and arms an idler (`AddIdler(this, gDoubleTapInterval *
+16 + 80 ms, 2)`); when it fires, `Idle(2)` 0x00180994 runs `HandleTap`
+0x001772f4 - the selection removed and the caret placed at the character
+nearest the point (`PointToOffset`; before the first line the start, past
+the text the end).  A double tap (aeDoubleTap) cancels the pending tap and
+selects the word under it: the character found, the word scanned around it
+(`ScanWordStart`/`ScanWordEnd` 0x001a37d0/0x001a36b4 - back and forward
+over characters of the same kind, ink or not, that are not white space)
+and `MakeHilite`d.  NOT YET: the ink-word double tap
+(`HitsHilitedInkWord`), `OpenKeypadFor`, the tap sound (`FClicker`).
+(Tested by `test_Views`: `TestParagraphTap` taps and double-taps
+directly, and `TestClicks` taps a paragraph through the recognition and
+lets the idler place the caret.)
+
 ### Selecting text (`TParagraphView::MakeHilite` 0x0016c4cc)
 
 A range of a paragraph's text is selected by `MakeHilite(start, end,

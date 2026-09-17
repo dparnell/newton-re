@@ -76,6 +76,8 @@ public:
 	virtual			~TParagraphView();									// ROM 0x00182624 __dt__14TParagraphViewFv
 	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x00180df0 Constructor__14TParagraphViewFRC6RefVarP5TView
 	virtual void	SetupDone(void);									// ROM 0x00181608 SetupDone__14TParagraphViewFv
+	virtual long	Idle(long reason);									// ROM 0x00180994 Idle__14TParagraphViewFl - reason 2 runs a deferred tap
+	virtual void	HandleTap(Point& pt);								// ROM 0x001772f4 HandleTap__14TParagraphViewFR6TPoint (vtable +0x11c) - the caret placed at the tap
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016b14c RealDraw__14TParagraphViewFR5TRect
 	virtual void	SetBounds(const Rect& bounds);						// ROM 0x00180418 SetBounds__14TParagraphViewFRC5TRect
 	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x00181008 SetCaretOffset__14TParagraphViewFPlT1
@@ -114,6 +116,7 @@ public:
 	void		DrawHilites(Boolean scaled);							// ROM 0x0016cefc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
 	void		RemoveAllHilites(void);									// host: the hilites slot cleared (the ROM's TView::RemoveAllHilites 0x0026002c removes them one by one)
 	Boolean		SelectionRegion(RefArg hilite, RgnHandle rgn);			// host: the region covering a hilite's characters (from its caretStart/caretEnd)
+	Boolean		SelectWordAt(Point pt);									// the word under the point selected (the ROM's aeDoubleTap case of RealDoCommand at 0x0016e688, over ScanWordStart/End 0x001a37d0/0x001a36b4)
 	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x0017a778 GetStyleForInsertion__14TParagraphViewFlUcT2
 	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x0017b1d8 GetStyleAtOffset__14TParagraphViewFlPlT2
 	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x0017b228 GetStylesOfRange__14TParagraphViewFlT1Uc
@@ -133,6 +136,8 @@ public:
 	long		fLineHeight;		// +0x3c  the default style's height (ascent + descent + leading), then the last line's
 	Rect		fCachedBounds;		// +0x40  the bounds the lines were laid out in
 	Boolean		fCalculateBounds;	// +0x58  vCalculateBounds is set
+	Boolean		fTapped;			// +0x59  a tap is pending the double-tap interval (Idle reason 2 runs it)
+	Point		fTapPoint;			// +0x5c  where the tap was
 	long		fCaretOffset;		// +0x60  the caret's character offset (SetCaretOffset)
 	RefStruct	fWordBreakTable;	// +0x64  the locale's
 	RefStruct	fLineBreakTable;	// +0x68

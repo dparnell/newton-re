@@ -25,6 +25,7 @@
 #include "Recognizer.h"
 #include "StrokeCentral.h"
 #include "HostTablet.h"
+#include "hal/host/Host.h"
 #include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -1627,6 +1628,28 @@ TestClicks()
 	EXPECT(NOTNIL(Eval("cancelled")) && ISNIL(Eval("picked")) && gRootView->fChildren->Count() == 0);		// (the ROM: the cancel script, then the action script with nil)
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "picker cancelled and closed"));
+
+	// a tap on a paragraph reaches it as aeTap and, after the double-tap
+	// interval (the idler), places the caret at the tapped character
+	gKeyboardConnected = true;
+	TParagraphView* tp = (TParagraphView*) ViewOf("ctxTP := AddView(GetRoot(), {viewClass: 81, viewFlags: 1 + 0x200 + 0x800 + 0x1000, viewBounds: {left: 20, top: 40, right: 160, bottom: 60}, viewJustify: 0, viewFont: espy12, text: \"Hello World\"})");
+	Eval("ctxTP:Dirty()");
+	Refresh();
+	Rect box4;
+	tp->OffsetToBounds(4, &box4);
+	long tpy = (tp->Line(0).fBounds.top + tp->Line(0).fBounds.bottom) / 2;
+	HostAdvanceClock(60 * 60 * 0xf000);		// so the tap is well after any prior click
+	HostTabletPenDown(box4.left + 1, tpy, 0);
+	HostTabletPenUp(0);
+	IdleStrokes();
+	EXPECT(tp->fTapped && gRootView->fCaretView != tp);		// deferred, not yet placed
+	HostAdvanceClock(kSeconds);								// past the double-tap interval
+	gRootView->IdleViews();
+	EXPECT(!tp->fTapped && gRootView->fCaretView == tp && tp->fCaretOffset == 4);
+	gKeyboardConnected = false;
+	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxTP)");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "paragraph tap in recognition closed"));
 }
 
 
@@ -2002,6 +2025,57 @@ TestSelection()
 }
 
 
+// tapping a paragraph places the caret; a double tap selects the word
+static void
+TestParagraphTap()
+{
+	const ULong kGermanyBundle = 0x003c10ed;
+	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	RefVar intl(AllocateFrame());
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, bundle);
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	gKeyboardConnected = true;
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxPT := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 160, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hello World\"})");
+	Eval("ctxPT:Dirty()");
+	Refresh();
+	long mid = (p->Line(0).fBounds.top + p->Line(0).fBounds.bottom) / 2;
+	// a tap between the 3rd and 4th character places the caret there
+	Rect box3;
+	p->OffsetToBounds(3, &box3);
+	Point tap;
+	tap.h = (short) (box3.left + 1);
+	tap.v = (short) mid;
+	p->HandleTap(tap);
+	EXPECT(gRootView->fCaretView == p && p->fCaretOffset == 3 && gRootView->fCaretLength == 0);
+	// a tap past the end of the text goes to the end
+	Point tapEnd;
+	tapEnd.h = (short) (p->viewBounds.right - 1);
+	tapEnd.v = (short) mid;
+	p->HandleTap(tapEnd);
+	EXPECT(p->fCaretOffset == 11);
+	// a double tap in "World" selects the whole word (offsets 6..11)
+	Rect box8;
+	p->OffsetToBounds(8, &box8);
+	Point tapWord;
+	tapWord.h = (short) box8.left;
+	tapWord.v = (short) mid;
+	EXPECT(p->SelectWordAt(tapWord));
+	EXPECT(NOTNIL(p->FirstHilite()) && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 6 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 11);
+	p->RemoveAllHilites();
+	// the deferred single tap: aeTap stores the point and arms the idler,
+	// Idle(2) places the caret once the interval passes
+	p->fTapped = true;
+	p->fTapPoint = tap;			// near offset 3
+	gRootView->SetKeyView(nil, 0, 0, false);
+	p->Idle(2);
+	EXPECT(!p->fTapped && gRootView->fCaretView == p && p->fCaretOffset == 3);
+	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxPT); RemoveSlot(vars, 'international)");
+	gKeyboardConnected = false;
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "paragraph tap closed"));
+}
+
+
 int
 main()
 {
@@ -2073,6 +2147,7 @@ main()
 		TestTyping();
 		TestKeyChain();
 		TestSelection();
+		TestParagraphTap();
 		TestIdlers();
 		TestPickView();
 		TestClicks();

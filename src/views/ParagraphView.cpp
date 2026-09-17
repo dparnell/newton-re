@@ -12,6 +12,9 @@
 #include "RootView.h"
 #include "Application.h"
 #include "Commands.h"
+#include "UnitPublic.h"
+#include "Stroke.h"
+#include "StrokeQueue.h"
 #include "Keyboard.h"
 #include "Rects.h"
 #include "Regions.h"
@@ -86,6 +89,8 @@ TParagraphView::Constructor(RefArg context, TView* parent)
 	fTextFlags = -1;
 	fCaretOffset = 0;
 	fSetupDone = false;
+	fTapped = false;
+	fTapPoint.h = fTapPoint.v = 0;
 	TView::Constructor(context, parent);
 }
 
@@ -1164,6 +1169,117 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 }
 
 
+static const UniChar kScanInkChar = 0xf701;		// the ink-word placeholder the word scan treats as its own kind (RichString.h's kInkChar is 0xf700)
+
+
+// ROM 0x001a37d0 ScanWordStart__FPUslT2
+// The start of the word around offset: back while the characters are of
+// the same kind (all ink or all not) and not white space, no further than
+// limit.
+static long
+ScanWordStart(const UniChar* text, long offset, long limit)
+{
+	Boolean startInk = text[offset] == kScanInkChar;
+	while (offset >= limit)
+	{
+		UniChar c = text[offset];
+		if (IsWhiteSpace(c) || (c == kScanInkChar) != startInk)
+			break;
+		offset--;
+	}
+	return offset + 1;
+}
+
+
+// ROM 0x001a36b4 ScanWordEnd__FPUslT2
+// The end of the word around offset (the character after it): forward
+// while the characters are of the same kind and not white space, no
+// further than limit.
+static long
+ScanWordEnd(const UniChar* text, long offset, long limit)
+{
+	Boolean startInk = text[offset] == kScanInkChar;
+	while (offset < limit)
+	{
+		UniChar c = text[offset];
+		if (IsWhiteSpace(c) || (c == kScanInkChar) != startInk)
+			break;
+		offset++;
+	}
+	return offset;
+}
+
+
+// The word around a point selected (a double tap): the character under
+// the point found (PointToOffset), the word scanned around it, and, when
+// it is not empty, hilited.  ==> whether a word was selected.
+Boolean
+TParagraphView::SelectWordAt(Point pt)
+{
+	if (fFlags & (vReadOnly | vWriteProtected))
+		return false;
+	long offset = PointToOffset(pt);
+	if (offset < 0)
+		return false;
+	long length = TextLength();
+	if (offset >= length)
+		return false;
+	RefVar textRef(Text());
+	if (ISNIL(textRef))
+		return false;
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	long start = ScanWordStart(text, offset, 0);
+	long end = ScanWordEnd(text, offset, length);
+	rich.ReleasePtr();
+	if (end <= start)
+		return false;
+	MakeHilite(start, end, true);
+	return true;
+}
+
+
+// ROM 0x001772f4 HandleTap__14TParagraphViewFR6TPoint
+// The caret placed at the tapped point: the selection removed, the
+// character nearest the point found (PointToOffset; before the first line
+// goes to the start, past the text to its end), the key view set there.
+// NOT YET RECONSTRUCTED: FClicker (the tap sound).
+void
+TParagraphView::HandleTap(Point& pt)
+{
+	RemoveAllHilites();
+	if (fFlags & (vReadOnly | vWriteProtected))
+		return;
+	long offset = PointToOffset(pt);
+	if (offset < 0)
+	{
+		if (pt.v < fCachedBounds.top)
+			offset = 0;
+		else
+			offset = TextLength();
+	}
+	gRootView->SetKeyView(this, offset, 0, true);
+}
+
+
+// ROM 0x00180994 Idle__14TParagraphViewFl
+// TView's idle; reason 2 is the deferred single tap - the caret placed at
+// the point kept when the tap came, once the double-tap interval has
+// passed with no second tap.  NOT YET RECONSTRUCTED: reason 1's expiry of
+// the just-typed word runs (the ink recogniser).
+long
+TParagraphView::Idle(long reason)
+{
+	long delay = TView::Idle(reason);
+	if (reason == 2 && fTapped)
+	{
+		HandleTap(fTapPoint);
+		fTapped = false;
+	}
+	return delay;
+}
+
+
 // ROM 0x00182d14 ProcessStyles__14TParagraphViewFUc
 // The styles checked for ink words to recognise (CheckStyles; the
 // recogniser then runs over the text).  NOT YET RECONSTRUCTED: ink -
@@ -1689,6 +1805,29 @@ TParagraphView::RealDoCommand(RefArg cmd)
 	if (id == aeReplaceText)
 	{
 		HandleReplaceText(cmd);
+		return true;
+	}
+	if (id == aeTap)
+	{
+		// defer placing the caret until the double-tap interval passes, so
+		// a second tap can be a double tap (word select) instead
+		fTapped = true;
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		fTapPoint = unit->Stroke()->FirstPoint();
+		gRootView->AddIdler(this, gDoubleTapInterval * 16 + 80, 2);
+		CommandSetResult(cmd, 1);
+		return true;
+	}
+	if (id == aeDoubleTap)
+	{
+		// the pending single tap cancelled; the word under the tap selected
+		fTapped = false;
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		Point pt = unit->Stroke()->FirstPoint();
+		if (PtInRect(pt, &viewBounds) && SelectWordAt(pt))
+			CommandSetResult(cmd, 1);
+		else
+			HandleTap(pt);		// no word there: just the caret
 		return true;
 	}
 	return TView::RealDoCommand(cmd);
