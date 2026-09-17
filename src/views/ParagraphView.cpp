@@ -1326,7 +1326,7 @@ TParagraphView::Idle(long reason)
 }
 
 
-// ROM 0x0026051c PointInHilite (TView's iterates the hilites' Encloses)
+// host: whether the point falls within the selected text (the ROM TView::PointInHilite 0x0026051c iterates the hilites, asking each Encloses)
 // Whether the point falls within the selected text: it is tested against
 // each hilite's region (built by SelectionRegion).  DEVIATION: the ROM
 // asks each C++ TParagraphHilite's Encloses in the view's local
