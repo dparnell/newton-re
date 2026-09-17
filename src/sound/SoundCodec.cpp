@@ -1,7 +1,8 @@
 /*
 	File:		sound/SoundCodec.cpp
 
-	Contains:	TSoundCodec's Safe* wrappers and TMuLawCodec (SoundCodec.h).
+	Contains:	TSoundCodec's Safe* wrappers, TMuLawCodec and TIMACodec
+				(SoundCodec.h).
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
 	The protocol's own calls are dispatch glue, which src/protocols/
@@ -74,12 +75,12 @@ SafeCodecReset(TSoundCodec* codec, CodecBlock* block)
 
 // ROM 0x001e80e0 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
 NewtonErr
-SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* block)
+SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block)
 {
 	NewtonErr err;
 	newton_try
 	{
-		err = codec->Produce(dst, dstSize, sampleCount, block);
+		err = codec->Produce(dst, dstSize, codedSize, block);
 	}
 	newton_catch_all
 	{
@@ -92,12 +93,12 @@ SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* sampleCou
 
 // ROM 0x001e8160 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
 NewtonErr
-SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* sampleCount, const CodecBlock* block)
+SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block)
 {
 	NewtonErr err;
 	newton_try
 	{
-		err = codec->Consume(src, srcSize, sampleCount, block);
+		err = codec->Consume(src, srcSize, codedSize, block);
 	}
 	newton_catch_all
 	{
@@ -264,13 +265,13 @@ TMuLawCodec::BlockConvertLin16ToMuLaw(void* dst, const void* src, long count)
 // Decode the next stretch of the buffer into the caller's, and say in the
 // block what those samples now are: 16-bit linear, at the recorded rate.
 NewtonErr
-TMuLawCodec::Produce(void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* block)
+TMuLawCodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block)
 {
 	NewtonErr err = noErr;
 	long bytesPerSample = (long) fSampleBits / 8;	// the ROM's shift rounds toward zero
 	ULong count = *dstSize / (ULong) bytesPerSample;
 	*dstSize = 0;
-	*sampleCount = 0;
+	*codedSize = 0;
 	if (fBuffer == nil)
 		err = kSoundErrNoBuffer;
 	else
@@ -283,7 +284,7 @@ TMuLawCodec::Produce(void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* 
 			BlockConvertMuLawToLin16(dst, (UByte*) fBuffer + fPosition, count);
 			fPosition += count;
 			*dstSize = count * (ULong) ((long) fSampleBits / 8);
-			*sampleCount = count;
+			*codedSize = count;
 		}
 		block->fFormat = kSoundFormatLinear16;
 		block->fSampleBits = 16;
@@ -296,13 +297,13 @@ TMuLawCodec::Produce(void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* 
 // ROM 0x00124c10 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
 // The other way: code the caller's samples into the codec's buffer.
 NewtonErr
-TMuLawCodec::Consume(const void* src, ULong* srcSize, ULong* sampleCount, const CodecBlock* /*block*/)
+TMuLawCodec::Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* /*block*/)
 {
 	NewtonErr err = noErr;
 	long bytesPerSample = (long) fSampleBits / 8;
 	ULong count = *srcSize / (ULong) bytesPerSample;
 	*srcSize = 0;
-	*sampleCount = 0;
+	*codedSize = 0;
 	if (fBuffer == nil)
 		err = kSoundErrNoBuffer;
 	else
@@ -315,7 +316,7 @@ TMuLawCodec::Consume(const void* src, ULong* srcSize, ULong* sampleCount, const 
 			BlockConvertLin16ToMuLaw((UByte*) fBuffer + fPosition, src, count);
 			fPosition += count;
 			*srcSize = count * (ULong) ((long) fSampleBits / 8);
-			*sampleCount = count;
+			*codedSize = count;
 		}
 	}
 	return err;
@@ -342,13 +343,136 @@ TMuLawCodec::BufferCompleted()
 }
 
 
+/*------------------------------------------------------------------------------
+	T I M A C o d e c
+------------------------------------------------------------------------------*/
+
+PROTOCOL_IMPL_SOURCE_MACRO(TIMACodec)		// ROM 0x000e9898 Sizeof__9TIMACodecSFv
+PROTOCOL_CLASSINFO(TIMACodec, "TSoundCodec", "", 0, 0, nil)	// ROM 0x0037f7ac ClassInfo__9TIMACodecSFv
+
+
+// ROM 0x000e98a0 New__9TIMACodecFv
+TIMACodec*
+TIMACodec::New()
+{
+	fState.fPredictor = 0;
+	fState.fStepIndex = 0;
+	fBuffer = nil;
+	fPosition = 0;
+	fUnknown30 = 0;
+	fUnknown34 = 0xa00;
+	fUnknown38 = 3;
+	return this;
+}
+
+
+// ROM 0x000e9ca8 Delete__9TIMACodecFv
+void
+TIMACodec::Delete()
+{ }
+
+
+// ROM 0x000e9cac Init__9TIMACodecFP10CodecBlock
+NewtonErr
+TIMACodec::Init(CodecBlock* /*block*/)
+{
+	return noErr;
+}
+
+
+// ROM 0x000e9cb4 Reset__9TIMACodecFP10CodecBlock
+// The buffer, and a fresh predictor: a stream starts from silence.
+NewtonErr
+TIMACodec::Reset(CodecBlock* block)
+{
+	fState.fPredictor = 0;
+	fState.fStepIndex = 0;
+	fBuffer = block->fBuffer;
+	fFormat = block->fFormat;
+	fSampleRate = block->fSampleRate;
+	fSampleBits = block->fSampleBits;
+	fSize = block->fSize;
+	fPosition = 0;
+	return noErr;
+}
+
+
+// ROM 0x000e9cf8 Produce__9TIMACodecFPvPUlT2P10CodecBlock
+// A coded block is kIMABlockBytes long and unpacks to kIMABlockSize samples,
+// so the two sides' counts are quite unlike each other: dstSize comes back
+// as the linear bytes written, codedSize as the coded bytes taken.
+NewtonErr
+TIMACodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block)
+{
+	if (fBuffer == nil)
+		return kSoundErrNoBuffer;
+
+	ULong bytesPerSample = (fSampleBits == 8) ? 1 : 2;
+	ULong blocks = *dstSize / (bytesPerSample * kIMABlockSize);
+	ULong available = (fSize - fPosition) / kIMABlockBytes;
+	if (available < blocks)
+		blocks = available;
+	ULong outFormat = (fSampleBits == 8) ? 0 : 2;		// 8-bit unsigned, or 16-bit
+	ExpandIMA((const signed char*) fBuffer + fPosition, dst, &fState, blocks, 1, outFormat);
+	fPosition += blocks * kIMABlockBytes;
+	*dstSize = bytesPerSample * blocks * kIMABlockSize;
+	*codedSize = blocks * kIMABlockBytes;
+	block->fSampleBits = fSampleBits;
+	block->fFormat = (fSampleBits == 8) ? kSoundFormatStd8 : kSoundFormatLinear16;
+	block->fSampleRate = fSampleRate;
+	return noErr;
+}
+
+
+// ROM 0x000e9e20 Consume__9TIMACodecFPCvPUlT2PC10CodecBlock
+// The coding side only takes 16-bit samples, so a block is 0x80 bytes in.
+NewtonErr
+TIMACodec::Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* /*block*/)
+{
+	if (fBuffer == nil)
+		return kSoundErrNoBuffer;
+
+	ULong blocks = *srcSize / (2 * kIMABlockSize);
+	ULong available = (fSize - fPosition) / kIMABlockBytes;
+	if (available < blocks)
+		blocks = available;
+	CompressIMA((const short*) src, (signed char*) fBuffer + fPosition,
+				blocks * kIMABlockSize, &fState, 1, 1);
+	fPosition += blocks * kIMABlockBytes;
+	*srcSize = blocks * 2 * kIMABlockSize;
+	*codedSize = blocks * kIMABlockBytes;
+	return noErr;
+}
+
+
+// ROM 0x000e9ed8 Start__9TIMACodecFv
+void
+TIMACodec::Start()
+{ }
+
+
+// ROM 0x000e9edc Stop__9TIMACodecFi
+void
+TIMACodec::Stop(int /*reason*/)
+{ }
+
+
+// ROM 0x000e9ee0 BufferCompleted__9TIMACodecFv
+Boolean
+TIMACodec::BufferCompleted()
+{
+	return fPosition == fSize;
+}
+
+
 // ROM 0x001eae0c InitializeSound__Fv
 // NOT YET: the ROM also powers the sound hardware down, registers its
 // driver, starts the TSoundServer app world and sets gMaxFilterNodes from
-// the CPU type; and it registers TIMACodec, TGSMCodec and TDTMFCodec beside
-// the mu-law one, none of which is reconstructed.
+// the CPU type; and it registers TGSMCodec and TDTMFCodec beside these two,
+// neither of which is reconstructed.
 void
 InitializeSound(void)
 {
 	TMuLawCodec::ClassInfo()->Register();
+	TIMACodec::ClassInfo()->Register();
 }

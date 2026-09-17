@@ -176,17 +176,25 @@ calls with an exception handler round them, which is how the sound channel
 makes them: a Throw out of a codec becomes `ERRBASE_SOUND` rather than
 unwinding into the channel.
 
-`TMuLawCodec` (ROM 0x001249c8-0x00124ce0) is the mu-law implementation.  It
-keeps nothing but where it has got to in the buffer, so `Init`, `Start` and
-`Stop` have nothing to do, and it carries its own copies of the two
-conversions - the same arithmetic as `SampleConvert.h`'s, including the
-overflow bug, but without the dither.  `InitializeSound` (ROM 0x001eae0c)
-registers it; `test_SoundCodec` drives one both directly and through an
-instance made by name from the registry, which is why it boots the OS.
+Two implementations are reconstructed.  `TMuLawCodec` (ROM
+0x001249c8-0x00124ce0) keeps nothing but where it has got to in the buffer,
+so `Init`, `Start` and `Stop` have nothing to do, and it carries its own
+copies of the two conversions - the same arithmetic as `SampleConvert.h`'s,
+including the overflow bug, but without the dither.  `TIMACodec` (ROM
+0x000e9898-0x000e9efc) is IMA/DVI ADPCM over `IMACodec.h`: a coded block of
+`kIMABlockBytes` unpacks to `kIMABlockSize` samples, so the two sides'
+counts are far apart, and the block's sample size decides whether the linear
+side is 8- or 16-bit (`Consume` only ever takes 16-bit).  Its `Reset` starts
+the predictor from silence, and the state carries across calls so a buffer
+can be produced a piece at a time.
+
+`InitializeSound` (ROM 0x001eae0c) registers them; `test_SoundCodec` drives
+both directly and through instances made by name from the registry, which is
+why it boots the OS.
 
 ## Not yet
 
-The other codec implementations (`TIMACodec`, `TGSMCodec`, `TDTMFCodec`) and
-the layer that drives them: `TSoundServer`/`TSoundChannel`, `TCodecChannel`,
-`TDMAChannel` and the `SoundBlock` a `CodecBlock` is converted from, and the
-sound hardware driver the rest of `InitializeSound` starts.
+`TGSMCodec` and `TDTMFCodec`, and the layer that drives the codecs:
+`TSoundServer`/`TSoundChannel`, `TCodecChannel`, `TDMAChannel` and the
+`SoundBlock` a `CodecBlock` is converted from, and the sound hardware driver
+the rest of `InitializeSound` starts.

@@ -1,7 +1,8 @@
 // Host unit test for the sound codec protocol (src/sound/SoundCodec.h):
-// TMuLawCodec driven the way a sound channel drives one - Reset with a
-// buffer, Produce until BufferCompleted, and Consume the other way - both
-// directly and through an instance made by name from the protocol registry.
+// TMuLawCodec and TIMACodec driven the way a sound channel drives one -
+// Reset with a buffer, Produce until BufferCompleted, and Consume the other
+// way - both directly and through instances made by name from the protocol
+// registry.
 //
 // Making an instance by name needs the registry, which is a monitor, so the
 // test runs as the kernel services task of a booted OS (as
@@ -56,28 +57,28 @@ TestProduce()
 
 	// four samples at a time, into an eight-byte buffer
 	short out[16];
-	ULong dstSize = 8, sampleCount = 0;
-	EXPECT(codec.Produce(out, &dstSize, &sampleCount, &block) == noErr);
-	EXPECT(dstSize == 8 && sampleCount == 4);
+	ULong dstSize = 8, codedSize = 0;
+	EXPECT(codec.Produce(out, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 8 && codedSize == 4);
 	EXPECT(block.fFormat == kSoundFormatLinear16);		// what they are now
 	EXPECT(block.fSampleBits == 16);
 	EXPECT(block.fSampleRate == 11025);
 	EXPECT(!codec.BufferCompleted());
 
 	dstSize = 8;
-	EXPECT(codec.Produce(out + 4, &dstSize, &sampleCount, &block) == noErr);
-	EXPECT(dstSize == 8 && sampleCount == 4);
+	EXPECT(codec.Produce(out + 4, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 8 && codedSize == 4);
 
 	// only two are left, so a full-sized ask gets two
 	dstSize = 8;
-	EXPECT(codec.Produce(out + 8, &dstSize, &sampleCount, &block) == noErr);
-	EXPECT(dstSize == 4 && sampleCount == 2);
+	EXPECT(codec.Produce(out + 8, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 4 && codedSize == 2);
 	EXPECT(codec.BufferCompleted());
 
 	// and nothing after that
 	dstSize = 8;
-	EXPECT(codec.Produce(out + 10, &dstSize, &sampleCount, &block) == noErr);
-	EXPECT(dstSize == 0 && sampleCount == 0);
+	EXPECT(codec.Produce(out + 10, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 0 && codedSize == 0);
 
 	// the samples are what the free converter makes of the same bytes, bar
 	// the two dithered bits it adds and the codec's copy does not
@@ -106,9 +107,9 @@ TestConsumeRoundTrip()
 	FillBlock(&block, coded, sizeof(coded));
 	EXPECT(codec.Reset(&block) == noErr);
 
-	ULong srcSize = sizeof(samples), sampleCount = 0;
-	EXPECT(codec.Consume(samples, &srcSize, &sampleCount, &block) == noErr);
-	EXPECT(srcSize == 16 && sampleCount == 8);
+	ULong srcSize = sizeof(samples), codedSize = 0;
+	EXPECT(codec.Consume(samples, &srcSize, &codedSize, &block) == noErr);
+	EXPECT(srcSize == 16 && codedSize == 8);
 	EXPECT(codec.BufferCompleted());
 
 	// the same bytes the free converter would make
@@ -123,8 +124,8 @@ TestConsumeRoundTrip()
 	// and decoding them again lands within the coding's step
 	EXPECT(codec.Reset(&block) == noErr);
 	ULong dstSize = sizeof(back);
-	EXPECT(codec.Produce(back, &dstSize, &sampleCount, &block) == noErr);
-	EXPECT(dstSize == 16 && sampleCount == 8);
+	EXPECT(codec.Produce(back, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 16 && codedSize == 8);
 	for (int i = 0; i < 8; i++)
 	{
 		long exponent = (((UByte) ~coded[i]) >> 4) & 7;
@@ -148,12 +149,12 @@ TestNoBuffer()
 	FillBlock(&block, nil, 0);
 
 	short out[4];
-	ULong dstSize = 8, sampleCount = 0;
-	EXPECT(codec.Produce(out, &dstSize, &sampleCount, &block) == kSoundErrNoBuffer);
-	EXPECT(dstSize == 0 && sampleCount == 0);
+	ULong dstSize = 8, codedSize = 0;
+	EXPECT(codec.Produce(out, &dstSize, &codedSize, &block) == kSoundErrNoBuffer);
+	EXPECT(dstSize == 0 && codedSize == 0);
 
 	dstSize = 8;
-	EXPECT(SafeCodecProduce(&codec, out, &dstSize, &sampleCount, &block) == kSoundErrNoBuffer);
+	EXPECT(SafeCodecProduce(&codec, out, &dstSize, &codedSize, &block) == kSoundErrNoBuffer);
 	EXPECT(SafeCodecInit(&codec, &block) == noErr);
 	EXPECT(SafeCodecStart(&codec) == noErr);
 	EXPECT(SafeCodecStop(&codec, 0) == noErr);
@@ -177,13 +178,103 @@ TestByName()
 	EXPECT(SafeCodecReset(codec, &block) == noErr);
 
 	short out[4];
-	ULong dstSize = sizeof(out), sampleCount = 0;
-	EXPECT(SafeCodecProduce(codec, out, &dstSize, &sampleCount, &block) == noErr);
-	EXPECT(dstSize == 8 && sampleCount == 4);
+	ULong dstSize = sizeof(out), codedSize = 0;
+	EXPECT(SafeCodecProduce(codec, out, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 8 && codedSize == 4);
 	EXPECT(codec->BufferCompleted());
 	EXPECT(out[3] == 0);						// 0xFF is the coding's silence
 
 	SafeCodecDelete(codec);
+}
+
+
+// TIMACodec: a coded block is 0x22 bytes and unpacks to 0x40 samples, so
+// the two sides' counts are quite unlike each other.  Samples coded and
+// decoded again come back close, the coding being lossy but predictive.
+static void
+TestIMACodec()
+{
+	enum { kBlocks = 3, kSamples = kBlocks * (int) kIMABlockSize };
+	static short samples[kSamples];
+	static signed char coded[kBlocks * (int) kIMABlockBytes];
+	static short back[kSamples];
+	for (int i = 0; i < kSamples; i++)
+	{
+		int up = (i + 16) % 64;						// a triangle, starting at silence
+		samples[i] = (short) (((up < 32 ? up : 64 - up) - 16) * 375);
+	}
+
+	TIMACodec codec;
+	codec.New();
+	EXPECT(codec.fUnknown34 == 0xa00 && codec.fUnknown38 == 3);
+
+	CodecBlock block;
+	FillBlock(&block, coded, sizeof(coded));
+	block.fFormat = kSoundFormatLinear16;
+	EXPECT(codec.Reset(&block) == noErr);
+	EXPECT(!codec.BufferCompleted());
+
+	// coding: 0x80 bytes in for 0x22 bytes of buffer, a block at a time
+	ULong srcSize = 2 * kIMABlockSize, codedSize = 0;
+	EXPECT(codec.Consume(samples, &srcSize, &codedSize, &block) == noErr);
+	EXPECT(srcSize == 2 * kIMABlockSize && codedSize == kIMABlockBytes);
+
+	// the rest in one go
+	srcSize = 2 * (kSamples - kIMABlockSize);
+	EXPECT(codec.Consume(samples + kIMABlockSize, &srcSize, &codedSize, &block) == noErr);
+	EXPECT(srcSize == 2 * (kSamples - kIMABlockSize));
+	EXPECT(codedSize == (kBlocks - 1) * kIMABlockBytes);
+	EXPECT(codec.BufferCompleted());
+
+	// and nothing more fits
+	srcSize = 2 * kIMABlockSize;
+	EXPECT(codec.Consume(samples, &srcSize, &codedSize, &block) == noErr);
+	EXPECT(srcSize == 0 && codedSize == 0);
+
+	// decoding: the block says the samples are 16-bit linear again
+	EXPECT(codec.Reset(&block) == noErr);
+	ULong dstSize = sizeof(back);
+	EXPECT(codec.Produce(back, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == 2 * kSamples && codedSize == kBlocks * kIMABlockBytes);
+	EXPECT(block.fFormat == kSoundFormatLinear16 && block.fSampleBits == 16);
+	EXPECT(codec.BufferCompleted());
+
+	long worst = 0;
+	long settled = 0;
+	for (int i = 0; i < kSamples; i++)
+	{
+		long error = back[i] - samples[i];
+		if (error < 0)
+			error = -error;
+		if (error > worst)
+			worst = error;
+		if (i >= 16 && error > settled)			// past the step size settling
+			settled = error;
+	}
+	EXPECT(worst < 2000);					// the step size slewing up from silence
+	EXPECT(settled < 300);					// and then it follows the signal closely
+
+	// with an 8-bit block the samples come out 8-bit, and the block says so
+	EXPECT(codec.Reset(&block) == noErr);
+	codec.fSampleBits = 8;
+	UByte bytes[kSamples];
+	dstSize = sizeof(bytes);
+	EXPECT(codec.Produce(bytes, &dstSize, &codedSize, &block) == noErr);
+	EXPECT(dstSize == kSamples && codedSize == kBlocks * kIMABlockBytes);
+	EXPECT(block.fFormat == kSoundFormatStd8 && block.fSampleBits == 8);
+
+	// and by name, out of the registry
+	TSoundCodec* byName = TSoundCodec::New("TIMACodec");
+	EXPECT(byName != nil);
+	if (byName != nil)
+	{
+		FillBlock(&block, coded, sizeof(coded));
+		EXPECT(SafeCodecReset(byName, &block) == noErr);
+		dstSize = sizeof(back);
+		EXPECT(SafeCodecProduce(byName, back, &dstSize, &codedSize, &block) == noErr);
+		EXPECT(dstSize == 2 * kSamples && byName->BufferCompleted());
+		SafeCodecDelete(byName);
+	}
 }
 
 
@@ -194,6 +285,7 @@ CodecScenario(void)
 	TestConsumeRoundTrip();
 	TestNoBuffer();
 	TestByName();
+	TestIMACodec();
 	HostStopTasks();
 }
 

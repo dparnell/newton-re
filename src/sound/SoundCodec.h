@@ -9,26 +9,25 @@
 				A codec holds one buffer of coded sound at a time.  Reset
 				hands it the buffer - where it is, how big, how the samples
 				are coded and at what rate - and Produce is then asked, over
-				and over, for the next stretch as 16-bit linear samples:
-				each call fills as much of the caller's buffer as it can,
-				says how many bytes and samples that was, and fills the
-				CodecBlock in with what the samples are now (16-bit linear,
-				at the rate they were recorded).  Consume is the other
-				direction, coding the caller's samples into the codec's own
-				buffer.  BufferCompleted says when the buffer has been used
+				and over, for the next stretch as linear samples: each
+				call fills as much of the caller's buffer as it can, says how
+				many bytes that took on each side - the caller's in dstSize,
+				the codec's own buffer's in codedSize - and fills the
+				CodecBlock in with what the samples are now.  Consume is the
+				other direction, coding the caller's samples into the codec's
+				own buffer.  BufferCompleted says when the buffer has been used
 				up; Start, Stop and Init are the hooks a codec with state of
 				its own needs, and are empty in the mu-law one.
 
-				The ROM's other implementations - TIMACodec, TGSMCodec and
-				TDTMFCodec - are NOT YET; so is the TSoundServer/
-				TSoundChannel layer that drives them, with the SoundBlock a
-				CodecBlock is converted from.
+				TGSMCodec and TDTMFCodec are NOT YET; so is the
+				TSoundServer/TSoundChannel layer that drives them, with the
+				SoundBlock a CodecBlock is converted from.
 
 	Not in the DDK; the interface follows the ROM's dispatch table
 	(tools/newton-rom/analysis/classinfo.py --name TMuLawCodec) and the
-	implementations at 0x001249c8-0x00124ce0.  CodecBlock's field names are
-	ours, read off ConvertCodecBlock (ROM 0x001e8004, 0x001e8040), which
-	copies a SoundBlock into one.
+	implementations at 0x001249c8-0x00124ce0 and 0x000e9898-0x000e9efc.
+	CodecBlock's field names are ours, read off ConvertCodecBlock (ROM
+	0x001e8004, 0x001e8040), which copies a SoundBlock into one.
 */
 
 #ifndef __SOUNDCODEC_H
@@ -40,6 +39,10 @@
 
 #ifndef __NEWTERRORS_H
 #include "NewtErrors.h"
+#endif
+
+#ifndef __IMACODEC_H
+#include "IMACodec.h"
 #endif
 
 
@@ -83,8 +86,8 @@ public:
 
 	VIRTUAL NewtonErr	Init(CodecBlock* block) ENDVIRTUAL;						// ROM 0x0037f688
 	VIRTUAL NewtonErr	Reset(CodecBlock* block) ENDVIRTUAL;					// ROM 0x0037f694
-	VIRTUAL NewtonErr	Produce(void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* block) ENDVIRTUAL;			// ROM 0x0037f6a0
-	VIRTUAL NewtonErr	Consume(const void* src, ULong* srcSize, ULong* sampleCount, const CodecBlock* block) ENDVIRTUAL;	// ROM 0x0037f6ac
+	VIRTUAL NewtonErr	Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block) ENDVIRTUAL;			// ROM 0x0037f6a0
+	VIRTUAL NewtonErr	Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block) ENDVIRTUAL;	// ROM 0x0037f6ac
 	VIRTUAL void		Start() ENDVIRTUAL;										// ROM 0x0037f6b8
 	VIRTUAL void		Stop(int reason) ENDVIRTUAL;							// ROM 0x0037f6c4
 	VIRTUAL Boolean		BufferCompleted() ENDVIRTUAL;							// ROM 0x0037f6d0
@@ -95,8 +98,8 @@ public:
 // sound channel makes them: a Throw out of a codec becomes an error code.
 NewtonErr	SafeCodecInit(TSoundCodec* codec, CodecBlock* block);			// ROM 0x000d3558 SafeCodecInit__FP11TSoundCodecP10CodecBlock
 NewtonErr	SafeCodecReset(TSoundCodec* codec, CodecBlock* block);			// ROM 0x001e8080 SafeCodecReset__FP11TSoundCodecP10CodecBlock
-NewtonErr	SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* block);			// ROM 0x001e80e0 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
-NewtonErr	SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* sampleCount, const CodecBlock* block);	// ROM 0x001e8160 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
+NewtonErr	SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);			// ROM 0x001e80e0 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
+NewtonErr	SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x001e8160 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
 NewtonErr	SafeCodecStart(TSoundCodec* codec);								// ROM 0x001e81e0 SafeCodecStart__FP11TSoundCodec
 NewtonErr	SafeCodecStop(TSoundCodec* codec, int reason);					// ROM 0x001e8238 SafeCodecStop__FP11TSoundCodeci
 void		SafeCodecDelete(TSoundCodec* codec);							// ROM 0x000d35b8 SafeCodecDelete__FP11TSoundCodec
@@ -118,8 +121,8 @@ public:
 
 	NewtonErr		Init(CodecBlock* block);				// ROM 0x00124af4 Init__11TMuLawCodecFP10CodecBlock
 	NewtonErr		Reset(CodecBlock* block);				// ROM 0x00124afc Reset__11TMuLawCodecFP10CodecBlock
-	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* sampleCount, CodecBlock* block);				// ROM 0x00124b34 Produce__11TMuLawCodecFPvPUlT2P10CodecBlock
-	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* sampleCount, const CodecBlock* block);	// ROM 0x00124c10 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
+	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x00124b34 Produce__11TMuLawCodecFPvPUlT2P10CodecBlock
+	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x00124c10 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
 	void			Start();								// ROM 0x00124cd4 Start__11TMuLawCodecFv
 	void			Stop(int reason);						// ROM 0x00124cd8 Stop__11TMuLawCodecFi
 	Boolean			BufferCompleted();						// ROM 0x00124cdc BufferCompleted__11TMuLawCodecFv
@@ -137,9 +140,46 @@ public:
 	ULong			fSampleRate;		// +0x24
 };
 
+/*------------------------------------------------------------------------------
+	T I M A C o d e c
+	IMA/DVI ADPCM (IMACodec.h) behind the same protocol: a coded block of
+	0x22 bytes is 0x40 samples, so the two sides' counts differ by a lot
+	more than the mu-law codec's.  The block's sample size decides whether
+	the linear side is 8- or 16-bit; Consume only ever takes 16-bit.
+------------------------------------------------------------------------------*/
+
+PROTOCOL TIMACodec : public TSoundCodec
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(TIMACodec);
+
+	TIMACodec*		New();									// ROM 0x000e98a0 New__9TIMACodecFv
+	void			Delete();								// ROM 0x000e9ca8 Delete__9TIMACodecFv
+
+	NewtonErr		Init(CodecBlock* block);				// ROM 0x000e9cac Init__9TIMACodecFP10CodecBlock
+	NewtonErr		Reset(CodecBlock* block);				// ROM 0x000e9cb4 Reset__9TIMACodecFP10CodecBlock
+	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x000e9cf8 Produce__9TIMACodecFPvPUlT2P10CodecBlock
+	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x000e9e20 Consume__9TIMACodecFPCvPUlT2PC10CodecBlock
+	void			Start();								// ROM 0x000e9ed8 Start__9TIMACodecFv
+	void			Stop(int reason);						// ROM 0x000e9edc Stop__9TIMACodecFi
+	Boolean			BufferCompleted();						// ROM 0x000e9ee0 BufferCompleted__9TIMACodecFv
+
+	IMAState		fState;				// +0x10  the predictor and step index, carried between calls
+	void*			fBuffer;			// +0x18  the coded sound
+	ULong			fSize;				// +0x1c  its size in bytes
+	ULong			fPosition;			// +0x20  how much of it has been used
+	ULong			fFormat;			// +0x24
+	ULong			fSampleRate;		// +0x28
+	ULong			fSampleBits;		// +0x2c  bits a linear sample takes on the caller's side
+	ULong			fUnknown30;			// +0x30  0 from New; nothing in the ROM reads them
+	ULong			fUnknown34;			// +0x34  0xa00
+	ULong			fUnknown38;			// +0x38  3
+};
+
+
 // Put the ROM's codecs in the protocol registry.  NOT YET: everything else
-// the ROM's does - the sound hardware, the sound server, and the three
-// codecs beside the mu-law one.
+// the ROM's does - the sound hardware, the sound server, and the two codecs
+// beside these.
 void	InitializeSound(void);				// ROM 0x001eae0c InitializeSound__Fv
 
 #endif	/* __SOUNDCODEC_H */
