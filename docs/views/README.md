@@ -782,13 +782,14 @@ view in `PostDraw` 0x0016cc84, the host inverts the region directly (the
 same on one bit); `SelectionRegion` builds the region as the union, over
 the lines the selection touches, of the box from the first selected
 character to the last (`OffsetToBounds`).  Tab into a paragraph selects
-it whole (`RealDoCommand`, `ch == 9`).  `gDontDrawHilites` suppresses
+it whole (`RealDoCommand`, `ch == 9`); a content key typed over a
+selection replaces it in one edit, backspace deletes it, an arrow
+collapses it to an edge, and `GetSelection` answers its range.  `gDontDrawHilites` suppresses
 the drawing during an effect.  (Tested by `test_Views`'s `TestSelection`:
 a range inverted, extended, removed, and a tab selecting a field.)  NOT
-YET: `AdjustHilites` (moving a selection past an edit), a selection
-replaced by a key, `RemoveHilite`/`GetSelection` returning the range, the
-selection stack, `ActivateSelection`'s soft-keyboard shift, the container
-and edit views' hilites.
+YET: `AdjustHilites` (moving a selection past an edit), `RemoveHilite`
+(dropping one hilite), the selection stack, `ActivateSelection`'s
+soft-keyboard shift, the container and edit views' hilites.
 
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 

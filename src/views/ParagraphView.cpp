@@ -613,9 +613,16 @@ Ref
 TParagraphView::GetSelection(void)
 {
 	RefVar info(Clone(RefVar(Rcanonicalparacaretinfo)));
-	// NOT YET RECONSTRUCTED: FirstHilite's range (the hilites)
-	SetFrameSlot(info, RSSYMoffset, RefVar(MAKEINT(fCaretOffset)));
-	SetFrameSlot(info, RSSYMlength, RefVar(MAKEINT(0)));
+	RefVar hilite(FirstHilite());
+	long offset = fCaretOffset;
+	long length = 0;
+	if (NOTNIL(hilite))
+	{
+		offset = RINT(GetFrameSlotRef(hilite, RSSYMstart));
+		length = RINT(GetFrameSlotRef(hilite, RSSYMend)) - offset;
+	}
+	SetFrameSlot(info, RSSYMoffset, RefVar(MAKEINT(offset)));
+	SetFrameSlot(info, RSSYMlength, RefVar(MAKEINT(length)));
 	return info;
 }
 
@@ -1580,20 +1587,45 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			}
 			return true;
 		}
-		// NOT YET RECONSTRUCTED: FirstHilite - a selection replaced by the key
+		// a selection is collapsed by an arrow and replaced by a content key
+		RefVar hiliteRef(FirstHilite());
+		Boolean hasSelection = NOTNIL(hiliteRef);
+		long hiliteStart = 0, hiliteEnd = 0;
+		if (hasSelection)
+		{
+			hiliteStart = RINT(GetFrameSlotRef(hiliteRef, RSSYMstart));
+			hiliteEnd = RINT(GetFrameSlotRef(hiliteRef, RSSYMend));
+		}
 		if (ch == 0x1c || ch == 0x1d)
 		{
-			long offset = fCaretOffset;
-			if (ch == 0x1c)
-				offset--;
+			long offset;
+			if (hasSelection)
+			{
+				offset = (ch == 0x1c) ? hiliteStart : hiliteEnd;
+				RemoveAllHilites();
+			}
 			else
-				offset++;
+				offset = fCaretOffset + (ch == 0x1c ? -1 : 1);
 			long textLength = TextLength();
 			if (offset < 0)
 				offset = 0;
 			if (offset > textLength)
 				offset = textLength;
 			gRootView->SetKeyView(this, offset, 0, false);
+			return true;
+		}
+		// a content key over a selection replaces it in one edit
+		if (hasSelection && ch != 0 && (ch == 8 || KeyCanBeHandled(ch)))
+		{
+			RemoveAllHilites();
+			long removeLength = hiliteEnd - hiliteStart;
+			if (ch == 8)
+				InsertStyledText(hiliteStart, nil, 0, RefVar(NILREF), RefVar(NILREF), 0, removeLength, true);
+			else
+			{
+				UniChar key = ch;
+				InsertStyledText(hiliteStart, &key, 1, RefVar(NILREF), RefVar(NILREF), 0, removeLength, true);
+			}
 			return true;
 		}
 		if (ch == 0x1e || ch == 0x1f)

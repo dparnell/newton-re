@@ -1949,6 +1949,26 @@ TestSelection()
 	// extending the selection unions the ranges
 	p->MakeHilite(5, 8, false);
 	EXPECT(RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 0 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 8);
+	// typing over a selection replaces it in one edit
+	gKeyboardConnected = true;
+	Eval("ClearUndoStacks()");
+	gApplication->Idle();
+	p->RemoveAllHilites();
+	p->MakeHilite(0, 5, false);		// select "Hello"
+	EXPECT(NOTNIL(p->FirstHilite()));
+	TypeKey(6);		// y (German layout): replaces the selection
+	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"y World\")")) && ISNIL(p->FirstHilite()) && p->fCaretOffset == 1);
+	// backspace over a selection deletes it
+	p->MakeHilite(0, 2, false);		// select "y "
+	TypeKey(0x33);	// backspace
+	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"World\")")) && ISNIL(p->FirstHilite()));
+	// an arrow collapses a selection to its edge
+	p->MakeHilite(1, 4, false);
+	TypeKey(0x7b);	// left arrow: caret to the selection start
+	EXPECT(ISNIL(p->FirstHilite()) && p->fCaretOffset == 1);
+	gKeyboardConnected = false;
+	Eval("ctxS.text := \"Hello World\"; ctxS:SyncView()");		// back to the plain text for the check below
+	Refresh();
 	// removing the hilites restores the plain text
 	p->RemoveAllHilites();
 	Refresh();
