@@ -130,6 +130,32 @@ TestAtan2()
 }
 
 
+// FractSineCosine(degrees<<16, &cos): the sine (returned) and cosine, both
+// 2.30, of an angle in degrees.  Checked against the C library.
+static void
+TestSinCos()
+{
+	// exact-ish anchors
+	Fract cos0 = 0;
+	EXPECT(FractSineCosine(0, &cos0) == 0 && cos0 == (Fract) 0x40000000);	// sin0=0, cos0=1
+	for (int deg = -350; deg <= 360; deg += 10)
+	{
+		Fract cos = 0;
+		Fract sin = FractSineCosine((Fixed) (deg * 65536), &cos);
+		double rad = deg * M_PI / 180.0;
+		double diff_s = (double) sin - ::sin(rad) * kFrac;
+		double diff_c = (double) cos - ::cos(rad) * kFrac;
+		EXPECT(diff_s > -0x8000 && diff_s < 0x8000);		// CORDIC to ~1e-5
+		EXPECT(diff_c > -0x8000 && diff_c < 0x8000);
+	}
+	// the memo cache answers a repeated angle identically
+	Fract c1 = 0, c2 = 0;
+	Fract s1 = FractSineCosine(45 << 16, &c1);
+	Fract s2 = FractSineCosine(45 << 16, &c2);
+	EXPECT(s1 == s2 && c1 == c2);
+}
+
+
 int main()
 {
 	TestFixedMul();
@@ -139,6 +165,7 @@ int main()
 	TestFractSqrt();
 	TestMultiplyDivide();
 	TestAtan2();
+	TestSinCos();
 	if (failures == 0)
 		printf("test_FixedMath: all passed\n");
 	else
