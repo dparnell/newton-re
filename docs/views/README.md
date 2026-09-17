@@ -811,10 +811,12 @@ the key view moves away, `CommonSetKeyView` deactivates the old view -
 hilite view's) hilites, so a selection clears when its field loses the
 caret.  `RemoveHilite` 0x0025ff60 drops one hilite from the array and
 invalidates (the ROM disposes the C++ hilite and invalidates its area;
-the host dirties the view).  NOT YET: `AdjustHilites` (moving a selection
-past an edit), the selection stack,
-`ActivateSelection`'s soft-keyboard shift, the container and edit views'
-hilites.
+the host dirties the view).  A selection survives the key view moving:
+`SetKeyView` pushes the old view's `GetSelection` onto the selection stack
+and `RestoreKeyView` restores it within a view, `SetSelection` re-hiliting
+the range through `MakeHilite`.  NOT YET: `AdjustHilites` (moving a
+selection past an edit), `ActivateSelection`'s soft-keyboard shift, the
+container and edit views' hilites.
 
 `DoPopup(pickItems, x, y, callbackContext)` (`FDoPopup` 0x001f2a3c) opens
 a popup menu over the items at a point (or a bounds frame local to the
