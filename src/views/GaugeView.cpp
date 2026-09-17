@@ -13,6 +13,10 @@
 #include "Polygons.h"
 #include "RegionVars.h"
 #include "ObjectHeap.h"
+#include "RootView.h"
+#include "Commands.h"
+#include "UnitPublic.h"
+#include "NewtonTime.h"
 
 
 // ROM 0x0018ada4 ClassID__10TGaugeViewCFv
@@ -133,11 +137,66 @@ TGaugeView::RealDraw(Rect& /*bounds*/)
 
 
 // ROM 0x0018b2d0 RealDoCommand__10TGaugeViewFRC6RefVar
-// aeClick on an editable gauge tracks the pen to set the value
-// (TrackSetValue 0x0018b344: NOT YET RECONSTRUCTED - the strokes); then
-// as TView.
+// aeClick on an editable gauge (vReadOnly clear) tracks the pen to set
+// the value (TrackSetValue), the command's result its answer; then as
+// TView.
 Boolean
 TGaugeView::RealDoCommand(RefArg cmd)
 {
+	if (CommandID(cmd) == aeClick && (fFlags & vReadOnly) == 0)
+	{
+		Boolean result = TrackSetValue((TUnitPublic*) CommandParameter(cmd));
+		CommandSetResult(cmd, result);
+		if (result)
+			return result;
+	}
 	return TView::RealDoCommand(cmd);
+}
+
+
+// ROM 0x0018b344 TrackSetValue__10TGaugeViewFP11TUnitPublic
+// The pen tracked, its ink off: each turn the value under the stroke's
+// last point - the point's distance from the left, half a step on, as a
+// fraction of the width in the range, clamped to it - set when it
+// changed (the _sound proto variable played, the root view updated), a
+// tick waited when it did not, until the stroke is done; the
+// viewFinalChangeScript is run with [old, new] when the value changed.
+// ==> true.  NOT YET RECONSTRUCTED: BusyBoxSend, FPlaySound.
+Boolean
+TGaugeView::TrackSetValue(TUnitPublic* unit)
+{
+	TStrokePublic* stroke = unit->Stroke();
+	stroke->InkOff(true);
+	long original = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
+	RefVar sound(GetProto(RSSYM_sound));
+	long width = viewBounds.right - viewBounds.left;
+	long range = fMaxValue - fMinValue;
+	long halfStep = (width / range) / 2;
+	long value = original;
+	do
+	{
+		Point pt = stroke->FinalPoint();
+		long newValue = (range * ((pt.h - viewBounds.left) + halfStep)) / width + fMinValue;
+		if (newValue < fMinValue)
+			newValue = fMinValue;
+		else if (newValue > fMaxValue)
+			newValue = fMaxValue;
+		if (newValue == value)
+			Wait(1);
+		else
+		{
+			// NOT YET RECONSTRUCTED: FPlaySound(*this, sound) when there is one
+			SetValue(RSSYMviewvalue, MAKEINT(newValue));
+			gRootView->Update(nil);
+			value = newValue;
+		}
+	} while (!stroke->Done());
+	if (value != original)
+	{
+		RefVar args(MakeArray(2));
+		SetArraySlot(args, 0, MAKEINT(original));
+		SetArraySlot(args, 1, MAKEINT(value));
+		RunScript(RSSYMviewfinalchangescript, args);
+	}
+	return true;
 }

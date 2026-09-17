@@ -1560,6 +1560,29 @@ TestClicks()
 	Eval("ctxC:Hilite(nil)");
 	Eval("RemoveView(GetRoot(), ctxC)");
 	Refresh();
+	// a slider dragged: the value follows the pen along the bar (the aeClick tracked by TGaugeView::TrackSetValue), the viewFinalChangeScript run once at the end with [old, new]
+	TView* slider = ViewOf("ctxS := AddView(GetRoot(), {viewClass: 92, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 50, right: 120, bottom: 60}, viewValue: 30, changes: [], "
+		"viewFinalChangeScript: func(old, new) begin AddArraySlot(changes, [old, new]); nil end})");
+	Eval("ctxS:Dirty()");
+	Refresh();
+	HostTabletQueuePenDown(50, 55, 6000);		// (50 - 20 + 0) * 100 / 100 = 30: unchanged
+	HostTabletQueuePenMove(70, 55);				// 50
+	HostTabletQueuePenMove(70, 55);
+	HostTabletQueuePenMove(200, 55);			// past the end: 100
+	HostTabletQueuePenMove(90, 55);				// 70
+	HostTabletQueuePenUp(6040);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(RINT(Eval("ctxS.viewValue")) == 70 && RINT(Eval("Length(ctxS.changes)")) == 1 && RINT(Eval("ctxS.changes[0][0]")) == 30 && RINT(Eval("ctxS.changes[0][1]")) == 70);
+	EXPECT(HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil && slider->fFlags & vVisible);
+	// a read-only gauge ignores the pen
+	Eval("SetValue(ctxS, 'viewFlags, 3 + 0x200)");
+	HostTabletPenDown(40, 55, 7000);
+	HostTabletPenUp(7003);
+	IdleStrokes();
+	EXPECT(RINT(Eval("ctxS.viewValue")) == 70 && RINT(Eval("Length(ctxS.changes)")) == 1);
+	Eval("RemoveView(GetRoot(), ctxS)");
+	Refresh();
 }
 
 

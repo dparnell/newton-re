@@ -6,10 +6,10 @@
 				viewValue between minValue and maxValue (100 when there is
 				none); an editable one (vReadOnly clear) has a hollow diamond
 				knob at the value's place, and gaugeDrawLimits fills the rest
-				of the bar in light gray.  The ROM's object is 0x38 bytes:
-				TView, the maximum and the minimum.  NOT YET RECONSTRUCTED:
-				tracking the pen (TrackSetValue: the aeClick command, the
-				strokes), the gray pattern of deeper ports.
+				of the bar in light gray; the pen tracked on a click sets the value
+				(TrackSetValue).  The ROM's object is 0x38 bytes: TView, the
+				maximum and the minimum.  NOT YET RECONSTRUCTED: the gray
+				pattern of deeper ports, the _sound.
 
 	Reconstructed from the MP2100 D ROM (0x0018ada4-0x0018b400); each
 	function cites its origin.
@@ -31,6 +31,7 @@ public:
 	virtual void	SetValue(RefArg slot, RefArg value);				// ROM 0x0018aed4 SetValue__10TGaugeViewFRC6RefVarT1
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0018af84 RealDraw__10TGaugeViewFR5TRect
 	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0018b2d0 RealDoCommand__10TGaugeViewFRC6RefVar
+	Boolean			TrackSetValue(TUnitPublic* unit);					// ROM 0x0018b344 TrackSetValue__10TGaugeViewFP11TUnitPublic
 
 	long		fMaxValue;			// +0x30  maxValue (100 when none)
 	long		fMinValue;			// +0x34  minValue (0 when none)

@@ -313,8 +313,15 @@ from the top and bottom; an editable gauge (vReadOnly clear) keeps a
 knob's width (the height) out of the range and draws a hollow diamond
 (a region from four lines, painted, inset a pixel and erased) centred on
 the filled part's end; `gaugeDrawLimits` paints the rest of the bar
-light gray.  NOT YET: tracking the pen (`TrackSetValue` 0x0018b344 on
-aeClick).
+light gray.  A click on an editable gauge (`RealDoCommand` 0x0018b2d0:
+aeClick, vReadOnly clear) tracks the pen (`TrackSetValue` 0x0018b344):
+the ink off, each turn the value under the stroke's last point - its
+distance from the left, plus half a value's width in pixels, as a
+fraction of the width in the range, clamped - set when it changed (the
+`_sound` played, the root view updated) and a tick waited when not,
+until the stroke is done; then `viewFinalChangeScript([old, new])` when
+the value changed.  (Tested with the host tablet: `test_Views`'s
+slider.)  NOT YET: the sound.
 
 **Shapes** (`DrawShape.h`): the NewtonScript shapes and `DrawShape`.  A
 shape is a `'rectangle`, `'oval` or `'line` binary (8 bytes: the rect,
