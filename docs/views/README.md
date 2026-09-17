@@ -894,7 +894,7 @@ the deepest view with the recogniser's viewFlags bits - vClickable for
 clicks, vGesturesAllowed for the events).  `TrackHilite`/`TrackButton`
 (`FTrackHiliteX` 0x001ecaa8) follow the stroke a tick at a time (`Wait(1)`)
 until `StrokeDone`; `TRootView::DoCaretClick` 0x001b7774 takes a click on
-the caret the same way (the caret popup NOT YET).  The unit functions of
+the caret the same way (its _caretPopup opened via DoPopupMenu).  The unit functions of
 NewtonScript (`GetPoint`, `GetPointsArray`, `StrokeDone`, `StrokeBounds`,
 `InkOff`, ...) are `recognition/UnitNatives.cpp`.  On the host the pen is
 `hal/host/HostTablet.h`, fed at once or a record a tick; `test_Views`'s

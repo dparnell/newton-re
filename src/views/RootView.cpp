@@ -1158,8 +1158,7 @@ TRootView::RestoreBitsUnderCaret(void)
 // while the pen is over it (within the caret view's clip) - and, when it
 // ends there, the caret view's _caretPopup is popped up at the caret and
 // the stroke's ink taken off.  ==> whether the popup came up.
-// NOT YET RECONSTRUCTED: FClicker (the click sound), FDoPopup (the caret
-// popup - the click is taken as handled).
+// NOT YET RECONSTRUCTED: FClicker (the click sound).
 Boolean
 TRootView::DoCaretClick(TUnitPublic* unit)
 {
