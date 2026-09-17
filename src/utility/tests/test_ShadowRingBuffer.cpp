@@ -6,8 +6,10 @@
 //
 // Covered: the same fill/drain, full/empty and wrap behaviour as CRingBuffer,
 // the bulk CopyIn/CopyOut across the wrap, the Compute*Vectors/Update*Vector
-// runs, and the speculative read the class adds - TempGetn reads ahead
-// without consuming, TempReset puts the position back.
+// runs, the speculative read the class adds - TempGetn reads ahead without
+// consuming, TempReset puts the position back - and the pair the ROM really
+// uses: an ordinary CRingBuffer whose memory MakeShared hands out, read
+// through a CShadowRingBuffer over the same object.
 
 #include "RingBuffer.h"
 #include "UserSharedMem.h"
@@ -165,12 +167,56 @@ TestTempRead()
 }
 
 
+// The arrangement CTaskPipe is built on: one task holds an ordinary
+// CRingBuffer and hands its memory out with MakeShared; the other reaches the
+// same bytes through a CShadowRingBuffer over that object.  The two keep
+// their own offsets - it is the pipe that tells each side how far the other
+// has got, with UpdatePutVector/UpdateGetVector.
+static void
+TestMakeShared()
+{
+	static const UByte source[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	static const UByte more[4] = { 11, 12, 13, 14 };
+	UByte storage[16];
+	memset(storage, 0, sizeof(storage));
+
+	CRingBuffer local;
+	EXPECT(local.Init(storage, sizeof(storage), false, 0, 0) == noErr);
+	EXPECT(!local.fIsShared);
+	local.MakeShared(kSMemReadWrite);
+	EXPECT(local.fIsShared && local.fSharedMem.fId != 0);
+
+	EXPECT(local.Putn(source, sizeof(source)) == 10);
+
+	CShadowRingBuffer remote;
+	remote.Init(local.fSharedMem.fId, 0, sizeof(source));
+	EXPECT(remote.GetSize() == 15 && remote.DataCount() == 10);
+
+	UByte out[16];
+	EXPECT(remote.Getn(out, 10) == 10);
+	EXPECT(memcmp(out, source, sizeof(source)) == 0);	// what the local buffer wrote
+	EXPECT(remote.IsEmpty());
+
+	// and the other way round: the shadow writes, the local side is told how
+	// much arrived and reads it out of its own memory
+	EXPECT(remote.Putn(more, sizeof(more)) == 4);
+	EXPECT(local.UpdatePutVector(sizeof(more)) == 0);
+	EXPECT(local.DataCount() == 14);
+	EXPECT(local.Getn(out, 14) == 14);
+	EXPECT(memcmp(out, source, sizeof(source)) == 0 && memcmp(out + 10, more, sizeof(more)) == 0);
+
+	local.UnShare();
+	EXPECT(!local.fIsShared);
+}
+
+
 static void
 ShadowScenario(void)
 {
 	TestFillAndDrain();
 	TestWrapAndBulk();
 	TestTempRead();
+	TestMakeShared();
 	HostStopTasks();
 }
 

@@ -14,6 +14,7 @@
 #include "RingBuffer.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "SharedTypes.h"
 #include "OSErrors.h"
 
 extern const ExceptionName exPipeException;
@@ -38,6 +39,7 @@ CRingBuffer::CRingBuffer()
 	fSize = 0;
 	fPut = nil;
 	fGet = nil;
+	fIsShared = false;
 	fOwnsBuffer = false;
 }
 
@@ -512,6 +514,37 @@ CRingBuffer::Skip()
 			return noErr;
 	}
 	return -1;
+}
+
+
+// ROM 0x001af998 MakeShared__11CRingBufferFUl
+// The buffer's own memory becomes a shared-memory object, so that another
+// task can reach it (through a CShadowRingBuffer, say).  Note the
+// kSMemNoSizeChangeOnCopyTo the permissions gain: a ring buffer writes at a
+// lower offset than the last write every time it wraps, and the block's size
+// in use must not follow it down.  A second call re-points the existing
+// object at the buffer rather than making another.
+void
+CRingBuffer::MakeShared(ULong permissions)
+{
+	NewtonErr err = noErr;
+	if (fIsShared || (err = fSharedMem.Init()) == noErr)
+		err = fSharedMem.SetBuffer(fBufStart, fSize, permissions + kSMemNoSizeChangeOnCopyTo);
+	if (err == noErr)
+		fIsShared = true;
+}
+
+
+// ROM 0x001af9f0 UnShare__11CRingBufferFv
+NewtonErr
+CRingBuffer::UnShare()
+{
+	if (fIsShared)
+	{
+		fSharedMem.DestroyObject();
+		fIsShared = false;
+	}
+	return noErr;
 }
 
 

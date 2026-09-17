@@ -25,8 +25,7 @@
 	virtuals in the ROM's vtable order (analysis/vtable.py on the CRingBuffer
 	vtable) - note that Init is *not* virtual there, and that CopyIn(CPipe*)
 	and GetnAt are CRingBuffer's own additions past the end of the base's
-	twenty.  NOT YET: CRingBuffer's shared forms (MakeShared/UnShare, over the
-	TUObject at +0x18).
+	twenty.
 */
 
 #ifndef __RINGBUFFER_H
@@ -113,12 +112,21 @@ public:
 	virtual NewtonErr	CopyIn(CPipe* pipe, long& count);			// ROM 0x001af2e8 CopyIn__11CRingBufferFP5CPipeRl
 	virtual int			GetnAt(long offset, UByte* data, long count);	// ROM 0x001afa28 GetnAt__11CRingBufferFlPUcT1
 
+	// Hand the buffer's memory out as a shared-memory object, so that another
+	// task can read or write it (through a CShadowRingBuffer of its own, say).
+	// kSMemNoSizeChangeOnCopyTo is added to the permissions asked for, because
+	// a ring buffer writes at a lower offset than the last write every time it
+	// wraps and the block's size in use must not follow it down.
+	void			MakeShared(ULong permissions);	// ROM 0x001af998 MakeShared__11CRingBufferFUl
+	NewtonErr		UnShare();						// ROM 0x001af9f0 UnShare__11CRingBufferFv
+
 	UByte*			fBufStart;			// +0x04
 	UByte*			fBufEnd;			// +0x08  fBufStart + fSize
 	long			fSize;				// +0x0c  the buffer's byte count (usable capacity + 1)
 	UByte*			fPut;				// +0x10  where the next Put writes
 	UByte*			fGet;				// +0x14  where the next Get reads
-	// +0x18 the TUObject the shared forms use - NOT YET
+	TUSharedMem		fSharedMem;			// +0x18  the buffer handed out by MakeShared
+	Boolean			fIsShared;			// +0x20  MakeShared succeeded and UnShare has not run
 	Boolean			fOwnsBuffer;		// +0x21  the buffer was allocated here and must be freed
 };
 
