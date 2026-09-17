@@ -45,10 +45,47 @@ ROM, big-endian, keeps those samples big-endian in memory, but the values
 are the same, and the compressed stream's bytes are kept exactly as the
 ROM lays them, so the two interoperate.
 
+## Mu-law (`MuLaw.h`)
+
+Eight-bit sampled sound is companded: a sign bit, a three-bit exponent and a
+four-bit mantissa, stored complemented so that silence is `0xFF` and the
+byte's ordering follows the sample's.  This is CCITT G.711's mu-law, but not
+the usual parameters - the ROM works on the 16-bit sample shifted down by
+two (a 14-bit magnitude) and biases it by 33 rather than 132, so its loudest
+code stands for about `0x5D7C` rather than full scale, and the steps run 2,
+4, 8 ... 256 over the eight exponents.
+
+* `SampleConvertLin16ToMuLaw` (ROM 0x001e9880) and
+  `SampleConvertMuLawToLin16` (ROM 0x001e9b90) do one sample;
+* `BlockConvertLin16ToMuLaw` (ROM 0x001e98e0) and
+  `BlockConvertMuLawToLin16` (ROM 0x001e9c14) do a run, taking a count for
+  each side and answering the smaller of the two in both.
+
+Decoding dithers the two bits the coding cannot carry with bits 8 and 9 of
+QuickDraw's `Random` (`qd/Ports.h`), which is why the sound library depends
+on the graphics one.
+
+**Two bugs, kept.**  The magnitude is never clamped to what eight exponents
+can hold (G.711's implementations clip at the top of the last segment), so
+the loudest samples overflow the exponent search:
+
+* 32636..32763 and -32760..-32633 leave no bit set in the low eight of the
+  shifted magnitude.  The search runs off the end, the exponent stays -1 and
+  the mantissa is shifted by it - ARM takes a shift count modulo 256, so a
+  count of 255 shifts everything out and the mantissa is zero.  The code
+  comes out `0x0F` whichever the sign, and `0x0F` means about -16764: a loud
+  positive sample decodes as a loud negative one.
+* 32764 and above, -32761 and below, the search finds bit 0 instead, the
+  mantissa keeps only its bottom four bits, which are zero, and the sample
+  codes as silence (`0xFF` or `0x7F`).
+
+`test_MuLaw` checks the coding by what it promises - every code round-trips
+through decode and encode, the curve is monotonic with doubling steps, a
+ramp comes back within the step of the code it lands in - and states both
+bugs as expectations.
+
 ## Not yet
 
-The mu-law codec (`SampleConvertLin16ToMuLaw`/`SampleConvertMuLawToLin16`,
-`TMuLawCodec`; the mu-law->linear conversion dithers the low two bits with
-`Random()`), `Resample`, and the sound-server streaming layer
-(`TSoundCodec`, `TIMACodec`, `TSoundServer`/`TSoundChannel`, `CodecBlock`,
-`Produce`/`Consume`).
+`TMuLawCodec`, `Resample`/`ResampleFiltered`, and the sound-server streaming
+layer (`TSoundCodec`, `TIMACodec`, `TSoundServer`/`TSoundChannel`,
+`CodecBlock`, `Produce`/`Consume`).
