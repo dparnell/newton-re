@@ -28,6 +28,7 @@ tools/newton-rom/
     import_rom.py         step 4: headless project creation + import
     verify_types.py       step 5: check types against the ROM, recover sizes/vtables -> romfacts.json
     apply_romfacts.py     step 6: apply romfacts.json to the project (+ auto-analysis)
+    fix_virtual_calls.py  re-mark the virtual call sites of an older project as fall-through calls
     NewtonROMImport.py    the import, as a Script Manager (GUI) script
     check_import.py       report/spot-check an imported project
   pipeline.py           steps 1-6 in one command
@@ -249,12 +250,15 @@ add  pc,r12,#slot*4   ; branch into the table
 
 Ghidra treats `add pc,...` as a terminal jump, which silently truncated every
 function after its first virtual call (18 % of the code region was left
-undefined). The importer now marks the 2,975 such sites as call-with-return
-and keeps disassembling (`fix_virtual_calls`). The *decompiler* still gives
-up at the call in many functions, showing a `return` right after it (the
-loop in `TTimerQueue::Check`, the dispatch in `TAppWorld::AEDispatch`): when
-a decompiled function has a virtual call, read the disassembly (`disasm.py`)
-for what follows it. (One Ghidra process at a time: the project is locked while a script runs, so
+undefined). The importer marks the 2,975 such sites as calls that fall
+through (`FlowOverride.CALL`) and keeps disassembling (`fix_virtual_calls`),
+so the decompiler goes on after the call as well. (Earlier imports used the
+call-and-return override, which kept the disassembly going but made the
+decompiler show a `return` right after every virtual call - the loop in
+`TTimerQueue::Check`, the dispatch in `TAppWorld::AEDispatch`;
+`ghidra_scripts/fix_virtual_calls.py --project build/ghidra --name MP2100D
+--ghidra <dir>` re-marks an existing project's sites in ten seconds, no
+re-analysis needed.) (One Ghidra process at a time: the project is locked while a script runs, so
 run the analysis tools sequentially; `decompile.py --range START END` does a
 whole subsystem in one start.)  `analysis/vtable.py build/MP2100D 0x2073c` lists a
 vtable's slots by method name (the address is the literal a constructor

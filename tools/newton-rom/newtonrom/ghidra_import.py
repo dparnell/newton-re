@@ -474,9 +474,12 @@ def fix_virtual_calls(program, monitor, log: Log, stats: Stats, fresh=None) -> N
     A virtual call is `ldr rN,[this] / mov lr,pc / add pc,rN,#slot*4` (the
     vtable is an array of B instructions, see verify_types.py).  Ghidra treats
     `add pc,...` as a terminal jump and stops disassembling, truncating every
-    function after its first virtual call.  Mark those instructions as
-    call-with-return and continue at the next instruction, repeating until no
-    new sites appear (newly disassembled code contains more virtual calls).
+    function after its first virtual call.  Mark those instructions as calls
+    that fall through (FlowOverride.CALL - the decompiler then goes on after
+    the call; CALL_RETURN, used before, made it show a return there) and
+    continue disassembling at the next instruction, repeating until no new
+    sites appear (newly disassembled code contains more virtual calls).  A
+    site marked call-return by an earlier import is re-marked.
     """
     from ghidra.app.cmd.disassemble import DisassembleCommand
     from ghidra.program.model.address import AddressSet
@@ -495,9 +498,9 @@ def fix_virtual_calls(program, monitor, log: Log, stats: Stats, fresh=None) -> N
             text = str(ins)
             if (text.startswith("add pc,") and prev is not None and str(prev) == "mov lr,pc"
                     and prev.getAddress().add(4) == ins.getAddress()
-                    and ins.getFlowOverride() != FlowOverride.CALL_RETURN):
-                ins.setFlowOverride(FlowOverride.CALL_RETURN)
-                stats.bump("virtual call sites marked call-return")
+                    and ins.getFlowOverride() != FlowOverride.CALL):
+                ins.setFlowOverride(FlowOverride.CALL)
+                stats.bump("virtual call sites marked call")
                 nxt = ins.getAddress().add(4)
                 if listing.getInstructionAt(nxt) is None:
                     starts.add(nxt)
@@ -508,7 +511,7 @@ def fix_virtual_calls(program, monitor, log: Log, stats: Stats, fresh=None) -> N
         cmd = DisassembleCommand(starts, None, True)
         cmd.applyTo(program, monitor)
         fresh = cmd.getDisassembledAddressSet()
-    log(f"virtual calls: {stats.get('virtual call sites marked call-return', 0)} sites, {rounds} rounds")
+    log(f"virtual calls: {stats.get('virtual call sites marked call', 0)} sites, {rounds} rounds")
 
 
 def ghidra_name(d: Optional[dict], raw: str) -> str:
