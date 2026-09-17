@@ -1646,6 +1646,29 @@ TestClicks()
 	HostAdvanceClock(kSeconds);								// past the double-tap interval
 	gRootView->IdleViews();
 	EXPECT(!tp->fTapped && gRootView->fCaretView == tp && tp->fCaretOffset == 4);
+	// a tap on the caret opens the key view's _caretPopup (DoCaretClick ->
+	// DoPopupMenu), a picker over the popup's items
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "canonicalPopup")), RefVar(Rcanonicalpopup));
+	Eval("caretPopped := nil");
+	Eval("ctxTP._caretPopup := {popup: [\"Undo\", \"Copy\"], pickActionScript: func(i) caretPopped := i}");
+	Eval("SetKeyView(ctxTP, 2)");
+	Refresh();
+	EXPECT(gRootView->fCaretShowing);
+	Rect caretRect;
+	gRootView->GetCaretRect(&caretRect);
+	long caretChildren = gRootView->fChildren->Count();
+	HostAdvanceClock(kSeconds);
+	HostTabletPenDown((caretRect.left + caretRect.right) / 2, (caretRect.top + caretRect.bottom) / 2, 0);
+	HostTabletPenUp(0);
+	IdleStrokes();
+	EXPECT(gRootView->fChildren->Count() == caretChildren + 1);		// the popup opened
+	TView* caretPop = gRootView->fChildren->Last();
+	EXPECT(caretPop->ClassID() == clPickView);
+	{
+		RefVar cmd(MakeCommand(aePickItem, caretPop, 0));		// pick "Undo"
+		gApplication->DispatchCommand(cmd);
+	}
+	EXPECT(RINT(Eval("caretPopped")) == 0 && gRootView->fChildren->Count() == caretChildren);
 	gKeyboardConnected = false;
 	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxTP)");
 	Refresh();
