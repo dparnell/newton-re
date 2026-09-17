@@ -4,13 +4,19 @@
 // back to one) and interpretations (added, best, reused, deleted), the
 // stroke count across subs, unit and type lists, areas and area lists,
 // the root domain, the recognisers of TRecognitionManager and the public
-// face's bounds, tap and stroke.  No views (FindView and Invalidate need
-// the root view: test_Views).
+// face's bounds, tap and stroke; then the tablet buffer and the stroke
+// queue: pen records in, strokes out, with the click events the queue
+// notes (a tap, a hilite click, a double tap).  No views (FindView,
+// Invalidate and the stroke world's clicks need the root view:
+// test_Views).
 #include "Unit.h"
 #include "UnitPublic.h"
 #include "Areas.h"
 #include "Domain.h"
 #include "Recognizer.h"
+#include "TabletBuffer.h"
+#include "StrokeQueue.h"
+#include "StrokeCentral.h"
 #include "Commands.h"
 #include "Rects.h"
 #include "memory/host/KernelHeap.h"

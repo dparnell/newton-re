@@ -142,18 +142,154 @@ when the click's stroke is the last written (`OnlyStrokeWritten`), 0x31
 aeTap for a tap, 0x32 aeDoubleTap and 0x37 for events 3 and 5 only when
 the two clicks were on the same view, 0x34 for a hilite click.
 
+## From the pen to the stroke world
+
+The tablet driver (a `TTabletDriver` protocol, `TResistiveTablet` in the
+ROM extension: NOT YET) puts records into the *tablet buffer*
+(`TBCInsertTabletSample` 0x0024e4e8; `InsertTabletSample` 0x0024e834
+wakes the inker after): a ring of 250 words at 0x0c104464 with a write
+index (`gTabData`, 0x0c104458), the inker's read index (0x0c10445c) and
+the stroker's (0x0c104460).  A sample is one word - x in bits 18-31 and y
+in bits 4-17 in eighths of a pixel, the pressure 0-7 in the low nibble;
+a pen-down is two words (0xd, the time in ticks), a pen-up four (0xe,
+the time, a dummy sample 0x14000000, the time).  `TBCPollTablet` and
+`SetTabletPolling` are the calibration screen's one-sample mode.  The
+inker (`TInker::LCDEntry`) draws the samples and calls `RealStrokeTime`
+0x001fce38, whose reader `xGetTabPt` 0x000381f8 (through the recogniser's
+glue `GetTabPt`/`LastTabPt`/`GetDownTime`/`GetUpTime` 0x0011d350-0x0011d360)
+runs a pen state machine over the buffer (the `collect` block at
+0x0c1008a8: +0x10 the state, 3 idle, 6 just down, 4 down, 1 just up;
++0x18/+0x1c the last down and up times; established from the code and
+the ROM's initialised data, which starts the state at 3).
+
+The *stroke queue* (`gStrokeQ` 0x0c101988 -> `sQ` 0x0c103e4c: a head and
+tail halfword and 64 `TSStroke*`; a `TSStroke` 0x00220804 is a `TStroke`
+of 0x58 bytes with its first point and the point the inker draws from
+next) is filled by `RealStrokeTime`: `StrokeNext` 0x001fcd2c starts a
+locked, queue-flagged (0x10000000) stroke after the head; the first point
+takes the pen-down time (`gTickOff` added) and the pen tip
+(`gLastPenTip` in flag bits 8-15) and starts the click-event watcher;
+each point re-estimates the up time as down + count * `gSamplesToTicks`;
+the pen-up sets the up time, judges the stroke, and `EndStroke`s it.
+`StrokeGet` 0x001fcc04 hands the stroke world the tail's stroke once it
+has points, flagged taken (0x80000000), inkless when `gDefaultInk` is
+off.  The click-event watcher (`StrokeHiliteState`, 0x1c bytes, `oldHilite`
+0x0c103fa0 and `newHilite` 0x0c103fbc; `InitHiliteState` 0x001fd094,
+`CheckHiliteState` 0x001fd184) decides three things about a stroke -
+whether it moved past twice `gHiliteDistance`, whether it is a tap (down
+under 10 ticks and within `gMaxTapSize`), whether it can be the second
+of a double tap (the last was a tap within `gDoubleTapInterval` = 27
+ticks) - and notes the event in the stroke's word at +0x48: 4 a hilite
+click (held still 45 ticks, or 90 within twice the distance), 5 a
+tap-and-drag (a press within `gDoubleTapDistance` of the last tap while
+a double tap was still possible), and at the pen-up 3 a double tap or 2
+a tap; 1 once nothing is left to decide.  The distances are 4, 6 and 6
+points scaled to the screen's resolution (`SetupDistances` 0x001fc7f8:
+the gestalt's dpi; 6, 8, 8 pixels at 100 dpi; the halfwords at
+0x0c101d28, 0x0c101d2c, 0x0c101d30 - `CheckHiliteState` reads them with
+rotated unaligned `ldr`s).  `NukeEgregiousStrokes` disposes strokes
+nobody took for ten seconds; `UnbufferStroke` 0x001fd474 takes a stroke
+out of the queue when its unit disposes it.
+
+`StrokeCentral` (`gStrokeWorld`, 0x44 bytes: +0 whether a stroke is
+current, +4 the stroke, +8 its click unit, +0xc/+0x10 the last down and
+up times, +0x14/+0x18 the block count and idles, +0x1c the last flush
+time, +0x20 the deferred strokes, +0x28 the expired strokes, +0x2c the
+next compress time, +0x34 the compress group) is idled from the
+application (`IdleStrokes` 0x001463cc, not re-entered).
+`StrokeCentral::IdleStrokes` 0x0014640c: while the controller is not
+busy and no stroke is current, `StrokeGet`; the stroke made current
+(`StartNewStroke` notes the previous stroke's times in it at +0x3c/+0x40)
+and a `TClickUnit` made of it in `gRootDomain`, flagged 0x4000000, given
+to `TController::NewClassification` - and handed to `HandleUnit` at once
+when `IsExternallyArbitrated`; then `IdleCurrentStroke` keeps the
+click's box at the stroke's, a click event in the stroke (unless the
+click was claimed) becomes a `TClickEventUnit` over the click, cleared
+from the stroke (`ClearEvent`) and classified; a done stroke is
+journalled, `DoneCurrentStroke`d and `TriggerRecognition` called.
+`FlushStrokes` 0x0014664c throws the queued strokes away (each a click
+whose ink is taken off), `BlockStrokes` holds them for ten idles,
+`BeforeLastFlush` tells whether a time precedes the last flush.
+
+## The unit handler
+
+`HandleUnit(TArray*)` 0x0019f964 runs `HandleUnitList` 0x0019f9e8 under
+an exception handler.  For each unit: the recogniser's command; dropped
+when the recogniser is arbitrated (flag 2), the last unit went to a
+flag-1 (word) recogniser (`gRecognition+0x1c`) and the click came within
+30 ticks of the previous stroke's pen-up (a tap after writing) - a click
+on a clicks-only area noting `gRecognition+0x38`; `SetNextClick` with
+the unit's start; dropped too outside the modal bounds
+(`ModalRecognitionOK`) or when `TRootView::DoCaretClick` 0x001b7774 takes
+a click on the caret.  Unless the unit started before the last flush,
+the recogniser's `HandleUnit` answers the command and `PostAndDoCommand`
+0x0019ff88 dispatches it: the view under the unit (`FindView` with the
+recogniser's mask; nothing for none); a click outside the popup and its
+parents closes the popup instead (result 1); else `MakeCommand(command,
+view, unitPublic)` - aeRawInk and aeInkWord carry the strokes bundle -
+through `TApplication::DispatchCommand`; the application's next undo
+batch begins.  Afterwards (when the unit handled is still the one): a
+command nobody handled, other than aeTap, with nothing noted leaves the
+unit; otherwise `gRecognition+0x1c` becomes the recogniser's flag 1, and
+- except for a click whose stroke is already over - the unit's ink is
+taken off (`Cleanup`: `InkOff`, the stroke world's current stroke
+forgotten), invalidated, and its strokes claimed
+(`TController::MarkUnits`, 0x40000000; so a click a view takes gets no
+tap gesture after it).  `HandleExpiredStroke` 0x0019fd8c passes a stroke
+no recogniser took to the stroke world's expired strokes (ink: NOT YET).
+
+The click and stroke tracking loops - `FTrackHiliteX` 0x001ecaa8
+(`:TrackHilite(unit)`: the view hilited while the stroke's last point is
+inside it, `Wait(1)` between looks until `StrokeDone`), `DoCaretClick` -
+run in the application task while the inker task fills the stroke.
+
+## The unit natives
+
+`UnitFromRef` 0x001ec718 turns a script's unit argument (an address ref
+of a `TUnitPublic`) back, `StrokeFromRef` 0x001ec750 gives its stroke
+face.  `GetPoint(which, unit)` 0x001a5d60: 0/1 the first point's x/y, 4/5
+the last's, 6/8 the first/last as a `{x, y}` frame (a clone of
+`canonicalPoint`); `GetPointsArray` 0x001a21d0 answers `[y0, x0, y1, x1,
+...]` (the tablet's order - `GetPointsArrayXY` 0x001a25d0 gives x first);
+`StrokeDone`, `StrokeBounds` (the unit's bounds as a bounds frame),
+`CountUnitStrokes`, `GetUnitStartTime`/`EndTime` (the unit's),
+`GetUnitDownTime`/`UpTime` (the stroke's), `InkOn`, `InkOff` (the ink taken
+off, invalidating), `InkOffUnHobbled`, `GestureType` (`CaretType`).
+
 ## Reconstruction (`src/recognition/`)
 
 `RecObject.h` (TRecObject, TArray, TDArray, the recogniser's handle
-glue), `Stroke.h` (TStroke, TStrokePublic), `Unit.h` (TUnit, TUnitList,
-TTypeList, TSIUnit, TStrokeUnit, TClickUnit, TClickEventUnit),
-`UnitPublic.h`, `Areas.h` (TRecArea's layout and use counts, TAreaList),
-`Domain.h` (TDomain), `Recognizer.h` (TRecognizer, TRecognizerList, the
-click and event recognisers, TRecognitionManager: `gRecognition.Init(1)`
-installs the two click recognisers and the root domain).  Tests:
-`test_RecObject`, `test_Stroke`, `test_Unit`.
+glue), `Stroke.h` (TStroke, TStrokePublic, the Fixed rectangle helpers),
+`Unit.h` (TUnit, TUnitList, TTypeList, TSIUnit, TStrokeUnit, TClickUnit,
+TClickEventUnit), `UnitPublic.h` (TUnitPublic; UnitFromRef,
+StrokeFromRef, `RegisterUnitNatives` for UnitNatives.cpp), `Areas.h`
+(TRecArea's layout and use counts, TAreaList), `Domain.h` (TDomain),
+`Recognizer.h` (TRecognizer, TRecognizerList, the click and event
+recognisers, TRecognitionManager: `gRecognition.Init(1)` installs the
+two click recognisers and the root domain; the unit handler's
+HandleUnit/HandleUnitList/PostAndDoCommand), `TabletBuffer.h` (the ring
+and its reader), `StrokeQueue.h` (the queue, TSStroke, the click-event
+watcher, the tablet glue), `StrokeCentral.h` (the stroke world:
+`gStrokeWorld.Init()`, `IdleStrokes()`).  The host's tablet is
+`hal/host/HostTablet.h`: pen records into the buffer at once or queued
+a record per tick of a `Wait` (its wait hook stands in for the inker
+task, reading the buffer into the stroke queue in `StrokeTime`).
+Tests: `test_RecObject`, `test_Stroke`, `test_Unit` (the units, the
+buffer and the queue's click events), `test_Views` `TestClicks` (a tap's
+aeClick and aeTap to a view's scripts, a tracked drag, a double tap).
 
-NOT YET: StrokeCentral and the tablet, TController and the arbiter, the
-domains (stroke, edge-list gestures, shapes, words), TTypeAssoc and the
-area cache (`InitAreas`, `GetAreasHit`, `BuildRecConfig`), the inker,
-the word list and dictionaries, `HandleUnitList` and the unit natives.
+DEVIATIONS on the host: `StrokeTime` (nothing in the ROM: the inker task
+reads the tablet) reads the tablet buffer into the stroke queue, and the
+inker's read index simply follows the writer (no ink is drawn); with no
+controller, `StrokeCentral::IdleStrokes` hands every click and
+click-event unit straight to `HandleUnit` and disposes the units itself;
+`TUnitPublic::EndTime` uses the unit's own end (the controller's stroke
+unit is NOT YET); `Wait` with no task running runs the host wait hook
+(os600/user/UserBoot.h).
+
+NOT YET: TController and the arbiter, the domains (stroke, edge-list
+gestures, shapes, words), TTypeAssoc and the area cache (`InitAreas`,
+`GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the
+inker and ink (`StrokeUpdate`, `TStroke::Draw`, the expired strokes'
+grouping and compression, the stroke bundles), the word list and
+dictionaries, the tablet driver, the journal, the caret popup.

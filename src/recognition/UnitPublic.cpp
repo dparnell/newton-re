@@ -11,6 +11,7 @@
 #include "RootView.h"
 #include "ViewFlags.h"
 #include "Rects.h"
+#include "StrokeCentral.h"
 
 
 // ROM 0x0022a688 __ct__11TUnitPublicFP5TUnitUl
@@ -206,14 +207,15 @@ TUnitPublic::RequiredMask(void)
 
 
 // ROM 0x0022b388 Cleanup__11TUnitPublicFv
-// A click's ink taken off the screen once it is handled.
+// A click's ink taken off the screen once it is handled, and the stroke
+// world's current stroke forgotten.
 void
 TUnitPublic::Cleanup(void)
 {
 	if (fUnit->fType != kClickUnit)
 		return;
 	Stroke()->InkOff(true);
-	// (the ROM: gStrokeWorld's current stroke word cleared - NOT YET: StrokeCentral)
+	gStrokeWorld.InvalidateCurrentStroke();
 }
 
 
@@ -306,4 +308,14 @@ TUnitPublic::GestureAngle(void)
 	if (diff <= tolerance)
 		return 180;
 	return angle;
+}
+
+
+// ROM 0x0022b110 Strokes__11TUnitPublicFv
+// The word's strokes as a stroke bundle: the word info frame's strokes
+// slot.  NOT YET RECONSTRUCTED: WordInfo (MakeWordInfo); nil.
+Ref
+TUnitPublic::Strokes(void)
+{
+	return NILREF;
 }

@@ -120,11 +120,16 @@ src/
   recognition/  the recognition system: the recogniser's object base
                 (RecObject.h), the strokes (Stroke.h), the units the
                 recognisers make and the face the views see (Unit.h,
-                UnitPublic.h), the areas (Areas.h), the domains' base
-                (Domain.h) and the recognisers' front - TRecognizer, the
-                click recognisers, TRecognitionManager (Recognizer.h);
-                the stroke world, controller, arbiter and domains to come
-                (docs/recognition/README.md)
+                UnitPublic.h, the NewtonScript unit functions in
+                UnitNatives.cpp), the areas (Areas.h), the domains' base
+                (Domain.h), the recognisers' front - TRecognizer, the
+                click recognisers, TRecognitionManager (Recognizer.h) -
+                and the unit handler posting to the views (HandleUnit.cpp);
+                from the pen: the tablet buffer (TabletBuffer.h), the
+                stroke queue with its click-event watcher (StrokeQueue.h)
+                and the stroke world making clicks of the strokes
+                (StrokeCentral.h); the controller, arbiter, domains and
+                ink to come (docs/recognition/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

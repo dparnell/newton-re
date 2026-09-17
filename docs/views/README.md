@@ -772,10 +772,30 @@ icon, a cut item, the item under a point, the keys - the pick moved,
 type-select, a key event through the ROM's viewKeyDownScript -, a pick
 closing the picker).
 
+### Clicks and taps (`docs/recognition/README.md`)
+
+A pen-down reaches a view as aeClick with the recogniser's unit as the
+command parameter (`TView::RealDoCommand` runs `viewClickScript(unit)`;
+the script's `true` claims the click, `'skip` passes it on), the
+pen-up's tap, double tap or tap-and-drag as aeTap/aeDoubleTap/aeTapDrag
+(`viewGestureScript(unit, kind)`) - unless the click was claimed.  The
+path is the recognition system's: the tablet buffer, the stroke queue's
+click-event watcher, the stroke world's click units, the unit handler's
+`PostAndDoCommand` to the view under the pen (`TUnitPublic::FindView`:
+the deepest view with the recogniser's viewFlags bits - vClickable for
+clicks, vGesturesAllowed for the events).  `TrackHilite`/`TrackButton`
+(`FTrackHiliteX` 0x001ecaa8) follow the stroke a tick at a time (`Wait(1)`)
+until `StrokeDone`; `TRootView::DoCaretClick` 0x001b7774 takes a click on
+the caret the same way (the caret popup NOT YET).  The unit functions of
+NewtonScript (`GetPoint`, `GetPointsArray`, `StrokeDone`, `StrokeBounds`,
+`InkOff`, ...) are `recognition/UnitNatives.cpp`.  On the host the pen is
+`hal/host/HostTablet.h`, fed at once or a record a tick; `test_Views`'s
+`TestClicks` taps, drags and double-taps a view.
+
 ## Not yet
 
 The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
-the pen tracking behind `TrackHilite` (strokes), the rest of the
+the rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key view chain (`NextKeyView`), the key help, the keyboard tool and the
@@ -783,6 +803,6 @@ on-screen keyboards, drag and drop, the animation
 effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
 `TEditView`, ...), editing in `TParagraphView`, the picker's pen
-tracking and keys, the
-recogniser's units behind the click and gesture commands, the event
+tracking, the strokes and words of the recogniser (its controller and
+domains: `docs/recognition/README.md`), the event
 loop (`TNotebook::Run`) and the idle timer.

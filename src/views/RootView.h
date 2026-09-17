@@ -110,6 +110,7 @@ public:
 	Boolean		CaretValid(Point* pt);									// ROM 0x001b70cc CaretValid__9TRootViewFP6TPoint
 	void		GetCaretPoint(Point* pt);								// ROM 0x001b72a0 GetCaretPoint__9TRootViewFP6TPoint
 	void		GetCaretRect(Rect* rect);								// ROM 0x001b7314 GetCaretRect__9TRootViewFP5TRect
+	Boolean		DoCaretClick(TUnitPublic* unit);						// ROM 0x001b7774 DoCaretClick__9TRootViewFP11TUnitPublic - a click on the caret tracked (the caret inverted while the pen is on it); ==> whether the caret popup came up
 	void		DrawCaret(Point pt);									// ROM 0x001b745c DrawCaret__9TRootViewF6TPoint
 	void		RestoreBitsUnderCaret(void);							// ROM 0x001b7698 RestoreBitsUnderCaret__9TRootViewFv
 	void		HideCaret(void);										// ROM 0x001b7adc HideCaret__9TRootViewFv

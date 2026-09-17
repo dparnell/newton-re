@@ -249,7 +249,7 @@ TRecognizerList::FindRecognizer(ULong id)
 // NOT YET RECONSTRUCTED: whether an area of the area cache (gAreaCache)
 // other than the view's is in use (its use count above 0); the host has
 // no area cache.
-static Boolean
+Boolean
 OtherViewInUse(TView* /*view*/)
 {
 	return false;
@@ -259,7 +259,7 @@ OtherViewInUse(TView* /*view*/)
 // ROM 0x00036a98 ClicksOnlyArea__FP5TUnit
 // NOT YET RECONSTRUCTED: whether the unit's area accepts only clicks (one
 // type, 'CLIK'); the host's units have no areas.
-static Boolean
+Boolean
 ClicksOnlyArea(TUnit* /*unit*/)
 {
 	return false;
@@ -292,7 +292,7 @@ TClickRecognizer::HandleUnit(TUnitPublic* unit)
 	{
 		command = 0;
 		if (ClicksOnlyArea(theUnit))
-			gRecognition.fFlag38 = 1;
+			gRecognition.fClickSwallowed = true;
 	}
 	return command;
 }
@@ -383,7 +383,7 @@ TRecognitionManager::Init(UChar level)
 	fArbiter = nil;
 	fAreas = nil;
 	fIgnoreClicksUntil = 0;
-	fFlag1c = 1;
+	fAfterWriting = true;
 	fLevel = level;
 	fModalBounds = nil;
 	fRecognizers = TRecognizerList::Make();

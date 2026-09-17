@@ -1410,14 +1410,6 @@ TStrokeUnit::SetContextID(ULong id)
 	T C l i c k U n i t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001fd474 UnbufferStroke__FP7TStroke
-// NOT YET RECONSTRUCTED: the inker's queue of 64 strokes still being
-// drawn, which the stroke is taken out of; the host has no inker task.
-void
-UnbufferStroke(TStroke* /*stroke*/)
-{ }
-
-
 // ROM 0x0021cde8 Make__10TClickUnitSFP7TDomainUlP7TStrokeP6TArray
 TClickUnit*
 TClickUnit::Make(TDomain* domain, ULong kind, TStroke* stroke, TArray* areas)

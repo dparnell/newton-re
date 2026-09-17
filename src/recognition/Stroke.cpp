@@ -16,8 +16,8 @@
 #include <string.h>
 
 // the pen tip and inking defaults the strokes are made with
-static ULong	gLastPenTip = 0;			// ROM 0x0c1008bc gLastPenTip
-static Boolean	gDefaultInk = true;			// ROM 0x0c10197c gDefaultInk
+ULong	gLastPenTip = 0;				// ROM 0x0c1008bc gLastPenTip
+Boolean	gDefaultInk = true;				// ROM 0x0c10197c gDefaultInk
 
 
 /*------------------------------------------------------------------------------
@@ -207,6 +207,72 @@ GetMapper(const FRect* src, const FRect* dst)
 }
 
 
+// ROM 0x001a656c EmptyRectangle
+Boolean
+EmptyRectangle(const FRect* rect)
+{
+	return !(rect->top < rect->bottom && rect->left < rect->right);
+}
+
+
+// ROM 0x001a65a0 InsetRectangle
+void
+InsetRectangle(FRect* rect, Fixed dx, Fixed dy)
+{
+	rect->top += dy;
+	rect->left += dx;
+	rect->bottom -= dy;
+	rect->right -= dx;
+}
+
+
+// ROM 0x001a65d4 PointInRectangle
+Boolean
+PointInRectangle(const FPoint* pt, const FRect* rect)
+{
+	return rect->top <= pt->y && pt->y < rect->bottom && rect->left <= pt->x && pt->x < rect->right;
+}
+
+
+// ROM 0x001a6970 SetRectangleEdges
+void
+SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bottom)
+{
+	rect->left = left;
+	rect->top = top;
+	rect->right = right;
+	rect->bottom = bottom;
+}
+
+
+// ROM 0x001a6618 SectRectangle
+// The rectangles' intersection; empty (and false) when they do not meet
+// or a is empty.
+Boolean
+SectRectangle(FRect* result, const FRect* a, const FRect* b)
+{
+	Fixed left = a->left, top = a->top, right = a->right, bottom = a->bottom;
+	if (top < bottom && left < right)
+	{
+		if (top < b->top)
+			top = b->top;
+		if (left < b->left)
+			left = b->left;
+		if (bottom > b->bottom)
+			bottom = b->bottom;
+		if (right > b->right)
+			right = b->right;
+		if (top < bottom && left < right)
+		{
+			SetRectangleEdges(result, left, top, right, bottom);
+			return true;
+		}
+	}
+	SetRectangleEmpty(result);
+	return false;
+}
+
+
 // ROM 0x001a6864 MapPoint
 // The point moved from where it lies in src to the same place in dst.
 void
@@ -262,8 +328,8 @@ TStroke::IStroke(ULong count)
 	{
 		fUpTime = 0;
 		fDownTime = 0;
-		fUnused40 = 0;
-		fUnused3c = 0;
+		fPrevUpTime = 0;
+		fPrevDownTime = 0;
 		fDecimation = 1;
 		fDecimationCount = 0;
 		SetRectangleEmpty(&fBBox);
@@ -515,11 +581,11 @@ TStroke::Done(void)
 
 // ROM 0x001fcdf0 AcquireStroke__FP7TStroke
 // The inker's lock taken while the stroke is still being drawn (the
-// host has no inker task: nothing to take); ==> whether it was.
+// host has no inker task: the semaphore is nothing); ==> whether it was.
 Boolean
-AcquireStroke(TStroke* /*stroke*/)
+AcquireStroke(TStroke* stroke)
 {
-	return false;
+	return !stroke->Done();
 }
 
 

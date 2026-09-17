@@ -30,8 +30,7 @@
 
 				NOT YET RECONSTRUCTED: the Dump methods (TMsg, the debugging
 				message buffer), the controller's next-event time that
-				AddSub and EndSubs lower (TController is NOT YET), the
-				inker's stroke queue (UnbufferStroke).
+				AddSub and EndSubs lower (TController is NOT YET).
 
 	Reconstructed from the MP2100 D ROM (0x0022a24c-0x0022a688,
 	0x0022b744-0x0022bea0, 0x0021a340-0x0021b4a0, 0x0021e6e0-0x0021e760,
@@ -78,7 +77,8 @@ enum
 	kProcessedClick		= 1,
 	kTapClick			= 2,
 	kDoubleTapClick		= 3,
-	kHiliteClick		= 4
+	kHiliteClick		= 4,
+	kTapDragClick		= 5			// a press within reach of the last tap
 };
 
 void	FixRect(FRect* dst, const Rect* src);				// ROM 0x001a6528 FixRect - pixels to Fixed
@@ -292,8 +292,8 @@ public:
 	long				fEvent;			// +0x3c  -1 until read
 };
 
-// the inker's queue of strokes still being drawn (NOT YET: nothing on the host)
+// the stroke queue (StrokeQueue.h): a stroke taken out of it
 void	UnbufferStroke(TStroke* stroke);						// ROM 0x001fd474 UnbufferStroke__FP7TStroke
-enum { kBufferedStroke = 0x10000000 };						// the stroke flag the inker holds it by
+enum { kBufferedStroke = 0x10000000 };						// the stroke flag the queue holds it by (StrokeQueue.h: kStrokeInQueue)
 
 #endif	/* __UNIT_H */

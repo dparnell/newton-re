@@ -5,9 +5,12 @@
 # the views see (UnitPublic.h), the areas (Areas.h), the domains' base
 # (Domain.h) and the recognisers' front (Recognizer.h: TRecognizer, the
 # click recognisers, TRecognitionManager).  The recognisers themselves
-# (the stroke world, the controller, the arbiter, the domains) are NOT
-# YET.  Over frames (the units and strokes are handed to NewtonScript as
-# address refs) and qd.
+# The tablet buffer (TabletBuffer.h) and the stroke queue (StrokeQueue.h)
+# bring the pen's points in as strokes; the stroke world (StrokeCentral.h)
+# makes clicks of them and the unit handler (HandleUnit.cpp) posts the
+# commands to the views.  The controller, the arbiter and the domains are
+# NOT YET.  Over frames (the units and strokes are handed to NewtonScript
+# as address refs) and qd.
 add_library(recognition STATIC
     RecObject.cpp
     Stroke.cpp
@@ -16,6 +19,11 @@ add_library(recognition STATIC
     Areas.cpp
     Domain.cpp
     Recognizer.cpp
+    TabletBuffer.cpp
+    StrokeQueue.cpp
+    StrokeCentral.cpp
+    HandleUnit.cpp
+    UnitNatives.cpp
 )
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # (the strokes tell the root view what to redraw; the views track strokes:

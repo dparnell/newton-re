@@ -77,6 +77,14 @@ void	RectangleCenter(const FRect* rect, FPoint* center);	// ROM 0x001a66a8 Recta
 void	UnfixRect(const FRect* src, Rect* dst);				// ROM 0x001a64c4 UnfixRect - rounded to pixels
 void	GetMapper(const FRect* src, const FRect* dst);		// ROM 0x001a67a4 GetMapper - the dst rect kept in the src rect's proportions
 void	MapPoint(FPoint* pt, const FRect* src, const FRect* dst);	// ROM 0x001a6864 MapPoint - the point moved from the src rect to the dst rect
+Boolean	EmptyRectangle(const FRect* rect);					// ROM 0x001a656c EmptyRectangle
+void	InsetRectangle(FRect* rect, Fixed dx, Fixed dy);	// ROM 0x001a65a0 InsetRectangle
+Boolean	PointInRectangle(const FPoint* pt, const FRect* rect);	// ROM 0x001a65d4 PointInRectangle
+Boolean	SectRectangle(FRect* result, const FRect* a, const FRect* b);	// ROM 0x001a6618 SectRectangle - ==> whether they meet (the result empty when not)
+void	SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bottom);	// ROM 0x001a6970 SetRectangleEdges
+
+extern Boolean	gDefaultInk;								// ROM 0x0c10197c gDefaultInk - strokes are inked unless told otherwise
+extern ULong	gLastPenTip;								// ROM 0x0c1008bc gLastPenTip - the pen tip new strokes are flagged with
 
 class TStroke : public TDArray
 {
@@ -105,8 +113,8 @@ public:
 	long			fSampleRate;	// +0x30  halved by Bifurcate
 	ULong			fDownTime;		// +0x34
 	ULong			fUpTime;		// +0x38
-	long			fUnused3c;		// +0x3c
-	long			fUnused40;		// +0x40
+	ULong			fPrevDownTime;	// +0x3c  the stroke before's times (StrokeCentral::StartNewStroke)
+	ULong			fPrevUpTime;	// +0x40
 	UShort			fDecimation;	// +0x44  every n-th point kept (1: all)
 	UShort			fDecimationCount;	// +0x46  points since the last kept
 	long			fClickEvent;	// +0x48  the click event noted in it (Unit.h: kTapClick...; kProcessedClick once handled)

@@ -117,6 +117,14 @@ every call through the real stubs.  `ctest -R Boot`.
 monitor and three tasks built by hand, a client/server exchange, monitor
 calls and a timeout.  `ctest -R HostRuntime`.
 
+`Wait(ticks)` (`os600/user/UserTime.cpp`) is the ROM's send to the null
+port when a task is running.  With no task - the standalone tests, which
+boot no kernel - it runs `gHostWaitHook` (`os600/user/UserBoot.h`) when
+one is installed, or sleeps the thread: the hook stands in for the tasks
+that would run while the caller sleeps (the host tablet installs the
+inker's stand-in there, `hal/host/HostTablet.h`, so the views' pen
+tracking loops see the stroke grow).
+
 Task stacks on the host come from `NewStack` in
 `src/os600/user/host/StackManager.cpp`, a stand-in for the paged stack
 manager (page-aligned host allocations; locking is a no-op); before

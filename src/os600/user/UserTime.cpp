@@ -17,6 +17,12 @@
 #include "hal/System.h"
 #include "hal/Timer.h"
 #include "os600/GenericSWISelectors.h"
+#include "UserBoot.h"
+#include "UserTasks.h"
+#include <chrono>
+#include <thread>
+
+void (*gHostWaitHook)(ULong ticks) = nil;
 
 
 // ROM 0x0013ec68 GetGlobalTime
@@ -144,6 +150,30 @@ Ticks(void)
 {
 	TTime now = GetGlobalTime();
 	return now.ConvertTo(kMacTicks) & 0x7fffffff;
+}
+
+
+// ROM 0x0025356c Wait__FUl
+// The task sleeps for the ticks: a send to the null port (which never
+// receives) with that timeout.  Host: with no task running (no kernel
+// booted) the wait hook runs instead, or the thread sleeps.
+void
+Wait(ULong ticks)
+{
+	if (gCurrentTask == nil)
+	{
+		if (gHostWaitHook != nil)
+			gHostWaitHook(ticks);
+		else
+			std::this_thread::sleep_for(std::chrono::microseconds(ticks * 1000000 / 60));
+		return;
+	}
+	TTimeout timeout = ticks * 0xf000;		// kMacTicks of the 3.6864 MHz clock
+	if (timeout == 0)
+		return;
+	if (timeout == (TTimeout) -1)
+		timeout = 0;
+	Sleep(timeout);			// (the ROM: the same send to the null port as Sleep's)
 }
 
 

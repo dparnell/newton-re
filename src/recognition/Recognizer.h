@@ -134,18 +134,31 @@ public:
 	TRecObject*			fAreas;				// +0x10
 	TRecognizerList*	fRecognizers;		// +0x14
 	ULong				fIgnoreClicksUntil;	// +0x18
-	UChar				fFlag1c;			// +0x1c  1
+	Boolean				fAfterWriting;		// +0x1c  the last unit handled went to a recogniser flagged 1 (the words'): a click soon after is swallowed
 	Rect*				fModalBounds;		// +0x28
 	TView*				fPrevClickView;		// +0x2c
 	TView*				fClickView;			// +0x30
-	UChar				fFlag38;			// +0x38
+	Boolean				fClickSwallowed;	// +0x38  a click on a clicks-only area went unhandled: the click view forgotten, recognition triggered
 	ULong				fUnused3c;			// +0x3c
 };
 
 extern TRecognitionManager	gRecognition;					// ROM 0x0c103f50 gRecognition
 
+// the unit handler (HandleUnit.cpp): the units the controller has
+// arbitrated handed to their recognisers and the commands posted to the
+// views
+long	HandleUnit(TArray* units);						// ROM 0x0019f964 HandleUnit__FP6TArray - HandleUnitList under an exception handler (an exception is reported, not thrown)
+long	HandleUnitList(TArray* units);					// ROM 0x0019f9e8 HandleUnitList__FP6TArray - ==> whether any unit was handled
+long	PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask);	// ROM 0x0019ff88 PostAndDoCommand__FUlP11TUnitPublicT1 - the command dispatched to the view under the unit; ==> the command's result (1 when a popup closed on the click)
+long	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019fe94 HandleGetContextUnits__FP5TUnitl - command 0x14 to the view under the unit
+void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019fd8c HandleExpiredStroke__FP5TUnit - a stroke no recogniser took (NOT YET: to the stroke world's expired strokes; the ink taken off while the arbiter is modal)
+void	UpdateStroke(TUnit* unit);						// ROM 0x0019fe40 UpdateStroke__FP5TUnit - the unit's stroke's ink taken off and the root view updated
+extern Boolean	gInhibitPopup;							// ROM 0x0c101a34 gInhibitPopup
+
 void	InstallClickRecognizer(TRecognitionManager* manager);	// ROM 0x00145830 InstallClickRecognizer__FP19TRecognitionManager
 void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00145704 InstallEventRecognizer__FP19TRecognitionManager
 Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x00209828 OnlyStrokeWritten__FP11TStrokeUnit (NOT YET: true)
+Boolean	OtherViewInUse(TView* view);						// ROM 0x00036a10 OtherViewInUse__FP5TView (NOT YET: false)
+Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x00036a98 ClicksOnlyArea__FP5TUnit (NOT YET: false)
 
 #endif	/* __RECOGNIZER_H */

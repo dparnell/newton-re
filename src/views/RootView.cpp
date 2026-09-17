@@ -26,6 +26,8 @@
 #include "ROMConstants.h"
 #include "DynamicArray.h"
 #include "NewtonExceptions.h"
+#include "UnitPublic.h"
+#include "NewtonTime.h"
 
 Boolean	gNewtIsAliveAndWell = true;			// ROM 0x0c102604 gNewtIsAliveAndWell (host: no boot splash)
 
@@ -1146,6 +1148,79 @@ TRootView::RestoreBitsUnderCaret(void)
 	port->clipRgn = savedClip;
 	DisposeRgn(screenRgn);
 	fCaretShowing = false;
+}
+
+
+// ROM 0x001b7774 DoCaretClick__9TRootViewFP11TUnitPublic
+// A click on the caret: when the caret is showing (and no popup is up)
+// and the stroke starts within the caret's rectangle let out two pixels,
+// the pen is tracked until the stroke ends - the caret drawn inverted
+// while the pen is over it (within the caret view's clip) - and, when it
+// ends there, the caret view's _caretPopup is popped up at the caret and
+// the stroke's ink taken off.  ==> whether the popup came up.
+// NOT YET RECONSTRUCTED: FClicker (the click sound), FDoPopup (the caret
+// popup - the click is taken as handled).
+Boolean
+TRootView::DoCaretClick(TUnitPublic* unit)
+{
+	Boolean poppedUp = false;
+	if (!fCaretShowing || fPopup != nil)
+		return false;
+	Rect caretRect;
+	GetCaretRect(&caretRect);
+	CaretPointToRect(fCaretPoint, &caretRect);
+	Rect hitRect = caretRect;
+	InsetRect(&hitRect, -2, -2);
+	TStrokePublic* stroke = unit->Stroke();
+	Point first = stroke->FirstPoint();
+	if (!PtInRect(first, &hitRect))
+		return false;
+	TRegionVar hitRgn;
+	RectRgn(hitRgn, &hitRect);
+	TView* clipView = GetCaretClipView(fCaretDrawnView);
+	TRegion savedRgn(fCaretDrawnView->SetupVisRgn());
+	TRegionVar savedVis(savedRgn);
+	fCaretDrawnView->NarrowVisByIntersectingObscuringSiblingsAndUncles(clipView, &caretRect);
+	GrafPort* port;
+	GetPort(&port);
+	SectRgn(hitRgn, port->clipRgn, hitRgn);
+	if (PtInRgn(first, hitRgn))
+	{
+		// NOT YET RECONSTRUCTED: FClicker
+		Boolean inverted = false;
+		do
+		{
+			Point last = stroke->FinalPoint();
+			Boolean inside = PtInRgn(last, hitRgn);
+			if (inside == inverted)
+				Wait(1);
+			else
+			{
+				DrawCaretBits(caretRect, inside);
+				inverted = inside;
+			}
+		} while (!stroke->Done());
+		if (inverted)
+		{
+			DrawCaretBits(caretRect, false);
+			GetPort(&port);
+			CopyRgn(savedVis, port->visRgn);
+			if (fCaretView != nil)
+			{
+				RefVar popup(fCaretView->GetVar(RSSYM_caretpopup));
+				poppedUp = NOTNIL(popup);
+				if (poppedUp)
+				{
+					// NOT YET RECONSTRUCTED: FDoPopup(fContext, GetProtoVariable(popup, RSSYMpopup), caretRect.right, caretRect.bottom, popup)
+					stroke->InkOff(true);
+				}
+			}
+			return poppedUp;
+		}
+	}
+	GetPort(&port);
+	CopyRgn(savedVis, port->visRgn);
+	return poppedUp;
 }
 
 

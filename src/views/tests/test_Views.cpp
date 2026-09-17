@@ -21,6 +21,10 @@
 #include "REPTranslators.h"
 #include "Bits.h"
 #include "Application.h"
+#include "UnitPublic.h"
+#include "Recognizer.h"
+#include "StrokeCentral.h"
+#include "HostTablet.h"
 #include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -1497,6 +1501,68 @@ TestIdlers()
 }
 
 
+// Clicks: the pen's records go through the host tablet into the tablet
+// buffer, the stroke queue makes strokes of them, the stroke world makes
+// click units and the unit handler posts aeClick to the view under the
+// pen (its viewClickScript, with the unit) at the pen-down and the click
+// events (aeTap, aeDoubleTap: viewGestureScript) at the pen-up; a click
+// script's TrackHilite follows a stroke fed a tick at a time.
+static void
+TestClicks()
+{
+	gRecognition.Init(1);
+	gStrokeWorld.Init();
+	HostTabletInit();
+	RegisterUnitNatives();
+	Eval("userConfiguration.userPenSize := 1");		// (the ink is let out by the pen size)
+	TView* v = ViewOf("ctxC := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200 + 0x800, viewBounds: {left: 60, top: 40, right: 120, bottom: 80}, viewFormat: 1, clicks: [], gestures: [], "
+		"viewClickScript: func(unit) begin AddArraySlot(clicks, [GetPoint(0, unit), GetPoint(1, unit), StrokeDone(unit), StrokeBounds(unit), GetUnitDownTime(unit), CountUnitStrokes(unit)]); nil end, "
+		"viewGestureScript: func(unit, kind) begin AddArraySlot(gestures, [kind, GetPoint(4, unit), GetPoint(5, unit), GetUnitUpTime(unit), GetPoint(8, unit)]); true end})");
+	Eval("ctxC:Dirty()");
+	Refresh();
+	// a tap: the click at the pen-down (the stroke already done here), and - the click script not having taken it - the tap at the pen-up
+	HostTabletPenDown(90, 60, 1000);
+	HostTabletPenUp(1004);
+	IdleStrokes();
+	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 1 && RINT(Eval("ctxC.clicks[0][0]")) == 90 && RINT(Eval("ctxC.clicks[0][1]")) == 60 && NOTNIL(Eval("ctxC.clicks[0][2]")));
+	EXPECT(RINT(Eval("ctxC.clicks[0][3].left")) == 90 && RINT(Eval("ctxC.clicks[0][3].bottom")) == 61 && RINT(Eval("ctxC.clicks[0][4]")) == 1000 && RINT(Eval("ctxC.clicks[0][5]")) == 1);
+	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && RINT(Eval("ctxC.gestures[0][0]")) == aeTap && RINT(Eval("ctxC.gestures[0][1]")) == 90 && RINT(Eval("ctxC.gestures[0][3]")) == 1004 && RINT(Eval("ctxC.gestures[0][4].y")) == 60);
+	EXPECT(gRecognition.fClickView == v && gStrokeWorld.CurrentStroke() == nil);
+	// a tap where no view takes clicks: nothing, and no click view
+	HostTabletPenDown(10, 90, 2000);
+	HostTabletPenUp(2003);
+	IdleStrokes();
+	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 1 && RINT(Eval("Length(ctxC.gestures)")) == 1 && gRecognition.fClickView == nil);
+	// a press and drag, fed a record a tick as the click script's TrackHilite waits: hilited inside, not outside, ended inside; the click taken (true), so no gesture follows
+	Eval("ctxC.viewClickScript := func(unit) begin AddArraySlot(clicks, [StrokeDone(unit), :TrackHilite(unit), GetPointsArrayXY(unit), StrokeDone(unit)]); true end");
+	HostTabletQueuePenDown(90, 60, 3000);
+	HostTabletQueuePenMove(95, 62);
+	HostTabletQueuePenMove(100, 65);
+	HostTabletQueuePenMove(150, 65);
+	HostTabletQueuePenMove(110, 65);
+	HostTabletQueuePenUp(3040);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 2 && ISNIL(Eval("ctxC.clicks[1][0]")) && NOTNIL(Eval("ctxC.clicks[1][1]")) && NOTNIL(Eval("ctxC.clicks[1][3]")));
+	EXPECT(RINT(Eval("Length(ctxC.clicks[1][2])")) == 10 && RINT(Eval("ctxC.clicks[1][2][6]")) == 150 && RINT(Eval("ctxC.clicks[1][2][9]")) == 65);
+	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && (v->fFlags & vSelected) != 0 && HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil);
+	Eval("ctxC:Hilite(nil)");
+	// two taps close together: a tap, then a double tap (both on the same view; the clicks not taken)
+	Eval("ctxC.viewClickScript := func(unit) begin AddArraySlot(clicks, GetPoint(6, unit)); nil end");
+	HostTabletPenDown(90, 60, 5000);
+	HostTabletPenUp(5003);
+	IdleStrokes();
+	HostTabletPenDown(91, 61, 5010);
+	HostTabletPenUp(5013);
+	IdleStrokes();
+	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 3 && RINT(Eval("ctxC.gestures[1][0]")) == aeTap && RINT(Eval("ctxC.gestures[2][0]")) == aeDoubleTap);
+	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 4 && RINT(Eval("ctxC.clicks[3].x")) == 91);
+	Eval("ctxC:Hilite(nil)");
+	Eval("RemoveView(GetRoot(), ctxC)");
+	Refresh();
+}
+
+
 static void
 TestPickView()
 {
@@ -1692,6 +1758,7 @@ main()
 		TestTyping();
 		TestIdlers();
 		TestPickView();
+		TestClicks();
 	}
 	newton_catch_all
 	{

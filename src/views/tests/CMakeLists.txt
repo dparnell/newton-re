@@ -1,5 +1,5 @@
 add_executable(test_Views test_Views.cpp)
-target_link_libraries(test_Views PRIVATE views)
+target_link_libraries(test_Views PRIVATE views recognition hal_host_tablet)
 target_compile_definitions(test_Views PRIVATE "NEWTON_ROM_BIN=\"${CMAKE_SOURCE_DIR}/../build/MP2100D/rom.bin\"")
 add_test(NAME views.Views COMMAND test_Views)
 set_tests_properties(views.Views PROPERTIES TIMEOUT 120)

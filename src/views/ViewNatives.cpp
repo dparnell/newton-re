@@ -32,6 +32,7 @@
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
+#include "UnitPublic.h"
 
 
 // ROM 0x001f0234 FGetView__FRC6RefVarT1
@@ -494,33 +495,41 @@ FViewContainsCaretView(RefArg /*rcvr*/, RefArg context)
 
 
 // ROM 0x001ecaa8 FTrackHiliteX
-// :TrackHilite(unit): the view hilited while the pen is inside it and
-// un-hilited when it leaves, until the stroke ends; ==> whether the pen
+// :TrackHilite(unit): the unit's stroke's ink taken off; the view hilited
+// while the pen is inside it (within 10 pixels) and un-hilited when it
+// leaves, a tick at a time, until the stroke ends; ==> whether the pen
 // ended inside.  Each turn inside runs the buttonPressedScript, and its
 // non-nil answer ends the tracking (when the newt_feature proto variable
 // is set).  Before that: the busy box is shown (0x35) when there is no
 // buttonPressedScript, and the _sound proto variable (the click when
 // there is none) played - NOT YET RECONSTRUCTED: BusyBoxSend, FClicker,
-// FPlaySound.  Host: strokes are NOT YET, so the unit is nil - a press
-// at the view's centre, which ends after two turns (as the ROM's loop
-// does without a stroke), hiliting the view as the view had it.
+// FPlaySound.  With no unit (nil) the pen is taken to be at the view's
+// centre, and the tracking ends after two turns.
 static Ref
 FTrackHiliteX(RefArg rcvr, RefArg unit)
 {
+	TStrokePublic* stroke = nil;
 	if (NOTNIL(unit))
-		ThrowBadTypeWithFrameData(kNSErrBadArgs, unit);		// NOT YET RECONSTRUCTED: StrokeFromRef(unit), InkOff
+	{
+		stroke = StrokeFromRef(unit);
+		stroke->InkOff(true);
+	}
+	// NOT YET RECONSTRUCTED: BusyBoxSend(0x35) when there is no buttonPressedScript; the _sound / FClicker
 	TView* view = FailGetView(rcvr);
 	Boolean selected = (view->fFlags & vSelected) != 0;
 	Boolean wasInside = false;
-	Point pt;
-	pt.h = (view->viewBounds.left + view->viewBounds.right) / 2;
-	pt.v = (view->viewBounds.top + view->viewBounds.bottom) / 2;
+	Point centre;
+	centre.h = (view->viewBounds.left + view->viewBounds.right) / 2;
+	centre.v = (view->viewBounds.top + view->viewBounds.bottom) / 2;
 	Point delta;
 	delta.h = delta.v = 10;
 	for (long turn = 0; ; )
 	{
+		Point pt = stroke != nil ? stroke->FinalPoint() : centre;
 		Boolean inside = view->Distance(pt, &delta) != 0x10000;
-		if (inside != wasInside)
+		if (inside == wasInside)
+			Wait(1);
+		else
 		{
 			selected = !selected;
 			view->Select(selected, false);
@@ -530,9 +539,11 @@ FTrackHiliteX(RefArg rcvr, RefArg unit)
 		{
 			RefVar result(DoMessageIfDefined(rcvr, RSSYMbuttonpressedscript, RefVar(NILREF), nil));
 			if (NOTNIL(result) && NOTNIL(GetProtoVariable(rcvr, RSSYMnewt_feature, nil)))
-				return result;
+				return result;		// (the ROM: BusyBoxSend(0x36) first)
 		}
-		if (++turn == 2)
+		turn++;
+		Boolean done = stroke != nil ? stroke->Done() : turn == 2;
+		if (done)
 			return MAKEBOOLEAN(inside);
 	}
 }

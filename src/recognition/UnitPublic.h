@@ -89,4 +89,9 @@ public:
 	ULong				fViewHitFlags;	// +0x38  the flags it was found with
 };
 
+// the NewtonScript side (UnitNatives.cpp)
+TUnitPublic*	UnitFromRef(RefArg unit);					// ROM 0x001ec718 UnitFromRef__FRC6RefVar - the unit a script argument stands for (a throw for nil)
+TStrokePublic*	StrokeFromRef(RefArg unit);					// ROM 0x001ec750 StrokeFromRef__FRC6RefVar - its stroke's face
+void	RegisterUnitNatives(void);							// the unit functions bound (GetPoint, GetPointsArray, StrokeDone, StrokeBounds, InkOff, ...)
+
 #endif	/* __UNITPUBLIC_H */

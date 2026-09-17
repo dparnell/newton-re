@@ -33,4 +33,10 @@ long	InitialKSRVTask();
 // nil to run nothing
 extern void (*gHostKernelServicesTask)();
 
+// host: what Wait (NewtonTime.h) runs when no task is running - the
+// standalone tests', with no kernel booted, in place of the tasks that
+// would run while a task sleeps (the inker's stand-in installs itself
+// here); nil to just let the time pass
+extern void (*gHostWaitHook)(ULong ticks);
+
 #endif	/* __USERBOOT_H */
