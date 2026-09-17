@@ -78,6 +78,7 @@ public:
 	virtual void	SetupDone(void);									// ROM 0x00181608 SetupDone__14TParagraphViewFv
 	virtual long	Idle(long reason);									// ROM 0x00180994 Idle__14TParagraphViewFl - reason 2 runs a deferred tap
 	virtual void	HandleTap(Point& pt);								// ROM 0x001772f4 HandleTap__14TParagraphViewFR6TPoint (vtable +0x11c) - the caret placed at the tap
+	virtual Boolean	PointInHilite(Point& pt);							// ROM 0x0026051c PointInHilite (host: the point tested against the selection region)
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016b14c RealDraw__14TParagraphViewFR5TRect
 	virtual void	SetBounds(const Rect& bounds);						// ROM 0x00180418 SetBounds__14TParagraphViewFRC5TRect
 	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x00181008 SetCaretOffset__14TParagraphViewFPlT1

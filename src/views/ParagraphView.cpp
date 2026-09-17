@@ -1326,6 +1326,26 @@ TParagraphView::Idle(long reason)
 }
 
 
+// ROM 0x0026051c PointInHilite (TView's iterates the hilites' Encloses)
+// Whether the point falls within the selected text: it is tested against
+// each hilite's region (built by SelectionRegion).  DEVIATION: the ROM
+// asks each C++ TParagraphHilite's Encloses in the view's local
+// coordinates; the host builds the region from the frame.
+Boolean
+TParagraphView::PointInHilite(Point& pt)
+{
+	RefVar hilites(Hilites());
+	long count = NOTNIL(hilites) ? Length(hilites) : 0;
+	for (long i = 0; i < count; i++)
+	{
+		TRegionVar rgn;
+		if (SelectionRegion(RefVar(GetArraySlotRef(hilites, i)), rgn) && PtInRgn(pt, rgn))
+			return true;
+	}
+	return false;
+}
+
+
 // ROM 0x00182d14 ProcessStyles__14TParagraphViewFUc
 // The styles checked for ink words to recognise (CheckStyles; the
 // recogniser then runs over the text).  NOT YET RECONSTRUCTED: ink -

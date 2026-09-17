@@ -2014,6 +2014,16 @@ TestSelection()
 	// RemoveHilite drops the one hilite (the array emptied)
 	p->RemoveHilite(RefVar(p->FirstHilite()));
 	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0);
+	// PointInHilite tells whether a point is on the selection
+	p->MakeHilite(6, 11, false);				// select "World"
+	{
+		Rect wb; p->OffsetToBounds(8, &wb);
+		Point inSel; inSel.h = (short) wb.left; inSel.v = (short) ((p->Line(0).fBounds.top + p->Line(0).fBounds.bottom) / 2);
+		Rect hb; p->OffsetToBounds(2, &hb);
+		Point outSel; outSel.h = (short) hb.left; outSel.v = inSel.v;
+		EXPECT(p->PointInHilite(inSel) && !p->PointInHilite(outSel));
+	}
+	p->RemoveAllHilites();
 	// ChangeStyleOfSelection restyles the selected text: "World" (6..11)
 	// given a bold spec becomes a run of its own with that style
 	p->MakeHilite(6, 11, false);
