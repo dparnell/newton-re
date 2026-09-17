@@ -21,8 +21,8 @@
 				first; Hide of an unpicked autoclose picker runs
 				pickCancelledScript.  The ROM's object is 0xbc bytes.
 
-				NOT YET RECONSTRUCTED: tracking the pen (TrackStroke on
-				aeClick: the strokes), the key commands and type-select
+				A click tracks the pen over the items (TrackStroke) and picks
+				the one it ends on.  NOT YET RECONSTRUCTED: the key commands and type-select
 				(GetKeyCommandInfo, HandleKeyDown, KeyToNextItem: a command
 				keyboard is never connected on the host), ink items
 				(DrawStrokeBundle), the pickable test inside a grid picture
@@ -41,6 +41,8 @@
 #ifndef __FONTS_H
 #include "Fonts.h"
 #endif
+
+class TStrokePublic;
 
 // which item, and which cell of a grid item
 struct PickStuff
@@ -86,6 +88,7 @@ public:
 	void		GetGridItemRect(PickStuff* item, Rect* r);				// ROM 0x001892dc GetGridItemRect__9TPickViewFP9PickStuffP5TRect
 	void		InvertItem(PickStuff* item);							// ROM 0x00189478 InvertItem__9TPickViewFP9PickStuff
 	void		FlashItem(PickStuff* item);								// ROM 0x0018949c FlashItem__9TPickViewFP9PickStuff
+	void		TrackStroke(TStrokePublic* stroke, PickStuff* item);	// ROM 0x00189948 TrackStroke__9TPickViewFP13TStrokePublicP9PickStuff
 	void		SubItem(Point& pt, PickStuff* item);					// ROM 0x001894e4 SubItem__9TPickViewFR6TPointP9PickStuff
 	void		Item(Point& pt, PickStuff* item);						// ROM 0x001895b8 Item__9TPickViewFR6TPointP9PickStuff
 	void		PickableItem(Point& pt, PickStuff* item);				// ROM 0x0018966c PickableItem__9TPickViewFR6TPointP9PickStuff

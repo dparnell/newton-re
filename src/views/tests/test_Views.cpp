@@ -1583,6 +1583,35 @@ TestClicks()
 	EXPECT(RINT(Eval("ctxS.viewValue")) == 70 && RINT(Eval("Length(ctxS.changes)")) == 1);
 	Eval("RemoveView(GetRoot(), ctxS)");
 	Refresh();
+	// a picker tracked with the pen: the item under the pen inverted as it moves, the one it ends on picked (pickActionScript, the autoclose picker closed); a pen ending outside picks nothing (-1) and closes it
+	Eval("picked := nil");
+	TPickView* p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, pickItems: [\"Alpha\", \"Beta\", 'pickSeparator, \"Gamma\"], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) picked := index, pickCancelledScript: func() picked := 'cancelled})");
+	Eval("ctxK:Open()");
+	Refresh();
+	long top = p->viewBounds.top, left = p->viewBounds.left;
+	HostTabletQueuePenDown(left + 10, top + 5, 8000);		// on Alpha
+	HostTabletQueuePenMove(left + 10, top + 5);
+	HostTabletQueuePenMove(left + 10, top + 20);			// Beta
+	HostTabletQueuePenMove(left + 10, top + 40);			// Gamma
+	HostTabletQueuePenUp(8040);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(RINT(Eval("picked")) == 3 && gRootView->fChildren->Count() == 0 && HostTabletQueued() == 0);
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "picker picked and closed"));
+	p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, pickItems: [\"Alpha\", \"Beta\"], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) picked := index, pickCancelledScript: func() cancelled := true})");
+	Eval("picked := 0; cancelled := nil");
+	Eval("ctxK:Open()");
+	Refresh();
+	top = p->viewBounds.top, left = p->viewBounds.left;
+	HostTabletQueuePenDown(left + 10, top + 5, 9000);
+	HostTabletQueuePenMove(left + 10, top + 60);			// off the picker
+	HostTabletQueuePenUp(9020);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("cancelled")) && ISNIL(Eval("picked")) && gRootView->fChildren->Count() == 0);		// (the ROM: the cancel script, then the action script with nil)
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "picker cancelled and closed"));
 }
 
 

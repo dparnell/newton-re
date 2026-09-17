@@ -471,9 +471,19 @@ autoclose picker runs `pickCancelledScript`; `RealDoCommand` 0x001890f4
 answers the pick command 0x36 (the PickStuff as a binary, or the
 parameter as the index) and drops an autoclose picker from its parent.
 `Scroll` 0x0018718c moves the child origin a view's height to an item's
-top.  NOT YET: the pen tracking on aeClick (`TrackStroke`), the key
-commands, ink items, the pickable test inside a masked grid picture,
-the item flash's waits.  The ROM's protoPicker has
+top.  A click (`RealDoCommand`: aeClick, after `FClicker`) tracks the
+pen over the items (`TrackStroke` 0x00189948: the ink off, the root view
+updated, the pickable item under the stroke's first point inverted, then
+each turn the one under the last point - un-inverting the old and
+inverting the new when it changed, cell and all, a tick waited when
+not - until the stroke is done) and dispatches the pick command with the
+item the pen ended on (the PickStuff as a 'string binary frame
+parameter), which `PickItem`s it: an item flashed (`FlashItem`: inverted
+three times, five ticks apart), the autoclose picker hidden and
+`pickActionScript(index)` run; no item (-1) runs `pickCancelledScript`
+from the hide, and then the action script with nil.  NOT YET: the key
+commands, ink items, the pickable test inside a masked grid picture, the
+clicker.  The ROM's protoPicker has
 viewFlags without vVisible: it is opened with `:Open()`.
 
 ### Hiliting a view (`TView::Hilite` 0x0026418c, `Select` 0x00264c34)

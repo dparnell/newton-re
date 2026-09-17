@@ -9,6 +9,7 @@
 #include "PickView.h"
 #include "RootView.h"
 #include "Commands.h"
+#include "UnitPublic.h"
 #include "NewtonTime.h"
 #include "NativeFunctions.h"
 #include "Keyboard.h"
@@ -741,15 +742,53 @@ TPickView::InvertItem(PickStuff* item)
 
 
 // ROM 0x0018949c FlashItem__9TPickViewFP9PickStuff
-// The item inverted three times, 5 ticks apart (NOT YET RECONSTRUCTED:
-// the waits - the host inverts at once, leaving it inverted).
+// The item inverted three times, 5 ticks apart (it is left inverted:
+// the tracking inverted it under the pen, so it ends un-inverted).
 void
 TPickView::FlashItem(PickStuff* item)
 {
 	if (item->fItem == -1)
 		return;
 	for (long i = 0; i < 3; i++)
+	{
+		Wait(5);
 		InvertItem(item);
+	}
+}
+
+
+// ROM 0x00189948 TrackStroke__9TPickViewFP13TStrokePublicP9PickStuff
+// The pen tracked over the items, its ink off, the screen brought up to
+// date first: the pickable item under the stroke's first point inverted,
+// then each turn the one under its last point - the old one un-inverted
+// and the new inverted when it changed (a grid item's cell counts), a
+// tick waited when it did not - until the stroke is done; ==> item the
+// one the pen ended on (-1 for none).  NOT YET RECONSTRUCTED: BusyBoxSend.
+void
+TPickView::TrackStroke(TStrokePublic* stroke, PickStuff* item)
+{
+	stroke->InkOff(true);
+	gRootView->Update(nil);
+	Point pt = stroke->FirstPoint();
+	PickableItem(pt, item);
+	if (item->fItem != -1)
+		InvertItem(item);
+	while (!stroke->Done())
+	{
+		PickStuff under;
+		pt = stroke->FinalPoint();
+		PickableItem(pt, &under);
+		if (under.fItem == item->fItem && under.fX == item->fX && under.fY == item->fY)
+			Wait(1);
+		else
+		{
+			if (item->fItem != -1)
+				InvertItem(item);
+			if (under.fItem != -1)
+				InvertItem(&under);
+			*item = under;
+		}
+	}
 }
 
 
@@ -1267,17 +1306,28 @@ TPickView::Hide(void)
 
 
 // ROM 0x001890f4 RealDoCommand__9TPickViewFRC6RefVar
-// aeClick tracks the pen over the items (NOT YET RECONSTRUCTED: the
-// strokes) and posts the pick (0x36) with the PickStuff as a binary
-// frame parameter; the pick command picks the item (PickItem) and, when
-// the picker autocloses, drops it from its parent.  Other commands as
-// TView.  ==> handled.
+// aeClick clicks (FClicker, NOT YET RECONSTRUCTED), tracks the pen over
+// the items (TrackStroke) and dispatches the pick (0x36) with the item
+// the pen ended on as the parameter and the PickStuff as a binary frame
+// parameter; the pick command picks the item (PickItem) and, when the
+// picker autocloses, drops it from its parent.  Other commands as TView.
+// ==> handled.
 Boolean
 TPickView::RealDoCommand(RefArg cmd)
 {
 	long id = CommandID(cmd);
 	if (id == aeClick)
-		return TView::RealDoCommand(cmd);
+	{
+		PickStuff stuff;
+		TrackStroke(((TUnitPublic*) CommandParameter(cmd))->Stroke(), &stuff);
+		RefVar pick(MakeCommand(aePickItem, this, stuff.fItem));
+		RefVar param(AllocateBinary(RSSYMstring, sizeof(PickStuff)));
+		memmove(BinaryData(param), &stuff, sizeof(PickStuff));
+		CommandSetFrameParameter(pick, param);
+		gApplication->DispatchCommand(pick);
+		CommandSetResult(cmd, 1);
+		return true;
+	}
 	if (id != aePickItem)
 		return TView::RealDoCommand(cmd);
 	fPicking = true;
