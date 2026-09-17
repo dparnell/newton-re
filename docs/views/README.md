@@ -816,6 +816,16 @@ past an edit), the selection stack,
 `ActivateSelection`'s soft-keyboard shift, the container and edit views'
 hilites.
 
+`DoPopup(pickItems, x, y, callbackContext)` (`FDoPopup` 0x001f2a3c) opens
+a popup menu over the items at a point (or a bounds frame local to the
+receiver view): a picker is built from the template, parented to the root,
+placed and shown; picking an item runs the `callbackContext`'s
+`pickActionScript` and closes the autoclose popup.  DEVIATION: the ROM
+clones `canonicalPopup` (a scrolling-popup wrapper); the reconstruction
+uses a plain `protoPicker` (the scrolling popup and the modal
+`FFilterDialog` path are NOT YET).  (Tested by `test_Views`: `DoPopup`
+opens a three-item menu and a pick runs the callback.)
+
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 
 The ROM's protoPicker's `viewKeyDownScript` is the native

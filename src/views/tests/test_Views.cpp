@@ -1775,6 +1775,22 @@ TestPickView()
 	Eval("ctxK:Close()");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "picker closed again"));
+
+	// DoPopup opens a popup menu (a picker from canonicalPopup) over the
+	// items; picking one runs the callback's pickActionScript and closes it
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "canonicalPopup")), RefVar(Rcanonicalpopup));
+	Eval("popped := nil; cb := {pickActionScript: func(index) popped := index}");
+	RefVar popCtx(Eval("GetRoot():DoPopup([\"Cut\", \"Copy\", \"Paste\"], {left: 30, top: 30, right: 30, bottom: 30}, 0, cb)"));
+	TPickView* pop = (TPickView*) GetView(popCtx);
+	EXPECT(pop != nil && pop->ClassID() == clPickView && pop->fItemCount == 3 && (pop->fFlags & vVisible));
+	Refresh();
+	{
+		RefVar cmd(MakeCommand(aePickItem, pop, 1));		// pick "Copy"
+		gApplication->DispatchCommand(cmd);
+	}
+	EXPECT(RINT(Eval("popped")) == 1 && gRootView->fChildren->Count() == 0);		// the callback ran, the autoclose popup gone
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "popup closed"));
 }
 
 

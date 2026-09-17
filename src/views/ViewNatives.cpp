@@ -33,6 +33,7 @@
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
 #include "UnitPublic.h"
+#include "Recognizer.h"
 #include "Animate.h"
 #include "Stroke.h"
 
@@ -345,6 +346,68 @@ FSetPopupX(RefArg rcvr)
 	if (view != nil)
 		gRootView->SetPopup(view, true);
 	return NILREF;
+}
+
+
+static Ref FOpenX(RefArg rcvr);		// (defined below)
+
+// ROM 0x001f2a3c FDoPopup__FRC6RefVarN41
+// :DoPopup(pickItems, x, y, callbackContext): a popup menu (the ROM's
+// canonicalPopup, a picker) opened over the items at (x, y).  When x is a
+// bounds frame it is used as the popup's box (relative to the receiver
+// view), else x and y are an offset from the view's top-left (the whole
+// screen when there is no view); the picker sizes and places itself.  The
+// receiver view is remembered in the popup's `info` (so its items can
+// reach it), and the callbackContext gets the pick.  Nothing when there
+// are no items or popups are inhibited.  ==> the popup's context.  NOT
+// YET RECONSTRUCTED: the modal case (FFilterDialog).
+static Ref
+FDoPopup(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext)
+{
+	if (ISNIL(pickItems) || Length(pickItems) == 0 || gInhibitPopup)
+		return NILREF;
+	TView* view = GetView(rcvr);
+	Rect box;
+	Boolean haveView = view != nil;
+	if (IsFrame(x) && FromObject(x, box))
+	{
+		// a bounds frame, local to the view
+		if (haveView)
+			OffsetRect(&box, view->viewBounds.left, view->viewBounds.top);
+	}
+	else
+	{
+		long ox = ISINT(x) ? RINT(x) : 0;
+		long oy = ISINT(y) ? RINT(y) : 0;
+		long baseLeft = 0, baseTop = 0;
+		if (haveView)
+		{
+			baseLeft = view->viewBounds.left;
+			baseTop = view->viewBounds.top;
+		}
+		SetRect(&box, baseLeft + ox, baseTop + oy, baseLeft + ox, baseTop + oy);
+	}
+	RefVar templ(Clone(RefVar(Rprotopicker)));		// DEVIATION: the ROM uses canonicalPopup (a scrolling popup wrapper); a plain picker suffices
+	RefVar boundsFrame(ToObject(box));
+	if (haveView)
+		SetFrameSlot(boundsFrame, RSSYMinfo, RefVar(AddressToRef(view)));
+	SetFrameSlot(templ, RSSYMbounds, boundsFrame);
+	SetFrameSlot(templ, RSSYMpickitems, pickItems);
+	// the popup is a top-level view: parented to the receiver's window (the
+	// root view here), so RealOpenX adds it there
+	SetFrameSlot(templ, RSSYM_parent, RefVar(gRootView->fContext));
+	RefVar context;
+	if (NOTNIL(callbackContext))
+	{
+		SetFrameSlot(templ, RSSYMcallbackcontext, callbackContext);
+		context = TView::BuildContext(templ, true);
+		// build the popup under the root (like AddView), then show it -
+		// FOpenX finds the now-built, hidden view and dispatches aeShow
+		BuildView(gRootView, context);
+		FOpenX(context);
+	}
+	gRecognition.IgnoreClicks(0);
+	return NOTNIL(context) ? (Ref) context : (Ref) templ;
 }
 
 
@@ -1060,6 +1123,7 @@ RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
 	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);
+	RegisterNativeFunction("FDoPopup__FRC6RefVarN41", (void*) FDoPopup, 4);
 	RegisterNativeFunction("FSetKeyView__FRC6RefVarN21", (void*) FSetKeyView, 2);
 	RegisterNativeFunction("FGetKeyView", (void*) FGetKeyView, 0);
 	RegisterNativeFunction("FNextKeyView", (void*) FNextKeyView, 3);
@@ -1144,7 +1208,7 @@ MakeViewMethods(void)
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
 		{ "Drag", (void*) FDragX, 2 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
 		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
-		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 },
+		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
 		{ nil, nil, 0 } };
