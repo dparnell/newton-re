@@ -1169,6 +1169,46 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 }
 
 
+// ROM 0x0017b494 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
+// The characters from start for length given a style: the writeable
+// styles array gets the spec over the range (SetStyleOfRange, the equal
+// neighbours merged), and the range is laid out again.  DEVIATION: the
+// ROM merges the spec into each run (a font, a face toggled, a size) and
+// posts it as an undoable command; the reconstruction sets the spec over
+// the range directly (no per-run merge, no undo).
+void
+TParagraphView::ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw)
+{
+	if (length <= 0)
+		return;
+	RefVar spec(style);
+	if (ISNIL(spec))
+		spec = GetPreference(RSSYMuserfont);
+	RefVar styles(GetWriteableTextStylesArray());
+	SetStyleOfRange(styles, spec, start, start + length);
+	CompactStyleRuns(styles);
+	if (redraw)
+	{
+		ClearAllCaches();
+		RangeChanged(start, length, length, RSSYMstyles);
+	}
+}
+
+
+// ROM 0x0017ba98 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar
+// The selected text (the first hilite's range) restyled.
+void
+TParagraphView::ChangeStyleOfSelection(RefArg style)
+{
+	RefVar hilite(FirstHilite());
+	if (ISNIL(hilite))
+		return;
+	long start = RINT(GetFrameSlotRef(hilite, RSSYMstart));
+	long end = RINT(GetFrameSlotRef(hilite, RSSYMend));
+	ChangeStylesOfRange(start, end - start, style, true);
+}
+
+
 static const UniChar kScanInkChar = 0xf701;		// the ink-word placeholder the word scan treats as its own kind (RichString.h's kInkChar is 0xf700)
 
 

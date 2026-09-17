@@ -1991,6 +1991,15 @@ TestSelection()
 	// RemoveHilite drops the one hilite (the array emptied)
 	p->RemoveHilite(RefVar(p->FirstHilite()));
 	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0);
+	// ChangeStyleOfSelection restyles the selected text: "World" (6..11)
+	// given a bold spec becomes a run of its own with that style
+	p->MakeHilite(6, 11, false);
+	p->ChangeStyleOfSelection(RefVar(Eval("{family: 'espy, face: 1, size: 12}")));
+	EXPECT(RINT(Eval("Length(ctxS.styles)")) >= 2);				// now there are style runs
+	EXPECT(RINT(Eval("ctxS.styles[0]")) == 6 && RINT(Eval("ctxS.styles[2]")) == 5);	// the first run "Hello ", then the 5-char "World"
+	EXPECT(RINT(Eval("ctxS.styles[3].face")) == 1);				// the selection's run is bold
+	p->RemoveAllHilites();
+	Eval("ctxS.text := \"Hello World\"; ctxS.styles := nil; ctxS:SyncView()");	// back to plain for the checks below
 	// typing over a selection replaces it in one edit
 	gKeyboardConnected = true;
 	Eval("ClearUndoStacks()");

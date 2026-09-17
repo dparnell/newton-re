@@ -826,6 +826,14 @@ uses a plain `protoPicker` (the scrolling popup and the modal
 `FFilterDialog` path are NOT YET).  (Tested by `test_Views`: `DoPopup`
 opens a three-item menu and a pick runs the callback.)
 
+
+`ChangeStyleOfSelection` 0x0017ba98 restyles the selected text: the first
+hilite's range is given a style spec through `ChangeStylesOfRange`
+0x0017b494 (`SetStyleOfRange` over the writeable styles array, the runs
+compacted, the range laid out again).  DEVIATION: the ROM merges the spec
+into each run (a font kept, a face toggled) and posts an undoable command;
+the reconstruction sets the spec over the range directly.  (Tested by
+`TestSelection`: bolding "World" splits the styles into a bold run.)
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 
 The ROM's protoPicker's `viewKeyDownScript` is the native

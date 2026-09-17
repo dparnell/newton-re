@@ -112,6 +112,8 @@ public:
 	Boolean		AddKeyToCurrUndo(UniChar ch, long offset);				// ROM 0x00179248 AddKeyToCurrUndo__14TParagraphViewFUsl
 	void		AdjustStyles(long offset, long removed, long inserted, RefArg styles, long styleOffset);	// ROM 0x0017af04 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
 	void		AdjustHilites(long offset, long delta);					// ROM 0x0016c854 AdjustHilites__14TParagraphViewFlT1
+	void		ChangeStyleOfSelection(RefArg style);					// ROM 0x0017ba98 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar - the selected text restyled
+	void		ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw);	// ROM 0x0017b494 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
 	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016c4cc MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
 	void		DrawHilites(Boolean scaled);							// ROM 0x0016cefc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
 	void		RemoveAllHilites(void);									// host: the hilites slot cleared (the ROM's TView::RemoveAllHilites 0x0026002c removes them one by one)
