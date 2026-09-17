@@ -29,8 +29,10 @@
 				receiver (DoCommand).  TViewList is a CList of TView*, walked
 				by TListLoop (forwards) and TBackwardLoop.
 
-				NOT YET RECONSTRUCTED: hilites and selection (THilite,
-				HiliteLoop, the DrawHilit* methods draw nothing), drag and
+				Select/Hilite invert a view (a button pressed) through the
+				viewHiliteScript or InvertRect.  NOT YET RECONSTRUCTED: the
+				data hilites (THilite, HiliteLoop, the DrawHilit* methods
+				draw nothing), drag and
 				drop, keys and the key view chain (BuildKeyChildList,
 				NextKeyView, HandleKeyEvent; RealDoCommand answers the other
 				commands - Commands.h), the animation effects
@@ -271,6 +273,8 @@ public:
 	TView*		FindView(Point pt, ULong flags, Point* distance);		// ROM 0x0025df5c FindView__5TViewF6TPointUlP6TPoint
 	TView*		FindClosestView(Point pt, ULong flags, long* distance, Point* delta, Boolean* clipped);	// ROM 0x0025de40
 	long		Distance(Point pt, Point* delta);						// ROM 0x0025dd38 Distance__5TViewF6TPointP6TPoint
+	void		Select(Boolean on, Boolean unique);						// ROM 0x00264c34 Select__5TViewFUcT1
+	void		SelectNone(void);										// ROM 0x002643c4 SelectNone__5TViewFv
 	TView*		FindID(long id);										// ROM 0x00265460 FindID__5TViewFl
 	TView*		FrontMost(void);										// ROM 0x0025f3d4 FrontMost__5TViewFv
 	TView*		FrontMostApp(void);										// ROM 0x0025f448 FrontMostApp__5TViewFv

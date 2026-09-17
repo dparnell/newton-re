@@ -1012,6 +1012,79 @@ TestCommands()
 }
 
 
+// Hilite/Select: a view inverted while selected, TrackHilite/TrackButton
+// without a stroke (a press at the centre), HiliteUnique, the
+// viewHiliteScript taking over.
+static void
+TestHilite()
+{
+	TView* v = ViewOf("ctxH := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 10, top: 10, right: 30, bottom: 30}, viewFormat: 1 + 0x50 + 0x100 + 0x10000 + (2 << 24), pressed: 0, clicked: nil, buttonPressedScript: func() begin pressed := pressed + 1; nil end, buttonClickScript: func() clicked := true})");
+	Eval("ctxH:Dirty()");
+	Refresh();
+	// a white, round-cornered box framed a pixel outside its bounds (viewFormat: fill white, frame black, pen 1, inset 1, round 2)
+	EXPECT(Pixel(15, 15) == 0 && Pixel(8, 15) == 1 && Pixel(31, 15) == 1 && Pixel(9, 15) == 0 && Pixel(9, 9) == 0);
+	long framed = InkIn(7, 7, 33, 33);
+	// Hilite(true): the bounds let out by the inset (9,9,31,31) inverted as a round rectangle of radius 4 - the corners stay white, the frame stays
+	Eval("ctxH:Hilite(true)");
+	EXPECT((v->fFlags & vSelected) != 0 && Pixel(15, 15) == 1 && Pixel(9, 15) == 1 && Pixel(30, 15) == 1 && Pixel(9, 9) == 0 && Pixel(30, 30) == 0 && Pixel(8, 15) == 1);
+	EXPECT(InkIn(9, 9, 31, 31) > 470 && InkIn(9, 9, 31, 31) < 22 * 22);
+	Eval("ctxH:Hilite(true)");		// already selected: nothing changes
+	EXPECT(Pixel(15, 15) == 1);
+	Eval("ctxH:Hilite(nil)");
+	EXPECT((v->fFlags & vSelected) == 0 && Pixel(15, 15) == 0 && Pixel(9, 15) == 0 && InkIn(7, 7, 33, 33) == framed);
+	// TrackHilite with no stroke: pressed at the centre for two turns, the button left hilited
+	RefVar result(Eval("ctxH:TrackHilite(nil)"));
+	EXPECT(NOTNIL(result) && RINT(Eval("ctxH.pressed")) == 2 && (v->fFlags & vSelected) != 0 && Pixel(15, 15) == 1);
+	Eval("ctxH:Hilite(nil)");
+	// TrackButton: the click script run, the view un-hilited after
+	Eval("ctxH.pressed := 0");
+	result = Eval("ctxH:TrackButton(nil)");
+	EXPECT(NOTNIL(result) && NOTNIL(Eval("ctxH.clicked")) && RINT(Eval("ctxH.pressed")) == 2 && (v->fFlags & vSelected) == 0 && Pixel(15, 15) == 0);
+	// a throwing click script still leaves the button un-hilited
+	Eval("ctxH.buttonClickScript := func() Throw('|evt.ex.msg|, \"boom\")");
+	Eval("caught := nil; try ctxH:TrackButton(nil) onexception |evt.ex.msg| do caught := true");
+	EXPECT(NOTNIL(Eval("caught")) && (v->fFlags & vSelected) == 0 && Pixel(15, 15) == 0);
+	// a buttonPressedScript's answer ends the tracking only with newt_feature set
+	Eval("ctxH.buttonPressedScript := func() begin pressed := pressed + 1; 'stop end; ctxH.pressed := 0");
+	result = Eval("ctxH:TrackHilite(nil)");
+	EXPECT(EQRef(result, TRUEREF) && RINT(Eval("ctxH.pressed")) == 2);
+	Eval("ctxH:Hilite(nil); ctxH.newt_feature := true; ctxH.pressed := 0");
+	result = Eval("ctxH:TrackHilite(nil)");
+	EXPECT(EQRef(result, Intern((char*) "stop")) && RINT(Eval("ctxH.pressed")) == 1);
+	Eval("ctxH:Hilite(nil)");
+	// HiliteUnique: the sibling selected before is un-hilited (its flag stays, as the ROM leaves it)
+	TView* w = ViewOf("ctxH2 := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 40, top: 10, right: 60, bottom: 30}, viewFormat: 1})");
+	Eval("ctxH2:Dirty()");
+	Refresh();
+	Eval("ctxH:Hilite(true)");
+	EXPECT(Pixel(15, 15) == 1 && Pixel(45, 15) == 0);
+	Eval("ctxH2:HiliteUnique(true)");
+	EXPECT(Pixel(15, 15) == 0 && Pixel(45, 15) == 1 && (w->fFlags & vSelected) != 0 && (v->fFlags & vSelected) != 0);
+	v->ClearFlags(vSelected);
+	Eval("ctxH2:Hilite(nil)");
+	EXPECT(Pixel(45, 15) == 0);
+	// the viewHiliteScript: a non-nil answer means it did the hiliting itself (a slot the view was
+	// made with: the slot cache's bit is cleared once a lookup finds nothing)
+	TView* h = ViewOf("ctxH3 := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 40, top: 40, right: 60, bottom: 60}, viewFormat: 1, hilited: [], viewHiliteScript: func(on) begin AddArraySlot(hilited, on); true end})");
+	Eval("ctxH3:Dirty()");
+	Refresh();
+	Eval("ctxH3:Hilite(true)");
+	EXPECT(Pixel(45, 45) == 0 && (h->fFlags & vSelected) != 0 && RINT(Eval("Length(ctxH3.hilited)")) == 1 && EQRef(Eval("ctxH3.hilited[0]"), TRUEREF));
+	Eval("ctxH3:Hilite(nil)");
+	EXPECT(RINT(Eval("Length(ctxH3.hilited)")) == 2 && ISNIL(Eval("ctxH3.hilited[1]")));
+	Eval("ctxH3:Close()");
+	// a hidden view is not hilited on screen, though selected
+	Eval("ctxH:Hide()");
+	Refresh();
+	Eval("ctxH:Hilite(true)");
+	EXPECT((v->fFlags & vSelected) != 0 && Pixel(15, 15) == 0);
+	Eval("ctxH:Hilite(nil)");
+	Eval("ctxH:Close(); ctxH2:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "hilite closed"));
+}
+
+
 static void
 TestIdlers()
 {
@@ -1195,6 +1268,7 @@ main()
 		TestGaugeView();
 		TestShapes();
 		TestCommands();
+		TestHilite();
 		TestIdlers();
 		TestPickView();
 	}

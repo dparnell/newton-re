@@ -342,6 +342,101 @@ FSetPopupX(RefArg rcvr)
 }
 
 
+// ROM 0x001ecaa8 FTrackHiliteX
+// :TrackHilite(unit): the view hilited while the pen is inside it and
+// un-hilited when it leaves, until the stroke ends; ==> whether the pen
+// ended inside.  Each turn inside runs the buttonPressedScript, and its
+// non-nil answer ends the tracking (when the newt_feature proto variable
+// is set).  Before that: the busy box is shown (0x35) when there is no
+// buttonPressedScript, and the _sound proto variable (the click when
+// there is none) played - NOT YET RECONSTRUCTED: BusyBoxSend, FClicker,
+// FPlaySound.  Host: strokes are NOT YET, so the unit is nil - a press
+// at the view's centre, which ends after two turns (as the ROM's loop
+// does without a stroke), hiliting the view as the view had it.
+static Ref
+FTrackHiliteX(RefArg rcvr, RefArg unit)
+{
+	if (NOTNIL(unit))
+		ThrowBadTypeWithFrameData(kNSErrBadArgs, unit);		// NOT YET RECONSTRUCTED: StrokeFromRef(unit), InkOff
+	TView* view = FailGetView(rcvr);
+	Boolean selected = (view->fFlags & vSelected) != 0;
+	Boolean wasInside = false;
+	Point pt;
+	pt.h = (view->viewBounds.left + view->viewBounds.right) / 2;
+	pt.v = (view->viewBounds.top + view->viewBounds.bottom) / 2;
+	Point delta;
+	delta.h = delta.v = 10;
+	for (long turn = 0; ; )
+	{
+		Boolean inside = view->Distance(pt, &delta) != 0x10000;
+		if (inside != wasInside)
+		{
+			selected = !selected;
+			view->Select(selected, false);
+			wasInside = inside;
+		}
+		if (inside)
+		{
+			RefVar result(DoMessageIfDefined(rcvr, RSSYMbuttonpressedscript, RefVar(NILREF), nil));
+			if (NOTNIL(result) && NOTNIL(GetProtoVariable(rcvr, RSSYMnewt_feature, nil)))
+				return result;
+		}
+		if (++turn == 2)
+			return MAKEBOOLEAN(inside);
+	}
+}
+
+
+// ROM 0x001ecd9c FTrackButtonX
+// :TrackButton(unit): TrackHilite, then the buttonClickScript when the
+// pen ended inside; the view is un-hilited after, even when a script
+// throws.  ==> TrackHilite's answer.
+static Ref
+FTrackButtonX(RefArg rcvr, RefArg unit)
+{
+	RefVar result;
+	unwind_protect
+	{
+		result = FTrackHiliteX(rcvr, unit);
+		if (NOTNIL(result))
+			DoMessage(rcvr, RSSYMbuttonclickscript, RefVar(NILREF));
+	}
+	on_unwind
+	{
+		TView* view = GetView(rcvr);
+		if (view != nil)
+			view->Select(false, false);
+	}
+	end_unwind;
+	return result;
+}
+
+
+// ROM 0x001ece78 FHiliteX
+// :Hilite(on): the view selected (hilited) or not.
+static Ref
+FHiliteX(RefArg rcvr, RefArg on)
+{
+	TView* view = GetView(rcvr);
+	if (view != nil)
+		view->Select(NOTNIL(on), false);
+	return TRUEREF;
+}
+
+
+// ROM 0x001eceb4 FHiliteUniqueX
+// :HiliteUnique(on): the view selected (hilited) or not, its siblings
+// un-hilited first.
+static Ref
+FHiliteUniqueX(RefArg rcvr, RefArg on)
+{
+	TView* view = GetView(rcvr);
+	if (view != nil)
+		view->Select(NOTNIL(on), true);
+	return TRUEREF;
+}
+
+
 // ROM 0x001ee9e8 FSetupIdleX
 // :SetupIdle(milliseconds): the view's idler set (0 removes it) - its
 // viewIdleScript runs when the time comes, its answer the next delay.
@@ -658,6 +753,10 @@ RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
 	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);
+	RegisterNativeFunction("FTrackHiliteX", (void*) FTrackHiliteX, 1);
+	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
+	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
+	RegisterNativeFunction("FHiliteUniqueX", (void*) FHiliteUniqueX, 1);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();
 	RegisterApplicationNatives();
@@ -715,6 +814,8 @@ MakeViewMethods(void)
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 },
+		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
+		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)

@@ -17,6 +17,8 @@
 #include "Application.h"
 #include "Rects.h"
 #include "Shapes.h"
+#include "Draw.h"
+#include "RegionVars.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "REPTranslators.h"
@@ -992,11 +994,106 @@ TView::Changed(RefArg slot, RefArg context)
 
 
 // ROM 0x0026418c Hilite__5TViewFUc
-// NOT YET RECONSTRUCTED: the ROM inverts the view's visible region
-// (through the viewHiliteScript when there is one) and hides the caret.
+// The view shown hilited (or not): nothing for a view that is not
+// visible; otherwise, within the view's visible region, the
+// viewHiliteScript run with [on] - a non-nil result means it did the
+// hiliting - else the bounds, let out by the format's inset, inverted
+// (as a round rectangle of the format's radius less the pen, when there
+// is a radius).  The caret is hidden while the view is drawn on when
+// its rectangle overlaps the view's (NOT YET: the caret).
 void
-TView::Hilite(Boolean /*on*/)
-{ }
+TView::Hilite(Boolean on)
+{
+	if (!VisibleDeep())
+		return;
+	TRegion savedRgn(SetupVisRgn());
+	TRegionVar savedVisRgn(savedRgn);
+	// NOT YET RECONSTRUCTED: gRootView->GetCaretRect / HideCaret when it overlaps OuterBounds
+	unwind_protect
+	{
+		Boolean done = false;
+		if (NOTNIL(GetCacheProto(kIndexViewHiliteScript)))
+		{
+			RefVar args(MakeArray(1));
+			if (on)
+				SetArraySlot(args, 0, RefVar(TRUEREF));
+			done = NOTNIL(RunCacheScript(kIndexViewHiliteScript, args));
+		}
+		if (!done)
+		{
+			Rect bounds = viewBounds;
+			long inset = (fViewFormat & vfInsetMask) >> vfInsetShift;
+			long round = ((fViewFormat & vfRoundMask) >> vfRoundShift) * 2;
+			InsetRect(&bounds, -inset, -inset);
+			if (round != 0)
+			{
+				long pen = (fViewFormat & vfPenMask) >> vfPenShift;
+				if (pen > 1)
+				{
+					round -= (pen - 1) * 2;
+					if (round < 0)
+						round = 0;
+				}
+			}
+			if (round == 0)
+				InvertRect(&bounds);
+			else
+				InvertRoundRect(&bounds, round, round);
+		}
+	}
+	on_unwind
+	{
+		// NOT YET RECONSTRUCTED: gRootView->ShowCaret()
+		GrafPort* port;
+		GetPort(&port);
+		CopyRgn(savedVisRgn, port->visRgn);
+	}
+	end_unwind;
+}
+
+
+// ROM 0x00264c34 Select__5TViewFUcT1
+// The view selected (hilited) or not: unique first deselects the
+// parent's selected child; then the vSelected flag set or cleared, and
+// Hilite told, when it changes.
+void
+TView::Select(Boolean on, Boolean unique)
+{
+	if (unique)
+		fParent->SelectNone();
+	if (on)
+	{
+		if ((fFlags & vSelected) == 0)
+		{
+			SetFlags(vSelected);
+			Hilite(true);
+		}
+	}
+	else if (fFlags & vSelected)
+	{
+		ClearFlags(vSelected);
+		Hilite(false);
+	}
+}
+
+
+// ROM 0x002643c4 SelectNone__5TViewFv
+// The first selected child un-hilited (its flag stays as it is: Select
+// clears it for its own view).
+void
+TView::SelectNone(void)
+{
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if (child->fFlags & vSelected)
+		{
+			child->Hilite(false);
+			break;
+		}
+	}
+}
 
 
 // ROM 0x00268768 SetCaretOffset__5TViewFPlT1

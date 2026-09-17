@@ -469,6 +469,44 @@ commands and type-select, ink items, the pickable test inside a masked
 grid picture, the item flash's waits.  The ROM's protoPicker has
 viewFlags without vVisible: it is opened with `:Open()`.
 
+### Hiliting a view (`TView::Hilite` 0x0026418c, `Select` 0x00264c34)
+
+Buttons are hilited by inverting them.  `Select(on, unique)` keeps the
+`vSelected` flag (0x02000000) in the view's flags and calls the virtual
+`Hilite` (vtable +0x58) when the flag changes; `unique` first has the
+parent's `SelectNone` 0x002643c4 un-hilite its first selected child
+(the child's flag is left set - the ROM does the same).  `Hilite(on)`
+does nothing for a view that is not `VisibleDeep`; otherwise, with the
+port's visRgn narrowed to the view's (`SetupVisRgn`, put back after,
+even on a throw), it runs the `viewHiliteScript` (slot cache 22) with
+`[on]` - a non-nil answer means the script did the hiliting - and else
+inverts the view's bounds let out by the format's inset, as a round
+rectangle of twice the format's radius, less `(pen - 1) * 2`, when
+there is a radius (`InvertRect`/`InvertRoundRect`).  The caret is
+hidden while the view's outer bounds overlap its rectangle (NOT YET:
+the caret).  The slot cache's bit for a script is cleared once a lookup
+finds none, so a `viewHiliteScript` added to a context after its first
+hilite is not seen.
+
+`:TrackHilite(unit)` 0x001ecaa8 tracks the pen: while the stroke
+(`StrokeFromRef`, its ink off) goes on, its final point's distance from
+the view (`TView::Distance`) toggles the selection as it enters and
+leaves, `Wait(1)` between turns; each turn inside runs the
+`buttonPressedScript` (`DoMessageIfDefined`), whose non-nil answer ends
+the tracking when the `newt_feature` proto variable is set.  Before
+that the busy box is shown (`BusyBoxSend(0x35)`) when there is no
+`buttonPressedScript`, and the `_sound` proto variable is played
+(`FPlaySound`; `FClicker` when there is none); `BusyBoxSend(0x36)`
+takes the busy box down at the end.  ==> whether the pen ended inside.
+Without a stroke (a nil unit) the ROM's loop presses at the view's
+centre for two turns, which is what the host does (strokes, the sounds
+and the busy box are NOT YET).  `:TrackButton(unit)` 0x001ecd9c is
+`TrackHilite` then `:buttonClickScript()` when it answered non-nil,
+and `Select(false, false)` after, even when a script throws.
+`:Hilite(on)` 0x001ece78 and `:HiliteUnique(on)` 0x001eceb4 are
+`Select(on, false)` and `Select(on, true)`.  All four are methods of
+`Rviewroot`.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -483,14 +521,19 @@ value through SetValue, the limits, the knob and the gray rest), shapes
 fills, pens, styles in lists, nested lists, text, clipping), commands
 (the frames, show/hide/click through the application, the undo stacks
 both ways, AddUndoAction/Call/Send, the delayed actions, aeAddChild and
-aeDropChild), idlers (SetupIdle, the idle script re-timing and stopping
-its idler, removal with the view), pickers from the ROM's protoPicker
+aeDropChild), hiliting (a framed round button inverted inside its
+frame, TrackHilite and TrackButton without a stroke, the click script,
+a throwing script, the pressed script's answer with newt_feature,
+HiliteUnique, the viewHiliteScript, a hidden view), idlers (SetupIdle,
+the idle script re-timing and stopping its idler, removal with the
+view), pickers from the ROM's protoPicker
 (the rows, the placement below and above, the separator, marks, an
 icon, a cut item, the item under a point, a pick closing the picker).
 
 ## Not yet
 
-Hilites and selection (`THilite`, `HiliteLoop`), the caret and key views,
+The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
+the pen tracking behind `TrackHilite` (strokes), the caret and key views,
 drag and drop, the key events (`HandleKeyEvent`), the animation
 effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
