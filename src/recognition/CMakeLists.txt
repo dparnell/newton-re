@@ -7,7 +7,10 @@
 # as address refs) and qd.
 add_library(recognition STATIC
     RecObject.cpp
+    Stroke.cpp
 )
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(recognition PUBLIC frames qd)
+# (the strokes tell the root view what to redraw; the views track strokes:
+# the two static libraries depend on each other)
+target_link_libraries(recognition PUBLIC frames qd views)
 add_subdirectory(tests)
