@@ -21,6 +21,7 @@ add_library(utility STATIC
     Pipes.cpp
     CRC16.cpp
     CRC16Tables.cpp
+    RingBuffer.cpp
 )
 target_link_libraries(utility PUBLIC newton_config toolbox os600_user memory)
 target_include_directories(utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

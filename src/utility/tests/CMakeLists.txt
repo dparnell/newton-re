@@ -9,3 +9,7 @@ add_test(NAME utility.Pipes COMMAND test_Pipes)
 add_executable(test_CRC16 test_CRC16.cpp)
 target_link_libraries(test_CRC16 PRIVATE utility)
 add_test(NAME utility.CRC16 COMMAND test_CRC16)
+
+add_executable(test_RingBuffer test_RingBuffer.cpp)
+target_link_libraries(test_RingBuffer PRIVATE utility)
+add_test(NAME utility.RingBuffer COMMAND test_RingBuffer)
