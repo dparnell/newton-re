@@ -7,3 +7,8 @@ add_executable(test_MuLaw test_MuLaw.cpp)
 target_link_libraries(test_MuLaw PRIVATE sound)
 add_test(NAME sound.MuLaw COMMAND test_MuLaw)
 set_tests_properties(sound.MuLaw PROPERTIES TIMEOUT 60)
+
+add_executable(test_Resample test_Resample.cpp)
+target_link_libraries(test_Resample PRIVATE sound)
+add_test(NAME sound.Resample COMMAND test_Resample)
+set_tests_properties(sound.Resample PROPERTIES TIMEOUT 60)

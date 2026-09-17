@@ -84,8 +84,27 @@ through decode and encode, the curve is monotonic with doubling steps, a
 ramp comes back within the step of the code it lands in - and states both
 bugs as expectations.
 
+## Sample-rate conversion (`Resample.h`)
+
+`Resample` (ROM 0x001e9978) is what the sound DMA channel puts a buffer
+through when the sound's rate is not the hardware's
+(`TDMAChannel::SetupNode` fills a `SampleSpec` and calls it).  It is
+nearest-neighbour: an accumulator is carried from sample to sample, the
+input rate paying for the output rate, so input samples are dropped when the
+output rate is the lower and repeated when it is the higher.  Both rates are
+kept doubled, so that the half-step the decimating branch starts from is
+exact.  Nothing is interpolated and nothing is filtered.
+
+`SampleSpec` (the field names are ours - it is not in the DDK, and its only
+caller is the unreconstructed sound channel) is a destination pointer, rate
+and sample size, the same three for the source, and a sample converter:
+`fConvert` is one of `MuLaw.h`'s converters, or nil to copy the sample's
+bytes.  The counts are in and out: each comes back as how far its side got,
+so a caller can carry on where the smaller of the two stopped.
+
 ## Not yet
 
-`TMuLawCodec`, `Resample`/`ResampleFiltered`, and the sound-server streaming
-layer (`TSoundCodec`, `TIMACodec`, `TSoundServer`/`TSoundChannel`,
-`CodecBlock`, `Produce`/`Consume`).
+`TMuLawCodec`, `ResampleFiltered` (the filtered converter, over a
+`ResampleState` with a 160-entry history and its own rate ratio in Fixed),
+and the sound-server streaming layer (`TSoundCodec`, `TIMACodec`,
+`TSoundServer`/`TSoundChannel`, `CodecBlock`, `Produce`/`Consume`).
