@@ -53,7 +53,7 @@ slipButton:Dirty();
 
 // a paragraph made the key view: what is typed goes in at the caret
 para := AddView(GetRoot(), {
-	viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 280, right: 300, bottom: 340},
+	viewClass: 81, viewFlags: 1 + 0x200 + 0x800 + 0x1000, viewBounds: {left: 20, top: 280, right: 300, bottom: 340},		// clickable + gestures: a tap moves the caret
 	viewFormat: 0x151, viewFont: kBold12, viewLineSpacing: 16, text: "Type here" });
 para:Dirty();
 SetKeyView(para, 9);
