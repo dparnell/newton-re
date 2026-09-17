@@ -166,7 +166,10 @@ loop.
 over the host display with `--script` as the boot test script, a Win32
 window (`host/win32/HostWindow.cpp`) showing the display thirty times a
 second, its mouse the pen (records into the tablet buffer, read by the
-host inker task `HostInkerStart` every tick) and its keys the keyboard
+host inker task `HostInkerStart` every tick - which, when a stroke
+changes, wakes the event loop with an `'inkr` event on the Newt port as
+the ROM's `TInker::LCDEntry` 0x002150ec does, so a click reaches the
+views even while the idle timer is stopped) and its keys the keyboard
 (`host/HostKeyboard.cpp`: a task sending 'keyb events to the newt port
 like the ROM's keyboard tool, the keyboard connected first); closing the
 window ends the run.  `--headless seconds` runs without the window

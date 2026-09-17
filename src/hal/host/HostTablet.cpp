@@ -9,6 +9,7 @@
 #include "StrokeQueue.h"
 #include "UserBoot.h"
 #include "UserTasks.h"
+#include "UserPorts.h"
 #include "KernelGlobals.h"
 #include <atomic>
 
@@ -159,19 +160,36 @@ HostTabletWait(ULong ticks)
 
 static std::atomic<bool>	gInkerStop(false);
 static Boolean				gInkerRunning = false;
+static TUPort*				gInkerNewtPort = nil;
 
 // the task: every tick the queued records (a test's) and the buffer read
-// into the stroke queue
+// into the stroke queue; when a stroke changed, the newt world woken with
+// the inker's event - {'newt, 'idle, 'inkr}, sent asynchronously to the
+// Newt port as TInker::LCDEntry 0x002150ec does after RealStrokeTime -
+// so its event loop idles the strokes (the clicks reach the views) even
+// when its idle timer is stopped
 static void
 HostInkerMain(void)
 {
+	TUAsyncMessage message;
+	message.Init(true);
+	static ULong event[4] = { 'newt', 'idle', 'inkr', 0 };
 	while (!gInkerStop.load())
 	{
 		Wait(1);
 		HostTabletPump();
-		StrokeTime();
+		if (StrokeTime() != 0 && gInkerNewtPort != nil)
+			gInkerNewtPort->Send(&message, event, sizeof(event), 0);
 	}
 	gInkerRunning = false;
+}
+
+
+// TInker::SetNewtPort 0x002150e4 (the ROM's inker's) - the port woken
+void
+HostInkerSetNewtPort(TUPort* port)
+{
+	gInkerNewtPort = port;
 }
 
 

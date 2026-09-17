@@ -118,7 +118,7 @@ void	StrokeInit(void);									// ROM 0x001fd39c StrokeInit__Fv (nothing: the in
 void	StrokeReInit(void);									// ROM 0x001fd530 StrokeReInit__Fv - the queue emptied and the tablet turned on
 Boolean	StrokeNext(void);									// ROM 0x001fcd2c StrokeNext__Fv - a new stroke started at the head; ==> whether there was room
 TStroke*	StrokeGet(void);								// ROM 0x001fcc04 StrokeGet__Fv - the next stroke for the stroke world (marked taken), nil for none
-void	StrokeTime(void);									// ROM 0x001fcdec StrokeTime__Fv (the ROM: nothing; DEVIATION: the host reads the tablet here)
+long	StrokeTime(void);									// ROM 0x001fcdec StrokeTime__Fv (the ROM: nothing; DEVIATION: the host reads the tablet here; ==> whether a stroke changed)
 long	RealStrokeTime(void);								// ROM 0x001fce38 RealStrokeTime__Fv - the tablet's points read into the head stroke; ==> 0 nothing new, 1 a stroke changed, 2 a pen-down with no stroke to put it in
 void	StrokeUpdate(FRect* rect);							// ROM 0x001fd3a0 StrokeUpdate__FP5FRect - the queued strokes in the rect drawn (NOT YET: the inker)
 void	ClearStrokeBuf(void);								// ROM 0x001fd4dc ClearStrokeBuf__Fv - every queued stroke disposed

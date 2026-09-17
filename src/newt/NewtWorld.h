@@ -70,7 +70,8 @@ enum
 	kNewtExternalEvent		= 'ext ',
 	kNewtDeadAdapterEvent	= 'dead',
 	kNewtBatteryEvent		= 'bats',
-	kNewtExternalNewtEvent	= 'xnwt'
+	kNewtExternalNewtEvent	= 'xnwt',
+	kNewtInkerEvent			= 'inkr'		// the inker's wake-up when a stroke changes (TInker::LCDEntry 0x002150ec): nothing but the idle pass
 };
 
 // a 'newt/'idle/'draw event: the screen rectangle to redraw (0x14 bytes)

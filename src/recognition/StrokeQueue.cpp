@@ -449,16 +449,19 @@ StrokeGet(void)
 
 // ROM 0x001fcdec StrokeTime__Fv
 // The ROM's does nothing: the inker task reads the tablet.  DEVIATION:
-// the host has no inker task - the tablet buffer is read here, as the
-// inker would (its own read index just follows the writer's: no ink is
-// drawn, NOT YET), until nothing is left.
-void
+// the host has no TInker - the tablet buffer is read here, as the inker's
+// LCD entry would (its own read index just follows the writer's: no ink
+// is drawn, NOT YET), until nothing is left; ==> whether a stroke
+// changed (the inker then wakes the newt world: hal/host/HostTablet.h).
+long
 StrokeTime(void)
 {
 	while (!TBCInkerBufferEmpty())
 		TBCIncInkerIndex(1);
+	long changed = 0;
 	while (RealStrokeTime() != 0)
-		;
+		changed = 1;
+	return changed;
 }
 
 

@@ -20,6 +20,7 @@
 #include "NewtonExceptions.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
+#include "NewtWorld.h"
 #include "hal/host/HostTablet.h"
 #include <string.h>
 
@@ -119,11 +120,13 @@ TNotebook::InitOffscreenBitmaps(void)
 // The inker (a TInker, 'inkr, over the Newt port) started as a fork.
 // NOT YET RECONSTRUCTED: TInker.  Host: the tablet's stand-in - a task
 // reading the tablet buffer into the stroke queue every tick when the OS
-// runs, the wait hook otherwise (hal/host/HostTablet.h).
+// runs (waking the world through the Newt port when a stroke changes, as
+// the ROM's inker does), the wait hook otherwise (hal/host/HostTablet.h).
 void
 TNotebook::InitInker(void)
 {
 	HostTabletInit();
+	HostInkerSetNewtPort(gNewtPort);
 	HostInkerStart();
 }
 

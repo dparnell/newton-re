@@ -44,7 +44,9 @@ void	HostTabletWait(ULong ticks);						// the wait hook: ticks records pumped, t
 // the inker's stand-in when the OS runs: a task ('inkr) that reads the
 // tablet buffer into the stroke queue every tick, as the ROM's inker task
 // does (the wait hook cannot: a task's Wait sleeps in the kernel)
+class TUPort;
 Boolean	HostInkerStart(void);								// the task started (none when the OS is not running); ==> whether it was
 void	HostInkerStop(void);								// the task told to end
+void	HostInkerSetNewtPort(TUPort* port);					// the port woken with {'newt, 'idle, 'inkr} when a stroke changes (TInker::SetNewtPort)
 
 #endif	/* __HAL_HOST_TABLET_H */

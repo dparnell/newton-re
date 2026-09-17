@@ -340,6 +340,7 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	switch (type)
 	{
 	case kNewtIdleEvent:
+	case kNewtInkerEvent:		// (the inker's: the application's Run below idles the strokes)
 		break;
 	case kNewtKeyboardEvent:
 		{
