@@ -649,14 +649,19 @@ TParagraphView::SetSelection(RefArg selection, long* offset, long* length)
 
 
 // ROM 0x00181308 ActivateSelection__14TParagraphViewFUc
-// TView's (the viewCaretActivateScript); losing the caret also asks the
-// hilite view (GetHiliteView - NOT YET: the ROM goes on to its hilites).
+// TView's (the viewCaretActivateScript); deactivating (losing the caret)
+// removes the selection - of the hilite view when there is one, else our
+// own.
 void
 TParagraphView::ActivateSelection(Boolean on)
 {
 	TView::ActivateSelection(on);
-	if (!on)
-		GetHiliteView();
+	if (on)
+		return;
+	TView* hiliteView = GetHiliteView();
+	if (hiliteView == nil)
+		hiliteView = this;
+	hiliteView->RemoveAllHilites();
 }
 
 

@@ -1985,10 +1985,13 @@ TestSelection()
 		"{viewClass: 81, viewFlags: 1, viewBounds: {left: 4, top: 16, right: 130, bottom: 28}, textFlags: 0x8000, viewFont: espy12, text: \"bbbbb\"}]})");
 	Eval("ctxS2:Dirty()");
 	Refresh();
+	TParagraphView* q0 = (TParagraphView*) GetView(RefVar(Eval("ctxS2:ChildViewFrames()[0]")));
 	TParagraphView* q = (TParagraphView*) GetView(RefVar(Eval("ctxS2:ChildViewFrames()[1]")));
 	Eval("SetKeyView(ctxS2:ChildViewFrames()[0], 0)");
-	TypeKey(0x30);		// tab
+	TypeKey(0x30);		// tab: the second field selected whole
 	EXPECT(gRootView->fCaretView == q && RINT(GetFrameSlotRef(RefVar(q->FirstHilite()), RSSYMend)) == 5);
+	TypeKey(0x30);		// tab again: back to the first, and the second's selection removed (its ActivateSelection(false))
+	EXPECT(gRootView->fCaretView == q0 && NOTNIL(q0->FirstHilite()) && ISNIL(q->FirstHilite()));
 	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxS2); RemoveSlot(vars, 'international)");
 	gKeyboardConnected = false;
 	Refresh();

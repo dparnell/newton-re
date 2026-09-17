@@ -787,9 +787,14 @@ selection replaces it in one edit, backspace deletes it, an arrow
 collapses it to an edge, and `GetSelection` answers its range.  `gDontDrawHilites` suppresses
 the drawing during an effect.  (Tested by `test_Views`'s `TestSelection`:
 a range inverted, extended, removed, and a tab selecting a field.)  NOT
-YET: `AdjustHilites` (moving a selection past an edit), `RemoveHilite`
-(dropping one hilite), the selection stack, `ActivateSelection`'s
-soft-keyboard shift, the container and edit views' hilites.
+When
+the key view moves away, `CommonSetKeyView` deactivates the old view -
+`TParagraphView::ActivateSelection(false)` 0x00181308 removes its (or its
+hilite view's) hilites, so a selection clears when its field loses the
+caret.  NOT YET: `AdjustHilites` (moving a selection past an edit),
+`RemoveHilite` (dropping one hilite), the selection stack,
+`ActivateSelection`'s soft-keyboard shift, the container and edit views'
+hilites.
 
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 
