@@ -8,6 +8,8 @@
 */
 
 #include "RootView.h"
+#include "Keyboard.h"
+#include "Commands.h"
 #include "Application.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -62,6 +64,7 @@ TRootView::Constructor(RefArg templ)
 	fIdlersHighWater = 0;
 	fIdlingViews = nil;
 	fPopup = nil;
+	fPassthruKeyboard = false;
 	fCaretView = nil;
 	fDefaultButton = nil;
 	fCaretSlip = nil;
@@ -86,12 +89,115 @@ TRootView::~TRootView()
 
 
 // ROM 0x001b56c8 RealDoCommand__9TRootViewFRC6RefVar
-// NOT YET RECONSTRUCTED: the root view's commands (clicks, keys, the
-// clipboard).
+// aeKeyboardConnected: the parameter says whether a keyboard is
+// connected - the hard key map cleared when it is, the caret's view
+// asked to give it up when not; the popup synced, the root dirtied.
+// NOT YET RECONSTRUCTED: the root view's other commands (the hiliter,
+// the clipboard, ...).
 Boolean
 TRootView::RealDoCommand(RefArg cmd)
 {
+	if (CommandID(cmd) == aeKeyboardConnected)
+	{
+		gKeyboardConnected = CommandParameter(cmd) != 0;
+		if (!gKeyboardConnected)
+			CheckForCaretRemoval();
+		else
+			ClearHardKeymap();
+		if (fPopup != nil)
+			fPopup->Sync();
+		Dirty(nil);
+		return true;
+	}
 	return TView::RealDoCommand(cmd);
+}
+
+
+// ROM 0x001b6fac KeyboardConnected__9TRootViewFv
+// A hardware keyboard, or a keyboard passed through a soft one.
+Boolean
+TRootView::KeyboardConnected(void)
+{
+	return gKeyboardConnected || fPassthruKeyboard;
+}
+
+
+// ROM 0x001b6fd4 CommandKeyboardConnected__9TRootViewFv
+Boolean
+TRootView::CommandKeyboardConnected(void)
+{
+	return gKeyboardConnected;
+}
+
+
+// ROM 0x001b6fe4 KeyboardActive__9TRootViewFv
+// A keyboard connected, or an on-screen keyboard registered as active
+// (flags bit 2).
+Boolean
+TRootView::KeyboardActive(void)
+{
+	if (KeyboardConnected())
+		return true;
+	if (NOTNIL(fKeyboards))
+	{
+		long count = Length(fKeyboards) / 2;
+		for (long i = 0; i < count; i++)
+			if (RINT(GetArraySlotRef(fKeyboards, i * 2 + 1)) & 4)
+				return true;
+	}
+	return false;
+}
+
+
+// ROM 0x001b6df4 ConnectPassthruKeyboard__9TRootViewFUc
+// A keyboard connected (or not) through a soft keyboard; the caret's
+// view is asked whether it keeps the caret when it goes (DerivedFrom
+// clEditView: the ROM's virtual call, NOT YET).
+void
+TRootView::ConnectPassthruKeyboard(Boolean connected)
+{
+	fPassthruKeyboard = connected;
+	if (!connected)
+		CheckForCaretRemoval();
+}
+
+
+// ROM 0x001b6ad0 CheckForCaretRemoval__9TRootViewFv
+// NOT YET RECONSTRUCTED: the ROM asks the caret view DerivedFrom(clEditView).
+void
+TRootView::CheckForCaretRemoval(void)
+{
+	if (fCaretView != nil)
+		fCaretView->DerivedFrom(clEditView);
+}
+
+
+// ROM 0x001b6e04 HandleKeyIn__9TRootViewFUlUcP5TView
+// A modifier key (shift, caps lock, option, control) on a soft keyboard:
+// the other registered keyboards that show the modifiers (flags bit 0)
+// are dirtied - the first one found.
+void
+TRootView::HandleKeyIn(ULong keyCode, Boolean /*isDown*/, TView* keyboard)
+{
+	RefVar context;
+	if (keyboard != nil)
+		context = keyboard->fContext;
+	if (keyCode != kShiftKey && keyCode != kCapsLockKey && keyCode != kOptionKey && keyCode != kControlKey)
+		return;
+	long count = Length(fKeyboards) / 2;
+	for (long i = 0; i < count; i++)
+	{
+		RefVar other(GetArraySlotRef(fKeyboards, i * 2));
+		if ((RINT(GetArraySlotRef(fKeyboards, i * 2 + 1)) & 1) && !EQRef(other, context))
+		{
+			TView* view = GetView(other);
+			if (view != nil)
+			{
+				view->Dirty(nil);
+				return;
+			}
+		}
+	}
 }
 
 
@@ -102,6 +208,7 @@ void
 TRootView::RemoveAllViews(void)
 {
 	fPopup = nil;
+	fPassthruKeyboard = false;
 	fCaretView = nil;
 	fDefaultButton = nil;
 	fCaretSlip = nil;

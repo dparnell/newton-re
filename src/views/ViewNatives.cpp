@@ -21,6 +21,7 @@
 #include "DrawShape.h"
 #include "Application.h"
 #include "Commands.h"
+#include "Keyboard.h"
 #include "NewtonTime.h"
 #include "CompMath.h"
 #include "Rects.h"
@@ -760,6 +761,7 @@ RegisterViewNatives(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();
 	RegisterApplicationNatives();
+	RegisterKeyboardNatives();
 	RegisterNativeFunction("FGetView__FRC6RefVarT1", (void*) FGetView, 1);
 	RegisterNativeFunction("FGetRoot", (void*) FGetRoot, 0);
 	RegisterNativeFunction("FGetFlags__FRC6RefVarT1", (void*) FGetFlags, 1);

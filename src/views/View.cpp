@@ -15,6 +15,7 @@
 #include "RootView.h"
 #include "Commands.h"
 #include "Application.h"
+#include "Keyboard.h"
 #include "Rects.h"
 #include "Shapes.h"
 #include "Draw.h"
@@ -646,11 +647,11 @@ TView::RealDoCommand(RefArg cmd)
 		}
 		break;
 
-	case aeKeyDown:
 	case aeKeyUp:
-	case aeKeyRepeat:
+	case aeKeyDown:
 	case aeKeyString:
-		// NOT YET RECONSTRUCTED: HandleKeyEvent(cmd, id, nil)
+	case aeKeyRepeat:
+		HandleKeyEvent(cmd, id, nil);
 		handled = true;
 		break;
 
@@ -1049,6 +1050,101 @@ TView::Hilite(Boolean on)
 		CopyRgn(savedVisRgn, port->visRgn);
 	}
 	end_unwind;
+}
+
+
+// ROM 0x00267d00 HandleKeyEvent__5TViewFRC6RefVarUlPUc
+// A key command to the view: aeKeyString runs the viewKeyStringScript
+// with [string].  For the others the parameter's character, key code
+// and modifiers make the arguments [char, int]: the int is the key
+// code's unmodified character (TranslateKey without modifiers; a
+// function key's own character or escape kept) with the key code and
+// modifiers above it.  A repeat runs the viewKeyRepeatScript, or the
+// viewKeyDownScript when there is none; a key up the viewKeyUpScript.
+// A key down nobody took then looks for a key command (FindKeyCommand:
+// unless the view takes its own keys, TextFlags 0x1000, and it is not
+// a command keystroke) and sends its keyMessage (a repeat only when the
+// command's modifiers have bit 2); and caps lock, when nobody took it,
+// clicks and tells the _infoButtons' contexts :SetCapsLock(on).
+// isCommandKey answers whether the keystroke was one.  ==> handled.
+Boolean
+TView::HandleKeyEvent(RefArg cmd, ULong id, Boolean* isCommandKey)
+{
+	RefVar args;
+	if (id == aeKeyString)
+	{
+		args = MakeArray(1);
+		SetArraySlot(args, 0, RefVar(CommandFrameParameter(cmd)));
+		return NOTNIL(RunCacheScript(kIndexViewKeyStringScript, args));
+	}
+	ULong parameter = (ULong) CommandParameter(cmd);
+	ULong ch = KeyEventChar(parameter);
+	ULong keyCode = KeyEventKeyCode(parameter);
+	Boolean isDown = id == aeKeyDown || id == aeKeyRepeat;
+	ULong translated = ch;
+	Boolean translate = true;
+	if (keyCode == 0 && isDown && ch >= kFunctionKeyCharFirst && ch <= kFunctionKeyCharLast)
+		translate = false;
+	if (translate && ch != kEscapeChar)
+	{
+		ULong deadState = 0;
+		translated = TranslateKey(keyCode, isDown, 0, &deadState);
+	}
+	args = MakeArray(2);
+	SetArraySlot(args, 0, RefVar(MAKECHAR(ch)));
+	SetArraySlot(args, 1, RefVar(MAKEINT(translated | (parameter & 0xffff0000))));
+	Boolean ran = false;
+	RefVar result;
+	if (id == aeKeyRepeat)
+		result = RunCacheScript(kIndexViewKeyRepeatScript, args, false, &ran);
+	if (!ran)
+		result = RunCacheScript(isDown ? kIndexViewKeyDownScript : kIndexViewKeyUpScript, args);
+	Boolean handled = NOTNIL(result);
+	Boolean commandKeystroke = isDown && IsCommandKeystroke((UniChar) translated, parameter);
+	if (isCommandKey != nil)
+		*isCommandKey = commandKeystroke;
+	if (isDown && !handled && ch != 0)
+	{
+		if ((TextFlags() & 0x1000) == 0 || commandKeystroke)
+		{
+			RefVar keyCommand(FindKeyCommand(this, (UniChar) translated, parameter & 0x3e000000));
+			if (NOTNIL(keyCommand))
+			{
+				RefVar message(GetFrameSlotRef(keyCommand, RSSYMkeymessage));
+				if (NOTNIL(message))
+				{
+					Boolean send = true;
+					if (id == aeKeyRepeat)
+					{
+						RefVar modifiers(GetFrameSlotRef(keyCommand, RSSYMmodifiers));
+						if (ISNIL(modifiers) || (RINT(modifiers) & 4) == 0)
+							send = false;
+						else
+							gInRepeatedKeyCommand = true;
+					}
+					if (send)
+						SendKeyMessage(this, message);
+					handled = true;
+					gInRepeatedKeyCommand = false;
+				}
+			}
+		}
+	}
+	if (!handled && isDown && keyCode == kCapsLockKey && (parameter & 0x1000000) == 0)
+	{
+		// NOT YET RECONSTRUCTED: FClicker
+		RefVar buttons(GetFrameSlotRef(gVarFrame, RSSYM_infobuttons));
+		if (IsArray(buttons))
+		{
+			for (long i = 0; i < Length(buttons); i++)
+			{
+				RefVar button(GetArraySlotRef(buttons, i));
+				NSSend(button, RSSYMsetcapslock, RefVar(MAKEBOOLEAN(gHardCapsLock)));
+			}
+		}
+		handled = true;
+	}
+	return handled;
 }
 
 

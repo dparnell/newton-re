@@ -23,6 +23,7 @@ add_library(views STATIC
     GaugeView.cpp
     DrawShape.cpp
     Commands.cpp
+    Keyboard.cpp
     Application.cpp
     PickView.cpp
 )

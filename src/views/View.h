@@ -33,9 +33,10 @@
 				viewHiliteScript or InvertRect.  NOT YET RECONSTRUCTED: the
 				data hilites (THilite, HiliteLoop, the DrawHilit* methods
 				draw nothing), drag and
-				drop, keys and the key view chain (BuildKeyChildList,
-				NextKeyView, HandleKeyEvent; RealDoCommand answers the other
-				commands - Commands.h), the animation effects
+				drop, the key view chain (BuildKeyChildList, NextKeyView;
+				HandleKeyEvent runs the key scripts and the key commands -
+				Keyboard.h; RealDoCommand answers the other commands -
+				Commands.h), the animation effects
 				(TAnimate: Show and Hide draw at once), the stroke world, the
 				sound effects, gSlowMotion, SyncScroll, and
 				the subclasses (BuildView makes a TView for every class).
@@ -274,6 +275,7 @@ public:
 	TView*		FindClosestView(Point pt, ULong flags, long* distance, Point* delta, Boolean* clipped);	// ROM 0x0025de40
 	long		Distance(Point pt, Point* delta);						// ROM 0x0025dd38 Distance__5TViewF6TPointP6TPoint
 	void		Select(Boolean on, Boolean unique);						// ROM 0x00264c34 Select__5TViewFUcT1
+	Boolean		HandleKeyEvent(RefArg cmd, ULong id, Boolean* isCommandKey);	// ROM 0x00267d00 HandleKeyEvent__5TViewFRC6RefVarUlPUc
 	void		SelectNone(void);										// ROM 0x002643c4 SelectNone__5TViewFv
 	TView*		FindID(long id);										// ROM 0x00265460 FindID__5TViewFl
 	TView*		FrontMost(void);										// ROM 0x0025f3d4 FrontMost__5TViewFv

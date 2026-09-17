@@ -83,6 +83,12 @@ public:
 	Boolean		ViewContainsCaretView(TView* view);						// ROM 0x002635d0 ViewContainsCaretView__FP5TView
 	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b7bb0 SetPopup__9TRootViewFP5TViewUc
 	TView*		GetClipboard(TView* view);								// ROM 0x001b7e6c GetClipboard__9TRootViewFP5TView
+	Boolean		KeyboardConnected(void);								// ROM 0x001b6fac KeyboardConnected__9TRootViewFv
+	Boolean		CommandKeyboardConnected(void);							// ROM 0x001b6fd4 CommandKeyboardConnected__9TRootViewFv
+	Boolean		KeyboardActive(void);									// ROM 0x001b6fe4 KeyboardActive__9TRootViewFv
+	void		ConnectPassthruKeyboard(Boolean connected);				// ROM 0x001b6df4 ConnectPassthruKeyboard__9TRootViewFUc
+	void		HandleKeyIn(ULong keyCode, Boolean isDown, TView* keyboard);	// ROM 0x001b6e04 HandleKeyIn__9TRootViewFUlUcP5TView
+	void		CheckForCaretRemoval(void);								// ROM 0x001b6ad0 CheckForCaretRemoval__9TRootViewFv
 	void		SetModalView(TView* view);								// ROM 0x002e8b18 SetModalView__FP5TView
 	TTime		IdleViews(void);										// ROM 0x001b4bf4 IdleViews__9TRootViewFv - the due idlers run; ==> the next idle time (zero: none)
 	ULong		AddIdler(TView* view, ULong delay, long arg);			// ROM 0x001b4f8c AddIdler__9TRootViewFP5TViewUll - delay 0 removes; ==> the time left
@@ -102,15 +108,16 @@ public:
 	IdlingView*		fIdlingViews;		// +0x4c  the views whose Idle is running
 	TView*			fPopup;				// +0x50  the popup view
 	RefStruct		fClipboardIcon;		// +0x54  (NOT YET)
-	RefStruct		fSelectionStack;	// +0x60  the saved key view selections (NOT YET)
 	Boolean			fDirtyFlag;			// +0x5c  a gesture or a command to the children changed something (the ROM's event loop looks)
+	RefStruct		fKeyboards;			// +0x60  the registered on-screen keyboards: [context, flags] pairs (flags: 1 shows the modifiers, 2 hears viewCaretChangedScript, 4 active) - the registry NOT YET
+	Boolean			fPassthruKeyboard;	// +0x64  a keyboard connected through a soft keyboard (ConnectPassthruKeyboard)
 	TView*			fCaretView;			// +0x68  the key view with the caret (NOT YET)
 	TView*			fDefaultButton;		// +0x74  drawn with its marks; three pixels of outer bounds
 	TView*			fCaretSlip;			// +0x78  the view whose hilite frame is thick
-	RefStruct		fKeyboards;			// +0x7c  the registered keyboards (NOT YET)
+	RefStruct		fSelectionStack;	// +0x7c  the saved key view selections (NOT YET)
 	TView*			fModalView;			// host: SetModalView's view (the ROM keeps it in the modal dialog code)
 };
 
-extern Boolean	gNewtIsAliveAndWell;		// 0x0c101a24  the boot is over: the root view draws no splash
+extern Boolean	gNewtIsAliveAndWell;		// 0x0c102604  the boot is over: the root view draws no splash
 
 #endif	/* __ROOTVIEW_H */

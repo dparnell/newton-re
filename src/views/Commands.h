@@ -41,10 +41,11 @@ enum
 	aeWord					= 0x12,		// viewWordScript(unit)
 	aeRawInk				= 0x15,		// viewRawInkScript(strokes)
 	aeInkWord				= 0x18,		// viewInkWordScript(strokes)
-	aeKeyDown				= 0x1f,		// the key events (HandleKeyEvent, NOT YET)
-	aeKeyUp					= 0x20,
-	aeKeyRepeat				= 0x22,
-	aeKeyString				= 0x23,
+	aeKeyUp					= 0x1f,		// the key events (TView::HandleKeyEvent; Keyboard.h): the parameter (modifiers << 25) | (key code << 16) | character
+	aeKeyDown				= 0x20,
+	aeKeyboardConnected		= 0x21,		// to the root: the parameter says whether a keyboard is connected
+	aeKeyString				= 0x22,		// the frame parameter: the string typed
+	aeKeyRepeat				= 0x23,
 	aeAddChild				= 0x29,		// the frameParameter's view added under the receiver and shown
 	aeDropChild				= 0x2a,		// the parameter (a view) hidden and removed
 	aeHide					= 0x2b,

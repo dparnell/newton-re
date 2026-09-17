@@ -17,6 +17,7 @@
 #include "PickView.h"
 #include "DrawShape.h"
 #include "Commands.h"
+#include "Keyboard.h"
 #include "Application.h"
 #include "StyleRuns.h"
 #include "Rects.h"
@@ -1085,6 +1086,158 @@ TestHilite()
 }
 
 
+// The keyboard: the German 'kchr mapping of the ROM's locale bundle, the
+// key maps and modifiers, a dead key, key events to a key view and its
+// scripts, a key command, PostKeyString and HandleKeyEvents.
+static void
+TestKeyboard()
+{
+	const ULong kGermanyBundle = 0x003c10ed;		// the ROM's locale bundle 'Germany
+	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	RefVar intl(AllocateFrame());
+	RefVar keyboard(AllocateFrame());
+	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
+	SetFrameSlot(intl, RSSYMkeyboard, keyboard);
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	EXPECT(NOTNIL(GetKeyTransMapping()));
+	// the translation: the tables by the modifiers, the function keys
+	ULong dead = 0;
+	EXPECT(TranslateKey(0, true, 0, &dead) == 'a' && TranslateKey(0, true, kShiftModifier, &dead) == 'A' && TranslateKey(0, true, kCapsLockModifier, &dead) == 'A');
+	EXPECT(TranslateKey(0x12, true, 0, &dead) == '1' && TranslateKey(0x12, true, kShiftModifier, &dead) == '!' && TranslateKey(0x12, true, kOptionModifier, &dead) == 0xa1);	// option-1: inverted ! (Mac Roman 0xc1)
+	EXPECT(TranslateKey(0x7a, true, 0, &dead) == 0xf721 && TranslateKey(0x60, true, 0, &dead) == 0xf725 && dead == 0);
+	// a dead key: the acute accent, then a completed and an uncompleted character
+	EXPECT(TranslateKey(0x18, true, 0, &dead) == 0xb4 && dead != 0);
+	EXPECT(TranslateKey(0, true, 0, &dead) == 0xe1 && dead == 0);			// a acute
+	TranslateKey(0x18, true, 0, &dead);
+	EXPECT(TranslateKey(0x12, true, 0, &dead) == '1' && dead == 0);		// no completion for 1: as it is
+	TranslateKey(0x18, true, 0, &dead);
+	EXPECT(TranslateKey(0x18, true, 0, &dead) == 0xb4 && dead == 0);		// the accent itself again
+	// the hard key map: modifiers and caps lock through KeyIn
+	ClearHardKeymap();
+	EXPECT(KeyIn(0, true, (TView*) -1) == 'a' && KeyDown(0, true) && !KeyDown(1, true));
+	EXPECT(KeyIn(0, false, (TView*) -1) == 'a' && !KeyDown(0, true));
+	EXPECT(KeyIn(kShiftKey, true, (TView*) -1) == 0 && Modifiers(true) == kShiftModifier && gTrueModifiers == 1);
+	EXPECT(KeyIn(0, true, (TView*) -1) == 'A');
+	KeyIn(0, false, (TView*) -1);
+	EXPECT(KeyIn(kRightShiftKey, true, (TView*) -1) == 0 && gTrueModifiers == 3 && Modifiers(true) == kShiftModifier);
+	EXPECT(KeyIn(kShiftKey, false, (TView*) -1) == 0 && Modifiers(true) == kShiftModifier);		// the right one still holds it
+	EXPECT(KeyIn(kRightShiftKey, false, (TView*) -1) == 0 && Modifiers(true) == 0 && gTrueModifiers == 0);
+	KeyIn(kCapsLockKey, true, (TView*) -1);
+	EXPECT(gHardCapsLock && Modifiers(true) == kCapsLockModifier && KeyIn(0, true, (TView*) -1) == 'A');
+	KeyIn(0, false, (TView*) -1);
+	KeyIn(kCapsLockKey, false, (TView*) -1);
+	KeyIn(kCapsLockKey, true, (TView*) -1);
+	EXPECT(!gHardCapsLock && Modifiers(true) == 0);
+	KeyIn(kCapsLockKey, false, (TView*) -1);
+	// a dead key through KeyIn: nothing until it completes
+	EXPECT(KeyIn(0x18, true, (TView*) -1) == 0 && gHardKeyDeadState != 0);
+	KeyIn(0x18, false, (TView*) -1);
+	EXPECT(KeyIn(0, true, (TView*) -1) == 0xe1 && gHardKeyDeadState == 0);
+	KeyIn(0, false, (TView*) -1);
+	EXPECT(IsCommandKeyCode(0x35) && IsCommandKeyCode(0x7a) && !IsCommandKeyCode(0x66) && !IsCommandKeyCode(0));
+	EXPECT(IsCommandKeystroke('s', kCommandModifier << 25) && IsCommandKeystroke(0xf721, 0) && IsCommandKeystroke(0x1b, 0) && !IsCommandKeystroke('s', 0));
+	EXPECT(KeyIsPrintable('a', gRootView) && !KeyIsPrintable(0x0d, gRootView) && !KeyIsPrintable(0xf721, gRootView) && !KeyIsPrintable('a', nil));
+	// key events to a key view: the scripts' arguments
+	TView* v = ViewOf("ctxK := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 30, bottom: 30}, viewFormat: 1, keys: [], viewKeyDownScript: func(char, key) begin AddArraySlot(keys, ['down, char, key]); nil end, viewKeyUpScript: func(char, key) begin AddArraySlot(keys, ['up, char, key]); nil end, viewKeyStringScript: func(str) begin AddArraySlot(keys, ['string, Clone(str)]); true end, viewKeyRepeatScript: func(char, key) begin AddArraySlot(keys, ['again, char, key]); if char = $x then true else nil end, _keyCommands: [{char: $s, modifiers: 1 << 25, keyMessage: 'DoSave}, {char: $r, modifiers: (1 << 25) + 4, keyMessage: 'DoRepeat}], saved: 0, DoSave: func(ctx) saved := saved + 1, DoRepeat: func(ctx) saved := saved + 10})");
+	gRootView->fCaretView = v;
+	EXPECT(GetPostingView(false) == v);
+	gKeyboardConnected = false;
+	KeyboardEvent down(aeKeyDown, 0);
+	HandleKeyEvent(&down);
+	EXPECT(gKeyboardConnected);		// told by the first key
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 1 && EQRef(Eval("ctxK.keys[0][0]"), Intern((char*) "down")) && EQRef(Eval("ctxK.keys[0][1]"), MAKECHAR('a')) && RINT(Eval("ctxK.keys[0][2]")) == 'a');
+	KeyboardEvent up(aeKeyUp, 0);
+	HandleKeyEvent(&up);
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 2 && EQRef(Eval("ctxK.keys[1][0]"), Intern((char*) "up")));
+	// shift held: the char is '!', the key argument the plain key's '1' with the key code and modifiers above
+	KeyboardEvent shiftDown(aeKeyDown, kShiftKey);
+	HandleKeyEvent(&shiftDown);
+	KeyboardEvent oneDown(aeKeyDown, 0x12);
+	HandleKeyEvent(&oneDown);
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 4 && EQRef(Eval("ctxK.keys[3][1]"), MAKECHAR('!')) && RINT(Eval("ctxK.keys[3][2]")) == (long) MakeKeyEventParameter(kShiftModifier, 0x12, '1'));
+	KeyboardEvent oneUp(aeKeyUp, 0x12);
+	HandleKeyEvent(&oneUp);
+	KeyboardEvent shiftUp(aeKeyUp, kShiftKey);
+	HandleKeyEvent(&shiftUp);
+	EXPECT(Modifiers(true) == 0);
+	// a repeat: the repeat script, and the down script when it is not there
+	Eval("ctxK.keys := []");
+	KeyboardEvent repeat(aeKeyRepeat, 0);
+	HandleKeyEvent(&repeat);
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 1 && EQRef(Eval("ctxK.keys[0][0]"), Intern((char*) "again")));
+	HandleKeyEvent(&up);
+	// a key command: command-s runs DoSave through SendKeyMessage; command-r repeats
+	Eval("ctxK.keys := []");
+	KeyboardEvent cmdDown(aeKeyDown, kCommandKey);
+	HandleKeyEvent(&cmdDown);
+	EXPECT(IsCommandKeyDown() && Modifiers(true) == kCommandModifier);
+	KeyboardEvent sDown(aeKeyDown, 1);
+	HandleKeyEvent(&sDown);
+	EXPECT(RINT(Eval("ctxK.saved")) == 1 && RINT(Eval("Length(ctxK.keys)")) == 2 && EQRef(Eval("ctxK.keys[1][1]"), MAKECHAR('s')));		// the command key's down and the s down ran the script first (answering nil)
+	KeyboardEvent sRepeat(aeKeyRepeat, 1);
+	HandleKeyEvent(&sRepeat);
+	EXPECT(RINT(Eval("ctxK.saved")) == 1);		// not repeatable: taken, not sent
+	KeyboardEvent sUp(aeKeyUp, 1);
+	HandleKeyEvent(&sUp);
+	KeyboardEvent rDown(aeKeyDown, 0x0f);
+	HandleKeyEvent(&rDown);
+	KeyboardEvent rRepeat(aeKeyRepeat, 0x0f);
+	HandleKeyEvent(&rRepeat);
+	EXPECT(RINT(Eval("ctxK.saved")) == 21);
+	KeyboardEvent rUp(aeKeyUp, 0x0f);
+	HandleKeyEvent(&rUp);
+	KeyboardEvent cmdUp(aeKeyUp, kCommandKey);
+	HandleKeyEvent(&cmdUp);
+	EXPECT(!IsCommandKeyDown());
+	// a command the view does not have goes up to the root
+	Eval("GetRoot()._keyCommands := [{char: $q, modifiers: 1 << 25, keyMessage: 'DoQuit}]; GetRoot().quit := nil; GetRoot().DoQuit := func(ctx) quit := ctx");
+	HandleKeyEvent(&cmdDown);
+	KeyboardEvent qDown(aeKeyDown, 0x0c);
+	HandleKeyEvent(&qDown);
+	EXPECT(EQRef(Eval("GetRoot().quit"), v->fContext));
+	KeyboardEvent qUp(aeKeyUp, 0x0c);
+	HandleKeyEvent(&qUp);
+	HandleKeyEvent(&cmdUp);
+	Eval("RemoveSlot(GetRoot(), '_keyCommands)");
+	// FindKeyCommand: the best partial match when there is no exact one
+	RefVar found(FindKeyCommand(v, 's', (kCommandModifier | kShiftModifier) << 25));
+	EXPECT(NOTNIL(found) && EQRef(GetFrameSlotRef(found, RSSYMkeymessage), Intern((char*) "DoSave")));
+	EXPECT(ISNIL(FindKeyCommand(v, 's', 0)));
+	// PostKeyString: printable text as one aeKeyString; other characters as key down/up
+	Eval("ctxK.keys := []");
+	PostKeyString(v, RefVar(MakeString("hi")));
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 1 && EQRef(Eval("ctxK.keys[0][0]"), Intern((char*) "string")) && NOTNIL(Eval("StrEqual(ctxK.keys[0][1], \"hi\")")));
+	Eval("ctxK.keys := []");
+	PostKeyString(v, RefVar(MakeString("a\tb")));
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 6);		// "a", tab down, tab up, "b", the terminator's down and up (as the ROM posts)
+	EXPECT(NOTNIL(Eval("StrEqual(ctxK.keys[0][1], \"a\")")) && EQRef(Eval("ctxK.keys[1][0]"), Intern((char*) "down")) && EQRef(Eval("ctxK.keys[1][1]"), MAKECHAR(9)) && EQRef(Eval("ctxK.keys[2][0]"), Intern((char*) "up")) && NOTNIL(Eval("StrEqual(ctxK.keys[3][1], \"b\")")));
+	// HandleKeyEvents: key events in an array, the characters gathered into a string
+	Eval("ctxK.keys := []");
+	RefVar events(Eval("[0x80 + 4, 4, 0x80 + 0x22, 0x22]"));		// h, i
+	HandleKeyEvents(events, 4);
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 1 && NOTNIL(Eval("StrEqual(ctxK.keys[0][1], \"hi\")")));
+	Eval("ctxK.keys := []");
+	Eval("HandleKeyEvents([0x80 + 4, 4, 0x80 + 0x37, 0x80 + 1, 1, 0x37])");		// h, then command-s
+	// "h", the command key down, s down and up, the command key up (the string posted is the gathering
+	// buffer, reused for the rest as the ROM does - hence the script's Clone)
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 5 && NOTNIL(Eval("StrEqual(ctxK.keys[0][1], \"h\")")) && EQRef(Eval("ctxK.keys[2][1]"), MAKECHAR('s')) && RINT(Eval("ctxK.saved")) == 22);
+	// the natives
+	EXPECT(RINT(Eval("KeyIn(0, true)")) == 'a' && RINT(Eval("KeyIn(0, nil)")) == 'a' && NOTNIL(Eval("IsCommandKeystroke($s, 1 << 25)")) && RINT(Eval("GetTrueModifiers()")) == 0);
+	EXPECT(RINT(Eval("TranslateKey(0, 2 << 25, 0)")) == 'A');
+	Eval("ctxK.keys := []");
+	Eval("PostKeyString(ctxK, \"yo\")");
+	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 1);
+	gRootView->fCaretView = nil;
+	EXPECT(GetPostingView(false) == gRootView);
+	Eval("ctxK:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "keyboard closed"));
+	ClearHardKeymap();
+	gKeyboardConnected = false;
+	Eval("RemoveSlot(vars, 'international)");
+}
+
+
 static void
 TestIdlers()
 {
@@ -1269,6 +1422,7 @@ main()
 		TestShapes();
 		TestCommands();
 		TestHilite();
+		TestKeyboard();
 		TestIdlers();
 		TestPickView();
 	}

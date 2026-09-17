@@ -507,6 +507,84 @@ and `Select(false, false)` after, even when a script throws.
 `Select(on, false)` and `Select(on, true)`.  All four are methods of
 `Rviewroot`.
 
+### The keyboard (`Keyboard.h`)
+
+Key events come from the keyboard tool (`TKeyboardTool::SendKeyEvent`
+0x000fbc54) as `KeyboardEvent`s (0x2c bytes: a `TNewtEvent` 'newt/'idle
+with the type 'keyb at +8, then +0xc the id - aeKeyUp 0x1f, aeKeyDown
+0x20, aeKeyboardConnected 0x21, aeKeyString 0x22 (several key events at
+once: +0x18 their count, +0x1c their bytes, a key code | 0x80 for a
+down), aeKeyRepeat 0x23 -, +0x10 1, +0x14 the key code).  `HandleKeyEvent`
+0x002e5e0c sends a key string to `HandleKeyEvents` 0x002e5b80 and the
+rest to `DoKeyEvent` 0x002e5918 for the posting view (`GetPostingView`
+0x002eb114: the root's visible popup unless it lets keys through
+(`allowKeysThrough`), else `GetView(nil, 'viewFrontKey)` - or
+`'viewFrontCommandKey` for the command key, a command key held or a
+command key code).  `DoKeyEvent` runs the key through `KeyIn`, dispatches
+aeKeyboardConnected to the root when no keyboard was known (the root's
+`RealDoCommand` 0x001b56c8 sets `gKeyboardConnected` 0x0c101a24, clears
+the hard key map when connected, syncs the popup and dirties itself),
+then dispatches the event's command to the receiver with the parameter
+`(modifiers << 25) | (key code << 16) | character`, and updates the root
+view; the command key repeating opens the key help (`_keyHelpOpenScript`
+up the key view chain; NOT YET: the help itself).
+
+`KeyIn` 0x002e6a64 keeps the key maps (`gHardKeyMap`/`gSoftKeyMap`, a bit
+per key code; `Modifiers` 0x002e69bc reads bits 0x37-0x3b of them:
+command, shift, caps lock, option, control), folds the right shift and
+option keys (0x3c, 0x3d) onto the left ones with `gTrueModifiers`
+remembering which are really down, toggles caps lock on each press (its
+release becomes key 0), tells the on-screen keyboards of a modifier
+(`TRootView::HandleKeyIn` 0x001b6e04 dirties the first registered
+keyboard showing them) and translates the key: `TranslateKey` 0x002e5610
+reads the locale's `'kchr` binary (`vars.international.keyboard.mapping`,
+`GetKeyTransMapping` 0x002ea13c; the Macintosh KCHR: +2 a table index per
+modifier combination, +0x102 the table count, +0x104 the 128-byte
+tables, then the dead keys - a count and records {table, key code,
+completion count, (completion, result) pairs, (0, the accent)}), keeps a
+pending dead key's record offset in the dead state (`KeyIn` answers 0
+until it completes), converts the Mac Roman character to Unicode and maps
+the function keys' 0x10 to U+F721-U+F72F.  `IsCommandKeyCode` 0x002eaf0c
+(escape 0x35 and the function keys), `IsCommandKeystroke` 0x002eaf64
+(command held, a function key or escape), `KeyIsPrintable` 0x002eb01c
+(return and tab only in a paragraph), `KeyCanBeHandled` 0x002eb0e4.
+
+`TView::HandleKeyEvent` 0x00267d00 answers the key commands: aeKeyString
+runs `viewKeyStringScript(string)`; the others make the arguments `[char,
+key]` - the key an int of the key code's unmodified character
+(`TranslateKey` without modifiers; a function key's character and
+escape kept) with the key code and modifiers above it - and run
+`viewKeyRepeatScript` (a repeat; `viewKeyDownScript` when there is
+none), `viewKeyDownScript` or `viewKeyUpScript`.  A key down nobody took
+looks for a key command (`FindKeyCommand` 0x002e9f9c: the `_keyCommands`
+arrays of frames `{char, modifiers, keyMessage}` up the key view chain -
+the `_nextKeyView` proto variable, `'none` ending it, else the parent -
+an exact match of the modifiers (`KeyCommandModifiers` 0x002e9de0: the
+parameter's bits 25-29) winning at once, else the one asking for the
+most of the modifiers held) unless the view takes its own keys
+(`textFlags` 0x1000) and it is not a command keystroke, and sends its
+`keyMessage` with `SendKeyMessage` 0x002ea238 (run by the first view up
+the chain that has it, with the context as the argument) - a repeat only
+when the command's `modifiers` has bit 2 (`gInRepeatedKeyCommand` set
+while it runs); caps lock nobody took clicks and tells the
+`_infoButtons` `:SetCapsLock(on)`.  `HandleKeyEvents` sends a key view
+that wants its keys one by one (`textFlags` 0x400) each event as
+`DoKeyEvent`, else gathers the keys down into a string for
+`PostKeyString` 0x002eb1ec (one aeKeyString when every character is
+printable for the view; a view wanting keys gets a key down and up per
+character; else the printable runs as strings and each other character
+as a down and up), switching to `DoKeyEvent` for good at a command
+keystroke.  The natives `KeyIn`, `TranslateKey`, `IsKeyDown`,
+`GetTrueModifiers`, `IsCommandKeystroke`, `PostKeyString`,
+`HandleKeyEvents`, `SendKeyMessage`, `ClearHardKeymap`.  NOT YET: the key
+help (`MatchKeyMessage`, `GatherKeyCommands`), the caret's key view and
+its chain (`SetKeyView`, `NextKeyView`, `BuildKeyChildList`), the
+on-screen keyboards' registry (`RegisterKeyboard`), the keyboard tool.
+The root view's `+0x60` is the registered keyboards' `[context, flags]`
+pairs (flags: 1 shows the modifiers, 2 hears `viewCaretChangedScript`, 4
+active), `+0x64` a keyboard passed through a soft one
+(`ConnectPassthruKeyboard` 0x001b6df4), `+0x7c` the selection stack.
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -524,7 +602,11 @@ both ways, AddUndoAction/Call/Send, the delayed actions, aeAddChild and
 aeDropChild), hiliting (a framed round button inverted inside its
 frame, TrackHilite and TrackButton without a stroke, the click script,
 a throwing script, the pressed script's answer with newt_feature,
-HiliteUnique, the viewHiliteScript, a hidden view), idlers (SetupIdle,
+HiliteUnique, the viewHiliteScript, a hidden view), the keyboard (the
+German mapping's tables, a dead key, the key maps and modifiers through
+KeyIn, key events to a key view's scripts, a repeat, key commands with
+the command key, one found up at the root, PostKeyString and
+HandleKeyEvents, the natives), idlers (SetupIdle,
 the idle script re-timing and stopping its idler, removal with the
 view), pickers from the ROM's protoPicker
 (the rows, the placement below and above, the separator, marks, an
@@ -533,8 +615,9 @@ icon, a cut item, the item under a point, a pick closing the picker).
 ## Not yet
 
 The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
-the pen tracking behind `TrackHilite` (strokes), the caret and key views,
-drag and drop, the key events (`HandleKeyEvent`), the animation
+the pen tracking behind `TrackHilite` (strokes), the caret and key views
+(`SetKeyView`, `NextKeyView`), the key help, the keyboard tool and the
+on-screen keyboards, drag and drop, the animation
 effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,
 `TEditView`, ...), editing in `TParagraphView`, the picker's pen
