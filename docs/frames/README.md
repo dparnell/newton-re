@@ -443,8 +443,54 @@ the stdio translator writes the Newton's carriage returns as newlines.
 `test_Printer` checks the output against the ROM's formats.  The UniChar
 string functions and the conversions to and from 8-bit text are
 `utility/Unicode.h` (`Ustrlen` and friends; `ConvertToUnicode`/
-`ConvertFromUnicode` as the ROM does them before `InitUnicode` installs
-the encoding tables - NOT YET).
+`ConvertFromUnicode`).
+
+### The character tables (`UnicodeTables.h`, `utility/Unicode.h`)
+
+`InitUnicode` 0x00254b80 (the ROM: `TNewtWorld::MainConstructor` after
+`InitObjects`; the host: at the end of `InitObjects`, when the ROM's
+objects are imported - `Runicode`, the magic pointer @283, is the ROM's
+`unicode` frame) installs the character tables:
+
+- `charEncodings`: frames `{encodingID, mapFromUnicode, mapToUnicode}`
+  for the encodings 1 (Mac Roman), 2, 3 and 4.  `GetMappingInfo`
+  0x00256014 reads a mapping binary's header - halfword 0 the kind, 2
+  the size (256), 4 flags, 6 the segment count - into a `TEncodingMap`
+  (0x20 bytes) and picks the converter: kind 0 "contiguous 8"
+  (`ConvertToUnicodeFunc_Contiguous8` 0x00256548: 256 big-endian UniChars
+  indexed by the byte) or kind 4 "segmented 16"
+  (`ConvertFromUnicodeFunc_Segmented16` 0x00256784: the segments' ends,
+  starts and offsets - `count` halfwords each - then the byte table; a
+  character's segment is the first whose end is not below it, a
+  character below its start has no byte, 0x1a, else the byte at the
+  character plus the offset).  `InstallCharEncoding` 0x002555ec puts the
+  maps and converters in `gUnicode` (0x0c104858, five entries of
+  {fromMap, fromFn, toMap, toFn}); `ConvertToUnicode` 0x002553a0 and
+  `ConvertFromUnicode` 0x002568b8 go through them once `gUnicodeInited`
+  is set (an encoding without a table converts nothing - so encoding 0),
+  and before that widen bytes as they are / narrow characters over 0x7f
+  to 0x1a.  Host: the binaries are copied out of the object heap (the
+  ROM points into its own objects, which never move).
+- `charClass` (a class per Mac Roman character), `typelist`, and the
+  per-class deltas `upperList`, `lowerList`, `upperNoMarkList`,
+  `noMarkList` (70 classes): `ConvertTextCase` 0x002557ec takes each
+  character to Mac Roman (`A_CONST_CHAR` over 0x7f; 0x1a - no such
+  character - is left), adds its class's delta and takes the result back
+  through `U_CONST_CHAR`; `UppercaseText` 0x0025587c, `LowercaseText`
+  0x0025588c, `NoDiacriticsText` 0x0025589c, `UppercaseNoDiacriticsText`
+  0x002559f4 are its uses, `ToggleCase` 0x00255a04, `UToLower` 0x00255a54
+  and `IsAlphabet` 0x00255428 (uppercased without diacriticals it is A-Z
+  or the sharp s) are built on them.  Before `InitUnicode` the host's
+  versions know Latin-1's letters (the ROM would read through null
+  pointers).
+- `Rasciibreak` (the magic pointer @6): `gASCIIBreakTable`, a byte per
+  Mac Roman character - `IsDelimiter` 0x00255678 - the word breakers of
+  `StrCapitalizeWords` and `FindWordsInString` (space and the punctuation
+  below `0`, `:`-`@`, and some of the high characters; not `_`).
+
+NOT YET: the sort tables (`TSortTables`, `gSortTables`).  `test_Strings`
+converts Mac Roman each way, cases and un-accents text, and asks the
+break table.
 
 ### The debugger's view of the stack (`DebugAPI.cpp`)
 

@@ -91,6 +91,40 @@ Printed(RefArg obj)
 #define EXPECT_THROWS(source, code) do { THROWS(Eval(source)); if (gThrownCode != (code)) { failures++; fprintf(stderr, "FAIL %s:%d: %s threw %s %ld\n", __FILE__, __LINE__, source, gThrown ? gThrown : "nothing", gThrownCode); } } while (0)
 
 
+// The character tables of the ROM's 'unicode frame (InitUnicode): Mac
+// Roman each way, the case and diacritical conversions, the delimiters.
+static void
+TestUnicodeTables()
+{
+	EXPECT(gUnicodeInited && gUnicode[kMacRomanEncoding].fToUnicode != nil && gUnicode[kASCIIEncoding].fToUnicode == nil);
+	unsigned char mac[4] = { 0x8e, 0xa5, 'a', 0 };		// e acute, bullet
+	UniChar uni[4];
+	ConvertToUnicode(mac, uni, kMacRomanEncoding, 3);
+	EXPECT(uni[0] == 0xe9 && uni[1] == 0x2022 && uni[2] == 'a' && uni[3] == 0);
+	EXPECT(U_CONST_CHAR(0xab) == 0xb4 && U_CONST_CHAR(0xc1) == 0xa1 && U_CONST_CHAR('z') == 'z');
+	UniChar back[4] = { 0xe9, 0x2022, 0x4e2d, 0 };		// the third has no Mac Roman
+	unsigned char narrow[4];
+	ConvertFromUnicode(back, narrow, kMacRomanEncoding, 3);
+	EXPECT(narrow[0] == 0x8e && narrow[1] == 0xa5 && narrow[2] == 0x1a && narrow[3] == 0);
+	EXPECT(A_CONST_CHAR(0xb4) == (char) 0xab && A_CONST_CHAR('q') == 'q');
+	// cases: a-umlaut, sharp s, plain letters
+	UniChar text[5] = { 0xe4, 'b', 'C', 0xdf, 0 };
+	UppercaseText(text, 4);
+	EXPECT(text[0] == 0xc4 && text[1] == 'B' && text[2] == 'C' && text[3] == 0xdf);
+	LowercaseText(text, 4);
+	EXPECT(text[0] == 0xe4 && text[1] == 'b' && text[2] == 'c');
+	NoDiacriticsText(text, 4);
+	EXPECT(text[0] == 'a' && text[1] == 'b');
+	UniChar e[2] = { 0xe9, 0 };
+	UppercaseNoDiacriticsText(e, 1);
+	EXPECT(e[0] == 'E');
+	EXPECT(UToUpper(0xe9) == 0xc9 && UToLower(0xc9) == 0xe9 && ToggleCase('a') == 'A' && ToggleCase('A') == 'a' && ToggleCase('1') == '1');
+	EXPECT(IsAlphabet(0xe4) && IsAlphabet(0xdf) && !IsAlphabet('1') && !IsAlphabet(0x2022));
+	// the break table: what ends a word (not '_', as the ROM has it)
+	EXPECT(IsDelimiter(' ') && IsDelimiter(',') && IsDelimiter('?') && IsDelimiter('@') && !IsDelimiter('a') && !IsDelimiter('_'));
+}
+
+
 static void
 TestRichString()
 {
@@ -120,7 +154,7 @@ TestRichString()
 	EXPECT(sa.CompareSubStringCommon(sb, 0, -1, true) != 0);
 	// C string views
 	UniChar text[8];
-	ConvertToUnicode("abcdef", text, kASCIIEncoding, 7);
+	ConvertToUnicode("abcdef", text, kMacRomanEncoding, 7);		// (encoding 0 has no table once the ROM's are installed)
 	TRichString c(text);
 	EXPECT(c.Length() == 6 && c.GetChar(5) == 'f');
 	EXPECT(sa.CompareSubStringCommon(c, 0, 3, false) < 0);		// "abc" vs "abcdef"
@@ -551,6 +585,7 @@ main()
 	Printed();
 	newton_try
 	{
+		TestUnicodeTables();
 		TestRichString();
 		TestStringFunctions();
 		TestSorting();

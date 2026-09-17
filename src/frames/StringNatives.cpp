@@ -44,23 +44,6 @@ CharOf(RefArg r)
 	return RCHAR(ref);
 }
 
-// n characters of text upper- or lower-cased in place (the ROM's
-// UppercaseText/LowercaseText, 0x0025587c/0x002557f0, use the case tables)
-static void
-UppercaseText(UniChar* text, long n)
-{
-	for (long i = 0; i < n; i++)
-		text[i] = UToUpper(text[i]);
-}
-
-static void
-LowercaseText(UniChar* text, long n)
-{
-	for (long i = 0; i < n; i++)
-		text[i] = UToLower(text[i]);
-}
-
-
 /* -------------------------------------------------------------------------------
 	Lengths, comparison
 ------------------------------------------------------------------------------- */
@@ -453,8 +436,6 @@ FCapitalize(RefArg /*rcvr*/, RefArg str)
 }
 
 
-static Boolean	IsDelimiter(UniChar c);
-
 // ROM 0x002ef84c StrCapitalizeWords__FRC6RefVar
 // The first character of each word upper-cased.
 void
@@ -670,16 +651,6 @@ FFindStringInArray(RefArg /*rcvr*/, RefArg array, RefArg str)
 			return MAKEINT(i);
 	}
 	return NILREF;
-}
-
-
-// a word delimiter (the ROM's IsDelimiter, 0x00255678, uses the break
-// table gASCIIBreakTable - NOT YET RECONSTRUCTED: white space and
-// punctuation here)
-static Boolean
-IsDelimiter(UniChar c)
-{
-	return !IsAlphaNumeric(c);
 }
 
 

@@ -25,6 +25,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "ROMConstants.h"
+#include "UnicodeTables.h"
 #include "hal/System.h"
 #include "Unicode.h"
 
@@ -2277,6 +2278,7 @@ InitObjects(void)
 	AddGCRoot(gUnionSoups);
 	AddGCRoot(gPackageStores);
 	gPackageStores = AllocateArray(RSSYMarray, 0);
+	InitUnicode();		// (the ROM: TNewtWorld::MainConstructor, after InitObjects; nothing without the ROM's objects)
 }
 
 

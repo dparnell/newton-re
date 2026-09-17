@@ -158,12 +158,166 @@ Umemset(UniChar* dest, UniChar c, long n)
 }
 
 
-// ROM 0x002553a0 ConvertToUnicode__FPCvPUslT3
-// NOT YET RECONSTRUCTED: the encoding tables (gUnicode, after InitUnicode);
-// this is what the ROM does before they are installed.
-void
-ConvertToUnicode(const void* src, UniChar* dest, long /*encoding*/, long n)
+CharEncoding	gUnicode[kNumberOfEncodings];		// ROM 0x0c104858 gUnicode
+static long		gEncodingCount = 0;					// ROM 0x0c1048a8
+Boolean			gUnicodeInited = false;				// ROM 0x0c101fd4 gUnicodeInited
+Boolean			gHasUnicode = false;				// ROM 0x0c101fd0 gHasUnicode
+const UniChar*	gASCIItoUnicodeTable = nil;			// ROM 0x0c101fd8 gASCIItoUnicodeTable
+const unsigned char*	gASCIIBreakTable = nil;		// ROM 0x0c101fdc gASCIIBreakTable
+const unsigned char*	gCharClass = nil;			// ROM 0x0c1048ac
+const unsigned char*	gTypeList = nil;			// ROM 0x0c1048b0
+const signed char*		gUpperList = nil;			// ROM 0x0c1048b4
+const signed char*		gLowerList = nil;			// ROM 0x0c1048b8
+const signed char*		gUpperNoMarkList = nil;		// ROM 0x0c1048bc
+const signed char*		gNoMarkList = nil;			// ROM 0x0c1048c0
+
+
+// a big-endian halfword of a mapping binary
+static inline ULong
+MapHalf(const unsigned char* p)
 {
+	return (p[0] << 8) | p[1];
+}
+
+
+// ROM 0x00256014 GetMappingInfo__FPvP12TEncodingMapPPFv_l
+// The map filled from the mapping binary's header (kind, size, flags,
+// segment count) and its tables located: kind 0's UniChars follow the
+// header; kind 4's ends, starts and offsets (segment count halfwords
+// each) come first, then the bytes.  ==> the converter for the kind.
+void
+GetMappingInfo(const void* mapping, TEncodingMap* map, void** converter)
+{
+	const unsigned char* p = (const unsigned char*) mapping;
+	map->fKind = (UShort) MapHalf(p);
+	map->fSize = MapHalf(p + 2);
+	map->fFlags = MapHalf(p + 4);
+	ULong segments = MapHalf(p + 6);
+	map->fSegments = segments;
+	const unsigned char* data = p + 8;
+	if (map->fKind == 0)
+	{
+		map->fTable = data;
+		*converter = (void*) ConvertToUnicodeFunc_Contiguous8;
+	}
+	else if (map->fKind == 4)
+	{
+		map->fEnds = (const UniChar*) data;
+		data += segments * 2;
+		map->fStarts = (const UniChar*) data;
+		data += segments * 2;
+		map->fOffsets = (const short*) data;
+		map->fTable = data + segments * 2;
+		*converter = (void*) ConvertFromUnicodeFunc_Segmented16;
+	}
+	else
+		*converter = (void*) -1;
+}
+
+
+// ROM 0x002555ec InstallCharEncoding__FUsPcT2PFPCUsPvT2l_vPFPCvPUsPvl_v
+// An encoding's maps and converters put in the table (ids 0-4; both
+// converters needed).
+void
+InstallCharEncoding(UShort encoding, void* fromMap, void* toMap, ConvertFromUnicodeProcPtr fromUnicode, ConvertToUnicodeProcPtr toUnicode)
+{
+	if (encoding > 4)
+		return;
+	if (fromUnicode == nil || toUnicode == nil)
+		return;
+	gUnicode[encoding].fFromMap = fromMap;
+	gUnicode[encoding].fFromUnicode = fromUnicode;
+	gUnicode[encoding].fToMap = toMap;
+	gUnicode[encoding].fToUnicode = toUnicode;
+	gEncodingCount++;
+}
+
+
+// host: the character tables InitUnicode (0x00254b80) stores in the globals
+void
+InstallCharTables(const unsigned char* charClass, const unsigned char* typeList, const signed char* upperList, const signed char* lowerList, const signed char* upperNoMarkList, const signed char* noMarkList, const unsigned char* breakTable)
+{
+	gCharClass = charClass;
+	gTypeList = typeList;
+	gUpperList = upperList;
+	gLowerList = lowerList;
+	gUpperNoMarkList = upperNoMarkList;
+	gNoMarkList = noMarkList;
+	gASCIIBreakTable = breakTable;
+	gASCIItoUnicodeTable = (const UniChar*) ((TEncodingMap*) gUnicode[kMacRomanEncoding].fToMap)->fTable;
+	gUnicodeInited = true;
+	gHasUnicode = true;
+}
+
+
+// the UniChars of a mapping binary are big-endian
+static inline UniChar
+MapChar(const UniChar* table, long i)
+{
+	const unsigned char* p = (const unsigned char*) (table + i);
+	return (UniChar) ((p[0] << 8) | p[1]);
+}
+
+
+// ROM 0x00256548 ConvertToUnicodeFunc_Contiguous8__FPCvPUsPvl
+// Each byte looked up in the map's 256 UniChars, to a 0 or n.
+void
+ConvertToUnicodeFunc_Contiguous8(const void* src, UniChar* dest, void* map, long n)
+{
+	const UniChar* table = (const UniChar*) ((TEncodingMap*) map)->fTable;
+	const unsigned char* s = (const unsigned char*) src;
+	long i = 0;
+	while (i < n && *s != 0)
+	{
+		*dest++ = MapChar(table, *s++);
+		i++;
+	}
+	*dest = 0;
+}
+
+
+// ROM 0x00256784 ConvertFromUnicodeFunc_Segmented16__FPCUsPUcPvl
+// Each character's segment is the first whose end is not below it; a
+// character below the segment's start has no byte (0x1a), else the byte
+// is the table's at the character plus the segment's offset.
+void
+ConvertFromUnicodeFunc_Segmented16(const UniChar* src, void* dest, void* map, long n)
+{
+	TEncodingMap* m = (TEncodingMap*) map;
+	const unsigned char* table = (const unsigned char*) m->fTable;
+	unsigned char* d = (unsigned char*) dest;
+	long i = 0;
+	while (i < n && *src != 0)
+	{
+		ULong c = *src++;
+		long seg = 0;
+		while (MapChar(m->fEnds, seg) < c)
+			seg++;
+		unsigned char b;
+		if (c < MapChar(m->fStarts, seg))
+			b = 0x1a;
+		else
+			b = table[(UShort) ((short) MapChar((const UniChar*) m->fOffsets, seg) + c)];
+		*d++ = b;
+		i++;
+	}
+	*d = 0;
+}
+
+
+// ROM 0x002553a0 ConvertToUnicode__FPCvPUslT3
+// Through the encoding's converter once the tables are in (nothing for
+// an encoding without one); before that bytes widened as they are, to a
+// 0 or n.
+void
+ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n)
+{
+	if (gUnicodeInited)
+	{
+		if (gUnicode[encoding].fToUnicode != nil)
+			gUnicode[encoding].fToUnicode(src, dest, gUnicode[encoding].fToMap, n);
+		return;
+	}
 	const unsigned char* s = (const unsigned char*) src;
 	long i = 0;
 	while (i < n && *s != 0)
@@ -176,11 +330,17 @@ ConvertToUnicode(const void* src, UniChar* dest, long /*encoding*/, long n)
 
 
 // ROM 0x002568b8 ConvertFromUnicode__FPCUsPvlT3
-// NOT YET RECONSTRUCTED: the encoding tables; this is what the ROM does
-// before they are installed - characters over 0x7f become 0x1a.
+// Through the encoding's converter once the tables are in; before that
+// characters over 0x7f become 0x1a.
 void
-ConvertFromUnicode(const UniChar* src, void* dest, long /*encoding*/, long n)
+ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n)
 {
+	if (gUnicodeInited)
+	{
+		if (gUnicode[encoding].fFromUnicode != nil)
+			gUnicode[encoding].fFromUnicode(src, dest, gUnicode[encoding].fFromMap, n);
+		return;
+	}
 	unsigned char* d = (unsigned char*) dest;
 	long i = 0;
 	while (i < n && *src != 0)
@@ -219,11 +379,99 @@ A_CONST_CHAR(UniChar c)
 }
 
 
+// ROM 0x002557ec ConvertTextCase__FPUslPSc
+// Each character (to a 0 or n) taken to Mac Roman (as it is below 0x80),
+// its class's delta added (none for 0x1a: no Mac Roman character), and
+// the result taken back to Unicode when it is over 0x7f.
+void
+ConvertTextCase(UniChar* text, long n, const signed char* deltas)
+{
+	for (long i = 0; i < n; i++, text++)
+	{
+		ULong c = *text;
+		if (c == 0)
+			return;
+		unsigned char a = c < 0x80 ? (unsigned char) c : (unsigned char) A_CONST_CHAR((UniChar) c);
+		if (a == 0x1a)
+			continue;
+		a = (unsigned char) (a + deltas[gCharClass[a]]);
+		*text = a > 0x7f ? U_CONST_CHAR(a) : (UniChar) a;
+	}
+}
+
+
+// ROM 0x0025587c UppercaseText__FPUsl
+// (host: Latin-1's letters before InitUnicode)
+void
+UppercaseText(UniChar* text, long n)
+{
+	if (gUnicodeInited)
+		ConvertTextCase(text, n, gUpperList);
+	else
+		for (long i = 0; i < n && text[i] != 0; i++)
+			text[i] = UToUpper(text[i]);
+}
+
+
+// ROM 0x0025588c LowercaseText__FPUsl
+void
+LowercaseText(UniChar* text, long n)
+{
+	if (gUnicodeInited)
+		ConvertTextCase(text, n, gLowerList);
+	else
+		for (long i = 0; i < n && text[i] != 0; i++)
+			text[i] = UToLower(text[i]);
+}
+
+
+// ROM 0x0025589c NoDiacriticsText__FPUsl
+// (host: nothing before InitUnicode)
+void
+NoDiacriticsText(UniChar* text, long n)
+{
+	if (gUnicodeInited)
+		ConvertTextCase(text, n, gNoMarkList);
+}
+
+
+// ROM 0x002559f4 UppercaseNoDiacriticsText__FPUsl
+// (host: UppercaseText before InitUnicode)
+void
+UppercaseNoDiacriticsText(UniChar* text, long n)
+{
+	if (gUnicodeInited)
+		ConvertTextCase(text, n, gUpperNoMarkList);
+	else
+		UppercaseText(text, n);
+}
+
+
+// ROM 0x00255a04 ToggleCase__FUs
+// Lowercased when that changes it, else uppercased.
+UniChar
+ToggleCase(UniChar c)
+{
+	UniChar u = c;
+	LowercaseText(&u, 1);
+	if (u == c)
+		UppercaseText(&u, 1);
+	return u;
+}
+
+
 // ROM 0x00255a54 UToLower__FUs
-// NOT YET RECONSTRUCTED: LowercaseText's tables; ASCII and Latin-1 letters.
+// LowercaseText's one character.  Host: before InitUnicode (no tables)
+// ASCII and Latin-1 letters.
 UniChar
 UToLower(UniChar c)
 {
+	if (gUnicodeInited)
+	{
+		UniChar u = c;
+		LowercaseText(&u, 1);
+		return u;
+	}
 	if ((c >= 'A' && c <= 'Z') || (c >= 0xc0 && c <= 0xde && c != 0xd7))
 		return c + 0x20;
 	return c;
@@ -234,6 +482,12 @@ UToLower(UniChar c)
 UniChar
 UToUpper(UniChar c)
 {
+	if (gUnicodeInited)
+	{
+		UniChar u = c;
+		UppercaseText(&u, 1);
+		return u;
+	}
 	if ((c >= 'a' && c <= 'z') || (c >= 0xe0 && c <= 0xfe && c != 0xf7))
 		return c - 0x20;
 	return c;
@@ -242,11 +496,17 @@ UToUpper(UniChar c)
 
 // ROM 0x00255428 IsAlphabet__FUs
 // A letter: uppercased without diacriticals it is A-Z (or the German sharp
-// s, 0xdf, which has no upper case).  NOT YET RECONSTRUCTED:
-// UppercaseNoDiacriticsText; Latin-1's letters are taken.
+// s, 0xdf, which has no upper case).  Host: before InitUnicode Latin-1's
+// letters are taken.
 Boolean
 IsAlphabet(UniChar c)
 {
+	if (gUnicodeInited)
+	{
+		UniChar u = c;
+		UppercaseNoDiacriticsText(&u, 1);
+		return (u >= 'A' && u <= 'Z') || u == 0xdf;
+	}
 	UniChar u = UToUpper(c);
 	if (u >= 0xc0 && u <= 0xde && u != 0xd7)
 		return true;
@@ -299,6 +559,27 @@ Boolean
 IsBreaker(UniChar c)
 {
 	return c == '\n' || c == '\r';
+}
+
+
+// ROM 0x0025563c IsReturn__FUs
+Boolean
+IsReturn(UniChar c)
+{
+	return c == '\r';
+}
+
+
+// ROM 0x00255678 IsDelimiter__FUs
+// The ASCII break table's byte for the Mac Roman character.  Host:
+// before InitUnicode anything but a letter or digit.
+Boolean
+IsDelimiter(UniChar c)
+{
+	if (gASCIIBreakTable == nil)
+		return !IsAlphaNumeric(c);
+	unsigned char a = c < 0x80 ? (unsigned char) c : (unsigned char) A_CONST_CHAR(c);
+	return gASCIIBreakTable[a] != 0;
 }
 
 

@@ -8,6 +8,7 @@ add_library(frames STATIC
     ObjectHeap.cpp
     GC.cpp
     Objects.cpp
+    UnicodeTables.cpp
     CObjectBinary.cpp
     Symbols.cpp
     RSSymbolTable.cpp

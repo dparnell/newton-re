@@ -7,11 +7,21 @@
 				The DDK has no header for these; the declarations are the
 				ROM's (symbols.txt) and this file is ours.
 
-	NOT YET RECONSTRUCTED: the encoding tables InitUnicode (0x00254b80)
-	installs - ConvertToUnicode/ConvertFromUnicode are what the ROM does
-	before it: bytes widened as they are, and characters over 0x7f
-	narrowed to 0x1a.  Encoding 1 (kMacRomanEncoding) is the one the
-	frames code asks for.
+	The encodings are tables InitUnicode (0x00254b80, frames/UnicodeTables.h
+	- it reads the ROM's 'unicode frame) installs with InstallCharEncoding:
+	a mapping binary (GetMappingInfo) and its converter each way - kind 0
+	"contiguous 8": 256 UniChars indexed by the byte; kind 4 "segmented
+	16": ranges of Unicode (starts, ends, offsets into a byte table), 0x1a
+	for a character outside them.  Until they are installed
+	ConvertToUnicode/ConvertFromUnicode do what the ROM does before
+	InitUnicode: bytes widened as they are, characters over 0x7f narrowed
+	to 0x1a.  Encoding 1 (kMacRomanEncoding) is the one the frames code
+	asks for.  The case conversions (UppercaseText & co.) go through the
+	'unicode frame's charClass table (a class per Mac Roman character)
+	and the per-class deltas (upperList, lowerList, upperNoMarkList,
+	noMarkList); IsDelimiter through the ASCII break table.  Before
+	InitUnicode the host's UToLower/UToUpper/IsAlphabet know Latin-1's
+	letters (the ROM would read through null pointers).
 */
 
 #ifndef __UNICODE_H
@@ -22,7 +32,8 @@
 #endif
 
 // the encodings ConvertToUnicode/ConvertFromUnicode take (the ROM's
-// table indices; only their identity matters until the tables are done)
+// table indices; the 'unicode frame installs 1-4, so 0 converts nothing
+// once the tables are in)
 const long	kASCIIEncoding = 0;
 const long	kMacRomanEncoding = 1;
 
@@ -47,6 +58,55 @@ void	ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n);
 UniChar	U_CONST_CHAR(unsigned char c);
 char	A_CONST_CHAR(UniChar c);
 
+// the encoding tables (installed by InitUnicode)
+struct TEncodingMap			// 0x20 bytes, from a mapping binary (GetMappingInfo)
+{
+	UShort			fKind;			// +0x00  0: contiguous 8-bit to Unicode; 4: segmented Unicode to 8-bit
+	UShort			fUnused;
+	ULong			fSize;			// +0x04  the binary's halfword at 2 (256: the table's entries)
+	ULong			fFlags;			// +0x08  the halfword at 4
+	ULong			fSegments;		// +0x0c  the halfword at 6: the segment count
+	const void*		fTable;			// +0x10  kind 0: the UniChars; kind 4: the bytes
+	const UniChar*	fStarts;		// +0x14  kind 4: each segment's first Unicode character
+	const UniChar*	fEnds;			// +0x18  kind 4: each segment's last
+	const short*	fOffsets;		// +0x1c  kind 4: added to the character for its byte's index
+};
+typedef void (*ConvertFromUnicodeProcPtr)(const UniChar* src, void* dest, void* map, long n);
+typedef void (*ConvertToUnicodeProcPtr)(const void* src, UniChar* dest, void* map, long n);
+struct CharEncoding			// (ROM gUnicode, 0x0c104858): one per encoding id (0-4)
+{
+	void*						fFromMap;
+	ConvertFromUnicodeProcPtr	fFromUnicode;
+	void*						fToMap;
+	ConvertToUnicodeProcPtr		fToUnicode;
+};
+const long kNumberOfEncodings = 5;
+extern CharEncoding	gUnicode[kNumberOfEncodings];
+extern Boolean		gUnicodeInited;				// 0x0c101fd4  the tables are in
+extern Boolean		gHasUnicode;				// 0x0c101fd0
+extern const UniChar*	gASCIItoUnicodeTable;	// 0x0c101fd8  Mac Roman's kind 0 table
+extern const unsigned char*	gASCIIBreakTable;	// 0x0c101fdc  a byte per Mac Roman character: a delimiter
+extern const unsigned char*	gCharClass;			// 0x0c1048ac  a class per Mac Roman character
+extern const unsigned char*	gTypeList;			// 0x0c1048b0  the classes' types
+extern const signed char*	gUpperList;			// 0x0c1048b4  the classes' deltas to upper case
+extern const signed char*	gLowerList;			// 0x0c1048b8  ... to lower case
+extern const signed char*	gUpperNoMarkList;	// 0x0c1048bc  ... to upper case without diacriticals
+extern const signed char*	gNoMarkList;		// 0x0c1048c0  ... without diacriticals
+
+void	GetMappingInfo(const void* mapping, TEncodingMap* map, void** converter);		// ==> the converter for the kind ((void*) -1 for an unknown one)
+void	InstallCharEncoding(UShort encoding, void* fromMap, void* toMap, ConvertFromUnicodeProcPtr fromUnicode, ConvertToUnicodeProcPtr toUnicode);
+void	ConvertToUnicodeFunc_Contiguous8(const void* src, UniChar* dest, void* map, long n);
+void	ConvertFromUnicodeFunc_Segmented16(const UniChar* src, void* dest, void* map, long n);
+void	InstallCharTables(const unsigned char* charClass, const unsigned char* typeList, const signed char* upperList, const signed char* lowerList, const signed char* upperNoMarkList, const signed char* noMarkList, const unsigned char* breakTable);	// host: what InitUnicode stores
+
+// case (in place, n characters or to a 0)
+void	ConvertTextCase(UniChar* text, long n, const signed char* deltas);
+void	UppercaseText(UniChar* text, long n);
+void	LowercaseText(UniChar* text, long n);
+void	NoDiacriticsText(UniChar* text, long n);
+void	UppercaseNoDiacriticsText(UniChar* text, long n);
+UniChar	ToggleCase(UniChar c);
+
 // character classes (the ROM's UnicodeUtils; NOT YET RECONSTRUCTED: the
 // case tables UppercaseNoDiacriticsText and LowercaseText - letters and
 // cases are Latin-1's here)
@@ -58,6 +118,8 @@ Boolean	IsWhiteSpace(UniChar c);
 Boolean	IsSpace(UniChar c);
 Boolean	IsTab(UniChar c);
 Boolean	IsBreaker(UniChar c);
+Boolean	IsReturn(UniChar c);
+Boolean	IsDelimiter(UniChar c);			// (host: not a letter or digit, before InitUnicode)
 UniChar	UToLower(UniChar c);
 UniChar	UToUpper(UniChar c);
 
