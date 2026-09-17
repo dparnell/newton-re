@@ -28,6 +28,7 @@
 #include "StyleRuns.h"
 #include "Rects.h"
 #include "Ports.h"
+#include "Screen.h"
 #include "Draw.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -801,6 +802,20 @@ TestGaugeView()
 
 
 // the ink in a box of the map
+// the map printed as text (for looking at a failure)
+static void
+DumpMap(const char* what)
+{
+	fprintf(stderr, "--- %s\n", what);
+	for (long y = 0; y < kHeight; y += 2)
+	{
+		for (long x = 0; x < kWidth; x++)
+			fputc(Pixel(x, y) ? '#' : (Pixel(x, y + 1) ? '+' : '.'), stderr);
+		fputc('\n', stderr);
+	}
+}
+
+
 static long
 InkIn(long left, long top, long right, long bottom)
 {
@@ -1740,6 +1755,110 @@ TestPickView()
 }
 
 
+// the animation effects and dragging: the view effects run over the
+// offscreen map (the waits are the tablet's hook: no time passes), the
+// picture right when they are done
+static void
+TestEffects()
+{
+	// what InitScreen would set: the effects work in screen coordinates and save the screen's pixels
+	screenWidth = kWidth;
+	screenHeight = kHeight;
+	qdGlobals.fScreenBits = gMap;
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	// a hidden view shown with an effect (eight rows wiped in), hidden with it: the effect's steps drawn, the picture whole after
+	TView* e = ViewOf("ctxE := AddView(GetRoot(), {viewClass: 74, viewFlags: 0, viewBounds: {left: 20, top: 20, right: 80, bottom: 60}, viewFormat: 5, viewEffect: 7 << 5})");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "effect view hidden"));
+	Eval("ctxE:Show()");
+	EXPECT((e->fFlags & vVisible) != 0);
+	Refresh();
+	EXPECT(InkIn(20, 20, 80, 60) == 60 * 40 && InkIn(0, 0, 160, 20) == 0 && InkIn(80, 20, 160, 100) == 0);
+	Eval("ctxE:Hide()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "effect view hidden again"));
+	// a sliding show (the cells moving down from the top), the slide of the contents, a reveal, an effect run by the script
+	Eval("SetValue(ctxE, 'viewEffect, (1 << 17) + (1 << 11) + (2 << 21) + (1 << 25))");
+	Eval("ctxE:Show()");
+	Refresh();
+	EXPECT(InkIn(20, 20, 80, 60) == 60 * 40 && InkIn(0, 60, 160, 100) == 0);
+	// the slides draw the contents where they are going and leave the screen so (the callers move the contents): the view slid down ten rows
+	Eval("ctxE:SlideEffect(10, 1, nil, nil, nil)");
+	EXPECT(InkIn(20, 20, 80, 60) == 60 * 40 && InkIn(20, 60, 80, 70) == 60 * 10 && InkIn(0, 70, 160, 100) == 0);
+	Eval("ctxE:SlideEffect(-10, 0, nil, nil, nil)");
+	Eval("ctxE:SlideEffect(10, -1, nil, nil, nil)");
+	Eval("ctxE:RevealEffect(8, {left: 0, top: 0, right: 60, bottom: 20}, nil, nil, nil)");
+	Eval("ctxE:Effect((1 << 16) + (1 << 18) + (3 << 21), nil, nil, nil, nil)");
+	Eval("ctxE:Effect(0x1f + (1 << 12) + (1 << 14), true, nil, nil, nil)");
+	gRootView->Dirty(nil);
+	Refresh();
+	EXPECT(InkIn(20, 20, 80, 60) == 60 * 40 && InkIn(0, 60, 160, 100) == 0 && InkIn(80, 0, 160, 100) == 0);
+	// the trash: crumpled into the ROM's trash can at the application area's corner, the view closed by the message
+	Eval("ctxE.trashed := nil; ctxE.trashIt := func() begin trashed := true; :Close() end");
+	Eval("ctxE:Delete('trashIt, nil)");
+	EXPECT(NOTNIL(Eval("ctxE.trashed")) && gRootView->fChildren->Count() == 0);
+	Refresh();
+	Boolean trashedClean = MapIs(ExpWhite, "trashed");
+	if (!trashedClean)
+		DumpMap("after the trash");
+	EXPECT(trashedClean);
+	// the poof over a unit's bounds
+	Eval("ctxP := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 10, top: 10, right: 150, bottom: 90}, viewFormat: 1, "
+		"viewClickScript: func(unit) begin DoScrubEffect(unit); true end})");
+	Eval("ctxP:Dirty()");
+	Refresh();
+	HostTabletPenDown(80, 50, 11000);
+	HostTabletPenUp(11003);
+	IdleStrokes();
+	Refresh();
+	EXPECT(InkIn(10, 10, 150, 90) == 0);		// (the frame is a pixel: viewFormat 1 has none)
+	Eval("RemoveView(GetRoot(), ctxP)");
+	Refresh();
+	// dragging: a view moved by the pen within the bounds given, its viewBounds slot following; a press that goes nowhere moves nothing
+	TView* d = ViewOf("ctxD := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 20, right: 60, bottom: 50}, viewFormat: 5, dragged: nil, "
+		"viewClickScript: func(unit) begin dragged := :Drag(unit, {left: 0, top: 0, right: 160, bottom: 100}); true end})");
+	Eval("ctxD:Dirty()");
+	Refresh();
+	EXPECT(InkIn(20, 20, 60, 50) == 40 * 30 && InkIn(60, 0, 160, 100) == 0);
+	HostTabletQueuePenDown(40, 35, 12000);
+	HostTabletQueuePenMove(45, 40);
+	HostTabletQueuePenMove(60, 50);
+	HostTabletQueuePenMove(80, 60);
+	HostTabletQueuePenMove(80, 60);
+	HostTabletQueuePenMove(90, 65);
+	HostTabletQueuePenUp(12040);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("ctxD.dragged")) && d->viewBounds.left == 70 && d->viewBounds.top == 50 && d->viewBounds.right == 110 && d->viewBounds.bottom == 80);
+	EXPECT(RINT(Eval("ctxD.viewBounds.left")) == 70 && RINT(Eval("ctxD.viewBounds.top")) == 50 && HostTabletQueued() == 0);
+	Refresh();
+	EXPECT(InkIn(70, 50, 110, 80) == 40 * 30 && InkIn(0, 0, 160, 50) == 0 && InkIn(0, 50, 70, 100) == 0);
+	// dragged past the limit: stopped at the edge
+	HostTabletQueuePenDown(90, 65, 13000);
+	HostTabletQueuePenMove(150, 65);
+	HostTabletQueuePenMove(200, 65);
+	HostTabletQueuePenUp(13020);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(d->viewBounds.right == 160 && d->viewBounds.left == 120 && d->viewBounds.top == 50);
+	Refresh();
+	EXPECT(InkIn(120, 50, 160, 80) == 40 * 30 && InkIn(0, 0, 120, 100) == 0);
+	// a press without a move: nothing moves (:Drag answers true all the same)
+	Eval("ctxD.dragged := 'untouched");
+	HostTabletQueuePenDown(140, 65, 14000);
+	HostTabletQueuePenMove(141, 65);
+	HostTabletQueuePenUp(14010);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("ctxD.dragged")) && d->viewBounds.left == 120 && d->viewBounds.top == 50);
+	Refresh();
+	EXPECT(InkIn(120, 50, 160, 80) == 40 * 30 && InkIn(0, 0, 120, 100) == 0);
+	Eval("RemoveView(GetRoot(), ctxD)");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "drag view removed"));
+}
+
+
 int
 main()
 {
@@ -1812,6 +1931,7 @@ main()
 		TestIdlers();
 		TestPickView();
 		TestClicks();
+		TestEffects();
 	}
 	newton_catch_all
 	{

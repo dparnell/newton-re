@@ -17,6 +17,12 @@
 #include "Ports.h"
 #include "Draw.h"
 #include "Shapes.h"
+#include "Animate.h"
+#include "Stroke.h"
+#include "StrokeCentral.h"
+#include "Screen.h"
+#include "Regions.h"
+#include "Frames.h"
 #include "ObjectHeap.h"
 #include "NewtonExceptions.h"
 
@@ -117,37 +123,49 @@ TView::SetCustomPattern(RefArg slot)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x00263f48 Show__5TViewFv
-// The view shown: brought to the front, made visible (a child of the root
-// view has the visibility of the views around it recomputed; any other
-// is dirtied), the viewShowScript run.  NOT YET RECONSTRUCTED: the strokes
-// blocked while it happens, the animation effect (TAnimate), the sound.
+// The view shown: the strokes blocked, the view brought to the front, its
+// show effect set up, the view made visible (a child of the root view has
+// the visibility of the views around it recomputed; any other is
+// dirtied), the effect run with the showSound, the strokes unblocked and
+// flushed, the viewShowScript run.
 void
 TView::Show(void)
 {
 	if (fFlags & vVisible)
 		return;
+	gStrokeWorld.BlockStrokes();
 	BringToFront();
+	TAnimate effect;
+	effect.SetupPlainEffect(this, true, 0);
 	SetFlags(vVisible);
 	if (HasVisRgn())
 		fParent->ViewVisibleChanged(this, true);
 	else
 		Dirty(nil);
+	effect.DoEffect(RSSYMshowsound);
+	gStrokeWorld.UnblockStrokes();
+	gStrokeWorld.FlushStrokes();
 	RunScript(RSSYMviewshowscript, RefVar(NILREF));
 }
 
 
 // ROM 0x0026404c Hide__5TViewFv
-// The view hidden: the caret and popup let go of it, the viewHideScript
-// run, the view made invisible and the views around it recomputed, or
-// its outer bounds invalidated.
+// The view hidden: the strokes blocked, the caret and popup let go of it,
+// its hide effect set up (the image taken from the screen), the
+// viewHideScript run, the view made invisible and the views around it
+// recomputed, or its outer bounds invalidated; the effect run with the
+// hideSound, the strokes unblocked and flushed.
 void
 TView::Hide(void)
 {
 	if ((fFlags & vVisible) == 0)
 		return;
+	gStrokeWorld.BlockStrokes();
 	if (gRootView->ViewContainsCaretView(this))
 		gRootView->CaretViewGone();
 	gRootView->SetPopup(this, false);
+	TAnimate effect;
+	effect.SetupPlainEffect(this, false, 0);
 	RunScript(RSSYMviewhidescript, RefVar(NILREF));
 	if (HasVisRgn())
 	{
@@ -161,6 +179,125 @@ TView::Hide(void)
 		ClearFlags(vVisible);
 		gRootView->SmartInvalidate(bounds);
 	}
+	effect.DoEffect(RSSYMhidesound);
+	gStrokeWorld.UnblockStrokes();
+	gStrokeWorld.FlushStrokes();
+}
+
+
+// ROM 0x00264cbc Drag__5TViewFP13TStrokePublicRC5TRect
+// The view dragged with the pen: the caret hidden, the ink off, the root
+// view brought up to date and the view's image taken as a sprite
+// (TAnimate::SetupDragEffect) - the drag is off when there is no memory
+// to save the port's pixels.  Until the stroke ends: nothing until the
+// pen has moved more than four pixels from where it went down, then a
+// tick waited while it stays put, else the view's outer bounds moved by
+// the pen's travel (kept within the limit) and, the first time, the view
+// hidden (its parent dirtied, or the visibility recomputed), the screen
+// redrawn without it and saved, and the view made visible again (not
+// redrawn); the saved pixels put back where the sprite was and the
+// sprite drawn at the new place.  When it moved: the pixels put back
+// where views in front cover the new place, the view offset to it (its
+// viewBounds slot written dejustified and Changed), the visibility
+// recomputed, the port's area validated.  The caret shown again.  ==>
+// whether the view moved.  NOT YET RECONSTRUCTED: the busy box.
+Boolean
+TView::Drag(TStrokePublic* stroke, const Rect& limit)
+{
+	gRootView->HideCaret();
+	stroke->InkOff(true);
+	Point start = stroke->FirstPoint();
+	Point last = start;
+	Rect outer;
+	OuterBounds(&outer);
+	gRootView->Update(nil);
+	TAnimate sprite;
+	sprite.SetupDragEffect(this);
+	Rect drawn = outer;
+	if (outer.bottom - outer.top > screenHeight)
+		drawn.bottom = (short) (outer.top + screenHeight);
+	if (outer.right - outer.left > screenWidth)
+		drawn.right = (short) (outer.left + screenWidth);
+	GrafPort* port;
+	GetPort(&port);
+	Rect portRect = port->portRect;
+	if (!sprite.SavedBits().AllocateBuffers(&portRect))
+		return false;
+	Boolean moved = false;
+	Boolean hidden = false;
+	Rect newBounds = outer;
+	while (!stroke->Done())
+	{
+		Point pt = stroke->FinalPoint();
+		if (!moved)
+			moved = CheapDistance(pt, last) > 4;
+		if (!moved || EqualPt(pt, last))
+			Wait(1);
+		else
+		{
+			newBounds = outer;
+			OffsetRect(&newBounds, pt.h - start.h, pt.v - start.v);
+			long d;
+			if ((d = limit.right - newBounds.right) < 0)
+				OffsetRect(&newBounds, d, 0);
+			if ((d = limit.bottom - newBounds.bottom) < 0)
+				OffsetRect(&newBounds, 0, d);
+			if ((d = limit.left - newBounds.left) > 0)
+				OffsetRect(&newBounds, d, 0);
+			if ((d = limit.top - newBounds.top) > 0)
+				OffsetRect(&newBounds, 0, d);
+			UnionRect(&drawn, &newBounds, &drawn);
+			if (hidden)
+			{
+				StartDrawing(nil, nil);
+				sprite.SavedBits().RestoreScreenBits(&drawn, nil);
+			}
+			else
+			{
+				hidden = true;
+				ClearFlags(vVisible);
+				if (HasVisRgn())
+					fParent->ViewVisibleChanged(this, true);
+				else
+					fParent->Dirty(&drawn);
+				StartDrawing(nil, nil);
+				gRootView->Update(nil);
+				sprite.SavedBits().SaveScreenBits();
+				SetFlags(vVisible);
+				if (HasVisRgn())
+					fParent->ViewVisibleChanged(this, false);
+			}
+			sprite.Draw(newBounds, srcCopy, nil);
+			StopDrawing(nil, nil);
+			drawn = newBounds;
+			last = pt;
+		}
+	}
+	PenNormal();
+	if (moved)
+	{
+		{
+			TRectangularRegion newRgn(newBounds);
+			TRegionVar covered;
+			SectRgn(sprite.Mask(), newRgn, covered);
+			if (!EmptyRgn(covered))
+				sprite.SavedBits().RestoreScreenBits(&newBounds, covered);
+		}
+		Point delta;
+		delta.v = newBounds.top - outer.top;
+		delta.h = newBounds.left - outer.left;
+		Offset(delta);
+		Rect bounds;
+		DejustifyBounds(&bounds);
+		SetDataSlot(RSSYMviewbounds, RefVar(ToObject(bounds)));
+		Changed(RSSYMviewbounds);
+		if (HasVisRgn())
+			fParent->ViewVisibleChanged(this, false);
+		TRectangularRegion portRgn(portRect);
+		gRootView->Validate(portRgn);
+	}
+	gRootView->ShowCaret();
+	return moved;
 }
 
 

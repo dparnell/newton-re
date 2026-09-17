@@ -265,3 +265,19 @@ ScalePt(Point* pt, const Rect* src, const Rect* dst)
 		h = 1;
 	pt->h = (short) h;
 }
+
+
+// ROM 0x0019b824 CheapDistance__FRC6TPointT1
+// An approximation of the distance between two points: the longer of the
+// two axes' differences plus half the shorter.
+long
+CheapDistance(const Point& a, const Point& b)
+{
+	long dh = a.h - b.h;
+	if (dh < 0)
+		dh = -dh;
+	long dv = a.v - b.v;
+	if (dv < 0)
+		dv = -dv;
+	return (dh < dv) ? dv + (dh >> 1) : dh + (dv >> 1);
+}

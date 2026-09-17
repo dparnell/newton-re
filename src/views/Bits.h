@@ -7,11 +7,14 @@
 				in a handle it owns, or another map's) with the drawing
 				helpers: CopyFromScreen takes the current port's pixels of a
 				rectangle, Draw puts them back (or elsewhere), Fill paints
-				the bits with a word.  The ROM's object is 0x34 bytes: the
-				PixelMap, +0x1c the TBitsPort drawn into (BeginDrawing/
-				EndDrawing, NOT YET RECONSTRUCTED), +0x20 whether it was
-				drawn from/to the screen, +0x21 whether it owns its bits,
-				+0x24 an exception cleanup for a stack instance (the host's
+				the bits with a word; BeginDrawing/EndDrawing make the bits
+				the current port (a TBitsPort: a GrafPort over the map with
+				the origin asked for, the map cleared first unless it was
+				drawn from the screen) so a view can be drawn into them.
+				The ROM's object is 0x34 bytes: the PixelMap, +0x1c the
+				TBitsPort drawn into, +0x20 whether it was drawn from/to
+				the screen, +0x21 whether it owns its bits, +0x24 an
+				exception cleanup for a stack instance (the host's
 				destructor does).
 
 	Reconstructed from the MP2100 D ROM (0x00042b7c-0x00045bcc, with
@@ -25,6 +28,21 @@
 #include "Newton.h"
 #endif
 #include "Ports.h"
+
+class TBits;
+
+// a port over a TBits' map for the time a view is drawn into it; the
+// ROM's object is 0xc bytes
+class TBitsPort
+{
+public:
+	void		Constructor(TBits* bits, Point origin, Boolean fill);	// ROM 0x00042d54 Constructor__9TBitsPortFP5TBits6TPointUc
+				~TBitsPort();									// ROM 0x00042e3c __dt__9TBitsPortFv
+
+	TBits*		fBits;			// +0x00
+	GrafPort*	fPort;			// +0x04  the port over the bits
+	GrafPort*	fSavedPort;		// +0x08  the port current before
+};
 
 class TBits : public PixelMap
 {
@@ -40,9 +58,13 @@ public:
 	void		Draw(const Rect& dst, long mode, RgnHandle mask);	// ROM 0x00042c00: the whole map
 	void		CopyIntoBitmap(PixelMap* map, long mode, RgnHandle mask);	// ROM 0x00042c3c
 	void		Fill(long pattern);								// ROM 0x00042d14 Fill__5TBitsFl
+	void		BeginDrawing(Point origin);						// ROM 0x00045a94 BeginDrawing__5TBitsF6TPoint (the bits made the current port)
+	void		EndDrawing(void);								// ROM 0x00045b4c EndDrawing__5TBitsFv
+	void		SetPort(void);									// ROM 0x00042cfc SetPort__5TBitsFv (the bits' port current)
+	void		RestorePort(void);								// ROM 0x00042d08 RestorePort__5TBitsFv (the port before)
 	static long	InitBitMap(const Rect& bounds, PixelMap* map);	// ROM 0x00042e84 InitBitMap__5TBitsSFRC5TRectP8PixelMap (==> the bits' size)
 
-	void*		fPort;			// +0x1c  the TBitsPort (NOT YET)
+	TBitsPort*	fPort;			// +0x1c  the port while drawing into the bits
 	Boolean		fDrawn;			// +0x20  drawn from or to the screen
 	Boolean		fOwnsBits;		// +0x21  the bits are a handle of ours
 };

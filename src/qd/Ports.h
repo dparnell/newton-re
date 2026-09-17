@@ -40,7 +40,7 @@
 // the QuickDraw globals (ROM 0x0c104e3c stdPatterns, 0x0c104e50 qdGlobals)
 struct QDGlobals
 {
-	long		fVersion;			// +0x00  1 once InitGraf has run
+	long		fRandSeed;			// +0x00  1 from InitGraf: the seed of Random (GetRandSeed/SetRandSeed)
 	PixelMap	fScreenBits;		// +0x04  the screen's pixel map (a port starts with it)
 	long		fReserved20;		// +0x20
 	long		fReserved24;		// +0x24
@@ -51,6 +51,12 @@ struct QDGlobals
 	Handle		fRgnHandle;			// +0x38
 };
 extern QDGlobals		qdGlobals;
+
+// the random numbers (the Macintosh's generator over the seed in qdGlobals)
+long		GetRandSeed(void);					// ROM 0x003135e0 GetRandSeed__Fv
+void		SetRandSeed(long seed);				// ROM 0x003135f0 SetRandSeed__Fl
+long		Random(void);						// ROM 0x00313540 Random__Fv - -32767..32767
+long		Rand(long n);						// ROM 0x0025a67c Rand__Fl - 0..n-1
 extern PatternHandle	stdPatterns[5];		// white, light gray, gray, dark gray, black
 extern RgnHandle		wideHandle;			// the rectangle of every coordinate
 extern GrafPort			gGrafPort;			// 0x0c103a98  the port before a task has its own

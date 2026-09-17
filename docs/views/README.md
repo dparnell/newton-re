@@ -230,9 +230,10 @@ when the format is; the visible region less what is in front,
 `RecalcVisible`) is made by `SetBounds` and recomputed by
 `ViewVisibleChanged` 0x00263d48 (Show, Hide, Constructor, a reorder), so a
 viewFormat changed on an open window does not grow its region - as in
-the ROM.  `Show`/`Hide` 0x00263f48/0x0026404c run the `viewShowScript`/
-`viewHideScript` (the ROM's animation effects and stroke blocking are
-NOT YET); `ReorderView` 0x0025eda0 (`MoveBehind`, `BringToFront`)
+the ROM.  `Show`/`Hide` 0x00263f48/0x0026404c block the strokes, set up
+the view's effect (`TAnimate`: below), make the change, run the effect
+with the `showSound`/`hideSound` and the `viewShowScript`/
+`viewHideScript`; `ReorderView` 0x0025eda0 (`MoveBehind`, `BringToFront`)
 invalidates what the siblings between the two places overlap of the
 view.  `TRegionVar` (`qd/RegionVars.h`) registers an exception cleanup
 like the ROM's, so a Throw through a drawing scope gives the region back.
@@ -809,6 +810,95 @@ NewtonScript (`GetPoint`, `GetPointsArray`, `StrokeDone`, `StrokeBounds`,
 `hal/host/HostTablet.h`, fed at once or a record a tick; `test_Views`'s
 `TestClicks` taps, drags and double-taps a view.
 
+### The view effects (`Animate.h`)
+
+`TAnimate` (0xbc bytes: a `TBits` sprite, a `TSaveScreenBits` at +0x34,
+the mask region +0x60, the effect's bounds +0x64, its start bounds
++0x6c, the saved area +0x74, the part of the sprite drawn from the view
++0x7c with its origin +0x84, the view +0x88, the kind +0x8c, the slide
+offsets +0x90/+0x94, the cell limit +0x98, the effect word +0x9c, the
+context +0xa0, the reverse and has-bits flags +0xa4/+0xa5, the enabled
+kinds +0xa8 - all but the `noFX` preference's bits - and a cleanup
++0xac) animates a view: an effect is set up before the view changes and
+run after.  `SetupPlainEffect(view, showing, effect)` 0x00043460 (Show,
+Hide, `:Effect()`; the effect word the view's `viewEffect` when 0, none
+means no effect) takes the view's outer bounds cut to the port, then
+`PreSetup` 0x00043b24 and `PostSetup(bounds, from, to)` 0x00043c3c: the
+screen under the rows of bounds outside from is what will be saved
+(`TrimRect` 0x00043b60); the sprite's bits are allocated for to; the mask
+is the front mask of the view and its ancestors, complemented within the
+screen and then everywhere (so: what is in front, plus off-screen); a
+show (from = bounds) draws the whole image from the view later, a hide
+copies the screen into the sprite (the caret's bits put back first) and
+draws the view into it where other views cover it.  `SetupSlideEffect
+(view, bounds, distance, direction)` 0x00043600 (`SyncScroll`,
+`:SlideEffect()`, `:RevealEffect()`: the contents slid, new ones coming
+in from the far edge when direction > 0, the old ones going out for 0
+and < 0, the effect word fxMoveV with fxVStartPhase when the distance
+and direction disagree), `SetupTrashEffect` 0x000438e0 (`:Delete()`: the
+saved area reaching from at most 72 above the view's bottom to the
+screen's bottom right), `SetupPoofEffect(view, bounds)` 0x000439fc (a
+scrub: a cloud of at least 89 x 54), `SetupDragEffect` 0x000459e8 (the
+drag's sprite: a hide's setup, every kind enabled).
+
+`DoEffect(sound)` 0x00043fac: a disabled kind invalidates the view's
+bounds and updates; no sprite or no memory for the screen bits plays
+the sound only; else, drawing, when there is an area to save the view's
+bounds are validated when the image starts somewhere (not to be drawn
+by the update), the root view updated (the screen without the view),
+the caret's bits put back and the screen saved; the caret is dirtied
+when it lies in the area; then `MultiEffect` 0x000441b4 (plain and
+slide), `CrumpleEffect` 0x00045298 or `PoofEffect` 0x000458cc.
+`MultiEffect` reads the effect word - bits 0-4 the columns less one,
+5-9 the rows less one (NTK's fxColumnsMask/fxRowsMask), 10/11 the
+horizontal/vertical start phase (the cells drawn from their right/bottom
+edge), 12/13 the phase alternating along a row, 14/15 from row to row,
+16/17 the cells moving (fxMoveH/fxMoveV: a slide rather than a wipe),
+18 a line along the moving edge the frame's pen wide (fxRevealLine), 19
+the effect the other way, 21-24 the steps (0: 3, else n + 1), 25-28 the
+ticks a step takes (0: 3) - completes the image from the view, clips to
+the view's region (the clipper's when not a plain rectangle, else the
+bounds) less the mask, plays the sound, and each step puts back the
+cells drawn last from the saved screen and draws every cell (a part
+shrinking when hiding or growing when showing towards the slide offset,
+no taller than the limit; the last step of a plain hide draws nothing -
+the screen is right already), releasing the screen for the step's ticks
+between steps (`SleepTillTicks` 0x002531e8); the clip and pen are put
+back even on a throw, and the mask within the sprite is validated in
+the root view.  `CrumpleSprite` 0x00044d58 crumples the image in six
+passes, eight ticks each (eight vertical strips squeezed to the middle,
+losing rows top and bottom; the sprite drawn clipped to a region with
+jittered edges - `CrumpleRect` 0x00044b2c, `CrumplePt` 0x00044ad4 with
+`Rand` 0x0025a67c over QuickDraw's `Random` 0x00313540 - and framed
+two wide); `CrumpleEffect` then flies the ball (the `crumpleBitmaps`
+cycled) along a path that rises 16, 9, 4, 1 and falls with gathering
+speed into the `trashBitmap` at the application area's bottom right
+(`vars.displayParams`), every other point a frame four ticks apart, the
+clip cut so nothing draws over the trash, a plunk, half a second, the
+screen put back.  `PoofEffect` draws the three `cloud` bitmaps (178 x
+109, filled into the area at half size) two, two and one tick apart and
+dirties the saved area.  The sounds go through `PlaySound` 0x000432bc
+(a symbol looked up in the context; NOT YET: the sound system itself).
+
+The NewtonScript face: `:Effect(effect, offScreen, sound, message,
+args)` (`FEffectX` 0x001ee2cc), `:SlideEffect(distance, direction, ...)`
+0x001ee3b0, `:RevealEffect(distance, bounds, ...)` 0x001ee4a4,
+`:Delete(message, args)` 0x001ee22c, `DoScrubEffect(view, unit)`
+0x001ee620 - and `:Drag(unit, bounds)` (`FDragX` 0x001ecef0, `TView::Drag`
+0x00264cbc): the view dragged with the pen within the bounds (nil: the
+application area) - the caret hidden, the view's image taken as a sprite
+and the port's pixels saved, then until the stroke ends the view's outer
+bounds follow the pen's travel once it has moved more than four pixels
+(the view hidden the first time and the screen redrawn without it), the
+saved pixels put back and the sprite drawn; when it moved, the view is
+offset to the new place (its viewBounds slot written and Changed), the
+pixels put back where views in front cover it, the port's area
+validated.  `test_Views`'s `TestEffects` shows and hides a view with
+effects, slides, reveals, trashes and poofs, and drags a view with the
+host tablet (the waits are the tablet's hook: no real time passes).  The
+`newton` program's demo slip has a checkerboard effect (the Slip button
+hides and shows it) and is dragged by a press on it.
+
 ## Not yet
 
 The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
@@ -816,10 +906,8 @@ the rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key view chain (`NextKeyView`), the key help, the keyboard tool and the
-on-screen keyboards, drag and drop, the animation
-effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
-and modal dialog machinery, the other subclasses (`TListView`,
-`TEditView`, ...), editing in `TParagraphView`, the picker's pen
-tracking, the strokes and words of the recogniser (its controller and
-domains: `docs/recognition/README.md`), the event
-loop (`TNotebook::Run`) and the idle timer.
+on-screen keyboards, drag and drop (`DragAndDrop`, `TDragInfo`), the
+sounds, `SyncScroll`, the clipboards, the popup and modal dialog
+machinery, the other subclasses (`TListView`, `TEditView`, ...), editing
+in `TParagraphView`, the strokes and words of the recogniser (its
+controller and domains: `docs/recognition/README.md`).

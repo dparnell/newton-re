@@ -67,7 +67,7 @@ class TView;
 class TRootView;
 class TViewList;
 class TDragInfo;				// NOT YET RECONSTRUCTED: drag and drop
-class TStrokePublic;			// NOT YET RECONSTRUCTED: the strokes
+class TStrokePublic;			// recognition/Stroke.h
 class TUnitPublic;				// NOT YET RECONSTRUCTED: the recognition units
 struct StyleRecord;
 
@@ -317,6 +317,7 @@ public:
 	void		WriteBounds(const Rect& bounds);						// ROM 0x00261ff0 WriteBounds__5TViewFRC5TRect
 	void		Move(const Point& delta);								// ROM 0x00261ee4 Move__5TViewFRC6TPoint
 	void		Offset(Point delta);									// ROM 0x0025df8c Offset__5TViewF6TPoint
+	Boolean		Drag(TStrokePublic* stroke, const Rect& limit);			// ROM 0x00264cbc Drag__5TViewFP13TStrokePublicRC5TRect (the view dragged with the pen within the limit; ==> whether it moved)
 	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x0025e0f0 ChildViewMoved__5TViewFP5TView6TPoint
 	void		GetChildOrigin(Point* origin);							// ROM 0x00265520 GetChildOrigin__5TViewFP6TPoint
 	Point		ContentsOrigin(void);									// ROM 0x002655cc ContentsOrigin__5TViewFv

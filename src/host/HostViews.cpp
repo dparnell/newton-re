@@ -7,6 +7,7 @@
 #include "HostViews.h"
 #include "HostScreen.h"
 #include "Screen.h"
+#include "Rects.h"
 #include "Ports.h"
 #include "Fonts.h"
 #include "Text.h"
@@ -162,8 +163,9 @@ HostStartDisplay(long width, long height, long depth)
 // the fonts (vars.fonts: the ROM font list's families by their symbols,
 // as the ROM's globals template has them), an empty userConfiguration
 // (with the userPenSize the ink is let out by), vars.international from
-// the globals template (the locale and the keyboard mapping), the text,
-// view, unit and host functions.
+// the globals template (the locale and the keyboard mapping),
+// vars.displayParams (the application area: the screen), the text, view,
+// unit and host functions.
 void
 HostInitViewToolbox(void)
 {
@@ -195,6 +197,23 @@ HostInitViewToolbox(void)
 		RefVar intl(GetFrameSlotRef(RefVar(Rglobalheapvarwannabes), RSSYMinternational));
 		if (NOTNIL(intl))
 			SetFrameSlot(vars, RSSYMinternational, RefVar(Clone(intl)));
+	}
+	if (ISNIL(GetFrameSlotRef(vars, RSSYMdisplayparams)))
+	{
+		// what the ROM's CreateDisplayParams (a root script) makes for the
+		// screen: here the application area is the whole screen, with no
+		// button bar (NOT YET RECONSTRUCTED: the button bar, the raw
+		// display parameters of the display driver)
+		RefVar params(AllocateFrame());
+		SetFrameSlot(params, RSSYMappareagloballeft, RefVar(MAKEINT(0)));
+		SetFrameSlot(params, RSSYMappareaglobaltop, RefVar(MAKEINT(0)));
+		SetFrameSlot(params, RSSYMappareawidth, RefVar(MAKEINT(screenWidth)));
+		SetFrameSlot(params, RSSYMappareaheight, RefVar(MAKEINT(screenHeight)));
+		Rect root;
+		SetRect(&root, 0, 0, screenWidth, screenHeight);
+		SetFrameSlot(params, RefVar(Intern((char*) "rootBounds")), RefVar(ToObject(root)));
+		SetFrameSlot(params, RefVar(Intern((char*) "buttonBarThickness")), RefVar(MAKEINT(0)));
+		SetFrameSlot(vars, RSSYMdisplayparams, params);
 	}
 	HostRegisterViewFunctions();
 	RegisterUnitNatives();

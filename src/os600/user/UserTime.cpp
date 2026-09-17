@@ -177,6 +177,19 @@ Wait(ULong ticks)
 }
 
 
+// ROM 0x002531e8 SleepTillTicks__FUl
+// The task sleeps until the tick (nothing when it has passed): a send to
+// the null port with the timeout, as Wait's.
+void
+SleepTillTicks(ULong ticks)
+{
+	long remaining = ticks - Ticks();
+	if (remaining < 1)
+		return;
+	Wait(remaining);		// (the ROM: the send itself, with remaining * 0xf000)
+}
+
+
 // ROM 0x002536ac RealClock__Fv
 ULong
 RealClock(void)

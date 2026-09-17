@@ -114,9 +114,11 @@ src/
                 (DrawShape.h), the command frames (Commands.h) and the
                 application that dispatches them, with the undo stacks
                 and the delayed actions (Application.h), the picker of
-                popup menus (PickView.h); the other subclasses (lists,
-                editing) and the event loop to come
-                (docs/views/README.md)
+                popup menus (PickView.h), the view effects - a view
+                shown, hidden, slid, trashed or poofed with its
+                viewEffect's animation - and the drag of a view with the
+                pen (Animate.h); the other subclasses (lists, editing)
+                and drag and drop to come (docs/views/README.md)
   recognition/  the recognition system: the recogniser's object base
                 (RecObject.h), the strokes (Stroke.h), the units the
                 recognisers make and the face the views see (Unit.h,

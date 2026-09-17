@@ -40,6 +40,8 @@ void	MapPt(Point* pt, const Rect* src, const Rect* dst);
 void	MapRect(Rect* r, const Rect* src, const Rect* dst);
 void	ScalePt(Point* pt, const Rect* src, const Rect* dst);
 
+long	CheapDistance(const Point& a, const Point& b);					// ROM 0x0019b824 CheapDistance__FRC6TPointT1 - the longer axis plus half the shorter
+
 inline Point	MakePoint(long h, long v)		{ Point p; p.v = (short) v; p.h = (short) h; return p; }
 inline Point	MidPoint(const Rect& r)			{ return MakePoint((r.left + r.right) / 2, (r.top + r.bottom) / 2); }		// ROM 0x00199ed0 MidPoint__5TRectCFv
 inline Boolean	EqualPt(Point a, Point b)		{ return a.v == b.v && a.h == b.h; }

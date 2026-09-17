@@ -277,6 +277,54 @@ SetStdProcs(QDProcs* procs)
 
 
 // ROM 0x002be600 InitGraf__Fv
+// ROM 0x003135e0 GetRandSeed__Fv
+long
+GetRandSeed(void)
+{
+	return qdGlobals.fRandSeed;
+}
+
+
+// ROM 0x003135f0 SetRandSeed__Fl
+void
+SetRandSeed(long seed)
+{
+	qdGlobals.fRandSeed = seed;
+}
+
+
+// ROM 0x00313540 Random__Fv
+// The Macintosh's generator: the seed multiplied by 16807 modulo 2^31 - 1
+// (in two halves), the low halfword answered signed (0x8000 as 0).
+long
+Random(void)
+{
+	ULong seed = GetRandSeed();
+	ULong lo = (seed & 0xffff) * 0x41a7;
+	ULong hi = ((seed >> 16) & 0xffff) * 0x41a7 + (lo >> 16);
+	seed = (lo & 0xffff) + 0x80000001 + (hi & 0x7fff) * 0x10000 + ((long) (hi * 2) >> 16);
+	if ((long) seed < 0)
+		seed += 0x7fffffff;
+	SetRandSeed(seed);
+	short result = (short) seed;
+	if ((seed & 0xffff) == 0x8000)
+		result = 0;
+	return result;
+}
+
+
+// ROM 0x0025a67c Rand__Fl
+// A random number from 0 to n - 1.
+long
+Rand(long n)
+{
+	long r = Random();
+	if (r < 0)
+		r = -r;
+	return r % n;
+}
+
+
 // The library started: the globals cleared, the standard patterns and
 // the wide-open region made, the default port opened on the screen.
 // NOT YET RECONSTRUCTED: InitScreen (the display driver's PixelMap: the
@@ -286,7 +334,7 @@ void
 InitGraf(void)
 {
 	memset(&qdGlobals, 0, sizeof(qdGlobals));
-	qdGlobals.fVersion = 1;
+	qdGlobals.fRandSeed = 1;
 	static const Region kWideOpen = { kRectRgnSize, 0, { -32767, -32767, 32767, 32767 } };
 	wideHandle = (RgnHandle) NewHandle(kRectRgnSize);
 	**wideHandle = kWideOpen;

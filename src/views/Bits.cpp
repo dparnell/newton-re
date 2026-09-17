@@ -11,6 +11,7 @@
 #include "Draw.h"
 #include "Screen.h"
 #include "NewtonMemory.h"
+#include "objects.h"
 #include <string.h>
 
 
@@ -40,7 +41,7 @@ TBits::Cleanup(void)
 {
 	if (baseAddr == nil)
 		return;
-	// NOT YET RECONSTRUCTED: EndDrawing (the TBitsPort)
+	EndDrawing();
 	if (fOwnsBits)
 	{
 		DisposHandle((Handle) baseAddr);
@@ -158,4 +159,93 @@ TBits::Fill(long pattern)
 	unsigned char* p = (unsigned char*) bits;
 	for (long i = 0; i < size; i++)
 		p[i] = (unsigned char) (pattern >> (24 - 8 * (i & 3)));		// the word's bytes as the ROM stores them
+}
+
+
+/*------------------------------------------------------------------------------
+	D r a w i n g   i n t o   t h e   b i t s
+------------------------------------------------------------------------------*/
+
+// ROM 0x00042d54 Constructor__9TBitsPortFP5TBits6TPointUc
+// A new port over the bits made current: its portRect and visRgn the
+// map's bounds, the bits cleared when asked, the origin set.
+void
+TBitsPort::Constructor(TBits* bits, Point origin, Boolean fill)
+{
+	fBits = bits;
+	GetPort(&fSavedPort);
+	fPort = new GrafPort;
+	if (fPort == nil)
+		OutOfMemory();
+	OpenPort(fPort);
+	::SetPort(fPort);
+	SetPortBits(bits);
+	fPort->portRect = bits->bounds;
+	GrafPort* port;
+	GetPort(&port);
+	RectRgn(port->visRgn, &bits->bounds);
+	if (fill)
+		bits->Fill(0);
+	SetOrigin(origin.h, origin.v);
+}
+
+
+// ROM 0x00042e3c __dt__9TBitsPortFv
+// The port before made current again, ours closed.
+TBitsPort::~TBitsPort()
+{
+	::SetPort(fSavedPort);
+	ClosePort(fPort);
+	delete fPort;
+}
+
+
+// ROM 0x00045a94 BeginDrawing__5TBitsF6TPoint
+// The bits made the current port at the origin: a TBitsPort the first
+// time (the bits cleared unless they came from the screen), else the port
+// made current again.  NOT YET RECONSTRUCTED: gSlowMotion (the screen
+// drawn into instead, the newt globals' port).
+void
+TBits::BeginDrawing(Point origin)
+{
+	if (fPort == nil)
+	{
+		fPort = new TBitsPort;
+		if (fPort == nil)
+			OutOfMemory();
+		fPort->Constructor(this, origin, !fDrawn);
+	}
+	else
+	{
+		SetPort();
+		SetOrigin(origin.h, origin.v);
+	}
+}
+
+
+// ROM 0x00045b4c EndDrawing__5TBitsFv
+// The port disposed (the port before made current).  NOT YET
+// RECONSTRUCTED: gSlowMotion's copy back from the screen.
+void
+TBits::EndDrawing(void)
+{
+	if (fPort != nil)
+		delete fPort;
+	fPort = nil;
+}
+
+
+// ROM 0x00042cfc SetPort__5TBitsFv
+void
+TBits::SetPort(void)
+{
+	::SetPort(fPort->fPort);
+}
+
+
+// ROM 0x00042d08 RestorePort__5TBitsFv
+void
+TBits::RestorePort(void)
+{
+	::SetPort(fPort->fSavedPort);
 }

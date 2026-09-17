@@ -33,6 +33,8 @@
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
 #include "UnitPublic.h"
+#include "Animate.h"
+#include "Stroke.h"
 
 
 // ROM 0x001f0234 FGetView__FRC6RefVarT1
@@ -898,6 +900,134 @@ FSetOriginX(RefArg rcvr, RefArg x, RefArg y)
 }
 
 
+/*------------------------------------------------------------------------------
+	E f f e c t s   a n d   d r a g g i n g
+------------------------------------------------------------------------------*/
+
+// ROM 0x001ecef0 FDragX
+// :Drag(unit, bounds): the view dragged with the unit's stroke, kept
+// within the bounds frame (nil: the application area).  ==> true.
+static Ref
+FDragX(RefArg rcvr, RefArg unit, RefArg bounds)
+{
+	TView* view = FailGetView(rcvr);
+	TStrokePublic* stroke = StrokeFromRef(unit);
+	stroke->InkOff(true);
+	Rect limit;
+	if (ISNIL(bounds))
+		GetAppAreaBounds(&limit);
+	else
+		FromObject(bounds, limit);
+	view->Drag(stroke, limit);
+	return TRUEREF;
+}
+
+
+// ROM 0x001ee22c FDeleteX
+// :Delete(message, args): the view crumpled into the trash - the trash
+// effect set up, the message sent to the view (which removes it), the
+// effect run.  ==> nil.
+static Ref
+FDeleteX(RefArg rcvr, RefArg message, RefArg args)
+{
+	if (NOTNIL(rcvr))
+	{
+		TView* view = FailGetView(rcvr);
+		TAnimate effect;
+		effect.SetupTrashEffect(view);
+		view->RunScript(message, args, true);
+		effect.DoEffect(RefVar(NILREF));
+	}
+	return NILREF;
+}
+
+
+// ROM 0x001ee2cc FEffectX
+// :Effect(effect, offScreen, sound, message, args): a plain effect of the
+// effect word (nil: the viewEffect) set up as a show (offScreen non-nil:
+// the image drawn from the view) or a hide, the message sent to the view
+// when there is one, the effect run with the sound.  ==> nil.
+static Ref
+FEffectX(RefArg rcvr, RefArg effect, RefArg offScreen, RefArg sound, RefArg message, RefArg args)
+{
+	if (NOTNIL(rcvr))
+	{
+		TView* view = FailGetView(rcvr);
+		TAnimate anim;
+		anim.SetupPlainEffect(view, ISNIL(offScreen), ISINT(effect) ? RINT(effect) : 0);
+		if (NOTNIL(message))
+			DoMessageIfDefined(rcvr, message, args, nil);
+		anim.DoEffect(sound);
+	}
+	return NILREF;
+}
+
+
+// ROM 0x001ee3b0 FSlideEffectX
+// :SlideEffect(distance, direction, sound, message, args): the view's
+// outer bounds slid (TAnimate::SetupSlideEffect), the message sent, the
+// effect run.  ==> nil.
+static Ref
+FSlideEffectX(RefArg rcvr, RefArg distance, RefArg direction, RefArg sound, RefArg message, RefArg args)
+{
+	if (NOTNIL(rcvr))
+	{
+		TView* view = FailGetView(rcvr);
+		TAnimate anim;
+		Rect bounds;
+		view->OuterBounds(&bounds);
+		anim.SetupSlideEffect(view, bounds, RINT(distance), RINT(direction));
+		if (NOTNIL(message))
+			DoMessageIfDefined(rcvr, message, args, nil);
+		anim.DoEffect(sound);
+	}
+	return NILREF;
+}
+
+
+// ROM 0x001ee4a4 FRevealEffectX
+// :RevealEffect(distance, bounds, sound, message, args): the bounds frame
+// (local to the view) slid the distance with new contents coming in from
+// no direction (0), the message sent, the effect run.  ==> nil.
+static Ref
+FRevealEffectX(RefArg rcvr, RefArg distance, RefArg bounds, RefArg sound, RefArg message, RefArg args)
+{
+	if (NOTNIL(rcvr))
+	{
+		TView* view = FailGetView(rcvr);
+		Rect box;
+		if (FromObject(bounds, box))
+		{
+			TAnimate anim;
+			OffsetRect(&box, view->viewBounds.left, view->viewBounds.top);
+			anim.SetupSlideEffect(view, box, RINT(distance), 0);
+			if (NOTNIL(message))
+				DoMessageIfDefined(rcvr, message, args, nil);
+			anim.DoEffect(sound);
+		}
+	}
+	return NILREF;
+}
+
+
+// ROM 0x001ee620 FDoScrubEffect__FRC6RefVarT1
+// DoScrubEffect(view, unit): the poof over the unit's bounds, its ink
+// left; ==> nil.
+static Ref
+FDoScrubEffect(RefArg rcvr, RefArg unit)
+{
+	TUnitPublic* theUnit = UnitFromRef(unit);
+	TView* view = FailGetView(rcvr);
+	Rect bounds;
+	theUnit->Bounds(&bounds);
+	theUnit->Stroke()->InkOff(false);
+	TAnimate anim;
+	anim.SetupPoofEffect(view, bounds);
+	anim.DoEffect(RefVar(Rpoof));
+	return NILREF;
+}
+
+
 // the ROM's NewtonScript view functions, as source
 // ROM 0x00438ae9 (object) Visible
 // ROM 0x004724dd (object) Rviewroot.Open (DEVIATION: the screen rotation prompt for a small display is not asked)
@@ -969,6 +1099,12 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FVisibleBox", (void*) FVisibleBox, 0);
 	RegisterNativeFunction("FGetDrawBoxX", (void*) FGetDrawBoxX, 0);
 	RegisterNativeFunction("FSetOriginX", (void*) FSetOriginX, 2);
+	RegisterNativeFunction("FDragX", (void*) FDragX, 2);
+	RegisterNativeFunction("FDeleteX", (void*) FDeleteX, 2);
+	RegisterNativeFunction("FEffectX", (void*) FEffectX, 5);
+	RegisterNativeFunction("FSlideEffectX", (void*) FSlideEffectX, 5);
+	RegisterNativeFunction("FRevealEffectX", (void*) FRevealEffectX, 5);
+	RegisterNativeFunction("FDoScrubEffect__FRC6RefVarT1", (void*) FDoScrubEffect, 1);
 	InstallScriptFunctions(gViewScriptFunctions);
 }
 
@@ -990,6 +1126,8 @@ MakeViewMethods(void)
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
+		{ "Drag", (void*) FDragX, 2 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
+		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
