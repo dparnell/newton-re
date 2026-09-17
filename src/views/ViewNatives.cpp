@@ -22,6 +22,7 @@
 #include "Application.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "PickView.h"
 #include "ROMConstants.h"
 #include "NewtonTime.h"
 #include "CompMath.h"
@@ -924,6 +925,7 @@ RegisterViewNatives(void)
 	RegisterShapeNatives();
 	RegisterApplicationNatives();
 	RegisterKeyboardNatives();
+	RegisterPickNatives();
 	RegisterNativeFunction("FGetView__FRC6RefVarT1", (void*) FGetView, 1);
 	RegisterNativeFunction("FGetRoot", (void*) FGetRoot, 0);
 	RegisterNativeFunction("FGetFlags__FRC6RefVarT1", (void*) FGetFlags, 1);

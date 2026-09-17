@@ -5,7 +5,8 @@
 				driver, hal/host/HostScreen.h) made the screen, QuickDraw and
 				the fonts started, what the ROM's boot puts in the globals
 				for the views (vars.fonts from the ROM font list,
-				vars.userConfiguration, vars.displayParams) and the root view
+				vars.userConfiguration, vars.international - the locale and the
+				keyboard mapping) and the root view
 				made over the screen; the NewtonScript functions
 				ScreenSnapshot(path) (the display written as a PGM, or a PBM
 				for a .pbm path), ScreenWidth(), ScreenHeight(),

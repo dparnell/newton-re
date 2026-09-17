@@ -17,9 +17,17 @@
 				SetCaretOffset keeps its caret offset (fCaretOffset), and
 				OffsetToCaret/PointToCaret place the caret from the line
 				cache (host: the text measured up to the offset; the ROM
-				asks its text objects - CharBounds).  NOT YET RECONSTRUCTED:
-				editing (insertion, the hilites, ink words, the recogniser's
-				word and gesture handling, the edit commands), the tab stops
+				asks its text objects - CharBounds).  Typing: the key
+				commands (RealDoCommand) insert and delete at the caret
+				through InsertStyledText, which makes an aeReplaceText
+				command (MakeAndDoReplaceCommand) that HandleReplaceText
+				carries out - the text munged, the style runs adjusted
+				(AdjustStyles), the inverse posted for undo (consecutive
+				keys merged by AddKeyToCurrUndo), the caret moved, the lines
+				laid out again (RangeChanged).  NOT YET RECONSTRUCTED: the
+				hilites (a selection typed over), ink words, the recogniser's
+				word and gesture handling, the correction info, the other
+				edit commands (styles changed, cut and paste), the tab stops
 				(tabs draw as characters), the text objects (each line is
 				laid out from the text when drawn), the bounds recalculation
 				of vCalculateBounds paragraphs (the lines are all laid out;
@@ -75,6 +83,7 @@ public:
 	virtual void	SetSelection(RefArg selection, long* offset, long* length);	// ROM 0x001811a8 SetSelection__14TParagraphViewFRC6RefVarPlT2
 	virtual void	ActivateSelection(Boolean on);						// ROM 0x00181308 ActivateSelection__14TParagraphViewFUc
 	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00173b04 OffsetToCaret__14TParagraphViewFlP5TRect
+	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0016e688 RealDoCommand__14TParagraphViewFRC6RefVar
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001736f8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
 	Ref			Text(void);												// ROM 0x00183034 Text__14TParagraphViewFv
@@ -92,6 +101,22 @@ public:
 	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00179f50 OffsetToBounds__14TParagraphViewFlP5TRect
 	long		PointToOffset(const Point& pt);							// ROM 0x00179550 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc (host: the nearest character)
 	void		FlushWordAtCaret(void);									// ROM 0x00176cac FlushWordAtCaret__14TParagraphViewFv
+
+	// editing
+	void		HandleReplaceText(RefArg cmd);							// ROM 0x00170f30 HandleReplaceText__14TParagraphViewFRC6RefVar
+	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x0017aa6c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+	void		RemoveText(ULong offset, ULong length);					// ROM 0x0017abc8 RemoveText__14TParagraphViewFUlT1
+	void		MakeAndDoReplaceCommand(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x0017ad8c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+	Boolean		AddKeyToCurrUndo(UniChar ch, long offset);				// ROM 0x00179248 AddKeyToCurrUndo__14TParagraphViewFUsl
+	void		AdjustStyles(long offset, long removed, long inserted, RefArg styles, long styleOffset);	// ROM 0x0017af04 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
+	void		AdjustHilites(long offset, long delta);					// ROM 0x0016c854 AdjustHilites__14TParagraphViewFlT1
+	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x0017a778 GetStyleForInsertion__14TParagraphViewFlUcT2
+	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x0017b1d8 GetStyleAtOffset__14TParagraphViewFlPlT2
+	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x0017b228 GetStylesOfRange__14TParagraphViewFlT1Uc
+	Ref			GetWriteableTextStylesArray(void);						// ROM 0x0017b278 GetWriteableTextStylesArray__14TParagraphViewFv
+	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00182c08 RangeChanged__14TParagraphViewFlN21RC6RefVar
+	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00182d14 ProcessStyles__14TParagraphViewFUc
+	void		FixupBBox(void);										// ROM 0x001835e8 FixupBBox__14TParagraphViewFv
 	long		TextLength(void);										// the text's characters (host)
 
 	long		LineCount(void) const				{ return fLineCount; }
@@ -111,6 +136,7 @@ public:
 	long		fLineCount;
 	long		fLineCapacity;
 	Boolean		fCachesValid;		// +0x78
+	Boolean		fSetupDone;			// +0x79  SetupDone has run (RangeChanged processes the styles; cleared while it does)
 	TextOptions	fTextOptions;		// +0x84  the width and alignment the lines are laid out with
 	Rect		fTextBounds;		// +0xa0  the lines' union
 

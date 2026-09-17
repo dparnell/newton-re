@@ -404,7 +404,7 @@ KeyCommandModifiers(RefArg command)
 // exact match of the modifiers (*exact) wins at once, else the one
 // asking for the most of the modifiers held (*matched: how many);
 // ==> its index, -1 for none.
-static long
+long
 FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matched, Boolean* exact)
 {
 	long found = -1;

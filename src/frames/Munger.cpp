@@ -17,6 +17,7 @@
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
+#include "Frames.h"
 #include "NSErrors.h"
 
 #include <string.h>
@@ -189,6 +190,55 @@ StrMunger(RefArg s1, long s1start, long s1count, RefArg s2, long s2start, long s
 		memmove(text1 + s1start, text2 + s2start, s2count * sizeof(UniChar));
 	if (delta < 0)
 		SetLength(s1, (s1length + delta + 1) * sizeof(UniChar));
+}
+
+
+// ROM 0x0012a860 ArrayGrowAt__FRC6RefVarlT2
+// count empty slots opened at the index (the end for an index outside
+// the array): the array grown and the elements from the index moved up.
+void
+ArrayGrowAt(RefArg array, long index, long count)
+{
+	long length = Length(array);
+	if (index < 0 || index > length)
+		index = length;
+	SetLength(array, length + count);
+	for (long slot = length - 1; slot >= index; slot--)
+		SetArraySlot(array, slot + count, RefVar(GetArraySlotRef(array, slot)));
+}
+
+
+// ROM 0x0012b5d0 Munger__FRC6RefVarlT2PcT2
+// count bytes of the binary from start replaced by dataLength bytes of
+// the data (start and count kept within the object); a read-only object
+// is cloned first; ==> the object written.
+Ref
+Munger(RefArg obj, long start, long count, const void* data, long dataLength)
+{
+	long length = Length(obj);
+	if (start < 0)
+		start = 0;
+	if (start > length)
+	{
+		count = 0;
+		start = length;
+	}
+	if (start + count > length)
+		count = length - start;
+	long newLength = length + dataLength - count;
+	RefVar target(obj);
+	if (ObjectFlags(target) & kObjReadOnly)
+		target = Clone(target);
+	if (newLength > length)
+		SetLength(target, newLength);
+	LockRefArg(target);
+	char* p = (char*) BinaryData(target) + start;
+	memmove(p + dataLength, p + count, length - start - count);
+	memmove(p, data, dataLength);
+	UnlockRefArg(target);
+	if (newLength <= length)
+		SetLength(target, newLength);
+	return target;
 }
 
 

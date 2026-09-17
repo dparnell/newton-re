@@ -243,3 +243,19 @@ FailGetResponder(RefArg context, RefArg name)
 		ThrowMsg((char*) "nil responder");
 	return responder;
 }
+
+
+// ROM 0x0017c29c CommandText__FRC6RefVar
+Ref
+CommandText(RefArg cmd)
+{
+	return GetFrameSlotRef(cmd, RSSYMtext);
+}
+
+
+// ROM 0x0017c28c CommandSetText__FRC6RefVarT1
+void
+CommandSetText(RefArg cmd, RefArg text)
+{
+	SetFrameSlot(cmd, RSSYMtext, text);
+}

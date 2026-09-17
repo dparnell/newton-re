@@ -465,8 +465,8 @@ answers the pick command 0x36 (the PickStuff as a binary, or the
 parameter as the index) and drops an autoclose picker from its parent.
 `Scroll` 0x0018718c moves the child origin a view's height to an item's
 top.  NOT YET: the pen tracking on aeClick (`TrackStroke`), the key
-commands and type-select, ink items, the pickable test inside a masked
-grid picture, the item flash's waits.  The ROM's protoPicker has
+commands, ink items, the pickable test inside a masked grid picture,
+the item flash's waits.  The ROM's protoPicker has
 viewFlags without vVisible: it is opened with `:Open()`.
 
 ### Hiliting a view (`TView::Hilite` 0x0026418c, `Select` 0x00264c34)
@@ -655,6 +655,88 @@ the key view chain (`NextKeyView`, tabbing), `SetCaretInfo`/
 `PositionCaret`, `HoldPendingKeyView`'s users, the hilites a selection
 means, typing into the paragraph.
 
+### Typing into a paragraph (`ParagraphView.h`, `StyleRuns.h`)
+
+`TParagraphView::RealDoCommand` 0x0016e688 takes the key commands: a
+key down or repeat first runs the key scripts and key commands
+(`HandleKeyEvent`); a key nobody took, when the paragraph can be
+written (not vReadOnly/vWriteProtected, and not a command keystroke),
+goes into the text - return (or enter, 3) with a default button
+(viewJustify 0x1800000) sends `_doDefaultButton` up the key chain; tab
+moves to the next key view (NOT YET) unless the view calculates its
+bounds; the left and right arrows (0x1c, 0x1d) move the caret
+(`SetKeyView`; up and down, NOT YET: to the line's start/end); white
+space flushes the word at the caret (`FlushWordAtCaret`, NOT YET: the
+recogniser's dictionaries); backspace (8) removes the character before
+the caret, another character `KeyCanBeHandled` goes in at it - both
+through `AddKeyToCurrUndo` 0x00179248 first: when the last undo entry
+undoes typing here (an aeReplaceText for this view's id, typed,
+inserting nothing) that ends at the offset and covers fewer than ten
+characters, the entry grows (shrinks for a backspace, goes when empty)
+and the key is carried out by a replace command posting no undo -
+which only happens for a vCalculateBounds paragraph, whose commands
+carry its id (a plain paragraph's carry kNoParameter, so every key gets
+its own entry).  A key string (aeKeyString) is inserted at the caret
+(or over the hilite, NOT YET) and the hilites removed.
+
+`InsertStyledText` 0x0017aa6c (offset, text, length, styles,
+correctInfo, styleOffset, removeLength, typed) makes an aeReplaceText
+(0x46) command through `MakeAndDoReplaceCommand` 0x0017ad8c - index
+parameters `[offset, removeLength, length, styleOffset, postUndo (1),
+caretAfter (1), typed]`, the frame parameter the styles (a runs array,
+or a canonical correctInfo frame {styles, correctInfo}), the command's
+`text` slot the string - and dispatches it; a deletion that inserts
+nothing then drops the white space left at the end of the text.
+`RemoveText` 0x0017abc8 widens a range to a neighbouring space.
+`HandleReplaceText` 0x00170f30 carries the command out: the styles for
+the insertion (none: one run of `GetStyleForInsertion` 0x0017a778 -
+`vars.nextStyle`, else the style of the last character before the
+offset, else for an empty vCalculateBounds paragraph `defaultFontSpec`
+or the `userFont` preference, else the default view style; an ink word
+before the offset gets the style over the whole range), the offset and
+count kept within the text, the inverse command (the removed text with
+its styles - `GetStylesOfRange` - and tabs, in a `SaveStylesAndTabStopsArrays`
+frame) posted to the application's undo, the text munged (`Munger`
+0x0012b5d0: a read-only string is cloned) into the data frame, the
+style runs adjusted (`AdjustStyles` 0x0017af04: `RunsDelete`/`RunsInsert`
+for an unstyled change, else the run before the range grown or shrunk
+by the difference and the new runs laid over the insertion with
+`SetStyleOfRange` 0x0017bb10, then `CompactStyleRuns` 0x0017cb94 - a
+single run that is the view's font drops the styles slot, a
+vCalculateBounds paragraph takes it as its viewFont), the hilites moved
+(NOT YET), the tabs slot dropped when no tab is left, the caret moved
+(to the insertion's end, or past the change when it lay after it) when
+this is the key view, `RangeChanged` 0x00182c08 (the lines laid out
+again - `FixupBBox` 0x001835e8, which also sizes a vCalculateBounds
+paragraph to its text - and, once set up, `Changed('text)` after
+`ProcessStyles` 0x00182d14 has looked for ink to recognise - NOT YET),
+the view dirtied (its parent for an undo, and the old bounds when they
+shrank).  `GetStyleAtOffset` 0x0017f8dc, `GetStylesOfRange` 0x0017fa94,
+`CountStylesForLength` 0x0017fd68, `SetStyleOfRange`,
+`CompactStyleRuns`, `ExtractStylesArray`/`ExtractTabStopsArray`/
+`ExtractCorrectInfo` (0x0017ca88-) are `StyleRuns.h`'s;
+`GetWriteableTextStylesArray` 0x0017b278 makes the styles slot a runs
+array when it was a single spec.
+
+### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
+
+The ROM's protoPicker's `viewKeyDownScript` is the native
+`PickViewKeyDown(char, key)` 0x0018585c: the arrows move the pick -
+left and right within a grid item's row (or to the first pickable
+item's last/first cell when nothing is picked), up and down (and tab)
+to the previous/next pickable item (`KeyToPrevItem` 0x0018a320,
+`KeyToNextItem` 0x0018a17c: the separators skipped; with nothing picked
+yet the first item that is shown); return or enter picks the picked
+item (the pick command with the PickStuff, keys allowed through the
+picker); a key command of the items (`keyCommands`,
+`FindKeyCommandInArray`) picks that item outright; command-., command-w
+and escape close the picker (aeDropChild to its parent); any other
+character type-selects - the characters typed within the
+`typeSelectTimeout` preference (up to 21) pick the first item, from the
+picked one on, whose text begins with them.  The picked item is
+scrolled into view and the picker redrawn.  The host's demo types "d"
+into its paragraph and shows the picker last (a popup takes the keys).
+
 `test_Views` runs with the ROM's objects imported (for the text views'
 fonts; the canonical context, rect and slot cache frames come from the
 ROM, or from `InitViewPrototypes` without it), over a 160 x 100 one-bit
@@ -679,18 +761,24 @@ the command key, one found up at the root, PostKeyString and
 HandleKeyEvents, the natives), the caret (TBits, a paragraph made the
 key view showing the caret under its text at the offset, hidden and
 shown, moved, a tap's offset, the selection stack pushed and restored,
-the natives), idlers (SetupIdle,
+the natives), typing (keys into a paragraph, backspace, the undo
+entries and Undo, a key string, styled runs around an insertion, the
+arrows, a read-only paragraph, RemoveText, the style-run helpers),
+idlers (SetupIdle,
 the idle script re-timing and stopping its idler, removal with the
 view), pickers from the ROM's protoPicker
 (the rows, the placement below and above, the separator, marks, an
-icon, a cut item, the item under a point, a pick closing the picker).
+icon, a cut item, the item under a point, the keys - the pick moved,
+type-select, a key event through the ROM's viewKeyDownScript -, a pick
+closing the picker).
 
 ## Not yet
 
 The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
-the pen tracking behind `TrackHilite` (strokes), typing into a
-paragraph (its `RealDoCommand`'s keys: `InsertStyledText`), the key
-view chain (`NextKeyView`), the key help, the keyboard tool and the
+the pen tracking behind `TrackHilite` (strokes), the rest of the
+paragraph's editing (the hilites typed over, the style and clipboard
+commands, ink words, the correction info, the caret's line moves), the
+key view chain (`NextKeyView`), the key help, the keyboard tool and the
 on-screen keyboards, drag and drop, the animation
 effects (`TAnimate`), `SyncScroll`, the clipboards, the popup
 and modal dialog machinery, the other subclasses (`TListView`,

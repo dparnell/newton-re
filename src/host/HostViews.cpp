@@ -95,7 +95,9 @@ HostRegisterViewFunctions(void)
 // The display made and the view system started over it: QuickDraw, the
 // screen, the fonts (vars.fonts: the ROM font list's families by their
 // symbols, as the ROM's globals template has them), an empty
-// userConfiguration, the text, view and host functions, the root view.
+// userConfiguration, vars.international from the globals template (the
+// locale and the keyboard mapping), the text, view and host functions,
+// the root view.
 THostScreenDriver*
 HostStartViews(long width, long height, long depth)
 {
@@ -121,6 +123,15 @@ HostStartViews(long width, long height, long depth)
 	}
 	if (ISNIL(GetFrameSlotRef(vars, RSSYMuserconfiguration)))
 		SetFrameSlot(vars, RSSYMuserconfiguration, RefVar(AllocateFrame()));
+	if (ISNIL(GetFrameSlotRef(vars, RSSYMinternational)) && NOTNIL(Rglobalheapvarwannabes))
+	{
+		// the ROM's globals template has the international frame the boot
+		// makes a global of: the locale bundles, the current one, the
+		// keyboard mapping (the German 'kchr) the keyboard translates with
+		RefVar intl(GetFrameSlotRef(RefVar(Rglobalheapvarwannabes), RSSYMinternational));
+		if (NOTNIL(intl))
+			SetFrameSlot(vars, RSSYMinternational, RefVar(Clone(intl)));
+	}
 	HostRegisterViewFunctions();
 	InitViewSystem();
 	return gHostDisplay;

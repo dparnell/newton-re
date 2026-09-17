@@ -62,6 +62,7 @@ enum
 	aeRemoveData			= 0x3f,		// the child of the parameter's id removed from the soup
 	aeMoveData				= 0x40,		// the receiver moved by params[0], params[1] (undone by the reverse)
 	aeScaleData				= 0x42,		// the receiver scaled from params[0..3] (undone by the reverse)
+	aeReplaceText			= 0x46,		// a paragraph's text replaced (TParagraphView::HandleReplaceText): index parameters [offset, removed, inserted, styleOffset, postUndo, caretAfter, typed], the frame parameter the styles ({styles, tabs, correctInfo}), the text slot the string
 	aeAddHilite				= 0x47,		// the frameParameter (a hilite, or a frame with one) appended to hilites
 	aeRemoveHilite			= 0x48,
 	aeToChildren			= 0x49,		// the command sent to every child
@@ -84,6 +85,8 @@ void	CommandSetResult(RefArg cmd, long result);								// ROM 0x00071234 Command
 Long	CommandParameter(RefArg cmd);											// ROM 0x00071274 CommandParameter__FRC6RefVar
 void	CommandSetParameter(RefArg cmd, Long parameter);						// ROM 0x000712b0 CommandSetParameter__FRC6RefVarl
 Ref		CommandFrameParameter(RefArg cmd);										// ROM 0x000712f0 CommandFrameParameter__FRC6RefVar
+Ref		CommandText(RefArg cmd);												// ROM 0x0017c29c CommandText__FRC6RefVar (the text slot)
+void	CommandSetText(RefArg cmd, RefArg text);								// ROM 0x0017c28c CommandSetText__FRC6RefVarT1
 void	CommandSetFrameParameter(RefArg cmd, RefArg parameter);					// ROM 0x0007130c CommandSetFrameParameter__FRC6RefVarT1
 Long	CommandIndexParameter(RefArg cmd, long index);							// ROM 0x00070fc4 CommandIndexParameter__FRC6RefVarl
 void	CommandSetIndexParameter(RefArg cmd, long index, Long parameter);		// ROM 0x00070f08 CommandSetIndexParameter__FRC6RefVarlT2

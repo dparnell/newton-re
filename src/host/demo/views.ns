@@ -41,7 +41,19 @@ slip := AddView(GetRoot(), {
 	]});
 slip:Dirty();
 
+// an editable paragraph made the key view: the caret shows under its text
+// (a keyboard connected), and a key typed goes in at the caret
+para := AddView(GetRoot(), {
+	viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 400, right: 300, bottom: 430},
+	viewFormat: 0x111, viewFont: kBold12, text: "Type here" });
+para:Dirty();
+KeyboardConnect(true);
+SetKeyView(para, 4);
+KeyEvent(2, true); KeyEvent(2, nil);		// the d key (the ROM's German layout) typed at the caret: "Typed here"
+
 // a popup menu, as the ROM's protoPicker lays it out, below a "button"
+// (opened last: while it is up the keys go to it - the arrows move its
+// pick, return picks, escape closes it)
 button := AddView(GetRoot(), {
 	viewClass: 98, viewFlags: 1, viewBounds: {left: 60, top: 300, right: 160, bottom: 320},
 	viewFormat: 0x4000551, viewJustify: 0x800006, viewFont: kBold12, text: "Pick one" });
@@ -52,15 +64,6 @@ picker := AddView(GetRoot(), {
 	bounds: button:GlobalBox(),
 	pickActionScript: func(index) Print("picked " & index) });
 picker:Open();
-
-// an editable paragraph made the key view: the caret shows under its text
-// (a keyboard connected)
-para := AddView(GetRoot(), {
-	viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 400, right: 300, bottom: 430},
-	viewFormat: 0x111, viewFont: kBold12, text: "Type here" });
-para:Dirty();
-KeyboardConnect(true);
-SetKeyView(para, 4);
 
 RefreshViews();
 ScreenSnapshot("build/views-demo.pgm");

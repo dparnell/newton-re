@@ -9,6 +9,9 @@
 #include "PickView.h"
 #include "RootView.h"
 #include "Commands.h"
+#include "NewtonTime.h"
+#include "NativeFunctions.h"
+#include "Keyboard.h"
 #include "Application.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -141,6 +144,8 @@ TPickView::Constructor(RefArg context, TView* parent)
 	fGrids = nil;
 	fPicked.fItem = -1;
 	fPicking = false;
+	fTypeSelect = NILREF;
+	fLastKeyTime = 0;
 	TView::Constructor(context, parent);
 }
 
@@ -816,6 +821,373 @@ TPickView::PickableItem(Point& pt, PickStuff* item)
 	Point again = pt;
 	again.v = (short) (r.top - 1);
 	PickableItem(again, item);
+}
+
+
+/*------------------------------------------------------------------------------
+	K e y s
+------------------------------------------------------------------------------*/
+
+// the pick command for the picked item: the PickStuff as a binary frame
+// parameter (the ROM: ToObject('string, &fPicked, 16)), keys allowed
+// through the picker while it is picked
+static void
+PostPick(TPickView* view)
+{
+	RefVar cmd(MakeCommand(aePickItem, view, view->fPicked.fItem));
+	RefVar stuff(AllocateBinary(RSSYMstring, sizeof(PickStuff)));
+	memmove(BinaryData(stuff), &view->fPicked, sizeof(PickStuff));
+	CommandSetFrameParameter(cmd, stuff);
+	SetFrameSlot(view->fContext, RSSYMallowkeysthrough, RefVar(TRUEREF));
+	gApplication->DispatchCommand(cmd);
+}
+
+
+// ROM 0x0018a17c KeyToNextItem__9TPickViewFl
+// The pick moved down from the item given: the next pickable item (a
+// grid's cells row by row), the first that is shown (its top within the
+// view) when nothing was picked yet.
+void
+TPickView::KeyToNextItem(long from)
+{
+	long item = from;
+	while (item != fItemCount && !IsItemNoPickable(item))
+		item++;
+	Boolean isGrid = false;
+	PickGridInfo* grid = nil;
+	long x = 0, y = 0;
+	if (item != fItemCount)
+	{
+		grid = fGrids[item];
+		isGrid = grid != nil;
+	}
+	for ( ; ; )
+	{
+		Rect r;
+		SetEmptyRect(&r);
+		if (item != fItemCount)
+		{
+			PickStuff stuff = { item, isGrid, x, y };
+			GetGridItemRect(&stuff, &r);
+		}
+		if (fPicked.fItem != -1 || item == fItemCount || r.top >= viewBounds.top)
+		{
+			if (item != fItemCount)
+			{
+				fPicked.fItem = item;
+				fPicked.fIsGrid = isGrid;
+				if (isGrid)
+				{
+					fPicked.fX = x;
+					fPicked.fY = y;
+				}
+			}
+			return;
+		}
+		if (isGrid && y != grid->fRows - 1)
+			y++;
+		else
+		{
+			do
+				item++;
+			while (item != fItemCount && !IsItemNoPickable(item));
+			if (item != fItemCount)
+			{
+				grid = fGrids[item];
+				isGrid = grid != nil;
+				x = y = 0;
+			}
+		}
+	}
+}
+
+
+// ROM 0x0018a320 KeyToPrevItem__9TPickViewFl
+// The pick moved up from the item given: the previous pickable item (a
+// grid's last row), the last that is shown (its bottom within the view)
+// when nothing was picked yet.
+void
+TPickView::KeyToPrevItem(long from)
+{
+	long item = from;
+	while (item != -1 && !IsItemNoPickable(item))
+		item--;
+	Boolean isGrid = false;
+	PickGridInfo* grid = nil;
+	long x = 0, y = 0;
+	if (item != -1)
+	{
+		grid = fGrids[item];
+		isGrid = grid != nil;
+		if (isGrid)
+			y = grid->fRows - 1;
+	}
+	for ( ; ; )
+	{
+		Rect r;
+		SetEmptyRect(&r);
+		if (item != -1)
+		{
+			PickStuff stuff = { item, isGrid, x, y };
+			GetGridItemRect(&stuff, &r);
+		}
+		if (fPicked.fItem != -1 || item == -1 || r.bottom <= viewBounds.bottom)
+		{
+			if (item != -1)
+			{
+				fPicked.fItem = item;
+				fPicked.fIsGrid = isGrid;
+				if (isGrid)
+				{
+					fPicked.fX = x;
+					fPicked.fY = y;
+				}
+			}
+			return;
+		}
+		if (isGrid && y != 0)
+			y--;
+		else
+		{
+			do
+				item--;
+			while (item != -1 && !IsItemNoPickable(item));
+			if (item != -1)
+			{
+				grid = fGrids[item];
+				isGrid = grid != nil;
+				x = 0;
+				y = isGrid ? grid->fRows - 1 : 0;
+			}
+		}
+	}
+}
+
+
+// the first pickable item, as a key to a picker with nothing picked finds it
+static long
+FirstPickable(TPickView* view)
+{
+	long item = 0;
+	while (item != view->fItemCount && !view->IsItemNoPickable(item))
+		item++;
+	return item;
+}
+
+
+// ROM 0x0018a4b0 HandleKeyDown__9TPickViewFUsUl
+// A key to the picker: the arrows move the pick (left/right within a
+// grid's row - or to the first pickable item's last/first cell when
+// nothing is picked; up/down to the previous/next item, tab down too);
+// return (or enter) picks the picked item (the pick command with the
+// PickStuff, keys allowed through); a key command of the items
+// (keyCommands, FindKeyCommandInArray) picks that item outright;
+// command-. / command-w / escape close the picker (aeDropChild to the
+// parent); any other character type-selects: it joins the characters
+// typed within the timeout (up to 21) and the first item from the pick
+// on (else from the start) whose text begins with them is picked.  The
+// picked item is scrolled into view, the picker redrawn.  ==> true
+// (handled).  NOT YET RECONSTRUCTED: FClicker.
+Boolean
+TPickView::HandleKeyDown(UniChar ch, ULong parameter)
+{
+	ULong modifiers = parameter & 0x3e000000;
+	UniChar key = (UniChar) (parameter & 0xffff);
+	long item = fPicked.fItem;
+	PickGridInfo* grid = item != -1 ? fGrids[item] : nil;
+	Boolean moved = false;
+	Boolean picked = false;
+	if (key == 0x1c)
+	{
+		moved = true;
+		if (item == -1)
+		{
+			long first = FirstPickable(this);
+			if (first != fItemCount && fGrids[first] != nil)
+			{
+				fPicked.fItem = first;
+				fPicked.fIsGrid = true;
+				fPicked.fY = 0;
+				fPicked.fX = fGrids[first]->fColumns - 1;
+			}
+		}
+		else if (grid != nil && fPicked.fX != 0)
+			fPicked.fX--;
+	}
+	else if (key == 0x1d)
+	{
+		moved = true;
+		if (item == -1)
+		{
+			long first = FirstPickable(this);
+			if (first != fItemCount && fGrids[first] != nil)
+			{
+				fPicked.fItem = first;
+				fPicked.fIsGrid = true;
+				fPicked.fY = 0;
+				fPicked.fX = 0;
+			}
+		}
+		else if (grid != nil && fPicked.fX != grid->fColumns - 1)
+			fPicked.fX++;
+	}
+	else if (key == 0x1e)
+	{
+		moved = true;
+		if (grid != nil && fPicked.fY != 0)
+			fPicked.fY--;
+		else
+			KeyToPrevItem((item == -1 ? fItemCount : item) - 1);
+	}
+	else if (key == 0x1f || key == 9)
+	{
+		moved = true;
+		if (grid != nil && fPicked.fY != grid->fRows - 1)
+			fPicked.fY++;
+		else
+			KeyToNextItem(item == -1 ? 0 : item + 1);
+	}
+	else if (key == 0x0d || key == 3)
+	{
+		moved = true;
+		if (item != -1)
+		{
+			// NOT YET RECONSTRUCTED: FClicker
+			PostPick(this);
+			picked = true;
+		}
+	}
+	else
+	{
+		if (IsArray(fKeyCommands))
+		{
+			long found = FindKeyCommandInArray(fKeyCommands, key, modifiers, nil, nil);
+			if (found != -1)
+			{
+				PickStuff old = fPicked;
+				fPicked.fItem = found;
+				if (fGrids[found] == nil)
+					fPicked.fIsGrid = false;
+				else
+				{
+					fPicked.fIsGrid = true;
+					fPicked.fX = 0;
+					fPicked.fY = 0;
+				}
+				if (found != old.fItem || (fPicked.fIsGrid && (fPicked.fX != old.fX || fPicked.fY != old.fY)))
+				{
+					Dirty(nil);
+					gRootView->Update(nil);
+				}
+				PostPick(this);
+				moved = true;
+				picked = true;
+			}
+		}
+		if (!picked && (((modifiers & (kCommandModifier << 25)) && (key == '.' || key == 'w')) || key == 0x1b))
+		{
+			SetFrameSlot(fContext, RSSYMallowkeysthrough, RefVar(TRUEREF));
+			fAutoClose = true;
+			RefVar cmd(MakeCommand(aeDropChild, fParent, (Long) this));
+			gApplication->DispatchCommand(cmd);
+			moved = true;
+			picked = true;
+		}
+	}
+	if (ch != 0 && !moved)
+	{
+		ULong now = Ticks();
+		if (ISNIL(fTypeSelect) || (ULong) fTypeSelectTimeout < now - fLastKeyTime)
+			fTypeSelect = Clone(RefVar(Remptystring));
+		fLastKeyTime = now;
+		long typed = Length(fTypeSelect) / 2 - 1;
+		if (typed < 21)
+		{
+			SetLength(fTypeSelect, typed * 2 + 4);
+			UniChar* text = GetCString(fTypeSelect);
+			text[typed] = ch;
+			text[typed + 1] = 0;
+			typed++;
+		}
+		TRichString wanted(fTypeSelect);
+		long count = Length(fPickItems);
+		long found = -1;
+		long start = fPicked.fItem == -1 ? 0 : fPicked.fItem;
+		for (long pass = 0; pass < 2 && found == -1; pass++)
+		{
+			long first = pass == 0 ? start : 0;
+			long last = pass == 0 ? start + 1 : count;
+			if (pass == 0 && fPicked.fItem == -1)
+				continue;
+			for (long i = first; i < last; i++)
+			{
+				RefVar text(GetItemNoText(i));
+				if (ISNIL(text))
+					continue;
+				TRichString itemText(text);
+				long n = typed;
+				if (itemText.Length() < n)
+					n = itemText.Length();
+				if (itemText.CompareSubStringCommon(wanted, 0, n, false) == 0)
+				{
+					found = i;
+					break;
+				}
+			}
+		}
+		if (found != -1)
+		{
+			fPicked.fItem = found;
+			fPicked.fIsGrid = false;
+		}
+	}
+	if (picked)
+		return true;
+	if (fPicked.fItem == -1)
+		return true;
+	Rect r;
+	GetGridItemRect(&fPicked, &r);
+	if (r.bottom > viewBounds.bottom)
+	{
+		while (r.bottom > viewBounds.bottom)
+		{
+			Scroll(RSSYMdown, false);
+			GetGridItemRect(&fPicked, &r);
+		}
+		NSSend(fContext, RSSYMsetscrollers);
+	}
+	else if (r.top < viewBounds.top)
+	{
+		while (r.top < viewBounds.top)
+		{
+			Scroll(RSSYMup, false);
+			GetGridItemRect(&fPicked, &r);
+		}
+		NSSend(fContext, RSSYMsetscrollers);
+	}
+	Dirty(nil);
+	gRootView->Update(nil);
+	return true;
+}
+
+
+// ROM 0x0018585c FPickViewKeyDown
+// :PickViewKeyDown(char, key) (protoPicker's viewKeyDownScript): the key
+// handled by the picker; ==> whether it was.
+static Ref
+FPickViewKeyDown(RefArg rcvr, RefArg ch, RefArg key)
+{
+	TPickView* view = (TPickView*) GetView(rcvr);
+	if (view == nil)
+		return TRUEREF;
+	return MAKEBOOLEAN(view->HandleKeyDown((UniChar) RCHAR(ch), (ULong) RINT(key)));
+}
+
+
+void
+RegisterPickNatives(void)
+{
+	RegisterNativeFunction("FPickViewKeyDown", (void*) FPickViewKeyDown, 2);
 }
 
 

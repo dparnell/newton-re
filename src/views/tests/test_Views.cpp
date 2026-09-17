@@ -18,6 +18,7 @@
 #include "DrawShape.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "REPTranslators.h"
 #include "Bits.h"
 #include "Application.h"
 #include "StyleRuns.h"
@@ -1351,6 +1352,118 @@ TestCaret()
 
 
 static void
+TypeKey(ULong keyCode)
+{
+	KeyboardEvent down(aeKeyDown, keyCode);
+	HandleKeyEvent(&down);
+	KeyboardEvent up(aeKeyUp, keyCode);
+	HandleKeyEvent(&up);
+}
+
+
+// Typing into a paragraph: keys to the key view insert at the caret
+// (aeReplaceText through HandleReplaceText), backspace deletes, the undo
+// entries merge, a key string is inserted, the style runs follow, the
+// text is laid out again and the caret moves.
+static void
+TestTyping()
+{
+	const ULong kGermanyBundle = 0x003c10ed;
+	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	RefVar intl(AllocateFrame());
+	RefVar keyboard(AllocateFrame());
+	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
+	SetFrameSlot(intl, RSSYMkeyboard, keyboard);
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, bundle);		// (the paragraph reads the locale's break tables)
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	ClearHardKeymap();
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxT := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 140, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"Hello World\", changes: [], viewChangedScript: func(slot, ctx) AddArraySlot(changes, slot)})");
+	Eval("ctxT:Dirty()");
+	Refresh();
+	long helloWidth = p->Line(0).fBounds.right - p->Line(0).fBounds.left;
+	gKeyboardConnected = true;
+	Eval("ClearUndoStacks()");
+	gApplication->Idle();
+	Eval("SetKeyView(ctxT, 5)");
+	Refresh();
+	// x and y typed at the caret
+	TypeKey(7);		// x
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Hellox World\")")) && p->fCaretOffset == 6 && gRootView->fCaretOffset == 6);
+	EXPECT(RINT(Eval("Length(ctxT.changes)")) == 1 && EQRef(Eval("ctxT.changes[0]"), RSSYMtext));
+	EXPECT(ISNIL(Eval("ctxT.styles")));		// a single run of the view's font: no styles slot
+	TypeKey(6);		// y (the German layout: key 16 is z)
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Helloxy World\")")) && p->fCaretOffset == 7);
+	Refresh();
+	EXPECT(p->Line(0).fBounds.right - p->Line(0).fBounds.left > helloWidth);
+	Rect caret;
+	gRootView->GetCaretRect(&caret);
+	Rect at7;
+	p->OffsetToCaret(7, &at7);
+	EXPECT(gRootView->fCaretShowing && caret.left == at7.left - 5);
+	// each key posts its inverse (remove 1 at the offset) - keys merge into one entry only in a
+	// vCalculateBounds paragraph, whose commands carry its id (AddKeyToCurrUndo)
+	EXPECT(Length(gApplication->GetUndoStack(0)) == 2);
+	RefVar entry(GetArraySlotRef(gApplication->GetUndoStack(0), 1));
+	EXPECT(CommandID(entry) == aeReplaceText && CommandIndexParameter(entry, 0) == 6 && CommandIndexParameter(entry, 1) == 1 && CommandIndexParameter(entry, 2) == 0 && CommandIndexParameter(entry, 6) == 1);
+	// backspace takes the y back
+	TypeKey(0x33);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Hellox World\")")) && p->fCaretOffset == 6 && Length(gApplication->GetUndoStack(0)) == 3);
+	entry = GetArraySlotRef(gApplication->GetUndoStack(0), 2);
+	EXPECT(CommandIndexParameter(entry, 0) == 6 && CommandIndexParameter(entry, 1) == 0 && CommandIndexParameter(entry, 2) == 1 && ((UniChar*) BinaryData(RefVar(CommandText(entry))))[0] == 'y');
+	// undo puts the text back (the batch: all three) and the caret where the change was
+	Eval("Undo()");
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Hello World\")")) && p->fCaretOffset == 5);
+	Refresh();
+	EXPECT(p->Line(0).fBounds.right - p->Line(0).fBounds.left == helloWidth);
+	// a key string goes in at the caret
+	gApplication->Idle();
+	PostKeyString(p, RefVar(MakeString("abc")));
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Helloabc World\")")) && p->fCaretOffset == 8 && gRootView->fCaretOffset == 8);
+	// styled: a paragraph with style runs keeps them around the insertion
+	Eval("ctxT.text := \"ab\"; ctxT.styles := [1, espy12, 1, {family: 'geneva, face: 1, size: 12}]; ctxT:SyncView()");
+	Eval("SetKeyView(ctxT, 1)");
+	TypeKey(16);	// z
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"azb\")")) && RINT(Eval("Length(ctxT.styles)")) == 4 && RINT(Eval("ctxT.styles[0]")) == 2 && RINT(Eval("ctxT.styles[2]")) == 1);
+	// backspace at the start does nothing; a control character is not typed
+	Eval("SetKeyView(ctxT, 0)");
+	TypeKey(0x33);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"azb\")")) && p->fCaretOffset == 0);
+	// the arrows move the caret
+	TypeKey(0x7c);	// right arrow (0x1d)
+	EXPECT(p->fCaretOffset == 1);
+	TypeKey(0x7b);	// left arrow (0x1c)
+	EXPECT(p->fCaretOffset == 0);
+	// a read-only paragraph takes no keys
+	p->fFlags |= vReadOnly;
+	TypeKey(7);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"azb\")")));
+	p->fFlags &= ~vReadOnly;
+	// RemoveText widens to a neighbouring space; the style-run helpers
+	Eval("ctxT.text := \"one two three\"; ctxT.styles := nil; ctxT:SyncView()");
+	p->RemoveText(4, 3);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"one three\")")));
+	RefVar runs(Eval("[3, 'a, 2, 'b, 4, 'c]"));
+	long run, inRun;
+	EXPECT(EQRef(GetStyleAtOffset(runs, 4, &run, &inRun), Intern((char*) "b")) && run == 1 && inRun == 1);
+	EXPECT(EQRef(GetStyleAtOffset(runs, 20, &run, &inRun), Intern((char*) "c")) && run == 2);
+	EXPECT(CountStylesForLength(runs, 0, 5) == 2 && CountStylesForLength(runs, 1, 1) == 1 && CountStylesForLength(runs, 0, 100) == 3);
+	RefVar part(GetStylesOfRange(runs, 2, 4, false));
+	EXPECT(Length(part) == 6 && RINT(GetArraySlotRef(part, 0)) == 1 && EQRef(GetArraySlotRef(part, 1), Intern((char*) "a")) && RINT(GetArraySlotRef(part, 2)) == 2 && EQRef(GetArraySlotRef(part, 3), Intern((char*) "b")) && RINT(GetArraySlotRef(part, 4)) == 1 && EQRef(GetArraySlotRef(part, 5), Intern((char*) "c")));
+	SetStyleOfRange(runs, RefVar(Intern((char*) "d")), 1, 6);
+	EXPECT(Length(runs) == 6 && RINT(GetArraySlotRef(runs, 0)) == 1 && RINT(GetArraySlotRef(runs, 2)) == 5 && EQRef(GetArraySlotRef(runs, 3), Intern((char*) "d")) && RINT(GetArraySlotRef(runs, 4)) == 3 && TotalRunLength(runs) == 9);
+	SetStyleOfRange(runs, RefVar(Intern((char*) "d")), 0, 1);
+	CompactStyleRuns(runs);
+	EXPECT(Length(runs) == 4 && RINT(GetArraySlotRef(runs, 0)) == 6 && TotalRunLength(runs) == 9);
+	Eval("SetKeyView(nil, nil)");
+	Eval("ctxT:Close()");
+	Refresh();
+	gKeyboardConnected = false;
+	Eval("SetLength(GetSelectionStack(), 0); RemoveSlot(vars, 'international); ClearUndoStacks()");
+	EXPECT(MapIs(ExpWhite, "typing closed"));
+}
+
+
+static void
 TestIdlers()
 {
 	// an idler: the viewIdleScript runs when the time comes, its answer re-times it, 0 stops it
@@ -1439,6 +1552,46 @@ TestPickView()
 	stuff.fItem = 3;
 	p->GetItemRect(&stuff, &r);
 	EXPECT(r.top == 67 && r.bottom == 80 && r.left == 30 && r.right == p->viewBounds.right);
+	// keys: down moves the pick over the pickable items (the separator skipped), up back; the
+	// pick is inverted on screen
+	EXPECT(p->HandleKeyDown(0, 0x1f) && p->fPicked.fItem == 0);
+	EXPECT(InkIn(34, 35, 60, 48) > (60 - 34) * 6);
+	p->HandleKeyDown(0, 0x1f);
+	p->HandleKeyDown(0, 0x1f);
+	EXPECT(p->fPicked.fItem == 3);
+	p->HandleKeyDown(0, 0x1f);
+	EXPECT(p->fPicked.fItem == 3);		// the end
+	p->HandleKeyDown(0, 0x1e);
+	EXPECT(p->fPicked.fItem == 1);
+	// type-select: "g" picks Gamma, "ga" too, then "b" (within the timeout, so "gab": nothing)
+	p->fTypeSelectTimeout = 100000;
+	p->HandleKeyDown('g', 'g');
+	EXPECT(p->fPicked.fItem == 3);
+	p->HandleKeyDown('a', 'a');
+	EXPECT(p->fPicked.fItem == 3);
+	p->HandleKeyDown('b', 'b');
+	EXPECT(p->fPicked.fItem == 3);
+	p->fTypeSelect = NILREF;		// (the timeout passed)
+	p->HandleKeyDown('b', 'b');
+	EXPECT(p->fPicked.fItem == 1);
+	// through the ROM's viewKeyDownScript (PickViewKeyDown) from a key event to the popup
+	{
+		RefVar bundle(TranslateROMRef(0x003c10ed));
+		RefVar intl(AllocateFrame());
+		RefVar keyboard(AllocateFrame());
+		SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
+		SetFrameSlot(intl, RSSYMkeyboard, keyboard);
+		SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	}
+	gKeyboardConnected = true;
+	Eval("ctxK:SetPopup()");
+	KeyboardEvent down(aeKeyDown, 0x7d);		// the down arrow
+	HandleKeyEvent(&down);
+	EXPECT(p->fPicked.fItem == 3);
+	KeyboardEvent up(aeKeyUp, 0x7d);
+	HandleKeyEvent(&up);
+	gKeyboardConnected = false;
+	Eval("RemoveSlot(vars, 'international)");
 	// picking: the pick command runs pickActionScript with the index and closes the autoclose picker
 	{
 		RefVar cmd(MakeCommand(aePickItem, p, 3));
@@ -1536,6 +1689,7 @@ main()
 		TestHilite();
 		TestKeyboard();
 		TestCaret();
+		TestTyping();
 		TestIdlers();
 		TestPickView();
 	}
@@ -1543,6 +1697,12 @@ main()
 	{
 		failures++;
 		fprintf(stderr, "FAIL: unhandled exception %s (%ld)\n", _info.exception.name, (long) (Long) _info.exception.data);
+		if (strncmp(_info.exception.name, "evt.ex.fr", 9) == 0)
+		{
+			HostInitREP(stderr, nil);
+			PrintObject(*(RefStruct*) _info.exception.data, 0);
+			fprintf(stderr, "\n");
+		}
 	}
 	end_try;
 	ClosePort(&gPort);

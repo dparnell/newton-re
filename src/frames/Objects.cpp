@@ -1950,6 +1950,19 @@ MakeString(const UniChar* str)
 }
 
 
+// ROM 0x0012ac84 MakeString__FPCUsl
+// A string of the first length UniChars (need not be terminated).
+Ref
+MakeString(const UniChar* str, long length)
+{
+	RefVar s(AllocateBinary(RSSYMstring, (length + 1) * sizeof(UniChar)));
+	UniChar* p = (UniChar*) BinaryData(s);
+	memcpy(p, str, length * sizeof(UniChar));
+	p[length] = 0;
+	return s;
+}
+
+
 // ROM 0x002f6fa8 GetCString__FRC6RefVar
 // The characters of a string (which must be one).
 UniChar*

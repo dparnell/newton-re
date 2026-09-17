@@ -92,6 +92,9 @@ public:
 	void		PickItem(PickStuff* item);								// ROM 0x00189a7c PickItem__9TPickViewFP9PickStuff
 	void		GetItemFlags(PickStuff* item, Boolean* pickable, UniChar* mark);	// ROM 0x00189e38 GetItemFlags__9TPickViewFP9PickStuffPUcPUs
 	Boolean		IsItemNoPickable(long index);							// ROM 0x00189e64 IsItemNoPickable__9TPickViewFl
+	Boolean		HandleKeyDown(UniChar ch, ULong parameter);				// ROM 0x0018a4b0 HandleKeyDown__9TPickViewFUsUl
+	void		KeyToNextItem(long from);								// ROM 0x0018a17c KeyToNextItem__9TPickViewFl
+	void		KeyToPrevItem(long from);								// ROM 0x0018a320 KeyToPrevItem__9TPickViewFl
 	void		SetItemFlags(PickStuff* item, Boolean pickable, UniChar mark);	// ROM 0x00189e7c SetItemFlags__9TPickViewFP9PickStuffUcUs
 	long		GetItemLength(long index);								// ROM 0x00189ea0 GetItemLength__9TPickViewFl
 	void		SetItemLength(PickStuff* item, long length);			// ROM 0x00189eb4 SetItemLength__9TPickViewFP9PickStuffl
@@ -117,10 +120,13 @@ public:
 	long		fBottomMargin;		// +0xa0
 	RefStruct	fKeyCommands;		// +0xa4  per item, with a command keyboard (NOT YET: nil)
 	Fixed		fKeyCommandWidth;	// +0xa8
-	long		fTypeSelectTimeout;	// +0xb4
+	RefStruct	fTypeSelect;		// +0xac  the characters typed to select an item (the ROM: a RefStruct*)
+	ULong		fLastKeyTime;		// +0xb0  when the last was typed (Ticks)
+	long		fTypeSelectTimeout;	// +0xb4  ticks: a pause longer starts the string again
 	Boolean		fPicking;			// +0xb8  an item is being picked (Hide runs no cancel script)
 };
 
+void	RegisterPickNatives(void);												// PickViewKeyDown (the ROM's protoPicker viewKeyDownScript)
 void	GetAppAreaBounds(Rect* bounds);										// ROM 0x001858f4 GetAppAreaBounds__FP5TRect - vars.displayParams' application area
 Boolean	AdjustPopupInRect(Rect& bounds, long width, long height, const Rect& within, short frame);	// ROM 0x00186e84 AdjustPopupInRect__FR5TRectlT2RC5TRects - ==> placed above
 

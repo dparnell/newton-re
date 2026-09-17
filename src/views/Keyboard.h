@@ -126,6 +126,7 @@ Boolean		IsCommandKeystroke(UniChar ch, ULong parameter);		// ROM 0x002eaf64 IsC
 Boolean		KeyIsPrintable(UniChar ch, TView* view);				// ROM 0x002eb01c KeyIsPrintable__FUsP5TView
 Boolean		KeyCanBeHandled(UniChar ch);							// ROM 0x002eb0e4 KeyCanBeHandled__FUs
 
+long		FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matched, Boolean* exact);	// ROM 0x002e9e44 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc - the index of the best match, -1 for none
 Ref			FindKeyCommand(TView* view, UniChar ch, ULong modifiers);	// ROM 0x002e9f9c FindKeyCommand__FP5TViewUsUl (modifiers: the parameter's bits)
 Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x002ea238 SendKeyMessage__FP5TViewRC6RefVar
 
