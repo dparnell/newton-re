@@ -620,8 +620,8 @@ TView::RealDoCommand(RefArg cmd)
 	case aeCaret:
 	case aeLine:
 	case aeGesture2f:
-	case aeGesture31:
-	case aeGesture32:
+	case aeTap:
+	case aeDoubleTap:
 		{
 			RefVar args(MakeArray(2));
 			Long unit = CommandParameter(cmd);

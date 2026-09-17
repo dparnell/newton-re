@@ -41,6 +41,8 @@ long	CopyHandle(Handle* h);							// ROM 0x0011d334 CopyHandle__FPPPc - *h repla
 void	NameHandle(Handle h, ULong name);				// ROM 0x0011d398 NameHandle__FPPcUl (a tag: nothing on the host)
 void	MoveBlock(const void* src, void* dst, long size);	// ROM 0x0011d2d0 MoveBlock__FPcT1l
 long	MemoryError(void);								// ROM 0x0011d2cc MemoryError__Fv
+void	NamePtr(char* ptr, ULong name);					// ROM 0x0011d2c0 NamePtr__FPcUl (a tag: nothing on the host)
+ULong	GetTicks(void);									// ROM 0x0011d344 GetTicks__Fv - Ticks(), sixtieths of a second
 
 class TRecObject
 {
@@ -87,11 +89,11 @@ public:
 	static TArray*	Make(ULong elementSize, ULong count);	// ROM 0x00206b30 Make__6TArraySFUlT1
 	long			IArray(ULong elementSize, ULong count);	// ROM 0x00206d54 IArray__6TArrayFUlT1 - ==> 0, or an error
 
-	virtual void	Dispose(void);							// ROM 0x00206e7c Dispose__6TArrayFv
+	virtual void	Dispose(void);							// ROM 0x00206e7c Dispose__6TArrayFv (released; gone when no user is left)
 	virtual void	Dump(TMsg* msg);						// ROM 0x00206e10 Dump__6TArrayFP4TMsg
 	virtual long	SizeInBytes(void);						// ROM 0x002067e8 SizeInBytes__6TArrayFv
 	virtual long	CopyInto(TRecObject* other);			// ROM 0x00206824 CopyInto__6TArrayFP10TRecObject
-	virtual void	IDispose(void);							// ROM 0x00206ea8 IDispose__6TArrayFv (vtable +0x10: the storage freed)
+	virtual void	IDispose(void);							// ROM 0x00206ea8 IDispose__6TArrayFv (vtable +0x10: the storage freed, the object deleted)
 	virtual long	Add(void);								// ROM 0x00206c58 Add__6TArrayFv - a slot added at the end; ==> its index, -1 for no memory
 	virtual char*	AddEntry(void);							// ROM 0x00206cec AddEntry__6TArrayFv - ==> the new entry
 	virtual char*	GetEntry(ULong index);					// ROM 0x00206a8c GetEntry__6TArrayFUl - nil past the count

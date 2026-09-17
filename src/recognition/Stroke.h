@@ -109,7 +109,7 @@ public:
 	long			fUnused40;		// +0x40
 	UShort			fDecimation;	// +0x44  every n-th point kept (1: all)
 	UShort			fDecimationCount;	// +0x46  points since the last kept
-	long			fUnused48;		// +0x48
+	long			fClickEvent;	// +0x48  the click event noted in it (Unit.h: kTapClick...; kProcessedClick once handled)
 };
 
 // the inker's lock on the stroke being drawn (the host has no inker task)

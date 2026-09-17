@@ -8,6 +8,7 @@
 */
 
 #include "RecObject.h"
+#include "NewtonTime.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -64,6 +65,23 @@ CopyHandle(Handle* h)
 	memcpy(*copy, **h, size);
 	*h = copy;
 	return 0;
+}
+
+
+// ROM 0x0011d2c0 NamePtr__FPcUl
+// The recogniser tags its blocks for the heap's accounting; the host has no
+// pointer names.
+void
+NamePtr(char* /*ptr*/, ULong /*name*/)
+{ }
+
+
+// ROM 0x0011d344 GetTicks__Fv
+// The recogniser's clock: the Macintosh tick count.
+ULong
+GetTicks(void)
+{
+	return Ticks();
 }
 
 
@@ -253,22 +271,24 @@ TArray::IArray(ULong elementSize, ULong count)
 
 
 // ROM 0x00206e7c Dispose__6TArrayFv
+// One user fewer; the array goes when none is left.
 void
 TArray::Dispose(void)
 {
-	IDispose();
-	delete this;
+	if (Release())
+		IDispose();
 }
 
 
 // ROM 0x00206ea8 IDispose__6TArrayFv
-// The data freed.
+// The data freed and the object deleted.
 void
 TArray::IDispose(void)
 {
 	if (fData != nil)
 		DeleteHandle(fData);
 	fData = nil;
+	delete this;
 }
 
 

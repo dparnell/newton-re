@@ -272,7 +272,7 @@ TStroke::IStroke(ULong count)
 		if (!gDefaultInk)
 			SetFlags(kStrokeNoInk);
 		fSampleRate = 0;
-		fUnused48 = 0;
+		fClickEvent = 0;
 	}
 	return err;
 }

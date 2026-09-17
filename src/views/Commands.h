@@ -54,8 +54,10 @@ enum
 	aeScrollDown			= 0x2e,		// viewScrollDownScript
 	aeGesture2f				= 0x2f,		// more viewGestureScript kinds
 	aeRemoveAllHilites		= 0x30,
-	aeGesture31				= 0x31,
-	aeGesture32				= 0x32,
+	aeTap					= 0x31,		// the click events (TEventRecognizer): viewGestureScript(unit, kind)
+	aeDoubleTap				= 0x32,
+	aeHiliteClick			= 0x34,		// the other click events (kHiliteClick, event 5): not the views' gesture script (NOT YET: who takes them)
+	aeTapDrag				= 0x37,
 	aeOverview				= 0x33,		// viewOverviewScript
 	aePickItem				= 0x36,		// a picker's item picked (TPickView: the PickStuff as a binary frame parameter)
 	aeAddData				= 0x3d,		// the frameParameter added to the receiver's soup (the undo of aeRemoveData)

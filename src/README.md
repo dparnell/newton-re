@@ -117,6 +117,14 @@ src/
                 popup menus (PickView.h); the other subclasses (lists,
                 editing) and the event loop to come
                 (docs/views/README.md)
+  recognition/  the recognition system: the recogniser's object base
+                (RecObject.h), the strokes (Stroke.h), the units the
+                recognisers make and the face the views see (Unit.h,
+                UnitPublic.h), the areas (Areas.h), the domains' base
+                (Domain.h) and the recognisers' front - TRecognizer, the
+                click recognisers, TRecognitionManager (Recognizer.h);
+                the stroke world, controller, arbiter and domains to come
+                (docs/recognition/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the
