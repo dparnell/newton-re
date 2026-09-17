@@ -12,6 +12,7 @@
 add_library(views STATIC
     View.cpp
     Animate.cpp
+    DragDrop.cpp
     ViewDraw.cpp
     BuildView.cpp
     RootView.cpp

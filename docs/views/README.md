@@ -999,14 +999,42 @@ host tablet (the waits are the tablet's hook: no real time passes).  The
 `newton` program's demo slip has a checkerboard effect (the Slip button
 hides and shows it) and is dragged by a press on it.
 
-## Not yet
+### Drag and drop (`DragDrop.h`, `TView::DragAndDrop`)
+
+A view drags its data onto another.  `TDragInfo` 0x000a1d78 (`DragDrop.h`)
+is the payload: an array of item frames (the ROM's canonicalDragItem),
+each with the drag `types` it offers, the `dragRef` (the data or a key to
+it), a `label` and the source `view` - with accessors and `CheckTypes`
+(do the items overlap a set of accepted types).  `TView::DragAndDrop`
+0x0009e394 tracks the pen (`:DragAndDrop(unit, bounds, limit, copy,
+items)`, `FDragAndDrop` 0x001f2f74): the source fills the drag info
+(`AddDragInfo` 0x0009f848, its `viewAddDragInfoScript`), the pen is
+followed, and on release `TargetDrop` 0x0009e7c8 finds the view under it
+that accepts the drag - the deepest with the drop flags
+(`FindView(0x1fffe00)`), walked up while it does not accept
+(`FindDropViewDeep` 0x0009e744 asks `AcceptDrop` 0x000a24c0, which checks
+the target's `GetSupportedDropTypes`/`viewGetDropTypesScript` against the
+items) - then `EndDrag` 0x0009dfb4 delivers each item: the type matched,
+the data fetched from the source (`GetDropData`/`viewGetDropDataScript`)
+and the target told to `Drop` it (`viewDropScript([type, data, pt])`); a
+non-copy drop then `DropRemove`s it from the source
+(`viewDropRemoveScript`), and the target's `DropDone` ends it.  Each step
+runs the matching view script (`Drop`, `DropMove`, `DropApprove`,
+`DropDone`...).  DEVIATION: the ROM's drag draws the dragged data as a
+clipboard icon that follows the pen (`TClipboard`, `NewClipboard`); the
+host's simplified drag just tracks the pen and drops on the release point
+- the visual icon, the clipboard corner, and `DragAndDropLtd` are NOT
+YET.  (Tested by `test_Views`: a press-drag carries a `'text` item from a
+source to a target whose `viewDropScript` receives the data.)
+
+## Not yet## Not yet
 
 The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
 the rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 the key help, the keyboard tool and the
-on-screen keyboards, drag and drop (`DragAndDrop`, `TDragInfo`), the
+on-screen keyboards, the drag icon and the clipboard (`TClipboard`), the
 sounds, `SyncScroll`, the clipboards, the popup and modal dialog
 machinery, the other subclasses (`TListView`, `TEditView`, ...), editing
 in `TParagraphView`, the strokes and words of the recogniser (its

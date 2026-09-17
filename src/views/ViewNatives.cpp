@@ -36,6 +36,7 @@
 #include "Recognizer.h"
 #include "Animate.h"
 #include "Stroke.h"
+#include "DragDrop.h"
 
 
 // ROM 0x001f0234 FGetView__FRC6RefVarT1
@@ -1008,6 +1009,27 @@ FDragX(RefArg rcvr, RefArg unit, RefArg bounds)
 }
 
 
+// ROM 0x001f2f74 FDragAndDrop
+// :DragAndDrop(unit, bounds, limit, copy, dragItems): the view's data
+// (the dragItems array) dragged with the unit's stroke and dropped on the
+// view under the pen at the end.  ==> whether it was dropped.
+static Ref
+FDragAndDrop(RefArg rcvr, RefArg unit, RefArg bounds, RefArg limit, RefArg copy, RefArg dragItems)
+{
+	TView* view = FailGetView(rcvr);
+	TStrokePublic* stroke = StrokeFromRef(unit);
+	Rect b;
+	FromObject(bounds, b);
+	Rect lim;
+	Rect* limitP = nil;
+	if (NOTNIL(limit) && FromObject(limit, lim))
+		limitP = &lim;
+	TDragInfo dragInfo(dragItems);
+	Boolean did = view->DragAndDrop(stroke, b, limitP, nil, NOTNIL(copy), dragInfo, nil);
+	return MAKEBOOLEAN(did);
+}
+
+
 // ROM 0x001ee22c FDeleteX
 // :Delete(message, args): the view crumpled into the trash - the trash
 // effect set up, the message sent to the view (which removes it), the
@@ -1187,6 +1209,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FGetDrawBoxX", (void*) FGetDrawBoxX, 0);
 	RegisterNativeFunction("FSetOriginX", (void*) FSetOriginX, 2);
 	RegisterNativeFunction("FDragX", (void*) FDragX, 2);
+	RegisterNativeFunction("FDragAndDrop", (void*) FDragAndDrop, 5);
 	RegisterNativeFunction("FDeleteX", (void*) FDeleteX, 2);
 	RegisterNativeFunction("FEffectX", (void*) FEffectX, 5);
 	RegisterNativeFunction("FSlideEffectX", (void*) FSlideEffectX, 5);
@@ -1213,7 +1236,7 @@ MakeViewMethods(void)
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
-		{ "Drag", (void*) FDragX, 2 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
+		{ "Drag", (void*) FDragX, 2 }, { "DragAndDrop", (void*) FDragAndDrop, 5 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
 		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },

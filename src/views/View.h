@@ -236,24 +236,26 @@ public:
 	virtual Boolean	PointInHilite(Point& pt);							// ROM 0x0026051c PointInHilite__5TViewFR6TPoint
 	virtual long	ClickOptions(void);									// ROM 0x00260630 ClickOptions__5TViewFv
 	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x00260638 DrawScaledData__5TViewFRC5TRectT1P5TRect
-	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);
-	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);
-	virtual Boolean	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* slop, Boolean copy, const TDragInfo& dragInfo, const Rect* dragBounds);
+	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0009f848 AddDragInfo__5TViewFP9TDragInfo (viewAddDragInfoScript)
+	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x000a27c0 GetDropData__5TViewFRC6RefVarT1 (viewGetDropDataScript, else nil)
+	virtual Boolean	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* slop, Boolean copy, const TDragInfo& dragInfo, const Rect* dragBounds);	// ROM 0x0009e394 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3
 	virtual void	DrawDragBackground(const Rect& bounds, Boolean copy);
 	virtual void	DrawDragData(const Rect& bounds);
 	virtual Boolean	GetClipboardDataBits(Rect* bounds);
-	virtual Boolean	AcceptDrop(const TDragInfo& dragInfo, const Point& pt);
-	virtual Boolean	Drop(RefArg dropTypes, RefArg dropData, Point* dropPt);
-	virtual Boolean	DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy);
-	virtual Boolean	DropRemove(RefArg dragRef);
-	virtual void	DropDone(void);
+	virtual Boolean	AcceptDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a24c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
+	virtual Boolean	Drop(RefArg dropTypes, RefArg dropData, Point* dropPt);	// ROM 0x0009ddc4 Drop__5TViewFRC6RefVarT1P6TPoint (viewDropScript)
+	virtual Boolean	DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy);	// ROM 0x000a25e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc (viewDropMoveScript)
+	virtual Boolean	DropRemove(RefArg dragRef);							// ROM 0x0009de90 DropRemove__5TViewFRC6RefVar (viewDropRemoveScript)
+	virtual Boolean	DropDone(void);										// ROM 0x0009e334 DropDone__5TViewFv
+	virtual Boolean	DropApprove(TView* target);							// ROM 0x0009df10 DropApprove__5TViewFP5TView (viewDropApproveScript)
+	virtual TView*	TargetDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x0009e7c8 TargetDrop__5TViewFRC9TDragInfoRC6TPoint
 	virtual void	BuildKeyChildList(TViewList* list, long arg1, long arg2);	// ROM 0x00268290 BuildKeyChildList__5TViewFP9TViewListlT2
 	virtual void	SimpleOffset(Point delta, Boolean inChildren);		// ROM 0x0025e064 SimpleOffset__5TViewF6TPointl
 	virtual void	PreDraw(Rect& bounds);								// ROM 0x00266370 PreDraw__5TViewFR5TRect
 	virtual void	PostDraw(Rect& bounds);								// ROM 0x002666c0 PostDraw__5TViewFR5TRect
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x002666bc RealDraw__5TViewFR5TRect
 	virtual void	Scale(const Rect& src, const Rect& dst);			// ROM 0x002606bc Scale__5TViewFRC5TRectT1
-	virtual Boolean	EndDrag(const TDragInfo& dragInfo, TView* target, const Point& dropPt, const Point& dragPt, Boolean copy);
+	virtual void	EndDrag(const TDragInfo& dragInfo, TView* target, const Point& startPt, const Point& dropPt, const Point& dragPt, Boolean copy);	// ROM 0x0009dfb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
 	virtual void	DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean copy);
 	virtual Ref		GetSupportedDropTypes(const Point& pt);
 	virtual TView*	FindDropView(const TDragInfo& dragInfo, const Point& pt);

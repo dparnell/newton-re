@@ -22,6 +22,8 @@
 #include "RegionVars.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "DragDrop.h"
+#include "Stroke.h"
 #include "ROMConstants.h"
 #include "REPTranslators.h"
 #include "Fonts.h"
@@ -1335,22 +1337,235 @@ long	TView::ClickOptions(void)									{ return 0; }		// ROM 0x00260630 ClickOpt
 void	TView::DrawScaledData(const Rect&, const Rect&, Rect*)		{ }		// ROM 0x00260638 DrawScaledData__5TViewFRC5TRectT1P5TRect
 void	TView::Scale(const Rect&, const Rect&)						{ }		// ROM 0x002606bc Scale__5TViewFRC5TRectT1
 
-// drag and drop: NOT YET RECONSTRUCTED
-Boolean	TView::AddDragInfo(TDragInfo*)								{ return false; }
-Ref		TView::GetDropData(RefArg, RefArg)							{ return NILREF; }
-Boolean	TView::DragAndDrop(TStrokePublic*, const Rect&, const Rect*, const Rect*, Boolean, const TDragInfo&, const Rect*)	{ return false; }
+/*------------------------------------------------------------------------------
+	D r a g   a n d   d r o p
+	The pen-tracked drag of a view's data onto another; the source offers
+	drag items (AddDragInfo), the target under the pen is found and asked
+	which types it takes (GetSupportedDropTypes/AcceptDrop), given the data
+	(GetDropData from the source) and told to drop (Drop -> viewDropScript).
+	Each step runs the matching view script.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0009f848 AddDragInfo__5TViewFP9TDragInfo
+// The view's drag items added through its viewAddDragInfoScript([items]);
+// ==> whether it added any.
+Boolean
+TView::AddDragInfo(TDragInfo* dragInfo)
+{
+	RefVar args(MakeArray(1));
+	SetArraySlot(args, 0, RefVar(dragInfo->GetItems()));
+	Boolean ran = false;
+	RefVar result(RunScript(RSSYMviewadddraginfoscript, args, true, &ran));
+	return ran && NOTNIL(result);
+}
+
+
+// ROM 0x000a27c0 GetDropData__5TViewFRC6RefVarT1
+// The data for a drop type, from the source's viewGetDropDataScript
+// ([type, dragRef]).
+Ref
+TView::GetDropData(RefArg dragType, RefArg dragRef)
+{
+	RefVar args(MakeArray(2));
+	SetArraySlot(args, 0, dragType);
+	SetArraySlot(args, 1, dragRef);
+	return RunScript(RSSYMviewgetdropdatascript, args, true);
+}
+
+
+// ROM 0x000a26fc GetSupportedDropTypes__5TViewFRC6TPoint
+// The drag types the view accepts at the point, from its
+// viewGetDropTypesScript([pt]); nil for none.
+Ref
+TView::GetSupportedDropTypes(const Point& pt)
+{
+	RefVar args(MakeArray(1));
+	SetArraySlot(args, 0, RefVar(PointToFrame(pt)));
+	Boolean ran = false;
+	RefVar result(RunScript(RSSYMviewgetdroptypesscript, args, true, &ran));
+	return (ran && ISNIL(result)) ? NILREF : (Ref) result;
+}
+
+
+// ROM 0x000a24c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
+// Whether the view takes the drag at the point: its supported types
+// checked against the drag's items.
+Boolean
+TView::AcceptDrop(const TDragInfo& dragInfo, const Point& pt)
+{
+	RefVar types(GetSupportedDropTypes(pt));
+	if (!IsArray(types))
+		return false;
+	return ((TDragInfo&) dragInfo).CheckTypes(types);
+}
+
+
+// ROM 0x0009ddc4 Drop__5TViewFRC6RefVarT1P6TPoint
+// The drop delivered to the view: viewDropScript([type, data, pt]).
+Boolean
+TView::Drop(RefArg dropTypes, RefArg dropData, Point* dropPt)
+{
+	RefVar args(MakeArray(3));
+	SetArraySlot(args, 0, dropTypes);
+	SetArraySlot(args, 1, dropData);
+	SetArraySlot(args, 2, RefVar(PointToFrame(*dropPt)));
+	return NOTNIL(RunScript(RSSYMviewdropscript, args, true));
+}
+
+
+// ROM 0x000a25e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc
+// A drag moved within the view: viewDropMoveScript([dragRef, oldPt,
+// newPt, copy]).
+Boolean
+TView::DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy)
+{
+	RefVar args(MakeArray(4));
+	SetArraySlot(args, 0, dragRef);
+	SetArraySlot(args, 1, RefVar(PointToFrame(oldPt)));
+	SetArraySlot(args, 2, RefVar(PointToFrame(newPt)));
+	SetArraySlot(args, 3, RefVar(copy ? TRUEREF : NILREF));
+	return NOTNIL(RunScript(RSSYMviewdropmovescript, args, true));
+}
+
+
+// ROM 0x0009de90 DropRemove__5TViewFRC6RefVar
+// The dragged item removed from the source after a move:
+// viewDropRemoveScript([dragRef]).
+Boolean
+TView::DropRemove(RefArg dragRef)
+{
+	RefVar args(MakeArray(1));
+	SetArraySlot(args, 0, dragRef);
+	return NOTNIL(RunScript(RSSYMviewdropremovescript, args, true));
+}
+
+
+// ROM 0x0009df10 DropApprove__5TViewFP5TView
+// Whether the source approves dropping on the target:
+// viewDropApproveScript([targetContext]).  With no script the drop is
+// approved.
+Boolean
+TView::DropApprove(TView* target)
+{
+	RefVar args(MakeArray(1));
+	if (target != nil)
+		SetArraySlot(args, 0, RefVar(target->fContext));
+	Boolean ran = false;
+	RefVar result(RunScript(RSSYMviewdropapprovescript, args, true, &ran));
+	if (!ran)
+		return true;			// no script: approved
+	return NOTNIL(result);
+}
+
+
+// ROM 0x0009e334 DropDone__5TViewFv
+Boolean
+TView::DropDone(void)
+{
+	return NOTNIL(RunScript(RSSYMviewdropdonescript, RefVar(NILREF), true));
+}
+
+
+// ROM 0x0009e7c8 TargetDrop__5TViewFRC9TDragInfoRC6TPoint
+// The view that would take the drag at the point: the deepest view there
+// with the drop flags, walked up to one that accepts the drag
+// (FindDropViewDeep), then its FindDropView, then its viewFindTargetScript
+// gets a chance to redirect.  Nil for none.
+TView*
+TView::TargetDrop(const TDragInfo& dragInfo, const Point& pt)
+{
+	TView* under = gRootView->FindView(pt, 0x1fffe00, nil);
+	if (under == nil)
+		return nil;
+	TView* accepting = FindDropViewDeep(under, dragInfo, pt);
+	if (accepting == nil)
+		return nil;
+	TView* target = accepting->FindDropView(dragInfo, pt);
+	if (target == nil)
+		return nil;
+	RefVar args(MakeArray(1));
+	SetArraySlot(args, 0, RefVar(((TDragInfo&) dragInfo).GetItems()));
+	Boolean ran = false;
+	RefVar redirect(target->RunScript(RSSYMviewfindtargetscript, args, true, &ran));
+	if (ran)
+		target = ISNIL(redirect) ? nil : GetView(redirect);
+	return target;
+}
+
+
+// ROM 0x0009dfb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
+// The drag delivered: for each item, when it is dropped on this same view
+// it is moved (DropMove); else the target's supported types pick the
+// item's type, the data is fetched from the source (GetDropData) and the
+// target told to Drop it - a successful non-copy drop then removes the
+// item from the source (DropRemove).  The target's DropDone ends it.
+void
+TView::EndDrag(const TDragInfo& info, TView* target, const Point& startPt, const Point& dropPt, const Point& dragPt, Boolean copy)
+{
+	TDragInfo& dragInfo = (TDragInfo&) info;
+	long count = dragInfo.Count();
+	for (long i = 0; i < count; i++)
+	{
+		RefVar dragRef(dragInfo.GetItemDragRef(i));
+		if (this == target)
+		{
+			DropMove(dragRef, startPt, dragPt, copy);
+			continue;
+		}
+		RefVar types(target->GetSupportedDropTypes(dropPt));
+		RefVar type(dragInfo.FindType(i, types));
+		RefVar data(GetDropData(type, dragRef));
+		if (ISNIL(data))
+		{
+			TView* itemView = dragInfo.GetItemView(i);
+			if (itemView != nil)
+				data = itemView->GetDropData(type, dragRef);
+		}
+		if (ISNIL(data))
+			continue;
+		Point pt = dropPt;
+		if (target->Drop(type, data, &pt))
+		{
+			if (!copy && (fFlags & (vReadOnly | vWriteProtected)) == 0)
+				DropRemove(dragRef);
+		}
+	}
+	target->DropDone();
+}
+
+
+// ROM 0x0009e394 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 (NOT YET RECONSTRUCTED: the pen-tracked drag
+// with the clipboard icon following the pen; the host's simplified drag
+// tracks the pen and drops on the target under the release point)
+Boolean
+TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* /*limit*/, const Rect* /*slop*/, Boolean copy, const TDragInfo& info, const Rect* /*dragBounds*/)
+{
+	stroke->InkOff(true);
+	TDragInfo& dragInfo = (TDragInfo&) info;
+	if (dragInfo.Count() == 0)
+		AddDragInfo(&dragInfo);
+	Point start = stroke->FirstPoint();
+	// follow the pen (a full drag draws the item as it moves - NOT YET);
+	// the release point picks the drop target
+	while (!stroke->Done())
+		Wait(1);
+	Point drop = stroke->FinalPoint();
+	TView* target = TargetDrop(dragInfo, drop);
+	if (target == nil)
+		return false;
+	if (!DropApprove(target))
+		return false;
+	EndDrag(dragInfo, target, start, drop, drop, copy);
+	return true;
+}
+
+
+// the default drop hooks a view without its own behaviour uses
 void	TView::DrawDragBackground(const Rect&, Boolean)				{ }
 void	TView::DrawDragData(const Rect&)							{ }
 Boolean	TView::GetClipboardDataBits(Rect*)							{ return false; }
-Boolean	TView::AcceptDrop(const TDragInfo&, const Point&)			{ return false; }
-Boolean	TView::Drop(RefArg, RefArg, Point*)							{ return false; }
-Boolean	TView::DropMove(RefArg, const Point&, const Point&, Boolean)	{ return false; }
-Boolean	TView::DropRemove(RefArg)									{ return false; }
-void	TView::DropDone(void)										{ }
-Boolean	TView::EndDrag(const TDragInfo&, TView*, const Point&, const Point&, Boolean)	{ return false; }
 void	TView::DragFeedback(const TDragInfo&, const Point&, Boolean)	{ }
-Ref		TView::GetSupportedDropTypes(const Point&)					{ return NILREF; }
-TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return nil; }
+TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a1ff4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
 
 
 // ROM 0x00268290 BuildKeyChildList__5TViewFP9TViewListlT2

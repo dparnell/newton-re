@@ -1673,6 +1673,31 @@ TestClicks()
 	Eval("SetKeyView(nil, nil); RemoveView(GetRoot(), ctxTP)");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "paragraph tap in recognition closed"));
+
+	// drag and drop: a press-drag from a source view carries a 'text item
+	// to a target with a viewDropScript that accepts 'text
+	Eval("dropped := nil");
+	TView* src = ViewOf("ctxDS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
+		"viewClickScript: func(unit) begin :DragAndDrop(unit, :GlobalBox(), nil, nil, [{types: ['text], dragRef: \"hi there\"}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
+	Eval("ctxDT := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 100, top: 40, right: 150, bottom: 70}, viewFormat: 1, "
+		"viewGetDropTypesScript: func(pt) ['text], "
+		"viewDropScript: func(dropType, dropData, pt) begin dropped := dropData; true end})");
+	Eval("ctxDS:Dirty(); ctxDT:Dirty()");
+	Refresh();
+	(void) src;
+	// press on the source, drag to the target, release
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(40, 55, 0);
+	HostTabletQueuePenMove(70, 55);
+	HostTabletQueuePenMove(100, 55);
+	HostTabletQueuePenMove(125, 55);		// over the target
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"hi there\")")));		// the target's drop script got the data
+	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "drag and drop closed"));
 }
 
 
