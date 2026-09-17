@@ -152,8 +152,41 @@ sample strides and the converters out of the rates, sample sizes and formats
 already in the state; `GetSample` and `PutSample` (ROM 0x001e9e30,
 0x001e9e8c) are the one-sample reads and writes that go through them.
 
+## The codec protocol (`SoundCodec.h`)
+
+`TSoundCodec` is the protocol a sound channel turns coded sound into samples
+through, and samples back into coded sound.  A codec holds one buffer at a
+time: `Reset` hands it a `CodecBlock` - where the buffer is, how big, how
+its samples are coded and at what rate - and `Produce` is then asked, over
+and over, for the next stretch as 16-bit linear.  Each call fills as much of
+the caller's buffer as it can, answers how many bytes and samples that was,
+and fills the block in with what the samples have become (16-bit linear, at
+the recorded rate).  `Consume` goes the other way, coding the caller's
+samples into the codec's own buffer.  `BufferCompleted` says when the buffer
+is used up; `Init`, `Start` and `Stop` are the hooks a codec with state of
+its own needs.
+
+`CodecBlock`'s field names are ours, read off `ConvertCodecBlock` (ROM
+0x001e8004 and 0x001e8040), which copies a `SoundBlock` into one and back;
+`fError` is zeroed when the block is made, and converting one back into a
+`SoundBlock` is refused while it is negative.
+
+The `SafeCodec*` calls (ROM 0x000d3558, 0x001e8080-0x001e8290) are the same
+calls with an exception handler round them, which is how the sound channel
+makes them: a Throw out of a codec becomes `ERRBASE_SOUND` rather than
+unwinding into the channel.
+
+`TMuLawCodec` (ROM 0x001249c8-0x00124ce0) is the mu-law implementation.  It
+keeps nothing but where it has got to in the buffer, so `Init`, `Start` and
+`Stop` have nothing to do, and it carries its own copies of the two
+conversions - the same arithmetic as `SampleConvert.h`'s, including the
+overflow bug, but without the dither.  `InitializeSound` (ROM 0x001eae0c)
+registers it; `test_SoundCodec` drives one both directly and through an
+instance made by name from the registry, which is why it boots the OS.
+
 ## Not yet
 
-`TMuLawCodec` and the sound-server streaming layer (`TSoundCodec`,
-`TIMACodec`, `TSoundServer`/`TSoundChannel`, `CodecBlock`,
-`Produce`/`Consume`).
+The other codec implementations (`TIMACodec`, `TGSMCodec`, `TDTMFCodec`) and
+the layer that drives them: `TSoundServer`/`TSoundChannel`, `TCodecChannel`,
+`TDMAChannel` and the `SoundBlock` a `CodecBlock` is converted from, and the
+sound hardware driver the rest of `InitializeSound` starts.

@@ -1,6 +1,7 @@
 # Sound: the codecs the Newton uses for recorded sound - IMA/DVI ADPCM
 # (IMACodec.h), the 8-bit sample codings (SampleConvert.h: mu-law and
-# offset-binary 8-bit) and the sample-rate converters (Resample.h).  The DDK
+# offset-binary 8-bit), the sample-rate converters (Resample.h) and the
+# TSoundCodec protocol with its mu-law implementation (SoundCodec.h).  The DDK
 # has no header for these; reconstructed from the ROM.  The
 # TSoundCodec/TSoundServer streaming is NOT YET.
 #
@@ -12,8 +13,9 @@ add_library(sound STATIC
     SampleConvert.cpp
     Resample.cpp
     ResampleTables.cpp
+    SoundCodec.cpp
 )
-target_link_libraries(sound PUBLIC newton_config qd)
+target_link_libraries(sound PUBLIC newton_config qd protocols)
 target_include_directories(sound PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

@@ -17,3 +17,8 @@ add_executable(test_ResampleFiltered test_ResampleFiltered.cpp)
 target_link_libraries(test_ResampleFiltered PRIVATE sound)
 add_test(NAME sound.ResampleFiltered COMMAND test_ResampleFiltered)
 set_tests_properties(sound.ResampleFiltered PROPERTIES TIMEOUT 60)
+
+add_executable(test_SoundCodec test_SoundCodec.cpp)
+target_link_libraries(test_SoundCodec PRIVATE sound os600_kernel os600_user)
+add_test(NAME sound.SoundCodec COMMAND test_SoundCodec)
+set_tests_properties(sound.SoundCodec PROPERTIES TIMEOUT 60)
