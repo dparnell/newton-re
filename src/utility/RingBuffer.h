@@ -3,8 +3,9 @@
 
 	Contains:	CRingBuffer, the byte ring buffer the serial and comm code
 				streams through, its abstract base CBaseRingBuffer (the
-				interface CRingPipe and CTaskPipe hold), and CRingPipe, the
-				CPipe over such a buffer.
+				interface CRingPipe and CTaskPipe hold), CRingPipe, the CPipe
+				over such a buffer, and CShadowRingBuffer, the form whose
+				bytes live in a shared-memory object.
 
 				The buffer holds fSize bytes and wastes one slot, so it can
 				tell full from empty by the pointers alone: fGet == fPut is
@@ -17,14 +18,15 @@
 				Update*Vector advances the pointers over a run.
 
 	The DDK has no header for these; reconstructed from the MP2100 D ROM
-	(0x001af060-0x001b00d0), each function citing its origin.  The ROM
+	(0x001af060-0x001b00d0 and 0x001e12d8-0x001e1e80), each function citing
+	its origin.  The ROM
 	dispatches the primitives through the vtable (so Put asks the virtual
 	IsFull, and so on); the reconstruction keeps that, and declares the
 	virtuals in the ROM's vtable order (analysis/vtable.py on the CRingBuffer
 	vtable) - note that Init is *not* virtual there, and that CopyIn(CPipe*)
 	and GetnAt are CRingBuffer's own additions past the end of the base's
-	twenty.  NOT YET: the shared forms (MakeShared/UnShare, over the TUObject
-	at +0x18) and CShadowRingBuffer, the form over shared memory.
+	twenty.  NOT YET: CRingBuffer's shared forms (MakeShared/UnShare, over the
+	TUObject at +0x18).
 */
 
 #ifndef __RINGBUFFER_H
@@ -36,6 +38,10 @@
 
 #ifndef __PIPES_H
 #include "Pipes.h"
+#endif
+
+#ifndef __USERSHAREDMEM_H
+#include "UserSharedMem.h"
 #endif
 
 
@@ -149,6 +155,80 @@ public:
 	CBaseRingBuffer*	fBuffer;		// +0x04
 	Boolean				fOwnsBuffer;	// +0x08  disposed of with the pipe
 	Boolean				fReadHitEOF;	// +0x09  the buffer ran out during a read
+};
+
+
+/*------------------------------------------------------------------------------
+	C S h a d o w R i n g B u f f e r
+	The same ring buffer, but over a shared-memory object belonging to another
+	task: there is no address to write to here, so every byte goes through
+	TUSharedMem::CopyToShared / CopyFromShared, and what the buffer keeps are
+	offsets into that block rather than pointers.  The base class's virtuals
+	hand their vectors back through a UByte*&, so the ROM - and this
+	reconstruction with it - puts those offsets through the pointer type; the
+	third, untyped pointer is ComputeTempGetVectors, which the class declares
+	for itself and so could type honestly.
+
+	The extra pointer is what the "shadow" means: besides fGetOffset, which
+	says what has been consumed, there is fTempGetOffset, a speculative read
+	position.  TempGetn/TempCopyOut read ahead from it without consuming, and
+	TempReset puts it back to fGetOffset - so a reader can look at what is
+	coming (a part's header, say) and then decide.  CPartPipe streams a
+	package's part through one.
+
+	The class adds no virtuals of its own: everything past the base's twenty
+	is an ordinary member.
+
+	The shared-memory object must be made with kSMemNoSizeChangeOnCopyTo
+	(SharedTypes.h): a CopyToShared otherwise sets the block's size in use to
+	what it has just written (offset + size), and a ring buffer writes at a
+	lower offset than the last one every time it wraps - so the block would
+	shrink under the buffer and a read past the new end would answer nothing.
+------------------------------------------------------------------------------*/
+
+class CShadowRingBuffer : public CBaseRingBuffer
+{
+public:
+					CShadowRingBuffer();			// ROM 0x001e12d8 __ct__17CShadowRingBufferFv
+	virtual			~CShadowRingBuffer();			// ROM 0x001e1334 __dt__17CShadowRingBufferFv
+
+	void			Init(TObjectId sharedMem, long getOffset, long dataCount);	// ROM 0x001e1868 Init__17CShadowRingBufferFUllT2
+
+	virtual int			Peek();						// ROM 0x001e1d60 Peek__17CShadowRingBufferFv
+	virtual int			Next();						// ROM 0x001e1d78 Next__17CShadowRingBufferFv
+	virtual NewtonErr	Skip();						// ROM 0x001e1db4 Skip__17CShadowRingBufferFv
+	virtual int			Get();						// ROM 0x001e1df4 Get__17CShadowRingBufferFv
+	virtual int			Getn(UByte* data, long count);				// ROM 0x001e1e3c Getn__17CShadowRingBufferFPUcl
+	virtual NewtonErr	CopyOut(UByte* data, long& count);			// ROM 0x001e1380 CopyOut__17CShadowRingBufferFPUcRl
+	virtual int			Put(int byte);				// ROM 0x001e1634 Put__17CShadowRingBufferFi
+	virtual int			Putn(const UByte* data, long count);			// ROM 0x001e1694 Putn__17CShadowRingBufferFPCUcl
+	virtual NewtonErr	CopyIn(const UByte* data, long& count);		// ROM 0x001e16c4 CopyIn__17CShadowRingBufferFPCUcRl
+	virtual void		Reset();					// ROM 0x001e17fc Reset__17CShadowRingBufferFv
+	virtual long		GetSize() const;			// ROM 0x001e180c GetSize__17CShadowRingBufferCFv
+	virtual Boolean		AtEOF() const;				// ROM 0x001e1818 AtEOF__17CShadowRingBufferCFv
+	virtual Boolean		IsFull() const;				// ROM 0x001e1c9c IsFull__17CShadowRingBufferCFv
+	virtual Boolean		IsEmpty() const;			// ROM 0x001e1cc4 IsEmpty__17CShadowRingBufferCFv
+	virtual long		FreeCount() const;			// ROM 0x001e18b0 FreeCount__17CShadowRingBufferCFv
+	virtual long		DataCount() const;			// ROM 0x001e18d0 DataCount__17CShadowRingBufferCFv
+	virtual long		UpdatePutVector(long count);	// ROM 0x001e1bec UpdatePutVector__17CShadowRingBufferFl
+	virtual long		UpdateGetVector(long count);	// ROM 0x001e1b3c UpdateGetVector__17CShadowRingBufferFl
+	virtual void		ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001e1910 ComputePutVectors__17CShadowRingBufferCFRPUcRlT1T2
+	virtual void		ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001e1a80 ComputeGetVectors__17CShadowRingBufferCFRPUcRlT1T2
+
+	// the class's own members - it adds nothing to the vtable
+	UByte			GetByteAt(long offset);				// ROM 0x001e1cdc GetByteAt__17CShadowRingBufferFl
+	int				PutByteAt(int byte, long offset);	// ROM 0x001e1d1c PutByteAt__17CShadowRingBufferFil
+	int				TempGetn(UByte* data, long count);	// ROM 0x001e14c8 TempGetn__17CShadowRingBufferFPUcl
+	NewtonErr		TempCopyOut(UByte* data, long& count);	// ROM 0x001e14f0 TempCopyOut__17CShadowRingBufferFPUcRl
+	void			TempReset();						// ROM 0x001e1628 TempReset__17CShadowRingBufferFv
+	long			TempDataCount() const;				// ROM 0x001e18f0 TempDataCount__17CShadowRingBufferCFv
+	void			ComputeTempGetVectors(ULong& o1, long& n1, ULong& o2, long& n2) const;	// ROM 0x001e19c4 ComputeTempGetVectors__17CShadowRingBufferCFRUlRlT1T2
+
+	ULong			fPutOffset;			// +0x04  where the next Put writes
+	ULong			fGetOffset;			// +0x08  where the next Get reads
+	ULong			fTempGetOffset;		// +0x0c  the speculative read position
+	ULong			fSize;				// +0x10  the shared memory's size, the wrap point
+	TUSharedMem		fSharedMem;		// +0x14  the block the bytes live in
 };
 
 #endif	/* __RINGBUFFER_H */

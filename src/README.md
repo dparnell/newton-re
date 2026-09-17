@@ -155,7 +155,8 @@ src/
                 CMemoryPipe and MemoryPipe, PipeCallBack; no DDK header);
                 the byte ring buffer the serial and comm code streams
                 through and the pipe over it (RingBuffer.h:
-                CBaseRingBuffer, CRingBuffer, CRingPipe), and the two
+                CBaseRingBuffer, CRingBuffer, CRingPipe, and
+                CShadowRingBuffer over a shared-memory object), and the two
                 CRC-16 accumulators framed data is checked with
                 (CRC16.h)
   frames/       the NewtonScript object system: refs, the object heap and

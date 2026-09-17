@@ -13,3 +13,8 @@ add_test(NAME utility.CRC16 COMMAND test_CRC16)
 add_executable(test_RingBuffer test_RingBuffer.cpp)
 target_link_libraries(test_RingBuffer PRIVATE utility)
 add_test(NAME utility.RingBuffer COMMAND test_RingBuffer)
+
+add_executable(test_ShadowRingBuffer test_ShadowRingBuffer.cpp)
+target_link_libraries(test_ShadowRingBuffer PRIVATE utility os600_kernel os600_user)
+add_test(NAME utility.ShadowRingBuffer COMMAND test_ShadowRingBuffer)
+set_tests_properties(utility.ShadowRingBuffer PROPERTIES TIMEOUT 30)

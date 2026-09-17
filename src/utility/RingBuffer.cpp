@@ -1,9 +1,10 @@
 /*
 	File:		utility/RingBuffer.cpp
 
-	Contains:	CBaseRingBuffer, CRingBuffer and CRingPipe (RingBuffer.h) -
-				the byte ring buffer the comm code streams through, and the
-				pipe over it.
+	Contains:	CBaseRingBuffer, CRingBuffer, CRingPipe and
+				CShadowRingBuffer (RingBuffer.h) - the byte ring buffer the
+				comm code streams through, the pipe over it, and the form
+				whose bytes live in a shared-memory object.
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
 	The internal calls go through the virtuals as the ROM's do (Put asks
@@ -678,4 +679,550 @@ CRingPipe::WriteChunk(const void* data, long count, Boolean flush)
 	}
 	if (flush)
 		FlushWrite();
+}
+
+
+/*------------------------------------------------------------------------------
+	C S h a d o w R i n g B u f f e r
+
+	What the ROM's Compute*Vectors hand back here are offsets into the shared
+	memory, not addresses; the base class's virtual passes them through a
+	UByte*&, so they go through the pointer type both ways.  ULong is
+	pointer-sized (NewtonTypes.h), so nothing is lost.
+------------------------------------------------------------------------------*/
+
+static inline UByte*	AsVector(ULong offset)	{ return (UByte*) offset; }
+static inline ULong		AsOffset(UByte* p)		{ return (ULong) p; }
+
+
+// ROM 0x001e12d8 __ct__17CShadowRingBufferFv
+CShadowRingBuffer::CShadowRingBuffer()
+{
+	fPutOffset = 0;
+	fGetOffset = 0;
+	fTempGetOffset = 0;
+	fSize = 0;
+}
+
+
+// ROM 0x001e1334 __dt__17CShadowRingBufferFv
+CShadowRingBuffer::~CShadowRingBuffer()
+{ }
+
+
+// ROM 0x001e1868 Init__17CShadowRingBufferFUllT2
+// Take a copy of the shared-memory object's id and let its size be the
+// buffer's; the data already in it starts at getOffset and is dataCount
+// bytes long.
+void
+CShadowRingBuffer::Init(TObjectId sharedMem, long getOffset, long dataCount)
+{
+	fSharedMem.CopyObject(sharedMem);
+	fSharedMem.GetSize(&fSize, nil);
+	fGetOffset = getOffset;
+	fTempGetOffset = getOffset;
+	fPutOffset = getOffset + dataCount;
+}
+
+
+// ROM 0x001e1cdc GetByteAt__17CShadowRingBufferFl
+UByte
+CShadowRingBuffer::GetByteAt(long offset)
+{
+	ULong got = 0;
+	UByte byte;
+	fSharedMem.CopyFromShared(&got, &byte, 1, offset, nil);
+	return byte;
+}
+
+
+// ROM 0x001e1d1c PutByteAt__17CShadowRingBufferFil
+int
+CShadowRingBuffer::PutByteAt(int byte, long offset)
+{
+	UByte value = (UByte) byte;
+	if (fSharedMem.CopyToShared(&value, 1, offset, nil) != noErr)
+		return -1;
+	return byte;
+}
+
+
+// ROM 0x001e17fc Reset__17CShadowRingBufferFv
+// fTempGetOffset is left where it was - TempReset is what puts it back.
+void
+CShadowRingBuffer::Reset()
+{
+	fGetOffset = 0;
+	fPutOffset = 0;
+}
+
+
+// ROM 0x001e1628 TempReset__17CShadowRingBufferFv
+void
+CShadowRingBuffer::TempReset()
+{
+	fTempGetOffset = fGetOffset;
+}
+
+
+// ROM 0x001e180c GetSize__17CShadowRingBufferCFv
+long
+CShadowRingBuffer::GetSize() const
+{
+	return fSize - 1;
+}
+
+
+// ROM 0x001e1c9c IsFull__17CShadowRingBufferCFv
+Boolean
+CShadowRingBuffer::IsFull() const
+{
+	ULong next = (fGetOffset == 0) ? fSize : fGetOffset;
+	return fPutOffset == next - 1;
+}
+
+
+// ROM 0x001e1cc4 IsEmpty__17CShadowRingBufferCFv
+Boolean
+CShadowRingBuffer::IsEmpty() const
+{
+	return fGetOffset == fPutOffset;
+}
+
+
+// ROM 0x001e1818 AtEOF__17CShadowRingBufferCFv
+Boolean
+CShadowRingBuffer::AtEOF() const
+{
+	return IsEmpty() || IsFull();
+}
+
+
+// ROM 0x001e18b0 FreeCount__17CShadowRingBufferCFv
+long
+CShadowRingBuffer::FreeCount() const
+{
+	long count = (long) (fGetOffset - fPutOffset) - 1;
+	if (fGetOffset <= fPutOffset)
+		count += fSize;
+	return count;
+}
+
+
+// ROM 0x001e18d0 DataCount__17CShadowRingBufferCFv
+long
+CShadowRingBuffer::DataCount() const
+{
+	long count = (long) (fPutOffset - fGetOffset);
+	if (fPutOffset < fGetOffset)
+		count += fSize;
+	return count;
+}
+
+
+// ROM 0x001e18f0 TempDataCount__17CShadowRingBufferCFv
+// What is still ahead of the speculative read position.
+long
+CShadowRingBuffer::TempDataCount() const
+{
+	long count = (long) (fPutOffset - fTempGetOffset);
+	if (fPutOffset < fTempGetOffset)
+		count += fSize;
+	return count;
+}
+
+
+// ROM 0x001e1910 ComputePutVectors__17CShadowRingBufferCFRPUcRlT1T2
+// CRingBuffer::ComputePutVectors with the buffer starting at offset 0.
+void
+CShadowRingBuffer::ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const
+{
+	ULong limit = (fGetOffset == 0) ? fSize : fGetOffset;
+	limit = limit - 1;					// the last writable slot before fGetOffset
+	if (fPutOffset == fGetOffset)
+	{
+		if (fPutOffset == 0 || limit == 0)
+		{
+			p1 = AsVector(0);
+			n1 = 0;
+		}
+		else
+		{
+			p1 = AsVector(0);
+			n1 = limit;
+		}
+		if (fPutOffset <= limit)
+		{
+			p2 = AsVector(fPutOffset);
+			n2 = limit - fPutOffset;
+		}
+		else
+		{
+			p2 = AsVector(fPutOffset);
+			n2 = fSize - fPutOffset;
+		}
+	}
+	else if (fPutOffset == limit)
+	{
+		p1 = AsVector(0);  n1 = 0;
+		p2 = AsVector(0);  n2 = 0;
+	}
+	else if (fPutOffset <= limit)
+	{
+		p1 = AsVector(0);  n1 = 0;
+		p2 = AsVector(fPutOffset);
+		n2 = limit - fPutOffset;
+	}
+	else
+	{
+		p1 = AsVector(0);
+		n1 = limit;
+		p2 = AsVector(fPutOffset);
+		n2 = fSize - fPutOffset;
+	}
+}
+
+
+// ROM 0x001e1a80 ComputeGetVectors__17CShadowRingBufferCFRPUcRlT1T2
+void
+CShadowRingBuffer::ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const
+{
+	ULong wrap = (fGetOffset == 0) ? fSize : fGetOffset;
+	if (fPutOffset == fGetOffset)		// empty
+	{
+		p1 = AsVector(0);  n1 = 0;
+		p2 = AsVector(0);  n2 = 0;
+		return;
+	}
+	if (fPutOffset == wrap - 1)
+	{
+		if (fPutOffset < fGetOffset)
+		{
+			p1 = AsVector(0);
+			n1 = fPutOffset;
+			p2 = AsVector(fGetOffset);
+			n2 = fSize - fGetOffset;
+			return;
+		}
+	}
+	else if (fPutOffset <= fGetOffset)
+	{
+		p2 = AsVector(fGetOffset);
+		n2 = fSize - fGetOffset;
+		p1 = AsVector(0);
+		n1 = fPutOffset;
+		return;
+	}
+	p1 = AsVector(0);  n1 = 0;
+	p2 = AsVector(fGetOffset);
+	n2 = fPutOffset - fGetOffset;
+}
+
+
+// ROM 0x001e19c4 ComputeTempGetVectors__17CShadowRingBufferCFRUlRlT1T2
+// The same runs, from the speculative read position - and with the offsets
+// declared as what they are, this one not being an override.
+void
+CShadowRingBuffer::ComputeTempGetVectors(ULong& o1, long& n1, ULong& o2, long& n2) const
+{
+	ULong wrap = (fTempGetOffset == 0) ? fSize : fTempGetOffset;
+	if (fPutOffset == fTempGetOffset)
+	{
+		o1 = 0;  n1 = 0;
+		o2 = 0;  n2 = 0;
+		return;
+	}
+	if (fPutOffset == wrap - 1)
+	{
+		if (fPutOffset < fTempGetOffset)
+		{
+			o1 = 0;
+			n1 = fPutOffset;
+			o2 = fTempGetOffset;
+			n2 = fSize - fTempGetOffset;
+			return;
+		}
+	}
+	else if (fPutOffset <= fTempGetOffset)
+	{
+		o2 = fTempGetOffset;
+		n2 = fSize - fTempGetOffset;
+		o1 = 0;
+		n1 = fPutOffset;
+		return;
+	}
+	o1 = 0;  n1 = 0;
+	o2 = fTempGetOffset;
+	n2 = fPutOffset - fTempGetOffset;
+}
+
+
+// ROM 0x001e1bec UpdatePutVector__17CShadowRingBufferFl
+long
+CShadowRingBuffer::UpdatePutVector(long count)
+{
+	if (count > 0)
+	{
+		UByte* p1; long n1; UByte* p2; long n2;
+		ComputePutVectors(p1, n1, p2, n2);
+		if (n2 > 0)
+		{
+			if (count < n2)
+				n2 = count;
+			count -= n2;
+			fPutOffset += n2;
+			if (fPutOffset == fSize)
+				fPutOffset = 0;
+		}
+		if (n1 > 0)
+		{
+			if (count < n1)
+				n1 = count;
+			count -= n1;
+			fPutOffset += n1;
+		}
+	}
+	return count;
+}
+
+
+// ROM 0x001e1b3c UpdateGetVector__17CShadowRingBufferFl
+long
+CShadowRingBuffer::UpdateGetVector(long count)
+{
+	if (count > 0)
+	{
+		UByte* p1; long n1; UByte* p2; long n2;
+		ComputeGetVectors(p1, n1, p2, n2);
+		if (n2 > 0)
+		{
+			if (count < n2)
+				n2 = count;
+			count -= n2;
+			fGetOffset += n2;
+			if (fGetOffset == fSize)
+				fGetOffset = 0;
+		}
+		if (n1 > 0)
+		{
+			if (count < n1)
+				n1 = count;
+			count -= n1;
+			fGetOffset += n1;
+		}
+	}
+	return count;
+}
+
+
+// ROM 0x001e1634 Put__17CShadowRingBufferFi
+int
+CShadowRingBuffer::Put(int byte)
+{
+	ULong next = (fGetOffset == 0) ? fSize : fGetOffset;
+	ULong at = fPutOffset;
+	if (at == next - 1)					// full
+		return -1;
+	fPutOffset = at + 1;
+	PutByteAt(byte, at);
+	if (fPutOffset == fSize)
+		fPutOffset = 0;
+	return byte;
+}
+
+
+// ROM 0x001e1694 Putn__17CShadowRingBufferFPCUcl
+int
+CShadowRingBuffer::Putn(const UByte* data, long count)
+{
+	long remaining = count;
+	CopyIn(data, remaining);
+	return count - remaining;
+}
+
+
+// ROM 0x001e16c4 CopyIn__17CShadowRingBufferFPCUcRl
+NewtonErr
+CShadowRingBuffer::CopyIn(const UByte* data, long& count)
+{
+	if (count > 0)
+	{
+		UByte* p1; long n1; UByte* p2; long n2;
+		ComputePutVectors(p1, n1, p2, n2);
+		if (n2 > 0)
+		{
+			if (count < n2)
+				n2 = count;
+			fSharedMem.CopyToShared((void*) data, n2, AsOffset(p2), nil);
+			data += n2;
+			count -= n2;
+			fPutOffset += n2;
+			if (fPutOffset == fSize)
+				fPutOffset = 0;
+		}
+		if (n1 > 0)
+		{
+			if (count < n1)
+				n1 = count;
+			fSharedMem.CopyToShared((void*) data, n1, AsOffset(p1), nil);
+			count -= n1;
+			fPutOffset += n1;
+		}
+	}
+	return IsFull() ? -1 : noErr;
+}
+
+
+// ROM 0x001e1d60 Peek__17CShadowRingBufferFv
+int
+CShadowRingBuffer::Peek()
+{
+	if (fGetOffset == fPutOffset)
+		return -1;
+	ULong got = 0;
+	UByte byte;
+	fSharedMem.CopyFromShared(&got, &byte, 1, fGetOffset, nil);
+	return byte;
+}
+
+
+// ROM 0x001e1d78 Next__17CShadowRingBufferFv
+int
+CShadowRingBuffer::Next()
+{
+	if (fGetOffset != fPutOffset)
+	{
+		fGetOffset++;
+		if (fGetOffset == fSize)
+			fGetOffset = 0;
+		if (fGetOffset != fPutOffset)
+		{
+			ULong got = 0;
+			UByte byte;
+			fSharedMem.CopyFromShared(&got, &byte, 1, fGetOffset, nil);
+			return byte;
+		}
+	}
+	return -1;
+}
+
+
+// ROM 0x001e1db4 Skip__17CShadowRingBufferFv
+NewtonErr
+CShadowRingBuffer::Skip()
+{
+	if (fGetOffset != fPutOffset)
+	{
+		fGetOffset++;
+		if (fGetOffset == fSize)
+			fGetOffset = 0;
+		if (fGetOffset != fPutOffset)
+			return noErr;
+	}
+	return -1;
+}
+
+
+// ROM 0x001e1df4 Get__17CShadowRingBufferFv
+int
+CShadowRingBuffer::Get()
+{
+	if (fGetOffset == fPutOffset)
+		return -1;
+	UByte byte = GetByteAt(fGetOffset);
+	fGetOffset++;
+	if (fGetOffset == fSize)
+		fGetOffset = 0;
+	return byte;
+}
+
+
+// ROM 0x001e1e3c Getn__17CShadowRingBufferFPUcl
+int
+CShadowRingBuffer::Getn(UByte* data, long count)
+{
+	long remaining = count;
+	CopyOut(data, remaining);
+	return count - remaining;
+}
+
+
+// ROM 0x001e1380 CopyOut__17CShadowRingBufferFPUcRl
+NewtonErr
+CShadowRingBuffer::CopyOut(UByte* data, long& count)
+{
+	if (count > 0)
+	{
+		UByte* p1; long n1; UByte* p2; long n2;
+		ComputeGetVectors(p1, n1, p2, n2);
+		if (n2 > 0)
+		{
+			ULong size = (n2 <= count) ? (ULong) n2 : (ULong) count;
+			ULong got = size;
+			fSharedMem.CopyFromShared(&got, data, size, AsOffset(p2), nil);
+			data += got;
+			count -= got;
+			fGetOffset += got;
+			if (fGetOffset == fSize)
+				fGetOffset = 0;
+		}
+		if (n1 > 0)
+		{
+			if (count < n1)
+				n1 = count;
+			ULong got = n1;
+			fSharedMem.CopyFromShared(&got, data, n1, AsOffset(p1), nil);
+			count -= got;
+			fGetOffset += got;
+		}
+	}
+	return IsEmpty() ? -1 : noErr;
+}
+
+
+// ROM 0x001e14c8 TempGetn__17CShadowRingBufferFPUcl
+int
+CShadowRingBuffer::TempGetn(UByte* data, long count)
+{
+	long remaining = count;
+	TempCopyOut(data, remaining);
+	return count - remaining;
+}
+
+
+// ROM 0x001e14f0 TempCopyOut__17CShadowRingBufferFPUcRl
+// Read ahead without consuming: only fTempGetOffset moves, so the same bytes
+// can be read again after TempReset.  The answer is the error from the copy,
+// not the buffer's state.
+NewtonErr
+CShadowRingBuffer::TempCopyOut(UByte* data, long& count)
+{
+	NewtonErr err = noErr;
+	if (count > 0)
+	{
+		ULong o1; long n1; ULong o2; long n2;
+		ComputeTempGetVectors(o1, n1, o2, n2);
+		if (n2 > 0)
+		{
+			if (count < n2)
+				n2 = count;
+			ULong got = n2;
+			err = fSharedMem.CopyFromShared(&got, data, n2, o2, nil);
+			data += got;
+			count -= got;
+			fTempGetOffset += got;
+			if (fTempGetOffset == fSize)
+				fTempGetOffset = 0;
+		}
+		if (n1 > 0)
+		{
+			if (count < n1)
+				n1 = count;
+			ULong got = n1;
+			err = fSharedMem.CopyFromShared(&got, data, n1, o1, nil);
+			count -= got;
+			fTempGetOffset += got;
+		}
+	}
+	return err;
 }
