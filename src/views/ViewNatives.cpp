@@ -361,8 +361,8 @@ static Ref FOpenX(RefArg rcvr);		// (defined below)
 // reach it), and the callbackContext gets the pick.  Nothing when there
 // are no items or popups are inhibited.  ==> the popup's context.  NOT
 // YET RECONSTRUCTED: the modal case (FFilterDialog).
-static Ref
-FDoPopup(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext)
+Ref
+DoPopupMenu(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext)
 {
 	if (ISNIL(pickItems) || Length(pickItems) == 0 || gInhibitPopup)
 		return NILREF;
@@ -408,6 +408,13 @@ FDoPopup(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackConte
 	}
 	gRecognition.IgnoreClicks(0);
 	return NOTNIL(context) ? (Ref) context : (Ref) templ;
+}
+
+
+static Ref
+FDoPopup(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext)
+{
+	return DoPopupMenu(rcvr, pickItems, x, y, callbackContext);
 }
 
 

@@ -372,6 +372,7 @@ TView*		GetView(RefArg context, RefArg name);					// ROM 0x0025f5a8 GetView__FRC
 TView*		FailGetView(RefArg context);							// ROM 0x001efe1c FailGetView__FRC6RefVar
 TView*		FailGetView(RefArg context, RefArg name);				// ROM 0x001f0258 FailGetView__FRC6RefVarT1
 TView*		BuildView(TView* parent, RefArg context);				// ROM 0x0025ca18 BuildView__FP5TViewRC6RefVar
+Ref			DoPopupMenu(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext);	// ROM 0x001f2a3c FDoPopup__FRC6RefVarN41 - a popup menu opened over the items
 TView*		Exists(TViewList* list, RefArg templ);					// ROM 0x0025fe48 Exists__FP9TViewListRC6RefVar
 TView*		DataExists(TViewList* list, RefArg data);				// ROM 0x0025f84c DataExists__FP9TViewListRC6RefVar
 Boolean		SoupEQ(RefArg a, RefArg b);								// ROM 0x002638e4 SoupEQ__FRC6RefVarT1

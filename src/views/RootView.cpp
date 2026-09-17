@@ -1211,7 +1211,8 @@ TRootView::DoCaretClick(TUnitPublic* unit)
 				poppedUp = NOTNIL(popup);
 				if (poppedUp)
 				{
-					// NOT YET RECONSTRUCTED: FDoPopup(fContext, GetProtoVariable(popup, RSSYMpopup), caretRect.right, caretRect.bottom, popup)
+					RefVar items(GetProtoVariable(popup, RSSYMpopup, nil));
+					DoPopupMenu(RefVar(fContext), items, RefVar(MAKEINT(caretRect.right)), RefVar(MAKEINT(caretRect.bottom)), popup);
 					stroke->InkOff(true);
 				}
 			}
