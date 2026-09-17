@@ -13,7 +13,8 @@
 				KeyEvent(keyCode, isDown) and KeyboardConnect(connected) (the
 				hardware keyboard's events, as the keyboard tool sends them).  What
 				TNotebook::InitToolbox and the boot's NewtonScript do on the
-				MessagePad; the event loop is NOT YET.
+				MessagePad.  The newt world (newt/NewtWorld.h) boots over
+				HostBootNewtWorld and runs the event loop.
 */
 
 #ifndef __HOSTVIEWS_H
@@ -26,7 +27,16 @@
 class THostScreenDriver;
 
 // after InitObjects (with the ROM's objects imported for the fonts)
-THostScreenDriver*	HostStartViews(long width, long height, long depth);
-void				HostRegisterViewFunctions(void);		// the NewtonScript functions above (HostStartViews does it)
+THostScreenDriver*	HostStartViews(long width, long height, long depth);	// the display, the toolbox, the root view, the recognition system and the pen: for a program with no event loop
+THostScreenDriver*	HostStartDisplay(long width, long height, long depth);	// QuickDraw and the host screen driver made the screen
+void				HostInitViewToolbox(void);				// the fonts, the globals and the natives the views need
+void				HostRegisterViewFunctions(void);		// the NewtonScript functions above (HostInitViewToolbox does it)
+
+// the newt world on the host (newt/NewtWorld.h): what its MainConstructor
+// boots when gNewtHostBoot is HostBootNewtWorld - the ROM image read in,
+// the object system, the display (HostConfigureNewtWorld says which),
+// the toolbox
+void				HostConfigureNewtWorld(const char* romImage, long heapSize, long width, long height, long depth);
+void				HostBootNewtWorld(void);
 
 #endif	/* __HOSTVIEWS_H */

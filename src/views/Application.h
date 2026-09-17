@@ -43,12 +43,12 @@ public:
 	virtual long	ClassID(void) const;										// ROM 0x00033b58 ClassID__12TApplicationCFv
 	virtual Boolean	DerivedFrom(long id) const;									// ROM 0x00033b60 DerivedFrom__12TApplicationCFl
 	virtual			~TApplication();											// ROM 0x0003453c __dt__12TApplicationFv
-	virtual Boolean	DoCommand(RefArg cmd);										// ROM 0x00034744 DoCommand__12TApplicationFRC6RefVar
-	virtual void	Constructor(void);											// ROM 0x000343e4 Constructor__12TApplicationFv
-	virtual void	InitToolbox(void);											// ROM 0x000345b0 InitToolbox__12TApplicationFv
-	virtual void	Run(void);													// ROM 0x000345b4 Run__12TApplicationFv
-	virtual void	Quit(void);													// ROM 0x000345b8 Quit__12TApplicationFv
-	virtual void	Idle(void);													// ROM 0x00033b94 Idle__12TApplicationFv
+	virtual Boolean	DoCommand(RefArg cmd);										// ROM 0x00034744 DoCommand__12TApplicationFRC6RefVar (vtable +0x10, after TxObject's Key)
+	virtual void	Constructor(void);											// ROM 0x000343e4 Constructor__12TApplicationFv (+0x14: InitToolbox, the undo stacks, the idle time)
+	virtual void	Run(void);													// ROM 0x000345b4 Run__12TApplicationFv (+0x18)
+	virtual void	Idle(void);													// ROM 0x00033b94 Idle__12TApplicationFv (+0x1c)
+	virtual void	Quit(void);													// ROM 0x000345b8 Quit__12TApplicationFv (+0x20)
+	virtual void	InitToolbox(void);											// ROM 0x000345b0 InitToolbox__12TApplicationFv (+0x24)
 
 	long		DispatchCommand(RefArg cmd);									// ROM 0x00034128 DispatchCommand__12TApplicationFRC6RefVar
 	void		PostUndoCommand(RefArg cmd);									// ROM 0x00034450 PostUndoCommand__12TApplicationFRC6RefVar
@@ -58,7 +58,7 @@ public:
 	Ref			GetUndoState(void);												// ROM 0x0003435c GetUndoState__12TApplicationFv
 	Ref			GetUndoStack(long which);										// ROM 0x000343bc GetUndoStack__12TApplicationFl
 	void		AddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefArg delay);	// ROM 0x00033ba0 AddDelayedAction__12TApplicationFRC6RefVarN31
-	void		RunNextDelayedAction(void);										// ROM 0x00033d48 RunNextDelayedAction__12TApplicationFv
+	Boolean		RunNextDelayedAction(void);										// ROM 0x00033d48 RunNextDelayedAction__12TApplicationFv - one due action run; ==> whether one was
 	void		UpdateNextIdleTime(const TTime& time);							// ROM 0x00033f4c UpdateNextIdleTime__12TApplicationFRC5TTime
 	TTime		NextDelayedActionTime(const TTime& now);						// ROM 0x00033fc8 NextDelayedActionTime__12TApplicationFRC5TTime
 
@@ -73,6 +73,7 @@ public:
 
 extern TApplication*	gApplication;		// ROM 0x0c1025a0 gApplication
 
+void	ErrorNotify(long error, long kind);										// ROM 0x001480fc ErrorNotify__FlT1 - root:Notify(kind, error, nil)
 Ref		FAddUndoAction(RefArg rcvr, RefArg script, RefArg args);				// ROM 0x000b0e3c FAddUndoAction__FRC6RefVarN21 - a view's AddUndoAction method
 void	RegisterApplicationNatives(void);	// PostCommand, PostCommandParam, PostAndDo, AddDelayedAction/Call/Send, AddDeferredAction/Call/Send, AddUndoAction/Call/Send, ClearUndoStacks, GetUndoState
 

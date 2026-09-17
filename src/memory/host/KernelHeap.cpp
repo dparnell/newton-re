@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const Size kHostKernelHeapSize = 4 * 1024 * 1024;		// what the kernel and the services allocate with NewPtr
+const Size kHostKernelHeapSize = 32 * 1024 * 1024;		// what the kernel and the services allocate with NewPtr - and, the host having one heap where the ROM has one per domain, the NewtonScript world's object heap (TObjectHeap: 4 MB) and everything else
 
 
 void

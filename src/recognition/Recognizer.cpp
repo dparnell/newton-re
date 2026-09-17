@@ -13,6 +13,7 @@
 #include "RootView.h"
 #include "Rects.h"
 #include "NewtonExceptions.h"
+#include "StrokeCentral.h"
 
 TRecognitionManager	gRecognition;			// ROM 0x0c103f50 gRecognition
 
@@ -378,7 +379,7 @@ InstallEventRecognizer(TRecognitionManager* manager)
 long
 TRecognitionManager::Init(UChar level)
 {
-	fStrokeWorld = nil;
+	fStrokeWorld = &gStrokeWorld;
 	fController = nil;
 	fArbiter = nil;
 	fAreas = nil;
@@ -492,10 +493,30 @@ TRecognitionManager::RemoveClickView(TView* view)
 
 
 // ROM 0x001a0618 Idle__19TRecognitionManagerFv
-// NOT YET RECONSTRUCTED: IdleStrokes, the stroke world's IdleCompress and
-// the controller's Idle.
+// When started: the strokes idled, the stroke world's ink compressed, the
+// controller idled (NOT YET RECONSTRUCTED: TController::Idle).
 long
 TRecognitionManager::Idle(void)
 {
+	if (fLevel != 0)
+	{
+		IdleStrokes();
+		fStrokeWorld->IdleCompress();
+	}
 	return 0;
+}
+
+
+// ROM 0x001a0650 NextIdle__19TRecognitionManagerFv
+// When to idle next: when started, the stroke world's compress time, or
+// the controller's next idle time (in milliseconds from now) when that
+// is earlier (NOT YET RECONSTRUCTED: TController::NextIdleTime - none);
+// zero when there is nothing to wait for.
+TTime
+TRecognitionManager::NextIdle(void)
+{
+	TTime next(0);
+	if (fLevel != 0)
+		next = fStrokeWorld->fNextCompressTime;
+	return next;
 }

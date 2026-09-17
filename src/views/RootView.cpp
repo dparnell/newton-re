@@ -29,7 +29,7 @@
 #include "UnitPublic.h"
 #include "NewtonTime.h"
 
-Boolean	gNewtIsAliveAndWell = true;			// ROM 0x0c102604 gNewtIsAliveAndWell (host: no boot splash)
+Boolean	gNewtIsAliveAndWell = false;		// ROM 0x0c102604 gNewtIsAliveAndWell (set by TNewtWorld::PreMain once the boot is over; a program without the newt world sets it itself)
 
 const long kUpdateRegionCount = 3;
 

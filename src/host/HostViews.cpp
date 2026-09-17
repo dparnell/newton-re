@@ -24,6 +24,7 @@
 #include "UnitPublic.h"
 #include "HostTablet.h"
 #include "hal/host/Host.h"
+#include "ROMImport.h"
 #include <string.h>
 
 static THostScreenDriver*	gHostDisplay = nil;
@@ -143,20 +144,29 @@ HostRegisterViewFunctions(void)
 }
 
 
-// The display made and the view system started over it: QuickDraw, the
-// screen, the fonts (vars.fonts: the ROM font list's families by their
-// symbols, as the ROM's globals template has them), an empty
-// userConfiguration, vars.international from the globals template (the
-// locale and the keyboard mapping), the text, view, unit and host
-// functions, the root view, the recognition system and the pen.
+// The display made the screen: QuickDraw started, the host screen driver
+// made and configured, InitScreen.
 THostScreenDriver*
-HostStartViews(long width, long height, long depth)
+HostStartDisplay(long width, long height, long depth)
 {
 	InitGraf();
 	gHostDisplay = new THostScreenDriver;
 	gHostDisplay->New();
 	gHostDisplay->Configure(width, height, depth, 100);
 	InitScreen(gHostDisplay);
+	return gHostDisplay;
+}
+
+
+// What the ROM's boot puts in the globals for the views and the fonts:
+// the fonts (vars.fonts: the ROM font list's families by their symbols,
+// as the ROM's globals template has them), an empty userConfiguration
+// (with the userPenSize the ink is let out by), vars.international from
+// the globals template (the locale and the keyboard mapping), the text,
+// view, unit and host functions.
+void
+HostInitViewToolbox(void)
+{
 	InitFonts();
 	RegisterTextNatives();
 	RegisterViewNatives();
@@ -174,6 +184,9 @@ HostStartViews(long width, long height, long depth)
 	}
 	if (ISNIL(GetFrameSlotRef(vars, RSSYMuserconfiguration)))
 		SetFrameSlot(vars, RSSYMuserconfiguration, RefVar(AllocateFrame()));
+	RefVar config(GetFrameSlotRef(vars, RSSYMuserconfiguration));
+	if (ISNIL(GetFrameSlotRef(config, RSSYMuserpensize)))
+		SetFrameSlot(config, RSSYMuserpensize, RefVar(MAKEINT(1)));
 	if (ISNIL(GetFrameSlotRef(vars, RSSYMinternational)) && NOTNIL(Rglobalheapvarwannabes))
 	{
 		// the ROM's globals template has the international frame the boot
@@ -185,15 +198,60 @@ HostStartViews(long width, long height, long depth)
 	}
 	HostRegisterViewFunctions();
 	RegisterUnitNatives();
+}
+
+
+// The display made and the view system started over it, for a program
+// with no event loop (newtonscript --display): the display, the toolbox,
+// the root view, the recognition system at the clicks level, the stroke
+// world and the host's pen (a minute put on the clock: the ROM boots for
+// longer, and a click in the first half second is dropped as a tap after
+// writing).
+THostScreenDriver*
+HostStartViews(long width, long height, long depth)
+{
+	HostStartDisplay(width, height, depth);
+	HostInitViewToolbox();
 	InitViewSystem();
-	// the recognition system at the clicks level, the stroke world and the
-	// host's pen; the ink is let out by the user's pen size
+	gNewtIsAliveAndWell = true;		// (no boot: the root draws no splash)
 	gRecognition.Init(1);
 	gStrokeWorld.Init();
 	HostTabletInit();
-	HostAdvanceClock(60 * 60 * 0xf000);		// a minute on the clock (0xf000 clock ticks a Mac tick): the ROM boots for longer, and a click in the first half second is dropped as a tap after writing
-	RefVar config(GetFrameSlotRef(vars, RSSYMuserconfiguration));
-	if (ISNIL(GetFrameSlotRef(config, RSSYMuserpensize)))
-		SetFrameSlot(config, RSSYMuserpensize, RefVar(MAKEINT(1)));
+	HostAdvanceClock(60 * 60 * 0xf000);		// (0xf000 clock ticks a Mac tick)
 	return gHostDisplay;
+}
+
+
+// the display the newt world is to boot over (HostBootNewtWorld)
+static long	gNewtDisplayWidth = 320;
+static long	gNewtDisplayHeight = 480;
+static long	gNewtDisplayDepth = 4;
+static const char*	gNewtROMImage = nil;
+static long	gNewtHeapSize = 0x400000;
+
+void
+HostConfigureNewtWorld(const char* romImage, long heapSize, long width, long height, long depth)
+{
+	gNewtROMImage = romImage;
+	gNewtHeapSize = heapSize;
+	gNewtDisplayWidth = width;
+	gNewtDisplayHeight = height;
+	gNewtDisplayDepth = depth;
+}
+
+
+// The newt world's host boot (newt/NewtWorld.h gNewtHostBoot: what the
+// world's MainConstructor runs in place of the ROM's InitObjects, InitGraf
+// and InitFonts): the ROM image read in and the object system started,
+// the display and the toolbox, a minute on the clock.
+void
+HostBootNewtWorld(void)
+{
+	if (gNewtROMImage != nil && ImportROMObjectsFromFile(gNewtROMImage) != noErr)
+		printf("cannot import %s\n", gNewtROMImage);
+	gObjectHeapSize = gNewtHeapSize;
+	InitObjects();
+	HostStartDisplay(gNewtDisplayWidth, gNewtDisplayHeight, gNewtDisplayDepth);
+	HostInitViewToolbox();
+	HostAdvanceClock(60 * 60 * 0xf000);
 }

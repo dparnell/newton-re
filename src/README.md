@@ -130,6 +130,13 @@ src/
                 and the stroke world making clicks of the strokes
                 (StrokeCentral.h); the controller, arbiter, domains and
                 ink to come (docs/recognition/README.md)
+  newt/         the NewtonScript world: TNewtWorld, the application world
+                the 'main' task runs - its boot and its event loop with
+                the 'newt event handler (NewtWorld.h) - and TNotebook,
+                the Newton application: the root view, the toolbox, the
+                idle passes, the notifiers (Notebook.h); the forks, the
+                package parts and the other events to come
+                (docs/newt/README.md)
   bootstrap/    reset and boot code (to come)
   utility/      UtilityClasses: CDynamicArray, CArrayIterator, CList,
                 CListIterator, CSortedList, CItemTester/CItemComparer, the

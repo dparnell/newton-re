@@ -39,6 +39,7 @@
 
 #include "Unit.h"
 #include "Domain.h"
+#include "NewtonTime.h"
 
 class TView;
 class TUnitPublic;
@@ -125,7 +126,8 @@ public:
 	void				SetNextClick(ULong time);				// ROM 0x0019f910 SetNextClick__19TRecognitionManagerFUl - the ignoring dropped unless the time is within a second of its end
 	void				SaveClickView(TView* view);				// ROM 0x0019f934 SaveClickView__19TRecognitionManagerFP5TView
 	void				RemoveClickView(TView* view);			// ROM 0x0019f944 RemoveClickView__19TRecognitionManagerFP5TView
-	long				Idle(void);								// ROM 0x001a0618 Idle__19TRecognitionManagerFv (NOT YET: the stroke world and controller idled)
+	long				Idle(void);								// ROM 0x001a0618 Idle__19TRecognitionManagerFv - the strokes idled, the ink compressed (the controller's idle NOT YET)
+	TTime				NextIdle(void);							// ROM 0x001a0650 NextIdle__19TRecognitionManagerFv - when to idle next: the earlier of the stroke world's compress time and the controller's next time (NOT YET); zero for never
 
 	UChar				fLevel;				// +0x00
 	StrokeCentral*		fStrokeWorld;		// +0x04

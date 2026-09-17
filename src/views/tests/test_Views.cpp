@@ -1733,6 +1733,7 @@ main()
 	newton_try
 	{
 		InitViewSystem();
+		gNewtIsAliveAndWell = true;		// (the boot is over: the root draws no splash)
 		// the viewJustify constants for the templates
 		static const struct { const char* fName; long fValue; } kConstants[] = {
 			{ "vjParentClip", vjParentClip }, { "vjSiblingRightH", vjSiblingRightH }, { "vjSiblingBottomV", vjSiblingBottomV },

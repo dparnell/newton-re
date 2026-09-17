@@ -311,3 +311,33 @@ StrokeCentral::AddDeferredStroke(RefArg stroke, long a, long b)
 	AddArraySlot(*fDeferredStrokes, RefVar(MAKEINT(a)));
 	AddArraySlot(*fDeferredStrokes, RefVar(MAKEINT(b)));
 }
+
+
+// ROM 0x00147050 IdleCompress__13StrokeCentralFv
+// With no stroke current, once the compress time has come the expired
+// strokes are compressed into ink.
+void
+StrokeCentral::IdleCompress(void)
+{
+	if (gStrokeWorld.CurrentStroke() != nil)
+		return;
+	static const Int64 zero = { 0, 0 };
+	if (CompCompare(&fNextCompressTime.time, &zero) != 0)
+	{
+		TTime now = GetGlobalTime();
+		if (CompCompare(&now.time, &fNextCompressTime.time) >= 0)
+			ExpireAll();
+	}
+}
+
+
+// ROM 0x0014682c ExpireAll__13StrokeCentralFv
+// The compress group grouped and compressed into ink for the views
+// (NOT YET RECONSTRUCTED: IGGroupAndCompressStrokes); with no expired
+// stroke left the compress time is cleared.
+void
+StrokeCentral::ExpireAll(void)
+{
+	if (fExpiredStrokes->Count() == 0)
+		fNextCompressTime = TTime(0);
+}

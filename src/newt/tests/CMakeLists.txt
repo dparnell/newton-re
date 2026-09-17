@@ -1,0 +1,5 @@
+add_executable(test_Newt test_Newt.cpp)
+target_link_libraries(test_Newt PRIVATE newt host_views hal_host_display)
+target_compile_definitions(test_Newt PRIVATE "NEWTON_ROM_BIN=\"${CMAKE_SOURCE_DIR}/../build/MP2100D/rom.bin\"")
+add_test(NAME newt.Newt COMMAND test_Newt)
+set_tests_properties(newt.Newt PROPERTIES TIMEOUT 120)

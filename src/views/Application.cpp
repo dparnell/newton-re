@@ -258,18 +258,17 @@ TApplication::AddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefA
 
 
 // ROM 0x00033d48 RunNextDelayedAction__12TApplicationFv
-// The due actions run: each whose time is nil or past is taken out of
-// the queue (the queue nil when empty) and done - a function called
-// (DoBlock), a message sent (DoMessage), a script run on the receiver
-// (DoScript).  The queue is walked once; an action added while one
-// runs waits for the next call.
-void
+// The first delayed action whose time has come (or that has none) taken
+// out of the queue (the queue nil when empty) and done - a function
+// called (DoBlock), a message sent (DoMessage), a script run on the
+// receiver (DoScript).  ==> whether one was run.
+Boolean
 TApplication::RunNextDelayedAction(void)
 {
 	if (ISNIL(fDelayedActions) || Length(fDelayedActions) <= 0)
-		return;
+		return false;
 	TTime now = GetGlobalTime();
-	for (long index = 0; index < Length(fDelayedActions); )
+	for (long index = 0; index < Length(fDelayedActions); index += 4)
 	{
 		RefVar when(GetArraySlotRef(fDelayedActions, index + 3));
 		Boolean due = ISNIL(when);
@@ -279,10 +278,7 @@ TApplication::RunNextDelayedAction(void)
 			due = CompCompare(&now.time, &time.time) > 0;
 		}
 		if (!due)
-		{
-			index += 4;
 			continue;
-		}
 		RefVar receiver(GetArraySlotRef(fDelayedActions, index));
 		RefVar action(GetArraySlotRef(fDelayedActions, index + 1));
 		RefVar args(GetArraySlotRef(fDelayedActions, index + 2));
@@ -295,9 +291,9 @@ TApplication::RunNextDelayedAction(void)
 			DoMessage(receiver, action, args);
 		else
 			DoScript(receiver, action, args);
-		if (ISNIL(fDelayedActions))
-			return;
+		return true;
 	}
+	return false;
 }
 
 
@@ -546,12 +542,13 @@ FUndo(RefArg /*rcvr*/)
 }
 
 
-// host: RunDelayedActions() - the due delayed actions run (the ROM runs
-// them from the event loop's idle)
+// host: RunDelayedActions() - the due delayed actions run, one after the
+// other (the ROM runs them from the event loop: RunDelayedActionProcs)
 static Ref
 FRunDelayedActions(RefArg /*rcvr*/)
 {
-	gApplication->RunNextDelayedAction();
+	while (gApplication->RunNextDelayedAction())
+		;
 	return NILREF;
 }
 

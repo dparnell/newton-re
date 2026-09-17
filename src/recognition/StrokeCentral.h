@@ -60,6 +60,8 @@ public:
 	Boolean				FlushStrokes(void);						// ROM 0x0014664c FlushStrokes__13StrokeCentralFv - ==> whether any was thrown away
 	Boolean				BeforeLastFlush(long time);				// ROM 0x0014671c BeforeLastFlush__13StrokeCentralFl - whether the time is before the last flush (which is forgotten after ten seconds)
 	void				AddDeferredStroke(RefArg stroke, long a, long b);	// ROM 0x00146364 AddDeferredStroke__13StrokeCentralFRC6RefVarlT2
+	void				IdleCompress(void);						// ROM 0x00147050 IdleCompress__13StrokeCentralFv - the expired strokes compressed into ink once the compress time has come (no stroke current)
+	void				ExpireAll(void);						// ROM 0x0014682c ExpireAll__13StrokeCentralFv - the compress group grouped and compressed (NOT YET); the compress time cleared when no expired stroke is left
 
 	Boolean				fHasCurrent;		// +0x00
 	TStroke*			fCurrentStroke;		// +0x04
