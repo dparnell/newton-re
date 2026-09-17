@@ -157,6 +157,7 @@ src/
                 (HostViews.cpp: ScreenSnapshot writes the picture) - the
                 demo/views.ns script draws a slip, a paragraph, gauges,
                 shapes and a popup menu into build/views-demo.pgm
+                (tools/imaging/pgm2png.py turns it into a PNG)
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 
