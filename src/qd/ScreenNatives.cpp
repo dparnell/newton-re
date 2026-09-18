@@ -60,9 +60,25 @@ FSetOrientation(RefArg /*rcvr*/, RefArg orientation)
 }
 
 
+// ROM 0x001f009c FLockScreen
+// The screen held while a script draws a lot: the drawing bracket taken
+// and given back, so what is drawn in between reaches the display in one
+// go.  nil unlocks.
+Ref
+FLockScreen(RefArg /*rcvr*/, RefArg lock)
+{
+	if (ISNIL(lock))
+		StopDrawing(nil, nil);
+	else
+		StartDrawing(nil, nil);
+	return NILREF;
+}
+
+
 void
 RegisterScreenNatives(void)
 {
+	RegisterNativeFunction("FLockScreen", (void*) FLockScreen, 1);
 	RegisterNativeFunction("FGetLCDContrast__FRC6RefVar", (void*) FGetLCDContrast, 0);
 	RegisterNativeFunction("FSetLCDContrast__FRC6RefVarT1", (void*) FSetLCDContrast, 1);
 	RegisterNativeFunction("FGetOrientation", (void*) FGetOrientation, 0);

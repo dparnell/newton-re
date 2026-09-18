@@ -18,6 +18,16 @@
 // ROM 0x00070dc4 MakeCommand__FUlP10TResponderl
 // A command frame (a clone of protoCommand) with the id, the receiver's
 // context ('application for the application) and the parameter.
+//
+// DEVIATION: the ROM does not look at the receiver, it takes the address
+// of the context field (receiver + 0x24) and hands that to SetFrameSlot -
+// so a nil receiver reads the word at 0x24, which on the Newton is inside
+// the exception vectors and gives the command a receiver that is not a
+// view.  TView::RealDoCommand's aeAddChild does exactly that whenever the
+// child it added was a preallocated slip that is not open, and the
+// command then fails in the dispatch and is reported as an action error.
+// A host cannot read address 0x24, so a nil receiver leaves the slot nil,
+// which fails in the same place for the same reason.
 Ref
 MakeCommand(ULong id, TResponder* receiver, Long parameter)
 {
@@ -25,6 +35,8 @@ MakeCommand(ULong id, TResponder* receiver, Long parameter)
 	SetFrameSlot(cmd, RSSYMid, RefVar(MAKEINT(id)));
 	if (receiver == gApplication)
 		SetFrameSlot(cmd, RSSYMreceiver, RSSYMapplication);
+	else if (receiver == nil)
+		SetFrameSlot(cmd, RSSYMreceiver, RefVar(NILREF));
 	else
 		SetFrameSlot(cmd, RSSYMreceiver, ((TView*) receiver)->fContext);
 	SetFrameSlot(cmd, RSSYMparameter, RefVar(MAKEINT(parameter)));

@@ -126,6 +126,58 @@ WriteFaultBlock(RefArg faultBlock)
 }
 
 
+// the ROM's 0x42: the special immediate left where an object was killed
+// (the DDK names the other specials but not this one)
+static const Ref kKilledObjectRef = MAKEIMMED(kImmedSpecial, 4);
+
+
+// ROM 0x002f8d98 FIsValid
+// Whether the object is still usable: an immediate always is, except the
+// ROM's 0x42 - the marker a killed object leaves behind; a soup entry is
+// when its store is still there (EntryValid), a large binary when its
+// pages are still mapped, and anything else simply is.  An
+// evt.ex.fr;type.ref exception carrying error -48201 - the object has
+// gone - is the answer nil rather than a throw.
+//
+// NOT YET RECONSTRUCTED: the large binaries, so IsLargeBinary is always
+// false and LargeObjectAddressIsValid is never asked.
+Ref
+FIsValid(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!ISPTR(obj))
+		return (Ref) obj == kKilledObjectRef ? NILREF : TRUEREF;
+	RefVar result(TRUEREF);
+	newton_try
+	{
+		int isLargeObject = 0;
+		NoTouchObjectPtr(obj, &isLargeObject);
+		if (isLargeObject == 0)
+		{
+			if (IsSoupEntry(obj))
+				result = MAKEBOOLEAN(EntryValid(obj));
+			else if (IsLargeBinary(obj))
+				result = NILREF;		// (the ROM: LargeObjectAddressIsValid)
+		}
+	}
+	newton_catch(exFrames)
+	{
+		Exception* exception = CurrentException();
+		if (Subexception(exception->name, (ExceptionName) "type.ref") && IsFrame(RefVar(*(Ref*) exception->data)))
+		{
+			RefVar code(GetFrameSlotRef(RefVar(*(Ref*) exception->data), RSSYMerrorcode));
+			if (ISINT(code) && RINT(code) == kNSErrBadMagicPointer)
+				result = NILREF;
+			else
+				rethrow;
+		}
+		else
+			rethrow;
+	}
+	end_try;
+	return result;
+}
+
+
 // ROM 0x002ba618 InvalFaultBlock__FRC6RefVar
 // The store is gone: no store, no entry.
 void

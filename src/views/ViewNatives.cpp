@@ -1147,9 +1147,33 @@ static const char* const kOpenSource = "func() :_Open()";
 static const char* const kToggleSource = "func() if not viewCObject or not Visible(self) then :Open() else :close()";
 
 
+// ROM 0x001ef3dc TableLookup
+// An association list looked up: the array is key, value, key, value, ...
+// and one last slot, the answer when no key matches.  The keys are
+// compared with EQ, so symbols and integers match and strings do not.
+Ref
+FTableLookup(RefArg /*rcvr*/, RefArg table, RefArg key)
+{
+	RefVar result;
+	long length = Length(table);
+	for (long i = 0; i < length - 2; i += 2)
+	{
+		if (EQRef(GetArraySlotRef(table, i), key))
+		{
+			result = GetArraySlotRef(table, i + 1);
+			break;
+		}
+	}
+	if (ISNIL(result))
+		result = GetArraySlotRef(table, length - 1);
+	return result;
+}
+
+
 void
 RegisterViewNatives(void)
 {
+	RegisterNativeFunction("TableLookup", (void*) FTableLookup, 2);
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
 	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);
 	RegisterNativeFunction("FDoPopup__FRC6RefVarN41", (void*) FDoPopup, 4);

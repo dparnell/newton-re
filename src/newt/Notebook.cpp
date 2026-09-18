@@ -54,9 +54,16 @@ TNotebook::DerivedFrom(long id) const
 // ROM 0x00148350 Constructor__9TNotebookFv
 // The application constructed, the root view made from the viewRoot
 // template (gRootView), and the librarian with its library soup (from
-// the root's copperfield: NOT YET RECONSTRUCTED - TLibrarian).  Host: the
-// root view is InitViewSystem's, over the current port, with the host's
-// root template.
+// the root's copperfield: NOT YET RECONSTRUCTED - TLibrarian).
+//
+// Host: the root view is InitViewSystem's, over the current port, with
+// the host's root template.  `MakeRootTemplate()` answers the ROM's own
+// Rviewroot - 263 slots, and the methods the applications send to the
+// root, Notify among them - and passing it here is what the ROM does;
+// it is not passed yet because the root then builds the ROM's own
+// children, and AddView throws "nil view" on the first of them.  That,
+// and FConvertToSoundFrame (which the init scripts call 312 times), are
+// what stand between this and the ROM's own screen.
 void
 TNotebook::Constructor(void)
 {

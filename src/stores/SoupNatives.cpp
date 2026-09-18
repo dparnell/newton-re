@@ -407,6 +407,7 @@ FIsSameEntry(RefArg /*rcvr*/, RefArg a, RefArg b)
 void
 RegisterSoupNatives(void)
 {
+	RegisterNativeFunction("FIsValid", (void*) FIsValid, 1);
 	RegisterNativeFunction("FGetStores", (void*) FGetStores, 0);
 	RegisterNativeFunction("FQuery", (void*) FQuery, 2);
 	RegisterNativeFunction("FIsSoupEntry", (void*) FIsSoupEntry, 1);

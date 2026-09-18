@@ -106,6 +106,7 @@ void	EntrySetHandler(RefArg entry, RefArg handler);
 Ref		ForwardEntryMessage(RefArg entry, RefArg message);
 Ref		ForwardEntryMessage(RefArg entry, RefArg message, RefArg arg);
 Boolean	IsSoupEntry(RefArg object);
+Ref		FIsValid(RefArg rcvr, RefArg obj);			// ROM 0x002f8d98 FIsValid - whether the object is still usable
 Ref		EntrySoup(RefArg entry);
 long	EntrySize(PSSId id, TStoreWrapper* wrapper, Boolean withLargeBinaries);
 long	EntrySize(RefArg entry);

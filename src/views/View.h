@@ -389,6 +389,8 @@ void		DisposeFgPattern(void);									// ROM 0x00303b70 DisposeFgPattern__Fv
 
 void		InitViewPrototypes(void);		// host: the canonical context, data context and rect frames when no ROM is imported
 void		InitViewSystem(void);			// host: the slot cache table, the prototypes, the root view (with the current port) - after InitObjects and InitGraf
+void		InitViewSystem(RefArg rootTemplate);	// ... built from this template instead of the host's (the ROM's Rviewroot: TNotebook::Constructor)
+Ref			MakeRootTemplate(void);			// the ROM's Rviewroot with the view methods under it, or the host's stand-in when there are no ROM objects
 void		RegisterViewNatives(void);		// the NewtonScript view functions (ViewNatives.cpp)
 Ref			MakeViewMethods(void);			// the methods a view inherits from the root template (Rviewroot's), as a frame
 

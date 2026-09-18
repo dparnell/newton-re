@@ -443,8 +443,43 @@ InitViewPrototypes(void)
 // setup form script as source, _proto the view methods} and its display
 // params are the port's rectangle (the application area the whole of it);
 // the application (gApplication, a plain TApplication) is made first.
+// The root's template: the ROM's own Rviewroot - 263 slots, the methods
+// every application sends to the root (Notify, BlessApp, CloseSlips,
+// GotoSleep, ...) and its setup scripts - with the C view methods put
+// under it as its _proto, the ROM's copy having none.  Without the ROM's
+// objects there is the host's stand-in instead: a plain root that fills
+// white and takes its bounds from the display params.
+Ref
+MakeRootTemplate(void)
+{
+	GrafPort* port = GetCurrentPort();
+	if (NOTNIL(Rviewroot))
+	{
+		RefVar templ(Clone(RefVar(Rviewroot)));
+		SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
+		return templ;
+	}
+	RefVar templ(AllocateFrame());
+	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clRootView)));
+	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
+	SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
+	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
+	// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
+	SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
+	SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
+	return templ;
+}
+
+
 void
 InitViewSystem(void)
+{
+	InitViewSystem(RefVar(NILREF));
+}
+
+
+void
+InitViewSystem(RefArg rootTemplate)
 {
 	InitViewPrototypes();
 	if (gSlotCacheTable == nil)
@@ -462,14 +497,18 @@ InitViewSystem(void)
 		SetFrameSlot(params, RSSYMappareaheight, RefVar(MAKEINT(port->portRect.bottom - port->portRect.top)));
 		SetFrameSlot(RefVar(gVarFrame), RSSYMdisplayparams, params);
 	}
-	RefVar templ(AllocateFrame());
-	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clRootView)));
-	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
-	SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
-	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
-	// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
-	SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
-	SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
+	RefVar templ(rootTemplate);
+	if (ISNIL(templ))
+	{
+		templ = AllocateFrame();
+		SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clRootView)));
+		SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
+		SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
+		SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
+		// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
+		SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
+		SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
+	}
 	if (gApplication == nil)
 	{
 		gApplication = new TApplication;
