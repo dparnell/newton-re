@@ -55,6 +55,7 @@ public:
 	virtual Boolean	PointInHilite(Point& pt);				// ROM 0x000a8c54 PointInHilite__9TEditViewFR6TPoint
 	virtual void	ActivateSelection(Boolean on);		// ROM 0x000aba60 ActivateSelection__9TEditViewFUc
 	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000acbb4 BuildKeyChildList__9TEditViewFP9TViewListlT2
+	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a40e4 OffsetToCaret__9TEditViewFlP5TRect
 
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a8a8c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
@@ -69,6 +70,10 @@ public:
 	void			SetCaretRectGlobal(const Rect& r);		// ROM 0x000abaa4 SetCaretRectGlobal__9TEditViewFRC5TRect
 	Point			GetCaretLocalTopLeft(void);			// ROM 0x000abb2c GetCaretLocalTopLeft__9TEditViewFv
 	Point			GetCaretGlobalTopLeft(void);		// ROM 0x000abb38 GetCaretGlobalTopLeft__9TEditViewFv
+
+	// the children that are selected, and the way between them
+	TView**		GetHilitedViewsSorted(void);		// ROM 0x000ac090 GetHilitedViewsSorted__9TEditViewFv - CountHilites of them, the caller's to delete[]
+	TView*			MoveBetweenParagraphs(long v, long direction);	// ROM 0x000ac80c MoveBetweenParagraphs__9TEditViewFlT1
 
 	short			fLineSpacing;		// +0x30  viewLineSpacing, read by SetupDone
 	// +0x32 not yet known

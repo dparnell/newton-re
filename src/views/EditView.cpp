@@ -25,6 +25,8 @@
 #include "Ports.h"
 #include "Frames.h"
 #include "RSSymbols.h"
+#include "OSErrors.h"
+#include "NewtonExceptions.h"
 
 
 // what a gathering rectangle starts as, and how the callers know nothing
@@ -503,4 +505,92 @@ TEditView::GetCaretGlobalTopLeft(void)
 	pt.v = (short) (fCaretRect.top + origin.v);
 	pt.h = (short) (fCaretRect.left + origin.h);
 	return pt;
+}
+
+// ROM 0x000a40e4 OffsetToCaret__9TEditViewFlP5TRect
+// Where the caret is, in the coordinates the view is scrolled to.  The
+// offset is the paragraph's way of asking and means nothing here: the
+// editor has one caret rectangle, wherever it was last put.
+void
+TEditView::OffsetToCaret(long /*offset*/, Rect* caret)
+{
+	if (fCaretRect.top == kNoBounds)
+	{
+		StartGathering(caret);
+		return;
+	}
+	*caret = fCaretRect;
+	Point origin = ContentsOrigin();
+	OffsetRect(caret, origin.h, origin.v);
+}
+
+
+// ROM 0x000ac090 GetHilitedViewsSorted__9TEditViewFv
+// The selected children in reading order: down the page, and within
+// twelve pixels of the same top, left to right.  The array is the
+// caller's to delete[]; nil when nothing is selected.
+TView**
+TEditView::GetHilitedViewsSorted(void)
+{
+	long count = CountHilites();
+	if (count == 0)
+		return nil;
+	TView** sorted = new TView*[count];
+	if (sorted == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	long found = 0;
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if (!child->Hilited())
+			continue;
+		long at = 0;
+		while (at < found)
+		{
+			long down = sorted[at]->viewBounds.top - child->viewBounds.top;
+			Boolean before = down > 12;
+			if (!before)
+			{
+				long apart = down < 0 ? -down : down;
+				before = apart < 13 && child->viewBounds.left < sorted[at]->viewBounds.left;
+			}
+			if (before)
+				break;
+			at++;
+		}
+		for (long i = found; i > at; i--)
+			sorted[i] = sorted[i - 1];
+		sorted[at] = child;
+		found++;
+	}
+	return sorted;
+}
+
+
+// ROM 0x000ac80c MoveBetweenParagraphs__9TEditViewFlT1
+// The paragraph nearest above (direction -1) or below (+1) the line v,
+// which is how the up and down arrows leave one paragraph for the next.
+TView*
+TEditView::MoveBetweenParagraphs(long v, long direction)
+{
+	TView* best = nil;
+	for (ArrayIndex i = 0; i < fChildren->GetArraySize(); i++)
+	{
+		TView* child = fChildren->At((short) i);
+		if (!child->DerivedFrom(clParagraphView))
+			continue;
+		long top = child->viewBounds.top;
+		if (direction == -1)
+		{
+			if (top < v && (best == nil || best->viewBounds.top < top))
+				best = child;
+		}
+		else if (direction == 1)
+		{
+			if (v < top && (best == nil || top < best->viewBounds.top))
+				best = child;
+		}
+	}
+	return best;
 }

@@ -1173,6 +1173,15 @@ move between those and the coordinates the view is scrolled to
 with the caret, and `BuildKeyChildList` 0x000acbb4 puts the editor itself
 in the tab order beside its children, unless it is read-only.
 
+`GetHilitedViewsSorted` 0x000ac090 answers the selected children in reading
+order - down the page, and within twelve pixels of the same top, left to
+right - and `MoveBetweenParagraphs` 0x000ac80c the paragraph nearest above
+or below a line, which is how the up and down arrows leave one paragraph
+for the next.  `OffsetToCaret` 0x000a40e4 answers the caret rectangle where
+the view is scrolled to, or the -32768 marker when there is no caret; the
+offset it is given is the paragraph's way of asking and means nothing to an
+editor, which has one caret rectangle wherever it was last put.
+
 NOT YET: everything the recogniser drives (`HandleWord`, `HandleInk`,
 `HandleShape`, `HandleCaret`, `HandleLineGesture`, `Scrub`, `JamText`,
 `AddNewParagraph`, `PlaybackInk`), the caret and selection

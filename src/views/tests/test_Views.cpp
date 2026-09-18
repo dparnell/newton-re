@@ -1356,6 +1356,53 @@ TestEditView()
 	Point back = editor->GetCaretGlobalTopLeft();
 	EXPECT(back.h == global.left && back.v == global.top);
 
+	// the selected children come back in reading order: down the page, and
+	// within twelve pixels of the same top, left to right
+	TView* p1 = ViewOf("ctxEVp1 := AddView(ctxEV, {viewClass: 81, viewFlags: 1, viewBounds: {left: 50, top: 60, right: 90, bottom: 75}, text: \"one\"})");
+	TView* p2 = ViewOf("ctxEVp2 := AddView(ctxEV, {viewClass: 81, viewFlags: 1, viewBounds: {left: 5, top: 62, right: 45, bottom: 77}, text: \"two\"})");
+	Refresh();
+	a->HiliteAll();
+	p1->HiliteAll();
+	p2->HiliteAll();
+	EXPECT(editor->CountHilites() == 3);
+	{
+		TView** sorted = editor->GetHilitedViewsSorted();
+		EXPECT(sorted != nil);
+		if (sorted != nil)
+		{
+			// a is at the top; p2 and p1 are within two pixels of each other,
+			// so the left one comes first
+			EXPECT(sorted[0] == a && sorted[1] == p2 && sorted[2] == p1);
+			delete[] sorted;
+		}
+	}
+	editor->RemoveAllHilites();
+	EXPECT(editor->GetHilitedViewsSorted() == nil);
+
+	// the up and down arrows leave one paragraph for the nearest next
+	long top1 = p1->viewBounds.top;		// the bounds are global: the editor is at 10, 10
+	long top2 = p2->viewBounds.top;
+	EXPECT(top1 < top2);
+	EXPECT(editor->MoveBetweenParagraphs(top1 - 1, 1) == p1);	// the nearest below
+	EXPECT(editor->MoveBetweenParagraphs(top1, 1) == p2);
+	EXPECT(editor->MoveBetweenParagraphs(top2, -1) == p1);	// the nearest above
+	EXPECT(editor->MoveBetweenParagraphs(top2 + 1, -1) == p2);
+	EXPECT(editor->MoveBetweenParagraphs(top1, -1) == nil);
+	EXPECT(editor->MoveBetweenParagraphs(top2, 1) == nil);
+
+	// OffsetToCaret answers the caret rectangle where the view is scrolled to
+	{
+		Rect where;
+		editor->OffsetToCaret(0, &where);
+		Point origin2 = editor->ContentsOrigin();
+		EXPECT(where.left == editor->fCaretRect.left + origin2.h);
+		EXPECT(where.top == editor->fCaretRect.top + origin2.v);
+		// and the marker when there is no caret
+		editor->fCaretRect.top = -32768;
+		editor->OffsetToCaret(0, &where);
+		EXPECT(where.top == -32768);
+	}
+
 	Eval("ctxEV:Close()");
 	Refresh();
 }
