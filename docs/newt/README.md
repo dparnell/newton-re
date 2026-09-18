@@ -192,18 +192,38 @@ does: a boot that fails part way is better than none.
 
 `InitFormFunctions` 0x001ef108 is a stub in this ROM and is kept as one.
 
+`TNotebook::InitToolbox` runs `InitScriptGlobals` where the ROM runs it,
+after the offscreen bitmaps, so booting `build/host/host/newton` runs the
+ROM's own boot block: it takes `GetStores()[0]`, gets or creates the
+System soup, defines `vars.userConfiguration` from its entry and then sets
+the sort id, the LCD contrast and the system volume out of it.  The OS
+comes up with one store, one soup, a real user configuration, sort id 1
+and volume 4.
+
+Two things have to be there first.  **The compressors**:
+`InitializeCompression` (`compression/Compression.h`) puts every
+compressor in the protocol registry, and `TNewtWorld::MainConstructor`
+calls it before `InitObjects` as the ROM does.  Without it a store cannot
+write an object at all once the OS is running - `NewCoder`
+(`stores/StorePipes.cpp`) makes a coder by name through the registry when
+`gProtocolRegistry` is set and only falls back on the class info when it
+is not, so the same code that works in `newtonscript`, which boots no OS,
+threw "Couldn't create compressor" inside the 'newt world (and the abort
+that followed rolled back objects the cleanup then read, which is why it
+looked like `kSError_ObjectNotFound`).  **A store**: `HostMountStores`
+(`host/HostStores.h`) and `RegisterAllNatives` (`host/HostNatives.h`),
+both from `HostBootNewtWorld`.
+
 **How far the boot block gets.**  Running it by hand
 (`newtonscript --rom <image> -e 'call ROMConstant(bootinitnsglobals) with
 ()'`) is the quickest way to find the next thing to reconstruct: an
-unbound native now names itself on stderr rather than answering a bare
-error code.  It currently reaches an empty `GetStores()`, the host having
-no store mounted when the script boot runs - that, not a missing
-function, is the next thing in the way.
+unbound native names itself on stderr rather than answering a bare error
+code.  It now runs to the end; `RunInitScripts` is the next stage, and it
+wants the package part handlers.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
 and the extras soup, activateStorePackages, the boot test script, the
-'aliv event, the inker calibration and the sort tables, InitScriptGlobals'
-NewtonScript boot, the librarian, the splash screen, the boot sound, the
-print drivers, the font loader, RunInitScripts, DarkStar, the busy box
-and the screen lock, a host window.
+'aliv event, the inker calibration, the librarian, the splash screen, the
+boot sound, the print drivers, the font loader, RunInitScripts, DarkStar
+and the busy box.

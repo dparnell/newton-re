@@ -5,6 +5,8 @@
 */
 
 #include "HostViews.h"
+#include "HostStores.h"
+#include "HostNatives.h"
 #include "HostScreen.h"
 #include "Screen.h"
 #include "Rects.h"
@@ -278,6 +280,8 @@ HostBootNewtWorld(void)
 		printf("cannot import %s\n", gNewtROMImage);
 	gObjectHeapSize = gNewtHeapSize;
 	InitObjects();
+	RegisterAllNatives();
+	HostMountStores();
 	HostStartDisplay(gNewtDisplayWidth, gNewtDisplayHeight, gNewtDisplayDepth);
 	HostInitViewToolbox();
 	HostAdvanceClock(60 * 60 * 0xf000);

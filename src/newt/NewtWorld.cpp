@@ -22,6 +22,7 @@
 #include "Screen.h"
 #include "RegionVars.h"
 #include "Loader.h"
+#include "Compression.h"
 #include "UserGlobals.h"
 #include "NewtonExceptions.h"
 #include "NSErrors.h"
@@ -148,8 +149,11 @@ TNewtWorld::ForkSwitch(Boolean in)
 // 'idle handler of the 'newt class with an idler not yet started), the
 // application - a TARMNotebook, constructed - and the package part
 // handlers, the card events, the battery check, the inker calibration,
-// the sort tables; drawing started.
-// NOT YET RECONSTRUCTED: InitializeCompression, the real-time alarm
+// the sort tables; drawing started.  The compressors go in the protocol
+// registry first: a store cannot write an object without them, because
+// with the OS running NewCoder makes them by name through the registry
+// rather than straight off their class info.
+// NOT YET RECONSTRUCTED: the real-time alarm
 // name, InitTranslators, NTKInit, REPInit/ResetREPIdler, InitExternal,
 // the part handlers ('form, 'book, 'dict, 'auto, 'comm), HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
@@ -167,6 +171,7 @@ TNewtWorld::MainConstructor()
 		return kError_No_Memory;
 	if ((err = fMessage->Init()) != noErr)
 		return err;
+	InitializeCompression();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
 	else

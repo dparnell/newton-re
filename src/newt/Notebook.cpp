@@ -7,6 +7,7 @@
 */
 
 #include "Notebook.h"
+#include "ScriptBoot.h"
 #include "RootView.h"
 #include "Recognizer.h"
 #include "StrokeCentral.h"
@@ -80,6 +81,7 @@ TNotebook::InitToolbox(void)
 {
 	TApplication::InitToolbox();
 	InitOffscreenBitmaps();
+	InitScriptGlobals();
 	InitInker();
 	RefVar orientation(GetPreference(RSSYMscreenorientation));
 	if (ISNIL(orientation))
