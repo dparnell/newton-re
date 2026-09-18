@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "HostNatives.h"
+#include "HostStores.h"
 
 #ifndef NEWTON_DEFAULT_ROM_IMAGE
 #define NEWTON_DEFAULT_ROM_IMAGE "DebugRom/MP2100 D/Senior DCirrusNoDebug image"
@@ -113,6 +114,7 @@ main(int argc, char** argv)
 	gObjectHeapSize = heapSize;
 	InitObjects();
 	RegisterAllNatives();
+	HostMountStores();
 	HostInitREP(stdout, stdin);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
 	if (displayWidth > 0)

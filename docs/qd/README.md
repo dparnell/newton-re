@@ -400,6 +400,16 @@ default port and the `screenWidth`/`screenHeight` globals (the tablet
 and the gestalt NOT YET).  `test_Screen` drives it over a 64 x 48 host
 display.
 
+`ScreenNatives.cpp` is what a script may ask of the screen:
+`GetLCDContrast` 0x00200634 and `SetLCDContrast` 0x0020030c over
+`GetGrafInfo`/`SetGrafInfo`, `GetOrientation` 0x002003b4 the same way and
+`SetOrientation` 0x002003dc through `SetOrientation` rather than
+`SetGrafInfo`, because turning the screen moves the root view and the
+ports with it.  The ROM's NewtonScript boot asks for the contrast while
+it is setting its globals up, so these answer before the view system is
+running; with no screen driver `GetGrafInfo` answers a contrast of 0 and
+an orientation of 1.
+
 ## Not yet
 
 Arcs of less than a full turn, QuickDraw pictures and shapes,

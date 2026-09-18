@@ -19,6 +19,7 @@ add_library(qd STATIC
     Text.cpp
     Pictures.cpp
     Screen.cpp
+    ScreenNatives.cpp
 )
 target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols)
 target_include_directories(qd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -31,6 +31,10 @@
 #ifndef __PORTS_H
 #include "Ports.h"
 #endif
+
+#ifndef __FRAMES_H
+#include "Frames.h"
+#endif
 #ifndef __PROTOCOLS_H
 #include "Protocols.h"
 #endif
@@ -105,5 +109,12 @@ void	BlitToScreens(PixelMap* map, Rect* src, Rect* dst, long mode);	// ROM 0x001
 long	GetGrafInfo(long selector, void* info);	// ROM 0x001cf828 GetGrafInfo__FlPv
 void	SetGrafInfo(long selector, long value);	// ROM 0x001cedb0 SetGrafInfo__FlT1
 void	SetOrientation(long orientation);		// ROM 0x0020040c SetOrientation__Fl
+
+// what a script can ask of the screen (ScreenNatives.cpp)
+Ref		FGetLCDContrast(RefArg rcvr);			// ROM 0x00200634 FGetLCDContrast__FRC6RefVar
+Ref		FSetLCDContrast(RefArg rcvr, RefArg contrast);	// ROM 0x0020030c FSetLCDContrast__FRC6RefVarT1
+Ref		FGetOrientation(RefArg rcvr);			// ROM 0x002003b4 FGetOrientation
+Ref		FSetOrientation(RefArg rcvr, RefArg orientation);	// ROM 0x002003dc FSetOrientation
+void	RegisterScreenNatives(void);
 
 #endif	/* __SCREEN_H */

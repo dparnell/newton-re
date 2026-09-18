@@ -17,6 +17,7 @@
 #include "DrawShape.h"
 #include "Soups.h"
 #include "Text.h"
+#include "Screen.h"
 #include "View.h"
 #include "UnitPublic.h"
 #include "CardInfo.h"
@@ -30,6 +31,7 @@ RegisterAllNatives(void)
 
 	// text and the view system
 	RegisterTextNatives();
+	RegisterScreenNatives();
 	RegisterViewNatives();
 	RegisterShapeNatives();
 	RegisterPickNatives();
