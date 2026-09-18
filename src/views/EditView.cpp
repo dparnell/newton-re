@@ -436,3 +436,71 @@ TEditView::PostDraw(Rect& drawBounds)
 		bits.Draw(bounds, bounds, srcXor, nil);
 	}
 }
+
+// ROM 0x000aba60 ActivateSelection__9TEditViewFUc
+// Losing the caret loses the selection with it.
+void
+TEditView::ActivateSelection(Boolean on)
+{
+	TView::ActivateSelection(on);
+	if (!on)
+		RemoveAllHilites();
+}
+
+
+// ROM 0x000acbb4 BuildKeyChildList__9TEditViewFP9TViewListlT2
+// The editor itself takes the caret as well as its children do - tab
+// stops on the page, not only on what is written on it - unless it is
+// read-only.
+void
+TEditView::BuildKeyChildList(TViewList* list, long a, long b)
+{
+	TView::BuildKeyChildList(list, a, b);
+	if (a == 0 && (fFlags & vReadOnly) == 0)
+	{
+		TView* self = this;
+		list->InsertElementsBefore(list->GetArraySize(), &self, 1);
+	}
+}
+
+
+// ROM 0x000aba94 SetCaretRectLocal__9TEditViewFRC5TRect
+void
+TEditView::SetCaretRectLocal(const Rect& r)
+{
+	fCaretRect = r;
+}
+
+
+// ROM 0x000abaa4 SetCaretRectGlobal__9TEditViewFRC5TRect
+// The same, given in the coordinates the view is scrolled to.
+void
+TEditView::SetCaretRectGlobal(const Rect& r)
+{
+	fCaretRect = r;
+	Point origin = ContentsOrigin();
+	OffsetRect(&fCaretRect, -origin.h, -origin.v);
+}
+
+
+// ROM 0x000abb2c GetCaretLocalTopLeft__9TEditViewFv
+Point
+TEditView::GetCaretLocalTopLeft(void)
+{
+	Point pt;
+	pt.v = fCaretRect.top;
+	pt.h = fCaretRect.left;
+	return pt;
+}
+
+
+// ROM 0x000abb38 GetCaretGlobalTopLeft__9TEditViewFv
+Point
+TEditView::GetCaretGlobalTopLeft(void)
+{
+	Point origin = ContentsOrigin();
+	Point pt;
+	pt.v = (short) (fCaretRect.top + origin.v);
+	pt.h = (short) (fCaretRect.left + origin.h);
+	return pt;
+}

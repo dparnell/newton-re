@@ -1340,6 +1340,22 @@ TestEditView()
 	EXPECT(editor->CountHilites() == 2 && a->Hilited() && b->Hilited());
 	editor->RemoveAllHilites();
 
+	// the caret rectangle, kept in the editor's own coordinates
+	Rect caret;
+	SetRect(&caret, 4, 6, 5, 20);
+	editor->SetCaretRectLocal(caret);
+	Point topLeft = editor->GetCaretLocalTopLeft();
+	EXPECT(topLeft.h == 4 && topLeft.v == 6);
+	EXPECT(editor->fCaretRect.bottom == 20);
+	// given in the scrolled coordinates it comes back to the same place
+	Point origin = editor->ContentsOrigin();
+	Rect global = caret;
+	OffsetRect(&global, origin.h, origin.v);
+	editor->SetCaretRectGlobal(global);
+	EXPECT(editor->fCaretRect.left == 4 && editor->fCaretRect.top == 6);
+	Point back = editor->GetCaretGlobalTopLeft();
+	EXPECT(back.h == global.left && back.v == global.top);
+
 	Eval("ctxEV:Close()");
 	Refresh();
 }

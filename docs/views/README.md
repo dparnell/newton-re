@@ -1165,6 +1165,14 @@ the twelve pixels the border takes, within the view.
 changes: into the one selected paragraph when that is all there is, else
 onto the editor itself with the number of selected children as the length.
 
+The caret rectangle is the editor's, kept in its own coordinates:
+`SetCaretRectLocal`/`SetCaretRectGlobal` 0x000aba94, 0x000abaa4 and
+`GetCaretLocalTopLeft`/`GetCaretGlobalTopLeft` 0x000abb2c, 0x000abb38
+move between those and the coordinates the view is scrolled to
+(`ContentsOrigin`).  `ActivateSelection` 0x000aba60 loses the selection
+with the caret, and `BuildKeyChildList` 0x000acbb4 puts the editor itself
+in the tab order beside its children, unless it is read-only.
+
 NOT YET: everything the recogniser drives (`HandleWord`, `HandleInk`,
 `HandleShape`, `HandleCaret`, `HandleLineGesture`, `Scrub`, `JamText`,
 `AddNewParagraph`, `PlaybackInk`), the caret and selection

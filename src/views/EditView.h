@@ -53,6 +53,8 @@ public:
 	virtual void	GlobalHiliteResizeBounds(Rect* bounds);	// ROM 0x000a8b90 GlobalHiliteResizeBounds__9TEditViewFP5TRect
 	virtual void	GlobalHilitePinnedBounds(Rect* bounds);	// ROM 0x000a8c00 GlobalHilitePinnedBounds__9TEditViewFP5TRect
 	virtual Boolean	PointInHilite(Point& pt);				// ROM 0x000a8c54 PointInHilite__9TEditViewFR6TPoint
+	virtual void	ActivateSelection(Boolean on);		// ROM 0x000aba60 ActivateSelection__9TEditViewFUc
+	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000acbb4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a8a8c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
@@ -61,6 +63,12 @@ public:
 	void			DetermineKeyView(void);					// ROM 0x000a8588 DetermineKeyView__9TEditViewFv
 	void			InvalAllHilites(void);					// ROM 0x000a7470 InvalAllHilites__9TEditViewFv
 	void			DirtyBoxHilites(void);					// ROM 0x000a7210 DirtyBoxHilites__9TEditViewFv
+
+	// the caret rectangle, which the editor keeps in its own coordinates
+	void			SetCaretRectLocal(const Rect& r);		// ROM 0x000aba94 SetCaretRectLocal__9TEditViewFRC5TRect
+	void			SetCaretRectGlobal(const Rect& r);		// ROM 0x000abaa4 SetCaretRectGlobal__9TEditViewFRC5TRect
+	Point			GetCaretLocalTopLeft(void);			// ROM 0x000abb2c GetCaretLocalTopLeft__9TEditViewFv
+	Point			GetCaretGlobalTopLeft(void);		// ROM 0x000abb38 GetCaretGlobalTopLeft__9TEditViewFv
 
 	short			fLineSpacing;		// +0x30  viewLineSpacing, read by SetupDone
 	// +0x32 not yet known
