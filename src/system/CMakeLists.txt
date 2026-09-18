@@ -4,6 +4,7 @@
 # machine and this supplies the script's view of it.
 add_library(system STATIC
     SystemNatives.cpp
+    ConfigServer.cpp
 )
-target_link_libraries(system PUBLIC newton_config frames hal_host)
+target_link_libraries(system PUBLIC newton_config frames hal_host os600_user)
 target_include_directories(system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

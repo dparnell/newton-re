@@ -335,6 +335,6 @@ ExceptionNotify(Exception* exception)
 	SetFrameSlot(vars, RSSYMlastexerror, RefVar(MAKEINT(err)));
 	SetFrameSlot(vars, RSSYMlastexdata, data);
 	SetPort(&gGrafPort);
-	// (the ROM: ReleaseScreenLock - NOT YET)
+	ReleaseScreenLock();
 	ActionErrorNotify(err, 3);
 }

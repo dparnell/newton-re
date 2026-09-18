@@ -236,10 +236,22 @@ unbound native names itself on stderr rather than answering a bare error
 code.  It now runs to the end, and `TNotebook::InitToolbox` goes on to
 `RunInitScripts`, which asks each installed part for its InstallScript:
 that is what takes the store from one soup to thirteen.  Those scripts
-want `GetSerialNumber` (`system/SystemNatives.h`) and `SetInkerPenSize`
-(`recognition/UnitPublic.h`); what stops them now is `CSInstantiate`
-0x0013c8fc, the comms name server's config server (`TNSConfigServer`), and
-two `Query`/`Notify` sends out of delayed actions.
+want `GetSerialNumber` (`system/SystemNatives.h`), `SetInkerPenSize`
+(`recognition/UnitPublic.h`), `TableLookup` and `ModalState`
+(`views/ViewNatives.cpp`), `IsValid` (`stores/Entries.h`), `LockScreen`
+(`qd/ScreenNatives.cpp`), the sound play group (`sound/SoundSettings.h`)
+and `CSInstantiate` (`system/ConfigServer.h`).  With those the boot runs
+with nothing unreconstructed but `setdefaultConfig`, which wants the name
+server's configuration registry (`TUConfigServer::SetDefaultConfig`).
+
+Two exceptions are left, both out of the root view's `viewIdleScript` -
+the Newton's power-management idle pass, which asks the user
+configuration for its sleep time, watches the backlight and checks the
+batteries.  One is a `Query` sent to nil: a nought-argument closure whose
+locals hold `vars.userConfiguration` and a tagspec query
+`{type: index, indexPath: _uniqueID, tagspec: ...}`, so a soup it expects
+is not there.  The other indexes an empty array at nought.  Neither is a
+missing function.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages

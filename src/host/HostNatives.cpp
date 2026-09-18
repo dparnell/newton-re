@@ -24,6 +24,7 @@
 #include "CardInfo.h"
 #include "SoundSettings.h"
 #include "SystemNatives.h"
+#include "ConfigServer.h"
 
 
 void
@@ -63,6 +64,7 @@ RegisterAllNatives(void)
 
 	// the machine itself
 	RegisterSystemNatives();
+	RegisterConfigServerNatives();
 
 	// and, with no ROM built-in functions frame to fall back on, a function
 	// object in gFunctionFrame for each of them
