@@ -326,6 +326,7 @@ public:
 	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x0025e0f0 ChildViewMoved__5TViewFP5TView6TPoint
 	void		GetChildOrigin(Point* origin);							// ROM 0x00265520 GetChildOrigin__5TViewFP6TPoint
 	Point		ContentsOrigin(void);									// ROM 0x002655cc ContentsOrigin__5TViewFv
+	Boolean		IsGridded(RefArg gridKind, Point* spacing);	// ROM 0x00260ae8 IsGridded__5TViewFRC6RefVarP6TPoint - the viewGrid is this kind, and how far apart
 	Point		LocalOrigin(void) const;								// ROM 0x00261e6c LocalOrigin__5TViewCFv
 	void		SetOrigin(Point& origin);								// ROM 0x002633fc SetOrigin__5TViewFR6TPoint
 	long		ChildrenHeight(long* count);							// ROM 0x002636e4 ChildrenHeight__5TViewFPl

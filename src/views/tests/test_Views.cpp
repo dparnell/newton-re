@@ -1390,6 +1390,25 @@ TestEditView()
 	EXPECT(editor->MoveBetweenParagraphs(top1, -1) == nil);
 	EXPECT(editor->MoveBetweenParagraphs(top2, 1) == nil);
 
+	// a new paragraph is put on the ruled lines: its baseline onto the
+	// nearest, with the text sitting three pixels above it
+	{
+		Rect box;
+		SetRect(&box, 7, 30, 60, 48);
+		editor->AlignToLineSpacing(&box, 30, 12);	// a baseline at 30 + 12
+		// viewLineSpacing is 22, so the line is (30 + 44/3) / 22 = 2, the
+		// baseline goes to 22 * 2 - 4 = 40 (four, the spacing being over 20)
+		// and the box moves up by the two the baseline moved
+		EXPECT(box.top == 28 && box.bottom == 46);
+		EXPECT(box.left == 7 && box.right == 60);	// no square grid on this view
+		// a clipboard is left where it is
+		editor->fFlags |= vClipboard;
+		SetRect(&box, 7, 30, 60, 48);
+		editor->AlignToLineSpacing(&box, 30, 12);
+		EXPECT(box.top == 30);
+		editor->fFlags &= ~vClipboard;
+	}
+
 	// OffsetToCaret answers the caret rectangle where the view is scrolled to
 	{
 		Rect where;

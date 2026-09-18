@@ -594,3 +594,32 @@ TEditView::MoveBetweenParagraphs(long v, long direction)
 	}
 	return best;
 }
+
+// ROM 0x000a3dc4 AlignToLineSpacing__9TEditViewFP5TRectlT2
+// A new paragraph's rectangle moved onto the ruled lines: its baseline
+// (top + ascent) onto the nearest line, and its left onto the square grid
+// when the view has one.  A line is chosen by rounding two thirds of the
+// way down - so a baseline a little below a line still belongs to it -
+// and the text then sits three pixels above the line, four on a wide
+// spacing.  A clipboard is left alone.
+void
+TEditView::AlignToLineSpacing(Rect* r, long top, long ascent)
+{
+	if ((fFlags & vClipboard) != 0)
+		return;
+	long left = r->left;
+	RefVar lineSpacing(GetVar(RSSYMviewlinespacing));
+	long spacing = ISNIL(lineSpacing) ? 0 : RINT(lineSpacing);
+	if (spacing > 0)
+	{
+		Point grid;
+		if (IsGridded(RSSYMsquaregrid, &grid) && grid.h != 0)
+			left = (left + grid.h / 2) / grid.h * grid.h;
+		long line = (top + (spacing * 2) / 3) / spacing;
+		top = spacing * line - (spacing <= 20 ? 3 : 4);
+	}
+	long down = top - (ascent + r->top);
+	long across = left - r->left;
+	if (down != 0 || across != 0)
+		OffsetRect(r, across, down);
+}

@@ -1546,6 +1546,27 @@ TView::GlobalHilitePinnedBounds(Rect* bounds)
 }
 
 
+// ROM 0x00260ae8 IsGridded__5TViewFRC6RefVarP6TPoint
+// Whether the view's viewGrid is the kind asked about, and how far apart
+// the grid is: viewLineSpacing both ways, except that a line grid has no
+// horizontal step at all.  A view with no viewLineSpacing is on a grid of
+// one.
+Boolean
+TView::IsGridded(RefArg gridKind, Point* spacing)
+{
+	if (!EQRef(GetProto(RSSYMviewgrid), gridKind))
+		return false;
+	if (spacing != nil)
+	{
+		RefVar lineSpacing(GetProto(RSSYMviewlinespacing));
+		short apart = (short) (ISNIL(lineSpacing) ? 1 : RINT(lineSpacing));
+		spacing->v = apart;
+		spacing->h = EQRef(gridKind, RSSYMlinegrid) ? 0 : apart;
+	}
+	return true;
+}
+
+
 // ROM 0x0026051c PointInHilite__5TViewFR6TPoint
 // Whether the point - in the parent's coordinates - falls on any of the
 // hilites, whose bounds are the view's own.

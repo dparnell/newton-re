@@ -1182,6 +1182,16 @@ the view is scrolled to, or the -32768 marker when there is no caret; the
 offset it is given is the paragraph's way of asking and means nothing to an
 editor, which has one caret rectangle wherever it was last put.
 
+`AlignToLineSpacing` 0x000a3dc4 puts a new paragraph on the ruled lines:
+its baseline (top plus ascent) onto the nearest, chosen by rounding two
+thirds of the way down - so a baseline a little below a line still belongs
+to it - and the text then sits three pixels above the line, four when the
+spacing is over twenty.  The left goes onto the square grid when the view
+has one (`TView::IsGridded` 0x00260ae8: the view's `viewGrid` is the kind
+asked about, and `viewLineSpacing` is how far apart it is both ways -
+except that a `linegrid` has no horizontal step).  A clipboard is left
+where it is.
+
 NOT YET: everything the recogniser drives (`HandleWord`, `HandleInk`,
 `HandleShape`, `HandleCaret`, `HandleLineGesture`, `Scrub`, `JamText`,
 `AddNewParagraph`, `PlaybackInk`), the caret and selection

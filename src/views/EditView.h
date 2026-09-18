@@ -74,6 +74,7 @@ public:
 	// the children that are selected, and the way between them
 	TView**		GetHilitedViewsSorted(void);		// ROM 0x000ac090 GetHilitedViewsSorted__9TEditViewFv - CountHilites of them, the caller's to delete[]
 	TView*			MoveBetweenParagraphs(long v, long direction);	// ROM 0x000ac80c MoveBetweenParagraphs__9TEditViewFlT1
+	void			AlignToLineSpacing(Rect* r, long top, long ascent);	// ROM 0x000a3dc4 AlignToLineSpacing__9TEditViewFP5TRectlT2
 
 	short			fLineSpacing;		// +0x30  viewLineSpacing, read by SetupDone
 	// +0x32 not yet known
