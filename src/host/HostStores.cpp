@@ -30,21 +30,30 @@ HostMountStores(void)
 		return;
 	gMounted = true;
 
-	InitQueries();
+	// a store that will not mount is worth saying so about, but not worth
+	// taking the machine down over: the boot goes on without one
+	newton_try
+	{
+		InitQueries();
 
-	TStore* store = (TStore*) THostStore::ClassInfo()->New();
-	if (store == nil)
-	{
-		fprintf(stderr, "[host] no memory for the internal store\n");
-		return;
+		TStore* store = (TStore*) THostStore::ClassInfo()->New();
+		if (store == nil)
+			fprintf(stderr, "[host] no memory for the internal store\n");
+		else
+		{
+			NewtonErr err = store->Init(nil, kHostStoreSize, 0, 0, kStoreIsInternal, nil);
+			if (err == noErr)
+				err = store->Format();
+			if (err != noErr)
+				fprintf(stderr, "[host] the internal store would not format (%ld)\n", (long) err);
+			else
+				RegisterTStore(store);
+		}
 	}
-	NewtonErr err = store->Init(nil, kHostStoreSize, 0, 0, kStoreIsInternal, nil);
-	if (err == noErr)
-		err = store->Format();
-	if (err != noErr)
+	newton_catch_all
 	{
-		fprintf(stderr, "[host] the internal store would not format (%ld)\n", (long) err);
-		return;
+		fprintf(stderr, "[host] the internal store threw %s (%ld) while mounting\n",
+				CurrentException()->name, (long) (intptr_t) CurrentException()->data);
 	}
-	RegisterTStore(store);
+	end_try;
 }
