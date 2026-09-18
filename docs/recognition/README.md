@@ -287,8 +287,20 @@ click-event unit straight to `HandleUnit` and disposes the units itself;
 unit is NOT YET); `Wait` with no task running runs the host wait hook
 (os600/user/UserBoot.h).
 
+An area's two association lists are `TTypeAssoc` (ROM 0x00229f30-
+0x0022a1e0, `recognition/Areas.h`): a `TDArray` of `Assoc` records - a
+unit type, the domain that handles it, and the parameter block to handle it
+with - sorted by type, so that merging two areas' lists keeps the order.
+`AddAssoc` is therefore a search and an insert rather than an append, and
+an association that is already there answers its own index rather than
+being added twice; two entries count as the same when the type, the domain
+and the two words beside them all match.  `IDispose` frees the parameter
+blocks that belong to the entries - telling the domain first
+(`DomainParameter` with selector 3) - and leaves alone any marked as
+someone else's.  (`test_Areas`.)
+
 NOT YET: TController and the arbiter, the domains (stroke, edge-list
-gestures, shapes, words), TTypeAssoc and the area cache (`InitAreas`,
+gestures, shapes, words), the area cache (`InitAreas`,
 `GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the
 inker and ink (`StrokeUpdate`, `TStroke::Draw`, the expired strokes'
 grouping and compression, the stroke bundles), the word list and

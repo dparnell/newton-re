@@ -7,3 +7,7 @@ add_test(NAME recognition.Stroke COMMAND test_Stroke)
 add_executable(test_Unit test_Unit.cpp)
 target_link_libraries(test_Unit PRIVATE recognition)
 add_test(NAME recognition.Unit COMMAND test_Unit)
+
+add_executable(test_Areas test_Areas.cpp)
+target_link_libraries(test_Areas PRIVATE recognition)
+add_test(NAME recognition.Areas COMMAND test_Areas)

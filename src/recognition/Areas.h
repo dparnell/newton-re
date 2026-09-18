@@ -12,9 +12,8 @@
 				lies in; its last area is the merged one.  The ROM's
 				TRecArea is 0x30 bytes.
 
-				NOT YET RECONSTRUCTED: TTypeAssoc (the type/recogniser and
-				domain associations - fTypes and fDomains stay nil), the
-				area cache (gAreaCache: the areas built for the views hit,
+				NOT YET RECONSTRUCTED: the area cache (gAreaCache: the areas
+				built for the views hit,
 				InitAreas/GetAreasHit), GetInfoFor and ParamsAllSet (the
 				domains' parameter blocks), the dictionary chains.
 
@@ -27,8 +26,43 @@
 
 #include "RecObject.h"
 
-class TTypeAssoc;
 class TDictChain;
+class TDomain;
+
+
+// One entry of a TTypeAssoc: a unit type, the domain that handles it, and
+// the parameter block it is handled with.  The last three words are the
+// domain's to read; what they mean is still to be found.
+struct Assoc
+{
+	ULong		fType;			// +0x00  the unit type this entry is for
+	TDomain*	fDomain;		// +0x04  the recogniser that handles it
+	Handle		fParams;		// +0x08  its parameter block
+	ULong		fUnknown0C;		// +0x0c  part of what makes an entry unique
+	ULong		fUnknown10;		// +0x10  and so is this
+	ULong		fUnknown14;		// +0x14
+	Boolean		fSharedParams;	// +0x18  the parameters are someone else's: not freed with the entry
+};
+
+
+// The types a recognition area takes, or the domains it runs, each with
+// the parameters to run it with.  A sorted array of Assoc records - sorted
+// by type, so that merging two areas' associations keeps the order - which
+// is what makes AddAssoc a search and an insert rather than an append.
+class TTypeAssoc : public TDArray
+{
+public:
+	static TTypeAssoc*	Make(void);			// ROM 0x00229f30 Make__10TTypeAssocSFv
+	long			ITypeAssoc(void);			// ROM 0x00229f98 ITypeAssoc__10TTypeAssocFv - ==> 0, or an error
+
+	virtual void		IDispose(void);			// ROM 0x00229fa4 IDispose__10TTypeAssocFv - the parameter blocks that are ours freed with it
+	virtual void		Dump(TMsg* msg);			// ROM 0x0022a1d8 Dump__10TTypeAssocFP4TMsg (nothing)
+
+	TTypeAssoc*		Copy(void);				// ROM 0x0022a030 Copy__10TTypeAssocFv
+	ULong			AddAssoc(const Assoc* assoc);	// ROM 0x0022a088 AddAssoc__10TTypeAssocFP5Assoc - ==> its index, -1 for no memory
+	void			MergeAssoc(TTypeAssoc* other);	// ROM 0x0022a150 MergeAssoc__10TTypeAssocFP10TTypeAssoc
+	Assoc*			GetAssoc(ULong index);		// ROM 0x0022a1d0 GetAssoc__10TTypeAssocFUl
+};
 
 class TRecArea : public TRecObject
 {

@@ -7,6 +7,8 @@
 */
 
 #include "Areas.h"
+#include "Domain.h"
+#include "OSErrors.h"
 
 
 /*------------------------------------------------------------------------------
@@ -206,3 +208,121 @@ TAreaList::GetMergedArea(void)
 {
 	return GetArea(fCount - 1);
 }
+
+/*------------------------------------------------------------------------------
+	T T y p e A s s o c
+------------------------------------------------------------------------------*/
+
+// ROM 0x00229f30 Make__10TTypeAssocSFv
+TTypeAssoc*
+TTypeAssoc::Make(void)
+{
+	TTypeAssoc* assoc = new TTypeAssoc;
+	if (assoc != nil && assoc->ITypeAssoc() != noErr)
+	{
+		assoc->Dispose();
+		assoc = nil;
+	}
+	return assoc;
+}
+
+
+// ROM 0x00229f98 ITypeAssoc__10TTypeAssocFv
+// An array of Assoc records, grown a chunk at a time like any other; the
+// handle is named so that a heap dump says what it is.
+long
+TTypeAssoc::ITypeAssoc(void)
+{
+	long err = IArray(sizeof(Assoc), 0);
+	NameHandle(fData, 'Datd');
+	return err;
+}
+
+
+// ROM 0x00229fa4 IDispose__10TTypeAssocFv
+// The parameter blocks that belong to the entries go with them: the domain
+// is told first (DomainParameter with selector 3), then the handle is
+// freed.  A block someone else owns (fSharedParams) is left alone.
+void
+TTypeAssoc::IDispose(void)
+{
+	ULong count = (ULong) fCount;
+	for (ULong i = 0; i < count; i++)
+	{
+		Assoc* assoc = GetAssoc(i);
+		if (assoc->fParams != nil && !assoc->fSharedParams)
+		{
+			assoc->fDomain->DomainParameter(3, 0, 0);
+			DisposeHandle(assoc->fParams);
+		}
+	}
+	TArray::IDispose();
+}
+
+
+// ROM 0x0022a030 Copy__10TTypeAssocFv
+TTypeAssoc*
+TTypeAssoc::Copy(void)
+{
+	TTypeAssoc* copy = new TTypeAssoc;
+	if (copy != nil)
+		CopyInto(copy);
+	return copy;
+}
+
+
+// ROM 0x0022a088 AddAssoc__10TTypeAssocFP5Assoc
+// Sorted by type.  An entry that matches this one - the same type, domain,
+// and the two words that go with them - is already there and its index is
+// the answer; otherwise a slot is opened where the order wants it.
+ULong
+TTypeAssoc::AddAssoc(const Assoc* assoc)
+{
+	ULong at = 0;
+	ULong count = (ULong) fCount;
+	while (at < count)
+	{
+		Assoc* entry = GetAssoc(at);
+		if (assoc->fType < entry->fType)
+			break;
+		if (assoc->fType == entry->fType
+			&& (ULong) assoc->fDomain == (ULong) entry->fDomain
+			&& assoc->fUnknown0C == entry->fUnknown0C
+			&& assoc->fUnknown10 == entry->fUnknown10)
+			return at;
+		at++;
+	}
+	at = Insert(at);
+	if (at != (ULong) -1)
+		*GetAssoc(at) = *assoc;
+	return at;
+}
+
+
+// ROM 0x0022a150 MergeAssoc__10TTypeAssocFP10TTypeAssoc
+// Another area's associations added to ours - what happens when a unit
+// lies in more than one area and the merged one has to take both.
+void
+TTypeAssoc::MergeAssoc(TTypeAssoc* other)
+{
+	ULong count = (ULong) other->fCount;
+	for (ULong i = 0; i < count; i++)
+	{
+		Assoc entry = *other->GetAssoc(i);
+		AddAssoc(&entry);
+	}
+}
+
+
+// ROM 0x0022a1d0 GetAssoc__10TTypeAssocFUl
+Assoc*
+TTypeAssoc::GetAssoc(ULong index)
+{
+	return (Assoc*) GetEntry(index);
+}
+
+
+// ROM 0x0022a1d8 Dump__10TTypeAssocFP4TMsg
+void
+TTypeAssoc::Dump(TMsg* /*msg*/)
+{ }
