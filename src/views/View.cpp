@@ -12,6 +12,7 @@
 */
 
 #include "View.h"
+#include "Hilites.h"
 #include "RootView.h"
 #include "Commands.h"
 #include "Application.h"
@@ -589,8 +590,8 @@ ScriptHandled(RefArg cmd, Ref result)
 // takes the child of the parameter's id out (posting aeAddData with its
 // data), aeMoveData moves by params[0], [1] (posting the reverse as
 // aeMoveChild to the parent), aeScaleData scales by params[0..3]
-// (Scale, NOT YET), aeAddHilite appends the frame parameter (a hilite,
-// or a frame's hilite slot) to hilites, aeRemoveHilite removes one,
+// (Scale, NOT YET), aeAddHilite appends the frame parameter (a THilite as
+// a pointer Ref) to hilites, aeRemoveHilite removes one,
 // aeRemoveAllHilites all, aeToChildren sends the command to every child
 // and aeToHilitedChildren to the hilited ones, aeMoveChild sends
 // aeMoveData to the child of the parameter's id.  ==> whether handled.
@@ -783,8 +784,6 @@ TView::RealDoCommand(RefArg cmd)
 	case aeAddHilite:
 		{
 			RefVar hilite(CommandFrameParameter(cmd));
-			if (IsFrame(hilite))
-				hilite = GetFrameSlotRef(hilite, RSSYMhilite);
 			RefVar hilites(GetFrameSlotRef(fContext, RSSYMhilites));
 			if (ISNIL(hilites))
 			{
@@ -1286,12 +1285,45 @@ TView::Idle(long /*arg*/)
 }
 
 
-// the hilites: NOT YET RECONSTRUCTED (THilite, HiliteLoop)
-void	TView::DrawHiliting(void)									{ }		// ROM 0x00265250 DrawHiliting__5TViewFv
-void	TView::DrawHilitedData(void)								{ }		// ROM 0x00265224 DrawHilitedData__5TViewFv
+/*------------------------------------------------------------------------------
+	T h e   d a t a   h i l i t e s
+	What is selected *inside* a view, as against TView::Hilite, which
+	inverts the whole of one because it is being pressed.  Each hilite is a
+	C++ THilite (Hilites.h) whose address sits in the view's `hilites` array
+	as a pointer Ref; the base class only keeps them, a data view being the
+	one that knows what its items are and draws them.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00265250 DrawHiliting__5TViewFv
+// The base draws no hiliting of its own.
+void	TView::DrawHiliting(void)									{ }
+
+
+// ROM 0x00265224 DrawHilitedData__5TViewFv
+// The whole view, drawn again - a data view that hilites part of itself
+// overrides this with something smaller.
+void
+TView::DrawHilitedData(void)
+{
+	Draw(viewBounds, false);
+}
+
+
+// the pen-driven hiliting: NOT YET RECONSTRUCTED (the recogniser's units)
 Boolean	TView::HandleHilite(TUnitPublic*, long, Boolean)			{ return false; }	// ROM 0x00260218 HandleHilite__5TViewFP11TUnitPubliclUc
 Boolean	TView::HandleScrub(const Rect&, long, TUnitPublic*, Boolean)	{ return false; }	// ROM 0x002605f0 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
-Boolean	TView::Hilited(void)										{ return false; }	// ROM 0x0025feac Hilited__5TViewFv
+
+
+// ROM 0x0025feac Hilited__5TViewFv
+// Whether anything in the view is selected.
+Boolean
+TView::Hilited(void)
+{
+	RefVar hilites(Hilites());
+	return NOTNIL(hilites) && Length(hilites) != 0;
+}
+
+
 // ROM 0x0025fe3c Hilites__5TViewFv
 // The view's selections: the `hilites` slot of the context.
 Ref		TView::Hilites(void)		{ return GetProto(RSSYMhilites); }
@@ -1309,29 +1341,152 @@ TView::FirstHilite(void)
 }
 
 
-void	TView::DrawHilites(Boolean)									{ }		// ROM 0x0025ff5c DrawHilites__5TViewFUc
-Boolean	TView::IsCompletelyHilited(RefArg)							{ return false; }	// ROM 0x002600c8 IsCompletelyHilited__5TViewFRC6RefVar
-void	TView::HiliteAll(void)										{ }		// ROM 0x002600d0 HiliteAll__5TViewFv
-void	TView::DeleteHilited(RefArg)								{ }		// ROM 0x002601cc DeleteHilited__5TViewFRC6RefVar
+// ROM 0x0025ff5c DrawHilites__5TViewFUc
+// The base draws none; a data view (TParagraphView) overrides it.
+void	TView::DrawHilites(Boolean)									{ }
+
+
+// ROM 0x002600c8 IsCompletelyHilited__5TViewFRC6RefVar
+// Whether the hilite covers a whole item: true for a view with no items of
+// its own to be partly selected.
+Boolean	TView::IsCompletelyHilited(RefArg)							{ return true; }
+
+
+// ROM 0x002600d0 HiliteAll__5TViewFv
+// One hilite over the whole view, in the view's own coordinates.  It goes
+// in through the command, so that it can be undone like any other.
+void
+TView::HiliteAll(void)
+{
+	RemoveAllHilites();
+	THilite* hilite = new THilite;
+	if (hilite == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	SetRect(&hilite->fBounds, 0, 0,
+			viewBounds.right - viewBounds.left, viewBounds.bottom - viewBounds.top);
+	RefVar cmd(MakeCommand(aeAddHilite, this, 0x8000000));
+	CommandSetFrameParameter(cmd, RefVar(AddressToRef(hilite)));
+	gApplication->DispatchCommand(cmd);
+}
+
+
+// ROM 0x002601cc DeleteHilited__5TViewFRC6RefVar
+// The parent is asked to delete what is selected here - a data view keeps
+// the items, so the child that holds the hilite is not the one that owns
+// them.  The hilite the caller names is not looked at.
+void
+TView::DeleteHilited(RefArg)
+{
+	RefVar cmd(MakeCommand(aeRemoveData, fParent, fId));
+	gApplication->DispatchCommand(cmd);
+}
+
+
 // ROM 0x0025ff60 RemoveHilite__5TViewFRC6RefVar
-// The hilite dropped from the hilites array and its area invalidated (the
-// ROM disposes the C++ TParagraphHilite and invalidates its stored area
-// rect; the host keeps a frame and dirties the view), the root's hilited
-// view forgotten when it was ours.
+// Out of the array, the C++ object disposed of, and the parent invalidated
+// over where it was (the hilite's bounds are the view's own coordinates);
+// when nothing is selected any more the root forgets us as its hiliter.
 void
 TView::RemoveHilite(RefArg hilite)
 {
-	RefVar hilites(Hilites());
+	RefVar hilites(GetFrameSlotRef(fContext, RSSYMhilites));
 	if (NOTNIL(hilites))
 		ArrayRemove(hilites, hilite);
-	Dirty(nil);
+	THilite* object = (THilite*) RefToAddress(hilite);
+	Rect bounds;
+	SetEmptyRect(&bounds);
+	if (object != nil)
+	{
+		bounds = object->fBounds;
+		delete object;
+	}
+	OffsetRect(&bounds, viewBounds.left, viewBounds.top);
+	if (fParent != nil)
+		fParent->Dirty(&bounds);
+	if (!Hilited() && gRootView->fHiliter == this)
+		gRootView->fHiliter = nil;
+}
+
+
+// ROM 0x0026002c RemoveAllHilites__5TViewFv
+// Each one in turn.  Removing shortens the array under the loop, so the
+// loop's index and count are stepped back with it.
+void
+TView::RemoveAllHilites(void)
+{
+	HiliteLoop loop(this);
+	while (loop.Next())
+	{
+		RemoveHilite(loop.fHilite);
+		loop.fIndex--;
+		loop.fCount--;
+	}
 	if (gRootView->fHiliter == this)
 		gRootView->fHiliter = nil;
 }
-void	TView::RemoveAllHilites(void)								{ }		// ROM 0x0026002c RemoveAllHilites__5TViewFv
-void	TView::GlobalHiliteBounds(Rect* bounds)						{ SetEmptyRect(bounds); }	// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
-void	TView::GlobalHiliteResizeBounds(Rect* bounds)				{ SetEmptyRect(bounds); }	// ROM 0x002604dc GlobalHiliteResizeBounds__5TViewFP5TRect
-void	TView::GlobalHilitePinnedBounds(Rect* bounds)				{ SetEmptyRect(bounds); }	// ROM 0x00260514 GlobalHilitePinnedBounds__5TViewFP5TRect
+
+
+// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
+// The union of the hilites' bounds, in the parent's coordinates, added to
+// whatever the caller had in bounds already (an empty rect, usually).  A
+// view with nothing selected leaves it alone.
+//
+// BUG (the ROM's): the function ends by calling ClickOptions and answering
+// its result - a bounds routine whose answer is the view's click options.
+// Every caller ignores it, and the base's ClickOptions does nothing, so the
+// call is kept where the ROM has it rather than dropped.
+void
+TView::GlobalHiliteBounds(Rect* bounds)
+{
+	HiliteLoop loop(this);
+	if (!loop.Next())
+		return;
+	do
+	{
+		Rect r = loop.fCurrent != nil ? loop.fCurrent->fBounds : viewBounds;
+		OffsetRect(&r, viewBounds.left, viewBounds.top);
+		UnionRect(bounds, &r, bounds);
+	}
+	while (loop.Next());
+	ClickOptions();
+}
+
+
+// ROM 0x002604dc GlobalHiliteResizeBounds__5TViewFP5TRect
+// The bounds a selection may be resized within: the view's own, unioned
+// with what the caller had.  Nothing selected here, nothing to add.
+void
+TView::GlobalHiliteResizeBounds(Rect* bounds)
+{
+	if (!Hilited())
+		return;
+	if (bounds->top == -32768 || EmptyRect(bounds))
+	{
+		*bounds = viewBounds;
+		return;
+	}
+	if (EmptyRect(&viewBounds))
+		return;
+	if (viewBounds.top < bounds->top)
+		bounds->top = viewBounds.top;
+	if (viewBounds.left < bounds->left)
+		bounds->left = viewBounds.left;
+	if (viewBounds.bottom > bounds->bottom)
+		bounds->bottom = viewBounds.bottom;
+	if (viewBounds.right > bounds->right)
+		bounds->right = viewBounds.right;
+}
+
+
+// ROM 0x00260514 GlobalHilitePinnedBounds__5TViewFP5TRect
+// The base pins a selection to where the hilites are.
+void
+TView::GlobalHilitePinnedBounds(Rect* bounds)
+{
+	GlobalHiliteBounds(bounds);
+}
+
+
 Boolean	TView::PointInHilite(Point&)								{ return false; }	// ROM 0x0026051c PointInHilite__5TViewFR6TPoint
 long	TView::ClickOptions(void)									{ return 0; }		// ROM 0x00260630 ClickOptions__5TViewFv
 void	TView::DrawScaledData(const Rect&, const Rect&, Rect*)		{ }		// ROM 0x00260638 DrawScaledData__5TViewFRC5TRectT1P5TRect

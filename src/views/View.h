@@ -30,12 +30,12 @@
 				by TListLoop (forwards) and TBackwardLoop.
 
 				Select/Hilite invert a view (a button pressed) through the
-				viewHiliteScript or InvertRect.  NOT YET RECONSTRUCTED: the
-				data hilites (THilite, HiliteLoop, the DrawHilit* methods
-				draw nothing; SetCaretOffset/OffsetToCaret/PointToCaret/
-				GetSelection/SetSelection are the paragraph's - RootView.h
-				has the key view), drag and
-				drop, the key view chain (BuildKeyChildList, NextKeyView;
+				viewHiliteScript or InvertRect; the data hilites - what is
+				selected inside a view - are kept as THilite objects in the
+				`hilites` array and walked with HiliteLoop (Hilites.h), the
+				base class keeping them and a data view drawing them.  NOT
+				YET RECONSTRUCTED: the pen-driven HandleHilite/HandleScrub,
+				the key view chain (BuildKeyChildList, NextKeyView;
 				HandleKeyEvent runs the key scripts and the key commands -
 				Keyboard.h; RealDoCommand answers the other commands -
 				Commands.h), the animation effects

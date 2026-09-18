@@ -13,6 +13,7 @@
 #include "RootView.h"
 #include "TextView.h"
 #include "ParagraphView.h"
+#include "Hilites.h"
 #include "GaugeView.h"
 #include "PickView.h"
 #include "DrawShape.h"
@@ -962,9 +963,12 @@ TestCommands()
 	Eval("GetRoot().notified := nil; GetRoot().Notify := func(kind, err, x) notified := [kind, err]");
 	cmd = MakeCommand(0x66, v, 0);
 	EXPECT(gApplication->DispatchCommand(cmd) == 0 && ISNIL(Eval("GetRoot().notified")));
-	// PostCommandParam with a frame parameter: aeAddHilite appends to the view's hilites
+	// PostCommandParam with a frame parameter: aeAddHilite appends it to the
+	// view's hilites as it stands (a real hilite is a THilite pointer Ref, so
+	// the slot is emptied again rather than left holding a frame)
 	Eval("PostCommandParam(ctxC, 0x47, {hilite: 'h1})");
-	EXPECT(RINT(Eval("Length(ctxC.hilites)")) == 1 && EQRef(Eval("ctxC.hilites[0]"), Intern((char*) "h1")));
+	EXPECT(RINT(Eval("Length(ctxC.hilites)")) == 1 && EQRef(Eval("ctxC.hilites[0].hilite"), Intern((char*) "h1")));
+	Eval("ctxC.hilites := nil");
 	// aeMoveData moves the view and posts its undo; Undo moves it back
 	Eval("ClearUndoStacks()");
 	gApplication->Idle();
@@ -1111,6 +1115,74 @@ TestHilite()
 // The keyboard: the German 'kchr mapping of the ROM's locale bundle, the
 // key maps and modifiers, a dead key, key events to a key view and its
 // scripts, a key command, PostKeyString and HandleKeyEvents.
+// The data hilites: what is selected *inside* a view (views/Hilites.h),
+// as against TView::Hilite, which inverts a whole one.  The base class only
+// keeps them - each a THilite whose address is a pointer Ref in the view's
+// hilites array - so what is checked here is the keeping: HiliteAll makes
+// one over the whole view, GlobalHiliteBounds unions their bounds into the
+// parent's coordinates, and RemoveAllHilites takes them out again.
+static void
+TestDataHilites()
+{
+	TView* v = ViewOf("ctxDH := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}})");
+	EXPECT(!v->Hilited() && ISNIL(v->FirstHilite()));
+	EXPECT(v->IsCompletelyHilited(RefVar(NILREF)));	// a view with no items of its own
+
+	// HiliteAll selects the whole view, in the view's own coordinates
+	v->HiliteAll();
+	EXPECT(v->Hilited() && RINT(Eval("Length(ctxDH.hilites)")) == 1);
+	RefVar first(v->FirstHilite());
+	THilite* hilite = (THilite*) RefToAddress(first);
+	EXPECT(hilite != nil);
+	EXPECT(hilite->fBounds.left == 0 && hilite->fBounds.top == 0
+		&& hilite->fBounds.right == 40 && hilite->fBounds.bottom == 30);
+
+	// the hilite answers about itself in those coordinates
+	Point inside;  inside.h = 10;  inside.v = 10;
+	Point outside; outside.h = 50; outside.v = 10;
+	EXPECT(hilite->Encloses(inside) && !hilite->Encloses(outside));
+	Rect over;  SetRect(&over, 5, 5, 15, 15);
+	Rect clear; SetRect(&clear, 100, 100, 110, 110);
+	EXPECT(hilite->Overlaps(over) && !hilite->Overlaps(clear));
+	TRegionVar area;
+	hilite->Area(area);
+	EXPECT(!EmptyRgn(area) && EqualRect(&(*(RgnHandle) area)->rgnBBox, &hilite->fBounds));
+
+	// GlobalHiliteBounds offsets them into the parent's coordinates and
+	// unions them into whatever the caller had
+	Rect bounds;
+	SetEmptyRect(&bounds);
+	v->GlobalHiliteBounds(&bounds);
+	EXPECT(bounds.left == 20 && bounds.top == 40 && bounds.right == 60 && bounds.bottom == 70);
+
+	// a loop hands out each hilite and the object behind it
+	long seen = 0;
+	{
+		HiliteLoop loop(v);
+		while (loop.Next())
+		{
+			EXPECT(loop.fCurrent == hilite && EQRef(loop.fHilite, first));
+			seen++;
+		}
+	}
+	EXPECT(seen == 1);
+
+	// HiliteAll again replaces the one that was there
+	v->HiliteAll();
+	EXPECT(RINT(Eval("Length(ctxDH.hilites)")) == 1);
+
+	// and RemoveAllHilites empties the array (the objects disposed of with it)
+	v->RemoveAllHilites();
+	EXPECT(!v->Hilited() && RINT(Eval("Length(ctxDH.hilites)")) == 0 && ISNIL(v->FirstHilite()));
+	SetEmptyRect(&bounds);
+	v->GlobalHiliteBounds(&bounds);
+	EXPECT(EmptyRect(&bounds));		// nothing selected, nothing added
+
+	Eval("ctxDH:Close()");
+	Refresh();
+}
+
+
 static void
 TestKeyboard()
 {
@@ -2001,6 +2073,19 @@ TestKeyChain()
 
 // text selection: a hilited range of a paragraph drawn inverted, made by
 // MakeHilite (and by tab into a paragraph, which selects it all)
+// The range of a paragraph's first hilite: a THilite pointer Ref in the
+// view's hilites array, not a frame (views/Hilites.h).
+static long
+HiliteRange(TParagraphView* view, Boolean wantStart)
+{
+	RefVar first(view->FirstHilite());
+	if (ISNIL(first))
+		return -1;
+	TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(first);
+	return wantStart ? hilite->fStart : hilite->fEnd;
+}
+
+
 static void
 TestSelection()
 {
@@ -2023,7 +2108,7 @@ TestSelection()
 	long before = InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom);
 	p->MakeHilite(0, 5, false);
 	Refresh();
-	EXPECT(RINT(Eval("Length(ctxS.hilites)")) == 1 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 0 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 5);
+	EXPECT(RINT(Eval("Length(ctxS.hilites)")) == 1 && HiliteRange(p, true) == 0 && HiliteRange(p, false) == 5);
 	long after = InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom);
 	EXPECT(after != before);		// the region is inverted (mostly-white text becomes mostly-black)
 	EXPECT(gRootView->fCaretView == p && gRootView->fCaretLength == 5 && !gRootView->fCaretShowing);	// a selection, no caret
@@ -2035,7 +2120,7 @@ TestSelection()
 	EXPECT(worldInk > 0 && worldInk < (box11.left - box6.left) * (p->Line(0).fBounds.bottom - p->Line(0).fBounds.top));	// plain text, not a solid block
 	// extending the selection unions the ranges
 	p->MakeHilite(5, 8, false);
-	EXPECT(RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 0 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 8);
+	EXPECT(HiliteRange(p, true) == 0 && HiliteRange(p, false) == 8);
 	// RemoveHilite drops the one hilite (the array emptied)
 	p->RemoveHilite(RefVar(p->FirstHilite()));
 	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0);
@@ -2081,7 +2166,9 @@ TestSelection()
 	// removing the hilites restores the plain text
 	p->RemoveAllHilites();
 	Refresh();
-	EXPECT(ISNIL(Eval("ctxS.hilites")) && InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom) == before);
+	// (the hilites array is emptied, not cleared: RemoveHilite takes them out one by one)
+	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0
+		&& InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom) == before);
 	Eval("SetKeyView(nil, nil)");
 	Eval("ctxS:Close()");
 	Refresh();
@@ -2098,17 +2185,17 @@ TestSelection()
 	TParagraphView* q = (TParagraphView*) GetView(RefVar(Eval("ctxS2:ChildViewFrames()[1]")));
 	Eval("SetKeyView(ctxS2:ChildViewFrames()[0], 0)");
 	TypeKey(0x30);		// tab: the second field selected whole
-	EXPECT(gRootView->fCaretView == q && RINT(GetFrameSlotRef(RefVar(q->FirstHilite()), RSSYMend)) == 5);
+	EXPECT(gRootView->fCaretView == q && HiliteRange(q, false) == 5);
 	TypeKey(0x30);		// tab again: back to the first, and the second's selection removed (its ActivateSelection(false))
 	EXPECT(gRootView->fCaretView == q0 && NOTNIL(q0->FirstHilite()) && ISNIL(q->FirstHilite()));
 	// the selection stack: select in the first field, move the key view
 	// away (the selection pushed), then RestoreKeyView brings it back
 	q0->MakeHilite(0, 3, false);							// select "aaa" in the first
-	EXPECT(RINT(GetFrameSlotRef(RefVar(q0->FirstHilite()), RSSYMend)) == 3);
+	EXPECT(HiliteRange(q0, false) == 3);
 	gRootView->SetKeyView(nil, 0, 0, false);				// focus away: q0's selection pushed, its hilite deactivated
 	EXPECT(gRootView->fCaretView == nil && ISNIL(q0->FirstHilite()));
 	EXPECT(gRootView->RestoreKeyView(GetView(RefVar(Eval("ctxS2")))));	// restore within the container
-	EXPECT(gRootView->fCaretView == q0 && NOTNIL(q0->FirstHilite()) && RINT(GetFrameSlotRef(RefVar(q0->FirstHilite()), RSSYMend)) == 3);
+	EXPECT(gRootView->fCaretView == q0 && NOTNIL(q0->FirstHilite()) && HiliteRange(q0, false) == 3);
 	Eval("SetKeyView(nil, nil); SetLength(GetSelectionStack(), 0); RemoveView(GetRoot(), ctxS2); RemoveSlot(vars, 'international)");
 	gKeyboardConnected = false;
 	Refresh();
@@ -2151,7 +2238,7 @@ TestParagraphTap()
 	tapWord.h = (short) box8.left;
 	tapWord.v = (short) mid;
 	EXPECT(p->SelectWordAt(tapWord));
-	EXPECT(NOTNIL(p->FirstHilite()) && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMstart)) == 6 && RINT(GetFrameSlotRef(RefVar(p->FirstHilite()), RSSYMend)) == 11);
+	EXPECT(NOTNIL(p->FirstHilite()) && HiliteRange(p, true) == 6 && HiliteRange(p, false) == 11);
 	p->RemoveAllHilites();
 	// the deferred single tap: aeTap stores the point and arms the idler,
 	// Idle(2) places the caret once the interval passes
@@ -2233,6 +2320,7 @@ main()
 		TestShapes();
 		TestCommands();
 		TestHilite();
+		TestDataHilites();
 		TestKeyboard();
 		TestCaret();
 		TestTyping();

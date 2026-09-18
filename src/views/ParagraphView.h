@@ -68,6 +68,8 @@ struct LineInfo
 	Rect		fBounds;			// +0x1c  its box (the text's width)
 };
 
+class TParagraphHilite;
+
 class TParagraphView : public TDataView
 {
 public:
@@ -117,8 +119,8 @@ public:
 	void		ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw);	// ROM 0x0017b494 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
 	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016c4cc MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
 	void		DrawHilites(Boolean scaled);							// ROM 0x0016cefc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
-	void		RemoveAllHilites(void);									// host: the hilites slot cleared (the ROM's TView::RemoveAllHilites 0x0026002c removes them one by one)
-	Boolean		SelectionRegion(RefArg hilite, RgnHandle rgn);			// host: the region covering a hilite's characters (from its caretStart/caretEnd)
+	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016c774 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once
+	Boolean		SelectionRegion(long start, long end, RgnHandle rgn);	// host: the region covering a range of the text
 	Boolean		SelectWordAt(Point pt);									// the word under the point selected (the ROM's aeDoubleTap case of RealDoCommand at 0x0016e688, over ScanWordStart/End 0x001a37d0/0x001a36b4)
 	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x0017a778 GetStyleForInsertion__14TParagraphViewFlUcT2
 	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x0017b1d8 GetStyleAtOffset__14TParagraphViewFlPlT2

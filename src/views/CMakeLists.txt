@@ -11,6 +11,7 @@
 # (Application.h), the picker of popup menus (PickView.h); the other subclasses (lists, pickers, ...) to come.
 add_library(views STATIC
     View.cpp
+    Hilites.cpp
     Animate.cpp
     DragDrop.cpp
     ViewDraw.cpp

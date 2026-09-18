@@ -1027,15 +1027,53 @@ host's simplified drag just tracks the pen and drops on the release point
 YET.  (Tested by `test_Views`: a press-drag carries a `'text` item from a
 source to a target whose `viewDropScript` receives the data.)
 
-## Not yet## Not yet
+## The data hilites (`views/Hilites.h`)
 
-The hilites of data views (`THilite`, `HiliteLoop`, `TContainerView`),
-the rest of the
+What is selected *inside* a view, as against `TView::Hilite`, which
+inverts a whole one because it is being pressed.  A hilite is a C++
+object whose address is kept in the view's `hilites` array as a pointer
+Ref (`AddressToRef`, the same "magic" the views themselves are held by),
+so the array a script sees is opaque to it.
+
+`THilite` 0x00260bdc is the base: a rectangle in the view's own
+coordinates and the questions asked of it - `Area` (the rectangle as a
+region), `Overlaps` (each rectangle given a pixel first, so that a hilite
+of an empty line still overlaps it), `Encloses`, `Clone`/`CopyFrom`.
+`TParagraphHilite` 0x00182e68 is the paragraph's: a range of characters,
+whose region only the paragraph can work out - the characters are laid
+out in lines - so `TParagraphView::SetupArea` 0x0016c774 computes it once
+and keeps it in the hilite, `fBounds` being that region's bounding box.
+NOT YET: the copy of the selected text the ROM's carries for the undo of
+a replacement.
+
+`HiliteLoop` 0x00260f58 walks a view's hilites, handing out each one's
+Ref and the object behind it.  It reads the array's length once, so a
+caller that removes what it is handed steps the loop's index and count
+back with it - which is what `TView::RemoveAllHilites` 0x0026002c does.
+
+The base class only *keeps* hilites; a data view draws them
+(`TParagraphView::DrawHilites` inverts each one's region).
+`HiliteAll` 0x002600d0 makes one over the whole view and adds it through
+the `aeAddHilite` command, so it can be undone like anything else;
+`RemoveHilite` 0x0025ff60 takes one out, disposes of the object and
+invalidates the parent over where it was; `GlobalHiliteBounds` 0x002603a0
+unions their bounds into the parent's coordinates; `DeleteHilited`
+0x002601cc asks the *parent* to remove what is selected here, the data
+belonging to it rather than to the view holding the hilite.
+
+**BUG (the ROM's), kept:** `GlobalHiliteBounds` ends by calling
+`ClickOptions` and answering its result - a bounds routine whose answer
+is the view's click options.  Every caller ignores it, and the base's
+`ClickOptions` does nothing, so the call stands where the ROM has it.
+
+## Not yet
+
+The pen-driven hiliting (`HandleHilite`, `HandleScrub`) and the container
+views' hilites (`TContainerView`, `TContainerHilite`), the rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
-the key help, the keyboard tool and the
-on-screen keyboards, the drag icon and the clipboard (`TClipboard`), the
-sounds, `SyncScroll`, the clipboards, the popup and modal dialog
-machinery, the other subclasses (`TListView`, `TEditView`, ...), editing
-in `TParagraphView`, the strokes and words of the recogniser (its
-controller and domains: `docs/recognition/README.md`).
+key help, the keyboard tool and the on-screen keyboards, the drag icon
+and the clipboard (`TClipboard`), the sounds, `SyncScroll`, the popup and
+modal dialog machinery, the other subclasses (`TListView`, `TEditView`,
+...), the strokes and words of the recogniser (its controller and
+domains: `docs/recognition/README.md`).

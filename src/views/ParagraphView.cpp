@@ -7,6 +7,8 @@
 */
 
 #include "ParagraphView.h"
+#include "Hilites.h"
+#include "OSErrors.h"
 #include "StyleRuns.h"
 #include "Unicode.h"
 #include "RootView.h"
@@ -30,6 +32,15 @@
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include <string.h>
+
+
+// host: the C++ hilite a Ref in the hilites array stands for.
+static TParagraphHilite*
+HiliteOf(RefArg hilite)
+{
+	return ISNIL(hilite) ? nil : (TParagraphHilite*) RefToAddress(hilite);
+}
+
 
 const UniChar kCR = 0x0d;
 const UniChar kSP = 0x20;
@@ -618,13 +629,13 @@ Ref
 TParagraphView::GetSelection(void)
 {
 	RefVar info(Clone(RefVar(Rcanonicalparacaretinfo)));
-	RefVar hilite(FirstHilite());
+	TParagraphHilite* hilite = HiliteOf(RefVar(FirstHilite()));
 	long offset = fCaretOffset;
 	long length = 0;
-	if (NOTNIL(hilite))
+	if (hilite != nil)
 	{
-		offset = RINT(GetFrameSlotRef(hilite, RSSYMstart));
-		length = RINT(GetFrameSlotRef(hilite, RSSYMend)) - offset;
+		offset = hilite->fStart;
+		length = hilite->fEnd - offset;
 	}
 	SetFrameSlot(info, RSSYMoffset, RefVar(MAKEINT(offset)));
 	SetFrameSlot(info, RSSYMlength, RefVar(MAKEINT(length)));
@@ -1047,13 +1058,11 @@ TParagraphView::AdjustHilites(long /*offset*/, long /*delta*/)
 // line's right when the selection runs on past it).  ==> whether it is
 // non-empty.
 Boolean
-TParagraphView::SelectionRegion(RefArg hilite, RgnHandle rgn)
+TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
 {
 	if (fLines == nil || !fCachesValid)
 		CreateAllCaches();
 	SetEmptyRgn(rgn);
-	long start = RINT(GetFrameSlotRef(hilite, RSSYMstart));
-	long end = RINT(GetFrameSlotRef(hilite, RSSYMend));
 	if (end <= start)
 		return false;
 	for (long i = 0; i < fLineCount; i++)
@@ -1101,27 +1110,33 @@ TParagraphView::DrawHilites(Boolean scaled)
 {
 	if (scaled || gDontDrawHilites)
 		return;
-	RefVar hilites(Hilites());
-	long count = NOTNIL(hilites) ? Length(hilites) : 0;
-	for (long i = 0; i < count; i++)
+	HiliteLoop loop(this);
+	while (loop.Next())
 	{
+		TParagraphHilite* hilite = (TParagraphHilite*) loop.fCurrent;
+		if (hilite == nil)
+			continue;
+		SetupArea(hilite);
 		TRegionVar rgn;
-		if (SelectionRegion(RefVar(GetArraySlotRef(hilites, i)), rgn))
+		hilite->Area(rgn);
+		if (!EmptyRgn(rgn))
 			InvertRgn(rgn);
 	}
 }
 
 
-// host: the hilites slot cleared and the view redrawn (the ROM's
-// TView::RemoveAllHilites 0x0026002c removes each hilite through RemoveHilite).
+// ROM 0x0016c774 SetupArea__14TParagraphViewFP16TParagraphHilite
+// The region a hilite covers, worked out once and kept in it - the
+// characters are laid out in lines, so only the paragraph can say - and
+// the bounding box that goes with it.
 void
-TParagraphView::RemoveAllHilites(void)
+TParagraphView::SetupArea(TParagraphHilite* hilite)
 {
-	if (NOTNIL(GetFrameSlotRef(fContext, RSSYMhilites)))
-	{
-		SetFrameSlot(fContext, RSSYMhilites, RefVar(NILREF));
-		Dirty(nil);
-	}
+	if (hilite == nil || hilite->HasArea())
+		return;
+	TRegionVar rgn;
+	SelectionRegion(hilite->fStart, hilite->fEnd, rgn);
+	hilite->SetArea(rgn);
 }
 
 
@@ -1147,11 +1162,11 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 		start = length;
 	if (end < start)
 		end = start;
-	RefVar first(FirstHilite());
-	if (NOTNIL(first))
+	TParagraphHilite* first = HiliteOf(RefVar(FirstHilite()));
+	if (first != nil)
 	{
-		long s0 = RINT(GetFrameSlotRef(first, RSSYMstart));
-		long e0 = RINT(GetFrameSlotRef(first, RSSYMend));
+		long s0 = first->fStart;
+		long e0 = first->fEnd;
 		if (s0 < start)
 			start = s0;
 		if (e0 > end)
@@ -1163,13 +1178,12 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 		gRootView->SetKeyView(this, start, 0, false);
 		return;
 	}
-	RefVar hilite(AllocateFrame());
-	SetFrameSlot(hilite, RSSYMstart, RefVar(MAKEINT(start)));
-	SetFrameSlot(hilite, RSSYMend, RefVar(MAKEINT(end)));
-	RefVar param(AllocateFrame());
-	SetFrameSlot(param, RSSYMhilite, hilite);
+	TParagraphHilite* hilite = new TParagraphHilite(start, end);
+	if (hilite == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	SetupArea(hilite);
 	RefVar cmd(MakeCommand(aeAddHilite, this, 0x8000000));
-	CommandSetFrameParameter(cmd, param);
+	CommandSetFrameParameter(cmd, RefVar(AddressToRef(hilite)));
 	gApplication->DispatchCommand(cmd);
 	gRootView->SetKeyView(this, start, end - start, false);
 }
@@ -1206,12 +1220,10 @@ TParagraphView::ChangeStylesOfRange(long start, long length, RefArg style, Boole
 void
 TParagraphView::ChangeStyleOfSelection(RefArg style)
 {
-	RefVar hilite(FirstHilite());
-	if (ISNIL(hilite))
+	TParagraphHilite* hilite = HiliteOf(RefVar(FirstHilite()));
+	if (hilite == nil)
 		return;
-	long start = RINT(GetFrameSlotRef(hilite, RSSYMstart));
-	long end = RINT(GetFrameSlotRef(hilite, RSSYMend));
-	ChangeStylesOfRange(start, end - start, style, true);
+	ChangeStylesOfRange(hilite->fStart, hilite->fEnd - hilite->fStart, style, true);
 }
 
 
@@ -1334,12 +1346,14 @@ TParagraphView::Idle(long reason)
 Boolean
 TParagraphView::PointInHilite(Point& pt)
 {
-	RefVar hilites(Hilites());
-	long count = NOTNIL(hilites) ? Length(hilites) : 0;
-	for (long i = 0; i < count; i++)
+	HiliteLoop loop(this);
+	while (loop.Next())
 	{
-		TRegionVar rgn;
-		if (SelectionRegion(RefVar(GetArraySlotRef(hilites, i)), rgn) && PtInRgn(pt, rgn))
+		TParagraphHilite* hilite = (TParagraphHilite*) loop.fCurrent;
+		if (hilite == nil)
+			continue;
+		SetupArea(hilite);
+		if (hilite->Encloses(pt))
 			return true;
 	}
 	return false;
@@ -1775,13 +1789,13 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			return true;
 		}
 		// a selection is collapsed by an arrow and replaced by a content key
-		RefVar hiliteRef(FirstHilite());
-		Boolean hasSelection = NOTNIL(hiliteRef);
+		TParagraphHilite* selection = HiliteOf(RefVar(FirstHilite()));
+		Boolean hasSelection = selection != nil;
 		long hiliteStart = 0, hiliteEnd = 0;
 		if (hasSelection)
 		{
-			hiliteStart = RINT(GetFrameSlotRef(hiliteRef, RSSYMstart));
-			hiliteEnd = RINT(GetFrameSlotRef(hiliteRef, RSSYMend));
+			hiliteStart = selection->fStart;
+			hiliteEnd = selection->fEnd;
 		}
 		if (ch == 0x1c || ch == 0x1d)
 		{
