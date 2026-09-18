@@ -40,6 +40,19 @@ REPLACED = {
 }
 
 PATCHES = {
+    # SerialOptions.h: a block of NewtonScript character constants ($\u0000 and
+    # friends) behind #ifdef FRAM.  They are not C++, and a C++ compiler lexes
+    # even a skipped conditional block far enough to reject the universal
+    # character names as control characters - so nothing that includes this
+    # header will compile, and HALOptions.h (the configuration server's) does.
+    # The block is commented out rather than deleted, so it is still there to
+    # read.
+    "SerialOptions.h": [
+        ('#define\tunicodeNUL\t\t\t\t\t$\\u0000',
+         "/*\tNewtonScript character constants; a C++ lexer will not have them\r" + '#define\tunicodeNUL\t\t\t\t\t$\\u0000'),
+        ('#define\tunicodeUS\t\t\t\t\t$\\u001F',
+         '#define\tunicodeUS\t\t\t\t\t$\\u001F' + "\r*/"),
+    ],
     # UserSemaphore.h: GetRefCon takes void**, fSem is a ULong* -> needs a cast in C++
     "UserSemaphore.h": [
         ("TULockingSemaphore(TObjectId id = 0) : TUSemaphoreGroup(id) { GetRefCon(&fSem); }",

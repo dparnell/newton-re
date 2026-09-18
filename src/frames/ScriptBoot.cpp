@@ -97,14 +97,23 @@ InitScriptGlobals(void)
 // guards neither the soups nor the functions, so one throw costs every
 // init function after it.
 //
-// That is what happens here today: PreSetupUserConfig, the first of them,
-// asks the internal store for a soup called "Names" and sends Query to
-// what it gets.  The ROM's own boot table makes twelve soups and "Names"
-// is not among them - the Names application's soup is made by the Cardfile
-// package in the ROM extension, which cannot install while
-// LoadHighROMFramesPackages and the part handlers are NOT YET
-// RECONSTRUCTED (newt/NewtWorld.cpp's PreMain and MainConstructor).  So
-// the other six init functions never run.
+// That is what happens here, and it is the ROM's own doing.
+// PreSetupUserConfig, the first of them, asks the internal store for a
+// soup called "Names" and sends Query to what it gets, without looking to
+// see whether it got one.  Nothing in this ROM makes a soup of that name:
+// its boot table makes twelve, and the Names application's is "Directory"
+// (userName "Verzeichnis", ownerApp 'systemDirectory).  The string "Names"
+// appears exactly once in the whole German ROM - the constant this
+// function pushes - where the US ROM has it five times, so the German
+// build renamed the soup and left this one function behind.  Soup names
+// are not localised otherwise: "To do" and "To Do List" keep their English
+// names beside their German userNames.
+//
+// It costs the six init functions after it: StartAutoFaxReceive,
+// StartSniffing, StartAutoCallReceive, SetBatteryTypes, CheckSerialNumber
+// and ReadPreferences.  Make a soup called "Names" and all seven run
+// through - which is how the diagnosis was checked, not something this
+// does: the reconstruction is meant to do what the ROM does.
 void
 RunInitScripts(void)
 {

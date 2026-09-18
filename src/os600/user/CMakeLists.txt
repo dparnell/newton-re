@@ -16,6 +16,7 @@ add_library(os600_user STATIC
     UserBoot.cpp
     NameServer.cpp
     UserNameServer.cpp
+    UserConfigServer.cpp
     SystemEvents.cpp
     UserGestalt.cpp
     UserTime.cpp

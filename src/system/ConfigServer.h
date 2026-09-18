@@ -15,11 +15,9 @@
 				The C++ object hangs off the script's frame in a ciPrivate
 				slot, as the ROM's "magic" objects do.
 
-	NOT YET RECONSTRUCTED: GetConfig 0x0013c7f4 and SetConfig 0x0013c888,
-	which go through TUConfigServer::GetDefaultConfig/SetDefaultConfig -
-	the name server's configuration registry, which nothing registers
-	anything in yet.  Instantiating is what the boot needs, and that is
-	what is here.
+	The registry underneath is the name server's own: a service's default
+	configuration is registered under the service's four characters
+	(TUConfigServer, user/UserConfigServer.cpp).
 
 	Reconstructed from the MP2100 D ROM; each function cites its origin.
 */
@@ -28,22 +26,18 @@
 #define __CONFIGSERVER_H
 
 #include "objects.h"
-#include "NameServer.h"
+#include "HALOptions.h"
 
 
-// The ROM derives it from TUConfigServer (ddk/HALOptions.h), which adds
-// no instance variables to TUNameServer and only the GetDefaultConfig /
-// SetDefaultConfig calls that GetConfig and SetConfig - NOT YET - would
-// make; the layout is the same either way, and HALOptions.h drags in
-// SerialOptions.h, whose four-character constants this compiler will not
-// take.
-class TNSConfigServer : public TUNameServer
+class TNSConfigServer : public TUConfigServer
 {
 public:
 					TNSConfigServer();
 					~TNSConfigServer();
 
 	NewtonErr		InitConfigServer(RefArg serviceType, RefArg configName);
+	Ref				GetConfig(NewtonErr* err);
+	NewtonErr		SetConfig(RefArg config);
 
 	char*			fName;			// +0x10  the configuration's name, as a C string
 	ULong			fServiceType;	// +0x14  the service's four characters
@@ -51,6 +45,10 @@ public:
 
 
 Ref		CSInstantiate(RefArg rcvr, RefArg serviceType, RefArg configName);
+Ref		CSGetDefaultConfig(RefArg rcvr);
+Ref		CSSetDefaultConfig(RefArg rcvr, RefArg config);
+Ref		CSDispose(RefArg rcvr);
+TNSConfigServer*	GetClient(RefArg rcvr);		// ROM 0x000ad564 GetClient__FRC6RefVar
 
 void	RegisterConfigServerNatives(void);
 

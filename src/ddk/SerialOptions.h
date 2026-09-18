@@ -71,7 +71,7 @@
 
 
 #ifdef FRAM
-#define	unicodeNUL					$\u0000
+/*	NewtonScript character constants; a C++ lexer will not have them#define	unicodeNUL					$\u0000
 #define	unicodeSOH					$\u0001
 #define	unicodeSTX					$\u0002
 #define	unicodeETX					$\u0003
@@ -102,7 +102,7 @@
 #define	unicodeFS					$\u001C
 #define	unicodeGS					$\u001D
 #define	unicodeRS					$\u001E
-#define	unicodeUS					$\u001F
+#define	unicodeUS					$\u001F*/
 #endif
 
 
