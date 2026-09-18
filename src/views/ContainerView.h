@@ -70,7 +70,7 @@ public:
 
 	// the container's own
 	virtual void	MakeHilite(long child, TView* view);	// ROM 0x00075270 MakeHilite__14TContainerViewFlP5TView
-	TView*			GetHiliteView(void);					// ROM 0x00074618 GetHiliteView__14TContainerViewFv
+	virtual TView*	GetHiliteView(void);					// ROM 0x00074618 GetHiliteView__14TContainerViewFv
 
 	long			fUnknown30;			// +0x30  5 from the constructor; nothing reconstructed reads them
 	long			fUnknown34;			// +0x34  2

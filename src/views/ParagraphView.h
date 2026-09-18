@@ -70,6 +70,9 @@ struct LineInfo
 
 class TParagraphHilite;
 
+// The text flags of an input view: what kind of text it takes.
+ULong	GetInputViewTextFlags(ULong textFlags, ULong viewFlags);	// ROM 0x0025fdf4 GetInputViewTextFlags__FUlT1
+
 class TParagraphView : public TDataView
 {
 public:

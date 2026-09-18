@@ -15,6 +15,7 @@
 #include "PictureView.h"
 #include "ParagraphView.h"
 #include "ContainerView.h"
+#include "EditView.h"
 #include "Application.h"
 #include "GaugeView.h"
 #include "PickView.h"
@@ -147,7 +148,6 @@ BuildView(TView* parent, RefArg context)
 	switch (viewClass)
 	{
 	case clView:
-	case clEditView:
 	case clKeyboardView:
 	case clMonthView:
 	case clPolygonView:
@@ -179,6 +179,9 @@ BuildView(TView* parent, RefArg context)
 		break;
 	case clContainerView:
 		view = new TContainerView;
+		break;
+	case clEditView:
+		view = new TEditView;
 		break;
 	case clGaugeView:
 		view = new TGaugeView;

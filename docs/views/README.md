@@ -1120,12 +1120,58 @@ NOT YET: everything the recogniser drives (`HandleWord`, `HandleInkWord`,
 `HandleCaret`, `HandleLineGesture`, `HandleScrub`, `HandleHilite`,
 `HandleTap`, `PointOverText`), the editing that goes with `TEditView`
 (`AddHilited`, `DeleteHilited`, `CopyForm`, `RealDoCommand`, `GetValue`,
-`ChildBoundsChanged`, `PointToCaret`), and `TEditView` itself - which is
-also what calls a container's `DrawHilites` in the ROM
-(`TEditView::DrawHiliting` 0x000a7358).  There is no generic draw path
+`ChildBoundsChanged`, `PointToCaret`).  A container's `DrawHilites` is
+called by `TEditView::DrawHiliting`, which is reconstructed (above).
+There is no generic draw path
 for hilites: `TView::DrawHiliting` is empty, and each subclass that has
 them draws its own from `PostDraw` or `DrawHiliting`, as
 `TParagraphView` does.
+
+## The editor (`views/EditView.h`)
+
+`TEditView` 0x000a2c68 (class 77) is the editor a page of a notebook
+application is written on - what turns strokes into paragraphs and shapes,
+and what holds them while they are moved, scaled and scrubbed.  It is
+derived straight from `TView`, not from `TContainerView`, although the two
+answer the same questions about a selection: `DerivedFrom(clContainerView)`
+is false for an edit view.
+
+It keeps no hilite of its own.  Every question about the selection is put
+to the children that are hilited themselves: `CountHilites`,
+`HasHilitedChildren`, `PointInHilite`, `HiliteAll`, `RemoveAllHilites`,
+`DrawHilitedData`, and the four bounds calls.  `GlobalSelectedBounds`
+0x000a8a8c is the odd one out: not the selections but the hilited children
+themselves, unioned.
+
+`GlobalHiliteBounds` 0x000a89cc gathers the children's bounds and answers
+the click options they have in common - every bit AND-ed except bit 2,
+which is OR-ed - through `fClickOptions`, a mask that starts at `~2` and so
+holds bit 1 (resizable) off until something turns it on.  Bit 1 is what
+puts a resize border round the selection.
+
+`SetupDone` 0x000a768c reads `viewLineSpacing` into `fLineSpacing`, works
+the text flags a child paragraph inherits out of the view's own
+(`GetInputViewTextFlags`), and marks the caret rectangle empty.
+
+`DrawHiliting` 0x000a729c has each hilited child draw its hilites twice,
+scaled false and then true; `PostDraw` 0x000a70b8 draws that into an
+offscreen `TBits` and blits it over the view in XOR, so that inverting the
+selection does not leave the children drawn twice.  `InvalAllHilites` and
+`DirtyBoxHilites` dirty what a resizable selection covers, which is more
+than the children: `ToOutsideGrayBorder` 0x000a4698 grows a rectangle by
+the twelve pixels the border takes, within the view.
+
+`DetermineKeyView` 0x000a8588 is where the caret goes when the selection
+changes: into the one selected paragraph when that is all there is, else
+onto the editor itself with the number of selected children as the length.
+
+NOT YET: everything the recogniser drives (`HandleWord`, `HandleInk`,
+`HandleShape`, `HandleCaret`, `HandleLineGesture`, `Scrub`, `JamText`,
+`AddNewParagraph`, `PlaybackInk`), the caret and selection
+(`PositionCaret`, `SetSelection`, `GetSelection`, `ValidateCaret`), drag
+and drop, `TrackScale`/`TrackDistort`, the commands (`RealDoCommand`,
+`GetValue`, `SetValue`) and the drawing of the resize border itself
+(`DrawResizeBorder`, `TRect::Scale` over `gEditViewTransform`).
 
 ## Not yet
 

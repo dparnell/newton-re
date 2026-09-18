@@ -22,6 +22,7 @@ add_library(views STATIC
     PictureView.cpp
     DataView.cpp
     ContainerView.cpp
+    EditView.cpp
     StyleRuns.cpp
     ParagraphView.cpp
     GaugeView.cpp

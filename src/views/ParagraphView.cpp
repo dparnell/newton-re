@@ -50,7 +50,7 @@ const UniChar kEllipsisChar = 0x2026;		// the ROM's U_CONST_CHAR(0xc9): Mac Roma
 // The text flags of an input view: bits 14-16 (0x1c000) say what kind of
 // text it takes; a view without them takes anything (0xc000), one that is
 // read-only or takes no scripts (viewFlags 0x82) just the plain kind (0x4000).
-static ULong
+ULong
 GetInputViewTextFlags(ULong textFlags, ULong viewFlags)
 {
 	if ((textFlags & 0x1c000) == 0)

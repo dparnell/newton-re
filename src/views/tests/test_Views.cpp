@@ -15,6 +15,7 @@
 #include "ParagraphView.h"
 #include "Hilites.h"
 #include "ContainerView.h"
+#include "EditView.h"
 #include "GaugeView.h"
 #include "PickView.h"
 #include "DrawShape.h"
@@ -1285,6 +1286,65 @@ TestContainerView()
 }
 
 
+// TEditView (views/EditView.h): an editor over its children.  It keeps no
+// hilite of its own - every question about the selection is put to the
+// children that are hilited themselves - and its answer to
+// GlobalHiliteBounds is the click options they have in common.
+static void
+TestEditView()
+{
+	TView* e = ViewOf("ctxEV := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 110, bottom: 90}, viewLineSpacing: 22})");
+	EXPECT(e->ClassID() == clEditView && e->DerivedFrom(clEditView) && e->DerivedFrom(clView));
+	EXPECT(!e->DerivedFrom(clContainerView));	// the ROM derives it from TView
+	TEditView* editor = (TEditView*) e;
+	EXPECT(editor->fLineSpacing == 22);		// SetupDone read viewLineSpacing
+	EXPECT(editor->fClickOptions == ~2);		// nothing resizable yet
+	EXPECT(editor->fCaretRect.top == -32768);	// and no caret
+
+	// two children, of which one gets selected
+	TView* a = ViewOf("ctxEVa := AddView(ctxEV, {viewClass: 74, viewFlags: 1, viewBounds: {left: 5, top: 5, right: 45, bottom: 25}})");
+	TView* b = ViewOf("ctxEVb := AddView(ctxEV, {viewClass: 74, viewFlags: 1, viewBounds: {left: 5, top: 35, right: 45, bottom: 55}})");
+	Refresh();
+	EXPECT(editor->CountHilites() == 0 && !editor->HasHilitedChildren(1, nil));
+
+	a->HiliteAll();
+	TView* found = nil;
+	EXPECT(editor->CountHilites() == 1);
+	EXPECT(editor->HasHilitedChildren(1, &found) && found == a);
+	EXPECT(!editor->HasHilitedChildren(2, nil));
+
+	// the bounds of the selection are the child's, in the editor's parent
+	Rect bounds;
+	long options = editor->GlobalHiliteBounds(&bounds);
+	EXPECT(bounds.left == 15 && bounds.top == 15 && bounds.right == 55 && bounds.bottom == 35);
+	EXPECT((options & 2) == 0);		// masked off by fClickOptions
+
+	// GlobalSelectedBounds is the hilited children themselves
+	b->HiliteAll();
+	editor->GlobalSelectedBounds(&bounds);
+	EXPECT(bounds.left == 15 && bounds.top == 15 && bounds.right == 55 && bounds.bottom == 65);
+	EXPECT(editor->CountHilites() == 2);
+
+	// a point on either child's selection is on the editor's
+	Point on;  on.h = 20; on.v = 20;
+	Point off; off.h = 90; off.v = 20;
+	EXPECT(editor->PointInHilite(on) && !editor->PointInHilite(off));
+
+	// HiliteAll selects every child; RemoveAllHilites clears them all
+	editor->RemoveAllHilites();
+	EXPECT(editor->CountHilites() == 0 && !a->Hilited() && !b->Hilited());
+	options = editor->GlobalHiliteBounds(&bounds);
+	EXPECT(options == 0 && bounds.top == -32768);	// nothing gathered
+
+	editor->HiliteAll();
+	EXPECT(editor->CountHilites() == 2 && a->Hilited() && b->Hilited());
+	editor->RemoveAllHilites();
+
+	Eval("ctxEV:Close()");
+	Refresh();
+}
+
+
 static void
 TestKeyboard()
 {
@@ -2424,6 +2484,7 @@ main()
 		TestHilite();
 		TestDataHilites();
 		TestContainerView();
+		TestEditView();
 		TestKeyboard();
 		TestCaret();
 		TestTyping();
