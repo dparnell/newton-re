@@ -42,4 +42,12 @@ Boolean		ROMObjectsImported(void);
 long		ROMObjectCount(void);
 Ref			TranslateROMRef(ULong32 ref);		// a ROM ref as a host ref (nil: a pointer that is not a ROM object's)
 
+// The ROM's own bytes, with ROM address 0 at the start (an AIF image's
+// header already stepped over); nil when nothing has been imported.  The
+// device's ROM is simply there to be read - its extension's package list
+// and the packages themselves are in it - so the host keeps the image the
+// objects came from rather than letting it go.  An image handed to
+// ImportROMObjects must outlive the import for this to answer it.
+const void*	ROMImageBase(ULong* size);
+
 #endif	/* __ROMIMPORT_H */

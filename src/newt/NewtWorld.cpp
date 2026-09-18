@@ -22,6 +22,7 @@
 #include "Screen.h"
 #include "RegionVars.h"
 #include "Loader.h"
+#include "ROMPackages.h"
 #include "Compression.h"
 #include "UserGlobals.h"
 #include "NewtonExceptions.h"
@@ -213,7 +214,7 @@ TNewtWorld::TheMain()
 // packages activated, the card events accepted, the boot test script run
 // when there is one, the 'aliv system event sent; then the system is
 // alive and well, the strokes unblocked and the handler woken in a tick.
-// NOT YET RECONSTRUCTED: LoadHighROMFramesPackages, the extras soup, the
+// NOT YET RECONSTRUCTED: the extras soup, the
 // reboot reason (the gestalt), activateStorePackages, the card events,
 // the boot test script, the 'aliv event.
 long
@@ -222,6 +223,7 @@ TNewtWorld::PreMain()
 	long err = 0;
 	gStrokeWorld.BlockStrokes();
 	gLastWakeupTime = GetGlobalTime();
+	LoadHighROMFramesPackages();
 	gApplication->Run();
 	if (gNewtBootTestScript != nil)		// (the ROM: a "bootTestScript" file, with the REP's output to files)
 	{
