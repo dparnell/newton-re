@@ -49,7 +49,12 @@ kernel source is unchanged.
   task's thread and parks its own until it is current again. On return the
   stub reports the glue's r0 if there was no switch, else the task's saved
   r0 - which is what the kernel wrote while the task was blocked - and reads
-  any other results (r1-r4) from the saved registers.
+  any other results (r1-r4) from the saved registers. A stub with no task to
+  make the call - before `OsBoot`, in a host program that runs user-side code
+  without booting the OS at all (`build/host/host/newtonscript` is one), or
+  once the run has ended - refuses it (`kError_Call_Aborted`, or 0) rather
+  than crashing on a `gCurrentTask` that is not there; on the Newton there is
+  always a current task, so nothing is lost.
 * **Registers hold host words.** `TTask::fRegister` is `TRegister`
   (`uintptr_t`), so a pointer passed through a register survives on a 64-bit
   host. Kernel code reading a register as a 32-bit value (an id, a selector)
