@@ -39,6 +39,10 @@
 TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101a1c gEmptyViewList__5TView
 long		TView::gViewIdCounter = 0;			// ROM 0x0c102050
 TRootView*	gRootView = nil;					// ROM 0x0c101a20 gRootView
+// ROM 0x0c102618 gModalCount
+// How many modal dialogs are up.  NOT YET RECONSTRUCTED: the modal
+// dialog code that raises and lowers it, so nothing is ever modal.
+long		gModalCount = 0;
 RefStruct*	gSlotCacheTable = nil;				// ROM 0x0c10204c slotCacheRefs (the array, not a pointer into it: the host's heap compacts)
 Boolean		gSkipVisRegions = false;			// ROM 0x0c102054 gSkipVisRegions
 Boolean		gDontDrawHilites = false;			// ROM 0x0c100cb8 gDontDrawHilites

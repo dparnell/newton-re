@@ -32,12 +32,18 @@
 
 #include "AEventHandler.h"
 #include "UserPorts.h"
+#include "NewtErrors.h"
+#include "objects.h"
 
 
 // the sound server's events are 'newt'/'usnd'
 const AEEventID	kSoundEventId = 0x75736e64;			// 'usnd'
 
 // the commands SendImmediate carries (only the ones used here are named)
+// ERRBASE_SOUND - 10: what the ROM answers for a channel that is not open
+// or has nothing scheduled
+const NewtonErr kSoundErrNotOpen = ERRBASE_SOUND - 10;
+
 enum {
 	kSoundSetVolume			= 0x0f,
 	kSoundSetInputGain		= 0x10,
@@ -83,6 +89,11 @@ public:
 	void			SetInputGain(long gain);
 	long			GetInputGain(void);
 	void			SetOutputDevice(long device);
+
+	// playing
+	NewtonErr		Schedule(RefArg sound);
+	NewtonErr		Start(int wait);
+	NewtonErr		Stop(long* samplesPlayed);
 
 	// one immediate message to the sound server
 	NewtonErr		SendImmediate(ULong command, ULong channelId, ULong value,

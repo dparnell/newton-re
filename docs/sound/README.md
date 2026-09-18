@@ -247,6 +247,26 @@ strips the ink out of the string first (`FStripInk`, NOT YET; a string of
 this reconstruction carries none).  The boot's init scripts call it 312
 times, once for each sound they register.
 
+The play functions are `PlaySoundIrregardless` 0x001e8660 (whatever is
+playing stopped, this scheduled in its place and started without waiting),
+`PlaySoundSync` 0x001e88e4 (the same, but the start waits for the end and
+it answers true), `PlaySound` 0x001e88b4 (the same as Irregardless when
+`SoundPlayEnabled` 0x001e96f8 says the preferences allow it - the two
+click sounds the pen makes go by `penSoundEffects`, everything else by
+`actionSoundEffects`) and `PlaySoundEffect` 0x001e8714 (the sound made
+into a frame, cloned with a `volume` slot when one is given, and played
+when the preference for its kind - 'pen, 'alarm or 'action - allows it; a
+kind that is none of those plays regardless).
+
+**DEVIATION:** all four go through `TUSoundChannel::Schedule`, `Start` and
+`Stop`, and each of those answers `kSoundErrNotOpen` in the ROM when the
+channel was never opened - which, with no sound server, the host's always
+is.  The host's channel plays nothing, so scheduling, starting and
+stopping it are no work and succeed; otherwise every sound the ROM's
+scripts play would throw, and the boot plays 375 of them.  NOT YET
+RECONSTRUCTED behind them: `TFrameSoundChannel::Convert` (the frame turned
+into a `SoundBlock`, a codec opened for it) and the scheduled nodes.
+
 ## Not yet
 
 `TGSMCodec` and `TDTMFCodec`, and the layer that drives the codecs:

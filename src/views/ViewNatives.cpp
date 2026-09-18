@@ -1170,9 +1170,24 @@ FTableLookup(RefArg /*rcvr*/, RefArg table, RefArg key)
 }
 
 
+// ROM 0x001f2a20 FModalState
+// Whether a modal dialog is up: the ROM counts them in gModalCount
+// (0x0c102618), which the modal dialog code raises and lowers.
+//
+// NOT YET RECONSTRUCTED: the modal dialogs themselves, so the count stays
+// at nought and nothing is ever modal - which is the truth on a host that
+// cannot put one up.
+Ref
+FModalState(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gModalCount >= 1);
+}
+
+
 void
 RegisterViewNatives(void)
 {
+	RegisterNativeFunction("FModalState", (void*) FModalState, 0);
 	RegisterNativeFunction("TableLookup", (void*) FTableLookup, 2);
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
 	RegisterNativeFunction("FSetPopupX", (void*) FSetPopupX, 0);

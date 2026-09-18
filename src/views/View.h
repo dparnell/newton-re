@@ -361,7 +361,8 @@ public:
 	static long			gViewIdCounter;		// 0x0c102050
 };
 
-extern TRootView*	gRootView;				// 0x0c101a20
+extern TRootView*	gRootView;
+extern long			gModalCount;		// ROM 0x0c102618 gModalCount - how many modal dialogs are up (NOT YET: the modal dialogs)				// 0x0c101a20
 extern RefStruct*	gSlotCacheTable;		// 0x0c10204c slotCacheRefs: the ROM keeps a pointer to the 34 slot symbols of Rslotcachetable; the host the array (SlotCacheRef)
 Ref			SlotCacheRef(long index);		// the slot symbol of a cache index
 extern Boolean		gSkipVisRegions;		// 0x0c102054  Draw does not clip to the visible regions

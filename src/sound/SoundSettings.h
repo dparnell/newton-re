@@ -39,6 +39,16 @@ Ref		FSetVolume(RefArg rcvr, RefArg volume);
 Ref		FGetSystemVolume(RefArg rcvr);
 Ref		FSetSystemVolume(RefArg rcvr, RefArg decibels);
 Ref		FConvertToSoundFrame(RefArg rcvr, RefArg obj);
+Ref		FSoundPlayEnabled(RefArg rcvr, RefArg sound);
+Ref		FPlaySoundIrregardless(RefArg rcvr, RefArg sound);
+Ref		FPlaySoundSync(RefArg rcvr, RefArg sound);
+Ref		FPlaySound(RefArg rcvr, RefArg sound);
+Ref		FPlaySoundEffect(RefArg rcvr, RefArg sound, RefArg volume, RefArg kind);
+
+// the two ROM sounds the pen makes, which go by the penSoundEffects
+// preference rather than actionSoundEffects (the ROM compares the magic
+// pointers)
+enum { kClickSoundMagicPtr = 51, kPlonkSoundMagicPtr = 110 };
 
 void	RegisterSoundNatives(void);
 

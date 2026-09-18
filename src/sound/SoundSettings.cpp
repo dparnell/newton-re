@@ -8,6 +8,9 @@
 
 #include "SoundSettings.h"
 #include "SoundChannel.h"
+#include "ObjectHeap.h"
+#include "NewtonExceptions.h"
+#include "Locale.h"
 #include "NativeFunctions.h"
 #include "REPTranslators.h"
 #include "RSSymbols.h"
@@ -170,9 +173,115 @@ FConvertToSoundFrame(RefArg /*rcvr*/, RefArg obj)
 }
 
 
+// ROM 0x001e96f8 FSoundPlayEnabled
+// Whether this sound may be heard: the two click sounds the pen makes go
+// by the penSoundEffects preference, everything else by
+// actionSoundEffects.
+Ref
+FSoundPlayEnabled(RefArg /*rcvr*/, RefArg sound)
+{
+	RefVar preference;
+	if (EQRef(sound, MAKEMAGICPTR(kClickSoundMagicPtr)) || EQRef(sound, MAKEMAGICPTR(kPlonkSoundMagicPtr)))
+		preference = GetPreference(RefVar(RSSYMpensoundeffects));
+	else
+		preference = GetPreference(RefVar(RSSYMactionsoundeffects));
+	return MAKEBOOLEAN(NOTNIL(preference));
+}
+
+
+// ROM 0x001e8660 FPlaySoundIrregardless
+// The sound played whatever the preferences say: whatever is playing is
+// stopped, this is scheduled in its place and started without waiting.
+// ==> nil.
+Ref
+FPlaySoundIrregardless(RefArg /*rcvr*/, RefArg sound)
+{
+	if (ISNIL(sound))
+		return NILREF;
+	TUSoundChannel* channel = GlobalSoundChannel();
+	if (channel == nil)
+		return NILREF;
+	NewtonErr err = channel->Stop(nil);
+	if (err == noErr)
+		err = channel->Schedule(sound);
+	if (err == noErr)
+		err = channel->Start(1);
+	if (err != noErr)
+		Throw(exFrames, (void*) (Long) err, nil);
+	return NILREF;
+}
+
+
+// ROM 0x001e88e4 FPlaySoundSync
+// The same, but Start waits for the end.  ==> true.
+Ref
+FPlaySoundSync(RefArg /*rcvr*/, RefArg sound)
+{
+	if (ISNIL(sound))
+		return TRUEREF;
+	TUSoundChannel* channel = GlobalSoundChannel();
+	if (channel == nil)
+		return TRUEREF;
+	NewtonErr err = channel->Stop(nil);
+	if (err == noErr)
+		err = channel->Schedule(sound);
+	if (err == noErr)
+		err = channel->Start(0);
+	if (err != noErr)
+		Throw(exFrames, (void*) (Long) err, nil);
+	return TRUEREF;
+}
+
+
+// ROM 0x001e88b4 FPlaySound__FRC6RefVarT1
+// The sound played if the preferences allow it.
+Ref
+FPlaySound(RefArg rcvr, RefArg sound)
+{
+	if (NOTNIL(FSoundPlayEnabled(rcvr, sound)))
+		FPlaySoundIrregardless(rcvr, sound);
+	return NILREF;
+}
+
+
+// ROM 0x001e8714 FPlaySoundEffect
+// PlaySoundEffect(sound, volume, kind): the sound turned into a frame, at
+// the volume given if there is one, played when the preference for its
+// kind allows it - 'pen, 'alarm and 'action have preferences, and a kind
+// that is none of those plays regardless.
+Ref
+FPlaySoundEffect(RefArg rcvr, RefArg sound, RefArg volume, RefArg kind)
+{
+	if (ISNIL(sound))
+		return NILREF;
+	RefVar frame(FConvertToSoundFrame(rcvr, sound));
+	RefVar toPlay(frame);
+	if (NOTNIL(volume))
+	{
+		toPlay = Clone(frame);
+		SetFrameSlot(toPlay, RSSYMvolume, volume);
+	}
+	Boolean allowed = true;
+	if (EQRef(kind, RSSYMpen))
+		allowed = NOTNIL(GetPreference(RefVar(RSSYMpensoundeffects)));
+	else if (EQRef(kind, RSSYMalarm))
+		allowed = NOTNIL(GetPreference(RefVar(RSSYMalarmsoundeffects)));
+	else if (EQRef(kind, RSSYMaction))
+		allowed = NOTNIL(GetPreference(RefVar(RSSYMactionsoundeffects)));
+	if (!allowed)
+		return NILREF;
+	return FPlaySoundIrregardless(rcvr, toPlay);
+}
+
+
 void
 RegisterSoundNatives(void)
 {
+	RegisterNativeFunction("FSoundPlayEnabled", (void*) FSoundPlayEnabled, 1);
+	RegisterNativeFunction("FPlaySoundIrregardless", (void*) FPlaySoundIrregardless, 1);
+	RegisterNativeFunction("FPlaySoundSync", (void*) FPlaySoundSync, 1);
+	RegisterNativeFunction("FPlaySound__FRC6RefVarT1", (void*) FPlaySound, 1);
+	RegisterNativeFunction("FPlaySoundEffect", (void*) FPlaySoundEffect, 3);
 	RegisterNativeFunction("FConvertToSoundFrame", (void*) FConvertToSoundFrame, 1);
 	RegisterNativeFunction("FVolumeToDecibels", (void*) FVolumeToDecibels, 1);
 	RegisterNativeFunction("FDecibelsToVolume", (void*) FDecibelsToVolume, 1);

@@ -164,6 +164,54 @@ TUSoundChannel::SetOutputDevice(long device)
 }
 
 
+// ROM 0x000d3898 Schedule__18TFrameSoundChannelFRC6RefVar
+// The sound frame turned into a SoundBlock the server can play
+// (TFrameSoundChannel::Convert, which opens a codec for it) and put on the
+// channel's queue.
+//
+// DEVIATION: TFrameSoundChannel, the codec channel and the SoundBlock are
+// NOT YET RECONSTRUCTED, and with no sound server there is nowhere to send
+// one (GlobalSoundChannel below).  The host's channel plays nothing, so
+// the sound is accepted and dropped - the ROM's answer would be an error,
+// and then every sound the ROM's scripts play would throw.
+NewtonErr
+TUSoundChannel::Schedule(RefArg /*sound*/)
+{
+	return noErr;
+}
+
+
+// ROM 0x002595d4 Start__14TUSoundChannelFi
+// The channel told to play what is scheduled: wait 0 plays and waits for
+// the end, 1 starts it and comes back (the server's commands 10 and 9).
+// The ROM answers kSoundErrNotOpen when nothing is scheduled.
+//
+// DEVIATION: nothing is ever scheduled on the host's channel (Schedule
+// above), so it succeeds and plays nothing.
+NewtonErr
+TUSoundChannel::Start(int /*wait*/)
+{
+	return noErr;
+}
+
+
+// ROM 0x002597bc Stop__14TUSoundChannelFP10SoundBlockPl
+// Whatever the channel is playing stopped, the block it was playing copied
+// out and how far it got answered.  The ROM answers kSoundErrNotOpen when
+// the channel was never opened.
+//
+// DEVIATION: as Schedule - nothing is playing, so there is nothing to stop
+// and nothing to say about it.  NOT YET RECONSTRUCTED: the scheduled nodes
+// (SoundNode, SoundBlock), which is what the ROM copies out.
+NewtonErr
+TUSoundChannel::Stop(long* samplesPlayed)
+{
+	if (samplesPlayed != nil)
+		*samplesPlayed = -1;
+	return noErr;
+}
+
+
 // ROM 0x001e94cc GlobalSoundChannel__Fv
 // The channel the NewtonScript sound functions play through, made the
 // first time one of them is called.
