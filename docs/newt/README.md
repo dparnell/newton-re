@@ -218,8 +218,13 @@ both from `HostBootNewtWorld`.
 (`newtonscript --rom <image> -e 'call ROMConstant(bootinitnsglobals) with
 ()'`) is the quickest way to find the next thing to reconstruct: an
 unbound native names itself on stderr rather than answering a bare error
-code.  It now runs to the end; `RunInitScripts` is the next stage, and it
-wants the package part handlers.
+code.  It now runs to the end, and `TNotebook::InitToolbox` goes on to
+`RunInitScripts`, which asks each installed part for its InstallScript:
+that is what takes the store from one soup to thirteen.  Those scripts
+want `GetSerialNumber` (`system/SystemNatives.h`) and `SetInkerPenSize`
+(`recognition/UnitPublic.h`); what stops them now is `CSInstantiate`
+0x0013c8fc, the comms name server's config server (`TNSConfigServer`), and
+two `Query`/`Notify` sends out of delayed actions.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages

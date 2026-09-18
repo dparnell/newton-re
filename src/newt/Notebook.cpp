@@ -93,6 +93,7 @@ TNotebook::InitToolbox(void)
 	else
 		SetOrientation(RINT(orientation));
 	gRecognition.Init(1);
+	RunInitScripts();
 	gStrokeWorld.Init();
 }
 

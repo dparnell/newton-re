@@ -6,6 +6,7 @@
 */
 
 #include "hal/System.h"
+#include "OSErrors.h"
 
 #include <stdio.h>
 #ifdef _WIN32
@@ -54,6 +55,25 @@ GetRamSize(void)
 {
 	return 4 * 1024 * 1024;
 }
+
+// ROM 0x001dfb38 GetSystemSerialNumber__16TSerialNumberROMFPUl
+// The MessagePad reads its number off a one-wire ROM chip
+// (TSerialNumberROM, whose Init reads the eight bytes: a family code, the
+// number and a CRC) and hands back the middle of it - the first word bits
+// 8-23 of the chip's first word, the second the rest.
+//
+// DEVIATION: a host has no such chip, and the ROM answers -10074 when the
+// chip has not been read - which would leave every store unsigned.  The
+// host therefore has a number of its own, fixed so that a store formatted
+// by one run is recognised by the next, and obviously not a real Newton's.
+extern "C" NewtonErr
+GetSystemSerialNumber(ULong serialNumber[2])
+{
+	serialNumber[0] = 0x00004e65;		// 'Ne'
+	serialNumber[1] = 0x77746f6e;		// 'wton'
+	return noErr;
+}
+
 
 // The host runs everything as a user-mode task.
 extern "C" ULong

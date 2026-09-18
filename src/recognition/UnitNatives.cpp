@@ -226,9 +226,29 @@ FInkOffUnHobbled(RefArg /*rcvr*/, RefArg unit)
 }
 
 
+// ROM 0x00141a04 FSetInkerPenSize__FRC6RefVarT1
+// The pen the ink is drawn with: the size is remembered in gLastPenTip,
+// which every new stroke is flagged with, and the inker is told (a
+// 'newt/'inkr message carrying the size plus 12, the pen width the inker
+// draws at).  ==> nil, or the error as an integer when the message could
+// not be sent.
+//
+// DEVIATION: TInker is NOT YET RECONSTRUCTED and the host's stand-in
+// (hal/host/HostTablet.h) draws no ink, so there is nobody to tell; the
+// size is remembered and nil answered, as a message that got through
+// would.
+Ref
+FSetInkerPenSize(RefArg /*rcvr*/, RefArg size)
+{
+	gLastPenTip = (ULong) RINT(size);
+	return NILREF;
+}
+
+
 void
 RegisterUnitNatives(void)
 {
+	RegisterNativeFunction("FSetInkerPenSize__FRC6RefVarT1", (void*) FSetInkerPenSize, 1);
 	RegisterNativeFunction("FGetPoint__FRC6RefVarN21", (void*) FGetPoint, 2);
 	RegisterNativeFunction("FGetPointsArray__FRC6RefVarT1", (void*) FGetPointsArray, 1);
 	RegisterNativeFunction("FGetPointsArrayXY__FRC6RefVarT1", (void*) FGetPointsArrayXY, 1);
