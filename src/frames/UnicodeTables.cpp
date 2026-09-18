@@ -12,6 +12,7 @@
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
 #include "NewtonMemory.h"
+#include "SortTables.h"
 #include <string.h>
 
 static Ref	GetUnicodeSlot(const char* name)
@@ -59,14 +60,25 @@ InstallBuiltInEncodings(void)
 // ROM 0x00254b80 InitUnicode__Fv
 // The encodings installed, then the character class and case tables and
 // the ASCII break table (Rasciibreak, the magic pointer @6) stored; the
-// Unicode globals set.  NOT YET RECONSTRUCTED: the sort tables
-// (gSortTables from the 'sortTables array, TSortTables::AddSortTable).
-// Host: nothing without the ROM's objects (Runicode nil).
+// Unicode globals set.  The ROM's sorting tables - the 'sortTables array
+// of binaries, one per table - are registered first, before anything can
+// ask to collate.  Host: nothing without the ROM's objects (Runicode nil).
 void
 InitUnicode(void)
 {
 	if (ISNIL(Runicode) || gUnicodeInited)
 		return;
+	RefVar tables(Rsorttables);
+	if (NOTNIL(tables))
+	{
+		long count = Length(tables);
+		for (long i = 0; i < count; i++)
+			// DEVIATION: the ROM's tables are its own objects, which never
+			// move, so it registers them where they lie and does not own
+			// them; the host's heap compacts, so each is copied out and
+			// the copy is ours.
+			gSortTables.AddSortTable((const TSortingTable*) CopyBinary(RefVar(GetArraySlotRef(tables, i))), true);
+	}
 	InstallBuiltInEncodings();
 	const unsigned char* breakTable = nil;
 	RefVar breaks(Rasciibreak);

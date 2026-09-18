@@ -65,7 +65,9 @@
 #include "ByteOrder.h"
 #endif
 
-class TSortingTable;		// NOT YET RECONSTRUCTED: the collation tables
+#ifndef __SORTTABLES_H
+#include "SortTables.h"		// the collation a string key is ordered by
+#endif
 
 
 /*------------------------------------------------------------------------------

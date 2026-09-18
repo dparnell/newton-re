@@ -7,6 +7,7 @@
 #include "HostNatives.h"
 
 #include "NativeFunctions.h"
+#include "SortTables.h"
 #include "Application.h"
 #include "Cursors.h"
 #include "Dates.h"
@@ -28,6 +29,7 @@ RegisterAllNatives(void)
 {
 	// the frames core: arithmetic, strings, arrays, the compiler, the printer
 	RegisterBuiltinNatives();
+	RegisterSortTableNatives();
 
 	// text and the view system
 	RegisterTextNatives();

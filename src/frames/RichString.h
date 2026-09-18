@@ -9,8 +9,9 @@
 	NOT YET RECONSTRUCTED: the ink - a rich string's text is read and
 	written (its format and lengths are computed as the ROM computes them)
 	but MungeRange keeps no ink data and the ink word functions
-	(GetInkData, NumInkWords, ...) are not here; CompareUnicodeText's
-	collation (the sort tables) is a plain, case-folding comparison.
+	(GetInkData, NumInkWords, ...) are not here, so the comparisons hand
+	CompareUnicodeText (frames/SortTables.h) no ink-comparing function and
+	a string of ink collates as its kInkChars.
 
 	The DDK has no header for TRichString; the layout is the ROM's (0x28).
 */
@@ -20,6 +21,9 @@
 
 #ifndef __OBJECTS_H
 #include "objects.h"
+#endif
+#ifndef __SORTTABLES_H
+#include "SortTables.h"		// the collation the string comparisons go through
 #endif
 
 const UniChar kInkChar = 0xf700;			// the character standing for an ink word in a rich string
@@ -68,12 +72,7 @@ public:
 	Boolean		fFlag;				// +0x24
 };
 
-// the collation compare the string functions use: < 0, 0, > 0; exact
-// compares cases, else letters are folded
 Boolean	IsInkWord(RefArg obj);				// an 'inkWord binary (the ink of a word not yet recognised)
 
-int		CompareUnicodeText(const UniChar* a, long aLength, const UniChar* b, long bLength, Boolean exact);
-int		CompareStringNoCase(const UniChar* a, const UniChar* b);
-int		CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength);
 
 #endif	/* __RICHSTRING_H */

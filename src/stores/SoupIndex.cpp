@@ -467,8 +467,12 @@ TSoupIndex::CompareKeys(const SKey& a, const SKey& b)
 
 
 // ROM 0x002c1824 StringKeyCompare__10TSoupIndexFRC4SKeyT1
-// The collation compare of the texts (the sorting table: NOT YET
-// RECONSTRUCTED - letters are folded); the keys' UniChars are big-endian.
+// The collation compare of the texts through the index's own sorting
+// table.  With a table the compare is exact - the second order decides
+// what the primary weights leave equal - and without one it is not, which
+// is what makes an index with no table fold its letters.
+// DEVIATION: the keys' UniChars are big-endian on the store, so the host
+// copies them out and swaps; the ROM compared them where they lay.
 int
 TSoupIndex::StringKeyCompare(const SKey& a, const SKey& b)
 {
@@ -480,7 +484,8 @@ TSoupIndex::StringKeyCompare(const SKey& a, const SKey& b)
 	memcpy(bText, b.Data(), bLength * sizeof(UniChar));
 	SwapUniChars(aText, aLength);
 	SwapUniChars(bText, bLength);
-	return CompareUnicodeText(aText, aLength, bText, bLength, false);
+	return CompareUnicodeText(aText, aLength, bText, bLength,
+							  fSortingTable, fSortingTable != nil, nil, nil);
 }
 
 
@@ -2577,7 +2582,8 @@ TSoupIndex::Delete(SKey* key, SKey* data)
 // key and first datum), kIndexNotFound when the key after it is
 // (outKey/outData that), kIndexEnd when nothing follows.  Not exact, a
 // string key is matched at the lowest sort order (NOT YET RECONSTRUCTED:
-// TSortingTable).  An exception's error is the result.
+// TSortingTable::ConvertTextToLowestSort).  An exception's error is the
+// result.
 int
 TSoupIndex::Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact)
 {
@@ -2588,7 +2594,12 @@ TSoupIndex::Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact)
 	if (fSortingTable != nil && !exact && fInfo.fKeyType == kKeyTypeString)
 	{
 		lowestSortLength = key->Size() / sizeof(UniChar);
-		// TSortingTable::ConvertTextToLowestSort(fSortingTable, theKeyField + 4, lowestSortLength): NOT YET
+		// DEVIATION: the key field's UniChars are big-endian, so they are
+		// swapped, converted and swapped back; the ROM worked in place.
+		UniChar* text = (UniChar*) (theKeyField + 4);
+		SwapUniChars(text, lowestSortLength);
+		fSortingTable->ConvertTextToLowestSort(text, lowestSortLength);
+		SwapUniChars(text, lowestSortLength);
 	}
 	volatile int result = kIndexOK;
 	volatile Boolean failed = false;

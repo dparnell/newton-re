@@ -25,6 +25,7 @@ add_library(frames STATIC
     Builtins.cpp
     Munger.cpp
     RichString.cpp
+    SortTables.cpp
     StringNatives.cpp
     ArrayNatives.cpp
     DebugAPI.cpp

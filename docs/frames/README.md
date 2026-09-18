@@ -355,8 +355,9 @@ rich string keeps ink words after the text and ends in a trailer word
 format); `MungeRange` replaces a range of characters from another
 TRichString, growing or shrinking the object (the ink is NOT YET
 RECONSTRUCTED: a munged rich string comes out plain), and
-`CompareSubStringCommon` compares a range with `CompareUnicodeText`
-(cases folded unless exact; the ROM's sort tables are not here).
+`CompareSubStringCommon` compares a range with `CompareUnicodeText` (the
+collation tables below; NOT YET: `CompareInkProc` 0x001ade0c, so ink
+collates as the character standing for it).
 `StringNatives.cpp` has the string functions over it - `StrLen`,
 `StrConcat`, `SubStr`, `StrEqual`/`StrExactCompare`/`StrCompare`,
 `BeginsWith`/`EndsWith`, `Upcase`/`Downcase`/`Capitalize`/`CapitalizeWords`
@@ -444,6 +445,86 @@ the stdio translator writes the Newton's carriage returns as newlines.
 string functions and the conversions to and from 8-bit text are
 `utility/Unicode.h` (`Ustrlen` and friends; `ConvertToUnicode`/
 `ConvertFromUnicode`).
+
+### The collation tables (`SortTables.h`)
+
+Which of two pieces of text comes first is decided by a *sorting table*, a
+binary object holding, for every character it knows, a four-byte
+**projection entry**: the primary weight the character sorts as, and the
+second-order weight that separates the characters sharing it.  Small
+letters project to their capitals - `a` and `A` both project to `A`, with
+second orders 7 and 0, and `a-grave` joins them with 9 - so a plain
+compare folds case and diacriticals and an exact one does not.
+
+A table is laid out as a 0x44-byte header and then its data:
+
+| offset | |
+| --- | --- |
+| +0x00 | the table's id (a short) |
+| +0x06 | how many ranges |
+| +0x08 | up to six ranges, `{first, last}` halfwords |
+| +0x20 | how many single characters |
+| +0x24 | where the ligatures are, from +0x44, and how many |
+| +0x28 | where the lowest-sort table is, from +0x44, and how many |
+| +0x44 | each range's projection entries, then the singles, the ligatures, the lowest-sort halfwords |
+
+`GetProjectionEntry` 0x00256270 indexes the ranges - below 0x80 it goes
+straight to the first one, which is why every table starts with the ASCII
+block - and then binary searches the single characters, six bytes each
+`{character, primary, secondOrder}`; a character in neither is unknown and
+answers nil.  A primary of 0xffff means the character is really two:
+`GetLigatureEntry` 0x0025635c walks the ligature table (eight bytes,
+`{character, first, second, lowest}`, not counted - a character that is not
+there runs off the end) so that `ae` sorts as `AE` and a sharp s as `ss`.
+A primary of 0 means the character is ignored altogether.
+`ConvertTextToLowestSort` 0x00256384 replaces each character by the least
+one sharing its primary weight, which is what a soup index stores so that
+its keys compare with a memcmp, and `CalcSize` 0x00256428 works the binary's
+length out from the header (1484 bytes for the ROM's own table, which sits
+in a 1496-byte binary).
+
+The tables are a persistent format - they come out of a ROM object or off a
+store - so every halfword in one is big-endian whatever the host is.
+
+`TSortTables` (`gSortTables`, 0x0c1048c8) holds five of them and remembers
+which is the default: `AddSortTable` 0x0025659c registers one in the first
+free slot with one user (and throws when all five are taken),
+`Subscribe`/`Unsubscribe` 0x00256630/0x00256654 count the indexes wanting
+it and dispose of it when the last has gone, and `SetDefaultTableId`
+0x00256698 chooses the default, refusing an id that names no table (0,
+meaning none at all, is always taken).  The ROM's one table, id 1, is the
+`sortTables` array of the `unicode` frame, registered by `InitUnicode`;
+`GetSortID`/`SetSortID` (`FGetSortID` 0x002566e0, `FSetSortID` 0x00256710)
+are the script's way at the default, and the boot's `bootInitNSGlobals`
+calls `SetSortID` while it is setting its globals up.
+
+`CompareUnicodeText` 0x00255d6c is the comparison everything that orders
+text goes through.  It walks both strings through a `TStringToSort`
+(0x18 bytes: the table, the text left, the current character, a ligature's
+second character waiting for the next `Fetch`, and the character the two
+first differed at) and answers the *sign* of the first difference in the
+primary weights, not its size.  A character that projects to nothing is
+skipped and the other string's kept for the next turn.  If the primaries
+never differ, an exact compare then asks `CalcSecondOrderResult`
+0x00255fd0 for the second-order weights of the characters they first
+differed at, and failing those the string that had a ligature in it comes
+second.  Two quirks are worth knowing: the leftover of a longer string is
+only examined for ignorable characters once the two have differed
+somewhere, so `"a­"` sorts after `"a"` although the soft hyphen is
+ignored; and the table argument 1 is not a table but "the default one".
+
+With no table at all - which is how the system starts, and how an index
+with no `sortId` compares - `OldCompareText` 0x00255bf8 answers instead:
+character by character, each taken to Mac Roman and folded through
+`charClass` and `upperNoMarkList` unless the compare is exact, and the
+folded characters compared *as bytes* - so two characters with no Mac
+Roman form compare on their low bytes alone.  `CompareStringNoCase`
+0x00255750 and `CompareTextNoCase` 0x002557a4 are the wrappers over the
+default table.
+
+`test_SortTables` reads the ROM's table, checks its shape and its
+projections, collates through it and drives the registry.
+
 
 ### The character tables (`UnicodeTables.h`, `utility/Unicode.h`)
 

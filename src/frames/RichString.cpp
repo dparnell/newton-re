@@ -253,33 +253,6 @@ TRichString::MungeRange(ULong start, ULong count, const TRichString* src, ULong 
 }
 
 
-// the collation compare (CompareUnicodeText, 0x00255....): NOT YET
-// RECONSTRUCTED - the sort tables; letters are compared upper-cased
-// unless exact
-int
-CompareUnicodeText(const UniChar* a, long aLength, const UniChar* b, long bLength, Boolean exact)
-{
-	long n = aLength < bLength ? aLength : bLength;
-	for (long i = 0; i < n; i++)
-	{
-		UniChar ca = a[i];
-		UniChar cb = b[i];
-		if (!exact)
-		{
-			ca = UToUpper(ca);
-			cb = UToUpper(cb);
-		}
-		if (ca != cb)
-			return (int) ca - (int) cb;
-	}
-	if (aLength != bLength)
-		return aLength < bLength ? -1 : 1;
-	if (!exact)
-		return 0;
-	return 0;
-}
-
-
 // ROM 0x001adea4 CompareSubStringCommon__11TRichStringCFRC11TRichStringUllUc
 // count characters of this from start (-1: to the end) against all of
 // other.
@@ -290,7 +263,10 @@ TRichString::CompareSubStringCommon(const TRichString& other, ULong start, long 
 		count = fLength - start;
 	UniChar* text = GrabPtr();
 	UniChar* otherText = other.GrabPtr();
-	int result = CompareUnicodeText(text + start, count, otherText, other.fLength, exact);
+	// NOT YET RECONSTRUCTED: CompareInkProc (0x001ade0c), which compares
+	// two ink words - so ink collates as the kInkChar standing for it.
+	int result = CompareUnicodeText(text + start, count, otherText, other.fLength,
+									kDefaultSortTable, exact, nil, nil);
 	other.ReleasePtr();
 	ReleasePtr();
 	return result;
@@ -317,24 +293,6 @@ TRichString::Verify(void) const
 		result = (fLength >= 0 && (ULong) (fLength * sizeof(UniChar)) <= fInkOffset && fInkSize >= 0) ? 0 : 1;
 	ReleasePtr();
 	return result;
-}
-
-
-// ROM 0x00255750 CompareStringNoCase__FPUsT1
-// Two C strings collated, case folded (the sort table the ROM passes is 1:
-// the default table - NOT YET RECONSTRUCTED).
-int
-CompareStringNoCase(const UniChar* a, const UniChar* b)
-{
-	return CompareUnicodeText(a, Ustrlen(a), b, Ustrlen(b), false);
-}
-
-
-// ROM 0x002557a4 CompareTextNoCase__FPUslT1T2
-int
-CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength)
-{
-	return CompareUnicodeText(a, aLength, b, bLength, false);
 }
 
 

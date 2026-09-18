@@ -36,7 +36,6 @@ extern const ExceptionName exFramesWithFrameData;	// "evt.ex.fr;type.ref.frame"
 const long kMaxSoupNameLength = 39;					// UniChars (0x27)
 
 // gStores, gUnionSoups and gPackageStores are the frames layer's (ObjectHeap.cpp)
-static long	gDefaultSortId = 0;						// 0x0c104904: the default sorting table's id (NOT YET: 0)
 
 
 /*------------------------------------------------------------------------------
@@ -345,12 +344,19 @@ GetStoreVersion(TStore* store, long* version)
 
 
 // ROM 0x003278a4 StoreGetDirSortTable__FRC6RefVar
-// The sorting table the store's soup names are ordered by: NOT YET
-// RECONSTRUCTED (TSortTables) - none.
+// The sorting table the store's soup names are ordered by: the store's
+// dirSortId, looked up among the registered tables.  NOT YET
+// RECONSTRUCTED: a table the store itself carries (StoreSaveSortTable
+// writes one into the store's root, and this reads it back when it is not
+// one of the registered ones).
 const TSortingTable*
-StoreGetDirSortTable(RefArg /*storeObject*/)
+StoreGetDirSortTable(RefArg storeObject)
 {
-	return nil;
+	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
+	RefVar sortId(GetFrameSlotRef(persistent, RSSYMdirsortid));
+	if (!ISINT(sortId))
+		return nil;
+	return gSortTables.GetSortTable(RINT(sortId), nil);
 }
 
 
@@ -486,8 +492,8 @@ MakeStoreObject(TStore* store)
 				info.fMultiTypes = 0xffffffff;
 				info.fMultiAscending = 0xff;
 				SetFrameSlot(persistent, RSSYMnameindex, RefVar(MAKEINT(TSoupIndex::Create(wrapper, &info))));
-				if (gDefaultSortId != 0)
-					SetFrameSlot(persistent, RSSYMdirsortid, RefVar(MAKEINT(gDefaultSortId)));
+				if (gSortTables.fDefaultId != 0)
+					SetFrameSlot(persistent, RSSYMdirsortid, RefVar(MAKEINT(gSortTables.fDefaultId)));
 				SetFrameSlot(persistent, RSSYMname, RefVar(MakeString("Untitled")));
 				// NOT YET RECONSTRUCTED: the internal store's signature is the system serial number
 				SetFrameSlot(persistent, RSSYMsignature, RefVar(MAKEINT(GetRandomSignature())));
@@ -536,7 +542,7 @@ MakeStoreObject(TStore* store)
 		SetFrameSlot(storeObject, RSSYMsoups, RefVar(MakeEntryCache()));
 		SetFrameSlot(storeObject, RSSYMversion, RefVar(MAKEINT(version)));
 		if (formatted)
-			StoreSaveSortTable(storeObject, gDefaultSortId);
+			StoreSaveSortTable(storeObject, gSortTables.fDefaultId);
 		// else the ROM loads the store's sort tables (0x00327e3c): NOT YET
 		SetupEphemeralTracker(storeObject, rootFrameId);
 	}
@@ -1511,12 +1517,15 @@ IndexPathToIndexDesc(RefArg soupPersistent, RefArg path, long* index)
 
 
 // ROM 0x0031cd8c GetIndexSortTable__FRC6RefVar
-// The sorting table an index description's sortID names: NOT YET
-// RECONSTRUCTED (TSortTables) - none.
+// The sorting table an index description's sortId names; no sortId slot
+// means no table at all (the folding compare).
 const TSortingTable*
-GetIndexSortTable(RefArg /*indexDesc*/)
+GetIndexSortTable(RefArg indexDesc)
 {
-	return nil;
+	RefVar sortId(GetFrameSlotRef(indexDesc, RSSYMsortid));
+	if (!ISINT(sortId))
+		return nil;
+	return gSortTables.GetSortTable(RINT(sortId), nil);
 }
 
 
@@ -1638,11 +1647,11 @@ NewIndexDesc(RefArg soupPersistent, RefArg storeObject, RefArg indexSpec)
 	if (hasString)
 	{
 		RefVar sortId(GetFrameSlotRef(indexDesc, RSSYMsortid));
-		long id = gDefaultSortId;
+		long id = gSortTables.fDefaultId;
 		if ((Ref) sortId == NILREF)
 		{
-			if (gDefaultSortId != 0)
-				SetFrameSlot(indexDesc, RSSYMsortid, RefVar(MAKEINT(gDefaultSortId)));
+			if (gSortTables.fDefaultId != 0)
+				SetFrameSlot(indexDesc, RSSYMsortid, RefVar(MAKEINT(gSortTables.fDefaultId)));
 		}
 		else
 		{

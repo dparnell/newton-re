@@ -601,8 +601,9 @@ variants, `TXIPStoreCompander` and `TPixelMapCompander`.
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
 `CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
 (`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
-and `text`), `TEphemeralTracker`, `TSortingTable`/`TSortTables` (the sort
-ids are all 0; `secOrder`),
+and `text`), `TEphemeralTracker`, a sorting table kept on the store
+(`StoreSaveSortTable`/`StoreRemoveSortTable`, so only the registered tables
+- `frames/SortTables.h` - can be named by a `sortId`) and `secOrder`,
 the XMit methods and `XmitSoupChangeNow` (the soup change broadcasts), the
 store prototype's NewtonScript methods (`SetName`, `Erase`, `SetInfo`, ...
 wrap the natives with broadcasts), store passwords, `TPSSManager` and the
