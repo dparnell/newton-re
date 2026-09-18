@@ -200,6 +200,21 @@ the sort id, the LCD contrast and the system volume out of it.  The OS
 comes up with one store, one soup, a real user configuration, sort id 1
 and volume 4.
 
+`TNotebook::Constructor` builds the root view from the ROM's own
+`Rviewroot` (`MakeRootTemplate`, `views/BuildView.cpp`): 263 slots - the
+methods the applications send to the root (`Notify`, `BlessApp`,
+`CloseSlips`, `GotoSleep`), its setup scripts, and a `viewChildren` naming
+the fifty-nine views a Newton boots with.  Only the visible ones are
+built; the applications are opened later and have no `vVisible` until they
+are.  The C view methods (`MakeViewMethods`) go under it as its `_proto`,
+the ROM's copy having none, and `InitViewSystem` takes the template so the
+view-only host programs keep the plain root they had.  **DEVIATION:** that
+`viewChildren` is a ROM object and so read-only, and `FAddView` appends to
+whatever the proto chain answers, so a script adding a view to the root
+gets `kNSErrObjectReadOnly`.  Nothing in the ROM adds to the root that way
+- its applications are opened, not added - but the host's demos and tests
+do, so the array is copied into the clone.
+
 Two things have to be there first.  **The compressors**:
 `InitializeCompression` (`compression/Compression.h`) puts every
 compressor in the protocol registry, and `TNewtWorld::MainConstructor`

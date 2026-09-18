@@ -29,7 +29,8 @@ RgnHandle	gScreenRgn = nil;			// (the ROM's word at 0x0c103abc)
 RgnHandle	gWideRgn = nil;				// (0x0c103ac0)
 static PatternHandle	gNotebookPattern = nil;	// (0x0c103ac4: a pattern the notebook disposes with the regions; NOT YET: what makes it)
 
-void	InitViewSystem(void);			// views/BuildView.cpp: the host's root view
+void	InitViewSystem(RefArg rootTemplate);	// views/BuildView.cpp: the root view, from this template
+Ref		MakeRootTemplate(void);			// views/BuildView.cpp: the ROM's Rviewroot, or the host's stand-in
 
 
 /*------------------------------------------------------------------------------
@@ -56,21 +57,18 @@ TNotebook::DerivedFrom(long id) const
 // template (gRootView), and the librarian with its library soup (from
 // the root's copperfield: NOT YET RECONSTRUCTED - TLibrarian).
 //
-// Host: the root view is InitViewSystem's, over the current port, with
-// the host's root template.  `MakeRootTemplate()` answers the ROM's own
-// Rviewroot - 263 slots, and the methods the applications send to the
-// root, Notify among them - and passing it here is what the ROM does;
-// it is not passed yet: with the ROM's root the boot gets much further and
-// then AddView throws "nil view" - not from the two-argument FailGetView
-// that resolves the parent, which succeeds, but from the one-argument one
-// somewhere inside the child's Constructor, ViewNatives.cpp's
-// `FailGetView(GetProtoVariable(context, _parent))` being the likeliest.
-// That is what stands between this and the ROM's own screen.
+// The template is the ROM's own Rviewroot (MakeRootTemplate), 263 slots:
+// the methods the applications send to the root - Notify, BlessApp,
+// CloseSlips, GotoSleep - its setup scripts, and the viewChildren naming
+// the fifty-nine views a Newton boots with.  Only the visible ones are
+// built; the applications are opened later, and most of them have no
+// vVisible until they are.  Without the ROM's objects MakeRootTemplate
+// answers the host's stand-in instead.
 void
 TNotebook::Constructor(void)
 {
 	TApplication::Constructor();
-	InitViewSystem();
+	InitViewSystem(RefVar(MakeRootTemplate()));
 }
 
 

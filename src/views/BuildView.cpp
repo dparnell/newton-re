@@ -457,6 +457,16 @@ MakeRootTemplate(void)
 	{
 		RefVar templ(Clone(RefVar(Rviewroot)));
 		SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
+		// DEVIATION: the ROM's viewChildren is one of its own objects and
+		// so read-only, and FAddView appends to whatever the proto chain
+		// answers - so a script that adds a view to the root writes a
+		// read-only object and gets kNSErrObjectReadOnly.  Nothing in the
+		// ROM adds to the root that way (its applications are opened, not
+		// added), but the host's demos and tests do, so the array is
+		// copied into the clone.
+		RefVar children(GetFrameSlotRef(templ, RSSYMviewchildren));
+		if (NOTNIL(children))
+			SetFrameSlot(templ, RSSYMviewchildren, RefVar(Clone(children)));
 		return templ;
 	}
 	RefVar templ(AllocateFrame());
