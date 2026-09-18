@@ -9,6 +9,10 @@
 #include "SoundSettings.h"
 #include "SoundChannel.h"
 #include "NativeFunctions.h"
+#include "REPTranslators.h"
+#include "RSSymbols.h"
+#include "ROMConstants.h"
+#include "Frames.h"
 
 
 // decibels are 16.16 fixed point on the wire and reals in a script
@@ -109,9 +113,67 @@ FSetSystemVolume(RefArg /*rcvr*/, RefArg decibels)
 }
 
 
+// the sound frame a string or a binary is made into: the ROM's own
+// numbers, read out of the instructions that build it
+enum {
+	kSoundFrameBufferSize		= 5000,
+	kSoundFrameBufferCount		= 4,
+	kSoundFrameCompressionType	= 6,
+	kSoundFrameDataType			= 16,
+	kSoundFrameSamplingRate		= 21600
+};
+
+
+// ROM 0x000d3188 ConvertToSoundFrame__FRC6RefVar (the native is 0x001e870c)
+// What a script hands to a sound function turned into something the sound
+// server can play: a string is spoken, so it becomes a codec frame for
+// TMacintalkCodec with the text as its samples; a binary is coded sound,
+// and its class names the codec that knows how to read it.  Anything else
+// - a sound frame already, most of all - is answered as it stands.
+//
+// NOT YET RECONSTRUCTED: FStripInk, which the ROM runs the string through
+// first; a string of this reconstruction carries no ink (frames/RichString.h),
+// so a clone of it is what stripping would give.
+Ref
+FConvertToSoundFrame(RefArg /*rcvr*/, RefArg obj)
+{
+	RefVar sound(obj);
+	if (IsString(sound))
+	{
+		RefVar frame(AllocateFrame());
+		SetFrameSlot(frame, RSSYM_proto, RefVar(Rprotosoundframe));
+		SetFrameSlot(frame, RSSYMsndframetype, RSSYMcodec);
+		SetFrameSlot(frame, RSSYMcodecname, RefVar(MakeString("TMacintalkCodec")));
+		SetFrameSlot(frame, RSSYMsamples, RefVar(Clone(sound)));
+		SetFrameSlot(frame, RSSYMbuffersize, RefVar(MAKEINT(kSoundFrameBufferSize)));
+		SetFrameSlot(frame, RSSYMbuffercount, RefVar(MAKEINT(kSoundFrameBufferCount)));
+		SetFrameSlot(frame, RSSYMcompressiontype, RefVar(MAKEINT(kSoundFrameCompressionType)));
+		SetFrameSlot(frame, RSSYMdatatype, RefVar(MAKEINT(kSoundFrameDataType)));
+		SetFrameSlot(frame, RSSYMsamplingrate, RefVar(MAKEINT(kSoundFrameSamplingRate)));
+		sound = frame;
+	}
+	if (IsBinary(sound))
+	{
+		RefVar frame(AllocateFrame());
+		SetFrameSlot(frame, RSSYM_proto, RefVar(Rprotosoundframe));
+		SetFrameSlot(frame, RSSYMsndframetype, RSSYMcodec);
+		SetFrameSlot(frame, RSSYMcodecname, RefVar(SPrintObject(RefVar(ClassOf(sound)))));
+		SetFrameSlot(frame, RSSYMsamples, sound);
+		SetFrameSlot(frame, RSSYMbuffersize, RefVar(MAKEINT(kSoundFrameBufferSize)));
+		SetFrameSlot(frame, RSSYMbuffercount, RefVar(MAKEINT(kSoundFrameBufferCount)));
+		SetFrameSlot(frame, RSSYMcompressiontype, RefVar(MAKEINT(kSoundFrameCompressionType)));
+		SetFrameSlot(frame, RSSYMdatatype, RefVar(MAKEINT(kSoundFrameDataType)));
+		SetFrameSlot(frame, RSSYMsamplingrate, RefVar(MAKEINT(kSoundFrameSamplingRate)));
+		sound = frame;
+	}
+	return sound;
+}
+
+
 void
 RegisterSoundNatives(void)
 {
+	RegisterNativeFunction("FConvertToSoundFrame", (void*) FConvertToSoundFrame, 1);
 	RegisterNativeFunction("FVolumeToDecibels", (void*) FVolumeToDecibels, 1);
 	RegisterNativeFunction("FDecibelsToVolume", (void*) FDecibelsToVolume, 1);
 	RegisterNativeFunction("FGetVolume", (void*) FGetVolume, 0);

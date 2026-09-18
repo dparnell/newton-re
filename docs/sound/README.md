@@ -236,6 +236,17 @@ before there is an OS to ask, and every caller falls back on the channel's
 own value.  `test_SoundVolume` pins the table, the channel's state and the
 script functions.
 
+`ConvertToSoundFrame` 0x000d3188 (the native at 0x001e870c) is what the
+sound functions put their argument through: a string is speech, so it
+becomes a codec frame for `TMacintalkCodec` with the text as its samples;
+a binary is coded sound, and its class names the codec that can read it;
+anything else - a sound frame already - is answered as it stands.  Either
+frame gets the ROM's own numbers: a buffer size of 5000, four buffers,
+compression type 6, data type 16 and a sampling rate of 21600.  The ROM
+strips the ink out of the string first (`FStripInk`, NOT YET; a string of
+this reconstruction carries none).  The boot's init scripts call it 312
+times, once for each sound they register.
+
 ## Not yet
 
 `TGSMCodec` and `TDTMFCodec`, and the layer that drives the codecs:

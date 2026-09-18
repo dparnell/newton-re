@@ -60,10 +60,12 @@ TNotebook::DerivedFrom(long id) const
 // the host's root template.  `MakeRootTemplate()` answers the ROM's own
 // Rviewroot - 263 slots, and the methods the applications send to the
 // root, Notify among them - and passing it here is what the ROM does;
-// it is not passed yet because the root then builds the ROM's own
-// children, and AddView throws "nil view" on the first of them.  That,
-// and FConvertToSoundFrame (which the init scripts call 312 times), are
-// what stand between this and the ROM's own screen.
+// it is not passed yet: with the ROM's root the boot gets much further and
+// then AddView throws "nil view" - not from the two-argument FailGetView
+// that resolves the parent, which succeeds, but from the one-argument one
+// somewhere inside the child's Constructor, ViewNatives.cpp's
+// `FailGetView(GetProtoVariable(context, _parent))` being the likeliest.
+// That is what stands between this and the ROM's own screen.
 void
 TNotebook::Constructor(void)
 {

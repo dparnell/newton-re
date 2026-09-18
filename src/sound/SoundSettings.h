@@ -38,6 +38,7 @@ Ref		FGetVolume(RefArg rcvr);
 Ref		FSetVolume(RefArg rcvr, RefArg volume);
 Ref		FGetSystemVolume(RefArg rcvr);
 Ref		FSetSystemVolume(RefArg rcvr, RefArg decibels);
+Ref		FConvertToSoundFrame(RefArg rcvr, RefArg obj);
 
 void	RegisterSoundNatives(void);
 
