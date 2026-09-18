@@ -4,6 +4,7 @@ add_library(hal_host STATIC
     host/Atomic.cpp
     host/Interrupts.cpp
     host/Timer.cpp
+    host/RealTimeClock.cpp
     host/System.cpp
     host/MMU.cpp
 )

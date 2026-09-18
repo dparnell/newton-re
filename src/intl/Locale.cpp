@@ -276,6 +276,27 @@ GetPreference(RefArg slot)
 }
 
 
+// ROM 0x002554c0 GMTOffset__Fv
+// The time zone: the `gmt` slot of the location preference, in seconds
+// (San Francisco is -28800).  Throws when the preference is not a frame,
+// which is what the ROM does too - the boot sets it before anything asks.
+long
+GMTOffset(void)
+{
+	RefVar location(GetPreference(RSSYMlocation));
+	return RINT(GetFrameSlotRef(location, RSSYMgmt));
+}
+
+
+// ROM 0x0025551c DaylightSavingsOffset__Fv
+// The seconds daylight saving adds, straight out of the preference.
+long
+DaylightSavingsOffset(void)
+{
+	return RINT(GetPreference(RSSYMdaylightsavings));
+}
+
+
 // ROM 0x0012914c SetPreference__FRC6RefVarT1
 void
 SetPreference(RefArg slot, RefArg value)

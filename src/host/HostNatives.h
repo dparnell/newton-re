@@ -23,6 +23,6 @@
 
 // Every reconstructed native bound.  Wants the object system started
 // (InitObjects), and is safe to call more than once.
-void	RegisterAllNatives(void);
+void	RegisterAllNatives(void);		// (all but the newt world's own, which it registers itself: it is above this library)
 
 #endif	/* __HOSTNATIVES_H */

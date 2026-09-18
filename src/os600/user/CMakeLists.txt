@@ -20,6 +20,7 @@ add_library(os600_user STATIC
     SystemEvents.cpp
     UserGestalt.cpp
     UserTime.cpp
+    UserRealTimeAlarm.cpp
     Loader.cpp
     host/StackManager.cpp
     host/MonitorGlue.cpp

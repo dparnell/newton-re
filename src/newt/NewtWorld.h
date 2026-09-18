@@ -47,6 +47,7 @@
 
 #include "AppWorld.h"
 #include "Ports.h"
+#include "objects.h"
 
 class TNewtEventHandler;
 
@@ -83,6 +84,28 @@ public:
 	ULong				fEvent;			// +0x08  'draw
 	Rect				fRect;			// +0x0c
 };
+
+// a 'newt/'idle/'alrm event: the system alarm (0x1c bytes).  The one the
+// machine has is a member of the application (Notebook.h), because there is
+// only ever the one: SetSysAlarm fills it in and hands it to the real-time
+// clock, whose alarm sends it to the newt port when its second arrives, and
+// HandleAlarmEvent then calls the function it carries.
+class TAlarmEvent : public TAEvent
+{
+public:
+	ULong				fEvent;			// +0x08  'alrm
+	ULong				fTime;			// +0x0c  the second it was set for (the low word of the time)
+	RefStruct			fArgs;			// +0x10  the arguments the function is called with
+	RefStruct			fFunc;			// +0x14  the function
+	RefStruct			fUnused18;		// +0x18
+};
+
+void	HandleAlarmEvent(TAlarmEvent* event);		// ROM 0x0030eee0 HandleAlarmEvent__FP11TAlarmEvent
+
+// the NewtonScript side
+Ref		FSetSysAlarm(RefArg rcvr, RefArg time, RefArg func, RefArg args);	// ROM 0x0030eeec FSetSysAlarm
+void	RegisterAlarmNatives(void);
+
 
 // a 'newt/'idle/'scpt event: a method of a root variable run with a binary
 // of the data (0x9c bytes); the error and the result (an integer) come
@@ -147,6 +170,7 @@ public:
 };
 
 extern TUPort*			gNewtPort;							// ROM 0x0c1054a8 gNewtPort - the world's port
+extern ULong			NewtAlarmName;						// ROM 0x0c10551c NewtAlarmName - the world's real-time clock alarm
 extern Boolean			gNewtIsAliveAndWell;				// ROM 0x0c105510 gNewtIsAliveAndWell (views/Application.cpp)
 extern TTime			gLastWakeupTime;					// ROM 0x0c104c4c gLastWakeupTime
 extern TTime			gTickleTime;						// ROM 0x0c100d04 gTickleTime - the last user activity (the 'ext / 'bklt events)

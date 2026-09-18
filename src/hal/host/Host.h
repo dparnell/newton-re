@@ -18,6 +18,9 @@ void			HostUseRealClock(Boolean real);		// the host's steady clock instead of th
 void			HostSleepUntil(const Int64* time);	// real clock: sleep; controllable clock: jump to `time`
 extern Boolean	gHostAlarmArmed;
 extern Int64	gHostAlarmTime;
+extern Boolean	gHostRTCAlarmArmed;		// the real-time clock's alarm (hal/RealTimeClock.h)
+extern ULong	gHostRTCAlarmSeconds;
+Boolean			HostRTCAlarmDeadline(Int64* outTime);	// when it is due on the system clock
 extern Boolean	gHostInterruptEnabled;
 extern Boolean	gHostTimeSliceArmed;
 extern Int64	gHostTimeSliceDeadline;

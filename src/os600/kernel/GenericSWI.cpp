@@ -21,6 +21,7 @@
 #include "Environment.h"
 #include "Reboot.h"
 #include "MemObjManager.h"
+#include "RealTimeClock.h"
 #include "OSErrors.h"
 #include "CompMath.h"
 #include "hal/Atomic.h"
@@ -151,6 +152,8 @@ GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 		return (long) r[0];
 	case kGeneric_GetMemObjInfo:
 		return PrimGetMemObjInfo();
+	case kGeneric_RealTimeClockDispatch:
+		return RealTimeClockDispatch();
 	case kGeneric_GetTaskStackInfo:
 		{
 			TTask* task = gCurrentTask;
@@ -209,7 +212,6 @@ GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 	case kGeneric_RemoveDelayedFunction:
 		// NOT YET RECONSTRUCTED: PrimRegisterDelayedFunction / PrimRemoveDelayedFunction
 		return kError_Call_Not_Implemented;
-	case kGeneric_RealTimeClockDispatch:
 	case kGeneric_GetNetworkPersistentInfo:
 	case kGeneric_GetPatchInfo:
 	case kGeneric_ResetRebootReason:

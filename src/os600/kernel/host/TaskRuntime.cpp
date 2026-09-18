@@ -30,6 +30,8 @@
 #include "KernelGlobals.h"
 #include "CompMath.h"
 #include "hal/Timer.h"
+#include "hal/RealTimeClock.h"
+#include "RealTimeClock.h"
 #include "hal/MMU.h"
 #include "hal/host/Host.h"
 #include "MonitorGlue.h"
@@ -166,6 +168,11 @@ HostDeliverInterrupts()
 		gHostAlarmArmed = false;
 		TimerInterruptHandler();
 	}
+	if (gHostRTCAlarmArmed && GetRealTimeClock() >= gHostRTCAlarmSeconds)
+	{
+		gHostRTCAlarmArmed = false;
+		TRealTimeClock::Alarm();				// the real-time clock's alarm interrupt
+	}
 	if (gHostTimeSliceArmed && gHostInterruptEnabled && CompCompare(&now, &gHostTimeSliceDeadline) >= 0)
 	{
 		gHostTimeSliceArmed = false;
@@ -211,6 +218,12 @@ HostIdleTask()
 		if (gHostTimeSliceArmed && gHostInterruptEnabled && (!haveDeadline || CompCompare(&gHostTimeSliceDeadline, &deadline) < 0))
 		{
 			deadline = gHostTimeSliceDeadline;
+			haveDeadline = true;
+		}
+		Int64 rtc;
+		if (HostRTCAlarmDeadline(&rtc) && (!haveDeadline || CompCompare(&rtc, &deadline) < 0))
+		{
+			deadline = rtc;
 			haveDeadline = true;
 		}
 		if (haveDeadline)

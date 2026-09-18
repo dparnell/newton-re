@@ -35,6 +35,7 @@
 #define __NOTEBOOK_H
 
 #include "Application.h"
+#include "NewtWorld.h"
 
 const long clNotebook = 0x44;
 const long clARMNotebook = 0x46;
@@ -53,6 +54,7 @@ public:
 	virtual Boolean		InitOffscreenBitmaps(void);				// ROM 0x00146c50 InitOffscreenBitmaps__9TNotebookFv (+0x2c: the port and the screen regions)
 
 	void				DrawSplashScreen(void);					// ROM 0x0014602c DrawSplashScreen__9TNotebookFv (NOT YET)
+	TAlarmEvent			fAlarmEvent;			// +0x20  the one system alarm (NewtWorld.h); SetSysAlarm fills it in
 	void				InitInker(void);						// ROM 0x00146ca8 InitInker__9TNotebookFv (the inker task: NOT YET - the host's stand-in)
 };
 

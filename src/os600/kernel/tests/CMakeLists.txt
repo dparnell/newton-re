@@ -14,6 +14,10 @@ add_executable(test_Semaphore test_Semaphore.cpp)
 target_link_libraries(test_Semaphore PRIVATE os600_kernel)
 add_test(NAME os600.kernel.Semaphore COMMAND test_Semaphore)
 
+add_executable(test_RealTimeClock test_RealTimeClock.cpp)
+target_link_libraries(test_RealTimeClock PRIVATE os600_kernel)
+add_test(NAME os600.kernel.RealTimeClock COMMAND test_RealTimeClock)
+
 add_executable(test_TimerEngine test_TimerEngine.cpp)
 target_link_libraries(test_TimerEngine PRIVATE os600_kernel)
 add_test(NAME os600.kernel.TimerEngine COMMAND test_TimerEngine)

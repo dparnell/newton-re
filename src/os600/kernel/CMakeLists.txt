@@ -13,6 +13,7 @@ add_library(os600_kernel STATIC
     ObjectManager.cpp
     ObjectTable.cpp
     Port.cpp
+    RealTimeClock.cpp
     Reboot.cpp
     Scheduler.cpp
     Semaphore.cpp

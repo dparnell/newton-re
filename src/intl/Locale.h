@@ -56,6 +56,12 @@ extern LocaleCache*	gLocaleCache;
 Ref		GetPreference(RefArg slot);
 void	SetPreference(RefArg slot, RefArg value);
 
+// where the machine is: the seconds the local time is ahead of the clock's
+// (which counts GMT).  Both come from the preferences and both throw when
+// they are not there or are not integers, as the ROM does.
+long	GMTOffset(void);						// ROM 0x002554c0 GMTOffset__Fv - userConfiguration.location.gmt
+long	DaylightSavingsOffset(void);			// ROM 0x0025551c DaylightSavingsOffset__Fv - userConfiguration.daylightSavings
+
 // the date and time strings: minutes since 1904 (or a date frame), the
 // format spec (0: every element), into str of at most max UniChars, the
 // formats of the locale (nil: the current one)

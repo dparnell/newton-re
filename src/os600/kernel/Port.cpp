@@ -21,6 +21,7 @@
 #include "OSErrors.h"
 #include "hal/Atomic.h"
 #include "UserObjects.h"
+#include "UserPorts.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -401,6 +402,69 @@ DeferredNotify()
 		else
 			NotifySend(msg);
 	}
+}
+
+
+// ROM 0x00191c0c SendForInterrupt__FUlN21PvN31P5TTimeUc
+// A send from interrupt level: nothing may block and no object may be made,
+// so the message is filled in and queued on gDeferredSends for
+// PortDeferredSendNotify to hand to the port once the interrupt is over.
+// The message must be one the caller made earlier and is not in use
+// (fStatus is set to in-progress under the FIQ lock so two interrupts
+// cannot take the same one), and the send flags it would have passed are
+// parked in fFilter, which a message being sent has no other use for.
+long
+SendForInterrupt(TObjectId portId, TObjectId msgId, TObjectId replyId, void* content, ULong size,
+                 ULong msgType, TTimeout timeout, TTime* futureTimeToSend, Boolean urgent)
+{
+	long err = noErr;
+	TSharedMemMsg* msg = ObjectType(msgId) == kSharedMemMsgType ? (TSharedMemMsg*) gObjectTable->Get(msgId) : nil;
+	if (msg == nil)
+		err = kError_Bad_ObjectId;
+	else if (replyId == 0 || (err = ConvertIdToObj(kSharedMemType, replyId, nil)) == noErr)
+	{
+		EnterFIQAtomic();
+		if (msg->fStatus == kSMemMsgStatus_InProgress || (msg->fMsgFlags & kSMemMsgFlags_CompleteToPortMask) != 0)
+		{
+			ExitFIQAtomic();
+			err = kError_Message_Already_Posted;
+		}
+		else
+		{
+			msg->fStatus = kSMemMsgStatus_InProgress;
+			gWantDeferred = true;
+			gDeferredSends->Add(msg);
+			// (the ROM, when this is an FIQ, fires the timer alarm so that the
+			// IRQ side runs soon; the host has no FIQ mode - IsFIQMode/FireAlarm
+			// are NOT YET RECONSTRUCTED)
+			ExitFIQAtomic();
+			msg->fFilter = kPortFlags_ScheduleOnSend | kPortFlags_TimerWanted | kPortFlags_Async
+						 | (urgent ? kPortFlags_Urgent : 0);
+			if (futureTimeToSend == nil)
+			{
+				msg->fTimerFlags = 0;
+				msg->fTimeout = timeout;
+				msg->fExpiryTime.hi = 0;
+				msg->fExpiryTime.lo = 0;
+			}
+			else
+			{
+				msg->fTimerFlags = kSMemMsgTimer_DeferredSend;
+				msg->fTimeout = timeout;
+				msg->fExpiryTime = futureTimeToSend->time;
+			}
+			msg->fBuffer = content;
+			msg->fSize = size;
+			msg->fReplyMemId = replyId;
+			msg->fMsgFlags = msgType;
+			msg->fFlags = 1;
+			msg->fCurSize = size;
+			msg->fPortId = portId;
+			msg->fSenderTaskId = 0;
+			msg->fNotifyId = msg->fMsgAvailPortId;
+		}
+	}
+	return err;
 }
 
 

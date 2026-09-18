@@ -24,6 +24,10 @@
 #include "Loader.h"
 #include "ROMPackages.h"
 #include "Compression.h"
+#include "NativeFunctions.h"
+#include "Dates.h"
+#include "LongTime.h"
+#include "CompMath.h"
 #include "UserGlobals.h"
 #include "NewtonExceptions.h"
 #include "NSErrors.h"
@@ -172,6 +176,9 @@ TNewtWorld::MainConstructor()
 		return kError_No_Memory;
 	if ((err = fMessage->Init()) != noErr)
 		return err;
+	TURealTimeAlarm::NewName(&NewtAlarmName);	// (0, and the slot it takes still reads as free:
+												// see TRealTimeClock::NewName)
+	RegisterAlarmNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
 	InitializeCompression();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
@@ -372,6 +379,9 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	case kNewtRedrawEvent:
 		HandleRedrawEvent((TRedrawScreenEvent*) event);
 		break;
+	case kNewtAlarmEvent:
+		HandleAlarmEvent((TAlarmEvent*) event);
+		break;
 	case kNewtScriptEvent:
 		HandleRunScriptEvent((TRunScriptEvent*) event);
 		gTickleTime = GetGlobalTime();
@@ -381,7 +391,7 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 		gTickleTime = GetGlobalTime();
 		break;
 	default:
-		// NOT YET RECONSTRUCTED: 'alrm (HandleAlarmEvent), 'card (HandleNewCard),
+		// NOT YET RECONSTRUCTED: 'card (HandleNewCard),
 		// 'ic   (HandleInterConnect), 'irMC
 		// (the root's IRConnectRequest), 'dead/'bats (the alerts), 'pwch
 		// (callPowerStatusChangeFns), 'rstr (StorageCardRemoved), 'scp!
@@ -586,6 +596,72 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 			event->fError = (long) (Long) exception->data;
 	}
 	end_try;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   s y s t e m   a l a r m
+
+	One alarm, kept in the application (TNotebook::fAlarmEvent), on one slot
+	of the real-time clock (NewtAlarmName, taken in MainConstructor).  A
+	script sets it with SetSysAlarm(seconds, func, args): the second is a
+	TimeInSeconds and the function is what to run when it arrives.  The
+	clock's alarm interrupt sends the event to the newt port, and the event
+	loop then runs the function.  The alarm the machine keeps is always the
+	*next* one of the alarm soup's; choosing it is NewtonScript's
+	(SetNextAlarm), which asks for this one as it goes.
+------------------------------------------------------------------------------*/
+
+ULong	NewtAlarmName = 0;			// ROM 0x0c10551c NewtAlarmName
+
+
+// ROM 0x0030eee0 HandleAlarmEvent__FP11TAlarmEvent
+// The alarm arrived: the function it carries, called with its arguments.
+void
+HandleAlarmEvent(TAlarmEvent* event)
+{
+	DoBlock(event->fFunc, event->fArgs);
+}
+
+
+// ROM 0x0030eeec FSetSysAlarm
+// SetSysAlarm(time, func, args): the alarm set for the second, or only
+// cleared when the time is nil.  The second is a TimeInSeconds - seconds
+// from the start of 1993, in local time - while the clock counts seconds
+// from 1904 in GMT, so the epoch goes back on and the time zone comes off.
+// The event is the application's own, which is why setting an alarm
+// replaces the one before it rather than adding to it.
+Ref
+FSetSysAlarm(RefArg /*rcvr*/, RefArg time, RefArg func, RefArg args)
+{
+	TURealTimeAlarm::ClearAlarm(NewtAlarmName);
+	if (ISNIL(time))
+		return NILREF;
+	TTime epoch(kSecondsFrom1904To1993, kSeconds);
+	TTime when(RINT(time), kSeconds);
+	TTime zone(GMTOffset() + DaylightSavingsOffset(), kSeconds);
+	Int64 alarm = when.time;
+	CompAdd(&epoch.time, &alarm);
+	CompSub(&zone.time, &alarm);
+	TAlarmEvent* event = &((TNotebook*) gApplication)->fAlarmEvent;
+	event->fAEventClass = kNewtEventClass;
+	event->fAEventID = kNewtIdleEvent;
+	event->fEvent = kNewtAlarmEvent;
+	event->fTime = alarm.lo;
+	event->fFunc = func;
+	event->fArgs = args;
+	TTime at;
+	at.time = alarm;
+	TURealTimeAlarm::SetAlarm(NewtAlarmName, at, gNewtPort->fId, ((TNewtWorld*) GetGlobals())->fMessage->fId,
+							  event, sizeof(TAlarmEvent), 1);
+	return NILREF;
+}
+
+
+void
+RegisterAlarmNatives(void)
+{
+	RegisterNativeFunction("FSetSysAlarm", (void*) FSetSysAlarm, 3);
 }
 
 
