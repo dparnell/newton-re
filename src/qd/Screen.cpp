@@ -179,6 +179,29 @@ QDStopDrawing(PixelMap* map, Rect* r)
 }
 
 
+// ROM 0x001cf7f8 ReleaseScreenLock__Fv
+// The screen lock dropped however deep it went: the ROM unlocks its
+// semaphore group over and over until there is nothing left to unlock.
+// The event dispatch does this at the end of every event
+// (TNewtWorld::AEDispatch), which is what lets go of the lock the world's
+// MainConstructor takes and never gives back - and of any bracket a Throw
+// unwound past.
+//
+// Host: the drawing depth stands in for the lock count, so it goes to
+// zero; and because the host updates the display when the last bracket
+// closes rather than from the ROM's screen update task, what is dirty is
+// shown now.  Without this the depth never comes back to zero after the
+// world is built and the screen is drawn on but never blitted.
+void
+ReleaseScreenLock(void)
+{
+	if (gScreenDrawingDepth <= 0)
+		return;
+	gScreenDrawingDepth = 0;
+	UpdateHardwareScreen();
+}
+
+
 // ROM 0x001cf6b8 StartDrawing__FP8PixelMapP4Rect
 // Drawing on the screen begun (the views' bracket): the screen's lock
 // taken - nested brackets stack.

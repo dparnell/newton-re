@@ -105,6 +105,7 @@ void	QDStopDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf228 QDStopDrawing__FP8
 void	StartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf6b8 StartDrawing__FP8PixelMapP4Rect
 void	StopDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf704 StopDrawing__FP8PixelMapP4Rect
 void	UpdateHardwareScreen(void);				// ROM 0x001cf35c UpdateHardwareScreen__Fv
+void	ReleaseScreenLock(void);				// ROM 0x001cf7f8 ReleaseScreenLock__Fv
 void	BlitToScreens(PixelMap* map, Rect* src, Rect* dst, long mode);	// ROM 0x001cf3b8 BlitToScreens__FP8PixelMapP4RectT2l
 long	GetGrafInfo(long selector, void* info);	// ROM 0x001cf828 GetGrafInfo__FlPv
 void	SetGrafInfo(long selector, long value);	// ROM 0x001cedb0 SetGrafInfo__FlT1

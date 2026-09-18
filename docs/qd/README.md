@@ -392,7 +392,17 @@ lock across many, so the display is updated once, by
 the driver (`BlitToScreens` 0x001cf3b8).  The ROM's screen update task
 (`ScreenUpdateTask` 0x001cf4f0) does that every 33 ms when the LCD
 semaphores say so; the host does it when the last bracket closes (the
-semaphores stand in as a count).  `GetGrafInfo` 0x001cf828 answers the
+semaphores stand in as a count).  `ReleaseScreenLock` 0x001cf7f8 drops the
+lock however deep it went - the ROM unlocks its semaphore group over and
+over until there is nothing left to unlock - and the event dispatch calls
+it at the end of every event (`TNewtWorld::AEDispatch`).  That matters far
+more on the host than on the Newton: `TNewtWorld::MainConstructor` takes a
+bracket and never gives it back, which on the ROM only keeps the update
+task out for a while, but on the host means the depth never returns to zero
+and nothing is ever blitted.  Without it the OS drew a perfectly good
+screen that no-one could see - the display only changed when something
+called `UpdateHardwareScreen` itself, which is what `ScreenSnapshot` does,
+so the snapshots looked right while the window sat frozen.  `GetGrafInfo` 0x001cf828 answers the
 screen's map, resolution, depth and the driver's features; `SetGrafInfo`
 0x001cedb0 sets contrast and orientation (the map re-made, its bits
 cleared); `SetOrientation` 0x0020040c turns the screen and re-makes the

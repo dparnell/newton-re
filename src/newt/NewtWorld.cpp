@@ -244,10 +244,11 @@ TNewtWorld::PreMain()
 // An event dispatched with the port set to the default one, under an
 // exception handler: the action description set, the busy box hidden
 // (0x36), the app world's dispatch, the delayed actions run, the screen
-// lock released; an exception is shown (ExceptionNotify, and the REP's)
+// lock released - which is what gives back the lock MainConstructor takes,
+// and so lets the display be updated at all; an exception is shown (ExceptionNotify, and the REP's)
 // and the idle timer re-armed.  Then the busy box allowed again (0x35),
 // the port restored, the ref handles cleared.
-// NOT YET RECONSTRUCTED: BusyBoxSend, ReleaseScreenLock, IncrementCurrentStackPos.
+// NOT YET RECONSTRUCTED: BusyBoxSend, IncrementCurrentStackPos.
 long
 TNewtWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* event)
 {
@@ -259,6 +260,7 @@ TNewtWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* e
 		SetActionDescription(-8103);
 		result = TAppWorld::AEDispatch(msgType, token, size, event);
 		RunDelayedActionProcs();
+		ReleaseScreenLock();
 	}
 	newton_catch_all
 	{
