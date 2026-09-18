@@ -48,8 +48,12 @@ import struct
 import sys
 
 SYMBOL_CLASS = 0x55552
-ROM_SYMBOL_TABLE = 0x53eba1			# the literal in InitSymbols (0x0032d97c)
-ROM_BUILTIN_FUNCTIONS = 0x62418d	# the literal in ResolveMagicPtr (0x002f87d0), magic pointer 1.2
+# Both of these are literals in the ROM's code - the symbol table in
+# InitSymbols, the built-in functions frame in ResolveMagicPtr (magic
+# pointer 1.2) - and both are found here without reading the code, so that
+# this works on any of the ROMs: the symbol table is the one object in the
+# area with 32768 slots, and the built-in functions frame is what the
+# Rbuiltinfunctions constant points at.
 
 
 def symbol_hash(name: str) -> int:
@@ -117,14 +121,30 @@ def main(argv=None) -> int:
     if a != soup + soup_size:
         print(f"error: the object area does not end at gROMSoupData + gROMSoupDataSize ({a:#x})", file=sys.stderr)
         return 1
-    st = ROM_SYMBOL_TABLE - 1
-    st_slots = ((word(st) >> 8) - 12) // 4
-    if (word(st) & 3) != 1 or st_slots != 32768:
-        print(f"error: the object at {ROM_SYMBOL_TABLE:#x} is not the symbol table", file=sys.stderr)
+    # the symbol table: the only object of 32768 slots
+    symbol_tables = []
+    a = soup
+    while a < soup + soup_size:
+        h = word(a)
+        size = h >> 8
+        if (h & 3) == 1 and (size - 12) // 4 == 32768:
+            symbol_tables.append(a)
+        a += (size + 3) & ~3
+    if len(symbol_tables) != 1:
+        print(f"error: {len(symbol_tables)} objects of 32768 slots, expected one", file=sys.stderr)
         return 1
-    bf = ROM_BUILTIN_FUNCTIONS - 1
-    if (word(bf) & 3) != 3:
-        print(f"error: the object at {ROM_BUILTIN_FUNCTIONS:#x} is not a frame", file=sys.stderr)
+    rom_symbol_table = symbol_tables[0] | 1
+    st = rom_symbol_table - 1
+    st_slots = ((word(st) >> 8) - 12) // 4
+
+    # the built-in functions frame: what Rbuiltinfunctions points at
+    if "Rbuiltinfunctions" not in by_name:
+        print("error: no Rbuiltinfunctions symbol", file=sys.stderr)
+        return 1
+    rom_builtin_functions = word(by_name["Rbuiltinfunctions"])
+    bf = rom_builtin_functions - 1
+    if not (soup <= bf < soup + soup_size) or (word(bf) & 3) != 3:
+        print(f"error: the object at {rom_builtin_functions:#x} is not a frame", file=sys.stderr)
         return 1
     mp_count = word(mp_table)
 
@@ -233,8 +253,8 @@ def main(argv=None) -> int:
         f"const unsigned int kROMSoupBase = 0x{soup:08x};\t\t\t\t// gROMSoupData",
         f"const unsigned int kROMSoupSize = 0x{soup_size:08x};\t\t\t\t// gROMSoupDataSize: {count} objects",
         f"const unsigned int kROMMagicPointerTable = 0x{mp_table:08x};\t// gROMMagicPointerTable: the count, then {mp_count} refs",
-        f"const unsigned int kROMSymbolTable = 0x{ROM_SYMBOL_TABLE:08x};\t\t// the array of {st_slots} slots InitSymbols (0x0032d97c) names",
-        f"const unsigned int kROMBuiltinFunctions = 0x{ROM_BUILTIN_FUNCTIONS:08x};\t// the frame magic pointer 1.2 resolves to (ResolveMagicPtr, 0x002f87d0)",
+        f"const unsigned int kROMSymbolTable = 0x{rom_symbol_table:08x};\t\t// the array of {st_slots} slots InitSymbols names",
+        f"const unsigned int kROMBuiltinFunctions = 0x{rom_builtin_functions:08x};\t// the frame magic pointer 1.2 resolves to (Rbuiltinfunctions)",
         "",
     ]
     for name, addr, ref in objects:

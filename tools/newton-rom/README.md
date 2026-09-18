@@ -55,6 +55,8 @@ tools/newton-rom/
                           --doc docs/packages/rex-packages.md
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
+    recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
+                          (--from build/A --to build/B [--check])
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -316,6 +318,22 @@ build/MP2100D --parts` lists the ten packages built into the ROM extension
 (the REx's `pkgl` entry: their directories, parts, flags and infos, the
 format described in the script), `--extract DIR` writes each as a `.pkg`
 file and `--doc docs/packages/rex-packages.md` the listing as markdown.
+
+`analysis/recite.py --from build/MP2100D --to build/MP2x00US [--check]`
+moves the reconstruction's citations from one ROM image to another, which
+is what changing which ROM the reconstruction is of amounts to: the two
+images are builds of the same source, so a function keeps its mangled name
+and only moves.  It rewrites a citation only when the address it carries
+really is that name in the ROM it is moving from, so a citation that does
+not check out is reported rather than guessed at; `+0x<offset>` citations
+keep their offset, and `(object)` ones are resolved as a path in both
+ROMs.  What it cannot do is the `(unnamed)` citations - a static function
+with no symbol has nothing to look it up by - and the handful of names
+that are not in both ROMs; it lists them for a person.  The generated
+tables (`romconstants.py`, `nsfunctions.py --natives`, `nsgrammar.py`,
+`romtable.py`) are regenerated from the new ROM rather than recited, and
+all of these read the ROM rather than any address written into them, so
+they run against either image unchanged.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class

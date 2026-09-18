@@ -44,7 +44,8 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 
-BUILTIN_FUNCTIONS = 0x62418d
+# the built-in functions frame is what the Rbuiltinfunctions constant points
+# at, so this works on any of the ROMs (ROM.builtin_functions below)
 SYMBOL_CLASS = 0x55552
 
 SIMPLE_OPS = ["pop", "dup", "return", "push-self", "set-lex-scope", "iter-next", "iter-done", "pop-handlers"]
@@ -77,6 +78,11 @@ class ROM:
         self.soup = by_name["gROMSoupData"]
         self.soup_size = self.word(by_name["gROMSoupDataSize"])
         self.jump = {int(v): int(t) for v, t in data["jumptable"]["entries"]} if "jumptable" in data else {}
+
+    # the frame magic pointer 1.2 resolves to, found through the constant
+    # rather than the literal in ResolveMagicPtr, so any ROM works
+    def builtin_functions(self) -> int:
+        return self.word(self.by_name["Rbuiltinfunctions"])
 
     def word(self, a: int) -> int:
         return struct.unpack(">I", self.rom[a:a + 4])[0]
@@ -184,7 +190,7 @@ class ROM:
 
 def builtins(rom: ROM):
     """(name, function ref) pairs of the built-in functions frame, in slot order."""
-    return rom.frame_slots(BUILTIN_FUNCTIONS)
+    return rom.frame_slots(rom.builtin_functions())
 
 
 def objects(rom: ROM):
@@ -228,6 +234,10 @@ def resolve(rom: ROM, name: str):
         return rom.resolve_magic(rom.word(rom.by_name[name]))
     if "R" + name in rom.by_name:
         return rom.resolve_magic(rom.word(rom.by_name["R" + name]))
+    # the R symbols are all lower case, but the objects they hold are
+    # written the way NewtonScript writes them (unionSoupPrototype)
+    if "R" + name.lower() in rom.by_name:
+        return rom.resolve_magic(rom.word(rom.by_name["R" + name.lower()]))
     for n, fn in builtins(rom):
         if n.lower() == name.lower():
             return fn
