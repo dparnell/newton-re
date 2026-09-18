@@ -13,7 +13,22 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 
+#include <stdio.h>
+
 extern const ExceptionName exRootException;
+
+
+// Both boot blocks swallow an exception, as the ROM does - a boot that
+// fails part way is better than none.  The ROM says nothing about it; the
+// host says what it swallowed, because a block that gives up half way
+// leaves the system quietly short of whatever the rest of it would have
+// done, and there is no other sign of it.
+static void
+ReportSwallowed(const char* block, Exception* exception)
+{
+	fprintf(stderr, "[boot] %s gave up on %s\n", block, exception->name);
+	fflush(stderr);
+}
 
 
 // ROM 0x001ef108 InitFormFunctions__FRC6RefVar
@@ -66,14 +81,30 @@ InitScriptGlobals(void)
 	}
 	newton_catch(exRootException)
 	{
+		ReportSwallowed("InitScriptGlobals", CurrentException());
 	}
 	end_try;
 }
 
 
 // ROM 0x001f3eec RunInitScripts__Fv
-// The ROM's boot block that asks each installed part to run its
-// InstallScript.  As above, a script that throws does not stop the boot.
+// The ROM's boot block: the soups of its soupDef table made on the
+// internal store with their initial entries, and then its seven init
+// functions (@549: PreSetupUserConfig, StartAutoFaxReceive, StartSniffing,
+// StartAutoCallReceive, SetBatteryTypes, CheckSerialNumber,
+// ReadPreferences) invoked one after another.  As above, a script that
+// throws does not stop the boot - but it does stop the block, and the ROM
+// guards neither the soups nor the functions, so one throw costs every
+// init function after it.
+//
+// That is what happens here today: PreSetupUserConfig, the first of them,
+// asks the internal store for a soup called "Names" and sends Query to
+// what it gets.  The ROM's own boot table makes twelve soups and "Names"
+// is not among them - the Names application's soup is made by the Cardfile
+// package in the ROM extension, which cannot install while
+// LoadHighROMFramesPackages and the part handlers are NOT YET
+// RECONSTRUCTED (newt/NewtWorld.cpp's PreMain and MainConstructor).  So
+// the other six init functions never run.
 void
 RunInitScripts(void)
 {
@@ -83,6 +114,7 @@ RunInitScripts(void)
 	}
 	newton_catch(exRootException)
 	{
+		ReportSwallowed("RunInitScripts", CurrentException());
 	}
 	end_try;
 }

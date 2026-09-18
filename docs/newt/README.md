@@ -244,14 +244,29 @@ and `CSInstantiate` (`system/ConfigServer.h`).  With those the boot runs
 with nothing unreconstructed but `setdefaultConfig`, which wants the name
 server's configuration registry (`TUConfigServer::SetDefaultConfig`).
 
-Two exceptions are left, both out of the root view's `viewIdleScript` -
-the Newton's power-management idle pass, which asks the user
-configuration for its sleep time, watches the backlight and checks the
-batteries.  One is a `Query` sent to nil: a nought-argument closure whose
-locals hold `vars.userConfiguration` and a tagspec query
-`{type: index, indexPath: _uniqueID, tagspec: ...}`, so a soup it expects
-is not there.  The other indexes an empty array at nought.  Neither is a
-missing function.
+**Where the boot stops, and why.**  `Rbootruninitscripts` does two
+things: it makes the twelve soups of the ROM's soupDef table (`@548`) on
+the internal store, with their initial entries - which is where the
+thirteen soups come from, the System soup being the twelfth's neighbour -
+and then invokes the seven init functions of `@549` one after another:
+`PreSetupUserConfig`, `StartAutoFaxReceive`, `StartSniffing`,
+`StartAutoCallReceive`, `SetBatteryTypes`, `CheckSerialNumber`,
+`ReadPreferences`.  Neither loop is guarded, so one throw costs the rest.
+
+`PreSetupUserConfig`, the first of them, builds the owner personae: it
+asks the internal store for a soup called `"Names"` and sends `Query` to
+what it gets, with a tagspec of `_ownerNames`.  The ROM's boot table does
+not make a `"Names"` soup - the Names application's soup is made by the
+**Cardfile** package in the ROM extension (`analysis/packages.py
+build/MP2100D --parts` lists it, an `'auto'` frames part), which cannot
+install while `LoadHighROMFramesPackages` and the package part handlers
+are NOT YET RECONSTRUCTED.  So the soup is nil, `Query` is sent to nil,
+and the other six init functions never run.  The second exception - index
+nought of an empty array - is the same script on the idle pass afterwards.
+
+Neither is a missing native or a store gap.  What they want is the ROM's
+own applications installed, and `frames/FramesPart.h`'s `ImportFramesPart`
+and `packages/PackageIterator.h` are most of what that needs.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
