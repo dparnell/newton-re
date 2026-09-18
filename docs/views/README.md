@@ -117,7 +117,7 @@ agree with the switch.)
 ## The reconstruction (`src/views/`)
 
 `View.h` declares `TView` with the ROM's fields at their offsets and its
-methods in the vtable's order (`analysis/vtable.py build/MP2100D 0x1f75c`),
+methods in the vtable's order (`analysis/vtable.py build/MP2x00US 0x1f750`),
 over `TResponder` and `TxObject` (`TxObject::operator new` clears the
 memory - NewPtrClear - so a fresh view's fields are zero).  `ViewFlags.h`
 has the constants: the viewFlags bits (the names TView::Dump 0x0025e33c
@@ -873,7 +873,7 @@ aeDropChild), hiliting (a framed round button inverted inside its
 frame, TrackHilite and TrackButton without a stroke, the click script,
 a throwing script, the pressed script's answer with newt_feature,
 HiliteUnique, the viewHiliteScript, a hidden view), the keyboard (the
-German mapping's tables, a dead key, the key maps and modifiers through
+U.S. mapping's tables, a dead key (option-e), the key maps and modifiers through
 KeyIn, key events to a key view's scripts, a repeat, key commands with
 the command key, one found up at the root, PostKeyString and
 HandleKeyEvents, the natives), the caret (TBits, a paragraph made the

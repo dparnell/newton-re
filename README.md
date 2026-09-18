@@ -1,8 +1,13 @@
 # Newton MessagePad 2x00 ROM reverse engineering
 
-Reverse engineering of the Apple Newton MessagePad 2100 (German, "MP2100 D")
-ROM, with the long-term goal of a retargetable, maintainable re-implementation
-of Newton OS.
+Reverse engineering of the Apple Newton MessagePad 2x00 ROM, with the
+long-term goal of a retargetable, maintainable re-implementation of Newton
+OS.  Two debug ROMs are in the repository and the tooling works with
+either; the reconstruction in `src/` is of the US English one, `MP2x00 US`
+(2.1, build 717006).  The other, `MP2100 D` (D-2.1, build 747129), is the
+newer operating system but a German one, with no English locale and German
+strings built into the applications in its ROM extension, so it is kept as
+a second opinion rather than as the subject.
 
 ## Contents
 
@@ -25,10 +30,10 @@ and a JDK 21 for it.
 python -m venv build\venv
 build\venv\Scripts\pip install -r tools\newton-rom\requirements.txt
 build\venv\Scripts\pip install --no-index --find-links "<ghidra>\Ghidra\Features\PyGhidra\pypkg\dist" pyghidra
-build\venv\Scripts\python tools\newton-rom\pipeline.py "DebugRom\MP2100 D" -o build\MP2100D --ghidra <ghidra>
+build\venv\Scripts\python tools\newton-rom\pipeline.py "DebugRom\MP2x00 US" -o build\MP2x00US --ghidra <ghidra> --name MP2x00US
 ```
 
-Result: `build/ghidra/MP2100D.gpr`, a Ghidra project of the ROM as the CPU sees
+Result: `build/ghidra/MP2x00US.gpr`, a Ghidra project of the ROM as the CPU sees
 it, with ~35,000 functions named and placed in ~1,050 C++ class namespaces,
 16,000+ prototypes (1,500 of them complete with return types and parameter
 names from the DDK headers), the DDK's ~250 structs/classes and 60 enums as

@@ -48,13 +48,13 @@ part's info, compressor and offset against the sizes -
 `kError_Bad_Package` otherwise.  NOT YET RECONSTRUCTED: `Store` (the
 package written to a store as a large object through
 `TStorePackageWriter`).  `test_PackageIterator` reads the ten packages
-built into the MP2100 D ROM extension (below) from memory and through a
+built into the ROM extension (below) from memory and through a
 pipe.
 
 ## The packages built into the ROM extension
 
 The REx's `pkgl` entry holds ten packages (`rex-packages.md`, from
-`packages.py build/MP2100D --parts`): six NTK applications with frames
+`packages.py build/MP2x00US --parts`): six NTK applications with frames
 parts (Cardfile - the Names application, Verbindung - the connection
 utility, FaxViewer, Tabellen, Profil, and the help book), two protocol
 code packages (ScreenBuffer, ScreenDrivers: raw ARM code, not portable)

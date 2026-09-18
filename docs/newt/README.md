@@ -258,7 +258,7 @@ asks the internal store for a soup called `"Names"` and sends `Query` to
 what it gets, with a tagspec of `_ownerNames`.  The ROM's boot table does
 not make a `"Names"` soup - the Names application's soup is made by the
 **Cardfile** package in the ROM extension (`analysis/packages.py
-build/MP2100D --parts` lists it, an `'auto'` frames part), which cannot
+build/MP2x00US --parts` lists it, an `'auto'` frames part), which cannot
 install while `LoadHighROMFramesPackages` and the package part handlers
 are NOT YET RECONSTRUCTED.  So the soup is nil, `Query` is sent to nil,
 and the other six init functions never run.  The second exception - index

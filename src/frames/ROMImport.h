@@ -2,7 +2,7 @@
 	File:		frames/ROMImport.h
 
 	Contains:	The ROM object importer: the MessagePad's ROM holds the frames
-				the OS is built on - 40597 objects in one area (gROMSoupData:
+				the OS is built on - 46538 objects in one area (gROMSoupData:
 				the symbol table, the built-in functions, the protos and the
 				magic pointer table that names them) - in the ARM's layout
 				(32-bit big-endian words, 4-byte rounding).  On the MessagePad

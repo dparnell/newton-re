@@ -11,7 +11,7 @@
 				controller's strokes it covers, a delay before it is
 				arbitrated, and a use count (Clone/Release).  The flags
 				(TRecObject's): 0x40000000 claimed, 0x10000000 delayed,
-				0x8000000 invalidated, 0x003e0260 invalid, 0x80000 passed on
+				0x8000000 invalidated, 0x400000 invalid, 0x80000 passed on
 				from the subs, 0x20000 the areas are a list.  TUnitList and
 				TTypeList are TDArrays of units and of types.
 

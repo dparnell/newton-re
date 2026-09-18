@@ -57,6 +57,8 @@ tools/newton-rom/
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
+    regenerate.py         run every generator above against one ROM (--list, --only NAME)
+    romid.py              which ROM a build directory holds (the version string it carries)
   requirements.txt      libclang pin
   tests/                unit tests + oracle comparison against mpdumper
 ```
@@ -69,11 +71,11 @@ python -m venv build\venv
 build\venv\Scripts\pip install -r tools\newton-rom\requirements.txt
 build\venv\Scripts\pip install --no-index --find-links "D:\apps\ghidra_12.1.3_PUBLIC\Ghidra\Features\PyGhidra\pypkg\dist" pyghidra
 
-build\venv\Scripts\python tools\newton-rom\pipeline.py "DebugRom\MP2100 D" -o build\MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
+build\venv\Scripts\python tools\newton-rom\pipeline.py "DebugRom\MP2x00 US" -o build\MP2x00US --name MP2x00US --ghidra D:\apps\ghidra_12.1.3_PUBLIC
 ```
 
-This writes `build/MP2100D/{rom.bin,layout.json,symbols.json,symbols.txt,types.json,romfacts.json,verify-report.txt}`
-and creates the Ghidra project `build/ghidra/MP2100D.gpr` (≈ 40 s for the
+This writes `build/MP2x00US/{rom.bin,layout.json,symbols.json,symbols.txt,types.json,romfacts.json,verify-report.txt}`
+and creates the Ghidra project `build/ghidra/MP2x00US.gpr` (≈ 40 s for the
 import, ≈ 1 minute for verification, ≈ 4 minutes for auto-analysis on a
 current desktop). Open the project in Ghidra
 normally afterwards. `build/` is git-ignored; everything in it is regenerated
@@ -82,13 +84,13 @@ by the tools.
 Steps individually:
 
 ```powershell
-python tools\newton-rom\extract_rom.py "DebugRom\MP2100 D\Senior DCirrusNoDebug image" --rex "DebugRom\MP2100 D\Senior DCirrusNoDebug high" -o build\MP2100D
-python tools\newton-rom\dump_symbols.py "DebugRom\MP2100 D\Senior DCirrusNoDebug image" -o build\MP2100D\symbols.json --text build\MP2100D\symbols.txt
-build\venv\Scripts\python tools\newton-rom\parse_headers.py headers -o build\MP2100D\types.json
-build\venv\Scripts\python tools\newton-rom\ghidra_scripts\import_rom.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --no-analyze
-build\venv\Scripts\python tools\newton-rom\ghidra_scripts\verify_types.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC
-build\venv\Scripts\python tools\newton-rom\ghidra_scripts\apply_romfacts.py build\MP2100D --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --analyze
-build\venv\Scripts\python tools\newton-rom\ghidra_scripts\check_import.py --project build\ghidra --name MP2100D --ghidra D:\apps\ghidra_12.1.3_PUBLIC --lookup InitIdler --type TAEventHandler
+python tools\newton-rom\extract_rom.py "DebugRom\MP2x00 US\Senior CirrusNoDebug image" --rex "DebugRom\MP2x00 US\Senior CirrusNoDebug high" -o build\MP2x00US
+python tools\newton-rom\dump_symbols.py "DebugRom\MP2x00 US\Senior CirrusNoDebug image" -o build\MP2x00US\symbols.json --text build\MP2x00US\symbols.txt
+build\venv\Scripts\python tools\newton-rom\parse_headers.py headers -o build\MP2x00US\types.json
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\import_rom.py build\MP2x00US --project build\ghidra --name MP2x00US --ghidra D:\apps\ghidra_12.1.3_PUBLIC --no-analyze
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\verify_types.py build\MP2x00US --project build\ghidra --name MP2x00US --ghidra D:\apps\ghidra_12.1.3_PUBLIC
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\apply_romfacts.py build\MP2x00US --project build\ghidra --name MP2x00US --ghidra D:\apps\ghidra_12.1.3_PUBLIC --analyze
+build\venv\Scripts\python tools\newton-rom\ghidra_scripts\check_import.py --project build\ghidra --name MP2x00US --ghidra D:\apps\ghidra_12.1.3_PUBLIC --lookup InitIdler --type TAEventHandler
 ```
 
 GUI alternative for step 3: import `rom.bin` in Ghidra with the *Binary*
@@ -108,16 +110,19 @@ build/venv/Scripts/python tools/newton-rom/tests/test_headers.py     # needs lib
 
 `Senior ... image` is an ARM **AIF** executable (big-endian):
 
-| Region | File offset | Load address | Size (MP2100 D) |
+| Region | File offset | Load address | Size (MP2x00 US) |
 |---|---|---|---|
 | AIF header | 0x0 | — | 0x80 |
-| RO area (code + rodata) | 0x80 | 0x00000000 | 0x6F0AE8 |
-| RW initialisers | 0x6F0B68 | 0x0C100800 (RAM) | 0x23B4 |
-| zero-init data | — | 0x0C102BB4 | 0x2328 |
-| debug area | 0x6F2F1C | — | 0x1C4024 |
+| RO area (code + rodata) | 0x80 | 0x00000000 | 0x71A95C |
+| RW initialisers | 0x71A9DC | 0x0C100800 (RAM) | 0x52F0 |
+| zero-init data | — | 0x0C105AF0 | 0x2324 |
+| debug area | 0x71FC4C | — | 0x1CAF30 |
 
-The debug area is a single `LANG_NONE` section: a flat table of 52,150
-symbols (name, value, flags). There is **no type information** — the C++
+(The MP2100 D is laid out the same way with its own sizes: RO 0x6F0AE8,
+RW 0x23B4, ZI 0x2328, debug area at 0x6F2F1C.)
+
+The debug area is a single `LANG_NONE` section: a flat table of 52,751
+symbols in the MP2x00 US and 52,150 in the MP2100 D (name, value, flags). There is **no type information** — the C++
 structure is recovered purely from the mangled names. The symbol flags are
 unreliable (almost everything is marked "code", including NewtonScript data
 objects), so the importer decides for itself what is a function (below).
@@ -227,7 +232,7 @@ checks each DDK class for: allocation size == clang's size; a vtable stored at
 offset 0 iff the header says the class is polymorphic; the vtable entries
 naming the header's virtual methods in declaration order; and every store to
 `this` landing on a declared member (recursing into embedded objects and
-bases). Results for the MP2100 D (`build/MP2100D/verify-report.txt`):
+bases). Results for the MP2100 D (`build/MP2100D/verify-report.txt`, the ROM this was measured on):
 129/131 sizes, 131/132 vptr checks, 9/9 vtables and 131/132 field checks
 agree. The three genuine differences, i.e. places where the DDK header is
 not the ROM's version of the class:
@@ -260,25 +265,25 @@ so the decompiler goes on after the call as well. (Earlier imports used the
 call-and-return override, which kept the disassembly going but made the
 decompiler show a `return` right after every virtual call - the loop in
 `TTimerQueue::Check`, the dispatch in `TAppWorld::AEDispatch`;
-`ghidra_scripts/fix_virtual_calls.py --project build/ghidra --name MP2100D
+`ghidra_scripts/fix_virtual_calls.py --project build/ghidra --name MP2x00US
 --ghidra <dir>` re-marks an existing project's sites in ten seconds, no
 re-analysis needed.) (One Ghidra process at a time: the project is locked while a script runs, so
 run the analysis tools sequentially; `decompile.py --range START END` does a
-whole subsystem in one start.)  `analysis/vtable.py build/MP2100D 0x2073c` lists a
+whole subsystem in one start.)  `analysis/vtable.py build/MP2x00US 0x20730` lists a
 vtable's slots by method name (the address is the literal a constructor
 stores at `[this,#0]`), which is how a `add pc,r12,#0x50` is resolved.
 
 Protocol implementations (ProtocolGen output) dispatch through a second kind
 of table Ghidra leaves as undefined data: the `TClassInfo` (self-relative
 offsets to the names, `B` instructions to the code, then the dispatch table
-and the monitor entry).  `analysis/classinfo.py build/MP2100D --name
+and the monitor entry).  `analysis/classinfo.py build/MP2x00US --name
 TSerialChipVoyager` decodes one - names, version, instance size, every
 dispatch slot and monitor selector by method name - from `rom.bin` and
 `symbols.json` alone; `--all` lists the 101 implementations in the ROM
 (`docs/protocols/README.md` explains the mechanism).
 
 Tables of the ROM go into the source through scripts, never by hand:
-`analysis/romtable.py build/MP2100D NAME[@addr][:type[:count]]... -o
+`analysis/romtable.py build/MP2x00US NAME[@addr][:type[:count]]... -o
 file.cpp` emits data symbols as C++ arrays (the compression coders'
 tables; type `cstr` for a table of pointers to C strings, such as the
 interpreter's opcode names `gPrintLiterals`, which lives in the
@@ -286,12 +291,12 @@ initialised RAM area and is read from the ROM's copy of it; a table the
 debug symbols do not name is given its address instead and the name is
 ours, as `kResampleFilter@0x0036dbe8:i32:262` for the resampler's sinc,
 which is then cited `(unnamed)`), and
-`analysis/romconstants.py build/MP2100D -o src/frames` emits the ROM's
+`analysis/romconstants.py build/MP2x00US -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
 name and hash from the object the constant refers to), the 1102 `R`/`RS`
 object constants, and where the ROM's object area and tables are, for the
 ROM object importer (`docs/frames/README.md`).  Both write a header naming
-the command that made them.  `analysis/nsfunctions.py build/MP2100D
+the command that made them.  `analysis/nsfunctions.py build/MP2x00US
 --list` lists the 1352 functions of the ROM's built-in functions frame
 (native or NewtonScript, argument counts), `--natives -o
 src/frames/ROMNatives.cpp` emits the tables the host binds its native
@@ -310,13 +315,13 @@ re-expressed as source (`src/frames/ScriptBuiltins.cpp`).  `coverage.py`
 accepts such a re-expression's citation of the function object,
 `// ROM 0x006278bd (object) unionSoupPrototype.Add` (a ref into the
 object area).
-`analysis/nsgrammar.py build/MP2100D -o src/frames --doc
+`analysis/nsgrammar.py build/MP2x00US -o src/frames --doc
 docs/frames/grammar.md` reads the NewtonScript compiler's Berkeley yacc
 tables (`yylhs`..`yycheck`), token names (`yyname`), rule texts (`yyrule`)
 and the lexer's reserved-word table out of the ROM into `ParserTables.h`
 (the token enum and the parser's constants) and `ParserTables.cpp`, and
 writes the grammar rule by rule as markdown.  `analysis/packages.py
-build/MP2100D --parts` lists the ten packages built into the ROM extension
+build/MP2x00US --parts` lists the ten packages built into the ROM extension
 (the REx's `pkgl` entry: their directories, parts, flags and infos, the
 format described in the script), `--extract DIR` writes each as a `.pkg`
 file and `--doc docs/packages/rex-packages.md` the listing as markdown.
@@ -329,13 +334,22 @@ and only moves.  It rewrites a citation only when the address it carries
 really is that name in the ROM it is moving from, so a citation that does
 not check out is reported rather than guessed at; `+0x<offset>` citations
 keep their offset, and `(object)` ones are resolved as a path in both
-ROMs.  What it cannot do is the `(unnamed)` citations - a static function
-with no symbol has nothing to look it up by - and the handful of names
-that are not in both ROMs; it lists them for a person.  The generated
-tables (`romconstants.py`, `nsfunctions.py --natives`, `nsgrammar.py`,
-`romtable.py`) are regenerated from the new ROM rather than recited, and
-all of these read the ROM rather than any address written into them, so
-they run against either image unchanged.
+ROMs.  `--old-name "MP2100 D" --new-name "MP2x00 US"` additionally renames
+the ROM in each file's opening comment and moves the addresses in it,
+reading each as an offset into whatever symbol it falls in, which is how
+the end of a range (one past the last function) moves with the range.
+What it cannot do is the `(unnamed)` citations - a static function with no
+symbol has nothing to look it up by - and the handful of names that are
+not in both ROMs; it lists them for a person.
+
+The generated files are regenerated from the new ROM rather than recited:
+`analysis/regenerate.py build/MP2x00US` runs all twelve commands that make
+them (`--list` prints them, `--only NAME` runs one).  All of them read the
+ROM rather than any address written into them, and name it through
+`analysis/romid.py`, which finds the ROM's own version string, so they run
+against either image unchanged.  `docs/os600/swi-table.md` is the
+exception: `swi_table.py` needs a Ghidra project for the ROM, so it is run
+by hand after `pipeline.py`.
 
 `verify_types.py` writes what it observed to `romfacts.json`: the allocation
 size of every class (655), the vtable address of every polymorphic class

@@ -4,36 +4,39 @@ Reverse-engineering notes on the ROM's international utilities - the
 locale bundles and the date and time formatting built on them.
 Reconstructed source: `src/intl/` (`Locale.h`, `Dates.h`); the host test
 is `src/intl/tests/test_Dates.cpp`, which formats dates through the
-German locale bundle read out of the ROM image.  How each fact was
+'USA locale bundle read out of the ROM image.  How each fact was
 established is stated with it.
 
 ## Locale bundles (`src/intl/Locale.h`)
 
 A locale is a NewtonScript frame, the *locale bundle*.  The ROM has one
-per country; the MP2100 D's are `'Germany` (ROM object 0x3c10ed, title
-"Deutschland"), `'Austria` (0x3c15d5) and `'SwitzGerman` (0x3c1345), the
-latter two prototyped on Germany and overriding a few slots.  A bundle
-holds (read with `analysis/nsfunctions.py build/MP2100D --object 0x3c10ed`):
+per country; the MP2x00 US's are `'USA` (ROM object 0x4a4d09, title
+"U.S."), `'Canada` (0x4a5029), `'CanadaFr` (0x4a5225), `'UK` (0x4a5451),
+`'Australia` (0x4a5641) and `'Sweden` (0x4a5775), the others prototyped on
+'USA and overriding a few slots.  (The MP2100 D carries `'Germany`,
+`'Austria` and `'SwitzGerman` instead, and nothing English.)  A bundle
+holds (read with `analysis/nsfunctions.py build/MP2x00US --object 0x4a4d09`):
 
 - `title`, `localeSym`/`localeslot`, `sortID`, `firstDayOfWeek` (1:
   Monday), `useWeekNumber`, `keyboardLayout`, `defaultPaperSize`;
-- `longDateFormat` (0x3bf511): `longDofWeek`, `abbrDofWeek` ("Son",
-  "Mon", "Die", "Mit", ...), `terseDofWeek`, `shortDofWeek`, `longMonth`,
-  `abbrMonth` ("Jan.", ..., "März", ..., "Okt.", ...), `longDateOrder`
-  (an element order, below), `dayLeadingZ`, `longDateDelim` (the strings
-  between the elements: ", ", ". ", " ", "") and the optional
+- `longDateFormat` (0x4a3769): `longDofWeek`, `abbrDofWeek` ("Sun",
+  "Mon", "Tue", "Wed", ...), `terseDofWeek`, `shortDofWeek`, `longMonth`,
+  `abbrMonth` ("Jan", ..., "Oct", ...), `longDateOrder` (an element
+  order, below), `dayLeadingZ`, `longDateDelim` (the strings between the
+  elements: "", ", ", " ", ", ") and the optional
   `long{Day,Month,Year}Suffix` strings;
-- `shortDateFormat` (0x3bf021): `shortDateOrder`, `shortDateDelim`,
+- `shortDateFormat` (0x4a3179): `shortDateOrder`, `shortDateDelim` ("/"),
   `dayLeadingZ`, `monthLeadingZ`, `yearLeading` (1: two-digit years) and
   the short suffixes;
-- `timeformat` (0x3bef95): `timeSepStr1`/`timeSepStr2` (":"),
-  `morningStr`/`eveningStr` (AM/PM), `suffixStr` (" Uhr"), `hourLeadingZ`,
-  `minuteLeadingZ`, `timeCycle` (0: 24-hour), `midNightForm`, `noonForm`;
+- `timeformat` (0x4a30e9): `timeSepStr1`/`timeSepStr2` (":"),
+  `morningStr`/`eveningStr` (" am"/" pm"), `suffixStr` (""),
+  `hourLeadingZ`, `minuteLeadingZ`, `timeCycle` (1: 12-hour),
+  `midNightForm`, `noonForm`;
 - `numberformat`, the labels (`postalCodeLabel`, `streetLabel`, ...), the
   recognition dictionaries and the filters (not reconstructed).
 
 A `...LeadingZ` slot of **0** means *add* the leading zero (the ROM tests
-`== 0`; `dayLeadingZ 1` in the German bundle gives "3.10.1990").
+`== 0`; `dayLeadingZ 1` in the U.S. bundle gives "10/3/90").
 
 The locale globals live in `vars.international` (`IntlResources`
 0x000ed21c): `currentLocaleBundle`, `systemLocaleBundle`, `locales` (an
@@ -94,11 +97,13 @@ magic pointer @66): `longDateStrSpec`, `abbrDateStrSpec`,
 NewtonScript constants `kIncludeAllElements`, `kFormatLongDate` etc.
 expand to.
 
-The same encoding orders the elements: `longDateOrder` 11711050 in the
-German bundle decodes to *day of week (long), day (long), month
-(numeric), year (numeric)* and, with the delimiters, gives "Mittwoch, 3.
-10 1990" for a spec of 0 and "Mittwoch, 3. Oktober 1990" when the spec
-asks for a long month (the spec's format wins over the order's).
+The same encoding orders the elements: `longDateOrder` 11702986 in the
+U.S. bundle decodes to *day of week (long), month (long), day (long),
+year (numeric)* and, with the delimiters, gives "Wednesday, October 3,
+1990" both for a spec of 0 and when the spec asks for a long month
+(the spec's format wins over the order's).  The MP2100 D's German bundle
+has 11711050 there - day of week, day, month, year - and gives
+"Mittwoch, 3. 10 1990" and "Mittwoch, 3. Oktober 1990".
 
 `LongDateString` 0x0008e088 walks the order, emitting the wanted
 elements through `DateElementString` 0x0008eba4 (which picks the name
@@ -108,13 +113,13 @@ but the last; the year is dropped when out of range.  `ShortDateString`
 0x0008e3e0 does the same numerically with `shortDateOrder`; `TimeString`
 0x0008e68c emits the hour (12-hour with `timeCycle` 1, `midNightForm`/
 `noonForm` for 0 and 12), `timeSepStr1`, the minutes, `timeSepStr2` and
-the seconds, then the AM/PM string and the suffix ("14:05:00 Uhr").
+the seconds, then the AM/PM string and the suffix ("2:05:00 pm").
 
 ### NewtonScript functions
 
 `Time`, `TimeInSeconds`, `Ticks`, `Date`, `DateFromSeconds`,
-`TotalMinutes`, `DateNTime` ("3.10.1990 14:05"), `HourMinute`,
-`ShortDate` ("Mit 3.10."), `LongDateStr`, `ShortDateStr`, `TimeStr`,
+`TotalMinutes`, `DateNTime` ("10/3/90 2:05 pm"), `HourMinute`,
+`ShortDate` ("Wed 10/3"), `LongDateStr`, `ShortDateStr`, `TimeStr`,
 `TimeFrameStr`, `SetTime`, `SetTimeInSeconds`, `IsValidDate`,
 `IncrementMonth`, `WeekNumber` (0x0008b5b0 `WeekNumCalc`: the week
 of the year counted from the week holding the 1st of January, weeks
@@ -129,9 +134,9 @@ frame (missing slots are 1904/1/1 0:00).
 
 ## Numbers (`src/intl/NumberFormat.h`)
 
-The locale's `numberformat` frame (Germany 0x3bef0d: `decimalpoint` ",",
-`groupSepStr` ".", `groupWidth` 3, `minusPrefix` "-", `minusSuffix` "",
-`currencyPrefix` "", `currencySuffix` " DM", `decimalLeadingZ` 0) is
+The locale's `numberformat` frame (U.S. 0x4a3065: `decimalpoint` ".",
+`groupSepStr` ",", `groupWidth` 3, `minusPrefix` "-", `minusSuffix` "",
+`currencyPrefix` "$", `currencySuffix` "", `decimalLeadingZ` 0) is
 cached with the date names; `ROMCacheLocaleAttributes` also sets
 `gNumberGroupWidth` (0x0c10108c) and `gNumberLeadingZero` (0x0c101090)
 and drops the *prototype strings* so that they are remade for the new

@@ -8,7 +8,7 @@
 				0x00262224 applies them, the viewFormat fields as PreDraw/
 				PostDraw 0x00266370/0x002666c0 draw them, the view class
 				numbers BuildView 0x0025ca18 switches on, the slot cache
-				indices (Rslotcachetable 0x005c94c5), and the view system's
+				indices (Rslotcachetable 0x0062d899), and the view system's
 				evt.ex error codes.  The NewtonScript-side names are the
 				NTK's (Newton Programmer's Guide, "Views"); where a name is
 				recalled rather than read from a header it says so.

@@ -10,7 +10,7 @@
 	Reconstructed from the MP2x00 US ROM (0x00358644-0x00358e9c and the
 	comparisons at 0x003195dc-0x003197c8); each function cites its origin.
 
-	The ROM's symbol table (the array at 0x00537f19, 32768 slots) is part of
+	The ROM's symbol table (the array at 0x00570da1, 32768 slots) is part of
 	the ROM's object graph, which is not imported yet; the host stands in
 	with a read-only symbol space holding the symbols the C++ code refers to
 	(RSSymbols.h, generated from the ROM's RSSYM constants), as
@@ -569,7 +569,7 @@ InitROMSymbols(void)
 
 // ROM 0x00358b18 InitSymbols__Fv
 // The RAM table (128 slots, a GC root the collector treats specially) over
-// the ROM's (the array at 0x0053eba1 - here the one ROMImport read, or
+// the ROM's (the array at 0x00570da1 - here the one ROMImport read, or
 // InitROMSymbols' small stand-in when no ROM image was imported).
 void
 InitSymbols(void)

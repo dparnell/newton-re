@@ -7,7 +7,7 @@ NewtonScript store/soup/cursor functions.  Reconstructed source is under
 `src/stores/`.
 
 How these facts were established: the protocol's method list is the
-dispatch table `tools/newton-rom/analysis/classinfo.py build/MP2100D --name
+dispatch table `tools/newton-rom/analysis/classinfo.py build/MP2x00US --name
 TPackageStore` (or `TFlashStore`, `TMuxStore`) decodes; the semantics come
 from decompiling the three implementations (`analysis/decompile.py --class
 TFlashStore` etc.) and the callers in `TStoreWrapper`; the error codes are

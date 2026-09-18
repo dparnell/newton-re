@@ -186,7 +186,7 @@ public:
 class TView : public TResponder
 {
 public:
-	// the vtable's order (analysis/vtable.py build/MP2x00US 0x1f75c)
+	// the vtable's order (analysis/vtable.py build/MP2x00US 0x1f750)
 	virtual long	ClassID(void) const;								// ROM 0x0025f290 ClassID__5TViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x002635c0 DerivedFrom__5TViewCFl
 	virtual			~TView();											// ROM 0x00268af4 __dt__5TViewFv

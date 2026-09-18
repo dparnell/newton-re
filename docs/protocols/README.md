@@ -24,7 +24,7 @@ table of self-relative offsets to its names, signature, dispatch table and
 monitor entry, and `B` instructions to its `Sizeof`, alloc/free, `New` and
 `Delete` code, plus version and flags. Every implementation's static
 `ClassInfo()` is `sub r0,pc,#imm; mov pc,lr` pointing at its table; there
-are 101 of them in the MP2100 D ROM (`classinfos.md`).
+are 101 of them in the ROM (`classinfos.md`).
 
 Making an instance (`TClassInfo::New`, 0x0005cfd0): allocate `Size()` bytes
 (the alloc proc, or `malloc` = `NewPtr`), `MakeAt` (fill in the four

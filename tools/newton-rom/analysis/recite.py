@@ -86,6 +86,19 @@ def file_header(text: str):
 kFarIntoASymbol = 0x8000		# further than that and it is not an offset into it
 
 
+def object_area(rom):
+    """(first, last) of the ROM's NewtonScript object area.  Addresses in
+    it cannot be moved by the offset rule: the objects are laid out in
+    their own order and most of them carry a debug symbol, so an address
+    in the middle of one would happily read as an offset into whichever
+    symbol came before it and land somewhere unrelated."""
+    base = rom.by_name.get("gROMSoupData")
+    size = rom.by_name.get("gROMSoupDataSize")
+    if base is None or size is None:
+        return (0, 0)
+    return (base, base + rom.word(size))
+
+
 def move_address(old_addr, new_name, symbol_starts, address: int):
     """Where an address of the old ROM is in the new one: the symbol it
     falls in, plus its offset into that symbol.  None when there is no
@@ -158,6 +171,7 @@ def main(argv=None) -> int:
     moved = unchanged = headers = 0
     problems: list[str] = []
     symbol_starts = sorted(old_addr)
+    objects = object_area(old_rom)
 
     for path in sorted(files):
         with open(path, "r", encoding="utf-8", newline="") as f:
@@ -216,6 +230,9 @@ def main(argv=None) -> int:
                 address = int(m.group(), 16)
                 if not symbol_starts[0] <= address < len(old_rom.rom):
                     return m.group()	# not an address at all: a bit mask, a size
+                if objects[0] <= address < objects[1]:
+                    stuck.append(m.group() + " (an object)")
+                    return m.group()
                 now = move_address(old_addr, new_name, symbol_starts, address)
                 if now is None:
                     stuck.append(m.group())

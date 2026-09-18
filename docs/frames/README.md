@@ -85,7 +85,7 @@ cache of its own.
 `Intern` (0x0032d674) hashes the name (the sum of the upper-cased bytes
 times 0x9E3779B9, 32 bits; the hash is stored in the symbol, so the host
 keeps it 32-bit) and looks in the ROM's symbol table (the read-only array
-at 0x0053eba1: 32768 slots), then in the RAM table (`gSymbolTable`, an
+at 0x00570da1: 32768 slots), then in the RAM table (`gSymbolTable`, an
 array of 128 slots at start), else makes the symbol.  Both are open
 addressed: slot = hash >> shift, step = (hash & 7)·2 + 1, NILREF empty, an
 integer deleted.  The RAM table doubles past 85 % full (`EnlargeSymbolTable`),
@@ -169,7 +169,7 @@ object, -48221 bad package ref; -48400 not a frame, -48401 not an array,
   the ROM's object graph) keep the ARM layout and will be imported.
 * The ROM's own objects come from a ROM image (below); without one,
   `InitROMSymbols` (Symbols.cpp) builds a read-only symbol space outside
-  the heap holding the 1765 symbols the C++ refers to and a table over
+  the heap holding the 1768 symbols the C++ refers to and a table over
   them as `gROMSymbolTable`.  The constants the C++ names - the ROM's
   `RSSYM` symbol RefStructs and its `R`/`RS` object constants - are `Ref`s
   here (`RSSymbols.h`, `ROMConstants.h`, generated with their ROM values by
@@ -188,13 +188,13 @@ the table).
 
 ## The ROM's objects (`ROMImport.cpp`)
 
-The ROM keeps its frames in one area, `gROMSoupData` (0x003a5da8,
-0x292180 bytes: 40597 consecutive objects - the 8634 symbols (`SYM*` in
-the debug symbols), the symbol table (the 32768-slot array at 0x0053eba1
-that `InitSymbols` names), the built-in functions frame (0x0062418d,
+The ROM keeps its frames in one area, `gROMSoupData` (0x003afda8,
+0x2cfc98 bytes: 46538 consecutive objects - the 8623 symbols (`SYM*` in
+the debug symbols), the symbol table (the 32768-slot array at 0x00570da1
+that `InitSymbols` names), the built-in functions frame (0x00639581,
 `Rbuiltinfunctions`), the protos, strings, bitmaps and bytecode of the
 built-in applications) followed by the `R`/`RS` constants and the `RSSYM`
-constants.  `gROMMagicPointerTable` (0x003a5000) is magic pointer table 0:
+constants.  `gROMMagicPointerTable` (0x003af000) is magic pointer table 0:
 a count (873) then the refs, which the MMU also maps at 0x01d80000 in the
 jump table's diagonal page layout (`ResolveMagicPtr` reads it there).
 
@@ -212,7 +212,7 @@ their readers.  It then sets the symbol table (`gROMSymbolTableRef`,
 which `InitSymbols` takes over), magic pointer table 0,
 `gROMBuiltinFunctions`, and every `R`/`RSSYM` constant.  Objects there
 count as ROM (`InROMObjectArea`): read-only, never moved, their symbols
-unique.  `test_ROMImport` runs the object system over the MP2100 D image
+unique.  `test_ROMImport` runs the object system over the ROM image
 in the repository.
 
 ## Frames parts (`FramesPart.cpp`)
@@ -324,7 +324,7 @@ iterator, symbols) and, when no ROM image is imported, gives each a
 function object in `gFunctionFrame` (`InstallHostNatives`) so that the
 frequently called functions exist.  `test_Interpreter` runs assembled
 bytecode and the ROM's own NewtonScript functions (`GetGlobalVar`,
-`DefGlobalVar`, `IsNameRef`, ...) over the MP2100 D image; `test_Frames`
+`DefGlobalVar`, `IsNameRef`, ...) over the ROM image; `test_Frames`
 runs the natives without one.
 
 Some of the ROM's built-ins are NewtonScript, not native (`nsfunctions.py

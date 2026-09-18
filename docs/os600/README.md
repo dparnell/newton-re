@@ -1,6 +1,6 @@
 # OS600 — the Newton kernel layer
 
-Working notes for the lowest layer of Newton OS 2.x as found in the MP2100 D
+Working notes for the lowest layer of Newton OS 2.x as found in the MP2x00 US
 ROM. Facts here were established with the tools in `tools/newton-rom/` and
 the Ghidra project they produce; where a table can be regenerated from the
 ROM it is (see "Regenerating"), everything else says how it was found.
@@ -213,7 +213,7 @@ Application worlds, as established: a `TForkWorld` (0x30) is a
 sharing one mutex (`TForkMutex`, a `TULockingSemaphore` with two counts),
 so only one of the family runs its main code at a time; the main world
 runs PreMain/TheMain/PostMain under the mutex.  A `TAppWorld` (0x70; vtable
-of 21 slots, `analysis/vtable.py 0x2073c`) is a `TForkWorld` whose TheMain
+of 21 slots, `analysis/vtable.py 0x20730`) is a `TForkWorld` whose TheMain
 is an event loop over a `TAppWorldState` (0x134: port, the message token,
 sizes, filter, a 256-byte event buffer): fire the `TTimerQueue`, receive
 with the next timer as timeout, `AEDispatch` the `TAEvent` received - a
@@ -453,8 +453,8 @@ so on. `SWIBoot` reads several of them on every SWI (see its head at
 ## Regenerating
 
 ```
-build\venv\Scripts\python tools\newton-rom\analysis\swi_table.py build\MP2100D --project build\ghidra --name MP2100D --ghidra <ghidra> -o docs\os600\swi-table.md
-build\venv\Scripts\python tools\newton-rom\analysis\memobj_tables.py build\MP2100D -o docs\os600\memobj-tables.md --cpp src\os600\kernel\MemObjTables.cpp
+build\venv\Scripts\python tools\newton-rom\analysis\swi_table.py build\MP2x00US --project build\ghidra --name MP2x00US --ghidra <ghidra> -o docs\os600\swi-table.md
+build\venv\Scripts\python tools\newton-rom\analysis\memobj_tables.py build\MP2x00US -o docs\os600\memobj-tables.md --cpp src\os600\kernel\MemObjTables.cpp
 ```
 
 ## Open questions (next steps)
