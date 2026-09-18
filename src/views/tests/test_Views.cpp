@@ -14,6 +14,7 @@
 #include "TextView.h"
 #include "ParagraphView.h"
 #include "Hilites.h"
+#include "ContainerView.h"
 #include "GaugeView.h"
 #include "PickView.h"
 #include "DrawShape.h"
@@ -1183,6 +1184,72 @@ TestDataHilites()
 }
 
 
+// TContainerView (views/ContainerView.h): a view whose selection is made of
+// whole children rather than a range of anything.  Its hilite either says
+// "all of me" - drawn as its bounds filled - or stands for the children that
+// are hilited themselves, and the container then hands the drawing, the
+// bounds and the removing on to them.
+static void
+TestContainerView()
+{
+	TView* c = ViewOf("ctxCV := AddView(GetRoot(), {viewClass: 78, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 90, bottom: 60}})");
+	EXPECT(c->ClassID() == clContainerView && c->DerivedFrom(clContainerView) && c->DerivedFrom(clView));
+	TContainerView* container = (TContainerView*) c;
+	EXPECT(container->ClickOptions() == 1);
+	EXPECT(container->GetHiliteView() == nil);	// nothing selected at all
+
+	// two children of its own
+	TView* a = ViewOf("ctxCVa := AddView(ctxCV, {viewClass: 74, viewFlags: 1, viewBounds: {left: 5, top: 5, right: 35, bottom: 25}})");
+	TView* b = ViewOf("ctxCVb := AddView(ctxCV, {viewClass: 74, viewFlags: 1, viewBounds: {left: 45, top: 5, right: 75, bottom: 25}})");
+	Refresh();
+
+	// HiliteAll selects the whole container, in its own coordinates
+	container->HiliteAll();
+	RefVar first(container->FirstHilite());
+	EXPECT(NOTNIL(first) && container->IsCompletelyHilited(first));
+	TContainerHilite* hilite = (TContainerHilite*) RefToAddress(first);
+	EXPECT(hilite->fComplete && hilite->fView == container);
+	EXPECT(hilite->fBounds.left == 0 && hilite->fBounds.top == 0
+		&& hilite->fBounds.right == 80 && hilite->fBounds.bottom == 50);
+	EXPECT(container->GetHiliteView() == container);	// all of it: the container itself
+
+	// and its bounds come back in the parent's coordinates
+	Rect bounds;
+	SetEmptyRect(&bounds);
+	container->GlobalHiliteBounds(&bounds);
+	EXPECT(bounds.left == 10 && bounds.top == 10 && bounds.right == 90 && bounds.bottom == 60);
+
+	// (a complete hilite draws as the container's bounds filled, but nothing
+	// in the reconstruction calls a view's DrawHilites yet except the
+	// paragraph, which draws its own: the generic draw path is NOT YET)
+	container->RemoveAllHilites();
+	EXPECT(!container->Hilited());
+
+	// a hilite of one child takes that child's hilite bounds, and the
+	// container then leaves the drawing and the bounds to the children
+	a->HiliteAll();			// the child selects itself
+	container->MakeHilite(1, a);
+	first = container->FirstHilite();
+	hilite = (TContainerHilite*) RefToAddress(first);
+	EXPECT(!hilite->fComplete && !container->IsCompletelyHilited(first));
+	EXPECT(hilite->fBounds.left == 5 && hilite->fBounds.top == 5
+		&& hilite->fBounds.right == 35 && hilite->fBounds.bottom == 25);
+	EXPECT(container->GetHiliteView() == a);	// the first hilited child
+
+	SetEmptyRect(&bounds);
+	container->GlobalHiliteBounds(&bounds);
+	EXPECT(bounds.left == 15 && bounds.top == 15 && bounds.right == 45 && bounds.bottom == 35);
+
+	// removing the container's hilite takes the children's with it
+	EXPECT(a->Hilited() && !b->Hilited());
+	container->RemoveAllHilites();
+	EXPECT(!container->Hilited() && !a->Hilited());
+
+	Eval("ctxCV:Close()");
+	Refresh();
+}
+
+
 static void
 TestKeyboard()
 {
@@ -2321,6 +2388,7 @@ main()
 		TestCommands();
 		TestHilite();
 		TestDataHilites();
+		TestContainerView();
 		TestKeyboard();
 		TestCaret();
 		TestTyping();

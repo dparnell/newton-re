@@ -1066,10 +1066,45 @@ belonging to it rather than to the view holding the hilite.
 is the view's click options.  Every caller ignores it, and the base's
 `ClickOptions` does nothing, so the call stands where the ROM has it.
 
+## Container views (`views/ContainerView.h`)
+
+`TContainerView` 0x00073b84 (class 78, over `TDataView`) is the view that
+holds others and lets them be selected - the frame a page of a notebook
+application is laid out in, and the base of `TEditView`.  What it adds is
+a selection made of whole children rather than a range of anything.
+
+A `TContainerHilite` either says "all of me" (`fComplete`, and then
+`DrawHilites` fills the container's bounds with the black pattern) or
+stands for the children that are hilited themselves, and the container
+hands `DrawHilites`, `DrawHilitedData`, `GlobalHiliteBounds` and
+`RemoveHilite` on to them - a child being removed takes its own selection
+with it.  `GetHiliteView` 0x00074618 answers which view a selection really
+belongs to: the container when it is complete, else the first hilited
+child.  `MakeHilite(child, view)` 0x00075270 makes either kind, taking the
+child's own hilite bounds for the second, and adds it through
+`aeAddHilite` so that it can be undone; `HiliteAll` is
+`RemoveAllHilites` and then `MakeHilite(0, nil)`.
+
+Bounds are gathered into a rectangle whose top and bottom start at -32768:
+that makes it empty, so the first `Union` replaces it rather than
+stretching from the top of the world, and `GlobalHiliteResizeBounds` reads
+the top as the same marker.  The ROM leaves left and right uninitialised,
+which the host cannot, so the reconstruction sets all four.
+
+`GlobalHiliteBounds` ends with the same `ClickOptions` call - and the same
+bug - as `TView`'s.
+
+NOT YET: everything the recogniser drives (`HandleWord`, `HandleInkWord`,
+`HandleCaret`, `HandleLineGesture`, `HandleScrub`, `HandleHilite`,
+`HandleTap`, `PointOverText`), the editing that goes with `TEditView`
+(`AddHilited`, `DeleteHilited`, `CopyForm`, `RealDoCommand`, `GetValue`,
+`ChildBoundsChanged`, `PointToCaret`), and `TEditView` itself.  Nothing
+calls a view's `DrawHilites` from the generic draw path yet either - the
+paragraph draws its own at the end of its `Draw`.
+
 ## Not yet
 
-The pen-driven hiliting (`HandleHilite`, `HandleScrub`) and the container
-views' hilites (`TContainerView`, `TContainerHilite`), the rest of the
+The pen-driven hiliting (`HandleHilite`, `HandleScrub`), the rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the drag icon

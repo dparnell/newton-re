@@ -14,6 +14,7 @@
 #include "TextView.h"
 #include "PictureView.h"
 #include "ParagraphView.h"
+#include "ContainerView.h"
 #include "Application.h"
 #include "GaugeView.h"
 #include "PickView.h"
@@ -147,7 +148,7 @@ BuildView(TView* parent, RefArg context)
 	{
 	case clView:
 	case clEditView:
-	case clContainerView: case clKeyboardView:
+	case clKeyboardView:
 	case clMonthView:
 	case clPolygonView:
 	case clMathExpView:
@@ -175,6 +176,9 @@ BuildView(TView* parent, RefArg context)
 		break;
 	case clDataView:
 		view = new TDataView;
+		break;
+	case clContainerView:
+		view = new TContainerView;
 		break;
 	case clGaugeView:
 		view = new TGaugeView;
