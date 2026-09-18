@@ -23,6 +23,7 @@
 #include "Recognizer.h"
 #include "StrokeCentral.h"
 #include "UnitPublic.h"
+#include "CardInfo.h"
 #include "HostTablet.h"
 #include "hal/host/Host.h"
 #include "ROMImport.h"

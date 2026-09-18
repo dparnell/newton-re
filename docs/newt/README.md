@@ -176,6 +176,30 @@ window ends the run.  `--headless seconds` runs without the window
 (`host.Newton` test: `demo/newton.ns`, which writes the display half a
 second in through a delayed action).
 
+## The NewtonScript boot (`frames/ScriptBoot.h`)
+
+`InitScriptGlobals` 0x001f3c40 makes the global frames what the ROM's own
+scripts expect before any of them runs.  `gVarFrame` is not grown slot by
+slot: a clone of `Rvarsmapstarter` takes whatever is already in it and
+then becomes it, so that the globals the ROM looks up sit in the map the
+ROM built for them.  Then `vars.classes` is a clone of
+`Rinitialinheritanceframe`, the ROM's own function frame (`Rgfunky`) is
+added to `gFunctionFrame` and hung on `vars.functions`, and the ROM's boot
+block `Rbootinitnsglobals` is run.  `RunInitScripts` 0x001f3eec runs
+`Rbootruninitscripts`, which asks each installed part for its
+InstallScript.  Both swallow an `evt.ex` out of the script, as the ROM
+does: a boot that fails part way is better than none.
+
+`InitFormFunctions` 0x001ef108 is a stub in this ROM and is kept as one.
+
+**How far the boot block gets.**  Running it by hand
+(`newtonscript --rom <image> -e 'call ROMConstant(bootinitnsglobals) with
+()'`) is the quickest way to find the next thing to reconstruct: an
+unbound native now names itself on stderr rather than answering a bare
+error code.  It currently reaches an empty `GetStores()`, the host having
+no store mounted when the script boot runs - that, not a missing
+function, is the next thing in the way.
+
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
 and the extras soup, activateStorePackages, the boot test script, the

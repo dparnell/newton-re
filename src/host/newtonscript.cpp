@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "HostNatives.h"
 
 #ifndef NEWTON_DEFAULT_ROM_IMAGE
 #define NEWTON_DEFAULT_ROM_IMAGE "DebugRom/MP2100 D/Senior DCirrusNoDebug image"
@@ -111,6 +112,7 @@ main(int argc, char** argv)
 		fprintf(stderr, "newtonscript: no ROM image at %s; running without the ROM's objects\n", romImage);
 	gObjectHeapSize = heapSize;
 	InitObjects();
+	RegisterAllNatives();
 	HostInitREP(stdout, stdin);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
 	if (displayWidth > 0)

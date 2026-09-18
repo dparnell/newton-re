@@ -1,0 +1,58 @@
+/*
+	File:		host/HostNatives.cpp
+
+	Contains:	RegisterAllNatives (HostNatives.h).
+*/
+
+#include "HostNatives.h"
+
+#include "NativeFunctions.h"
+#include "Application.h"
+#include "Cursors.h"
+#include "Dates.h"
+#include "Keyboard.h"
+#include "Locale.h"
+#include "Meetings.h"
+#include "PickView.h"
+#include "DrawShape.h"
+#include "Soups.h"
+#include "Text.h"
+#include "View.h"
+#include "UnitPublic.h"
+#include "CardInfo.h"
+
+
+void
+RegisterAllNatives(void)
+{
+	// the frames core: arithmetic, strings, arrays, the compiler, the printer
+	RegisterBuiltinNatives();
+
+	// text and the view system
+	RegisterTextNatives();
+	RegisterViewNatives();
+	RegisterShapeNatives();
+	RegisterPickNatives();
+	RegisterKeyboardNatives();
+	RegisterApplicationNatives();
+
+	// the recogniser's units
+	RegisterUnitNatives();
+
+	// the stores and soups
+	RegisterSoupNatives();
+	RegisterUnionSoupNatives();
+	RegisterCursorNatives();
+
+	// the international utilities
+	RegisterLocaleNatives();
+	RegisterDateNatives();
+	RegisterMeetingNatives();
+
+	// the cards
+	RegisterCardNatives();
+
+	// and, with no ROM built-in functions frame to fall back on, a function
+	// object in gFunctionFrame for each of them
+	InstallHostNatives();
+}

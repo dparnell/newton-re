@@ -28,6 +28,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 
+#include <stdio.h>
 #include <string.h>
 
 TInterpreter*	gInterpreter = nil;
@@ -760,6 +761,23 @@ TInterpreter::CallPlainCFunction(RefArg fn, long numArgs)
 }
 
 
+// Host: a script that asks for a ROM native we have not written yet should
+// say which one, so that the next thing to reconstruct is obvious rather
+// than a bare error code.  The boot is full of these while it is being
+// filled in, and this is how they are found.
+static void
+NoteMissingNative(ULong funcPtr)
+{
+	const ROMNativeEntry* entry = ROMNativeAt((unsigned int) funcPtr);
+	if (entry != nil)
+		fprintf(stderr, "[frames] native not reconstructed: %s (ROM 0x%08x %s)\n",
+			entry->fName, entry->fTarget, entry->fSymbol);
+	else
+		fprintf(stderr, "[frames] native not reconstructed: funcPtr 0x%08lx\n",
+			(unsigned long) funcPtr);
+}
+
+
 // ROM 0x002cf8b0 CallCFuncPtr__12TInterpreterFPFRC6RefVare_ll
 // Call a C function with the receiver and the numArgs values at the top of
 // the stack, each passed as the RefVar of its slot (StackRef).  A ROM
@@ -777,7 +795,10 @@ TInterpreter::CallCFuncPtr(void* funcPtr, long numArgs)
 		long boundArgs;
 		fn = ResolveNativeFunction((ULong) funcPtr, &boundArgs);
 		if (fn == nil)
+		{
+			NoteMissingNative((ULong) funcPtr);
 			Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);
+		}
 	}
 	#define ARG(i)	fValueStack.StackRef(first + (i))
 	switch (numArgs)

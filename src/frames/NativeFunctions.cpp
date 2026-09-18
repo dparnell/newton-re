@@ -63,6 +63,18 @@ RegisterNativeFunction(const char* symbol, void* fn, long numArgs)
 }
 
 
+// Host: the ROM's own name for the native at an address, so that a boot
+// which asks for one we have not written yet says which.
+const ROMNativeEntry*
+ROMNativeAt(unsigned int funcPtr)
+{
+	for (long i = 0; i < gROMNativeCount; i++)
+		if (gROMNativeEntries[i].fFuncPtr == funcPtr)
+			return &gROMNativeEntries[i];
+	return nil;
+}
+
+
 void*
 ResolveNativeFunction(ULong funcPtr, long* numArgs)
 {

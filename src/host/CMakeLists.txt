@@ -1,10 +1,11 @@
 # Host programs over the reconstructed OS: newtonscript, the NewtonScript
 # compiler, interpreter and REP on the host (newtonscript.cpp), with the
-# view system over a host display on request (HostViews.cpp).
+# view system over a host display on request (HostViews.cpp); every
+# reconstructed native bound in one place (HostNatives.cpp).
 # the view system on the host (HostViews.h), for newtonscript and the newt
 # world's boot
-add_library(host_views STATIC HostViews.cpp)
-target_link_libraries(host_views PUBLIC frames views recognition hal_host_display hal_host_tablet)
+add_library(host_views STATIC HostViews.cpp HostNatives.cpp)
+target_link_libraries(host_views PUBLIC frames views recognition pcmcia stores intl intl_meetings hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(newtonscript newtonscript.cpp)

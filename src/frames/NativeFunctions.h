@@ -43,6 +43,11 @@ struct ROMNativeEntry
 	const char*		fSymbol;		// that function's symbol ("FLength")
 };
 extern const ROMNativeEntry	gROMNativeEntries[];
+
+// Host: what the ROM calls the native at this funcPtr, for saying which
+// one a script wanted when it is not reconstructed yet; nil when the
+// address is not one of the ROM's.
+const ROMNativeEntry*	ROMNativeAt(unsigned int funcPtr);
 extern const long			gROMNativeCount;
 
 // the other native function objects in the ROM's object area: the methods
