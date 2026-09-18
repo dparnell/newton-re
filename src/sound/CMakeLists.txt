@@ -3,7 +3,9 @@
 # offset-binary 8-bit), the sample-rate converters (Resample.h) and the
 # TSoundCodec protocol with its mu-law implementation (SoundCodec.h).  The DDK
 # has no header for these; reconstructed from the ROM.  The
-# TSoundCodec/TSoundServer streaming is NOT YET.
+# TSoundCodec/TSoundServer streaming is NOT YET; SoundChannel.h has only
+# as much of TUSoundChannel as the volume needs, and SoundSettings.h the
+# NewtonScript volume functions over it.
 #
 # The 8-bit decoders dither with QuickDraw's Random (qd/Ports.h), as the
 # ROM's do, so the library depends on qd; the filtered resampler needs the
@@ -14,8 +16,10 @@ add_library(sound STATIC
     Resample.cpp
     ResampleTables.cpp
     SoundCodec.cpp
+    SoundChannel.cpp
+    SoundSettings.cpp
 )
-target_link_libraries(sound PUBLIC newton_config qd protocols)
+target_link_libraries(sound PUBLIC newton_config qd protocols frames utility os600_user)
 target_include_directories(sound PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

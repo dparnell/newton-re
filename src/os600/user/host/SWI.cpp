@@ -50,11 +50,15 @@ ExitWithResult(TTask* self, long result)
 }
 
 
-// nil once the run has ended (static destructors, say): the call is refused
+// nil when there is no task to make the call - before OsBoot, in a host
+// program that runs user-side code without booting the OS at all
+// (build/host/host/newtonscript is one), or once the run has ended (static
+// destructors, say): the call is refused rather than crashing on a task
+// that is not there.
 static inline TTask*
 Enter()
 {
-	if (gHostTasksStopping)
+	if (gHostTasksStopping || gCurrentTask == nil)
 		return nil;
 	TTask* self = gCurrentTask;
 	self->fRegister[kcPC] = kResumeInStub;

@@ -22,6 +22,7 @@
 #include "View.h"
 #include "UnitPublic.h"
 #include "CardInfo.h"
+#include "SoundSettings.h"
 
 
 void
@@ -55,6 +56,9 @@ RegisterAllNatives(void)
 
 	// the cards
 	RegisterCardNatives();
+
+	// the volume
+	RegisterSoundNatives();
 
 	// and, with no ROM built-in functions frame to fall back on, a function
 	// object in gFunctionFrame for each of them

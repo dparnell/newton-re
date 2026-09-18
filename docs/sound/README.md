@@ -192,9 +192,56 @@ can be produced a piece at a time.
 both directly and through instances made by name from the registry, which is
 why it boots the OS.
 
+## The volume (`SoundSettings.h`, `SoundChannel.h`)
+
+The Newton has five volume settings, 0 to 4, and the sound server works in
+decibels - 16.16 fixed point, with `0x80000000` standing for silence.
+`VolumeToDecibels` 0x001e85ac is the table between them, read out of the
+ROM's own words: an eighth of full amplitude for 1 (-18.0618 dB), a half
+for 2 (-6.0206 dB), a square root of a half for 3 (-3.0103 dB), full for 4
+and silence for 0; anything below 0 is silence and anything above 4 is
+full.  `DecibelsToVolume` 0x001e8f54 is the way back, comparing against
+settings 2's and 3's levels built up out of immediate constants, so a level
+exactly at a setting's own answers that setting.
+
+The NewtonScript functions are thin wrappers over those and the global
+sound channel, scaling by 65536 to hand decibels to and from a script as
+reals: `VolumeToDecibels` 0x001e8614 and `DecibelsToVolume` 0x001e9434,
+`GetVolume` 0x001e95f8 and `SetVolume` 0x001e9618 (a setting, nil meaning
+silence), `GetSystemVolume` 0x001e9668 and `SetSystemVolume` 0x001e96a0
+(decibels; it answers the decibels the channel settled on).
+
+`TUSoundChannel` (`SoundChannel.h`, 0x3c bytes over `TAEventHandler`) is
+the client side of the sound server: a task opens a channel on the server's
+port (`gSndPort`) and then talks to it with immediate 'newt/'usnd events,
+`SendImmediate` 0x002591c4 carrying `{command, channel, value}` and the
+answer coming back in the reply's last word.  The channel keeps the volume
+(+0x2c, `0x7fffffff` until it is set), the input gain (+0x30, 0x80) and the
+output device (+0x38) itself as well as telling the server, so it can
+answer them without a round trip: `SetVolume` 0x00258e34 stores the
+decibels whatever happens, and `GetVolume` 0x00258edc only asks the server
+when `kGestalt_Ext_VolumeInfo` said it would answer.  `GlobalSoundChannel`
+0x001e94cc is the one the script functions go through, made on demand.
+
+Only that much is reconstructed, which is what the ROM's NewtonScript boot
+needs: its last act is to read the user configuration's `soundVolumeDb` and
+call `SetSystemVolume`.  **DEVIATION:** the ROM makes a
+`TFrameSoundChannel` and opens it for output, throwing `evt.ex.fr` if that
+fails - and with no sound server it does fail, `TUSoundChannel::Open`
+answering `ERRBASE_SOUND` when `gSndPort` is 0.  The host makes a plain,
+unopened channel instead: it keeps the volume it is told and answers it,
+and plays nothing.  `SendImmediate` answers `kError_Bad_ObjectId` rather
+than sending to port 0, because it is reached from the NewtonScript boot
+before there is an OS to ask, and every caller falls back on the channel's
+own value.  `test_SoundVolume` pins the table, the channel's state and the
+script functions.
+
 ## Not yet
 
 `TGSMCodec` and `TDTMFCodec`, and the layer that drives the codecs:
 `TSoundServer`/`TSoundChannel`, `TCodecChannel`, `TDMAChannel` and the
-`SoundBlock` a `CodecBlock` is converted from, and the sound hardware driver
-the rest of `InitializeSound` starts.
+`SoundBlock` a `CodecBlock` is converted from, `TFrameSoundChannel` (the
+subclass that plays NewtonScript sound frames) and the rest of
+`TUSoundChannel` - opening and closing a channel, the scheduling
+(`Schedule`/`Start`/`Pause`/`Stop`, `SoundNode`) and the callbacks - and
+the sound hardware driver the rest of `InitializeSound` starts.

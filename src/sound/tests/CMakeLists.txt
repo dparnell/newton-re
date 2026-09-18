@@ -22,3 +22,8 @@ add_executable(test_SoundCodec test_SoundCodec.cpp)
 target_link_libraries(test_SoundCodec PRIVATE sound os600_kernel os600_user)
 add_test(NAME sound.SoundCodec COMMAND test_SoundCodec)
 set_tests_properties(sound.SoundCodec PROPERTIES TIMEOUT 60)
+
+add_executable(test_SoundVolume test_SoundVolume.cpp)
+target_link_libraries(test_SoundVolume PRIVATE sound frames)
+add_test(NAME sound.SoundVolume COMMAND test_SoundVolume)
+set_tests_properties(sound.SoundVolume PROPERTIES TIMEOUT 60)

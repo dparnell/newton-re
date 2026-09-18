@@ -28,7 +28,9 @@ GenericSWI(ULong selector, ...)
 	ULong p3 = va_arg(args, ULong);
 	ULong p4 = va_arg(args, ULong);
 	va_end(args);
-	if (gHostTasksStopping)
+	// no task to make the call (before OsBoot, or after the run has ended):
+	// refused, as SWI.cpp's Enter refuses the rest
+	if (gHostTasksStopping || gCurrentTask == nil)
 		return kError_Call_Aborted;
 	TTask* self = gCurrentTask;
 	self->fRegister[kcPC] = kResumeInStub;
