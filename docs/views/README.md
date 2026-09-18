@@ -1066,6 +1066,28 @@ belonging to it rather than to the view holding the hilite.
 is the view's click options.  Every caller ignores it, and the base's
 `ClickOptions` does nothing, so the call stands where the ROM has it.
 
+### The pen over a view
+
+`TView::HandleHilite` 0x00260218 is what makes a stroke select a view.  The
+unit's box, grown by eight pixels, has to cover more than 60 per cent of
+the view (`TRect::CoveredBy` 0x00199d24, `qd/Rects.h`: the percentage of
+the first rectangle their intersection covers, each given a pixel where it
+is degenerate).  A stroke that is long and thin counts by its long axis
+alone - a line drawn across a one-line view covers little of it - so when
+the stroke is at least twice as wide as it is tall, and lies within the
+view horizontally, the horizontal extent is taken out of both rectangles
+and the test made on the vertical one; and the other way round for a tall
+stroke.  Only gestures 1 and -1 are looked at, and a false `doIt` asks
+whether the stroke would count without acting on it; acting is
+`HiliteAll`.
+
+`TView::HandleScrub` 0x002605f0 answers the gesture the view takes (5) when
+a scrub covers more than 75 per cent of it; a read-only or write-protected
+view takes none.  The base only answers - the caller is what acts.
+
+`TView::PointInHilite` 0x0026051c asks each hilite whether it encloses the
+point, moved into the view's own coordinates.
+
 ## Container views (`views/ContainerView.h`)
 
 `TContainerView` 0x00073b84 (class 78, over `TDataView`) is the view that
@@ -1098,13 +1120,16 @@ NOT YET: everything the recogniser drives (`HandleWord`, `HandleInkWord`,
 `HandleCaret`, `HandleLineGesture`, `HandleScrub`, `HandleHilite`,
 `HandleTap`, `PointOverText`), the editing that goes with `TEditView`
 (`AddHilited`, `DeleteHilited`, `CopyForm`, `RealDoCommand`, `GetValue`,
-`ChildBoundsChanged`, `PointToCaret`), and `TEditView` itself.  Nothing
-calls a view's `DrawHilites` from the generic draw path yet either - the
-paragraph draws its own at the end of its `Draw`.
+`ChildBoundsChanged`, `PointToCaret`), and `TEditView` itself - which is
+also what calls a container's `DrawHilites` in the ROM
+(`TEditView::DrawHiliting` 0x000a7358).  There is no generic draw path
+for hilites: `TView::DrawHiliting` is empty, and each subclass that has
+them draws its own from `PostDraw` or `DrawHiliting`, as
+`TParagraphView` does.
 
 ## Not yet
 
-The pen-driven hiliting (`HandleHilite`, `HandleScrub`), the rest of the
+The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the drag icon

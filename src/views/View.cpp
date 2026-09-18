@@ -13,6 +13,7 @@
 
 #include "View.h"
 #include "Hilites.h"
+#include "UnitPublic.h"
 #include "RootView.h"
 #include "Commands.h"
 #include "Application.h"
@@ -1310,8 +1311,68 @@ TView::DrawHilitedData(void)
 
 
 // the pen-driven hiliting: NOT YET RECONSTRUCTED (the recogniser's units)
-Boolean	TView::HandleHilite(TUnitPublic*, long, Boolean)			{ return false; }	// ROM 0x00260218 HandleHilite__5TViewFP11TUnitPubliclUc
-Boolean	TView::HandleScrub(const Rect&, long, TUnitPublic*, Boolean)	{ return false; }	// ROM 0x002605f0 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
+// ROM 0x00260218 HandleHilite__5TViewFP11TUnitPubliclUc
+// A stroke over the view selects the whole of it: the unit's box, grown by
+// eight pixels, has to cover more than 60 per cent of the view.  A stroke
+// that is long and thin counts by its long axis alone - a line drawn across
+// a one-line view covers little of it, so the short axis is taken out of
+// both rectangles and the test made on the other one.  Only the hilite and
+// un-hilite gestures (1 and -1) are looked at, and a false `doIt` asks
+// whether the stroke would count without acting on it.
+Boolean
+TView::HandleHilite(TUnitPublic* unit, long gesture, Boolean doIt)
+{
+	if (gesture != 1 && gesture != -1)
+		return false;
+	Rect strokeBounds;
+	unit->Bounds(&strokeBounds);
+	InsetRect(&strokeBounds, -8, -8);
+	Rect mine = viewBounds;
+	Boolean covered = CoveredBy(&mine, &strokeBounds) > 60;
+	if (!covered)
+	{
+		long width = strokeBounds.right - strokeBounds.left;
+		long height = strokeBounds.bottom - strokeBounds.top;
+		if (width >= 2 * height
+			&& strokeBounds.left >= mine.left && strokeBounds.right <= mine.right)
+		{
+			// a flat stroke lying within the view: judge it by its height alone
+			strokeBounds.left = 0;  strokeBounds.right = 1;
+			mine.left = 0;          mine.right = 1;
+		}
+		else if (height >= 2 * width
+			&& strokeBounds.top >= mine.top && strokeBounds.bottom <= mine.bottom)
+		{
+			// and a tall one by its width
+			strokeBounds.top = 0;   strokeBounds.bottom = 1;
+			mine.top = 0;           mine.bottom = 1;
+		}
+		else
+			return false;
+		covered = CoveredBy(&mine, &strokeBounds) > 60;
+	}
+	if (!covered)
+		return false;
+	if (doIt)
+		HiliteAll();
+	return true;
+}
+
+
+// ROM 0x002605f0 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
+// A scrub over the view: the answer is the gesture the view takes (5) when
+// the scrub covers more than 75 per cent of it.  A read-only or
+// write-protected view takes none.  The base only answers - the caller is
+// what acts - so the unit and `doIt` go unused here.
+Boolean
+TView::HandleScrub(const Rect& bounds, long gesture, TUnitPublic* /*unit*/, Boolean /*doIt*/)
+{
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+		return false;
+	if (gesture != 5 && gesture != -1)
+		return false;
+	return CoveredBy(&viewBounds, &bounds) > 75 ? 5 : 0;
+}
 
 
 // ROM 0x0025feac Hilited__5TViewFv
@@ -1487,7 +1548,23 @@ TView::GlobalHilitePinnedBounds(Rect* bounds)
 }
 
 
-Boolean	TView::PointInHilite(Point&)								{ return false; }	// ROM 0x0026051c PointInHilite__5TViewFR6TPoint
+// ROM 0x0026051c PointInHilite__5TViewFR6TPoint
+// Whether the point - in the parent's coordinates - falls on any of the
+// hilites, whose bounds are the view's own.
+Boolean
+TView::PointInHilite(Point& pt)
+{
+	Point local;
+	local.v = (short) (pt.v - viewBounds.top);
+	local.h = (short) (pt.h - viewBounds.left);
+	HiliteLoop loop(this);
+	while (loop.Next())
+	{
+		if (loop.fCurrent != nil && loop.fCurrent->Encloses(local))
+			return true;
+	}
+	return false;
+}
 long	TView::ClickOptions(void)									{ return 0; }		// ROM 0x00260630 ClickOptions__5TViewFv
 void	TView::DrawScaledData(const Rect&, const Rect&, Rect*)		{ }		// ROM 0x00260638 DrawScaledData__5TViewFRC5TRectT1P5TRect
 void	TView::Scale(const Rect&, const Rect&)						{ }		// ROM 0x002606bc Scale__5TViewFRC5TRectT1

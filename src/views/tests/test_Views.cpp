@@ -1179,6 +1179,41 @@ TestDataHilites()
 	v->GlobalHiliteBounds(&bounds);
 	EXPECT(EmptyRect(&bounds));		// nothing selected, nothing added
 
+
+	// PointInHilite asks the hilites, in the view's own coordinates
+	v->HiliteAll();
+	Point on;  on.h = 30;  on.v = 50;		// inside (20,40,60,70)
+	Point off; off.h = 70; off.v = 50;
+	EXPECT(v->PointInHilite(on) && !v->PointInHilite(off));
+	v->RemoveAllHilites();
+	EXPECT(!v->PointInHilite(on));
+
+	// a scrub takes the view when it covers more than three quarters of it
+	Rect all;    SetRect(&all, 20, 40, 60, 70);
+	Rect most;   SetRect(&most, 20, 40, 60, 66);	// 26 of 30 rows: 86%
+	Rect little; SetRect(&little, 20, 40, 60, 55);	// half
+	EXPECT(v->HandleScrub(all, 5, nil, true));
+	EXPECT(v->HandleScrub(most, 5, nil, true));
+	EXPECT(!v->HandleScrub(little, 5, nil, true));
+	EXPECT(!v->HandleScrub(all, 2, nil, true));		// not a scrub gesture
+
+	// and a read-only view takes none
+	v->fFlags |= vReadOnly;
+	EXPECT(!v->HandleScrub(all, 5, nil, true));
+	v->fFlags &= ~vReadOnly;
+
+	// CoveredBy is what both of those ask (qd/Rects.h): the percentage of the
+	// first rectangle the intersection covers, a degenerate one given a pixel
+	Rect half;  SetRect(&half, 0, 0, 10, 10);
+	Rect qtr;   SetRect(&qtr, 0, 0, 5, 10);
+	Rect away;  SetRect(&away, 100, 100, 110, 110);
+	Rect line;  SetRect(&line, 0, 5, 10, 5);		// no height
+	EXPECT(CoveredBy(&half, &half) == 100);
+	EXPECT(CoveredBy(&half, &qtr) == 50);
+	EXPECT(CoveredBy(&qtr, &half) == 100);
+	EXPECT(CoveredBy(&half, &away) == 0);
+	EXPECT(CoveredBy(&half, &line) == 10);		// the line given a row of its own
+
 	Eval("ctxDH:Close()");
 	Refresh();
 }

@@ -44,7 +44,7 @@ public:
 	virtual			~TContainerHilite();
 
 	virtual THilite* Clone(void);							// ROM 0x000749bc Clone__16TContainerHiliteFv
-	virtual void	CopyFrom(THilite* other);				// ROM 0x00074a44 CopyFrom__16TContainerHiliteFP7THilite
+	void			CopyFrom(THilite* other);				// ROM 0x00074a44 CopyFrom__16TContainerHiliteFP7THilite
 
 	Boolean			fComplete;			// +0x0c  the whole container, not a set of children
 	TView*			fView;				// +0x10  the container the hilite belongs to

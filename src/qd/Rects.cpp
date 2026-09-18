@@ -281,3 +281,27 @@ CheapDistance(const Point& a, const Point& b)
 		dv = -dv;
 	return (dh < dv) ? dv + (dh >> 1) : dh + (dv >> 1);
 }
+
+// ROM 0x00199d24 CoveredBy__5TRectCFRC5TRect
+// How much of r, as a percentage, the intersection with other covers.  A
+// rectangle with no width or height would intersect nothing, so each is
+// given a pixel first - the same widening THilite::Overlaps does.
+long
+CoveredBy(const Rect* r, const Rect* other)
+{
+	Rect mine = *r;
+	Rect theirs = *other;
+	if (mine.left == mine.right)
+		mine.right++;
+	if (mine.top == mine.bottom)
+		mine.bottom++;
+	if (theirs.left == theirs.right)
+		theirs.right++;
+	if (theirs.top == theirs.bottom)
+		theirs.bottom++;
+	if (!SectRect(&mine, &theirs, &theirs))
+		return 0;
+	long covered = (long) (theirs.bottom - theirs.top) * (theirs.right - theirs.left);
+	long whole = (long) (mine.bottom - mine.top) * (mine.right - mine.left);
+	return covered * 100 / whole;
+}

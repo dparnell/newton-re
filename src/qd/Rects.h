@@ -30,6 +30,7 @@ Boolean	PtInRect(Point pt, const Rect* r);
 Boolean	EmptyRect(const Rect* r);
 Boolean	EqualRect(const Rect* a, const Rect* b);
 Boolean	SectRect(const Rect* a, const Rect* b, Rect* result);		// ==> whether they intersect (result empty when not)
+long	CoveredBy(const Rect* r, const Rect* other);		// ROM 0x00199d24 CoveredBy__5TRectCFRC5TRect - how much of r (per cent) their intersection covers
 void	UnionRect(const Rect* a, const Rect* b, Rect* result);		// an empty one ignored
 void	JoinRect(const Rect* a, const Rect* b, Rect* result);		// the bounds of both (an empty one ignored)
 Boolean	RSect(Rect* result, long count, const Rect* first, ...);	// the intersection of count rects

@@ -41,18 +41,21 @@
 #endif
 
 
+// The virtuals are declared in the ROM's vtable order (analysis/vtable.py
+// on THilite's); CopyFrom is not one of them - Clone calls it knowing the
+// concrete type.
 class THilite
 {
 public:
 					THilite();								// ROM 0x00260bdc __ct__7THiliteFv
 	virtual			~THilite();								// ROM 0x00260c10 __dt__7THiliteFv
 
-	virtual void	Area(RgnHandle rgn);					// ROM 0x00260c28 Area__7THiliteFv - the bounds, as a region
 	virtual THilite* Clone(void);							// ROM 0x00260c70 Clone__7THiliteFv
-	virtual void	CopyFrom(THilite* other);				// ROM 0x00260c9c CopyFrom__7THiliteFP7THilite
 	virtual void	UpdateBounds(void);						// ROM 0x00260cb0 UpdateBounds__7THiliteFv - the base has none to update
 	virtual Boolean	Overlaps(const Rect& r);				// ROM 0x00260cb4 Overlaps__7THiliteFRC5TRect
 	virtual Boolean	Encloses(const Point& pt);				// ROM 0x00260cbc Encloses__7THiliteFRC6TPoint
+	virtual void	Area(RgnHandle rgn);					// ROM 0x00260c28 Area__7THiliteFv - the bounds, as a region
+	void			CopyFrom(THilite* other);				// ROM 0x00260c9c CopyFrom__7THiliteFP7THilite
 
 	Rect			fBounds;			// +0x04  in the view's own coordinates
 };
@@ -70,11 +73,11 @@ public:
 					TParagraphHilite(long start, long end);	// ROM 0x00182e68 __ct__16TParagraphHiliteFl (which takes the text length)
 	virtual			~TParagraphHilite();					// ROM 0x00182ef8 __dt__16TParagraphHiliteFv
 
-	virtual void	Area(RgnHandle rgn);					// ROM 0x001830c4 Area__16TParagraphHiliteFv
 	virtual THilite* Clone(void);							// ROM 0x00182f50 Clone__16TParagraphHiliteFv
-	virtual void	CopyFrom(THilite* other);				// ROM 0x00182fac CopyFrom__16TParagraphHiliteFP7THilite
 	virtual Boolean	Overlaps(const Rect& r);				// ROM 0x00182fec Overlaps__16TParagraphHiliteFRC5TRect
 	virtual Boolean	Encloses(const Point& pt);				// ROM 0x00183070 Encloses__16TParagraphHiliteFRC6TPoint
+	virtual void	Area(RgnHandle rgn);					// ROM 0x001830c4 Area__16TParagraphHiliteFv
+	void			CopyFrom(THilite* other);				// ROM 0x00182fac CopyFrom__16TParagraphHiliteFP7THilite
 
 	Boolean			HasArea(void) const		{ return fArea != nil && !EmptyRgn(fArea); }
 	void			SetArea(RgnHandle rgn);					// host: the region the paragraph worked out, and its bounding box
