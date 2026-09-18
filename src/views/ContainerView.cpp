@@ -257,11 +257,10 @@ TContainerView::DrawHilitedData(void)
 
 
 // ROM 0x00074088 GlobalHiliteBounds__14TContainerViewFP5TRect
-// The whole container's bounds, or the union of the hilited children's.
-//
-// BUG (the ROM's), as in TView's: the function ends by calling ClickOptions
-// and answering its result.  Kept where the ROM has it.
-void
+// The whole container's bounds, or the union of the hilited children's;
+// the answer, as in TView's, is the click options that go with the
+// selection.
+long
 TContainerView::GlobalHiliteBounds(Rect* bounds)
 {
 	if (Hilited())
@@ -281,5 +280,5 @@ TContainerView::GlobalHiliteBounds(Rect* bounds)
 			UnionRect(bounds, &r, bounds);
 		}
 	}
-	ClickOptions();
+	return ClickOptions();
 }

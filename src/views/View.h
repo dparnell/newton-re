@@ -230,7 +230,7 @@ public:
 	virtual void	DeleteHilited(RefArg hilite);						// ROM 0x002601cc DeleteHilited__5TViewFRC6RefVar
 	virtual void	RemoveHilite(RefArg hilite);						// ROM 0x0025ff60 RemoveHilite__5TViewFRC6RefVar
 	virtual void	RemoveAllHilites(void);								// ROM 0x0026002c RemoveAllHilites__5TViewFv
-	virtual void	GlobalHiliteBounds(Rect* bounds);					// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
+	virtual long	GlobalHiliteBounds(Rect* bounds);					// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
 	virtual void	GlobalHiliteResizeBounds(Rect* bounds);				// ROM 0x002604dc GlobalHiliteResizeBounds__5TViewFP5TRect
 	virtual void	GlobalHilitePinnedBounds(Rect* bounds);				// ROM 0x00260514 GlobalHilitePinnedBounds__5TViewFP5TRect
 	virtual Boolean	PointInHilite(Point& pt);							// ROM 0x0026051c PointInHilite__5TViewFR6TPoint

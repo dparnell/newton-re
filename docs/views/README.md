@@ -1061,10 +1061,11 @@ unions their bounds into the parent's coordinates; `DeleteHilited`
 0x002601cc asks the *parent* to remove what is selected here, the data
 belonging to it rather than to the view holding the hilite.
 
-**BUG (the ROM's), kept:** `GlobalHiliteBounds` ends by calling
-`ClickOptions` and answering its result - a bounds routine whose answer
-is the view's click options.  Every caller ignores it, and the base's
-`ClickOptions` does nothing, so the call stands where the ROM has it.
+`GlobalHiliteBounds` answers as well as fills in: the click options that go
+with the selection.  Bit 1 says it can be resized, and
+`TEditView::DrawHiliting` draws a resize border round it when it is set.
+A leaf view answers its own `ClickOptions`; an editor ANDs its hilited
+children's answers together, except bit 2, which it ORs.
 
 ### The pen over a view
 
@@ -1113,8 +1114,7 @@ stretching from the top of the world, and `GlobalHiliteResizeBounds` reads
 the top as the same marker.  The ROM leaves left and right uninitialised,
 which the host cannot, so the reconstruction sets all four.
 
-`GlobalHiliteBounds` ends with the same `ClickOptions` call - and the same
-bug - as `TView`'s.
+`GlobalHiliteBounds` answers the same click options as `TView`'s.
 
 NOT YET: everything the recogniser drives (`HandleWord`, `HandleInkWord`,
 `HandleCaret`, `HandleLineGesture`, `HandleScrub`, `HandleHilite`,

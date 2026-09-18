@@ -1489,19 +1489,17 @@ TView::RemoveAllHilites(void)
 
 // ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
 // The union of the hilites' bounds, in the parent's coordinates, added to
-// whatever the caller had in bounds already (an empty rect, usually).  A
-// view with nothing selected leaves it alone.
-//
-// BUG (the ROM's): the function ends by calling ClickOptions and answering
-// its result - a bounds routine whose answer is the view's click options.
-// Every caller ignores it, and the base's ClickOptions does nothing, so the
-// call is kept where the ROM has it rather than dropped.
-void
+// whatever the caller had in bounds already (an empty rect, usually), and
+// the answer is the click options that go with the selection - bit 1 says
+// it can be resized, and TEditView::DrawHiliting draws a resize border
+// round it.  A leaf view answers its own ClickOptions; a view with nothing
+// selected leaves the bounds alone and answers 0.
+long
 TView::GlobalHiliteBounds(Rect* bounds)
 {
 	HiliteLoop loop(this);
 	if (!loop.Next())
-		return;
+		return 0;
 	do
 	{
 		Rect r = loop.fCurrent != nil ? loop.fCurrent->fBounds : viewBounds;
@@ -1509,7 +1507,7 @@ TView::GlobalHiliteBounds(Rect* bounds)
 		UnionRect(bounds, &r, bounds);
 	}
 	while (loop.Next());
-	ClickOptions();
+	return ClickOptions();
 }
 
 

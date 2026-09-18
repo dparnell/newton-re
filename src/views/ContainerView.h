@@ -65,7 +65,7 @@ public:
 	virtual void	HiliteAll(void);						// ROM 0x00073bc0 HiliteAll__14TContainerViewFv
 	virtual void	RemoveHilite(RefArg hilite);			// ROM 0x00074564 RemoveHilite__14TContainerViewFRC6RefVar
 	virtual void	RemoveAllHilites(void);					// ROM 0x00073bf4 RemoveAllHilites__14TContainerViewFv - TView's, word for word
-	virtual void	GlobalHiliteBounds(Rect* bounds);		// ROM 0x00074088 GlobalHiliteBounds__14TContainerViewFP5TRect
+	virtual long	GlobalHiliteBounds(Rect* bounds);		// ROM 0x00074088 GlobalHiliteBounds__14TContainerViewFP5TRect
 	virtual long	ClickOptions(void);						// ROM 0x000742c8 ClickOptions__14TContainerViewFv
 
 	// the container's own
