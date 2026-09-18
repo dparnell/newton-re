@@ -4,13 +4,13 @@
 	Contains:	TCRC16 and TIrCRC16 (CRC16.h) - the ROM's two CRC-16
 				accumulators.  The tables are in CRC16Tables.cpp.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "CRC16.h"
 
 
-// ROM 0x0004a5a0 Reset__6TCRC16Fv
+// ROM 0x00049cd0 Reset__6TCRC16Fv
 void
 TCRC16::Reset()
 {
@@ -18,7 +18,7 @@ TCRC16::Reset()
 }
 
 
-// ROM 0x0004a5ac ComputeCRC__6TCRC16FUc
+// ROM 0x00049cdc ComputeCRC__6TCRC16FUc
 void
 TCRC16::ComputeCRC(UByte byte)
 {
@@ -27,7 +27,7 @@ TCRC16::ComputeCRC(UByte byte)
 }
 
 
-// ROM 0x0004a6a0 ComputeCRC__6TCRC16FPUcUl
+// ROM 0x00049dd0 ComputeCRC__6TCRC16FPUcUl
 void
 TCRC16::ComputeCRC(UByte* data, ULong count)
 {
@@ -39,7 +39,7 @@ TCRC16::ComputeCRC(UByte* data, ULong count)
 }
 
 
-// ROM 0x0004a700 Get__6TCRC16Fv
+// ROM 0x00049e30 Get__6TCRC16Fv
 void
 TCRC16::Get()
 {
@@ -48,7 +48,7 @@ TCRC16::Get()
 }
 
 
-// ROM 0x000ef3d8 Reset__8TIrCRC16Fv
+// ROM 0x000edd80 Reset__8TIrCRC16Fv
 void
 TIrCRC16::Reset()
 {
@@ -56,7 +56,7 @@ TIrCRC16::Reset()
 }
 
 
-// ROM 0x000ef3e8 ComputeCRC__8TIrCRC16FUc
+// ROM 0x000edd90 ComputeCRC__8TIrCRC16FUc
 void
 TIrCRC16::ComputeCRC(UByte byte)
 {
@@ -64,7 +64,7 @@ TIrCRC16::ComputeCRC(UByte byte)
 }
 
 
-// ROM 0x000ef414 Finalize__8TIrCRC16Fv
+// ROM 0x000eddbc Finalize__8TIrCRC16Fv
 void
 TIrCRC16::Finalize()
 {
@@ -72,7 +72,7 @@ TIrCRC16::Finalize()
 }
 
 
-// ROM 0x000ef424 Get__8TIrCRC16Fv
+// ROM 0x000eddcc Get__8TIrCRC16Fv
 void
 TIrCRC16::Get()
 {

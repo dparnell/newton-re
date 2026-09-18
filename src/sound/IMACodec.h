@@ -6,7 +6,7 @@
 				CheckState re-syncs a decoder to a block's header.  This is
 				the standard IMA ADPCM (an adaptive step size chosen from an
 				89-entry table, stepped by a per-nibble index adjustment),
-				as the ROM (0x000e98d0-0x000e9c00) codes the Newton's
+				as the ROM (0x000e82f8-0x000e8628) codes the Newton's
 				recorded sound.
 
 				The compressed form is a run of 0x40-sample (kIMABlockSize)
@@ -24,7 +24,7 @@
 				compressed stream's bytes - the nibbles and the header - are
 				kept exactly as the ROM lays them, so the two interoperate).
 
-	The DDK has no header for these; reconstructed from the MP2100 D ROM,
+	The DDK has no header for these; reconstructed from the MP2x00 US ROM,
 	each function citing its origin.  A TIMACodec (a TSoundCodec) wraps them
 	for the sound server (NOT YET).
 */
@@ -63,16 +63,16 @@ extern const short	kIMAIndexTable[16];		// ROM 0x0034f5dc (unnamed)
 // Pack numSamples 16-bit PCM samples (from src, taking every srcStride'th
 // sample starting at channel) into dst as IMA blocks; state carries across
 // calls.  numSamples is rounded down to whole blocks.
-void	CompressIMA(const short* src, signed char* dst, ULong numSamples, IMAState* state, ULong srcStride, ULong channel);	// ROM 0x000e98d0 CompressIMA__FPsPScUlP8IMAStateN23
+void	CompressIMA(const short* src, signed char* dst, ULong numSamples, IMAState* state, ULong srcStride, ULong channel);	// ROM 0x000e82f8 CompressIMA__FPsPScUlP8IMAStateN23
 
 // Re-sync state to the block header src points at: if the header's step
 // index or its predictor (within 0x80) disagree with state, reset to it.
-void	CheckState(const signed char* src, IMAState* state);	// ROM 0x000e9a7c CheckState__FPScP8IMAState
+void	CheckState(const signed char* src, IMAState* state);	// ROM 0x000e84a4 CheckState__FPScP8IMAState
 
 // Unpack numBlocks IMA blocks (from src) into dst; outFormat selects the
 // output: 0 = 8-bit unsigned mono, 1 = 8-bit stride 2, 2 = 16-bit,
 // 3 = 16-bit stride 2 (a channel of an interleaved pair).  numChannels
 // steps the source over the other channels' blocks.
-void	ExpandIMA(const signed char* src, void* dst, IMAState* state, ULong numBlocks, ULong numChannels, ULong outFormat);	// ROM 0x000e9ad8 ExpandIMA__FPScT1P8IMAStateUlN24
+void	ExpandIMA(const signed char* src, void* dst, IMAState* state, ULong numBlocks, ULong numChannels, ULong outFormat);	// ROM 0x000e8500 ExpandIMA__FPScT1P8IMAStateUlN24
 
 #endif	/* __IMACODEC_H */

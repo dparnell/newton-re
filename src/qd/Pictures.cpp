@@ -4,7 +4,7 @@
 	Contains:	Drawing bitmap frames: TPixelObj, DrawBitmap, Justify,
 				DrawPicture.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Pictures.h"
@@ -26,7 +26,7 @@ const long kGrafErrNotABitmap = -8803;			// the ROM's 0xffffdd9d
 	T P i x e l O b j
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0003e868 __ct__9TPixelObjFv
+// ROM 0x0003e7b8 __ct__9TPixelObjFv
 TPixelObj::TPixelObj()
 {
 	memset(&fPixMap, 0, sizeof(fPixMap));
@@ -39,7 +39,7 @@ TPixelObj::TPixelObj()
 }
 
 
-// ROM 0x0003e8bc __dt__9TPixelObjFv
+// ROM 0x0003e80c __dt__9TPixelObjFv
 TPixelObj::~TPixelObj()
 {
 	if (fGrayTable != nil)
@@ -51,10 +51,22 @@ TPixelObj::~TPixelObj()
 }
 
 
-// ROM 0x00041d40 FramBitMapToPixMap__9TPixelObjFRC10FramBitmapP8PixelMap
+// ROM 0x00041448 FramBitMapToPixMap__9TPixelObjFRC10FramBitmap
 // A pixel map over a 'bits binary: its rows, row bytes and bounds (the
 // binary is a persistent format: its halfwords big-endian), the depth as
 // found, 72 dpi, and the gray table when there is one.
+//
+// This is the one place the two ROMs we have differ in their interface
+// rather than only in their addresses, and this follows the later of the
+// two.  The MP2x00 US build's TPixelObj is 0x34 bytes with a single
+// PixelMap in it, and this method fills that one map and answers it
+// (FramBitMapToPixMap(FramBitmap const&)), so Init(picture, withMask)
+// converts the mask into it, keeps the pointer, and then converts the
+// image over the top of it: the mask and the image end up the same map.
+// The MP2100 D build's TPixelObj is 0x50 bytes with a second PixelMap for
+// the mask, and its method takes the map to fill
+// (0x00041d40 FramBitMapToPixMap__9TPixelObjFRC10FramBitmapP8PixelMap),
+// which is what the mask drawing needs and what is written here.
 void
 TPixelObj::FramBitMapToPixMap(const FramBitmap& bits, PixelMap* map)
 {
@@ -73,7 +85,7 @@ TPixelObj::FramBitMapToPixMap(const FramBitmap& bits, PixelMap* map)
 }
 
 
-// ROM 0x000419a4 GetFramBitmap__9TPixelObjFv
+// ROM 0x000410ac GetFramBitmap__9TPixelObjFv
 // The bitmap frame's bits for the port's depth: the bits slot when it has
 // no colorData; else the colorData's (a frame: its bitDepth and cBits; an
 // array: the entry of the port's depth, or the nearest - the deepest not
@@ -119,7 +131,7 @@ TPixelObj::GetFramBitmap(void)
 }
 
 
-// ROM 0x0003f718 Init__9TPixelObjFRC6RefVar
+// ROM 0x0003f614 Init__9TPixelObjFRC6RefVar
 // The picture readied for drawing: a 'picture binary is refused
 // (evt.ex.graf), a bitmap frame gives its bits (a frame that is not a
 // bitmap: its data), which are locked and made a pixel map (a 'pixels
@@ -151,7 +163,7 @@ TPixelObj::Init(RefArg picture)
 }
 
 
-// ROM 0x00041818 Init__9TPixelObjFRC6RefVarUc
+// ROM 0x00040f28 Init__9TPixelObjFRC6RefVarUc
 // The same for a frame with a data slot ('pixels or bits), and the mask
 // made a pixel map too (always when asked, else only... the ROM makes the
 // mask's map when there is a mask, and the bits' map when asked or there
@@ -193,7 +205,7 @@ TPixelObj::Init(RefArg picture, Boolean withBits)
 	D r a w i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0003ea68 DrawBitmap__FRC6RefVarP5TRectl
+// ROM 0x0003e9b8 DrawBitmap__FRC6RefVarP5TRectl
 // The bitmap's pixels copied into the box in the mode (a box of no width
 // takes the bits' size).
 void
@@ -213,7 +225,7 @@ DrawBitmap(RefArg bitmap, Rect* box, long mode)
 }
 
 
-// ROM 0x0018b5f0 Justify__FP5TRectRC5TRectUl
+// ROM 0x001895c0 Justify__FP5TRectRC5TRectUl
 // The rectangle placed in the box by the viewJustify bits: a box of no
 // size takes the rectangle's; vertically at the top, centred (never
 // above the top), at the bottom, or the box's full height; horizontally
@@ -266,7 +278,7 @@ Justify(Rect* r, const Rect& box, ULong justify)
 }
 
 
-// ROM 0x0018b82c DrawPicture__FRC6RefVarRC5TRectUll
+// ROM 0x001897fc DrawPicture__FRC6RefVarRC5TRectUll
 // A bitmap frame (one with bits or colorData) drawn in the box: its
 // bounds justified into the box ("bad pictBounds frame" without proper
 // bounds); mode 8 (patCopy) draws the mask first in srcBic and the bits

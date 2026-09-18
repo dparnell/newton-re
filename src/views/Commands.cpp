@@ -3,7 +3,7 @@
 
 	Contains:	Command frames: MakeCommand and the accessors.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Commands.h"
@@ -15,7 +15,7 @@
 #include "NewtonExceptions.h"
 
 
-// ROM 0x00070dc4 MakeCommand__FUlP10TResponderl
+// ROM 0x00070424 MakeCommand__FUlP10TResponderl
 // A command frame (a clone of protoCommand) with the id, the receiver's
 // context ('application for the application) and the parameter.
 //
@@ -44,7 +44,7 @@ MakeCommand(ULong id, TResponder* receiver, Long parameter)
 }
 
 
-// ROM 0x00070e88 CommandReceiver__FRC6RefVar
+// ROM 0x000704e8 CommandReceiver__FRC6RefVar
 // The receiver: the application for 'application, else the context's view.
 TResponder*
 CommandReceiver(RefArg cmd)
@@ -56,7 +56,7 @@ CommandReceiver(RefArg cmd)
 }
 
 
-// ROM 0x0007117c CommandID__FRC6RefVar
+// ROM 0x000707dc CommandID__FRC6RefVar
 long
 CommandID(RefArg cmd)
 {
@@ -67,7 +67,7 @@ CommandID(RefArg cmd)
 }
 
 
-// ROM 0x000711b8 CommandSetID__FRC6RefVarUl
+// ROM 0x00070818 CommandSetID__FRC6RefVarUl
 void
 CommandSetID(RefArg cmd, ULong id)
 {
@@ -75,7 +75,7 @@ CommandSetID(RefArg cmd, ULong id)
 }
 
 
-// ROM 0x000711f8 CommandResult__FRC6RefVar
+// ROM 0x00070858 CommandResult__FRC6RefVar
 long
 CommandResult(RefArg cmd)
 {
@@ -86,7 +86,7 @@ CommandResult(RefArg cmd)
 }
 
 
-// ROM 0x00071234 CommandSetResult__FRC6RefVarl
+// ROM 0x00070894 CommandSetResult__FRC6RefVarl
 void
 CommandSetResult(RefArg cmd, long result)
 {
@@ -94,7 +94,7 @@ CommandSetResult(RefArg cmd, long result)
 }
 
 
-// ROM 0x00071274 CommandParameter__FRC6RefVar
+// ROM 0x000708d4 CommandParameter__FRC6RefVar
 Long
 CommandParameter(RefArg cmd)
 {
@@ -105,7 +105,7 @@ CommandParameter(RefArg cmd)
 }
 
 
-// ROM 0x000712b0 CommandSetParameter__FRC6RefVarl
+// ROM 0x00070910 CommandSetParameter__FRC6RefVarl
 void
 CommandSetParameter(RefArg cmd, Long parameter)
 {
@@ -113,7 +113,7 @@ CommandSetParameter(RefArg cmd, Long parameter)
 }
 
 
-// ROM 0x000712f0 CommandFrameParameter__FRC6RefVar
+// ROM 0x00070950 CommandFrameParameter__FRC6RefVar
 Ref
 CommandFrameParameter(RefArg cmd)
 {
@@ -121,7 +121,7 @@ CommandFrameParameter(RefArg cmd)
 }
 
 
-// ROM 0x0007130c CommandSetFrameParameter__FRC6RefVarT1
+// ROM 0x0007096c CommandSetFrameParameter__FRC6RefVarT1
 void
 CommandSetFrameParameter(RefArg cmd, RefArg parameter)
 {
@@ -145,7 +145,7 @@ CommandParams(RefArg cmd, long index)
 }
 
 
-// ROM 0x00070fc4 CommandIndexParameter__FRC6RefVarl
+// ROM 0x00070624 CommandIndexParameter__FRC6RefVarl
 // params[index]; 0 beyond the array (or without one).
 Long
 CommandIndexParameter(RefArg cmd, long index)
@@ -157,7 +157,7 @@ CommandIndexParameter(RefArg cmd, long index)
 }
 
 
-// ROM 0x00070f08 CommandSetIndexParameter__FRC6RefVarlT2
+// ROM 0x00070568 CommandSetIndexParameter__FRC6RefVarlT2
 void
 CommandSetIndexParameter(RefArg cmd, long index, Long parameter)
 {
@@ -166,7 +166,7 @@ CommandSetIndexParameter(RefArg cmd, long index, Long parameter)
 }
 
 
-// ROM 0x00071058 CommandSetIndexFrame__FRC6RefVarlT1
+// ROM 0x000706b8 CommandSetIndexFrame__FRC6RefVarlT1
 void
 CommandSetIndexFrame(RefArg cmd, long index, RefArg parameter)
 {
@@ -175,7 +175,7 @@ CommandSetIndexFrame(RefArg cmd, long index, RefArg parameter)
 }
 
 
-// ROM 0x00071104 MarkUndoCommand__FRC6RefVar
+// ROM 0x00070764 MarkUndoCommand__FRC6RefVar
 void
 MarkUndoCommand(RefArg cmd)
 {
@@ -183,7 +183,7 @@ MarkUndoCommand(RefArg cmd)
 }
 
 
-// ROM 0x00071144 IsUndoCommand__FRC6RefVar
+// ROM 0x000707a4 IsUndoCommand__FRC6RefVar
 Boolean
 IsUndoCommand(RefArg cmd)
 {
@@ -191,7 +191,7 @@ IsUndoCommand(RefArg cmd)
 }
 
 
-// ROM 0x000345bc MakeRunScriptCommand__FRC6RefVarN21
+// ROM 0x0003450c MakeRunScriptCommand__FRC6RefVarN21
 // An aeRunScript command for the application: the frame parameter
 // [script, args, context] - the view of the context runs the script.
 Ref
@@ -207,7 +207,7 @@ MakeRunScriptCommand(RefArg context, RefArg script, RefArg args)
 }
 
 
-// ROM 0x0003467c MakeUndoCommand__FRC6RefVarN21
+// ROM 0x000345cc MakeUndoCommand__FRC6RefVarN21
 // The same with an 'undo array: a function is called, a message sent to
 // the receiver.
 Ref
@@ -223,7 +223,7 @@ MakeUndoCommand(RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x00266cec GetStrokeBundleFromCommand__FRC6RefVar
+// ROM 0x00268c24 GetStrokeBundleFromCommand__FRC6RefVar
 // The strokes of a recognition command: the frame parameter, or made
 // from the unit the parameter points to (NOT YET RECONSTRUCTED: the
 // units - TUnitPublic::WordInfo and Strokes; the frame parameter alone).
@@ -234,7 +234,7 @@ GetStrokeBundleFromCommand(RefArg cmd)
 }
 
 
-// ROM 0x000b07a8 GetResponder__FRC6RefVarT1
+// ROM 0x000af5b0 GetResponder__FRC6RefVarT1
 // The responder a name means from a context: the application for
 // 'application, else the view (GetView).
 TResponder*
@@ -246,7 +246,7 @@ GetResponder(RefArg context, RefArg name)
 }
 
 
-// ROM 0x000b07fc FailGetResponder__FRC6RefVarT1
+// ROM 0x000af604 FailGetResponder__FRC6RefVarT1
 TResponder*
 FailGetResponder(RefArg context, RefArg name)
 {
@@ -257,7 +257,7 @@ FailGetResponder(RefArg context, RefArg name)
 }
 
 
-// ROM 0x0017c29c CommandText__FRC6RefVar
+// ROM 0x0017a26c CommandText__FRC6RefVar
 Ref
 CommandText(RefArg cmd)
 {
@@ -265,7 +265,7 @@ CommandText(RefArg cmd)
 }
 
 
-// ROM 0x0017c28c CommandSetText__FRC6RefVarT1
+// ROM 0x0017a25c CommandSetText__FRC6RefVarT1
 void
 CommandSetText(RefArg cmd, RefArg text)
 {

@@ -12,7 +12,7 @@
 				TaskConstructor / TaskMain / TaskDestructor on it, reporting the
 				constructor's result to the parent through fMotherPort when asked.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserTasks.h"
@@ -31,7 +31,7 @@ const ULong kTaskWorldStartMsgType = 0x00800000;
 	TUTask
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00259c9c Init__6TUTaskFPFPvUlT2_vUlT2PvN22
+// ROM 0x0025bbd4 Init__6TUTaskFPFPvUlT2_vUlT2PvN22
 long
 TUTask::Init(TaskProcPtr pc, ULong stackSize, ULong objectSize, void* theObject, ULong priority, ULong taskName)
 {
@@ -39,7 +39,7 @@ TUTask::Init(TaskProcPtr pc, ULong stackSize, ULong objectSize, void* theObject,
 }
 
 
-// ROM 0x00259cdc Init__6TUTaskFPFPvUlT2_vUlT2PvN32
+// ROM 0x0025bc14 Init__6TUTaskFPFPvUlT2_vUlT2PvN32
 // The object is exposed through a shared memory for the kernel to copy; the
 // temporary handle goes once the task exists (environment 0: the caller's).
 long
@@ -62,7 +62,7 @@ TUTask::Init(TaskProcPtr pc, ULong stackSize, ULong objectSize, void* theObject,
 }
 
 
-// ROM 0x00259d8c Start__6TUTaskFv
+// ROM 0x0025bcc4 Start__6TUTaskFv
 long
 TUTask::Start()
 {
@@ -73,7 +73,7 @@ TUTask::Start()
 }
 
 
-// ROM 0x00259dc8 Suspend__6TUTaskFv
+// ROM 0x0025bd00 Suspend__6TUTaskFv
 long
 TUTask::Suspend()
 {
@@ -84,7 +84,7 @@ TUTask::Suspend()
 }
 
 
-// ROM 0x00259e04 GetRegister__6TUTaskFUlPUl
+// ROM 0x0025bd3c GetRegister__6TUTaskFUlPUl
 long
 TUTask::GetRegister(ULong reg, ULong* value)
 {
@@ -98,7 +98,7 @@ TUTask::GetRegister(ULong reg, ULong* value)
 }
 
 
-// ROM 0x00259e50 SetRegister__6TUTaskFUlT1
+// ROM 0x0025bd88 SetRegister__6TUTaskFUlT1
 long
 TUTask::SetRegister(ULong reg, ULong value)
 {
@@ -115,7 +115,7 @@ TUTask::SetRegister(ULong reg, ULong value)
 	TUTaskWorld
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00259940 __ct__11TUTaskWorldFv
+// ROM 0x0025b878 __ct__11TUTaskWorldFv
 TUTaskWorld::TUTaskWorld()
 {
 	fIsSpawned = false;
@@ -124,13 +124,13 @@ TUTaskWorld::TUTaskWorld()
 }
 
 
-// ROM 0x00259994 __dt__11TUTaskWorldFv
+// ROM 0x0025b8cc __dt__11TUTaskWorldFv
 TUTaskWorld::~TUTaskWorld()
 {
 }
 
 
-// ROM 0x00259b14 StartTask__11TUTaskWorldFUcT1UlN33
+// ROM 0x0025ba4c StartTask__11TUTaskWorldFUcT1UlN33
 long
 TUTaskWorld::StartTask(Boolean wantResultFromChild, Boolean wantOwnerShip, TTimeout startTimeout, ULong stackSize, ULong priority, ULong taskName)
 {
@@ -138,7 +138,7 @@ TUTaskWorld::StartTask(Boolean wantResultFromChild, Boolean wantOwnerShip, TTime
 }
 
 
-// ROM 0x002599e0 StartTask__11TUTaskWorldFUcT1UlN43
+// ROM 0x0025b918 StartTask__11TUTaskWorldFUcT1UlN43
 // Spawn: make a task running TaskEntry on a copy of this object, start it,
 // take ownership of it if wanted (the kernel made it owned by nobody and
 // assigned to us; the destroy the CopyObject(0) attempts is refused, then
@@ -171,7 +171,7 @@ TUTaskWorld::StartTask(Boolean wantResultFromChild, Boolean wantOwnerShip, TTime
 }
 
 
-// ROM 0x00259b5c TaskEntry__11TUTaskWorldFUlT1
+// ROM 0x0025ba94 TaskEntry__11TUTaskWorldFUlT1
 // The child's side, running on the copy: wait for the parent's RPC if it
 // wants a result, construct, answer, run, destruct, and unmake the copy in
 // place.
@@ -211,7 +211,7 @@ TUTaskWorld::TaskEntryProc(void* theObject, ULong size, TObjectId taskId)
 }
 
 
-// ROM 0x00259c50 TaskConstructor__11TUTaskWorldFv
+// ROM 0x0025bb88 TaskConstructor__11TUTaskWorldFv
 long
 TUTaskWorld::TaskConstructor()
 {
@@ -219,7 +219,7 @@ TUTaskWorld::TaskConstructor()
 }
 
 
-// ROM 0x00259c58 TaskDestructor__11TUTaskWorldFv
+// ROM 0x0025bb90 TaskDestructor__11TUTaskWorldFv
 void
 TUTaskWorld::TaskDestructor()
 {
@@ -230,7 +230,7 @@ TUTaskWorld::TaskDestructor()
 	Free functions
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002577b8 TaskGiveObject__FUlT1
+// ROM 0x002596f0 TaskGiveObject__FUlT1
 long
 TaskGiveObject(TObjectId id, TObjectId assignToTaskId)
 {
@@ -238,7 +238,7 @@ TaskGiveObject(TObjectId id, TObjectId assignToTaskId)
 }
 
 
-// ROM 0x002577c8 TaskAcceptObject__FUl
+// ROM 0x00259700 TaskAcceptObject__FUl
 long
 TaskAcceptObject(TObjectId id)
 {
@@ -246,7 +246,7 @@ TaskAcceptObject(TObjectId id)
 }
 
 
-// ROM 0x00259c5c Yield__FUl
+// ROM 0x0025bb94 Yield__FUl
 long
 Yield(TObjectId taskId)
 {
@@ -254,7 +254,7 @@ Yield(TObjectId taskId)
 }
 
 
-// ROM 0x000da6b8 SetBequeathId__FUl
+// ROM 0x000d9640 SetBequeathId__FUl
 long
 SetBequeathId(TObjectId to)
 {
@@ -262,7 +262,7 @@ SetBequeathId(TObjectId to)
 }
 
 
-// ROM 0x00259e94 Sleep__FUl
+// ROM 0x0025bdcc Sleep__FUl
 // A send to the null port (which never receives) that times out.
 void
 Sleep(TTimeout timeout)
@@ -275,7 +275,7 @@ Sleep(TTimeout timeout)
 }
 
 
-// ROM 0x002598e8 SleepTill__FP5TTime
+// ROM 0x0025b820 SleepTill__FP5TTime
 void
 SleepTill(TTime* futureTime)
 {
@@ -283,7 +283,7 @@ SleepTill(TTime* futureTime)
 }
 
 
-// ROM 0x00259930 GetGlobals
+// ROM 0x0025b868 GetGlobals
 // The running task's globals pointer (the end of its TaskGlobals block).
 extern "C" void*
 GetGlobals(void)

@@ -8,7 +8,7 @@
 				PostMain under it; a fork (ForkInit from its parent) runs
 				TheMain under the same mutex.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Layout (0x30 bytes): the TUTaskWorld (0x18), fMutex +0x18, fIsMain
 	+0x1c, fRunsMain +0x1d, fRunning +0x1e, fForkingEnabled +0x1f, fParent
 	+0x20, fStackSize +0x24, fPriority +0x28, fName +0x2c.
@@ -19,7 +19,7 @@
 #include "OSErrors.h"
 
 
-// ROM 0x000cc2dc __ct__10TForkWorldFv
+// ROM 0x000cb188 __ct__10TForkWorldFv
 TForkWorld::TForkWorld()
 {
 	fIsMain = true;
@@ -34,12 +34,12 @@ TForkWorld::TForkWorld()
 }
 
 
-// ROM 0x000cc358 __dt__10TForkWorldFv
+// ROM 0x000cb204 __dt__10TForkWorldFv
 TForkWorld::~TForkWorld()
 { }
 
 
-// ROM 0x000cc594 GetSizeOf__10TForkWorldFv
+// ROM 0x000cb440 GetSizeOf__10TForkWorldFv
 ULong
 TForkWorld::GetSizeOf()
 {
@@ -47,7 +47,7 @@ TForkWorld::GetSizeOf()
 }
 
 
-// ROM 0x000cc610 MainInit__10TForkWorldFUlT1
+// ROM 0x000cb4bc MainInit__10TForkWorldFUlT1
 long
 TForkWorld::MainInit(ULong name, ULong stackSize)
 {
@@ -57,7 +57,7 @@ TForkWorld::MainInit(ULong name, ULong stackSize)
 }
 
 
-// ROM 0x000cc64c MainInit__10TForkWorldFUlN31
+// ROM 0x000cb4f8 MainInit__10TForkWorldFUlN31
 long
 TForkWorld::MainInit(ULong name, ULong stackSize, ULong priority, TObjectId environment)
 {
@@ -68,7 +68,7 @@ TForkWorld::MainInit(ULong name, ULong stackSize, ULong priority, TObjectId envi
 }
 
 
-// ROM 0x000cc6a4 TaskConstructor__10TForkWorldFv
+// ROM 0x000cb550 TaskConstructor__10TForkWorldFv
 // In the new task: the main world makes the family's mutex, a fork joins
 // its parent's; then the main or fork constructor.
 long
@@ -92,7 +92,7 @@ TForkWorld::TaskConstructor()
 }
 
 
-// ROM 0x000cc76c TaskDestructor__10TForkWorldFv
+// ROM 0x000cb618 TaskDestructor__10TForkWorldFv
 void
 TForkWorld::TaskDestructor()
 {
@@ -108,7 +108,7 @@ TForkWorld::TaskDestructor()
 }
 
 
-// ROM 0x000cc398 TaskMain__10TForkWorldFv
+// ROM 0x000cb244 TaskMain__10TForkWorldFv
 // The main code runs under the mutex: the main world's PreMain first, then
 // TheMain if it runs a main and PreMain succeeded; a fork's TheMain straight
 // away.
@@ -135,7 +135,7 @@ TForkWorld::TaskMain()
 }
 
 
-// ROM 0x000cc424 MainConstructor__10TForkWorldFv
+// ROM 0x000cb2d0 MainConstructor__10TForkWorldFv
 long
 TForkWorld::MainConstructor()
 {
@@ -143,7 +143,7 @@ TForkWorld::MainConstructor()
 }
 
 
-// ROM 0x000cc428 MainDestructor__10TForkWorldFv
+// ROM 0x000cb2d4 MainDestructor__10TForkWorldFv
 void
 TForkWorld::MainDestructor()
 {
@@ -151,7 +151,7 @@ TForkWorld::MainDestructor()
 }
 
 
-// ROM 0x000cc438 ForkInit__10TForkWorldFP10TForkWorld
+// ROM 0x000cb2e4 ForkInit__10TForkWorldFP10TForkWorld
 // A fork takes its parent's settings and mutex.
 long
 TForkWorld::ForkInit(TForkWorld* parent)
@@ -167,7 +167,7 @@ TForkWorld::ForkInit(TForkWorld* parent)
 }
 
 
-// ROM 0x000cc42c ForkConstructor__10TForkWorldFP10TForkWorld
+// ROM 0x000cb2d8 ForkConstructor__10TForkWorldFP10TForkWorld
 long
 TForkWorld::ForkConstructor(TForkWorld* /*parent*/)
 {
@@ -175,13 +175,13 @@ TForkWorld::ForkConstructor(TForkWorld* /*parent*/)
 }
 
 
-// ROM 0x000cc434 ForkDestructor__10TForkWorldFv
+// ROM 0x000cb2e0 ForkDestructor__10TForkWorldFv
 void
 TForkWorld::ForkDestructor()
 { }
 
 
-// ROM 0x000cc7d4 PreMain__10TForkWorldFv
+// ROM 0x000cb680 PreMain__10TForkWorldFv
 long
 TForkWorld::PreMain()
 {
@@ -189,19 +189,19 @@ TForkWorld::PreMain()
 }
 
 
-// ROM 0x000cc7dc PostMain__10TForkWorldFv
+// ROM 0x000cb688 PostMain__10TForkWorldFv
 void
 TForkWorld::PostMain()
 { }
 
 
-// ROM 0x000cc590 ForkSwitch__10TForkWorldFUc
+// ROM 0x000cb43c ForkSwitch__10TForkWorldFUc
 void
 TForkWorld::ForkSwitch(Boolean /*acquired*/)
 { }
 
 
-// ROM 0x000cc69c MakeFork__10TForkWorldFv
+// ROM 0x000cb548 MakeFork__10TForkWorldFv
 long
 TForkWorld::MakeFork()
 {
@@ -209,7 +209,7 @@ TForkWorld::MakeFork()
 }
 
 
-// ROM 0x000cc474 Fork__10TForkWorldFP10TForkWorld
+// ROM 0x000cb320 Fork__10TForkWorldFP10TForkWorld
 // Spawns a fork, once the world is running with forking enabled: the given
 // world is initialised from this one, or (with none) MakeFork makes one -
 // if this world runs a main.
@@ -228,7 +228,7 @@ TForkWorld::Fork(TForkWorld* fork)
 }
 
 
-// ROM 0x000cc57c EnableForking__10TForkWorldFUc
+// ROM 0x000cb428 EnableForking__10TForkWorldFUc
 Boolean
 TForkWorld::EnableForking(Boolean enable)
 {
@@ -238,7 +238,7 @@ TForkWorld::EnableForking(Boolean enable)
 }
 
 
-// ROM 0x000cc59c AcquireMutex__10TForkWorldFv
+// ROM 0x000cb448 AcquireMutex__10TForkWorldFv
 long
 TForkWorld::AcquireMutex()
 {
@@ -248,7 +248,7 @@ TForkWorld::AcquireMutex()
 }
 
 
-// ROM 0x000cc5d8 ReleaseMutex__10TForkWorldFv
+// ROM 0x000cb484 ReleaseMutex__10TForkWorldFv
 // (a release that would not block anybody is not an error)
 long
 TForkWorld::ReleaseMutex()
@@ -261,7 +261,7 @@ TForkWorld::ReleaseMutex()
 }
 
 
-// ROM 0x000cc554 Yield__10TForkWorldFv
+// ROM 0x000cb400 Yield__10TForkWorldFv
 // Lets another of the family run.
 void
 TForkWorld::Yield()

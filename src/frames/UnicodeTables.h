@@ -12,7 +12,7 @@
 				RECONSTRUCTED: the sort tables (TSortTables, the 'sortTables
 				array).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #ifndef __UNICODETABLES_H
@@ -22,7 +22,7 @@
 #include "Newton.h"
 #endif
 
-void	InitUnicode(void);			// ROM 0x00254b80 InitUnicode__Fv
-void	InstallBuiltInEncodings(void);	// ROM 0x002558ac InstallBuiltInEncodings__Fv
+void	InitUnicode(void);			// ROM 0x00256acc InitUnicode__Fv
+void	InstallBuiltInEncodings(void);	// ROM 0x002577e4 InstallBuiltInEncodings__Fv
 
 #endif	/* __UNICODETABLES_H */

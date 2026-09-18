@@ -17,16 +17,16 @@
 				glyph through the 'cmap' subtable, glyph metrics and bitmap
 				through the strike's index subtables into 'bdat'), and the
 				adjustments the faces the font does not have are synthesised
-				with (the style table at 0x00377324: bold smears a pixel and
+				with (the style table at 0x00380f78: bold smears a pixel and
 				widens by one, italic shears, underline takes a position and
 				thickness, outline and shadow widen).
 
 	The ROM's layouts: StyleRecord 0x20 bytes, FontEngineInfo 0xc4 bytes
 	(the offsets below are the ROM's; the host's pointers are wider).
 
-	Reconstructed from the MP2100 D ROM (0x000af120-0x000b0108,
-	0x0025f980-0x0025fdf4, 0x002bc0d8-0x002bcf88, 0x0032ea8c-0x0032ebe4,
-	0x0032f3f0); each function cites its origin.  NOT YET RECONSTRUCTED:
+	Reconstructed from the MP2x00 US ROM (0x000adf28-0x000aef10,
+	0x002618b8-0x00261d2c, 0x002e1e60-0x002e2d10, 0x00359be8-0x00359d40,
+	0x0035a54c); each function cites its origin.  NOT YET RECONSTRUCTED:
 	the four-entry font cache (OpenFont opens afresh), scaled bitmaps
 	(a strike is drawn at its own size), ink fonts (InkOpenFont), the
 	PostScript printer's font substitution, the 'font' part handler.

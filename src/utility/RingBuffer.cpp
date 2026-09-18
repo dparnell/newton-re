@@ -6,7 +6,7 @@
 				comm code streams through, the pipe over it, and the form
 				whose bytes live in a shared-memory object.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The internal calls go through the virtuals as the ROM's do (Put asks
 	IsFull, CopyIn asks ComputePutVectors, ...).
 */
@@ -20,18 +20,18 @@
 extern const ExceptionName exPipeException;
 
 
-// ROM 0x0003b3f8 __ct__15CBaseRingBufferFv
+// ROM 0x0003b348 __ct__15CBaseRingBufferFv
 CBaseRingBuffer::CBaseRingBuffer()
 {
 }
 
-// ROM 0x0003b438 __dt__15CBaseRingBufferFv
+// ROM 0x0003b388 __dt__15CBaseRingBufferFv
 CBaseRingBuffer::~CBaseRingBuffer()
 {
 }
 
 
-// ROM 0x001af060 __ct__11CRingBufferFv
+// ROM 0x001acb78 __ct__11CRingBufferFv
 CRingBuffer::CRingBuffer()
 {
 	fBufStart = nil;
@@ -44,7 +44,7 @@ CRingBuffer::CRingBuffer()
 }
 
 
-// ROM 0x001af0c8 __dt__11CRingBufferFv
+// ROM 0x001acbe0 __dt__11CRingBufferFv
 CRingBuffer::~CRingBuffer()
 {
 	if (fOwnsBuffer && fBufStart != nil)
@@ -52,7 +52,7 @@ CRingBuffer::~CRingBuffer()
 }
 
 
-// ROM 0x001af5d8 Init__11CRingBufferFl
+// ROM 0x001ad0f0 Init__11CRingBufferFl
 NewtonErr
 CRingBuffer::Init(long size)
 {
@@ -70,7 +70,7 @@ CRingBuffer::Init(long size)
 }
 
 
-// ROM 0x001afaa8 Init__11CRingBufferFPvlUcN22
+// ROM 0x001ad5c0 Init__11CRingBufferFPvlUcN22
 NewtonErr
 CRingBuffer::Init(void* buffer, long size, UChar ownsIt, long getOffset, long putOffset)
 {
@@ -86,7 +86,7 @@ CRingBuffer::Init(void* buffer, long size, UChar ownsIt, long getOffset, long pu
 }
 
 
-// ROM 0x001af500 Reset__11CRingBufferFv
+// ROM 0x001ad018 Reset__11CRingBufferFv
 void
 CRingBuffer::Reset()
 {
@@ -95,7 +95,7 @@ CRingBuffer::Reset()
 }
 
 
-// ROM 0x001af510 GetSize__11CRingBufferCFv
+// ROM 0x001ad028 GetSize__11CRingBufferCFv
 long
 CRingBuffer::GetSize() const
 {
@@ -103,7 +103,7 @@ CRingBuffer::GetSize() const
 }
 
 
-// ROM 0x001af51c IsFull__11CRingBufferCFv
+// ROM 0x001ad034 IsFull__11CRingBufferCFv
 Boolean
 CRingBuffer::IsFull() const
 {
@@ -112,7 +112,7 @@ CRingBuffer::IsFull() const
 }
 
 
-// ROM 0x001af548 IsEmpty__11CRingBufferCFv
+// ROM 0x001ad060 IsEmpty__11CRingBufferCFv
 Boolean
 CRingBuffer::IsEmpty() const
 {
@@ -120,7 +120,7 @@ CRingBuffer::IsEmpty() const
 }
 
 
-// ROM 0x001af564 AtEOF__11CRingBufferCFv
+// ROM 0x001ad07c AtEOF__11CRingBufferCFv
 Boolean
 CRingBuffer::AtEOF() const
 {
@@ -128,7 +128,7 @@ CRingBuffer::AtEOF() const
 }
 
 
-// ROM 0x001af5b4 FreeCount__11CRingBufferCFv
+// ROM 0x001ad0cc FreeCount__11CRingBufferCFv
 long
 CRingBuffer::FreeCount() const
 {
@@ -139,7 +139,7 @@ CRingBuffer::FreeCount() const
 }
 
 
-// ROM 0x001af640 DataCount__11CRingBufferCFv
+// ROM 0x001ad158 DataCount__11CRingBufferCFv
 long
 CRingBuffer::DataCount() const
 {
@@ -150,7 +150,7 @@ CRingBuffer::DataCount() const
 }
 
 
-// ROM 0x001af660 ComputePutVectors__11CRingBufferCFRPUcRlT1T2
+// ROM 0x001ad178 ComputePutVectors__11CRingBufferCFRPUcRlT1T2
 // The up-to-two runs a write may fill: the wrap-around run (from fBufStart)
 // in the first pair, the run up to fBufEnd in the second - each nil/0 when
 // it does not apply.  The slot before fGet is kept free.
@@ -203,7 +203,7 @@ CRingBuffer::ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const
 }
 
 
-// ROM 0x001af72c ComputeGetVectors__11CRingBufferCFRPUcRlT1T2
+// ROM 0x001ad244 ComputeGetVectors__11CRingBufferCFRPUcRlT1T2
 // The up-to-two runs a read may take from: the run up to fBufEnd and the
 // wrap-around run from fBufStart.
 void
@@ -241,7 +241,7 @@ CRingBuffer::ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const
 }
 
 
-// ROM 0x001af8cc UpdatePutVector__11CRingBufferFl
+// ROM 0x001ad3e4 UpdatePutVector__11CRingBufferFl
 long
 CRingBuffer::UpdatePutVector(long count)
 {
@@ -270,7 +270,7 @@ CRingBuffer::UpdatePutVector(long count)
 }
 
 
-// ROM 0x001af800 UpdateGetVector__11CRingBufferFl
+// ROM 0x001ad318 UpdateGetVector__11CRingBufferFl
 long
 CRingBuffer::UpdateGetVector(long count)
 {
@@ -299,7 +299,7 @@ CRingBuffer::UpdateGetVector(long count)
 }
 
 
-// ROM 0x001af128 Put__11CRingBufferFi
+// ROM 0x001acc40 Put__11CRingBufferFi
 int
 CRingBuffer::Put(int byte)
 {
@@ -312,7 +312,7 @@ CRingBuffer::Put(int byte)
 }
 
 
-// ROM 0x001af17c Putn__11CRingBufferFPCUcl
+// ROM 0x001acc94 Putn__11CRingBufferFPCUcl
 int
 CRingBuffer::Putn(const UByte* data, long count)
 {
@@ -322,7 +322,7 @@ CRingBuffer::Putn(const UByte* data, long count)
 }
 
 
-// ROM 0x001af1ac CopyIn__11CRingBufferFPCUcRl
+// ROM 0x001accc4 CopyIn__11CRingBufferFPCUcRl
 NewtonErr
 CRingBuffer::CopyIn(const UByte* data, long& count)
 {
@@ -356,7 +356,7 @@ CRingBuffer::CopyIn(const UByte* data, long& count)
 }
 
 
-// ROM 0x001af2e8 CopyIn__11CRingBufferFP5CPipeRl
+// ROM 0x001ace00 CopyIn__11CRingBufferFP5CPipeRl
 // Fill the free runs straight from a pipe: the pipe reads its chunk into the
 // buffer itself, so the bytes are not copied twice.  A pipe exception becomes
 // the answer; anything else is passed on.
@@ -418,7 +418,7 @@ CRingBuffer::CopyIn(CPipe* pipe, long& count)
 }
 
 
-// ROM 0x001afba4 Get__11CRingBufferFv
+// ROM 0x001ad6bc Get__11CRingBufferFv
 int
 CRingBuffer::Get()
 {
@@ -431,7 +431,7 @@ CRingBuffer::Get()
 }
 
 
-// ROM 0x001afbec Getn__11CRingBufferFPUcl
+// ROM 0x001ad704 Getn__11CRingBufferFPUcl
 int
 CRingBuffer::Getn(UByte* data, long count)
 {
@@ -441,7 +441,7 @@ CRingBuffer::Getn(UByte* data, long count)
 }
 
 
-// ROM 0x001afc1c CopyOut__11CRingBufferFPUcRl
+// ROM 0x001ad734 CopyOut__11CRingBufferFPUcRl
 NewtonErr
 CRingBuffer::CopyOut(UByte* data, long& count)
 {
@@ -475,7 +475,7 @@ CRingBuffer::CopyOut(UByte* data, long& count)
 }
 
 
-// ROM 0x001afb0c Peek__11CRingBufferFv
+// ROM 0x001ad624 Peek__11CRingBufferFv
 int
 CRingBuffer::Peek()
 {
@@ -485,7 +485,7 @@ CRingBuffer::Peek()
 }
 
 
-// ROM 0x001afb24 Next__11CRingBufferFv
+// ROM 0x001ad63c Next__11CRingBufferFv
 int
 CRingBuffer::Next()
 {
@@ -501,7 +501,7 @@ CRingBuffer::Next()
 }
 
 
-// ROM 0x001afb64 Skip__11CRingBufferFv
+// ROM 0x001ad67c Skip__11CRingBufferFv
 NewtonErr
 CRingBuffer::Skip()
 {
@@ -517,7 +517,7 @@ CRingBuffer::Skip()
 }
 
 
-// ROM 0x001af998 MakeShared__11CRingBufferFUl
+// ROM 0x001ad4b0 MakeShared__11CRingBufferFUl
 // The buffer's own memory becomes a shared-memory object, so that another
 // task can reach it (through a CShadowRingBuffer, say).  Note the
 // kSMemNoSizeChangeOnCopyTo the permissions gain: a ring buffer writes at a
@@ -535,7 +535,7 @@ CRingBuffer::MakeShared(ULong permissions)
 }
 
 
-// ROM 0x001af9f0 UnShare__11CRingBufferFv
+// ROM 0x001ad508 UnShare__11CRingBufferFv
 NewtonErr
 CRingBuffer::UnShare()
 {
@@ -548,7 +548,7 @@ CRingBuffer::UnShare()
 }
 
 
-// ROM 0x001afa28 GetnAt__11CRingBufferFlPUcT1
+// ROM 0x001ad540 GetnAt__11CRingBufferFlPUcT1
 // Read count bytes that start offset bytes into the data, without
 // consuming: fGet is moved forward, Getn reads, then fGet is put back.
 int
@@ -573,7 +573,7 @@ CRingBuffer::GetnAt(long offset, UByte* data, long count)
 	C R i n g P i p e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001afd58 __ct__9CRingPipeFv
+// ROM 0x001ad870 __ct__9CRingPipeFv
 // fReadHitEOF is left alone, as the ROM leaves it: both Init calls set it
 // (the second by way of Reset) before anything reads it.
 CRingPipe::CRingPipe()
@@ -583,7 +583,7 @@ CRingPipe::CRingPipe()
 }
 
 
-// ROM 0x001afda4 __dt__9CRingPipeFv
+// ROM 0x001ad8bc __dt__9CRingPipeFv
 CRingPipe::~CRingPipe()
 {
 	if (fOwnsBuffer && fBuffer != nil)
@@ -591,7 +591,7 @@ CRingPipe::~CRingPipe()
 }
 
 
-// ROM 0x001afe0c Init__9CRingPipeFl
+// ROM 0x001ad924 Init__9CRingPipeFl
 // A CRingBuffer of our own, of size bytes.
 void
 CRingPipe::Init(long size)
@@ -608,7 +608,7 @@ CRingPipe::Init(long size)
 }
 
 
-// ROM 0x001afe84 Init__9CRingPipeFP15CBaseRingBufferUc
+// ROM 0x001ad99c Init__9CRingPipeFP15CBaseRingBufferUc
 // Over a buffer someone else made (a shared one, say); Reset empties it.
 void
 CRingPipe::Init(CBaseRingBuffer* buffer, UChar ownsIt)
@@ -619,7 +619,7 @@ CRingPipe::Init(CBaseRingBuffer* buffer, UChar ownsIt)
 }
 
 
-// ROM 0x001afe98 Reset__9CRingPipeFv
+// ROM 0x001ad9b0 Reset__9CRingPipeFv
 void
 CRingPipe::Reset(void)
 {
@@ -629,7 +629,7 @@ CRingPipe::Reset(void)
 }
 
 
-// ROM 0x001b00b8 ReadSeek__9CRingPipeFli
+// ROM 0x001adbd0 ReadSeek__9CRingPipeFli
 long
 CRingPipe::ReadSeek(long inOffset, int inMode)
 {
@@ -637,7 +637,7 @@ CRingPipe::ReadSeek(long inOffset, int inMode)
 }
 
 
-// ROM 0x001b00c8 ReadPosition__9CRingPipeCFv
+// ROM 0x001adbe0 ReadPosition__9CRingPipeCFv
 long
 CRingPipe::ReadPosition(void) const
 {
@@ -645,7 +645,7 @@ CRingPipe::ReadPosition(void) const
 }
 
 
-// ROM 0x001b00c0 WriteSeek__9CRingPipeFli
+// ROM 0x001adbd8 WriteSeek__9CRingPipeFli
 long
 CRingPipe::WriteSeek(long inOffset, int inMode)
 {
@@ -653,7 +653,7 @@ CRingPipe::WriteSeek(long inOffset, int inMode)
 }
 
 
-// ROM 0x001afe04 WritePosition__9CRingPipeCFv
+// ROM 0x001ad91c WritePosition__9CRingPipeCFv
 long
 CRingPipe::WritePosition(void) const
 {
@@ -661,7 +661,7 @@ CRingPipe::WritePosition(void) const
 }
 
 
-// ROM 0x001afeb4 ReadChunk__9CRingPipeFPvRlRUc
+// ROM 0x001ad9cc ReadChunk__9CRingPipeFPvRlRUc
 // Drain the buffer into the caller's data; whenever it runs dry before the
 // count is met, Underflow is asked for more (and tells us, in fReadHitEOF,
 // when there will be no more).  count comes back as what was read, and the
@@ -690,7 +690,7 @@ CRingPipe::ReadChunk(void* data, long& count, Boolean& eof)
 }
 
 
-// ROM 0x001affcc WriteChunk__9CRingPipeFPvlUc
+// ROM 0x001adae4 WriteChunk__9CRingPipeFPvlUc
 // Fill the buffer from the caller's data; whenever it fills before the count
 // is met, Overflow is asked to make room.  A flush at the end is FlushWrite.
 void
@@ -728,7 +728,7 @@ static inline UByte*	AsVector(ULong offset)	{ return (UByte*) offset; }
 static inline ULong		AsOffset(UByte* p)		{ return (ULong) p; }
 
 
-// ROM 0x001e12d8 __ct__17CShadowRingBufferFv
+// ROM 0x001deec0 __ct__17CShadowRingBufferFv
 CShadowRingBuffer::CShadowRingBuffer()
 {
 	fPutOffset = 0;
@@ -738,12 +738,12 @@ CShadowRingBuffer::CShadowRingBuffer()
 }
 
 
-// ROM 0x001e1334 __dt__17CShadowRingBufferFv
+// ROM 0x001def1c __dt__17CShadowRingBufferFv
 CShadowRingBuffer::~CShadowRingBuffer()
 { }
 
 
-// ROM 0x001e1868 Init__17CShadowRingBufferFUllT2
+// ROM 0x001df450 Init__17CShadowRingBufferFUllT2
 // Take a copy of the shared-memory object's id and let its size be the
 // buffer's; the data already in it starts at getOffset and is dataCount
 // bytes long.
@@ -758,7 +758,7 @@ CShadowRingBuffer::Init(TObjectId sharedMem, long getOffset, long dataCount)
 }
 
 
-// ROM 0x001e1cdc GetByteAt__17CShadowRingBufferFl
+// ROM 0x001df8c4 GetByteAt__17CShadowRingBufferFl
 UByte
 CShadowRingBuffer::GetByteAt(long offset)
 {
@@ -769,7 +769,7 @@ CShadowRingBuffer::GetByteAt(long offset)
 }
 
 
-// ROM 0x001e1d1c PutByteAt__17CShadowRingBufferFil
+// ROM 0x001df904 PutByteAt__17CShadowRingBufferFil
 int
 CShadowRingBuffer::PutByteAt(int byte, long offset)
 {
@@ -780,7 +780,7 @@ CShadowRingBuffer::PutByteAt(int byte, long offset)
 }
 
 
-// ROM 0x001e17fc Reset__17CShadowRingBufferFv
+// ROM 0x001df3e4 Reset__17CShadowRingBufferFv
 // fTempGetOffset is left where it was - TempReset is what puts it back.
 void
 CShadowRingBuffer::Reset()
@@ -790,7 +790,7 @@ CShadowRingBuffer::Reset()
 }
 
 
-// ROM 0x001e1628 TempReset__17CShadowRingBufferFv
+// ROM 0x001df210 TempReset__17CShadowRingBufferFv
 void
 CShadowRingBuffer::TempReset()
 {
@@ -798,7 +798,7 @@ CShadowRingBuffer::TempReset()
 }
 
 
-// ROM 0x001e180c GetSize__17CShadowRingBufferCFv
+// ROM 0x001df3f4 GetSize__17CShadowRingBufferCFv
 long
 CShadowRingBuffer::GetSize() const
 {
@@ -806,7 +806,7 @@ CShadowRingBuffer::GetSize() const
 }
 
 
-// ROM 0x001e1c9c IsFull__17CShadowRingBufferCFv
+// ROM 0x001df884 IsFull__17CShadowRingBufferCFv
 Boolean
 CShadowRingBuffer::IsFull() const
 {
@@ -815,7 +815,7 @@ CShadowRingBuffer::IsFull() const
 }
 
 
-// ROM 0x001e1cc4 IsEmpty__17CShadowRingBufferCFv
+// ROM 0x001df8ac IsEmpty__17CShadowRingBufferCFv
 Boolean
 CShadowRingBuffer::IsEmpty() const
 {
@@ -823,7 +823,7 @@ CShadowRingBuffer::IsEmpty() const
 }
 
 
-// ROM 0x001e1818 AtEOF__17CShadowRingBufferCFv
+// ROM 0x001df400 AtEOF__17CShadowRingBufferCFv
 Boolean
 CShadowRingBuffer::AtEOF() const
 {
@@ -831,7 +831,7 @@ CShadowRingBuffer::AtEOF() const
 }
 
 
-// ROM 0x001e18b0 FreeCount__17CShadowRingBufferCFv
+// ROM 0x001df498 FreeCount__17CShadowRingBufferCFv
 long
 CShadowRingBuffer::FreeCount() const
 {
@@ -842,7 +842,7 @@ CShadowRingBuffer::FreeCount() const
 }
 
 
-// ROM 0x001e18d0 DataCount__17CShadowRingBufferCFv
+// ROM 0x001df4b8 DataCount__17CShadowRingBufferCFv
 long
 CShadowRingBuffer::DataCount() const
 {
@@ -853,7 +853,7 @@ CShadowRingBuffer::DataCount() const
 }
 
 
-// ROM 0x001e18f0 TempDataCount__17CShadowRingBufferCFv
+// ROM 0x001df4d8 TempDataCount__17CShadowRingBufferCFv
 // What is still ahead of the speculative read position.
 long
 CShadowRingBuffer::TempDataCount() const
@@ -865,7 +865,7 @@ CShadowRingBuffer::TempDataCount() const
 }
 
 
-// ROM 0x001e1910 ComputePutVectors__17CShadowRingBufferCFRPUcRlT1T2
+// ROM 0x001df4f8 ComputePutVectors__17CShadowRingBufferCFRPUcRlT1T2
 // CRingBuffer::ComputePutVectors with the buffer starting at offset 0.
 void
 CShadowRingBuffer::ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const
@@ -916,7 +916,7 @@ CShadowRingBuffer::ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2)
 }
 
 
-// ROM 0x001e1a80 ComputeGetVectors__17CShadowRingBufferCFRPUcRlT1T2
+// ROM 0x001df668 ComputeGetVectors__17CShadowRingBufferCFRPUcRlT1T2
 void
 CShadowRingBuffer::ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const
 {
@@ -952,7 +952,7 @@ CShadowRingBuffer::ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2)
 }
 
 
-// ROM 0x001e19c4 ComputeTempGetVectors__17CShadowRingBufferCFRUlRlT1T2
+// ROM 0x001df5ac ComputeTempGetVectors__17CShadowRingBufferCFRUlRlT1T2
 // The same runs, from the speculative read position - and with the offsets
 // declared as what they are, this one not being an override.
 void
@@ -990,7 +990,7 @@ CShadowRingBuffer::ComputeTempGetVectors(ULong& o1, long& n1, ULong& o2, long& n
 }
 
 
-// ROM 0x001e1bec UpdatePutVector__17CShadowRingBufferFl
+// ROM 0x001df7d4 UpdatePutVector__17CShadowRingBufferFl
 long
 CShadowRingBuffer::UpdatePutVector(long count)
 {
@@ -1019,7 +1019,7 @@ CShadowRingBuffer::UpdatePutVector(long count)
 }
 
 
-// ROM 0x001e1b3c UpdateGetVector__17CShadowRingBufferFl
+// ROM 0x001df724 UpdateGetVector__17CShadowRingBufferFl
 long
 CShadowRingBuffer::UpdateGetVector(long count)
 {
@@ -1048,7 +1048,7 @@ CShadowRingBuffer::UpdateGetVector(long count)
 }
 
 
-// ROM 0x001e1634 Put__17CShadowRingBufferFi
+// ROM 0x001df21c Put__17CShadowRingBufferFi
 int
 CShadowRingBuffer::Put(int byte)
 {
@@ -1064,7 +1064,7 @@ CShadowRingBuffer::Put(int byte)
 }
 
 
-// ROM 0x001e1694 Putn__17CShadowRingBufferFPCUcl
+// ROM 0x001df27c Putn__17CShadowRingBufferFPCUcl
 int
 CShadowRingBuffer::Putn(const UByte* data, long count)
 {
@@ -1074,7 +1074,7 @@ CShadowRingBuffer::Putn(const UByte* data, long count)
 }
 
 
-// ROM 0x001e16c4 CopyIn__17CShadowRingBufferFPCUcRl
+// ROM 0x001df2ac CopyIn__17CShadowRingBufferFPCUcRl
 NewtonErr
 CShadowRingBuffer::CopyIn(const UByte* data, long& count)
 {
@@ -1106,7 +1106,7 @@ CShadowRingBuffer::CopyIn(const UByte* data, long& count)
 }
 
 
-// ROM 0x001e1d60 Peek__17CShadowRingBufferFv
+// ROM 0x001df948 Peek__17CShadowRingBufferFv
 int
 CShadowRingBuffer::Peek()
 {
@@ -1119,7 +1119,7 @@ CShadowRingBuffer::Peek()
 }
 
 
-// ROM 0x001e1d78 Next__17CShadowRingBufferFv
+// ROM 0x001df960 Next__17CShadowRingBufferFv
 int
 CShadowRingBuffer::Next()
 {
@@ -1140,7 +1140,7 @@ CShadowRingBuffer::Next()
 }
 
 
-// ROM 0x001e1db4 Skip__17CShadowRingBufferFv
+// ROM 0x001df99c Skip__17CShadowRingBufferFv
 NewtonErr
 CShadowRingBuffer::Skip()
 {
@@ -1156,7 +1156,7 @@ CShadowRingBuffer::Skip()
 }
 
 
-// ROM 0x001e1df4 Get__17CShadowRingBufferFv
+// ROM 0x001df9dc Get__17CShadowRingBufferFv
 int
 CShadowRingBuffer::Get()
 {
@@ -1170,7 +1170,7 @@ CShadowRingBuffer::Get()
 }
 
 
-// ROM 0x001e1e3c Getn__17CShadowRingBufferFPUcl
+// ROM 0x001dfa24 Getn__17CShadowRingBufferFPUcl
 int
 CShadowRingBuffer::Getn(UByte* data, long count)
 {
@@ -1180,7 +1180,7 @@ CShadowRingBuffer::Getn(UByte* data, long count)
 }
 
 
-// ROM 0x001e1380 CopyOut__17CShadowRingBufferFPUcRl
+// ROM 0x001def68 CopyOut__17CShadowRingBufferFPUcRl
 NewtonErr
 CShadowRingBuffer::CopyOut(UByte* data, long& count)
 {
@@ -1213,7 +1213,7 @@ CShadowRingBuffer::CopyOut(UByte* data, long& count)
 }
 
 
-// ROM 0x001e14c8 TempGetn__17CShadowRingBufferFPUcl
+// ROM 0x001df0b0 TempGetn__17CShadowRingBufferFPUcl
 int
 CShadowRingBuffer::TempGetn(UByte* data, long count)
 {
@@ -1223,7 +1223,7 @@ CShadowRingBuffer::TempGetn(UByte* data, long count)
 }
 
 
-// ROM 0x001e14f0 TempCopyOut__17CShadowRingBufferFPUcRl
+// ROM 0x001df0d8 TempCopyOut__17CShadowRingBufferFPUcRl
 // Read ahead without consuming: only fTempGetOffset moves, so the same bytes
 // can be read again after TempReset.  The answer is the error from the copy,
 // not the buffer's state.

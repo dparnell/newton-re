@@ -28,7 +28,7 @@
 #include "objects.h"
 #endif
 
-// rom is the ROM as it appears at address 0 (build/MP2100D/rom.bin) or the
+// rom is the ROM as it appears at address 0 (build/MP2x00US/rom.bin) or the
 // AIF image it was extracted from (DebugRom/...: the 128-byte header is
 // skipped).  Answers kError_Bad_Parameters for a ROM without the object
 // area where this build's ROMConstants.h says it is, kError_No_Memory when

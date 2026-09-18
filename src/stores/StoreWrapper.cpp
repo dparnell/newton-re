@@ -5,7 +5,7 @@
 				TCachedReadStore (StoreWrapper.h): the frames layer's symbol
 				and map tables on a store.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	NOT YET RECONSTRUCTED: TEphemeralTracker (fEphemeralTracker stays nil,
 	its calls are skipped as the ROM skips them when it is nil).
 */
@@ -26,7 +26,7 @@
 Boolean gAskedForFlush = false;			// 0x0c102a2c  a store is dirty: the flush task should run
 
 
-// ROM 0x002b698c _OSErr__Fl
+// ROM 0x002dc714 _OSErr__Fl
 // A store error thrown as exStoreError.
 void
 ThrowOSErr(NewtonErr err)
@@ -35,7 +35,7 @@ ThrowOSErr(NewtonErr err)
 }
 
 
-// ROM 0x00328a04 AskForFlush__FUc
+// ROM 0x00353ba0 AskForFlush__FUc
 void
 AskForFlush(Boolean ask)
 {
@@ -64,7 +64,7 @@ SetLengthAt(void* p, long length)
 	TStoreHashTable
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00328158 Create__15TStoreHashTableSFP6TStore
+// ROM 0x003532f4 Create__15TStoreHashTableSFP6TStore
 // A new table object, its 64 buckets empty; ==> its id.
 PSSId
 TStoreHashTable::Create(TStore* store)
@@ -88,7 +88,7 @@ ReadBuckets(TStore* store, PSSId id, StorePSSId* buckets)
 }
 
 
-// ROM 0x003281a0 __ct__15TStoreHashTableFP6TStoreUl
+// ROM 0x0035333c __ct__15TStoreHashTableFP6TStoreUl
 TStoreHashTable::TStoreHashTable(TStore* store, PSSId id)
 {
 	fId = id;
@@ -97,7 +97,7 @@ TStoreHashTable::TStoreHashTable(TStore* store, PSSId id)
 }
 
 
-// ROM 0x00328204 Abort__15TStoreHashTableFv
+// ROM 0x003533a0 Abort__15TStoreHashTableFv
 // The buckets as the store has them again (after its transaction aborted).
 void
 TStoreHashTable::Abort(void)
@@ -106,7 +106,7 @@ TStoreHashTable::Abort(void)
 }
 
 
-// ROM 0x00328244 Insert__15TStoreHashTableFUlPcl
+// ROM 0x003533e0 Insert__15TStoreHashTableFUlPcl
 // The entry (size bytes of data) in the bucket its hash selects, added
 // when not there yet; ==> its reference (bucket << 16 | offset).
 long
@@ -174,7 +174,7 @@ TStoreHashTable::Insert(ULong hash, char* data, long size)
 }
 
 
-// ROM 0x003284e8 Get__15TStoreHashTableFlPcPl
+// ROM 0x00353684 Get__15TStoreHashTableFlPcPl
 // The entry a reference names, when it fits *size bytes; *size becomes
 // its length either way.
 Boolean
@@ -193,7 +193,7 @@ TStoreHashTable::Get(long reference, char* data, long* size)
 }
 
 
-// ROM 0x0032859c TotalSize__15TStoreHashTableFv
+// ROM 0x00353738 TotalSize__15TStoreHashTableFv
 // The table object and its buckets.
 long
 TStoreHashTable::TotalSize(void)
@@ -210,7 +210,7 @@ TStoreHashTable::TotalSize(void)
 }
 
 
-// ROM 0x003285f8 __ct__23TStoreHashTableIteratorFP15TStoreHashTable
+// ROM 0x00353794 __ct__23TStoreHashTableIteratorFP15TStoreHashTable
 // Positioned on the first entry (or done).
 TStoreHashTableIterator::TStoreHashTableIterator(TStoreHashTable* table)
 {
@@ -224,7 +224,7 @@ TStoreHashTableIterator::TStoreHashTableIterator(TStoreHashTable* table)
 }
 
 
-// ROM 0x00328654 Next__23TStoreHashTableIteratorFv
+// ROM 0x003537f0 Next__23TStoreHashTableIteratorFv
 // On to the next entry: past the current one, then through the empty
 // buckets to the next that has entries.
 void
@@ -254,7 +254,7 @@ TStoreHashTableIterator::Next(void)
 }
 
 
-// ROM 0x00328730 GetData__23TStoreHashTableIteratorFPcPl
+// ROM 0x003538cc GetData__23TStoreHashTableIteratorFPcPl
 // The current entry's bytes, up to *size of them; *size what was copied.
 void
 TStoreHashTableIterator::GetData(char* data, long* size)
@@ -271,7 +271,7 @@ TStoreHashTableIterator::GetData(char* data, long* size)
 	TCachedReadStore
 ------------------------------------------------------------------------------- */
 
-// ROM 0x003299fc __ct__16TCachedReadStoreFv
+// ROM 0x00354b98 __ct__16TCachedReadStoreFv
 TCachedReadStore::TCachedReadStore()
 {
 	fData = nil;
@@ -280,7 +280,7 @@ TCachedReadStore::TCachedReadStore()
 }
 
 
-// ROM 0x00329a38 __ct__16TCachedReadStoreFP6TStoreUll
+// ROM 0x00354bd4 __ct__16TCachedReadStoreFP6TStoreUll
 TCachedReadStore::TCachedReadStore(TStore* store, PSSId id, long size)
 {
 	fData = nil;
@@ -290,7 +290,7 @@ TCachedReadStore::TCachedReadStore(TStore* store, PSSId id, long size)
 }
 
 
-// ROM 0x00329c04 __dt__16TCachedReadStoreFv
+// ROM 0x00354da0 __dt__16TCachedReadStoreFv
 TCachedReadStore::~TCachedReadStore()
 {
 	if (fData != nil && fData != fBuffer)
@@ -300,7 +300,7 @@ TCachedReadStore::~TCachedReadStore()
 }
 
 
-// ROM 0x00329c48 Init__16TCachedReadStoreFP6TStoreUll
+// ROM 0x00354de4 Init__16TCachedReadStoreFP6TStoreUll
 // Over an object of size bytes (-1: as the store says); nothing read yet.
 void
 TCachedReadStore::Init(TStore* store, PSSId id, long size)
@@ -320,7 +320,7 @@ TCachedReadStore::Init(TStore* store, PSSId id, long size)
 }
 
 
-// ROM 0x00329ce4 GetDataPtr__16TCachedReadStoreFlT1PPv
+// ROM 0x00354e80 GetDataPtr__16TCachedReadStoreFlT1PPv
 // A pointer to size bytes of the object at offset: into the cached copy
 // (read on first use), or - for a range beyond it - read into a buffer
 // of their own.
@@ -361,7 +361,7 @@ TCachedReadStore::GetDataPtr(long offset, long size, void** data)
 	TStoreWrapper
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00328790 __ct__13TStoreWrapperFP6TStore
+// ROM 0x0035392c __ct__13TStoreWrapperFP6TStore
 // Over a store; the tables are attached by whoever reads or makes the
 // store's root (MakeStoreObject).
 TStoreWrapper::TStoreWrapper(TStore* store)
@@ -385,7 +385,7 @@ TStoreWrapper::TStoreWrapper(TStore* store)
 }
 
 
-// ROM 0x00328948 __dt__13TStoreWrapperFv
+// ROM 0x00353ae4 __dt__13TStoreWrapperFv
 TStoreWrapper::~TStoreWrapper()
 {
 	if (fMapTable != nil)
@@ -396,7 +396,7 @@ TStoreWrapper::~TStoreWrapper()
 }
 
 
-// ROM 0x003289b4 Dirty__13TStoreWrapperFv
+// ROM 0x00353b50 Dirty__13TStoreWrapperFv
 // A change begins: the store locked (committed by SparklingClean) and the
 // flush asked for.
 void
@@ -409,7 +409,7 @@ TStoreWrapper::Dirty(void)
 }
 
 
-// ROM 0x003289ec SparklingClean__13TStoreWrapperFv
+// ROM 0x00353b88 SparklingClean__13TStoreWrapperFv
 // The change is complete: the store unlocked (committing when this was
 // the last lock).
 void
@@ -421,7 +421,7 @@ TStoreWrapper::SparklingClean(void)
 }
 
 
-// ROM 0x00329930 LockStore__13TStoreWrapperFv
+// ROM 0x00354acc LockStore__13TStoreWrapperFv
 NewtonErr
 TStoreWrapper::LockStore(void)
 {
@@ -430,7 +430,7 @@ TStoreWrapper::LockStore(void)
 }
 
 
-// ROM 0x00329958 UnlockStore__13TStoreWrapperFv
+// ROM 0x00354af4 UnlockStore__13TStoreWrapperFv
 NewtonErr
 TStoreWrapper::UnlockStore(void)
 {
@@ -439,7 +439,7 @@ TStoreWrapper::UnlockStore(void)
 }
 
 
-// ROM 0x003299b4 Abort__13TStoreWrapperFv
+// ROM 0x00354b50 Abort__13TStoreWrapperFv
 // The store's transaction undone and everything cached over it dropped.
 NewtonErr
 TStoreWrapper::Abort(void)
@@ -455,7 +455,7 @@ TStoreWrapper::Abort(void)
 }
 
 
-// ROM 0x00329900 GetStoreSizes__13TStoreWrapperFPlT1
+// ROM 0x00354a9c GetStoreSizes__13TStoreWrapperFPlT1
 // (after a collection, so that unreferenced entries are gone)
 void
 TStoreWrapper::GetStoreSizes(long* totalSize, long* usedSize)
@@ -476,7 +476,7 @@ RotateInHash(ULong hash, ULong nameHash, long count)
 }
 
 
-// ROM 0x00328a14 AddMap__13TStoreWrapperFP12SortedMapTagUcPlT3
+// ROM 0x00353bb0 AddMap__13TStoreWrapperFP12SortedMapTagUcPlT3
 // The map of *count sorted tags entered in the map table: _proto is left
 // out, and with skipHiddenSlots so are _uniqueID and _modTime; the names
 // are packed after a 2-byte count into the buffer after indexes, and
@@ -516,7 +516,7 @@ TStoreWrapper::AddMap(SortedMapTag* tags, Boolean skipHiddenSlots, long* count, 
 }
 
 
-// ROM 0x00328bac FrameToMapReference__13TStoreWrapperFRC6RefVarUcPlPPl
+// ROM 0x00353d48 FrameToMapReference__13TStoreWrapperFRC6RefVarUcPlPPl
 // The frame's tags sorted (except a function's and an argFrame's, whose
 // order matters) and entered in the map table; *indexes (the caller's to
 // delete) says which slot each stored slot is, *count how many.
@@ -548,7 +548,7 @@ TStoreWrapper::FrameToMapReference(RefArg frame, Boolean skipHiddenSlots, long* 
 }
 
 
-// ROM 0x00328d18 ReferenceToMap__13TStoreWrapperFl
+// ROM 0x00353eb4 ReferenceToMap__13TStoreWrapperFl
 // The frame map a map reference names, from the cache of the last eight
 // or built from the names in the map table.
 Ref
@@ -598,7 +598,7 @@ TStoreWrapper::ReferenceToMap(long reference)
 }
 
 
-// ROM 0x003297bc SymbolToReference__13TStoreWrapperFRC6RefVar
+// ROM 0x00354958 SymbolToReference__13TStoreWrapperFRC6RefVar
 // The symbol entered in the symbol table (its name, in the bucket its
 // hash selects); ==> the symbol reference.
 long
@@ -609,7 +609,7 @@ TStoreWrapper::SymbolToReference(RefArg symbol)
 }
 
 
-// ROM 0x0032980c ReferenceToSymbol__13TStoreWrapperFl
+// ROM 0x003549a8 ReferenceToSymbol__13TStoreWrapperFl
 // The symbol a symbol reference names, from the cache of the last sixteen
 // or interned from the symbol table.
 Ref
@@ -643,7 +643,7 @@ TStoreWrapper::ReferenceToSymbol(long reference)
 }
 
 
-// ROM 0x00328f2c StartCopyMaps_Symbols__13TStoreWrapperFv
+// ROM 0x003540c8 StartCopyMaps_Symbols__13TStoreWrapperFv
 // The translation tables for copying another store's objects here.
 void
 TStoreWrapper::StartCopyMaps_Symbols(void)
@@ -659,7 +659,7 @@ TStoreWrapper::StartCopyMaps_Symbols(void)
 }
 
 
-// ROM 0x00328fb0 EndCopyMaps_Symbols__13TStoreWrapperFv
+// ROM 0x0035414c EndCopyMaps_Symbols__13TStoreWrapperFv
 void
 TStoreWrapper::EndCopyMaps_Symbols(void)
 {
@@ -668,7 +668,7 @@ TStoreWrapper::EndCopyMaps_Symbols(void)
 }
 
 
-// ROM 0x00329594 CopyMap__13TStoreWrapperFlP13TStoreWrapperPl
+// ROM 0x00354730 CopyMap__13TStoreWrapperFlP13TStoreWrapperPl
 // A map of the store from copied here (the names re-hashed and inserted);
 // the last sixteen translations are remembered.  ==> the reference here;
 // *count the number of names.
@@ -720,7 +720,7 @@ TStoreWrapper::CopyMap(long reference, TStoreWrapper* from, long* count)
 }
 
 
-// ROM 0x00329704 CopySymbol__13TStoreWrapperFlP13TStoreWrapper
+// ROM 0x003548a0 CopySymbol__13TStoreWrapperFlP13TStoreWrapper
 // A symbol of the store from entered here; the last 32 translations are
 // remembered (round robin).
 long
@@ -748,7 +748,7 @@ TStoreWrapper::CopySymbol(long reference, TStoreWrapper* from)
 	The root object
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00326dac ReadStoreRootData__FP6TStoreUlP13StoreRootDataPl
+// ROM 0x00351f48 ReadStoreRootData__FP6TStoreUlP13StoreRootDataPl
 // The root object (rootId 0: the store's) read into data: *size becomes
 // its size (-1 when it cannot be read); an old 0x14-byte root has fExtra 0.
 void

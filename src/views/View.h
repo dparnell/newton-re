@@ -22,7 +22,7 @@
 				redraws it.
 
 				TView's layout is the ROM's (0x30 bytes; the fields as the
-				Constructor 0x00264430 and Dump 0x0025e33c use them) and its
+				Constructor 0x00266368 and Dump 0x00260274 use them) and its
 				methods are declared in the order of its vtable (0x0001f75c).
 				TxObject and TResponder are the bases: TxObject the class-id
 				root (ClassID, DerivedFrom, Key), TResponder the command
@@ -43,8 +43,8 @@
 				sound effects, gSlowMotion, SyncScroll, and
 				the subclasses (BuildView makes a TView for every class).
 
-	Reconstructed from the MP2100 D ROM (0x0025c598-0x00269200,
-	0x00066bf8-0x00066d6c); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x0025e4d0-0x0026b138,
+	0x00066258-0x000663cc); each function cites its origin.
 */
 
 #ifndef __VIEW_H
@@ -80,20 +80,20 @@ struct StyleRecord;
 class TxObject
 {
 public:
-	static void*	operator new(size_t size);				// ROM 0x0014528c __nw__8TxObjectSFUi  (the memory cleared)
-	static void		operator delete(void* p);				// ROM 0x001452c8 __dl__8TxObjectSFPv
-	virtual long	ClassID(void) const;					// ROM 0x001452e4 ClassID__8TxObjectCFv
-	virtual Boolean	DerivedFrom(long id) const;				// ROM 0x001452ec DerivedFrom__8TxObjectCFl
-	virtual			~TxObject();							// ROM 0x001452cc __dt__8TxObjectFv
-	virtual ULong	Key(void) const;						// ROM 0x00145300 Key__8TxObjectCFv
+	static void*	operator new(size_t size);				// ROM 0x00143738 __nw__8TxObjectSFUi  (the memory cleared)
+	static void		operator delete(void* p);				// ROM 0x00143774 __dl__8TxObjectSFPv
+	virtual long	ClassID(void) const;					// ROM 0x00143790 ClassID__8TxObjectCFv
+	virtual Boolean	DerivedFrom(long id) const;				// ROM 0x00143798 DerivedFrom__8TxObjectCFl
+	virtual			~TxObject();							// ROM 0x00143778 __dt__8TxObjectFv
+	virtual ULong	Key(void) const;						// ROM 0x001437ac Key__8TxObjectCFv
 };
 
 class TResponder : public TxObject
 {
 public:
-	virtual long	ClassID(void) const;					// ROM 0x001ab8f0 ClassID__10TResponderCFv
-	virtual Boolean	DerivedFrom(long id) const;				// ROM 0x001ab8f8 DerivedFrom__10TResponderCFl
-	virtual Boolean	DoCommand(RefArg cmd);					// ROM 0x001ab92c DoCommand__10TResponderFRC6RefVar
+	virtual long	ClassID(void) const;					// ROM 0x001a9354 ClassID__10TResponderCFv
+	virtual Boolean	DerivedFrom(long id) const;				// ROM 0x001a935c DerivedFrom__10TResponderCFl
+	virtual Boolean	DoCommand(RefArg cmd);					// ROM 0x001a9390 DoCommand__10TResponderFRC6RefVar
 	virtual Boolean	RealDoCommand(RefArg cmd);
 };
 
@@ -169,10 +169,10 @@ public:
 class TClipper
 {
 public:
-				TClipper();										// ROM 0x00066bf8 __ct__8TClipperFv
-	void		UpdateRegions(TView* view);						// ROM 0x00066c3c UpdateRegions__8TClipperFP5TView
-	void		Offset(Point delta);							// ROM 0x00066cfc Offset__8TClipperF6TPoint
-	void		RecalcVisible(RgnHandle inFront);				// ROM 0x00066d28 RecalcVisible__8TClipperF11TBaseRegion
+				TClipper();										// ROM 0x00066258 __ct__8TClipperFv
+	void		UpdateRegions(TView* view);						// ROM 0x0006629c UpdateRegions__8TClipperFP5TView
+	void		Offset(Point delta);							// ROM 0x0006635c Offset__8TClipperF6TPoint
+	void		RecalcVisible(RgnHandle inFront);				// ROM 0x00066388 RecalcVisible__8TClipperF11TBaseRegion
 
 	TRegionStruct	fFullRgn;			// +0x00  the view's region
 	TRegionStruct	fVisRgn;			// +0x04  less what is in front of it
@@ -186,164 +186,164 @@ public:
 class TView : public TResponder
 {
 public:
-	// the vtable's order (analysis/vtable.py build/MP2100D 0x1f75c)
-	virtual long	ClassID(void) const;								// ROM 0x0025d358 ClassID__5TViewCFv
-	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x00261688 DerivedFrom__5TViewCFl
-	virtual			~TView();											// ROM 0x00266bbc __dt__5TViewFv
-	virtual Boolean	DoCommand(RefArg cmd);								// ROM 0x00266c94 DoCommand__5TViewFRC6RefVar
-	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x00264430 Constructor__5TViewFRC6RefVarP5TView
-	virtual void	Delete(void);										// ROM 0x0026564c Delete__5TViewFv
-	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x00266e00 RealDoCommand__5TViewFRC6RefVar
-	virtual long	TextFlags(void) const;								// ROM 0x0025dca4 TextFlags__5TViewCFv
-	virtual void	OuterBounds(Rect* bounds);							// ROM 0x00262198 OuterBounds__5TViewFP5TRect
-	virtual Boolean	InsideView(Point& pt);								// ROM 0x0025dcfc InsideView__5TViewFR6TPoint
-	virtual void	SetBounds(const Rect& bounds);						// ROM 0x00263624 SetBounds__5TViewFRC5TRect
-	virtual void	ChildBoundsChanged(TView* child, Rect& bounds);		// ROM 0x00263894 ChildBoundsChanged__5TViewFP5TViewR5TRect
-	virtual void	SetupForm(void);									// ROM 0x00263898 SetupForm__5TViewFv
-	virtual void	SetupDone(void);									// ROM 0x00263988 SetupDone__5TViewFv
-	virtual void	Hide(void);											// ROM 0x0026404c Hide__5TViewFv
-	virtual Ref		GetRangeText(long start, long end);					// ROM 0x002688c8 GetRangeText__5TViewFlT1
-	virtual Ref		GetValue(RefArg slot, RefArg type);					// ROM 0x002688d0 GetValue__5TViewFRC6RefVarT1
-	virtual void	SetValue(RefArg slot, RefArg value);				// ROM 0x00268ab4 SetValue__5TViewFRC6RefVarT1
-	virtual void	Changed(RefArg slot);								// ROM 0x00268cfc Changed__5TViewFRC6RefVar
-	virtual void	Changed(RefArg slot, RefArg context);				// ROM 0x00268d08 Changed__5TViewFRC6RefVarT1
-	virtual void	Dirty(const Rect* rect);							// ROM 0x00268ee8 Dirty__5TViewFPC5TRect
-	virtual void	Hilite(Boolean on);									// ROM 0x0026418c Hilite__5TViewFUc
-	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x00268768 SetCaretOffset__5TViewFPlT1
-	virtual void	SetSelection(RefArg selection, long* start, long* end);	// ROM 0x00268764 SetSelection__5TViewFRC6RefVarPlT2
-	virtual Ref		GetSelection(void);									// ROM 0x00268750 GetSelection__5TViewFv
-	virtual void	ActivateSelection(Boolean on);						// ROM 0x0026876c ActivateSelection__5TViewFUc
-	virtual Boolean	DoEditCommand(long command);						// ROM 0x0009f9ec DoEditCommand__5TViewFl
-	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00268810 OffsetToCaret__5TViewFlP5TRect
-	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x002687f0 PointToCaret__5TViewFR6TPointP5TRectT2
+	// the vtable's order (analysis/vtable.py build/MP2x00US 0x1f75c)
+	virtual long	ClassID(void) const;								// ROM 0x0025f290 ClassID__5TViewCFv
+	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x002635c0 DerivedFrom__5TViewCFl
+	virtual			~TView();											// ROM 0x00268af4 __dt__5TViewFv
+	virtual Boolean	DoCommand(RefArg cmd);								// ROM 0x00268bcc DoCommand__5TViewFRC6RefVar
+	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x00266368 Constructor__5TViewFRC6RefVarP5TView
+	virtual void	Delete(void);										// ROM 0x00267584 Delete__5TViewFv
+	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x00268d38 RealDoCommand__5TViewFRC6RefVar
+	virtual long	TextFlags(void) const;								// ROM 0x0025fbdc TextFlags__5TViewCFv
+	virtual void	OuterBounds(Rect* bounds);							// ROM 0x002640d0 OuterBounds__5TViewFP5TRect
+	virtual Boolean	InsideView(Point& pt);								// ROM 0x0025fc34 InsideView__5TViewFR6TPoint
+	virtual void	SetBounds(const Rect& bounds);						// ROM 0x0026555c SetBounds__5TViewFRC5TRect
+	virtual void	ChildBoundsChanged(TView* child, Rect& bounds);		// ROM 0x002657cc ChildBoundsChanged__5TViewFP5TViewR5TRect
+	virtual void	SetupForm(void);									// ROM 0x002657d0 SetupForm__5TViewFv
+	virtual void	SetupDone(void);									// ROM 0x002658c0 SetupDone__5TViewFv
+	virtual void	Hide(void);											// ROM 0x00265f84 Hide__5TViewFv
+	virtual Ref		GetRangeText(long start, long end);					// ROM 0x0026a800 GetRangeText__5TViewFlT1
+	virtual Ref		GetValue(RefArg slot, RefArg type);					// ROM 0x0026a808 GetValue__5TViewFRC6RefVarT1
+	virtual void	SetValue(RefArg slot, RefArg value);				// ROM 0x0026a9ec SetValue__5TViewFRC6RefVarT1
+	virtual void	Changed(RefArg slot);								// ROM 0x0026ac34 Changed__5TViewFRC6RefVar
+	virtual void	Changed(RefArg slot, RefArg context);				// ROM 0x0026ac40 Changed__5TViewFRC6RefVarT1
+	virtual void	Dirty(const Rect* rect);							// ROM 0x0026ae20 Dirty__5TViewFPC5TRect
+	virtual void	Hilite(Boolean on);									// ROM 0x002660c4 Hilite__5TViewFUc
+	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x0026a6a0 SetCaretOffset__5TViewFPlT1
+	virtual void	SetSelection(RefArg selection, long* start, long* end);	// ROM 0x0026a69c SetSelection__5TViewFRC6RefVarPlT2
+	virtual Ref		GetSelection(void);									// ROM 0x0026a688 GetSelection__5TViewFv
+	virtual void	ActivateSelection(Boolean on);						// ROM 0x0026a6a4 ActivateSelection__5TViewFUc
+	virtual Boolean	DoEditCommand(long command);						// ROM 0x0009e7ec DoEditCommand__5TViewFl
+	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x0026a748 OffsetToCaret__5TViewFlP5TRect
+	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x0026a728 PointToCaret__5TViewFR6TPointP5TRectT2
 	virtual void	NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* bounds);	// ROM 0x002639d4
-	virtual void	RemoveAllViews(void);								// ROM 0x0025db24 RemoveAllViews__5TViewFv
-	virtual long	Idle(long arg);										// ROM 0x00266c04 Idle__5TViewFl
-	virtual void	DrawHiliting(void);									// ROM 0x00265250 DrawHiliting__5TViewFv
-	virtual void	DrawHilitedData(void);								// ROM 0x00265224 DrawHilitedData__5TViewFv
-	virtual Boolean	HandleHilite(TUnitPublic* unit, long arg, Boolean on);	// ROM 0x00260218 HandleHilite__5TViewFP11TUnitPubliclUc
-	virtual Boolean	HandleScrub(const Rect& bounds, long arg, TUnitPublic* unit, Boolean on);	// ROM 0x002605f0 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
-	virtual Boolean	Hilited(void);										// ROM 0x0025feac Hilited__5TViewFv
-	virtual void	DrawHilites(Boolean on);							// ROM 0x0025ff5c DrawHilites__5TViewFUc
-	virtual Boolean	IsCompletelyHilited(RefArg hilite);					// ROM 0x002600c8 IsCompletelyHilited__5TViewFRC6RefVar
-	virtual void	HiliteAll(void);									// ROM 0x002600d0 HiliteAll__5TViewFv
-	virtual void	DeleteHilited(RefArg hilite);						// ROM 0x002601cc DeleteHilited__5TViewFRC6RefVar
-	virtual void	RemoveHilite(RefArg hilite);						// ROM 0x0025ff60 RemoveHilite__5TViewFRC6RefVar
-	virtual void	RemoveAllHilites(void);								// ROM 0x0026002c RemoveAllHilites__5TViewFv
-	virtual long	GlobalHiliteBounds(Rect* bounds);					// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
-	virtual void	GlobalHiliteResizeBounds(Rect* bounds);				// ROM 0x002604dc GlobalHiliteResizeBounds__5TViewFP5TRect
-	virtual void	GlobalHilitePinnedBounds(Rect* bounds);				// ROM 0x00260514 GlobalHilitePinnedBounds__5TViewFP5TRect
-	virtual Boolean	PointInHilite(Point& pt);							// ROM 0x0026051c PointInHilite__5TViewFR6TPoint
-	virtual long	ClickOptions(void);									// ROM 0x00260630 ClickOptions__5TViewFv
-	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x00260638 DrawScaledData__5TViewFRC5TRectT1P5TRect
-	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0009f848 AddDragInfo__5TViewFP9TDragInfo (viewAddDragInfoScript)
-	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x000a27c0 GetDropData__5TViewFRC6RefVarT1 (viewGetDropDataScript, else nil)
-	virtual Boolean	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* slop, Boolean copy, const TDragInfo& dragInfo, const Rect* dragBounds);	// ROM 0x0009e394 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3
+	virtual void	RemoveAllViews(void);								// ROM 0x0025fa5c RemoveAllViews__5TViewFv
+	virtual long	Idle(long arg);										// ROM 0x00268b3c Idle__5TViewFl
+	virtual void	DrawHiliting(void);									// ROM 0x00267188 DrawHiliting__5TViewFv
+	virtual void	DrawHilitedData(void);								// ROM 0x0026715c DrawHilitedData__5TViewFv
+	virtual Boolean	HandleHilite(TUnitPublic* unit, long arg, Boolean on);	// ROM 0x00262150 HandleHilite__5TViewFP11TUnitPubliclUc
+	virtual Boolean	HandleScrub(const Rect& bounds, long arg, TUnitPublic* unit, Boolean on);	// ROM 0x00262528 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
+	virtual Boolean	Hilited(void);										// ROM 0x00261de4 Hilited__5TViewFv
+	virtual void	DrawHilites(Boolean on);							// ROM 0x00261e94 DrawHilites__5TViewFUc
+	virtual Boolean	IsCompletelyHilited(RefArg hilite);					// ROM 0x00262000 IsCompletelyHilited__5TViewFRC6RefVar
+	virtual void	HiliteAll(void);									// ROM 0x00262008 HiliteAll__5TViewFv
+	virtual void	DeleteHilited(RefArg hilite);						// ROM 0x00262104 DeleteHilited__5TViewFRC6RefVar
+	virtual void	RemoveHilite(RefArg hilite);						// ROM 0x00261e98 RemoveHilite__5TViewFRC6RefVar
+	virtual void	RemoveAllHilites(void);								// ROM 0x00261f64 RemoveAllHilites__5TViewFv
+	virtual long	GlobalHiliteBounds(Rect* bounds);					// ROM 0x002622d8 GlobalHiliteBounds__5TViewFP5TRect
+	virtual void	GlobalHiliteResizeBounds(Rect* bounds);				// ROM 0x00262414 GlobalHiliteResizeBounds__5TViewFP5TRect
+	virtual void	GlobalHilitePinnedBounds(Rect* bounds);				// ROM 0x0026244c GlobalHilitePinnedBounds__5TViewFP5TRect
+	virtual Boolean	PointInHilite(Point& pt);							// ROM 0x00262454 PointInHilite__5TViewFR6TPoint
+	virtual long	ClickOptions(void);									// ROM 0x00262568 ClickOptions__5TViewFv
+	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect
+	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0009e648 AddDragInfo__5TViewFP9TDragInfo (viewAddDragInfoScript)
+	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x000a15c0 GetDropData__5TViewFRC6RefVarT1 (viewGetDropDataScript, else nil)
+	virtual Boolean	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* slop, Boolean copy, const TDragInfo& dragInfo, const Rect* dragBounds);	// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3
 	virtual void	DrawDragBackground(const Rect& bounds, Boolean copy);
 	virtual void	DrawDragData(const Rect& bounds);
 	virtual Boolean	GetClipboardDataBits(Rect* bounds);
-	virtual Boolean	AcceptDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a24c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
-	virtual Boolean	Drop(RefArg dropTypes, RefArg dropData, Point* dropPt);	// ROM 0x0009ddc4 Drop__5TViewFRC6RefVarT1P6TPoint (viewDropScript)
-	virtual Boolean	DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy);	// ROM 0x000a25e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc (viewDropMoveScript)
-	virtual Boolean	DropRemove(RefArg dragRef);							// ROM 0x0009de90 DropRemove__5TViewFRC6RefVar (viewDropRemoveScript)
-	virtual Boolean	DropDone(void);										// ROM 0x0009e334 DropDone__5TViewFv
-	virtual Boolean	DropApprove(TView* target);							// ROM 0x0009df10 DropApprove__5TViewFP5TView (viewDropApproveScript)
-	virtual TView*	TargetDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x0009e7c8 TargetDrop__5TViewFRC9TDragInfoRC6TPoint
-	virtual void	BuildKeyChildList(TViewList* list, long arg1, long arg2);	// ROM 0x00268290 BuildKeyChildList__5TViewFP9TViewListlT2
-	virtual void	SimpleOffset(Point delta, Boolean inChildren);		// ROM 0x0025e064 SimpleOffset__5TViewF6TPointl
-	virtual void	PreDraw(Rect& bounds);								// ROM 0x00266370 PreDraw__5TViewFR5TRect
-	virtual void	PostDraw(Rect& bounds);								// ROM 0x002666c0 PostDraw__5TViewFR5TRect
-	virtual void	RealDraw(Rect& bounds);								// ROM 0x002666bc RealDraw__5TViewFR5TRect
-	virtual void	Scale(const Rect& src, const Rect& dst);			// ROM 0x002606bc Scale__5TViewFRC5TRectT1
-	virtual void	EndDrag(const TDragInfo& dragInfo, TView* target, const Point& startPt, const Point& dropPt, const Point& dragPt, Boolean copy);	// ROM 0x0009dfb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
+	virtual Boolean	AcceptDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a12c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
+	virtual Boolean	Drop(RefArg dropTypes, RefArg dropData, Point* dropPt);	// ROM 0x0009cbc4 Drop__5TViewFRC6RefVarT1P6TPoint (viewDropScript)
+	virtual Boolean	DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy);	// ROM 0x000a13e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc (viewDropMoveScript)
+	virtual Boolean	DropRemove(RefArg dragRef);							// ROM 0x0009cc90 DropRemove__5TViewFRC6RefVar (viewDropRemoveScript)
+	virtual Boolean	DropDone(void);										// ROM 0x0009d134 DropDone__5TViewFv
+	virtual Boolean	DropApprove(TView* target);							// ROM 0x0009cd10 DropApprove__5TViewFP5TView (viewDropApproveScript)
+	virtual TView*	TargetDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x0009d5c8 TargetDrop__5TViewFRC9TDragInfoRC6TPoint
+	virtual void	BuildKeyChildList(TViewList* list, long arg1, long arg2);	// ROM 0x0026a1c8 BuildKeyChildList__5TViewFP9TViewListlT2
+	virtual void	SimpleOffset(Point delta, Boolean inChildren);		// ROM 0x0025ff9c SimpleOffset__5TViewF6TPointl
+	virtual void	PreDraw(Rect& bounds);								// ROM 0x002682a8 PreDraw__5TViewFR5TRect
+	virtual void	PostDraw(Rect& bounds);								// ROM 0x002685f8 PostDraw__5TViewFR5TRect
+	virtual void	RealDraw(Rect& bounds);								// ROM 0x002685f4 RealDraw__5TViewFR5TRect
+	virtual void	Scale(const Rect& src, const Rect& dst);			// ROM 0x002625f4 Scale__5TViewFRC5TRectT1
+	virtual void	EndDrag(const TDragInfo& dragInfo, TView* target, const Point& startPt, const Point& dropPt, const Point& dragPt, Boolean copy);	// ROM 0x0009cdb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
 	virtual void	DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean copy);
 	virtual Ref		GetSupportedDropTypes(const Point& pt);
 	virtual TView*	FindDropView(const TDragInfo& dragInfo, const Point& pt);
 
 	// making and structure
-	static Ref		BuildContext(RefArg templ, Boolean forceVisible);		// ROM 0x0025c634 BuildContext__5TViewFRC6RefVarUc  (the view is unused: a static here)
-	TView*		AddView(RefArg templ);									// ROM 0x0025d274 AddView__5TViewFRC6RefVar
-	void		AddView(TView* child);									// ROM 0x0025d994 AddView__5TViewFP5TView
-	TView*		AddChild(RefArg templ);									// ROM 0x00263f14 AddChild__5TViewFRC6RefVar
-	void		AddViews(Boolean sync);									// ROM 0x00260cd4 AddViews__5TViewFUc
-	void		RemoveView(void);										// ROM 0x0025da28 RemoveView__5TViewFv
-	void		RemoveChildView(TView* child);							// ROM 0x0025da34 RemoveChildView__5TViewFP5TView
-	void		RemoveUnmarked(void);									// ROM 0x00260468 RemoveUnmarked__5TViewFv
-	void		ReorderView(TView* child, long index);					// ROM 0x0025eda0 ReorderView__5TViewFP5TViewl
-	void		BringToFront(void);										// ROM 0x0025f2b0 BringToFront__5TViewFv
-	void		MoveChildBehind(TView* child, TView* behind);			// ROM 0x0025f2c4 MoveChildBehind__5TViewFP5TViewT1
-	TView*		AddToSoup(RefArg templ);								// ROM 0x0025d504 AddToSoup__5TViewFRC6RefVar
-	void		RemoveFromSoup(TView* child);							// ROM 0x0025d66c RemoveFromSoup__5TViewFP5TView
-	TView*		FindView(RefArg data);									// ROM 0x0025dbfc FindView__5TViewFRC6RefVar
-	TView*		FindView(Point pt, ULong flags, Point* distance);		// ROM 0x0025df5c FindView__5TViewF6TPointUlP6TPoint
+	static Ref		BuildContext(RefArg templ, Boolean forceVisible);		// ROM 0x0025e56c BuildContext__5TViewFRC6RefVarUc  (the view is unused: a static here)
+	TView*		AddView(RefArg templ);									// ROM 0x0025f1ac AddView__5TViewFRC6RefVar
+	void		AddView(TView* child);									// ROM 0x0025f8cc AddView__5TViewFP5TView
+	TView*		AddChild(RefArg templ);									// ROM 0x00265e4c AddChild__5TViewFRC6RefVar
+	void		AddViews(Boolean sync);									// ROM 0x00262c0c AddViews__5TViewFUc
+	void		RemoveView(void);										// ROM 0x0025f960 RemoveView__5TViewFv
+	void		RemoveChildView(TView* child);							// ROM 0x0025f96c RemoveChildView__5TViewFP5TView
+	void		RemoveUnmarked(void);									// ROM 0x002623a0 RemoveUnmarked__5TViewFv
+	void		ReorderView(TView* child, long index);					// ROM 0x00260cd8 ReorderView__5TViewFP5TViewl
+	void		BringToFront(void);										// ROM 0x002611e8 BringToFront__5TViewFv
+	void		MoveChildBehind(TView* child, TView* behind);			// ROM 0x002611fc MoveChildBehind__5TViewFP5TViewT1
+	TView*		AddToSoup(RefArg templ);								// ROM 0x0025f43c AddToSoup__5TViewFRC6RefVar
+	void		RemoveFromSoup(TView* child);							// ROM 0x0025f5a4 RemoveFromSoup__5TViewFP5TView
+	TView*		FindView(RefArg data);									// ROM 0x0025fb34 FindView__5TViewFRC6RefVar
+	TView*		FindView(Point pt, ULong flags, Point* distance);		// ROM 0x0025fe94 FindView__5TViewF6TPointUlP6TPoint
 	TView*		FindClosestView(Point pt, ULong flags, long* distance, Point* delta, Boolean* clipped);	// ROM 0x0025de40
-	long		Distance(Point pt, Point* delta);						// ROM 0x0025dd38 Distance__5TViewF6TPointP6TPoint
-	void		Select(Boolean on, Boolean unique);						// ROM 0x00264c34 Select__5TViewFUcT1
-	Boolean		HandleKeyEvent(RefArg cmd, ULong id, Boolean* isCommandKey);	// ROM 0x00267d00 HandleKeyEvent__5TViewFRC6RefVarUlPUc
-	void		SelectNone(void);										// ROM 0x002643c4 SelectNone__5TViewFv
-	TView*		FindID(long id);										// ROM 0x00265460 FindID__5TViewFl
-	TView*		FrontMost(void);										// ROM 0x0025f3d4 FrontMost__5TViewFv
-	TView*		FrontMostApp(void);										// ROM 0x0025f448 FrontMostApp__5TViewFv
-	Ref			ChildViewFrames(void);									// ROM 0x0025f328 ChildViewFrames__5TViewFv
-	Ref			Children(void);											// ROM 0x00268758 Children__5TViewFv
-	TView*		GetWindowView(void);									// ROM 0x00263d10 GetWindowView__5TViewFv
-	TView*		NextKeyView(TView* focus, long direction, long kind);	// ROM 0x002683a0 NextKeyView__5TViewFP5TViewlT2 - the next (direction 1) or previous (-1) key view in the tab order
-	Boolean		ProtoedFrom(RefArg proto);								// ROM 0x00268200 ProtoedFrom__5TViewFRC6RefVar
-	TClipper*	Clipper(void) const;									// ROM 0x00268830 Clipper__5TViewCFv
-	Boolean		HasVisRgn(void) const;									// ROM 0x00268898 HasVisRgn__5TViewCFv
-	Boolean		VisibleDeep(void) const;								// ROM 0x00260a18 VisibleDeep__5TViewCFv
+	long		Distance(Point pt, Point* delta);						// ROM 0x0025fc70 Distance__5TViewF6TPointP6TPoint
+	void		Select(Boolean on, Boolean unique);						// ROM 0x00266b6c Select__5TViewFUcT1
+	Boolean		HandleKeyEvent(RefArg cmd, ULong id, Boolean* isCommandKey);	// ROM 0x00269c38 HandleKeyEvent__5TViewFRC6RefVarUlPUc
+	void		SelectNone(void);										// ROM 0x002662fc SelectNone__5TViewFv
+	TView*		FindID(long id);										// ROM 0x00267398 FindID__5TViewFl
+	TView*		FrontMost(void);										// ROM 0x0026130c FrontMost__5TViewFv
+	TView*		FrontMostApp(void);										// ROM 0x00261380 FrontMostApp__5TViewFv
+	Ref			ChildViewFrames(void);									// ROM 0x00261260 ChildViewFrames__5TViewFv
+	Ref			Children(void);											// ROM 0x0026a690 Children__5TViewFv
+	TView*		GetWindowView(void);									// ROM 0x00265c48 GetWindowView__5TViewFv
+	TView*		NextKeyView(TView* focus, long direction, long kind);	// ROM 0x0026a2d8 NextKeyView__5TViewFP5TViewlT2 - the next (direction 1) or previous (-1) key view in the tab order
+	Boolean		ProtoedFrom(RefArg proto);								// ROM 0x0026a138 ProtoedFrom__5TViewFRC6RefVar
+	TClipper*	Clipper(void) const;									// ROM 0x0026a768 Clipper__5TViewCFv
+	Boolean		HasVisRgn(void) const;									// ROM 0x0026a7d0 HasVisRgn__5TViewCFv
+	Boolean		VisibleDeep(void) const;								// ROM 0x00262950 VisibleDeep__5TViewCFv
 
 	// the context and its slots
-	Ref			DataFrame(void);										// ROM 0x00269038 DataFrame__5TViewFv
-	Ref			Hilites(void);											// ROM 0x0025fe3c Hilites__5TViewFv - the hilites slot (the view's selections)
-	Ref			FirstHilite(void);										// ROM 0x0025fef8 FirstHilite__5TViewFv - the first, or nil
-	Ref			GetProto(RefArg slot) const;							// ROM 0x00269074 GetProto__5TViewCFRC6RefVar
-	Ref			GetVar(RefArg slot) const;								// ROM 0x00269080 GetVar__5TViewCFRC6RefVar
-	Ref			GetWriteableProtoVariable(RefArg slot);					// ROM 0x00269090 GetWriteableProtoVariable__5TViewFRC6RefVar
-	Ref			GetWriteableVariable(RefArg slot);						// ROM 0x00269134 GetWriteableVariable__5TViewFRC6RefVar
-	void		SetContextSlot(RefArg slot, RefArg value);				// ROM 0x002691b4 SetContextSlot__5TViewFRC6RefVarT1
-	void		SetDataSlot(RefArg slot, RefArg value);					// ROM 0x002691bc SetDataSlot__5TViewFRC6RefVarT1
-	Ref			GetCacheProto(long index);								// ROM 0x0025d474 GetCacheProto__5TViewFl
-	Ref			GetCacheVariable(long index);							// ROM 0x0025d3e4 GetCacheVariable__5TViewFl
-	void		InvalidateSlotCache(long index);						// ROM 0x00261d94 InvalidateSlotCache__5TViewFl
+	Ref			DataFrame(void);										// ROM 0x0026af70 DataFrame__5TViewFv
+	Ref			Hilites(void);											// ROM 0x00261d74 Hilites__5TViewFv - the hilites slot (the view's selections)
+	Ref			FirstHilite(void);										// ROM 0x00261e30 FirstHilite__5TViewFv - the first, or nil
+	Ref			GetProto(RefArg slot) const;							// ROM 0x0026afac GetProto__5TViewCFRC6RefVar
+	Ref			GetVar(RefArg slot) const;								// ROM 0x0026afb8 GetVar__5TViewCFRC6RefVar
+	Ref			GetWriteableProtoVariable(RefArg slot);					// ROM 0x0026afc8 GetWriteableProtoVariable__5TViewFRC6RefVar
+	Ref			GetWriteableVariable(RefArg slot);						// ROM 0x0026b06c GetWriteableVariable__5TViewFRC6RefVar
+	void		SetContextSlot(RefArg slot, RefArg value);				// ROM 0x0026b0ec SetContextSlot__5TViewFRC6RefVarT1
+	void		SetDataSlot(RefArg slot, RefArg value);					// ROM 0x0026b0f4 SetDataSlot__5TViewFRC6RefVarT1
+	Ref			GetCacheProto(long index);								// ROM 0x0025f3ac GetCacheProto__5TViewFl
+	Ref			GetCacheVariable(long index);							// ROM 0x0025f31c GetCacheVariable__5TViewFl
+	void		InvalidateSlotCache(long index);						// ROM 0x00263ccc InvalidateSlotCache__5TViewFl
 	Ref			RunScript(RefArg tag, RefArg args, Boolean lookupVars = false, Boolean* ran = nil);		// ROM 0x00261dc8
 	Ref			RunCacheScript(long index, RefArg args, Boolean lookupVars = false, Boolean* ran = nil);	// ROM 0x00261c84
-	void		Sync(void);												// ROM 0x0025d730 Sync__5TViewFv
-	void		SetFlags(ULong flags);									// ROM 0x0025d360 SetFlags__5TViewFUl
-	void		ClearFlags(ULong flags);								// ROM 0x00268c78 ClearFlags__5TViewFUl
-	Ref			GetTextStyle(void);										// ROM 0x0025f8d4 GetTextStyle__5TViewFv
-	void		GetTextStyleRecord(StyleRecord* style);					// ROM 0x0025f948 GetTextStyleRecord__5TViewFP11StyleRecord
-	Boolean		Printing(void);											// ROM 0x0025fe0c Printing__5TViewFv
+	void		Sync(void);												// ROM 0x0025f668 Sync__5TViewFv
+	void		SetFlags(ULong flags);									// ROM 0x0025f298 SetFlags__5TViewFUl
+	void		ClearFlags(ULong flags);								// ROM 0x0026abb0 ClearFlags__5TViewFUl
+	Ref			GetTextStyle(void);										// ROM 0x0026180c GetTextStyle__5TViewFv
+	void		GetTextStyleRecord(StyleRecord* style);					// ROM 0x00261880 GetTextStyleRecord__5TViewFP11StyleRecord
+	Boolean		Printing(void);											// ROM 0x00261d44 Printing__5TViewFv
 
 	// bounds
-	void		JustifyBounds(Rect* bounds);							// ROM 0x00262224 JustifyBounds__5TViewFP5TRect
-	void		DejustifyBounds(Rect* bounds);							// ROM 0x00262b1c DejustifyBounds__5TViewFP5TRect
-	void		RecalcBounds(void);										// ROM 0x0026336c RecalcBounds__5TViewFv
-	void		WriteBounds(const Rect& bounds);						// ROM 0x00261ff0 WriteBounds__5TViewFRC5TRect
-	void		Move(const Point& delta);								// ROM 0x00261ee4 Move__5TViewFRC6TPoint
-	void		Offset(Point delta);									// ROM 0x0025df8c Offset__5TViewF6TPoint
-	Boolean		Drag(TStrokePublic* stroke, const Rect& limit);			// ROM 0x00264cbc Drag__5TViewFP13TStrokePublicRC5TRect (the view dragged with the pen within the limit; ==> whether it moved)
-	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x0025e0f0 ChildViewMoved__5TViewFP5TView6TPoint
-	void		GetChildOrigin(Point* origin);							// ROM 0x00265520 GetChildOrigin__5TViewFP6TPoint
-	Point		ContentsOrigin(void);									// ROM 0x002655cc ContentsOrigin__5TViewFv
-	Boolean		IsGridded(RefArg gridKind, Point* spacing);	// ROM 0x00260ae8 IsGridded__5TViewFRC6RefVarP6TPoint - the viewGrid is this kind, and how far apart
-	Point		LocalOrigin(void) const;								// ROM 0x00261e6c LocalOrigin__5TViewCFv
-	void		SetOrigin(Point& origin);								// ROM 0x002633fc SetOrigin__5TViewFR6TPoint
-	long		ChildrenHeight(long* count);							// ROM 0x002636e4 ChildrenHeight__5TViewFPl
-	long		SetChildrenVertical(long top, long spacing);			// ROM 0x00263760 SetChildrenVertical__5TViewFlT1
+	void		JustifyBounds(Rect* bounds);							// ROM 0x0026415c JustifyBounds__5TViewFP5TRect
+	void		DejustifyBounds(Rect* bounds);							// ROM 0x00264a54 DejustifyBounds__5TViewFP5TRect
+	void		RecalcBounds(void);										// ROM 0x002652a4 RecalcBounds__5TViewFv
+	void		WriteBounds(const Rect& bounds);						// ROM 0x00263f28 WriteBounds__5TViewFRC5TRect
+	void		Move(const Point& delta);								// ROM 0x00263e1c Move__5TViewFRC6TPoint
+	void		Offset(Point delta);									// ROM 0x0025fec4 Offset__5TViewF6TPoint
+	Boolean		Drag(TStrokePublic* stroke, const Rect& limit);			// ROM 0x00266bf4 Drag__5TViewFP13TStrokePublicRC5TRect (the view dragged with the pen within the limit; ==> whether it moved)
+	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x00260028 ChildViewMoved__5TViewFP5TView6TPoint
+	void		GetChildOrigin(Point* origin);							// ROM 0x00267458 GetChildOrigin__5TViewFP6TPoint
+	Point		ContentsOrigin(void);									// ROM 0x00267504 ContentsOrigin__5TViewFv
+	Boolean		IsGridded(RefArg gridKind, Point* spacing);	// ROM 0x00262a20 IsGridded__5TViewFRC6RefVarP6TPoint - the viewGrid is this kind, and how far apart
+	Point		LocalOrigin(void) const;								// ROM 0x00263da4 LocalOrigin__5TViewCFv
+	void		SetOrigin(Point& origin);								// ROM 0x00265334 SetOrigin__5TViewFR6TPoint
+	long		ChildrenHeight(long* count);							// ROM 0x0026561c ChildrenHeight__5TViewFPl
+	long		SetChildrenVertical(long top, long spacing);			// ROM 0x00265698 SetChildrenVertical__5TViewFlT1
 
 	// showing and drawing
-	void		Show(void);												// ROM 0x00263f48 Show__5TViewFv
-	void		ViewVisibleChanged(TView* child, Boolean invalidate);		// ROM 0x00263d48 ViewVisibleChanged__5TViewFP5TViewUc
-	TRegion		SetupVisRgn(void) const;								// ROM 0x00265a3c SetupVisRgn__5TViewCFv
-	TRegion		GetFrontMask(void) const;								// ROM 0x00263b4c GetFrontMask__5TViewCFv
-	void		Draw(const Rect& bounds, Boolean force);				// ROM 0x00265b54 Draw__5TViewFRC5TRectUc
-	void		Draw(RgnHandle rgn, Boolean force);						// ROM 0x00265b90 Draw__5TViewF11TBaseRegionUc
-	void		Update(RgnHandle rgn, TView* filler);					// ROM 0x00266050 Update__5TViewF11TBaseRegionP5TView
-	void		DrawChildren(const Rect& bounds, TView* after);			// ROM 0x00266200 DrawChildren__5TViewFRC5TRectP5TView
-	void		DrawChildren(RgnHandle rgn, TView* after);				// ROM 0x0026623c DrawChildren__5TViewF11TBaseRegionP5TView
-	Boolean		SetCustomPattern(RefArg slot);							// ROM 0x00266308 SetCustomPattern__5TViewFRC6RefVar
-	void		Dump(long depth);										// ROM 0x0025e33c Dump__5TViewFl
+	void		Show(void);												// ROM 0x00265e80 Show__5TViewFv
+	void		ViewVisibleChanged(TView* child, Boolean invalidate);		// ROM 0x00265c80 ViewVisibleChanged__5TViewFP5TViewUc
+	TRegion		SetupVisRgn(void) const;								// ROM 0x00267974 SetupVisRgn__5TViewCFv
+	TRegion		GetFrontMask(void) const;								// ROM 0x00265a84 GetFrontMask__5TViewCFv
+	void		Draw(const Rect& bounds, Boolean force);				// ROM 0x00267a8c Draw__5TViewFRC5TRectUc
+	void		Draw(RgnHandle rgn, Boolean force);						// ROM 0x00267ac8 Draw__5TViewF11TBaseRegionUc
+	void		Update(RgnHandle rgn, TView* filler);					// ROM 0x00267f88 Update__5TViewF11TBaseRegionP5TView
+	void		DrawChildren(const Rect& bounds, TView* after);			// ROM 0x00268138 DrawChildren__5TViewFRC5TRectP5TView
+	void		DrawChildren(RgnHandle rgn, TView* after);				// ROM 0x00268174 DrawChildren__5TViewF11TBaseRegionP5TView
+	Boolean		SetCustomPattern(RefArg slot);							// ROM 0x00268240 SetCustomPattern__5TViewFRC6RefVar
+	void		Dump(long depth);										// ROM 0x00260274 Dump__5TViewFl
 
 	// the fields (the ROM's offsets)
 	long		fId;				// +0x04  a serial number
@@ -362,7 +362,7 @@ public:
 };
 
 extern TRootView*	gRootView;
-extern long			gModalCount;		// ROM 0x0c102618 gModalCount - how many modal dialogs are up (NOT YET: the modal dialogs)				// 0x0c101a20
+extern long			gModalCount;		// ROM 0x0c105524 gModalCount - how many modal dialogs are up (NOT YET: the modal dialogs)				// 0x0c101a20
 extern RefStruct*	gSlotCacheTable;		// 0x0c10204c slotCacheRefs: the ROM keeps a pointer to the 34 slot symbols of Rslotcachetable; the host the array (SlotCacheRef)
 Ref			SlotCacheRef(long index);		// the slot symbol of a cache index
 extern Boolean		gSkipVisRegions;		// 0x0c102054  Draw does not clip to the visible regions
@@ -371,22 +371,22 @@ extern Boolean		gOutlineViews;			// 0x0c101a28  Draw frames every view in light 
 extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET: unused)
 
 // views from contexts
-TView*		GetView(RefArg context);								// ROM 0x0025f4c4 GetView__FRC6RefVar
-TView*		GetView(RefArg context, RefArg name);					// ROM 0x0025f5a8 GetView__FRC6RefVarT1
-TView*		FailGetView(RefArg context);							// ROM 0x001efe1c FailGetView__FRC6RefVar
-TView*		FailGetView(RefArg context, RefArg name);				// ROM 0x001f0258 FailGetView__FRC6RefVarT1
-TView*		BuildView(TView* parent, RefArg context);				// ROM 0x0025ca18 BuildView__FP5TViewRC6RefVar
-Ref			DoPopupMenu(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext);	// ROM 0x001f2a3c FDoPopup__FRC6RefVarN41 - a popup menu opened over the items
-TView*		Exists(TViewList* list, RefArg templ);					// ROM 0x0025fe48 Exists__FP9TViewListRC6RefVar
-TView*		DataExists(TViewList* list, RefArg data);				// ROM 0x0025f84c DataExists__FP9TViewListRC6RefVar
-Boolean		SoupEQ(RefArg a, RefArg b);								// ROM 0x002638e4 SoupEQ__FRC6RefVarT1
-Boolean		ProtoEQ(RefArg a, RefArg b);							// ROM 0x00262a98 ProtoEQ__FRC6RefVarT1
-Ref			GetCacheContext(RefArg templ);							// ROM 0x0025c598 GetCacheContext__FRC6RefVar
-void		OuterBounds1(Rect* bounds, ULong viewFormat);			// ROM 0x00262114 OuterBounds1__FP5TRectUl
-void		BadWickedNaughtyNoot(long which);						// ROM 0x001f18dc BadWickedNaughtyNoot__Fl
-Boolean		GetPattern(RefArg spec, Boolean* owned, PatternHandle* pattern, Boolean wasOwned);	// ROM 0x0019a378 GetPattern__FRC6RefVarPUcPPP8PixelMapUc - a pattern from its NewtonScript form
-Boolean		SetPattern(long index);									// ROM 0x000e4aa0 SetPattern__Fl - the pen pattern from a viewFormat pattern index
-void		DisposeFgPattern(void);									// ROM 0x00303b70 DisposeFgPattern__Fv
+TView*		GetView(RefArg context);								// ROM 0x002613fc GetView__FRC6RefVar
+TView*		GetView(RefArg context, RefArg name);					// ROM 0x002614e0 GetView__FRC6RefVarT1
+TView*		FailGetView(RefArg context);							// ROM 0x001eda04 FailGetView__FRC6RefVar
+TView*		FailGetView(RefArg context, RefArg name);				// ROM 0x001ede40 FailGetView__FRC6RefVarT1
+TView*		BuildView(TView* parent, RefArg context);				// ROM 0x0025e950 BuildView__FP5TViewRC6RefVar
+Ref			DoPopupMenu(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext);	// ROM 0x001f0624 FDoPopup__FRC6RefVarN41 - a popup menu opened over the items
+TView*		Exists(TViewList* list, RefArg templ);					// ROM 0x00261d80 Exists__FP9TViewListRC6RefVar
+TView*		DataExists(TViewList* list, RefArg data);				// ROM 0x00261784 DataExists__FP9TViewListRC6RefVar
+Boolean		SoupEQ(RefArg a, RefArg b);								// ROM 0x0026581c SoupEQ__FRC6RefVarT1
+Boolean		ProtoEQ(RefArg a, RefArg b);							// ROM 0x002649d0 ProtoEQ__FRC6RefVarT1
+Ref			GetCacheContext(RefArg templ);							// ROM 0x0025e4d0 GetCacheContext__FRC6RefVar
+void		OuterBounds1(Rect* bounds, ULong viewFormat);			// ROM 0x0026404c OuterBounds1__FP5TRectUl
+void		BadWickedNaughtyNoot(long which);						// ROM 0x001ef4c4 BadWickedNaughtyNoot__Fl
+Boolean		GetPattern(RefArg spec, Boolean* owned, PatternHandle* pattern, Boolean wasOwned);	// ROM 0x00197d2c GetPattern__FRC6RefVarPUcPPP8PixelMapUc - a pattern from its NewtonScript form
+Boolean		SetPattern(long index);									// ROM 0x000e37e8 SetPattern__Fl - the pen pattern from a viewFormat pattern index
+void		DisposeFgPattern(void);									// ROM 0x00328e6c DisposeFgPattern__Fv
 
 void		InitViewPrototypes(void);		// host: the canonical context, data context and rect frames when no ROM is imported
 void		InitViewSystem(void);			// host: the slot cache table, the prototypes, the root view (with the current port) - after InitObjects and InitGraf

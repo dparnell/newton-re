@@ -3,7 +3,7 @@
 
 	Contains:	THilite, TParagraphHilite and HiliteLoop (Hilites.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Hilites.h"
@@ -15,7 +15,7 @@
 	T H i l i t e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00260bdc __ct__7THiliteFv
+// ROM 0x00262b14 __ct__7THiliteFv
 // The ROM leaves the bounds alone; the host empties them, an uninitialised
 // rectangle being indeterminate rather than merely stale.
 THilite::THilite()
@@ -24,12 +24,12 @@ THilite::THilite()
 }
 
 
-// ROM 0x00260c10 __dt__7THiliteFv
+// ROM 0x00262b48 __dt__7THiliteFv
 THilite::~THilite()
 { }
 
 
-// ROM 0x00260c28 Area__7THiliteFv
+// ROM 0x00262b60 Area__7THiliteFv
 void
 THilite::Area(RgnHandle rgn)
 {
@@ -37,7 +37,7 @@ THilite::Area(RgnHandle rgn)
 }
 
 
-// ROM 0x00260c70 Clone__7THiliteFv
+// ROM 0x00262ba8 Clone__7THiliteFv
 THilite*
 THilite::Clone(void)
 {
@@ -47,7 +47,7 @@ THilite::Clone(void)
 }
 
 
-// ROM 0x00260c9c CopyFrom__7THiliteFP7THilite
+// ROM 0x00262bd4 CopyFrom__7THiliteFP7THilite
 void
 THilite::CopyFrom(THilite* other)
 {
@@ -55,13 +55,13 @@ THilite::CopyFrom(THilite* other)
 }
 
 
-// ROM 0x00260cb0 UpdateBounds__7THiliteFv
+// ROM 0x00262be8 UpdateBounds__7THiliteFv
 void
 THilite::UpdateBounds(void)
 { }
 
 
-// ROM 0x00260cb4 Overlaps__7THiliteFRC5TRect
+// ROM 0x00262bec Overlaps__7THiliteFRC5TRect
 // A rectangle with no width or height would intersect nothing, so each is
 // given a pixel first - a hilite of an empty line still overlaps the line.
 static void
@@ -85,7 +85,7 @@ THilite::Overlaps(const Rect& r)
 }
 
 
-// ROM 0x00260cbc Encloses__7THiliteFRC6TPoint
+// ROM 0x00262bf4 Encloses__7THiliteFRC6TPoint
 Boolean
 THilite::Encloses(const Point& pt)
 {
@@ -98,7 +98,7 @@ THilite::Encloses(const Point& pt)
 	T P a r a g r a p h H i l i t e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00182e68 __ct__16TParagraphHiliteFl
+// ROM 0x00180e38 __ct__16TParagraphHiliteFl
 // The ROM's takes the length of the text to copy and allocates room for it;
 // the reconstruction takes the range instead, the text copy being NOT YET.
 TParagraphHilite::TParagraphHilite(long start, long end)
@@ -111,7 +111,7 @@ TParagraphHilite::TParagraphHilite(long start, long end)
 }
 
 
-// ROM 0x00182ef8 __dt__16TParagraphHiliteFv
+// ROM 0x00180ec8 __dt__16TParagraphHiliteFv
 TParagraphHilite::~TParagraphHilite()
 {
 	if (fArea != nil)
@@ -119,7 +119,7 @@ TParagraphHilite::~TParagraphHilite()
 }
 
 
-// ROM 0x001830c4 Area__16TParagraphHiliteFv
+// ROM 0x00181094 Area__16TParagraphHiliteFv
 // Whatever the paragraph worked out; empty until it has (SetupArea).
 void
 TParagraphHilite::Area(RgnHandle rgn)
@@ -143,7 +143,7 @@ TParagraphHilite::SetArea(RgnHandle rgn)
 }
 
 
-// ROM 0x00182f50 Clone__16TParagraphHiliteFv
+// ROM 0x00180f20 Clone__16TParagraphHiliteFv
 THilite*
 TParagraphHilite::Clone(void)
 {
@@ -153,7 +153,7 @@ TParagraphHilite::Clone(void)
 }
 
 
-// ROM 0x00182fac CopyFrom__16TParagraphHiliteFP7THilite
+// ROM 0x00180f7c CopyFrom__16TParagraphHiliteFP7THilite
 // The range and the laid-out region; the ROM also copies the selected text.
 void
 TParagraphHilite::CopyFrom(THilite* other)
@@ -167,7 +167,7 @@ TParagraphHilite::CopyFrom(THilite* other)
 }
 
 
-// ROM 0x00182fec Overlaps__16TParagraphHiliteFRC5TRect
+// ROM 0x00180fbc Overlaps__16TParagraphHiliteFRC5TRect
 // The region, once there is one - a selection that runs over several lines
 // is not the rectangle around them.
 Boolean
@@ -179,7 +179,7 @@ TParagraphHilite::Overlaps(const Rect& r)
 }
 
 
-// ROM 0x00183070 Encloses__16TParagraphHiliteFRC6TPoint
+// ROM 0x00181040 Encloses__16TParagraphHiliteFRC6TPoint
 Boolean
 TParagraphHilite::Encloses(const Point& pt)
 {
@@ -193,7 +193,7 @@ TParagraphHilite::Encloses(const Point& pt)
 	H i l i t e L o o p
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00260f58 __ct__10HiliteLoopFP5TView
+// ROM 0x00262e90 __ct__10HiliteLoopFP5TView
 // The length is read once: a caller that removes what it is handed steps
 // fIndex and fCount back itself, as TView::RemoveAllHilites does.
 HiliteLoop::HiliteLoop(TView* view)
@@ -205,12 +205,12 @@ HiliteLoop::HiliteLoop(TView* view)
 }
 
 
-// ROM 0x00260ff8 __dt__10HiliteLoopFv
+// ROM 0x00262f30 __dt__10HiliteLoopFv
 HiliteLoop::~HiliteLoop()
 { }
 
 
-// ROM 0x00261030 Next__10HiliteLoopFv
+// ROM 0x00262f68 Next__10HiliteLoopFv
 Boolean
 HiliteLoop::Next(void)
 {

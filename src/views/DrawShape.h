@@ -33,8 +33,8 @@
 				hit testing HitShape/FindShape/PointInShape, GetShapeInfo,
 				and the wedge's box (WedgeBox: the whole oval's here).
 
-	Reconstructed from the MP2100 D ROM (0x000ddae0-0x000e5000,
-	0x0019a7c4-0x0019b43c); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x000dc840-0x000e3d48,
+	0x00198178-0x00198df0); each function cites its origin.
 */
 
 #ifndef __DRAWSHAPE_H
@@ -48,8 +48,8 @@
 struct TPattern
 {
 				TPattern()	{ fPattern = nil; fOwned = false; fRestoreFg = false; }
-				~TPattern();															// ROM 0x0019a808 __dt__8TPatternFv
-	Boolean		GetFillPattern(RefArg spec, Boolean isPen);							// ROM 0x0019a7c4 GetFillPattern__8TPatternFRC6RefVarUc
+				~TPattern();															// ROM 0x001981bc __dt__8TPatternFv
+	Boolean		GetFillPattern(RefArg spec, Boolean isPen);							// ROM 0x00198178 GetFillPattern__8TPatternFRC6RefVarUc
 
 	PatternHandle	fPattern;		// +0x00
 	Boolean			fOwned;			// +0x04  disposed by the destructor
@@ -60,7 +60,7 @@ struct TPattern
 // list ends (0x10 bytes)
 struct SaveLevel
 {
-	void		Init(SaveLevel* previous);											// ROM 0x0019b424 Init__9SaveLevelFP9SaveLevel
+	void		Init(SaveLevel* previous);											// ROM 0x00198dd8 Init__9SaveLevelFP9SaveLevel
 
 	SaveLevel*	fPrevious;		// +0x00
 	RgnHandle	fClip;			// +0x04  the clip before the level's clipping
@@ -71,11 +71,11 @@ struct SaveLevel
 class TStyleSave
 {
 public:
-				TStyleSave();														// ROM 0x0019a86c __ct__10TStyleSaveFv
-				~TStyleSave();														// ROM 0x0019a9b8 __dt__10TStyleSaveFv
-	Boolean		SetStyle(RefArg style, const Point& origin, long flags);			// ROM 0x0019aab8 SetStyle__10TStyleSaveFRC6RefVarRC6TPointl
-	void		BeginLevel(SaveLevel* level);										// ROM 0x0019b384 BeginLevel__10TStyleSaveFP9SaveLevel
-	void		EndLevel(void);														// ROM 0x0019b3ac EndLevel__10TStyleSaveFv
+				TStyleSave();														// ROM 0x00198220 __ct__10TStyleSaveFv
+				~TStyleSave();														// ROM 0x0019836c __dt__10TStyleSaveFv
+	Boolean		SetStyle(RefArg style, const Point& origin, long flags);			// ROM 0x0019846c SetStyle__10TStyleSaveFRC6RefVarRC6TPointl
+	void		BeginLevel(SaveLevel* level);										// ROM 0x00198d38 BeginLevel__10TStyleSaveFP9SaveLevel
+	void		EndLevel(void);														// ROM 0x00198d60 EndLevel__10TStyleSaveFv
 
 	Boolean		fPen;				// +0x00  the outline is drawn (penPattern not nil)
 	Boolean		fFill;				// +0x01  the inside is filled (fillPattern)
@@ -97,20 +97,20 @@ public:
 };
 
 // shapes
-Boolean	IsStyleFrame(RefArg obj);													// ROM 0x000dea84 IsStyleFrame__FRC6RefVar
-Boolean	IsPrimShape(RefArg obj);													// ROM 0x000deac8 IsPrimShape__FRC6RefVar
-Ref		MakeRectShape(RefArg cls, RefArg left, RefArg top, RefArg right, RefArg bottom);	// ROM 0x000e260c MakeRectShape__FRC6RefVarN41
-void	ShapeBounds(RefArg shape, Rect* bounds);									// ROM 0x000e21cc ShapeBounds__FRC6RefVarP5TRect - a shape's or a list's bounds
-void	GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style);	// ROM 0x000e0f00 GetBoundsRect__FRC6RefVarP5TRectRC6TPointP10TStyleSave
-void	WedgeBox(Rect* box, short startAngle, short arcAngle);						// ROM 0x000e2738 WedgeBox__FP5TRectsT2
-void	DrawShape(RefArg shape, RefArg style, const Point& origin);					// ROM 0x000e0a68 DrawShape__FRC6RefVarT1RC6TPoint
-void	DrawShapeList(RefArg shape, const Point& origin, TStyleSave* style);		// ROM 0x000e0d5c DrawShapeList__FRC6RefVarRC6TPointP10TStyleSave
-void	DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style);			// ROM 0x000e0fa0 DrawOneShape__FRC6RefVarRC6TPointP10TStyleSave
+Boolean	IsStyleFrame(RefArg obj);													// ROM 0x000dd7e4 IsStyleFrame__FRC6RefVar
+Boolean	IsPrimShape(RefArg obj);													// ROM 0x000dd828 IsPrimShape__FRC6RefVar
+Ref		MakeRectShape(RefArg cls, RefArg left, RefArg top, RefArg right, RefArg bottom);	// ROM 0x000e1360 MakeRectShape__FRC6RefVarN41
+void	ShapeBounds(RefArg shape, Rect* bounds);									// ROM 0x000e0f20 ShapeBounds__FRC6RefVarP5TRect - a shape's or a list's bounds
+void	GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style);	// ROM 0x000dfc60 GetBoundsRect__FRC6RefVarP5TRectRC6TPointP10TStyleSave
+void	WedgeBox(Rect* box, short startAngle, short arcAngle);						// ROM 0x000e148c WedgeBox__FP5TRectsT2
+void	DrawShape(RefArg shape, RefArg style, const Point& origin);					// ROM 0x000df7c8 DrawShape__FRC6RefVarT1RC6TPoint
+void	DrawShapeList(RefArg shape, const Point& origin, TStyleSave* style);		// ROM 0x000dfabc DrawShapeList__FRC6RefVarRC6TPointP10TStyleSave
+void	DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style);			// ROM 0x000dfd00 DrawOneShape__FRC6RefVarRC6TPointP10TStyleSave
 
 // the NewtonScript functions: DrawShape, MakeRect, MakeOval, MakeRoundRect,
 // MakeLine, MakeWedge, MakePolygon, MakeRegion, MakeText, MakeTextBox,
 // ShapeBounds, OffsetShape, IsPrimShape
 void	RegisterShapeNatives(void);
-Ref		FDrawShape(RefArg rcvr, RefArg shape, RefArg style);						// ROM 0x000ddae4 FDrawShape - a view's DrawShape method
+Ref		FDrawShape(RefArg rcvr, RefArg shape, RefArg style);						// ROM 0x000dc844 FDrawShape - a view's DrawShape method
 
 #endif	/* __DRAWSHAPE_H */

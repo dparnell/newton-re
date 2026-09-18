@@ -13,8 +13,8 @@
 				'picture binaries (QuickDraw pictures), shapes (DrawShape,
 				ShapeBounds for them), the colour tables as gray tables.
 
-	Reconstructed from the MP2100 D ROM (0x0003e868-0x0003eb84,
-	0x0003f718-0x0003f86c, 0x00041818-0x00041e00, 0x0018b5f0-0x0018bb40);
+	Reconstructed from the MP2x00 US ROM (0x0003e7b8-0x0003ead4,
+	0x0003f614-0x0003f86c, 0x00040f28-0x00041530, 0x001895c0-0x00189b10);
 	each function cites its origin.
 */
 
@@ -44,12 +44,12 @@ const long kFramBitmapHeaderSize = 0x10;
 class TPixelObj
 {
 public:
-				TPixelObj();										// ROM 0x0003e868 __ct__9TPixelObjFv
-				~TPixelObj();										// ROM 0x0003e8bc __dt__9TPixelObjFv
-	void		Init(RefArg picture);								// ROM 0x0003f718 Init__9TPixelObjFRC6RefVar
-	void		Init(RefArg picture, Boolean withMask);				// ROM 0x00041818 Init__9TPixelObjFRC6RefVarUc
-	Ref			GetFramBitmap(void);								// ROM 0x000419a4 GetFramBitmap__9TPixelObjFv
-	void		FramBitMapToPixMap(const FramBitmap& bits, PixelMap* map);	// ROM 0x00041d40 FramBitMapToPixMap__9TPixelObjFRC10FramBitmapP8PixelMap
+				TPixelObj();										// ROM 0x0003e7b8 __ct__9TPixelObjFv
+				~TPixelObj();										// ROM 0x0003e80c __dt__9TPixelObjFv
+	void		Init(RefArg picture);								// ROM 0x0003f614 Init__9TPixelObjFRC6RefVar
+	void		Init(RefArg picture, Boolean withMask);				// ROM 0x00040f28 Init__9TPixelObjFRC6RefVarUc
+	Ref			GetFramBitmap(void);								// ROM 0x000410ac GetFramBitmap__9TPixelObjFv
+	void		FramBitMapToPixMap(const FramBitmap& bits, PixelMap* map);	// ROM 0x00041448 FramBitMapToPixMap__9TPixelObjFRC10FramBitmap (see Pictures.cpp: the two ROMs differ)
 
 	PixelMap*	Pixels(void)					{ return fPixels; }
 	PixelMap*	Mask(void)						{ return fMask; }

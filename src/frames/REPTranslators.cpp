@@ -244,17 +244,17 @@ REPFormat(char* buffer, long size, const char* format, va_list args)
 PROTOCOL_IMPL_SOURCE_MACRO(PNullInTranslator)
 PROTOCOL_CLASSINFO(PNullInTranslator, "PInTranslator", "", 0, 0, nil)
 
-// ROM 0x00148c34 New__17PNullInTranslatorFv
+// ROM 0x001470d8 New__17PNullInTranslatorFv
 PNullInTranslator*	PNullInTranslator::New()				{ return this; }
-// ROM 0x00148c38 Delete__17PNullInTranslatorFv
+// ROM 0x001470dc Delete__17PNullInTranslatorFv
 void				PNullInTranslator::Delete()				{ }
-// ROM 0x00148c3c Init__17PNullInTranslatorFPv
+// ROM 0x001470e0 Init__17PNullInTranslatorFPv
 long				PNullInTranslator::Init(void*)			{ return noErr; }
-// ROM 0x00148c44 Idle__17PNullInTranslatorFv
+// ROM 0x001470e8 Idle__17PNullInTranslatorFv
 long				PNullInTranslator::Idle()				{ return 0; }
-// ROM 0x00148c4c FrameAvailable__17PNullInTranslatorFv
+// ROM 0x001470f0 FrameAvailable__17PNullInTranslatorFv
 Boolean				PNullInTranslator::FrameAvailable()		{ return false; }
-// ROM 0x00148c54 ProduceFrame__17PNullInTranslatorFi
+// ROM 0x001470f8 ProduceFrame__17PNullInTranslatorFi
 Ref					PNullInTranslator::ProduceFrame(int)	{ return NILREF; }
 
 
@@ -267,14 +267,14 @@ PROTOCOL_CLASSINFO(PNullOutTranslator, "POutTranslator", "", 0, 0, nil)
 
 Boolean* gBreakLoopDone = nil;		// 0x0c10226c  the break loop's "done" flag, when one is running
 
-// ROM 0x00148c64 New__18PNullOutTranslatorFv
+// ROM 0x00147108 New__18PNullOutTranslatorFv
 PNullOutTranslator*	PNullOutTranslator::New()				{ return this; }
-// ROM 0x00148c88 Delete__18PNullOutTranslatorFv
+// ROM 0x0014712c Delete__18PNullOutTranslatorFv
 void				PNullOutTranslator::Delete()			{ }
-// ROM 0x00148c8c Init__18PNullOutTranslatorFPv
+// ROM 0x00147130 Init__18PNullOutTranslatorFPv
 long				PNullOutTranslator::Init(void*)			{ fInBreakLoop = false; return noErr; }
 
-// ROM 0x00148c9c Idle__18PNullOutTranslatorFv
+// ROM 0x00147140 Idle__18PNullOutTranslatorFv
 // A break loop with nowhere to print ends at once.
 long
 PNullOutTranslator::Idle()
@@ -284,23 +284,23 @@ PNullOutTranslator::Idle()
 	return 0;
 }
 
-// ROM 0x00148cc4 ConsumeFrame__18PNullOutTranslatorFRC6RefVariT2
+// ROM 0x00147168 ConsumeFrame__18PNullOutTranslatorFRC6RefVariT2
 void				PNullOutTranslator::ConsumeFrame(RefArg, int, long)	{ }
-// ROM 0x00148ccc Flush__18PNullOutTranslatorFv
+// ROM 0x00147170 Flush__18PNullOutTranslatorFv
 void				PNullOutTranslator::Flush()				{ }
-// ROM 0x00148cc8 Prompt__18PNullOutTranslatorFi
+// ROM 0x0014716c Prompt__18PNullOutTranslatorFi
 void				PNullOutTranslator::Prompt(int)			{ }
-// ROM 0x00148cd0 Print__18PNullOutTranslatorFPCce
+// ROM 0x00147174 Print__18PNullOutTranslatorFPCce
 long				PNullOutTranslator::Print(const char*, ...)	{ return 0; }
-// ROM 0x00148cd8 Putc__18PNullOutTranslatorFi
+// ROM 0x0014717c Putc__18PNullOutTranslatorFi
 int					PNullOutTranslator::Putc(int)			{ return 0; }
-// ROM 0x00148c68 EnterBreakLoop__18PNullOutTranslatorFi
+// ROM 0x0014710c EnterBreakLoop__18PNullOutTranslatorFi
 void				PNullOutTranslator::EnterBreakLoop(int)	{ fInBreakLoop = true; }
-// ROM 0x00148c74 ExitBreakLoop__18PNullOutTranslatorFv
+// ROM 0x00147118 ExitBreakLoop__18PNullOutTranslatorFv
 void				PNullOutTranslator::ExitBreakLoop()		{ fInBreakLoop = false; }
-// ROM 0x00148c80 StackTrace__18PNullOutTranslatorFPv
+// ROM 0x00147124 StackTrace__18PNullOutTranslatorFPv
 void				PNullOutTranslator::StackTrace(void*)	{ }
-// ROM 0x00148c84 ExceptionNotify__18PNullOutTranslatorFP9Exception
+// ROM 0x00147128 ExceptionNotify__18PNullOutTranslatorFP9Exception
 void				PNullOutTranslator::ExceptionNotify(Exception*)	{ }
 
 
@@ -311,7 +311,7 @@ void				PNullOutTranslator::ExceptionNotify(Exception*)	{ }
 PROTOCOL_IMPL_SOURCE_MACRO(PStdioInTranslator)
 PROTOCOL_CLASSINFO(PStdioInTranslator, "PInTranslator", "", 0, 0, nil)
 
-// ROM 0x001f6f9c New__18PStdioInTranslatorFv
+// ROM 0x001f974c New__18PStdioInTranslatorFv
 PStdioInTranslator*
 PStdioInTranslator::New()
 {
@@ -320,7 +320,7 @@ PStdioInTranslator::New()
 	return this;
 }
 
-// ROM 0x001f6fac Delete__18PStdioInTranslatorFv
+// ROM 0x001f975c Delete__18PStdioInTranslatorFv
 void
 PStdioInTranslator::Delete()
 {
@@ -329,7 +329,7 @@ PStdioInTranslator::Delete()
 	fBuffer = nil;
 }
 
-// ROM 0x001f6fbc Init__18PStdioInTranslatorFPv
+// ROM 0x001f976c Init__18PStdioInTranslatorFPv
 long
 PStdioInTranslator::Init(void* context)
 {
@@ -343,21 +343,21 @@ PStdioInTranslator::Init(void* context)
 	return noErr;
 }
 
-// ROM 0x001f7004 Idle__18PStdioInTranslatorFv
+// ROM 0x001f97b4 Idle__18PStdioInTranslatorFv
 long
 PStdioInTranslator::Idle()
 {
 	return 0;
 }
 
-// ROM 0x001f700c FrameAvailable__18PStdioInTranslatorFv
+// ROM 0x001f97bc FrameAvailable__18PStdioInTranslatorFv
 Boolean
 PStdioInTranslator::FrameAvailable()
 {
 	return fInput != nil && !feof(fInput);
 }
 
-// ROM 0x001f7040 ProduceFrame__18PStdioInTranslatorFi
+// ROM 0x001f97f0 ProduceFrame__18PStdioInTranslatorFi
 // The next line, compiled (nil at the end of the input).
 Ref
 PStdioInTranslator::ProduceFrame(int /*level*/)
@@ -376,12 +376,12 @@ PStdioInTranslator::ProduceFrame(int /*level*/)
 PROTOCOL_IMPL_SOURCE_MACRO(PStdioOutTranslator)
 PROTOCOL_CLASSINFO(PStdioOutTranslator, "POutTranslator", "", 0, 0, nil)
 
-// ROM 0x001f70c0 New__19PStdioOutTranslatorFv
+// ROM 0x001f9870 New__19PStdioOutTranslatorFv
 PStdioOutTranslator*	PStdioOutTranslator::New()			{ fFile = nil; return this; }
-// ROM 0x001f7144 Delete__19PStdioOutTranslatorFv
+// ROM 0x001f98f4 Delete__19PStdioOutTranslatorFv
 void				PStdioOutTranslator::Delete()			{ }
 
-// ROM 0x001f7148 Init__19PStdioOutTranslatorFPv
+// ROM 0x001f98f8 Init__19PStdioOutTranslatorFPv
 // The context is a FILE** (nil: print nothing).
 long
 PStdioOutTranslator::Init(void* context)
@@ -390,10 +390,10 @@ PStdioOutTranslator::Init(void* context)
 	return noErr;
 }
 
-// ROM 0x001f7158 Idle__19PStdioOutTranslatorFv
+// ROM 0x001f9908 Idle__19PStdioOutTranslatorFv
 long				PStdioOutTranslator::Idle()				{ return 0; }
 
-// ROM 0x001f7160 ConsumeFrame__19PStdioOutTranslatorFRC6RefVariT2
+// ROM 0x001f9910 ConsumeFrame__19PStdioOutTranslatorFRC6RefVariT2
 // (the ROM inlines PrintObjectAux here)
 void
 PStdioOutTranslator::ConsumeFrame(RefArg obj, int depth, long indent)
@@ -401,7 +401,7 @@ PStdioOutTranslator::ConsumeFrame(RefArg obj, int depth, long indent)
 	PrintObjectAux(obj, indent, depth);
 }
 
-// ROM 0x001f717c Flush__19PStdioOutTranslatorFv
+// ROM 0x001f992c Flush__19PStdioOutTranslatorFv
 void
 PStdioOutTranslator::Flush()
 {
@@ -409,7 +409,7 @@ PStdioOutTranslator::Flush()
 		Throw(exTranslatorException, (void*) -1, nil);
 }
 
-// ROM 0x001f7178 Prompt__19PStdioOutTranslatorFi
+// ROM 0x001f9928 Prompt__19PStdioOutTranslatorFi
 void				PStdioOutTranslator::Prompt(int)		{ }
 
 // text to the stream, the Newton's carriage-return line ends as the
@@ -421,7 +421,7 @@ PutText(FILE* file, const char* text)
 		fputc(*text == '\r' ? '\n' : *text, file);
 }
 
-// ROM 0x001f71bc Print__19PStdioOutTranslatorFPCce
+// ROM 0x001f996c Print__19PStdioOutTranslatorFPCce
 long
 PStdioOutTranslator::Print(const char* format, ...)
 {
@@ -447,14 +447,14 @@ PStdioOutTranslator::Print(const char* format, ...)
 	return length;
 }
 
-// ROM 0x001f71fc Putc__19PStdioOutTranslatorFi
+// ROM 0x001f99ac Putc__19PStdioOutTranslatorFi
 int
 PStdioOutTranslator::Putc(int c)
 {
 	return fFile != nil ? fputc(c == '\r' ? '\n' : c, fFile) : 0;
 }
 
-// ROM 0x001f70cc EnterBreakLoop__19PStdioOutTranslatorFi
+// ROM 0x001f987c EnterBreakLoop__19PStdioOutTranslatorFi
 void
 PStdioOutTranslator::EnterBreakLoop(int level)
 {
@@ -463,21 +463,21 @@ PStdioOutTranslator::EnterBreakLoop(int level)
 	Flush();
 }
 
-// ROM 0x001f7118 ExitBreakLoop__19PStdioOutTranslatorFv
+// ROM 0x001f98c8 ExitBreakLoop__19PStdioOutTranslatorFv
 void
 PStdioOutTranslator::ExitBreakLoop()
 {
 	Print("Exiting break loop\r");
 }
 
-// ROM 0x001f7134 StackTrace__19PStdioOutTranslatorFPv
+// ROM 0x001f98e4 StackTrace__19PStdioOutTranslatorFPv
 void
 PStdioOutTranslator::StackTrace(void* interpreter)
 {
 	REPStackTrace(interpreter);
 }
 
-// ROM 0x001f713c ExceptionNotify__19PStdioOutTranslatorFP9Exception
+// ROM 0x001f98ec ExceptionNotify__19PStdioOutTranslatorFP9Exception
 void
 PStdioOutTranslator::ExceptionNotify(Exception* exception)
 {
@@ -514,7 +514,7 @@ NewTranslator(const char* interface, const char* implementation, const TClassInf
 }
 
 
-// ROM 0x0012dce8 CreateNullInTranslator__FPP13PInTranslator
+// ROM 0x0012c28c CreateNullInTranslator__FPP13PInTranslator
 NewtonErr
 CreateNullInTranslator(PInTranslator** translator)
 {
@@ -533,7 +533,7 @@ CreateNullInTranslator(PInTranslator** translator)
 }
 
 
-// ROM 0x0012e0ac CreateNullOutTranslator__FPP14POutTranslator
+// ROM 0x0012c650 CreateNullOutTranslator__FPP14POutTranslator
 NewtonErr
 CreateNullOutTranslator(POutTranslator** translator)
 {
@@ -552,7 +552,7 @@ CreateNullOutTranslator(POutTranslator** translator)
 }
 
 
-// ROM 0x0012c460 InitREPIn__Fv
+// ROM 0x0012aa04 InitREPIn__Fv
 PInTranslator*
 InitREPIn(void)
 {
@@ -562,7 +562,7 @@ InitREPIn(void)
 }
 
 
-// ROM 0x0012c4a0 InitREPOut__Fv
+// ROM 0x0012aa44 InitREPOut__Fv
 POutTranslator*
 InitREPOut(void)
 {
@@ -576,7 +576,7 @@ InitREPOut(void)
 	The REP
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0019d268 REPInit__Fv
+// ROM 0x0019ac08 REPInit__Fv
 // The globals the REP defines (trace, vars, functions, printDepth,
 // prettyPrint), its context, and the greeting.
 void
@@ -637,7 +637,7 @@ HostInitREP(FILE* out, FILE* in)
 }
 
 
-// ROM 0x0019d4b0 REPAcceptLine__Fv
+// ROM 0x0019ae50 REPAcceptLine__Fv
 // A form the in translator has: printed when showCodeBlocks is set, run
 // in the REP's context, its result printed as "#addr value"; an
 // exception is reported by the out translator.  The ref handles the
@@ -677,7 +677,7 @@ REPAcceptLine(void)
 }
 
 
-// ROM 0x0019d668 REPIdle__Fv
+// ROM 0x0019b008 REPIdle__Fv
 // (the ROM repeats REPAcceptLine's body after idling the translators)
 void
 REPIdle(void)
@@ -688,7 +688,7 @@ REPIdle(void)
 }
 
 
-// ROM 0x0019d454 REPTime__Fv
+// ROM 0x0019adf4 REPTime__Fv
 // The sooner of the translators' idle times, 0 for never.
 long
 REPTime(void)
@@ -705,7 +705,7 @@ REPTime(void)
 }
 
 
-// ROM 0x0019d694 REPprintf__FPCce
+// ROM 0x0019b034 REPprintf__FPCce
 void
 REPprintf(const char* format, ...)
 {
@@ -730,7 +730,7 @@ REPprintf(const char* format, ...)
 }
 
 
-// ROM 0x0019d6c8 REPflush__Fv
+// ROM 0x0019b068 REPflush__Fv
 void
 REPflush(void)
 {
@@ -738,7 +738,7 @@ REPflush(void)
 }
 
 
-// ROM 0x002d01e4 REPExceptionNotify__FP9Exception
+// ROM 0x002f5a58 REPExceptionNotify__FP9Exception
 // The REP's report of an exception: a message exception's text, a frames
 // exception's frame (with the file and line of a compiled form when it
 // has them) or an error code.

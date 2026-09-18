@@ -37,9 +37,9 @@
 				world (InitObjects needs the ROM image read in) and the
 				screen by HostStartViews.
 
-	Reconstructed from the MP2100 D ROM (0x002e66f4-0x002e6900,
-	0x002e6dcc-0x002e6e2c, 0x002e76f4-0x002e7ff0, 0x002e8228-0x002e8a00,
-	0x002e9b70-0x002e9bcc); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x0030ba08-0x0030bc14,
+	0x0030c0e0-0x0030c140, 0x0030ca08-0x0030d304, 0x0030d53c-0x0030dd14,
+	0x0030ee84-0x0030eee0); each function cites its origin.
 */
 
 #ifndef __NEWTWORLD_H
@@ -112,22 +112,22 @@ struct NewtGlobals
 	void*				fTempBuf;		// +0x10  a temporary drawing buffer (AllocNewTempBuf)
 	void*				fTempBuf2;		// +0x14
 };
-extern NewtGlobals*	gNewtGlobals;						// ROM 0x0c1025a4 gNewtGlobals
-NewtGlobals*	GetNewtGlobals(void);					// ROM 0x002e7844 GetNewtGlobals__Fv
+extern NewtGlobals*	gNewtGlobals;						// ROM 0x0c1054b0 gNewtGlobals
+NewtGlobals*	GetNewtGlobals(void);					// ROM 0x0030cb58 GetNewtGlobals__Fv
 
 class TNewtWorld : public TAppWorld			// 0x94 bytes
 {
 public:
-	virtual ULong		GetSizeOf();							// ROM 0x002e76ec GetSizeOf__10TNewtWorldFv
-	virtual long		ForkInit(TForkWorld* parent);			// ROM 0x002e77c8 ForkInit__10TNewtWorldFP10TForkWorld - the message, handler and port shared with the parent
-	virtual long		ForkConstructor(TForkWorld* parent);	// ROM 0x002e7888 ForkConstructor__10TNewtWorldFP10TForkWorld - the fork's own frames and QD globals (NOT YET)
-	virtual void		ForkDestructor();						// ROM 0x002e78d0 ForkDestructor__10TNewtWorldFv
-	virtual void		ForkSwitch(Boolean in);					// ROM 0x002e790c ForkSwitch__10TNewtWorldFUc - the globals of the fork switched in or saved
-	virtual long		MainConstructor();						// ROM 0x002e7ef8 MainConstructor__10TNewtWorldFv
-	virtual void		TheMain();								// ROM 0x002e7854 TheMain__10TNewtWorldFv - the event loop with the stack locked (NOT YET: LockStack)
-	virtual long		AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x002e7928 AEDispatch__10TNewtWorldFUlP10TUMsgTokenPUlP7TAEvent
-	virtual long		PreMain();								// ROM 0x002e7a14 PreMain__10TNewtWorldFv - ==> 0, or the boot test script's error
-	virtual long		MakeFork();								// ROM 0x002e7790 MakeFork__10TNewtWorldFv - a new TNewtWorld (answered as the ROM does: the object itself)
+	virtual ULong		GetSizeOf();							// ROM 0x0030ca00 GetSizeOf__10TNewtWorldFv
+	virtual long		ForkInit(TForkWorld* parent);			// ROM 0x0030cadc ForkInit__10TNewtWorldFP10TForkWorld - the message, handler and port shared with the parent
+	virtual long		ForkConstructor(TForkWorld* parent);	// ROM 0x0030cb9c ForkConstructor__10TNewtWorldFP10TForkWorld - the fork's own frames and QD globals (NOT YET)
+	virtual void		ForkDestructor();						// ROM 0x0030cbe4 ForkDestructor__10TNewtWorldFv
+	virtual void		ForkSwitch(Boolean in);					// ROM 0x0030cc20 ForkSwitch__10TNewtWorldFUc - the globals of the fork switched in or saved
+	virtual long		MainConstructor();						// ROM 0x0030d20c MainConstructor__10TNewtWorldFv
+	virtual void		TheMain();								// ROM 0x0030cb68 TheMain__10TNewtWorldFv - the event loop with the stack locked (NOT YET: LockStack)
+	virtual long		AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x0030cc3c AEDispatch__10TNewtWorldFUlP10TUMsgTokenPUlP7TAEvent
+	virtual long		PreMain();								// ROM 0x0030cd28 PreMain__10TNewtWorldFv - ==> 0, or the boot test script's error
+	virtual long		MakeFork();								// ROM 0x0030caa4 MakeFork__10TNewtWorldFv - a new TNewtWorld (answered as the ROM does: the object itself)
 
 	TUSharedMemMsg*		fMessage;		// +0x70  the message the alarms are sent with
 	ULong				fUnused74;		// +0x74
@@ -138,24 +138,24 @@ public:
 class TNewtEventHandler : public TAEventHandler		// 0x14 bytes
 {
 public:
-						TNewtEventHandler();					// ROM 0x002e6dcc __ct__17TNewtEventHandlerFv
-	virtual void		AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x002e830c AEHandlerProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
-	virtual void		AECompletionProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x002e6890 AECompletionProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent (nothing)
-	virtual void		IdleProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x002e8228 IdleProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent - the idle timer's: an 'idle event handled under the exception handler
+						TNewtEventHandler();					// ROM 0x0030c0e0 __ct__17TNewtEventHandlerFv
+	virtual void		AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x0030d620 AEHandlerProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
+	virtual void		AECompletionProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x0030bba4 AECompletionProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent (nothing)
+	virtual void		IdleProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x0030d53c IdleProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent - the idle timer's: an 'idle event handled under the exception handler
 
-	void				SetWakeupTime(ULong ticks);				// ROM 0x002e893c SetWakeupTime__17TNewtEventHandlerFUl - the idle timer re-armed for the earliest of the application's next idle, ticks from now (when not 0) and the next delayed action
+	void				SetWakeupTime(ULong ticks);				// ROM 0x0030dc50 SetWakeupTime__17TNewtEventHandlerFUl - the idle timer re-armed for the earliest of the application's next idle, ticks from now (when not 0) and the next delayed action
 };
 
-extern TUPort*			gNewtPort;							// ROM 0x0c10259c gNewtPort - the world's port
-extern Boolean			gNewtIsAliveAndWell;				// ROM 0x0c102604 gNewtIsAliveAndWell (views/Application.cpp)
-extern TTime			gLastWakeupTime;					// ROM 0x0c101d40 gLastWakeupTime
-extern TTime			gTickleTime;						// ROM 0x0c100d00 gTickleTime - the last user activity (the 'ext / 'bklt events)
-extern Boolean			gGoingToSleep;						// ROM 0x0c102614 gGoingToSleep
+extern TUPort*			gNewtPort;							// ROM 0x0c1054a8 gNewtPort - the world's port
+extern Boolean			gNewtIsAliveAndWell;				// ROM 0x0c105510 gNewtIsAliveAndWell (views/Application.cpp)
+extern TTime			gLastWakeupTime;					// ROM 0x0c104c4c gLastWakeupTime
+extern TTime			gTickleTime;						// ROM 0x0c100d04 gTickleTime - the last user activity (the 'ext / 'bklt events)
+extern Boolean			gGoingToSleep;						// ROM 0x0c105520 gGoingToSleep
 
-void	RunDelayedActionProcs(void);						// ROM 0x002e76f4 RunDelayedActionProcs__Fv - up to ten delayed actions run (the root view updated and the application idled after each), the idle timer re-armed
-void	CheckForDeferredActions(void);						// ROM 0x002e6e0c CheckForDeferredActions__Fv - the idle timer re-armed for the next delayed action (within a tick)
-void	HandleRedrawEvent(TRedrawScreenEvent* event);		// ROM 0x002e9b70 HandleRedrawEvent__FP18TRedrawScreenEvent - the rectangle invalidated and the root view updated
-void	HandleRunScriptEvent(TRunScriptEvent* event);		// ROM 0x002e62a0 HandleRunScriptEvent__FP15TRunScriptEvent - root.variable:method(data) run, the error or result kept in the event
+void	RunDelayedActionProcs(void);						// ROM 0x0030ca08 RunDelayedActionProcs__Fv - up to ten delayed actions run (the root view updated and the application idled after each), the idle timer re-armed
+void	CheckForDeferredActions(void);						// ROM 0x0030c120 CheckForDeferredActions__Fv - the idle timer re-armed for the next delayed action (within a tick)
+void	HandleRedrawEvent(TRedrawScreenEvent* event);		// ROM 0x0030ee84 HandleRedrawEvent__FP18TRedrawScreenEvent - the rectangle invalidated and the root view updated
+void	HandleRunScriptEvent(TRunScriptEvent* event);		// ROM 0x0030b5b4 HandleRunScriptEvent__FP15TRunScriptEvent - root.variable:method(data) run, the error or result kept in the event
 
 // host: what the world's MainConstructor runs in place of the ROM's
 // InitObjects/InitGraf/InitFonts when set - the program's boot of the
@@ -165,7 +165,7 @@ extern void	(*gNewtHostBoot)(void);
 // host: the boot test script's path (the ROM's PreMain runs the file
 // "bootTestScript" when there is one); nil for none
 extern const char*	gNewtBootTestScript;
-void	NewtUserMain(void);									// ROM 0x002e6894 UserMain__Fv - the 'main' task: a TNewtWorld made and run (installed as the loader's gHostUserMain by NewtInstallUserMain)
+void	NewtUserMain(void);									// ROM 0x0030bba8 UserMain__Fv - the 'main' task: a TNewtWorld made and run (installed as the loader's gHostUserMain by NewtInstallUserMain)
 void	NewtInstallUserMain(void);							// host: the loader's 'main' task runs NewtUserMain
 
 #endif	/* __NEWTWORLD_H */

@@ -11,7 +11,7 @@
 				answers a contrast of 0 and an orientation of 1, which is
 				what a host that has not started a display gets.
 
-	Reconstructed from the MP2100 D ROM (0x0020030c-0x00200660); each
+	Reconstructed from the MP2x00 US ROM (0x00202a3c-0x00202d90); each
 	function cites its origin.
 */
 
@@ -20,7 +20,7 @@
 #include "NativeFunctions.h"
 
 
-// ROM 0x00200634 FGetLCDContrast__FRC6RefVar
+// ROM 0x00202d64 FGetLCDContrast__FRC6RefVar
 Ref
 FGetLCDContrast(RefArg /*rcvr*/)
 {
@@ -30,7 +30,7 @@ FGetLCDContrast(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x0020030c FSetLCDContrast__FRC6RefVarT1
+// ROM 0x00202a3c FSetLCDContrast__FRC6RefVarT1
 Ref
 FSetLCDContrast(RefArg /*rcvr*/, RefArg contrast)
 {
@@ -39,7 +39,7 @@ FSetLCDContrast(RefArg /*rcvr*/, RefArg contrast)
 }
 
 
-// ROM 0x002003b4 FGetOrientation
+// ROM 0x00202ae4 FGetOrientation
 Ref
 FGetOrientation(RefArg /*rcvr*/)
 {
@@ -49,7 +49,7 @@ FGetOrientation(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x002003dc FSetOrientation
+// ROM 0x00202b0c FSetOrientation
 // SetOrientation, not SetGrafInfo: turning the screen moves the root view
 // and the ports with it.
 Ref
@@ -60,7 +60,7 @@ FSetOrientation(RefArg /*rcvr*/, RefArg orientation)
 }
 
 
-// ROM 0x001f009c FLockScreen
+// ROM 0x001edc84 FLockScreen
 // The screen held while a script draws a lot: the drawing bracket taken
 // and given back, so what is drawn in between reaches the display in one
 // go.  nil unlocks.

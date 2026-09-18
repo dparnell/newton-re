@@ -10,7 +10,7 @@
 				uncontended acquire never enters the kernel; the read/write
 				semaphore is two counters with fixed op lists.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserSemaphore.h"
@@ -35,7 +35,7 @@ TUSemaphoreOpList	TURdWrSemaphore::freleaseRdOP;
 	TUSemaphoreOpList
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00258290 Init__17TUSemaphoreOpListFUle
+// ROM 0x0025a1c8 Init__17TUSemaphoreOpListFUle
 // The ops (MAKESEMLISTITEM words) follow the count as varargs.
 long
 TUSemaphoreOpList::Init(ULong numInList, ...)
@@ -62,7 +62,7 @@ TUSemaphoreOpList::Init(ULong numInList, ...)
 	TUSemaphoreGroup
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00258338 Init__16TUSemaphoreGroupFUl
+// ROM 0x0025a270 Init__16TUSemaphoreGroupFUl
 long
 TUSemaphoreGroup::Init(ULong num)
 {
@@ -72,7 +72,7 @@ TUSemaphoreGroup::Init(ULong num)
 }
 
 
-// ROM 0x00258524 SemOp__16TUSemaphoreGroupFUl8SemFlags
+// ROM 0x0025a45c SemOp__16TUSemaphoreGroupFUl8SemFlags
 long
 TUSemaphoreGroup::SemOp(TObjectId semListId, SemFlags flags)
 {
@@ -80,7 +80,7 @@ TUSemaphoreGroup::SemOp(TObjectId semListId, SemFlags flags)
 }
 
 
-// ROM 0x0025852c SemOp__16TUSemaphoreGroupFP17TUSemaphoreOpList8SemFlags
+// ROM 0x0025a464 SemOp__16TUSemaphoreGroupFP17TUSemaphoreOpList8SemFlags
 long
 TUSemaphoreGroup::SemOp(TUSemaphoreOpList* semListObj, SemFlags flags)
 {
@@ -88,7 +88,7 @@ TUSemaphoreGroup::SemOp(TUSemaphoreOpList* semListObj, SemFlags flags)
 }
 
 
-// ROM 0x00258538 SetRefCon__16TUSemaphoreGroupFPv
+// ROM 0x0025a470 SetRefCon__16TUSemaphoreGroupFPv
 // (The ROM's function serves both modes; this is the user-mode path, the
 // kernel body is SemGroupSetRefCon.)
 long
@@ -98,7 +98,7 @@ TUSemaphoreGroup::SetRefCon(void* refCon)
 }
 
 
-// ROM 0x00258540 GetRefCon__16TUSemaphoreGroupFPPv
+// ROM 0x0025a478 GetRefCon__16TUSemaphoreGroupFPPv
 long
 TUSemaphoreGroup::GetRefCon(void** pRefCon)
 {
@@ -110,7 +110,7 @@ TUSemaphoreGroup::GetRefCon(void** pRefCon)
 	TULockingSemaphore
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00258548 StaticInit__18TULockingSemaphoreSFv
+// ROM 0x0025a480 StaticInit__18TULockingSemaphoreSFv
 // The two op lists every locking semaphore uses: acquire = wait for
 // semaphore 0 to be zero then add one; release = subtract one.
 long
@@ -123,7 +123,7 @@ TULockingSemaphore::StaticInit()
 }
 
 
-// ROM 0x00258590 Init__18TULockingSemaphoreFv
+// ROM 0x0025a4c8 Init__18TULockingSemaphoreFv
 // The user-side word lives in the heap and is published as the group's ref
 // con, so other handles on the same semaphore (CopyObject) find it.
 long
@@ -145,7 +145,7 @@ TULockingSemaphore::Init()
 }
 
 
-// ROM 0x00258608 CopyObject__18TULockingSemaphoreFUl
+// ROM 0x0025a540 CopyObject__18TULockingSemaphoreFUl
 void
 TULockingSemaphore::CopyObject(TObjectId id)
 {
@@ -154,7 +154,7 @@ TULockingSemaphore::CopyObject(TObjectId id)
 }
 
 
-// ROM 0x0025862c __dt__18TULockingSemaphoreFv
+// ROM 0x0025a564 __dt__18TULockingSemaphoreFv
 // The word is freed with the object only if we made it (the kernel object
 // goes with ~TUObject).
 TULockingSemaphore::~TULockingSemaphore()
@@ -164,7 +164,7 @@ TULockingSemaphore::~TULockingSemaphore()
 }
 
 
-// ROM 0x00258360 Acquire__18TULockingSemaphoreF8SemFlags
+// ROM 0x0025a298 Acquire__18TULockingSemaphoreF8SemFlags
 // Claim the word with our task id.  If someone holds it, wait on the
 // kernel semaphore (the holder's Release bumps it) and try again; the
 // kernel semaphore is left as it was once the word is ours.
@@ -191,7 +191,7 @@ TULockingSemaphore::Acquire(SemFlags flags)
 }
 
 
-// ROM 0x002583e4 Release__18TULockingSemaphoreFv
+// ROM 0x0025a31c Release__18TULockingSemaphoreFv
 // Let go of the word; if another task took it meanwhile (it is waiting in
 // Acquire) wake it through the kernel semaphore.
 long
@@ -207,7 +207,7 @@ TULockingSemaphore::Release()
 	TURdWrSemaphore
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00258430 StaticInit__15TURdWrSemaphoreSFv
+// ROM 0x0025a368 StaticInit__15TURdWrSemaphoreSFv
 // Semaphore 0 counts writers, semaphore 1 readers.  A writer waits for both
 // to be zero and takes 0; a reader waits for no writer and takes one of 1.
 long
@@ -226,7 +226,7 @@ TURdWrSemaphore::StaticInit()
 }
 
 
-// ROM 0x002584c8 Init__15TURdWrSemaphoreFv
+// ROM 0x0025a400 Init__15TURdWrSemaphoreFv
 long
 TURdWrSemaphore::Init()
 {
@@ -234,7 +234,7 @@ TURdWrSemaphore::Init()
 }
 
 
-// ROM 0x002584e4 AcquireWr__15TURdWrSemaphoreF8SemFlags
+// ROM 0x0025a41c AcquireWr__15TURdWrSemaphoreF8SemFlags
 long
 TURdWrSemaphore::AcquireWr(SemFlags flags)
 {
@@ -242,7 +242,7 @@ TURdWrSemaphore::AcquireWr(SemFlags flags)
 }
 
 
-// ROM 0x002584f4 ReleaseWr__15TURdWrSemaphoreFv
+// ROM 0x0025a42c ReleaseWr__15TURdWrSemaphoreFv
 long
 TURdWrSemaphore::ReleaseWr()
 {
@@ -250,7 +250,7 @@ TURdWrSemaphore::ReleaseWr()
 }
 
 
-// ROM 0x00258504 AcquireRd__15TURdWrSemaphoreF8SemFlags
+// ROM 0x0025a43c AcquireRd__15TURdWrSemaphoreF8SemFlags
 long
 TURdWrSemaphore::AcquireRd(SemFlags flags)
 {
@@ -258,7 +258,7 @@ TURdWrSemaphore::AcquireRd(SemFlags flags)
 }
 
 
-// ROM 0x00258514 ReleaseRd__15TURdWrSemaphoreFv
+// ROM 0x0025a44c ReleaseRd__15TURdWrSemaphoreFv
 long
 TURdWrSemaphore::ReleaseRd()
 {

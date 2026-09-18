@@ -3,7 +3,7 @@
 
 	Contains:	The screen pixel map, its driver and the drawing brackets.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Screen.h"
@@ -23,7 +23,7 @@ long			screenHeight = 0;			// ROM 0x0c101d50
 static long		gScreenDrawingDepth = 0;
 
 
-// ROM 0x0037ee40 Delete__13TScreenDriverFv (the protocol glue)
+// ROM 0x003885a0 Delete__13TScreenDriverFv (the protocol glue)
 TScreenDriver*
 TScreenDriver::New(const char* implementation)
 {
@@ -39,7 +39,7 @@ TScreenDriver::Delete()
 }
 
 
-// ROM 0x001ceee4 SetupScreenPixelMap__Fv
+// ROM 0x001ccb10 SetupScreenPixelMap__Fv
 // The screen pixel map from the driver's info: the row bytes the width
 // rounded up to a 64-bit word's pixels times the depth, the bounds the
 // size, the flags a pointer map of the depth, the resolution.  (The bits
@@ -62,7 +62,7 @@ SetupScreenPixelMap(void)
 }
 
 
-// ROM 0x001cec68 InitScreen__Fv
+// ROM 0x001cc894 InitScreen__Fv
 // The screen driver (the ROM: NewByName("TScreenDriver",
 // "TMainDisplayDriver") - the host is given one) set up and powered,
 // the screen pixel map made over bits enough for either orientation
@@ -115,7 +115,7 @@ IsScreen(PixelMap* map)
 }
 
 
-// ROM 0x001cf3b8 BlitToScreens__FP8PixelMapP4RectT2l
+// ROM 0x001ccfe4 BlitToScreens__FP8PixelMapP4RectT2l
 // The rectangle of the map blitted to the display (and to a video card's
 // screen, NOT YET).
 void
@@ -126,7 +126,7 @@ BlitToScreens(PixelMap* map, Rect* src, Rect* dst, long mode)
 }
 
 
-// ROM 0x001cf35c UpdateHardwareScreen__Fv
+// ROM 0x001ccf88 UpdateHardwareScreen__Fv
 // What is dirty within the screen shown, and the dirty rectangle
 // emptied.
 void
@@ -139,7 +139,7 @@ UpdateHardwareScreen(void)
 }
 
 
-// ROM 0x001cf1e0 QDStartDrawing__FP8PixelMapP4Rect
+// ROM 0x001cce0c QDStartDrawing__FP8PixelMapP4Rect
 // QuickDraw about to draw on the map (the current port's when nil): when
 // it is the screen, the screen's RAM is taken (the ROM's locking
 // semaphore; the host counts).  ==> whether it is the screen.
@@ -153,7 +153,7 @@ QDStartDrawing(PixelMap* map, Rect* /*r*/)
 }
 
 
-// ROM 0x001cf228 QDStopDrawing__FP8PixelMapP4Rect
+// ROM 0x001cce54 QDStopDrawing__FP8PixelMapP4Rect
 // QuickDraw done with the map: the rectangle drawn (in the map's
 // coordinates) added to the dirty rectangle, the display told when the
 // dirty rectangle was empty (the update task's trigger; the host updates
@@ -179,7 +179,7 @@ QDStopDrawing(PixelMap* map, Rect* r)
 }
 
 
-// ROM 0x001cf7f8 ReleaseScreenLock__Fv
+// ROM 0x001cd3f4 ReleaseScreenLock__Fv
 // The screen lock dropped however deep it went: the ROM unlocks its
 // semaphore group over and over until there is nothing left to unlock.
 // The event dispatch does this at the end of every event
@@ -202,7 +202,7 @@ ReleaseScreenLock(void)
 }
 
 
-// ROM 0x001cf6b8 StartDrawing__FP8PixelMapP4Rect
+// ROM 0x001cd2b4 StartDrawing__FP8PixelMapP4Rect
 // Drawing on the screen begun (the views' bracket): the screen's lock
 // taken - nested brackets stack.
 void
@@ -214,7 +214,7 @@ StartDrawing(PixelMap* map, Rect* /*r*/)
 }
 
 
-// ROM 0x001cf704 StopDrawing__FP8PixelMapP4Rect
+// ROM 0x001cd300 StopDrawing__FP8PixelMapP4Rect
 // Drawing on the screen done: the rectangle added to the dirty
 // rectangle; when this was the outermost bracket the display is
 // updated.
@@ -239,7 +239,7 @@ StopDrawing(PixelMap* map, Rect* r)
 }
 
 
-// ROM 0x001cf828 GetGrafInfo__FlPv
+// ROM 0x001cd424 GetGrafInfo__FlPv
 // The screen's pixel map (0), resolution (1), depth (2), the driver's
 // contrast (3), orientation (4: 1 without a driver), backlight (5),
 // feature 5 (6: 10 without a driver), its ScreenInfo (7).
@@ -280,7 +280,7 @@ GetGrafInfo(long selector, void* info)
 }
 
 
-// ROM 0x001cedb0 SetGrafInfo__FlT1
+// ROM 0x001cc9dc SetGrafInfo__FlT1
 // The contrast (3: the driver's feature 0; NOT YET: the temperature
 // sampling), the orientation (4: the driver's feature 4, the screen
 // pixel map made again for it and its bits cleared), or feature 5 -
@@ -307,7 +307,7 @@ SetGrafInfo(long selector, long value)
 }
 
 
-// ROM 0x0020040c SetOrientation__Fl
+// ROM 0x00202b3c SetOrientation__Fl
 // The screen turned: the driver's orientation set, the default port's
 // bits, rect and regions re-made over the new screen, the screen size
 // globals set (the larger side the width for orientations 1 and 3).

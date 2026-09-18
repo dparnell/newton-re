@@ -14,7 +14,7 @@
 	current heap for the duration, takes the heap's semaphore if it has one,
 	and leaves its result in the task globals for MemError.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SkiaHeap.h"
@@ -68,7 +68,7 @@ SetMemError(NewtonErr err)
 }
 
 
-// ROM 0x001442ac MemError
+// ROM 0x00142758 MemError
 extern "C" NewtonErr
 MemError(void)
 {
@@ -77,7 +77,7 @@ MemError(void)
 }
 
 
-// ROM 0x00144674 GetHeap
+// ROM 0x00142b20 GetHeap
 extern "C" Heap
 GetHeap(void)
 {
@@ -85,7 +85,7 @@ GetHeap(void)
 }
 
 
-// ROM 0x00144678 SetHeap
+// ROM 0x00142b24 SetHeap
 extern "C" void
 SetHeap(Heap heap)
 {
@@ -97,7 +97,7 @@ SetHeap(Heap heap)
 	Debugging breaks
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00143c58 ReportMemMgrTrap__Fl
+// ROM 0x00142104 ReportMemMgrTrap__Fl
 // (the ROM formats the message for the debugger; there is none here)
 static void
 ReportMemMgrTrap(long what)
@@ -107,7 +107,7 @@ ReportMemMgrTrap(long what)
 }
 
 
-// ROM 0x0014302c ReportSmashedHeap__FPclPv
+// ROM 0x001414d8 ReportSmashedHeap__FPclPv
 void
 ReportSmashedHeap(char* where, long err, void* address)
 {
@@ -116,7 +116,7 @@ ReportSmashedHeap(char* where, long err, void* address)
 }
 
 
-// ROM 0x0037fc84 HashCallChain
+// ROM 0x003893ec HashCallChain
 // NOT YET RECONSTRUCTED: a hash of the return addresses up the ARM stack
 // frames (the debugger's block tagging); nothing on the host.
 static ULong
@@ -126,7 +126,7 @@ HashCallChain(void)
 }
 
 
-// ROM 0x00143088 SetMemMgrBreak
+// ROM 0x00141534 SetMemMgrBreak
 // (empty in this ROM: the breaks are set from the debugger)
 extern "C" void
 SetMemMgrBreak(long /*what*/, ...)
@@ -177,7 +177,7 @@ BreakOnAddressOut(const void* address)
 	The heap semaphore
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00144510 GetHeapSemaphore__FPv
+// ROM 0x001429bc GetHeapSemaphore__FPv
 TULockingSemaphore*
 GetHeapSemaphore(void* heap)
 {
@@ -207,7 +207,7 @@ ReleaseHeapSemaphore(TULockingSemaphore* semaphore)
 }
 
 
-// ROM 0x0014454c AddSemaphoreToHeap
+// ROM 0x001429f8 AddSemaphoreToHeap
 extern "C" NewtonErr
 AddSemaphoreToHeap(Heap heap)
 {
@@ -228,7 +228,7 @@ AddSemaphoreToHeap(Heap heap)
 }
 
 
-// ROM 0x001445e0 ClobberHeapSemaphore
+// ROM 0x00142a8c ClobberHeapSemaphore
 extern "C" NewtonErr
 ClobberHeapSemaphore(Heap heap)
 {
@@ -275,7 +275,7 @@ SwitchBack(Heap saved)
 }
 
 
-// ROM 0x002ebcac PtrToHeap
+// ROM 0x00310fc0 PtrToHeap
 extern "C" Heap
 PtrToHeap(Ptr p)
 {
@@ -283,7 +283,7 @@ PtrToHeap(Ptr p)
 }
 
 
-// ROM 0x002ebcbc HandleToHeap
+// ROM 0x00310fd0 HandleToHeap
 extern "C" Heap
 HandleToHeap(Handle h)
 {
@@ -295,7 +295,7 @@ HandleToHeap(Handle h)
 	Pointers
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0014467c NewPtr
+// ROM 0x00142b28 NewPtr
 // A block from the task's heap: a direct block, busy from birth (it never
 // moves).  In a safe heap - the kernel heap, and so everything before the OS
 // runs - the safe heap allocates.  (The ROM tests gOSIsRunning as well as
@@ -341,7 +341,7 @@ NewPtr(Size size)
 }
 
 
-// ROM 0x00144be4 NewNamedPtr
+// ROM 0x00143090 NewNamedPtr
 extern "C" Ptr
 NewNamedPtr(Size size, ULong name)
 {
@@ -352,7 +352,7 @@ NewNamedPtr(Size size, ULong name)
 }
 
 
-// ROM 0x00144d34 NewPtrClear
+// ROM 0x001431e0 NewPtrClear
 extern "C" Ptr
 NewPtrClear(Size byteCount)
 {
@@ -363,7 +363,7 @@ NewPtrClear(Size byteCount)
 }
 
 
-// ROM 0x00144d60 DisposPtr  (0x002f3c24 operator delete is the same code)
+// ROM 0x0014320c DisposPtr  (0x002f3c24 operator delete is the same code)
 // Back to its heap; a heap with much free space gives pages back.
 extern "C" void
 DisposPtr(Ptr p)
@@ -396,7 +396,7 @@ DisposPtr(Ptr p)
 }
 
 
-// ROM 0x00144f80 GetPtrSize
+// ROM 0x0014342c GetPtrSize
 extern "C" Size
 GetPtrSize(Ptr p)
 {
@@ -408,7 +408,7 @@ GetPtrSize(Ptr p)
 }
 
 
-// ROM 0x00144fec ReallocPtr
+// ROM 0x00143498 ReallocPtr
 // Resizes in place if it can, else moves the block; nil (and the old block
 // intact) if there is no room.
 extern "C" Ptr
@@ -454,7 +454,7 @@ ReallocPtr(Ptr p, Size size)
 }
 
 
-// ROM 0x00144b98 LockPtr
+// ROM 0x00143044 LockPtr
 // The stack manager keeps the block's pages in.
 extern "C" NewtonErr
 LockPtr(Ptr p)
@@ -464,7 +464,7 @@ LockPtr(Ptr p)
 }
 
 
-// ROM 0x00144bc0 UnlockPtr
+// ROM 0x0014306c UnlockPtr
 extern "C" NewtonErr
 UnlockPtr(Ptr p)
 {
@@ -473,7 +473,7 @@ UnlockPtr(Ptr p)
 }
 
 
-// ROM 0x00144980 NewWiredPtr
+// ROM 0x00142e2c NewWiredPtr
 extern "C" Ptr
 NewWiredPtr(Size /*size*/)
 {
@@ -485,7 +485,7 @@ NewWiredPtr(Size /*size*/)
 }
 
 
-// ROM 0x00144ad4 DisposeWiredPtr
+// ROM 0x00142f80 DisposeWiredPtr
 extern "C" void
 DisposeWiredPtr(Ptr /*p*/)
 {
@@ -493,7 +493,7 @@ DisposeWiredPtr(Ptr /*p*/)
 }
 
 
-// ROM 0x00144c10 TotalSystemFree
+// ROM 0x001430bc TotalSystemFree
 extern "C" Size
 TotalSystemFree(void)
 {
@@ -502,7 +502,7 @@ TotalSystemFree(void)
 }
 
 
-// ROM 0x00144c28 SystemRAMSize
+// ROM 0x001430d4 SystemRAMSize
 extern "C" Size
 SystemRAMSize(void)
 {
@@ -511,7 +511,7 @@ SystemRAMSize(void)
 }
 
 
-// ROM 0x002ec06c GetPtrOwner
+// ROM 0x00311380 GetPtrOwner
 extern "C" TObjectId
 GetPtrOwner(Ptr p)
 {
@@ -521,7 +521,7 @@ GetPtrOwner(Ptr p)
 }
 
 
-// ROM 0x002ec090 SetPtrOwner
+// ROM 0x003113a4 SetPtrOwner
 extern "C" void
 SetPtrOwner(Ptr p, TObjectId owner)
 {
@@ -530,7 +530,7 @@ SetPtrOwner(Ptr p, TObjectId owner)
 }
 
 
-// ROM 0x002ec0c8 GetPtrType
+// ROM 0x003113dc GetPtrType
 extern "C" HeapBlockType
 GetPtrType(Ptr p)
 {
@@ -538,7 +538,7 @@ GetPtrType(Ptr p)
 }
 
 
-// ROM 0x002ec0d8 SetPtrType
+// ROM 0x003113ec SetPtrType
 extern "C" void
 SetPtrType(Ptr p, HeapBlockType type)
 {
@@ -547,7 +547,7 @@ SetPtrType(Ptr p, HeapBlockType type)
 }
 
 
-// ROM 0x002ec12c GetPtrName
+// ROM 0x00311440 GetPtrName
 // A name shares the owner word (its top bit set says so).
 extern "C" ULong
 GetPtrName(Ptr p)
@@ -558,7 +558,7 @@ GetPtrName(Ptr p)
 }
 
 
-// ROM 0x002ec148 SetPtrName
+// ROM 0x0031145c SetPtrName
 extern "C" void
 SetPtrName(Ptr p, ULong name)
 {
@@ -571,7 +571,7 @@ SetPtrName(Ptr p, ULong name)
 	Handles
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0014308c NewHandle
+// ROM 0x00141538 NewHandle
 // An indirect block in the task's heap's relocatable heap; the handle is
 // its master pointer.
 extern "C" Handle
@@ -600,7 +600,7 @@ NewHandle(Size size)
 }
 
 
-// ROM 0x00143270 NewNamedHandle
+// ROM 0x0014171c NewNamedHandle
 extern "C" Handle
 NewNamedHandle(Size size, ULong name)
 {
@@ -611,7 +611,7 @@ NewNamedHandle(Size size, ULong name)
 }
 
 
-// ROM 0x0014329c NewHandleClear
+// ROM 0x00141748 NewHandleClear
 extern "C" Handle
 NewHandleClear(Size byteCount)
 {
@@ -626,7 +626,7 @@ NewHandleClear(Size byteCount)
 }
 
 
-// ROM 0x001432d8 DisposHandle
+// ROM 0x00141784 DisposHandle
 extern "C" void
 DisposHandle(Handle h)
 {
@@ -658,7 +658,7 @@ DisposHandle(Handle h)
 }
 
 
-// ROM 0x00143560 GetHandleSize
+// ROM 0x00141a0c GetHandleSize
 extern "C" Size
 GetHandleSize(Handle h)
 {
@@ -676,7 +676,7 @@ GetHandleSize(Handle h)
 }
 
 
-// ROM 0x001436cc SetHandleSize
+// ROM 0x00141b78 SetHandleSize
 extern "C" NewtonErr
 SetHandleSize(Handle h, Size size)
 {
@@ -703,7 +703,7 @@ SetHandleSize(Handle h, Size size)
 }
 
 
-// ROM 0x001438dc HLock
+// ROM 0x00141d88 HLock
 // The block stays put while locked; its address is the result.
 extern "C" void*
 HLock(Handle h)
@@ -724,7 +724,7 @@ HLock(Handle h)
 }
 
 
-// ROM 0x001439f8 HUnlock
+// ROM 0x00141ea4 HUnlock
 extern "C" void
 HUnlock(Handle h)
 {
@@ -741,7 +741,7 @@ HUnlock(Handle h)
 }
 
 
-// ROM 0x00143b38 HSetState
+// ROM 0x00141fe4 HSetState
 extern "C" void
 HSetState(Handle h, char savedCount)
 {
@@ -754,7 +754,7 @@ HSetState(Handle h, char savedCount)
 }
 
 
-// ROM 0x00143bc4 HGetState
+// ROM 0x00142070 HGetState
 extern "C" char
 HGetState(Handle h)
 {
@@ -768,7 +768,7 @@ HGetState(Handle h)
 }
 
 
-// ROM 0x00143cc8 NewFakeHandle
+// ROM 0x00142174 NewFakeHandle
 // A handle on memory that is not a heap block.
 extern "C" Handle
 NewFakeHandle(void* address, Size size)
@@ -788,7 +788,7 @@ NewFakeHandle(void* address, Size size)
 }
 
 
-// ROM 0x00143d6c IsFakeHandle
+// ROM 0x00142218 IsFakeHandle
 extern "C" Boolean
 IsFakeHandle(Handle h)
 {
@@ -796,7 +796,7 @@ IsFakeHandle(Handle h)
 }
 
 
-// ROM 0x00143d84 HandToHand
+// ROM 0x00142230 HandToHand
 // Replaces the handle with a copy.
 extern "C" NewtonErr
 HandToHand(Handle* hPtr)
@@ -817,7 +817,7 @@ HandToHand(Handle* hPtr)
 }
 
 
-// ROM 0x00143dfc CopyHandle
+// ROM 0x001422a8 CopyHandle
 extern "C" Handle
 CopyHandle(Handle h)
 {
@@ -837,7 +837,7 @@ CopyHandle(Handle h)
 }
 
 
-// ROM 0x00143e70 MoveHHi
+// ROM 0x0014231c MoveHHi
 extern "C" void
 MoveHHi(Handle /*h*/)
 {
@@ -845,7 +845,7 @@ MoveHHi(Handle /*h*/)
 }
 
 
-// ROM 0x002ec0a4 GetHandleOwner
+// ROM 0x003113b8 GetHandleOwner
 extern "C" TObjectId
 GetHandleOwner(Handle h)
 {
@@ -853,7 +853,7 @@ GetHandleOwner(Handle h)
 }
 
 
-// ROM 0x002ec0b8 SetHandleOwner
+// ROM 0x003113cc SetHandleOwner
 extern "C" void
 SetHandleOwner(Handle h, TObjectId owner)
 {
@@ -862,7 +862,7 @@ SetHandleOwner(Handle h, TObjectId owner)
 }
 
 
-// ROM 0x002ec0ec GetHandleType
+// ROM 0x00311400 GetHandleType
 extern "C" HeapBlockType
 GetHandleType(Handle h)
 {
@@ -870,7 +870,7 @@ GetHandleType(Handle h)
 }
 
 
-// ROM 0x002ec118 SetHandleType
+// ROM 0x0031142c SetHandleType
 extern "C" void
 SetHandleType(Handle h, HeapBlockType type)
 {
@@ -879,7 +879,7 @@ SetHandleType(Handle h, HeapBlockType type)
 }
 
 
-// ROM 0x002ec160 GetHandleName
+// ROM 0x00311474 GetHandleName
 extern "C" ULong
 GetHandleName(Handle h)
 {
@@ -887,7 +887,7 @@ GetHandleName(Handle h)
 }
 
 
-// ROM 0x002ec18c SetHandleName
+// ROM 0x003114a0 SetHandleName
 extern "C" void
 SetHandleName(Handle h, ULong name)
 {
@@ -900,7 +900,7 @@ SetHandleName(Handle h, ULong name)
 	Heaps
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0014436c NewHeapAt
+// ROM 0x00142818 NewHeapAt
 // A heap laid out in memory the caller has (1 KB to start with).
 extern "C" NewtonErr
 NewHeapAt(VAddr address, Size size, Heap* pResult)
@@ -913,7 +913,7 @@ NewHeapAt(VAddr address, Size size, Heap* pResult)
 }
 
 
-// ROM 0x00143e8c NewVMHeap
+// ROM 0x00142338 NewVMHeap
 // A heap in a new area from the stack manager: maxSize of address space,
 // of which a page is made real and laid out; the heap grows into the rest
 // as it needs, and has a semaphore.  A persistent heap starts on a page
@@ -950,7 +950,7 @@ NewVMHeap(TObjectId defaultDomain, Size maxSize, Heap* pResult, ULong options)
 }
 
 
-// ROM 0x00143f9c NewPersistentVMHeap
+// ROM 0x00142448 NewPersistentVMHeap
 // A VM heap recorded in the memory object database, to be found again
 // after a warm reboot.
 extern "C" NewtonErr
@@ -996,7 +996,7 @@ NewPersistentVMHeap(TObjectId domainId, Size maxSize, Heap* pResult, ULong optio
 }
 
 
-// ROM 0x001440ec DeletePersistentVMHeap
+// ROM 0x00142598 DeletePersistentVMHeap
 extern "C" NewtonErr
 DeletePersistentVMHeap(ULong name)
 {
@@ -1008,7 +1008,7 @@ DeletePersistentVMHeap(ULong name)
 }
 
 
-// ROM 0x0014413c NewSegregatedVMHeap
+// ROM 0x001425e8 NewSegregatedVMHeap
 // Three VM heaps in one: pointers in the first (the fixed heap), master
 // pointers in the second (a quarter of the size), handles in the third;
 // all three share the first's semaphore.
@@ -1053,7 +1053,7 @@ NewSegregatedVMHeap(TObjectId defaultDomain, Size ptrSize, Size handleSize, Heap
 }
 
 
-// ROM 0x00144288 DestroyVMHeapHelper__FPv
+// ROM 0x00142734 DestroyVMHeapHelper__FPv
 static void
 DestroyVMHeapHelper(void* heap)
 {
@@ -1062,7 +1062,7 @@ DestroyVMHeapHelper(void* heap)
 }
 
 
-// ROM 0x001442c0 DestroyVMHeap
+// ROM 0x0014276c DestroyVMHeap
 extern "C" NewtonErr
 DestroyVMHeap(Heap heap)
 {
@@ -1086,7 +1086,7 @@ DestroyVMHeap(Heap heap)
 }
 
 
-// ROM 0x00144398 ZapHeap
+// ROM 0x00142844 ZapHeap
 // Lays a fresh heap over an existing one's area (the verification word is
 // '->-<'... '-><-').
 extern "C" NewtonErr
@@ -1115,7 +1115,7 @@ ZapHeap(Heap heap, ULong verification, Boolean isPersistent)
 }
 
 
-// ROM 0x0014449c ResurrectVMHeap
+// ROM 0x00142948 ResurrectVMHeap
 // A persistent heap found after a warm reboot is put back in service.
 extern "C" NewtonErr
 ResurrectVMHeap(Heap oldHeap)
@@ -1133,7 +1133,7 @@ ResurrectVMHeap(Heap oldHeap)
 }
 
 
-// ROM 0x0014462c ShrinkHeapLeaving
+// ROM 0x00142ad8 ShrinkHeapLeaving
 extern "C" NewtonErr
 ShrinkHeapLeaving(Heap heap, Size amountLeftFree)
 {
@@ -1144,7 +1144,7 @@ ShrinkHeapLeaving(Heap heap, Size amountLeftFree)
 }
 
 
-// ROM 0x001448e4 GetHeapRefcon
+// ROM 0x00142d90 GetHeapRefcon
 extern "C" void*
 GetHeapRefcon(Heap heap)
 {
@@ -1152,7 +1152,7 @@ GetHeapRefcon(Heap heap)
 }
 
 
-// ROM 0x001448e8 SetHeapRefcon
+// ROM 0x00142d94 SetHeapRefcon
 extern "C" void
 SetHeapRefcon(void* refCon, Heap heap)
 {
@@ -1160,7 +1160,7 @@ SetHeapRefcon(void* refCon, Heap heap)
 }
 
 
-// ROM 0x001448ec VoidStarToHeap
+// ROM 0x00142d98 VoidStarToHeap
 extern "C" Heap
 VoidStarToHeap(void* base)
 {
@@ -1172,7 +1172,7 @@ VoidStarToHeap(void* base)
 	Walking a heap
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00270024 HeapSeed
+// ROM 0x00271f00 HeapSeed
 extern "C" long
 HeapSeed(Heap heap)
 {
@@ -1182,7 +1182,7 @@ HeapSeed(Heap heap)
 }
 
 
-// ROM 0x00270040 NextHeapBlock
+// ROM 0x00271f1c NextHeapBlock
 // The block after fromBlock (nil: the first, the header) and what it is.
 extern "C" int
 NextHeapBlock(Heap opaque_heap, long seed, void* fromBlock, void** pFoundBlock, void*** pFoundBlockHandle, int* pFoundBlockType, char* pFoundBlockTag, Size* pFoundBlockSize, TObjectId* pFoundBlockOwner)
@@ -1243,7 +1243,7 @@ NextHeapBlock(Heap opaque_heap, long seed, void* fromBlock, void** pFoundBlock, 
 }
 
 
-// ROM 0x00144c34 CountHeapBlocks
+// ROM 0x001430e0 CountHeapBlocks
 // Counts the pointer and/or handle blocks (blockType, or 0 for both) whose
 // name matches under the mask.
 extern "C" void
@@ -1281,7 +1281,7 @@ CountHeapBlocks(Size* pTotalSize, ULong* pFoundCount, Heap heap, int blockType, 
 }
 
 
-// ROM 0x0026fec4 CheckHeap
+// ROM 0x00271da0 CheckHeap
 extern "C" NewtonErr
 CheckHeap(Heap opaque_heap, void** whereSmashed)
 {
@@ -1302,7 +1302,7 @@ CheckHeap(Heap opaque_heap, void** whereSmashed)
 }
 
 
-// ROM 0x00120d90 ClearMemory
+// ROM 0x0011f328 ClearMemory
 extern "C" void
 ClearMemory(void* p, ULong size)
 {

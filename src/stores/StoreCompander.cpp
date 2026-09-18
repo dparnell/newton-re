@@ -10,7 +10,7 @@
 				indexed by a chunk-table object; the NewPtr and operator new
 				here are the memory manager's.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "StoreCompander.h"
@@ -25,7 +25,7 @@
 //	PackageRoot and the transaction / shared-objects helpers.
 // ---------------------------------------------------------------------------
 
-// ROM 0x00162b30 __ct__11PackageRootFv
+// ROM 0x001608a8 __ct__11PackageRootFv
 PackageRoot::PackageRoot()
 {
 	fChunkTableId = 0;
@@ -36,7 +36,7 @@ PackageRoot::PackageRoot()
 }
 
 
-// ROM 0x001f80f4 LODefaultDoTransaction__FP6TStoreUlT2lUc
+// ROM 0x001fa8a4 LODefaultDoTransaction__FP6TStoreUlT2lUc
 long
 LODefaultDoTransaction(TStore* /*store*/, ULong /*rootId*/, ULong /*chunkTableId*/, long /*arg*/, UChar /*flag*/)
 {
@@ -54,7 +54,7 @@ static long			gLZRefCount = 0;
 static void*		gSharedLZBuffer = nil;
 
 
-// ROM 0x001f80fc GetSharedLZObjects__FPP11TCompressorPP13TDecompressorPPcPl
+// ROM 0x001fa8ac GetSharedLZObjects__FPP11TCompressorPP13TDecompressorPPcPl
 long
 GetSharedLZObjects(TCompressor** compressor, TDecompressor** decompressor, char** buffer, long* bufferSize)
 {
@@ -99,7 +99,7 @@ GetSharedLZObjects(TCompressor** compressor, TDecompressor** decompressor, char*
 }
 
 
-// ROM 0x001f8208 ReleaseSharedLZObjects__FP11TCompressorP13TDecompressorPc
+// ROM 0x001fa9b8 ReleaseSharedLZObjects__FP11TCompressorP13TDecompressorPc
 void
 ReleaseSharedLZObjects(TCompressor* compressor, TDecompressor* /*decompressor*/, char* /*buffer*/)
 {
@@ -118,7 +118,7 @@ ReleaseSharedLZObjects(TCompressor* compressor, TDecompressor* /*decompressor*/,
 //	TStoreCompander - the interface's New(char*)/Delete() glue.
 // ---------------------------------------------------------------------------
 
-// ROM 0x0037dbfc New__15TStoreCompanderSFPc
+// ROM 0x0038735c New__15TStoreCompanderSFPc
 TStoreCompander*
 TStoreCompander::New(const char* implementation)
 {
@@ -127,7 +127,7 @@ TStoreCompander::New(const char* implementation)
 }
 
 
-// ROM 0x0037dc28 Delete__15TStoreCompanderFv
+// ROM 0x00387388 Delete__15TStoreCompanderFv
 void
 TStoreCompander::Delete()
 {
@@ -142,7 +142,7 @@ TStoreCompander::Delete()
 PROTOCOL_IMPL_SOURCE_MACRO(TSimpleStoreCompander)
 
 
-// ROM 0x001f7c4c New__21TSimpleStoreCompanderFv
+// ROM 0x001fa3fc New__21TSimpleStoreCompanderFv
 TSimpleStoreCompander*
 TSimpleStoreCompander::New()
 {
@@ -152,14 +152,14 @@ TSimpleStoreCompander::New()
 }
 
 
-// ROM 0x001f7c5c Delete__21TSimpleStoreCompanderFv
+// ROM 0x001fa40c Delete__21TSimpleStoreCompanderFv
 void
 TSimpleStoreCompander::Delete()
 {
 }
 
 
-// ROM 0x001f7c60 Init__21TSimpleStoreCompanderFP6TStoreUlT2UcT4
+// ROM 0x001fa410 Init__21TSimpleStoreCompanderFP6TStoreUlT2UcT4
 NewtonErr
 TSimpleStoreCompander::Init(TStore* store, ULong rootId, ULong /*arg3*/, UChar readOnly, UChar /*shared*/)
 {
@@ -173,7 +173,7 @@ TSimpleStoreCompander::Init(TStore* store, ULong rootId, ULong /*arg3*/, UChar r
 }
 
 
-// ROM 0x001f7cc0 BlockSize__21TSimpleStoreCompanderFv
+// ROM 0x001fa470 BlockSize__21TSimpleStoreCompanderFv
 ULong
 TSimpleStoreCompander::BlockSize()
 {
@@ -181,7 +181,7 @@ TSimpleStoreCompander::BlockSize()
 }
 
 
-// ROM 0x001f7cc8 Read__21TSimpleStoreCompanderFUlPclT1
+// ROM 0x001fa478 Read__21TSimpleStoreCompanderFUlPclT1
 NewtonErr
 TSimpleStoreCompander::Read(ULong offset, char* buffer, long count, ULong /*page*/)
 {
@@ -207,7 +207,7 @@ TSimpleStoreCompander::Read(ULong offset, char* buffer, long count, ULong /*page
 }
 
 
-// ROM 0x001f7d7c Write__21TSimpleStoreCompanderFUlPclT1
+// ROM 0x001fa52c Write__21TSimpleStoreCompanderFUlPclT1
 NewtonErr
 TSimpleStoreCompander::Write(ULong offset, char* buffer, long count, ULong /*page*/)
 {
@@ -219,7 +219,7 @@ TSimpleStoreCompander::Write(ULong offset, char* buffer, long count, ULong /*pag
 }
 
 
-// ROM 0x001f7de0 DoTransactionAgainst__21TSimpleStoreCompanderFlUl
+// ROM 0x001fa590 DoTransactionAgainst__21TSimpleStoreCompanderFlUl
 void
 TSimpleStoreCompander::DoTransactionAgainst(long arg, ULong /*page*/)
 {
@@ -227,7 +227,7 @@ TSimpleStoreCompander::DoTransactionAgainst(long arg, ULong /*page*/)
 }
 
 
-// ROM 0x001f7e0c IsReadOnly__21TSimpleStoreCompanderFv
+// ROM 0x001fa5bc IsReadOnly__21TSimpleStoreCompanderFv
 Boolean
 TSimpleStoreCompander::IsReadOnly()
 {
@@ -242,7 +242,7 @@ TSimpleStoreCompander::IsReadOnly()
 PROTOCOL_IMPL_SOURCE_MACRO(TLZStoreCompander)
 
 
-// ROM 0x001f788c New__17TLZStoreCompanderFv
+// ROM 0x001fa03c New__17TLZStoreCompanderFv
 TLZStoreCompander*
 TLZStoreCompander::New()
 {
@@ -254,7 +254,7 @@ TLZStoreCompander::New()
 }
 
 
-// ROM 0x001f78a4 Delete__17TLZStoreCompanderFv
+// ROM 0x001fa054 Delete__17TLZStoreCompanderFv
 void
 TLZStoreCompander::Delete()
 {
@@ -272,7 +272,7 @@ TLZStoreCompander::Delete()
 }
 
 
-// ROM 0x001f78f8 Init__17TLZStoreCompanderFP6TStoreUlT2UcT4
+// ROM 0x001fa0a8 Init__17TLZStoreCompanderFP6TStoreUlT2UcT4
 NewtonErr
 TLZStoreCompander::Init(TStore* store, ULong rootId, ULong /*arg3*/, UChar /*readOnly*/, UChar shared)
 {
@@ -301,7 +301,7 @@ TLZStoreCompander::Init(TStore* store, ULong rootId, ULong /*arg3*/, UChar /*rea
 }
 
 
-// ROM 0x001f7a18 BlockSize__17TLZStoreCompanderFv
+// ROM 0x001fa1c8 BlockSize__17TLZStoreCompanderFv
 ULong
 TLZStoreCompander::BlockSize()
 {
@@ -309,7 +309,7 @@ TLZStoreCompander::BlockSize()
 }
 
 
-// ROM 0x001f7a20 Read__17TLZStoreCompanderFUlPclT1
+// ROM 0x001fa1d0 Read__17TLZStoreCompanderFUlPclT1
 NewtonErr
 TLZStoreCompander::Read(ULong offset, char* buffer, long count, ULong /*page*/)
 {
@@ -336,7 +336,7 @@ TLZStoreCompander::Read(ULong offset, char* buffer, long count, ULong /*page*/)
 }
 
 
-// ROM 0x001f7afc Write__17TLZStoreCompanderFUlPclT1
+// ROM 0x001fa2ac Write__17TLZStoreCompanderFUlPclT1
 NewtonErr
 TLZStoreCompander::Write(ULong offset, char* buffer, long count, ULong /*page*/)
 {
@@ -353,7 +353,7 @@ TLZStoreCompander::Write(ULong offset, char* buffer, long count, ULong /*page*/)
 }
 
 
-// ROM 0x001f7b90 DoTransactionAgainst__17TLZStoreCompanderFlUl
+// ROM 0x001fa340 DoTransactionAgainst__17TLZStoreCompanderFlUl
 void
 TLZStoreCompander::DoTransactionAgainst(long arg, ULong /*page*/)
 {
@@ -361,7 +361,7 @@ TLZStoreCompander::DoTransactionAgainst(long arg, ULong /*page*/)
 }
 
 
-// ROM 0x001f7bbc IsReadOnly__17TLZStoreCompanderFv
+// ROM 0x001fa36c IsReadOnly__17TLZStoreCompanderFv
 Boolean
 TLZStoreCompander::IsReadOnly()
 {
@@ -373,8 +373,8 @@ TLZStoreCompander::IsReadOnly()
 //	Registration.
 // ---------------------------------------------------------------------------
 
-PROTOCOL_CLASSINFO(TSimpleStoreCompander, "TStoreCompander", "", 0, 0, nil)	// ROM 0x0037e1a8 ClassInfo__21TSimpleStoreCompanderSFv
-PROTOCOL_CLASSINFO(TLZStoreCompander, "TStoreCompander", "", 0, 0, nil)		// ROM 0x0037e244 ClassInfo__17TLZStoreCompanderSFv
+PROTOCOL_CLASSINFO(TSimpleStoreCompander, "TStoreCompander", "", 0, 0, nil)	// ROM 0x00387908 ClassInfo__21TSimpleStoreCompanderSFv
+PROTOCOL_CLASSINFO(TLZStoreCompander, "TStoreCompander", "", 0, 0, nil)		// ROM 0x003879a4 ClassInfo__17TLZStoreCompanderSFv
 
 
 // A host subset of the ROM's InitializeStoreDecompressors (0x001f824c):

@@ -3,7 +3,7 @@
 
 	Contains:	TDate and the NewtonScript date functions (Dates.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM divides with __rt_udiv/__rt_sdiv (quotient and remainder at
 	once); here / and %.
 */
@@ -36,7 +36,7 @@ IsLeapYear(long year)
 }
 
 // the next element type or format of a spec: three bits at a time
-// ROM 0x0008dfe0 GetNextElementType__FPUl
+// ROM 0x0008cd94 GetNextElementType__FPUl
 static ULong
 GetNextElementType(ULong* spec)
 {
@@ -45,7 +45,7 @@ GetNextElementType(ULong* spec)
 	return element;
 }
 
-// ROM 0x0008e074 GetNextElementFormat__FPUl
+// ROM 0x0008ce28 GetNextElementFormat__FPUl
 static ULong
 GetNextElementFormat(ULong* spec)
 {
@@ -77,7 +77,7 @@ CopyStringObject(UniChar* str, RefArg obj, ULong max)
 	T D a t e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008ad1c __ct__5TDateFv
+// ROM 0x00089ad0 __ct__5TDateFv
 TDate::TDate()
 {
 	fYear = 0;
@@ -90,21 +90,21 @@ TDate::TDate()
 }
 
 
-// ROM 0x0008d910 __ct__5TDateFUl
+// ROM 0x0008c6c4 __ct__5TDateFUl
 TDate::TDate(ULong minutes)
 {
 	InitWithMinutes(minutes);
 }
 
 
-// ROM 0x0008dff4 __ct__5TDateFPCUsPUlUl
+// ROM 0x0008cda8 __ct__5TDateFPCUsPUlUl
 TDate::TDate(const UniChar* str, ULong* consumed, ULong length)
 {
 	StringToDate(str, consumed, length);
 }
 
 
-// ROM 0x0008f9a8 InitWithMinutes__5TDateFUl
+// ROM 0x0008e75c InitWithMinutes__5TDateFUl
 // The fields from minutes since 1904: the day's year and day of the
 // year through the four-year cycle (1461 days), the month and date
 // through the 128ths of a month (3919/128 = 30.6 days, from March), the
@@ -135,7 +135,7 @@ TDate::InitWithMinutes(ULong minutes)
 }
 
 
-// ROM 0x0008f978 InitWithSeconds__5TDateFUl
+// ROM 0x0008e72c InitWithSeconds__5TDateFUl
 void
 TDate::InitWithSeconds(ULong seconds)
 {
@@ -144,7 +144,7 @@ TDate::InitWithSeconds(ULong seconds)
 }
 
 
-// ROM 0x0008f69c SetCurrentTime__5TDateFv
+// ROM 0x0008e450 SetCurrentTime__5TDateFv
 void
 TDate::SetCurrentTime(void)
 {
@@ -152,7 +152,7 @@ TDate::SetCurrentTime(void)
 }
 
 
-// ROM 0x0008dc14 CleanUpFields__5TDateFv
+// ROM 0x0008c9c8 CleanUpFields__5TDateFv
 void
 TDate::CleanUpFields(void)
 {
@@ -160,7 +160,7 @@ TDate::CleanUpFields(void)
 }
 
 
-// ROM 0x0008f744 InitWithDateFrame__5TDateFRC6RefVarUc
+// ROM 0x0008e4f8 InitWithDateFrame__5TDateFRC6RefVarUc
 // The fields from a date frame's integer slots; a missing or non-integer
 // slot is -1, or the start of 1904 when fillIn (then the fields are
 // normalised).  A nil frame changes nothing.
@@ -186,7 +186,7 @@ TDate::InitWithDateFrame(RefArg frame, Boolean fillIn)
 }
 
 
-// ROM 0x0008fa58 TotalDays__5TDateCFv
+// ROM 0x0008e80c TotalDays__5TDateCFv
 // Days since the start of 1904: the years' (a quarter day each for the
 // leap years), the months' before this one (from March, 30.6 days each,
 // January and February's before that) and the date's.
@@ -205,7 +205,7 @@ TDate::TotalDays(void) const
 }
 
 
-// ROM 0x0008fac4 TotalHours__5TDateCFv
+// ROM 0x0008e878 TotalHours__5TDateCFv
 long
 TDate::TotalHours(void) const
 {
@@ -213,7 +213,7 @@ TDate::TotalHours(void) const
 }
 
 
-// ROM 0x0008fae8 TotalMinutes__5TDateCFv
+// ROM 0x0008e89c TotalMinutes__5TDateCFv
 long
 TDate::TotalMinutes(void) const
 {
@@ -221,7 +221,7 @@ TDate::TotalMinutes(void) const
 }
 
 
-// ROM 0x0008d980 TotalSeconds__5TDateCFv
+// ROM 0x0008c734 TotalSeconds__5TDateCFv
 // (The ROM's 32-bit word wraps past 2^31 seconds, in 1972; so does this.)
 long
 TDate::TotalSeconds(void) const
@@ -231,7 +231,7 @@ TDate::TotalSeconds(void) const
 }
 
 
-// ROM 0x0008d9c4 DaysInMonth__5TDateCFv
+// ROM 0x0008c778 DaysInMonth__5TDateCFv
 // 0 for a month out of 1..12; February's by the year (29 for a year out
 // of TDate's range).
 long
@@ -253,7 +253,7 @@ TDate::DaysInMonth(void) const
 }
 
 
-// ROM 0x0008da98 DaysInYear__5TDateCFv
+// ROM 0x0008c84c DaysInYear__5TDateCFv
 // The day of the year (January 1st is 1).
 long
 TDate::DaysInYear(void) const
@@ -270,7 +270,7 @@ TDate::DaysInYear(void) const
 }
 
 
-// ROM 0x0008dbc4 IsValidDate__5TDateCFv
+// ROM 0x0008c978 IsValidDate__5TDateCFv
 // The month and date are set, the month is one and the date within it.
 Boolean
 TDate::IsValidDate(void) const
@@ -279,7 +279,7 @@ TDate::IsValidDate(void) const
 }
 
 
-// ROM 0x0008dc38 IncrementMonth__5TDateFl
+// ROM 0x0008c9ec IncrementMonth__5TDateFl
 // delta months on (or back), the year following, never before 1904 or
 // past the last year; the date clipped to the month.
 void
@@ -308,7 +308,7 @@ TDate::IncrementMonth(long delta)
 }
 
 
-// ROM 0x0008f66c __lt__FRC5TDateT1
+// ROM 0x0008e420 __lt__FRC5TDateT1
 Boolean
 operator<(const TDate& a, const TDate& b)
 {
@@ -316,7 +316,7 @@ operator<(const TDate& a, const TDate& b)
 }
 
 
-// ROM 0x0008f6c0 __gt__FRC5TDateT1
+// ROM 0x0008e474 __gt__FRC5TDateT1
 Boolean
 operator>(const TDate& a, const TDate& b)
 {
@@ -324,7 +324,7 @@ operator>(const TDate& a, const TDate& b)
 }
 
 
-// ROM 0x0008f6f0 __eq__FRC5TDateT1
+// ROM 0x0008e4a4 __eq__FRC5TDateT1
 Boolean
 operator==(const TDate& a, const TDate& b)
 {
@@ -337,7 +337,7 @@ operator==(const TDate& a, const TDate& b)
 	F o r m a t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008dd9c SetFormatResource__5TDateFRC6RefVar
+// ROM 0x0008cb50 SetFormatResource__5TDateFRC6RefVar
 // The three formats from the locale bundle (the current one for nil),
 // those not set already.
 void
@@ -357,7 +357,7 @@ TDate::SetFormatResource(RefArg locale)
 }
 
 
-// ROM 0x0008dec4 SetFormatResource__5TDateFRC6RefVarN21
+// ROM 0x0008cc78 SetFormatResource__5TDateFRC6RefVarN21
 // The three formats given, the current locale's for any that is nil.
 void
 TDate::SetFormatResource(RefArg longDateFormat, RefArg shortDateFormat, RefArg timeFormat)
@@ -378,7 +378,7 @@ TDate::SetFormatResource(RefArg longDateFormat, RefArg shortDateFormat, RefArg t
 }
 
 
-// ROM 0x0008e088 LongDateString__5TDateFUlPUsT1
+// ROM 0x0008ce3c LongDateString__5TDateFUlPUsT1
 // The date in the long format: the elements the spec asks for (all four
 // for 0; the year dropped when out of range) in the locale's
 // longDateOrder, each in the spec's format (the order's when 0),
@@ -454,7 +454,7 @@ TDate::LongDateString(ULong spec, UniChar* str, ULong max)
 }
 
 
-// ROM 0x0008e3e0 ShortDateString__5TDateFUlPUsT1
+// ROM 0x0008d194 ShortDateString__5TDateFUlPUsT1
 // The date in the short format: the day, month and year (those the spec
 // asks for; the year dropped when out of range) numerically in the
 // locale's shortDateOrder with the shortDateDelim strings.
@@ -523,7 +523,7 @@ TDate::ShortDateString(ULong spec, UniChar* str, ULong max)
 }
 
 
-// ROM 0x0008e68c TimeString__5TDateFUlPUsT1
+// ROM 0x0008d440 TimeString__5TDateFUlPUsT1
 // The time: the hour (in the locale's timeCycle: 1 is 12-hour, midnight
 // and noon by its midNightForm and noonForm), the minute and second
 // with the separators, each with a leading zero when the format asks
@@ -609,7 +609,7 @@ TDate::TimeString(ULong spec, UniChar* str, ULong max)
 }
 
 
-// ROM 0x0008eba4 DateElementString__5TDateFUlT1PUsT1Uc
+// ROM 0x0008d958 DateElementString__5TDateFUlT1PUsT1Uc
 // One element: the day (numeric, a leading zero when the format's
 // dayLeadingZ is 0), the day of the week (the cached names of the
 // format: 1 long, 2 abbreviated, 3 terse, 4 short, each falling back on
@@ -728,7 +728,7 @@ TDate::DateElementString(ULong element, ULong format, UniChar* str, ULong max, B
 	gDateLexDictionary, the recognition system's); nothing is parsed here.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008f0b8 StringToDateFields__5TDateFPCUsPUlUl
+// ROM 0x0008de6c StringToDateFields__5TDateFPCUsPUlUl
 // The time then the date parsed out of the string (the later one first
 // when they come in that order), a two-digit year put in the current
 // century; *consumed the characters used.  ==> 0 all used, 2 some, -1
@@ -743,7 +743,7 @@ TDate::StringToDateFields(const UniChar* /*str*/, ULong* consumed, ULong /*lengt
 }
 
 
-// ROM 0x0008f280 StringToDateFrame__5TDateFPCUsPUlUl
+// ROM 0x0008e034 StringToDateFrame__5TDateFPCUsPUlUl
 // A canonicalDate frame of the fields parsed (the year clipped to the
 // last year), its status the parse's.
 Ref
@@ -772,7 +772,7 @@ TDate::StringToDateFrame(const UniChar* str, ULong* consumed, ULong length)
 }
 
 
-// ROM 0x0008f4bc StringToDate__5TDateFPCUsPUlUl
+// ROM 0x0008e270 StringToDate__5TDateFPCUsPUlUl
 // The fields parsed over the current time: what the string leaves out
 // stays as now (a day of the week alone moves the date to it; a time
 // without minutes has 0), then normalised.
@@ -810,7 +810,7 @@ TDate::StringToDate(const UniChar* str, ULong* consumed, ULong length)
 }
 
 
-// ROM 0x0008f5d0 StringToTime__5TDateFPCUsPUlUl
+// ROM 0x0008e384 StringToTime__5TDateFPCUsPUlUl
 // The time parsed over today's date; everything 0 when nothing is.
 long
 TDate::StringToTime(const UniChar* /*str*/, ULong* consumed, ULong length)
@@ -833,7 +833,7 @@ TDate::StringToTime(const UniChar* /*str*/, ULong* consumed, ULong length)
 	F r a m e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008b898 ToObject__FRC5TDate
+// ROM 0x0008a64c ToObject__FRC5TDate
 // A canonicalDate frame {year, month, date, dayOfWeek, hour, minute,
 // second, daysInMonth} of the date (a year out of range answers as the
 // year after the last).
@@ -856,7 +856,7 @@ ToObject(const TDate& date)
 }
 
 
-// ROM 0x0008b144 GetLongDateSlot__FRC6RefVar
+// ROM 0x00089ef8 GetLongDateSlot__FRC6RefVar
 static Ref
 GetLongDateSlot(RefArg slot)
 {
@@ -865,7 +865,7 @@ GetLongDateSlot(RefArg slot)
 }
 
 
-// ROM 0x0008b1a8 GetDayName__Fl
+// ROM 0x00089f5c GetDayName__Fl
 Ref
 GetDayName(long dayOfWeek)
 {
@@ -874,7 +874,7 @@ GetDayName(long dayOfWeek)
 }
 
 
-// ROM 0x0008b5b0 WeekNumCalc__FlT1
+// ROM 0x0008a364 WeekNumCalc__FlT1
 // The week of the year the minutes fall in, weeks starting on
 // firstDayOfWeek: the ISO way (a week belongs to the year holding its
 // Thursday) when the locale's weekNumberType is 1, else counted from
@@ -919,7 +919,7 @@ MinutesArg(RefArg arg)
 }
 
 
-// ROM 0x0008ad98 FTime__FRC6RefVar
+// ROM 0x00089b4c FTime__FRC6RefVar
 static Ref
 FTime(RefArg /*rcvr*/)
 {
@@ -927,7 +927,7 @@ FTime(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x0008adb0 FTimeInSeconds__FRC6RefVar
+// ROM 0x00089b64 FTimeInSeconds__FRC6RefVar
 static Ref
 FTimeInSeconds(RefArg /*rcvr*/)
 {
@@ -935,7 +935,7 @@ FTimeInSeconds(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x0008aea8 FTicks__FRC6RefVar
+// ROM 0x00089c5c FTicks__FRC6RefVar
 static Ref
 FTicks(RefArg /*rcvr*/)
 {
@@ -943,7 +943,7 @@ FTicks(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x0008add4 FIsValidDate__FRC6RefVarT1
+// ROM 0x00089b88 FIsValidDate__FRC6RefVarT1
 // A string parsed, or a date frame's fields.
 static Ref
 FIsValidDate(RefArg /*rcvr*/, RefArg date)
@@ -965,7 +965,7 @@ FIsValidDate(RefArg /*rcvr*/, RefArg date)
 }
 
 
-// ROM 0x0008aec0 FStringToTime__FRC6RefVarT1
+// ROM 0x00089c74 FStringToTime__FRC6RefVarT1
 static Ref
 FStringToTime(RefArg /*rcvr*/, RefArg str)
 {
@@ -981,7 +981,7 @@ FStringToTime(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x0008af84 FHourMinute__FRC6RefVarT1
+// ROM 0x00089d38 FHourMinute__FRC6RefVarT1
 // The time (now for nil) in the short time format.
 static Ref
 FHourMinute(RefArg /*rcvr*/, RefArg minutes)
@@ -993,7 +993,7 @@ FHourMinute(RefArg /*rcvr*/, RefArg minutes)
 }
 
 
-// ROM 0x0008b038 FDateNTime__FRC6RefVarT1
+// ROM 0x00089dec FDateNTime__FRC6RefVarT1
 // The date (every element, short) and the short time.
 static Ref
 FDateNTime(RefArg /*rcvr*/, RefArg minutes)
@@ -1010,7 +1010,7 @@ FDateNTime(RefArg /*rcvr*/, RefArg minutes)
 }
 
 
-// ROM 0x0008b1ec FShortDate__FRC6RefVarT1
+// ROM 0x00089fa0 FShortDate__FRC6RefVarT1
 // The abbreviated day of the week, then the month and day.
 static Ref
 FShortDate(RefArg /*rcvr*/, RefArg minutes)
@@ -1028,7 +1028,7 @@ FShortDate(RefArg /*rcvr*/, RefArg minutes)
 }
 
 
-// ROM 0x0008b328 FLongDateStr__FRC6RefVarN21
+// ROM 0x0008a0dc FLongDateStr__FRC6RefVarN21
 static Ref
 FLongDateStr(RefArg /*rcvr*/, RefArg minutes, RefArg spec)
 {
@@ -1038,7 +1038,7 @@ FLongDateStr(RefArg /*rcvr*/, RefArg minutes, RefArg spec)
 }
 
 
-// ROM 0x0008b3c0 FShortDateStr__FRC6RefVarN21
+// ROM 0x0008a174 FShortDateStr__FRC6RefVarN21
 static Ref
 FShortDateStr(RefArg /*rcvr*/, RefArg minutes, RefArg spec)
 {
@@ -1048,7 +1048,7 @@ FShortDateStr(RefArg /*rcvr*/, RefArg minutes, RefArg spec)
 }
 
 
-// ROM 0x0008b494 FTimeStr__FRC6RefVarN21
+// ROM 0x0008a248 FTimeStr__FRC6RefVarN21
 static Ref
 FTimeStr(RefArg /*rcvr*/, RefArg minutes, RefArg spec)
 {
@@ -1058,7 +1058,7 @@ FTimeStr(RefArg /*rcvr*/, RefArg minutes, RefArg spec)
 }
 
 
-// ROM 0x0008b52c FTimeFrameStr
+// ROM 0x0008a2e0 FTimeFrameStr
 static Ref
 FTimeFrameStr(RefArg /*rcvr*/, RefArg dateFrame, RefArg spec)
 {
@@ -1070,7 +1070,7 @@ FTimeFrameStr(RefArg /*rcvr*/, RefArg dateFrame, RefArg spec)
 }
 
 
-// ROM 0x0008b458 FSetTimeInSeconds
+// ROM 0x0008a20c FSetTimeInSeconds
 static Ref
 FSetTimeInSeconds(RefArg /*rcvr*/, RefArg seconds)
 {
@@ -1079,7 +1079,7 @@ FSetTimeInSeconds(RefArg /*rcvr*/, RefArg seconds)
 }
 
 
-// ROM 0x0008b810 FSetTime__FRC6RefVarT1
+// ROM 0x0008a5c4 FSetTime__FRC6RefVarT1
 static Ref
 FSetTime(RefArg /*rcvr*/, RefArg minutes)
 {
@@ -1088,7 +1088,7 @@ FSetTime(RefArg /*rcvr*/, RefArg minutes)
 }
 
 
-// ROM 0x0008b728 FWeekNumber
+// ROM 0x0008a4dc FWeekNumber
 // The week number of the minutes, weeks starting on firstDayOfWeek (nil:
 // the firstDayOfWeek preference, else the locale's, else Sunday).
 static Ref
@@ -1112,7 +1112,7 @@ FWeekNumber(RefArg /*rcvr*/, RefArg minutes, RefArg firstDayOfWeek)
 }
 
 
-// ROM 0x0008b840 FTotalMinutes__FRC6RefVarT1
+// ROM 0x0008a5f4 FTotalMinutes__FRC6RefVarT1
 static Ref
 FTotalMinutes(RefArg /*rcvr*/, RefArg dateFrame)
 {
@@ -1122,7 +1122,7 @@ FTotalMinutes(RefArg /*rcvr*/, RefArg dateFrame)
 }
 
 
-// ROM 0x0008ba48 FDate__FRC6RefVarT1
+// ROM 0x0008a7fc FDate__FRC6RefVarT1
 static Ref
 FDate(RefArg /*rcvr*/, RefArg minutes)
 {
@@ -1132,7 +1132,7 @@ FDate(RefArg /*rcvr*/, RefArg minutes)
 }
 
 
-// ROM 0x0008bab4 FDateFromSeconds
+// ROM 0x0008a868 FDateFromSeconds
 static Ref
 FDateFromSeconds(RefArg /*rcvr*/, RefArg seconds)
 {
@@ -1142,7 +1142,7 @@ FDateFromSeconds(RefArg /*rcvr*/, RefArg seconds)
 }
 
 
-// ROM 0x0008bb28 FStringToDateFrame__FRC6RefVarT1
+// ROM 0x0008a8dc FStringToDateFrame__FRC6RefVarT1
 static Ref
 FStringToDateFrame(RefArg /*rcvr*/, RefArg str)
 {
@@ -1155,7 +1155,7 @@ FStringToDateFrame(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x0008bbd4 FStringToDate__FRC6RefVarT1
+// ROM 0x0008a988 FStringToDate__FRC6RefVarT1
 static Ref
 FStringToDate(RefArg /*rcvr*/, RefArg str)
 {
@@ -1171,7 +1171,7 @@ FStringToDate(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x0008dcf4 FIncrementMonth__FRC6RefVarN21
+// ROM 0x0008caa8 FIncrementMonth__FRC6RefVarN21
 // The minutes delta months on; nil when the result would be out of the
 // integer's range, the largest integer when past 2^29 minutes.
 static Ref

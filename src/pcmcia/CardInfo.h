@@ -8,7 +8,7 @@
 				run, card hardware or no card hardware.
 
 	Not in the DDK's headers as a script function; reconstructed from the
-	MP2100 D ROM (0x000545a4), citing its origin.  NOT YET: the card server
+	MP2x00 US ROM (0x00053ccc), citing its origin.  NOT YET: the card server
 	itself (TCardServer, the socket states and the CIS tuples a real card
 	answers with), so the sockets are always empty here - which is what the
 	ROM's own code does on a machine whose gNumberOfHWSockets is zero.
@@ -22,7 +22,7 @@
 #endif
 
 
-Ref		FGetCardInfo(RefArg rcvr);			// ROM 0x000545a4 FGetCardInfo
+Ref		FGetCardInfo(RefArg rcvr);			// ROM 0x00053ccc FGetCardInfo
 
 // the card functions bound to the ROM's native function objects
 void	RegisterCardNatives(void);

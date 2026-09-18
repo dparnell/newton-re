@@ -3,21 +3,21 @@
 
 	Contains:	The tablet buffer and its reader.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "TabletBuffer.h"
 #include "NewtonTime.h"
 
-ULong	gTabData = 0;						// ROM 0x0c104458 gTabData
+ULong	gTabData = 0;						// ROM 0x0c107390 gTabData
 ULong	gTabletInkerIndex = 0;				// (0x0c10445c)
 ULong	gTabletStrokerIndex = 0;			// (0x0c104460)
 ULong	gTabletBuffer[kTabletBufferSize];	// (0x0c104464)
-static Boolean	gTBCOnlyPollTablet = false;	// ROM 0x0c101f90 gTBCOnlyPollTablet
-static Boolean	gTBCPollReady = false;		// ROM 0x0c101f94 gTBCPollReady
-static Boolean	gTBCPenUp = true;			// ROM 0x0c101f9c gTBCPenUp
-static Boolean	gTBCBypassTablet = false;	// ROM 0x0c101fa0 gTBCBypassTablet
-static ULong	gTBCPollSample = 0;			// ROM 0x0c101f98 gTBCPollSample
+static Boolean	gTBCOnlyPollTablet = false;	// ROM 0x0c104e9c gTBCOnlyPollTablet
+static Boolean	gTBCPollReady = false;		// ROM 0x0c104ea0 gTBCPollReady
+static Boolean	gTBCPenUp = true;			// ROM 0x0c104ea8 gTBCPenUp
+static Boolean	gTBCBypassTablet = false;	// ROM 0x0c104eac gTBCBypassTablet
+static ULong	gTBCPollSample = 0;			// ROM 0x0c104ea4 gTBCPollSample
 TabletCollectState	gTabletCollect = { false, 0, 0, 0, kPenStateIdle, 0, 0, 0 };	// ROM 0x0c1008a8 collect
 
 const long kTabletBufferFull = -56006;
@@ -35,7 +35,7 @@ NextIndex(ULong index)
 }
 
 
-// ROM 0x0024e4e8 TBCInsertTabletSample__FUlT1
+// ROM 0x00250430 TBCInsertTabletSample__FUlT1
 // A record put in the ring - a sample word, a pen-down (0xd, the time), a
 // pen-up (0xe, the time, a dummy sample, the time); the time is now when
 // 0.  ==> 0, or kTabletBufferFull when the record would catch the reader.
@@ -106,7 +106,7 @@ TBCInsertTabletSample(ULong sample, ULong time)
 }
 
 
-// ROM 0x0024e834 InsertTabletSample__FUlT1
+// ROM 0x0025077c InsertTabletSample__FUlT1
 // The tablet driver's entry: the record buffered and the inker woken
 // (NOT YET RECONSTRUCTED: TBCWakeUpInker - the host's stroke world polls).
 long
@@ -116,7 +116,7 @@ InsertTabletSample(ULong sample, ULong time)
 }
 
 
-// ROM 0x0024e168 TBCTabletBufferInit__FP6TUPort
+// ROM 0x002500b0 TBCTabletBufferInit__FP6TUPort
 // The buffer emptied and the modes reset.  NOT YET RECONSTRUCTED: the
 // inker's port and the 'newt/'inkr event that wakes it.
 void
@@ -131,7 +131,7 @@ TBCTabletBufferInit(TUPort* /*inkerPort*/)
 }
 
 
-// ROM 0x0024e200 TBCTabletBufferEmpty__Fv
+// ROM 0x00250148 TBCTabletBufferEmpty__Fv
 Boolean
 TBCTabletBufferEmpty(void)
 {
@@ -139,7 +139,7 @@ TBCTabletBufferEmpty(void)
 }
 
 
-// ROM 0x0024e6e8 TBCFlushTabletBuffer__Fv
+// ROM 0x00250630 TBCFlushTabletBuffer__Fv
 // Both readers caught up with the writer.
 void
 TBCFlushTabletBuffer(void)
@@ -149,7 +149,7 @@ TBCFlushTabletBuffer(void)
 }
 
 
-// ROM 0x0024e700 TBCFlushInkerBuffer__Fv
+// ROM 0x00250648 TBCFlushInkerBuffer__Fv
 // The stroker caught up with the inker.
 void
 TBCFlushInkerBuffer(void)
@@ -158,7 +158,7 @@ TBCFlushInkerBuffer(void)
 }
 
 
-// ROM 0x0024e328 TBCSetTabletPolling__FUc
+// ROM 0x00250270 TBCSetTabletPolling__FUc
 void
 TBCSetTabletPolling(Boolean polling)
 {
@@ -167,7 +167,7 @@ TBCSetTabletPolling(Boolean polling)
 }
 
 
-// ROM 0x0024e7f8 SetTabletPolling__FUc
+// ROM 0x00250740 SetTabletPolling__FUc
 void
 SetTabletPolling(Boolean polling)
 {
@@ -176,7 +176,7 @@ SetTabletPolling(Boolean polling)
 }
 
 
-// ROM 0x0024e318 TBCGetTabletPolling__Fv
+// ROM 0x00250260 TBCGetTabletPolling__Fv
 Boolean
 TBCGetTabletPolling(void)
 {
@@ -184,7 +184,7 @@ TBCGetTabletPolling(void)
 }
 
 
-// ROM 0x0024e340 TBCPollTablet__FPlT1PUlPUc
+// ROM 0x00250288 TBCPollTablet__FPlT1PUlPUc
 // The last sample in polling mode: x and y in Fixed, the pressure, whether
 // the pen is up.  ==> 0, or kTabletNoNewSample when nothing came since.
 long
@@ -208,7 +208,7 @@ TBCPollTablet(long* x, long* y, ULong* pressure, Boolean* penUp)
 }
 
 
-// ROM 0x0024e2d8 TBCInkerBufferEmpty__Fv
+// ROM 0x00250220 TBCInkerBufferEmpty__Fv
 Boolean
 TBCInkerBufferEmpty(void)
 {
@@ -216,7 +216,7 @@ TBCInkerBufferEmpty(void)
 }
 
 
-// ROM 0x0024e228 TBCGetInkerData__Fv
+// ROM 0x00250170 TBCGetInkerData__Fv
 ULong
 TBCGetInkerData(void)
 {
@@ -224,7 +224,7 @@ TBCGetInkerData(void)
 }
 
 
-// ROM 0x0024e240 TBCSetInkerData__FUl
+// ROM 0x00250188 TBCSetInkerData__FUl
 void
 TBCSetInkerData(ULong word)
 {
@@ -232,7 +232,7 @@ TBCSetInkerData(ULong word)
 }
 
 
-// ROM 0x0024e258 TBCSetInkerData__FUlT1
+// ROM 0x002501a0 TBCSetInkerData__FUlT1
 void
 TBCSetInkerData(ULong word, ULong offset)
 {
@@ -243,7 +243,7 @@ TBCSetInkerData(ULong word, ULong offset)
 }
 
 
-// ROM 0x0024e27c TBCIncInkerIndex__FUl
+// ROM 0x002501c4 TBCIncInkerIndex__FUl
 void
 TBCIncInkerIndex(ULong count)
 {
@@ -253,7 +253,7 @@ TBCIncInkerIndex(ULong count)
 }
 
 
-// ROM 0x0024e6c4 TBCStrokerBufferEmpty__Fv
+// ROM 0x0025060c TBCStrokerBufferEmpty__Fv
 Boolean
 TBCStrokerBufferEmpty(void)
 {
@@ -261,7 +261,7 @@ TBCStrokerBufferEmpty(void)
 }
 
 
-// ROM 0x0024e29c TBCGetStrokerData__Fv
+// ROM 0x002501e4 TBCGetStrokerData__Fv
 ULong
 TBCGetStrokerData(void)
 {
@@ -269,7 +269,7 @@ TBCGetStrokerData(void)
 }
 
 
-// ROM 0x0024e2b4 TBCGetStrokerData__FUl
+// ROM 0x002501fc TBCGetStrokerData__FUl
 ULong
 TBCGetStrokerData(ULong offset)
 {
@@ -280,7 +280,7 @@ TBCGetStrokerData(ULong offset)
 }
 
 
-// ROM 0x0024e2f8 TBCIncStrokerIndex__FUl
+// ROM 0x00250240 TBCIncStrokerIndex__FUl
 void
 TBCIncStrokerIndex(ULong count)
 {
@@ -290,7 +290,7 @@ TBCIncStrokerIndex(ULong count)
 }
 
 
-// ROM 0x0024e870 StrokerBufferEmpty__Fv
+// ROM 0x002507b8 StrokerBufferEmpty__Fv
 Boolean
 StrokerBufferEmpty(void)
 {
@@ -298,7 +298,7 @@ StrokerBufferEmpty(void)
 }
 
 
-// ROM 0x0024e890 GetStrokerData__Fv
+// ROM 0x002507d8 GetStrokerData__Fv
 ULong
 GetStrokerData(void)
 {
@@ -306,7 +306,7 @@ GetStrokerData(void)
 }
 
 
-// ROM 0x0024e894 GetStrokerData__FUl
+// ROM 0x002507dc GetStrokerData__FUl
 ULong
 GetStrokerData(ULong offset)
 {
@@ -314,7 +314,7 @@ GetStrokerData(ULong offset)
 }
 
 
-// ROM 0x0024e8a4 IncStrokerIndex__FUl
+// ROM 0x002507ec IncStrokerIndex__FUl
 void
 IncStrokerIndex(ULong count)
 {
@@ -322,7 +322,7 @@ IncStrokerIndex(ULong count)
 }
 
 
-// ROM 0x0024e8b4 GetSampleRate__Fv
+// ROM 0x002507fc GetSampleRate__Fv
 // The tablet driver's sampling rate (NOT YET RECONSTRUCTED: gTabletDriver;
 // the MP2100 samples 60 times a second: 60.0).
 ULong
@@ -336,7 +336,7 @@ GetSampleRate(void)
 	T h e   r e a d e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000381a4 xTabInit__Fv
+// ROM 0x000380f4 xTabInit__Fv
 void
 xTabInit(void)
 {
@@ -346,7 +346,7 @@ xTabInit(void)
 }
 
 
-// ROM 0x000381d4 xTabOn__Fv
+// ROM 0x00038124 xTabOn__Fv
 void
 xTabOn(void)
 {
@@ -355,7 +355,7 @@ xTabOn(void)
 }
 
 
-// ROM 0x000381f8 xGetTabPt__FP5TabPt
+// ROM 0x00038148 xGetTabPt__FP5TabPt
 // The next point from the buffer, through the pen state: a sample while
 // the pen is down (states 6 and 4) becomes a TabPt (x and y from the
 // word, the pressure, no flags); a pen-down record in the idle state (3)
@@ -414,7 +414,7 @@ xGetTabPt(TabPt* pt)
 }
 
 
-// ROM 0x00038368 xLastPoint__FP5TabPt
+// ROM 0x000382b8 xLastPoint__FP5TabPt
 Boolean
 xLastPoint(TabPt* pt)
 {
@@ -422,7 +422,7 @@ xLastPoint(TabPt* pt)
 }
 
 
-// ROM 0x000383b8 xGetDownTime__Fv
+// ROM 0x00038308 xGetDownTime__Fv
 ULong
 xGetDownTime(void)
 {
@@ -432,7 +432,7 @@ xGetDownTime(void)
 }
 
 
-// ROM 0x000383d0 xGetUpTime__Fv
+// ROM 0x00038320 xGetUpTime__Fv
 ULong
 xGetUpTime(void)
 {
@@ -442,7 +442,7 @@ xGetUpTime(void)
 }
 
 
-// ROM 0x000383e8 xGetTabScale__FP6FPoint
+// ROM 0x00038338 xGetTabScale__FP6FPoint
 void
 xGetTabScale(FPoint* scale)
 {

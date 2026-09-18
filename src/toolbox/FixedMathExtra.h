@@ -19,7 +19,7 @@
 #include "FixedMath.h"
 #endif
 
-Fixed	FixedASin(Fract x);		// ROM 0x00253210 FixedASin__Fl
-Fixed	FixedACos(Fract x);		// ROM 0x0025325c FixedACos__Fl
+Fixed	FixedASin(Fract x);		// ROM 0x00255158 FixedASin__Fl
+Fixed	FixedACos(Fract x);		// ROM 0x002551a4 FixedACos__Fl
 
 #endif	/* __FIXEDMATHEXTRA_H */

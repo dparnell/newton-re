@@ -8,9 +8,9 @@
 				(GetVariable, FindImplementor, SetVariable and the TICache
 				lookup caches) and the global function table.
 
-	Reconstructed from the MP2100 D ROM: the interpreter at
-	0x002c7370-0x002d1860 and 0x002aef38-0x002af500, the lookup caches at
-	0x002d9b40-0x002dbc00, the stacks at 0x001a6b80-0x001a7100.  The DDK
+	Reconstructed from the MP2x00 US ROM: the interpreter at
+	0x002ecbd0-0x002f70a4 and 0x002d3cc4-0x002d428c, the lookup caches at
+	0x002ff53c-0x003015fc, the stacks at 0x001a4600-0x001a4b80.  The DDK
 	has no header for any of this; the layouts are the ROM's (TInterpreter
 	0x80 bytes, TRefStack 0x10, TRefStructStack 0x18, TICache 0x10).
 

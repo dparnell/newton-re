@@ -34,10 +34,10 @@
 	caller), justification and the options, ink words, scaled glyphs,
 	recording into a picture (StdText).
 
-	Reconstructed from the MP2100 D ROM (0x0025fd08-0x0025fdf4,
-	0x0032eec8-0x0032f3f0, 0x003301d0, 0x0033057c, 0x00330948,
-	0x0017dd5c-0x0017e2c0, 0x0017f0a0, 0x000ed674, 0x000e4808,
-	0x001efeb4-0x001f0084, 0x001f2648); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x00261c40-0x00261d2c,
+	0x0035a024-0x0035a54c, 0x0035b32c, 0x0035b6d8, 0x0035baa4,
+	0x0017bd2c-0x0017c290, 0x0017d070, 0x000ec09c, 0x000e3550,
+	0x001eda9c-0x001edc6c, 0x001f0230); each function cites its origin.
 */
 
 #ifndef __TEXT_H

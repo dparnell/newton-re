@@ -48,7 +48,7 @@ CharOf(RefArg r)
 	Lengths, comparison
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001fa8f8 FStrLen__FRC6RefVarT1
+// ROM 0x001fd0a8 FStrLen__FRC6RefVarT1
 // The characters of a string (its ink words counting one each).
 Ref
 FStrLen(RefArg /*rcvr*/, RefArg str)
@@ -58,7 +58,7 @@ FStrLen(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x001fc514 StrEmpty__FRC6RefVar
+// ROM 0x001fecc4 StrEmpty__FRC6RefVar
 Boolean
 StrEmpty(RefArg str)
 {
@@ -69,7 +69,7 @@ StrEmpty(RefArg str)
 }
 
 
-// ROM 0x001fc568 FStrFilled
+// ROM 0x001fed18 FStrFilled
 Ref
 FStrFilled(RefArg /*rcvr*/, RefArg str)
 {
@@ -77,7 +77,7 @@ FStrFilled(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x001fc644 FStrEqual__FRC6RefVarN21
+// ROM 0x001fedf4 FStrEqual__FRC6RefVarN21
 // The same characters, cases apart (the same object is equal at once;
 // strings of different sizes are not).
 Ref
@@ -93,7 +93,7 @@ FStrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x001fa124 FStrExactCompare__FRC6RefVarN21
+// ROM 0x001fc8d4 FStrExactCompare__FRC6RefVarN21
 // ==> < 0, 0, > 0 as a compares to b, cases counting.
 Ref
 FStrExactCompare(RefArg /*rcvr*/, RefArg a, RefArg b)
@@ -106,7 +106,7 @@ FStrExactCompare(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00291e1c FStrCompare
+// ROM 0x002b6d48 FStrCompare
 // ==> < 0, 0, > 0 as a compares to b, cases folded.
 Ref
 FStrCompare(RefArg /*rcvr*/, RefArg a, RefArg b)
@@ -119,7 +119,7 @@ FStrCompare(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0032dc0c FSymbolCompareLex
+// ROM 0x00358da8 FSymbolCompareLex
 Ref
 FSymbolCompareLex(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -131,7 +131,7 @@ FSymbolCompareLex(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002ef3c4 StrBeginsWith__FRC6RefVarT1
+// ROM 0x003146c8 StrBeginsWith__FRC6RefVarT1
 int
 StrBeginsWith(RefArg str, RefArg prefix)
 {
@@ -143,7 +143,7 @@ StrBeginsWith(RefArg str, RefArg prefix)
 }
 
 
-// ROM 0x002ef460 FBeginsWith
+// ROM 0x00314764 FBeginsWith
 Ref
 FBeginsWith(RefArg /*rcvr*/, RefArg str, RefArg prefix)
 {
@@ -151,7 +151,7 @@ FBeginsWith(RefArg /*rcvr*/, RefArg str, RefArg prefix)
 }
 
 
-// ROM 0x002ef488 StrEndsWith__FRC6RefVarT1
+// ROM 0x0031478c StrEndsWith__FRC6RefVarT1
 int
 StrEndsWith(RefArg str, RefArg suffix)
 {
@@ -163,7 +163,7 @@ StrEndsWith(RefArg str, RefArg suffix)
 }
 
 
-// ROM 0x002ef584 FEndsWith
+// ROM 0x00314888 FEndsWith
 Ref
 FEndsWith(RefArg /*rcvr*/, RefArg str, RefArg suffix)
 {
@@ -175,7 +175,7 @@ FEndsWith(RefArg /*rcvr*/, RefArg str, RefArg suffix)
 	Pieces
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ef280 Substring__FRC6RefVarlT2
+// ROM 0x00314584 Substring__FRC6RefVarlT2
 // count characters of str from start (-1: to the end), as a new string of
 // str's class.
 Ref
@@ -195,7 +195,7 @@ Substring(RefArg str, long start, long count)
 }
 
 
-// ROM 0x002ef35c FSubstr
+// ROM 0x00314660 FSubstr
 Ref
 FSubstr(RefArg /*rcvr*/, RefArg str, RefArg start, RefArg count)
 {
@@ -203,7 +203,7 @@ FSubstr(RefArg /*rcvr*/, RefArg str, RefArg start, RefArg count)
 }
 
 
-// ROM 0x001fa1c0 FStrConcat__FRC6RefVarN21
+// ROM 0x001fc970 FStrConcat__FRC6RefVarN21
 // A new string: a with b appended.
 Ref
 FStrConcat(RefArg /*rcvr*/, RefArg a, RefArg b)
@@ -216,7 +216,7 @@ FStrConcat(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002ef918 TrimString__FRC6RefVar
+// ROM 0x00314c1c TrimString__FRC6RefVar
 // The white space at both ends removed, in place.
 void
 TrimString(RefArg str)
@@ -236,7 +236,7 @@ TrimString(RefArg str)
 }
 
 
-// ROM 0x002efa54 FTrimString
+// ROM 0x00314d58 FTrimString
 Ref
 FTrimString(RefArg /*rcvr*/, RefArg str)
 {
@@ -245,7 +245,7 @@ FTrimString(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x002efa78 CharacterPosition__FRC6RefVarUsl
+// ROM 0x00314d7c CharacterPosition__FRC6RefVarUsl
 // The index of c in str at or after start, -1 for none.
 long
 CharacterPosition(RefArg str, UniChar c, long start)
@@ -258,7 +258,7 @@ CharacterPosition(RefArg str, UniChar c, long start)
 }
 
 
-// ROM 0x002efae4 FCharPos
+// ROM 0x00314de8 FCharPos
 Ref
 FCharPos(RefArg /*rcvr*/, RefArg str, RefArg c, RefArg start)
 {
@@ -267,7 +267,7 @@ FCharPos(RefArg /*rcvr*/, RefArg str, RefArg c, RefArg start)
 }
 
 
-// ROM 0x002efb6c StrPosition__FRC6RefVarT1l
+// ROM 0x00314e70 StrPosition__FRC6RefVarT1l
 // The index of substr in str at or after start (cases folded), -1 for none.
 long
 StrPosition(RefArg str, RefArg substr, long start)
@@ -285,7 +285,7 @@ StrPosition(RefArg str, RefArg substr, long start)
 }
 
 
-// ROM 0x002efc28 FStrPos
+// ROM 0x00314f2c FStrPos
 Ref
 FStrPos(RefArg /*rcvr*/, RefArg str, RefArg substr, RefArg start)
 {
@@ -294,7 +294,7 @@ FStrPos(RefArg /*rcvr*/, RefArg str, RefArg substr, RefArg start)
 }
 
 
-// ROM 0x002efc74 StrReplace__FRC6RefVarN21l
+// ROM 0x00314f78 StrReplace__FRC6RefVarN21l
 // Up to count (-1: all) occurrences of substr in str replaced by
 // replacement, in place; ==> how many were.
 long
@@ -328,7 +328,7 @@ StrReplace(RefArg str, RefArg substr, RefArg replacement, long count)
 }
 
 
-// ROM 0x002efddc FStrReplace
+// ROM 0x003150e0 FStrReplace
 Ref
 FStrReplace(RefArg /*rcvr*/, RefArg str, RefArg substr, RefArg replacement, RefArg count)
 {
@@ -336,7 +336,7 @@ FStrReplace(RefArg /*rcvr*/, RefArg str, RefArg substr, RefArg replacement, RefA
 }
 
 
-// ROM 0x001fbf14 FGetChar
+// ROM 0x001fe6c4 FGetChar
 // The character at index (an ink word's ink: NOT YET, the ink character).
 Ref
 FGetChar(RefArg /*rcvr*/, RefArg str, RefArg index)
@@ -346,7 +346,7 @@ FGetChar(RefArg /*rcvr*/, RefArg str, RefArg index)
 }
 
 
-// ROM 0x001fbfa0 FSetChar
+// ROM 0x001fe750 FSetChar
 // The character at index replaced (by an ink word: NOT YET).
 Ref
 FSetChar(RefArg /*rcvr*/, RefArg str, RefArg index, RefArg c)
@@ -361,7 +361,7 @@ FSetChar(RefArg /*rcvr*/, RefArg str, RefArg index, RefArg c)
 	Case
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ef5ac StrUpcase__FRC6RefVar
+// ROM 0x003148b0 StrUpcase__FRC6RefVar
 void
 StrUpcase(RefArg str)
 {
@@ -374,7 +374,7 @@ StrUpcase(RefArg str)
 }
 
 
-// ROM 0x002ef610 FUpcase
+// ROM 0x00314914 FUpcase
 // A string upper-cased in place, or a character upper-cased.
 Ref
 FUpcase(RefArg /*rcvr*/, RefArg obj)
@@ -386,7 +386,7 @@ FUpcase(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002ef6ac StrDowncase__FRC6RefVar
+// ROM 0x003149b0 StrDowncase__FRC6RefVar
 void
 StrDowncase(RefArg str)
 {
@@ -399,7 +399,7 @@ StrDowncase(RefArg str)
 }
 
 
-// ROM 0x002ef710 FDowncase
+// ROM 0x00314a14 FDowncase
 Ref
 FDowncase(RefArg /*rcvr*/, RefArg obj)
 {
@@ -410,7 +410,7 @@ FDowncase(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002ef7ac StrCapitalize__FRC6RefVar
+// ROM 0x00314ab0 StrCapitalize__FRC6RefVar
 // The first character upper-cased.
 void
 StrCapitalize(RefArg str)
@@ -427,7 +427,7 @@ StrCapitalize(RefArg str)
 }
 
 
-// ROM 0x002ef828 FCapitalize
+// ROM 0x00314b2c FCapitalize
 Ref
 FCapitalize(RefArg /*rcvr*/, RefArg str)
 {
@@ -436,7 +436,7 @@ FCapitalize(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x002ef84c StrCapitalizeWords__FRC6RefVar
+// ROM 0x00314b50 StrCapitalizeWords__FRC6RefVar
 // The first character of each word upper-cased.
 void
 StrCapitalizeWords(RefArg str)
@@ -464,7 +464,7 @@ StrCapitalizeWords(RefArg str)
 }
 
 
-// ROM 0x002ef8f4 FCapitalizeWords
+// ROM 0x00314bf8 FCapitalizeWords
 Ref
 FCapitalizeWords(RefArg /*rcvr*/, RefArg str)
 {
@@ -477,7 +477,7 @@ FCapitalizeWords(RefArg /*rcvr*/, RefArg str)
 	Characters and numbers
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001fc58c FIsAlphaNumeric
+// ROM 0x001fed3c FIsAlphaNumeric
 Ref
 FIsAlphaNumeric(RefArg /*rcvr*/, RefArg c)
 {
@@ -485,7 +485,7 @@ FIsAlphaNumeric(RefArg /*rcvr*/, RefArg c)
 }
 
 
-// ROM 0x001fc5e8 FIsWhiteSpace
+// ROM 0x001fed98 FIsWhiteSpace
 Ref
 FIsWhiteSpace(RefArg /*rcvr*/, RefArg c)
 {
@@ -493,7 +493,7 @@ FIsWhiteSpace(RefArg /*rcvr*/, RefArg c)
 }
 
 
-// ROM 0x001fc164 FIsInkChar
+// ROM 0x001fe914 FIsInkChar
 Ref
 FIsInkChar(RefArg /*rcvr*/, RefArg c)
 {
@@ -501,7 +501,7 @@ FIsInkChar(RefArg /*rcvr*/, RefArg c)
 }
 
 
-// ROM 0x001fbde4 FIsRichString__FRC6RefVarT1
+// ROM 0x001fe594 FIsRichString__FRC6RefVarT1
 Ref
 FIsRichString(RefArg /*rcvr*/, RefArg str)
 {
@@ -509,7 +509,7 @@ FIsRichString(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x001fc388 FIsValidString
+// ROM 0x001feb38 FIsValidString
 Ref
 FIsValidString(RefArg /*rcvr*/, RefArg str)
 {
@@ -520,7 +520,7 @@ FIsValidString(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x001fc3e0 FStripDiacriticals
+// ROM 0x001feb90 FStripDiacriticals
 // NOT YET RECONSTRUCTED: StripDiacriticalsText's table; the string is
 // answered as it is.
 Ref
@@ -532,7 +532,7 @@ FStripDiacriticals(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x001fbebc FNumberStr__FRC6RefVarT1
+// ROM 0x001fe66c FNumberStr__FRC6RefVarT1
 // A number's text (nil for anything else).
 Ref
 FNumberStr(RefArg /*rcvr*/, RefArg number)
@@ -547,7 +547,7 @@ FNumberStr(RefArg /*rcvr*/, RefArg number)
 }
 
 
-// ROM 0x001fc460 FStringToNumber__FRC6RefVarT1
+// ROM 0x001fec10 FStringToNumber__FRC6RefVarT1
 // The number a string spells, as a real; nil for none.  NOT YET
 // RECONSTRUCTED: TNumberParser (the locale's separators); strtod.
 Ref
@@ -568,7 +568,7 @@ FStringToNumber(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x001f9f04 FIsFiniteNumber__FRC6RefVarT1
+// ROM 0x001fc6b4 FIsFiniteNumber__FRC6RefVarT1
 // An integer, or a real that is finite.
 static Ref
 FIsFiniteNumber(RefArg /*rcvr*/, RefArg number)
@@ -596,7 +596,7 @@ ErrorString(Ref& romString, const char* text)
 }
 
 
-// ROM 0x001f9f74 FFormattedNumberStr__FRC6RefVarN21
+// ROM 0x001fc724 FFormattedNumberStr__FRC6RefVarN21
 // A number formatted in the locale: by a printf format string (NumberString)
 // or a format spec integer (IntegerStringSpec/NumberStringSpec: the
 // kFormat... bits); the error strings for a number that is not finite,
@@ -632,7 +632,7 @@ FFormattedNumberStr(RefArg /*rcvr*/, RefArg number, RefArg format)
 	Searching
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001fbc18 FFindStringInArray__FRC6RefVarN21
+// ROM 0x001fe3c8 FFindStringInArray__FRC6RefVarN21
 // The index of the string in an array of strings (cases counting), nil
 // for none.
 Ref
@@ -695,7 +695,7 @@ FindWordsInString(const TRichString& text, const TRichString& str, Report report
 }
 
 
-// ROM 0x001fb5a8 RecurseFindStringInFrame__FRC6RefVarN21RC11TRichStringl
+// ROM 0x001fdd58 RecurseFindStringInFrame__FRC6RefVarN21RC11TRichStringl
 // ==> whether str is in a string of obj (a string itself at depth 0, or
 // a frame or array, its slotted values searched to a depth of ten);
 // with a results array, every match adds [string, path (its slot's tag,
@@ -759,7 +759,7 @@ RecurseFindStringInFrame(RefArg obj, RefArg path, RefArg results, const TRichStr
 }
 
 
-// ROM 0x001fba0c FFindStringInFrame__FRC6RefVarN31
+// ROM 0x001fe1bc FFindStringInFrame__FRC6RefVarN31
 // Every string of strings looked for in the frame's strings (nested to
 // ten levels, matching at the start of words, cases folded): with
 // results nil ==> true when all are found; else an array of
@@ -806,7 +806,7 @@ FFindStringInFrame(RefArg /*rcvr*/, RefArg frame, RefArg strings, RefArg results
 	ParamStr
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001fafcc ParamStrParse__FP11TRichStringlUcT3RC6RefVar
+// ROM 0x001fd77c ParamStrParse__FP11TRichStringlUcT3RC6RefVar
 // One pass over str from start: ^0-^9 replaced by the parameter's text
 // (SPrintObject for a non-string), ^?N<text>|<text>| by the first text
 // when parameter N is neither nil nor empty, else the second; on the
@@ -908,7 +908,7 @@ ParamStrParse(TRichString* str, long start, Boolean skipping, Boolean stripping,
 }
 
 
-// ROM 0x001fb4f8 FParamStr__FRC6RefVarN21
+// ROM 0x001fdca8 FParamStr__FRC6RefVarN21
 // The template's ^N parameters substituted (three passes, so that a
 // parameter's own ^N are substituted too), then its ^^ and ^| escapes
 // stripped; ==> a new string.

@@ -3,7 +3,7 @@
 
 	Contains:	TMonitor and the monitor system calls.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 
 	The monitor task's registers are set up by hand: MonitorEntryGlue expects
 	r0 = fMonitorObject, r1 = selector, r2 = userObject and r3 = fProc, and
@@ -43,7 +43,7 @@ DeleteTaskOnMonitorQProc(void* monitor, char* task)
 }
 
 
-// ROM 0x001215c8 __ct__8TMonitorFv
+// ROM 0x0011fb60 __ct__8TMonitorFv
 TMonitor::TMonitor()
 	: fQueue(offsetof(TTask, fMonitorQItem), DeleteTaskOnMonitorQProc, this)
 {
@@ -58,7 +58,7 @@ TMonitor::TMonitor()
 }
 
 
-// ROM 0x00121900 Init__8TMonitorFPFPvUlT1_vUlPvP12TEnvironmentUcT2T5
+// ROM 0x0011fe98 Init__8TMonitorFPFPvUlT1_vUlPvP12TEnvironmentUcT2T5
 // Makes the monitor's task (owned by nobody, at gMonitorTaskPriority,
 // starting in MonitorEntryGlue) and its message (the one a fault monitor
 // reads the faulting registers through).
@@ -87,7 +87,7 @@ TMonitor::Init(MonitorProcPtr proc, ULong stackSize, void* monitorObject, TEnvir
 }
 
 
-// ROM 0x00121a28 __dt__8TMonitorFv
+// ROM 0x0011ffc0 __dt__8TMonitorFv
 // Fails every waiter, then lets the object table destroy the message and the
 // monitor task.
 TMonitor::~TMonitor()
@@ -98,7 +98,7 @@ TMonitor::~TMonitor()
 }
 
 
-// ROM 0x00121630 FlushTasksOnMonitor__8TMonitorFv
+// ROM 0x0011fbc8 FlushTasksOnMonitor__8TMonitorFv
 // Every waiter runs again with whatever its r0 held; the current call is left alone.
 void
 TMonitor::FlushTasksOnMonitor()
@@ -112,7 +112,7 @@ TMonitor::FlushTasksOnMonitor()
 }
 
 
-// ROM 0x00121890 SetCallerRegister__8TMonitorFiUl
+// ROM 0x0011fe28 SetCallerRegister__8TMonitorFiUl
 void
 TMonitor::SetCallerRegister(int reg, TRegister value)
 {
@@ -121,7 +121,7 @@ TMonitor::SetCallerRegister(int reg, TRegister value)
 }
 
 
-// ROM 0x00121a78 SetResult__8TMonitorFP5TTaskl
+// ROM 0x00120010 SetResult__8TMonitorFP5TTaskl
 // A fault monitor answering 0 leaves the faulting task's r0 as it was.
 void
 TMonitor::SetResult(TTask* task, TRegister result)
@@ -132,7 +132,7 @@ TMonitor::SetResult(TTask* task, TRegister result)
 }
 
 
-// ROM 0x00121a94 Suspend__8TMonitorFUl
+// ROM 0x0012002c Suspend__8TMonitorFUl
 // Waiters are failed with kError_No_Such_Monitor only while a call is in
 // progress (the queue is empty otherwise).  Returns true if nothing is inside.
 Boolean
@@ -155,7 +155,7 @@ TMonitor::Suspend(ULong flags)
 }
 
 
-// ROM 0x00121b28 DeleteTaskOnMonitorQ__8TMonitorFP5TTask
+// ROM 0x001200c0 DeleteTaskOnMonitorQ__8TMonitorFP5TTask
 void
 TMonitor::DeleteTaskOnMonitorQ(TTask* task)
 {
@@ -165,7 +165,7 @@ TMonitor::DeleteTaskOnMonitorQ(TTask* task)
 }
 
 
-// ROM 0x00121b50 SetUpEntry__8TMonitorFP5TTask
+// ROM 0x001200e8 SetUpEntry__8TMonitorFP5TTask
 // Points the monitor task at the caller's request and schedules it.  A
 // kSuspendMonitor request is answered here (result 0) without running the
 // proc: returns false and the caller is not the current call.  Nothing is
@@ -214,7 +214,7 @@ TMonitor::SetUpEntry(TTask* caller)
 }
 
 
-// ROM 0x00121c94 Aquire__8TMonitorFv
+// ROM 0x0012022c Aquire__8TMonitorFv
 // The current task calls the monitor with the selector in its saved r1 and
 // the user object in r2.  It leaves the run queues; if the monitor is idle its
 // task is dispatched at once, otherwise the caller waits its turn.  A suspend
@@ -246,7 +246,7 @@ TMonitor::Aquire()
 }
 
 
-// ROM 0x00121d4c Release__8TMonitorFl
+// ROM 0x001202e4 Release__8TMonitorFl
 // The monitor task has finished a call.  Its caller is normally rescheduled
 // with the result and preferred to run next; a caller that has been killed
 // meanwhile, or a faulting task the fault monitor condemned, resumes in
@@ -300,7 +300,7 @@ TMonitor::Release(TRegister result)
 	task switch intervenes, in which case its saved r0 is what it sees.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00121678 MonitorDispatchKernelGlue
+// ROM 0x0011fc10 MonitorDispatchKernelGlue
 // SWI 27: r0 = monitor id, r1 = selector, r2 = user object.  Coming through
 // here (rather than from the abort handler) it is never a fault call.
 NewtonErr
@@ -317,7 +317,7 @@ MonitorDispatchKernelGlue()
 }
 
 
-// ROM 0x00121748 MonitorExitKernelGlue
+// ROM 0x0011fce0 MonitorExitKernelGlue
 // SWI 28, from MonitorEntryGlue when the proc returns: the monitor task's
 // current monitor gives the result to the caller.
 NewtonErr
@@ -331,7 +331,7 @@ MonitorExitKernelGlue(long result)
 }
 
 
-// ROM 0x0012178c MonitorThrowKernelGlue
+// ROM 0x0011fd24 MonitorThrowKernelGlue
 // SWI 29: an exception escaped the monitor proc.  The caller is made to
 // resume in Throw with the same (name, data, destructor) so it unwinds there -
 // provided it was in user mode; a caller in the middle of a shared-memory
@@ -366,7 +366,7 @@ MonitorThrowKernelGlue(char* name, void* data, void (*destructor)(void*))
 }
 
 
-// ROM 0x0012185c MonitorFlushKernelGlue
+// ROM 0x0011fdf4 MonitorFlushKernelGlue
 // SWI 32.
 NewtonErr
 MonitorFlushKernelGlue(TObjectId monitorId)
@@ -379,7 +379,7 @@ MonitorFlushKernelGlue(TObjectId monitorId)
 }
 
 
-// ROM 0x0014a4e8 DeleteMonitor__FP8TMonitor
+// ROM 0x0014898c DeleteMonitor__FP8TMonitor
 void
 DeleteMonitor(TMonitor* monitor)
 {

@@ -1,7 +1,7 @@
 // Dates test (src/intl/Dates.h, Locale.h): TDate's calendar arithmetic
 // (minutes since 1904 to fields and back, leap years, days in a month,
 // months incremented), and the date and time strings formatted with the
-// German locale bundle of the MP2100 D ROM (the ROM's objects imported,
+// U.S. locale bundle of the ROM (the ROM's objects imported,
 // vars.international pointing at the bundle as the boot script would),
 // through TDate and the NewtonScript functions (Date, DateNTime,
 // LongDateStr, ShortDateStr, TimeStr, HourMinute, ShortDate,
@@ -31,7 +31,7 @@ static int failures = 0;
 
 static Ref SYMBOL(const char* name) { return Intern((char*) name); }
 
-const ULong kGermanyBundle = 0x003c10ed;		// the ROM's locale bundle 'Germany (nsfunctions.py --object 0x3c10ed)
+const ULong kUSABundle = 0x004a4d09;		// the ROM's locale bundle 'USA (nsfunctions.py --object 0x4a4d09)
 const long kWednesday3Oct1990 = 45630125;		// 14:05, minutes since 1904
 
 
@@ -175,45 +175,45 @@ TestStrings()
 	UniChar str[64];
 	LongDateString(kWednesday3Oct1990, 0, str, 63, RefVar(NILREF));
 	PrintU("long, all", str);
-	EXPECT(UStringIs(str, "Mittwoch, 3. 10 1990"));
+	EXPECT(UStringIs(str, "Wednesday, October 3, 1990"));
 	ULong spec = RINT(GetFrameSlotRef(Rdatetimestrspecs, SYMBOL("longDateStrSpec")));
 	LongDateString(kWednesday3Oct1990, spec, str, 63, RefVar(NILREF));
 	PrintU("long", str);
-	EXPECT(UStringIs(str, "Mittwoch, 3. Oktober 1990"));
+	EXPECT(UStringIs(str, "Wednesday, October 3, 1990"));
 	spec = RINT(GetFrameSlotRef(Rdatetimestrspecs, RSSYMabbrdatestrspec));
 	LongDateString(kWednesday3Oct1990, spec, str, 63, RefVar(NILREF));
 	PrintU("abbr", str);
-	EXPECT(UStringIs(str, "Mit, 3. Okt. 1990"));
+	EXPECT(UStringIs(str, "Wed, Oct 3, 1990"));
 	ShortDateString(kWednesday3Oct1990, 0, str, 63, RefVar(NILREF));
 	PrintU("short", str);
-	EXPECT(UStringIs(str, "3.10.1990"));
+	EXPECT(UStringIs(str, "10/3/90"));
 	spec = RINT(GetFrameSlotRef(Rdatetimestrspecs, SYMBOL("yearMonthDayStrSpec")));
 	ShortDateString(kWednesday3Oct1990, spec, str, 63, RefVar(NILREF));
 	PrintU("year month day", str);
 	TimeString(kWednesday3Oct1990, 0, str, 63, RefVar(NILREF));
 	PrintU("time, all", str);
-	EXPECT(UStringIs(str, "14:05:00 Uhr"));
+	EXPECT(UStringIs(str, "2:05:00 pm"));
 	spec = RINT(GetFrameSlotRef(Rdatetimestrspecs, RSSYMshorttimestrspec));
 	TimeString(kWednesday3Oct1990, spec, str, 63, RefVar(NILREF));
 	PrintU("short time", str);
-	EXPECT(UStringIs(str, "14:05"));
+	EXPECT(UStringIs(str, "2:05 pm"));
 	TimeString(kWednesday3Oct1990 - 14 * 60 + 9 * 60 + 2, spec, str, 63, RefVar(NILREF));		// 9:07
 	PrintU("9:07", str);
-	EXPECT(UStringIs(str, "9:07"));
+	EXPECT(UStringIs(str, "9:07 am"));
 	TimeString(kWednesday3Oct1990 - 14 * 60 - 5, spec, str, 63, RefVar(NILREF));				// midnight
 	PrintU("midnight", str);
-	EXPECT(UStringIs(str, "0:00"));
+	EXPECT(UStringIs(str, "12:00 am"));
 
 	// the NewtonScript functions
 	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("when")), RefVar(MAKEINT(kWednesday3Oct1990)));
-	EXPECT(StringIs(RefVar(Eval("LongDateStr(when, 0)")), "Mittwoch, 3. 10 1990"));
-	EXPECT(StringIs(RefVar(Eval("ShortDateStr(when, 0)")), "3.10.1990"));
-	EXPECT(StringIs(RefVar(Eval("TimeStr(when, 0)")), "14:05:00 Uhr"));
-	EXPECT(StringIs(RefVar(Eval("HourMinute(when)")), "14:05"));
-	EXPECT(StringIs(RefVar(Eval("DateNTime(when)")), "3.10.1990 14:05"));
+	EXPECT(StringIs(RefVar(Eval("LongDateStr(when, 0)")), "Wednesday, October 3, 1990"));
+	EXPECT(StringIs(RefVar(Eval("ShortDateStr(when, 0)")), "10/3/90"));
+	EXPECT(StringIs(RefVar(Eval("TimeStr(when, 0)")), "2:05:00 pm"));
+	EXPECT(StringIs(RefVar(Eval("HourMinute(when)")), "2:05 pm"));
+	EXPECT(StringIs(RefVar(Eval("DateNTime(when)")), "10/3/90 2:05 pm"));
 	RefVar shortDate(Eval("ShortDate(when)"));
 	PrintU("ShortDate", GetCString(shortDate));
-	EXPECT(StringIs(shortDate, "Mit 3.10."));
+	EXPECT(StringIs(shortDate, "Wed 10/3"));
 	RefVar dateFrame(Eval("Date(when)"));
 	EXPECT(IsFrame(dateFrame) && RINT(GetFrameSlotRef(dateFrame, RSSYMyear)) == 1990 && RINT(GetFrameSlotRef(dateFrame, RSSYMminute)) == 5);
 	EXPECT(RINT(Eval("TotalMinutes({year: 1990, month: 10, date: 3, hour: 14, minute: 5})")) == kWednesday3Oct1990);
@@ -226,72 +226,72 @@ TestStrings()
 	EXPECT(RINT(Eval("Time()")) > 0 && RINT(Eval("Ticks()")) >= 0);
 	EXPECT(RINT(Eval("Date(Time()).year")) >= 2024);
 	EXPECT(RINT(Eval("DateFromSeconds(TimeInSeconds()).year")) == RINT(Eval("Date(Time()).year")));
-	EXPECT(StringIs(RefVar(Eval("TimeFrameStr({hour: 7, minute: 30, second: 5}, 0)")), "7:30:05 Uhr"));
+	EXPECT(StringIs(RefVar(Eval("TimeFrameStr({hour: 7, minute: 30, second: 5}, 0)")), "7:30:05 am"));
 	// the locale
 	EXPECT(EQRef(Eval("GetLocale()"), GetCurrentLocale()));
-	EXPECT(StringIs(RefVar(GetLocaleSlot(RefVar(NILREF), RSSYMtitle)), "Deutschland"));
-	EXPECT(EQRef(GetLocaleSlot(RSSYMlocalesym), SYMBOL("Germany")));
-	EXPECT(StringIs(RefVar(GetDayName(0)), "Sonntag"));
+	EXPECT(StringIs(RefVar(GetLocaleSlot(RefVar(NILREF), RSSYMtitle)), "U.S."));
+	EXPECT(EQRef(GetLocaleSlot(RSSYMlocalesym), SYMBOL("USA")));
+	EXPECT(StringIs(RefVar(GetDayName(0)), "Sunday"));
 	// a string cannot be parsed yet: nil, and a frame with status -1
-	EXPECT(Eval("StringToDate(\"3.10.1990\")") == NILREF);
-	EXPECT(RINT(Eval("StringToDateFrame(\"3.10.1990\").status")) == -1);
+	EXPECT(Eval("StringToDate(\"10/3/1990\")") == NILREF);
+	EXPECT(RINT(Eval("StringToDateFrame(\"10/3/1990\").status")) == -1);
 }
 
 
-// the German number format: decimal point ",", group separator ".", minus
-// prefix "-", currency suffix " DM"
+// the U.S. number format: decimal point ".", group separator ",", minus
+// prefix "-", currency prefix "$"
 static void
 TestNumbers()
 {
 	UniChar str[64];
 	// a printf format localised
-	EXPECT(NumberString(1234.5, str, 63, "%.15g") == 0 && UStringIs(str, "1.234,5"));
+	EXPECT(NumberString(1234.5, str, 63, "%.15g") == 0 && UStringIs(str, "1,234.5"));
 	EXPECT(NumberString(-42.0, str, 63, "%.15g") == 0 && UStringIs(str, "-42"));
-	EXPECT(NumberString(0.5, str, 63, "%.15g") == 0 && UStringIs(str, "0,5"));
-	EXPECT(NumberString(1234567.0, str, 63, "%.15g") == 0 && UStringIs(str, "1.234.567"));
-	EXPECT(NumberString(-1234567.891, str, 63, "%.2f") == 0 && UStringIs(str, "-1.234.567,89"));
-	EXPECT(NumberString(7.0, str, 63, "%6.1f") == 0 && UStringIs(str, "   7,0"));			// the width's spaces precede
+	EXPECT(NumberString(0.5, str, 63, "%.15g") == 0 && UStringIs(str, "0.5"));
+	EXPECT(NumberString(1234567.0, str, 63, "%.15g") == 0 && UStringIs(str, "1,234,567"));
+	EXPECT(NumberString(-1234567.891, str, 63, "%.2f") == 0 && UStringIs(str, "-1,234,567.89"));
+	EXPECT(NumberString(7.0, str, 63, "%6.1f") == 0 && UStringIs(str, "   7.0"));			// the width's spaces precede
 	EXPECT(NumberString(1e21, str, 63, "%.15g") == 0 && UStringIs(str, "1e+21"));			// an exponent form: only the point is localised
-	EXPECT(NumberString(-1.5e21, str, 63, "%.15g") == 0 && UStringIs(str, "-1,5e+21"));
+	EXPECT(NumberString(-1.5e21, str, 63, "%.15g") == 0 && UStringIs(str, "-1.5e+21"));
 	EXPECT(NumberString(1234.5, str, 6, "%.15g") == kNumberTooLarge);					// no room
 	EXPECT(NumberString(-1234.5, str, 6, "%.15g") == kNumberTooSmall);
 	// format specs
 	EXPECT(IntegerStringSpec(1234567, str, 63, 0) == 0 && UStringIs(str, "1234567"));
-	EXPECT(IntegerStringSpec(1234567, str, 63, kFormatGroupDigits) == 0 && UStringIs(str, "1.234.567"));
-	EXPECT(IntegerStringSpec(-1234567, str, 63, kFormatGroupDigits | kFormatCurrency) == 0 && UStringIs(str, "-1.234.567 DM"));
+	EXPECT(IntegerStringSpec(1234567, str, 63, kFormatGroupDigits) == 0 && UStringIs(str, "1,234,567"));
+	EXPECT(IntegerStringSpec(-1234567, str, 63, kFormatGroupDigits | kFormatCurrency) == 0 && UStringIs(str, "-$1,234,567"));
 	EXPECT(IntegerStringSpec(-5, str, 63, kFormatParenthesizeNegative) == 0 && UStringIs(str, "(5)"));
 	EXPECT(IntegerStringSpec(5, str, 63, kFormatPercent) == 0 && UStringIs(str, "500%"));
-	EXPECT(IntegerStringSpec(5, str, 63, kFormatDecimalPlaces | 2) == 0 && UStringIs(str, "5,00"));
-	EXPECT(NumberStringSpec(3.14159, str, 63, 0) == 0 && UStringIs(str, "3,14159"));
-	EXPECT(NumberStringSpec(2.5, str, 63, 0) == 0 && UStringIs(str, "2,5"));
-	EXPECT(NumberStringSpec(3.14159, str, 63, kFormatDecimalPlaces | 2) == 0 && UStringIs(str, "3,14"));
-	EXPECT(NumberStringSpec(2.5, str, 63, kFormatDecimalPlaces | 3) == 0 && UStringIs(str, "2,500"));
-	EXPECT(NumberStringSpec(2.5, str, 63, kFormatDecimalPlaces | kFormatSignificant | 3) == 0 && UStringIs(str, "2,5"));
-	EXPECT(NumberStringSpec(-1234.5, str, 63, kFormatGroupDigits | kFormatDecimalPlaces | 1) == 0 && UStringIs(str, "-1.234,5"));
-	EXPECT(NumberStringSpec(0.125, str, 63, kFormatPercent | kFormatDecimalPlaces | 1) == 0 && UStringIs(str, "12,5%"));
+	EXPECT(IntegerStringSpec(5, str, 63, kFormatDecimalPlaces | 2) == 0 && UStringIs(str, "5.00"));
+	EXPECT(NumberStringSpec(3.14159, str, 63, 0) == 0 && UStringIs(str, "3.14159"));
+	EXPECT(NumberStringSpec(2.5, str, 63, 0) == 0 && UStringIs(str, "2.5"));
+	EXPECT(NumberStringSpec(3.14159, str, 63, kFormatDecimalPlaces | 2) == 0 && UStringIs(str, "3.14"));
+	EXPECT(NumberStringSpec(2.5, str, 63, kFormatDecimalPlaces | 3) == 0 && UStringIs(str, "2.500"));
+	EXPECT(NumberStringSpec(2.5, str, 63, kFormatDecimalPlaces | kFormatSignificant | 3) == 0 && UStringIs(str, "2.5"));
+	EXPECT(NumberStringSpec(-1234.5, str, 63, kFormatGroupDigits | kFormatDecimalPlaces | 1) == 0 && UStringIs(str, "-1,234.5"));
+	EXPECT(NumberStringSpec(0.125, str, 63, kFormatPercent | kFormatDecimalPlaces | 1) == 0 && UStringIs(str, "12.5%"));
 	EXPECT(NumberStringSpec(1e21, str, 63, 0) == kNumberTooLarge);							// more than twenty digits
 	EXPECT(NumberStringSpec(1234.5, str, 4, 0) == kNumberStringTooLong);						// (the room check leaves the decimal point out)
 	// ParamString
 	const UniChar* proto = PositiveNumberProtoStr();
-	EXPECT(UStringIs(proto, "^0,^1"));
+	EXPECT(UStringIs(proto, "^0.^1"));
 	EXPECT(UStringIs(NegativeIntProtoStr(), "-^0"));
 	UniChar a[4], b[4];
 	ConvertToUnicode("12", a, kMacRomanEncoding, 2);
 	ConvertToUnicode("34", b, kMacRomanEncoding, 2);
 	ParamString(str, 63, proto, a, b);
-	EXPECT(UStringIs(str, "12,34"));
+	EXPECT(UStringIs(str, "12.34"));
 	ParamString(str, 3, proto, a, b);
-	EXPECT(UStringIs(str, "12,"));
+	EXPECT(UStringIs(str, "12."));
 	ParamString(str, 63, proto, a, (const UniChar*) nil);
-	EXPECT(UStringIs(str, "12,"));
+	EXPECT(UStringIs(str, "12."));
 	// from NewtonScript
-	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1234.5678, \"%.2f\")")), "1.234,57"));
-	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1234567, 0x20)")), "1.234.567"));
-	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(-19.99, 0x10 + 0x80 + 2)")), "-19,99 DM"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1234.5678, \"%.2f\")")), "1,234.57"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1234567, 0x20)")), "1,234,567"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(-19.99, 0x10 + 0x80 + 2)")), "-$19.99"));
 	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(0.5, 0x100)")), "50%"));
-	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1.0e21, 0)")), "Zahl zu gro\xdf"));
-	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1.0 / 0.0, 0)")), "Keine Zahl"));
-	EXPECT(StringIs(RefVar(Eval("NumberStr(1234.5)")), "1.234,5"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1.0e21, 0)")), "Number too large"));
+	EXPECT(StringIs(RefVar(Eval("FormattedNumberStr(1.0 / 0.0, 0)")), "Not a number"));
+	EXPECT(StringIs(RefVar(Eval("NumberStr(1234.5)")), "1,234.5"));
 	EXPECT(StringIs(RefVar(Eval("NumberStr(-7)")), "-7"));
 }
 
@@ -309,13 +309,13 @@ main()
 	InitObjects();
 	// what the boot script makes: vars.international with the locale bundle
 	RefVar intl(AllocateFrame());
-	SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(TranslateROMRef(kGermanyBundle)));
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(TranslateROMRef(kUSABundle)));
 	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
 	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));
 	EXPECT(InitInternationalUtils() == noErr);
 	// the host's clock is the real-time clock: seconds since 1904 (2082844800 of them before 1970)
 	SetRealClockSeconds((ULong) ((unsigned long long) time(NULL) + 2082844800ULL));
-	EXPECT(EQRef(GetCurrentLocale(), TranslateROMRef(kGermanyBundle)));
+	EXPECT(EQRef(GetCurrentLocale(), TranslateROMRef(kUSABundle)));
 	EXPECT(IsArray(gLocaleCache->fLongDayOfWeek) && Length(gLocaleCache->fLongDayOfWeek) == 7);
 	newton_try
 	{

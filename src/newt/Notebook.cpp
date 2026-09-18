@@ -3,7 +3,7 @@
 
 	Contains:	TNotebook, TARMNotebook and the notifiers.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Notebook.h"
@@ -44,7 +44,7 @@ TNotebook::ClassID(void) const
 }
 
 
-// ROM 0x00147b08 DerivedFrom__9TNotebookCFl
+// ROM 0x00145fb4 DerivedFrom__9TNotebookCFl
 Boolean
 TNotebook::DerivedFrom(long id) const
 {
@@ -52,7 +52,7 @@ TNotebook::DerivedFrom(long id) const
 }
 
 
-// ROM 0x00148350 Constructor__9TNotebookFv
+// ROM 0x001467f8 Constructor__9TNotebookFv
 // The application constructed, the root view made from the viewRoot
 // template (gRootView), and the librarian with its library soup (from
 // the root's copperfield: NOT YET RECONSTRUCTED - TLibrarian).
@@ -72,7 +72,7 @@ TNotebook::Constructor(void)
 }
 
 
-// ROM 0x00148680 InitToolbox__9TNotebookFv
+// ROM 0x00146b28 InitToolbox__9TNotebookFv
 // The toolbox: the offscreen bitmaps and the port, the script globals,
 // the inker, the screen orientation from the preference (else the
 // screen's own), the splash screen and the boot sound, the print
@@ -105,7 +105,7 @@ TNotebook::InitToolbox(void)
 }
 
 
-// ROM 0x001487a8 InitOffscreenBitmaps__9TNotebookFv
+// ROM 0x00146c50 InitOffscreenBitmaps__9TNotebookFv
 // The port of the task's globals copied into gGrafPort (the ROM: the
 // fork's port, 0x54 bytes; the host has one port), the screen region
 // made of the screen's rectangle and the wide-open region copied.
@@ -126,7 +126,7 @@ TNotebook::InitOffscreenBitmaps(void)
 }
 
 
-// ROM 0x00148800 InitInker__9TNotebookFv
+// ROM 0x00146ca8 InitInker__9TNotebookFv
 // The inker (a TInker, 'inkr, over the Newt port) started as a fork.
 // NOT YET RECONSTRUCTED: TInker.  Host: the tablet's stand-in - a task
 // reading the tablet buffer into the stroke queue every tick when the OS
@@ -141,7 +141,7 @@ TNotebook::InitInker(void)
 }
 
 
-// ROM 0x00147b84 DrawSplashScreen__9TNotebookFv
+// ROM 0x0014602c DrawSplashScreen__9TNotebookFv
 // NOT YET RECONSTRUCTED: the splash screen (the 'splash picture and the
 // version string drawn in the screen's middle).
 void
@@ -149,7 +149,7 @@ TNotebook::DrawSplashScreen(void)
 { }
 
 
-// ROM 0x00147f68 Run__9TNotebookFv
+// ROM 0x00146410 Run__9TNotebookFv
 // Up to ten idle passes, the root view updated after each, while an idle
 // is due.
 void
@@ -168,7 +168,7 @@ TNotebook::Run(void)
 }
 
 
-// ROM 0x00147fd0 Idle__9TNotebookFv
+// ROM 0x00146478 Idle__9TNotebookFv
 // The application idled, then the recognition system and the views; the
 // next idle time is the earlier of the views' and the recogniser's.
 void
@@ -182,7 +182,7 @@ TNotebook::Idle(void)
 }
 
 
-// ROM 0x00148028 NeedsIdle__9TNotebookFv
+// ROM 0x001464d0 NeedsIdle__9TNotebookFv
 // Whether an idle time is set and has passed.
 Boolean
 TNotebook::NeedsIdle(void)
@@ -198,7 +198,7 @@ TNotebook::NeedsIdle(void)
 }
 
 
-// ROM 0x00148674 Quit__9TNotebookFv
+// ROM 0x00146b1c Quit__9TNotebookFv
 // The screen regions and the pattern let go.
 void
 TNotebook::Quit(void)
@@ -218,7 +218,7 @@ TNotebook::Quit(void)
 	T A R M N o t e b o o k
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00147acc ClassID__12TARMNotebookCFv
+// ROM 0x00145f78 ClassID__12TARMNotebookCFv
 long
 TARMNotebook::ClassID(void) const
 {
@@ -226,7 +226,7 @@ TARMNotebook::ClassID(void) const
 }
 
 
-// ROM 0x00147ad4 DerivedFrom__12TARMNotebookCFl
+// ROM 0x00145f80 DerivedFrom__12TARMNotebookCFl
 Boolean
 TARMNotebook::DerivedFrom(long id) const
 {
@@ -238,7 +238,7 @@ TARMNotebook::DerivedFrom(long id) const
 	T h e   n o t i f i e r s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00148080 SetActionDescription__Fl
+// ROM 0x00146528 SetActionDescription__Fl
 // vars.actionDescription: the error string's code for what is going on.
 void
 SetActionDescription(long errorCode)
@@ -247,7 +247,7 @@ SetActionDescription(long errorCode)
 }
 
 
-// ROM 0x001480dc Notify__FRC6RefVar
+// ROM 0x00146584 Notify__FRC6RefVar
 // The root view's notify method sent the arguments (the ROM: DoSend after
 // FindImplementor - a throw when the root has none).  Host: nothing when
 // the root has no notify (the ROM's root template has one).
@@ -259,7 +259,7 @@ Notify(RefArg args)
 }
 
 
-// ROM 0x001481a0 ActionErrorNotify__FlT1
+// ROM 0x00146648 ActionErrorNotify__FlT1
 // actionNotify(kind, errorCode, nil): an error in what was going on.
 void
 ActionErrorNotify(long errorCode, long kind)
@@ -274,7 +274,7 @@ ActionErrorNotify(long errorCode, long kind)
 }
 
 
-// ROM 0x00148244 GetExceptionErr__FP9Exception
+// ROM 0x001466ec GetExceptionErr__FP9Exception
 // The error code an exception carries: out of memory's data (kError_No_Memory
 // when none), a frames exception's errorCode slot, a message exception's
 // data; else kError_No_Memory... no: -8007 (an unknown exception).
@@ -304,7 +304,7 @@ GetExceptionErr(Exception* exception)
 }
 
 
-// ROM 0x0014842c ExceptionNotify__FP9Exception
+// ROM 0x001468d4 ExceptionNotify__FP9Exception
 // An exception shown to the user: the memory is checked (an out-of-memory
 // exception thrown when 1K cannot be had), vars.lastEx (the name),
 // lastExMessage (a message exception's text, or a frames exception's

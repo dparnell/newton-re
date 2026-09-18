@@ -3,7 +3,7 @@
 
 	Contains:	FGetCardInfo (CardInfo.h).
 
-	Reconstructed from the MP2100 D ROM; the function cites its origin.
+	Reconstructed from the MP2x00 US ROM; the function cites its origin.
 */
 
 #include "CardInfo.h"
@@ -17,7 +17,7 @@
 enum { kCardInfoVersion = 0x20200 };
 
 
-// ROM 0x000545a4 FGetCardInfo
+// ROM 0x00053ccc FGetCardInfo
 // A clone of the canonical card info frame, with a socketInfos entry for
 // each hardware socket the card server knows about.
 //

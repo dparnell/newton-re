@@ -24,8 +24,8 @@
 				between the inker task and the recogniser (AcquireStroke:
 				the host has one task).
 
-	Reconstructed from the MP2100 D ROM (0x0021f8e4-0x002207f0,
-	0x0014727c-0x001476b0, 0x001a5bd8-0x001a6520); each function cites its
+	Reconstructed from the MP2x00 US ROM (0x0022212c-0x00223038,
+	0x00145728-0x00145b5c, 0x001a3658-0x001a3fa0); each function cites its
 	origin.
 */
 
@@ -50,16 +50,16 @@ struct SamplePt
 	UShort		fX;
 	UShort		fY;
 };
-Fixed	SampleX(SamplePt* pt);								// ROM 0x0021e638 SampleX__FP8SamplePt
-Fixed	SampleY(SamplePt* pt);								// ROM 0x0021f8e4 SampleY__FP8SamplePt
-ULong	SampleP(SamplePt* pt);								// ROM 0x0021fb7c SampleP__FP8SamplePt - the pressure
-void	SetSampleX(SamplePt* pt, Fixed x);					// ROM 0x00220644 SetSampleX__FP8SamplePtl
-void	SetSampleY(SamplePt* pt, Fixed y);					// ROM 0x002207cc SetSampleY__FP8SamplePtl
-void	GetPoint(SamplePt* pt, FPoint* fpt);				// ROM 0x0021f8f8 GetPoint__FP8SamplePtP6FPoint
-void	SetPoint(SamplePt* pt, FPoint* fpt);				// ROM 0x0021f924 SetPoint__FP8SamplePtP6FPoint
-ULong	TestFlag(SamplePt* pt, ULong flag);					// ROM 0x0021f990 TestFlag__FP8SamplePtUl
-void	SetFlag(SamplePt* pt, ULong flag);					// ROM 0x0021f9a8 SetFlag__FP8SamplePtUl
-void	UnsetFlag(SamplePt* pt, ULong flag);				// ROM 0x0021f9d8 UnsetFlag__FP8SamplePtUl
+Fixed	SampleX(SamplePt* pt);								// ROM 0x00220e80 SampleX__FP8SamplePt
+Fixed	SampleY(SamplePt* pt);								// ROM 0x0022212c SampleY__FP8SamplePt
+ULong	SampleP(SamplePt* pt);								// ROM 0x002223c4 SampleP__FP8SamplePt - the pressure
+void	SetSampleX(SamplePt* pt, Fixed x);					// ROM 0x00222e8c SetSampleX__FP8SamplePtl
+void	SetSampleY(SamplePt* pt, Fixed y);					// ROM 0x00223014 SetSampleY__FP8SamplePtl
+void	GetPoint(SamplePt* pt, FPoint* fpt);				// ROM 0x00222140 GetPoint__FP8SamplePtP6FPoint
+void	SetPoint(SamplePt* pt, FPoint* fpt);				// ROM 0x0022216c SetPoint__FP8SamplePtP6FPoint
+ULong	TestFlag(SamplePt* pt, ULong flag);					// ROM 0x002221d8 TestFlag__FP8SamplePtUl
+void	SetFlag(SamplePt* pt, ULong flag);					// ROM 0x002221f0 SetFlag__FP8SamplePtUl
+void	UnsetFlag(SamplePt* pt, ULong flag);				// ROM 0x00222220 UnsetFlag__FP8SamplePtUl
 
 // the stroke flags
 enum
@@ -70,44 +70,44 @@ enum
 	kStrokeDrawn		= 0x04000000
 };
 
-void	AddPtToRect(const FPoint* pt, FRect* rect, Boolean first);	// ROM 0x001a66f4 AddPtToRect - the rect grown to the point (set to it when first)
-void	SetRectangleEmpty(FRect* rect);						// ROM 0x001a6934 SetRectangleEmpty
-void	SetRectanglePoint(FRect* rect, const FPoint* pt);	// ROM 0x001a694c SetRectanglePoint
-void	RectangleCenter(const FRect* rect, FPoint* center);	// ROM 0x001a66a8 RectangleCenter
-void	UnfixRect(const FRect* src, Rect* dst);				// ROM 0x001a64c4 UnfixRect - rounded to pixels
-void	GetMapper(const FRect* src, const FRect* dst);		// ROM 0x001a67a4 GetMapper - the dst rect kept in the src rect's proportions
-void	MapPoint(FPoint* pt, const FRect* src, const FRect* dst);	// ROM 0x001a6864 MapPoint - the point moved from the src rect to the dst rect
-Boolean	EmptyRectangle(const FRect* rect);					// ROM 0x001a656c EmptyRectangle
-void	InsetRectangle(FRect* rect, Fixed dx, Fixed dy);	// ROM 0x001a65a0 InsetRectangle
-Boolean	PointInRectangle(const FPoint* pt, const FRect* rect);	// ROM 0x001a65d4 PointInRectangle
-Boolean	SectRectangle(FRect* result, const FRect* a, const FRect* b);	// ROM 0x001a6618 SectRectangle - ==> whether they meet (the result empty when not)
-void	SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bottom);	// ROM 0x001a6970 SetRectangleEdges
+void	AddPtToRect(const FPoint* pt, FRect* rect, Boolean first);	// ROM 0x001a4174 AddPtToRect - the rect grown to the point (set to it when first)
+void	SetRectangleEmpty(FRect* rect);						// ROM 0x001a43b4 SetRectangleEmpty
+void	SetRectanglePoint(FRect* rect, const FPoint* pt);	// ROM 0x001a43cc SetRectanglePoint
+void	RectangleCenter(const FRect* rect, FPoint* center);	// ROM 0x001a4128 RectangleCenter
+void	UnfixRect(const FRect* src, Rect* dst);				// ROM 0x001a3f44 UnfixRect - rounded to pixels
+void	GetMapper(const FRect* src, const FRect* dst);		// ROM 0x001a4224 GetMapper - the dst rect kept in the src rect's proportions
+void	MapPoint(FPoint* pt, const FRect* src, const FRect* dst);	// ROM 0x001a42e4 MapPoint - the point moved from the src rect to the dst rect
+Boolean	EmptyRectangle(const FRect* rect);					// ROM 0x001a3fec EmptyRectangle
+void	InsetRectangle(FRect* rect, Fixed dx, Fixed dy);	// ROM 0x001a4020 InsetRectangle
+Boolean	PointInRectangle(const FPoint* pt, const FRect* rect);	// ROM 0x001a4054 PointInRectangle
+Boolean	SectRectangle(FRect* result, const FRect* a, const FRect* b);	// ROM 0x001a4098 SectRectangle - ==> whether they meet (the result empty when not)
+void	SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bottom);	// ROM 0x001a43f0 SetRectangleEdges
 
-extern Boolean	gDefaultInk;								// ROM 0x0c10197c gDefaultInk - strokes are inked unless told otherwise
+extern Boolean	gDefaultInk;								// ROM 0x0c101890 gDefaultInk - strokes are inked unless told otherwise
 extern ULong	gLastPenTip;								// ROM 0x0c1008bc gLastPenTip - the pen tip new strokes are flagged with
 
 class TStroke : public TDArray
 {
 public:
-	static TStroke*	Make(ULong count);						// ROM 0x0021fa0c Make__7TStrokeSFUl
-	long			IStroke(ULong count);					// ROM 0x0021fa7c IStroke__7TStrokeFUl
-	virtual void	IDispose(void);							// ROM 0x0021fb28 IDispose__7TStrokeFv
-	virtual long	SizeInBytes(void);						// ROM 0x0021fb78 SizeInBytes__7TStrokeFv
+	static TStroke*	Make(ULong count);						// ROM 0x00222254 Make__7TStrokeSFUl
+	long			IStroke(ULong count);					// ROM 0x002222c4 IStroke__7TStrokeFUl
+	virtual void	IDispose(void);							// ROM 0x00222370 IDispose__7TStrokeFv
+	virtual long	SizeInBytes(void);						// ROM 0x002223c0 SizeInBytes__7TStrokeFv
 
-	void			Bifurcate(void);						// ROM 0x0021fba8 Bifurcate__7TStrokeFv - every other point dropped, the decimation doubled
-	SamplePt*		TryToAddPoint(void);					// ROM 0x0021fc3c TryToAddPoint__7TStrokeFv - a point added (bifurcating when memory is short)
-	virtual long	AddPoint(TabPt* pt);					// ROM 0x0021fc78 AddPoint__7TStrokeFP5TabPt - ==> 0, or 1 for no memory
-	void			EndStroke(void);						// ROM 0x0021ff34 EndStroke__7TStrokeFv - done, compacted
-	SamplePt*		GetPoint(long index);					// ROM 0x0021ff78 GetPoint__7TStrokeFl
-	void			GetTabPt(long index, TabPt* pt);		// ROM 0x0021ff80 GetTabPt__7TStrokeFlP5TabPt
-	void			GetFPoint(long index, FPoint* pt);		// ROM 0x00220010 GetFPoint__7TStrokeFlP6FPoint
-	void			Rotate(long angle);						// ROM 0x00220058 Rotate__7TStrokeFl (NOT YET)
-	void			Scale(long sx, long sy);				// ROM 0x0022016c Scale__7TStrokeFlT1 (NOT YET)
-	void			Draw(void);								// ROM 0x002202b0 Draw__7TStrokeFv (NOT YET: the inker; the flags are set)
-	void			Map(FRect* dst);						// ROM 0x00220424 Map__7TStrokeFP5FRect - the points moved from the box to the rect
-	void			Offset(long dx, long dy);				// ROM 0x00220550 Offset__7TStrokeFlT1
-	void			UpdateBBox(void);						// ROM 0x0022067c UpdateBBox__7TStrokeFv
-	Boolean			Done(void);								// ROM 0x0022071c Done__7TStrokeFv
+	void			Bifurcate(void);						// ROM 0x002223f0 Bifurcate__7TStrokeFv - every other point dropped, the decimation doubled
+	SamplePt*		TryToAddPoint(void);					// ROM 0x00222484 TryToAddPoint__7TStrokeFv - a point added (bifurcating when memory is short)
+	virtual long	AddPoint(TabPt* pt);					// ROM 0x002224c0 AddPoint__7TStrokeFP5TabPt - ==> 0, or 1 for no memory
+	void			EndStroke(void);						// ROM 0x0022277c EndStroke__7TStrokeFv - done, compacted
+	SamplePt*		GetPoint(long index);					// ROM 0x002227c0 GetPoint__7TStrokeFl
+	void			GetTabPt(long index, TabPt* pt);		// ROM 0x002227c8 GetTabPt__7TStrokeFlP5TabPt
+	void			GetFPoint(long index, FPoint* pt);		// ROM 0x00222858 GetFPoint__7TStrokeFlP6FPoint
+	void			Rotate(long angle);						// ROM 0x002228a0 Rotate__7TStrokeFl (NOT YET)
+	void			Scale(long sx, long sy);				// ROM 0x002229b4 Scale__7TStrokeFlT1 (NOT YET)
+	void			Draw(void);								// ROM 0x00222af8 Draw__7TStrokeFv (NOT YET: the inker; the flags are set)
+	void			Map(FRect* dst);						// ROM 0x00222c6c Map__7TStrokeFP5FRect - the points moved from the box to the rect
+	void			Offset(long dx, long dy);				// ROM 0x00222d98 Offset__7TStrokeFlT1
+	void			UpdateBBox(void);						// ROM 0x00222ec4 UpdateBBox__7TStrokeFv
+	Boolean			Done(void);								// ROM 0x00222f64 Done__7TStrokeFv
 
 	FRect			fBBox;			// +0x20  the points' box (its right and bottom a fixed unit past them)
 	long			fSampleRate;	// +0x30  halved by Bifurcate
@@ -121,30 +121,30 @@ public:
 };
 
 // the inker's lock on the stroke being drawn (the host has no inker task)
-Boolean	AcquireStroke(TStroke* stroke);						// ROM 0x001fcdf0 AcquireStroke__FP7TStroke - ==> whether it was taken (to release)
-void	ReleaseStroke(void);								// ROM 0x001fce28 ReleaseStroke__Fv
-void	GetStrokeRect(TStroke* stroke, Rect* rect);			// ROM 0x001a5bd8 GetStrokeRect__FP7TStrokeP5TRect - the box in pixels, at least a pixel each way
-void	AdjustForInk(Rect* rect);							// ROM 0x0022b6cc AdjustForInk__FP5TRect - let out for the pen size
+Boolean	AcquireStroke(TStroke* stroke);						// ROM 0x001ff5a0 AcquireStroke__FP7TStroke - ==> whether it was taken (to release)
+void	ReleaseStroke(void);								// ROM 0x001ff5d8 ReleaseStroke__Fv
+void	GetStrokeRect(TStroke* stroke, Rect* rect);			// ROM 0x001a3658 GetStrokeRect__FP7TStrokeP5TRect - the box in pixels, at least a pixel each way
+void	AdjustForInk(Rect* rect);							// ROM 0x0022de2c AdjustForInk__FP5TRect - let out for the pen size
 
 class TStrokePublic
 {
 public:
-	static TStrokePublic*	Make(TStroke* stroke, Boolean owns);	// ROM 0x0014727c Make__13TStrokePublicSFP7TStrokeUc
-					TStrokePublic(TStroke* stroke, Boolean owns);	// ROM 0x0014728c __ct__13TStrokePublicFP7TStrokeUc
-					~TStrokePublic();						// ROM 0x001472e8 __dt__13TStrokePublicFv (the stroke disposed when owned)
-	Boolean			Done(void);								// ROM 0x00147324 Done__13TStrokePublicFv
-	long			Size(void);								// ROM 0x0014732c Size__13TStrokePublicFv - the points
-	ULong			DownTime(void);							// ROM 0x00147338 DownTime__13TStrokePublicFv
-	ULong			UpTime(void);							// ROM 0x00147344 UpTime__13TStrokePublicFv
-	void			Bounds(Rect* rect);						// ROM 0x0014740c Bounds__13TStrokePublicFP5TRect - the box in pixels, a pixel wider and taller
-	Point			GetPoint(long index);					// ROM 0x0014745c GetPoint__13TStrokePublicFl - rounded (the last for an index past the end)
-	Point			FirstPoint(void);						// ROM 0x00147504 FirstPoint__13TStrokePublicFv
-	Point			FinalPoint(void);						// ROM 0x0014750c FinalPoint__13TStrokePublicFv
-	void			InkOn(void);							// ROM 0x0014753c InkOn__13TStrokePublicFv (nothing)
-	void			InkOff(Boolean invalidate, Boolean hobbled);	// ROM 0x00147540 InkOff__13TStrokePublicFUcT1
-	void			InkOff(Boolean invalidate);				// ROM 0x00147620 InkOff__13TStrokePublicFUc
-	void			GetInkedRect(Rect* rect);				// ROM 0x0014762c GetInkedRect__13TStrokePublicFP5TRect
-	void			Invalidate(void);						// ROM 0x00147674 Invalidate__13TStrokePublicFv
+	static TStrokePublic*	Make(TStroke* stroke, Boolean owns);	// ROM 0x00145728 Make__13TStrokePublicSFP7TStrokeUc
+					TStrokePublic(TStroke* stroke, Boolean owns);	// ROM 0x00145738 __ct__13TStrokePublicFP7TStrokeUc
+					~TStrokePublic();						// ROM 0x00145794 __dt__13TStrokePublicFv (the stroke disposed when owned)
+	Boolean			Done(void);								// ROM 0x001457d0 Done__13TStrokePublicFv
+	long			Size(void);								// ROM 0x001457d8 Size__13TStrokePublicFv - the points
+	ULong			DownTime(void);							// ROM 0x001457e4 DownTime__13TStrokePublicFv
+	ULong			UpTime(void);							// ROM 0x001457f0 UpTime__13TStrokePublicFv
+	void			Bounds(Rect* rect);						// ROM 0x001458b8 Bounds__13TStrokePublicFP5TRect - the box in pixels, a pixel wider and taller
+	Point			GetPoint(long index);					// ROM 0x00145908 GetPoint__13TStrokePublicFl - rounded (the last for an index past the end)
+	Point			FirstPoint(void);						// ROM 0x001459b0 FirstPoint__13TStrokePublicFv
+	Point			FinalPoint(void);						// ROM 0x001459b8 FinalPoint__13TStrokePublicFv
+	void			InkOn(void);							// ROM 0x001459e8 InkOn__13TStrokePublicFv (nothing)
+	void			InkOff(Boolean invalidate, Boolean hobbled);	// ROM 0x001459ec InkOff__13TStrokePublicFUcT1
+	void			InkOff(Boolean invalidate);				// ROM 0x00145acc InkOff__13TStrokePublicFUc
+	void			GetInkedRect(Rect* rect);				// ROM 0x00145ad8 GetInkedRect__13TStrokePublicFP5TRect
+	void			Invalidate(void);						// ROM 0x00145b20 Invalidate__13TStrokePublicFv
 
 	TStroke*		Stroke(void)		{ return fStroke; }
 

@@ -56,7 +56,7 @@ GetRamSize(void)
 	return 4 * 1024 * 1024;
 }
 
-// ROM 0x001dfb38 GetSystemSerialNumber__16TSerialNumberROMFPUl
+// ROM 0x001dd720 GetSystemSerialNumber__16TSerialNumberROMFPUl
 // The MessagePad reads its number off a one-wire ROM chip
 // (TSerialNumberROM, whose Init reads the eight bytes: a family code, the
 // number and a CRC) and hands back the middle of it - the first word bits

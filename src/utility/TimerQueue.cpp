@@ -10,7 +10,7 @@
 				and answers how long until the next, which TTimerPort uses as
 				its receive timeout.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Layouts: TTimerElement 0x18 (vptr, fQueue +4, fNext +8, fDelta +0xc,
 	fRefCon +0x10, fPrimed +0x14); TTimerQueue 0x10 (fHead, fLastCalibrate
 	+4, fTimeoutInProgress +0xc); TTimerPort 0xc (the TUPort, fQueue +8).
@@ -29,7 +29,7 @@ const TTimeout kTimerSlop = 4;
 	TTimerElement
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00253704 __ct__13TTimerElementFP11TTimerQueueUl
+// ROM 0x0025564c __ct__13TTimerElementFP11TTimerQueueUl
 TTimerElement::TTimerElement(TTimerQueue* q, ULong refCon)
 {
 	fQueue = q;
@@ -40,14 +40,14 @@ TTimerElement::TTimerElement(TTimerQueue* q, ULong refCon)
 }
 
 
-// ROM 0x00253754 __dt__13TTimerElementFv
+// ROM 0x0025569c __dt__13TTimerElementFv
 TTimerElement::~TTimerElement()
 {
 	Cancel();
 }
 
 
-// ROM 0x0025394c Prime__13TTimerElementFUl
+// ROM 0x00255894 Prime__13TTimerElementFUl
 // (Re)starts the timer to fire delta from now; a zero delta does nothing.
 Boolean
 TTimerElement::Prime(TTimeout delta)
@@ -64,7 +64,7 @@ TTimerElement::Prime(TTimeout delta)
 }
 
 
-// ROM 0x002539a4 Cancel__13TTimerElementFv
+// ROM 0x002558ec Cancel__13TTimerElementFv
 Boolean
 TTimerElement::Cancel()
 {
@@ -78,7 +78,7 @@ TTimerElement::Cancel()
 	TTimerQueue
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002539d4 __ct__11TTimerQueueFv
+// ROM 0x0025591c __ct__11TTimerQueueFv
 TTimerQueue::TTimerQueue()
 {
 	fHead = nil;
@@ -87,12 +87,12 @@ TTimerQueue::TTimerQueue()
 }
 
 
-// ROM 0x00253a14 __dt__11TTimerQueueFv
+// ROM 0x0025595c __dt__11TTimerQueueFv
 TTimerQueue::~TTimerQueue()
 { }
 
 
-// ROM 0x00253a20 Check__11TTimerQueueFv
+// ROM 0x00255968 Check__11TTimerQueueFv
 // Fires every element that is due, then answers the time until the next
 // (0 with none).  Timeout handlers may prime timers; the queue is not
 // recalibrated while they run.
@@ -117,7 +117,7 @@ TTimerQueue::Check()
 }
 
 
-// ROM 0x00253aac Calibrate__11TTimerQueueFv
+// ROM 0x002559f8 Calibrate__11TTimerQueueFv
 // Takes the time elapsed since the last calibration off the head of the
 // queue: elements it passes are left due (kTimerSlop), the one it lands in
 // keeps what remains (never less than kTimerSlop).
@@ -150,7 +150,7 @@ done:
 }
 
 
-// ROM 0x00253790 Cancel__11TTimerQueueFUl
+// ROM 0x002556d8 Cancel__11TTimerQueueFUl
 // Dequeues the first element with that refcon (its successor takes over its
 // delta); nil if none.
 TTimerElement*
@@ -179,7 +179,7 @@ TTimerQueue::Cancel(ULong refCon)
 }
 
 
-// ROM 0x00253b70 Enqueue__11TTimerQueueFP13TTimerElement
+// ROM 0x00255abc Enqueue__11TTimerQueueFP13TTimerElement
 // Inserts the element (fDelta from now) in delta order: its delta becomes
 // relative to its predecessor, and its successor's to it.  Only an element
 // of this queue with a non-zero delta goes in; nil otherwise.
@@ -217,7 +217,7 @@ TTimerQueue::Enqueue(TTimerElement* item)
 }
 
 
-// ROM 0x00253c1c Dequeue__11TTimerQueueFP13TTimerElementUc
+// ROM 0x00255b68 Dequeue__11TTimerQueueFP13TTimerElementUc
 // Unlinks the element; with adjust its successor takes over its delta (a
 // fired element's successor is already due relative to now).
 TTimerElement*
@@ -250,14 +250,14 @@ TTimerQueue::Dequeue(TTimerElement* item, Boolean adjust)
 	TTimerPort
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00253810 __ct__10TTimerPortFv
+// ROM 0x00255758 __ct__10TTimerPortFv
 TTimerPort::TTimerPort()
 {
 	fQueue = nil;
 }
 
 
-// ROM 0x00253848 __dt__10TTimerPortFv
+// ROM 0x00255790 __dt__10TTimerPortFv
 TTimerPort::~TTimerPort()
 {
 	if (fQueue != nil)
@@ -265,7 +265,7 @@ TTimerPort::~TTimerPort()
 }
 
 
-// ROM 0x0025388c Init__10TTimerPortFv
+// ROM 0x002557d4 Init__10TTimerPortFv
 NewtonErr
 TTimerPort::Init()
 {
@@ -280,7 +280,7 @@ TTimerPort::Init()
 }
 
 
-// ROM 0x002538cc TimedReceive__10TTimerPortFPUlPvUlP10TUMsgTokenT1T3UcT7
+// ROM 0x00255814 TimedReceive__10TTimerPortFPUlPvUlP10TUMsgTokenT1T3UcT7
 // A receive that fires the queue's timers: it waits until the next timer is
 // due, fires what is due, and goes round until a message arrives.
 NewtonErr

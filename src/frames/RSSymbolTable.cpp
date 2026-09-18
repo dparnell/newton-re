@@ -5,3538 +5,3544 @@
 
 #include "RSSymbols.h"
 
-Ref RSSYM_2A = NILREF;	// ROM 0x0063a1a0 RSSYM_2A
-Ref RSSYM_2B = NILREF;	// ROM 0x0063a1a8 RSSYM_2B
-Ref RSSYM_2D = NILREF;	// ROM 0x0063a1b0 RSSYM_2D
-Ref RSSYM_2F = NILREF;	// ROM 0x0063a1b8 RSSYM_2F
-Ref RSSYM1_2Ex = NILREF;	// ROM 0x0063a1c0 RSSYM1_2Ex
-Ref RSSYM_3C = NILREF;	// ROM 0x0063a1c8 RSSYM_3C
-Ref RSSYM_3C_3C = NILREF;	// ROM 0x0063a1d0 RSSYM_3C_3C
-Ref RSSYM_3C_3D = NILREF;	// ROM 0x0063a1d8 RSSYM_3C_3D
-Ref RSSYM_3C_3E = NILREF;	// ROM 0x0063a1e0 RSSYM_3C_3E
-Ref RSSYM_3D = NILREF;	// ROM 0x0063a1e8 RSSYM_3D
-Ref RSSYM_3E = NILREF;	// ROM 0x0063a1f0 RSSYM_3E
-Ref RSSYM_3E_3D = NILREF;	// ROM 0x0063a1f8 RSSYM_3E_3D
-Ref RSSYM_3E_3E = NILREF;	// ROM 0x0063a200 RSSYM_3E_3E
-Ref RSSYMa4 = NILREF;	// ROM 0x0063a208 RSSYMa4
-Ref RSSYMabbrdatestrspec = NILREF;	// ROM 0x0063a210 RSSYMabbrdatestrspec
-Ref RSSYMabbrdayofweekstrspec = NILREF;	// ROM 0x0063a218 RSSYMabbrdayofweekstrspec
-Ref RSSYMabbrdofweek = NILREF;	// ROM 0x0063a220 RSSYMabbrdofweek
-Ref RSSYMabbrmonth = NILREF;	// ROM 0x0063a228 RSSYMabbrmonth
-Ref RSSYMabout_task = NILREF;	// ROM 0x0063a230 RSSYMabout_task
-Ref RSSYMacpower = NILREF;	// ROM 0x0063a238 RSSYMacpower
-Ref RSSYMaction = NILREF;	// ROM 0x0063a240 RSSYMaction
-Ref RSSYMactiondescription = NILREF;	// ROM 0x0063a248 RSSYMactiondescription
-Ref RSSYMactionnotify = NILREF;	// ROM 0x0063a250 RSSYMactionnotify
-Ref RSSYMactionsoundeffects = NILREF;	// ROM 0x0063a258 RSSYMactionsoundeffects
-Ref RSSYMactivatestorepackages = NILREF;	// ROM 0x0063a260 RSSYMactivatestorepackages
-Ref RSSYMactivepackagelist = NILREF;	// ROM 0x0063a268 RSSYMactivepackagelist
-Ref RSSYMactivetimeout = NILREF;	// ROM 0x0063a270 RSSYMactivetimeout
-Ref RSSYMacvoltage = NILREF;	// ROM 0x0063a278 RSSYMacvoltage
-Ref RSSYMadd = NILREF;	// ROM 0x0063a280 RSSYMadd
-Ref RSSYMadded = NILREF;	// ROM 0x0063a288 RSSYMadded
-Ref RSSYMaddencodedword = NILREF;	// ROM 0x0063a290 RSSYMaddencodedword
-Ref RSSYMaddicon = NILREF;	// ROM 0x0063a298 RSSYMaddicon
-Ref RSSYMaddindex = NILREF;	// ROM 0x0063a2a0 RSSYMaddindex
-Ref RSSYMaddnotification = NILREF;	// ROM 0x0063a2a8 RSSYMaddnotification
-Ref RSSYMaddress = NILREF;	// ROM 0x0063a2b0 RSSYMaddress
-Ref RSSYMaddressdata = NILREF;	// ROM 0x0063a2b8 RSSYMaddressdata
-Ref RSSYMaddresstype = NILREF;	// ROM 0x0063a2c0 RSSYMaddresstype
-Ref RSSYMaddspace = NILREF;	// ROM 0x0063a2c8 RSSYMaddspace
-Ref RSSYMaddwithuniqueid = NILREF;	// ROM 0x0063a2d0 RSSYMaddwithuniqueid
-Ref RSSYMaffiliate = NILREF;	// ROM 0x0063a2d8 RSSYMaffiliate
-Ref RSSYMalarm = NILREF;	// ROM 0x0063a2e0 RSSYMalarm
-Ref RSSYMalarmsound = NILREF;	// ROM 0x0063a2e8 RSSYMalarmsound
-Ref RSSYMalarmsoundeffects = NILREF;	// ROM 0x0063a2f0 RSSYMalarmsoundeffects
-Ref RSSYMalias = NILREF;	// ROM 0x0063a2f8 RSSYMalias
-Ref RSSYMalkaline = NILREF;	// ROM 0x0063a300 RSSYMalkaline
-Ref RSSYMall = NILREF;	// ROM 0x0063a308 RSSYMall
-Ref RSSYMallcollapsed = NILREF;	// ROM 0x0063a310 RSSYMallcollapsed
-Ref RSSYMalldictionaries = NILREF;	// ROM 0x0063a318 RSSYMalldictionaries
-Ref RSSYMallentries = NILREF;	// ROM 0x0063a320 RSSYMallentries
-Ref RSSYMallocatecontext = NILREF;	// ROM 0x0063a328 RSSYMallocatecontext
-Ref RSSYMallowformularecognition = NILREF;	// ROM 0x0063a330 RSSYMallowformularecognition
-Ref RSSYMallowkeysthrough = NILREF;	// ROM 0x0063a338 RSSYMallowkeysthrough
-Ref RSSYMallowshaperecognition = NILREF;	// ROM 0x0063a340 RSSYMallowshaperecognition
-Ref RSSYMallowtextrecognition = NILREF;	// ROM 0x0063a348 RSSYMallowtextrecognition
-Ref RSSYMalphakeyboard = NILREF;	// ROM 0x0063a350 RSSYMalphakeyboard
-Ref RSSYMalternatewords = NILREF;	// ROM 0x0063a358 RSSYMalternatewords
-Ref RSSYMalwayscallpickactionscript = NILREF;	// ROM 0x0063a360 RSSYMalwayscallpickactionscript
-Ref RSSYMambienttemp = NILREF;	// ROM 0x0063a368 RSSYMambienttemp
-Ref RSSYMamountread = NILREF;	// ROM 0x0063a370 RSSYMamountread
-Ref RSSYMany = NILREF;	// ROM 0x0063a378 RSSYMany
-Ref RSSYMapp = NILREF;	// ROM 0x0063a380 RSSYMapp
-Ref RSSYMappareagloballeft = NILREF;	// ROM 0x0063a388 RSSYMappareagloballeft
-Ref RSSYMappareaglobaltop = NILREF;	// ROM 0x0063a390 RSSYMappareaglobaltop
-Ref RSSYMappareaheight = NILREF;	// ROM 0x0063a398 RSSYMappareaheight
-Ref RSSYMapparealeft = NILREF;	// ROM 0x0063a3a0 RSSYMapparealeft
-Ref RSSYMappareatop = NILREF;	// ROM 0x0063a3a8 RSSYMappareatop
-Ref RSSYMappareawidth = NILREF;	// ROM 0x0063a3b0 RSSYMappareawidth
-Ref RSSYMapplication = NILREF;	// ROM 0x0063a3b8 RSSYMapplication
-Ref RSSYMapplications = NILREF;	// ROM 0x0063a3c0 RSSYMapplications
-Ref RSSYMapply = NILREF;	// ROM 0x0063a3c8 RSSYMapply
-Ref RSSYMappname = NILREF;	// ROM 0x0063a3d0 RSSYMappname
-Ref RSSYMappsymbol = NILREF;	// ROM 0x0063a3d8 RSSYMappsymbol
-Ref RSSYMarcerbounds = NILREF;	// ROM 0x0063a3e0 RSSYMarcerbounds
-Ref RSSYMaref = NILREF;	// ROM 0x0063a3e8 RSSYMaref
-Ref RSSYMarglist = NILREF;	// ROM 0x0063a3f0 RSSYMarglist
-Ref RSSYMargs = NILREF;	// ROM 0x0063a3f8 RSSYMargs
-Ref RSSYMarm610a = NILREF;	// ROM 0x0063a400 RSSYMarm610a
-Ref RSSYMarm710a = NILREF;	// ROM 0x0063a408 RSSYMarm710a
-Ref RSSYMarray = NILREF;	// ROM 0x0063a410 RSSYMarray
-Ref RSSYMascending = NILREF;	// ROM 0x0063a418 RSSYMascending
-Ref RSSYMasciistring = NILREF;	// ROM 0x0063a420 RSSYMasciistring
-Ref RSSYMassist = NILREF;	// ROM 0x0063a428 RSSYMassist
-Ref RSSYMassistant = NILREF;	// ROM 0x0063a430 RSSYMassistant
-Ref RSSYMassistline = NILREF;	// ROM 0x0063a438 RSSYMassistline
-Ref RSSYMasync = NILREF;	// ROM 0x0063a440 RSSYMasync
-Ref RSSYMattachment = NILREF;	// ROM 0x0063a448 RSSYMattachment
-Ref RSSYMattribute = NILREF;	// ROM 0x0063a450 RSSYMattribute
-Ref RSSYMaustralia = NILREF;	// ROM 0x0063a458 RSSYMaustralia
-Ref RSSYMauto = NILREF;	// ROM 0x0063a460 RSSYMauto
-Ref RSSYMautoadd = NILREF;	// ROM 0x0063a468 RSSYMautoadd
-Ref RSSYMautoclose = NILREF;	// ROM 0x0063a470 RSSYMautoclose
-Ref RSSYMautodock = NILREF;	// ROM 0x0063a478 RSSYMautodock
-Ref RSSYMavailableprinters = NILREF;	// ROM 0x0063a480 RSSYMavailableprinters
-Ref RSSYMbackground = NILREF;	// ROM 0x0063a488 RSSYMbackground
-Ref RSSYMbackgroundpicture = NILREF;	// ROM 0x0063a490 RSSYMbackgroundpicture
-Ref RSSYMbackupinfo = NILREF;	// ROM 0x0063a498 RSSYMbackupinfo
-Ref RSSYMbackuppassword = NILREF;	// ROM 0x0063a4a0 RSSYMbackuppassword
-Ref RSSYMbadadapteralert = NILREF;	// ROM 0x0063a4a8 RSSYMbadadapteralert
-Ref RSSYMbadbatteryalert = NILREF;	// ROM 0x0063a4b0 RSSYMbadbatteryalert
-Ref RSSYMbadfontmap = NILREF;	// ROM 0x0063a4b8 RSSYMbadfontmap
-Ref RSSYMbadpassword = NILREF;	// ROM 0x0063a4c0 RSSYMbadpassword
-Ref RSSYMbadwickednaughtynoot = NILREF;	// ROM 0x0063a4c8 RSSYMbadwickednaughtynoot
-Ref RSSYMbarber = NILREF;	// ROM 0x0063a4d0 RSSYMbarber
-Ref RSSYMbase = NILREF;	// ROM 0x0063a4d8 RSSYMbase
-Ref RSSYMbaseinputmask = NILREF;	// ROM 0x0063a4e0 RSSYMbaseinputmask
-Ref RSSYMbatterycapacity = NILREF;	// ROM 0x0063a4e8 RSSYMbatterycapacity
-Ref RSSYMbatterycurrent = NILREF;	// ROM 0x0063a4f0 RSSYMbatterycurrent
-Ref RSSYMbatterydead = NILREF;	// ROM 0x0063a4f8 RSSYMbatterydead
-Ref RSSYMbatterylow = NILREF;	// ROM 0x0063a500 RSSYMbatterylow
-Ref RSSYMbatterytemp = NILREF;	// ROM 0x0063a508 RSSYMbatterytemp
-Ref RSSYMbatterytype = NILREF;	// ROM 0x0063a510 RSSYMbatterytype
-Ref RSSYMbatteryvoltage = NILREF;	// ROM 0x0063a518 RSSYMbatteryvoltage
-Ref RSSYMbcalphaname = NILREF;	// ROM 0x0063a520 RSSYMbcalphaname
-Ref RSSYMbcfullname = NILREF;	// ROM 0x0063a528 RSSYMbcfullname
-Ref RSSYMbeamcommitrecv = NILREF;	// ROM 0x0063a530 RSSYMbeamcommitrecv
-Ref RSSYMbeamcommitsend = NILREF;	// ROM 0x0063a538 RSSYMbeamcommitsend
-Ref RSSYMbeamindex = NILREF;	// ROM 0x0063a540 RSSYMbeamindex
-Ref RSSYMbeamnextitem = NILREF;	// ROM 0x0063a548 RSSYMbeamnextitem
-Ref RSSYMbeamstartrecv = NILREF;	// ROM 0x0063a550 RSSYMbeamstartrecv
-Ref RSSYMbeamtotal = NILREF;	// ROM 0x0063a558 RSSYMbeamtotal
-Ref RSSYMbecause = NILREF;	// ROM 0x0063a560 RSSYMbecause
-Ref RSSYMbeepsound = NILREF;	// ROM 0x0063a568 RSSYMbeepsound
-Ref RSSYMbegin = NILREF;	// ROM 0x0063a570 RSSYMbegin
-Ref RSSYMbeginexclkey = NILREF;	// ROM 0x0063a578 RSSYMbeginexclkey
-Ref RSSYMbeginkey = NILREF;	// ROM 0x0063a580 RSSYMbeginkey
-Ref RSSYMbelong = NILREF;	// ROM 0x0063a588 RSSYMbelong
-Ref RSSYMbigheight = NILREF;	// ROM 0x0063a590 RSSYMbigheight
-Ref RSSYMbiglearningenabled = NILREF;	// ROM 0x0063a598 RSSYMbiglearningenabled
-Ref RSSYMbinary = NILREF;	// ROM 0x0063a5a0 RSSYMbinary
-Ref RSSYMbincfunction = NILREF;	// ROM 0x0063a5a8 RSSYMbincfunction
-Ref RSSYMbindoptions = NILREF;	// ROM 0x0063a5b0 RSSYMbindoptions
-Ref RSSYMbirthday = NILREF;	// ROM 0x0063a5b8 RSSYMbirthday
-Ref RSSYMbitdepth = NILREF;	// ROM 0x0063a5c0 RSSYMbitdepth
-Ref RSSYMbitmap = NILREF;	// ROM 0x0063a5c8 RSSYMbitmap
-Ref RSSYMbitmapdata = NILREF;	// ROM 0x0063a5d0 RSSYMbitmapdata
-Ref RSSYMbits = NILREF;	// ROM 0x0063a5d8 RSSYMbits
-Ref RSSYMbitsbounds = NILREF;	// ROM 0x0063a5e0 RSSYMbitsbounds
-Ref RSSYMblessedapp = NILREF;	// ROM 0x0063a5e8 RSSYMblessedapp
-Ref RSSYMblinddialdelay = NILREF;	// ROM 0x0063a5f0 RSSYMblinddialdelay
-Ref RSSYMblinddialing = NILREF;	// ROM 0x0063a5f8 RSSYMblinddialing
-Ref RSSYMblock = NILREF;	// ROM 0x0063a600 RSSYMblock
-Ref RSSYMblocks = NILREF;	// ROM 0x0063a608 RSSYMblocks
-Ref RSSYMbody = NILREF;	// ROM 0x0063a610 RSSYMbody
-Ref RSSYMbold = NILREF;	// ROM 0x0063a618 RSSYMbold
-Ref RSSYMbolddata = NILREF;	// ROM 0x0063a620 RSSYMbolddata
-Ref RSSYMbolditalic = NILREF;	// ROM 0x0063a628 RSSYMbolditalic
-Ref RSSYMbolditalicdata = NILREF;	// ROM 0x0063a630 RSSYMbolditalicdata
-Ref RSSYMbook = NILREF;	// ROM 0x0063a638 RSSYMbook
-Ref RSSYMbookinstallscript = NILREF;	// ROM 0x0063a640 RSSYMbookinstallscript
-Ref RSSYMbookpresent = NILREF;	// ROM 0x0063a648 RSSYMbookpresent
-Ref RSSYMbookref = NILREF;	// ROM 0x0063a650 RSSYMbookref
-Ref RSSYMbookremovescript = NILREF;	// ROM 0x0063a658 RSSYMbookremovescript
-Ref RSSYMbooks = NILREF;	// ROM 0x0063a660 RSSYMbooks
-Ref RSSYMbookscripts = NILREF;	// ROM 0x0063a668 RSSYMbookscripts
-Ref RSSYMbooksearchscript = NILREF;	// ROM 0x0063a670 RSSYMbooksearchscript
-Ref RSSYMbooksoup = NILREF;	// ROM 0x0063a678 RSSYMbooksoup
-Ref RSSYMboolean = NILREF;	// ROM 0x0063a680 RSSYMboolean
-Ref RSSYMbottom = NILREF;	// ROM 0x0063a688 RSSYMbottom
-Ref RSSYMbounds = NILREF;	// ROM 0x0063a690 RSSYMbounds
-Ref RSSYMboundsrect = NILREF;	// ROM 0x0063a698 RSSYMboundsrect
-Ref RSSYMbox = NILREF;	// ROM 0x0063a6a0 RSSYMbox
-Ref RSSYMboxbottom = NILREF;	// ROM 0x0063a6a8 RSSYMboxbottom
-Ref RSSYMboxleft = NILREF;	// ROM 0x0063a6b0 RSSYMboxleft
-Ref RSSYMboxright = NILREF;	// ROM 0x0063a6b8 RSSYMboxright
-Ref RSSYMboxtop = NILREF;	// ROM 0x0063a6c0 RSSYMboxtop
-Ref RSSYMbps = NILREF;	// ROM 0x0063a6c8 RSSYMbps
-Ref RSSYMbreakloop = NILREF;	// ROM 0x0063a6d0 RSSYMbreakloop
-Ref RSSYMbreakonthrows = NILREF;	// ROM 0x0063a6d8 RSSYMbreakonthrows
-Ref RSSYMbritishwordscursiveoption = NILREF;	// ROM 0x0063a6e0 RSSYMbritishwordscursiveoption
-Ref RSSYMbrowser = NILREF;	// ROM 0x0063a6e8 RSSYMbrowser
-Ref RSSYMbrowserclose = NILREF;	// ROM 0x0063a6f0 RSSYMbrowserclose
-Ref RSSYMbrowsers = NILREF;	// ROM 0x0063a6f8 RSSYMbrowsers
-Ref RSSYMbuffercount = NILREF;	// ROM 0x0063a700 RSSYMbuffercount
-Ref RSSYMbuffersize = NILREF;	// ROM 0x0063a708 RSSYMbuffersize
-Ref RSSYMbuildinputmask = NILREF;	// ROM 0x0063a710 RSSYMbuildinputmask
-Ref RSSYMbuiltin = NILREF;	// ROM 0x0063a718 RSSYMbuiltin
-Ref RSSYMbusy = NILREF;	// ROM 0x0063a720 RSSYMbusy
-Ref RSSYMbusydialog = NILREF;	// ROM 0x0063a728 RSSYMbusydialog
-Ref RSSYMbuttonbarposition = NILREF;	// ROM 0x0063a730 RSSYMbuttonbarposition
-Ref RSSYMbuttonclickscript = NILREF;	// ROM 0x0063a738 RSSYMbuttonclickscript
-Ref RSSYMbuttonpressedscript = NILREF;	// ROM 0x0063a740 RSSYMbuttonpressedscript
-Ref RSSYMbyte = NILREF;	// ROM 0x0063a748 RSSYMbyte
-Ref RSSYMbytecount = NILREF;	// ROM 0x0063a750 RSSYMbytecount
-Ref RSSYMbyteproxy = NILREF;	// ROM 0x0063a758 RSSYMbyteproxy
-Ref RSSYMbytes = NILREF;	// ROM 0x0063a760 RSSYMbytes
-Ref RSSYMcache = NILREF;	// ROM 0x0063a768 RSSYMcache
-Ref RSSYMcachedrecconfig = NILREF;	// ROM 0x0063a770 RSSYMcachedrecconfig
-Ref RSSYMcalendar = NILREF;	// ROM 0x0063a778 RSSYMcalendar
-Ref RSSYMcalibration = NILREF;	// ROM 0x0063a780 RSSYMcalibration
-Ref RSSYMcallback = NILREF;	// ROM 0x0063a788 RSSYMcallback
-Ref RSSYMcallbackcontext = NILREF;	// ROM 0x0063a790 RSSYMcallbackcontext
-Ref RSSYMcallbackfreq = NILREF;	// ROM 0x0063a798 RSSYMcallbackfreq
-Ref RSSYMcallpowerstatuschangefns = NILREF;	// ROM 0x0063a7a0 RSSYMcallpowerstatuschangefns
-Ref RSSYMcanada = NILREF;	// ROM 0x0063a7a8 RSSYMcanada
-Ref RSSYMcanadafr = NILREF;	// ROM 0x0063a7b0 RSSYMcanadafr
-Ref RSSYMcanceling = NILREF;	// ROM 0x0063a7b8 RSSYMcanceling
-Ref RSSYMcanonicalparatopic = NILREF;	// ROM 0x0063a7c0 RSSYMcanonicalparatopic
-Ref RSSYMcard = NILREF;	// ROM 0x0063a7c8 RSSYMcard
-Ref RSSYMcardarray = NILREF;	// ROM 0x0063a7d0 RSSYMcardarray
-Ref RSSYMcardfile = NILREF;	// ROM 0x0063a7d8 RSSYMcardfile
-Ref RSSYMcardfirst = NILREF;	// ROM 0x0063a7e0 RSSYMcardfirst
-Ref RSSYMcardhwlocationids = NILREF;	// ROM 0x0063a7e8 RSSYMcardhwlocationids
-Ref RSSYMcardinfoversion = NILREF;	// ROM 0x0063a7f0 RSSYMcardinfoversion
-Ref RSSYMcardlast = NILREF;	// ROM 0x0063a7f8 RSSYMcardlast
-Ref RSSYMcardlock = NILREF;	// ROM 0x0063a800 RSSYMcardlock
-Ref RSSYMcardprefs = NILREF;	// ROM 0x0063a808 RSSYMcardprefs
-Ref RSSYMcardreinserted = NILREF;	// ROM 0x0063a810 RSSYMcardreinserted
-Ref RSSYMcardremoved = NILREF;	// ROM 0x0063a818 RSSYMcardremoved
-Ref RSSYMcardsocket = NILREF;	// ROM 0x0063a820 RSSYMcardsocket
-Ref RSSYMcardsoups = NILREF;	// ROM 0x0063a828 RSSYMcardsoups
-Ref RSSYMcardtypes = NILREF;	// ROM 0x0063a830 RSSYMcardtypes
-Ref RSSYMcardyanked = NILREF;	// ROM 0x0063a838 RSSYMcardyanked
-Ref RSSYMcarrierdelay = NILREF;	// ROM 0x0063a840 RSSYMcarrierdelay
-Ref RSSYMcategory = NILREF;	// ROM 0x0063a848 RSSYMcategory
-Ref RSSYMcbits = NILREF;	// ROM 0x0063a850 RSSYMcbits
-Ref RSSYMcellframe = NILREF;	// ROM 0x0063a858 RSSYMcellframe
-Ref RSSYMcellularconnection = NILREF;	// ROM 0x0063a860 RSSYMcellularconnection
-Ref RSSYMcenter = NILREF;	// ROM 0x0063a868 RSSYMcenter
-Ref RSSYMcertificate = NILREF;	// ROM 0x0063a870 RSSYMcertificate
-Ref RSSYMcertificatepassword = NILREF;	// ROM 0x0063a878 RSSYMcertificatepassword
-Ref RSSYMcfunction = NILREF;	// ROM 0x0063a880 RSSYMcfunction
-Ref RSSYMchanged = NILREF;	// ROM 0x0063a888 RSSYMchanged
-Ref RSSYMchar = NILREF;	// ROM 0x0063a890 RSSYMchar
-Ref RSSYMcharclass = NILREF;	// ROM 0x0063a898 RSSYMcharclass
-Ref RSSYMcharencodings = NILREF;	// ROM 0x0063a8a0 RSSYMcharencodings
-Ref RSSYMchargecurrent = NILREF;	// ROM 0x0063a8a8 RSSYMchargecurrent
-Ref RSSYMchargerate = NILREF;	// ROM 0x0063a8b0 RSSYMchargerate
-Ref RSSYMchargestate = NILREF;	// ROM 0x0063a8b8 RSSYMchargestate
-Ref RSSYMcheckbitmaps = NILREF;	// ROM 0x0063a8c0 RSSYMcheckbitmaps
-Ref RSSYMcheckpassword = NILREF;	// ROM 0x0063a8c8 RSSYMcheckpassword
-Ref RSSYMchecksum = NILREF;	// ROM 0x0063a8d0 RSSYMchecksum
-Ref RSSYMchoices = NILREF;	// ROM 0x0063a8d8 RSSYMchoices
-Ref RSSYMchr_3C = NILREF;	// ROM 0x0063a8e0 RSSYMchr_3C
-Ref RSSYMchr_3E = NILREF;	// ROM 0x0063a8e8 RSSYMchr_3E
-Ref RSSYMciprivate = NILREF;	// ROM 0x0063a8f0 RSSYMciprivate
-Ref RSSYMcisdevicetypes = NILREF;	// ROM 0x0063a8f8 RSSYMcisdevicetypes
-Ref RSSYMcisfunctionexts = NILREF;	// ROM 0x0063a900 RSSYMcisfunctionexts
-Ref RSSYMcisfunctionid = NILREF;	// ROM 0x0063a908 RSSYMcisfunctionid
-Ref RSSYMcisfunctions = NILREF;	// ROM 0x0063a910 RSSYMcisfunctions
-Ref RSSYMcismanufacturerid = NILREF;	// ROM 0x0063a918 RSSYMcismanufacturerid
-Ref RSSYMcismanufactureridinfo = NILREF;	// ROM 0x0063a920 RSSYMcismanufactureridinfo
-Ref RSSYMcismanufacturername = NILREF;	// ROM 0x0063a928 RSSYMcismanufacturername
-Ref RSSYMcisproductinfo0 = NILREF;	// ROM 0x0063a930 RSSYMcisproductinfo0
-Ref RSSYMcisproductinfo1 = NILREF;	// ROM 0x0063a938 RSSYMcisproductinfo1
-Ref RSSYMcisproductname = NILREF;	// ROM 0x0063a940 RSSYMcisproductname
-Ref RSSYMcity = NILREF;	// ROM 0x0063a948 RSSYMcity
-Ref RSSYMclass = NILREF;	// ROM 0x0063a950 RSSYMclass
-Ref RSSYMclasses = NILREF;	// ROM 0x0063a958 RSSYMclasses
-Ref RSSYMclearonpaste = NILREF;	// ROM 0x0063a960 RSSYMclearonpaste
-Ref RSSYMclicker = NILREF;	// ROM 0x0063a968 RSSYMclicker
-Ref RSSYMclicksound = NILREF;	// ROM 0x0063a970 RSSYMclicksound
-Ref RSSYMclient = NILREF;	// ROM 0x0063a978 RSSYMclient
-Ref RSSYMclipboarddepth = NILREF;	// ROM 0x0063a980 RSSYMclipboarddepth
-Ref RSSYMclipbounds = NILREF;	// ROM 0x0063a988 RSSYMclipbounds
-Ref RSSYMclipping = NILREF;	// ROM 0x0063a990 RSSYMclipping
-Ref RSSYMclosure = NILREF;	// ROM 0x0063a998 RSSYMclosure
-Ref RSSYMcmdkeyrepeatthreshold = NILREF;	// ROM 0x0063a9a0 RSSYMcmdkeyrepeatthreshold
-Ref RSSYMcmprsdsz = NILREF;	// ROM 0x0063a9a8 RSSYMcmprsdsz
-Ref RSSYMcntrlpanel = NILREF;	// ROM 0x0063a9b0 RSSYMcntrlpanel
-Ref RSSYMcobject = NILREF;	// ROM 0x0063a9b8 RSSYMcobject
-Ref RSSYMcode = NILREF;	// ROM 0x0063a9c0 RSSYMcode
-Ref RSSYMcodeblock = NILREF;	// ROM 0x0063a9c8 RSSYMcodeblock
-Ref RSSYMcodec = NILREF;	// ROM 0x0063a9d0 RSSYMcodec
-Ref RSSYMcodecname = NILREF;	// ROM 0x0063a9d8 RSSYMcodecname
-Ref RSSYMcollapsed = NILREF;	// ROM 0x0063a9e0 RSSYMcollapsed
-Ref RSSYMcollapsedheight = NILREF;	// ROM 0x0063a9e8 RSSYMcollapsedheight
-Ref RSSYMcollect = NILREF;	// ROM 0x0063a9f0 RSSYMcollect
-Ref RSSYMcolor = NILREF;	// ROM 0x0063a9f8 RSSYMcolor
-Ref RSSYMcolordata = NILREF;	// ROM 0x0063aa00 RSSYMcolordata
-Ref RSSYMcolortable = NILREF;	// ROM 0x0063aa08 RSSYMcolortable
-Ref RSSYMcommadelay = NILREF;	// ROM 0x0063aa10 RSSYMcommadelay
-Ref RSSYMcommand = NILREF;	// ROM 0x0063aa18 RSSYMcommand
-Ref RSSYMcompanderdata = NILREF;	// ROM 0x0063aa20 RSSYMcompanderdata
-Ref RSSYMcompandername = NILREF;	// ROM 0x0063aa28 RSSYMcompandername
-Ref RSSYMcompany = NILREF;	// ROM 0x0063aa30 RSSYMcompany
-Ref RSSYMcompanyphonetic = NILREF;	// ROM 0x0063aa38 RSSYMcompanyphonetic
-Ref RSSYMcompleted = NILREF;	// ROM 0x0063aa40 RSSYMcompleted
-Ref RSSYMcompletionscript = NILREF;	// ROM 0x0063aa48 RSSYMcompletionscript
-Ref RSSYMcompressed = NILREF;	// ROM 0x0063aa50 RSSYMcompressed
-Ref RSSYMcompressiontype = NILREF;	// ROM 0x0063aa58 RSSYMcompressiontype
-Ref RSSYMcondition = NILREF;	// ROM 0x0063aa60 RSSYMcondition
-Ref RSSYMconfig = NILREF;	// ROM 0x0063aa68 RSSYMconfig
-Ref RSSYMconfigoptions = NILREF;	// ROM 0x0063aa70 RSSYMconfigoptions
-Ref RSSYMconfigurations = NILREF;	// ROM 0x0063aa78 RSSYMconfigurations
-Ref RSSYMconfirmed = NILREF;	// ROM 0x0063aa80 RSSYMconfirmed
-Ref RSSYMconfirming = NILREF;	// ROM 0x0063aa88 RSSYMconfirming
-Ref RSSYMconnaddchangedsoup = NILREF;	// ROM 0x0063aa90 RSSYMconnaddchangedsoup
-Ref RSSYMconncobject = NILREF;	// ROM 0x0063aa98 RSSYMconncobject
-Ref RSSYMconnect = NILREF;	// ROM 0x0063aaa0 RSSYMconnect
-Ref RSSYMconnected = NILREF;	// ROM 0x0063aaa8 RSSYMconnected
-Ref RSSYMconnecting = NILREF;	// ROM 0x0063aab0 RSSYMconnecting
-Ref RSSYMconnection = NILREF;	// ROM 0x0063aab8 RSSYMconnection
-Ref RSSYMconnectionextensions = NILREF;	// ROM 0x0063aac0 RSSYMconnectionextensions
-Ref RSSYMconnectoptions = NILREF;	// ROM 0x0063aac8 RSSYMconnectoptions
-Ref RSSYMconnecttimeout = NILREF;	// ROM 0x0063aad0 RSSYMconnecttimeout
-Ref RSSYMconnsendchanges = NILREF;	// ROM 0x0063aad8 RSSYMconnsendchanges
-Ref RSSYMconstantfunctions = NILREF;	// ROM 0x0063aae0 RSSYMconstantfunctions
-Ref RSSYMconstructor = NILREF;	// ROM 0x0063aae8 RSSYMconstructor
-Ref RSSYMcontentarea = NILREF;	// ROM 0x0063aaf0 RSSYMcontentarea
-Ref RSSYMcontents = NILREF;	// ROM 0x0063aaf8 RSSYMcontents
-Ref RSSYMcontext = NILREF;	// ROM 0x0063ab00 RSSYMcontext
-Ref RSSYMcontextframe = NILREF;	// ROM 0x0063ab08 RSSYMcontextframe
-Ref RSSYMconversionerror = NILREF;	// ROM 0x0063ab10 RSSYMconversionerror
-Ref RSSYMconvert1_2Excard_3F = NILREF;	// ROM 0x0063ab18 RSSYMconvert1_2Excard_3F
-Ref RSSYMconvert1_2Exstore = NILREF;	// ROM 0x0063ab20 RSSYMconvert1_2Exstore
-Ref RSSYMconvertdroptoshape = NILREF;	// ROM 0x0063ab28 RSSYMconvertdroptoshape
-Ref RSSYMconvertframe = NILREF;	// ROM 0x0063ab30 RSSYMconvertframe
-Ref RSSYMcopperfield = NILREF;	// ROM 0x0063ab38 RSSYMcopperfield
-Ref RSSYMcopyentries = NILREF;	// ROM 0x0063ab40 RSSYMcopyentries
-Ref RSSYMcopyprotection = NILREF;	// ROM 0x0063ab48 RSSYMcopyprotection
-Ref RSSYMcopyright = NILREF;	// ROM 0x0063ab50 RSSYMcopyright
-Ref RSSYMcorrect = NILREF;	// ROM 0x0063ab58 RSSYMcorrect
-Ref RSSYMcorrectinfo = NILREF;	// ROM 0x0063ab60 RSSYMcorrectinfo
-Ref RSSYMcount = NILREF;	// ROM 0x0063ab68 RSSYMcount
-Ref RSSYMcountry = NILREF;	// ROM 0x0063ab70 RSSYMcountry
-Ref RSSYMcountrycode = NILREF;	// ROM 0x0063ab78 RSSYMcountrycode
-Ref RSSYMcoverform = NILREF;	// ROM 0x0063ab80 RSSYMcoverform
-Ref RSSYMcpuspeed = NILREF;	// ROM 0x0063ab88 RSSYMcpuspeed
-Ref RSSYMcputype = NILREF;	// ROM 0x0063ab90 RSSYMcputype
-Ref RSSYMcreategetsoup = NILREF;	// ROM 0x0063ab98 RSSYMcreategetsoup
-Ref RSSYMcreateusoupmember = NILREF;	// ROM 0x0063aba0 RSSYMcreateusoupmember
-Ref RSSYMcreationdate = NILREF;	// ROM 0x0063aba8 RSSYMcreationdate
-Ref RSSYMcreator = NILREF;	// ROM 0x0063abb0 RSSYMcreator
-Ref RSSYMcreditcard = NILREF;	// ROM 0x0063abb8 RSSYMcreditcard
-Ref RSSYMcreditexper = NILREF;	// ROM 0x0063abc0 RSSYMcreditexper
-Ref RSSYMcreditnumber = NILREF;	// ROM 0x0063abc8 RSSYMcreditnumber
-Ref RSSYMcribnote = NILREF;	// ROM 0x0063abd0 RSSYMcribnote
-Ref RSSYMcupage = NILREF;	// ROM 0x0063abd8 RSSYMcupage
-Ref RSSYMcurascent = NILREF;	// ROM 0x0063abe0 RSSYMcurascent
-Ref RSSYMcurdescent = NILREF;	// ROM 0x0063abe8 RSSYMcurdescent
-Ref RSSYMcurfontsize = NILREF;	// ROM 0x0063abf0 RSSYMcurfontsize
-Ref RSSYMcurheight = NILREF;	// ROM 0x0063abf8 RSSYMcurheight
-Ref RSSYMcurpage = NILREF;	// ROM 0x0063ac00 RSSYMcurpage
-Ref RSSYMcurpensize = NILREF;	// ROM 0x0063ac08 RSSYMcurpensize
-Ref RSSYMcurrencyprefix = NILREF;	// ROM 0x0063ac10 RSSYMcurrencyprefix
-Ref RSSYMcurrencysuffix = NILREF;	// ROM 0x0063ac18 RSSYMcurrencysuffix
-Ref RSSYMcurrendering = NILREF;	// ROM 0x0063ac20 RSSYMcurrendering
-Ref RSSYMcurrentcountry = NILREF;	// ROM 0x0063ac28 RSSYMcurrentcountry
-Ref RSSYMcurrententry = NILREF;	// ROM 0x0063ac30 RSSYMcurrententry
-Ref RSSYMcurrentformat = NILREF;	// ROM 0x0063ac38 RSSYMcurrentformat
-Ref RSSYMcurrentline = NILREF;	// ROM 0x0063ac40 RSSYMcurrentline
-Ref RSSYMcurrentlocalebundle = NILREF;	// ROM 0x0063ac48 RSSYMcurrentlocalebundle
-Ref RSSYMcurrentpartnumber = NILREF;	// ROM 0x0063ac50 RSSYMcurrentpartnumber
-Ref RSSYMcurrentwordrecognizer = NILREF;	// ROM 0x0063ac58 RSSYMcurrentwordrecognizer
-Ref RSSYMcursor = NILREF;	// ROM 0x0063ac60 RSSYMcursor
-Ref RSSYMcursors = NILREF;	// ROM 0x0063ac68 RSSYMcursors
-Ref RSSYMcurtopic = NILREF;	// ROM 0x0063ac70 RSSYMcurtopic
-Ref RSSYMcurveshapeoption = NILREF;	// ROM 0x0063ac78 RSSYMcurveshapeoption
-Ref RSSYMcurwidth = NILREF;	// ROM 0x0063ac80 RSSYMcurwidth
-Ref RSSYMcurxheight = NILREF;	// ROM 0x0063ac88 RSSYMcurxheight
-Ref RSSYMcustom = NILREF;	// ROM 0x0063ac90 RSSYMcustom
-Ref RSSYMdata = NILREF;	// ROM 0x0063ac98 RSSYMdata
-Ref RSSYMdatabits = NILREF;	// ROM 0x0063aca0 RSSYMdatabits
-Ref RSSYMdatabounds = NILREF;	// ROM 0x0063aca8 RSSYMdatabounds
-Ref RSSYMdatalen = NILREF;	// ROM 0x0063acb0 RSSYMdatalen
-Ref RSSYMdataoffset = NILREF;	// ROM 0x0063acb8 RSSYMdataoffset
-Ref RSSYMdatatext = NILREF;	// ROM 0x0063acc0 RSSYMdatatext
-Ref RSSYMdatatype = NILREF;	// ROM 0x0063acc8 RSSYMdatatype
-Ref RSSYMdate = NILREF;	// ROM 0x0063acd0 RSSYMdate
-Ref RSSYMdatedictionary = NILREF;	// ROM 0x0063acd8 RSSYMdatedictionary
-Ref RSSYMdatekeyboard = NILREF;	// ROM 0x0063ace0 RSSYMdatekeyboard
-Ref RSSYMdatesfont = NILREF;	// ROM 0x0063ace8 RSSYMdatesfont
-Ref RSSYMdatestr = NILREF;	// ROM 0x0063acf0 RSSYMdatestr
-Ref RSSYMdayheight = NILREF;	// ROM 0x0063acf8 RSSYMdayheight
-Ref RSSYMdayleadingz = NILREF;	// ROM 0x0063ad00 RSSYMdayleadingz
-Ref RSSYMdaylightsavings = NILREF;	// ROM 0x0063ad08 RSSYMdaylightsavings
-Ref RSSYMdayofweeek = NILREF;	// ROM 0x0063ad10 RSSYMdayofweeek
-Ref RSSYMdayofweek = NILREF;	// ROM 0x0063ad18 RSSYMdayofweek
-Ref RSSYMdayphone = NILREF;	// ROM 0x0063ad20 RSSYMdayphone
-Ref RSSYMdaysinmonth = NILREF;	// ROM 0x0063ad28 RSSYMdaysinmonth
-Ref RSSYMdaystrspec = NILREF;	// ROM 0x0063ad30 RSSYMdaystrspec
-Ref RSSYMdebug = NILREF;	// ROM 0x0063ad38 RSSYMdebug
-Ref RSSYMdebuggerinfo = NILREF;	// ROM 0x0063ad40 RSSYMdebuggerinfo
-Ref RSSYMdebugslot = NILREF;	// ROM 0x0063ad48 RSSYMdebugslot
-Ref RSSYMdecimalpoint = NILREF;	// ROM 0x0063ad50 RSSYMdecimalpoint
-Ref RSSYMdeclareself = NILREF;	// ROM 0x0063ad58 RSSYMdeclareself
-Ref RSSYMdeepcount = NILREF;	// ROM 0x0063ad60 RSSYMdeepcount
-Ref RSSYMdeepfoundcount = NILREF;	// ROM 0x0063ad68 RSSYMdeepfoundcount
-Ref RSSYMdeeptoast = NILREF;	// ROM 0x0063ad70 RSSYMdeeptoast
-Ref RSSYMdefault = NILREF;	// ROM 0x0063ad78 RSSYMdefault
-Ref RSSYMdefaultfontspec = NILREF;	// ROM 0x0063ad80 RSSYMdefaultfontspec
-Ref RSSYMdefaultstore = NILREF;	// ROM 0x0063ad88 RSSYMdefaultstore
-Ref RSSYMdefault_task = NILREF;	// ROM 0x0063ad90 RSSYMdefault_task
-Ref RSSYMdeferredrec = NILREF;	// ROM 0x0063ad98 RSSYMdeferredrec
-Ref RSSYMdefglobalfn = NILREF;	// ROM 0x0063ada0 RSSYMdefglobalfn
-Ref RSSYMdeleted = NILREF;	// ROM 0x0063ada8 RSSYMdeleted
-Ref RSSYMdeleteencodedword = NILREF;	// ROM 0x0063adb0 RSSYMdeleteencodedword
-Ref RSSYMdeletionscript = NILREF;	// ROM 0x0063adb8 RSSYMdeletionscript
-Ref RSSYMdepth = NILREF;	// ROM 0x0063adc0 RSSYMdepth
-Ref RSSYMdescent = NILREF;	// ROM 0x0063adc8 RSSYMdescent
-Ref RSSYMdeskey = NILREF;	// ROM 0x0063add0 RSSYMdeskey
-Ref RSSYMdesktopapps = NILREF;	// ROM 0x0063add8 RSSYMdesktopapps
-Ref RSSYMdesktoperror = NILREF;	// ROM 0x0063ade0 RSSYMdesktoperror
-Ref RSSYMdesktopresult = NILREF;	// ROM 0x0063ade8 RSSYMdesktopresult
-Ref RSSYMdestructor = NILREF;	// ROM 0x0063adf0 RSSYMdestructor
-Ref RSSYMdetectbusy = NILREF;	// ROM 0x0063adf8 RSSYMdetectbusy
-Ref RSSYMdetectdialtone = NILREF;	// ROM 0x0063ae00 RSSYMdetectdialtone
-Ref RSSYMdevice = NILREF;	// ROM 0x0063ae08 RSSYMdevice
-Ref RSSYMdeviceid = NILREF;	// ROM 0x0063ae10 RSSYMdeviceid
-Ref RSSYMdevicekind = NILREF;	// ROM 0x0063ae18 RSSYMdevicekind
-Ref RSSYMdevicenumber = NILREF;	// ROM 0x0063ae20 RSSYMdevicenumber
-Ref RSSYMdialing = NILREF;	// ROM 0x0063ae28 RSSYMdialing
-Ref RSSYMdialnavigate = NILREF;	// ROM 0x0063ae30 RSSYMdialnavigate
-Ref RSSYMdialnavigator = NILREF;	// ROM 0x0063ae38 RSSYMdialnavigator
-Ref RSSYMdict = NILREF;	// ROM 0x0063ae40 RSSYMdict
-Ref RSSYMdictdata = NILREF;	// ROM 0x0063ae48 RSSYMdictdata
-Ref RSSYMdictid = NILREF;	// ROM 0x0063ae50 RSSYMdictid
-Ref RSSYMdictionaries = NILREF;	// ROM 0x0063ae58 RSSYMdictionaries
-Ref RSSYMdictionarylist = NILREF;	// ROM 0x0063ae60 RSSYMdictionarylist
-Ref RSSYMdicttype = NILREF;	// ROM 0x0063ae68 RSSYMdicttype
-Ref RSSYMdirection = NILREF;	// ROM 0x0063ae70 RSSYMdirection
-Ref RSSYMdirsortid = NILREF;	// ROM 0x0063ae78 RSSYMdirsortid
-Ref RSSYMdirty = NILREF;	// ROM 0x0063ae80 RSSYMdirty
-Ref RSSYMdisabled = NILREF;	// ROM 0x0063ae88 RSSYMdisabled
-Ref RSSYMdiscardafter = NILREF;	// ROM 0x0063ae90 RSSYMdiscardafter
-Ref RSSYMdischarging = NILREF;	// ROM 0x0063ae98 RSSYMdischarging
-Ref RSSYMdisconnect = NILREF;	// ROM 0x0063aea0 RSSYMdisconnect
-Ref RSSYMdisconnecting = NILREF;	// ROM 0x0063aea8 RSSYMdisconnecting
-Ref RSSYMdisksoup = NILREF;	// ROM 0x0063aeb0 RSSYMdisksoup
-Ref RSSYMdispatchonly = NILREF;	// ROM 0x0063aeb8 RSSYMdispatchonly
-Ref RSSYMdisplayimportslip = NILREF;	// ROM 0x0063aec0 RSSYMdisplayimportslip
-Ref RSSYMdisplayparams = NILREF;	// ROM 0x0063aec8 RSSYMdisplayparams
-Ref RSSYMdisplayslip = NILREF;	// ROM 0x0063aed0 RSSYMdisplayslip
-Ref RSSYMdisposedictionary = NILREF;	// ROM 0x0063aed8 RSSYMdisposedictionary
-Ref RSSYMdistance = NILREF;	// ROM 0x0063aee0 RSSYMdistance
-Ref RSSYMditherpattern = NILREF;	// ROM 0x0063aee8 RSSYMditherpattern
-Ref RSSYMdiv = NILREF;	// ROM 0x0063aef0 RSSYMdiv
-Ref RSSYMdoautoadd = NILREF;	// ROM 0x0063aef8 RSSYMdoautoadd
-Ref RSSYMdocorrection = NILREF;	// ROM 0x0063af00 RSSYMdocorrection
-Ref RSSYMdocstring = NILREF;	// ROM 0x0063af08 RSSYMdocstring
-Ref RSSYMdoformularecognition = NILREF;	// ROM 0x0063af10 RSSYMdoformularecognition
-Ref RSSYMdofragmentation = NILREF;	// ROM 0x0063af18 RSSYMdofragmentation
-Ref RSSYMdohilite = NILREF;	// ROM 0x0063af20 RSSYMdohilite
-Ref RSSYMdoingscrub = NILREF;	// ROM 0x0063af28 RSSYMdoingscrub
-Ref RSSYMdoinkwordrecognition = NILREF;	// ROM 0x0063af30 RSSYMdoinkwordrecognition
-Ref RSSYMdomaintype = NILREF;	// ROM 0x0063af38 RSSYMdomaintype
-Ref RSSYMdon_27tactivate = NILREF;	// ROM 0x0063af40 RSSYMdon_27tactivate
-Ref RSSYMdontbackup = NILREF;	// ROM 0x0063af48 RSSYMdontbackup
-Ref RSSYMdorawinkrecognition = NILREF;	// ROM 0x0063af50 RSSYMdorawinkrecognition
-Ref RSSYMdoshaperecognition = NILREF;	// ROM 0x0063af58 RSSYMdoshaperecognition
-Ref RSSYMdotextrecognition = NILREF;	// ROM 0x0063af60 RSSYMdotextrecognition
-Ref RSSYMdown = NILREF;	// ROM 0x0063af68 RSSYMdown
-Ref RSSYMdragoptions = NILREF;	// ROM 0x0063af70 RSSYMdragoptions
-Ref RSSYMdragref = NILREF;	// ROM 0x0063af78 RSSYMdragref
-Ref RSSYMdragto = NILREF;	// ROM 0x0063af80 RSSYMdragto
-Ref RSSYMdrawfillmode = NILREF;	// ROM 0x0063af88 RSSYMdrawfillmode
-Ref RSSYMdrawing = NILREF;	// ROM 0x0063af90 RSSYMdrawing
-Ref RSSYMdrawpenmode = NILREF;	// ROM 0x0063af98 RSSYMdrawpenmode
-Ref RSSYMdrawpensizex = NILREF;	// ROM 0x0063afa0 RSSYMdrawpensizex
-Ref RSSYMdrawpensizey = NILREF;	// ROM 0x0063afa8 RSSYMdrawpensizey
-Ref RSSYMdrivername = NILREF;	// ROM 0x0063afb0 RSSYMdrivername
-Ref RSSYMdropicon = NILREF;	// ROM 0x0063afb8 RSSYMdropicon
-Ref RSSYMdsquery = NILREF;	// ROM 0x0063afc0 RSSYMdsquery
-Ref RSSYMdteheader = NILREF;	// ROM 0x0063afc8 RSSYMdteheader
-Ref RSSYMdtemain = NILREF;	// ROM 0x0063afd0 RSSYMdtemain
-Ref RSSYMdtetrigrams = NILREF;	// ROM 0x0063afd8 RSSYMdtetrigrams
-Ref RSSYMdtmftonedialing = NILREF;	// ROM 0x0063afe0 RSSYMdtmftonedialing
-Ref RSSYMduh = NILREF;	// ROM 0x0063afe8 RSSYMduh
-Ref RSSYMdynamic = NILREF;	// ROM 0x0063aff0 RSSYMdynamic
-Ref RSSYMdynatemplates = NILREF;	// ROM 0x0063aff8 RSSYMdynatemplates
-Ref RSSYMedgewidth = NILREF;	// ROM 0x0063b000 RSSYMedgewidth
-Ref RSSYMeditaddshapescript = NILREF;	// ROM 0x0063b008 RSSYMeditaddshapescript
-Ref RSSYMeditaddwordscript = NILREF;	// ROM 0x0063b010 RSSYMeditaddwordscript
-Ref RSSYMemail = NILREF;	// ROM 0x0063b018 RSSYMemail
-Ref RSSYMemptied = NILREF;	// ROM 0x0063b020 RSSYMemptied
-Ref RSSYMempty = NILREF;	// ROM 0x0063b028 RSSYMempty
-Ref RSSYMemptystring = NILREF;	// ROM 0x0063b030 RSSYMemptystring
-Ref RSSYMenabledlanguage = NILREF;	// ROM 0x0063b038 RSSYMenabledlanguage
-Ref RSSYMencoded = NILREF;	// ROM 0x0063b040 RSSYMencoded
-Ref RSSYMencoding = NILREF;	// ROM 0x0063b048 RSSYMencoding
-Ref RSSYMencodingid = NILREF;	// ROM 0x0063b050 RSSYMencodingid
-Ref RSSYMend = NILREF;	// ROM 0x0063b058 RSSYMend
-Ref RSSYMendchar = NILREF;	// ROM 0x0063b060 RSSYMendchar
-Ref RSSYMendcharacter = NILREF;	// ROM 0x0063b068 RSSYMendcharacter
-Ref RSSYMendexclkey = NILREF;	// ROM 0x0063b070 RSSYMendexclkey
-Ref RSSYMendkey = NILREF;	// ROM 0x0063b078 RSSYMendkey
-Ref RSSYMendsequence = NILREF;	// ROM 0x0063b080 RSSYMendsequence
-Ref RSSYMendtest = NILREF;	// ROM 0x0063b088 RSSYMendtest
-Ref RSSYMendtime = NILREF;	// ROM 0x0063b090 RSSYMendtime
-Ref RSSYMentirewords = NILREF;	// ROM 0x0063b098 RSSYMentirewords
-Ref RSSYMentries = NILREF;	// ROM 0x0063b0a0 RSSYMentries
-Ref RSSYMentry = NILREF;	// ROM 0x0063b0a8 RSSYMentry
-Ref RSSYMentryaccess = NILREF;	// ROM 0x0063b0b0 RSSYMentryaccess
-Ref RSSYMentryadded = NILREF;	// ROM 0x0063b0b8 RSSYMentryadded
-Ref RSSYMentrychange = NILREF;	// ROM 0x0063b0c0 RSSYMentrychange
-Ref RSSYMentrychanged = NILREF;	// ROM 0x0063b0c8 RSSYMentrychanged
-Ref RSSYMentrychangeverbatim = NILREF;	// ROM 0x0063b0d0 RSSYMentrychangeverbatim
-Ref RSSYMentrychangewithmodtime = NILREF;	// ROM 0x0063b0d8 RSSYMentrychangewithmodtime
-Ref RSSYMentrycopy = NILREF;	// ROM 0x0063b0e0 RSSYMentrycopy
-Ref RSSYMentryline = NILREF;	// ROM 0x0063b0e8 RSSYMentryline
-Ref RSSYMentrymodtime = NILREF;	// ROM 0x0063b0f0 RSSYMentrymodtime
-Ref RSSYMentrymove = NILREF;	// ROM 0x0063b0f8 RSSYMentrymove
-Ref RSSYMentrymoved = NILREF;	// ROM 0x0063b100 RSSYMentrymoved
-Ref RSSYMentryremoved = NILREF;	// ROM 0x0063b108 RSSYMentryremoved
-Ref RSSYMentryremovefromsoup = NILREF;	// ROM 0x0063b110 RSSYMentryremovefromsoup
-Ref RSSYMentryreplace = NILREF;	// ROM 0x0063b118 RSSYMentryreplace
-Ref RSSYMentryreplaced = NILREF;	// ROM 0x0063b120 RSSYMentryreplaced
-Ref RSSYMentryreplacewithmodtime = NILREF;	// ROM 0x0063b128 RSSYMentryreplacewithmodtime
-Ref RSSYMentrysize = NILREF;	// ROM 0x0063b130 RSSYMentrysize
-Ref RSSYMentrysoup = NILREF;	// ROM 0x0063b138 RSSYMentrysoup
-Ref RSSYMentrystore = NILREF;	// ROM 0x0063b140 RSSYMentrystore
-Ref RSSYMentrytextsize = NILREF;	// ROM 0x0063b148 RSSYMentrytextsize
-Ref RSSYMentryundochanges = NILREF;	// ROM 0x0063b150 RSSYMentryundochanges
-Ref RSSYMentryuniqueid = NILREF;	// ROM 0x0063b158 RSSYMentryuniqueid
-Ref RSSYMentryvalid = NILREF;	// ROM 0x0063b160 RSSYMentryvalid
-Ref RSSYMep = NILREF;	// ROM 0x0063b168 RSSYMep
-Ref RSSYMephemerals = NILREF;	// ROM 0x0063b170 RSSYMephemerals
-Ref RSSYMequal = NILREF;	// ROM 0x0063b178 RSSYMequal
-Ref RSSYMerror = NILREF;	// ROM 0x0063b180 RSSYMerror
-Ref RSSYMerrorcode = NILREF;	// ROM 0x0063b188 RSSYMerrorcode
-Ref RSSYMerrorfree = NILREF;	// ROM 0x0063b190 RSSYMerrorfree
-Ref RSSYMerrorgauge = NILREF;	// ROM 0x0063b198 RSSYMerrorgauge
-Ref RSSYMerrorstring = NILREF;	// ROM 0x0063b1a0 RSSYMerrorstring
-Ref RSSYMespy = NILREF;	// ROM 0x0063b1a8 RSSYMespy
-Ref RSSYMeveningstr = NILREF;	// ROM 0x0063b1b0 RSSYMeveningstr
-Ref RSSYMeventcode = NILREF;	// ROM 0x0063b1b8 RSSYMeventcode
-Ref RSSYMeventhandler = NILREF;	// ROM 0x0063b1c0 RSSYMeventhandler
-Ref RSSYMevents = NILREF;	// ROM 0x0063b1c8 RSSYMevents
-Ref RSSYMexception = NILREF;	// ROM 0x0063b1d0 RSSYMexception
-Ref RSSYMexceptionhandler = NILREF;	// ROM 0x0063b1d8 RSSYMexceptionhandler
-Ref RSSYMexceptionmeeting = NILREF;	// ROM 0x0063b1e0 RSSYMexceptionmeeting
-Ref RSSYMexceptions = NILREF;	// ROM 0x0063b1e8 RSSYMexceptions
-Ref RSSYMexpanddirectoryentry = NILREF;	// ROM 0x0063b1f0 RSSYMexpanddirectoryentry
-Ref RSSYMexpandsettings = NILREF;	// ROM 0x0063b1f8 RSSYMexpandsettings
-Ref RSSYMexport = NILREF;	// ROM 0x0063b200 RSSYMexport
-Ref RSSYMexporttable = NILREF;	// ROM 0x0063b208 RSSYMexporttable
-Ref RSSYMextrasdrawer = NILREF;	// ROM 0x0063b210 RSSYMextrasdrawer
-Ref RSSYMextrasstate = NILREF;	// ROM 0x0063b218 RSSYMextrasstate
-Ref RSSYMface = NILREF;	// ROM 0x0063b220 RSSYMface
-Ref RSSYMfamily = NILREF;	// ROM 0x0063b228 RSSYMfamily
-Ref RSSYMfastcharging = NILREF;	// ROM 0x0063b230 RSSYMfastcharging
-Ref RSSYMfastvalidtest = NILREF;	// ROM 0x0063b238 RSSYMfastvalidtest
-Ref RSSYMfaxnavigate = NILREF;	// ROM 0x0063b240 RSSYMfaxnavigate
-Ref RSSYMfaxnavigator = NILREF;	// ROM 0x0063b248 RSSYMfaxnavigator
-Ref RSSYMfaxresolution = NILREF;	// ROM 0x0063b250 RSSYMfaxresolution
-Ref RSSYMfields = NILREF;	// ROM 0x0063b258 RSSYMfields
-Ref RSSYMfilename = NILREF;	// ROM 0x0063b260 RSSYMfilename
-Ref RSSYMfilesize = NILREF;	// ROM 0x0063b268 RSSYMfilesize
-Ref RSSYMfiletransferstatus = NILREF;	// ROM 0x0063b270 RSSYMfiletransferstatus
-Ref RSSYMfillpattern = NILREF;	// ROM 0x0063b278 RSSYMfillpattern
-Ref RSSYMfilter = NILREF;	// ROM 0x0063b280 RSSYMfilter
-Ref RSSYMfindapps = NILREF;	// ROM 0x0063b288 RSSYMfindapps
-Ref RSSYMfindcustomdicts = NILREF;	// ROM 0x0063b290 RSSYMfindcustomdicts
-Ref RSSYMfinddrawer = NILREF;	// ROM 0x0063b298 RSSYMfinddrawer
-Ref RSSYMfirst = NILREF;	// ROM 0x0063b2a0 RSSYMfirst
-Ref RSSYMfirstdayofweek = NILREF;	// ROM 0x0063b2a8 RSSYMfirstdayofweek
-Ref RSSYMfirstname = NILREF;	// ROM 0x0063b2b0 RSSYMfirstname
-Ref RSSYMfirstnamephonetic = NILREF;	// ROM 0x0063b2b8 RSSYMfirstnamephonetic
-Ref RSSYMfirstpage = NILREF;	// ROM 0x0063b2c0 RSSYMfirstpage
-Ref RSSYMfirsttopic = NILREF;	// ROM 0x0063b2c8 RSSYMfirsttopic
-Ref RSSYMfirstword = NILREF;	// ROM 0x0063b2d0 RSSYMfirstword
-Ref RSSYMfixed = NILREF;	// ROM 0x0063b2d8 RSSYMfixed
-Ref RSSYMfixedheight = NILREF;	// ROM 0x0063b2e0 RSSYMfixedheight
-Ref RSSYMflags = NILREF;	// ROM 0x0063b2e8 RSSYMflags
-Ref RSSYMflashcardbadvpp = NILREF;	// ROM 0x0063b2f0 RSSYMflashcardbadvpp
-Ref RSSYMflattener = NILREF;	// ROM 0x0063b2f8 RSSYMflattener
-Ref RSSYMfliphorizontal = NILREF;	// ROM 0x0063b300 RSSYMfliphorizontal
-Ref RSSYMflipvertical = NILREF;	// ROM 0x0063b308 RSSYMflipvertical
-Ref RSSYMfloating = NILREF;	// ROM 0x0063b310 RSSYMfloating
-Ref RSSYMflush = NILREF;	// ROM 0x0063b318 RSSYMflush
-Ref RSSYMflushappchanges = NILREF;	// ROM 0x0063b320 RSSYMflushappchanges
-Ref RSSYMfont = NILREF;	// ROM 0x0063b328 RSSYMfont
-Ref RSSYMfontface = NILREF;	// ROM 0x0063b330 RSSYMfontface
-Ref RSSYMfontparms = NILREF;	// ROM 0x0063b338 RSSYMfontparms
-Ref RSSYMfonts = NILREF;	// ROM 0x0063b340 RSSYMfonts
-Ref RSSYMfoo = NILREF;	// ROM 0x0063b348 RSSYMfoo
-Ref RSSYMforeachstate = NILREF;	// ROM 0x0063b350 RSSYMforeachstate
-Ref RSSYMforeground = NILREF;	// ROM 0x0063b358 RSSYMforeground
-Ref RSSYMform = NILREF;	// ROM 0x0063b360 RSSYMform
-Ref RSSYMformat = NILREF;	// ROM 0x0063b368 RSSYMformat
-Ref RSSYMformat_3F = NILREF;	// ROM 0x0063b370 RSSYMformat_3F
-Ref RSSYMformataftermounterror_3F = NILREF;	// ROM 0x0063b378 RSSYMformataftermounterror_3F
-Ref RSSYMformatbadvppcard = NILREF;	// ROM 0x0063b380 RSSYMformatbadvppcard
-Ref RSSYMformatlockedcard = NILREF;	// ROM 0x0063b388 RSSYMformatlockedcard
-Ref RSSYMformatwithextremeprejudice_3F = NILREF;	// ROM 0x0063b390 RSSYMformatwithextremeprejudice_3F
-Ref RSSYMformhilitescript = NILREF;	// ROM 0x0063b398 RSSYMformhilitescript
-Ref RSSYMformsearchscript = NILREF;	// ROM 0x0063b3a0 RSSYMformsearchscript
-Ref RSSYMfound = NILREF;	// ROM 0x0063b3a8 RSSYMfound
-Ref RSSYMfoundcount = NILREF;	// ROM 0x0063b3b0 RSSYMfoundcount
-Ref RSSYMfpatch = NILREF;	// ROM 0x0063b3b8 RSSYMfpatch
-Ref RSSYMfpatchchecksum = NILREF;	// ROM 0x0063b3c0 RSSYMfpatchchecksum
-Ref RSSYMfpatchfirstpageindex = NILREF;	// ROM 0x0063b3c8 RSSYMfpatchfirstpageindex
-Ref RSSYMfpatchpagecount = NILREF;	// ROM 0x0063b3d0 RSSYMfpatchpagecount
-Ref RSSYMfpatchversion = NILREF;	// ROM 0x0063b3d8 RSSYMfpatchversion
-Ref RSSYMframe = NILREF;	// ROM 0x0063b3e0 RSSYMframe
-Ref RSSYMframeparameter = NILREF;	// ROM 0x0063b3e8 RSSYMframeparameter
-Ref RSSYMfromemailaddress = NILREF;	// ROM 0x0063b3f0 RSSYMfromemailaddress
-Ref RSSYMfromname = NILREF;	// ROM 0x0063b3f8 RSSYMfromname
-Ref RSSYMftotalpatchpagecount = NILREF;	// ROM 0x0063b400 RSSYMftotalpatchpagecount
-Ref RSSYMfull = NILREF;	// ROM 0x0063b408 RSSYMfull
-Ref RSSYMfullycharged = NILREF;	// ROM 0x0063b410 RSSYMfullycharged
-Ref RSSYMfuncptr = NILREF;	// ROM 0x0063b418 RSSYMfuncptr
-Ref RSSYMfunction = NILREF;	// ROM 0x0063b420 RSSYMfunction
-Ref RSSYMfunctions = NILREF;	// ROM 0x0063b428 RSSYMfunctions
-Ref RSSYMgauge = NILREF;	// ROM 0x0063b430 RSSYMgauge
-Ref RSSYMgaugedrawlimits = NILREF;	// ROM 0x0063b438 RSSYMgaugedrawlimits
-Ref RSSYMgeckohdihelp = NILREF;	// ROM 0x0063b440 RSSYMgeckohdihelp
-Ref RSSYMgeneva = NILREF;	// ROM 0x0063b448 RSSYMgeneva
-Ref RSSYMgetallinfo = NILREF;	// ROM 0x0063b450 RSSYMgetallinfo
-Ref RSSYMgetbackupallpackagescursor = NILREF;	// ROM 0x0063b458 RSSYMgetbackupallpackagescursor
-Ref RSSYMgetbitmapinfo = NILREF;	// ROM 0x0063b460 RSSYMgetbitmapinfo
-Ref RSSYMgetconversionframe = NILREF;	// ROM 0x0063b468 RSSYMgetconversionframe
-Ref RSSYMgetcountryentry = NILREF;	// ROM 0x0063b470 RSSYMgetcountryentry
-Ref RSSYMgetcurrentmodemsetup = NILREF;	// ROM 0x0063b478 RSSYMgetcurrentmodemsetup
-Ref RSSYMgetdefaultownerstore = NILREF;	// ROM 0x0063b480 RSSYMgetdefaultownerstore
-Ref RSSYMgetdefaultstore = NILREF;	// ROM 0x0063b488 RSSYMgetdefaultstore
-Ref RSSYMgetindexes = NILREF;	// ROM 0x0063b490 RSSYMgetindexes
-Ref RSSYMgetinfo = NILREF;	// ROM 0x0063b498 RSSYMgetinfo
-Ref RSSYMgetlibraryentry = NILREF;	// ROM 0x0063b4a0 RSSYMgetlibraryentry
-Ref RSSYMgetname = NILREF;	// ROM 0x0063b4a8 RSSYMgetname
-Ref RSSYMgetnextuid = NILREF;	// ROM 0x0063b4b0 RSSYMgetnextuid
-Ref RSSYMgetnotesdata = NILREF;	// ROM 0x0063b4b8 RSSYMgetnotesdata
-Ref RSSYMgetownerapp = NILREF;	// ROM 0x0063b4c0 RSSYMgetownerapp
-Ref RSSYMgetpackageentry = NILREF;	// ROM 0x0063b4c8 RSSYMgetpackageentry
-Ref RSSYMgetpassword = NILREF;	// ROM 0x0063b4d0 RSSYMgetpassword
-Ref RSSYMgetregisteredsound = NILREF;	// ROM 0x0063b4d8 RSSYMgetregisteredsound
-Ref RSSYMgetroot = NILREF;	// ROM 0x0063b4e0 RSSYMgetroot
-Ref RSSYMgetsignature = NILREF;	// ROM 0x0063b4e8 RSSYMgetsignature
-Ref RSSYMgetstore = NILREF;	// ROM 0x0063b4f0 RSSYMgetstore
-Ref RSSYMgetuserconfig = NILREF;	// ROM 0x0063b4f8 RSSYMgetuserconfig
-Ref RSSYMgetview = NILREF;	// ROM 0x0063b500 RSSYMgetview
-Ref RSSYMgmt = NILREF;	// ROM 0x0063b508 RSSYMgmt
-Ref RSSYMgotosleep = NILREF;	// ROM 0x0063b510 RSSYMgotosleep
-Ref RSSYMgraphics = NILREF;	// ROM 0x0063b518 RSSYMgraphics
-Ref RSSYMgraphicsgutter = NILREF;	// ROM 0x0063b520 RSSYMgraphicsgutter
-Ref RSSYMgravityshapeoption = NILREF;	// ROM 0x0063b528 RSSYMgravityshapeoption
-Ref RSSYMgraylevels = NILREF;	// ROM 0x0063b530 RSSYMgraylevels
-Ref RSSYMgraypattern = NILREF;	// ROM 0x0063b538 RSSYMgraypattern
-Ref RSSYMgroup = NILREF;	// ROM 0x0063b540 RSSYMgroup
-Ref RSSYMgroupsepstr = NILREF;	// ROM 0x0063b548 RSSYMgroupsepstr
-Ref RSSYMgroupwidth = NILREF;	// ROM 0x0063b550 RSSYMgroupwidth
-Ref RSSYMhandlecardevent = NILREF;	// ROM 0x0063b558 RSSYMhandlecardevent
-Ref RSSYMhandlecheck = NILREF;	// ROM 0x0063b560 RSSYMhandlecheck
-Ref RSSYMhandleerror = NILREF;	// ROM 0x0063b568 RSSYMhandleerror
-Ref RSSYMhandlescrub = NILREF;	// ROM 0x0063b570 RSSYMhandlescrub
-Ref RSSYMhandwriting = NILREF;	// ROM 0x0063b578 RSSYMhandwriting
-Ref RSSYMhardflowblocked = NILREF;	// ROM 0x0063b580 RSSYMhardflowblocked
-Ref RSSYMhasinput = NILREF;	// ROM 0x0063b588 RSSYMhasinput
-Ref RSSYMhasoutput = NILREF;	// ROM 0x0063b590 RSSYMhasoutput
-Ref RSSYMhaspath = NILREF;	// ROM 0x0063b598 RSSYMhaspath
-Ref RSSYMhasvar = NILREF;	// ROM 0x0063b5a0 RSSYMhasvar
-Ref RSSYMhasvariable = NILREF;	// ROM 0x0063b5a8 RSSYMhasvariable
-Ref RSSYMheader = NILREF;	// ROM 0x0063b5b0 RSSYMheader
-Ref RSSYMheaderversion = NILREF;	// ROM 0x0063b5b8 RSSYMheaderversion
-Ref RSSYMheight = NILREF;	// ROM 0x0063b5c0 RSSYMheight
-Ref RSSYMhelp = NILREF;	// ROM 0x0063b5c8 RSSYMhelp
-Ref RSSYMhelpbook = NILREF;	// ROM 0x0063b5d0 RSSYMhelpbook
-Ref RSSYMhidecount = NILREF;	// ROM 0x0063b5d8 RSSYMhidecount
-Ref RSSYMhidesound = NILREF;	// ROM 0x0063b5e0 RSSYMhidesound
-Ref RSSYMhigh = NILREF;	// ROM 0x0063b5e8 RSSYMhigh
-Ref RSSYMhighrom = NILREF;	// ROM 0x0063b5f0 RSSYMhighrom
-Ref RSSYMhilite = NILREF;	// ROM 0x0063b5f8 RSSYMhilite
-Ref RSSYMhilitebusy = NILREF;	// ROM 0x0063b600 RSSYMhilitebusy
-Ref RSSYMhilites = NILREF;	// ROM 0x0063b608 RSSYMhilites
-Ref RSSYMhints = NILREF;	// ROM 0x0063b610 RSSYMhints
-Ref RSSYMhistory = NILREF;	// ROM 0x0063b618 RSSYMhistory
-Ref RSSYMhomephone = NILREF;	// ROM 0x0063b620 RSSYMhomephone
-Ref RSSYMhour = NILREF;	// ROM 0x0063b628 RSSYMhour
-Ref RSSYMhourfont = NILREF;	// ROM 0x0063b630 RSSYMhourfont
-Ref RSSYMhourleadingz = NILREF;	// ROM 0x0063b638 RSSYMhourleadingz
-Ref RSSYMiaref = NILREF;	// ROM 0x0063b640 RSSYMiaref
-Ref RSSYMicon = NILREF;	// ROM 0x0063b648 RSSYMicon
-Ref RSSYMiconshape = NILREF;	// ROM 0x0063b650 RSSYMiconshape
-Ref RSSYMid = NILREF;	// ROM 0x0063b658 RSSYMid
-Ref RSSYMidle = NILREF;	// ROM 0x0063b660 RSSYMidle
-Ref RSSYMidleconnection = NILREF;	// ROM 0x0063b668 RSSYMidleconnection
-Ref RSSYMidletimeout = NILREF;	// ROM 0x0063b670 RSSYMidletimeout
-Ref RSSYMimagingname = NILREF;	// ROM 0x0063b678 RSSYMimagingname
-Ref RSSYMimmediate = NILREF;	// ROM 0x0063b680 RSSYMimmediate
-Ref RSSYMimplementor = NILREF;	// ROM 0x0063b688 RSSYMimplementor
-Ref RSSYMimport = NILREF;	// ROM 0x0063b690 RSSYMimport
-Ref RSSYMimporttable = NILREF;	// ROM 0x0063b698 RSSYMimporttable
-Ref RSSYMinbox = NILREF;	// ROM 0x0063b6a0 RSSYMinbox
-Ref RSSYMinboxstatustext = NILREF;	// ROM 0x0063b6a8 RSSYMinboxstatustext
-Ref RSSYMindent = NILREF;	// ROM 0x0063b6b0 RSSYMindent
-Ref RSSYMindex = NILREF;	// ROM 0x0063b6b8 RSSYMindex
-Ref RSSYMindexes = NILREF;	// ROM 0x0063b6c0 RSSYMindexes
-Ref RSSYMindexesmodtime = NILREF;	// ROM 0x0063b6c8 RSSYMindexesmodtime
-Ref RSSYMindexnextuid = NILREF;	// ROM 0x0063b6d0 RSSYMindexnextuid
-Ref RSSYMindexobjects = NILREF;	// ROM 0x0063b6d8 RSSYMindexobjects
-Ref RSSYMindexpath = NILREF;	// ROM 0x0063b6e0 RSSYMindexpath
-Ref RSSYMindexvalidtest = NILREF;	// ROM 0x0063b6e8 RSSYMindexvalidtest
-Ref RSSYMinfo = NILREF;	// ROM 0x0063b6f0 RSSYMinfo
-Ref RSSYMinfomodtime = NILREF;	// ROM 0x0063b6f8 RSSYMinfomodtime
-Ref RSSYMinhibitbaseromwrecregistration = NILREF;	// ROM 0x0063b700 RSSYMinhibitbaseromwrecregistration
-Ref RSSYMinhibitsymbolsdictionary = NILREF;	// ROM 0x0063b708 RSSYMinhibitsymbolsdictionary
-Ref RSSYMinitialized = NILREF;	// ROM 0x0063b710 RSSYMinitialized
-Ref RSSYMink = NILREF;	// ROM 0x0063b718 RSSYMink
-Ref RSSYMink2 = NILREF;	// ROM 0x0063b720 RSSYMink2
-Ref RSSYMinkmarks = NILREF;	// ROM 0x0063b728 RSSYMinkmarks
-Ref RSSYMinkprintingscale = NILREF;	// ROM 0x0063b730 RSSYMinkprintingscale
-Ref RSSYMinkword = NILREF;	// ROM 0x0063b738 RSSYMinkword
-Ref RSSYMinkwordscaling = NILREF;	// ROM 0x0063b740 RSSYMinkwordscaling
-Ref RSSYMinput = NILREF;	// ROM 0x0063b748 RSSYMinput
-Ref RSSYMinputdevice = NILREF;	// ROM 0x0063b750 RSSYMinputdevice
-Ref RSSYMinputform = NILREF;	// ROM 0x0063b758 RSSYMinputform
-Ref RSSYMinputgain = NILREF;	// ROM 0x0063b760 RSSYMinputgain
-Ref RSSYMinputmask = NILREF;	// ROM 0x0063b768 RSSYMinputmask
-Ref RSSYMinputscript = NILREF;	// ROM 0x0063b770 RSSYMinputscript
-Ref RSSYMinsertheight = NILREF;	// ROM 0x0063b778 RSSYMinsertheight
-Ref RSSYMinsertitems = NILREF;	// ROM 0x0063b780 RSSYMinsertitems
-Ref RSSYMinsertoffset = NILREF;	// ROM 0x0063b788 RSSYMinsertoffset
-Ref RSSYMinstallpart = NILREF;	// ROM 0x0063b790 RSSYMinstallpart
-Ref RSSYMinstallscript = NILREF;	// ROM 0x0063b798 RSSYMinstallscript
-Ref RSSYMinstancenotesdata = NILREF;	// ROM 0x0063b7a0 RSSYMinstancenotesdata
-Ref RSSYMinstructions = NILREF;	// ROM 0x0063b7a8 RSSYMinstructions
-Ref RSSYMint = NILREF;	// ROM 0x0063b7b0 RSSYMint
-Ref RSSYMinteger = NILREF;	// ROM 0x0063b7b8 RSSYMinteger
-Ref RSSYMinterconnect = NILREF;	// ROM 0x0063b7c0 RSSYMinterconnect
-Ref RSSYMinternal = NILREF;	// ROM 0x0063b7c8 RSSYMinternal
-Ref RSSYMinternalbuffersize = NILREF;	// ROM 0x0063b7d0 RSSYMinternalbuffersize
-Ref RSSYMinternational = NILREF;	// ROM 0x0063b7d8 RSSYMinternational
-Ref RSSYMiobox = NILREF;	// ROM 0x0063b7e0 RSSYMiobox
-Ref RSSYMiobusy = NILREF;	// ROM 0x0063b7e8 RSSYMiobusy
-Ref RSSYMirconnectrequest = NILREF;	// ROM 0x0063b7f0 RSSYMirconnectrequest
-Ref RSSYMisa = NILREF;	// ROM 0x0063b7f8 RSSYMisa
-Ref RSSYMisbn = NILREF;	// ROM 0x0063b800 RSSYMisbn
-Ref RSSYMiscopyprotected = NILREF;	// ROM 0x0063b808 RSSYMiscopyprotected
-Ref RSSYMisresult = NILREF;	// ROM 0x0063b810 RSSYMisresult
-Ref RSSYMisslotbusy = NILREF;	// ROM 0x0063b818 RSSYMisslotbusy
-Ref RSSYMitalic = NILREF;	// ROM 0x0063b820 RSSYMitalic
-Ref RSSYMitalicdata = NILREF;	// ROM 0x0063b828 RSSYMitalicdata
-Ref RSSYMitem = NILREF;	// ROM 0x0063b830 RSSYMitem
-Ref RSSYMitemchosen = NILREF;	// ROM 0x0063b838 RSSYMitemchosen
-Ref RSSYMitemcompleted = NILREF;	// ROM 0x0063b840 RSSYMitemcompleted
-Ref RSSYMitemcount = NILREF;	// ROM 0x0063b848 RSSYMitemcount
-Ref RSSYMitemmissing = NILREF;	// ROM 0x0063b850 RSSYMitemmissing
-Ref RSSYMitems = NILREF;	// ROM 0x0063b858 RSSYMitems
-Ref RSSYMjustification = NILREF;	// ROM 0x0063b860 RSSYMjustification
-Ref RSSYMkeepselectiononpaste = NILREF;	// ROM 0x0063b868 RSSYMkeepselectiononpaste
-Ref RSSYMkey = NILREF;	// ROM 0x0063b870 RSSYMkey
-Ref RSSYMkeyarrayindex = NILREF;	// ROM 0x0063b878 RSSYMkeyarrayindex
-Ref RSSYMkeyboard = NILREF;	// ROM 0x0063b880 RSSYMkeyboard
-Ref RSSYMkeycommand = NILREF;	// ROM 0x0063b888 RSSYMkeycommand
-Ref RSSYMkeycommands = NILREF;	// ROM 0x0063b890 RSSYMkeycommands
-Ref RSSYMkeydefinitions = NILREF;	// ROM 0x0063b898 RSSYMkeydefinitions
-Ref RSSYMkeyhighlightkeys = NILREF;	// ROM 0x0063b8a0 RSSYMkeyhighlightkeys
-Ref RSSYMkeymessage = NILREF;	// ROM 0x0063b8a8 RSSYMkeymessage
-Ref RSSYMkeypressscript = NILREF;	// ROM 0x0063b8b0 RSSYMkeypressscript
-Ref RSSYMkeyreceiverview = NILREF;	// ROM 0x0063b8b8 RSSYMkeyreceiverview
-Ref RSSYMkeyrepeatfrequency = NILREF;	// ROM 0x0063b8c0 RSSYMkeyrepeatfrequency
-Ref RSSYMkeyrepeatthreshold = NILREF;	// ROM 0x0063b8c8 RSSYMkeyrepeatthreshold
-Ref RSSYMkeyresultsarekeycodes = NILREF;	// ROM 0x0063b8d0 RSSYMkeyresultsarekeycodes
-Ref RSSYMkeysound = NILREF;	// ROM 0x0063b8d8 RSSYMkeysound
-Ref RSSYMkilometers = NILREF;	// ROM 0x0063b8e0 RSSYMkilometers
-Ref RSSYMkind = NILREF;	// ROM 0x0063b8e8 RSSYMkind
-Ref RSSYMknobpicture = NILREF;	// ROM 0x0063b8f0 RSSYMknobpicture
-Ref RSSYMlabel = NILREF;	// ROM 0x0063b8f8 RSSYMlabel
-Ref RSSYMlabelfont = NILREF;	// ROM 0x0063b900 RSSYMlabelfont
-Ref RSSYMlabels = NILREF;	// ROM 0x0063b908 RSSYMlabels
-Ref RSSYMlabelsfilter = NILREF;	// ROM 0x0063b910 RSSYMlabelsfilter
-Ref RSSYMlabelstext = NILREF;	// ROM 0x0063b918 RSSYMlabelstext
-Ref RSSYMlabelstyle = NILREF;	// ROM 0x0063b920 RSSYMlabelstyle
-Ref RSSYMlandscape = NILREF;	// ROM 0x0063b928 RSSYMlandscape
-Ref RSSYMlanguage = NILREF;	// ROM 0x0063b930 RSSYMlanguage
-Ref RSSYMlast = NILREF;	// ROM 0x0063b938 RSSYMlast
-Ref RSSYMlastcommunicationwithdesktop = NILREF;	// ROM 0x0063b940 RSSYMlastcommunicationwithdesktop
-Ref RSSYMlastex = NILREF;	// ROM 0x0063b948 RSSYMlastex
-Ref RSSYMlastexdata = NILREF;	// ROM 0x0063b950 RSSYMlastexdata
-Ref RSSYMlastexerror = NILREF;	// ROM 0x0063b958 RSSYMlastexerror
-Ref RSSYMlastexmessage = NILREF;	// ROM 0x0063b960 RSSYMlastexmessage
-Ref RSSYMlastitem = NILREF;	// ROM 0x0063b968 RSSYMlastitem
-Ref RSSYMlastname = NILREF;	// ROM 0x0063b970 RSSYMlastname
-Ref RSSYMlastnamephonetic = NILREF;	// ROM 0x0063b978 RSSYMlastnamephonetic
-Ref RSSYMlastpolyhilitechanged = NILREF;	// ROM 0x0063b980 RSSYMlastpolyhilitechanged
-Ref RSSYMlastrecmemwarning = NILREF;	// ROM 0x0063b988 RSSYMlastrecmemwarning
-Ref RSSYMlasttextchanged = NILREF;	// ROM 0x0063b990 RSSYMlasttextchanged
-Ref RSSYMlasttexthilitechanged = NILREF;	// ROM 0x0063b998 RSSYMlasttexthilitechanged
-Ref RSSYMlasttopic = NILREF;	// ROM 0x0063b9a0 RSSYMlasttopic
-Ref RSSYMlastuid = NILREF;	// ROM 0x0063b9a8 RSSYMlastuid
-Ref RSSYMlatitude = NILREF;	// ROM 0x0063b9b0 RSSYMlatitude
-Ref RSSYMlayout = NILREF;	// ROM 0x0063b9b8 RSSYMlayout
-Ref RSSYMlcdcontrast = NILREF;	// ROM 0x0063b9c0 RSSYMlcdcontrast
-Ref RSSYMlearningdata = NILREF;	// ROM 0x0063b9c8 RSSYMlearningdata
-Ref RSSYMlearningenabledoption = NILREF;	// ROM 0x0063b9d0 RSSYMlearningenabledoption
-Ref RSSYMleft = NILREF;	// ROM 0x0063b9d8 RSSYMleft
-Ref RSSYMleftmargin = NILREF;	// ROM 0x0063b9e0 RSSYMleftmargin
-Ref RSSYMleftmarkgap = NILREF;	// ROM 0x0063b9e8 RSSYMleftmarkgap
-Ref RSSYMlen = NILREF;	// ROM 0x0063b9f0 RSSYMlen
-Ref RSSYMlength = NILREF;	// ROM 0x0063b9f8 RSSYMlength
-Ref RSSYMletter = NILREF;	// ROM 0x0063ba00 RSSYMletter
-Ref RSSYMletterimages = NILREF;	// ROM 0x0063ba08 RSSYMletterimages
-Ref RSSYMletters = NILREF;	// ROM 0x0063ba10 RSSYMletters
-Ref RSSYMletterscursiveoption = NILREF;	// ROM 0x0063ba18 RSSYMletterscursiveoption
-Ref RSSYMlettersetselection = NILREF;	// ROM 0x0063ba20 RSSYMlettersetselection
-Ref RSSYMletterspacecursiveoption = NILREF;	// ROM 0x0063ba28 RSSYMletterspacecursiveoption
-Ref RSSYMletterweights = NILREF;	// ROM 0x0063ba30 RSSYMletterweights
-Ref RSSYMlevel = NILREF;	// ROM 0x0063ba38 RSSYMlevel
-Ref RSSYMlex = NILREF;	// ROM 0x0063ba40 RSSYMlex
-Ref RSSYMlexical = NILREF;	// ROM 0x0063ba48 RSSYMlexical
-Ref RSSYMlexicon = NILREF;	// ROM 0x0063ba50 RSSYMlexicon
-Ref RSSYMlibrary = NILREF;	// ROM 0x0063ba58 RSSYMlibrary
-Ref RSSYMlimit = NILREF;	// ROM 0x0063ba60 RSSYMlimit
-Ref RSSYMlimitbounds = NILREF;	// ROM 0x0063ba68 RSSYMlimitbounds
-Ref RSSYMline = NILREF;	// ROM 0x0063ba70 RSSYMline
-Ref RSSYMlineatatime = NILREF;	// ROM 0x0063ba78 RSSYMlineatatime
-Ref RSSYMlinebreaktable = NILREF;	// ROM 0x0063ba80 RSSYMlinebreaktable
-Ref RSSYMlinegrid = NILREF;	// ROM 0x0063ba88 RSSYMlinegrid
-Ref RSSYMlineheight = NILREF;	// ROM 0x0063ba90 RSSYMlineheight
-Ref RSSYMlineindent = NILREF;	// ROM 0x0063ba98 RSSYMlineindent
-Ref RSSYMlinenumber = NILREF;	// ROM 0x0063baa0 RSSYMlinenumber
-Ref RSSYMlines = NILREF;	// ROM 0x0063baa8 RSSYMlines
-Ref RSSYMlinespacing = NILREF;	// ROM 0x0063bab0 RSSYMlinespacing
-Ref RSSYMlinkeddictid = NILREF;	// ROM 0x0063bab8 RSSYMlinkeddictid
-Ref RSSYMlist = NILREF;	// ROM 0x0063bac0 RSSYMlist
-Ref RSSYMlistviewflags = NILREF;	// ROM 0x0063bac8 RSSYMlistviewflags
-Ref RSSYMliterals = NILREF;	// ROM 0x0063bad0 RSSYMliterals
-Ref RSSYMlithium = NILREF;	// ROM 0x0063bad8 RSSYMlithium
-Ref RSSYMloadletterweights = NILREF;	// ROM 0x0063bae0 RSSYMloadletterweights
-Ref RSSYMlocaldictslot = NILREF;	// ROM 0x0063bae8 RSSYMlocaldictslot
-Ref RSSYMlocale = NILREF;	// ROM 0x0063baf0 RSSYMlocale
-Ref RSSYMlocales = NILREF;	// ROM 0x0063baf8 RSSYMlocales
-Ref RSSYMlocalesym = NILREF;	// ROM 0x0063bb00 RSSYMlocalesym
-Ref RSSYMlocaletable = NILREF;	// ROM 0x0063bb08 RSSYMlocaletable
-Ref RSSYMlocalfind = NILREF;	// ROM 0x0063bb10 RSSYMlocalfind
-Ref RSSYMlocalid = NILREF;	// ROM 0x0063bb18 RSSYMlocalid
-Ref RSSYMlocation = NILREF;	// ROM 0x0063bb20 RSSYMlocation
-Ref RSSYMlockedcardmounterror = NILREF;	// ROM 0x0063bb28 RSSYMlockedcardmounterror
-Ref RSSYMlongdatedelim = NILREF;	// ROM 0x0063bb30 RSSYMlongdatedelim
-Ref RSSYMlongdateformat = NILREF;	// ROM 0x0063bb38 RSSYMlongdateformat
-Ref RSSYMlongdateorder = NILREF;	// ROM 0x0063bb40 RSSYMlongdateorder
-Ref RSSYMlongdayofweekstrspec = NILREF;	// ROM 0x0063bb48 RSSYMlongdayofweekstrspec
-Ref RSSYMlongdaysuffix = NILREF;	// ROM 0x0063bb50 RSSYMlongdaysuffix
-Ref RSSYMlongdofweek = NILREF;	// ROM 0x0063bb58 RSSYMlongdofweek
-Ref RSSYMlongitude = NILREF;	// ROM 0x0063bb60 RSSYMlongitude
-Ref RSSYMlongmonth = NILREF;	// ROM 0x0063bb68 RSSYMlongmonth
-Ref RSSYMlongmonthsuffix = NILREF;	// ROM 0x0063bb70 RSSYMlongmonthsuffix
-Ref RSSYMlongyearsuffix = NILREF;	// ROM 0x0063bb78 RSSYMlongyearsuffix
-Ref RSSYMlook = NILREF;	// ROM 0x0063bb80 RSSYMlook
-Ref RSSYMloops = NILREF;	// ROM 0x0063bb88 RSSYMloops
-Ref RSSYMlow = NILREF;	// ROM 0x0063bb90 RSSYMlow
-Ref RSSYMlowerlist = NILREF;	// ROM 0x0063bb98 RSSYMlowerlist
-Ref RSSYMmacfontid = NILREF;	// ROM 0x0063bba0 RSSYMmacfontid
-Ref RSSYMmachinetype = NILREF;	// ROM 0x0063bba8 RSSYMmachinetype
-Ref RSSYMmacpict = NILREF;	// ROM 0x0063bbb0 RSSYMmacpict
-Ref RSSYMmailaccount = NILREF;	// ROM 0x0063bbb8 RSSYMmailaccount
-Ref RSSYMmailconnector = NILREF;	// ROM 0x0063bbc0 RSSYMmailconnector
-Ref RSSYMmaillist = NILREF;	// ROM 0x0063bbc8 RSSYMmaillist
-Ref RSSYMmailnavigate = NILREF;	// ROM 0x0063bbd0 RSSYMmailnavigate
-Ref RSSYMmailnavigator = NILREF;	// ROM 0x0063bbd8 RSSYMmailnavigator
-Ref RSSYMmailpassword = NILREF;	// ROM 0x0063bbe0 RSSYMmailpassword
-Ref RSSYMmailphone = NILREF;	// ROM 0x0063bbe8 RSSYMmailphone
-Ref RSSYMmailreceivestatus = NILREF;	// ROM 0x0063bbf0 RSSYMmailreceivestatus
-Ref RSSYMmailsendtext = NILREF;	// ROM 0x0063bbf8 RSSYMmailsendtext
-Ref RSSYMmailslip = NILREF;	// ROM 0x0063bc00 RSSYMmailslip
-Ref RSSYMmainformat = NILREF;	// ROM 0x0063bc08 RSSYMmainformat
-Ref RSSYMmajor = NILREF;	// ROM 0x0063bc10 RSSYMmajor
-Ref RSSYMmanualdial = NILREF;	// ROM 0x0063bc18 RSSYMmanualdial
-Ref RSSYMmanualdialing = NILREF;	// ROM 0x0063bc20 RSSYMmanualdialing
-Ref RSSYMmanufacturedate = NILREF;	// ROM 0x0063bc28 RSSYMmanufacturedate
-Ref RSSYMmanufacturer = NILREF;	// ROM 0x0063bc30 RSSYMmanufacturer
-Ref RSSYMmap = NILREF;	// ROM 0x0063bc38 RSSYMmap
-Ref RSSYMmapcursor = NILREF;	// ROM 0x0063bc40 RSSYMmapcursor
-Ref RSSYMmapfromunicode = NILREF;	// ROM 0x0063bc48 RSSYMmapfromunicode
-Ref RSSYMmapping = NILREF;	// ROM 0x0063bc50 RSSYMmapping
-Ref RSSYMmaptounicode = NILREF;	// ROM 0x0063bc58 RSSYMmaptounicode
-Ref RSSYMmark = NILREF;	// ROM 0x0063bc60 RSSYMmark
-Ref RSSYMmarkbusy = NILREF;	// ROM 0x0063bc68 RSSYMmarkbusy
-Ref RSSYMmarkers = NILREF;	// ROM 0x0063bc70 RSSYMmarkers
-Ref RSSYMmarknotbusy = NILREF;	// ROM 0x0063bc78 RSSYMmarknotbusy
-Ref RSSYMmarks = NILREF;	// ROM 0x0063bc80 RSSYMmarks
-Ref RSSYMmarkslotbusy = NILREF;	// ROM 0x0063bc88 RSSYMmarkslotbusy
-Ref RSSYMmarkslotnotbusy = NILREF;	// ROM 0x0063bc90 RSSYMmarkslotnotbusy
-Ref RSSYMmarkupbutton = NILREF;	// ROM 0x0063bc98 RSSYMmarkupbutton
-Ref RSSYMmarkuplayer = NILREF;	// ROM 0x0063bca0 RSSYMmarkuplayer
-Ref RSSYMmask = NILREF;	// ROM 0x0063bca8 RSSYMmask
-Ref RSSYMmaskdictionaries = NILREF;	// ROM 0x0063bcb0 RSSYMmaskdictionaries
-Ref RSSYMmatched = NILREF;	// ROM 0x0063bcb8 RSSYMmatched
-Ref RSSYMmatchstring = NILREF;	// ROM 0x0063bcc0 RSSYMmatchstring
-Ref RSSYMmathline = NILREF;	// ROM 0x0063bcc8 RSSYMmathline
-Ref RSSYMmathoperator = NILREF;	// ROM 0x0063bcd0 RSSYMmathoperator
-Ref RSSYMmax = NILREF;	// ROM 0x0063bcd8 RSSYMmax
-Ref RSSYMmaximum = NILREF;	// ROM 0x0063bce0 RSSYMmaximum
-Ref RSSYMmaxlevel = NILREF;	// ROM 0x0063bce8 RSSYMmaxlevel
-Ref RSSYMmaxvalue = NILREF;	// ROM 0x0063bcf0 RSSYMmaxvalue
-Ref RSSYMmeal_act = NILREF;	// ROM 0x0063bcf8 RSSYMmeal_act
-Ref RSSYMmedium = NILREF;	// ROM 0x0063bd00 RSSYMmedium
-Ref RSSYMmeeting = NILREF;	// ROM 0x0063bd08 RSSYMmeeting
-Ref RSSYMmeetingnotes = NILREF;	// ROM 0x0063bd10 RSSYMmeetingnotes
-Ref RSSYMmeetingoverview = NILREF;	// ROM 0x0063bd18 RSSYMmeetingoverview
-Ref RSSYMmeetingsoup = NILREF;	// ROM 0x0063bd20 RSSYMmeetingsoup
-Ref RSSYMmeetingtype = NILREF;	// ROM 0x0063bd28 RSSYMmeetingtype
-Ref RSSYMmeetingtyperegistry = NILREF;	// ROM 0x0063bd30 RSSYMmeetingtyperegistry
-Ref RSSYMmessage = NILREF;	// ROM 0x0063bd38 RSSYMmessage
-Ref RSSYMmeta_level = NILREF;	// ROM 0x0063bd40 RSSYMmeta_level
-Ref RSSYMmetric = NILREF;	// ROM 0x0063bd48 RSSYMmetric
-Ref RSSYMmidnightform = NILREF;	// ROM 0x0063bd50 RSSYMmidnightform
-Ref RSSYMmiles = NILREF;	// ROM 0x0063bd58 RSSYMmiles
-Ref RSSYMmincho = NILREF;	// ROM 0x0063bd60 RSSYMmincho
-Ref RSSYMmindragdistance = NILREF;	// ROM 0x0063bd68 RSSYMmindragdistance
-Ref RSSYMminimalchildren = NILREF;	// ROM 0x0063bd70 RSSYMminimalchildren
-Ref RSSYMminimum = NILREF;	// ROM 0x0063bd78 RSSYMminimum
-Ref RSSYMminor = NILREF;	// ROM 0x0063bd80 RSSYMminor
-Ref RSSYMminusprefix = NILREF;	// ROM 0x0063bd88 RSSYMminusprefix
-Ref RSSYMminussuffix = NILREF;	// ROM 0x0063bd90 RSSYMminussuffix
-Ref RSSYMminute = NILREF;	// ROM 0x0063bd98 RSSYMminute
-Ref RSSYMminuteleadingz = NILREF;	// ROM 0x0063bda0 RSSYMminuteleadingz
-Ref RSSYMminvalue = NILREF;	// ROM 0x0063bda8 RSSYMminvalue
-Ref RSSYMmisccarderror = NILREF;	// ROM 0x0063bdb0 RSSYMmisccarderror
-Ref RSSYMmissingindex = NILREF;	// ROM 0x0063bdb8 RSSYMmissingindex
-Ref RSSYMmod = NILREF;	// ROM 0x0063bdc0 RSSYMmod
-Ref RSSYMmodalstate = NILREF;	// ROM 0x0063bdc8 RSSYMmodalstate
-Ref RSSYMmodem = NILREF;	// ROM 0x0063bdd0 RSSYMmodem
-Ref RSSYMmodemname = NILREF;	// ROM 0x0063bdd8 RSSYMmodemname
-Ref RSSYMmodemnavigate = NILREF;	// ROM 0x0063bde0 RSSYMmodemnavigate
-Ref RSSYMmodemnavigator = NILREF;	// ROM 0x0063bde8 RSSYMmodemnavigator
-Ref RSSYMmodemsoundvolume = NILREF;	// ROM 0x0063bdf0 RSSYMmodemsoundvolume
-Ref RSSYMmodifiers = NILREF;	// ROM 0x0063bdf8 RSSYMmodifiers
-Ref RSSYMmodtime = NILREF;	// ROM 0x0063be00 RSSYMmodtime
-Ref RSSYMmonaddin = NILREF;	// ROM 0x0063be08 RSSYMmonaddin
-Ref RSSYMmonth = NILREF;	// ROM 0x0063be10 RSSYMmonth
-Ref RSSYMmonthchangedscript = NILREF;	// ROM 0x0063be18 RSSYMmonthchangedscript
-Ref RSSYMmonthdaystrspec = NILREF;	// ROM 0x0063be20 RSSYMmonthdaystrspec
-Ref RSSYMmonthleadingz = NILREF;	// ROM 0x0063be28 RSSYMmonthleadingz
-Ref RSSYMmorningstr = NILREF;	// ROM 0x0063be30 RSSYMmorningstr
-Ref RSSYMmovecaret = NILREF;	// ROM 0x0063be38 RSSYMmovecaret
-Ref RSSYMmtgalarm = NILREF;	// ROM 0x0063be40 RSSYMmtgalarm
-Ref RSSYMmtgdone = NILREF;	// ROM 0x0063be48 RSSYMmtgdone
-Ref RSSYMmtgduration = NILREF;	// ROM 0x0063be50 RSSYMmtgduration
-Ref RSSYMmtgicontype = NILREF;	// ROM 0x0063be58 RSSYMmtgicontype
-Ref RSSYMmtginfo = NILREF;	// ROM 0x0063be60 RSSYMmtginfo
-Ref RSSYMmtgnotes = NILREF;	// ROM 0x0063be68 RSSYMmtgnotes
-Ref RSSYMmtgpriority = NILREF;	// ROM 0x0063be70 RSSYMmtgpriority
-Ref RSSYMmtgstartdate = NILREF;	// ROM 0x0063be78 RSSYMmtgstartdate
-Ref RSSYMmtgstopdate = NILREF;	// ROM 0x0063be80 RSSYMmtgstopdate
-Ref RSSYMmtgtext = NILREF;	// ROM 0x0063be88 RSSYMmtgtext
-Ref RSSYMmtgtype = NILREF;	// ROM 0x0063be90 RSSYMmtgtype
-Ref RSSYMmultislot = NILREF;	// ROM 0x0063be98 RSSYMmultislot
-Ref RSSYMmungecontentscript = NILREF;	// ROM 0x0063bea0 RSSYMmungecontentscript
-Ref RSSYMname = NILREF;	// ROM 0x0063bea8 RSSYMname
-Ref RSSYMnameindex = NILREF;	// ROM 0x0063beb0 RSSYMnameindex
-Ref RSSYMnames = NILREF;	// ROM 0x0063beb8 RSSYMnames
-Ref RSSYMnavigator = NILREF;	// ROM 0x0063bec0 RSSYMnavigator
-Ref RSSYMncklastbackuptime = NILREF;	// ROM 0x0063bec8 RSSYMncklastbackuptime
-Ref RSSYMnegate = NILREF;	// ROM 0x0063bed0 RSSYMnegate
-Ref RSSYMnet = NILREF;	// ROM 0x0063bed8 RSSYMnet
-Ref RSSYMnewccount = NILREF;	// ROM 0x0063bee0 RSSYMnewccount
-Ref RSSYMnewiterator = NILREF;	// ROM 0x0063bee8 RSSYMnewiterator
-Ref RSSYMnewtonuniqueid = NILREF;	// ROM 0x0063bef0 RSSYMnewtonuniqueid
-Ref RSSYMnewt_feature = NILREF;	// ROM 0x0063bef8 RSSYMnewt_feature
-Ref RSSYMnewwritecount = NILREF;	// ROM 0x0063bf00 RSSYMnewwritecount
-Ref RSSYMnewyork = NILREF;	// ROM 0x0063bf08 RSSYMnewyork
-Ref RSSYMnextinputspec = NILREF;	// ROM 0x0063bf10 RSSYMnextinputspec
-Ref RSSYMnextstyle = NILREF;	// ROM 0x0063bf18 RSSYMnextstyle
-Ref RSSYMnicd = NILREF;	// ROM 0x0063bf20 RSSYMnicd
-Ref RSSYMnimh = NILREF;	// ROM 0x0063bf28 RSSYMnimh
-Ref RSSYMno = NILREF;	// ROM 0x0063bf30 RSSYMno
-Ref RSSYMnode = NILREF;	// ROM 0x0063bf38 RSSYMnode
-Ref RSSYMnofx = NILREF;	// ROM 0x0063bf40 RSSYMnofx
-Ref RSSYMnogrid = NILREF;	// ROM 0x0063bf48 RSSYMnogrid
-Ref RSSYMnoisewords = NILREF;	// ROM 0x0063bf50 RSSYMnoisewords
-Ref RSSYMnoletters = NILREF;	// ROM 0x0063bf58 RSSYMnoletters
-Ref RSSYMnomarklist = NILREF;	// ROM 0x0063bf60 RSSYMnomarklist
-Ref RSSYMnone = NILREF;	// ROM 0x0063bf68 RSSYMnone
-Ref RSSYMnoonform = NILREF;	// ROM 0x0063bf70 RSSYMnoonform
-Ref RSSYMnoremap = NILREF;	// ROM 0x0063bf78 RSSYMnoremap
-Ref RSSYMnormal = NILREF;	// ROM 0x0063bf80 RSSYMnormal
-Ref RSSYMnoselection = NILREF;	// ROM 0x0063bf88 RSSYMnoselection
-Ref RSSYMnot = NILREF;	// ROM 0x0063bf90 RSSYMnot
-Ref RSSYMnotes = NILREF;	// ROM 0x0063bf98 RSSYMnotes
-Ref RSSYMnotesdata = NILREF;	// ROM 0x0063bfa0 RSSYMnotesdata
-Ref RSSYMnotify = NILREF;	// ROM 0x0063bfa8 RSSYMnotify
-Ref RSSYMntopics = NILREF;	// ROM 0x0063bfb0 RSSYMntopics
-Ref RSSYMnullproxy = NILREF;	// ROM 0x0063bfb8 RSSYMnullproxy
-Ref RSSYMnumargs = NILREF;	// ROM 0x0063bfc0 RSSYMnumargs
-Ref RSSYMnumber = NILREF;	// ROM 0x0063bfc8 RSSYMnumber
-Ref RSSYMnumberdictionary = NILREF;	// ROM 0x0063bfd0 RSSYMnumberdictionary
-Ref RSSYMnumberformat = NILREF;	// ROM 0x0063bfd8 RSSYMnumberformat
-Ref RSSYMnumberofparts = NILREF;	// ROM 0x0063bfe0 RSSYMnumberofparts
-Ref RSSYMnumberscursiveoption = NILREF;	// ROM 0x0063bfe8 RSSYMnumberscursiveoption
-Ref RSSYMnumchannels = NILREF;	// ROM 0x0063bff0 RSSYMnumchannels
-Ref RSSYMnumcols = NILREF;	// ROM 0x0063bff8 RSSYMnumcols
-Ref RSSYMnumdrawn = NILREF;	// ROM 0x0063c000 RSSYMnumdrawn
-Ref RSSYMnumerickeyboard = NILREF;	// ROM 0x0063c008 RSSYMnumerickeyboard
-Ref RSSYMnumlines = NILREF;	// ROM 0x0063c010 RSSYMnumlines
-Ref RSSYMnumparts = NILREF;	// ROM 0x0063c018 RSSYMnumparts
-Ref RSSYMnumrows = NILREF;	// ROM 0x0063c020 RSSYMnumrows
-Ref RSSYMobjects = NILREF;	// ROM 0x0063c028 RSSYMobjects
-Ref RSSYMoffset = NILREF;	// ROM 0x0063c030 RSSYMoffset
-Ref RSSYMonelineparagraphs = NILREF;	// ROM 0x0063c038 RSSYMonelineparagraphs
-Ref RSSYMoneo = NILREF;	// ROM 0x0063c040 RSSYMoneo
-Ref RSSYMonlineslip = NILREF;	// ROM 0x0063c048 RSSYMonlineslip
-Ref RSSYMop = NILREF;	// ROM 0x0063c050 RSSYMop
-Ref RSSYMopcode = NILREF;	// ROM 0x0063c058 RSSYMopcode
-Ref RSSYMopenkeypadfor = NILREF;	// ROM 0x0063c060 RSSYMopenkeypadfor
-Ref RSSYMopenoptions = NILREF;	// ROM 0x0063c068 RSSYMopenoptions
-Ref RSSYMoptimize = NILREF;	// ROM 0x0063c070 RSSYMoptimize
-Ref RSSYMoption = NILREF;	// ROM 0x0063c078 RSSYMoption
-Ref RSSYMorder = NILREF;	// ROM 0x0063c080 RSSYMorder
-Ref RSSYMorientation = NILREF;	// ROM 0x0063c088 RSSYMorientation
-Ref RSSYMorigascent = NILREF;	// ROM 0x0063c090 RSSYMorigascent
-Ref RSSYMorigdescent = NILREF;	// ROM 0x0063c098 RSSYMorigdescent
-Ref RSSYMorigfontsize = NILREF;	// ROM 0x0063c0a0 RSSYMorigfontsize
-Ref RSSYMorigin = NILREF;	// ROM 0x0063c0a8 RSSYMorigin
-Ref RSSYMoriginalbounds = NILREF;	// ROM 0x0063c0b0 RSSYMoriginalbounds
-Ref RSSYMorigpensize = NILREF;	// ROM 0x0063c0b8 RSSYMorigpensize
-Ref RSSYMorigphrase = NILREF;	// ROM 0x0063c0c0 RSSYMorigphrase
-Ref RSSYMorigwidth = NILREF;	// ROM 0x0063c0c8 RSSYMorigwidth
-Ref RSSYMorigxheight = NILREF;	// ROM 0x0063c0d0 RSSYMorigxheight
-Ref RSSYMoutbox = NILREF;	// ROM 0x0063c0d8 RSSYMoutbox
-Ref RSSYMouterframe = NILREF;	// ROM 0x0063c0e0 RSSYMouterframe
-Ref RSSYMoutlineclickscript = NILREF;	// ROM 0x0063c0e8 RSSYMoutlineclickscript
-Ref RSSYMoutputdevice = NILREF;	// ROM 0x0063c0f0 RSSYMoutputdevice
-Ref RSSYMoval = NILREF;	// ROM 0x0063c0f8 RSSYMoval
-Ref RSSYMoverlapscrollamount = NILREF;	// ROM 0x0063c100 RSSYMoverlapscrollamount
-Ref RSSYMowner = NILREF;	// ROM 0x0063c108 RSSYMowner
-Ref RSSYMownerapp = NILREF;	// ROM 0x0063c110 RSSYMownerapp
-Ref RSSYMpackage = NILREF;	// ROM 0x0063c118 RSSYMpackage
-Ref RSSYMpackagecallback = NILREF;	// ROM 0x0063c120 RSSYMpackagecallback
-Ref RSSYMpackageentry = NILREF;	// ROM 0x0063c128 RSSYMpackageentry
-Ref RSSYMpackageid = NILREF;	// ROM 0x0063c130 RSSYMpackageid
-Ref RSSYMpackagename = NILREF;	// ROM 0x0063c138 RSSYMpackagename
-Ref RSSYMpackagesize = NILREF;	// ROM 0x0063c140 RSSYMpackagesize
-Ref RSSYMpackagestyle = NILREF;	// ROM 0x0063c148 RSSYMpackagestyle
-Ref RSSYMpackagetype = NILREF;	// ROM 0x0063c150 RSSYMpackagetype
-Ref RSSYMpackageversion = NILREF;	// ROM 0x0063c158 RSSYMpackageversion
-Ref RSSYMpage = NILREF;	// ROM 0x0063c160 RSSYMpage
-Ref RSSYMpagebounds = NILREF;	// ROM 0x0063c168 RSSYMpagebounds
-Ref RSSYMpagecount = NILREF;	// ROM 0x0063c170 RSSYMpagecount
-Ref RSSYMpagenumber = NILREF;	// ROM 0x0063c178 RSSYMpagenumber
-Ref RSSYMpages = NILREF;	// ROM 0x0063c180 RSSYMpages
-Ref RSSYMpagesize = NILREF;	// ROM 0x0063c188 RSSYMpagesize
-Ref RSSYMpagesound = NILREF;	// ROM 0x0063c190 RSSYMpagesound
-Ref RSSYMpagesshowing = NILREF;	// ROM 0x0063c198 RSSYMpagesshowing
-Ref RSSYMpagestr = NILREF;	// ROM 0x0063c1a0 RSSYMpagestr
-Ref RSSYMpageturnawayscript = NILREF;	// ROM 0x0063c1a8 RSSYMpageturnawayscript
-Ref RSSYMpageturntoscript = NILREF;	// ROM 0x0063c1b0 RSSYMpageturntoscript
-Ref RSSYMpaneindex = NILREF;	// ROM 0x0063c1b8 RSSYMpaneindex
-Ref RSSYMpaperroll = NILREF;	// ROM 0x0063c1c0 RSSYMpaperroll
-Ref RSSYMpara = NILREF;	// ROM 0x0063c1c8 RSSYMpara
-Ref RSSYMparameter = NILREF;	// ROM 0x0063c1d0 RSSYMparameter
-Ref RSSYMparams = NILREF;	// ROM 0x0063c1d8 RSSYMparams
-Ref RSSYMparity = NILREF;	// ROM 0x0063c1e0 RSSYMparity
-Ref RSSYMparse = NILREF;	// ROM 0x0063c1e8 RSSYMparse
-Ref RSSYMparsed_number = NILREF;	// ROM 0x0063c1f0 RSSYMparsed_number
-Ref RSSYMparsed_phone = NILREF;	// ROM 0x0063c1f8 RSSYMparsed_phone
-Ref RSSYMpartframe = NILREF;	// ROM 0x0063c200 RSSYMpartframe
-Ref RSSYMpartialfrequency = NILREF;	// ROM 0x0063c208 RSSYMpartialfrequency
-Ref RSSYMpartialscript = NILREF;	// ROM 0x0063c210 RSSYMpartialscript
-Ref RSSYMpartindex = NILREF;	// ROM 0x0063c218 RSSYMpartindex
-Ref RSSYMparts = NILREF;	// ROM 0x0063c220 RSSYMparts
-Ref RSSYMparttype = NILREF;	// ROM 0x0063c228 RSSYMparttype
-Ref RSSYMparttypes = NILREF;	// ROM 0x0063c230 RSSYMparttypes
-Ref RSSYMpar_separatelettersflag = NILREF;	// ROM 0x0063c238 RSSYMpar_separatelettersflag
-Ref RSSYMpassall = NILREF;	// ROM 0x0063c240 RSSYMpassall
-Ref RSSYMpassbeginning = NILREF;	// ROM 0x0063c248 RSSYMpassbeginning
-Ref RSSYMpassone = NILREF;	// ROM 0x0063c250 RSSYMpassone
-Ref RSSYMpasswordkey = NILREF;	// ROM 0x0063c258 RSSYMpasswordkey
-Ref RSSYMpatches = NILREF;	// ROM 0x0063c260 RSSYMpatches
-Ref RSSYMpatchversion = NILREF;	// ROM 0x0063c268 RSSYMpatchversion
-Ref RSSYMpath = NILREF;	// ROM 0x0063c270 RSSYMpath
-Ref RSSYMpathexpr = NILREF;	// ROM 0x0063c278 RSSYMpathexpr
-Ref RSSYMpattern = NILREF;	// ROM 0x0063c280 RSSYMpattern
-Ref RSSYMpen = NILREF;	// ROM 0x0063c288 RSSYMpen
-Ref RSSYMpenpattern = NILREF;	// ROM 0x0063c290 RSSYMpenpattern
-Ref RSSYMpensize = NILREF;	// ROM 0x0063c298 RSSYMpensize
-Ref RSSYMpensoundeffects = NILREF;	// ROM 0x0063c2a0 RSSYMpensoundeffects
-Ref RSSYMpercentdone = NILREF;	// ROM 0x0063c2a8 RSSYMpercentdone
-Ref RSSYMperform = NILREF;	// ROM 0x0063c2b0 RSSYMperform
-Ref RSSYMperson = NILREF;	// ROM 0x0063c2b8 RSSYMperson
-Ref RSSYMpersonadded = NILREF;	// ROM 0x0063c2c0 RSSYMpersonadded
-Ref RSSYMphone1 = NILREF;	// ROM 0x0063c2c8 RSSYMphone1
-Ref RSSYMphone1type = NILREF;	// ROM 0x0063c2d0 RSSYMphone1type
-Ref RSSYMphone2 = NILREF;	// ROM 0x0063c2d8 RSSYMphone2
-Ref RSSYMphone2type = NILREF;	// ROM 0x0063c2e0 RSSYMphone2type
-Ref RSSYMphone3 = NILREF;	// ROM 0x0063c2e8 RSSYMphone3
-Ref RSSYMphone3type = NILREF;	// ROM 0x0063c2f0 RSSYMphone3type
-Ref RSSYMphone4 = NILREF;	// ROM 0x0063c2f8 RSSYMphone4
-Ref RSSYMphone4type = NILREF;	// ROM 0x0063c300 RSSYMphone4type
-Ref RSSYMphonedictionary = NILREF;	// ROM 0x0063c308 RSSYMphonedictionary
-Ref RSSYMphonekeyboard = NILREF;	// ROM 0x0063c310 RSSYMphonekeyboard
-Ref RSSYMphonenumber = NILREF;	// ROM 0x0063c318 RSSYMphonenumber
-Ref RSSYMphones = NILREF;	// ROM 0x0063c320 RSSYMphones
-Ref RSSYMphonetext = NILREF;	// ROM 0x0063c328 RSSYMphonetext
-Ref RSSYMphonetypes = NILREF;	// ROM 0x0063c330 RSSYMphonetypes
-Ref RSSYMphrases = NILREF;	// ROM 0x0063c338 RSSYMphrases
-Ref RSSYMpickable = NILREF;	// ROM 0x0063c340 RSSYMpickable
-Ref RSSYMpickactionscript = NILREF;	// ROM 0x0063c348 RSSYMpickactionscript
-Ref RSSYMpickautoclose = NILREF;	// ROM 0x0063c350 RSSYMpickautoclose
-Ref RSSYMpickbottommargin = NILREF;	// ROM 0x0063c358 RSSYMpickbottommargin
-Ref RSSYMpickcancelledscript = NILREF;	// ROM 0x0063c360 RSSYMpickcancelledscript
-Ref RSSYMpickitems = NILREF;	// ROM 0x0063c368 RSSYMpickitems
-Ref RSSYMpickitemsmarkable = NILREF;	// ROM 0x0063c370 RSSYMpickitemsmarkable
-Ref RSSYMpickleftmargin = NILREF;	// ROM 0x0063c378 RSSYMpickleftmargin
-Ref RSSYMpickmarkwidth = NILREF;	// ROM 0x0063c380 RSSYMpickmarkwidth
-Ref RSSYMpickmaxwidth = NILREF;	// ROM 0x0063c388 RSSYMpickmaxwidth
-Ref RSSYMpickrightmargin = NILREF;	// ROM 0x0063c390 RSSYMpickrightmargin
-Ref RSSYMpickseparator = NILREF;	// ROM 0x0063c398 RSSYMpickseparator
-Ref RSSYMpicksolidseparator = NILREF;	// ROM 0x0063c3a0 RSSYMpicksolidseparator
-Ref RSSYMpicktextitemheight = NILREF;	// ROM 0x0063c3a8 RSSYMpicktextitemheight
-Ref RSSYMpicktopmargin = NILREF;	// ROM 0x0063c3b0 RSSYMpicktopmargin
-Ref RSSYMpict = NILREF;	// ROM 0x0063c3b8 RSSYMpict
-Ref RSSYMpicture = NILREF;	// ROM 0x0063c3c0 RSSYMpicture
-Ref RSSYMpicturedata = NILREF;	// ROM 0x0063c3c8 RSSYMpicturedata
-Ref RSSYMpin = NILREF;	// ROM 0x0063c3d0 RSSYMpin
-Ref RSSYMpinbounds = NILREF;	// ROM 0x0063c3d8 RSSYMpinbounds
-Ref RSSYMpixels = NILREF;	// ROM 0x0063c3e0 RSSYMpixels
-Ref RSSYMplaceadded = NILREF;	// ROM 0x0063c3e8 RSSYMplaceadded
-Ref RSSYMplaces = NILREF;	// ROM 0x0063c3f0 RSSYMplaces
-Ref RSSYMplaindata = NILREF;	// ROM 0x0063c3f8 RSSYMplaindata
-Ref RSSYMplay = NILREF;	// ROM 0x0063c400 RSSYMplay
-Ref RSSYMplaysound = NILREF;	// ROM 0x0063c408 RSSYMplaysound
-Ref RSSYMplaysoundirregardlessatvolume = NILREF;	// ROM 0x0063c410 RSSYMplaysoundirregardlessatvolume
-Ref RSSYMpoints = NILREF;	// ROM 0x0063c418 RSSYMpoints
-Ref RSSYMpoly = NILREF;	// ROM 0x0063c420 RSSYMpoly
-Ref RSSYMpolygon = NILREF;	// ROM 0x0063c428 RSSYMpolygon
-Ref RSSYMpolygondata = NILREF;	// ROM 0x0063c430 RSSYMpolygondata
-Ref RSSYMpolygonshape = NILREF;	// ROM 0x0063c438 RSSYMpolygonshape
-Ref RSSYMpopup = NILREF;	// ROM 0x0063c440 RSSYMpopup
-Ref RSSYMpostalcode = NILREF;	// ROM 0x0063c448 RSSYMpostalcode
-Ref RSSYMpostcommandparam = NILREF;	// ROM 0x0063c450 RSSYMpostcommandparam
-Ref RSSYMpostkeystring = NILREF;	// ROM 0x0063c458 RSSYMpostkeystring
-Ref RSSYMpostparse = NILREF;	// ROM 0x0063c460 RSSYMpostparse
-Ref RSSYMpostquit = NILREF;	// ROM 0x0063c468 RSSYMpostquit
-Ref RSSYMppdmain = NILREF;	// ROM 0x0063c470 RSSYMppdmain
-Ref RSSYMpreallocatedcontext = NILREF;	// ROM 0x0063c478 RSSYMpreallocatedcontext
-Ref RSSYMpreconditions = NILREF;	// ROM 0x0063c480 RSSYMpreconditions
-Ref RSSYMprefsdictionaries = NILREF;	// ROM 0x0063c488 RSSYMprefsdictionaries
-Ref RSSYMpreliminarycharge = NILREF;	// ROM 0x0063c490 RSSYMpreliminarycharge
-Ref RSSYMprencoding = NILREF;	// ROM 0x0063c498 RSSYMprencoding
-Ref RSSYMpreparing = NILREF;	// ROM 0x0063c4a0 RSSYMpreparing
-Ref RSSYMprettyprint = NILREF;	// ROM 0x0063c4a8 RSSYMprettyprint
-Ref RSSYMprevpage = NILREF;	// ROM 0x0063c4b0 RSSYMprevpage
-Ref RSSYMprimary_act = NILREF;	// ROM 0x0063c4b8 RSSYMprimary_act
-Ref RSSYMprintdepth = NILREF;	// ROM 0x0063c4c0 RSSYMprintdepth
-Ref RSSYMprinter = NILREF;	// ROM 0x0063c4c8 RSSYMprinter
-Ref RSSYMprintername = NILREF;	// ROM 0x0063c4d0 RSSYMprintername
-Ref RSSYMprinterpagebounds = NILREF;	// ROM 0x0063c4d8 RSSYMprinterpagebounds
-Ref RSSYMprintform = NILREF;	// ROM 0x0063c4e0 RSSYMprintform
-Ref RSSYMprinting = NILREF;	// ROM 0x0063c4e8 RSSYMprinting
-Ref RSSYMprintinstructions = NILREF;	// ROM 0x0063c4f0 RSSYMprintinstructions
-Ref RSSYMprintlength = NILREF;	// ROM 0x0063c4f8 RSSYMprintlength
-Ref RSSYMprintnextpagescript = NILREF;	// ROM 0x0063c500 RSSYMprintnextpagescript
-Ref RSSYMprintproblem = NILREF;	// ROM 0x0063c508 RSSYMprintproblem
-Ref RSSYMprinttype = NILREF;	// ROM 0x0063c510 RSSYMprinttype
-Ref RSSYMprintview = NILREF;	// ROM 0x0063c518 RSSYMprintview
-Ref RSSYMpriorityitems = NILREF;	// ROM 0x0063c520 RSSYMpriorityitems
-Ref RSSYMprivateeventcollector = NILREF;	// ROM 0x0063c528 RSSYMprivateeventcollector
-Ref RSSYMprivatetraceevents = NILREF;	// ROM 0x0063c530 RSSYMprivatetraceevents
-Ref RSSYMprocessorofftime = NILREF;	// ROM 0x0063c538 RSSYMprocessorofftime
-Ref RSSYMprogramcounter = NILREF;	// ROM 0x0063c540 RSSYMprogramcounter
-Ref RSSYMprogress = NILREF;	// ROM 0x0063c548 RSSYMprogress
-Ref RSSYMprogressgauge = NILREF;	// ROM 0x0063c550 RSSYMprogressgauge
-Ref RSSYMprogressscript = NILREF;	// ROM 0x0063c558 RSSYMprogressscript
-Ref RSSYMprotocol = NILREF;	// ROM 0x0063c560 RSSYMprotocol
-Ref RSSYMprotocolversion = NILREF;	// ROM 0x0063c568 RSSYMprotocolversion
-Ref RSSYMprotodictionarycursor = NILREF;	// ROM 0x0063c570 RSSYMprotodictionarycursor
-Ref RSSYMproxy = NILREF;	// ROM 0x0063c578 RSSYMproxy
-Ref RSSYMpsfonts = NILREF;	// ROM 0x0063c580 RSSYMpsfonts
-Ref RSSYMpsname = NILREF;	// ROM 0x0063c588 RSSYMpsname
-Ref RSSYMpsscale = NILREF;	// ROM 0x0063c590 RSSYMpsscale
-Ref RSSYMpssid = NILREF;	// ROM 0x0063c598 RSSYMpssid
-Ref RSSYMpssids = NILREF;	// ROM 0x0063c5a0 RSSYMpssids
-Ref RSSYMpssym = NILREF;	// ROM 0x0063c5a8 RSSYMpssym
-Ref RSSYMpunctuationcursiveoption = NILREF;	// ROM 0x0063c5b0 RSSYMpunctuationcursiveoption
-Ref RSSYMquery = NILREF;	// ROM 0x0063c5b8 RSSYMquery
-Ref RSSYMqueryspec = NILREF;	// ROM 0x0063c5c0 RSSYMqueryspec
-Ref RSSYMquicklooklives = NILREF;	// ROM 0x0063c5c8 RSSYMquicklooklives
-Ref RSSYMramsize = NILREF;	// ROM 0x0063c5d0 RSSYMramsize
-Ref RSSYMrandomstate = NILREF;	// ROM 0x0063c5d8 RSSYMrandomstate
-Ref RSSYMraw = NILREF;	// ROM 0x0063c5e0 RSSYMraw
-Ref RSSYMrcbaseinfo = NILREF;	// ROM 0x0063c5e8 RSSYMrcbaseinfo
-Ref RSSYMrcgridinfo = NILREF;	// ROM 0x0063c5f0 RSSYMrcgridinfo
-Ref RSSYMrcsingleletters = NILREF;	// ROM 0x0063c5f8 RSSYMrcsingleletters
-Ref RSSYMrcvflags = NILREF;	// ROM 0x0063c600 RSSYMrcvflags
-Ref RSSYMrcvoptions = NILREF;	// ROM 0x0063c608 RSSYMrcvoptions
-Ref RSSYMreadonly = NILREF;	// ROM 0x0063c610 RSSYMreadonly
-Ref RSSYMreal = NILREF;	// ROM 0x0063c618 RSSYMreal
-Ref RSSYMrealdata = NILREF;	// ROM 0x0063c620 RSSYMrealdata
-Ref RSSYMrebootcount = NILREF;	// ROM 0x0063c628 RSSYMrebootcount
-Ref RSSYMrebootreason = NILREF;	// ROM 0x0063c630 RSSYMrebootreason
-Ref RSSYMrecconfig = NILREF;	// ROM 0x0063c638 RSSYMrecconfig
-Ref RSSYMreceipt = NILREF;	// ROM 0x0063c640 RSSYMreceipt
-Ref RSSYMreceivedfax = NILREF;	// ROM 0x0063c648 RSSYMreceivedfax
-Ref RSSYMreceiver = NILREF;	// ROM 0x0063c650 RSSYMreceiver
-Ref RSSYMreceiving = NILREF;	// ROM 0x0063c658 RSSYMreceiving
-Ref RSSYMrecogcitiesdictionary = NILREF;	// ROM 0x0063c660 RSSYMrecogcitiesdictionary
-Ref RSSYMrecogcompaniesdictionary = NILREF;	// ROM 0x0063c668 RSSYMrecogcompaniesdictionary
-Ref RSSYMrecogdatedictionary = NILREF;	// ROM 0x0063c670 RSSYMrecogdatedictionary
-Ref RSSYMrecoghonorificsdictionary = NILREF;	// ROM 0x0063c678 RSSYMrecoghonorificsdictionary
-Ref RSSYMrecognitioninkwordwarning = NILREF;	// ROM 0x0063c680 RSSYMrecognitioninkwordwarning
-Ref RSSYMrecognitionmemorywarning = NILREF;	// ROM 0x0063c688 RSSYMrecognitionmemorywarning
-Ref RSSYMrecognizers = NILREF;	// ROM 0x0063c690 RSSYMrecognizers
-Ref RSSYMrecognumberdictionary = NILREF;	// ROM 0x0063c698 RSSYMrecognumberdictionary
-Ref RSSYMrecogphonedictionary = NILREF;	// ROM 0x0063c6a0 RSSYMrecogphonedictionary
-Ref RSSYMrecogpropersdictionary = NILREF;	// ROM 0x0063c6a8 RSSYMrecogpropersdictionary
-Ref RSSYMrecogrevpropersdictionary = NILREF;	// ROM 0x0063c6b0 RSSYMrecogrevpropersdictionary
-Ref RSSYMrecogstatesabbrevsdictionary = NILREF;	// ROM 0x0063c6b8 RSSYMrecogstatesabbrevsdictionary
-Ref RSSYMrecogstatesdictionary = NILREF;	// ROM 0x0063c6c0 RSSYMrecogstatesdictionary
-Ref RSSYMrecogtimedictionary = NILREF;	// ROM 0x0063c6c8 RSSYMrecogtimedictionary
-Ref RSSYMrecord = NILREF;	// ROM 0x0063c6d0 RSSYMrecord
-Ref RSSYMrecording = NILREF;	// ROM 0x0063c6d8 RSSYMrecording
-Ref RSSYMrectangle = NILREF;	// ROM 0x0063c6e0 RSSYMrectangle
-Ref RSSYMrecvflags = NILREF;	// ROM 0x0063c6e8 RSSYMrecvflags
-Ref RSSYMrecvwaiting = NILREF;	// ROM 0x0063c6f0 RSSYMrecvwaiting
-Ref RSSYMredochildren = NILREF;	// ROM 0x0063c6f8 RSSYMredochildren
-Ref RSSYMrefcount = NILREF;	// ROM 0x0063c700 RSSYMrefcount
-Ref RSSYMreflow = NILREF;	// ROM 0x0063c708 RSSYMreflow
-Ref RSSYMreflowfont = NILREF;	// ROM 0x0063c710 RSSYMreflowfont
-Ref RSSYMreflowoptions = NILREF;	// ROM 0x0063c718 RSSYMreflowoptions
-Ref RSSYMregcommconfigarray = NILREF;	// ROM 0x0063c720 RSSYMregcommconfigarray
-Ref RSSYMregion = NILREF;	// ROM 0x0063c728 RSSYMregion
-Ref RSSYMregiondata = NILREF;	// ROM 0x0063c730 RSSYMregiondata
-Ref RSSYMregisternewpackage = NILREF;	// ROM 0x0063c738 RSSYMregisternewpackage
-Ref RSSYMrejectall = NILREF;	// ROM 0x0063c740 RSSYMrejectall
-Ref RSSYMrejectbeginning = NILREF;	// ROM 0x0063c748 RSSYMrejectbeginning
-Ref RSSYMrejectone = NILREF;	// ROM 0x0063c750 RSSYMrejectone
-Ref RSSYMrelated = NILREF;	// ROM 0x0063c758 RSSYMrelated
-Ref RSSYMremallbutbuiltinfromdir = NILREF;	// ROM 0x0063c760 RSSYMremallbutbuiltinfromdir
-Ref RSSYMremoteid = NILREF;	// ROM 0x0063c768 RSSYMremoteid
-Ref RSSYMremotewriting = NILREF;	// ROM 0x0063c770 RSSYMremotewriting
-Ref RSSYMremoveallentries = NILREF;	// ROM 0x0063c778 RSSYMremoveallentries
-Ref RSSYMremovecookie = NILREF;	// ROM 0x0063c780 RSSYMremovecookie
-Ref RSSYMremovefromstore = NILREF;	// ROM 0x0063c788 RSSYMremovefromstore
-Ref RSSYMremoveindex = NILREF;	// ROM 0x0063c790 RSSYMremoveindex
-Ref RSSYMremoveoldestbook = NILREF;	// ROM 0x0063c798 RSSYMremoveoldestbook
-Ref RSSYMremovepackage = NILREF;	// ROM 0x0063c7a0 RSSYMremovepackage
-Ref RSSYMremovepart = NILREF;	// ROM 0x0063c7a8 RSSYMremovepart
-Ref RSSYMremovescript = NILREF;	// ROM 0x0063c7b0 RSSYMremovescript
-Ref RSSYMremovesymbol = NILREF;	// ROM 0x0063c7b8 RSSYMremovesymbol
-Ref RSSYMrendering = NILREF;	// ROM 0x0063c7c0 RSSYMrendering
-Ref RSSYMreorienttoscreen = NILREF;	// ROM 0x0063c7c8 RSSYMreorienttoscreen
-Ref RSSYMrepeatingmeeting = NILREF;	// ROM 0x0063c7d0 RSSYMrepeatingmeeting
-Ref RSSYMrepeatnotes = NILREF;	// ROM 0x0063c7d8 RSSYMrepeatnotes
-Ref RSSYMrepeatsoup = NILREF;	// ROM 0x0063c7e0 RSSYMrepeatsoup
-Ref RSSYMrepeattemplate = NILREF;	// ROM 0x0063c7e8 RSSYMrepeattemplate
-Ref RSSYMrepeattemplatealias = NILREF;	// ROM 0x0063c7f0 RSSYMrepeattemplatealias
-Ref RSSYMrepeattype = NILREF;	// ROM 0x0063c7f8 RSSYMrepeattype
-Ref RSSYMreplacechars = NILREF;	// ROM 0x0063c800 RSSYMreplacechars
-Ref RSSYMreportdeadunitimports = NILREF;	// ROM 0x0063c808 RSSYMreportdeadunitimports
-Ref RSSYMreqtimeout = NILREF;	// ROM 0x0063c810 RSSYMreqtimeout
-Ref RSSYMresolution = NILREF;	// ROM 0x0063c818 RSSYMresolution
-Ref RSSYMrestore2_2E0systementry = NILREF;	// ROM 0x0063c820 RSSYMrestore2_2E0systementry
-Ref RSSYMrestoreapackagefrompieces = NILREF;	// ROM 0x0063c828 RSSYMrestoreapackagefrompieces
-Ref RSSYMresult = NILREF;	// ROM 0x0063c830 RSSYMresult
-Ref RSSYMretryallowed = NILREF;	// ROM 0x0063c838 RSSYMretryallowed
-Ref RSSYMretrybutton = NILREF;	// ROM 0x0063c840 RSSYMretrybutton
-Ref RSSYMreturnelt = NILREF;	// ROM 0x0063c848 RSSYMreturnelt
-Ref RSSYMreversedictid = NILREF;	// ROM 0x0063c850 RSSYMreversedictid
-Ref RSSYMrichstring = NILREF;	// ROM 0x0063c858 RSSYMrichstring
-Ref RSSYMright = NILREF;	// ROM 0x0063c860 RSSYMright
-Ref RSSYMrightindent = NILREF;	// ROM 0x0063c868 RSSYMrightindent
-Ref RSSYMrightmargin = NILREF;	// ROM 0x0063c870 RSSYMrightmargin
-Ref RSSYMrightmarkgap = NILREF;	// ROM 0x0063c878 RSSYMrightmarkgap
-Ref RSSYMringtoanswerafter = NILREF;	// ROM 0x0063c880 RSSYMringtoanswerafter
-Ref RSSYMromdictid = NILREF;	// ROM 0x0063c888 RSSYMromdictid
-Ref RSSYMromid = NILREF;	// ROM 0x0063c890 RSSYMromid
-Ref RSSYMromname = NILREF;	// ROM 0x0063c898 RSSYMromname
-Ref RSSYMromstage = NILREF;	// ROM 0x0063c8a0 RSSYMromstage
-Ref RSSYMromversion = NILREF;	// ROM 0x0063c8a8 RSSYMromversion
-Ref RSSYMromversionstring = NILREF;	// ROM 0x0063c8b0 RSSYMromversionstring
-Ref RSSYMrootcontext = NILREF;	// ROM 0x0063c8b8 RSSYMrootcontext
-Ref RSSYMrosignoredicts = NILREF;	// ROM 0x0063c8c0 RSSYMrosignoredicts
-Ref RSSYMrosmapdicts = NILREF;	// ROM 0x0063c8c8 RSSYMrosmapdicts
-Ref RSSYMrotate180 = NILREF;	// ROM 0x0063c8d0 RSSYMrotate180
-Ref RSSYMrotateleft = NILREF;	// ROM 0x0063c8d8 RSSYMrotateleft
-Ref RSSYMrotateright = NILREF;	// ROM 0x0063c8e0 RSSYMrotateright
-Ref RSSYMroundrectangle = NILREF;	// ROM 0x0063c8e8 RSSYMroundrectangle
-Ref RSSYMrowbytes = NILREF;	// ROM 0x0063c8f0 RSSYMrowbytes
-Ref RSSYMrulers = NILREF;	// ROM 0x0063c8f8 RSSYMrulers
-Ref RSSYMsafetoremove = NILREF;	// ROM 0x0063c900 RSSYMsafetoremove
-Ref RSSYMsalutationprefix = NILREF;	// ROM 0x0063c908 RSSYMsalutationprefix
-Ref RSSYMsamples = NILREF;	// ROM 0x0063c910 RSSYMsamples
-Ref RSSYMsamplesize = NILREF;	// ROM 0x0063c918 RSSYMsamplesize
-Ref RSSYMsamplingrate = NILREF;	// ROM 0x0063c920 RSSYMsamplingrate
-Ref RSSYMsaveletterweights = NILREF;	// ROM 0x0063c928 RSSYMsaveletterweights
-Ref RSSYMsavemarkup = NILREF;	// ROM 0x0063c930 RSSYMsavemarkup
-Ref RSSYMscale = NILREF;	// ROM 0x0063c938 RSSYMscale
-Ref RSSYMscanoffset = NILREF;	// ROM 0x0063c940 RSSYMscanoffset
-Ref RSSYMschedule_act = NILREF;	// ROM 0x0063c948 RSSYMschedule_act
-Ref RSSYMscore = NILREF;	// ROM 0x0063c950 RSSYMscore
-Ref RSSYMscreendepth = NILREF;	// ROM 0x0063c958 RSSYMscreendepth
-Ref RSSYMscreenheight = NILREF;	// ROM 0x0063c960 RSSYMscreenheight
-Ref RSSYMscreenontime = NILREF;	// ROM 0x0063c968 RSSYMscreenontime
-Ref RSSYMscreenorientation = NILREF;	// ROM 0x0063c970 RSSYMscreenorientation
-Ref RSSYMscreenresolutionx = NILREF;	// ROM 0x0063c978 RSSYMscreenresolutionx
-Ref RSSYMscreenresolutiony = NILREF;	// ROM 0x0063c980 RSSYMscreenresolutiony
-Ref RSSYMscreensym = NILREF;	// ROM 0x0063c988 RSSYMscreensym
-Ref RSSYMscreenwidth = NILREF;	// ROM 0x0063c990 RSSYMscreenwidth
-Ref RSSYMscripts = NILREF;	// ROM 0x0063c998 RSSYMscripts
-Ref RSSYMscrolldelta = NILREF;	// ROM 0x0063c9a0 RSSYMscrolldelta
-Ref RSSYMscrolldownsound = NILREF;	// ROM 0x0063c9a8 RSSYMscrolldownsound
-Ref RSSYMscrolledview = NILREF;	// ROM 0x0063c9b0 RSSYMscrolledview
-Ref RSSYMscroller = NILREF;	// ROM 0x0063c9b8 RSSYMscroller
-Ref RSSYMscrollers = NILREF;	// ROM 0x0063c9c0 RSSYMscrollers
-Ref RSSYMscrollupsound = NILREF;	// ROM 0x0063c9c8 RSSYMscrollupsound
-Ref RSSYMsecond = NILREF;	// ROM 0x0063c9d0 RSSYMsecond
-Ref RSSYMsecondleadingz = NILREF;	// ROM 0x0063c9d8 RSSYMsecondleadingz
-Ref RSSYMsecorder = NILREF;	// ROM 0x0063c9e0 RSSYMsecorder
-Ref RSSYMselecteddates = NILREF;	// ROM 0x0063c9e8 RSSYMselecteddates
-Ref RSSYMselection = NILREF;	// ROM 0x0063c9f0 RSSYMselection
-Ref RSSYMselectivesyncok = NILREF;	// ROM 0x0063c9f8 RSSYMselectivesyncok
-Ref RSSYMsendflags = NILREF;	// ROM 0x0063ca00 RSSYMsendflags
-Ref RSSYMsending = NILREF;	// ROM 0x0063ca08 RSSYMsending
-Ref RSSYMsendwaiting = NILREF;	// ROM 0x0063ca10 RSSYMsendwaiting
-Ref RSSYMserialgpi = NILREF;	// ROM 0x0063ca18 RSSYMserialgpi
-Ref RSSYMserialnumber = NILREF;	// ROM 0x0063ca20 RSSYMserialnumber
-Ref RSSYMserialontime = NILREF;	// ROM 0x0063ca28 RSSYMserialontime
-Ref RSSYMservice = NILREF;	// ROM 0x0063ca30 RSSYMservice
-Ref RSSYMserviceid = NILREF;	// ROM 0x0063ca38 RSSYMserviceid
-Ref RSSYMsetallinfo = NILREF;	// ROM 0x0063ca40 RSSYMsetallinfo
-Ref RSSYMsetaref = NILREF;	// ROM 0x0063ca48 RSSYMsetaref
-Ref RSSYMsetbrowserposition = NILREF;	// ROM 0x0063ca50 RSSYMsetbrowserposition
-Ref RSSYMsetcapslock = NILREF;	// ROM 0x0063ca58 RSSYMsetcapslock
-Ref RSSYMsetglobal = NILREF;	// ROM 0x0063ca60 RSSYMsetglobal
-Ref RSSYMsetinfo = NILREF;	// ROM 0x0063ca68 RSSYMsetinfo
-Ref RSSYMsetmarkicon = NILREF;	// ROM 0x0063ca70 RSSYMsetmarkicon
-Ref RSSYMsetmeetingbounds = NILREF;	// ROM 0x0063ca78 RSSYMsetmeetingbounds
-Ref RSSYMsetname = NILREF;	// ROM 0x0063ca80 RSSYMsetname
-Ref RSSYMsetpagenumber = NILREF;	// ROM 0x0063ca88 RSSYMsetpagenumber
-Ref RSSYMsetprintprogress = NILREF;	// ROM 0x0063ca90 RSSYMsetprintprogress
-Ref RSSYMsetscroller = NILREF;	// ROM 0x0063ca98 RSSYMsetscroller
-Ref RSSYMsetscrollers = NILREF;	// ROM 0x0063caa0 RSSYMsetscrollers
-Ref RSSYMsetsignature = NILREF;	// ROM 0x0063caa8 RSSYMsetsignature
-Ref RSSYMsetstatus = NILREF;	// ROM 0x0063cab0 RSSYMsetstatus
-Ref RSSYMsetstatusdialog = NILREF;	// ROM 0x0063cab8 RSSYMsetstatusdialog
-Ref RSSYMsettings = NILREF;	// ROM 0x0063cac0 RSSYMsettings
-Ref RSSYMsetup = NILREF;	// ROM 0x0063cac8 RSSYMsetup
-Ref RSSYMsetup1 = NILREF;	// ROM 0x0063cad0 RSSYMsetup1
-Ref RSSYMsetup2 = NILREF;	// ROM 0x0063cad8 RSSYMsetup2
-Ref RSSYMsetupromhelpbook = NILREF;	// ROM 0x0063cae0 RSSYMsetupromhelpbook
-Ref RSSYMsevenbit = NILREF;	// ROM 0x0063cae8 RSSYMsevenbit
-Ref RSSYMshape = NILREF;	// ROM 0x0063caf0 RSSYMshape
-Ref RSSYMshapebounds = NILREF;	// ROM 0x0063caf8 RSSYMshapebounds
-Ref RSSYMshortdatedelim = NILREF;	// ROM 0x0063cb00 RSSYMshortdatedelim
-Ref RSSYMshortdateformat = NILREF;	// ROM 0x0063cb08 RSSYMshortdateformat
-Ref RSSYMshortdateorder = NILREF;	// ROM 0x0063cb10 RSSYMshortdateorder
-Ref RSSYMshortdaysuffix = NILREF;	// ROM 0x0063cb18 RSSYMshortdaysuffix
-Ref RSSYMshortdofweek = NILREF;	// ROM 0x0063cb20 RSSYMshortdofweek
-Ref RSSYMshortmonth = NILREF;	// ROM 0x0063cb28 RSSYMshortmonth
-Ref RSSYMshortmonthsuffix = NILREF;	// ROM 0x0063cb30 RSSYMshortmonthsuffix
-Ref RSSYMshortordinals = NILREF;	// ROM 0x0063cb38 RSSYMshortordinals
-Ref RSSYMshorttimestrspec = NILREF;	// ROM 0x0063cb40 RSSYMshorttimestrspec
-Ref RSSYMshorttitle = NILREF;	// ROM 0x0063cb48 RSSYMshorttitle
-Ref RSSYMshortyearsuffix = NILREF;	// ROM 0x0063cb50 RSSYMshortyearsuffix
-Ref RSSYMshowchar = NILREF;	// ROM 0x0063cb58 RSSYMshowchar
-Ref RSSYMshowmarkup = NILREF;	// ROM 0x0063cb60 RSSYMshowmarkup
-Ref RSSYMshowsound = NILREF;	// ROM 0x0063cb68 RSSYMshowsound
-Ref RSSYMsignature = NILREF;	// ROM 0x0063cb70 RSSYMsignature
-Ref RSSYMsignaturea = NILREF;	// ROM 0x0063cb78 RSSYMsignaturea
-Ref RSSYMsignatureb = NILREF;	// ROM 0x0063cb80 RSSYMsignatureb
-Ref RSSYMsimplesound = NILREF;	// ROM 0x0063cb88 RSSYMsimplesound
-Ref RSSYMsingleday = NILREF;	// ROM 0x0063cb90 RSSYMsingleday
-Ref RSSYMsize = NILREF;	// ROM 0x0063cb98 RSSYMsize
-Ref RSSYMskip = NILREF;	// ROM 0x0063cba0 RSSYMskip
-Ref RSSYMsleeptime = NILREF;	// ROM 0x0063cba8 RSSYMsleeptime
-Ref RSSYMslipheight = NILREF;	// ROM 0x0063cbb0 RSSYMslipheight
-Ref RSSYMslot = NILREF;	// ROM 0x0063cbb8 RSSYMslot
-Ref RSSYMsmallheight = NILREF;	// ROM 0x0063cbc0 RSSYMsmallheight
-Ref RSSYMsmileaftermounterror = NILREF;	// ROM 0x0063cbc8 RSSYMsmileaftermounterror
-Ref RSSYMsndframetype = NILREF;	// ROM 0x0063cbd0 RSSYMsndframetype
-Ref RSSYMsocket = NILREF;	// ROM 0x0063cbd8 RSSYMsocket
-Ref RSSYMsocketinfos = NILREF;	// ROM 0x0063cbe0 RSSYMsocketinfos
-Ref RSSYMsocketnumber = NILREF;	// ROM 0x0063cbe8 RSSYMsocketnumber
-Ref RSSYMsoftflowblocked = NILREF;	// ROM 0x0063cbf0 RSSYMsoftflowblocked
-Ref RSSYMsortid = NILREF;	// ROM 0x0063cbf8 RSSYMsortid
-Ref RSSYMsorton = NILREF;	// ROM 0x0063cc00 RSSYMsorton
-Ref RSSYMsorttables = NILREF;	// ROM 0x0063cc08 RSSYMsorttables
-Ref RSSYMsound = NILREF;	// ROM 0x0063cc10 RSSYMsound
-Ref RSSYMsoundinfo = NILREF;	// ROM 0x0063cc18 RSSYMsoundinfo
-Ref RSSYMsoundontime = NILREF;	// ROM 0x0063cc20 RSSYMsoundontime
-Ref RSSYMsoup = NILREF;	// ROM 0x0063cc28 RSSYMsoup
-Ref RSSYMsoupcreated = NILREF;	// ROM 0x0063cc30 RSSYMsoupcreated
-Ref RSSYMsoupdef = NILREF;	// ROM 0x0063cc38 RSSYMsoupdef
-Ref RSSYMsoupdeleted = NILREF;	// ROM 0x0063cc40 RSSYMsoupdeleted
-Ref RSSYMsoupenters = NILREF;	// ROM 0x0063cc48 RSSYMsoupenters
-Ref RSSYMsoupindexadded = NILREF;	// ROM 0x0063cc50 RSSYMsoupindexadded
-Ref RSSYMsoupindexremoved = NILREF;	// ROM 0x0063cc58 RSSYMsoupindexremoved
-Ref RSSYMsoupinfochanged = NILREF;	// ROM 0x0063cc60 RSSYMsoupinfochanged
-Ref RSSYMsoupleaves = NILREF;	// ROM 0x0063cc68 RSSYMsoupleaves
-Ref RSSYMsouplist = NILREF;	// ROM 0x0063cc70 RSSYMsouplist
-Ref RSSYMsoupname = NILREF;	// ROM 0x0063cc78 RSSYMsoupname
-Ref RSSYMsoups = NILREF;	// ROM 0x0063cc80 RSSYMsoups
-Ref RSSYMsouptagschanged = NILREF;	// ROM 0x0063cc88 RSSYMsouptagschanged
-Ref RSSYMsource = NILREF;	// ROM 0x0063cc90 RSSYMsource
-Ref RSSYMspeaker = NILREF;	// ROM 0x0063cc98 RSSYMspeaker
-Ref RSSYMspeakeron = NILREF;	// ROM 0x0063cca0 RSSYMspeakeron
-Ref RSSYMspeakervolume = NILREF;	// ROM 0x0063cca8 RSSYMspeakervolume
-Ref RSSYMspeed = NILREF;	// ROM 0x0063ccb0 RSSYMspeed
-Ref RSSYMspeedcursiveoption = NILREF;	// ROM 0x0063ccb8 RSSYMspeedcursiveoption
-Ref RSSYMsplit = NILREF;	// ROM 0x0063ccc0 RSSYMsplit
-Ref RSSYMsquaregrid = NILREF;	// ROM 0x0063ccc8 RSSYMsquaregrid
-Ref RSSYMsramcardlowbattery = NILREF;	// ROM 0x0063ccd0 RSSYMsramcardlowbattery
-Ref RSSYMsramcardreplacebattery = NILREF;	// ROM 0x0063ccd8 RSSYMsramcardreplacebattery
-Ref RSSYMstart = NILREF;	// ROM 0x0063cce0 RSSYMstart
-Ref RSSYMstartchar = NILREF;	// ROM 0x0063cce8 RSSYMstartchar
-Ref RSSYMstartidle = NILREF;	// ROM 0x0063ccf0 RSSYMstartidle
-Ref RSSYMstartkey = NILREF;	// ROM 0x0063ccf8 RSSYMstartkey
-Ref RSSYMstarttime = NILREF;	// ROM 0x0063cd00 RSSYMstarttime
-Ref RSSYMstate = NILREF;	// ROM 0x0063cd08 RSSYMstate
-Ref RSSYMstatus = NILREF;	// ROM 0x0063cd10 RSSYMstatus
-Ref RSSYMstatustext = NILREF;	// ROM 0x0063cd18 RSSYMstatustext
-Ref RSSYMstdforms = NILREF;	// ROM 0x0063cd20 RSSYMstdforms
-Ref RSSYMstepchildren = NILREF;	// ROM 0x0063cd28 RSSYMstepchildren
-Ref RSSYMstop = NILREF;	// ROM 0x0063cd30 RSSYMstop
-Ref RSSYMstopbits = NILREF;	// ROM 0x0063cd38 RSSYMstopbits
-Ref RSSYMstopidle = NILREF;	// ROM 0x0063cd40 RSSYMstopidle
-Ref RSSYMstore = NILREF;	// ROM 0x0063cd48 RSSYMstore
-Ref RSSYMstoreid = NILREF;	// ROM 0x0063cd50 RSSYMstoreid
-Ref RSSYMstoremounted = NILREF;	// ROM 0x0063cd58 RSSYMstoremounted
-Ref RSSYMstoreobj = NILREF;	// ROM 0x0063cd60 RSSYMstoreobj
-Ref RSSYMstorepassword = NILREF;	// ROM 0x0063cd68 RSSYMstorepassword
-Ref RSSYMstoresig = NILREF;	// ROM 0x0063cd70 RSSYMstoresig
-Ref RSSYMstoreunmounted = NILREF;	// ROM 0x0063cd78 RSSYMstoreunmounted
-Ref RSSYMstoreversion = NILREF;	// ROM 0x0063cd80 RSSYMstoreversion
-Ref RSSYMstorycard = NILREF;	// ROM 0x0063cd88 RSSYMstorycard
-Ref RSSYMstr_3C = NILREF;	// ROM 0x0063cd90 RSSYMstr_3C
-Ref RSSYMstr_3D = NILREF;	// ROM 0x0063cd98 RSSYMstr_3D
-Ref RSSYMstr_3E = NILREF;	// ROM 0x0063cda0 RSSYMstr_3E
-Ref RSSYMstrequal = NILREF;	// ROM 0x0063cda8 RSSYMstrequal
-Ref RSSYMstring = NILREF;	// ROM 0x0063cdb0 RSSYMstring
-Ref RSSYMstring_2Ecustom = NILREF;	// ROM 0x0063cdb8 RSSYMstring_2Ecustom
-Ref RSSYMstring_2Enohint = NILREF;	// ROM 0x0063cdc0 RSSYMstring_2Enohint
-Ref RSSYMstroke = NILREF;	// ROM 0x0063cdc8 RSSYMstroke
-Ref RSSYMstrokebundle = NILREF;	// ROM 0x0063cdd0 RSSYMstrokebundle
-Ref RSSYMstrokelist = NILREF;	// ROM 0x0063cdd8 RSSYMstrokelist
-Ref RSSYMstrokes = NILREF;	// ROM 0x0063cde0 RSSYMstrokes
-Ref RSSYMstrongarm = NILREF;	// ROM 0x0063cde8 RSSYMstrongarm
-Ref RSSYMstructure = NILREF;	// ROM 0x0063cdf0 RSSYMstructure
-Ref RSSYMstrxrcommands = NILREF;	// ROM 0x0063cdf8 RSSYMstrxrcommands
-Ref RSSYMstuffmodalcommandkeys = NILREF;	// ROM 0x0063ce00 RSSYMstuffmodalcommandkeys
-Ref RSSYMstylepalette = NILREF;	// ROM 0x0063ce08 RSSYMstylepalette
-Ref RSSYMstyles = NILREF;	// ROM 0x0063ce10 RSSYMstyles
-Ref RSSYMsubmit = NILREF;	// ROM 0x0063ce18 RSSYMsubmit
-Ref RSSYMsuffixstr = NILREF;	// ROM 0x0063ce20 RSSYMsuffixstr
-Ref RSSYMsummaryvalue = NILREF;	// ROM 0x0063ce28 RSSYMsummaryvalue
-Ref RSSYMsupportscallback = NILREF;	// ROM 0x0063ce30 RSSYMsupportscallback
-Ref RSSYMsweden = NILREF;	// ROM 0x0063ce38 RSSYMsweden
-Ref RSSYMswitzgerman = NILREF;	// ROM 0x0063ce40 RSSYMswitzgerman
-Ref RSSYMsym_3C = NILREF;	// ROM 0x0063ce48 RSSYMsym_3C
-Ref RSSYMsym_3E = NILREF;	// ROM 0x0063ce50 RSSYMsym_3E
-Ref RSSYMsymbol = NILREF;	// ROM 0x0063ce58 RSSYMsymbol
-Ref RSSYMsymbolset = NILREF;	// ROM 0x0063ce60 RSSYMsymbolset
-Ref RSSYMsymmetryshapeoption = NILREF;	// ROM 0x0063ce68 RSSYMsymmetryshapeoption
-Ref RSSYMsync = NILREF;	// ROM 0x0063ce70 RSSYMsync
-Ref RSSYMsyncbuttons = NILREF;	// ROM 0x0063ce78 RSSYMsyncbuttons
-Ref RSSYMsyncchildren = NILREF;	// ROM 0x0063ce80 RSSYMsyncchildren
-Ref RSSYMsyncpensize = NILREF;	// ROM 0x0063ce88 RSSYMsyncpensize
-Ref RSSYMsynth = NILREF;	// ROM 0x0063ce90 RSSYMsynth
-Ref RSSYMsysbeep = NILREF;	// ROM 0x0063ce98 RSSYMsysbeep
-Ref RSSYMsystem = NILREF;	// ROM 0x0063cea0 RSSYMsystem
-Ref RSSYMsystemdirectory = NILREF;	// ROM 0x0063cea8 RSSYMsystemdirectory
-Ref RSSYMsystemlocalebundle = NILREF;	// ROM 0x0063ceb0 RSSYMsystemlocalebundle
-Ref RSSYMsystemname = NILREF;	// ROM 0x0063ceb8 RSSYMsystemname
-Ref RSSYMsystempsfont = NILREF;	// ROM 0x0063cec0 RSSYMsystempsfont
-Ref RSSYMsystemscratch = NILREF;	// ROM 0x0063cec8 RSSYMsystemscratch
-Ref RSSYMtabacross = NILREF;	// ROM 0x0063ced0 RSSYMtabacross
-Ref RSSYMtabdown = NILREF;	// ROM 0x0063ced8 RSSYMtabdown
-Ref RSSYMtabheights = NILREF;	// ROM 0x0063cee0 RSSYMtabheights
-Ref RSSYMtabletresolutionx = NILREF;	// ROM 0x0063cee8 RSSYMtabletresolutionx
-Ref RSSYMtabletresolutiony = NILREF;	// ROM 0x0063cef0 RSSYMtabletresolutiony
-Ref RSSYMtabprotos = NILREF;	// ROM 0x0063cef8 RSSYMtabprotos
-Ref RSSYMtabs = NILREF;	// ROM 0x0063cf00 RSSYMtabs
-Ref RSSYMtabsetup = NILREF;	// ROM 0x0063cf08 RSSYMtabsetup
-Ref RSSYMtabvalues = NILREF;	// ROM 0x0063cf10 RSSYMtabvalues
-Ref RSSYMtabvalueslot = NILREF;	// ROM 0x0063cf18 RSSYMtabvalueslot
-Ref RSSYMtabwidths = NILREF;	// ROM 0x0063cf20 RSSYMtabwidths
-Ref RSSYMtag = NILREF;	// ROM 0x0063cf28 RSSYMtag
-Ref RSSYMtags = NILREF;	// ROM 0x0063cf30 RSSYMtags
-Ref RSSYMtagspec = NILREF;	// ROM 0x0063cf38 RSSYMtagspec
-Ref RSSYMtapdata = NILREF;	// ROM 0x0063cf40 RSSYMtapdata
-Ref RSSYMtarget = NILREF;	// ROM 0x0063cf48 RSSYMtarget
-Ref RSSYMtask = NILREF;	// ROM 0x0063cf50 RSSYMtask
-Ref RSSYMtaskslip = NILREF;	// ROM 0x0063cf58 RSSYMtaskslip
-Ref RSSYMtask_list = NILREF;	// ROM 0x0063cf60 RSSYMtask_list
-Ref RSSYMtcursor = NILREF;	// ROM 0x0063cf68 RSSYMtcursor
-Ref RSSYMtemplate = NILREF;	// ROM 0x0063cf70 RSSYMtemplate
-Ref RSSYMtemporary = NILREF;	// ROM 0x0063cf78 RSSYMtemporary
-Ref RSSYMterminalclass = NILREF;	// ROM 0x0063cf80 RSSYMterminalclass
-Ref RSSYMtermination = NILREF;	// ROM 0x0063cf88 RSSYMtermination
-Ref RSSYMtersedofweek = NILREF;	// ROM 0x0063cf90 RSSYMtersedofweek
-Ref RSSYMtersemonth = NILREF;	// ROM 0x0063cf98 RSSYMtersemonth
-Ref RSSYMtestconfig = NILREF;	// ROM 0x0063cfa0 RSSYMtestconfig
-Ref RSSYMtext = NILREF;	// ROM 0x0063cfa8 RSSYMtext
-Ref RSSYMtextbox = NILREF;	// ROM 0x0063cfb0 RSSYMtextbox
-Ref RSSYMtextdata = NILREF;	// ROM 0x0063cfb8 RSSYMtextdata
-Ref RSSYMtextflags = NILREF;	// ROM 0x0063cfc0 RSSYMtextflags
-Ref RSSYMtextgutter = NILREF;	// ROM 0x0063cfc8 RSSYMtextgutter
-Ref RSSYMtextpattern = NILREF;	// ROM 0x0063cfd0 RSSYMtextpattern
-Ref RSSYMtextstyle = NILREF;	// ROM 0x0063cfd8 RSSYMtextstyle
-Ref RSSYMthedesktoptype = NILREF;	// ROM 0x0063cfe0 RSSYMthedesktoptype
-Ref RSSYMtheformat = NILREF;	// ROM 0x0063cfe8 RSSYMtheformat
-Ref RSSYMthefunc = NILREF;	// ROM 0x0063cff0 RSSYMthefunc
-Ref RSSYMthename = NILREF;	// ROM 0x0063cff8 RSSYMthename
-Ref RSSYMthinking = NILREF;	// ROM 0x0063d000 RSSYMthinking
-Ref RSSYMthroughputgauge = NILREF;	// ROM 0x0063d008 RSSYMthroughputgauge
-Ref RSSYMthumbnailscript = NILREF;	// ROM 0x0063d010 RSSYMthumbnailscript
-Ref RSSYMticksound = NILREF;	// ROM 0x0063d018 RSSYMticksound
-Ref RSSYMtime = NILREF;	// ROM 0x0063d020 RSSYMtime
-Ref RSSYMtimeatcoldboot = NILREF;	// ROM 0x0063d028 RSSYMtimeatcoldboot
-Ref RSSYMtimecycle = NILREF;	// ROM 0x0063d030 RSSYMtimecycle
-Ref RSSYMtimedictionary = NILREF;	// ROM 0x0063d038 RSSYMtimedictionary
-Ref RSSYMtimeformat = NILREF;	// ROM 0x0063d040 RSSYMtimeformat
-Ref RSSYMtimeoutcursiveoption = NILREF;	// ROM 0x0063d048 RSSYMtimeoutcursiveoption
-Ref RSSYMtimeoutscript = NILREF;	// ROM 0x0063d050 RSSYMtimeoutscript
-Ref RSSYMtimesepstr1 = NILREF;	// ROM 0x0063d058 RSSYMtimesepstr1
-Ref RSSYMtimesepstr2 = NILREF;	// ROM 0x0063d060 RSSYMtimesepstr2
-Ref RSSYMtimestamp = NILREF;	// ROM 0x0063d068 RSSYMtimestamp
-Ref RSSYMtinytim = NILREF;	// ROM 0x0063d070 RSSYMtinytim
-Ref RSSYMtitle = NILREF;	// ROM 0x0063d078 RSSYMtitle
-Ref RSSYMtitletext = NILREF;	// ROM 0x0063d080 RSSYMtitletext
-Ref RSSYMtocksound = NILREF;	// ROM 0x0063d088 RSSYMtocksound
-Ref RSSYMtodo = NILREF;	// ROM 0x0063d090 RSSYMtodo
-Ref RSSYMtodoitem = NILREF;	// ROM 0x0063d098 RSSYMtodoitem
-Ref RSSYMtoemailaddress = NILREF;	// ROM 0x0063d0a0 RSSYMtoemailaddress
-Ref RSSYMtoggletopic = NILREF;	// ROM 0x0063d0a8 RSSYMtoggletopic
-Ref RSSYMtop = NILREF;	// ROM 0x0063d0b0 RSSYMtop
-Ref RSSYMtopic = NILREF;	// ROM 0x0063d0b8 RSSYMtopic
-Ref RSSYMtopicdraginfo = NILREF;	// ROM 0x0063d0c0 RSSYMtopicdraginfo
-Ref RSSYMtopicfont = NILREF;	// ROM 0x0063d0c8 RSSYMtopicfont
-Ref RSSYMtopicmarkers = NILREF;	// ROM 0x0063d0d0 RSSYMtopicmarkers
-Ref RSSYMtopics = NILREF;	// ROM 0x0063d0d8 RSSYMtopics
-Ref RSSYMtopicslabel = NILREF;	// ROM 0x0063d0e0 RSSYMtopicslabel
-Ref RSSYMtopitem = NILREF;	// ROM 0x0063d0e8 RSSYMtopitem
-Ref RSSYMtopmargin = NILREF;	// ROM 0x0063d0f0 RSSYMtopmargin
-Ref RSSYMtotal = NILREF;	// ROM 0x0063d0f8 RSSYMtotal
-Ref RSSYMtotalcards = NILREF;	// ROM 0x0063d100 RSSYMtotalcards
-Ref RSSYMtotalsize = NILREF;	// ROM 0x0063d108 RSSYMtotalsize
-Ref RSSYMtotalsockets = NILREF;	// ROM 0x0063d110 RSSYMtotalsockets
-Ref RSSYMtouchtone = NILREF;	// ROM 0x0063d118 RSSYMtouchtone
-Ref RSSYMtrace = NILREF;	// ROM 0x0063d120 RSSYMtrace
-Ref RSSYMtraceelements = NILREF;	// ROM 0x0063d128 RSSYMtraceelements
-Ref RSSYMtrailingfirst = NILREF;	// ROM 0x0063d130 RSSYMtrailingfirst
-Ref RSSYMtrailinglast = NILREF;	// ROM 0x0063d138 RSSYMtrailinglast
-Ref RSSYMtransactiontimeout = NILREF;	// ROM 0x0063d140 RSSYMtransactiontimeout
-Ref RSSYMtransfermode = NILREF;	// ROM 0x0063d148 RSSYMtransfermode
-Ref RSSYMtransform = NILREF;	// ROM 0x0063d150 RSSYMtransform
-Ref RSSYMtricklechargecontinuous = NILREF;	// ROM 0x0063d158 RSSYMtricklechargecontinuous
-Ref RSSYMtricklecharging = NILREF;	// ROM 0x0063d160 RSSYMtricklecharging
-Ref RSSYMtsid = NILREF;	// ROM 0x0063d168 RSSYMtsid
-Ref RSSYMtstore = NILREF;	// ROM 0x0063d170 RSSYMtstore
-Ref RSSYMtwoo = NILREF;	// ROM 0x0063d178 RSSYMtwoo
-Ref RSSYMtxcharsobj = NILREF;	// ROM 0x0063d180 RSSYMtxcharsobj
-Ref RSSYMtxdata = NILREF;	// ROM 0x0063d188 RSSYMtxdata
-Ref RSSYMtxtext = NILREF;	// ROM 0x0063d190 RSSYMtxtext
-Ref RSSYMtype = NILREF;	// ROM 0x0063d198 RSSYMtype
-Ref RSSYMtypelist = NILREF;	// ROM 0x0063d1a0 RSSYMtypelist
-Ref RSSYMtypes = NILREF;	// ROM 0x0063d1a8 RSSYMtypes
-Ref RSSYMtypeselecttimeout = NILREF;	// ROM 0x0063d1b0 RSSYMtypeselecttimeout
-Ref RSSYMuk = NILREF;	// ROM 0x0063d1b8 RSSYMuk
-Ref RSSYMundo = NILREF;	// ROM 0x0063d1c0 RSSYMundo
-Ref RSSYMundoable = NILREF;	// ROM 0x0063d1c8 RSSYMundoable
-Ref RSSYMundoredo = NILREF;	// ROM 0x0063d1d0 RSSYMundoredo
-Ref RSSYMundosound = NILREF;	// ROM 0x0063d1d8 RSSYMundosound
-Ref RSSYMunflattener = NILREF;	// ROM 0x0063d1e0 RSSYMunflattener
-Ref RSSYMunflattennocode = NILREF;	// ROM 0x0063d1e8 RSSYMunflattennocode
-Ref RSSYMunicode = NILREF;	// ROM 0x0063d1f0 RSSYMunicode
-Ref RSSYMunistyle = NILREF;	// ROM 0x0063d1f8 RSSYMunistyle
-Ref RSSYMunitdata = NILREF;	// ROM 0x0063d200 RSSYMunitdata
-Ref RSSYMunitid = NILREF;	// ROM 0x0063d208 RSSYMunitid
-Ref RSSYMunknown = NILREF;	// ROM 0x0063d210 RSSYMunknown
-Ref RSSYMunregcommconfigarray = NILREF;	// ROM 0x0063d218 RSSYMunregcommconfigarray
-Ref RSSYMunstuffmodalcommandkeys = NILREF;	// ROM 0x0063d220 RSSYMunstuffmodalcommandkeys
-Ref RSSYMuntraincharstr = NILREF;	// ROM 0x0063d228 RSSYMuntraincharstr
-Ref RSSYMup = NILREF;	// ROM 0x0063d230 RSSYMup
-Ref RSSYMupdatelocalefromuserconfig = NILREF;	// ROM 0x0063d238 RSSYMupdatelocalefromuserconfig
-Ref RSSYMuploadingfile = NILREF;	// ROM 0x0063d240 RSSYMuploadingfile
-Ref RSSYMupperlist = NILREF;	// ROM 0x0063d248 RSSYMupperlist
-Ref RSSYMuppernomarklist = NILREF;	// ROM 0x0063d250 RSSYMuppernomarklist
-Ref RSSYMusa = NILREF;	// ROM 0x0063d258 RSSYMusa
-Ref RSSYMuseaddressdomain = NILREF;	// ROM 0x0063d260 RSSYMuseaddressdomain
-Ref RSSYMusecalcdomain = NILREF;	// ROM 0x0063d268 RSSYMusecalcdomain
-Ref RSSYMuseccolumndomain = NILREF;	// ROM 0x0063d270 RSSYMuseccolumndomain
-Ref RSSYMusedatedomain = NILREF;	// ROM 0x0063d278 RSSYMusedatedomain
-Ref RSSYMusedialnavigator = NILREF;	// ROM 0x0063d280 RSSYMusedialnavigator
-Ref RSSYMusedsize = NILREF;	// ROM 0x0063d288 RSSYMusedsize
-Ref RSSYMuseeom = NILREF;	// ROM 0x0063d290 RSSYMuseeom
-Ref RSSYMuseeop = NILREF;	// ROM 0x0063d298 RSSYMuseeop
-Ref RSSYMusefaxnavigator = NILREF;	// ROM 0x0063d2a0 RSSYMusefaxnavigator
-Ref RSSYMusefullpage = NILREF;	// ROM 0x0063d2a8 RSSYMusefullpage
-Ref RSSYMusegeneralshapedomain = NILREF;	// ROM 0x0063d2b0 RSSYMusegeneralshapedomain
-Ref RSSYMusehardflowcontrol = NILREF;	// ROM 0x0063d2b8 RSSYMusehardflowcontrol
-Ref RSSYMuseinkwordrecognition = NILREF;	// ROM 0x0063d2c0 RSSYMuseinkwordrecognition
-Ref RSSYMusekanjidomain = NILREF;	// ROM 0x0063d2c8 RSSYMusekanjidomain
-Ref RSSYMusemailconnector = NILREF;	// ROM 0x0063d2d0 RSSYMusemailconnector
-Ref RSSYMusemodemnavigator = NILREF;	// ROM 0x0063d2d8 RSSYMusemodemnavigator
-Ref RSSYMusenamedomain = NILREF;	// ROM 0x0063d2e0 RSSYMusenamedomain
-Ref RSSYMusenumberdomain = NILREF;	// ROM 0x0063d2e8 RSSYMusenumberdomain
-Ref RSSYMusepassword = NILREF;	// ROM 0x0063d2f0 RSSYMusepassword
-Ref RSSYMusephonedomain = NILREF;	// ROM 0x0063d2f8 RSSYMusephonedomain
-Ref RSSYMuser = NILREF;	// ROM 0x0063d300 RSSYMuser
-Ref RSSYMuserawinkrecognition = NILREF;	// ROM 0x0063d308 RSSYMuserawinkrecognition
-Ref RSSYMuserconfiguration = NILREF;	// ROM 0x0063d310 RSSYMuserconfiguration
-Ref RSSYMuserdictquery = NILREF;	// ROM 0x0063d318 RSSYMuserdictquery
-Ref RSSYMuserdismissed = NILREF;	// ROM 0x0063d320 RSSYMuserdismissed
-Ref RSSYMuserfolders = NILREF;	// ROM 0x0063d328 RSSYMuserfolders
-Ref RSSYMuserfont = NILREF;	// ROM 0x0063d330 RSSYMuserfont
-Ref RSSYMuserpensize = NILREF;	// ROM 0x0063d338 RSSYMuserpensize
-Ref RSSYMuser_obj = NILREF;	// ROM 0x0063d340 RSSYMuser_obj
-Ref RSSYMusesoftflowcontrol = NILREF;	// ROM 0x0063d348 RSSYMusesoftflowcontrol
-Ref RSSYMusetimedomain = NILREF;	// ROM 0x0063d350 RSSYMusetimedomain
-Ref RSSYMusevoicenavigator = NILREF;	// ROM 0x0063d358 RSSYMusevoicenavigator
-Ref RSSYMuseworddomain = NILREF;	// ROM 0x0063d360 RSSYMuseworddomain
-Ref RSSYMusewordreplaydomain = NILREF;	// ROM 0x0063d368 RSSYMusewordreplaydomain
-Ref RSSYMvalid = NILREF;	// ROM 0x0063d370 RSSYMvalid
-Ref RSSYMvalidtest = NILREF;	// ROM 0x0063d378 RSSYMvalidtest
-Ref RSSYMvalue = NILREF;	// ROM 0x0063d380 RSSYMvalue
-Ref RSSYMvars = NILREF;	// ROM 0x0063d388 RSSYMvars
-Ref RSSYMvarsmapstarter = NILREF;	// ROM 0x0063d390 RSSYMvarsmapstarter
-Ref RSSYMvbarber = NILREF;	// ROM 0x0063d398 RSSYMvbarber
-Ref RSSYMvbo = NILREF;	// ROM 0x0063d3a0 RSSYMvbo
-Ref RSSYMverifycalibration = NILREF;	// ROM 0x0063d3a8 RSSYMverifycalibration
-Ref RSSYMversion = NILREF;	// ROM 0x0063d3b0 RSSYMversion
-Ref RSSYMvertex = NILREF;	// ROM 0x0063d3b8 RSSYMvertex
-Ref RSSYMvgauge = NILREF;	// ROM 0x0063d3c0 RSSYMvgauge
-Ref RSSYMviaappletalk = NILREF;	// ROM 0x0063d3c8 RSSYMviaappletalk
-Ref RSSYMview = NILREF;	// ROM 0x0063d3d0 RSSYMview
-Ref RSSYMviewabletopics = NILREF;	// ROM 0x0063d3d8 RSSYMviewabletopics
-Ref RSSYMviewaddchildscript = NILREF;	// ROM 0x0063d3e0 RSSYMviewaddchildscript
-Ref RSSYMviewadddraginfoscript = NILREF;	// ROM 0x0063d3e8 RSSYMviewadddraginfoscript
-Ref RSSYMviewbounds = NILREF;	// ROM 0x0063d3f0 RSSYMviewbounds
-Ref RSSYMviewcaretactivatescript = NILREF;	// ROM 0x0063d3f8 RSSYMviewcaretactivatescript
-Ref RSSYMviewcaretchangedscript = NILREF;	// ROM 0x0063d400 RSSYMviewcaretchangedscript
-Ref RSSYMviewcaretscrollscript = NILREF;	// ROM 0x0063d408 RSSYMviewcaretscrollscript
-Ref RSSYMviewchildren = NILREF;	// ROM 0x0063d410 RSSYMviewchildren
-Ref RSSYMviewclass = NILREF;	// ROM 0x0063d418 RSSYMviewclass
-Ref RSSYMviewclickscript = NILREF;	// ROM 0x0063d420 RSSYMviewclickscript
-Ref RSSYMviewclipper = NILREF;	// ROM 0x0063d428 RSSYMviewclipper
-Ref RSSYMviewcobject = NILREF;	// ROM 0x0063d430 RSSYMviewcobject
-Ref RSSYMviewdragfeedbackscript = NILREF;	// ROM 0x0063d438 RSSYMviewdragfeedbackscript
-Ref RSSYMviewdrawdragbackgroundscript = NILREF;	// ROM 0x0063d440 RSSYMviewdrawdragbackgroundscript
-Ref RSSYMviewdrawdragdatascript = NILREF;	// ROM 0x0063d448 RSSYMviewdrawdragdatascript
-Ref RSSYMviewdrawscript = NILREF;	// ROM 0x0063d450 RSSYMviewdrawscript
-Ref RSSYMviewdropapprovescript = NILREF;	// ROM 0x0063d458 RSSYMviewdropapprovescript
-Ref RSSYMviewdropchildscript = NILREF;	// ROM 0x0063d460 RSSYMviewdropchildscript
-Ref RSSYMviewdropdonescript = NILREF;	// ROM 0x0063d468 RSSYMviewdropdonescript
-Ref RSSYMviewdropmovescript = NILREF;	// ROM 0x0063d470 RSSYMviewdropmovescript
-Ref RSSYMviewdropremovescript = NILREF;	// ROM 0x0063d478 RSSYMviewdropremovescript
-Ref RSSYMviewdropscript = NILREF;	// ROM 0x0063d480 RSSYMviewdropscript
-Ref RSSYMvieweffect = NILREF;	// ROM 0x0063d488 RSSYMvieweffect
-Ref RSSYMviewfillpattern = NILREF;	// ROM 0x0063d490 RSSYMviewfillpattern
-Ref RSSYMviewfinalchangescript = NILREF;	// ROM 0x0063d498 RSSYMviewfinalchangescript
-Ref RSSYMviewfindtargetscript = NILREF;	// ROM 0x0063d4a0 RSSYMviewfindtargetscript
-Ref RSSYMviewflags = NILREF;	// ROM 0x0063d4a8 RSSYMviewflags
-Ref RSSYMviewfont = NILREF;	// ROM 0x0063d4b0 RSSYMviewfont
-Ref RSSYMviewformat = NILREF;	// ROM 0x0063d4b8 RSSYMviewformat
-Ref RSSYMviewframepattern = NILREF;	// ROM 0x0063d4c0 RSSYMviewframepattern
-Ref RSSYMviewfrontcommandkey = NILREF;	// ROM 0x0063d4c8 RSSYMviewfrontcommandkey
-Ref RSSYMviewfrontkey = NILREF;	// ROM 0x0063d4d0 RSSYMviewfrontkey
-Ref RSSYMviewfrontmost = NILREF;	// ROM 0x0063d4d8 RSSYMviewfrontmost
-Ref RSSYMviewfrontmostapp = NILREF;	// ROM 0x0063d4e0 RSSYMviewfrontmostapp
-Ref RSSYMviewgesturescript = NILREF;	// ROM 0x0063d4e8 RSSYMviewgesturescript
-Ref RSSYMviewgetdropdatascript = NILREF;	// ROM 0x0063d4f0 RSSYMviewgetdropdatascript
-Ref RSSYMviewgetdroptypesscript = NILREF;	// ROM 0x0063d4f8 RSSYMviewgetdroptypesscript
-Ref RSSYMviewgrid = NILREF;	// ROM 0x0063d500 RSSYMviewgrid
-Ref RSSYMviewhelp = NILREF;	// ROM 0x0063d508 RSSYMviewhelp
-Ref RSSYMviewhidescript = NILREF;	// ROM 0x0063d510 RSSYMviewhidescript
-Ref RSSYMviewhilitescript = NILREF;	// ROM 0x0063d518 RSSYMviewhilitescript
-Ref RSSYMviewinkwordscript = NILREF;	// ROM 0x0063d520 RSSYMviewinkwordscript
-Ref RSSYMviewinsertitemsscript = NILREF;	// ROM 0x0063d528 RSSYMviewinsertitemsscript
-Ref RSSYMviewjustify = NILREF;	// ROM 0x0063d530 RSSYMviewjustify
-Ref RSSYMviewlinepattern = NILREF;	// ROM 0x0063d538 RSSYMviewlinepattern
-Ref RSSYMviewlinespacing = NILREF;	// ROM 0x0063d540 RSSYMviewlinespacing
-Ref RSSYMviewnextidletime = NILREF;	// ROM 0x0063d548 RSSYMviewnextidletime
-Ref RSSYMvieworiginx = NILREF;	// ROM 0x0063d550 RSSYMvieworiginx
-Ref RSSYMvieworiginy = NILREF;	// ROM 0x0063d558 RSSYMvieworiginy
-Ref RSSYMviewoverviewscript = NILREF;	// ROM 0x0063d560 RSSYMviewoverviewscript
-Ref RSSYMviewpostquitscript = NILREF;	// ROM 0x0063d568 RSSYMviewpostquitscript
-Ref RSSYMviewquitscript = NILREF;	// ROM 0x0063d570 RSSYMviewquitscript
-Ref RSSYMviewrawinkscript = NILREF;	// ROM 0x0063d578 RSSYMviewrawinkscript
-Ref RSSYMviewscrolldownscript = NILREF;	// ROM 0x0063d580 RSSYMviewscrolldownscript
-Ref RSSYMviewscrollupscript = NILREF;	// ROM 0x0063d588 RSSYMviewscrollupscript
-Ref RSSYMviewscrubscript = NILREF;	// ROM 0x0063d590 RSSYMviewscrubscript
-Ref RSSYMviewset = NILREF;	// ROM 0x0063d598 RSSYMviewset
-Ref RSSYMviewsetupchildrenscript = NILREF;	// ROM 0x0063d5a0 RSSYMviewsetupchildrenscript
-Ref RSSYMviewsetupdonescript = NILREF;	// ROM 0x0063d5a8 RSSYMviewsetupdonescript
-Ref RSSYMviewsetupformscript = NILREF;	// ROM 0x0063d5b0 RSSYMviewsetupformscript
-Ref RSSYMviewshowscript = NILREF;	// ROM 0x0063d5b8 RSSYMviewshowscript
-Ref RSSYMviewstationery = NILREF;	// ROM 0x0063d5c0 RSSYMviewstationery
-Ref RSSYMviewstats = NILREF;	// ROM 0x0063d5c8 RSSYMviewstats
-Ref RSSYMviewstrokescript = NILREF;	// ROM 0x0063d5d0 RSSYMviewstrokescript
-Ref RSSYMviewtie = NILREF;	// ROM 0x0063d5d8 RSSYMviewtie
-Ref RSSYMviewtransfermode = NILREF;	// ROM 0x0063d5e0 RSSYMviewtransfermode
-Ref RSSYMviewupdatescrollersscript = NILREF;	// ROM 0x0063d5e8 RSSYMviewupdatescrollersscript
-Ref RSSYMviewvalue = NILREF;	// ROM 0x0063d5f0 RSSYMviewvalue
-Ref RSSYMviewwordscript = NILREF;	// ROM 0x0063d5f8 RSSYMviewwordscript
-Ref RSSYMvisible = NILREF;	// ROM 0x0063d600 RSSYMvisible
-Ref RSSYMvoicenavigate = NILREF;	// ROM 0x0063d608 RSSYMvoicenavigate
-Ref RSSYMvoicenavigator = NILREF;	// ROM 0x0063d610 RSSYMvoicenavigator
-Ref RSSYMvolume = NILREF;	// ROM 0x0063d618 RSSYMvolume
-Ref RSSYMvstatus = NILREF;	// ROM 0x0063d620 RSSYMvstatus
-Ref RSSYMwaitbeforeblinddial = NILREF;	// ROM 0x0063d628 RSSYMwaitbeforeblinddial
-Ref RSSYMwaitforcarrier = NILREF;	// ROM 0x0063d630 RSSYMwaitforcarrier
-Ref RSSYMwarningraised = NILREF;	// ROM 0x0063d638 RSSYMwarningraised
-Ref RSSYMwavetable = NILREF;	// ROM 0x0063d640 RSSYMwavetable
-Ref RSSYMwedge = NILREF;	// ROM 0x0063d648 RSSYMwedge
-Ref RSSYMweeknumbertype = NILREF;	// ROM 0x0063d650 RSSYMweeknumbertype
-Ref RSSYMweirdcardinserted = NILREF;	// ROM 0x0063d658 RSSYMweirdcardinserted
-Ref RSSYMweird_immediate = NILREF;	// ROM 0x0063d660 RSSYMweird_immediate
-Ref RSSYMwhatthe = NILREF;	// ROM 0x0063d668 RSSYMwhatthe
-Ref RSSYMwhat_obj = NILREF;	// ROM 0x0063d670 RSSYMwhat_obj
-Ref RSSYMwhen_obj = NILREF;	// ROM 0x0063d678 RSSYMwhen_obj
-Ref RSSYMwhere_obj = NILREF;	// ROM 0x0063d680 RSSYMwhere_obj
-Ref RSSYMwhichicons = NILREF;	// ROM 0x0063d688 RSSYMwhichicons
-Ref RSSYMwho_obj = NILREF;	// ROM 0x0063d690 RSSYMwho_obj
-Ref RSSYMwidth = NILREF;	// ROM 0x0063d698 RSSYMwidth
-Ref RSSYMwidths = NILREF;	// ROM 0x0063d6a0 RSSYMwidths
-Ref RSSYMwizard = NILREF;	// ROM 0x0063d6a8 RSSYMwizard
-Ref RSSYMwizardcommit = NILREF;	// ROM 0x0063d6b0 RSSYMwizardcommit
-Ref RSSYMwizstatustext = NILREF;	// ROM 0x0063d6b8 RSSYMwizstatustext
-Ref RSSYMword = NILREF;	// ROM 0x0063d6c0 RSSYMword
-Ref RSSYMwordbreaktable = NILREF;	// ROM 0x0063d6c8 RSSYMwordbreaktable
-Ref RSSYMwordbuf = NILREF;	// ROM 0x0063d6d0 RSSYMwordbuf
-Ref RSSYMwordinfo = NILREF;	// ROM 0x0063d6d8 RSSYMwordinfo
-Ref RSSYMwordlength = NILREF;	// ROM 0x0063d6e0 RSSYMwordlength
-Ref RSSYMwordoffset = NILREF;	// ROM 0x0063d6e8 RSSYMwordoffset
-Ref RSSYMwords = NILREF;	// ROM 0x0063d6f0 RSSYMwords
-Ref RSSYMwordscursiveoption = NILREF;	// ROM 0x0063d6f8 RSSYMwordscursiveoption
-Ref RSSYMwritecount = NILREF;	// ROM 0x0063d700 RSSYMwritecount
-Ref RSSYMx = NILREF;	// ROM 0x0063d708 RSSYMx
-Ref RSSYMxmitsoupchange = NILREF;	// ROM 0x0063d710 RSSYMxmitsoupchange
-Ref RSSYMxoffchar = NILREF;	// ROM 0x0063d718 RSSYMxoffchar
-Ref RSSYMxonchar = NILREF;	// ROM 0x0063d720 RSSYMxonchar
-Ref RSSYMxrwcommands = NILREF;	// ROM 0x0063d728 RSSYMxrwcommands
-Ref RSSYMxspace = NILREF;	// ROM 0x0063d730 RSSYMxspace
-Ref RSSYMxy = NILREF;	// ROM 0x0063d738 RSSYMxy
-Ref RSSYMy = NILREF;	// ROM 0x0063d740 RSSYMy
-Ref RSSYMyaccstack = NILREF;	// ROM 0x0063d748 RSSYMyaccstack
-Ref RSSYMyear = NILREF;	// ROM 0x0063d750 RSSYMyear
-Ref RSSYMyearleading = NILREF;	// ROM 0x0063d758 RSSYMyearleading
-Ref RSSYMyes = NILREF;	// ROM 0x0063d760 RSSYMyes
-Ref RSSYMyspace = NILREF;	// ROM 0x0063d768 RSSYMyspace
-Ref RSSYMzapautoreceive = NILREF;	// ROM 0x0063d770 RSSYMzapautoreceive
-Ref RSSYMzapcommtoolid = NILREF;	// ROM 0x0063d778 RSSYMzapcommtoolid
-Ref RSSYMzappackagesforfullrestore = NILREF;	// ROM 0x0063d780 RSSYMzappackagesforfullrestore
-Ref RSSYMzapslip = NILREF;	// ROM 0x0063d788 RSSYMzapslip
-Ref RSSYMzapsystemsoupforrestorefrom1_2Ex = NILREF;	// ROM 0x0063d790 RSSYMzapsystemsoupforrestorefrom1_2Ex
-Ref RSSYMzip = NILREF;	// ROM 0x0063d798 RSSYMzip
-Ref RSSYM_cachecontext = NILREF;	// ROM 0x0063d7a0 RSSYM_cachecontext
-Ref RSSYM_caretinfo = NILREF;	// ROM 0x0063d7a8 RSSYM_caretinfo
-Ref RSSYM_caretpopup = NILREF;	// ROM 0x0063d7b0 RSSYM_caretpopup
-Ref RSSYM_channel = NILREF;	// ROM 0x0063d7b8 RSSYM_channel
-Ref RSSYM_classinfo = NILREF;	// ROM 0x0063d7c0 RSSYM_classinfo
-Ref RSSYM_clicksong = NILREF;	// ROM 0x0063d7c8 RSSYM_clicksong
-Ref RSSYM_curclick = NILREF;	// ROM 0x0063d7d0 RSSYM_curclick
-Ref RSSYM_defaultbutton = NILREF;	// ROM 0x0063d7d8 RSSYM_defaultbutton
-Ref RSSYM_defaultbuttonbounds = NILREF;	// ROM 0x0063d7e0 RSSYM_defaultbuttonbounds
-Ref RSSYM_dodefaultbutton = NILREF;	// ROM 0x0063d7e8 RSSYM_dodefaultbutton
-Ref RSSYM_exporttable = NILREF;	// ROM 0x0063d7f0 RSSYM_exporttable
-Ref RSSYM_function = NILREF;	// ROM 0x0063d7f8 RSSYM_function
-Ref RSSYM_function_2Enative = NILREF;	// ROM 0x0063d800 RSSYM_function_2Enative
-Ref RSSYM_hilitemenuitem = NILREF;	// ROM 0x0063d808 RSSYM_hilitemenuitem
-Ref RSSYM_implementor = NILREF;	// ROM 0x0063d810 RSSYM_implementor
-Ref RSSYM_importtable = NILREF;	// ROM 0x0063d818 RSSYM_importtable
-Ref RSSYM_infobuttons = NILREF;	// ROM 0x0063d820 RSSYM_infobuttons
-Ref RSSYM_instance = NILREF;	// ROM 0x0063d828 RSSYM_instance
-Ref RSSYM_keycommands = NILREF;	// ROM 0x0063d830 RSSYM_keycommands
-Ref RSSYM_keyhelpclosescript = NILREF;	// ROM 0x0063d838 RSSYM_keyhelpclosescript
-Ref RSSYM_keyhelpopenscript = NILREF;	// ROM 0x0063d840 RSSYM_keyhelpopenscript
-Ref RSSYM_modtime = NILREF;	// ROM 0x0063d848 RSSYM_modtime
-Ref RSSYM_nextargframe = NILREF;	// ROM 0x0063d850 RSSYM_nextargframe
-Ref RSSYM_nextkeyview = NILREF;	// ROM 0x0063d858 RSSYM_nextkeyview
-Ref RSSYM_noautoadd = NILREF;	// ROM 0x0063d860 RSSYM_noautoadd
-Ref RSSYM_norepeat = NILREF;	// ROM 0x0063d868 RSSYM_norepeat
-Ref RSSYM_parent = NILREF;	// ROM 0x0063d870 RSSYM_parent
-Ref RSSYM_proto = NILREF;	// ROM 0x0063d878 RSSYM_proto
-Ref RSSYM_recognizeruserchoices = NILREF;	// ROM 0x0063d880 RSSYM_recognizeruserchoices
-Ref RSSYM_recogsettings = NILREF;	// ROM 0x0063d888 RSSYM_recogsettings
-Ref RSSYM_sndcallback = NILREF;	// ROM 0x0063d890 RSSYM_sndcallback
-Ref RSSYM_sndchannels = NILREF;	// ROM 0x0063d898 RSSYM_sndchannels
-Ref RSSYM_sound = NILREF;	// ROM 0x0063d8a0 RSSYM_sound
-Ref RSSYM_tabchildren = NILREF;	// ROM 0x0063d8a8 RSSYM_tabchildren
-Ref RSSYM_tabparent = NILREF;	// ROM 0x0063d8b0 RSSYM_tabparent
-Ref RSSYM_uniqueid = NILREF;	// ROM 0x0063d8b8 RSSYM_uniqueid
-Ref RSSYM_weakarray = NILREF;	// ROM 0x0063d8c0 RSSYM_weakarray
+Ref RSSYM_2A = NILREF;	// ROM 0x00681ca0 RSSYM_2A
+Ref RSSYM_2B = NILREF;	// ROM 0x00681ca8 RSSYM_2B
+Ref RSSYM_2D = NILREF;	// ROM 0x00681cb0 RSSYM_2D
+Ref RSSYM_2F = NILREF;	// ROM 0x00681cb8 RSSYM_2F
+Ref RSSYM1_2Ex = NILREF;	// ROM 0x00681cc0 RSSYM1_2Ex
+Ref RSSYM_3C = NILREF;	// ROM 0x00681cc8 RSSYM_3C
+Ref RSSYM_3C_3C = NILREF;	// ROM 0x00681cd0 RSSYM_3C_3C
+Ref RSSYM_3C_3D = NILREF;	// ROM 0x00681cd8 RSSYM_3C_3D
+Ref RSSYM_3C_3E = NILREF;	// ROM 0x00681ce0 RSSYM_3C_3E
+Ref RSSYM_3D = NILREF;	// ROM 0x00681ce8 RSSYM_3D
+Ref RSSYM_3E = NILREF;	// ROM 0x00681cf0 RSSYM_3E
+Ref RSSYM_3E_3D = NILREF;	// ROM 0x00681cf8 RSSYM_3E_3D
+Ref RSSYM_3E_3E = NILREF;	// ROM 0x00681d00 RSSYM_3E_3E
+Ref RSSYMa4 = NILREF;	// ROM 0x00681d08 RSSYMa4
+Ref RSSYMabbrdatestrspec = NILREF;	// ROM 0x00681d10 RSSYMabbrdatestrspec
+Ref RSSYMabbrdayofweekstrspec = NILREF;	// ROM 0x00681d18 RSSYMabbrdayofweekstrspec
+Ref RSSYMabbrdofweek = NILREF;	// ROM 0x00681d20 RSSYMabbrdofweek
+Ref RSSYMabbrmonth = NILREF;	// ROM 0x00681d28 RSSYMabbrmonth
+Ref RSSYMabout_task = NILREF;	// ROM 0x00681d30 RSSYMabout_task
+Ref RSSYMacpower = NILREF;	// ROM 0x00681d38 RSSYMacpower
+Ref RSSYMaction = NILREF;	// ROM 0x00681d40 RSSYMaction
+Ref RSSYMactiondescription = NILREF;	// ROM 0x00681d48 RSSYMactiondescription
+Ref RSSYMactionnotify = NILREF;	// ROM 0x00681d50 RSSYMactionnotify
+Ref RSSYMactionsoundeffects = NILREF;	// ROM 0x00681d58 RSSYMactionsoundeffects
+Ref RSSYMactivatestorepackages = NILREF;	// ROM 0x00681d60 RSSYMactivatestorepackages
+Ref RSSYMactivepackagelist = NILREF;	// ROM 0x00681d68 RSSYMactivepackagelist
+Ref RSSYMactivetimeout = NILREF;	// ROM 0x00681d70 RSSYMactivetimeout
+Ref RSSYMacvoltage = NILREF;	// ROM 0x00681d78 RSSYMacvoltage
+Ref RSSYMadd = NILREF;	// ROM 0x00681d80 RSSYMadd
+Ref RSSYMadded = NILREF;	// ROM 0x00681d88 RSSYMadded
+Ref RSSYMaddencodedword = NILREF;	// ROM 0x00681d90 RSSYMaddencodedword
+Ref RSSYMaddicon = NILREF;	// ROM 0x00681d98 RSSYMaddicon
+Ref RSSYMaddindex = NILREF;	// ROM 0x00681da0 RSSYMaddindex
+Ref RSSYMaddnotification = NILREF;	// ROM 0x00681da8 RSSYMaddnotification
+Ref RSSYMaddress = NILREF;	// ROM 0x00681db0 RSSYMaddress
+Ref RSSYMaddressdata = NILREF;	// ROM 0x00681db8 RSSYMaddressdata
+Ref RSSYMaddresstype = NILREF;	// ROM 0x00681dc0 RSSYMaddresstype
+Ref RSSYMaddspace = NILREF;	// ROM 0x00681dc8 RSSYMaddspace
+Ref RSSYMaddwithuniqueid = NILREF;	// ROM 0x00681dd0 RSSYMaddwithuniqueid
+Ref RSSYMaffiliate = NILREF;	// ROM 0x00681dd8 RSSYMaffiliate
+Ref RSSYMalarm = NILREF;	// ROM 0x00681de0 RSSYMalarm
+Ref RSSYMalarmsound = NILREF;	// ROM 0x00681de8 RSSYMalarmsound
+Ref RSSYMalarmsoundeffects = NILREF;	// ROM 0x00681df0 RSSYMalarmsoundeffects
+Ref RSSYMalias = NILREF;	// ROM 0x00681df8 RSSYMalias
+Ref RSSYMalkaline = NILREF;	// ROM 0x00681e00 RSSYMalkaline
+Ref RSSYMall = NILREF;	// ROM 0x00681e08 RSSYMall
+Ref RSSYMallcollapsed = NILREF;	// ROM 0x00681e10 RSSYMallcollapsed
+Ref RSSYMalldictionaries = NILREF;	// ROM 0x00681e18 RSSYMalldictionaries
+Ref RSSYMallentries = NILREF;	// ROM 0x00681e20 RSSYMallentries
+Ref RSSYMallocatecontext = NILREF;	// ROM 0x00681e28 RSSYMallocatecontext
+Ref RSSYMallowformularecognition = NILREF;	// ROM 0x00681e30 RSSYMallowformularecognition
+Ref RSSYMallowkeysthrough = NILREF;	// ROM 0x00681e38 RSSYMallowkeysthrough
+Ref RSSYMallowshaperecognition = NILREF;	// ROM 0x00681e40 RSSYMallowshaperecognition
+Ref RSSYMallowtextrecognition = NILREF;	// ROM 0x00681e48 RSSYMallowtextrecognition
+Ref RSSYMalphakeyboard = NILREF;	// ROM 0x00681e50 RSSYMalphakeyboard
+Ref RSSYMalternatewords = NILREF;	// ROM 0x00681e58 RSSYMalternatewords
+Ref RSSYMalwayscallpickactionscript = NILREF;	// ROM 0x00681e60 RSSYMalwayscallpickactionscript
+Ref RSSYMambienttemp = NILREF;	// ROM 0x00681e68 RSSYMambienttemp
+Ref RSSYMamountread = NILREF;	// ROM 0x00681e70 RSSYMamountread
+Ref RSSYMany = NILREF;	// ROM 0x00681e78 RSSYMany
+Ref RSSYMapp = NILREF;	// ROM 0x00681e80 RSSYMapp
+Ref RSSYMappareagloballeft = NILREF;	// ROM 0x00681e88 RSSYMappareagloballeft
+Ref RSSYMappareaglobaltop = NILREF;	// ROM 0x00681e90 RSSYMappareaglobaltop
+Ref RSSYMappareaheight = NILREF;	// ROM 0x00681e98 RSSYMappareaheight
+Ref RSSYMapparealeft = NILREF;	// ROM 0x00681ea0 RSSYMapparealeft
+Ref RSSYMappareatop = NILREF;	// ROM 0x00681ea8 RSSYMappareatop
+Ref RSSYMappareawidth = NILREF;	// ROM 0x00681eb0 RSSYMappareawidth
+Ref RSSYMapplication = NILREF;	// ROM 0x00681eb8 RSSYMapplication
+Ref RSSYMapplications = NILREF;	// ROM 0x00681ec0 RSSYMapplications
+Ref RSSYMapply = NILREF;	// ROM 0x00681ec8 RSSYMapply
+Ref RSSYMappname = NILREF;	// ROM 0x00681ed0 RSSYMappname
+Ref RSSYMappsymbol = NILREF;	// ROM 0x00681ed8 RSSYMappsymbol
+Ref RSSYMarcerbounds = NILREF;	// ROM 0x00681ee0 RSSYMarcerbounds
+Ref RSSYMaref = NILREF;	// ROM 0x00681ee8 RSSYMaref
+Ref RSSYMarglist = NILREF;	// ROM 0x00681ef0 RSSYMarglist
+Ref RSSYMargs = NILREF;	// ROM 0x00681ef8 RSSYMargs
+Ref RSSYMarm610a = NILREF;	// ROM 0x00681f00 RSSYMarm610a
+Ref RSSYMarm710a = NILREF;	// ROM 0x00681f08 RSSYMarm710a
+Ref RSSYMarray = NILREF;	// ROM 0x00681f10 RSSYMarray
+Ref RSSYMascending = NILREF;	// ROM 0x00681f18 RSSYMascending
+Ref RSSYMasciistring = NILREF;	// ROM 0x00681f20 RSSYMasciistring
+Ref RSSYMassist = NILREF;	// ROM 0x00681f28 RSSYMassist
+Ref RSSYMassistant = NILREF;	// ROM 0x00681f30 RSSYMassistant
+Ref RSSYMassistline = NILREF;	// ROM 0x00681f38 RSSYMassistline
+Ref RSSYMasync = NILREF;	// ROM 0x00681f40 RSSYMasync
+Ref RSSYMattachment = NILREF;	// ROM 0x00681f48 RSSYMattachment
+Ref RSSYMattribute = NILREF;	// ROM 0x00681f50 RSSYMattribute
+Ref RSSYMaustralia = NILREF;	// ROM 0x00681f58 RSSYMaustralia
+Ref RSSYMauto = NILREF;	// ROM 0x00681f60 RSSYMauto
+Ref RSSYMautoadd = NILREF;	// ROM 0x00681f68 RSSYMautoadd
+Ref RSSYMautoclose = NILREF;	// ROM 0x00681f70 RSSYMautoclose
+Ref RSSYMautodock = NILREF;	// ROM 0x00681f78 RSSYMautodock
+Ref RSSYMavailableprinters = NILREF;	// ROM 0x00681f80 RSSYMavailableprinters
+Ref RSSYMbackground = NILREF;	// ROM 0x00681f88 RSSYMbackground
+Ref RSSYMbackgroundpicture = NILREF;	// ROM 0x00681f90 RSSYMbackgroundpicture
+Ref RSSYMbackupinfo = NILREF;	// ROM 0x00681f98 RSSYMbackupinfo
+Ref RSSYMbackuppassword = NILREF;	// ROM 0x00681fa0 RSSYMbackuppassword
+Ref RSSYMbadadapteralert = NILREF;	// ROM 0x00681fa8 RSSYMbadadapteralert
+Ref RSSYMbadbatteryalert = NILREF;	// ROM 0x00681fb0 RSSYMbadbatteryalert
+Ref RSSYMbadfontmap = NILREF;	// ROM 0x00681fb8 RSSYMbadfontmap
+Ref RSSYMbadpassword = NILREF;	// ROM 0x00681fc0 RSSYMbadpassword
+Ref RSSYMbadwickednaughtynoot = NILREF;	// ROM 0x00681fc8 RSSYMbadwickednaughtynoot
+Ref RSSYMbarber = NILREF;	// ROM 0x00681fd0 RSSYMbarber
+Ref RSSYMbase = NILREF;	// ROM 0x00681fd8 RSSYMbase
+Ref RSSYMbaseinputmask = NILREF;	// ROM 0x00681fe0 RSSYMbaseinputmask
+Ref RSSYMbatterycapacity = NILREF;	// ROM 0x00681fe8 RSSYMbatterycapacity
+Ref RSSYMbatterycurrent = NILREF;	// ROM 0x00681ff0 RSSYMbatterycurrent
+Ref RSSYMbatterydead = NILREF;	// ROM 0x00681ff8 RSSYMbatterydead
+Ref RSSYMbatterylow = NILREF;	// ROM 0x00682000 RSSYMbatterylow
+Ref RSSYMbatterytemp = NILREF;	// ROM 0x00682008 RSSYMbatterytemp
+Ref RSSYMbatterytype = NILREF;	// ROM 0x00682010 RSSYMbatterytype
+Ref RSSYMbatteryvoltage = NILREF;	// ROM 0x00682018 RSSYMbatteryvoltage
+Ref RSSYMbcalphaname = NILREF;	// ROM 0x00682020 RSSYMbcalphaname
+Ref RSSYMbcfullname = NILREF;	// ROM 0x00682028 RSSYMbcfullname
+Ref RSSYMbeamcommitrecv = NILREF;	// ROM 0x00682030 RSSYMbeamcommitrecv
+Ref RSSYMbeamcommitsend = NILREF;	// ROM 0x00682038 RSSYMbeamcommitsend
+Ref RSSYMbeamindex = NILREF;	// ROM 0x00682040 RSSYMbeamindex
+Ref RSSYMbeamnextitem = NILREF;	// ROM 0x00682048 RSSYMbeamnextitem
+Ref RSSYMbeamstartrecv = NILREF;	// ROM 0x00682050 RSSYMbeamstartrecv
+Ref RSSYMbeamtotal = NILREF;	// ROM 0x00682058 RSSYMbeamtotal
+Ref RSSYMbecause = NILREF;	// ROM 0x00682060 RSSYMbecause
+Ref RSSYMbeepsound = NILREF;	// ROM 0x00682068 RSSYMbeepsound
+Ref RSSYMbegin = NILREF;	// ROM 0x00682070 RSSYMbegin
+Ref RSSYMbeginexclkey = NILREF;	// ROM 0x00682078 RSSYMbeginexclkey
+Ref RSSYMbeginkey = NILREF;	// ROM 0x00682080 RSSYMbeginkey
+Ref RSSYMbelong = NILREF;	// ROM 0x00682088 RSSYMbelong
+Ref RSSYMbigheight = NILREF;	// ROM 0x00682090 RSSYMbigheight
+Ref RSSYMbiglearningenabled = NILREF;	// ROM 0x00682098 RSSYMbiglearningenabled
+Ref RSSYMbinary = NILREF;	// ROM 0x006820a0 RSSYMbinary
+Ref RSSYMbincfunction = NILREF;	// ROM 0x006820a8 RSSYMbincfunction
+Ref RSSYMbindoptions = NILREF;	// ROM 0x006820b0 RSSYMbindoptions
+Ref RSSYMbirthday = NILREF;	// ROM 0x006820b8 RSSYMbirthday
+Ref RSSYMbitdepth = NILREF;	// ROM 0x006820c0 RSSYMbitdepth
+Ref RSSYMbitmap = NILREF;	// ROM 0x006820c8 RSSYMbitmap
+Ref RSSYMbitmapdata = NILREF;	// ROM 0x006820d0 RSSYMbitmapdata
+Ref RSSYMbits = NILREF;	// ROM 0x006820d8 RSSYMbits
+Ref RSSYMbitsbounds = NILREF;	// ROM 0x006820e0 RSSYMbitsbounds
+Ref RSSYMblessedapp = NILREF;	// ROM 0x006820e8 RSSYMblessedapp
+Ref RSSYMblinddialdelay = NILREF;	// ROM 0x006820f0 RSSYMblinddialdelay
+Ref RSSYMblinddialing = NILREF;	// ROM 0x006820f8 RSSYMblinddialing
+Ref RSSYMblock = NILREF;	// ROM 0x00682100 RSSYMblock
+Ref RSSYMblocks = NILREF;	// ROM 0x00682108 RSSYMblocks
+Ref RSSYMbody = NILREF;	// ROM 0x00682110 RSSYMbody
+Ref RSSYMbold = NILREF;	// ROM 0x00682118 RSSYMbold
+Ref RSSYMbolddata = NILREF;	// ROM 0x00682120 RSSYMbolddata
+Ref RSSYMbolditalic = NILREF;	// ROM 0x00682128 RSSYMbolditalic
+Ref RSSYMbolditalicdata = NILREF;	// ROM 0x00682130 RSSYMbolditalicdata
+Ref RSSYMbook = NILREF;	// ROM 0x00682138 RSSYMbook
+Ref RSSYMbookinstallscript = NILREF;	// ROM 0x00682140 RSSYMbookinstallscript
+Ref RSSYMbookpresent = NILREF;	// ROM 0x00682148 RSSYMbookpresent
+Ref RSSYMbookref = NILREF;	// ROM 0x00682150 RSSYMbookref
+Ref RSSYMbookremovescript = NILREF;	// ROM 0x00682158 RSSYMbookremovescript
+Ref RSSYMbooks = NILREF;	// ROM 0x00682160 RSSYMbooks
+Ref RSSYMbookscripts = NILREF;	// ROM 0x00682168 RSSYMbookscripts
+Ref RSSYMbooksearchscript = NILREF;	// ROM 0x00682170 RSSYMbooksearchscript
+Ref RSSYMbooksoup = NILREF;	// ROM 0x00682178 RSSYMbooksoup
+Ref RSSYMboolean = NILREF;	// ROM 0x00682180 RSSYMboolean
+Ref RSSYMbottom = NILREF;	// ROM 0x00682188 RSSYMbottom
+Ref RSSYMbounds = NILREF;	// ROM 0x00682190 RSSYMbounds
+Ref RSSYMboundsrect = NILREF;	// ROM 0x00682198 RSSYMboundsrect
+Ref RSSYMbox = NILREF;	// ROM 0x006821a0 RSSYMbox
+Ref RSSYMboxbottom = NILREF;	// ROM 0x006821a8 RSSYMboxbottom
+Ref RSSYMboxleft = NILREF;	// ROM 0x006821b0 RSSYMboxleft
+Ref RSSYMboxright = NILREF;	// ROM 0x006821b8 RSSYMboxright
+Ref RSSYMboxtop = NILREF;	// ROM 0x006821c0 RSSYMboxtop
+Ref RSSYMbps = NILREF;	// ROM 0x006821c8 RSSYMbps
+Ref RSSYMbreakloop = NILREF;	// ROM 0x006821d0 RSSYMbreakloop
+Ref RSSYMbreakonthrows = NILREF;	// ROM 0x006821d8 RSSYMbreakonthrows
+Ref RSSYMbritishwordscursiveoption = NILREF;	// ROM 0x006821e0 RSSYMbritishwordscursiveoption
+Ref RSSYMbrowser = NILREF;	// ROM 0x006821e8 RSSYMbrowser
+Ref RSSYMbrowserclose = NILREF;	// ROM 0x006821f0 RSSYMbrowserclose
+Ref RSSYMbrowsers = NILREF;	// ROM 0x006821f8 RSSYMbrowsers
+Ref RSSYMbuffercount = NILREF;	// ROM 0x00682200 RSSYMbuffercount
+Ref RSSYMbuffersize = NILREF;	// ROM 0x00682208 RSSYMbuffersize
+Ref RSSYMbuildinputmask = NILREF;	// ROM 0x00682210 RSSYMbuildinputmask
+Ref RSSYMbuiltin = NILREF;	// ROM 0x00682218 RSSYMbuiltin
+Ref RSSYMbusy = NILREF;	// ROM 0x00682220 RSSYMbusy
+Ref RSSYMbusydialog = NILREF;	// ROM 0x00682228 RSSYMbusydialog
+Ref RSSYMbuttonbarposition = NILREF;	// ROM 0x00682230 RSSYMbuttonbarposition
+Ref RSSYMbuttonclickscript = NILREF;	// ROM 0x00682238 RSSYMbuttonclickscript
+Ref RSSYMbuttonpressedscript = NILREF;	// ROM 0x00682240 RSSYMbuttonpressedscript
+Ref RSSYMbyte = NILREF;	// ROM 0x00682248 RSSYMbyte
+Ref RSSYMbytecount = NILREF;	// ROM 0x00682250 RSSYMbytecount
+Ref RSSYMbyteproxy = NILREF;	// ROM 0x00682258 RSSYMbyteproxy
+Ref RSSYMbytes = NILREF;	// ROM 0x00682260 RSSYMbytes
+Ref RSSYMcache = NILREF;	// ROM 0x00682268 RSSYMcache
+Ref RSSYMcachedrecconfig = NILREF;	// ROM 0x00682270 RSSYMcachedrecconfig
+Ref RSSYMcalendar = NILREF;	// ROM 0x00682278 RSSYMcalendar
+Ref RSSYMcalibration = NILREF;	// ROM 0x00682280 RSSYMcalibration
+Ref RSSYMcallback = NILREF;	// ROM 0x00682288 RSSYMcallback
+Ref RSSYMcallbackcontext = NILREF;	// ROM 0x00682290 RSSYMcallbackcontext
+Ref RSSYMcallbackfreq = NILREF;	// ROM 0x00682298 RSSYMcallbackfreq
+Ref RSSYMcallpowerstatuschangefns = NILREF;	// ROM 0x006822a0 RSSYMcallpowerstatuschangefns
+Ref RSSYMcanada = NILREF;	// ROM 0x006822a8 RSSYMcanada
+Ref RSSYMcanadafr = NILREF;	// ROM 0x006822b0 RSSYMcanadafr
+Ref RSSYMcanceling = NILREF;	// ROM 0x006822b8 RSSYMcanceling
+Ref RSSYMcanonicalparatopic = NILREF;	// ROM 0x006822c0 RSSYMcanonicalparatopic
+Ref RSSYMcard = NILREF;	// ROM 0x006822c8 RSSYMcard
+Ref RSSYMcardarray = NILREF;	// ROM 0x006822d0 RSSYMcardarray
+Ref RSSYMcardfile = NILREF;	// ROM 0x006822d8 RSSYMcardfile
+Ref RSSYMcardfirst = NILREF;	// ROM 0x006822e0 RSSYMcardfirst
+Ref RSSYMcardhwlocationids = NILREF;	// ROM 0x006822e8 RSSYMcardhwlocationids
+Ref RSSYMcardinfoversion = NILREF;	// ROM 0x006822f0 RSSYMcardinfoversion
+Ref RSSYMcardlast = NILREF;	// ROM 0x006822f8 RSSYMcardlast
+Ref RSSYMcardlock = NILREF;	// ROM 0x00682300 RSSYMcardlock
+Ref RSSYMcardprefs = NILREF;	// ROM 0x00682308 RSSYMcardprefs
+Ref RSSYMcardreinserted = NILREF;	// ROM 0x00682310 RSSYMcardreinserted
+Ref RSSYMcardremoved = NILREF;	// ROM 0x00682318 RSSYMcardremoved
+Ref RSSYMcardsocket = NILREF;	// ROM 0x00682320 RSSYMcardsocket
+Ref RSSYMcardsoups = NILREF;	// ROM 0x00682328 RSSYMcardsoups
+Ref RSSYMcardtypes = NILREF;	// ROM 0x00682330 RSSYMcardtypes
+Ref RSSYMcardyanked = NILREF;	// ROM 0x00682338 RSSYMcardyanked
+Ref RSSYMcarrierdelay = NILREF;	// ROM 0x00682340 RSSYMcarrierdelay
+Ref RSSYMcategory = NILREF;	// ROM 0x00682348 RSSYMcategory
+Ref RSSYMcbits = NILREF;	// ROM 0x00682350 RSSYMcbits
+Ref RSSYMcellframe = NILREF;	// ROM 0x00682358 RSSYMcellframe
+Ref RSSYMcellularconnection = NILREF;	// ROM 0x00682360 RSSYMcellularconnection
+Ref RSSYMcenter = NILREF;	// ROM 0x00682368 RSSYMcenter
+Ref RSSYMcertificate = NILREF;	// ROM 0x00682370 RSSYMcertificate
+Ref RSSYMcertificatepassword = NILREF;	// ROM 0x00682378 RSSYMcertificatepassword
+Ref RSSYMcfunction = NILREF;	// ROM 0x00682380 RSSYMcfunction
+Ref RSSYMchanged = NILREF;	// ROM 0x00682388 RSSYMchanged
+Ref RSSYMchar = NILREF;	// ROM 0x00682390 RSSYMchar
+Ref RSSYMcharclass = NILREF;	// ROM 0x00682398 RSSYMcharclass
+Ref RSSYMcharencodings = NILREF;	// ROM 0x006823a0 RSSYMcharencodings
+Ref RSSYMchargecurrent = NILREF;	// ROM 0x006823a8 RSSYMchargecurrent
+Ref RSSYMchargerate = NILREF;	// ROM 0x006823b0 RSSYMchargerate
+Ref RSSYMchargestate = NILREF;	// ROM 0x006823b8 RSSYMchargestate
+Ref RSSYMcheckbitmaps = NILREF;	// ROM 0x006823c0 RSSYMcheckbitmaps
+Ref RSSYMcheckpassword = NILREF;	// ROM 0x006823c8 RSSYMcheckpassword
+Ref RSSYMchecksum = NILREF;	// ROM 0x006823d0 RSSYMchecksum
+Ref RSSYMchoices = NILREF;	// ROM 0x006823d8 RSSYMchoices
+Ref RSSYMchr_3C = NILREF;	// ROM 0x006823e0 RSSYMchr_3C
+Ref RSSYMchr_3E = NILREF;	// ROM 0x006823e8 RSSYMchr_3E
+Ref RSSYMciprivate = NILREF;	// ROM 0x006823f0 RSSYMciprivate
+Ref RSSYMcisdevicetypes = NILREF;	// ROM 0x006823f8 RSSYMcisdevicetypes
+Ref RSSYMcisfunctionexts = NILREF;	// ROM 0x00682400 RSSYMcisfunctionexts
+Ref RSSYMcisfunctionid = NILREF;	// ROM 0x00682408 RSSYMcisfunctionid
+Ref RSSYMcisfunctions = NILREF;	// ROM 0x00682410 RSSYMcisfunctions
+Ref RSSYMcismanufacturerid = NILREF;	// ROM 0x00682418 RSSYMcismanufacturerid
+Ref RSSYMcismanufactureridinfo = NILREF;	// ROM 0x00682420 RSSYMcismanufactureridinfo
+Ref RSSYMcismanufacturername = NILREF;	// ROM 0x00682428 RSSYMcismanufacturername
+Ref RSSYMcisproductinfo0 = NILREF;	// ROM 0x00682430 RSSYMcisproductinfo0
+Ref RSSYMcisproductinfo1 = NILREF;	// ROM 0x00682438 RSSYMcisproductinfo1
+Ref RSSYMcisproductname = NILREF;	// ROM 0x00682440 RSSYMcisproductname
+Ref RSSYMcity = NILREF;	// ROM 0x00682448 RSSYMcity
+Ref RSSYMclass = NILREF;	// ROM 0x00682450 RSSYMclass
+Ref RSSYMclasses = NILREF;	// ROM 0x00682458 RSSYMclasses
+Ref RSSYMclearonpaste = NILREF;	// ROM 0x00682460 RSSYMclearonpaste
+Ref RSSYMclicker = NILREF;	// ROM 0x00682468 RSSYMclicker
+Ref RSSYMclicksound = NILREF;	// ROM 0x00682470 RSSYMclicksound
+Ref RSSYMclient = NILREF;	// ROM 0x00682478 RSSYMclient
+Ref RSSYMclipboarddepth = NILREF;	// ROM 0x00682480 RSSYMclipboarddepth
+Ref RSSYMclipbounds = NILREF;	// ROM 0x00682488 RSSYMclipbounds
+Ref RSSYMclipping = NILREF;	// ROM 0x00682490 RSSYMclipping
+Ref RSSYMclosure = NILREF;	// ROM 0x00682498 RSSYMclosure
+Ref RSSYMcmdkeyrepeatthreshold = NILREF;	// ROM 0x006824a0 RSSYMcmdkeyrepeatthreshold
+Ref RSSYMcmprsdsz = NILREF;	// ROM 0x006824a8 RSSYMcmprsdsz
+Ref RSSYMcntrlpanel = NILREF;	// ROM 0x006824b0 RSSYMcntrlpanel
+Ref RSSYMcobject = NILREF;	// ROM 0x006824b8 RSSYMcobject
+Ref RSSYMcode = NILREF;	// ROM 0x006824c0 RSSYMcode
+Ref RSSYMcodeblock = NILREF;	// ROM 0x006824c8 RSSYMcodeblock
+Ref RSSYMcodec = NILREF;	// ROM 0x006824d0 RSSYMcodec
+Ref RSSYMcodecname = NILREF;	// ROM 0x006824d8 RSSYMcodecname
+Ref RSSYMcollapsed = NILREF;	// ROM 0x006824e0 RSSYMcollapsed
+Ref RSSYMcollapsedheight = NILREF;	// ROM 0x006824e8 RSSYMcollapsedheight
+Ref RSSYMcollect = NILREF;	// ROM 0x006824f0 RSSYMcollect
+Ref RSSYMcolor = NILREF;	// ROM 0x006824f8 RSSYMcolor
+Ref RSSYMcolordata = NILREF;	// ROM 0x00682500 RSSYMcolordata
+Ref RSSYMcolortable = NILREF;	// ROM 0x00682508 RSSYMcolortable
+Ref RSSYMcommadelay = NILREF;	// ROM 0x00682510 RSSYMcommadelay
+Ref RSSYMcommand = NILREF;	// ROM 0x00682518 RSSYMcommand
+Ref RSSYMcompanderdata = NILREF;	// ROM 0x00682520 RSSYMcompanderdata
+Ref RSSYMcompandername = NILREF;	// ROM 0x00682528 RSSYMcompandername
+Ref RSSYMcompany = NILREF;	// ROM 0x00682530 RSSYMcompany
+Ref RSSYMcompanyphonetic = NILREF;	// ROM 0x00682538 RSSYMcompanyphonetic
+Ref RSSYMcompleted = NILREF;	// ROM 0x00682540 RSSYMcompleted
+Ref RSSYMcompletionscript = NILREF;	// ROM 0x00682548 RSSYMcompletionscript
+Ref RSSYMcompressed = NILREF;	// ROM 0x00682550 RSSYMcompressed
+Ref RSSYMcompressiontype = NILREF;	// ROM 0x00682558 RSSYMcompressiontype
+Ref RSSYMcondition = NILREF;	// ROM 0x00682560 RSSYMcondition
+Ref RSSYMconfig = NILREF;	// ROM 0x00682568 RSSYMconfig
+Ref RSSYMconfigoptions = NILREF;	// ROM 0x00682570 RSSYMconfigoptions
+Ref RSSYMconfigurations = NILREF;	// ROM 0x00682578 RSSYMconfigurations
+Ref RSSYMconfirmed = NILREF;	// ROM 0x00682580 RSSYMconfirmed
+Ref RSSYMconfirming = NILREF;	// ROM 0x00682588 RSSYMconfirming
+Ref RSSYMconnaddchangedsoup = NILREF;	// ROM 0x00682590 RSSYMconnaddchangedsoup
+Ref RSSYMconncobject = NILREF;	// ROM 0x00682598 RSSYMconncobject
+Ref RSSYMconnect = NILREF;	// ROM 0x006825a0 RSSYMconnect
+Ref RSSYMconnected = NILREF;	// ROM 0x006825a8 RSSYMconnected
+Ref RSSYMconnecting = NILREF;	// ROM 0x006825b0 RSSYMconnecting
+Ref RSSYMconnection = NILREF;	// ROM 0x006825b8 RSSYMconnection
+Ref RSSYMconnectionextensions = NILREF;	// ROM 0x006825c0 RSSYMconnectionextensions
+Ref RSSYMconnectoptions = NILREF;	// ROM 0x006825c8 RSSYMconnectoptions
+Ref RSSYMconnecttimeout = NILREF;	// ROM 0x006825d0 RSSYMconnecttimeout
+Ref RSSYMconnsendchanges = NILREF;	// ROM 0x006825d8 RSSYMconnsendchanges
+Ref RSSYMconstantfunctions = NILREF;	// ROM 0x006825e0 RSSYMconstantfunctions
+Ref RSSYMconstructor = NILREF;	// ROM 0x006825e8 RSSYMconstructor
+Ref RSSYMcontentarea = NILREF;	// ROM 0x006825f0 RSSYMcontentarea
+Ref RSSYMcontents = NILREF;	// ROM 0x006825f8 RSSYMcontents
+Ref RSSYMcontext = NILREF;	// ROM 0x00682600 RSSYMcontext
+Ref RSSYMcontextframe = NILREF;	// ROM 0x00682608 RSSYMcontextframe
+Ref RSSYMconversionerror = NILREF;	// ROM 0x00682610 RSSYMconversionerror
+Ref RSSYMconvert1_2Excard_3F = NILREF;	// ROM 0x00682618 RSSYMconvert1_2Excard_3F
+Ref RSSYMconvert1_2Exstore = NILREF;	// ROM 0x00682620 RSSYMconvert1_2Exstore
+Ref RSSYMconvertdroptoshape = NILREF;	// ROM 0x00682628 RSSYMconvertdroptoshape
+Ref RSSYMconvertframe = NILREF;	// ROM 0x00682630 RSSYMconvertframe
+Ref RSSYMcopperfield = NILREF;	// ROM 0x00682638 RSSYMcopperfield
+Ref RSSYMcopyentries = NILREF;	// ROM 0x00682640 RSSYMcopyentries
+Ref RSSYMcopyprotection = NILREF;	// ROM 0x00682648 RSSYMcopyprotection
+Ref RSSYMcopyright = NILREF;	// ROM 0x00682650 RSSYMcopyright
+Ref RSSYMcorrect = NILREF;	// ROM 0x00682658 RSSYMcorrect
+Ref RSSYMcorrectinfo = NILREF;	// ROM 0x00682660 RSSYMcorrectinfo
+Ref RSSYMcount = NILREF;	// ROM 0x00682668 RSSYMcount
+Ref RSSYMcountry = NILREF;	// ROM 0x00682670 RSSYMcountry
+Ref RSSYMcountrycode = NILREF;	// ROM 0x00682678 RSSYMcountrycode
+Ref RSSYMcountskippedasmisspelled = NILREF;	// ROM 0x00682680 RSSYMcountskippedasmisspelled
+Ref RSSYMcoverform = NILREF;	// ROM 0x00682688 RSSYMcoverform
+Ref RSSYMcpuspeed = NILREF;	// ROM 0x00682690 RSSYMcpuspeed
+Ref RSSYMcputype = NILREF;	// ROM 0x00682698 RSSYMcputype
+Ref RSSYMcreategetsoup = NILREF;	// ROM 0x006826a0 RSSYMcreategetsoup
+Ref RSSYMcreateusoupmember = NILREF;	// ROM 0x006826a8 RSSYMcreateusoupmember
+Ref RSSYMcreationdate = NILREF;	// ROM 0x006826b0 RSSYMcreationdate
+Ref RSSYMcreator = NILREF;	// ROM 0x006826b8 RSSYMcreator
+Ref RSSYMcreditcard = NILREF;	// ROM 0x006826c0 RSSYMcreditcard
+Ref RSSYMcreditexper = NILREF;	// ROM 0x006826c8 RSSYMcreditexper
+Ref RSSYMcreditnumber = NILREF;	// ROM 0x006826d0 RSSYMcreditnumber
+Ref RSSYMcribnote = NILREF;	// ROM 0x006826d8 RSSYMcribnote
+Ref RSSYMcupage = NILREF;	// ROM 0x006826e0 RSSYMcupage
+Ref RSSYMcurascent = NILREF;	// ROM 0x006826e8 RSSYMcurascent
+Ref RSSYMcurdescent = NILREF;	// ROM 0x006826f0 RSSYMcurdescent
+Ref RSSYMcurfontsize = NILREF;	// ROM 0x006826f8 RSSYMcurfontsize
+Ref RSSYMcurheight = NILREF;	// ROM 0x00682700 RSSYMcurheight
+Ref RSSYMcurpage = NILREF;	// ROM 0x00682708 RSSYMcurpage
+Ref RSSYMcurpensize = NILREF;	// ROM 0x00682710 RSSYMcurpensize
+Ref RSSYMcurrencyprefix = NILREF;	// ROM 0x00682718 RSSYMcurrencyprefix
+Ref RSSYMcurrencysuffix = NILREF;	// ROM 0x00682720 RSSYMcurrencysuffix
+Ref RSSYMcurrendering = NILREF;	// ROM 0x00682728 RSSYMcurrendering
+Ref RSSYMcurrentcountry = NILREF;	// ROM 0x00682730 RSSYMcurrentcountry
+Ref RSSYMcurrententry = NILREF;	// ROM 0x00682738 RSSYMcurrententry
+Ref RSSYMcurrentformat = NILREF;	// ROM 0x00682740 RSSYMcurrentformat
+Ref RSSYMcurrentline = NILREF;	// ROM 0x00682748 RSSYMcurrentline
+Ref RSSYMcurrentlocalebundle = NILREF;	// ROM 0x00682750 RSSYMcurrentlocalebundle
+Ref RSSYMcurrentpartnumber = NILREF;	// ROM 0x00682758 RSSYMcurrentpartnumber
+Ref RSSYMcurrentwordrecognizer = NILREF;	// ROM 0x00682760 RSSYMcurrentwordrecognizer
+Ref RSSYMcursor = NILREF;	// ROM 0x00682768 RSSYMcursor
+Ref RSSYMcursors = NILREF;	// ROM 0x00682770 RSSYMcursors
+Ref RSSYMcurtopic = NILREF;	// ROM 0x00682778 RSSYMcurtopic
+Ref RSSYMcurveshapeoption = NILREF;	// ROM 0x00682780 RSSYMcurveshapeoption
+Ref RSSYMcurwidth = NILREF;	// ROM 0x00682788 RSSYMcurwidth
+Ref RSSYMcurxheight = NILREF;	// ROM 0x00682790 RSSYMcurxheight
+Ref RSSYMcustom = NILREF;	// ROM 0x00682798 RSSYMcustom
+Ref RSSYMdata = NILREF;	// ROM 0x006827a0 RSSYMdata
+Ref RSSYMdatabits = NILREF;	// ROM 0x006827a8 RSSYMdatabits
+Ref RSSYMdatabounds = NILREF;	// ROM 0x006827b0 RSSYMdatabounds
+Ref RSSYMdatalen = NILREF;	// ROM 0x006827b8 RSSYMdatalen
+Ref RSSYMdataoffset = NILREF;	// ROM 0x006827c0 RSSYMdataoffset
+Ref RSSYMdatatext = NILREF;	// ROM 0x006827c8 RSSYMdatatext
+Ref RSSYMdatatype = NILREF;	// ROM 0x006827d0 RSSYMdatatype
+Ref RSSYMdate = NILREF;	// ROM 0x006827d8 RSSYMdate
+Ref RSSYMdatedictionary = NILREF;	// ROM 0x006827e0 RSSYMdatedictionary
+Ref RSSYMdatekeyboard = NILREF;	// ROM 0x006827e8 RSSYMdatekeyboard
+Ref RSSYMdatesfont = NILREF;	// ROM 0x006827f0 RSSYMdatesfont
+Ref RSSYMdatestr = NILREF;	// ROM 0x006827f8 RSSYMdatestr
+Ref RSSYMdayheight = NILREF;	// ROM 0x00682800 RSSYMdayheight
+Ref RSSYMdayleadingz = NILREF;	// ROM 0x00682808 RSSYMdayleadingz
+Ref RSSYMdaylightsavings = NILREF;	// ROM 0x00682810 RSSYMdaylightsavings
+Ref RSSYMdayofweeek = NILREF;	// ROM 0x00682818 RSSYMdayofweeek
+Ref RSSYMdayofweek = NILREF;	// ROM 0x00682820 RSSYMdayofweek
+Ref RSSYMdayphone = NILREF;	// ROM 0x00682828 RSSYMdayphone
+Ref RSSYMdaysinmonth = NILREF;	// ROM 0x00682830 RSSYMdaysinmonth
+Ref RSSYMdaystrspec = NILREF;	// ROM 0x00682838 RSSYMdaystrspec
+Ref RSSYMdebug = NILREF;	// ROM 0x00682840 RSSYMdebug
+Ref RSSYMdebuggerinfo = NILREF;	// ROM 0x00682848 RSSYMdebuggerinfo
+Ref RSSYMdebugslot = NILREF;	// ROM 0x00682850 RSSYMdebugslot
+Ref RSSYMdecimalpoint = NILREF;	// ROM 0x00682858 RSSYMdecimalpoint
+Ref RSSYMdeclareself = NILREF;	// ROM 0x00682860 RSSYMdeclareself
+Ref RSSYMdeepcount = NILREF;	// ROM 0x00682868 RSSYMdeepcount
+Ref RSSYMdeepfoundcount = NILREF;	// ROM 0x00682870 RSSYMdeepfoundcount
+Ref RSSYMdeeptoast = NILREF;	// ROM 0x00682878 RSSYMdeeptoast
+Ref RSSYMdefault = NILREF;	// ROM 0x00682880 RSSYMdefault
+Ref RSSYMdefaultfontspec = NILREF;	// ROM 0x00682888 RSSYMdefaultfontspec
+Ref RSSYMdefaultstore = NILREF;	// ROM 0x00682890 RSSYMdefaultstore
+Ref RSSYMdefault_task = NILREF;	// ROM 0x00682898 RSSYMdefault_task
+Ref RSSYMdeferredrec = NILREF;	// ROM 0x006828a0 RSSYMdeferredrec
+Ref RSSYMdefglobalfn = NILREF;	// ROM 0x006828a8 RSSYMdefglobalfn
+Ref RSSYMdeleted = NILREF;	// ROM 0x006828b0 RSSYMdeleted
+Ref RSSYMdeleteencodedword = NILREF;	// ROM 0x006828b8 RSSYMdeleteencodedword
+Ref RSSYMdeletionscript = NILREF;	// ROM 0x006828c0 RSSYMdeletionscript
+Ref RSSYMdepth = NILREF;	// ROM 0x006828c8 RSSYMdepth
+Ref RSSYMdescent = NILREF;	// ROM 0x006828d0 RSSYMdescent
+Ref RSSYMdeskey = NILREF;	// ROM 0x006828d8 RSSYMdeskey
+Ref RSSYMdesktopapps = NILREF;	// ROM 0x006828e0 RSSYMdesktopapps
+Ref RSSYMdesktoperror = NILREF;	// ROM 0x006828e8 RSSYMdesktoperror
+Ref RSSYMdesktopresult = NILREF;	// ROM 0x006828f0 RSSYMdesktopresult
+Ref RSSYMdestructor = NILREF;	// ROM 0x006828f8 RSSYMdestructor
+Ref RSSYMdetectbusy = NILREF;	// ROM 0x00682900 RSSYMdetectbusy
+Ref RSSYMdetectdialtone = NILREF;	// ROM 0x00682908 RSSYMdetectdialtone
+Ref RSSYMdevice = NILREF;	// ROM 0x00682910 RSSYMdevice
+Ref RSSYMdeviceid = NILREF;	// ROM 0x00682918 RSSYMdeviceid
+Ref RSSYMdevicekind = NILREF;	// ROM 0x00682920 RSSYMdevicekind
+Ref RSSYMdevicenumber = NILREF;	// ROM 0x00682928 RSSYMdevicenumber
+Ref RSSYMdialing = NILREF;	// ROM 0x00682930 RSSYMdialing
+Ref RSSYMdialnavigate = NILREF;	// ROM 0x00682938 RSSYMdialnavigate
+Ref RSSYMdialnavigator = NILREF;	// ROM 0x00682940 RSSYMdialnavigator
+Ref RSSYMdict = NILREF;	// ROM 0x00682948 RSSYMdict
+Ref RSSYMdictdata = NILREF;	// ROM 0x00682950 RSSYMdictdata
+Ref RSSYMdictid = NILREF;	// ROM 0x00682958 RSSYMdictid
+Ref RSSYMdictionaries = NILREF;	// ROM 0x00682960 RSSYMdictionaries
+Ref RSSYMdictionarylist = NILREF;	// ROM 0x00682968 RSSYMdictionarylist
+Ref RSSYMdicttype = NILREF;	// ROM 0x00682970 RSSYMdicttype
+Ref RSSYMdirection = NILREF;	// ROM 0x00682978 RSSYMdirection
+Ref RSSYMdirsortid = NILREF;	// ROM 0x00682980 RSSYMdirsortid
+Ref RSSYMdirty = NILREF;	// ROM 0x00682988 RSSYMdirty
+Ref RSSYMdisabled = NILREF;	// ROM 0x00682990 RSSYMdisabled
+Ref RSSYMdiscardafter = NILREF;	// ROM 0x00682998 RSSYMdiscardafter
+Ref RSSYMdischarging = NILREF;	// ROM 0x006829a0 RSSYMdischarging
+Ref RSSYMdisconnect = NILREF;	// ROM 0x006829a8 RSSYMdisconnect
+Ref RSSYMdisconnecting = NILREF;	// ROM 0x006829b0 RSSYMdisconnecting
+Ref RSSYMdisksoup = NILREF;	// ROM 0x006829b8 RSSYMdisksoup
+Ref RSSYMdispatchonly = NILREF;	// ROM 0x006829c0 RSSYMdispatchonly
+Ref RSSYMdisplayimportslip = NILREF;	// ROM 0x006829c8 RSSYMdisplayimportslip
+Ref RSSYMdisplayparams = NILREF;	// ROM 0x006829d0 RSSYMdisplayparams
+Ref RSSYMdisplayslip = NILREF;	// ROM 0x006829d8 RSSYMdisplayslip
+Ref RSSYMdisposedictionary = NILREF;	// ROM 0x006829e0 RSSYMdisposedictionary
+Ref RSSYMdistance = NILREF;	// ROM 0x006829e8 RSSYMdistance
+Ref RSSYMditherpattern = NILREF;	// ROM 0x006829f0 RSSYMditherpattern
+Ref RSSYMdiv = NILREF;	// ROM 0x006829f8 RSSYMdiv
+Ref RSSYMdoautoadd = NILREF;	// ROM 0x00682a00 RSSYMdoautoadd
+Ref RSSYMdocorrection = NILREF;	// ROM 0x00682a08 RSSYMdocorrection
+Ref RSSYMdocstring = NILREF;	// ROM 0x00682a10 RSSYMdocstring
+Ref RSSYMdoformularecognition = NILREF;	// ROM 0x00682a18 RSSYMdoformularecognition
+Ref RSSYMdofragmentation = NILREF;	// ROM 0x00682a20 RSSYMdofragmentation
+Ref RSSYMdohilite = NILREF;	// ROM 0x00682a28 RSSYMdohilite
+Ref RSSYMdoingscrub = NILREF;	// ROM 0x00682a30 RSSYMdoingscrub
+Ref RSSYMdoinkwordrecognition = NILREF;	// ROM 0x00682a38 RSSYMdoinkwordrecognition
+Ref RSSYMdomaintype = NILREF;	// ROM 0x00682a40 RSSYMdomaintype
+Ref RSSYMdon_27tactivate = NILREF;	// ROM 0x00682a48 RSSYMdon_27tactivate
+Ref RSSYMdontbackup = NILREF;	// ROM 0x00682a50 RSSYMdontbackup
+Ref RSSYMdorawinkrecognition = NILREF;	// ROM 0x00682a58 RSSYMdorawinkrecognition
+Ref RSSYMdoshaperecognition = NILREF;	// ROM 0x00682a60 RSSYMdoshaperecognition
+Ref RSSYMdotextrecognition = NILREF;	// ROM 0x00682a68 RSSYMdotextrecognition
+Ref RSSYMdown = NILREF;	// ROM 0x00682a70 RSSYMdown
+Ref RSSYMdragoptions = NILREF;	// ROM 0x00682a78 RSSYMdragoptions
+Ref RSSYMdragref = NILREF;	// ROM 0x00682a80 RSSYMdragref
+Ref RSSYMdragto = NILREF;	// ROM 0x00682a88 RSSYMdragto
+Ref RSSYMdrawfillmode = NILREF;	// ROM 0x00682a90 RSSYMdrawfillmode
+Ref RSSYMdrawing = NILREF;	// ROM 0x00682a98 RSSYMdrawing
+Ref RSSYMdrawpenmode = NILREF;	// ROM 0x00682aa0 RSSYMdrawpenmode
+Ref RSSYMdrawpensizex = NILREF;	// ROM 0x00682aa8 RSSYMdrawpensizex
+Ref RSSYMdrawpensizey = NILREF;	// ROM 0x00682ab0 RSSYMdrawpensizey
+Ref RSSYMdrivername = NILREF;	// ROM 0x00682ab8 RSSYMdrivername
+Ref RSSYMdropicon = NILREF;	// ROM 0x00682ac0 RSSYMdropicon
+Ref RSSYMdsquery = NILREF;	// ROM 0x00682ac8 RSSYMdsquery
+Ref RSSYMdteheader = NILREF;	// ROM 0x00682ad0 RSSYMdteheader
+Ref RSSYMdtemain = NILREF;	// ROM 0x00682ad8 RSSYMdtemain
+Ref RSSYMdtetrigrams = NILREF;	// ROM 0x00682ae0 RSSYMdtetrigrams
+Ref RSSYMdtmftonedialing = NILREF;	// ROM 0x00682ae8 RSSYMdtmftonedialing
+Ref RSSYMduh = NILREF;	// ROM 0x00682af0 RSSYMduh
+Ref RSSYMdynamic = NILREF;	// ROM 0x00682af8 RSSYMdynamic
+Ref RSSYMdynatemplates = NILREF;	// ROM 0x00682b00 RSSYMdynatemplates
+Ref RSSYMedgewidth = NILREF;	// ROM 0x00682b08 RSSYMedgewidth
+Ref RSSYMeditaddshapescript = NILREF;	// ROM 0x00682b10 RSSYMeditaddshapescript
+Ref RSSYMeditaddwordscript = NILREF;	// ROM 0x00682b18 RSSYMeditaddwordscript
+Ref RSSYMemail = NILREF;	// ROM 0x00682b20 RSSYMemail
+Ref RSSYMemptied = NILREF;	// ROM 0x00682b28 RSSYMemptied
+Ref RSSYMempty = NILREF;	// ROM 0x00682b30 RSSYMempty
+Ref RSSYMemptystring = NILREF;	// ROM 0x00682b38 RSSYMemptystring
+Ref RSSYMenabledlanguage = NILREF;	// ROM 0x00682b40 RSSYMenabledlanguage
+Ref RSSYMencoded = NILREF;	// ROM 0x00682b48 RSSYMencoded
+Ref RSSYMencoding = NILREF;	// ROM 0x00682b50 RSSYMencoding
+Ref RSSYMencodingid = NILREF;	// ROM 0x00682b58 RSSYMencodingid
+Ref RSSYMend = NILREF;	// ROM 0x00682b60 RSSYMend
+Ref RSSYMendchar = NILREF;	// ROM 0x00682b68 RSSYMendchar
+Ref RSSYMendcharacter = NILREF;	// ROM 0x00682b70 RSSYMendcharacter
+Ref RSSYMendexclkey = NILREF;	// ROM 0x00682b78 RSSYMendexclkey
+Ref RSSYMendkey = NILREF;	// ROM 0x00682b80 RSSYMendkey
+Ref RSSYMendsequence = NILREF;	// ROM 0x00682b88 RSSYMendsequence
+Ref RSSYMendtest = NILREF;	// ROM 0x00682b90 RSSYMendtest
+Ref RSSYMendtime = NILREF;	// ROM 0x00682b98 RSSYMendtime
+Ref RSSYMentirewords = NILREF;	// ROM 0x00682ba0 RSSYMentirewords
+Ref RSSYMentries = NILREF;	// ROM 0x00682ba8 RSSYMentries
+Ref RSSYMentry = NILREF;	// ROM 0x00682bb0 RSSYMentry
+Ref RSSYMentryaccess = NILREF;	// ROM 0x00682bb8 RSSYMentryaccess
+Ref RSSYMentryadded = NILREF;	// ROM 0x00682bc0 RSSYMentryadded
+Ref RSSYMentrychange = NILREF;	// ROM 0x00682bc8 RSSYMentrychange
+Ref RSSYMentrychanged = NILREF;	// ROM 0x00682bd0 RSSYMentrychanged
+Ref RSSYMentrychangeverbatim = NILREF;	// ROM 0x00682bd8 RSSYMentrychangeverbatim
+Ref RSSYMentrychangewithmodtime = NILREF;	// ROM 0x00682be0 RSSYMentrychangewithmodtime
+Ref RSSYMentrycopy = NILREF;	// ROM 0x00682be8 RSSYMentrycopy
+Ref RSSYMentryline = NILREF;	// ROM 0x00682bf0 RSSYMentryline
+Ref RSSYMentrymodtime = NILREF;	// ROM 0x00682bf8 RSSYMentrymodtime
+Ref RSSYMentrymove = NILREF;	// ROM 0x00682c00 RSSYMentrymove
+Ref RSSYMentrymoved = NILREF;	// ROM 0x00682c08 RSSYMentrymoved
+Ref RSSYMentryremoved = NILREF;	// ROM 0x00682c10 RSSYMentryremoved
+Ref RSSYMentryremovefromsoup = NILREF;	// ROM 0x00682c18 RSSYMentryremovefromsoup
+Ref RSSYMentryreplace = NILREF;	// ROM 0x00682c20 RSSYMentryreplace
+Ref RSSYMentryreplaced = NILREF;	// ROM 0x00682c28 RSSYMentryreplaced
+Ref RSSYMentryreplacewithmodtime = NILREF;	// ROM 0x00682c30 RSSYMentryreplacewithmodtime
+Ref RSSYMentrysize = NILREF;	// ROM 0x00682c38 RSSYMentrysize
+Ref RSSYMentrysoup = NILREF;	// ROM 0x00682c40 RSSYMentrysoup
+Ref RSSYMentrystore = NILREF;	// ROM 0x00682c48 RSSYMentrystore
+Ref RSSYMentrytextsize = NILREF;	// ROM 0x00682c50 RSSYMentrytextsize
+Ref RSSYMentryundochanges = NILREF;	// ROM 0x00682c58 RSSYMentryundochanges
+Ref RSSYMentryuniqueid = NILREF;	// ROM 0x00682c60 RSSYMentryuniqueid
+Ref RSSYMentryvalid = NILREF;	// ROM 0x00682c68 RSSYMentryvalid
+Ref RSSYMep = NILREF;	// ROM 0x00682c70 RSSYMep
+Ref RSSYMephemerals = NILREF;	// ROM 0x00682c78 RSSYMephemerals
+Ref RSSYMequal = NILREF;	// ROM 0x00682c80 RSSYMequal
+Ref RSSYMerror = NILREF;	// ROM 0x00682c88 RSSYMerror
+Ref RSSYMerrorcode = NILREF;	// ROM 0x00682c90 RSSYMerrorcode
+Ref RSSYMerrorfree = NILREF;	// ROM 0x00682c98 RSSYMerrorfree
+Ref RSSYMerrorgauge = NILREF;	// ROM 0x00682ca0 RSSYMerrorgauge
+Ref RSSYMerrorstring = NILREF;	// ROM 0x00682ca8 RSSYMerrorstring
+Ref RSSYMespy = NILREF;	// ROM 0x00682cb0 RSSYMespy
+Ref RSSYMeveningstr = NILREF;	// ROM 0x00682cb8 RSSYMeveningstr
+Ref RSSYMeventcode = NILREF;	// ROM 0x00682cc0 RSSYMeventcode
+Ref RSSYMeventhandler = NILREF;	// ROM 0x00682cc8 RSSYMeventhandler
+Ref RSSYMevents = NILREF;	// ROM 0x00682cd0 RSSYMevents
+Ref RSSYMexception = NILREF;	// ROM 0x00682cd8 RSSYMexception
+Ref RSSYMexceptionhandler = NILREF;	// ROM 0x00682ce0 RSSYMexceptionhandler
+Ref RSSYMexceptionmeeting = NILREF;	// ROM 0x00682ce8 RSSYMexceptionmeeting
+Ref RSSYMexceptions = NILREF;	// ROM 0x00682cf0 RSSYMexceptions
+Ref RSSYMexpanddirectoryentry = NILREF;	// ROM 0x00682cf8 RSSYMexpanddirectoryentry
+Ref RSSYMexpandsettings = NILREF;	// ROM 0x00682d00 RSSYMexpandsettings
+Ref RSSYMexport = NILREF;	// ROM 0x00682d08 RSSYMexport
+Ref RSSYMexporttable = NILREF;	// ROM 0x00682d10 RSSYMexporttable
+Ref RSSYMextrasdrawer = NILREF;	// ROM 0x00682d18 RSSYMextrasdrawer
+Ref RSSYMextrasstate = NILREF;	// ROM 0x00682d20 RSSYMextrasstate
+Ref RSSYMface = NILREF;	// ROM 0x00682d28 RSSYMface
+Ref RSSYMfamily = NILREF;	// ROM 0x00682d30 RSSYMfamily
+Ref RSSYMfastcharging = NILREF;	// ROM 0x00682d38 RSSYMfastcharging
+Ref RSSYMfastvalidtest = NILREF;	// ROM 0x00682d40 RSSYMfastvalidtest
+Ref RSSYMfaxnavigate = NILREF;	// ROM 0x00682d48 RSSYMfaxnavigate
+Ref RSSYMfaxnavigator = NILREF;	// ROM 0x00682d50 RSSYMfaxnavigator
+Ref RSSYMfaxresolution = NILREF;	// ROM 0x00682d58 RSSYMfaxresolution
+Ref RSSYMfields = NILREF;	// ROM 0x00682d60 RSSYMfields
+Ref RSSYMfilename = NILREF;	// ROM 0x00682d68 RSSYMfilename
+Ref RSSYMfilesize = NILREF;	// ROM 0x00682d70 RSSYMfilesize
+Ref RSSYMfiletransferstatus = NILREF;	// ROM 0x00682d78 RSSYMfiletransferstatus
+Ref RSSYMfillpattern = NILREF;	// ROM 0x00682d80 RSSYMfillpattern
+Ref RSSYMfilter = NILREF;	// ROM 0x00682d88 RSSYMfilter
+Ref RSSYMfindapps = NILREF;	// ROM 0x00682d90 RSSYMfindapps
+Ref RSSYMfindcustomdicts = NILREF;	// ROM 0x00682d98 RSSYMfindcustomdicts
+Ref RSSYMfinddrawer = NILREF;	// ROM 0x00682da0 RSSYMfinddrawer
+Ref RSSYMfirst = NILREF;	// ROM 0x00682da8 RSSYMfirst
+Ref RSSYMfirstdayofweek = NILREF;	// ROM 0x00682db0 RSSYMfirstdayofweek
+Ref RSSYMfirstname = NILREF;	// ROM 0x00682db8 RSSYMfirstname
+Ref RSSYMfirstnamephonetic = NILREF;	// ROM 0x00682dc0 RSSYMfirstnamephonetic
+Ref RSSYMfirstpage = NILREF;	// ROM 0x00682dc8 RSSYMfirstpage
+Ref RSSYMfirsttopic = NILREF;	// ROM 0x00682dd0 RSSYMfirsttopic
+Ref RSSYMfirstword = NILREF;	// ROM 0x00682dd8 RSSYMfirstword
+Ref RSSYMfixed = NILREF;	// ROM 0x00682de0 RSSYMfixed
+Ref RSSYMfixedheight = NILREF;	// ROM 0x00682de8 RSSYMfixedheight
+Ref RSSYMflags = NILREF;	// ROM 0x00682df0 RSSYMflags
+Ref RSSYMflashcardbadvpp = NILREF;	// ROM 0x00682df8 RSSYMflashcardbadvpp
+Ref RSSYMflattener = NILREF;	// ROM 0x00682e00 RSSYMflattener
+Ref RSSYMfliphorizontal = NILREF;	// ROM 0x00682e08 RSSYMfliphorizontal
+Ref RSSYMflipvertical = NILREF;	// ROM 0x00682e10 RSSYMflipvertical
+Ref RSSYMfloating = NILREF;	// ROM 0x00682e18 RSSYMfloating
+Ref RSSYMflush = NILREF;	// ROM 0x00682e20 RSSYMflush
+Ref RSSYMflushappchanges = NILREF;	// ROM 0x00682e28 RSSYMflushappchanges
+Ref RSSYMfont = NILREF;	// ROM 0x00682e30 RSSYMfont
+Ref RSSYMfontface = NILREF;	// ROM 0x00682e38 RSSYMfontface
+Ref RSSYMfontparms = NILREF;	// ROM 0x00682e40 RSSYMfontparms
+Ref RSSYMfonts = NILREF;	// ROM 0x00682e48 RSSYMfonts
+Ref RSSYMfoo = NILREF;	// ROM 0x00682e50 RSSYMfoo
+Ref RSSYMforeachstate = NILREF;	// ROM 0x00682e58 RSSYMforeachstate
+Ref RSSYMforeground = NILREF;	// ROM 0x00682e60 RSSYMforeground
+Ref RSSYMform = NILREF;	// ROM 0x00682e68 RSSYMform
+Ref RSSYMformat = NILREF;	// ROM 0x00682e70 RSSYMformat
+Ref RSSYMformat_3F = NILREF;	// ROM 0x00682e78 RSSYMformat_3F
+Ref RSSYMformataftermounterror_3F = NILREF;	// ROM 0x00682e80 RSSYMformataftermounterror_3F
+Ref RSSYMformatbadvppcard = NILREF;	// ROM 0x00682e88 RSSYMformatbadvppcard
+Ref RSSYMformatlockedcard = NILREF;	// ROM 0x00682e90 RSSYMformatlockedcard
+Ref RSSYMformatwithextremeprejudice_3F = NILREF;	// ROM 0x00682e98 RSSYMformatwithextremeprejudice_3F
+Ref RSSYMformhilitescript = NILREF;	// ROM 0x00682ea0 RSSYMformhilitescript
+Ref RSSYMformsearchscript = NILREF;	// ROM 0x00682ea8 RSSYMformsearchscript
+Ref RSSYMfound = NILREF;	// ROM 0x00682eb0 RSSYMfound
+Ref RSSYMfoundcount = NILREF;	// ROM 0x00682eb8 RSSYMfoundcount
+Ref RSSYMfpatch = NILREF;	// ROM 0x00682ec0 RSSYMfpatch
+Ref RSSYMfpatchchecksum = NILREF;	// ROM 0x00682ec8 RSSYMfpatchchecksum
+Ref RSSYMfpatchfirstpageindex = NILREF;	// ROM 0x00682ed0 RSSYMfpatchfirstpageindex
+Ref RSSYMfpatchpagecount = NILREF;	// ROM 0x00682ed8 RSSYMfpatchpagecount
+Ref RSSYMfpatchversion = NILREF;	// ROM 0x00682ee0 RSSYMfpatchversion
+Ref RSSYMframe = NILREF;	// ROM 0x00682ee8 RSSYMframe
+Ref RSSYMframeparameter = NILREF;	// ROM 0x00682ef0 RSSYMframeparameter
+Ref RSSYMfromemailaddress = NILREF;	// ROM 0x00682ef8 RSSYMfromemailaddress
+Ref RSSYMfromname = NILREF;	// ROM 0x00682f00 RSSYMfromname
+Ref RSSYMftotalpatchpagecount = NILREF;	// ROM 0x00682f08 RSSYMftotalpatchpagecount
+Ref RSSYMfull = NILREF;	// ROM 0x00682f10 RSSYMfull
+Ref RSSYMfullycharged = NILREF;	// ROM 0x00682f18 RSSYMfullycharged
+Ref RSSYMfuncptr = NILREF;	// ROM 0x00682f20 RSSYMfuncptr
+Ref RSSYMfunction = NILREF;	// ROM 0x00682f28 RSSYMfunction
+Ref RSSYMfunctions = NILREF;	// ROM 0x00682f30 RSSYMfunctions
+Ref RSSYMgauge = NILREF;	// ROM 0x00682f38 RSSYMgauge
+Ref RSSYMgaugedrawlimits = NILREF;	// ROM 0x00682f40 RSSYMgaugedrawlimits
+Ref RSSYMgeckohdihelp = NILREF;	// ROM 0x00682f48 RSSYMgeckohdihelp
+Ref RSSYMgeneva = NILREF;	// ROM 0x00682f50 RSSYMgeneva
+Ref RSSYMgetallinfo = NILREF;	// ROM 0x00682f58 RSSYMgetallinfo
+Ref RSSYMgetbackupallpackagescursor = NILREF;	// ROM 0x00682f60 RSSYMgetbackupallpackagescursor
+Ref RSSYMgetbitmapinfo = NILREF;	// ROM 0x00682f68 RSSYMgetbitmapinfo
+Ref RSSYMgetconversionframe = NILREF;	// ROM 0x00682f70 RSSYMgetconversionframe
+Ref RSSYMgetcountryentry = NILREF;	// ROM 0x00682f78 RSSYMgetcountryentry
+Ref RSSYMgetcurrentmodemsetup = NILREF;	// ROM 0x00682f80 RSSYMgetcurrentmodemsetup
+Ref RSSYMgetdefaultownerstore = NILREF;	// ROM 0x00682f88 RSSYMgetdefaultownerstore
+Ref RSSYMgetdefaultstore = NILREF;	// ROM 0x00682f90 RSSYMgetdefaultstore
+Ref RSSYMgetindexes = NILREF;	// ROM 0x00682f98 RSSYMgetindexes
+Ref RSSYMgetinfo = NILREF;	// ROM 0x00682fa0 RSSYMgetinfo
+Ref RSSYMgetlibraryentry = NILREF;	// ROM 0x00682fa8 RSSYMgetlibraryentry
+Ref RSSYMgetname = NILREF;	// ROM 0x00682fb0 RSSYMgetname
+Ref RSSYMgetnextuid = NILREF;	// ROM 0x00682fb8 RSSYMgetnextuid
+Ref RSSYMgetnotesdata = NILREF;	// ROM 0x00682fc0 RSSYMgetnotesdata
+Ref RSSYMgetownerapp = NILREF;	// ROM 0x00682fc8 RSSYMgetownerapp
+Ref RSSYMgetpackageentry = NILREF;	// ROM 0x00682fd0 RSSYMgetpackageentry
+Ref RSSYMgetpassword = NILREF;	// ROM 0x00682fd8 RSSYMgetpassword
+Ref RSSYMgetregisteredsound = NILREF;	// ROM 0x00682fe0 RSSYMgetregisteredsound
+Ref RSSYMgetroot = NILREF;	// ROM 0x00682fe8 RSSYMgetroot
+Ref RSSYMgetsignature = NILREF;	// ROM 0x00682ff0 RSSYMgetsignature
+Ref RSSYMgetstore = NILREF;	// ROM 0x00682ff8 RSSYMgetstore
+Ref RSSYMgetuserconfig = NILREF;	// ROM 0x00683000 RSSYMgetuserconfig
+Ref RSSYMgetview = NILREF;	// ROM 0x00683008 RSSYMgetview
+Ref RSSYMgmt = NILREF;	// ROM 0x00683010 RSSYMgmt
+Ref RSSYMgotosleep = NILREF;	// ROM 0x00683018 RSSYMgotosleep
+Ref RSSYMgraphics = NILREF;	// ROM 0x00683020 RSSYMgraphics
+Ref RSSYMgraphicsgutter = NILREF;	// ROM 0x00683028 RSSYMgraphicsgutter
+Ref RSSYMgravityshapeoption = NILREF;	// ROM 0x00683030 RSSYMgravityshapeoption
+Ref RSSYMgraylevels = NILREF;	// ROM 0x00683038 RSSYMgraylevels
+Ref RSSYMgraypattern = NILREF;	// ROM 0x00683040 RSSYMgraypattern
+Ref RSSYMgroup = NILREF;	// ROM 0x00683048 RSSYMgroup
+Ref RSSYMgroupsepstr = NILREF;	// ROM 0x00683050 RSSYMgroupsepstr
+Ref RSSYMgroupwidth = NILREF;	// ROM 0x00683058 RSSYMgroupwidth
+Ref RSSYMhandlecardevent = NILREF;	// ROM 0x00683060 RSSYMhandlecardevent
+Ref RSSYMhandlecheck = NILREF;	// ROM 0x00683068 RSSYMhandlecheck
+Ref RSSYMhandleerror = NILREF;	// ROM 0x00683070 RSSYMhandleerror
+Ref RSSYMhandlescrub = NILREF;	// ROM 0x00683078 RSSYMhandlescrub
+Ref RSSYMhandwriting = NILREF;	// ROM 0x00683080 RSSYMhandwriting
+Ref RSSYMhardflowblocked = NILREF;	// ROM 0x00683088 RSSYMhardflowblocked
+Ref RSSYMhasinput = NILREF;	// ROM 0x00683090 RSSYMhasinput
+Ref RSSYMhasoutput = NILREF;	// ROM 0x00683098 RSSYMhasoutput
+Ref RSSYMhaspath = NILREF;	// ROM 0x006830a0 RSSYMhaspath
+Ref RSSYMhasvar = NILREF;	// ROM 0x006830a8 RSSYMhasvar
+Ref RSSYMhasvariable = NILREF;	// ROM 0x006830b0 RSSYMhasvariable
+Ref RSSYMheader = NILREF;	// ROM 0x006830b8 RSSYMheader
+Ref RSSYMheaderversion = NILREF;	// ROM 0x006830c0 RSSYMheaderversion
+Ref RSSYMheight = NILREF;	// ROM 0x006830c8 RSSYMheight
+Ref RSSYMhelp = NILREF;	// ROM 0x006830d0 RSSYMhelp
+Ref RSSYMhelpbook = NILREF;	// ROM 0x006830d8 RSSYMhelpbook
+Ref RSSYMhidecount = NILREF;	// ROM 0x006830e0 RSSYMhidecount
+Ref RSSYMhidesound = NILREF;	// ROM 0x006830e8 RSSYMhidesound
+Ref RSSYMhigh = NILREF;	// ROM 0x006830f0 RSSYMhigh
+Ref RSSYMhighrom = NILREF;	// ROM 0x006830f8 RSSYMhighrom
+Ref RSSYMhilite = NILREF;	// ROM 0x00683100 RSSYMhilite
+Ref RSSYMhilitebusy = NILREF;	// ROM 0x00683108 RSSYMhilitebusy
+Ref RSSYMhilites = NILREF;	// ROM 0x00683110 RSSYMhilites
+Ref RSSYMhints = NILREF;	// ROM 0x00683118 RSSYMhints
+Ref RSSYMhistory = NILREF;	// ROM 0x00683120 RSSYMhistory
+Ref RSSYMhomephone = NILREF;	// ROM 0x00683128 RSSYMhomephone
+Ref RSSYMhour = NILREF;	// ROM 0x00683130 RSSYMhour
+Ref RSSYMhourfont = NILREF;	// ROM 0x00683138 RSSYMhourfont
+Ref RSSYMhourleadingz = NILREF;	// ROM 0x00683140 RSSYMhourleadingz
+Ref RSSYMiaref = NILREF;	// ROM 0x00683148 RSSYMiaref
+Ref RSSYMicon = NILREF;	// ROM 0x00683150 RSSYMicon
+Ref RSSYMiconshape = NILREF;	// ROM 0x00683158 RSSYMiconshape
+Ref RSSYMid = NILREF;	// ROM 0x00683160 RSSYMid
+Ref RSSYMidle = NILREF;	// ROM 0x00683168 RSSYMidle
+Ref RSSYMidleconnection = NILREF;	// ROM 0x00683170 RSSYMidleconnection
+Ref RSSYMidletimeout = NILREF;	// ROM 0x00683178 RSSYMidletimeout
+Ref RSSYMimagingname = NILREF;	// ROM 0x00683180 RSSYMimagingname
+Ref RSSYMimmediate = NILREF;	// ROM 0x00683188 RSSYMimmediate
+Ref RSSYMimplementor = NILREF;	// ROM 0x00683190 RSSYMimplementor
+Ref RSSYMimport = NILREF;	// ROM 0x00683198 RSSYMimport
+Ref RSSYMimporttable = NILREF;	// ROM 0x006831a0 RSSYMimporttable
+Ref RSSYMinbox = NILREF;	// ROM 0x006831a8 RSSYMinbox
+Ref RSSYMinboxstatustext = NILREF;	// ROM 0x006831b0 RSSYMinboxstatustext
+Ref RSSYMindent = NILREF;	// ROM 0x006831b8 RSSYMindent
+Ref RSSYMindex = NILREF;	// ROM 0x006831c0 RSSYMindex
+Ref RSSYMindexes = NILREF;	// ROM 0x006831c8 RSSYMindexes
+Ref RSSYMindexesmodtime = NILREF;	// ROM 0x006831d0 RSSYMindexesmodtime
+Ref RSSYMindexnextuid = NILREF;	// ROM 0x006831d8 RSSYMindexnextuid
+Ref RSSYMindexobjects = NILREF;	// ROM 0x006831e0 RSSYMindexobjects
+Ref RSSYMindexpath = NILREF;	// ROM 0x006831e8 RSSYMindexpath
+Ref RSSYMindexvalidtest = NILREF;	// ROM 0x006831f0 RSSYMindexvalidtest
+Ref RSSYMinfo = NILREF;	// ROM 0x006831f8 RSSYMinfo
+Ref RSSYMinfomodtime = NILREF;	// ROM 0x00683200 RSSYMinfomodtime
+Ref RSSYMinhibitbaseromwrecregistration = NILREF;	// ROM 0x00683208 RSSYMinhibitbaseromwrecregistration
+Ref RSSYMinhibitsymbolsdictionary = NILREF;	// ROM 0x00683210 RSSYMinhibitsymbolsdictionary
+Ref RSSYMinitialized = NILREF;	// ROM 0x00683218 RSSYMinitialized
+Ref RSSYMink = NILREF;	// ROM 0x00683220 RSSYMink
+Ref RSSYMink2 = NILREF;	// ROM 0x00683228 RSSYMink2
+Ref RSSYMinkmarks = NILREF;	// ROM 0x00683230 RSSYMinkmarks
+Ref RSSYMinkprintingscale = NILREF;	// ROM 0x00683238 RSSYMinkprintingscale
+Ref RSSYMinkword = NILREF;	// ROM 0x00683240 RSSYMinkword
+Ref RSSYMinkwordscaling = NILREF;	// ROM 0x00683248 RSSYMinkwordscaling
+Ref RSSYMinput = NILREF;	// ROM 0x00683250 RSSYMinput
+Ref RSSYMinputdevice = NILREF;	// ROM 0x00683258 RSSYMinputdevice
+Ref RSSYMinputform = NILREF;	// ROM 0x00683260 RSSYMinputform
+Ref RSSYMinputgain = NILREF;	// ROM 0x00683268 RSSYMinputgain
+Ref RSSYMinputmask = NILREF;	// ROM 0x00683270 RSSYMinputmask
+Ref RSSYMinputscript = NILREF;	// ROM 0x00683278 RSSYMinputscript
+Ref RSSYMinsertheight = NILREF;	// ROM 0x00683280 RSSYMinsertheight
+Ref RSSYMinsertitems = NILREF;	// ROM 0x00683288 RSSYMinsertitems
+Ref RSSYMinsertoffset = NILREF;	// ROM 0x00683290 RSSYMinsertoffset
+Ref RSSYMinstallpart = NILREF;	// ROM 0x00683298 RSSYMinstallpart
+Ref RSSYMinstallscript = NILREF;	// ROM 0x006832a0 RSSYMinstallscript
+Ref RSSYMinstancenotesdata = NILREF;	// ROM 0x006832a8 RSSYMinstancenotesdata
+Ref RSSYMinstructions = NILREF;	// ROM 0x006832b0 RSSYMinstructions
+Ref RSSYMint = NILREF;	// ROM 0x006832b8 RSSYMint
+Ref RSSYMinteger = NILREF;	// ROM 0x006832c0 RSSYMinteger
+Ref RSSYMinterconnect = NILREF;	// ROM 0x006832c8 RSSYMinterconnect
+Ref RSSYMinternal = NILREF;	// ROM 0x006832d0 RSSYMinternal
+Ref RSSYMinternalbuffersize = NILREF;	// ROM 0x006832d8 RSSYMinternalbuffersize
+Ref RSSYMinternational = NILREF;	// ROM 0x006832e0 RSSYMinternational
+Ref RSSYMiobox = NILREF;	// ROM 0x006832e8 RSSYMiobox
+Ref RSSYMiobusy = NILREF;	// ROM 0x006832f0 RSSYMiobusy
+Ref RSSYMirconnectrequest = NILREF;	// ROM 0x006832f8 RSSYMirconnectrequest
+Ref RSSYMisa = NILREF;	// ROM 0x00683300 RSSYMisa
+Ref RSSYMisbn = NILREF;	// ROM 0x00683308 RSSYMisbn
+Ref RSSYMiscopyprotected = NILREF;	// ROM 0x00683310 RSSYMiscopyprotected
+Ref RSSYMisresult = NILREF;	// ROM 0x00683318 RSSYMisresult
+Ref RSSYMisslotbusy = NILREF;	// ROM 0x00683320 RSSYMisslotbusy
+Ref RSSYMitalic = NILREF;	// ROM 0x00683328 RSSYMitalic
+Ref RSSYMitalicdata = NILREF;	// ROM 0x00683330 RSSYMitalicdata
+Ref RSSYMitem = NILREF;	// ROM 0x00683338 RSSYMitem
+Ref RSSYMitemchosen = NILREF;	// ROM 0x00683340 RSSYMitemchosen
+Ref RSSYMitemcompleted = NILREF;	// ROM 0x00683348 RSSYMitemcompleted
+Ref RSSYMitemcount = NILREF;	// ROM 0x00683350 RSSYMitemcount
+Ref RSSYMitemmissing = NILREF;	// ROM 0x00683358 RSSYMitemmissing
+Ref RSSYMitems = NILREF;	// ROM 0x00683360 RSSYMitems
+Ref RSSYMjustification = NILREF;	// ROM 0x00683368 RSSYMjustification
+Ref RSSYMkeepselectiononpaste = NILREF;	// ROM 0x00683370 RSSYMkeepselectiononpaste
+Ref RSSYMkey = NILREF;	// ROM 0x00683378 RSSYMkey
+Ref RSSYMkeyarrayindex = NILREF;	// ROM 0x00683380 RSSYMkeyarrayindex
+Ref RSSYMkeyboard = NILREF;	// ROM 0x00683388 RSSYMkeyboard
+Ref RSSYMkeycommand = NILREF;	// ROM 0x00683390 RSSYMkeycommand
+Ref RSSYMkeycommands = NILREF;	// ROM 0x00683398 RSSYMkeycommands
+Ref RSSYMkeydefinitions = NILREF;	// ROM 0x006833a0 RSSYMkeydefinitions
+Ref RSSYMkeyhighlightkeys = NILREF;	// ROM 0x006833a8 RSSYMkeyhighlightkeys
+Ref RSSYMkeymessage = NILREF;	// ROM 0x006833b0 RSSYMkeymessage
+Ref RSSYMkeypressscript = NILREF;	// ROM 0x006833b8 RSSYMkeypressscript
+Ref RSSYMkeyreceiverview = NILREF;	// ROM 0x006833c0 RSSYMkeyreceiverview
+Ref RSSYMkeyrepeatfrequency = NILREF;	// ROM 0x006833c8 RSSYMkeyrepeatfrequency
+Ref RSSYMkeyrepeatthreshold = NILREF;	// ROM 0x006833d0 RSSYMkeyrepeatthreshold
+Ref RSSYMkeyresultsarekeycodes = NILREF;	// ROM 0x006833d8 RSSYMkeyresultsarekeycodes
+Ref RSSYMkeysound = NILREF;	// ROM 0x006833e0 RSSYMkeysound
+Ref RSSYMkilometers = NILREF;	// ROM 0x006833e8 RSSYMkilometers
+Ref RSSYMkind = NILREF;	// ROM 0x006833f0 RSSYMkind
+Ref RSSYMknobpicture = NILREF;	// ROM 0x006833f8 RSSYMknobpicture
+Ref RSSYMlabel = NILREF;	// ROM 0x00683400 RSSYMlabel
+Ref RSSYMlabelfont = NILREF;	// ROM 0x00683408 RSSYMlabelfont
+Ref RSSYMlabels = NILREF;	// ROM 0x00683410 RSSYMlabels
+Ref RSSYMlabelsfilter = NILREF;	// ROM 0x00683418 RSSYMlabelsfilter
+Ref RSSYMlabelstext = NILREF;	// ROM 0x00683420 RSSYMlabelstext
+Ref RSSYMlabelstyle = NILREF;	// ROM 0x00683428 RSSYMlabelstyle
+Ref RSSYMlandscape = NILREF;	// ROM 0x00683430 RSSYMlandscape
+Ref RSSYMlanguage = NILREF;	// ROM 0x00683438 RSSYMlanguage
+Ref RSSYMlast = NILREF;	// ROM 0x00683440 RSSYMlast
+Ref RSSYMlastcommunicationwithdesktop = NILREF;	// ROM 0x00683448 RSSYMlastcommunicationwithdesktop
+Ref RSSYMlastex = NILREF;	// ROM 0x00683450 RSSYMlastex
+Ref RSSYMlastexdata = NILREF;	// ROM 0x00683458 RSSYMlastexdata
+Ref RSSYMlastexerror = NILREF;	// ROM 0x00683460 RSSYMlastexerror
+Ref RSSYMlastexmessage = NILREF;	// ROM 0x00683468 RSSYMlastexmessage
+Ref RSSYMlastitem = NILREF;	// ROM 0x00683470 RSSYMlastitem
+Ref RSSYMlastname = NILREF;	// ROM 0x00683478 RSSYMlastname
+Ref RSSYMlastnamephonetic = NILREF;	// ROM 0x00683480 RSSYMlastnamephonetic
+Ref RSSYMlastpolyhilitechanged = NILREF;	// ROM 0x00683488 RSSYMlastpolyhilitechanged
+Ref RSSYMlastrecmemwarning = NILREF;	// ROM 0x00683490 RSSYMlastrecmemwarning
+Ref RSSYMlasttextchanged = NILREF;	// ROM 0x00683498 RSSYMlasttextchanged
+Ref RSSYMlasttexthilitechanged = NILREF;	// ROM 0x006834a0 RSSYMlasttexthilitechanged
+Ref RSSYMlasttopic = NILREF;	// ROM 0x006834a8 RSSYMlasttopic
+Ref RSSYMlastuid = NILREF;	// ROM 0x006834b0 RSSYMlastuid
+Ref RSSYMlatitude = NILREF;	// ROM 0x006834b8 RSSYMlatitude
+Ref RSSYMlayout = NILREF;	// ROM 0x006834c0 RSSYMlayout
+Ref RSSYMlcdcontrast = NILREF;	// ROM 0x006834c8 RSSYMlcdcontrast
+Ref RSSYMlearningdata = NILREF;	// ROM 0x006834d0 RSSYMlearningdata
+Ref RSSYMlearningenabledoption = NILREF;	// ROM 0x006834d8 RSSYMlearningenabledoption
+Ref RSSYMleft = NILREF;	// ROM 0x006834e0 RSSYMleft
+Ref RSSYMleftmargin = NILREF;	// ROM 0x006834e8 RSSYMleftmargin
+Ref RSSYMleftmarkgap = NILREF;	// ROM 0x006834f0 RSSYMleftmarkgap
+Ref RSSYMlen = NILREF;	// ROM 0x006834f8 RSSYMlen
+Ref RSSYMlength = NILREF;	// ROM 0x00683500 RSSYMlength
+Ref RSSYMletter = NILREF;	// ROM 0x00683508 RSSYMletter
+Ref RSSYMletterimages = NILREF;	// ROM 0x00683510 RSSYMletterimages
+Ref RSSYMletters = NILREF;	// ROM 0x00683518 RSSYMletters
+Ref RSSYMletterscursiveoption = NILREF;	// ROM 0x00683520 RSSYMletterscursiveoption
+Ref RSSYMlettersetselection = NILREF;	// ROM 0x00683528 RSSYMlettersetselection
+Ref RSSYMletterspacecursiveoption = NILREF;	// ROM 0x00683530 RSSYMletterspacecursiveoption
+Ref RSSYMletterweights = NILREF;	// ROM 0x00683538 RSSYMletterweights
+Ref RSSYMlevel = NILREF;	// ROM 0x00683540 RSSYMlevel
+Ref RSSYMlex = NILREF;	// ROM 0x00683548 RSSYMlex
+Ref RSSYMlexical = NILREF;	// ROM 0x00683550 RSSYMlexical
+Ref RSSYMlexicon = NILREF;	// ROM 0x00683558 RSSYMlexicon
+Ref RSSYMlibrary = NILREF;	// ROM 0x00683560 RSSYMlibrary
+Ref RSSYMlimit = NILREF;	// ROM 0x00683568 RSSYMlimit
+Ref RSSYMlimitbounds = NILREF;	// ROM 0x00683570 RSSYMlimitbounds
+Ref RSSYMline = NILREF;	// ROM 0x00683578 RSSYMline
+Ref RSSYMlineatatime = NILREF;	// ROM 0x00683580 RSSYMlineatatime
+Ref RSSYMlinebreaktable = NILREF;	// ROM 0x00683588 RSSYMlinebreaktable
+Ref RSSYMlinegrid = NILREF;	// ROM 0x00683590 RSSYMlinegrid
+Ref RSSYMlineheight = NILREF;	// ROM 0x00683598 RSSYMlineheight
+Ref RSSYMlineindent = NILREF;	// ROM 0x006835a0 RSSYMlineindent
+Ref RSSYMlinenumber = NILREF;	// ROM 0x006835a8 RSSYMlinenumber
+Ref RSSYMlines = NILREF;	// ROM 0x006835b0 RSSYMlines
+Ref RSSYMlinespacing = NILREF;	// ROM 0x006835b8 RSSYMlinespacing
+Ref RSSYMlinkeddictid = NILREF;	// ROM 0x006835c0 RSSYMlinkeddictid
+Ref RSSYMlist = NILREF;	// ROM 0x006835c8 RSSYMlist
+Ref RSSYMlistviewflags = NILREF;	// ROM 0x006835d0 RSSYMlistviewflags
+Ref RSSYMliterals = NILREF;	// ROM 0x006835d8 RSSYMliterals
+Ref RSSYMlithium = NILREF;	// ROM 0x006835e0 RSSYMlithium
+Ref RSSYMloadletterweights = NILREF;	// ROM 0x006835e8 RSSYMloadletterweights
+Ref RSSYMlocaldictslot = NILREF;	// ROM 0x006835f0 RSSYMlocaldictslot
+Ref RSSYMlocale = NILREF;	// ROM 0x006835f8 RSSYMlocale
+Ref RSSYMlocales = NILREF;	// ROM 0x00683600 RSSYMlocales
+Ref RSSYMlocalesym = NILREF;	// ROM 0x00683608 RSSYMlocalesym
+Ref RSSYMlocaletable = NILREF;	// ROM 0x00683610 RSSYMlocaletable
+Ref RSSYMlocalfind = NILREF;	// ROM 0x00683618 RSSYMlocalfind
+Ref RSSYMlocalid = NILREF;	// ROM 0x00683620 RSSYMlocalid
+Ref RSSYMlocation = NILREF;	// ROM 0x00683628 RSSYMlocation
+Ref RSSYMlockedcardmounterror = NILREF;	// ROM 0x00683630 RSSYMlockedcardmounterror
+Ref RSSYMlongdatedelim = NILREF;	// ROM 0x00683638 RSSYMlongdatedelim
+Ref RSSYMlongdateformat = NILREF;	// ROM 0x00683640 RSSYMlongdateformat
+Ref RSSYMlongdateorder = NILREF;	// ROM 0x00683648 RSSYMlongdateorder
+Ref RSSYMlongdayofweekstrspec = NILREF;	// ROM 0x00683650 RSSYMlongdayofweekstrspec
+Ref RSSYMlongdaysuffix = NILREF;	// ROM 0x00683658 RSSYMlongdaysuffix
+Ref RSSYMlongdofweek = NILREF;	// ROM 0x00683660 RSSYMlongdofweek
+Ref RSSYMlongitude = NILREF;	// ROM 0x00683668 RSSYMlongitude
+Ref RSSYMlongmonth = NILREF;	// ROM 0x00683670 RSSYMlongmonth
+Ref RSSYMlongmonthsuffix = NILREF;	// ROM 0x00683678 RSSYMlongmonthsuffix
+Ref RSSYMlongyearsuffix = NILREF;	// ROM 0x00683680 RSSYMlongyearsuffix
+Ref RSSYMlook = NILREF;	// ROM 0x00683688 RSSYMlook
+Ref RSSYMloops = NILREF;	// ROM 0x00683690 RSSYMloops
+Ref RSSYMlow = NILREF;	// ROM 0x00683698 RSSYMlow
+Ref RSSYMlowerlist = NILREF;	// ROM 0x006836a0 RSSYMlowerlist
+Ref RSSYMmacfontid = NILREF;	// ROM 0x006836a8 RSSYMmacfontid
+Ref RSSYMmachinetype = NILREF;	// ROM 0x006836b0 RSSYMmachinetype
+Ref RSSYMmacpict = NILREF;	// ROM 0x006836b8 RSSYMmacpict
+Ref RSSYMmailaccount = NILREF;	// ROM 0x006836c0 RSSYMmailaccount
+Ref RSSYMmailconnector = NILREF;	// ROM 0x006836c8 RSSYMmailconnector
+Ref RSSYMmaillist = NILREF;	// ROM 0x006836d0 RSSYMmaillist
+Ref RSSYMmailnavigate = NILREF;	// ROM 0x006836d8 RSSYMmailnavigate
+Ref RSSYMmailnavigator = NILREF;	// ROM 0x006836e0 RSSYMmailnavigator
+Ref RSSYMmailpassword = NILREF;	// ROM 0x006836e8 RSSYMmailpassword
+Ref RSSYMmailphone = NILREF;	// ROM 0x006836f0 RSSYMmailphone
+Ref RSSYMmailreceivestatus = NILREF;	// ROM 0x006836f8 RSSYMmailreceivestatus
+Ref RSSYMmailsendtext = NILREF;	// ROM 0x00683700 RSSYMmailsendtext
+Ref RSSYMmailslip = NILREF;	// ROM 0x00683708 RSSYMmailslip
+Ref RSSYMmainformat = NILREF;	// ROM 0x00683710 RSSYMmainformat
+Ref RSSYMmajor = NILREF;	// ROM 0x00683718 RSSYMmajor
+Ref RSSYMmanualdial = NILREF;	// ROM 0x00683720 RSSYMmanualdial
+Ref RSSYMmanualdialing = NILREF;	// ROM 0x00683728 RSSYMmanualdialing
+Ref RSSYMmanufacturedate = NILREF;	// ROM 0x00683730 RSSYMmanufacturedate
+Ref RSSYMmanufacturer = NILREF;	// ROM 0x00683738 RSSYMmanufacturer
+Ref RSSYMmap = NILREF;	// ROM 0x00683740 RSSYMmap
+Ref RSSYMmapcursor = NILREF;	// ROM 0x00683748 RSSYMmapcursor
+Ref RSSYMmapfromunicode = NILREF;	// ROM 0x00683750 RSSYMmapfromunicode
+Ref RSSYMmapping = NILREF;	// ROM 0x00683758 RSSYMmapping
+Ref RSSYMmaptounicode = NILREF;	// ROM 0x00683760 RSSYMmaptounicode
+Ref RSSYMmark = NILREF;	// ROM 0x00683768 RSSYMmark
+Ref RSSYMmarkbusy = NILREF;	// ROM 0x00683770 RSSYMmarkbusy
+Ref RSSYMmarkers = NILREF;	// ROM 0x00683778 RSSYMmarkers
+Ref RSSYMmarknotbusy = NILREF;	// ROM 0x00683780 RSSYMmarknotbusy
+Ref RSSYMmarks = NILREF;	// ROM 0x00683788 RSSYMmarks
+Ref RSSYMmarkslotbusy = NILREF;	// ROM 0x00683790 RSSYMmarkslotbusy
+Ref RSSYMmarkslotnotbusy = NILREF;	// ROM 0x00683798 RSSYMmarkslotnotbusy
+Ref RSSYMmarkupbutton = NILREF;	// ROM 0x006837a0 RSSYMmarkupbutton
+Ref RSSYMmarkuplayer = NILREF;	// ROM 0x006837a8 RSSYMmarkuplayer
+Ref RSSYMmask = NILREF;	// ROM 0x006837b0 RSSYMmask
+Ref RSSYMmaskdictionaries = NILREF;	// ROM 0x006837b8 RSSYMmaskdictionaries
+Ref RSSYMmatched = NILREF;	// ROM 0x006837c0 RSSYMmatched
+Ref RSSYMmatchstring = NILREF;	// ROM 0x006837c8 RSSYMmatchstring
+Ref RSSYMmathline = NILREF;	// ROM 0x006837d0 RSSYMmathline
+Ref RSSYMmathoperator = NILREF;	// ROM 0x006837d8 RSSYMmathoperator
+Ref RSSYMmax = NILREF;	// ROM 0x006837e0 RSSYMmax
+Ref RSSYMmaximum = NILREF;	// ROM 0x006837e8 RSSYMmaximum
+Ref RSSYMmaxlevel = NILREF;	// ROM 0x006837f0 RSSYMmaxlevel
+Ref RSSYMmaxvalue = NILREF;	// ROM 0x006837f8 RSSYMmaxvalue
+Ref RSSYMmeal_act = NILREF;	// ROM 0x00683800 RSSYMmeal_act
+Ref RSSYMmedium = NILREF;	// ROM 0x00683808 RSSYMmedium
+Ref RSSYMmeeting = NILREF;	// ROM 0x00683810 RSSYMmeeting
+Ref RSSYMmeetingnotes = NILREF;	// ROM 0x00683818 RSSYMmeetingnotes
+Ref RSSYMmeetingoverview = NILREF;	// ROM 0x00683820 RSSYMmeetingoverview
+Ref RSSYMmeetingsoup = NILREF;	// ROM 0x00683828 RSSYMmeetingsoup
+Ref RSSYMmeetingtype = NILREF;	// ROM 0x00683830 RSSYMmeetingtype
+Ref RSSYMmeetingtyperegistry = NILREF;	// ROM 0x00683838 RSSYMmeetingtyperegistry
+Ref RSSYMmessage = NILREF;	// ROM 0x00683840 RSSYMmessage
+Ref RSSYMmeta_level = NILREF;	// ROM 0x00683848 RSSYMmeta_level
+Ref RSSYMmetric = NILREF;	// ROM 0x00683850 RSSYMmetric
+Ref RSSYMmidnightform = NILREF;	// ROM 0x00683858 RSSYMmidnightform
+Ref RSSYMmiles = NILREF;	// ROM 0x00683860 RSSYMmiles
+Ref RSSYMmincho = NILREF;	// ROM 0x00683868 RSSYMmincho
+Ref RSSYMmindragdistance = NILREF;	// ROM 0x00683870 RSSYMmindragdistance
+Ref RSSYMminimalchildren = NILREF;	// ROM 0x00683878 RSSYMminimalchildren
+Ref RSSYMminimum = NILREF;	// ROM 0x00683880 RSSYMminimum
+Ref RSSYMminor = NILREF;	// ROM 0x00683888 RSSYMminor
+Ref RSSYMminusprefix = NILREF;	// ROM 0x00683890 RSSYMminusprefix
+Ref RSSYMminussuffix = NILREF;	// ROM 0x00683898 RSSYMminussuffix
+Ref RSSYMminute = NILREF;	// ROM 0x006838a0 RSSYMminute
+Ref RSSYMminuteleadingz = NILREF;	// ROM 0x006838a8 RSSYMminuteleadingz
+Ref RSSYMminvalue = NILREF;	// ROM 0x006838b0 RSSYMminvalue
+Ref RSSYMmisccarderror = NILREF;	// ROM 0x006838b8 RSSYMmisccarderror
+Ref RSSYMmissingindex = NILREF;	// ROM 0x006838c0 RSSYMmissingindex
+Ref RSSYMmod = NILREF;	// ROM 0x006838c8 RSSYMmod
+Ref RSSYMmodalstate = NILREF;	// ROM 0x006838d0 RSSYMmodalstate
+Ref RSSYMmodem = NILREF;	// ROM 0x006838d8 RSSYMmodem
+Ref RSSYMmodemname = NILREF;	// ROM 0x006838e0 RSSYMmodemname
+Ref RSSYMmodemnavigate = NILREF;	// ROM 0x006838e8 RSSYMmodemnavigate
+Ref RSSYMmodemnavigator = NILREF;	// ROM 0x006838f0 RSSYMmodemnavigator
+Ref RSSYMmodemsoundvolume = NILREF;	// ROM 0x006838f8 RSSYMmodemsoundvolume
+Ref RSSYMmodifiers = NILREF;	// ROM 0x00683900 RSSYMmodifiers
+Ref RSSYMmodtime = NILREF;	// ROM 0x00683908 RSSYMmodtime
+Ref RSSYMmonth = NILREF;	// ROM 0x00683910 RSSYMmonth
+Ref RSSYMmonthchangedscript = NILREF;	// ROM 0x00683918 RSSYMmonthchangedscript
+Ref RSSYMmonthdaystrspec = NILREF;	// ROM 0x00683920 RSSYMmonthdaystrspec
+Ref RSSYMmonthleadingz = NILREF;	// ROM 0x00683928 RSSYMmonthleadingz
+Ref RSSYMmorningstr = NILREF;	// ROM 0x00683930 RSSYMmorningstr
+Ref RSSYMmovecaret = NILREF;	// ROM 0x00683938 RSSYMmovecaret
+Ref RSSYMmtgalarm = NILREF;	// ROM 0x00683940 RSSYMmtgalarm
+Ref RSSYMmtgdone = NILREF;	// ROM 0x00683948 RSSYMmtgdone
+Ref RSSYMmtgduration = NILREF;	// ROM 0x00683950 RSSYMmtgduration
+Ref RSSYMmtgicontype = NILREF;	// ROM 0x00683958 RSSYMmtgicontype
+Ref RSSYMmtginfo = NILREF;	// ROM 0x00683960 RSSYMmtginfo
+Ref RSSYMmtgnotes = NILREF;	// ROM 0x00683968 RSSYMmtgnotes
+Ref RSSYMmtgpriority = NILREF;	// ROM 0x00683970 RSSYMmtgpriority
+Ref RSSYMmtgstartdate = NILREF;	// ROM 0x00683978 RSSYMmtgstartdate
+Ref RSSYMmtgstopdate = NILREF;	// ROM 0x00683980 RSSYMmtgstopdate
+Ref RSSYMmtgtext = NILREF;	// ROM 0x00683988 RSSYMmtgtext
+Ref RSSYMmtgtype = NILREF;	// ROM 0x00683990 RSSYMmtgtype
+Ref RSSYMmultislot = NILREF;	// ROM 0x00683998 RSSYMmultislot
+Ref RSSYMmungecontentscript = NILREF;	// ROM 0x006839a0 RSSYMmungecontentscript
+Ref RSSYMname = NILREF;	// ROM 0x006839a8 RSSYMname
+Ref RSSYMnameindex = NILREF;	// ROM 0x006839b0 RSSYMnameindex
+Ref RSSYMnames = NILREF;	// ROM 0x006839b8 RSSYMnames
+Ref RSSYMnavigator = NILREF;	// ROM 0x006839c0 RSSYMnavigator
+Ref RSSYMncklastbackuptime = NILREF;	// ROM 0x006839c8 RSSYMncklastbackuptime
+Ref RSSYMnegate = NILREF;	// ROM 0x006839d0 RSSYMnegate
+Ref RSSYMnet = NILREF;	// ROM 0x006839d8 RSSYMnet
+Ref RSSYMnewccount = NILREF;	// ROM 0x006839e0 RSSYMnewccount
+Ref RSSYMnewiterator = NILREF;	// ROM 0x006839e8 RSSYMnewiterator
+Ref RSSYMnewtonuniqueid = NILREF;	// ROM 0x006839f0 RSSYMnewtonuniqueid
+Ref RSSYMnewt_feature = NILREF;	// ROM 0x006839f8 RSSYMnewt_feature
+Ref RSSYMnewwritecount = NILREF;	// ROM 0x00683a00 RSSYMnewwritecount
+Ref RSSYMnewyork = NILREF;	// ROM 0x00683a08 RSSYMnewyork
+Ref RSSYMnextinputspec = NILREF;	// ROM 0x00683a10 RSSYMnextinputspec
+Ref RSSYMnextstyle = NILREF;	// ROM 0x00683a18 RSSYMnextstyle
+Ref RSSYMnicd = NILREF;	// ROM 0x00683a20 RSSYMnicd
+Ref RSSYMnimh = NILREF;	// ROM 0x00683a28 RSSYMnimh
+Ref RSSYMno = NILREF;	// ROM 0x00683a30 RSSYMno
+Ref RSSYMnode = NILREF;	// ROM 0x00683a38 RSSYMnode
+Ref RSSYMnofx = NILREF;	// ROM 0x00683a40 RSSYMnofx
+Ref RSSYMnogrid = NILREF;	// ROM 0x00683a48 RSSYMnogrid
+Ref RSSYMnoisewords = NILREF;	// ROM 0x00683a50 RSSYMnoisewords
+Ref RSSYMnoletters = NILREF;	// ROM 0x00683a58 RSSYMnoletters
+Ref RSSYMnomarklist = NILREF;	// ROM 0x00683a60 RSSYMnomarklist
+Ref RSSYMnone = NILREF;	// ROM 0x00683a68 RSSYMnone
+Ref RSSYMnoonform = NILREF;	// ROM 0x00683a70 RSSYMnoonform
+Ref RSSYMnoremap = NILREF;	// ROM 0x00683a78 RSSYMnoremap
+Ref RSSYMnormal = NILREF;	// ROM 0x00683a80 RSSYMnormal
+Ref RSSYMnoselection = NILREF;	// ROM 0x00683a88 RSSYMnoselection
+Ref RSSYMnot = NILREF;	// ROM 0x00683a90 RSSYMnot
+Ref RSSYMnotes = NILREF;	// ROM 0x00683a98 RSSYMnotes
+Ref RSSYMnotesdata = NILREF;	// ROM 0x00683aa0 RSSYMnotesdata
+Ref RSSYMnotify = NILREF;	// ROM 0x00683aa8 RSSYMnotify
+Ref RSSYMntopics = NILREF;	// ROM 0x00683ab0 RSSYMntopics
+Ref RSSYMnullproxy = NILREF;	// ROM 0x00683ab8 RSSYMnullproxy
+Ref RSSYMnumargs = NILREF;	// ROM 0x00683ac0 RSSYMnumargs
+Ref RSSYMnumber = NILREF;	// ROM 0x00683ac8 RSSYMnumber
+Ref RSSYMnumberdictionary = NILREF;	// ROM 0x00683ad0 RSSYMnumberdictionary
+Ref RSSYMnumberformat = NILREF;	// ROM 0x00683ad8 RSSYMnumberformat
+Ref RSSYMnumberofparts = NILREF;	// ROM 0x00683ae0 RSSYMnumberofparts
+Ref RSSYMnumberscursiveoption = NILREF;	// ROM 0x00683ae8 RSSYMnumberscursiveoption
+Ref RSSYMnumchannels = NILREF;	// ROM 0x00683af0 RSSYMnumchannels
+Ref RSSYMnumcols = NILREF;	// ROM 0x00683af8 RSSYMnumcols
+Ref RSSYMnumdrawn = NILREF;	// ROM 0x00683b00 RSSYMnumdrawn
+Ref RSSYMnumerickeyboard = NILREF;	// ROM 0x00683b08 RSSYMnumerickeyboard
+Ref RSSYMnumlines = NILREF;	// ROM 0x00683b10 RSSYMnumlines
+Ref RSSYMnumparts = NILREF;	// ROM 0x00683b18 RSSYMnumparts
+Ref RSSYMnumrows = NILREF;	// ROM 0x00683b20 RSSYMnumrows
+Ref RSSYMobjects = NILREF;	// ROM 0x00683b28 RSSYMobjects
+Ref RSSYMoffset = NILREF;	// ROM 0x00683b30 RSSYMoffset
+Ref RSSYMonelineparagraphs = NILREF;	// ROM 0x00683b38 RSSYMonelineparagraphs
+Ref RSSYMoneo = NILREF;	// ROM 0x00683b40 RSSYMoneo
+Ref RSSYMonlineslip = NILREF;	// ROM 0x00683b48 RSSYMonlineslip
+Ref RSSYMop = NILREF;	// ROM 0x00683b50 RSSYMop
+Ref RSSYMopcode = NILREF;	// ROM 0x00683b58 RSSYMopcode
+Ref RSSYMopenkeypadfor = NILREF;	// ROM 0x00683b60 RSSYMopenkeypadfor
+Ref RSSYMopenoptions = NILREF;	// ROM 0x00683b68 RSSYMopenoptions
+Ref RSSYMoptimize = NILREF;	// ROM 0x00683b70 RSSYMoptimize
+Ref RSSYMoption = NILREF;	// ROM 0x00683b78 RSSYMoption
+Ref RSSYMorder = NILREF;	// ROM 0x00683b80 RSSYMorder
+Ref RSSYMorientation = NILREF;	// ROM 0x00683b88 RSSYMorientation
+Ref RSSYMorigascent = NILREF;	// ROM 0x00683b90 RSSYMorigascent
+Ref RSSYMorigdescent = NILREF;	// ROM 0x00683b98 RSSYMorigdescent
+Ref RSSYMorigfontsize = NILREF;	// ROM 0x00683ba0 RSSYMorigfontsize
+Ref RSSYMorigin = NILREF;	// ROM 0x00683ba8 RSSYMorigin
+Ref RSSYMoriginalbounds = NILREF;	// ROM 0x00683bb0 RSSYMoriginalbounds
+Ref RSSYMorigpensize = NILREF;	// ROM 0x00683bb8 RSSYMorigpensize
+Ref RSSYMorigphrase = NILREF;	// ROM 0x00683bc0 RSSYMorigphrase
+Ref RSSYMorigwidth = NILREF;	// ROM 0x00683bc8 RSSYMorigwidth
+Ref RSSYMorigxheight = NILREF;	// ROM 0x00683bd0 RSSYMorigxheight
+Ref RSSYMoutbox = NILREF;	// ROM 0x00683bd8 RSSYMoutbox
+Ref RSSYMouterframe = NILREF;	// ROM 0x00683be0 RSSYMouterframe
+Ref RSSYMoutlineclickscript = NILREF;	// ROM 0x00683be8 RSSYMoutlineclickscript
+Ref RSSYMoutputdevice = NILREF;	// ROM 0x00683bf0 RSSYMoutputdevice
+Ref RSSYMoval = NILREF;	// ROM 0x00683bf8 RSSYMoval
+Ref RSSYMoverlapscrollamount = NILREF;	// ROM 0x00683c00 RSSYMoverlapscrollamount
+Ref RSSYMowner = NILREF;	// ROM 0x00683c08 RSSYMowner
+Ref RSSYMownerapp = NILREF;	// ROM 0x00683c10 RSSYMownerapp
+Ref RSSYMpackage = NILREF;	// ROM 0x00683c18 RSSYMpackage
+Ref RSSYMpackagecallback = NILREF;	// ROM 0x00683c20 RSSYMpackagecallback
+Ref RSSYMpackageentry = NILREF;	// ROM 0x00683c28 RSSYMpackageentry
+Ref RSSYMpackageid = NILREF;	// ROM 0x00683c30 RSSYMpackageid
+Ref RSSYMpackagename = NILREF;	// ROM 0x00683c38 RSSYMpackagename
+Ref RSSYMpackagesize = NILREF;	// ROM 0x00683c40 RSSYMpackagesize
+Ref RSSYMpackagestyle = NILREF;	// ROM 0x00683c48 RSSYMpackagestyle
+Ref RSSYMpackagetype = NILREF;	// ROM 0x00683c50 RSSYMpackagetype
+Ref RSSYMpackageversion = NILREF;	// ROM 0x00683c58 RSSYMpackageversion
+Ref RSSYMpage = NILREF;	// ROM 0x00683c60 RSSYMpage
+Ref RSSYMpagebounds = NILREF;	// ROM 0x00683c68 RSSYMpagebounds
+Ref RSSYMpagecount = NILREF;	// ROM 0x00683c70 RSSYMpagecount
+Ref RSSYMpagenumber = NILREF;	// ROM 0x00683c78 RSSYMpagenumber
+Ref RSSYMpages = NILREF;	// ROM 0x00683c80 RSSYMpages
+Ref RSSYMpagesize = NILREF;	// ROM 0x00683c88 RSSYMpagesize
+Ref RSSYMpagesound = NILREF;	// ROM 0x00683c90 RSSYMpagesound
+Ref RSSYMpagesshowing = NILREF;	// ROM 0x00683c98 RSSYMpagesshowing
+Ref RSSYMpagestr = NILREF;	// ROM 0x00683ca0 RSSYMpagestr
+Ref RSSYMpageturnawayscript = NILREF;	// ROM 0x00683ca8 RSSYMpageturnawayscript
+Ref RSSYMpageturntoscript = NILREF;	// ROM 0x00683cb0 RSSYMpageturntoscript
+Ref RSSYMpaneindex = NILREF;	// ROM 0x00683cb8 RSSYMpaneindex
+Ref RSSYMpaperroll = NILREF;	// ROM 0x00683cc0 RSSYMpaperroll
+Ref RSSYMpara = NILREF;	// ROM 0x00683cc8 RSSYMpara
+Ref RSSYMparameter = NILREF;	// ROM 0x00683cd0 RSSYMparameter
+Ref RSSYMparams = NILREF;	// ROM 0x00683cd8 RSSYMparams
+Ref RSSYMparity = NILREF;	// ROM 0x00683ce0 RSSYMparity
+Ref RSSYMparse = NILREF;	// ROM 0x00683ce8 RSSYMparse
+Ref RSSYMparsed_number = NILREF;	// ROM 0x00683cf0 RSSYMparsed_number
+Ref RSSYMparsed_phone = NILREF;	// ROM 0x00683cf8 RSSYMparsed_phone
+Ref RSSYMpartframe = NILREF;	// ROM 0x00683d00 RSSYMpartframe
+Ref RSSYMpartialfrequency = NILREF;	// ROM 0x00683d08 RSSYMpartialfrequency
+Ref RSSYMpartialscript = NILREF;	// ROM 0x00683d10 RSSYMpartialscript
+Ref RSSYMpartindex = NILREF;	// ROM 0x00683d18 RSSYMpartindex
+Ref RSSYMparts = NILREF;	// ROM 0x00683d20 RSSYMparts
+Ref RSSYMparttype = NILREF;	// ROM 0x00683d28 RSSYMparttype
+Ref RSSYMparttypes = NILREF;	// ROM 0x00683d30 RSSYMparttypes
+Ref RSSYMpar_separatelettersflag = NILREF;	// ROM 0x00683d38 RSSYMpar_separatelettersflag
+Ref RSSYMpassall = NILREF;	// ROM 0x00683d40 RSSYMpassall
+Ref RSSYMpassbeginning = NILREF;	// ROM 0x00683d48 RSSYMpassbeginning
+Ref RSSYMpassone = NILREF;	// ROM 0x00683d50 RSSYMpassone
+Ref RSSYMpasswordkey = NILREF;	// ROM 0x00683d58 RSSYMpasswordkey
+Ref RSSYMpatches = NILREF;	// ROM 0x00683d60 RSSYMpatches
+Ref RSSYMpatchversion = NILREF;	// ROM 0x00683d68 RSSYMpatchversion
+Ref RSSYMpath = NILREF;	// ROM 0x00683d70 RSSYMpath
+Ref RSSYMpathexpr = NILREF;	// ROM 0x00683d78 RSSYMpathexpr
+Ref RSSYMpattern = NILREF;	// ROM 0x00683d80 RSSYMpattern
+Ref RSSYMpen = NILREF;	// ROM 0x00683d88 RSSYMpen
+Ref RSSYMpenpattern = NILREF;	// ROM 0x00683d90 RSSYMpenpattern
+Ref RSSYMpensize = NILREF;	// ROM 0x00683d98 RSSYMpensize
+Ref RSSYMpensoundeffects = NILREF;	// ROM 0x00683da0 RSSYMpensoundeffects
+Ref RSSYMpercentdone = NILREF;	// ROM 0x00683da8 RSSYMpercentdone
+Ref RSSYMperform = NILREF;	// ROM 0x00683db0 RSSYMperform
+Ref RSSYMperson = NILREF;	// ROM 0x00683db8 RSSYMperson
+Ref RSSYMpersonadded = NILREF;	// ROM 0x00683dc0 RSSYMpersonadded
+Ref RSSYMphone1 = NILREF;	// ROM 0x00683dc8 RSSYMphone1
+Ref RSSYMphone1type = NILREF;	// ROM 0x00683dd0 RSSYMphone1type
+Ref RSSYMphone2 = NILREF;	// ROM 0x00683dd8 RSSYMphone2
+Ref RSSYMphone2type = NILREF;	// ROM 0x00683de0 RSSYMphone2type
+Ref RSSYMphone3 = NILREF;	// ROM 0x00683de8 RSSYMphone3
+Ref RSSYMphone3type = NILREF;	// ROM 0x00683df0 RSSYMphone3type
+Ref RSSYMphone4 = NILREF;	// ROM 0x00683df8 RSSYMphone4
+Ref RSSYMphone4type = NILREF;	// ROM 0x00683e00 RSSYMphone4type
+Ref RSSYMphonedictionary = NILREF;	// ROM 0x00683e08 RSSYMphonedictionary
+Ref RSSYMphonekeyboard = NILREF;	// ROM 0x00683e10 RSSYMphonekeyboard
+Ref RSSYMphonenumber = NILREF;	// ROM 0x00683e18 RSSYMphonenumber
+Ref RSSYMphones = NILREF;	// ROM 0x00683e20 RSSYMphones
+Ref RSSYMphonetext = NILREF;	// ROM 0x00683e28 RSSYMphonetext
+Ref RSSYMphonetypes = NILREF;	// ROM 0x00683e30 RSSYMphonetypes
+Ref RSSYMphrases = NILREF;	// ROM 0x00683e38 RSSYMphrases
+Ref RSSYMpickable = NILREF;	// ROM 0x00683e40 RSSYMpickable
+Ref RSSYMpickactionscript = NILREF;	// ROM 0x00683e48 RSSYMpickactionscript
+Ref RSSYMpickautoclose = NILREF;	// ROM 0x00683e50 RSSYMpickautoclose
+Ref RSSYMpickbottommargin = NILREF;	// ROM 0x00683e58 RSSYMpickbottommargin
+Ref RSSYMpickcancelledscript = NILREF;	// ROM 0x00683e60 RSSYMpickcancelledscript
+Ref RSSYMpickitems = NILREF;	// ROM 0x00683e68 RSSYMpickitems
+Ref RSSYMpickitemsmarkable = NILREF;	// ROM 0x00683e70 RSSYMpickitemsmarkable
+Ref RSSYMpickleftmargin = NILREF;	// ROM 0x00683e78 RSSYMpickleftmargin
+Ref RSSYMpickmarkwidth = NILREF;	// ROM 0x00683e80 RSSYMpickmarkwidth
+Ref RSSYMpickmaxwidth = NILREF;	// ROM 0x00683e88 RSSYMpickmaxwidth
+Ref RSSYMpickrightmargin = NILREF;	// ROM 0x00683e90 RSSYMpickrightmargin
+Ref RSSYMpickseparator = NILREF;	// ROM 0x00683e98 RSSYMpickseparator
+Ref RSSYMpicksolidseparator = NILREF;	// ROM 0x00683ea0 RSSYMpicksolidseparator
+Ref RSSYMpicktextitemheight = NILREF;	// ROM 0x00683ea8 RSSYMpicktextitemheight
+Ref RSSYMpicktopmargin = NILREF;	// ROM 0x00683eb0 RSSYMpicktopmargin
+Ref RSSYMpict = NILREF;	// ROM 0x00683eb8 RSSYMpict
+Ref RSSYMpicture = NILREF;	// ROM 0x00683ec0 RSSYMpicture
+Ref RSSYMpicturedata = NILREF;	// ROM 0x00683ec8 RSSYMpicturedata
+Ref RSSYMpin = NILREF;	// ROM 0x00683ed0 RSSYMpin
+Ref RSSYMpinbounds = NILREF;	// ROM 0x00683ed8 RSSYMpinbounds
+Ref RSSYMpixels = NILREF;	// ROM 0x00683ee0 RSSYMpixels
+Ref RSSYMplaceadded = NILREF;	// ROM 0x00683ee8 RSSYMplaceadded
+Ref RSSYMplaces = NILREF;	// ROM 0x00683ef0 RSSYMplaces
+Ref RSSYMplaindata = NILREF;	// ROM 0x00683ef8 RSSYMplaindata
+Ref RSSYMplay = NILREF;	// ROM 0x00683f00 RSSYMplay
+Ref RSSYMplaysound = NILREF;	// ROM 0x00683f08 RSSYMplaysound
+Ref RSSYMplaysoundirregardlessatvolume = NILREF;	// ROM 0x00683f10 RSSYMplaysoundirregardlessatvolume
+Ref RSSYMpoints = NILREF;	// ROM 0x00683f18 RSSYMpoints
+Ref RSSYMpoly = NILREF;	// ROM 0x00683f20 RSSYMpoly
+Ref RSSYMpolygon = NILREF;	// ROM 0x00683f28 RSSYMpolygon
+Ref RSSYMpolygondata = NILREF;	// ROM 0x00683f30 RSSYMpolygondata
+Ref RSSYMpolygonshape = NILREF;	// ROM 0x00683f38 RSSYMpolygonshape
+Ref RSSYMpopup = NILREF;	// ROM 0x00683f40 RSSYMpopup
+Ref RSSYMpostalcode = NILREF;	// ROM 0x00683f48 RSSYMpostalcode
+Ref RSSYMpostcommandparam = NILREF;	// ROM 0x00683f50 RSSYMpostcommandparam
+Ref RSSYMpostkeystring = NILREF;	// ROM 0x00683f58 RSSYMpostkeystring
+Ref RSSYMpostparse = NILREF;	// ROM 0x00683f60 RSSYMpostparse
+Ref RSSYMpostquit = NILREF;	// ROM 0x00683f68 RSSYMpostquit
+Ref RSSYMppdmain = NILREF;	// ROM 0x00683f70 RSSYMppdmain
+Ref RSSYMpreallocatedcontext = NILREF;	// ROM 0x00683f78 RSSYMpreallocatedcontext
+Ref RSSYMpreconditions = NILREF;	// ROM 0x00683f80 RSSYMpreconditions
+Ref RSSYMprefsdictionaries = NILREF;	// ROM 0x00683f88 RSSYMprefsdictionaries
+Ref RSSYMpreliminarycharge = NILREF;	// ROM 0x00683f90 RSSYMpreliminarycharge
+Ref RSSYMprencoding = NILREF;	// ROM 0x00683f98 RSSYMprencoding
+Ref RSSYMpreparing = NILREF;	// ROM 0x00683fa0 RSSYMpreparing
+Ref RSSYMprettyprint = NILREF;	// ROM 0x00683fa8 RSSYMprettyprint
+Ref RSSYMprevpage = NILREF;	// ROM 0x00683fb0 RSSYMprevpage
+Ref RSSYMprimary_act = NILREF;	// ROM 0x00683fb8 RSSYMprimary_act
+Ref RSSYMprintdepth = NILREF;	// ROM 0x00683fc0 RSSYMprintdepth
+Ref RSSYMprinter = NILREF;	// ROM 0x00683fc8 RSSYMprinter
+Ref RSSYMprintername = NILREF;	// ROM 0x00683fd0 RSSYMprintername
+Ref RSSYMprinterpagebounds = NILREF;	// ROM 0x00683fd8 RSSYMprinterpagebounds
+Ref RSSYMprintform = NILREF;	// ROM 0x00683fe0 RSSYMprintform
+Ref RSSYMprinting = NILREF;	// ROM 0x00683fe8 RSSYMprinting
+Ref RSSYMprintinstructions = NILREF;	// ROM 0x00683ff0 RSSYMprintinstructions
+Ref RSSYMprintlength = NILREF;	// ROM 0x00683ff8 RSSYMprintlength
+Ref RSSYMprintnextpagescript = NILREF;	// ROM 0x00684000 RSSYMprintnextpagescript
+Ref RSSYMprintproblem = NILREF;	// ROM 0x00684008 RSSYMprintproblem
+Ref RSSYMprinttype = NILREF;	// ROM 0x00684010 RSSYMprinttype
+Ref RSSYMprintview = NILREF;	// ROM 0x00684018 RSSYMprintview
+Ref RSSYMpriorityitems = NILREF;	// ROM 0x00684020 RSSYMpriorityitems
+Ref RSSYMprivateeventcollector = NILREF;	// ROM 0x00684028 RSSYMprivateeventcollector
+Ref RSSYMprivatetraceevents = NILREF;	// ROM 0x00684030 RSSYMprivatetraceevents
+Ref RSSYMprocessorofftime = NILREF;	// ROM 0x00684038 RSSYMprocessorofftime
+Ref RSSYMprogramcounter = NILREF;	// ROM 0x00684040 RSSYMprogramcounter
+Ref RSSYMprogress = NILREF;	// ROM 0x00684048 RSSYMprogress
+Ref RSSYMprogressgauge = NILREF;	// ROM 0x00684050 RSSYMprogressgauge
+Ref RSSYMprogressscript = NILREF;	// ROM 0x00684058 RSSYMprogressscript
+Ref RSSYMprotocol = NILREF;	// ROM 0x00684060 RSSYMprotocol
+Ref RSSYMprotocolversion = NILREF;	// ROM 0x00684068 RSSYMprotocolversion
+Ref RSSYMprotodictionarycursor = NILREF;	// ROM 0x00684070 RSSYMprotodictionarycursor
+Ref RSSYMproxy = NILREF;	// ROM 0x00684078 RSSYMproxy
+Ref RSSYMpsfonts = NILREF;	// ROM 0x00684080 RSSYMpsfonts
+Ref RSSYMpsname = NILREF;	// ROM 0x00684088 RSSYMpsname
+Ref RSSYMpsscale = NILREF;	// ROM 0x00684090 RSSYMpsscale
+Ref RSSYMpssid = NILREF;	// ROM 0x00684098 RSSYMpssid
+Ref RSSYMpssids = NILREF;	// ROM 0x006840a0 RSSYMpssids
+Ref RSSYMpssym = NILREF;	// ROM 0x006840a8 RSSYMpssym
+Ref RSSYMpunctuationcursiveoption = NILREF;	// ROM 0x006840b0 RSSYMpunctuationcursiveoption
+Ref RSSYMquery = NILREF;	// ROM 0x006840b8 RSSYMquery
+Ref RSSYMqueryspec = NILREF;	// ROM 0x006840c0 RSSYMqueryspec
+Ref RSSYMquicklooklives = NILREF;	// ROM 0x006840c8 RSSYMquicklooklives
+Ref RSSYMramsize = NILREF;	// ROM 0x006840d0 RSSYMramsize
+Ref RSSYMrandomstate = NILREF;	// ROM 0x006840d8 RSSYMrandomstate
+Ref RSSYMraw = NILREF;	// ROM 0x006840e0 RSSYMraw
+Ref RSSYMrcbaseinfo = NILREF;	// ROM 0x006840e8 RSSYMrcbaseinfo
+Ref RSSYMrcgridinfo = NILREF;	// ROM 0x006840f0 RSSYMrcgridinfo
+Ref RSSYMrcsingleletters = NILREF;	// ROM 0x006840f8 RSSYMrcsingleletters
+Ref RSSYMrcvflags = NILREF;	// ROM 0x00684100 RSSYMrcvflags
+Ref RSSYMrcvoptions = NILREF;	// ROM 0x00684108 RSSYMrcvoptions
+Ref RSSYMreadonly = NILREF;	// ROM 0x00684110 RSSYMreadonly
+Ref RSSYMreal = NILREF;	// ROM 0x00684118 RSSYMreal
+Ref RSSYMrealdata = NILREF;	// ROM 0x00684120 RSSYMrealdata
+Ref RSSYMrebootcount = NILREF;	// ROM 0x00684128 RSSYMrebootcount
+Ref RSSYMrebootreason = NILREF;	// ROM 0x00684130 RSSYMrebootreason
+Ref RSSYMrecconfig = NILREF;	// ROM 0x00684138 RSSYMrecconfig
+Ref RSSYMreceipt = NILREF;	// ROM 0x00684140 RSSYMreceipt
+Ref RSSYMreceivedfax = NILREF;	// ROM 0x00684148 RSSYMreceivedfax
+Ref RSSYMreceiver = NILREF;	// ROM 0x00684150 RSSYMreceiver
+Ref RSSYMreceiving = NILREF;	// ROM 0x00684158 RSSYMreceiving
+Ref RSSYMrecogcitiesdictionary = NILREF;	// ROM 0x00684160 RSSYMrecogcitiesdictionary
+Ref RSSYMrecogcompaniesdictionary = NILREF;	// ROM 0x00684168 RSSYMrecogcompaniesdictionary
+Ref RSSYMrecogdatedictionary = NILREF;	// ROM 0x00684170 RSSYMrecogdatedictionary
+Ref RSSYMrecoghonorificsdictionary = NILREF;	// ROM 0x00684178 RSSYMrecoghonorificsdictionary
+Ref RSSYMrecognitioninkwordwarning = NILREF;	// ROM 0x00684180 RSSYMrecognitioninkwordwarning
+Ref RSSYMrecognitionmemorywarning = NILREF;	// ROM 0x00684188 RSSYMrecognitionmemorywarning
+Ref RSSYMrecognizers = NILREF;	// ROM 0x00684190 RSSYMrecognizers
+Ref RSSYMrecognumberdictionary = NILREF;	// ROM 0x00684198 RSSYMrecognumberdictionary
+Ref RSSYMrecogphonedictionary = NILREF;	// ROM 0x006841a0 RSSYMrecogphonedictionary
+Ref RSSYMrecogpropersdictionary = NILREF;	// ROM 0x006841a8 RSSYMrecogpropersdictionary
+Ref RSSYMrecogrevpropersdictionary = NILREF;	// ROM 0x006841b0 RSSYMrecogrevpropersdictionary
+Ref RSSYMrecogstatesabbrevsdictionary = NILREF;	// ROM 0x006841b8 RSSYMrecogstatesabbrevsdictionary
+Ref RSSYMrecogstatesdictionary = NILREF;	// ROM 0x006841c0 RSSYMrecogstatesdictionary
+Ref RSSYMrecogtimedictionary = NILREF;	// ROM 0x006841c8 RSSYMrecogtimedictionary
+Ref RSSYMrecord = NILREF;	// ROM 0x006841d0 RSSYMrecord
+Ref RSSYMrecording = NILREF;	// ROM 0x006841d8 RSSYMrecording
+Ref RSSYMrectangle = NILREF;	// ROM 0x006841e0 RSSYMrectangle
+Ref RSSYMrecvflags = NILREF;	// ROM 0x006841e8 RSSYMrecvflags
+Ref RSSYMrecvwaiting = NILREF;	// ROM 0x006841f0 RSSYMrecvwaiting
+Ref RSSYMredochildren = NILREF;	// ROM 0x006841f8 RSSYMredochildren
+Ref RSSYMrefcount = NILREF;	// ROM 0x00684200 RSSYMrefcount
+Ref RSSYMreflow = NILREF;	// ROM 0x00684208 RSSYMreflow
+Ref RSSYMreflowfont = NILREF;	// ROM 0x00684210 RSSYMreflowfont
+Ref RSSYMreflowoptions = NILREF;	// ROM 0x00684218 RSSYMreflowoptions
+Ref RSSYMregcommconfigarray = NILREF;	// ROM 0x00684220 RSSYMregcommconfigarray
+Ref RSSYMregion = NILREF;	// ROM 0x00684228 RSSYMregion
+Ref RSSYMregiondata = NILREF;	// ROM 0x00684230 RSSYMregiondata
+Ref RSSYMregisternewpackage = NILREF;	// ROM 0x00684238 RSSYMregisternewpackage
+Ref RSSYMrejectall = NILREF;	// ROM 0x00684240 RSSYMrejectall
+Ref RSSYMrejectbeginning = NILREF;	// ROM 0x00684248 RSSYMrejectbeginning
+Ref RSSYMrejectone = NILREF;	// ROM 0x00684250 RSSYMrejectone
+Ref RSSYMrelated = NILREF;	// ROM 0x00684258 RSSYMrelated
+Ref RSSYMremallbutbuiltinfromdir = NILREF;	// ROM 0x00684260 RSSYMremallbutbuiltinfromdir
+Ref RSSYMremoteid = NILREF;	// ROM 0x00684268 RSSYMremoteid
+Ref RSSYMremotewriting = NILREF;	// ROM 0x00684270 RSSYMremotewriting
+Ref RSSYMremoveallentries = NILREF;	// ROM 0x00684278 RSSYMremoveallentries
+Ref RSSYMremovecookie = NILREF;	// ROM 0x00684280 RSSYMremovecookie
+Ref RSSYMremovefromstore = NILREF;	// ROM 0x00684288 RSSYMremovefromstore
+Ref RSSYMremoveindex = NILREF;	// ROM 0x00684290 RSSYMremoveindex
+Ref RSSYMremoveoldestbook = NILREF;	// ROM 0x00684298 RSSYMremoveoldestbook
+Ref RSSYMremovepackage = NILREF;	// ROM 0x006842a0 RSSYMremovepackage
+Ref RSSYMremovepart = NILREF;	// ROM 0x006842a8 RSSYMremovepart
+Ref RSSYMremovescript = NILREF;	// ROM 0x006842b0 RSSYMremovescript
+Ref RSSYMremovesymbol = NILREF;	// ROM 0x006842b8 RSSYMremovesymbol
+Ref RSSYMrendering = NILREF;	// ROM 0x006842c0 RSSYMrendering
+Ref RSSYMreorienttoscreen = NILREF;	// ROM 0x006842c8 RSSYMreorienttoscreen
+Ref RSSYMrepeatingmeeting = NILREF;	// ROM 0x006842d0 RSSYMrepeatingmeeting
+Ref RSSYMrepeatnotes = NILREF;	// ROM 0x006842d8 RSSYMrepeatnotes
+Ref RSSYMrepeatsoup = NILREF;	// ROM 0x006842e0 RSSYMrepeatsoup
+Ref RSSYMrepeattemplate = NILREF;	// ROM 0x006842e8 RSSYMrepeattemplate
+Ref RSSYMrepeattemplatealias = NILREF;	// ROM 0x006842f0 RSSYMrepeattemplatealias
+Ref RSSYMrepeattype = NILREF;	// ROM 0x006842f8 RSSYMrepeattype
+Ref RSSYMreplacechars = NILREF;	// ROM 0x00684300 RSSYMreplacechars
+Ref RSSYMreportdeadunitimports = NILREF;	// ROM 0x00684308 RSSYMreportdeadunitimports
+Ref RSSYMreqtimeout = NILREF;	// ROM 0x00684310 RSSYMreqtimeout
+Ref RSSYMresolution = NILREF;	// ROM 0x00684318 RSSYMresolution
+Ref RSSYMrestore2_2E0systementry = NILREF;	// ROM 0x00684320 RSSYMrestore2_2E0systementry
+Ref RSSYMrestoreapackagefrompieces = NILREF;	// ROM 0x00684328 RSSYMrestoreapackagefrompieces
+Ref RSSYMresult = NILREF;	// ROM 0x00684330 RSSYMresult
+Ref RSSYMretryallowed = NILREF;	// ROM 0x00684338 RSSYMretryallowed
+Ref RSSYMretrybutton = NILREF;	// ROM 0x00684340 RSSYMretrybutton
+Ref RSSYMreturnelt = NILREF;	// ROM 0x00684348 RSSYMreturnelt
+Ref RSSYMreversedictid = NILREF;	// ROM 0x00684350 RSSYMreversedictid
+Ref RSSYMrichstring = NILREF;	// ROM 0x00684358 RSSYMrichstring
+Ref RSSYMright = NILREF;	// ROM 0x00684360 RSSYMright
+Ref RSSYMrightindent = NILREF;	// ROM 0x00684368 RSSYMrightindent
+Ref RSSYMrightmargin = NILREF;	// ROM 0x00684370 RSSYMrightmargin
+Ref RSSYMrightmarkgap = NILREF;	// ROM 0x00684378 RSSYMrightmarkgap
+Ref RSSYMringtoanswerafter = NILREF;	// ROM 0x00684380 RSSYMringtoanswerafter
+Ref RSSYMromdictid = NILREF;	// ROM 0x00684388 RSSYMromdictid
+Ref RSSYMromid = NILREF;	// ROM 0x00684390 RSSYMromid
+Ref RSSYMromname = NILREF;	// ROM 0x00684398 RSSYMromname
+Ref RSSYMromstage = NILREF;	// ROM 0x006843a0 RSSYMromstage
+Ref RSSYMromversion = NILREF;	// ROM 0x006843a8 RSSYMromversion
+Ref RSSYMromversionstring = NILREF;	// ROM 0x006843b0 RSSYMromversionstring
+Ref RSSYMrootcontext = NILREF;	// ROM 0x006843b8 RSSYMrootcontext
+Ref RSSYMrosignoredicts = NILREF;	// ROM 0x006843c0 RSSYMrosignoredicts
+Ref RSSYMrosmapdicts = NILREF;	// ROM 0x006843c8 RSSYMrosmapdicts
+Ref RSSYMrotate180 = NILREF;	// ROM 0x006843d0 RSSYMrotate180
+Ref RSSYMrotateleft = NILREF;	// ROM 0x006843d8 RSSYMrotateleft
+Ref RSSYMrotateright = NILREF;	// ROM 0x006843e0 RSSYMrotateright
+Ref RSSYMroundrectangle = NILREF;	// ROM 0x006843e8 RSSYMroundrectangle
+Ref RSSYMrowbytes = NILREF;	// ROM 0x006843f0 RSSYMrowbytes
+Ref RSSYMrulers = NILREF;	// ROM 0x006843f8 RSSYMrulers
+Ref RSSYMsafetoremove = NILREF;	// ROM 0x00684400 RSSYMsafetoremove
+Ref RSSYMsalutationprefix = NILREF;	// ROM 0x00684408 RSSYMsalutationprefix
+Ref RSSYMsamples = NILREF;	// ROM 0x00684410 RSSYMsamples
+Ref RSSYMsamplesize = NILREF;	// ROM 0x00684418 RSSYMsamplesize
+Ref RSSYMsamplingrate = NILREF;	// ROM 0x00684420 RSSYMsamplingrate
+Ref RSSYMsaveletterweights = NILREF;	// ROM 0x00684428 RSSYMsaveletterweights
+Ref RSSYMsavemarkup = NILREF;	// ROM 0x00684430 RSSYMsavemarkup
+Ref RSSYMsaveuserdict = NILREF;	// ROM 0x00684438 RSSYMsaveuserdict
+Ref RSSYMsaveuserdictionary = NILREF;	// ROM 0x00684440 RSSYMsaveuserdictionary
+Ref RSSYMscale = NILREF;	// ROM 0x00684448 RSSYMscale
+Ref RSSYMscanoffset = NILREF;	// ROM 0x00684450 RSSYMscanoffset
+Ref RSSYMschedule_act = NILREF;	// ROM 0x00684458 RSSYMschedule_act
+Ref RSSYMscore = NILREF;	// ROM 0x00684460 RSSYMscore
+Ref RSSYMscreendepth = NILREF;	// ROM 0x00684468 RSSYMscreendepth
+Ref RSSYMscreenheight = NILREF;	// ROM 0x00684470 RSSYMscreenheight
+Ref RSSYMscreenontime = NILREF;	// ROM 0x00684478 RSSYMscreenontime
+Ref RSSYMscreenorientation = NILREF;	// ROM 0x00684480 RSSYMscreenorientation
+Ref RSSYMscreenresolutionx = NILREF;	// ROM 0x00684488 RSSYMscreenresolutionx
+Ref RSSYMscreenresolutiony = NILREF;	// ROM 0x00684490 RSSYMscreenresolutiony
+Ref RSSYMscreensym = NILREF;	// ROM 0x00684498 RSSYMscreensym
+Ref RSSYMscreenwidth = NILREF;	// ROM 0x006844a0 RSSYMscreenwidth
+Ref RSSYMscripts = NILREF;	// ROM 0x006844a8 RSSYMscripts
+Ref RSSYMscrolldelta = NILREF;	// ROM 0x006844b0 RSSYMscrolldelta
+Ref RSSYMscrolldownsound = NILREF;	// ROM 0x006844b8 RSSYMscrolldownsound
+Ref RSSYMscrolledview = NILREF;	// ROM 0x006844c0 RSSYMscrolledview
+Ref RSSYMscroller = NILREF;	// ROM 0x006844c8 RSSYMscroller
+Ref RSSYMscrollers = NILREF;	// ROM 0x006844d0 RSSYMscrollers
+Ref RSSYMscrollupsound = NILREF;	// ROM 0x006844d8 RSSYMscrollupsound
+Ref RSSYMsecond = NILREF;	// ROM 0x006844e0 RSSYMsecond
+Ref RSSYMsecondleadingz = NILREF;	// ROM 0x006844e8 RSSYMsecondleadingz
+Ref RSSYMsecorder = NILREF;	// ROM 0x006844f0 RSSYMsecorder
+Ref RSSYMselecteddates = NILREF;	// ROM 0x006844f8 RSSYMselecteddates
+Ref RSSYMselection = NILREF;	// ROM 0x00684500 RSSYMselection
+Ref RSSYMselectivesyncok = NILREF;	// ROM 0x00684508 RSSYMselectivesyncok
+Ref RSSYMsendflags = NILREF;	// ROM 0x00684510 RSSYMsendflags
+Ref RSSYMsending = NILREF;	// ROM 0x00684518 RSSYMsending
+Ref RSSYMsendwaiting = NILREF;	// ROM 0x00684520 RSSYMsendwaiting
+Ref RSSYMserialgpi = NILREF;	// ROM 0x00684528 RSSYMserialgpi
+Ref RSSYMserialnumber = NILREF;	// ROM 0x00684530 RSSYMserialnumber
+Ref RSSYMserialontime = NILREF;	// ROM 0x00684538 RSSYMserialontime
+Ref RSSYMservice = NILREF;	// ROM 0x00684540 RSSYMservice
+Ref RSSYMserviceid = NILREF;	// ROM 0x00684548 RSSYMserviceid
+Ref RSSYMsetallinfo = NILREF;	// ROM 0x00684550 RSSYMsetallinfo
+Ref RSSYMsetaref = NILREF;	// ROM 0x00684558 RSSYMsetaref
+Ref RSSYMsetbrowserposition = NILREF;	// ROM 0x00684560 RSSYMsetbrowserposition
+Ref RSSYMsetcapslock = NILREF;	// ROM 0x00684568 RSSYMsetcapslock
+Ref RSSYMsetglobal = NILREF;	// ROM 0x00684570 RSSYMsetglobal
+Ref RSSYMsetinfo = NILREF;	// ROM 0x00684578 RSSYMsetinfo
+Ref RSSYMsetmarkicon = NILREF;	// ROM 0x00684580 RSSYMsetmarkicon
+Ref RSSYMsetmeetingbounds = NILREF;	// ROM 0x00684588 RSSYMsetmeetingbounds
+Ref RSSYMsetname = NILREF;	// ROM 0x00684590 RSSYMsetname
+Ref RSSYMsetpagenumber = NILREF;	// ROM 0x00684598 RSSYMsetpagenumber
+Ref RSSYMsetprintprogress = NILREF;	// ROM 0x006845a0 RSSYMsetprintprogress
+Ref RSSYMsetscroller = NILREF;	// ROM 0x006845a8 RSSYMsetscroller
+Ref RSSYMsetscrollers = NILREF;	// ROM 0x006845b0 RSSYMsetscrollers
+Ref RSSYMsetsignature = NILREF;	// ROM 0x006845b8 RSSYMsetsignature
+Ref RSSYMsetstatus = NILREF;	// ROM 0x006845c0 RSSYMsetstatus
+Ref RSSYMsetstatusdialog = NILREF;	// ROM 0x006845c8 RSSYMsetstatusdialog
+Ref RSSYMsettings = NILREF;	// ROM 0x006845d0 RSSYMsettings
+Ref RSSYMsetup = NILREF;	// ROM 0x006845d8 RSSYMsetup
+Ref RSSYMsetup1 = NILREF;	// ROM 0x006845e0 RSSYMsetup1
+Ref RSSYMsetup2 = NILREF;	// ROM 0x006845e8 RSSYMsetup2
+Ref RSSYMsetupromhelpbook = NILREF;	// ROM 0x006845f0 RSSYMsetupromhelpbook
+Ref RSSYMsevenbit = NILREF;	// ROM 0x006845f8 RSSYMsevenbit
+Ref RSSYMshape = NILREF;	// ROM 0x00684600 RSSYMshape
+Ref RSSYMshapebounds = NILREF;	// ROM 0x00684608 RSSYMshapebounds
+Ref RSSYMshortdatedelim = NILREF;	// ROM 0x00684610 RSSYMshortdatedelim
+Ref RSSYMshortdateformat = NILREF;	// ROM 0x00684618 RSSYMshortdateformat
+Ref RSSYMshortdateorder = NILREF;	// ROM 0x00684620 RSSYMshortdateorder
+Ref RSSYMshortdaysuffix = NILREF;	// ROM 0x00684628 RSSYMshortdaysuffix
+Ref RSSYMshortdofweek = NILREF;	// ROM 0x00684630 RSSYMshortdofweek
+Ref RSSYMshortmonth = NILREF;	// ROM 0x00684638 RSSYMshortmonth
+Ref RSSYMshortmonthsuffix = NILREF;	// ROM 0x00684640 RSSYMshortmonthsuffix
+Ref RSSYMshortordinals = NILREF;	// ROM 0x00684648 RSSYMshortordinals
+Ref RSSYMshorttimestrspec = NILREF;	// ROM 0x00684650 RSSYMshorttimestrspec
+Ref RSSYMshorttitle = NILREF;	// ROM 0x00684658 RSSYMshorttitle
+Ref RSSYMshortyearsuffix = NILREF;	// ROM 0x00684660 RSSYMshortyearsuffix
+Ref RSSYMshowchar = NILREF;	// ROM 0x00684668 RSSYMshowchar
+Ref RSSYMshowmarkup = NILREF;	// ROM 0x00684670 RSSYMshowmarkup
+Ref RSSYMshowsound = NILREF;	// ROM 0x00684678 RSSYMshowsound
+Ref RSSYMsignature = NILREF;	// ROM 0x00684680 RSSYMsignature
+Ref RSSYMsignaturea = NILREF;	// ROM 0x00684688 RSSYMsignaturea
+Ref RSSYMsignatureb = NILREF;	// ROM 0x00684690 RSSYMsignatureb
+Ref RSSYMsimplesound = NILREF;	// ROM 0x00684698 RSSYMsimplesound
+Ref RSSYMsingleday = NILREF;	// ROM 0x006846a0 RSSYMsingleday
+Ref RSSYMsize = NILREF;	// ROM 0x006846a8 RSSYMsize
+Ref RSSYMskip = NILREF;	// ROM 0x006846b0 RSSYMskip
+Ref RSSYMsleeptime = NILREF;	// ROM 0x006846b8 RSSYMsleeptime
+Ref RSSYMslipheight = NILREF;	// ROM 0x006846c0 RSSYMslipheight
+Ref RSSYMslot = NILREF;	// ROM 0x006846c8 RSSYMslot
+Ref RSSYMsmallheight = NILREF;	// ROM 0x006846d0 RSSYMsmallheight
+Ref RSSYMsmileaftermounterror = NILREF;	// ROM 0x006846d8 RSSYMsmileaftermounterror
+Ref RSSYMsndframetype = NILREF;	// ROM 0x006846e0 RSSYMsndframetype
+Ref RSSYMsocket = NILREF;	// ROM 0x006846e8 RSSYMsocket
+Ref RSSYMsocketinfos = NILREF;	// ROM 0x006846f0 RSSYMsocketinfos
+Ref RSSYMsocketnumber = NILREF;	// ROM 0x006846f8 RSSYMsocketnumber
+Ref RSSYMsoftflowblocked = NILREF;	// ROM 0x00684700 RSSYMsoftflowblocked
+Ref RSSYMsortid = NILREF;	// ROM 0x00684708 RSSYMsortid
+Ref RSSYMsorton = NILREF;	// ROM 0x00684710 RSSYMsorton
+Ref RSSYMsorttables = NILREF;	// ROM 0x00684718 RSSYMsorttables
+Ref RSSYMsound = NILREF;	// ROM 0x00684720 RSSYMsound
+Ref RSSYMsoundinfo = NILREF;	// ROM 0x00684728 RSSYMsoundinfo
+Ref RSSYMsoundontime = NILREF;	// ROM 0x00684730 RSSYMsoundontime
+Ref RSSYMsoup = NILREF;	// ROM 0x00684738 RSSYMsoup
+Ref RSSYMsoupcreated = NILREF;	// ROM 0x00684740 RSSYMsoupcreated
+Ref RSSYMsoupdef = NILREF;	// ROM 0x00684748 RSSYMsoupdef
+Ref RSSYMsoupdeleted = NILREF;	// ROM 0x00684750 RSSYMsoupdeleted
+Ref RSSYMsoupenters = NILREF;	// ROM 0x00684758 RSSYMsoupenters
+Ref RSSYMsoupindexadded = NILREF;	// ROM 0x00684760 RSSYMsoupindexadded
+Ref RSSYMsoupindexremoved = NILREF;	// ROM 0x00684768 RSSYMsoupindexremoved
+Ref RSSYMsoupinfochanged = NILREF;	// ROM 0x00684770 RSSYMsoupinfochanged
+Ref RSSYMsoupleaves = NILREF;	// ROM 0x00684778 RSSYMsoupleaves
+Ref RSSYMsouplist = NILREF;	// ROM 0x00684780 RSSYMsouplist
+Ref RSSYMsoupname = NILREF;	// ROM 0x00684788 RSSYMsoupname
+Ref RSSYMsoups = NILREF;	// ROM 0x00684790 RSSYMsoups
+Ref RSSYMsouptagschanged = NILREF;	// ROM 0x00684798 RSSYMsouptagschanged
+Ref RSSYMsource = NILREF;	// ROM 0x006847a0 RSSYMsource
+Ref RSSYMspeaker = NILREF;	// ROM 0x006847a8 RSSYMspeaker
+Ref RSSYMspeakeron = NILREF;	// ROM 0x006847b0 RSSYMspeakeron
+Ref RSSYMspeakervolume = NILREF;	// ROM 0x006847b8 RSSYMspeakervolume
+Ref RSSYMspeed = NILREF;	// ROM 0x006847c0 RSSYMspeed
+Ref RSSYMspeedcursiveoption = NILREF;	// ROM 0x006847c8 RSSYMspeedcursiveoption
+Ref RSSYMspeller = NILREF;	// ROM 0x006847d0 RSSYMspeller
+Ref RSSYMspellframe = NILREF;	// ROM 0x006847d8 RSSYMspellframe
+Ref RSSYMsplit = NILREF;	// ROM 0x006847e0 RSSYMsplit
+Ref RSSYMsquaregrid = NILREF;	// ROM 0x006847e8 RSSYMsquaregrid
+Ref RSSYMsramcardlowbattery = NILREF;	// ROM 0x006847f0 RSSYMsramcardlowbattery
+Ref RSSYMsramcardreplacebattery = NILREF;	// ROM 0x006847f8 RSSYMsramcardreplacebattery
+Ref RSSYMstart = NILREF;	// ROM 0x00684800 RSSYMstart
+Ref RSSYMstartchar = NILREF;	// ROM 0x00684808 RSSYMstartchar
+Ref RSSYMstartidle = NILREF;	// ROM 0x00684810 RSSYMstartidle
+Ref RSSYMstartkey = NILREF;	// ROM 0x00684818 RSSYMstartkey
+Ref RSSYMstarttime = NILREF;	// ROM 0x00684820 RSSYMstarttime
+Ref RSSYMstate = NILREF;	// ROM 0x00684828 RSSYMstate
+Ref RSSYMstatus = NILREF;	// ROM 0x00684830 RSSYMstatus
+Ref RSSYMstatustext = NILREF;	// ROM 0x00684838 RSSYMstatustext
+Ref RSSYMstdforms = NILREF;	// ROM 0x00684840 RSSYMstdforms
+Ref RSSYMstepchildren = NILREF;	// ROM 0x00684848 RSSYMstepchildren
+Ref RSSYMstop = NILREF;	// ROM 0x00684850 RSSYMstop
+Ref RSSYMstopbits = NILREF;	// ROM 0x00684858 RSSYMstopbits
+Ref RSSYMstopidle = NILREF;	// ROM 0x00684860 RSSYMstopidle
+Ref RSSYMstore = NILREF;	// ROM 0x00684868 RSSYMstore
+Ref RSSYMstoreid = NILREF;	// ROM 0x00684870 RSSYMstoreid
+Ref RSSYMstoremounted = NILREF;	// ROM 0x00684878 RSSYMstoremounted
+Ref RSSYMstoreobj = NILREF;	// ROM 0x00684880 RSSYMstoreobj
+Ref RSSYMstorepassword = NILREF;	// ROM 0x00684888 RSSYMstorepassword
+Ref RSSYMstoresig = NILREF;	// ROM 0x00684890 RSSYMstoresig
+Ref RSSYMstoreunmounted = NILREF;	// ROM 0x00684898 RSSYMstoreunmounted
+Ref RSSYMstoreversion = NILREF;	// ROM 0x006848a0 RSSYMstoreversion
+Ref RSSYMstorycard = NILREF;	// ROM 0x006848a8 RSSYMstorycard
+Ref RSSYMstr_3C = NILREF;	// ROM 0x006848b0 RSSYMstr_3C
+Ref RSSYMstr_3D = NILREF;	// ROM 0x006848b8 RSSYMstr_3D
+Ref RSSYMstr_3E = NILREF;	// ROM 0x006848c0 RSSYMstr_3E
+Ref RSSYMstrequal = NILREF;	// ROM 0x006848c8 RSSYMstrequal
+Ref RSSYMstring = NILREF;	// ROM 0x006848d0 RSSYMstring
+Ref RSSYMstring_2Ecustom = NILREF;	// ROM 0x006848d8 RSSYMstring_2Ecustom
+Ref RSSYMstring_2Enohint = NILREF;	// ROM 0x006848e0 RSSYMstring_2Enohint
+Ref RSSYMstroke = NILREF;	// ROM 0x006848e8 RSSYMstroke
+Ref RSSYMstrokebundle = NILREF;	// ROM 0x006848f0 RSSYMstrokebundle
+Ref RSSYMstrokelist = NILREF;	// ROM 0x006848f8 RSSYMstrokelist
+Ref RSSYMstrokes = NILREF;	// ROM 0x00684900 RSSYMstrokes
+Ref RSSYMstrongarm = NILREF;	// ROM 0x00684908 RSSYMstrongarm
+Ref RSSYMstructure = NILREF;	// ROM 0x00684910 RSSYMstructure
+Ref RSSYMstrxrcommands = NILREF;	// ROM 0x00684918 RSSYMstrxrcommands
+Ref RSSYMstuffmodalcommandkeys = NILREF;	// ROM 0x00684920 RSSYMstuffmodalcommandkeys
+Ref RSSYMstylepalette = NILREF;	// ROM 0x00684928 RSSYMstylepalette
+Ref RSSYMstyles = NILREF;	// ROM 0x00684930 RSSYMstyles
+Ref RSSYMsubmit = NILREF;	// ROM 0x00684938 RSSYMsubmit
+Ref RSSYMsuffixstr = NILREF;	// ROM 0x00684940 RSSYMsuffixstr
+Ref RSSYMsummaryvalue = NILREF;	// ROM 0x00684948 RSSYMsummaryvalue
+Ref RSSYMsupportscallback = NILREF;	// ROM 0x00684950 RSSYMsupportscallback
+Ref RSSYMsweden = NILREF;	// ROM 0x00684958 RSSYMsweden
+Ref RSSYMsym_3C = NILREF;	// ROM 0x00684960 RSSYMsym_3C
+Ref RSSYMsym_3E = NILREF;	// ROM 0x00684968 RSSYMsym_3E
+Ref RSSYMsymbol = NILREF;	// ROM 0x00684970 RSSYMsymbol
+Ref RSSYMsymbolset = NILREF;	// ROM 0x00684978 RSSYMsymbolset
+Ref RSSYMsymmetryshapeoption = NILREF;	// ROM 0x00684980 RSSYMsymmetryshapeoption
+Ref RSSYMsync = NILREF;	// ROM 0x00684988 RSSYMsync
+Ref RSSYMsyncbuttons = NILREF;	// ROM 0x00684990 RSSYMsyncbuttons
+Ref RSSYMsyncchildren = NILREF;	// ROM 0x00684998 RSSYMsyncchildren
+Ref RSSYMsyncpensize = NILREF;	// ROM 0x006849a0 RSSYMsyncpensize
+Ref RSSYMsynth = NILREF;	// ROM 0x006849a8 RSSYMsynth
+Ref RSSYMsysbeep = NILREF;	// ROM 0x006849b0 RSSYMsysbeep
+Ref RSSYMsystem = NILREF;	// ROM 0x006849b8 RSSYMsystem
+Ref RSSYMsystemdirectory = NILREF;	// ROM 0x006849c0 RSSYMsystemdirectory
+Ref RSSYMsystemlocalebundle = NILREF;	// ROM 0x006849c8 RSSYMsystemlocalebundle
+Ref RSSYMsystemname = NILREF;	// ROM 0x006849d0 RSSYMsystemname
+Ref RSSYMsystempsfont = NILREF;	// ROM 0x006849d8 RSSYMsystempsfont
+Ref RSSYMsystemscratch = NILREF;	// ROM 0x006849e0 RSSYMsystemscratch
+Ref RSSYMtabacross = NILREF;	// ROM 0x006849e8 RSSYMtabacross
+Ref RSSYMtabdown = NILREF;	// ROM 0x006849f0 RSSYMtabdown
+Ref RSSYMtabheights = NILREF;	// ROM 0x006849f8 RSSYMtabheights
+Ref RSSYMtabletresolutionx = NILREF;	// ROM 0x00684a00 RSSYMtabletresolutionx
+Ref RSSYMtabletresolutiony = NILREF;	// ROM 0x00684a08 RSSYMtabletresolutiony
+Ref RSSYMtabprotos = NILREF;	// ROM 0x00684a10 RSSYMtabprotos
+Ref RSSYMtabs = NILREF;	// ROM 0x00684a18 RSSYMtabs
+Ref RSSYMtabsetup = NILREF;	// ROM 0x00684a20 RSSYMtabsetup
+Ref RSSYMtabvalues = NILREF;	// ROM 0x00684a28 RSSYMtabvalues
+Ref RSSYMtabvalueslot = NILREF;	// ROM 0x00684a30 RSSYMtabvalueslot
+Ref RSSYMtabwidths = NILREF;	// ROM 0x00684a38 RSSYMtabwidths
+Ref RSSYMtag = NILREF;	// ROM 0x00684a40 RSSYMtag
+Ref RSSYMtags = NILREF;	// ROM 0x00684a48 RSSYMtags
+Ref RSSYMtagspec = NILREF;	// ROM 0x00684a50 RSSYMtagspec
+Ref RSSYMtapdata = NILREF;	// ROM 0x00684a58 RSSYMtapdata
+Ref RSSYMtarget = NILREF;	// ROM 0x00684a60 RSSYMtarget
+Ref RSSYMtask = NILREF;	// ROM 0x00684a68 RSSYMtask
+Ref RSSYMtaskslip = NILREF;	// ROM 0x00684a70 RSSYMtaskslip
+Ref RSSYMtask_list = NILREF;	// ROM 0x00684a78 RSSYMtask_list
+Ref RSSYMtcursor = NILREF;	// ROM 0x00684a80 RSSYMtcursor
+Ref RSSYMtemplate = NILREF;	// ROM 0x00684a88 RSSYMtemplate
+Ref RSSYMtemporary = NILREF;	// ROM 0x00684a90 RSSYMtemporary
+Ref RSSYMterminalclass = NILREF;	// ROM 0x00684a98 RSSYMterminalclass
+Ref RSSYMtermination = NILREF;	// ROM 0x00684aa0 RSSYMtermination
+Ref RSSYMtersedofweek = NILREF;	// ROM 0x00684aa8 RSSYMtersedofweek
+Ref RSSYMtersemonth = NILREF;	// ROM 0x00684ab0 RSSYMtersemonth
+Ref RSSYMtestconfig = NILREF;	// ROM 0x00684ab8 RSSYMtestconfig
+Ref RSSYMtext = NILREF;	// ROM 0x00684ac0 RSSYMtext
+Ref RSSYMtextbox = NILREF;	// ROM 0x00684ac8 RSSYMtextbox
+Ref RSSYMtextdata = NILREF;	// ROM 0x00684ad0 RSSYMtextdata
+Ref RSSYMtextflags = NILREF;	// ROM 0x00684ad8 RSSYMtextflags
+Ref RSSYMtextgutter = NILREF;	// ROM 0x00684ae0 RSSYMtextgutter
+Ref RSSYMtextpattern = NILREF;	// ROM 0x00684ae8 RSSYMtextpattern
+Ref RSSYMtextstyle = NILREF;	// ROM 0x00684af0 RSSYMtextstyle
+Ref RSSYMthedesktoptype = NILREF;	// ROM 0x00684af8 RSSYMthedesktoptype
+Ref RSSYMtheformat = NILREF;	// ROM 0x00684b00 RSSYMtheformat
+Ref RSSYMthefunc = NILREF;	// ROM 0x00684b08 RSSYMthefunc
+Ref RSSYMthename = NILREF;	// ROM 0x00684b10 RSSYMthename
+Ref RSSYMthinking = NILREF;	// ROM 0x00684b18 RSSYMthinking
+Ref RSSYMthroughputgauge = NILREF;	// ROM 0x00684b20 RSSYMthroughputgauge
+Ref RSSYMthumbnailscript = NILREF;	// ROM 0x00684b28 RSSYMthumbnailscript
+Ref RSSYMticksound = NILREF;	// ROM 0x00684b30 RSSYMticksound
+Ref RSSYMtime = NILREF;	// ROM 0x00684b38 RSSYMtime
+Ref RSSYMtimeatcoldboot = NILREF;	// ROM 0x00684b40 RSSYMtimeatcoldboot
+Ref RSSYMtimecycle = NILREF;	// ROM 0x00684b48 RSSYMtimecycle
+Ref RSSYMtimedictionary = NILREF;	// ROM 0x00684b50 RSSYMtimedictionary
+Ref RSSYMtimeformat = NILREF;	// ROM 0x00684b58 RSSYMtimeformat
+Ref RSSYMtimeoutcursiveoption = NILREF;	// ROM 0x00684b60 RSSYMtimeoutcursiveoption
+Ref RSSYMtimeoutscript = NILREF;	// ROM 0x00684b68 RSSYMtimeoutscript
+Ref RSSYMtimesepstr1 = NILREF;	// ROM 0x00684b70 RSSYMtimesepstr1
+Ref RSSYMtimesepstr2 = NILREF;	// ROM 0x00684b78 RSSYMtimesepstr2
+Ref RSSYMtimestamp = NILREF;	// ROM 0x00684b80 RSSYMtimestamp
+Ref RSSYMtinytim = NILREF;	// ROM 0x00684b88 RSSYMtinytim
+Ref RSSYMtitle = NILREF;	// ROM 0x00684b90 RSSYMtitle
+Ref RSSYMtitletext = NILREF;	// ROM 0x00684b98 RSSYMtitletext
+Ref RSSYMtocksound = NILREF;	// ROM 0x00684ba0 RSSYMtocksound
+Ref RSSYMtodo = NILREF;	// ROM 0x00684ba8 RSSYMtodo
+Ref RSSYMtodoitem = NILREF;	// ROM 0x00684bb0 RSSYMtodoitem
+Ref RSSYMtoemailaddress = NILREF;	// ROM 0x00684bb8 RSSYMtoemailaddress
+Ref RSSYMtoggletopic = NILREF;	// ROM 0x00684bc0 RSSYMtoggletopic
+Ref RSSYMtop = NILREF;	// ROM 0x00684bc8 RSSYMtop
+Ref RSSYMtopic = NILREF;	// ROM 0x00684bd0 RSSYMtopic
+Ref RSSYMtopicdraginfo = NILREF;	// ROM 0x00684bd8 RSSYMtopicdraginfo
+Ref RSSYMtopicfont = NILREF;	// ROM 0x00684be0 RSSYMtopicfont
+Ref RSSYMtopicmarkers = NILREF;	// ROM 0x00684be8 RSSYMtopicmarkers
+Ref RSSYMtopics = NILREF;	// ROM 0x00684bf0 RSSYMtopics
+Ref RSSYMtopicslabel = NILREF;	// ROM 0x00684bf8 RSSYMtopicslabel
+Ref RSSYMtopitem = NILREF;	// ROM 0x00684c00 RSSYMtopitem
+Ref RSSYMtopmargin = NILREF;	// ROM 0x00684c08 RSSYMtopmargin
+Ref RSSYMtotal = NILREF;	// ROM 0x00684c10 RSSYMtotal
+Ref RSSYMtotalcards = NILREF;	// ROM 0x00684c18 RSSYMtotalcards
+Ref RSSYMtotalsize = NILREF;	// ROM 0x00684c20 RSSYMtotalsize
+Ref RSSYMtotalsockets = NILREF;	// ROM 0x00684c28 RSSYMtotalsockets
+Ref RSSYMtouchtone = NILREF;	// ROM 0x00684c30 RSSYMtouchtone
+Ref RSSYMtrace = NILREF;	// ROM 0x00684c38 RSSYMtrace
+Ref RSSYMtraceelements = NILREF;	// ROM 0x00684c40 RSSYMtraceelements
+Ref RSSYMtrailingfirst = NILREF;	// ROM 0x00684c48 RSSYMtrailingfirst
+Ref RSSYMtrailinglast = NILREF;	// ROM 0x00684c50 RSSYMtrailinglast
+Ref RSSYMtransactiontimeout = NILREF;	// ROM 0x00684c58 RSSYMtransactiontimeout
+Ref RSSYMtransfermode = NILREF;	// ROM 0x00684c60 RSSYMtransfermode
+Ref RSSYMtransform = NILREF;	// ROM 0x00684c68 RSSYMtransform
+Ref RSSYMtricklechargecontinuous = NILREF;	// ROM 0x00684c70 RSSYMtricklechargecontinuous
+Ref RSSYMtricklecharging = NILREF;	// ROM 0x00684c78 RSSYMtricklecharging
+Ref RSSYMtsid = NILREF;	// ROM 0x00684c80 RSSYMtsid
+Ref RSSYMtstore = NILREF;	// ROM 0x00684c88 RSSYMtstore
+Ref RSSYMtwoo = NILREF;	// ROM 0x00684c90 RSSYMtwoo
+Ref RSSYMtxcharsobj = NILREF;	// ROM 0x00684c98 RSSYMtxcharsobj
+Ref RSSYMtxdata = NILREF;	// ROM 0x00684ca0 RSSYMtxdata
+Ref RSSYMtxtext = NILREF;	// ROM 0x00684ca8 RSSYMtxtext
+Ref RSSYMtype = NILREF;	// ROM 0x00684cb0 RSSYMtype
+Ref RSSYMtypelist = NILREF;	// ROM 0x00684cb8 RSSYMtypelist
+Ref RSSYMtypes = NILREF;	// ROM 0x00684cc0 RSSYMtypes
+Ref RSSYMtypeselecttimeout = NILREF;	// ROM 0x00684cc8 RSSYMtypeselecttimeout
+Ref RSSYMuk = NILREF;	// ROM 0x00684cd0 RSSYMuk
+Ref RSSYMundo = NILREF;	// ROM 0x00684cd8 RSSYMundo
+Ref RSSYMundoable = NILREF;	// ROM 0x00684ce0 RSSYMundoable
+Ref RSSYMundoredo = NILREF;	// ROM 0x00684ce8 RSSYMundoredo
+Ref RSSYMundosound = NILREF;	// ROM 0x00684cf0 RSSYMundosound
+Ref RSSYMunflattener = NILREF;	// ROM 0x00684cf8 RSSYMunflattener
+Ref RSSYMunflattennocode = NILREF;	// ROM 0x00684d00 RSSYMunflattennocode
+Ref RSSYMunicode = NILREF;	// ROM 0x00684d08 RSSYMunicode
+Ref RSSYMunistyle = NILREF;	// ROM 0x00684d10 RSSYMunistyle
+Ref RSSYMunitdata = NILREF;	// ROM 0x00684d18 RSSYMunitdata
+Ref RSSYMunitid = NILREF;	// ROM 0x00684d20 RSSYMunitid
+Ref RSSYMunknown = NILREF;	// ROM 0x00684d28 RSSYMunknown
+Ref RSSYMunregcommconfigarray = NILREF;	// ROM 0x00684d30 RSSYMunregcommconfigarray
+Ref RSSYMunstuffmodalcommandkeys = NILREF;	// ROM 0x00684d38 RSSYMunstuffmodalcommandkeys
+Ref RSSYMuntraincharstr = NILREF;	// ROM 0x00684d40 RSSYMuntraincharstr
+Ref RSSYMup = NILREF;	// ROM 0x00684d48 RSSYMup
+Ref RSSYMupdatelocalefromuserconfig = NILREF;	// ROM 0x00684d50 RSSYMupdatelocalefromuserconfig
+Ref RSSYMuploadingfile = NILREF;	// ROM 0x00684d58 RSSYMuploadingfile
+Ref RSSYMupperlist = NILREF;	// ROM 0x00684d60 RSSYMupperlist
+Ref RSSYMuppernomarklist = NILREF;	// ROM 0x00684d68 RSSYMuppernomarklist
+Ref RSSYMusa = NILREF;	// ROM 0x00684d70 RSSYMusa
+Ref RSSYMuseaddressdomain = NILREF;	// ROM 0x00684d78 RSSYMuseaddressdomain
+Ref RSSYMusecalcdomain = NILREF;	// ROM 0x00684d80 RSSYMusecalcdomain
+Ref RSSYMuseccolumndomain = NILREF;	// ROM 0x00684d88 RSSYMuseccolumndomain
+Ref RSSYMusedatedomain = NILREF;	// ROM 0x00684d90 RSSYMusedatedomain
+Ref RSSYMusedialnavigator = NILREF;	// ROM 0x00684d98 RSSYMusedialnavigator
+Ref RSSYMusedsize = NILREF;	// ROM 0x00684da0 RSSYMusedsize
+Ref RSSYMuseeom = NILREF;	// ROM 0x00684da8 RSSYMuseeom
+Ref RSSYMuseeop = NILREF;	// ROM 0x00684db0 RSSYMuseeop
+Ref RSSYMusefaxnavigator = NILREF;	// ROM 0x00684db8 RSSYMusefaxnavigator
+Ref RSSYMusefullpage = NILREF;	// ROM 0x00684dc0 RSSYMusefullpage
+Ref RSSYMusegeneralshapedomain = NILREF;	// ROM 0x00684dc8 RSSYMusegeneralshapedomain
+Ref RSSYMusehardflowcontrol = NILREF;	// ROM 0x00684dd0 RSSYMusehardflowcontrol
+Ref RSSYMuseinkwordrecognition = NILREF;	// ROM 0x00684dd8 RSSYMuseinkwordrecognition
+Ref RSSYMusekanjidomain = NILREF;	// ROM 0x00684de0 RSSYMusekanjidomain
+Ref RSSYMusemailconnector = NILREF;	// ROM 0x00684de8 RSSYMusemailconnector
+Ref RSSYMusemodemnavigator = NILREF;	// ROM 0x00684df0 RSSYMusemodemnavigator
+Ref RSSYMusenamedomain = NILREF;	// ROM 0x00684df8 RSSYMusenamedomain
+Ref RSSYMusenumberdomain = NILREF;	// ROM 0x00684e00 RSSYMusenumberdomain
+Ref RSSYMusepassword = NILREF;	// ROM 0x00684e08 RSSYMusepassword
+Ref RSSYMusephonedomain = NILREF;	// ROM 0x00684e10 RSSYMusephonedomain
+Ref RSSYMuser = NILREF;	// ROM 0x00684e18 RSSYMuser
+Ref RSSYMuserawinkrecognition = NILREF;	// ROM 0x00684e20 RSSYMuserawinkrecognition
+Ref RSSYMuserconfiguration = NILREF;	// ROM 0x00684e28 RSSYMuserconfiguration
+Ref RSSYMuserdictquery = NILREF;	// ROM 0x00684e30 RSSYMuserdictquery
+Ref RSSYMuserdismissed = NILREF;	// ROM 0x00684e38 RSSYMuserdismissed
+Ref RSSYMuserfolders = NILREF;	// ROM 0x00684e40 RSSYMuserfolders
+Ref RSSYMuserfont = NILREF;	// ROM 0x00684e48 RSSYMuserfont
+Ref RSSYMuserpensize = NILREF;	// ROM 0x00684e50 RSSYMuserpensize
+Ref RSSYMuser_obj = NILREF;	// ROM 0x00684e58 RSSYMuser_obj
+Ref RSSYMusesoftflowcontrol = NILREF;	// ROM 0x00684e60 RSSYMusesoftflowcontrol
+Ref RSSYMusetimedomain = NILREF;	// ROM 0x00684e68 RSSYMusetimedomain
+Ref RSSYMusevoicenavigator = NILREF;	// ROM 0x00684e70 RSSYMusevoicenavigator
+Ref RSSYMuseworddomain = NILREF;	// ROM 0x00684e78 RSSYMuseworddomain
+Ref RSSYMusewordreplaydomain = NILREF;	// ROM 0x00684e80 RSSYMusewordreplaydomain
+Ref RSSYMvalid = NILREF;	// ROM 0x00684e88 RSSYMvalid
+Ref RSSYMvalidtest = NILREF;	// ROM 0x00684e90 RSSYMvalidtest
+Ref RSSYMvalue = NILREF;	// ROM 0x00684e98 RSSYMvalue
+Ref RSSYMvars = NILREF;	// ROM 0x00684ea0 RSSYMvars
+Ref RSSYMvarsmapstarter = NILREF;	// ROM 0x00684ea8 RSSYMvarsmapstarter
+Ref RSSYMvbarber = NILREF;	// ROM 0x00684eb0 RSSYMvbarber
+Ref RSSYMvbo = NILREF;	// ROM 0x00684eb8 RSSYMvbo
+Ref RSSYMverifycalibration = NILREF;	// ROM 0x00684ec0 RSSYMverifycalibration
+Ref RSSYMversion = NILREF;	// ROM 0x00684ec8 RSSYMversion
+Ref RSSYMvertex = NILREF;	// ROM 0x00684ed0 RSSYMvertex
+Ref RSSYMvgauge = NILREF;	// ROM 0x00684ed8 RSSYMvgauge
+Ref RSSYMviaappletalk = NILREF;	// ROM 0x00684ee0 RSSYMviaappletalk
+Ref RSSYMview = NILREF;	// ROM 0x00684ee8 RSSYMview
+Ref RSSYMviewabletopics = NILREF;	// ROM 0x00684ef0 RSSYMviewabletopics
+Ref RSSYMviewaddchildscript = NILREF;	// ROM 0x00684ef8 RSSYMviewaddchildscript
+Ref RSSYMviewadddraginfoscript = NILREF;	// ROM 0x00684f00 RSSYMviewadddraginfoscript
+Ref RSSYMviewbounds = NILREF;	// ROM 0x00684f08 RSSYMviewbounds
+Ref RSSYMviewcaretactivatescript = NILREF;	// ROM 0x00684f10 RSSYMviewcaretactivatescript
+Ref RSSYMviewcaretchangedscript = NILREF;	// ROM 0x00684f18 RSSYMviewcaretchangedscript
+Ref RSSYMviewcaretscrollscript = NILREF;	// ROM 0x00684f20 RSSYMviewcaretscrollscript
+Ref RSSYMviewchildren = NILREF;	// ROM 0x00684f28 RSSYMviewchildren
+Ref RSSYMviewclass = NILREF;	// ROM 0x00684f30 RSSYMviewclass
+Ref RSSYMviewclickscript = NILREF;	// ROM 0x00684f38 RSSYMviewclickscript
+Ref RSSYMviewclipper = NILREF;	// ROM 0x00684f40 RSSYMviewclipper
+Ref RSSYMviewcobject = NILREF;	// ROM 0x00684f48 RSSYMviewcobject
+Ref RSSYMviewdragfeedbackscript = NILREF;	// ROM 0x00684f50 RSSYMviewdragfeedbackscript
+Ref RSSYMviewdrawdragbackgroundscript = NILREF;	// ROM 0x00684f58 RSSYMviewdrawdragbackgroundscript
+Ref RSSYMviewdrawdragdatascript = NILREF;	// ROM 0x00684f60 RSSYMviewdrawdragdatascript
+Ref RSSYMviewdrawscript = NILREF;	// ROM 0x00684f68 RSSYMviewdrawscript
+Ref RSSYMviewdropapprovescript = NILREF;	// ROM 0x00684f70 RSSYMviewdropapprovescript
+Ref RSSYMviewdropchildscript = NILREF;	// ROM 0x00684f78 RSSYMviewdropchildscript
+Ref RSSYMviewdropdonescript = NILREF;	// ROM 0x00684f80 RSSYMviewdropdonescript
+Ref RSSYMviewdropmovescript = NILREF;	// ROM 0x00684f88 RSSYMviewdropmovescript
+Ref RSSYMviewdropremovescript = NILREF;	// ROM 0x00684f90 RSSYMviewdropremovescript
+Ref RSSYMviewdropscript = NILREF;	// ROM 0x00684f98 RSSYMviewdropscript
+Ref RSSYMvieweffect = NILREF;	// ROM 0x00684fa0 RSSYMvieweffect
+Ref RSSYMviewfillpattern = NILREF;	// ROM 0x00684fa8 RSSYMviewfillpattern
+Ref RSSYMviewfinalchangescript = NILREF;	// ROM 0x00684fb0 RSSYMviewfinalchangescript
+Ref RSSYMviewfindtargetscript = NILREF;	// ROM 0x00684fb8 RSSYMviewfindtargetscript
+Ref RSSYMviewflags = NILREF;	// ROM 0x00684fc0 RSSYMviewflags
+Ref RSSYMviewfont = NILREF;	// ROM 0x00684fc8 RSSYMviewfont
+Ref RSSYMviewformat = NILREF;	// ROM 0x00684fd0 RSSYMviewformat
+Ref RSSYMviewframepattern = NILREF;	// ROM 0x00684fd8 RSSYMviewframepattern
+Ref RSSYMviewfrontcommandkey = NILREF;	// ROM 0x00684fe0 RSSYMviewfrontcommandkey
+Ref RSSYMviewfrontkey = NILREF;	// ROM 0x00684fe8 RSSYMviewfrontkey
+Ref RSSYMviewfrontmost = NILREF;	// ROM 0x00684ff0 RSSYMviewfrontmost
+Ref RSSYMviewfrontmostapp = NILREF;	// ROM 0x00684ff8 RSSYMviewfrontmostapp
+Ref RSSYMviewgesturescript = NILREF;	// ROM 0x00685000 RSSYMviewgesturescript
+Ref RSSYMviewgetdropdatascript = NILREF;	// ROM 0x00685008 RSSYMviewgetdropdatascript
+Ref RSSYMviewgetdroptypesscript = NILREF;	// ROM 0x00685010 RSSYMviewgetdroptypesscript
+Ref RSSYMviewgrid = NILREF;	// ROM 0x00685018 RSSYMviewgrid
+Ref RSSYMviewhelp = NILREF;	// ROM 0x00685020 RSSYMviewhelp
+Ref RSSYMviewhidescript = NILREF;	// ROM 0x00685028 RSSYMviewhidescript
+Ref RSSYMviewhilitescript = NILREF;	// ROM 0x00685030 RSSYMviewhilitescript
+Ref RSSYMviewinkwordscript = NILREF;	// ROM 0x00685038 RSSYMviewinkwordscript
+Ref RSSYMviewinsertitemsscript = NILREF;	// ROM 0x00685040 RSSYMviewinsertitemsscript
+Ref RSSYMviewjustify = NILREF;	// ROM 0x00685048 RSSYMviewjustify
+Ref RSSYMviewlinepattern = NILREF;	// ROM 0x00685050 RSSYMviewlinepattern
+Ref RSSYMviewlinespacing = NILREF;	// ROM 0x00685058 RSSYMviewlinespacing
+Ref RSSYMviewnextidletime = NILREF;	// ROM 0x00685060 RSSYMviewnextidletime
+Ref RSSYMvieworiginx = NILREF;	// ROM 0x00685068 RSSYMvieworiginx
+Ref RSSYMvieworiginy = NILREF;	// ROM 0x00685070 RSSYMvieworiginy
+Ref RSSYMviewoverviewscript = NILREF;	// ROM 0x00685078 RSSYMviewoverviewscript
+Ref RSSYMviewpostquitscript = NILREF;	// ROM 0x00685080 RSSYMviewpostquitscript
+Ref RSSYMviewquitscript = NILREF;	// ROM 0x00685088 RSSYMviewquitscript
+Ref RSSYMviewrawinkscript = NILREF;	// ROM 0x00685090 RSSYMviewrawinkscript
+Ref RSSYMviewscrolldownscript = NILREF;	// ROM 0x00685098 RSSYMviewscrolldownscript
+Ref RSSYMviewscrollupscript = NILREF;	// ROM 0x006850a0 RSSYMviewscrollupscript
+Ref RSSYMviewscrubscript = NILREF;	// ROM 0x006850a8 RSSYMviewscrubscript
+Ref RSSYMviewset = NILREF;	// ROM 0x006850b0 RSSYMviewset
+Ref RSSYMviewsetupchildrenscript = NILREF;	// ROM 0x006850b8 RSSYMviewsetupchildrenscript
+Ref RSSYMviewsetupdonescript = NILREF;	// ROM 0x006850c0 RSSYMviewsetupdonescript
+Ref RSSYMviewsetupformscript = NILREF;	// ROM 0x006850c8 RSSYMviewsetupformscript
+Ref RSSYMviewshowscript = NILREF;	// ROM 0x006850d0 RSSYMviewshowscript
+Ref RSSYMviewstationery = NILREF;	// ROM 0x006850d8 RSSYMviewstationery
+Ref RSSYMviewstats = NILREF;	// ROM 0x006850e0 RSSYMviewstats
+Ref RSSYMviewstrokescript = NILREF;	// ROM 0x006850e8 RSSYMviewstrokescript
+Ref RSSYMviewtie = NILREF;	// ROM 0x006850f0 RSSYMviewtie
+Ref RSSYMviewtransfermode = NILREF;	// ROM 0x006850f8 RSSYMviewtransfermode
+Ref RSSYMviewupdatescrollersscript = NILREF;	// ROM 0x00685100 RSSYMviewupdatescrollersscript
+Ref RSSYMviewvalue = NILREF;	// ROM 0x00685108 RSSYMviewvalue
+Ref RSSYMviewwordscript = NILREF;	// ROM 0x00685110 RSSYMviewwordscript
+Ref RSSYMvisible = NILREF;	// ROM 0x00685118 RSSYMvisible
+Ref RSSYMvoicenavigate = NILREF;	// ROM 0x00685120 RSSYMvoicenavigate
+Ref RSSYMvoicenavigator = NILREF;	// ROM 0x00685128 RSSYMvoicenavigator
+Ref RSSYMvolume = NILREF;	// ROM 0x00685130 RSSYMvolume
+Ref RSSYMvstatus = NILREF;	// ROM 0x00685138 RSSYMvstatus
+Ref RSSYMwaitbeforeblinddial = NILREF;	// ROM 0x00685140 RSSYMwaitbeforeblinddial
+Ref RSSYMwaitforcarrier = NILREF;	// ROM 0x00685148 RSSYMwaitforcarrier
+Ref RSSYMwarningraised = NILREF;	// ROM 0x00685150 RSSYMwarningraised
+Ref RSSYMwavetable = NILREF;	// ROM 0x00685158 RSSYMwavetable
+Ref RSSYMwedge = NILREF;	// ROM 0x00685160 RSSYMwedge
+Ref RSSYMweeknumbertype = NILREF;	// ROM 0x00685168 RSSYMweeknumbertype
+Ref RSSYMweirdcardinserted = NILREF;	// ROM 0x00685170 RSSYMweirdcardinserted
+Ref RSSYMweird_immediate = NILREF;	// ROM 0x00685178 RSSYMweird_immediate
+Ref RSSYMwhatthe = NILREF;	// ROM 0x00685180 RSSYMwhatthe
+Ref RSSYMwhat_obj = NILREF;	// ROM 0x00685188 RSSYMwhat_obj
+Ref RSSYMwhen_obj = NILREF;	// ROM 0x00685190 RSSYMwhen_obj
+Ref RSSYMwhere_obj = NILREF;	// ROM 0x00685198 RSSYMwhere_obj
+Ref RSSYMwhichicons = NILREF;	// ROM 0x006851a0 RSSYMwhichicons
+Ref RSSYMwho_obj = NILREF;	// ROM 0x006851a8 RSSYMwho_obj
+Ref RSSYMwidth = NILREF;	// ROM 0x006851b0 RSSYMwidth
+Ref RSSYMwidths = NILREF;	// ROM 0x006851b8 RSSYMwidths
+Ref RSSYMwizard = NILREF;	// ROM 0x006851c0 RSSYMwizard
+Ref RSSYMwizardcommit = NILREF;	// ROM 0x006851c8 RSSYMwizardcommit
+Ref RSSYMwizstatustext = NILREF;	// ROM 0x006851d0 RSSYMwizstatustext
+Ref RSSYMword = NILREF;	// ROM 0x006851d8 RSSYMword
+Ref RSSYMwordbreaktable = NILREF;	// ROM 0x006851e0 RSSYMwordbreaktable
+Ref RSSYMwordbuf = NILREF;	// ROM 0x006851e8 RSSYMwordbuf
+Ref RSSYMwordinfo = NILREF;	// ROM 0x006851f0 RSSYMwordinfo
+Ref RSSYMwordlength = NILREF;	// ROM 0x006851f8 RSSYMwordlength
+Ref RSSYMwordoffset = NILREF;	// ROM 0x00685200 RSSYMwordoffset
+Ref RSSYMwords = NILREF;	// ROM 0x00685208 RSSYMwords
+Ref RSSYMwordscursiveoption = NILREF;	// ROM 0x00685210 RSSYMwordscursiveoption
+Ref RSSYMwritecount = NILREF;	// ROM 0x00685218 RSSYMwritecount
+Ref RSSYMx = NILREF;	// ROM 0x00685220 RSSYMx
+Ref RSSYMxmitsoupchange = NILREF;	// ROM 0x00685228 RSSYMxmitsoupchange
+Ref RSSYMxoffchar = NILREF;	// ROM 0x00685230 RSSYMxoffchar
+Ref RSSYMxonchar = NILREF;	// ROM 0x00685238 RSSYMxonchar
+Ref RSSYMxrwcommands = NILREF;	// ROM 0x00685240 RSSYMxrwcommands
+Ref RSSYMxspace = NILREF;	// ROM 0x00685248 RSSYMxspace
+Ref RSSYMxy = NILREF;	// ROM 0x00685250 RSSYMxy
+Ref RSSYMy = NILREF;	// ROM 0x00685258 RSSYMy
+Ref RSSYMyaccstack = NILREF;	// ROM 0x00685260 RSSYMyaccstack
+Ref RSSYMyear = NILREF;	// ROM 0x00685268 RSSYMyear
+Ref RSSYMyearleading = NILREF;	// ROM 0x00685270 RSSYMyearleading
+Ref RSSYMyes = NILREF;	// ROM 0x00685278 RSSYMyes
+Ref RSSYMyspace = NILREF;	// ROM 0x00685280 RSSYMyspace
+Ref RSSYMzapautoreceive = NILREF;	// ROM 0x00685288 RSSYMzapautoreceive
+Ref RSSYMzapcommtoolid = NILREF;	// ROM 0x00685290 RSSYMzapcommtoolid
+Ref RSSYMzappackagesforfullrestore = NILREF;	// ROM 0x00685298 RSSYMzappackagesforfullrestore
+Ref RSSYMzapslip = NILREF;	// ROM 0x006852a0 RSSYMzapslip
+Ref RSSYMzapsystemsoupforrestorefrom1_2Ex = NILREF;	// ROM 0x006852a8 RSSYMzapsystemsoupforrestorefrom1_2Ex
+Ref RSSYMzip = NILREF;	// ROM 0x006852b0 RSSYMzip
+Ref RSSYM_cachecontext = NILREF;	// ROM 0x006852b8 RSSYM_cachecontext
+Ref RSSYM_caretinfo = NILREF;	// ROM 0x006852c0 RSSYM_caretinfo
+Ref RSSYM_caretpopup = NILREF;	// ROM 0x006852c8 RSSYM_caretpopup
+Ref RSSYM_channel = NILREF;	// ROM 0x006852d0 RSSYM_channel
+Ref RSSYM_classinfo = NILREF;	// ROM 0x006852d8 RSSYM_classinfo
+Ref RSSYM_clicksong = NILREF;	// ROM 0x006852e0 RSSYM_clicksong
+Ref RSSYM_curclick = NILREF;	// ROM 0x006852e8 RSSYM_curclick
+Ref RSSYM_defaultbutton = NILREF;	// ROM 0x006852f0 RSSYM_defaultbutton
+Ref RSSYM_defaultbuttonbounds = NILREF;	// ROM 0x006852f8 RSSYM_defaultbuttonbounds
+Ref RSSYM_dodefaultbutton = NILREF;	// ROM 0x00685300 RSSYM_dodefaultbutton
+Ref RSSYM_exporttable = NILREF;	// ROM 0x00685308 RSSYM_exporttable
+Ref RSSYM_function = NILREF;	// ROM 0x00685310 RSSYM_function
+Ref RSSYM_function_2Enative = NILREF;	// ROM 0x00685318 RSSYM_function_2Enative
+Ref RSSYM_hilitemenuitem = NILREF;	// ROM 0x00685320 RSSYM_hilitemenuitem
+Ref RSSYM_implementor = NILREF;	// ROM 0x00685328 RSSYM_implementor
+Ref RSSYM_importtable = NILREF;	// ROM 0x00685330 RSSYM_importtable
+Ref RSSYM_infobuttons = NILREF;	// ROM 0x00685338 RSSYM_infobuttons
+Ref RSSYM_instance = NILREF;	// ROM 0x00685340 RSSYM_instance
+Ref RSSYM_keycommands = NILREF;	// ROM 0x00685348 RSSYM_keycommands
+Ref RSSYM_keyhelpclosescript = NILREF;	// ROM 0x00685350 RSSYM_keyhelpclosescript
+Ref RSSYM_keyhelpopenscript = NILREF;	// ROM 0x00685358 RSSYM_keyhelpopenscript
+Ref RSSYM_modtime = NILREF;	// ROM 0x00685360 RSSYM_modtime
+Ref RSSYM_nextargframe = NILREF;	// ROM 0x00685368 RSSYM_nextargframe
+Ref RSSYM_nextkeyview = NILREF;	// ROM 0x00685370 RSSYM_nextkeyview
+Ref RSSYM_noautoadd = NILREF;	// ROM 0x00685378 RSSYM_noautoadd
+Ref RSSYM_norepeat = NILREF;	// ROM 0x00685380 RSSYM_norepeat
+Ref RSSYM_parent = NILREF;	// ROM 0x00685388 RSSYM_parent
+Ref RSSYM_proto = NILREF;	// ROM 0x00685390 RSSYM_proto
+Ref RSSYM_recognizeruserchoices = NILREF;	// ROM 0x00685398 RSSYM_recognizeruserchoices
+Ref RSSYM_recogsettings = NILREF;	// ROM 0x006853a0 RSSYM_recogsettings
+Ref RSSYM_sndcallback = NILREF;	// ROM 0x006853a8 RSSYM_sndcallback
+Ref RSSYM_sndchannels = NILREF;	// ROM 0x006853b0 RSSYM_sndchannels
+Ref RSSYM_sound = NILREF;	// ROM 0x006853b8 RSSYM_sound
+Ref RSSYM_tabchildren = NILREF;	// ROM 0x006853c0 RSSYM_tabchildren
+Ref RSSYM_tabparent = NILREF;	// ROM 0x006853c8 RSSYM_tabparent
+Ref RSSYM_uniqueid = NILREF;	// ROM 0x006853d0 RSSYM_uniqueid
+Ref RSSYM_weakarray = NILREF;	// ROM 0x006853d8 RSSYM_weakarray
 
 const RSSymbolEntry gRSSymbolEntries[] = {
-	{ "*", 0xf519f85a, 0x003a5e85, &RSSYM_2A },
-	{ "+", 0x93517213, 0x003a5df1, &RSSYM_2B },
-	{ "-", 0xcfc06585, 0x003a5e05, &RSSYM_2D },
-	{ "/", 0x0c2f58f7, 0x003a5e99, &RSSYM_2F },
-	{ "1.X", 0x19a8033f, 0x003b10c9, &RSSYM1_2Ex },
-	{ "<", 0x1500875c, 0x003a5ec1, &RSSYM_3C },
-	{ "<<", 0x2a010eb8, 0x003a6cad, &RSSYM_3C_3C },
-	{ "<=", 0xc8388871, 0x003a5efd, &RSSYM_3C_3D },
-	{ "<>", 0x6670022a, 0x003a5e71, &RSSYM_3C_3E },
-	{ "=", 0xb3380115, 0x003a5e49, &RSSYM_3D },
-	{ ">", 0x516f7ace, 0x003a5ed5, &RSSYM_3E },
-	{ ">=", 0x04a77be3, 0x003a5ee9, &RSSYM_3E_3D },
-	{ ">>", 0xa2def59c, 0x003a6cc1, &RSSYM_3E_3E },
-	{ "a4", 0x4f5aa18d, 0x003b9ca1, &RSSYMa4 },
-	{ "abbrDateStrSpec", 0xdf303551, 0x003b1365, &RSSYMabbrdatestrspec },
-	{ "abbrDayOfWeekStrSpec", 0xd09e448a, 0x003b9cb5, &RSSYMabbrdayofweekstrspec },
-	{ "abbrDofWeek", 0xf47e7b3c, 0x003b1385, &RSSYMabbrdofweek },
-	{ "abbrMonth", 0x76f91875, 0x003b9cdd, &RSSYMabbrmonth },
-	{ "about_task", 0xaf3e5965, 0x003b9cf9, &RSSYMabout_task },
-	{ "acPower", 0xf0a28749, 0x003b13a1, &RSSYMacpower },
-	{ "action", 0xa4a6104e, 0x003b9d15, &RSSYMaction },
-	{ "actionDescription", 0x51cf9072, 0x003b13b9, &RSSYMactiondescription },
-	{ "ActionNotify", 0xf925f71f, 0x003b13dd, &RSSYMactionnotify },
-	{ "actionSoundEffects", 0xf6c35f4f, 0x003b13fd, &RSSYMactionsoundeffects },
-	{ "ActivateStorePackages", 0x39231ff5, 0x003a6d91, &RSSYMactivatestorepackages },
-	{ "ActivePackageList", 0xc74f4cc4, 0x0053d961, &RSSYMactivepackagelist },
-	{ "activetimeout", 0xf19e1a0b, 0x003b1421, &RSSYMactivetimeout },
-	{ "acVoltage", 0x2374c466, 0x003b1441, &RSSYMacvoltage },
-	{ "Add", 0x398e9241, 0x003bc469, &RSSYMadd },
-	{ "added", 0xe53eb642, 0x003b145d, &RSSYMadded },
-	{ "AddEncodedWord", 0x4df39c7f, 0x005a6015, &RSSYMaddencodedword },
-	{ "addIcon", 0xc7eac9e2, 0x003b1475, &RSSYMaddicon },
-	{ "AddIndex", 0x9b0959f9, 0x004c8435, &RSSYMaddindex },
-	{ "AddNotification", 0x4f3cedd0, 0x003c7a2d, &RSSYMaddnotification },
-	{ "address", 0x24404c56, 0x003b148d, &RSSYMaddress },
-	{ "addressData", 0x6d5c6220, 0x003b14a5, &RSSYMaddressdata },
-	{ "addressType", 0x26076708, 0x003b14c1, &RSSYMaddresstype },
-	{ "addspace", 0x306fa54d, 0x003b9d2d, &RSSYMaddspace },
-	{ "AddWithUniqueID", 0xc2a7d0e1, 0x005d370d, &RSSYMaddwithuniqueid },
-	{ "affiliate", 0xa1c5af1d, 0x003b9d49, &RSSYMaffiliate },
-	{ "alarm", 0x95188cc5, 0x003b14dd, &RSSYMalarm },
-	{ "alarmSound", 0x784269c6, 0x003cdcb1, &RSSYMalarmsound },
-	{ "alarmSoundEffects", 0xe735dbc6, 0x003b14f5, &RSSYMalarmsoundeffects },
-	{ "alias", 0xba721f9a, 0x0046119d, &RSSYMalias },
-	{ "alkaline", 0x9b0959f9, 0x003b1519, &RSSYMalkaline },
-	{ "all", 0x1d062dd1, 0x003b1535, &RSSYMall },
-	{ "allCollapsed", 0xdeb26bf0, 0x003b9d65, &RSSYMallcollapsed },
-	{ "alldictionaries", 0xa2c141df, 0x003b1549, &RSSYMalldictionaries },
-	{ "allEntries", 0x9d9bfc9b, 0x003b9d85, &RSSYMallentries },
-	{ "allocateContext", 0x60df4a9a, 0x003b1569, &RSSYMallocatecontext },
-	{ "allowFormulaRecognition", 0x8f3a16a6, 0x005c8681, &RSSYMallowformularecognition },
-	{ "allowKeysThrough", 0xd5937efc, 0x003b1589, &RSSYMallowkeysthrough },
-	{ "allowShapeRecognition", 0x9578a269, 0x003b15ad, &RSSYMallowshaperecognition },
-	{ "allowTextRecognition", 0x63efb69d, 0x003b15d5, &RSSYMallowtextrecognition },
-	{ "alphaKeyboard", 0xc0152e3f, 0x003b15fd, &RSSYMalphakeyboard },
-	{ "alternatewords", 0xea163cf7, 0x003b161d, &RSSYMalternatewords },
-	{ "alwaysCallPickActionScript", 0xba8476af, 0x003b163d, &RSSYMalwayscallpickactionscript },
-	{ "ambientTemp", 0x0620d806, 0x003b1669, &RSSYMambienttemp },
-	{ "amountRead", 0xc2f58f70, 0x003b9da1, &RSSYMamountread },
-	{ "any", 0x62464fa8, 0x00578b1d, &RSSYMany },
-	{ "app", 0x0ec1fb99, 0x003b1685, &RSSYMapp },
-	{ "appAreaGlobalLeft", 0x2046a4a6, 0x0043690d, &RSSYMappareagloballeft },
-	{ "appAreaGlobalTop", 0x8424042e, 0x004367c5, &RSSYMappareaglobaltop },
-	{ "appAreaHeight", 0x4737475b, 0x003b1699, &RSSYMappareaheight },
-	{ "appAreaLeft", 0x8471c2bd, 0x003b16b9, &RSSYMapparealeft },
-	{ "appAreaTop", 0xe84f2245, 0x003b16d5, &RSSYMappareatop },
-	{ "appAreaWidth", 0x0cdd2d2a, 0x003b16f1, &RSSYMappareawidth },
-	{ "application", 0xc9b1e494, 0x003b1711, &RSSYMapplication },
-	{ "applications", 0x15ae5b8f, 0x003b172d, &RSSYMapplications },
-	{ "Apply", 0x08836fd6, 0x003a730d, &RSSYMapply },
-	{ "appName", 0xab626572, 0x003c68bd, &RSSYMappname },
-	{ "appSymbol", 0x889b753f, 0x003b174d, &RSSYMappsymbol },
-	{ "arcerbounds", 0x428fcb78, 0x003b1769, &RSSYMarcerbounds },
-	{ "aref", 0xc1f9fcae, 0x003a5e19, &RSSYMaref },
-	{ "arglist", 0x07b7e7e6, 0x003b1785, &RSSYMarglist },
-	{ "args", 0x073a1e85, 0x0045f931, &RSSYMargs },
-	{ "arm610a", 0xef5935f8, 0x003b179d, &RSSYMarm610a },
-	{ "arm710a", 0x8d90afb1, 0x003b17b5, &RSSYMarm710a },
-	{ "Array", 0xb4ff1bc7, 0x003a6029, &RSSYMarray },
-	{ "ascending", 0xf54a032c, 0x004d1f5d, &RSSYMascending },
-	{ "asciiString", 0x344b9940, 0x005d2d85, &RSSYMasciistring },
-	{ "assist", 0x1810f35f, 0x003b17cd, &RSSYMassist },
-	{ "assistant", 0x6341e26a, 0x003b0b99, &RSSYMassistant },
-	{ "assistLine", 0x0835b147, 0x003b17e5, &RSSYMassistline },
-	{ "async", 0x16c7a20e, 0x003b1801, &RSSYMasync },
-	{ "attachment", 0x6f713b61, 0x003b1819, &RSSYMattachment },
-	{ "attribute", 0xadf50814, 0x003b1835, &RSSYMattribute },
-	{ "Australia", 0x06ec5ff6, 0x00458065, &RSSYMaustralia },
-	{ "auto", 0x71d3d331, 0x003b1851, &RSSYMauto },
-	{ "AutoAdd", 0xab626572, 0x003b1869, &RSSYMautoadd },
-	{ "autoClose", 0x96dfa777, 0x003b1881, &RSSYMautoclose },
-	{ "AutoDock", 0x0e743d0a, 0x003a69d5, &RSSYMautodock },
-	{ "AvailablePrinters", 0x23a4cf38, 0x003b9dbd, &RSSYMavailableprinters },
-	{ "background", 0xdf7df3e0, 0x003b189d, &RSSYMbackground },
-	{ "backgroundpicture", 0x9c82b61c, 0x003b18b9, &RSSYMbackgroundpicture },
-	{ "backupInfo", 0x1bece752, 0x003b18dd, &RSSYMbackupinfo },
-	{ "backuppassword", 0x34c962a1, 0x003b18f9, &RSSYMbackuppassword },
-	{ "BadAdapterAlert", 0x6bc55240, 0x00582dd9, &RSSYMbadadapteralert },
-	{ "BadBatteryAlert", 0x7d67af0a, 0x00582d35, &RSSYMbadbatteryalert },
-	{ "badFontMap", 0x66a00cfc, 0x003b9de1, &RSSYMbadfontmap },
-	{ "BadPassword", 0x7efebeea, 0x0058a49d, &RSSYMbadpassword },
-	{ "BadWickedNaughtyNoot", 0x497c2b6e, 0x003a7585, &RSSYMbadwickednaughtynoot },
-	{ "barber", 0xc12e74be, 0x003b1919, &RSSYMbarber },
-	{ "base", 0xe7538f83, 0x003b1931, &RSSYMbase },
-	{ "baseInputMask", 0x8704655f, 0x003b1949, &RSSYMbaseinputmask },
-	{ "batteryCapacity", 0xc2a7d0e1, 0x003b1969, &RSSYMbatterycapacity },
-	{ "batteryCurrent", 0x2f565ece, 0x003bc1a9, &RSSYMbatterycurrent },
-	{ "batteryDead", 0xfd4fa9a1, 0x003b1989, &RSSYMbatterydead },
-	{ "batteryLow", 0xaf3e5965, 0x003b19a5, &RSSYMbatterylow },
-	{ "batteryTemp", 0xb5faae89, 0x003b19c1, &RSSYMbatterytemp },
-	{ "batteryType", 0x20946335, 0x003b19dd, &RSSYMbatterytype },
-	{ "batteryVoltage", 0xada74985, 0x003b19f9, &RSSYMbatteryvoltage },
-	{ "bcAlphaName", 0x1106dfac, 0x003b1a19, &RSSYMbcalphaname },
-	{ "bcFullName", 0x8bf99fd1, 0x003b1a35, &RSSYMbcfullname },
-	{ "BeamCommitRecv", 0x84ef8c1e, 0x003b1a51, &RSSYMbeamcommitrecv },
-	{ "BeamCommitSend", 0xcfa2b1c8, 0x003b1a71, &RSSYMbeamcommitsend },
-	{ "beamIndex", 0x93817ce5, 0x004e4895, &RSSYMbeamindex },
-	{ "BeamNextItem", 0x9cd074ab, 0x003b1a91, &RSSYMbeamnextitem },
-	{ "BeamStartRecv", 0x0e267e7b, 0x003b1ab1, &RSSYMbeamstartrecv },
-	{ "beamTotal", 0xfe1b3191, 0x004e48b1, &RSSYMbeamtotal },
-	{ "because", 0x7d37a438, 0x003b1ad1, &RSSYMbecause },
-	{ "beepSound", 0x68b4e63d, 0x003b1ae9, &RSSYMbeepsound },
-	{ "begin", 0xa35cbefd, 0x003b1b05, &RSSYMbegin },
-	{ "beginExclKey", 0x0cdd2d2a, 0x00521e11, &RSSYMbeginexclkey },
-	{ "beginKey", 0xa3da885e, 0x003b1b1d, &RSSYMbeginkey },
-	{ "belong", 0x5121bc3f, 0x003b1b39, &RSSYMbelong },
-	{ "bigHeight", 0x57128973, 0x003b1b51, &RSSYMbigheight },
-	{ "bigLearningEnabled", 0x1e31cb65, 0x0058c995, &RSSYMbiglearningenabled },
-	{ "binary", 0xf82a645d, 0x003b1b6d, &RSSYMbinary },
-	{ "binCFunction", 0xfe98faf2, 0x005d2da1, &RSSYMbincfunction },
-	{ "bindoptions", 0xc43ee0c1, 0x003b9dfd, &RSSYMbindoptions },
-	{ "birthday", 0x33cdcfdf, 0x003b1b85, &RSSYMbirthday },
-	{ "bitdepth", 0x592762b4, 0x003b1ba1, &RSSYMbitdepth },
-	{ "bitmap", 0x066e9695, 0x003b1bbd, &RSSYMbitmap },
-	{ "bitmapdata", 0x4f8aac5f, 0x003b1bd5, &RSSYMbitmapdata },
-	{ "bits", 0x1e4f7f22, 0x003b1bf1, &RSSYMbits },
-	{ "bitsBounds", 0xcbc6bdd5, 0x003b1c09, &RSSYMbitsbounds },
-	{ "blessedapp", 0xba24610b, 0x003b0ff9, &RSSYMblessedapp },
-	{ "blinddialdelay", 0x36de3be2, 0x003b1c25, &RSSYMblinddialdelay },
-	{ "blinddialing", 0x99724a19, 0x003b1c45, &RSSYMblinddialing },
-	{ "block", 0x58a99953, 0x003b1c65, &RSSYMblock },
-	{ "blocks", 0xa4a6104e, 0x003b1c7d, &RSSYMblocks },
-	{ "body", 0xa571983e, 0x003b1c95, &RSSYMbody },
-	{ "bold", 0x9ca069d9, 0x003b9e19, &RSSYMbold },
-	{ "boldData", 0xe5bc7fa3, 0x003b9e31, &RSSYMbolddata },
-	{ "bolditalic", 0x4f8aac5f, 0x003b9e4d, &RSSYMbolditalic },
-	{ "boldItalicData", 0x98a6c229, 0x003b9e69, &RSSYMbolditalicdata },
-	{ "Book", 0xcacb2b13, 0x003b1cad, &RSSYMbook },
-	{ "bookInstallScript", 0x4c5c8c9f, 0x003b1cc5, &RSSYMbookinstallscript },
-	{ "bookPresent", 0x9ee54dec, 0x003b1ce9, &RSSYMbookpresent },
-	{ "bookRef", 0x60af3fc8, 0x003b1d05, &RSSYMbookref },
-	{ "bookRemoveScript", 0x2e8ad6de, 0x003b1d1d, &RSSYMbookremovescript },
-	{ "books", 0x16c7a20e, 0x003b1d41, &RSSYMbooks },
-	{ "bookScripts", 0xf269a1fb, 0x003b1d59, &RSSYMbookscripts },
-	{ "bookSearchScript", 0x59576d86, 0x003b1d75, &RSSYMbooksearchscript },
-	{ "bookSoup", 0xe3a7a662, 0x003b1d99, &RSSYMbooksoup },
-	{ "boolean", 0x6ef37200, 0x003c19f1, &RSSYMboolean },
-	{ "bottom", 0xdba1ffed, 0x003b1db5, &RSSYMbottom },
-	{ "bounds", 0xad773eb3, 0x003b1dcd, &RSSYMbounds },
-	{ "boundsrect", 0x52e8d6f1, 0x003b1de5, &RSSYMboundsrect },
-	{ "box", 0x007dc961, 0x003b1e01, &RSSYMbox },
-	{ "boxBottom", 0xdc1fc94e, 0x003b1e15, &RSSYMboxbottom },
-	{ "boxLeft", 0xcb48f474, 0x003b1e31, &RSSYMboxleft },
-	{ "boxRight", 0x17456b6f, 0x003b1e49, &RSSYMboxright },
-	{ "boxTop", 0x2f2653fc, 0x003b1e65, &RSSYMboxtop },
-	{ "bps", 0x879fe27d, 0x003b1e7d, &RSSYMbps },
-	{ "BreakLoop", 0xb3680be7, 0x003a76e1, &RSSYMbreakloop },
-	{ "breakOnThrows", 0xa6eaf461, 0x005d2dc1, &RSSYMbreakonthrows },
-	{ "britishwordscursiveoption", 0x2a912f2e, 0x003b1e91, &RSSYMbritishwordscursiveoption },
-	{ "browser", 0xaec09004, 0x003b1ebd, &RSSYMbrowser },
-	{ "BrowserClose", 0xd3cc644a, 0x003b1ed5, &RSSYMbrowserclose },
-	{ "browsers", 0xfabd06ff, 0x003b1ef5, &RSSYMbrowsers },
-	{ "bufferCount", 0x0ef2066b, 0x003bc731, &RSSYMbuffercount },
-	{ "bufferSize", 0xda0af00d, 0x003b9e89, &RSSYMbuffersize },
-	{ "BuildInputMask", 0x0f6fcfcc, 0x003b1f11, &RSSYMbuildinputmask },
-	{ "builtin", 0xa5ef619f, 0x003d0e3d, &RSSYMbuiltin },
-	{ "Busy", 0x9ffe946b, 0x003b1f31, &RSSYMbusy },
-	{ "busyDialog", 0x9d9bfc9b, 0x003b1f49, &RSSYMbusydialog },
-	{ "buttonBarPosition", 0x919cae76, 0x00436ae1, &RSSYMbuttonbarposition },
-	{ "buttonClickScript", 0x4c5c8c9f, 0x003b1f65, &RSSYMbuttonclickscript },
-	{ "buttonPressedScript", 0x12803bcf, 0x003b1f89, &RSSYMbuttonpressedscript },
-	{ "byte", 0x5abe7294, 0x003b1fad, &RSSYMbyte },
-	{ "byteCount", 0x3de84f95, 0x003b1fc5, &RSSYMbytecount },
-	{ "byteproxy", 0xb15332a6, 0x003b1fe1, &RSSYMbyteproxy },
-	{ "bytes", 0xa6bae98f, 0x003b1ffd, &RSSYMbytes },
-	{ "cache", 0x21ada9b4, 0x005d399d, &RSSYMcache },
-	{ "cachedRecConfig", 0x9691e8e8, 0x003b2015, &RSSYMcachedrecconfig },
-	{ "calendar", 0x478505ea, 0x003b01a1, &RSSYMcalendar },
-	{ "calibration", 0x5f182fe8, 0x003b2035, &RSSYMcalibration },
-	{ "callback", 0x3eb3d785, 0x003b2051, &RSSYMcallback },
-	{ "callbackcontext", 0x8babe142, 0x003b9ea5, &RSSYMcallbackcontext },
-	{ "callbackfreq", 0xe4256fc3, 0x005d409d, &RSSYMcallbackfreq },
-	{ "CallPowerStatusChangeFns", 0x95f66bca, 0x00588225, &RSSYMcallpowerstatuschangefns },
-	{ "Canada", 0x2869fed8, 0x003b206d, &RSSYMcanada },
-	{ "CanadaFr", 0x195a44b0, 0x003b9ec5, &RSSYMcanadafr },
-	{ "Canceling", 0x038e3564, 0x003b2085, &RSSYMcanceling },
-	{ "canonicalParaTopic", 0xa8b20f13, 0x003b20a1, &RSSYMcanonicalparatopic },
-	{ "card", 0x491c15ca, 0x003b20c5, &RSSYMcard },
-	{ "cardarray", 0xfe1b3191, 0x003b20dd, &RSSYMcardarray },
-	{ "cardfile", 0x478505ea, 0x003b01bd, &RSSYMcardfile },
-	{ "cardfirst", 0x8e0e7912, 0x003b20f9, &RSSYMcardfirst },
-	{ "cardHWLocationIds", 0x6e57f4e2, 0x003bc0b5, &RSSYMcardhwlocationids },
-	{ "cardInfoVersion", 0x9d4e3e0c, 0x003bc02d, &RSSYMcardinfoversion },
-	{ "cardlast", 0xa3da885e, 0x003b2115, &RSSYMcardlast },
-	{ "cardlock", 0xd7784d6b, 0x003b2131, &RSSYMcardlock },
-	{ "cardprefs", 0x9c52ab4a, 0x003b214d, &RSSYMcardprefs },
-	{ "CardReInserted", 0x232705d7, 0x003b2169, &RSSYMcardreinserted },
-	{ "CardRemoved", 0xd7f616cc, 0x003b2189, &RSSYMcardremoved },
-	{ "cardSocket", 0xba24610b, 0x003b21a5, &RSSYMcardsocket },
-	{ "cardSoups", 0xadf50814, 0x005c9c2d, &RSSYMcardsoups },
-	{ "cardTypes", 0x96dfa777, 0x003b9ee1, &RSSYMcardtypes },
-	{ "cardYanked", 0xb15332a6, 0x003b21c1, &RSSYMcardyanked },
-	{ "carrierdelay", 0x3236bfff, 0x003b21dd, &RSSYMcarrierdelay },
-	{ "category", 0x875223ee, 0x003b21fd, &RSSYMcategory },
-	{ "cbits", 0x86d45a8d, 0x003b2219, &RSSYMcbits },
-	{ "cellframe", 0x57128973, 0x003b2231, &RSSYMcellframe },
-	{ "cellularConnection", 0x1c1cf224, 0x003b224d, &RSSYMcellularconnection },
-	{ "center", 0x7f4c7d79, 0x003b2271, &RSSYMcenter },
-	{ "certificate", 0x4802cf4b, 0x003b2289, &RSSYMcertificate },
-	{ "certificatepassword", 0xc9e1ef66, 0x003b22a5, &RSSYMcertificatepassword },
-	{ "CFunction", 0xe192cd21, 0x003a5dd5, &RSSYMcfunction },
-	{ "changed", 0xd62efc1a, 0x003b22c9, &RSSYMchanged },
-	{ "char", 0xc1f9fcae, 0x003b22e1, &RSSYMchar },
-	{ "charClass", 0xe705d0f4, 0x003b9efd, &RSSYMcharclass },
-	{ "charEncodings", 0x5e4ca7f8, 0x003b9f19, &RSSYMcharencodings },
-	{ "chargeCurrent", 0x58d9a425, 0x003bc1c9, &RSSYMchargecurrent },
-	{ "chargeRate", 0xb15332a6, 0x003b22f9, &RSSYMchargerate },
-	{ "chargeState", 0x39be9d13, 0x003b2315, &RSSYMchargestate },
-	{ "checkBitmaps", 0xa243787e, 0x003b0145, &RSSYMcheckbitmaps },
-	{ "CheckPassword", 0xd1b78b09, 0x0058a47d, &RSSYMcheckpassword },
-	{ "checksum", 0xbaefe8fb, 0x003b0f49, &RSSYMchecksum },
-	{ "choices", 0x32847e8e, 0x003b2331, &RSSYMchoices },
-	{ "chr<", 0xaae49c11, 0x00566c79, &RSSYMchr_3C },
-	{ "chr>", 0xe7538f83, 0x005d404d, &RSSYMchr_3E },
-	{ "ciprivate", 0xa523d9af, 0x003b2349, &RSSYMciprivate },
-	{ "cisDeviceTypes", 0x1db40204, 0x003b9f39, &RSSYMcisdevicetypes },
-	{ "cisFunctionExts", 0x89970801, 0x003b9f59, &RSSYMcisfunctionexts },
-	{ "cisFunctionId", 0x6fef04c2, 0x003b9f79, &RSSYMcisfunctionid },
-	{ "cisFunctions", 0x975d70d8, 0x003bc095, &RSSYMcisfunctions },
-	{ "cisManufacturerId", 0xc1dc48f1, 0x003b9f99, &RSSYMcismanufacturerid },
-	{ "cisManufacturerIdInfo", 0x2adeedbd, 0x003b9fbd, &RSSYMcismanufactureridinfo },
-	{ "cisManufacturerName", 0x39eea7e5, 0x003b9fe5, &RSSYMcismanufacturername },
-	{ "cisProductInfo0", 0xb9d6a27c, 0x003ba009, &RSSYMcisproductinfo0 },
-	{ "cisProductInfo1", 0x580e1c35, 0x003ba029, &RSSYMcisproductinfo1 },
-	{ "cisProductName", 0x430d94d9, 0x003ba049, &RSSYMcisproductname },
-	{ "city", 0x71d3d331, 0x003b2365, &RSSYMcity },
-	{ "class", 0x250bd446, 0x003ba069, &RSSYMclass },
-	{ "classes", 0x15fc1a1e, 0x003ba081, &RSSYMclasses },
-	{ "clearOnPaste", 0x60618139, 0x003b237d, &RSSYMclearonpaste },
-	{ "clicker", 0x944d04d5, 0x003af649, &RSSYMclicker },
-	{ "clickSound", 0x24be15b7, 0x003b239d, &RSSYMclicksound },
-	{ "client", 0x42dd8a07, 0x005821a1, &RSSYMclient },
-	{ "clipboardDepth", 0xf4fc449d, 0x00436b8d, &RSSYMclipboarddepth },
-	{ "clipBounds", 0x9d9bfc9b, 0x00472ad9, &RSSYMclipbounds },
-	{ "clipping", 0x95965626, 0x003b23b9, &RSSYMclipping },
-	{ "closure", 0x5b3c3bf5, 0x00491725, &RSSYMclosure },
-	{ "cmdKeyRepeatThreshold", 0xe02bc813, 0x003b105d, &RSSYMcmdkeyrepeatthreshold },
-	{ "cmprsdSz", 0x5c858d46, 0x003bbce1, &RSSYMcmprsdsz },
-	{ "cntrlPanel", 0x9d9bfc9b, 0x0051c879, &RSSYMcntrlpanel },
-	{ "CObject", 0xb9a697aa, 0x005d2de1, &RSSYMcobject },
-	{ "code", 0xe7538f83, 0x003bc795, &RSSYMcode },
-	{ "CodeBlock", 0x3ffd28d6, 0x005cec6d, &RSSYMcodeblock },
-	{ "codec", 0x4fd86aee, 0x003bc6fd, &RSSYMcodec },
-	{ "codecName", 0xec78d4c7, 0x003bc715, &RSSYMcodecname },
-	{ "collapsed", 0xc1ac3e1f, 0x003ba099, &RSSYMcollapsed },
-	{ "collapsedHeight", 0x4f3cedd0, 0x003ba0b5, &RSSYMcollapsedheight },
-	{ "collect", 0x24404c56, 0x003af661, &RSSYMcollect },
-	{ "color", 0xb4ff1bc7, 0x003b23d5, &RSSYMcolor },
-	{ "colordata", 0xfe1b3191, 0x003b23ed, &RSSYMcolordata },
-	{ "colortable", 0x330247ef, 0x003b2409, &RSSYMcolortable },
-	{ "commaDelay", 0x66a00cfc, 0x003b2425, &RSSYMcommadelay },
-	{ "command", 0xd0bbf847, 0x003b2441, &RSSYMcommand },
-	{ "companderdata", 0x4737475b, 0x003b2459, &RSSYMcompanderdata },
-	{ "compandername", 0x9abb9b6a, 0x003b2479, &RSSYMcompandername },
-	{ "company", 0xa5ef619f, 0x003b2499, &RSSYMcompany },
-	{ "companyphonetic", 0xb4639ea9, 0x003b24b1, &RSSYMcompanyphonetic },
-	{ "completed", 0x76f91875, 0x003b24d1, &RSSYMcompleted },
-	{ "completionscript", 0xccc25097, 0x003b24ed, &RSSYMcompletionscript },
-	{ "compressed", 0xda0af00d, 0x003bbcc5, &RSSYMcompressed },
-	{ "compressionType", 0x55f942f4, 0x003b2511, &RSSYMcompressiontype },
-	{ "condition", 0xa523d9af, 0x003b2531, &RSSYMcondition },
-	{ "config", 0xb2ea4286, 0x003b254d, &RSSYMconfig },
-	{ "configOptions", 0x5366a052, 0x003b2565, &RSSYMconfigoptions },
-	{ "configurations", 0x71385613, 0x003b2585, &RSSYMconfigurations },
-	{ "confirmed", 0xc1ac3e1f, 0x003b25a5, &RSSYMconfirmed },
-	{ "Confirming", 0x4a17a88c, 0x003ba0d5, &RSSYMconfirming },
-	{ "ConnAddChangedSoup", 0xce0ba1e8, 0x003a7c89, &RSSYMconnaddchangedsoup },
-	{ "conncobject", 0x5f182fe8, 0x003b25c1, &RSSYMconncobject },
-	{ "Connect", 0x9d1e333a, 0x003b25dd, &RSSYMconnect },
-	{ "connected", 0x48ce573b, 0x003b25f5, &RSSYMconnected },
-	{ "Connecting", 0xd139c1a8, 0x003ba0f1, &RSSYMconnecting },
-	{ "Connection", 0xc2f58f70, 0x003b2611, &RSSYMconnection },
-	{ "connectionextensions", 0x4cda5600, 0x003b262d, &RSSYMconnectionextensions },
-	{ "connectOptions", 0x3d9a9106, 0x003ba10d, &RSSYMconnectoptions },
-	{ "connecttimeout", 0x26853069, 0x00481bb5, &RSSYMconnecttimeout },
-	{ "connsendchanges", 0xed746789, 0x00481b21, &RSSYMconnsendchanges },
-	{ "constantfunctions", 0xb6f6414b, 0x003a6129, &RSSYMconstantfunctions },
-	{ "constructor", 0xb087aab6, 0x003b2655, &RSSYMconstructor },
-	{ "contentArea", 0xc9b1e494, 0x003b2671, &RSSYMcontentarea },
-	{ "contents", 0x6ac9bf7e, 0x003b268d, &RSSYMcontents },
-	{ "context", 0x4cf809bd, 0x003b26a9, &RSSYMcontext },
-	{ "contextFrame", 0xa5a1a310, 0x005cf3b9, &RSSYMcontextframe },
-	{ "conversionerror", 0xdd1b5c10, 0x00481a85, &RSSYMconversionerror },
-	{ "Convert1.XCard?", 0x26853069, 0x003b26c1, &RSSYMconvert1_2Excard_3F },
-	{ "Convert1.XStore", 0x49c9e9fd, 0x003a7d69, &RSSYMconvert1_2Exstore },
-	{ "ConvertDropToShape", 0x9859039a, 0x003b26e1, &RSSYMconvertdroptoshape },
-	{ "ConvertFrame", 0x2cc3bc2c, 0x003a7dd1, &RSSYMconvertframe },
-	{ "copperfield", 0x762d9085, 0x003b022d, &RSSYMcopperfield },
-	{ "CopyEntries", 0x2ed8956d, 0x005d3749, &RSSYMcopyentries },
-	{ "copyprotection", 0xa83445b2, 0x003b2705, &RSSYMcopyprotection },
-	{ "copyright", 0xc50a68b1, 0x003bbca9, &RSSYMcopyright },
-	{ "correct", 0x8eda0102, 0x003b2725, &RSSYMcorrect },
-	{ "correctInfo", 0xf7dca5ce, 0x003b273d, &RSSYMcorrectinfo },
-	{ "count", 0xe329dd01, 0x003b2759, &RSSYMcount },
-	{ "country", 0x92382b94, 0x003b2771, &RSSYMcountry },
-	{ "countryCode", 0x798bbb17, 0x003b2789, &RSSYMcountrycode },
-	{ "coverForm", 0x0fbd8e5b, 0x003b27a5, &RSSYMcoverform },
-	{ "cpuspeed", 0x703cc351, 0x003b27c1, &RSSYMcpuspeed },
-	{ "cputype", 0x640d6a5a, 0x003b27dd, &RSSYMcputype },
-	{ "CreateGetSoup", 0xffe24c43, 0x003b27f5, &RSSYMcreategetsoup },
-	{ "CreateUSoupMember", 0x071c6ac8, 0x003a806d, &RSSYMcreateusoupmember },
-	{ "creationdate", 0xb958d91b, 0x003bbc69, &RSSYMcreationdate },
-	{ "creator", 0x526b0d90, 0x003b2815, &RSSYMcreator },
-	{ "creditcard", 0x131bb8ed, 0x003b282d, &RSSYMcreditcard },
-	{ "creditexper", 0x96141f87, 0x003b2849, &RSSYMcreditexper },
-	{ "creditnumber", 0x3b07ee64, 0x003b2865, &RSSYMcreditnumber },
-	{ "cribNote", 0x95965626, 0x003b0265, &RSSYMcribnote },
-	{ "CuPage", 0x14b2c8cd, 0x003b2885, &RSSYMcupage },
-	{ "curAscent", 0x435b5368, 0x003ba12d, &RSSYMcurascent },
-	{ "curDescent", 0xc2f58f70, 0x003ba149, &RSSYMcurdescent },
-	{ "curFontSize", 0x825ce97c, 0x003ba165, &RSSYMcurfontsize },
-	{ "curHeight", 0x2c45f2cb, 0x003ba181, &RSSYMcurheight },
-	{ "curpage", 0xc277c60f, 0x003b289d, &RSSYMcurpage },
-	{ "curPenSize", 0x9828f8c8, 0x003ba19d, &RSSYMcurpensize },
-	{ "currencyPrefix", 0x1840fe31, 0x003b28b5, &RSSYMcurrencyprefix },
-	{ "currencySuffix", 0x6bc55240, 0x003b28d5, &RSSYMcurrencysuffix },
-	{ "curRendering", 0xb3e5d548, 0x003b28f5, &RSSYMcurrendering },
-	{ "currentCountry", 0xa2c141df, 0x003b2915, &RSSYMcurrentcountry },
-	{ "currentEntry", 0x83a63acd, 0x003b2935, &RSSYMcurrententry },
-	{ "currentFormat", 0x8191618c, 0x003b2955, &RSSYMcurrentformat },
-	{ "currentline", 0x00add433, 0x003b2975, &RSSYMcurrentline },
-	{ "currentlocalebundle", 0x39eea7e5, 0x003b2991, &RSSYMcurrentlocalebundle },
-	{ "currentPartNumber", 0xb6f6414b, 0x003ba1b9, &RSSYMcurrentpartnumber },
-	{ "currentwordrecognizer", 0x11b4b3df, 0x003b29b5, &RSSYMcurrentwordrecognizer },
-	{ "cursor", 0x6b95476e, 0x003b29dd, &RSSYMcursor },
-	{ "cursors", 0xb791be69, 0x003af6dd, &RSSYMcursors },
-	{ "curTopic", 0x53b45ee1, 0x003b29f5, &RSSYMcurtopic },
-	{ "curveshapeoption", 0xccc25097, 0x003b2a11, &RSSYMcurveshapeoption },
-	{ "curWidth", 0xf1ebd89a, 0x003ba1dd, &RSSYMcurwidth },
-	{ "curXHeight", 0x8f57ca63, 0x003ba1f9, &RSSYMcurxheight },
-	{ "custom", 0x90eeda43, 0x003b2a35, &RSSYMcustom },
-	{ "data", 0x491c15ca, 0x003b2a4d, &RSSYMdata },
-	{ "dataBits", 0x676b94ec, 0x003b2a65, &RSSYMdatabits },
-	{ "dataBounds", 0xf693547d, 0x003b2a81, &RSSYMdatabounds },
-	{ "datalen", 0x1b6f1df1, 0x003b2a9d, &RSSYMdatalen },
-	{ "dataoffset", 0x7db56d99, 0x003b2ab5, &RSSYMdataoffset },
-	{ "datatext", 0x25899da7, 0x003b2ad1, &RSSYMdatatext },
-	{ "dataType", 0x4ae3307c, 0x003bc6e1, &RSSYMdatatype },
-	{ "Date", 0xc1f9fcae, 0x003a8245, &RSSYMdate },
-	{ "dateDictionary", 0x3a3c6674, 0x003b2aed, &RSSYMdatedictionary },
-	{ "dateKeyboard", 0x407af237, 0x003b2b0d, &RSSYMdatekeyboard },
-	{ "datesFont", 0x435b5368, 0x003b2b2d, &RSSYMdatesfont },
-	{ "dateStr", 0xa5ef619f, 0x003b2b49, &RSSYMdatestr },
-	{ "dayheight", 0xc1ac3e1f, 0x003b2b61, &RSSYMdayheight },
-	{ "dayLeadingZ", 0xd7f616cc, 0x003ba215, &RSSYMdayleadingz },
-	{ "daylightsavings", 0xb4639ea9, 0x003b2b7d, &RSSYMdaylightsavings },
-	{ "dayofweeek", 0x585bdac4, 0x003b2b9d, &RSSYMdayofweeek },
-	{ "dayOfWeek", 0xb3680be7, 0x003b2bb9, &RSSYMdayofweek },
-	{ "dayphone", 0xd2054998, 0x003b2bd5, &RSSYMdayphone },
-	{ "daysInMonth", 0xdb54415e, 0x003b2bf1, &RSSYMdaysinmonth },
-	{ "dayStrSpec", 0xe2dc1e72, 0x003b2c0d, &RSSYMdaystrspec },
-	{ "debug", 0xdfcbb26f, 0x003af6f5, &RSSYMdebug },
-	{ "DebuggerInfo", 0x7ce9e5a9, 0x005cf0f9, &RSSYMdebuggerinfo },
-	{ "debugslot", 0xe192cd21, 0x003b2c29, &RSSYMdebugslot },
-	{ "decimalpoint", 0x6ea5b371, 0x003b2c45, &RSSYMdecimalpoint },
-	{ "declareSelf", 0xb80f87ca, 0x003ba231, &RSSYMdeclareself },
-	{ "deepcount", 0xa523d9af, 0x003b2c65, &RSSYMdeepcount },
-	{ "deepfoundcount", 0x7f7c884b, 0x003b2c81, &RSSYMdeepfoundcount },
-	{ "deepToast", 0xe192cd21, 0x0045c561, &RSSYMdeeptoast },
-	{ "default", 0x8608d29d, 0x003b2ca1, &RSSYMdefault },
-	{ "defaultFontSpec", 0x8638dd6f, 0x003b9ad9, &RSSYMdefaultfontspec },
-	{ "defaultStore", 0xe2109682, 0x003af70d, &RSSYMdefaultstore },
-	{ "default_task", 0xf925f71f, 0x003ba24d, &RSSYMdefault_task },
-	{ "DeferredRec", 0x56470183, 0x003ba26d, &RSSYMdeferredrec },
-	{ "DefGlobalFn", 0x02c2ad74, 0x003a83d5, &RSSYMdefglobalfn },
-	{ "deleted", 0xdf002a7f, 0x003b2cb9, &RSSYMdeleted },
-	{ "DeleteEncodedWord", 0xeca8df99, 0x005a6119, &RSSYMdeleteencodedword },
-	{ "DeletionScript", 0x34c962a1, 0x003b2cd1, &RSSYMdeletionscript },
-	{ "depth", 0x86d45a8d, 0x003b2cf1, &RSSYMdepth },
-	{ "descent", 0x24404c56, 0x003b2d09, &RSSYMdescent },
-	{ "deskey", 0xf82a645d, 0x003b2d21, &RSSYMdeskey },
-	{ "desktopapps", 0xdb54415e, 0x00481b41, &RSSYMdesktopapps },
-	{ "desktoperror", 0x01f72584, 0x003b2d39, &RSSYMdesktoperror },
-	{ "desktopresult", 0x8a628ff1, 0x003b2d59, &RSSYMdesktopresult },
-	{ "destructor", 0xebad4cd7, 0x003b2d79, &RSSYMdestructor },
-	{ "detectBusy", 0x2d8f441c, 0x003b2d95, &RSSYMdetectbusy },
-	{ "detectDialTone", 0x6dda2b81, 0x003b2db1, &RSSYMdetectdialtone },
-	{ "device", 0xfd9d6830, 0x00446209, &RSSYMdevice },
-	{ "deviceid", 0x222b7315, 0x003b2dd1, &RSSYMdeviceid },
-	{ "deviceKind", 0xb15332a6, 0x003b2ded, &RSSYMdevicekind },
-	{ "deviceNumber", 0x6ea5b371, 0x003b2e09, &RSSYMdevicenumber },
-	{ "dialing", 0x7d37a438, 0x003b2e29, &RSSYMdialing },
-	{ "dialnavigate", 0x8b2e17e1, 0x003b2e41, &RSSYMdialnavigate },
-	{ "dialnavigator", 0x671dd65d, 0x003b2e61, &RSSYMdialnavigator },
-	{ "dict", 0x7746d704, 0x003b2e81, &RSSYMdict },
-	{ "dictdata", 0xc062ecce, 0x003b2e99, &RSSYMdictdata },
-	{ "dictID", 0x9bd4e1e9, 0x003b2eb5, &RSSYMdictid },
-	{ "dictionaries", 0x85bb140e, 0x003b0299, &RSSYMdictionaries },
-	{ "dictionaryList", 0xc4bcaa22, 0x003b02b9, &RSSYMdictionarylist },
-	{ "dictType", 0x790df1b6, 0x003b2ecd, &RSSYMdicttype },
-	{ "direction", 0xefd6ff59, 0x003ba289, &RSSYMdirection },
-	{ "dirSortID", 0xadf50814, 0x005d2df9, &RSSYMdirsortid },
-	{ "Dirty", 0xbdd04a2c, 0x00438175, &RSSYMdirty },
-	{ "disabled", 0x0b161278, 0x005d2e15, &RSSYMdisabled },
-	{ "discardafter", 0x65d4850c, 0x003b2ee9, &RSSYMdiscardafter },
-	{ "discharging", 0x4802cf4b, 0x003b2f09, &RSSYMdischarging },
-	{ "Disconnect", 0x0da8b51a, 0x004a77dd, &RSSYMdisconnect },
-	{ "Disconnecting", 0x41c44388, 0x003ba2a5, &RSSYMdisconnecting },
-	{ "DiskSoup", 0xe3a7a662, 0x005d40bd, &RSSYMdisksoup },
-	{ "dispatchonly", 0xe2109682, 0x003bbc89, &RSSYMdispatchonly },
-	{ "displayimportslip", 0x6c431ba1, 0x003b2f25, &RSSYMdisplayimportslip },
-	{ "displayParams", 0x61aad28a, 0x003b2f49, &RSSYMdisplayparams },
-	{ "displayslip", 0xdb54415e, 0x003b2f69, &RSSYMdisplayslip },
-	{ "DisposeDictionary", 0x1e31cb65, 0x003a84e5, &RSSYMdisposedictionary },
-	{ "distance", 0xc9341b33, 0x003b2f85, &RSSYMdistance },
-	{ "ditherPattern", 0xda88b96e, 0x003b2fa1, &RSSYMditherpattern },
-	{ "div", 0x4b30ef0b, 0x003a5ead, &RSSYMdiv },
-	{ "doAutoAdd", 0x853d4aad, 0x003b2fc1, &RSSYMdoautoadd },
-	{ "DoCorrection", 0x8e8c4273, 0x003a852d, &RSSYMdocorrection },
-	{ "docString", 0x5a70b405, 0x005d2e31, &RSSYMdocstring },
-	{ "doFormulaRecognition", 0xb415e01a, 0x003b2fdd, &RSSYMdoformularecognition },
-	{ "dofragmentation", 0x6f237cd2, 0x003b3005, &RSSYMdofragmentation },
-	{ "dohilite", 0x1cb86f42, 0x003b3025, &RSSYMdohilite },
-	{ "doingScrub", 0xc2f58f70, 0x005265bd, &RSSYMdoingscrub },
-	{ "doInkWordRecognition", 0xa5d1ade2, 0x003b3041, &RSSYMdoinkwordrecognition },
-	{ "domainType", 0xf12050aa, 0x003b3069, &RSSYMdomaintype },
-	{ "don'tactivate", 0x91ea6d05, 0x004a03c9, &RSSYMdon_27tactivate },
-	{ "dontbackup", 0xabe02ed3, 0x003b3085, &RSSYMdontbackup },
-	{ "doRawInkRecognition", 0xf80cb0a0, 0x003b30a1, &RSSYMdorawinkrecognition },
-	{ "doShapeRecognition", 0xba546bdd, 0x003b30c5, &RSSYMdoshaperecognition },
-	{ "doTextRecognition", 0x88cb8011, 0x003b30e9, &RSSYMdotextrecognition },
-	{ "down", 0xd39c5978, 0x003db18d, &RSSYMdown },
-	{ "dragOptions", 0x62765a7a, 0x003b310d, &RSSYMdragoptions },
-	{ "dragRef", 0x57de1163, 0x003b3129, &RSSYMdragref },
-	{ "dragTo", 0x7f4c7d79, 0x003b3141, &RSSYMdragto },
-	{ "drawfillmode", 0x0cdd2d2a, 0x003e8dd9, &RSSYMdrawfillmode },
-	{ "drawing", 0xd98d26ac, 0x003b3159, &RSSYMdrawing },
-	{ "drawpenmode", 0x0620d806, 0x003b3171, &RSSYMdrawpenmode },
-	{ "drawPenSizeX", 0x01f72584, 0x003b318d, &RSSYMdrawpensizex },
-	{ "drawPenSizeY", 0xa02e9f3d, 0x003b31ad, &RSSYMdrawpensizey },
-	{ "driverName", 0xe84f2245, 0x003ba2c5, &RSSYMdrivername },
-	{ "DropIcon", 0x875223ee, 0x003b31cd, &RSSYMdropicon },
-	{ "dsQuery", 0x3eb3d785, 0x003ba2e1, &RSSYMdsquery },
-	{ "DTEHeader", 0x3ffd28d6, 0x003b31e9, &RSSYMdteheader },
-	{ "DTEMain", 0xab626572, 0x003b3205, &RSSYMdtemain },
-	{ "DTETrigrams", 0xe9987396, 0x003b321d, &RSSYMdtetrigrams },
-	{ "dtmfToneDialing", 0xdf303551, 0x003b3239, &RSSYMdtmftonedialing },
-	{ "Duh", 0x0ec1fb99, 0x003ba2f9, &RSSYMduh },
-	{ "dynamic", 0x8608d29d, 0x003b3259, &RSSYMdynamic },
-	{ "dynatemplates", 0xffe24c43, 0x003ba30d, &RSSYMdynatemplates },
-	{ "edgeWidth", 0x853d4aad, 0x003b3271, &RSSYMedgewidth },
-	{ "editaddshapescript", 0xd6dcd04d, 0x003b328d, &RSSYMeditaddshapescript },
-	{ "editAddWordScript", 0x15609d00, 0x003b32b1, &RSSYMeditaddwordscript },
-	{ "email", 0x7e032c28, 0x003b32d5, &RSSYMemail },
-	{ "emptied", 0x60af3fc8, 0x003b32ed, &RSSYMemptied },
-	{ "empty", 0x9876b757, 0x003b3305, &RSSYMempty },
-	{ "emptyString", 0xb087aab6, 0x003b331d, &RSSYMemptystring },
-	{ "enabledlanguage", 0xea163cf7, 0x003b9bf5, &RSSYMenabledlanguage },
-	{ "encoded", 0xc7eac9e2, 0x003b3339, &RSSYMencoded },
-	{ "encoding", 0x5056344f, 0x003b3351, &RSSYMencoding },
-	{ "encodingID", 0x74e43f34, 0x003ba32d, &RSSYMencodingid },
-	{ "end", 0xe0973a5f, 0x003b336d, &RSSYMend },
-	{ "endchar", 0xa291370d, 0x003b3381, &RSSYMendchar },
-	{ "endcharacter", 0x7418b744, 0x003b3399, &RSSYMendcharacter },
-	{ "endExclKey", 0x4a17a88c, 0x003b33b9, &RSSYMendexclkey },
-	{ "endKey", 0xe11503c0, 0x003b33d5, &RSSYMendkey },
-	{ "endsequence", 0x50d3fdb0, 0x003b33ed, &RSSYMendsequence },
-	{ "endTest", 0xa5ef619f, 0x005aa975, &RSSYMendtest },
-	{ "endTime", 0x24404c56, 0x003b3409, &RSSYMendtime },
-	{ "entirewords", 0xcd100f26, 0x0053078d, &RSSYMentirewords },
-	{ "entries", 0x8095ceca, 0x003ba349, &RSSYMentries },
-	{ "entry", 0x731d2482, 0x003b3421, &RSSYMentry },
-	{ "EntryAccess", 0xad298024, 0x005d2e4d, &RSSYMentryaccess },
-	{ "entryAdded", 0x585bdac4, 0x00468051, &RSSYMentryadded },
-	{ "EntryChange", 0x428fcb78, 0x003a888d, &RSSYMentrychange },
-	{ "entryChanged", 0x494c209c, 0x00467dd1, &RSSYMentrychanged },
-	{ "EntryChangeVerbatim", 0x51040882, 0x003a87f5, &RSSYMentrychangeverbatim },
-	{ "EntryChangeWithModTime", 0x433d9fab, 0x003a8845, &RSSYMentrychangewithmodtime },
-	{ "EntryCopy", 0x215feb25, 0x003a88c9, &RSSYMentrycopy },
-	{ "entryLine", 0x6341e26a, 0x003ba361, &RSSYMentryline },
-	{ "EntryModTime", 0x2750b859, 0x003a8981, &RSSYMentrymodtime },
-	{ "EntryMove", 0xa8820441, 0x003a89c1, &RSSYMentrymove },
-	{ "entryMoved", 0xaf3e5965, 0x004f56fd, &RSSYMentrymoved },
-	{ "entryRemoved", 0x01f72584, 0x004af445, &RSSYMentryremoved },
-	{ "EntryRemoveFromSoup", 0x6ed5be43, 0x003a8a05, &RSSYMentryremovefromsoup },
-	{ "EntryReplace", 0x6932af9e, 0x003a8aa1, &RSSYMentryreplace },
-	{ "entryReplaced", 0x6fef04c2, 0x005cf9d9, &RSSYMentryreplaced },
-	{ "EntryReplaceWithModTime", 0x69e083d1, 0x003a8a55, &RSSYMentryreplacewithmodtime },
-	{ "EntrySize", 0x215feb25, 0x003a8b09, &RSSYMentrysize },
-	{ "EntrySoup", 0x8bf99fd1, 0x003a8b25, &RSSYMentrysoup },
-	{ "EntryStore", 0xcf24e867, 0x003a8b41, &RSSYMentrystore },
-	{ "EntryTextSize", 0xfdcd7302, 0x003a8b5d, &RSSYMentrytextsize },
-	{ "EntryUndoChanges", 0x25b9a879, 0x003a8b7d, &RSSYMentryundochanges },
-	{ "EntryUniqueID", 0xafbc22c6, 0x003a8ba1, &RSSYMentryuniqueid },
-	{ "EntryValid", 0xe2dc1e72, 0x003a8bc1, &RSSYMentryvalid },
-	{ "ep", 0x1649d8ad, 0x003b3439, &RSSYMep },
-	{ "ephemerals", 0x94cace36, 0x005d0101, &RSSYMephemerals },
-	{ "equal", 0x617ac7b8, 0x00462d3d, &RSSYMequal },
-	{ "error", 0x816156ba, 0x003b344d, &RSSYMerror },
-	{ "errorCode", 0x68b4e63d, 0x003b3465, &RSSYMerrorcode },
-	{ "errorFree", 0xbc393a4c, 0x003b3481, &RSSYMerrorfree },
-	{ "errorgauge", 0x9d9bfc9b, 0x003b349d, &RSSYMerrorgauge },
-	{ "errorstring", 0x99724a19, 0x003b34b9, &RSSYMerrorstring },
-	{ "espy", 0x638fa0f9, 0x003b34d5, &RSSYMespy },
-	{ "eveningStr", 0xbd828b9d, 0x003ba37d, &RSSYMeveningstr },
-	{ "eventCode", 0x76f91875, 0x003b34ed, &RSSYMeventcode },
-	{ "eventHandler", 0xc22a0780, 0x003b3509, &RSSYMeventhandler },
-	{ "events", 0xdba1ffed, 0x003b3529, &RSSYMevents },
-	{ "exception", 0x96dfa777, 0x003ba399, &RSSYMexception },
-	{ "ExceptionHandler", 0xc9642605, 0x003b3541, &RSSYMexceptionhandler },
-	{ "exceptionMeeting", 0x95c660f8, 0x003b3565, &RSSYMexceptionmeeting },
-	{ "exceptions", 0xe2dc1e72, 0x003b3589, &RSSYMexceptions },
-	{ "ExpandDirectoryEntry", 0xa05eaa0f, 0x003a8c49, &RSSYMexpanddirectoryentry },
-	{ "ExpandSettings", 0x26853069, 0x003a8c8d, &RSSYMexpandsettings },
-	{ "export", 0xe4732e52, 0x003b35a5, &RSSYMexport },
-	{ "ExportTable", 0x62765a7a, 0x005cf73d, &RSSYMexporttable },
-	{ "ExtrasDrawer", 0x103b57bc, 0x003b0d71, &RSSYMextrasdrawer },
-	{ "extrasState", 0x097f0298, 0x003b35bd, &RSSYMextrasstate },
-	{ "face", 0x7cb9dad7, 0x003b35d9, &RSSYMface },
-	{ "family", 0x1d83f732, 0x003ba3b5, &RSSYMfamily },
-	{ "fastCharging", 0x7ce9e5a9, 0x003b35f1, &RSSYMfastcharging },
-	{ "fastValidTest", 0xda88b96e, 0x005d2e69, &RSSYMfastvalidtest },
-	{ "faxNavigate", 0x14650a3e, 0x003b3611, &RSSYMfaxnavigate },
-	{ "faxNavigator", 0xf054c8ba, 0x003b362d, &RSSYMfaxnavigator },
-	{ "faxResolution", 0xd515b59b, 0x003ba3cd, &RSSYMfaxresolution },
-	{ "fields", 0x5121bc3f, 0x003ba3ed, &RSSYMfields },
-	{ "filename", 0x9b0959f9, 0x003b364d, &RSSYMfilename },
-	{ "filesize", 0xacabb6c3, 0x003b3669, &RSSYMfilesize },
-	{ "filetransferstatus", 0xfa2189e1, 0x003b3685, &RSSYMfiletransferstatus },
-	{ "fillPattern", 0x4b60f9dd, 0x003b36a9, &RSSYMfillpattern },
-	{ "filter", 0x9661de16, 0x003b36c5, &RSSYMfilter },
-	{ "findApps", 0xf75edc6d, 0x003b36dd, &RSSYMfindapps },
-	{ "FindCustomDicts", 0xf0d2921b, 0x003b36f9, &RSSYMfindcustomdicts },
-	{ "findDrawer", 0x94cace36, 0x003b3719, &RSSYMfinddrawer },
-	{ "first", 0x44f26348, 0x003b3735, &RSSYMfirst },
-	{ "firstDayOfWeek", 0xf85a6f2f, 0x003b374d, &RSSYMfirstdayofweek },
-	{ "firstName", 0xe192cd21, 0x003b376d, &RSSYMfirstname },
-	{ "firstnamephonetic", 0xf0070a2b, 0x003b3789, &RSSYMfirstnamephonetic },
-	{ "firstPage", 0x68b4e63d, 0x003b37ad, &RSSYMfirstpage },
-	{ "firstTopic", 0xf9f17f0f, 0x003b37c9, &RSSYMfirsttopic },
-	{ "firstWord", 0x916ca3a4, 0x003b37e5, &RSSYMfirstword },
-	{ "fixed", 0x6fbef9f0, 0x003b3801, &RSSYMfixed },
-	{ "fixedHeight", 0xfd4fa9a1, 0x003b0fc5, &RSSYMfixedheight },
-	{ "flags", 0x95188cc5, 0x003b3819, &RSSYMflags },
-	{ "flashCardBadVpp", 0x82dab2dd, 0x003cb87d, &RSSYMflashcardbadvpp },
-	{ "flattener", 0x68b4e63d, 0x003b3831, &RSSYMflattener },
-	{ "fliphorizontal", 0x9f63174d, 0x003b384d, &RSSYMfliphorizontal },
-	{ "flipvertical", 0xd93f681d, 0x003b386d, &RSSYMflipvertical },
-	{ "floating", 0x592762b4, 0x003b388d, &RSSYMfloating },
-	{ "flush", 0x8fa588f2, 0x004b7e41, &RSSYMflush },
-	{ "flushappchanges", 0xb9d6a27c, 0x003b38a9, &RSSYMflushappchanges },
-	{ "font", 0x3564dfbf, 0x003b38c9, &RSSYMfont },
-	{ "fontFace", 0xb21eba96, 0x003ba405, &RSSYMfontface },
-	{ "fontParms", 0x6341e26a, 0x003b38e1, &RSSYMfontparms },
-	{ "fonts", 0x816156ba, 0x003b38fd, &RSSYMfonts },
-	{ "foo", 0xe96868c4, 0x003ba421, &RSSYMfoo },
-	{ "forEachState", 0x6ea5b371, 0x005d2e89, &RSSYMforeachstate },
-	{ "foreground", 0x8f57ca63, 0x003b3915, &RSSYMforeground },
-	{ "form", 0x5abe7294, 0x003b3931, &RSSYMform },
-	{ "format", 0x71084b41, 0x003b3949, &RSSYMformat },
-	{ "Format?", 0x60af3fc8, 0x003b3961, &RSSYMformat_3F },
-	{ "FormatAfterMountError?", 0x9f93221f, 0x003b3979, &RSSYMformataftermounterror_3F },
-	{ "formatBadVppCard", 0xc092f7a0, 0x003cbbf5, &RSSYMformatbadvppcard },
-	{ "formatLockedCard", 0xf430bcad, 0x003cbdc9, &RSSYMformatlockedcard },
-	{ "FormatWithExtremePrejudice?", 0x684973f1, 0x003b39a1, &RSSYMformatwithextremeprejudice_3F },
-	{ "formHiliteScript", 0x793dfc88, 0x003b39cd, &RSSYMformhilitescript },
-	{ "formSearchScript", 0xe94ab507, 0x003b39f1, &RSSYMformsearchscript },
-	{ "found", 0xda58ae9c, 0x003b3a15, &RSSYMfound },
-	{ "foundcount", 0xbd828b9d, 0x003b3a2d, &RSSYMfoundcount },
-	{ "fPatch", 0xb2ea4286, 0x003b0e49, &RSSYMfpatch },
-	{ "fPatchCheckSum", 0x6dda2b81, 0x003b0e89, &RSSYMfpatchchecksum },
-	{ "fPatchFirstPageIndex", 0x7d19f07b, 0x003b0ee9, &RSSYMfpatchfirstpageindex },
-	{ "fPatchPageCount", 0xb9d6a27c, 0x003b0ec9, &RSSYMfpatchpagecount },
-	{ "fPatchVersion", 0x9e19c5fc, 0x003b0ea9, &RSSYMfpatchversion },
-	{ "frame", 0x58a99953, 0x003b3a49, &RSSYMframe },
-	{ "frameparameter", 0x488098ac, 0x003b3a61, &RSSYMframeparameter },
-	{ "fromEmailAddress", 0xfd01eb12, 0x003b3a81, &RSSYMfromemailaddress },
-	{ "fromName", 0xf75edc6d, 0x003b3aa5, &RSSYMfromname },
-	{ "fTotalPatchPageCount", 0x85eb1ee0, 0x003b0e61, &RSSYMftotalpatchpagecount },
-	{ "full", 0xbc86f8db, 0x003b3ac1, &RSSYMfull },
-	{ "fullyCharged", 0x0cdd2d2a, 0x003b3ad9, &RSSYMfullycharged },
-	{ "funcPtr", 0x72519c92, 0x00437df9, &RSSYMfuncptr },
-	{ "function", 0x790df1b6, 0x00481bf1, &RSSYMfunction },
-	{ "functions", 0xc50a68b1, 0x003a6071, &RSSYMfunctions },
-	{ "gauge", 0x1c3aa5e1, 0x003b3af9, &RSSYMgauge },
-	{ "gaugeDrawLimits", 0xc2a7d0e1, 0x003b3b11, &RSSYMgaugedrawlimits },
-	{ "GeckoHDIHelp", 0x4ebf246f, 0x0051c0dd, &RSSYMgeckohdihelp },
-	{ "geneva", 0xb2ea4286, 0x003b3b31, &RSSYMgeneva },
-	{ "GetAllInfo", 0xf693547d, 0x0049d609, &RSSYMgetallinfo },
-	{ "GetBackupAllPackagesCursor", 0x0aaaa02c, 0x003a9471, &RSSYMgetbackupallpackagescursor },
-	{ "GetBitmapInfo", 0xdffbbd41, 0x003a949d, &RSSYMgetbitmapinfo },
-	{ "GetConversionFrame", 0x24ee2089, 0x003a95fd, &RSSYMgetconversionframe },
-	{ "GetCountryEntry", 0x75dfd1f6, 0x003a9649, &RSSYMgetcountryentry },
-	{ "GetCurrentModemSetup", 0x02273056, 0x003a968d, &RSSYMgetcurrentmodemsetup },
-	{ "GetDefaultOwnerStore", 0x7233e8d5, 0x003b9ab1, &RSSYMgetdefaultownerstore },
-	{ "GetDefaultStore", 0x529b1862, 0x003a9749, &RSSYMgetdefaultstore },
-	{ "GetIndexes", 0xc2f58f70, 0x00475a81, &RSSYMgetindexes },
-	{ "GetInfo", 0xd98d26ac, 0x004a0471, &RSSYMgetinfo },
-	{ "GetLibraryEntry", 0x4d28148f, 0x003b3b49, &RSSYMgetlibraryentry },
-	{ "GetName", 0x0d2aebb9, 0x003e81c5, &RSSYMgetname },
-	{ "GetNextUID", 0x44a4a4b9, 0x005d36f1, &RSSYMgetnextuid },
-	{ "GetNotesData", 0x9cd074ab, 0x003b3b69, &RSSYMgetnotesdata },
-	{ "GetOwnerApp", 0x9ee54dec, 0x003a9eb9, &RSSYMgetownerapp },
-	{ "GetPackageEntry", 0xf64595ee, 0x003a9ed5, &RSSYMgetpackageentry },
-	{ "getpassword", 0xf269a1fb, 0x003b3b89, &RSSYMgetpassword },
-	{ "GetRegisteredSound", 0xda3afadf, 0x003aa115, &RSSYMgetregisteredsound },
-	{ "GetRoot", 0xaec09004, 0x003aa185, &RSSYMgetroot },
-	{ "GetSignature", 0xe2109682, 0x0049ffd1, &RSSYMgetsignature },
-	{ "GetStore", 0xcc9245c5, 0x0043dfe5, &RSSYMgetstore },
-	{ "GetUserConfig", 0x4a9571ed, 0x003aa4a1, &RSSYMgetuserconfig },
-	{ "GetView", 0x1ecd4883, 0x003aa635, &RSSYMgetview },
-	{ "gmt", 0x62464fa8, 0x003b3ba5, &RSSYMgmt },
-	{ "GotoSleep", 0x718614a2, 0x003b3bb9, &RSSYMgotosleep },
-	{ "graphics", 0x7e80f589, 0x0047e631, &RSSYMgraphics },
-	{ "graphicsGutter", 0x0f6fcfcc, 0x003b3bd5, &RSSYMgraphicsgutter },
-	{ "gravityshapeoption", 0x4da5ddf0, 0x003b3bf5, &RSSYMgravityshapeoption },
-	{ "grayLevels", 0x69fe378e, 0x00471831, &RSSYMgraylevels },
-	{ "grayPattern", 0xb5faae89, 0x003b3c19, &RSSYMgraypattern },
-	{ "group", 0x5c07c3e5, 0x003da6f5, &RSSYMgroup },
-	{ "groupSepStr", 0xa243787e, 0x003b3c35, &RSSYMgroupsepstr },
-	{ "groupWidth", 0xaf3e5965, 0x003b3c51, &RSSYMgroupwidth },
-	{ "HandleCardEvent", 0x5d812008, 0x003aa75d, &RSSYMhandlecardevent },
-	{ "HandleCheck", 0xd497ec3a, 0x003b3c6d, &RSSYMhandlecheck },
-	{ "HandleError", 0x0620d806, 0x003b3c89, &RSSYMhandleerror },
-	{ "HandleScrub", 0x39be9d13, 0x003b3ca5, &RSSYMhandlescrub },
-	{ "handwriting", 0x96141f87, 0x003b3cc1, &RSSYMhandwriting },
-	{ "hardFlowBlocked", 0x38278d33, 0x00534295, &RSSYMhardflowblocked },
-	{ "hasInput", 0x2e5acc0c, 0x003b3cdd, &RSSYMhasinput },
-	{ "hasOutput", 0x215feb25, 0x003b3cf9, &RSSYMhasoutput },
-	{ "hasPath", 0xfee6b981, 0x003a5ff9, &RSSYMhaspath },
-	{ "hasVar", 0xf82a645d, 0x003afae5, &RSSYMhasvar },
-	{ "hasVariable", 0xa9cb5592, 0x003afac9, &RSSYMhasvariable },
-	{ "Header", 0xaa191421, 0x003b3d15, &RSSYMheader },
-	{ "headerVersion", 0x95489797, 0x003b0f65, &RSSYMheaderversion },
-	{ "height", 0x8d90afb1, 0x003b3d2d, &RSSYMheight },
-	{ "help", 0x8e5c37a1, 0x003b3d45, &RSSYMhelp },
-	{ "helpbook", 0x592762b4, 0x003d5e61, &RSSYMhelpbook },
-	{ "hideCount", 0x2c45f2cb, 0x003b3d5d, &RSSYMhidecount },
-	{ "hideSound", 0x2c45f2cb, 0x003b3d79, &RSSYMhidesound },
-	{ "high", 0xfe68f020, 0x003b3d95, &RSSYMhigh },
-	{ "HighROM", 0x15fc1a1e, 0x003b3dad, &RSSYMhighrom },
-	{ "hilite", 0x42dd8a07, 0x003ba435, &RSSYMhilite },
-	{ "hiliteBusy", 0xe2dc1e72, 0x00478f35, &RSSYMhilitebusy },
-	{ "hilites", 0x8eda0102, 0x003ba44d, &RSSYMhilites },
-	{ "hints", 0x08836fd6, 0x003b3dc5, &RSSYMhints },
-	{ "history", 0x55c93822, 0x003ba465, &RSSYMhistory },
-	{ "homePhone", 0x2c45f2cb, 0x003b3ddd, &RSSYMhomephone },
-	{ "hour", 0x88e933ce, 0x003b3df9, &RSSYMhour },
-	{ "HourFont", 0xbe4e138d, 0x003b3e11, &RSSYMhourfont },
-	{ "hourLeadingZ", 0x2cc3bc2c, 0x003ba47d, &RSSYMhourleadingz },
-	{ "iaref", 0xdfcbb26f, 0x003ba49d, &RSSYMiaref },
-	{ "icon", 0x8e5c37a1, 0x003b3e2d, &RSSYMicon },
-	{ "iconShape", 0x9c52ab4a, 0x003b3e45, &RSSYMiconshape },
-	{ "id", 0x248e0ae5, 0x003b3e61, &RSSYMid },
-	{ "idle", 0xc1f9fcae, 0x003ba4b5, &RSSYMidle },
-	{ "IdleConnection", 0x84ef8c1e, 0x00481b5d, &RSSYMidleconnection },
-	{ "idletimeout", 0x4b60f9dd, 0x00481bd5, &RSSYMidletimeout },
-	{ "imagingName", 0x92b5f4f5, 0x003ba4cd, &RSSYMimagingname },
-	{ "immediate", 0xcff07057, 0x005d2ea9, &RSSYMimmediate },
-	{ "implementor", 0x9ee54dec, 0x005d2ec5, &RSSYMimplementor },
-	{ "Import", 0x90eeda43, 0x003a6041, &RSSYMimport },
-	{ "ImportTable", 0x0ef2066b, 0x005cf849, &RSSYMimporttable },
-	{ "inbox", 0x53369580, 0x003b3e75, &RSSYMinbox },
-	{ "inboxstatustext", 0x50863f21, 0x003b3e8d, &RSSYMinboxstatustext },
-	{ "indent", 0x1d83f732, 0x003b3ead, &RSSYMindent },
-	{ "index", 0x617ac7b8, 0x003b00b5, &RSSYMindex },
-	{ "indexes", 0x526b0d90, 0x0043e4f1, &RSSYMindexes },
-	{ "indexesModTime", 0x069ea167, 0x005d40f1, &RSSYMindexesmodtime },
-	{ "indexnextuid", 0x3594ea91, 0x005d39d5, &RSSYMindexnextuid },
-	{ "indexObjects", 0xfe98faf2, 0x005d39b5, &RSSYMindexobjects },
-	{ "indexPath", 0x68b4e63d, 0x003b3ec5, &RSSYMindexpath },
-	{ "IndexValidTest", 0x9691e8e8, 0x003e874d, &RSSYMindexvalidtest },
-	{ "info", 0x6902a4cc, 0x003b3ee1, &RSSYMinfo },
-	{ "infoModTime", 0x1d3638a3, 0x005d4111, &RSSYMinfomodtime },
-	{ "inhibitbaseromwrecregistration", 0xb37a62fc, 0x003b3ef9, &RSSYMinhibitbaseromwrecregistration },
-	{ "inhibitSymbolsDictionary", 0x00902076, 0x003b3f29, &RSSYMinhibitsymbolsdictionary },
-	{ "initialized", 0x0620d806, 0x003b3f55, &RSSYMinitialized },
-	{ "ink", 0xacf97552, 0x003b3f71, &RSSYMink },
-	{ "ink2", 0x93cf3b74, 0x003b3f85, &RSSYMink2 },
-	{ "InkMarks", 0xc3c11760, 0x003b3f9d, &RSSYMinkmarks },
-	{ "inkPrintingScale", 0xbb1ff3cd, 0x0058ad1d, &RSSYMinkprintingscale },
-	{ "inkWord", 0xf973b5ae, 0x003b3fb9, &RSSYMinkword },
-	{ "inkWordScaling", 0x069ea167, 0x003ba4e9, &RSSYMinkwordscaling },
-	{ "input", 0x36ae3110, 0x003ba509, &RSSYMinput },
-	{ "inputDevice", 0x344b9940, 0x00445f4d, &RSSYMinputdevice },
-	{ "inputForm", 0x916ca3a4, 0x003b3fd1, &RSSYMinputform },
-	{ "inputGain", 0x96dfa777, 0x00445f69, &RSSYMinputgain },
-	{ "inputmask", 0x9fb0d5dc, 0x003b3fed, &RSSYMinputmask },
-	{ "InputScript", 0x125030fd, 0x003b4009, &RSSYMinputscript },
-	{ "insertHeight", 0x6932af9e, 0x003b4025, &RSSYMinsertheight },
-	{ "insertItems", 0x6b4788df, 0x003ba521, &RSSYMinsertitems },
-	{ "insertOffset", 0x103b57bc, 0x003ba53d, &RSSYMinsertoffset },
-	{ "InstallPart", 0xdb54415e, 0x003aaa59, &RSSYMinstallpart },
-	{ "InstallScript", 0x8191618c, 0x003b4045, &RSSYMinstallscript },
-	{ "InstanceNotesData", 0x23a4cf38, 0x003b4065, &RSSYMinstancenotesdata },
-	{ "instructions", 0x83a63acd, 0x0056086d, &RSSYMinstructions },
-	{ "int", 0x3cecbcd3, 0x0043e435, &RSSYMint },
-	{ "integer", 0x15fc1a1e, 0x003b4089, &RSSYMinteger },
-	{ "InterConnect", 0x2cc3bc2c, 0x0058814d, &RSSYMinterconnect },
-	{ "internal", 0xe91aaa35, 0x003b40a1, &RSSYMinternal },
-	{ "internalbuffersize", 0xc3259a42, 0x003b40bd, &RSSYMinternalbuffersize },
-	{ "international", 0x253bdf18, 0x003b40e1, &RSSYMinternational },
-	{ "iobox", 0xf16e0f39, 0x003b4101, &RSSYMiobox },
-	{ "ioBusy", 0x90eeda43, 0x003b4119, &RSSYMiobusy },
-	{ "IRConnectRequest", 0x2e8ad6de, 0x003b4131, &RSSYMirconnectrequest },
-	{ "isa", 0x95e414b5, 0x003afb15, &RSSYMisa },
-	{ "isbn", 0x6902a4cc, 0x003b4155, &RSSYMisbn },
-	{ "iscopyprotected", 0x97db3a39, 0x003b416d, &RSSYMiscopyprotected },
-	{ "isresult", 0x739aede3, 0x003b418d, &RSSYMisresult },
-	{ "IsSlotBusy", 0x0b93dbd9, 0x003aae6d, &RSSYMisslotbusy },
-	{ "italic", 0xb2ea4286, 0x003ba55d, &RSSYMitalic },
-	{ "italicData", 0xfc065850, 0x003ba575, &RSSYMitalicdata },
-	{ "item", 0x43a911f7, 0x003b41a9, &RSSYMitem },
-	{ "itemChosen", 0x24be15b7, 0x00474a11, &RSSYMitemchosen },
-	{ "ItemCompleted", 0xbaa22a6c, 0x003b41c1, &RSSYMitemcompleted },
-	{ "ItemCount", 0x26d2eef8, 0x003b41e1, &RSSYMitemcount },
-	{ "ItemMissing", 0xc43ee0c1, 0x004e416d, &RSSYMitemmissing },
-	{ "items", 0x8fa588f2, 0x003b41fd, &RSSYMitems },
-	{ "justification", 0x9e19c5fc, 0x003b4215, &RSSYMjustification },
-	{ "keepSelectionOnPaste", 0x9d007f7d, 0x00472a79, &RSSYMkeepselectiononpaste },
-	{ "key", 0x007dc961, 0x003b4235, &RSSYMkey },
-	{ "keyArrayIndex", 0x16f7ace0, 0x003b4249, &RSSYMkeyarrayindex },
-	{ "Keyboard", 0x7e80f589, 0x003b42a1, &RSSYMkeyboard },
-	{ "keyCommand", 0xd139c1a8, 0x003b4269, &RSSYMkeycommand },
-	{ "keyCommands", 0x1d3638a3, 0x003b4285, &RSSYMkeycommands },
-	{ "keyDefinitions", 0xbbeb7bbd, 0x003ba591, &RSSYMkeydefinitions },
-	{ "keyHighlightKeys", 0xacdbc195, 0x003b42bd, &RSSYMkeyhighlightkeys },
-	{ "keyMessage", 0x86869bfe, 0x003b4301, &RSSYMkeymessage },
-	{ "keyPressScript", 0x38278d33, 0x003b42e1, &RSSYMkeypressscript },
-	{ "keyReceiverView", 0xa61f6c71, 0x003b431d, &RSSYMkeyreceiverview },
-	{ "keyRepeatFrequency", 0xf1505b7c, 0x003b1015, &RSSYMkeyrepeatfrequency },
-	{ "keyRepeatThreshold", 0xda3afadf, 0x003b1039, &RSSYMkeyrepeatthreshold },
-	{ "keyResultsAreKeycodes", 0x08e3857a, 0x003b433d, &RSSYMkeyresultsarekeycodes },
-	{ "keySound", 0xe3a7a662, 0x003b4365, &RSSYMkeysound },
-	{ "kilometers", 0x0835b147, 0x003b4381, &RSSYMkilometers },
-	{ "kind", 0xb3b5ca76, 0x003b439d, &RSSYMkind },
-	{ "knobpicture", 0xe9987396, 0x003b43b5, &RSSYMknobpicture },
-	{ "label", 0x8c475e60, 0x003b43d1, &RSSYMlabel },
-	{ "labelFont", 0xc1ac3e1f, 0x003b43e9, &RSSYMlabelfont },
-	{ "labels", 0xd843d55b, 0x003b4405, &RSSYMlabels },
-	{ "labelsFilter", 0x6ea5b371, 0x003b441d, &RSSYMlabelsfilter },
-	{ "labelstext", 0xb4b15d38, 0x003b443d, &RSSYMlabelstext },
-	{ "labelStyle", 0x612d0929, 0x003b4459, &RSSYMlabelstyle },
-	{ "landscape", 0x57128973, 0x003b4475, &RSSYMlandscape },
-	{ "language", 0x75afc724, 0x003b4491, &RSSYMlanguage },
-	{ "last", 0x5abe7294, 0x003b44ad, &RSSYMlast },
-	{ "lastcommunicationwithdesktop", 0x109b6d60, 0x003b44c5, &RSSYMlastcommunicationwithdesktop },
-	{ "lastex", 0x62c41909, 0x003b44f5, &RSSYMlastex },
-	{ "LastExData", 0xabe02ed3, 0x003b450d, &RSSYMlastexdata },
-	{ "lastexerror", 0xe4256fc3, 0x003b4529, &RSSYMlastexerror },
-	{ "lastexmessage", 0xe8cceba6, 0x003b4545, &RSSYMlastexmessage },
-	{ "lastItem", 0x9e67848b, 0x003b4565, &RSSYMlastitem },
-	{ "lastName", 0xf75edc6d, 0x003b4581, &RSSYMlastname },
-	{ "lastnamephonetic", 0x05d31977, 0x003b459d, &RSSYMlastnamephonetic },
-	{ "lastPolyHiliteChanged", 0xb20106d9, 0x003ba5b1, &RSSYMlastpolyhilitechanged },
-	{ "lastRecMemWarning", 0xf0070a2b, 0x005c86f9, &RSSYMlastrecmemwarning },
-	{ "lastTextChanged", 0x0d5af68b, 0x003b45c1, &RSSYMlasttextchanged },
-	{ "lastTextHiliteChanged", 0x50388092, 0x003ba5d9, &RSSYMlasttexthilitechanged },
-	{ "lastTopic", 0x0fbd8e5b, 0x003b45e1, &RSSYMlasttopic },
-	{ "lastUID", 0x07b7e7e6, 0x005d40d9, &RSSYMlastuid },
-	{ "latitude", 0x4ae3307c, 0x003b45fd, &RSSYMlatitude },
-	{ "layout", 0x6b95476e, 0x003b4619, &RSSYMlayout },
-	{ "lcdContrast", 0xd28312f9, 0x003b4631, &RSSYMlcdcontrast },
-	{ "learningdata", 0x2965919a, 0x003b464d, &RSSYMlearningdata },
-	{ "learningEnabledOption", 0xa92fd874, 0x003b466d, &RSSYMlearningenabledoption },
-	{ "left", 0xcacb2b13, 0x003b4695, &RSSYMleft },
-	{ "leftMargin", 0x6f713b61, 0x00463ba5, &RSSYMleftmargin },
-	{ "leftMarkGap", 0x14650a3e, 0x003b46ad, &RSSYMleftmarkgap },
-	{ "len", 0xd2530827, 0x003b46c9, &RSSYMlen },
-	{ "length", 0x1d83f732, 0x003a5f71, &RSSYMlength },
-	{ "letter", 0xc48c9f50, 0x003ba601, &RSSYMletter },
-	{ "letterimages", 0x7776e1d6, 0x003b46dd, &RSSYMletterimages },
-	{ "letters", 0x1089164b, 0x003b0399, &RSSYMletters },
-	{ "lettersCursiveOption", 0x39231ff5, 0x003b46fd, &RSSYMletterscursiveoption },
-	{ "letterSetSelection", 0xa69d35d2, 0x003b4725, &RSSYMlettersetselection },
-	{ "letterSpaceCursiveOption", 0xe407bc06, 0x003b4749, &RSSYMletterspacecursiveoption },
-	{ "letterWeights", 0xe359e7d3, 0x003b4775, &RSSYMletterweights },
-	{ "level", 0x617ac7b8, 0x003b4795, &RSSYMlevel },
-	{ "lex", 0x007dc961, 0x003ba619, &RSSYMlex },
-	{ "lexical", 0xab626572, 0x003ba62d, &RSSYMlexical },
-	{ "Lexicon", 0x8eda0102, 0x003ba645, &RSSYMlexicon },
-	{ "library", 0x69806e2d, 0x003b47ad, &RSSYMlibrary },
-	{ "limit", 0xb4ff1bc7, 0x003b47c5, &RSSYMlimit },
-	{ "limitBounds", 0x62765a7a, 0x00472aa1, &RSSYMlimitbounds },
-	{ "line", 0xf024bde8, 0x003b47dd, &RSSYMline },
-	{ "lineAtATime", 0x762d9085, 0x003b47f5, &RSSYMlineatatime },
-	{ "lineBreakTable", 0x1184a90d, 0x003ba65d, &RSSYMlinebreaktable },
-	{ "linegrid", 0xa3da885e, 0x004dda01, &RSSYMlinegrid },
-	{ "lineHeight", 0x7db56d99, 0x003b4811, &RSSYMlineheight },
-	{ "lineIndent", 0x0da8b51a, 0x003b482d, &RSSYMlineindent },
-	{ "lineNumber", 0x612d0929, 0x005d4065, &RSSYMlinenumber },
-	{ "lines", 0x3c2134e3, 0x003b4849, &RSSYMlines },
-	{ "lineSpacing", 0x762d9085, 0x0047e7c5, &RSSYMlinespacing },
-	{ "linkedDictID", 0xecf69e28, 0x003b4861, &RSSYMlinkeddictid },
-	{ "list", 0x4c7a405c, 0x003b4881, &RSSYMlist },
-	{ "listViewFlags", 0x8fd593c4, 0x005265d9, &RSSYMlistviewflags },
-	{ "literals", 0xc3c11760, 0x005cec89, &RSSYMliterals },
-	{ "lithium", 0xbd04c23c, 0x003b4899, &RSSYMlithium },
-	{ "loadLetterWeights", 0xe1c2d7f3, 0x003afba9, &RSSYMloadletterweights },
-	{ "localDictSlot", 0xd1b78b09, 0x003b48b1, &RSSYMlocaldictslot },
-	{ "locale", 0xfd9d6830, 0x003b48d1, &RSSYMlocale },
-	{ "locales", 0x4999df2b, 0x003b48e9, &RSSYMlocales },
-	{ "localeSym", 0xe192cd21, 0x003ba67d, &RSSYMlocalesym },
-	{ "localeTable", 0x7ba09458, 0x003b4901, &RSSYMlocaletable },
-	{ "localFind", 0xf54a032c, 0x003b491d, &RSSYMlocalfind },
-	{ "localId", 0x7d37a438, 0x003ba699, &RSSYMlocalid },
-	{ "location", 0x703cc351, 0x003b4939, &RSSYMlocation },
-	{ "LockedCardMountError", 0x15de6661, 0x0058a4b9, &RSSYMlockedcardmounterror },
-	{ "longDateDelim", 0xfc8421b1, 0x003ba6b1, &RSSYMlongdatedelim },
-	{ "longDateFormat", 0x14e2d39f, 0x003b4955, &RSSYMlongdateformat },
-	{ "longDateOrder", 0x7e3336fa, 0x003ba6d1, &RSSYMlongdateorder },
-	{ "longDayOfWeekStrSpec", 0x4409279b, 0x003b4975, &RSSYMlongdayofweekstrspec },
-	{ "longDaySuffix", 0xf19e1a0b, 0x003b9bd5, &RSSYMlongdaysuffix },
-	{ "longDofWeek", 0x67e95e4d, 0x003b499d, &RSSYMlongdofweek },
-	{ "longitude", 0x1e01c093, 0x003b49b9, &RSSYMlongitude },
-	{ "longMonth", 0xea63fb86, 0x003ba6f1, &RSSYMlongmonth },
-	{ "longMonthSuffix", 0xc605fb73, 0x003b9bb5, &RSSYMlongmonthsuffix },
-	{ "longYearSuffix", 0x3d9a9106, 0x003b9b95, &RSSYMlongyearsuffix },
-	{ "look", 0xf8f5ec4d, 0x003b49d5, &RSSYMlook },
-	{ "loops", 0x5c07c3e5, 0x00436b45, &RSSYMloops },
-	{ "low", 0x907110e2, 0x003b49ed, &RSSYMlow },
-	{ "lowerList", 0x2fa41d5d, 0x003ba70d, &RSSYMlowerlist },
-	{ "macFontID", 0x853d4aad, 0x003ba729, &RSSYMmacfontid },
-	{ "machineType", 0xa45851bf, 0x003b4a01, &RSSYMmachinetype },
-	{ "MacPict", 0x0d2aebb9, 0x003b4a1d, &RSSYMmacpict },
-	{ "mailAccount", 0x50d3fdb0, 0x003b4a35, &RSSYMmailaccount },
-	{ "mailconnector", 0xf7111dde, 0x003b4a51, &RSSYMmailconnector },
-	{ "maillist", 0x25899da7, 0x003b4a71, &RSSYMmaillist },
-	{ "mailNavigate", 0x1b215f62, 0x003b4a8d, &RSSYMmailnavigate },
-	{ "mailnavigator", 0xf7111dde, 0x003b4aad, &RSSYMmailnavigator },
-	{ "mailPassword", 0x5aee7d66, 0x003b4acd, &RSSYMmailpassword },
-	{ "mailPhone", 0x76f91875, 0x003b4aed, &RSSYMmailphone },
-	{ "MailReceiveStatus", 0x438b5e3a, 0x0059a809, &RSSYMmailreceivestatus },
-	{ "mailSendText", 0xe2109682, 0x003b4b09, &RSSYMmailsendtext },
-	{ "mailSlip", 0xacabb6c3, 0x003b03ed, &RSSYMmailslip },
-	{ "mainFormat", 0x86869bfe, 0x003b4b29, &RSSYMmainformat },
-	{ "major", 0xffb24171, 0x005821d9, &RSSYMmajor },
-	{ "manualDial", 0xedc22618, 0x003b4b45, &RSSYMmanualdial },
-	{ "manualDialing", 0x21ddb486, 0x003b4b61, &RSSYMmanualdialing },
-	{ "manufacturedate", 0xdf303551, 0x003b4b81, &RSSYMmanufacturedate },
-	{ "manufacturer", 0xcafb35e5, 0x003b4ba1, &RSSYMmanufacturer },
-	{ "map", 0x341b8e6e, 0x003afc45, &RSSYMmap },
-	{ "MapCursor", 0x9fb0d5dc, 0x003ab7d5, &RSSYMmapcursor },
-	{ "mapFromUnicode", 0x5151c711, 0x003ba745, &RSSYMmapfromunicode },
-	{ "mapping", 0xd98d26ac, 0x003b4bc1, &RSSYMmapping },
-	{ "mapToUnicode", 0xb3e5d548, 0x003ba765, &RSSYMmaptounicode },
-	{ "mark", 0xcacb2b13, 0x003b4bd9, &RSSYMmark },
-	{ "MarkBusy", 0x6ac9bf7e, 0x00472ef9, &RSSYMmarkbusy },
-	{ "markers", 0x69806e2d, 0x005265f9, &RSSYMmarkers },
-	{ "MarkNotBusy", 0x5d0356a7, 0x00472f9d, &RSSYMmarknotbusy },
-	{ "marks", 0x16c7a20e, 0x003b4bf1, &RSSYMmarks },
-	{ "MarkSlotBusy", 0x6c90da30, 0x003ab89d, &RSSYMmarkslotbusy },
-	{ "MarkSlotNotBusy", 0x5eca7159, 0x003ab8bd, &RSSYMmarkslotnotbusy },
-	{ "markupButton", 0xf3b2f34c, 0x003b4c09, &RSSYMmarkupbutton },
-	{ "markupLayer", 0x3d1cc7a5, 0x003b4c29, &RSSYMmarkuplayer },
-	{ "mask", 0x6902a4cc, 0x003ba785, &RSSYMmask },
-	{ "maskdictionaries", 0xeebdb8da, 0x003b4c45, &RSSYMmaskdictionaries },
-	{ "matched", 0x40c8b0c6, 0x003ba79d, &RSSYMmatched },
-	{ "matchstring", 0xad298024, 0x003b4c69, &RSSYMmatchstring },
-	{ "mathline", 0x1cb86f42, 0x003ba7b5, &RSSYMmathline },
-	{ "mathoperator", 0x5aee7d66, 0x003ba7d1, &RSSYMmathoperator },
-	{ "max", 0x25d75c36, 0x003afc59, &RSSYMmax },
-	{ "maximum", 0xf973b5ae, 0x003b4c85, &RSSYMmaximum },
-	{ "maxLevel", 0x875223ee, 0x003b4c9d, &RSSYMmaxlevel },
-	{ "maxValue", 0x9e67848b, 0x003b4cb9, &RSSYMmaxvalue },
-	{ "meal_act", 0x95965626, 0x003ba7f1, &RSSYMmeal_act },
-	{ "medium", 0x7f4c7d79, 0x003b4cd5, &RSSYMmedium },
-	{ "meeting", 0xfee6b981, 0x003b0409, &RSSYMmeeting },
-	{ "MeetingNotes", 0xe2109682, 0x003b4ced, &RSSYMmeetingnotes },
-	{ "meetingoverview", 0xf9a3c080, 0x003b4d0d, &RSSYMmeetingoverview },
-	{ "MeetingSoup", 0x17c334d0, 0x003b4d2d, &RSSYMmeetingsoup },
-	{ "meetingType", 0x00add433, 0x003b4d49, &RSSYMmeetingtype },
-	{ "meetingTypeRegistry", 0x37d9cea4, 0x003b4d65, &RSSYMmeetingtyperegistry },
-	{ "message", 0x8608d29d, 0x003b4d89, &RSSYMmessage },
-	{ "meta_level", 0x69fe378e, 0x003ba80d, &RSSYMmeta_level },
-	{ "metric", 0x59f2eaa4, 0x003b4da1, &RSSYMmetric },
-	{ "midNightForm", 0xb3e5d548, 0x003ba829, &RSSYMmidnightform },
-	{ "miles", 0x9de9bb2a, 0x003b4db9, &RSSYMmiles },
-	{ "mincho", 0xa4a6104e, 0x003b4dd1, &RSSYMmincho },
-	{ "minDragDistance", 0x749680a5, 0x003b4e21, &RSSYMmindragdistance },
-	{ "minimalChildren", 0x4f3cedd0, 0x003b4de9, &RSSYMminimalchildren },
-	{ "minimum", 0xbd04c23c, 0x003b4e09, &RSSYMminimum },
-	{ "minor", 0x6a4bf61d, 0x005821f1, &RSSYMminor },
-	{ "minusPrefix", 0x45edf60a, 0x003b4e41, &RSSYMminusprefix },
-	{ "minusSuffix", 0x99724a19, 0x003b4e5d, &RSSYMminussuffix },
-	{ "minute", 0x00fb92c2, 0x003b4e79, &RSSYMminute },
-	{ "minuteLeadingZ", 0xa4d61b20, 0x003ba849, &RSSYMminuteleadingz },
-	{ "minValue", 0x61f89119, 0x003b4e91, &RSSYMminvalue },
-	{ "MiscCardError", 0x33801150, 0x003b4ead, &RSSYMmisccarderror },
-	{ "missingIndex", 0xe2109682, 0x005d2ee1, &RSSYMmissingindex },
-	{ "mod", 0x708a81e0, 0x003afc9d, &RSSYMmod },
-	{ "modalstate", 0x86869bfe, 0x003afc81, &RSSYMmodalstate },
-	{ "modem", 0xac2ded62, 0x003b4ecd, &RSSYMmodem },
-	{ "modemName", 0x48ce573b, 0x003b9a95, &RSSYMmodemname },
-	{ "modemNavigate", 0xee3fef79, 0x003b4ee5, &RSSYMmodemnavigate },
-	{ "modemNavigator", 0xca2fadf5, 0x003b4f05, &RSSYMmodemnavigator },
-	{ "modemSoundVolume", 0x45a0377b, 0x003b4f25, &RSSYMmodemsoundvolume },
-	{ "modifiers", 0x8e0e7912, 0x003b4f49, &RSSYMmodifiers },
-	{ "modtime", 0xb43393d7, 0x003b4f65, &RSSYMmodtime },
-	{ "monAddIn", 0x2afca17a, 0x004acec9, &RSSYMmonaddin },
-	{ "month", 0x08836fd6, 0x003b4f7d, &RSSYMmonth },
-	{ "monthChangedScript", 0xba546bdd, 0x003b4f95, &RSSYMmonthchangedscript },
-	{ "monthDayStrSpec", 0xeb5f8e48, 0x003ba869, &RSSYMmonthdaystrspec },
-	{ "monthLeadingZ", 0xac5df834, 0x003ba889, &RSSYMmonthleadingz },
-	{ "morningStr", 0x648b33bb, 0x003ba8a9, &RSSYMmorningstr },
-	{ "moveCaret", 0x06ec5ff6, 0x003ba8c5, &RSSYMmovecaret },
-	{ "mtgAlarm", 0xf75edc6d, 0x003b4fb9, &RSSYMmtgalarm },
-	{ "mtgDone", 0x15fc1a1e, 0x003b4fd5, &RSSYMmtgdone },
-	{ "mtgDuration", 0xdb54415e, 0x003b4fed, &RSSYMmtgduration },
-	{ "mtgIconType", 0xf269a1fb, 0x003b5009, &RSSYMmtgicontype },
-	{ "mtgInfo", 0xcb48f474, 0x003b5025, &RSSYMmtginfo },
-	{ "mtgnotes", 0x45702ca9, 0x003b503d, &RSSYMmtgnotes },
-	{ "mtgPriority", 0x2965919a, 0x003b5059, &RSSYMmtgpriority },
-	{ "mtgStartDate", 0x1e7f89f4, 0x003b5075, &RSSYMmtgstartdate },
-	{ "mtgStopDate", 0x9ee54dec, 0x003b5095, &RSSYMmtgstopdate },
-	{ "mtgText", 0x3eb3d785, 0x003b50b1, &RSSYMmtgtext },
-	{ "mtgtype", 0x640d6a5a, 0x003b50c9, &RSSYMmtgtype },
-	{ "multiSlot", 0x215feb25, 0x003b50e1, &RSSYMmultislot },
-	{ "mungeContentScript", 0xd4c7f70c, 0x003b50fd, &RSSYMmungecontentscript },
-	{ "name", 0x9ca069d9, 0x003b5121, &RSSYMname },
-	{ "nameIndex", 0xfe1b3191, 0x00487cc9, &RSSYMnameindex },
-	{ "names", 0xe89ce0d4, 0x003ba8e1, &RSSYMnames },
-	{ "navigator", 0x1e01c093, 0x003b5139, &RSSYMnavigator },
-	{ "NCKLastBackupTime", 0x48fe620d, 0x00481afd, &RSSYMncklastbackuptime },
-	{ "negate", 0x767b4f14, 0x003afccd, &RSSYMnegate },
-	{ "net", 0xc40ed5ef, 0x003b5155, &RSSYMnet },
-	{ "newccount", 0xea63fb86, 0x003b5169, &RSSYMnewccount },
-	{ "newiterator", 0x90a11bb4, 0x003a5f55, &RSSYMnewiterator },
-	{ "newtonuniqueid", 0xcd8dd887, 0x003b51a5, &RSSYMnewtonuniqueid },
-	{ "newt_feature", 0x190c8621, 0x003b5185, &RSSYMnewt_feature },
-	{ "newwritecount", 0xa177f08e, 0x003b51c5, &RSSYMnewwritecount },
-	{ "newYork", 0x7b22caf7, 0x003b51e5, &RSSYMnewyork },
-	{ "nextinputspec", 0x289a09aa, 0x003b51fd, &RSSYMnextinputspec },
-	{ "nextStyle", 0xfc065850, 0x003ba8f9, &RSSYMnextstyle },
-	{ "nicd", 0xc1f9fcae, 0x003b521d, &RSSYMnicd },
-	{ "nimh", 0x6902a4cc, 0x003b5235, &RSSYMnimh },
-	{ "no", 0x0805a675, 0x003b524d, &RSSYMno },
-	{ "node", 0xb3b5ca76, 0x003b5261, &RSSYMnode },
-	{ "noFX", 0xae42c6a3, 0x0044880d, &RSSYMnofx },
-	{ "nogrid", 0xbbbb70eb, 0x004dd9cd, &RSSYMnogrid },
-	{ "noisewords", 0xaf3e5965, 0x003ba915, &RSSYMnoisewords },
-	{ "noletters", 0x188ebcc0, 0x003b5279, &RSSYMnoletters },
-	{ "noMarkList", 0x1f4b11e4, 0x003ba931, &RSSYMnomarklist },
-	{ "none", 0xe1e08bb0, 0x003cafb9, &RSSYMnone },
-	{ "noonForm", 0x6ac9bf7e, 0x003ba94d, &RSSYMnoonform },
-	{ "noremap", 0x8eda0102, 0x003b5295, &RSSYMnoremap },
-	{ "normal", 0x71084b41, 0x003ba969, &RSSYMnormal },
-	{ "NoSelection", 0x0ef2066b, 0x003b52ad, &RSSYMnoselection },
-	{ "not", 0xf2399729, 0x003a5e5d, &RSSYMnot },
-	{ "notes", 0xe329dd01, 0x003b52c9, &RSSYMnotes },
-	{ "NotesData", 0x2c45f2cb, 0x003b52e1, &RSSYMnotesdata },
-	{ "Notify", 0x547fe6d1, 0x003b52fd, &RSSYMnotify },
-	{ "nTopics", 0x35e2a920, 0x00514c5d, &RSSYMntopics },
-	{ "nullproxy", 0x04d786b5, 0x003b5315, &RSSYMnullproxy },
-	{ "numArgs", 0x5b3c3bf5, 0x00437e11, &RSSYMnumargs },
-	{ "number", 0x71084b41, 0x003b5331, &RSSYMnumber },
-	{ "numberDictionary", 0xe94ab507, 0x003b5349, &RSSYMnumberdictionary },
-	{ "numberformat", 0xe2109682, 0x003b536d, &RSSYMnumberformat },
-	{ "numberOfParts", 0x08b37aa8, 0x003ba981, &RSSYMnumberofparts },
-	{ "numbersCursiveOption", 0xe59ecbe6, 0x003b538d, &RSSYMnumberscursiveoption },
-	{ "numChannels", 0xbb6db25c, 0x003b53b5, &RSSYMnumchannels },
-	{ "numcols", 0xd41a22d9, 0x003b53d1, &RSSYMnumcols },
-	{ "numdrawn", 0x2e5acc0c, 0x003b53e9, &RSSYMnumdrawn },
-	{ "numericKeyboard", 0xab927044, 0x003b5405, &RSSYMnumerickeyboard },
-	{ "numLines", 0x90235253, 0x003b5425, &RSSYMnumlines },
-	{ "numparts", 0xd563742a, 0x003bbcfd, &RSSYMnumparts },
-	{ "numRows", 0xe5bc7fa3, 0x003b5441, &RSSYMnumrows },
-	{ "objects", 0x9d1e333a, 0x0056026d, &RSSYMobjects },
-	{ "offset", 0x349957cf, 0x003b5459, &RSSYMoffset },
-	{ "onelineparagraphs", 0x0c8f6e9b, 0x003ba9a1, &RSSYMonelineparagraphs },
-	{ "oneO", 0x80180569, 0x003b5471, &RSSYMoneo },
-	{ "onlineslip", 0xcbc6bdd5, 0x003b5489, &RSSYMonlineslip },
-	{ "op", 0x447499e7, 0x005d2f01, &RSSYMop },
-	{ "opCode", 0x2bc8296a, 0x003b54a5, &RSSYMopcode },
-	{ "OpenKeypadFor", 0x8704655f, 0x003abf01, &RSSYMopenkeypadfor },
-	{ "openoptions", 0xbecbdcee, 0x003ba9c5, &RSSYMopenoptions },
-	{ "optimize", 0x45702ca9, 0x003b54bd, &RSSYMoptimize },
-	{ "option", 0x547fe6d1, 0x003b54d9, &RSSYMoption },
-	{ "order", 0xda58ae9c, 0x003b54f1, &RSSYMorder },
-	{ "orientation", 0x9ee54dec, 0x003b5509, &RSSYMorientation },
-	{ "origAscent", 0x24be15b7, 0x003ba9e1, &RSSYMorigascent },
-	{ "origDescent", 0xa45851bf, 0x003ba9fd, &RSSYMorigdescent },
-	{ "origFontSize", 0x63bfabcb, 0x003baa19, &RSSYMorigfontsize },
-	{ "origin", 0xd2d0d188, 0x003b5525, &RSSYMorigin },
-	{ "originalBounds", 0xa4d61b20, 0x003baa39, &RSSYMoriginalbounds },
-	{ "origPenSize", 0x798bbb17, 0x003baa59, &RSSYMorigpensize },
-	{ "OrigPhrase", 0x3bd37654, 0x003abfc1, &RSSYMorigphrase },
-	{ "origWidth", 0xd34e9ae9, 0x003baa75, &RSSYMorigwidth },
-	{ "origXHeight", 0x70ba8cb2, 0x003baa91, &RSSYMorigxheight },
-	{ "outbox", 0x463bb499, 0x003b553d, &RSSYMoutbox },
-	{ "outerframe", 0xf12050aa, 0x003b5555, &RSSYMouterframe },
-	{ "outlineClickScript", 0x5318e1c3, 0x003b5571, &RSSYMoutlineclickscript },
-	{ "outputDevice", 0x2750b859, 0x00445f2d, &RSSYMoutputdevice },
-	{ "oval", 0x1e4f7f22, 0x003b5595, &RSSYMoval },
-	{ "overlapscrollamount", 0x461e00dc, 0x003b55ad, &RSSYMoverlapscrollamount },
-	{ "owner", 0x1f98d073, 0x003b55d1, &RSSYMowner },
-	{ "ownerApp", 0x2e5acc0c, 0x003b55e9, &RSSYMownerapp },
-	{ "package", 0x129def8c, 0x003b5605, &RSSYMpackage },
-	{ "packageCallback", 0x5151c711, 0x003b561d, &RSSYMpackagecallback },
-	{ "PackageEntry", 0x85bb140e, 0x003b563d, &RSSYMpackageentry },
-	{ "packageId", 0x372bfa71, 0x003b565d, &RSSYMpackageid },
-	{ "packageName", 0xaf3e5965, 0x003b5679, &RSSYMpackagename },
-	{ "packageSize", 0xc0e0b62f, 0x003b5695, &RSSYMpackagesize },
-	{ "packageStyle", 0xe7839a55, 0x003b56b1, &RSSYMpackagestyle },
-	{ "packageType", 0x14650a3e, 0x003b56d1, &RSSYMpackagetype },
-	{ "packageversion", 0xfdcd7302, 0x003b56ed, &RSSYMpackageversion },
-	{ "page", 0x23c282f5, 0x003b570d, &RSSYMpage },
-	{ "pageBounds", 0xd139c1a8, 0x003b5725, &RSSYMpagebounds },
-	{ "pageCount", 0x06ec5ff6, 0x003b5741, &RSSYMpagecount },
-	{ "pageNumber", 0x94cace36, 0x003b575d, &RSSYMpagenumber },
-	{ "pages", 0x6fbef9f0, 0x003baaad, &RSSYMpages },
-	{ "PageSize", 0xd2054998, 0x003b5779, &RSSYMpagesize },
-	{ "pageSound", 0x06ec5ff6, 0x003b5795, &RSSYMpagesound },
-	{ "pagesShowing", 0x076a2957, 0x003b57b1, &RSSYMpagesshowing },
-	{ "pagestr", 0x07b7e7e6, 0x003b57d1, &RSSYMpagestr },
-	{ "pageTurnAwayScript", 0x72ff70c5, 0x003b57e9, &RSSYMpageturnawayscript },
-	{ "pageTurnToScript", 0x1202726e, 0x003b580d, &RSSYMpageturntoscript },
-	{ "paneIndex", 0xd8c19ebc, 0x003b5831, &RSSYMpaneindex },
-	{ "paperroll", 0xd34e9ae9, 0x003b584d, &RSSYMpaperroll },
-	{ "para", 0x7746d704, 0x003b5891, &RSSYMpara },
-	{ "parameter", 0xefd6ff59, 0x003b58a9, &RSSYMparameter },
-	{ "params", 0x59f2eaa4, 0x003b58c5, &RSSYMparams },
-	{ "parity", 0x547fe6d1, 0x003b58dd, &RSSYMparity },
-	{ "Parse", 0x3c2134e3, 0x003baac5, &RSSYMparse },
-	{ "parsed_number", 0x6a7c00ef, 0x003baadd, &RSSYMparsed_number },
-	{ "parsed_phone", 0x975d70d8, 0x003baafd, &RSSYMparsed_phone },
-	{ "partFrame", 0x8e0e7912, 0x003b58f5, &RSSYMpartframe },
-	{ "partialfrequency", 0xe94ab507, 0x003b5911, &RSSYMpartialfrequency },
-	{ "partialscript", 0x5366a052, 0x003b5935, &RSSYMpartialscript },
-	{ "partIndex", 0x96dfa777, 0x003b5955, &RSSYMpartindex },
-	{ "parts", 0x816156ba, 0x003bbd19, &RSSYMparts },
-	{ "partType", 0x372bfa71, 0x003b5971, &RSSYMparttype },
-	{ "parttypes", 0x8328716c, 0x003bbd31, &RSSYMparttypes },
-	{ "par_separateLettersFlag", 0x52cb2334, 0x003b5869, &RSSYMpar_separatelettersflag },
-	{ "passAll", 0x526b0d90, 0x003b598d, &RSSYMpassall },
-	{ "passBeginning", 0x41c44388, 0x003b59a5, &RSSYMpassbeginning },
-	{ "passOne", 0xe25e5511, 0x003b59c5, &RSSYMpassone },
-	{ "passwordkey", 0x825ce97c, 0x00481ac1, &RSSYMpasswordkey },
-	{ "patches", 0x60af3fc8, 0x0049efe9, &RSSYMpatches },
-	{ "patchVersion", 0x5aee7d66, 0x003b59dd, &RSSYMpatchversion },
-	{ "path", 0x073a1e85, 0x003b59fd, &RSSYMpath },
-	{ "pathExpr", 0x2e5acc0c, 0x003b5a15, &RSSYMpathexpr },
-	{ "pattern", 0xf973b5ae, 0x003b5a31, &RSSYMpattern },
-	{ "pen", 0x4b30ef0b, 0x00436b79, &RSSYMpen },
-	{ "penPattern", 0x44a4a4b9, 0x003b5a49, &RSSYMpenpattern },
-	{ "pensize", 0xf973b5ae, 0x003b5a65, &RSSYMpensize },
-	{ "penSoundEffects", 0x9d4e3e0c, 0x003b5a7d, &RSSYMpensoundeffects },
-	{ "percentDone", 0xa45851bf, 0x003b5a9d, &RSSYMpercentdone },
-	{ "Perform", 0x1ecd4883, 0x003ac13d, &RSSYMperform },
-	{ "person", 0x1810f35f, 0x003bab1d, &RSSYMperson },
-	{ "personadded", 0xfd4fa9a1, 0x003bab35, &RSSYMpersonadded },
-	{ "phone1", 0xe6880793, 0x003b5ab9, &RSSYMphone1 },
-	{ "phone1type", 0xe84f2245, 0x003b5ad1, &RSSYMphone1type },
-	{ "phone2", 0x84bf814c, 0x003b5aed, &RSSYMphone2 },
-	{ "phone2type", 0x86869bfe, 0x003b5b05, &RSSYMphone2type },
-	{ "phone3", 0x22f6fb05, 0x003b5b21, &RSSYMphone3 },
-	{ "phone3type", 0x24be15b7, 0x003b5b39, &RSSYMphone3type },
-	{ "phone4", 0xc12e74be, 0x003b5b55, &RSSYMphone4 },
-	{ "phone4type", 0xc2f58f70, 0x003b5b6d, &RSSYMphone4type },
-	{ "phoneDictionary", 0x162c24f0, 0x003b5b89, &RSSYMphonedictionary },
-	{ "phoneKeyboard", 0x1c6ab0b3, 0x003b5ba9, &RSSYMphonekeyboard },
-	{ "phoneNumber", 0x0ef2066b, 0x003bab51, &RSSYMphonenumber },
-	{ "phones", 0xe9e63225, 0x003b5bc9, &RSSYMphones },
-	{ "phoneText", 0x7a574307, 0x003b0495, &RSSYMphonetext },
-	{ "PhoneTypes", 0xebad4cd7, 0x003bab6d, &RSSYMphonetypes },
-	{ "phrases", 0x07b7e7e6, 0x003bab89, &RSSYMphrases },
-	{ "pickable", 0xe5bc7fa3, 0x003b5be1, &RSSYMpickable },
-	{ "pickActionScript", 0xd235546a, 0x003b5bfd, &RSSYMpickactionscript },
-	{ "pickAutoClose", 0xe8cceba6, 0x003b5c21, &RSSYMpickautoclose },
-	{ "pickBottomMargin", 0xd235546a, 0x003baba1, &RSSYMpickbottommargin },
-	{ "pickCancelledScript", 0xa12a31ff, 0x003b5c41, &RSSYMpickcancelledscript },
-	{ "pickItems", 0xe192cd21, 0x003babc5, &RSSYMpickitems },
-	{ "pickItemsMarkable", 0x402d33a8, 0x003b5c65, &RSSYMpickitemsmarkable },
-	{ "pickLeftMargin", 0xc15e7f90, 0x003babe1, &RSSYMpickleftmargin },
-	{ "pickMarkWidth", 0x6fef04c2, 0x003b5c89, &RSSYMpickmarkwidth },
-	{ "pickMaxWidth", 0xcafb35e5, 0x00474a2d, &RSSYMpickmaxwidth },
-	{ "pickRightMargin", 0x0d5af68b, 0x003bac01, &RSSYMpickrightmargin },
-	{ "pickseparator", 0x253bdf18, 0x003b5ca9, &RSSYMpickseparator },
-	{ "picksolidseparator", 0x615d13fb, 0x003b5cc9, &RSSYMpicksolidseparator },
-	{ "pickTextItemHeight", 0xff948db4, 0x003b5ced, &RSSYMpicktextitemheight },
-	{ "pickTopMargin", 0x253bdf18, 0x003bac21, &RSSYMpicktopmargin },
-	{ "pict", 0xe1e08bb0, 0x003b5d11, &RSSYMpict },
-	{ "picture", 0xbd04c23c, 0x003b5d29, &RSSYMpicture },
-	{ "picturedata", 0x0620d806, 0x003b5d41, &RSSYMpicturedata },
-	{ "pin", 0xc40ed5ef, 0x003b9c15, &RSSYMpin },
-	{ "pinBounds", 0x718614a2, 0x00472abd, &RSSYMpinbounds },
-	{ "pixels", 0xdba1ffed, 0x003b5d5d, &RSSYMpixels },
-	{ "placeadded", 0x889b753f, 0x003bac59, &RSSYMplaceadded },
-	{ "places", 0xef5935f8, 0x003bac41, &RSSYMplaces },
-	{ "plainData", 0x31b8f69e, 0x003bac75, &RSSYMplaindata },
-	{ "play", 0x972d6606, 0x003bac91, &RSSYMplay },
-	{ "playsound", 0x7a574307, 0x003afdcd, &RSSYMplaysound },
-	{ "PlaySoundIrregardlessAtVolume", 0x5c97e45b, 0x003a6b49, &RSSYMplaysoundirregardlessatvolume },
-	{ "points", 0xcd5dcdb5, 0x003baca9, &RSSYMpoints },
-	{ "poly", 0x3e360e24, 0x003b5d75, &RSSYMpoly },
-	{ "polygon", 0x279e76e8, 0x003b5d8d, &RSSYMpolygon },
-	{ "polygondata", 0x70ba8cb2, 0x003b5da5, &RSSYMpolygondata },
-	{ "polygonshape", 0x3594ea91, 0x003bacc1, &RSSYMpolygonshape },
-	{ "popup", 0xaf8c17f4, 0x003b5dc1, &RSSYMpopup },
-	{ "postalcode", 0x86869bfe, 0x003b5dd9, &RSSYMpostalcode },
-	{ "PostCommandParam", 0x59576d86, 0x003ac3c1, &RSSYMpostcommandparam },
-	{ "PostKeyString", 0x9333be56, 0x003ac401, &RSSYMpostkeystring },
-	{ "postParse", 0xb6c63679, 0x003bace1, &RSSYMpostparse },
-	{ "postQuit", 0x1aa39601, 0x003b5df5, &RSSYMpostquit },
-	{ "PPDMain", 0xfee6b981, 0x003b5e11, &RSSYMppdmain },
-	{ "preallocatedContext", 0x2baa75ad, 0x003b5e29, &RSSYMpreallocatedcontext },
-	{ "preconditions", 0xb52f2699, 0x003bacfd, &RSSYMpreconditions },
-	{ "prefsdictionaries", 0xd8f1a98e, 0x003b5e4d, &RSSYMprefsdictionaries },
-	{ "preliminaryCharge", 0xe735dbc6, 0x0045c4cd, &RSSYMpreliminarycharge },
-	{ "prencoding", 0x6f713b61, 0x003b5e71, &RSSYMprencoding },
-	{ "preparing", 0x435b5368, 0x003b5e8d, &RSSYMpreparing },
-	{ "prettyPrint", 0xf5c7cc8d, 0x003a60a9, &RSSYMprettyprint },
-	{ "prevpage", 0x0e743d0a, 0x003b5ea9, &RSSYMprevpage },
-	{ "primary_act", 0xe4256fc3, 0x003bad1d, &RSSYMprimary_act },
-	{ "printDepth", 0xe2dc1e72, 0x003a608d, &RSSYMprintdepth },
-	{ "printer", 0xaec09004, 0x003b5ec5, &RSSYMprinter },
-	{ "printerName", 0x4b60f9dd, 0x003bad39, &RSSYMprintername },
-	{ "printerPageBounds", 0x7ffa51ac, 0x003bad55, &RSSYMprinterpagebounds },
-	{ "printForm", 0xb6c63679, 0x003b0b55, &RSSYMprintform },
-	{ "printing", 0x90235253, 0x003b5edd, &RSSYMprinting },
-	{ "printInstructions", 0xdfadfeb2, 0x005d35f1, &RSSYMprintinstructions },
-	{ "PrintLength", 0x798bbb17, 0x003e80e9, &RSSYMprintlength },
-	{ "printNextPageScript", 0x828cf44e, 0x003bad79, &RSSYMprintnextpagescript },
-	{ "printProblem", 0x4caa4b2e, 0x003b5ef9, &RSSYMprintproblem },
-	{ "printType", 0x5dcede97, 0x003b5f19, &RSSYMprinttype },
-	{ "printView", 0x0a4a8a88, 0x003b5f35, &RSSYMprintview },
-	{ "priorityItems", 0x56c4cae4, 0x003b0165, &RSSYMpriorityitems },
-	{ "privateeventcollector", 0x5396ab24, 0x003b5f51, &RSSYMprivateeventcollector },
-	{ "privatetraceevents", 0xcbf6c8a7, 0x003b5f79, &RSSYMprivatetraceevents },
-	{ "processorofftime", 0xb5aceffa, 0x003b5f9d, &RSSYMprocessorofftime },
-	{ "programCounter", 0x7a098478, 0x005cf399, &RSSYMprogramcounter },
-	{ "progress", 0xbe4e138d, 0x003b5fc1, &RSSYMprogress },
-	{ "progressgauge", 0xda88b96e, 0x003b5fdd, &RSSYMprogressgauge },
-	{ "progressscript", 0x99f0137a, 0x003b5ffd, &RSSYMprogressscript },
-	{ "protocol", 0xe3a7a662, 0x005d4081, &RSSYMprotocol },
-	{ "protocolversion", 0xced729d8, 0x003b601d, &RSSYMprotocolversion },
-	{ "protoDictionaryCursor", 0x9363c928, 0x003b0b71, &RSSYMprotodictionarycursor },
-	{ "proxy", 0x5694c012, 0x003b603d, &RSSYMproxy },
-	{ "psFonts", 0x3eb3d785, 0x003bad9d, &RSSYMpsfonts },
-	{ "psName", 0x59f2eaa4, 0x003badb5, &RSSYMpsname },
-	{ "psScale", 0x3b55acf3, 0x003badcd, &RSSYMpsscale },
-	{ "pssid", 0x2ddd02ab, 0x003b6055, &RSSYMpssid },
-	{ "pssids", 0x79d979a6, 0x00582325, &RSSYMpssids },
-	{ "psSym", 0xa147e5bc, 0x003bade5, &RSSYMpssym },
-	{ "punctuationcursiveoption", 0x6e87ffb4, 0x003b606d, &RSSYMpunctuationcursiveoption },
-	{ "Query", 0xebfb0b66, 0x003ac6b5, &RSSYMquery },
-	{ "querySpec", 0xb6c63679, 0x003b6099, &RSSYMqueryspec },
-	{ "quicklooklives", 0x9f63174d, 0x003b60b5, &RSSYMquicklooklives },
-	{ "RAMSize", 0x1ecd4883, 0x003b60d5, &RSSYMramsize },
-	{ "randomState", 0x70ba8cb2, 0x005d3615, &RSSYMrandomstate },
-	{ "raw", 0x9eb5431a, 0x003b60ed, &RSSYMraw },
-	{ "rcBaseInfo", 0x66a00cfc, 0x003b6101, &RSSYMrcbaseinfo },
-	{ "rcGridInfo", 0x330247ef, 0x003b611d, &RSSYMrcgridinfo },
-	{ "rcSingleLetters", 0x4456e62a, 0x003b6139, &RSSYMrcsingleletters },
-	{ "rcvFlags", 0xd2054998, 0x003b6159, &RSSYMrcvflags },
-	{ "rcvOptions", 0xdd691a9f, 0x003b6175, &RSSYMrcvoptions },
-	{ "readOnly", 0x875223ee, 0x003b6191, &RSSYMreadonly },
-	{ "Real", 0x7746d704, 0x003ac7d1, &RSSYMreal },
-	{ "realData", 0xc062ecce, 0x003b61ad, &RSSYMrealdata },
-	{ "rebootCount", 0x90a11bb4, 0x003b61c9, &RSSYMrebootcount },
-	{ "rebootreason", 0x8048103b, 0x003b61e5, &RSSYMrebootreason },
-	{ "recConfig", 0x6e27ea10, 0x003b6205, &RSSYMrecconfig },
-	{ "receipt", 0xd98d26ac, 0x003b6221, &RSSYMreceipt },
-	{ "receivedFax", 0x22a93c76, 0x003b6239, &RSSYMreceivedfax },
-	{ "receiver", 0xf75edc6d, 0x003b6255, &RSSYMreceiver },
-	{ "Receiving", 0xd8c19ebc, 0x003badfd, &RSSYMreceiving },
-	{ "recogCitiesDictionary", 0x674de12f, 0x003b6271, &RSSYMrecogcitiesdictionary },
-	{ "recogCompaniesDictionary", 0x9b696f9d, 0x003b6299, &RSSYMrecogcompaniesdictionary },
-	{ "recogDateDictionary", 0xa9fb6064, 0x003b62c5, &RSSYMrecogdatedictionary },
-	{ "recogHonorificsDictionary", 0x23d4da0a, 0x003b62e9, &RSSYMrecoghonorificsdictionary },
-	{ "RecognitionInkWordWarning", 0xd3aeb08d, 0x005cc635, &RSSYMrecognitioninkwordwarning },
-	{ "RecognitionMemoryWarning", 0x2ebae1b0, 0x005cc609, &RSSYMrecognitionmemorywarning },
-	{ "recognizers", 0x00add433, 0x003b6315, &RSSYMrecognizers },
-	{ "recogNumberDictionary", 0x5909aef7, 0x003b6331, &RSSYMrecognumberdictionary },
-	{ "recogPhoneDictionary", 0x85eb1ee0, 0x003b6359, &RSSYMrecogphonedictionary },
-	{ "recogPropersDictionary", 0xea4647c9, 0x003b6381, &RSSYMrecogpropersdictionary },
-	{ "recogrevpropersdictionary", 0x63a1f80e, 0x003b63a9, &RSSYMrecogrevpropersdictionary },
-	{ "recogstatesabbrevsdictionary", 0xab74bc87, 0x003b63d5, &RSSYMrecogstatesabbrevsdictionary },
-	{ "recogstatesdictionary", 0x256be9ea, 0x003b6405, &RSSYMrecogstatesdictionary },
-	{ "recogTimeDictionary", 0x2baa75ad, 0x003b642d, &RSSYMrecogtimedictionary },
-	{ "record", 0x42dd8a07, 0x00445e5d, &RSSYMrecord },
-	{ "recording", 0x76f91875, 0x003b6451, &RSSYMrecording },
-	{ "rectangle", 0x853d4aad, 0x003b646d, &RSSYMrectangle },
-	{ "recvflags", 0x76f91875, 0x003b6489, &RSSYMrecvflags },
-	{ "RecvWaiting", 0x0ef2066b, 0x003b64a5, &RSSYMrecvwaiting },
-	{ "RedoChildren", 0xb958d91b, 0x003b64c1, &RSSYMredochildren },
-	{ "refCount", 0x790df1b6, 0x005cf701, &RSSYMrefcount },
-	{ "ReFlow", 0x26552597, 0x003ac771, &RSSYMreflow },
-	{ "reflowFont", 0x5bba0556, 0x003b64e1, &RSSYMreflowfont },
-	{ "reflowOptions", 0xc6d18363, 0x003b64fd, &RSSYMreflowoptions },
-	{ "RegCommConfigArray", 0x05079187, 0x003ac8e9, &RSSYMregcommconfigarray },
-	{ "region", 0x59f2eaa4, 0x003b651d, &RSSYMregion },
-	{ "regiondata", 0xa30f006e, 0x003b6535, &RSSYMregiondata },
-	{ "RegisterNewPackage", 0x8c29aaa3, 0x003accb1, &RSSYMregisternewpackage },
-	{ "rejectAll", 0x2374c466, 0x003b6551, &RSSYMrejectall },
-	{ "rejectBeginning", 0x12cdfa5e, 0x003b656d, &RSSYMrejectbeginning },
-	{ "rejectOne", 0xb3680be7, 0x003b658d, &RSSYMrejectone },
-	{ "related", 0x0d2aebb9, 0x003b65a9, &RSSYMrelated },
-	{ "RemAllButBuiltinFromDir", 0x165c2fc2, 0x003acd11, &RSSYMremallbutbuiltinfromdir },
-	{ "remoteId", 0x703cc351, 0x003bae19, &RSSYMremoteid },
-	{ "remoteWriting", 0xfa6f4870, 0x003b65c1, &RSSYMremotewriting },
-	{ "RemoveAllEntries", 0x25b9a879, 0x004a0169, &RSSYMremoveallentries },
-	{ "removeCookie", 0xb3e5d548, 0x003b65e1, &RSSYMremovecookie },
-	{ "RemoveFromStore", 0x3ee3e257, 0x0049fda5, &RSSYMremovefromstore },
-	{ "RemoveIndex", 0xe9987396, 0x004cada1, &RSSYMremoveindex },
-	{ "RemoveOldestBook", 0x006015a4, 0x003b6601, &RSSYMremoveoldestbook },
-	{ "RemovePackage", 0x9abb9b6a, 0x003aceb1, &RSSYMremovepackage },
-	{ "RemovePart", 0xbd828b9d, 0x003aced1, &RSSYMremovepart },
-	{ "removeScript", 0x63bfabcb, 0x003b6625, &RSSYMremovescript },
-	{ "RemoveSymbol", 0x01f72584, 0x005c8755, &RSSYMremovesymbol },
-	{ "rendering", 0x1530922e, 0x003b6645, &RSSYMrendering },
-	{ "ReOrientToScreen", 0x53e469b3, 0x003b6661, &RSSYMreorienttoscreen },
-	{ "RepeatingMeeting", 0xb24ec568, 0x003b6685, &RSSYMrepeatingmeeting },
-	{ "RepeatNotes", 0x62765a7a, 0x003b66a9, &RSSYMrepeatnotes },
-	{ "RepeatSoup", 0x9828f8c8, 0x003b66c5, &RSSYMrepeatsoup },
-	{ "repeatTemplate", 0xca2fadf5, 0x003b66e1, &RSSYMrepeattemplate },
-	{ "repeatTemplateAlias", 0x84a1cd8f, 0x003b6701, &RSSYMrepeattemplatealias },
-	{ "repeatType", 0x8113982b, 0x003b6725, &RSSYMrepeattype },
-	{ "replaceChars", 0x040bfec5, 0x003bae35, &RSSYMreplacechars },
-	{ "ReportDeadUnitImports", 0xafec2d98, 0x00582179, &RSSYMreportdeadunitimports },
-	{ "reqTimeout", 0xebad4cd7, 0x003b6741, &RSSYMreqtimeout },
-	{ "resolution", 0x02c2ad74, 0x003b675d, &RSSYMresolution },
-	{ "Restore2.0SystemEntry", 0xe02bc813, 0x003ad0c1, &RSSYMrestore2_2E0systementry },
-	{ "RestoreAPackageFromPieces", 0xd5c389ce, 0x003ad115, &RSSYMrestoreapackagefrompieces },
-	{ "result", 0x09ccc127, 0x003b6779, &RSSYMresult },
-	{ "retryAllowed", 0x4caa4b2e, 0x003b6791, &RSSYMretryallowed },
-	{ "retryButton", 0x1b215f62, 0x003b67b1, &RSSYMretrybutton },
-	{ "returnElt", 0x2fa41d5d, 0x00476169, &RSSYMreturnelt },
-	{ "reverseDictID", 0x58d9a425, 0x003b67cd, &RSSYMreversedictid },
-	{ "richstring", 0xcbc6bdd5, 0x003b67ed, &RSSYMrichstring },
-	{ "right", 0x16c7a20e, 0x003b6809, &RSSYMright },
-	{ "rightIndent", 0x344b9940, 0x003b6821, &RSSYMrightindent },
-	{ "rightMargin", 0xbb6db25c, 0x0047e7a9, &RSSYMrightmargin },
-	{ "rightMarkGap", 0x60618139, 0x003b683d, &RSSYMrightmarkgap },
-	{ "ringToAnswerAfter", 0x0fed992d, 0x003b685d, &RSSYMringtoanswerafter },
-	{ "ROMDictID", 0xb3680be7, 0x003b6881, &RSSYMromdictid },
-	{ "romID", 0x3c2134e3, 0x004758c9, &RSSYMromid },
-	{ "romname", 0xb43393d7, 0x003b689d, &RSSYMromname },
-	{ "ROMStage", 0x00300ad2, 0x003b68b5, &RSSYMromstage },
-	{ "ROMVersion", 0x02c2ad74, 0x003b68d1, &RSSYMromversion },
-	{ "ROMversionstring", 0x1ad3a0d3, 0x003b68ed, &RSSYMromversionstring },
-	{ "rootcontext", 0x8b2e17e1, 0x005ca2b9, &RSSYMrootcontext },
-	{ "rosIgnoreDicts", 0xea163cf7, 0x003c0519, &RSSYMrosignoredicts },
-	{ "rosMapDicts", 0xc43ee0c1, 0x003c0539, &RSSYMrosmapdicts },
-	{ "rotate180", 0xb57ce528, 0x003b6911, &RSSYMrotate180 },
-	{ "rotateleft", 0xf12050aa, 0x003b692d, &RSSYMrotateleft },
-	{ "rotateright", 0x3d1cc7a5, 0x003b6949, &RSSYMrotateright },
-	{ "roundrectangle", 0xca2fadf5, 0x003b6965, &RSSYMroundrectangle },
-	{ "rowbytes", 0xec78d4c7, 0x003b6985, &RSSYMrowbytes },
-	{ "rulers", 0xcd5dcdb5, 0x0047e679, &RSSYMrulers },
-	{ "safetoremove", 0xa5a1a310, 0x003b69a1, &RSSYMsafetoremove },
-	{ "salutationPrefix", 0xa768bdc2, 0x003bae55, &RSSYMsalutationprefix },
-	{ "samples", 0x69806e2d, 0x003b69c1, &RSSYMsamples },
-	{ "sampleSize", 0xcbc6bdd5, 0x003b69d9, &RSSYMsamplesize },
-	{ "samplingRate", 0x15ae5b8f, 0x003b69f5, &RSSYMsamplingrate },
-	{ "saveLetterWeights", 0x2702f9ca, 0x003afebd, &RSSYMsaveletterweights },
-	{ "SaveMarkup", 0x0835b147, 0x003b6a15, &RSSYMsavemarkup },
-	{ "scale", 0x7e032c28, 0x003bae79, &RSSYMscale },
-	{ "scanOffset", 0x4a17a88c, 0x003b6a31, &RSSYMscanoffset },
-	{ "schedule_act", 0x3b07ee64, 0x003bae91, &RSSYMschedule_act },
-	{ "score", 0xda58ae9c, 0x003baeb1, &RSSYMscore },
-	{ "screendepth", 0x67e95e4d, 0x003b6a4d, &RSSYMscreendepth },
-	{ "screenheight", 0x6ea5b371, 0x003b6a69, &RSSYMscreenheight },
-	{ "screenontime", 0x2cc3bc2c, 0x003b6a89, &RSSYMscreenontime },
-	{ "screenOrientation", 0x7ffa51ac, 0x00437e29, &RSSYMscreenorientation },
-	{ "screenresolutionx", 0x46e988cc, 0x003b6aa9, &RSSYMscreenresolutionx },
-	{ "screenresolutiony", 0xe5210285, 0x003b6acd, &RSSYMscreenresolutiony },
-	{ "screenSym", 0xc50a68b1, 0x003baec9, &RSSYMscreensym },
-	{ "screenwidth", 0x344b9940, 0x003b6af1, &RSSYMscreenwidth },
-	{ "scripts", 0x279e76e8, 0x003b6b0d, &RSSYMscripts },
-	{ "scrollDelta", 0xe0c74531, 0x0051c85d, &RSSYMscrolldelta },
-	{ "scrollDownSound", 0xdd1b5c10, 0x003b6b25, &RSSYMscrolldownsound },
-	{ "scrolledView", 0x8048103b, 0x003b6b45, &RSSYMscrolledview },
-	{ "Scroller", 0x790df1b6, 0x0045b0d9, &RSSYMscroller },
-	{ "scrollers", 0xc50a68b1, 0x00474a71, &RSSYMscrollers },
-	{ "scrollUpSound", 0x034076d5, 0x003b6b65, &RSSYMscrollupsound },
-	{ "second", 0x68371cdc, 0x003b6b85, &RSSYMsecond },
-	{ "secondLeadingZ", 0x0c11a53a, 0x003baee5, &RSSYMsecondleadingz },
-	{ "secorder", 0x33cdcfdf, 0x005d3631, &RSSYMsecorder },
-	{ "selectedDates", 0x9abb9b6a, 0x003b6b9d, &RSSYMselecteddates },
-	{ "Selection", 0x06ec5ff6, 0x003b6bbd, &RSSYMselection },
-	{ "selectivesyncok", 0xe28e5fe3, 0x003b6bd9, &RSSYMselectivesyncok },
-	{ "sendFlags", 0xc1ac3e1f, 0x003b6bf9, &RSSYMsendflags },
-	{ "Sending", 0x60af3fc8, 0x003baf05, &RSSYMsending },
-	{ "SendWaiting", 0x59a52c15, 0x003b6c15, &RSSYMsendwaiting },
-	{ "serialgpi", 0x519f85a0, 0x003b6c31, &RSSYMserialgpi },
-	{ "serialNumber", 0x521d4f01, 0x00438d5d, &RSSYMserialnumber },
-	{ "serialontime", 0x2cc3bc2c, 0x003b6c4d, &RSSYMserialontime },
-	{ "service", 0xf0a28749, 0x003b6c6d, &RSSYMservice },
-	{ "serviceId", 0x1530922e, 0x003b6c85, &RSSYMserviceid },
-	{ "SetAllInfo", 0x612d0929, 0x004a01ed, &RSSYMsetallinfo },
-	{ "setAref", 0x9d1e333a, 0x003a5e31, &RSSYMsetaref },
-	{ "SetBrowserPosition", 0x4832da1d, 0x003b6ca1, &RSSYMsetbrowserposition },
-	{ "SetCapsLock", 0xbb6db25c, 0x004482d1, &RSSYMsetcapslock },
-	{ "SetGlobal", 0x76f91875, 0x003ad785, &RSSYMsetglobal },
-	{ "SetInfo", 0x4426db58, 0x004a0209, &RSSYMsetinfo },
-	{ "SetMarkIcon", 0x344b9940, 0x003b6cc5, &RSSYMsetmarkicon },
-	{ "SetMeetingBounds", 0x87822ec0, 0x003b6ce1, &RSSYMsetmeetingbounds },
-	{ "SetName", 0x77c4a065, 0x003e81fd, &RSSYMsetname },
-	{ "SetPageNumber", 0x6fef04c2, 0x003b6d05, &RSSYMsetpagenumber },
-	{ "SetPrintProgress", 0xf57a0dfe, 0x003b6d25, &RSSYMsetprintprogress },
-	{ "SetScroller", 0x54322842, 0x003b9af9, &RSSYMsetscroller },
-	{ "SetScrollers", 0xa02e9f3d, 0x00474ab9, &RSSYMsetscrollers },
-	{ "SetSignature", 0x4caa4b2e, 0x004a01a5, &RSSYMsetsignature },
-	{ "SetStatus", 0xfc065850, 0x003b6d49, &RSSYMsetstatus },
-	{ "SetStatusDialog", 0xf9a3c080, 0x003b6d65, &RSSYMsetstatusdialog },
-	{ "settings", 0x45702ca9, 0x003b6d85, &RSSYMsettings },
-	{ "setup", 0xd4e5aac9, 0x003b0fe1, &RSSYMsetup },
-	{ "setup1", 0x1d83f732, 0x003b6da1, &RSSYMsetup1 },
-	{ "setup2", 0xbbbb70eb, 0x003b6db9, &RSSYMsetup2 },
-	{ "SetupROMHelpBook", 0x45a0377b, 0x003b6dd1, &RSSYMsetupromhelpbook },
-	{ "sevenbit", 0xc3c11760, 0x003b6df5, &RSSYMsevenbit },
-	{ "shape", 0x0df673a9, 0x003b6e11, &RSSYMshape },
-	{ "ShapeBounds", 0xbb6db25c, 0x003adbc5, &RSSYMshapebounds },
-	{ "shortDateDelim", 0x5151c711, 0x003baf1d, &RSSYMshortdatedelim },
-	{ "shortDateFormat", 0x69b078ff, 0x003baf3d, &RSSYMshortdateformat },
-	{ "shortDateOrder", 0xd300dc5a, 0x003baf5d, &RSSYMshortdateorder },
-	{ "shortDaySuffix", 0x466bbf6b, 0x003b9b75, &RSSYMshortdaysuffix },
-	{ "shortDofWeek", 0xbcb703ad, 0x003b6e29, &RSSYMshortdofweek },
-	{ "shortmonth", 0x3f31a0e6, 0x003baf7d, &RSSYMshortmonth },
-	{ "shortMonthSuffix", 0x1ad3a0d3, 0x003b9b51, &RSSYMshortmonthsuffix },
-	{ "shortOrdinals", 0x8191618c, 0x003b6e49, &RSSYMshortordinals },
-	{ "shortTimeStrSpec", 0x2917d30b, 0x003baf99, &RSSYMshorttimestrspec },
-	{ "shortTitle", 0xc653ba02, 0x003b6e69, &RSSYMshorttitle },
-	{ "shortYearSuffix", 0x92683666, 0x003b9b31, &RSSYMshortyearsuffix },
-	{ "showChar", 0x25899da7, 0x003b6e85, &RSSYMshowchar },
-	{ "ShowMarkup", 0x281c4049, 0x003b6ea1, &RSSYMshowmarkup },
-	{ "showSound", 0x46b97dfa, 0x003b6ebd, &RSSYMshowsound },
-	{ "signature", 0x718614a2, 0x003b6ed9, &RSSYMsignature },
-	{ "signatureA", 0x9d9bfc9b, 0x003b0f11, &RSSYMsignaturea },
-	{ "signatureB", 0x3bd37654, 0x003b0f2d, &RSSYMsignatureb },
-	{ "simpleSound", 0xf269a1fb, 0x003b6ef5, &RSSYMsimplesound },
-	{ "singleDay", 0x519f85a0, 0x003b6f11, &RSSYMsingleday },
-	{ "size", 0xae42c6a3, 0x003b6f2d, &RSSYMsize },
-	{ "skip", 0x3564dfbf, 0x003b6f45, &RSSYMskip },
-	{ "SleepTime", 0x435b5368, 0x003b6f5d, &RSSYMsleeptime },
-	{ "slipHeight", 0x612d0929, 0x0047521d, &RSSYMslipheight },
-	{ "slot", 0x01c71ab2, 0x003b0e31, &RSSYMslot },
-	{ "smallHeight", 0x8d42f122, 0x003b6f79, &RSSYMsmallheight },
-	{ "SmileAfterMountError", 0xdccd9d81, 0x003b6f95, &RSSYMsmileaftermounterror },
-	{ "sndFrameType", 0xe2109682, 0x003b6fbd, &RSSYMsndframetype },
-	{ "socket", 0x71084b41, 0x003b6fdd, &RSSYMsocket },
-	{ "socketInfos", 0x26076708, 0x003bafbd, &RSSYMsocketinfos },
-	{ "socketNumber", 0xe2109682, 0x003bafd9, &RSSYMsocketnumber },
-	{ "softFlowBlocked", 0x24705728, 0x005342b5, &RSSYMsoftflowblocked },
-	{ "sortID", 0xdba1ffed, 0x003bc435, &RSSYMsortid },
-	{ "sorton", 0xbf199b7d, 0x003b6ff5, &RSSYMsorton },
-	{ "sortTables", 0x8113982b, 0x005c9431, &RSSYMsorttables },
-	{ "sound", 0xe329dd01, 0x003e27b9, &RSSYMsound },
-	{ "soundInfo", 0x4c2c81cd, 0x003baff9, &RSSYMsoundinfo },
-	{ "soundontime", 0x2ed8956d, 0x003b700d, &RSSYMsoundontime },
-	{ "soup", 0x18dc7b4f, 0x003b7029, &RSSYMsoup },
-	{ "soupCreated", 0x96141f87, 0x0049fe99, &RSSYMsoupcreated },
-	{ "soupDef", 0x07b7e7e6, 0x003b7041, &RSSYMsoupdef },
-	{ "soupDeleted", 0xf7dca5ce, 0x0049fe5d, &RSSYMsoupdeleted },
-	{ "SoupEnters", 0x7ba09458, 0x00462399, &RSSYMsoupenters },
-	{ "soupIndexAdded", 0x5f95f949, 0x005d300d, &RSSYMsoupindexadded },
-	{ "soupIndexRemoved", 0x09314409, 0x005d30c9, &RSSYMsoupindexremoved },
-	{ "soupInfoChanged", 0x580e1c35, 0x005d381d, &RSSYMsoupinfochanged },
-	{ "SoupLeaves", 0xf9f17f0f, 0x0046245d, &RSSYMsoupleaves },
-	{ "soupList", 0x6556bbab, 0x003b7059, &RSSYMsouplist },
-	{ "soupName", 0xb57ce528, 0x003b7075, &RSSYMsoupname },
-	{ "soups", 0x64d8f24a, 0x003affd9, &RSSYMsoups },
-	{ "soupTagsChanged", 0x32b48960, 0x005d3049, &RSSYMsouptagschanged },
-	{ "source", 0x62c41909, 0x003b7091, &RSSYMsource },
-	{ "speaker", 0x3b55acf3, 0x003b70a9, &RSSYMspeaker },
-	{ "speakerOn", 0x435b5368, 0x003b70c1, &RSSYMspeakeron },
-	{ "speakerVolume", 0xf19e1a0b, 0x003b70dd, &RSSYMspeakervolume },
-	{ "speed", 0x0df673a9, 0x003b70fd, &RSSYMspeed },
-	{ "speedCursiveOption", 0x36907d53, 0x003b7115, &RSSYMspeedcursiveoption },
-	{ "split", 0xbdd04a2c, 0x003b7139, &RSSYMsplit },
-	{ "squaregrid", 0x1679e37f, 0x004dd9e5, &RSSYMsquaregrid },
-	{ "SRAMCardLowBattery", 0xb4e1680a, 0x003b7151, &RSSYMsramcardlowbattery },
-	{ "SRAMCardReplaceBattery", 0x1a85e244, 0x003b7175, &RSSYMsramcardreplacebattery },
-	{ "start", 0xfa3f3d9e, 0x003b719d, &RSSYMstart },
-	{ "startchar", 0xbc393a4c, 0x003b71b5, &RSSYMstartchar },
-	{ "StartIdle", 0xbc393a4c, 0x00481b7d, &RSSYMstartidle },
-	{ "startKey", 0xfabd06ff, 0x003b71d1, &RSSYMstartkey },
-	{ "startTime", 0x3de84f95, 0x003b71ed, &RSSYMstarttime },
-	{ "state", 0xf16e0f39, 0x003b7209, &RSSYMstate },
-	{ "status", 0x20e221c4, 0x003b7221, &RSSYMstatus },
-	{ "statusText", 0xfd4fa9a1, 0x003b7239, &RSSYMstatustext },
-	{ "stdForms", 0xe3a7a662, 0x003b09f5, &RSSYMstdforms },
-	{ "stepChildren", 0xd93f681d, 0x003b00ed, &RSSYMstepchildren },
-	{ "stop", 0x7aa50196, 0x003b7255, &RSSYMstop },
-	{ "stopBits", 0x98f480b8, 0x003b726d, &RSSYMstopbits },
-	{ "StopIdle", 0x3c9efe44, 0x00481b99, &RSSYMstopidle },
-	{ "store", 0x5c07c3e5, 0x003b7289, &RSSYMstore },
-	{ "storeID", 0x8095ceca, 0x004b3d1d, &RSSYMstoreid },
-	{ "StoreMounted", 0x190c8621, 0x003b72a1, &RSSYMstoremounted },
-	{ "storeObj", 0xb57ce528, 0x005d3981, &RSSYMstoreobj },
-	{ "storepassword", 0xdde6e400, 0x00481add, &RSSYMstorepassword },
-	{ "storeSig", 0xa738b2f0, 0x004f56d1, &RSSYMstoresig },
-	{ "StoreUnMounted", 0xd65f06ec, 0x003b72c1, &RSSYMstoreunmounted },
-	{ "storeversion", 0x4737475b, 0x003b72e1, &RSSYMstoreversion },
-	{ "storyCard", 0x01795c23, 0x003b7301, &RSSYMstorycard },
-	{ "str<", 0xf8f5ec4d, 0x003e807d, &RSSYMstr_3C },
-	{ "str=", 0x972d6606, 0x00469c55, &RSSYMstr_3D },
-	{ "str>", 0x3564dfbf, 0x005d364d, &RSSYMstr_3E },
-	{ "StrEqual", 0x45702ca9, 0x003adf35, &RSSYMstrequal },
-	{ "string", 0x1810f35f, 0x003b731d, &RSSYMstring },
-	{ "string.custom", 0x16f7ace0, 0x003bb56d, &RSSYMstring_2Ecustom },
-	{ "string.nohint", 0x4a9571ed, 0x005d3665, &RSSYMstring_2Enohint },
-	{ "stroke", 0xb6486d18, 0x003b7335, &RSSYMstroke },
-	{ "strokeBundle", 0xe2109682, 0x003b734d, &RSSYMstrokebundle },
-	{ "strokelist", 0x02c2ad74, 0x003b736d, &RSSYMstrokelist },
-	{ "strokes", 0x0244e413, 0x003b7389, &RSSYMstrokes },
-	{ "strongarm", 0x3de84f95, 0x003b73a1, &RSSYMstrongarm },
-	{ "structure", 0x9a3dd209, 0x003b73bd, &RSSYMstructure },
-	{ "strxrcommands", 0x1184a90d, 0x003b73d9, &RSSYMstrxrcommands },
-	{ "StuffModalCommandKeys", 0xf74128b0, 0x00491369, &RSSYMstuffmodalcommandkeys },
-	{ "stylePalette", 0x89193ea0, 0x003b73f9, &RSSYMstylepalette },
-	{ "styles", 0x20e221c4, 0x003b7419, &RSSYMstyles },
-	{ "submit", 0x3d6a8634, 0x003b7431, &RSSYMsubmit },
-	{ "suffixStr", 0xbf9764de, 0x003bb015, &RSSYMsuffixstr },
-	{ "summaryvalue", 0x557b7993, 0x003b7449, &RSSYMsummaryvalue },
-	{ "supportsCallBack", 0xacdbc195, 0x003b7469, &RSSYMsupportscallback },
-	{ "Sweden", 0x9661de16, 0x00458a59, &RSSYMsweden },
-	{ "SwitzGerman", 0xe4256fc3, 0x003c128d, &RSSYMswitzgerman },
-	{ "sym<", 0xf8f5ec4d, 0x005894b5, &RSSYMsym_3C },
-	{ "sym>", 0x3564dfbf, 0x005d3685, &RSSYMsym_3E },
-	{ "symbol", 0x79d979a6, 0x003bc2cd, &RSSYMsymbol },
-	{ "SymbolSet", 0x54fdb032, 0x005c8739, &RSSYMsymbolset },
-	{ "symmetryshapeoption", 0x1b516a34, 0x003b748d, &RSSYMsymmetryshapeoption },
-	{ "sync", 0xeab1ba15, 0x003b74b1, &RSSYMsync },
-	{ "syncButtons", 0x65d4850c, 0x003b74c9, &RSSYMsyncbuttons },
-	{ "SyncChildren", 0x7776e1d6, 0x003b0fa5, &RSSYMsyncchildren },
-	{ "SyncPenSize", 0xe4256fc3, 0x003b74e5, &RSSYMsyncpensize },
-	{ "synth", 0xebfb0b66, 0x003bb031, &RSSYMsynth },
-	{ "SysBeep", 0x1ecd4883, 0x003b7501, &RSSYMsysbeep },
-	{ "system", 0xbf199b7d, 0x003b7519, &RSSYMsystem },
-	{ "systemDirectory", 0x0b461d4a, 0x003b7531, &RSSYMsystemdirectory },
-	{ "systemLocaleBundle", 0xe87f2d17, 0x003b7551, &RSSYMsystemlocalebundle },
-	{ "systemName", 0x5bba0556, 0x003b7575, &RSSYMsystemname },
-	{ "systemPSFont", 0xb1d0fc07, 0x003b0a2d, &RSSYMsystempsfont },
-	{ "SystemScratch", 0x1fc8db45, 0x003b7591, &RSSYMsystemscratch },
-	{ "tabAcross", 0x8e0e7912, 0x003bb049, &RSSYMtabacross },
-	{ "tabDown", 0xb43393d7, 0x003bb065, &RSSYMtabdown },
-	{ "tabHeights", 0xba24610b, 0x003bb07d, &RSSYMtabheights },
-	{ "tabletresolutionx", 0xce0ba1e8, 0x003b75b1, &RSSYMtabletresolutionx },
-	{ "tabletresolutiony", 0x6c431ba1, 0x003b75d5, &RSSYMtabletresolutiony },
-	{ "tabProtos", 0xdc1fc94e, 0x003bb099, &RSSYMtabprotos },
-	{ "tabs", 0x2c93b15a, 0x003b75f9, &RSSYMtabs },
-	{ "tabSetup", 0xb57ce528, 0x003bb0b5, &RSSYMtabsetup },
-	{ "tabValues", 0xa523d9af, 0x003bb0d1, &RSSYMtabvalues },
-	{ "tabValueSlot", 0x5aee7d66, 0x003bb0ed, &RSSYMtabvalueslot },
-	{ "tabWidths", 0x7fca46da, 0x003bb10d, &RSSYMtabwidths },
-	{ "tag", 0xf7ac9afc, 0x003b7611, &RSSYMtag },
-	{ "tags", 0x43a911f7, 0x003b7625, &RSSYMtags },
-	{ "tagspec", 0xc277c60f, 0x00462d25, &RSSYMtagspec },
-	{ "tapdata", 0xd0bbf847, 0x003b763d, &RSSYMtapdata },
-	{ "target", 0x349957cf, 0x003b7655, &RSSYMtarget },
-	{ "task", 0xbc86f8db, 0x003b766d, &RSSYMtask },
-	{ "taskSlip", 0x90235253, 0x003bb145, &RSSYMtaskslip },
-	{ "task_list", 0xbf9764de, 0x003bb129, &RSSYMtask_list },
-	{ "tcursor", 0x55c93822, 0x005d2879, &RSSYMtcursor },
-	{ "template", 0x4ae3307c, 0x003b7685, &RSSYMtemplate },
-	{ "temporary", 0xf33529eb, 0x005d369d, &RSSYMtemporary },
-	{ "terminalClass", 0x6fef04c2, 0x003b76a1, &RSSYMterminalclass },
-	{ "termination", 0x62765a7a, 0x003b76c1, &RSSYMtermination },
-	{ "terseDofWeek", 0xb3e5d548, 0x003b76dd, &RSSYMtersedofweek },
-	{ "tersemonth", 0x36607281, 0x003bb161, &RSSYMtersemonth },
-	{ "testConfig", 0x784269c6, 0x003b76fd, &RSSYMtestconfig },
-	{ "text", 0xdc6d87dd, 0x003b7719, &RSSYMtext },
-	{ "TextBox", 0xdceb513e, 0x003ae7e1, &RSSYMtextbox },
-	{ "textdata", 0x25899da7, 0x003b7731, &RSSYMtextdata },
-	{ "textFlags", 0x718614a2, 0x003b774d, &RSSYMtextflags },
-	{ "textGutter", 0x6d5c6220, 0x003b7769, &RSSYMtextgutter },
-	{ "textPattern", 0xd5e13d8b, 0x003b77a1, &RSSYMtextpattern },
-	{ "textStyle", 0xb15332a6, 0x003b7785, &RSSYMtextstyle },
-	{ "thedesktoptype", 0x911ee515, 0x003b77bd, &RSSYMthedesktoptype },
-	{ "theFormat", 0x7fca46da, 0x003b77dd, &RSSYMtheformat },
-	{ "thefunc", 0x77c4a065, 0x003b77f9, &RSSYMthefunc },
-	{ "theName", 0xab626572, 0x00475dd5, &RSSYMthename },
-	{ "Thinking", 0x4ae3307c, 0x003bb17d, &RSSYMthinking },
-	{ "throughputgauge", 0xd44a2dab, 0x003b7811, &RSSYMthroughputgauge },
-	{ "thumbnailScript", 0xa61f6c71, 0x003b7831, &RSSYMthumbnailscript },
-	{ "tickSound", 0xadf50814, 0x003b0b01, &RSSYMticksound },
-	{ "Time", 0x43a911f7, 0x003a60f9, &RSSYMtime },
-	{ "timeatcoldboot", 0xef8940ca, 0x003b7851, &RSSYMtimeatcoldboot },
-	{ "timeCycle", 0xb3680be7, 0x003bb199, &RSSYMtimecycle },
-	{ "timeDictionary", 0xbbeb7bbd, 0x003b7871, &RSSYMtimedictionary },
-	{ "timeformat", 0xb4b15d38, 0x003bb1b5, &RSSYMtimeformat },
-	{ "timeoutCursiveOption", 0xb20106d9, 0x003b7891, &RSSYMtimeoutcursiveoption },
-	{ "timeoutscript", 0x6508fd1c, 0x003b78b9, &RSSYMtimeoutscript },
-	{ "timeSepStr1", 0xd28312f9, 0x003bb1d1, &RSSYMtimesepstr1 },
-	{ "timeSepStr2", 0x70ba8cb2, 0x003bb1ed, &RSSYMtimesepstr2 },
-	{ "timestamp", 0xadf50814, 0x003b78d9, &RSSYMtimestamp },
-	{ "TinyTim", 0xdceb513e, 0x003b78f5, &RSSYMtinytim },
-	{ "title", 0x8fa588f2, 0x003b790d, &RSSYMtitle },
-	{ "titleText", 0x6c1310cf, 0x003b7925, &RSSYMtitletext },
-	{ "tockSound", 0x6341e26a, 0x003b0b1d, &RSSYMtocksound },
-	{ "todo", 0x972d6606, 0x003b7941, &RSSYMtodo },
-	{ "TodoItem", 0xdad677fd, 0x003b7959, &RSSYMtodoitem },
-	{ "toEmailAddress", 0x5f95f949, 0x003b7975, &RSSYMtoemailaddress },
-	{ "ToggleTopic", 0xd28312f9, 0x003b7995, &RSSYMtoggletopic },
-	{ "top", 0x2ea88a9b, 0x003b79b1, &RSSYMtop },
-	{ "topic", 0xb4ff1bc7, 0x003b79c5, &RSSYMtopic },
-	{ "topicDragInfo", 0xdffbbd41, 0x003b79dd, &RSSYMtopicdraginfo },
-	{ "topicFont", 0xea63fb86, 0x00526611, &RSSYMtopicfont },
-	{ "topicMarkers", 0x1e7f89f4, 0x003b0d51, &RSSYMtopicmarkers },
-	{ "topics", 0x00fb92c2, 0x003b79fd, &RSSYMtopics },
-	{ "topicsLabel", 0x8d42f122, 0x003b7a15, &RSSYMtopicslabel },
-	{ "topItem", 0x72519c92, 0x003b7a31, &RSSYMtopitem },
-	{ "topMargin", 0xd34e9ae9, 0x003b7a49, &RSSYMtopmargin },
-	{ "total", 0xcc147c64, 0x003b7a65, &RSSYMtotal },
-	{ "totalCards", 0x612d0929, 0x003bb209, &RSSYMtotalcards },
-	{ "TotalSize", 0x7a574307, 0x003b7a7d, &RSSYMtotalsize },
-	{ "totalSockets", 0x89193ea0, 0x003bb225, &RSSYMtotalsockets },
-	{ "touchtone", 0xc50a68b1, 0x003b7a99, &RSSYMtouchtone },
-	{ "Trace", 0xd1878037, 0x003b7ab5, &RSSYMtrace },
-	{ "traceElements", 0xbaa22a6c, 0x003b7acd, &RSSYMtraceelements },
-	{ "trailingfirst", 0x5366a052, 0x0047e8e1, &RSSYMtrailingfirst },
-	{ "trailinglast", 0x6932af9e, 0x0047e901, &RSSYMtrailinglast },
-	{ "transactiontimeout", 0x72ff70c5, 0x003b7aed, &RSSYMtransactiontimeout },
-	{ "transferMode", 0xf054c8ba, 0x003b7b11, &RSSYMtransfermode },
-	{ "transform", 0x9fb0d5dc, 0x003b7b31, &RSSYMtransform },
-	{ "trickleChargeContinuous", 0x3bb5c297, 0x0045c4f1, &RSSYMtricklechargecontinuous },
-	{ "trickleCharging", 0xed746789, 0x003b7b4d, &RSSYMtricklecharging },
-	{ "tsID", 0x5abe7294, 0x003b7b6d, &RSSYMtsid },
-	{ "tStore", 0x463bb499, 0x005d3969, &RSSYMtstore },
-	{ "twoO", 0x554b6ec1, 0x003b7b85, &RSSYMtwoo },
-	{ "txCharsObj", 0xb4b15d38, 0x0047e859, &RSSYMtxcharsobj },
-	{ "txData", 0x9661de16, 0x0047e701, &RSSYMtxdata },
-	{ "txText", 0x29b35029, 0x0047e755, &RSSYMtxtext },
-	{ "type", 0x01c71ab2, 0x003b7b9d, &RSSYMtype },
-	{ "typelist", 0x4e415b0e, 0x003b7bb5, &RSSYMtypelist },
-	{ "types", 0x4dc391ad, 0x003b7bd1, &RSSYMtypes },
-	{ "typeSelectTimeOut", 0x6c431ba1, 0x004748d5, &RSSYMtypeselecttimeout },
-	{ "UK", 0xe2ac13a0, 0x00457f31, &RSSYMuk },
-	{ "undo", 0x972d6606, 0x003b7be9, &RSSYMundo },
-	{ "undoable", 0x2afca17a, 0x003bb245, &RSSYMundoable },
-	{ "undoRedo", 0xc3c11760, 0x003b7c01, &RSSYMundoredo },
-	{ "undosound", 0x7a574307, 0x003b7c1d, &RSSYMundosound },
-	{ "unflattener", 0x26076708, 0x003b7c39, &RSSYMunflattener },
-	{ "unflattennocode", 0xc2a7d0e1, 0x0053b39d, &RSSYMunflattennocode },
-	{ "unicode", 0xc277c60f, 0x003b0a6d, &RSSYMunicode },
-	{ "unistyle", 0xb009e155, 0x003b7c55, &RSSYMunistyle },
-	{ "unitData", 0x0e743d0a, 0x003bb261, &RSSYMunitdata },
-	{ "unitID", 0xe9e63225, 0x003bb27d, &RSSYMunitid },
-	{ "unknown", 0x195a44b0, 0x003b7c71, &RSSYMunknown },
-	{ "UnRegCommConfigArray", 0xc25a1252, 0x003aeb19, &RSSYMunregcommconfigarray },
-	{ "UnstuffModalCommandKeys", 0xb493a97b, 0x00491535, &RSSYMunstuffmodalcommandkeys },
-	{ "untraincharstr", 0x7a098478, 0x003b7c89, &RSSYMuntraincharstr },
-	{ "up", 0xf9c1743d, 0x003db1c9, &RSSYMup },
-	{ "UpdateLocaleFromUserConfig", 0xee223bbc, 0x004adb25, &RSSYMupdatelocalefromuserconfig },
-	{ "uploadingfile", 0x2aaee2eb, 0x00599995, &RSSYMuploadingfile },
-	{ "upperList", 0x0a4a8a88, 0x003bb295, &RSSYMupperlist },
-	{ "upperNoMarkList", 0xdd1b5c10, 0x003bb2b1, &RSSYMuppernomarklist },
-	{ "USA", 0x007dc961, 0x00457ded, &RSSYMusa },
-	{ "useaddressdomain", 0x8cf53293, 0x003b7ca9, &RSSYMuseaddressdomain },
-	{ "usecalcdomain", 0x5e4ca7f8, 0x003b7ccd, &RSSYMusecalcdomain },
-	{ "useccolumndomain", 0x59576d86, 0x003b7ced, &RSSYMuseccolumndomain },
-	{ "usedatedomain", 0x2aaee2eb, 0x003b7d11, &RSSYMusedatedomain },
-	{ "usedialnavigator", 0xe07986a2, 0x003b7d31, &RSSYMusedialnavigator },
-	{ "UsedSize", 0x2e5acc0c, 0x003b7d55, &RSSYMusedsize },
-	{ "useeom", 0x881dabde, 0x0053b011, &RSSYMuseeom },
-	{ "useEOP", 0x62c41909, 0x003b7d71, &RSSYMuseeop },
-	{ "useFaxNavigator", 0x69b078ff, 0x003b7d89, &RSSYMusefaxnavigator },
-	{ "useFullPage", 0x59a52c15, 0x003b7da9, &RSSYMusefullpage },
-	{ "usegeneralshapedomain", 0xa92fd874, 0x003b7dc5, &RSSYMusegeneralshapedomain },
-	{ "useHardFlowControl", 0x8143a2fd, 0x003b7ded, &RSSYMusehardflowcontrol },
-	{ "useInkWordRecognition", 0x455278ec, 0x005c86a9, &RSSYMuseinkwordrecognition },
-	{ "usekanjidomain", 0xfdcd7302, 0x003b7e11, &RSSYMusekanjidomain },
-	{ "usemailconnector", 0x706cce23, 0x003b7e31, &RSSYMusemailconnector },
-	{ "useModemNavigator", 0x438b5e3a, 0x003b7e55, &RSSYMusemodemnavigator },
-	{ "usenamedomain", 0x05555016, 0x003b7e79, &RSSYMusenamedomain },
-	{ "usenumberdomain", 0xd9bd317e, 0x003b7e99, &RSSYMusenumberdomain },
-	{ "usepassword", 0xfb3ad060, 0x00481aa5, &RSSYMusepassword },
-	{ "usephonedomain", 0x069ea167, 0x003b7eb9, &RSSYMusephonedomain },
-	{ "user", 0x2720ad87, 0x003b7ed9, &RSSYMuser },
-	{ "useRawInkRecognition", 0x978d7baa, 0x005c86d1, &RSSYMuserawinkrecognition },
-	{ "userConfiguration", 0x4c5c8c9f, 0x003b0a85, &RSSYMuserconfiguration },
-	{ "userDictQuery", 0x8a628ff1, 0x003b0aa9, &RSSYMuserdictquery },
-	{ "userDismissed", 0x8fd593c4, 0x003b7f09, &RSSYMuserdismissed },
-	{ "userFolders", 0xdb54415e, 0x003b7f29, &RSSYMuserfolders },
-	{ "userFont", 0x5c858d46, 0x003bb2ed, &RSSYMuserfont },
-	{ "userPenSize", 0x20946335, 0x003b7f45, &RSSYMuserpensize },
-	{ "user_obj", 0x372bfa71, 0x003bb2d1, &RSSYMuser_obj },
-	{ "useSoftFlowControl", 0x6d8c6cf2, 0x003b7f61, &RSSYMusesoftflowcontrol },
-	{ "usetimedomain", 0xac5df834, 0x003b7f85, &RSSYMusetimedomain },
-	{ "useVoiceNavigator", 0xbc69451e, 0x003b7fa5, &RSSYMusevoicenavigator },
-	{ "useworddomain", 0xb52f2699, 0x003b7fc9, &RSSYMuseworddomain },
-	{ "useWordReplayDomain", 0x9f1558be, 0x003b7fe9, &RSSYMusewordreplaydomain },
-	{ "valid", 0x6fbef9f0, 0x005d36b9, &RSSYMvalid },
-	{ "validTest", 0x35172130, 0x003b800d, &RSSYMvalidtest },
-	{ "value", 0x78902855, 0x003b8029, &RSSYMvalue },
-	{ "vars", 0x4c7a405c, 0x003a6059, &RSSYMvars },
-	{ "varsmapstarter", 0xcd8dd887, 0x005c9ff9, &RSSYMvarsmapstarter },
-	{ "vBarber", 0xe7d158e4, 0x003b0d19, &RSSYMvbarber },
-	{ "VBO", 0xc40ed5ef, 0x003b8041, &RSSYMvbo },
-	{ "VerifyCalibration", 0x3aba2fd5, 0x003af2d1, &RSSYMverifycalibration },
-	{ "version", 0xeb2f8376, 0x003b8055, &RSSYMversion },
-	{ "vertex", 0x6b95476e, 0x003b806d, &RSSYMvertex },
-	{ "vGauge", 0x42dd8a07, 0x003b0ce5, &RSSYMvgauge },
-	{ "viaAppleTalk", 0x85bb140e, 0x003b8085, &RSSYMviaappletalk },
-	{ "view", 0xae42c6a3, 0x003b80a5, &RSSYMview },
-	{ "viewableTopics", 0x430d94d9, 0x003b80bd, &RSSYMviewabletopics },
-	{ "viewAddChildScript", 0xc8989e15, 0x003b80dd, &RSSYMviewaddchildscript },
-	{ "viewAddDragInfoScript", 0xee6ffa4b, 0x003b8101, &RSSYMviewadddraginfoscript },
-	{ "viewBounds", 0x5bba0556, 0x003b8129, &RSSYMviewbounds },
-	{ "viewCaretActivateScript", 0xd9ed3c50, 0x003b8145, &RSSYMviewcaretactivatescript },
-	{ "ViewCaretChangedScript", 0x319b42e1, 0x003b816d, &RSSYMviewcaretchangedscript },
-	{ "viewCaretScrollScript", 0x81c16c5e, 0x003b8195, &RSSYMviewcaretscrollscript },
-	{ "viewChildren", 0x3b07ee64, 0x003b00cd, &RSSYMviewchildren },
-	{ "viewClass", 0xd34e9ae9, 0x003bb309, &RSSYMviewclass },
-	{ "viewClickScript", 0xcb78ff46, 0x003b81bd, &RSSYMviewclickscript },
-	{ "viewclipper", 0x62765a7a, 0x003bb325, &RSSYMviewclipper },
-	{ "viewCObject", 0x67e95e4d, 0x003b81dd, &RSSYMviewcobject },
-	{ "viewdragfeedbackscript", 0x98d6ccfb, 0x003b81f9, &RSSYMviewdragfeedbackscript },
-	{ "viewdrawdragbackgroundscript", 0xd0ce4f5c, 0x003b8221, &RSSYMviewdrawdragbackgroundscript },
-	{ "viewdrawdragdatascript", 0x3a6c7146, 0x003b8251, &RSSYMviewdrawdragdatascript },
-	{ "viewDrawScript", 0x2f565ece, 0x003b8279, &RSSYMviewdrawscript },
-	{ "viewDropApproveScript", 0xde16eed2, 0x003b8299, &RSSYMviewdropapprovescript },
-	{ "viewDropChildScript", 0x87fff821, 0x003b82c1, &RSSYMviewdropchildscript },
-	{ "viewDropDoneScript", 0x36907d53, 0x003b8351, &RSSYMviewdropdonescript },
-	{ "viewDropMoveScript", 0xb83f929c, 0x003b82e5, &RSSYMviewdropmovescript },
-	{ "viewDropRemoveScript", 0x0af85ebb, 0x003b8309, &RSSYMviewdropremovescript },
-	{ "viewDropScript", 0x82dab2dd, 0x003b8331, &RSSYMviewdropscript },
-	{ "viewEffect", 0xd139c1a8, 0x003b8375, &RSSYMvieweffect },
-	{ "viewFillPattern", 0xf9a3c080, 0x003b8391, &RSSYMviewfillpattern },
-	{ "viewFinalChangeScript", 0x13c98d20, 0x003b83b1, &RSSYMviewfinalchangescript },
-	{ "viewFindTargetScript", 0x5b1e8838, 0x003b83d9, &RSSYMviewfindtargetscript },
-	{ "viewFlags", 0x435b5368, 0x003b8401, &RSSYMviewflags },
-	{ "viewFont", 0xe3a7a662, 0x003b841d, &RSSYMviewfont },
-	{ "viewFormat", 0x1f4b11e4, 0x003b8439, &RSSYMviewformat },
-	{ "viewFramePattern", 0x006015a4, 0x003b8455, &RSSYMviewframepattern },
-	{ "viewFrontCommandKey", 0x62a6654c, 0x003b10a5, &RSSYMviewfrontcommandkey },
-	{ "viewfrontkey", 0x91ea6d05, 0x003bb341, &RSSYMviewfrontkey },
-	{ "viewfrontmost", 0x316b380f, 0x003bb361, &RSSYMviewfrontmost },
-	{ "viewfrontmostapp", 0x402d33a8, 0x003bb381, &RSSYMviewfrontmostapp },
-	{ "viewgesturescript", 0x218ff5f7, 0x003b8479, &RSSYMviewgesturescript },
-	{ "viewGetDropDataScript", 0x3c814a87, 0x003b849d, &RSSYMviewgetdropdatascript },
-	{ "viewGetDropTypesScript", 0x4128c66a, 0x003b84c5, &RSSYMviewgetdroptypesscript },
-	{ "viewgrid", 0x61f89119, 0x004dd9b1, &RSSYMviewgrid },
-	{ "viewhelp", 0x3c9efe44, 0x003b84ed, &RSSYMviewhelp },
-	{ "viewHideScript", 0xd300dc5a, 0x003bb3a5, &RSSYMviewhidescript },
-	{ "viewHiliteScript", 0xccc25097, 0x003b8509, &RSSYMviewhilitescript },
-	{ "viewinkwordscript", 0x83587c3e, 0x003b852d, &RSSYMviewinkwordscript },
-	{ "viewinsertitemsscript", 0xf52c4f6f, 0x003b8551, &RSSYMviewinsertitemsscript },
-	{ "viewJustify", 0x8b2e17e1, 0x003bb3c5, &RSSYMviewjustify },
-	{ "viewlinepattern", 0x97db3a39, 0x003b8579, &RSSYMviewlinepattern },
-	{ "viewLineSpacing", 0x24705728, 0x003b8599, &RSSYMviewlinespacing },
-	{ "viewnextidletime", 0xdb0682cf, 0x003b85b9, &RSSYMviewnextidletime },
-	{ "viewOriginX", 0xe4256fc3, 0x003b85dd, &RSSYMvieworiginx },
-	{ "viewOriginY", 0x825ce97c, 0x003b85f9, &RSSYMvieworiginy },
-	{ "viewOverviewScript", 0x84a1cd8f, 0x003b8615, &RSSYMviewoverviewscript },
-	{ "viewPostQuitScript", 0xa4885c91, 0x003b8639, &RSSYMviewpostquitscript },
-	{ "viewQuitScript", 0x29e35afb, 0x003bb3e1, &RSSYMviewquitscript },
-	{ "viewRawInkScript", 0xd5937efc, 0x003b865d, &RSSYMviewrawinkscript },
-	{ "viewScrollDownScript", 0x83d6459f, 0x003bb401, &RSSYMviewscrolldownscript },
-	{ "viewScrollUpScript", 0xa9fb6064, 0x003bb429, &RSSYMviewscrollupscript },
-	{ "viewscrubscript", 0x3ee3e257, 0x003b8681, &RSSYMviewscrubscript },
-	{ "viewSet", 0x8966fd2f, 0x003b86a1, &RSSYMviewset },
-	{ "viewSetupChildrenScript", 0xeb8f991a, 0x003b86b9, &RSSYMviewsetupchildrenscript },
-	{ "viewSetupDoneScript", 0x12803bcf, 0x003b86e1, &RSSYMviewsetupdonescript },
-	{ "viewSetupFormScript", 0xb988e3ed, 0x003b8705, &RSSYMviewsetupformscript },
-	{ "viewShowScript", 0xed746789, 0x003bb44d, &RSSYMviewshowscript },
-	{ "viewStationery", 0x749680a5, 0x003b8729, &RSSYMviewstationery },
-	{ "viewstats", 0x46b97dfa, 0x003b8749, &RSSYMviewstats },
-	{ "viewStrokeScript", 0x402d33a8, 0x003bb46d, &RSSYMviewstrokescript },
-	{ "viewTie", 0x5b3c3bf5, 0x003bb491, &RSSYMviewtie },
-	{ "viewTransferMode", 0x9e978f5d, 0x003b87fd, &RSSYMviewtransfermode },
-	{ "ViewUpdateScrollersScript", 0x0aaaa02c, 0x00443c5d, &RSSYMviewupdatescrollersscript },
-	{ "viewValue", 0x26d2eef8, 0x003b888d, &RSSYMviewvalue },
-	{ "viewWordScript", 0xd65f06ec, 0x003b8925, &RSSYMviewwordscript },
-	{ "Visible", 0x15fc1a1e, 0x003af381, &RSSYMvisible },
-	{ "voiceNavigate", 0x671dd65d, 0x003b89f9, &RSSYMvoicenavigate },
-	{ "voiceNavigator", 0x430d94d9, 0x003b8a61, &RSSYMvoicenavigator },
-	{ "volume", 0xb6486d18, 0x003d2a01, &RSSYMvolume },
-	{ "vStatus", 0x478505ea, 0x003b0c91, &RSSYMvstatus },
-	{ "waitBeforeBlindDial", 0x36907d53, 0x003b8af9, &RSSYMwaitbeforeblinddial },
-	{ "waitForCarrier", 0x1db40204, 0x003b8bcd, &RSSYMwaitforcarrier },
-	{ "warningRaised", 0xf7111dde, 0x003b8cc1, &RSSYMwarningraised },
-	{ "waveTable", 0x3a8a2503, 0x003bb4a9, &RSSYMwavetable },
-	{ "wedge", 0xf6e1130c, 0x003b8d49, &RSSYMwedge },
-	{ "weekNumberType", 0xdbd20abf, 0x003b0f85, &RSSYMweeknumbertype },
-	{ "WeirdCardInserted", 0x0c8f6e9b, 0x003b8dc9, &RSSYMweirdcardinserted },
-	{ "weird_immediate", 0xc2a7d0e1, 0x005d36d1, &RSSYMweird_immediate },
-	{ "whatThe", 0x69806e2d, 0x003b8e61, &RSSYMwhatthe },
-	{ "what_obj", 0x6ac9bf7e, 0x003bb4c5, &RSSYMwhat_obj },
-	{ "when_obj", 0x2e5acc0c, 0x003bb4e1, &RSSYMwhen_obj },
-	{ "where_obj", 0x4c2c81cd, 0x003bb4fd, &RSSYMwhere_obj },
-	{ "whichIcons", 0x24be15b7, 0x003b9b15, &RSSYMwhichicons },
-	{ "who_obj", 0x279e76e8, 0x003bb519, &RSSYMwho_obj },
-	{ "width", 0x53369580, 0x003b8ef1, &RSSYMwidth },
-	{ "widths", 0x9f330c7b, 0x003b8f95, &RSSYMwidths },
-	{ "wizard", 0x62c41909, 0x003b9021, &RSSYMwizard },
-	{ "WizardCommit", 0xd3cc644a, 0x003b90c1, &RSSYMwizardcommit },
-	{ "wizstatustext", 0x7f7c884b, 0x003b9179, &RSSYMwizstatustext },
-	{ "word", 0x4c7a405c, 0x003b91d9, &RSSYMword },
-	{ "wordBreakTable", 0x6dda2b81, 0x003bb531, &RSSYMwordbreaktable },
-	{ "wordbuf", 0xe25e5511, 0x003b9259, &RSSYMwordbuf },
-	{ "wordInfo", 0xb57ce528, 0x00478f85, &RSSYMwordinfo },
-	{ "wordLength", 0x69fe378e, 0x003b92dd, &RSSYMwordlength },
-	{ "wordOffset", 0x8113982b, 0x003b9349, &RSSYMwordoffset },
-	{ "words", 0x9876b757, 0x003b93a5, &RSSYMwords },
-	{ "wordsCursiveOption", 0xc110c101, 0x003b9411, &RSSYMwordscursiveoption },
-	{ "writecount", 0x02c2ad74, 0x003b94c9, &RSSYMwritecount },
-	{ "x", 0x6311d798, 0x003b9569, &RSSYMx },
-	{ "XmitSoupChange", 0xea163cf7, 0x003af475, &RSSYMxmitsoupchange },
-	{ "xoffChar", 0x7e80f589, 0x003b95f5, &RSSYMxoffchar },
-	{ "xonChar", 0x2d117abb, 0x003b968d, &RSSYMxonchar },
-	{ "xrwcommands", 0xf269a1fb, 0x003b9729, &RSSYMxrwcommands },
-	{ "xSpace", 0x59f2eaa4, 0x003b97cd, &RSSYMxspace },
-	{ "xy", 0x645b28e9, 0x003b9819, &RSSYMxy },
-	{ "y", 0x01495151, 0x003b98a5, &RSSYMy },
-	{ "yaccStack", 0x2374c466, 0x005d4031, &RSSYMyaccstack },
-	{ "year", 0x80180569, 0x003b98d5, &RSSYMyear },
-	{ "yearLeading", 0x8471c2bd, 0x003bb551, &RSSYMyearleading },
-	{ "yes", 0xf2399729, 0x003b99cd, &RSSYMyes },
-	{ "ySpace", 0xf82a645d, 0x003b99e1, &RSSYMyspace },
-	{ "zapAutoReceive", 0xf85a6f2f, 0x003b99f9, &RSSYMzapautoreceive },
-	{ "zapCommToolId", 0x5366a052, 0x003b9a19, &RSSYMzapcommtoolid },
-	{ "ZapPackagesForFullRestore", 0xcadd8228, 0x003af4e5, &RSSYMzappackagesforfullrestore },
-	{ "zapSlip", 0x1089164b, 0x003b9a39, &RSSYMzapslip },
-	{ "ZapSystemSoupForRestoreFrom1.X", 0xfc18af65, 0x003b9a51, &RSSYMzapsystemsoupforrestorefrom1_2Ex },
-	{ "zip", 0x2ea88a9b, 0x003b9a81, &RSSYMzip },
-	{ "_cacheContext", 0x253bdf18, 0x003e83f1, &RSSYM_cachecontext },
-	{ "_caretInfo", 0xf12050aa, 0x003b10dd, &RSSYM_caretinfo },
-	{ "_caretpopup", 0x37a9c3d2, 0x003b10f9, &RSSYM_caretpopup },
-	{ "_channel", 0xd2054998, 0x00436b5d, &RSSYM_channel },
-	{ "_classinfo", 0x44a4a4b9, 0x003b9c29, &RSSYM_classinfo },
-	{ "_clicksong", 0x2d8f441c, 0x003b1115, &RSSYM_clicksong },
-	{ "_curclick", 0x96dfa777, 0x003b1131, &RSSYM_curclick },
-	{ "_defaultButton", 0x6bc55240, 0x003b114d, &RSSYM_defaultbutton },
-	{ "_defaultButtonBounds", 0x193c90f3, 0x003b116d, &RSSYM_defaultbuttonbounds },
-	{ "_DoDefaultButton", 0x45a0377b, 0x003b1195, &RSSYM_dodefaultbutton },
-	{ "_ExportTable", 0x190c8621, 0x00579f91, &RSSYM_exporttable },
-	{ "_function", 0x2fa41d5d, 0x005d2d29, &RSSYM_function },
-	{ "_function.native", 0xd235546a, 0x005d2d45, &RSSYM_function_2Enative },
-	{ "_hiliteMenuItem", 0x3612b3f2, 0x003b1085, &RSSYM_hilitemenuitem },
-	{ "_implementor", 0x557b7993, 0x005cf68d, &RSSYM_implementor },
-	{ "_ImportTable", 0xc5883212, 0x00582235, &RSSYM_importtable },
-	{ "_infoButtons", 0x9abb9b6a, 0x004482b1, &RSSYM_infobuttons },
-	{ "_instance", 0xadf50814, 0x003b9c45, &RSSYM_instance },
-	{ "_keyCommands", 0xd3cc644a, 0x003b11b9, &RSSYM_keycommands },
-	{ "_keyHelpCloseScript", 0x461e00dc, 0x003b11fd, &RSSYM_keyhelpclosescript },
-	{ "_keyHelpOpenScript", 0x3f61abb8, 0x003b11d9, &RSSYM_keyhelpopenscript },
-	{ "_modTime", 0x6ac9bf7e, 0x003b1221, &RSSYM_modtime },
-	{ "_nextArgFrame", 0xf19e1a0b, 0x005cf43d, &RSSYM_nextargframe },
-	{ "_nextKeyView", 0x8c776932, 0x003b123d, &RSSYM_nextkeyview },
-	{ "_noAutoAdd", 0x69fe378e, 0x003b125d, &RSSYM_noautoadd },
-	{ "_noRepeat", 0x3de84f95, 0x003b1279, &RSSYM_norepeat },
-	{ "_parent", 0xc5d5f0a1, 0x003e8491, &RSSYM_parent },
-	{ "_proto", 0x6622439b, 0x003b1295, &RSSYM_proto },
-	{ "_recognizerUserChoices", 0xc4ecb4f4, 0x003b12ad, &RSSYM_recognizeruserchoices },
-	{ "_recogSettings", 0x6bc55240, 0x003b12d5, &RSSYM_recogsettings },
-	{ "_sndCallback", 0x7ce9e5a9, 0x003b9c61, &RSSYM_sndcallback },
-	{ "_sndChannels", 0xa5a1a310, 0x003b9c81, &RSSYM_sndchannels },
-	{ "_sound", 0x99c008a8, 0x003b12f5, &RSSYM_sound },
-	{ "_tabchildren", 0x23f28dc7, 0x003b130d, &RSSYM_tabchildren },
-	{ "_tabparent", 0xa66d2b00, 0x003b132d, &RSSYM_tabparent },
-	{ "_uniqueID", 0xf33529eb, 0x003b1349, &RSSYM_uniqueid },
-	{ "_weakarray", 0x5bba0556, 0x005d2d69, &RSSYM_weakarray },
+	{ "*", 0xf519f85a, 0x003afe75, &RSSYM_2A },
+	{ "+", 0x93517213, 0x003afde1, &RSSYM_2B },
+	{ "-", 0xcfc06585, 0x003afdf5, &RSSYM_2D },
+	{ "/", 0x0c2f58f7, 0x003afe89, &RSSYM_2F },
+	{ "1.X", 0x19a8033f, 0x003bb151, &RSSYM1_2Ex },
+	{ "<", 0x1500875c, 0x003afeb1, &RSSYM_3C },
+	{ "<<", 0x2a010eb8, 0x003b0d35, &RSSYM_3C_3C },
+	{ "<=", 0xc8388871, 0x003afeed, &RSSYM_3C_3D },
+	{ "<>", 0x6670022a, 0x003afe61, &RSSYM_3C_3E },
+	{ "=", 0xb3380115, 0x003afe39, &RSSYM_3D },
+	{ ">", 0x516f7ace, 0x003afec5, &RSSYM_3E },
+	{ ">=", 0x04a77be3, 0x003afed9, &RSSYM_3E_3D },
+	{ ">>", 0xa2def59c, 0x003b0d49, &RSSYM_3E_3E },
+	{ "a4", 0x4f5aa18d, 0x003c2e05, &RSSYMa4 },
+	{ "abbrDateStrSpec", 0xdf303551, 0x003bb3ed, &RSSYMabbrdatestrspec },
+	{ "abbrDayOfWeekStrSpec", 0xd09e448a, 0x003c2e19, &RSSYMabbrdayofweekstrspec },
+	{ "abbrDofWeek", 0xf47e7b3c, 0x003bb40d, &RSSYMabbrdofweek },
+	{ "abbrMonth", 0x76f91875, 0x003c2e41, &RSSYMabbrmonth },
+	{ "about_task", 0xaf3e5965, 0x003c2e5d, &RSSYMabout_task },
+	{ "acPower", 0xf0a28749, 0x003bb429, &RSSYMacpower },
+	{ "action", 0xa4a6104e, 0x003c2e79, &RSSYMaction },
+	{ "actionDescription", 0x51cf9072, 0x003bb441, &RSSYMactiondescription },
+	{ "ActionNotify", 0xf925f71f, 0x003bb465, &RSSYMactionnotify },
+	{ "actionSoundEffects", 0xf6c35f4f, 0x003bb485, &RSSYMactionsoundeffects },
+	{ "ActivateStorePackages", 0x39231ff5, 0x003b0e19, &RSSYMactivatestorepackages },
+	{ "ActivePackageList", 0xc74f4cc4, 0x00536c95, &RSSYMactivepackagelist },
+	{ "activetimeout", 0xf19e1a0b, 0x003bb4a9, &RSSYMactivetimeout },
+	{ "acVoltage", 0x2374c466, 0x003bb4c9, &RSSYMacvoltage },
+	{ "Add", 0x398e9241, 0x003c5539, &RSSYMadd },
+	{ "added", 0xe53eb642, 0x003bb4e5, &RSSYMadded },
+	{ "AddEncodedWord", 0x4df39c7f, 0x005a97dd, &RSSYMaddencodedword },
+	{ "addIcon", 0xc7eac9e2, 0x003bb4fd, &RSSYMaddicon },
+	{ "AddIndex", 0x9b0959f9, 0x004b45bd, &RSSYMaddindex },
+	{ "AddNotification", 0x4f3cedd0, 0x005abc09, &RSSYMaddnotification },
+	{ "address", 0x24404c56, 0x003bb515, &RSSYMaddress },
+	{ "addressData", 0x6d5c6220, 0x003bb52d, &RSSYMaddressdata },
+	{ "addressType", 0x26076708, 0x003bb549, &RSSYMaddresstype },
+	{ "addspace", 0x306fa54d, 0x003c2e91, &RSSYMaddspace },
+	{ "AddWithUniqueID", 0xc2a7d0e1, 0x00634935, &RSSYMaddwithuniqueid },
+	{ "affiliate", 0xa1c5af1d, 0x003c2ead, &RSSYMaffiliate },
+	{ "alarm", 0x95188cc5, 0x003bb565, &RSSYMalarm },
+	{ "alarmSound", 0x784269c6, 0x004224a5, &RSSYMalarmsound },
+	{ "alarmSoundEffects", 0xe735dbc6, 0x003bb57d, &RSSYMalarmsoundeffects },
+	{ "alias", 0xba721f9a, 0x0044ff61, &RSSYMalias },
+	{ "alkaline", 0x9b0959f9, 0x003bb5a1, &RSSYMalkaline },
+	{ "all", 0x1d062dd1, 0x003bb5bd, &RSSYMall },
+	{ "allCollapsed", 0xdeb26bf0, 0x003c2ec9, &RSSYMallcollapsed },
+	{ "alldictionaries", 0xa2c141df, 0x003bb5d1, &RSSYMalldictionaries },
+	{ "allEntries", 0x9d9bfc9b, 0x003c2ee9, &RSSYMallentries },
+	{ "allocateContext", 0x60df4a9a, 0x003bb5f1, &RSSYMallocatecontext },
+	{ "allowFormulaRecognition", 0x8f3a16a6, 0x00629d71, &RSSYMallowformularecognition },
+	{ "allowKeysThrough", 0xd5937efc, 0x003bb611, &RSSYMallowkeysthrough },
+	{ "allowShapeRecognition", 0x9578a269, 0x003bb635, &RSSYMallowshaperecognition },
+	{ "allowTextRecognition", 0x63efb69d, 0x003bb65d, &RSSYMallowtextrecognition },
+	{ "alphaKeyboard", 0xc0152e3f, 0x003bb685, &RSSYMalphakeyboard },
+	{ "alternatewords", 0xea163cf7, 0x003bb6a5, &RSSYMalternatewords },
+	{ "alwaysCallPickActionScript", 0xba8476af, 0x003bb6c5, &RSSYMalwayscallpickactionscript },
+	{ "ambientTemp", 0x0620d806, 0x003bb6f1, &RSSYMambienttemp },
+	{ "amountRead", 0xc2f58f70, 0x003c2f05, &RSSYMamountread },
+	{ "any", 0x62464fa8, 0x0054cdc5, &RSSYMany },
+	{ "app", 0x0ec1fb99, 0x003bb70d, &RSSYMapp },
+	{ "appAreaGlobalLeft", 0x2046a4a6, 0x00416d19, &RSSYMappareagloballeft },
+	{ "appAreaGlobalTop", 0x8424042e, 0x00416cdd, &RSSYMappareaglobaltop },
+	{ "appAreaHeight", 0x4737475b, 0x003bb721, &RSSYMappareaheight },
+	{ "appAreaLeft", 0x8471c2bd, 0x003bb741, &RSSYMapparealeft },
+	{ "appAreaTop", 0xe84f2245, 0x003bb75d, &RSSYMappareatop },
+	{ "appAreaWidth", 0x0cdd2d2a, 0x003bb779, &RSSYMappareawidth },
+	{ "application", 0xc9b1e494, 0x003bb799, &RSSYMapplication },
+	{ "applications", 0x15ae5b8f, 0x003bb7b5, &RSSYMapplications },
+	{ "Apply", 0x08836fd6, 0x003b1395, &RSSYMapply },
+	{ "appName", 0xab626572, 0x00421af5, &RSSYMappname },
+	{ "appSymbol", 0x889b753f, 0x003bb7d5, &RSSYMappsymbol },
+	{ "arcerbounds", 0x428fcb78, 0x003bb7f1, &RSSYMarcerbounds },
+	{ "aref", 0xc1f9fcae, 0x003afe09, &RSSYMaref },
+	{ "arglist", 0x07b7e7e6, 0x003bb80d, &RSSYMarglist },
+	{ "args", 0x073a1e85, 0x0043f901, &RSSYMargs },
+	{ "arm610a", 0xef5935f8, 0x003bb825, &RSSYMarm610a },
+	{ "arm710a", 0x8d90afb1, 0x003bb83d, &RSSYMarm710a },
+	{ "Array", 0xb4ff1bc7, 0x003b0039, &RSSYMarray },
+	{ "ascending", 0xf54a032c, 0x004be6e5, &RSSYMascending },
+	{ "asciiString", 0x344b9940, 0x00636351, &RSSYMasciistring },
+	{ "assist", 0x1810f35f, 0x003bb855, &RSSYMassist },
+	{ "assistant", 0x6341e26a, 0x003bac21, &RSSYMassistant },
+	{ "assistLine", 0x0835b147, 0x003bb86d, &RSSYMassistline },
+	{ "async", 0x16c7a20e, 0x003bb889, &RSSYMasync },
+	{ "attachment", 0x6f713b61, 0x003bb8a1, &RSSYMattachment },
+	{ "attribute", 0xadf50814, 0x003bb8bd, &RSSYMattribute },
+	{ "Australia", 0x06ec5ff6, 0x004343b9, &RSSYMaustralia },
+	{ "auto", 0x71d3d331, 0x003bb8d9, &RSSYMauto },
+	{ "AutoAdd", 0xab626572, 0x003bb8f1, &RSSYMautoadd },
+	{ "autoClose", 0x96dfa777, 0x003bb909, &RSSYMautoclose },
+	{ "AutoDock", 0x0e743d0a, 0x003b0a81, &RSSYMautodock },
+	{ "AvailablePrinters", 0x23a4cf38, 0x003c2f21, &RSSYMavailableprinters },
+	{ "background", 0xdf7df3e0, 0x003bb925, &RSSYMbackground },
+	{ "backgroundpicture", 0x9c82b61c, 0x003bb941, &RSSYMbackgroundpicture },
+	{ "backupInfo", 0x1bece752, 0x003bb965, &RSSYMbackupinfo },
+	{ "backuppassword", 0x34c962a1, 0x003bb981, &RSSYMbackuppassword },
+	{ "BadAdapterAlert", 0x6bc55240, 0x00563b35, &RSSYMbadadapteralert },
+	{ "BadBatteryAlert", 0x7d67af0a, 0x005639d5, &RSSYMbadbatteryalert },
+	{ "badFontMap", 0x66a00cfc, 0x003c2f45, &RSSYMbadfontmap },
+	{ "BadPassword", 0x7efebeea, 0x0056a73d, &RSSYMbadpassword },
+	{ "BadWickedNaughtyNoot", 0x497c2b6e, 0x003b160d, &RSSYMbadwickednaughtynoot },
+	{ "barber", 0xc12e74be, 0x003bb9a1, &RSSYMbarber },
+	{ "base", 0xe7538f83, 0x003bb9b9, &RSSYMbase },
+	{ "baseInputMask", 0x8704655f, 0x003bb9d1, &RSSYMbaseinputmask },
+	{ "batteryCapacity", 0xc2a7d0e1, 0x003bb9f1, &RSSYMbatterycapacity },
+	{ "batteryCurrent", 0x2f565ece, 0x003c5295, &RSSYMbatterycurrent },
+	{ "batteryDead", 0xfd4fa9a1, 0x003bba11, &RSSYMbatterydead },
+	{ "batteryLow", 0xaf3e5965, 0x003bba2d, &RSSYMbatterylow },
+	{ "batteryTemp", 0xb5faae89, 0x003bba49, &RSSYMbatterytemp },
+	{ "batteryType", 0x20946335, 0x003bba65, &RSSYMbatterytype },
+	{ "batteryVoltage", 0xada74985, 0x003bba81, &RSSYMbatteryvoltage },
+	{ "bcAlphaName", 0x1106dfac, 0x003bbaa1, &RSSYMbcalphaname },
+	{ "bcFullName", 0x8bf99fd1, 0x003bbabd, &RSSYMbcfullname },
+	{ "BeamCommitRecv", 0x84ef8c1e, 0x003bbad9, &RSSYMbeamcommitrecv },
+	{ "BeamCommitSend", 0xcfa2b1c8, 0x003bbaf9, &RSSYMbeamcommitsend },
+	{ "beamIndex", 0x93817ce5, 0x004d1be5, &RSSYMbeamindex },
+	{ "BeamNextItem", 0x9cd074ab, 0x003bbb19, &RSSYMbeamnextitem },
+	{ "BeamStartRecv", 0x0e267e7b, 0x003bbb39, &RSSYMbeamstartrecv },
+	{ "beamTotal", 0xfe1b3191, 0x004d1c01, &RSSYMbeamtotal },
+	{ "because", 0x7d37a438, 0x003bbb59, &RSSYMbecause },
+	{ "beepSound", 0x68b4e63d, 0x003bbb71, &RSSYMbeepsound },
+	{ "begin", 0xa35cbefd, 0x003bbb8d, &RSSYMbegin },
+	{ "beginExclKey", 0x0cdd2d2a, 0x005117ed, &RSSYMbeginexclkey },
+	{ "beginKey", 0xa3da885e, 0x003bbba5, &RSSYMbeginkey },
+	{ "belong", 0x5121bc3f, 0x003bbbc1, &RSSYMbelong },
+	{ "bigHeight", 0x57128973, 0x003bbbd9, &RSSYMbigheight },
+	{ "bigLearningEnabled", 0x1e31cb65, 0x00567739, &RSSYMbiglearningenabled },
+	{ "binary", 0xf82a645d, 0x003bbbf5, &RSSYMbinary },
+	{ "binCFunction", 0xfe98faf2, 0x0063636d, &RSSYMbincfunction },
+	{ "bindoptions", 0xc43ee0c1, 0x003c2f61, &RSSYMbindoptions },
+	{ "birthday", 0x33cdcfdf, 0x003bbc0d, &RSSYMbirthday },
+	{ "bitdepth", 0x592762b4, 0x003bbc29, &RSSYMbitdepth },
+	{ "bitmap", 0x066e9695, 0x003bbc45, &RSSYMbitmap },
+	{ "bitmapdata", 0x4f8aac5f, 0x003bbc5d, &RSSYMbitmapdata },
+	{ "bits", 0x1e4f7f22, 0x003bbc79, &RSSYMbits },
+	{ "bitsBounds", 0xcbc6bdd5, 0x003bbc91, &RSSYMbitsbounds },
+	{ "blessedapp", 0xba24610b, 0x003bb081, &RSSYMblessedapp },
+	{ "blinddialdelay", 0x36de3be2, 0x003bbcad, &RSSYMblinddialdelay },
+	{ "blinddialing", 0x99724a19, 0x003bbccd, &RSSYMblinddialing },
+	{ "block", 0x58a99953, 0x003bbced, &RSSYMblock },
+	{ "blocks", 0xa4a6104e, 0x003bbd05, &RSSYMblocks },
+	{ "body", 0xa571983e, 0x003bbd1d, &RSSYMbody },
+	{ "bold", 0x9ca069d9, 0x003c2f7d, &RSSYMbold },
+	{ "boldData", 0xe5bc7fa3, 0x003c2f95, &RSSYMbolddata },
+	{ "bolditalic", 0x4f8aac5f, 0x003c2fb1, &RSSYMbolditalic },
+	{ "boldItalicData", 0x98a6c229, 0x003c2fcd, &RSSYMbolditalicdata },
+	{ "Book", 0xcacb2b13, 0x003bbd35, &RSSYMbook },
+	{ "bookInstallScript", 0x4c5c8c9f, 0x003bbd4d, &RSSYMbookinstallscript },
+	{ "bookPresent", 0x9ee54dec, 0x003bbd71, &RSSYMbookpresent },
+	{ "bookRef", 0x60af3fc8, 0x003bbd8d, &RSSYMbookref },
+	{ "bookRemoveScript", 0x2e8ad6de, 0x003bbda5, &RSSYMbookremovescript },
+	{ "books", 0x16c7a20e, 0x003bbdc9, &RSSYMbooks },
+	{ "bookScripts", 0xf269a1fb, 0x003bbde1, &RSSYMbookscripts },
+	{ "bookSearchScript", 0x59576d86, 0x003bbdfd, &RSSYMbooksearchscript },
+	{ "bookSoup", 0xe3a7a662, 0x003bbe21, &RSSYMbooksoup },
+	{ "boolean", 0x6ef37200, 0x003c5dc1, &RSSYMboolean },
+	{ "bottom", 0xdba1ffed, 0x003bbe3d, &RSSYMbottom },
+	{ "bounds", 0xad773eb3, 0x003bbe55, &RSSYMbounds },
+	{ "boundsrect", 0x52e8d6f1, 0x003bbe6d, &RSSYMboundsrect },
+	{ "box", 0x007dc961, 0x003bbe89, &RSSYMbox },
+	{ "boxBottom", 0xdc1fc94e, 0x003bbe9d, &RSSYMboxbottom },
+	{ "boxLeft", 0xcb48f474, 0x003bbeb9, &RSSYMboxleft },
+	{ "boxRight", 0x17456b6f, 0x003bbed1, &RSSYMboxright },
+	{ "boxTop", 0x2f2653fc, 0x003bbeed, &RSSYMboxtop },
+	{ "bps", 0x879fe27d, 0x003bbf05, &RSSYMbps },
+	{ "BreakLoop", 0xb3680be7, 0x003b1769, &RSSYMbreakloop },
+	{ "breakOnThrows", 0xa6eaf461, 0x0063638d, &RSSYMbreakonthrows },
+	{ "britishwordscursiveoption", 0x2a912f2e, 0x003bbf19, &RSSYMbritishwordscursiveoption },
+	{ "browser", 0xaec09004, 0x003bbf45, &RSSYMbrowser },
+	{ "BrowserClose", 0xd3cc644a, 0x003bbf5d, &RSSYMbrowserclose },
+	{ "browsers", 0xfabd06ff, 0x003bbf7d, &RSSYMbrowsers },
+	{ "bufferCount", 0x0ef2066b, 0x003c57f9, &RSSYMbuffercount },
+	{ "bufferSize", 0xda0af00d, 0x003c2fed, &RSSYMbuffersize },
+	{ "BuildInputMask", 0x0f6fcfcc, 0x003bbf99, &RSSYMbuildinputmask },
+	{ "builtIn", 0xa5ef619f, 0x00536a95, &RSSYMbuiltin },
+	{ "Busy", 0x9ffe946b, 0x003bbfb9, &RSSYMbusy },
+	{ "busyDialog", 0x9d9bfc9b, 0x003bbfd1, &RSSYMbusydialog },
+	{ "buttonBarPosition", 0x919cae76, 0x00416ddd, &RSSYMbuttonbarposition },
+	{ "buttonClickScript", 0x4c5c8c9f, 0x003bbfed, &RSSYMbuttonclickscript },
+	{ "buttonPressedScript", 0x12803bcf, 0x003bc011, &RSSYMbuttonpressedscript },
+	{ "byte", 0x5abe7294, 0x003bc035, &RSSYMbyte },
+	{ "byteCount", 0x3de84f95, 0x003bc04d, &RSSYMbytecount },
+	{ "byteproxy", 0xb15332a6, 0x003bc069, &RSSYMbyteproxy },
+	{ "bytes", 0xa6bae98f, 0x003bc085, &RSSYMbytes },
+	{ "cache", 0x21ada9b4, 0x00634bc5, &RSSYMcache },
+	{ "cachedRecConfig", 0x9691e8e8, 0x003bc09d, &RSSYMcachedrecconfig },
+	{ "calendar", 0x478505ea, 0x003ba229, &RSSYMcalendar },
+	{ "calibration", 0x5f182fe8, 0x003bc0bd, &RSSYMcalibration },
+	{ "callback", 0x3eb3d785, 0x003bc0d9, &RSSYMcallback },
+	{ "callbackcontext", 0x8babe142, 0x003c3009, &RSSYMcallbackcontext },
+	{ "callbackfreq", 0xe4256fc3, 0x0063664d, &RSSYMcallbackfreq },
+	{ "CallPowerStatusChangeFns", 0x95f66bca, 0x00562cc1, &RSSYMcallpowerstatuschangefns },
+	{ "Canada", 0x2869fed8, 0x003bc0f5, &RSSYMcanada },
+	{ "CanadaFr", 0x195a44b0, 0x003c3029, &RSSYMcanadafr },
+	{ "Canceling", 0x038e3564, 0x003bc10d, &RSSYMcanceling },
+	{ "canonicalParaTopic", 0xa8b20f13, 0x003bc129, &RSSYMcanonicalparatopic },
+	{ "card", 0x491c15ca, 0x003bc14d, &RSSYMcard },
+	{ "cardarray", 0xfe1b3191, 0x003bc165, &RSSYMcardarray },
+	{ "cardfile", 0x478505ea, 0x003ba245, &RSSYMcardfile },
+	{ "cardfirst", 0x8e0e7912, 0x003bc181, &RSSYMcardfirst },
+	{ "cardHWLocationIds", 0x6e57f4e2, 0x003c51a1, &RSSYMcardhwlocationids },
+	{ "cardInfoVersion", 0x9d4e3e0c, 0x003c5119, &RSSYMcardinfoversion },
+	{ "cardlast", 0xa3da885e, 0x003bc19d, &RSSYMcardlast },
+	{ "cardlock", 0xd7784d6b, 0x003bc1b9, &RSSYMcardlock },
+	{ "cardprefs", 0x9c52ab4a, 0x003bc1d5, &RSSYMcardprefs },
+	{ "CardReInserted", 0x232705d7, 0x003bc1f1, &RSSYMcardreinserted },
+	{ "CardRemoved", 0xd7f616cc, 0x003bc211, &RSSYMcardremoved },
+	{ "cardSocket", 0xba24610b, 0x003bc22d, &RSSYMcardsocket },
+	{ "cardSoups", 0xadf50814, 0x0062e76d, &RSSYMcardsoups },
+	{ "cardTypes", 0x96dfa777, 0x003c3045, &RSSYMcardtypes },
+	{ "cardYanked", 0xb15332a6, 0x003bc249, &RSSYMcardyanked },
+	{ "carrierdelay", 0x3236bfff, 0x003bc265, &RSSYMcarrierdelay },
+	{ "category", 0x875223ee, 0x003bc285, &RSSYMcategory },
+	{ "cbits", 0x86d45a8d, 0x003bc2a1, &RSSYMcbits },
+	{ "cellframe", 0x57128973, 0x003bc2b9, &RSSYMcellframe },
+	{ "cellularConnection", 0x1c1cf224, 0x003bc2d5, &RSSYMcellularconnection },
+	{ "center", 0x7f4c7d79, 0x003bc2f9, &RSSYMcenter },
+	{ "certificate", 0x4802cf4b, 0x003bc311, &RSSYMcertificate },
+	{ "certificatepassword", 0xc9e1ef66, 0x003bc32d, &RSSYMcertificatepassword },
+	{ "CFunction", 0xe192cd21, 0x003afdc5, &RSSYMcfunction },
+	{ "changed", 0xd62efc1a, 0x003bc351, &RSSYMchanged },
+	{ "char", 0xc1f9fcae, 0x003bc369, &RSSYMchar },
+	{ "charClass", 0xe705d0f4, 0x003c3061, &RSSYMcharclass },
+	{ "charEncodings", 0x5e4ca7f8, 0x003c307d, &RSSYMcharencodings },
+	{ "chargeCurrent", 0x58d9a425, 0x003c52b5, &RSSYMchargecurrent },
+	{ "chargeRate", 0xb15332a6, 0x003bc381, &RSSYMchargerate },
+	{ "chargeState", 0x39be9d13, 0x003bc39d, &RSSYMchargestate },
+	{ "checkBitmaps", 0xa243787e, 0x003ba1cd, &RSSYMcheckbitmaps },
+	{ "CheckPassword", 0xd1b78b09, 0x0056a71d, &RSSYMcheckpassword },
+	{ "checksum", 0xbaefe8fb, 0x003bafd1, &RSSYMchecksum },
+	{ "choices", 0x32847e8e, 0x003bc3b9, &RSSYMchoices },
+	{ "chr<", 0xaae49c11, 0x0054859d, &RSSYMchr_3C },
+	{ "chr>", 0xe7538f83, 0x006365fd, &RSSYMchr_3E },
+	{ "ciprivate", 0xa523d9af, 0x003bc3d1, &RSSYMciprivate },
+	{ "cisDeviceTypes", 0x1db40204, 0x003c309d, &RSSYMcisdevicetypes },
+	{ "cisFunctionExts", 0x89970801, 0x003c30bd, &RSSYMcisfunctionexts },
+	{ "cisFunctionId", 0x6fef04c2, 0x003c30dd, &RSSYMcisfunctionid },
+	{ "cisFunctions", 0x975d70d8, 0x003c5181, &RSSYMcisfunctions },
+	{ "cisManufacturerId", 0xc1dc48f1, 0x003c30fd, &RSSYMcismanufacturerid },
+	{ "cisManufacturerIdInfo", 0x2adeedbd, 0x003c3121, &RSSYMcismanufactureridinfo },
+	{ "cisManufacturerName", 0x39eea7e5, 0x003c3149, &RSSYMcismanufacturername },
+	{ "cisProductInfo0", 0xb9d6a27c, 0x003c316d, &RSSYMcisproductinfo0 },
+	{ "cisProductInfo1", 0x580e1c35, 0x003c318d, &RSSYMcisproductinfo1 },
+	{ "cisProductName", 0x430d94d9, 0x003c31ad, &RSSYMcisproductname },
+	{ "city", 0x71d3d331, 0x003bc3ed, &RSSYMcity },
+	{ "class", 0x250bd446, 0x003c31cd, &RSSYMclass },
+	{ "classes", 0x15fc1a1e, 0x003c31e5, &RSSYMclasses },
+	{ "clearOnPaste", 0x60618139, 0x003bc405, &RSSYMclearonpaste },
+	{ "clicker", 0x944d04d5, 0x003b96d1, &RSSYMclicker },
+	{ "clickSound", 0x24be15b7, 0x003bc425, &RSSYMclicksound },
+	{ "client", 0x42dd8a07, 0x00557ab9, &RSSYMclient },
+	{ "clipboardDepth", 0xf4fc449d, 0x00417025, &RSSYMclipboarddepth },
+	{ "clipBounds", 0x9d9bfc9b, 0x004493c1, &RSSYMclipbounds },
+	{ "clipping", 0x95965626, 0x003bc441, &RSSYMclipping },
+	{ "closure", 0x5b3c3bf5, 0x0046138d, &RSSYMclosure },
+	{ "cmdKeyRepeatThreshold", 0xe02bc813, 0x003bb0e5, &RSSYMcmdkeyrepeatthreshold },
+	{ "cmprsdSz", 0x5c858d46, 0x003c4dcd, &RSSYMcmprsdsz },
+	{ "cntrlPanel", 0x9d9bfc9b, 0x00519851, &RSSYMcntrlpanel },
+	{ "CObject", 0xb9a697aa, 0x006363ad, &RSSYMcobject },
+	{ "code", 0xe7538f83, 0x003c586d, &RSSYMcode },
+	{ "CodeBlock", 0x3ffd28d6, 0x00629419, &RSSYMcodeblock },
+	{ "codec", 0x4fd86aee, 0x003c57c5, &RSSYMcodec },
+	{ "codecName", 0xec78d4c7, 0x003c57dd, &RSSYMcodecname },
+	{ "collapsed", 0xc1ac3e1f, 0x003c31fd, &RSSYMcollapsed },
+	{ "collapsedHeight", 0x4f3cedd0, 0x003c3219, &RSSYMcollapsedheight },
+	{ "collect", 0x24404c56, 0x003b96e9, &RSSYMcollect },
+	{ "color", 0xb4ff1bc7, 0x003bc45d, &RSSYMcolor },
+	{ "colordata", 0xfe1b3191, 0x003bc475, &RSSYMcolordata },
+	{ "colortable", 0x330247ef, 0x003bc491, &RSSYMcolortable },
+	{ "commaDelay", 0x66a00cfc, 0x003bc4ad, &RSSYMcommadelay },
+	{ "command", 0xd0bbf847, 0x003bc4c9, &RSSYMcommand },
+	{ "companderdata", 0x4737475b, 0x003bc4e1, &RSSYMcompanderdata },
+	{ "compandername", 0x9abb9b6a, 0x003bc501, &RSSYMcompandername },
+	{ "company", 0xa5ef619f, 0x003bc521, &RSSYMcompany },
+	{ "companyphonetic", 0xb4639ea9, 0x003bc539, &RSSYMcompanyphonetic },
+	{ "completed", 0x76f91875, 0x003bc559, &RSSYMcompleted },
+	{ "completionscript", 0xccc25097, 0x003bc575, &RSSYMcompletionscript },
+	{ "compressed", 0xda0af00d, 0x003c4db1, &RSSYMcompressed },
+	{ "compressionType", 0x55f942f4, 0x003bc599, &RSSYMcompressiontype },
+	{ "condition", 0xa523d9af, 0x003bc5b9, &RSSYMcondition },
+	{ "config", 0xb2ea4286, 0x003bc5d5, &RSSYMconfig },
+	{ "configOptions", 0x5366a052, 0x003bc5ed, &RSSYMconfigoptions },
+	{ "configurations", 0x71385613, 0x003bc60d, &RSSYMconfigurations },
+	{ "confirmed", 0xc1ac3e1f, 0x003bc62d, &RSSYMconfirmed },
+	{ "Confirming", 0x4a17a88c, 0x003c3239, &RSSYMconfirming },
+	{ "ConnAddChangedSoup", 0xce0ba1e8, 0x003b1d11, &RSSYMconnaddchangedsoup },
+	{ "conncobject", 0x5f182fe8, 0x003bc649, &RSSYMconncobject },
+	{ "Connect", 0x9d1e333a, 0x003bc665, &RSSYMconnect },
+	{ "connected", 0x48ce573b, 0x003bc67d, &RSSYMconnected },
+	{ "Connecting", 0xd139c1a8, 0x003c3255, &RSSYMconnecting },
+	{ "Connection", 0xc2f58f70, 0x003bc699, &RSSYMconnection },
+	{ "connectionextensions", 0x4cda5600, 0x003bc6b5, &RSSYMconnectionextensions },
+	{ "connectOptions", 0x3d9a9106, 0x003c3271, &RSSYMconnectoptions },
+	{ "connecttimeout", 0x26853069, 0x00472735, &RSSYMconnecttimeout },
+	{ "connsendchanges", 0xed746789, 0x004726a1, &RSSYMconnsendchanges },
+	{ "constantfunctions", 0xb6f6414b, 0x003b0139, &RSSYMconstantfunctions },
+	{ "constructor", 0xb087aab6, 0x003bc6dd, &RSSYMconstructor },
+	{ "contentArea", 0xc9b1e494, 0x003bc6f9, &RSSYMcontentarea },
+	{ "contents", 0x6ac9bf7e, 0x003bc715, &RSSYMcontents },
+	{ "context", 0x4cf809bd, 0x003bc731, &RSSYMcontext },
+	{ "contextFrame", 0xa5a1a310, 0x00629fad, &RSSYMcontextframe },
+	{ "conversionerror", 0xdd1b5c10, 0x00472605, &RSSYMconversionerror },
+	{ "Convert1.XCard?", 0x26853069, 0x003bc749, &RSSYMconvert1_2Excard_3F },
+	{ "Convert1.XStore", 0x49c9e9fd, 0x003b1df1, &RSSYMconvert1_2Exstore },
+	{ "ConvertDropToShape", 0x9859039a, 0x003bc769, &RSSYMconvertdroptoshape },
+	{ "ConvertFrame", 0x2cc3bc2c, 0x003b1e59, &RSSYMconvertframe },
+	{ "copperfield", 0x762d9085, 0x003ba2b5, &RSSYMcopperfield },
+	{ "CopyEntries", 0x2ed8956d, 0x00634971, &RSSYMcopyentries },
+	{ "copyprotection", 0xa83445b2, 0x003bc78d, &RSSYMcopyprotection },
+	{ "copyright", 0xc50a68b1, 0x003c4d95, &RSSYMcopyright },
+	{ "correct", 0x8eda0102, 0x003bc7ad, &RSSYMcorrect },
+	{ "correctInfo", 0xf7dca5ce, 0x003bc7c5, &RSSYMcorrectinfo },
+	{ "count", 0xe329dd01, 0x003bc7e1, &RSSYMcount },
+	{ "country", 0x92382b94, 0x003bc7f9, &RSSYMcountry },
+	{ "countryCode", 0x798bbb17, 0x003bc811, &RSSYMcountrycode },
+	{ "countskippedasmisspelled", 0xad0bcc67, 0x0062836d, &RSSYMcountskippedasmisspelled },
+	{ "coverForm", 0x0fbd8e5b, 0x003bc82d, &RSSYMcoverform },
+	{ "cpuspeed", 0x703cc351, 0x003bc849, &RSSYMcpuspeed },
+	{ "cputype", 0x640d6a5a, 0x003bc865, &RSSYMcputype },
+	{ "CreateGetSoup", 0xffe24c43, 0x003bc87d, &RSSYMcreategetsoup },
+	{ "CreateUSoupMember", 0x071c6ac8, 0x003b20f5, &RSSYMcreateusoupmember },
+	{ "creationdate", 0xb958d91b, 0x003c4d55, &RSSYMcreationdate },
+	{ "creator", 0x526b0d90, 0x003bc89d, &RSSYMcreator },
+	{ "creditcard", 0x131bb8ed, 0x003bc8b5, &RSSYMcreditcard },
+	{ "creditexper", 0x96141f87, 0x003bc8d1, &RSSYMcreditexper },
+	{ "creditnumber", 0x3b07ee64, 0x003bc8ed, &RSSYMcreditnumber },
+	{ "cribNote", 0x95965626, 0x003ba2ed, &RSSYMcribnote },
+	{ "CuPage", 0x14b2c8cd, 0x003bc90d, &RSSYMcupage },
+	{ "curAscent", 0x435b5368, 0x003c3291, &RSSYMcurascent },
+	{ "curDescent", 0xc2f58f70, 0x003c32ad, &RSSYMcurdescent },
+	{ "curFontSize", 0x825ce97c, 0x003c32c9, &RSSYMcurfontsize },
+	{ "curHeight", 0x2c45f2cb, 0x003c32e5, &RSSYMcurheight },
+	{ "curpage", 0xc277c60f, 0x003bc925, &RSSYMcurpage },
+	{ "curPenSize", 0x9828f8c8, 0x003c3301, &RSSYMcurpensize },
+	{ "currencyPrefix", 0x1840fe31, 0x003bc93d, &RSSYMcurrencyprefix },
+	{ "currencySuffix", 0x6bc55240, 0x003bc95d, &RSSYMcurrencysuffix },
+	{ "curRendering", 0xb3e5d548, 0x003bc97d, &RSSYMcurrendering },
+	{ "currentCountry", 0xa2c141df, 0x003bc99d, &RSSYMcurrentcountry },
+	{ "currentEntry", 0x83a63acd, 0x003bc9bd, &RSSYMcurrententry },
+	{ "currentFormat", 0x8191618c, 0x003bc9dd, &RSSYMcurrentformat },
+	{ "currentline", 0x00add433, 0x003bc9fd, &RSSYMcurrentline },
+	{ "currentlocalebundle", 0x39eea7e5, 0x003bca19, &RSSYMcurrentlocalebundle },
+	{ "currentPartNumber", 0xb6f6414b, 0x003c331d, &RSSYMcurrentpartnumber },
+	{ "currentwordrecognizer", 0x11b4b3df, 0x003bca3d, &RSSYMcurrentwordrecognizer },
+	{ "cursor", 0x6b95476e, 0x003bca65, &RSSYMcursor },
+	{ "cursors", 0xb791be69, 0x003b9765, &RSSYMcursors },
+	{ "curTopic", 0x53b45ee1, 0x003bca7d, &RSSYMcurtopic },
+	{ "curveshapeoption", 0xccc25097, 0x003bca99, &RSSYMcurveshapeoption },
+	{ "curWidth", 0xf1ebd89a, 0x003c3341, &RSSYMcurwidth },
+	{ "curXHeight", 0x8f57ca63, 0x003c335d, &RSSYMcurxheight },
+	{ "custom", 0x90eeda43, 0x003bcabd, &RSSYMcustom },
+	{ "data", 0x491c15ca, 0x003bcad5, &RSSYMdata },
+	{ "dataBits", 0x676b94ec, 0x003bcaed, &RSSYMdatabits },
+	{ "dataBounds", 0xf693547d, 0x003bcb09, &RSSYMdatabounds },
+	{ "datalen", 0x1b6f1df1, 0x003bcb25, &RSSYMdatalen },
+	{ "dataoffset", 0x7db56d99, 0x003bcb3d, &RSSYMdataoffset },
+	{ "datatext", 0x25899da7, 0x003bcb59, &RSSYMdatatext },
+	{ "dataType", 0x4ae3307c, 0x003c57a9, &RSSYMdatatype },
+	{ "Date", 0xc1f9fcae, 0x003b22cd, &RSSYMdate },
+	{ "dateDictionary", 0x3a3c6674, 0x003bcb75, &RSSYMdatedictionary },
+	{ "dateKeyboard", 0x407af237, 0x003bcb95, &RSSYMdatekeyboard },
+	{ "datesFont", 0x435b5368, 0x003bcbb5, &RSSYMdatesfont },
+	{ "dateStr", 0xa5ef619f, 0x003bcbd1, &RSSYMdatestr },
+	{ "dayheight", 0xc1ac3e1f, 0x003bcbe9, &RSSYMdayheight },
+	{ "dayLeadingZ", 0xd7f616cc, 0x003c3379, &RSSYMdayleadingz },
+	{ "daylightsavings", 0xb4639ea9, 0x003bcc05, &RSSYMdaylightsavings },
+	{ "dayofweeek", 0x585bdac4, 0x003bcc25, &RSSYMdayofweeek },
+	{ "dayOfWeek", 0xb3680be7, 0x003bcc41, &RSSYMdayofweek },
+	{ "dayphone", 0xd2054998, 0x003bcc5d, &RSSYMdayphone },
+	{ "daysInMonth", 0xdb54415e, 0x003bcc79, &RSSYMdaysinmonth },
+	{ "dayStrSpec", 0xe2dc1e72, 0x003bcc95, &RSSYMdaystrspec },
+	{ "debug", 0xdfcbb26f, 0x003b977d, &RSSYMdebug },
+	{ "DebuggerInfo", 0x7ce9e5a9, 0x00629efd, &RSSYMdebuggerinfo },
+	{ "debugslot", 0xe192cd21, 0x003bccb1, &RSSYMdebugslot },
+	{ "decimalpoint", 0x6ea5b371, 0x003bcccd, &RSSYMdecimalpoint },
+	{ "declareSelf", 0xb80f87ca, 0x003c3395, &RSSYMdeclareself },
+	{ "deepcount", 0xa523d9af, 0x003bcced, &RSSYMdeepcount },
+	{ "deepfoundcount", 0x7f7c884b, 0x003bcd09, &RSSYMdeepfoundcount },
+	{ "deepToast", 0xe192cd21, 0x0043b895, &RSSYMdeeptoast },
+	{ "default", 0x8608d29d, 0x003bcd29, &RSSYMdefault },
+	{ "defaultFontSpec", 0x8638dd6f, 0x003c2c3d, &RSSYMdefaultfontspec },
+	{ "defaultStore", 0xe2109682, 0x003b9795, &RSSYMdefaultstore },
+	{ "default_task", 0xf925f71f, 0x003c33b1, &RSSYMdefault_task },
+	{ "DeferredRec", 0x56470183, 0x003c33d1, &RSSYMdeferredrec },
+	{ "DefGlobalFn", 0x02c2ad74, 0x003b245d, &RSSYMdefglobalfn },
+	{ "deleted", 0xdf002a7f, 0x003bcd41, &RSSYMdeleted },
+	{ "DeleteEncodedWord", 0xeca8df99, 0x005a98e1, &RSSYMdeleteencodedword },
+	{ "DeletionScript", 0x34c962a1, 0x003bcd59, &RSSYMdeletionscript },
+	{ "depth", 0x86d45a8d, 0x003bcd79, &RSSYMdepth },
+	{ "descent", 0x24404c56, 0x003bcd91, &RSSYMdescent },
+	{ "deskey", 0xf82a645d, 0x003bcda9, &RSSYMdeskey },
+	{ "desktopapps", 0xdb54415e, 0x004726c1, &RSSYMdesktopapps },
+	{ "desktoperror", 0x01f72584, 0x003bcdc1, &RSSYMdesktoperror },
+	{ "desktopresult", 0x8a628ff1, 0x003bcde1, &RSSYMdesktopresult },
+	{ "destructor", 0xebad4cd7, 0x003bce01, &RSSYMdestructor },
+	{ "detectBusy", 0x2d8f441c, 0x003bce1d, &RSSYMdetectbusy },
+	{ "detectDialTone", 0x6dda2b81, 0x003bce39, &RSSYMdetectdialtone },
+	{ "device", 0xfd9d6830, 0x00422f59, &RSSYMdevice },
+	{ "deviceid", 0x222b7315, 0x003bce59, &RSSYMdeviceid },
+	{ "deviceKind", 0xb15332a6, 0x003bce75, &RSSYMdevicekind },
+	{ "deviceNumber", 0x6ea5b371, 0x003bce91, &RSSYMdevicenumber },
+	{ "dialing", 0x7d37a438, 0x003bceb1, &RSSYMdialing },
+	{ "dialnavigate", 0x8b2e17e1, 0x003bcec9, &RSSYMdialnavigate },
+	{ "dialnavigator", 0x671dd65d, 0x003bcee9, &RSSYMdialnavigator },
+	{ "dict", 0x7746d704, 0x003bcf09, &RSSYMdict },
+	{ "dictdata", 0xc062ecce, 0x003bcf21, &RSSYMdictdata },
+	{ "dictID", 0x9bd4e1e9, 0x003bcf3d, &RSSYMdictid },
+	{ "dictionaries", 0x85bb140e, 0x003ba321, &RSSYMdictionaries },
+	{ "dictionaryList", 0xc4bcaa22, 0x003ba341, &RSSYMdictionarylist },
+	{ "dictType", 0x790df1b6, 0x003bcf55, &RSSYMdicttype },
+	{ "direction", 0xefd6ff59, 0x003c33ed, &RSSYMdirection },
+	{ "dirSortID", 0xadf50814, 0x006363c5, &RSSYMdirsortid },
+	{ "Dirty", 0xbdd04a2c, 0x004199c5, &RSSYMdirty },
+	{ "disabled", 0x0b161278, 0x006363e1, &RSSYMdisabled },
+	{ "discardafter", 0x65d4850c, 0x003bcf71, &RSSYMdiscardafter },
+	{ "discharging", 0x4802cf4b, 0x003bcf91, &RSSYMdischarging },
+	{ "Disconnect", 0x0da8b51a, 0x00498a91, &RSSYMdisconnect },
+	{ "Disconnecting", 0x41c44388, 0x003c3409, &RSSYMdisconnecting },
+	{ "DiskSoup", 0xe3a7a662, 0x00635239, &RSSYMdisksoup },
+	{ "dispatchonly", 0xe2109682, 0x003c4d75, &RSSYMdispatchonly },
+	{ "displayimportslip", 0x6c431ba1, 0x003bcfad, &RSSYMdisplayimportslip },
+	{ "displayParams", 0x61aad28a, 0x003bcfd1, &RSSYMdisplayparams },
+	{ "displayslip", 0xdb54415e, 0x003bcff1, &RSSYMdisplayslip },
+	{ "DisposeDictionary", 0x1e31cb65, 0x003b256d, &RSSYMdisposedictionary },
+	{ "distance", 0xc9341b33, 0x003bd00d, &RSSYMdistance },
+	{ "ditherPattern", 0xda88b96e, 0x003bd029, &RSSYMditherpattern },
+	{ "div", 0x4b30ef0b, 0x003afe9d, &RSSYMdiv },
+	{ "doAutoAdd", 0x853d4aad, 0x003bd049, &RSSYMdoautoadd },
+	{ "DoCorrection", 0x8e8c4273, 0x003b25b5, &RSSYMdocorrection },
+	{ "docString", 0x5a70b405, 0x006363fd, &RSSYMdocstring },
+	{ "doFormulaRecognition", 0xb415e01a, 0x003bd065, &RSSYMdoformularecognition },
+	{ "dofragmentation", 0x6f237cd2, 0x003bd08d, &RSSYMdofragmentation },
+	{ "dohilite", 0x1cb86f42, 0x003bd0ad, &RSSYMdohilite },
+	{ "doingScrub", 0xc2f58f70, 0x005247d1, &RSSYMdoingscrub },
+	{ "doInkWordRecognition", 0xa5d1ade2, 0x003bd0c9, &RSSYMdoinkwordrecognition },
+	{ "domainType", 0xf12050aa, 0x003bd0f1, &RSSYMdomaintype },
+	{ "don'tactivate", 0x91ea6d05, 0x004915b5, &RSSYMdon_27tactivate },
+	{ "dontbackup", 0xabe02ed3, 0x003bd10d, &RSSYMdontbackup },
+	{ "doRawInkRecognition", 0xf80cb0a0, 0x003bd129, &RSSYMdorawinkrecognition },
+	{ "doShapeRecognition", 0xba546bdd, 0x003bd14d, &RSSYMdoshaperecognition },
+	{ "doTextRecognition", 0x88cb8011, 0x003bd171, &RSSYMdotextrecognition },
+	{ "down", 0xd39c5978, 0x0042b4a9, &RSSYMdown },
+	{ "dragOptions", 0x62765a7a, 0x003bd195, &RSSYMdragoptions },
+	{ "dragRef", 0x57de1163, 0x003bd1b1, &RSSYMdragref },
+	{ "dragTo", 0x7f4c7d79, 0x003bd1c9, &RSSYMdragto },
+	{ "drawfillmode", 0x0cdd2d2a, 0x003c76cd, &RSSYMdrawfillmode },
+	{ "drawing", 0xd98d26ac, 0x003bd1e1, &RSSYMdrawing },
+	{ "drawpenmode", 0x0620d806, 0x003bd1f9, &RSSYMdrawpenmode },
+	{ "drawPenSizeX", 0x01f72584, 0x003bd215, &RSSYMdrawpensizex },
+	{ "drawPenSizeY", 0xa02e9f3d, 0x003bd235, &RSSYMdrawpensizey },
+	{ "driverName", 0xe84f2245, 0x003c3429, &RSSYMdrivername },
+	{ "DropIcon", 0x875223ee, 0x003bd255, &RSSYMdropicon },
+	{ "dsQuery", 0x3eb3d785, 0x003c3445, &RSSYMdsquery },
+	{ "DTEHeader", 0x3ffd28d6, 0x003bd271, &RSSYMdteheader },
+	{ "DTEMain", 0xab626572, 0x003bd28d, &RSSYMdtemain },
+	{ "DTETrigrams", 0xe9987396, 0x003bd2a5, &RSSYMdtetrigrams },
+	{ "dtmfToneDialing", 0xdf303551, 0x003bd2c1, &RSSYMdtmftonedialing },
+	{ "Duh", 0x0ec1fb99, 0x003c345d, &RSSYMduh },
+	{ "dynamic", 0x8608d29d, 0x003bd2e1, &RSSYMdynamic },
+	{ "dynatemplates", 0xffe24c43, 0x003c3471, &RSSYMdynatemplates },
+	{ "edgeWidth", 0x853d4aad, 0x003bd2f9, &RSSYMedgewidth },
+	{ "editaddshapescript", 0xd6dcd04d, 0x003bd315, &RSSYMeditaddshapescript },
+	{ "editAddWordScript", 0x15609d00, 0x003bd339, &RSSYMeditaddwordscript },
+	{ "email", 0x7e032c28, 0x003bd35d, &RSSYMemail },
+	{ "emptied", 0x60af3fc8, 0x003bd375, &RSSYMemptied },
+	{ "empty", 0x9876b757, 0x003bd38d, &RSSYMempty },
+	{ "emptyString", 0xb087aab6, 0x003bd3a5, &RSSYMemptystring },
+	{ "enabledlanguage", 0xea163cf7, 0x003c2d59, &RSSYMenabledlanguage },
+	{ "encoded", 0xc7eac9e2, 0x003bd3c1, &RSSYMencoded },
+	{ "encoding", 0x5056344f, 0x003bd3d9, &RSSYMencoding },
+	{ "encodingID", 0x74e43f34, 0x003c3491, &RSSYMencodingid },
+	{ "end", 0xe0973a5f, 0x003bd3f5, &RSSYMend },
+	{ "endchar", 0xa291370d, 0x003bd409, &RSSYMendchar },
+	{ "endcharacter", 0x7418b744, 0x003bd421, &RSSYMendcharacter },
+	{ "endExclKey", 0x4a17a88c, 0x003bd441, &RSSYMendexclkey },
+	{ "endKey", 0xe11503c0, 0x003bd45d, &RSSYMendkey },
+	{ "endsequence", 0x50d3fdb0, 0x003bd475, &RSSYMendsequence },
+	{ "endTest", 0xa5ef619f, 0x005ab775, &RSSYMendtest },
+	{ "endTime", 0x24404c56, 0x003bd491, &RSSYMendtime },
+	{ "entirewords", 0xcd100f26, 0x0052872d, &RSSYMentirewords },
+	{ "entries", 0x8095ceca, 0x003c34ad, &RSSYMentries },
+	{ "entry", 0x731d2482, 0x003bd4a9, &RSSYMentry },
+	{ "EntryAccess", 0xad298024, 0x00636419, &RSSYMentryaccess },
+	{ "entryAdded", 0x585bdac4, 0x004571b1, &RSSYMentryadded },
+	{ "EntryChange", 0x428fcb78, 0x003b2915, &RSSYMentrychange },
+	{ "entryChanged", 0x494c209c, 0x00456f15, &RSSYMentrychanged },
+	{ "EntryChangeVerbatim", 0x51040882, 0x003b287d, &RSSYMentrychangeverbatim },
+	{ "EntryChangeWithModTime", 0x433d9fab, 0x003b28cd, &RSSYMentrychangewithmodtime },
+	{ "EntryCopy", 0x215feb25, 0x003b2951, &RSSYMentrycopy },
+	{ "entryLine", 0x6341e26a, 0x003c34c5, &RSSYMentryline },
+	{ "EntryModTime", 0x2750b859, 0x003b2a09, &RSSYMentrymodtime },
+	{ "EntryMove", 0xa8820441, 0x003b2a49, &RSSYMentrymove },
+	{ "entryMoved", 0xaf3e5965, 0x004f4ff1, &RSSYMentrymoved },
+	{ "entryRemoved", 0x01f72584, 0x004a7f89, &RSSYMentryremoved },
+	{ "EntryRemoveFromSoup", 0x6ed5be43, 0x003b2a8d, &RSSYMentryremovefromsoup },
+	{ "EntryReplace", 0x6932af9e, 0x003b2b29, &RSSYMentryreplace },
+	{ "entryReplaced", 0x6fef04c2, 0x0062bc0d, &RSSYMentryreplaced },
+	{ "EntryReplaceWithModTime", 0x69e083d1, 0x003b2add, &RSSYMentryreplacewithmodtime },
+	{ "EntrySize", 0x215feb25, 0x003b2b91, &RSSYMentrysize },
+	{ "EntrySoup", 0x8bf99fd1, 0x003b2bad, &RSSYMentrysoup },
+	{ "EntryStore", 0xcf24e867, 0x003b2bc9, &RSSYMentrystore },
+	{ "EntryTextSize", 0xfdcd7302, 0x003b2be5, &RSSYMentrytextsize },
+	{ "EntryUndoChanges", 0x25b9a879, 0x003b2c05, &RSSYMentryundochanges },
+	{ "EntryUniqueID", 0xafbc22c6, 0x003b2c29, &RSSYMentryuniqueid },
+	{ "EntryValid", 0xe2dc1e72, 0x003b2c49, &RSSYMentryvalid },
+	{ "ep", 0x1649d8ad, 0x003bd4c1, &RSSYMep },
+	{ "ephemerals", 0x94cace36, 0x00635ed9, &RSSYMephemerals },
+	{ "equal", 0x617ac7b8, 0x00451b99, &RSSYMequal },
+	{ "error", 0x816156ba, 0x003bd4d5, &RSSYMerror },
+	{ "errorCode", 0x68b4e63d, 0x003bd4ed, &RSSYMerrorcode },
+	{ "errorFree", 0xbc393a4c, 0x003bd509, &RSSYMerrorfree },
+	{ "errorgauge", 0x9d9bfc9b, 0x003bd525, &RSSYMerrorgauge },
+	{ "errorstring", 0x99724a19, 0x003bd541, &RSSYMerrorstring },
+	{ "espy", 0x638fa0f9, 0x003bd55d, &RSSYMespy },
+	{ "eveningStr", 0xbd828b9d, 0x003c34e1, &RSSYMeveningstr },
+	{ "eventCode", 0x76f91875, 0x003bd575, &RSSYMeventcode },
+	{ "eventHandler", 0xc22a0780, 0x003bd591, &RSSYMeventhandler },
+	{ "events", 0xdba1ffed, 0x003bd5b1, &RSSYMevents },
+	{ "exception", 0x96dfa777, 0x003c34fd, &RSSYMexception },
+	{ "ExceptionHandler", 0xc9642605, 0x003bd5c9, &RSSYMexceptionhandler },
+	{ "exceptionMeeting", 0x95c660f8, 0x003bd5ed, &RSSYMexceptionmeeting },
+	{ "exceptions", 0xe2dc1e72, 0x003bd611, &RSSYMexceptions },
+	{ "ExpandDirectoryEntry", 0xa05eaa0f, 0x003b2cd1, &RSSYMexpanddirectoryentry },
+	{ "ExpandSettings", 0x26853069, 0x003b2d15, &RSSYMexpandsettings },
+	{ "export", 0xe4732e52, 0x003bd62d, &RSSYMexport },
+	{ "ExportTable", 0x62765a7a, 0x0062a5a5, &RSSYMexporttable },
+	{ "ExtrasDrawer", 0x103b57bc, 0x003badf9, &RSSYMextrasdrawer },
+	{ "extrasState", 0x097f0298, 0x003bd645, &RSSYMextrasstate },
+	{ "face", 0x7cb9dad7, 0x003bd661, &RSSYMface },
+	{ "family", 0x1d83f732, 0x003c3519, &RSSYMfamily },
+	{ "fastCharging", 0x7ce9e5a9, 0x003bd679, &RSSYMfastcharging },
+	{ "fastValidTest", 0xda88b96e, 0x00636435, &RSSYMfastvalidtest },
+	{ "faxNavigate", 0x14650a3e, 0x003bd699, &RSSYMfaxnavigate },
+	{ "faxNavigator", 0xf054c8ba, 0x003bd6b5, &RSSYMfaxnavigator },
+	{ "faxResolution", 0xd515b59b, 0x003c3531, &RSSYMfaxresolution },
+	{ "fields", 0x5121bc3f, 0x003c3551, &RSSYMfields },
+	{ "filename", 0x9b0959f9, 0x003bd6d5, &RSSYMfilename },
+	{ "filesize", 0xacabb6c3, 0x003bd6f1, &RSSYMfilesize },
+	{ "filetransferstatus", 0xfa2189e1, 0x003bd70d, &RSSYMfiletransferstatus },
+	{ "fillPattern", 0x4b60f9dd, 0x003bd731, &RSSYMfillpattern },
+	{ "filter", 0x9661de16, 0x003bd74d, &RSSYMfilter },
+	{ "findApps", 0xf75edc6d, 0x003bd765, &RSSYMfindapps },
+	{ "FindCustomDicts", 0xf0d2921b, 0x003bd781, &RSSYMfindcustomdicts },
+	{ "findDrawer", 0x94cace36, 0x003bd7a1, &RSSYMfinddrawer },
+	{ "first", 0x44f26348, 0x003bd7bd, &RSSYMfirst },
+	{ "firstDayOfWeek", 0xf85a6f2f, 0x003bd7d5, &RSSYMfirstdayofweek },
+	{ "firstName", 0xe192cd21, 0x003bd7f5, &RSSYMfirstname },
+	{ "firstnamephonetic", 0xf0070a2b, 0x003bd811, &RSSYMfirstnamephonetic },
+	{ "firstPage", 0x68b4e63d, 0x003bd835, &RSSYMfirstpage },
+	{ "firstTopic", 0xf9f17f0f, 0x003bd851, &RSSYMfirsttopic },
+	{ "firstWord", 0x916ca3a4, 0x003bd86d, &RSSYMfirstword },
+	{ "fixed", 0x6fbef9f0, 0x003bd889, &RSSYMfixed },
+	{ "fixedHeight", 0xfd4fa9a1, 0x003bb04d, &RSSYMfixedheight },
+	{ "flags", 0x95188cc5, 0x003bd8a1, &RSSYMflags },
+	{ "FlashCardBadVpp", 0x82dab2dd, 0x0056a759, &RSSYMflashcardbadvpp },
+	{ "flattener", 0x68b4e63d, 0x003bd8b9, &RSSYMflattener },
+	{ "fliphorizontal", 0x9f63174d, 0x003bd8d5, &RSSYMfliphorizontal },
+	{ "flipvertical", 0xd93f681d, 0x003bd8f5, &RSSYMflipvertical },
+	{ "floating", 0x592762b4, 0x003bd915, &RSSYMfloating },
+	{ "flush", 0x8fa588f2, 0x0049e41d, &RSSYMflush },
+	{ "flushappchanges", 0xb9d6a27c, 0x003bd931, &RSSYMflushappchanges },
+	{ "font", 0x3564dfbf, 0x003bd951, &RSSYMfont },
+	{ "fontFace", 0xb21eba96, 0x003c3569, &RSSYMfontface },
+	{ "fontParms", 0x6341e26a, 0x003bd969, &RSSYMfontparms },
+	{ "fonts", 0x816156ba, 0x003bd985, &RSSYMfonts },
+	{ "foo", 0xe96868c4, 0x003c3585, &RSSYMfoo },
+	{ "forEachState", 0x6ea5b371, 0x00636455, &RSSYMforeachstate },
+	{ "foreground", 0x8f57ca63, 0x003bd99d, &RSSYMforeground },
+	{ "form", 0x5abe7294, 0x003bd9b9, &RSSYMform },
+	{ "format", 0x71084b41, 0x003bd9d1, &RSSYMformat },
+	{ "Format?", 0x60af3fc8, 0x003bd9e9, &RSSYMformat_3F },
+	{ "FormatAfterMountError?", 0x9f93221f, 0x003bda01, &RSSYMformataftermounterror_3F },
+	{ "FormatBadVppCard", 0xc092f7a0, 0x0056a79d, &RSSYMformatbadvppcard },
+	{ "FormatLockedCard", 0xf430bcad, 0x0056a779, &RSSYMformatlockedcard },
+	{ "FormatWithExtremePrejudice?", 0x684973f1, 0x003bda29, &RSSYMformatwithextremeprejudice_3F },
+	{ "formHiliteScript", 0x793dfc88, 0x003bda55, &RSSYMformhilitescript },
+	{ "formSearchScript", 0xe94ab507, 0x003bda79, &RSSYMformsearchscript },
+	{ "found", 0xda58ae9c, 0x003bda9d, &RSSYMfound },
+	{ "foundcount", 0xbd828b9d, 0x003bdab5, &RSSYMfoundcount },
+	{ "fPatch", 0xb2ea4286, 0x003baed1, &RSSYMfpatch },
+	{ "fPatchCheckSum", 0x6dda2b81, 0x003baf11, &RSSYMfpatchchecksum },
+	{ "fPatchFirstPageIndex", 0x7d19f07b, 0x003baf71, &RSSYMfpatchfirstpageindex },
+	{ "fPatchPageCount", 0xb9d6a27c, 0x003baf51, &RSSYMfpatchpagecount },
+	{ "fPatchVersion", 0x9e19c5fc, 0x003baf31, &RSSYMfpatchversion },
+	{ "frame", 0x58a99953, 0x003bdad1, &RSSYMframe },
+	{ "frameparameter", 0x488098ac, 0x003bdae9, &RSSYMframeparameter },
+	{ "fromEmailAddress", 0xfd01eb12, 0x003bdb09, &RSSYMfromemailaddress },
+	{ "fromName", 0xf75edc6d, 0x003bdb2d, &RSSYMfromname },
+	{ "fTotalPatchPageCount", 0x85eb1ee0, 0x003baee9, &RSSYMftotalpatchpagecount },
+	{ "full", 0xbc86f8db, 0x003bdb49, &RSSYMfull },
+	{ "fullyCharged", 0x0cdd2d2a, 0x003bdb61, &RSSYMfullycharged },
+	{ "funcPtr", 0x72519c92, 0x00419565, &RSSYMfuncptr },
+	{ "function", 0x790df1b6, 0x00472771, &RSSYMfunction },
+	{ "functions", 0xc50a68b1, 0x003b0081, &RSSYMfunctions },
+	{ "gauge", 0x1c3aa5e1, 0x003bdb81, &RSSYMgauge },
+	{ "gaugeDrawLimits", 0xc2a7d0e1, 0x003bdb99, &RSSYMgaugedrawlimits },
+	{ "GeckoHDIHelp", 0x4ebf246f, 0x00519815, &RSSYMgeckohdihelp },
+	{ "geneva", 0xb2ea4286, 0x003bdbb9, &RSSYMgeneva },
+	{ "GetAllInfo", 0xf693547d, 0x0048e3dd, &RSSYMgetallinfo },
+	{ "GetBackupAllPackagesCursor", 0x0aaaa02c, 0x003b34f9, &RSSYMgetbackupallpackagescursor },
+	{ "GetBitmapInfo", 0xdffbbd41, 0x003b3525, &RSSYMgetbitmapinfo },
+	{ "GetConversionFrame", 0x24ee2089, 0x003b3685, &RSSYMgetconversionframe },
+	{ "GetCountryEntry", 0x75dfd1f6, 0x003b36d1, &RSSYMgetcountryentry },
+	{ "GetCurrentModemSetup", 0x02273056, 0x003b3715, &RSSYMgetcurrentmodemsetup },
+	{ "GetDefaultOwnerStore", 0x7233e8d5, 0x003c2c15, &RSSYMgetdefaultownerstore },
+	{ "GetDefaultStore", 0x529b1862, 0x003b37d1, &RSSYMgetdefaultstore },
+	{ "GetIndexes", 0xc2f58f70, 0x00436b39, &RSSYMgetindexes },
+	{ "GetInfo", 0xd98d26ac, 0x0049165d, &RSSYMgetinfo },
+	{ "GetLibraryEntry", 0x4d28148f, 0x003bdbd1, &RSSYMgetlibraryentry },
+	{ "GetName", 0x0d2aebb9, 0x003c5b45, &RSSYMgetname },
+	{ "GetNextUID", 0x44a4a4b9, 0x00634919, &RSSYMgetnextuid },
+	{ "GetNotesData", 0x9cd074ab, 0x003bdbf1, &RSSYMgetnotesdata },
+	{ "GetOwnerApp", 0x9ee54dec, 0x003b3f41, &RSSYMgetownerapp },
+	{ "GetPackageEntry", 0xf64595ee, 0x003b3f5d, &RSSYMgetpackageentry },
+	{ "getpassword", 0xf269a1fb, 0x003bdc11, &RSSYMgetpassword },
+	{ "GetRegisteredSound", 0xda3afadf, 0x003b419d, &RSSYMgetregisteredsound },
+	{ "GetRoot", 0xaec09004, 0x003b420d, &RSSYMgetroot },
+	{ "GetSignature", 0xe2109682, 0x004911ad, &RSSYMgetsignature },
+	{ "GetStore", 0xcc9245c5, 0x00424fd5, &RSSYMgetstore },
+	{ "GetUserConfig", 0x4a9571ed, 0x003b4529, &RSSYMgetuserconfig },
+	{ "GetView", 0x1ecd4883, 0x003b46bd, &RSSYMgetview },
+	{ "gmt", 0x62464fa8, 0x003bdc2d, &RSSYMgmt },
+	{ "GotoSleep", 0x718614a2, 0x003bdc41, &RSSYMgotosleep },
+	{ "graphics", 0x7e80f589, 0x0046eb35, &RSSYMgraphics },
+	{ "graphicsGutter", 0x0f6fcfcc, 0x003bdc5d, &RSSYMgraphicsgutter },
+	{ "gravityshapeoption", 0x4da5ddf0, 0x003bdc7d, &RSSYMgravityshapeoption },
+	{ "grayLevels", 0x69fe378e, 0x00447f79, &RSSYMgraylevels },
+	{ "grayPattern", 0xb5faae89, 0x003bdca1, &RSSYMgraypattern },
+	{ "group", 0x5c07c3e5, 0x00455839, &RSSYMgroup },
+	{ "groupSepStr", 0xa243787e, 0x003bdcbd, &RSSYMgroupsepstr },
+	{ "groupWidth", 0xaf3e5965, 0x003bdcd9, &RSSYMgroupwidth },
+	{ "HandleCardEvent", 0x5d812008, 0x003b47e5, &RSSYMhandlecardevent },
+	{ "HandleCheck", 0xd497ec3a, 0x003bdcf5, &RSSYMhandlecheck },
+	{ "HandleError", 0x0620d806, 0x003bdd11, &RSSYMhandleerror },
+	{ "HandleScrub", 0x39be9d13, 0x003bdd2d, &RSSYMhandlescrub },
+	{ "handwriting", 0x96141f87, 0x003bdd49, &RSSYMhandwriting },
+	{ "hardFlowBlocked", 0x38278d33, 0x0052ee45, &RSSYMhardflowblocked },
+	{ "hasInput", 0x2e5acc0c, 0x003bdd65, &RSSYMhasinput },
+	{ "hasOutput", 0x215feb25, 0x003bdd81, &RSSYMhasoutput },
+	{ "hasPath", 0xfee6b981, 0x003affe9, &RSSYMhaspath },
+	{ "hasVar", 0xf82a645d, 0x003b9b6d, &RSSYMhasvar },
+	{ "hasVariable", 0xa9cb5592, 0x003b9b51, &RSSYMhasvariable },
+	{ "Header", 0xaa191421, 0x003bdd9d, &RSSYMheader },
+	{ "headerVersion", 0x95489797, 0x003bafed, &RSSYMheaderversion },
+	{ "height", 0x8d90afb1, 0x003bddb5, &RSSYMheight },
+	{ "help", 0x8e5c37a1, 0x003bddcd, &RSSYMhelp },
+	{ "HelpBook", 0x592762b4, 0x003d6c31, &RSSYMhelpbook },
+	{ "hideCount", 0x2c45f2cb, 0x003bdde5, &RSSYMhidecount },
+	{ "hideSound", 0x2c45f2cb, 0x003bde01, &RSSYMhidesound },
+	{ "high", 0xfe68f020, 0x003bde1d, &RSSYMhigh },
+	{ "HighROM", 0x15fc1a1e, 0x003bde35, &RSSYMhighrom },
+	{ "hilite", 0x42dd8a07, 0x003c3599, &RSSYMhilite },
+	{ "hiliteBusy", 0xe2dc1e72, 0x00468fed, &RSSYMhilitebusy },
+	{ "hilites", 0x8eda0102, 0x003c35b1, &RSSYMhilites },
+	{ "hints", 0x08836fd6, 0x003bde4d, &RSSYMhints },
+	{ "history", 0x55c93822, 0x003c35c9, &RSSYMhistory },
+	{ "homePhone", 0x2c45f2cb, 0x003bde65, &RSSYMhomephone },
+	{ "hour", 0x88e933ce, 0x003bde81, &RSSYMhour },
+	{ "HourFont", 0xbe4e138d, 0x003bde99, &RSSYMhourfont },
+	{ "hourLeadingZ", 0x2cc3bc2c, 0x003c35e1, &RSSYMhourleadingz },
+	{ "iaref", 0xdfcbb26f, 0x003c3601, &RSSYMiaref },
+	{ "icon", 0x8e5c37a1, 0x003bdeb5, &RSSYMicon },
+	{ "iconShape", 0x9c52ab4a, 0x003bdecd, &RSSYMiconshape },
+	{ "id", 0x248e0ae5, 0x003bdee9, &RSSYMid },
+	{ "idle", 0xc1f9fcae, 0x003c3619, &RSSYMidle },
+	{ "IdleConnection", 0x84ef8c1e, 0x004726dd, &RSSYMidleconnection },
+	{ "idletimeout", 0x4b60f9dd, 0x00472755, &RSSYMidletimeout },
+	{ "imagingName", 0x92b5f4f5, 0x003c3631, &RSSYMimagingname },
+	{ "immediate", 0xcff07057, 0x00636475, &RSSYMimmediate },
+	{ "implementor", 0x9ee54dec, 0x00636491, &RSSYMimplementor },
+	{ "Import", 0x90eeda43, 0x003b0051, &RSSYMimport },
+	{ "ImportTable", 0x0ef2066b, 0x0062a605, &RSSYMimporttable },
+	{ "inbox", 0x53369580, 0x003bdefd, &RSSYMinbox },
+	{ "inboxstatustext", 0x50863f21, 0x003bdf15, &RSSYMinboxstatustext },
+	{ "indent", 0x1d83f732, 0x003bdf35, &RSSYMindent },
+	{ "index", 0x617ac7b8, 0x003ba13d, &RSSYMindex },
+	{ "indexes", 0x526b0d90, 0x00421b69, &RSSYMindexes },
+	{ "indexesModTime", 0x069ea167, 0x0063526d, &RSSYMindexesmodtime },
+	{ "indexnextuid", 0x3594ea91, 0x00634bfd, &RSSYMindexnextuid },
+	{ "indexObjects", 0xfe98faf2, 0x00634bdd, &RSSYMindexobjects },
+	{ "indexPath", 0x68b4e63d, 0x003bdf4d, &RSSYMindexpath },
+	{ "IndexValidTest", 0x9691e8e8, 0x00421f19, &RSSYMindexvalidtest },
+	{ "info", 0x6902a4cc, 0x003bdf69, &RSSYMinfo },
+	{ "infoModTime", 0x1d3638a3, 0x0063528d, &RSSYMinfomodtime },
+	{ "inhibitbaseromwrecregistration", 0xb37a62fc, 0x003bdf81, &RSSYMinhibitbaseromwrecregistration },
+	{ "inhibitSymbolsDictionary", 0x00902076, 0x003bdfb1, &RSSYMinhibitsymbolsdictionary },
+	{ "initialized", 0x0620d806, 0x003bdfdd, &RSSYMinitialized },
+	{ "ink", 0xacf97552, 0x003bdff9, &RSSYMink },
+	{ "ink2", 0x93cf3b74, 0x003be00d, &RSSYMink2 },
+	{ "InkMarks", 0xc3c11760, 0x003be025, &RSSYMinkmarks },
+	{ "inkPrintingScale", 0xbb1ff3cd, 0x00565a3d, &RSSYMinkprintingscale },
+	{ "inkWord", 0xf973b5ae, 0x003be041, &RSSYMinkword },
+	{ "inkWordScaling", 0x069ea167, 0x003c364d, &RSSYMinkwordscaling },
+	{ "input", 0x36ae3110, 0x003c366d, &RSSYMinput },
+	{ "inputDevice", 0x344b9940, 0x00422c9d, &RSSYMinputdevice },
+	{ "inputForm", 0x916ca3a4, 0x003be059, &RSSYMinputform },
+	{ "inputGain", 0x96dfa777, 0x00422cb9, &RSSYMinputgain },
+	{ "inputmask", 0x9fb0d5dc, 0x003be075, &RSSYMinputmask },
+	{ "InputScript", 0x125030fd, 0x003be091, &RSSYMinputscript },
+	{ "insertHeight", 0x6932af9e, 0x003be0ad, &RSSYMinsertheight },
+	{ "insertItems", 0x6b4788df, 0x003c3685, &RSSYMinsertitems },
+	{ "insertOffset", 0x103b57bc, 0x003c36a1, &RSSYMinsertoffset },
+	{ "InstallPart", 0xdb54415e, 0x003b4ae1, &RSSYMinstallpart },
+	{ "InstallScript", 0x8191618c, 0x003be0cd, &RSSYMinstallscript },
+	{ "InstanceNotesData", 0x23a4cf38, 0x003be0ed, &RSSYMinstancenotesdata },
+	{ "instructions", 0x83a63acd, 0x00535f6d, &RSSYMinstructions },
+	{ "int", 0x3cecbcd3, 0x00421a01, &RSSYMint },
+	{ "integer", 0x15fc1a1e, 0x003be111, &RSSYMinteger },
+	{ "InterConnect", 0x2cc3bc2c, 0x00562be9, &RSSYMinterconnect },
+	{ "internal", 0xe91aaa35, 0x003be129, &RSSYMinternal },
+	{ "internalbuffersize", 0xc3259a42, 0x003be145, &RSSYMinternalbuffersize },
+	{ "international", 0x253bdf18, 0x003be169, &RSSYMinternational },
+	{ "iobox", 0xf16e0f39, 0x003be189, &RSSYMiobox },
+	{ "ioBusy", 0x90eeda43, 0x003be1a1, &RSSYMiobusy },
+	{ "IRConnectRequest", 0x2e8ad6de, 0x003be1b9, &RSSYMirconnectrequest },
+	{ "isa", 0x95e414b5, 0x003b9b9d, &RSSYMisa },
+	{ "isbn", 0x6902a4cc, 0x003be1dd, &RSSYMisbn },
+	{ "iscopyprotected", 0x97db3a39, 0x003be1f5, &RSSYMiscopyprotected },
+	{ "isresult", 0x739aede3, 0x003be215, &RSSYMisresult },
+	{ "IsSlotBusy", 0x0b93dbd9, 0x003b4ef5, &RSSYMisslotbusy },
+	{ "italic", 0xb2ea4286, 0x003c36c1, &RSSYMitalic },
+	{ "italicData", 0xfc065850, 0x003c36d9, &RSSYMitalicdata },
+	{ "item", 0x43a911f7, 0x003be231, &RSSYMitem },
+	{ "itemChosen", 0x24be15b7, 0x0044b845, &RSSYMitemchosen },
+	{ "ItemCompleted", 0xbaa22a6c, 0x003be249, &RSSYMitemcompleted },
+	{ "ItemCount", 0x26d2eef8, 0x003be269, &RSSYMitemcount },
+	{ "ItemMissing", 0xc43ee0c1, 0x004d1369, &RSSYMitemmissing },
+	{ "items", 0x8fa588f2, 0x003be285, &RSSYMitems },
+	{ "justification", 0x9e19c5fc, 0x003be29d, &RSSYMjustification },
+	{ "keepSelectionOnPaste", 0x9d007f7d, 0x00449361, &RSSYMkeepselectiononpaste },
+	{ "key", 0x007dc961, 0x003be2bd, &RSSYMkey },
+	{ "keyArrayIndex", 0x16f7ace0, 0x003be2d1, &RSSYMkeyarrayindex },
+	{ "Keyboard", 0x7e80f589, 0x003be329, &RSSYMkeyboard },
+	{ "keyCommand", 0xd139c1a8, 0x003be2f1, &RSSYMkeycommand },
+	{ "keyCommands", 0x1d3638a3, 0x003be30d, &RSSYMkeycommands },
+	{ "keyDefinitions", 0xbbeb7bbd, 0x003c36f5, &RSSYMkeydefinitions },
+	{ "keyHighlightKeys", 0xacdbc195, 0x003be345, &RSSYMkeyhighlightkeys },
+	{ "keyMessage", 0x86869bfe, 0x003be389, &RSSYMkeymessage },
+	{ "keyPressScript", 0x38278d33, 0x003be369, &RSSYMkeypressscript },
+	{ "keyReceiverView", 0xa61f6c71, 0x003be3a5, &RSSYMkeyreceiverview },
+	{ "keyRepeatFrequency", 0xf1505b7c, 0x003bb09d, &RSSYMkeyrepeatfrequency },
+	{ "keyRepeatThreshold", 0xda3afadf, 0x003bb0c1, &RSSYMkeyrepeatthreshold },
+	{ "keyResultsAreKeycodes", 0x08e3857a, 0x003be3c5, &RSSYMkeyresultsarekeycodes },
+	{ "keySound", 0xe3a7a662, 0x003be3ed, &RSSYMkeysound },
+	{ "kilometers", 0x0835b147, 0x003be409, &RSSYMkilometers },
+	{ "kind", 0xb3b5ca76, 0x003be425, &RSSYMkind },
+	{ "knobpicture", 0xe9987396, 0x003be43d, &RSSYMknobpicture },
+	{ "label", 0x8c475e60, 0x003be459, &RSSYMlabel },
+	{ "labelFont", 0xc1ac3e1f, 0x003be471, &RSSYMlabelfont },
+	{ "labels", 0xd843d55b, 0x003be48d, &RSSYMlabels },
+	{ "labelsFilter", 0x6ea5b371, 0x003be4a5, &RSSYMlabelsfilter },
+	{ "labelstext", 0xb4b15d38, 0x003be4c5, &RSSYMlabelstext },
+	{ "labelStyle", 0x612d0929, 0x003be4e1, &RSSYMlabelstyle },
+	{ "landscape", 0x57128973, 0x003be4fd, &RSSYMlandscape },
+	{ "language", 0x75afc724, 0x003be519, &RSSYMlanguage },
+	{ "last", 0x5abe7294, 0x003be535, &RSSYMlast },
+	{ "lastcommunicationwithdesktop", 0x109b6d60, 0x003be54d, &RSSYMlastcommunicationwithdesktop },
+	{ "lastex", 0x62c41909, 0x003be57d, &RSSYMlastex },
+	{ "LastExData", 0xabe02ed3, 0x003be595, &RSSYMlastexdata },
+	{ "lastexerror", 0xe4256fc3, 0x003be5b1, &RSSYMlastexerror },
+	{ "lastexmessage", 0xe8cceba6, 0x003be5cd, &RSSYMlastexmessage },
+	{ "lastItem", 0x9e67848b, 0x003be5ed, &RSSYMlastitem },
+	{ "lastName", 0xf75edc6d, 0x003be609, &RSSYMlastname },
+	{ "lastnamephonetic", 0x05d31977, 0x003be625, &RSSYMlastnamephonetic },
+	{ "lastPolyHiliteChanged", 0xb20106d9, 0x003c3715, &RSSYMlastpolyhilitechanged },
+	{ "lastRecMemWarning", 0xf0070a2b, 0x00629de9, &RSSYMlastrecmemwarning },
+	{ "lastTextChanged", 0x0d5af68b, 0x003be649, &RSSYMlasttextchanged },
+	{ "lastTextHiliteChanged", 0x50388092, 0x003c373d, &RSSYMlasttexthilitechanged },
+	{ "lastTopic", 0x0fbd8e5b, 0x003be669, &RSSYMlasttopic },
+	{ "lastUID", 0x07b7e7e6, 0x00635255, &RSSYMlastuid },
+	{ "latitude", 0x4ae3307c, 0x003be685, &RSSYMlatitude },
+	{ "layout", 0x6b95476e, 0x003be6a1, &RSSYMlayout },
+	{ "lcdContrast", 0xd28312f9, 0x003be6b9, &RSSYMlcdcontrast },
+	{ "learningdata", 0x2965919a, 0x003be6d5, &RSSYMlearningdata },
+	{ "learningEnabledOption", 0xa92fd874, 0x003be6f5, &RSSYMlearningenabledoption },
+	{ "left", 0xcacb2b13, 0x003be71d, &RSSYMleft },
+	{ "leftMargin", 0x6f713b61, 0x004529e5, &RSSYMleftmargin },
+	{ "leftMarkGap", 0x14650a3e, 0x003be735, &RSSYMleftmarkgap },
+	{ "len", 0xd2530827, 0x003be751, &RSSYMlen },
+	{ "length", 0x1d83f732, 0x003aff61, &RSSYMlength },
+	{ "letter", 0xc48c9f50, 0x003c3765, &RSSYMletter },
+	{ "letterimages", 0x7776e1d6, 0x003be765, &RSSYMletterimages },
+	{ "letters", 0x1089164b, 0x003ba421, &RSSYMletters },
+	{ "lettersCursiveOption", 0x39231ff5, 0x003be785, &RSSYMletterscursiveoption },
+	{ "letterSetSelection", 0xa69d35d2, 0x003be7ad, &RSSYMlettersetselection },
+	{ "letterSpaceCursiveOption", 0xe407bc06, 0x003be7d1, &RSSYMletterspacecursiveoption },
+	{ "letterWeights", 0xe359e7d3, 0x003be7fd, &RSSYMletterweights },
+	{ "level", 0x617ac7b8, 0x003be81d, &RSSYMlevel },
+	{ "lex", 0x007dc961, 0x003c377d, &RSSYMlex },
+	{ "lexical", 0xab626572, 0x003c3791, &RSSYMlexical },
+	{ "Lexicon", 0x8eda0102, 0x003c37a9, &RSSYMlexicon },
+	{ "library", 0x69806e2d, 0x003be835, &RSSYMlibrary },
+	{ "limit", 0xb4ff1bc7, 0x003be84d, &RSSYMlimit },
+	{ "limitBounds", 0x62765a7a, 0x00449389, &RSSYMlimitbounds },
+	{ "line", 0xf024bde8, 0x003be865, &RSSYMline },
+	{ "lineAtATime", 0x762d9085, 0x003be87d, &RSSYMlineatatime },
+	{ "lineBreakTable", 0x1184a90d, 0x003c37c1, &RSSYMlinebreaktable },
+	{ "linegrid", 0xa3da885e, 0x004d6eb9, &RSSYMlinegrid },
+	{ "lineHeight", 0x7db56d99, 0x003be899, &RSSYMlineheight },
+	{ "lineIndent", 0x0da8b51a, 0x003be8b5, &RSSYMlineindent },
+	{ "lineNumber", 0x612d0929, 0x00636615, &RSSYMlinenumber },
+	{ "lines", 0x3c2134e3, 0x003be8d1, &RSSYMlines },
+	{ "lineSpacing", 0x762d9085, 0x0046ecc9, &RSSYMlinespacing },
+	{ "linkedDictID", 0xecf69e28, 0x003be8e9, &RSSYMlinkeddictid },
+	{ "list", 0x4c7a405c, 0x003be909, &RSSYMlist },
+	{ "listViewFlags", 0x8fd593c4, 0x005247ed, &RSSYMlistviewflags },
+	{ "literals", 0xc3c11760, 0x00629435, &RSSYMliterals },
+	{ "lithium", 0xbd04c23c, 0x003be921, &RSSYMlithium },
+	{ "loadLetterWeights", 0xe1c2d7f3, 0x003b9c31, &RSSYMloadletterweights },
+	{ "localDictSlot", 0xd1b78b09, 0x003be939, &RSSYMlocaldictslot },
+	{ "locale", 0xfd9d6830, 0x003be959, &RSSYMlocale },
+	{ "locales", 0x4999df2b, 0x003be971, &RSSYMlocales },
+	{ "localeSym", 0xe192cd21, 0x003c37e1, &RSSYMlocalesym },
+	{ "localeTable", 0x7ba09458, 0x003be989, &RSSYMlocaletable },
+	{ "localFind", 0xf54a032c, 0x003be9a5, &RSSYMlocalfind },
+	{ "localId", 0x7d37a438, 0x003c37fd, &RSSYMlocalid },
+	{ "location", 0x703cc351, 0x003be9c1, &RSSYMlocation },
+	{ "LockedCardMountError", 0x15de6661, 0x0056a7c1, &RSSYMlockedcardmounterror },
+	{ "longDateDelim", 0xfc8421b1, 0x003c3815, &RSSYMlongdatedelim },
+	{ "longDateFormat", 0x14e2d39f, 0x003be9dd, &RSSYMlongdateformat },
+	{ "longDateOrder", 0x7e3336fa, 0x003c3835, &RSSYMlongdateorder },
+	{ "longDayOfWeekStrSpec", 0x4409279b, 0x003be9fd, &RSSYMlongdayofweekstrspec },
+	{ "longDaySuffix", 0xf19e1a0b, 0x003c2d39, &RSSYMlongdaysuffix },
+	{ "longDofWeek", 0x67e95e4d, 0x003bea25, &RSSYMlongdofweek },
+	{ "longitude", 0x1e01c093, 0x003bea41, &RSSYMlongitude },
+	{ "longMonth", 0xea63fb86, 0x003c3855, &RSSYMlongmonth },
+	{ "longMonthSuffix", 0xc605fb73, 0x003c2d19, &RSSYMlongmonthsuffix },
+	{ "longYearSuffix", 0x3d9a9106, 0x003c2cf9, &RSSYMlongyearsuffix },
+	{ "look", 0xf8f5ec4d, 0x003bea5d, &RSSYMlook },
+	{ "loops", 0x5c07c3e5, 0x00422845, &RSSYMloops },
+	{ "low", 0x907110e2, 0x003bea75, &RSSYMlow },
+	{ "lowerList", 0x2fa41d5d, 0x003c3871, &RSSYMlowerlist },
+	{ "macFontID", 0x853d4aad, 0x003c388d, &RSSYMmacfontid },
+	{ "machineType", 0xa45851bf, 0x003bea89, &RSSYMmachinetype },
+	{ "MacPict", 0x0d2aebb9, 0x003beaa5, &RSSYMmacpict },
+	{ "mailAccount", 0x50d3fdb0, 0x003beabd, &RSSYMmailaccount },
+	{ "mailconnector", 0xf7111dde, 0x003bead9, &RSSYMmailconnector },
+	{ "maillist", 0x25899da7, 0x003beaf9, &RSSYMmaillist },
+	{ "mailNavigate", 0x1b215f62, 0x003beb15, &RSSYMmailnavigate },
+	{ "mailnavigator", 0xf7111dde, 0x003beb35, &RSSYMmailnavigator },
+	{ "mailPassword", 0x5aee7d66, 0x003beb55, &RSSYMmailpassword },
+	{ "mailPhone", 0x76f91875, 0x003beb75, &RSSYMmailphone },
+	{ "MailReceiveStatus", 0x438b5e3a, 0x00592381, &RSSYMmailreceivestatus },
+	{ "mailSendText", 0xe2109682, 0x003beb91, &RSSYMmailsendtext },
+	{ "mailSlip", 0xacabb6c3, 0x003ba475, &RSSYMmailslip },
+	{ "mainFormat", 0x86869bfe, 0x003bebb1, &RSSYMmainformat },
+	{ "major", 0xffb24171, 0x00557af1, &RSSYMmajor },
+	{ "manualDial", 0xedc22618, 0x003bebcd, &RSSYMmanualdial },
+	{ "manualDialing", 0x21ddb486, 0x003bebe9, &RSSYMmanualdialing },
+	{ "manufacturedate", 0xdf303551, 0x003bec09, &RSSYMmanufacturedate },
+	{ "manufacturer", 0xcafb35e5, 0x003bec29, &RSSYMmanufacturer },
+	{ "map", 0x341b8e6e, 0x003b9ccd, &RSSYMmap },
+	{ "MapCursor", 0x9fb0d5dc, 0x003b585d, &RSSYMmapcursor },
+	{ "mapFromUnicode", 0x5151c711, 0x003c38a9, &RSSYMmapfromunicode },
+	{ "mapping", 0xd98d26ac, 0x003bec49, &RSSYMmapping },
+	{ "mapToUnicode", 0xb3e5d548, 0x003c38c9, &RSSYMmaptounicode },
+	{ "mark", 0xcacb2b13, 0x003bec61, &RSSYMmark },
+	{ "MarkBusy", 0x6ac9bf7e, 0x00449815, &RSSYMmarkbusy },
+	{ "markers", 0x69806e2d, 0x0052480d, &RSSYMmarkers },
+	{ "MarkNotBusy", 0x5d0356a7, 0x00449925, &RSSYMmarknotbusy },
+	{ "marks", 0x16c7a20e, 0x003bec79, &RSSYMmarks },
+	{ "MarkSlotBusy", 0x6c90da30, 0x003b5925, &RSSYMmarkslotbusy },
+	{ "MarkSlotNotBusy", 0x5eca7159, 0x003b5945, &RSSYMmarkslotnotbusy },
+	{ "markupButton", 0xf3b2f34c, 0x003bec91, &RSSYMmarkupbutton },
+	{ "markupLayer", 0x3d1cc7a5, 0x003becb1, &RSSYMmarkuplayer },
+	{ "mask", 0x6902a4cc, 0x003c38e9, &RSSYMmask },
+	{ "maskdictionaries", 0xeebdb8da, 0x003beccd, &RSSYMmaskdictionaries },
+	{ "matched", 0x40c8b0c6, 0x003c3901, &RSSYMmatched },
+	{ "matchstring", 0xad298024, 0x003becf1, &RSSYMmatchstring },
+	{ "mathline", 0x1cb86f42, 0x003c3919, &RSSYMmathline },
+	{ "mathoperator", 0x5aee7d66, 0x003c3935, &RSSYMmathoperator },
+	{ "max", 0x25d75c36, 0x003b9ce1, &RSSYMmax },
+	{ "maximum", 0xf973b5ae, 0x003bed0d, &RSSYMmaximum },
+	{ "maxLevel", 0x875223ee, 0x003bed25, &RSSYMmaxlevel },
+	{ "maxValue", 0x9e67848b, 0x003bed41, &RSSYMmaxvalue },
+	{ "meal_act", 0x95965626, 0x003c3955, &RSSYMmeal_act },
+	{ "medium", 0x7f4c7d79, 0x003bed5d, &RSSYMmedium },
+	{ "meeting", 0xfee6b981, 0x003ba491, &RSSYMmeeting },
+	{ "MeetingNotes", 0xe2109682, 0x003bed75, &RSSYMmeetingnotes },
+	{ "meetingoverview", 0xf9a3c080, 0x003bed95, &RSSYMmeetingoverview },
+	{ "MeetingSoup", 0x17c334d0, 0x003bedb5, &RSSYMmeetingsoup },
+	{ "meetingType", 0x00add433, 0x003bedd1, &RSSYMmeetingtype },
+	{ "meetingTypeRegistry", 0x37d9cea4, 0x003beded, &RSSYMmeetingtyperegistry },
+	{ "message", 0x8608d29d, 0x003bee11, &RSSYMmessage },
+	{ "meta_level", 0x69fe378e, 0x003c3971, &RSSYMmeta_level },
+	{ "metric", 0x59f2eaa4, 0x003bee29, &RSSYMmetric },
+	{ "midNightForm", 0xb3e5d548, 0x003c398d, &RSSYMmidnightform },
+	{ "miles", 0x9de9bb2a, 0x003bee41, &RSSYMmiles },
+	{ "mincho", 0xa4a6104e, 0x003bee59, &RSSYMmincho },
+	{ "minDragDistance", 0x749680a5, 0x003beea9, &RSSYMmindragdistance },
+	{ "minimalChildren", 0x4f3cedd0, 0x003bee71, &RSSYMminimalchildren },
+	{ "minimum", 0xbd04c23c, 0x003bee91, &RSSYMminimum },
+	{ "minor", 0x6a4bf61d, 0x00557b09, &RSSYMminor },
+	{ "minusPrefix", 0x45edf60a, 0x003beec9, &RSSYMminusprefix },
+	{ "minusSuffix", 0x99724a19, 0x003beee5, &RSSYMminussuffix },
+	{ "minute", 0x00fb92c2, 0x003bef01, &RSSYMminute },
+	{ "minuteLeadingZ", 0xa4d61b20, 0x003c39ad, &RSSYMminuteleadingz },
+	{ "minValue", 0x61f89119, 0x003bef19, &RSSYMminvalue },
+	{ "MiscCardError", 0x33801150, 0x003bef35, &RSSYMmisccarderror },
+	{ "missingIndex", 0xe2109682, 0x006364ad, &RSSYMmissingindex },
+	{ "mod", 0x708a81e0, 0x003b9d25, &RSSYMmod },
+	{ "modalstate", 0x86869bfe, 0x003b9d09, &RSSYMmodalstate },
+	{ "modem", 0xac2ded62, 0x003bef55, &RSSYMmodem },
+	{ "modemName", 0x48ce573b, 0x003c2bf9, &RSSYMmodemname },
+	{ "modemNavigate", 0xee3fef79, 0x003bef6d, &RSSYMmodemnavigate },
+	{ "modemNavigator", 0xca2fadf5, 0x003bef8d, &RSSYMmodemnavigator },
+	{ "modemSoundVolume", 0x45a0377b, 0x003befad, &RSSYMmodemsoundvolume },
+	{ "modifiers", 0x8e0e7912, 0x003befd1, &RSSYMmodifiers },
+	{ "modtime", 0xb43393d7, 0x003befed, &RSSYMmodtime },
+	{ "month", 0x08836fd6, 0x003bf005, &RSSYMmonth },
+	{ "monthChangedScript", 0xba546bdd, 0x003bf01d, &RSSYMmonthchangedscript },
+	{ "monthDayStrSpec", 0xeb5f8e48, 0x003c39cd, &RSSYMmonthdaystrspec },
+	{ "monthLeadingZ", 0xac5df834, 0x003c39ed, &RSSYMmonthleadingz },
+	{ "morningStr", 0x648b33bb, 0x003c3a0d, &RSSYMmorningstr },
+	{ "moveCaret", 0x06ec5ff6, 0x003c3a29, &RSSYMmovecaret },
+	{ "mtgAlarm", 0xf75edc6d, 0x003bf041, &RSSYMmtgalarm },
+	{ "mtgDone", 0x15fc1a1e, 0x003bf05d, &RSSYMmtgdone },
+	{ "mtgDuration", 0xdb54415e, 0x003bf075, &RSSYMmtgduration },
+	{ "mtgIconType", 0xf269a1fb, 0x003bf091, &RSSYMmtgicontype },
+	{ "mtgInfo", 0xcb48f474, 0x003bf0ad, &RSSYMmtginfo },
+	{ "mtgnotes", 0x45702ca9, 0x003bf0c5, &RSSYMmtgnotes },
+	{ "mtgPriority", 0x2965919a, 0x003bf0e1, &RSSYMmtgpriority },
+	{ "mtgStartDate", 0x1e7f89f4, 0x003bf0fd, &RSSYMmtgstartdate },
+	{ "mtgStopDate", 0x9ee54dec, 0x003bf11d, &RSSYMmtgstopdate },
+	{ "mtgText", 0x3eb3d785, 0x003bf139, &RSSYMmtgtext },
+	{ "mtgtype", 0x640d6a5a, 0x003bf151, &RSSYMmtgtype },
+	{ "multiSlot", 0x215feb25, 0x003bf169, &RSSYMmultislot },
+	{ "mungeContentScript", 0xd4c7f70c, 0x003bf185, &RSSYMmungecontentscript },
+	{ "name", 0x9ca069d9, 0x003bf1a9, &RSSYMname },
+	{ "nameIndex", 0xfe1b3191, 0x00464a15, &RSSYMnameindex },
+	{ "names", 0xe89ce0d4, 0x003c3a45, &RSSYMnames },
+	{ "navigator", 0x1e01c093, 0x003bf1c1, &RSSYMnavigator },
+	{ "NCKLastBackupTime", 0x48fe620d, 0x0047267d, &RSSYMncklastbackuptime },
+	{ "negate", 0x767b4f14, 0x003b9d55, &RSSYMnegate },
+	{ "net", 0xc40ed5ef, 0x003bf1dd, &RSSYMnet },
+	{ "newccount", 0xea63fb86, 0x003bf1f1, &RSSYMnewccount },
+	{ "newiterator", 0x90a11bb4, 0x003aff45, &RSSYMnewiterator },
+	{ "newtonuniqueid", 0xcd8dd887, 0x003bf22d, &RSSYMnewtonuniqueid },
+	{ "newt_feature", 0x190c8621, 0x003bf20d, &RSSYMnewt_feature },
+	{ "newwritecount", 0xa177f08e, 0x003bf24d, &RSSYMnewwritecount },
+	{ "newYork", 0x7b22caf7, 0x003bf26d, &RSSYMnewyork },
+	{ "nextinputspec", 0x289a09aa, 0x003bf285, &RSSYMnextinputspec },
+	{ "nextStyle", 0xfc065850, 0x003c3a5d, &RSSYMnextstyle },
+	{ "nicd", 0xc1f9fcae, 0x003bf2a5, &RSSYMnicd },
+	{ "nimh", 0x6902a4cc, 0x003bf2bd, &RSSYMnimh },
+	{ "no", 0x0805a675, 0x003bf2d5, &RSSYMno },
+	{ "node", 0xb3b5ca76, 0x003bf2e9, &RSSYMnode },
+	{ "noFX", 0xae42c6a3, 0x004314a5, &RSSYMnofx },
+	{ "nogrid", 0xbbbb70eb, 0x004d6e85, &RSSYMnogrid },
+	{ "noisewords", 0xaf3e5965, 0x003c3a79, &RSSYMnoisewords },
+	{ "noletters", 0x188ebcc0, 0x003bf301, &RSSYMnoletters },
+	{ "noMarkList", 0x1f4b11e4, 0x003c3a95, &RSSYMnomarklist },
+	{ "none", 0xe1e08bb0, 0x00416a3d, &RSSYMnone },
+	{ "noonForm", 0x6ac9bf7e, 0x003c3ab1, &RSSYMnoonform },
+	{ "noremap", 0x8eda0102, 0x003bf31d, &RSSYMnoremap },
+	{ "normal", 0x71084b41, 0x003c3acd, &RSSYMnormal },
+	{ "NoSelection", 0x0ef2066b, 0x003bf335, &RSSYMnoselection },
+	{ "not", 0xf2399729, 0x003afe4d, &RSSYMnot },
+	{ "notes", 0xe329dd01, 0x003bf351, &RSSYMnotes },
+	{ "NotesData", 0x2c45f2cb, 0x003bf369, &RSSYMnotesdata },
+	{ "Notify", 0x547fe6d1, 0x003bf385, &RSSYMnotify },
+	{ "nTopics", 0x35e2a920, 0x00512081, &RSSYMntopics },
+	{ "nullproxy", 0x04d786b5, 0x003bf39d, &RSSYMnullproxy },
+	{ "numArgs", 0x5b3c3bf5, 0x0041957d, &RSSYMnumargs },
+	{ "number", 0x71084b41, 0x003bf3b9, &RSSYMnumber },
+	{ "numberDictionary", 0xe94ab507, 0x003bf3d1, &RSSYMnumberdictionary },
+	{ "numberformat", 0xe2109682, 0x003bf3f5, &RSSYMnumberformat },
+	{ "numberOfParts", 0x08b37aa8, 0x003c3ae5, &RSSYMnumberofparts },
+	{ "numbersCursiveOption", 0xe59ecbe6, 0x003bf415, &RSSYMnumberscursiveoption },
+	{ "numChannels", 0xbb6db25c, 0x003bf43d, &RSSYMnumchannels },
+	{ "numcols", 0xd41a22d9, 0x003bf459, &RSSYMnumcols },
+	{ "numdrawn", 0x2e5acc0c, 0x003bf471, &RSSYMnumdrawn },
+	{ "numericKeyboard", 0xab927044, 0x003bf48d, &RSSYMnumerickeyboard },
+	{ "numLines", 0x90235253, 0x003bf4ad, &RSSYMnumlines },
+	{ "numparts", 0xd563742a, 0x003c4de9, &RSSYMnumparts },
+	{ "numRows", 0xe5bc7fa3, 0x003bf4c9, &RSSYMnumrows },
+	{ "objects", 0x9d1e333a, 0x00535991, &RSSYMobjects },
+	{ "offset", 0x349957cf, 0x003bf4e1, &RSSYMoffset },
+	{ "onelineparagraphs", 0x0c8f6e9b, 0x003c3b05, &RSSYMonelineparagraphs },
+	{ "oneO", 0x80180569, 0x003bf4f9, &RSSYMoneo },
+	{ "onlineslip", 0xcbc6bdd5, 0x003bf511, &RSSYMonlineslip },
+	{ "op", 0x447499e7, 0x006364cd, &RSSYMop },
+	{ "opCode", 0x2bc8296a, 0x003bf52d, &RSSYMopcode },
+	{ "OpenKeypadFor", 0x8704655f, 0x003b5f89, &RSSYMopenkeypadfor },
+	{ "openoptions", 0xbecbdcee, 0x003c3b29, &RSSYMopenoptions },
+	{ "optimize", 0x45702ca9, 0x003bf545, &RSSYMoptimize },
+	{ "option", 0x547fe6d1, 0x003bf561, &RSSYMoption },
+	{ "order", 0xda58ae9c, 0x003bf579, &RSSYMorder },
+	{ "orientation", 0x9ee54dec, 0x003bf591, &RSSYMorientation },
+	{ "origAscent", 0x24be15b7, 0x003c3b45, &RSSYMorigascent },
+	{ "origDescent", 0xa45851bf, 0x003c3b61, &RSSYMorigdescent },
+	{ "origFontSize", 0x63bfabcb, 0x003c3b7d, &RSSYMorigfontsize },
+	{ "origin", 0xd2d0d188, 0x003bf5ad, &RSSYMorigin },
+	{ "originalBounds", 0xa4d61b20, 0x003c3b9d, &RSSYMoriginalbounds },
+	{ "origPenSize", 0x798bbb17, 0x003c3bbd, &RSSYMorigpensize },
+	{ "OrigPhrase", 0x3bd37654, 0x003b6049, &RSSYMorigphrase },
+	{ "origWidth", 0xd34e9ae9, 0x003c3bd9, &RSSYMorigwidth },
+	{ "origXHeight", 0x70ba8cb2, 0x003c3bf5, &RSSYMorigxheight },
+	{ "outbox", 0x463bb499, 0x003bf5c5, &RSSYMoutbox },
+	{ "outerframe", 0xf12050aa, 0x003bf5dd, &RSSYMouterframe },
+	{ "outlineClickScript", 0x5318e1c3, 0x003bf5f9, &RSSYMoutlineclickscript },
+	{ "outputDevice", 0x2750b859, 0x00422c7d, &RSSYMoutputdevice },
+	{ "oval", 0x1e4f7f22, 0x003bf61d, &RSSYMoval },
+	{ "overlapscrollamount", 0x461e00dc, 0x003bf635, &RSSYMoverlapscrollamount },
+	{ "owner", 0x1f98d073, 0x003bf659, &RSSYMowner },
+	{ "ownerApp", 0x2e5acc0c, 0x003bf671, &RSSYMownerapp },
+	{ "package", 0x129def8c, 0x003bf68d, &RSSYMpackage },
+	{ "packageCallback", 0x5151c711, 0x003bf6a5, &RSSYMpackagecallback },
+	{ "PackageEntry", 0x85bb140e, 0x003bf6c5, &RSSYMpackageentry },
+	{ "packageId", 0x372bfa71, 0x003bf6e5, &RSSYMpackageid },
+	{ "packageName", 0xaf3e5965, 0x003bf701, &RSSYMpackagename },
+	{ "packageSize", 0xc0e0b62f, 0x003bf71d, &RSSYMpackagesize },
+	{ "packageStyle", 0xe7839a55, 0x003bf739, &RSSYMpackagestyle },
+	{ "packageType", 0x14650a3e, 0x003bf759, &RSSYMpackagetype },
+	{ "packageversion", 0xfdcd7302, 0x003bf775, &RSSYMpackageversion },
+	{ "page", 0x23c282f5, 0x003bf795, &RSSYMpage },
+	{ "pageBounds", 0xd139c1a8, 0x003bf7ad, &RSSYMpagebounds },
+	{ "pageCount", 0x06ec5ff6, 0x003bf7c9, &RSSYMpagecount },
+	{ "pageNumber", 0x94cace36, 0x003bf7e5, &RSSYMpagenumber },
+	{ "pages", 0x6fbef9f0, 0x003c3c11, &RSSYMpages },
+	{ "PageSize", 0xd2054998, 0x003bf801, &RSSYMpagesize },
+	{ "pageSound", 0x06ec5ff6, 0x003bf81d, &RSSYMpagesound },
+	{ "pagesShowing", 0x076a2957, 0x003bf839, &RSSYMpagesshowing },
+	{ "pagestr", 0x07b7e7e6, 0x003bf859, &RSSYMpagestr },
+	{ "pageTurnAwayScript", 0x72ff70c5, 0x003bf871, &RSSYMpageturnawayscript },
+	{ "pageTurnToScript", 0x1202726e, 0x003bf895, &RSSYMpageturntoscript },
+	{ "paneIndex", 0xd8c19ebc, 0x003bf8b9, &RSSYMpaneindex },
+	{ "paperroll", 0xd34e9ae9, 0x003bf8d5, &RSSYMpaperroll },
+	{ "para", 0x7746d704, 0x003bf919, &RSSYMpara },
+	{ "parameter", 0xefd6ff59, 0x003bf931, &RSSYMparameter },
+	{ "params", 0x59f2eaa4, 0x003bf94d, &RSSYMparams },
+	{ "parity", 0x547fe6d1, 0x003bf965, &RSSYMparity },
+	{ "Parse", 0x3c2134e3, 0x003c3c29, &RSSYMparse },
+	{ "parsed_number", 0x6a7c00ef, 0x003c3c41, &RSSYMparsed_number },
+	{ "parsed_phone", 0x975d70d8, 0x003c3c61, &RSSYMparsed_phone },
+	{ "partFrame", 0x8e0e7912, 0x003bf97d, &RSSYMpartframe },
+	{ "partialfrequency", 0xe94ab507, 0x003bf999, &RSSYMpartialfrequency },
+	{ "partialscript", 0x5366a052, 0x003bf9bd, &RSSYMpartialscript },
+	{ "partIndex", 0x96dfa777, 0x003bf9dd, &RSSYMpartindex },
+	{ "parts", 0x816156ba, 0x003c4e05, &RSSYMparts },
+	{ "partType", 0x372bfa71, 0x003bf9f9, &RSSYMparttype },
+	{ "parttypes", 0x8328716c, 0x003c4e1d, &RSSYMparttypes },
+	{ "par_separateLettersFlag", 0x52cb2334, 0x003bf8f1, &RSSYMpar_separatelettersflag },
+	{ "passAll", 0x526b0d90, 0x003bfa15, &RSSYMpassall },
+	{ "passBeginning", 0x41c44388, 0x003bfa2d, &RSSYMpassbeginning },
+	{ "passOne", 0xe25e5511, 0x003bfa4d, &RSSYMpassone },
+	{ "passwordkey", 0x825ce97c, 0x00472641, &RSSYMpasswordkey },
+	{ "patches", 0x60af3fc8, 0x0048feb5, &RSSYMpatches },
+	{ "patchVersion", 0x5aee7d66, 0x003bfa65, &RSSYMpatchversion },
+	{ "path", 0x073a1e85, 0x003bfa85, &RSSYMpath },
+	{ "pathExpr", 0x2e5acc0c, 0x003bfa9d, &RSSYMpathexpr },
+	{ "pattern", 0xf973b5ae, 0x003bfab9, &RSSYMpattern },
+	{ "pen", 0x4b30ef0b, 0x00422879, &RSSYMpen },
+	{ "penPattern", 0x44a4a4b9, 0x003bfad1, &RSSYMpenpattern },
+	{ "pensize", 0xf973b5ae, 0x003bfaed, &RSSYMpensize },
+	{ "penSoundEffects", 0x9d4e3e0c, 0x003bfb05, &RSSYMpensoundeffects },
+	{ "percentDone", 0xa45851bf, 0x003bfb25, &RSSYMpercentdone },
+	{ "Perform", 0x1ecd4883, 0x003b61c5, &RSSYMperform },
+	{ "person", 0x1810f35f, 0x003c3c81, &RSSYMperson },
+	{ "personadded", 0xfd4fa9a1, 0x003c3c99, &RSSYMpersonadded },
+	{ "phone1", 0xe6880793, 0x003bfb41, &RSSYMphone1 },
+	{ "phone1type", 0xe84f2245, 0x003bfb59, &RSSYMphone1type },
+	{ "phone2", 0x84bf814c, 0x003bfb75, &RSSYMphone2 },
+	{ "phone2type", 0x86869bfe, 0x003bfb8d, &RSSYMphone2type },
+	{ "phone3", 0x22f6fb05, 0x003bfba9, &RSSYMphone3 },
+	{ "phone3type", 0x24be15b7, 0x003bfbc1, &RSSYMphone3type },
+	{ "phone4", 0xc12e74be, 0x003bfbdd, &RSSYMphone4 },
+	{ "phone4type", 0xc2f58f70, 0x003bfbf5, &RSSYMphone4type },
+	{ "phoneDictionary", 0x162c24f0, 0x003bfc11, &RSSYMphonedictionary },
+	{ "phoneKeyboard", 0x1c6ab0b3, 0x003bfc31, &RSSYMphonekeyboard },
+	{ "phoneNumber", 0x0ef2066b, 0x003c3cb5, &RSSYMphonenumber },
+	{ "phones", 0xe9e63225, 0x003bfc51, &RSSYMphones },
+	{ "phoneText", 0x7a574307, 0x003ba51d, &RSSYMphonetext },
+	{ "PhoneTypes", 0xebad4cd7, 0x003c3cd1, &RSSYMphonetypes },
+	{ "phrases", 0x07b7e7e6, 0x003c3ced, &RSSYMphrases },
+	{ "pickable", 0xe5bc7fa3, 0x003bfc69, &RSSYMpickable },
+	{ "pickActionScript", 0xd235546a, 0x003bfc85, &RSSYMpickactionscript },
+	{ "pickAutoClose", 0xe8cceba6, 0x003bfca9, &RSSYMpickautoclose },
+	{ "pickBottomMargin", 0xd235546a, 0x003c3d05, &RSSYMpickbottommargin },
+	{ "pickCancelledScript", 0xa12a31ff, 0x003bfcc9, &RSSYMpickcancelledscript },
+	{ "pickItems", 0xe192cd21, 0x003c3d29, &RSSYMpickitems },
+	{ "pickItemsMarkable", 0x402d33a8, 0x003bfced, &RSSYMpickitemsmarkable },
+	{ "pickLeftMargin", 0xc15e7f90, 0x003c3d45, &RSSYMpickleftmargin },
+	{ "pickMarkWidth", 0x6fef04c2, 0x003bfd11, &RSSYMpickmarkwidth },
+	{ "pickMaxWidth", 0xcafb35e5, 0x0044b861, &RSSYMpickmaxwidth },
+	{ "pickRightMargin", 0x0d5af68b, 0x003c3d65, &RSSYMpickrightmargin },
+	{ "pickseparator", 0x253bdf18, 0x003bfd31, &RSSYMpickseparator },
+	{ "picksolidseparator", 0x615d13fb, 0x003bfd51, &RSSYMpicksolidseparator },
+	{ "pickTextItemHeight", 0xff948db4, 0x003bfd75, &RSSYMpicktextitemheight },
+	{ "pickTopMargin", 0x253bdf18, 0x003c3d85, &RSSYMpicktopmargin },
+	{ "pict", 0xe1e08bb0, 0x003bfd99, &RSSYMpict },
+	{ "picture", 0xbd04c23c, 0x003bfdb1, &RSSYMpicture },
+	{ "picturedata", 0x0620d806, 0x003bfdc9, &RSSYMpicturedata },
+	{ "pin", 0xc40ed5ef, 0x003c2d79, &RSSYMpin },
+	{ "pinBounds", 0x718614a2, 0x004493a5, &RSSYMpinbounds },
+	{ "pixels", 0xdba1ffed, 0x003bfde5, &RSSYMpixels },
+	{ "placeadded", 0x889b753f, 0x003c3dbd, &RSSYMplaceadded },
+	{ "places", 0xef5935f8, 0x003c3da5, &RSSYMplaces },
+	{ "plainData", 0x31b8f69e, 0x003c3dd9, &RSSYMplaindata },
+	{ "play", 0x972d6606, 0x003c3df5, &RSSYMplay },
+	{ "playsound", 0x7a574307, 0x003b9e55, &RSSYMplaysound },
+	{ "PlaySoundIrregardlessAtVolume", 0x5c97e45b, 0x003b0bf5, &RSSYMplaysoundirregardlessatvolume },
+	{ "points", 0xcd5dcdb5, 0x003c3e0d, &RSSYMpoints },
+	{ "poly", 0x3e360e24, 0x003bfdfd, &RSSYMpoly },
+	{ "polygon", 0x279e76e8, 0x003bfe15, &RSSYMpolygon },
+	{ "polygondata", 0x70ba8cb2, 0x003bfe2d, &RSSYMpolygondata },
+	{ "polygonshape", 0x3594ea91, 0x003c3e25, &RSSYMpolygonshape },
+	{ "popup", 0xaf8c17f4, 0x003bfe49, &RSSYMpopup },
+	{ "postalcode", 0x86869bfe, 0x003bfe61, &RSSYMpostalcode },
+	{ "PostCommandParam", 0x59576d86, 0x003b6449, &RSSYMpostcommandparam },
+	{ "PostKeyString", 0x9333be56, 0x003b6489, &RSSYMpostkeystring },
+	{ "postParse", 0xb6c63679, 0x003c3e45, &RSSYMpostparse },
+	{ "postQuit", 0x1aa39601, 0x003bfe7d, &RSSYMpostquit },
+	{ "PPDMain", 0xfee6b981, 0x003bfe99, &RSSYMppdmain },
+	{ "preallocatedContext", 0x2baa75ad, 0x003bfeb1, &RSSYMpreallocatedcontext },
+	{ "preconditions", 0xb52f2699, 0x003c3e61, &RSSYMpreconditions },
+	{ "prefsdictionaries", 0xd8f1a98e, 0x003bfed5, &RSSYMprefsdictionaries },
+	{ "preliminaryCharge", 0xe735dbc6, 0x0043b741, &RSSYMpreliminarycharge },
+	{ "prencoding", 0x6f713b61, 0x003bfef9, &RSSYMprencoding },
+	{ "preparing", 0x435b5368, 0x003bff15, &RSSYMpreparing },
+	{ "prettyPrint", 0xf5c7cc8d, 0x003b00b9, &RSSYMprettyprint },
+	{ "prevpage", 0x0e743d0a, 0x003bff31, &RSSYMprevpage },
+	{ "primary_act", 0xe4256fc3, 0x003c3e81, &RSSYMprimary_act },
+	{ "printDepth", 0xe2dc1e72, 0x003b009d, &RSSYMprintdepth },
+	{ "printer", 0xaec09004, 0x003bff4d, &RSSYMprinter },
+	{ "printerName", 0x4b60f9dd, 0x003c3e9d, &RSSYMprintername },
+	{ "printerPageBounds", 0x7ffa51ac, 0x003c3eb9, &RSSYMprinterpagebounds },
+	{ "printForm", 0xb6c63679, 0x003babdd, &RSSYMprintform },
+	{ "printing", 0x90235253, 0x003bff65, &RSSYMprinting },
+	{ "printInstructions", 0xdfadfeb2, 0x006364e1, &RSSYMprintinstructions },
+	{ "PrintLength", 0x798bbb17, 0x003c5a69, &RSSYMprintlength },
+	{ "printNextPageScript", 0x828cf44e, 0x003c3edd, &RSSYMprintnextpagescript },
+	{ "printProblem", 0x4caa4b2e, 0x003bff81, &RSSYMprintproblem },
+	{ "printType", 0x5dcede97, 0x003bffa1, &RSSYMprinttype },
+	{ "printView", 0x0a4a8a88, 0x003bffbd, &RSSYMprintview },
+	{ "priorityItems", 0x56c4cae4, 0x003ba1ed, &RSSYMpriorityitems },
+	{ "privateeventcollector", 0x5396ab24, 0x003bffd9, &RSSYMprivateeventcollector },
+	{ "privatetraceevents", 0xcbf6c8a7, 0x003c0001, &RSSYMprivatetraceevents },
+	{ "processorofftime", 0xb5aceffa, 0x003c0025, &RSSYMprocessorofftime },
+	{ "programCounter", 0x7a098478, 0x00629f8d, &RSSYMprogramcounter },
+	{ "progress", 0xbe4e138d, 0x003c0049, &RSSYMprogress },
+	{ "progressgauge", 0xda88b96e, 0x003c0065, &RSSYMprogressgauge },
+	{ "progressscript", 0x99f0137a, 0x003c0085, &RSSYMprogressscript },
+	{ "protocol", 0xe3a7a662, 0x00636631, &RSSYMprotocol },
+	{ "protocolversion", 0xced729d8, 0x003c00a5, &RSSYMprotocolversion },
+	{ "protoDictionaryCursor", 0x9363c928, 0x003babf9, &RSSYMprotodictionarycursor },
+	{ "proxy", 0x5694c012, 0x003c00c5, &RSSYMproxy },
+	{ "psFonts", 0x3eb3d785, 0x003c3f01, &RSSYMpsfonts },
+	{ "psName", 0x59f2eaa4, 0x003c3f19, &RSSYMpsname },
+	{ "psScale", 0x3b55acf3, 0x003c3f31, &RSSYMpsscale },
+	{ "pssid", 0x2ddd02ab, 0x003c00dd, &RSSYMpssid },
+	{ "pssids", 0x79d979a6, 0x00557c3d, &RSSYMpssids },
+	{ "psSym", 0xa147e5bc, 0x003c3f49, &RSSYMpssym },
+	{ "punctuationcursiveoption", 0x6e87ffb4, 0x003c00f5, &RSSYMpunctuationcursiveoption },
+	{ "Query", 0xebfb0b66, 0x003b673d, &RSSYMquery },
+	{ "querySpec", 0xb6c63679, 0x003c0121, &RSSYMqueryspec },
+	{ "quicklooklives", 0x9f63174d, 0x003c013d, &RSSYMquicklooklives },
+	{ "RAMSize", 0x1ecd4883, 0x003c015d, &RSSYMramsize },
+	{ "randomState", 0x70ba8cb2, 0x00636505, &RSSYMrandomstate },
+	{ "raw", 0x9eb5431a, 0x003c0175, &RSSYMraw },
+	{ "rcBaseInfo", 0x66a00cfc, 0x003c0189, &RSSYMrcbaseinfo },
+	{ "rcGridInfo", 0x330247ef, 0x003c01a5, &RSSYMrcgridinfo },
+	{ "rcSingleLetters", 0x4456e62a, 0x003c01c1, &RSSYMrcsingleletters },
+	{ "rcvFlags", 0xd2054998, 0x003c01e1, &RSSYMrcvflags },
+	{ "rcvOptions", 0xdd691a9f, 0x003c01fd, &RSSYMrcvoptions },
+	{ "readOnly", 0x875223ee, 0x003c0219, &RSSYMreadonly },
+	{ "Real", 0x7746d704, 0x003b6859, &RSSYMreal },
+	{ "realData", 0xc062ecce, 0x003c0235, &RSSYMrealdata },
+	{ "rebootCount", 0x90a11bb4, 0x003c0251, &RSSYMrebootcount },
+	{ "rebootreason", 0x8048103b, 0x003c026d, &RSSYMrebootreason },
+	{ "recConfig", 0x6e27ea10, 0x003c028d, &RSSYMrecconfig },
+	{ "receipt", 0xd98d26ac, 0x003c02a9, &RSSYMreceipt },
+	{ "receivedFax", 0x22a93c76, 0x003c02c1, &RSSYMreceivedfax },
+	{ "receiver", 0xf75edc6d, 0x003c02dd, &RSSYMreceiver },
+	{ "Receiving", 0xd8c19ebc, 0x003c3f61, &RSSYMreceiving },
+	{ "recogCitiesDictionary", 0x674de12f, 0x003c02f9, &RSSYMrecogcitiesdictionary },
+	{ "recogCompaniesDictionary", 0x9b696f9d, 0x003c0321, &RSSYMrecogcompaniesdictionary },
+	{ "recogDateDictionary", 0xa9fb6064, 0x003c034d, &RSSYMrecogdatedictionary },
+	{ "recogHonorificsDictionary", 0x23d4da0a, 0x003c0371, &RSSYMrecoghonorificsdictionary },
+	{ "RecognitionInkWordWarning", 0xd3aeb08d, 0x0062b015, &RSSYMrecognitioninkwordwarning },
+	{ "RecognitionMemoryWarning", 0x2ebae1b0, 0x0062afe9, &RSSYMrecognitionmemorywarning },
+	{ "recognizers", 0x00add433, 0x003c039d, &RSSYMrecognizers },
+	{ "recogNumberDictionary", 0x5909aef7, 0x003c03b9, &RSSYMrecognumberdictionary },
+	{ "recogPhoneDictionary", 0x85eb1ee0, 0x003c03e1, &RSSYMrecogphonedictionary },
+	{ "recogPropersDictionary", 0xea4647c9, 0x003c0409, &RSSYMrecogpropersdictionary },
+	{ "recogrevpropersdictionary", 0x63a1f80e, 0x003c0431, &RSSYMrecogrevpropersdictionary },
+	{ "recogstatesabbrevsdictionary", 0xab74bc87, 0x003c045d, &RSSYMrecogstatesabbrevsdictionary },
+	{ "recogstatesdictionary", 0x256be9ea, 0x003c048d, &RSSYMrecogstatesdictionary },
+	{ "recogTimeDictionary", 0x2baa75ad, 0x003c04b5, &RSSYMrecogtimedictionary },
+	{ "record", 0x42dd8a07, 0x00422bc5, &RSSYMrecord },
+	{ "recording", 0x76f91875, 0x003c04d9, &RSSYMrecording },
+	{ "rectangle", 0x853d4aad, 0x003c04f5, &RSSYMrectangle },
+	{ "recvflags", 0x76f91875, 0x003c0511, &RSSYMrecvflags },
+	{ "RecvWaiting", 0x0ef2066b, 0x003c052d, &RSSYMrecvwaiting },
+	{ "RedoChildren", 0xb958d91b, 0x003c0549, &RSSYMredochildren },
+	{ "refCount", 0x790df1b6, 0x0062a589, &RSSYMrefcount },
+	{ "ReFlow", 0x26552597, 0x003b67f9, &RSSYMreflow },
+	{ "reflowFont", 0x5bba0556, 0x003c0569, &RSSYMreflowfont },
+	{ "reflowOptions", 0xc6d18363, 0x003c0585, &RSSYMreflowoptions },
+	{ "RegCommConfigArray", 0x05079187, 0x003b6971, &RSSYMregcommconfigarray },
+	{ "region", 0x59f2eaa4, 0x003c05a5, &RSSYMregion },
+	{ "regiondata", 0xa30f006e, 0x003c05bd, &RSSYMregiondata },
+	{ "RegisterNewPackage", 0x8c29aaa3, 0x003b6d39, &RSSYMregisternewpackage },
+	{ "rejectAll", 0x2374c466, 0x003c05d9, &RSSYMrejectall },
+	{ "rejectBeginning", 0x12cdfa5e, 0x003c05f5, &RSSYMrejectbeginning },
+	{ "rejectOne", 0xb3680be7, 0x003c0615, &RSSYMrejectone },
+	{ "related", 0x0d2aebb9, 0x003c0631, &RSSYMrelated },
+	{ "RemAllButBuiltinFromDir", 0x165c2fc2, 0x003b6d99, &RSSYMremallbutbuiltinfromdir },
+	{ "remoteId", 0x703cc351, 0x003c3f7d, &RSSYMremoteid },
+	{ "remoteWriting", 0xfa6f4870, 0x003c0649, &RSSYMremotewriting },
+	{ "RemoveAllEntries", 0x25b9a879, 0x00491345, &RSSYMremoveallentries },
+	{ "removeCookie", 0xb3e5d548, 0x003c0669, &RSSYMremovecookie },
+	{ "RemoveFromStore", 0x3ee3e257, 0x00490d95, &RSSYMremovefromstore },
+	{ "RemoveIndex", 0xe9987396, 0x004c1109, &RSSYMremoveindex },
+	{ "RemoveOldestBook", 0x006015a4, 0x003c0689, &RSSYMremoveoldestbook },
+	{ "RemovePackage", 0x9abb9b6a, 0x003b6f39, &RSSYMremovepackage },
+	{ "RemovePart", 0xbd828b9d, 0x003b6f59, &RSSYMremovepart },
+	{ "removeScript", 0x63bfabcb, 0x003c06ad, &RSSYMremovescript },
+	{ "RemoveSymbol", 0x01f72584, 0x00629e5d, &RSSYMremovesymbol },
+	{ "rendering", 0x1530922e, 0x003c06cd, &RSSYMrendering },
+	{ "ReOrientToScreen", 0x53e469b3, 0x003c06e9, &RSSYMreorienttoscreen },
+	{ "RepeatingMeeting", 0xb24ec568, 0x003c070d, &RSSYMrepeatingmeeting },
+	{ "RepeatNotes", 0x62765a7a, 0x003c0731, &RSSYMrepeatnotes },
+	{ "RepeatSoup", 0x9828f8c8, 0x003c074d, &RSSYMrepeatsoup },
+	{ "repeatTemplate", 0xca2fadf5, 0x003c0769, &RSSYMrepeattemplate },
+	{ "repeatTemplateAlias", 0x84a1cd8f, 0x003c0789, &RSSYMrepeattemplatealias },
+	{ "repeatType", 0x8113982b, 0x003c07ad, &RSSYMrepeattype },
+	{ "replaceChars", 0x040bfec5, 0x003c3f99, &RSSYMreplacechars },
+	{ "ReportDeadUnitImports", 0xafec2d98, 0x00557a91, &RSSYMreportdeadunitimports },
+	{ "reqTimeout", 0xebad4cd7, 0x003c07c9, &RSSYMreqtimeout },
+	{ "resolution", 0x02c2ad74, 0x003c07e5, &RSSYMresolution },
+	{ "Restore2.0SystemEntry", 0xe02bc813, 0x003b7149, &RSSYMrestore2_2E0systementry },
+	{ "RestoreAPackageFromPieces", 0xd5c389ce, 0x003b719d, &RSSYMrestoreapackagefrompieces },
+	{ "result", 0x09ccc127, 0x003c0801, &RSSYMresult },
+	{ "retryAllowed", 0x4caa4b2e, 0x003c0819, &RSSYMretryallowed },
+	{ "retryButton", 0x1b215f62, 0x003c0839, &RSSYMretrybutton },
+	{ "returnElt", 0x2fa41d5d, 0x00437241, &RSSYMreturnelt },
+	{ "reverseDictID", 0x58d9a425, 0x003c0855, &RSSYMreversedictid },
+	{ "richstring", 0xcbc6bdd5, 0x003c0875, &RSSYMrichstring },
+	{ "right", 0x16c7a20e, 0x003c0891, &RSSYMright },
+	{ "rightIndent", 0x344b9940, 0x003c08a9, &RSSYMrightindent },
+	{ "rightMargin", 0xbb6db25c, 0x0046ecad, &RSSYMrightmargin },
+	{ "rightMarkGap", 0x60618139, 0x003c08c5, &RSSYMrightmarkgap },
+	{ "ringToAnswerAfter", 0x0fed992d, 0x003c08e5, &RSSYMringtoanswerafter },
+	{ "ROMDictID", 0xb3680be7, 0x003c0909, &RSSYMromdictid },
+	{ "romID", 0x3c2134e3, 0x0043699d, &RSSYMromid },
+	{ "romname", 0xb43393d7, 0x003c0925, &RSSYMromname },
+	{ "ROMStage", 0x00300ad2, 0x003c093d, &RSSYMromstage },
+	{ "ROMVersion", 0x02c2ad74, 0x003c0959, &RSSYMromversion },
+	{ "ROMversionstring", 0x1ad3a0d3, 0x003c0975, &RSSYMromversionstring },
+	{ "rootcontext", 0x8b2e17e1, 0x00630005, &RSSYMrootcontext },
+	{ "rosIgnoreDicts", 0xea163cf7, 0x004a4395, &RSSYMrosignoredicts },
+	{ "rosMapDicts", 0xc43ee0c1, 0x004a43b5, &RSSYMrosmapdicts },
+	{ "rotate180", 0xb57ce528, 0x003c0999, &RSSYMrotate180 },
+	{ "rotateleft", 0xf12050aa, 0x003c09b5, &RSSYMrotateleft },
+	{ "rotateright", 0x3d1cc7a5, 0x003c09d1, &RSSYMrotateright },
+	{ "roundrectangle", 0xca2fadf5, 0x003c09ed, &RSSYMroundrectangle },
+	{ "rowbytes", 0xec78d4c7, 0x003c0a0d, &RSSYMrowbytes },
+	{ "rulers", 0xcd5dcdb5, 0x0046eb7d, &RSSYMrulers },
+	{ "safetoremove", 0xa5a1a310, 0x003c0a29, &RSSYMsafetoremove },
+	{ "salutationPrefix", 0xa768bdc2, 0x003c3fb9, &RSSYMsalutationprefix },
+	{ "samples", 0x69806e2d, 0x003c0a49, &RSSYMsamples },
+	{ "sampleSize", 0xcbc6bdd5, 0x003c0a61, &RSSYMsamplesize },
+	{ "samplingRate", 0x15ae5b8f, 0x003c0a7d, &RSSYMsamplingrate },
+	{ "saveLetterWeights", 0x2702f9ca, 0x003b9f45, &RSSYMsaveletterweights },
+	{ "SaveMarkup", 0x0835b147, 0x003c0a9d, &RSSYMsavemarkup },
+	{ "saveUserDict", 0xe2109682, 0x0062834d, &RSSYMsaveuserdict },
+	{ "SaveUserDictionary", 0xe30c2944, 0x003b7469, &RSSYMsaveuserdictionary },
+	{ "scale", 0x7e032c28, 0x003c3fdd, &RSSYMscale },
+	{ "scanOffset", 0x4a17a88c, 0x003c0ab9, &RSSYMscanoffset },
+	{ "schedule_act", 0x3b07ee64, 0x003c3ff5, &RSSYMschedule_act },
+	{ "score", 0xda58ae9c, 0x003c4015, &RSSYMscore },
+	{ "screendepth", 0x67e95e4d, 0x003c0ad5, &RSSYMscreendepth },
+	{ "screenheight", 0x6ea5b371, 0x003c0af1, &RSSYMscreenheight },
+	{ "screenontime", 0x2cc3bc2c, 0x003c0b11, &RSSYMscreenontime },
+	{ "screenOrientation", 0x7ffa51ac, 0x004195ad, &RSSYMscreenorientation },
+	{ "screenresolutionx", 0x46e988cc, 0x003c0b31, &RSSYMscreenresolutionx },
+	{ "screenresolutiony", 0xe5210285, 0x003c0b55, &RSSYMscreenresolutiony },
+	{ "screenSym", 0xc50a68b1, 0x003c402d, &RSSYMscreensym },
+	{ "screenwidth", 0x344b9940, 0x003c0b79, &RSSYMscreenwidth },
+	{ "scripts", 0x279e76e8, 0x003c0b95, &RSSYMscripts },
+	{ "scrollDelta", 0xe0c74531, 0x00519835, &RSSYMscrolldelta },
+	{ "scrollDownSound", 0xdd1b5c10, 0x003c0bad, &RSSYMscrolldownsound },
+	{ "scrolledView", 0x8048103b, 0x003c0bcd, &RSSYMscrolledview },
+	{ "Scroller", 0x790df1b6, 0x0043a31d, &RSSYMscroller },
+	{ "scrollers", 0xc50a68b1, 0x0044b8a5, &RSSYMscrollers },
+	{ "scrollUpSound", 0x034076d5, 0x003c0bed, &RSSYMscrollupsound },
+	{ "second", 0x68371cdc, 0x003c0c0d, &RSSYMsecond },
+	{ "secondLeadingZ", 0x0c11a53a, 0x003c4049, &RSSYMsecondleadingz },
+	{ "secorder", 0x33cdcfdf, 0x00636521, &RSSYMsecorder },
+	{ "selectedDates", 0x9abb9b6a, 0x003c0c25, &RSSYMselecteddates },
+	{ "Selection", 0x06ec5ff6, 0x003c0c45, &RSSYMselection },
+	{ "selectivesyncok", 0xe28e5fe3, 0x003c0c61, &RSSYMselectivesyncok },
+	{ "sendFlags", 0xc1ac3e1f, 0x003c0c81, &RSSYMsendflags },
+	{ "Sending", 0x60af3fc8, 0x003c4069, &RSSYMsending },
+	{ "SendWaiting", 0x59a52c15, 0x003c0c9d, &RSSYMsendwaiting },
+	{ "serialgpi", 0x519f85a0, 0x003c0cb9, &RSSYMserialgpi },
+	{ "serialNumber", 0x521d4f01, 0x0041aa95, &RSSYMserialnumber },
+	{ "serialontime", 0x2cc3bc2c, 0x003c0cd5, &RSSYMserialontime },
+	{ "service", 0xf0a28749, 0x003c0cf5, &RSSYMservice },
+	{ "serviceId", 0x1530922e, 0x003c0d0d, &RSSYMserviceid },
+	{ "SetAllInfo", 0x612d0929, 0x004913c9, &RSSYMsetallinfo },
+	{ "setAref", 0x9d1e333a, 0x003afe21, &RSSYMsetaref },
+	{ "SetBrowserPosition", 0x4832da1d, 0x003c0d29, &RSSYMsetbrowserposition },
+	{ "SetCapsLock", 0xbb6db25c, 0x00430f69, &RSSYMsetcapslock },
+	{ "SetGlobal", 0x76f91875, 0x003b780d, &RSSYMsetglobal },
+	{ "SetInfo", 0x4426db58, 0x004913e5, &RSSYMsetinfo },
+	{ "SetMarkIcon", 0x344b9940, 0x003c0d4d, &RSSYMsetmarkicon },
+	{ "SetMeetingBounds", 0x87822ec0, 0x003c0d69, &RSSYMsetmeetingbounds },
+	{ "SetName", 0x77c4a065, 0x003c5b5d, &RSSYMsetname },
+	{ "SetPageNumber", 0x6fef04c2, 0x003c0d8d, &RSSYMsetpagenumber },
+	{ "SetPrintProgress", 0xf57a0dfe, 0x003c0dad, &RSSYMsetprintprogress },
+	{ "SetScroller", 0x54322842, 0x003c2c5d, &RSSYMsetscroller },
+	{ "SetScrollers", 0xa02e9f3d, 0x0044b8ed, &RSSYMsetscrollers },
+	{ "SetSignature", 0x4caa4b2e, 0x00491381, &RSSYMsetsignature },
+	{ "SetStatus", 0xfc065850, 0x003c0dd1, &RSSYMsetstatus },
+	{ "SetStatusDialog", 0xf9a3c080, 0x003c0ded, &RSSYMsetstatusdialog },
+	{ "settings", 0x45702ca9, 0x003c0e0d, &RSSYMsettings },
+	{ "setup", 0xd4e5aac9, 0x003bb069, &RSSYMsetup },
+	{ "setup1", 0x1d83f732, 0x003c0e29, &RSSYMsetup1 },
+	{ "setup2", 0xbbbb70eb, 0x003c0e41, &RSSYMsetup2 },
+	{ "SetupROMHelpBook", 0x45a0377b, 0x003c0e59, &RSSYMsetupromhelpbook },
+	{ "sevenbit", 0xc3c11760, 0x003c0e7d, &RSSYMsevenbit },
+	{ "shape", 0x0df673a9, 0x003c0e99, &RSSYMshape },
+	{ "ShapeBounds", 0xbb6db25c, 0x003b7c4d, &RSSYMshapebounds },
+	{ "shortDateDelim", 0x5151c711, 0x003c4081, &RSSYMshortdatedelim },
+	{ "shortDateFormat", 0x69b078ff, 0x003c40a1, &RSSYMshortdateformat },
+	{ "shortDateOrder", 0xd300dc5a, 0x003c40c1, &RSSYMshortdateorder },
+	{ "shortDaySuffix", 0x466bbf6b, 0x003c2cd9, &RSSYMshortdaysuffix },
+	{ "shortDofWeek", 0xbcb703ad, 0x003c0eb1, &RSSYMshortdofweek },
+	{ "shortmonth", 0x3f31a0e6, 0x003c40e1, &RSSYMshortmonth },
+	{ "shortMonthSuffix", 0x1ad3a0d3, 0x003c2cb5, &RSSYMshortmonthsuffix },
+	{ "shortOrdinals", 0x8191618c, 0x003c0ed1, &RSSYMshortordinals },
+	{ "shortTimeStrSpec", 0x2917d30b, 0x003c40fd, &RSSYMshorttimestrspec },
+	{ "shortTitle", 0xc653ba02, 0x003c0ef1, &RSSYMshorttitle },
+	{ "shortYearSuffix", 0x92683666, 0x003c2c95, &RSSYMshortyearsuffix },
+	{ "showChar", 0x25899da7, 0x003c0f0d, &RSSYMshowchar },
+	{ "ShowMarkup", 0x281c4049, 0x003c0f29, &RSSYMshowmarkup },
+	{ "showSound", 0x46b97dfa, 0x003c0f45, &RSSYMshowsound },
+	{ "signature", 0x718614a2, 0x003c0f61, &RSSYMsignature },
+	{ "signatureA", 0x9d9bfc9b, 0x003baf99, &RSSYMsignaturea },
+	{ "signatureB", 0x3bd37654, 0x003bafb5, &RSSYMsignatureb },
+	{ "simpleSound", 0xf269a1fb, 0x003c0f7d, &RSSYMsimplesound },
+	{ "singleDay", 0x519f85a0, 0x003c0f99, &RSSYMsingleday },
+	{ "size", 0xae42c6a3, 0x003c0fb5, &RSSYMsize },
+	{ "skip", 0x3564dfbf, 0x003c0fcd, &RSSYMskip },
+	{ "SleepTime", 0x435b5368, 0x003c0fe5, &RSSYMsleeptime },
+	{ "slipHeight", 0x612d0929, 0x0044bee5, &RSSYMslipheight },
+	{ "slot", 0x01c71ab2, 0x003baeb9, &RSSYMslot },
+	{ "smallHeight", 0x8d42f122, 0x003c1001, &RSSYMsmallheight },
+	{ "SmileAfterMountError", 0xdccd9d81, 0x003c101d, &RSSYMsmileaftermounterror },
+	{ "sndFrameType", 0xe2109682, 0x003c1045, &RSSYMsndframetype },
+	{ "socket", 0x71084b41, 0x003c1065, &RSSYMsocket },
+	{ "socketInfos", 0x26076708, 0x003c4121, &RSSYMsocketinfos },
+	{ "socketNumber", 0xe2109682, 0x003c413d, &RSSYMsocketnumber },
+	{ "softFlowBlocked", 0x24705728, 0x0052ee65, &RSSYMsoftflowblocked },
+	{ "sortID", 0xdba1ffed, 0x003c5505, &RSSYMsortid },
+	{ "sorton", 0xbf199b7d, 0x003c107d, &RSSYMsorton },
+	{ "sortTables", 0x8113982b, 0x0062d7e1, &RSSYMsorttables },
+	{ "sound", 0xe329dd01, 0x0042248d, &RSSYMsound },
+	{ "soundInfo", 0x4c2c81cd, 0x003c415d, &RSSYMsoundinfo },
+	{ "soundontime", 0x2ed8956d, 0x003c1095, &RSSYMsoundontime },
+	{ "soup", 0x18dc7b4f, 0x003c10b1, &RSSYMsoup },
+	{ "soupCreated", 0x96141f87, 0x00491075, &RSSYMsoupcreated },
+	{ "soupDef", 0x07b7e7e6, 0x003c10c9, &RSSYMsoupdef },
+	{ "soupDeleted", 0xf7dca5ce, 0x00491039, &RSSYMsoupdeleted },
+	{ "SoupEnters", 0x7ba09458, 0x004511e1, &RSSYMsoupenters },
+	{ "soupIndexAdded", 0x5f95f949, 0x00634315, &RSSYMsoupindexadded },
+	{ "soupIndexRemoved", 0x09314409, 0x006343e9, &RSSYMsoupindexremoved },
+	{ "soupInfoChanged", 0x580e1c35, 0x00634a45, &RSSYMsoupinfochanged },
+	{ "SoupLeaves", 0xf9f17f0f, 0x004512a5, &RSSYMsoupleaves },
+	{ "soupList", 0x6556bbab, 0x003c10e1, &RSSYMsouplist },
+	{ "soupName", 0xb57ce528, 0x003c10fd, &RSSYMsoupname },
+	{ "soups", 0x64d8f24a, 0x003ba061, &RSSYMsoups },
+	{ "soupTagsChanged", 0x32b48960, 0x00634369, &RSSYMsouptagschanged },
+	{ "source", 0x62c41909, 0x003c1119, &RSSYMsource },
+	{ "speaker", 0x3b55acf3, 0x003c1131, &RSSYMspeaker },
+	{ "speakerOn", 0x435b5368, 0x003c1149, &RSSYMspeakeron },
+	{ "speakerVolume", 0xf19e1a0b, 0x003c1165, &RSSYMspeakervolume },
+	{ "speed", 0x0df673a9, 0x003c1185, &RSSYMspeed },
+	{ "speedCursiveOption", 0x36907d53, 0x003c119d, &RSSYMspeedcursiveoption },
+	{ "speller", 0xa5ef619f, 0x00628335, &RSSYMspeller },
+	{ "spellFrame", 0xabe02ed3, 0x00628319, &RSSYMspellframe },
+	{ "split", 0xbdd04a2c, 0x003c11c1, &RSSYMsplit },
+	{ "squaregrid", 0x1679e37f, 0x004d6e9d, &RSSYMsquaregrid },
+	{ "SRAMCardLowBattery", 0xb4e1680a, 0x003c11d9, &RSSYMsramcardlowbattery },
+	{ "SRAMCardReplaceBattery", 0x1a85e244, 0x003c11fd, &RSSYMsramcardreplacebattery },
+	{ "start", 0xfa3f3d9e, 0x003c1225, &RSSYMstart },
+	{ "startchar", 0xbc393a4c, 0x003c123d, &RSSYMstartchar },
+	{ "StartIdle", 0xbc393a4c, 0x004726fd, &RSSYMstartidle },
+	{ "startKey", 0xfabd06ff, 0x003c1259, &RSSYMstartkey },
+	{ "startTime", 0x3de84f95, 0x003c1275, &RSSYMstarttime },
+	{ "state", 0xf16e0f39, 0x003c1291, &RSSYMstate },
+	{ "status", 0x20e221c4, 0x003c12a9, &RSSYMstatus },
+	{ "statusText", 0xfd4fa9a1, 0x003c12c1, &RSSYMstatustext },
+	{ "stdForms", 0xe3a7a662, 0x003baa7d, &RSSYMstdforms },
+	{ "stepChildren", 0xd93f681d, 0x003ba175, &RSSYMstepchildren },
+	{ "stop", 0x7aa50196, 0x003c12dd, &RSSYMstop },
+	{ "stopBits", 0x98f480b8, 0x003c12f5, &RSSYMstopbits },
+	{ "StopIdle", 0x3c9efe44, 0x00472719, &RSSYMstopidle },
+	{ "store", 0x5c07c3e5, 0x003c1311, &RSSYMstore },
+	{ "storeID", 0x8095ceca, 0x004ac53d, &RSSYMstoreid },
+	{ "StoreMounted", 0x190c8621, 0x003c1329, &RSSYMstoremounted },
+	{ "storeObj", 0xb57ce528, 0x00634ba9, &RSSYMstoreobj },
+	{ "storepassword", 0xdde6e400, 0x0047265d, &RSSYMstorepassword },
+	{ "storeSig", 0xa738b2f0, 0x004f372d, &RSSYMstoresig },
+	{ "StoreUnMounted", 0xd65f06ec, 0x003c1349, &RSSYMstoreunmounted },
+	{ "storeversion", 0x4737475b, 0x003c1369, &RSSYMstoreversion },
+	{ "storyCard", 0x01795c23, 0x003c1389, &RSSYMstorycard },
+	{ "str<", 0xf8f5ec4d, 0x003c59fd, &RSSYMstr_3C },
+	{ "str=", 0x972d6606, 0x00458f1d, &RSSYMstr_3D },
+	{ "str>", 0x3564dfbf, 0x0063653d, &RSSYMstr_3E },
+	{ "StrEqual", 0x45702ca9, 0x003b7fbd, &RSSYMstrequal },
+	{ "string", 0x1810f35f, 0x003c13a5, &RSSYMstring },
+	{ "string.custom", 0x16f7ace0, 0x003c46d1, &RSSYMstring_2Ecustom },
+	{ "string.nohint", 0x4a9571ed, 0x00636555, &RSSYMstring_2Enohint },
+	{ "stroke", 0xb6486d18, 0x003c13bd, &RSSYMstroke },
+	{ "strokeBundle", 0xe2109682, 0x003c13d5, &RSSYMstrokebundle },
+	{ "strokelist", 0x02c2ad74, 0x003c13f5, &RSSYMstrokelist },
+	{ "strokes", 0x0244e413, 0x003c1411, &RSSYMstrokes },
+	{ "strongarm", 0x3de84f95, 0x003c1429, &RSSYMstrongarm },
+	{ "structure", 0x9a3dd209, 0x003c1445, &RSSYMstructure },
+	{ "strxrcommands", 0x1184a90d, 0x003c1461, &RSSYMstrxrcommands },
+	{ "StuffModalCommandKeys", 0xf74128b0, 0x00460fd1, &RSSYMstuffmodalcommandkeys },
+	{ "stylePalette", 0x89193ea0, 0x003c1481, &RSSYMstylepalette },
+	{ "styles", 0x20e221c4, 0x003c14a1, &RSSYMstyles },
+	{ "submit", 0x3d6a8634, 0x003c14b9, &RSSYMsubmit },
+	{ "suffixStr", 0xbf9764de, 0x003c4179, &RSSYMsuffixstr },
+	{ "summaryvalue", 0x557b7993, 0x003c14d1, &RSSYMsummaryvalue },
+	{ "supportsCallBack", 0xacdbc195, 0x003c14f1, &RSSYMsupportscallback },
+	{ "Sweden", 0x9661de16, 0x00434dd5, &RSSYMsweden },
+	{ "sym<", 0xf8f5ec4d, 0x00569501, &RSSYMsym_3C },
+	{ "sym>", 0x3564dfbf, 0x00636575, &RSSYMsym_3E },
+	{ "symbol", 0x79d979a6, 0x003c53b9, &RSSYMsymbol },
+	{ "SymbolSet", 0x54fdb032, 0x00629e41, &RSSYMsymbolset },
+	{ "symmetryshapeoption", 0x1b516a34, 0x003c1515, &RSSYMsymmetryshapeoption },
+	{ "sync", 0xeab1ba15, 0x003c1539, &RSSYMsync },
+	{ "syncButtons", 0x65d4850c, 0x003c1551, &RSSYMsyncbuttons },
+	{ "SyncChildren", 0x7776e1d6, 0x003bb02d, &RSSYMsyncchildren },
+	{ "SyncPenSize", 0xe4256fc3, 0x003c156d, &RSSYMsyncpensize },
+	{ "synth", 0xebfb0b66, 0x003c4195, &RSSYMsynth },
+	{ "SysBeep", 0x1ecd4883, 0x003c1589, &RSSYMsysbeep },
+	{ "system", 0xbf199b7d, 0x003c15a1, &RSSYMsystem },
+	{ "systemDirectory", 0x0b461d4a, 0x003c15b9, &RSSYMsystemdirectory },
+	{ "systemLocaleBundle", 0xe87f2d17, 0x003c15d9, &RSSYMsystemlocalebundle },
+	{ "systemName", 0x5bba0556, 0x003c15fd, &RSSYMsystemname },
+	{ "systemPSFont", 0xb1d0fc07, 0x003baab5, &RSSYMsystempsfont },
+	{ "SystemScratch", 0x1fc8db45, 0x003c1619, &RSSYMsystemscratch },
+	{ "tabAcross", 0x8e0e7912, 0x003c41ad, &RSSYMtabacross },
+	{ "tabDown", 0xb43393d7, 0x003c41c9, &RSSYMtabdown },
+	{ "tabHeights", 0xba24610b, 0x003c41e1, &RSSYMtabheights },
+	{ "tabletresolutionx", 0xce0ba1e8, 0x003c1639, &RSSYMtabletresolutionx },
+	{ "tabletresolutiony", 0x6c431ba1, 0x003c165d, &RSSYMtabletresolutiony },
+	{ "tabProtos", 0xdc1fc94e, 0x003c41fd, &RSSYMtabprotos },
+	{ "tabs", 0x2c93b15a, 0x003c1681, &RSSYMtabs },
+	{ "tabSetup", 0xb57ce528, 0x003c4219, &RSSYMtabsetup },
+	{ "tabValues", 0xa523d9af, 0x003c4235, &RSSYMtabvalues },
+	{ "tabValueSlot", 0x5aee7d66, 0x003c4251, &RSSYMtabvalueslot },
+	{ "tabWidths", 0x7fca46da, 0x003c4271, &RSSYMtabwidths },
+	{ "tag", 0xf7ac9afc, 0x003c1699, &RSSYMtag },
+	{ "tags", 0x43a911f7, 0x003c16ad, &RSSYMtags },
+	{ "tagspec", 0xc277c60f, 0x00451b81, &RSSYMtagspec },
+	{ "tapdata", 0xd0bbf847, 0x003c16c5, &RSSYMtapdata },
+	{ "target", 0x349957cf, 0x003c16dd, &RSSYMtarget },
+	{ "task", 0xbc86f8db, 0x003c16f5, &RSSYMtask },
+	{ "taskSlip", 0x90235253, 0x003c42a9, &RSSYMtaskslip },
+	{ "task_list", 0xbf9764de, 0x003c428d, &RSSYMtask_list },
+	{ "tcursor", 0x55c93822, 0x00633e15, &RSSYMtcursor },
+	{ "template", 0x4ae3307c, 0x003c170d, &RSSYMtemplate },
+	{ "temporary", 0xf33529eb, 0x0063658d, &RSSYMtemporary },
+	{ "terminalClass", 0x6fef04c2, 0x003c1729, &RSSYMterminalclass },
+	{ "termination", 0x62765a7a, 0x003c1749, &RSSYMtermination },
+	{ "terseDofWeek", 0xb3e5d548, 0x003c1765, &RSSYMtersedofweek },
+	{ "tersemonth", 0x36607281, 0x003c42c5, &RSSYMtersemonth },
+	{ "testConfig", 0x784269c6, 0x003c1785, &RSSYMtestconfig },
+	{ "text", 0xdc6d87dd, 0x003c17a1, &RSSYMtext },
+	{ "TextBox", 0xdceb513e, 0x003b8869, &RSSYMtextbox },
+	{ "textdata", 0x25899da7, 0x003c17b9, &RSSYMtextdata },
+	{ "textFlags", 0x718614a2, 0x003c17d5, &RSSYMtextflags },
+	{ "textGutter", 0x6d5c6220, 0x003c17f1, &RSSYMtextgutter },
+	{ "textPattern", 0xd5e13d8b, 0x003c1829, &RSSYMtextpattern },
+	{ "textStyle", 0xb15332a6, 0x003c180d, &RSSYMtextstyle },
+	{ "thedesktoptype", 0x911ee515, 0x003c1845, &RSSYMthedesktoptype },
+	{ "theFormat", 0x7fca46da, 0x003c1865, &RSSYMtheformat },
+	{ "thefunc", 0x77c4a065, 0x003c1881, &RSSYMthefunc },
+	{ "theName", 0xab626572, 0x00436e8d, &RSSYMthename },
+	{ "Thinking", 0x4ae3307c, 0x003c42e1, &RSSYMthinking },
+	{ "throughputgauge", 0xd44a2dab, 0x003c1899, &RSSYMthroughputgauge },
+	{ "thumbnailScript", 0xa61f6c71, 0x003c18b9, &RSSYMthumbnailscript },
+	{ "tickSound", 0xadf50814, 0x003bab89, &RSSYMticksound },
+	{ "Time", 0x43a911f7, 0x003b0109, &RSSYMtime },
+	{ "timeatcoldboot", 0xef8940ca, 0x003c18d9, &RSSYMtimeatcoldboot },
+	{ "timeCycle", 0xb3680be7, 0x003c42fd, &RSSYMtimecycle },
+	{ "timeDictionary", 0xbbeb7bbd, 0x003c18f9, &RSSYMtimedictionary },
+	{ "timeformat", 0xb4b15d38, 0x003c4319, &RSSYMtimeformat },
+	{ "timeoutCursiveOption", 0xb20106d9, 0x003c1919, &RSSYMtimeoutcursiveoption },
+	{ "timeoutscript", 0x6508fd1c, 0x003c1941, &RSSYMtimeoutscript },
+	{ "timeSepStr1", 0xd28312f9, 0x003c4335, &RSSYMtimesepstr1 },
+	{ "timeSepStr2", 0x70ba8cb2, 0x003c4351, &RSSYMtimesepstr2 },
+	{ "timestamp", 0xadf50814, 0x003c1961, &RSSYMtimestamp },
+	{ "TinyTim", 0xdceb513e, 0x003c197d, &RSSYMtinytim },
+	{ "title", 0x8fa588f2, 0x003c1995, &RSSYMtitle },
+	{ "titleText", 0x6c1310cf, 0x003c19ad, &RSSYMtitletext },
+	{ "tockSound", 0x6341e26a, 0x003baba5, &RSSYMtocksound },
+	{ "todo", 0x972d6606, 0x003c19c9, &RSSYMtodo },
+	{ "TodoItem", 0xdad677fd, 0x003c19e1, &RSSYMtodoitem },
+	{ "toEmailAddress", 0x5f95f949, 0x003c19fd, &RSSYMtoemailaddress },
+	{ "ToggleTopic", 0xd28312f9, 0x003c1a1d, &RSSYMtoggletopic },
+	{ "top", 0x2ea88a9b, 0x003c1a39, &RSSYMtop },
+	{ "topic", 0xb4ff1bc7, 0x003c1a4d, &RSSYMtopic },
+	{ "topicDragInfo", 0xdffbbd41, 0x003c1a65, &RSSYMtopicdraginfo },
+	{ "topicFont", 0xea63fb86, 0x00524825, &RSSYMtopicfont },
+	{ "topicMarkers", 0x1e7f89f4, 0x003badd9, &RSSYMtopicmarkers },
+	{ "topics", 0x00fb92c2, 0x003c1a85, &RSSYMtopics },
+	{ "topicsLabel", 0x8d42f122, 0x003c1a9d, &RSSYMtopicslabel },
+	{ "topItem", 0x72519c92, 0x003c1ab9, &RSSYMtopitem },
+	{ "topMargin", 0xd34e9ae9, 0x003c1ad1, &RSSYMtopmargin },
+	{ "total", 0xcc147c64, 0x003c1aed, &RSSYMtotal },
+	{ "totalCards", 0x612d0929, 0x003c436d, &RSSYMtotalcards },
+	{ "TotalSize", 0x7a574307, 0x003c1b05, &RSSYMtotalsize },
+	{ "totalSockets", 0x89193ea0, 0x003c4389, &RSSYMtotalsockets },
+	{ "touchtone", 0xc50a68b1, 0x003c1b21, &RSSYMtouchtone },
+	{ "Trace", 0xd1878037, 0x003c1b3d, &RSSYMtrace },
+	{ "traceElements", 0xbaa22a6c, 0x003c1b55, &RSSYMtraceelements },
+	{ "trailingfirst", 0x5366a052, 0x0046ede5, &RSSYMtrailingfirst },
+	{ "trailinglast", 0x6932af9e, 0x0046ee05, &RSSYMtrailinglast },
+	{ "transactiontimeout", 0x72ff70c5, 0x003c1b75, &RSSYMtransactiontimeout },
+	{ "transferMode", 0xf054c8ba, 0x003c1b99, &RSSYMtransfermode },
+	{ "transform", 0x9fb0d5dc, 0x003c1bb9, &RSSYMtransform },
+	{ "trickleChargeContinuous", 0x3bb5c297, 0x0043b7dd, &RSSYMtricklechargecontinuous },
+	{ "trickleCharging", 0xed746789, 0x003c1bd5, &RSSYMtricklecharging },
+	{ "tsID", 0x5abe7294, 0x003c1bf5, &RSSYMtsid },
+	{ "tStore", 0x463bb499, 0x00634b91, &RSSYMtstore },
+	{ "twoO", 0x554b6ec1, 0x003c1c0d, &RSSYMtwoo },
+	{ "txCharsObj", 0xb4b15d38, 0x0046ed5d, &RSSYMtxcharsobj },
+	{ "txData", 0x9661de16, 0x0046ec05, &RSSYMtxdata },
+	{ "txText", 0x29b35029, 0x0046ec59, &RSSYMtxtext },
+	{ "type", 0x01c71ab2, 0x003c1c25, &RSSYMtype },
+	{ "typelist", 0x4e415b0e, 0x003c1c3d, &RSSYMtypelist },
+	{ "types", 0x4dc391ad, 0x003c1c59, &RSSYMtypes },
+	{ "typeSelectTimeOut", 0x6c431ba1, 0x0044b709, &RSSYMtypeselecttimeout },
+	{ "UK", 0xe2ac13a0, 0x0043425d, &RSSYMuk },
+	{ "undo", 0x972d6606, 0x003c1c71, &RSSYMundo },
+	{ "undoable", 0x2afca17a, 0x003c43a9, &RSSYMundoable },
+	{ "undoRedo", 0xc3c11760, 0x003c1c89, &RSSYMundoredo },
+	{ "undosound", 0x7a574307, 0x003c1ca5, &RSSYMundosound },
+	{ "unflattener", 0x26076708, 0x003c1cc1, &RSSYMunflattener },
+	{ "unflattennocode", 0xc2a7d0e1, 0x0052ccd1, &RSSYMunflattennocode },
+	{ "unicode", 0xc277c60f, 0x003baaf5, &RSSYMunicode },
+	{ "unistyle", 0xb009e155, 0x003c1cdd, &RSSYMunistyle },
+	{ "unitData", 0x0e743d0a, 0x003c43c5, &RSSYMunitdata },
+	{ "unitID", 0xe9e63225, 0x003c43e1, &RSSYMunitid },
+	{ "unknown", 0x195a44b0, 0x003c1cf9, &RSSYMunknown },
+	{ "UnRegCommConfigArray", 0xc25a1252, 0x003b8ba1, &RSSYMunregcommconfigarray },
+	{ "UnstuffModalCommandKeys", 0xb493a97b, 0x0046119d, &RSSYMunstuffmodalcommandkeys },
+	{ "untraincharstr", 0x7a098478, 0x003c1d11, &RSSYMuntraincharstr },
+	{ "up", 0xf9c1743d, 0x0042b495, &RSSYMup },
+	{ "UpdateLocaleFromUserConfig", 0xee223bbc, 0x004a65a1, &RSSYMupdatelocalefromuserconfig },
+	{ "uploadingfile", 0x2aaee2eb, 0x00590f69, &RSSYMuploadingfile },
+	{ "upperList", 0x0a4a8a88, 0x003c43f9, &RSSYMupperlist },
+	{ "upperNoMarkList", 0xdd1b5c10, 0x003c4415, &RSSYMuppernomarklist },
+	{ "USA", 0x007dc961, 0x00434161, &RSSYMusa },
+	{ "useaddressdomain", 0x8cf53293, 0x003c1d31, &RSSYMuseaddressdomain },
+	{ "usecalcdomain", 0x5e4ca7f8, 0x003c1d55, &RSSYMusecalcdomain },
+	{ "useccolumndomain", 0x59576d86, 0x003c1d75, &RSSYMuseccolumndomain },
+	{ "usedatedomain", 0x2aaee2eb, 0x003c1d99, &RSSYMusedatedomain },
+	{ "usedialnavigator", 0xe07986a2, 0x003c1db9, &RSSYMusedialnavigator },
+	{ "UsedSize", 0x2e5acc0c, 0x003c1ddd, &RSSYMusedsize },
+	{ "useeom", 0x881dabde, 0x0052c945, &RSSYMuseeom },
+	{ "useEOP", 0x62c41909, 0x003c1df9, &RSSYMuseeop },
+	{ "useFaxNavigator", 0x69b078ff, 0x003c1e11, &RSSYMusefaxnavigator },
+	{ "useFullPage", 0x59a52c15, 0x003c1e31, &RSSYMusefullpage },
+	{ "usegeneralshapedomain", 0xa92fd874, 0x003c1e4d, &RSSYMusegeneralshapedomain },
+	{ "useHardFlowControl", 0x8143a2fd, 0x003c1e75, &RSSYMusehardflowcontrol },
+	{ "useInkWordRecognition", 0x455278ec, 0x00629d99, &RSSYMuseinkwordrecognition },
+	{ "usekanjidomain", 0xfdcd7302, 0x003c1e99, &RSSYMusekanjidomain },
+	{ "usemailconnector", 0x706cce23, 0x003c1eb9, &RSSYMusemailconnector },
+	{ "useModemNavigator", 0x438b5e3a, 0x003c1edd, &RSSYMusemodemnavigator },
+	{ "usenamedomain", 0x05555016, 0x003c1f01, &RSSYMusenamedomain },
+	{ "usenumberdomain", 0xd9bd317e, 0x003c1f21, &RSSYMusenumberdomain },
+	{ "usepassword", 0xfb3ad060, 0x00472625, &RSSYMusepassword },
+	{ "usephonedomain", 0x069ea167, 0x003c1f41, &RSSYMusephonedomain },
+	{ "user", 0x2720ad87, 0x003c1f61, &RSSYMuser },
+	{ "useRawInkRecognition", 0x978d7baa, 0x00629dc1, &RSSYMuserawinkrecognition },
+	{ "userConfiguration", 0x4c5c8c9f, 0x003bab0d, &RSSYMuserconfiguration },
+	{ "userDictQuery", 0x8a628ff1, 0x003bab31, &RSSYMuserdictquery },
+	{ "userDismissed", 0x8fd593c4, 0x003c1f79, &RSSYMuserdismissed },
+	{ "userFolders", 0xdb54415e, 0x003c1f99, &RSSYMuserfolders },
+	{ "userFont", 0x5c858d46, 0x003c4451, &RSSYMuserfont },
+	{ "userPenSize", 0x20946335, 0x003c1fb5, &RSSYMuserpensize },
+	{ "user_obj", 0x372bfa71, 0x003c4435, &RSSYMuser_obj },
+	{ "useSoftFlowControl", 0x6d8c6cf2, 0x003c1fd1, &RSSYMusesoftflowcontrol },
+	{ "usetimedomain", 0xac5df834, 0x003c1ff5, &RSSYMusetimedomain },
+	{ "useVoiceNavigator", 0xbc69451e, 0x003c2015, &RSSYMusevoicenavigator },
+	{ "useworddomain", 0xb52f2699, 0x003c2039, &RSSYMuseworddomain },
+	{ "useWordReplayDomain", 0x9f1558be, 0x003c2059, &RSSYMusewordreplaydomain },
+	{ "valid", 0x6fbef9f0, 0x006365a9, &RSSYMvalid },
+	{ "validTest", 0x35172130, 0x003c207d, &RSSYMvalidtest },
+	{ "value", 0x78902855, 0x003c2099, &RSSYMvalue },
+	{ "vars", 0x4c7a405c, 0x003b0069, &RSSYMvars },
+	{ "varsmapstarter", 0xcd8dd887, 0x0062eed1, &RSSYMvarsmapstarter },
+	{ "vBarber", 0xe7d158e4, 0x003bada1, &RSSYMvbarber },
+	{ "VBO", 0xc40ed5ef, 0x003c20b1, &RSSYMvbo },
+	{ "VerifyCalibration", 0x3aba2fd5, 0x003b9359, &RSSYMverifycalibration },
+	{ "version", 0xeb2f8376, 0x003c20c5, &RSSYMversion },
+	{ "vertex", 0x6b95476e, 0x003c20dd, &RSSYMvertex },
+	{ "vGauge", 0x42dd8a07, 0x003bad6d, &RSSYMvgauge },
+	{ "viaAppleTalk", 0x85bb140e, 0x003c20f5, &RSSYMviaappletalk },
+	{ "view", 0xae42c6a3, 0x003c2115, &RSSYMview },
+	{ "viewableTopics", 0x430d94d9, 0x003c212d, &RSSYMviewabletopics },
+	{ "viewAddChildScript", 0xc8989e15, 0x003c214d, &RSSYMviewaddchildscript },
+	{ "viewAddDragInfoScript", 0xee6ffa4b, 0x003c2171, &RSSYMviewadddraginfoscript },
+	{ "viewBounds", 0x5bba0556, 0x003c2199, &RSSYMviewbounds },
+	{ "viewCaretActivateScript", 0xd9ed3c50, 0x003c21b5, &RSSYMviewcaretactivatescript },
+	{ "ViewCaretChangedScript", 0x319b42e1, 0x003c21dd, &RSSYMviewcaretchangedscript },
+	{ "viewCaretScrollScript", 0x81c16c5e, 0x003c2205, &RSSYMviewcaretscrollscript },
+	{ "viewChildren", 0x3b07ee64, 0x003ba155, &RSSYMviewchildren },
+	{ "viewClass", 0xd34e9ae9, 0x003c446d, &RSSYMviewclass },
+	{ "viewClickScript", 0xcb78ff46, 0x003c222d, &RSSYMviewclickscript },
+	{ "viewclipper", 0x62765a7a, 0x003c4489, &RSSYMviewclipper },
+	{ "viewCObject", 0x67e95e4d, 0x003c224d, &RSSYMviewcobject },
+	{ "viewdragfeedbackscript", 0x98d6ccfb, 0x003c2269, &RSSYMviewdragfeedbackscript },
+	{ "viewdrawdragbackgroundscript", 0xd0ce4f5c, 0x003c2291, &RSSYMviewdrawdragbackgroundscript },
+	{ "viewdrawdragdatascript", 0x3a6c7146, 0x003c22c1, &RSSYMviewdrawdragdatascript },
+	{ "viewDrawScript", 0x2f565ece, 0x003c22e9, &RSSYMviewdrawscript },
+	{ "viewDropApproveScript", 0xde16eed2, 0x003c2309, &RSSYMviewdropapprovescript },
+	{ "viewDropChildScript", 0x87fff821, 0x003c2331, &RSSYMviewdropchildscript },
+	{ "viewDropDoneScript", 0x36907d53, 0x003c23c1, &RSSYMviewdropdonescript },
+	{ "viewDropMoveScript", 0xb83f929c, 0x003c2355, &RSSYMviewdropmovescript },
+	{ "viewDropRemoveScript", 0x0af85ebb, 0x003c2379, &RSSYMviewdropremovescript },
+	{ "viewDropScript", 0x82dab2dd, 0x003c23a1, &RSSYMviewdropscript },
+	{ "viewEffect", 0xd139c1a8, 0x003c23e5, &RSSYMvieweffect },
+	{ "viewFillPattern", 0xf9a3c080, 0x003c2401, &RSSYMviewfillpattern },
+	{ "viewFinalChangeScript", 0x13c98d20, 0x003c2421, &RSSYMviewfinalchangescript },
+	{ "viewFindTargetScript", 0x5b1e8838, 0x003c2449, &RSSYMviewfindtargetscript },
+	{ "viewFlags", 0x435b5368, 0x003c2471, &RSSYMviewflags },
+	{ "viewFont", 0xe3a7a662, 0x003c248d, &RSSYMviewfont },
+	{ "viewFormat", 0x1f4b11e4, 0x003c24a9, &RSSYMviewformat },
+	{ "viewFramePattern", 0x006015a4, 0x003c24c5, &RSSYMviewframepattern },
+	{ "viewFrontCommandKey", 0x62a6654c, 0x003bb12d, &RSSYMviewfrontcommandkey },
+	{ "viewfrontkey", 0x91ea6d05, 0x003c44a5, &RSSYMviewfrontkey },
+	{ "viewfrontmost", 0x316b380f, 0x003c44c5, &RSSYMviewfrontmost },
+	{ "viewfrontmostapp", 0x402d33a8, 0x003c44e5, &RSSYMviewfrontmostapp },
+	{ "viewgesturescript", 0x218ff5f7, 0x003c24e9, &RSSYMviewgesturescript },
+	{ "viewGetDropDataScript", 0x3c814a87, 0x003c250d, &RSSYMviewgetdropdatascript },
+	{ "viewGetDropTypesScript", 0x4128c66a, 0x003c2535, &RSSYMviewgetdroptypesscript },
+	{ "viewgrid", 0x61f89119, 0x004d6e69, &RSSYMviewgrid },
+	{ "viewhelp", 0x3c9efe44, 0x003c255d, &RSSYMviewhelp },
+	{ "viewHideScript", 0xd300dc5a, 0x003c4509, &RSSYMviewhidescript },
+	{ "viewHiliteScript", 0xccc25097, 0x003c2579, &RSSYMviewhilitescript },
+	{ "viewinkwordscript", 0x83587c3e, 0x003c259d, &RSSYMviewinkwordscript },
+	{ "viewinsertitemsscript", 0xf52c4f6f, 0x003c25c1, &RSSYMviewinsertitemsscript },
+	{ "viewJustify", 0x8b2e17e1, 0x003c4529, &RSSYMviewjustify },
+	{ "viewlinepattern", 0x97db3a39, 0x003c25e9, &RSSYMviewlinepattern },
+	{ "viewLineSpacing", 0x24705728, 0x003c2609, &RSSYMviewlinespacing },
+	{ "viewnextidletime", 0xdb0682cf, 0x003c2629, &RSSYMviewnextidletime },
+	{ "viewOriginX", 0xe4256fc3, 0x003c264d, &RSSYMvieworiginx },
+	{ "viewOriginY", 0x825ce97c, 0x003c2669, &RSSYMvieworiginy },
+	{ "viewOverviewScript", 0x84a1cd8f, 0x003c2685, &RSSYMviewoverviewscript },
+	{ "viewPostQuitScript", 0xa4885c91, 0x003c26a9, &RSSYMviewpostquitscript },
+	{ "viewQuitScript", 0x29e35afb, 0x003c4545, &RSSYMviewquitscript },
+	{ "viewRawInkScript", 0xd5937efc, 0x003c26cd, &RSSYMviewrawinkscript },
+	{ "viewScrollDownScript", 0x83d6459f, 0x003c4565, &RSSYMviewscrolldownscript },
+	{ "viewScrollUpScript", 0xa9fb6064, 0x003c458d, &RSSYMviewscrollupscript },
+	{ "viewscrubscript", 0x3ee3e257, 0x003c26f1, &RSSYMviewscrubscript },
+	{ "viewSet", 0x8966fd2f, 0x003c2711, &RSSYMviewset },
+	{ "viewSetupChildrenScript", 0xeb8f991a, 0x003c2729, &RSSYMviewsetupchildrenscript },
+	{ "viewSetupDoneScript", 0x12803bcf, 0x003c2751, &RSSYMviewsetupdonescript },
+	{ "viewSetupFormScript", 0xb988e3ed, 0x003c2775, &RSSYMviewsetupformscript },
+	{ "viewShowScript", 0xed746789, 0x003c45b1, &RSSYMviewshowscript },
+	{ "viewStationery", 0x749680a5, 0x003c2799, &RSSYMviewstationery },
+	{ "viewstats", 0x46b97dfa, 0x003c27b9, &RSSYMviewstats },
+	{ "viewStrokeScript", 0x402d33a8, 0x003c45d1, &RSSYMviewstrokescript },
+	{ "viewTie", 0x5b3c3bf5, 0x003c45f5, &RSSYMviewtie },
+	{ "viewTransferMode", 0x9e978f5d, 0x003c27d5, &RSSYMviewtransfermode },
+	{ "ViewUpdateScrollersScript", 0x0aaaa02c, 0x0041a5f1, &RSSYMviewupdatescrollersscript },
+	{ "viewValue", 0x26d2eef8, 0x003c27f9, &RSSYMviewvalue },
+	{ "viewWordScript", 0xd65f06ec, 0x003c2815, &RSSYMviewwordscript },
+	{ "Visible", 0x15fc1a1e, 0x003b9409, &RSSYMvisible },
+	{ "voiceNavigate", 0x671dd65d, 0x003c2835, &RSSYMvoicenavigate },
+	{ "voiceNavigator", 0x430d94d9, 0x003c2855, &RSSYMvoicenavigator },
+	{ "volume", 0xb6486d18, 0x004224e1, &RSSYMvolume },
+	{ "vStatus", 0x478505ea, 0x003bad19, &RSSYMvstatus },
+	{ "waitBeforeBlindDial", 0x36907d53, 0x003c2875, &RSSYMwaitbeforeblinddial },
+	{ "waitForCarrier", 0x1db40204, 0x003c2899, &RSSYMwaitforcarrier },
+	{ "warningRaised", 0xf7111dde, 0x003c28b9, &RSSYMwarningraised },
+	{ "waveTable", 0x3a8a2503, 0x003c460d, &RSSYMwavetable },
+	{ "wedge", 0xf6e1130c, 0x003c28d9, &RSSYMwedge },
+	{ "weekNumberType", 0xdbd20abf, 0x003bb00d, &RSSYMweeknumbertype },
+	{ "WeirdCardInserted", 0x0c8f6e9b, 0x003c28f1, &RSSYMweirdcardinserted },
+	{ "weird_immediate", 0xc2a7d0e1, 0x006365c1, &RSSYMweird_immediate },
+	{ "whatThe", 0x69806e2d, 0x003c2915, &RSSYMwhatthe },
+	{ "what_obj", 0x6ac9bf7e, 0x003c4629, &RSSYMwhat_obj },
+	{ "when_obj", 0x2e5acc0c, 0x003c4645, &RSSYMwhen_obj },
+	{ "where_obj", 0x4c2c81cd, 0x003c4661, &RSSYMwhere_obj },
+	{ "whichIcons", 0x24be15b7, 0x003c2c79, &RSSYMwhichicons },
+	{ "who_obj", 0x279e76e8, 0x003c467d, &RSSYMwho_obj },
+	{ "width", 0x53369580, 0x003c292d, &RSSYMwidth },
+	{ "widths", 0x9f330c7b, 0x003c2945, &RSSYMwidths },
+	{ "wizard", 0x62c41909, 0x003c295d, &RSSYMwizard },
+	{ "WizardCommit", 0xd3cc644a, 0x003c2975, &RSSYMwizardcommit },
+	{ "wizstatustext", 0x7f7c884b, 0x003c2995, &RSSYMwizstatustext },
+	{ "word", 0x4c7a405c, 0x003c29b5, &RSSYMword },
+	{ "wordBreakTable", 0x6dda2b81, 0x003c4695, &RSSYMwordbreaktable },
+	{ "wordbuf", 0xe25e5511, 0x003c29cd, &RSSYMwordbuf },
+	{ "wordInfo", 0xb57ce528, 0x0046903d, &RSSYMwordinfo },
+	{ "wordLength", 0x69fe378e, 0x003c29e5, &RSSYMwordlength },
+	{ "wordOffset", 0x8113982b, 0x003c2a01, &RSSYMwordoffset },
+	{ "words", 0x9876b757, 0x003c2a1d, &RSSYMwords },
+	{ "wordsCursiveOption", 0xc110c101, 0x003c2a35, &RSSYMwordscursiveoption },
+	{ "writecount", 0x02c2ad74, 0x003c2a59, &RSSYMwritecount },
+	{ "x", 0x6311d798, 0x003c2a75, &RSSYMx },
+	{ "XmitSoupChange", 0xea163cf7, 0x003b94fd, &RSSYMxmitsoupchange },
+	{ "xoffChar", 0x7e80f589, 0x003c2a89, &RSSYMxoffchar },
+	{ "xonChar", 0x2d117abb, 0x003c2aa5, &RSSYMxonchar },
+	{ "xrwcommands", 0xf269a1fb, 0x003c2abd, &RSSYMxrwcommands },
+	{ "xSpace", 0x59f2eaa4, 0x003c2ad9, &RSSYMxspace },
+	{ "xy", 0x645b28e9, 0x003c2af1, &RSSYMxy },
+	{ "y", 0x01495151, 0x003c2b05, &RSSYMy },
+	{ "yaccStack", 0x2374c466, 0x006365e1, &RSSYMyaccstack },
+	{ "year", 0x80180569, 0x003c2b19, &RSSYMyear },
+	{ "yearLeading", 0x8471c2bd, 0x003c46b5, &RSSYMyearleading },
+	{ "yes", 0xf2399729, 0x003c2b31, &RSSYMyes },
+	{ "ySpace", 0xf82a645d, 0x003c2b45, &RSSYMyspace },
+	{ "zapAutoReceive", 0xf85a6f2f, 0x003c2b5d, &RSSYMzapautoreceive },
+	{ "zapCommToolId", 0x5366a052, 0x003c2b7d, &RSSYMzapcommtoolid },
+	{ "ZapPackagesForFullRestore", 0xcadd8228, 0x003b956d, &RSSYMzappackagesforfullrestore },
+	{ "zapSlip", 0x1089164b, 0x003c2b9d, &RSSYMzapslip },
+	{ "ZapSystemSoupForRestoreFrom1.X", 0xfc18af65, 0x003c2bb5, &RSSYMzapsystemsoupforrestorefrom1_2Ex },
+	{ "zip", 0x2ea88a9b, 0x003c2be5, &RSSYMzip },
+	{ "_cacheContext", 0x253bdf18, 0x003c5d71, &RSSYM_cachecontext },
+	{ "_caretInfo", 0xf12050aa, 0x003bb165, &RSSYM_caretinfo },
+	{ "_caretpopup", 0x37a9c3d2, 0x003bb181, &RSSYM_caretpopup },
+	{ "_channel", 0xd2054998, 0x0042285d, &RSSYM_channel },
+	{ "_classinfo", 0x44a4a4b9, 0x003c2d8d, &RSSYM_classinfo },
+	{ "_clicksong", 0x2d8f441c, 0x003bb19d, &RSSYM_clicksong },
+	{ "_curclick", 0x96dfa777, 0x003bb1b9, &RSSYM_curclick },
+	{ "_defaultButton", 0x6bc55240, 0x003bb1d5, &RSSYM_defaultbutton },
+	{ "_defaultButtonBounds", 0x193c90f3, 0x003bb1f5, &RSSYM_defaultbuttonbounds },
+	{ "_DoDefaultButton", 0x45a0377b, 0x003bb21d, &RSSYM_dodefaultbutton },
+	{ "_ExportTable", 0x190c8621, 0x00559489, &RSSYM_exporttable },
+	{ "_function", 0x2fa41d5d, 0x006362f5, &RSSYM_function },
+	{ "_function.native", 0xd235546a, 0x00636311, &RSSYM_function_2Enative },
+	{ "_hiliteMenuItem", 0x3612b3f2, 0x003bb10d, &RSSYM_hilitemenuitem },
+	{ "_implementor", 0x557b7993, 0x0062a051, &RSSYM_implementor },
+	{ "_ImportTable", 0xc5883212, 0x00557b4d, &RSSYM_importtable },
+	{ "_infoButtons", 0x9abb9b6a, 0x00430f49, &RSSYM_infobuttons },
+	{ "_instance", 0xadf50814, 0x003c2da9, &RSSYM_instance },
+	{ "_keyCommands", 0xd3cc644a, 0x003bb241, &RSSYM_keycommands },
+	{ "_keyHelpCloseScript", 0x461e00dc, 0x003bb285, &RSSYM_keyhelpclosescript },
+	{ "_keyHelpOpenScript", 0x3f61abb8, 0x003bb261, &RSSYM_keyhelpopenscript },
+	{ "_modTime", 0x6ac9bf7e, 0x003bb2a9, &RSSYM_modtime },
+	{ "_nextArgFrame", 0xf19e1a0b, 0x0062a031, &RSSYM_nextargframe },
+	{ "_nextKeyView", 0x8c776932, 0x003bb2c5, &RSSYM_nextkeyview },
+	{ "_noAutoAdd", 0x69fe378e, 0x003bb2e5, &RSSYM_noautoadd },
+	{ "_noRepeat", 0x3de84f95, 0x003bb301, &RSSYM_norepeat },
+	{ "_parent", 0xc5d5f0a1, 0x003c5d91, &RSSYM_parent },
+	{ "_proto", 0x6622439b, 0x003bb31d, &RSSYM_proto },
+	{ "_recognizerUserChoices", 0xc4ecb4f4, 0x003bb335, &RSSYM_recognizeruserchoices },
+	{ "_recogSettings", 0x6bc55240, 0x003bb35d, &RSSYM_recogsettings },
+	{ "_sndCallback", 0x7ce9e5a9, 0x003c2dc5, &RSSYM_sndcallback },
+	{ "_sndChannels", 0xa5a1a310, 0x003c2de5, &RSSYM_sndchannels },
+	{ "_sound", 0x99c008a8, 0x003bb37d, &RSSYM_sound },
+	{ "_tabchildren", 0x23f28dc7, 0x003bb395, &RSSYM_tabchildren },
+	{ "_tabparent", 0xa66d2b00, 0x003bb3b5, &RSSYM_tabparent },
+	{ "_uniqueID", 0xf33529eb, 0x003bb3d1, &RSSYM_uniqueid },
+	{ "_weakarray", 0x5bba0556, 0x00636335, &RSSYM_weakarray },
 };
 
-const long gRSSymbolCount = 1765;
+const long gRSSymbolCount = 1768;

@@ -5,7 +5,7 @@
 				and StorePermObject/LoadPermObject/DeletePermObject
 				(StoreObject.h): frames objects to and from store objects.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	NOT YET RECONSTRUCTED: large binaries (tag 12: LoadLargeBinary,
 	DuplicateLargeBinary, CommitLargeBinary, FinalizeLargeObjectWrites,
 	ZapLargeBinaries) - a large binary in an object to write, or met in an
@@ -48,7 +48,7 @@ NotYetLargeBinaries(void)
 	StoreObjectHeader
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002b69a4 GetHintsHandlerId__17StoreObjectHeaderFv
+// ROM 0x002dc72c GetHintsHandlerId__17StoreObjectHeaderFv
 // The id in bits 1 and 3 of the flags.
 int
 StoreObjectHeader::GetHintsHandlerId(void) const
@@ -57,7 +57,7 @@ StoreObjectHeader::GetHintsHandlerId(void) const
 }
 
 
-// ROM 0x002b70e8 SetHintsHandlerId__17StoreObjectHeaderFi
+// ROM 0x002dce70 SetHintsHandlerId__17StoreObjectHeaderFi
 void
 StoreObjectHeader::SetHintsHandlerId(int id)
 {
@@ -94,7 +94,7 @@ StoreObjectHeader::WriteTo(void* bytes) const
 }
 
 
-// ROM 0x002b69bc ClearHintBits__FPl
+// ROM 0x002dc744 ClearHintBits__FPl
 static void
 ClearHintBits(long* chunk)
 {
@@ -107,7 +107,7 @@ ClearHintBits(long* chunk)
 	Small rects and references
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032aec4 PackSmallRect__FlPl
+// ROM 0x00356060 PackSmallRect__FlPl
 // A frame of exactly {top, left, bottom, right}, each an integer 0..255,
 // packed into a long (top the high byte); ==> whether it is one.
 Boolean
@@ -130,7 +130,7 @@ PackSmallRect(Ref frame, long* packed)
 }
 
 
-// ROM 0x0032aff0 UnpackSmallRect__Fl
+// ROM 0x0035618c UnpackSmallRect__Fl
 Ref
 UnpackSmallRect(long packed)
 {
@@ -143,7 +143,7 @@ UnpackSmallRect(long packed)
 }
 
 
-// ROM 0x002b79bc WriteReference__FPcl
+// ROM 0x002dd744 WriteReference__FPcl
 // A map or symbol reference: three bytes, big-endian.
 void
 WriteReference(char* bytes, long reference)
@@ -154,7 +154,7 @@ WriteReference(char* bytes, long reference)
 }
 
 
-// ROM 0x002b79e8 WriteReference__FR15TStoreWritePipel
+// ROM 0x002dd770 WriteReference__FR15TStoreWritePipel
 void
 WriteReference(TStoreWritePipe& pipe, long reference)
 {
@@ -164,7 +164,7 @@ WriteReference(TStoreWritePipe& pipe, long reference)
 }
 
 
-// ROM 0x002b7a08 ReadReference__FR14TStoreReadPipe
+// ROM 0x002dd790 ReadReference__FR14TStoreReadPipe
 long
 ReadReference(TStoreReadPipe& pipe)
 {
@@ -178,7 +178,7 @@ ReadReference(TStoreReadPipe& pipe)
 	TBucketArray
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032a574 __ct__12TBucketArrayFl
+// ROM 0x00355710 __ct__12TBucketArrayFl
 TBucketArray::TBucketArray(long elementSize)
 {
 	fNumElements = 0;
@@ -188,7 +188,7 @@ TBucketArray::TBucketArray(long elementSize)
 }
 
 
-// ROM 0x0032a5b4 __dt__12TBucketArrayFv
+// ROM 0x00355750 __dt__12TBucketArrayFv
 TBucketArray::~TBucketArray()
 {
 	for (long i = 0; i < fNumBuckets; i++)
@@ -197,7 +197,7 @@ TBucketArray::~TBucketArray()
 }
 
 
-// ROM 0x0032aaa8 ElementAt__12TBucketArrayFl
+// ROM 0x00355c44 ElementAt__12TBucketArrayFl
 void*
 TBucketArray::ElementAt(long index)
 {
@@ -207,7 +207,7 @@ TBucketArray::ElementAt(long index)
 }
 
 
-// ROM 0x0032ad20 SetNumberOfElements__12TBucketArrayFl
+// ROM 0x00355ebc SetNumberOfElements__12TBucketArrayFl
 // Buckets for count elements (one more than needed, so that the next
 // element has room); extra buckets freed.
 void
@@ -257,7 +257,7 @@ struct WritingPrecedent
 	long	fLink1;			// +0x08
 };
 
-// ROM 0x0032a610 __ct__21TPrecedentsForWritingFv
+// ROM 0x003557ac __ct__21TPrecedentsForWritingFv
 TPrecedentsForWriting::TPrecedentsForWriting()
 	: TBucketArray(sizeof(WritingPrecedent))
 {
@@ -270,7 +270,7 @@ TPrecedentsForWriting::TPrecedentsForWriting()
 }
 
 
-// ROM 0x0032a678 __dt__21TPrecedentsForWritingFv
+// ROM 0x00355814 __dt__21TPrecedentsForWritingFv
 TPrecedentsForWriting::~TPrecedentsForWriting()
 {
 	DIYGCUnregister(this);
@@ -324,7 +324,7 @@ HashInsert(Ref** table, long** indexes, long* size, Ref ref, long index)
 }
 
 
-// ROM 0x0032a6b8 Append__21TPrecedentsForWritingFRC6RefVar
+// ROM 0x00355854 Append__21TPrecedentsForWritingFRC6RefVar
 // ==> the object's index (its element number less one)
 long
 TPrecedentsForWriting::Append(RefArg obj)
@@ -340,7 +340,7 @@ TPrecedentsForWriting::Append(RefArg obj)
 }
 
 
-// ROM 0x0032a704 Find__21TPrecedentsForWritingFRC6RefVar
+// ROM 0x003558a0 Find__21TPrecedentsForWritingFRC6RefVar
 // The object's index, -1 when it has not been written.
 long
 TPrecedentsForWriting::Find(RefArg obj)
@@ -359,7 +359,7 @@ TPrecedentsForWriting::Find(RefArg obj)
 }
 
 
-// ROM 0x0032a748 Reset__21TPrecedentsForWritingFv
+// ROM 0x003558e4 Reset__21TPrecedentsForWritingFv
 // Just the root.
 void
 TPrecedentsForWriting::Reset(void)
@@ -377,7 +377,7 @@ TPrecedentsForWriting::Reset(void)
 }
 
 
-// ROM 0x0032ab04 RebuildTable__21TPrecedentsForWritingFv
+// ROM 0x00355ca0 RebuildTable__21TPrecedentsForWritingFv
 // After a collection moved the objects: every element found again.
 void
 TPrecedentsForWriting::RebuildTable(void)
@@ -392,7 +392,7 @@ TPrecedentsForWriting::RebuildTable(void)
 }
 
 
-// ROM 0x0032ab80 MarkAllRefs__21TPrecedentsForWritingFv
+// ROM 0x00355d1c MarkAllRefs__21TPrecedentsForWritingFv
 void
 TPrecedentsForWriting::MarkAllRefs(void)
 {
@@ -401,7 +401,7 @@ TPrecedentsForWriting::MarkAllRefs(void)
 }
 
 
-// ROM 0x0032abcc UpdateAllRefs__21TPrecedentsForWritingFv
+// ROM 0x00355d68 UpdateAllRefs__21TPrecedentsForWritingFv
 void
 TPrecedentsForWriting::UpdateAllRefs(void)
 {
@@ -413,7 +413,7 @@ TPrecedentsForWriting::UpdateAllRefs(void)
 }
 
 
-// ROM 0x0032aaa4 GCOccured__21TPrecedentsForWritingSFPv
+// ROM 0x00355c40 GCOccured__21TPrecedentsForWritingSFPv
 void
 TPrecedentsForWriting::GCOccured(void* refCon)
 {
@@ -421,7 +421,7 @@ TPrecedentsForWriting::GCOccured(void* refCon)
 }
 
 
-// ROM 0x0032ab7c GCMark__21TPrecedentsForWritingSFPv
+// ROM 0x00355d18 GCMark__21TPrecedentsForWritingSFPv
 void
 TPrecedentsForWriting::GCMark(void* refCon)
 {
@@ -429,7 +429,7 @@ TPrecedentsForWriting::GCMark(void* refCon)
 }
 
 
-// ROM 0x0032abc8 GCUpdate__21TPrecedentsForWritingSFPv
+// ROM 0x00355d64 GCUpdate__21TPrecedentsForWritingSFPv
 void
 TPrecedentsForWriting::GCUpdate(void* refCon)
 {
@@ -441,7 +441,7 @@ TPrecedentsForWriting::GCUpdate(void* refCon)
 	TPrecedentsForReading: the objects read so far, by index
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032ac28 __ct__21TPrecedentsForReadingFv
+// ROM 0x00355dc4 __ct__21TPrecedentsForReadingFv
 TPrecedentsForReading::TPrecedentsForReading()
 	: TBucketArray(sizeof(Ref))
 {
@@ -450,14 +450,14 @@ TPrecedentsForReading::TPrecedentsForReading()
 }
 
 
-// ROM 0x0032ac80 __dt__21TPrecedentsForReadingFv
+// ROM 0x00355e1c __dt__21TPrecedentsForReadingFv
 TPrecedentsForReading::~TPrecedentsForReading()
 {
 	DIYGCUnregister(this);
 }
 
 
-// ROM 0x0032acb8 Append__21TPrecedentsForReadingFRC6RefVar
+// ROM 0x00355e54 Append__21TPrecedentsForReadingFRC6RefVar
 long
 TPrecedentsForReading::Append(RefArg obj)
 {
@@ -468,7 +468,7 @@ TPrecedentsForReading::Append(RefArg obj)
 }
 
 
-// ROM 0x0032acf8 Replace__21TPrecedentsForReadingFlRC6RefVar
+// ROM 0x00355e94 Replace__21TPrecedentsForReadingFlRC6RefVar
 void
 TPrecedentsForReading::Replace(long index, RefArg obj)
 {
@@ -476,7 +476,7 @@ TPrecedentsForReading::Replace(long index, RefArg obj)
 }
 
 
-// ROM 0x0032ad18 Reset__21TPrecedentsForReadingFv
+// ROM 0x00355eb4 Reset__21TPrecedentsForReadingFv
 // Empty, with one bucket kept.
 void
 TPrecedentsForReading::Reset(void)
@@ -506,7 +506,7 @@ TPrecedentsForReading::Reset(void)
 }
 
 
-// ROM 0x0032ae28 MarkAllRefs__21TPrecedentsForReadingFv
+// ROM 0x00355fc4 MarkAllRefs__21TPrecedentsForReadingFv
 void
 TPrecedentsForReading::MarkAllRefs(void)
 {
@@ -515,7 +515,7 @@ TPrecedentsForReading::MarkAllRefs(void)
 }
 
 
-// ROM 0x0032ae74 UpdateAllRefs__21TPrecedentsForReadingFv
+// ROM 0x00356010 UpdateAllRefs__21TPrecedentsForReadingFv
 void
 TPrecedentsForReading::UpdateAllRefs(void)
 {
@@ -527,7 +527,7 @@ TPrecedentsForReading::UpdateAllRefs(void)
 }
 
 
-// ROM 0x0032ae24 GCMark__21TPrecedentsForReadingSFPv
+// ROM 0x00355fc0 GCMark__21TPrecedentsForReadingSFPv
 void
 TPrecedentsForReading::GCMark(void* refCon)
 {
@@ -535,7 +535,7 @@ TPrecedentsForReading::GCMark(void* refCon)
 }
 
 
-// ROM 0x0032ae70 GCUpdate__21TPrecedentsForReadingSFPv
+// ROM 0x0035600c GCUpdate__21TPrecedentsForReadingSFPv
 void
 TPrecedentsForReading::GCUpdate(void* refCon)
 {
@@ -555,7 +555,7 @@ LongSize(long l)
 }
 
 
-// ROM 0x002b7a30 __ct__18TStoreObjectWriterFRC6RefVarP13TStoreWrapperUl
+// ROM 0x002dd7b8 __ct__18TStoreObjectWriterFRC6RefVarP13TStoreWrapperUl
 // To write obj to the wrapper's store as object id (-1: a new one).
 TStoreObjectWriter::TStoreObjectWriter(RefArg obj, TStoreWrapper* wrapper, PSSId id)
 {
@@ -587,7 +587,7 @@ TStoreObjectWriter::TStoreObjectWriter(RefArg obj, TStoreWrapper* wrapper, PSSId
 }
 
 
-// ROM 0x002b7b3c __dt__18TStoreObjectWriterFv
+// ROM 0x002dd8c4 __dt__18TStoreObjectWriterFv
 TStoreObjectWriter::~TStoreObjectWriter()
 {
 	if (fHeader != nil && fHeader != fPipe.GetDataPtr(0))
@@ -607,7 +607,7 @@ TStoreObjectWriter::~TStoreObjectWriter()
 #define PRESCEND(part)		{ *fStack.fTop++ = fObject; fObject = (part); Prescan(); fObject = *--fStack.fTop; }
 
 
-// ROM 0x002b801c Prescan1__18TStoreObjectWriterFv
+// ROM 0x002ddda4 Prescan1__18TStoreObjectWriterFv
 // The stream's size counted (an upper bound: what the pipe's buffer must
 // hold), and the text's; every pointer object entered as a precedent.
 void
@@ -687,7 +687,7 @@ TStoreObjectWriter::Prescan(void)
 }
 
 
-// ROM 0x002b85f4 Scan1__18TStoreObjectWriterFv
+// ROM 0x002de37c Scan1__18TStoreObjectWriterFv
 // The object written to the stream (StoreObject.h has the tags).
 void
 TStoreObjectWriter::Scan(void)
@@ -793,7 +793,7 @@ TStoreObjectWriter::Scan(void)
 }
 
 
-// ROM 0x002b84c0 WriteLargeBinary__18TStoreObjectWriterFv
+// ROM 0x002de248 WriteLargeBinary__18TStoreObjectWriterFv
 // NOT YET RECONSTRUCTED: tag 12, the large binary's store object id and
 // size, duplicated onto this store when it lives elsewhere.
 void
@@ -803,7 +803,7 @@ TStoreObjectWriter::WriteLargeBinary(void)
 }
 
 
-// ROM 0x002b7f8c NextHintChunk__18TStoreObjectWriterFv
+// ROM 0x002ddd14 NextHintChunk__18TStoreObjectWriterFv
 // The current hint chunk closed (-1 marks its end) and the next begun.
 void
 TStoreObjectWriter::NextHintChunk(void)
@@ -817,7 +817,7 @@ TStoreObjectWriter::NextHintChunk(void)
 }
 
 
-// ROM 0x002b7c14 Write__18TStoreObjectWriterFv
+// ROM 0x002dd99c Write__18TStoreObjectWriterFv
 // The object written: the header (uniqueID, modTime, text object, hints,
 // flags, text size), the hint chunks and the stream; the strings' text
 // to its own compressed object.  ==> the store object's id.
@@ -913,7 +913,7 @@ TStoreObjectWriter::Write(void)
 	TStoreObjectReader
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002b8b8c __ct__18TStoreObjectReaderFP13TStoreWrapperUlPP13CDynamicArray
+// ROM 0x002de914 __ct__18TStoreObjectReaderFP13TStoreWrapperUlPP13CDynamicArray
 // To read store object id; with largeBinaries, the large binaries met are
 // listed there instead of loaded.
 TStoreObjectReader::TStoreObjectReader(TStoreWrapper* wrapper, PSSId id, CDynamicArray** largeBinaries)
@@ -950,7 +950,7 @@ TStoreObjectReader::TStoreObjectReader(TStoreWrapper* wrapper, PSSId id, CDynami
 }
 
 
-// ROM 0x002b8cf8 __dt__18TStoreObjectReaderFv
+// ROM 0x002dea80 __dt__18TStoreObjectReaderFv
 TStoreObjectReader::~TStoreObjectReader()
 {
 	if (fPrecedents == gPrecedentsForReading)
@@ -963,7 +963,7 @@ TStoreObjectReader::~TStoreObjectReader()
 }
 
 
-// ROM 0x002b8d80 Read__18TStoreObjectReaderFv
+// ROM 0x002deb08 Read__18TStoreObjectReaderFv
 // The object; a frame gets the header's _uniqueID and _modTime back.
 Ref
 TStoreObjectReader::Read(void)
@@ -981,7 +981,7 @@ TStoreObjectReader::Read(void)
 }
 
 
-// ROM 0x002b8e4c Scan1__18TStoreObjectReaderFv
+// ROM 0x002debd4 Scan1__18TStoreObjectReaderFv
 // One object from the stream.
 Ref
 TStoreObjectReader::Scan(void)
@@ -1104,7 +1104,7 @@ TStoreObjectReader::Scan(void)
 }
 
 
-// ROM 0x002b937c EachLargeObjectDo__18TStoreObjectReaderFPFP13TStoreWrapperUllPv_UcPv
+// ROM 0x002df104 EachLargeObjectDo__18TStoreObjectReaderFPFP13TStoreWrapperUllPv_UcPv
 // The stream skipped through, fn called with each large binary's id and
 // size (NOT YET RECONSTRUCTED: one is met).
 Boolean
@@ -1186,7 +1186,7 @@ TStoreObjectReader::EachLargeObjectDo(Boolean (*fn)(TStoreWrapper*, PSSId, long,
 	Permanent objects
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002b96cc LoadPermObject__FP13TStoreWrapperUlPP13CDynamicArray
+// ROM 0x002df454 LoadPermObject__FP13TStoreWrapperUlPP13CDynamicArray
 // Store object id read back as a frames object.
 Ref
 LoadPermObject(TStoreWrapper* wrapper, PSSId id, CDynamicArray** largeBinaries)
@@ -1196,7 +1196,7 @@ LoadPermObject(TStoreWrapper* wrapper, PSSId id, CDynamicArray** largeBinaries)
 }
 
 
-// ROM 0x002b976c CopyObjectReferences__FR14TStoreReadPipeP13TStoreWrapperT2
+// ROM 0x002df4f4 CopyObjectReferences__FR14TStoreReadPipeP13TStoreWrapperT2
 // One object of the stream (recursively its parts) skipped through, its
 // map and symbol references translated in place from the store from to
 // the store to (the pipe reads memory: the three reference bytes just
@@ -1274,7 +1274,7 @@ CopyObjectReferences(TStoreReadPipe& pipe, TStoreWrapper* from, TStoreWrapper* t
 }
 
 
-// ROM 0x002b99ec CopyPermObject__FUlP13TStoreWrapperT2
+// ROM 0x002df774 CopyPermObject__FUlP13TStoreWrapperT2
 // Store object id of the store from copied to the store to as it lies
 // (the text object copied, its id patched into the header; the map and
 // symbol references translated); one with large binaries is read and
@@ -1317,7 +1317,7 @@ CopyPermObject(PSSId id, TStoreWrapper* from, TStoreWrapper* to)
 }
 
 
-// ROM 0x002b9c10 StorePermObject__FRC6RefVarP13TStoreWrapperRUlP13CDynamicArrayPUc
+// ROM 0x002df998 StorePermObject__FRC6RefVarP13TStoreWrapperRUlP13CDynamicArrayPUc
 // obj written to the store as object id (-1: a new one, whose id comes
 // back in id); the store must be writable.
 void
@@ -1337,7 +1337,7 @@ StorePermObject(RefArg obj, TStoreWrapper* wrapper, PSSId& id, CDynamicArray* /*
 }
 
 
-// ROM 0x002b9dcc DeletePermObject__FP13TStoreWrapperUl
+// ROM 0x002dfb54 DeletePermObject__FP13TStoreWrapperUl
 // The store object and its text object deleted (and, NOT YET, its large
 // binaries zapped).
 void

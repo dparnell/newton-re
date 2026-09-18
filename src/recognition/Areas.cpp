@@ -3,7 +3,7 @@
 
 	Contains:	TRecArea and TAreaList.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Areas.h"
@@ -15,7 +15,7 @@
 	T R e c A r e a
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00219a7c Make__8TRecAreaSFUlT1
+// ROM 0x0021c1ac Make__8TRecAreaSFUlT1
 // An area for a view's recognition flags; nothing in it yet.
 // NOT YET RECONSTRUCTED: the two TTypeAssocs it is made with.
 TRecArea*
@@ -38,7 +38,7 @@ TRecArea::Make(ULong viewFlags, ULong flags)
 }
 
 
-// ROM 0x00219b30 Dispose__8TRecAreaFv
+// ROM 0x0021c260 Dispose__8TRecAreaFv
 // One user fewer; the area goes when none is left.
 void
 TRecArea::Dispose(void)
@@ -48,7 +48,7 @@ TRecArea::Dispose(void)
 }
 
 
-// ROM 0x00219c5c IDispose__8TRecAreaFv
+// ROM 0x0021c38c IDispose__8TRecAreaFv
 // The associations and chains disposed with it.
 void
 TRecArea::IDispose(void)
@@ -64,13 +64,13 @@ TRecArea::IDispose(void)
 }
 
 
-// ROM 0x0021a090 Dump__8TRecAreaFP4TMsg
+// ROM 0x0021c7c0 Dump__8TRecAreaFP4TMsg
 void
 TRecArea::Dump(TMsg* /*msg*/)
 { }
 
 
-// ROM 0x00219fd4 SizeInBytes__8TRecAreaFv
+// ROM 0x0021c704 SizeInBytes__8TRecAreaFv
 long
 TRecArea::SizeInBytes(void)
 {
@@ -83,7 +83,7 @@ TRecArea::SizeInBytes(void)
 }
 
 
-// ROM 0x00219f4c Clone__8TRecAreaFv
+// ROM 0x0021c67c Clone__8TRecAreaFv
 void
 TRecArea::Clone(void)
 {
@@ -91,7 +91,7 @@ TRecArea::Clone(void)
 }
 
 
-// ROM 0x00219fb8 Release__8TRecAreaFv
+// ROM 0x0021c6e8 Release__8TRecAreaFv
 // ==> whether no user is left.
 Boolean
 TRecArea::Release(void)
@@ -104,7 +104,7 @@ TRecArea::Release(void)
 	T A r e a L i s t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00219d68 Make__9TAreaListSFv
+// ROM 0x0021c498 Make__9TAreaListSFv
 TAreaList*
 TAreaList::Make(void)
 {
@@ -121,7 +121,7 @@ TAreaList::Make(void)
 }
 
 
-// ROM 0x00219dd0 IAreaList__9TAreaListFv
+// ROM 0x0021c500 IAreaList__9TAreaListFv
 long
 TAreaList::IAreaList(void)
 {
@@ -131,7 +131,7 @@ TAreaList::IAreaList(void)
 }
 
 
-// ROM 0x00219ddc Dispose__9TAreaListFv
+// ROM 0x0021c50c Dispose__9TAreaListFv
 // The areas released; the list goes when no user is left.
 void
 TAreaList::Dispose(void)
@@ -144,7 +144,7 @@ TAreaList::Dispose(void)
 }
 
 
-// ROM 0x00219e3c IDispose__9TAreaListFv
+// ROM 0x0021c56c IDispose__9TAreaListFv
 void
 TAreaList::IDispose(void)
 {
@@ -152,7 +152,7 @@ TAreaList::IDispose(void)
 }
 
 
-// ROM 0x00219e40 Clone__9TAreaListFv
+// ROM 0x0021c570 Clone__9TAreaListFv
 // One more user of the list and of each area.
 void
 TAreaList::Clone(void)
@@ -164,7 +164,7 @@ TAreaList::Clone(void)
 }
 
 
-// ROM 0x00219e88 GetArea__9TAreaListFUl
+// ROM 0x0021c5b8 GetArea__9TAreaListFUl
 TRecArea*
 TAreaList::GetArea(ULong index)
 {
@@ -172,7 +172,7 @@ TAreaList::GetArea(ULong index)
 }
 
 
-// ROM 0x00219ea8 AddArea__9TAreaListFP8TRecArea
+// ROM 0x0021c5d8 AddArea__9TAreaListFP8TRecArea
 // The area cloned and added.  ==> 0, or 1 for no memory.
 long
 TAreaList::AddArea(TRecArea* area)
@@ -188,7 +188,7 @@ TAreaList::AddArea(TRecArea* area)
 }
 
 
-// ROM 0x00219ef8 FindMatchingView__9TAreaListFUl
+// ROM 0x0021c628 FindMatchingView__9TAreaListFUl
 // Whether an area stands for the view.
 Boolean
 TAreaList::FindMatchingView(ULong viewId)
@@ -201,7 +201,7 @@ TAreaList::FindMatchingView(ULong viewId)
 }
 
 
-// ROM 0x00219fac GetMergedArea__9TAreaListFv
+// ROM 0x0021c6dc GetMergedArea__9TAreaListFv
 // The merged area is the last.
 TRecArea*
 TAreaList::GetMergedArea(void)
@@ -213,7 +213,7 @@ TAreaList::GetMergedArea(void)
 	T T y p e A s s o c
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00229f30 Make__10TTypeAssocSFv
+// ROM 0x0022c778 Make__10TTypeAssocSFv
 TTypeAssoc*
 TTypeAssoc::Make(void)
 {
@@ -227,7 +227,7 @@ TTypeAssoc::Make(void)
 }
 
 
-// ROM 0x00229f98 ITypeAssoc__10TTypeAssocFv
+// ROM 0x0022c7e0 ITypeAssoc__10TTypeAssocFv
 // An array of Assoc records, grown a chunk at a time like any other; the
 // handle is named so that a heap dump says what it is.
 long
@@ -239,7 +239,7 @@ TTypeAssoc::ITypeAssoc(void)
 }
 
 
-// ROM 0x00229fa4 IDispose__10TTypeAssocFv
+// ROM 0x0022c7ec IDispose__10TTypeAssocFv
 // The parameter blocks that belong to the entries go with them: the domain
 // is told first (DomainParameter with selector 3), then the handle is
 // freed.  A block someone else owns (fSharedParams) is left alone.
@@ -260,7 +260,7 @@ TTypeAssoc::IDispose(void)
 }
 
 
-// ROM 0x0022a030 Copy__10TTypeAssocFv
+// ROM 0x0022c878 Copy__10TTypeAssocFv
 TTypeAssoc*
 TTypeAssoc::Copy(void)
 {
@@ -271,7 +271,7 @@ TTypeAssoc::Copy(void)
 }
 
 
-// ROM 0x0022a088 AddAssoc__10TTypeAssocFP5Assoc
+// ROM 0x0022c8d0 AddAssoc__10TTypeAssocFP5Assoc
 // Sorted by type.  An entry that matches this one - the same type, domain,
 // and the two words that go with them - is already there and its index is
 // the answer; otherwise a slot is opened where the order wants it.
@@ -299,7 +299,7 @@ TTypeAssoc::AddAssoc(const Assoc* assoc)
 }
 
 
-// ROM 0x0022a150 MergeAssoc__10TTypeAssocFP10TTypeAssoc
+// ROM 0x0022c998 MergeAssoc__10TTypeAssocFP10TTypeAssoc
 // Another area's associations added to ours - what happens when a unit
 // lies in more than one area and the merged one has to take both.
 void
@@ -314,7 +314,7 @@ TTypeAssoc::MergeAssoc(TTypeAssoc* other)
 }
 
 
-// ROM 0x0022a1d0 GetAssoc__10TTypeAssocFUl
+// ROM 0x0022ca18 GetAssoc__10TTypeAssocFUl
 Assoc*
 TTypeAssoc::GetAssoc(ULong index)
 {
@@ -322,7 +322,7 @@ TTypeAssoc::GetAssoc(ULong index)
 }
 
 
-// ROM 0x0022a1d8 Dump__10TTypeAssocFP4TMsg
+// ROM 0x0022ca20 Dump__10TTypeAssocFP4TMsg
 void
 TTypeAssoc::Dump(TMsg* /*msg*/)
 { }

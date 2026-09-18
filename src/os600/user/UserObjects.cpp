@@ -6,7 +6,7 @@
 				destroy it).  Objects are made and destroyed by asking the object
 				manager monitor (gUObjectMgrMonitor) with an ObjectMessage.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserObjects.h"
@@ -20,7 +20,7 @@ TUMonitor*		gUObjectMgrMonitor = nil;		// 0x0c101060 (set by the user-side boot)
 TUPort*			gUNullPort = nil;				// 0x0c1010bc
 
 
-// ROM 0x0025767c MakeObject__8TUObjectF11ObjectTypesP13ObjectMessageUl
+// ROM 0x002595b4 MakeObject__8TUObjectF11ObjectTypesP13ObjectMessageUl
 // The message's type and size fields are filled in here; the new id comes
 // back in the message's first word.  A handle that already made an object
 // refuses to make another.
@@ -43,7 +43,7 @@ TUObject::MakeObject(ObjectTypes objectType, ObjectMessage* msg, ULong msgSize)
 }
 
 
-// ROM 0x002576ec CopyObject__8TUObjectFCUl
+// ROM 0x00259624 CopyObject__8TUObjectFCUl
 // Refer to another object (destroying ours if we made it); the copy does
 // not own it.
 void
@@ -57,7 +57,7 @@ TUObject::CopyObject(const TObjectId id)
 }
 
 
-// ROM 0x00257724 DestroyObject__8TUObjectFv
+// ROM 0x0025965c DestroyObject__8TUObjectFv
 void
 TUObject::DestroyObject()
 {
@@ -75,7 +75,7 @@ TUObject::DestroyObject()
 }
 
 
-// ROM 0x0025778c __dt__8TUObjectFv
+// ROM 0x002596c4 __dt__8TUObjectFv
 TUObject::~TUObject()
 {
 	DestroyObject();

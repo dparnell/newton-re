@@ -4,7 +4,7 @@
 	Contains:	TApplication: dispatching commands, the undo stacks, the
 				delayed actions; the NewtonScript functions over them.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Application.h"
@@ -27,7 +27,7 @@ const long kNotifyKindError = 3;
 static TTime kZeroTime;					// the ROM's zeroTime: all zero
 
 
-// ROM 0x001480fc ErrorNotify__FlT1
+// ROM 0x001465a4 ErrorNotify__FlT1
 // The root view told of an error: root:Notify(kind, error, nil) (the
 // ROM's Rviewroot script puts up the notify icon; the host's root has the
 // method only when a template gives it one - DEVIATION: sent if defined).
@@ -48,7 +48,7 @@ ErrorNotify(long error, long kind)
 	T A p p l i c a t i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00033b58 ClassID__12TApplicationCFv
+// ROM 0x00033aa8 ClassID__12TApplicationCFv
 long
 TApplication::ClassID(void) const
 {
@@ -56,7 +56,7 @@ TApplication::ClassID(void) const
 }
 
 
-// ROM 0x00033b60 DerivedFrom__12TApplicationCFl
+// ROM 0x00033ab0 DerivedFrom__12TApplicationCFl
 Boolean
 TApplication::DerivedFrom(long id) const
 {
@@ -64,12 +64,12 @@ TApplication::DerivedFrom(long id) const
 }
 
 
-// ROM 0x0003453c __dt__12TApplicationFv
+// ROM 0x0003448c __dt__12TApplicationFv
 TApplication::~TApplication()
 { }
 
 
-// ROM 0x000343e4 Constructor__12TApplicationFv
+// ROM 0x00034334 Constructor__12TApplicationFv
 // The toolbox initialised (the subclass's), empty undo stacks, no batch
 // pending, the next idle time 1 (never, as it were).
 void
@@ -85,15 +85,15 @@ TApplication::Constructor(void)
 }
 
 
-// ROM 0x000345b0 InitToolbox__12TApplicationFv
+// ROM 0x00034500 InitToolbox__12TApplicationFv
 void	TApplication::InitToolbox(void)		{ }
-// ROM 0x000345b4 Run__12TApplicationFv
+// ROM 0x00034504 Run__12TApplicationFv
 void	TApplication::Run(void)				{ }
-// ROM 0x000345b8 Quit__12TApplicationFv
+// ROM 0x00034508 Quit__12TApplicationFv
 void	TApplication::Quit(void)			{ }
 
 
-// ROM 0x00033b94 Idle__12TApplicationFv
+// ROM 0x00033ae4 Idle__12TApplicationFv
 // An idle: the next undo command posted starts a new batch.
 void
 TApplication::Idle(void)
@@ -102,7 +102,7 @@ TApplication::Idle(void)
 }
 
 
-// ROM 0x00034128 DispatchCommand__12TApplicationFRC6RefVar
+// ROM 0x00034078 DispatchCommand__12TApplicationFRC6RefVar
 // The command sent to its receiver's DoCommand; ==> the result the
 // receiver left (0 when there is no receiver: ErrorNotify -8003).
 long
@@ -117,7 +117,7 @@ TApplication::DispatchCommand(RefArg cmd)
 }
 
 
-// ROM 0x00034450 PostUndoCommand__12TApplicationFRC6RefVar
+// ROM 0x000343a0 PostUndoCommand__12TApplicationFRC6RefVar
 // The command marked undo and pushed on the undo stack; the first one
 // after an idle starts a new batch: the stack so far becomes the redo
 // stack when the undoRedo preference is off, else is dropped.
@@ -137,7 +137,7 @@ TApplication::PostUndoCommand(RefArg cmd)
 }
 
 
-// ROM 0x000344e4 PostUndoCommand__12TApplicationFUlP10TResponderl
+// ROM 0x00034434 PostUndoCommand__12TApplicationFUlP10TResponderl
 // A command made and posted (the application itself the receiver when
 // none is given).
 void
@@ -150,7 +150,7 @@ TApplication::PostUndoCommand(ULong id, TResponder* receiver, Long parameter)
 }
 
 
-// ROM 0x00034178 Undo__12TApplicationFv
+// ROM 0x000340c8 Undo__12TApplicationFv
 // The undo stack's commands dispatched, newest first, while a fresh
 // stack collects what they post (the undo of the undo); the old stack
 // is emptied.  With the undoRedo preference off the redo stack is what
@@ -192,7 +192,7 @@ TApplication::Undo(void)
 }
 
 
-// ROM 0x00034318 ClearUndo__12TApplicationFv
+// ROM 0x00034268 ClearUndo__12TApplicationFv
 void
 TApplication::ClearUndo(void)
 {
@@ -202,7 +202,7 @@ TApplication::ClearUndo(void)
 }
 
 
-// ROM 0x0003435c GetUndoState__12TApplicationFv
+// ROM 0x000342ac GetUndoState__12TApplicationFv
 // 'undo, or - with the undoRedo preference - 'undoRedo when the next Undo
 // redoes.
 Ref
@@ -214,7 +214,7 @@ TApplication::GetUndoState(void)
 }
 
 
-// ROM 0x000343bc GetUndoStack__12TApplicationFl
+// ROM 0x0003430c GetUndoStack__12TApplicationFl
 Ref
 TApplication::GetUndoStack(long which)
 {
@@ -222,7 +222,7 @@ TApplication::GetUndoStack(long which)
 }
 
 
-// ROM 0x00033ba0 AddDelayedAction__12TApplicationFRC6RefVarN31
+// ROM 0x00033af0 AddDelayedAction__12TApplicationFRC6RefVarN31
 // A delayed action queued: the receiver, the action (a message symbol,
 // or a function - nil receiver: called), its args, and the time it is
 // due (a 'time binary of the global time delay milliseconds from now;
@@ -257,7 +257,7 @@ TApplication::AddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefA
 }
 
 
-// ROM 0x00033d48 RunNextDelayedAction__12TApplicationFv
+// ROM 0x00033c98 RunNextDelayedAction__12TApplicationFv
 // The first delayed action whose time has come (or that has none) taken
 // out of the queue (the queue nil when empty) and done - a function
 // called (DoBlock), a message sent (DoMessage), a script run on the
@@ -297,7 +297,7 @@ TApplication::RunNextDelayedAction(void)
 }
 
 
-// ROM 0x00033f4c UpdateNextIdleTime__12TApplicationFRC5TTime
+// ROM 0x00033e9c UpdateNextIdleTime__12TApplicationFRC5TTime
 // The next idle time brought forward to the time when it is sooner (a
 // zero time means none).
 void
@@ -311,7 +311,7 @@ TApplication::UpdateNextIdleTime(const TTime& time)
 }
 
 
-// ROM 0x00033fc8 NextDelayedActionTime__12TApplicationFRC5TTime
+// ROM 0x00033f18 NextDelayedActionTime__12TApplicationFRC5TTime
 // The earliest time of the queued actions, from the one given (the
 // given one when there is none earlier, or no queue, or the system is
 // not up).
@@ -334,7 +334,7 @@ TApplication::NextDelayedActionTime(const TTime& from)
 }
 
 
-// ROM 0x00034744 DoCommand__12TApplicationFRC6RefVar
+// ROM 0x00034694 DoCommand__12TApplicationFRC6RefVar
 // The application's own commands: aeAppIdle notes it; aeRunScript's frame
 // parameter [script, args, context] runs the script on the context's
 // view (no view: the result -8003) - an 'undo array sends the message
@@ -378,7 +378,7 @@ TApplication::DoCommand(RefArg cmd)
 	N a t i v e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000b0af4 FPostCommand__FRC6RefVarN21
+// ROM 0x000af8fc FPostCommand__FRC6RefVarN21
 // PostCommand(receiverName, id): the command (the id an integer, or a
 // four-character string) dispatched to the responder of the name.
 static Ref
@@ -401,7 +401,7 @@ FPostCommand(RefArg rcvr, RefArg name, RefArg id)
 }
 
 
-// ROM 0x000b0bbc FPostCommandParam__FRC6RefVarN31
+// ROM 0x000af9c4 FPostCommandParam__FRC6RefVarN31
 // PostCommandParam(receiverName, id, parameter): an integer parameter,
 // or a frame parameter.
 static Ref
@@ -423,7 +423,7 @@ FPostCommandParam(RefArg rcvr, RefArg name, RefArg id, RefArg parameter)
 }
 
 
-// ROM 0x000b0ad0 FPostAndDo__FRC6RefVarT1
+// ROM 0x000af8d8 FPostAndDo__FRC6RefVarT1
 static Ref
 FPostAndDo(RefArg /*rcvr*/, RefArg cmd)
 {
@@ -432,7 +432,7 @@ FPostAndDo(RefArg /*rcvr*/, RefArg cmd)
 }
 
 
-// ROM 0x000b0840 FAddDelayedAction__FRC6RefVarN31
+// ROM 0x000af648 FAddDelayedAction__FRC6RefVarN31
 static Ref
 FAddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefArg delay)
 {
@@ -441,7 +441,7 @@ FAddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefArg delay)
 }
 
 
-// ROM 0x000b0874 FAddDelayedCall
+// ROM 0x000af67c FAddDelayedCall
 static Ref
 FAddDelayedCall(RefArg /*rcvr*/, RefArg fn, RefArg args, RefArg delay)
 {
@@ -450,7 +450,7 @@ FAddDelayedCall(RefArg /*rcvr*/, RefArg fn, RefArg args, RefArg delay)
 }
 
 
-// ROM 0x000b08c8 FAddDelayedSend
+// ROM 0x000af6d0 FAddDelayedSend
 static Ref
 FAddDelayedSend(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args, RefArg delay)
 {
@@ -459,7 +459,7 @@ FAddDelayedSend(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args, R
 }
 
 
-// ROM 0x000b08fc FAddDeferredAction__FRC6RefVarN21
+// ROM 0x000af704 FAddDeferredAction__FRC6RefVarN21
 static Ref
 FAddDeferredAction(RefArg receiver, RefArg action, RefArg args)
 {
@@ -467,7 +467,7 @@ FAddDeferredAction(RefArg receiver, RefArg action, RefArg args)
 }
 
 
-// ROM 0x000b094c FAddDeferredCall
+// ROM 0x000af754 FAddDeferredCall
 static Ref
 FAddDeferredCall(RefArg rcvr, RefArg fn, RefArg args)
 {
@@ -475,7 +475,7 @@ FAddDeferredCall(RefArg rcvr, RefArg fn, RefArg args)
 }
 
 
-// ROM 0x000b099c FAddDeferredSend
+// ROM 0x000af7a4 FAddDeferredSend
 static Ref
 FAddDeferredSend(RefArg rcvr, RefArg receiver, RefArg message, RefArg args)
 {
@@ -483,7 +483,7 @@ FAddDeferredSend(RefArg rcvr, RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x000b0e3c FAddUndoAction__FRC6RefVarN21
+// ROM 0x000afc44 FAddUndoAction__FRC6RefVarN21
 // AddUndoAction(script, args) on a view (a slot of the ROM's root
 // template, and a global): the script run on it by Undo.
 Ref
@@ -495,7 +495,7 @@ FAddUndoAction(RefArg rcvr, RefArg script, RefArg args)
 }
 
 
-// ROM 0x000b0e7c FAddUndoCall
+// ROM 0x000afc84 FAddUndoCall
 static Ref
 FAddUndoCall(RefArg /*rcvr*/, RefArg fn, RefArg args)
 {
@@ -505,7 +505,7 @@ FAddUndoCall(RefArg /*rcvr*/, RefArg fn, RefArg args)
 }
 
 
-// ROM 0x000b0ee4 FAddUndoSend
+// ROM 0x000afcec FAddUndoSend
 static Ref
 FAddUndoSend(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 {
@@ -515,7 +515,7 @@ FAddUndoSend(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x000b0f38 FClearUndoStacks
+// ROM 0x000afd40 FClearUndoStacks
 static Ref
 FClearUndoStacks(RefArg /*rcvr*/)
 {
@@ -524,7 +524,7 @@ FClearUndoStacks(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x000b0830 FGetUndoState
+// ROM 0x000af638 FGetUndoState
 static Ref
 FGetUndoState(RefArg /*rcvr*/)
 {

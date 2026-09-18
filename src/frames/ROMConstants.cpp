@@ -5,1108 +5,1105 @@
 
 #include "ROMConstants.h"
 
-Ref Rupbitmap = NILREF;	// ROM 0x00637f2c Rupbitmap
-Ref Rdatetimestrspecs = NILREF;	// ROM 0x00637f34 Rdatetimestrspecs
-Ref Rstoragecardtypes = NILREF;	// ROM 0x00637f3c Rstoragecardtypes
-Ref Rdirectoryconversionframe = NILREF;	// ROM 0x00637f44 Rdirectoryconversionframe
-Ref Rnewtrolabeltimeinputline = NILREF;	// ROM 0x00637f4c Rnewtrolabeltimeinputline
-Ref Roverviewbitmap = NILREF;	// ROM 0x00637f54 Roverviewbitmap
-Ref Rprotologpicker = NILREF;	// ROM 0x00637f5c Rprotologpicker
-Ref Rprotomeetingplacepopup = NILREF;	// ROM 0x00637f64 Rprotomeetingplacepopup
-Ref Rucletters = NILREF;	// ROM 0x00637f6c Rucletters
-Ref Rerrnumbertoosmall = NILREF;	// ROM 0x00637f74 Rerrnumbertoosmall
-Ref Rprotophoneexpando = NILREF;	// ROM 0x00637f7c Rprotophoneexpando
-Ref Rrouteforward = NILREF;	// ROM 0x00637f84 Rrouteforward
-Ref Rplusminusbitmap = NILREF;	// ROM 0x00637f8c Rplusminusbitmap
-Ref Rstartiaprogress = NILREF;	// ROM 0x00637f94 Rstartiaprogress
-Ref Rnewtfalseentryview = NILREF;	// ROM 0x00637f9c Rnewtfalseentryview
-Ref Rprotoconvertinkslip = NILREF;	// ROM 0x00637fa4 Rprotoconvertinkslip
-Ref Rstylusupbitmap = NILREF;	// ROM 0x00637fac Rstylusupbitmap
-Ref Rdtmf9 = NILREF;	// ROM 0x00637fb4 Rdtmf9
-Ref Rfinepentipbitmap = NILREF;	// ROM 0x00637fbc Rfinepentipbitmap
-Ref Rprintpagemessage = NILREF;	// ROM 0x00637fc4 Rprintpagemessage
-Ref Rprotoconfigpicker = NILREF;	// ROM 0x00637fcc Rprotoconfigpicker
-Ref Rmetasoupname = NILREF;	// ROM 0x00637fd4 Rmetasoupname
-Ref Rnumberfilter = NILREF;	// ROM 0x00637fdc Rnumberfilter
-Ref Rcharsetinforesources = NILREF;	// ROM 0x00637fe4 Rcharsetinforesources
-Ref Rtwobeep = NILREF;	// ROM 0x00637fec Rtwobeep
-Ref Rsoupfinder = NILREF;	// ROM 0x00637ff4 Rsoupfinder
-Ref Rcorrectortrailbits = NILREF;	// ROM 0x00637ffc Rcorrectortrailbits
-Ref Rinboxsoupname = NILREF;	// ROM 0x00638004 Rinboxsoupname
-Ref Rusphonefilter = NILREF;	// ROM 0x0063800c Rusphonefilter
-Ref Rzapnomsg = NILREF;	// ROM 0x00638014 Rzapnomsg
-Ref Rkoserroralertbounds = NILREF;	// ROM 0x0063801c Rkoserroralertbounds
-Ref Rextrasromicons = NILREF;	// ROM 0x00638024 Rextrasromicons
-Ref Rkbddeletebitmap = NILREF;	// ROM 0x0063802c Rkbddeletebitmap
-Ref Rprotoleftrightscroller = NILREF;	// ROM 0x00638034 Rprotoleftrightscroller
-Ref Rprinterchooserbutton = NILREF;	// ROM 0x0063803c Rprinterchooserbutton
-Ref Rnewtareacodeline = NILREF;	// ROM 0x00638044 Rnewtareacodeline
-Ref Rprotosendbutton = NILREF;	// ROM 0x0063804c Rprotosendbutton
-Ref Rdtmf9bitmap = NILREF;	// ROM 0x00638054 Rdtmf9bitmap
-Ref Rcloud1 = NILREF;	// ROM 0x0063805c Rcloud1
-Ref Rcanonicaltitle = NILREF;	// ROM 0x00638064 Rcanonicaltitle
-Ref Rnewtronumview = NILREF;	// ROM 0x0063806c Rnewtronumview
-Ref Rcorrectortwobuttons = NILREF;	// ROM 0x00638074 Rcorrectortwobuttons
-Ref Rnewtlabelsimpledateinputline = NILREF;	// ROM 0x0063807c Rnewtlabelsimpledateinputline
-Ref Rstoreprototype = NILREF;	// ROM 0x00638084 Rstoreprototype
-Ref Rcalculator = NILREF;	// ROM 0x0063808c Rcalculator
-Ref Rmaileditor = NILREF;	// ROM 0x00638094 Rmaileditor
-Ref Rnewtembeddedentryview = NILREF;	// ROM 0x0063809c Rnewtembeddedentryview
-Ref Rrecognizeruserchoices = NILREF;	// ROM 0x006380a4 Rrecognizeruserchoices
-Ref Rprotoprefframe = NILREF;	// ROM 0x006380ac Rprotoprefframe
-Ref Rroutereaddress = NILREF;	// ROM 0x006380b4 Rroutereaddress
-Ref Rprintdone = NILREF;	// ROM 0x006380bc Rprintdone
-Ref Rnewtprotolinebase = NILREF;	// ROM 0x006380c4 Rnewtprotolinebase
-Ref Raddingmachine = NILREF;	// ROM 0x006380cc Raddingmachine
-Ref Rextrasdrawer = NILREF;	// ROM 0x006380d4 Rextrasdrawer
-Ref Rletters = NILREF;	// ROM 0x006380dc Rletters
-Ref Rconversionrates = NILREF;	// ROM 0x006380e4 Rconversionrates
-Ref Rnewtstatefilter = NILREF;	// ROM 0x006380ec Rnewtstatefilter
-Ref Rnewtrolabelnuminputline = NILREF;	// ROM 0x006380f4 Rnewtrolabelnuminputline
-Ref Rprotoeditview = NILREF;	// ROM 0x006380fc Rprotoeditview
-Ref Rprotoendpoint = NILREF;	// ROM 0x00638104 Rprotoendpoint
-Ref Rkbdcapslockbitmap = NILREF;	// ROM 0x0063810c Rkbdcapslockbitmap
-Ref Rkbdtabbitmap = NILREF;	// ROM 0x00638114 Rkbdtabbitmap
-Ref Rcanonicaldatacontext = NILREF;	// ROM 0x0063811c Rcanonicaldatacontext
-Ref Rdtmf1 = NILREF;	// ROM 0x00638124 Rdtmf1
-Ref Rfoldertableft = NILREF;	// ROM 0x0063812c Rfoldertableft
-Ref Rnewttextview = NILREF;	// ROM 0x00638134 Rnewttextview
-Ref Rstopwordlist = NILREF;	// ROM 0x0063813c Rstopwordlist
-Ref Rcalculatorbitmap = NILREF;	// ROM 0x00638144 Rcalculatorbitmap
-Ref Rfilledstarbitmap = NILREF;	// ROM 0x0063814c Rfilledstarbitmap
-Ref Rhandscrollbitmap = NILREF;	// ROM 0x00638154 Rhandscrollbitmap
-Ref Rdatesbitmap = NILREF;	// ROM 0x0063815c Rdatesbitmap
-Ref Rlocationpicker = NILREF;	// ROM 0x00638164 Rlocationpicker
-Ref Rnotification = NILREF;	// ROM 0x0063816c Rnotification
-Ref Rprotodatepicker = NILREF;	// ROM 0x00638174 Rprotodatepicker
-Ref Rprotorichlabelinputline = NILREF;	// ROM 0x0063817c Rprotorichlabelinputline
-Ref Rdraweropen = NILREF;	// ROM 0x00638184 Rdraweropen
-Ref Rremindslip = NILREF;	// ROM 0x0063818c Rremindslip
-Ref Rtestfields = NILREF;	// ROM 0x00638194 Rtestfields
-Ref Rukphonefilter = NILREF;	// ROM 0x0063819c Rukphonefilter
-Ref Rzapconfirmmsg = NILREF;	// ROM 0x006381a4 Rzapconfirmmsg
-Ref Rnotifycloud = NILREF;	// ROM 0x006381ac Rnotifycloud
-Ref Rnewtentryrollheader = NILREF;	// ROM 0x006381b4 Rnewtentryrollheader
-Ref Rprotosubcontentarea = NILREF;	// ROM 0x006381bc Rprotosubcontentarea
-Ref Rcardfileindices = NILREF;	// ROM 0x006381c4 Rcardfileindices
-Ref Rnewtpagelayout = NILREF;	// ROM 0x006381cc Rnewtpagelayout
-Ref Rroutemissing = NILREF;	// ROM 0x006381d4 Rroutemissing
-Ref Rioprotoreceivebutton = NILREF;	// ROM 0x006381dc Rioprotoreceivebutton
-Ref Rcanonicalframepartinstallinfo = NILREF;	// ROM 0x006381e4 Rcanonicalframepartinstallinfo
-Ref Rdtmf1bitmap = NILREF;	// ROM 0x006381ec Rdtmf1bitmap
-Ref Rprotonamerefdatadef = NILREF;	// ROM 0x006381f4 Rprotonamerefdatadef
-Ref Rprotobottomtitle = NILREF;	// ROM 0x006381fc Rprotobottomtitle
-Ref Rprotopictureview = NILREF;	// ROM 0x00638204 Rprotopictureview
-Ref Rrepeatmeetingname = NILREF;	// ROM 0x0063820c Rrepeatmeetingname
-Ref Rprotostatustemplate = NILREF;	// ROM 0x00638214 Rprotostatustemplate
-Ref Rkeydividebitmap = NILREF;	// ROM 0x0063821c Rkeydividebitmap
-Ref Rprotorouteslip = NILREF;	// ROM 0x00638224 Rprotorouteslip
-Ref Rprototitletext = NILREF;	// ROM 0x0063822c Rprototitletext
-Ref Rnewtrollentryview = NILREF;	// ROM 0x00638234 Rnewtrollentryview
-Ref Rprototabledef = NILREF;	// ROM 0x0063823c Rprototabledef
-Ref Rrcprefsconfig = NILREF;	// ROM 0x00638244 Rrcprefsconfig
-Ref Rdefaultsilentprefinfo = NILREF;	// ROM 0x0063824c Rdefaultsilentprefinfo
-Ref Raddsound = NILREF;	// ROM 0x00638254 Raddsound
-Ref Rcursorprototype = NILREF;	// ROM 0x0063825c Rcursorprototype
-Ref Rnewtnewstationerybutton = NILREF;	// ROM 0x00638264 Rnewtnewstationerybutton
-Ref Rdrawerclose = NILREF;	// ROM 0x0063826c Rdrawerclose
-Ref Rlargepentip = NILREF;	// ROM 0x00638274 Rlargepentip
-Ref Rrightbitmap = NILREF;	// ROM 0x0063827c Rrightbitmap
-Ref Rcanonicalfirstgroup = NILREF;	// ROM 0x00638284 Rcanonicalfirstgroup
-Ref Rcopier = NILREF;	// ROM 0x0063828c Rcopier
-Ref Rmissingviewdef = NILREF;	// ROM 0x00638294 Rmissingviewdef
-Ref Rprotorecconfig = NILREF;	// ROM 0x0063829c Rprotorecconfig
-Ref Rprovincepicker = NILREF;	// ROM 0x006382a4 Rprovincepicker
-Ref Rcanonicalcurrentimport = NILREF;	// ROM 0x006382ac Rcanonicalcurrentimport
-Ref Rhandwritingstyleimages = NILREF;	// ROM 0x006382b4 Rhandwritingstyleimages
-Ref Rfaxdriver = NILREF;	// ROM 0x006382bc Rfaxdriver
-Ref Rbootinitnsglobals = NILREF;	// ROM 0x006382c4 Rbootinitnsglobals
-Ref Rlinespacingfmtstr = NILREF;	// ROM 0x006382cc Rlinespacingfmtstr
-Ref Rparagraphcodebook1 = NILREF;	// ROM 0x006382d4 Rparagraphcodebook1
-Ref Rassistbitmap = NILREF;	// ROM 0x006382dc Rassistbitmap
-Ref Rextrasbitmap = NILREF;	// ROM 0x006382e4 Rextrasbitmap
-Ref Rratchetsound = NILREF;	// ROM 0x006382ec Rratchetsound
-Ref Rtopicmarkers = NILREF;	// ROM 0x006382f4 Rtopicmarkers
-Ref Raustphonefilter = NILREF;	// ROM 0x006382fc Raustphonefilter
-Ref Rnewtfilter = NILREF;	// ROM 0x00638304 Rnewtfilter
-Ref Rextrassoupdef = NILREF;	// ROM 0x0063830c Rextrassoupdef
-Ref Rlocationpopup = NILREF;	// ROM 0x00638314 Rlocationpopup
-Ref Rprotoprefinfo = NILREF;	// ROM 0x0063831c Rprotoprefinfo
-Ref Ruparrowbitmap = NILREF;	// ROM 0x00638324 Ruparrowbitmap
-Ref Rnewtonnewtbitmap = NILREF;	// ROM 0x0063832c Rnewtonnewtbitmap
-Ref Rprotonewsetclock = NILREF;	// ROM 0x00638334 Rprotonewsetclock
-Ref Rcanonicalgestaltpatchinfo = NILREF;	// ROM 0x0063833c Rcanonicalgestaltpatchinfo
-Ref Rucardpositionalertbutton = NILREF;	// ROM 0x00638344 Rucardpositionalertbutton
-Ref Rrcinkortext = NILREF;	// ROM 0x0063834c Rrcinkortext
-Ref Rnewtinfobutton = NILREF;	// ROM 0x00638354 Rnewtinfobutton
-Ref Rprotolonglattextpicker = NILREF;	// ROM 0x0063835c Rprotolonglattextpicker
-Ref Rprotoroll = NILREF;	// ROM 0x00638364 Rprotoroll
-Ref Rprotohilitebutton = NILREF;	// ROM 0x0063836c Rprotohilitebutton
-Ref Rcanonicalexporttableclient = NILREF;	// ROM 0x00638374 Rcanonicalexporttableclient
-Ref Rcanonicalrect = NILREF;	// ROM 0x0063837c Rcanonicalrect
-Ref Rcanonicalgroupee = NILREF;	// ROM 0x00638384 Rcanonicalgroupee
-Ref Rprototimebutton = NILREF;	// ROM 0x0063838c Rprototimebutton
-Ref Rprotolabeledbatterygauge = NILREF;	// ROM 0x00638394 Rprotolabeledbatterygauge
-Ref Rglobebitmap = NILREF;	// ROM 0x0063839c Rglobebitmap
-Ref Rdefaultsendprefinfo = NILREF;	// ROM 0x006383a4 Rdefaultsendprefinfo
-Ref Rrcrerecognizeconfig = NILREF;	// ROM 0x006383ac Rrcrerecognizeconfig
-Ref Rconnectmessage = NILREF;	// ROM 0x006383b4 Rconnectmessage
-Ref Rlargepentipbitmap = NILREF;	// ROM 0x006383bc Rlargepentipbitmap
-Ref Rfontsystem12 = NILREF;	// ROM 0x006383c4 Rfontsystem12
-Ref Rprototransportprefs = NILREF;	// ROM 0x006383cc Rprototransportprefs
-Ref Rroutecallbitmap = NILREF;	// ROM 0x006383d4 Rroutecallbitmap
-Ref Rampmslides = NILREF;	// ROM 0x006383dc Rampmslides
-Ref Rnewtcheckallbutton = NILREF;	// ROM 0x006383e4 Rnewtcheckallbutton
-Ref Rprotocharedit = NILREF;	// ROM 0x006383ec Rprotocharedit
-Ref Rdigitaltimepopup = NILREF;	// ROM 0x006383f4 Rdigitaltimepopup
-Ref Rprotodateexpando = NILREF;	// ROM 0x006383fc Rprotodateexpando
-Ref Raliascursor = NILREF;	// ROM 0x00638404 Raliascursor
-Ref Rhilitesound = NILREF;	// ROM 0x0063840c Rhilitesound
-Ref Rownerbitmap = NILREF;	// ROM 0x00638414 Rownerbitmap
-Ref Ruerasepersistentdatabutton0str = NILREF;	// ROM 0x0063841c Ruerasepersistentdatabutton0str
-Ref Rsaveletterweights = NILREF;	// ROM 0x00638424 Rsaveletterweights
-Ref Rsolopokertemplate = NILREF;	// ROM 0x0063842c Rsolopokertemplate
-Ref Rcitysoupname = NILREF;	// ROM 0x00638434 Rcitysoupname
-Ref Rprotofloater = NILREF;	// ROM 0x0063843c Rprotofloater
-Ref Rnewtrocomboview = NILREF;	// ROM 0x00638444 Rnewtrocomboview
-Ref Rprotodictionary = NILREF;	// ROM 0x0063844c Rprotodictionary
-Ref Rprotoiocategory = NILREF;	// ROM 0x00638454 Rprotoiocategory
-Ref Rnewtprotoline = NILREF;	// ROM 0x0063845c Rnewtprotoline
-Ref Rplainsouppersistent = NILREF;	// ROM 0x00638464 Rplainsouppersistent
-Ref Rcanonicalcorrectoralternates = NILREF;	// ROM 0x0063846c Rcanonicalcorrectoralternates
-Ref Ralarmiconbitmap = NILREF;	// ROM 0x00638474 Ralarmiconbitmap
-Ref Redgedrawer = NILREF;	// ROM 0x0063847c Redgedrawer
-Ref Rsystemsoupindexes = NILREF;	// ROM 0x00638484 Rsystemsoupindexes
-Ref Rdtmf6 = NILREF;	// ROM 0x0063848c Rdtmf6
-Ref Rfontsystem12underline = NILREF;	// ROM 0x00638494 Rfontsystem12underline
-Ref Rnewtcountrysymbolfilter = NILREF;	// ROM 0x0063849c Rnewtcountrysymbolfilter
-Ref Rcanonicalpopup = NILREF;	// ROM 0x006384a4 Rcanonicalpopup
-Ref Rcloseboxbitmap = NILREF;	// ROM 0x006384ac Rcloseboxbitmap
-Ref Rdialtones = NILREF;	// ROM 0x006384b4 Rdialtones
-Ref Rusdatefilter = NILREF;	// ROM 0x006384bc Rusdatefilter
-Ref Ranalogtimepopup = NILREF;	// ROM 0x006384c4 Ranalogtimepopup
-Ref Rprototable = NILREF;	// ROM 0x006384cc Rprototable
-Ref Rzapsendmsg = NILREF;	// ROM 0x006384d4 Rzapsendmsg
-Ref R_clicksong = NILREF;	// ROM 0x006384dc R_clicksong
-Ref Rwaitprintermessage = NILREF;	// ROM 0x006384e4 Rwaitprintermessage
-Ref Rnewtstationerypopupbutton = NILREF;	// ROM 0x006384ec Rnewtstationerypopupbutton
-Ref Rkeybuttbitmap = NILREF;	// ROM 0x006384f4 Rkeybuttbitmap
-Ref Rprotokeyboard = NILREF;	// ROM 0x006384fc Rprotokeyboard
-Ref Rroutingbitmap = NILREF;	// ROM 0x00638504 Rroutingbitmap
-Ref Rcanonicalparacaretinfo = NILREF;	// ROM 0x0063850c Rcanonicalparacaretinfo
-Ref Rcanonicalcardinfo = NILREF;	// ROM 0x00638514 Rcanonicalcardinfo
-Ref Rroutetrashbitmap = NILREF;	// ROM 0x0063851c Rroutetrashbitmap
-Ref Rprototimedeltatextpicker = NILREF;	// ROM 0x00638524 Rprototimedeltatextpicker
-Ref Rfontsystem9 = NILREF;	// ROM 0x0063852c Rfontsystem9
-Ref Rprototracer = NILREF;	// ROM 0x00638534 Rprototracer
-Ref Rprotoprintpage = NILREF;	// ROM 0x0063853c Rprotoprintpage
-Ref Rprintslip = NILREF;	// ROM 0x00638544 Rprintslip
-Ref Ryearpopup = NILREF;	// ROM 0x0063854c Ryearpopup
-Ref Rprotocategoryrollcategory = NILREF;	// ROM 0x00638554 Rprotocategoryrollcategory
-Ref Rprototextpicker = NILREF;	// ROM 0x0063855c Rprototextpicker
-Ref Ranalogclock = NILREF;	// ROM 0x00638564 Ranalogclock
-Ref Rdtmf6bitmap = NILREF;	// ROM 0x0063856c Rdtmf6bitmap
-Ref Rjapanprefecturename = NILREF;	// ROM 0x00638574 Rjapanprefecturename
-Ref Rradiooffbitmap = NILREF;	// ROM 0x0063857c Rradiooffbitmap
-Ref Rnewtrosymbolview = NILREF;	// ROM 0x00638584 Rnewtrosymbolview
-Ref Rcalendarnotessoupdef = NILREF;	// ROM 0x0063858c Rcalendarnotessoupdef
-Ref Ronebeep = NILREF;	// ROM 0x00638594 Ronebeep
-Ref Rcanonicalgestaltversion = NILREF;	// ROM 0x0063859c Rcanonicalgestaltversion
-Ref Rasciishift = NILREF;	// ROM 0x006385a4 Rasciishift
-Ref Rflapslides = NILREF;	// ROM 0x006385ac Rflapslides
-Ref Rtodoname = NILREF;	// ROM 0x006385b4 Rtodoname
-Ref Rprotobeamer = NILREF;	// ROM 0x006385bc Rprotobeamer
-Ref Rprinterserialpicker = NILREF;	// ROM 0x006385c4 Rprinterserialpicker
-Ref Rprotoiostatemachine = NILREF;	// ROM 0x006385cc Rprotoiostatemachine
-Ref Ronlineservices = NILREF;	// ROM 0x006385d4 Ronlineservices
-Ref Rnewtintegerfilter = NILREF;	// ROM 0x006385dc Rnewtintegerfilter
-Ref Rdsexceptions = NILREF;	// ROM 0x006385e4 Rdsexceptions
-Ref Rprmemoformat = NILREF;	// ROM 0x006385ec Rprmemoformat
-Ref Rfontsystem9underline = NILREF;	// ROM 0x006385f4 Rfontsystem9underline
-Ref Rkeysmallbuttonbitmap = NILREF;	// ROM 0x006385fc Rkeysmallbuttonbitmap
-Ref Rkeybuttonbitmap = NILREF;	// ROM 0x00638604 Rkeybuttonbitmap
-Ref Rrepeatqueryspec = NILREF;	// ROM 0x0063860c Rrepeatqueryspec
-Ref Rcanonicalpackagecallbackinfo = NILREF;	// ROM 0x00638614 Rcanonicalpackagecallbackinfo
-Ref Rcountrypicker = NILREF;	// ROM 0x0063861c Rcountrypicker
-Ref Rnamerefvalidationframe = NILREF;	// ROM 0x00638624 Rnamerefvalidationframe
-Ref Rcanonicalinkshape = NILREF;	// ROM 0x0063862c Rcanonicalinkshape
-Ref Rnorthsouthbitmap = NILREF;	// ROM 0x00638634 Rnorthsouthbitmap
-Ref Rcanonicalfakecontext = NILREF;	// ROM 0x0063863c Rcanonicalfakecontext
-Ref Rnewtentryviewfiling = NILREF;	// ROM 0x00638644 Rnewtentryviewfiling
-Ref Rrcbuildchains = NILREF;	// ROM 0x0063864c Rrcbuildchains
-Ref Rcanonicalgrayfontspec = NILREF;	// ROM 0x00638654 Rcanonicalgrayfontspec
-Ref Rprotopinwithoutlogic = NILREF;	// ROM 0x0063865c Rprotopinwithoutlogic
-Ref Ralerterbeep = NILREF;	// ROM 0x00638664 Ralerterbeep
-Ref Rbizarrebeep = NILREF;	// ROM 0x0063866c Rbizarrebeep
-Ref Rprotomulticursor = NILREF;	// ROM 0x00638674 Rprotomulticursor
-Ref Rsearchprefix = NILREF;	// ROM 0x0063867c Rsearchprefix
-Ref Rukdatefilter = NILREF;	// ROM 0x00638684 Rukdatefilter
-Ref Rromavailableprinters = NILREF;	// ROM 0x0063868c Rromavailableprinters
-Ref Rworldclock = NILREF;	// ROM 0x00638694 Rworldclock
-Ref Rnewtlabelinputline = NILREF;	// ROM 0x0063869c Rnewtlabelinputline
-Ref Rdefaultoutboxprefinfo = NILREF;	// ROM 0x006386a4 Rdefaultoutboxprefinfo
-Ref Rsoundoff = NILREF;	// ROM 0x006386ac Rsoundoff
-Ref Rvconfirm = NILREF;	// ROM 0x006386b4 Rvconfirm
-Ref Rrominternational = NILREF;	// ROM 0x006386bc Rrominternational
-Ref Rcuckoosound = NILREF;	// ROM 0x006386c4 Rcuckoosound
-Ref Rgfunky = NILREF;	// ROM 0x006386cc Rgfunky
-Ref Rstylepreflight = NILREF;	// ROM 0x006386d4 Rstylepreflight
-Ref Rtimesromanfont = NILREF;	// ROM 0x006386dc Rtimesromanfont
-Ref Rconnvalidtestexclusion = NILREF;	// ROM 0x006386e4 Rconnvalidtestexclusion
-Ref Rucardreinsertalerttext = NILREF;	// ROM 0x006386ec Rucardreinsertalerttext
-Ref Rbootsound = NILREF;	// ROM 0x006386f4 Rbootsound
-Ref Rcanonicaldate = NILREF;	// ROM 0x006386fc Rcanonicaldate
-Ref Rprotoiconradiobutton = NILREF;	// ROM 0x00638704 Rprotoiconradiobutton
-Ref Rprototitle = NILREF;	// ROM 0x0063870c Rprototitle
-Ref Rclassinfoprototype = NILREF;	// ROM 0x00638714 Rclassinfoprototype
-Ref Rprototextexpando = NILREF;	// ROM 0x0063871c Rprototextexpando
-Ref Rtabrighthilitebitmap = NILREF;	// ROM 0x00638724 Rtabrighthilitebitmap
-Ref Rnewtoverlayout = NILREF;	// ROM 0x0063872c Rnewtoverlayout
-Ref Rupackneedscardalerttext = NILREF;	// ROM 0x00638734 Rupackneedscardalerttext
-Ref Riotransportbutton = NILREF;	// ROM 0x0063873c Riotransportbutton
-Ref Rnoconvertsouplist = NILREF;	// ROM 0x00638744 Rnoconvertsouplist
-Ref Rbindi = NILREF;	// ROM 0x0063874c Rbindi
-Ref Rclick = NILREF;	// ROM 0x00638754 Rclick
-Ref Raddresseeslip = NILREF;	// ROM 0x0063875c Raddresseeslip
-Ref Rcapslocklight = NILREF;	// ROM 0x00638764 Rcapslocklight
-Ref Rprotopreferencesfield = NILREF;	// ROM 0x0063876c Rprotopreferencesfield
-Ref Rphonepad = NILREF;	// ROM 0x00638774 Rphonepad
-Ref Rdefaultinfoprefs = NILREF;	// ROM 0x0063877c Rdefaultinfoprefs
-Ref Rprotousstatestextpicker = NILREF;	// ROM 0x00638784 Rprotousstatestextpicker
-Ref Rwildestbeep = NILREF;	// ROM 0x0063878c Rwildestbeep
-Ref Rkeyrightparenbitmap = NILREF;	// ROM 0x00638794 Rkeyrightparenbitmap
-Ref Rvgauge = NILREF;	// ROM 0x0063879c Rvgauge
-Ref Rkeycolonbitmap = NILREF;	// ROM 0x006387a4 Rkeycolonbitmap
-Ref Rkeyslashbitmap = NILREF;	// ROM 0x006387ac Rkeyslashbitmap
-Ref Rmidpunctbitmap = NILREF;	// ROM 0x006387b4 Rmidpunctbitmap
-Ref Reraseslip = NILREF;	// ROM 0x006387bc Reraseslip
-Ref Rprotostatemachine = NILREF;	// ROM 0x006387c4 Rprotostatemachine
-Ref Rmediumpentip = NILREF;	// ROM 0x006387cc Rmediumpentip
-Ref Rcrumple = NILREF;	// ROM 0x006387d4 Rcrumple
-Ref Rprotostatemachineinputspec = NILREF;	// ROM 0x006387dc Rprotostatemachineinputspec
-Ref Rkeyplusbitmap = NILREF;	// ROM 0x006387e4 Rkeyplusbitmap
-Ref Rprotobookmark = NILREF;	// ROM 0x006387ec Rprotobookmark
-Ref Rpostmark = NILREF;	// ROM 0x006387f4 Rpostmark
-Ref Rroutelog = NILREF;	// ROM 0x006387fc Rroutelog
-Ref Rnewtfilingbutton = NILREF;	// ROM 0x00638804 Rnewtfilingbutton
-Ref Rprotopictindexer = NILREF;	// ROM 0x0063880c Rprotopictindexer
-Ref Rucardwpalerttext = NILREF;	// ROM 0x00638814 Rucardwpalerttext
-Ref Russtdphonefilter = NILREF;	// ROM 0x0063881c Russtdphonefilter
-Ref Rprotonote = NILREF;	// ROM 0x00638824 Rprotonote
-Ref Rnewtstationermenu = NILREF;	// ROM 0x0063882c Rnewtstationermenu
-Ref Rfreshcardname = NILREF;	// ROM 0x00638834 Rfreshcardname
-Ref Rcanonicalpictureshape = NILREF;	// ROM 0x0063883c Rcanonicalpictureshape
-Ref Rcalendar = NILREF;	// ROM 0x00638844 Rcalendar
-Ref Rcardfile = NILREF;	// ROM 0x0063884c Rcardfile
-Ref Rvstatus = NILREF;	// ROM 0x00638854 Rvstatus
-Ref Rcountrysoupname = NILREF;	// ROM 0x0063885c Rcountrysoupname
-Ref Rprotoinfobutton = NILREF;	// ROM 0x00638864 Rprotoinfobutton
-Ref Rbootruninitscripts = NILREF;	// ROM 0x0063886c Rbootruninitscripts
-Ref Rprotoroutingformat = NILREF;	// ROM 0x00638874 Rprotoroutingformat
-Ref Rcloud3 = NILREF;	// ROM 0x0063887c Rcloud3
-Ref Rkbdrightbitmap = NILREF;	// ROM 0x00638884 Rkbdrightbitmap
-Ref Rkbdshiftbitmap = NILREF;	// ROM 0x0063888c Rkbdshiftbitmap
-Ref Rrecorderengine = NILREF;	// ROM 0x00638894 Rrecorderengine
-Ref Rsmallclockbitmaps = NILREF;	// ROM 0x0063889c Rsmallclockbitmaps
-Ref Rtransportscripts = NILREF;	// ROM 0x006388a4 Rtransportscripts
-Ref Rdefaultinboxprefinfo = NILREF;	// ROM 0x006388ac Rdefaultinboxprefinfo
-Ref Rinkname = NILREF;	// ROM 0x006388b4 Rinkname
-Ref Rcoverpageformat = NILREF;	// ROM 0x006388bc Rcoverpageformat
-Ref Rpagefooter = NILREF;	// ROM 0x006388c4 Rpagefooter
-Ref Rmediumpentipbitmap = NILREF;	// ROM 0x006388cc Rmediumpentipbitmap
-Ref Rgtscenes = NILREF;	// ROM 0x006388d4 Rgtscenes
-Ref Rcaretbitsoutside = NILREF;	// ROM 0x006388dc Rcaretbitsoutside
-Ref Rtxcanonicalruler = NILREF;	// ROM 0x006388e4 Rtxcanonicalruler
-Ref Ralarmqueryspec = NILREF;	// ROM 0x006388ec Ralarmqueryspec
-Ref Rdateintervalpopup = NILREF;	// ROM 0x006388f4 Rdateintervalpopup
-Ref Rprotopeoplepicker = NILREF;	// ROM 0x006388fc Rprotopeoplepicker
-Ref Ruserconfiguration = NILREF;	// ROM 0x00638904 Ruserconfiguration
-Ref Routboxbitmap = NILREF;	// ROM 0x0063890c Routboxbitmap
-Ref Rtodosoupname = NILREF;	// ROM 0x00638914 Rtodosoupname
-Ref Rprotostatemachinecallbackspec = NILREF;	// ROM 0x0063891c Rprotostatemachinecallbackspec
-Ref Rcanonicalkeycommand = NILREF;	// ROM 0x00638924 Rcanonicalkeycommand
-Ref Rnewtstatusbar = NILREF;	// ROM 0x0063892c Rnewtstatusbar
-Ref Routboxsoupdef = NILREF;	// ROM 0x00638934 Routboxsoupdef
-Ref Rcanonicalcharcorrector = NILREF;	// ROM 0x0063893c Rcanonicalcharcorrector
-Ref Rprotoorientation = NILREF;	// ROM 0x00638944 Rprotoorientation
-Ref Rcalendarsoupdef = NILREF;	// ROM 0x0063894c Rcalendarsoupdef
-Ref Rcardfilesoupdef = NILREF;	// ROM 0x00638954 Rcardfilesoupdef
-Ref Rnewtstationery = NILREF;	// ROM 0x0063895c Rnewtstationery
-Ref Rrcdefaultconfig = NILREF;	// ROM 0x00638964 Rrcdefaultconfig
-Ref Rsmallflagbitmap = NILREF;	// ROM 0x0063896c Rsmallflagbitmap
-Ref Rcardbitmap = NILREF;	// ROM 0x00638974 Rcardbitmap
-Ref Rdtmf3 = NILREF;	// ROM 0x0063897c Rdtmf3
-Ref Rrepeatindices = NILREF;	// ROM 0x00638984 Rrepeatindices
-Ref Rgongbeep = NILREF;	// ROM 0x0063898c Rgongbeep
-Ref Rcanonicalmeetingdroptext = NILREF;	// ROM 0x00638994 Rcanonicalmeetingdroptext
-Ref Rrouteaddsender = NILREF;	// ROM 0x0063899c Rrouteaddsender
-Ref Rdefaultstateicons = NILREF;	// ROM 0x006389a4 Rdefaultstateicons
-Ref Rprototimedeltapicker = NILREF;	// ROM 0x006389ac Rprototimedeltapicker
-Ref Rprotoletterspreferencesfield = NILREF;	// ROM 0x006389b4 Rprotoletterspreferencesfield
-Ref Rnewtapplication = NILREF;	// ROM 0x006389bc Rnewtapplication
-Ref Rswissgermkeycodemapping = NILREF;	// ROM 0x006389c4 Rswissgermkeycodemapping
-Ref Rnewtmailnetchooser = NILREF;	// ROM 0x006389cc Rnewtmailnetchooser
-Ref Rnewtrollshowstationerybutton = NILREF;	// ROM 0x006389d4 Rnewtrollshowstationerybutton
-Ref Rprotoborder = NILREF;	// ROM 0x006389dc Rprotoborder
-Ref Rprotokeypad = NILREF;	// ROM 0x006389e4 Rprotokeypad
-Ref Rprotopicker = NILREF;	// ROM 0x006389ec Rprotopicker
-Ref Rprletterformat = NILREF;	// ROM 0x006389f4 Rprletterformat
-Ref Rnewtentryshowstationerybutton = NILREF;	// ROM 0x006389fc Rnewtentryshowstationerybutton
-Ref Rprotofinderwindow = NILREF;	// ROM 0x00638a04 Rprotofinderwindow
-Ref Rioitemstatus = NILREF;	// ROM 0x00638a0c Rioitemstatus
-Ref Rpasswordslip = NILREF;	// ROM 0x00638a14 Rpasswordslip
-Ref Rprotoextrasicon = NILREF;	// ROM 0x00638a1c Rprotoextrasicon
-Ref Rprotonewshowbar = NILREF;	// ROM 0x00638a24 Rprotonewshowbar
-Ref Rcheckbitmap = NILREF;	// ROM 0x00638a2c Rcheckbitmap
-Ref Rdtmf3bitmap = NILREF;	// ROM 0x00638a34 Rdtmf3bitmap
-Ref Rroutereply = NILREF;	// ROM 0x00638a3c Rroutereply
-Ref Rcanonicalsocketinfo = NILREF;	// ROM 0x00638a44 Rcanonicalsocketinfo
-Ref Rnewtrotextdateview = NILREF;	// ROM 0x00638a4c Rnewtrotextdateview
-Ref Rpriorityitems = NILREF;	// ROM 0x00638a54 Rpriorityitems
-Ref Rcardeventhandlers = NILREF;	// ROM 0x00638a5c Rcardeventhandlers
-Ref Rnewttexttimeview = NILREF;	// ROM 0x00638a64 Rnewttexttimeview
-Ref Ropenpadlockbitmap = NILREF;	// ROM 0x00638a6c Ropenpadlockbitmap
-Ref Rprotopeoplepopup = NILREF;	// ROM 0x00638a74 Rprotopeoplepopup
-Ref Rtxlocalprototype = NILREF;	// ROM 0x00638a7c Rtxlocalprototype
-Ref Rpleasantbeep = NILREF;	// ROM 0x00638a84 Rpleasantbeep
-Ref Rprotoextraslistitem = NILREF;	// ROM 0x00638a8c Rprotoextraslistitem
-Ref Rtxchartopointresult = NILREF;	// ROM 0x00638a94 Rtxchartopointresult
-Ref Rcaretbitsinside = NILREF;	// ROM 0x00638a9c Rcaretbitsinside
-Ref Rkeycapsbitmap = NILREF;	// ROM 0x00638aa4 Rkeycapsbitmap
-Ref Rroutebeamicon = NILREF;	// ROM 0x00638aac Rroutebeamicon
-Ref Rcallslip = NILREF;	// ROM 0x00638ab4 Rcallslip
-Ref Rnewtnrlabeldatentimeinputline = NILREF;	// ROM 0x00638abc Rnewtnrlabeldatentimeinputline
-Ref Rautodocktemplate = NILREF;	// ROM 0x00638ac4 Rautodocktemplate
-Ref Rcaretpunctbitmap = NILREF;	// ROM 0x00638acc Rcaretpunctbitmap
-Ref Rinboxbitmap = NILREF;	// ROM 0x00638ad4 Rinboxbitmap
-Ref Rprefsbitmap = NILREF;	// ROM 0x00638adc Rprefsbitmap
-Ref Rnewtdatentimefilter = NILREF;	// ROM 0x00638ae4 Rnewtdatentimefilter
-Ref Rprotoschedulepicker = NILREF;	// ROM 0x00638aec Rprotoschedulepicker
-Ref Rsettingsshapebitmap = NILREF;	// ROM 0x00638af4 Rsettingsshapebitmap
-Ref Remailtext = NILREF;	// ROM 0x00638afc Remailtext
-Ref Rerrnumbertoolarge = NILREF;	// ROM 0x00638b04 Rerrnumbertoolarge
-Ref Rrouteupdatebitmap = NILREF;	// ROM 0x00638b0c Rrouteupdatebitmap
-Ref Rpoof = NILREF;	// ROM 0x00638b14 Rpoof
-Ref Rinboxsoupdef = NILREF;	// ROM 0x00638b1c Rinboxsoupdef
-Ref Rprotodragngo = NILREF;	// ROM 0x00638b24 Rprotodragngo
-Ref Rprotopopinplace = NILREF;	// ROM 0x00638b2c Rprotopopinplace
-Ref Razverttabs = NILREF;	// ROM 0x00638b34 Razverttabs
-Ref Rauststdphonefilter = NILREF;	// ROM 0x00638b3c Rauststdphonefilter
-Ref Rprotosmallkeyboardbutton = NILREF;	// ROM 0x00638b44 Rprotosmallkeyboardbutton
-Ref Rioboxcursor = NILREF;	// ROM 0x00638b4c Rioboxcursor
-Ref Rprotokeyboardbutton = NILREF;	// ROM 0x00638b54 Rprotokeyboardbutton
-Ref Rloadcalibration = NILREF;	// ROM 0x00638b5c Rloadcalibration
-Ref Rprotosoftbuttonbaricon = NILREF;	// ROM 0x00638b64 Rprotosoftbuttonbaricon
-Ref Rprotoview = NILREF;	// ROM 0x00638b6c Rprotoview
-Ref Rcanonicalgestaltrebootinfo = NILREF;	// ROM 0x00638b74 Rcanonicalgestaltrebootinfo
-Ref Rcheckonbitmap = NILREF;	// ROM 0x00638b7c Rcheckonbitmap
-Ref Riotransportover = NILREF;	// ROM 0x00638b84 Riotransportover
-Ref Rpackagedirectory = NILREF;	// ROM 0x00638b8c Rpackagedirectory
-Ref Rpaperlinedbitmap = NILREF;	// ROM 0x00638b94 Rpaperlinedbitmap
-Ref Rprotonotifyform = NILREF;	// ROM 0x00638b9c Rprotonotifyform
-Ref Rprotostatictext = NILREF;	// ROM 0x00638ba4 Rprotostatictext
-Ref Rprotostatusicon = NILREF;	// ROM 0x00638bac Rprotostatusicon
-Ref Rcommandkeyicon = NILREF;	// ROM 0x00638bb4 Rcommandkeyicon
-Ref Rfoldertabright = NILREF;	// ROM 0x00638bbc Rfoldertabright
-Ref Rhelpbookbitmap = NILREF;	// ROM 0x00638bc4 Rhelpbookbitmap
-Ref Rfontsystem14 = NILREF;	// ROM 0x00638bcc Rfontsystem14
-Ref Rtxexternalvboprototype = NILREF;	// ROM 0x00638bd4 Rtxexternalvboprototype
-Ref Rfilingslip = NILREF;	// ROM 0x00638bdc Rfilingslip
-Ref Rrouteduplicateicon = NILREF;	// ROM 0x00638be4 Rrouteduplicateicon
-Ref Raztabsslimmaskcz = NILREF;	// ROM 0x00638bec Raztabsslimmaskcz
-Ref Ralarmsoupconversionframe = NILREF;	// ROM 0x00638bf4 Ralarmsoupconversionframe
-Ref Rnewtnrlabeltimeinputline = NILREF;	// ROM 0x00638bfc Rnewtnrlabeltimeinputline
-Ref Rerrnumberoutofrange = NILREF;	// ROM 0x00638c04 Rerrnumberoutofrange
-Ref Rnewtsmartnamefilter = NILREF;	// ROM 0x00638c0c Rnewtsmartnamefilter
-Ref Rprotolabelinputline = NILREF;	// ROM 0x00638c14 Rprotolabelinputline
-Ref Rgtpens = NILREF;	// ROM 0x00638c1c Rgtpens
-Ref Rcontrolkeyicon = NILREF;	// ROM 0x00638c24 Rcontrolkeyicon
-Ref Rnewttimefilter = NILREF;	// ROM 0x00638c2c Rnewttimefilter
-Ref Rassistant = NILREF;	// ROM 0x00638c34 Rassistant
-Ref Rtocksound = NILREF;	// ROM 0x00638c3c Rtocksound
-Ref Rprotopalette = NILREF;	// ROM 0x00638c44 Rprotopalette
-Ref Rukcountyname = NILREF;	// ROM 0x00638c4c Rukcountyname
-Ref Rnewtsmartphonefilter = NILREF;	// ROM 0x00638c54 Rnewtsmartphonefilter
-Ref Rprotomultilinepicker = NILREF;	// ROM 0x00638c5c Rprotomultilinepicker
-Ref Rclosedpadlockbitmap = NILREF;	// ROM 0x00638c64 Rclosedpadlockbitmap
-Ref Rprotomaptextpicker = NILREF;	// ROM 0x00638c6c Rprotomaptextpicker
-Ref Rprotorollitem = NILREF;	// ROM 0x00638c74 Rprotorollitem
-Ref Rprotowordinfo = NILREF;	// ROM 0x00638c7c Rprotowordinfo
-Ref Rnewtrolllayout = NILREF;	// ROM 0x00638c84 Rnewtrolllayout
-Ref Rprotomonthview = NILREF;	// ROM 0x00638c8c Rprotomonthview
-Ref Rprotoprintform = NILREF;	// ROM 0x00638c94 Rprotoprintform
-Ref Rcanonicaltextshape = NILREF;	// ROM 0x00638c9c Rcanonicaltextshape
-Ref Rdtmf8 = NILREF;	// ROM 0x00638ca4 Rdtmf8
-Ref Rfontsystem14underline = NILREF;	// ROM 0x00638cac Rfontsystem14underline
-Ref Rwildbeep = NILREF;	// ROM 0x00638cb4 Rwildbeep
-Ref Rdigitslides = NILREF;	// ROM 0x00638cbc Rdigitslides
-Ref Ralarmicontinybitmap = NILREF;	// ROM 0x00638cc4 Ralarmicontinybitmap
-Ref Raztabsmaskcz = NILREF;	// ROM 0x00638ccc Raztabsmaskcz
-Ref Rtouchtonepad = NILREF;	// ROM 0x00638cd4 Rtouchtonepad
-Ref Rvphonekeypad = NILREF;	// ROM 0x00638cdc Rvphonekeypad
-Ref Rkoserroralerttextboundsnobuttons = NILREF;	// ROM 0x00638ce4 Rkoserroralerttextboundsnobuttons
-Ref Rcanonicalpictdragdata = NILREF;	// ROM 0x00638cec Rcanonicalpictdragdata
-Ref Russtddatefilter = NILREF;	// ROM 0x00638cf4 Russtddatefilter
-Ref Rrepeatnotessoupdef = NILREF;	// ROM 0x00638cfc Rrepeatnotessoupdef
-Ref Rcanonicaleditcaretinfo = NILREF;	// ROM 0x00638d04 Rcanonicaleditcaretinfo
-Ref Rbuiltinfunctions = NILREF;	// ROM 0x00638d0c Rbuiltinfunctions
-Ref Rcountrylocpicker = NILREF;	// ROM 0x00638d14 Rcountrylocpicker
-Ref Rprotodatentimetextpicker = NILREF;	// ROM 0x00638d1c Rprotodatentimetextpicker
-Ref Rprotoslider = NILREF;	// ROM 0x00638d24 Rprotoslider
-Ref Rremovesound = NILREF;	// ROM 0x00638d2c Rremovesound
-Ref Rprotodatedurationtextpicker = NILREF;	// ROM 0x00638d34 Rprotodatedurationtextpicker
-Ref Rnewtroeditview = NILREF;	// ROM 0x00638d3c Rnewtroeditview
-Ref Rnewtsmartcompanyfilter = NILREF;	// ROM 0x00638d44 Rnewtsmartcompanyfilter
-Ref Rpreviewremoteview = NILREF;	// ROM 0x00638d4c Rpreviewremoteview
-Ref Rprotofilingbutton = NILREF;	// ROM 0x00638d54 Rprotofilingbutton
-Ref Rparagraphdata = NILREF;	// ROM 0x00638d5c Rparagraphdata
-Ref Rtxclipboardprototype = NILREF;	// ROM 0x00638d64 Rtxclipboardprototype
-Ref Rdtmf8bitmap = NILREF;	// ROM 0x00638d6c Rdtmf8bitmap
-Ref Rsystemsymbolfont = NILREF;	// ROM 0x00638d74 Rsystemsymbolfont
-Ref Rletterheader = NILREF;	// ROM 0x00638d7c Rletterheader
-Ref Rrecinkbitmap = NILREF;	// ROM 0x00638d84 Rrecinkbitmap
-Ref Rdtmfdel = NILREF;	// ROM 0x00638d8c Rdtmfdel
-Ref Rinfobitmap = NILREF;	// ROM 0x00638d94 Rinfobitmap
-Ref Rwakeupbeep = NILREF;	// ROM 0x00638d9c Rwakeupbeep
-Ref Rprotoinstanceofrepeatingmeeting = NILREF;	// ROM 0x00638da4 Rprotoinstanceofrepeatingmeeting
-Ref Rbasiccalltransport = NILREF;	// ROM 0x00638dac Rbasiccalltransport
-Ref Rcanonicalgestaltsysteminfo = NILREF;	// ROM 0x00638db4 Rcanonicalgestaltsysteminfo
-Ref Rprotodoubleclock = NILREF;	// ROM 0x00638dbc Rprotodoubleclock
-Ref Rstarterparagraph = NILREF;	// ROM 0x00638dc4 Rstarterparagraph
-Ref Rtickleiaprogress = NILREF;	// ROM 0x00638dcc Rtickleiaprogress
-Ref Rblacklistnowbuiltin = NILREF;	// ROM 0x00638dd4 Rblacklistnowbuiltin
-Ref Rcanonicalpowerstats = NILREF;	// ROM 0x00638ddc Rcanonicalpowerstats
-Ref Rcaretpunctbits = NILREF;	// ROM 0x00638de4 Rcaretpunctbits
-Ref Rroutefaxbitmap = NILREF;	// ROM 0x00638dec Rroutefaxbitmap
-Ref Rcanonicalcurrentexport = NILREF;	// ROM 0x00638df4 Rcanonicalcurrentexport
-Ref Rdatepopup = NILREF;	// ROM 0x00638dfc Rdatepopup
-Ref Rprotodivider = NILREF;	// ROM 0x00638e04 Rprotodivider
-Ref Rvolumeslider = NILREF;	// ROM 0x00638e0c Rvolumeslider
-Ref Rprotolongitudepicker = NILREF;	// ROM 0x00638e14 Rprotolongitudepicker
-Ref Rcanonicalgestaltpatchinfoarrayelement = NILREF;	// ROM 0x00638e1c Rcanonicalgestaltpatchinfoarrayelement
-Ref Rindexdescprototype = NILREF;	// ROM 0x00638e24 Rindexdescprototype
-Ref Rrctrylettersconfig = NILREF;	// ROM 0x00638e2c Rrctrylettersconfig
-Ref Rnewtaboutview = NILREF;	// ROM 0x00638e34 Rnewtaboutview
-Ref Rsystemconversionframe = NILREF;	// ROM 0x00638e3c Rsystemconversionframe
-Ref Rprotopin = NILREF;	// ROM 0x00638e44 Rprotopin
-Ref Ruerasepersistentconfirmalerttext = NILREF;	// ROM 0x00638e4c Ruerasepersistentconfirmalerttext
-Ref Rcanonicalcorrectinfo = NILREF;	// ROM 0x00638e54 Rcanonicalcorrectinfo
-Ref Rprotorecorderbutton = NILREF;	// ROM 0x00638e5c Rprotorecorderbutton
-Ref Rprototimetextpicker = NILREF;	// ROM 0x00638e64 Rprototimetextpicker
-Ref R_knownglobalsymbols = NILREF;	// ROM 0x00638e6c R_knownglobalsymbols
-Ref Rprotostatusbar = NILREF;	// ROM 0x00638e74 Rprotostatusbar
-Ref Rstarterpolygon = NILREF;	// ROM 0x00638e7c Rstarterpolygon
-Ref Rsystemsoupname = NILREF;	// ROM 0x00638e84 Rsystemsoupname
-Ref Rarrayersatzcursor = NILREF;	// ROM 0x00638e8c Rarrayersatzcursor
-Ref Rdtmf0 = NILREF;	// ROM 0x00638e94 Rdtmf0
-Ref Rdigitwideflap = NILREF;	// ROM 0x00638e9c Rdigitwideflap
-Ref Rfontsystem18bold = NILREF;	// ROM 0x00638ea4 Rfontsystem18bold
-Ref Radditionalbootshiftkeyfn = NILREF;	// ROM 0x00638eac Radditionalbootshiftkeyfn
-Ref Rcopperfield = NILREF;	// ROM 0x00638eb4 Rcopperfield
-Ref Rdrawingname = NILREF;	// ROM 0x00638ebc Rdrawingname
-Ref Rroutemailbitmap = NILREF;	// ROM 0x00638ec4 Rroutemailbitmap
-Ref Rukstddatefilter = NILREF;	// ROM 0x00638ecc Rukstddatefilter
-Ref Rreviewdict = NILREF;	// ROM 0x00638ed4 Rreviewdict
-Ref Rbootscriptwannabes = NILREF;	// ROM 0x00638edc Rbootscriptwannabes
-Ref Rprotoaddresspicker = NILREF;	// ROM 0x00638ee4 Rprotoaddresspicker
-Ref Rabstractarrow = NILREF;	// ROM 0x00638eec Rabstractarrow
-Ref Rdatequeryspec = NILREF;	// ROM 0x00638ef4 Rdatequeryspec
-Ref Rprplainformat = NILREF;	// ROM 0x00638efc Rprplainformat
-Ref Rsoundrecorder = NILREF;	// ROM 0x00638f04 Rsoundrecorder
-Ref Rprotocontentarea = NILREF;	// ROM 0x00638f0c Rprotocontentarea
-Ref Rprotoframeformat = NILREF;	// ROM 0x00638f14 Rprotoframeformat
-Ref Rnumerickeys = NILREF;	// ROM 0x00638f1c Rnumerickeys
-Ref Rstartermath = NILREF;	// ROM 0x00638f24 Rstartermath
-Ref Rzonechooser = NILREF;	// ROM 0x00638f2c Rzonechooser
-Ref Rcanonicalciscardfunctioninfo = NILREF;	// ROM 0x00638f34 Rcanonicalciscardfunctioninfo
-Ref Rclockfacebitmap = NILREF;	// ROM 0x00638f3c Rclockfacebitmap
-Ref Rnewtnetchooser = NILREF;	// ROM 0x00638f44 Rnewtnetchooser
-Ref Rprotogaugeview = NILREF;	// ROM 0x00638f4c Rprotogaugeview
-Ref Rprotothumbnail = NILREF;	// ROM 0x00638f54 Rprotothumbnail
-Ref Rrcsinglecharacterconfig = NILREF;	// ROM 0x00638f5c Rrcsinglecharacterconfig
-Ref Rphonetext = NILREF;	// ROM 0x00638f64 Rphonetext
-Ref Rprotobook = NILREF;	// ROM 0x00638f6c Rprotobook
-Ref Rnewtsmartnameview = NILREF;	// ROM 0x00638f74 Rnewtsmartnameview
-Ref Rprotoconfigserver = NILREF;	// ROM 0x00638f7c Rprotoconfigserver
-Ref Riacancelalert = NILREF;	// ROM 0x00638f84 Riacancelalert
-Ref Rnewtstatusbarnoclose = NILREF;	// ROM 0x00638f8c Rnewtstatusbarnoclose
-Ref Rprototransportheader = NILREF;	// ROM 0x00638f94 Rprototransportheader
-Ref Russtatesoupname = NILREF;	// ROM 0x00638f9c Russtatesoupname
-Ref Rdtmf0bitmap = NILREF;	// ROM 0x00638fa4 Rdtmf0bitmap
-Ref Rnewtsmartphoneview = NILREF;	// ROM 0x00638fac Rnewtsmartphoneview
-Ref Rprotocallassistbutton = NILREF;	// ROM 0x00638fb4 Rprotocallassistbutton
-Ref Rfaxheader = NILREF;	// ROM 0x00638fbc Rfaxheader
-Ref Rcanonicalfontspec = NILREF;	// ROM 0x00638fc4 Rcanonicalfontspec
-Ref Rprotooutcategory = NILREF;	// ROM 0x00638fcc Rprotooutcategory
-Ref Rprotoprintformat = NILREF;	// ROM 0x00638fd4 Rprotoprintformat
-Ref Rdefrotatefunc = NILREF;	// ROM 0x00638fdc Rdefrotatefunc
-Ref Rnewtrolabeldateinputline = NILREF;	// ROM 0x00638fe4 Rnewtrolabeldateinputline
-Ref Ralarmwakeup = NILREF;	// ROM 0x00638fec Ralarmwakeup
-Ref Ruerasepersistentstatusalerttext = NILREF;	// ROM 0x00638ff4 Ruerasepersistentstatusalerttext
-Ref Rcities = NILREF;	// ROM 0x00638ffc Rcities
-Ref Rblindentryline = NILREF;	// ROM 0x00639004 Rblindentryline
-Ref Rworldmapbitmap = NILREF;	// ROM 0x0063900c Rworldmapbitmap
-Ref Rnewtlabeltimeinputline = NILREF;	// ROM 0x00639014 Rnewtlabeltimeinputline
-Ref Rzaprecvconnectmsg = NILREF;	// ROM 0x0063901c Rzaprecvconnectmsg
-Ref Rprotocommand = NILREF;	// ROM 0x00639024 Rprotocommand
-Ref Rprototransportpopup = NILREF;	// ROM 0x0063902c Rprototransportpopup
-Ref Rnotifycloudmask = NILREF;	// ROM 0x00639034 Rnotifycloudmask
-Ref Rnewtaztabs = NILREF;	// ROM 0x0063903c Rnewtaztabs
-Ref Rrebootslip = NILREF;	// ROM 0x00639044 Rrebootslip
-Ref Rsorttables = NILREF;	// ROM 0x0063904c Rsorttables
-Ref Rprotocharcorrector = NILREF;	// ROM 0x00639054 Rprotocharcorrector
-Ref Rprotoparagraphview = NILREF;	// ROM 0x0063905c Rprotoparagraphview
-Ref Rsnoozenotification = NILREF;	// ROM 0x00639064 Rsnoozenotification
-Ref Rplunk = NILREF;	// ROM 0x0063906c Rplunk
-Ref Rkoserroralertbutton1bounds = NILREF;	// ROM 0x00639074 Rkoserroralertbutton1bounds
-Ref Rprotosetclock = NILREF;	// ROM 0x0063907c Rprotosetclock
-Ref Rcanonicaldragitem = NILREF;	// ROM 0x00639084 Rcanonicaldragitem
-Ref Rrouteprinticon = NILREF;	// ROM 0x0063908c Rrouteprinticon
-Ref Rletterweightquery = NILREF;	// ROM 0x00639094 Rletterweightquery
-Ref Rcanonicalcompass = NILREF;	// ROM 0x0063909c Rcanonicalcompass
-Ref Rfontsystem10bold = NILREF;	// ROM 0x006390a4 Rfontsystem10bold
-Ref Rstorepersistent = NILREF;	// ROM 0x006390ac Rstorepersistent
-Ref Rprotopolygonview = NILREF;	// ROM 0x006390b4 Rprotopolygonview
-Ref Rprotodefaultstatusbutton = NILREF;	// ROM 0x006390bc Rprotodefaultstatusbutton
-Ref Rdictionaries = NILREF;	// ROM 0x006390c4 Rdictionaries
-Ref Rtodo2soupdef = NILREF;	// ROM 0x006390cc Rtodo2soupdef
-Ref Rrepeatmeetingsoupdef = NILREF;	// ROM 0x006390d4 Rrepeatmeetingsoupdef
-Ref Rfunbeep = NILREF;	// ROM 0x006390dc Rfunbeep
-Ref Raztabsslimmaska = NILREF;	// ROM 0x006390e4 Raztabsslimmaska
-Ref Rfilingextbitmap = NILREF;	// ROM 0x006390ec Rfilingextbitmap
-Ref Rkbdoptionbitmap = NILREF;	// ROM 0x006390f4 Rkbdoptionbitmap
-Ref Rnewtfloatingbar = NILREF;	// ROM 0x006390fc Rnewtfloatingbar
-Ref Rsmalllogobitmap = NILREF;	// ROM 0x00639104 Rsmalllogobitmap
-Ref Rbackupslip = NILREF;	// ROM 0x0063910c Rbackupslip
-Ref Rnewtclockshowbar = NILREF;	// ROM 0x00639114 Rnewtclockshowbar
-Ref Rfaxroutingicon = NILREF;	// ROM 0x0063911c Rfaxroutingicon
-Ref Rprotodaypicker = NILREF;	// ROM 0x00639124 Rprotodaypicker
-Ref Rpaperrollsoupname = NILREF;	// ROM 0x0063912c Rpaperrollsoupname
-Ref Reworldcountries = NILREF;	// ROM 0x00639134 Reworldcountries
-Ref Rprotoincategory = NILREF;	// ROM 0x0063913c Rprotoincategory
-Ref Rnewtphonepopupedit = NILREF;	// ROM 0x00639144 Rnewtphonepopupedit
-Ref Rprotocontainerview = NILREF;	// ROM 0x0063914c Rprotocontainerview
-Ref Rprotorichinputline = NILREF;	// ROM 0x00639154 Rprotorichinputline
-Ref Rnewtprefsview = NILREF;	// ROM 0x0063915c Rnewtprefsview
-Ref Ruserdictquery = NILREF;	// ROM 0x00639164 Ruserdictquery
-Ref Rnewtnumview = NILREF;	// ROM 0x0063916c Rnewtnumview
-Ref Rrootcontext = NILREF;	// ROM 0x00639174 Rrootcontext
-Ref Rfrenchdepartmentname = NILREF;	// ROM 0x0063917c Rfrenchdepartmentname
-Ref Rprotocorrectcontext = NILREF;	// ROM 0x00639184 Rprotocorrectcontext
-Ref Rcanonicalcorrector = NILREF;	// ROM 0x0063918c Rcanonicalcorrector
-Ref Rleadingpunctbitmap = NILREF;	// ROM 0x00639194 Rleadingpunctbitmap
-Ref Rdtmf5 = NILREF;	// ROM 0x0063919c Rdtmf5
-Ref Rprotocolinstanceprototype = NILREF;	// ROM 0x006391a4 Rprotocolinstanceprototype
-Ref Rcalendarstuff = NILREF;	// ROM 0x006391ac Rcalendarstuff
-Ref Rcanonicalpackageliteframe = NILREF;	// ROM 0x006391b4 Rcanonicalpackageliteframe
-Ref Raztabsmaska = NILREF;	// ROM 0x006391bc Raztabsmaska
-Ref Rclicks = NILREF;	// ROM 0x006391c4 Rclicks
-Ref Rsmallroundclockbitmaps = NILREF;	// ROM 0x006391cc Rsmallroundclockbitmaps
-Ref Ralphakeys = NILREF;	// ROM 0x006391d4 Ralphakeys
-Ref Rrcnorecog = NILREF;	// ROM 0x006391dc Rrcnorecog
-Ref Rprotocheckboxicon = NILREF;	// ROM 0x006391e4 Rprotocheckboxicon
-Ref Rprotoiconcheckbox = NILREF;	// ROM 0x006391ec Rprotoiconcheckbox
-Ref Rprotopopupbutton = NILREF;	// ROM 0x006391f4 Rprotopopupbutton
-Ref Rudefaultreasonforbusycard = NILREF;	// ROM 0x006391fc Rudefaultreasonforbusycard
-Ref Rsearchsuffix = NILREF;	// ROM 0x00639204 Rsearchsuffix
-Ref Rkcardalerttextbounds = NILREF;	// ROM 0x0063920c Rkcardalerttextbounds
-Ref Rprotostatusprogress = NILREF;	// ROM 0x00639214 Rprotostatusprogress
-Ref Rusdefaultphonefilter = NILREF;	// ROM 0x0063921c Rusdefaultphonefilter
-Ref Rcuremotethumb = NILREF;	// ROM 0x00639224 Rcuremotethumb
-Ref Rerrnotanumber = NILREF;	// ROM 0x0063922c Rerrnotanumber
-Ref Rprotofinditem = NILREF;	// ROM 0x00639234 Rprotofinditem
-Ref Rnewtlabelnuminputline = NILREF;	// ROM 0x0063923c Rnewtlabelnuminputline
-Ref Rnewtnumberfilter = NILREF;	// ROM 0x00639244 Rnewtnumberfilter
-Ref Rucardreinsertalertbutton = NILREF;	// ROM 0x0063924c Rucardreinsertalertbutton
-Ref Rnewtshowbar = NILREF;	// ROM 0x00639254 Rnewtshowbar
-Ref Rcanadianprovincename = NILREF;	// ROM 0x0063925c Rcanadianprovincename
-Ref Rcanonicalbitmapshape = NILREF;	// ROM 0x00639264 Rcanonicalbitmapshape
-Ref Rmultidatepopup = NILREF;	// ROM 0x0063926c Rmultidatepopup
-Ref Rnewtcityfilter = NILREF;	// ROM 0x00639274 Rnewtcityfilter
-Ref Rprintdoneerror = NILREF;	// ROM 0x0063927c Rprintdoneerror
-Ref Rinitialinheritanceframe = NILREF;	// ROM 0x00639284 Rinitialinheritanceframe
-Ref Rprotostreamingendpoint = NILREF;	// ROM 0x0063928c Rprotostreamingendpoint
-Ref Rprotogeneralpopup = NILREF;	// ROM 0x00639294 Rprotogeneralpopup
-Ref Rprotostatusbarber = NILREF;	// ROM 0x0063929c Rprotostatusbarber
-Ref Ruerasepersistentconfirmbutton1str = NILREF;	// ROM 0x006392a4 Ruerasepersistentconfirmbutton1str
-Ref Rprotodesktopendpoint = NILREF;	// ROM 0x006392ac Rprotodesktopendpoint
-Ref Rprotopictradiobutton = NILREF;	// ROM 0x006392b4 Rprotopictradiobutton
-Ref Rkeyradicalbitmap = NILREF;	// ROM 0x006392bc Rkeyradicalbitmap
-Ref Rnewtqbetextview = NILREF;	// ROM 0x006392c4 Rnewtqbetextview
-Ref Rdateindices = NILREF;	// ROM 0x006392cc Rdateindices
-Ref Rdtmf5bitmap = NILREF;	// ROM 0x006392d4 Rdtmf5bitmap
-Ref Rcanonicalpendingimport = NILREF;	// ROM 0x006392dc Rcanonicalpendingimport
-Ref Rprotodictionarycursor = NILREF;	// ROM 0x006392e4 Rprotodictionarycursor
-Ref Rdisconnectmessage = NILREF;	// ROM 0x006392ec Rdisconnectmessage
-Ref Rprotooutlineview = NILREF;	// ROM 0x006392f4 Rprotooutlineview
-Ref Rtxrangeprototype = NILREF;	// ROM 0x006392fc Rtxrangeprototype
-Ref Rcanonicalgestaltsoundinfo = NILREF;	// ROM 0x00639304 Rcanonicalgestaltsoundinfo
-Ref Remailclasses = NILREF;	// ROM 0x0063930c Remailclasses
-Ref Rfilingbitmap = NILREF;	// ROM 0x00639314 Rfilingbitmap
-Ref Rfrcantimefilter = NILREF;	// ROM 0x0063931c Rfrcantimefilter
-Ref Rnewtrotextview = NILREF;	// ROM 0x00639324 Rnewtrotextview
-Ref Rsimplebeep = NILREF;	// ROM 0x0063932c Rsimplebeep
-Ref Rlonglatpicker = NILREF;	// ROM 0x00639334 Rlonglatpicker
-Ref Rcanonicalgesturepoint = NILREF;	// ROM 0x0063933c Rcanonicalgesturepoint
-Ref Rcanonicalshapedragdata = NILREF;	// ROM 0x00639344 Rcanonicalshapedragdata
-Ref Rcribnote = NILREF;	// ROM 0x0063934c Rcribnote
-Ref Rdtmfleft = NILREF;	// ROM 0x00639354 Rdtmfleft
-Ref Ruskeycodemapping = NILREF;	// ROM 0x0063935c Ruskeycodemapping
-Ref Rcolonslides = NILREF;	// ROM 0x00639364 Rcolonslides
-Ref Rstatepicker = NILREF;	// ROM 0x0063936c Rstatepicker
-Ref Rtrashbitmap = NILREF;	// ROM 0x00639374 Rtrashbitmap
-Ref Rtrailingpunctbitmap = NILREF;	// ROM 0x0063937c Rtrailingpunctbitmap
-Ref Rcrumplebitmaps = NILREF;	// ROM 0x00639384 Rcrumplebitmaps
-Ref Rkeytimesbitmap = NILREF;	// ROM 0x0063938c Rkeytimesbitmap
-Ref Rzaprecvdonemsg = NILREF;	// ROM 0x00639394 Rzaprecvdonemsg
-Ref Ralertfont = NILREF;	// ROM 0x0063939c Ralertfont
-Ref Rproto1_2Exformentry = NILREF;	// ROM 0x006393a4 Rproto1_2Exformentry
-Ref Rtrig = NILREF;	// ROM 0x006393ac Rtrig
-Ref Rgotoarrowbitmap = NILREF;	// ROM 0x006393b4 Rgotoarrowbitmap
-Ref Respyfont = NILREF;	// ROM 0x006393bc Respyfont
-Ref Rnewtsymbolfilter = NILREF;	// ROM 0x006393c4 Rnewtsymbolfilter
-Ref Rprotocategorizedoverview = NILREF;	// ROM 0x006393cc Rprotocategorizedoverview
-Ref Rromfontlist = NILREF;	// ROM 0x006393d4 Rromfontlist
-Ref Rfontstyleitems = NILREF;	// ROM 0x006393dc Rfontstyleitems
-Ref Rprototxviewfinder = NILREF;	// ROM 0x006393e4 Rprototxviewfinder
-Ref Rrouteputaway = NILREF;	// ROM 0x006393ec Rrouteputaway
-Ref Rmeetingname = NILREF;	// ROM 0x006393f4 Rmeetingname
-Ref Rmessagenotification = NILREF;	// ROM 0x006393fc Rmessagenotification
-Ref Rprotopicturebutton = NILREF;	// ROM 0x00639404 Rprotopicturebutton
-Ref Rbookmarkbitmap = NILREF;	// ROM 0x0063940c Rbookmarkbitmap
-Ref Rkeycommabitmap = NILREF;	// ROM 0x00639414 Rkeycommabitmap
-Ref Rplinkbeep = NILREF;	// ROM 0x0063941c Rplinkbeep
-Ref Rzapreceiveconfirm = NILREF;	// ROM 0x00639424 Rzapreceiveconfirm
-Ref Rautodockicon = NILREF;	// ROM 0x0063942c Rautodockicon
-Ref Rbasewordinfo = NILREF;	// ROM 0x00639434 Rbasewordinfo
-Ref Rprotopicttextbutton = NILREF;	// ROM 0x0063943c Rprotopicttextbutton
-Ref Rtxexternalprototype = NILREF;	// ROM 0x00639444 Rtxexternalprototype
-Ref Rcanonicalstyles = NILREF;	// ROM 0x0063944c Rcanonicalstyles
-Ref Rundobitmap = NILREF;	// ROM 0x00639454 Rundobitmap
-Ref Rrectextbitmap = NILREF;	// ROM 0x0063945c Rrectextbitmap
-Ref Rnofilter = NILREF;	// ROM 0x00639464 Rnofilter
-Ref Rtodosoupdef = NILREF;	// ROM 0x0063946c Rtodosoupdef
-Ref Rprotolatitudepicker = NILREF;	// ROM 0x00639474 Rprotolatitudepicker
-Ref Rstandardstyles = NILREF;	// ROM 0x0063947c Rstandardstyles
-Ref Rcountries = NILREF;	// ROM 0x00639484 Rcountries
-Ref Rioitemlayout = NILREF;	// ROM 0x0063948c Rioitemlayout
-Ref Rglobalheapvarwannabes = NILREF;	// ROM 0x00639494 Rglobalheapvarwannabes
-Ref Rprotolistpicker = NILREF;	// ROM 0x0063949c Rprotolistpicker
-Ref Rprototableentry = NILREF;	// ROM 0x006394a4 Rprototableentry
-Ref Rslotcachetable = NILREF;	// ROM 0x006394ac Rslotcachetable
-Ref Rnewtsoup = NILREF;	// ROM 0x006394b4 Rnewtsoup
-Ref Rprotopensizemenu = NILREF;	// ROM 0x006394bc Rprotopensizemenu
-Ref Rcheckbitmaps = NILREF;	// ROM 0x006394c4 Rcheckbitmaps
-Ref Rsavecalibration = NILREF;	// ROM 0x006394cc Rsavecalibration
-Ref Rfindbitmap = NILREF;	// ROM 0x006394d4 Rfindbitmap
-Ref Rprotopersonapopup = NILREF;	// ROM 0x006394dc Rprotopersonapopup
-Ref Rcantimefilter = NILREF;	// ROM 0x006394e4 Rcantimefilter
-Ref Rpaperrollindices = NILREF;	// ROM 0x006394ec Rpaperrollindices
-Ref Rukkeycodemapping = NILREF;	// ROM 0x006394f4 Rukkeycodemapping
-Ref Rphonebitmap = NILREF;	// ROM 0x006394fc Rphonebitmap
-Ref Rprotodigitbase = NILREF;	// ROM 0x00639504 Rprotodigitbase
-Ref Rrosettachoices = NILREF;	// ROM 0x0063950c Rrosettachoices
-Ref Rprotodragger = NILREF;	// ROM 0x00639514 Rprotodragger
-Ref Rshiftkeyicon = NILREF;	// ROM 0x0063951c Rshiftkeyicon
-Ref Rfaxslip = NILREF;	// ROM 0x00639524 Rfaxslip
-Ref Rcanonicalframepartsavedobject = NILREF;	// ROM 0x0063952c Rcanonicalframepartsavedobject
-Ref Rprotogriditem = NILREF;	// ROM 0x00639534 Rprotogriditem
-Ref Rputawaypicker = NILREF;	// ROM 0x0063953c Rputawaypicker
-Ref Ruerasepersistentdataalerttext = NILREF;	// ROM 0x00639544 Ruerasepersistentdataalerttext
-Ref Rprotocorrectinfo = NILREF;	// ROM 0x0063954c Rprotocorrectinfo
-Ref Raction_list = NILREF;	// ROM 0x00639554 Raction_list
-Ref Rprotodrawer = NILREF;	// ROM 0x0063955c Rprotodrawer
-Ref Rprotocategoryroll = NILREF;	// ROM 0x00639564 Rprotocategoryroll
-Ref Rkbddictbitmap = NILREF;	// ROM 0x0063956c Rkbddictbitmap
-Ref Rnewtareacodephoneline = NILREF;	// ROM 0x00639574 Rnewtareacodephoneline
-Ref Rclassinfoenabler = NILREF;	// ROM 0x0063957c Rclassinfoenabler
-Ref Rprotoremoteview = NILREF;	// ROM 0x00639584 Rprotoremoteview
-Ref Rprotodurationtextpicker = NILREF;	// ROM 0x0063958c Rprotodurationtextpicker
-Ref Rcloud2 = NILREF;	// ROM 0x00639594 Rcloud2
-Ref Rnewtentryview = NILREF;	// ROM 0x0063959c Rnewtentryview
-Ref Rprotolistview = NILREF;	// ROM 0x006395a4 Rprotolistview
-Ref Rprotooverview = NILREF;	// ROM 0x006395ac Rprotooverview
-Ref Rtxcanonicaltab = NILREF;	// ROM 0x006395b4 Rtxcanonicaltab
-Ref Rshapename = NILREF;	// ROM 0x006395bc Rshapename
-Ref Rprotoroutingslip = NILREF;	// ROM 0x006395c4 Rprotoroutingslip
-Ref Rkeypadbitmap = NILREF;	// ROM 0x006395cc Rkeypadbitmap
-Ref Rprototxview = NILREF;	// ROM 0x006395d4 Rprototxview
-Ref Rstdaddressee = NILREF;	// ROM 0x006395dc Rstdaddressee
-Ref Rdefaultconfiguration = NILREF;	// ROM 0x006395e4 Rdefaultconfiguration
-Ref Rcalendarstrings = NILREF;	// ROM 0x006395ec Rcalendarstrings
-Ref Rrecorderchassis = NILREF;	// ROM 0x006395f4 Rrecorderchassis
-Ref Rmailslip = NILREF;	// ROM 0x006395fc Rmailslip
-Ref Rprotostatustext = NILREF;	// ROM 0x00639604 Rprotostatustext
-Ref Runionsoupprototype = NILREF;	// ROM 0x0063960c Runionsoupprototype
-Ref Reastwestbitmap = NILREF;	// ROM 0x00639614 Reastwestbitmap
-Ref Rprotorcheckbox = NILREF;	// ROM 0x0063961c Rprotorcheckbox
-Ref Rtimedeltapopup = NILREF;	// ROM 0x00639624 Rtimedeltapopup
-Ref Rticksound = NILREF;	// ROM 0x0063962c Rticksound
-Ref Rprotocancelbutton = NILREF;	// ROM 0x00639634 Rprotocancelbutton
-Ref Rprotoclockshowbar = NILREF;	// ROM 0x0063963c Rprotoclockshowbar
-Ref Rprotodisplayclock = NILREF;	// ROM 0x00639644 Rprotodisplayclock
-Ref Rprotosoundchannel = NILREF;	// ROM 0x0063964c Rprotosoundchannel
-Ref Rprotovalidateslip = NILREF;	// ROM 0x00639654 Rprotovalidateslip
-Ref Rmarshaltypes = NILREF;	// ROM 0x0063965c Rmarshaltypes
-Ref Rustimefilter = NILREF;	// ROM 0x00639664 Rustimefilter
-Ref Rrulerpicts = NILREF;	// ROM 0x0063966c Rrulerpicts
-Ref Rsymbolfont = NILREF;	// ROM 0x00639674 Rsymbolfont
-Ref Rcheckoffbitmap = NILREF;	// ROM 0x0063967c Rcheckoffbitmap
-Ref Rprotopickview = NILREF;	// ROM 0x00639684 Rprotopickview
-Ref Rprotocitiestextpicker = NILREF;	// ROM 0x0063968c Rprotocitiestextpicker
-Ref Rnewtcustomfilter = NILREF;	// ROM 0x00639694 Rnewtcustomfilter
-Ref Rprotoradiobutton = NILREF;	// ROM 0x0063969c Rprotoradiobutton
-Ref Rtrylettersbitmap = NILREF;	// ROM 0x006396a4 Rtrylettersbitmap
-Ref Remptystring = NILREF;	// ROM 0x006396ac Remptystring
-Ref Rnewyorkfont = NILREF;	// ROM 0x006396b4 Rnewyorkfont
-Ref Rnewtsymbolview = NILREF;	// ROM 0x006396bc Rnewtsymbolview
-Ref Rprotostorycard = NILREF;	// ROM 0x006396c4 Rprotostorycard
-Ref Rblacklistgenericapology = NILREF;	// ROM 0x006396cc Rblacklistgenericapology
-Ref Rcanonicaltextblock = NILREF;	// ROM 0x006396d4 Rcanonicaltextblock
-Ref Rnewtcountryfilter = NILREF;	// ROM 0x006396dc Rnewtcountryfilter
-Ref Rprotonotescontent = NILREF;	// ROM 0x006396e4 Rprotonotescontent
-Ref Rdtmf2 = NILREF;	// ROM 0x006396ec Rdtmf2
-Ref Rsystempsfont = NILREF;	// ROM 0x006396f4 Rsystempsfont
-Ref Rtableftbitmap = NILREF;	// ROM 0x006396fc Rtableftbitmap
-Ref Rcanonicalpolygonshape = NILREF;	// ROM 0x00639704 Rcanonicalpolygonshape
-Ref Rkcardalertbounds = NILREF;	// ROM 0x0063970c Rkcardalertbounds
-Ref Rzaprecvcancelmsg = NILREF;	// ROM 0x00639714 Rzaprecvcancelmsg
-Ref Rnewtrolloverlayout = NILREF;	// ROM 0x0063971c Rnewtrolloverlayout
-Ref Rplainsoupprototype = NILREF;	// ROM 0x00639724 Rplainsoupprototype
-Ref Rusdefaultdatefilter = NILREF;	// ROM 0x0063972c Rusdefaultdatefilter
-Ref Rbanner = NILREF;	// ROM 0x00639734 Rbanner
-Ref Rothercategoryname = NILREF;	// ROM 0x0063973c Rothercategoryname
-Ref Rmailregister = NILREF;	// ROM 0x00639744 Rmailregister
-Ref Rscheduleview = NILREF;	// ROM 0x0063974c Rscheduleview
-Ref Rkeyequalsbitmap = NILREF;	// ROM 0x00639754 Rkeyequalsbitmap
-Ref Rpagecounterform = NILREF;	// ROM 0x0063975c Rpagecounterform
-Ref Rbootsoupwannabes = NILREF;	// ROM 0x00639764 Rbootsoupwannabes
-Ref Rnewtlabelsymbolinputline = NILREF;	// ROM 0x0063976c Rnewtlabelsymbolinputline
-Ref Rprotomeetingsoupfinder = NILREF;	// ROM 0x00639774 Rprotomeetingsoupfinder
-Ref Rprintform = NILREF;	// ROM 0x0063977c Rprintform
-Ref Rcanonicalcaretinfo = NILREF;	// ROM 0x00639784 Rcanonicalcaretinfo
-Ref Rdefaultstatusmsgs = NILREF;	// ROM 0x0063978c Rdefaultstatusmsgs
-Ref Rprototapiendpoint = NILREF;	// ROM 0x00639794 Rprototapiendpoint
-Ref Rprotoshowbar = NILREF;	// ROM 0x0063979c Rprotoshowbar
-Ref Rassistutilities = NILREF;	// ROM 0x006397a4 Rassistutilities
-Ref Rdtmf2bitmap = NILREF;	// ROM 0x006397ac Rdtmf2bitmap
-Ref Rprotoprefsrollitem = NILREF;	// ROM 0x006397b4 Rprotoprefsrollitem
-Ref Rbackdropbitmap = NILREF;	// ROM 0x006397bc Rbackdropbitmap
-Ref Rcanonicalgestaltrexinfoarrayelement = NILREF;	// ROM 0x006397c4 Rcanonicalgestaltrexinfoarrayelement
-Ref Ra2zbitmap = NILREF;	// ROM 0x006397cc Ra2zbitmap
-Ref Rroutetransport = NILREF;	// ROM 0x006397d4 Rroutetransport
-Ref Rwhackybeep = NILREF;	// ROM 0x006397dc Rwhackybeep
-Ref Rwilderbeep = NILREF;	// ROM 0x006397e4 Rwilderbeep
-Ref Rfaxpreferencesform = NILREF;	// ROM 0x006397ec Rfaxpreferencesform
-Ref Rhelveticafont = NILREF;	// ROM 0x006397f4 Rhelveticafont
-Ref Rpalettebitmap = NILREF;	// ROM 0x006397fc Rpalettebitmap
-Ref Rnewtqbelabelinputline = NILREF;	// ROM 0x00639804 Rnewtqbelabelinputline
-Ref Rprototextbutton = NILREF;	// ROM 0x0063980c Rprototextbutton
-Ref Rstarterclipboard = NILREF;	// ROM 0x00639814 Rstarterclipboard
-Ref Rprotoperiodicalarmeditor = NILREF;	// ROM 0x0063981c Rprotoperiodicalarmeditor
-Ref Rcanonicalbatterystatus = NILREF;	// ROM 0x00639824 Rcanonicalbatterystatus
-Ref Riotransportheader = NILREF;	// ROM 0x0063982c Riotransportheader
-Ref Rparagraphcodebook2 = NILREF;	// ROM 0x00639834 Rparagraphcodebook2
-Ref Rassistframes = NILREF;	// ROM 0x0063983c Rassistframes
-Ref Rcanonicaldictramframe = NILREF;	// ROM 0x00639844 Rcanonicaldictramframe
-Ref Rnewtrolabelinputline = NILREF;	// ROM 0x0063984c Rnewtrolabelinputline
-Ref Rnewtphonefilter = NILREF;	// ROM 0x00639854 Rnewtphonefilter
-Ref Rprotoprefframer = NILREF;	// ROM 0x0063985c Rprotoprefframer
-Ref Rsavedatatoentry = NILREF;	// ROM 0x00639864 Rsavedatatoentry
-Ref Rcontinents = NILREF;	// ROM 0x0063986c Rcontinents
-Ref Rprotodigit = NILREF;	// ROM 0x00639874 Rprotodigit
-Ref Rvalidslots = NILREF;	// ROM 0x0063987c Rvalidslots
-Ref Rprotofloatngo = NILREF;	// ROM 0x00639884 Rprotofloatngo
-Ref Rrecogarrowdownoutside = NILREF;	// ROM 0x0063988c Rrecogarrowdownoutside
-Ref Rprotoapp = NILREF;	// ROM 0x00639894 Rprotoapp
-Ref Rioprintpreview = NILREF;	// ROM 0x0063989c Rioprintpreview
-Ref Rprotocorrector = NILREF;	// ROM 0x006398a4 Rprotocorrector
-Ref Rasciibreak = NILREF;	// ROM 0x006398ac Rasciibreak
-Ref Rfontsystem12bold = NILREF;	// ROM 0x006398b4 Rfontsystem12bold
-Ref Rioindices = NILREF;	// ROM 0x006398bc Rioindices
-Ref Runicode = NILREF;	// ROM 0x006398c4 Runicode
-Ref Rzapbeep = NILREF;	// ROM 0x006398cc Rzapbeep
-Ref Rgetserialnumber = NILREF;	// ROM 0x006398d4 Rgetserialnumber
-Ref Rkeyperiodbitmap = NILREF;	// ROM 0x006398dc Rkeyperiodbitmap
-Ref Rprotocountrytextpicker = NILREF;	// ROM 0x006398e4 Rprotocountrytextpicker
-Ref Rprotosoupoverview = NILREF;	// ROM 0x006398ec Rprotosoupoverview
-Ref Rsmallpentip = NILREF;	// ROM 0x006398f4 Rsmallpentip
-Ref Rnewtentrylockedicon = NILREF;	// ROM 0x006398fc Rnewtentrylockedicon
-Ref Rdictionarylist = NILREF;	// ROM 0x00639904 Rdictionarylist
-Ref Rkeyminusbitmap = NILREF;	// ROM 0x0063990c Rkeyminusbitmap
-Ref Rprotoimageview = NILREF;	// ROM 0x00639914 Rprotoimageview
-Ref Ruerasepersistentdatabutton1str = NILREF;	// ROM 0x0063991c Ruerasepersistentdatabutton1str
-Ref Rprotoexpandoshell = NILREF;	// ROM 0x00639924 Rprotoexpandoshell
-Ref Rprotoformatpicker = NILREF;	// ROM 0x0063992c Rprotoformatpicker
-Ref Rprotonumberpicker = NILREF;	// ROM 0x00639934 Rprotonumberpicker
-Ref Rprotoconfirm = NILREF;	// ROM 0x0063993c Rprotoconfirm
-Ref Rprotozonestable = NILREF;	// ROM 0x00639944 Rprotozonestable
-Ref Rprototwolinepicker = NILREF;	// ROM 0x0063994c Rprototwolinepicker
-Ref Rclickbeep = NILREF;	// ROM 0x00639954 Rclickbeep
-Ref Rcalendarnotesname = NILREF;	// ROM 0x0063995c Rcalendarnotesname
-Ref Rextraprotos = NILREF;	// ROM 0x00639964 Rextraprotos
-Ref Rprotosmartcluster = NILREF;	// ROM 0x0063996c Rprotosmartcluster
-Ref Rdtmf7 = NILREF;	// ROM 0x00639974 Rdtmf7
-Ref Rcontainername = NILREF;	// ROM 0x0063997c Rcontainername
-Ref Rdtmfdash = NILREF;	// ROM 0x00639984 Rdtmfdash
-Ref Rmathname = NILREF;	// ROM 0x0063998c Rmathname
-Ref Rcanonicalcontext = NILREF;	// ROM 0x00639994 Rcanonicalcontext
-Ref Rpreparingmessage = NILREF;	// ROM 0x0063999c Rpreparingmessage
-Ref Rprotodeckofcards = NILREF;	// ROM 0x006399a4 Rprotodeckofcards
-Ref Rstampframebitmap = NILREF;	// ROM 0x006399ac Rstampframebitmap
-Ref Raustralianstatename = NILREF;	// ROM 0x006399b4 Raustralianstatename
-Ref Rnewtentrypageheader = NILREF;	// ROM 0x006399bc Rnewtentrypageheader
-Ref Rprotoemporiumpopup = NILREF;	// ROM 0x006399c4 Rprotoemporiumpopup
-Ref Ronlinemessages = NILREF;	// ROM 0x006399cc Ronlinemessages
-Ref Rstatelocpicker = NILREF;	// ROM 0x006399d4 Rstatelocpicker
-Ref Rprotohorizontalupdownscroller = NILREF;	// ROM 0x006399dc Rprotohorizontalupdownscroller
-Ref Rsmallpentipbitmap = NILREF;	// ROM 0x006399e4 Rsmallpentipbitmap
-Ref Rzapsendconnectmsg = NILREF;	// ROM 0x006399ec Rzapsendconnectmsg
-Ref Rflip = NILREF;	// ROM 0x006399f4 Rflip
-Ref Rprotoextrascontrolbutton = NILREF;	// ROM 0x006399fc Rprotoextrascontrolbutton
-Ref Rmarkupbitmap = NILREF;	// ROM 0x00639a04 Rmarkupbitmap
-Ref Rdefaultitemstatemsgs = NILREF;	// ROM 0x00639a0c Rdefaultitemstatemsgs
-Ref Rprotodatenyearpicker = NILREF;	// ROM 0x00639a14 Rprotodatenyearpicker
-Ref Rrecogarrowdowninside = NILREF;	// ROM 0x00639a1c Rrecogarrowdowninside
-Ref Rucardrepairalerttext = NILREF;	// ROM 0x00639a24 Rucardrepairalerttext
-Ref Rfontsystem9bold = NILREF;	// ROM 0x00639a2c Rfontsystem9bold
-Ref Rhandwritingfont = NILREF;	// ROM 0x00639a34 Rhandwritingfont
-Ref Rprotogauge = NILREF;	// ROM 0x00639a3c Rprotogauge
-Ref Rcanonicaltpmiteratorpackageframe = NILREF;	// ROM 0x00639a44 Rcanonicaltpmiteratorpackageframe
-Ref Rprotopreferencestitle = NILREF;	// ROM 0x00639a4c Rprotopreferencestitle
-Ref Rcanonicalbaseinfo = NILREF;	// ROM 0x00639a54 Rcanonicalbaseinfo
-Ref Rnewtlabelcustominputline = NILREF;	// ROM 0x00639a5c Rnewtlabelcustominputline
-Ref Raboutnewton = NILREF;	// ROM 0x00639a64 Raboutnewton
-Ref Rmodemsetups = NILREF;	// ROM 0x00639a6c Rmodemsetups
-Ref Rextrassoupname = NILREF;	// ROM 0x00639a74 Rextrassoupname
-Ref Rprotonavigator = NILREF;	// ROM 0x00639a7c Rprotonavigator
-Ref Rvarsmapstarter = NILREF;	// ROM 0x00639a84 Rvarsmapstarter
-Ref Rucardpositionalerttext = NILREF;	// ROM 0x00639a8c Rucardpositionalerttext
-Ref Rtimeintervalpopup = NILREF;	// ROM 0x00639a94 Rtimeintervalpopup
-Ref Rcompatiblefinder = NILREF;	// ROM 0x00639a9c Rcompatiblefinder
-Ref Rdtmf7bitmap = NILREF;	// ROM 0x00639aa4 Rdtmf7bitmap
-Ref Rtypewriter = NILREF;	// ROM 0x00639aac Rtypewriter
-Ref Rrecshapebitmap = NILREF;	// ROM 0x00639ab4 Rrecshapebitmap
-Ref Rprotorollbrowser = NILREF;	// ROM 0x00639abc Rprotorollbrowser
-Ref Rprotostatus = NILREF;	// ROM 0x00639ac4 Rprotostatus
-Ref Rprototransport = NILREF;	// ROM 0x00639acc Rprototransport
-Ref Rroutebeambitmap = NILREF;	// ROM 0x00639ad4 Rroutebeambitmap
-Ref Rdebugcodeblockprototype = NILREF;	// ROM 0x00639adc Rdebugcodeblockprototype
-Ref Rbookbitmap = NILREF;	// ROM 0x00639ae4 Rbookbitmap
-Ref Rleftbitmap = NILREF;	// ROM 0x00639aec Rleftbitmap
-Ref Rnewtentryviewrouting = NILREF;	// ROM 0x00639af4 Rnewtentryviewrouting
-Ref Rabstractscroller = NILREF;	// ROM 0x00639afc Rabstractscroller
-Ref Rprotorecognitioncheckbox = NILREF;	// ROM 0x00639b04 Rprotorecognitioncheckbox
-Ref Rmptablenoop = NILREF;	// ROM 0x00639b0c Rmptablenoop
-Ref Rnomarkupbitmap = NILREF;	// ROM 0x00639b14 Rnomarkupbitmap
-Ref Rprotoparagraph = NILREF;	// ROM 0x00639b1c Rprotoparagraph
-Ref Rbuttonbar = NILREF;	// ROM 0x00639b24 Rbuttonbar
-Ref Rdtmfpound = NILREF;	// ROM 0x00639b2c Rdtmfpound
-Ref Rprotofindcategory = NILREF;	// ROM 0x00639b34 Rprotofindcategory
-Ref Rprotorepeatpicker = NILREF;	// ROM 0x00639b3c Rprotorepeatpicker
-Ref Rprotocursivecheckbox = NILREF;	// ROM 0x00639b44 Rprotocursivecheckbox
-Ref Rprotoyearpicker = NILREF;	// ROM 0x00639b4c Rprotoyearpicker
-Ref Rprotodiamondbutton = NILREF;	// ROM 0x00639b54 Rprotodiamondbutton
-Ref Rcanonicalkeycommandcategory = NILREF;	// ROM 0x00639b5c Rcanonicalkeycommandcategory
-Ref Rprotoclosebox = NILREF;	// ROM 0x00639b64 Rprotoclosebox
-Ref Rnewttextdateview = NILREF;	// ROM 0x00639b6c Rnewttextdateview
-Ref Rrestoreprefsslip = NILREF;	// ROM 0x00639b74 Rrestoreprefsslip
-Ref Rcancelbitmap = NILREF;	// ROM 0x00639b7c Rcancelbitmap
-Ref Rprefsslipproto = NILREF;	// ROM 0x00639b84 Rprefsslipproto
-Ref Rprotoinputline = NILREF;	// ROM 0x00639b8c Rprotoinputline
-Ref Rprotopolygon = NILREF;	// ROM 0x00639b94 Rprotopolygon
-Ref Rvstatustitle = NILREF;	// ROM 0x00639b9c Rvstatustitle
-Ref Rcanonicalpackagedata = NILREF;	// ROM 0x00639ba4 Rcanonicalpackagedata
-Ref Rnewtrotexttimeview = NILREF;	// ROM 0x00639bac Rnewtrotexttimeview
-Ref Rprotofullrouteslip = NILREF;	// ROM 0x00639bb4 Rprotofullrouteslip
-Ref Rcanonicalgroup = NILREF;	// ROM 0x00639bbc Rcanonicalgroup
-Ref Rprototextlist = NILREF;	// ROM 0x00639bc4 Rprototextlist
-Ref Rrectoggle = NILREF;	// ROM 0x00639bcc Rrectoggle
-Ref Rprotodigitalclock = NILREF;	// ROM 0x00639bd4 Rprotodigitalclock
-Ref Rfontsystem18 = NILREF;	// ROM 0x00639bdc Rfontsystem18
-Ref Rgoawaybitmap = NILREF;	// ROM 0x00639be4 Rgoawaybitmap
-Ref Rnewtcheckbox = NILREF;	// ROM 0x00639bec Rnewtcheckbox
-Ref Rscheduleslip = NILREF;	// ROM 0x00639bf4 Rscheduleslip
-Ref Rrouteduplicatebitmap = NILREF;	// ROM 0x00639bfc Rrouteduplicatebitmap
-Ref Rbackupprefsslip = NILREF;	// ROM 0x00639c04 Rbackupprefsslip
-Ref Rdtmfpoundbitmap = NILREF;	// ROM 0x00639c0c Rdtmfpoundbitmap
-Ref Rkbdreturnbitmap = NILREF;	// ROM 0x00639c14 Rkbdreturnbitmap
-Ref Rkeybulletbitmap = NILREF;	// ROM 0x00639c1c Rkeybulletbitmap
-Ref Rnewtonmodemname = NILREF;	// ROM 0x00639c24 Rnewtonmodemname
-Ref Rnewtlabelphoneinputline = NILREF;	// ROM 0x00639c2c Rnewtlabelphoneinputline
-Ref Rdownbitmap = NILREF;	// ROM 0x00639c34 Rdownbitmap
-Ref Rprotobasicendpoint = NILREF;	// ROM 0x00639c3c Rprotobasicendpoint
-Ref Rdtmfstar = NILREF;	// ROM 0x00639c44 Rdtmfstar
-Ref Rpaperrollsoupdef = NILREF;	// ROM 0x00639c4c Rpaperrollsoupdef
-Ref Rlocationcursor = NILREF;	// ROM 0x00639c54 Rlocationcursor
-Ref Rprotokeyboardview = NILREF;	// ROM 0x00639c5c Rprotokeyboardview
-Ref Rprotorepeatview = NILREF;	// ROM 0x00639c64 Rprotorepeatview
-Ref Rconfirmbuttonlists = NILREF;	// ROM 0x00639c6c Rconfirmbuttonlists
-Ref Rchargingbitmap = NILREF;	// ROM 0x00639c74 Rchargingbitmap
-Ref Rdiamantebitmap = NILREF;	// ROM 0x00639c7c Rdiamantebitmap
-Ref Rnotesoverview = NILREF;	// ROM 0x00639c84 Rnotesoverview
-Ref Rglobalvarwannabes = NILREF;	// ROM 0x00639c8c Rglobalvarwannabes
-Ref Rprotosenderpopup = NILREF;	// ROM 0x00639c94 Rprotosenderpopup
-Ref Rstylusdownbitmap = NILREF;	// ROM 0x00639c9c Rstylusdownbitmap
-Ref Rcanonicalinkwordinfo = NILREF;	// ROM 0x00639ca4 Rcanonicalinkwordinfo
-Ref Rbasecorrectinfo = NILREF;	// ROM 0x00639cac Rbasecorrectinfo
-Ref Rrecsketchbitmap = NILREF;	// ROM 0x00639cb4 Rrecsketchbitmap
-Ref Rzero2ninebitmap = NILREF;	// ROM 0x00639cbc Rzero2ninebitmap
-Ref Rcanonicalfontparms = NILREF;	// ROM 0x00639cc4 Rcanonicalfontparms
-Ref Rnewtroutingbutton = NILREF;	// ROM 0x00639ccc Rnewtroutingbutton
-Ref Rprotopeopledatadef = NILREF;	// ROM 0x00639cd4 Rprotopeopledatadef
-Ref Rradioonbitmap = NILREF;	// ROM 0x00639cdc Rradioonbitmap
-Ref Rfontsystem18underline = NILREF;	// ROM 0x00639ce4 Rfontsystem18underline
-Ref Rprotolabelpicker = NILREF;	// ROM 0x00639cec Rprotolabelpicker
-Ref Rnewtnrlabeldateinputline = NILREF;	// ROM 0x00639cf4 Rnewtnrlabeldateinputline
-Ref Rbootlogobitmap = NILREF;	// ROM 0x00639cfc Rbootlogobitmap
-Ref Rdtmfstarbitmap = NILREF;	// ROM 0x00639d04 Rdtmfstarbitmap
-Ref Rnewtdatefilter = NILREF;	// ROM 0x00639d0c Rnewtdatefilter
-Ref Rzapsenddonemsg = NILREF;	// ROM 0x00639d14 Rzapsenddonemsg
-Ref Rcanonicaltextandstyles = NILREF;	// ROM 0x00639d1c Rcanonicaltextandstyles
-Ref Rdtmfright = NILREF;	// ROM 0x00639d24 Rdtmfright
-Ref Rdrawpokertemplate = NILREF;	// ROM 0x00639d2c Rdrawpokertemplate
-Ref Rloadletterweights = NILREF;	// ROM 0x00639d34 Rloadletterweights
-Ref Rprotoemailexpando = NILREF;	// ROM 0x00639d3c Rprotoemailexpando
-Ref Rromphrasallexicon = NILREF;	// ROM 0x00639d44 Rromphrasallexicon
-Ref Rnewtshowstationerybutton = NILREF;	// ROM 0x00639d4c Rnewtshowstationerybutton
-Ref Rstrokebundle = NILREF;	// ROM 0x00639d54 Rstrokebundle
-Ref Rdayview = NILREF;	// ROM 0x00639d5c Rdayview
-Ref Rcopyrightnotice = NILREF;	// ROM 0x00639d64 Rcopyrightnotice
-Ref Rnotifyicon = NILREF;	// ROM 0x00639d6c Rnotifyicon
-Ref Rwordfilter = NILREF;	// ROM 0x00639d74 Rwordfilter
-Ref Rzaprecvmsg = NILREF;	// ROM 0x00639d7c Rzaprecvmsg
-Ref Rkoserroralertbutton0bounds = NILREF;	// ROM 0x00639d84 Rkoserroralertbutton0bounds
-Ref Roptionkeyicon = NILREF;	// ROM 0x00639d8c Roptionkeyicon
-Ref Rtosubjectslip = NILREF;	// ROM 0x00639d94 Rtosubjectslip
-Ref Rmappopup = NILREF;	// ROM 0x00639d9c Rmappopup
-Ref Rstdforms = NILREF;	// ROM 0x00639da4 Rstdforms
-Ref Rrubricpopup = NILREF;	// ROM 0x00639dac Rrubricpopup
-Ref Rcanonicalregionshape = NILREF;	// ROM 0x00639db4 Rcanonicalregionshape
-Ref Rrecogarrowupoutside = NILREF;	// ROM 0x00639dbc Rrecogarrowupoutside
-Ref Rvprogress = NILREF;	// ROM 0x00639dc4 Rvprogress
-Ref Rprotoletterformat = NILREF;	// ROM 0x00639dcc Rprotoletterformat
-Ref Rnewtshowmenu = NILREF;	// ROM 0x00639dd4 Rnewtshowmenu
-Ref Rdataname = NILREF;	// ROM 0x00639ddc Rdataname
-Ref Rkoserroralerttextbounds = NILREF;	// ROM 0x00639de4 Rkoserroralerttextbounds
-Ref Rloadglobals = NILREF;	// ROM 0x00639dec Rloadglobals
-Ref Rcaretspacebits = NILREF;	// ROM 0x00639df4 Rcaretspacebits
-Ref Rdigitflap = NILREF;	// ROM 0x00639dfc Rdigitflap
-Ref Rfontsystem10 = NILREF;	// ROM 0x00639e04 Rfontsystem10
-Ref Rcanonicalpackageframe = NILREF;	// ROM 0x00639e0c Rcanonicalpackageframe
-Ref Rvbarber = NILREF;	// ROM 0x00639e14 Rvbarber
-Ref Rtxgraphicsrunprototype = NILREF;	// ROM 0x00639e1c Rtxgraphicsrunprototype
-Ref Rgenevafont = NILREF;	// ROM 0x00639e24 Rgenevafont
-Ref Rcorrectormidbits = NILREF;	// ROM 0x00639e2c Rcorrectormidbits
-Ref Rnotesbitmap = NILREF;	// ROM 0x00639e34 Rnotesbitmap
-Ref Rworldpicker = NILREF;	// ROM 0x00639e3c Rworldpicker
-Ref Rdatentimepopup = NILREF;	// ROM 0x00639e44 Rdatentimepopup
-Ref Rnewtsmartaddressfilter = NILREF;	// ROM 0x00639e4c Rnewtsmartaddressfilter
-Ref Rprotobatterygauge = NILREF;	// ROM 0x00639e54 Rprotobatterygauge
-Ref Rprotohorizontal2dscroller = NILREF;	// ROM 0x00639e5c Rprotohorizontal2dscroller
-Ref Rnewteditview = NILREF;	// ROM 0x00639e64 Rnewteditview
-Ref Rprotorepeatdatedurationtextpicker = NILREF;	// ROM 0x00639e6c Rprotorepeatdatedurationtextpicker
-Ref Rprotosoundframe = NILREF;	// ROM 0x00639e74 Rprotosoundframe
-Ref Rcanonicalbitmapinfo = NILREF;	// ROM 0x00639e7c Rcanonicalbitmapinfo
-Ref Rcanonicaldeadimport = NILREF;	// ROM 0x00639e84 Rcanonicaldeadimport
-Ref Rnewtpopupedit = NILREF;	// ROM 0x00639e8c Rnewtpopupedit
-Ref Rprotocategoryrollitem = NILREF;	// ROM 0x00639e94 Rprotocategoryrollitem
-Ref Rprotopreferencespopup = NILREF;	// ROM 0x00639e9c Rprotopreferencespopup
-Ref Rviewroot = NILREF;	// ROM 0x00639ea4 Rviewroot
-Ref Rcanonicalscrollee = NILREF;	// ROM 0x00639eac Rcanonicalscrollee
-Ref Rprotoampmcluster = NILREF;	// ROM 0x00639eb4 Rprotoampmcluster
-Ref Rprotostatusgauge = NILREF;	// ROM 0x00639ebc Rprotostatusgauge
-Ref Ruerasepersistentstatusemptybuttonstr = NILREF;	// ROM 0x00639ec4 Ruerasepersistentstatusemptybuttonstr
-Ref Rgermankeycodemapping = NILREF;	// ROM 0x00639ecc Rgermankeycodemapping
-Ref Rpapercallbitmap = NILREF;	// ROM 0x00639ed4 Rpapercallbitmap
-Ref Rroutepastetext = NILREF;	// ROM 0x00639edc Rroutepastetext
-Ref Rcardaction = NILREF;	// ROM 0x00639ee4 Rcardaction
-Ref Rdtmf4 = NILREF;	// ROM 0x00639eec Rdtmf4
-Ref Rfontsystem10underline = NILREF;	// ROM 0x00639ef4 Rfontsystem10underline
-Ref Rnamesbitmap = NILREF;	// ROM 0x00639efc Rnamesbitmap
-Ref Rprotopinwindowwithoutlogic = NILREF;	// ROM 0x00639f04 Rprotopinwindowwithoutlogic
-Ref Rnewtsimpledatefilter = NILREF;	// ROM 0x00639f0c Rnewtsimpledatefilter
-Ref Rstackframeinfoframeprototype = NILREF;	// ROM 0x00639f14 Rstackframeinfoframeprototype
-Ref Rpagepreviewform = NILREF;	// ROM 0x00639f1c Rpagepreviewform
-Ref Rnetchooser = NILREF;	// ROM 0x00639f24 Rnetchooser
-Ref Rstdclosing = NILREF;	// ROM 0x00639f2c Rstdclosing
-Ref Rcodeblockprototype = NILREF;	// ROM 0x00639f34 Rcodeblockprototype
-Ref Rrecogarrowupinside = NILREF;	// ROM 0x00639f3c Rrecogarrowupinside
-Ref Rprotothumbnailfloater = NILREF;	// ROM 0x00639f44 Rprotothumbnailfloater
-Ref Rcanonicalchargrid = NILREF;	// ROM 0x00639f4c Rcanonicalchargrid
-Ref Rhollowstarbitmap = NILREF;	// ROM 0x00639f54 Rhollowstarbitmap
-Ref Rdstsoupname = NILREF;	// ROM 0x00639f5c Rdstsoupname
-Ref Rnewtinfobox = NILREF;	// ROM 0x00639f64 Rnewtinfobox
-Ref Rprotodatetextpicker = NILREF;	// ROM 0x00639f6c Rprotodatetextpicker
-Ref Rtimepopup = NILREF;	// ROM 0x00639f74 Rtimepopup
-Ref Rcanonicalshapeinfo = NILREF;	// ROM 0x00639f7c Rcanonicalshapeinfo
-Ref Rprotoradiocluster = NILREF;	// ROM 0x00639f84 Rprotoradiocluster
-Ref Rprotorecorderview = NILREF;	// ROM 0x00639f8c Rprotorecorderview
-Ref Rstarterinsertspec = NILREF;	// ROM 0x00639f94 Rstarterinsertspec
-Ref Ruerasepersistentconfirmbutton0str = NILREF;	// ROM 0x00639f9c Ruerasepersistentconfirmbutton0str
-Ref Rprotorecognitioncluster = NILREF;	// ROM 0x00639fa4 Rprotorecognitioncluster
-Ref Rdtmf4bitmap = NILREF;	// ROM 0x00639fac Rdtmf4bitmap
-Ref Rnewtlayout = NILREF;	// ROM 0x00639fb4 Rnewtlayout
-Ref Rsystemfont = NILREF;	// ROM 0x00639fbc Rsystemfont
-Ref Rtablefthilitebitmap = NILREF;	// ROM 0x00639fc4 Rtablefthilitebitmap
-Ref Rcanonicalscroller = NILREF;	// ROM 0x00639fcc Rcanonicalscroller
-Ref Rcardalerttemplate = NILREF;	// ROM 0x00639fd4 Rcardalerttemplate
-Ref Rcreatempforbackup = NILREF;	// ROM 0x00639fdc Rcreatempforbackup
-Ref Rprotostrokesitem = NILREF;	// ROM 0x00639fe4 Rprotostrokesitem
-Ref Rdockerbitmap = NILREF;	// ROM 0x00639fec Rdockerbitmap
-Ref Rprotostatusclosebox = NILREF;	// ROM 0x00639ff4 Rprotostatusclosebox
-Ref Rprotoupdownscroller = NILREF;	// ROM 0x00639ffc Rprotoupdownscroller
-Ref Rprotomeetingplacepicker = NILREF;	// ROM 0x0063a004 Rprotomeetingplacepicker
-Ref Rkeyleftparenbitmap = NILREF;	// ROM 0x0063a00c Rkeyleftparenbitmap
-Ref Raztabsslimbitmap = NILREF;	// ROM 0x0063a014 Raztabsslimbitmap
-Ref Rprotoglance = NILREF;	// ROM 0x0063a01c Rprotoglance
-Ref Rsymboltable = NILREF;	// ROM 0x0063a024 Rsymboltable
-Ref Rcanonicalpackageinfo = NILREF;	// ROM 0x0063a02c Rcanonicalpackageinfo
-Ref Raztabs = NILREF;	// ROM 0x0063a034 Raztabs
-Ref Rconnectiondupvalidtest = NILREF;	// ROM 0x0063a03c Rconnectiondupvalidtest
-Ref Rnotepaper = NILREF;	// ROM 0x0063a044 Rnotepaper
-Ref Rprotocard = NILREF;	// ROM 0x0063a04c Rprotocard
-Ref Rcharsversion = NILREF;	// ROM 0x0063a054 Rcharsversion
-Ref Rroutefaxicon = NILREF;	// ROM 0x0063a05c Rroutefaxicon
-Ref Rdownarrowbitmap = NILREF;	// ROM 0x0063a064 Rdownarrowbitmap
-Ref Rprototapipicker = NILREF;	// ROM 0x0063a06c Rprototapipicker
-Ref Rstarterink = NILREF;	// ROM 0x0063a074 Rstarterink
-Ref Rcanonicaltable = NILREF;	// ROM 0x0063a07c Rcanonicaltable
-Ref Rrouteprintbitmap = NILREF;	// ROM 0x0063a084 Rrouteprintbitmap
-Ref Rsalutationsuffix = NILREF;	// ROM 0x0063a08c Rsalutationsuffix
-Ref Rioioboxsoup = NILREF;	// ROM 0x0063a094 Rioioboxsoup
-Ref Rprotoeworldendpoint = NILREF;	// ROM 0x0063a09c Rprotoeworldendpoint
-Ref Rcanonicalframepartremoveinfo = NILREF;	// ROM 0x0063a0a4 Rcanonicalframepartremoveinfo
-Ref Rnewttextfilter = NILREF;	// ROM 0x0063a0ac Rnewttextfilter
-Ref Routboxsoupname = NILREF;	// ROM 0x0063a0b4 Routboxsoupname
-Ref Rstarterproperties = NILREF;	// ROM 0x0063a0bc Rstarterproperties
-Ref Rkbdleftbitmap = NILREF;	// ROM 0x0063a0c4 Rkbdleftbitmap
-Ref Rcalendarsoupname = NILREF;	// ROM 0x0063a0cc Rcalendarsoupname
-Ref Rcardfilesoupname = NILREF;	// ROM 0x0063a0d4 Rcardfilesoupname
-Ref Rfontsystem14bold = NILREF;	// ROM 0x0063a0dc Rfontsystem14bold
-Ref Rprotowordinterp = NILREF;	// ROM 0x0063a0e4 Rprotowordinterp
-Ref Rnewtstationeryview = NILREF;	// ROM 0x0063a0ec Rnewtstationeryview
-Ref Rcanonicalpoint = NILREF;	// ROM 0x0063a0f4 Rcanonicalpoint
-Ref Rtabrightbitmap = NILREF;	// ROM 0x0063a0fc Rtabrightbitmap
-Ref Rnewtlabeldateinputline = NILREF;	// ROM 0x0063a104 Rnewtlabeldateinputline
-Ref Rblacklist = NILREF;	// ROM 0x0063a10c Rblacklist
-Ref Rcardfilequeryspec = NILREF;	// ROM 0x0063a114 Rcardfilequeryspec
-Ref Rcorrectorleadbits = NILREF;	// ROM 0x0063a11c Rcorrectorleadbits
-Ref Rtargetframeformat = NILREF;	// ROM 0x0063a124 Rtargetframeformat
-Ref Raztabsbitmap = NILREF;	// ROM 0x0063a12c Raztabsbitmap
-Ref Rdsplacehints = NILREF;	// ROM 0x0063a134 Rdsplacehints
-Ref Ronlinebitmap = NILREF;	// ROM 0x0063a13c Ronlinebitmap
-Ref Rpackagequery = NILREF;	// ROM 0x0063a144 Rpackagequery
-Ref Rioprotoshowbybutton = NILREF;	// ROM 0x0063a14c Rioprotoshowbybutton
-Ref Rmeeting = NILREF;	// ROM 0x0063a154 Rmeeting
-Ref Rdigitflaploword = NILREF;	// ROM 0x0063a15c Rdigitflaploword
-Ref Rrepeatnotesname = NILREF;	// ROM 0x0063a164 Rrepeatnotesname
-Ref Rroutedeleteicon = NILREF;	// ROM 0x0063a16c Rroutedeleteicon
-Ref Rerrortable = NILREF;	// ROM 0x0063a174 Rerrortable
-Ref Rfinepentip = NILREF;	// ROM 0x0063a17c Rfinepentip
-Ref Rprotostatusbutton = NILREF;	// ROM 0x0063a184 Rprotostatusbutton
-Ref Rprotocheckbox = NILREF;	// ROM 0x0063a18c Rprotocheckbox
-Ref Rroutemailicon = NILREF;	// ROM 0x0063a194 Rroutemailicon
+Ref Rupbitmap = NILREF;	// ROM 0x0067fa44 Rupbitmap
+Ref Rdatetimestrspecs = NILREF;	// ROM 0x0067fa4c Rdatetimestrspecs
+Ref Rstoragecardtypes = NILREF;	// ROM 0x0067fa54 Rstoragecardtypes
+Ref Rdirectoryconversionframe = NILREF;	// ROM 0x0067fa5c Rdirectoryconversionframe
+Ref Rnewtrolabeltimeinputline = NILREF;	// ROM 0x0067fa64 Rnewtrolabeltimeinputline
+Ref Roverviewbitmap = NILREF;	// ROM 0x0067fa6c Roverviewbitmap
+Ref Rprotologpicker = NILREF;	// ROM 0x0067fa74 Rprotologpicker
+Ref Rprotomeetingplacepopup = NILREF;	// ROM 0x0067fa7c Rprotomeetingplacepopup
+Ref Rucletters = NILREF;	// ROM 0x0067fa84 Rucletters
+Ref Rerrnumbertoosmall = NILREF;	// ROM 0x0067fa8c Rerrnumbertoosmall
+Ref Rprotophoneexpando = NILREF;	// ROM 0x0067fa94 Rprotophoneexpando
+Ref Rrouteforward = NILREF;	// ROM 0x0067fa9c Rrouteforward
+Ref Rplusminusbitmap = NILREF;	// ROM 0x0067faa4 Rplusminusbitmap
+Ref Rstartiaprogress = NILREF;	// ROM 0x0067faac Rstartiaprogress
+Ref Rnewtfalseentryview = NILREF;	// ROM 0x0067fab4 Rnewtfalseentryview
+Ref Rprotoconvertinkslip = NILREF;	// ROM 0x0067fabc Rprotoconvertinkslip
+Ref Rstylusupbitmap = NILREF;	// ROM 0x0067fac4 Rstylusupbitmap
+Ref Rdtmf9 = NILREF;	// ROM 0x0067facc Rdtmf9
+Ref Rfinepentipbitmap = NILREF;	// ROM 0x0067fad4 Rfinepentipbitmap
+Ref Rprintpagemessage = NILREF;	// ROM 0x0067fadc Rprintpagemessage
+Ref Rprotoconfigpicker = NILREF;	// ROM 0x0067fae4 Rprotoconfigpicker
+Ref Rmetasoupname = NILREF;	// ROM 0x0067faec Rmetasoupname
+Ref Rnumberfilter = NILREF;	// ROM 0x0067faf4 Rnumberfilter
+Ref Rcharsetinforesources = NILREF;	// ROM 0x0067fafc Rcharsetinforesources
+Ref Rtwobeep = NILREF;	// ROM 0x0067fb04 Rtwobeep
+Ref Rsoupfinder = NILREF;	// ROM 0x0067fb0c Rsoupfinder
+Ref Rcorrectortrailbits = NILREF;	// ROM 0x0067fb14 Rcorrectortrailbits
+Ref Rinboxsoupname = NILREF;	// ROM 0x0067fb1c Rinboxsoupname
+Ref Rusphonefilter = NILREF;	// ROM 0x0067fb24 Rusphonefilter
+Ref Rzapnomsg = NILREF;	// ROM 0x0067fb2c Rzapnomsg
+Ref Rkoserroralertbounds = NILREF;	// ROM 0x0067fb34 Rkoserroralertbounds
+Ref Rextrasromicons = NILREF;	// ROM 0x0067fb3c Rextrasromicons
+Ref Rkbddeletebitmap = NILREF;	// ROM 0x0067fb44 Rkbddeletebitmap
+Ref Rprotoleftrightscroller = NILREF;	// ROM 0x0067fb4c Rprotoleftrightscroller
+Ref Rprinterchooserbutton = NILREF;	// ROM 0x0067fb54 Rprinterchooserbutton
+Ref Rnewtareacodeline = NILREF;	// ROM 0x0067fb5c Rnewtareacodeline
+Ref Rprotosendbutton = NILREF;	// ROM 0x0067fb64 Rprotosendbutton
+Ref Rdtmf9bitmap = NILREF;	// ROM 0x0067fb6c Rdtmf9bitmap
+Ref Rcloud1 = NILREF;	// ROM 0x0067fb74 Rcloud1
+Ref Rcanonicaltitle = NILREF;	// ROM 0x0067fb7c Rcanonicaltitle
+Ref Rnewtronumview = NILREF;	// ROM 0x0067fb84 Rnewtronumview
+Ref Rcorrectortwobuttons = NILREF;	// ROM 0x0067fb8c Rcorrectortwobuttons
+Ref Rnewtlabelsimpledateinputline = NILREF;	// ROM 0x0067fb94 Rnewtlabelsimpledateinputline
+Ref Rstoreprototype = NILREF;	// ROM 0x0067fb9c Rstoreprototype
+Ref Rcalculator = NILREF;	// ROM 0x0067fba4 Rcalculator
+Ref Rmaileditor = NILREF;	// ROM 0x0067fbac Rmaileditor
+Ref Rnewtembeddedentryview = NILREF;	// ROM 0x0067fbb4 Rnewtembeddedentryview
+Ref Rrecognizeruserchoices = NILREF;	// ROM 0x0067fbbc Rrecognizeruserchoices
+Ref Rprotoprefframe = NILREF;	// ROM 0x0067fbc4 Rprotoprefframe
+Ref Rroutereaddress = NILREF;	// ROM 0x0067fbcc Rroutereaddress
+Ref Rprintdone = NILREF;	// ROM 0x0067fbd4 Rprintdone
+Ref Rnewtprotolinebase = NILREF;	// ROM 0x0067fbdc Rnewtprotolinebase
+Ref Raddingmachine = NILREF;	// ROM 0x0067fbe4 Raddingmachine
+Ref Rextrasdrawer = NILREF;	// ROM 0x0067fbec Rextrasdrawer
+Ref Rletters = NILREF;	// ROM 0x0067fbf4 Rletters
+Ref Rconversionrates = NILREF;	// ROM 0x0067fbfc Rconversionrates
+Ref Rnewtstatefilter = NILREF;	// ROM 0x0067fc04 Rnewtstatefilter
+Ref Rnewtrolabelnuminputline = NILREF;	// ROM 0x0067fc0c Rnewtrolabelnuminputline
+Ref Rprotoeditview = NILREF;	// ROM 0x0067fc14 Rprotoeditview
+Ref Rprotoendpoint = NILREF;	// ROM 0x0067fc1c Rprotoendpoint
+Ref Rkbdcapslockbitmap = NILREF;	// ROM 0x0067fc24 Rkbdcapslockbitmap
+Ref Rkbdtabbitmap = NILREF;	// ROM 0x0067fc2c Rkbdtabbitmap
+Ref Rcanonicaldatacontext = NILREF;	// ROM 0x0067fc34 Rcanonicaldatacontext
+Ref Rdtmf1 = NILREF;	// ROM 0x0067fc3c Rdtmf1
+Ref Rfoldertableft = NILREF;	// ROM 0x0067fc44 Rfoldertableft
+Ref Rnewttextview = NILREF;	// ROM 0x0067fc4c Rnewttextview
+Ref Rstopwordlist = NILREF;	// ROM 0x0067fc54 Rstopwordlist
+Ref Rcalculatorbitmap = NILREF;	// ROM 0x0067fc5c Rcalculatorbitmap
+Ref Rfilledstarbitmap = NILREF;	// ROM 0x0067fc64 Rfilledstarbitmap
+Ref Rhandscrollbitmap = NILREF;	// ROM 0x0067fc6c Rhandscrollbitmap
+Ref Rdatesbitmap = NILREF;	// ROM 0x0067fc74 Rdatesbitmap
+Ref Rlocationpicker = NILREF;	// ROM 0x0067fc7c Rlocationpicker
+Ref Rnotification = NILREF;	// ROM 0x0067fc84 Rnotification
+Ref Rprotodatepicker = NILREF;	// ROM 0x0067fc8c Rprotodatepicker
+Ref Rprotorichlabelinputline = NILREF;	// ROM 0x0067fc94 Rprotorichlabelinputline
+Ref Rdraweropen = NILREF;	// ROM 0x0067fc9c Rdraweropen
+Ref Rremindslip = NILREF;	// ROM 0x0067fca4 Rremindslip
+Ref Rtestfields = NILREF;	// ROM 0x0067fcac Rtestfields
+Ref Rukphonefilter = NILREF;	// ROM 0x0067fcb4 Rukphonefilter
+Ref Rzapconfirmmsg = NILREF;	// ROM 0x0067fcbc Rzapconfirmmsg
+Ref Rnotifycloud = NILREF;	// ROM 0x0067fcc4 Rnotifycloud
+Ref Rnewtentryrollheader = NILREF;	// ROM 0x0067fccc Rnewtentryrollheader
+Ref Rprotosubcontentarea = NILREF;	// ROM 0x0067fcd4 Rprotosubcontentarea
+Ref Rcardfileindices = NILREF;	// ROM 0x0067fcdc Rcardfileindices
+Ref Rnewtpagelayout = NILREF;	// ROM 0x0067fce4 Rnewtpagelayout
+Ref Rroutemissing = NILREF;	// ROM 0x0067fcec Rroutemissing
+Ref Rioprotoreceivebutton = NILREF;	// ROM 0x0067fcf4 Rioprotoreceivebutton
+Ref Rcanonicalframepartinstallinfo = NILREF;	// ROM 0x0067fcfc Rcanonicalframepartinstallinfo
+Ref Rdtmf1bitmap = NILREF;	// ROM 0x0067fd04 Rdtmf1bitmap
+Ref Rprotonamerefdatadef = NILREF;	// ROM 0x0067fd0c Rprotonamerefdatadef
+Ref Rprotobottomtitle = NILREF;	// ROM 0x0067fd14 Rprotobottomtitle
+Ref Rprotopictureview = NILREF;	// ROM 0x0067fd1c Rprotopictureview
+Ref Rrepeatmeetingname = NILREF;	// ROM 0x0067fd24 Rrepeatmeetingname
+Ref Rprotostatustemplate = NILREF;	// ROM 0x0067fd2c Rprotostatustemplate
+Ref Rkeydividebitmap = NILREF;	// ROM 0x0067fd34 Rkeydividebitmap
+Ref Rprotorouteslip = NILREF;	// ROM 0x0067fd3c Rprotorouteslip
+Ref Rprototitletext = NILREF;	// ROM 0x0067fd44 Rprototitletext
+Ref Rnewtrollentryview = NILREF;	// ROM 0x0067fd4c Rnewtrollentryview
+Ref Rprototabledef = NILREF;	// ROM 0x0067fd54 Rprototabledef
+Ref Rrcprefsconfig = NILREF;	// ROM 0x0067fd5c Rrcprefsconfig
+Ref Rdefaultsilentprefinfo = NILREF;	// ROM 0x0067fd64 Rdefaultsilentprefinfo
+Ref Raddsound = NILREF;	// ROM 0x0067fd6c Raddsound
+Ref Rcursorprototype = NILREF;	// ROM 0x0067fd74 Rcursorprototype
+Ref Rnewtnewstationerybutton = NILREF;	// ROM 0x0067fd7c Rnewtnewstationerybutton
+Ref Rdrawerclose = NILREF;	// ROM 0x0067fd84 Rdrawerclose
+Ref Rlargepentip = NILREF;	// ROM 0x0067fd8c Rlargepentip
+Ref Rrightbitmap = NILREF;	// ROM 0x0067fd94 Rrightbitmap
+Ref Rcanonicalfirstgroup = NILREF;	// ROM 0x0067fd9c Rcanonicalfirstgroup
+Ref Rcopier = NILREF;	// ROM 0x0067fda4 Rcopier
+Ref Rmissingviewdef = NILREF;	// ROM 0x0067fdac Rmissingviewdef
+Ref Rprotorecconfig = NILREF;	// ROM 0x0067fdb4 Rprotorecconfig
+Ref Rprovincepicker = NILREF;	// ROM 0x0067fdbc Rprovincepicker
+Ref Rcanonicalcurrentimport = NILREF;	// ROM 0x0067fdc4 Rcanonicalcurrentimport
+Ref Rhandwritingstyleimages = NILREF;	// ROM 0x0067fdcc Rhandwritingstyleimages
+Ref Rfaxdriver = NILREF;	// ROM 0x0067fdd4 Rfaxdriver
+Ref Rbootinitnsglobals = NILREF;	// ROM 0x0067fddc Rbootinitnsglobals
+Ref Rlinespacingfmtstr = NILREF;	// ROM 0x0067fde4 Rlinespacingfmtstr
+Ref Rparagraphcodebook1 = NILREF;	// ROM 0x0067fdec Rparagraphcodebook1
+Ref Rassistbitmap = NILREF;	// ROM 0x0067fdf4 Rassistbitmap
+Ref Rextrasbitmap = NILREF;	// ROM 0x0067fdfc Rextrasbitmap
+Ref Rratchetsound = NILREF;	// ROM 0x0067fe04 Rratchetsound
+Ref Rtopicmarkers = NILREF;	// ROM 0x0067fe0c Rtopicmarkers
+Ref Raustphonefilter = NILREF;	// ROM 0x0067fe14 Raustphonefilter
+Ref Rnewtfilter = NILREF;	// ROM 0x0067fe1c Rnewtfilter
+Ref Rextrassoupdef = NILREF;	// ROM 0x0067fe24 Rextrassoupdef
+Ref Rlocationpopup = NILREF;	// ROM 0x0067fe2c Rlocationpopup
+Ref Rprotoprefinfo = NILREF;	// ROM 0x0067fe34 Rprotoprefinfo
+Ref Ruparrowbitmap = NILREF;	// ROM 0x0067fe3c Ruparrowbitmap
+Ref Rnewtonnewtbitmap = NILREF;	// ROM 0x0067fe44 Rnewtonnewtbitmap
+Ref Rprotonewsetclock = NILREF;	// ROM 0x0067fe4c Rprotonewsetclock
+Ref Rcanonicalgestaltpatchinfo = NILREF;	// ROM 0x0067fe54 Rcanonicalgestaltpatchinfo
+Ref Rucardpositionalertbutton = NILREF;	// ROM 0x0067fe5c Rucardpositionalertbutton
+Ref Rrcinkortext = NILREF;	// ROM 0x0067fe64 Rrcinkortext
+Ref Rnewtinfobutton = NILREF;	// ROM 0x0067fe6c Rnewtinfobutton
+Ref Rprotolonglattextpicker = NILREF;	// ROM 0x0067fe74 Rprotolonglattextpicker
+Ref Rprotoroll = NILREF;	// ROM 0x0067fe7c Rprotoroll
+Ref Rprotohilitebutton = NILREF;	// ROM 0x0067fe84 Rprotohilitebutton
+Ref Rcanonicalexporttableclient = NILREF;	// ROM 0x0067fe8c Rcanonicalexporttableclient
+Ref Rcanonicalrect = NILREF;	// ROM 0x0067fe94 Rcanonicalrect
+Ref Rcanonicalgroupee = NILREF;	// ROM 0x0067fe9c Rcanonicalgroupee
+Ref Rprototimebutton = NILREF;	// ROM 0x0067fea4 Rprototimebutton
+Ref Rprotolabeledbatterygauge = NILREF;	// ROM 0x0067feac Rprotolabeledbatterygauge
+Ref Rglobebitmap = NILREF;	// ROM 0x0067feb4 Rglobebitmap
+Ref Rdefaultsendprefinfo = NILREF;	// ROM 0x0067febc Rdefaultsendprefinfo
+Ref Rrcrerecognizeconfig = NILREF;	// ROM 0x0067fec4 Rrcrerecognizeconfig
+Ref Rconnectmessage = NILREF;	// ROM 0x0067fecc Rconnectmessage
+Ref Rlargepentipbitmap = NILREF;	// ROM 0x0067fed4 Rlargepentipbitmap
+Ref Rfontsystem12 = NILREF;	// ROM 0x0067fedc Rfontsystem12
+Ref Rprototransportprefs = NILREF;	// ROM 0x0067fee4 Rprototransportprefs
+Ref Rroutecallbitmap = NILREF;	// ROM 0x0067feec Rroutecallbitmap
+Ref Rampmslides = NILREF;	// ROM 0x0067fef4 Rampmslides
+Ref Rnewtcheckallbutton = NILREF;	// ROM 0x0067fefc Rnewtcheckallbutton
+Ref Rprotocharedit = NILREF;	// ROM 0x0067ff04 Rprotocharedit
+Ref Rdigitaltimepopup = NILREF;	// ROM 0x0067ff0c Rdigitaltimepopup
+Ref Rprotodateexpando = NILREF;	// ROM 0x0067ff14 Rprotodateexpando
+Ref Raliascursor = NILREF;	// ROM 0x0067ff1c Raliascursor
+Ref Rhilitesound = NILREF;	// ROM 0x0067ff24 Rhilitesound
+Ref Rownerbitmap = NILREF;	// ROM 0x0067ff2c Rownerbitmap
+Ref Ruerasepersistentdatabutton0str = NILREF;	// ROM 0x0067ff34 Ruerasepersistentdatabutton0str
+Ref Rsaveletterweights = NILREF;	// ROM 0x0067ff3c Rsaveletterweights
+Ref Rsolopokertemplate = NILREF;	// ROM 0x0067ff44 Rsolopokertemplate
+Ref Rcitysoupname = NILREF;	// ROM 0x0067ff4c Rcitysoupname
+Ref Rprotofloater = NILREF;	// ROM 0x0067ff54 Rprotofloater
+Ref Rnewtrocomboview = NILREF;	// ROM 0x0067ff5c Rnewtrocomboview
+Ref Rprotodictionary = NILREF;	// ROM 0x0067ff64 Rprotodictionary
+Ref Rprotoiocategory = NILREF;	// ROM 0x0067ff6c Rprotoiocategory
+Ref Rnewtprotoline = NILREF;	// ROM 0x0067ff74 Rnewtprotoline
+Ref Rplainsouppersistent = NILREF;	// ROM 0x0067ff7c Rplainsouppersistent
+Ref Rcanonicalcorrectoralternates = NILREF;	// ROM 0x0067ff84 Rcanonicalcorrectoralternates
+Ref Ralarmiconbitmap = NILREF;	// ROM 0x0067ff8c Ralarmiconbitmap
+Ref Redgedrawer = NILREF;	// ROM 0x0067ff94 Redgedrawer
+Ref Rsystemsoupindexes = NILREF;	// ROM 0x0067ff9c Rsystemsoupindexes
+Ref Rdtmf6 = NILREF;	// ROM 0x0067ffa4 Rdtmf6
+Ref Rfontsystem12underline = NILREF;	// ROM 0x0067ffac Rfontsystem12underline
+Ref Rnewtcountrysymbolfilter = NILREF;	// ROM 0x0067ffb4 Rnewtcountrysymbolfilter
+Ref Rcanonicalpopup = NILREF;	// ROM 0x0067ffbc Rcanonicalpopup
+Ref Rcloseboxbitmap = NILREF;	// ROM 0x0067ffc4 Rcloseboxbitmap
+Ref Rdialtones = NILREF;	// ROM 0x0067ffcc Rdialtones
+Ref Rusdatefilter = NILREF;	// ROM 0x0067ffd4 Rusdatefilter
+Ref Ranalogtimepopup = NILREF;	// ROM 0x0067ffdc Ranalogtimepopup
+Ref Rprototable = NILREF;	// ROM 0x0067ffe4 Rprototable
+Ref Rzapsendmsg = NILREF;	// ROM 0x0067ffec Rzapsendmsg
+Ref R_clicksong = NILREF;	// ROM 0x0067fff4 R_clicksong
+Ref Rwaitprintermessage = NILREF;	// ROM 0x0067fffc Rwaitprintermessage
+Ref Rnewtstationerypopupbutton = NILREF;	// ROM 0x00680004 Rnewtstationerypopupbutton
+Ref Rkeybuttbitmap = NILREF;	// ROM 0x0068000c Rkeybuttbitmap
+Ref Rprotokeyboard = NILREF;	// ROM 0x00680014 Rprotokeyboard
+Ref Rroutingbitmap = NILREF;	// ROM 0x0068001c Rroutingbitmap
+Ref Rcanonicalparacaretinfo = NILREF;	// ROM 0x00680024 Rcanonicalparacaretinfo
+Ref Rcanonicalcardinfo = NILREF;	// ROM 0x0068002c Rcanonicalcardinfo
+Ref Rroutetrashbitmap = NILREF;	// ROM 0x00680034 Rroutetrashbitmap
+Ref Rprototimedeltatextpicker = NILREF;	// ROM 0x0068003c Rprototimedeltatextpicker
+Ref Rfontsystem9 = NILREF;	// ROM 0x00680044 Rfontsystem9
+Ref Rprototracer = NILREF;	// ROM 0x0068004c Rprototracer
+Ref Rprotoprintpage = NILREF;	// ROM 0x00680054 Rprotoprintpage
+Ref Rprintslip = NILREF;	// ROM 0x0068005c Rprintslip
+Ref Ryearpopup = NILREF;	// ROM 0x00680064 Ryearpopup
+Ref Rprotocategoryrollcategory = NILREF;	// ROM 0x0068006c Rprotocategoryrollcategory
+Ref Rprototextpicker = NILREF;	// ROM 0x00680074 Rprototextpicker
+Ref Ranalogclock = NILREF;	// ROM 0x0068007c Ranalogclock
+Ref Rdtmf6bitmap = NILREF;	// ROM 0x00680084 Rdtmf6bitmap
+Ref Rjapanprefecturename = NILREF;	// ROM 0x0068008c Rjapanprefecturename
+Ref Rradiooffbitmap = NILREF;	// ROM 0x00680094 Rradiooffbitmap
+Ref Rnewtrosymbolview = NILREF;	// ROM 0x0068009c Rnewtrosymbolview
+Ref Rcalendarnotessoupdef = NILREF;	// ROM 0x006800a4 Rcalendarnotessoupdef
+Ref Ronebeep = NILREF;	// ROM 0x006800ac Ronebeep
+Ref Rcanonicalgestaltversion = NILREF;	// ROM 0x006800b4 Rcanonicalgestaltversion
+Ref Rasciishift = NILREF;	// ROM 0x006800bc Rasciishift
+Ref Rflapslides = NILREF;	// ROM 0x006800c4 Rflapslides
+Ref Rtodoname = NILREF;	// ROM 0x006800cc Rtodoname
+Ref Rprotobeamer = NILREF;	// ROM 0x006800d4 Rprotobeamer
+Ref Rprinterserialpicker = NILREF;	// ROM 0x006800dc Rprinterserialpicker
+Ref Rprotoiostatemachine = NILREF;	// ROM 0x006800e4 Rprotoiostatemachine
+Ref Ronlineservices = NILREF;	// ROM 0x006800ec Ronlineservices
+Ref Rnewtintegerfilter = NILREF;	// ROM 0x006800f4 Rnewtintegerfilter
+Ref Rdsexceptions = NILREF;	// ROM 0x006800fc Rdsexceptions
+Ref Rprmemoformat = NILREF;	// ROM 0x00680104 Rprmemoformat
+Ref Rfontsystem9underline = NILREF;	// ROM 0x0068010c Rfontsystem9underline
+Ref Rkeysmallbuttonbitmap = NILREF;	// ROM 0x00680114 Rkeysmallbuttonbitmap
+Ref Rkeybuttonbitmap = NILREF;	// ROM 0x0068011c Rkeybuttonbitmap
+Ref Rrepeatqueryspec = NILREF;	// ROM 0x00680124 Rrepeatqueryspec
+Ref Rcanonicalpackagecallbackinfo = NILREF;	// ROM 0x0068012c Rcanonicalpackagecallbackinfo
+Ref Rcountrypicker = NILREF;	// ROM 0x00680134 Rcountrypicker
+Ref Rnamerefvalidationframe = NILREF;	// ROM 0x0068013c Rnamerefvalidationframe
+Ref Rcanonicalinkshape = NILREF;	// ROM 0x00680144 Rcanonicalinkshape
+Ref Rnorthsouthbitmap = NILREF;	// ROM 0x0068014c Rnorthsouthbitmap
+Ref Rcanonicalfakecontext = NILREF;	// ROM 0x00680154 Rcanonicalfakecontext
+Ref Rnewtentryviewfiling = NILREF;	// ROM 0x0068015c Rnewtentryviewfiling
+Ref Rrcbuildchains = NILREF;	// ROM 0x00680164 Rrcbuildchains
+Ref Rcanonicalgrayfontspec = NILREF;	// ROM 0x0068016c Rcanonicalgrayfontspec
+Ref Rprotopinwithoutlogic = NILREF;	// ROM 0x00680174 Rprotopinwithoutlogic
+Ref Ralerterbeep = NILREF;	// ROM 0x0068017c Ralerterbeep
+Ref Rbizarrebeep = NILREF;	// ROM 0x00680184 Rbizarrebeep
+Ref Rprotomulticursor = NILREF;	// ROM 0x0068018c Rprotomulticursor
+Ref Rsearchprefix = NILREF;	// ROM 0x00680194 Rsearchprefix
+Ref Rukdatefilter = NILREF;	// ROM 0x0068019c Rukdatefilter
+Ref Rromavailableprinters = NILREF;	// ROM 0x006801a4 Rromavailableprinters
+Ref Rworldclock = NILREF;	// ROM 0x006801ac Rworldclock
+Ref Rnewtlabelinputline = NILREF;	// ROM 0x006801b4 Rnewtlabelinputline
+Ref Rdefaultoutboxprefinfo = NILREF;	// ROM 0x006801bc Rdefaultoutboxprefinfo
+Ref Rsoundoff = NILREF;	// ROM 0x006801c4 Rsoundoff
+Ref Rvconfirm = NILREF;	// ROM 0x006801cc Rvconfirm
+Ref Rrominternational = NILREF;	// ROM 0x006801d4 Rrominternational
+Ref Rcuckoosound = NILREF;	// ROM 0x006801dc Rcuckoosound
+Ref Rgfunky = NILREF;	// ROM 0x006801e4 Rgfunky
+Ref Rstylepreflight = NILREF;	// ROM 0x006801ec Rstylepreflight
+Ref Rtimesromanfont = NILREF;	// ROM 0x006801f4 Rtimesromanfont
+Ref Rconnvalidtestexclusion = NILREF;	// ROM 0x006801fc Rconnvalidtestexclusion
+Ref Rucardreinsertalerttext = NILREF;	// ROM 0x00680204 Rucardreinsertalerttext
+Ref Rbootsound = NILREF;	// ROM 0x0068020c Rbootsound
+Ref Rcanonicaldate = NILREF;	// ROM 0x00680214 Rcanonicaldate
+Ref Rprotoiconradiobutton = NILREF;	// ROM 0x0068021c Rprotoiconradiobutton
+Ref Rprototitle = NILREF;	// ROM 0x00680224 Rprototitle
+Ref Rclassinfoprototype = NILREF;	// ROM 0x0068022c Rclassinfoprototype
+Ref Rprototextexpando = NILREF;	// ROM 0x00680234 Rprototextexpando
+Ref Rtabrighthilitebitmap = NILREF;	// ROM 0x0068023c Rtabrighthilitebitmap
+Ref Rnewtoverlayout = NILREF;	// ROM 0x00680244 Rnewtoverlayout
+Ref Rupackneedscardalerttext = NILREF;	// ROM 0x0068024c Rupackneedscardalerttext
+Ref Riotransportbutton = NILREF;	// ROM 0x00680254 Riotransportbutton
+Ref Rnoconvertsouplist = NILREF;	// ROM 0x0068025c Rnoconvertsouplist
+Ref Rbindi = NILREF;	// ROM 0x00680264 Rbindi
+Ref Rclick = NILREF;	// ROM 0x0068026c Rclick
+Ref Raddresseeslip = NILREF;	// ROM 0x00680274 Raddresseeslip
+Ref Rcapslocklight = NILREF;	// ROM 0x0068027c Rcapslocklight
+Ref Rprotopreferencesfield = NILREF;	// ROM 0x00680284 Rprotopreferencesfield
+Ref Rphonepad = NILREF;	// ROM 0x0068028c Rphonepad
+Ref Rdefaultinfoprefs = NILREF;	// ROM 0x00680294 Rdefaultinfoprefs
+Ref Rprotousstatestextpicker = NILREF;	// ROM 0x0068029c Rprotousstatestextpicker
+Ref Rwildestbeep = NILREF;	// ROM 0x006802a4 Rwildestbeep
+Ref Rkeyrightparenbitmap = NILREF;	// ROM 0x006802ac Rkeyrightparenbitmap
+Ref Rvgauge = NILREF;	// ROM 0x006802b4 Rvgauge
+Ref Rkeycolonbitmap = NILREF;	// ROM 0x006802bc Rkeycolonbitmap
+Ref Rkeyslashbitmap = NILREF;	// ROM 0x006802c4 Rkeyslashbitmap
+Ref Rmidpunctbitmap = NILREF;	// ROM 0x006802cc Rmidpunctbitmap
+Ref Reraseslip = NILREF;	// ROM 0x006802d4 Reraseslip
+Ref Rprotostatemachine = NILREF;	// ROM 0x006802dc Rprotostatemachine
+Ref Rmediumpentip = NILREF;	// ROM 0x006802e4 Rmediumpentip
+Ref Rcrumple = NILREF;	// ROM 0x006802ec Rcrumple
+Ref Rprotostatemachineinputspec = NILREF;	// ROM 0x006802f4 Rprotostatemachineinputspec
+Ref Rkeyplusbitmap = NILREF;	// ROM 0x006802fc Rkeyplusbitmap
+Ref Rprotobookmark = NILREF;	// ROM 0x00680304 Rprotobookmark
+Ref Rpostmark = NILREF;	// ROM 0x0068030c Rpostmark
+Ref Rroutelog = NILREF;	// ROM 0x00680314 Rroutelog
+Ref Rnewtfilingbutton = NILREF;	// ROM 0x0068031c Rnewtfilingbutton
+Ref Rprotopictindexer = NILREF;	// ROM 0x00680324 Rprotopictindexer
+Ref Rucardwpalerttext = NILREF;	// ROM 0x0068032c Rucardwpalerttext
+Ref Russtdphonefilter = NILREF;	// ROM 0x00680334 Russtdphonefilter
+Ref Rprotonote = NILREF;	// ROM 0x0068033c Rprotonote
+Ref Rnewtstationermenu = NILREF;	// ROM 0x00680344 Rnewtstationermenu
+Ref Rfreshcardname = NILREF;	// ROM 0x0068034c Rfreshcardname
+Ref Rcanonicalpictureshape = NILREF;	// ROM 0x00680354 Rcanonicalpictureshape
+Ref Rcalendar = NILREF;	// ROM 0x0068035c Rcalendar
+Ref Rcardfile = NILREF;	// ROM 0x00680364 Rcardfile
+Ref Rvstatus = NILREF;	// ROM 0x0068036c Rvstatus
+Ref Rcountrysoupname = NILREF;	// ROM 0x00680374 Rcountrysoupname
+Ref Rprotoinfobutton = NILREF;	// ROM 0x0068037c Rprotoinfobutton
+Ref Rbootruninitscripts = NILREF;	// ROM 0x00680384 Rbootruninitscripts
+Ref Rprotoroutingformat = NILREF;	// ROM 0x0068038c Rprotoroutingformat
+Ref Rcloud3 = NILREF;	// ROM 0x00680394 Rcloud3
+Ref Rkbdrightbitmap = NILREF;	// ROM 0x0068039c Rkbdrightbitmap
+Ref Rkbdshiftbitmap = NILREF;	// ROM 0x006803a4 Rkbdshiftbitmap
+Ref Rrecorderengine = NILREF;	// ROM 0x006803ac Rrecorderengine
+Ref Rsmallclockbitmaps = NILREF;	// ROM 0x006803b4 Rsmallclockbitmaps
+Ref Rtransportscripts = NILREF;	// ROM 0x006803bc Rtransportscripts
+Ref Rdefaultinboxprefinfo = NILREF;	// ROM 0x006803c4 Rdefaultinboxprefinfo
+Ref Rinkname = NILREF;	// ROM 0x006803cc Rinkname
+Ref Rcoverpageformat = NILREF;	// ROM 0x006803d4 Rcoverpageformat
+Ref Rpagefooter = NILREF;	// ROM 0x006803dc Rpagefooter
+Ref Rmediumpentipbitmap = NILREF;	// ROM 0x006803e4 Rmediumpentipbitmap
+Ref Rgtscenes = NILREF;	// ROM 0x006803ec Rgtscenes
+Ref Rcaretbitsoutside = NILREF;	// ROM 0x006803f4 Rcaretbitsoutside
+Ref Rtxcanonicalruler = NILREF;	// ROM 0x006803fc Rtxcanonicalruler
+Ref Ralarmqueryspec = NILREF;	// ROM 0x00680404 Ralarmqueryspec
+Ref Rdateintervalpopup = NILREF;	// ROM 0x0068040c Rdateintervalpopup
+Ref Rprotopeoplepicker = NILREF;	// ROM 0x00680414 Rprotopeoplepicker
+Ref Ruserconfiguration = NILREF;	// ROM 0x0068041c Ruserconfiguration
+Ref Routboxbitmap = NILREF;	// ROM 0x00680424 Routboxbitmap
+Ref Rtodosoupname = NILREF;	// ROM 0x0068042c Rtodosoupname
+Ref Rprotostatemachinecallbackspec = NILREF;	// ROM 0x00680434 Rprotostatemachinecallbackspec
+Ref Rcanonicalkeycommand = NILREF;	// ROM 0x0068043c Rcanonicalkeycommand
+Ref Rnewtstatusbar = NILREF;	// ROM 0x00680444 Rnewtstatusbar
+Ref Routboxsoupdef = NILREF;	// ROM 0x0068044c Routboxsoupdef
+Ref Rcanonicalcharcorrector = NILREF;	// ROM 0x00680454 Rcanonicalcharcorrector
+Ref Rprotoorientation = NILREF;	// ROM 0x0068045c Rprotoorientation
+Ref Rcalendarsoupdef = NILREF;	// ROM 0x00680464 Rcalendarsoupdef
+Ref Rcardfilesoupdef = NILREF;	// ROM 0x0068046c Rcardfilesoupdef
+Ref Rnewtstationery = NILREF;	// ROM 0x00680474 Rnewtstationery
+Ref Rrcdefaultconfig = NILREF;	// ROM 0x0068047c Rrcdefaultconfig
+Ref Rsmallflagbitmap = NILREF;	// ROM 0x00680484 Rsmallflagbitmap
+Ref Rcardbitmap = NILREF;	// ROM 0x0068048c Rcardbitmap
+Ref Rdtmf3 = NILREF;	// ROM 0x00680494 Rdtmf3
+Ref Rrepeatindices = NILREF;	// ROM 0x0068049c Rrepeatindices
+Ref Rgongbeep = NILREF;	// ROM 0x006804a4 Rgongbeep
+Ref Rcanonicalmeetingdroptext = NILREF;	// ROM 0x006804ac Rcanonicalmeetingdroptext
+Ref Rrouteaddsender = NILREF;	// ROM 0x006804b4 Rrouteaddsender
+Ref Rdefaultstateicons = NILREF;	// ROM 0x006804bc Rdefaultstateicons
+Ref Rprototimedeltapicker = NILREF;	// ROM 0x006804c4 Rprototimedeltapicker
+Ref Rprotoletterspreferencesfield = NILREF;	// ROM 0x006804cc Rprotoletterspreferencesfield
+Ref Rnewtapplication = NILREF;	// ROM 0x006804d4 Rnewtapplication
+Ref Rnewtmailnetchooser = NILREF;	// ROM 0x006804dc Rnewtmailnetchooser
+Ref Rnewtrollshowstationerybutton = NILREF;	// ROM 0x006804e4 Rnewtrollshowstationerybutton
+Ref Rprotoborder = NILREF;	// ROM 0x006804ec Rprotoborder
+Ref Rprotokeypad = NILREF;	// ROM 0x006804f4 Rprotokeypad
+Ref Rprotopicker = NILREF;	// ROM 0x006804fc Rprotopicker
+Ref Rprletterformat = NILREF;	// ROM 0x00680504 Rprletterformat
+Ref Rnewtentryshowstationerybutton = NILREF;	// ROM 0x0068050c Rnewtentryshowstationerybutton
+Ref Rprotofinderwindow = NILREF;	// ROM 0x00680514 Rprotofinderwindow
+Ref Rioitemstatus = NILREF;	// ROM 0x0068051c Rioitemstatus
+Ref Rpasswordslip = NILREF;	// ROM 0x00680524 Rpasswordslip
+Ref Rprotoextrasicon = NILREF;	// ROM 0x0068052c Rprotoextrasicon
+Ref Rprotonewshowbar = NILREF;	// ROM 0x00680534 Rprotonewshowbar
+Ref Rcheckbitmap = NILREF;	// ROM 0x0068053c Rcheckbitmap
+Ref Rdtmf3bitmap = NILREF;	// ROM 0x00680544 Rdtmf3bitmap
+Ref Rroutereply = NILREF;	// ROM 0x0068054c Rroutereply
+Ref Rcanonicalsocketinfo = NILREF;	// ROM 0x00680554 Rcanonicalsocketinfo
+Ref Rnewtrotextdateview = NILREF;	// ROM 0x0068055c Rnewtrotextdateview
+Ref Rpriorityitems = NILREF;	// ROM 0x00680564 Rpriorityitems
+Ref Rcardeventhandlers = NILREF;	// ROM 0x0068056c Rcardeventhandlers
+Ref Rnewttexttimeview = NILREF;	// ROM 0x00680574 Rnewttexttimeview
+Ref Ropenpadlockbitmap = NILREF;	// ROM 0x0068057c Ropenpadlockbitmap
+Ref Rprotopeoplepopup = NILREF;	// ROM 0x00680584 Rprotopeoplepopup
+Ref Rtxlocalprototype = NILREF;	// ROM 0x0068058c Rtxlocalprototype
+Ref Rpleasantbeep = NILREF;	// ROM 0x00680594 Rpleasantbeep
+Ref Rprotoextraslistitem = NILREF;	// ROM 0x0068059c Rprotoextraslistitem
+Ref Rtxchartopointresult = NILREF;	// ROM 0x006805a4 Rtxchartopointresult
+Ref Rcaretbitsinside = NILREF;	// ROM 0x006805ac Rcaretbitsinside
+Ref Rkeycapsbitmap = NILREF;	// ROM 0x006805b4 Rkeycapsbitmap
+Ref Rroutebeamicon = NILREF;	// ROM 0x006805bc Rroutebeamicon
+Ref Rcallslip = NILREF;	// ROM 0x006805c4 Rcallslip
+Ref Rnewtnrlabeldatentimeinputline = NILREF;	// ROM 0x006805cc Rnewtnrlabeldatentimeinputline
+Ref Rautodocktemplate = NILREF;	// ROM 0x006805d4 Rautodocktemplate
+Ref Rcaretpunctbitmap = NILREF;	// ROM 0x006805dc Rcaretpunctbitmap
+Ref Rinboxbitmap = NILREF;	// ROM 0x006805e4 Rinboxbitmap
+Ref Rprefsbitmap = NILREF;	// ROM 0x006805ec Rprefsbitmap
+Ref Rnewtdatentimefilter = NILREF;	// ROM 0x006805f4 Rnewtdatentimefilter
+Ref Rprotoschedulepicker = NILREF;	// ROM 0x006805fc Rprotoschedulepicker
+Ref Rsettingsshapebitmap = NILREF;	// ROM 0x00680604 Rsettingsshapebitmap
+Ref Remailtext = NILREF;	// ROM 0x0068060c Remailtext
+Ref Rerrnumbertoolarge = NILREF;	// ROM 0x00680614 Rerrnumbertoolarge
+Ref Rrouteupdatebitmap = NILREF;	// ROM 0x0068061c Rrouteupdatebitmap
+Ref Rpoof = NILREF;	// ROM 0x00680624 Rpoof
+Ref Rinboxsoupdef = NILREF;	// ROM 0x0068062c Rinboxsoupdef
+Ref Rprotodragngo = NILREF;	// ROM 0x00680634 Rprotodragngo
+Ref Rprotopopinplace = NILREF;	// ROM 0x0068063c Rprotopopinplace
+Ref Razverttabs = NILREF;	// ROM 0x00680644 Razverttabs
+Ref Rauststdphonefilter = NILREF;	// ROM 0x0068064c Rauststdphonefilter
+Ref Rprotosmallkeyboardbutton = NILREF;	// ROM 0x00680654 Rprotosmallkeyboardbutton
+Ref Rioboxcursor = NILREF;	// ROM 0x0068065c Rioboxcursor
+Ref Rprotokeyboardbutton = NILREF;	// ROM 0x00680664 Rprotokeyboardbutton
+Ref Rloadcalibration = NILREF;	// ROM 0x0068066c Rloadcalibration
+Ref Rprotosoftbuttonbaricon = NILREF;	// ROM 0x00680674 Rprotosoftbuttonbaricon
+Ref Rprotoview = NILREF;	// ROM 0x0068067c Rprotoview
+Ref Rcanonicalgestaltrebootinfo = NILREF;	// ROM 0x00680684 Rcanonicalgestaltrebootinfo
+Ref Rcheckonbitmap = NILREF;	// ROM 0x0068068c Rcheckonbitmap
+Ref Riotransportover = NILREF;	// ROM 0x00680694 Riotransportover
+Ref Rpackagedirectory = NILREF;	// ROM 0x0068069c Rpackagedirectory
+Ref Rpaperlinedbitmap = NILREF;	// ROM 0x006806a4 Rpaperlinedbitmap
+Ref Rprotonotifyform = NILREF;	// ROM 0x006806ac Rprotonotifyform
+Ref Rprotostatictext = NILREF;	// ROM 0x006806b4 Rprotostatictext
+Ref Rprotostatusicon = NILREF;	// ROM 0x006806bc Rprotostatusicon
+Ref Rcommandkeyicon = NILREF;	// ROM 0x006806c4 Rcommandkeyicon
+Ref Rfoldertabright = NILREF;	// ROM 0x006806cc Rfoldertabright
+Ref Rhelpbookbitmap = NILREF;	// ROM 0x006806d4 Rhelpbookbitmap
+Ref Rfontsystem14 = NILREF;	// ROM 0x006806dc Rfontsystem14
+Ref Rtxexternalvboprototype = NILREF;	// ROM 0x006806e4 Rtxexternalvboprototype
+Ref Rfilingslip = NILREF;	// ROM 0x006806ec Rfilingslip
+Ref Rrouteduplicateicon = NILREF;	// ROM 0x006806f4 Rrouteduplicateicon
+Ref Raztabsslimmaskcz = NILREF;	// ROM 0x006806fc Raztabsslimmaskcz
+Ref Ralarmsoupconversionframe = NILREF;	// ROM 0x00680704 Ralarmsoupconversionframe
+Ref Rnewtnrlabeltimeinputline = NILREF;	// ROM 0x0068070c Rnewtnrlabeltimeinputline
+Ref Rerrnumberoutofrange = NILREF;	// ROM 0x00680714 Rerrnumberoutofrange
+Ref Rnewtsmartnamefilter = NILREF;	// ROM 0x0068071c Rnewtsmartnamefilter
+Ref Rprotolabelinputline = NILREF;	// ROM 0x00680724 Rprotolabelinputline
+Ref Rgtpens = NILREF;	// ROM 0x0068072c Rgtpens
+Ref Rcontrolkeyicon = NILREF;	// ROM 0x00680734 Rcontrolkeyicon
+Ref Rnewttimefilter = NILREF;	// ROM 0x0068073c Rnewttimefilter
+Ref Rassistant = NILREF;	// ROM 0x00680744 Rassistant
+Ref Rtocksound = NILREF;	// ROM 0x0068074c Rtocksound
+Ref Rprotopalette = NILREF;	// ROM 0x00680754 Rprotopalette
+Ref Rukcountyname = NILREF;	// ROM 0x0068075c Rukcountyname
+Ref Rnewtsmartphonefilter = NILREF;	// ROM 0x00680764 Rnewtsmartphonefilter
+Ref Rprotomultilinepicker = NILREF;	// ROM 0x0068076c Rprotomultilinepicker
+Ref Rclosedpadlockbitmap = NILREF;	// ROM 0x00680774 Rclosedpadlockbitmap
+Ref Rprotomaptextpicker = NILREF;	// ROM 0x0068077c Rprotomaptextpicker
+Ref Rprotorollitem = NILREF;	// ROM 0x00680784 Rprotorollitem
+Ref Rprotowordinfo = NILREF;	// ROM 0x0068078c Rprotowordinfo
+Ref Rnewtrolllayout = NILREF;	// ROM 0x00680794 Rnewtrolllayout
+Ref Rprotomonthview = NILREF;	// ROM 0x0068079c Rprotomonthview
+Ref Rprotoprintform = NILREF;	// ROM 0x006807a4 Rprotoprintform
+Ref Rcanonicaltextshape = NILREF;	// ROM 0x006807ac Rcanonicaltextshape
+Ref Rdtmf8 = NILREF;	// ROM 0x006807b4 Rdtmf8
+Ref Rfontsystem14underline = NILREF;	// ROM 0x006807bc Rfontsystem14underline
+Ref Rwildbeep = NILREF;	// ROM 0x006807c4 Rwildbeep
+Ref Rdigitslides = NILREF;	// ROM 0x006807cc Rdigitslides
+Ref Ralarmicontinybitmap = NILREF;	// ROM 0x006807d4 Ralarmicontinybitmap
+Ref Raztabsmaskcz = NILREF;	// ROM 0x006807dc Raztabsmaskcz
+Ref Rtouchtonepad = NILREF;	// ROM 0x006807e4 Rtouchtonepad
+Ref Rvphonekeypad = NILREF;	// ROM 0x006807ec Rvphonekeypad
+Ref Rkoserroralerttextboundsnobuttons = NILREF;	// ROM 0x006807f4 Rkoserroralerttextboundsnobuttons
+Ref Rcanonicalpictdragdata = NILREF;	// ROM 0x006807fc Rcanonicalpictdragdata
+Ref Russtddatefilter = NILREF;	// ROM 0x00680804 Russtddatefilter
+Ref Rrepeatnotessoupdef = NILREF;	// ROM 0x0068080c Rrepeatnotessoupdef
+Ref Rcanonicaleditcaretinfo = NILREF;	// ROM 0x00680814 Rcanonicaleditcaretinfo
+Ref Rbuiltinfunctions = NILREF;	// ROM 0x0068081c Rbuiltinfunctions
+Ref Rcountrylocpicker = NILREF;	// ROM 0x00680824 Rcountrylocpicker
+Ref Rprotodatentimetextpicker = NILREF;	// ROM 0x0068082c Rprotodatentimetextpicker
+Ref Rprotoslider = NILREF;	// ROM 0x00680834 Rprotoslider
+Ref Rremovesound = NILREF;	// ROM 0x0068083c Rremovesound
+Ref Rprotodatedurationtextpicker = NILREF;	// ROM 0x00680844 Rprotodatedurationtextpicker
+Ref Rnewtroeditview = NILREF;	// ROM 0x0068084c Rnewtroeditview
+Ref Rnewtsmartcompanyfilter = NILREF;	// ROM 0x00680854 Rnewtsmartcompanyfilter
+Ref Rpreviewremoteview = NILREF;	// ROM 0x0068085c Rpreviewremoteview
+Ref Rprotofilingbutton = NILREF;	// ROM 0x00680864 Rprotofilingbutton
+Ref Rparagraphdata = NILREF;	// ROM 0x0068086c Rparagraphdata
+Ref Rtxclipboardprototype = NILREF;	// ROM 0x00680874 Rtxclipboardprototype
+Ref Rdtmf8bitmap = NILREF;	// ROM 0x0068087c Rdtmf8bitmap
+Ref Rsystemsymbolfont = NILREF;	// ROM 0x00680884 Rsystemsymbolfont
+Ref Rletterheader = NILREF;	// ROM 0x0068088c Rletterheader
+Ref Rrecinkbitmap = NILREF;	// ROM 0x00680894 Rrecinkbitmap
+Ref Rdtmfdel = NILREF;	// ROM 0x0068089c Rdtmfdel
+Ref Rinfobitmap = NILREF;	// ROM 0x006808a4 Rinfobitmap
+Ref Rwakeupbeep = NILREF;	// ROM 0x006808ac Rwakeupbeep
+Ref Rprotoinstanceofrepeatingmeeting = NILREF;	// ROM 0x006808b4 Rprotoinstanceofrepeatingmeeting
+Ref Rbasiccalltransport = NILREF;	// ROM 0x006808bc Rbasiccalltransport
+Ref Rcanonicalgestaltsysteminfo = NILREF;	// ROM 0x006808c4 Rcanonicalgestaltsysteminfo
+Ref Rprotodoubleclock = NILREF;	// ROM 0x006808cc Rprotodoubleclock
+Ref Rstarterparagraph = NILREF;	// ROM 0x006808d4 Rstarterparagraph
+Ref Rtickleiaprogress = NILREF;	// ROM 0x006808dc Rtickleiaprogress
+Ref Rblacklistnowbuiltin = NILREF;	// ROM 0x006808e4 Rblacklistnowbuiltin
+Ref Rcanonicalpowerstats = NILREF;	// ROM 0x006808ec Rcanonicalpowerstats
+Ref Rcaretpunctbits = NILREF;	// ROM 0x006808f4 Rcaretpunctbits
+Ref Rroutefaxbitmap = NILREF;	// ROM 0x006808fc Rroutefaxbitmap
+Ref Rcanonicalcurrentexport = NILREF;	// ROM 0x00680904 Rcanonicalcurrentexport
+Ref Rdatepopup = NILREF;	// ROM 0x0068090c Rdatepopup
+Ref Rprotodivider = NILREF;	// ROM 0x00680914 Rprotodivider
+Ref Rvolumeslider = NILREF;	// ROM 0x0068091c Rvolumeslider
+Ref Rprotolongitudepicker = NILREF;	// ROM 0x00680924 Rprotolongitudepicker
+Ref Rcanonicalgestaltpatchinfoarrayelement = NILREF;	// ROM 0x0068092c Rcanonicalgestaltpatchinfoarrayelement
+Ref Rindexdescprototype = NILREF;	// ROM 0x00680934 Rindexdescprototype
+Ref Rrctrylettersconfig = NILREF;	// ROM 0x0068093c Rrctrylettersconfig
+Ref Rnewtaboutview = NILREF;	// ROM 0x00680944 Rnewtaboutview
+Ref Rsystemconversionframe = NILREF;	// ROM 0x0068094c Rsystemconversionframe
+Ref Rprotopin = NILREF;	// ROM 0x00680954 Rprotopin
+Ref Ruerasepersistentconfirmalerttext = NILREF;	// ROM 0x0068095c Ruerasepersistentconfirmalerttext
+Ref Rcanonicalcorrectinfo = NILREF;	// ROM 0x00680964 Rcanonicalcorrectinfo
+Ref Rprotorecorderbutton = NILREF;	// ROM 0x0068096c Rprotorecorderbutton
+Ref Rprototimetextpicker = NILREF;	// ROM 0x00680974 Rprototimetextpicker
+Ref R_knownglobalsymbols = NILREF;	// ROM 0x0068097c R_knownglobalsymbols
+Ref Rprotostatusbar = NILREF;	// ROM 0x00680984 Rprotostatusbar
+Ref Rstarterpolygon = NILREF;	// ROM 0x0068098c Rstarterpolygon
+Ref Rsystemsoupname = NILREF;	// ROM 0x00680994 Rsystemsoupname
+Ref Rarrayersatzcursor = NILREF;	// ROM 0x0068099c Rarrayersatzcursor
+Ref Rdtmf0 = NILREF;	// ROM 0x006809a4 Rdtmf0
+Ref Rdigitwideflap = NILREF;	// ROM 0x006809ac Rdigitwideflap
+Ref Rfontsystem18bold = NILREF;	// ROM 0x006809b4 Rfontsystem18bold
+Ref Radditionalbootshiftkeyfn = NILREF;	// ROM 0x006809bc Radditionalbootshiftkeyfn
+Ref Rcopperfield = NILREF;	// ROM 0x006809c4 Rcopperfield
+Ref Rdrawingname = NILREF;	// ROM 0x006809cc Rdrawingname
+Ref Rroutemailbitmap = NILREF;	// ROM 0x006809d4 Rroutemailbitmap
+Ref Rukstddatefilter = NILREF;	// ROM 0x006809dc Rukstddatefilter
+Ref Rreviewdict = NILREF;	// ROM 0x006809e4 Rreviewdict
+Ref Rbootscriptwannabes = NILREF;	// ROM 0x006809ec Rbootscriptwannabes
+Ref Rprotoaddresspicker = NILREF;	// ROM 0x006809f4 Rprotoaddresspicker
+Ref Rabstractarrow = NILREF;	// ROM 0x006809fc Rabstractarrow
+Ref Rdatequeryspec = NILREF;	// ROM 0x00680a04 Rdatequeryspec
+Ref Rprplainformat = NILREF;	// ROM 0x00680a0c Rprplainformat
+Ref Rsoundrecorder = NILREF;	// ROM 0x00680a14 Rsoundrecorder
+Ref Rprotocontentarea = NILREF;	// ROM 0x00680a1c Rprotocontentarea
+Ref Rprotoframeformat = NILREF;	// ROM 0x00680a24 Rprotoframeformat
+Ref Rnumerickeys = NILREF;	// ROM 0x00680a2c Rnumerickeys
+Ref Rstartermath = NILREF;	// ROM 0x00680a34 Rstartermath
+Ref Rzonechooser = NILREF;	// ROM 0x00680a3c Rzonechooser
+Ref Rcanonicalciscardfunctioninfo = NILREF;	// ROM 0x00680a44 Rcanonicalciscardfunctioninfo
+Ref Rclockfacebitmap = NILREF;	// ROM 0x00680a4c Rclockfacebitmap
+Ref Rnewtnetchooser = NILREF;	// ROM 0x00680a54 Rnewtnetchooser
+Ref Rprotogaugeview = NILREF;	// ROM 0x00680a5c Rprotogaugeview
+Ref Rprotothumbnail = NILREF;	// ROM 0x00680a64 Rprotothumbnail
+Ref Rrcsinglecharacterconfig = NILREF;	// ROM 0x00680a6c Rrcsinglecharacterconfig
+Ref Rphonetext = NILREF;	// ROM 0x00680a74 Rphonetext
+Ref Rprotobook = NILREF;	// ROM 0x00680a7c Rprotobook
+Ref Rnewtsmartnameview = NILREF;	// ROM 0x00680a84 Rnewtsmartnameview
+Ref Rprotoconfigserver = NILREF;	// ROM 0x00680a8c Rprotoconfigserver
+Ref Riacancelalert = NILREF;	// ROM 0x00680a94 Riacancelalert
+Ref Rnewtstatusbarnoclose = NILREF;	// ROM 0x00680a9c Rnewtstatusbarnoclose
+Ref Rprototransportheader = NILREF;	// ROM 0x00680aa4 Rprototransportheader
+Ref Russtatesoupname = NILREF;	// ROM 0x00680aac Russtatesoupname
+Ref Rdtmf0bitmap = NILREF;	// ROM 0x00680ab4 Rdtmf0bitmap
+Ref Rnewtsmartphoneview = NILREF;	// ROM 0x00680abc Rnewtsmartphoneview
+Ref Rprotocallassistbutton = NILREF;	// ROM 0x00680ac4 Rprotocallassistbutton
+Ref Rfaxheader = NILREF;	// ROM 0x00680acc Rfaxheader
+Ref Rcanonicalfontspec = NILREF;	// ROM 0x00680ad4 Rcanonicalfontspec
+Ref Rprotooutcategory = NILREF;	// ROM 0x00680adc Rprotooutcategory
+Ref Rprotoprintformat = NILREF;	// ROM 0x00680ae4 Rprotoprintformat
+Ref Rdefrotatefunc = NILREF;	// ROM 0x00680aec Rdefrotatefunc
+Ref Rnewtrolabeldateinputline = NILREF;	// ROM 0x00680af4 Rnewtrolabeldateinputline
+Ref Ralarmwakeup = NILREF;	// ROM 0x00680afc Ralarmwakeup
+Ref Ruerasepersistentstatusalerttext = NILREF;	// ROM 0x00680b04 Ruerasepersistentstatusalerttext
+Ref Rcities = NILREF;	// ROM 0x00680b0c Rcities
+Ref Rblindentryline = NILREF;	// ROM 0x00680b14 Rblindentryline
+Ref Rworldmapbitmap = NILREF;	// ROM 0x00680b1c Rworldmapbitmap
+Ref Rnewtlabeltimeinputline = NILREF;	// ROM 0x00680b24 Rnewtlabeltimeinputline
+Ref Rzaprecvconnectmsg = NILREF;	// ROM 0x00680b2c Rzaprecvconnectmsg
+Ref Rprotocommand = NILREF;	// ROM 0x00680b34 Rprotocommand
+Ref Rprototransportpopup = NILREF;	// ROM 0x00680b3c Rprototransportpopup
+Ref Rnotifycloudmask = NILREF;	// ROM 0x00680b44 Rnotifycloudmask
+Ref Rnewtaztabs = NILREF;	// ROM 0x00680b4c Rnewtaztabs
+Ref Rrebootslip = NILREF;	// ROM 0x00680b54 Rrebootslip
+Ref Rsorttables = NILREF;	// ROM 0x00680b5c Rsorttables
+Ref Rprotocharcorrector = NILREF;	// ROM 0x00680b64 Rprotocharcorrector
+Ref Rprotoparagraphview = NILREF;	// ROM 0x00680b6c Rprotoparagraphview
+Ref Rsnoozenotification = NILREF;	// ROM 0x00680b74 Rsnoozenotification
+Ref Rplunk = NILREF;	// ROM 0x00680b7c Rplunk
+Ref Rkoserroralertbutton1bounds = NILREF;	// ROM 0x00680b84 Rkoserroralertbutton1bounds
+Ref Rprotosetclock = NILREF;	// ROM 0x00680b8c Rprotosetclock
+Ref Rcanonicaldragitem = NILREF;	// ROM 0x00680b94 Rcanonicaldragitem
+Ref Rrouteprinticon = NILREF;	// ROM 0x00680b9c Rrouteprinticon
+Ref Rletterweightquery = NILREF;	// ROM 0x00680ba4 Rletterweightquery
+Ref Rcanonicalcompass = NILREF;	// ROM 0x00680bac Rcanonicalcompass
+Ref Rfontsystem10bold = NILREF;	// ROM 0x00680bb4 Rfontsystem10bold
+Ref Rstorepersistent = NILREF;	// ROM 0x00680bbc Rstorepersistent
+Ref Rprotopolygonview = NILREF;	// ROM 0x00680bc4 Rprotopolygonview
+Ref Rprotodefaultstatusbutton = NILREF;	// ROM 0x00680bcc Rprotodefaultstatusbutton
+Ref Rdictionaries = NILREF;	// ROM 0x00680bd4 Rdictionaries
+Ref Rtodo2soupdef = NILREF;	// ROM 0x00680bdc Rtodo2soupdef
+Ref Rrepeatmeetingsoupdef = NILREF;	// ROM 0x00680be4 Rrepeatmeetingsoupdef
+Ref Rfunbeep = NILREF;	// ROM 0x00680bec Rfunbeep
+Ref Raztabsslimmaska = NILREF;	// ROM 0x00680bf4 Raztabsslimmaska
+Ref Rfilingextbitmap = NILREF;	// ROM 0x00680bfc Rfilingextbitmap
+Ref Rkbdoptionbitmap = NILREF;	// ROM 0x00680c04 Rkbdoptionbitmap
+Ref Rnewtfloatingbar = NILREF;	// ROM 0x00680c0c Rnewtfloatingbar
+Ref Rsmalllogobitmap = NILREF;	// ROM 0x00680c14 Rsmalllogobitmap
+Ref Rbackupslip = NILREF;	// ROM 0x00680c1c Rbackupslip
+Ref Rnewtclockshowbar = NILREF;	// ROM 0x00680c24 Rnewtclockshowbar
+Ref Rfaxroutingicon = NILREF;	// ROM 0x00680c2c Rfaxroutingicon
+Ref Rprotodaypicker = NILREF;	// ROM 0x00680c34 Rprotodaypicker
+Ref Rpaperrollsoupname = NILREF;	// ROM 0x00680c3c Rpaperrollsoupname
+Ref Reworldcountries = NILREF;	// ROM 0x00680c44 Reworldcountries
+Ref Rprotoincategory = NILREF;	// ROM 0x00680c4c Rprotoincategory
+Ref Rnewtphonepopupedit = NILREF;	// ROM 0x00680c54 Rnewtphonepopupedit
+Ref Rprotocontainerview = NILREF;	// ROM 0x00680c5c Rprotocontainerview
+Ref Rprotorichinputline = NILREF;	// ROM 0x00680c64 Rprotorichinputline
+Ref Rnewtprefsview = NILREF;	// ROM 0x00680c6c Rnewtprefsview
+Ref Ruserdictquery = NILREF;	// ROM 0x00680c74 Ruserdictquery
+Ref Rnewtnumview = NILREF;	// ROM 0x00680c7c Rnewtnumview
+Ref Rrootcontext = NILREF;	// ROM 0x00680c84 Rrootcontext
+Ref Rfrenchdepartmentname = NILREF;	// ROM 0x00680c8c Rfrenchdepartmentname
+Ref Rprotocorrectcontext = NILREF;	// ROM 0x00680c94 Rprotocorrectcontext
+Ref Rcanonicalcorrector = NILREF;	// ROM 0x00680c9c Rcanonicalcorrector
+Ref Rleadingpunctbitmap = NILREF;	// ROM 0x00680ca4 Rleadingpunctbitmap
+Ref Rdtmf5 = NILREF;	// ROM 0x00680cac Rdtmf5
+Ref Rprotocolinstanceprototype = NILREF;	// ROM 0x00680cb4 Rprotocolinstanceprototype
+Ref Rcalendarstuff = NILREF;	// ROM 0x00680cbc Rcalendarstuff
+Ref Rcanonicalpackageliteframe = NILREF;	// ROM 0x00680cc4 Rcanonicalpackageliteframe
+Ref Raztabsmaska = NILREF;	// ROM 0x00680ccc Raztabsmaska
+Ref Rclicks = NILREF;	// ROM 0x00680cd4 Rclicks
+Ref Rsmallroundclockbitmaps = NILREF;	// ROM 0x00680cdc Rsmallroundclockbitmaps
+Ref Ralphakeys = NILREF;	// ROM 0x00680ce4 Ralphakeys
+Ref Rrcnorecog = NILREF;	// ROM 0x00680cec Rrcnorecog
+Ref Rprotocheckboxicon = NILREF;	// ROM 0x00680cf4 Rprotocheckboxicon
+Ref Rprotoiconcheckbox = NILREF;	// ROM 0x00680cfc Rprotoiconcheckbox
+Ref Rprotopopupbutton = NILREF;	// ROM 0x00680d04 Rprotopopupbutton
+Ref Rudefaultreasonforbusycard = NILREF;	// ROM 0x00680d0c Rudefaultreasonforbusycard
+Ref Rsearchsuffix = NILREF;	// ROM 0x00680d14 Rsearchsuffix
+Ref Rkcardalerttextbounds = NILREF;	// ROM 0x00680d1c Rkcardalerttextbounds
+Ref Rprotostatusprogress = NILREF;	// ROM 0x00680d24 Rprotostatusprogress
+Ref Rusdefaultphonefilter = NILREF;	// ROM 0x00680d2c Rusdefaultphonefilter
+Ref Rcuremotethumb = NILREF;	// ROM 0x00680d34 Rcuremotethumb
+Ref Rerrnotanumber = NILREF;	// ROM 0x00680d3c Rerrnotanumber
+Ref Rprotofinditem = NILREF;	// ROM 0x00680d44 Rprotofinditem
+Ref Rnewtlabelnuminputline = NILREF;	// ROM 0x00680d4c Rnewtlabelnuminputline
+Ref Rnewtnumberfilter = NILREF;	// ROM 0x00680d54 Rnewtnumberfilter
+Ref Rucardreinsertalertbutton = NILREF;	// ROM 0x00680d5c Rucardreinsertalertbutton
+Ref Rnewtshowbar = NILREF;	// ROM 0x00680d64 Rnewtshowbar
+Ref Rcanadianprovincename = NILREF;	// ROM 0x00680d6c Rcanadianprovincename
+Ref Rcanonicalbitmapshape = NILREF;	// ROM 0x00680d74 Rcanonicalbitmapshape
+Ref Rmultidatepopup = NILREF;	// ROM 0x00680d7c Rmultidatepopup
+Ref Rnewtcityfilter = NILREF;	// ROM 0x00680d84 Rnewtcityfilter
+Ref Rprintdoneerror = NILREF;	// ROM 0x00680d8c Rprintdoneerror
+Ref Rinitialinheritanceframe = NILREF;	// ROM 0x00680d94 Rinitialinheritanceframe
+Ref Rprotostreamingendpoint = NILREF;	// ROM 0x00680d9c Rprotostreamingendpoint
+Ref Rprotogeneralpopup = NILREF;	// ROM 0x00680da4 Rprotogeneralpopup
+Ref Rprotostatusbarber = NILREF;	// ROM 0x00680dac Rprotostatusbarber
+Ref Ruerasepersistentconfirmbutton1str = NILREF;	// ROM 0x00680db4 Ruerasepersistentconfirmbutton1str
+Ref Rprotodesktopendpoint = NILREF;	// ROM 0x00680dbc Rprotodesktopendpoint
+Ref Rprotopictradiobutton = NILREF;	// ROM 0x00680dc4 Rprotopictradiobutton
+Ref Rkeyradicalbitmap = NILREF;	// ROM 0x00680dcc Rkeyradicalbitmap
+Ref Rnewtqbetextview = NILREF;	// ROM 0x00680dd4 Rnewtqbetextview
+Ref Rdateindices = NILREF;	// ROM 0x00680ddc Rdateindices
+Ref Rdtmf5bitmap = NILREF;	// ROM 0x00680de4 Rdtmf5bitmap
+Ref Rcanonicalpendingimport = NILREF;	// ROM 0x00680dec Rcanonicalpendingimport
+Ref Rprotodictionarycursor = NILREF;	// ROM 0x00680df4 Rprotodictionarycursor
+Ref Rdisconnectmessage = NILREF;	// ROM 0x00680dfc Rdisconnectmessage
+Ref Rprotooutlineview = NILREF;	// ROM 0x00680e04 Rprotooutlineview
+Ref Rtxrangeprototype = NILREF;	// ROM 0x00680e0c Rtxrangeprototype
+Ref Rcanonicalgestaltsoundinfo = NILREF;	// ROM 0x00680e14 Rcanonicalgestaltsoundinfo
+Ref Remailclasses = NILREF;	// ROM 0x00680e1c Remailclasses
+Ref Rfilingbitmap = NILREF;	// ROM 0x00680e24 Rfilingbitmap
+Ref Rfrcantimefilter = NILREF;	// ROM 0x00680e2c Rfrcantimefilter
+Ref Rnewtrotextview = NILREF;	// ROM 0x00680e34 Rnewtrotextview
+Ref Rsimplebeep = NILREF;	// ROM 0x00680e3c Rsimplebeep
+Ref Rlonglatpicker = NILREF;	// ROM 0x00680e44 Rlonglatpicker
+Ref Rcanonicalgesturepoint = NILREF;	// ROM 0x00680e4c Rcanonicalgesturepoint
+Ref Rcanonicalshapedragdata = NILREF;	// ROM 0x00680e54 Rcanonicalshapedragdata
+Ref Rcribnote = NILREF;	// ROM 0x00680e5c Rcribnote
+Ref Rdtmfleft = NILREF;	// ROM 0x00680e64 Rdtmfleft
+Ref Rcolonslides = NILREF;	// ROM 0x00680e6c Rcolonslides
+Ref Rstatepicker = NILREF;	// ROM 0x00680e74 Rstatepicker
+Ref Rtrashbitmap = NILREF;	// ROM 0x00680e7c Rtrashbitmap
+Ref Rtrailingpunctbitmap = NILREF;	// ROM 0x00680e84 Rtrailingpunctbitmap
+Ref Rcrumplebitmaps = NILREF;	// ROM 0x00680e8c Rcrumplebitmaps
+Ref Rkeytimesbitmap = NILREF;	// ROM 0x00680e94 Rkeytimesbitmap
+Ref Rzaprecvdonemsg = NILREF;	// ROM 0x00680e9c Rzaprecvdonemsg
+Ref Ralertfont = NILREF;	// ROM 0x00680ea4 Ralertfont
+Ref Rproto1_2Exformentry = NILREF;	// ROM 0x00680eac Rproto1_2Exformentry
+Ref Rtrig = NILREF;	// ROM 0x00680eb4 Rtrig
+Ref Rgotoarrowbitmap = NILREF;	// ROM 0x00680ebc Rgotoarrowbitmap
+Ref Respyfont = NILREF;	// ROM 0x00680ec4 Respyfont
+Ref Rnewtsymbolfilter = NILREF;	// ROM 0x00680ecc Rnewtsymbolfilter
+Ref Rprotocategorizedoverview = NILREF;	// ROM 0x00680ed4 Rprotocategorizedoverview
+Ref Rromfontlist = NILREF;	// ROM 0x00680edc Rromfontlist
+Ref Rfontstyleitems = NILREF;	// ROM 0x00680ee4 Rfontstyleitems
+Ref Rprototxviewfinder = NILREF;	// ROM 0x00680eec Rprototxviewfinder
+Ref Rrouteputaway = NILREF;	// ROM 0x00680ef4 Rrouteputaway
+Ref Rmeetingname = NILREF;	// ROM 0x00680efc Rmeetingname
+Ref Rmessagenotification = NILREF;	// ROM 0x00680f04 Rmessagenotification
+Ref Rprotopicturebutton = NILREF;	// ROM 0x00680f0c Rprotopicturebutton
+Ref Rbookmarkbitmap = NILREF;	// ROM 0x00680f14 Rbookmarkbitmap
+Ref Rkeycommabitmap = NILREF;	// ROM 0x00680f1c Rkeycommabitmap
+Ref Rplinkbeep = NILREF;	// ROM 0x00680f24 Rplinkbeep
+Ref Rzapreceiveconfirm = NILREF;	// ROM 0x00680f2c Rzapreceiveconfirm
+Ref Rautodockicon = NILREF;	// ROM 0x00680f34 Rautodockicon
+Ref Rbasewordinfo = NILREF;	// ROM 0x00680f3c Rbasewordinfo
+Ref Rprotopicttextbutton = NILREF;	// ROM 0x00680f44 Rprotopicttextbutton
+Ref Rtxexternalprototype = NILREF;	// ROM 0x00680f4c Rtxexternalprototype
+Ref Rcanonicalstyles = NILREF;	// ROM 0x00680f54 Rcanonicalstyles
+Ref Rundobitmap = NILREF;	// ROM 0x00680f5c Rundobitmap
+Ref Rrectextbitmap = NILREF;	// ROM 0x00680f64 Rrectextbitmap
+Ref Rnofilter = NILREF;	// ROM 0x00680f6c Rnofilter
+Ref Rtodosoupdef = NILREF;	// ROM 0x00680f74 Rtodosoupdef
+Ref Rprotolatitudepicker = NILREF;	// ROM 0x00680f7c Rprotolatitudepicker
+Ref Rstandardstyles = NILREF;	// ROM 0x00680f84 Rstandardstyles
+Ref Rcountries = NILREF;	// ROM 0x00680f8c Rcountries
+Ref Rioitemlayout = NILREF;	// ROM 0x00680f94 Rioitemlayout
+Ref Rglobalheapvarwannabes = NILREF;	// ROM 0x00680f9c Rglobalheapvarwannabes
+Ref Rprotolistpicker = NILREF;	// ROM 0x00680fa4 Rprotolistpicker
+Ref Rprototableentry = NILREF;	// ROM 0x00680fac Rprototableentry
+Ref Rslotcachetable = NILREF;	// ROM 0x00680fb4 Rslotcachetable
+Ref Rnewtsoup = NILREF;	// ROM 0x00680fbc Rnewtsoup
+Ref Rprotopensizemenu = NILREF;	// ROM 0x00680fc4 Rprotopensizemenu
+Ref Rcheckbitmaps = NILREF;	// ROM 0x00680fcc Rcheckbitmaps
+Ref Rsavecalibration = NILREF;	// ROM 0x00680fd4 Rsavecalibration
+Ref Rfindbitmap = NILREF;	// ROM 0x00680fdc Rfindbitmap
+Ref Rprotopersonapopup = NILREF;	// ROM 0x00680fe4 Rprotopersonapopup
+Ref Rcantimefilter = NILREF;	// ROM 0x00680fec Rcantimefilter
+Ref Rpaperrollindices = NILREF;	// ROM 0x00680ff4 Rpaperrollindices
+Ref Rphonebitmap = NILREF;	// ROM 0x00680ffc Rphonebitmap
+Ref Rprotodigitbase = NILREF;	// ROM 0x00681004 Rprotodigitbase
+Ref Rrosettachoices = NILREF;	// ROM 0x0068100c Rrosettachoices
+Ref Rprotodragger = NILREF;	// ROM 0x00681014 Rprotodragger
+Ref Rshiftkeyicon = NILREF;	// ROM 0x0068101c Rshiftkeyicon
+Ref Rfaxslip = NILREF;	// ROM 0x00681024 Rfaxslip
+Ref Rcanonicalframepartsavedobject = NILREF;	// ROM 0x0068102c Rcanonicalframepartsavedobject
+Ref Rprotogriditem = NILREF;	// ROM 0x00681034 Rprotogriditem
+Ref Rputawaypicker = NILREF;	// ROM 0x0068103c Rputawaypicker
+Ref Ruerasepersistentdataalerttext = NILREF;	// ROM 0x00681044 Ruerasepersistentdataalerttext
+Ref Rprotocorrectinfo = NILREF;	// ROM 0x0068104c Rprotocorrectinfo
+Ref Raction_list = NILREF;	// ROM 0x00681054 Raction_list
+Ref Rprotodrawer = NILREF;	// ROM 0x0068105c Rprotodrawer
+Ref Rprotocategoryroll = NILREF;	// ROM 0x00681064 Rprotocategoryroll
+Ref Rkbddictbitmap = NILREF;	// ROM 0x0068106c Rkbddictbitmap
+Ref Rnewtareacodephoneline = NILREF;	// ROM 0x00681074 Rnewtareacodephoneline
+Ref Rclassinfoenabler = NILREF;	// ROM 0x0068107c Rclassinfoenabler
+Ref Rprotoremoteview = NILREF;	// ROM 0x00681084 Rprotoremoteview
+Ref Rprotodurationtextpicker = NILREF;	// ROM 0x0068108c Rprotodurationtextpicker
+Ref Rcloud2 = NILREF;	// ROM 0x00681094 Rcloud2
+Ref Rnewtentryview = NILREF;	// ROM 0x0068109c Rnewtentryview
+Ref Rprotolistview = NILREF;	// ROM 0x006810a4 Rprotolistview
+Ref Rprotooverview = NILREF;	// ROM 0x006810ac Rprotooverview
+Ref Rtxcanonicaltab = NILREF;	// ROM 0x006810b4 Rtxcanonicaltab
+Ref Rshapename = NILREF;	// ROM 0x006810bc Rshapename
+Ref Rprotoroutingslip = NILREF;	// ROM 0x006810c4 Rprotoroutingslip
+Ref Rkeypadbitmap = NILREF;	// ROM 0x006810cc Rkeypadbitmap
+Ref Rprototxview = NILREF;	// ROM 0x006810d4 Rprototxview
+Ref Rstdaddressee = NILREF;	// ROM 0x006810dc Rstdaddressee
+Ref Rdefaultconfiguration = NILREF;	// ROM 0x006810e4 Rdefaultconfiguration
+Ref Rcalendarstrings = NILREF;	// ROM 0x006810ec Rcalendarstrings
+Ref Rrecorderchassis = NILREF;	// ROM 0x006810f4 Rrecorderchassis
+Ref Rspellframe = NILREF;	// ROM 0x006810fc Rspellframe
+Ref Rmailslip = NILREF;	// ROM 0x00681104 Rmailslip
+Ref Rprotostatustext = NILREF;	// ROM 0x0068110c Rprotostatustext
+Ref Runionsoupprototype = NILREF;	// ROM 0x00681114 Runionsoupprototype
+Ref Reastwestbitmap = NILREF;	// ROM 0x0068111c Reastwestbitmap
+Ref Rprotorcheckbox = NILREF;	// ROM 0x00681124 Rprotorcheckbox
+Ref Rtimedeltapopup = NILREF;	// ROM 0x0068112c Rtimedeltapopup
+Ref Rticksound = NILREF;	// ROM 0x00681134 Rticksound
+Ref Rprotocancelbutton = NILREF;	// ROM 0x0068113c Rprotocancelbutton
+Ref Rprotoclockshowbar = NILREF;	// ROM 0x00681144 Rprotoclockshowbar
+Ref Rprotodisplayclock = NILREF;	// ROM 0x0068114c Rprotodisplayclock
+Ref Rprotosoundchannel = NILREF;	// ROM 0x00681154 Rprotosoundchannel
+Ref Rprotovalidateslip = NILREF;	// ROM 0x0068115c Rprotovalidateslip
+Ref Rmarshaltypes = NILREF;	// ROM 0x00681164 Rmarshaltypes
+Ref Rustimefilter = NILREF;	// ROM 0x0068116c Rustimefilter
+Ref Rrulerpicts = NILREF;	// ROM 0x00681174 Rrulerpicts
+Ref Rsymbolfont = NILREF;	// ROM 0x0068117c Rsymbolfont
+Ref Rcheckoffbitmap = NILREF;	// ROM 0x00681184 Rcheckoffbitmap
+Ref Rprotopickview = NILREF;	// ROM 0x0068118c Rprotopickview
+Ref Rprotocitiestextpicker = NILREF;	// ROM 0x00681194 Rprotocitiestextpicker
+Ref Rnewtcustomfilter = NILREF;	// ROM 0x0068119c Rnewtcustomfilter
+Ref Rprotoradiobutton = NILREF;	// ROM 0x006811a4 Rprotoradiobutton
+Ref Rtrylettersbitmap = NILREF;	// ROM 0x006811ac Rtrylettersbitmap
+Ref Remptystring = NILREF;	// ROM 0x006811b4 Remptystring
+Ref Rnewyorkfont = NILREF;	// ROM 0x006811bc Rnewyorkfont
+Ref Rnewtsymbolview = NILREF;	// ROM 0x006811c4 Rnewtsymbolview
+Ref Rprotostorycard = NILREF;	// ROM 0x006811cc Rprotostorycard
+Ref Rblacklistgenericapology = NILREF;	// ROM 0x006811d4 Rblacklistgenericapology
+Ref Rcanonicaltextblock = NILREF;	// ROM 0x006811dc Rcanonicaltextblock
+Ref Rnewtcountryfilter = NILREF;	// ROM 0x006811e4 Rnewtcountryfilter
+Ref Rprotonotescontent = NILREF;	// ROM 0x006811ec Rprotonotescontent
+Ref Rdtmf2 = NILREF;	// ROM 0x006811f4 Rdtmf2
+Ref Rsystempsfont = NILREF;	// ROM 0x006811fc Rsystempsfont
+Ref Rtableftbitmap = NILREF;	// ROM 0x00681204 Rtableftbitmap
+Ref Rcanonicalpolygonshape = NILREF;	// ROM 0x0068120c Rcanonicalpolygonshape
+Ref Rkcardalertbounds = NILREF;	// ROM 0x00681214 Rkcardalertbounds
+Ref Rzaprecvcancelmsg = NILREF;	// ROM 0x0068121c Rzaprecvcancelmsg
+Ref Rnewtrolloverlayout = NILREF;	// ROM 0x00681224 Rnewtrolloverlayout
+Ref Rplainsoupprototype = NILREF;	// ROM 0x0068122c Rplainsoupprototype
+Ref Rusdefaultdatefilter = NILREF;	// ROM 0x00681234 Rusdefaultdatefilter
+Ref Rbanner = NILREF;	// ROM 0x0068123c Rbanner
+Ref Rothercategoryname = NILREF;	// ROM 0x00681244 Rothercategoryname
+Ref Rmailregister = NILREF;	// ROM 0x0068124c Rmailregister
+Ref Rscheduleview = NILREF;	// ROM 0x00681254 Rscheduleview
+Ref Rkeyequalsbitmap = NILREF;	// ROM 0x0068125c Rkeyequalsbitmap
+Ref Rpagecounterform = NILREF;	// ROM 0x00681264 Rpagecounterform
+Ref Rbootsoupwannabes = NILREF;	// ROM 0x0068126c Rbootsoupwannabes
+Ref Rnewtlabelsymbolinputline = NILREF;	// ROM 0x00681274 Rnewtlabelsymbolinputline
+Ref Rprotomeetingsoupfinder = NILREF;	// ROM 0x0068127c Rprotomeetingsoupfinder
+Ref Rprintform = NILREF;	// ROM 0x00681284 Rprintform
+Ref Rcanonicalcaretinfo = NILREF;	// ROM 0x0068128c Rcanonicalcaretinfo
+Ref Rdefaultstatusmsgs = NILREF;	// ROM 0x00681294 Rdefaultstatusmsgs
+Ref Rprototapiendpoint = NILREF;	// ROM 0x0068129c Rprototapiendpoint
+Ref Rprotoshowbar = NILREF;	// ROM 0x006812a4 Rprotoshowbar
+Ref Rassistutilities = NILREF;	// ROM 0x006812ac Rassistutilities
+Ref Rdtmf2bitmap = NILREF;	// ROM 0x006812b4 Rdtmf2bitmap
+Ref Rprotoprefsrollitem = NILREF;	// ROM 0x006812bc Rprotoprefsrollitem
+Ref Rbackdropbitmap = NILREF;	// ROM 0x006812c4 Rbackdropbitmap
+Ref Rcanonicalgestaltrexinfoarrayelement = NILREF;	// ROM 0x006812cc Rcanonicalgestaltrexinfoarrayelement
+Ref Ra2zbitmap = NILREF;	// ROM 0x006812d4 Ra2zbitmap
+Ref Rroutetransport = NILREF;	// ROM 0x006812dc Rroutetransport
+Ref Rwhackybeep = NILREF;	// ROM 0x006812e4 Rwhackybeep
+Ref Rwilderbeep = NILREF;	// ROM 0x006812ec Rwilderbeep
+Ref Rfaxpreferencesform = NILREF;	// ROM 0x006812f4 Rfaxpreferencesform
+Ref Rhelveticafont = NILREF;	// ROM 0x006812fc Rhelveticafont
+Ref Rpalettebitmap = NILREF;	// ROM 0x00681304 Rpalettebitmap
+Ref Rnewtqbelabelinputline = NILREF;	// ROM 0x0068130c Rnewtqbelabelinputline
+Ref Rprototextbutton = NILREF;	// ROM 0x00681314 Rprototextbutton
+Ref Rstarterclipboard = NILREF;	// ROM 0x0068131c Rstarterclipboard
+Ref Rprotoperiodicalarmeditor = NILREF;	// ROM 0x00681324 Rprotoperiodicalarmeditor
+Ref Rcanonicalbatterystatus = NILREF;	// ROM 0x0068132c Rcanonicalbatterystatus
+Ref Riotransportheader = NILREF;	// ROM 0x00681334 Riotransportheader
+Ref Rparagraphcodebook2 = NILREF;	// ROM 0x0068133c Rparagraphcodebook2
+Ref Rassistframes = NILREF;	// ROM 0x00681344 Rassistframes
+Ref Rcanonicaldictramframe = NILREF;	// ROM 0x0068134c Rcanonicaldictramframe
+Ref Rnewtrolabelinputline = NILREF;	// ROM 0x00681354 Rnewtrolabelinputline
+Ref Rnewtphonefilter = NILREF;	// ROM 0x0068135c Rnewtphonefilter
+Ref Rprotoprefframer = NILREF;	// ROM 0x00681364 Rprotoprefframer
+Ref Rsavedatatoentry = NILREF;	// ROM 0x0068136c Rsavedatatoentry
+Ref Rcontinents = NILREF;	// ROM 0x00681374 Rcontinents
+Ref Rprotodigit = NILREF;	// ROM 0x0068137c Rprotodigit
+Ref Rvalidslots = NILREF;	// ROM 0x00681384 Rvalidslots
+Ref Rprotofloatngo = NILREF;	// ROM 0x0068138c Rprotofloatngo
+Ref Rrecogarrowdownoutside = NILREF;	// ROM 0x00681394 Rrecogarrowdownoutside
+Ref Rprotoapp = NILREF;	// ROM 0x0068139c Rprotoapp
+Ref Rioprintpreview = NILREF;	// ROM 0x006813a4 Rioprintpreview
+Ref Rprotocorrector = NILREF;	// ROM 0x006813ac Rprotocorrector
+Ref Rasciibreak = NILREF;	// ROM 0x006813b4 Rasciibreak
+Ref Rfontsystem12bold = NILREF;	// ROM 0x006813bc Rfontsystem12bold
+Ref Rioindices = NILREF;	// ROM 0x006813c4 Rioindices
+Ref Runicode = NILREF;	// ROM 0x006813cc Runicode
+Ref Rzapbeep = NILREF;	// ROM 0x006813d4 Rzapbeep
+Ref Rgetserialnumber = NILREF;	// ROM 0x006813dc Rgetserialnumber
+Ref Rkeyperiodbitmap = NILREF;	// ROM 0x006813e4 Rkeyperiodbitmap
+Ref Rprotocountrytextpicker = NILREF;	// ROM 0x006813ec Rprotocountrytextpicker
+Ref Rprotosoupoverview = NILREF;	// ROM 0x006813f4 Rprotosoupoverview
+Ref Rsmallpentip = NILREF;	// ROM 0x006813fc Rsmallpentip
+Ref Rnewtentrylockedicon = NILREF;	// ROM 0x00681404 Rnewtentrylockedicon
+Ref Rdictionarylist = NILREF;	// ROM 0x0068140c Rdictionarylist
+Ref Rkeyminusbitmap = NILREF;	// ROM 0x00681414 Rkeyminusbitmap
+Ref Rprotoimageview = NILREF;	// ROM 0x0068141c Rprotoimageview
+Ref Ruerasepersistentdatabutton1str = NILREF;	// ROM 0x00681424 Ruerasepersistentdatabutton1str
+Ref Rprotoexpandoshell = NILREF;	// ROM 0x0068142c Rprotoexpandoshell
+Ref Rprotoformatpicker = NILREF;	// ROM 0x00681434 Rprotoformatpicker
+Ref Rprotonumberpicker = NILREF;	// ROM 0x0068143c Rprotonumberpicker
+Ref Rprotoconfirm = NILREF;	// ROM 0x00681444 Rprotoconfirm
+Ref Rprotozonestable = NILREF;	// ROM 0x0068144c Rprotozonestable
+Ref Rprototwolinepicker = NILREF;	// ROM 0x00681454 Rprototwolinepicker
+Ref Rclickbeep = NILREF;	// ROM 0x0068145c Rclickbeep
+Ref Rcalendarnotesname = NILREF;	// ROM 0x00681464 Rcalendarnotesname
+Ref Rextraprotos = NILREF;	// ROM 0x0068146c Rextraprotos
+Ref Rprotosmartcluster = NILREF;	// ROM 0x00681474 Rprotosmartcluster
+Ref Rdtmf7 = NILREF;	// ROM 0x0068147c Rdtmf7
+Ref Rcontainername = NILREF;	// ROM 0x00681484 Rcontainername
+Ref Rdtmfdash = NILREF;	// ROM 0x0068148c Rdtmfdash
+Ref Rmathname = NILREF;	// ROM 0x00681494 Rmathname
+Ref Rcanonicalcontext = NILREF;	// ROM 0x0068149c Rcanonicalcontext
+Ref Rpreparingmessage = NILREF;	// ROM 0x006814a4 Rpreparingmessage
+Ref Rprotodeckofcards = NILREF;	// ROM 0x006814ac Rprotodeckofcards
+Ref Rstampframebitmap = NILREF;	// ROM 0x006814b4 Rstampframebitmap
+Ref Raustralianstatename = NILREF;	// ROM 0x006814bc Raustralianstatename
+Ref Rnewtentrypageheader = NILREF;	// ROM 0x006814c4 Rnewtentrypageheader
+Ref Rprotoemporiumpopup = NILREF;	// ROM 0x006814cc Rprotoemporiumpopup
+Ref Ronlinemessages = NILREF;	// ROM 0x006814d4 Ronlinemessages
+Ref Rstatelocpicker = NILREF;	// ROM 0x006814dc Rstatelocpicker
+Ref Rprotohorizontalupdownscroller = NILREF;	// ROM 0x006814e4 Rprotohorizontalupdownscroller
+Ref Rsmallpentipbitmap = NILREF;	// ROM 0x006814ec Rsmallpentipbitmap
+Ref Rzapsendconnectmsg = NILREF;	// ROM 0x006814f4 Rzapsendconnectmsg
+Ref Rflip = NILREF;	// ROM 0x006814fc Rflip
+Ref Rprotoextrascontrolbutton = NILREF;	// ROM 0x00681504 Rprotoextrascontrolbutton
+Ref Rmarkupbitmap = NILREF;	// ROM 0x0068150c Rmarkupbitmap
+Ref Rdefaultitemstatemsgs = NILREF;	// ROM 0x00681514 Rdefaultitemstatemsgs
+Ref Rprotodatenyearpicker = NILREF;	// ROM 0x0068151c Rprotodatenyearpicker
+Ref Rrecogarrowdowninside = NILREF;	// ROM 0x00681524 Rrecogarrowdowninside
+Ref Rucardrepairalerttext = NILREF;	// ROM 0x0068152c Rucardrepairalerttext
+Ref Rfontsystem9bold = NILREF;	// ROM 0x00681534 Rfontsystem9bold
+Ref Rhandwritingfont = NILREF;	// ROM 0x0068153c Rhandwritingfont
+Ref Rprotogauge = NILREF;	// ROM 0x00681544 Rprotogauge
+Ref Rcanonicaltpmiteratorpackageframe = NILREF;	// ROM 0x0068154c Rcanonicaltpmiteratorpackageframe
+Ref Rprotopreferencestitle = NILREF;	// ROM 0x00681554 Rprotopreferencestitle
+Ref Rcanonicalbaseinfo = NILREF;	// ROM 0x0068155c Rcanonicalbaseinfo
+Ref Rnewtlabelcustominputline = NILREF;	// ROM 0x00681564 Rnewtlabelcustominputline
+Ref Raboutnewton = NILREF;	// ROM 0x0068156c Raboutnewton
+Ref Rmodemsetups = NILREF;	// ROM 0x00681574 Rmodemsetups
+Ref Rextrassoupname = NILREF;	// ROM 0x0068157c Rextrassoupname
+Ref Rprotonavigator = NILREF;	// ROM 0x00681584 Rprotonavigator
+Ref Rvarsmapstarter = NILREF;	// ROM 0x0068158c Rvarsmapstarter
+Ref Rucardpositionalerttext = NILREF;	// ROM 0x00681594 Rucardpositionalerttext
+Ref Rtimeintervalpopup = NILREF;	// ROM 0x0068159c Rtimeintervalpopup
+Ref Rcompatiblefinder = NILREF;	// ROM 0x006815a4 Rcompatiblefinder
+Ref Rdtmf7bitmap = NILREF;	// ROM 0x006815ac Rdtmf7bitmap
+Ref Rtypewriter = NILREF;	// ROM 0x006815b4 Rtypewriter
+Ref Rrecshapebitmap = NILREF;	// ROM 0x006815bc Rrecshapebitmap
+Ref Rprotorollbrowser = NILREF;	// ROM 0x006815c4 Rprotorollbrowser
+Ref Rprotostatus = NILREF;	// ROM 0x006815cc Rprotostatus
+Ref Rprototransport = NILREF;	// ROM 0x006815d4 Rprototransport
+Ref Rroutebeambitmap = NILREF;	// ROM 0x006815dc Rroutebeambitmap
+Ref Rdebugcodeblockprototype = NILREF;	// ROM 0x006815e4 Rdebugcodeblockprototype
+Ref Rbookbitmap = NILREF;	// ROM 0x006815ec Rbookbitmap
+Ref Rleftbitmap = NILREF;	// ROM 0x006815f4 Rleftbitmap
+Ref Rnewtentryviewrouting = NILREF;	// ROM 0x006815fc Rnewtentryviewrouting
+Ref Rabstractscroller = NILREF;	// ROM 0x00681604 Rabstractscroller
+Ref Rprotorecognitioncheckbox = NILREF;	// ROM 0x0068160c Rprotorecognitioncheckbox
+Ref Rmptablenoop = NILREF;	// ROM 0x00681614 Rmptablenoop
+Ref Rnomarkupbitmap = NILREF;	// ROM 0x0068161c Rnomarkupbitmap
+Ref Rprotoparagraph = NILREF;	// ROM 0x00681624 Rprotoparagraph
+Ref Rbuttonbar = NILREF;	// ROM 0x0068162c Rbuttonbar
+Ref Rdtmfpound = NILREF;	// ROM 0x00681634 Rdtmfpound
+Ref Rprotofindcategory = NILREF;	// ROM 0x0068163c Rprotofindcategory
+Ref Rprotorepeatpicker = NILREF;	// ROM 0x00681644 Rprotorepeatpicker
+Ref Rprotocursivecheckbox = NILREF;	// ROM 0x0068164c Rprotocursivecheckbox
+Ref Rprotoyearpicker = NILREF;	// ROM 0x00681654 Rprotoyearpicker
+Ref Rprotodiamondbutton = NILREF;	// ROM 0x0068165c Rprotodiamondbutton
+Ref Rcanonicalkeycommandcategory = NILREF;	// ROM 0x00681664 Rcanonicalkeycommandcategory
+Ref Rprotoclosebox = NILREF;	// ROM 0x0068166c Rprotoclosebox
+Ref Rnewttextdateview = NILREF;	// ROM 0x00681674 Rnewttextdateview
+Ref Rrestoreprefsslip = NILREF;	// ROM 0x0068167c Rrestoreprefsslip
+Ref Rcancelbitmap = NILREF;	// ROM 0x00681684 Rcancelbitmap
+Ref Rprefsslipproto = NILREF;	// ROM 0x0068168c Rprefsslipproto
+Ref Rprotoinputline = NILREF;	// ROM 0x00681694 Rprotoinputline
+Ref Rprotopolygon = NILREF;	// ROM 0x0068169c Rprotopolygon
+Ref Rvstatustitle = NILREF;	// ROM 0x006816a4 Rvstatustitle
+Ref Rcanonicalpackagedata = NILREF;	// ROM 0x006816ac Rcanonicalpackagedata
+Ref Rnewtrotexttimeview = NILREF;	// ROM 0x006816b4 Rnewtrotexttimeview
+Ref Rprotofullrouteslip = NILREF;	// ROM 0x006816bc Rprotofullrouteslip
+Ref Rcanonicalgroup = NILREF;	// ROM 0x006816c4 Rcanonicalgroup
+Ref Rprototextlist = NILREF;	// ROM 0x006816cc Rprototextlist
+Ref Rrectoggle = NILREF;	// ROM 0x006816d4 Rrectoggle
+Ref Rprotodigitalclock = NILREF;	// ROM 0x006816dc Rprotodigitalclock
+Ref Rfontsystem18 = NILREF;	// ROM 0x006816e4 Rfontsystem18
+Ref Rgoawaybitmap = NILREF;	// ROM 0x006816ec Rgoawaybitmap
+Ref Rnewtcheckbox = NILREF;	// ROM 0x006816f4 Rnewtcheckbox
+Ref Rscheduleslip = NILREF;	// ROM 0x006816fc Rscheduleslip
+Ref Rrouteduplicatebitmap = NILREF;	// ROM 0x00681704 Rrouteduplicatebitmap
+Ref Rbackupprefsslip = NILREF;	// ROM 0x0068170c Rbackupprefsslip
+Ref Rdtmfpoundbitmap = NILREF;	// ROM 0x00681714 Rdtmfpoundbitmap
+Ref Rkbdreturnbitmap = NILREF;	// ROM 0x0068171c Rkbdreturnbitmap
+Ref Rkeybulletbitmap = NILREF;	// ROM 0x00681724 Rkeybulletbitmap
+Ref Rnewtonmodemname = NILREF;	// ROM 0x0068172c Rnewtonmodemname
+Ref Rnewtlabelphoneinputline = NILREF;	// ROM 0x00681734 Rnewtlabelphoneinputline
+Ref Rdownbitmap = NILREF;	// ROM 0x0068173c Rdownbitmap
+Ref Rprotobasicendpoint = NILREF;	// ROM 0x00681744 Rprotobasicendpoint
+Ref Rdtmfstar = NILREF;	// ROM 0x0068174c Rdtmfstar
+Ref Rpaperrollsoupdef = NILREF;	// ROM 0x00681754 Rpaperrollsoupdef
+Ref Rlocationcursor = NILREF;	// ROM 0x0068175c Rlocationcursor
+Ref Rprotokeyboardview = NILREF;	// ROM 0x00681764 Rprotokeyboardview
+Ref Rprotorepeatview = NILREF;	// ROM 0x0068176c Rprotorepeatview
+Ref Rconfirmbuttonlists = NILREF;	// ROM 0x00681774 Rconfirmbuttonlists
+Ref Rchargingbitmap = NILREF;	// ROM 0x0068177c Rchargingbitmap
+Ref Rdiamantebitmap = NILREF;	// ROM 0x00681784 Rdiamantebitmap
+Ref Rnotesoverview = NILREF;	// ROM 0x0068178c Rnotesoverview
+Ref Rglobalvarwannabes = NILREF;	// ROM 0x00681794 Rglobalvarwannabes
+Ref Rprotosenderpopup = NILREF;	// ROM 0x0068179c Rprotosenderpopup
+Ref Rstylusdownbitmap = NILREF;	// ROM 0x006817a4 Rstylusdownbitmap
+Ref Rcanonicalinkwordinfo = NILREF;	// ROM 0x006817ac Rcanonicalinkwordinfo
+Ref Rbasecorrectinfo = NILREF;	// ROM 0x006817b4 Rbasecorrectinfo
+Ref Rrecsketchbitmap = NILREF;	// ROM 0x006817bc Rrecsketchbitmap
+Ref Rzero2ninebitmap = NILREF;	// ROM 0x006817c4 Rzero2ninebitmap
+Ref Rcanonicalfontparms = NILREF;	// ROM 0x006817cc Rcanonicalfontparms
+Ref Rnewtroutingbutton = NILREF;	// ROM 0x006817d4 Rnewtroutingbutton
+Ref Rprotopeopledatadef = NILREF;	// ROM 0x006817dc Rprotopeopledatadef
+Ref Rradioonbitmap = NILREF;	// ROM 0x006817e4 Rradioonbitmap
+Ref Rfontsystem18underline = NILREF;	// ROM 0x006817ec Rfontsystem18underline
+Ref Rprotolabelpicker = NILREF;	// ROM 0x006817f4 Rprotolabelpicker
+Ref Rnewtnrlabeldateinputline = NILREF;	// ROM 0x006817fc Rnewtnrlabeldateinputline
+Ref Rbootlogobitmap = NILREF;	// ROM 0x00681804 Rbootlogobitmap
+Ref Rdtmfstarbitmap = NILREF;	// ROM 0x0068180c Rdtmfstarbitmap
+Ref Rnewtdatefilter = NILREF;	// ROM 0x00681814 Rnewtdatefilter
+Ref Rzapsenddonemsg = NILREF;	// ROM 0x0068181c Rzapsenddonemsg
+Ref Rcanonicaltextandstyles = NILREF;	// ROM 0x00681824 Rcanonicaltextandstyles
+Ref Rdtmfright = NILREF;	// ROM 0x0068182c Rdtmfright
+Ref Rdrawpokertemplate = NILREF;	// ROM 0x00681834 Rdrawpokertemplate
+Ref Rloadletterweights = NILREF;	// ROM 0x0068183c Rloadletterweights
+Ref Rprotoemailexpando = NILREF;	// ROM 0x00681844 Rprotoemailexpando
+Ref Rromphrasallexicon = NILREF;	// ROM 0x0068184c Rromphrasallexicon
+Ref Rnewtshowstationerybutton = NILREF;	// ROM 0x00681854 Rnewtshowstationerybutton
+Ref Rstrokebundle = NILREF;	// ROM 0x0068185c Rstrokebundle
+Ref Rdayview = NILREF;	// ROM 0x00681864 Rdayview
+Ref Rcopyrightnotice = NILREF;	// ROM 0x0068186c Rcopyrightnotice
+Ref Rnotifyicon = NILREF;	// ROM 0x00681874 Rnotifyicon
+Ref Rwordfilter = NILREF;	// ROM 0x0068187c Rwordfilter
+Ref Rzaprecvmsg = NILREF;	// ROM 0x00681884 Rzaprecvmsg
+Ref Rkoserroralertbutton0bounds = NILREF;	// ROM 0x0068188c Rkoserroralertbutton0bounds
+Ref Roptionkeyicon = NILREF;	// ROM 0x00681894 Roptionkeyicon
+Ref Rtosubjectslip = NILREF;	// ROM 0x0068189c Rtosubjectslip
+Ref Rmappopup = NILREF;	// ROM 0x006818a4 Rmappopup
+Ref Rstdforms = NILREF;	// ROM 0x006818ac Rstdforms
+Ref Rrubricpopup = NILREF;	// ROM 0x006818b4 Rrubricpopup
+Ref Rcanonicalregionshape = NILREF;	// ROM 0x006818bc Rcanonicalregionshape
+Ref Rrecogarrowupoutside = NILREF;	// ROM 0x006818c4 Rrecogarrowupoutside
+Ref Rvprogress = NILREF;	// ROM 0x006818cc Rvprogress
+Ref Rprotoletterformat = NILREF;	// ROM 0x006818d4 Rprotoletterformat
+Ref Rnewtshowmenu = NILREF;	// ROM 0x006818dc Rnewtshowmenu
+Ref Rdataname = NILREF;	// ROM 0x006818e4 Rdataname
+Ref Rkoserroralerttextbounds = NILREF;	// ROM 0x006818ec Rkoserroralerttextbounds
+Ref Rloadglobals = NILREF;	// ROM 0x006818f4 Rloadglobals
+Ref Rcaretspacebits = NILREF;	// ROM 0x006818fc Rcaretspacebits
+Ref Rdigitflap = NILREF;	// ROM 0x00681904 Rdigitflap
+Ref Rfontsystem10 = NILREF;	// ROM 0x0068190c Rfontsystem10
+Ref Rcanonicalpackageframe = NILREF;	// ROM 0x00681914 Rcanonicalpackageframe
+Ref Rvbarber = NILREF;	// ROM 0x0068191c Rvbarber
+Ref Rtxgraphicsrunprototype = NILREF;	// ROM 0x00681924 Rtxgraphicsrunprototype
+Ref Rgenevafont = NILREF;	// ROM 0x0068192c Rgenevafont
+Ref Rcorrectormidbits = NILREF;	// ROM 0x00681934 Rcorrectormidbits
+Ref Rnotesbitmap = NILREF;	// ROM 0x0068193c Rnotesbitmap
+Ref Rworldpicker = NILREF;	// ROM 0x00681944 Rworldpicker
+Ref Rdatentimepopup = NILREF;	// ROM 0x0068194c Rdatentimepopup
+Ref Rnewtsmartaddressfilter = NILREF;	// ROM 0x00681954 Rnewtsmartaddressfilter
+Ref Rprotobatterygauge = NILREF;	// ROM 0x0068195c Rprotobatterygauge
+Ref Rprotohorizontal2dscroller = NILREF;	// ROM 0x00681964 Rprotohorizontal2dscroller
+Ref Rnewteditview = NILREF;	// ROM 0x0068196c Rnewteditview
+Ref Rprotorepeatdatedurationtextpicker = NILREF;	// ROM 0x00681974 Rprotorepeatdatedurationtextpicker
+Ref Rprotosoundframe = NILREF;	// ROM 0x0068197c Rprotosoundframe
+Ref Rcanonicalbitmapinfo = NILREF;	// ROM 0x00681984 Rcanonicalbitmapinfo
+Ref Rcanonicaldeadimport = NILREF;	// ROM 0x0068198c Rcanonicaldeadimport
+Ref Rnewtpopupedit = NILREF;	// ROM 0x00681994 Rnewtpopupedit
+Ref Rprotocategoryrollitem = NILREF;	// ROM 0x0068199c Rprotocategoryrollitem
+Ref Rprotopreferencespopup = NILREF;	// ROM 0x006819a4 Rprotopreferencespopup
+Ref Rviewroot = NILREF;	// ROM 0x006819ac Rviewroot
+Ref Rcanonicalscrollee = NILREF;	// ROM 0x006819b4 Rcanonicalscrollee
+Ref Rprotoampmcluster = NILREF;	// ROM 0x006819bc Rprotoampmcluster
+Ref Rprotostatusgauge = NILREF;	// ROM 0x006819c4 Rprotostatusgauge
+Ref Ruerasepersistentstatusemptybuttonstr = NILREF;	// ROM 0x006819cc Ruerasepersistentstatusemptybuttonstr
+Ref Rpapercallbitmap = NILREF;	// ROM 0x006819d4 Rpapercallbitmap
+Ref Rroutepastetext = NILREF;	// ROM 0x006819dc Rroutepastetext
+Ref Rcardaction = NILREF;	// ROM 0x006819e4 Rcardaction
+Ref Rdtmf4 = NILREF;	// ROM 0x006819ec Rdtmf4
+Ref Rfontsystem10underline = NILREF;	// ROM 0x006819f4 Rfontsystem10underline
+Ref Rnamesbitmap = NILREF;	// ROM 0x006819fc Rnamesbitmap
+Ref Rprotopinwindowwithoutlogic = NILREF;	// ROM 0x00681a04 Rprotopinwindowwithoutlogic
+Ref Rnewtsimpledatefilter = NILREF;	// ROM 0x00681a0c Rnewtsimpledatefilter
+Ref Rstackframeinfoframeprototype = NILREF;	// ROM 0x00681a14 Rstackframeinfoframeprototype
+Ref Rpagepreviewform = NILREF;	// ROM 0x00681a1c Rpagepreviewform
+Ref Rnetchooser = NILREF;	// ROM 0x00681a24 Rnetchooser
+Ref Rstdclosing = NILREF;	// ROM 0x00681a2c Rstdclosing
+Ref Rcodeblockprototype = NILREF;	// ROM 0x00681a34 Rcodeblockprototype
+Ref Rrecogarrowupinside = NILREF;	// ROM 0x00681a3c Rrecogarrowupinside
+Ref Rprotothumbnailfloater = NILREF;	// ROM 0x00681a44 Rprotothumbnailfloater
+Ref Rcanonicalchargrid = NILREF;	// ROM 0x00681a4c Rcanonicalchargrid
+Ref Rhollowstarbitmap = NILREF;	// ROM 0x00681a54 Rhollowstarbitmap
+Ref Rdstsoupname = NILREF;	// ROM 0x00681a5c Rdstsoupname
+Ref Rnewtinfobox = NILREF;	// ROM 0x00681a64 Rnewtinfobox
+Ref Rprotodatetextpicker = NILREF;	// ROM 0x00681a6c Rprotodatetextpicker
+Ref Rtimepopup = NILREF;	// ROM 0x00681a74 Rtimepopup
+Ref Rcanonicalshapeinfo = NILREF;	// ROM 0x00681a7c Rcanonicalshapeinfo
+Ref Rprotoradiocluster = NILREF;	// ROM 0x00681a84 Rprotoradiocluster
+Ref Rprotorecorderview = NILREF;	// ROM 0x00681a8c Rprotorecorderview
+Ref Rstarterinsertspec = NILREF;	// ROM 0x00681a94 Rstarterinsertspec
+Ref Ruerasepersistentconfirmbutton0str = NILREF;	// ROM 0x00681a9c Ruerasepersistentconfirmbutton0str
+Ref Rprotorecognitioncluster = NILREF;	// ROM 0x00681aa4 Rprotorecognitioncluster
+Ref Rdtmf4bitmap = NILREF;	// ROM 0x00681aac Rdtmf4bitmap
+Ref Rnewtlayout = NILREF;	// ROM 0x00681ab4 Rnewtlayout
+Ref Rsystemfont = NILREF;	// ROM 0x00681abc Rsystemfont
+Ref Rtablefthilitebitmap = NILREF;	// ROM 0x00681ac4 Rtablefthilitebitmap
+Ref Rcanonicalscroller = NILREF;	// ROM 0x00681acc Rcanonicalscroller
+Ref Rcardalerttemplate = NILREF;	// ROM 0x00681ad4 Rcardalerttemplate
+Ref Rcreatempforbackup = NILREF;	// ROM 0x00681adc Rcreatempforbackup
+Ref Rprotostrokesitem = NILREF;	// ROM 0x00681ae4 Rprotostrokesitem
+Ref Rdockerbitmap = NILREF;	// ROM 0x00681aec Rdockerbitmap
+Ref Rprotostatusclosebox = NILREF;	// ROM 0x00681af4 Rprotostatusclosebox
+Ref Rprotoupdownscroller = NILREF;	// ROM 0x00681afc Rprotoupdownscroller
+Ref Rprotomeetingplacepicker = NILREF;	// ROM 0x00681b04 Rprotomeetingplacepicker
+Ref Rkeyleftparenbitmap = NILREF;	// ROM 0x00681b0c Rkeyleftparenbitmap
+Ref Raztabsslimbitmap = NILREF;	// ROM 0x00681b14 Raztabsslimbitmap
+Ref Rprotoglance = NILREF;	// ROM 0x00681b1c Rprotoglance
+Ref Rsymboltable = NILREF;	// ROM 0x00681b24 Rsymboltable
+Ref Rcanonicalpackageinfo = NILREF;	// ROM 0x00681b2c Rcanonicalpackageinfo
+Ref Raztabs = NILREF;	// ROM 0x00681b34 Raztabs
+Ref Rconnectiondupvalidtest = NILREF;	// ROM 0x00681b3c Rconnectiondupvalidtest
+Ref Rnotepaper = NILREF;	// ROM 0x00681b44 Rnotepaper
+Ref Rprotocard = NILREF;	// ROM 0x00681b4c Rprotocard
+Ref Rcharsversion = NILREF;	// ROM 0x00681b54 Rcharsversion
+Ref Rroutefaxicon = NILREF;	// ROM 0x00681b5c Rroutefaxicon
+Ref Rdownarrowbitmap = NILREF;	// ROM 0x00681b64 Rdownarrowbitmap
+Ref Rprototapipicker = NILREF;	// ROM 0x00681b6c Rprototapipicker
+Ref Rstarterink = NILREF;	// ROM 0x00681b74 Rstarterink
+Ref Rcanonicaltable = NILREF;	// ROM 0x00681b7c Rcanonicaltable
+Ref Rrouteprintbitmap = NILREF;	// ROM 0x00681b84 Rrouteprintbitmap
+Ref Rsalutationsuffix = NILREF;	// ROM 0x00681b8c Rsalutationsuffix
+Ref Rioioboxsoup = NILREF;	// ROM 0x00681b94 Rioioboxsoup
+Ref Rprotoeworldendpoint = NILREF;	// ROM 0x00681b9c Rprotoeworldendpoint
+Ref Rcanonicalframepartremoveinfo = NILREF;	// ROM 0x00681ba4 Rcanonicalframepartremoveinfo
+Ref Rnewttextfilter = NILREF;	// ROM 0x00681bac Rnewttextfilter
+Ref Routboxsoupname = NILREF;	// ROM 0x00681bb4 Routboxsoupname
+Ref Rstarterproperties = NILREF;	// ROM 0x00681bbc Rstarterproperties
+Ref Rkbdleftbitmap = NILREF;	// ROM 0x00681bc4 Rkbdleftbitmap
+Ref Rcalendarsoupname = NILREF;	// ROM 0x00681bcc Rcalendarsoupname
+Ref Rcardfilesoupname = NILREF;	// ROM 0x00681bd4 Rcardfilesoupname
+Ref Rfontsystem14bold = NILREF;	// ROM 0x00681bdc Rfontsystem14bold
+Ref Rprotowordinterp = NILREF;	// ROM 0x00681be4 Rprotowordinterp
+Ref Rnewtstationeryview = NILREF;	// ROM 0x00681bec Rnewtstationeryview
+Ref Rcanonicalpoint = NILREF;	// ROM 0x00681bf4 Rcanonicalpoint
+Ref Rtabrightbitmap = NILREF;	// ROM 0x00681bfc Rtabrightbitmap
+Ref Rnewtlabeldateinputline = NILREF;	// ROM 0x00681c04 Rnewtlabeldateinputline
+Ref Rblacklist = NILREF;	// ROM 0x00681c0c Rblacklist
+Ref Rcardfilequeryspec = NILREF;	// ROM 0x00681c14 Rcardfilequeryspec
+Ref Rcorrectorleadbits = NILREF;	// ROM 0x00681c1c Rcorrectorleadbits
+Ref Rtargetframeformat = NILREF;	// ROM 0x00681c24 Rtargetframeformat
+Ref Raztabsbitmap = NILREF;	// ROM 0x00681c2c Raztabsbitmap
+Ref Rdsplacehints = NILREF;	// ROM 0x00681c34 Rdsplacehints
+Ref Ronlinebitmap = NILREF;	// ROM 0x00681c3c Ronlinebitmap
+Ref Rpackagequery = NILREF;	// ROM 0x00681c44 Rpackagequery
+Ref Rioprotoshowbybutton = NILREF;	// ROM 0x00681c4c Rioprotoshowbybutton
+Ref Rmeeting = NILREF;	// ROM 0x00681c54 Rmeeting
+Ref Rdigitflaploword = NILREF;	// ROM 0x00681c5c Rdigitflaploword
+Ref Rrepeatnotesname = NILREF;	// ROM 0x00681c64 Rrepeatnotesname
+Ref Rroutedeleteicon = NILREF;	// ROM 0x00681c6c Rroutedeleteicon
+Ref Rerrortable = NILREF;	// ROM 0x00681c74 Rerrortable
+Ref Rfinepentip = NILREF;	// ROM 0x00681c7c Rfinepentip
+Ref Rprotostatusbutton = NILREF;	// ROM 0x00681c84 Rprotostatusbutton
+Ref Rprotocheckbox = NILREF;	// ROM 0x00681c8c Rprotocheckbox
+Ref Rroutemailicon = NILREF;	// ROM 0x00681c94 Rroutemailicon
 
 const ROMConstantEntry gROMConstantEntries[] = {
 	{ "upbitmap", 0x0000050f, &Rupbitmap },
@@ -1117,8 +1114,8 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "overviewbitmap", 0x00000527, &Roverviewbitmap },
 	{ "protologpicker", 0x00000987, &Rprotologpicker },
 	{ "protomeetingplacepopup", 0x00000623, &Rprotomeetingplacepopup },
-	{ "ucletters", 0x003e9481, &Rucletters },
-	{ "errnumbertoosmall", 0x003d678d, &Rerrnumbertoosmall },
+	{ "ucletters", 0x005adca1, &Rucletters },
+	{ "errnumbertoosmall", 0x004a5bed, &Rerrnumbertoosmall },
 	{ "protophoneexpando", 0x0000030b, &Rprotophoneexpando },
 	{ "routeforward", 0x00000c0f, &Rrouteforward },
 	{ "plusminusbitmap", 0x00000ac3, &Rplusminusbitmap },
@@ -1132,14 +1129,14 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protoconfigpicker", 0x0000098b, &Rprotoconfigpicker },
 	{ "metasoupname", 0x00000207, &Rmetasoupname },
 	{ "numberfilter", 0x00000c3b, &Rnumberfilter },
-	{ "charsetinforesources", 0x005bfced, &Rcharsetinforesources },
-	{ "twobeep", 0x003f6365, &Rtwobeep },
+	{ "charsetinforesources", 0x005c2e49, &Rcharsetinforesources },
+	{ "twobeep", 0x003d580d, &Rtwobeep },
 	{ "soupfinder", 0x000003b7, &Rsoupfinder },
 	{ "correctortrailbits", 0x00000c7f, &Rcorrectortrailbits },
 	{ "inboxsoupname", 0x000001bf, &Rinboxsoupname },
 	{ "usphonefilter", 0x00000c67, &Rusphonefilter },
-	{ "zapnomsg", 0x004e414d, &Rzapnomsg },
-	{ "koserroralertbounds", 0x003bb58d, &Rkoserroralertbounds },
+	{ "zapnomsg", 0x004d1349, &Rzapnomsg },
+	{ "koserroralertbounds", 0x003c6fed, &Rkoserroralertbounds },
 	{ "extrasromicons", 0x000003a7, &Rextrasromicons },
 	{ "kbddeletebitmap", 0x00000bc3, &Rkbddeletebitmap },
 	{ "protoleftrightscroller", 0x00000a47, &Rprotoleftrightscroller },
@@ -1152,14 +1149,14 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtronumview", 0x00000683, &Rnewtronumview },
 	{ "correctortwobuttons", 0x00000c83, &Rcorrectortwobuttons },
 	{ "newtlabelsimpledateinputline", 0x00000aab, &Rnewtlabelsimpledateinputline },
-	{ "storeprototype", 0x005d00e1, &Rstoreprototype },
+	{ "storeprototype", 0x00635eb9, &Rstoreprototype },
 	{ "calculator", 0x00000047, &Rcalculator },
 	{ "maileditor", 0x000001e3, &Rmaileditor },
 	{ "newtembeddedentryview", 0x00000a6b, &Rnewtembeddedentryview },
 	{ "recognizeruserchoices", 0x000000c7, &Rrecognizeruserchoices },
 	{ "protoprefframe", 0x00000ca7, &Rprotoprefframe },
 	{ "routereaddress", 0x00000bd7, &Rroutereaddress },
-	{ "printdone", 0x003e2fb1, &Rprintdone },
+	{ "printdone", 0x004c737d, &Rprintdone },
 	{ "newtprotolinebase", 0x000008d3, &Rnewtprotolinebase },
 	{ "addingmachine", 0x000005d3, &Raddingmachine },
 	{ "extrasdrawer", 0x00000d03, &Rextrasdrawer },
@@ -1173,7 +1170,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "kbdtabbitmap", 0x00000bb3, &Rkbdtabbitmap },
 	{ "canonicaldatacontext", 0x0000007f, &Rcanonicaldatacontext },
 	{ "dtmf1", 0x00000adb, &Rdtmf1 },
-	{ "foldertableft", 0x003f7ed1, &Rfoldertableft },
+	{ "foldertableft", 0x003d759d, &Rfoldertableft },
 	{ "newttextview", 0x0000067f, &Rnewttextview },
 	{ "stopwordlist", 0x0000043b, &Rstopwordlist },
 	{ "calculatorbitmap", 0x00000537, &Rcalculatorbitmap },
@@ -1186,17 +1183,17 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protorichlabelinputline", 0x00000a8f, &Rprotorichlabelinputline },
 	{ "draweropen", 0x00000137, &Rdraweropen },
 	{ "remindslip", 0x000003af, &Rremindslip },
-	{ "testfields", 0x005c8989, &Rtestfields },
+	{ "testfields", 0x0062a2a1, &Rtestfields },
 	{ "ukphonefilter", 0x00000c73, &Rukphonefilter },
-	{ "zapconfirmmsg", 0x003ca465, &Rzapconfirmmsg },
+	{ "zapconfirmmsg", 0x004d12e1, &Rzapconfirmmsg },
 	{ "notifycloud", 0x00000037, &Rnotifycloud },
 	{ "newtentryrollheader", 0x0000066b, &Rnewtentryrollheader },
-	{ "protosubcontentarea", 0x0052b5d5, &Rprotosubcontentarea },
+	{ "protosubcontentarea", 0x0051d455, &Rprotosubcontentarea },
 	{ "cardfileindices", 0x000000b3, &Rcardfileindices },
 	{ "newtpagelayout", 0x00000653, &Rnewtpagelayout },
 	{ "routemissing", 0x00000c0b, &Rroutemissing },
 	{ "ioprotoreceivebutton", 0x00000cdb, &Rioprotoreceivebutton },
-	{ "canonicalframepartinstallinfo", 0x003bbbf1, &Rcanonicalframepartinstallinfo },
+	{ "canonicalframepartinstallinfo", 0x003c4cdd, &Rcanonicalframepartinstallinfo },
 	{ "dtmf1bitmap", 0x00000adb, &Rdtmf1bitmap },
 	{ "protonamerefdatadef", 0x000003c3, &Rprotonamerefdatadef },
 	{ "protobottomtitle", 0x00000287, &Rprotobottomtitle },
@@ -1211,22 +1208,22 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "rcprefsconfig", 0x000006ef, &Rrcprefsconfig },
 	{ "defaultsilentprefinfo", 0x0000061b, &Rdefaultsilentprefinfo },
 	{ "addsound", 0x000004bf, &Raddsound },
-	{ "cursorprototype", 0x005d2a59, &Rcursorprototype },
+	{ "cursorprototype", 0x00633ff5, &Rcursorprototype },
 	{ "newtnewstationerybutton", 0x00000cb7, &Rnewtnewstationerybutton },
 	{ "drawerclose", 0x00000133, &Rdrawerclose },
 	{ "largepentip", 0x00000b1b, &Rlargepentip },
 	{ "rightbitmap", 0x0000051b, &Rrightbitmap },
-	{ "canonicalfirstgroup", 0x0044d641, &Rcanonicalfirstgroup },
+	{ "canonicalfirstgroup", 0x0042d739, &Rcanonicalfirstgroup },
 	{ "copier", 0x000005f3, &Rcopier },
 	{ "missingviewdef", 0x0000093b, &Rmissingviewdef },
 	{ "protorecconfig", 0x0000070b, &Rprotorecconfig },
 	{ "provincepicker", 0x00000727, &Rprovincepicker },
-	{ "canonicalcurrentimport", 0x005cf865, &Rcanonicalcurrentimport },
+	{ "canonicalcurrentimport", 0x0062a621, &Rcanonicalcurrentimport },
 	{ "handwritingstyleimages", 0x00000a87, &Rhandwritingstyleimages },
 	{ "faxdriver", 0x00000147, &Rfaxdriver },
-	{ "bootinitnsglobals", 0x003e81a5, &Rbootinitnsglobals },
-	{ "linespacingfmtstr", 0x003e72c5, &Rlinespacingfmtstr },
-	{ "paragraphcodebook1", 0x005b9931, &Rparagraphcodebook1 },
+	{ "bootinitnsglobals", 0x003c5b25, &Rbootinitnsglobals },
+	{ "linespacingfmtstr", 0x0046ead5, &Rlinespacingfmtstr },
+	{ "paragraphcodebook1", 0x005bc4ed, &Rparagraphcodebook1 },
 	{ "assistbitmap", 0x00000943, &Rassistbitmap },
 	{ "extrasbitmap", 0x00000b07, &Rextrasbitmap },
 	{ "ratchetsound", 0x000004bb, &Rratchetsound },
@@ -1239,14 +1236,14 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "uparrowbitmap", 0x0000051f, &Ruparrowbitmap },
 	{ "newtonnewtbitmap", 0x00000c2b, &Rnewtonnewtbitmap },
 	{ "protonewsetclock", 0x000005eb, &Rprotonewsetclock },
-	{ "canonicalgestaltpatchinfo", 0x003bba85, &Rcanonicalgestaltpatchinfo },
-	{ "ucardpositionalertbutton", 0x0051eb49, &Rucardpositionalertbutton },
+	{ "canonicalgestaltpatchinfo", 0x003c4b71, &Rcanonicalgestaltpatchinfo },
+	{ "ucardpositionalertbutton", 0x005a7f4d, &Rucardpositionalertbutton },
 	{ "rcinkortext", 0x00000707, &Rrcinkortext },
 	{ "newtinfobutton", 0x000001f3, &Rnewtinfobutton },
 	{ "protolonglattextpicker", 0x0000082f, &Rprotolonglattextpicker },
 	{ "protoroll", 0x0000033b, &Rprotoroll },
 	{ "protohilitebutton", 0x000002e3, &Rprotohilitebutton },
-	{ "canonicalexporttableclient", 0x005cf6c5, &Rcanonicalexporttableclient },
+	{ "canonicalexporttableclient", 0x0062a0a5, &Rcanonicalexporttableclient },
 	{ "canonicalrect", 0x00000093, &Rcanonicalrect },
 	{ "canonicalgroupee", 0x0000008b, &Rcanonicalgroupee },
 	{ "prototimebutton", 0x00000203, &Rprototimebutton },
@@ -1267,7 +1264,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "aliascursor", 0x00000863, &Raliascursor },
 	{ "hilitesound", 0x000001bb, &Rhilitesound },
 	{ "ownerbitmap", 0x00000bf3, &Rownerbitmap },
-	{ "uerasepersistentdatabutton0str", 0x003c7b09, &Ruerasepersistentdatabutton0str },
+	{ "uerasepersistentdatabutton0str", 0x0056b459, &Ruerasepersistentdatabutton0str },
 	{ "saveletterweights", 0x000003f3, &Rsaveletterweights },
 	{ "solopokertemplate", 0x00000cff, &Rsolopokertemplate },
 	{ "citysoupname", 0x000003ef, &Rcitysoupname },
@@ -1276,7 +1273,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protodictionary", 0x000002af, &Rprotodictionary },
 	{ "protoiocategory", 0x000002eb, &Rprotoiocategory },
 	{ "newtprotoline", 0x000008d7, &Rnewtprotoline },
-	{ "plainsouppersistent", 0x005d4159, &Rplainsouppersistent },
+	{ "plainsouppersistent", 0x006352d5, &Rplainsouppersistent },
 	{ "canonicalcorrectoralternates", 0x00000573, &Rcanonicalcorrectoralternates },
 	{ "alarmiconbitmap", 0x000005d7, &Ralarmiconbitmap },
 	{ "edgedrawer", 0x0000013b, &Redgedrawer },
@@ -1290,15 +1287,15 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "usdatefilter", 0x00000c47, &Rusdatefilter },
 	{ "analogtimepopup", 0x00000463, &Ranalogtimepopup },
 	{ "prototable", 0x0000037f, &Rprototable },
-	{ "zapsendmsg", 0x003ca631, &Rzapsendmsg },
-	{ "_clicksong", 0x003f5551, &R_clicksong },
-	{ "waitprintermessage", 0x003d783d, &Rwaitprintermessage },
+	{ "zapsendmsg", 0x004d1319, &Rzapsendmsg },
+	{ "_clicksong", 0x003d48e5, &R_clicksong },
+	{ "waitprintermessage", 0x004c89e1, &Rwaitprintermessage },
 	{ "newtstationerypopupbutton", 0x00000cb3, &Rnewtstationerypopupbutton },
 	{ "keybuttbitmap", 0x00000533, &Rkeybuttbitmap },
 	{ "protokeyboard", 0x000002ef, &Rprotokeyboard },
 	{ "routingbitmap", 0x000004e3, &Rroutingbitmap },
-	{ "canonicalparacaretinfo", 0x003bb841, &Rcanonicalparacaretinfo },
-	{ "canonicalcardinfo", 0x003bc079, &Rcanonicalcardinfo },
+	{ "canonicalparacaretinfo", 0x003c492d, &Rcanonicalparacaretinfo },
+	{ "canonicalcardinfo", 0x003c5165, &Rcanonicalcardinfo },
 	{ "routetrashbitmap", 0x0000048f, &Rroutetrashbitmap },
 	{ "prototimedeltatextpicker", 0x0000082b, &Rprototimedeltatextpicker },
 	{ "fontsystem9", 0x0000018f, &Rfontsystem9 },
@@ -1306,7 +1303,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protoprintpage", 0x00000327, &Rprotoprintpage },
 	{ "printslip", 0x00000273, &Rprintslip },
 	{ "yearpopup", 0x0000059b, &Ryearpopup },
-	{ "protocategoryrollcategory", 0x00447c3d, &Rprotocategoryrollcategory },
+	{ "protocategoryrollcategory", 0x004308d5, &Rprotocategoryrollcategory },
 	{ "prototextpicker", 0x000009cb, &Rprototextpicker },
 	{ "analogclock", 0x00000017, &Ranalogclock },
 	{ "dtmf6bitmap", 0x00000aef, &Rdtmf6bitmap },
@@ -1314,8 +1311,8 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "radiooffbitmap", 0x000004a7, &Rradiooffbitmap },
 	{ "newtrosymbolview", 0x000007bb, &Rnewtrosymbolview },
 	{ "calendarnotessoupdef", 0x000005c3, &Rcalendarnotessoupdef },
-	{ "onebeep", 0x003f62e9, &Ronebeep },
-	{ "canonicalgestaltversion", 0x003bb951, &Rcanonicalgestaltversion },
+	{ "onebeep", 0x003d57c5, &Ronebeep },
+	{ "canonicalgestaltversion", 0x003c4a3d, &Rcanonicalgestaltversion },
 	{ "asciishift", 0x0000001f, &Rasciishift },
 	{ "flapslides", 0x00000a2f, &Rflapslides },
 	{ "todoname", 0x00000467, &Rtodoname },
@@ -1330,18 +1327,18 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "keysmallbuttonbitmap", 0x00000b2f, &Rkeysmallbuttonbitmap },
 	{ "keybuttonbitmap", 0x00000b2b, &Rkeybuttonbitmap },
 	{ "repeatqueryspec", 0x000003cf, &Rrepeatqueryspec },
-	{ "canonicalpackagecallbackinfo", 0x003bc00d, &Rcanonicalpackagecallbackinfo },
+	{ "canonicalpackagecallbackinfo", 0x003c50f9, &Rcanonicalpackagecallbackinfo },
 	{ "countrypicker", 0x0000072b, &Rcountrypicker },
 	{ "namerefvalidationframe", 0x000003c7, &Rnamerefvalidationframe },
-	{ "canonicalinkshape", 0x003bb5c1, &Rcanonicalinkshape },
+	{ "canonicalinkshape", 0x003c4709, &Rcanonicalinkshape },
 	{ "northsouthbitmap", 0x00000ac7, &Rnorthsouthbitmap },
-	{ "canonicalfakecontext", 0x005cf6ad, &Rcanonicalfakecontext },
+	{ "canonicalfakecontext", 0x0062a071, &Rcanonicalfakecontext },
 	{ "newtentryviewfiling", 0x00000663, &Rnewtentryviewfiling },
 	{ "rcbuildchains", 0x00000703, &Rrcbuildchains },
-	{ "canonicalgrayfontspec", 0x0044d6f9, &Rcanonicalgrayfontspec },
+	{ "canonicalgrayfontspec", 0x0042d7f1, &Rcanonicalgrayfontspec },
 	{ "protopinwithoutlogic", 0x000008b7, &Rprotopinwithoutlogic },
-	{ "alerterbeep", 0x003f6289, &Ralerterbeep },
-	{ "bizarrebeep", 0x003f6111, &Rbizarrebeep },
+	{ "alerterbeep", 0x003d5731, &Ralerterbeep },
+	{ "bizarrebeep", 0x003d5565, &Rbizarrebeep },
 	{ "protomulticursor", 0x0000019f, &Rprotomulticursor },
 	{ "searchprefix", 0x000003ff, &Rsearchprefix },
 	{ "ukdatefilter", 0x00000c4f, &Rukdatefilter },
@@ -1353,31 +1350,31 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "vconfirm", 0x00000923, &Rvconfirm },
 	{ "rominternational", 0x000003db, &Rrominternational },
 	{ "cuckoosound", 0x000004b7, &Rcuckoosound },
-	{ "gfunky", 0x00626be9, &Rgfunky },
-	{ "stylepreflight", 0x004dfeed, &Rstylepreflight },
+	{ "gfunky", 0x0063aac1, &Rgfunky },
+	{ "stylepreflight", 0x004d93f1, &Rstylepreflight },
 	{ "timesromanfont", 0x0000045b, &Rtimesromanfont },
-	{ "connvalidtestexclusion", 0x0048209d, &Rconnvalidtestexclusion },
-	{ "ucardreinsertalerttext", 0x003c6c15, &Rucardreinsertalerttext },
+	{ "connvalidtestexclusion", 0x00472c1d, &Rconnvalidtestexclusion },
+	{ "ucardreinsertalerttext", 0x003c724d, &Rucardreinsertalerttext },
 	{ "bootsound", 0x00000043, &Rbootsound },
 	{ "canonicaldate", 0x00000083, &Rcanonicaldate },
-	{ "protoiconradiobutton", 0x0046aa51, &Rprotoiconradiobutton },
+	{ "protoiconradiobutton", 0x00459ed1, &Rprotoiconradiobutton },
 	{ "prototitle", 0x00000397, &Rprototitle },
-	{ "classinfoprototype", 0x005d2ad1, &Rclassinfoprototype },
+	{ "classinfoprototype", 0x00636141, &Rclassinfoprototype },
 	{ "prototextexpando", 0x0000038f, &Rprototextexpando },
 	{ "tabrighthilitebitmap", 0x00000b67, &Rtabrighthilitebitmap },
 	{ "newtoverlayout", 0x00000657, &Rnewtoverlayout },
-	{ "upackneedscardalerttext", 0x003c6d6d, &Rupackneedscardalerttext },
+	{ "upackneedscardalerttext", 0x003c7331, &Rupackneedscardalerttext },
 	{ "iotransportbutton", 0x00000cd7, &Riotransportbutton },
 	{ "noconvertsouplist", 0x0000090b, &Rnoconvertsouplist },
 	{ "bindi", 0x00000acf, &Rbindi },
 	{ "click", 0x000000cf, &Rclick },
 	{ "addresseeslip", 0x00000007, &Raddresseeslip },
-	{ "capslocklight", 0x00438aa5, &Rcapslocklight },
+	{ "capslocklight", 0x0041a691, &Rcapslocklight },
 	{ "protopreferencesfield", 0x00000997, &Rprotopreferencesfield },
 	{ "phonepad", 0x00000a93, &Rphonepad },
 	{ "defaultinfoprefs", 0x0000089f, &Rdefaultinfoprefs },
 	{ "protousstatestextpicker", 0x000009e7, &Rprotousstatestextpicker },
-	{ "wildestbeep", 0x003f63c5, &Rwildestbeep },
+	{ "wildestbeep", 0x003d58a1, &Rwildestbeep },
 	{ "keyrightparenbitmap", 0x00000ba3, &Rkeyrightparenbitmap },
 	{ "vgauge", 0x0000091f, &Rvgauge },
 	{ "keycolonbitmap", 0x00000b7f, &Rkeycolonbitmap },
@@ -1394,33 +1391,33 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "routelog", 0x00000bdf, &Rroutelog },
 	{ "newtfilingbutton", 0x000006e3, &Rnewtfilingbutton },
 	{ "protopictindexer", 0x00000313, &Rprotopictindexer },
-	{ "ucardwpalerttext", 0x003c705d, &Rucardwpalerttext },
+	{ "ucardwpalerttext", 0x003c74c9, &Rucardwpalerttext },
 	{ "usstdphonefilter", 0x00000c63, &Russtdphonefilter },
 	{ "protonote", 0x000005fb, &Rprotonote },
 	{ "newtstationermenu", 0x0000063f, &Rnewtstationermenu },
 	{ "freshcardname", 0x000008b3, &Rfreshcardname },
-	{ "canonicalpictureshape", 0x003bb639, &Rcanonicalpictureshape },
+	{ "canonicalpictureshape", 0x003c4765, &Rcanonicalpictureshape },
 	{ "calendar", 0x0000004b, &Rcalendar },
 	{ "cardfile", 0x000000af, &Rcardfile },
 	{ "vstatus", 0x00000913, &Rvstatus },
 	{ "countrysoupname", 0x0000049f, &Rcountrysoupname },
 	{ "protoinfobutton", 0x0000077b, &Rprotoinfobutton },
-	{ "bootruninitscripts", 0x003e83d1, &Rbootruninitscripts },
+	{ "bootruninitscripts", 0x003c5d51, &Rbootruninitscripts },
 	{ "protoroutingformat", 0x00000413, &Rprotoroutingformat },
 	{ "cloud3", 0x000000df, &Rcloud3 },
 	{ "kbdrightbitmap", 0x00000bbb, &Rkbdrightbitmap },
 	{ "kbdshiftbitmap", 0x00000bc7, &Rkbdshiftbitmap },
 	{ "recorderengine", 0x00000d4b, &Rrecorderengine },
-	{ "smallclockbitmaps", 0x003f8465, &Rsmallclockbitmaps },
+	{ "smallclockbitmaps", 0x003d8419, &Rsmallclockbitmaps },
 	{ "transportscripts", 0x00000c1b, &Rtransportscripts },
 	{ "defaultinboxprefinfo", 0x00000843, &Rdefaultinboxprefinfo },
-	{ "inkname", 0x003db3c5, &Rinkname },
+	{ "inkname", 0x003d9351, &Rinkname },
 	{ "coverpageformat", 0x000000f3, &Rcoverpageformat },
 	{ "pagefooter", 0x00000233, &Rpagefooter },
 	{ "mediumpentipbitmap", 0x00000b17, &Rmediumpentipbitmap },
 	{ "gtscenes", 0x000001ab, &Rgtscenes },
-	{ "caretbitsoutside", 0x0047de29, &Rcaretbitsoutside },
-	{ "txcanonicalruler", 0x0047e809, &Rtxcanonicalruler },
+	{ "caretbitsoutside", 0x0046e2b9, &Rcaretbitsoutside },
+	{ "txcanonicalruler", 0x0046ed0d, &Rtxcanonicalruler },
 	{ "alarmqueryspec", 0x0000000f, &Ralarmqueryspec },
 	{ "dateintervalpopup", 0x00000593, &Rdateintervalpopup },
 	{ "protopeoplepicker", 0x00000a63, &Rprotopeoplepicker },
@@ -1428,7 +1425,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "outboxbitmap", 0x00000547, &Routboxbitmap },
 	{ "todosoupname", 0x0000046b, &Rtodosoupname },
 	{ "protostatemachinecallbackspec", 0x00000837, &Rprotostatemachinecallbackspec },
-	{ "canonicalkeycommand", 0x003bb8f1, &Rcanonicalkeycommand },
+	{ "canonicalkeycommand", 0x003c49dd, &Rcanonicalkeycommand },
 	{ "newtstatusbar", 0x00000647, &Rnewtstatusbar },
 	{ "outboxsoupdef", 0x0000086f, &Routboxsoupdef },
 	{ "canonicalcharcorrector", 0x0000062b, &Rcanonicalcharcorrector },
@@ -1437,18 +1434,17 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "cardfilesoupdef", 0x000005a7, &Rcardfilesoupdef },
 	{ "newtstationery", 0x0000070f, &Rnewtstationery },
 	{ "rcdefaultconfig", 0x000006f3, &Rrcdefaultconfig },
-	{ "smallflagbitmap", 0x003f8e6d, &Rsmallflagbitmap },
+	{ "smallflagbitmap", 0x003d8e21, &Rsmallflagbitmap },
 	{ "cardbitmap", 0x0000056f, &Rcardbitmap },
 	{ "dtmf3", 0x00000ae3, &Rdtmf3 },
 	{ "repeatindices", 0x000003bb, &Rrepeatindices },
-	{ "gongbeep", 0x003f61d9, &Rgongbeep },
-	{ "canonicalmeetingdroptext", 0x003bc2ad, &Rcanonicalmeetingdroptext },
+	{ "gongbeep", 0x003d564d, &Rgongbeep },
+	{ "canonicalmeetingdroptext", 0x003c5399, &Rcanonicalmeetingdroptext },
 	{ "routeaddsender", 0x00000c13, &Rrouteaddsender },
 	{ "defaultstateicons", 0x0000048b, &Rdefaultstateicons },
 	{ "prototimedeltapicker", 0x00000813, &Rprototimedeltapicker },
 	{ "protoletterspreferencesfield", 0x00000993, &Rprotoletterspreferencesfield },
 	{ "newtapplication", 0x0000063b, &Rnewtapplication },
-	{ "swissgermkeycodemapping", 0x003be1f1, &Rswissgermkeycodemapping },
 	{ "newtmailnetchooser", 0x0000084f, &Rnewtmailnetchooser },
 	{ "newtrollshowstationerybutton", 0x00000cbf, &Rnewtrollshowstationerybutton },
 	{ "protoborder", 0x00000283, &Rprotoborder },
@@ -1464,18 +1460,18 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "checkbitmap", 0x00000bef, &Rcheckbitmap },
 	{ "dtmf3bitmap", 0x00000ae3, &Rdtmf3bitmap },
 	{ "routereply", 0x00000bd3, &Rroutereply },
-	{ "canonicalsocketinfo", 0x003bc139, &Rcanonicalsocketinfo },
+	{ "canonicalsocketinfo", 0x003c5225, &Rcanonicalsocketinfo },
 	{ "newtrotextdateview", 0x0000068b, &Rnewtrotextdateview },
 	{ "priorityitems", 0x00000033, &Rpriorityitems },
 	{ "cardeventhandlers", 0x00000877, &Rcardeventhandlers },
 	{ "newttexttimeview", 0x000007b3, &Rnewttexttimeview },
 	{ "openpadlockbitmap", 0x00000963, &Ropenpadlockbitmap },
 	{ "protopeoplepopup", 0x000005cf, &Rprotopeoplepopup },
-	{ "txlocalprototype", 0x0047e6e9, &Rtxlocalprototype },
-	{ "pleasantbeep", 0x003f6191, &Rpleasantbeep },
+	{ "txlocalprototype", 0x0046ebed, &Rtxlocalprototype },
+	{ "pleasantbeep", 0x003d5605, &Rpleasantbeep },
 	{ "protoextraslistitem", 0x00000c9f, &Rprotoextraslistitem },
-	{ "txchartopointresult", 0x0047e619, &Rtxchartopointresult },
-	{ "caretbitsinside", 0x0047dde5, &Rcaretbitsinside },
+	{ "txchartopointresult", 0x0046eb1d, &Rtxchartopointresult },
+	{ "caretbitsinside", 0x0046e275, &Rcaretbitsinside },
 	{ "keycapsbitmap", 0x0000052f, &Rkeycapsbitmap },
 	{ "routebeamicon", 0x00000b6f, &Rroutebeamicon },
 	{ "callslip", 0x0000006f, &Rcallslip },
@@ -1487,8 +1483,8 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtdatentimefilter", 0x00000a13, &Rnewtdatentimefilter },
 	{ "protoschedulepicker", 0x00000497, &Rprotoschedulepicker },
 	{ "settingsshapebitmap", 0x00000b53, &Rsettingsshapebitmap },
-	{ "emailtext", 0x003c6119, &Remailtext },
-	{ "errnumbertoolarge", 0x003d6765, &Rerrnumbertoolarge },
+	{ "emailtext", 0x0042f541, &Remailtext },
+	{ "errnumbertoolarge", 0x004a5bbd, &Rerrnumbertoolarge },
 	{ "routeupdatebitmap", 0x00000be7, &Rrouteupdatebitmap },
 	{ "poof", 0x000004eb, &Rpoof },
 	{ "inboxsoupdef", 0x0000086b, &Rinboxsoupdef },
@@ -1502,29 +1498,29 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "loadcalibration", 0x000001d7, &Rloadcalibration },
 	{ "protosoftbuttonbaricon", 0x00000d6b, &Rprotosoftbuttonbaricon },
 	{ "protoview", 0x00000d0f, &Rprotoview },
-	{ "canonicalgestaltrebootinfo", 0x003bba0d, &Rcanonicalgestaltrebootinfo },
-	{ "checkonbitmap", 0x003e9589, &Rcheckonbitmap },
+	{ "canonicalgestaltrebootinfo", 0x003c4af9, &Rcanonicalgestaltrebootinfo },
+	{ "checkonbitmap", 0x003c88a5, &Rcheckonbitmap },
 	{ "iotransportover", 0x00000cdf, &Riotransportover },
-	{ "packagedirectory", 0x0058237d, &Rpackagedirectory },
+	{ "packagedirectory", 0x00557ec5, &Rpackagedirectory },
 	{ "paperlinedbitmap", 0x00000b37, &Rpaperlinedbitmap },
 	{ "protonotifyform", 0x0000087b, &Rprotonotifyform },
 	{ "protostatictext", 0x0000036b, &Rprotostatictext },
 	{ "protostatusicon", 0x00000757, &Rprotostatusicon },
-	{ "commandkeyicon", 0x003e9849, &Rcommandkeyicon },
-	{ "foldertabright", 0x003f7f35, &Rfoldertabright },
+	{ "commandkeyicon", 0x003c8bad, &Rcommandkeyicon },
+	{ "foldertabright", 0x003d7601, &Rfoldertabright },
 	{ "helpbookbitmap", 0x00000947, &Rhelpbookbitmap },
 	{ "fontsystem14", 0x00000177, &Rfontsystem14 },
-	{ "txexternalvboprototype", 0x0047e78d, &Rtxexternalvboprototype },
+	{ "txexternalvboprototype", 0x0046ec91, &Rtxexternalvboprototype },
 	{ "filingslip", 0x00000153, &Rfilingslip },
 	{ "routeduplicateicon", 0x00000493, &Rrouteduplicateicon },
 	{ "aztabsslimmaskcz", 0x000008c7, &Raztabsslimmaskcz },
 	{ "alarmsoupconversionframe", 0x000007df, &Ralarmsoupconversionframe },
 	{ "newtnrlabeltimeinputline", 0x000009ef, &Rnewtnrlabeltimeinputline },
-	{ "errnumberoutofrange", 0x003d6721, &Rerrnumberoutofrange },
+	{ "errnumberoutofrange", 0x004a5b89, &Rerrnumberoutofrange },
 	{ "newtsmartnamefilter", 0x00000a2b, &Rnewtsmartnamefilter },
 	{ "protolabelinputline", 0x000002f7, &Rprotolabelinputline },
 	{ "gtpens", 0x000001a7, &Rgtpens },
-	{ "controlkeyicon", 0x003e9981, &Rcontrolkeyicon },
+	{ "controlkeyicon", 0x003c8ce5, &Rcontrolkeyicon },
 	{ "newttimefilter", 0x00000a0f, &Rnewttimefilter },
 	{ "assistant", 0x00000587, &Rassistant },
 	{ "tocksound", 0x000004b3, &Rtocksound },
@@ -1539,21 +1535,21 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtrolllayout", 0x0000064f, &Rnewtrolllayout },
 	{ "protomonthview", 0x00000d2b, &Rprotomonthview },
 	{ "protoprintform", 0x00000aa3, &Rprotoprintform },
-	{ "canonicaltextshape", 0x003bb651, &Rcanonicaltextshape },
+	{ "canonicaltextshape", 0x003c4799, &Rcanonicaltextshape },
 	{ "dtmf8", 0x00000af7, &Rdtmf8 },
 	{ "fontsystem14underline", 0x0000017f, &Rfontsystem14underline },
-	{ "wildbeep", 0x003f6259, &Rwildbeep },
+	{ "wildbeep", 0x003d56e5, &Rwildbeep },
 	{ "digitslides", 0x000009bb, &Rdigitslides },
 	{ "alarmicontinybitmap", 0x0000093f, &Ralarmicontinybitmap },
 	{ "aztabsmaskcz", 0x00000637, &Raztabsmaskcz },
 	{ "touchtonepad", 0x00000a97, &Rtouchtonepad },
 	{ "vphonekeypad", 0x0000092b, &Rvphonekeypad },
-	{ "koserroralerttextboundsnobuttons", 0x003bb741, &Rkoserroralerttextboundsnobuttons },
-	{ "canonicalpictdragdata", 0x0044d8c5, &Rcanonicalpictdragdata },
+	{ "koserroralerttextboundsnobuttons", 0x003c7025, &Rkoserroralerttextboundsnobuttons },
+	{ "canonicalpictdragdata", 0x0042d9bd, &Rcanonicalpictdragdata },
 	{ "usstddatefilter", 0x00000c43, &Russtddatefilter },
 	{ "repeatnotessoupdef", 0x000005bf, &Rrepeatnotessoupdef },
-	{ "canonicaleditcaretinfo", 0x003bb891, &Rcanonicaleditcaretinfo },
-	{ "builtinfunctions", 0x0062418d, &Rbuiltinfunctions },
+	{ "canonicaleditcaretinfo", 0x003c497d, &Rcanonicaleditcaretinfo },
+	{ "builtinfunctions", 0x00639581, &Rbuiltinfunctions },
 	{ "countrylocpicker", 0x000008a7, &Rcountrylocpicker },
 	{ "protodatentimetextpicker", 0x000009db, &Rprotodatentimetextpicker },
 	{ "protoslider", 0x00000353, &Rprotoslider },
@@ -1564,40 +1560,40 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "previewremoteview", 0x00000a9f, &Rpreviewremoteview },
 	{ "protofilingbutton", 0x000002c3, &Rprotofilingbutton },
 	{ "paragraphdata", 0x00000ab3, &Rparagraphdata },
-	{ "txclipboardprototype", 0x0047e6b1, &Rtxclipboardprototype },
+	{ "txclipboardprototype", 0x0046ebb5, &Rtxclipboardprototype },
 	{ "dtmf8bitmap", 0x00000af7, &Rdtmf8bitmap },
 	{ "systemsymbolfont", 0x00000443, &Rsystemsymbolfont },
 	{ "letterheader", 0x00000867, &Rletterheader },
 	{ "recinkbitmap", 0x00000b4b, &Rrecinkbitmap },
-	{ "dtmfdel", 0x003f8271, &Rdtmfdel },
+	{ "dtmfdel", 0x003d811d, &Rdtmfdel },
 	{ "infobitmap", 0x000005f7, &Rinfobitmap },
 	{ "wakeupbeep", 0x00000043, &Rwakeupbeep },
-	{ "protoinstanceofrepeatingmeeting", 0x0050f82d, &Rprotoinstanceofrepeatingmeeting },
+	{ "protoinstanceofrepeatingmeeting", 0x005009b1, &Rprotoinstanceofrepeatingmeeting },
 	{ "basiccalltransport", 0x0000085f, &Rbasiccalltransport },
-	{ "canonicalgestaltsysteminfo", 0x003bb9ad, &Rcanonicalgestaltsysteminfo },
+	{ "canonicalgestaltsysteminfo", 0x003c4a99, &Rcanonicalgestaltsysteminfo },
 	{ "protodoubleclock", 0x00000743, &Rprotodoubleclock },
 	{ "starterparagraph", 0x0000042f, &Rstarterparagraph },
 	{ "tickleiaprogress", 0x000004cb, &Rtickleiaprogress },
 	{ "blacklistnowbuiltin", 0x0000035b, &Rblacklistnowbuiltin },
-	{ "canonicalpowerstats", 0x003bbb65, &Rcanonicalpowerstats },
+	{ "canonicalpowerstats", 0x003c4c51, &Rcanonicalpowerstats },
 	{ "caretpunctbits", 0x00000c8b, &Rcaretpunctbits },
 	{ "routefaxbitmap", 0x0000080f, &Rroutefaxbitmap },
-	{ "canonicalcurrentexport", 0x005cf71d, &Rcanonicalcurrentexport },
+	{ "canonicalcurrentexport", 0x0062a5c1, &Rcanonicalcurrentexport },
 	{ "datepopup", 0x000004f7, &Rdatepopup },
 	{ "protodivider", 0x000002b3, &Rprotodivider },
 	{ "volumeslider", 0x00000d73, &Rvolumeslider },
 	{ "protolongitudepicker", 0x0000081f, &Rprotolongitudepicker },
-	{ "canonicalgestaltpatchinfoarrayelement", 0x003bbab9, &Rcanonicalgestaltpatchinfoarrayelement },
-	{ "indexdescprototype", 0x005d41a1, &Rindexdescprototype },
+	{ "canonicalgestaltpatchinfoarrayelement", 0x003c4ba5, &Rcanonicalgestaltpatchinfoarrayelement },
+	{ "indexdescprototype", 0x0063531d, &Rindexdescprototype },
 	{ "rctrylettersconfig", 0x000006fb, &Rrctrylettersconfig },
 	{ "newtaboutview", 0x00000263, &Rnewtaboutview },
 	{ "systemconversionframe", 0x000008e7, &Rsystemconversionframe },
 	{ "protopin", 0x00000303, &Rprotopin },
-	{ "uerasepersistentconfirmalerttext", 0x003c6a2d, &Ruerasepersistentconfirmalerttext },
-	{ "canonicalcorrectinfo", 0x0044d761, &Rcanonicalcorrectinfo },
-	{ "protorecorderbutton", 0x004402cd, &Rprotorecorderbutton },
+	{ "uerasepersistentconfirmalerttext", 0x003c70d1, &Ruerasepersistentconfirmalerttext },
+	{ "canonicalcorrectinfo", 0x0042d859, &Rcanonicalcorrectinfo },
+	{ "protorecorderbutton", 0x00426c59, &Rprotorecorderbutton },
 	{ "prototimetextpicker", 0x000009cf, &Rprototimetextpicker },
-	{ "_knownglobalsymbols", 0x003a62b9, &R_knownglobalsymbols },
+	{ "_knownglobalsymbols", 0x003b02c9, &R_knownglobalsymbols },
 	{ "protostatusbar", 0x00000373, &Rprotostatusbar },
 	{ "starterpolygon", 0x00000433, &Rstarterpolygon },
 	{ "systemsoupname", 0x00000453, &Rsystemsoupname },
@@ -1607,7 +1603,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "fontsystem18bold", 0x00000187, &Rfontsystem18bold },
 	{ "additionalbootshiftkeyfn", 0x00000ca3, &Radditionalbootshiftkeyfn },
 	{ "copperfield", 0x000000eb, &Rcopperfield },
-	{ "drawingname", 0x003db38d, &Rdrawingname },
+	{ "drawingname", 0x003d938d, &Rdrawingname },
 	{ "routemailbitmap", 0x00000b73, &Rroutemailbitmap },
 	{ "ukstddatefilter", 0x00000c4b, &Rukstddatefilter },
 	{ "reviewdict", 0x000003d3, &Rreviewdict },
@@ -1617,13 +1613,13 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "datequeryspec", 0x00000107, &Rdatequeryspec },
 	{ "prplainformat", 0x00000d97, &Rprplainformat },
 	{ "soundrecorder", 0x00000d53, &Rsoundrecorder },
-	{ "protocontentarea", 0x0052b54d, &Rprotocontentarea },
+	{ "protocontentarea", 0x0051d3cd, &Rprotocontentarea },
 	{ "protoframeformat", 0x000000d3, &Rprotoframeformat },
 	{ "numerickeys", 0x000005e3, &Rnumerickeys },
-	{ "startermath", 0x0044d7c5, &Rstartermath },
+	{ "startermath", 0x0042d8bd, &Rstartermath },
 	{ "zonechooser", 0x000004db, &Rzonechooser },
-	{ "canonicalciscardfunctioninfo", 0x003bc195, &Rcanonicalciscardfunctioninfo },
-	{ "clockfacebitmap", 0x003f8a71, &Rclockfacebitmap },
+	{ "canonicalciscardfunctioninfo", 0x003c5281, &Rcanonicalciscardfunctioninfo },
+	{ "clockfacebitmap", 0x003d8a25, &Rclockfacebitmap },
 	{ "newtnetchooser", 0x000007f7, &Rnewtnetchooser },
 	{ "protogaugeview", 0x00000d27, &Rprotogaugeview },
 	{ "protothumbnail", 0x00000793, &Rprotothumbnail },
@@ -1640,36 +1636,36 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtsmartphoneview", 0x000006b3, &Rnewtsmartphoneview },
 	{ "protocallassistbutton", 0x00000a73, &Rprotocallassistbutton },
 	{ "faxheader", 0x0000014b, &Rfaxheader },
-	{ "canonicalfontspec", 0x0044d6c1, &Rcanonicalfontspec },
+	{ "canonicalfontspec", 0x0042d7b9, &Rcanonicalfontspec },
 	{ "protooutcategory", 0x000004ff, &Rprotooutcategory },
 	{ "protoprintformat", 0x00000323, &Rprotoprintformat },
 	{ "defrotatefunc", 0x00000933, &Rdefrotatefunc },
 	{ "newtrolabeldateinputline", 0x000009b3, &Rnewtrolabeldateinputline },
 	{ "alarmwakeup", 0x00000013, &Ralarmwakeup },
-	{ "uerasepersistentstatusalerttext", 0x003c6ab1, &Ruerasepersistentstatusalerttext },
+	{ "uerasepersistentstatusalerttext", 0x003c7149, &Ruerasepersistentstatusalerttext },
 	{ "cities", 0x000000cb, &Rcities },
 	{ "blindentryline", 0x000008a3, &Rblindentryline },
 	{ "worldmapbitmap", 0x00000507, &Rworldmapbitmap },
 	{ "newtlabeltimeinputline", 0x000007b7, &Rnewtlabeltimeinputline },
-	{ "zaprecvconnectmsg", 0x003ca50d, &Rzaprecvconnectmsg },
+	{ "zaprecvconnectmsg", 0x004d1205, &Rzaprecvconnectmsg },
 	{ "protocommand", 0x000006c7, &Rprotocommand },
 	{ "prototransportpopup", 0x0000085b, &Rprototransportpopup },
 	{ "notifycloudmask", 0x0000012b, &Rnotifycloudmask },
 	{ "newtaztabs", 0x000006bb, &Rnewtaztabs },
 	{ "rebootslip", 0x000008f7, &Rrebootslip },
-	{ "sorttables", 0x005c944d, &Rsorttables },
+	{ "sorttables", 0x0062d7fd, &Rsorttables },
 	{ "protocharcorrector", 0x0000062b, &Rprotocharcorrector },
 	{ "protoparagraphview", 0x00000d17, &Rprotoparagraphview },
 	{ "snoozenotification", 0x0000015b, &Rsnoozenotification },
 	{ "plunk", 0x000004e7, &Rplunk },
-	{ "koserroralertbutton1bounds", 0x003bb779, &Rkoserroralertbutton1bounds },
+	{ "koserroralertbutton1bounds", 0x003c705d, &Rkoserroralertbutton1bounds },
 	{ "protosetclock", 0x0000034b, &Rprotosetclock },
-	{ "canonicaldragitem", 0x0044d865, &Rcanonicaldragitem },
+	{ "canonicaldragitem", 0x0042d95d, &Rcanonicaldragitem },
 	{ "routeprinticon", 0x00000b6b, &Rrouteprinticon },
 	{ "letterweightquery", 0x000001d3, &Rletterweightquery },
 	{ "canonicalcompass", 0x00000073, &Rcanonicalcompass },
 	{ "fontsystem10bold", 0x00000163, &Rfontsystem10bold },
-	{ "storepersistent", 0x005d013d, &Rstorepersistent },
+	{ "storepersistent", 0x00635f15, &Rstorepersistent },
 	{ "protopolygonview", 0x00000d1b, &Rprotopolygonview },
 	{ "protodefaultstatusbutton", 0x00000d43, &Rprotodefaultstatusbutton },
 	{ "dictionaries", 0x00000117, &Rdictionaries },
@@ -1680,7 +1676,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "filingextbitmap", 0x00000b23, &Rfilingextbitmap },
 	{ "kbdoptionbitmap", 0x00000bcb, &Rkbdoptionbitmap },
 	{ "newtfloatingbar", 0x0000072f, &Rnewtfloatingbar },
-	{ "smalllogobitmap", 0x003f65f5, &Rsmalllogobitmap },
+	{ "smalllogobitmap", 0x003d5ad1, &Rsmalllogobitmap },
 	{ "backupslip", 0x0000090f, &Rbackupslip },
 	{ "newtclockshowbar", 0x0000028b, &Rnewtclockshowbar },
 	{ "faxroutingicon", 0x0000080f, &Rfaxroutingicon },
@@ -1694,79 +1690,78 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtprefsview", 0x000001af, &Rnewtprefsview },
 	{ "userdictquery", 0x0000047b, &Ruserdictquery },
 	{ "newtnumview", 0x00000687, &Rnewtnumview },
-	{ "rootcontext", 0x005ca185, &Rrootcontext },
+	{ "rootcontext", 0x0062fce5, &Rrootcontext },
 	{ "frenchdepartmentname", 0x00000d5b, &Rfrenchdepartmentname },
 	{ "protocorrectcontext", 0x0000029f, &Rprotocorrectcontext },
 	{ "canonicalcorrector", 0x0000007b, &Rcanonicalcorrector },
 	{ "leadingpunctbitmap", 0x00000953, &Rleadingpunctbitmap },
 	{ "dtmf5", 0x00000aeb, &Rdtmf5 },
-	{ "protocolinstanceprototype", 0x005d2b01, &Rprotocolinstanceprototype },
+	{ "protocolinstanceprototype", 0x00636171, &Rprotocolinstanceprototype },
 	{ "calendarstuff", 0x00000067, &Rcalendarstuff },
-	{ "canonicalpackageliteframe", 0x003bbe6d, &Rcanonicalpackageliteframe },
+	{ "canonicalpackageliteframe", 0x003c4f59, &Rcanonicalpackageliteframe },
 	{ "aztabsmaska", 0x00000553, &Raztabsmaska },
-	{ "clicks", 0x003f5429, &Rclicks },
-	{ "smallroundclockbitmaps", 0x003f8825, &Rsmallroundclockbitmaps },
+	{ "clicks", 0x003d47bd, &Rclicks },
+	{ "smallroundclockbitmaps", 0x003d87d9, &Rsmallroundclockbitmaps },
 	{ "alphakeys", 0x000005df, &Ralphakeys },
 	{ "rcnorecog", 0x000006eb, &Rrcnorecog },
 	{ "protocheckboxicon", 0x00000297, &Rprotocheckboxicon },
-	{ "protoiconcheckbox", 0x0046aa11, &Rprotoiconcheckbox },
+	{ "protoiconcheckbox", 0x00459e91, &Rprotoiconcheckbox },
 	{ "protopopupbutton", 0x0000060b, &Rprotopopupbutton },
-	{ "udefaultreasonforbusycard", 0x003c6ec1, &Rudefaultreasonforbusycard },
+	{ "udefaultreasonforbusycard", 0x003c7645, &Rudefaultreasonforbusycard },
 	{ "searchsuffix", 0x00000403, &Rsearchsuffix },
-	{ "kcardalerttextbounds", 0x003e8dbd, &Rkcardalerttextbounds },
+	{ "kcardalerttextbounds", 0x003c7231, &Rkcardalerttextbounds },
 	{ "protostatusprogress", 0x00000763, &Rprotostatusprogress },
 	{ "usdefaultphonefilter", 0x00000c5f, &Rusdefaultphonefilter },
-	{ "curemotethumb", 0x00523151, &Rcuremotethumb },
-	{ "errnotanumber", 0x003d66fd, &Rerrnotanumber },
+	{ "curemotethumb", 0x00521105, &Rcuremotethumb },
+	{ "errnotanumber", 0x004a5b61, &Rerrnotanumber },
 	{ "protofinditem", 0x000002cb, &Rprotofinditem },
 	{ "newtlabelnuminputline", 0x0000069f, &Rnewtlabelnuminputline },
 	{ "newtnumberfilter", 0x00000a07, &Rnewtnumberfilter },
-	{ "ucardreinsertalertbutton", 0x0051eb49, &Rucardreinsertalertbutton },
+	{ "ucardreinsertalertbutton", 0x005a7f4d, &Rucardreinsertalertbutton },
 	{ "newtshowbar", 0x0000023f, &Rnewtshowbar },
 	{ "canadianprovincename", 0x00000717, &Rcanadianprovincename },
-	{ "canonicalbitmapshape", 0x003bb5fd, &Rcanonicalbitmapshape },
+	{ "canonicalbitmapshape", 0x003c4745, &Rcanonicalbitmapshape },
 	{ "multidatepopup", 0x00000597, &Rmultidatepopup },
 	{ "newtcityfilter", 0x00000a1f, &Rnewtcityfilter },
-	{ "printdoneerror", 0x003ca2d5, &Rprintdoneerror },
+	{ "printdoneerror", 0x004c739d, &Rprintdoneerror },
 	{ "initialinheritanceframe", 0x000001c3, &Rinitialinheritanceframe },
 	{ "protostreamingendpoint", 0x0000074b, &Rprotostreamingendpoint },
 	{ "protogeneralpopup", 0x00000a7f, &Rprotogeneralpopup },
 	{ "protostatusbarber", 0x00000057, &Rprotostatusbarber },
-	{ "uerasepersistentconfirmbutton1str", 0x003cc461, &Ruerasepersistentconfirmbutton1str },
+	{ "uerasepersistentconfirmbutton1str", 0x004607ad, &Ruerasepersistentconfirmbutton1str },
 	{ "protodesktopendpoint", 0x000009bf, &Rprotodesktopendpoint },
 	{ "protopictradiobutton", 0x00000317, &Rprotopictradiobutton },
 	{ "keyradicalbitmap", 0x00000b9f, &Rkeyradicalbitmap },
 	{ "newtqbetextview", 0x00000693, &Rnewtqbetextview },
 	{ "dateindices", 0x00000103, &Rdateindices },
 	{ "dtmf5bitmap", 0x00000aeb, &Rdtmf5bitmap },
-	{ "canonicalpendingimport", 0x005cf6c5, &Rcanonicalpendingimport },
+	{ "canonicalpendingimport", 0x0062a0a5, &Rcanonicalpendingimport },
 	{ "protodictionarycursor", 0x00000567, &Rprotodictionarycursor },
 	{ "disconnectmessage", 0x0000011f, &Rdisconnectmessage },
 	{ "protooutlineview", 0x00000d33, &Rprotooutlineview },
-	{ "txrangeprototype", 0x0047e5e9, &Rtxrangeprototype },
-	{ "canonicalgestaltsoundinfo", 0x003bba49, &Rcanonicalgestaltsoundinfo },
-	{ "emailclasses", 0x003c60d1, &Remailclasses },
+	{ "txrangeprototype", 0x0046eaed, &Rtxrangeprototype },
+	{ "canonicalgestaltsoundinfo", 0x003c4b35, &Rcanonicalgestaltsoundinfo },
+	{ "emailclasses", 0x0042f2d1, &Remailclasses },
 	{ "filingbitmap", 0x00000b1f, &Rfilingbitmap },
 	{ "frcantimefilter", 0x00000c5b, &Rfrcantimefilter },
 	{ "newtrotextview", 0x0000067b, &Rnewtrotextview },
 	{ "simplebeep", 0x00000013, &Rsimplebeep },
 	{ "longlatpicker", 0x00000827, &Rlonglatpicker },
 	{ "canonicalgesturepoint", 0x00000583, &Rcanonicalgesturepoint },
-	{ "canonicalshapedragdata", 0x0044d899, &Rcanonicalshapedragdata },
+	{ "canonicalshapedragdata", 0x0042d991, &Rcanonicalshapedragdata },
 	{ "cribnote", 0x000000f7, &Rcribnote },
-	{ "dtmfleft", 0x003f809d, &Rdtmfleft },
-	{ "uskeycodemapping", 0x003e8ee5, &Ruskeycodemapping },
+	{ "dtmfleft", 0x003d7f49, &Rdtmfleft },
 	{ "colonslides", 0x0000096f, &Rcolonslides },
 	{ "statepicker", 0x00000723, &Rstatepicker },
-	{ "trashbitmap", 0x003edfc5, &Rtrashbitmap },
+	{ "trashbitmap", 0x003cd369, &Rtrashbitmap },
 	{ "trailingpunctbitmap", 0x0000095b, &Rtrailingpunctbitmap },
-	{ "crumplebitmaps", 0x003f7e45, &Rcrumplebitmaps },
+	{ "crumplebitmaps", 0x003d7511, &Rcrumplebitmaps },
 	{ "keytimesbitmap", 0x00000bab, &Rkeytimesbitmap },
-	{ "zaprecvdonemsg", 0x004e414d, &Rzaprecvdonemsg },
-	{ "alertfont", 0x00401db9, &Ralertfont },
-	{ "proto1_2Exformentry", 0x0053e445, &Rproto1_2Exformentry },
-	{ "trig", 0x005b6281, &Rtrig },
-	{ "gotoarrowbitmap", 0x003e9b39, &Rgotoarrowbitmap },
+	{ "zaprecvdonemsg", 0x004d1349, &Rzaprecvdonemsg },
+	{ "alertfont", 0x003e21c1, &Ralertfont },
+	{ "proto1_2Exformentry", 0x00537765, &Rproto1_2Exformentry },
+	{ "trig", 0x005ba4b1, &Rtrig },
+	{ "gotoarrowbitmap", 0x003c8e9d, &Rgotoarrowbitmap },
 	{ "espyfont", 0x00000143, &Respyfont },
 	{ "newtsymbolfilter", 0x00000a17, &Rnewtsymbolfilter },
 	{ "protocategorizedoverview", 0x00000a5f, &Rprotocategorizedoverview },
@@ -1780,12 +1775,12 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "bookmarkbitmap", 0x00000563, &Rbookmarkbitmap },
 	{ "keycommabitmap", 0x00000b83, &Rkeycommabitmap },
 	{ "plinkbeep", 0x0000025b, &Rplinkbeep },
-	{ "zapreceiveconfirm", 0x004e42d5, &Rzapreceiveconfirm },
+	{ "zapreceiveconfirm", 0x004d14d1, &Rzapreceiveconfirm },
 	{ "autodockicon", 0x00000d0b, &Rautodockicon },
-	{ "basewordinfo", 0x0047dca5, &Rbasewordinfo },
+	{ "basewordinfo", 0x0046e135, &Rbasewordinfo },
 	{ "protopicttextbutton", 0x00000a6f, &Rprotopicttextbutton },
-	{ "txexternalprototype", 0x0047e739, &Rtxexternalprototype },
-	{ "canonicalstyles", 0x0044d731, &Rcanonicalstyles },
+	{ "txexternalprototype", 0x0046ec3d, &Rtxexternalprototype },
+	{ "canonicalstyles", 0x0042d829, &Rcanonicalstyles },
 	{ "undobitmap", 0x00000b77, &Rundobitmap },
 	{ "rectextbitmap", 0x00000b43, &Rrectextbitmap },
 	{ "nofilter", 0x00000c33, &Rnofilter },
@@ -1797,7 +1792,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "globalheapvarwannabes", 0x0000088f, &Rglobalheapvarwannabes },
 	{ "protolistpicker", 0x00000737, &Rprotolistpicker },
 	{ "prototableentry", 0x00000387, &Rprototableentry },
-	{ "slotcachetable", 0x005c94c5, &Rslotcachetable },
+	{ "slotcachetable", 0x0062d899, &Rslotcachetable },
 	{ "newtsoup", 0x000006b7, &Rnewtsoup },
 	{ "protopensizemenu", 0x00000d93, &Rprotopensizemenu },
 	{ "checkbitmaps", 0x0000002f, &Rcheckbitmaps },
@@ -1806,31 +1801,30 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protopersonapopup", 0x000007c7, &Rprotopersonapopup },
 	{ "cantimefilter", 0x00000c57, &Rcantimefilter },
 	{ "paperrollindices", 0x0000023b, &Rpaperrollindices },
-	{ "ukkeycodemapping", 0x003be88d, &Rukkeycodemapping },
 	{ "phonebitmap", 0x0000050b, &Rphonebitmap },
 	{ "protodigitbase", 0x00000823, &Rprotodigitbase },
-	{ "rosettachoices", 0x005adc29, &Rrosettachoices },
+	{ "rosettachoices", 0x005afa11, &Rrosettachoices },
 	{ "protodragger", 0x00000213, &Rprotodragger },
-	{ "shiftkeyicon", 0x003e98b1, &Rshiftkeyicon },
+	{ "shiftkeyicon", 0x003c8c15, &Rshiftkeyicon },
 	{ "faxslip", 0x0000014f, &Rfaxslip },
-	{ "canonicalframepartsavedobject", 0x003bbba1, &Rcanonicalframepartsavedobject },
-	{ "protogriditem", 0x0048379d, &Rprotogriditem },
+	{ "canonicalframepartsavedobject", 0x003c4c8d, &Rcanonicalframepartsavedobject },
+	{ "protogriditem", 0x0044c3fd, &Rprotogriditem },
 	{ "putawaypicker", 0x00000c1f, &Rputawaypicker },
-	{ "uerasepersistentdataalerttext", 0x003c6b9d, &Ruerasepersistentdataalerttext },
+	{ "uerasepersistentdataalerttext", 0x003c7079, &Ruerasepersistentdataalerttext },
 	{ "protocorrectinfo", 0x0000099b, &Rprotocorrectinfo },
 	{ "action_list", 0x00000003, &Raction_list },
 	{ "protodrawer", 0x000002b7, &Rprotodrawer },
-	{ "protocategoryroll", 0x004480ed, &Rprotocategoryroll },
+	{ "protocategoryroll", 0x00430d85, &Rprotocategoryroll },
 	{ "kbddictbitmap", 0x00000bbf, &Rkbddictbitmap },
 	{ "newtareacodephoneline", 0x0000049b, &Rnewtareacodephoneline },
-	{ "classinfoenabler", 0x005d031d, &Rclassinfoenabler },
+	{ "classinfoenabler", 0x006360f5, &Rclassinfoenabler },
 	{ "protoremoteview", 0x00000d2f, &Rprotoremoteview },
 	{ "protodurationtextpicker", 0x000009d3, &Rprotodurationtextpicker },
 	{ "cloud2", 0x000000db, &Rcloud2 },
 	{ "newtentryview", 0x0000065b, &Rnewtentryview },
 	{ "protolistview", 0x00000747, &Rprotolistview },
 	{ "protooverview", 0x000002ff, &Rprotooverview },
-	{ "txcanonicaltab", 0x0047e845, &Rtxcanonicaltab },
+	{ "txcanonicaltab", 0x0046ed49, &Rtxcanonicaltab },
 	{ "shapename", 0x00000417, &Rshapename },
 	{ "protoroutingslip", 0x00000347, &Rprotoroutingslip },
 	{ "keypadbitmap", 0x00000b33, &Rkeypadbitmap },
@@ -1839,6 +1833,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "defaultconfiguration", 0x0000084b, &Rdefaultconfiguration },
 	{ "calendarstrings", 0x00000063, &Rcalendarstrings },
 	{ "recorderchassis", 0x00000d4f, &Rrecorderchassis },
+	{ "spellframe", 0x00629555, &Rspellframe },
 	{ "mailslip", 0x000001eb, &Rmailslip },
 	{ "protostatustext", 0x00000767, &Rprotostatustext },
 	{ "unionsoupprototype", 0x000003a3, &Runionsoupprototype },
@@ -1851,17 +1846,17 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protodisplayclock", 0x000007e3, &Rprotodisplayclock },
 	{ "protosoundchannel", 0x000006bf, &Rprotosoundchannel },
 	{ "protovalidateslip", 0x000007f3, &Rprotovalidateslip },
-	{ "marshaltypes", 0x005d2c75, &Rmarshaltypes },
+	{ "marshaltypes", 0x0063629d, &Rmarshaltypes },
 	{ "ustimefilter", 0x00000c53, &Rustimefilter },
-	{ "rulerpicts", 0x0047e599, &Rrulerpicts },
+	{ "rulerpicts", 0x0046ea85, &Rrulerpicts },
 	{ "symbolfont", 0x00000443, &Rsymbolfont },
-	{ "checkoffbitmap", 0x003e9621, &Rcheckoffbitmap },
+	{ "checkoffbitmap", 0x003c8985, &Rcheckoffbitmap },
 	{ "protopickview", 0x00000d37, &Rprotopickview },
 	{ "protocitiestextpicker", 0x000009eb, &Rprotocitiestextpicker },
 	{ "newtcustomfilter", 0x000006d7, &Rnewtcustomfilter },
 	{ "protoradiobutton", 0x0000032b, &Rprotoradiobutton },
 	{ "trylettersbitmap", 0x00000c87, &Rtrylettersbitmap },
-	{ "emptystring", 0x0051eb49, &Remptystring },
+	{ "emptystring", 0x005a7f4d, &Remptystring },
 	{ "newyorkfont", 0x0000020f, &Rnewyorkfont },
 	{ "newtsymbolview", 0x000007bf, &Rnewtsymbolview },
 	{ "protostorycard", 0x00000377, &Rprotostorycard },
@@ -1870,16 +1865,16 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtcountryfilter", 0x00000a27, &Rnewtcountryfilter },
 	{ "protonotescontent", 0x0000021b, &Rprotonotescontent },
 	{ "dtmf2", 0x00000adf, &Rdtmf2 },
-	{ "systempsfont", 0x003fb539, &Rsystempsfont },
+	{ "systempsfont", 0x003db799, &Rsystempsfont },
 	{ "tableftbitmap", 0x00000b5b, &Rtableftbitmap },
-	{ "canonicalpolygonshape", 0x003bb669, &Rcanonicalpolygonshape },
-	{ "kcardalertbounds", 0x003e8d81, &Rkcardalertbounds },
-	{ "zaprecvcancelmsg", 0x003ca421, &Rzaprecvcancelmsg },
+	{ "canonicalpolygonshape", 0x003c47c9, &Rcanonicalpolygonshape },
+	{ "kcardalertbounds", 0x003c7215, &Rkcardalertbounds },
+	{ "zaprecvcancelmsg", 0x004d126d, &Rzaprecvcancelmsg },
 	{ "newtrolloverlayout", 0x000005db, &Rnewtrolloverlayout },
-	{ "plainsoupprototype", 0x005d3ffd, &Rplainsoupprototype },
+	{ "plainsoupprototype", 0x00635205, &Rplainsoupprototype },
 	{ "usdefaultdatefilter", 0x00000c3f, &Rusdefaultdatefilter },
 	{ "banner", 0x000007a7, &Rbanner },
-	{ "othercategoryname", 0x00627105, &Rothercategoryname },
+	{ "othercategoryname", 0x004b7d31, &Rothercategoryname },
 	{ "mailregister", 0x000001e7, &Rmailregister },
 	{ "scheduleview", 0x000003fb, &Rscheduleview },
 	{ "keyequalsbitmap", 0x00000b8b, &Rkeyequalsbitmap },
@@ -1888,7 +1883,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtlabelsymbolinputline", 0x000007c3, &Rnewtlabelsymbolinputline },
 	{ "protomeetingsoupfinder", 0x00000257, &Rprotomeetingsoupfinder },
 	{ "printform", 0x00000557, &Rprintform },
-	{ "canonicalcaretinfo", 0x003bb7f5, &Rcanonicalcaretinfo },
+	{ "canonicalcaretinfo", 0x003c48e1, &Rcanonicalcaretinfo },
 	{ "defaultstatusmsgs", 0x00000a37, &Rdefaultstatusmsgs },
 	{ "prototapiendpoint", 0x00000a5b, &Rprototapiendpoint },
 	{ "protoshowbar", 0x0000034f, &Rprotoshowbar },
@@ -1896,19 +1891,19 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "dtmf2bitmap", 0x00000adf, &Rdtmf2bitmap },
 	{ "protoprefsrollitem", 0x00000607, &Rprotoprefsrollitem },
 	{ "backdropbitmap", 0x00000beb, &Rbackdropbitmap },
-	{ "canonicalgestaltrexinfoarrayelement", 0x003bbb0d, &Rcanonicalgestaltrexinfoarrayelement },
+	{ "canonicalgestaltrexinfoarrayelement", 0x003c4bf9, &Rcanonicalgestaltrexinfoarrayelement },
 	{ "a2zbitmap", 0x00000577, &Ra2zbitmap },
 	{ "routetransport", 0x00000c07, &Rroutetransport },
-	{ "whackybeep", 0x003f6141, &Rwhackybeep },
-	{ "wilderbeep", 0x003f6395, &Rwilderbeep },
-	{ "faxpreferencesform", 0x005b2639, &Rfaxpreferencesform },
+	{ "whackybeep", 0x003d55b5, &Rwhackybeep },
+	{ "wilderbeep", 0x003d5859, &Rwilderbeep },
+	{ "faxpreferencesform", 0x005b46ad, &Rfaxpreferencesform },
 	{ "helveticafont", 0x000001b7, &Rhelveticafont },
 	{ "palettebitmap", 0x0000053f, &Rpalettebitmap },
 	{ "newtqbelabelinputline", 0x000006ab, &Rnewtqbelabelinputline },
 	{ "prototextbutton", 0x0000038b, &Rprototextbutton },
 	{ "starterclipboard", 0x00000427, &Rstarterclipboard },
 	{ "protoperiodicalarmeditor", 0x0000000b, &Rprotoperiodicalarmeditor },
-	{ "canonicalbatterystatus", 0x003bc22d, &Rcanonicalbatterystatus },
+	{ "canonicalbatterystatus", 0x003c5319, &Rcanonicalbatterystatus },
 	{ "iotransportheader", 0x00000ccb, &Riotransportheader },
 	{ "paragraphcodebook2", 0x00000247, &Rparagraphcodebook2 },
 	{ "assistframes", 0x00000023, &Rassistframes },
@@ -1916,12 +1911,12 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtrolabelinputline", 0x00000697, &Rnewtrolabelinputline },
 	{ "newtphonefilter", 0x00000a1b, &Rnewtphonefilter },
 	{ "protoprefframer", 0x00000cab, &Rprotoprefframer },
-	{ "savedatatoentry", 0x005b9099, &Rsavedatatoentry },
+	{ "savedatatoentry", 0x0062852d, &Rsavedatatoentry },
 	{ "continents", 0x0000071b, &Rcontinents },
 	{ "protodigit", 0x0000073b, &Rprotodigit },
 	{ "validslots", 0x000004d3, &Rvalidslots },
 	{ "protofloatngo", 0x000002d3, &Rprotofloatngo },
-	{ "recogarrowdownoutside", 0x003f8d3d, &Rrecogarrowdownoutside },
+	{ "recogarrowdownoutside", 0x003d8cf1, &Rrecogarrowdownoutside },
 	{ "protoapp", 0x00000277, &Rprotoapp },
 	{ "ioprintpreview", 0x00000853, &Rioprintpreview },
 	{ "protocorrector", 0x000002a3, &Rprotocorrector },
@@ -1929,7 +1924,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "fontsystem12bold", 0x0000016f, &Rfontsystem12bold },
 	{ "ioindices", 0x000001cb, &Rioindices },
 	{ "unicode", 0x0000046f, &Runicode },
-	{ "zapbeep", 0x003f6209, &Rzapbeep },
+	{ "zapbeep", 0x003d5695, &Rzapbeep },
 	{ "getserialnumber", 0x00000d3b, &Rgetserialnumber },
 	{ "keyperiodbitmap", 0x00000b97, &Rkeyperiodbitmap },
 	{ "protocountrytextpicker", 0x000009e3, &Rprotocountrytextpicker },
@@ -1939,21 +1934,21 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "dictionarylist", 0x0000011b, &Rdictionarylist },
 	{ "keyminusbitmap", 0x00000b93, &Rkeyminusbitmap },
 	{ "protoimageview", 0x00000797, &Rprotoimageview },
-	{ "uerasepersistentdatabutton1str", 0x003ccc25, &Ruerasepersistentdatabutton1str },
+	{ "uerasepersistentdatabutton1str", 0x0056b485, &Ruerasepersistentdatabutton1str },
 	{ "protoexpandoshell", 0x000002bf, &Rprotoexpandoshell },
 	{ "protoformatpicker", 0x0000079f, &Rprotoformatpicker },
 	{ "protonumberpicker", 0x00000123, &Rprotonumberpicker },
 	{ "protoconfirm", 0x00000883, &Rprotoconfirm },
 	{ "protozonestable", 0x0000039b, &Rprotozonestable },
 	{ "prototwolinepicker", 0x0000089b, &Rprototwolinepicker },
-	{ "clickbeep", 0x003f62b9, &Rclickbeep },
+	{ "clickbeep", 0x003d5779, &Rclickbeep },
 	{ "calendarnotesname", 0x0000005b, &Rcalendarnotesname },
 	{ "extraprotos", 0x00000937, &Rextraprotos },
 	{ "protosmartcluster", 0x0000012f, &Rprotosmartcluster },
 	{ "dtmf7", 0x00000af3, &Rdtmf7 },
 	{ "containername", 0x000000e7, &Rcontainername },
-	{ "dtmfdash", 0x003f81d5, &Rdtmfdash },
-	{ "mathname", 0x003e40a5, &Rmathname },
+	{ "dtmfdash", 0x003d8081, &Rdtmfdash },
+	{ "mathname", 0x003d9375, &Rmathname },
 	{ "canonicalcontext", 0x00000077, &Rcanonicalcontext },
 	{ "preparingmessage", 0x0000025f, &Rpreparingmessage },
 	{ "protodeckofcards", 0x00000cf3, &Rprotodeckofcards },
@@ -1965,27 +1960,27 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "statelocpicker", 0x000008ab, &Rstatelocpicker },
 	{ "protohorizontalupdownscroller", 0x0000076f, &Rprotohorizontalupdownscroller },
 	{ "smallpentipbitmap", 0x00000b13, &Rsmallpentipbitmap },
-	{ "zapsendconnectmsg", 0x003ca4d1, &Rzapsendconnectmsg },
+	{ "zapsendconnectmsg", 0x004d12a9, &Rzapsendconnectmsg },
 	{ "flip", 0x00000157, &Rflip },
 	{ "protoextrascontrolbutton", 0x00000d67, &Rprotoextrascontrolbutton },
 	{ "markupbitmap", 0x0000055b, &Rmarkupbitmap },
 	{ "defaultitemstatemsgs", 0x00000a3b, &Rdefaultitemstatemsgs },
 	{ "protodatenyearpicker", 0x000008af, &Rprotodatenyearpicker },
-	{ "recogarrowdowninside", 0x003f8dbd, &Rrecogarrowdowninside },
-	{ "ucardrepairalerttext", 0x003c6f85, &Rucardrepairalerttext },
+	{ "recogarrowdowninside", 0x003d8d71, &Rrecogarrowdowninside },
+	{ "ucardrepairalerttext", 0x003c7585, &Rucardrepairalerttext },
 	{ "fontsystem9bold", 0x00000193, &Rfontsystem9bold },
 	{ "handwritingfont", 0x000008ef, &Rhandwritingfont },
 	{ "protogauge", 0x000002db, &Rprotogauge },
-	{ "canonicaltpmiteratorpackageframe", 0x003bbe21, &Rcanonicaltpmiteratorpackageframe },
+	{ "canonicaltpmiteratorpackageframe", 0x003c4f0d, &Rcanonicaltpmiteratorpackageframe },
 	{ "protopreferencestitle", 0x00000603, &Rprotopreferencestitle },
 	{ "canonicalbaseinfo", 0x00000aa7, &Rcanonicalbaseinfo },
 	{ "newtlabelcustominputline", 0x000006db, &Rnewtlabelcustominputline },
 	{ "aboutnewton", 0x00000d6f, &Raboutnewton },
 	{ "modemsetups", 0x00000367, &Rmodemsetups },
-	{ "extrassoupname", 0x005a77a5, &Rextrassoupname },
+	{ "extrassoupname", 0x005a74d1, &Rextrassoupname },
 	{ "protonavigator", 0x0000058b, &Rprotonavigator },
-	{ "varsmapstarter", 0x005c9c49, &Rvarsmapstarter },
-	{ "ucardpositionalerttext", 0x003c6931, &Rucardpositionalerttext },
+	{ "varsmapstarter", 0x0062eb89, &Rvarsmapstarter },
+	{ "ucardpositionalerttext", 0x003c7429, &Rucardpositionalerttext },
 	{ "timeintervalpopup", 0x00000473, &Rtimeintervalpopup },
 	{ "compatiblefinder", 0x0000059f, &Rcompatiblefinder },
 	{ "dtmf7bitmap", 0x00000af3, &Rdtmf7bitmap },
@@ -1995,7 +1990,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protostatus", 0x0000036f, &Rprotostatus },
 	{ "prototransport", 0x00000617, &Rprototransport },
 	{ "routebeambitmap", 0x00000b6f, &Rroutebeambitmap },
-	{ "debugcodeblockprototype", 0x005cf119, &Rdebugcodeblockprototype },
+	{ "debugcodeblockprototype", 0x00629f1d, &Rdebugcodeblockprototype },
 	{ "bookbitmap", 0x0000057f, &Rbookbitmap },
 	{ "leftbitmap", 0x00000517, &Rleftbitmap },
 	{ "newtentryviewrouting", 0x0000065f, &Rnewtentryviewrouting },
@@ -2011,7 +2006,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protocursivecheckbox", 0x000002a7, &Rprotocursivecheckbox },
 	{ "protoyearpicker", 0x000001b3, &Rprotoyearpicker },
 	{ "protodiamondbutton", 0x000009c7, &Rprotodiamondbutton },
-	{ "canonicalkeycommandcategory", 0x003bb929, &Rcanonicalkeycommandcategory },
+	{ "canonicalkeycommandcategory", 0x003c4a15, &Rcanonicalkeycommandcategory },
 	{ "protoclosebox", 0x0000029b, &Rprotoclosebox },
 	{ "newttextdateview", 0x0000068f, &Rnewttextdateview },
 	{ "restoreprefsslip", 0x00000907, &Rrestoreprefsslip },
@@ -2020,7 +2015,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protoinputline", 0x000002e7, &Rprotoinputline },
 	{ "protopolygon", 0x0000031f, &Rprotopolygon },
 	{ "vstatustitle", 0x00000917, &Rvstatustitle },
-	{ "canonicalpackagedata", 0x003bbfd9, &Rcanonicalpackagedata },
+	{ "canonicalpackagedata", 0x003c50c5, &Rcanonicalpackagedata },
 	{ "newtrotexttimeview", 0x000007af, &Rnewtrotexttimeview },
 	{ "protofullrouteslip", 0x00000a3f, &Rprotofullrouteslip },
 	{ "canonicalgroup", 0x00000087, &Rcanonicalgroup },
@@ -2053,10 +2048,10 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "protosenderpopup", 0x00000053, &Rprotosenderpopup },
 	{ "stylusdownbitmap", 0x00000c27, &Rstylusdownbitmap },
 	{ "canonicalinkwordinfo", 0x00000773, &Rcanonicalinkwordinfo },
-	{ "basecorrectinfo", 0x0047dac1, &Rbasecorrectinfo },
+	{ "basecorrectinfo", 0x0046df51, &Rbasecorrectinfo },
 	{ "recsketchbitmap", 0x00000b4f, &Rrecsketchbitmap },
 	{ "zero2ninebitmap", 0x0000057b, &Rzero2ninebitmap },
-	{ "canonicalfontparms", 0x003bb8d5, &Rcanonicalfontparms },
+	{ "canonicalfontparms", 0x003c49c1, &Rcanonicalfontparms },
 	{ "newtroutingbutton", 0x000006df, &Rnewtroutingbutton },
 	{ "protopeopledatadef", 0x0000039f, &Rprotopeopledatadef },
 	{ "radioonbitmap", 0x00000407, &Rradioonbitmap },
@@ -2066,40 +2061,40 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "bootlogobitmap", 0x00000503, &Rbootlogobitmap },
 	{ "dtmfstarbitmap", 0x00000aff, &Rdtmfstarbitmap },
 	{ "newtdatefilter", 0x00000a0b, &Rnewtdatefilter },
-	{ "zapsenddonemsg", 0x004e414d, &Rzapsenddonemsg },
-	{ "canonicaltextandstyles", 0x003bb8c1, &Rcanonicaltextandstyles },
-	{ "dtmfright", 0x003f8139, &Rdtmfright },
+	{ "zapsenddonemsg", 0x004d1349, &Rzapsenddonemsg },
+	{ "canonicaltextandstyles", 0x003c49ad, &Rcanonicaltextandstyles },
+	{ "dtmfright", 0x003d7fe5, &Rdtmfright },
 	{ "drawpokertemplate", 0x00000cfb, &Rdrawpokertemplate },
 	{ "loadletterweights", 0x000001df, &Rloadletterweights },
-	{ "protoemailexpando", 0x0044f38d, &Rprotoemailexpando },
+	{ "protoemailexpando", 0x0042fcc5, &Rprotoemailexpando },
 	{ "romphrasallexicon", 0x000003e3, &Rromphrasallexicon },
 	{ "newtshowstationerybutton", 0x00000cbb, &Rnewtshowstationerybutton },
-	{ "strokebundle", 0x005c8ac1, &Rstrokebundle },
+	{ "strokebundle", 0x0062a301, &Rstrokebundle },
 	{ "dayview", 0x0000010f, &Rdayview },
 	{ "copyrightnotice", 0x000002e3, &Rcopyrightnotice },
 	{ "notifyicon", 0x00000223, &Rnotifyicon },
 	{ "wordfilter", 0x00000c37, &Rwordfilter },
-	{ "zaprecvmsg", 0x003ca599, &Rzaprecvmsg },
-	{ "koserroralertbutton0bounds", 0x003bb75d, &Rkoserroralertbutton0bounds },
-	{ "optionkeyicon", 0x003e9919, &Roptionkeyicon },
+	{ "zaprecvmsg", 0x004d1239, &Rzaprecvmsg },
+	{ "koserroralertbutton0bounds", 0x003c7041, &Rkoserroralertbutton0bounds },
+	{ "optionkeyicon", 0x003c8c7d, &Roptionkeyicon },
 	{ "tosubjectslip", 0x000000b7, &Rtosubjectslip },
 	{ "mappopup", 0x000005a3, &Rmappopup },
 	{ "stdforms", 0x00000437, &Rstdforms },
 	{ "rubricpopup", 0x000006cf, &Rrubricpopup },
-	{ "canonicalregionshape", 0x003bb695, &Rcanonicalregionshape },
-	{ "recogarrowupoutside", 0x003f8c31, &Rrecogarrowupoutside },
+	{ "canonicalregionshape", 0x003c47dd, &Rcanonicalregionshape },
+	{ "recogarrowupoutside", 0x003d8be5, &Rrecogarrowupoutside },
 	{ "vprogress", 0x0000091b, &Rvprogress },
 	{ "protoletterformat", 0x000004c7, &Rprotoletterformat },
 	{ "newtshowmenu", 0x00000643, &Rnewtshowmenu },
 	{ "dataname", 0x000000ff, &Rdataname },
-	{ "koserroralerttextbounds", 0x003bb725, &Rkoserroralerttextbounds },
+	{ "koserroralerttextbounds", 0x003c7009, &Rkoserroralerttextbounds },
 	{ "loadglobals", 0x000001db, &Rloadglobals },
 	{ "caretspacebits", 0x00000c8f, &Rcaretspacebits },
 	{ "digitflap", 0x00000abb, &Rdigitflap },
 	{ "fontsystem10", 0x0000015f, &Rfontsystem10 },
-	{ "canonicalpackageframe", 0x003bbda1, &Rcanonicalpackageframe },
+	{ "canonicalpackageframe", 0x003c4e8d, &Rcanonicalpackageframe },
 	{ "vbarber", 0x00000927, &Rvbarber },
-	{ "txgraphicsrunprototype", 0x0047e665, &Rtxgraphicsrunprototype },
+	{ "txgraphicsrunprototype", 0x0046eb69, &Rtxgraphicsrunprototype },
 	{ "genevafont", 0x000001a3, &Rgenevafont },
 	{ "correctormidbits", 0x00000c7b, &Rcorrectormidbits },
 	{ "notesbitmap", 0x00000bf7, &Rnotesbitmap },
@@ -2111,17 +2106,16 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newteditview", 0x00000677, &Rnewteditview },
 	{ "protorepeatdatedurationtextpicker", 0x0000004f, &Rprotorepeatdatedurationtextpicker },
 	{ "protosoundframe", 0x00000d47, &Rprotosoundframe },
-	{ "canonicalbitmapinfo", 0x003bb6e1, &Rcanonicalbitmapinfo },
-	{ "canonicaldeadimport", 0x005cf6c5, &Rcanonicaldeadimport },
+	{ "canonicalbitmapinfo", 0x003c4829, &Rcanonicalbitmapinfo },
+	{ "canonicaldeadimport", 0x0062a0a5, &Rcanonicaldeadimport },
 	{ "newtpopupedit", 0x000007fb, &Rnewtpopupedit },
-	{ "protocategoryrollitem", 0x004479d1, &Rprotocategoryrollitem },
+	{ "protocategoryrollitem", 0x0043061d, &Rprotocategoryrollitem },
 	{ "protopreferencespopup", 0x0000098f, &Rprotopreferencespopup },
 	{ "viewroot", 0x0000047f, &Rviewroot },
 	{ "canonicalscrollee", 0x00000097, &Rcanonicalscrollee },
 	{ "protoampmcluster", 0x000005ef, &Rprotoampmcluster },
 	{ "protostatusgauge", 0x0000075f, &Rprotostatusgauge },
-	{ "uerasepersistentstatusemptybuttonstr", 0x0051eb49, &Ruerasepersistentstatusemptybuttonstr },
-	{ "germankeycodemapping", 0x003bd8b1, &Rgermankeycodemapping },
+	{ "uerasepersistentstatusemptybuttonstr", 0x005a7f4d, &Ruerasepersistentstatusemptybuttonstr },
 	{ "papercallbitmap", 0x00000b3b, &Rpapercallbitmap },
 	{ "routepastetext", 0x00000c17, &Rroutepastetext },
 	{ "cardaction", 0x000005af, &Rcardaction },
@@ -2130,12 +2124,12 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "namesbitmap", 0x0000077f, &Rnamesbitmap },
 	{ "protopinwindowwithoutlogic", 0x000008bb, &Rprotopinwindowwithoutlogic },
 	{ "newtsimpledatefilter", 0x00000aaf, &Rnewtsimpledatefilter },
-	{ "stackframeinfoframeprototype", 0x005cf3d9, &Rstackframeinfoframeprototype },
+	{ "stackframeinfoframeprototype", 0x00629fcd, &Rstackframeinfoframeprototype },
 	{ "pagepreviewform", 0x00000237, &Rpagepreviewform },
 	{ "netchooser", 0x0000020b, &Rnetchooser },
 	{ "stdclosing", 0x000003b3, &Rstdclosing },
-	{ "codeblockprototype", 0x005cecc1, &Rcodeblockprototype },
-	{ "recogarrowupinside", 0x003f8cb1, &Rrecogarrowupinside },
+	{ "codeblockprototype", 0x0062946d, &Rcodeblockprototype },
+	{ "recogarrowupinside", 0x003d8c65, &Rrecogarrowupinside },
 	{ "protothumbnailfloater", 0x00000787, &Rprotothumbnailfloater },
 	{ "canonicalchargrid", 0x0000097b, &Rcanonicalchargrid },
 	{ "hollowstarbitmap", 0x0000003f, &Rhollowstarbitmap },
@@ -2143,19 +2137,19 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "newtinfobox", 0x00000a83, &Rnewtinfobox },
 	{ "protodatetextpicker", 0x000009d7, &Rprotodatetextpicker },
 	{ "timepopup", 0x0000024f, &Rtimepopup },
-	{ "canonicalshapeinfo", 0x003bb715, &Rcanonicalshapeinfo },
+	{ "canonicalshapeinfo", 0x003c4871, &Rcanonicalshapeinfo },
 	{ "protoradiocluster", 0x0000032f, &Rprotoradiocluster },
 	{ "protorecorderview", 0x00000d57, &Rprotorecorderview },
-	{ "starterinsertspec", 0x0044d4ed, &Rstarterinsertspec },
-	{ "uerasepersistentconfirmbutton0str", 0x003c6a0d, &Ruerasepersistentconfirmbutton0str },
+	{ "starterinsertspec", 0x0042d5e5, &Rstarterinsertspec },
+	{ "uerasepersistentconfirmbutton0str", 0x004633f9, &Ruerasepersistentconfirmbutton0str },
 	{ "protorecognitioncluster", 0x000007eb, &Rprotorecognitioncluster },
 	{ "dtmf4bitmap", 0x00000ae7, &Rdtmf4bitmap },
 	{ "newtlayout", 0x0000064b, &Rnewtlayout },
-	{ "systemfont", 0x003b34d5, &Rsystemfont },
+	{ "systemfont", 0x003bd55d, &Rsystemfont },
 	{ "tablefthilitebitmap", 0x00000b63, &Rtablefthilitebitmap },
 	{ "canonicalscroller", 0x0000009b, &Rcanonicalscroller },
 	{ "cardalerttemplate", 0x00000027, &Rcardalerttemplate },
-	{ "creatempforbackup", 0x005b9201, &Rcreatempforbackup },
+	{ "creatempforbackup", 0x00628695, &Rcreatempforbackup },
 	{ "protostrokesitem", 0x0000037b, &Rprotostrokesitem },
 	{ "dockerbitmap", 0x0000054b, &Rdockerbitmap },
 	{ "protostatusclosebox", 0x00000753, &Rprotostatusclosebox },
@@ -2164,10 +2158,10 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "keyleftparenbitmap", 0x00000b8f, &Rkeyleftparenbitmap },
 	{ "aztabsslimbitmap", 0x000008c3, &Raztabsslimbitmap },
 	{ "protoglance", 0x000002df, &Rprotoglance },
-	{ "symboltable", 0x0053eba1, &Rsymboltable },
-	{ "canonicalpackageinfo", 0x003bbf81, &Rcanonicalpackageinfo },
+	{ "symboltable", 0x00570da1, &Rsymboltable },
+	{ "canonicalpackageinfo", 0x003c506d, &Rcanonicalpackageinfo },
 	{ "aztabs", 0x000009a7, &Raztabs },
-	{ "connectiondupvalidtest", 0x00482059, &Rconnectiondupvalidtest },
+	{ "connectiondupvalidtest", 0x00472bd9, &Rconnectiondupvalidtest },
 	{ "notepaper", 0x00000217, &Rnotepaper },
 	{ "protocard", 0x00000cf7, &Rprotocard },
 	{ "charsversion", 0x000000c3, &Rcharsversion },
@@ -2180,10 +2174,10 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "salutationsuffix", 0x000003e7, &Rsalutationsuffix },
 	{ "ioioboxsoup", 0x00000ce3, &Rioioboxsoup },
 	{ "protoeworldendpoint", 0x00000613, &Rprotoeworldendpoint },
-	{ "canonicalframepartremoveinfo", 0x003bbc49, &Rcanonicalframepartremoveinfo },
+	{ "canonicalframepartremoveinfo", 0x003c4d35, &Rcanonicalframepartremoveinfo },
 	{ "newttextfilter", 0x000009ff, &Rnewttextfilter },
 	{ "outboxsoupname", 0x0000022f, &Routboxsoupname },
-	{ "starterproperties", 0x0044d4b1, &Rstarterproperties },
+	{ "starterproperties", 0x0042d5a9, &Rstarterproperties },
 	{ "kbdleftbitmap", 0x00000bb7, &Rkbdleftbitmap },
 	{ "calendarsoupname", 0x0000005f, &Rcalendarsoupname },
 	{ "cardfilesoupname", 0x000000bf, &Rcardfilesoupname },
@@ -2200,7 +2194,7 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "aztabsbitmap", 0x00000633, &Raztabsbitmap },
 	{ "dsplacehints", 0x00000887, &Rdsplacehints },
 	{ "onlinebitmap", 0x0000056b, &Ronlinebitmap },
-	{ "packagequery", 0x0058230d, &Rpackagequery },
+	{ "packagequery", 0x00557c25, &Rpackagequery },
 	{ "ioprotoshowbybutton", 0x00000cd3, &Rioprotoshowbybutton },
 	{ "meeting", 0x000001f7, &Rmeeting },
 	{ "digitflaploword", 0x00000ab7, &Rdigitflaploword },
@@ -2213,4 +2207,4 @@ const ROMConstantEntry gROMConstantEntries[] = {
 	{ "routemailicon", 0x00000b73, &Rroutemailicon },
 };
 
-const long gROMConstantCount = 1102;
+const long gROMConstantCount = 1099;

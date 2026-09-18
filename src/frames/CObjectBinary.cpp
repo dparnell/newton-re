@@ -9,7 +9,7 @@
 				and to destroy it when the binary is collected.  The soups
 				keep their TSoupIndex objects this way.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM's body: the procs pointer, the C object pointer, the destructor,
 	marker and updater, then (AllocateFramesCObject) the object itself.
 */
@@ -28,7 +28,7 @@ struct CObjectBinaryData
 };
 
 
-// ROM 0x002874dc CObjectBinaryLength__FPc
+// ROM 0x002ac084 CObjectBinaryLength__FPc
 static long
 CObjectBinaryLength(void* /*data*/)
 {
@@ -36,7 +36,7 @@ CObjectBinaryLength(void* /*data*/)
 }
 
 
-// ROM 0x002874e4 CObjectBinaryDataPtr__FPc
+// ROM 0x002ac08c CObjectBinaryDataPtr__FPc
 static char*
 CObjectBinaryDataPtr(void* data)
 {
@@ -44,13 +44,13 @@ CObjectBinaryDataPtr(void* data)
 }
 
 
-// ROM 0x002874ec CObjectBinarySetLength__FPcl
+// ROM 0x002ac094 CObjectBinarySetLength__FPcl
 static void
 CObjectBinarySetLength(void* /*data*/, long /*length*/)
 { }
 
 
-// ROM 0x002874f0 CObjectBinaryClone__FPcl
+// ROM 0x002ac098 CObjectBinaryClone__FPcl
 static Ref
 CObjectBinaryClone(void* /*data*/, Ref /*theClass*/)
 {
@@ -58,7 +58,7 @@ CObjectBinaryClone(void* /*data*/, Ref /*theClass*/)
 }
 
 
-// ROM 0x002874f8 CObjectBinaryDestroy__FPc
+// ROM 0x002ac0a0 CObjectBinaryDestroy__FPc
 static void
 CObjectBinaryDestroy(void* data)
 {
@@ -68,13 +68,13 @@ CObjectBinaryDestroy(void* data)
 }
 
 
-// ROM 0x0028750c CObjectBinarySetClass__FPcRC6RefVar
+// ROM 0x002ac0b4 CObjectBinarySetClass__FPcRC6RefVar
 static void
 CObjectBinarySetClass(void* /*data*/, RefArg /*theClass*/)
 { }
 
 
-// ROM 0x00287510 CObjectBinaryMark__FPc
+// ROM 0x002ac0b8 CObjectBinaryMark__FPc
 static void
 CObjectBinaryMark(void* data)
 {
@@ -84,7 +84,7 @@ CObjectBinaryMark(void* data)
 }
 
 
-// ROM 0x00287524 CObjectBinaryUpdate__FPc
+// ROM 0x002ac0cc CObjectBinaryUpdate__FPc
 static void
 CObjectBinaryUpdate(void* data)
 {
@@ -94,7 +94,7 @@ CObjectBinaryUpdate(void* data)
 }
 
 
-// ROM 0x0c10224c gCObjectBinaryProcs
+// ROM 0x0c105158 gCObjectBinaryProcs
 static IndirectBinaryProcs gCObjectBinaryProcs = {
 	CObjectBinaryLength,
 	CObjectBinaryDataPtr,
@@ -107,7 +107,7 @@ static IndirectBinaryProcs gCObjectBinaryProcs = {
 };
 
 
-// ROM 0x0028740c AllocateCObjectBinary__FPvPFPv_vN22
+// ROM 0x002abfb4 AllocateCObjectBinary__FPvPFPv_vN22
 // A binary standing for the C object cObj, which lives elsewhere.
 Ref
 AllocateCObjectBinary(void* cObj, CObjectBinaryProc destructor, CObjectBinaryProc marker, CObjectBinaryProc updater)
@@ -124,7 +124,7 @@ AllocateCObjectBinary(void* cObj, CObjectBinaryProc destructor, CObjectBinaryPro
 }
 
 
-// ROM 0x00287470 AllocateFramesCObject__FlPFPv_vN22
+// ROM 0x002ac018 AllocateFramesCObject__FlPFPv_vN22
 // A binary with room for a C object of cObjSize bytes in its body (its
 // data pointer); locked so the object stays put.
 Ref

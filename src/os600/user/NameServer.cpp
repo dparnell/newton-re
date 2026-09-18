@@ -14,9 +14,9 @@
 				every registrant has had the event.  Gestalt answers from the
 				kernel's globals.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Resource arbitration (the comm tools' claim/unclaim protocol,
-	0x00131498-0x00131b50) is NOT YET RECONSTRUCTED.
+	0x0012fa3c-0x001300f4) is NOT YET RECONSTRUCTED.
 */
 
 #include "NameServerImpl.h"
@@ -46,7 +46,7 @@ const ULong kSysEventMsgType = 1;
 	TObjectNameList
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00130a98 InitNameServer__Fv +0x58 (__vec_new of the 16 lists with the
+// ROM 0x0012f03c InitNameServer__Fv +0x58 (__vec_new of the 16 lists with the
 // constructor at 0x00381794, unnamed in the symbol table)
 TObjectNameList::TObjectNameList()
 {
@@ -56,7 +56,7 @@ TObjectNameList::TObjectNameList()
 }
 
 
-// ROM 0x00130b5c Add__15TObjectNameListFPcT1UlT3
+// ROM 0x0012f100 Add__15TObjectNameListFPcT1UlT3
 // A new entry (taking the strings) goes at the head; every caller waiting
 // for that name and type to be registered gets the (thing, spec) and is
 // dropped from the queue.  False when the entry cannot be made.
@@ -107,7 +107,7 @@ TObjectNameList::Add(char* name, char* type, ULong thing, ULong spec)
 }
 
 
-// ROM 0x00130fc8 Remove__15TObjectNameListFPcT1
+// ROM 0x0012f56c Remove__15TObjectNameListFPcT1
 // Drops the first entry of that name (NOTE: the type is not compared - a
 // ROM quirk); a resource claim on it is ended (or, with a claim
 // notification outstanding, marked to end when that returns).  Every
@@ -170,7 +170,7 @@ TObjectNameList::Remove(char* name, char* type)
 }
 
 
-// ROM 0x00131954 Lookup__15TObjectNameListFPcT1PUlT3PP16TObjectNameEntry
+// ROM 0x0012fef8 Lookup__15TObjectNameListFPcT1PUlT3PP16TObjectNameEntry
 Boolean
 TObjectNameList::Lookup(char* name, char* type, ULong* thing, ULong* spec, TObjectNameEntry** entry)
 {
@@ -195,7 +195,7 @@ TObjectNameList::Lookup(char* name, char* type, ULong* thing, ULong* spec, TObje
 	System event registrations
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001329c8 TestItem__20SysEventItemComparerCFPCv
+// ROM 0x00130f6c TestItem__20SysEventItemComparerCFPCv
 // Registrants are ordered by port id.
 CompareResult
 SysEventItemComparer::TestItem(const void* criteria) const
@@ -210,14 +210,14 @@ SysEventItemComparer::TestItem(const void* criteria) const
 }
 
 
-// ROM 0x001329ec __ct__14SysEventTesterFUl
+// ROM 0x00130f90 __ct__14SysEventTesterFUl
 SysEventTester::SysEventTester(SystemEvent event)
 {
 	fEvent = event;
 }
 
 
-// ROM 0x00132a24 TestItem__14SysEventTesterCFPCv
+// ROM 0x00130fc8 TestItem__14SysEventTesterCFPCv
 CompareResult
 SysEventTester::TestItem(const void* item) const
 {
@@ -225,14 +225,14 @@ SysEventTester::TestItem(const void* item) const
 }
 
 
-// ROM 0x00132a8c RegisterForSystemEvent__11TNameServerFUlN31 +0x28 (the constructor is inlined there)
+// ROM 0x00131030 RegisterForSystemEvent__11TNameServerFUlN31 +0x28 (the constructor is inlined there)
 EventMasterListItem::EventMasterListItem()
 {
 	fRegistrants = nil;
 }
 
 
-// ROM 0x0013295c __dt__19EventMasterListItemFv
+// ROM 0x00130f00 __dt__19EventMasterListItemFv
 EventMasterListItem::~EventMasterListItem()
 {
 	if (fRegistrants != nil)
@@ -240,7 +240,7 @@ EventMasterListItem::~EventMasterListItem()
 }
 
 
-// ROM 0x00132994 Init__19EventMasterListItemFv
+// ROM 0x00130f38 Init__19EventMasterListItemFv
 NewtonErr
 EventMasterListItem::Init()
 {
@@ -253,7 +253,7 @@ EventMasterListItem::Init()
 	TNameServer
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00130a98 InitNameServer__Fv +0x1c (the constructor is inlined there)
+// ROM 0x0012f03c InitNameServer__Fv +0x1c (the constructor is inlined there)
 TNameServer::TNameServer()
 {
 	fSysEventList = nil;
@@ -263,7 +263,7 @@ TNameServer::TNameServer()
 }
 
 
-// ROM 0x00131b50 TaskConstructor__11TNameServerFv
+// ROM 0x001300f4 TaskConstructor__11TNameServerFv
 // In the new task: the port (which becomes the well-known name server port),
 // the reply memory for system events, the event list.
 long
@@ -284,7 +284,7 @@ TNameServer::TaskConstructor()
 }
 
 
-// ROM 0x00130e4c Hash__11TNameServerFPc
+// ROM 0x0012f3f0 Hash__11TNameServerFPc
 // The bucket: the byte sum of the name, mod 16.
 ULong
 TNameServer::Hash(char* name)
@@ -296,7 +296,7 @@ TNameServer::Hash(char* name)
 }
 
 
-// ROM 0x00130e80 BuildNameAndType__11TNameServerFUlT1
+// ROM 0x0012f424 BuildNameAndType__11TNameServerFUlT1
 // Copies the request's name and type strings out of the caller's shared
 // memory objects into fName and fType.
 NewtonErr
@@ -327,7 +327,7 @@ TNameServer::BuildNameAndType(TObjectId nameId, TObjectId typeId)
 }
 
 
-// ROM 0x00130fa4 DeleteNameAndType__11TNameServerFv
+// ROM 0x0012f548 DeleteNameAndType__11TNameServerFv
 // (both strings are freed; the ROM inlines DisposPtr for the second)
 void
 TNameServer::DeleteNameAndType()
@@ -338,7 +338,7 @@ TNameServer::DeleteNameAndType()
 }
 
 
-// ROM 0x00131114 RegisterName__11TNameServerFUlT1
+// ROM 0x0012f6b8 RegisterName__11TNameServerFUlT1
 // The entry takes the strings, so they are not to be freed by DeleteNameAndType.
 NewtonErr
 TNameServer::RegisterName(ULong thing, ULong spec)
@@ -354,7 +354,7 @@ TNameServer::RegisterName(ULong thing, ULong spec)
 }
 
 
-// ROM 0x001311c4 UnRegisterName__11TNameServerFv
+// ROM 0x0012f768 UnRegisterName__11TNameServerFv
 NewtonErr
 TNameServer::UnRegisterName()
 {
@@ -367,7 +367,7 @@ TNameServer::UnRegisterName()
 }
 
 
-// ROM 0x00131254 QueueForRegister__11TNameServerFP10TUMsgToken
+// ROM 0x0012f7f8 QueueForRegister__11TNameServerFP10TUMsgToken
 // A name already registered is answered at once; otherwise the caller (its
 // token) waits in the bucket, which takes the strings.
 NewtonErr
@@ -398,7 +398,7 @@ TNameServer::QueueForRegister(TUMsgToken* token)
 }
 
 
-// ROM 0x00131358 QueueForUnregister__11TNameServerFP10TUMsgToken
+// ROM 0x0012f8fc QueueForUnregister__11TNameServerFP10TUMsgToken
 // The counterpart: a name not registered is an error at once.
 NewtonErr
 TNameServer::QueueForUnregister(TUMsgToken* token)
@@ -425,7 +425,7 @@ TNameServer::QueueForUnregister(TUMsgToken* token)
 }
 
 
-// ROM 0x00131440 Lookup__11TNameServerFPUlT1
+// ROM 0x0012f9e4 Lookup__11TNameServerFPUlT1
 NewtonErr
 TNameServer::Lookup(ULong* thing, ULong* spec)
 {
@@ -435,7 +435,7 @@ TNameServer::Lookup(ULong* thing, ULong* spec)
 }
 
 
-// ROM 0x00132a8c RegisterForSystemEvent__11TNameServerFUlN31
+// ROM 0x00131030 RegisterForSystemEvent__11TNameServerFUlN31
 // The event's master item (made on first use) gets the port; a port already
 // there is kError_Already_Registered, and an item left with no registrants
 // is dropped again.
@@ -484,7 +484,7 @@ TNameServer::RegisterForSystemEvent(SystemEvent event, TObjectId portId, ULong t
 }
 
 
-// ROM 0x00132bb0 UnRegisterForSystemEvent__11TNameServerFUlT1
+// ROM 0x00131154 UnRegisterForSystemEvent__11TNameServerFUlT1
 NewtonErr
 TNameServer::UnRegisterForSystemEvent(SystemEvent event, TObjectId portId)
 {
@@ -513,7 +513,7 @@ TNameServer::UnRegisterForSystemEvent(SystemEvent event, TObjectId portId)
 }
 
 
-// ROM 0x00132c68 SendSystemEvent__11TNameServerFUlT1
+// ROM 0x0013120c SendSystemEvent__11TNameServerFUlT1
 // Starts delivering: the sender's message (its shared memory holds the
 // event) goes to the first registrant that accepts an asynchronous send,
 // collected back on our port with fRPCInfo as its refcon; TaskMain carries
@@ -548,7 +548,7 @@ TNameServer::SendSystemEvent(SystemEvent event, TObjectId msgId)
 }
 
 
-// ROM 0x00131498 ResourceArbitration__11TNameServerFR10TUMsgTokenP22TResArbitrationRequest
+// ROM 0x0012fa3c ResourceArbitration__11TNameServerFR10TUMsgTokenP22TResArbitrationRequest
 void
 TNameServer::ResourceArbitration(TUMsgToken* token, TResArbitrationRequest* /*request*/)
 {
@@ -562,7 +562,7 @@ TNameServer::ResourceArbitration(TUMsgToken* token, TResArbitrationRequest* /*re
 }
 
 
-// ROM 0x00131a70 ResArbHandleReply__11TNameServerFP19TResArbitrationInfo
+// ROM 0x00130014 ResArbHandleReply__11TNameServerFP19TResArbitrationInfo
 void
 TNameServer::ResArbHandleReply(TResArbitrationInfo* /*info*/)
 {
@@ -570,7 +570,7 @@ TNameServer::ResArbHandleReply(TResArbitrationInfo* /*info*/)
 }
 
 
-// ROM 0x001335b0 Gestalt__11TNameServerFUlP10TUMsgToken
+// ROM 0x00131b54 Gestalt__11TNameServerFUlP10TUMsgToken
 // The machine's answers to the gestalt selectors (NewtonGestalt.h).
 void
 TNameServer::Gestalt(ULong selector, TUMsgToken* token)
@@ -648,7 +648,7 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 }
 
 
-// ROM 0x00131bc4 TaskMain__11TNameServerFv
+// ROM 0x00130168 TaskMain__11TNameServerFv
 // The service loop.  A request is a TNameServerRequest of some kind (the
 // largest, TResArbitrationRequest, is received into); a message that is a
 // collected sender is one of our own asynchronous sends completing.
@@ -752,7 +752,7 @@ TNameServer::TaskMain()
 }
 
 
-// ROM 0x00130a98 InitNameServer__Fv
+// ROM 0x0012f03c InitNameServer__Fv
 // Spawns the name server task, 'name', on a copy of a TNameServer.
 long
 InitNameServer()

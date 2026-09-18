@@ -3,7 +3,7 @@
 
 	Contains:	The view effects.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Animate.h"
@@ -31,7 +31,7 @@
 	T S a v e S c r e e n B i t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001c848c __ct__15TSaveScreenBitsFv
+// ROM 0x001c60b8 __ct__15TSaveScreenBitsFv
 // No bits yet (a stack instance registers its cleanup: the host's
 // destructor).
 TSaveScreenBits::TSaveScreenBits()
@@ -40,7 +40,7 @@ TSaveScreenBits::TSaveScreenBits()
 }
 
 
-// ROM 0x001c84e0 __dt__15TSaveScreenBitsFv
+// ROM 0x001c610c __dt__15TSaveScreenBitsFv
 TSaveScreenBits::~TSaveScreenBits()
 {
 	if (baseAddr != nil)
@@ -48,7 +48,7 @@ TSaveScreenBits::~TSaveScreenBits()
 }
 
 
-// ROM 0x001c851c AllocateBuffers__15TSaveScreenBitsFP4Rect
+// ROM 0x001c6148 AllocateBuffers__15TSaveScreenBitsFP4Rect
 // A pointer block for the rectangle's pixels at the screen's depth (nil:
 // the whole screen), the map set over it (a pointer map, 72 dpi); ==>
 // whether there was memory (the out-of-memory exception caught).
@@ -86,7 +86,7 @@ TSaveScreenBits::AllocateBuffers(Rect* r)
 }
 
 
-// ROM 0x001c8694 SaveScreenBits__15TSaveScreenBitsFv
+// ROM 0x001c62c0 SaveScreenBits__15TSaveScreenBitsFv
 // The current port's pixels of our bounds copied in.
 void
 TSaveScreenBits::SaveScreenBits(void)
@@ -95,7 +95,7 @@ TSaveScreenBits::SaveScreenBits(void)
 }
 
 
-// ROM 0x001c86cc RestoreScreenBits__15TSaveScreenBitsFP4RectPP6Region
+// ROM 0x001c62f8 RestoreScreenBits__15TSaveScreenBitsFP4RectPP6Region
 // Our pixels of the rectangle (cut down to our bounds when it reaches
 // outside them) copied back to the current port, through the mask.
 void
@@ -114,7 +114,7 @@ TSaveScreenBits::RestoreScreenBits(Rect* r, RgnHandle mask)
 	T A n i m a t e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000432bc PlaySound__FRC6RefVarT1
+// ROM 0x000429ec PlaySound__FRC6RefVarT1
 // A sound played for the context: a symbol is looked up as its proto
 // variable; nil plays nothing.  NOT YET RECONSTRUCTED: FPlaySound (the
 // sound system) - nothing is heard on the host.
@@ -129,7 +129,7 @@ PlaySound(RefArg context, RefArg sound)
 }
 
 
-// ROM 0x00043b60 TrimRect__FRC5TRectT1P5TRect
+// ROM 0x00043290 TrimRect__FRC5TRectT1P5TRect
 // The rows of a not covered by b: a when b is empty, nothing when a is;
 // else a's columns from where b ends (when b starts at or above a) down
 // to where b starts (when a ends at or above b) - the same rectangle
@@ -154,7 +154,7 @@ TrimRect(const Rect& a, const Rect& b, Rect* result)
 }
 
 
-// ROM 0x00043340 __ct__8TAnimateFv
+// ROM 0x00042a70 __ct__8TAnimateFv
 // The parts constructed, the context nil, no sprite; the kinds enabled
 // are all but the noFX preference's bits (a stack instance registers its
 // cleanup: the host's destructor).
@@ -167,7 +167,7 @@ TAnimate::TAnimate()
 }
 
 
-// ROM 0x00043404 __dt__8TAnimateFv
+// ROM 0x00042b34 __dt__8TAnimateFv
 TAnimate::~TAnimate()
 {
 }
@@ -183,7 +183,7 @@ TAnimate::Disabled(TView* view)
 }
 
 
-// ROM 0x00043b24 PreSetup__8TAnimateFP5TViewQ28TAnimate10EffectKind
+// ROM 0x00043254 PreSetup__8TAnimateFP5TViewQ28TAnimate10EffectKind
 // The view and the kind noted, the slide offsets none, the limit none,
 // the context the view's.
 void
@@ -199,7 +199,7 @@ TAnimate::PreSetup(TView* view, EffectKind kind)
 }
 
 
-// ROM 0x00043c3c PostSetup__8TAnimateFRC5TRectN21
+// ROM 0x0004336c PostSetup__8TAnimateFRC5TRectN21
 // The sprite made for bounds (the effect's area), from (where the image
 // starts: empty when it is drawn from the view) and to (the sprite's
 // size): the screen saved under the rows of bounds not covered by from;
@@ -280,7 +280,7 @@ TAnimate::PostSetup(const Rect& bounds, const Rect& from, const Rect& to)
 }
 
 
-// ROM 0x00043460 SetupPlainEffect__8TAnimateFP5TViewUcl
+// ROM 0x00042b90 SetupPlainEffect__8TAnimateFP5TViewUcl
 // The plain effect of a view about to be shown (showing) or hidden: the
 // area its outer bounds cut to the port's rectangle when that is
 // smaller, the effect word given or the view's viewEffect (none: no
@@ -321,7 +321,7 @@ TAnimate::SetupPlainEffect(TView* view, Boolean showing, long effect)
 }
 
 
-// ROM 0x00043600 SetupSlideEffect__8TAnimateFP5TViewRC5TRectlT3
+// ROM 0x00042d30 SetupSlideEffect__8TAnimateFP5TViewRC5TRectlT3
 // The contents of bounds slid by distance (down or right when positive):
 // direction > 0 slides new contents in from the far edge (the area grown
 // by the distance on that side, the sprite ending short of it), 0 slides
@@ -397,7 +397,7 @@ TAnimate::SetupSlideEffect(TView* view, const Rect& bounds, long distance, long 
 }
 
 
-// ROM 0x000438e0 SetupTrashEffect__8TAnimateFP5TView
+// ROM 0x00043010 SetupTrashEffect__8TAnimateFP5TView
 // The view crumpled into the trash: its outer bounds (no lower than the
 // screen), the image from the screen; the area saved reaches from at
 // most 72 pixels above the view's bottom to the screen's bottom right,
@@ -427,7 +427,7 @@ TAnimate::SetupTrashEffect(TView* view)
 }
 
 
-// ROM 0x000439fc SetupPoofEffect__8TAnimateFP5TViewRC5TRect
+// ROM 0x0004312c SetupPoofEffect__8TAnimateFP5TViewRC5TRect
 // A cloud of at least 89 x 54 centred on the bounds when they are smaller.
 void
 TAnimate::SetupPoofEffect(TView* view, const Rect& bounds)
@@ -452,7 +452,7 @@ TAnimate::SetupPoofEffect(TView* view, const Rect& bounds)
 }
 
 
-// ROM 0x000459e8 SetupDragEffect__8TAnimateFP5TView
+// ROM 0x00045118 SetupDragEffect__8TAnimateFP5TView
 // The sprite of a view about to be dragged: every kind enabled, the
 // plain setup of a view being hidden (the image from the screen) with
 // an effect word of its own (fxMoveV + fxVStartPhase; the drag never
@@ -465,7 +465,7 @@ TAnimate::SetupDragEffect(TView* view)
 }
 
 
-// ROM 0x00043fac DoEffect__8TAnimateFRC6RefVar
+// ROM 0x000436dc DoEffect__8TAnimateFRC6RefVar
 // The effect run, the view having changed: with the kind disabled the
 // view's bounds are invalidated and the root view updated (no effect);
 // without a sprite, or no memory for the screen bits, only the sound is
@@ -529,7 +529,7 @@ TAnimate::DoEffect(RefArg sound)
 }
 
 
-// ROM 0x000441b4 MultiEffect__8TAnimateFRC6RefVar
+// ROM 0x000438e4 MultiEffect__8TAnimateFRC6RefVar
 // The cells of the effect word drawn step by step (the word's fields
 // are described in Animate.h).  The image is first completed from the
 // view (the part in fDrawBounds).  The clip is the view's region (its
@@ -744,7 +744,7 @@ TAnimate::MultiEffect(RefArg sound)
 	T h e   t r a s h
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00044ad4 CrumplePt__FlN21P5Point
+// ROM 0x00044204 CrumplePt__FlN21P5Point
 // A point jittered by up to spread around (h, v).
 static void
 CrumplePt(long h, long v, long spread, Point* pt)
@@ -754,7 +754,7 @@ CrumplePt(long h, long v, long spread, Point* pt)
 }
 
 
-// ROM 0x00044b2c CrumpleRect__F11TBaseRegionP4Rectl
+// ROM 0x0004425c CrumpleRect__F11TBaseRegionP4Rectl
 // The rectangle as a region with crumpled edges: its corners jittered by
 // half the spread and the middles of its sides by the spread, joined by
 // lines.
@@ -788,7 +788,7 @@ CrumpleRect(RgnHandle rgn, Rect* r, long spread)
 }
 
 
-// ROM 0x00044d58 CrumpleSprite__8TAnimateFP5TRectT1
+// ROM 0x00044488 CrumpleSprite__8TAnimateFP5TRectT1
 // The view's image crumpled in six passes, eight ticks each: the sprite
 // is cut into eight vertical strips which are squeezed towards the
 // middle pass by pass (the left four moved right and the right four
@@ -890,7 +890,7 @@ TAnimate::CrumpleSprite(Rect* crumpleBox, Rect* spriteBox)
 }
 
 
-// ROM 0x00045298 CrumpleEffect__8TAnimateFv
+// ROM 0x000449c8 CrumpleEffect__8TAnimateFv
 // The crumple, then the ball's flight into the trash: the trash bitmap
 // placed at the bottom right of the application area (vars.displayParams'
 // appAreaGlobalLeft/Top/Width/Height), the ball's box the size of the
@@ -996,7 +996,7 @@ TAnimate::CrumpleEffect(void)
 }
 
 
-// ROM 0x000458cc PoofEffect__8TAnimateFv
+// ROM 0x00044ffc PoofEffect__8TAnimateFv
 // The poof sound; three clouds drawn in turn filling the area (each
 // masked; the ROM's clouds are 178 x 109, drawn at half size), two
 // ticks, two ticks and a tick apart, the screen put back between them;

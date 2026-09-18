@@ -7,7 +7,7 @@
 				FindImplementor/FindProtoImplementor (the frame implementing
 				a message) and SetVariable/SetVariableOrGlobal.
 
-	Reconstructed from the MP2100 D ROM (0x002d9b40-0x002dbc00); each
+	Reconstructed from the MP2x00 US ROM (0x002ff53c-0x003015fc); each
 	function cites its origin.  A frame in the ROM or in a package (an
 	address below 0x03800000 or in 0x60000000-0x67ffffff) gets its lookups
 	cached in gROProtoCache, which survives more; here that is the ROM
@@ -32,7 +32,7 @@ TICache*	gFindImpCache = nil;
 	by the context's address and the symbol's hash.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002d9b40 __ct__7TICacheFl
+// ROM 0x002ff53c __ct__7TICacheFl
 TICache::TICache(long bits)
 {
 	fSize = 1 << bits;
@@ -46,7 +46,7 @@ TICache::TICache(long bits)
 }
 
 
-// ROM 0x002d9be4 __dt__7TICacheFv
+// ROM 0x002ff5e0 __dt__7TICacheFv
 TICache::~TICache()
 {
 	DIYGCUnregister(this);
@@ -61,7 +61,7 @@ CacheEntry(TICache* cache, Ref context, ULong32 hash)
 }
 
 
-// ROM 0x002dbb88 Clear__7TICacheFv
+// ROM 0x00301584 Clear__7TICacheFv
 void
 TICache::Clear(void)
 {
@@ -70,7 +70,7 @@ TICache::Clear(void)
 }
 
 
-// ROM 0x002d9c54 ClearSymbol__7TICacheFlT1
+// ROM 0x002ff650 ClearSymbol__7TICacheFlT1
 void
 TICache::ClearSymbol(Ref sym, ULong32 hash)
 {
@@ -83,7 +83,7 @@ TICache::ClearSymbol(Ref sym, ULong32 hash)
 }
 
 
-// ROM 0x002d9d20 ClearFrame__7TICacheFl
+// ROM 0x002ff71c ClearFrame__7TICacheFl
 // Drop the entries found in this frame.
 void
 TICache::ClearFrame(Ref frame)
@@ -97,7 +97,7 @@ TICache::ClearFrame(Ref frame)
 }
 
 
-// ROM 0x002db994 Lookup__7TICacheFlT1PlN33
+// ROM 0x00301390 Lookup__7TICacheFlT1PlN33
 Boolean
 TICache::Lookup(Ref context, Ref sym, Ref* foundIn, Ref* value, long* exists, long* index)
 {
@@ -121,7 +121,7 @@ TICache::Lookup(Ref context, Ref sym, Ref* foundIn, Ref* value, long* exists, lo
 }
 
 
-// ROM 0x002dba70 LookupValue__7TICacheFlT1PlT3
+// ROM 0x0030146c LookupValue__7TICacheFlT1PlT3
 Boolean
 TICache::LookupValue(Ref context, Ref sym, Ref* value, long* exists)
 {
@@ -143,7 +143,7 @@ TICache::LookupValue(Ref context, Ref sym, Ref* value, long* exists)
 }
 
 
-// ROM 0x002dbb2c Insert__7TICacheFlN31
+// ROM 0x00301528 Insert__7TICacheFlN31
 // A fault block is never a context here (its slots may go away).
 void
 TICache::Insert(Ref context, Ref sym, Ref foundIn, long index)
@@ -160,14 +160,14 @@ TICache::Insert(Ref context, Ref sym, Ref foundIn, long index)
 }
 
 
-// ROM 0x002db904 Mark__7TICacheFv
+// ROM 0x00301300 Mark__7TICacheFv
 // Nothing: a cache keeps nothing alive.
 void
 TICache::Mark(void)
 { }
 
 
-// ROM 0x002db90c Update__7TICacheFv
+// ROM 0x00301308 Update__7TICacheFv
 // An entry whose context, symbol or frame went (NILREF now) is dropped.
 void
 TICache::Update(void)
@@ -190,7 +190,7 @@ TICache::Update(void)
 }
 
 
-// ROM 0x002dac14 DIYMarkTICache__7TICacheSFPv
+// ROM 0x00300610 DIYMarkTICache__7TICacheSFPv
 void
 TICache::DIYMarkTICache(void* cache)
 {
@@ -198,7 +198,7 @@ TICache::DIYMarkTICache(void* cache)
 }
 
 
-// ROM 0x002db908 DIYUpdateTICache__7TICacheSFPv
+// ROM 0x00301304 DIYUpdateTICache__7TICacheSFPv
 void
 TICache::DIYUpdateTICache(void* cache)
 {
@@ -206,7 +206,7 @@ TICache::DIYUpdateTICache(void* cache)
 }
 
 
-// ROM 0x002d9c1c ICacheClear__Fv
+// ROM 0x002ff618 ICacheClear__Fv
 void
 ICacheClear(void)
 {
@@ -217,7 +217,7 @@ ICacheClear(void)
 }
 
 
-// ROM 0x002d9cd0 ICacheClearSymbol__FlT1
+// ROM 0x002ff6cc ICacheClearSymbol__FlT1
 void
 ICacheClearSymbol(Ref sym, ULong32 hash)
 {
@@ -227,7 +227,7 @@ ICacheClearSymbol(Ref sym, ULong32 hash)
 }
 
 
-// ROM 0x002d9d98 ICacheClearFrame__Fl
+// ROM 0x002ff794 ICacheClearFrame__Fl
 void
 ICacheClearFrame(Ref frame)
 {
@@ -237,7 +237,7 @@ ICacheClearFrame(Ref frame)
 }
 
 
-// ROM 0x002d9dd8 InitICache__Fv
+// ROM 0x002ff7d4 InitICache__Fv
 void
 InitICache(void)
 {
@@ -260,7 +260,7 @@ IsROFrame(Ref frame)
 }
 
 
-// ROM 0x002d9e30 XGetVariable__FRC6RefVarT1Pli
+// ROM 0x002ff82c XGetVariable__FRC6RefVarT1Pli
 // The variable name seen from context: with lookupLocals, the locals
 // frames (the _nextArgFrame chain) first; then, from the context's
 // _parent (the receiver), each frame's _proto chain, and on to that
@@ -381,7 +381,7 @@ XGetVariable(RefArg context, RefArg name, long* exists, int lookupLocals)
 }
 
 
-// ROM 0x002daf34 GetVariable__FRC6RefVarT1Pli
+// ROM 0x00300930 GetVariable__FRC6RefVarT1Pli
 // XGetVariable without the caches (the tracing version).
 Ref
 GetVariable(RefArg context, RefArg name, long* exists, int lookupLocals)
@@ -422,7 +422,7 @@ GetVariable(RefArg context, RefArg name, long* exists, int lookupLocals)
 }
 
 
-// ROM 0x002da47c XFindImplementor__FRC6RefVarT1P6RefVarT3
+// ROM 0x002ffe78 XFindImplementor__FRC6RefVarT1P6RefVarT3
 // The frame implementing message name for receiver - up its _proto chain,
 // then its _parent's - and the method; cached.
 Boolean
@@ -515,7 +515,7 @@ XFindImplementor(RefArg receiver, RefArg name, RefVar* implementor, RefVar* valu
 }
 
 
-// ROM 0x002da9cc XFindProtoImplementor__FRC6RefVarT1P6RefVarT3
+// ROM 0x003003c8 XFindProtoImplementor__FRC6RefVarT1P6RefVarT3
 // The frame implementing name among the _protos of receiver (not receiver
 // itself), and the method.
 Boolean
@@ -563,7 +563,7 @@ XFindProtoImplementor(RefArg receiver, RefArg name, RefVar* implementor, RefVar*
 }
 
 
-// ROM 0x002dac18 FindProtoImplementor__FRC6RefVarT1
+// ROM 0x00300614 FindProtoImplementor__FRC6RefVarT1
 // The frame in receiver's _proto chain (receiver included) with a slot
 // name, NILREF if none; cached.
 Ref
@@ -610,7 +610,7 @@ FindProtoImplementor(RefArg receiver, RefArg name)
 }
 
 
-// ROM 0x002daeb0 FindImplementor__FRC6RefVarT1
+// ROM 0x003008ac FindImplementor__FRC6RefVarT1
 Ref
 FindImplementor(RefArg receiver, RefArg name)
 {
@@ -625,7 +625,7 @@ FindImplementor(RefArg receiver, RefArg name)
 	Assignment
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002db44c SetVariableOrGlobal__FRC6RefVarN21l
+// ROM 0x00300e48 SetVariableOrGlobal__FRC6RefVarN21l
 // Set the variable name seen from context (as XGetVariable finds it: with
 // kSetVarLookupLocals through the locals first, then the receiver's
 // chains).  A slot found in a _proto is set in the frame at the foot of
@@ -718,7 +718,7 @@ SetVariableOrGlobal(RefArg context, RefArg name, RefArg value, long flags)
 }
 
 
-// ROM 0x002db8fc SetVariable__FRC6RefVarN21
+// ROM 0x003012f8 SetVariable__FRC6RefVarN21
 // Set the variable through the receiver's chains (no locals, no globals);
 // a slot of the context when not found.
 Boolean

@@ -27,7 +27,7 @@
 				template, the ROM's needing the whole system) and the
 				recognition system starts at the clicks level.
 
-	Reconstructed from the MP2100 D ROM (0x00147acc-0x00148900); each
+	Reconstructed from the MP2x00 US ROM (0x00145f78-0x00146da8); each
 	function cites its origin.
 */
 
@@ -43,24 +43,24 @@ class TNotebook : public TApplication
 {
 public:
 	virtual long		ClassID(void) const;					// (the ROM has no TNotebook::ClassID: TARMNotebook's)
-	virtual Boolean		DerivedFrom(long id) const;				// ROM 0x00147b08 DerivedFrom__9TNotebookCFl
-	virtual void		Constructor(void);						// ROM 0x00148350 Constructor__9TNotebookFv
-	virtual void		Run(void);								// ROM 0x00147f68 Run__9TNotebookFv
-	virtual void		Idle(void);								// ROM 0x00147fd0 Idle__9TNotebookFv
-	virtual void		Quit(void);								// ROM 0x00148674 Quit__9TNotebookFv
-	virtual void		InitToolbox(void);						// ROM 0x00148680 InitToolbox__9TNotebookFv
-	virtual Boolean		NeedsIdle(void);						// ROM 0x00148028 NeedsIdle__9TNotebookFv (+0x28: an idle time is set and has passed)
-	virtual Boolean		InitOffscreenBitmaps(void);				// ROM 0x001487a8 InitOffscreenBitmaps__9TNotebookFv (+0x2c: the port and the screen regions)
+	virtual Boolean		DerivedFrom(long id) const;				// ROM 0x00145fb4 DerivedFrom__9TNotebookCFl
+	virtual void		Constructor(void);						// ROM 0x001467f8 Constructor__9TNotebookFv
+	virtual void		Run(void);								// ROM 0x00146410 Run__9TNotebookFv
+	virtual void		Idle(void);								// ROM 0x00146478 Idle__9TNotebookFv
+	virtual void		Quit(void);								// ROM 0x00146b1c Quit__9TNotebookFv
+	virtual void		InitToolbox(void);						// ROM 0x00146b28 InitToolbox__9TNotebookFv
+	virtual Boolean		NeedsIdle(void);						// ROM 0x001464d0 NeedsIdle__9TNotebookFv (+0x28: an idle time is set and has passed)
+	virtual Boolean		InitOffscreenBitmaps(void);				// ROM 0x00146c50 InitOffscreenBitmaps__9TNotebookFv (+0x2c: the port and the screen regions)
 
-	void				DrawSplashScreen(void);					// ROM 0x00147b84 DrawSplashScreen__9TNotebookFv (NOT YET)
-	void				InitInker(void);						// ROM 0x00148800 InitInker__9TNotebookFv (the inker task: NOT YET - the host's stand-in)
+	void				DrawSplashScreen(void);					// ROM 0x0014602c DrawSplashScreen__9TNotebookFv (NOT YET)
+	void				InitInker(void);						// ROM 0x00146ca8 InitInker__9TNotebookFv (the inker task: NOT YET - the host's stand-in)
 };
 
 class TARMNotebook : public TNotebook
 {
 public:
-	virtual long		ClassID(void) const;					// ROM 0x00147acc ClassID__12TARMNotebookCFv
-	virtual Boolean		DerivedFrom(long id) const;				// ROM 0x00147ad4 DerivedFrom__12TARMNotebookCFl
+	virtual long		ClassID(void) const;					// ROM 0x00145f78 ClassID__12TARMNotebookCFv
+	virtual Boolean		DerivedFrom(long id) const;				// ROM 0x00145f80 DerivedFrom__12TARMNotebookCFl
 };
 
 // the screen regions the notebook keeps (the ROM's at 0x0c103abc)
@@ -68,11 +68,11 @@ extern RgnHandle	gScreenRgn;				// the whole screen
 extern RgnHandle	gWideRgn;				// a copy of QuickDraw's wideOpen region
 
 // the notifiers
-void	SetActionDescription(long errorCode);				// ROM 0x00148080 SetActionDescription__Fl - vars.actionDescription
-Ref		Notify(RefArg args);								// ROM 0x001480dc Notify__FRC6RefVar - the root view's notify method
+void	SetActionDescription(long errorCode);				// ROM 0x00146528 SetActionDescription__Fl - vars.actionDescription
+Ref		Notify(RefArg args);								// ROM 0x00146584 Notify__FRC6RefVar - the root view's notify method
 // (ErrorNotify 0x001480fc: views/Application.h)
-void	ActionErrorNotify(long errorCode, long kind);		// ROM 0x001481a0 ActionErrorNotify__FlT1 - actionNotify([kind, errorCode, nil])
-long	GetExceptionErr(Exception* exception);				// ROM 0x00148244 GetExceptionErr__FP9Exception - the error code an exception carries
-void	ExceptionNotify(Exception* exception);				// ROM 0x0014842c ExceptionNotify__FP9Exception - vars.lastEx/lastExMessage/lastExError/lastExData set and the error shown
+void	ActionErrorNotify(long errorCode, long kind);		// ROM 0x00146648 ActionErrorNotify__FlT1 - actionNotify([kind, errorCode, nil])
+long	GetExceptionErr(Exception* exception);				// ROM 0x001466ec GetExceptionErr__FP9Exception - the error code an exception carries
+void	ExceptionNotify(Exception* exception);				// ROM 0x001468d4 ExceptionNotify__FP9Exception - vars.lastEx/lastExMessage/lastExError/lastExData set and the error shown
 
 #endif	/* __NOTEBOOK_H */

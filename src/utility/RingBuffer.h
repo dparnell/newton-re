@@ -17,8 +17,8 @@
 				up-to-two contiguous runs a bulk copy crosses the wrap in, and
 				Update*Vector advances the pointers over a run.
 
-	The DDK has no header for these; reconstructed from the MP2100 D ROM
-	(0x001af060-0x001b00d0 and 0x001e12d8-0x001e1e80), each function citing
+	The DDK has no header for these; reconstructed from the MP2x00 US ROM
+	(0x001acb78-0x001adbe8 and 0x001deec0-0x001dfa68), each function citing
 	its origin.  The ROM
 	dispatches the primitives through the vtable (so Put asks the virtual
 	IsFull, and so on); the reconstruction keeps that, and declares the
@@ -50,8 +50,8 @@
 class CBaseRingBuffer
 {
 public:
-					CBaseRingBuffer();				// ROM 0x0003b3f8 __ct__15CBaseRingBufferFv
-	virtual			~CBaseRingBuffer();				// ROM 0x0003b438 __dt__15CBaseRingBufferFv
+					CBaseRingBuffer();				// ROM 0x0003b348 __ct__15CBaseRingBufferFv
+	virtual			~CBaseRingBuffer();				// ROM 0x0003b388 __dt__15CBaseRingBufferFv
 
 	// the twenty pure virtuals, in the ROM's vtable order (+0x04 .. +0x50)
 	virtual int			Peek() = 0;
@@ -80,45 +80,45 @@ public:
 class CRingBuffer : public CBaseRingBuffer
 {
 public:
-					CRingBuffer();					// ROM 0x001af060 __ct__11CRingBufferFv
-	virtual			~CRingBuffer();					// ROM 0x001af0c8 __dt__11CRingBufferFv
+					CRingBuffer();					// ROM 0x001acb78 __ct__11CRingBufferFv
+	virtual			~CRingBuffer();					// ROM 0x001acbe0 __dt__11CRingBufferFv
 
 	// not virtual in the ROM: the other ring buffers' Init calls take other arguments
-	NewtonErr		Init(long size);				// ROM 0x001af5d8 Init__11CRingBufferFl - allocate a buffer of size bytes
-	NewtonErr		Init(void* buffer, long size, UChar ownsIt, long getOffset, long putOffset);	// ROM 0x001afaa8 Init__11CRingBufferFPvlUcN22 - over an existing buffer
+	NewtonErr		Init(long size);				// ROM 0x001ad0f0 Init__11CRingBufferFl - allocate a buffer of size bytes
+	NewtonErr		Init(void* buffer, long size, UChar ownsIt, long getOffset, long putOffset);	// ROM 0x001ad5c0 Init__11CRingBufferFPvlUcN22 - over an existing buffer
 
-	virtual int			Peek();						// ROM 0x001afb0c Peek__11CRingBufferFv
-	virtual int			Next();						// ROM 0x001afb24 Next__11CRingBufferFv
-	virtual NewtonErr	Skip();						// ROM 0x001afb64 Skip__11CRingBufferFv
-	virtual int			Get();						// ROM 0x001afba4 Get__11CRingBufferFv
-	virtual int			Getn(UByte* data, long count);				// ROM 0x001afbec Getn__11CRingBufferFPUcl
-	virtual NewtonErr	CopyOut(UByte* data, long& count);			// ROM 0x001afc1c CopyOut__11CRingBufferFPUcRl
-	virtual int			Put(int byte);				// ROM 0x001af128 Put__11CRingBufferFi
-	virtual int			Putn(const UByte* data, long count);		// ROM 0x001af17c Putn__11CRingBufferFPCUcl
-	virtual NewtonErr	CopyIn(const UByte* data, long& count);		// ROM 0x001af1ac CopyIn__11CRingBufferFPCUcRl
-	virtual void		Reset();					// ROM 0x001af500 Reset__11CRingBufferFv
-	virtual long		GetSize() const;			// ROM 0x001af510 GetSize__11CRingBufferCFv
-	virtual Boolean		AtEOF() const;				// ROM 0x001af564 AtEOF__11CRingBufferCFv
-	virtual Boolean		IsFull() const;				// ROM 0x001af51c IsFull__11CRingBufferCFv
-	virtual Boolean		IsEmpty() const;			// ROM 0x001af548 IsEmpty__11CRingBufferCFv
-	virtual long		FreeCount() const;			// ROM 0x001af5b4 FreeCount__11CRingBufferCFv
-	virtual long		DataCount() const;			// ROM 0x001af640 DataCount__11CRingBufferCFv
-	virtual long		UpdatePutVector(long count);	// ROM 0x001af8cc UpdatePutVector__11CRingBufferFl
-	virtual long		UpdateGetVector(long count);	// ROM 0x001af800 UpdateGetVector__11CRingBufferFl
-	virtual void		ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001af660 ComputePutVectors__11CRingBufferCFRPUcRlT1T2
-	virtual void		ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001af72c ComputeGetVectors__11CRingBufferCFRPUcRlT1T2
+	virtual int			Peek();						// ROM 0x001ad624 Peek__11CRingBufferFv
+	virtual int			Next();						// ROM 0x001ad63c Next__11CRingBufferFv
+	virtual NewtonErr	Skip();						// ROM 0x001ad67c Skip__11CRingBufferFv
+	virtual int			Get();						// ROM 0x001ad6bc Get__11CRingBufferFv
+	virtual int			Getn(UByte* data, long count);				// ROM 0x001ad704 Getn__11CRingBufferFPUcl
+	virtual NewtonErr	CopyOut(UByte* data, long& count);			// ROM 0x001ad734 CopyOut__11CRingBufferFPUcRl
+	virtual int			Put(int byte);				// ROM 0x001acc40 Put__11CRingBufferFi
+	virtual int			Putn(const UByte* data, long count);		// ROM 0x001acc94 Putn__11CRingBufferFPCUcl
+	virtual NewtonErr	CopyIn(const UByte* data, long& count);		// ROM 0x001accc4 CopyIn__11CRingBufferFPCUcRl
+	virtual void		Reset();					// ROM 0x001ad018 Reset__11CRingBufferFv
+	virtual long		GetSize() const;			// ROM 0x001ad028 GetSize__11CRingBufferCFv
+	virtual Boolean		AtEOF() const;				// ROM 0x001ad07c AtEOF__11CRingBufferCFv
+	virtual Boolean		IsFull() const;				// ROM 0x001ad034 IsFull__11CRingBufferCFv
+	virtual Boolean		IsEmpty() const;			// ROM 0x001ad060 IsEmpty__11CRingBufferCFv
+	virtual long		FreeCount() const;			// ROM 0x001ad0cc FreeCount__11CRingBufferCFv
+	virtual long		DataCount() const;			// ROM 0x001ad158 DataCount__11CRingBufferCFv
+	virtual long		UpdatePutVector(long count);	// ROM 0x001ad3e4 UpdatePutVector__11CRingBufferFl
+	virtual long		UpdateGetVector(long count);	// ROM 0x001ad318 UpdateGetVector__11CRingBufferFl
+	virtual void		ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001ad178 ComputePutVectors__11CRingBufferCFRPUcRlT1T2
+	virtual void		ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001ad244 ComputeGetVectors__11CRingBufferCFRPUcRlT1T2
 
 	// CRingBuffer's own virtuals, past the base's twenty (+0x54, +0x58)
-	virtual NewtonErr	CopyIn(CPipe* pipe, long& count);			// ROM 0x001af2e8 CopyIn__11CRingBufferFP5CPipeRl
-	virtual int			GetnAt(long offset, UByte* data, long count);	// ROM 0x001afa28 GetnAt__11CRingBufferFlPUcT1
+	virtual NewtonErr	CopyIn(CPipe* pipe, long& count);			// ROM 0x001ace00 CopyIn__11CRingBufferFP5CPipeRl
+	virtual int			GetnAt(long offset, UByte* data, long count);	// ROM 0x001ad540 GetnAt__11CRingBufferFlPUcT1
 
 	// Hand the buffer's memory out as a shared-memory object, so that another
 	// task can read or write it (through a CShadowRingBuffer of its own, say).
 	// kSMemNoSizeChangeOnCopyTo is added to the permissions asked for, because
 	// a ring buffer writes at a lower offset than the last write every time it
 	// wraps and the block's size in use must not follow it down.
-	void			MakeShared(ULong permissions);	// ROM 0x001af998 MakeShared__11CRingBufferFUl
-	NewtonErr		UnShare();						// ROM 0x001af9f0 UnShare__11CRingBufferFv
+	void			MakeShared(ULong permissions);	// ROM 0x001ad4b0 MakeShared__11CRingBufferFUl
+	NewtonErr		UnShare();						// ROM 0x001ad508 UnShare__11CRingBufferFv
 
 	UByte*			fBufStart;			// +0x04
 	UByte*			fBufEnd;			// +0x08  fBufStart + fSize
@@ -146,19 +146,19 @@ public:
 class CRingPipe : public CPipe
 {
 public:
-					CRingPipe();					// ROM 0x001afd58 __ct__9CRingPipeFv
-	virtual			~CRingPipe();					// ROM 0x001afda4 __dt__9CRingPipeFv
+					CRingPipe();					// ROM 0x001ad870 __ct__9CRingPipeFv
+	virtual			~CRingPipe();					// ROM 0x001ad8bc __dt__9CRingPipeFv
 
-	void			Init(long size);				// ROM 0x001afe0c Init__9CRingPipeFl - a CRingBuffer of size bytes, owned
-	void			Init(CBaseRingBuffer* buffer, UChar ownsIt);	// ROM 0x001afe84 Init__9CRingPipeFP15CBaseRingBufferUc
+	void			Init(long size);				// ROM 0x001ad924 Init__9CRingPipeFl - a CRingBuffer of size bytes, owned
+	void			Init(CBaseRingBuffer* buffer, UChar ownsIt);	// ROM 0x001ad99c Init__9CRingPipeFP15CBaseRingBufferUc
 
-	virtual long	ReadSeek(long offset, int mode);	// ROM 0x001b00b8 ReadSeek__9CRingPipeFli
-	virtual long	ReadPosition(void) const;			// ROM 0x001b00c8 ReadPosition__9CRingPipeCFv
-	virtual long	WriteSeek(long offset, int mode);	// ROM 0x001b00c0 WriteSeek__9CRingPipeFli
-	virtual long	WritePosition(void) const;			// ROM 0x001afe04 WritePosition__9CRingPipeCFv
-	virtual void	ReadChunk(void* data, long& count, Boolean& eof);		// ROM 0x001afeb4 ReadChunk__9CRingPipeFPvRlRUc
-	virtual void	WriteChunk(const void* data, long count, Boolean flush);	// ROM 0x001affcc WriteChunk__9CRingPipeFPvlUc
-	virtual void	Reset(void);						// ROM 0x001afe98 Reset__9CRingPipeFv
+	virtual long	ReadSeek(long offset, int mode);	// ROM 0x001adbd0 ReadSeek__9CRingPipeFli
+	virtual long	ReadPosition(void) const;			// ROM 0x001adbe0 ReadPosition__9CRingPipeCFv
+	virtual long	WriteSeek(long offset, int mode);	// ROM 0x001adbd8 WriteSeek__9CRingPipeFli
+	virtual long	WritePosition(void) const;			// ROM 0x001ad91c WritePosition__9CRingPipeCFv
+	virtual void	ReadChunk(void* data, long& count, Boolean& eof);		// ROM 0x001ad9cc ReadChunk__9CRingPipeFPvRlRUc
+	virtual void	WriteChunk(const void* data, long count, Boolean flush);	// ROM 0x001adae4 WriteChunk__9CRingPipeFPvlUc
+	virtual void	Reset(void);						// ROM 0x001ad9b0 Reset__9CRingPipeFv
 
 	CBaseRingBuffer*	fBuffer;		// +0x04
 	Boolean				fOwnsBuffer;	// +0x08  disposed of with the pipe
@@ -197,40 +197,40 @@ public:
 class CShadowRingBuffer : public CBaseRingBuffer
 {
 public:
-					CShadowRingBuffer();			// ROM 0x001e12d8 __ct__17CShadowRingBufferFv
-	virtual			~CShadowRingBuffer();			// ROM 0x001e1334 __dt__17CShadowRingBufferFv
+					CShadowRingBuffer();			// ROM 0x001deec0 __ct__17CShadowRingBufferFv
+	virtual			~CShadowRingBuffer();			// ROM 0x001def1c __dt__17CShadowRingBufferFv
 
-	void			Init(TObjectId sharedMem, long getOffset, long dataCount);	// ROM 0x001e1868 Init__17CShadowRingBufferFUllT2
+	void			Init(TObjectId sharedMem, long getOffset, long dataCount);	// ROM 0x001df450 Init__17CShadowRingBufferFUllT2
 
-	virtual int			Peek();						// ROM 0x001e1d60 Peek__17CShadowRingBufferFv
-	virtual int			Next();						// ROM 0x001e1d78 Next__17CShadowRingBufferFv
-	virtual NewtonErr	Skip();						// ROM 0x001e1db4 Skip__17CShadowRingBufferFv
-	virtual int			Get();						// ROM 0x001e1df4 Get__17CShadowRingBufferFv
-	virtual int			Getn(UByte* data, long count);				// ROM 0x001e1e3c Getn__17CShadowRingBufferFPUcl
-	virtual NewtonErr	CopyOut(UByte* data, long& count);			// ROM 0x001e1380 CopyOut__17CShadowRingBufferFPUcRl
-	virtual int			Put(int byte);				// ROM 0x001e1634 Put__17CShadowRingBufferFi
-	virtual int			Putn(const UByte* data, long count);			// ROM 0x001e1694 Putn__17CShadowRingBufferFPCUcl
-	virtual NewtonErr	CopyIn(const UByte* data, long& count);		// ROM 0x001e16c4 CopyIn__17CShadowRingBufferFPCUcRl
-	virtual void		Reset();					// ROM 0x001e17fc Reset__17CShadowRingBufferFv
-	virtual long		GetSize() const;			// ROM 0x001e180c GetSize__17CShadowRingBufferCFv
-	virtual Boolean		AtEOF() const;				// ROM 0x001e1818 AtEOF__17CShadowRingBufferCFv
-	virtual Boolean		IsFull() const;				// ROM 0x001e1c9c IsFull__17CShadowRingBufferCFv
-	virtual Boolean		IsEmpty() const;			// ROM 0x001e1cc4 IsEmpty__17CShadowRingBufferCFv
-	virtual long		FreeCount() const;			// ROM 0x001e18b0 FreeCount__17CShadowRingBufferCFv
-	virtual long		DataCount() const;			// ROM 0x001e18d0 DataCount__17CShadowRingBufferCFv
-	virtual long		UpdatePutVector(long count);	// ROM 0x001e1bec UpdatePutVector__17CShadowRingBufferFl
-	virtual long		UpdateGetVector(long count);	// ROM 0x001e1b3c UpdateGetVector__17CShadowRingBufferFl
-	virtual void		ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001e1910 ComputePutVectors__17CShadowRingBufferCFRPUcRlT1T2
-	virtual void		ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001e1a80 ComputeGetVectors__17CShadowRingBufferCFRPUcRlT1T2
+	virtual int			Peek();						// ROM 0x001df948 Peek__17CShadowRingBufferFv
+	virtual int			Next();						// ROM 0x001df960 Next__17CShadowRingBufferFv
+	virtual NewtonErr	Skip();						// ROM 0x001df99c Skip__17CShadowRingBufferFv
+	virtual int			Get();						// ROM 0x001df9dc Get__17CShadowRingBufferFv
+	virtual int			Getn(UByte* data, long count);				// ROM 0x001dfa24 Getn__17CShadowRingBufferFPUcl
+	virtual NewtonErr	CopyOut(UByte* data, long& count);			// ROM 0x001def68 CopyOut__17CShadowRingBufferFPUcRl
+	virtual int			Put(int byte);				// ROM 0x001df21c Put__17CShadowRingBufferFi
+	virtual int			Putn(const UByte* data, long count);			// ROM 0x001df27c Putn__17CShadowRingBufferFPCUcl
+	virtual NewtonErr	CopyIn(const UByte* data, long& count);		// ROM 0x001df2ac CopyIn__17CShadowRingBufferFPCUcRl
+	virtual void		Reset();					// ROM 0x001df3e4 Reset__17CShadowRingBufferFv
+	virtual long		GetSize() const;			// ROM 0x001df3f4 GetSize__17CShadowRingBufferCFv
+	virtual Boolean		AtEOF() const;				// ROM 0x001df400 AtEOF__17CShadowRingBufferCFv
+	virtual Boolean		IsFull() const;				// ROM 0x001df884 IsFull__17CShadowRingBufferCFv
+	virtual Boolean		IsEmpty() const;			// ROM 0x001df8ac IsEmpty__17CShadowRingBufferCFv
+	virtual long		FreeCount() const;			// ROM 0x001df498 FreeCount__17CShadowRingBufferCFv
+	virtual long		DataCount() const;			// ROM 0x001df4b8 DataCount__17CShadowRingBufferCFv
+	virtual long		UpdatePutVector(long count);	// ROM 0x001df7d4 UpdatePutVector__17CShadowRingBufferFl
+	virtual long		UpdateGetVector(long count);	// ROM 0x001df724 UpdateGetVector__17CShadowRingBufferFl
+	virtual void		ComputePutVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001df4f8 ComputePutVectors__17CShadowRingBufferCFRPUcRlT1T2
+	virtual void		ComputeGetVectors(UByte*& p1, long& n1, UByte*& p2, long& n2) const;	// ROM 0x001df668 ComputeGetVectors__17CShadowRingBufferCFRPUcRlT1T2
 
 	// the class's own members - it adds nothing to the vtable
-	UByte			GetByteAt(long offset);				// ROM 0x001e1cdc GetByteAt__17CShadowRingBufferFl
-	int				PutByteAt(int byte, long offset);	// ROM 0x001e1d1c PutByteAt__17CShadowRingBufferFil
-	int				TempGetn(UByte* data, long count);	// ROM 0x001e14c8 TempGetn__17CShadowRingBufferFPUcl
-	NewtonErr		TempCopyOut(UByte* data, long& count);	// ROM 0x001e14f0 TempCopyOut__17CShadowRingBufferFPUcRl
-	void			TempReset();						// ROM 0x001e1628 TempReset__17CShadowRingBufferFv
-	long			TempDataCount() const;				// ROM 0x001e18f0 TempDataCount__17CShadowRingBufferCFv
-	void			ComputeTempGetVectors(ULong& o1, long& n1, ULong& o2, long& n2) const;	// ROM 0x001e19c4 ComputeTempGetVectors__17CShadowRingBufferCFRUlRlT1T2
+	UByte			GetByteAt(long offset);				// ROM 0x001df8c4 GetByteAt__17CShadowRingBufferFl
+	int				PutByteAt(int byte, long offset);	// ROM 0x001df904 PutByteAt__17CShadowRingBufferFil
+	int				TempGetn(UByte* data, long count);	// ROM 0x001df0b0 TempGetn__17CShadowRingBufferFPUcl
+	NewtonErr		TempCopyOut(UByte* data, long& count);	// ROM 0x001df0d8 TempCopyOut__17CShadowRingBufferFPUcRl
+	void			TempReset();						// ROM 0x001df210 TempReset__17CShadowRingBufferFv
+	long			TempDataCount() const;				// ROM 0x001df4d8 TempDataCount__17CShadowRingBufferCFv
+	void			ComputeTempGetVectors(ULong& o1, long& n1, ULong& o2, long& n2) const;	// ROM 0x001df5ac ComputeTempGetVectors__17CShadowRingBufferCFRUlRlT1T2
 
 	ULong			fPutOffset;			// +0x04  where the next Put writes
 	ULong			fGetOffset;			// +0x08  where the next Get reads

@@ -1,6 +1,6 @@
 add_executable(test_Dates test_Dates.cpp)
 target_link_libraries(test_Dates PRIVATE intl)
-target_compile_definitions(test_Dates PRIVATE "NEWTON_ROM_BIN=\"${CMAKE_SOURCE_DIR}/../build/MP2100D/rom.bin\"")
+target_compile_definitions(test_Dates PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME intl.Dates COMMAND test_Dates)
 set_tests_properties(intl.Dates PROPERTIES TIMEOUT 120)
 

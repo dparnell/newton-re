@@ -19,7 +19,7 @@
 	configuration is registered under the service's four characters
 	(TUConfigServer, user/UserConfigServer.cpp).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #ifndef __CONFIGSERVER_H
@@ -48,7 +48,7 @@ Ref		CSInstantiate(RefArg rcvr, RefArg serviceType, RefArg configName);
 Ref		CSGetDefaultConfig(RefArg rcvr);
 Ref		CSSetDefaultConfig(RefArg rcvr, RefArg config);
 Ref		CSDispose(RefArg rcvr);
-TNSConfigServer*	GetClient(RefArg rcvr);		// ROM 0x000ad564 GetClient__FRC6RefVar
+TNSConfigServer*	GetClient(RefArg rcvr);		// ROM 0x000ac358 GetClient__FRC6RefVar
 
 void	RegisterConfigServerNatives(void);
 

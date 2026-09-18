@@ -15,12 +15,12 @@
 				on the undo stack.
 
 				The command ids are the ROM's (TView::RealDoCommand
-				0x00266e00 switches on them; the NTK's ae... constants):
+				0x00268d38 switches on them; the NTK's ae... constants):
 				the names below are ours, from what each does - NOT the
 				NTK's where the two are not known to agree.
 
-	Reconstructed from the MP2100 D ROM (0x00070dc4-0x00071380,
-	0x000345bc-0x00034744, 0x00266cec); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x00070424-0x000709e0,
+	0x0003450c-0x00034694, 0x00268c24); each function cites its origin.
 */
 
 #ifndef __COMMANDS_H
@@ -78,28 +78,28 @@ enum
 const Long kNoParameter = 0x8000000;		// (0x8000000: no parameter)
 const Long kNoModalCheck = 0x420000;		// aeShow's parameter to skip the modal check
 
-Ref		MakeCommand(ULong id, TResponder* receiver, Long parameter);			// ROM 0x00070dc4 MakeCommand__FUlP10TResponderl (Long: the ROM's word - a pointer fits)
-TResponder*	CommandReceiver(RefArg cmd);										// ROM 0x00070e88 CommandReceiver__FRC6RefVar
-long	CommandID(RefArg cmd);													// ROM 0x0007117c CommandID__FRC6RefVar
-void	CommandSetID(RefArg cmd, ULong id);										// ROM 0x000711b8 CommandSetID__FRC6RefVarUl
-long	CommandResult(RefArg cmd);												// ROM 0x000711f8 CommandResult__FRC6RefVar
-void	CommandSetResult(RefArg cmd, long result);								// ROM 0x00071234 CommandSetResult__FRC6RefVarl
-Long	CommandParameter(RefArg cmd);											// ROM 0x00071274 CommandParameter__FRC6RefVar
-void	CommandSetParameter(RefArg cmd, Long parameter);						// ROM 0x000712b0 CommandSetParameter__FRC6RefVarl
-Ref		CommandFrameParameter(RefArg cmd);										// ROM 0x000712f0 CommandFrameParameter__FRC6RefVar
-Ref		CommandText(RefArg cmd);												// ROM 0x0017c29c CommandText__FRC6RefVar (the text slot)
-void	CommandSetText(RefArg cmd, RefArg text);								// ROM 0x0017c28c CommandSetText__FRC6RefVarT1
-void	CommandSetFrameParameter(RefArg cmd, RefArg parameter);					// ROM 0x0007130c CommandSetFrameParameter__FRC6RefVarT1
-Long	CommandIndexParameter(RefArg cmd, long index);							// ROM 0x00070fc4 CommandIndexParameter__FRC6RefVarl
-void	CommandSetIndexParameter(RefArg cmd, long index, Long parameter);		// ROM 0x00070f08 CommandSetIndexParameter__FRC6RefVarlT2
-void	CommandSetIndexFrame(RefArg cmd, long index, RefArg parameter);			// ROM 0x00071058 CommandSetIndexFrame__FRC6RefVarlT1
-void	MarkUndoCommand(RefArg cmd);											// ROM 0x00071104 MarkUndoCommand__FRC6RefVar
-Boolean	IsUndoCommand(RefArg cmd);												// ROM 0x00071144 IsUndoCommand__FRC6RefVar
-Ref		MakeRunScriptCommand(RefArg context, RefArg script, RefArg args);		// ROM 0x000345bc MakeRunScriptCommand__FRC6RefVarN21
-Ref		MakeUndoCommand(RefArg receiver, RefArg message, RefArg args);			// ROM 0x0003467c MakeUndoCommand__FRC6RefVarN21
-Ref		GetStrokeBundleFromCommand(RefArg cmd);									// ROM 0x00266cec GetStrokeBundleFromCommand__FRC6RefVar
+Ref		MakeCommand(ULong id, TResponder* receiver, Long parameter);			// ROM 0x00070424 MakeCommand__FUlP10TResponderl (Long: the ROM's word - a pointer fits)
+TResponder*	CommandReceiver(RefArg cmd);										// ROM 0x000704e8 CommandReceiver__FRC6RefVar
+long	CommandID(RefArg cmd);													// ROM 0x000707dc CommandID__FRC6RefVar
+void	CommandSetID(RefArg cmd, ULong id);										// ROM 0x00070818 CommandSetID__FRC6RefVarUl
+long	CommandResult(RefArg cmd);												// ROM 0x00070858 CommandResult__FRC6RefVar
+void	CommandSetResult(RefArg cmd, long result);								// ROM 0x00070894 CommandSetResult__FRC6RefVarl
+Long	CommandParameter(RefArg cmd);											// ROM 0x000708d4 CommandParameter__FRC6RefVar
+void	CommandSetParameter(RefArg cmd, Long parameter);						// ROM 0x00070910 CommandSetParameter__FRC6RefVarl
+Ref		CommandFrameParameter(RefArg cmd);										// ROM 0x00070950 CommandFrameParameter__FRC6RefVar
+Ref		CommandText(RefArg cmd);												// ROM 0x0017a26c CommandText__FRC6RefVar (the text slot)
+void	CommandSetText(RefArg cmd, RefArg text);								// ROM 0x0017a25c CommandSetText__FRC6RefVarT1
+void	CommandSetFrameParameter(RefArg cmd, RefArg parameter);					// ROM 0x0007096c CommandSetFrameParameter__FRC6RefVarT1
+Long	CommandIndexParameter(RefArg cmd, long index);							// ROM 0x00070624 CommandIndexParameter__FRC6RefVarl
+void	CommandSetIndexParameter(RefArg cmd, long index, Long parameter);		// ROM 0x00070568 CommandSetIndexParameter__FRC6RefVarlT2
+void	CommandSetIndexFrame(RefArg cmd, long index, RefArg parameter);			// ROM 0x000706b8 CommandSetIndexFrame__FRC6RefVarlT1
+void	MarkUndoCommand(RefArg cmd);											// ROM 0x00070764 MarkUndoCommand__FRC6RefVar
+Boolean	IsUndoCommand(RefArg cmd);												// ROM 0x000707a4 IsUndoCommand__FRC6RefVar
+Ref		MakeRunScriptCommand(RefArg context, RefArg script, RefArg args);		// ROM 0x0003450c MakeRunScriptCommand__FRC6RefVarN21
+Ref		MakeUndoCommand(RefArg receiver, RefArg message, RefArg args);			// ROM 0x000345cc MakeUndoCommand__FRC6RefVarN21
+Ref		GetStrokeBundleFromCommand(RefArg cmd);									// ROM 0x00268c24 GetStrokeBundleFromCommand__FRC6RefVar
 
-TResponder*	GetResponder(RefArg context, RefArg name);							// ROM 0x000b07a8 GetResponder__FRC6RefVarT1
-TResponder*	FailGetResponder(RefArg context, RefArg name);						// ROM 0x000b07fc FailGetResponder__FRC6RefVarT1
+TResponder*	GetResponder(RefArg context, RefArg name);							// ROM 0x000af5b0 GetResponder__FRC6RefVarT1
+TResponder*	FailGetResponder(RefArg context, RefArg name);						// ROM 0x000af604 FailGetResponder__FRC6RefVarT1
 
 #endif	/* __COMMANDS_H */

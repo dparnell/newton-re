@@ -5,11 +5,24 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# The DDK headers are configured exactly as for the MP2100 D ROM build
+# Which ROM this is a reconstruction of.  NEWTON_ROM is the directory in
+# DebugRom/ and NEWTON_ROM_BUILD the extracted build directory; the tests
+# and the host programs read the image and the extracted rom.bin through
+# the two paths below rather than naming a ROM themselves.  Switching ROMs
+# means changing these three lines, re-running
+# tools/newton-rom/analysis/regenerate.py and recite.py, and setting the
+# localisation the DDK headers are configured with.
+set(NEWTON_ROM "MP2x00 US" CACHE STRING "the ROM directory under DebugRom/")
+set(NEWTON_ROM_FILE "Senior CirrusNoDebug image" CACHE STRING "the AIF image in it")
+set(NEWTON_ROM_BUILD "MP2x00US" CACHE STRING "the extract_rom.py output directory under build/")
+set(NEWTON_ROM_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/../DebugRom/${NEWTON_ROM}/${NEWTON_ROM_FILE}")
+set(NEWTON_ROM_BIN "${CMAKE_CURRENT_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/rom.bin")
+
+# The DDK headers are configured exactly as for that ROM build
 # (see tools/newton-rom/newtonrom/headers.py), minus __arm.
 add_library(newton_config INTERFACE)
 target_include_directories(newton_config INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ddk ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_definitions(newton_config INTERFACE forQ=1 forGerman=1)
+target_compile_definitions(newton_config INTERFACE forQ=1)
 target_compile_options(newton_config INTERFACE
     -include ${CMAKE_CURRENT_SOURCE_DIR}/host/host_compat.h
     -Wall -Wno-unknown-pragmas -Wno-return-type-c-linkage -Wno-mismatched-tags

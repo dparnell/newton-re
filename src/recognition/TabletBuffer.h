@@ -21,8 +21,8 @@
 				the calibration, the orientation), TBCTabletBufferInit's
 				inker port and the inker wake-ups (TBCWakeUpInker).
 
-	Reconstructed from the MP2100 D ROM (0x0024e29c-0x0024e8b4,
-	0x000381a4-0x000383f8); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x002501e4-0x002507fc,
+	0x000380f4-0x00038348); each function cites its origin.
 */
 
 #ifndef __TABLETBUFFER_H
@@ -45,43 +45,43 @@ enum
 // write index, the inker's read index (the inker draws the samples and
 // passes them on), the stroker's read index (the recogniser's, behind the
 // inker's), the words
-extern ULong	gTabData;						// ROM 0x0c104458 gTabData - the write index
+extern ULong	gTabData;						// ROM 0x0c107390 gTabData - the write index
 extern ULong	gTabletInkerIndex;				// (the ROM's word at 0x0c10445c) the inker's read index
 extern ULong	gTabletStrokerIndex;			// (0x0c104460) the stroker's read index
 extern ULong	gTabletBuffer[kTabletBufferSize];	// (0x0c104464)
 
-void	TBCTabletBufferInit(TUPort* inkerPort);		// ROM 0x0024e168 TBCTabletBufferInit__FP6TUPort - emptied, polling off (NOT YET: the inker's port and wake-up message)
-Boolean	TBCTabletBufferEmpty(void);						// ROM 0x0024e200 TBCTabletBufferEmpty__Fv - both readers caught up
+void	TBCTabletBufferInit(TUPort* inkerPort);		// ROM 0x002500b0 TBCTabletBufferInit__FP6TUPort - emptied, polling off (NOT YET: the inker's port and wake-up message)
+Boolean	TBCTabletBufferEmpty(void);						// ROM 0x00250148 TBCTabletBufferEmpty__Fv - both readers caught up
 
 // the writer's side
-long	TBCInsertTabletSample(ULong sample, ULong time);	// ROM 0x0024e4e8 TBCInsertTabletSample__FUlT1 - ==> 0, or -56006 (kTabletBufferFull) when the ring is full; time 0: now
-long	InsertTabletSample(ULong sample, ULong time);	// ROM 0x0024e834 InsertTabletSample__FUlT1 - ... and the inker woken (NOT YET)
-void	TBCFlushTabletBuffer(void);						// ROM 0x0024e6e8 TBCFlushTabletBuffer__Fv - emptied
-void	TBCFlushInkerBuffer(void);						// ROM 0x0024e700 TBCFlushInkerBuffer__Fv - the reader catches up
-void	TBCSetTabletPolling(Boolean polling);			// ROM 0x0024e328 TBCSetTabletPolling__FUc
-void	SetTabletPolling(Boolean polling);				// ROM 0x0024e7f8 SetTabletPolling__FUc
-Boolean	TBCGetTabletPolling(void);						// ROM 0x0024e318 TBCGetTabletPolling__Fv
-long	TBCPollTablet(long* x, long* y, ULong* pressure, Boolean* penUp);	// ROM 0x0024e340 TBCPollTablet__FPlT1PUlPUc - the last sample in polling mode; ==> 0, or -56007 when there is none new
+long	TBCInsertTabletSample(ULong sample, ULong time);	// ROM 0x00250430 TBCInsertTabletSample__FUlT1 - ==> 0, or -56006 (kTabletBufferFull) when the ring is full; time 0: now
+long	InsertTabletSample(ULong sample, ULong time);	// ROM 0x0025077c InsertTabletSample__FUlT1 - ... and the inker woken (NOT YET)
+void	TBCFlushTabletBuffer(void);						// ROM 0x00250630 TBCFlushTabletBuffer__Fv - emptied
+void	TBCFlushInkerBuffer(void);						// ROM 0x00250648 TBCFlushInkerBuffer__Fv - the reader catches up
+void	TBCSetTabletPolling(Boolean polling);			// ROM 0x00250270 TBCSetTabletPolling__FUc
+void	SetTabletPolling(Boolean polling);				// ROM 0x00250740 SetTabletPolling__FUc
+Boolean	TBCGetTabletPolling(void);						// ROM 0x00250260 TBCGetTabletPolling__Fv
+long	TBCPollTablet(long* x, long* y, ULong* pressure, Boolean* penUp);	// ROM 0x00250288 TBCPollTablet__FPlT1PUlPUc - the last sample in polling mode; ==> 0, or -56007 when there is none new
 
 // the inker's side
-Boolean	TBCInkerBufferEmpty(void);						// ROM 0x0024e2d8 TBCInkerBufferEmpty__Fv - the inker has read up to the writer
-ULong	TBCGetInkerData(void);							// ROM 0x0024e228 TBCGetInkerData__Fv
-void	TBCSetInkerData(ULong word);					// ROM 0x0024e240 TBCSetInkerData__FUl - the word at the inker's index replaced
-void	TBCSetInkerData(ULong word, ULong offset);		// ROM 0x0024e258 TBCSetInkerData__FUlT1
-void	TBCIncInkerIndex(ULong count);					// ROM 0x0024e27c TBCIncInkerIndex__FUl
+Boolean	TBCInkerBufferEmpty(void);						// ROM 0x00250220 TBCInkerBufferEmpty__Fv - the inker has read up to the writer
+ULong	TBCGetInkerData(void);							// ROM 0x00250170 TBCGetInkerData__Fv
+void	TBCSetInkerData(ULong word);					// ROM 0x00250188 TBCSetInkerData__FUl - the word at the inker's index replaced
+void	TBCSetInkerData(ULong word, ULong offset);		// ROM 0x002501a0 TBCSetInkerData__FUlT1
+void	TBCIncInkerIndex(ULong count);					// ROM 0x002501c4 TBCIncInkerIndex__FUl
 
 // the stroker's side (the recogniser's, through xGetTabPt)
-Boolean	TBCStrokerBufferEmpty(void);					// ROM 0x0024e6c4 TBCStrokerBufferEmpty__Fv - the stroker has read up to the inker
-ULong	TBCGetStrokerData(void);						// ROM 0x0024e29c TBCGetStrokerData__Fv - the word at the read index
-ULong	TBCGetStrokerData(ULong offset);				// ROM 0x0024e2b4 TBCGetStrokerData__FUl - ... offset words on
-void	TBCIncStrokerIndex(ULong count);				// ROM 0x0024e2f8 TBCIncStrokerIndex__FUl
-Boolean	StrokerBufferEmpty(void);						// ROM 0x0024e870 StrokerBufferEmpty__Fv
-ULong	GetStrokerData(void);							// ROM 0x0024e890 GetStrokerData__Fv
-ULong	GetStrokerData(ULong offset);					// ROM 0x0024e894 GetStrokerData__FUl
-void	IncStrokerIndex(ULong count);					// ROM 0x0024e8a4 IncStrokerIndex__FUl
+Boolean	TBCStrokerBufferEmpty(void);					// ROM 0x0025060c TBCStrokerBufferEmpty__Fv - the stroker has read up to the inker
+ULong	TBCGetStrokerData(void);						// ROM 0x002501e4 TBCGetStrokerData__Fv - the word at the read index
+ULong	TBCGetStrokerData(ULong offset);				// ROM 0x002501fc TBCGetStrokerData__FUl - ... offset words on
+void	TBCIncStrokerIndex(ULong count);				// ROM 0x00250240 TBCIncStrokerIndex__FUl
+Boolean	StrokerBufferEmpty(void);						// ROM 0x002507b8 StrokerBufferEmpty__Fv
+ULong	GetStrokerData(void);							// ROM 0x002507d8 GetStrokerData__Fv
+ULong	GetStrokerData(ULong offset);					// ROM 0x002507dc GetStrokerData__FUl
+void	IncStrokerIndex(ULong count);					// ROM 0x002507ec IncStrokerIndex__FUl
 
 // the tablet driver (NOT YET: a constant)
-ULong	GetSampleRate(void);							// ROM 0x0024e8b4 GetSampleRate__Fv - samples per second, Fixed
+ULong	GetSampleRate(void);							// ROM 0x002507fc GetSampleRate__Fv - samples per second, Fixed
 
 // the "collect" state (the ROM's at 0x0c1008a8): whether the tablet is
 // collecting, the pen state the reader is in, the last down and up times
@@ -106,12 +106,12 @@ enum
 	kPenStateJustDown	= 6
 };
 
-void	xTabInit(void);									// ROM 0x000381a4 xTabInit__Fv
-void	xTabOn(void);									// ROM 0x000381d4 xTabOn__Fv
-Boolean	xGetTabPt(TabPt* pt);							// ROM 0x000381f8 xGetTabPt__FP5TabPt - the next point (x -1 for the pen-up); ==> whether there was one
-Boolean	xLastPoint(TabPt* pt);							// ROM 0x00038368 xLastPoint__FP5TabPt - whether it is the pen-up
-ULong	xGetDownTime(void);								// ROM 0x000383b8 xGetDownTime__Fv - the last pen-down's time, once
-ULong	xGetUpTime(void);								// ROM 0x000383d0 xGetUpTime__Fv
-void	xGetTabScale(FPoint* scale);					// ROM 0x000383e8 xGetTabScale__FP6FPoint - 8.0 each way (eighths)
+void	xTabInit(void);									// ROM 0x000380f4 xTabInit__Fv
+void	xTabOn(void);									// ROM 0x00038124 xTabOn__Fv
+Boolean	xGetTabPt(TabPt* pt);							// ROM 0x00038148 xGetTabPt__FP5TabPt - the next point (x -1 for the pen-up); ==> whether there was one
+Boolean	xLastPoint(TabPt* pt);							// ROM 0x000382b8 xLastPoint__FP5TabPt - whether it is the pen-up
+ULong	xGetDownTime(void);								// ROM 0x00038308 xGetDownTime__Fv - the last pen-down's time, once
+ULong	xGetUpTime(void);								// ROM 0x00038320 xGetUpTime__Fv
+void	xGetTabScale(FPoint* scale);					// ROM 0x00038338 xGetTabScale__FP6FPoint - 8.0 each way (eighths)
 
 #endif	/* __TABLETBUFFER_H */

@@ -15,8 +15,8 @@
 				Each accumulates over ComputeCRC calls; Get() writes the
 				running value out as its two bytes, most significant first.
 
-	The DDK has no header for these; reconstructed from the MP2100 D ROM
-	(0x0004a5a0-0x0004a710, 0x000ef3d8-0x000ef430), each function citing its
+	The DDK has no header for these; reconstructed from the MP2x00 US ROM
+	(0x00049cd0-0x00049e40, 0x000edd80-0x000eddd8), each function citing its
 	origin.  The tables are read from the ROM by
 	tools/newton-rom/analysis/romtable.py into CRC16Tables.cpp.
 */
@@ -38,10 +38,10 @@ extern const unsigned short	IrCRCLookupTable[256];	// ROM 0x0034f79c
 class TCRC16
 {
 public:
-	void	Reset();									// ROM 0x0004a5a0 Reset__6TCRC16Fv
-	void	ComputeCRC(UByte byte);						// ROM 0x0004a5ac ComputeCRC__6TCRC16FUc
-	void	ComputeCRC(UByte* data, ULong count);		// ROM 0x0004a6a0 ComputeCRC__6TCRC16FPUcUl
-	void	Get();										// ROM 0x0004a700 Get__6TCRC16Fv - fResult = fCRC, big-endian
+	void	Reset();									// ROM 0x00049cd0 Reset__6TCRC16Fv
+	void	ComputeCRC(UByte byte);						// ROM 0x00049cdc ComputeCRC__6TCRC16FUc
+	void	ComputeCRC(UByte* data, ULong count);		// ROM 0x00049dd0 ComputeCRC__6TCRC16FPUcUl
+	void	Get();										// ROM 0x00049e30 Get__6TCRC16Fv - fResult = fCRC, big-endian
 
 	UShort	Value() const	{ return (UShort) fCRC; }	// host: the running value
 
@@ -56,10 +56,10 @@ public:
 class TIrCRC16
 {
 public:
-	void	Reset();									// ROM 0x000ef3d8 Reset__8TIrCRC16Fv
-	void	ComputeCRC(UByte byte);						// ROM 0x000ef3e8 ComputeCRC__8TIrCRC16FUc
-	void	Finalize();									// ROM 0x000ef414 Finalize__8TIrCRC16Fv - one's-complement
-	void	Get();										// ROM 0x000ef424 Get__8TIrCRC16Fv
+	void	Reset();									// ROM 0x000edd80 Reset__8TIrCRC16Fv
+	void	ComputeCRC(UByte byte);						// ROM 0x000edd90 ComputeCRC__8TIrCRC16FUc
+	void	Finalize();									// ROM 0x000eddbc Finalize__8TIrCRC16Fv - one's-complement
+	void	Get();										// ROM 0x000eddcc Get__8TIrCRC16Fv
 
 	UShort	Value() const	{ return (UShort) fCRC; }	// host: the running value
 

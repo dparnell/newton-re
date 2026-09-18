@@ -1,4 +1,4 @@
-// ROM import test: the MP2100 D ROM image's object area read into the
+// ROM import test: the ROM image's object area read into the
 // host (ROMImport.h), then the object system started over it: the ROM's
 // symbol table serves Intern, the magic pointer table and the constants
 // resolve to ROM objects, strings and reals read as the host's, the
@@ -56,7 +56,7 @@ main()
 		printf("test_ROMImport: cannot import %s (%ld)\n", NEWTON_ROM_IMAGE, (long) err);
 		return 1;
 	}
-	EXPECT(ROMObjectsImported() && ROMObjectCount() == 40597);
+	EXPECT(ROMObjectsImported() && ROMObjectCount() == 46538);
 	gObjectHeapSize = 0x80000;
 	InitObjects();
 

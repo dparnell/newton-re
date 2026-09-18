@@ -4,7 +4,7 @@
 	Contains:	TPrivatePackageIterator and TPackageIterator
 				(PackageIterator.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "PackageIterator.h"
@@ -22,7 +22,7 @@ extern const ExceptionName exPipeException;
 static const char kPackageSignatureVersions[2] = { '0', '1' };
 
 
-// ROM 0x001966b4 IsPackageHeader__FUlT1
+// ROM 0x00194694 IsPackageHeader__FUlT1
 // Whether the bytes begin with a package signature (the ROM catches the
 // bus and permission aborts of an unreadable address: none here).
 Boolean
@@ -45,7 +45,7 @@ IsPackageHeader(const void* data, ULong size)
 	T P r i v a t e P a c k a g e I t e r a t o r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001964fc __ct__23TPrivatePackageIteratorFv
+// ROM 0x001944dc __ct__23TPrivatePackageIteratorFv
 TPrivatePackageIterator::TPrivatePackageIterator()
 {
 	fPackage = nil;
@@ -58,14 +58,14 @@ TPrivatePackageIterator::TPrivatePackageIterator()
 }
 
 
-// ROM 0x001967bc __dt__23TPrivatePackageIteratorFv
+// ROM 0x0019479c __dt__23TPrivatePackageIteratorFv
 TPrivatePackageIterator::~TPrivatePackageIterator()
 {
 	DisposeDirectory();
 }
 
 
-// ROM 0x0019693c Init__23TPrivatePackageIteratorFPv
+// ROM 0x0019491c Init__23TPrivatePackageIteratorFPv
 // Over the package at package: the header checked, the entries and data
 // located, the relocation chunk found, the parts' offset computed, the
 // directory verified.
@@ -96,7 +96,7 @@ TPrivatePackageIterator::Init(void* package)
 }
 
 
-// ROM 0x001967e8 DisposeDirectory__23TPrivatePackageIteratorFv
+// ROM 0x001947c8 DisposeDirectory__23TPrivatePackageIteratorFv
 void
 TPrivatePackageIterator::DisposeDirectory(void)
 {
@@ -109,7 +109,7 @@ TPrivatePackageIterator::DisposeDirectory(void)
 }
 
 
-// ROM 0x00196808 CheckHeader__23TPrivatePackageIteratorFv
+// ROM 0x001947e8 CheckHeader__23TPrivatePackageIteratorFv
 NewtonErr
 TPrivatePackageIterator::CheckHeader(void)
 {
@@ -124,7 +124,7 @@ TPrivatePackageIterator::CheckHeader(void)
 }
 
 
-// ROM 0x001968a4 ComputeSizeOfEntriesAndData__23TPrivatePackageIteratorFRUlT1
+// ROM 0x00194884 ComputeSizeOfEntriesAndData__23TPrivatePackageIteratorFRUlT1
 // The entries follow the header, the data the entries.
 NewtonErr
 TPrivatePackageIterator::ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& /*dataSize*/)
@@ -135,7 +135,7 @@ TPrivatePackageIterator::ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& 
 }
 
 
-// ROM 0x001968e0 SetupRelocationData__23TPrivatePackageIteratorFUlPUl
+// ROM 0x001948c0 SetupRelocationData__23TPrivatePackageIteratorFUlPUl
 // The relocation chunk (when the flags say there is one) after the
 // directory; its reserved word must be 0.  *relocationSize: its size.
 NewtonErr
@@ -159,7 +159,7 @@ TPrivatePackageIterator::SetupRelocationData(ULong directoryOffset, ULong* reloc
 }
 
 
-// ROM 0x001968c8 GetRelocationChunkInfo__23TPrivatePackageIteratorFv
+// ROM 0x001948a8 GetRelocationChunkInfo__23TPrivatePackageIteratorFv
 // The relocation entries follow the chunk's first word.
 NewtonErr
 TPrivatePackageIterator::GetRelocationChunkInfo(void)
@@ -170,7 +170,7 @@ TPrivatePackageIterator::GetRelocationChunkInfo(void)
 }
 
 
-// ROM 0x00196a10 VerifyPackage__23TPrivatePackageIteratorFv
+// ROM 0x001949f0 VerifyPackage__23TPrivatePackageIteratorFv
 // The InfoRefs within the directory, the processor type this ROM's, each
 // part's info and compressor within the directory and its offset within
 // the package.
@@ -201,7 +201,7 @@ TPrivatePackageIterator::VerifyPackage(void)
 }
 
 
-// ROM 0x0019658c NumberOfParts__23TPrivatePackageIteratorFv
+// ROM 0x0019456c NumberOfParts__23TPrivatePackageIteratorFv
 ULong
 TPrivatePackageIterator::NumberOfParts(void)
 {
@@ -209,7 +209,7 @@ TPrivatePackageIterator::NumberOfParts(void)
 }
 
 
-// ROM 0x001965a0 PackageSize__23TPrivatePackageIteratorFv
+// ROM 0x00194580 PackageSize__23TPrivatePackageIteratorFv
 ULong
 TPrivatePackageIterator::PackageSize(void)
 {
@@ -217,7 +217,7 @@ TPrivatePackageIterator::PackageSize(void)
 }
 
 
-// ROM 0x00196544 PackageName__23TPrivatePackageIteratorFv
+// ROM 0x00194524 PackageName__23TPrivatePackageIteratorFv
 // The name as it lies in the directory data: big-endian UniChars with a
 // terminator (a host reads them with GetBigEndianHalf).
 const UniChar*
@@ -227,7 +227,7 @@ TPrivatePackageIterator::PackageName(void)
 }
 
 
-// ROM 0x00196558 GetPartDataOffset__23TPrivatePackageIteratorFUl
+// ROM 0x00194538 GetPartDataOffset__23TPrivatePackageIteratorFUl
 // Where the part's data lies in the package.
 ULong
 TPrivatePackageIterator::GetPartDataOffset(ULong partIndex)
@@ -238,7 +238,7 @@ TPrivatePackageIterator::GetPartDataOffset(ULong partIndex)
 }
 
 
-// ROM 0x001965b4 GetPartInfoDesc__23TPrivatePackageIteratorFUlCP8PartInfo
+// ROM 0x00194594 GetPartInfoDesc__23TPrivatePackageIteratorFUlCP8PartInfo
 // The part's entry as a PartInfo (its data left to the caller).
 void
 TPrivatePackageIterator::GetPartInfoDesc(ULong partIndex, PartInfo* const info)
@@ -260,7 +260,7 @@ TPrivatePackageIterator::GetPartInfoDesc(ULong partIndex, PartInfo* const info)
 }
 
 
-// ROM 0x00196660 GetPartInfo__23TPrivatePackageIteratorFUlCP8PartInfo
+// ROM 0x00194640 GetPartInfo__23TPrivatePackageIteratorFUlCP8PartInfo
 // The part's info with its data's address in memory.
 void
 TPrivatePackageIterator::GetPartInfo(ULong partIndex, PartInfo* const info)
@@ -276,7 +276,7 @@ TPrivatePackageIterator::GetPartInfo(ULong partIndex, PartInfo* const info)
 	T P a c k a g e I t e r a t o r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0015e7e0 __ct__16TPackageIteratorFP5CPipe
+// ROM 0x0015c558 __ct__16TPackageIteratorFP5CPipe
 TPackageIterator::TPackageIterator(CPipe* pipe)
 {
 	fFromPipe = true;
@@ -285,7 +285,7 @@ TPackageIterator::TPackageIterator(CPipe* pipe)
 }
 
 
-// ROM 0x0015e82c __ct__16TPackageIteratorFPv
+// ROM 0x0015c5a4 __ct__16TPackageIteratorFPv
 TPackageIterator::TPackageIterator(void* package)
 {
 	fFromPipe = false;
@@ -294,7 +294,7 @@ TPackageIterator::TPackageIterator(void* package)
 }
 
 
-// ROM 0x0015ea38 __dt__16TPackageIteratorFv
+// ROM 0x0015c7b0 __dt__16TPackageIteratorFv
 TPackageIterator::~TPackageIterator()
 {
 	DisposeDirectory();
@@ -322,7 +322,7 @@ ReadFromPipe(CPipe* pipe, void* data, long count)
 }
 
 
-// ROM 0x0015f3d0 Init__16TPackageIteratorFv
+// ROM 0x0015d148 Init__16TPackageIteratorFv
 // A memory source as the private iterator; a pipe: the header read into
 // memory of its own and checked, then the entries and data, the
 // relocation chunk, the parts' offset; verified.  Any exception is a bad
@@ -372,7 +372,7 @@ TPackageIterator::Init(void)
 }
 
 
-// ROM 0x0015efc0 DisposeDirectory__16TPackageIteratorFv
+// ROM 0x0015cd38 DisposeDirectory__16TPackageIteratorFv
 // A pipe source's directory memory freed.
 void
 TPackageIterator::DisposeDirectory(void)
@@ -399,7 +399,7 @@ TPackageIterator::DisposeDirectory(void)
 }
 
 
-// ROM 0x0015f024 ComputeSizeOfEntriesAndData__16TPackageIteratorFRUlT1
+// ROM 0x0015cd9c ComputeSizeOfEntriesAndData__16TPackageIteratorFRUlT1
 // A pipe source: the entries and the directory data read into memory.
 NewtonErr
 TPackageIterator::ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& dataSize)
@@ -419,7 +419,7 @@ TPackageIterator::ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& dataSiz
 }
 
 
-// ROM 0x0015f2ac SetupRelocationData__16TPackageIteratorFUlPUl
+// ROM 0x0015d024 SetupRelocationData__16TPackageIteratorFUlPUl
 // A pipe source: the relocation header read into memory.
 NewtonErr
 TPackageIterator::SetupRelocationData(ULong directoryOffset, ULong* relocationSize)
@@ -448,7 +448,7 @@ TPackageIterator::SetupRelocationData(ULong directoryOffset, ULong* relocationSi
 }
 
 
-// ROM 0x0015f1b0 GetRelocationChunkInfo__16TPackageIteratorFv
+// ROM 0x0015cf28 GetRelocationChunkInfo__16TPackageIteratorFv
 // A pipe source: the relocation entries read into memory (the header's
 // size less the header).
 NewtonErr
@@ -466,7 +466,7 @@ TPackageIterator::GetRelocationChunkInfo(void)
 }
 
 
-// ROM 0x0015f5b8 VerifyPackage__16TPackageIteratorFv
+// ROM 0x0015d330 VerifyPackage__16TPackageIteratorFv
 // (The ROM turns an abort while reading an unmapped package into a bad
 // package.)
 NewtonErr
@@ -476,7 +476,7 @@ TPackageIterator::VerifyPackage(void)
 }
 
 
-// ROM 0x0015e894 NumberOfParts__16TPackageIteratorFv
+// ROM 0x0015c60c NumberOfParts__16TPackageIteratorFv
 ULong
 TPackageIterator::NumberOfParts(void)
 {
@@ -484,7 +484,7 @@ TPackageIterator::NumberOfParts(void)
 }
 
 
-// ROM 0x0015e914 PackageSize__16TPackageIteratorFv
+// ROM 0x0015c68c PackageSize__16TPackageIteratorFv
 ULong
 TPackageIterator::PackageSize(void)
 {
@@ -492,7 +492,7 @@ TPackageIterator::PackageSize(void)
 }
 
 
-// ROM 0x0015e994 DirectorySize__16TPackageIteratorFv
+// ROM 0x0015c70c DirectorySize__16TPackageIteratorFv
 ULong
 TPackageIterator::DirectorySize(void)
 {
@@ -500,7 +500,7 @@ TPackageIterator::DirectorySize(void)
 }
 
 
-// ROM 0x0015e9a8 GetPackageId__16TPackageIteratorFv
+// ROM 0x0015c720 GetPackageId__16TPackageIteratorFv
 // The package's type word ('xxxx' for an NTK application).
 ULong
 TPackageIterator::GetPackageId(void)
@@ -509,7 +509,7 @@ TPackageIterator::GetPackageId(void)
 }
 
 
-// ROM 0x0015e9bc GetVersion__16TPackageIteratorFv
+// ROM 0x0015c734 GetVersion__16TPackageIteratorFv
 ULong
 TPackageIterator::GetVersion(void)
 {
@@ -517,7 +517,7 @@ TPackageIterator::GetVersion(void)
 }
 
 
-// ROM 0x0015e9d0 CreationDate__16TPackageIteratorFv
+// ROM 0x0015c748 CreationDate__16TPackageIteratorFv
 ULong
 TPackageIterator::CreationDate(void)
 {
@@ -525,7 +525,7 @@ TPackageIterator::CreationDate(void)
 }
 
 
-// ROM 0x0015e9e4 ModifyDate__16TPackageIteratorFv
+// ROM 0x0015c75c ModifyDate__16TPackageIteratorFv
 ULong
 TPackageIterator::ModifyDate(void)
 {
@@ -533,7 +533,7 @@ TPackageIterator::ModifyDate(void)
 }
 
 
-// ROM 0x0015ea70 PackageFlags__16TPackageIteratorFv
+// ROM 0x0015c7e8 PackageFlags__16TPackageIteratorFv
 ULong
 TPackageIterator::PackageFlags(void)
 {
@@ -541,7 +541,7 @@ TPackageIterator::PackageFlags(void)
 }
 
 
-// ROM 0x0015e9f8 ForDispatchOnly__16TPackageIteratorFv
+// ROM 0x0015c770 ForDispatchOnly__16TPackageIteratorFv
 // The auto-remove bit: a package loaded for dispatching (installing its
 // parts) only, not kept.
 Boolean
@@ -551,7 +551,7 @@ TPackageIterator::ForDispatchOnly(void)
 }
 
 
-// ROM 0x0015ea18 CopyProtected__16TPackageIteratorFv
+// ROM 0x0015c790 CopyProtected__16TPackageIteratorFv
 Boolean
 TPackageIterator::CopyProtected(void)
 {
@@ -559,7 +559,7 @@ TPackageIterator::CopyProtected(void)
 }
 
 
-// ROM 0x0015e874 Copyright__16TPackageIteratorFv
+// ROM 0x0015c5ec Copyright__16TPackageIteratorFv
 // The copyright as it lies (big-endian UniChars); nil when there is none.
 const UniChar*
 TPackageIterator::Copyright(void)
@@ -570,7 +570,7 @@ TPackageIterator::Copyright(void)
 }
 
 
-// ROM 0x0015ea84 GetPartInfo__16TPackageIteratorFUlCP8PartInfo
+// ROM 0x0015c7fc GetPartInfo__16TPackageIteratorFUlCP8PartInfo
 // The part's info: its data's address for a memory source, its offset in
 // the package for a pipe.
 void
@@ -586,7 +586,7 @@ TPackageIterator::GetPartInfo(ULong partIndex, PartInfo* const info)
 }
 
 
-// ROM 0x0015eaec ProcessorTypeOfPart__16TPackageIteratorFUl
+// ROM 0x0015c864 ProcessorTypeOfPart__16TPackageIteratorFUl
 ULong
 TPackageIterator::ProcessorTypeOfPart(ULong partIndex)
 {

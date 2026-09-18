@@ -5,7 +5,7 @@
 				TCompressor Handle helpers, and the registration of the ROM's
 				implementations.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Compression.h"
@@ -21,7 +21,7 @@
 	The interfaces' New(char*)/Delete() glue (ROM 0x0037fdf4-0x00380034)
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0037fdf4 New__11TCompressorSFPc
+// ROM 0x0038955c New__11TCompressorSFPc
 TCompressor*
 TCompressor::New(const char* implementation)
 {
@@ -30,7 +30,7 @@ TCompressor::New(const char* implementation)
 }
 
 
-// ROM 0x0037fe20 Delete__11TCompressorFv
+// ROM 0x00389588 Delete__11TCompressorFv
 void
 TCompressor::Delete()
 {
@@ -38,7 +38,7 @@ TCompressor::Delete()
 }
 
 
-// ROM 0x0037ff0c New__13TDecompressorSFPc
+// ROM 0x00389674 New__13TDecompressorSFPc
 TDecompressor*
 TDecompressor::New(const char* implementation)
 {
@@ -47,7 +47,7 @@ TDecompressor::New(const char* implementation)
 }
 
 
-// ROM 0x0037ff38 Delete__13TDecompressorFv
+// ROM 0x003896a0 Delete__13TDecompressorFv
 void
 TDecompressor::Delete()
 {
@@ -55,7 +55,7 @@ TDecompressor::Delete()
 }
 
 
-// ROM 0x0037fe7c New__19TCallbackCompressorSFPc
+// ROM 0x003895e4 New__19TCallbackCompressorSFPc
 TCallbackCompressor*
 TCallbackCompressor::New(const char* implementation)
 {
@@ -64,7 +64,7 @@ TCallbackCompressor::New(const char* implementation)
 }
 
 
-// ROM 0x0037fea8 Delete__19TCallbackCompressorFv
+// ROM 0x00389610 Delete__19TCallbackCompressorFv
 void
 TCallbackCompressor::Delete()
 {
@@ -72,7 +72,7 @@ TCallbackCompressor::Delete()
 }
 
 
-// ROM 0x0037ff8c New__21TCallbackDecompressorSFPc
+// ROM 0x003896f4 New__21TCallbackDecompressorSFPc
 TCallbackDecompressor*
 TCallbackDecompressor::New(const char* implementation)
 {
@@ -81,7 +81,7 @@ TCallbackDecompressor::New(const char* implementation)
 }
 
 
-// ROM 0x0037ffb8 Delete__21TCallbackDecompressorFv
+// ROM 0x00389720 Delete__21TCallbackDecompressorFv
 void
 TCallbackDecompressor::Delete()
 {
@@ -93,7 +93,7 @@ TCallbackDecompressor::Delete()
 	TCompressor over a Handle
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00071b88 EstimatedCompressedSize__11TCompressorFPPc
+// ROM 0x000711e8 EstimatedCompressedSize__11TCompressorFPPc
 ULong
 TCompressor::EstimatedCompressedSize(Handle h)
 {
@@ -105,7 +105,7 @@ TCompressor::EstimatedCompressedSize(Handle h)
 }
 
 
-// ROM 0x00071aa4 Compress__11TCompressorFPPc
+// ROM 0x00071104 Compress__11TCompressorFPPc
 // The Handle's contents are replaced by their compressed form (through a
 // temporary the size of the estimate; the ROM's malloc/free).
 NewtonErr
@@ -142,7 +142,7 @@ TCompressor::Compress(Handle h)
 	Registration
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00101050 InitLZDecompression__Fv
+// ROM 0x000ff9ec InitLZDecompression__Fv
 void
 InitLZDecompression(void)
 {
@@ -150,7 +150,7 @@ InitLZDecompression(void)
 }
 
 
-// ROM 0x00037950 InitArithmeticCompression__Fv
+// ROM 0x000378a0 InitArithmeticCompression__Fv
 void
 InitArithmeticCompression(void)
 {
@@ -159,7 +159,7 @@ InitArithmeticCompression(void)
 }
 
 
-// ROM 0x00254f60 InitUnicodeCompression__Fv
+// ROM 0x00256eac InitUnicodeCompression__Fv
 void
 InitUnicodeCompression(void)
 {
@@ -168,7 +168,7 @@ InitUnicodeCompression(void)
 }
 
 
-// ROM 0x00282ffc InitZippyCompression__Fv
+// ROM 0x00284998 InitZippyCompression__Fv
 void
 InitZippyCompression(void)
 {
@@ -178,7 +178,7 @@ InitZippyCompression(void)
 }
 
 
-// ROM 0x00283588 InitZippyDecompression__Fv
+// ROM 0x00284f24 InitZippyDecompression__Fv
 void
 InitZippyDecompression(void)
 {
@@ -186,7 +186,7 @@ InitZippyDecompression(void)
 }
 
 
-// ROM 0x00100ac8 InitializeCompression__Fv
+// ROM 0x000ff464 InitializeCompression__Fv
 // Every compressor of the ROM, in the registry (RegisterROMDomainManager
 // calls this before the store decompressors).
 void

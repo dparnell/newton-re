@@ -4,7 +4,7 @@
 	Contains:	Fonts and text styles: the 'sfnt' font engine and the font
 				manager over the font family frames.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The 'sfnt' data is read a byte at a time here (the ROM reads its
 	big-endian halfwords and words in place).
 */
@@ -52,13 +52,13 @@ static inline ULong	Get32(const char* p)	{ return (Get16(p) << 16) | Get16(p + 2
 	T h e   ' s f n t '   e n g i n e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000af120 EngineInitSFNT__Fv
+// ROM 0x000adf28 EngineInitSFNT__Fv
 static void
 EngineInitSFNT(void)
 { }
 
 
-// ROM 0x000afd98 FindFontTable__FP16sfnt_OffsetTableUl
+// ROM 0x000aeba0 FindFontTable__FP16sfnt_OffsetTableUl
 // The table with the tag in the 'sfnt' directory; nil for none.
 const char*
 FindFontTable(const char* sfnt, ULong tag)
@@ -72,7 +72,7 @@ FindFontTable(const char* sfnt, ULong tag)
 }
 
 
-// ROM 0x000af7ac MapFormat0__FlPv
+// ROM 0x000ae5b4 MapFormat0__FlPv
 // A byte-indexed cmap: characters under 256.
 static long
 MapFormat0(long ch, const void* cmap)
@@ -83,7 +83,7 @@ MapFormat0(long ch, const void* cmap)
 }
 
 
-// ROM 0x000af7c4 MapFormat2__FlPv
+// ROM 0x000ae5cc MapFormat2__FlPv
 // (The ROM has no format 2 mapping: nothing.)
 static long
 MapFormat2(long /*ch*/, const void* /*cmap*/)
@@ -92,7 +92,7 @@ MapFormat2(long /*ch*/, const void* /*cmap*/)
 }
 
 
-// ROM 0x000af7cc MapFormat4__FlPv
+// ROM 0x000ae5d4 MapFormat4__FlPv
 // The segment-mapped cmap: the segment whose end is at or past the
 // character (the ROM's binary search then linear scan), the glyph from
 // its delta or its glyph array.
@@ -126,7 +126,7 @@ MapFormat4(long ch, const void* cmap)
 }
 
 
-// ROM 0x000af9e8 MapFormat4Patched__FlPv
+// ROM 0x000ae7f0 MapFormat4Patched__FlPv
 // (A font frame with the patched slot: the same mapping.)
 static long
 MapFormat4Patched(long ch, const void* cmap)
@@ -135,7 +135,7 @@ MapFormat4Patched(long ch, const void* cmap)
 }
 
 
-// ROM 0x000af9b8 MapFormat6__FlPv
+// ROM 0x000ae7c0 MapFormat6__FlPv
 // The trimmed table: a run of codes from firstCode.
 static long
 MapFormat6(long ch, const void* cmap)
@@ -149,7 +149,7 @@ MapFormat6(long ch, const void* cmap)
 }
 
 
-// ROM 0x000afde4 LocateEntry__FlP14sfnt_blocTable
+// ROM 0x000aebec LocateEntry__FlP14sfnt_blocTable
 // The one-bit strike whose size is nearest the wanted size.
 static const char*
 LocateEntry(Fixed size, const char* bloc)
@@ -178,7 +178,7 @@ LocateEntry(Fixed size, const char* bloc)
 }
 
 
-// ROM 0x000afb50 SFNTGetGlyphInfo__FlT1Pv
+// ROM 0x000ae958 SFNTGetGlyphInfo__FlT1Pv
 // The glyph's data found through the strike's index subtables (the
 // missing glyph, 0, when the glyph is not in the strike) and its advance
 // - the small or big metrics' - with the faces' extra width, as 16.16.
@@ -228,7 +228,7 @@ SFNTGetGlyphInfo(long ch, long glyph, FontEngineInfo* info)
 }
 
 
-// ROM 0x000afc50 SFNTGetGlyph__FlT1Pv
+// ROM 0x000aea58 SFNTGetGlyph__FlT1Pv
 // The glyph's metrics and bitmap: the small (format 1) or big (format 6)
 // metrics before byte-aligned rows; a superscript's or subscript's
 // bearing shifted.
@@ -263,7 +263,7 @@ SFNTGetGlyph(long ch, long glyph, FontEngineInfo* info)
 }
 
 
-// ROM 0x000af724 SFNTGetWidthsInfo__FlT1Pv
+// ROM 0x000ae52c SFNTGetWidthsInfo__FlT1Pv
 // A widths font's advance: the 'hmtx' width (the last for glyphs beyond
 // the metrics) plus the faces' extra, scaled.
 static void
@@ -277,7 +277,7 @@ SFNTGetWidthsInfo(long ch, long glyph, FontEngineInfo* info)
 }
 
 
-// ROM 0x000af77c SFNTGetWidthsGlyph__FlT1Pv
+// ROM 0x000ae584 SFNTGetWidthsGlyph__FlT1Pv
 // A widths font has no bitmaps.
 static void
 SFNTGetWidthsGlyph(long ch, long glyph, FontEngineInfo* info)
@@ -291,7 +291,7 @@ SFNTGetWidthsGlyph(long ch, long glyph, FontEngineInfo* info)
 }
 
 
-// ROM 0x000af580 SetupWidthsFont__FlP16sfnt_OffsetTableP14FontEngineInfoPl
+// ROM 0x000ae388 SetupWidthsFont__FlP16sfnt_OffsetTableP14FontEngineInfoPl
 // A font without strikes (a printer face): the metrics from 'hhea' scaled
 // from the 'head' units per em to the size; the faces the font itself has
 // ('head' macStyle) are taken off the ones to synthesise, and 'hsty' says
@@ -335,7 +335,7 @@ SetupWidthsFont(Fixed size, const char* sfnt, FontEngineInfo* info, long* face)
 }
 
 
-// ROM 0x000af46c ChooseStrike__FlRC6RefVarPl
+// ROM 0x000ae274 ChooseStrike__FlRC6RefVarPl
 // The family's 'sfnt' for the face: boldItalicData for bold italic,
 // italicData for italic (or a bold italic the family lacks), boldData
 // for bold, else plainData; faceUsed says which of bold and italic the
@@ -378,7 +378,7 @@ ChooseStrike(long face, RefArg fontFamily, long* faceUsed)
 }
 
 
-// ROM 0x000afe60 FindSFNT__FlRC6RefVarP14FontEngineInfoPl
+// ROM 0x000aec68 FindSFNT__FlRC6RefVarP14FontEngineInfoPl
 // The family's data for the face opened: the 'cmap' subtable for the
 // family's encoding (its platform id) and its mapping, the one-bit strike
 // nearest the size (its line metrics) or the widths.  ==> the strike's
@@ -450,7 +450,7 @@ FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face)
 }
 
 
-// ROM 0x000b0108 IsSizeAvailable__FlRC6RefVarT1
+// ROM 0x000aef10 IsSizeAvailable__FlRC6RefVarT1
 // Whether the family has a strike of exactly the size for the face.
 static Boolean
 IsSizeAvailable(Fixed size, RefArg fontFamily, long face)
@@ -472,7 +472,7 @@ IsSizeAvailable(Fixed size, RefArg fontFamily, long face)
 }
 
 
-// ROM 0x000afa18 SFNTReopenFont__FPv
+// ROM 0x000ae820 SFNTReopenFont__FPv
 // (The ROM refreshes the info from its cache copy and re-locks the data;
 // with no cache the info is what SFNTOpenFont left.)
 static long
@@ -482,7 +482,7 @@ SFNTReopenFont(FontEngineInfo* info)
 }
 
 
-// ROM 0x000afd1c SFNTCloseFont__FPv
+// ROM 0x000aeb24 SFNTCloseFont__FPv
 static void
 SFNTCloseFont(FontEngineInfo* info)
 {
@@ -491,7 +491,7 @@ SFNTCloseFont(FontEngineInfo* info)
 }
 
 
-// ROM 0x000af124 SFNTOpenFont__FP8PixelMapP11StyleRecordRC6RefVarlT4P14FontEngineInfo
+// ROM 0x000adf2c SFNTOpenFont__FP8PixelMapP11StyleRecordRC6RefVarlT4P14FontEngineInfo
 // The info filled for the style in the family: the size scaled by
 // xScale (a superscript or subscript at four fifths of it, raised or
 // lowered by three eighths of the ascent), the strike found, the scale
@@ -581,7 +581,7 @@ SFNTOpenFont(PixelMap* /*pm*/, StyleRecord* style, RefArg fontFamily, Fixed xSca
 	T h e   f o n t   m a n a g e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002bc2ec InitFonts__Fv
+// ROM 0x002e2074 InitFonts__Fv
 void
 InitFonts(void)
 {
@@ -608,7 +608,7 @@ GetFontFamily(RefArg familySymbol)
 }
 
 
-// ROM 0x002bc358 SearchFont__FlPUs
+// ROM 0x002e20e0 SearchFont__FlPUs
 // The family in vars.fonts with the Mac font id (0: any) or the name;
 // the system font when none matches.
 Ref
@@ -648,7 +648,7 @@ SearchFont(long macFontID, const UniChar* name)
 }
 
 
-// ROM 0x002bc514 OpenFont__FP8PixelMapP11StyleRecordlT3P14FontEngineInfo
+// ROM 0x002e229c OpenFont__FP8PixelMapP11StyleRecordlT3P14FontEngineInfo
 // The info for the style (the system font when it names none): the
 // family's 'sfnt' opened at the scales.  NOT YET RECONSTRUCTED: the
 // four-entry cache of open fonts (each call opens afresh), ink fonts,
@@ -690,7 +690,7 @@ CloseFont(FontEngineInfo* info)
 }
 
 
-// ROM 0x002bc17c GetStyleFontInfo__FP11StyleRecordP8FontInfo
+// ROM 0x002e1f04 GetStyleFontInfo__FP11StyleRecordP8FontInfo
 // The style's ascent, descent, leading and widest glyph, scaled when the
 // strike is not the style's size.
 void
@@ -722,7 +722,7 @@ GetStyleFontInfo(StyleRecord* style, FontInfo* fontInfo)
 }
 
 
-// ROM 0x002bc0d8 FontRefToCharSize__FRC6RefVar
+// ROM 0x002e1e60 FontRefToCharSize__FRC6RefVar
 // The character size a font spec implies: 1 for a family with an
 // encoding, 2 otherwise.
 long
@@ -743,7 +743,7 @@ FontRefToCharSize(RefArg font)
 	S t y l e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0032f3f0 MakeSimpleStyle__FRC6RefVarlT2
+// ROM 0x0035a54c MakeSimpleStyle__FRC6RefVarlT2
 void
 MakeSimpleStyle(StyleRecord* style, RefArg fontFamily, long size, long face)
 {
@@ -758,7 +758,7 @@ MakeSimpleStyle(StyleRecord* style, RefArg fontFamily, long size, long face)
 }
 
 
-// ROM 0x0017be98 FamilyNumToSym__Fl
+// ROM 0x00179e68 FamilyNumToSym__Fl
 // The packed family numbers' symbols.
 Ref
 FamilyNumToSym(long family)
@@ -774,7 +774,7 @@ FamilyNumToSym(long family)
 }
 
 
-// ROM 0x0017ccd8 GetFontSize__FRC6RefVar
+// ROM 0x0017aca8 GetFontSize__FRC6RefVar
 // The size of a packed font spec, or a font frame's size slot (an
 // integer, else type.ref.frame); 0 for anything else (an ink word NOT
 // YET RECONSTRUCTED: the ROM measures its glyph).
@@ -792,7 +792,7 @@ GetFontSize(RefArg fontSpec)
 }
 
 
-// ROM 0x0017dbf4 GetFontFace__FRC6RefVar
+// ROM 0x0017bbc4 GetFontFace__FRC6RefVar
 // The face likewise (the face slot).
 long
 GetFontFace(RefArg fontSpec)
@@ -808,7 +808,7 @@ GetFontFace(RefArg fontSpec)
 }
 
 
-// ROM 0x0017edd4 GetFontFamilySym__FRC6RefVar
+// ROM 0x0017cda4 GetFontFamilySym__FRC6RefVar
 // The family symbol: a packed spec's number's, a font frame's family
 // slot; nil for anything else.
 Ref
@@ -835,7 +835,7 @@ PackedFontFamilyFrame(long font)
 }
 
 
-// ROM 0x0025f980 CreateTextStyleRecord__FRC6RefVarP11StyleRecord
+// ROM 0x002618b8 CreateTextStyleRecord__FRC6RefVarP11StyleRecord
 // A style from a font spec: a packed integer (the ROM font list index,
 // size and face), or a frame {family, size, face, color} (the family a
 // symbol through vars.fonts, the color a pattern), or an ink word (NOT
@@ -885,7 +885,7 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 }
 
 
-// ROM 0x0032ea8c CopyStyle__FP11StyleRecord
+// ROM 0x00359be8 CopyStyle__FP11StyleRecord
 // (The ROM copies a style into the font cache, re-making its pattern;
 // the host keeps no cache.)
 void
@@ -893,7 +893,7 @@ CopyStyle(StyleRecord* /*style*/)
 { }
 
 
-// ROM 0x0032eb5c EqualStyle__FP11StyleRecordT1
+// ROM 0x00359cb8 EqualStyle__FP11StyleRecordT1
 Boolean
 EqualStyle(const StyleRecord* a, const StyleRecord* b)
 {

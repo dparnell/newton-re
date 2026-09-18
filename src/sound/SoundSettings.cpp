@@ -3,7 +3,7 @@
 
 	Contains:	The volume as a script sees it (SoundSettings.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SoundSettings.h"
@@ -22,7 +22,7 @@
 static const double	kDecibelScale = 65536.0;
 
 
-// ROM 0x001e85ac VolumeToDecibels__Fl
+// ROM 0x001e6194 VolumeToDecibels__Fl
 // The five settings' levels, read out of the ROM's own words: an eighth,
 // a half and a square root of a half of full amplitude for 1, 2 and 3,
 // full for 4 and silence for 0.
@@ -44,7 +44,7 @@ VolumeToDecibels(long volume)
 }
 
 
-// ROM 0x001e8f54 DecibelsToVolume__Fl
+// ROM 0x001e6b3c DecibelsToVolume__Fl
 // The way back: the setting whose level the decibels reach.  The ROM
 // compares against VolumeToDecibels(2) and VolumeToDecibels(3) built up
 // out of immediate constants, so a level exactly at a setting's own
@@ -62,7 +62,7 @@ DecibelsToVolume(long decibels)
 }
 
 
-// ROM 0x001e8614 FVolumeToDecibels
+// ROM 0x001e61fc FVolumeToDecibels
 Ref
 FVolumeToDecibels(RefArg /*rcvr*/, RefArg volume)
 {
@@ -70,7 +70,7 @@ FVolumeToDecibels(RefArg /*rcvr*/, RefArg volume)
 }
 
 
-// ROM 0x001e9434 FDecibelsToVolume
+// ROM 0x001e701c FDecibelsToVolume
 Ref
 FDecibelsToVolume(RefArg /*rcvr*/, RefArg decibels)
 {
@@ -78,7 +78,7 @@ FDecibelsToVolume(RefArg /*rcvr*/, RefArg decibels)
 }
 
 
-// ROM 0x001e95f8 FGetVolume
+// ROM 0x001e71e0 FGetVolume
 Ref
 FGetVolume(RefArg /*rcvr*/)
 {
@@ -86,7 +86,7 @@ FGetVolume(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001e9618 FSetVolume
+// ROM 0x001e7200 FSetVolume
 // nil is volume 0, silence.  ==> nil.
 Ref
 FSetVolume(RefArg /*rcvr*/, RefArg volume)
@@ -97,7 +97,7 @@ FSetVolume(RefArg /*rcvr*/, RefArg volume)
 }
 
 
-// ROM 0x001e9668 FGetSystemVolume
+// ROM 0x001e7250 FGetSystemVolume
 Ref
 FGetSystemVolume(RefArg /*rcvr*/)
 {
@@ -105,7 +105,7 @@ FGetSystemVolume(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001e96a0 FSetSystemVolume
+// ROM 0x001e7288 FSetSystemVolume
 // ==> the decibels the channel settled on, which is what was asked for
 // unless the sound server had something to say about it.
 Ref
@@ -127,7 +127,7 @@ enum {
 };
 
 
-// ROM 0x000d3188 ConvertToSoundFrame__FRC6RefVar (the native is 0x001e870c)
+// ROM 0x000d2034 ConvertToSoundFrame__FRC6RefVar (the native is 0x001e870c)
 // What a script hands to a sound function turned into something the sound
 // server can play: a string is spoken, so it becomes a codec frame for
 // TMacintalkCodec with the text as its samples; a binary is coded sound,
@@ -173,7 +173,7 @@ FConvertToSoundFrame(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x001e96f8 FSoundPlayEnabled
+// ROM 0x001e72e0 FSoundPlayEnabled
 // Whether this sound may be heard: the two click sounds the pen makes go
 // by the penSoundEffects preference, everything else by
 // actionSoundEffects.
@@ -189,7 +189,7 @@ FSoundPlayEnabled(RefArg /*rcvr*/, RefArg sound)
 }
 
 
-// ROM 0x001e8660 FPlaySoundIrregardless
+// ROM 0x001e6248 FPlaySoundIrregardless
 // The sound played whatever the preferences say: whatever is playing is
 // stopped, this is scheduled in its place and started without waiting.
 // ==> nil.
@@ -212,7 +212,7 @@ FPlaySoundIrregardless(RefArg /*rcvr*/, RefArg sound)
 }
 
 
-// ROM 0x001e88e4 FPlaySoundSync
+// ROM 0x001e64cc FPlaySoundSync
 // The same, but Start waits for the end.  ==> true.
 Ref
 FPlaySoundSync(RefArg /*rcvr*/, RefArg sound)
@@ -233,7 +233,7 @@ FPlaySoundSync(RefArg /*rcvr*/, RefArg sound)
 }
 
 
-// ROM 0x001e88b4 FPlaySound__FRC6RefVarT1
+// ROM 0x001e649c FPlaySound__FRC6RefVarT1
 // The sound played if the preferences allow it.
 Ref
 FPlaySound(RefArg rcvr, RefArg sound)
@@ -244,7 +244,7 @@ FPlaySound(RefArg rcvr, RefArg sound)
 }
 
 
-// ROM 0x001e8714 FPlaySoundEffect
+// ROM 0x001e62fc FPlaySoundEffect
 // PlaySoundEffect(sound, volume, kind): the sound turned into a frame, at
 // the volume given if there is one, played when the preference for its
 // kind allows it - 'pen, 'alarm and 'action have preferences, and a kind

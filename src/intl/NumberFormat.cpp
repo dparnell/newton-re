@@ -8,8 +8,8 @@
 				them.  ParamString and the ^0/^1 prototype strings the
 				number format is cached into.
 
-	Reconstructed from the MP2100 D ROM (0x000ed358-0x000ed5d8,
-	0x000ee5a4-0x000ef27c); each function cites its origin.  The ROM
+	Reconstructed from the MP2x00 US ROM (0x000ebd80-0x000ec000,
+	0x000ecfec-0x000edc24); each function cites its origin.  The ROM
 	prints a format spec's digits with its C library's _fp_display
 	(seventeen significant digits, the rest '<'/'>' markers made zeros);
 	the host's snprintf prints the exact expansion instead, so very large
@@ -25,17 +25,17 @@
 #include <string.h>
 #include <math.h>
 
-// ROM 0x0c10108c gNumberGroupWidth
+// ROM 0x0c100f9c gNumberGroupWidth
 long		gNumberGroupWidth = 3;
-// ROM 0x0c101090 gNumberLeadingZero
+// ROM 0x0c100fa0 gNumberLeadingZero
 Boolean		gNumberLeadingZero = false;
-// ROM 0x0c101098 gPositiveNumProto
+// ROM 0x0c100fa8 gPositiveNumProto
 UniChar*	gPositiveNumProto = nil;
-// ROM 0x0c10109c gNegativeNumProto
+// ROM 0x0c100fac gNegativeNumProto
 UniChar*	gNegativeNumProto = nil;
-// ROM 0x0c1010a0 gPositiveIntProto
+// ROM 0x0c100fb0 gPositiveIntProto
 UniChar*	gPositiveIntProto = nil;
-// ROM 0x0c1010a4 gNegativeIntProto
+// ROM 0x0c100fb4 gNegativeIntProto
 UniChar*	gNegativeIntProto = nil;
 
 const long	kMaxDigits = 21;			// _IntlNumberMunge refuses longer digit strings
@@ -73,7 +73,7 @@ CachedString(RefStruct LocaleCache::* which)
 	fraction), made once and kept until the locale changes.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000ed530 PositiveIntProtoStr__Fv
+// ROM 0x000ebf58 PositiveIntProtoStr__Fv
 UniChar*
 PositiveIntProtoStr(void)
 {
@@ -90,7 +90,7 @@ PositiveIntProtoStr(void)
 }
 
 
-// ROM 0x000ed584 NegativeIntProtoStr__Fv
+// ROM 0x000ebfac NegativeIntProtoStr__Fv
 UniChar*
 NegativeIntProtoStr(void)
 {
@@ -112,7 +112,7 @@ NegativeIntProtoStr(void)
 }
 
 
-// ROM 0x000ed358 PositiveNumberProtoStr__Fv
+// ROM 0x000ebd80 PositiveNumberProtoStr__Fv
 UniChar*
 PositiveNumberProtoStr(void)
 {
@@ -135,7 +135,7 @@ PositiveNumberProtoStr(void)
 }
 
 
-// ROM 0x000ed440 NegativeNumberProtoStr__Fv
+// ROM 0x000ebe68 NegativeNumberProtoStr__Fv
 UniChar*
 NegativeNumberProtoStr(void)
 {
@@ -161,7 +161,7 @@ NegativeNumberProtoStr(void)
 	P a r a m S t r i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000ef0d8 ParamString__FPUsClPCUse
+// ROM 0x000eda80 ParamString__FPUsClPCUse
 // The prototype copied to dest (at most max characters), each ^digit
 // replaced by a UniChar string argument: the arguments are taken in the
 // order the markers appear, the digit says which of them to insert (nil
@@ -269,7 +269,7 @@ GroupDigits(const char* digits, long count, UniChar* dest)
 }
 
 
-// ROM 0x000ee5a4 _IntlNumberMunge__FPcPUsUcUlN24
+// ROM 0x000ecfec _IntlNumberMunge__FPcPUsUcUlN24
 // The digits (an integer part of intLength characters - 0: all of them -
 // then a '.' and the fraction) put into str with the locale's pieces:
 // the group separators when asked, the decimal point, the minus prefix
@@ -380,7 +380,7 @@ _IntlNumberMunge(const char* digits, UniChar* str, Boolean negative, ULong intLe
 }
 
 
-// ROM 0x0005f6f4 UiToA__FUlPUc
+// ROM 0x0005ed4c UiToA__FUlPUc
 // An unsigned integer's decimal digits.
 static void
 UiToA(ULong n, char* str)
@@ -389,7 +389,7 @@ UiToA(ULong n, char* str)
 }
 
 
-// ROM 0x000eea4c IntegerStringSpec__FlPUsUlT3
+// ROM 0x000ed494 IntegerStringSpec__FlPUsUlT3
 // An integer under a format spec: as a real when decimal places are
 // asked for; times 100 for a percentage.
 long
@@ -408,7 +408,7 @@ IntegerStringSpec(long n, UniChar* str, ULong max, ULong flags)
 }
 
 
-// ROM 0x000eeae0 NumberStringSpec__FdPUsUlT3
+// ROM 0x000ed528 NumberStringSpec__FdPUsUlT3
 // A real under a format spec: six decimal places with the trailing zeros
 // dropped, or the spec's decimal places (kept, or dropped when
 // kFormatSignificant), times 100 for a percentage; then munged.
@@ -448,7 +448,7 @@ NumberStringSpec(double d, UniChar* str, ULong max, ULong flags)
 }
 
 
-// ROM 0x000eec44 NumberString__FdPUsUlPc
+// ROM 0x000ed68c NumberString__FdPUsUlPc
 // A real printed by a printf format, then localised: the integer digits
 // grouped, the sign as the minus prefix and suffix, the decimal point
 // the locale's (an exponent form only gets the decimal point); what

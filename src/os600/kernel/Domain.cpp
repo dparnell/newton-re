@@ -4,7 +4,7 @@
 	Contains:	TKDomain, the domain access control word helpers and the fault
 				monitor table.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Domain.h"
@@ -28,7 +28,7 @@ DomainBits(long domainNumber, ULong bits)
 }
 
 
-// ROM 0x0009d758 DefaultDCR__Fv
+// ROM 0x0009c558 DefaultDCR__Fv
 // Client access to domains 0 and 1.
 ULong
 DefaultDCR()
@@ -37,7 +37,7 @@ DefaultDCR()
 }
 
 
-// ROM 0x0009d77c AddClientToDCR__FUll
+// ROM 0x0009c57c AddClientToDCR__FUll
 ULong
 AddClientToDCR(ULong dcr, long domainNumber)
 {
@@ -47,7 +47,7 @@ AddClientToDCR(ULong dcr, long domainNumber)
 }
 
 
-// ROM 0x0009d794 AddManagerToDCR__FUll
+// ROM 0x0009c594 AddManagerToDCR__FUll
 ULong
 AddManagerToDCR(ULong dcr, long domainNumber)
 {
@@ -57,7 +57,7 @@ AddManagerToDCR(ULong dcr, long domainNumber)
 }
 
 
-// ROM 0x0009d760 RemoveFromDCR__FUll
+// ROM 0x0009c560 RemoveFromDCR__FUll
 ULong
 RemoveFromDCR(ULong dcr, long domainNumber)
 {
@@ -67,7 +67,7 @@ RemoveFromDCR(ULong dcr, long domainNumber)
 }
 
 
-// ROM 0x0009d7ac GetSpecificDomainFromDCR__FRUll
+// ROM 0x0009c5ac GetSpecificDomainFromDCR__FRUll
 long
 GetSpecificDomainFromDCR(ULong& dcr, long domainNumber)
 {
@@ -79,7 +79,7 @@ GetSpecificDomainFromDCR(ULong& dcr, long domainNumber)
 }
 
 
-// ROM 0x0009d7d4 NextAvailDomainInDCR__FRUl
+// ROM 0x0009c5d4 NextAvailDomainInDCR__FRUl
 // Domain 15 is never handed out.
 long
 NextAvailDomainInDCR(ULong& dcr)
@@ -101,7 +101,7 @@ NextAvailDomainInDCR(ULong& dcr)
 	Fault monitor table
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0009d814 RegisterFaultMonitor__FUlN21
+// ROM 0x0009c614 RegisterFaultMonitor__FUlN21
 void
 RegisterFaultMonitor(ULong domainNumber, TObjectId domainId, TObjectId monitorId)
 {
@@ -113,7 +113,7 @@ RegisterFaultMonitor(ULong domainNumber, TObjectId domainId, TObjectId monitorId
 }
 
 
-// ROM 0x0009d850 DeregisterFaultMonitorByDomainNumber__FUl
+// ROM 0x0009c650 DeregisterFaultMonitorByDomainNumber__FUl
 void
 DeregisterFaultMonitorByDomainNumber(ULong domainNumber)
 {
@@ -128,7 +128,7 @@ DeregisterFaultMonitorByDomainNumber(ULong domainNumber)
 	TKDomain
 ------------------------------------------------------------------------------- */
 
-// ROM 0x000b0714 __ct__8TKDomainFv
+// ROM 0x000af51c __ct__8TKDomainFv
 TKDomain::TKDomain()
 {
 	fBase = 0;
@@ -139,7 +139,7 @@ TKDomain::TKDomain()
 }
 
 
-// ROM 0x000b0380 SetFaultMonitor__8TKDomainFUl
+// ROM 0x000af188 SetFaultMonitor__8TKDomainFUl
 NewtonErr
 TKDomain::SetFaultMonitor(TObjectId monitorId)
 {
@@ -149,7 +149,7 @@ TKDomain::SetFaultMonitor(TObjectId monitorId)
 }
 
 
-// ROM 0x000b03a8 Intersects__8TKDomainFUlT1
+// ROM 0x000af1b0 Intersects__8TKDomainFUlT1
 Boolean
 TKDomain::Intersects(VAddr base, VAddr end)
 {
@@ -172,7 +172,7 @@ RangeIsWellFormed(VAddr base, ULong size)
 }
 
 
-// ROM 0x000b02d4 Init__8TKDomainFUlN21
+// ROM 0x000af0dc Init__8TKDomainFUlN21
 // A domain on the next free number: its primary page table entries are set
 // up and its fault monitor registered.
 NewtonErr
@@ -189,7 +189,7 @@ TKDomain::Init(TObjectId faultMonitorId, VAddr base, ULong size)
 }
 
 
-// ROM 0x000b0238 InitWithDomainNumber__8TKDomainFUlN31
+// ROM 0x000af040 InitWithDomainNumber__8TKDomainFUlN31
 // The same on a given number (the kernel's own domain); the page table is
 // left as the boot set it up.
 NewtonErr
@@ -205,7 +205,7 @@ TKDomain::InitWithDomainNumber(TObjectId faultMonitorId, VAddr base, ULong size,
 }
 
 
-// ROM 0x000b0758 __dt__8TKDomainFv
+// ROM 0x000af560 __dt__8TKDomainFv
 // DEVIATION: the ROM deregisters the fault monitor for fNumber even when
 // the domain never got a number (-1), writing two words before the table;
 // a domain without a number has nothing registered, so it is skipped.

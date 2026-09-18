@@ -3,14 +3,14 @@
 
 	Contains:	QuickDraw's rectangles and points.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Rects.h"
 #include <stdarg.h>
 
 
-// ROM 0x00314068 SetRect__FP4RectlN32
+// ROM 0x0033ffb0 SetRect__FP4RectlN32
 void
 SetRect(Rect* r, long left, long top, long right, long bottom)
 {
@@ -21,7 +21,7 @@ SetRect(Rect* r, long left, long top, long right, long bottom)
 }
 
 
-// ROM 0x0031507c SetEmptyRect__FP4Rect
+// ROM 0x00340fc4 SetEmptyRect__FP4Rect
 void
 SetEmptyRect(Rect* r)
 {
@@ -32,7 +32,7 @@ SetEmptyRect(Rect* r)
 }
 
 
-// ROM 0x003140a0 OffsetRect__FP4RectlT2
+// ROM 0x0033ffe8 OffsetRect__FP4RectlT2
 void
 OffsetRect(Rect* r, long dh, long dv)
 {
@@ -43,7 +43,7 @@ OffsetRect(Rect* r, long dh, long dv)
 }
 
 
-// ROM 0x003147d0 InsetRect__FP4RectlT2
+// ROM 0x00340718 InsetRect__FP4RectlT2
 void
 InsetRect(Rect* r, long dh, long dv)
 {
@@ -54,7 +54,7 @@ InsetRect(Rect* r, long dh, long dv)
 }
 
 
-// ROM 0x0031420c Pt2Rect__F5PointT1P4Rect
+// ROM 0x00340154 Pt2Rect__F5PointT1P4Rect
 // The rectangle with the two points as opposite corners.
 void
 Pt2Rect(Point a, Point b, Rect* r)
@@ -82,7 +82,7 @@ Pt2Rect(Point a, Point b, Rect* r)
 }
 
 
-// ROM 0x003142b4 PtInRect__F5PointP4Rect
+// ROM 0x003401fc PtInRect__F5PointP4Rect
 // The pixel below and to the right of the point is in the rectangle.
 Boolean
 PtInRect(Point pt, const Rect* r)
@@ -91,7 +91,7 @@ PtInRect(Point pt, const Rect* r)
 }
 
 
-// ROM 0x00315040 EmptyRect__FP4Rect
+// ROM 0x00340f88 EmptyRect__FP4Rect
 Boolean
 EmptyRect(const Rect* r)
 {
@@ -99,7 +99,7 @@ EmptyRect(const Rect* r)
 }
 
 
-// ROM 0x00315018 EqualRect__FP4RectT1
+// ROM 0x00340f60 EqualRect__FP4RectT1
 Boolean
 EqualRect(const Rect* a, const Rect* b)
 {
@@ -107,7 +107,7 @@ EqualRect(const Rect* a, const Rect* b)
 }
 
 
-// ROM 0x00314e28 SectRect__FP4RectN21
+// ROM 0x00340d70 SectRect__FP4RectN21
 // (RSect with two rectangles.)
 Boolean
 SectRect(const Rect* a, const Rect* b, Rect* result)
@@ -116,7 +116,7 @@ SectRect(const Rect* a, const Rect* b, Rect* result)
 }
 
 
-// ROM 0x00314988 RSect__FP4RectlT1e
+// ROM 0x003408d0 RSect__FP4RectlT1e
 // The intersection of count rectangles; empty (and false) when any is
 // empty or they do not all overlap.
 Boolean
@@ -157,7 +157,7 @@ RSect(Rect* result, long count, const Rect* first, ...)
 }
 
 
-// ROM 0x00314e40 UnionRect__FP4RectN21
+// ROM 0x00340d88 UnionRect__FP4RectN21
 // The smallest rectangle holding both; an empty one contributes nothing.
 void
 UnionRect(const Rect* a, const Rect* b, Rect* result)
@@ -181,7 +181,7 @@ UnionRect(const Rect* a, const Rect* b, Rect* result)
 }
 
 
-// ROM 0x00314f18 JoinRect__FP4RectN21
+// ROM 0x00340e60 JoinRect__FP4RectN21
 // The same, spelt out for two non-empty rectangles (the ROM has both).
 void
 JoinRect(const Rect* a, const Rect* b, Rect* result)
@@ -209,7 +209,7 @@ JoinRect(const Rect* a, const Rect* b, Rect* result)
 	M a p p i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0030fedc MapCoord__FlN41
+// ROM 0x00335474 MapCoord__FlN41
 // x's position in [srcStart, srcStart + srcSize) scaled into the
 // destination range, rounded (away from zero at the half).
 long
@@ -229,7 +229,7 @@ MapCoord(long x, long srcStart, long srcSize, long dstStart, long dstSize)
 }
 
 
-// ROM 0x0030fd70 MapPt__FP5PointP4RectT2
+// ROM 0x00335308 MapPt__FP5PointP4RectT2
 void
 MapPt(Point* pt, const Rect* src, const Rect* dst)
 {
@@ -238,7 +238,7 @@ MapPt(Point* pt, const Rect* src, const Rect* dst)
 }
 
 
-// ROM 0x0031431c MapRect__FP4RectN21
+// ROM 0x00340264 MapRect__FP4RectN21
 void
 MapRect(Rect* r, const Rect* src, const Rect* dst)
 {
@@ -251,7 +251,7 @@ MapRect(Rect* r, const Rect* src, const Rect* dst)
 }
 
 
-// ROM 0x0030fe1c ScalePt__FP5PointP4RectT2
+// ROM 0x003353b4 ScalePt__FP5PointP4RectT2
 // A size scaled by the rectangles' proportions, never below 1.
 void
 ScalePt(Point* pt, const Rect* src, const Rect* dst)
@@ -267,7 +267,7 @@ ScalePt(Point* pt, const Rect* src, const Rect* dst)
 }
 
 
-// ROM 0x0019b824 CheapDistance__FRC6TPointT1
+// ROM 0x001991c4 CheapDistance__FRC6TPointT1
 // An approximation of the distance between two points: the longer of the
 // two axes' differences plus half the shorter.
 long
@@ -282,7 +282,7 @@ CheapDistance(const Point& a, const Point& b)
 	return (dh < dv) ? dv + (dh >> 1) : dh + (dv >> 1);
 }
 
-// ROM 0x00199d24 CoveredBy__5TRectCFRC5TRect
+// ROM 0x001976d8 CoveredBy__5TRectCFRC5TRect
 // How much of r, as a percentage, the intersection with other covers.  A
 // rectangle with no width or height would intersect nothing, so each is
 // given a pixel first - the same widening THilite::Overlaps does.

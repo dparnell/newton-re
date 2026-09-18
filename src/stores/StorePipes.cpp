@@ -5,7 +5,7 @@
 				buffered streams a store object is written and read through,
 				with the Unicode text coder for a store object's text.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "StoreObject.h"
@@ -36,7 +36,7 @@ NewCoder(const char* interface, const char* implementation, const TClassInfo* in
 ------------------------------------------------------------------------------- */
 
 // the compressor's write proc: the pipe is its refcon
-// ROM 0x002b6d44 CompCallback__FUlPvlUc
+// ROM 0x002dcacc CompCallback__FUlPvlUc
 static NewtonErr
 CompCallback(void* refCon, void* data, ULong size, Boolean isLast)
 {
@@ -44,7 +44,7 @@ CompCallback(void* refCon, void* data, ULong size, Boolean isLast)
 }
 
 
-// ROM 0x002b6ea4 __ct__15TStoreWritePipeFv
+// ROM 0x002dcc2c __ct__15TStoreWritePipeFv
 TStoreWritePipe::TStoreWritePipe()
 {
 	fData = nil;
@@ -52,7 +52,7 @@ TStoreWritePipe::TStoreWritePipe()
 }
 
 
-// ROM 0x002b7074 __dt__15TStoreWritePipeFv
+// ROM 0x002dcdfc __dt__15TStoreWritePipeFv
 TStoreWritePipe::~TStoreWritePipe()
 {
 	if (fData != nil && fData != fBuffer)
@@ -62,7 +62,7 @@ TStoreWritePipe::~TStoreWritePipe()
 }
 
 
-// ROM 0x002b6ed8 Init__15TStoreWritePipeFP13TStoreWrapperUll15CompressionType
+// ROM 0x002dcc60 Init__15TStoreWritePipeFP13TStoreWrapperUll15CompressionType
 // To write size bytes to object id (-1: a new object) of the wrapper's
 // store, through the Unicode compressor for kUnicodeCompression.  A
 // buffer for the whole object (twice that with a compressor: its input
@@ -125,7 +125,7 @@ TStoreWritePipe::Init(TStoreWrapper* wrapper, PSSId id, long size, CompressionTy
 }
 
 
-// ROM 0x002b70bc SetPosition__15TStoreWritePipeFl
+// ROM 0x002dce44 SetPosition__15TStoreWritePipeFl
 void
 TStoreWritePipe::SetPosition(long position)
 {
@@ -135,7 +135,7 @@ TStoreWritePipe::SetPosition(long position)
 }
 
 
-// ROM 0x002b70d0 GetDataPtr__15TStoreWritePipeFl
+// ROM 0x002dce58 GetDataPtr__15TStoreWritePipeFl
 char*
 TStoreWritePipe::GetDataPtr(long offset)
 {
@@ -143,7 +143,7 @@ TStoreWritePipe::GetDataPtr(long offset)
 }
 
 
-// ROM 0x002b710c BufferToObject__15TStoreWritePipeFPcl
+// ROM 0x002dce94 BufferToObject__15TStoreWritePipeFPcl
 // The whole object from a buffer: a new object, or the contents replaced.
 void
 TStoreWritePipe::BufferToObject(char* data, long size)
@@ -155,7 +155,7 @@ TStoreWritePipe::BufferToObject(char* data, long size)
 }
 
 
-// ROM 0x002b6d4c CompCallback__15TStoreWritePipeFPvlUc
+// ROM 0x002dcad4 CompCallback__15TStoreWritePipeFPvlUc
 // The compressor's output: into the output buffer when buffering (the
 // object made from it at the end, or at once when it overflows), else
 // straight to the object (made or grown as needed).
@@ -197,7 +197,7 @@ TStoreWritePipe::CompCallback(void* data, long count, Boolean isLast)
 }
 
 
-// ROM 0x002b7168 WriteToStore__15TStoreWritePipeFPcl
+// ROM 0x002dcef0 WriteToStore__15TStoreWritePipeFPcl
 // count bytes to the object (or through the compressor).
 void
 TStoreWritePipe::WriteToStore(char* data, long count)
@@ -224,7 +224,7 @@ TStoreWritePipe::WriteToStore(char* data, long count)
 }
 
 
-// ROM 0x002b723c Flush__15TStoreWritePipeFv
+// ROM 0x002dcfc4 Flush__15TStoreWritePipeFv
 void
 TStoreWritePipe::Flush(void)
 {
@@ -235,7 +235,7 @@ TStoreWritePipe::Flush(void)
 }
 
 
-// ROM 0x002b726c Complete__15TStoreWritePipeFv
+// ROM 0x002dcff4 Complete__15TStoreWritePipeFv
 // Everything written out; a compressor flushed; an object written
 // piecemeal cut to what was written.
 void
@@ -251,7 +251,7 @@ TStoreWritePipe::Complete(void)
 }
 
 
-// ROM 0x002b72cc Write__15TStoreWritePipeFPcl
+// ROM 0x002dd054 Write__15TStoreWritePipeFPcl
 void
 TStoreWritePipe::Write(char* data, long count)
 {
@@ -269,7 +269,7 @@ TStoreWritePipe::Write(char* data, long count)
 }
 
 
-// ROM 0x002b7348 __ls__15TStoreWritePipeFUc
+// ROM 0x002dd0d0 __ls__15TStoreWritePipeFUc
 TStoreWritePipe&
 TStoreWritePipe::operator<<(UByte b)
 {
@@ -280,7 +280,7 @@ TStoreWritePipe::operator<<(UByte b)
 }
 
 
-// ROM 0x002b7394 __ls__15TStoreWritePipeFl
+// ROM 0x002dd11c __ls__15TStoreWritePipeFl
 // A long: 0..254 in one byte, anything else as 0xff and its four bytes.
 TStoreWritePipe&
 TStoreWritePipe::operator<<(long l)
@@ -310,7 +310,7 @@ DecompCallback(void* refCon, void* into, long* size, Boolean* underflow)
 }
 
 
-// ROM 0x002b73e8 NewDecompressor__F15CompressionTypePFUlPvPlPUc_lUl
+// ROM 0x002dd170 NewDecompressor__F15CompressionTypePFUlPvPlPUc_lUl
 // A decompressor for the compression (nil for none), reading through readProc.
 TCallbackDecompressor*
 NewDecompressor(CompressionType compression, DecompressorReadProcPtr readProc, void* refCon)
@@ -329,7 +329,7 @@ NewDecompressor(CompressionType compression, DecompressorReadProcPtr readProc, v
 }
 
 
-// ROM 0x002b7548 __ct__14TStoreReadPipeFP13TStoreWrapper15CompressionType
+// ROM 0x002dd2d0 __ct__14TStoreReadPipeFP13TStoreWrapper15CompressionType
 TStoreReadPipe::TStoreReadPipe(TStoreWrapper* wrapper, CompressionType compression)
 {
 	fWrapper = wrapper;
@@ -343,7 +343,7 @@ TStoreReadPipe::TStoreReadPipe(TStoreWrapper* wrapper, CompressionType compressi
 }
 
 
-// ROM 0x002b75d0 __ct__14TStoreReadPipeFPcl
+// ROM 0x002dd358 __ct__14TStoreReadPipeFPcl
 // Over size bytes in memory.
 TStoreReadPipe::TStoreReadPipe(char* data, long size)
 {
@@ -358,7 +358,7 @@ TStoreReadPipe::TStoreReadPipe(char* data, long size)
 }
 
 
-// ROM 0x002b7628 __dt__14TStoreReadPipeFv
+// ROM 0x002dd3b0 __dt__14TStoreReadPipeFv
 TStoreReadPipe::~TStoreReadPipe()
 {
 	if (fDecompressor != nil)
@@ -366,7 +366,7 @@ TStoreReadPipe::~TStoreReadPipe()
 }
 
 
-// ROM 0x002b765c SetPSSID__14TStoreReadPipeFUl
+// ROM 0x002dd3e4 SetPSSID__14TStoreReadPipeFUl
 // The object to read, from its start.
 void
 TStoreReadPipe::SetPSSID(PSSId id)
@@ -376,7 +376,7 @@ TStoreReadPipe::SetPSSID(PSSId id)
 }
 
 
-// ROM 0x002b768c SetPosition__14TStoreReadPipeFl
+// ROM 0x002dd414 SetPosition__14TStoreReadPipeFl
 void
 TStoreReadPipe::SetPosition(long position)
 {
@@ -387,7 +387,7 @@ TStoreReadPipe::SetPosition(long position)
 }
 
 
-// ROM 0x002b74a8 DecompCallback__14TStoreReadPipeFPvPlPUc
+// ROM 0x002dd230 DecompCallback__14TStoreReadPipeFPvPlPUc
 // The decompressor's input: the next *count bytes of the object (fewer at
 // the end, with underflow set).
 NewtonErr
@@ -407,7 +407,7 @@ TStoreReadPipe::DecompCallback(void* data, long* count, Boolean* underflow)
 }
 
 
-// ROM 0x002b76b8 ReadFromStore__14TStoreReadPipeFPcl
+// ROM 0x002dd440 ReadFromStore__14TStoreReadPipeFPcl
 // Up to count bytes from the object (or the decompressor); ==> how many.
 long
 TStoreReadPipe::ReadFromStore(char* data, long count)
@@ -427,7 +427,7 @@ TStoreReadPipe::ReadFromStore(char* data, long count)
 }
 
 
-// ROM 0x002b7768 FillBuffer__14TStoreReadPipeFv
+// ROM 0x002dd4f0 FillBuffer__14TStoreReadPipeFv
 void
 TStoreReadPipe::FillBuffer(void)
 {
@@ -436,7 +436,7 @@ TStoreReadPipe::FillBuffer(void)
 }
 
 
-// ROM 0x002b7794 Read__14TStoreReadPipeFPcl
+// ROM 0x002dd51c Read__14TStoreReadPipeFPcl
 // count bytes: from the buffer, then a large remainder straight from the
 // object, or the buffer refilled for a small one.
 void
@@ -464,7 +464,7 @@ TStoreReadPipe::Read(char* data, long count)
 }
 
 
-// ROM 0x002b783c Skip__14TStoreReadPipeFl
+// ROM 0x002dd5c4 Skip__14TStoreReadPipeFl
 void
 TStoreReadPipe::Skip(long count)
 {
@@ -484,7 +484,7 @@ TStoreReadPipe::Skip(long count)
 }
 
 
-// ROM 0x002b7998 SkipUByte__14TStoreReadPipeFv
+// ROM 0x002dd720 SkipUByte__14TStoreReadPipeFv
 void
 TStoreReadPipe::SkipUByte(void)
 {
@@ -495,7 +495,7 @@ TStoreReadPipe::SkipUByte(void)
 }
 
 
-// ROM 0x002b78ac __rs__14TStoreReadPipeFRUc
+// ROM 0x002dd634 __rs__14TStoreReadPipeFRUc
 TStoreReadPipe&
 TStoreReadPipe::operator>>(UByte& b)
 {
@@ -507,7 +507,7 @@ TStoreReadPipe::operator>>(UByte& b)
 }
 
 
-// ROM 0x002b7948 __rs__14TStoreReadPipeFRl
+// ROM 0x002dd6d0 __rs__14TStoreReadPipeFRl
 TStoreReadPipe&
 TStoreReadPipe::operator>>(long& l)
 {

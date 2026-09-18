@@ -3,7 +3,7 @@
 
 	Contains:	TEnvironment and the environment system calls.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Environment.h"
@@ -15,7 +15,7 @@
 #include "OSErrors.h"
 
 
-// ROM 0x000b01f4 Init__12TEnvironmentFPv
+// ROM 0x000aeffc Init__12TEnvironmentFPv
 NewtonErr
 TEnvironment::Init(void* heap)
 {
@@ -29,14 +29,14 @@ TEnvironment::Init(void* heap)
 }
 
 
-// ROM 0x000b043c __dt__12TEnvironmentFv
+// ROM 0x000af244 __dt__12TEnvironmentFv
 TEnvironment::~TEnvironment()
 {
 	gTheMemArchManager->RemoveEnvironment(this);
 }
 
 
-// ROM 0x000b05f4 Add__12TEnvironmentFP8TKDomainUcN22
+// ROM 0x000af3fc Add__12TEnvironmentFP8TKDomainUcN22
 NewtonErr
 TEnvironment::Add(TKDomain* domain, Boolean isManager, Boolean isStack, Boolean isHeap)
 {
@@ -52,7 +52,7 @@ TEnvironment::Add(TKDomain* domain, Boolean isManager, Boolean isStack, Boolean 
 }
 
 
-// ROM 0x000b0658 Remove__12TEnvironmentFP8TKDomain
+// ROM 0x000af460 Remove__12TEnvironmentFP8TKDomain
 NewtonErr
 TEnvironment::Remove(TKDomain* domain)
 {
@@ -61,7 +61,7 @@ TEnvironment::Remove(TKDomain* domain)
 }
 
 
-// ROM 0x000b0680 IncrRefCount__12TEnvironmentFv
+// ROM 0x000af488 IncrRefCount__12TEnvironmentFv
 void
 TEnvironment::IncrRefCount()
 {
@@ -69,7 +69,7 @@ TEnvironment::IncrRefCount()
 }
 
 
-// ROM 0x000b0690 DecrRefCount__12TEnvironmentFv
+// ROM 0x000af498 DecrRefCount__12TEnvironmentFv
 // When the last user of a removed environment lets go it disowns itself
 // (so the object table will scavenge it) and asks to be deleted.
 Boolean
@@ -84,7 +84,7 @@ TEnvironment::DecrRefCount()
 }
 
 
-// ROM 0x000b06c4 HasDomain__12TEnvironmentFP8TKDomainPUcT2
+// ROM 0x000af4cc HasDomain__12TEnvironmentFP8TKDomainPUcT2
 void
 TEnvironment::HasDomain(TKDomain* domain, Boolean* outHasDomain, Boolean* outIsManager)
 {
@@ -125,7 +125,7 @@ DomainFromId(TObjectId id)
 }
 
 
-// ROM 0x000daa2c SetEnvironment__FUlPUl
+// ROM 0x000d99b4 SetEnvironment__FUlPUl
 // GenericSWI 0x23: switch the current task to another environment.  The old
 // one's refcount drops but it is not freed here even if that was its last use.
 NewtonErr
@@ -142,7 +142,7 @@ SetEnvironment(TObjectId newEnvId, TObjectId* outOldEnvId)
 }
 
 
-// ROM 0x000daaf0 GetEnvironment__FPUl
+// ROM 0x000d9a78 GetEnvironment__FPUl
 // GenericSWI 0x24.
 NewtonErr
 GetEnvironment(TObjectId* outEnvId)
@@ -152,7 +152,7 @@ GetEnvironment(TObjectId* outEnvId)
 }
 
 
-// ROM 0x000da3b4 AddDomainToEnvironment__FUlN21
+// ROM 0x000d933c AddDomainToEnvironment__FUlN21
 // GenericSWI 0x25.
 NewtonErr
 AddDomainToEnvironment(TObjectId envId, TObjectId domainId, ULong flags)
@@ -165,7 +165,7 @@ AddDomainToEnvironment(TObjectId envId, TObjectId domainId, ULong flags)
 }
 
 
-// ROM 0x000da4bc RemoveDomainFromEnvironment__FUlT1
+// ROM 0x000d9444 RemoveDomainFromEnvironment__FUlT1
 // GenericSWI 0x26.
 NewtonErr
 RemoveDomainFromEnvironment(TObjectId envId, TObjectId domainId)
@@ -178,7 +178,7 @@ RemoveDomainFromEnvironment(TObjectId envId, TObjectId domainId)
 }
 
 
-// ROM 0x000da2d0 EnvironmentHasDomain__FUlT1PUcT3
+// ROM 0x000d9258 EnvironmentHasDomain__FUlT1PUcT3
 // GenericSWI 0x27.
 NewtonErr
 EnvironmentHasDomain(TObjectId envId, TObjectId domainId, Boolean* outHasDomain, Boolean* outIsManager)

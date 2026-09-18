@@ -7,7 +7,7 @@
 				Int64); user mode asks for it with GenericSWI's kGetTaskTime
 				(task 0 is the global clock).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "NewtonTime.h"
@@ -25,7 +25,7 @@
 void (*gHostWaitHook)(ULong ticks) = nil;
 
 
-// ROM 0x0013ec68 GetGlobalTime
+// ROM 0x0013d0e0 GetGlobalTime
 // Dual-mode: the kernel reads the clock, a task asks for it (host: so does
 // code running with no task at all, as the standalone tests do).
 extern "C" TTime
@@ -45,7 +45,7 @@ GetGlobalTime(void)
 }
 
 
-// ROM 0x0013ed10 GetTaskTime
+// ROM 0x0013d188 GetTaskTime
 // The time a task has run (the current task by default).
 extern "C" TTime
 GetTaskTime(TObjectId timeForTaskId)
@@ -61,7 +61,7 @@ GetTaskTime(TObjectId timeForTaskId)
 }
 
 
-// ROM 0x0013ed8c TimeFromNow
+// ROM 0x0013d204 TimeFromNow
 extern "C" TTime
 TimeFromNow(TTimeout deltaTime)
 {
@@ -77,7 +77,7 @@ TimeFromNow(TTimeout deltaTime)
 }
 
 
-// ROM 0x0033349c Set__5TTimeFUl9TimeUnits
+// ROM 0x0035e430 Set__5TTimeFUl9TimeUnits
 // amount * units, in two halves so that the signed multiply cannot overflow.
 void
 TTime::Set(ULong amount, TimeUnits units)
@@ -93,14 +93,14 @@ TTime::Set(ULong amount, TimeUnits units)
 }
 
 
-// ROM 0x003334e8 __ct__5TTimeFUl9TimeUnits
+// ROM 0x0035e47c __ct__5TTimeFUl9TimeUnits
 TTime::TTime(ULong amount, TimeUnits units)
 {
 	Set(amount, units);
 }
 
 
-// ROM 0x0033352c ConvertTo__5TTimeF9TimeUnits
+// ROM 0x0035e4c0 ConvertTo__5TTimeF9TimeUnits
 // The time in the given units, rounded to nearest (dividing by twice the
 // unit keeps the quotient in range).
 ULong
@@ -125,7 +125,7 @@ TTime::ConvertTo(TimeUnits units)
 static ULong	gRealClockBase = 0;				// seconds at boot (SetRealClockSeconds)
 
 
-// ROM 0x00253630 RealClockSeconds__Fv
+// ROM 0x00255578 RealClockSeconds__Fv
 ULong
 RealClockSeconds(void)
 {
@@ -134,7 +134,7 @@ RealClockSeconds(void)
 }
 
 
-// ROM 0x00253670 SetRealClockSeconds__FUl
+// ROM 0x002555b8 SetRealClockSeconds__FUl
 void
 SetRealClockSeconds(ULong seconds)
 {
@@ -143,7 +143,7 @@ SetRealClockSeconds(ULong seconds)
 }
 
 
-// ROM 0x002531b0 Ticks__Fv
+// ROM 0x002550f8 Ticks__Fv
 // The time in Macintosh ticks (sixtieths of a second), 31 bits.
 ULong
 Ticks(void)
@@ -153,7 +153,7 @@ Ticks(void)
 }
 
 
-// ROM 0x0025356c Wait__FUl
+// ROM 0x002554b4 Wait__FUl
 // The task sleeps for the ticks: a send to the null port (which never
 // receives) with that timeout.  Host: with no task running (no kernel
 // booted) the wait hook runs instead, or the thread sleeps.
@@ -177,7 +177,7 @@ Wait(ULong ticks)
 }
 
 
-// ROM 0x002531e8 SleepTillTicks__FUl
+// ROM 0x00255130 SleepTillTicks__FUl
 // The task sleeps until the tick (nothing when it has passed): a send to
 // the null port with the timeout, as Wait's.
 void
@@ -190,7 +190,7 @@ SleepTillTicks(ULong ticks)
 }
 
 
-// ROM 0x002536ac RealClock__Fv
+// ROM 0x002555f4 RealClock__Fv
 ULong
 RealClock(void)
 {
@@ -198,7 +198,7 @@ RealClock(void)
 }
 
 
-// ROM 0x002536cc SetRealClock__FUl
+// ROM 0x00255614 SetRealClock__FUl
 void
 SetRealClock(ULong minutes)
 {

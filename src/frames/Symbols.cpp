@@ -7,15 +7,15 @@
 				ROM's ListEQ family, SymbolCompare, symcmp) and GCTWA, the
 				collector's dropping of symbols nothing else refers to.
 
-	Reconstructed from the MP2100 D ROM (0x0032d4a8-0x0032dd00 and the
-	comparisons at 0x002f42d8-0x002f44c4); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x00358644-0x00358e9c and the
+	comparisons at 0x003195dc-0x003197c8); each function cites its origin.
 
-	The ROM's symbol table (the array at 0x0053eba1, 32768 slots) is part of
+	The ROM's symbol table (the array at 0x00537f19, 32768 slots) is part of
 	the ROM's object graph, which is not imported yet; the host stands in
 	with a read-only symbol space holding the symbols the C++ code refers to
 	(RSSymbols.h, generated from the ROM's RSSYM constants), as
 	gROMSymbolTable.  Symbols there are unique, so EQRef compares two of them
-	by identity as the ROM does for symbols below its RExBlock (0x006f2e9c).
+	by identity as the ROM does for symbols below its RExBlock (0x0071fc4c).
 */
 
 #include "ObjectHeap.h"
@@ -46,7 +46,7 @@ static char*	gROMSymbolSpaceEnd = nil;
 	Names and hashes
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032d4a8 SymbolName__Fl
+// ROM 0x00358644 SymbolName__Fl
 char*
 SymbolName(Ref sym)
 {
@@ -54,7 +54,7 @@ SymbolName(Ref sym)
 }
 
 
-// ROM 0x0032d4c0 SymbolHash__Fl
+// ROM 0x0035865c SymbolHash__Fl
 ULong
 SymbolHash(Ref sym)
 {
@@ -62,7 +62,7 @@ SymbolHash(Ref sym)
 }
 
 
-// ROM 0x0032dab8 SymbolHashFunction__FPc
+// ROM 0x00358c54 SymbolHashFunction__FPc
 // The sum of the upper-cased characters times the golden-ratio constant,
 // in 32 bits (the hash is stored in every symbol, so it is the ROM's).
 ULong32
@@ -75,7 +75,7 @@ SymbolHashFunction(const char* name)
 }
 
 
-// ROM 0x0032db00 symcmp__FPcT1
+// ROM 0x00358c9c symcmp__FPcT1
 // Case-insensitive (ASCII letters) comparison, as strcmp.
 int
 symcmp(char* s1, char* s2)
@@ -102,7 +102,7 @@ symcmp(char* s1, char* s2)
 }
 
 
-// ROM 0x0032d940 SymbolCompare__FlT1
+// ROM 0x00358adc SymbolCompare__FlT1
 // Order two symbols: by hash first, then by name.
 int
 SymbolCompare(Ref sym1, Ref sym2)
@@ -119,7 +119,7 @@ SymbolCompare(Ref sym1, Ref sym2)
 }
 
 
-// ROM 0x0032db70 SymbolCompareLexRef__FlT1
+// ROM 0x00358d0c SymbolCompareLexRef__FlT1
 // Order two symbols by name (case-insensitively).
 int
 SymbolCompareLexRef(Ref sym1, Ref sym2)
@@ -138,7 +138,7 @@ SymbolCompareLexRef(Ref sym1, Ref sym2)
 }
 
 
-// ROM 0x0032d908 IsSymbol__Fl
+// ROM 0x00358aa4 IsSymbol__Fl
 int
 IsSymbol(Ref obj)
 {
@@ -146,7 +146,7 @@ IsSymbol(Ref obj)
 }
 
 
-// ROM 0x002f761c IsSymbol__FRC6RefVar
+// ROM 0x0031c920 IsSymbol__FRC6RefVar
 Boolean
 IsSymbol(RefArg obj)
 {
@@ -164,7 +164,7 @@ InROMSymbolSpace(Ref r)
 }
 
 
-// ROM 0x0032da2c UnsafeSymbolEqual__FlT1Ul
+// ROM 0x00358bc8 UnsafeSymbolEqual__FlT1Ul
 // Two symbols with the same name, given the first's hash; refs already
 // resolved to objects.
 Boolean
@@ -213,7 +213,7 @@ SameSymbol(ObjHeader* a, ObjHeader* b)
 }
 
 
-// ROM 0x002f42d8 EQ1__FlT1
+// ROM 0x003195dc EQ1__FlT1
 // Two pointer refs.
 static Boolean
 EQ1(Ref a, Ref b)
@@ -228,7 +228,7 @@ EQ1(Ref a, Ref b)
 }
 
 
-// ROM 0x002f43c8 EQRef__FlT1
+// ROM 0x003196cc EQRef__FlT1
 int
 EQRef(Ref a, Ref b)
 {
@@ -240,7 +240,7 @@ EQRef(Ref a, Ref b)
 }
 
 
-// ROM 0x002f44c4 SetupListEQ__Fl
+// ROM 0x003197c8 SetupListEQ__Fl
 // For comparing one ref against many: its object, once.
 static ObjHeader*
 SetupListEQ(Ref r)
@@ -251,7 +251,7 @@ SetupListEQ(Ref r)
 }
 
 
-// ROM 0x002f43e8 ListEQ1__FlT1Pc
+// ROM 0x003196ec ListEQ1__FlT1Pc
 static Boolean
 ListEQ1(Ref a, Ref b, ObjHeader* ob)
 {
@@ -264,7 +264,7 @@ ListEQ1(Ref a, Ref b, ObjHeader* ob)
 }
 
 
-// ROM 0x002f44a4 ListEQ__FlT1Pc
+// ROM 0x003197a8 ListEQ__FlT1Pc
 // EQRef(a, b) with b's object already found by SetupListEQ.
 static Boolean
 ListEQ(Ref a, Ref b, ObjHeader* ob)
@@ -283,7 +283,7 @@ ListEQ(Ref a, Ref b, ObjHeader* ob)
 	grows by 16, searched with ListEQ.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032b270 __ct__14TPrecedentsVarFv
+// ROM 0x0035640c __ct__14TPrecedentsVarFv
 TPrecedentsVar::TPrecedentsVar()
 	: fArray(AllocateArray(RSSYMarray, 16))
 {
@@ -291,7 +291,7 @@ TPrecedentsVar::TPrecedentsVar()
 }
 
 
-// ROM 0x0032c980 Append__14TPrecedentsVarFRC6RefVar
+// ROM 0x00357b1c Append__14TPrecedentsVarFRC6RefVar
 void
 TPrecedentsVar::Append(RefArg obj)
 {
@@ -303,7 +303,7 @@ TPrecedentsVar::Append(RefArg obj)
 }
 
 
-// ROM 0x0032ce14 Find__14TPrecedentsVarFRC6RefVar
+// ROM 0x00357fb0 Find__14TPrecedentsVarFRC6RefVar
 long
 TPrecedentsVar::Find(RefArg obj)
 {
@@ -319,7 +319,7 @@ TPrecedentsVar::Find(RefArg obj)
 }
 
 
-// ROM 0x0032ce90 Get__14TPrecedentsVarFl
+// ROM 0x0035802c Get__14TPrecedentsVarFl
 Ref
 TPrecedentsVar::Get(long index)
 {
@@ -334,7 +334,7 @@ TPrecedentsVar::Get(long index)
 	integer (GCTWA leaves 0).
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032dc34 FindSymbol__FPllT2PcUlRl
+// ROM 0x00358dd0 FindSymbol__FPllT2PcUlRl
 // Whether a symbol of this name is in the table; *index is its slot, or the
 // slot a new one would go in (the first deleted slot met, else the empty
 // one).
@@ -370,7 +370,7 @@ FindSymbol(Ref* table, long size, long hashShift, const char* name, ULong32 hash
 }
 
 
-// ROM 0x0032dcd4 InternExistingSymbol__FRC6RefVar
+// ROM 0x00358e70 InternExistingSymbol__FRC6RefVar
 // A symbol object into the RAM table (rehashing, or one made elsewhere).
 void
 InternExistingSymbol(RefArg sym)
@@ -403,7 +403,7 @@ RebuildSymbolTable(long size, long hashShift)
 }
 
 
-// ROM 0x0032d57c EnlargeSymbolTable__Fv
+// ROM 0x00358718 EnlargeSymbolTable__Fv
 void
 EnlargeSymbolTable(void)
 {
@@ -411,7 +411,7 @@ EnlargeSymbolTable(void)
 }
 
 
-// ROM 0x0032d598 RehashSymbolTable__Fv
+// ROM 0x00358734 RehashSymbolTable__Fv
 // The same size again: drops the deleted slots.
 void
 RehashSymbolTable(void)
@@ -420,7 +420,7 @@ RehashSymbolTable(void)
 }
 
 
-// ROM 0x0032d634 AdjustSymbolTableSize__Fv
+// ROM 0x003587d0 AdjustSymbolTableSize__Fv
 // The smallest power of two (at least 32) holding the symbols at half full.
 void
 AdjustSymbolTableSize(void)
@@ -437,7 +437,7 @@ AdjustSymbolTableSize(void)
 }
 
 
-// ROM 0x0032d674 Intern__FPc
+// ROM 0x00358810 Intern__FPc
 // The symbol of this name: the ROM's, or the RAM table's, or a new one -
 // which enlarges the table past 85% full, and afterwards shrinks it if it
 // is under a quarter full or rehashes it when the deleted slots make it
@@ -474,7 +474,7 @@ Intern(char* name)
 }
 
 
-// ROM 0x0032d810 Intern__FPUs
+// ROM 0x003589ac Intern__FPUs
 Ref
 Intern(UniChar* name)
 {
@@ -487,7 +487,7 @@ Intern(UniChar* name)
 }
 
 
-// ROM 0x002f766c MakeSymbol__FPc
+// ROM 0x0031c970 MakeSymbol__FPc
 Ref
 MakeSymbol(char* name)
 {
@@ -495,7 +495,7 @@ MakeSymbol(char* name)
 }
 
 
-// ROM 0x0032d870 GCTWA__Fv
+// ROM 0x00358a0c GCTWA__Fv
 // Garbage-collect the RAM symbols nothing else marked: their slots become
 // deleted (0), so that the table is not the reason they survive.
 void
@@ -567,7 +567,7 @@ InitROMSymbols(void)
 }
 
 
-// ROM 0x0032d97c InitSymbols__Fv
+// ROM 0x00358b18 InitSymbols__Fv
 // The RAM table (128 slots, a GC root the collector treats specially) over
 // the ROM's (the array at 0x0053eba1 - here the one ROMImport read, or
 // InitROMSymbols' small stand-in when no ROM image was imported).

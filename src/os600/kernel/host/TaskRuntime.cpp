@@ -225,7 +225,7 @@ HostIdleTask()
 }
 
 
-// ROM 0x001ce924 SleepTask__Fv
+// ROM 0x001cc550 SleepTask__Fv
 // The idle loop: on the MessagePad `for (;;) PauseSystem();`, waking for each
 // interrupt; here the boot thread hands over to the runtime, whose idle task
 // body does the waiting.  Returns when the run ends (the ROM's never does).

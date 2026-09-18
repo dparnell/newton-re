@@ -16,8 +16,8 @@
 				CMinBuffer 4 bytes, CBuffer 4, CBufferSegment 0x28, the
 				virtuals in the ROM's vtable order.
 
-	Reconstructed from the MP2100 D ROM (0x0004644c, 0x00047cc4-
-	0x000483a4, 0x00120d3c); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x00045b7c, 0x000473f4-
+	0x00047ad4, 0x0011f2d4); each function cites its origin.
 */
 
 #ifndef __BUFFERSEGMENT_H

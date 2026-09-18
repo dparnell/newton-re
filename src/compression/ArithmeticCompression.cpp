@@ -4,7 +4,7 @@
 	Contains:	TArithmeticCompressor and TArithmeticDecompressor
 				(ArithmeticCompression.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM's operator new/delete here are the memory manager's.
 */
 
@@ -48,7 +48,7 @@ Quotient5(ULong32 range, ULong32 total16)
 	The model (the same code in both coders)
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00036d30 StartModel__21TArithmeticCompressorFv
+// ROM 0x00036c80 StartModel__21TArithmeticCompressorFv
 // Every symbol equally likely (the increment's worth), bytes in order.
 void
 TArithmeticCompressor::StartModel()
@@ -75,7 +75,7 @@ TArithmeticCompressor::StartModel()
 }
 
 
-// ROM 0x00036dc8 UpdateModel__21TArithmeticCompressorFi
+// ROM 0x00036d18 UpdateModel__21TArithmeticCompressorFi
 // The symbol moves to the front of the symbols with its frequency, gains
 // the increment; the whole model is halved when the total gets too big.
 void
@@ -113,7 +113,7 @@ TArithmeticCompressor::UpdateModel(int symbol)
 }
 
 
-// ROM 0x00037514 StartModel__23TArithmeticDecompressorFv
+// ROM 0x00037464 StartModel__23TArithmeticDecompressorFv
 void
 TArithmeticDecompressor::StartModel()
 {
@@ -139,7 +139,7 @@ TArithmeticDecompressor::StartModel()
 }
 
 
-// ROM 0x000375ac UpdateModel__23TArithmeticDecompressorFi
+// ROM 0x000374fc UpdateModel__23TArithmeticDecompressorFi
 void
 TArithmeticDecompressor::UpdateModel(int symbol)
 {
@@ -179,11 +179,11 @@ TArithmeticDecompressor::UpdateModel(int symbol)
 	TArithmeticCompressor
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TArithmeticCompressor)		// ROM 0x00036d04 Sizeof__21TArithmeticCompressorSFv
-PROTOCOL_CLASSINFO(TArithmeticCompressor, "TCallbackCompressor", "", 0, 0, nil)	// ROM 0x0037fcec ClassInfo__21TArithmeticCompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TArithmeticCompressor)		// ROM 0x00036c54 Sizeof__21TArithmeticCompressorSFv
+PROTOCOL_CLASSINFO(TArithmeticCompressor, "TCallbackCompressor", "", 0, 0, nil)	// ROM 0x00389454 ClassInfo__21TArithmeticCompressorSFv
 
 
-// ROM 0x00036d0c New__21TArithmeticCompressorFv
+// ROM 0x00036c5c New__21TArithmeticCompressorFv
 TArithmeticCompressor*
 TArithmeticCompressor::New()
 {
@@ -197,14 +197,14 @@ TArithmeticCompressor::New()
 }
 
 
-// ROM 0x000371ac Delete__21TArithmeticCompressorFv
+// ROM 0x000370fc Delete__21TArithmeticCompressorFv
 // (nothing: the tables are Cleanup's, which no one calls at the end - the ROM)
 void
 TArithmeticCompressor::Delete()
 { }
 
 
-// ROM 0x00037970 Cleanup__21TArithmeticCompressorFv
+// ROM 0x000378c0 Cleanup__21TArithmeticCompressorFv
 void
 TArithmeticCompressor::Cleanup()
 {
@@ -223,7 +223,7 @@ TArithmeticCompressor::Cleanup()
 }
 
 
-// ROM 0x000379d0 Init__21TArithmeticCompressorFPv
+// ROM 0x00037920 Init__21TArithmeticCompressorFPv
 // With no model, an adaptive one of our own; else the given tables.
 NewtonErr
 TArithmeticCompressor::Init(void* model)
@@ -260,7 +260,7 @@ TArithmeticCompressor::Init(void* model)
 }
 
 
-// ROM 0x00037ae4 Reset__21TArithmeticCompressorFv
+// ROM 0x00037a34 Reset__21TArithmeticCompressorFv
 NewtonErr
 TArithmeticCompressor::Reset()
 {
@@ -276,7 +276,7 @@ TArithmeticCompressor::Reset()
 }
 
 
-// ROM 0x00036ecc StartOutputtingBits__21TArithmeticCompressorFv
+// ROM 0x00036e1c StartOutputtingBits__21TArithmeticCompressorFv
 void
 TArithmeticCompressor::StartOutputtingBits()
 {
@@ -285,7 +285,7 @@ TArithmeticCompressor::StartOutputtingBits()
 }
 
 
-// ROM 0x00036ee0 WriteByte__21TArithmeticCompressorFUc
+// ROM 0x00036e30 WriteByte__21TArithmeticCompressorFUc
 // Into the buffer; a full buffer goes to the write proc, whose error is
 // thrown.
 void
@@ -301,7 +301,7 @@ TArithmeticCompressor::WriteByte(UByte b)
 }
 
 
-// ROM 0x00036f4c FlushBits__21TArithmeticCompressorFv
+// ROM 0x00036e9c FlushBits__21TArithmeticCompressorFv
 // The buffered bytes, then the last partial byte, marked last.
 void
 TArithmeticCompressor::FlushBits()
@@ -326,7 +326,7 @@ TArithmeticCompressor::FlushBits()
 	} while (0)
 
 
-// ROM 0x00037bf8 NarrowRegion__21TArithmeticCompressorFi
+// ROM 0x00037b48 NarrowRegion__21TArithmeticCompressorFi
 // The interval shrinks to the symbol's share: cumulative frequencies count
 // down, so symbol s covers [cumFreq[s], cumFreq[s-1]) of the total.
 void
@@ -349,7 +349,7 @@ TArithmeticCompressor::NarrowRegion(int symbol)
 }
 
 
-// ROM 0x00037d2c PushOutBits__21TArithmeticCompressorFv
+// ROM 0x00037c7c PushOutBits__21TArithmeticCompressorFv
 // Renormalisation: settled top bits go out (with the opposite bits that
 // followed an undecided middle), the interval doubles.
 void
@@ -387,7 +387,7 @@ TArithmeticCompressor::PushOutBits()
 }
 
 
-// ROM 0x00037b34 WriteChunk__21TArithmeticCompressorFPvl
+// ROM 0x00037a84 WriteChunk__21TArithmeticCompressorFPvl
 NewtonErr
 TArithmeticCompressor::WriteChunk(void* data, long size)
 {
@@ -412,7 +412,7 @@ TArithmeticCompressor::WriteChunk(void* data, long size)
 }
 
 
-// ROM 0x00037ed8 Flush__21TArithmeticCompressorFv
+// ROM 0x00037e28 Flush__21TArithmeticCompressorFv
 // The end symbol, then enough bits to pin the interval, then the buffers.
 NewtonErr
 TArithmeticCompressor::Flush()
@@ -467,11 +467,11 @@ TArithmeticCompressor::Flush()
 	TArithmeticDecompressor
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TArithmeticDecompressor)		// ROM 0x00036fd0 Sizeof__23TArithmeticDecompressorSFv
-PROTOCOL_CLASSINFO(TArithmeticDecompressor, "TCallbackDecompressor", "", 0, 0, nil)	// ROM 0x0037fd84 ClassInfo__23TArithmeticDecompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TArithmeticDecompressor)		// ROM 0x00036f20 Sizeof__23TArithmeticDecompressorSFv
+PROTOCOL_CLASSINFO(TArithmeticDecompressor, "TCallbackDecompressor", "", 0, 0, nil)	// ROM 0x003894ec ClassInfo__23TArithmeticDecompressorSFv
 
 
-// ROM 0x00036fd8 New__23TArithmeticDecompressorFv
+// ROM 0x00036f28 New__23TArithmeticDecompressorFv
 TArithmeticDecompressor*
 TArithmeticDecompressor::New()
 {
@@ -488,7 +488,7 @@ TArithmeticDecompressor::New()
 }
 
 
-// ROM 0x00036ffc Delete__23TArithmeticDecompressorFv
+// ROM 0x00036f4c Delete__23TArithmeticDecompressorFv
 // (sic: the tables go if the model is adaptive, whoever owns them)
 void
 TArithmeticDecompressor::Delete()
@@ -502,7 +502,7 @@ TArithmeticDecompressor::Delete()
 }
 
 
-// ROM 0x0003703c Cleanup__23TArithmeticDecompressorFv
+// ROM 0x00036f8c Cleanup__23TArithmeticDecompressorFv
 void
 TArithmeticDecompressor::Cleanup()
 {
@@ -521,7 +521,7 @@ TArithmeticDecompressor::Cleanup()
 }
 
 
-// ROM 0x0003709c Init__23TArithmeticDecompressorFPv
+// ROM 0x00036fec Init__23TArithmeticDecompressorFPv
 NewtonErr
 TArithmeticDecompressor::Init(void* model)
 {
@@ -558,7 +558,7 @@ TArithmeticDecompressor::Init(void* model)
 }
 
 
-// ROM 0x000371b0 Reset__23TArithmeticDecompressorFv
+// ROM 0x00037100 Reset__23TArithmeticDecompressorFv
 NewtonErr
 TArithmeticDecompressor::Reset()
 {
@@ -572,7 +572,7 @@ TArithmeticDecompressor::Reset()
 }
 
 
-// ROM 0x000376b0 StartReadingBits__23TArithmeticDecompressorFv
+// ROM 0x00037600 StartReadingBits__23TArithmeticDecompressorFv
 void
 TArithmeticDecompressor::StartReadingBits()
 {
@@ -581,7 +581,7 @@ TArithmeticDecompressor::StartReadingBits()
 }
 
 
-// ROM 0x00037878 ReadByte__23TArithmeticDecompressorFv
+// ROM 0x000377c8 ReadByte__23TArithmeticDecompressorFv
 // From the buffer, refilled through the read proc; past the end of the
 // data zeros are made up, four bytes' worth, then the end is thrown.
 UByte
@@ -616,7 +616,7 @@ TArithmeticDecompressor::ReadByte()
 	} while (0)
 
 
-// ROM 0x000373e0 NarrowRegion__23TArithmeticDecompressorFi
+// ROM 0x00037330 NarrowRegion__23TArithmeticDecompressorFi
 void
 TArithmeticDecompressor::NarrowRegion(int symbol)
 {
@@ -637,7 +637,7 @@ TArithmeticDecompressor::NarrowRegion(int symbol)
 }
 
 
-// ROM 0x000376c0 FindSymbol__23TArithmeticDecompressorFv
+// ROM 0x00037610 FindSymbol__23TArithmeticDecompressorFv
 // The symbol whose share holds the value: (value - low) / q found bit by
 // bit from 2^26 down, the symbol advanced as the cumulative frequency is
 // narrowed down.
@@ -677,7 +677,7 @@ TArithmeticDecompressor::FindSymbol()
 }
 
 
-// ROM 0x0003779c DiscardBits__23TArithmeticDecompressorFv
+// ROM 0x000376ec DiscardBits__23TArithmeticDecompressorFv
 // The decoder's renormalisation: settled bits leave low and the value,
 // which takes the next bit of input.
 void
@@ -708,7 +708,7 @@ TArithmeticDecompressor::DiscardBits()
 }
 
 
-// ROM 0x000371f0 ReadChunk__23TArithmeticDecompressorFPvPlPUc
+// ROM 0x00037140 ReadChunk__23TArithmeticDecompressorFPvPlPUc
 // Up to *size bytes; at the end symbol *size is what was read and
 // *underflow is set.  The first call reads the 32-bit value (whose first
 // bit is always 1).

@@ -19,8 +19,8 @@
 				screen (NOT YET: the tablet, the gestalt - the port is
 				re-made over the screen).
 
-	Reconstructed from the MP2100 D ROM (0x001cec68-0x001cf900,
-	0x0020040c); each function cites its origin.  The ROM's screen driver
+	Reconstructed from the MP2x00 US ROM (0x001cc894-0x001cd4fc,
+	0x00202b3c); each function cites its origin.  The ROM's screen driver
 	(TMainDisplayDriver, in the ROM extension) drives the LCD; the host's
 	is hal/host/Screen.h.
 */
@@ -79,44 +79,44 @@ public:
 	static TScreenDriver*	New(const char* implementation);
 	void			Delete();
 
-	VIRTUAL void		ScreenSetup(void) ENDVIRTUAL;								// ROM 0x0037ee5c ScreenSetup__13TScreenDriverFv
-	VIRTUAL void		GetScreenInfo(ScreenInfo* info) ENDVIRTUAL;					// ROM 0x0037ee68 GetScreenInfo__13TScreenDriverFP10ScreenInfo
-	VIRTUAL void		PowerInit(void) ENDVIRTUAL;									// ROM 0x0037ee74 PowerInit__13TScreenDriverFv
-	VIRTUAL void		PowerOn(void) ENDVIRTUAL;									// ROM 0x0037ee80 PowerOn__13TScreenDriverFv
-	VIRTUAL void		PowerOff(void) ENDVIRTUAL;									// ROM 0x0037ee8c PowerOff__13TScreenDriverFv
-	VIRTUAL void		Blit(PixelMap* map, Rect* src, Rect* dst, long mode) ENDVIRTUAL;	// ROM 0x0037ee98 Blit__13TScreenDriverFP8PixelMapP4RectT2l
-	VIRTUAL long		GetFeature(long feature) ENDVIRTUAL;						// ROM 0x0037eea4 GetFeature__13TScreenDriverFl
-	VIRTUAL void		SetFeature(long feature, long value) ENDVIRTUAL;			// ROM 0x0037eeb0 SetFeature__13TScreenDriverFlT1
-	VIRTUAL void		AutoAdjustFeatures(void) ENDVIRTUAL;						// ROM 0x0037eebc AutoAdjustFeatures__13TScreenDriverFv
-	VIRTUAL void		DoubleBlit(PixelMap* map, PixelMap* map2, Rect* src, Rect* dst, long mode) ENDVIRTUAL;	// ROM 0x0037eec8 DoubleBlit__13TScreenDriverFP8PixelMapT1P4RectT3l
-	VIRTUAL void		EnterIdleMode(void) ENDVIRTUAL;								// ROM 0x0037eed4 EnterIdleMode__13TScreenDriverFv
-	VIRTUAL void		ExitIdleMode(void) ENDVIRTUAL;								// ROM 0x0037eee0 ExitIdleMode__13TScreenDriverFv
+	VIRTUAL void		ScreenSetup(void) ENDVIRTUAL;								// ROM 0x003885bc ScreenSetup__13TScreenDriverFv
+	VIRTUAL void		GetScreenInfo(ScreenInfo* info) ENDVIRTUAL;					// ROM 0x003885c8 GetScreenInfo__13TScreenDriverFP10ScreenInfo
+	VIRTUAL void		PowerInit(void) ENDVIRTUAL;									// ROM 0x003885d4 PowerInit__13TScreenDriverFv
+	VIRTUAL void		PowerOn(void) ENDVIRTUAL;									// ROM 0x003885e0 PowerOn__13TScreenDriverFv
+	VIRTUAL void		PowerOff(void) ENDVIRTUAL;									// ROM 0x003885ec PowerOff__13TScreenDriverFv
+	VIRTUAL void		Blit(PixelMap* map, Rect* src, Rect* dst, long mode) ENDVIRTUAL;	// ROM 0x003885f8 Blit__13TScreenDriverFP8PixelMapP4RectT2l
+	VIRTUAL long		GetFeature(long feature) ENDVIRTUAL;						// ROM 0x00388604 GetFeature__13TScreenDriverFl
+	VIRTUAL void		SetFeature(long feature, long value) ENDVIRTUAL;			// ROM 0x00388610 SetFeature__13TScreenDriverFlT1
+	VIRTUAL void		AutoAdjustFeatures(void) ENDVIRTUAL;						// ROM 0x0038861c AutoAdjustFeatures__13TScreenDriverFv
+	VIRTUAL void		DoubleBlit(PixelMap* map, PixelMap* map2, Rect* src, Rect* dst, long mode) ENDVIRTUAL;	// ROM 0x00388628 DoubleBlit__13TScreenDriverFP8PixelMapT1P4RectT3l
+	VIRTUAL void		EnterIdleMode(void) ENDVIRTUAL;								// ROM 0x00388634 EnterIdleMode__13TScreenDriverFv
+	VIRTUAL void		ExitIdleMode(void) ENDVIRTUAL;								// ROM 0x00388640 ExitIdleMode__13TScreenDriverFv
 };
 
-extern TScreenDriver*	gTheScreen;				// ROM 0x0c101c28 gTheScreen
-extern Rect				gScreenDirtyRect;		// ROM 0x0c101c34 gScreenDirtyRect - what the display has not been shown yet
-extern long				screenWidth;			// ROM 0x0c101d4c screenWidth
-extern long				screenHeight;			// ROM 0x0c101d50 screenHeight
+extern TScreenDriver*	gTheScreen;				// ROM 0x0c101a4c gTheScreen
+extern Rect				gScreenDirtyRect;		// ROM 0x0c101a58 gScreenDirtyRect - what the display has not been shown yet
+extern long				screenWidth;			// ROM 0x0c104c58 screenWidth
+extern long				screenHeight;			// ROM 0x0c104c5c screenHeight
 
-void	InitScreen(TScreenDriver* driver);		// ROM 0x001cec68 InitScreen__Fv (host: the driver given instead of made by name)
-void	SetupScreenPixelMap(void);				// ROM 0x001ceee4 SetupScreenPixelMap__Fv
-Boolean	QDStartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf1e0 QDStartDrawing__FP8PixelMapP4Rect
-void	QDStopDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf228 QDStopDrawing__FP8PixelMapP4Rect
-void	StartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf6b8 StartDrawing__FP8PixelMapP4Rect
-void	StopDrawing(PixelMap* map, Rect* r);	// ROM 0x001cf704 StopDrawing__FP8PixelMapP4Rect
-void	UpdateHardwareScreen(void);				// ROM 0x001cf35c UpdateHardwareScreen__Fv
-void	ReleaseScreenLock(void);				// ROM 0x001cf7f8 ReleaseScreenLock__Fv
-Ref		FLockScreen(RefArg rcvr, RefArg lock);	// ROM 0x001f009c FLockScreen
-void	BlitToScreens(PixelMap* map, Rect* src, Rect* dst, long mode);	// ROM 0x001cf3b8 BlitToScreens__FP8PixelMapP4RectT2l
-long	GetGrafInfo(long selector, void* info);	// ROM 0x001cf828 GetGrafInfo__FlPv
-void	SetGrafInfo(long selector, long value);	// ROM 0x001cedb0 SetGrafInfo__FlT1
-void	SetOrientation(long orientation);		// ROM 0x0020040c SetOrientation__Fl
+void	InitScreen(TScreenDriver* driver);		// ROM 0x001cc894 InitScreen__Fv (host: the driver given instead of made by name)
+void	SetupScreenPixelMap(void);				// ROM 0x001ccb10 SetupScreenPixelMap__Fv
+Boolean	QDStartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cce0c QDStartDrawing__FP8PixelMapP4Rect
+void	QDStopDrawing(PixelMap* map, Rect* r);	// ROM 0x001cce54 QDStopDrawing__FP8PixelMapP4Rect
+void	StartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cd2b4 StartDrawing__FP8PixelMapP4Rect
+void	StopDrawing(PixelMap* map, Rect* r);	// ROM 0x001cd300 StopDrawing__FP8PixelMapP4Rect
+void	UpdateHardwareScreen(void);				// ROM 0x001ccf88 UpdateHardwareScreen__Fv
+void	ReleaseScreenLock(void);				// ROM 0x001cd3f4 ReleaseScreenLock__Fv
+Ref		FLockScreen(RefArg rcvr, RefArg lock);	// ROM 0x001edc84 FLockScreen
+void	BlitToScreens(PixelMap* map, Rect* src, Rect* dst, long mode);	// ROM 0x001ccfe4 BlitToScreens__FP8PixelMapP4RectT2l
+long	GetGrafInfo(long selector, void* info);	// ROM 0x001cd424 GetGrafInfo__FlPv
+void	SetGrafInfo(long selector, long value);	// ROM 0x001cc9dc SetGrafInfo__FlT1
+void	SetOrientation(long orientation);		// ROM 0x00202b3c SetOrientation__Fl
 
 // what a script can ask of the screen (ScreenNatives.cpp)
-Ref		FGetLCDContrast(RefArg rcvr);			// ROM 0x00200634 FGetLCDContrast__FRC6RefVar
-Ref		FSetLCDContrast(RefArg rcvr, RefArg contrast);	// ROM 0x0020030c FSetLCDContrast__FRC6RefVarT1
-Ref		FGetOrientation(RefArg rcvr);			// ROM 0x002003b4 FGetOrientation
-Ref		FSetOrientation(RefArg rcvr, RefArg orientation);	// ROM 0x002003dc FSetOrientation
+Ref		FGetLCDContrast(RefArg rcvr);			// ROM 0x00202d64 FGetLCDContrast__FRC6RefVar
+Ref		FSetLCDContrast(RefArg rcvr, RefArg contrast);	// ROM 0x00202a3c FSetLCDContrast__FRC6RefVarT1
+Ref		FGetOrientation(RefArg rcvr);			// ROM 0x00202ae4 FGetOrientation
+Ref		FSetOrientation(RefArg rcvr, RefArg orientation);	// ROM 0x00202b0c FSetOrientation
 void	RegisterScreenNatives(void);
 
 #endif	/* __SCREEN_H */

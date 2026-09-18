@@ -3,7 +3,7 @@
 
 	Contains:	TTextView: a view showing its text.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "TextView.h"
@@ -12,7 +12,7 @@
 #include "ObjectHeap.h"
 
 
-// ROM 0x00250874 ClassID__9TTextViewCFv
+// ROM 0x002527bc ClassID__9TTextViewCFv
 long
 TTextView::ClassID(void) const
 {
@@ -20,7 +20,7 @@ TTextView::ClassID(void) const
 }
 
 
-// ROM 0x0025087c DerivedFrom__9TTextViewCFl
+// ROM 0x002527c4 DerivedFrom__9TTextViewCFl
 Boolean
 TTextView::DerivedFrom(long id) const
 {
@@ -28,7 +28,7 @@ TTextView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x002508b0 Constructor__9TTextViewFRC6RefVarP5TView
+// ROM 0x002527f8 Constructor__9TTextViewFRC6RefVarP5TView
 // The transfer mode from viewTransferMode, srcOr when there is none.
 void
 TTextView::Constructor(RefArg context, TView* parent)
@@ -39,7 +39,7 @@ TTextView::Constructor(RefArg context, TView* parent)
 }
 
 
-// ROM 0x0025090c RealDraw__9TTextViewFR5TRect
+// ROM 0x00252854 RealDraw__9TTextViewFR5TRect
 // The text slot (nothing without one) in the viewFont: a single line
 // (oneLineOnly) laid out across the bounds' width by the horizontal text
 // bits, its baseline the font's ascent below the top - or viewLineSpacing

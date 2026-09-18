@@ -18,8 +18,8 @@
 	The ROM's layout: TDate 0x28 (seven longs and three RefVars: the
 	format frames).
 
-	Reconstructed from the MP2100 D ROM (0x0008ad1c-0x0008bc98,
-	0x0008d8b0-0x0008fb18); each function cites its origin.  NOT YET
+	Reconstructed from the MP2x00 US ROM (0x00089ad0-0x0008aa4c,
+	0x0008c664-0x0008e8cc); each function cites its origin.  NOT YET
 	RECONSTRUCTED: reading a date or time out of a string
 	(StringToDateFields: the recognition system's lexical dictionaries).
 	The meeting and repeat functions are Meetings.h.

@@ -4,7 +4,7 @@
 	Contains:	Soup entries (Entries.h): fault blocks, the entry cache and
 				the entry operations.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Entries.h"
@@ -30,7 +30,7 @@ extern const ExceptionName exBadType;
 	F a u l t   b l o c k s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ba74c MakeFaultBlock__FRC6RefVarP13TStoreWrapperUl
+// ROM 0x002e04d4 MakeFaultBlock__FRC6RefVarP13TStoreWrapperUl
 // A fault block for store object id of wrapper's store, handled by
 // handler (the soup); the entry is not in memory.
 Ref
@@ -46,7 +46,7 @@ MakeFaultBlock(RefArg handler, TStoreWrapper* wrapper, PSSId id)
 }
 
 
-// ROM 0x002ba7fc MakeFaultBlock__FRC6RefVarP13TStoreWrapperUlT1
+// ROM 0x002e0584 MakeFaultBlock__FRC6RefVarP13TStoreWrapperUlT1
 // The same with the entry frame already in memory.
 Ref
 MakeFaultBlock(RefArg handler, TStoreWrapper* wrapper, PSSId id, RefArg object)
@@ -62,7 +62,7 @@ MakeFaultBlock(RefArg handler, TStoreWrapper* wrapper, PSSId id, RefArg object)
 }
 
 
-// ROM 0x002b52b4 NewProxyEntry__FRC6RefVarT1
+// ROM 0x002db03c NewProxyEntry__FRC6RefVarT1
 // A fault block with no store: its handler answers for it.
 Ref
 NewProxyEntry(RefArg handler, RefArg object)
@@ -78,7 +78,7 @@ NewProxyEntry(RefArg handler, RefArg object)
 }
 
 
-// ROM 0x002ba450 FollowFaultBlock__FRC6RefVar
+// ROM 0x002e01d8 FollowFaultBlock__FRC6RefVar
 // The entry a fault block stands for: read from its store (and kept in the
 // block); a proxy's handler is asked (EntryAccess); the store gone is an
 // error.
@@ -98,7 +98,7 @@ StoreFollowFaultBlock(RefArg faultBlock)
 }
 
 
-// ROM 0x002ba4f4 WriteFaultBlock__FRC6RefVar
+// ROM 0x002e027c WriteFaultBlock__FRC6RefVar
 // The entry frame in memory written back to its store object.
 void
 WriteFaultBlock(RefArg faultBlock)
@@ -131,7 +131,7 @@ WriteFaultBlock(RefArg faultBlock)
 static const Ref kKilledObjectRef = MAKEIMMED(kImmedSpecial, 4);
 
 
-// ROM 0x002f8d98 FIsValid
+// ROM 0x0031e09c FIsValid
 // Whether the object is still usable: an immediate always is, except the
 // ROM's 0x42 - the marker a killed object leaves behind; a soup entry is
 // when its store is still there (EntryValid), a large binary when its
@@ -178,7 +178,7 @@ FIsValid(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002ba618 InvalFaultBlock__FRC6RefVar
+// ROM 0x002e03a0 InvalFaultBlock__FRC6RefVar
 // The store is gone: no store, no entry.
 void
 InvalFaultBlock(RefArg faultBlock)
@@ -191,7 +191,7 @@ InvalFaultBlock(RefArg faultBlock)
 }
 
 
-// ROM 0x002ba678 UncacheIfFaultBlock__FRC6RefVar
+// ROM 0x002e0400 UncacheIfFaultBlock__FRC6RefVar
 // The entry frame dropped from memory (it will be read again).
 void
 UncacheIfFaultBlock(RefArg object)
@@ -206,7 +206,7 @@ UncacheIfFaultBlock(RefArg object)
 	T h e   e n t r y   c a c h e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002b3d88 MakeEntryCache__Fv
+// ROM 0x002d9b10 MakeEntryCache__Fv
 // A weak array of 8 nils: the entries stay only while something else
 // refers to them.
 Ref
@@ -216,7 +216,7 @@ MakeEntryCache(void)
 }
 
 
-// ROM 0x002b3dd4 FindEntryInCache__FRC6RefVarUl
+// ROM 0x002d9b5c FindEntryInCache__FRC6RefVarUl
 // The cached fault block for store object id; nil for none.
 Ref
 FindEntryInCache(RefArg cache, PSSId id)
@@ -232,7 +232,7 @@ FindEntryInCache(RefArg cache, PSSId id)
 }
 
 
-// ROM 0x002b49ec PutEntryIntoCache__FRC6RefVarT1
+// ROM 0x002da774 PutEntryIntoCache__FRC6RefVarT1
 // The cache closed up (its nils dropped) and the entry put after the last;
 // grown by 8 when full, shrunk to 8 when few.
 void
@@ -261,7 +261,7 @@ PutEntryIntoCache(RefArg cache, RefArg entry)
 }
 
 
-// ROM 0x002b50e4 DeleteEntryFromCache__FRC6RefVarT1
+// ROM 0x002dae6c DeleteEntryFromCache__FRC6RefVarT1
 void
 DeleteEntryFromCache(RefArg cache, RefArg entry)
 {
@@ -272,7 +272,7 @@ DeleteEntryFromCache(RefArg cache, RefArg entry)
 }
 
 
-// ROM 0x002b52c4 InvalidateCacheEntries__FRC6RefVar
+// ROM 0x002db04c InvalidateCacheEntries__FRC6RefVar
 // Every cached entry invalidated (its store is gone) and the cache emptied.
 void
 InvalidateCacheEntries(RefArg cache)
@@ -291,7 +291,7 @@ InvalidateCacheEntries(RefArg cache)
 }
 
 
-// ROM 0x002b5358 FindSoupInCache__FRC6RefVarT1
+// ROM 0x002db0e0 FindSoupInCache__FRC6RefVarT1
 // The soup of this name (case-insensitively) in a soup cache; nil for none.
 Ref
 FindSoupInCache(RefArg cache, RefArg name)
@@ -326,7 +326,7 @@ CheckEntry(RefArg entry)
 }
 
 
-// ROM 0x002b3e7c EntryStore__FRC6RefVar
+// ROM 0x002d9c04 EntryStore__FRC6RefVar
 // The store frame the entry's soup is on (a proxy's handler is asked).
 Ref
 EntryStore(RefArg entry)
@@ -338,7 +338,7 @@ EntryStore(RefArg entry)
 }
 
 
-// ROM 0x002b3ec8 EnsureEntryInternal__FRC6RefVar
+// ROM 0x002d9c50 EnsureEntryInternal__FRC6RefVar
 // The entry frame made all internal objects (EnsureInternal) - with its
 // _proto (the soup's persistent frame) taken off for the duration so
 // that it is not copied too.
@@ -366,7 +366,7 @@ EnsureEntryInternal(RefArg entry)
 }
 
 
-// ROM 0x002b3ff4 EntryChangeCommon__FRC6RefVari
+// ROM 0x002d9d7c EntryChangeCommon__FRC6RefVari
 // The entry (in memory) written back to its store object, the soup's
 // indexes updated from the old to the new keys, the soup's cursors told
 // (NOT YET RECONSTRUCTED: TCursor::EntryChanged) - by flags: _modTime set,
@@ -425,7 +425,7 @@ EntryChangeCommon(RefArg entry, int flags)
 }
 
 
-// ROM 0x002b443c EntryChange__FRC6RefVar
+// ROM 0x002da1c4 EntryChange__FRC6RefVar
 Ref
 EntryChange(RefArg entry)
 {
@@ -436,7 +436,7 @@ EntryChange(RefArg entry)
 }
 
 
-// ROM 0x002b43cc EntryChangeWithModTime__FRC6RefVar
+// ROM 0x002da154 EntryChangeWithModTime__FRC6RefVar
 // The frame's own _modTime kept.
 Ref
 EntryChangeWithModTime(RefArg entry)
@@ -448,7 +448,7 @@ EntryChangeWithModTime(RefArg entry)
 }
 
 
-// ROM 0x002b4404 EntryChangeVerbatim__FRC6RefVar
+// ROM 0x002da18c EntryChangeVerbatim__FRC6RefVar
 // _modTime and _uniqueID kept as they are in the frame.
 Ref
 EntryChangeVerbatim(RefArg entry)
@@ -460,7 +460,7 @@ EntryChangeVerbatim(RefArg entry)
 }
 
 
-// ROM 0x002b4474 EntryFlush__FRC6RefVar
+// ROM 0x002da1fc EntryFlush__FRC6RefVar
 // EntryChange, the frame dropped from memory after.
 Ref
 EntryFlush(RefArg entry)
@@ -472,7 +472,7 @@ EntryFlush(RefArg entry)
 }
 
 
-// ROM 0x002b44ac EntryFlushWithModTime__FRC6RefVar
+// ROM 0x002da234 EntryFlushWithModTime__FRC6RefVar
 Ref
 EntryFlushWithModTime(RefArg entry)
 {
@@ -483,7 +483,7 @@ EntryFlushWithModTime(RefArg entry)
 }
 
 
-// ROM 0x002b44e4 EntryRemoveFromSoup__FRC6RefVar
+// ROM 0x002da26c EntryRemoveFromSoup__FRC6RefVar
 // The entry taken out of its soup: its keys out of the indexes, the
 // block out of the cache and replaced by the plain frame, the store
 // object deleted; the soup's lastUID updated when it was the last.
@@ -537,7 +537,7 @@ EntryRemoveFromSoup(RefArg entry)
 }
 
 
-// ROM 0x002b4800 EntryReplaceCommon__FRC6RefVarT1i
+// ROM 0x002da588 EntryReplaceCommon__FRC6RefVarT1i
 // The entry's frame replaced by newEntry's (a plain frame is cloned, a
 // fault block gives up its frame and leaves its cache), written, and
 // newEntry made a forwarding object for entry.
@@ -572,7 +572,7 @@ EntryReplaceCommon(RefArg entry, RefArg newEntry, int withModTime)
 }
 
 
-// ROM 0x002b4ad8 EntryReplace__FRC6RefVarT1
+// ROM 0x002da860 EntryReplace__FRC6RefVarT1
 Ref
 EntryReplace(RefArg entry, RefArg newEntry)
 {
@@ -580,7 +580,7 @@ EntryReplace(RefArg entry, RefArg newEntry)
 }
 
 
-// ROM 0x002b4ae0 EntryReplaceWithModTime__FRC6RefVarT1
+// ROM 0x002da868 EntryReplaceWithModTime__FRC6RefVarT1
 Ref
 EntryReplaceWithModTime(RefArg entry, RefArg newEntry)
 {
@@ -588,7 +588,7 @@ EntryReplaceWithModTime(RefArg entry, RefArg newEntry)
 }
 
 
-// ROM 0x002b4ae8 EntryUndoChanges__FRC6RefVar
+// ROM 0x002da870 EntryUndoChanges__FRC6RefVar
 // The frame in memory dropped: the store's copy stands.
 Ref
 EntryUndoChanges(RefArg entry)
@@ -603,7 +603,7 @@ EntryUndoChanges(RefArg entry)
 }
 
 
-// ROM 0x002b4b5c EntryCopy__FRC6RefVarT1
+// ROM 0x002da8e4 EntryCopy__FRC6RefVarT1
 // A copy of the entry added to soup.
 Ref
 EntryCopy(RefArg entry, RefArg soup)
@@ -617,7 +617,7 @@ EntryCopy(RefArg entry, RefArg soup)
 }
 
 
-// ROM 0x002b4be0 EntryMove__FRC6RefVarT1
+// ROM 0x002da968 EntryMove__FRC6RefVarT1
 // The entry added to soup and removed from its own; the block becomes a
 // forwarder to the new entry.
 void
@@ -651,7 +651,7 @@ EntryMove(RefArg entry, RefArg soup)
 }
 
 
-// ROM 0x002b4de4 EntryDirty1__FP6ObjectP14EntryDirtyLink
+// ROM 0x002dab6c EntryDirty1__FP6ObjectP14EntryDirtyLink
 // Whether the object or any object it holds (not one already on the
 // chain of objects being looked at) is dirty.
 struct EntryDirtyLink
@@ -683,7 +683,7 @@ EntryDirty1(ObjHeader* o, EntryDirtyLink* chain)
 }
 
 
-// ROM 0x002b4e9c EntryDirty__Fl
+// ROM 0x002dac24 EntryDirty__Fl
 // Whether the entry frame in memory has been written to.
 Boolean
 EntryDirty(Ref entry)
@@ -696,7 +696,7 @@ EntryDirty(Ref entry)
 }
 
 
-// ROM 0x002b4efc EntryIsResident__Fl
+// ROM 0x002dac84 EntryIsResident__Fl
 Boolean
 EntryIsResident(Ref entry)
 {
@@ -705,7 +705,7 @@ EntryIsResident(Ref entry)
 }
 
 
-// ROM 0x002b4f4c EntryValid__FRC6RefVar
+// ROM 0x002dacd4 EntryValid__FRC6RefVar
 // Whether the entry's store is still here (a package store counts).
 Boolean
 EntryValid(RefArg entry)
@@ -730,7 +730,7 @@ EntryValid(RefArg entry)
 }
 
 
-// ROM 0x002b502c GetEntry__FRC6RefVarUl
+// ROM 0x002dadb4 GetEntry__FRC6RefVarUl
 // The soup's entry for store object id: from its cache, else a new fault
 // block put there.
 Ref
@@ -748,7 +748,7 @@ GetEntry(RefArg soup, PSSId id)
 }
 
 
-// ROM 0x002b5168 CheckProxyEntry__FRC6RefVar
+// ROM 0x002daef0 CheckProxyEntry__FRC6RefVar
 void
 CheckProxyEntry(RefArg entry)
 {
@@ -758,7 +758,7 @@ CheckProxyEntry(RefArg entry)
 }
 
 
-// ROM 0x002b51d0 IsProxyEntry__FRC6RefVar
+// ROM 0x002daf58 IsProxyEntry__FRC6RefVar
 Boolean
 IsProxyEntry(RefArg entry)
 {
@@ -766,7 +766,7 @@ IsProxyEntry(RefArg entry)
 }
 
 
-// ROM 0x002b51fc EntryCachedObject__FRC6RefVar
+// ROM 0x002daf84 EntryCachedObject__FRC6RefVar
 Ref
 EntryCachedObject(RefArg entry)
 {
@@ -775,7 +775,7 @@ EntryCachedObject(RefArg entry)
 }
 
 
-// ROM 0x002b5224 EntrySetCachedObject__FRC6RefVarT1
+// ROM 0x002dafac EntrySetCachedObject__FRC6RefVarT1
 void
 EntrySetCachedObject(RefArg entry, RefArg object)
 {
@@ -784,7 +784,7 @@ EntrySetCachedObject(RefArg entry, RefArg object)
 }
 
 
-// ROM 0x002b5258 EntryHandler__FRC6RefVar
+// ROM 0x002dafe0 EntryHandler__FRC6RefVar
 Ref
 EntryHandler(RefArg entry)
 {
@@ -793,7 +793,7 @@ EntryHandler(RefArg entry)
 }
 
 
-// ROM 0x002b5280 EntrySetHandler__FRC6RefVarT1
+// ROM 0x002db008 EntrySetHandler__FRC6RefVarT1
 void
 EntrySetHandler(RefArg entry, RefArg handler)
 {
@@ -802,7 +802,7 @@ EntrySetHandler(RefArg entry, RefArg handler)
 }
 
 
-// ROM 0x002b543c ForwardEntryMessage__FRC6RefVarT1
+// ROM 0x002db1c4 ForwardEntryMessage__FRC6RefVarT1
 // The message sent to the entry's handler with the entry as argument.
 Ref
 ForwardEntryMessage(RefArg entry, RefArg message)
@@ -814,7 +814,7 @@ ForwardEntryMessage(RefArg entry, RefArg message)
 }
 
 
-// ROM 0x002b54cc ForwardEntryMessage__FRC6RefVarN21
+// ROM 0x002db254 ForwardEntryMessage__FRC6RefVarN21
 Ref
 ForwardEntryMessage(RefArg entry, RefArg message, RefArg arg)
 {
@@ -826,7 +826,7 @@ ForwardEntryMessage(RefArg entry, RefArg message, RefArg arg)
 }
 
 
-// ROM 0x002b557c IsSoupEntry__FRC6RefVar
+// ROM 0x002db304 IsSoupEntry__FRC6RefVar
 Boolean
 IsSoupEntry(RefArg object)
 {
@@ -834,7 +834,7 @@ IsSoupEntry(RefArg object)
 }
 
 
-// ROM 0x002b5588 EntrySoup__FRC6RefVar
+// ROM 0x002db310 EntrySoup__FRC6RefVar
 Ref
 EntrySoup(RefArg entry)
 {
@@ -850,7 +850,7 @@ EntrySoup(RefArg entry)
 	Read from the store object's header (StoreObject.h).
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ba8c4 GetLargeObjectSize__FP13TStoreWrapperUllPv
+// ROM 0x002e064c GetLargeObjectSize__FP13TStoreWrapperUllPv
 // NOT YET RECONSTRUCTED: StorageSizeOfLargeObject.
 static Boolean
 GetLargeObjectSize(TStoreWrapper* /*wrapper*/, PSSId /*id*/, long /*arg*/, void* /*size*/)
@@ -869,7 +869,7 @@ ReadEntryHeader(TStoreWrapper* wrapper, PSSId id, StoreObjectHeader* header)
 }
 
 
-// ROM 0x002ba8f0 EntrySize__FUlP13TStoreWrapperUc
+// ROM 0x002e0678 EntrySize__FUlP13TStoreWrapperUc
 // The store object's size with its text object's (and its large
 // binaries' when asked).
 long
@@ -894,7 +894,7 @@ EntrySize(PSSId id, TStoreWrapper* wrapper, Boolean withLargeBinaries)
 }
 
 
-// ROM 0x002baa2c EntrySize__FRC6RefVar
+// ROM 0x002e07b4 EntrySize__FRC6RefVar
 long
 EntrySize(RefArg entry)
 {
@@ -908,7 +908,7 @@ EntrySize(RefArg entry)
 }
 
 
-// ROM 0x002baad0 EntrySizeWithoutVBOs__FRC6RefVar
+// ROM 0x002e0858 EntrySizeWithoutVBOs__FRC6RefVar
 long
 EntrySizeWithoutVBOs(RefArg entry)
 {
@@ -922,7 +922,7 @@ EntrySizeWithoutVBOs(RefArg entry)
 }
 
 
-// ROM 0x002bab74 EntryTextSize__FRC6RefVar
+// ROM 0x002e08fc EntryTextSize__FRC6RefVar
 // The size of the entry's (compressed) text object.
 long
 EntryTextSize(RefArg entry)
@@ -945,7 +945,7 @@ EntryTextSize(RefArg entry)
 }
 
 
-// ROM 0x002bac68 EntryUniqueID__FRC6RefVar
+// ROM 0x002e09f0 EntryUniqueID__FRC6RefVar
 // The _uniqueID as the store object's header has it (no need to read the
 // frame).
 long
@@ -965,7 +965,7 @@ EntryUniqueID(RefArg entry)
 }
 
 
-// ROM 0x002bad30 EntryModTime__FRC6RefVar
+// ROM 0x002e0ab8 EntryModTime__FRC6RefVar
 long
 EntryModTime(RefArg entry)
 {
@@ -987,7 +987,7 @@ EntryModTime(RefArg entry)
 	E p h e m e r a l s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002b5d1c StoreWritable__FP6TStore
+// ROM 0x002dbaa4 StoreWritable__FP6TStore
 Boolean
 StoreWritable(TStore* store)
 {
@@ -999,7 +999,7 @@ StoreWritable(TStore* store)
 }
 
 
-// ROM 0x002b5c88 CanCreateLargeObjectsOnStore__FP6TStore
+// ROM 0x002dba10 CanCreateLargeObjectsOnStore__FP6TStore
 // The store's implementation has the 'LOBJ' capability.
 Boolean
 CanCreateLargeObjectsOnStore(TStore* store)
@@ -1009,7 +1009,7 @@ CanCreateLargeObjectsOnStore(TStore* store)
 }
 
 
-// ROM 0x002b5600 SetupEphemeralTracker__FRC6RefVarUl
+// ROM 0x002db388 SetupEphemeralTracker__FRC6RefVarUl
 // The store's ephemeral (uncommitted large object) tracker: NOT YET
 // RECONSTRUCTED (TEphemeralTracker) - a store without the large-object
 // capability has none, which is what the ROM answers too.

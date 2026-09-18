@@ -12,7 +12,7 @@
 				expects a reply is replied to with what the handler set (or
 				the event itself) unless the handler deferred the reply.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Layout of TAppWorld (0x70 bytes): the TForkWorld (0x30), fRegisteredName
 	+0x30, fMainState +0x34, fCurrentState +0x38, fTimerComparer +0x3c,
 	fEventComparer +0x48, fHandlerComparer +0x54, fHandlers +0x60, fTimers
@@ -50,7 +50,7 @@ NameToString(ULong name, char* out)
 	TAppWorldState
 ------------------------------------------------------------------------------- */
 
-// ROM 0x000314a4 __ct__14TAppWorldStateFv
+// ROM 0x000313f4 __ct__14TAppWorldStateFv
 TAppWorldState::TAppWorldState()
 {
 	fToken = TUMsgToken();
@@ -68,7 +68,7 @@ TAppWorldState::TAppWorldState()
 }
 
 
-// ROM 0x00031720 __dt__14TAppWorldStateFv
+// ROM 0x00031670 __dt__14TAppWorldStateFv
 // DEVIATION: the ROM deletes the port whether the state made it (Init())
 // or was lent it (Init(TUPort*), as a nested loop is lent the world's) -
 // a nested event loop ends by freeing the world's port object.  Only a port
@@ -80,7 +80,7 @@ TAppWorldState::~TAppWorldState()
 }
 
 
-// ROM 0x00031b90 Init__14TAppWorldStateFv
+// ROM 0x00031ae0 Init__14TAppWorldStateFv
 // A port of its own.
 long
 TAppWorldState::Init()
@@ -94,7 +94,7 @@ TAppWorldState::Init()
 }
 
 
-// ROM 0x00031bcc Init__14TAppWorldStateFP6TUPort
+// ROM 0x00031b1c Init__14TAppWorldStateFP6TUPort
 long
 TAppWorldState::Init(TUPort* port)
 {
@@ -103,7 +103,7 @@ TAppWorldState::Init(TUPort* port)
 }
 
 
-// ROM 0x00031bd8 Init__14TAppWorldStateFUl
+// ROM 0x00031b28 Init__14TAppWorldStateFUl
 long
 TAppWorldState::Init(TObjectId portId)
 {
@@ -115,7 +115,7 @@ TAppWorldState::Init(TObjectId portId)
 }
 
 
-// ROM 0x00030edc NestedEventLoop__14TAppWorldStateFv
+// ROM 0x00030e2c NestedEventLoop__14TAppWorldStateFv
 // Runs the world's loop on this state until it is terminated; an exception
 // out of a handler ends it too.
 void
@@ -133,7 +133,7 @@ TAppWorldState::NestedEventLoop()
 }
 
 
-// ROM 0x00030f30 TerminateNestedEventLoop__14TAppWorldStateFv
+// ROM 0x00030e80 TerminateNestedEventLoop__14TAppWorldStateFv
 void
 TAppWorldState::TerminateNestedEventLoop()
 {
@@ -145,7 +145,7 @@ TAppWorldState::TerminateNestedEventLoop()
 	TAppWorld
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00030f3c __ct__9TAppWorldFv
+// ROM 0x00030e8c __ct__9TAppWorldFv
 TAppWorld::TAppWorld()
 {
 	fRegisteredName = 0;
@@ -158,12 +158,12 @@ TAppWorld::TAppWorld()
 }
 
 
-// ROM 0x00030fc4 __dt__9TAppWorldFv
+// ROM 0x00030f14 __dt__9TAppWorldFv
 TAppWorld::~TAppWorld()
 { }
 
 
-// ROM 0x00031444 GetSizeOf__9TAppWorldFv
+// ROM 0x00031394 GetSizeOf__9TAppWorldFv
 ULong
 TAppWorld::GetSizeOf()
 {
@@ -171,7 +171,7 @@ TAppWorld::GetSizeOf()
 }
 
 
-// ROM 0x00031004 Init__9TAppWorldFUlUcT1
+// ROM 0x00030f54 Init__9TAppWorldFUlUcT1
 // Starts the world's task; the name is registered with the name server
 // (type "TUPort", the world's port) if asked.
 long
@@ -185,7 +185,7 @@ TAppWorld::Init(ULong name, Boolean registerName, ULong stackSize)
 }
 
 
-// ROM 0x00031014 Init__9TAppWorldFUlUcN31
+// ROM 0x00030f64 Init__9TAppWorldFUlUcN31
 long
 TAppWorld::Init(ULong name, Boolean registerName, ULong stackSize, ULong priority, TObjectId environment)
 {
@@ -195,7 +195,7 @@ TAppWorld::Init(ULong name, Boolean registerName, ULong stackSize, ULong priorit
 }
 
 
-// ROM 0x00031048 MainConstructor__9TAppWorldFv
+// ROM 0x00030f98 MainConstructor__9TAppWorldFv
 // In the new task: the main state with a port of its own, the name
 // registration, the handler list and the timer queue.
 long
@@ -232,7 +232,7 @@ TAppWorld::MainConstructor()
 }
 
 
-// ROM 0x00031154 MainDestructor__9TAppWorldFv
+// ROM 0x000310a4 MainDestructor__9TAppWorldFv
 // The handlers (the head of each chain), the name, the state, the list
 // and the timers go.
 void
@@ -264,7 +264,7 @@ TAppWorld::MainDestructor()
 }
 
 
-// ROM 0x00031260 ForkInit__9TAppWorldFP10TForkWorld
+// ROM 0x000311b0 ForkInit__9TAppWorldFP10TForkWorld
 // A fork of an app world shares its parent's name, comparers, handlers and
 // timers; it gets a state of its own in ForkConstructor.
 long
@@ -288,7 +288,7 @@ TAppWorld::ForkInit(TForkWorld* parent)
 }
 
 
-// ROM 0x000312e8 ForkConstructor__9TAppWorldFP10TForkWorld
+// ROM 0x00031238 ForkConstructor__9TAppWorldFP10TForkWorld
 // In the fork's task: a state on the parent's port; the parent's loop is
 // told to end (the fork takes over receiving).
 long
@@ -310,7 +310,7 @@ TAppWorld::ForkConstructor(TForkWorld* parent)
 }
 
 
-// ROM 0x00031400 ForkDestructor__9TAppWorldFv
+// ROM 0x00031350 ForkDestructor__9TAppWorldFv
 // (the port is the parent's: forgotten, not deleted)
 void
 TAppWorld::ForkDestructor()
@@ -323,7 +323,7 @@ TAppWorld::ForkDestructor()
 }
 
 
-// ROM 0x0003143c TheMain__9TAppWorldFv
+// ROM 0x0003138c TheMain__9TAppWorldFv
 void
 TAppWorld::TheMain()
 {
@@ -331,13 +331,13 @@ TAppWorld::TheMain()
 }
 
 
-// ROM 0x0003144c InterruptHandler__9TAppWorldFPUlP7TAEvent
+// ROM 0x0003139c InterruptHandler__9TAppWorldFPUlP7TAEvent
 void
 TAppWorld::InterruptHandler(ULong* /*size*/, TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00031450 GetError__9TAppWorldFv
+// ROM 0x000313a0 GetError__9TAppWorldFv
 long
 TAppWorld::GetError()
 {
@@ -345,7 +345,7 @@ TAppWorld::GetError()
 }
 
 
-// ROM 0x0003145c SetFilter__9TAppWorldFUl
+// ROM 0x000313ac SetFilter__9TAppWorldFUl
 void
 TAppWorld::SetFilter(ULong bits)
 {
@@ -353,7 +353,7 @@ TAppWorld::SetFilter(ULong bits)
 }
 
 
-// ROM 0x00031470 ClearFilter__9TAppWorldFUl
+// ROM 0x000313c0 ClearFilter__9TAppWorldFUl
 void
 TAppWorld::ClearFilter(ULong bits)
 {
@@ -361,7 +361,7 @@ TAppWorld::ClearFilter(ULong bits)
 }
 
 
-// ROM 0x00031484 TokenOnly__9TAppWorldFv
+// ROM 0x000313d4 TokenOnly__9TAppWorldFv
 Boolean
 TAppWorld::TokenOnly()
 {
@@ -369,7 +369,7 @@ TAppWorld::TokenOnly()
 }
 
 
-// ROM 0x00031490 SetTokenOnly__9TAppWorldFUc
+// ROM 0x000313e0 SetTokenOnly__9TAppWorldFUc
 void
 TAppWorld::SetTokenOnly(Boolean tokenOnly)
 {
@@ -377,7 +377,7 @@ TAppWorld::SetTokenOnly(Boolean tokenOnly)
 }
 
 
-// ROM 0x0003149c GetMyPort__9TAppWorldFv
+// ROM 0x000313ec GetMyPort__9TAppWorldFv
 TUPort*
 TAppWorld::GetMyPort()
 {
@@ -385,7 +385,7 @@ TAppWorld::GetMyPort()
 }
 
 
-// ROM 0x00031588 AEInstallHandler__9TAppWorldFP14TAEventHandler
+// ROM 0x000314d8 AEInstallHandler__9TAppWorldFP14TAEventHandler
 // The handler joins the chain for its (class, id) - at its head - or
 // starts one.
 long
@@ -405,7 +405,7 @@ TAppWorld::AEInstallHandler(TAEventHandler* handler)
 }
 
 
-// ROM 0x00031510 AERemoveHandler__9TAppWorldFP14TAEventHandler
+// ROM 0x00031460 AERemoveHandler__9TAppWorldFP14TAEventHandler
 long
 TAppWorld::AERemoveHandler(TAEventHandler* handler)
 {
@@ -424,19 +424,19 @@ TAppWorld::AERemoveHandler(TAEventHandler* handler)
 }
 
 
-// ROM 0x00030ed8 AEInstallIdleHandler__9TAppWorldFP14TAEventHandler
+// ROM 0x00030e28 AEInstallIdleHandler__9TAppWorldFP14TAEventHandler
 void
 TAppWorld::AEInstallIdleHandler(TAEventHandler* /*handler*/)
 { }
 
 
-// ROM 0x00030ed4 AERemoveIdleHandler__9TAppWorldFP14TAEventHandler
+// ROM 0x00030e24 AERemoveIdleHandler__9TAppWorldFP14TAEventHandler
 void
 TAppWorld::AERemoveIdleHandler(TAEventHandler* /*handler*/)
 { }
 
 
-// ROM 0x000317d8 AEFindHandler__9TAppWorldFUlT1
+// ROM 0x00031728 AEFindHandler__9TAppWorldFUlT1
 // The head of the chain for the (class, id), or nil.
 TAEventHandler*
 TAppWorld::AEFindHandler(AEEventID id, AEEventClass eventClass)
@@ -450,7 +450,7 @@ TAppWorld::AEFindHandler(AEEventID id, AEEventClass eventClass)
 }
 
 
-// ROM 0x000315f8 AEGetCollectedEvent__9TAppWorldFUlP10TUMsgTokenPUlPP7TAEventT3
+// ROM 0x00031548 AEGetCollectedEvent__9TAppWorldFUlP10TUMsgTokenPUlPP7TAEventT3
 // A collected message: for one of our asynchronous sends that completed,
 // the reply memory's buffer is the event and the message's refcon (the
 // handler that sent it) comes back; for a collected receive, the message is
@@ -475,7 +475,7 @@ TAppWorld::AEGetCollectedEvent(ULong msgType, TUMsgToken* token, ULong* size, TA
 }
 
 
-// ROM 0x000316b0 AEDeferReply__9TAppWorldFv
+// ROM 0x00031600 AEDeferReply__9TAppWorldFv
 void
 TAppWorld::AEDeferReply()
 {
@@ -483,7 +483,7 @@ TAppWorld::AEDeferReply()
 }
 
 
-// ROM 0x000316c0 AESetReply__9TAppWorldFUl
+// ROM 0x00031610 AESetReply__9TAppWorldFUl
 void
 TAppWorld::AESetReply(ULong size)
 {
@@ -491,7 +491,7 @@ TAppWorld::AESetReply(ULong size)
 }
 
 
-// ROM 0x000316cc AESetReply__9TAppWorldFUlP7TAEvent
+// ROM 0x0003161c AESetReply__9TAppWorldFUlP7TAEvent
 void
 TAppWorld::AESetReply(ULong size, TAEvent* event)
 {
@@ -500,7 +500,7 @@ TAppWorld::AESetReply(ULong size, TAEvent* event)
 }
 
 
-// ROM 0x000316e0 AESetReply__9TAppWorldFP10TUMsgToken
+// ROM 0x00031630 AESetReply__9TAppWorldFP10TUMsgToken
 void
 TAppWorld::AESetReply(TUMsgToken* token)
 {
@@ -508,7 +508,7 @@ TAppWorld::AESetReply(TUMsgToken* token)
 }
 
 
-// ROM 0x000316ec AESetReply__9TAppWorldFP10TUMsgTokenUlP7TAEvent
+// ROM 0x0003163c AESetReply__9TAppWorldFP10TUMsgTokenUlP7TAEvent
 void
 TAppWorld::AESetReply(TUMsgToken* token, ULong size, TAEvent* event)
 {
@@ -518,7 +518,7 @@ TAppWorld::AESetReply(TUMsgToken* token, ULong size, TAEvent* event)
 }
 
 
-// ROM 0x00031708 AEGetMsgToken__9TAppWorldFv
+// ROM 0x00031658 AEGetMsgToken__9TAppWorldFv
 TUMsgToken*
 TAppWorld::AEGetMsgToken()
 {
@@ -526,7 +526,7 @@ TAppWorld::AEGetMsgToken()
 }
 
 
-// ROM 0x00031714 AEGetMsgType__9TAppWorldFv
+// ROM 0x00031664 AEGetMsgType__9TAppWorldFv
 ULong
 TAppWorld::AEGetMsgType()
 {
@@ -534,7 +534,7 @@ TAppWorld::AEGetMsgType()
 }
 
 
-// ROM 0x00031768 AEGetAEvent__9TAppWorldFv
+// ROM 0x000316b8 AEGetAEvent__9TAppWorldFv
 TAEvent*
 TAppWorld::AEGetAEvent()
 {
@@ -542,7 +542,7 @@ TAppWorld::AEGetAEvent()
 }
 
 
-// ROM 0x00031774 AEGetMsgSize__9TAppWorldFv
+// ROM 0x000316c4 AEGetMsgSize__9TAppWorldFv
 ULong
 TAppWorld::AEGetMsgSize()
 {
@@ -550,7 +550,7 @@ TAppWorld::AEGetMsgSize()
 }
 
 
-// ROM 0x00031780 AEReplyImmed__9TAppWorldFv
+// ROM 0x000316d0 AEReplyImmed__9TAppWorldFv
 long
 TAppWorld::AEReplyImmed()
 {
@@ -565,7 +565,7 @@ TAppWorld::AEReplyImmed()
 }
 
 
-// ROM 0x000317c8 AETerminateLoop__9TAppWorldFv
+// ROM 0x00031718 AETerminateLoop__9TAppWorldFv
 void
 TAppWorld::AETerminateLoop()
 {
@@ -573,7 +573,7 @@ TAppWorld::AETerminateLoop()
 }
 
 
-// ROM 0x00031820 AEDispatch__9TAppWorldFUlP10TUMsgTokenPUlP7TAEvent
+// ROM 0x00031770 AEDispatch__9TAppWorldFUlP10TUMsgTokenPUlP7TAEvent
 // Where a received message goes; the result is what the reply carries.
 long
 TAppWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* event)
@@ -619,7 +619,7 @@ TAppWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* ev
 }
 
 
-// ROM 0x000319ac AEventLoop__9TAppWorldFP14TAppWorldState
+// ROM 0x000318fc AEventLoop__9TAppWorldFP14TAppWorldState
 // The loop, on the given state, until AETerminateLoop: fire the timers,
 // receive (with the next timer as the timeout) into the event buffer,
 // dispatch what arrived (an event too large for the buffer is dispatched
@@ -658,14 +658,14 @@ TAppWorld::AEventLoop(TAppWorldState* state)
 }
 
 
-// ROM 0x00031af8 AEventLoop__9TAppWorldFP14TAppWorldStateP10TUMsgToken
+// ROM 0x00031a48 AEventLoop__9TAppWorldFP14TAppWorldStateP10TUMsgToken
 // (empty in the ROM)
 void
 TAppWorld::AEventLoop(TAppWorldState* /*state*/, TUMsgToken* /*token*/)
 { }
 
 
-// ROM 0x00031afc AEventLoop__9TAppWorldFv
+// ROM 0x00031a4c AEventLoop__9TAppWorldFv
 void
 TAppWorld::AEventLoop()
 {
@@ -673,7 +673,7 @@ TAppWorld::AEventLoop()
 }
 
 
-// ROM 0x00031b04 NestedEventLoop__9TAppWorldFv
+// ROM 0x00031a54 NestedEventLoop__9TAppWorldFv
 // A loop within a loop (a handler that must wait for something), on a
 // state of its own over the world's port; an exception out of it ends it.
 void

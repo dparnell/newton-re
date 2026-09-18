@@ -3,7 +3,7 @@
 
 	Contains:	QuickDraw's ports, pens, patterns and pixel maps.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM's standard patterns are PixelMaps in ROM reached through "fake
 	handles" (a master pointer in ROM); the host makes real handles over
 	the same data when InitGraf runs.  The current port is one host global
@@ -15,20 +15,20 @@
 #include <string.h>
 #include <stdint.h>
 
-// ROM 0x0c104e50 qdGlobals
+// ROM 0x0c107d88 qdGlobals
 QDGlobals		qdGlobals;
-// ROM 0x0c104e3c stdPatterns
+// ROM 0x0c107d74 stdPatterns
 PatternHandle	stdPatterns[5];
-// ROM 0x0c1027b4 wideHandle (a fake handle to the ROM's region at 0x00377a50)
+// ROM 0x0c1056f0 wideHandle (a fake handle to the ROM's region at 0x00377a50)
 RgnHandle		wideHandle;
-// ROM 0x0c103a98 gGrafPort
+// ROM 0x0c1067cc gGrafPort
 GrafPort		gGrafPort;
-// ROM 0x0c102504 gQDRunning
+// ROM 0x0c105410 gQDRunning
 Boolean			gQDRunning = false;
 
 static GrafPort*	gCurrentPort = nil;		// the task's NewtGlobals + 0x0c in the ROM
 
-// ROM 0x00376eb0 whitePatternData .. 0x00376f50 blackPatternData: the
+// ROM 0x00380b04 whitePatternData .. 0x00376f50 blackPatternData: the
 // eight rows of each standard pattern
 static const unsigned char kStdPatternData[5][8] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },		// white
@@ -46,7 +46,7 @@ const long	kPixelMapSize = 0x1c;
 	P i x e l   m a p s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0028a538 GetPixelMapBits__FP8PixelMap
+// ROM 0x002af0e0 GetPixelMapBits__FP8PixelMap
 // The pixels: baseAddr as a handle, a pointer or an offset from the map.
 Ptr
 GetPixelMapBits(const PixelMap* pm)
@@ -62,7 +62,7 @@ GetPixelMapBits(const PixelMap* pm)
 }
 
 
-// ROM 0x0028a574 GetPixelMapSize__FP8PixelMap
+// ROM 0x002af11c GetPixelMapSize__FP8PixelMap
 // The map's size: without the gray table before version 1.
 long
 GetPixelMapSize(const PixelMap* pm)
@@ -71,7 +71,7 @@ GetPixelMapSize(const PixelMap* pm)
 }
 
 
-// ROM 0x0028a588 PtInPixelMap__FP8PixelMaplT2
+// ROM 0x002af130 PtInPixelMap__FP8PixelMaplT2
 // Whether the pixel x across and y down from the map's origin is set (not
 // white); false outside the map.
 Boolean
@@ -119,7 +119,7 @@ SetPixel(PixelMap* pm, long x, long y, long value)
 	P a t t e r n s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00302de4 MakeSimplePattern__FlN71
+// ROM 0x003280e0 MakeSimplePattern__FlN71
 // A one-bit 8x8 pattern from its rows: a handle holding the PixelMap
 // (its pixels an offset: right after it) and the eight bytes.
 PatternHandle
@@ -130,7 +130,7 @@ MakeSimplePattern(long row0, long row1, long row2, long row3, long row4, long ro
 }
 
 
-// ROM 0x00302ea8 MakeSimplePattern__FPc
+// ROM 0x003281a4 MakeSimplePattern__FPc
 PatternHandle
 MakeSimplePattern(const char* rows)
 {
@@ -151,7 +151,7 @@ MakeSimplePattern(const char* rows)
 }
 
 
-// ROM 0x00303a68 CopyPattern__FPP8PixelMap
+// ROM 0x00328d64 CopyPattern__FPP8PixelMap
 // A copy of any pattern with its pixels inside the handle.
 static PatternHandle
 CopyPattern(PatternHandle pattern)
@@ -172,7 +172,7 @@ CopyPattern(PatternHandle pattern)
 }
 
 
-// ROM 0x00303b00 DisposePattern__FPP8PixelMap
+// ROM 0x00328dfc DisposePattern__FPP8PixelMap
 // A pattern freed with its pixels, unless it is a standard one.
 void
 DisposePattern(PatternHandle pattern)
@@ -195,7 +195,7 @@ DisposePattern(PatternHandle pattern)
 }
 
 
-// ROM 0x00304034 GetStdPattern__FUc
+// ROM 0x00329330 GetStdPattern__FUc
 PatternHandle
 GetStdPattern(GetPatSelector which)
 {
@@ -205,7 +205,7 @@ GetStdPattern(GetPatSelector which)
 }
 
 
-// ROM 0x00302dcc GetFgPattern__Fv
+// ROM 0x003280c8 GetFgPattern__Fv
 PatternHandle
 GetFgPattern(void)
 {
@@ -213,7 +213,7 @@ GetFgPattern(void)
 }
 
 
-// ROM 0x00302db4 GetBgPattern__Fv
+// ROM 0x003280b0 GetBgPattern__Fv
 PatternHandle
 GetBgPattern(void)
 {
@@ -221,7 +221,7 @@ GetBgPattern(void)
 }
 
 
-// ROM 0x00303a4c SetFgPattern__FPP8PixelMap
+// ROM 0x00328d48 SetFgPattern__FPP8PixelMap
 void
 SetFgPattern(PatternHandle pattern)
 {
@@ -229,7 +229,7 @@ SetFgPattern(PatternHandle pattern)
 }
 
 
-// ROM 0x00303a30 SetBgPattern__FPP8PixelMap
+// ROM 0x00328d2c SetBgPattern__FPP8PixelMap
 void
 SetBgPattern(PatternHandle pattern)
 {
@@ -261,7 +261,7 @@ PatternPixel(PatternHandle pattern, long x, long y, long depth)
 	T h e   l i b r a r y
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002be838 SetStdProcs__FP7QDProcs
+// ROM 0x002e45b8 SetStdProcs__FP7QDProcs
 // NOT YET RECONSTRUCTED: the arc, bits, curve, line, oval, paths, picture,
 // polygon, round-rect and text procs; the rect and region ones are Draw.cpp's.
 void	StdRect(GrafVerb verb, Rect* r);
@@ -276,8 +276,8 @@ SetStdProcs(QDProcs* procs)
 }
 
 
-// ROM 0x002be600 InitGraf__Fv
-// ROM 0x003135e0 GetRandSeed__Fv
+// ROM 0x002e4388 InitGraf__Fv
+// ROM 0x0033f528 GetRandSeed__Fv
 long
 GetRandSeed(void)
 {
@@ -285,7 +285,7 @@ GetRandSeed(void)
 }
 
 
-// ROM 0x003135f0 SetRandSeed__Fl
+// ROM 0x0033f538 SetRandSeed__Fl
 void
 SetRandSeed(long seed)
 {
@@ -293,7 +293,7 @@ SetRandSeed(long seed)
 }
 
 
-// ROM 0x00313540 Random__Fv
+// ROM 0x0033f488 Random__Fv
 // The Macintosh's generator: the seed multiplied by 16807 modulo 2^31 - 1
 // (in two halves), the low halfword answered signed (0x8000 as 0).
 long
@@ -313,7 +313,7 @@ Random(void)
 }
 
 
-// ROM 0x0025a67c Rand__Fl
+// ROM 0x0025c5b4 Rand__Fl
 // A random number from 0 to n - 1.
 long
 Rand(long n)
@@ -349,7 +349,7 @@ InitGraf(void)
 }
 
 
-// ROM 0x002be868 GetCurrentPort__Fv
+// ROM 0x002e45e8 GetCurrentPort__Fv
 // The task's port, or the default before the task has globals.
 GrafPort*
 GetCurrentPort(void)
@@ -358,7 +358,7 @@ GetCurrentPort(void)
 }
 
 
-// ROM 0x002bea14 SetPort__FP8GrafPort
+// ROM 0x002e4794 SetPort__FP8GrafPort
 void
 SetPort(GrafPort* port)
 {
@@ -366,7 +366,7 @@ SetPort(GrafPort* port)
 }
 
 
-// ROM 0x002bea48 GetPort__FPP8GrafPort
+// ROM 0x002e47c8 GetPort__FPP8GrafPort
 void
 GetPort(GrafPort** port)
 {
@@ -397,7 +397,7 @@ SetUpPort(GrafPort* port)
 }
 
 
-// ROM 0x002be72c OpenPort__FP8GrafPort
+// ROM 0x002e44ac OpenPort__FP8GrafPort
 void
 OpenPort(GrafPort* port)
 {
@@ -407,7 +407,7 @@ OpenPort(GrafPort* port)
 }
 
 
-// ROM 0x002be88c InitPort__FP8GrafPort
+// ROM 0x002e460c InitPort__FP8GrafPort
 void
 InitPort(GrafPort* port)
 {
@@ -415,7 +415,7 @@ InitPort(GrafPort* port)
 }
 
 
-// ROM 0x002be934 InitPortRgns__FP8GrafPort
+// ROM 0x002e46b4 InitPortRgns__FP8GrafPort
 // The visible region the screen's bounds, the clip region wide open.
 void
 InitPortRgns(GrafPort* port)
@@ -425,7 +425,7 @@ InitPortRgns(GrafPort* port)
 }
 
 
-// ROM 0x002bea64 ClosePort__FP8GrafPort
+// ROM 0x002e47e4 ClosePort__FP8GrafPort
 // The port's regions and patterns freed.
 void
 ClosePort(GrafPort* port)
@@ -437,7 +437,7 @@ ClosePort(GrafPort* port)
 }
 
 
-// ROM 0x002bea98 SetPortBits__FP8PixelMap
+// ROM 0x002e4818 SetPortBits__FP8PixelMap
 void
 SetPortBits(const PixelMap* bits)
 {
@@ -445,7 +445,7 @@ SetPortBits(const PixelMap* bits)
 }
 
 
-// ROM 0x002be758 SetOrigin__FlT1
+// ROM 0x002e44d8 SetOrigin__FlT1
 // The port's coordinate system moved so that (h, v) is its top left:
 // the bits' bounds, the port rect and the visible region shift.
 void
@@ -462,7 +462,7 @@ SetOrigin(long h, long v)
 }
 
 
-// ROM 0x002be7cc SetClip__FPP6Region
+// ROM 0x002e454c SetClip__FPP6Region
 void
 SetClip(RgnHandle rgn)
 {
@@ -470,7 +470,7 @@ SetClip(RgnHandle rgn)
 }
 
 
-// ROM 0x002be7f0 GetClip__FPP6Region
+// ROM 0x002e4570 GetClip__FPP6Region
 void
 GetClip(RgnHandle rgn)
 {
@@ -478,7 +478,7 @@ GetClip(RgnHandle rgn)
 }
 
 
-// ROM 0x002be814 ClipRect__FP4Rect
+// ROM 0x002e4594 ClipRect__FP4Rect
 void
 ClipRect(const Rect* r)
 {
@@ -490,7 +490,7 @@ ClipRect(const Rect* r)
 	T h e   p e n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00304050 HidePen__Fv
+// ROM 0x00329660 HidePen__Fv
 void
 HidePen(void)
 {
@@ -498,7 +498,7 @@ HidePen(void)
 }
 
 
-// ROM 0x0030407c ShowPen__Fv
+// ROM 0x0032968c ShowPen__Fv
 void
 ShowPen(void)
 {
@@ -506,7 +506,7 @@ ShowPen(void)
 }
 
 
-// ROM 0x003040a8 GetPen__FP5Point
+// ROM 0x003296b8 GetPen__FP5Point
 void
 GetPen(Point* pt)
 {
@@ -514,7 +514,7 @@ GetPen(Point* pt)
 }
 
 
-// ROM 0x003040c8 GetPenState__FP8PenState
+// ROM 0x003296d8 GetPenState__FP8PenState
 void
 GetPenState(PenState* state)
 {
@@ -526,7 +526,7 @@ GetPenState(PenState* state)
 }
 
 
-// ROM 0x00304110 SetPenState__FP8PenState
+// ROM 0x00329720 SetPenState__FP8PenState
 void
 SetPenState(const PenState* state)
 {
@@ -538,7 +538,7 @@ SetPenState(const PenState* state)
 }
 
 
-// ROM 0x00304158 PenSize__FlT1
+// ROM 0x00329768 PenSize__FlT1
 void
 PenSize(long width, long height)
 {
@@ -548,7 +548,7 @@ PenSize(long width, long height)
 }
 
 
-// ROM 0x0030418c PenMode__Fl
+// ROM 0x0032979c PenMode__Fl
 void
 PenMode(long mode)
 {
@@ -556,7 +556,7 @@ PenMode(long mode)
 }
 
 
-// ROM 0x003041b0 PenNormal__Fv
+// ROM 0x003297c0 PenNormal__Fv
 // A one-pixel pen, copying, black.
 void
 PenNormal(void)
@@ -567,7 +567,7 @@ PenNormal(void)
 }
 
 
-// ROM 0x003041e4 MoveTo__FlT1
+// ROM 0x003297f4 MoveTo__FlT1
 void
 MoveTo(long h, long v)
 {
@@ -577,7 +577,7 @@ MoveTo(long h, long v)
 }
 
 
-// ROM 0x00304218 Move__FlT1
+// ROM 0x00329828 Move__FlT1
 void
 Move(long dh, long dv)
 {

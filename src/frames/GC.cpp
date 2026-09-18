@@ -7,7 +7,7 @@
 				declawing of refs into packages that have gone, and the
 				registration of GC roots and hooks.
 
-	Reconstructed from the MP2100 D ROM (0x002bd4f8-0x002be600); each
+	Reconstructed from the MP2x00 US ROM (0x002e3280-0x002e4388); each
 	function cites its origin.
 */
 
@@ -40,7 +40,7 @@ struct GCProcEntry
 	Marking
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002bd590 Mark__11TObjectHeapFl
+// ROM 0x002e3318 Mark__11TObjectHeapFl
 // Mark everything reachable from r without a stack (Deutsch-Schorr-Waite):
 // on the way down each object's slot being followed holds the ref to its
 // parent and its GC word the slot's index; on the way back up the slot is
@@ -97,7 +97,7 @@ TObjectHeap::Mark(Ref r)
 }
 
 
-// ROM 0x002bd6d8 CleanUpWeakChain__11TObjectHeapFv
+// ROM 0x002e3460 CleanUpWeakChain__11TObjectHeapFv
 // The slots of the weak arrays reached: a ref to an unmarked heap object is
 // replaced by NILREF; forwarding is followed to find the object (the ref
 // itself is updated later by SweepAndCompact).
@@ -127,7 +127,7 @@ TObjectHeap::CleanUpWeakChain(void)
 	Sweeping
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002bd78c UpdateRef__11TObjectHeapFl
+// ROM 0x002e3514 UpdateRef__11TObjectHeapFl
 // What a ref becomes after this GC: forwarding followed; NILREF for a heap
 // object that was not marked; the object's new address (its GC word) unless
 // it is locked.  While declawing, a ref in a registered range becomes
@@ -163,7 +163,7 @@ TObjectHeap::UpdateRef(Ref r)
 }
 
 
-// ROM 0x002bd868 SweepAndCompact__11TObjectHeapFv
+// ROM 0x002e35f0 SweepAndCompact__11TObjectHeapFv
 // Three passes over the heap.  The first assigns each marked movable object
 // its new address: objects slide down over the dead ones, first-fit into
 // the gaps left below locked objects (up to 32 remembered; a gap that
@@ -336,7 +336,7 @@ TObjectHeap::SweepAndCompact(void)
 	GC
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002bdd6c GC__11TObjectHeapFv
+// ROM 0x002e3af4 GC__11TObjectHeapFv
 // Mark from the RefHandle table, the roots and the DIY markers; the symbol
 // table root is marked last, after GCTWA has dropped the symbols nothing
 // else reached.  NOT YET RECONSTRUCTED: the frames function profiler's
@@ -405,7 +405,7 @@ TObjectHeap::GC(void)
 }
 
 
-// ROM 0x002f6ce0 GC__Fv
+// ROM 0x0031bfe4 GC__Fv
 void
 GC(void)
 {
@@ -421,7 +421,7 @@ GC(void)
 	reports as kNSErrBadPackageRef.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002be15c RegisterRangeForDeclawing__11TObjectHeapFUlT1
+// ROM 0x002e3ee4 RegisterRangeForDeclawing__11TObjectHeapFUlT1
 Boolean
 TObjectHeap::RegisterRangeForDeclawing(ULong start, ULong end)
 {
@@ -432,7 +432,7 @@ TObjectHeap::RegisterRangeForDeclawing(ULong start, ULong end)
 }
 
 
-// ROM 0x002be18c DeclawRefsInRegisteredRanges__11TObjectHeapFv
+// ROM 0x002e3f14 DeclawRefsInRegisteredRanges__11TObjectHeapFv
 void
 TObjectHeap::DeclawRefsInRegisteredRanges(void)
 {
@@ -473,7 +473,7 @@ TObjectHeap::DeclawRefsInRegisteredRanges(void)
 }
 
 
-// ROM 0x002bd4f8 RegisterRangeForDeclawing__FUlT1
+// ROM 0x002e3280 RegisterRangeForDeclawing__FUlT1
 Boolean
 RegisterRangeForDeclawing(ULong start, ULong end)
 {
@@ -481,7 +481,7 @@ RegisterRangeForDeclawing(ULong start, ULong end)
 }
 
 
-// ROM 0x002bd510 DeclawRefsInRegisteredRanges__Fv
+// ROM 0x002e3298 DeclawRefsInRegisteredRanges__Fv
 void
 DeclawRefsInRegisteredRanges(void)
 {
@@ -496,7 +496,7 @@ DeclawRefsInRegisteredRanges(void)
 	after each collection.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002be46c CommonGCRegister__FPPPcl
+// ROM 0x002e41f4 CommonGCRegister__FPPPcl
 // Room for one more entry, which is returned.
 Ptr
 CommonGCRegister(Handle* h, long entrySize)
@@ -516,7 +516,7 @@ CommonGCRegister(Handle* h, long entrySize)
 }
 
 
-// ROM 0x002be508 CommonGCUnregister__FPPclPv
+// ROM 0x002e4290 CommonGCUnregister__FPPclPv
 // Remove the entry whose first word is refCon.
 void
 CommonGCUnregister(Handle h, long entrySize, void* refCon)
@@ -539,7 +539,7 @@ CommonGCUnregister(Handle h, long entrySize, void* refCon)
 }
 
 
-// ROM 0x002be584 CommonGCClearHooks__FPPPc
+// ROM 0x002e430c CommonGCClearHooks__FPPPc
 void
 CommonGCClearHooks(Handle* h)
 {
@@ -550,7 +550,7 @@ CommonGCClearHooks(Handle* h)
 }
 
 
-// ROM 0x002be32c AddGCRoot__FRl
+// ROM 0x002e40b4 AddGCRoot__FRl
 void
 AddGCRoot(Ref& root)
 {
@@ -558,7 +558,7 @@ AddGCRoot(Ref& root)
 }
 
 
-// ROM 0x002be3d8 RemoveGCRoot__FRl
+// ROM 0x002e4160 RemoveGCRoot__FRl
 void
 RemoveGCRoot(Ref& root)
 {
@@ -566,7 +566,7 @@ RemoveGCRoot(Ref& root)
 }
 
 
-// ROM 0x002be5b0 DIYGCRegister__FPvPFPv_vT2
+// ROM 0x002e4338 DIYGCRegister__FPvPFPv_vT2
 void
 DIYGCRegister(void* refCon, DIYGCFuncPtr markFunction, DIYGCFuncPtr updateFunction)
 {
@@ -577,7 +577,7 @@ DIYGCRegister(void* refCon, DIYGCFuncPtr markFunction, DIYGCFuncPtr updateFuncti
 }
 
 
-// ROM 0x002be5e8 DIYGCUnregister__FPv
+// ROM 0x002e4370 DIYGCUnregister__FPv
 void
 DIYGCUnregister(void* refCon)
 {
@@ -585,7 +585,7 @@ DIYGCUnregister(void* refCon)
 }
 
 
-// ROM 0x002bd520 DIYGCMark__Fl
+// ROM 0x002e32a8 DIYGCMark__Fl
 // For a DIY marker: mark from a ref of its own.
 void
 DIYGCMark(Ref r)
@@ -594,7 +594,7 @@ DIYGCMark(Ref r)
 }
 
 
-// ROM 0x002bd534 DIYGCUpdate__Fl
+// ROM 0x002e32bc DIYGCUpdate__Fl
 // For a DIY updater: what a ref of its own becomes.
 Ref
 DIYGCUpdate(Ref r)
@@ -603,7 +603,7 @@ DIYGCUpdate(Ref r)
 }
 
 
-// ROM 0x002bd548 GCRegister__FPvPFPv_v
+// ROM 0x002e32d0 GCRegister__FPvPFPv_v
 void
 GCRegister(void* refCon, GCProcPtr proc)
 {
@@ -613,7 +613,7 @@ GCRegister(void* refCon, GCProcPtr proc)
 }
 
 
-// ROM 0x002bd578 GCUnregister__FPv
+// ROM 0x002e3300 GCUnregister__FPv
 void
 GCUnregister(void* refCon)
 {
@@ -622,7 +622,7 @@ GCUnregister(void* refCon)
 
 
 // The ROM's ClearGCRoots and ClearGCHooks (objects.h) are CommonGCClearHooks
-// on the lists; neither has a symbol of its own in the MP2100 D ROM.
+// on the lists; neither has a symbol of its own in the MP2x00 US ROM.
 void
 ClearGCRoots(void)
 {

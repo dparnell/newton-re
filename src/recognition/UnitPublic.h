@@ -23,7 +23,7 @@
 				at (gArbiter), and EndTime's controller stroke (the unit's
 				own end time is used).
 
-	Reconstructed from the MP2100 D ROM (0x0022a688-0x0022b600); each
+	Reconstructed from the MP2x00 US ROM (0x0022ced0-0x0022dd60); each
 	function cites its origin.
 */
 
@@ -39,39 +39,39 @@ class TWordList;
 class TUnitPublic
 {
 public:
-						TUnitPublic(TUnit* unit, ULong unused);	// ROM 0x0022a688 __ct__11TUnitPublicFP5TUnitUl
-						~TUnitPublic();							// ROM 0x0022a718 __dt__11TUnitPublicFv (the stroke face, the polygons, the word list and the word info gone)
+						TUnitPublic(TUnit* unit, ULong unused);	// ROM 0x0022ced0 __ct__11TUnitPublicFP5TUnitUl
+						~TUnitPublic();							// ROM 0x0022cf60 __dt__11TUnitPublicFv (the stroke face, the polygons, the word list and the word info gone)
 
-	ULong				GetType(void);							// ROM 0x0022af18 GetType__11TUnitPublicFv
-	ULong				StartTime(void);						// ROM 0x0022b1d4 StartTime__11TUnitPublicFv
-	ULong				EndTime(void);							// ROM 0x0022b308 EndTime__11TUnitPublicFv - the end of the last stroke it covers
-	ULong				ContextID(void);						// ROM 0x0022a944 ContextID__11TUnitPublicFv
-	void				Bounds(Rect* rect);						// ROM 0x0022b4c8 Bounds__11TUnitPublicFP5TRect
-	Boolean				IsTap(void);							// ROM 0x0022b424 IsTap__11TUnitPublicFv - the bounds under 6 pixels each way
-	TStrokePublic*		Stroke(void);							// ROM 0x0022b47c Stroke__11TUnitPublicFv - the first stroke's face, made once; nil for no stroke
-	TView*				FindView(ULong flags);					// ROM 0x0022b1e0 FindView__11TUnitPublicFUl - the view under the bounds' centre with the flags (then within 10 pixels), remembered
-	void				SetViewHit(TView* view, ULong flags);	// ROM 0x0022b340 SetViewHit__11TUnitPublicFP5TViewUl
-	ULong				InputMask(void);						// ROM 0x0022b34c InputMask__11TUnitPublicFv - the recognition bits of the view found with the required mask
-	ULong				RequiredMask(void);						// ROM 0x0022b3c8 RequiredMask__11TUnitPublicFv - the recogniser's enabled services (strokes take the shape and word bits along, gestures the clicks)
-	void				Invalidate(void);						// ROM 0x0022b59c Invalidate__11TUnitPublicFv - what the strokes inked given to the root view to redraw
-	void				Cleanup(void);							// ROM 0x0022b388 Cleanup__11TUnitPublicFv - a click's ink taken off
-	long				CaretType(void);						// ROM 0x0022a780 CaretType__11TUnitPublicFv - the first interpretation's label when it is a caret kind (2, 3, 5, 6), else 0
-	long				GestureAngle(void);						// ROM 0x0022a870 GestureAngle__11TUnitPublicFv - the first interpretation's angle, snapped to 0, 90, -90, 180 or 135 within 20 degrees (30 for label 5)
+	ULong				GetType(void);							// ROM 0x0022d678 GetType__11TUnitPublicFv
+	ULong				StartTime(void);						// ROM 0x0022d934 StartTime__11TUnitPublicFv
+	ULong				EndTime(void);							// ROM 0x0022da68 EndTime__11TUnitPublicFv - the end of the last stroke it covers
+	ULong				ContextID(void);						// ROM 0x0022d18c ContextID__11TUnitPublicFv
+	void				Bounds(Rect* rect);						// ROM 0x0022dc28 Bounds__11TUnitPublicFP5TRect
+	Boolean				IsTap(void);							// ROM 0x0022db84 IsTap__11TUnitPublicFv - the bounds under 6 pixels each way
+	TStrokePublic*		Stroke(void);							// ROM 0x0022dbdc Stroke__11TUnitPublicFv - the first stroke's face, made once; nil for no stroke
+	TView*				FindView(ULong flags);					// ROM 0x0022d940 FindView__11TUnitPublicFUl - the view under the bounds' centre with the flags (then within 10 pixels), remembered
+	void				SetViewHit(TView* view, ULong flags);	// ROM 0x0022daa0 SetViewHit__11TUnitPublicFP5TViewUl
+	ULong				InputMask(void);						// ROM 0x0022daac InputMask__11TUnitPublicFv - the recognition bits of the view found with the required mask
+	ULong				RequiredMask(void);						// ROM 0x0022db28 RequiredMask__11TUnitPublicFv - the recogniser's enabled services (strokes take the shape and word bits along, gestures the clicks)
+	void				Invalidate(void);						// ROM 0x0022dcfc Invalidate__11TUnitPublicFv - what the strokes inked given to the root view to redraw
+	void				Cleanup(void);							// ROM 0x0022dae8 Cleanup__11TUnitPublicFv - a click's ink taken off
+	long				CaretType(void);						// ROM 0x0022cfc8 CaretType__11TUnitPublicFv - the first interpretation's label when it is a caret kind (2, 3, 5, 6), else 0
+	long				GestureAngle(void);						// ROM 0x0022d0b8 GestureAngle__11TUnitPublicFv - the first interpretation's angle, snapped to 0, 90, -90, 180 or 135 within 20 degrees (30 for label 5)
 
 	// NOT YET RECONSTRUCTED
-	Point				GesturePoint(void);						// ROM 0x0022a7d4 GesturePoint__11TUnitPublicFl
-	Handle				RoughShape(void);						// ROM 0x0022a950 RoughShape__11TUnitPublicFv
-	Handle				CleanShape(void);						// ROM 0x0022a990 CleanShape__11TUnitPublicFv
-	ULong				ShapeType(void);						// ROM 0x0022a9ec ShapeType__11TUnitPublicFv
-	TWordList*			MakeWordList(Boolean, Boolean);			// ROM 0x0022aa20 MakeWordList__11TUnitPublicFUcT1
-	Ref					WordInfo(void);							// ROM 0x0022af24 WordInfo__11TUnitPublicFv
-	void				ExtractWords(void);						// ROM 0x0022af64 ExtractWords__11TUnitPublicFv
-	Handle				Word(void);								// ROM 0x0022af98 Word__11TUnitPublicFv
-	ULong				WordScore(void);						// ROM 0x0022afbc WordScore__11TUnitPublicFv
-	TWordList*			Words(void);							// ROM 0x0022afe0 Words__11TUnitPublicFv
-	void				SetWordBase(void);						// ROM 0x0022b004 SetWordBase__11TUnitPublicFv
-	Ref					Strokes(void);							// ROM 0x0022b110 Strokes__11TUnitPublicFv
-	Ref					TrainingData(void);						// ROM 0x0022b154 TrainingData__11TUnitPublicFv
+	Point				GesturePoint(void);						// ROM 0x0022d01c GesturePoint__11TUnitPublicFl
+	Handle				RoughShape(void);						// ROM 0x0022d198 RoughShape__11TUnitPublicFv
+	Handle				CleanShape(void);						// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv
+	ULong				ShapeType(void);						// ROM 0x0022d234 ShapeType__11TUnitPublicFv
+	TWordList*			MakeWordList(Boolean, Boolean);			// ROM 0x0022d268 MakeWordList__11TUnitPublicFUcT1
+	Ref					WordInfo(void);							// ROM 0x0022d684 WordInfo__11TUnitPublicFv
+	void				ExtractWords(void);						// ROM 0x0022d6c4 ExtractWords__11TUnitPublicFv
+	Handle				Word(void);								// ROM 0x0022d6f8 Word__11TUnitPublicFv
+	ULong				WordScore(void);						// ROM 0x0022d71c WordScore__11TUnitPublicFv
+	TWordList*			Words(void);							// ROM 0x0022d740 Words__11TUnitPublicFv
+	void				SetWordBase(void);						// ROM 0x0022d764 SetWordBase__11TUnitPublicFv
+	Ref					Strokes(void);							// ROM 0x0022d870 Strokes__11TUnitPublicFv
+	Ref					TrainingData(void);						// ROM 0x0022d8b4 TrainingData__11TUnitPublicFv
 
 	TUnit*				fUnit;			// +0x00
 	TWordList*			fWordList;		// +0x04
@@ -90,9 +90,9 @@ public:
 };
 
 // the NewtonScript side (UnitNatives.cpp)
-TUnitPublic*	UnitFromRef(RefArg unit);					// ROM 0x001ec718 UnitFromRef__FRC6RefVar - the unit a script argument stands for (a throw for nil)
-TStrokePublic*	StrokeFromRef(RefArg unit);					// ROM 0x001ec750 StrokeFromRef__FRC6RefVar - its stroke's face
-Ref		FSetInkerPenSize(RefArg rcvr, RefArg size);			// ROM 0x00141a04 FSetInkerPenSize__FRC6RefVarT1
+TUnitPublic*	UnitFromRef(RefArg unit);					// ROM 0x001ea300 UnitFromRef__FRC6RefVar - the unit a script argument stands for (a throw for nil)
+TStrokePublic*	StrokeFromRef(RefArg unit);					// ROM 0x001ea338 StrokeFromRef__FRC6RefVar - its stroke's face
+Ref		FSetInkerPenSize(RefArg rcvr, RefArg size);			// ROM 0x0013feb8 FSetInkerPenSize__FRC6RefVarT1
 void	RegisterUnitNatives(void);							// the unit functions bound (GetPoint, GetPointsArray, StrokeDone, StrokeBounds, InkOff, SetInkerPenSize, ...)
 
 #endif	/* __UNITPUBLIC_H */

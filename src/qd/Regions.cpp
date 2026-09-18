@@ -11,7 +11,7 @@
 	difference from the row above becomes the output's row - as points
 	(y, x) that SortPoints orders and PackRgn packs into a region.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The scan-conversion mask (SeekRgn) is laid out in the current port's
 	pixel depth: NOT YET RECONSTRUCTED (ports), so the host uses one bit
 	per pixel.
@@ -56,7 +56,7 @@ CurrentPortDepth(void)
 	T e m p o r a r y   m e m o r y
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0031360c QDNewTempPtr__Fl
+// ROM 0x0033f554 QDNewTempPtr__Fl
 // NOT YET RECONSTRUCTED: the 1 KB scratch area in the Newt globals the
 // ROM hands out first; the heap here.
 void*
@@ -68,7 +68,7 @@ QDNewTempPtr(long size)
 }
 
 
-// ROM 0x00313688 QDDisposeTempPtr__FPc
+// ROM 0x0033f5d0 QDDisposeTempPtr__FPc
 void
 QDDisposeTempPtr(void* p)
 {
@@ -81,7 +81,7 @@ QDDisposeTempPtr(void* p)
 	M a k i n g   r e g i o n s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x003150b0 NewRgn__Fv
+// ROM 0x00340ff8 NewRgn__Fv
 // An empty rectangular region.
 RgnHandle
 NewRgn(void)
@@ -97,7 +97,7 @@ NewRgn(void)
 }
 
 
-// ROM 0x003159bc DisposeRgn__FPP6Region
+// ROM 0x00341904 DisposeRgn__FPP6Region
 void
 DisposeRgn(RgnHandle rgn)
 {
@@ -105,7 +105,7 @@ DisposeRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x00316c48 SetRectRgn__FPP6RegionlN32
+// ROM 0x00342b90 SetRectRgn__FPP6RegionlN32
 // The region made the rectangle (empty when it is).
 void
 SetRectRgn(RgnHandle rgn, long left, long top, long right, long bottom)
@@ -122,7 +122,7 @@ SetRectRgn(RgnHandle rgn, long left, long top, long right, long bottom)
 }
 
 
-// ROM 0x00316cd0 RectRgn__FPP6RegionP4Rect
+// ROM 0x00342c18 RectRgn__FPP6RegionP4Rect
 void
 RectRgn(RgnHandle rgn, const Rect* r)
 {
@@ -130,7 +130,7 @@ RectRgn(RgnHandle rgn, const Rect* r)
 }
 
 
-// ROM 0x00316ba4 SetEmptyRgn__FPP6Region
+// ROM 0x00342aec SetEmptyRgn__FPP6Region
 void
 SetEmptyRgn(RgnHandle rgn)
 {
@@ -138,7 +138,7 @@ SetEmptyRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x0031611c CopyRgn__FPP6RegionT1
+// ROM 0x00342064 CopyRgn__FPP6RegionT1
 Boolean
 CopyRgn(RgnHandle src, RgnHandle dst)
 {
@@ -157,7 +157,7 @@ CopyRgn(RgnHandle src, RgnHandle dst)
 }
 
 
-// ROM 0x00316d0c OffsetRgn__FPP6RegionlT2
+// ROM 0x00342c54 OffsetRgn__FPP6RegionlT2
 // The bounding box and every row moved.
 void
 OffsetRgn(RgnHandle rgn, long dh, long dv)
@@ -185,7 +185,7 @@ OffsetRgn(RgnHandle rgn, long dh, long dv)
 	T e s t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x003154c0 EmptyRgn__FPP6Region
+// ROM 0x00341408 EmptyRgn__FPP6Region
 Boolean
 EmptyRgn(RgnHandle rgn)
 {
@@ -194,7 +194,7 @@ EmptyRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x00315408 EqualRgn__FPP6RegionT1
+// ROM 0x00341350 EqualRgn__FPP6RegionT1
 // The same size, bounding box and rows.
 // DEVIATION: the ROM compares the rows from their second short to one
 // short past the region (the first row's y is the box's top anyway);
@@ -211,7 +211,7 @@ EqualRgn(RgnHandle a, RgnHandle b)
 }
 
 
-// ROM 0x00316bc8 IsWideOpenRgn__FPP6Region
+// ROM 0x00342b10 IsWideOpenRgn__FPP6Region
 // No region (nil), or the rectangle that reaches every coordinate.
 Boolean
 IsWideOpenRgn(RgnHandle rgn)
@@ -225,7 +225,7 @@ IsWideOpenRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x003155bc PtInRgn__F5PointPP6Region
+// ROM 0x00341504 PtInRgn__F5PointPP6Region
 // Whether the point is in the region: within the bounding box, the rows
 // above it applied, each x at or left of the point flipping membership.
 // (The ROM applies a row only to points strictly below its y, so for a
@@ -260,7 +260,7 @@ PtInRgn(Point pt, RgnHandle rgn)
 	S c a n   c o n v e r s i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x003169a8 InitRgnRec__FP6RegionP8RgnStatelN23
+// ROM 0x003428f0 InitRgnRec__FP6RegionP8RgnStatelN23
 // The state set to scan the region between left and right, the mask's
 // first pixel at origin, in the current port's depth.
 void
@@ -280,7 +280,7 @@ InitRgnRec(Region* rgn, RgnState* state, long left, long right, long origin)
 }
 
 
-// ROM 0x00315978 InitRgn__FP6RegionP8RgnStatelN23Pc
+// ROM 0x003418c0 InitRgn__FP6RegionP8RgnStatelN23Pc
 // The same with the mask's storage, cleared.
 void
 InitRgn(Region* rgn, RgnState* state, long left, long right, long origin, char* scan)
@@ -318,7 +318,7 @@ ToggleScan(RgnState* state, long x1, long x2)
 }
 
 
-// ROM 0x003159c0 SeekRgn__FP8RgnStatel
+// ROM 0x00341908 SeekRgn__FP8RgnStatel
 // The mask made that of pixel row y: the rows down to y applied (from the
 // top again when y is above the current row).  ==> false when the mask
 // already was row y's.
@@ -361,7 +361,7 @@ SeekRgn(RgnState* state, long y)
 }
 
 
-// ROM 0x003152c0 RectInRgn__FP4RectPP6Region
+// ROM 0x00341208 RectInRgn__FP4RectPP6Region
 // Whether any pixel of the rectangle is in the region: its rows over the
 // rectangle scanned until a mask has a bit.
 Boolean
@@ -407,7 +407,7 @@ RectInRgn(const Rect* r, RgnHandle rgn)
 
 typedef void (*ScanProc)(const short* a, const short* b, short* out, long inset);
 
-// ROM 0x00315c40 XorScan__FPsN21l
+// ROM 0x00341b88 XorScan__FPsN21l
 // The transitions in one row but not the other; ==> where a's row ends
 // (past its 0x7fff: the next row of a region).
 static const short*
@@ -448,7 +448,7 @@ XorScanProc(const short* a, const short* b, short* out, long inset)
 }
 
 
-// ROM 0x00315e10 ShareScan__FPsN21lT4
+// ROM 0x00341d58 ShareScan__FPsN21lT4
 // The rows combined: a transition of one row is kept when the other row is
 // in the state the flags say (aOutside: a is outside when b's transitions
 // count; bOutside likewise), a shared transition when both flags agree.
@@ -491,7 +491,7 @@ ShareScan(const short* a, const short* b, short* out, long aOutside, long bOutsi
 }
 
 
-// ROM 0x00315db8 UnionScan__FPsN21l
+// ROM 0x00341d00 UnionScan__FPsN21l
 static void
 UnionScan(const short* a, const short* b, short* out, long /*inset*/)
 {
@@ -499,7 +499,7 @@ UnionScan(const short* a, const short* b, short* out, long /*inset*/)
 }
 
 
-// ROM 0x00315dd4 DiffScan__FPsN21l
+// ROM 0x00341d1c DiffScan__FPsN21l
 static void
 DiffScan(const short* a, const short* b, short* out, long /*inset*/)
 {
@@ -507,7 +507,7 @@ DiffScan(const short* a, const short* b, short* out, long /*inset*/)
 }
 
 
-// ROM 0x00315df4 SectScan__FPsN21l
+// ROM 0x00341d3c SectScan__FPsN21l
 static void
 SectScan(const short* a, const short* b, short* out, long /*inset*/)
 {
@@ -515,7 +515,7 @@ SectScan(const short* a, const short* b, short* out, long /*inset*/)
 }
 
 
-// ROM 0x00315cd8 InsetScan__FPsN21l
+// ROM 0x00341c20 InsetScan__FPsN21l
 // Each span of a's row narrowed by inset on both sides (dropped when
 // nothing is left); widened for a negative inset, spans that then touch
 // merging.
@@ -560,7 +560,7 @@ InsetScan(const short* a, const short* /*b*/, short* out, long inset)
 	R e g i o n   o p e r a t i o n s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00315b68 Expand__FPPP10TrueRegionPP10TrueRegionP10TrueRegion
+// ROM 0x00341ab0 Expand__FPPP10TrueRegionPP10TrueRegionP10TrueRegion
 // A rectangular region given rows (in the caller's buffer, through the
 // caller's handle) so that the operations see one form only.
 static void
@@ -597,7 +597,7 @@ Swap(short*& a, short*& b)
 }
 
 
-// ROM 0x003162cc RgnOp__FPP10TrueRegionT1PPclN24Uc
+// ROM 0x00342214 RgnOp__FPP10TrueRegionT1PPclN24Uc
 // The operation on the two regions as points: the rows of both walked in
 // y order, each pixel row's transitions built by XOR-ing the rows above,
 // combined by the operation's scan procedure, and the change from the
@@ -740,7 +740,7 @@ RgnOp(RgnHandle a, RgnHandle b, Handle points, long pointsSize, long op, long in
 }
 
 
-// ROM 0x00316ac4 QDQuickSort__FP5PointT1
+// ROM 0x00342a0c QDQuickSort__FP5PointT1
 // The points from first to last (inclusive) ordered by y, then x.
 static inline Boolean
 PointLess(Point a, Point b)
@@ -774,7 +774,7 @@ QDQuickSort(Point* first, Point* last)
 }
 
 
-// ROM 0x00316a2c SortPoints__FP5Pointl
+// ROM 0x00342974 SortPoints__FP5Pointl
 void
 SortPoints(Point* points, long count)
 {
@@ -783,7 +783,7 @@ SortPoints(Point* points, long count)
 }
 
 
-// ROM 0x00316a40 CullPoints__FP5PointPl
+// ROM 0x00342988 CullPoints__FP5PointPl
 // Adjacent equal points (a transition twice: nothing) dropped in pairs.
 void
 CullPoints(Point* points, long* count)
@@ -807,7 +807,7 @@ CullPoints(Point* points, long* count)
 }
 
 
-// ROM 0x0031677c PackRgn__FPPclPP6Region
+// ROM 0x003426c4 PackRgn__FPPclPP6Region
 // The sorted points (y, x) packed into the region: four points make a
 // rectangular region, more make rows (the x list of each y), none an empty
 // region.  The region's handle is sized to fit.
@@ -873,7 +873,7 @@ PackRgn(Handle points, long count, RgnHandle rgn)
 }
 
 
-// ROM 0x00314884 PutRect__FP4RectPP6RegionPlT3
+// ROM 0x003407cc PutRect__FP4RectPP6RegionPlT3
 // The rectangle's four points appended to the point buffer (grown by 0x100
 // when full), offset moved past them.
 void
@@ -895,7 +895,7 @@ PutRect(const Rect* r, Handle points, long* offset, long* limit)
 }
 
 
-// ROM 0x003161ac PutRgn__FPP6RegionPPcPlT3
+// ROM 0x003420f4 PutRgn__FPP6RegionPPcPlT3
 // The region's rows appended to the point buffer as points, two per span.
 Boolean
 PutRgn(RgnHandle rgn, Handle points, long* offset, long* limit)
@@ -954,7 +954,7 @@ OperateRgn(RgnHandle a, RgnHandle b, RgnHandle dst, long op)
 }
 
 
-// ROM 0x00315270 SectRgn__FPP6RegionN21
+// ROM 0x003411b8 SectRgn__FPP6RegionN21
 // The intersection: a copy when the regions are equal, empty when their
 // boxes do not meet, the boxes' intersection when both are rectangles.
 void
@@ -980,7 +980,7 @@ SectRgn(RgnHandle a, RgnHandle b, RgnHandle dst)
 }
 
 
-// ROM 0x00315284 UnionRgn__FPP6RegionN21
+// ROM 0x003411cc UnionRgn__FPP6RegionN21
 // The union: a copy of the other when one is empty or they are equal.
 void
 UnionRgn(RgnHandle a, RgnHandle b, RgnHandle dst)
@@ -999,7 +999,7 @@ UnionRgn(RgnHandle a, RgnHandle b, RgnHandle dst)
 }
 
 
-// ROM 0x00315298 DiffRgn__FPP6RegionN21
+// ROM 0x003411e0 DiffRgn__FPP6RegionN21
 // a less b: a copy of a when b is empty or the boxes do not meet, empty
 // when they are equal.
 void
@@ -1020,7 +1020,7 @@ DiffRgn(RgnHandle a, RgnHandle b, RgnHandle dst)
 }
 
 
-// ROM 0x003152ac XorRgn__FPP6RegionN21
+// ROM 0x003411f4 XorRgn__FPP6RegionN21
 // The pixels in one region only: a copy of the other when one is empty,
 // empty when they are equal.
 void
@@ -1045,7 +1045,7 @@ XorRgn(RgnHandle a, RgnHandle b, RgnHandle dst)
 }
 
 
-// ROM 0x00315f80 DoRgnOp__FlPP6RegionN22
+// ROM 0x00341ec8 DoRgnOp__FlPP6RegionN22
 // The four operations through one entry (the QuickDraw library driver's).
 void
 DoRgnOp(long op, RgnHandle a, RgnHandle b, RgnHandle dst)
@@ -1097,7 +1097,7 @@ DoRgnOp(long op, RgnHandle a, RgnHandle b, RgnHandle dst)
 }
 
 
-// ROM 0x00315144 InsetRgn__FPP6RegionlT2
+// ROM 0x0034108c InsetRgn__FPP6RegionlT2
 // The region shrunk (or grown, for negative amounts) by dh on the left
 // and right and dv on the top and bottom: a rectangle's box inset, or two
 // inset passes - the second on the region transposed, so that the same
@@ -1140,7 +1140,7 @@ InsetRgn(RgnHandle rgn, long dh, long dv)
 }
 
 
-// ROM 0x00315728 MapRgn__FPP6RegionP4RectT2
+// ROM 0x00341670 MapRgn__FPP6RegionP4RectT2
 // The region mapped from one rectangle's coordinates to another's: a
 // rectangle's box mapped, otherwise every point mapped and the region
 // re-packed (coinciding points cancelling).
@@ -1173,7 +1173,7 @@ MapRgn(RgnHandle rgn, const Rect* src, const Rect* dst)
 }
 
 
-// ROM 0x0031586c TrimRect__FPP6RegionP4Rect
+// ROM 0x003417b4 TrimRect__FPP6RegionP4Rect
 // The rectangle cut down to the region: when the intersection is a
 // rectangle it replaces r and 0 is answered; a negative answer means an
 // empty intersection, a positive one a more complex shape (r untouched).

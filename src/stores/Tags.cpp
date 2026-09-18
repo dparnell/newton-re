@@ -8,8 +8,8 @@
 				plain soup's tag methods (AddTags, RemoveTags, ModifyTag,
 				HasTags, GetTags).  See Tags.h.
 
-	Reconstructed from the MP2100 D ROM (0x002abd78-0x002ac49c,
-	0x0031ce04, 0x0031ee94-0x0031fdcc, 0x00323580).
+	Reconstructed from the MP2x00 US ROM (0x002d0b04-0x002d1228,
+	0x00348074, 0x0034a104-0x0034b03c, 0x0034e7f0).
 */
 
 #include "Tags.h"
@@ -43,7 +43,7 @@ ThrowTagsIndexError(int result)
 	T a g s B i t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002abd78 SetTag__8TagsBitsFs
+// ROM 0x002d0b04 SetTag__8TagsBitsFs
 // Bit tag set; the bitmap grown (zeroed) to reach it.
 void
 TagsBits::SetTag(short tag)
@@ -60,7 +60,7 @@ TagsBits::SetTag(short tag)
 }
 
 
-// ROM 0x002abf80 ValidTest__8TagsBitsCFRC8TagsBitsl
+// ROM 0x002d0d0c ValidTest__8TagsBitsCFRC8TagsBitsl
 // Whether these (an entry's) bits satisfy the query's in the mode:
 // equal, all (every query bit set: no when the entry's bitmap is
 // shorter), any (some query bit set), none (no query bit set).
@@ -120,7 +120,7 @@ MakeTagsBinary(const TagsBits& bits)
 	E n c o d i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ac0a4 EncodeTags__FRC6RefVarT1P8TagsBits
+// ROM 0x002d0e30 EncodeTags__FRC6RefVarT1P8TagsBits
 // A tag (a symbol) or an array of them as bits, each's place in the tags
 // array its bit.  ==> whether every tag is in the array.
 Boolean
@@ -179,7 +179,7 @@ EncodeQueryTagsMode(RefArg tags, RefArg tagSpec, RefArg slot, long mode, RefArg 
 }
 
 
-// ROM 0x002ac330 EncodeQueryTags__FRC6RefVarT1
+// ROM 0x002d10bc EncodeQueryTags__FRC6RefVarT1
 // A query's tagSpec {equal, all, any, none} encoded against the tags
 // index description's tags: an array of [mode, bits binary] pairs; nil
 // when no entry of the soup can match.
@@ -199,7 +199,7 @@ EncodeQueryTags(RefArg indexDesc, RefArg tagSpec)
 }
 
 
-// ROM 0x002ac49c TagsValidTest__FR10TSoupIndexRC6RefVarUl
+// ROM 0x002d1228 TagsValidTest__FR10TSoupIndexRC6RefVarUl
 // Whether the entry (by store object id) passes the encoded query tags:
 // its bits from the tags index tested in every mode; an entry with no
 // tags in the index passes only a lone 'none, or a lone 'equal of no
@@ -249,7 +249,7 @@ TagsValidTest(TSoupIndex& tagsIndex, RefArg queryTags, PSSId id)
 	T h e   t a g s   i n d e x
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00323580 AlterTagsIndex__FUcR10TSoupIndexUlRC6RefVarN24
+// ROM 0x0034e7f0 AlterTagsIndex__FUcR10TSoupIndexUlRC6RefVarN24
 // The entry's tags (a symbol or a non-empty array) as bits added to (or
 // deleted from) the tags index under the entry's store object id; a tag
 // the soup does not know yet is added to it first.
@@ -275,7 +275,7 @@ AlterTagsIndex(Boolean add, TSoupIndex& tagsIndex, PSSId id, RefArg tagOrTags, R
 }
 
 
-// ROM 0x0031ce04 UpdateTagsIndex__FRC6RefVarN31Ul
+// ROM 0x00348074 UpdateTagsIndex__FRC6RefVarN31Ul
 // The tags index brought from oldEntry's tags to newEntry's (a new tag
 // added to the soup); nothing when they encode the same.  ==> whether it
 // changed.
@@ -315,7 +315,7 @@ UpdateTagsIndex(RefArg soup, RefArg indexDesc, RefArg oldEntry, RefArg newEntry,
 }
 
 
-// ROM 0x0031ee94 CountTags__FRC6RefVar
+// ROM 0x0034a104 CountTags__FRC6RefVar
 // The tags in the array (nil slots are removed tags).
 long
 CountTags(RefArg tags)
@@ -328,7 +328,7 @@ CountTags(RefArg tags)
 }
 
 
-// ROM 0x0031eee4 AddTag__FRC6RefVarT1
+// ROM 0x0034a154 AddTag__FRC6RefVarT1
 // The tag into the array (made internal): in the first nil slot, else
 // appended.  ==> false when it is there already.
 Boolean
@@ -352,7 +352,7 @@ AddTag(RefArg tags, RefArg tag)
 }
 
 
-// ROM 0x0031f1d8 QueryEntriesWithTags__FRC6RefVarT1
+// ROM 0x0034a448 QueryEntriesWithTags__FRC6RefVarT1
 // A cursor over the soup's entries with any of the tags.
 Ref
 QueryEntriesWithTags(RefArg soup, RefArg tagOrTags)
@@ -393,7 +393,7 @@ TagsChanged(RefArg soup, RefArg soupPersistent)
 }
 
 
-// ROM 0x0031efcc PlainSoupAddTags
+// ROM 0x0034a23c PlainSoupAddTags
 // A tag or an array of them added to the soup's tags (at most kMaxTags).
 Ref
 PlainSoupAddTags(RefArg rcvr, RefArg tagOrTags)
@@ -425,7 +425,7 @@ PlainSoupAddTags(RefArg rcvr, RefArg tagOrTags)
 }
 
 
-// ROM 0x0031f274 PlainSoupRemoveTags
+// ROM 0x0034a4e4 PlainSoupRemoveTags
 // The tags taken off every entry that has any of them (the slot on the
 // index's path: the tags removed from its array, the slot removed - or
 // set to nil for a deeper path - when none are left) and out of the
@@ -495,7 +495,7 @@ PlainSoupRemoveTags(RefArg rcvr, RefArg tags)
 }
 
 
-// ROM 0x0031f65c PlainSoupModifyTag
+// ROM 0x0034a8cc PlainSoupModifyTag
 // The tag renamed: in every entry that has it (the slot on the path, or
 // its place in the slot's array) and in the soup's tags, where it keeps
 // its bit (the entries' index bits stay).  Nothing when the old tag is
@@ -549,7 +549,7 @@ PlainSoupModifyTag(RefArg rcvr, RefArg oldTag, RefArg newTag)
 }
 
 
-// ROM 0x0031fa68 PlainSoupHasTags
+// ROM 0x0034acd8 PlainSoupHasTags
 Ref
 PlainSoupHasTags(RefArg rcvr)
 {
@@ -558,7 +558,7 @@ PlainSoupHasTags(RefArg rcvr)
 }
 
 
-// ROM 0x0031fdcc PlainSoupGetTags
+// ROM 0x0034b03c PlainSoupGetTags
 // The soup's tags (the removed ones' nil slots left out); nil when it
 // has no tags index.
 Ref

@@ -3,7 +3,7 @@
 
 	Contains:	TContainerView and TContainerHilite (ContainerView.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ContainerView.h"
@@ -35,7 +35,7 @@ TContainerHilite::~TContainerHilite()
 { }
 
 
-// ROM 0x000749bc Clone__16TContainerHiliteFv
+// ROM 0x0007401c Clone__16TContainerHiliteFv
 THilite*
 TContainerHilite::Clone(void)
 {
@@ -45,7 +45,7 @@ TContainerHilite::Clone(void)
 }
 
 
-// ROM 0x00074a44 CopyFrom__16TContainerHiliteFP7THilite
+// ROM 0x000740a4 CopyFrom__16TContainerHiliteFP7THilite
 // The bounds, and the eight bytes that follow them.
 void
 TContainerHilite::CopyFrom(THilite* other)
@@ -61,11 +61,11 @@ TContainerHilite::CopyFrom(THilite* other)
 	T C o n t a i n e r V i e w
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00073b84 ClassID__14TContainerViewCFv
+// ROM 0x000731e4 ClassID__14TContainerViewCFv
 long	TContainerView::ClassID(void) const		{ return clContainerView; }
 
 
-// ROM 0x00073b8c DerivedFrom__14TContainerViewCFl
+// ROM 0x000731ec DerivedFrom__14TContainerViewCFl
 Boolean
 TContainerView::DerivedFrom(long id) const
 {
@@ -73,12 +73,12 @@ TContainerView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x00074a04 __dt__14TContainerViewFv
+// ROM 0x00074064 __dt__14TContainerViewFv
 TContainerView::~TContainerView()
 { }
 
 
-// ROM 0x000742d0 Constructor__14TContainerViewFRC6RefVarP5TView
+// ROM 0x00073930 Constructor__14TContainerViewFRC6RefVarP5TView
 // TView's, and two fields whose meaning is still to be found - the ROM's
 // readers of them are the editing this class does not have yet.
 void
@@ -90,7 +90,7 @@ TContainerView::Constructor(RefArg context, TView* parent)
 }
 
 
-// ROM 0x000742c8 ClickOptions__14TContainerViewFv
+// ROM 0x00073928 ClickOptions__14TContainerViewFv
 long	TContainerView::ClickOptions(void)		{ return 1; }
 
 
@@ -102,7 +102,7 @@ ContainerHiliteOf(RefArg hilite)
 }
 
 
-// ROM 0x000745f8 IsCompletelyHilited__14TContainerViewFRC6RefVar
+// ROM 0x00073c58 IsCompletelyHilited__14TContainerViewFRC6RefVar
 // Whether the hilite stands for the whole container rather than a set of
 // its children.
 Boolean
@@ -113,7 +113,7 @@ TContainerView::IsCompletelyHilited(RefArg hilite)
 }
 
 
-// ROM 0x00074618 GetHiliteView__14TContainerViewFv
+// ROM 0x00073c78 GetHiliteView__14TContainerViewFv
 // Which view the selection really belongs to: this one when the whole
 // container is selected, else the first child that is hilited itself.
 TView*
@@ -132,7 +132,7 @@ TContainerView::GetHiliteView(void)
 }
 
 
-// ROM 0x00075270 MakeHilite__14TContainerViewFlP5TView
+// ROM 0x000748d0 MakeHilite__14TContainerViewFlP5TView
 // A hilite of the whole container (child 0), or of one child - whose own
 // hilite bounds it takes.  Either way the bounds end up in the container's
 // own coordinates, and it goes in through the command so that it can be
@@ -169,7 +169,7 @@ TContainerView::MakeHilite(long child, TView* view)
 }
 
 
-// ROM 0x00073bc0 HiliteAll__14TContainerViewFv
+// ROM 0x00073220 HiliteAll__14TContainerViewFv
 void
 TContainerView::HiliteAll(void)
 {
@@ -178,7 +178,7 @@ TContainerView::HiliteAll(void)
 }
 
 
-// ROM 0x00073bf4 RemoveAllHilites__14TContainerViewFv
+// ROM 0x00073254 RemoveAllHilites__14TContainerViewFv
 // The ROM has TView's again here, word for word, rather than inheriting it.
 void
 TContainerView::RemoveAllHilites(void)
@@ -195,7 +195,7 @@ TContainerView::RemoveAllHilites(void)
 }
 
 
-// ROM 0x00074564 RemoveHilite__14TContainerViewFRC6RefVar
+// ROM 0x00073bc4 RemoveHilite__14TContainerViewFRC6RefVar
 // A hilite that stood for the children takes their own selections with it.
 void
 TContainerView::RemoveHilite(RefArg hilite)
@@ -214,7 +214,7 @@ TContainerView::RemoveHilite(RefArg hilite)
 }
 
 
-// ROM 0x00074168 DrawHilites__14TContainerViewFUc
+// ROM 0x000737c8 DrawHilites__14TContainerViewFUc
 // The whole container is its bounds filled with the black pattern (in
 // whatever mode the port is in); a selection of
 // children is each of them drawing its own.  A view on its way out of
@@ -242,7 +242,7 @@ TContainerView::DrawHilites(Boolean scaled)
 }
 
 
-// ROM 0x00074260 DrawHilitedData__14TContainerViewFv
+// ROM 0x000738c0 DrawHilitedData__14TContainerViewFv
 void
 TContainerView::DrawHilitedData(void)
 {
@@ -256,7 +256,7 @@ TContainerView::DrawHilitedData(void)
 }
 
 
-// ROM 0x00074088 GlobalHiliteBounds__14TContainerViewFP5TRect
+// ROM 0x000736e8 GlobalHiliteBounds__14TContainerViewFP5TRect
 // The whole container's bounds, or the union of the hilited children's;
 // the answer, as in TView's, is the click options that go with the
 // selection.

@@ -5,7 +5,7 @@
 				Commit and DeleteNode, which write through the index, are in
 				SoupIndex.cpp.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "NodeCache.h"
@@ -22,7 +22,7 @@ Entries(Handle h)
 }
 
 
-// ROM 0x002c3ad8 __ct__10TNodeCacheFv
+// ROM 0x002e9338 __ct__10TNodeCacheFv
 // Three entries, each with a node-sized buffer.
 TNodeCache::TNodeCache()
 {
@@ -48,7 +48,7 @@ TNodeCache::TNodeCache()
 }
 
 
-// ROM 0x002c3c00 __dt__10TNodeCacheFv
+// ROM 0x002e9460 __dt__10TNodeCacheFv
 TNodeCache::~TNodeCache()
 {
 	HLock(fEntries);
@@ -60,7 +60,7 @@ TNodeCache::~TNodeCache()
 }
 
 
-// ROM 0x002c3c78 FindNode__10TNodeCacheFP10TSoupIndexUl
+// ROM 0x002e94d8 FindNode__10TNodeCacheFP10TSoupIndexUl
 // The cached node with this id, marked in use by index; nil for none.
 NodeHeader*
 TNodeCache::FindNode(TSoupIndex* index, ULong id)
@@ -79,7 +79,7 @@ TNodeCache::FindNode(TSoupIndex* index, ULong id)
 }
 
 
-// ROM 0x002c3ce0 RememberNode__10TNodeCacheFP10TSoupIndexUlliT4
+// ROM 0x002e9540 RememberNode__10TNodeCacheFP10TSoupIndexUlliT4
 // An entry for a node of size bytes: a free one, else the least recently
 // used one not in use, else a new one; ==> its buffer.
 NodeHeader*
@@ -131,7 +131,7 @@ TNodeCache::RememberNode(TSoupIndex* index, ULong id, long size, int isDup, int 
 }
 
 
-// ROM 0x002c3f20 ForgetNode__10TNodeCacheFUl
+// ROM 0x002e9780 ForgetNode__10TNodeCacheFUl
 void
 TNodeCache::ForgetNode(ULong id)
 {
@@ -149,7 +149,7 @@ TNodeCache::ForgetNode(ULong id)
 }
 
 
-// ROM 0x002c3f7c DirtyNode__10TNodeCacheFP10NodeHeader
+// ROM 0x002e97dc DirtyNode__10TNodeCacheFP10NodeHeader
 void
 TNodeCache::DirtyNode(NodeHeader* node)
 {
@@ -164,7 +164,7 @@ TNodeCache::DirtyNode(NodeHeader* node)
 }
 
 
-// ROM 0x002c40dc Reuse__10TNodeCacheFP10TSoupIndex
+// ROM 0x002e993c Reuse__10TNodeCacheFP10TSoupIndex
 void
 TNodeCache::Reuse(TSoupIndex* index)
 {
@@ -176,7 +176,7 @@ TNodeCache::Reuse(TSoupIndex* index)
 }
 
 
-// ROM 0x002c4118 Abort__10TNodeCacheFP10TSoupIndex
+// ROM 0x002e9978 Abort__10TNodeCacheFP10TSoupIndex
 void
 TNodeCache::Abort(TSoupIndex* index)
 {
@@ -194,7 +194,7 @@ TNodeCache::Abort(TSoupIndex* index)
 }
 
 
-// ROM 0x002c4174 Clear__10TNodeCacheFv
+// ROM 0x002e99d4 Clear__10TNodeCacheFv
 void
 TNodeCache::Clear(void)
 {

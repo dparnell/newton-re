@@ -7,9 +7,9 @@
 				(Frames.h); this header is for the object system's own files
 				and its tests.
 
-	Reconstructed from the MP2100 D ROM (the frames object system at
-	0x002f420c-0x002fb24c, the collector at 0x002bd4f8-0x002be600, symbols
-	at 0x0032d4a8-0x0032dd00); docs/frames/README.md explains the layouts.
+	Reconstructed from the MP2x00 US ROM (the frames object system at
+	0x00319510-0x002fb24c, the collector at 0x002e3280-0x002e4388, symbols
+	at 0x00358644-0x00358e9c); docs/frames/README.md explains the layouts.
 
 	Host re-expression: a Ref is the ARM's word, so on a host it is
 	pointer-sized (sync_ddk_headers.py makes objects.h's Ref a Long).  An

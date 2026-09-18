@@ -3,7 +3,7 @@
 
 	Contains:	OsBoot and the initialisation routines it calls.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Steps that belong to subsystems not reconstructed yet - the MMU-side of the
 	memory architecture, the memory object database (MemObjManager), the
 	real-time clock, the tablet - are marked NOT YET RECONSTRUCTED where they
@@ -50,7 +50,7 @@ TObjectId		gKernelDomainId = 0;
 static TSharedMemMsg&	gOverflowDetectMsg = *new TSharedMemMsg;
 
 
-// ROM 0x001e22c8 TaskInCopyKilled__FPvP5TTask
+// ROM 0x001dfeb0 TaskInCopyKilled__FPvP5TTask
 // gCopyTasks' destructor proc: a task deleted mid-copy lets go of the message
 // it was copying under.
 static void
@@ -63,7 +63,7 @@ TaskInCopyKilled(void* /*unused*/, TTask* task)
 }
 
 
-// ROM 0x001e2804 InitSMemManager__Fv
+// ROM 0x001e03ec InitSMemManager__Fv
 static NewtonErr
 InitSMemManager()
 {
@@ -71,7 +71,7 @@ InitSMemManager()
 }
 
 
-// ROM 0x000fb658 InitGlobalWorld__Fv
+// ROM 0x000f9ff4 InitGlobalWorld__Fv
 // The scheduler, the task queues shared memory copies and fault monitors
 // use, the object manager and the null port (owned by nobody, never receives).
 void
@@ -96,7 +96,7 @@ InitGlobalWorld()
 const long kKernelDomainNumber = 2;			// VirtualMemory.h: kKernelDomainHeapDomainNumber
 
 
-// ROM 0x000ea698 InitKernelDomainAndEnvironment__Fv
+// ROM 0x000e90c0 InitKernelDomainAndEnvironment__Fv
 // The kernel's environment ('krnl') on the kernel heap, and its domain -
 // number 2, covering the range the memory object database gives for 'krnl'.
 void
@@ -119,7 +119,7 @@ InitKernelDomainAndEnvironment()
 }
 
 
-// ROM 0x00045c84 InitCGlobals +0x374 (the memory object database)
+// ROM 0x000453b4 InitCGlobals +0x374 (the memory object database)
 // InitCGlobals, before OsBoot, picks the domain table for the RAM fitted and
 // lays the memory object database out in RAM (gMemObjHeap, at a computed
 // address); here the database is allocated.
@@ -138,7 +138,7 @@ InitMemObjDatabase(ULong ramSize)
 }
 
 
-// ROM 0x0011e660 InitMemArchCore__Fv
+// ROM 0x0011cbf8 InitMemArchCore__Fv
 // The memory architecture's own object table, its manager and the fault
 // monitor table.
 void
@@ -157,7 +157,7 @@ InitMemArchCore()
 }
 
 
-// ROM 0x0013ebac RestartTimerOverflowDetect__FPv
+// ROM 0x0013d024 RestartTimerOverflowDetect__FPv
 // Keeps the 64-bit clock's wrap count right by sampling the counter at least
 // once per 0xd2f0000 ticks (about an hour).
 static void
@@ -168,7 +168,7 @@ RestartTimerOverflowDetect(void* /*unused*/)
 }
 
 
-// ROM 0x0013ec34 StartTime
+// ROM 0x0013d0ac StartTime
 void
 StartTime()
 {
@@ -179,7 +179,7 @@ StartTime()
 }
 
 
-// ROM 0x00149c1c OsBoot
+// ROM 0x001480c0 OsBoot
 // The boot runs with a task and environment on its own stack standing in as
 // the current ones until the idle task exists; from SwapInGlobals on, the boot
 // context *is* the idle task.  Everything up to the first task's start happens

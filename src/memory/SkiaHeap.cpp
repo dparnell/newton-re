@@ -4,7 +4,7 @@
 	Contains:	The Skia heap (SkiaHeap.h): blocks, free list, master pointers,
 				growing, shrinking, compaction.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.  The
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.  The
 	functions the decompiler could not follow (SetBlockSize, TrySetSize,
 	FindSmallestSlide, SearchFreeList, JumpBlock) were read from the
 	disassembly.  The current heap is the task's (GetCurrentHeap): these
@@ -58,7 +58,7 @@ PhysicalSize(Size size, UByte* outDelta)
 	The current heap
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001448f4 GetCurrentHeap
+// ROM 0x00142da0 GetCurrentHeap
 // The task's current heap, or the kernel heap before there are tasks.
 Heap
 GetCurrentHeap(void)
@@ -72,7 +72,7 @@ GetCurrentHeap(void)
 }
 
 
-// ROM 0x00144944 SetCurrentHeap
+// ROM 0x00142df0 SetCurrentHeap
 void
 SetCurrentHeap(Heap heap)
 {
@@ -81,7 +81,7 @@ SetCurrentHeap(Heap heap)
 }
 
 
-// ROM 0x002eb59c GetFirstHeap
+// ROM 0x003108b0 GetFirstHeap
 Heap
 GetFirstHeap(void)
 {
@@ -89,7 +89,7 @@ GetFirstHeap(void)
 }
 
 
-// ROM 0x002eb5ac SetFirstHeap
+// ROM 0x003108c0 SetFirstHeap
 void
 SetFirstHeap(Heap heap)
 {
@@ -101,17 +101,17 @@ SetFirstHeap(Heap heap)
 	Heap fields
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002eb90c IsSkiaHeap
+// ROM 0x00310c20 IsSkiaHeap
 Boolean
 IsSkiaHeap(Heap heap)
 {
 	return ((SkiaHeap*) heap)->fMagic == kSkiaHeapMagic;
 }
 
-// ROM 0x002eb5bc SetSkiaHeapSemaphore
+// ROM 0x003108d0 SetSkiaHeapSemaphore
 void SetSkiaHeapSemaphore(Heap heap, TULockingSemaphore* semaphore)	{ ((SkiaHeap*) heap)->fSemaphore = semaphore; }
 
-// ROM 0x002ebccc GetSkiaHeapSemaphore
+// ROM 0x00310fe0 GetSkiaHeapSemaphore
 TULockingSemaphore*
 GetSkiaHeapSemaphore(Heap heap)
 {
@@ -120,7 +120,7 @@ GetSkiaHeapSemaphore(Heap heap)
 	return ((SkiaHeap*) heap)->fSemaphore;
 }
 
-// ROM 0x002eb5c4 GetSkiaHeapRefcon
+// ROM 0x003108d8 GetSkiaHeapRefcon
 void*
 GetSkiaHeapRefcon(Heap heap)
 {
@@ -129,7 +129,7 @@ GetSkiaHeapRefcon(Heap heap)
 	return ((SkiaHeap*) heap)->fRefCon;
 }
 
-// ROM 0x002eb5e0 SetSkiaHeapRefcon
+// ROM 0x003108f4 SetSkiaHeapRefcon
 void
 SetSkiaHeapRefcon(void* refCon, Heap heap)
 {
@@ -138,41 +138,41 @@ SetSkiaHeapRefcon(void* refCon, Heap heap)
 	((SkiaHeap*) heap)->fRefCon = refCon;
 }
 
-// ROM 0x002eb7b4 SetHeapIsVMBacked
+// ROM 0x00310ac8 SetHeapIsVMBacked
 void SetHeapIsVMBacked(Heap heap)					{ ((SkiaHeap*) heap)->fIsVMBacked = 1; }
-// ROM 0x002eb7c0 GetHeapEnd
+// ROM 0x00310ad4 GetHeapEnd
 char* GetHeapEnd(Heap heap)							{ return ((SkiaHeap*) heap)->fEnd; }
-// ROM 0x002eb984 GetHeapStart
+// ROM 0x00310c98 GetHeapStart
 char* GetHeapStart(Heap heap)						{ return ((SkiaHeap*) heap)->fStart; }
-// ROM 0x002eb978 GetHeapSize
+// ROM 0x00310c8c GetHeapSize
 Size GetHeapSize(Heap heap)							{ return ((SkiaHeap*) heap)->fEnd - ((SkiaHeap*) heap)->fStart; }
-// ROM 0x002eb970 GetHeapExtent
+// ROM 0x00310c84 GetHeapExtent
 Size GetHeapExtent(Heap heap)						{ return ((SkiaHeap*) heap)->fExtent; }
-// ROM 0x002eb968 SetHeapExtentUnits
+// ROM 0x00310c7c SetHeapExtentUnits
 void SetHeapExtentUnits(Heap heap, Size units)		{ ((SkiaHeap*) heap)->fExtentUnits = units; }
-// ROM 0x002eb8fc GetFixedHeap
+// ROM 0x00310c10 GetFixedHeap
 Heap GetFixedHeap(Heap heap)						{ return ((SkiaHeap*) heap)->fFixedHeap; }
-// ROM 0x002eb904 SetFixedHeap
+// ROM 0x00310c18 SetFixedHeap
 void SetFixedHeap(Heap heap, Heap fixedHeap)		{ ((SkiaHeap*) heap)->fFixedHeap = (SkiaHeap*) fixedHeap; }
-// ROM 0x002eb928 GetMPHeap
+// ROM 0x00310c3c GetMPHeap
 Heap GetMPHeap(Heap heap)							{ return ((SkiaHeap*) heap)->fMPHeap; }
-// ROM 0x002eb930 SetMPHeap
+// ROM 0x00310c44 SetMPHeap
 void SetMPHeap(Heap heap, Heap mpHeap)				{ ((SkiaHeap*) heap)->fMPHeap = (SkiaHeap*) mpHeap; }
-// ROM 0x002eb938 GetSPHeap
+// ROM 0x00310c4c GetSPHeap
 Heap GetSPHeap(Heap heap)							{ return ((SkiaHeap*) heap)->fSPHeap; }
-// ROM 0x002eb940 SetSPHeap
+// ROM 0x00310c54 SetSPHeap
 void SetSPHeap(Heap heap, Heap spHeap)				{ ((SkiaHeap*) heap)->fSPHeap = (SkiaHeap*) spHeap; }
-// ROM 0x002eb948 GetRelocHeap
+// ROM 0x00310c5c GetRelocHeap
 Heap GetRelocHeap(Heap heap)						{ return ((SkiaHeap*) heap)->fRelocHeap; }
-// ROM 0x002eb950 SetRelocHeap
+// ROM 0x00310c64 SetRelocHeap
 void SetRelocHeap(Heap heap, Heap relocHeap)		{ ((SkiaHeap*) heap)->fRelocHeap = (SkiaHeap*) relocHeap; }
-// ROM 0x002eb958 GetWiredHeap
+// ROM 0x00310c6c GetWiredHeap
 SWiredHeapDescr* GetWiredHeap(Heap heap)			{ return ((SkiaHeap*) heap)->fWiredHeap; }
-// ROM 0x002eb960 SetWiredHeap
+// ROM 0x00310c74 SetWiredHeap
 void SetWiredHeap(Heap heap, SWiredHeapDescr* wired) { ((SkiaHeap*) heap)->fWiredHeap = wired; }
 
 
-// ROM 0x002eb98c GetHeapReleaseable
+// ROM 0x00310ca0 GetHeapReleaseable
 // What the VM heap holds beyond what it uses.
 Size
 GetHeapReleaseable(Heap heap)
@@ -184,7 +184,7 @@ GetHeapReleaseable(Heap heap)
 }
 
 
-// ROM 0x002ebaf8 ResurrectSkiaHeap
+// ROM 0x00310e0c ResurrectSkiaHeap
 // A heap found again after a reboot: its pages are neither locked nor asked for.
 void
 ResurrectSkiaHeap(SkiaHeap* heap)
@@ -194,7 +194,7 @@ ResurrectSkiaHeap(SkiaHeap* heap)
 }
 
 
-// ROM 0x002ebb08 GetMinimumHeapSize
+// ROM 0x00310e1c GetMinimumHeapSize
 Size
 GetMinimumHeapSize(void)
 {
@@ -202,7 +202,7 @@ GetMinimumHeapSize(void)
 }
 
 
-// ROM 0x002ebf84 TotalFreeInHeap
+// ROM 0x00311298 TotalFreeInHeap
 Size
 TotalFreeInHeap(Heap heap)
 {
@@ -212,7 +212,7 @@ TotalFreeInHeap(Heap heap)
 }
 
 
-// ROM 0x002ebfa0 LargestFreeInHeap
+// ROM 0x003112b4 LargestFreeInHeap
 // The largest block's data size.
 Size
 LargestFreeInHeap(Heap heap)
@@ -229,7 +229,7 @@ LargestFreeInHeap(Heap heap)
 }
 
 
-// ROM 0x002ebff0 CountFreeBlocks
+// ROM 0x00311304 CountFreeBlocks
 unsigned long
 CountFreeBlocks(Heap heap)
 {
@@ -242,7 +242,7 @@ CountFreeBlocks(Heap heap)
 }
 
 
-// ROM 0x002ec02c TotalUsedInHeap
+// ROM 0x00311340 TotalUsedInHeap
 Size
 TotalUsedInHeap(Heap heap)
 {
@@ -253,7 +253,7 @@ TotalUsedInHeap(Heap heap)
 }
 
 
-// ROM 0x002ec050 MaxHeapSize
+// ROM 0x00311364 MaxHeapSize
 Size
 MaxHeapSize(Heap heap)
 {
@@ -264,33 +264,33 @@ MaxHeapSize(Heap heap)
 
 
 // The validation hooks: nothing in this ROM.
-long GetHeapValidation(void)	{ return 0; }	// ROM 0x002eb578 GetHeapValidation
-void SetHeapValidation(void)	{ }				// ROM 0x002eb580 SetHeapValidation
-void ValidateHeap(void)			{ }				// ROM 0x002eb584 ValidateHeap
-void ValidateDirectBlock(void)	{ }				// ROM 0x002eb588 ValidateDirectBlock
-void ValidateIndirectBlock(void) { }			// ROM 0x002eb58c ValidateIndirectBlock
-void ValidateMasterPointer(void) { }			// ROM 0x002eb590 ValidateMasterPointer
-void ValidateBlockRange(void)	{ }				// ROM 0x002eb594 ValidateBlockRange
-void UnscrambleMaster(void)		{ }				// ROM 0x002eb598 UnscrambleMaster
+long GetHeapValidation(void)	{ return 0; }	// ROM 0x0031088c GetHeapValidation
+void SetHeapValidation(void)	{ }				// ROM 0x00310894 SetHeapValidation
+void ValidateHeap(void)			{ }				// ROM 0x00310898 ValidateHeap
+void ValidateDirectBlock(void)	{ }				// ROM 0x0031089c ValidateDirectBlock
+void ValidateIndirectBlock(void) { }			// ROM 0x003108a0 ValidateIndirectBlock
+void ValidateMasterPointer(void) { }			// ROM 0x003108a4 ValidateMasterPointer
+void ValidateBlockRange(void)	{ }				// ROM 0x003108a8 ValidateBlockRange
+void UnscrambleMaster(void)		{ }				// ROM 0x003108ac UnscrambleMaster
 
 
 /* -------------------------------------------------------------------------------
 	Block fields
 ------------------------------------------------------------------------------- */
 
-UByte GetBlockType(const void* data)			{ return SkiaBlock::Of(data)->fType; }		// ROM 0x002ebe00 GetBlockType
-UByte GetBlockFlags(const void* data)			{ return SkiaBlock::Of(data)->fFlags; }		// ROM 0x002ebe08 GetBlockFlags
-UByte GetBlockBusy(const void* data)			{ return SkiaBlock::Of(data)->fBusy; }		// ROM 0x002ebe10 GetBlockBusy
-void* GetBlockParent(const void* data)			{ return SkiaBlock::Of(data)->fParent; }	// ROM 0x002ebe18 GetBlockParent
-void SetBlockType(void* data, UByte type)		{ SkiaBlock::Of(data)->fType = type; }		// ROM 0x002ebe20 SetBlockType
-void SetBlockFlags(void* data, UByte flags)		{ SkiaBlock::Of(data)->fFlags = flags; }	// ROM 0x002ebe28 SetBlockFlags
-void xSetBlockBusy(void* data, UByte busy)		{ SkiaBlock::Of(data)->fBusy = busy; }		// ROM 0x002ebe30 xSetBlockBusy
-void SetBlockParent(void* data, void* parent)	{ SkiaBlock::Of(data)->fParent = parent; }	// ROM 0x002ebe38 SetBlockParent
-UByte GetBlockDelta(const void* data)			{ return SkiaBlock::Of(data)->fDelta; }		// ROM 0x002ebe40 GetBlockDelta
-void IncrementBlockBusy(void* data)				{ SkiaBlock::Of(data)->fBusy++; }			// ROM 0x002ebe60 IncrementBlockBusy
-void DecrementBlockBusy(void* data)				{ SkiaBlock::Of(data)->fBusy--; }			// ROM 0x002ebe70 DecrementBlockBusy
+UByte GetBlockType(const void* data)			{ return SkiaBlock::Of(data)->fType; }		// ROM 0x00311114 GetBlockType
+UByte GetBlockFlags(const void* data)			{ return SkiaBlock::Of(data)->fFlags; }		// ROM 0x0031111c GetBlockFlags
+UByte GetBlockBusy(const void* data)			{ return SkiaBlock::Of(data)->fBusy; }		// ROM 0x00311124 GetBlockBusy
+void* GetBlockParent(const void* data)			{ return SkiaBlock::Of(data)->fParent; }	// ROM 0x0031112c GetBlockParent
+void SetBlockType(void* data, UByte type)		{ SkiaBlock::Of(data)->fType = type; }		// ROM 0x00311134 SetBlockType
+void SetBlockFlags(void* data, UByte flags)		{ SkiaBlock::Of(data)->fFlags = flags; }	// ROM 0x0031113c SetBlockFlags
+void xSetBlockBusy(void* data, UByte busy)		{ SkiaBlock::Of(data)->fBusy = busy; }		// ROM 0x00311144 xSetBlockBusy
+void SetBlockParent(void* data, void* parent)	{ SkiaBlock::Of(data)->fParent = parent; }	// ROM 0x0031114c SetBlockParent
+UByte GetBlockDelta(const void* data)			{ return SkiaBlock::Of(data)->fDelta; }		// ROM 0x00311154 GetBlockDelta
+void IncrementBlockBusy(void* data)				{ SkiaBlock::Of(data)->fBusy++; }			// ROM 0x00311174 IncrementBlockBusy
+void DecrementBlockBusy(void* data)				{ SkiaBlock::Of(data)->fBusy--; }			// ROM 0x00311184 DecrementBlockBusy
 
-// ROM 0x002ebe48 GetBlockPhysicalSize
+// ROM 0x0031115c GetBlockPhysicalSize
 Size
 GetBlockPhysicalSize(const void* data)
 {
@@ -298,7 +298,7 @@ GetBlockPhysicalSize(const void* data)
 }
 
 
-// ROM 0x002ed840 GetDirectBlockSize
+// ROM 0x00312b54 GetDirectBlockSize
 // The size the client asked for.
 Size
 GetDirectBlockSize(const void* data)
@@ -312,7 +312,7 @@ GetDirectBlockSize(const void* data)
 	The free list
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002eb538 SetFreeChain
+// ROM 0x0031084c SetFreeChain
 // Links a free block between prev and next (nil: an end of the list).
 static void
 SetFreeChain(SkiaBlock* block, SkiaBlock* prev, SkiaBlock* next)
@@ -331,7 +331,7 @@ SetFreeChain(SkiaBlock* block, SkiaBlock* prev, SkiaBlock* next)
 }
 
 
-// ROM 0x002eca44 RemoveFreeBlock
+// ROM 0x00311d58 RemoveFreeBlock
 // Unlinks a free block (the rover moves to the head if it was it); the
 // block after it is no longer preceded by free space.
 static void
@@ -354,7 +354,7 @@ RemoveFreeBlock(SkiaBlock* block)
 }
 
 
-// ROM 0x002ece98 MoveFreeBlock
+// ROM 0x003121ac MoveFreeBlock
 // The free block gives up `by` bytes at its start: its header moves up.
 static void
 MoveFreeBlock(SkiaBlock* block, Size by)
@@ -373,7 +373,7 @@ MoveFreeBlock(SkiaBlock* block, Size by)
 }
 
 
-// ROM 0x002edb54 LockedBlock
+// ROM 0x00312e68 LockedBlock
 // The first busy block between two blocks (from the end of `from`, which may
 // be free, up to `upTo`), or nil.
 static SkiaBlock*
@@ -396,7 +396,7 @@ LockedBlock(SkiaBlock* from, SkiaBlock* upTo)
 	Sliding
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ed88c SlideBlocksDown
+// ROM 0x00312ba0 SlideBlocksDown
 // Moves the allocated blocks after the free block `f` down over it, until
 // `upTo` (the next free block, which merges) is reached; returns the free
 // block, now above them.  Only a handle's master pointer is told (a direct
@@ -439,7 +439,7 @@ SlideBlocksDown(SkiaBlock* f, SkiaBlock* upTo)
 }
 
 
-// ROM 0x002ed9fc SlideBlocksUp
+// ROM 0x00312d10 SlideBlocksUp
 // The mirror: the allocated blocks between `from` (an allocated block, not
 // moved) and the free block `free` move up over it, so the free space ends
 // up just after `from`; a free block met on the way merges.
@@ -497,7 +497,7 @@ SlideBlocksUp(SkiaBlock* from, SkiaBlock* free)
 }
 
 
-// ROM 0x002ee054 JumpBlock
+// ROM 0x00313368 JumpBlock
 // The allocated blocks in [from, upTo) each jump to a new block elsewhere
 // in the heap, freeing their space (the free blocks among them merge into
 // it).
@@ -536,7 +536,7 @@ JumpBlock(SkiaBlock* from, SkiaBlock* upTo)
 }
 
 
-// ROM 0x002edbb0 FindSmallestSlide
+// ROM 0x00312ec4 FindSmallestSlide
 // Finds the cheapest way to make `size` bytes of free space by merging two
 // adjacent free blocks (sliding the allocated blocks between them, which
 // must not be busy), does it, and returns the merged free block; nil if
@@ -706,7 +706,7 @@ FindSmallestSlide(void** blockData, Size size, Size size2)
 }
 
 
-// ROM 0x002edfc4 SearchFreeList
+// ROM 0x003132d8 SearchFreeList
 // A free block of at least `size` bytes: round the free list from the
 // rover, then, unless this allocation may not compact, by sliding.
 static SkiaBlock*
@@ -738,7 +738,7 @@ SearchFreeList(Size size)
 }
 
 
-// ROM 0x002edf18 CompactHeap
+// ROM 0x0031322c CompactHeap
 // Slides every movable block down, merging the free blocks; `keepData`, a
 // block's data in the heap, is followed and its new address returned.
 void*
@@ -777,7 +777,7 @@ CompactHeap(SkiaHeap* heap, void* keepData)
 	Growing and shrinking
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002eb608 ExtendVMHeap
+// ROM 0x0031091c ExtendVMHeap
 // Grows the heap by `needed` bytes rounded to its extent units, moving the
 // sentinel up: the last free block grows, or the new space is a free block.
 // A VM-backed heap first has the stack manager extend its area and locks
@@ -840,7 +840,7 @@ ExtendVMHeap(SkiaHeap* heap, Size needed)
 }
 
 
-// ROM 0x002eb7c8 ShrinkSkiaHeapLeaving
+// ROM 0x00310adc ShrinkSkiaHeapLeaving
 // If the last free block reaches the end, the heap shrinks to leave
 // amountLeftFree of it (in extent units); the pages are released later, on
 // the stack manager's request (HeapReleaseRequestHandler).
@@ -879,7 +879,7 @@ ShrinkSkiaHeapLeaving(SkiaHeap* heap, Size amountLeftFree)
 }
 
 
-// ROM 0x002eb884 HeapReleaseRequestHandler
+// ROM 0x00310b98 HeapReleaseRequestHandler
 // The stack manager asks what a VM heap can give back: the pages between
 // what the heap uses (fRequested) and what it holds (fLimit); with `shrink`
 // the heap lets them go.
@@ -903,7 +903,7 @@ HeapReleaseRequestHandler(SkiaHeap* heap, VAddr* outStart, VAddr* outEnd, Boolea
 }
 
 
-// ROM 0x002eb9b0 RelocateHeap
+// ROM 0x00310cc4 RelocateHeap
 // The heap's memory is at a new address: every pointer in it is adjusted.
 void
 RelocateHeap(SkiaHeap* heap, char* newBase)
@@ -957,7 +957,7 @@ RelocateHeap(SkiaHeap* heap, char* newBase)
 	Heaps
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ecc1c CreatePrivateBlock
+// ROM 0x00311f30 CreatePrivateBlock
 // A block of the heap's own: never moved, never freed.
 static void
 CreatePrivateBlock(SkiaBlock* block, UByte type)
@@ -970,7 +970,7 @@ CreatePrivateBlock(SkiaBlock* block, UByte type)
 }
 
 
-// ROM 0x002ebb10 NewHeap
+// ROM 0x00310e24 NewHeap
 // Lays a heap out in `area`: the header block (this record), one free block,
 // the sentinel.  initialSize is what the heap starts as, and its extent
 // unit; maxSize is what it may grow to.  Returns the heap (the record).
@@ -1024,7 +1024,7 @@ NewHeap(void* area, Size maxSize, Size initialSize)
 }
 
 
-// ROM 0x002ebc24 GetHeaps
+// ROM 0x00310f38 GetHeaps
 // Lists heaps: `count` of them (all, -1) after skipping `skip`, from the
 // children of `from` (nil: the first heap); returns how many.
 int
@@ -1048,7 +1048,7 @@ GetHeaps(SkiaHeap* from, int skip, int count, SkiaHeap** outHeaps)
 }
 
 
-// ROM 0x002ebe80 FindHeap
+// ROM 0x00311194 FindHeap
 // The innermost heap whose range holds the address, or nil.
 SkiaHeap*
 FindHeap(const void* addr)
@@ -1071,7 +1071,7 @@ FindHeap(const void* addr)
 }
 
 
-// ROM 0x002ebecc FindBlock
+// ROM 0x003111e0 FindBlock
 // The block of the current heap holding the address: the last free block
 // at or below it, then along the blocks from there (the sentinel for the
 // heap's end).
@@ -1125,7 +1125,7 @@ FindBlock(const void* addr)
 	Blocks
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ecaa4 NewBlock  (0x002ecaa0 NewBlockLow is the same entry)
+// ROM 0x00311db8 NewBlock  (0x002ecaa0 NewBlockLow is the same entry)
 // A block for `size` bytes from the current heap: the first free block from
 // the rover that holds it (taking it whole if what would be left is
 // smaller than a header), else what SearchFreeList finds (sliding), else
@@ -1176,7 +1176,7 @@ NewBlock(Size size)
 }
 
 
-// ROM 0x002ecbd0 NewDirectBlock
+// ROM 0x00311ee4 NewDirectBlock
 // A Ptr's block.
 void*
 NewDirectBlock(Size size)
@@ -1195,7 +1195,7 @@ NewDirectBlock(Size size)
 }
 
 
-// ROM 0x002ed9d0 NewWeakBlock
+// ROM 0x00312ce4 NewWeakBlock
 // A direct block that is not worth compacting for.
 void*
 NewWeakBlock(Size size)
@@ -1234,7 +1234,7 @@ NewWeakBlockInHeaps(SkiaHeap* heap, Size size)
 }
 
 
-// ROM 0x002ebd44 NewTemporaryBlock
+// ROM 0x00311058 NewTemporaryBlock
 // A locked direct block, from the current heap or any other.
 void*
 NewTemporaryBlock(Size size)
@@ -1255,7 +1255,7 @@ NewTemporaryBlock(Size size)
 }
 
 
-// ROM 0x002ebda8 DisposeTemporaryBlock
+// ROM 0x003110bc DisposeTemporaryBlock
 void
 DisposeTemporaryBlock(void* data)
 {
@@ -1267,7 +1267,7 @@ DisposeTemporaryBlock(void* data)
 }
 
 
-// ROM 0x002ecf0c KillBlock  (0x002ed0c4 DisposeDirectBlock is the same entry)
+// ROM 0x00312220 KillBlock  (0x002ed0c4 DisposeDirectBlock is the same entry)
 // Frees a block: it joins the free block before it and/or after it, or
 // becomes one, in its place in the free list; the rover falls back to it
 // if it is lower.
@@ -1340,7 +1340,7 @@ DisposeDirectBlock(void* data)
 }
 
 
-// ROM 0x002ed0c8 TrySetSize
+// ROM 0x003123dc TrySetSize
 // How a block might grow by `grow` bytes (to `newPhysical`): 1 in place
 // (the free block after it holds the growth - if need be after the blocks
 // in the way jumped elsewhere, or after sliding), 3 by sliding down into
@@ -1431,7 +1431,7 @@ TrySetSize(SkiaBlock** blockPtr, Size grow, Size newPhysical)
 }
 
 
-// ROM 0x002ed358 SetBlockSize
+// ROM 0x0031266c SetBlockSize
 // Resizes a block to newSize bytes; returns its data, wherever it is now,
 // or nil if the heap cannot hold it (having asked the heap's hooks and
 // tried to grow).  A shrink gives the tail back (a small one is absorbed
@@ -1628,7 +1628,7 @@ finish:
 }
 
 
-// ROM 0x002ed83c SetDirectBlockSize
+// ROM 0x00312b50 SetDirectBlockSize
 void*
 SetDirectBlockSize(void* data, Size newSize)
 {
@@ -1640,7 +1640,7 @@ SetDirectBlockSize(void* data, Size newSize)
 	Master pointers and indirect blocks
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ecc54 AllocateMoreMasters
+// ROM 0x00311f68 AllocateMoreMasters
 // A private block of fMastersPerChunk master pointers (in the master
 // pointer heap, if that is another), chained onto the free master list.
 static void
@@ -1677,7 +1677,7 @@ AllocateMoreMasters(void)
 }
 
 
-// ROM 0x002ecd2c AllocateMasterPointer
+// ROM 0x00312040 AllocateMasterPointer
 static SkiaMasterPointer*
 AllocateMasterPointer(SkiaHeap* heap)
 {
@@ -1696,7 +1696,7 @@ AllocateMasterPointer(SkiaHeap* heap)
 }
 
 
-// ROM 0x002ecd78 FreeMasterPointer
+// ROM 0x0031208c FreeMasterPointer
 // (to the relocatable heap's free list, where handles live)
 static void
 FreeMasterPointer(SkiaHeap* heap, SkiaMasterPointer* m)
@@ -1708,7 +1708,7 @@ FreeMasterPointer(SkiaHeap* heap, SkiaMasterPointer* m)
 }
 
 
-// ROM 0x002ecda8 NewIndirectBlock
+// ROM 0x003120bc NewIndirectBlock
 // A Handle's block: a master pointer, and a block (after compacting the
 // heap if the free list has more than one block).
 SkiaMasterPointer*
@@ -1737,7 +1737,7 @@ NewIndirectBlock(Size size)
 }
 
 
-// ROM 0x002ece38 NewFakeIndirectBlock
+// ROM 0x0031214c NewFakeIndirectBlock
 // A handle on memory that is not a block (NewFakeHandle): a master pointer
 // with the size where the heap would be.
 SkiaMasterPointer*
@@ -1754,7 +1754,7 @@ NewFakeIndirectBlock(void* address, Size size)
 }
 
 
-// ROM 0x002ece74 IsFakeIndirectBlock
+// ROM 0x00312188 IsFakeIndirectBlock
 Boolean
 IsFakeIndirectBlock(const SkiaMasterPointer* m)
 {
@@ -1762,7 +1762,7 @@ IsFakeIndirectBlock(const SkiaMasterPointer* m)
 }
 
 
-// ROM 0x002ecef4 GetFakeIndirectBlockSize
+// ROM 0x00312208 GetFakeIndirectBlockSize
 Size
 GetFakeIndirectBlockSize(const SkiaMasterPointer* m)
 {
@@ -1770,7 +1770,7 @@ GetFakeIndirectBlockSize(const SkiaMasterPointer* m)
 }
 
 
-// ROM 0x002ed094 DisposeIndirectBlock
+// ROM 0x003123a8 DisposeIndirectBlock
 void
 DisposeIndirectBlock(SkiaMasterPointer* m)
 {
@@ -1780,7 +1780,7 @@ DisposeIndirectBlock(SkiaMasterPointer* m)
 }
 
 
-// ROM 0x002ed854 SetIndirectBlockSize
+// ROM 0x00312b68 SetIndirectBlockSize
 // Returns the block's data (its new address), nil if it could not be resized
 // (the ROM's callers read that from r0; a fake block gives its test result).
 void*
@@ -1795,7 +1795,7 @@ SetIndirectBlockSize(SkiaMasterPointer* m, Size newSize)
 }
 
 
-// ROM 0x002ed998 GetIndirectBlockSize
+// ROM 0x00312cac GetIndirectBlockSize
 Size
 GetIndirectBlockSize(const SkiaMasterPointer* m)
 {
@@ -1809,7 +1809,7 @@ GetIndirectBlockSize(const SkiaMasterPointer* m)
 	Bytes
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ebdec MoveBytes
+// ROM 0x00311100 MoveBytes
 void
 MoveBytes(const void* srcPtr, void* destPtr, Size byteCount)
 {
@@ -1817,7 +1817,7 @@ MoveBytes(const void* srcPtr, void* destPtr, Size byteCount)
 }
 
 
-// ROM 0x002ebdf0 BlockMove
+// ROM 0x00311104 BlockMove
 extern "C" void
 BlockMove(const void* srcPtr, void* destPtr, Size byteCount)
 {
@@ -1825,7 +1825,7 @@ BlockMove(const void* srcPtr, void* destPtr, Size byteCount)
 }
 
 
-// ROM 0x002ebe5c CopyBytes
+// ROM 0x00311170 CopyBytes
 // (the ROM's copies forward; the ranges of its callers do not overlap the wrong way)
 void
 CopyBytes(const void* srcPtr, void* destPtr, Size byteCount)
@@ -1834,7 +1834,7 @@ CopyBytes(const void* srcPtr, void* destPtr, Size byteCount)
 }
 
 
-// ROM 0x002ec088 ZeroBytes
+// ROM 0x0031139c ZeroBytes
 extern "C" void
 ZeroBytes(void* p, Size length)
 {
@@ -1842,7 +1842,7 @@ ZeroBytes(void* p, Size length)
 }
 
 
-// ROM 0x002ec174 FillBytes
+// ROM 0x00311488 FillBytes
 extern "C" void
 FillBytes(void* p, Size length, UChar pattern)
 {
@@ -1850,7 +1850,7 @@ FillBytes(void* p, Size length, UChar pattern)
 }
 
 
-// ROM 0x002ec1b0 FillLongs
+// ROM 0x003114c4 FillLongs
 // `length` bytes of the pattern, a word at a time (the tail bytes take the
 // pattern's leading bytes).
 extern "C" void
@@ -1865,7 +1865,7 @@ FillLongs(void* p, Size length, ULong pattern)
 }
 
 
-// ROM 0x002ec280 EqualBytes
+// ROM 0x00311594 EqualBytes
 extern "C" int
 EqualBytes(const void* a, const void* b, Size length)
 {
@@ -1873,7 +1873,7 @@ EqualBytes(const void* a, const void* b, Size length)
 }
 
 
-// ROM 0x002ec320 XORBytes
+// ROM 0x00311634 XORBytes
 extern "C" void
 XORBytes(const void* src1, const void* src2, void* dest, Size size)
 {

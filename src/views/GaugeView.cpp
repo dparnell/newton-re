@@ -3,7 +3,7 @@
 
 	Contains:	TGaugeView: a bar filled to its value, with a knob when editable.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "GaugeView.h"
@@ -19,7 +19,7 @@
 #include "NewtonTime.h"
 
 
-// ROM 0x0018ada4 ClassID__10TGaugeViewCFv
+// ROM 0x00188d74 ClassID__10TGaugeViewCFv
 long
 TGaugeView::ClassID(void) const
 {
@@ -27,7 +27,7 @@ TGaugeView::ClassID(void) const
 }
 
 
-// ROM 0x0018adac DerivedFrom__10TGaugeViewCFl
+// ROM 0x00188d7c DerivedFrom__10TGaugeViewCFl
 Boolean
 TGaugeView::DerivedFrom(long id) const
 {
@@ -35,7 +35,7 @@ TGaugeView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x0018ade0 Constructor__10TGaugeViewFRC6RefVarP5TView
+// ROM 0x00188db0 Constructor__10TGaugeViewFRC6RefVarP5TView
 // The maximum from maxValue (100 without one), the minimum from minValue
 // (0).
 void
@@ -53,7 +53,7 @@ TGaugeView::Constructor(RefArg context, TView* parent)
 }
 
 
-// ROM 0x0018aed4 SetValue__10TGaugeViewFRC6RefVarT1
+// ROM 0x00188ea4 SetValue__10TGaugeViewFRC6RefVarT1
 // maxValue and minValue set the limits; then as TView::SetValue (whose
 // body the ROM repeats here).
 void
@@ -67,7 +67,7 @@ TGaugeView::SetValue(RefArg slot, RefArg value)
 }
 
 
-// ROM 0x0018af84 RealDraw__10TGaugeViewFR5TRect
+// ROM 0x00188f54 RealDraw__10TGaugeViewFR5TRect
 // The bar: viewValue pinned to the limits; the bounds made an odd height
 // (a pixel off the bottom); an editable gauge keeps a knob's width (the
 // height) out of the range; the filled part runs from the left to half
@@ -136,7 +136,7 @@ TGaugeView::RealDraw(Rect& /*bounds*/)
 }
 
 
-// ROM 0x0018b2d0 RealDoCommand__10TGaugeViewFRC6RefVar
+// ROM 0x001892a0 RealDoCommand__10TGaugeViewFRC6RefVar
 // aeClick on an editable gauge (vReadOnly clear) tracks the pen to set
 // the value (TrackSetValue), the command's result its answer; then as
 // TView.
@@ -154,7 +154,7 @@ TGaugeView::RealDoCommand(RefArg cmd)
 }
 
 
-// ROM 0x0018b344 TrackSetValue__10TGaugeViewFP11TUnitPublic
+// ROM 0x00189314 TrackSetValue__10TGaugeViewFP11TUnitPublic
 // The pen tracked, its ink off: each turn the value under the stroke's
 // last point - the point's distance from the left, half a step on, as a
 // fraction of the width in the range, clamped to it - set when it

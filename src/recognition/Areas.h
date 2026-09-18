@@ -17,7 +17,7 @@
 				InitAreas/GetAreasHit), GetInfoFor and ParamsAllSet (the
 				domains' parameter blocks), the dictionary chains.
 
-	Reconstructed from the MP2100 D ROM (0x00219a7c-0x0021a094); each
+	Reconstructed from the MP2x00 US ROM (0x0021c1ac-0x0021c7c4); each
 	function cites its origin.
 */
 
@@ -52,30 +52,30 @@ struct Assoc
 class TTypeAssoc : public TDArray
 {
 public:
-	static TTypeAssoc*	Make(void);			// ROM 0x00229f30 Make__10TTypeAssocSFv
-	long			ITypeAssoc(void);			// ROM 0x00229f98 ITypeAssoc__10TTypeAssocFv - ==> 0, or an error
+	static TTypeAssoc*	Make(void);			// ROM 0x0022c778 Make__10TTypeAssocSFv
+	long			ITypeAssoc(void);			// ROM 0x0022c7e0 ITypeAssoc__10TTypeAssocFv - ==> 0, or an error
 
-	virtual void		IDispose(void);			// ROM 0x00229fa4 IDispose__10TTypeAssocFv - the parameter blocks that are ours freed with it
-	virtual void		Dump(TMsg* msg);			// ROM 0x0022a1d8 Dump__10TTypeAssocFP4TMsg (nothing)
+	virtual void		IDispose(void);			// ROM 0x0022c7ec IDispose__10TTypeAssocFv - the parameter blocks that are ours freed with it
+	virtual void		Dump(TMsg* msg);			// ROM 0x0022ca20 Dump__10TTypeAssocFP4TMsg (nothing)
 
-	TTypeAssoc*		Copy(void);				// ROM 0x0022a030 Copy__10TTypeAssocFv
-	ULong			AddAssoc(const Assoc* assoc);	// ROM 0x0022a088 AddAssoc__10TTypeAssocFP5Assoc - ==> its index, -1 for no memory
-	void			MergeAssoc(TTypeAssoc* other);	// ROM 0x0022a150 MergeAssoc__10TTypeAssocFP10TTypeAssoc
-	Assoc*			GetAssoc(ULong index);		// ROM 0x0022a1d0 GetAssoc__10TTypeAssocFUl
+	TTypeAssoc*		Copy(void);				// ROM 0x0022c878 Copy__10TTypeAssocFv
+	ULong			AddAssoc(const Assoc* assoc);	// ROM 0x0022c8d0 AddAssoc__10TTypeAssocFP5Assoc - ==> its index, -1 for no memory
+	void			MergeAssoc(TTypeAssoc* other);	// ROM 0x0022c998 MergeAssoc__10TTypeAssocFP10TTypeAssoc
+	Assoc*			GetAssoc(ULong index);		// ROM 0x0022ca18 GetAssoc__10TTypeAssocFUl
 };
 
 class TRecArea : public TRecObject
 {
 public:
-	static TRecArea*	Make(ULong viewFlags, ULong flags);		// ROM 0x00219a7c Make__8TRecAreaSFUlT1
+	static TRecArea*	Make(ULong viewFlags, ULong flags);		// ROM 0x0021c1ac Make__8TRecAreaSFUlT1
 
-	virtual void		Dispose(void);							// ROM 0x00219b30 Dispose__8TRecAreaFv (released; gone when no user is left)
-	virtual void		Dump(TMsg* msg);						// ROM 0x0021a090 Dump__8TRecAreaFP4TMsg (nothing)
-	virtual long		SizeInBytes(void);						// ROM 0x00219fd4 SizeInBytes__8TRecAreaFv
-	virtual void		IDispose(void);							// ROM 0x00219c5c IDispose__8TRecAreaFv
+	virtual void		Dispose(void);							// ROM 0x0021c260 Dispose__8TRecAreaFv (released; gone when no user is left)
+	virtual void		Dump(TMsg* msg);						// ROM 0x0021c7c0 Dump__8TRecAreaFP4TMsg (nothing)
+	virtual long		SizeInBytes(void);						// ROM 0x0021c704 SizeInBytes__8TRecAreaFv
+	virtual void		IDispose(void);							// ROM 0x0021c38c IDispose__8TRecAreaFv
 
-	void				Clone(void);							// ROM 0x00219f4c Clone__8TRecAreaFv
-	Boolean				Release(void);							// ROM 0x00219fb8 Release__8TRecAreaFv - ==> whether no user is left
+	void				Clone(void);							// ROM 0x0021c67c Clone__8TRecAreaFv
+	Boolean				Release(void);							// ROM 0x0021c6e8 Release__8TRecAreaFv - ==> whether no user is left
 
 	long				fUsers;			// +0x08  Clone/Release (0: one user)
 	ULong				fViewFlags;		// +0x0c  the recognition bits of the view's viewFlags
@@ -90,17 +90,17 @@ public:
 class TAreaList : public TDArray
 {
 public:
-	static TAreaList*	Make(void);								// ROM 0x00219d68 Make__9TAreaListSFv
-	long				IAreaList(void);						// ROM 0x00219dd0 IAreaList__9TAreaListFv
+	static TAreaList*	Make(void);								// ROM 0x0021c498 Make__9TAreaListSFv
+	long				IAreaList(void);						// ROM 0x0021c500 IAreaList__9TAreaListFv
 
-	virtual void		Dispose(void);							// ROM 0x00219ddc Dispose__9TAreaListFv (the areas released; the list gone when no user is left)
-	virtual void		IDispose(void);							// ROM 0x00219e3c IDispose__9TAreaListFv
+	virtual void		Dispose(void);							// ROM 0x0021c50c Dispose__9TAreaListFv (the areas released; the list gone when no user is left)
+	virtual void		IDispose(void);							// ROM 0x0021c56c IDispose__9TAreaListFv
 
-	void				Clone(void);							// ROM 0x00219e40 Clone__9TAreaListFv - the areas too
-	TRecArea*			GetArea(ULong index);					// ROM 0x00219e88 GetArea__9TAreaListFUl
-	long				AddArea(TRecArea* area);				// ROM 0x00219ea8 AddArea__9TAreaListFP8TRecArea - cloned; ==> 0, or 1 for no memory
-	Boolean				FindMatchingView(ULong viewId);			// ROM 0x00219ef8 FindMatchingView__9TAreaListFUl
-	TRecArea*			GetMergedArea(void);					// ROM 0x00219fac GetMergedArea__9TAreaListFv - the last one
+	void				Clone(void);							// ROM 0x0021c570 Clone__9TAreaListFv - the areas too
+	TRecArea*			GetArea(ULong index);					// ROM 0x0021c5b8 GetArea__9TAreaListFUl
+	long				AddArea(TRecArea* area);				// ROM 0x0021c5d8 AddArea__9TAreaListFP8TRecArea - cloned; ==> 0, or 1 for no memory
+	Boolean				FindMatchingView(ULong viewId);			// ROM 0x0021c628 FindMatchingView__9TAreaListFUl
+	TRecArea*			GetMergedArea(void);					// ROM 0x0021c6dc GetMergedArea__9TAreaListFv - the last one
 };
 
 #endif	/* __AREAS_H */

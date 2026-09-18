@@ -5,7 +5,7 @@
 				its slots, the attribute cache, preferences, the date and
 				time string wrappers over TDate (Dates.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Locale.h"
@@ -20,14 +20,14 @@
 #include "OSErrors.h"
 #include "NewtonMemory.h"
 
-// ROM 0x0c101074 gSpaceStr
-// ROM 0x0c101078 gZeroStr
+// ROM 0x0c100f84 gSpaceStr
+// ROM 0x0c100f88 gZeroStr
 static const UniChar kSpaceStr[2] = { ' ', 0 };
 static const UniChar kZeroStr[2] = { '0', 0 };
 const UniChar*	gSpaceStr = kSpaceStr;
 const UniChar*	gZeroStr = kZeroStr;
 
-// ROM 0x0c103464 gLocaleCache (and the ten cached attributes after it)
+// ROM 0x0c106198 gLocaleCache (and the ten cached attributes after it)
 LocaleCache*	gLocaleCache = nil;
 
 
@@ -35,7 +35,7 @@ LocaleCache*	gLocaleCache = nil;
 	T h e   l o c a l e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000ed21c IntlResources__Fv
+// ROM 0x000ebc44 IntlResources__Fv
 // The international global frame.
 Ref
 IntlResources(void)
@@ -44,7 +44,7 @@ IntlResources(void)
 }
 
 
-// ROM 0x000edafc GetCurrentLocale__Fv
+// ROM 0x000ec524 GetCurrentLocale__Fv
 Ref
 GetCurrentLocale(void)
 {
@@ -53,7 +53,7 @@ GetCurrentLocale(void)
 }
 
 
-// ROM 0x000edcb4 FindLocaleBundleByName__FRC6RefVar
+// ROM 0x000ec6fc FindLocaleBundleByName__FRC6RefVar
 // A symbol: the localeTable's bundle of that name; a string: the
 // bundle of the locales array whose title it is.
 Ref
@@ -92,7 +92,7 @@ FindLocaleBundleByName(RefArg name)
 }
 
 
-// ROM 0x000edb40 SetCurrentLocale__FRC6RefVar
+// ROM 0x000ec568 SetCurrentLocale__FRC6RefVar
 // The locale (a bundle, or a name FindLocaleBundleByName knows) made
 // current and its attributes cached - put back when it lacks them; the
 // preference set and UpdateLocaleFromUserConfig called.
@@ -122,7 +122,7 @@ SetCurrentLocale(RefArg locale)
 }
 
 
-// ROM 0x000ed268 GetLocaleSlot__FRC6RefVarT1
+// ROM 0x000ebc90 GetLocaleSlot__FRC6RefVarT1
 // A slot of the locale: nil or 'currentLocaleBundle for the current one,
 // 'systemLocaleBundle for the system's, else the bundle given.
 Ref
@@ -142,7 +142,7 @@ GetLocaleSlot(RefArg locale, RefArg slot)
 }
 
 
-// ROM 0x000ee478 GetLocaleSlot__FRC6RefVar
+// ROM 0x000ecec0 GetLocaleSlot__FRC6RefVar
 Ref
 GetLocaleSlot(RefArg slot)
 {
@@ -151,7 +151,7 @@ GetLocaleSlot(RefArg slot)
 }
 
 
-// ROM 0x000ede98 ROMCacheLocaleAttributes__Fv
+// ROM 0x000ec8e0 ROMCacheLocaleAttributes__Fv
 // The current locale's day and month names and number format strings
 // cached (the shorter day names fall back on the longer); false when it
 // has no long day names or a number format string is missing, and the
@@ -160,6 +160,15 @@ GetLocaleSlot(RefArg slot)
 Boolean
 ROMCacheLocaleAttributes(void)
 {
+	// DEVIATION: the ROM's gLocaleCache is eleven RefVar globals in the
+	// initialised RAM area, which are simply there from the start; the
+	// host has to make them, and the boot sets the locale (SetLocale, from
+	// the user configuration) before it calls InitInternationalUtils, so
+	// the cache is made here as well rather than only there.
+	if (gLocaleCache == nil)
+		gLocaleCache = new LocaleCache;
+	if (gLocaleCache == nil)
+		return false;
 	RefVar locale(GetCurrentLocale());
 	RefVar dateFormat(GetProtoVariable(locale, RSSYMlongdateformat, nil));
 	RefVar longDofWeek(GetProtoVariable(dateFormat, RSSYMlongdofweek, nil));
@@ -220,7 +229,7 @@ ROMCacheLocaleAttributes(void)
 }
 
 
-// ROM 0x000ee3e0 CacheLocaleAttributes__Fv
+// ROM 0x000ece28 CacheLocaleAttributes__Fv
 // The attributes cached, and the number prototype strings remade.
 Boolean
 CacheLocaleAttributes(void)
@@ -235,7 +244,7 @@ CacheLocaleAttributes(void)
 }
 
 
-// ROM 0x000ed050 InitInternationalUtils__Fv
+// ROM 0x000eba78 InitInternationalUtils__Fv
 // The cache made (its refs GC roots) and filled from the current locale.
 NewtonErr
 InitInternationalUtils(void)
@@ -257,7 +266,7 @@ InitInternationalUtils(void)
 	P r e f e r e n c e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0012ab34 GetPreference__FRC6RefVar
+// ROM 0x001290d8 GetPreference__FRC6RefVar
 // A slot of the user configuration (vars.userConfiguration).
 Ref
 GetPreference(RefArg slot)
@@ -267,7 +276,7 @@ GetPreference(RefArg slot)
 }
 
 
-// ROM 0x0012aba8 SetPreference__FRC6RefVarT1
+// ROM 0x0012914c SetPreference__FRC6RefVarT1
 void
 SetPreference(RefArg slot, RefArg value)
 {
@@ -280,7 +289,7 @@ SetPreference(RefArg slot, RefArg value)
 	D a t e   a n d   t i m e   s t r i n g s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000ed8f4 LongDateString__FUlT1PUsT1RC6RefVar
+// ROM 0x000ec31c LongDateString__FUlT1PUsT1RC6RefVar
 void
 LongDateString(ULong minutes, ULong spec, UniChar* str, ULong max, RefArg locale)
 {
@@ -292,7 +301,7 @@ LongDateString(ULong minutes, ULong spec, UniChar* str, ULong max, RefArg locale
 }
 
 
-// ROM 0x000ed974 ShortDateString__FUlT1PUsT1RC6RefVar
+// ROM 0x000ec39c ShortDateString__FUlT1PUsT1RC6RefVar
 void
 ShortDateString(ULong minutes, ULong spec, UniChar* str, ULong max, RefArg locale)
 {
@@ -304,7 +313,7 @@ ShortDateString(ULong minutes, ULong spec, UniChar* str, ULong max, RefArg local
 }
 
 
-// ROM 0x000ed9f4 TimeString__FUlT1PUsT1RC6RefVar
+// ROM 0x000ec41c TimeString__FUlT1PUsT1RC6RefVar
 void
 TimeString(ULong minutes, ULong spec, UniChar* str, ULong max, RefArg locale)
 {
@@ -316,7 +325,7 @@ TimeString(ULong minutes, ULong spec, UniChar* str, ULong max, RefArg locale)
 }
 
 
-// ROM 0x000eda78 TimeFrameString__FRC6RefVarUlPUsT2T1
+// ROM 0x000ec4a0 TimeFrameString__FRC6RefVarUlPUsT2T1
 void
 TimeFrameString(RefArg dateFrame, ULong spec, UniChar* str, ULong max, RefArg locale)
 {
@@ -332,7 +341,7 @@ TimeFrameString(RefArg dateFrame, ULong spec, UniChar* str, ULong max, RefArg lo
 	T h e   n a t i v e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001f36b8 FGetLocale__FRC6RefVar
+// ROM 0x001f12a0 FGetLocale__FRC6RefVar
 static Ref
 FGetLocale(RefArg /*rcvr*/)
 {
@@ -340,7 +349,7 @@ FGetLocale(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f36bc FSetLocale__FRC6RefVarT1
+// ROM 0x001f12a4 FSetLocale__FRC6RefVarT1
 static Ref
 FSetLocale(RefArg /*rcvr*/, RefArg locale)
 {

@@ -3,7 +3,7 @@
 
 	Contains:	TPictureView: a view showing a picture.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "PictureView.h"
@@ -11,7 +11,7 @@
 #include "ObjectHeap.h"
 
 
-// ROM 0x0018ad68 ClassID__12TPictureViewCFv
+// ROM 0x00188d38 ClassID__12TPictureViewCFv
 long
 TPictureView::ClassID(void) const
 {
@@ -19,7 +19,7 @@ TPictureView::ClassID(void) const
 }
 
 
-// ROM 0x0018ad70 DerivedFrom__12TPictureViewCFl
+// ROM 0x00188d40 DerivedFrom__12TPictureViewCFl
 Boolean
 TPictureView::DerivedFrom(long id) const
 {
@@ -27,7 +27,7 @@ TPictureView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x0018bb40 RealDraw__12TPictureViewFR5TRect
+// ROM 0x00189b10 RealDraw__12TPictureViewFR5TRect
 void
 TPictureView::RealDraw(Rect& /*bounds*/)
 {
@@ -35,7 +35,7 @@ TPictureView::RealDraw(Rect& /*bounds*/)
 }
 
 
-// ROM 0x0018bd00 DrawUsingRect__12TPictureViewFRC5TRect
+// ROM 0x00189cd0 DrawUsingRect__12TPictureViewFRC5TRect
 // The icon (GetValue: through the proto and parent chains) drawn in the
 // rectangle by the viewJustify bits - centred both ways for a template
 // without a viewJustify - in the viewTransferMode (srcCopy without one).

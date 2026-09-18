@@ -6,7 +6,7 @@
 				memory messages (the same plus the message machinery ports use).
 				Thin wrappers over the SMem*SWI system calls.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserSharedMem.h"
@@ -19,7 +19,7 @@
 	TUSharedMem
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00258674 Init__11TUSharedMemFv
+// ROM 0x0025a5ac Init__11TUSharedMemFv
 long
 TUSharedMem::Init()
 {
@@ -28,7 +28,7 @@ TUSharedMem::Init()
 }
 
 
-// ROM 0x00258698 SetBuffer__11TUSharedMemFPvUlT2
+// ROM 0x0025a5d0 SetBuffer__11TUSharedMemFPvUlT2
 long
 TUSharedMem::SetBuffer(void* buffer, ULong size, ULong permissions)
 {
@@ -36,7 +36,7 @@ TUSharedMem::SetBuffer(void* buffer, ULong size, ULong permissions)
 }
 
 
-// ROM 0x002586b0 GetSize__11TUSharedMemFPUlPPv
+// ROM 0x0025a5e8 GetSize__11TUSharedMemFPUlPPv
 long
 TUSharedMem::GetSize(ULong* returnSize, void** returnBuffer)
 {
@@ -44,7 +44,7 @@ TUSharedMem::GetSize(ULong* returnSize, void** returnBuffer)
 }
 
 
-// ROM 0x002586bc CopyToShared__11TUSharedMemFPvUlT2P10TUMsgToken
+// ROM 0x0025a5f4 CopyToShared__11TUSharedMemFPvUlT2P10TUMsgToken
 // A token names the message the memory came with, which lets the kernel
 // check the copy is legitimate.
 long
@@ -61,7 +61,7 @@ TUSharedMem::CopyToShared(void* buffer, ULong size, ULong offset, TUMsgToken* to
 }
 
 
-// ROM 0x00258710 CopyFromShared__11TUSharedMemFPUlPvUlT3P10TUMsgToken
+// ROM 0x0025a648 CopyFromShared__11TUSharedMemFPUlPvUlT3P10TUMsgToken
 long
 TUSharedMem::CopyFromShared(ULong* returnSize, void* buffer, ULong size, ULong offset, TUMsgToken* token)
 {
@@ -80,7 +80,7 @@ TUSharedMem::CopyFromShared(ULong* returnSize, void* buffer, ULong size, ULong o
 	TUSharedMemMsg
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00258774 Init__14TUSharedMemMsgFv
+// ROM 0x0025a6ac Init__14TUSharedMemMsgFv
 long
 TUSharedMemMsg::Init()
 {
@@ -89,7 +89,7 @@ TUSharedMemMsg::Init()
 }
 
 
-// ROM 0x00258798 SetTimerParms__14TUSharedMemMsgFUlP5TTime
+// ROM 0x0025a6d0 SetTimerParms__14TUSharedMemMsgFUlP5TTime
 // The timeout for the next call the message is used in, and optionally the
 // time at which a delayed send goes off.
 long
@@ -105,7 +105,7 @@ TUSharedMemMsg::SetTimerParms(TTimeout timeout, TTime* delay)
 }
 
 
-// ROM 0x002587ac SetMsgAvailPort__14TUSharedMemMsgFUl
+// ROM 0x0025a6e4 SetMsgAvailPort__14TUSharedMemMsgFUl
 long
 TUSharedMemMsg::SetMsgAvailPort(TObjectId availPortId)
 {
@@ -113,7 +113,7 @@ TUSharedMemMsg::SetMsgAvailPort(TObjectId availPortId)
 }
 
 
-// ROM 0x002587b4 GetSenderTaskId__14TUSharedMemMsgFPUl
+// ROM 0x0025a6ec GetSenderTaskId__14TUSharedMemMsgFPUl
 long
 TUSharedMemMsg::GetSenderTaskId(TObjectId* theSenderTaskId)
 {
@@ -121,7 +121,7 @@ TUSharedMemMsg::GetSenderTaskId(TObjectId* theSenderTaskId)
 }
 
 
-// ROM 0x002587bc GetSize__14TUSharedMemMsgFPUlPPvT1
+// ROM 0x0025a6f4 GetSize__14TUSharedMemMsgFPUlPPvT1
 long
 TUSharedMemMsg::GetSize(ULong* returnSize, void** returnBuffer, ULong* refConPtr)
 {
@@ -129,7 +129,7 @@ TUSharedMemMsg::GetSize(ULong* returnSize, void** returnBuffer, ULong* refConPtr
 }
 
 
-// ROM 0x002586a0 SetUserRefCon__14TUSharedMemMsgFUl
+// ROM 0x0025a5d8 SetUserRefCon__14TUSharedMemMsgFUl
 long
 TUSharedMemMsg::SetUserRefCon(ULong refCon)
 {
@@ -137,7 +137,7 @@ TUSharedMemMsg::SetUserRefCon(ULong refCon)
 }
 
 
-// ROM 0x002586a8 GetUserRefCon__14TUSharedMemMsgFPUl
+// ROM 0x0025a5e0 GetUserRefCon__14TUSharedMemMsgFPUl
 long
 TUSharedMemMsg::GetUserRefCon(ULong* refConPtr)
 {

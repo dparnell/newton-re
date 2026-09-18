@@ -21,8 +21,8 @@
 				TView::RemoveAllHilites does - steps its index and count
 				back itself.
 
-	Not in the DDK; reconstructed from the MP2100 D ROM (0x00260bdc-
-	0x00261060 and 0x00182e68-0x00183120), each function citing its origin.
+	Not in the DDK; reconstructed from the MP2x00 US ROM (0x00262b14-
+	0x00262f98 and 0x00180e38-0x001810f0), each function citing its origin.
 	DEVIATION: the ROM's Area answers a TRegion by value, a class the
 	reconstruction does not have; here it fills a region the caller owns.
 	NOT YET: the copy of the selected text a TParagraphHilite carries (for
@@ -47,15 +47,15 @@
 class THilite
 {
 public:
-					THilite();								// ROM 0x00260bdc __ct__7THiliteFv
-	virtual			~THilite();								// ROM 0x00260c10 __dt__7THiliteFv
+					THilite();								// ROM 0x00262b14 __ct__7THiliteFv
+	virtual			~THilite();								// ROM 0x00262b48 __dt__7THiliteFv
 
-	virtual THilite* Clone(void);							// ROM 0x00260c70 Clone__7THiliteFv
-	virtual void	UpdateBounds(void);						// ROM 0x00260cb0 UpdateBounds__7THiliteFv - the base has none to update
-	virtual Boolean	Overlaps(const Rect& r);				// ROM 0x00260cb4 Overlaps__7THiliteFRC5TRect
-	virtual Boolean	Encloses(const Point& pt);				// ROM 0x00260cbc Encloses__7THiliteFRC6TPoint
-	virtual void	Area(RgnHandle rgn);					// ROM 0x00260c28 Area__7THiliteFv - the bounds, as a region
-	void			CopyFrom(THilite* other);				// ROM 0x00260c9c CopyFrom__7THiliteFP7THilite
+	virtual THilite* Clone(void);							// ROM 0x00262ba8 Clone__7THiliteFv
+	virtual void	UpdateBounds(void);						// ROM 0x00262be8 UpdateBounds__7THiliteFv - the base has none to update
+	virtual Boolean	Overlaps(const Rect& r);				// ROM 0x00262bec Overlaps__7THiliteFRC5TRect
+	virtual Boolean	Encloses(const Point& pt);				// ROM 0x00262bf4 Encloses__7THiliteFRC6TPoint
+	virtual void	Area(RgnHandle rgn);					// ROM 0x00262b60 Area__7THiliteFv - the bounds, as a region
+	void			CopyFrom(THilite* other);				// ROM 0x00262bd4 CopyFrom__7THiliteFP7THilite
 
 	Rect			fBounds;			// +0x04  in the view's own coordinates
 };
@@ -70,14 +70,14 @@ class TParagraphView;
 class TParagraphHilite : public THilite
 {
 public:
-					TParagraphHilite(long start, long end);	// ROM 0x00182e68 __ct__16TParagraphHiliteFl (which takes the text length)
-	virtual			~TParagraphHilite();					// ROM 0x00182ef8 __dt__16TParagraphHiliteFv
+					TParagraphHilite(long start, long end);	// ROM 0x00180e38 __ct__16TParagraphHiliteFl (which takes the text length)
+	virtual			~TParagraphHilite();					// ROM 0x00180ec8 __dt__16TParagraphHiliteFv
 
-	virtual THilite* Clone(void);							// ROM 0x00182f50 Clone__16TParagraphHiliteFv
-	virtual Boolean	Overlaps(const Rect& r);				// ROM 0x00182fec Overlaps__16TParagraphHiliteFRC5TRect
-	virtual Boolean	Encloses(const Point& pt);				// ROM 0x00183070 Encloses__16TParagraphHiliteFRC6TPoint
-	virtual void	Area(RgnHandle rgn);					// ROM 0x001830c4 Area__16TParagraphHiliteFv
-	void			CopyFrom(THilite* other);				// ROM 0x00182fac CopyFrom__16TParagraphHiliteFP7THilite
+	virtual THilite* Clone(void);							// ROM 0x00180f20 Clone__16TParagraphHiliteFv
+	virtual Boolean	Overlaps(const Rect& r);				// ROM 0x00180fbc Overlaps__16TParagraphHiliteFRC5TRect
+	virtual Boolean	Encloses(const Point& pt);				// ROM 0x00181040 Encloses__16TParagraphHiliteFRC6TPoint
+	virtual void	Area(RgnHandle rgn);					// ROM 0x00181094 Area__16TParagraphHiliteFv
+	void			CopyFrom(THilite* other);				// ROM 0x00180f7c CopyFrom__16TParagraphHiliteFP7THilite
 
 	Boolean			HasArea(void) const		{ return fArea != nil && !EmptyRgn(fArea); }
 	void			SetArea(RgnHandle rgn);					// host: the region the paragraph worked out, and its bounding box
@@ -93,10 +93,10 @@ public:
 class HiliteLoop
 {
 public:
-					HiliteLoop(TView* view);				// ROM 0x00260f58 __ct__10HiliteLoopFP5TView
-					~HiliteLoop();							// ROM 0x00260ff8 __dt__10HiliteLoopFv
+					HiliteLoop(TView* view);				// ROM 0x00262e90 __ct__10HiliteLoopFP5TView
+					~HiliteLoop();							// ROM 0x00262f30 __dt__10HiliteLoopFv
 
-	Boolean			Next(void);								// ROM 0x00261030 Next__10HiliteLoopFv
+	Boolean			Next(void);								// ROM 0x00262f68 Next__10HiliteLoopFv
 
 	RefVar			fHilites;			// +0x00  the view's hilites array
 	long			fIndex;				// +0x04  the next one to hand out

@@ -8,7 +8,7 @@
 				is the current one; its visRgn is narrowed to what a view may
 				draw on and restored after.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "View.h"
@@ -27,7 +27,7 @@
 #include "NewtonExceptions.h"
 
 
-// ROM 0x000e4aa0 SetPattern__Fl
+// ROM 0x000e37e8 SetPattern__Fl
 // The port's pen pattern from a viewFormat pattern index: 1 white, 2
 // light gray, 3 gray, 4 dark gray, 5 black (12 black, 13 and 15 gray:
 // the hilite and drag frames); 14, the custom pattern, is the caller's.
@@ -54,7 +54,7 @@ SetPattern(long index)
 }
 
 
-// ROM 0x00303b70 DisposeFgPattern__Fv
+// ROM 0x00328e6c DisposeFgPattern__Fv
 // The pen pattern disposed and black put back.
 void
 DisposeFgPattern(void)
@@ -64,7 +64,7 @@ DisposeFgPattern(void)
 }
 
 
-// ROM 0x0019a378 GetPattern__FRC6RefVarPUcPPP8PixelMapUc
+// ROM 0x00197d2c GetPattern__FRC6RefVarPUcPPP8PixelMapUc
 // A pattern from its NewtonScript form: an integer is a standard pattern
 // index (1-5; a packed RGB with bit 28 NOT YET: a gray), a binary the
 // eight rows of a simple pattern.  NOT YET RECONSTRUCTED: the pattern
@@ -100,7 +100,7 @@ GetPattern(RefArg spec, Boolean* owned, PatternHandle* pattern, Boolean /*wasOwn
 }
 
 
-// ROM 0x00266308 SetCustomPattern__5TViewFRC6RefVar
+// ROM 0x00268240 SetCustomPattern__5TViewFRC6RefVar
 // The pen pattern from the view's slot (viewFillPattern, viewLinePattern,
 // viewFramePattern); ==> whether one was set.
 Boolean
@@ -122,7 +122,7 @@ TView::SetCustomPattern(RefArg slot)
 	S h o w i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00263f48 Show__5TViewFv
+// ROM 0x00265e80 Show__5TViewFv
 // The view shown: the strokes blocked, the view brought to the front, its
 // show effect set up, the view made visible (a child of the root view has
 // the visibility of the views around it recomputed; any other is
@@ -149,7 +149,7 @@ TView::Show(void)
 }
 
 
-// ROM 0x0026404c Hide__5TViewFv
+// ROM 0x00265f84 Hide__5TViewFv
 // The view hidden: the strokes blocked, the caret and popup let go of it,
 // its hide effect set up (the image taken from the screen), the
 // viewHideScript run, the view made invisible and the views around it
@@ -185,7 +185,7 @@ TView::Hide(void)
 }
 
 
-// ROM 0x00264cbc Drag__5TViewFP13TStrokePublicRC5TRect
+// ROM 0x00266bf4 Drag__5TViewFP13TStrokePublicRC5TRect
 // The view dragged with the pen: the caret hidden, the ink off, the root
 // view brought up to date and the view's image taken as a sprite
 // (TAnimate::SetupDragEffect) - the drag is off when there is no memory
@@ -301,7 +301,7 @@ TView::Drag(TStrokePublic* stroke, const Rect& limit)
 }
 
 
-// ROM 0x00263d48 ViewVisibleChanged__5TViewFP5TViewUc
+// ROM 0x00265c80 ViewVisibleChanged__5TViewFP5TViewUc
 // A child of the root view appeared, vanished or moved in the order: the
 // views from the front down to it have their visible regions recomputed
 // against what is in front (everything outside the root view's bounds to
@@ -349,7 +349,7 @@ TView::ViewVisibleChanged(TView* child, Boolean invalidate)
 }
 
 
-// ROM 0x00263b4c GetFrontMask__5TViewCFv
+// ROM 0x00265a84 GetFrontMask__5TViewCFv
 // What is in front of the view among its siblings: the regions of the
 // visible siblings in front that have a clipper or a fill, or the outer
 // bounds of their filled children.
@@ -395,7 +395,7 @@ TView::GetFrontMask(void) const
 }
 
 
-// ROM 0x002639d4 NarrowVisByIntersectingObscuringSiblingsAndUncles__5TViewFP5TViewP5TRect
+// ROM 0x0026590c NarrowVisByIntersectingObscuringSiblingsAndUncles__5TViewFP5TViewP5TRect
 // The port's visRgn less the filled or windowed views in front of this
 // one and of each ancestor up to upTo (the root view for nil) - only
 // those whose outer bounds meet the rectangle, when one is given.
@@ -437,7 +437,7 @@ TView::NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* boun
 }
 
 
-// ROM 0x00265a3c SetupVisRgn__5TViewCFv
+// ROM 0x00267974 SetupVisRgn__5TViewCFv
 // The port's visRgn narrowed to what the view may draw on: for each
 // ancestor from the view up to the root view, the clipper's visible
 // region, the bounds of a vClipping view, and less the front mask.  ==>
@@ -471,7 +471,7 @@ TView::SetupVisRgn(void) const
 	D r a w i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00265b54 Draw__5TViewFRC5TRectUc
+// ROM 0x00267a8c Draw__5TViewFRC5TRectUc
 void
 TView::Draw(const Rect& bounds, Boolean force)
 {
@@ -480,7 +480,7 @@ TView::Draw(const Rect& bounds, Boolean force)
 }
 
 
-// ROM 0x00265b90 Draw__5TViewF11TBaseRegionUc
+// ROM 0x00267ac8 Draw__5TViewF11TBaseRegionUc
 // The view drawn where the region meets it: an invisible view (or one
 // being deleted) only when forced; nothing when its outer bounds miss the
 // region (or its clipper's visible region does).  The port's visRgn is
@@ -591,7 +591,7 @@ TView::Draw(RgnHandle rgn, Boolean force)
 }
 
 
-// ROM 0x00266050 Update__5TViewF11TBaseRegionP5TView
+// ROM 0x00267f88 Update__5TViewF11TBaseRegionP5TView
 // An update: the port's visRgn cut to the region; the background erased
 // when the filler (this view when none) has no fill; the filler's
 // parent's children in front of the filler drawn and its parent's
@@ -627,7 +627,7 @@ TView::Update(RgnHandle rgn, TView* filler)
 }
 
 
-// ROM 0x00266200 DrawChildren__5TViewFRC5TRectP5TView
+// ROM 0x00268138 DrawChildren__5TViewFRC5TRectP5TView
 void
 TView::DrawChildren(const Rect& bounds, TView* after)
 {
@@ -636,7 +636,7 @@ TView::DrawChildren(const Rect& bounds, TView* after)
 }
 
 
-// ROM 0x0026623c DrawChildren__5TViewF11TBaseRegionP5TView
+// ROM 0x00268174 DrawChildren__5TViewF11TBaseRegionP5TView
 // The children drawn back to front - those after the given one (in front
 // of it) when one is given.  An evt.ex from a child ends the drawing.
 void
@@ -674,7 +674,7 @@ FormatBounds(TView* view, Rect* bounds)
 }
 
 
-// ROM 0x00266370 PreDraw__5TViewFR5TRect
+// ROM 0x002682a8 PreDraw__5TViewFR5TRect
 // The format's fill (a round rectangle when the corners are rounded) in
 // its pattern (the custom one from viewFillPattern) and the lines
 // (viewLineSpacing apart, from the top less the scroll origin, in patOr;
@@ -750,14 +750,14 @@ TView::PreDraw(Rect& drawBounds)
 }
 
 
-// ROM 0x002666bc RealDraw__5TViewFR5TRect
+// ROM 0x002685f4 RealDraw__5TViewFR5TRect
 // A plain view has no content of its own.
 void
 TView::RealDraw(Rect& /*bounds*/)
 { }
 
 
-// ROM 0x002666c0 PostDraw__5TViewFR5TRect
+// ROM 0x002685f8 PostDraw__5TViewFR5TRect
 // A selected view is hilited.  The frame in its pattern and pen (the
 // custom one from viewFramePattern; the hilite and drag-shadow frames a
 // gray frame with a black one of pen 2 - 4 for the caret slip - inside;
@@ -845,7 +845,7 @@ TView::PostDraw(Rect& /*drawBounds*/)
 }
 
 
-// ROM 0x00268ee8 Dirty__5TViewFPC5TRect
+// ROM 0x0026ae20 Dirty__5TViewFPC5TRect
 // The view (or the part of it in the rect) needs redrawing: its outer
 // bounds, cut to each vClipping ancestor's bounds up to the window view,
 // meet the window's visible region and go to the root view's update

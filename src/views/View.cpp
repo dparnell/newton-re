@@ -8,7 +8,7 @@
 				The drawing side is ViewDraw.cpp, the making of contexts and
 				views BuildView.cpp.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "View.h"
@@ -36,18 +36,18 @@
 #include "NewtonMemory.h"
 #include <string.h>
 
-TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101a1c gEmptyViewList__5TView
+TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101930 gEmptyViewList__5TView
 long		TView::gViewIdCounter = 0;			// ROM 0x0c102050
-TRootView*	gRootView = nil;					// ROM 0x0c101a20 gRootView
-// ROM 0x0c102618 gModalCount
+TRootView*	gRootView = nil;					// ROM 0x0c101934 gRootView
+// ROM 0x0c105524 gModalCount
 // How many modal dialogs are up.  NOT YET RECONSTRUCTED: the modal
 // dialog code that raises and lowers it, so nothing is ever modal.
 long		gModalCount = 0;
-RefStruct*	gSlotCacheTable = nil;				// ROM 0x0c10204c slotCacheRefs (the array, not a pointer into it: the host's heap compacts)
-Boolean		gSkipVisRegions = false;			// ROM 0x0c102054 gSkipVisRegions
-Boolean		gDontDrawHilites = false;			// ROM 0x0c100cb8 gDontDrawHilites
-Boolean		gOutlineViews = false;				// ROM 0x0c101a28 gOutlineViews
-long		gSlowMotion = 0;					// ROM 0x0c101a2c gSlowMotion
+RefStruct*	gSlotCacheTable = nil;				// ROM 0x0c104f58 slotCacheRefs (the array, not a pointer into it: the host's heap compacts)
+Boolean		gSkipVisRegions = false;			// ROM 0x0c104f60 gSkipVisRegions
+Boolean		gDontDrawHilites = false;			// ROM 0x0c100cbc gDontDrawHilites
+Boolean		gOutlineViews = false;				// ROM 0x0c10193c gOutlineViews
+long		gSlowMotion = 0;					// ROM 0x0c101940 gSlowMotion
 
 // the ROM's exception for a bounds frame that is not one
 static char kBadBoundsFrame[] = "bad bounds frame";
@@ -57,7 +57,7 @@ static char kBadBoundsFrame[] = "bad bounds frame";
 	T x O b j e c t,  T R e s p o n d e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0014528c __nw__8TxObjectSFUi
+// ROM 0x00143738 __nw__8TxObjectSFUi
 // A cleared block (NewtPtrClear), or exOutOfMemory.
 void*
 TxObject::operator new(size_t size)
@@ -69,7 +69,7 @@ TxObject::operator new(size_t size)
 }
 
 
-// ROM 0x001452c8 __dl__8TxObjectSFPv
+// ROM 0x00143774 __dl__8TxObjectSFPv
 void
 TxObject::operator delete(void* p)
 {
@@ -77,7 +77,7 @@ TxObject::operator delete(void* p)
 }
 
 
-// ROM 0x001452e4 ClassID__8TxObjectCFv
+// ROM 0x00143790 ClassID__8TxObjectCFv
 long
 TxObject::ClassID(void) const
 {
@@ -85,7 +85,7 @@ TxObject::ClassID(void) const
 }
 
 
-// ROM 0x001452ec DerivedFrom__8TxObjectCFl
+// ROM 0x00143798 DerivedFrom__8TxObjectCFl
 Boolean
 TxObject::DerivedFrom(long /*id*/) const
 {
@@ -93,12 +93,12 @@ TxObject::DerivedFrom(long /*id*/) const
 }
 
 
-// ROM 0x001452cc __dt__8TxObjectFv
+// ROM 0x00143778 __dt__8TxObjectFv
 TxObject::~TxObject()
 { }
 
 
-// ROM 0x00145300 Key__8TxObjectCFv
+// ROM 0x001437ac Key__8TxObjectCFv
 ULong
 TxObject::Key(void) const
 {
@@ -106,7 +106,7 @@ TxObject::Key(void) const
 }
 
 
-// ROM 0x001ab8f0 ClassID__10TResponderCFv
+// ROM 0x001a9354 ClassID__10TResponderCFv
 long
 TResponder::ClassID(void) const
 {
@@ -114,7 +114,7 @@ TResponder::ClassID(void) const
 }
 
 
-// ROM 0x001ab8f8 DerivedFrom__10TResponderCFl
+// ROM 0x001a935c DerivedFrom__10TResponderCFl
 Boolean
 TResponder::DerivedFrom(long id) const
 {
@@ -122,7 +122,7 @@ TResponder::DerivedFrom(long id) const
 }
 
 
-// ROM 0x001ab92c DoCommand__10TResponderFRC6RefVar
+// ROM 0x001a9390 DoCommand__10TResponderFRC6RefVar
 Boolean
 TResponder::DoCommand(RefArg cmd)
 {
@@ -141,7 +141,7 @@ TResponder::RealDoCommand(RefArg /*cmd*/)
 	T L i s t L o o p,  T B a c k w a r d L o o p
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00142ed4 __ct__9TListLoopFP5CList
+// ROM 0x00141380 __ct__9TListLoopFP5CList
 TListLoop::TListLoop(CList* list)
 {
 	fList = list;
@@ -149,7 +149,7 @@ TListLoop::TListLoop(CList* list)
 }
 
 
-// ROM 0x00142f10 Reset__9TListLoopFv
+// ROM 0x001413bc Reset__9TListLoopFv
 void
 TListLoop::Reset(void)
 {
@@ -158,7 +158,7 @@ TListLoop::Reset(void)
 }
 
 
-// ROM 0x00142f28 Next__9TListLoopFv
+// ROM 0x001413d4 Next__9TListLoopFv
 void*
 TListLoop::Next(void)
 {
@@ -172,7 +172,7 @@ TListLoop::Next(void)
 }
 
 
-// ROM 0x00142f38 Current__9TListLoopFv
+// ROM 0x001413e4 Current__9TListLoopFv
 void*
 TListLoop::Current(void)
 {
@@ -185,7 +185,7 @@ TListLoop::Current(void)
 }
 
 
-// ROM 0x00142f50 RemoveCurrent__9TListLoopFv
+// ROM 0x001413fc RemoveCurrent__9TListLoopFv
 void
 TListLoop::RemoveCurrent(void)
 {
@@ -195,7 +195,7 @@ TListLoop::RemoveCurrent(void)
 }
 
 
-// ROM 0x00142f8c __ct__13TBackwardLoopFP5CList
+// ROM 0x00141438 __ct__13TBackwardLoopFP5CList
 TBackwardLoop::TBackwardLoop(CList* list)
 {
 	fIndex = list->GetArraySize();
@@ -203,7 +203,7 @@ TBackwardLoop::TBackwardLoop(CList* list)
 }
 
 
-// ROM 0x00142fc4 Next__13TBackwardLoopFv
+// ROM 0x00141470 Next__13TBackwardLoopFv
 void*
 TBackwardLoop::Next(void)
 {
@@ -217,7 +217,7 @@ TBackwardLoop::Next(void)
 }
 
 
-// ROM 0x00142fd4 Current__13TBackwardLoopFv
+// ROM 0x00141480 Current__13TBackwardLoopFv
 void*
 TBackwardLoop::Current(void)
 {
@@ -230,7 +230,7 @@ TBackwardLoop::Current(void)
 }
 
 
-// ROM 0x0025e2fc GetFirstNonFloater__FP9TViewList
+// ROM 0x00260234 GetFirstNonFloater__FP9TViewList
 // The index of the last view that does not float (the front-most
 // non-floater: the walk from the back stops at it), -1 when all float.
 static long
@@ -247,14 +247,14 @@ FirstNonFloaterIndex(TViewList* list)
 	T C l i p p e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00066bf8 __ct__8TClipperFv
+// ROM 0x00066258 __ct__8TClipperFv
 TClipper::TClipper()
 {
 	fIsObscured = false;
 }
 
 
-// ROM 0x00066c3c UpdateRegions__8TClipperFP5TView
+// ROM 0x0006629c UpdateRegions__8TClipperFP5TView
 // The full region: the view's outer bounds, with rounded corners when its
 // format has them (the ROM records FrameRoundRect into a region; the host
 // takes the shape from OvalRgn - the same pixels); the visible region the
@@ -284,7 +284,7 @@ TClipper::UpdateRegions(TView* view)
 }
 
 
-// ROM 0x00066cfc Offset__8TClipperF6TPoint
+// ROM 0x0006635c Offset__8TClipperF6TPoint
 void
 TClipper::Offset(Point delta)
 {
@@ -292,7 +292,7 @@ TClipper::Offset(Point delta)
 }
 
 
-// ROM 0x00066d28 RecalcVisible__8TClipperF11TBaseRegion
+// ROM 0x00066388 RecalcVisible__8TClipperF11TBaseRegion
 // The visible region is the full one less what is in front.
 void
 TClipper::RecalcVisible(RgnHandle inFront)
@@ -306,7 +306,7 @@ TClipper::RecalcVisible(RgnHandle inFront)
 	T V i e w :  c l a s s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0025d358 ClassID__5TViewCFv
+// ROM 0x0025f290 ClassID__5TViewCFv
 long
 TView::ClassID(void) const
 {
@@ -314,7 +314,7 @@ TView::ClassID(void) const
 }
 
 
-// ROM 0x00261688 DerivedFrom__5TViewCFl
+// ROM 0x002635c0 DerivedFrom__5TViewCFl
 Boolean
 TView::DerivedFrom(long id) const
 {
@@ -322,13 +322,13 @@ TView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x00266bbc __dt__5TViewFv
+// ROM 0x00268af4 __dt__5TViewFv
 // The context's RefStruct goes; the children were removed by Delete.
 TView::~TView()
 { }
 
 
-// ROM 0x00266c94 DoCommand__5TViewFRC6RefVar
+// ROM 0x00268bcc DoCommand__5TViewFRC6RefVar
 Boolean
 TView::DoCommand(RefArg cmd)
 {
@@ -336,7 +336,7 @@ TView::DoCommand(RefArg cmd)
 }
 
 
-// ROM 0x00264430 Constructor__5TViewFRC6RefVarP5TView
+// ROM 0x00266368 Constructor__5TViewFRC6RefVarP5TView
 // The view built from its context under the parent: the context is
 // linked to the parent's (_parent) and to the object (viewCObject), the
 // allocateContext/stepAllocateContext templates get contexts of their own
@@ -496,7 +496,7 @@ TView::Constructor(RefArg context, TView* parent)
 }
 
 
-// ROM 0x0026564c Delete__5TViewFv
+// ROM 0x00267584 Delete__5TViewFv
 // The view and its children go: the viewQuitScript runs (answering
 // 'postQuit asks for the viewPostQuitScript after the children are gone),
 // the context forgets the object, the children are removed, the
@@ -577,7 +577,7 @@ ScriptHandled(RefArg cmd, Ref result)
 }
 
 
-// ROM 0x00266e00 RealDoCommand__5TViewFRC6RefVar
+// ROM 0x00268d38 RealDoCommand__5TViewFRC6RefVar
 // The commands a view answers (their ids Commands.h): the scripts -
 // aeClick runs viewClickScript(unit) on a clickable view ('skip: the
 // result 0, the click passed on), aeStroke viewStrokeScript(unit),
@@ -853,7 +853,7 @@ TView::RealDoCommand(RefArg cmd)
 }
 
 
-// ROM 0x0025dca4 TextFlags__5TViewCFv
+// ROM 0x0025fbdc TextFlags__5TViewCFv
 // The textFlags slot, 0 when none.
 long
 TView::TextFlags(void) const
@@ -863,7 +863,7 @@ TView::TextFlags(void) const
 }
 
 
-// ROM 0x0025dcfc InsideView__5TViewFR6TPoint
+// ROM 0x0025fc34 InsideView__5TViewFR6TPoint
 // Whether the point is within the outer bounds.
 Boolean
 TView::InsideView(Point& pt)
@@ -874,13 +874,13 @@ TView::InsideView(Point& pt)
 }
 
 
-// ROM 0x00263894 ChildBoundsChanged__5TViewFP5TViewR5TRect
+// ROM 0x002657cc ChildBoundsChanged__5TViewFP5TViewR5TRect
 void
 TView::ChildBoundsChanged(TView* /*child*/, Rect& /*bounds*/)
 { }
 
 
-// ROM 0x00263898 SetupForm__5TViewFv
+// ROM 0x002657d0 SetupForm__5TViewFv
 void
 TView::SetupForm(void)
 {
@@ -888,7 +888,7 @@ TView::SetupForm(void)
 }
 
 
-// ROM 0x00263988 SetupDone__5TViewFv
+// ROM 0x002658c0 SetupDone__5TViewFv
 void
 TView::SetupDone(void)
 {
@@ -896,7 +896,7 @@ TView::SetupDone(void)
 }
 
 
-// ROM 0x002688c8 GetRangeText__5TViewFlT1
+// ROM 0x0026a800 GetRangeText__5TViewFlT1
 Ref
 TView::GetRangeText(long /*start*/, long /*end*/)
 {
@@ -904,7 +904,7 @@ TView::GetRangeText(long /*start*/, long /*end*/)
 }
 
 
-// ROM 0x002688d0 GetValue__5TViewFRC6RefVarT1
+// ROM 0x0026a808 GetValue__5TViewFRC6RefVarT1
 // The slot's value, as the type asks: viewFlags is the view's own word,
 // 'hilites with 'offset NOT YET (nil), otherwise the variable; a type the
 // value is not a subclass of converts it: 'string prints it, 'int takes a
@@ -937,7 +937,7 @@ TView::GetValue(RefArg slot, RefArg type)
 }
 
 
-// ROM 0x00268ab4 SetValue__5TViewFRC6RefVarT1
+// ROM 0x0026a9ec SetValue__5TViewFRC6RefVarT1
 // The slot set in the context (viewFlags and viewFormat in the view too;
 // recConfig and dictionaries NOT YET: the recognition area cache), the
 // view synced when the slot is viewBounds, viewFormat, viewJustify or
@@ -961,7 +961,7 @@ TView::SetValue(RefArg slot, RefArg value)
 }
 
 
-// ROM 0x00268cfc Changed__5TViewFRC6RefVar
+// ROM 0x0026ac34 Changed__5TViewFRC6RefVar
 void
 TView::Changed(RefArg slot)
 {
@@ -969,7 +969,7 @@ TView::Changed(RefArg slot)
 }
 
 
-// ROM 0x00268d08 Changed__5TViewFRC6RefVarT1
+// ROM 0x0026ac40 Changed__5TViewFRC6RefVarT1
 // The tied views (viewTie: [view, message, ...] pairs) are sent their
 // messages with [context, slot]; the viewChangedScript runs (even for a
 // vNoScripts view) with [slot, context]; the view is dirtied.
@@ -1002,7 +1002,7 @@ TView::Changed(RefArg slot, RefArg context)
 }
 
 
-// ROM 0x0026418c Hilite__5TViewFUc
+// ROM 0x002660c4 Hilite__5TViewFUc
 // The view shown hilited (or not): nothing for a view that is not
 // visible; otherwise, within the view's visible region, the
 // viewHiliteScript run with [on] - a non-nil result means it did the
@@ -1061,7 +1061,7 @@ TView::Hilite(Boolean on)
 }
 
 
-// ROM 0x00267d00 HandleKeyEvent__5TViewFRC6RefVarUlPUc
+// ROM 0x00269c38 HandleKeyEvent__5TViewFRC6RefVarUlPUc
 // A key command to the view: aeKeyString runs the viewKeyStringScript
 // with [string].  For the others the parameter's character, key code
 // and modifiers make the arguments [char, int]: the int is the key
@@ -1156,7 +1156,7 @@ TView::HandleKeyEvent(RefArg cmd, ULong id, Boolean* isCommandKey)
 }
 
 
-// ROM 0x00264c34 Select__5TViewFUcT1
+// ROM 0x00266b6c Select__5TViewFUcT1
 // The view selected (hilited) or not: unique first deselects the
 // parent's selected child; then the vSelected flag set or cleared, and
 // Hilite told, when it changes.
@@ -1181,7 +1181,7 @@ TView::Select(Boolean on, Boolean unique)
 }
 
 
-// ROM 0x002643c4 SelectNone__5TViewFv
+// ROM 0x002662fc SelectNone__5TViewFv
 // The first selected child un-hilited (its flag stays as it is: Select
 // clears it for its own view).
 void
@@ -1200,19 +1200,19 @@ TView::SelectNone(void)
 }
 
 
-// ROM 0x00268768 SetCaretOffset__5TViewFPlT1
+// ROM 0x0026a6a0 SetCaretOffset__5TViewFPlT1
 void
 TView::SetCaretOffset(long* /*offset*/, long* /*length*/)
 { }
 
 
-// ROM 0x00268764 SetSelection__5TViewFRC6RefVarPlT2
+// ROM 0x0026a69c SetSelection__5TViewFRC6RefVarPlT2
 void
 TView::SetSelection(RefArg /*selection*/, long* /*start*/, long* /*end*/)
 { }
 
 
-// ROM 0x00268750 GetSelection__5TViewFv
+// ROM 0x0026a688 GetSelection__5TViewFv
 Ref
 TView::GetSelection(void)
 {
@@ -1220,7 +1220,7 @@ TView::GetSelection(void)
 }
 
 
-// ROM 0x0026876c ActivateSelection__5TViewFUc
+// ROM 0x0026a6a4 ActivateSelection__5TViewFUc
 // The view gains or loses the caret: its viewCaretActivateScript(on).
 void
 TView::ActivateSelection(Boolean on)
@@ -1231,7 +1231,7 @@ TView::ActivateSelection(Boolean on)
 }
 
 
-// ROM 0x0009f9ec DoEditCommand__5TViewFl
+// ROM 0x0009e7ec DoEditCommand__5TViewFl
 Boolean
 TView::DoEditCommand(long /*command*/)
 {
@@ -1239,7 +1239,7 @@ TView::DoEditCommand(long /*command*/)
 }
 
 
-// ROM 0x00268810 OffsetToCaret__5TViewFlP5TRect
+// ROM 0x0026a748 OffsetToCaret__5TViewFlP5TRect
 void
 TView::OffsetToCaret(long /*offset*/, Rect* caret)
 {
@@ -1247,7 +1247,7 @@ TView::OffsetToCaret(long /*offset*/, Rect* caret)
 }
 
 
-// ROM 0x002687f0 PointToCaret__5TViewFR6TPointP5TRectT2
+// ROM 0x0026a728 PointToCaret__5TViewFR6TPointP5TRectT2
 void
 TView::PointToCaret(Point& /*pt*/, Rect* caret, Rect* /*bounds*/)
 {
@@ -1255,7 +1255,7 @@ TView::PointToCaret(Point& /*pt*/, Rect* caret, Rect* /*bounds*/)
 }
 
 
-// ROM 0x0025db24 RemoveAllViews__5TViewFv
+// ROM 0x0025fa5c RemoveAllViews__5TViewFv
 // Every child deleted (the view marked as going while they are, so that
 // the children do not update the viewChildren slot), the list freed.
 void
@@ -1280,7 +1280,7 @@ TView::RemoveAllViews(void)
 }
 
 
-// ROM 0x00266c04 Idle__5TViewFl
+// ROM 0x00268b3c Idle__5TViewFl
 // The viewIdleScript's answer: the delay until the next idle, 0 for none.
 long
 TView::Idle(long /*arg*/)
@@ -1299,12 +1299,12 @@ TView::Idle(long /*arg*/)
 	one that knows what its items are and draws them.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00265250 DrawHiliting__5TViewFv
+// ROM 0x00267188 DrawHiliting__5TViewFv
 // The base draws no hiliting of its own.
 void	TView::DrawHiliting(void)									{ }
 
 
-// ROM 0x00265224 DrawHilitedData__5TViewFv
+// ROM 0x0026715c DrawHilitedData__5TViewFv
 // The whole view, drawn again - a data view that hilites part of itself
 // overrides this with something smaller.
 void
@@ -1315,7 +1315,7 @@ TView::DrawHilitedData(void)
 
 
 // the pen-driven hiliting: NOT YET RECONSTRUCTED (the recogniser's units)
-// ROM 0x00260218 HandleHilite__5TViewFP11TUnitPubliclUc
+// ROM 0x00262150 HandleHilite__5TViewFP11TUnitPubliclUc
 // A stroke over the view selects the whole of it: the unit's box, grown by
 // eight pixels, has to cover more than 60 per cent of the view.  A stroke
 // that is long and thin counts by its long axis alone - a line drawn across
@@ -1363,7 +1363,7 @@ TView::HandleHilite(TUnitPublic* unit, long gesture, Boolean doIt)
 }
 
 
-// ROM 0x002605f0 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
+// ROM 0x00262528 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
 // A scrub over the view: the answer is the gesture the view takes (5) when
 // the scrub covers more than 75 per cent of it.  A read-only or
 // write-protected view takes none.  The base only answers - the caller is
@@ -1379,7 +1379,7 @@ TView::HandleScrub(const Rect& bounds, long gesture, TUnitPublic* /*unit*/, Bool
 }
 
 
-// ROM 0x0025feac Hilited__5TViewFv
+// ROM 0x00261de4 Hilited__5TViewFv
 // Whether anything in the view is selected.
 Boolean
 TView::Hilited(void)
@@ -1389,12 +1389,12 @@ TView::Hilited(void)
 }
 
 
-// ROM 0x0025fe3c Hilites__5TViewFv
+// ROM 0x00261d74 Hilites__5TViewFv
 // The view's selections: the `hilites` slot of the context.
 Ref		TView::Hilites(void)		{ return GetProto(RSSYMhilites); }
 
 
-// ROM 0x0025fef8 FirstHilite__5TViewFv
+// ROM 0x00261e30 FirstHilite__5TViewFv
 // The first hilite, or nil.
 Ref
 TView::FirstHilite(void)
@@ -1406,18 +1406,18 @@ TView::FirstHilite(void)
 }
 
 
-// ROM 0x0025ff5c DrawHilites__5TViewFUc
+// ROM 0x00261e94 DrawHilites__5TViewFUc
 // The base draws none; a data view (TParagraphView) overrides it.
 void	TView::DrawHilites(Boolean)									{ }
 
 
-// ROM 0x002600c8 IsCompletelyHilited__5TViewFRC6RefVar
+// ROM 0x00262000 IsCompletelyHilited__5TViewFRC6RefVar
 // Whether the hilite covers a whole item: true for a view with no items of
 // its own to be partly selected.
 Boolean	TView::IsCompletelyHilited(RefArg)							{ return true; }
 
 
-// ROM 0x002600d0 HiliteAll__5TViewFv
+// ROM 0x00262008 HiliteAll__5TViewFv
 // One hilite over the whole view, in the view's own coordinates.  It goes
 // in through the command, so that it can be undone like any other.
 void
@@ -1435,7 +1435,7 @@ TView::HiliteAll(void)
 }
 
 
-// ROM 0x002601cc DeleteHilited__5TViewFRC6RefVar
+// ROM 0x00262104 DeleteHilited__5TViewFRC6RefVar
 // The parent is asked to delete what is selected here - a data view keeps
 // the items, so the child that holds the hilite is not the one that owns
 // them.  The hilite the caller names is not looked at.
@@ -1447,7 +1447,7 @@ TView::DeleteHilited(RefArg)
 }
 
 
-// ROM 0x0025ff60 RemoveHilite__5TViewFRC6RefVar
+// ROM 0x00261e98 RemoveHilite__5TViewFRC6RefVar
 // Out of the array, the C++ object disposed of, and the parent invalidated
 // over where it was (the hilite's bounds are the view's own coordinates);
 // when nothing is selected any more the root forgets us as its hiliter.
@@ -1473,7 +1473,7 @@ TView::RemoveHilite(RefArg hilite)
 }
 
 
-// ROM 0x0026002c RemoveAllHilites__5TViewFv
+// ROM 0x00261f64 RemoveAllHilites__5TViewFv
 // Each one in turn.  Removing shortens the array under the loop, so the
 // loop's index and count are stepped back with it.
 void
@@ -1491,7 +1491,7 @@ TView::RemoveAllHilites(void)
 }
 
 
-// ROM 0x002603a0 GlobalHiliteBounds__5TViewFP5TRect
+// ROM 0x002622d8 GlobalHiliteBounds__5TViewFP5TRect
 // The union of the hilites' bounds, in the parent's coordinates, added to
 // whatever the caller had in bounds already (an empty rect, usually), and
 // the answer is the click options that go with the selection - bit 1 says
@@ -1515,7 +1515,7 @@ TView::GlobalHiliteBounds(Rect* bounds)
 }
 
 
-// ROM 0x002604dc GlobalHiliteResizeBounds__5TViewFP5TRect
+// ROM 0x00262414 GlobalHiliteResizeBounds__5TViewFP5TRect
 // The bounds a selection may be resized within: the view's own, unioned
 // with what the caller had.  Nothing selected here, nothing to add.
 void
@@ -1541,7 +1541,7 @@ TView::GlobalHiliteResizeBounds(Rect* bounds)
 }
 
 
-// ROM 0x00260514 GlobalHilitePinnedBounds__5TViewFP5TRect
+// ROM 0x0026244c GlobalHilitePinnedBounds__5TViewFP5TRect
 // The base pins a selection to where the hilites are.
 void
 TView::GlobalHilitePinnedBounds(Rect* bounds)
@@ -1550,7 +1550,7 @@ TView::GlobalHilitePinnedBounds(Rect* bounds)
 }
 
 
-// ROM 0x00260ae8 IsGridded__5TViewFRC6RefVarP6TPoint
+// ROM 0x00262a20 IsGridded__5TViewFRC6RefVarP6TPoint
 // Whether the view's viewGrid is the kind asked about, and how far apart
 // the grid is: viewLineSpacing both ways, except that a line grid has no
 // horizontal step at all.  A view with no viewLineSpacing is on a grid of
@@ -1571,7 +1571,7 @@ TView::IsGridded(RefArg gridKind, Point* spacing)
 }
 
 
-// ROM 0x0026051c PointInHilite__5TViewFR6TPoint
+// ROM 0x00262454 PointInHilite__5TViewFR6TPoint
 // Whether the point - in the parent's coordinates - falls on any of the
 // hilites, whose bounds are the view's own.
 Boolean
@@ -1588,9 +1588,9 @@ TView::PointInHilite(Point& pt)
 	}
 	return false;
 }
-long	TView::ClickOptions(void)									{ return 0; }		// ROM 0x00260630 ClickOptions__5TViewFv
-void	TView::DrawScaledData(const Rect&, const Rect&, Rect*)		{ }		// ROM 0x00260638 DrawScaledData__5TViewFRC5TRectT1P5TRect
-void	TView::Scale(const Rect&, const Rect&)						{ }		// ROM 0x002606bc Scale__5TViewFRC5TRectT1
+long	TView::ClickOptions(void)									{ return 0; }		// ROM 0x00262568 ClickOptions__5TViewFv
+void	TView::DrawScaledData(const Rect&, const Rect&, Rect*)		{ }		// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect
+void	TView::Scale(const Rect&, const Rect&)						{ }		// ROM 0x002625f4 Scale__5TViewFRC5TRectT1
 
 /*------------------------------------------------------------------------------
 	D r a g   a n d   d r o p
@@ -1601,7 +1601,7 @@ void	TView::Scale(const Rect&, const Rect&)						{ }		// ROM 0x002606bc Scale__5
 	Each step runs the matching view script.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0009f848 AddDragInfo__5TViewFP9TDragInfo
+// ROM 0x0009e648 AddDragInfo__5TViewFP9TDragInfo
 // The view's drag items added through its viewAddDragInfoScript([items]);
 // ==> whether it added any.
 Boolean
@@ -1615,7 +1615,7 @@ TView::AddDragInfo(TDragInfo* dragInfo)
 }
 
 
-// ROM 0x000a27c0 GetDropData__5TViewFRC6RefVarT1
+// ROM 0x000a15c0 GetDropData__5TViewFRC6RefVarT1
 // The data for a drop type, from the source's viewGetDropDataScript
 // ([type, dragRef]).
 Ref
@@ -1628,7 +1628,7 @@ TView::GetDropData(RefArg dragType, RefArg dragRef)
 }
 
 
-// ROM 0x000a26fc GetSupportedDropTypes__5TViewFRC6TPoint
+// ROM 0x000a14fc GetSupportedDropTypes__5TViewFRC6TPoint
 // The drag types the view accepts at the point, from its
 // viewGetDropTypesScript([pt]); nil for none.
 Ref
@@ -1642,7 +1642,7 @@ TView::GetSupportedDropTypes(const Point& pt)
 }
 
 
-// ROM 0x000a24c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
+// ROM 0x000a12c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
 // Whether the view takes the drag at the point: its supported types
 // checked against the drag's items.
 Boolean
@@ -1655,7 +1655,7 @@ TView::AcceptDrop(const TDragInfo& dragInfo, const Point& pt)
 }
 
 
-// ROM 0x0009ddc4 Drop__5TViewFRC6RefVarT1P6TPoint
+// ROM 0x0009cbc4 Drop__5TViewFRC6RefVarT1P6TPoint
 // The drop delivered to the view: viewDropScript([type, data, pt]).
 Boolean
 TView::Drop(RefArg dropTypes, RefArg dropData, Point* dropPt)
@@ -1668,7 +1668,7 @@ TView::Drop(RefArg dropTypes, RefArg dropData, Point* dropPt)
 }
 
 
-// ROM 0x000a25e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc
+// ROM 0x000a13e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc
 // A drag moved within the view: viewDropMoveScript([dragRef, oldPt,
 // newPt, copy]).
 Boolean
@@ -1683,7 +1683,7 @@ TView::DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean 
 }
 
 
-// ROM 0x0009de90 DropRemove__5TViewFRC6RefVar
+// ROM 0x0009cc90 DropRemove__5TViewFRC6RefVar
 // The dragged item removed from the source after a move:
 // viewDropRemoveScript([dragRef]).
 Boolean
@@ -1695,7 +1695,7 @@ TView::DropRemove(RefArg dragRef)
 }
 
 
-// ROM 0x0009df10 DropApprove__5TViewFP5TView
+// ROM 0x0009cd10 DropApprove__5TViewFP5TView
 // Whether the source approves dropping on the target:
 // viewDropApproveScript([targetContext]).  With no script the drop is
 // approved.
@@ -1713,7 +1713,7 @@ TView::DropApprove(TView* target)
 }
 
 
-// ROM 0x0009e334 DropDone__5TViewFv
+// ROM 0x0009d134 DropDone__5TViewFv
 Boolean
 TView::DropDone(void)
 {
@@ -1721,7 +1721,7 @@ TView::DropDone(void)
 }
 
 
-// ROM 0x0009e7c8 TargetDrop__5TViewFRC9TDragInfoRC6TPoint
+// ROM 0x0009d5c8 TargetDrop__5TViewFRC9TDragInfoRC6TPoint
 // The view that would take the drag at the point: the deepest view there
 // with the drop flags, walked up to one that accepts the drag
 // (FindDropViewDeep), then its FindDropView, then its viewFindTargetScript
@@ -1748,7 +1748,7 @@ TView::TargetDrop(const TDragInfo& dragInfo, const Point& pt)
 }
 
 
-// ROM 0x0009dfb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
+// ROM 0x0009cdb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
 // The drag delivered: for each item, when it is dropped on this same view
 // it is moved (DropMove); else the target's supported types pick the
 // item's type, the data is fetched from the source (GetDropData) and the
@@ -1789,7 +1789,7 @@ TView::EndDrag(const TDragInfo& info, TView* target, const Point& startPt, const
 }
 
 
-// ROM 0x0009e394 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 (NOT YET RECONSTRUCTED: the pen-tracked drag
+// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 (NOT YET RECONSTRUCTED: the pen-tracked drag
 // with the clipboard icon following the pen; the host's simplified drag
 // tracks the pen and drops on the target under the release point)
 Boolean
@@ -1820,10 +1820,10 @@ void	TView::DrawDragBackground(const Rect&, Boolean)				{ }
 void	TView::DrawDragData(const Rect&)							{ }
 Boolean	TView::GetClipboardDataBits(Rect*)							{ return false; }
 void	TView::DragFeedback(const TDragInfo&, const Point&, Boolean)	{ }
-TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a1ff4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
+TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a0df4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
 
 
-// ROM 0x00268290 BuildKeyChildList__5TViewFP9TViewListlT2
+// ROM 0x0026a1c8 BuildKeyChildList__5TViewFP9TViewListlT2
 // The key views under this one, front to back, appended to the list: each
 // visible child asked to add its own (recursing), then the child itself
 // added when it is not read-only - for the plain tab order (kind 0), when
@@ -1855,7 +1855,7 @@ TView::BuildKeyChildList(TViewList* list, long direction, long kind)
 }
 
 
-// ROM 0x002683a0 NextKeyView__5TViewFP5TViewlT2
+// ROM 0x0026a2d8 NextKeyView__5TViewFP5TViewlT2
 // The key view that follows (direction 1) or precedes (-1) the focus in
 // the tab order, for the given kind.  An explicit order comes first: from
 // this view up to the one that holds a _tabChildren array (a plain view
@@ -1954,7 +1954,7 @@ automatic:
 	T V i e w :  s t r u c t u r e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0025d274 AddView__5TViewFRC6RefVar
+// ROM 0x0025f1ac AddView__5TViewFRC6RefVar
 // A child made from the template: its context built (or, for a template
 // naming a preallocatedContext, taken from the view's variable of that
 // name - when its viewFlags say visible), the view built.  ==> nil when
@@ -1977,7 +1977,7 @@ TView::AddView(RefArg templ)
 }
 
 
-// ROM 0x0025d994 AddView__5TViewFP5TView
+// ROM 0x0025f8cc AddView__5TViewFP5TView
 // The child appended to the list - in front of the floaters when it does
 // not float itself (the ROM's ReorderView with the last index).
 void
@@ -1999,7 +1999,7 @@ TView::AddView(TView* child)
 }
 
 
-// ROM 0x00263f14 AddChild__5TViewFRC6RefVar
+// ROM 0x00265e4c AddChild__5TViewFRC6RefVar
 // The template's view when it is already a child, else a new one.
 TView*
 TView::AddChild(RefArg templ)
@@ -2011,7 +2011,7 @@ TView::AddChild(RefArg templ)
 }
 
 
-// ROM 0x00260cd4 AddViews__5TViewFUc
+// ROM 0x00262c0c AddViews__5TViewFUc
 // The children from viewChildren (Children) and stepChildren made, after
 // the viewSetupChildrenScript.  Syncing (SyncChildren): the children that
 // exist are kept and marked, the rest dropped (RemoveUnmarked), and every
@@ -2069,7 +2069,7 @@ TView::AddViews(Boolean sync)
 }
 
 
-// ROM 0x0025da28 RemoveView__5TViewFv
+// ROM 0x0025f960 RemoveView__5TViewFv
 // The view leaves its parent: hidden if it was visible and being set up
 // is over, taken out of the list (freed when empty) and deleted.
 void
@@ -2098,7 +2098,7 @@ TView::RemoveView(void)
 }
 
 
-// ROM 0x0025da34 RemoveChildView__5TViewFP5TView
+// ROM 0x0025f96c RemoveChildView__5TViewFP5TView
 void
 TView::RemoveChildView(TView* child)
 {
@@ -2124,7 +2124,7 @@ TView::RemoveChildView(TView* child)
 }
 
 
-// ROM 0x00260468 RemoveUnmarked__5TViewFv
+// ROM 0x002623a0 RemoveUnmarked__5TViewFv
 // The children AddViews did not mark are removed; the marks are cleared.
 void
 TView::RemoveUnmarked(void)
@@ -2145,7 +2145,7 @@ TView::RemoveUnmarked(void)
 }
 
 
-// ROM 0x0025eda0 ReorderView__5TViewFP5TViewl
+// ROM 0x00260cd8 ReorderView__5TViewFP5TViewl
 // The child moved to the index: a non-floater no further than the first
 // floater, a floater no nearer the front than the non-floaters (behind the
 // clipboards of the root view); the view's visibility recomputed when it
@@ -2255,7 +2255,7 @@ TView::ReorderView(TView* child, long index)
 }
 
 
-// ROM 0x0025f2b0 BringToFront__5TViewFv
+// ROM 0x002611e8 BringToFront__5TViewFv
 void
 TView::BringToFront(void)
 {
@@ -2263,7 +2263,7 @@ TView::BringToFront(void)
 }
 
 
-// ROM 0x0025f2c4 MoveChildBehind__5TViewFP5TViewT1
+// ROM 0x002611fc MoveChildBehind__5TViewFP5TViewT1
 // The child moved to just behind the other (to the back for nil).
 void
 TView::MoveChildBehind(TView* child, TView* behind)
@@ -2277,7 +2277,7 @@ TView::MoveChildBehind(TView* child, TView* behind)
 }
 
 
-// ROM 0x0025d504 AddToSoup__5TViewFRC6RefVar
+// ROM 0x0025f43c AddToSoup__5TViewFRC6RefVar
 // A child added from its template: the viewAddChildScript is asked first
 // (answering a frame names the template, anything else means done: the
 // view is looked up); else the template joins the data frame's
@@ -2305,7 +2305,7 @@ TView::AddToSoup(RefArg templ)
 }
 
 
-// ROM 0x0025d66c RemoveFromSoup__5TViewFP5TView
+// ROM 0x0025f5a4 RemoveFromSoup__5TViewFP5TView
 // The child removed, and its data frame taken out of viewChildren unless
 // the viewDropChildScript (given the data frame) does it.
 void
@@ -2324,7 +2324,7 @@ TView::RemoveFromSoup(TView* child)
 }
 
 
-// ROM 0x0025dbfc FindView__5TViewFRC6RefVar
+// ROM 0x0025fb34 FindView__5TViewFRC6RefVar
 // The view (this or a descendant) whose data is the frame (SoupEQ).
 TView*
 TView::FindView(RefArg data)
@@ -2344,7 +2344,7 @@ TView::FindView(RefArg data)
 }
 
 
-// ROM 0x0025dd38 Distance__5TViewF6TPointP6TPoint
+// ROM 0x0025fc70 Distance__5TViewF6TPointP6TPoint
 // How far the point is outside the view: 0 inside its visible region (or
 // its outer bounds when it has no clipper), else 0x10000... the ROM answers
 // 0x10000 for an invisible view, 0 for a point inside, and the distance
@@ -2361,7 +2361,7 @@ TView::Distance(Point pt, Point* /*delta*/)
 }
 
 
-// ROM 0x0025de40 FindClosestView__5TViewF6TPointUlPlP6TPointPUc
+// ROM 0x0025fd78 FindClosestView__5TViewF6TPointUlPlP6TPointPUc
 // The deepest (front-most) view under the point whose flags match the
 // mask (any view for 0), with its distance; clipped says a vClipping view
 // was met on the way.
@@ -2401,7 +2401,7 @@ TView::FindClosestView(Point pt, ULong flags, long* distance, Point* delta, Bool
 }
 
 
-// ROM 0x0025df5c FindView__5TViewF6TPointUlP6TPoint
+// ROM 0x0025fe94 FindView__5TViewF6TPointUlP6TPoint
 TView*
 TView::FindView(Point pt, ULong flags, Point* delta)
 {
@@ -2411,7 +2411,7 @@ TView::FindView(Point pt, ULong flags, Point* delta)
 }
 
 
-// ROM 0x00265460 FindID__5TViewFl
+// ROM 0x00267398 FindID__5TViewFl
 // The child with the id.
 TView*
 TView::FindID(long id)
@@ -2424,7 +2424,7 @@ TView::FindID(long id)
 }
 
 
-// ROM 0x0025f3d4 FrontMost__5TViewFv
+// ROM 0x0026130c FrontMost__5TViewFv
 // The front-most visible application view under this one (this one when
 // no child is).
 TView*
@@ -2443,7 +2443,7 @@ TView::FrontMost(void)
 }
 
 
-// ROM 0x0025f448 FrontMostApp__5TViewFv
+// ROM 0x00261380 FrontMostApp__5TViewFv
 // The same, not counting floaters.
 TView*
 TView::FrontMostApp(void)
@@ -2461,7 +2461,7 @@ TView::FrontMostApp(void)
 }
 
 
-// ROM 0x0025f328 ChildViewFrames__5TViewFv
+// ROM 0x00261260 ChildViewFrames__5TViewFv
 // The children's contexts, as an array.
 Ref
 TView::ChildViewFrames(void)
@@ -2476,7 +2476,7 @@ TView::ChildViewFrames(void)
 }
 
 
-// ROM 0x00268758 Children__5TViewFv
+// ROM 0x0026a690 Children__5TViewFv
 // The viewChildren array.
 Ref
 TView::Children(void)
@@ -2485,7 +2485,7 @@ TView::Children(void)
 }
 
 
-// ROM 0x00263d10 GetWindowView__5TViewFv
+// ROM 0x00265c48 GetWindowView__5TViewFv
 // The ancestor that is a child of the root view.
 TView*
 TView::GetWindowView(void)
@@ -2497,7 +2497,7 @@ TView::GetWindowView(void)
 }
 
 
-// ROM 0x00268200 ProtoedFrom__5TViewFRC6RefVar
+// ROM 0x0026a138 ProtoedFrom__5TViewFRC6RefVar
 // Whether the frame is in the context's proto chain.
 Boolean
 TView::ProtoedFrom(RefArg proto)
@@ -2513,7 +2513,7 @@ TView::ProtoedFrom(RefArg proto)
 }
 
 
-// ROM 0x00268830 Clipper__5TViewCFv
+// ROM 0x0026a768 Clipper__5TViewCFv
 // The clipper of a child of the root view, from its context's viewclipper.
 TClipper*
 TView::Clipper(void) const
@@ -2525,7 +2525,7 @@ TView::Clipper(void) const
 }
 
 
-// ROM 0x00268898 HasVisRgn__5TViewCFv
+// ROM 0x0026a7d0 HasVisRgn__5TViewCFv
 // The children of the root view have visible regions of their own.
 Boolean
 TView::HasVisRgn(void) const
@@ -2534,7 +2534,7 @@ TView::HasVisRgn(void) const
 }
 
 
-// ROM 0x00260a18 VisibleDeep__5TViewCFv
+// ROM 0x00262950 VisibleDeep__5TViewCFv
 // Visible, and so are all the ancestors.
 Boolean
 TView::VisibleDeep(void) const
@@ -2555,7 +2555,7 @@ TView::VisibleDeep(void) const
 	T V i e w :  t h e   c o n t e x t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00269038 DataFrame__5TViewFv
+// ROM 0x0026af70 DataFrame__5TViewFv
 // The realData of a data view, else the context.
 Ref
 TView::DataFrame(void)
@@ -2565,7 +2565,7 @@ TView::DataFrame(void)
 }
 
 
-// ROM 0x00269074 GetProto__5TViewCFRC6RefVar
+// ROM 0x0026afac GetProto__5TViewCFRC6RefVar
 // The slot along the context's proto chain (GetProtoVariable, with the
 // nil-context error).
 Ref
@@ -2577,7 +2577,7 @@ TView::GetProto(RefArg slot) const
 }
 
 
-// ROM 0x00269080 GetVar__5TViewCFRC6RefVar
+// ROM 0x0026afb8 GetVar__5TViewCFRC6RefVar
 // The slot along the context's proto and parent chains (GetVariable).
 Ref
 TView::GetVar(RefArg slot) const
@@ -2588,7 +2588,7 @@ TView::GetVar(RefArg slot) const
 }
 
 
-// ROM 0x00269090 GetWriteableProtoVariable__5TViewFRC6RefVar
+// ROM 0x0026afc8 GetWriteableProtoVariable__5TViewFRC6RefVar
 // The slot in the data frame itself: an inherited value is cloned into it.
 Ref
 TView::GetWriteableProtoVariable(RefArg slot)
@@ -2608,7 +2608,7 @@ TView::GetWriteableProtoVariable(RefArg slot)
 }
 
 
-// ROM 0x00269134 GetWriteableVariable__5TViewFRC6RefVar
+// ROM 0x0026b06c GetWriteableVariable__5TViewFRC6RefVar
 Ref
 TView::GetWriteableVariable(RefArg slot)
 {
@@ -2626,7 +2626,7 @@ TView::GetWriteableVariable(RefArg slot)
 }
 
 
-// ROM 0x002691b4 SetContextSlot__5TViewFRC6RefVarT1
+// ROM 0x0026b0ec SetContextSlot__5TViewFRC6RefVarT1
 // The slot set in the context itself (SetFrameSlot: the frame must be
 // writeable; the lookup caches are cleared).
 void
@@ -2636,7 +2636,7 @@ TView::SetContextSlot(RefArg slot, RefArg value)
 }
 
 
-// ROM 0x002691bc SetDataSlot__5TViewFRC6RefVarT1
+// ROM 0x0026b0f4 SetDataSlot__5TViewFRC6RefVarT1
 void
 TView::SetDataSlot(RefArg slot, RefArg value)
 {
@@ -2653,7 +2653,7 @@ SlotCacheRef(long index)
 }
 
 
-// ROM 0x0025d474 GetCacheProto__5TViewFl
+// ROM 0x0025f3ac GetCacheProto__5TViewFl
 // The cached slot along the proto chain: nil at once when the view's mask
 // says the slot is not there; the bit is cleared when the lookup finds
 // nil, set when it finds a value.
@@ -2673,7 +2673,7 @@ TView::GetCacheProto(long index)
 }
 
 
-// ROM 0x0025d3e4 GetCacheVariable__5TViewFl
+// ROM 0x0025f31c GetCacheVariable__5TViewFl
 // The same along the proto and parent chains.
 Ref
 TView::GetCacheVariable(long index)
@@ -2691,7 +2691,7 @@ TView::GetCacheVariable(long index)
 }
 
 
-// ROM 0x00261d94 InvalidateSlotCache__5TViewFl
+// ROM 0x00263ccc InvalidateSlotCache__5TViewFl
 // The slot may be there again.
 void
 TView::InvalidateSlotCache(long index)
@@ -2703,7 +2703,7 @@ TView::InvalidateSlotCache(long index)
 }
 
 
-// ROM 0x00261dc8 RunScript__5TViewFRC6RefVarT1UcPUc
+// ROM 0x00263d00 RunScript__5TViewFRC6RefVarT1UcPUc
 // The script (a slot of the context's proto chain, or of the parent
 // chain too when lookupVars) sent to the context with the args, unless
 // the view runs no scripts; ran says whether there was one.
@@ -2727,7 +2727,7 @@ TView::RunScript(RefArg tag, RefArg args, Boolean lookupVars, Boolean* ran)
 }
 
 
-// ROM 0x00261c84 RunCacheScript__5TViewFlRC6RefVarUcPUc
+// ROM 0x00263bbc RunCacheScript__5TViewFlRC6RefVarUcPUc
 // The same for a slot of the cache: nothing when the view's mask says the
 // script is not there.
 Ref
@@ -2756,7 +2756,7 @@ TView::RunCacheScript(long index, RefArg args, Boolean lookupVars, Boolean* ran)
 }
 
 
-// ROM 0x0025d730 Sync__5TViewFv
+// ROM 0x0025f668 Sync__5TViewFv
 // The view brought up to date with its context: the viewSetupFormScript
 // run again (for a view that is set up), the bounds recomputed from
 // viewBounds and viewJustify - a view of the same size is moved (Offset),
@@ -2799,7 +2799,7 @@ TView::Sync(void)
 }
 
 
-// ROM 0x0025d360 SetFlags__5TViewFUl
+// ROM 0x0025f298 SetFlags__5TViewFUl
 // The bits set; a change of vVisible or vSelected goes to the context's
 // viewFlags slot too.
 void
@@ -2814,7 +2814,7 @@ TView::SetFlags(ULong flags)
 }
 
 
-// ROM 0x00268c78 ClearFlags__5TViewFUl
+// ROM 0x0026abb0 ClearFlags__5TViewFUl
 void
 TView::ClearFlags(ULong flags)
 {
@@ -2827,7 +2827,7 @@ TView::ClearFlags(ULong flags)
 }
 
 
-// ROM 0x0025f8d4 GetTextStyle__5TViewFv
+// ROM 0x0026180c GetTextStyle__5TViewFv
 // The viewFont, the user's font when none.
 Ref
 TView::GetTextStyle(void)
@@ -2839,7 +2839,7 @@ TView::GetTextStyle(void)
 }
 
 
-// ROM 0x0025f948 GetTextStyleRecord__5TViewFP11StyleRecord
+// ROM 0x00261880 GetTextStyleRecord__5TViewFP11StyleRecord
 void
 TView::GetTextStyleRecord(StyleRecord* style)
 {
@@ -2847,7 +2847,7 @@ TView::GetTextStyleRecord(StyleRecord* style)
 }
 
 
-// ROM 0x0025fe0c Printing__5TViewFv
+// ROM 0x00261d44 Printing__5TViewFv
 // Whether the view is in a print view (NOT YET: no print views).
 Boolean
 TView::Printing(void)
@@ -2860,7 +2860,7 @@ TView::Printing(void)
 	T V i e w :  b o u n d s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00262114 OuterBounds1__FP5TRectUl
+// ROM 0x0026404c OuterBounds1__FP5TRectUl
 // The bounds grown by the frame's pen (when there is a frame) and the
 // inset, with the shadow added at the right and bottom.
 void
@@ -2879,7 +2879,7 @@ OuterBounds1(Rect* bounds, ULong viewFormat)
 }
 
 
-// ROM 0x00262198 OuterBounds__5TViewFP5TRect
+// ROM 0x002640d0 OuterBounds__5TViewFP5TRect
 // The bounds with what the format draws outside them; the popup view gets
 // three pixels more above and below.
 void
@@ -2897,7 +2897,7 @@ TView::OuterBounds(Rect* bounds)
 }
 
 
-// ROM 0x00263624 SetBounds__5TViewFRC5TRect
+// ROM 0x0026555c SetBounds__5TViewFRC5TRect
 // The bounds from the template's viewBounds: justified against the parent
 // by viewJustify (read from the context into fViewJustify); a child of
 // the root view has its clipper's regions recomputed and the visibility
@@ -2918,7 +2918,7 @@ TView::SetBounds(const Rect& bounds)
 }
 
 
-// ROM 0x00265520 GetChildOrigin__5TViewFP6TPoint
+// ROM 0x00267458 GetChildOrigin__5TViewFP6TPoint
 // The scroll origin of the contents: viewOriginX, viewOriginY.
 void
 TView::GetChildOrigin(Point* origin)
@@ -2930,7 +2930,7 @@ TView::GetChildOrigin(Point* origin)
 }
 
 
-// ROM 0x002655cc ContentsOrigin__5TViewFv
+// ROM 0x00267504 ContentsOrigin__5TViewFv
 // Where the contents' (0, 0) is: the bounds' top left less the scroll
 // origin.
 Point
@@ -2942,7 +2942,7 @@ TView::ContentsOrigin(void)
 }
 
 
-// ROM 0x00261e6c LocalOrigin__5TViewCFv
+// ROM 0x00263da4 LocalOrigin__5TViewCFv
 // The bounds' top left relative to the contents' origin.
 Point
 TView::LocalOrigin(void) const
@@ -2952,7 +2952,7 @@ TView::LocalOrigin(void) const
 }
 
 
-// ROM 0x002633fc SetOrigin__5TViewFR6TPoint
+// ROM 0x00265334 SetOrigin__5TViewFR6TPoint
 // The contents scrolled to the origin: the view dirtied, the children
 // shifted by the old origin less the new (a window child through Offset,
 // the rest simply), and viewOriginX/Y set.
@@ -3002,7 +3002,7 @@ ParentBoundsFor(TView* view, TView* parent, Rect* parentBounds)
 }
 
 
-// ROM 0x00262224 JustifyBounds__5TViewFP5TRect
+// ROM 0x0026415c JustifyBounds__5TViewFP5TRect
 // The template's viewBounds made global.  The base is the parent's
 // contents origin (its top left less the scroll origin; the top left
 // itself for vjParentClip); a parent still being set up whose bounds are
@@ -3177,7 +3177,7 @@ TView::JustifyBounds(Rect* bounds)
 }
 
 
-// ROM 0x00262b1c DejustifyBounds__5TViewFP5TRect
+// ROM 0x00264a54 DejustifyBounds__5TViewFP5TRect
 // The inverse: the global bounds made a template's viewBounds under the
 // view's viewJustify (the full alignments and the sibling ones are undone
 // as the ROM does, after the base is taken off; ratios become hundredths
@@ -3335,7 +3335,7 @@ TView::DejustifyBounds(Rect* bounds)
 }
 
 
-// ROM 0x0026336c RecalcBounds__5TViewFv
+// ROM 0x002652a4 RecalcBounds__5TViewFv
 // The bounds set again from the template's viewBounds (after the parent
 // moved or changed size); a template without a proper viewBounds keeps
 // the children's recalculated instead... the ROM recalculates the children
@@ -3356,7 +3356,7 @@ TView::RecalcBounds(void)
 }
 
 
-// ROM 0x00261ff0 WriteBounds__5TViewFRC5TRect
+// ROM 0x00263f28 WriteBounds__5TViewFRC5TRect
 // The bounds (relative to the parent's contents origin) written to the
 // data frame's viewBounds when they changed - not for a read-only or
 // write-protected view - and set, with Changed sent.
@@ -3376,7 +3376,7 @@ TView::WriteBounds(const Rect& bounds)
 }
 
 
-// ROM 0x00261ee4 Move__5TViewFRC6TPoint
+// ROM 0x00263e1c Move__5TViewFRC6TPoint
 // The view moved by the delta: the bounds written, the children
 // recalculated, the parent dirtied.
 void
@@ -3394,7 +3394,7 @@ TView::Move(const Point& delta)
 }
 
 
-// ROM 0x0025df8c Offset__5TViewF6TPoint
+// ROM 0x0025fec4 Offset__5TViewF6TPoint
 // The view and its children shifted by the delta without re-justifying:
 // a view without a clipper has its old place dirtied in the parent and
 // its new one dirtied; a child of the root view has the parent told
@@ -3422,7 +3422,7 @@ TView::Offset(Point delta)
 }
 
 
-// ROM 0x0025e064 SimpleOffset__5TViewF6TPointl
+// ROM 0x0025ff9c SimpleOffset__5TViewF6TPointl
 // The bounds and the children's moved by the delta; a vjParentClip view
 // stays where it is unless the move is its parent's (inChildren).
 void
@@ -3437,7 +3437,7 @@ TView::SimpleOffset(Point delta, Boolean inChildren)
 }
 
 
-// ROM 0x0025e0f0 ChildViewMoved__5TViewFP5TView6TPoint
+// ROM 0x00260028 ChildViewMoved__5TViewFP5TView6TPoint
 // A child of the root view moved by the delta: the views from the front
 // down to it have their visible regions recomputed, the old and new
 // places of the child invalidated less what shows through.
@@ -3479,7 +3479,7 @@ TView::ChildViewMoved(TView* child, Point delta)
 }
 
 
-// ROM 0x002636e4 ChildrenHeight__5TViewFPl
+// ROM 0x0026561c ChildrenHeight__5TViewFPl
 // The children's heights added; count answers how many, plus one.
 long
 TView::ChildrenHeight(long* count)
@@ -3498,7 +3498,7 @@ TView::ChildrenHeight(long* count)
 }
 
 
-// ROM 0x00263760 SetChildrenVertical__5TViewFlT1
+// ROM 0x00265698 SetChildrenVertical__5TViewFlT1
 // The children stacked from top, spacing apart (NOT YET RECONSTRUCTED
 // beyond the first: the ROM's loop over the rest is lost after the first
 // child's SetBounds); ==> the bottom reached.
@@ -3523,7 +3523,7 @@ TView::SetChildrenVertical(long top, long spacing)
 }
 
 
-// ROM 0x0025e33c Dump__5TViewFl
+// ROM 0x00260274 Dump__5TViewFl
 // The view printed for the debugger: its debug name, class, context,
 // bounds and flags by name, one line per depth.
 void

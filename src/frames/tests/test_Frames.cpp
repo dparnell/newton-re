@@ -551,7 +551,7 @@ main()
 	InitHostStandaloneHeap();
 	gObjectHeapSize = 0x80000;
 	InitObjects();
-	EXPECT(gHeap != nil && gRSSymbolCount == 1765 && IsSymbol(RSSYMarray) && IsFrame(gVarFrame));
+	EXPECT(gHeap != nil && gRSSymbolCount == 1768 && IsSymbol(RSSYMarray) && IsFrame(gVarFrame));
 	TestRefs();
 	TestBinaries();
 	TestArrays();

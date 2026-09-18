@@ -4,7 +4,7 @@
 	Contains:	TRootView: the update regions and their redraw, the views
 				it keeps track of.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "RootView.h"
@@ -29,12 +29,12 @@
 #include "UnitPublic.h"
 #include "NewtonTime.h"
 
-Boolean	gNewtIsAliveAndWell = false;		// ROM 0x0c102604 gNewtIsAliveAndWell (set by TNewtWorld::PreMain once the boot is over; a program without the newt world sets it itself)
+Boolean	gNewtIsAliveAndWell = false;		// ROM 0x0c105510 gNewtIsAliveAndWell (set by TNewtWorld::PreMain once the boot is over; a program without the newt world sets it itself)
 
 const long kUpdateRegionCount = 3;
 
 
-// ROM 0x001b3d04 ClassID__9TRootViewCFv
+// ROM 0x001b182c ClassID__9TRootViewCFv
 long
 TRootView::ClassID(void) const
 {
@@ -42,7 +42,7 @@ TRootView::ClassID(void) const
 }
 
 
-// ROM 0x001b3d0c DerivedFrom__9TRootViewCFl
+// ROM 0x001b1834 DerivedFrom__9TRootViewCFl
 Boolean
 TRootView::DerivedFrom(long id) const
 {
@@ -50,7 +50,7 @@ TRootView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x001b3d40 Constructor__9TRootViewFRC6RefVar
+// ROM 0x001b1868 Constructor__9TRootViewFRC6RefVar
 // The root view from its template: the update regions, the idler list,
 // the shared empty view list, the selection stack and keyboard arrays,
 // the context (a clone of Rrootcontext protoed to the template) built as
@@ -100,7 +100,7 @@ TRootView::Constructor(RefArg templ)
 }
 
 
-// ROM 0x001b3eb4 __dt__9TRootViewFv
+// ROM 0x001b19dc __dt__9TRootViewFv
 TRootView::~TRootView()
 {
 	delete fIdlers;
@@ -108,7 +108,7 @@ TRootView::~TRootView()
 }
 
 
-// ROM 0x001b56c8 RealDoCommand__9TRootViewFRC6RefVar
+// ROM 0x001b31f0 RealDoCommand__9TRootViewFRC6RefVar
 // aeKeyboardConnected: the parameter says whether a keyboard is
 // connected - the hard key map cleared when it is, the caret's view
 // asked to give it up when not; the popup synced, the root dirtied.
@@ -133,7 +133,7 @@ TRootView::RealDoCommand(RefArg cmd)
 }
 
 
-// ROM 0x001b6fac KeyboardConnected__9TRootViewFv
+// ROM 0x001b4ad4 KeyboardConnected__9TRootViewFv
 // A hardware keyboard, or a keyboard passed through a soft one.
 Boolean
 TRootView::KeyboardConnected(void)
@@ -142,7 +142,7 @@ TRootView::KeyboardConnected(void)
 }
 
 
-// ROM 0x001b6fd4 CommandKeyboardConnected__9TRootViewFv
+// ROM 0x001b4afc CommandKeyboardConnected__9TRootViewFv
 Boolean
 TRootView::CommandKeyboardConnected(void)
 {
@@ -150,7 +150,7 @@ TRootView::CommandKeyboardConnected(void)
 }
 
 
-// ROM 0x001b6fe4 KeyboardActive__9TRootViewFv
+// ROM 0x001b4b0c KeyboardActive__9TRootViewFv
 // A keyboard connected, or an on-screen keyboard registered as active
 // (flags bit 2).
 Boolean
@@ -169,7 +169,7 @@ TRootView::KeyboardActive(void)
 }
 
 
-// ROM 0x001b6df4 ConnectPassthruKeyboard__9TRootViewFUc
+// ROM 0x001b491c ConnectPassthruKeyboard__9TRootViewFUc
 // A keyboard connected (or not) through a soft keyboard; the caret's
 // view is asked whether it keeps the caret when it goes (DerivedFrom
 // clEditView: the ROM's virtual call, NOT YET).
@@ -182,7 +182,7 @@ TRootView::ConnectPassthruKeyboard(Boolean connected)
 }
 
 
-// ROM 0x001b6ad0 CheckForCaretRemoval__9TRootViewFv
+// ROM 0x001b45f8 CheckForCaretRemoval__9TRootViewFv
 // NOT YET RECONSTRUCTED: the ROM asks the caret view DerivedFrom(clEditView).
 void
 TRootView::CheckForCaretRemoval(void)
@@ -192,7 +192,7 @@ TRootView::CheckForCaretRemoval(void)
 }
 
 
-// ROM 0x001b6e04 HandleKeyIn__9TRootViewFUlUcP5TView
+// ROM 0x001b492c HandleKeyIn__9TRootViewFUlUcP5TView
 // A modifier key (shift, caps lock, option, control) on a soft keyboard:
 // the other registered keyboards that show the modifiers (flags bit 0)
 // are dirtied - the first one found.
@@ -221,7 +221,7 @@ TRootView::HandleKeyIn(ULong keyCode, Boolean /*isDown*/, TView* keyboard)
 }
 
 
-// ROM 0x001b8044 RemoveAllViews__9TRootViewFv
+// ROM 0x001b5b6c RemoveAllViews__9TRootViewFv
 // NOT YET RECONSTRUCTED beyond the children: the ROM forgets the key view,
 // the popup and the clipboards first.
 void
@@ -249,7 +249,7 @@ TRootView::RemoveAllViews(void)
 }
 
 
-// ROM 0x001b4838 PostDraw__9TRootViewFR5TRect
+// ROM 0x001b2360 PostDraw__9TRootViewFR5TRect
 // NOT YET RECONSTRUCTED: the ink in the rect redrawn (TController::
 // UpdateInk) and the stroke groups updated.
 void
@@ -257,7 +257,7 @@ TRootView::PostDraw(Rect& /*bounds*/)
 { }
 
 
-// ROM 0x001b4844 RealDraw__9TRootViewFR5TRect
+// ROM 0x001b236c RealDraw__9TRootViewFR5TRect
 // The boot splash (the screen painted black, the logo, the version) until
 // the system is up; nothing after: the root's format fills the screen.
 // NOT YET RECONSTRUCTED: the splash's picture and text (the screen is
@@ -290,7 +290,7 @@ TRootView::ScreenHeight(void) const
 }
 
 
-// ROM 0x001b52e4 Dirty__9TRootViewFPC5TRect
+// ROM 0x001b2e0c Dirty__9TRootViewFPC5TRect
 // The rect (the whole view for nil) into the update region, with the root
 // as its filler.
 void
@@ -303,7 +303,7 @@ TRootView::Dirty(const Rect* rect)
 }
 
 
-// ROM 0x001b44d4 GetCommonParent__9TRootViewFP5TViewT1
+// ROM 0x001b1ffc GetCommonParent__9TRootViewFP5TViewT1
 // The nearest view both are in (one of them when it contains the other),
 // nil when none: the root view's parent is taken as nil.
 TView*
@@ -317,7 +317,7 @@ TRootView::GetCommonParent(TView* a, TView* b)
 }
 
 
-// ROM 0x001b4524 Invalidate__9TRootViewFC11TBaseRegionP5TView
+// ROM 0x001b204c Invalidate__9TRootViewFC11TBaseRegionP5TView
 // The region joins the update regions under the filler (the view that
 // paints its background; nil or the root: everything merges into the
 // first slot under the root).  A slot whose filler contains the filler,
@@ -402,7 +402,7 @@ TRootView::Invalidate(RgnHandle rgn, TView* filler)
 }
 
 
-// ROM 0x001b47f8 Validate__9TRootViewFC11TBaseRegion
+// ROM 0x001b2320 Validate__9TRootViewFC11TBaseRegion
 // The region needs no update after all.
 void
 TRootView::Validate(RgnHandle rgn)
@@ -412,7 +412,7 @@ TRootView::Validate(RgnHandle rgn)
 }
 
 
-// ROM 0x001b43d8 SmartInvalidate__9TRootViewFRC5TRect
+// ROM 0x001b1f00 SmartInvalidate__9TRootViewFRC5TRect
 // The rect dirtied in the deepest visible window (a child of the root
 // view, then of that, ...) whose bounds enclose it, cut to the port.
 void
@@ -449,7 +449,7 @@ TRootView::SmartInvalidate(const Rect& rect)
 }
 
 
-// ROM 0x001b4868 SmartScreenDirty__9TRootViewFRC5TRect
+// ROM 0x001b2390 SmartScreenDirty__9TRootViewFRC5TRect
 // The rect joins what the screen must be shown again (an unset rect,
 // top -32768, takes the rect as it is).
 void
@@ -475,7 +475,7 @@ TRootView::SmartScreenDirty(const Rect& rect)
 }
 
 
-// ROM 0x001b4870 NeedsUpdate__9TRootViewFv
+// ROM 0x001b2398 NeedsUpdate__9TRootViewFv
 // Whether Update has anything to do: a dirty screen rect, the caret
 // wrong, the default button or caret slip changed, or an update region.
 Boolean
@@ -497,7 +497,7 @@ TRootView::NeedsUpdate(void)
 }
 
 
-// ROM 0x001b4914 Update__9TRootViewFP5TRect
+// ROM 0x001b243c Update__9TRootViewFP5TRect
 // The screen brought up to date: the rectangle (when given) invalidated
 // first; the caret checked (CaretValid) - it is taken off the screen
 // when it is wrong or a dirty region covers it - and the default button
@@ -564,7 +564,7 @@ TRootView::Update(Rect* rect)
 }
 
 
-// ROM 0x001b42e4 ForgetAboutView__9TRootViewFP5TView
+// ROM 0x001b1e0c ForgetAboutView__9TRootViewFP5TView
 // A view is going: the pointers to it are dropped (the hiliter, the caret
 // view, the popup, the caret slip or default button, the modal view), its
 // idlers removed (when it has the hint), a filler that was it becomes its
@@ -599,7 +599,7 @@ TRootView::ForgetAboutView(TView* view)
 
 // the caret's rectangle from its point: 12 wide from 5 left of the
 // point, 11 down from it
-// ROM 0x001b7210 CaretPointToRect__FR6TPointP5TRect
+// ROM 0x001b4d38 CaretPointToRect__FR6TPointP5TRect
 static void
 CaretPointToRect(const Point& pt, Rect* rect)
 {
@@ -626,7 +626,7 @@ KeyViewUsable(TView* view)
 }
 
 
-// ROM 0x001b5f24 DoAutoShift__FP14TParagraphViewl
+// ROM 0x001b3a4c DoAutoShift__FP14TParagraphViewl
 // The soft keyboards' shift set for a paragraph's caret: down at the
 // start of the text or after white space, up otherwise (KeyIn(shift) when
 // that changes it); ==> the character KeyIn answered.
@@ -648,7 +648,7 @@ DoAutoShift(TParagraphView* view, long offset)
 }
 
 
-// ROM 0x001b608c SetKeyView__9TRootViewFP5TViewlT2Uc
+// ROM 0x001b3bb4 SetKeyView__9TRootViewFP5TViewlT2Uc
 // The key view set with a caret offset and selection length: a usable
 // old key view (there, not being deleted) that is not the new one has
 // its selection (GetSelection) pushed on the selection stack; the new
@@ -672,7 +672,7 @@ TRootView::SetKeyView(TView* view, long offset, long length, Boolean flushWord)
 }
 
 
-// ROM 0x001b5fbc SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
+// ROM 0x001b3ae4 SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
 // The key view set from a caret info frame ({offset, length} for a
 // paragraph; the view's SetSelection reads it): with pushOld a usable
 // old key view that is not the new one has its selection pushed; nil
@@ -691,7 +691,7 @@ TRootView::SetKeyViewSelection(TView* view, RefArg selection, Boolean pushOld)
 }
 
 
-// ROM 0x001b6174 CommonSetKeyView__9TRootViewFP5TViewlT2
+// ROM 0x001b3c9c CommonSetKeyView__9TRootViewFP5TViewlT2
 // The key view, offset and length stored.  When the view changes: unless
 // hilites are being preserved, a usable old view is told
 // ActivateSelection(false) - except when old and new are paragraphs of
@@ -791,7 +791,7 @@ TRootView::CommonSetKeyView(TView* view, long offset, long length)
 }
 
 
-// ROM 0x001b4198 HoldPendingKeyView__9TRootViewFRC6RefVarT1
+// ROM 0x001b1cc0 HoldPendingKeyView__9TRootViewFRC6RefVarT1
 void
 TRootView::HoldPendingKeyView(RefArg view, RefArg info)
 {
@@ -800,7 +800,7 @@ TRootView::HoldPendingKeyView(RefArg view, RefArg info)
 }
 
 
-// ROM 0x001b41bc ActivatePendingKeyView__9TRootViewFv
+// ROM 0x001b1ce4 ActivatePendingKeyView__9TRootViewFv
 // The held key view made the key view (with its caret info), and
 // forgotten.
 void
@@ -814,7 +814,7 @@ TRootView::ActivatePendingKeyView(void)
 }
 
 
-// ROM 0x001b6588 CleanSelectionStack__9TRootViewFP5TViewUc
+// ROM 0x001b40b0 CleanSelectionStack__9TRootViewFP5TViewUc
 // The selection stack's entries for views that are gone (no viewCObject)
 // or for the view given removed; with trim a stack of twenty or more
 // loses its oldest ten.
@@ -837,7 +837,7 @@ TRootView::CleanSelectionStack(TView* view, Boolean trim)
 }
 
 
-// ROM 0x001b69a8 PushSelection__9TRootViewFP5TViewRC6RefVar
+// ROM 0x001b44d0 PushSelection__9TRootViewFP5TViewRC6RefVar
 // The view's context and caret info pushed (the stack cleaned first).
 void
 TRootView::PushSelection(TView* view, RefArg info)
@@ -850,7 +850,7 @@ TRootView::PushSelection(TView* view, RefArg info)
 }
 
 
-// ROM 0x001b6868 PopSelection__9TRootViewFv
+// ROM 0x001b4390 PopSelection__9TRootViewFv
 // The newest entry (after cleaning) as a caret info frame {view, info};
 // nil for none.
 Ref
@@ -872,7 +872,7 @@ TRootView::PopSelection(void)
 }
 
 
-// ROM 0x001b66b8 GetSelectionStack__9TRootViewFv
+// ROM 0x001b41e0 GetSelectionStack__9TRootViewFv
 Ref
 TRootView::GetSelectionStack(void)
 {
@@ -880,7 +880,7 @@ TRootView::GetSelectionStack(void)
 }
 
 
-// ROM 0x001b66d4 FindRestorableKeyView__9TRootViewFP5TViewPUl
+// ROM 0x001b41fc FindRestorableKeyView__9TRootViewFP5TViewPUl
 // The newest stacked key view within the view (the view itself or a
 // descendant); index: its place in the stack.
 TView*
@@ -903,7 +903,7 @@ TRootView::FindRestorableKeyView(TView* view, ULong* index)
 }
 
 
-// ROM 0x001b678c RestoreKeyView__9TRootViewFP5TView
+// ROM 0x001b42b4 RestoreKeyView__9TRootViewFP5TView
 // The newest stacked key view within the view made the key view again
 // with its caret info; ==> whether there was one.
 Boolean
@@ -918,7 +918,7 @@ TRootView::RestoreKeyView(TView* view)
 }
 
 
-// ROM 0x001b6a34 GetPreserveHilites__9TRootViewFv
+// ROM 0x001b455c GetPreserveHilites__9TRootViewFv
 Boolean
 TRootView::GetPreserveHilites(void)
 {
@@ -926,7 +926,7 @@ TRootView::GetPreserveHilites(void)
 }
 
 
-// ROM 0x001b6a20 SetPreserveHilites__9TRootViewFUc
+// ROM 0x001b4548 SetPreserveHilites__9TRootViewFUc
 void
 TRootView::SetPreserveHilites(Boolean preserve)
 {
@@ -934,7 +934,7 @@ TRootView::SetPreserveHilites(Boolean preserve)
 }
 
 
-// ROM 0x001b6f44 GetRemoteWriting__9TRootViewFv
+// ROM 0x001b4a6c GetRemoteWriting__9TRootViewFv
 // The remoteWriting preference (a keyboard elsewhere writing here).
 Boolean
 TRootView::GetRemoteWriting(void)
@@ -943,7 +943,7 @@ TRootView::GetRemoteWriting(void)
 }
 
 
-// ROM 0x001b6f6c SetRemoteWriting__9TRootViewFUc
+// ROM 0x001b4a94 SetRemoteWriting__9TRootViewFUc
 void
 TRootView::SetRemoteWriting(Boolean on)
 {
@@ -951,7 +951,7 @@ TRootView::SetRemoteWriting(Boolean on)
 }
 
 
-// ROM 0x001b707c CaretEnabled__9TRootViewFv
+// ROM 0x001b4ba4 CaretEnabled__9TRootViewFv
 // A caret shows for a key view without a selection when something can
 // type: remote writing, a keyboard connected, or an active on-screen
 // keyboard (flags bit 2).
@@ -975,7 +975,7 @@ TRootView::CaretEnabled(void)
 }
 
 
-// ROM 0x001b70cc CaretValid__9TRootViewFP6TPoint
+// ROM 0x001b4bf4 CaretValid__9TRootViewFP6TPoint
 // Whether the caret on the screen is right: always while hidden; when no
 // caret should show, right when none shows; else the caret's point (pt
 // answers it) must be the shown caret's for the same view - a point
@@ -1010,7 +1010,7 @@ TRootView::CaretValid(Point* pt)
 }
 
 
-// ROM 0x001b72a0 GetCaretPoint__9TRootViewFP6TPoint
+// ROM 0x001b4dc8 GetCaretPoint__9TRootViewFP6TPoint
 // The caret's point from the key view's OffsetToCaret: the rectangle's
 // left and bottom (nowhere: h = -0x8000, as an empty rect gives).
 void
@@ -1023,7 +1023,7 @@ TRootView::GetCaretPoint(Point* pt)
 }
 
 
-// ROM 0x001b7314 GetCaretRect__9TRootViewFP5TRect
+// ROM 0x001b4e3c GetCaretRect__9TRootViewFP5TRect
 // Where the caret is drawn (empty when it is not).
 void
 TRootView::GetCaretRect(Rect* rect)
@@ -1037,7 +1037,7 @@ TRootView::GetCaretRect(Rect* rect)
 }
 
 
-// ROM 0x001b7344 DrawCaretBits__FR5TRectUc
+// ROM 0x001b4e6c DrawCaretBits__FR5TRectUc
 // The caret: the outside bitmap in the rectangle (mode 3 - drawn; 1 -
 // erased), the inside one a pixel in with the other mode.
 static void
@@ -1053,7 +1053,7 @@ DrawCaretBits(const Rect& rect, Boolean erase)
 }
 
 
-// ROM 0x001b73dc GetCaretClipView__FP5TView
+// ROM 0x001b4f04 GetCaretClipView__FP5TView
 // The view the caret is clipped to: a view that is not a paragraph, or a
 // paragraph's hilite view (its edit view, NOT YET: GetHiliteView), else
 // the paragraph's window - the first ancestor below the root that is an
@@ -1077,7 +1077,7 @@ GetCaretClipView(TView* view)
 }
 
 
-// ROM 0x001b745c DrawCaret__9TRootViewF6TPoint
+// ROM 0x001b4f84 DrawCaret__9TRootViewF6TPoint
 // The caret drawn at the point for the key view (unless a selection or
 // HideCaret): the screen under its rectangle (clipped to the port's
 // bounds) saved in fCaretBits, the port's visible region narrowed to the
@@ -1125,7 +1125,7 @@ TRootView::DrawCaret(Point pt)
 }
 
 
-// ROM 0x001b7698 RestoreBitsUnderCaret__9TRootViewFv
+// ROM 0x001b51c0 RestoreBitsUnderCaret__9TRootViewFv
 // The saved bits put back where the caret was (the port clipped to the
 // whole screen for it); the caret no longer showing.
 void
@@ -1151,7 +1151,7 @@ TRootView::RestoreBitsUnderCaret(void)
 }
 
 
-// ROM 0x001b7774 DoCaretClick__9TRootViewFP11TUnitPublic
+// ROM 0x001b529c DoCaretClick__9TRootViewFP11TUnitPublic
 // A click on the caret: when the caret is showing (and no popup is up)
 // and the stroke starts within the caret's rectangle let out two pixels,
 // the pen is tracked until the stroke ends - the caret drawn inverted
@@ -1224,7 +1224,7 @@ TRootView::DoCaretClick(TUnitPublic* unit)
 }
 
 
-// ROM 0x001b7adc HideCaret__9TRootViewFv
+// ROM 0x001b5604 HideCaret__9TRootViewFv
 // The caret taken off the screen and kept off (a count).
 void
 TRootView::HideCaret(void)
@@ -1235,7 +1235,7 @@ TRootView::HideCaret(void)
 }
 
 
-// ROM 0x001b7b0c ShowCaret__9TRootViewFv
+// ROM 0x001b5634 ShowCaret__9TRootViewFv
 // One HideCaret undone (the caret comes back with the next Update).
 void
 TRootView::ShowCaret(void)
@@ -1245,7 +1245,7 @@ TRootView::ShowCaret(void)
 }
 
 
-// ROM 0x001b7b6c DirtyCaret__9TRootViewFv
+// ROM 0x001b5694 DirtyCaret__9TRootViewFv
 // The caret's rectangle to be redrawn, the caret no longer counted as
 // showing.
 void
@@ -1260,7 +1260,7 @@ TRootView::DirtyCaret(void)
 }
 
 
-// ROM 0x001b6bac FindDefaultButtonAndCaretSlip__9TRootViewFP5TViewPP5TViewT2
+// ROM 0x001b46d4 FindDefaultButtonAndCaretSlip__9TRootViewFP5TViewPP5TViewT2
 // For a key view, with a keyboard connected: the view its _defaultButton
 // variable names, and the slip - the first ancestor (the view itself
 // included) with a hilite or drag-shadow frame, or the root's child.
@@ -1293,7 +1293,7 @@ TRootView::FindDefaultButtonAndCaretSlip(TView* view, TView** button, TView** sl
 }
 
 
-// ROM 0x001b6c60 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
+// ROM 0x001b4788 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
 // The default button and caret slip found for the key view; a change
 // dirties the old view (when there was one) or the new (the ROM does
 // one thing per call: the old one dirtied first, the new one taken on
@@ -1332,7 +1332,7 @@ TRootView::UpdateDefaultButtonAndCaretSlip(void)
 }
 
 
-// ROM 0x001b6d5c GetKeyboardIndex__9TRootViewFRC6RefVar
+// ROM 0x001b4884 GetKeyboardIndex__9TRootViewFRC6RefVar
 // Where the context is in the keyboards array; -1 for not.
 long
 TRootView::GetKeyboardIndex(RefArg context)
@@ -1345,7 +1345,7 @@ TRootView::GetKeyboardIndex(RefArg context)
 }
 
 
-// ROM 0x001b6a3c RegisterKeyboard__9TRootViewFRC6RefVarUl
+// ROM 0x001b4564 RegisterKeyboard__9TRootViewFRC6RefVarUl
 // An on-screen keyboard's context and flags added (or its flags set).
 void
 TRootView::RegisterKeyboard(RefArg context, ULong flags)
@@ -1361,7 +1361,7 @@ TRootView::RegisterKeyboard(RefArg context, ULong flags)
 }
 
 
-// ROM 0x001b6b44 UnregisterKeyboard__9TRootViewFRC6RefVar
+// ROM 0x001b466c UnregisterKeyboard__9TRootViewFRC6RefVar
 // The keyboard removed; the caret's view asked whether it goes on
 // (CheckForCaretRemoval without a key view, the key view's DerivedFrom
 // otherwise, NOT YET); ==> whether it was registered.
@@ -1382,7 +1382,7 @@ TRootView::UnregisterKeyboard(RefArg context)
 }
 
 
-// ROM 0x001b420c CaretViewGone__9TRootViewFv
+// ROM 0x001b1d34 CaretViewGone__9TRootViewFv
 // The key view has gone: the newest stacked selection (PopSelection)
 // becomes the key view again, or there is none.
 void
@@ -1399,7 +1399,7 @@ TRootView::CaretViewGone(void)
 }
 
 
-// ROM 0x002635d0 ViewContainsCaretView__FP5TView
+// ROM 0x00265508 ViewContainsCaretView__FP5TView
 // Whether the caret view is the view or under it.
 Boolean
 TRootView::ViewContainsCaretView(TView* view)
@@ -1418,7 +1418,7 @@ TRootView::ViewContainsCaretView(TView* view)
 }
 
 
-// ROM 0x001b7bb0 SetPopup__9TRootViewFP5TViewUc
+// ROM 0x001b56d8 SetPopup__9TRootViewFP5TViewUc
 // The popup view set (the previous one noted in the new one's popup slot),
 // or, for set false, the view let go: the popup its context's popup slot
 // names takes its place.  NOT YET RECONSTRUCTED: the previous popup
@@ -1445,7 +1445,7 @@ TRootView::SetPopup(TView* view, Boolean set)
 }
 
 
-// ROM 0x001b7e6c GetClipboard__9TRootViewFP5TView
+// ROM 0x001b5994 GetClipboard__9TRootViewFP5TView
 // The clipboard the view is (NOT YET RECONSTRUCTED: no clipboards).
 TView*
 TRootView::GetClipboard(TView* /*view*/)
@@ -1454,7 +1454,7 @@ TRootView::GetClipboard(TView* /*view*/)
 }
 
 
-// ROM 0x002e8b18 SetModalView__FP5TView
+// ROM 0x0030de2c SetModalView__FP5TView
 // The view marked modal (its viewJustify's private bit); NOT YET: the
 // recognition disabled for it.
 void
@@ -1471,7 +1471,7 @@ TRootView::SetModalView(TView* view)
 	I d l e r s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001b4b60 MoveLow__FP13CDynamicArray
+// ROM 0x001b2688 MoveLow__FP13CDynamicArray
 // An array's storage re-made at its size (the ROM moves it low in the
 // heap: the block freed and allocated again, its contents kept; the host
 // copies the elements out and back).
@@ -1493,7 +1493,7 @@ MoveLow(CDynamicArray* array, Size elementSize)
 }
 
 
-// ROM 0x001b50d0 GetIdlingView__9TRootViewFP5TView
+// ROM 0x001b2bf8 GetIdlingView__9TRootViewFP5TView
 // The idling record of a view whose Idle is running, nil when it is not.
 IdlingView*
 TRootView::GetIdlingView(TView* view)
@@ -1505,7 +1505,7 @@ TRootView::GetIdlingView(TView* view)
 }
 
 
-// ROM 0x001b5100 UnlinkIdleView__9TRootViewFP5TView
+// ROM 0x001b2c28 UnlinkIdleView__9TRootViewFP5TView
 // A view's idling record taken out of the list (its idler was removed
 // while its Idle ran: IdleViews must not touch the entry again).
 void
@@ -1521,7 +1521,7 @@ TRootView::UnlinkIdleView(TView* view)
 }
 
 
-// ROM 0x001b4f8c AddIdler__9TRootViewFP5TViewUll
+// ROM 0x001b2ab4 AddIdler__9TRootViewFP5TViewUll
 // An idler set for the view: due delay milliseconds from now, with the
 // arg its Idle gets - an existing one for the view and arg re-timed, a
 // new one appended, the view given the hint and the application's next
@@ -1557,7 +1557,7 @@ TRootView::AddIdler(TView* view, ULong delay, long arg)
 }
 
 
-// ROM 0x001b5124 RemoveIdler__9TRootViewFP5TViewl
+// ROM 0x001b2c4c RemoveIdler__9TRootViewFP5TViewl
 // The view's idler with the arg removed; ==> the time it had left, in
 // the clock's units (0 when it was due).
 ULong
@@ -1585,7 +1585,7 @@ TRootView::RemoveIdler(TView* view, long arg)
 }
 
 
-// ROM 0x001b5238 RemoveAllIdlers__9TRootViewFP5TView
+// ROM 0x001b2d60 RemoveAllIdlers__9TRootViewFP5TView
 // Every idler of the view removed, and its hint cleared.
 void
 TRootView::RemoveAllIdlers(TView* view)
@@ -1605,7 +1605,7 @@ TRootView::RemoveAllIdlers(TView* view)
 }
 
 
-// ROM 0x001b4bf4 IdleViews__9TRootViewFv
+// ROM 0x001b271c IdleViews__9TRootViewFv
 // The idlers whose time has come (within 10 ms) run: each view's
 // Idle(arg) while it is on the idling list - the delay it answers (in
 // milliseconds) re-times its idler from the time it was due (from now

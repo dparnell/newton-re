@@ -3,7 +3,7 @@
 
 	Contains:	MemObjManager, the database it works on, and the info classes.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "MemObjManager.h"
@@ -26,7 +26,7 @@ void*					gMemObjHeap = nil;
 static const ULong kPersistentQueueItemOffset = 0x14;	// FUN_00381424 (a patch stub returning 0x14)
 
 
-// ROM 0x00045c84 InitCGlobals +0x374 (the part that picks the domain table)
+// ROM 0x000453b4 InitCGlobals +0x374 (the part that picks the domain table)
 void
 SelectDomainTable(ULong ramSize)
 {
@@ -38,7 +38,7 @@ SelectDomainTable(ULong ramSize)
 	Info classes
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0011f594 InitDomainInfo__10DomainInfoFUlN31
+// ROM 0x0011db2c InitDomainInfo__10DomainInfoFUlN31
 void
 DomainInfo::InitDomainInfo(ULong name, ULong unknown, ULong base, ULong size)
 {
@@ -49,7 +49,7 @@ DomainInfo::InitDomainInfo(ULong name, ULong unknown, ULong base, ULong size)
 }
 
 
-// ROM 0x0011f5a0 InitHeapInfo__10DomainInfoFUlN21
+// ROM 0x0011db38 InitHeapInfo__10DomainInfoFUlN21
 void
 DomainInfo::InitHeapInfo(ULong heapSize, ULong handleHeapSize, ULong heapFlags)
 {
@@ -59,7 +59,7 @@ DomainInfo::InitHeapInfo(ULong heapSize, ULong handleHeapSize, ULong heapFlags)
 }
 
 
-// ROM 0x0011f5ac InitGlobalInfo__10DomainInfoFUlN31
+// ROM 0x0011db44 InitGlobalInfo__10DomainInfoFUlN31
 void
 DomainInfo::InitGlobalInfo(ULong globalBase, ULong globalROMBase, ULong initSize, ULong zeroSize)
 {
@@ -70,7 +70,7 @@ DomainInfo::InitGlobalInfo(ULong globalBase, ULong globalROMBase, ULong initSize
 }
 
 
-// ROM 0x0011f840 Init__15EnvironmentInfoFUlN41
+// ROM 0x0011ddd8 Init__15EnvironmentInfoFUlN41
 void
 EnvironmentInfo::Init(ULong name, ULong unknown, ULong defaultHeap, ULong heapDomain, ULong stackDomain)
 {
@@ -82,7 +82,7 @@ EnvironmentInfo::Init(ULong name, ULong unknown, ULong defaultHeap, ULong heapDo
 }
 
 
-// ROM 0x0011f858 Domains__15EnvironmentInfoFUlPUlPUcPl
+// ROM 0x0011ddf0 Domains__15EnvironmentInfoFUlPUlPUcPl
 Boolean
 EnvironmentInfo::Domains(ULong index, ULong* outName, Boolean* outIsManager, long* outError)
 {
@@ -90,7 +90,7 @@ EnvironmentInfo::Domains(ULong index, ULong* outName, Boolean* outIsManager, lon
 }
 
 
-// ROM 0x0011f8dc Init__17PersistentDBEntryFUlUcT1
+// ROM 0x0011de74 Init__17PersistentDBEntryFUlUcT1
 // reset: start the record afresh under `name` for the domain at domainIndex
 // (its id from the domain table, -1 if it has none yet); otherwise only the
 // low half of the flags is kept.
@@ -127,7 +127,7 @@ DomainHasHeap(const DomainTableEntry& d)
 }
 
 
-// ROM 0x0011e784 ComputeMemObjDatabaseSize__FPUl
+// ROM 0x0011cd1c ComputeMemObjDatabaseSize__FPUl
 // Room for the four tables: an entry per domain, per environment and per heap,
 // a persistent record per persistent heap plus ten spare ones, and the 0x30
 // bytes of table headers.  (0x168 is the ten spares' 0x24 bytes each.)
@@ -147,7 +147,7 @@ ComputeMemObjDatabaseSize(ULong* outSize)
 }
 
 
-// ROM 0x0011e84c BuildMemObjDatabase__Fv
+// ROM 0x0011cde4 BuildMemObjDatabase__Fv
 // Lays the tables out in the memory object heap: domains, then heaps (the
 // domains with a heap that is not persistent), then persistent heaps (with
 // ten free 'emty' records), then environments.  Ids and heap addresses start
@@ -224,7 +224,7 @@ BuildMemObjDatabase()
 	Kernel-mode primitives
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0011eac8 PrimGetDomainInfo__13MemObjManagerSFUlP10DomainInfo
+// ROM 0x0011d060 PrimGetDomainInfo__13MemObjManagerSFUlP10DomainInfo
 // The index'th domain of the domain table, with its globals from the
 // data-area table if it has an entry there.
 NewtonErr
@@ -248,7 +248,7 @@ MemObjManager::PrimGetDomainInfo(ULong index, DomainInfo* outInfo)
 }
 
 
-// ROM 0x0011ebb8 PrimGetDomainInfoByName__13MemObjManagerSFUlP10DomainInfo
+// ROM 0x0011d150 PrimGetDomainInfoByName__13MemObjManagerSFUlP10DomainInfo
 NewtonErr
 MemObjManager::PrimGetDomainInfoByName(ULong name, DomainInfo* outInfo)
 {
@@ -265,7 +265,7 @@ MemObjManager::PrimGetDomainInfoByName(ULong name, DomainInfo* outInfo)
 }
 
 
-// ROM 0x0011ec38 PrimGetEnvironmentInfo__13MemObjManagerSFUlP15EnvironmentInfo
+// ROM 0x0011d1d0 PrimGetEnvironmentInfo__13MemObjManagerSFUlP15EnvironmentInfo
 NewtonErr
 MemObjManager::PrimGetEnvironmentInfo(ULong index, EnvironmentInfo* outInfo)
 {
@@ -279,7 +279,7 @@ MemObjManager::PrimGetEnvironmentInfo(ULong index, EnvironmentInfo* outInfo)
 }
 
 
-// ROM 0x0011ecbc PrimGetEnvDomainName__13MemObjManagerSFUlT1PUlPUcT4
+// ROM 0x0011d254 PrimGetEnvDomainName__13MemObjManagerSFUlT1PUlPUcT4
 // The index'th domain of the environment: its client domains first, then
 // the ones it manages.  outFound false past the end.
 NewtonErr
@@ -325,7 +325,7 @@ MemObjManager::PrimGetEnvDomainName(ULong envName, ULong index, ULong* outName, 
 }
 
 
-// ROM 0x0011f40c EntryLocByIndex__13MemObjManagerSF10MemObjTypeUl
+// ROM 0x0011d9a4 EntryLocByIndex__13MemObjManagerSF10MemObjTypeUl
 void*
 MemObjManager::EntryLocByIndex(MemObjType type, ULong index)
 {
@@ -338,7 +338,7 @@ MemObjManager::EntryLocByIndex(MemObjType type, ULong index)
 }
 
 
-// ROM 0x0011f5fc EntryLocByName__13MemObjManagerSF10MemObjTypeUl
+// ROM 0x0011db94 EntryLocByName__13MemObjManagerSF10MemObjTypeUl
 void*
 MemObjManager::EntryLocByName(MemObjType type, ULong name)
 {
@@ -353,7 +353,7 @@ MemObjManager::EntryLocByName(MemObjType type, ULong name)
 }
 
 
-// ROM 0x0011ef78 CopyObject__13MemObjManagerSF10MemObjTypePvT2
+// ROM 0x0011d510 CopyObject__13MemObjManagerSF10MemObjTypePvT2
 void
 MemObjManager::CopyObject(MemObjType type, void* to, void* from)
 {
@@ -364,7 +364,7 @@ MemObjManager::CopyObject(MemObjType type, void* to, void* from)
 }
 
 
-// ROM 0x0011f780 PrimGetEntryByIndex__13MemObjManagerSF10MemObjTypeUlPv
+// ROM 0x0011dd18 PrimGetEntryByIndex__13MemObjManagerSF10MemObjTypeUlPv
 NewtonErr
 MemObjManager::PrimGetEntryByIndex(MemObjType type, ULong index, void* outEntry)
 {
@@ -376,7 +376,7 @@ MemObjManager::PrimGetEntryByIndex(MemObjType type, ULong index, void* outEntry)
 }
 
 
-// ROM 0x0011f8a0 PrimSetEntryByIndex__13MemObjManagerSF10MemObjTypeUlPv
+// ROM 0x0011de38 PrimSetEntryByIndex__13MemObjManagerSF10MemObjTypeUlPv
 NewtonErr
 MemObjManager::PrimSetEntryByIndex(MemObjType type, ULong index, void* newEntry)
 {
@@ -388,7 +388,7 @@ MemObjManager::PrimSetEntryByIndex(MemObjType type, ULong index, void* newEntry)
 }
 
 
-// ROM 0x0011fb98 PrimGetEntryByName__13MemObjManagerSF10MemObjTypeUlPv
+// ROM 0x0011e130 PrimGetEntryByName__13MemObjManagerSF10MemObjTypeUlPv
 NewtonErr
 MemObjManager::PrimGetEntryByName(MemObjType type, ULong name, void* outEntry)
 {
@@ -400,7 +400,7 @@ MemObjManager::PrimGetEntryByName(MemObjType type, ULong name, void* outEntry)
 }
 
 
-// ROM 0x0011fbd8 PrimSetEntryByName__13MemObjManagerSF10MemObjTypeUlPv
+// ROM 0x0011e170 PrimSetEntryByName__13MemObjManagerSF10MemObjTypeUlPv
 NewtonErr
 MemObjManager::PrimSetEntryByName(MemObjType type, ULong name, void* newEntry)
 {
@@ -420,7 +420,7 @@ Request()
 }
 
 
-// ROM 0x0011f4bc PrimGetMemObjInfo__Fv
+// ROM 0x0011da54 PrimGetMemObjInfo__Fv
 // GenericSWI kGeneric_GetMemObjInfo: the user-mode side of every call above,
 // with the request in the caller's task globals.
 long
@@ -455,7 +455,7 @@ PrimGetMemObjInfo()
 	The calls either side makes
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0011f060 GetDomainInfo__13MemObjManagerSFUlP10DomainInfoPl
+// ROM 0x0011d5f8 GetDomainInfo__13MemObjManagerSFUlP10DomainInfoPl
 // True with the info; false at the end of the table (outError 0) or on an
 // error (outError set).
 Boolean
@@ -482,7 +482,7 @@ MemObjManager::GetDomainInfo(ULong index, DomainInfo* outInfo, long* outError)
 }
 
 
-// ROM 0x0011f104 GetDomainInfoByName__13MemObjManagerSFUlP10DomainInfo
+// ROM 0x0011d69c GetDomainInfoByName__13MemObjManagerSFUlP10DomainInfo
 NewtonErr
 MemObjManager::GetDomainInfoByName(ULong name, DomainInfo* outInfo)
 {
@@ -498,7 +498,7 @@ MemObjManager::GetDomainInfoByName(ULong name, DomainInfo* outInfo)
 }
 
 
-// ROM 0x0011f17c GetEnvironmentInfo__13MemObjManagerSFUlP15EnvironmentInfoPl
+// ROM 0x0011d714 GetEnvironmentInfo__13MemObjManagerSFUlP15EnvironmentInfoPl
 Boolean
 MemObjManager::GetEnvironmentInfo(ULong index, EnvironmentInfo* outInfo, long* outError)
 {
@@ -523,7 +523,7 @@ MemObjManager::GetEnvironmentInfo(ULong index, EnvironmentInfo* outInfo, long* o
 }
 
 
-// ROM 0x0011f220 GetEnvDomainName__13MemObjManagerSFUlT1PUlPUcPl
+// ROM 0x0011d7b8 GetEnvDomainName__13MemObjManagerSFUlT1PUlPUcPl
 // True with the index'th domain's name and whether the environment manages
 // it; false past the end, or on error with outError set.
 Boolean
@@ -555,7 +555,7 @@ MemObjManager::GetEnvDomainName(ULong envName, ULong index, ULong* outName, Bool
 }
 
 
-// ROM 0x0011f2e0 FindEntryByIndex__13MemObjManagerSF10MemObjTypeUlPvPl
+// ROM 0x0011d878 FindEntryByIndex__13MemObjManagerSF10MemObjTypeUlPvPl
 Boolean
 MemObjManager::FindEntryByIndex(MemObjType type, ULong index, void* outEntry, long* outError)
 {
@@ -589,7 +589,7 @@ MemObjManager::FindEntryByIndex(MemObjType type, ULong index, void* outEntry, lo
 }
 
 
-// ROM 0x0011f390 FindEntryByName__13MemObjManagerSF10MemObjTypeUlPv
+// ROM 0x0011d928 FindEntryByName__13MemObjManagerSF10MemObjTypeUlPv
 NewtonErr
 MemObjManager::FindEntryByName(MemObjType type, ULong name, void* outEntry)
 {
@@ -606,7 +606,7 @@ MemObjManager::FindEntryByName(MemObjType type, ULong name, void* outEntry)
 }
 
 
-// ROM 0x0011f450 RegisterEntryByName__13MemObjManagerSF10MemObjTypeUlPv
+// ROM 0x0011d9e8 RegisterEntryByName__13MemObjManagerSF10MemObjTypeUlPv
 NewtonErr
 MemObjManager::RegisterEntryByName(MemObjType type, ULong name, void* entry)
 {
@@ -627,7 +627,7 @@ MemObjManager::RegisterEntryByName(MemObjType type, ULong name, void* entry)
 }
 
 
-// ROM 0x0011eeb8 FindEnvironmentId__13MemObjManagerSFUlPUl
+// ROM 0x0011d450 FindEnvironmentId__13MemObjManagerSFUlPUl
 // (The ROM's is void; callers read FindEntryByName's result left in r0.)
 NewtonErr
 MemObjManager::FindEnvironmentId(ULong name, TObjectId* outId)
@@ -640,7 +640,7 @@ MemObjManager::FindEnvironmentId(ULong name, TObjectId* outId)
 }
 
 
-// ROM 0x0011eee4 FindDomainId__13MemObjManagerSFUlPUl
+// ROM 0x0011d47c FindDomainId__13MemObjManagerSFUlPUl
 NewtonErr
 MemObjManager::FindDomainId(ULong name, TObjectId* outId)
 {
@@ -652,7 +652,7 @@ MemObjManager::FindDomainId(ULong name, TObjectId* outId)
 }
 
 
-// ROM 0x0011ef10 FindHeapRef__13MemObjManagerSFUlPPv
+// ROM 0x0011d4a8 FindHeapRef__13MemObjManagerSFUlPPv
 // A heap by name: from the heap table, else from the persistent records.
 NewtonErr
 MemObjManager::FindHeapRef(ULong name, void** outHeap)
@@ -671,7 +671,7 @@ MemObjManager::FindHeapRef(ULong name, void** outHeap)
 }
 
 
-// ROM 0x0011efac RegisterEnvironmentId__13MemObjManagerSFUlT1
+// ROM 0x0011d544 RegisterEnvironmentId__13MemObjManagerSFUlT1
 void
 MemObjManager::RegisterEnvironmentId(ULong name, TObjectId id)
 {
@@ -684,7 +684,7 @@ MemObjManager::RegisterEnvironmentId(ULong name, TObjectId id)
 }
 
 
-// ROM 0x0011efe8 RegisterDomainId__13MemObjManagerSFUlT1
+// ROM 0x0011d580 RegisterDomainId__13MemObjManagerSFUlT1
 void
 MemObjManager::RegisterDomainId(ULong name, TObjectId id)
 {
@@ -697,7 +697,7 @@ MemObjManager::RegisterDomainId(ULong name, TObjectId id)
 }
 
 
-// ROM 0x0011f024 RegisterHeapRef__13MemObjManagerSFUlPv
+// ROM 0x0011d5bc RegisterHeapRef__13MemObjManagerSFUlPv
 void
 MemObjManager::RegisterHeapRef(ULong name, void* heap)
 {
@@ -710,7 +710,7 @@ MemObjManager::RegisterHeapRef(ULong name, void* heap)
 }
 
 
-// ROM 0x0011ea90 GetPersistentRef__13MemObjManagerSFUlPP17PersistentDBEntryPl
+// ROM 0x0011d028 GetPersistentRef__13MemObjManagerSFUlPP17PersistentDBEntryPl
 // The index'th persistent record itself (in the database, not a copy).
 Boolean
 MemObjManager::GetPersistentRef(ULong index, PersistentDBEntry** outEntry, long* outError)
@@ -724,7 +724,7 @@ MemObjManager::GetPersistentRef(ULong index, PersistentDBEntry** outEntry, long*
 }
 
 
-// ROM 0x0011edb8 RegisterPersistentNewEntry__13MemObjManagerSFUlP17PersistentDBEntry
+// ROM 0x0011d350 RegisterPersistentNewEntry__13MemObjManagerSFUlP17PersistentDBEntry
 // A new persistent heap takes the first free ('emty') record; a name already
 // in use is refused.
 NewtonErr
@@ -741,7 +741,7 @@ MemObjManager::RegisterPersistentNewEntry(ULong name, PersistentDBEntry* entry)
 }
 
 
-// ROM 0x0011ee30 DeregisterPersistentEntry__13MemObjManagerSFUl
+// ROM 0x0011d3c8 DeregisterPersistentEntry__13MemObjManagerSFUl
 // Frees the record: it becomes an 'emty' slot.  A record not in use is not found.
 NewtonErr
 MemObjManager::DeregisterPersistentEntry(ULong name)

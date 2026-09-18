@@ -4,7 +4,7 @@
 	Contains:	TLoader (Loader.h): the 'drvl' world's start-up of the system,
 				and UserMain.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The services TheMain starts are each NOT YET RECONSTRUCTED, marked in
 	place with their ROM addresses.
 */
@@ -22,7 +22,7 @@
 void (*gHostUserMain)() = nil;
 
 
-// ROM 0x00115328 GetSizeOf__7TLoaderFv
+// ROM 0x00113cb4 GetSizeOf__7TLoaderFv
 ULong
 TLoader::GetSizeOf()
 {
@@ -30,7 +30,7 @@ TLoader::GetSizeOf()
 }
 
 
-// ROM 0x00115320 MainConstructor__7TLoaderFv
+// ROM 0x00113cac MainConstructor__7TLoaderFv
 long
 TLoader::MainConstructor()
 {
@@ -38,7 +38,7 @@ TLoader::MainConstructor()
 }
 
 
-// ROM 0x00115324 MainDestructor__7TLoaderFv
+// ROM 0x00113cb0 MainDestructor__7TLoaderFv
 void
 TLoader::MainDestructor()
 {
@@ -46,7 +46,7 @@ TLoader::MainDestructor()
 }
 
 
-// ROM 0x00115690 TheMain__7TLoaderFv
+// ROM 0x0011401c TheMain__7TLoaderFv
 // Not an event loop: the drivers, the events, the alert manager, sound,
 // the communications manager, card services, the store (PSS) manager and
 // the power manager are started, then the 'main' task, and this task ends.
@@ -72,7 +72,7 @@ TLoader::TheMain()
 }
 
 
-// ROM 0x002e6894 UserMain__Fv
+// ROM 0x0030bba8 UserMain__Fv
 // NOT YET RECONSTRUCTED: the NewtonScript world - the object system, the
 // stores, the view system and the application layer.
 void

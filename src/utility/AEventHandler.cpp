@@ -13,7 +13,7 @@
 				an idle timer that calls its IdleProc.  The world is found
 				through the task's globals (GetGlobals() is the TAppWorld).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Layouts: TAEventHandler 0x14 (vptr, fNext +4, fEventClass +8, fEventID
 	+0xc, fIdler +0x10); TAEIdleTimer 0x20 (the TTimerElement, fHandler
 	+0x18, fIdleTime +0x1c); TSystemEventHandler 0x18 (fInited +0x14);
@@ -31,7 +31,7 @@
 	Events
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00025dcc __ct__7TAEventFv
+// ROM 0x00025d1c __ct__7TAEventFv
 // (only the class is set; the id is the subclass's or the sender's to set)
 TAEvent::TAEvent()
 {
@@ -39,7 +39,7 @@ TAEvent::TAEvent()
 }
 
 
-// ROM 0x00025e00 __ct__14TAESystemEventFv
+// ROM 0x00025d50 __ct__14TAESystemEventFv
 TAESystemEvent::TAESystemEvent()
 {
 	fAEventID = kAESystemEventID;
@@ -47,7 +47,7 @@ TAESystemEvent::TAESystemEvent()
 }
 
 
-// ROM 0x00025e48 __ct__14TAESystemEventFUl
+// ROM 0x00025d98 __ct__14TAESystemEventFUl
 TAESystemEvent::TAESystemEvent(ULong type)
 {
 	fAEventID = kAESystemEventID;
@@ -55,14 +55,14 @@ TAESystemEvent::TAESystemEvent(ULong type)
 }
 
 
-// ROM 0x00025e8c __ct__11TPowerEventFv
+// ROM 0x00025ddc __ct__11TPowerEventFv
 TPowerEvent::TPowerEvent()
 {
 	fReason = 0;
 }
 
 
-// ROM 0x00025ec8 __ct__11TPowerEventFUlT1
+// ROM 0x00025e18 __ct__11TPowerEventFUlT1
 TPowerEvent::TPowerEvent(ULong type, ULong reason)
 	: TAESystemEvent(type)
 {
@@ -83,12 +83,12 @@ CompareKeys(AEEventClass classA, AEEventID idA, AEEventClass classB, AEEventID i
 }
 
 
-// ROM 0x00025f0c __ct__15TAEventComparerFv
+// ROM 0x00025e5c __ct__15TAEventComparerFv
 TAEventComparer::TAEventComparer()
 { }
 
 
-// ROM 0x00025f4c TestItem__15TAEventComparerCFPCv
+// ROM 0x00025e9c TestItem__15TAEventComparerCFPCv
 // The item is a handler, the criterion (fItem) the event looked for.
 // NOTE: "less" and "greater" are the other way about from the base
 // comparer's; CSortedList's bisection only needs them consistent.
@@ -106,12 +106,12 @@ TAEventComparer::TestItem(const void* testItem) const
 }
 
 
-// ROM 0x00025d8c __ct__18TAEHandlerComparerFv
+// ROM 0x00025cdc __ct__18TAEHandlerComparerFv
 TAEHandlerComparer::TAEHandlerComparer()
 { }
 
 
-// ROM 0x00025518 TestItem__18TAEHandlerComparerCFPCv
+// ROM 0x00025468 TestItem__18TAEHandlerComparerCFPCv
 // Both the item and the criterion are handlers.
 CompareResult
 TAEHandlerComparer::TestItem(const void* testItem) const
@@ -131,7 +131,7 @@ TAEHandlerComparer::TestItem(const void* testItem) const
 	TAEHandlerIterator
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00025578 __ct__18TAEHandlerIteratorFP14TAEventHandler
+// ROM 0x000254c8 __ct__18TAEHandlerIteratorFP14TAEventHandler
 TAEHandlerIterator::TAEHandlerIterator(TAEventHandler* chainHead)
 {
 	fFirstHandler = chainHead;
@@ -140,7 +140,7 @@ TAEHandlerIterator::TAEHandlerIterator(TAEventHandler* chainHead)
 }
 
 
-// ROM 0x000255c8 Advance__18TAEHandlerIteratorFv
+// ROM 0x00025518 Advance__18TAEHandlerIteratorFv
 void
 TAEHandlerIterator::Advance()
 {
@@ -150,7 +150,7 @@ TAEHandlerIterator::Advance()
 }
 
 
-// ROM 0x000255f4 Reset__18TAEHandlerIteratorFv
+// ROM 0x00025544 Reset__18TAEHandlerIteratorFv
 void
 TAEHandlerIterator::Reset()
 {
@@ -163,7 +163,7 @@ TAEHandlerIterator::Reset()
 	TAEventHandler
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00025624 __ct__14TAEventHandlerFv
+// ROM 0x00025574 __ct__14TAEventHandlerFv
 TAEventHandler::TAEventHandler()
 {
 	fNext = nil;
@@ -173,7 +173,7 @@ TAEventHandler::TAEventHandler()
 }
 
 
-// ROM 0x0002566c __dt__14TAEventHandlerFv
+// ROM 0x000255bc __dt__14TAEventHandlerFv
 // The idler goes, and an initialised handler leaves its world.
 TAEventHandler::~TAEventHandler()
 {
@@ -184,7 +184,7 @@ TAEventHandler::~TAEventHandler()
 }
 
 
-// ROM 0x000256d8 Init__14TAEventHandlerFUlT1
+// ROM 0x00025628 Init__14TAEventHandlerFUlT1
 NewtonErr
 TAEventHandler::Init(AEEventID eventID, AEEventClass eventClass)
 {
@@ -195,7 +195,7 @@ TAEventHandler::Init(AEEventID eventID, AEEventClass eventClass)
 }
 
 
-// ROM 0x00025704 DeferReply__14TAEventHandlerFv
+// ROM 0x00025654 DeferReply__14TAEventHandlerFv
 void
 TAEventHandler::DeferReply()
 {
@@ -203,7 +203,7 @@ TAEventHandler::DeferReply()
 }
 
 
-// ROM 0x0002571c SetReply__14TAEventHandlerFUlP7TAEvent
+// ROM 0x0002566c SetReply__14TAEventHandlerFUlP7TAEvent
 void
 TAEventHandler::SetReply(ULong size, TAEvent* event)
 {
@@ -213,7 +213,7 @@ TAEventHandler::SetReply(ULong size, TAEvent* event)
 }
 
 
-// ROM 0x00025744 SetReply__14TAEventHandlerFP10TUMsgToken
+// ROM 0x00025694 SetReply__14TAEventHandlerFP10TUMsgToken
 void
 TAEventHandler::SetReply(TUMsgToken* token)
 {
@@ -221,7 +221,7 @@ TAEventHandler::SetReply(TUMsgToken* token)
 }
 
 
-// ROM 0x00025768 SetReply__14TAEventHandlerFP10TUMsgTokenUlP7TAEvent
+// ROM 0x000256b8 SetReply__14TAEventHandlerFP10TUMsgTokenUlP7TAEvent
 void
 TAEventHandler::SetReply(TUMsgToken* token, ULong size, TAEvent* event)
 {
@@ -232,7 +232,7 @@ TAEventHandler::SetReply(TUMsgToken* token, ULong size, TAEvent* event)
 }
 
 
-// ROM 0x00025798 ReplyImmed__14TAEventHandlerFv
+// ROM 0x000256e8 ReplyImmed__14TAEventHandlerFv
 // Replies now with what is set, and defers (so that the loop does not
 // reply again).
 NewtonErr
@@ -250,7 +250,7 @@ TAEventHandler::ReplyImmed()
 }
 
 
-// ROM 0x000257b0 AddHandler__14TAEventHandlerFP14TAEventHandler
+// ROM 0x00025700 AddHandler__14TAEventHandlerFP14TAEventHandler
 // Puts this handler in front of the chain; returns the new head.
 TAEventHandler*
 TAEventHandler::AddHandler(TAEventHandler* headOfChain)
@@ -260,7 +260,7 @@ TAEventHandler::AddHandler(TAEventHandler* headOfChain)
 }
 
 
-// ROM 0x000257b8 RemoveHandler__14TAEventHandlerFP14TAEventHandler
+// ROM 0x00025708 RemoveHandler__14TAEventHandlerFP14TAEventHandler
 // Unlinks this handler from the chain; returns the (possibly new) head.
 TAEventHandler*
 TAEventHandler::RemoveHandler(TAEventHandler* headOfChain)
@@ -282,7 +282,7 @@ TAEventHandler::RemoveHandler(TAEventHandler* headOfChain)
 }
 
 
-// ROM 0x00025830 AEDoEvent__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x00025780 AEDoEvent__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
 // The first handler down the chain that accepts the event handles it;
 // eNoHandler if none does.
 NewtonErr
@@ -299,7 +299,7 @@ TAEventHandler::AEDoEvent(TUMsgToken* token, ULong* size, TAEvent* event)
 }
 
 
-// ROM 0x000258b8 AEDoComplete__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x00025808 AEDoComplete__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
 // The same for a completion (an asynchronous send of ours came back).
 void
 TAEventHandler::AEDoComplete(TUMsgToken* token, ULong* size, TAEvent* event)
@@ -315,25 +315,25 @@ TAEventHandler::AEDoComplete(TUMsgToken* token, ULong* size, TAEvent* event)
 }
 
 
-// ROM 0x00025924 AEHandlerProc__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x00025874 AEHandlerProc__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
 void
 TAEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025928 AECompletionProc__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x00025878 AECompletionProc__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
 void
 TAEventHandler::AECompletionProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*event*/)
 { }
 
 
-// ROM 0x0002592c IdleProc__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x0002587c IdleProc__14TAEventHandlerFP10TUMsgTokenPUlP7TAEvent
 void
 TAEventHandler::IdleProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025930 AETestEvent__14TAEventHandlerFP7TAEvent
+// ROM 0x00025880 AETestEvent__14TAEventHandlerFP7TAEvent
 Boolean
 TAEventHandler::AETestEvent(TAEvent* /*event*/)
 {
@@ -341,7 +341,7 @@ TAEventHandler::AETestEvent(TAEvent* /*event*/)
 }
 
 
-// ROM 0x00025954 InitIdler__14TAEventHandlerFUlT1Uc
+// ROM 0x000258a4 InitIdler__14TAEventHandlerFUlT1Uc
 // An idle timer on the world's queue; started unless told otherwise.
 NewtonErr
 TAEventHandler::InitIdler(TTimeout idle, ULong refCon, Boolean start)
@@ -355,7 +355,7 @@ TAEventHandler::InitIdler(TTimeout idle, ULong refCon, Boolean start)
 }
 
 
-// ROM 0x0002593c InitIdler__14TAEventHandlerFUl9TimeUnitsT1Uc
+// ROM 0x0002588c InitIdler__14TAEventHandlerFUl9TimeUnitsT1Uc
 NewtonErr
 TAEventHandler::InitIdler(ULong idleAmount, TimeUnits idleUnits, ULong refCon, Boolean start)
 {
@@ -363,7 +363,7 @@ TAEventHandler::InitIdler(ULong idleAmount, TimeUnits idleUnits, ULong refCon, B
 }
 
 
-// ROM 0x000259cc StartIdle__14TAEventHandlerFv
+// ROM 0x0002591c StartIdle__14TAEventHandlerFv
 NewtonErr
 TAEventHandler::StartIdle()
 {
@@ -373,7 +373,7 @@ TAEventHandler::StartIdle()
 }
 
 
-// ROM 0x00025a00 StopIdle__14TAEventHandlerFv
+// ROM 0x00025950 StopIdle__14TAEventHandlerFv
 NewtonErr
 TAEventHandler::StopIdle()
 {
@@ -383,7 +383,7 @@ TAEventHandler::StopIdle()
 }
 
 
-// ROM 0x00025a30 ResetIdle__14TAEventHandlerFv
+// ROM 0x00025980 ResetIdle__14TAEventHandlerFv
 // (a Prime dequeues a primed timer itself, so this is StartIdle again)
 NewtonErr
 TAEventHandler::ResetIdle()
@@ -394,7 +394,7 @@ TAEventHandler::ResetIdle()
 }
 
 
-// ROM 0x00025a64 ResetIdle__14TAEventHandlerFUl
+// ROM 0x000259b4 ResetIdle__14TAEventHandlerFUl
 // (the new delay is used once; fIdleTime keeps the original)
 NewtonErr
 TAEventHandler::ResetIdle(TTimeout idle)
@@ -405,7 +405,7 @@ TAEventHandler::ResetIdle(TTimeout idle)
 }
 
 
-// ROM 0x00025a94 ResetIdle__14TAEventHandlerFUl9TimeUnits
+// ROM 0x000259e4 ResetIdle__14TAEventHandlerFUl9TimeUnits
 // Also times out the world's receive (a port reset of its receivers) so
 // that the loop picks up the new timeout.
 NewtonErr
@@ -417,7 +417,7 @@ TAEventHandler::ResetIdle(ULong amount, TimeUnits units)
 }
 
 
-// ROM 0x00025ac8 GetNextHandler__14TAEventHandlerFv
+// ROM 0x00025a18 GetNextHandler__14TAEventHandlerFv
 TAEventHandler*
 TAEventHandler::GetNextHandler()
 {
@@ -429,7 +429,7 @@ TAEventHandler::GetNextHandler()
 	TAEIdleTimer
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00025cc4 __ct__12TAEIdleTimerFP11TTimerQueueUlP14TAEventHandlerT2
+// ROM 0x00025c14 __ct__12TAEIdleTimerFP11TTimerQueueUlP14TAEventHandlerT2
 TAEIdleTimer::TAEIdleTimer(TTimerQueue* q, ULong refCon, TAEventHandler* handler, TTimeout idle)
 	: TTimerElement(q, refCon)
 {
@@ -438,7 +438,7 @@ TAEIdleTimer::TAEIdleTimer(TTimerQueue* q, ULong refCon, TAEventHandler* handler
 }
 
 
-// ROM 0x00025d28 Timeout__12TAEIdleTimerFv
+// ROM 0x00025c78 Timeout__12TAEIdleTimerFv
 // The handler's IdleProc gets a timer event naming the timer and its refcon.
 // (The ROM leaves the event's id as TAEvent's constructor does: unset.)
 void
@@ -456,14 +456,14 @@ TAEIdleTimer::Timeout()
 	TSystemEventHandler
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00025ad0 __ct__19TSystemEventHandlerFv
+// ROM 0x00025a20 __ct__19TSystemEventHandlerFv
 TSystemEventHandler::TSystemEventHandler()
 {
 	fInited = false;
 }
 
 
-// ROM 0x00025b18 Init__19TSystemEventHandlerFUlT1
+// ROM 0x00025a68 Init__19TSystemEventHandlerFUlT1
 // Registers the world's port for the system event with the name server;
 // the first time, installs itself as the world's 'sysm' handler.
 NewtonErr
@@ -480,49 +480,49 @@ TSystemEventHandler::Init(ULong systemEvent, ULong sendFilter)
 }
 
 
-// ROM 0x00025ba0 AnySystemEvents__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025af0 AnySystemEvents__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::AnySystemEvents(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025ba4 PowerOn__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025af4 PowerOn__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::PowerOn(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025ba8 PowerOff__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025af8 PowerOff__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::PowerOff(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025bac NewCard__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025afc NewCard__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::NewCard(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025bb0 AppAlive__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025b00 AppAlive__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::AppAlive(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025bb4 DeviceNotification__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025b04 DeviceNotification__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::DeviceNotification(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025bb8 PowerOffPending__19TSystemEventHandlerFP7TAEvent
+// ROM 0x00025b08 PowerOffPending__19TSystemEventHandlerFP7TAEvent
 void
 TSystemEventHandler::PowerOffPending(TAEvent* /*event*/)
 { }
 
 
-// ROM 0x00025bbc AEHandlerProc__19TSystemEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x00025b0c AEHandlerProc__19TSystemEventHandlerFP10TUMsgTokenPUlP7TAEvent
 // Every system event goes to AnySystemEvents, then to its own method.
 void
 TSystemEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* event)

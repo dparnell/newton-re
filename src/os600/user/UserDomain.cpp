@@ -4,7 +4,7 @@
 	Contains:	TUDomain (UserDomain.h), the handle on a kernel domain.  Base()
 				and Size() are declared by the DDK but have no code in the ROM.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserDomain.h"
@@ -13,7 +13,7 @@
 #include "os600/ObjectMessage.h"
 
 
-// ROM 0x002569e0 Init__8TUDomainFUlN21
+// ROM 0x00258918 Init__8TUDomainFUlN21
 long
 TUDomain::Init(TObjectId monitor, VAddr base, ULong size)
 {
@@ -25,7 +25,7 @@ TUDomain::Init(TObjectId monitor, VAddr base, ULong size)
 }
 
 
-// ROM 0x0025744c SetFaultMonitor__8TUDomainFUl
+// ROM 0x00259384 SetFaultMonitor__8TUDomainFUl
 long
 TUDomain::SetFaultMonitor(TObjectId monitor)
 {

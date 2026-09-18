@@ -3,13 +3,13 @@
 
 	Contains:	TDataView.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "DataView.h"
 
 
-// ROM 0x000a41c0 ClassID__9TDataViewCFv
+// ROM 0x000a2fc0 ClassID__9TDataViewCFv
 long
 TDataView::ClassID(void) const
 {
@@ -17,7 +17,7 @@ TDataView::ClassID(void) const
 }
 
 
-// ROM 0x000a41c8 DerivedFrom__9TDataViewCFl
+// ROM 0x000a2fc8 DerivedFrom__9TDataViewCFl
 Boolean
 TDataView::DerivedFrom(long id) const
 {
@@ -25,7 +25,7 @@ TDataView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x000a43bc GetHiliteView__9TDataViewFv
+// ROM 0x000a31bc GetHiliteView__9TDataViewFv
 // The view that owns this one's hilites: the enclosing edit view.  NOT
 // YET RECONSTRUCTED: the edit views (nil - the data view stands alone).
 TView*

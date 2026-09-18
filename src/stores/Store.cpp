@@ -10,7 +10,7 @@
 #include "host/HostStore.h"
 
 
-// ROM 0x0037d2a8 New__6TStoreSFPc
+// ROM 0x00386a08 New__6TStoreSFPc
 TStore*
 TStore::New(const char* implementation)
 {
@@ -19,7 +19,7 @@ TStore::New(const char* implementation)
 }
 
 
-// ROM 0x0037d2d4 Delete__6TStoreFv
+// ROM 0x00386a34 Delete__6TStoreFv
 void
 TStore::Delete()
 {

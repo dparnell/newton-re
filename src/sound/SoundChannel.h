@@ -24,7 +24,7 @@
 	message that would carry it to the server, because the boot's
 	SetSystemVolume needs those and nothing else.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #ifndef __SOUNDCHANNEL_H
@@ -113,8 +113,8 @@ public:
 
 
 // the sound server's port (NOT YET RECONSTRUCTED: never opened)
-extern TObjectId		gSndPort;			// ROM 0x0c101cec gSndPort
-extern TUSoundChannel*	gSoundChannel;		// ROM 0x0c101ce4 gSoundChannel
+extern TObjectId		gSndPort;			// ROM 0x0c101b10 gSndPort
+extern TUSoundChannel*	gSoundChannel;		// ROM 0x0c101b08 gSoundChannel
 
 TUSoundChannel*	GlobalSoundChannel(void);
 

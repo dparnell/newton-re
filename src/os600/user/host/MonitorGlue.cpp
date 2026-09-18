@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 
-// ROM 0x0038ac98 MonitorEntryGlue (assembly)
+// ROM 0x00394318 MonitorEntryGlue (assembly)
 // r0 = monitor object, r1 = selector, r2 = user object, r3 = the proc; the
 // proc's result goes back through MonitorExitSWI, which does not return -
 // the next call re-enters here.
@@ -35,7 +35,7 @@ MonitorEntryGlue(void)
 }
 
 
-// ROM 0x0038ad2c TaskKillSelf (assembly)
+// ROM 0x003943ac TaskKillSelf (assembly)
 // Asks the object manager monitor to delete the calling task; the request
 // never returns ("Task did not kill self properly!!!" otherwise).
 extern "C" void
@@ -49,7 +49,7 @@ TaskKillSelf(void)
 }
 
 
-// ROM 0x003a4ad8 BadExit
+// ROM 0x003ae158 BadExit
 extern "C" void
 BadExit(void)
 {

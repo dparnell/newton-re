@@ -4,7 +4,7 @@
 	Contains:	NewtonScript shapes: making them, their bounds, DrawShape
 				with its style frames.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "DrawShape.h"
@@ -38,7 +38,7 @@ static Ref gSYMTextBox = NILREF;
 	T P a t t e r n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0019a808 __dt__8TPatternFv
+// ROM 0x001981bc __dt__8TPatternFv
 // An owned pattern disposed - the port's pen pattern put back to black
 // first when it is this one.
 TPattern::~TPattern()
@@ -52,7 +52,7 @@ TPattern::~TPattern()
 }
 
 
-// ROM 0x0019a7c4 GetFillPattern__8TPatternFRC6RefVarUc
+// ROM 0x00198178 GetFillPattern__8TPatternFRC6RefVarUc
 // The pattern from its slot (GetPattern); ==> whether there is one - a
 // nil slot answers isPen (a pen without a pattern is still drawn, in
 // black).
@@ -69,7 +69,7 @@ TPattern::GetFillPattern(RefArg spec, Boolean isPen)
 	T S t y l e S a v e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0019b424 Init__9SaveLevelFP9SaveLevel
+// ROM 0x00198dd8 Init__9SaveLevelFP9SaveLevel
 void
 SaveLevel::Init(SaveLevel* previous)
 {
@@ -80,7 +80,7 @@ SaveLevel::Init(SaveLevel* previous)
 }
 
 
-// ROM 0x0019a86c __ct__10TStyleSaveFv
+// ROM 0x00198220 __ct__10TStyleSaveFv
 // No patterns, the port, an empty base level; the style in force is not
 // any frame yet.
 TStyleSave::TStyleSave()
@@ -101,7 +101,7 @@ TStyleSave::TStyleSave()
 }
 
 
-// ROM 0x0019a9b8 __dt__10TStyleSaveFv
+// ROM 0x0019836c __dt__10TStyleSaveFv
 // The levels ended (their clips put back), the patterns disposed.
 TStyleSave::~TStyleSave()
 {
@@ -109,7 +109,7 @@ TStyleSave::~TStyleSave()
 }
 
 
-// ROM 0x0019b384 BeginLevel__10TStyleSaveFP9SaveLevel
+// ROM 0x00198d38 BeginLevel__10TStyleSaveFP9SaveLevel
 void
 TStyleSave::BeginLevel(SaveLevel* level)
 {
@@ -118,7 +118,7 @@ TStyleSave::BeginLevel(SaveLevel* level)
 }
 
 
-// ROM 0x0019b3ac EndLevel__10TStyleSaveFv
+// ROM 0x00198d60 EndLevel__10TStyleSaveFv
 // The level's clipping undone: the clip it saved put back.
 void
 TStyleSave::EndLevel(void)
@@ -139,7 +139,7 @@ TStyleSave::EndLevel(void)
 }
 
 
-// ROM 0x0019aab8 SetStyle__10TStyleSaveFRC6RefVarRC6TPointl
+// ROM 0x0019846c SetStyle__10TStyleSaveFRC6RefVarRC6TPointl
 // The style frame put in force: the pen normal, then its slots -
 // clipping (a shape, or a region shape: the port's clip narrowed to it,
 // offset by the origin, the clip before saved in the level; ==> false
@@ -296,7 +296,7 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 	S h a p e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000dea84 IsStyleFrame__FRC6RefVar
+// ROM 0x000dd7e4 IsStyleFrame__FRC6RefVar
 // A style is a plain frame (class 'frame).
 Boolean
 IsStyleFrame(RefArg obj)
@@ -314,7 +314,7 @@ SYMTextBox(void)
 }
 
 
-// ROM 0x000deac8 IsPrimShape__FRC6RefVar
+// ROM 0x000dd828 IsPrimShape__FRC6RefVar
 // Whether the object is one shape: a pointer object of class 'rectangle,
 // 'line, 'TextBox, 'ink, 'roundRectangle, 'oval, 'bitmap, 'picture (a
 // frame), 'polygon, 'wedge, 'region or 'text.
@@ -333,7 +333,7 @@ IsPrimShape(RefArg obj)
 }
 
 
-// ROM 0x000e260c MakeRectShape__FRC6RefVarN41
+// ROM 0x000e1360 MakeRectShape__FRC6RefVarN41
 // An 8-byte binary of the class holding the rectangle.
 Ref
 MakeRectShape(RefArg cls, RefArg left, RefArg top, RefArg right, RefArg bottom)
@@ -365,7 +365,7 @@ RectOf(RefArg binary, Rect* r)
 }
 
 
-// ROM 0x000e21cc ShapeBounds__FRC6RefVarP5TRect
+// ROM 0x000e0f20 ShapeBounds__FRC6RefVarP5TRect
 // The bounds of a shape: a list's the union of its members' (styles
 // skipped); a region's its data's box; a polygon's its data's box, a
 // pixel wider and taller; a bitmap's, picture's, text's or ink's its
@@ -450,7 +450,7 @@ ShapeBounds(RefArg shape, Rect* bounds)
 }
 
 
-// ROM 0x000e0f00 GetBoundsRect__FRC6RefVarP5TRectRC6TPointP10TStyleSave
+// ROM 0x000dfc60 GetBoundsRect__FRC6RefVarP5TRectRC6TPointP10TStyleSave
 // A shape's bounds slot, offset by the origin (not when scaling).
 void
 GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style)
@@ -462,7 +462,7 @@ GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style
 }
 
 
-// ROM 0x000e2738 WedgeBox__FP5TRectsT2
+// ROM 0x000e148c WedgeBox__FP5TRectsT2
 // The box of the wedge of the oval in the box between the angles.  NOT
 // YET RECONSTRUCTED: the ROM's quadrant arithmetic - the whole oval's box
 // is answered (only whole turns are drawn, see DrawArc).
@@ -472,7 +472,7 @@ WedgeBox(Rect* /*box*/, short /*startAngle*/, short /*arcAngle*/)
 }
 
 
-// ROM 0x000e0a68 DrawShape__FRC6RefVarT1RC6TPoint
+// ROM 0x000df7c8 DrawShape__FRC6RefVarT1RC6TPoint
 // The shape (or list) drawn with the style from the origin: the pen
 // state saved and put back, a level for what the style sets.
 void
@@ -501,7 +501,7 @@ DrawShape(RefArg shape, RefArg style, const Point& origin)
 }
 
 
-// ROM 0x000e0d5c DrawShapeList__FRC6RefVarRC6TPointP10TStyleSave
+// ROM 0x000dfabc DrawShapeList__FRC6RefVarRC6TPointP10TStyleSave
 // A list: each member drawn - a style frame is put in force for the rest
 // (a style leaving nothing visible skips them); a nested list is drawn
 // in its own level with the style in force put back after it; nil is
@@ -559,7 +559,7 @@ SetPenPattern(TStyleSave* style)
 }
 
 
-// ROM 0x000e0fa0 DrawOneShape__FRC6RefVarRC6TPointP10TStyleSave
+// ROM 0x000dfd00 DrawOneShape__FRC6RefVarRC6TPointP10TStyleSave
 // One shape drawn from the origin: with the fill pattern set when the
 // style fills; nothing when its bounds miss the port's clip.  A
 // rectangle, oval, round rectangle or wedge is painted (fill) then
@@ -756,7 +756,7 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	N a t i v e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000ddae4 FDrawShape
+// ROM 0x000dc844 FDrawShape
 // DrawShape(shape, style) on a view: drawn from the view's top left (a
 // slot of the ROM's root template, so every view has it).
 Ref
@@ -769,7 +769,7 @@ FDrawShape(RefArg rcvr, RefArg shape, RefArg style)
 }
 
 
-// ROM 0x000ddb34 FMakeRect
+// ROM 0x000dc894 FMakeRect
 static Ref
 FMakeRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 {
@@ -777,7 +777,7 @@ FMakeRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 }
 
 
-// ROM 0x000decb0 FMakeOval
+// ROM 0x000dda10 FMakeOval
 static Ref
 FMakeOval(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 {
@@ -785,7 +785,7 @@ FMakeOval(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 }
 
 
-// ROM 0x000e207c FMakeRoundRect
+// ROM 0x000e0dd0 FMakeRoundRect
 // A 12-byte 'roundRectangle: the rectangle and the corners' diameter.
 static Ref
 FMakeRoundRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom, RefArg diameter)
@@ -803,7 +803,7 @@ FMakeRoundRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bo
 }
 
 
-// ROM 0x000dfb00 FMakeLine
+// ROM 0x000de860 FMakeLine
 // An 8-byte 'line: {y1, x1, y2, x2} - a rectangle of the two ends.
 static Ref
 FMakeLine(RefArg /*rcvr*/, RefArg x1, RefArg y1, RefArg x2, RefArg y2)
@@ -819,7 +819,7 @@ FMakeLine(RefArg /*rcvr*/, RefArg x1, RefArg y1, RefArg x2, RefArg y2)
 }
 
 
-// ROM 0x000e3e18 FMakeWedge
+// ROM 0x000e2b60 FMakeWedge
 // A 12-byte 'wedge: the oval's rectangle, the start angle and the arc.
 static Ref
 FMakeWedge(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom, RefArg startAngle, RefArg arcAngle)
@@ -837,7 +837,7 @@ FMakeWedge(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom
 }
 
 
-// ROM 0x000e4d30 FMakePolygon
+// ROM 0x000e3a78 FMakePolygon
 // A 'polygon frame (canonicalPolygonShape) whose data is a Polygon of the
 // points [x0, y0, x1, y1, ...], its box their bounds.
 static Ref
@@ -873,7 +873,7 @@ FMakePolygon(RefArg /*rcvr*/, RefArg points)
 }
 
 
-// ROM 0x000e446c FMakeRegion
+// ROM 0x000e31b4 FMakeRegion
 // A 'region frame (canonicalRegionShape) whose data is the region of the
 // shape: the shape drawn (with no style) into an open region.
 static Ref
@@ -900,7 +900,7 @@ FMakeRegion(RefArg /*rcvr*/, RefArg shape)
 }
 
 
-// ROM 0x000de268 FMakeText
+// ROM 0x000dcfc8 FMakeText
 // A 'text frame (canonicalTextShape): its bounds a 'boundsRect binary,
 // its data a copy of the string as 'textData.
 static Ref
@@ -915,7 +915,7 @@ FMakeText(RefArg /*rcvr*/, RefArg str, RefArg left, RefArg top, RefArg right, Re
 }
 
 
-// ROM 0x000de334 FMakeTextBox
+// ROM 0x000dd094 FMakeTextBox
 // The same with the data a 'textBox: wrapped into the bounds when drawn.
 static Ref
 FMakeTextBox(RefArg /*rcvr*/, RefArg str, RefArg left, RefArg top, RefArg right, RefArg bottom)
@@ -929,7 +929,7 @@ FMakeTextBox(RefArg /*rcvr*/, RefArg str, RefArg left, RefArg top, RefArg right,
 }
 
 
-// ROM 0x000deffc FShapeBounds
+// ROM 0x000ddd5c FShapeBounds
 static Ref
 FShapeBounds(RefArg /*rcvr*/, RefArg shape)
 {
@@ -939,7 +939,7 @@ FShapeBounds(RefArg /*rcvr*/, RefArg shape)
 }
 
 
-// ROM 0x000ded00 FOffsetShape
+// ROM 0x000dda60 FOffsetShape
 // The shape moved in place: a list's members each (styles left alone); a
 // region's or polygon's data offset; a bitmap's, picture's, text's or
 // ink's bounds; else the binary's rectangle.  ==> the shape.
@@ -982,7 +982,7 @@ FOffsetShape(RefArg rcvr, RefArg shape, RefArg dx, RefArg dy)
 }
 
 
-// ROM 0x000decdc FIsPrimShape
+// ROM 0x000dda3c FIsPrimShape
 static Ref
 FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
 {

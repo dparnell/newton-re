@@ -8,7 +8,7 @@
 				the class identity (the hilites and the recogniser's
 				gestures are not yet).
 
-	Reconstructed from the MP2100 D ROM (0x000a41c0-0x000a4694); each
+	Reconstructed from the MP2x00 US ROM (0x000a2fc0-0x000a3494); each
 	function cites its origin.
 */
 
@@ -22,9 +22,9 @@
 class TDataView : public TView
 {
 public:
-	virtual long	ClassID(void) const;								// ROM 0x000a41c0 ClassID__9TDataViewCFv
-	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x000a41c8 DerivedFrom__9TDataViewCFl
-	virtual TView*	GetHiliteView(void);								// ROM 0x000a43bc GetHiliteView__9TDataViewFv (vtable +0x140)
+	virtual long	ClassID(void) const;								// ROM 0x000a2fc0 ClassID__9TDataViewCFv
+	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x000a2fc8 DerivedFrom__9TDataViewCFl
+	virtual TView*	GetHiliteView(void);								// ROM 0x000a31bc GetHiliteView__9TDataViewFv (vtable +0x140)
 };
 
 #endif	/* __DATAVIEW_H */

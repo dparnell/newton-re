@@ -3,7 +3,7 @@
 
 	Contains:	TTask construction and the task queues.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 
 	TTask::Init builds the new task's stack.  Above the stack proper sits the
 	task's globals block (TaskGlobals) and above that a copy of the object the
@@ -38,7 +38,7 @@ void (*gTaskDeletedHook)(TTask* task) = nil;
 	TTaskQItem
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032e8a0 __ct__10TTaskQItemFv
+// ROM 0x003599fc __ct__10TTaskQItemFv
 TTaskQItem::TTaskQItem()
 {
 	fNext = nil;
@@ -50,7 +50,7 @@ TTaskQItem::TTaskQItem()
 	TTaskContainer
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0024e958 Remove__14TTaskContainerFP5TTask
+// ROM 0x002508a0 Remove__14TTaskContainerFP5TTask
 TTaskContainer*
 TTaskContainer::Remove(TTask* /*task*/)
 {
@@ -62,7 +62,7 @@ TTaskContainer::Remove(TTask* /*task*/)
 	TTaskQueue
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0032e918 __ct__10TTaskQueueFv
+// ROM 0x00359a74 __ct__10TTaskQueueFv
 TTaskQueue::TTaskQueue()
 {
 	fHead = nil;
@@ -70,7 +70,7 @@ TTaskQueue::TTaskQueue()
 }
 
 
-// ROM 0x0032e94c CheckBeforeAdd__10TTaskQueueFP5TTask
+// ROM 0x00359aa8 CheckBeforeAdd__10TTaskQueueFP5TTask
 // A no-op in the release ROM; presumably a debug hook.
 void
 TTaskQueue::CheckBeforeAdd(TTask* /*task*/)
@@ -78,7 +78,7 @@ TTaskQueue::CheckBeforeAdd(TTask* /*task*/)
 }
 
 
-// ROM 0x0032e950 Add__10TTaskQueueFP5TTask17KernelObjectStateP14TTaskContainer
+// ROM 0x00359aac Add__10TTaskQueueFP5TTask17KernelObjectStateP14TTaskContainer
 // Appends the task, marks it with the state bit and records the container.
 void
 TTaskQueue::Add(TTask* task, KernelObjectState state, TTaskContainer* container)
@@ -103,7 +103,7 @@ TTaskQueue::Add(TTask* task, KernelObjectState state, TTaskContainer* container)
 }
 
 
-// ROM 0x0032e9b8 Remove__10TTaskQueueF17KernelObjectState
+// ROM 0x00359b14 Remove__10TTaskQueueF17KernelObjectState
 TTask*
 TTaskQueue::Remove(KernelObjectState state)
 {
@@ -124,7 +124,7 @@ TTaskQueue::Remove(KernelObjectState state)
 }
 
 
-// ROM 0x0032ea00 RemoveFromQueue__10TTaskQueueFP5TTask17KernelObjectState
+// ROM 0x00359b5c RemoveFromQueue__10TTaskQueueFP5TTask17KernelObjectState
 // Takes the task out if it carries the state bit; true if it did.
 Boolean
 TTaskQueue::RemoveFromQueue(TTask* task, KernelObjectState state)
@@ -163,7 +163,7 @@ TTaskQueue::RemoveFromQueue(TTask* task, KernelObjectState state)
 }
 
 
-// ROM 0x0032e8d4 FindAndRemove__10TTaskQueueFUl17KernelObjectState
+// ROM 0x00359a30 FindAndRemove__10TTaskQueueFUl17KernelObjectState
 TTask*
 TTaskQueue::FindAndRemove(ULong id, KernelObjectState state)
 {
@@ -179,7 +179,7 @@ TTaskQueue::FindAndRemove(ULong id, KernelObjectState state)
 }
 
 
-// ROM 0x0032ea84 Peek__10TTaskQueueFv
+// ROM 0x00359be0 Peek__10TTaskQueueFv
 TTask*
 TTaskQueue::Peek()
 {
@@ -191,7 +191,7 @@ TTaskQueue::Peek()
 	TTask
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00250248 __ct__5TTaskFv
+// ROM 0x00252190 __ct__5TTaskFv
 // The queue items construct themselves; the remaining members the ROM
 // clears are listed in its order.
 TTask::TTask()
@@ -224,7 +224,7 @@ TTask::TTask()
 }
 
 
-// ROM 0x00250330 SetBequeathId__5TTaskFUl
+// ROM 0x00252278 SetBequeathId__5TTaskFUl
 // Our objects go to task `id` when we die (DeleteTask), and it remembers
 // whom it inherits from.
 void
@@ -237,7 +237,7 @@ TTask::SetBequeathId(TObjectId id)
 }
 
 
-// ROM 0x00250368 Init__5TTaskFPFPvUlT2_vUlPvN32P12TEnvironment
+// ROM 0x002522b0 Init__5TTaskFPFPvUlT2_vUlPvN32P12TEnvironment
 // taskId is the task's own id (passed to proc as its third argument, so it
 // arrives as a void*); dataId a shared memory holding the object to copy.
 // The stack allocation is stack | TaskGlobals | object; sp starts at the
@@ -360,7 +360,7 @@ TTask::Init(TaskProcPtr proc, ULong stackSize, void* taskId, TObjectId dataId, U
 }
 
 
-// ROM 0x00250308 FreeStack__5TTaskFv
+// ROM 0x00252250 FreeStack__5TTaskFv
 // A stack from the stack manager goes back to it (the ROM asks the stack
 // manager's monitor directly, request 4: FreePagedMem); one from the heap is
 // freed.
@@ -376,7 +376,7 @@ TTask::FreeStack()
 }
 
 
-// ROM 0x0025079c __dt__5TTaskFv
+// ROM 0x002526e4 __dt__5TTaskFv
 // Leaves whatever queues the task is in, returns its stack, adds its run
 // time to the dead tasks' total, lets go of its environment (deleting it if
 // that was its last user) and removes its shared memory and message.

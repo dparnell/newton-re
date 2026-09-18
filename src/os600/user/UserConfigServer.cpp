@@ -8,14 +8,14 @@
 				writes those four bytes into a five-byte buffer and asks
 				the name server about that.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "HALOptions.h"
 #include "ByteOrder.h"
 
 
-// ROM 0x000e7294 ULongStrToCStr__14TUConfigServerFUlPc
+// ROM 0x000e5fdc ULongStrToCStr__14TUConfigServerFUlPc
 // The four characters of a name as a C string.
 //
 // DEVIATION: the ROM stores the word straight into the buffer
@@ -33,7 +33,7 @@ TUConfigServer::ULongStrToCStr(ULong name, char* nameStr)
 }
 
 
-// ROM 0x000e74a0 GetDefaultConfig__14TUConfigServerFUlPcPUlT3
+// ROM 0x000e61e8 GetDefaultConfig__14TUConfigServerFUlPcPUlT3
 // The configuration registered for a service; flagsPtr may be nil, and
 // the ROM still asks for the flags into a place of its own.
 NewtonErr
@@ -48,7 +48,7 @@ TUConfigServer::GetDefaultConfig(ULong serviceID, char* configType, ULong* confi
 }
 
 
-// ROM 0x000e7520 SetDefaultConfig__14TUConfigServerFUlPcN21
+// ROM 0x000e6268 SetDefaultConfig__14TUConfigServerFUlPcN21
 // The service's configuration set: whatever was registered is taken away
 // first, and a configuration of nought only takes it away.
 NewtonErr
@@ -63,7 +63,7 @@ TUConfigServer::SetDefaultConfig(ULong serviceID, char* configType, ULong config
 }
 
 
-// ROM 0x000e7584 RegisterULongName__14TUConfigServerFUlPcN21
+// ROM 0x000e62cc RegisterULongName__14TUConfigServerFUlPcN21
 NewtonErr
 TUConfigServer::RegisterULongName(ULong name, char* type, ULong thing, ULong spec)
 {
@@ -73,7 +73,7 @@ TUConfigServer::RegisterULongName(ULong name, char* type, ULong thing, ULong spe
 }
 
 
-// ROM 0x000e75cc UnRegisterULongName__14TUConfigServerFUlPc
+// ROM 0x000e6314 UnRegisterULongName__14TUConfigServerFUlPc
 NewtonErr
 TUConfigServer::UnRegisterULongName(ULong name, char* type)
 {

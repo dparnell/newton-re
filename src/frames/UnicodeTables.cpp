@@ -3,7 +3,7 @@
 
 	Contains:	InitUnicode: the ROM's character tables installed.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UnicodeTables.h"
@@ -33,7 +33,7 @@ CopyBinary(RefArg binary)
 }
 
 
-// ROM 0x002558ac InstallBuiltInEncodings__Fv
+// ROM 0x002577e4 InstallBuiltInEncodings__Fv
 // Each frame of the 'unicode frame's charEncodings ({encodingID,
 // mapFromUnicode, mapToUnicode}) read by GetMappingInfo into two
 // TEncodingMaps and installed with its converters.
@@ -57,7 +57,7 @@ InstallBuiltInEncodings(void)
 }
 
 
-// ROM 0x00254b80 InitUnicode__Fv
+// ROM 0x00256acc InitUnicode__Fv
 // The encodings installed, then the character class and case tables and
 // the ASCII break table (Rasciibreak, the magic pointer @6) stored; the
 // Unicode globals set.  The ROM's sorting tables - the 'sortTables array

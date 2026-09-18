@@ -3,7 +3,7 @@
 
 	Contains:	UserInit, UserBoot and InitialKSRVTask.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.  The
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.  The
 	memory-system and service start-ups these call are marked NOT YET
 	RECONSTRUCTED where they belong.
 */
@@ -28,7 +28,7 @@
 void (*gHostKernelServicesTask)() = nil;
 
 
-// ROM 0x002574fc UserInit__Fv
+// ROM 0x00259434 UserInit__Fv
 // The user side's handles on the well-known kernel objects (GetPortInfo).
 void
 UserInit()
@@ -38,7 +38,7 @@ UserInit()
 }
 
 
-// ROM 0x002d1860 UserBoot__Fv
+// ROM 0x002f70a4 UserBoot__Fv
 // The 'user' task: the semaphore classes' shared op lists, the kernel heap's
 // semaphore, the user-level memory architecture (page managers, stack
 // manager, the domains and environments of the memory object database),
@@ -65,7 +65,7 @@ UserBoot()
 }
 
 
-// ROM 0x002d1954 InitialKSRVTask__Fv
+// ROM 0x002f7198 InitialKSRVTask__Fv
 // The kernel services: protocol registry, stdio, the name server, the ROM
 // domain manager, the package manager (in the 'prot' environment) and the
 // loader world ('drvl', in the 'user' environment), which starts the rest;

@@ -6,8 +6,8 @@
 				side of TClassInfoRegistry - the monitor-call glue ProtocolGen
 				generated for it.
 
-	Reconstructed from the MP2100 D ROM (0x0005c0d8-0x0005d678 and the
-	registry glue at 0x0037c7a4-0x0037c8e0); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x0005b740-0x0005cce0 and the
+	registry glue at 0x00385f04-0x00386040); each function cites its origin.
 	Where the ROM decodes its class-info table (a self-relative offset, a
 	branch instruction) this calls the pointer that stands for it - see
 	Protocols.h for the correspondence.
@@ -32,7 +32,7 @@ TClassInfoRegistry*	gProtocolRegistry = nil;		// 0x0c100b58
 	TProtocol
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0005c0d8 ClassInfo__9TProtocolCFv
+// ROM 0x0005b740 ClassInfo__9TProtocolCFv
 // (the ROM: dispatch slot 1 of the real this)
 const TClassInfo*
 TProtocol::ClassInfo() const
@@ -41,7 +41,7 @@ TProtocol::ClassInfo() const
 }
 
 
-// ROM 0x0005d0a0 Become__9TProtocolFPC9TProtocol
+// ROM 0x0005c708 Become__9TProtocolFPC9TProtocol
 // Forwarding to another instance: unused in the ROM, and only the class
 // info follows here (calls dispatch through this object's own vtable).
 void
@@ -51,7 +51,7 @@ TProtocol::Become(const TProtocol* instance)
 }
 
 
-// ROM 0x0005cf54 Become__9TProtocolFUl
+// ROM 0x0005c5bc Become__9TProtocolFUl
 void
 TProtocol::Become(TObjectId monitorId)
 {
@@ -59,7 +59,7 @@ TProtocol::Become(TObjectId monitorId)
 }
 
 
-// ROM 0x0005d3e4 SetType__9TProtocolFPC10TClassInfo
+// ROM 0x0005ca4c SetType__9TProtocolFPC10TClassInfo
 // (the ROM points the instance at the class info's dispatch table)
 void
 TProtocol::SetType(const TClassInfo* info)
@@ -68,7 +68,7 @@ TProtocol::SetType(const TClassInfo* info)
 }
 
 
-// ROM 0x0005d65c GetMonitorId__9TProtocolCFv
+// ROM 0x0005ccc4 GetMonitorId__9TProtocolCFv
 TObjectId
 TProtocol::GetMonitorId() const
 {
@@ -76,7 +76,7 @@ TProtocol::GetMonitorId() const
 }
 
 
-// ROM 0x0005d57c StartMonitor__9TProtocolFUlN21Uc
+// ROM 0x0005cbe4 StartMonitor__9TProtocolFUlN21Uc
 // The instance becomes a monitor: a monitor task running the class info's
 // entry proc on it.
 long
@@ -94,7 +94,7 @@ TProtocol::StartMonitor(unsigned long stackSize, TObjectId environment, ULong na
 }
 
 
-// ROM 0x0005d618 DestroyMonitor__9TProtocolFv
+// ROM 0x0005cc80 DestroyMonitor__9TProtocolFv
 // The monitor goes, and the instance with it (the ROM's free is DisposPtr).
 long
 TProtocol::DestroyMonitor()
@@ -145,7 +145,7 @@ TProtocol::MonitorCall(ULong selector, ProtocolMonitorArgs* args)
 	TClassInfo
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0005d664 ImplementationName__10TClassInfoCFv
+// ROM 0x0005cccc ImplementationName__10TClassInfoCFv
 const char*
 TClassInfo::ImplementationName() const
 {
@@ -153,7 +153,7 @@ TClassInfo::ImplementationName() const
 }
 
 
-// ROM 0x0005d668 InterfaceName__10TClassInfoCFv
+// ROM 0x0005ccd0 InterfaceName__10TClassInfoCFv
 const char*
 TClassInfo::InterfaceName() const
 {
@@ -161,7 +161,7 @@ TClassInfo::InterfaceName() const
 }
 
 
-// ROM 0x0005d66c Signature__10TClassInfoCFv
+// ROM 0x0005ccd4 Signature__10TClassInfoCFv
 const char*
 TClassInfo::Signature() const
 {
@@ -169,7 +169,7 @@ TClassInfo::Signature() const
 }
 
 
-// ROM 0x0005cf5c Size__10TClassInfoCFv
+// ROM 0x0005c5c4 Size__10TClassInfoCFv
 size_t
 TClassInfo::Size() const
 {
@@ -177,7 +177,7 @@ TClassInfo::Size() const
 }
 
 
-// ROM 0x0005cf88 MakeAt__10TClassInfoCFPCv
+// ROM 0x0005c5f0 MakeAt__10TClassInfoCFPCv
 void
 TClassInfo::MakeAt(const void* at) const
 {
@@ -185,7 +185,7 @@ TClassInfo::MakeAt(const void* at) const
 }
 
 
-// ROM 0x0005cf8c EntryProc__10TClassInfoCFv
+// ROM 0x0005c5f4 EntryProc__10TClassInfoCFv
 const void*
 TClassInfo::EntryProc() const
 {
@@ -193,7 +193,7 @@ TClassInfo::EntryProc() const
 }
 
 
-// ROM 0x0005cf60 AllocProc__10TClassInfoCFv
+// ROM 0x0005c5c8 AllocProc__10TClassInfoCFv
 const void*
 TClassInfo::AllocProc() const
 {
@@ -201,7 +201,7 @@ TClassInfo::AllocProc() const
 }
 
 
-// ROM 0x0005cf74 FreeProc__10TClassInfoCFv
+// ROM 0x0005c5dc FreeProc__10TClassInfoCFv
 const void*
 TClassInfo::FreeProc() const
 {
@@ -209,7 +209,7 @@ TClassInfo::FreeProc() const
 }
 
 
-// ROM 0x0005cf98 Version__10TClassInfoCFv
+// ROM 0x0005c600 Version__10TClassInfoCFv
 unsigned long
 TClassInfo::Version() const
 {
@@ -225,7 +225,7 @@ TClassInfo::Flags() const
 }
 
 
-// ROM 0x0005cfa0 Register__10TClassInfoCFv
+// ROM 0x0005c608 Register__10TClassInfoCFv
 long
 TClassInfo::Register() const
 {
@@ -233,7 +233,7 @@ TClassInfo::Register() const
 }
 
 
-// ROM 0x0005cfb8 DeRegister__10TClassInfoCFv
+// ROM 0x0005c620 DeRegister__10TClassInfoCFv
 long
 TClassInfo::DeRegister() const
 {
@@ -241,7 +241,7 @@ TClassInfo::DeRegister() const
 }
 
 
-// ROM 0x0005cfd0 New__10TClassInfoCFv
+// ROM 0x0005c638 New__10TClassInfoCFv
 // An instance: from the alloc proc, or the memory manager (the ROM's
 // malloc); made at, then its New() run, and counted.
 TProtocol*
@@ -262,7 +262,7 @@ TClassInfo::New() const
 }
 
 
-// ROM 0x0005d048 Destroy__10TClassInfoCFP9TProtocol
+// ROM 0x0005c6b0 Destroy__10TClassInfoCFP9TProtocol
 // (the instance's Delete() is the caller's business)
 void
 TClassInfo::Destroy(TProtocol* instance) const
@@ -276,7 +276,7 @@ TClassInfo::Destroy(TProtocol* instance) const
 }
 
 
-// ROM 0x0005d0a8 Selector__10TClassInfoCFv
+// ROM 0x0005c710 Selector__10TClassInfoCFv
 // (sic: the ROM answers the address of the free branch, +0x20, not the
 // selector branch at +0x34)
 CodeProcPtr
@@ -286,7 +286,7 @@ TClassInfo::Selector() const
 }
 
 
-// ROM 0x0005d0b0 GetCapability__10TClassInfoCFPCc
+// ROM 0x0005c718 GetCapability__10TClassInfoCFPCc
 // The signature is a list of name, value string pairs ended by an empty
 // name; the value of the named capability (the first, for a nil name).
 const char*
@@ -303,7 +303,7 @@ TClassInfo::GetCapability(const char* name) const
 }
 
 
-// ROM 0x0005d134 GetCapability__10TClassInfoCFl
+// ROM 0x0005c79c GetCapability__10TClassInfoCFl
 // A four-character capability name.
 const char*
 TClassInfo::GetCapability(long name) const
@@ -326,7 +326,7 @@ TClassInfo::GetCapability(long name) const
 }
 
 
-// ROM 0x0005d1c8 HasInstances__10TClassInfoCFPl
+// ROM 0x0005c830 HasInstances__10TClassInfoCFPl
 Boolean
 TClassInfo::HasInstances(long* count) const
 {
@@ -341,7 +341,7 @@ TClassInfo::HasInstances(long* count) const
 }
 
 
-// ROM 0x0005d540 PrivateClassInfoSize__FPC10TClassInfo
+// ROM 0x0005cba8 PrivateClassInfoSize__FPC10TClassInfo
 size_t
 PrivateClassInfoSize(const TClassInfo* info)
 {
@@ -349,7 +349,7 @@ PrivateClassInfoSize(const TClassInfo* info)
 }
 
 
-// ROM 0x0005d544 PrivateClassInfoMakeAt__FPC10TClassInfoPCv
+// ROM 0x0005cbac PrivateClassInfoMakeAt__FPC10TClassInfoPCv
 // The TProtocol fields of a new instance: no runtime, its own real this,
 // the dispatch table, no monitor.  (Here the vtable pointer as well, and
 // the runtime field remembers the memory.)
@@ -365,7 +365,7 @@ PrivateClassInfoMakeAt(const TClassInfo* info, const void* proto)
 }
 
 
-// ROM 0x0005d564 PrivateClassInfoInterfaceName__FPC10TClassInfo
+// ROM 0x0005cbcc PrivateClassInfoInterfaceName__FPC10TClassInfo
 const char*
 PrivateClassInfoInterfaceName(const TClassInfo* info)
 {
@@ -373,7 +373,7 @@ PrivateClassInfoInterfaceName(const TClassInfo* info)
 }
 
 
-// ROM 0x0005d570 PrivateClassInfoImplementationName__FPC10TClassInfo
+// ROM 0x0005cbd8 PrivateClassInfoImplementationName__FPC10TClassInfo
 const char*
 PrivateClassInfoImplementationName(const TClassInfo* info)
 {
@@ -385,7 +385,7 @@ PrivateClassInfoImplementationName(const TClassInfo* info)
 	Instances by name
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0005d21c NewByName__FPCcT1
+// ROM 0x0005c884 NewByName__FPCcT1
 TProtocol*
 NewByName(const char* abstract, const char* implementation)
 {
@@ -394,7 +394,7 @@ NewByName(const char* abstract, const char* implementation)
 }
 
 
-// ROM 0x0005d258 NewByName__FPCcT1Ul
+// ROM 0x0005c8c0 NewByName__FPCcT1Ul
 TProtocol*
 NewByName(const char* abstract, const char* implementation, ULong version)
 {
@@ -403,7 +403,7 @@ NewByName(const char* abstract, const char* implementation, ULong version)
 }
 
 
-// ROM 0x0005d294 NewByName__FPCcN21
+// ROM 0x0005c8fc NewByName__FPCcN21
 TProtocol*
 NewByName(const char* abstract, const char* implementation, const char* capability)
 {
@@ -412,7 +412,7 @@ NewByName(const char* abstract, const char* implementation, const char* capabili
 }
 
 
-// ROM 0x0005d3c8 ClassInfoByName__FPCcT1Ul
+// ROM 0x0005ca30 ClassInfoByName__FPCcT1Ul
 const TClassInfo*
 ClassInfoByName(const char* abstract, const char* implementation, ULong version)
 {
@@ -420,7 +420,7 @@ ClassInfoByName(const char* abstract, const char* implementation, ULong version)
 }
 
 
-// ROM 0x0005d2d0 AllocInstanceByName__FPCcT1
+// ROM 0x0005c938 AllocInstanceByName__FPCcT1
 // An instance made but not New()ed - the interface's New(char*) glue does
 // that.
 TProtocol*
@@ -446,7 +446,7 @@ AllocInstanceByName(const char* abstract, const char* implementation)
 }
 
 
-// ROM 0x0005d35c FreeInstance__FP9TProtocol
+// ROM 0x0005c9c4 FreeInstance__FP9TProtocol
 void
 FreeInstance(TProtocol* instance)
 {
@@ -464,7 +464,7 @@ FreeInstance(TProtocol* instance)
 }
 
 
-// ROM 0x0005d3f4 ClassInfoFromHunkByName__FPvPCcT2
+// ROM 0x0005ca5c ClassInfoFromHunkByName__FPvPCcT2
 // The hunk's classes are asked for one by one; a nil name matches any.
 const TClassInfo*
 ClassInfoFromHunkByName(void* hunk, const char* abstract, const char* implementation)
@@ -488,7 +488,7 @@ ClassInfoFromHunkByName(void* hunk, const char* abstract, const char* implementa
 }
 
 
-// ROM 0x0005d4a4 NewFromHunkByName__FPvPCcT2
+// ROM 0x0005cb0c NewFromHunkByName__FPvPCcT2
 // (made and MakeAt'd, not New()ed and not counted)
 TProtocol*
 NewFromHunkByName(void* hunk, const char* abstract, const char* implementation)
@@ -505,7 +505,7 @@ NewFromHunkByName(void* hunk, const char* abstract, const char* implementation)
 	The registry
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0005d4e4 StartupProtocolRegistry__Fv
+// ROM 0x0005cb4c StartupProtocolRegistry__Fv
 // The registry is an instance of its own implementation, started as a
 // monitor (1 KB stack, the caller's environment) and registered with itself.
 void
@@ -517,7 +517,7 @@ StartupProtocolRegistry(void)
 }
 
 
-// ROM 0x0005d530 GetProtocolRegistry__Fv
+// ROM 0x0005cb98 GetProtocolRegistry__Fv
 TClassInfoRegistry*
 GetProtocolRegistry(void)
 {
@@ -539,7 +539,7 @@ TClassInfoRegistryName(void)
 }
 
 
-// ROM 0x0037c808 New__18TClassInfoRegistrySFPCc
+// ROM 0x00385f68 New__18TClassInfoRegistrySFPCc
 // (an instance, not yet New()ed: for a monitor that is a call to make once
 // it runs)
 TClassInfoRegistry*
@@ -549,7 +549,7 @@ TClassInfoRegistry::New(const char* implementation)
 }
 
 
-// ROM 0x0037c82c Delete__18TClassInfoRegistryFv
+// ROM 0x00385f8c Delete__18TClassInfoRegistryFv
 void
 TClassInfoRegistry::Delete()
 {
@@ -559,7 +559,7 @@ TClassInfoRegistry::Delete()
 }
 
 
-// ROM 0x0037c844 Register__18TClassInfoRegistryFPC10TClassInfoUl
+// ROM 0x00385fa4 Register__18TClassInfoRegistryFPC10TClassInfoUl
 NewtonErr
 TClassInfoRegistry::Register(const TClassInfo* info, ULong refCon)
 {
@@ -568,7 +568,7 @@ TClassInfoRegistry::Register(const TClassInfo* info, ULong refCon)
 }
 
 
-// ROM 0x0037c850 DeRegister__18TClassInfoRegistryFPC10TClassInfoUc
+// ROM 0x00385fb0 DeRegister__18TClassInfoRegistryFPC10TClassInfoUc
 NewtonErr
 TClassInfoRegistry::DeRegister(const TClassInfo* info, Boolean specific)
 {
@@ -577,7 +577,7 @@ TClassInfoRegistry::DeRegister(const TClassInfo* info, Boolean specific)
 }
 
 
-// ROM 0x0037c85c IsRegistered__18TClassInfoRegistryCFPC10TClassInfoUc
+// ROM 0x00385fbc IsRegistered__18TClassInfoRegistryCFPC10TClassInfoUc
 Boolean
 TClassInfoRegistry::IsRegistered(const TClassInfo* info, Boolean specific) const
 {
@@ -586,7 +586,7 @@ TClassInfoRegistry::IsRegistered(const TClassInfo* info, Boolean specific) const
 }
 
 
-// ROM 0x0037c868 Satisfy__18TClassInfoRegistryCFPCcT1Ul
+// ROM 0x00385fc8 Satisfy__18TClassInfoRegistryCFPCcT1Ul
 const TClassInfo*
 TClassInfoRegistry::Satisfy(const char* intf, const char* impl, ULong version) const
 {
@@ -595,7 +595,7 @@ TClassInfoRegistry::Satisfy(const char* intf, const char* impl, ULong version) c
 }
 
 
-// ROM 0x0037c874 Seed__18TClassInfoRegistryCFv
+// ROM 0x00385fd4 Seed__18TClassInfoRegistryCFv
 long
 TClassInfoRegistry::Seed() const
 {
@@ -604,7 +604,7 @@ TClassInfoRegistry::Seed() const
 }
 
 
-// ROM 0x0037c880 First__18TClassInfoRegistryCFlPUl
+// ROM 0x00385fe0 First__18TClassInfoRegistryCFlPUl
 const TClassInfo*
 TClassInfoRegistry::First(long seed, ULong* pRefCon) const
 {
@@ -613,7 +613,7 @@ TClassInfoRegistry::First(long seed, ULong* pRefCon) const
 }
 
 
-// ROM 0x0037c88c Next__18TClassInfoRegistryCFlPC10TClassInfoPUl
+// ROM 0x00385fec Next__18TClassInfoRegistryCFlPC10TClassInfoPUl
 const TClassInfo*
 TClassInfoRegistry::Next(long seed, const TClassInfo* from, ULong* pRefCon) const
 {
@@ -622,7 +622,7 @@ TClassInfoRegistry::Next(long seed, const TClassInfo* from, ULong* pRefCon) cons
 }
 
 
-// ROM 0x0037c898 Find__18TClassInfoRegistryCFPCcT1iPUl
+// ROM 0x00385ff8 Find__18TClassInfoRegistryCFPCcT1iPUl
 const TClassInfo*
 TClassInfoRegistry::Find(const char* intf, const char* impl, int skipCount, ULong* pRefCon) const
 {
@@ -631,7 +631,7 @@ TClassInfoRegistry::Find(const char* intf, const char* impl, int skipCount, ULon
 }
 
 
-// ROM 0x0037c8a4 Satisfy__18TClassInfoRegistryCFPCcN21
+// ROM 0x00386004 Satisfy__18TClassInfoRegistryCFPCcN21
 const TClassInfo*
 TClassInfoRegistry::Satisfy(const char* intf, const char* impl, const char* capability) const
 {
@@ -640,7 +640,7 @@ TClassInfoRegistry::Satisfy(const char* intf, const char* impl, const char* capa
 }
 
 
-// ROM 0x0037c8b0 Satisfy__18TClassInfoRegistryCFPCcN31
+// ROM 0x00386010 Satisfy__18TClassInfoRegistryCFPCcN31
 const TClassInfo*
 TClassInfoRegistry::Satisfy(const char* intf, const char* impl, const char* capability, const char* capabilityValue) const
 {
@@ -649,7 +649,7 @@ TClassInfoRegistry::Satisfy(const char* intf, const char* impl, const char* capa
 }
 
 
-// ROM 0x0037c8bc Satisfy__18TClassInfoRegistryCFPCcT1ClT3
+// ROM 0x0038601c Satisfy__18TClassInfoRegistryCFPCcT1ClT3
 const TClassInfo*
 TClassInfoRegistry::Satisfy(const char* intf, const char* impl, const long capability, const long capabilityValue) const
 {
@@ -658,7 +658,7 @@ TClassInfoRegistry::Satisfy(const char* intf, const char* impl, const long capab
 }
 
 
-// ROM 0x0037c8c8 UpdateInstanceCount__18TClassInfoRegistryFPC10TClassInfol
+// ROM 0x00386028 UpdateInstanceCount__18TClassInfoRegistryFPC10TClassInfol
 void
 TClassInfoRegistry::UpdateInstanceCount(const TClassInfo* info, long adjustment)
 {
@@ -667,7 +667,7 @@ TClassInfoRegistry::UpdateInstanceCount(const TClassInfo* info, long adjustment)
 }
 
 
-// ROM 0x0037c8d4 GetInstanceCount__18TClassInfoRegistryFPC10TClassInfo
+// ROM 0x00386034 GetInstanceCount__18TClassInfoRegistryFPC10TClassInfo
 long
 TClassInfoRegistry::GetInstanceCount(const TClassInfo* info)
 {

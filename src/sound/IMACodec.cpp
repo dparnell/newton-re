@@ -17,7 +17,7 @@
 	compressed stream it produces - the big-endian 2-byte block header and
 	the packed nibbles - is byte-for-byte the ROM's, so the two interoperate.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "IMACodec.h"
@@ -77,7 +77,7 @@ NibbleToDelta(ULong code, long step)
 }
 
 
-// ROM 0x000e98d0 CompressIMA__FPsPScUlP8IMAStateN23
+// ROM 0x000e82f8 CompressIMA__FPsPScUlP8IMAStateN23
 void
 CompressIMA(const short* src, signed char* dst, ULong numSamples, IMAState* state, ULong srcStride, ULong channel)
 {
@@ -159,7 +159,7 @@ CompressIMA(const short* src, signed char* dst, ULong numSamples, IMAState* stat
 }
 
 
-// ROM 0x000e9a7c CheckState__FPScP8IMAState
+// ROM 0x000e84a4 CheckState__FPScP8IMAState
 void
 CheckState(const signed char* src, IMAState* state)
 {
@@ -180,7 +180,7 @@ CheckState(const signed char* src, IMAState* state)
 }
 
 
-// ROM 0x000e9ad8 ExpandIMA__FPScT1P8IMAStateUlN24
+// ROM 0x000e8500 ExpandIMA__FPScT1P8IMAStateUlN24
 void
 ExpandIMA(const signed char* src, void* dst, IMAState* state, ULong numBlocks, ULong numChannels, ULong outFormat)
 {

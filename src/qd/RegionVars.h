@@ -14,10 +14,10 @@
 				rectangular Region, so that the object's address is a
 				RgnHandle (the ROM's 0x10-byte layout: never resized, only
 				the source of a region operation).  The ROM keeps them with
-				TRect's methods (0x00199bb0..0x0019a380: Overlaps, Union,
+				TRect's methods (0x00197564..0x00197d34: Overlaps, Union,
 				...; the host's Rects.h has those as functions).
 
-	Reconstructed from the MP2100 D ROM (0x00199fb0-0x0019a360); each
+	Reconstructed from the MP2x00 US ROM (0x00197964-0x00197d14); each
 	function cites its origin.
 */
 

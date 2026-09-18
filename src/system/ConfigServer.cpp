@@ -3,7 +3,7 @@
 
 	Contains:	TNSConfigServer and CSInstantiate (ConfigServer.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ConfigServer.h"
@@ -24,7 +24,7 @@ TNSConfigServer::TNSConfigServer()
 }
 
 
-// ROM 0x0013c7a8 __dt__15TNSConfigServerFv
+// ROM 0x0013ad4c __dt__15TNSConfigServerFv
 TNSConfigServer::~TNSConfigServer()
 {
 	if (fName != nil)
@@ -35,7 +35,7 @@ TNSConfigServer::~TNSConfigServer()
 }
 
 
-// ROM 0x0013c724 InitConfigServer__15TNSConfigServerFRC6RefVarT1
+// ROM 0x0013acc8 InitConfigServer__15TNSConfigServerFRC6RefVarT1
 // The service type's four characters taken out of the string into the
 // ULong the name server keys on, and the configuration's name kept as a
 // C string of its own.
@@ -57,7 +57,7 @@ TNSConfigServer::InitConfigServer(RefArg serviceType, RefArg configName)
 }
 
 
-// ROM 0x0013c8fc CSInstantiate
+// ROM 0x0013aea0 CSInstantiate
 // protoConfigServer:Instantiate(serviceType, configName): the C++ object
 // made and hung off the frame's ciPrivate slot.  A failure is an
 // evt.ex.comm throw.
@@ -78,7 +78,7 @@ CSInstantiate(RefArg rcvr, RefArg serviceType, RefArg configName)
 }
 
 
-// ROM 0x0013c7f4 GetConfig__15TNSConfigServerFPl
+// ROM 0x0013ad98 GetConfig__15TNSConfigServerFPl
 // The configuration registered for this service, as a string of its four
 // characters; the error comes back separately, and "there is none"
 // (kError_Not_Registered, which the name server answers for a name it
@@ -99,7 +99,7 @@ TNSConfigServer::GetConfig(NewtonErr* err)
 }
 
 
-// ROM 0x0013c888 SetConfig__15TNSConfigServerFRC6RefVar
+// ROM 0x0013ae2c SetConfig__15TNSConfigServerFRC6RefVar
 // The service's configuration set from a string of four characters; nil
 // takes the registration away, and "there was none to take away" is not an
 // error.
@@ -118,7 +118,7 @@ TNSConfigServer::SetConfig(RefArg config)
 }
 
 
-// ROM 0x000ad564 GetClient__FRC6RefVar
+// ROM 0x000ac358 GetClient__FRC6RefVar
 // The C++ object a protoConfigServer frame carries in its ciPrivate slot.
 TNSConfigServer*
 GetClient(RefArg rcvr)
@@ -132,7 +132,7 @@ GetClient(RefArg rcvr)
 }
 
 
-// ROM 0x0013bba4 CSGetDefaultConfig
+// ROM 0x0013a148 CSGetDefaultConfig
 Ref
 CSGetDefaultConfig(RefArg rcvr)
 {
@@ -147,7 +147,7 @@ CSGetDefaultConfig(RefArg rcvr)
 }
 
 
-// ROM 0x0013bc4c CSSetDefaultConfig
+// ROM 0x0013a1f0 CSSetDefaultConfig
 Ref
 CSSetDefaultConfig(RefArg rcvr, RefArg config)
 {
@@ -159,7 +159,7 @@ CSSetDefaultConfig(RefArg rcvr, RefArg config)
 }
 
 
-// ROM 0x0013c9a4 CSDispose
+// ROM 0x0013af48 CSDispose
 // protoConfigServer:Dispose(): the C++ object let go and the frame's
 // ciPrivate slot emptied.
 Ref

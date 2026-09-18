@@ -11,7 +11,7 @@
 				or, when the caller asked for a token, leaves it for
 				TUMsgToken::ReplyRPC / CashMessageToken.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserPorts.h"
@@ -35,14 +35,14 @@ CopyOK(long err)
 	TUPort
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00257b78 __ct__6TUPortFUl
+// ROM 0x00259ab0 __ct__6TUPortFUl
 TUPort::TUPort(TObjectId id)
 	: TUObject(id)
 {
 }
 
 
-// ROM 0x00257bb0 Init__6TUPortFv
+// ROM 0x00259ae8 Init__6TUPortFv
 long
 TUPort::Init()
 {
@@ -51,7 +51,7 @@ TUPort::Init()
 }
 
 
-// ROM 0x00257bd4 SendGoo__6TUPortFUlT1PvN31UcT1P5TTime
+// ROM 0x00259b0c SendGoo__6TUPortFUlT1PvN31UcT1P5TTime
 // The common send: point the message at the content, arm its timeout and/or
 // delayed-send time, and hand it to the kernel.
 long
@@ -76,7 +76,7 @@ TUPort::SendGoo(TObjectId msgId, TObjectId replyId, void* content, ULong size, U
 }
 
 
-// ROM 0x00257ca0 SendRPCGoo__6TUPortFUlT1PUlPvN31UcT4N21P5TTime
+// ROM 0x00259bd8 SendRPCGoo__6TUPortFUlT1PUlPvN31UcT4N21P5TTime
 // A send with a reply buffer; after a synchronous call the reply's size is
 // read back.
 long
@@ -92,7 +92,7 @@ TUPort::SendRPCGoo(TObjectId msgId, TObjectId replyId, ULong* returnSize, void* 
 }
 
 
-// ROM 0x00257d50 Receive__6TUPortFPUlPvUlP10TUMsgTokenT1N23UcT8
+// ROM 0x00259c88 Receive__6TUPortFPUlPvUlP10TUMsgTokenT1N23UcT8
 // Waits for a message (with the task's built-in message), then collects it:
 // a collected-receiver completion is unwrapped with CheckForDone, the content
 // is copied out (or only measured, tokenOnly), and the message is finished -
@@ -166,7 +166,7 @@ TUPort::Receive(ULong* returnSize, void* content, ULong size, TUMsgToken* token,
 }
 
 
-// ROM 0x00257f54 Receive__6TUPortFP14TUAsyncMessageUlT2Uc
+// ROM 0x00259e8c Receive__6TUPortFP14TUAsyncMessageUlT2Uc
 // An asynchronous receive on the async message's behalf; with no message it
 // is a peek (kPortFlags_IsMsgAvail) with the built-in message.
 long
@@ -194,7 +194,7 @@ TUPort::Receive(TUAsyncMessage* async, TTimeout timeout, ULong msgFilter, Boolea
 }
 
 
-// ROM 0x0025808c ResetMsgFilter__6TUPortFP14TUAsyncMessageUl
+// ROM 0x00259fc4 ResetMsgFilter__6TUPortFP14TUAsyncMessageUl
 long
 TUPort::ResetMsgFilter(TUAsyncMessage* async, ULong msgFilter)
 {
@@ -202,7 +202,7 @@ TUPort::ResetMsgFilter(TUAsyncMessage* async, ULong msgFilter)
 }
 
 
-// ROM 0x00258098 Reset__6TUPortFUlT1
+// ROM 0x00259fd0 Reset__6TUPortFUlT1
 long
 TUPort::Reset(ULong sendersResetFlags, ULong receiversResetFlags)
 {
@@ -214,7 +214,7 @@ TUPort::Reset(ULong sendersResetFlags, ULong receiversResetFlags)
 	TUMsgToken
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002579f8 CashMessageToken__10TUMsgTokenFPUlPvUlT3Uc
+// ROM 0x00259930 CashMessageToken__10TUMsgTokenFPUlPvUlT3Uc
 // Copies the sender's content out of a message received tokenOnly, and
 // finishes the message if it wants no reply (or the copy failed).
 long
@@ -228,7 +228,7 @@ TUMsgToken::CashMessageToken(ULong* returnSize, void* content, ULong size, ULong
 }
 
 
-// ROM 0x0025800c ReplyRPC__10TUMsgTokenFPvUll
+// ROM 0x00259f44 ReplyRPC__10TUMsgTokenFPvUll
 // Copies the reply into the sender's reply memory and finishes the message.
 long
 TUMsgToken::ReplyRPC(void* content, ULong size, long replyResult)
@@ -246,7 +246,7 @@ TUMsgToken::ReplyRPC(void* content, ULong size, long replyResult)
 }
 
 
-// ROM 0x00257a90 GetUserRefCon__10TUMsgTokenFPUl
+// ROM 0x002599c8 GetUserRefCon__10TUMsgTokenFPUl
 // The receiver's own message's ref con if this was an async receive, else
 // the sender's.
 long
@@ -260,13 +260,13 @@ TUMsgToken::GetUserRefCon(ULong* refConPtr)
 	TUAsyncMessage
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002580ac __ct__14TUAsyncMessageFv
+// ROM 0x00259fe4 __ct__14TUAsyncMessageFv
 TUAsyncMessage::TUAsyncMessage()
 {
 }
 
 
-// ROM 0x002580e8 __ct__14TUAsyncMessageFRC14TUAsyncMessage
+// ROM 0x0025a020 __ct__14TUAsyncMessageFRC14TUAsyncMessage
 TUAsyncMessage::TUAsyncMessage(const TUAsyncMessage& copy)
 {
 	fMsg.CopyObject(copy.fMsg.fId);
@@ -274,7 +274,7 @@ TUAsyncMessage::TUAsyncMessage(const TUAsyncMessage& copy)
 }
 
 
-// ROM 0x00258144 __ct__14TUAsyncMessageFUlT1
+// ROM 0x0025a07c __ct__14TUAsyncMessageFUlT1
 TUAsyncMessage::TUAsyncMessage(TObjectId sMemMsg, TObjectId replyMem)
 {
 	fMsg.CopyObject(sMemMsg);
@@ -282,13 +282,13 @@ TUAsyncMessage::TUAsyncMessage(TObjectId sMemMsg, TObjectId replyMem)
 }
 
 
-// ROM 0x002581e8 __dt__14TUAsyncMessageFv
+// ROM 0x0025a120 __dt__14TUAsyncMessageFv
 TUAsyncMessage::~TUAsyncMessage()
 {
 }
 
 
-// ROM 0x002581a4 __as__14TUAsyncMessageFRC10TUMsgToken
+// ROM 0x0025a0dc __as__14TUAsyncMessageFRC10TUMsgToken
 // Take over the message a token refers to: the receiver's message of an
 // async receive, or the sender's message and its reply memory.
 void
@@ -304,7 +304,7 @@ TUAsyncMessage::operator=(const TUMsgToken& copy)
 }
 
 
-// ROM 0x0025828c SetCollectorPort__14TUAsyncMessageFUl
+// ROM 0x0025a1c4 SetCollectorPort__14TUAsyncMessageFUl
 // The port that receives the message (as a collected sender) when the
 // asynchronous call completes: the same SWI as SetMsgAvailPort.
 long
@@ -314,7 +314,7 @@ TUAsyncMessage::SetCollectorPort(TObjectId portId)
 }
 
 
-// ROM 0x00258244 Init__14TUAsyncMessageFUc
+// ROM 0x0025a17c Init__14TUAsyncMessageFUc
 long
 TUAsyncMessage::Init(Boolean forSendRPC)
 {
@@ -325,7 +325,7 @@ TUAsyncMessage::Init(Boolean forSendRPC)
 }
 
 
-// ROM 0x00257aa4 GetResult__14TUAsyncMessageFPUlN31
+// ROM 0x002599dc GetResult__14TUAsyncMessageFPUlN31
 long
 TUAsyncMessage::GetResult(TObjectId* sentbyId, TObjectId* replymemId, ULong* msgType, ULong* signature)
 {
@@ -333,7 +333,7 @@ TUAsyncMessage::GetResult(TObjectId* sentbyId, TObjectId* replymemId, ULong* msg
 }
 
 
-// ROM 0x00257adc BlockTillDone__14TUAsyncMessageFPUlN31
+// ROM 0x00259a14 BlockTillDone__14TUAsyncMessageFPUlN31
 long
 TUAsyncMessage::BlockTillDone(TObjectId* sentbyId, TObjectId* replymemId, ULong* msgType, ULong* signature)
 {
@@ -341,7 +341,7 @@ TUAsyncMessage::BlockTillDone(TObjectId* sentbyId, TObjectId* replymemId, ULong*
 }
 
 
-// ROM 0x00257b14 Abort__14TUAsyncMessageFv
+// ROM 0x00259a4c Abort__14TUAsyncMessageFv
 long
 TUAsyncMessage::Abort()
 {
@@ -349,7 +349,7 @@ TUAsyncMessage::Abort()
 }
 
 
-// ROM 0x00257b40 Abort__14TUAsyncMessageFP10TUMsgTokenPUl
+// ROM 0x00259a78 Abort__14TUAsyncMessageFP10TUMsgTokenPUl
 long
 TUAsyncMessage::Abort(TUMsgToken* token, ULong* msgType)
 {

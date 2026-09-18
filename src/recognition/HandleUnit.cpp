@@ -6,7 +6,7 @@
 				recognisers and the commands they answer are posted to the
 				views under them.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Recognizer.h"
@@ -20,11 +20,11 @@
 #include "REPTranslators.h"
 #include <string.h>
 
-Boolean	gInhibitPopup = false;					// ROM 0x0c101a34 gInhibitPopup
+Boolean	gInhibitPopup = false;					// ROM 0x0c101948 gInhibitPopup
 static TUnit*	gUnitBeingHandled = nil;		// (the ROM's word at 0x0c103f8c) the unit HandleUnitList is on (nil once it is done)
 
 
-// ROM 0x00036aec SafeExceptionNotify__FP9Exception
+// ROM 0x00036a3c SafeExceptionNotify__FP9Exception
 // The exception shown to the user (ExceptionNotify) with a handler round
 // it, so that a failure in the showing is dropped.  NOT YET RECONSTRUCTED:
 // ExceptionNotify (the host prints it).
@@ -35,7 +35,7 @@ SafeExceptionNotify(Exception* exception)
 }
 
 
-// ROM 0x0019f964 HandleUnit__FP6TArray
+// ROM 0x0019d6a8 HandleUnit__FP6TArray
 // HandleUnitList under an exception handler: an exception ends the
 // handling and is reported, not thrown on.
 long
@@ -55,7 +55,7 @@ HandleUnit(TArray* units)
 }
 
 
-// ROM 0x0019f9e8 HandleUnitList__FP6TArray
+// ROM 0x0019d72c HandleUnitList__FP6TArray
 // Each unit: its recogniser's command is taken (and dropped, as a click
 // on a clicks-only area is noted, when the recogniser is arbitrated and
 // the click came within half a second of a stroke that went to the word
@@ -176,7 +176,7 @@ next:
 }
 
 
-// ROM 0x0019ff88 PostAndDoCommand__FUlP11TUnitPublicT1
+// ROM 0x0019dccc PostAndDoCommand__FUlP11TUnitPublicT1
 // The view under the unit found with the mask (none: nothing posted); a
 // click outside the popup and its parents closes the popup instead (and
 // forgets the click view) - ==> 1.  Otherwise a command to the view
@@ -231,7 +231,7 @@ PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask)
 }
 
 
-// ROM 0x0019fe94 HandleGetContextUnits__FP5TUnitl
+// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl
 // Command 0x14 (the context units) to the view under the unit, with the
 // argument as its first index parameter.  ==> the command's result, 0
 // for no view.
@@ -257,7 +257,7 @@ HandleGetContextUnits(TUnit* unit, long arg)
 }
 
 
-// ROM 0x0019fe40 UpdateStroke__FP5TUnit
+// ROM 0x0019db84 UpdateStroke__FP5TUnit
 // The unit's stroke's ink taken off and the root view updated.
 void
 UpdateStroke(TUnit* unit)
@@ -268,7 +268,7 @@ UpdateStroke(TUnit* unit)
 }
 
 
-// ROM 0x0019fd8c HandleExpiredStroke__FP5TUnit
+// ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit
 // A stroke no recogniser took: the after-writing state set; the stroke
 // goes to the stroke world's expired strokes (to be grouped into ink:
 // NOT YET RECONSTRUCTED: StrokeCentral::AddExpiredStroke), or, while the

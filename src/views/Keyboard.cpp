@@ -4,7 +4,7 @@
 	Contains:	The keyboard: key translation, the key maps, the key events
 				posted as commands, the key commands.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Keyboard.h"
@@ -32,7 +32,7 @@ Boolean			gHardCapsLock = false;			// ROM 0x0c1025fc
 ULong			gTrueModifiers = 0;				// ROM 0x0c102600
 Boolean			gKeyboardConnected = false;		// ROM 0x0c101a24
 Boolean			gKeyHelpOpen = false;			// ROM 0x0c10261c
-Boolean			gInRepeatedKeyCommand = false;	// ROM 0x0c102064 gInRepeatedKeyCommand (the Newt globals + 0x18)
+Boolean			gInRepeatedKeyCommand = false;	// ROM 0x0c104f70 gInRepeatedKeyCommand (the Newt globals + 0x18)
 
 
 /*------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ KeyboardEvent::KeyboardEvent(ULong id, ULong keyCode)
 	T r a n s l a t i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ea13c GetKeyTransMapping__Fv
+// ROM 0x0030f450 GetKeyTransMapping__Fv
 // The 'kchr binary: vars.international.keyboard.mapping (the locale's
 // keycodeMapping, put there when the locale is set).
 Ref
@@ -101,7 +101,7 @@ FunctionKeyChar(ULong keyCode)
 }
 
 
-// ROM 0x002e5610 TranslateKey__FUlUcT1PUl
+// ROM 0x0030a948 TranslateKey__FUlUcT1PUl
 // The character a key code gives under the modifiers, from the mapping
 // (the KCHR: +2 the modifiers' table index, +0x102 the table count,
 // +0x104 the 128-byte tables, then the dead keys: a count and records
@@ -169,7 +169,7 @@ TranslateKey(ULong keyCode, Boolean isDown, ULong modifiers, ULong* deadState)
 }
 
 
-// ROM 0x002e69bc Modifiers__FUc
+// ROM 0x0030bcd0 Modifiers__FUc
 // The modifier keys down, from the hard or soft key map: bit 0 command
 // (key 0x37), 1 shift, 2 caps lock, 3 option, 4 control.
 ULong
@@ -180,7 +180,7 @@ Modifiers(Boolean hard)
 }
 
 
-// ROM 0x002e69e8 IsModifierKeyCode__FUl
+// ROM 0x0030bcfc IsModifierKeyCode__FUl
 Boolean
 IsModifierKeyCode(ULong keyCode)
 {
@@ -188,7 +188,7 @@ IsModifierKeyCode(ULong keyCode)
 }
 
 
-// ROM 0x002e6a04 KeyLabel__FUlUc
+// ROM 0x0030bd18 KeyLabel__FUlUc
 // The character the key would give now (the dead state is not changed).
 UniChar
 KeyLabel(ULong keyCode, Boolean hard)
@@ -198,7 +198,7 @@ KeyLabel(ULong keyCode, Boolean hard)
 }
 
 
-// ROM 0x002e6090 KeyDown__FUlUc
+// ROM 0x0030b3a4 KeyDown__FUlUc
 Boolean
 KeyDown(ULong keyCode, Boolean hard)
 {
@@ -207,7 +207,7 @@ KeyDown(ULong keyCode, Boolean hard)
 }
 
 
-// ROM 0x002e8e00 ClearHardKeymap__Fv
+// ROM 0x0030e114 ClearHardKeymap__Fv
 void
 ClearHardKeymap(void)
 {
@@ -218,7 +218,7 @@ ClearHardKeymap(void)
 }
 
 
-// ROM 0x002e6a64 KeyIn__FUlUcP5TView
+// ROM 0x0030bd78 KeyIn__FUlUcP5TView
 // A key gone down or up on the hardware keyboard (keyboard == -1) or an
 // on-screen one (its view): the right shift and option keys stand for
 // the left ones (the hardware's gTrueModifiers keeps which are really
@@ -306,7 +306,7 @@ KeyIn(ULong keyCode, Boolean isDown, TView* keyboard)
 }
 
 
-// ROM 0x002e5af8 IsCommandKeyDown__Fv
+// ROM 0x0030ae0c IsCommandKeyDown__Fv
 Boolean
 IsCommandKeyDown(void)
 {
@@ -314,7 +314,7 @@ IsCommandKeyDown(void)
 }
 
 
-// ROM 0x002eaf0c IsCommandKeyCode__FUl
+// ROM 0x00310220 IsCommandKeyCode__FUl
 // Escape (0x35) and the function keys are command keys of their own.
 Boolean
 IsCommandKeyCode(ULong keyCode)
@@ -330,7 +330,7 @@ IsCommandKeyCode(ULong keyCode)
 }
 
 
-// ROM 0x002eaf64 IsCommandKeystroke__FUsUl
+// ROM 0x00310278 IsCommandKeystroke__FUsUl
 // The command key held, a function key or escape.
 Boolean
 IsCommandKeystroke(UniChar ch, ULong parameter)
@@ -343,7 +343,7 @@ IsCommandKeystroke(UniChar ch, ULong parameter)
 }
 
 
-// ROM 0x002eb01c KeyIsPrintable__FUsP5TView
+// ROM 0x00310330 KeyIsPrintable__FUsP5TView
 // Whether the character goes into the view's text: not the function
 // keys or escape; return and tab only in a paragraph; else any from
 // space up.
@@ -362,7 +362,7 @@ KeyIsPrintable(UniChar ch, TView* view)
 }
 
 
-// ROM 0x002eb0e4 KeyCanBeHandled__FUs
+// ROM 0x003103f8 KeyCanBeHandled__FUs
 Boolean
 KeyCanBeHandled(UniChar ch)
 {
@@ -374,7 +374,7 @@ KeyCanBeHandled(UniChar ch)
 	T h e   k e y   c o m m a n d s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002e9da0 CountOnes__FUl
+// ROM 0x0030f0b4 CountOnes__FUl
 static ULong
 CountOnes(ULong n)
 {
@@ -387,7 +387,7 @@ CountOnes(ULong n)
 }
 
 
-// ROM 0x002e9de0 KeyCommandModifiers__FRC6RefVar
+// ROM 0x0030f0f4 KeyCommandModifiers__FRC6RefVar
 // The modifiers a key command frame asks for, in the parameter's bits.
 static ULong
 KeyCommandModifiers(RefArg command)
@@ -399,7 +399,7 @@ KeyCommandModifiers(RefArg command)
 }
 
 
-// ROM 0x002e9e44 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc
+// ROM 0x0030f158 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc
 // The key command in the array for the character and modifiers: an
 // exact match of the modifiers (*exact) wins at once, else the one
 // asking for the most of the modifiers held (*matched: how many);
@@ -444,7 +444,7 @@ FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matche
 }
 
 
-// ROM 0x002e9f9c FindKeyCommand__FP5TViewUsUl
+// ROM 0x0030f2b0 FindKeyCommand__FP5TViewUsUl
 // The key command for the keystroke, looked for in the _keyCommands
 // arrays up the key view chain (the _nextKeyView proto variable when
 // there is one - 'none ends the search - else the parent) to the root:
@@ -492,7 +492,7 @@ FindKeyCommand(TView* view, UniChar ch, ULong modifiers)
 }
 
 
-// ROM 0x002ea238 SendKeyMessage__FP5TViewRC6RefVar
+// ROM 0x0030f54c SendKeyMessage__FP5TViewRC6RefVar
 // The message run (with the view's context as its argument) by the
 // first view up the key view chain that has it; ==> its result.
 Ref
@@ -527,7 +527,7 @@ SendKeyMessage(TView* view, RefArg message)
 	T h e   e v e n t s   t o   t h e   v i e w s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002eb114 GetPostingView__FUc
+// ROM 0x00310428 GetPostingView__FUc
 // The view key events go to: with a hardware keyboard, the root's
 // popup while it is visible and does not let keys through
 // (allowKeysThrough); else the key view ('viewFrontKey), or for a
@@ -545,7 +545,7 @@ GetPostingView(Boolean commandKey)
 }
 
 
-// ROM 0x002e5918 DoKeyEvent__FP10TResponderUlT2
+// ROM 0x0030ac50 DoKeyEvent__FP10TResponderUlT2
 // A key event from the keyboard tool to the receiver: the command key
 // held down (a repeat) opens the key help (_keyHelpOpenScript up the key
 // view chain, the popup dismissed - NOT YET); a key up/down/repeat goes
@@ -599,7 +599,7 @@ DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode)
 }
 
 
-// ROM 0x002e5e0c HandleKeyEvent__FP13KeyboardEvent
+// ROM 0x0030b120 HandleKeyEvent__FP13KeyboardEvent
 // A keyboard event from the keyboard tool: a key string (several key
 // events at once) through HandleKeyEvents; else DoKeyEvent to the
 // posting view (the command-key view for the command key, a command
@@ -620,7 +620,7 @@ HandleKeyEvent(KeyboardEvent* event)
 }
 
 
-// ROM 0x002e5b0c GetKeyEventNo__FRC6RefVarUl
+// ROM 0x0030ae20 GetKeyEventNo__FRC6RefVarUl
 // The index'th key event of a set: a byte of the event's own data (an
 // address ref), an int of an array, or a byte of a string's data - the
 // key code with 0x80 for a key down.
@@ -635,7 +635,7 @@ GetKeyEventNo(RefArg keys, ULong index)
 }
 
 
-// ROM 0x002e5b80 HandleKeyEvents__FRC6RefVarUl
+// ROM 0x0030ae94 HandleKeyEvents__FRC6RefVarUl
 // A run of key events: a key view that takes its keys one by one
 // (TextFlags 0x400) gets each as DoKeyEvent; else the characters of the
 // keys down are gathered (KeyIn) into a string posted with
@@ -727,7 +727,7 @@ PostKeyDownUp(UniChar ch, TView* downView)
 }
 
 
-// ROM 0x002eb1ec PostKeyString__FP5TViewRC6RefVar
+// ROM 0x00310500 PostKeyString__FP5TViewRC6RefVar
 // A string typed at the view: when every character is printable for
 // it, one aeKeyString command with the string; a view that wants its
 // keys one by one (TextFlags 0x400) gets a key down and key up per
@@ -793,7 +793,7 @@ PostKeyString(TView* view, RefArg str)
 	T h e   n a t i v e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002e6c74 FKeyIn
+// ROM 0x0030bf88 FKeyIn
 // KeyIn(keyCode, isDown): a key on a soft keyboard (no view); ==> the character's code
 static Ref
 FKeyIn(RefArg /*rcvr*/, RefArg keyCode, RefArg isDown)
@@ -802,7 +802,7 @@ FKeyIn(RefArg /*rcvr*/, RefArg keyCode, RefArg isDown)
 }
 
 
-// ROM 0x002e6cc8 FTranslateKey
+// ROM 0x0030bfdc FTranslateKey
 // TranslateKey(keyCode, parameter, deadState): the character's code, or
 // the new dead state when a dead key is pending
 static Ref
@@ -814,7 +814,7 @@ FTranslateKey(RefArg /*rcvr*/, RefArg keyCode, RefArg parameter, RefArg deadStat
 }
 
 
-// ROM 0x002e680c FIsKeyDown
+// ROM 0x0030bb20 FIsKeyDown
 static Ref
 FIsKeyDown(RefArg /*rcvr*/, RefArg keyCode, RefArg hard)
 {
@@ -822,7 +822,7 @@ FIsKeyDown(RefArg /*rcvr*/, RefArg keyCode, RefArg hard)
 }
 
 
-// ROM 0x002e6a50 FGetTrueModifiers
+// ROM 0x0030bd64 FGetTrueModifiers
 static Ref
 FGetTrueModifiers(RefArg /*rcvr*/)
 {
@@ -830,7 +830,7 @@ FGetTrueModifiers(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x002eaf9c FIsCommandKeystroke
+// ROM 0x003102b0 FIsCommandKeystroke
 static Ref
 FIsCommandKeystroke(RefArg /*rcvr*/, RefArg ch, RefArg parameter)
 {
@@ -838,7 +838,7 @@ FIsCommandKeystroke(RefArg /*rcvr*/, RefArg ch, RefArg parameter)
 }
 
 
-// ROM 0x002e58f0 FPostKeyString__FRC6RefVarN21
+// ROM 0x0030ac28 FPostKeyString__FRC6RefVarN21
 // PostKeyString(viewName, string) from a context
 static Ref
 FPostKeyString(RefArg rcvr, RefArg name, RefArg str)
@@ -850,7 +850,7 @@ FPostKeyString(RefArg rcvr, RefArg name, RefArg str)
 }
 
 
-// ROM 0x002e5ddc FHandleKeyEvents
+// ROM 0x0030b0f0 FHandleKeyEvents
 static Ref
 FHandleKeyEvents(RefArg /*rcvr*/, RefArg keys)
 {
@@ -859,7 +859,7 @@ FHandleKeyEvents(RefArg /*rcvr*/, RefArg keys)
 }
 
 
-// ROM 0x002ea384 FSendKeyMessage
+// ROM 0x0030f698 FSendKeyMessage
 static Ref
 FSendKeyMessage(RefArg /*rcvr*/, RefArg context, RefArg message)
 {
@@ -870,7 +870,7 @@ FSendKeyMessage(RefArg /*rcvr*/, RefArg context, RefArg message)
 }
 
 
-// ROM 0x002e9b58 FClearHardKeymap
+// ROM 0x0030ee6c FClearHardKeymap
 static Ref
 FClearHardKeymap(RefArg /*rcvr*/)
 {

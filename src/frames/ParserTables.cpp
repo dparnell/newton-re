@@ -6,7 +6,7 @@
 
 #include "ParserTables.h"
 
-// ROM 0x00371268 yylhs
+// ROM 0x0037aed0 yylhs
 const short	yylhs[152] = {
 	-1, 0, 0, 1, 45, 1, 2, 2, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -23,7 +23,7 @@ const short	yylhs[152] = {
 	41, 42, 42, 43, 43, 44, 44, 0,
 };
 
-// ROM 0x00371398 yylen
+// ROM 0x0037b000 yylen
 const short	yylen[152] = {
 	2, 0, 1, 1, 0, 4, 1, 1, 1, 1, 1, 1,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3,
@@ -40,7 +40,7 @@ const short	yylen[152] = {
 	1, 1, 3, 0, 1, 3, 5, 0,
 };
 
-// ROM 0x003714c8 yydefred
+// ROM 0x0037b130 yydefred
 const short	yydefred[308] = {
 	0, 47, 0, 48, 49, 51, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0,
@@ -70,7 +70,7 @@ const short	yydefred[308] = {
 	0, 150, 0, 0, 0, 0, 0, 0,
 };
 
-// ROM 0x00371730 yydgoto
+// ROM 0x0037b398 yydgoto
 const short	yydgoto[46] = {
 	31, 32, 33, 84, 35, 36, 37, 38, 39, 40, 41, 42,
 	43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 144, 53,
@@ -78,7 +78,7 @@ const short	yydgoto[46] = {
 	137, 101, 102, 168, 99, 169, 170, 172, 173, 178,
 };
 
-// ROM 0x0037178c yysindex
+// ROM 0x0037b3f4 yysindex
 const short	yysindex[308] = {
 	3831, 0, -15, 0, 0, 0, 4041, -33, -230, -225, 4041, 4041,
 	-218, 4041, -195, 4041, 4041, 4041, -191, 0, -53, 4041, 4041, 4041,
@@ -108,7 +108,7 @@ const short	yysindex[308] = {
 	3954, 0, 3933, 3954, 4041, 4041, 3954, 3954,
 };
 
-// ROM 0x003719f4 yyrindex
+// ROM 0x0037b65c yyrindex
 const short	yyrindex[308] = {
 	248, 0, 1, 0, 0, 0, -44, 0, 0, 0, 0, -27,
 	0, 0, 0, 0, -45, 0, 0, 0, 0, 1309, 1357, 0,
@@ -138,7 +138,7 @@ const short	yyrindex[308] = {
 	3149, 0, 0, 3179, 0, 0, 3206, 3278,
 };
 
-// ROM 0x00371c5c yygindex
+// ROM 0x0037b8c4 yygindex
 const short	yygindex[46] = {
 	0, 0, 118, 2292, 38, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 152, 0,
@@ -146,7 +146,7 @@ const short	yygindex[46] = {
 	0, 0, 0, -17, 0, 79, 0, 0, 0, 0,
 };
 
-// ROM 0x00371cb8 yytable
+// ROM 0x0037b920 yytable
 const short	yytable[4402] = {
 	139, 52, 201, 155, 125, 77, 63, 63, 131, 62, 62, 125,
 	98, 131, 109, 109, 123, 6, 59, 60, 106, 29, 129, 123,
@@ -517,7 +517,7 @@ const short	yytable[4402] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 27,
 };
 
-// ROM 0x00373f1c yycheck
+// ROM 0x0037db84 yycheck
 const short	yycheck[4402] = {
 	40, 0, 40, 44, 46, 58, 40, 40, 59, 43, 43, 46,
 	29, 59, 59, 59, 58, 0, 0, 0, 41, 39, 44, 58,
@@ -888,7 +888,7 @@ const short	yycheck[4402] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, 312,
 };
 
-// ROM 0x00376180 yyname
+// ROM 0x0037fde8 yyname
 const char* const	yyname[313] = {
 	"end-of-file",
 	0,
@@ -1205,7 +1205,7 @@ const char* const	yyname[313] = {
 	"tokenSENDIFDEFINED",
 };
 
-// ROM 0x00376664 yyrule
+// ROM 0x003802cc yyrule
 const char* const	yyrule[151] = {
 	"$accept : input",
 	"input :",
@@ -1360,7 +1360,7 @@ const char* const	yyrule[151] = {
 	"sexpr_frame_slot_plus : sexpr_frame_slot_plus ',' tokenSYMBOL ':' sexpr",
 };
 
-// the reserved words TCompiler::ReservedWordToken (0x00301564) searches: an unnamed table at 0x0c102690 in the initialised RAM area
+// the reserved words TCompiler::ReservedWordToken (0x00326860) searches: an unnamed table at 0x0c10559c in the initialised RAM area
 const ReservedWord	gReservedWords[35] = {
 	{ "and", tokenAND },
 	{ "begin", tokenBEGIN },

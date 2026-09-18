@@ -49,7 +49,7 @@ static inline TFunctionState*	RefToState(Ref r)		{ return (TFunctionState*) (siz
 	The parse tree
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029aa38 AllocatePT1__FiRC6RefVar
+// ROM 0x002bf984 AllocatePT1__FiRC6RefVar
 Ref
 AllocatePT1(int kind, RefArg a)
 {
@@ -60,7 +60,7 @@ AllocatePT1(int kind, RefArg a)
 }
 
 
-// ROM 0x0029b1c0 AllocatePT2__FiRC6RefVarT2
+// ROM 0x002c010c AllocatePT2__FiRC6RefVarT2
 Ref
 AllocatePT2(int kind, RefArg a, RefArg b)
 {
@@ -72,7 +72,7 @@ AllocatePT2(int kind, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029bb10 AllocatePT3__FiRC6RefVarN22
+// ROM 0x002c0a5c AllocatePT3__FiRC6RefVarN22
 Ref
 AllocatePT3(int kind, RefArg a, RefArg b, RefArg c)
 {
@@ -85,7 +85,7 @@ AllocatePT3(int kind, RefArg a, RefArg b, RefArg c)
 }
 
 
-// ROM 0x0029ce44 AllocatePT5__FiRC6RefVarN42
+// ROM 0x002c1d90 AllocatePT5__FiRC6RefVarN42
 Ref
 AllocatePT5(int kind, RefArg a, RefArg b, RefArg c, RefArg d, RefArg e)
 {
@@ -121,7 +121,7 @@ NodeKind(RefArg node)
 }
 
 
-// ROM 0x002a190c WalkNodes__FRC6RefVarPvPFPvRC6RefVarlN52_ii
+// ROM 0x002c6858 WalkNodes__FRC6RefVarPvPFPvRC6RefVarlN52_ii
 // Every node of the tree to the walker, before its children (postOrder
 // false; a walker answering false stops the descent) or after them.
 void
@@ -271,7 +271,7 @@ WalkNodes(RefArg node, void* context, WalkerProc walker, Boolean postOrder)
 	TLoopState
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029ac80 __ct__10TLoopStateFP14TFunctionStateP10TLoopState
+// ROM 0x002bfbcc __ct__10TLoopStateFP14TFunctionStateP10TLoopState
 TLoopState::TLoopState(TFunctionState* function, TLoopState* enclosing)
 {
 	fFunction = function;
@@ -280,7 +280,7 @@ TLoopState::TLoopState(TFunctionState* function, TLoopState* enclosing)
 }
 
 
-// ROM 0x0029acdc __dt__10TLoopStateFv
+// ROM 0x002bfc28 __dt__10TLoopStateFv
 TLoopState::~TLoopState()
 {
 	if (fEnclosing != nil)
@@ -288,7 +288,7 @@ TLoopState::~TLoopState()
 }
 
 
-// ROM 0x0029ad1c AddExit__10TLoopStateFl
+// ROM 0x002bfc68 AddExit__10TLoopStateFl
 void
 TLoopState::AddExit(long pc)
 {
@@ -296,7 +296,7 @@ TLoopState::AddExit(long pc)
 }
 
 
-// ROM 0x0029ad54 PatchExits__10TLoopStateFl
+// ROM 0x002bfca0 PatchExits__10TLoopStateFl
 void
 TLoopState::PatchExits(long pc)
 {
@@ -310,7 +310,7 @@ TLoopState::PatchExits(long pc)
 	TFunctionState
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029add0 __ct__14TFunctionStateFP9TCompilerRC6RefVarP14TFunctionStatePi
+// ROM 0x002bfd1c __ct__14TFunctionStateFP9TCompilerRC6RefVarP14TFunctionStatePi
 TFunctionState::TFunctionState(TCompiler* compiler, RefArg args, TFunctionState* enclosing, int* funcDepth)
 {
 	fCompiler = compiler;
@@ -355,7 +355,7 @@ TFunctionState::TFunctionState(TCompiler* compiler, RefArg args, TFunctionState*
 }
 
 
-// ROM 0x0029b048 __dt__14TFunctionStateFv
+// ROM 0x002bff94 __dt__14TFunctionStateFv
 TFunctionState::~TFunctionState()
 {
 	if (fLoop != nil)
@@ -363,7 +363,7 @@ TFunctionState::~TFunctionState()
 }
 
 
-// ROM 0x0029b0d0 CurPC__14TFunctionStateFv
+// ROM 0x002c001c CurPC__14TFunctionStateFv
 long
 TFunctionState::CurPC(void)
 {
@@ -371,7 +371,7 @@ TFunctionState::CurPC(void)
 }
 
 
-// ROM 0x0029b0d8 LitOffset__14TFunctionStateFRC6RefVar
+// ROM 0x002c0024 LitOffset__14TFunctionStateFRC6RefVar
 // The index of a literal, added when new (magic pointers by identity).
 long
 TFunctionState::LitOffset(RefArg literal)
@@ -395,7 +395,7 @@ TFunctionState::LitOffset(RefArg literal)
 }
 
 
-// ROM 0x0029b250 EmitOne__14TFunctionStateFUc
+// ROM 0x002c019c EmitOne__14TFunctionStateFUc
 void
 TFunctionState::EmitOne(unsigned char b)
 {
@@ -405,7 +405,7 @@ TFunctionState::EmitOne(unsigned char b)
 }
 
 
-// ROM 0x0029b2c4 EmitThree__14TFunctionStateFUcl
+// ROM 0x002c0210 EmitThree__14TFunctionStateFUcl
 void
 TFunctionState::EmitThree(unsigned char b, long operand)
 {
@@ -419,7 +419,7 @@ TFunctionState::EmitThree(unsigned char b, long operand)
 }
 
 
-// ROM 0x0029b348 Emit__14TFunctionStateF6Opcodel
+// ROM 0x002c0294 Emit__14TFunctionStateF6Opcodel
 // An instruction: the short form for operands 0-6, else the 16-bit one.
 void
 TFunctionState::Emit(int opcode, long operand)
@@ -431,7 +431,7 @@ TFunctionState::Emit(int opcode, long operand)
 }
 
 
-// ROM 0x0029b370 EmitPlaceholder__14TFunctionStateFv
+// ROM 0x002c02bc EmitPlaceholder__14TFunctionStateFv
 // A branch to be patched; ==> its pc.
 long
 TFunctionState::EmitPlaceholder(void)
@@ -442,7 +442,7 @@ TFunctionState::EmitPlaceholder(void)
 }
 
 
-// ROM 0x0029b3a0 Backpatch__14TFunctionStateFl6OpcodeT1
+// ROM 0x002c02ec Backpatch__14TFunctionStateFl6OpcodeT1
 void
 TFunctionState::Backpatch(long pc, int opcode, long operand)
 {
@@ -453,7 +453,7 @@ TFunctionState::Backpatch(long pc, int opcode, long operand)
 }
 
 
-// ROM 0x0029b3e0 AddLocals__14TFunctionStateFRC6RefVar
+// ROM 0x002c032c AddLocals__14TFunctionStateFRC6RefVar
 // Local variables declared; a constant's name cannot be one.
 void
 TFunctionState::AddLocals(RefArg names)
@@ -476,7 +476,7 @@ TFunctionState::AddLocals(RefArg names)
 }
 
 
-// ROM 0x0029b4ec DeclarationsFinished__14TFunctionStateFv
+// ROM 0x002c0438 DeclarationsFinished__14TFunctionStateFv
 void
 TFunctionState::DeclarationsFinished(void)
 {
@@ -485,7 +485,7 @@ TFunctionState::DeclarationsFinished(void)
 }
 
 
-// ROM 0x0029b53c ComputeInitialVarLocs__14TFunctionStateFv
+// ROM 0x002c0488 ComputeInitialVarLocs__14TFunctionStateFv
 // Every argument and local starts at location 0 (a reference count).
 void
 TFunctionState::ComputeInitialVarLocs(void)
@@ -498,7 +498,7 @@ TFunctionState::ComputeInitialVarLocs(void)
 }
 
 
-// ROM 0x0029b648 ComputeArgFrame__14TFunctionStateFv
+// ROM 0x002c0594 ComputeArgFrame__14TFunctionStateFv
 // The function's argFrame and where each variable lives.  A 1.x code
 // block (compatibility 0) keeps every argument and local in the argFrame
 // [_nextArgFrame, _parent, _implementor, args..., locals...].  A 2.x
@@ -571,7 +571,7 @@ TFunctionState::ComputeArgFrame(void)
 }
 
 
-// ROM 0x0029bbb8 CopyClosedArgs__14TFunctionStateFv
+// ROM 0x002c0b04 CopyClosedArgs__14TFunctionStateFv
 // The arguments inner functions close over are copied from the stack
 // into the argFrame at entry.
 void
@@ -592,7 +592,7 @@ TFunctionState::CopyClosedArgs(void)
 }
 
 
-// ROM 0x0029bca4 IsLocalVariable__14TFunctionStateFRC6RefVar
+// ROM 0x002c0bf0 IsLocalVariable__14TFunctionStateFRC6RefVar
 Boolean
 TFunctionState::IsLocalVariable(RefArg name)
 {
@@ -604,7 +604,7 @@ TFunctionState::IsLocalVariable(RefArg name)
 }
 
 
-// ROM 0x0029bd40 VariableIndex__14TFunctionStateFRC6RefVar
+// ROM 0x002c0c8c VariableIndex__14TFunctionStateFRC6RefVar
 // The variable's index on the stack (its argFrame slot for a 1.x code
 // block); -1 when it lives in the argFrame.
 long
@@ -622,7 +622,7 @@ TFunctionState::VariableIndex(RefArg name)
 }
 
 
-// ROM 0x0029bdac NoteVarReference__14TFunctionStateFRC6RefVar
+// ROM 0x002c0cf8 NoteVarReference__14TFunctionStateFRC6RefVar
 // An inner function refers to name: if it is this function's, it is
 // closed over; else the enclosing functions are asked, and this one
 // closes over an outer variable.  ==> whether any function has it.
@@ -646,7 +646,7 @@ TFunctionState::NoteVarReference(RefArg name)
 }
 
 
-// ROM 0x0029be58 NoteMsgEnvReference__14TFunctionStateFQ214TFunctionState15MsgEnvComponent
+// ROM 0x002c0da4 NoteMsgEnvReference__14TFunctionStateFQ214TFunctionState15MsgEnvComponent
 // self or inherited is used: this function and all enclosing ones need it.
 void
 TFunctionState::NoteMsgEnvReference(MsgEnvComponent component)
@@ -661,7 +661,7 @@ TFunctionState::NoteMsgEnvReference(MsgEnvComponent component)
 }
 
 
-// ROM 0x0029be88 AddConstant__14TFunctionStateFRC6RefVarT1
+// ROM 0x002c0dd4 AddConstant__14TFunctionStateFRC6RefVarT1
 // (the ROM inlines SetFrameSlot on the constants frame)
 void
 TFunctionState::AddConstant(RefArg name, RefArg value)
@@ -672,7 +672,7 @@ TFunctionState::AddConstant(RefArg name, RefArg value)
 }
 
 
-// ROM 0x0029bed4 IsConstant__14TFunctionStateFRC6RefVar
+// ROM 0x002c0e20 IsConstant__14TFunctionStateFRC6RefVar
 // A constant of this function or an enclosing one, unless a variable of
 // a nearer function hides it (_proto is never one).
 Boolean
@@ -691,7 +691,7 @@ TFunctionState::IsConstant(RefArg name)
 }
 
 
-// ROM 0x0029bf58 IsLocalConstant__14TFunctionStateFRC6RefVar
+// ROM 0x002c0ea4 IsLocalConstant__14TFunctionStateFRC6RefVar
 Boolean
 TFunctionState::IsLocalConstant(RefArg name)
 {
@@ -699,7 +699,7 @@ TFunctionState::IsLocalConstant(RefArg name)
 }
 
 
-// ROM 0x0029bf80 GetConstantValue__14TFunctionStateFRC6RefVarPl
+// ROM 0x002c0ecc GetConstantValue__14TFunctionStateFRC6RefVarPl
 // (the ROM inlines GetProtoVariable on the constants frame)
 Ref
 TFunctionState::GetConstantValue(RefArg name, long* exists)
@@ -714,7 +714,7 @@ TFunctionState::GetConstantValue(RefArg name, long* exists)
 }
 
 
-// ROM 0x0029bf88 AtTopLevel__14TFunctionStateFv
+// ROM 0x002c0ed4 AtTopLevel__14TFunctionStateFv
 Boolean
 TFunctionState::AtTopLevel(void)
 {
@@ -722,7 +722,7 @@ TFunctionState::AtTopLevel(void)
 }
 
 
-// ROM 0x0029bfa0 MakeCodeBlock__14TFunctionStateFv
+// ROM 0x002c0eec MakeCodeBlock__14TFunctionStateFv
 // The function object: a clone of the code block prototype (the debug
 // one when the debugger numbers functions or names are kept) with the
 // instructions, literals (nil when none), argFrame and, for a 2.x
@@ -799,7 +799,7 @@ TFunctionState::MakeCodeBlock(void)
 }
 
 
-// ROM 0x0029c3d0 BeginLoop__14TFunctionStateFv
+// ROM 0x002c131c BeginLoop__14TFunctionStateFv
 void
 TFunctionState::BeginLoop(void)
 {
@@ -810,7 +810,7 @@ TFunctionState::BeginLoop(void)
 }
 
 
-// ROM 0x0029c41c AddLoopExit__14TFunctionStateFv
+// ROM 0x002c1368 AddLoopExit__14TFunctionStateFv
 // A break: a placeholder branch the loop's end patches; ==> its pc.
 long
 TFunctionState::AddLoopExit(void)
@@ -824,7 +824,7 @@ TFunctionState::AddLoopExit(void)
 }
 
 
-// ROM 0x0029c474 EndLoop__14TFunctionStateFv
+// ROM 0x002c13c0 EndLoop__14TFunctionStateFv
 void
 TFunctionState::EndLoop(void)
 {
@@ -840,7 +840,7 @@ TFunctionState::EndLoop(void)
 	TCompiler
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029a240 __ct__9TCompilerFP12TInputStreami
+// ROM 0x002bf18c __ct__9TCompilerFP12TInputStreami
 // The first compiler roots the parser's values, makes the constant
 // functions frame (the constantFunctions global) and the frame of the
 // frequently called functions' names.
@@ -880,7 +880,7 @@ TCompiler::TCompiler(TInputStream* stream, Boolean interactive)
 }
 
 
-// ROM 0x0029ea9c __dt__9TCompilerFv
+// ROM 0x002c39e8 __dt__9TCompilerFv
 TCompiler::~TCompiler()
 {
 	while (fFunctionStates != nil)
@@ -894,7 +894,7 @@ TCompiler::~TCompiler()
 }
 
 
-// ROM 0x0029a5c4 Warning__9TCompilerFPc
+// ROM 0x002bf510 Warning__9TCompilerFPc
 void
 TCompiler::Warning(const char* message)
 {
@@ -902,7 +902,7 @@ TCompiler::Warning(const char* message)
 }
 
 
-// ROM 0x0029d1c4 Error__9TCompilerFl
+// ROM 0x002c2110 Error__9TCompilerFl
 // evt.ex.fr.comp;type.ref.frame with {errorCode, filename, linenumber}.
 void
 TCompiler::Error(long error)
@@ -915,7 +915,7 @@ TCompiler::Error(long error)
 }
 
 
-// ROM 0x0029d290 Error__9TCompilerFlRC6RefVar
+// ROM 0x002c21dc Error__9TCompilerFlRC6RefVar
 void
 TCompiler::Error(long error, RefArg value)
 {
@@ -928,7 +928,7 @@ TCompiler::Error(long error, RefArg value)
 }
 
 
-// ROM 0x0029d144 ThrowExCompilerWithBadValue__FlRC6RefVar
+// ROM 0x002c2090 ThrowExCompilerWithBadValue__FlRC6RefVar
 void
 ThrowExCompilerWithBadValue(long error, RefArg value)
 {
@@ -943,7 +943,7 @@ ThrowExCompilerWithBadValue(long error, RefArg value)
 	Emitting
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029a628 Emit__9TCompilerF6Opcodel
+// ROM 0x002bf574 Emit__9TCompilerF6Opcodel
 void
 TCompiler::Emit(int opcode, long operand)
 {
@@ -951,7 +951,7 @@ TCompiler::Emit(int opcode, long operand)
 }
 
 
-// ROM 0x0029a630 EmitPush__9TCompilerFRC6RefVar
+// ROM 0x002bf57c EmitPush__9TCompilerFRC6RefVar
 // push-constant for an immediate that fits 16 bits (sign extended) or a
 // magic pointer under 0x1000, else push of a literal.
 void
@@ -966,7 +966,7 @@ TCompiler::EmitPush(RefArg value)
 }
 
 
-// ROM 0x0029a6a0 EmitPop__9TCompilerFv
+// ROM 0x002bf5ec EmitPop__9TCompilerFv
 void
 TCompiler::EmitPop(void)
 {
@@ -974,7 +974,7 @@ TCompiler::EmitPop(void)
 }
 
 
-// ROM 0x0029a6ac EmitVarSet__9TCompilerFRC6RefVar
+// ROM 0x002bf5f8 EmitVarSet__9TCompilerFRC6RefVar
 // set-var for a variable on the stack, else set-find-var.
 void
 TCompiler::EmitVarSet(RefArg name)
@@ -987,7 +987,7 @@ TCompiler::EmitVarSet(RefArg name)
 }
 
 
-// ROM 0x0029a710 EmitVarGet__9TCompilerFRC6RefVar
+// ROM 0x002bf65c EmitVarGet__9TCompilerFRC6RefVar
 void
 TCompiler::EmitVarGet(RefArg name)
 {
@@ -1001,7 +1001,7 @@ TCompiler::EmitVarGet(RefArg name)
 }
 
 
-// ROM 0x0029a7e4 EmitVarIncr__9TCompilerFRC6RefVar
+// ROM 0x002bf730 EmitVarIncr__9TCompilerFRC6RefVar
 // incr-var of a for loop's index, which must be on the stack.
 void
 TCompiler::EmitVarIncr(RefArg name)
@@ -1014,7 +1014,7 @@ TCompiler::EmitVarIncr(RefArg name)
 }
 
 
-// ROM 0x0029a8d8 FreqFuncIndex__FRC6RefVarl
+// ROM 0x002bf824 FreqFuncIndex__FRC6RefVarl
 // The index of a frequently called function with that many arguments, -1
 // for none.
 long
@@ -1032,7 +1032,7 @@ FreqFuncIndex(RefArg name, long numArgs)
 }
 
 
-// ROM 0x0029a86c EmitFuncall__9TCompilerFRC6RefVarUl
+// ROM 0x002bf7b8 EmitFuncall__9TCompilerFRC6RefVarUl
 // freq-func for a frequently called function, else push name; call n.
 void
 TCompiler::EmitFuncall(RefArg name, ULong numArgs)
@@ -1048,7 +1048,7 @@ TCompiler::EmitFuncall(RefArg name, ULong numArgs)
 }
 
 
-// ROM 0x0029a8c4 EmitBranch__9TCompilerFUl
+// ROM 0x002bf810 EmitBranch__9TCompilerFUl
 void
 TCompiler::EmitBranch(ULong pc)
 {
@@ -1056,7 +1056,7 @@ TCompiler::EmitBranch(ULong pc)
 }
 
 
-// ROM 0x0029a8d0 EmitPlaceholder__9TCompilerFv
+// ROM 0x002bf81c EmitPlaceholder__9TCompilerFv
 long
 TCompiler::EmitPlaceholder(void)
 {
@@ -1064,7 +1064,7 @@ TCompiler::EmitPlaceholder(void)
 }
 
 
-// ROM 0x0029a95c EmitReturn__9TCompilerFv
+// ROM 0x002bf8a8 EmitReturn__9TCompilerFv
 void
 TCompiler::EmitReturn(void)
 {
@@ -1072,7 +1072,7 @@ TCompiler::EmitReturn(void)
 }
 
 
-// ROM 0x0029a968 CurPC__9TCompilerFv
+// ROM 0x002bf8b4 CurPC__9TCompilerFv
 long
 TCompiler::CurPC(void)
 {
@@ -1080,7 +1080,7 @@ TCompiler::CurPC(void)
 }
 
 
-// ROM 0x0029a970 Backpatch__9TCompilerFUl6Opcodel
+// ROM 0x002bf8bc Backpatch__9TCompilerFUl6Opcodel
 void
 TCompiler::Backpatch(ULong pc, int opcode, long operand)
 {
@@ -1088,7 +1088,7 @@ TCompiler::Backpatch(ULong pc, int opcode, long operand)
 }
 
 
-// ROM 0x0029a978 AddLocals__9TCompilerFRC6RefVar
+// ROM 0x002bf8c4 AddLocals__9TCompilerFRC6RefVar
 void
 TCompiler::AddLocals(RefArg names)
 {
@@ -1096,7 +1096,7 @@ TCompiler::AddLocals(RefArg names)
 }
 
 
-// ROM 0x0029a980 NewFunctionState__9TCompilerFRC6RefVarP14TFunctionStatePi
+// ROM 0x002bf8cc NewFunctionState__9TCompilerFRC6RefVarP14TFunctionStatePi
 void
 TCompiler::NewFunctionState(RefArg args, TFunctionState* enclosing, int* funcDepth)
 {
@@ -1109,7 +1109,7 @@ TCompiler::NewFunctionState(RefArg args, TFunctionState* enclosing, int* funcDep
 }
 
 
-// ROM 0x0029a9e4 EndFunction__9TCompilerFv
+// ROM 0x002bf930 EndFunction__9TCompilerFv
 Ref
 TCompiler::EndFunction(void)
 {
@@ -1120,7 +1120,7 @@ TCompiler::EndFunction(void)
 }
 
 
-// ROM 0x0029aa20 BeginLoop__9TCompilerFv
+// ROM 0x002bf96c BeginLoop__9TCompilerFv
 void
 TCompiler::BeginLoop(void)
 {
@@ -1128,7 +1128,7 @@ TCompiler::BeginLoop(void)
 }
 
 
-// ROM 0x0029aa28 AddLoopExit__9TCompilerFv
+// ROM 0x002bf974 AddLoopExit__9TCompilerFv
 long
 TCompiler::AddLoopExit(void)
 {
@@ -1136,7 +1136,7 @@ TCompiler::AddLoopExit(void)
 }
 
 
-// ROM 0x0029aa30 EndLoop__9TCompilerFv
+// ROM 0x002bf97c EndLoop__9TCompilerFv
 void
 TCompiler::EndLoop(void)
 {
@@ -1148,7 +1148,7 @@ TCompiler::EndLoop(void)
 	Constants
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029aab0 IsConstantExpr__9TCompilerFRC6RefVar
+// ROM 0x002bf9fc IsConstantExpr__9TCompilerFRC6RefVar
 // A constant, a constant's name, or the negation of one.
 Boolean
 TCompiler::IsConstantExpr(RefArg expr)
@@ -1165,7 +1165,7 @@ TCompiler::IsConstantExpr(RefArg expr)
 }
 
 
-// ROM 0x0029ab94 EvaluateConstantExpr__9TCompilerFRC6RefVar
+// ROM 0x002bfae0 EvaluateConstantExpr__9TCompilerFRC6RefVar
 Ref
 TCompiler::EvaluateConstantExpr(RefArg expr)
 {
@@ -1181,7 +1181,7 @@ TCompiler::EvaluateConstantExpr(RefArg expr)
 }
 
 
-// ROM 0x0029edf4 Simplify__9TCompilerFRC6RefVar
+// ROM 0x002c3d40 Simplify__9TCompilerFRC6RefVar
 // (nothing in this ROM)
 void
 TCompiler::Simplify(RefArg /*tree*/)
@@ -1192,7 +1192,7 @@ TCompiler::Simplify(RefArg /*tree*/)
 	Declarations
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002a22c4 DeclarationWalker__9TCompilerFRC6RefVarlN51
+// ROM 0x002c7210 DeclarationWalker__9TCompilerFRC6RefVarlN51
 // Locals, constants, for and foreach loop variables (name|limit,
 // name|incr; name|iter and, when collecting, name|index and
 // name|result), and nested functions, which get a TFunctionState of
@@ -1281,7 +1281,7 @@ DeclarationWalkerTrampoline(void* context, RefArg node, long kind, RefArg a1, Re
 }
 
 
-// ROM 0x002a28d0 WalkForDeclarations__9TCompilerFRC6RefVar
+// ROM 0x002c781c WalkForDeclarations__9TCompilerFRC6RefVar
 void
 TCompiler::WalkForDeclarations(RefArg tree)
 {
@@ -1294,7 +1294,7 @@ TCompiler::WalkForDeclarations(RefArg tree)
 	Closures
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029eaf0 ClosureWalker__9TCompilerFRC6RefVarlN51
+// ROM 0x002c3a3c ClosureWalker__9TCompilerFRC6RefVarlN51
 // Which variables are referenced from where: a variable of this
 // function counts its references (fVarLocs), one of an enclosing
 // function is noted as closed over, a global as needing the message
@@ -1358,7 +1358,7 @@ ClosureWalkerTrampoline(void* context, RefArg node, long kind, RefArg a1, RefArg
 }
 
 
-// ROM 0x0029edb4 WalkForClosures__9TCompilerFRC6RefVar
+// ROM 0x002c3d00 WalkForClosures__9TCompilerFRC6RefVar
 // (the ROM inlines ComputeArgFrame after the walk)
 void
 TCompiler::WalkForClosures(RefArg tree)
@@ -1373,7 +1373,7 @@ TCompiler::WalkForClosures(RefArg tree)
 	Code
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029f08c WalkAssignment__9TCompilerFRC6RefVarT1Uc
+// ROM 0x002c3fd8 WalkAssignment__9TCompilerFRC6RefVarT1Uc
 // lvalue := value: a variable (set-var/set-find-var, the value left
 // unless it is for effect), a path (set-path) or an element (setAref).
 // ==> whether a value is left on the stack.
@@ -1414,7 +1414,7 @@ TCompiler::WalkAssignment(RefArg lvalue, RefArg value, Boolean isEffect)
 }
 
 
-// ROM 0x0029f298 WalkForPath__9TCompilerFRC6RefVarRl
+// ROM 0x002c41e4 WalkForPath__9TCompilerFRC6RefVarRl
 // The code for a path expression a.b.c: the object, then get-path per
 // element until the last, which is answered (a symbol, or a pathExpr of
 // the constant tail) for the caller to push and use; nil when the last
@@ -1470,7 +1470,7 @@ TCompiler::WalkForPath(RefArg expr, long& nilForNil)
 }
 
 
-// ROM 0x0029f5fc WalkForStringer__9TCompilerFRC6RefVar
+// ROM 0x002c4548 WalkForStringer__9TCompilerFRC6RefVar
 // The parts of a & / && concatenation pushed (&& with a " " between);
 // ==> how many.
 long
@@ -1496,7 +1496,7 @@ TCompiler::WalkForStringer(RefArg expr)
 #define WALK_EFFECT(expr)	do { if (WalkForCode(expr, true)) EmitPop(); } while (0)
 
 
-// ROM 0x0029f718 WalkForCode__9TCompilerFRC6RefVarUc
+// ROM 0x002c4664 WalkForCode__9TCompilerFRC6RefVarUc
 // The code of a node.  isEffect: its value is not wanted (a statement,
 // the non-final expressions of a sequence); ==> whether a value was
 // left on the stack anyway.  Warns about a statement with no effect.
@@ -2102,7 +2102,7 @@ TCompiler::WalkForCode(RefArg node, Boolean isEffect)
 	Compiling
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029edf8 Compile__9TCompilerFv
+// ROM 0x002c3d44 Compile__9TCompilerFv
 // The input's commands, parsed and compiled into one function of no
 // arguments (nil when the parse failed): declarations, closures, the
 // closed-over arguments copied, code.
@@ -2155,7 +2155,7 @@ TCompiler::Compile(void)
 }
 
 
-// ROM 0x0029c4b8 ParseString__FRC6RefVar
+// ROM 0x002c1404 ParseString__FRC6RefVar
 // The forms in a string compiled into one function.  (The ROM's stack
 // objects are destroyed by hand on an exception; here they are made on
 // the heap for the same reason - a Throw runs no destructors.)
@@ -2181,7 +2181,7 @@ ParseString(RefArg str)
 }
 
 
-// ROM 0x0029c584 ParseFile__FPc
+// ROM 0x002c14d0 ParseFile__FPc
 // Each form of a file compiled and run (showCodeBlocks prints the
 // function, showLoadResults the result); a compiler error gets the file
 // and line.  ==> the last form's result.
@@ -2243,7 +2243,7 @@ ParseFile(const char* filename)
 	Natives
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00290910 FCompile
+// ROM 0x002b583c FCompile
 Ref
 FCompile(RefArg /*rcvr*/, RefArg str)
 {
@@ -2251,7 +2251,7 @@ FCompile(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x00290918 FDisasm
+// ROM 0x002b5844 FDisasm
 Ref
 FDisasm(RefArg /*rcvr*/, RefArg fn)
 {

@@ -4,8 +4,8 @@
 	Contains:	TUnionSoupIndex and TCursor (Cursors.h), the cursor natives
 				and the soup query methods.
 
-	Reconstructed from the MP2100 D ROM (0x002a8eb8-0x002acef0,
-	0x002c2efc-0x002c3c00, 0x00322c8c-0x00322eb8); each function cites
+	Reconstructed from the MP2x00 US ROM (0x002cdc44-0x002d1c7c,
+	0x002e875c-0x002e9460, 0x0034defc-0x0034e128); each function cites
 	its origin.
 */
 
@@ -35,7 +35,7 @@ static void*	gPermObjectTextCache = nil;
 	T U n i o n S o u p I n d e x
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c2efc __ct__14UnionIndexDataFv
+// ROM 0x002e875c __ct__14UnionIndexDataFv
 UnionIndexData::UnionIndexData()
 {
 	fIndex = nil;
@@ -45,7 +45,7 @@ UnionIndexData::UnionIndexData()
 }
 
 
-// ROM 0x002c2f78 __ct__15TUnionSoupIndexFlP14UnionIndexData
+// ROM 0x002e87d8 __ct__15TUnionSoupIndexFlP14UnionIndexData
 TUnionSoupIndex::TUnionSoupIndex(long numSoups, UnionIndexData* data)
 {
 	fNumSoups = numSoups;
@@ -55,14 +55,14 @@ TUnionSoupIndex::TUnionSoupIndex(long numSoups, UnionIndexData* data)
 }
 
 
-// ROM 0x002c2fcc __dt__15TUnionSoupIndexFv
+// ROM 0x002e882c __dt__15TUnionSoupIndexFv
 TUnionSoupIndex::~TUnionSoupIndex()
 {
 	delete[] fData;
 }
 
 
-// ROM 0x002c3014 Find__15TUnionSoupIndexFP4SKeyN21Uc
+// ROM 0x002e8874 Find__15TUnionSoupIndexFP4SKeyN21Uc
 // The key looked for in every soup: the lowest of what they answer
 // (an exact match beating a next key; a match in a soup with a sorting
 // table is taken when not exact).  ==> Find's result for that soup.
@@ -102,7 +102,7 @@ TUnionSoupIndex::Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact)
 }
 
 
-// ROM 0x002c31c4 First__15TUnionSoupIndexFP4SKeyT1
+// ROM 0x002e8a24 First__15TUnionSoupIndexFP4SKeyT1
 // The lowest first key of the soups.
 int
 TUnionSoupIndex::First(SKey* outKey, SKey* outData)
@@ -132,7 +132,7 @@ TUnionSoupIndex::First(SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c32e8 Last__15TUnionSoupIndexFP4SKeyT1
+// ROM 0x002e8b48 Last__15TUnionSoupIndexFP4SKeyT1
 int
 TUnionSoupIndex::Last(SKey* outKey, SKey* outData)
 {
@@ -161,7 +161,7 @@ TUnionSoupIndex::Last(SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c340c Next__15TUnionSoupIndexFP4SKeyT1iN21
+// ROM 0x002e8c6c Next__15TUnionSoupIndexFP4SKeyT1iN21
 int
 TUnionSoupIndex::Next(SKey* key, SKey* data, int mode, SKey* outKey, SKey* outData)
 {
@@ -169,7 +169,7 @@ TUnionSoupIndex::Next(SKey* key, SKey* data, int mode, SKey* outKey, SKey* outDa
 }
 
 
-// ROM 0x002c3450 Prior__15TUnionSoupIndexFP4SKeyT1UcN21
+// ROM 0x002e8cb0 Prior__15TUnionSoupIndexFP4SKeyT1UcN21
 int
 TUnionSoupIndex::Prior(SKey* key, SKey* data, Boolean skipDups, SKey* outKey, SKey* outData)
 {
@@ -177,7 +177,7 @@ TUnionSoupIndex::Prior(SKey* key, SKey* data, Boolean skipDups, SKey* outKey, SK
 }
 
 
-// ROM 0x002c349c MoveToNextSoup__15TUnionSoupIndexFUciP4SKeyT1
+// ROM 0x002e8cfc MoveToNextSoup__15TUnionSoupIndexFUciP4SKeyT1
 // The soup with the next key after key (before it, backwards) becomes
 // the current one: each soup not yet exhausted is positioned at the key
 // after (its state kept), and the lowest (highest) wins - the current
@@ -261,7 +261,7 @@ compare:
 }
 
 
-// ROM 0x002c3698 InvalidateState__15TUnionSoupIndexFv
+// ROM 0x002e8ef8 InvalidateState__15TUnionSoupIndexFv
 void
 TUnionSoupIndex::InvalidateState(void)
 {
@@ -270,7 +270,7 @@ TUnionSoupIndex::InvalidateState(void)
 }
 
 
-// ROM 0x002c36c4 IsValidState__15TUnionSoupIndexFP4SKeyT1
+// ROM 0x002e8f24 IsValidState__15TUnionSoupIndexFP4SKeyT1
 // The states still stand: no soup's node cache has changed since, and
 // the current soup is positioned on key/data.  The valid soups' nodes
 // are marked in use again.
@@ -302,7 +302,7 @@ TUnionSoupIndex::IsValidState(SKey* key, SKey* data)
 }
 
 
-// ROM 0x002c37dc Search__15TUnionSoupIndexFUcP4SKeyT2PFP4SKeyT1Pv_iPvN22i
+// ROM 0x002e903c Search__15TUnionSoupIndexFUcP4SKeyT2PFP4SKeyT1Pv_iPvN22i
 // From key/data in the current soup, each entry in turn (in order across
 // the soups) to stop until it says so; the soups' states are kept
 // between calls while they stay valid.  ==> kIndexOK when stopped,
@@ -383,7 +383,7 @@ TUnionSoupIndex::Search(Boolean forward, SKey* key, SKey* data, IndexStopProcPtr
 }
 
 
-// ROM 0x002c3a1c CurrentSoupGone__15TUnionSoupIndexFP4SKeyN21
+// ROM 0x002e927c CurrentSoupGone__15TUnionSoupIndexFP4SKeyN21
 // The current soup has gone: the soup with the next key after key takes
 // its place (outKey/outData its entry); none: the first soup is current.
 // ==> kIndexOK, kIndexEnd, or an exception's error.
@@ -412,7 +412,7 @@ TUnionSoupIndex::CurrentSoupGone(SKey* key, SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c3bbc Commit__15TUnionSoupIndexFv
+// ROM 0x002e941c Commit__15TUnionSoupIndexFv
 void
 TUnionSoupIndex::Commit(void)
 {
@@ -424,7 +424,7 @@ TUnionSoupIndex::Commit(void)
 }
 
 
-// ROM 0x002c3bf8 SetCurrentSoup__15TUnionSoupIndexFl
+// ROM 0x002e9458 SetCurrentSoup__15TUnionSoupIndexFl
 void
 TUnionSoupIndex::SetCurrentSoup(long index)
 {
@@ -437,7 +437,7 @@ TUnionSoupIndex::SetCurrentSoup(long index)
 	T C u r s o r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002a8eb8 __ct__14CursorSoupInfoFv
+// ROM 0x002cdc44 __ct__14CursorSoupInfoFv
 CursorSoupInfo::CursorSoupInfo()
 {
 	fSoup = NILREF;
@@ -445,7 +445,7 @@ CursorSoupInfo::CursorSoupInfo()
 }
 
 
-// ROM 0x002ab234 __ct__7TCursorFv
+// ROM 0x002cffc0 __ct__7TCursorFv
 TCursor::TCursor()
 {
 	fParkedAtEnd = false;
@@ -480,14 +480,14 @@ TCursor::TCursor()
 }
 
 
-// ROM 0x002ac890 __dt__7TCursorFv
+// ROM 0x002d161c __dt__7TCursorFv
 TCursor::~TCursor()
 {
 	Invalidate();
 }
 
 
-// ROM 0x002a8ef4 Invalidate__7TCursorFv
+// ROM 0x002cdc80 Invalidate__7TCursorFv
 // The indexes and soup info let go; no soups, no entry.
 void
 TCursor::Invalidate(void)
@@ -534,7 +534,7 @@ GCDeleteCursor(void* cursor)
 }
 
 
-// ROM 0x002aac44 CreateNewCursor__7TCursorSFv
+// ROM 0x002cf9d0 CreateNewCursor__7TCursorSFv
 // A cursor frame: cursorPrototype with a TCursor in a C-object binary.
 Ref
 TCursor::CreateNewCursor(void)
@@ -549,7 +549,7 @@ TCursor::CreateNewCursor(void)
 }
 
 
-// ROM 0x002ab538 CursorObj__FRC6RefVar
+// ROM 0x002d02c4 CursorObj__FRC6RefVar
 TCursor*
 CursorObj(RefArg cursor)
 {
@@ -558,7 +558,7 @@ CursorObj(RefArg cursor)
 }
 
 
-// ROM 0x002ab568 GCMark__7TCursorFv
+// ROM 0x002d02f4 GCMark__7TCursorFv
 void
 TCursor::GCMark(void)
 {
@@ -592,7 +592,7 @@ TCursor::GCMark(void)
 }
 
 
-// ROM 0x002ab648 GCUpdate__7TCursorFv
+// ROM 0x002d03d4 GCUpdate__7TCursorFv
 void
 TCursor::GCUpdate(void)
 {
@@ -626,7 +626,7 @@ TCursor::GCUpdate(void)
 }
 
 
-// ROM 0x002a91e4 CloneFrameSlot__7TCursorCFRC6RefVarT1
+// ROM 0x002cdf70 CloneFrameSlot__7TCursorCFRC6RefVarT1
 // A total clone of a slot's value; nil for none.
 Ref
 TCursor::CloneFrameSlot(RefArg frame, RefArg tag) const
@@ -638,7 +638,7 @@ TCursor::CloneFrameSlot(RefArg frame, RefArg tag) const
 }
 
 
-// ROM 0x002ab818 Init__7TCursorFRC6RefVarN21
+// ROM 0x002d05a4 Init__7TCursorFRC6RefVarN21
 // The cursor over soup for the query spec: the spec's parts taken (the
 // keys total-cloned, the tags/words/text noted), the soups' info and
 // indexes built, the cursor registered with the soup(s).
@@ -717,7 +717,7 @@ TCursor::Init(RefArg cursor, RefArg soup, RefArg querySpec)
 }
 
 
-// ROM 0x002abe1c Init__7TCursorFRC6RefVarPC7TCursor
+// ROM 0x002d0ba8 Init__7TCursorFRC6RefVarPC7TCursor
 // A clone of another cursor: its query, position and state, over its
 // own soup info and indexes.
 void
@@ -784,7 +784,7 @@ TCursor::Init(RefArg cursor, const TCursor* other)
 }
 
 
-// ROM 0x002a9238 BuildSoupsInfo__7TCursorFv
+// ROM 0x002cdfc4 BuildSoupsInfo__7TCursorFv
 // The soups queried (a union soup's soupList, else the soup itself) with
 // what the query needs of each: the index on the path must be there (the
 // first soup's index type is the cursor's; a tags index cannot be
@@ -874,7 +874,7 @@ TCursor::BuildSoupsInfo(void)
 }
 
 
-// ROM 0x002a9738 CreateIndexes__7TCursorFv
+// ROM 0x002ce4c4 CreateIndexes__7TCursorFv
 // The union index over each soup's index on the path (and the tags
 // indexes when the query has tags).
 void
@@ -923,7 +923,7 @@ TCursor::CreateIndexes(void)
 }
 
 
-// ROM 0x002ab2d4 RegisterInSoup__7TCursorCFRC6RefVar
+// ROM 0x002d0060 RegisterInSoup__7TCursorCFRC6RefVar
 // The cursor frame put in the soup's cursors cache (and each of a union
 // soup's soups').
 void
@@ -942,7 +942,7 @@ TCursor::RegisterInSoup(RefArg soup) const
 }
 
 
-// ROM 0x002ab3e0 UnregisterFromSoup__7TCursorCFRC6RefVar
+// ROM 0x002d016c UnregisterFromSoup__7TCursorCFRC6RefVar
 void
 TCursor::UnregisterFromSoup(RefArg soup) const
 {
@@ -963,7 +963,7 @@ TCursor::UnregisterFromSoup(RefArg soup) const
 }
 
 
-// ROM 0x002a99b0 ExitParking__7TCursorFUc
+// ROM 0x002ce73c ExitParking__7TCursorFUc
 // From a parked cursor to the first entry in the direction: nothing
 // when parked at that end; else the begin key (or the first key), or
 // backwards the end key (or the last).  ==> the index result.
@@ -994,7 +994,7 @@ TCursor::ExitParking(Boolean forward)
 }
 
 
-// ROM 0x002a9ae0 KeyBoundsValidTest__7TCursorFRC4SKeyUc
+// ROM 0x002ce86c KeyBoundsValidTest__7TCursorFRC4SKeyUc
 // Whether the key is within the begin key (atEnd false) or end key.
 Boolean
 TCursor::KeyBoundsValidTest(const SKey& key, Boolean atEnd)
@@ -1022,7 +1022,7 @@ TCursor::KeyBoundsValidTest(const SKey& key, Boolean atEnd)
 }
 
 
-// ROM 0x002a9c90 WordsValidTest__7TCursorFUl
+// ROM 0x002cea1c WordsValidTest__7TCursorFUl
 // NOT YET RECONSTRUCTED: TestObjHints, WithPermObjectTextDo.
 Boolean
 TCursor::WordsValidTest(PSSId /*id*/)
@@ -1032,7 +1032,7 @@ TCursor::WordsValidTest(PSSId /*id*/)
 }
 
 
-// ROM 0x002a9d84 TextValidTest__7TCursorFUl
+// ROM 0x002ceb10 TextValidTest__7TCursorFUl
 Boolean
 TCursor::TextValidTest(PSSId /*id*/)
 {
@@ -1041,7 +1041,7 @@ TCursor::TextValidTest(PSSId /*id*/)
 }
 
 
-// ROM 0x002a9e20 ValidTest__7TCursorFRC4SKeyUlUcPUcT4
+// ROM 0x002cebac ValidTest__7TCursorFRC4SKeyUlUcPUcT4
 // Whether the entry at key/id passes the query: within the key bound in
 // the direction (else outOfBounds: no further entry will), the tags,
 // words and text (NOT YET), indexValidTest of the key, then - the entry
@@ -1101,7 +1101,7 @@ TCursor::ValidTest(const SKey& key, PSSId id, Boolean atEnd, Boolean* entryMade,
 }
 
 
-// ROM 0x002aa0f8 CursorStopFn__FP4SKeyT1Pv
+// ROM 0x002cee84 CursorStopFn__FP4SKeyT1Pv
 // The stop function of Move's search: each valid entry counts one step;
 // stop at the step wanted, or when the bounds are passed.
 struct CursorMoveInfo
@@ -1127,7 +1127,7 @@ CursorStopFn(SKey* key, SKey* data, void* refCon)
 }
 
 
-// ROM 0x002aa164 Move__7TCursorFl
+// ROM 0x002ceef0 Move__7TCursorFl
 // The cursor moved count entries (back for a negative count; 0 re-tests
 // the current one): out of parking first, then entry by entry counting
 // the valid ones; parked at the end when the entries run out.  ==> the
@@ -1194,7 +1194,7 @@ TCursor::Move(long count)
 }
 
 
-// ROM 0x002aa364 Entry__7TCursorFv
+// ROM 0x002cf0f0 Entry__7TCursorFv
 // The current entry; 'deleted when it has been removed from its soup.
 Ref
 TCursor::Entry(void)
@@ -1203,7 +1203,7 @@ TCursor::Entry(void)
 }
 
 
-// ROM 0x002aa384 EntryKey__7TCursorFv
+// ROM 0x002cf110 EntryKey__7TCursorFv
 Ref
 TCursor::EntryKey(void)
 {
@@ -1213,7 +1213,7 @@ TCursor::EntryKey(void)
 }
 
 
-// ROM 0x002aa3e8 GetState__7TCursorFP11CursorState
+// ROM 0x002cf174 GetState__7TCursorFP11CursorState
 void
 TCursor::GetState(CursorState* state)
 {
@@ -1230,7 +1230,7 @@ TCursor::GetState(CursorState* state)
 }
 
 
-// ROM 0x002aa474 SetState__7TCursorFR11CursorState
+// ROM 0x002cf200 SetState__7TCursorFR11CursorState
 void
 TCursor::SetState(CursorState& state)
 {
@@ -1247,7 +1247,7 @@ TCursor::SetState(CursorState& state)
 }
 
 
-// ROM 0x002aa500 MakeEntryFaultBlock__7TCursorFUl
+// ROM 0x002cf28c MakeEntryFaultBlock__7TCursorFUl
 // The current soup's entry for store object id becomes the entry.
 void
 TCursor::MakeEntryFaultBlock(PSSId id)
@@ -1257,7 +1257,7 @@ TCursor::MakeEntryFaultBlock(PSSId id)
 }
 
 
-// ROM 0x002aa54c Park__7TCursorFUc
+// ROM 0x002cf2d8 Park__7TCursorFUc
 // No entry: parked before the first or after the last.
 void
 TCursor::Park(Boolean atEnd)
@@ -1269,7 +1269,7 @@ TCursor::Park(Boolean atEnd)
 }
 
 
-// ROM 0x002aa56c CountEntriesStopFn__FP4SKeyT1Pv
+// ROM 0x002cf2f8 CountEntriesStopFn__FP4SKeyT1Pv
 struct CursorCountInfo
 {
 	TCursor*	fCursor;
@@ -1288,7 +1288,7 @@ CountEntriesStopFn(SKey* key, SKey* data, void* refCon)
 }
 
 
-// ROM 0x002aa5d4 CountEntries__7TCursorFv
+// ROM 0x002cf360 CountEntries__7TCursorFv
 // The valid entries from the start, the cursor's position kept.
 long
 TCursor::CountEntries(void)
@@ -1323,7 +1323,7 @@ TCursor::CountEntries(void)
 }
 
 
-// ROM 0x002aa6f8 RebuildInfo__7TCursorFUcl
+// ROM 0x002cf484 RebuildInfo__7TCursorFUcl
 // The soup info (unless kept) and the indexes rebuilt after the soups or
 // their indexes changed; removedSoup (-1: none) is the union soup index
 // that went - the position follows the current soup, and when that is
@@ -1374,7 +1374,7 @@ TCursor::RebuildInfo(Boolean keepSoupInfo, long removedSoup)
 }
 
 
-// ROM 0x002aa7ec GetSoupInfoIndex__7TCursorFRC6RefVar
+// ROM 0x002cf578 GetSoupInfoIndex__7TCursorFRC6RefVar
 long
 TCursor::GetSoupInfoIndex(RefArg soup)
 {
@@ -1385,7 +1385,7 @@ TCursor::GetSoupInfoIndex(RefArg soup)
 }
 
 
-// ROM 0x002aa83c SoupRemoved__7TCursorFRC6RefVar
+// ROM 0x002cf5c8 SoupRemoved__7TCursorFRC6RefVar
 // A soup went: the cursor's own (or a union soup's only one) invalidates
 // it; one of a union's soups has the info rebuilt; another soup that
 // cached this cursor drops it.
@@ -1410,7 +1410,7 @@ TCursor::SoupRemoved(RefArg soup)
 }
 
 
-// ROM 0x002aa8c0 SoupAdded__7TCursorFRC6RefVar
+// ROM 0x002cf64c SoupAdded__7TCursorFRC6RefVar
 // A soup joined the union: the info rebuilt when it has the index (and
 // tags index) the query needs; otherwise the cursor is invalid, missing
 // an index.
@@ -1431,7 +1431,7 @@ TCursor::SoupAdded(RefArg soup)
 }
 
 
-// ROM 0x002aa9a8 Status__7TCursorFv
+// ROM 0x002cf734 Status__7TCursorFv
 Ref
 TCursor::Status(void)
 {
@@ -1439,7 +1439,7 @@ TCursor::Status(void)
 }
 
 
-// ROM 0x002aa9cc SetSoup__7TCursorFRC6RefVar
+// ROM 0x002cf758 SetSoup__7TCursorFRC6RefVar
 void
 TCursor::SetSoup(RefArg soup)
 {
@@ -1449,7 +1449,7 @@ TCursor::SetSoup(RefArg soup)
 }
 
 
-// ROM 0x002aaa90 IndexRemoved__7TCursorFRC6RefVarT1
+// ROM 0x002cf81c IndexRemoved__7TCursorFRC6RefVarT1
 // The index the query uses (or its tags index) went: invalid.
 void
 TCursor::IndexRemoved(RefArg /*soup*/, RefArg indexDesc)
@@ -1471,7 +1471,7 @@ TCursor::IndexRemoved(RefArg /*soup*/, RefArg indexDesc)
 }
 
 
-// ROM 0x002aab7c IndexObjectsChanged__7TCursorFv
+// ROM 0x002cf908 IndexObjectsChanged__7TCursorFv
 // The soup's TSoupIndex objects were remade: the indexes rebuilt.
 void
 TCursor::IndexObjectsChanged(void)
@@ -1482,7 +1482,7 @@ TCursor::IndexObjectsChanged(void)
 }
 
 
-// ROM 0x002aab98 SoupTagsChanged__7TCursorFRC6RefVar
+// ROM 0x002cf924 SoupTagsChanged__7TCursorFRC6RefVar
 // The soup's tags changed: the query's tags re-encoded for it.
 void
 TCursor::SoupTagsChanged(RefArg soup)
@@ -1497,7 +1497,7 @@ TCursor::SoupTagsChanged(RefArg soup)
 }
 
 
-// ROM 0x002aacd4 PinCurrentKey__7TCursorFv
+// ROM 0x002cfa60 PinCurrentKey__7TCursorFv
 // The current key kept within the query's bounds: before the begin key
 // the cursor resets, after the end key it resets to the end.  ==> whether
 // it moved.
@@ -1518,7 +1518,7 @@ TCursor::PinCurrentKey(void)
 }
 
 
-// ROM 0x002aad38 GotoKey__7TCursorFRC6RefVar
+// ROM 0x002cfac4 GotoKey__7TCursorFRC6RefVar
 // The cursor to the entry with the key, or the one after it; parked at
 // the end when there is none.  ==> the entry.
 Ref
@@ -1543,7 +1543,7 @@ TCursor::GotoKey(RefArg key)
 }
 
 
-// ROM 0x002aae10 GotoEntry__7TCursorFRC6RefVar
+// ROM 0x002cfb9c GotoEntry__7TCursorFRC6RefVar
 // The cursor to the entry: an entry of one of the query's soups is
 // looked up in that soup's index (and pinned within the bounds), another
 // soup's found by its key.  ==> whether the cursor is now on it.
@@ -1582,7 +1582,7 @@ TCursor::GotoEntry(RefArg entry)
 }
 
 
-// ROM 0x002ab028 Reset__7TCursorFv
+// ROM 0x002cfdb4 Reset__7TCursorFv
 // To the start key when the query has one, else parked before the first
 // and moved to it.
 Ref
@@ -1595,7 +1595,7 @@ TCursor::Reset(void)
 }
 
 
-// ROM 0x002ab098 ResetToEnd__7TCursorFv
+// ROM 0x002cfe24 ResetToEnd__7TCursorFv
 Ref
 TCursor::ResetToEnd(void)
 {
@@ -1604,7 +1604,7 @@ TCursor::ResetToEnd(void)
 }
 
 
-// ROM 0x002ab0c4 IsParked__7TCursorFv
+// ROM 0x002cfe50 IsParked__7TCursorFv
 // 'begin or 'end when parked; nil when on an entry.
 Ref
 TCursor::IsParked(void)
@@ -1615,7 +1615,7 @@ TCursor::IsParked(void)
 }
 
 
-// ROM 0x002ab0f8 EntryChanged__7TCursorFRC6RefVarUcT2
+// ROM 0x002cfe84 EntryChanged__7TCursorFRC6RefVarUcT2
 // The current entry was changed: its keys changed, the cursor finds it
 // again; its tags changed, the entry is re-tested.
 void
@@ -1633,7 +1633,7 @@ TCursor::EntryChanged(RefArg entry, Boolean keysChanged, Boolean tagsChanged)
 }
 
 
-// ROM 0x002ab168 EntryReadded__7TCursorFRC6RefVarT1
+// ROM 0x002cfef4 EntryReadded__7TCursorFRC6RefVarT1
 // The current entry was added to another soup: this soup's fault block
 // for it is the entry now.
 void
@@ -1644,7 +1644,7 @@ TCursor::EntryReadded(RefArg entry, RefArg faultBlock)
 }
 
 
-// ROM 0x002ab1a0 EntryRemoved__7TCursorFRC6RefVar
+// ROM 0x002cff2c EntryRemoved__7TCursorFRC6RefVar
 // The current entry was removed: on to the next one, remembered as
 // standing in for the removed one (Entry answers 'deleted).
 void
@@ -1658,7 +1658,7 @@ TCursor::EntryRemoved(RefArg entry)
 }
 
 
-// ROM 0x002ab1f4 EntrySoupChanged__7TCursorFRC6RefVarT1
+// ROM 0x002cff80 EntrySoupChanged__7TCursorFRC6RefVarT1
 void
 TCursor::EntrySoupChanged(RefArg entry, RefArg newEntry)
 {
@@ -1668,7 +1668,7 @@ TCursor::EntrySoupChanged(RefArg entry, RefArg newEntry)
 }
 
 
-// ROM 0x002ab4f0 Clone__7TCursorFv
+// ROM 0x002d027c Clone__7TCursorFv
 Ref
 TCursor::Clone(void)
 {
@@ -1683,7 +1683,7 @@ TCursor::Clone(void)
 	The matching entries collected up front as [id, soup index] pairs.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ac800 __ct__14TCollectCursorFv
+// ROM 0x002d158c __ct__14TCollectCursorFv
 TCollectCursor::TCollectCursor()
 {
 	fCurrent = 0;
@@ -1691,12 +1691,12 @@ TCollectCursor::TCollectCursor()
 }
 
 
-// ROM 0x002ac850 __dt__14TCollectCursorFv
+// ROM 0x002d15dc __dt__14TCollectCursorFv
 TCollectCursor::~TCollectCursor()
 { }
 
 
-// ROM 0x002ac770 CreateNewCollectCursor__14TCollectCursorSFv
+// ROM 0x002d14fc CreateNewCollectCursor__14TCollectCursorSFv
 Ref
 TCollectCursor::CreateNewCollectCursor(void)
 {
@@ -1710,7 +1710,7 @@ TCollectCursor::CreateNewCollectCursor(void)
 }
 
 
-// ROM 0x002a8f80 Invalidate__14TCollectCursorFv
+// ROM 0x002cdd0c Invalidate__14TCollectCursorFv
 void
 TCollectCursor::Invalidate(void)
 {
@@ -1719,7 +1719,7 @@ TCollectCursor::Invalidate(void)
 }
 
 
-// ROM 0x002a8fac GCMark__14TCollectCursorFv
+// ROM 0x002cdd38 GCMark__14TCollectCursorFv
 void
 TCollectCursor::GCMark(void)
 {
@@ -1728,7 +1728,7 @@ TCollectCursor::GCMark(void)
 }
 
 
-// ROM 0x002a8fcc GCUpdate__14TCollectCursorFv
+// ROM 0x002cdd58 GCUpdate__14TCollectCursorFv
 void
 TCollectCursor::GCUpdate(void)
 {
@@ -1737,7 +1737,7 @@ TCollectCursor::GCUpdate(void)
 }
 
 
-// ROM 0x002ac6a0 CollectStopFn__FP4SKeyT1Pv
+// ROM 0x002d142c CollectStopFn__FP4SKeyT1Pv
 struct CollectInfo
 {
 	TCursor*	fCursor;
@@ -1764,7 +1764,7 @@ CollectStopFn(SKey* key, SKey* data, void* refCon)
 }
 
 
-// ROM 0x002ac8f0 Collect__14TCollectCursorFv
+// ROM 0x002d167c Collect__14TCollectCursorFv
 // Every valid entry from the start collected; the cursor left on the
 // first.
 void
@@ -1794,7 +1794,7 @@ TCollectCursor::Collect(void)
 }
 
 
-// ROM 0x002a8f5c RebuildInfo__14TCollectCursorFUcl
+// ROM 0x002cdce8 RebuildInfo__14TCollectCursorFUcl
 void
 TCollectCursor::RebuildInfo(Boolean keepSoupInfo, long removedSoup)
 {
@@ -1803,7 +1803,7 @@ TCollectCursor::RebuildInfo(Boolean keepSoupInfo, long removedSoup)
 }
 
 
-// ROM 0x002aca40 Move__14TCollectCursorFl
+// ROM 0x002d17cc Move__14TCollectCursorFl
 // count entries along the collected list; parked past either end.
 Ref
 TCollectCursor::Move(long count)
@@ -1822,7 +1822,7 @@ TCollectCursor::Move(long count)
 }
 
 
-// ROM 0x002acabc DefineCurrentEntry__14TCollectCursorFv
+// ROM 0x002d1848 DefineCurrentEntry__14TCollectCursorFv
 void
 TCollectCursor::DefineCurrentEntry(void)
 {
@@ -1835,7 +1835,7 @@ TCollectCursor::DefineCurrentEntry(void)
 }
 
 
-// ROM 0x002acb50 FindEntry__14TCollectCursorFRC6RefVar
+// ROM 0x002d18dc FindEntry__14TCollectCursorFRC6RefVar
 // The entry's place in the collected list; -1 for none.
 long
 TCollectCursor::FindEntry(RefArg entry)
@@ -1855,7 +1855,7 @@ TCollectCursor::FindEntry(RefArg entry)
 }
 
 
-// ROM 0x002acc3c GotoEntry__14TCollectCursorFRC6RefVar
+// ROM 0x002d19c8 GotoEntry__14TCollectCursorFRC6RefVar
 Ref
 TCollectCursor::GotoEntry(RefArg entry)
 {
@@ -1870,7 +1870,7 @@ TCollectCursor::GotoEntry(RefArg entry)
 }
 
 
-// ROM 0x002accac GotoKey__14TCollectCursorFRC6RefVar
+// ROM 0x002d1a38 GotoKey__14TCollectCursorFRC6RefVar
 Ref
 TCollectCursor::GotoKey(RefArg key)
 {
@@ -1881,7 +1881,7 @@ TCollectCursor::GotoKey(RefArg key)
 }
 
 
-// ROM 0x002acd00 CountEntries__14TCollectCursorFv
+// ROM 0x002d1a8c CountEntries__14TCollectCursorFv
 long
 TCollectCursor::CountEntries(void)
 {
@@ -1889,7 +1889,7 @@ TCollectCursor::CountEntries(void)
 }
 
 
-// ROM 0x002acd20 Clone__14TCollectCursorFv
+// ROM 0x002d1aac Clone__14TCollectCursorFv
 Ref
 TCollectCursor::Clone(void)
 {
@@ -1899,7 +1899,7 @@ TCollectCursor::Clone(void)
 }
 
 
-// ROM 0x002acd7c EntryRemoved__14TCollectCursorFRC6RefVar
+// ROM 0x002d1b08 EntryRemoved__14TCollectCursorFRC6RefVar
 // The entry out of the list; the current one moves up when it was the
 // one removed.
 void
@@ -1928,7 +1928,7 @@ TCollectCursor::EntryRemoved(RefArg entry)
 }
 
 
-// ROM 0x002ace44 EntrySoupChanged__14TCollectCursorFRC6RefVarT1
+// ROM 0x002d1bd0 EntrySoupChanged__14TCollectCursorFRC6RefVarT1
 // The entry moved to another soup: its list entry follows it when that
 // soup is one of the query's, else it leaves the list.
 void
@@ -1956,7 +1956,7 @@ TCollectCursor::EntrySoupChanged(RefArg entry, RefArg newEntry)
 	T h e   s o u p ' s   c u r s o r s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002a8ff0 EachSoupCursorDo__FRC6RefVarlN21
+// ROM 0x002cdd7c EachSoupCursorDo__FRC6RefVarlN21
 // Every cursor in the soup's cursors cache told what happened.
 void
 EachSoupCursorDo(RefArg soup, int op, RefArg arg1, RefArg arg2)
@@ -2003,7 +2003,7 @@ EachSoupCursorDo(RefArg soup, int op, RefArg arg1, RefArg arg2)
 }
 
 
-// ROM 0x002a913c EachSoupCursorDo__FRC6RefVarl
+// ROM 0x002cdec8 EachSoupCursorDo__FRC6RefVarl
 void
 EachSoupCursorDo(RefArg soup, int op)
 {
@@ -2013,7 +2013,7 @@ EachSoupCursorDo(RefArg soup, int op)
 }
 
 
-// ROM 0x002a919c EachSoupCursorDo__FRC6RefVarlT1
+// ROM 0x002cdf28 EachSoupCursorDo__FRC6RefVarlT1
 void
 EachSoupCursorDo(RefArg soup, int op, RefArg arg)
 {
@@ -2042,7 +2042,7 @@ EachSoupCursorEntryChanged(RefArg soup, RefArg entry, Boolean keysChanged, Boole
 	Q u e r i e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00322c8c DefineCursor__FRC6RefVarN21
+// ROM 0x0034defc DefineCursor__FRC6RefVarN21
 // The cursor set up over the soup for the query (a union soup with an
 // errorCode: over its last soup, and cached in the union soup's cursors).
 void
@@ -2064,7 +2064,7 @@ DefineCursor(RefArg soup, RefArg querySpec, RefArg cursor)
 }
 
 
-// ROM 0x00322d98 CommonSoupQuery
+// ROM 0x0034e008 CommonSoupQuery
 // A soup's Query method: a new cursor, reset to its first entry.
 Ref
 CommonSoupQuery(RefArg rcvr, RefArg querySpec)
@@ -2076,7 +2076,7 @@ CommonSoupQuery(RefArg rcvr, RefArg querySpec)
 }
 
 
-// ROM 0x00322dec SoupCollect
+// ROM 0x0034e05c SoupCollect
 // A soup's collect method: a collect cursor (a plain query when memory
 // runs out).
 Ref
@@ -2105,7 +2105,7 @@ SoupCollect(RefArg rcvr, RefArg querySpec)
 	The cursor prototype's methods (the receiver is the cursor frame).
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ab76c CursorMove__FRC6RefVarl
+// ROM 0x002d04f8 CursorMove__FRC6RefVarl
 Ref
 CursorMove(RefArg cursor, long count)
 {
@@ -2113,7 +2113,7 @@ CursorMove(RefArg cursor, long count)
 }
 
 
-// ROM 0x002abd64 CursorNext__FRC6RefVar
+// ROM 0x002d0af0 CursorNext__FRC6RefVar
 Ref
 CursorNext(RefArg cursor)
 {
@@ -2121,7 +2121,7 @@ CursorNext(RefArg cursor)
 }
 
 
-// ROM 0x002abd68 CursorPrev__FRC6RefVar
+// ROM 0x002d0af4 CursorPrev__FRC6RefVar
 Ref
 CursorPrev(RefArg cursor)
 {
@@ -2129,7 +2129,7 @@ CursorPrev(RefArg cursor)
 }
 
 
-// ROM 0x002abd6c CursorReset__FRC6RefVar
+// ROM 0x002d0af8 CursorReset__FRC6RefVar
 Ref
 CursorReset(RefArg cursor)
 {
@@ -2137,7 +2137,7 @@ CursorReset(RefArg cursor)
 }
 
 
-// ROM 0x002abd70 CursorEntry__FRC6RefVar
+// ROM 0x002d0afc CursorEntry__FRC6RefVar
 Ref
 CursorEntry(RefArg cursor)
 {
@@ -2145,7 +2145,7 @@ CursorEntry(RefArg cursor)
 }
 
 
-// ROM 0x002abd74 CursorClone__FRC6RefVar
+// ROM 0x002d0b00 CursorClone__FRC6RefVar
 Ref
 CursorClone(RefArg cursor)
 {
@@ -2153,7 +2153,7 @@ CursorClone(RefArg cursor)
 }
 
 
-// ROM 0x002abd5c CursorGoto__FRC6RefVarT1
+// ROM 0x002d0ae8 CursorGoto__FRC6RefVarT1
 Ref
 CursorGoto(RefArg cursor, RefArg entry)
 {
@@ -2161,7 +2161,7 @@ CursorGoto(RefArg cursor, RefArg entry)
 }
 
 
-// ROM 0x002abd60 CursorGotoKey__FRC6RefVarT1
+// ROM 0x002d0aec CursorGotoKey__FRC6RefVarT1
 Ref
 CursorGotoKey(RefArg cursor, RefArg key)
 {
@@ -2169,7 +2169,7 @@ CursorGotoKey(RefArg cursor, RefArg key)
 }
 
 
-// ROM 0x002ab78c FCursorMove
+// ROM 0x002d0518 FCursorMove
 static Ref
 FCursorMove(RefArg rcvr, RefArg count)
 {
@@ -2177,7 +2177,7 @@ FCursorMove(RefArg rcvr, RefArg count)
 }
 
 
-// ROM 0x002ab7d0 FCursorGoto
+// ROM 0x002d055c FCursorGoto
 static Ref
 FCursorGoto(RefArg rcvr, RefArg entry)
 {
@@ -2185,7 +2185,7 @@ FCursorGoto(RefArg rcvr, RefArg entry)
 }
 
 
-// ROM 0x002ab7f4 FCursorGotoKey
+// ROM 0x002d0580 FCursorGotoKey
 static Ref
 FCursorGotoKey(RefArg rcvr, RefArg key)
 {
@@ -2193,7 +2193,7 @@ FCursorGotoKey(RefArg rcvr, RefArg key)
 }
 
 
-// ROM 0x002abbcc FCursorNext
+// ROM 0x002d0958 FCursorNext
 static Ref
 FCursorNext(RefArg rcvr)
 {
@@ -2201,7 +2201,7 @@ FCursorNext(RefArg rcvr)
 }
 
 
-// ROM 0x002abbe8 FCursorPrev
+// ROM 0x002d0974 FCursorPrev
 static Ref
 FCursorPrev(RefArg rcvr)
 {
@@ -2209,7 +2209,7 @@ FCursorPrev(RefArg rcvr)
 }
 
 
-// ROM 0x002abc04 FCursorEntry
+// ROM 0x002d0990 FCursorEntry
 static Ref
 FCursorEntry(RefArg rcvr)
 {
@@ -2217,7 +2217,7 @@ FCursorEntry(RefArg rcvr)
 }
 
 
-// ROM 0x002abc1c FCursorReset
+// ROM 0x002d09a8 FCursorReset
 static Ref
 FCursorReset(RefArg rcvr)
 {
@@ -2225,7 +2225,7 @@ FCursorReset(RefArg rcvr)
 }
 
 
-// ROM 0x002abc34 CursorResetToEnd
+// ROM 0x002d09c0 CursorResetToEnd
 static Ref
 CursorResetToEnd(RefArg rcvr)
 {
@@ -2233,7 +2233,7 @@ CursorResetToEnd(RefArg rcvr)
 }
 
 
-// ROM 0x002abc4c FCursorClone
+// ROM 0x002d09d8 FCursorClone
 static Ref
 FCursorClone(RefArg rcvr)
 {
@@ -2241,7 +2241,7 @@ FCursorClone(RefArg rcvr)
 }
 
 
-// ROM 0x002abc68 CursorCountEntries
+// ROM 0x002d09f4 CursorCountEntries
 static Ref
 CursorCountEntries(RefArg rcvr)
 {
@@ -2249,7 +2249,7 @@ CursorCountEntries(RefArg rcvr)
 }
 
 
-// ROM 0x002abc8c CursorWhichEnd
+// ROM 0x002d0a18 CursorWhichEnd
 static Ref
 CursorWhichEnd(RefArg rcvr)
 {
@@ -2257,7 +2257,7 @@ CursorWhichEnd(RefArg rcvr)
 }
 
 
-// ROM 0x002abca4 CursorSoup
+// ROM 0x002d0a30 CursorSoup
 static Ref
 CursorSoup(RefArg rcvr)
 {
@@ -2265,7 +2265,7 @@ CursorSoup(RefArg rcvr)
 }
 
 
-// ROM 0x002abcbc CursorIndexPath
+// ROM 0x002d0a48 CursorIndexPath
 static Ref
 CursorIndexPath(RefArg rcvr)
 {
@@ -2273,7 +2273,7 @@ CursorIndexPath(RefArg rcvr)
 }
 
 
-// ROM 0x002abd2c CursorEntryKey
+// ROM 0x002d0ab8 CursorEntryKey
 static Ref
 CursorEntryKey(RefArg rcvr)
 {
@@ -2281,7 +2281,7 @@ CursorEntryKey(RefArg rcvr)
 }
 
 
-// ROM 0x002abd44 CursorStatus
+// ROM 0x002d0ad0 CursorStatus
 static Ref
 CursorStatus(RefArg rcvr)
 {

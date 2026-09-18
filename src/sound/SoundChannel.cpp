@@ -4,7 +4,7 @@
 	Contains:	TUSoundChannel's settings and the global channel
 				(SoundChannel.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SoundChannel.h"
@@ -20,7 +20,7 @@ TObjectId		gSndPort = 0;			// ROM 0x0c101cec
 TUSoundChannel*	gSoundChannel = nil;	// ROM 0x0c101ce4
 
 
-// ROM 0x0025886c __ct__14TUSoundChannelFv
+// ROM 0x0025a7a4 __ct__14TUSoundChannelFv
 // Nothing scheduled, no channel open, the volume "never set"
 // (0x7fffffff) and the input gain at 0x80; the gestalt says whether the
 // server can be asked for the volume, which is what GetVolume goes on.
@@ -55,7 +55,7 @@ TUSoundChannel::TUSoundChannel()
 }
 
 
-// ROM 0x002591c4 SendImmediate__14TUSoundChannelFUlN21P12TUSoundReplyT1
+// ROM 0x0025b0fc SendImmediate__14TUSoundChannelFUlN21P12TUSoundReplyT1
 // One 'newt/'usnd event carrying {command, channel, value}, sent to the
 // sound server's port and answered on the spot.
 //
@@ -76,7 +76,7 @@ TUSoundChannel::SendImmediate(ULong command, ULong channelId, ULong value,
 }
 
 
-// ROM 0x00258e34 SetVolume__14TUSoundChannelFl
+// ROM 0x0025ad6c SetVolume__14TUSoundChannelFl
 // The volume in decibels, 16.16 fixed.  The channel keeps it whatever
 // happens; an open channel - or the global one, which the sound functions
 // all go through - also tells the server, and answers what the server made
@@ -100,7 +100,7 @@ TUSoundChannel::SetVolume(long decibels)
 }
 
 
-// ROM 0x00258edc GetVolume__14TUSoundChannelFv
+// ROM 0x0025ae14 GetVolume__14TUSoundChannelFv
 // The server is only asked when the gestalt said it would answer.
 long
 TUSoundChannel::GetVolume(void)
@@ -121,7 +121,7 @@ TUSoundChannel::GetVolume(void)
 }
 
 
-// ROM 0x00258f88 SetInputGain__14TUSoundChannelFl
+// ROM 0x0025aec0 SetInputGain__14TUSoundChannelFl
 void
 TUSoundChannel::SetInputGain(long gain)
 {
@@ -138,7 +138,7 @@ TUSoundChannel::SetInputGain(long gain)
 }
 
 
-// ROM 0x00259004 GetInputGain__14TUSoundChannelFv
+// ROM 0x0025af3c GetInputGain__14TUSoundChannelFv
 // The channel's own; the server is never asked.
 long
 TUSoundChannel::GetInputGain(void)
@@ -147,7 +147,7 @@ TUSoundChannel::GetInputGain(void)
 }
 
 
-// ROM 0x00259148 SetOutputDevice__14TUSoundChannelFl
+// ROM 0x0025b080 SetOutputDevice__14TUSoundChannelFl
 void
 TUSoundChannel::SetOutputDevice(long device)
 {
@@ -164,7 +164,7 @@ TUSoundChannel::SetOutputDevice(long device)
 }
 
 
-// ROM 0x000d3898 Schedule__18TFrameSoundChannelFRC6RefVar
+// ROM 0x000d2744 Schedule__18TFrameSoundChannelFRC6RefVar
 // The sound frame turned into a SoundBlock the server can play
 // (TFrameSoundChannel::Convert, which opens a codec for it) and put on the
 // channel's queue.
@@ -181,7 +181,7 @@ TUSoundChannel::Schedule(RefArg /*sound*/)
 }
 
 
-// ROM 0x002595d4 Start__14TUSoundChannelFi
+// ROM 0x0025b50c Start__14TUSoundChannelFi
 // The channel told to play what is scheduled: wait 0 plays and waits for
 // the end, 1 starts it and comes back (the server's commands 10 and 9).
 // The ROM answers kSoundErrNotOpen when nothing is scheduled.
@@ -195,7 +195,7 @@ TUSoundChannel::Start(int /*wait*/)
 }
 
 
-// ROM 0x002597bc Stop__14TUSoundChannelFP10SoundBlockPl
+// ROM 0x0025b6f4 Stop__14TUSoundChannelFP10SoundBlockPl
 // Whatever the channel is playing stopped, the block it was playing copied
 // out and how far it got answered.  The ROM answers kSoundErrNotOpen when
 // the channel was never opened.
@@ -212,7 +212,7 @@ TUSoundChannel::Stop(long* samplesPlayed)
 }
 
 
-// ROM 0x001e94cc GlobalSoundChannel__Fv
+// ROM 0x001e70b4 GlobalSoundChannel__Fv
 // The channel the NewtonScript sound functions play through, made the
 // first time one of them is called.
 //

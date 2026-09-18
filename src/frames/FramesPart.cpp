@@ -80,7 +80,7 @@ InFramesPartArea(Ref r)
 }
 
 
-// ROM 0x000d2898 FramePartToplevelFrame__FPv
+// ROM 0x000d1744 FramePartToplevelFrame__FPv
 // The frame in the array the part begins with (the array's GC word must
 // be clear: a real object, not a page of something else); nil otherwise.
 // (The ROM also checks a part in the ROM domain's space is a valid large

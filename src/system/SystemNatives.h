@@ -11,13 +11,13 @@
 				is reached through hal/System.h, so a port supplies the
 				machine and this supplies the script's view of it.
 
-	NOT YET RECONSTRUCTED: the battery (FBatteryRawStatus 0x001ff0a4,
-	FBatteryLevel 0x001ff0d4, FMinimumBatteryCheck 0x001ff270 - they read
+	NOT YET RECONSTRUCTED: the battery (FBatteryRawStatus 0x002017d4,
+	FBatteryLevel 0x00201804, FMinimumBatteryCheck 0x002019a0 - they read
 	a PowerPlantStatus off the power manager), the backlight
-	(FBackLightStatus 0x001ff2dc, FBackLight 0x001ff30c), FPowerOff
-	0x001ff3d0 and FSetRandomSeed 0x001ff074.
+	(FBackLightStatus 0x00201a0c, FBackLight 0x00201a3c), FPowerOff
+	0x00201b00 and FSetRandomSeed 0x002017a4.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #ifndef __SYSTEMNATIVES_H

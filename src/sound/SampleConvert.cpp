@@ -3,7 +3,7 @@
 
 	Contains:	The sample converters (SampleConvert.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM has the sample and the block forms as separate functions with
 	the conversion written out in each; the reconstruction keeps the two
 	entry points and shares the arithmetic, which is instruction for
@@ -21,7 +21,7 @@
 	of QuickDraw's Random, the rest left zero.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001e980c SampleConvertLin16ToStd8__FPvT1
+// ROM 0x001e73f4 SampleConvertLin16ToStd8__FPvT1
 // A negative sample gains 255 before the shift, so that the division rounds
 // toward zero rather than down.
 void
@@ -34,7 +34,7 @@ SampleConvertLin16ToStd8(void* dst, void* src)
 }
 
 
-// ROM 0x001ea21c SampleConvertStd8ToLin16__FPvT1
+// ROM 0x001e7e04 SampleConvertStd8ToLin16__FPvT1
 void
 SampleConvertStd8ToLin16(void* dst, void* src)
 {
@@ -44,7 +44,7 @@ SampleConvertStd8ToLin16(void* dst, void* src)
 }
 
 
-// ROM 0x001e9828 BlockConvertLin16ToStd8__FPvPlT1T2
+// ROM 0x001e7410 BlockConvertLin16ToStd8__FPvPlT1T2
 void
 BlockConvertLin16ToStd8(void* dst, long* dstCount, void* src, long* srcCount)
 {
@@ -63,7 +63,7 @@ BlockConvertLin16ToStd8(void* dst, long* dstCount, void* src, long* srcCount)
 }
 
 
-// ROM 0x001ea260 BlockConvertStd8ToLin16__FPvPlT1T2
+// ROM 0x001e7e48 BlockConvertStd8ToLin16__FPvPlT1T2
 void
 BlockConvertStd8ToLin16(void* dst, long* dstCount, void* src, long* srcCount)
 {
@@ -143,7 +143,7 @@ Lin16FromMuLaw(UByte code)
 }
 
 
-// ROM 0x001e9880 SampleConvertLin16ToMuLaw__FPvT1
+// ROM 0x001e7468 SampleConvertLin16ToMuLaw__FPvT1
 // The ROM loads a whole word and takes its top half, which on the big-endian
 // ARM is the sample itself (and reads two bytes past it); the reconstruction
 // reads the sample.
@@ -154,7 +154,7 @@ SampleConvertLin16ToMuLaw(void* dst, void* src)
 }
 
 
-// ROM 0x001e9b90 SampleConvertMuLawToLin16__FPvT1
+// ROM 0x001e7778 SampleConvertMuLawToLin16__FPvT1
 // The two bits the coding cannot carry come from bits 8 and 9 of QuickDraw's
 // Random, so that quantisation noise is spread instead of sitting at a fixed
 // level.  The ROM stores the result a byte at a time, high byte first.
@@ -166,7 +166,7 @@ SampleConvertMuLawToLin16(void* dst, void* src)
 }
 
 
-// ROM 0x001e98e0 BlockConvertLin16ToMuLaw__FPvPlT1T2
+// ROM 0x001e74c8 BlockConvertLin16ToMuLaw__FPvPlT1T2
 void
 BlockConvertLin16ToMuLaw(void* dst, long* dstCount, void* src, long* srcCount)
 {
@@ -180,7 +180,7 @@ BlockConvertLin16ToMuLaw(void* dst, long* dstCount, void* src, long* srcCount)
 }
 
 
-// ROM 0x001e9c14 BlockConvertMuLawToLin16__FPvPlT1T2
+// ROM 0x001e77fc BlockConvertMuLawToLin16__FPvPlT1T2
 void
 BlockConvertMuLawToLin16(void* dst, long* dstCount, void* src, long* srcCount)
 {

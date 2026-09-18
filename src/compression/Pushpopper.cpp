@@ -3,7 +3,7 @@
 
 	Contains:	Pushpopper (Pushpopper.h), the LZ coder's bit I/O.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The range complaints are the ROM's printfs.
 */
 
@@ -12,17 +12,17 @@
 #include <stdio.h>
 
 
-// ROM 0x003131b0 __ct__10PushpopperFv
+// ROM 0x0033f0f8 __ct__10PushpopperFv
 Pushpopper::Pushpopper()
 { }
 
 
-// ROM 0x003131e4 __dt__10PushpopperFv
+// ROM 0x0033f12c __dt__10PushpopperFv
 Pushpopper::~Pushpopper()
 { }
 
 
-// ROM 0x003131fc setupreadbuffer__10PushpopperFPUcl
+// ROM 0x0033f144 setupreadbuffer__10PushpopperFPUcl
 void
 Pushpopper::setupreadbuffer(UByte* buffer, long size)
 {
@@ -34,7 +34,7 @@ Pushpopper::setupreadbuffer(UByte* buffer, long size)
 }
 
 
-// ROM 0x00313218 setupwritebuffer__10PushpopperFPUcl
+// ROM 0x0033f160 setupwritebuffer__10PushpopperFPUcl
 void
 Pushpopper::setupwritebuffer(UByte* buffer, long size)
 {
@@ -46,7 +46,7 @@ Pushpopper::setupwritebuffer(UByte* buffer, long size)
 }
 
 
-// ROM 0x00313238 restorebits__10PushpopperFl
+// ROM 0x0033f180 restorebits__10PushpopperFl
 void
 Pushpopper::restorebits(long count)
 {
@@ -54,7 +54,7 @@ Pushpopper::restorebits(long count)
 }
 
 
-// ROM 0x00313248 popbits__10PushpopperFl
+// ROM 0x0033f190 popbits__10PushpopperFl
 // The accumulator is refilled to at least 23 bits first.
 ULong32
 Pushpopper::popbits(long count)
@@ -70,7 +70,7 @@ Pushpopper::popbits(long count)
 }
 
 
-// ROM 0x003132b0 popString__10PushpopperFPUcl
+// ROM 0x0033f1f8 popString__10PushpopperFPUcl
 // Whole bytes: what the accumulator holds first, then straight from the
 // buffer through it.
 void
@@ -99,7 +99,7 @@ Pushpopper::popString(UByte* into, long count)
 }
 
 
-// ROM 0x00313324 popFewBits__10PushpopperFl
+// ROM 0x0033f26c popFewBits__10PushpopperFl
 // At most eight bits: one byte of refill is enough.
 ULong32
 Pushpopper::popFewBits(long count)
@@ -119,7 +119,7 @@ Pushpopper::popFewBits(long count)
 }
 
 
-// ROM 0x00313378 pushbits__10PushpopperFlT1
+// ROM 0x0033f2c0 pushbits__10PushpopperFlT1
 // The accumulator is drained to at least 23 free bits first.
 void
 Pushpopper::pushbits(long count, long value)
@@ -140,7 +140,7 @@ Pushpopper::pushbits(long count, long value)
 }
 
 
-// ROM 0x0031349c flushbits__10PushpopperFv
+// ROM 0x0033f3e4 flushbits__10PushpopperFv
 // Everything in the accumulator goes to the buffer, zero-padded to bytes.
 void
 Pushpopper::flushbits()

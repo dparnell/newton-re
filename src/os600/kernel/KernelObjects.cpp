@@ -5,8 +5,8 @@
 				tasks.  GiveObject/AcceptObject implement GenericSWI selectors
 				1 and 2 (TaskGiveObject / TaskAcceptObject in UserObjects.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	ObjectScavenger (0x0014a508), the scavenge proc installed in
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
+	ObjectScavenger (0x001489ac), the scavenge proc installed in
 	gObjectTable that picks the per-type destructor, will follow once the
 	destructors it dispatches to (DeletePort, DeleteTask, ...) exist.
 */
@@ -27,7 +27,7 @@ CurrentTaskId()
 }
 
 
-// ROM 0x00193ea0 LocalToGlobalId__FUl
+// ROM 0x00191e80 LocalToGlobalId__FUl
 TObjectId
 LocalToGlobalId(TObjectId id)
 {
@@ -57,7 +57,7 @@ LocalToGlobalId(TObjectId id)
 }
 
 
-// ROM 0x00193f34 ConvertIdToObj__F11KernelTypesUlPv
+// ROM 0x00191f14 ConvertIdToObj__F11KernelTypesUlPv
 NewtonErr
 ConvertIdToObj(KernelTypes type, TObjectId id, void* outObject)
 {
@@ -69,7 +69,7 @@ ConvertIdToObj(KernelTypes type, TObjectId id, void* outObject)
 }
 
 
-// ROM 0x001e2b6c ConvertMemOrMsgIdToObj__FUlPP10TSharedMem
+// ROM 0x001e0754 ConvertMemOrMsgIdToObj__FUlPP10TSharedMem
 NewtonErr
 ConvertMemOrMsgIdToObj(TObjectId id, TSharedMem** outObject)
 {
@@ -81,7 +81,7 @@ ConvertMemOrMsgIdToObj(TObjectId id, TSharedMem** outObject)
 }
 
 
-// ROM 0x0014a428 RegisterObject__FP13TKernelObject11KernelTypesUlPUl
+// ROM 0x001488cc RegisterObject__FP13TKernelObject11KernelTypesUlPUl
 NewtonErr
 RegisterObject(TKernelObject* object, KernelTypes type, TObjectId owner, TObjectId* outId)
 {
@@ -96,7 +96,7 @@ RegisterObject(TKernelObject* object, KernelTypes type, TObjectId owner, TObject
 }
 
 
-// ROM 0x0014b16c GiveObject__FUlT1
+// ROM 0x00149610 GiveObject__FUlT1
 // Offers an object the current task owns to another task, which must then
 // AcceptObject it.  As in the ROM, the offer is refused when the receiving
 // task exists and is itself alive (owner == itself, or its owner exists);
@@ -119,7 +119,7 @@ GiveObject(TObjectId id, TObjectId assignToTaskId)
 }
 
 
-// ROM 0x0014b220 AcceptObject__FUl
+// ROM 0x001496c4 AcceptObject__FUl
 // The task an object was given to takes ownership of it.
 NewtonErr
 AcceptObject(TObjectId id)

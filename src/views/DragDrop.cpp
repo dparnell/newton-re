@@ -3,7 +3,7 @@
 
 	Contains:	TDragInfo, the data carried by a drag-and-drop.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "DragDrop.h"
@@ -41,21 +41,21 @@ PointToFrame(const Point& pt)
 }
 
 
-// ROM 0x000a1d78 __ct__9TDragInfoFl
+// ROM 0x000a0b78 __ct__9TDragInfoFl
 TDragInfo::TDragInfo(long numItems)
 {
 	fItems = MakeArray(numItems);		// numItems nil slots
 }
 
 
-// ROM 0x000a1e08 __ct__9TDragInfoFRC6RefVar
+// ROM 0x000a0c08 __ct__9TDragInfoFRC6RefVar
 TDragInfo::TDragInfo(RefArg items)
 {
 	fItems = items;
 }
 
 
-// ROM 0x000a1e5c __ct__9TDragInfoFRC6RefVarN21
+// ROM 0x000a0c5c __ct__9TDragInfoFRC6RefVarN21
 TDragInfo::TDragInfo(RefArg types, RefArg dragRef, RefArg label)
 {
 	fItems = MakeArray(0);
@@ -63,7 +63,7 @@ TDragInfo::TDragInfo(RefArg types, RefArg dragRef, RefArg label)
 }
 
 
-// ROM 0x000a1f6c GetItemTypes__9TDragInfoCFl
+// ROM 0x000a0d6c GetItemTypes__9TDragInfoCFl
 Ref
 TDragInfo::GetItemTypes(long i) const
 {
@@ -71,7 +71,7 @@ TDragInfo::GetItemTypes(long i) const
 }
 
 
-// ROM 0x000a1fb8 GetItemIndType__9TDragInfoCFlT1
+// ROM 0x000a0db8 GetItemIndType__9TDragInfoCFlT1
 Ref
 TDragInfo::GetItemIndType(long i, long j) const
 {
@@ -79,7 +79,7 @@ TDragInfo::GetItemIndType(long i, long j) const
 }
 
 
-// ROM 0x000a1ff8 GetItemDragRef__9TDragInfoCFl
+// ROM 0x000a0df8 GetItemDragRef__9TDragInfoCFl
 Ref
 TDragInfo::GetItemDragRef(long i) const
 {
@@ -87,7 +87,7 @@ TDragInfo::GetItemDragRef(long i) const
 }
 
 
-// ROM 0x000a2044 GetItemDragLabel__9TDragInfoCFl
+// ROM 0x000a0e44 GetItemDragLabel__9TDragInfoCFl
 Ref
 TDragInfo::GetItemDragLabel(long i) const
 {
@@ -95,7 +95,7 @@ TDragInfo::GetItemDragLabel(long i) const
 }
 
 
-// ROM 0x000a2090 GetItemView__9TDragInfoCFl
+// ROM 0x000a0e90 GetItemView__9TDragInfoCFl
 TView*
 TDragInfo::GetItemView(long i) const
 {
@@ -104,7 +104,7 @@ TDragInfo::GetItemView(long i) const
 }
 
 
-// ROM 0x000a211c SetItemView__9TDragInfoFlP5TView
+// ROM 0x000a0f1c SetItemView__9TDragInfoFlP5TView
 void
 TDragInfo::SetItemView(long i, TView* view)
 {
@@ -113,7 +113,7 @@ TDragInfo::SetItemView(long i, TView* view)
 }
 
 
-// ROM 0x000a1ecc CheckTypes__9TDragInfoCFRC6RefVar
+// ROM 0x000a0ccc CheckTypes__9TDragInfoCFRC6RefVar
 // True when every item offers at least one of the accepted types.
 Boolean
 TDragInfo::CheckTypes(RefArg acceptedTypes) const
@@ -125,7 +125,7 @@ TDragInfo::CheckTypes(RefArg acceptedTypes) const
 }
 
 
-// ROM 0x000a215c FindType__9TDragInfoCFlRC6RefVar
+// ROM 0x000a0f5c FindType__9TDragInfoCFlRC6RefVar
 // The item's first type that is in the given set, nil for none.
 Ref
 TDragInfo::FindType(long i, RefArg types) const
@@ -135,7 +135,7 @@ TDragInfo::FindType(long i, RefArg types) const
 }
 
 
-// ROM 0x000a2280 CreateItemFrame__9TDragInfoFl
+// ROM 0x000a1080 CreateItemFrame__9TDragInfoFl
 // The item's frame, made (a clone of canonicalDragItem) when the slot is
 // still nil.
 Ref
@@ -151,7 +151,7 @@ TDragInfo::CreateItemFrame(long i)
 }
 
 
-// ROM 0x000a22ec SetItemDragRef__9TDragInfoFlRC6RefVar
+// ROM 0x000a10ec SetItemDragRef__9TDragInfoFlRC6RefVar
 void
 TDragInfo::SetItemDragRef(long i, RefArg dragRef)
 {
@@ -159,7 +159,7 @@ TDragInfo::SetItemDragRef(long i, RefArg dragRef)
 }
 
 
-// ROM 0x000a232c SetItemDragLabel__9TDragInfoFlRC6RefVar
+// ROM 0x000a112c SetItemDragLabel__9TDragInfoFlRC6RefVar
 void
 TDragInfo::SetItemDragLabel(long i, RefArg label)
 {
@@ -167,7 +167,7 @@ TDragInfo::SetItemDragLabel(long i, RefArg label)
 }
 
 
-// ROM 0x000a236c SetItemDragTypes__9TDragInfoFlRC6RefVar
+// ROM 0x000a116c SetItemDragTypes__9TDragInfoFlRC6RefVar
 void
 TDragInfo::SetItemDragTypes(long i, RefArg types)
 {
@@ -175,7 +175,7 @@ TDragInfo::SetItemDragTypes(long i, RefArg types)
 }
 
 
-// ROM 0x000a23ac AddItemDragType__9TDragInfoFlRC6RefVar
+// ROM 0x000a11ac AddItemDragType__9TDragInfoFlRC6RefVar
 // A type (or an array of types) added to the item's types.
 void
 TDragInfo::AddItemDragType(long i, RefArg type)
@@ -215,7 +215,7 @@ TDragInfo::AddItemDragType(long i, RefArg type)
 }
 
 
-// ROM 0x000a2530 AddDragItem__9TDragInfoFv
+// ROM 0x000a1330 AddDragItem__9TDragInfoFv
 long
 TDragInfo::AddDragItem(void)
 {
@@ -224,7 +224,7 @@ TDragInfo::AddDragItem(void)
 }
 
 
-// ROM 0x000a2578 AddDragItem__9TDragInfoFRC6RefVarN21
+// ROM 0x000a1378 AddDragItem__9TDragInfoFRC6RefVarN21
 long
 TDragInfo::AddDragItem(RefArg types, RefArg dragRef, RefArg label)
 {
@@ -237,7 +237,7 @@ TDragInfo::AddDragItem(RefArg types, RefArg dragRef, RefArg label)
 }
 
 
-// ROM 0x0009e744 FindDropViewDeep__FP5TViewRC9TDragInfoRC6TPoint
+// ROM 0x0009d544 FindDropViewDeep__FP5TViewRC9TDragInfoRC6TPoint
 // From the view under the pen up to the enclosing window (or the root),
 // the first that is not read-only and accepts the drag (AcceptDrop).
 TView*

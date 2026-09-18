@@ -30,8 +30,8 @@
 				friends, SampleConvert.h), and when it is nil the sample's bytes are
 				copied as they are.
 
-	The DDK has no header for these; reconstructed from the MP2100 D ROM
-	(0x001e9978 and 0x001e9cd8-0x001ea21c), each function citing its origin.
+	The DDK has no header for these; reconstructed from the MP2x00 US ROM
+	(0x001e7560 and 0x001e78c0-0x001e7e04), each function citing its origin.
 	SampleSpec's and ResampleState's field names are ours: neither structure
 	is in the DDK, and their callers - the sound channel and the codecs - are
 	not reconstructed.
@@ -63,7 +63,7 @@ struct SampleSpec
 
 // Convert as many samples as both counts allow; each count comes back as
 // what was used - outputs written in *dstCount, inputs read in *srcCount.
-void	Resample(const SampleSpec* spec, long* dstCount, long* srcCount);	// ROM 0x001e9978 Resample__FPC10SampleSpecPlT2
+void	Resample(const SampleSpec* spec, long* dstCount, long* srcCount);	// ROM 0x001e7560 Resample__FPC10SampleSpecPlT2
 
 
 /*------------------------------------------------------------------------------
@@ -100,21 +100,21 @@ struct ResampleState
 
 // Work out fTapCount, fRatio, the shifts and the converters from the rates,
 // sample sizes and formats already in the state, and empty the history.
-void	InitResampleState(ResampleState* state);			// ROM 0x001e9cd8 InitResampleState__FP13ResampleState
+void	InitResampleState(ResampleState* state);			// ROM 0x001e78c0 InitResampleState__FP13ResampleState
 
 // One sample in or out of the state's buffers, through its converter.
-int		GetSample(ResampleState* state, long index);			// ROM 0x001e9e30 GetSample__FP13ResampleStatel
-void	PutSample(ResampleState* state, short value, long index);	// ROM 0x001e9e8c PutSample__FP13ResampleStatesl
+int		GetSample(ResampleState* state, long index);			// ROM 0x001e7a18 GetSample__FP13ResampleStatel
+void	PutSample(ResampleState* state, short value, long index);	// ROM 0x001e7a74 PutSample__FP13ResampleStatesl
 
 // The filtered conversion.  The short form takes everything from the state;
 // the long one is what it calls, with the buffers, the history, the tap
 // count, the phase and the ratio spelled out (the ROM passes the two buffers
 // but reads and writes through the state, so they are unused).
-void	ResampleFiltered(ResampleState* state, long* dstCount, long* srcCount);	// ROM 0x001e9de8 ResampleFiltered__FP13ResampleStatePlT2
+void	ResampleFiltered(ResampleState* state, long* dstCount, long* srcCount);	// ROM 0x001e79d0 ResampleFiltered__FP13ResampleStatePlT2
 void	ResampleFiltered(ResampleState* state, short* dst, short* src,
 					long* dstCount, long* srcCount, short* history, long tapCount,
-					long* phase, Fixed ratio);			// ROM 0x001e9eec ResampleFiltered__FP13ResampleStatePsT2PlT4T2lT4T7
+					long* phase, Fixed ratio);			// ROM 0x001e7ad4 ResampleFiltered__FP13ResampleStatePsT2PlT4T2lT4T7
 
-extern long	gHitInitResampleAgain;		// ROM 0x0c101ce8 gHitInitResampleAgain - how often a state has been set up
+extern long	gHitInitResampleAgain;		// ROM 0x0c101b0c gHitInitResampleAgain - how often a state has been set up
 
 #endif	/* __RESAMPLE_H */

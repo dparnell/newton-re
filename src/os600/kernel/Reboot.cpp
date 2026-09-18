@@ -3,7 +3,7 @@
 
 	Contains:	Rebooting and restarting.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	These ROM functions serve both modes: in user mode they issue GenericSWI
 	28/29 instead.  That path belongs to the user-side syscall layer; these
 	are the kernel-mode bodies.
@@ -21,7 +21,7 @@
 #include "hal/System.h"
 
 
-// ROM 0x000da8fc Reboot__FlUlUc
+// ROM 0x000d9884 Reboot__FlUlUc
 // Records why, then resets - unless `safe` and a reboot-protected monitor
 // call is in progress, in which case the reboot happens when it ends
 // (TMonitor::Release).  A cold-boot request (kRebootMagicNumber) clears a
@@ -56,7 +56,7 @@ Reboot(NewtonErr error, ULong rebootType, Boolean safe)
 }
 
 
-// ROM 0x000da9e8 CantThrowInUndefinedModeReboot
+// ROM 0x000d9970 CantThrowInUndefinedModeReboot
 void
 CantThrowInUndefinedModeReboot()
 {
@@ -76,7 +76,7 @@ CantThrowInUndefinedModeReboot()
 }
 
 
-// ROM 0x000da9fc Restart__Fv
+// ROM 0x000d9984 Restart__Fv
 void
 Restart()
 {

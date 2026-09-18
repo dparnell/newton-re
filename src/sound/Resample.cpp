@@ -4,7 +4,7 @@
 	Contains:	The two sample-rate converters (Resample.h) - Resample, the
 				plain one, and ResampleFiltered over a ResampleState.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Resample's accumulator arithmetic is the ROM's: both rates are kept
 	doubled, so that the half-step the decimating branch starts with is
 	exact.
@@ -27,7 +27,7 @@ ResampleOne(const SampleSpec* spec, UByte* dst, UByte* src, long dstBytes)
 }
 
 
-// ROM 0x001e9978 Resample__FPC10SampleSpecPlT2
+// ROM 0x001e7560 Resample__FPC10SampleSpecPlT2
 void
 Resample(const SampleSpec* spec, long* dstCount, long* srcCount)
 {
@@ -108,7 +108,7 @@ Resample(const SampleSpec* spec, long* dstCount, long* srcCount)
 
 extern const int	kResampleFilter[262];		// ResampleTables.cpp
 
-// ROM 0x0c101ce8 gHitInitResampleAgain
+// ROM 0x0c101b0c gHitInitResampleAgain
 long	gHitInitResampleAgain = 0;
 
 enum
@@ -120,7 +120,7 @@ enum
 };
 
 
-// ROM 0x001e9cd8 InitResampleState__FP13ResampleState
+// ROM 0x001e78c0 InitResampleState__FP13ResampleState
 void
 InitResampleState(ResampleState* state)
 {
@@ -156,7 +156,7 @@ InitResampleState(ResampleState* state)
 }
 
 
-// ROM 0x001e9e30 GetSample__FP13ResampleStatel
+// ROM 0x001e7a18 GetSample__FP13ResampleStatel
 // The ROM reads the sample with a word load at a halfword address and lets
 // the ARM's rotation put it in place, which comes to the same thing.
 int
@@ -170,7 +170,7 @@ GetSample(ResampleState* state, long index)
 }
 
 
-// ROM 0x001e9e8c PutSample__FP13ResampleStatesl
+// ROM 0x001e7a74 PutSample__FP13ResampleStatesl
 void
 PutSample(ResampleState* state, short value, long index)
 {
@@ -181,7 +181,7 @@ PutSample(ResampleState* state, short value, long index)
 }
 
 
-// ROM 0x001e9de8 ResampleFiltered__FP13ResampleStatePlT2
+// ROM 0x001e79d0 ResampleFiltered__FP13ResampleStatePlT2
 // Everything the long form wants is already in the state.
 void
 ResampleFiltered(ResampleState* state, long* dstCount, long* srcCount)
@@ -191,7 +191,7 @@ ResampleFiltered(ResampleState* state, long* dstCount, long* srcCount)
 }
 
 
-// ROM 0x001e9eec ResampleFiltered__FP13ResampleStatePsT2PlT4T2lT4T7
+// ROM 0x001e7ad4 ResampleFiltered__FP13ResampleStatePsT2PlT4T2lT4T7
 // dst and src are the state's own buffers: the ROM passes them and then
 // reads and writes through GetSample/PutSample, which take them from the
 // state, so they go unused here as they do there.

@@ -3,7 +3,7 @@
 
 	Contains:	TPickView: the picker's items laid out, drawn and picked.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "PickView.h"
@@ -38,7 +38,7 @@ const long kFlipEffect = 0x182000;			// viewEffect for a picker opening upward
 const UniChar kEllipsisChar = 0x2026;
 const UniChar kSpace = 0x20;
 
-// ROM 0x00199bb0 Encloses__5TRectCFRC5TRect - the rectangle holds the other
+// ROM 0x00197564 Encloses__5TRectCFRC5TRect - the rectangle holds the other
 static Boolean
 RectEncloses(const Rect& outer, const Rect& inner)
 {
@@ -46,7 +46,7 @@ RectEncloses(const Rect& outer, const Rect& inner)
 }
 
 
-// ROM 0x001858f4 GetAppAreaBounds__FP5TRect
+// ROM 0x001838c4 GetAppAreaBounds__FP5TRect
 // The application area of vars.displayParams (appAreaGlobalLeft/Top,
 // appAreaWidth/Height).
 void
@@ -60,7 +60,7 @@ GetAppAreaBounds(Rect* bounds)
 }
 
 
-// ROM 0x00186e84 AdjustPopupInRect__FR5TRectlT2RC5TRects
+// ROM 0x00184e54 AdjustPopupInRect__FR5TRectlT2RC5TRects
 // A popup of the width and height placed against its bounds within the
 // rectangle: to the right of the bounds, or - when that does not fit -
 // to the left, or when neither does over them from the top (or the
@@ -119,7 +119,7 @@ AdjustPopupInRect(Rect& bounds, long width, long height, const Rect& within, sho
 	T P i c k V i e w
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00185854 ClassID__9TPickViewCFv
+// ROM 0x00183824 ClassID__9TPickViewCFv
 long
 TPickView::ClassID(void) const
 {
@@ -127,7 +127,7 @@ TPickView::ClassID(void) const
 }
 
 
-// ROM 0x00186c70 DerivedFrom__9TPickViewCFl
+// ROM 0x00184c40 DerivedFrom__9TPickViewCFl
 Boolean
 TPickView::DerivedFrom(long id) const
 {
@@ -135,7 +135,7 @@ TPickView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x001885c0 Constructor__9TPickViewFRC6RefVarP5TView
+// ROM 0x00186590 Constructor__9TPickViewFRC6RefVarP5TView
 // No caches yet, nothing picked; then as TView.
 void
 TPickView::Constructor(RefArg context, TView* parent)
@@ -176,7 +176,7 @@ DisposeCaches(TPickView* view)
 }
 
 
-// ROM 0x00189878 __dt__9TPickViewFv
+// ROM 0x00187848 __dt__9TPickViewFv
 TPickView::~TPickView()
 {
 	DisposeCaches(this);
@@ -184,7 +184,7 @@ TPickView::~TPickView()
 }
 
 
-// ROM 0x00185690 GetGridInfo__9TPickViewFRC6RefVarP5TRect
+// ROM 0x00183660 GetGridInfo__9TPickViewFRC6RefVarP5TRect
 // A picture item with a width slot is a grid of width x height cells,
 // cellFrame (1) apart, outerFrame (2) in from its bounds: the cells'
 // size from the picture's.  Nil for any other item.
@@ -213,7 +213,7 @@ TPickView::GetGridInfo(RefArg item, const Rect& bounds)
 }
 
 
-// ROM 0x00186d38 GetDisplayIcon__9TPickViewFRC6RefVar
+// ROM 0x00184d08 GetDisplayIcon__9TPickViewFRC6RefVar
 // A frame item's icon slot.
 Ref
 TPickView::GetDisplayIcon(RefArg item)
@@ -224,7 +224,7 @@ TPickView::GetDisplayIcon(RefArg item)
 }
 
 
-// ROM 0x00186d7c GetDisplayIndent__9TPickViewFRC6RefVar
+// ROM 0x00184d4c GetDisplayIndent__9TPickViewFRC6RefVar
 // A frame item's indent, -1 for none: the text's offset after the
 // margin (and the icon's width otherwise).
 long
@@ -240,7 +240,7 @@ TPickView::GetDisplayIndent(RefArg item)
 }
 
 
-// ROM 0x00186e00 GetDisplayFixedHeight__9TPickViewFRC6RefVar
+// ROM 0x00184dd0 GetDisplayFixedHeight__9TPickViewFRC6RefVar
 // A frame item's fixedHeight, -1 for none: the height of it and the
 // items after it (a separator keeps its own).
 long
@@ -256,7 +256,7 @@ TPickView::GetDisplayFixedHeight(RefArg item)
 }
 
 
-// ROM 0x00189ed8 GetDisplayItem__9TPickViewFlPUcPUs
+// ROM 0x00187ea8 GetDisplayItem__9TPickViewFlPUcPUs
 // What an item shows: a string or symbol itself; a frame's item slot
 // (else its key command's name, else the empty string); with whether it
 // can be picked (a separator cannot; a frame's pickable slot) and its
@@ -299,7 +299,7 @@ TPickView::GetDisplayItem(long index, Boolean* pickable, UniChar* mark)
 }
 
 
-// ROM 0x0018a118 GetItemNoText__9TPickViewFl
+// ROM 0x001880e8 GetItemNoText__9TPickViewFl
 // A pickable item's text (nil for a picture, a separator).
 Ref
 TPickView::GetItemNoText(long index)
@@ -312,7 +312,7 @@ TPickView::GetItemNoText(long index)
 }
 
 
-// ROM 0x00189e38 GetItemFlags__9TPickViewFP9PickStuffPUcPUs
+// ROM 0x00187e08 GetItemFlags__9TPickViewFP9PickStuffPUcPUs
 void
 TPickView::GetItemFlags(PickStuff* item, Boolean* pickable, UniChar* mark)
 {
@@ -322,7 +322,7 @@ TPickView::GetItemFlags(PickStuff* item, Boolean* pickable, UniChar* mark)
 }
 
 
-// ROM 0x00189e64 IsItemNoPickable__9TPickViewFl
+// ROM 0x00187e34 IsItemNoPickable__9TPickViewFl
 Boolean
 TPickView::IsItemNoPickable(long index)
 {
@@ -330,7 +330,7 @@ TPickView::IsItemNoPickable(long index)
 }
 
 
-// ROM 0x00189e7c SetItemFlags__9TPickViewFP9PickStuffUcUs
+// ROM 0x00187e4c SetItemFlags__9TPickViewFP9PickStuffUcUs
 void
 TPickView::SetItemFlags(PickStuff* item, Boolean pickable, UniChar mark)
 {
@@ -338,7 +338,7 @@ TPickView::SetItemFlags(PickStuff* item, Boolean pickable, UniChar mark)
 }
 
 
-// ROM 0x00189ea0 GetItemLength__9TPickViewFl
+// ROM 0x00187e70 GetItemLength__9TPickViewFl
 long
 TPickView::GetItemLength(long index)
 {
@@ -346,7 +346,7 @@ TPickView::GetItemLength(long index)
 }
 
 
-// ROM 0x00189eb4 SetItemLength__9TPickViewFP9PickStuffl
+// ROM 0x00187e84 SetItemLength__9TPickViewFP9PickStuffl
 void
 TPickView::SetItemLength(PickStuff* item, long length)
 {
@@ -354,7 +354,7 @@ TPickView::SetItemLength(PickStuff* item, long length)
 }
 
 
-// ROM 0x00187350 SetupForm__9TPickViewFv
+// ROM 0x00185320 SetupForm__9TPickViewFv
 // The items laid out and the view placed.  Each item's height and width
 // are found: a string's the text height and its measured width (cut
 // with an ellipsis to pickMaxWidth: the length kept negative to say so),
@@ -637,7 +637,7 @@ TPickView::SetupForm(void)
 }
 
 
-// ROM 0x00187098 GetOverflows__9TPickViewFv
+// ROM 0x00185068 GetOverflows__9TPickViewFv
 // [what is scrolled off the top, what is off the bottom].
 Ref
 TPickView::GetOverflows(void)
@@ -652,7 +652,7 @@ TPickView::GetOverflows(void)
 }
 
 
-// ROM 0x0018718c Scroll__9TPickViewFRC6RefVarUc
+// ROM 0x0018515c Scroll__9TPickViewFRC6RefVarUc
 // The list scrolled a view's height 'up or 'down, to an item's top (not
 // past the first, not past what lets the last show); unpick forgets the
 // picked item.
@@ -700,7 +700,7 @@ TPickView::Scroll(RefArg direction, Boolean unpick)
 }
 
 
-// ROM 0x001893b4 GetItemRect__9TPickViewFP9PickStuffP5TRect
+// ROM 0x00187384 GetItemRect__9TPickViewFP9PickStuffP5TRect
 // An item's row: the view's width, from its top to its bottom (the
 // child origin applied).
 void
@@ -715,7 +715,7 @@ TPickView::GetItemRect(PickStuff* item, Rect* r)
 }
 
 
-// ROM 0x001892dc GetGridItemRect__9TPickViewFP9PickStuffP5TRect
+// ROM 0x001872ac GetGridItemRect__9TPickViewFP9PickStuffP5TRect
 // A grid item's cell (the row for an item that is no grid).
 void
 TPickView::GetGridItemRect(PickStuff* item, Rect* r)
@@ -731,7 +731,7 @@ TPickView::GetGridItemRect(PickStuff* item, Rect* r)
 }
 
 
-// ROM 0x00189478 InvertItem__9TPickViewFP9PickStuff
+// ROM 0x00187448 InvertItem__9TPickViewFP9PickStuff
 void
 TPickView::InvertItem(PickStuff* item)
 {
@@ -741,7 +741,7 @@ TPickView::InvertItem(PickStuff* item)
 }
 
 
-// ROM 0x0018949c FlashItem__9TPickViewFP9PickStuff
+// ROM 0x0018746c FlashItem__9TPickViewFP9PickStuff
 // The item inverted three times, 5 ticks apart (it is left inverted:
 // the tracking inverted it under the pen, so it ends un-inverted).
 void
@@ -757,7 +757,7 @@ TPickView::FlashItem(PickStuff* item)
 }
 
 
-// ROM 0x00189948 TrackStroke__9TPickViewFP13TStrokePublicP9PickStuff
+// ROM 0x00187918 TrackStroke__9TPickViewFP13TStrokePublicP9PickStuff
 // The pen tracked over the items, its ink off, the screen brought up to
 // date first: the pickable item under the stroke's first point inverted,
 // then each turn the one under its last point - the old one un-inverted
@@ -792,7 +792,7 @@ TPickView::TrackStroke(TStrokePublic* stroke, PickStuff* item)
 }
 
 
-// ROM 0x001894e4 SubItem__9TPickViewFR6TPointP9PickStuff
+// ROM 0x001874b4 SubItem__9TPickViewFR6TPointP9PickStuff
 // The cell of a grid item under the point (none: the item -1).
 void
 TPickView::SubItem(Point& pt, PickStuff* item)
@@ -817,7 +817,7 @@ TPickView::SubItem(Point& pt, PickStuff* item)
 }
 
 
-// ROM 0x001895b8 Item__9TPickViewFR6TPointP9PickStuff
+// ROM 0x00187588 Item__9TPickViewFR6TPointP9PickStuff
 // The item under the point (-1 for none), and its cell in a grid.
 void
 TPickView::Item(Point& pt, PickStuff* item)
@@ -840,7 +840,7 @@ TPickView::Item(Point& pt, PickStuff* item)
 }
 
 
-// ROM 0x0018966c PickableItem__9TPickViewFR6TPointP9PickStuff
+// ROM 0x0018763c PickableItem__9TPickViewFR6TPointP9PickStuff
 // The pickable item under the point: an unpickable one (a separator)
 // sends the search to the row above (from its middle); a grid cell over
 // a masked picture's blank is not pickable (FPtInPicture, NOT YET).
@@ -882,7 +882,7 @@ PostPick(TPickView* view)
 }
 
 
-// ROM 0x0018a17c KeyToNextItem__9TPickViewFl
+// ROM 0x0018814c KeyToNextItem__9TPickViewFl
 // The pick moved down from the item given: the next pickable item (a
 // grid's cells row by row), the first that is shown (its top within the
 // view) when nothing was picked yet.
@@ -941,7 +941,7 @@ TPickView::KeyToNextItem(long from)
 }
 
 
-// ROM 0x0018a320 KeyToPrevItem__9TPickViewFl
+// ROM 0x001882f0 KeyToPrevItem__9TPickViewFl
 // The pick moved up from the item given: the previous pickable item (a
 // grid's last row), the last that is shown (its bottom within the view)
 // when nothing was picked yet.
@@ -1014,7 +1014,7 @@ FirstPickable(TPickView* view)
 }
 
 
-// ROM 0x0018a4b0 HandleKeyDown__9TPickViewFUsUl
+// ROM 0x00188480 HandleKeyDown__9TPickViewFUsUl
 // A key to the picker: the arrows move the pick (left/right within a
 // grid's row - or to the first pickable item's last/first cell when
 // nothing is picked; up/down to the previous/next item, tab down too);
@@ -1210,7 +1210,7 @@ TPickView::HandleKeyDown(UniChar ch, ULong parameter)
 }
 
 
-// ROM 0x0018585c FPickViewKeyDown
+// ROM 0x0018382c FPickViewKeyDown
 // :PickViewKeyDown(char, key) (protoPicker's viewKeyDownScript): the key
 // handled by the picker; ==> whether it was.
 static Ref
@@ -1230,7 +1230,7 @@ RegisterPickNatives(void)
 }
 
 
-// ROM 0x00189a7c PickItem__9TPickViewFP9PickStuff
+// ROM 0x00187a4c PickItem__9TPickViewFP9PickStuff
 // An item picked: remembered, flashed, the picker hidden when it
 // autocloses, and pickActionScript run with the item's index (plus
 // topItem) - a grid cell as a protoGridItem frame {index, x, y} - on the
@@ -1278,7 +1278,7 @@ TPickView::PickItem(PickStuff* item)
 }
 
 
-// ROM 0x00188fa4 Hide__9TPickViewFv
+// ROM 0x00186f74 Hide__9TPickViewFv
 // Hidden (keys allowed through again); an autoclose picker hidden without
 // a pick runs pickCancelledScript on the callbackContext (when it has
 // one), else on the view.
@@ -1305,7 +1305,7 @@ TPickView::Hide(void)
 }
 
 
-// ROM 0x001890f4 RealDoCommand__9TPickViewFRC6RefVar
+// ROM 0x001870c4 RealDoCommand__9TPickViewFRC6RefVar
 // aeClick clicks (FClicker, NOT YET RECONSTRUCTED), tracks the pen over
 // the items (TrackStroke) and dispatches the pick (0x36) with the item
 // the pen ended on as the parameter and the PickStuff as a binary frame
@@ -1354,7 +1354,7 @@ TPickView::RealDoCommand(RefArg cmd)
 }
 
 
-// ROM 0x001885e0 RealDraw__9TPickViewFR5TRect
+// ROM 0x001865b0 RealDraw__9TPickViewFR5TRect
 // The rows drawn from the child origin: a string item from the text
 // column (its icon before it, and the indent), its baseline centred in
 // the row, |length| characters and the ellipsis after them when the

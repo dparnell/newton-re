@@ -19,11 +19,11 @@
 				as its _proto.
 
 				The layout follows the ROM's (the fields the Constructor
-				0x001b3d40 and the methods use, at their offsets; what lies
+				0x001b1868 and the methods use, at their offsets; what lies
 				between is unknown); the update regions are TUpdateRegion[3]
 				at +0x34.
 
-	Reconstructed from the MP2100 D ROM (0x001b3d04-0x001b8100); each
+	Reconstructed from the MP2x00 US ROM (0x001b182c-0x001b5c28); each
 	function cites its origin.
 */
 
@@ -67,73 +67,73 @@ struct IdlingView
 class TRootView : public TView
 {
 public:
-	virtual long	ClassID(void) const;								// ROM 0x001b3d04 ClassID__9TRootViewCFv
-	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x001b3d0c DerivedFrom__9TRootViewCFl
-	virtual			~TRootView();										// ROM 0x001b3eb4 __dt__9TRootViewFv
-	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x001b56c8 RealDoCommand__9TRootViewFRC6RefVar
-	virtual void	Dirty(const Rect* rect);							// ROM 0x001b52e4 Dirty__9TRootViewFPC5TRect
-	virtual void	RemoveAllViews(void);								// ROM 0x001b8044 RemoveAllViews__9TRootViewFv
-	virtual void	PostDraw(Rect& bounds);								// ROM 0x001b4838 PostDraw__9TRootViewFR5TRect
-	virtual void	RealDraw(Rect& bounds);								// ROM 0x001b4844 RealDraw__9TRootViewFR5TRect
+	virtual long	ClassID(void) const;								// ROM 0x001b182c ClassID__9TRootViewCFv
+	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x001b1834 DerivedFrom__9TRootViewCFl
+	virtual			~TRootView();										// ROM 0x001b19dc __dt__9TRootViewFv
+	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x001b31f0 RealDoCommand__9TRootViewFRC6RefVar
+	virtual void	Dirty(const Rect* rect);							// ROM 0x001b2e0c Dirty__9TRootViewFPC5TRect
+	virtual void	RemoveAllViews(void);								// ROM 0x001b5b6c RemoveAllViews__9TRootViewFv
+	virtual void	PostDraw(Rect& bounds);								// ROM 0x001b2360 PostDraw__9TRootViewFR5TRect
+	virtual void	RealDraw(Rect& bounds);								// ROM 0x001b236c RealDraw__9TRootViewFR5TRect
 
 	using TView::Constructor;
-	void		Constructor(RefArg templ);								// ROM 0x001b3d40 Constructor__9TRootViewFRC6RefVar
-	void		Invalidate(RgnHandle rgn, TView* filler);				// ROM 0x001b4524 Invalidate__9TRootViewFC11TBaseRegionP5TView
-	void		Validate(RgnHandle rgn);								// ROM 0x001b47f8 Validate__9TRootViewFC11TBaseRegion
-	void		SmartInvalidate(const Rect& rect);						// ROM 0x001b43d8 SmartInvalidate__9TRootViewFRC5TRect
-	void		SmartScreenDirty(const Rect& rect);						// ROM 0x001b4868 SmartScreenDirty__9TRootViewFRC5TRect
-	Boolean		NeedsUpdate(void);										// ROM 0x001b4870 NeedsUpdate__9TRootViewFv
-	void		Update(Rect* rect);										// ROM 0x001b4914 Update__9TRootViewFP5TRect
-	TView*		GetCommonParent(TView* a, TView* b);					// ROM 0x001b44d4 GetCommonParent__9TRootViewFP5TViewT1
-	void		ForgetAboutView(TView* view);							// ROM 0x001b42e4 ForgetAboutView__9TRootViewFP5TView
-	void		CaretViewGone(void);									// ROM 0x001b420c CaretViewGone__9TRootViewFv
-	Boolean		ViewContainsCaretView(TView* view);						// ROM 0x002635d0 ViewContainsCaretView__FP5TView
-	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b7bb0 SetPopup__9TRootViewFP5TViewUc
-	TView*		GetClipboard(TView* view);								// ROM 0x001b7e6c GetClipboard__9TRootViewFP5TView
+	void		Constructor(RefArg templ);								// ROM 0x001b1868 Constructor__9TRootViewFRC6RefVar
+	void		Invalidate(RgnHandle rgn, TView* filler);				// ROM 0x001b204c Invalidate__9TRootViewFC11TBaseRegionP5TView
+	void		Validate(RgnHandle rgn);								// ROM 0x001b2320 Validate__9TRootViewFC11TBaseRegion
+	void		SmartInvalidate(const Rect& rect);						// ROM 0x001b1f00 SmartInvalidate__9TRootViewFRC5TRect
+	void		SmartScreenDirty(const Rect& rect);						// ROM 0x001b2390 SmartScreenDirty__9TRootViewFRC5TRect
+	Boolean		NeedsUpdate(void);										// ROM 0x001b2398 NeedsUpdate__9TRootViewFv
+	void		Update(Rect* rect);										// ROM 0x001b243c Update__9TRootViewFP5TRect
+	TView*		GetCommonParent(TView* a, TView* b);					// ROM 0x001b1ffc GetCommonParent__9TRootViewFP5TViewT1
+	void		ForgetAboutView(TView* view);							// ROM 0x001b1e0c ForgetAboutView__9TRootViewFP5TView
+	void		CaretViewGone(void);									// ROM 0x001b1d34 CaretViewGone__9TRootViewFv
+	Boolean		ViewContainsCaretView(TView* view);						// ROM 0x00265508 ViewContainsCaretView__FP5TView
+	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b56d8 SetPopup__9TRootViewFP5TViewUc
+	TView*		GetClipboard(TView* view);								// ROM 0x001b5994 GetClipboard__9TRootViewFP5TView
 	// the key view and the caret
-	void		SetKeyView(TView* view, long offset, long length, Boolean noSelection);	// ROM 0x001b608c SetKeyView__9TRootViewFP5TViewlT2Uc
-	void		SetKeyViewSelection(TView* view, RefArg selection, Boolean check);	// ROM 0x001b5fbc SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
-	void		CommonSetKeyView(TView* view, long offset, long length);	// ROM 0x001b6174 CommonSetKeyView__9TRootViewFP5TViewlT2
-	void		HoldPendingKeyView(RefArg view, RefArg info);			// ROM 0x001b4198 HoldPendingKeyView__9TRootViewFRC6RefVarT1
-	void		ActivatePendingKeyView(void);							// ROM 0x001b41bc ActivatePendingKeyView__9TRootViewFv
-	void		PushSelection(TView* view, RefArg info);				// ROM 0x001b69a8 PushSelection__9TRootViewFP5TViewRC6RefVar
-	Ref			PopSelection(void);										// ROM 0x001b6868 PopSelection__9TRootViewFv
-	void		CleanSelectionStack(TView* view, Boolean trim);			// ROM 0x001b6588 CleanSelectionStack__9TRootViewFP5TViewUc
-	Ref			GetSelectionStack(void);								// ROM 0x001b66b8 GetSelectionStack__9TRootViewFv
-	TView*		FindRestorableKeyView(TView* view, ULong* index);		// ROM 0x001b66d4 FindRestorableKeyView__9TRootViewFP5TViewPUl
-	Boolean		RestoreKeyView(TView* view);							// ROM 0x001b678c RestoreKeyView__9TRootViewFP5TView
-	Boolean		GetPreserveHilites(void);								// ROM 0x001b6a34 GetPreserveHilites__9TRootViewFv
-	void		SetPreserveHilites(Boolean preserve);					// ROM 0x001b6a20 SetPreserveHilites__9TRootViewFUc
-	Boolean		GetRemoteWriting(void);									// ROM 0x001b6f44 GetRemoteWriting__9TRootViewFv
-	void		SetRemoteWriting(Boolean on);							// ROM 0x001b6f6c SetRemoteWriting__9TRootViewFUc
-	Boolean		CaretEnabled(void);										// ROM 0x001b707c CaretEnabled__9TRootViewFv
-	Boolean		CaretValid(Point* pt);									// ROM 0x001b70cc CaretValid__9TRootViewFP6TPoint
-	void		GetCaretPoint(Point* pt);								// ROM 0x001b72a0 GetCaretPoint__9TRootViewFP6TPoint
-	void		GetCaretRect(Rect* rect);								// ROM 0x001b7314 GetCaretRect__9TRootViewFP5TRect
-	Boolean		DoCaretClick(TUnitPublic* unit);						// ROM 0x001b7774 DoCaretClick__9TRootViewFP11TUnitPublic - a click on the caret tracked (the caret inverted while the pen is on it); ==> whether the caret popup came up
-	void		DrawCaret(Point pt);									// ROM 0x001b745c DrawCaret__9TRootViewF6TPoint
-	void		RestoreBitsUnderCaret(void);							// ROM 0x001b7698 RestoreBitsUnderCaret__9TRootViewFv
-	void		HideCaret(void);										// ROM 0x001b7adc HideCaret__9TRootViewFv
-	void		ShowCaret(void);										// ROM 0x001b7b0c ShowCaret__9TRootViewFv
-	void		DirtyCaret(void);										// ROM 0x001b7b6c DirtyCaret__9TRootViewFv
+	void		SetKeyView(TView* view, long offset, long length, Boolean noSelection);	// ROM 0x001b3bb4 SetKeyView__9TRootViewFP5TViewlT2Uc
+	void		SetKeyViewSelection(TView* view, RefArg selection, Boolean check);	// ROM 0x001b3ae4 SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
+	void		CommonSetKeyView(TView* view, long offset, long length);	// ROM 0x001b3c9c CommonSetKeyView__9TRootViewFP5TViewlT2
+	void		HoldPendingKeyView(RefArg view, RefArg info);			// ROM 0x001b1cc0 HoldPendingKeyView__9TRootViewFRC6RefVarT1
+	void		ActivatePendingKeyView(void);							// ROM 0x001b1ce4 ActivatePendingKeyView__9TRootViewFv
+	void		PushSelection(TView* view, RefArg info);				// ROM 0x001b44d0 PushSelection__9TRootViewFP5TViewRC6RefVar
+	Ref			PopSelection(void);										// ROM 0x001b4390 PopSelection__9TRootViewFv
+	void		CleanSelectionStack(TView* view, Boolean trim);			// ROM 0x001b40b0 CleanSelectionStack__9TRootViewFP5TViewUc
+	Ref			GetSelectionStack(void);								// ROM 0x001b41e0 GetSelectionStack__9TRootViewFv
+	TView*		FindRestorableKeyView(TView* view, ULong* index);		// ROM 0x001b41fc FindRestorableKeyView__9TRootViewFP5TViewPUl
+	Boolean		RestoreKeyView(TView* view);							// ROM 0x001b42b4 RestoreKeyView__9TRootViewFP5TView
+	Boolean		GetPreserveHilites(void);								// ROM 0x001b455c GetPreserveHilites__9TRootViewFv
+	void		SetPreserveHilites(Boolean preserve);					// ROM 0x001b4548 SetPreserveHilites__9TRootViewFUc
+	Boolean		GetRemoteWriting(void);									// ROM 0x001b4a6c GetRemoteWriting__9TRootViewFv
+	void		SetRemoteWriting(Boolean on);							// ROM 0x001b4a94 SetRemoteWriting__9TRootViewFUc
+	Boolean		CaretEnabled(void);										// ROM 0x001b4ba4 CaretEnabled__9TRootViewFv
+	Boolean		CaretValid(Point* pt);									// ROM 0x001b4bf4 CaretValid__9TRootViewFP6TPoint
+	void		GetCaretPoint(Point* pt);								// ROM 0x001b4dc8 GetCaretPoint__9TRootViewFP6TPoint
+	void		GetCaretRect(Rect* rect);								// ROM 0x001b4e3c GetCaretRect__9TRootViewFP5TRect
+	Boolean		DoCaretClick(TUnitPublic* unit);						// ROM 0x001b529c DoCaretClick__9TRootViewFP11TUnitPublic - a click on the caret tracked (the caret inverted while the pen is on it); ==> whether the caret popup came up
+	void		DrawCaret(Point pt);									// ROM 0x001b4f84 DrawCaret__9TRootViewF6TPoint
+	void		RestoreBitsUnderCaret(void);							// ROM 0x001b51c0 RestoreBitsUnderCaret__9TRootViewFv
+	void		HideCaret(void);										// ROM 0x001b5604 HideCaret__9TRootViewFv
+	void		ShowCaret(void);										// ROM 0x001b5634 ShowCaret__9TRootViewFv
+	void		DirtyCaret(void);										// ROM 0x001b5694 DirtyCaret__9TRootViewFv
 	void		FindDefaultButtonAndCaretSlip(TView* view, TView** button, TView** slip);	// ROM 0x001b6bac
-	void		UpdateDefaultButtonAndCaretSlip(void);					// ROM 0x001b6c60 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
-	long		GetKeyboardIndex(RefArg context);						// ROM 0x001b6d5c GetKeyboardIndex__9TRootViewFRC6RefVar
-	void		RegisterKeyboard(RefArg context, ULong flags);			// ROM 0x001b6a3c RegisterKeyboard__9TRootViewFRC6RefVarUl
-	Boolean		UnregisterKeyboard(RefArg context);						// ROM 0x001b6b44 UnregisterKeyboard__9TRootViewFRC6RefVar
-	Boolean		KeyboardConnected(void);								// ROM 0x001b6fac KeyboardConnected__9TRootViewFv
-	Boolean		CommandKeyboardConnected(void);							// ROM 0x001b6fd4 CommandKeyboardConnected__9TRootViewFv
-	Boolean		KeyboardActive(void);									// ROM 0x001b6fe4 KeyboardActive__9TRootViewFv
-	void		ConnectPassthruKeyboard(Boolean connected);				// ROM 0x001b6df4 ConnectPassthruKeyboard__9TRootViewFUc
-	void		HandleKeyIn(ULong keyCode, Boolean isDown, TView* keyboard);	// ROM 0x001b6e04 HandleKeyIn__9TRootViewFUlUcP5TView
-	void		CheckForCaretRemoval(void);								// ROM 0x001b6ad0 CheckForCaretRemoval__9TRootViewFv
-	void		SetModalView(TView* view);								// ROM 0x002e8b18 SetModalView__FP5TView
-	TTime		IdleViews(void);										// ROM 0x001b4bf4 IdleViews__9TRootViewFv - the due idlers run; ==> the next idle time (zero: none)
-	ULong		AddIdler(TView* view, ULong delay, long arg);			// ROM 0x001b4f8c AddIdler__9TRootViewFP5TViewUll - delay 0 removes; ==> the time left
-	ULong		RemoveIdler(TView* view, long arg);						// ROM 0x001b5124 RemoveIdler__9TRootViewFP5TViewl
-	void		RemoveAllIdlers(TView* view);							// ROM 0x001b5238 RemoveAllIdlers__9TRootViewFP5TView
-	IdlingView*	GetIdlingView(TView* view);								// ROM 0x001b50d0 GetIdlingView__9TRootViewFP5TView
-	void		UnlinkIdleView(TView* view);							// ROM 0x001b5100 UnlinkIdleView__9TRootViewFP5TView
+	void		UpdateDefaultButtonAndCaretSlip(void);					// ROM 0x001b4788 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
+	long		GetKeyboardIndex(RefArg context);						// ROM 0x001b4884 GetKeyboardIndex__9TRootViewFRC6RefVar
+	void		RegisterKeyboard(RefArg context, ULong flags);			// ROM 0x001b4564 RegisterKeyboard__9TRootViewFRC6RefVarUl
+	Boolean		UnregisterKeyboard(RefArg context);						// ROM 0x001b466c UnregisterKeyboard__9TRootViewFRC6RefVar
+	Boolean		KeyboardConnected(void);								// ROM 0x001b4ad4 KeyboardConnected__9TRootViewFv
+	Boolean		CommandKeyboardConnected(void);							// ROM 0x001b4afc CommandKeyboardConnected__9TRootViewFv
+	Boolean		KeyboardActive(void);									// ROM 0x001b4b0c KeyboardActive__9TRootViewFv
+	void		ConnectPassthruKeyboard(Boolean connected);				// ROM 0x001b491c ConnectPassthruKeyboard__9TRootViewFUc
+	void		HandleKeyIn(ULong keyCode, Boolean isDown, TView* keyboard);	// ROM 0x001b492c HandleKeyIn__9TRootViewFUlUcP5TView
+	void		CheckForCaretRemoval(void);								// ROM 0x001b45f8 CheckForCaretRemoval__9TRootViewFv
+	void		SetModalView(TView* view);								// ROM 0x0030de2c SetModalView__FP5TView
+	TTime		IdleViews(void);										// ROM 0x001b271c IdleViews__9TRootViewFv - the due idlers run; ==> the next idle time (zero: none)
+	ULong		AddIdler(TView* view, ULong delay, long arg);			// ROM 0x001b2ab4 AddIdler__9TRootViewFP5TViewUll - delay 0 removes; ==> the time left
+	ULong		RemoveIdler(TView* view, long arg);						// ROM 0x001b2c4c RemoveIdler__9TRootViewFP5TViewl
+	void		RemoveAllIdlers(TView* view);							// ROM 0x001b2d60 RemoveAllIdlers__9TRootViewFP5TView
+	IdlingView*	GetIdlingView(TView* view);								// ROM 0x001b2bf8 GetIdlingView__9TRootViewFP5TView
+	void		UnlinkIdleView(TView* view);							// ROM 0x001b2c28 UnlinkIdleView__9TRootViewFP5TView
 	long		ScreenWidth(void) const;								// host: the port's width (the ROM's screenWidth global)
 	long		ScreenHeight(void) const;
 

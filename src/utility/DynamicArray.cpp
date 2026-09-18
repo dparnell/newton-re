@@ -8,7 +8,7 @@
 				valid.  CList, CSortedList and the event/timer queues sit on
 				it.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Layout (0x18 bytes): fSize +0, fElementSize +4, fChunkSize +8,
 	fAllocatedSize +0xc, fArrayBlock +0x10, fIterator +0x14.
 */
@@ -19,7 +19,7 @@
 #include "NewtonMemory.h"
 
 
-// ROM 0x000a2868 __ct__13CDynamicArrayFv
+// ROM 0x000a1668 __ct__13CDynamicArrayFv
 CDynamicArray::CDynamicArray()
 {
 	fArrayBlock = nil;
@@ -31,7 +31,7 @@ CDynamicArray::CDynamicArray()
 }
 
 
-// ROM 0x000a28ac __ct__13CDynamicArrayFlT1
+// ROM 0x000a16ac __ct__13CDynamicArrayFlT1
 CDynamicArray::CDynamicArray(Size elementSize, ArrayIndex chunkSize)
 {
 	fArrayBlock = nil;
@@ -43,7 +43,7 @@ CDynamicArray::CDynamicArray(Size elementSize, ArrayIndex chunkSize)
 }
 
 
-// ROM 0x000a291c __dt__13CDynamicArrayFv
+// ROM 0x000a171c __dt__13CDynamicArrayFv
 // Iterators still on the array are cut loose (they answer "no more").
 CDynamicArray::~CDynamicArray()
 {
@@ -54,7 +54,7 @@ CDynamicArray::~CDynamicArray()
 }
 
 
-// ROM 0x000a28f8 SetElementCount__13CDynamicArrayFl
+// ROM 0x000a16f8 SetElementCount__13CDynamicArrayFl
 NewtonErr
 CDynamicArray::SetElementCount(ArrayIndex theSize)
 {
@@ -65,7 +65,7 @@ CDynamicArray::SetElementCount(ArrayIndex theSize)
 }
 
 
-// ROM 0x000a295c SafeElementPtrAt__13CDynamicArrayFl
+// ROM 0x000a175c SafeElementPtrAt__13CDynamicArrayFl
 // nil outside [0, fSize).
 void*
 CDynamicArray::SafeElementPtrAt(ArrayIndex index)
@@ -76,7 +76,7 @@ CDynamicArray::SafeElementPtrAt(ArrayIndex index)
 }
 
 
-// ROM 0x000a2bb0 SetArraySize__13CDynamicArrayFl
+// ROM 0x000a19b0 SetArraySize__13CDynamicArrayFl
 // The physical size follows the logical one in chunks: nothing changes
 // while the request fits and the slack is under a chunk; otherwise the
 // block is resized to the next chunk boundary above the request (a request
@@ -115,7 +115,7 @@ CDynamicArray::SetArraySize(ArrayIndex theSize)
 }
 
 
-// ROM 0x000a2a2c GetElementsAt__13CDynamicArrayFlPvT1
+// ROM 0x000a182c GetElementsAt__13CDynamicArrayFlPvT1
 NewtonErr
 CDynamicArray::GetElementsAt(ArrayIndex index, void* elemPtr, ArrayIndex count)
 {
@@ -125,7 +125,7 @@ CDynamicArray::GetElementsAt(ArrayIndex index, void* elemPtr, ArrayIndex count)
 }
 
 
-// ROM 0x000a2a64 InsertElementsBefore__13CDynamicArrayFlPvT1
+// ROM 0x000a1864 InsertElementsBefore__13CDynamicArrayFlPvT1
 // An index past the end appends.
 NewtonErr
 CDynamicArray::InsertElementsBefore(ArrayIndex startHere, void* elemPtr, ArrayIndex count)
@@ -147,7 +147,7 @@ CDynamicArray::InsertElementsBefore(ArrayIndex startHere, void* elemPtr, ArrayIn
 }
 
 
-// ROM 0x000a2b20 ReplaceElementsAt__13CDynamicArrayFlPvT1
+// ROM 0x000a1920 ReplaceElementsAt__13CDynamicArrayFlPvT1
 NewtonErr
 CDynamicArray::ReplaceElementsAt(ArrayIndex index, void* elemPtr, ArrayIndex count)
 {
@@ -157,7 +157,7 @@ CDynamicArray::ReplaceElementsAt(ArrayIndex index, void* elemPtr, ArrayIndex cou
 }
 
 
-// ROM 0x000a298c RemoveElementsAt__13CDynamicArrayFlT1
+// ROM 0x000a178c RemoveElementsAt__13CDynamicArrayFlT1
 NewtonErr
 CDynamicArray::RemoveElementsAt(ArrayIndex index, ArrayIndex count)
 {
@@ -182,7 +182,7 @@ CDynamicArray::RemoveElementsAt(ArrayIndex index, ArrayIndex count)
 }
 
 
-// ROM 0x000a2b58 Merge__13CDynamicArrayFP13CDynamicArray
+// ROM 0x000a1958 Merge__13CDynamicArrayFP13CDynamicArray
 // Appends the other array's elements; the element sizes must agree.
 NewtonErr
 CDynamicArray::Merge(CDynamicArray* aDynamicArray)

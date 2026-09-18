@@ -17,8 +17,8 @@
 				CPipe 4 bytes, PipeCallBack 0xc, CBufferPipe 0x10, the
 				virtuals in the ROM's vtable order.
 
-	Reconstructed from the MP2100 D ROM (0x0018c444-0x0018c97c,
-	0x0004738c-0x00047cc4, 0x002b37a8, 0x000d093c-0x000d2840); each
+	Reconstructed from the MP2x00 US ROM (0x0018a424-0x0018a95c,
+	0x00046abc-0x000473f4, 0x002d8588, 0x000cf7e8-0x000d16ec); each
 	function cites its origin.
 */
 

@@ -14,7 +14,7 @@
 	NTK loads a text file); -e compiles and runs a string; with no files
 	and no -e, or with -i, forms are read from stdin one line at a time
 	(REPAcceptLine) until the end of the input.  The ROM image defaults to
-	the MP2100 D image in DebugRom/ next to the source tree (NEWTON_ROM
+	the MP2x00 US image in DebugRom/ next to the source tree (NEWTON_ROM
 	overrides); without a readable image the object system runs without
 	the ROM's objects (its built-in NewtonScript functions are then
 	missing, the reconstructed natives are not).  The host adds the global
@@ -46,7 +46,7 @@
 #include "HostStores.h"
 
 #ifndef NEWTON_DEFAULT_ROM_IMAGE
-#define NEWTON_DEFAULT_ROM_IMAGE "DebugRom/MP2100 D/Senior DCirrusNoDebug image"
+#define NEWTON_DEFAULT_ROM_IMAGE "DebugRom/MP2x00 US/Senior CirrusNoDebug image"
 #endif
 
 

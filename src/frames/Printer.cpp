@@ -41,7 +41,7 @@ extern const FreqFuncInfo	gFreqFuncInfo[];
 	Setup
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00310884 InitPrinter__Fv
+// ROM 0x0033c7cc InitPrinter__Fv
 // DEVIATION: the ROM's boot has a translator in gREPout (gBootOut) before
 // InitObjects; here, until the REP is started (HostInitREP), a null one
 // keeps the printer from printing to nothing.
@@ -55,7 +55,7 @@ InitPrinter(void)
 }
 
 
-// ROM 0x003108b8 IsAggregate__FRC6RefVar
+// ROM 0x0033c800 IsAggregate__FRC6RefVar
 // A frame or an array (a slotted object that is not a symbol).
 Boolean
 IsAggregate(RefArg obj)
@@ -68,7 +68,7 @@ IsAggregate(RefArg obj)
 	Printing
 ------------------------------------------------------------------------------- */
 
-// ROM 0x003107e8 SafelyPrintString__FPUs
+// ROM 0x0033c730 SafelyPrintString__FPUs
 // A string through Print's %U, at most 250 characters at a time.
 void
 SafelyPrintString(UniChar* str)
@@ -176,7 +176,7 @@ HasAggregateElements(RefArg obj, long printLength)
 }
 
 
-// ROM 0x00310908 PrintObjectAux__FRC6RefVarlT2
+// ROM 0x0033c850 PrintObjectAux__FRC6RefVarlT2
 // obj as NewtonScript source, indented by indent (for the lines after the
 // first) at nesting depth.  Integers, characters ($c, $\xx, $\uxxxx), the
 // immediates, symbols, reals (%#g), strings (quoted), other binaries
@@ -442,7 +442,7 @@ PrintObjectAux(RefArg obj, long indent, long depth)
 }
 
 
-// ROM 0x00311894 PrintObject__FRC6RefVarUl
+// ROM 0x0033d7dc PrintObject__FRC6RefVarUl
 void
 PrintObject(RefArg obj, long indent)
 {
@@ -454,7 +454,7 @@ PrintObject(RefArg obj, long indent)
 	Bytecode
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029ca8c PrintInstructions__FRC6RefVar
+// ROM 0x002c19d8 PrintInstructions__FRC6RefVar
 // The instructions of a function, on one line: <Instrs: get-var 3, ...>.
 void
 PrintInstructions(RefArg instructions)
@@ -489,7 +489,7 @@ PrintInstructions(RefArg instructions)
 }
 
 
-// ROM 0x0029cbcc PrintInstruction__FiPUcRC6RefVarN23
+// ROM 0x002c1b18 PrintInstruction__FiPUcRC6RefVarN23
 // One instruction with what its operand names: the literal for push,
 // find-var and set-find-var; the constant for push-constant; the local's
 // name for get-var and set-var (from the argFrame of a 1.x code block,
@@ -543,7 +543,7 @@ PrintInstruction(Boolean is2xFunction, const unsigned char* pc, RefArg literals,
 }
 
 
-// ROM 0x0029cf1c Disassemble__FRC6RefVar
+// ROM 0x002c1e68 Disassemble__FRC6RefVar
 // A function's instructions, one per line with its pc.
 void
 Disassemble(RefArg fn)
@@ -575,7 +575,7 @@ Disassemble(RefArg fn)
 	Well-known objects and slot names (the stack trace's helpers)
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ad514 FindSlotName__FRC6RefVarT1
+// ROM 0x002d22a0 FindSlotName__FRC6RefVarT1
 // The tag of the slot of context holding value, or nil.
 Ref
 FindSlotName(RefArg context, RefArg value)
@@ -588,7 +588,7 @@ FindSlotName(RefArg context, RefArg value)
 }
 
 
-// ROM 0x0029a474 GetFramesErrorString__Fl
+// ROM 0x002bf3c0 GetFramesErrorString__Fl
 // The message of a frames error code; this ROM has none.
 const char*
 GetFramesErrorString(long /*error*/)
@@ -597,7 +597,7 @@ GetFramesErrorString(long /*error*/)
 }
 
 
-// ROM 0x0029a47c PrintFramesErrorMsg__FPCcRC6RefVar
+// ROM 0x002bf3c8 PrintFramesErrorMsg__FPCcRC6RefVar
 // A message with %slot. references to the exception frame's slots
 // printed in place.
 void
@@ -641,7 +641,7 @@ PrintFramesErrorMsg(const char* message, RefArg data)
 	Objects as strings
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001add98 GetStringFormat__FRC6RefVar
+// ROM 0x001ab8b0 GetStringFormat__FRC6RefVar
 // The format bits of a string: the low two bits of its last UniChar (the
 // terminator, 0, for a plain string).
 long
@@ -653,7 +653,7 @@ GetStringFormat(RefArg str)
 }
 
 
-// ROM 0x001ad6b0 IsRichString__FRC6RefVar
+// ROM 0x001ab1c8 IsRichString__FRC6RefVar
 Boolean
 IsRichString(RefArg str)
 {
@@ -661,7 +661,7 @@ IsRichString(RefArg str)
 }
 
 
-// ROM 0x000ee4bc IntegerString__FlPUs
+// ROM 0x000ecf04 IntegerString__FlPUs
 void
 IntegerString(long i, UniChar* str)
 {
@@ -671,7 +671,7 @@ IntegerString(long i, UniChar* str)
 }
 
 
-// ROM 0x0012b320 StringObject__FRC6RefVarPUsRll
+// ROM 0x001298c4 StringObject__FRC6RefVarPUsRll
 Boolean
 StringObject(RefArg obj, UniChar* buffer, long& length, long maxLength)
 {
@@ -724,7 +724,7 @@ StringObject(RefArg obj, UniChar* buffer, long& length, long maxLength)
 }
 
 
-// ROM 0x0012b540 SPrintObject__FRC6RefVar
+// ROM 0x00129ae4 SPrintObject__FRC6RefVar
 // obj's text as a new string.
 Ref
 SPrintObject(RefArg obj)
@@ -738,7 +738,7 @@ SPrintObject(RefArg obj)
 }
 
 
-// ROM 0x00291910 StringerStringObject__FRC6RefVarPcPlT2T3
+// ROM 0x002b683c StringerStringObject__FRC6RefVarPcPlT2T3
 // The text of one object for Stringer: its UniChars into text (nil: only
 // the length, in bytes) and, for a rich string, its ink data into
 // inkData (inkLength).  A string, nil (nothing), a character, an
@@ -801,7 +801,7 @@ StringerStringObject(RefArg obj, char* text, long* length, char* /*inkData*/, lo
 }
 
 
-// ROM 0x00291b3c Stringer__FRC6RefVar
+// ROM 0x002b6a68 Stringer__FRC6RefVar
 // The objects of an array as one string (the & operator's).  With ink
 // data among them the string is a rich one: the text, padding, the ink
 // and a trailer word (text length << 4 | 1).
@@ -858,7 +858,7 @@ Stringer(RefArg array)
 	Natives
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00291d00 FFramesStringer
+// ROM 0x002b6c2c FFramesStringer
 Ref
 FFramesStringer(RefArg /*rcvr*/, RefArg array)
 {
@@ -866,7 +866,7 @@ FFramesStringer(RefArg /*rcvr*/, RefArg array)
 }
 
 
-// ROM 0x00291d08 FEvalStringer
+// ROM 0x002b6c34 FEvalStringer
 // Each symbol among the elements stands for the receiver's variable of
 // that name.
 Ref
@@ -888,7 +888,7 @@ FEvalStringer(RefArg rcvr, RefArg array)
 }
 
 
-// ROM 0x00292fb4 FPrint
+// ROM 0x002b7ee0 FPrint
 Ref
 FPrint(RefArg /*rcvr*/, RefArg obj)
 {
@@ -898,7 +898,7 @@ FPrint(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00292fec FDisplay
+// ROM 0x002b7f18 FDisplay
 Ref
 FDisplay(RefArg /*rcvr*/, RefArg obj)
 {
@@ -907,7 +907,7 @@ FDisplay(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x001ef504 FSPrintObject__FRC6RefVarT1
+// ROM 0x001ed0ec FSPrintObject__FRC6RefVarT1
 // obj's text as a string (a rich string becomes a plain one), at most
 // 1000 characters.
 Ref

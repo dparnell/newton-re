@@ -29,8 +29,8 @@
 				the host installs the click and click-event recognisers and
 				the root domain.
 
-	Reconstructed from the MP2100 D ROM (0x00145308-0x001460a0,
-	0x001a0140-0x001a0260, 0x0019f6f4-0x0019f960, 0x001a03e0-0x001a0680);
+	Reconstructed from the MP2x00 US ROM (0x001437b4-0x0014454c,
+	0x0019de84-0x0019dfa4, 0x0019d438-0x0019d6a4, 0x0019e124-0x0019e3c4);
 	each function cites its origin.
 */
 
@@ -58,26 +58,26 @@ enum
 class TRecognizer
 {
 public:
-						TRecognizer();							// ROM 0x00145308 __ct__11TRecognizerFv
-	virtual void		Init(TDomain* domain, ULong id, ULong command, UChar flags, ULong arbitrateTime);	// ROM 0x00145488 Init__11TRecognizerFP7TDomainUlT2UcT2 (+0x00)
-	virtual void		InitServices(ULong possible, ULong enabled);	// ROM 0x0014535c InitServices__11TRecognizerFUlT1 (+0x04)
-	virtual TDomain*	Domain(void);							// ROM 0x00145938 Domain__11TRecognizerFv (+0x08)
-	virtual ULong		ID(void);								// ROM 0x00145f40 ID__11TRecognizerFv (+0x0c)
-	virtual ULong		Command(void);							// ROM 0x0014604c Command__11TRecognizerFv (+0x10)
-	virtual ULong		Flags(void);							// ROM 0x00146054 Flags__11TRecognizerFv (+0x14)
-	virtual Boolean		TestFlags(UChar flags);					// ROM 0x0014605c TestFlags__11TRecognizerFUc (+0x18)
-	virtual ULong		ServicesPossible(void);					// ROM 0x0014607c ServicesPossible__11TRecognizerFv (+0x1c)
-	virtual ULong		ServicesEnabled(void);					// ROM 0x0014533c ServicesEnabled__11TRecognizerFv (+0x20)
-	virtual long		UnitConfidence(TUnitPublic* unit);		// ROM 0x00145344 UnitConfidence__11TRecognizerFP11TUnitPublic (+0x24: 0)
-	virtual void		Sleep(void);							// ROM 0x0014534c Sleep__11TRecognizerFv (+0x28)
-	virtual void		WakeUp(void);							// ROM 0x00145350 WakeUp__11TRecognizerFv (+0x2c)
-	virtual ULong		ArbitrateTime(void);					// ROM 0x00145354 ArbitrateTime__11TRecognizerFv (+0x30)
-	virtual void		BuildConfig(RefArg config, TView* view, ULong flags);	// ROM 0x00145368 BuildConfig__11TRecognizerFRC6RefVarP5TViewUl (+0x34: nothing)
-	virtual long		EnableArea(TRecArea* area, RefArg config);	// ROM 0x0014536c EnableArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x38: NOT YET - the type added to the area when the config's inputMask enables it)
-	virtual long		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x00145418 ConfigureArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x3c: 0)
-	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00146074 HandleUnit__11TRecognizerFP11TUnitPublic (+0x40: ==> the command)
-	virtual Ref			GetLearningData(TUnitPublic* unit);		// ROM 0x001454b8 GetLearningData__11TRecognizerFP11TUnitPublic (+0x44: nil)
-	virtual void		DoLearning(RefArg data, long arg);		// ROM 0x001454c0 DoLearning__11TRecognizerFRC6RefVarl (+0x48: nothing)
+						TRecognizer();							// ROM 0x001437b4 __ct__11TRecognizerFv
+	virtual void		Init(TDomain* domain, ULong id, ULong command, UChar flags, ULong arbitrateTime);	// ROM 0x00143934 Init__11TRecognizerFP7TDomainUlT2UcT2 (+0x00)
+	virtual void		InitServices(ULong possible, ULong enabled);	// ROM 0x00143808 InitServices__11TRecognizerFUlT1 (+0x04)
+	virtual TDomain*	Domain(void);							// ROM 0x00143de4 Domain__11TRecognizerFv (+0x08)
+	virtual ULong		ID(void);								// ROM 0x001443ec ID__11TRecognizerFv (+0x0c)
+	virtual ULong		Command(void);							// ROM 0x001444f8 Command__11TRecognizerFv (+0x10)
+	virtual ULong		Flags(void);							// ROM 0x00144500 Flags__11TRecognizerFv (+0x14)
+	virtual Boolean		TestFlags(UChar flags);					// ROM 0x00144508 TestFlags__11TRecognizerFUc (+0x18)
+	virtual ULong		ServicesPossible(void);					// ROM 0x00144528 ServicesPossible__11TRecognizerFv (+0x1c)
+	virtual ULong		ServicesEnabled(void);					// ROM 0x001437e8 ServicesEnabled__11TRecognizerFv (+0x20)
+	virtual long		UnitConfidence(TUnitPublic* unit);		// ROM 0x001437f0 UnitConfidence__11TRecognizerFP11TUnitPublic (+0x24: 0)
+	virtual void		Sleep(void);							// ROM 0x001437f8 Sleep__11TRecognizerFv (+0x28)
+	virtual void		WakeUp(void);							// ROM 0x001437fc WakeUp__11TRecognizerFv (+0x2c)
+	virtual ULong		ArbitrateTime(void);					// ROM 0x00143800 ArbitrateTime__11TRecognizerFv (+0x30)
+	virtual void		BuildConfig(RefArg config, TView* view, ULong flags);	// ROM 0x00143814 BuildConfig__11TRecognizerFRC6RefVarP5TViewUl (+0x34: nothing)
+	virtual long		EnableArea(TRecArea* area, RefArg config);	// ROM 0x00143818 EnableArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x38: NOT YET - the type added to the area when the config's inputMask enables it)
+	virtual long		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x001438c4 ConfigureArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x3c: 0)
+	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00144520 HandleUnit__11TRecognizerFP11TUnitPublic (+0x40: ==> the command)
+	virtual Ref			GetLearningData(TUnitPublic* unit);		// ROM 0x00143964 GetLearningData__11TRecognizerFP11TUnitPublic (+0x44: nil)
+	virtual void		DoLearning(RefArg data, long arg);		// ROM 0x0014396c DoLearning__11TRecognizerFRC6RefVarl (+0x48: nothing)
 
 	TDomain*			fDomain;			// +0x04
 	ULong				fID;				// +0x08  the unit type
@@ -91,43 +91,43 @@ public:
 class TRecognizerList : public TArray
 {
 public:
-	static TRecognizerList*	Make(void);							// ROM 0x001a0140 Make__15TRecognizerListSFv
-	long				IRecognizerList(void);					// ROM 0x001a01a8 IRecognizerList__15TRecognizerListFv
+	static TRecognizerList*	Make(void);							// ROM 0x0019de84 Make__15TRecognizerListSFv
+	long				IRecognizerList(void);					// ROM 0x0019deec IRecognizerList__15TRecognizerListFv
 
-	void				AddRecognizer(TRecognizer* recognizer);	// ROM 0x001a01b4 AddRecognizer__15TRecognizerListFP11TRecognizer
-	TRecognizer*		GetRecognizer(ULong index);				// ROM 0x001a01d8 GetRecognizer__15TRecognizerListFUl
-	TRecognizer*		FindRecognizer(ULong id);				// ROM 0x001a01f8 FindRecognizer__15TRecognizerListFUl - by unit type; nil for none
+	void				AddRecognizer(TRecognizer* recognizer);	// ROM 0x0019def8 AddRecognizer__15TRecognizerListFP11TRecognizer
+	TRecognizer*		GetRecognizer(ULong index);				// ROM 0x0019df1c GetRecognizer__15TRecognizerListFUl
+	TRecognizer*		FindRecognizer(ULong id);				// ROM 0x0019df3c FindRecognizer__15TRecognizerListFUl - by unit type; nil for none
 };
 
 // the click recogniser: ==> 0 when another view's area is in use
 class TClickRecognizer : public TRecognizer
 {
 public:
-	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x0014578c HandleUnit__16TClickRecognizerFP11TUnitPublic
+	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00143c38 HandleUnit__16TClickRecognizerFP11TUnitPublic
 };
 
 // the click-event recogniser: taps, double taps, hilite clicks
 class TEventRecognizer : public TRecognizer
 {
 public:
-	virtual ULong		ID(void);								// ROM 0x00145668 ID__16TEventRecognizerFv ('CEVT')
-	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00145674 HandleUnit__16TEventRecognizerFP11TUnitPublic
+	virtual ULong		ID(void);								// ROM 0x00143b14 ID__16TEventRecognizerFv ('CEVT')
+	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00143b20 HandleUnit__16TEventRecognizerFP11TUnitPublic
 };
 
 class TRecognitionManager
 {
 public:
-	long				Init(UChar level);						// ROM 0x001a03e0 Init__19TRecognitionManagerFUc
-	long				InitRecognizers(void);					// ROM 0x0019f6f4 InitRecognizers__19TRecognitionManagerFv
-	void				EnableModalRecognition(Rect& bounds);	// ROM 0x0019f7a4 EnableModalRecognition__19TRecognitionManagerFR5TRect
-	void				DisableModalRecognition(void);			// ROM 0x0019f7fc DisableModalRecognition__19TRecognitionManagerFv
-	Boolean				ModalRecognitionOK(Rect& bounds);		// ROM 0x0019f824 ModalRecognitionOK__19TRecognitionManagerFR5TRect - whether the rect's centre lies in the modal bounds (the popup closed when not)
-	void				IgnoreClicks(ULong ticks);				// ROM 0x0019f8ec IgnoreClicks__19TRecognitionManagerFUl
-	void				SetNextClick(ULong time);				// ROM 0x0019f910 SetNextClick__19TRecognitionManagerFUl - the ignoring dropped unless the time is within a second of its end
-	void				SaveClickView(TView* view);				// ROM 0x0019f934 SaveClickView__19TRecognitionManagerFP5TView
-	void				RemoveClickView(TView* view);			// ROM 0x0019f944 RemoveClickView__19TRecognitionManagerFP5TView
-	long				Idle(void);								// ROM 0x001a0618 Idle__19TRecognitionManagerFv - the strokes idled, the ink compressed (the controller's idle NOT YET)
-	TTime				NextIdle(void);							// ROM 0x001a0650 NextIdle__19TRecognitionManagerFv - when to idle next: the earlier of the stroke world's compress time and the controller's next time (NOT YET); zero for never
+	long				Init(UChar level);						// ROM 0x0019e124 Init__19TRecognitionManagerFUc
+	long				InitRecognizers(void);					// ROM 0x0019d438 InitRecognizers__19TRecognitionManagerFv
+	void				EnableModalRecognition(Rect& bounds);	// ROM 0x0019d4e8 EnableModalRecognition__19TRecognitionManagerFR5TRect
+	void				DisableModalRecognition(void);			// ROM 0x0019d540 DisableModalRecognition__19TRecognitionManagerFv
+	Boolean				ModalRecognitionOK(Rect& bounds);		// ROM 0x0019d568 ModalRecognitionOK__19TRecognitionManagerFR5TRect - whether the rect's centre lies in the modal bounds (the popup closed when not)
+	void				IgnoreClicks(ULong ticks);				// ROM 0x0019d630 IgnoreClicks__19TRecognitionManagerFUl
+	void				SetNextClick(ULong time);				// ROM 0x0019d654 SetNextClick__19TRecognitionManagerFUl - the ignoring dropped unless the time is within a second of its end
+	void				SaveClickView(TView* view);				// ROM 0x0019d678 SaveClickView__19TRecognitionManagerFP5TView
+	void				RemoveClickView(TView* view);			// ROM 0x0019d688 RemoveClickView__19TRecognitionManagerFP5TView
+	long				Idle(void);								// ROM 0x0019e35c Idle__19TRecognitionManagerFv - the strokes idled, the ink compressed (the controller's idle NOT YET)
+	TTime				NextIdle(void);							// ROM 0x0019e394 NextIdle__19TRecognitionManagerFv - when to idle next: the earlier of the stroke world's compress time and the controller's next time (NOT YET); zero for never
 
 	UChar				fLevel;				// +0x00
 	StrokeCentral*		fStrokeWorld;		// +0x04
@@ -144,23 +144,23 @@ public:
 	ULong				fUnused3c;			// +0x3c
 };
 
-extern TRecognitionManager	gRecognition;					// ROM 0x0c103f50 gRecognition
+extern TRecognitionManager	gRecognition;					// ROM 0x0c106e88 gRecognition
 
 // the unit handler (HandleUnit.cpp): the units the controller has
 // arbitrated handed to their recognisers and the commands posted to the
 // views
-long	HandleUnit(TArray* units);						// ROM 0x0019f964 HandleUnit__FP6TArray - HandleUnitList under an exception handler (an exception is reported, not thrown)
-long	HandleUnitList(TArray* units);					// ROM 0x0019f9e8 HandleUnitList__FP6TArray - ==> whether any unit was handled
-long	PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask);	// ROM 0x0019ff88 PostAndDoCommand__FUlP11TUnitPublicT1 - the command dispatched to the view under the unit; ==> the command's result (1 when a popup closed on the click)
-long	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019fe94 HandleGetContextUnits__FP5TUnitl - command 0x14 to the view under the unit
-void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019fd8c HandleExpiredStroke__FP5TUnit - a stroke no recogniser took (NOT YET: to the stroke world's expired strokes; the ink taken off while the arbiter is modal)
-void	UpdateStroke(TUnit* unit);						// ROM 0x0019fe40 UpdateStroke__FP5TUnit - the unit's stroke's ink taken off and the root view updated
-extern Boolean	gInhibitPopup;							// ROM 0x0c101a34 gInhibitPopup
+long	HandleUnit(TArray* units);						// ROM 0x0019d6a8 HandleUnit__FP6TArray - HandleUnitList under an exception handler (an exception is reported, not thrown)
+long	HandleUnitList(TArray* units);					// ROM 0x0019d72c HandleUnitList__FP6TArray - ==> whether any unit was handled
+long	PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask);	// ROM 0x0019dccc PostAndDoCommand__FUlP11TUnitPublicT1 - the command dispatched to the view under the unit; ==> the command's result (1 when a popup closed on the click)
+long	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl - command 0x14 to the view under the unit
+void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit - a stroke no recogniser took (NOT YET: to the stroke world's expired strokes; the ink taken off while the arbiter is modal)
+void	UpdateStroke(TUnit* unit);						// ROM 0x0019db84 UpdateStroke__FP5TUnit - the unit's stroke's ink taken off and the root view updated
+extern Boolean	gInhibitPopup;							// ROM 0x0c101948 gInhibitPopup
 
-void	InstallClickRecognizer(TRecognitionManager* manager);	// ROM 0x00145830 InstallClickRecognizer__FP19TRecognitionManager
-void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00145704 InstallEventRecognizer__FP19TRecognitionManager
-Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x00209828 OnlyStrokeWritten__FP11TStrokeUnit (NOT YET: true)
-Boolean	OtherViewInUse(TView* view);						// ROM 0x00036a10 OtherViewInUse__FP5TView (NOT YET: false)
-Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x00036a98 ClicksOnlyArea__FP5TUnit (NOT YET: false)
+void	InstallClickRecognizer(TRecognitionManager* manager);	// ROM 0x00143cdc InstallClickRecognizer__FP19TRecognitionManager
+void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00143bb0 InstallEventRecognizer__FP19TRecognitionManager
+Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit (NOT YET: true)
+Boolean	OtherViewInUse(TView* view);						// ROM 0x00036960 OtherViewInUse__FP5TView (NOT YET: false)
+Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit (NOT YET: false)
 
 #endif	/* __RECOGNIZER_H */

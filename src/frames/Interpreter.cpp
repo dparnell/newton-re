@@ -5,14 +5,14 @@
 				VM states, calling and returning, the bytecode loop, exception
 				handlers, and the entry points C++ uses to run NewtonScript.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	The ROM has two bytecode loops: SlowRun (0x002cc66c), which handles
-	tracing and breakpoints, and FastRun (0x002c8848), a copy of it with the
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
+	The ROM has two bytecode loops: SlowRun (0x002f1ee0), which handles
+	tracing and breakpoints, and FastRun (0x002ee0a8), a copy of it with the
 	instruction pointer and stack pointer held in registers and the common
 	cases open-coded, chosen while nothing needs SlowRun (fFastLoop).  The
 	two compute the same; here FastRun runs SlowRun's loop
-	(NOT YET RECONSTRUCTED: FastRun1 and its Fast... helpers, 0x002c7440-
-	0x002c9aa0, as a separate loop).
+	(NOT YET RECONSTRUCTED: FastRun1 and its Fast... helpers, 0x002ecca0-
+	0x002ef314, as a separate loop).
 
 	Two things of the ROM's are not a host's: native functions in binary
 	objects (ARM code) cannot be run, and the frames function profiler
@@ -61,7 +61,7 @@ const long	kRefStackRefs = 16384;
 	TRefStack
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001a6f5c TRefStackMark__FPv
+// ROM 0x001a49dc TRefStackMark__FPv
 static void
 TRefStackMark(void* stack)
 {
@@ -71,7 +71,7 @@ TRefStackMark(void* stack)
 }
 
 
-// ROM 0x001a6f90 TRefStackUpdate__FPv
+// ROM 0x001a4a10 TRefStackUpdate__FPv
 static void
 TRefStackUpdate(void* stack)
 {
@@ -81,7 +81,7 @@ TRefStackUpdate(void* stack)
 }
 
 
-// ROM 0x001a6e64 __ct__9TRefStackFv
+// ROM 0x001a48e4 __ct__9TRefStackFv
 TRefStack::TRefStack()
 {
 	fSize = 300;
@@ -94,7 +94,7 @@ TRefStack::TRefStack()
 }
 
 
-// ROM 0x001a6f28 __dt__9TRefStackFv
+// ROM 0x001a49a8 __dt__9TRefStackFv
 TRefStack::~TRefStack()
 {
 	DIYGCUnregister(this);
@@ -102,7 +102,7 @@ TRefStack::~TRefStack()
 }
 
 
-// ROM 0x001a6b9c Reset__9TRefStackFl
+// ROM 0x001a461c Reset__9TRefStackFl
 // Back to depth refs (never up).
 void
 TRefStack::Reset(long depth)
@@ -114,7 +114,7 @@ TRefStack::Reset(long depth)
 }
 
 
-// ROM 0x001a6be0 PushNILs__9TRefStackFl
+// ROM 0x001a4660 PushNILs__9TRefStackFl
 void
 TRefStack::PushNILs(long count)
 {
@@ -131,7 +131,7 @@ TRefStack::PushNILs(long count)
 	TRefStructStack, TIntrpStack
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001a6ff8 __ct__15TRefStructStackFv
+// ROM 0x001a4a78 __ct__15TRefStructStackFv
 TRefStructStack::TRefStructStack()
 {
 	fHandles = (RefHandle**) NewPtr(kRefStackRefs * sizeof(RefHandle*));
@@ -141,14 +141,14 @@ TRefStructStack::TRefStructStack()
 }
 
 
-// ROM 0x001a7098 __dt__15TRefStructStackFv
+// ROM 0x001a4b18 __dt__15TRefStructStackFv
 TRefStructStack::~TRefStructStack()
 {
 	DisposPtr((Ptr) fHandles);
 }
 
 
-// ROM 0x001a70d4 Fill__15TRefStructStackFv
+// ROM 0x001a4b54 Fill__15TRefStructStackFv
 // Pointers for every slot in use.
 void
 TRefStructStack::Fill(void)
@@ -171,7 +171,7 @@ TopState(TIntrpStack* stack)
 }
 
 
-// ROM 0x001a6c70 NewState__11TIntrpStackFv
+// ROM 0x001a46f0 NewState__11TIntrpStackFv
 VMState*
 TIntrpStack::NewState(void)
 {
@@ -180,7 +180,7 @@ TIntrpStack::NewState(void)
 }
 
 
-// ROM 0x001a6cfc DupState__11TIntrpStackFv
+// ROM 0x001a477c DupState__11TIntrpStackFv
 VMState*
 TIntrpStack::DupState(void)
 {
@@ -194,7 +194,7 @@ TIntrpStack::DupState(void)
 }
 
 
-// ROM 0x001a6da0 PrevState__11TIntrpStackFv
+// ROM 0x001a4820 PrevState__11TIntrpStackFv
 VMState*
 TIntrpStack::PrevState(void)
 {
@@ -203,7 +203,7 @@ TIntrpStack::PrevState(void)
 }
 
 
-// ROM 0x001a6e10 StateAt__11TIntrpStackFl
+// ROM 0x001a4890 StateAt__11TIntrpStackFl
 VMState*
 TIntrpStack::StateAt(long index)
 {
@@ -217,7 +217,7 @@ TIntrpStack::StateAt(long index)
 	Function objects
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002d1604 IsFunction__FRC6RefVar
+// ROM 0x002f6e48 IsFunction__FRC6RefVar
 Boolean
 IsFunction(RefArg obj)
 {
@@ -232,7 +232,7 @@ IsFunction(RefArg obj)
 }
 
 
-// ROM 0x002af4e4 IsNativeFunction__FRC6RefVar
+// ROM 0x002d4270 IsNativeFunction__FRC6RefVar
 Boolean
 IsNativeFunction(RefArg fn)
 {
@@ -241,7 +241,7 @@ IsNativeFunction(RefArg fn)
 }
 
 
-// ROM 0x002d16dc GetFunctionArgCount__FRC6RefVar
+// ROM 0x002f6f20 GetFunctionArgCount__FRC6RefVar
 long
 GetFunctionArgCount(RefArg fn)
 {
@@ -266,7 +266,7 @@ GetFunctionArgCount(RefArg fn)
 }
 
 
-// ROM 0x002d1548 MakeCFunction__FPFRC6RefVare_llPc
+// ROM 0x002f6d8c MakeCFunction__FPFRC6RefVare_llPc
 // A native function object over a C function (its address in the funcPtr
 // slot as an integer-tagged word).
 Ref
@@ -282,7 +282,7 @@ MakeCFunction(void* funcPtr, long numArgs, const char* docString)
 }
 
 
-// ROM 0x002d0ce4 NativeEntry__FRC6RefVarlPP9RefHandle
+// ROM 0x002f6558 NativeEntry__FRC6RefVarlPP9RefHandle
 // The code of a native function and its closure, given the argument count
 // matches; nil for a function that is not native.  NOT YET RECONSTRUCTED:
 // code in binary objects (0x232, binCFunction) is ARM code.
@@ -307,7 +307,7 @@ NativeEntry(RefArg fn, long numArgs, RefHandle** closure)
 	TInterpreter
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ce86c __ct__12TInterpreterFv
+// ROM 0x002f40e0 __ct__12TInterpreterFv
 TInterpreter::TInterpreter()
 {
 	fNext = gInterpreterList;
@@ -324,7 +324,7 @@ TInterpreter::TInterpreter()
 }
 
 
-// ROM 0x002ce958 __dt__12TInterpreterFv
+// ROM 0x002f41cc __dt__12TInterpreterFv
 TInterpreter::~TInterpreter()
 {
 	for (TInterpreter** link = &gInterpreterList; *link != nil; link = &(*link)->fNext)
@@ -336,7 +336,7 @@ TInterpreter::~TInterpreter()
 }
 
 
-// ROM 0x002cea00 PushValue__12TInterpreterFRC6RefVar
+// ROM 0x002f4274 PushValue__12TInterpreterFRC6RefVar
 void
 TInterpreter::PushValue(RefArg value)
 {
@@ -346,7 +346,7 @@ TInterpreter::PushValue(RefArg value)
 }
 
 
-// ROM 0x002cea18 PopValue__12TInterpreterFv
+// ROM 0x002f428c PopValue__12TInterpreterFv
 Ref
 TInterpreter::PopValue(void)
 {
@@ -354,7 +354,7 @@ TInterpreter::PopValue(void)
 }
 
 
-// ROM 0x002cea2c PeekValue__12TInterpreterFl
+// ROM 0x002f42a0 PeekValue__12TInterpreterFl
 Ref
 TInterpreter::PeekValue(long depth)
 {
@@ -362,7 +362,7 @@ TInterpreter::PeekValue(long depth)
 }
 
 
-// ROM 0x002cea40 SetValue__12TInterpreterFlT1
+// ROM 0x002f42b4 SetValue__12TInterpreterFlT1
 void
 TInterpreter::SetValue(long depth, Ref value)
 {
@@ -370,7 +370,7 @@ TInterpreter::SetValue(long depth, Ref value)
 }
 
 
-// ROM 0x002cea54 ValuePosition__12TInterpreterFv
+// ROM 0x002f42c8 ValuePosition__12TInterpreterFv
 long
 TInterpreter::ValuePosition(void)
 {
@@ -378,7 +378,7 @@ TInterpreter::ValuePosition(void)
 }
 
 
-// ROM 0x002cea70 PeekControl__12TInterpreterFl
+// ROM 0x002f42e4 PeekControl__12TInterpreterFl
 Ref
 TInterpreter::PeekControl(long depth)
 {
@@ -386,7 +386,7 @@ TInterpreter::PeekControl(long depth)
 }
 
 
-// ROM 0x002cea84 SetControl__12TInterpreterFlT1
+// ROM 0x002f42f8 SetControl__12TInterpreterFlT1
 void
 TInterpreter::SetControl(long depth, Ref value)
 {
@@ -394,7 +394,7 @@ TInterpreter::SetControl(long depth, Ref value)
 }
 
 
-// ROM 0x002cea98 ControlPosition__12TInterpreterFv
+// ROM 0x002f430c ControlPosition__12TInterpreterFv
 long
 TInterpreter::ControlPosition(void)
 {
@@ -402,7 +402,7 @@ TInterpreter::ControlPosition(void)
 }
 
 
-// ROM 0x002d0b40 GetReceiver__12TInterpreterFv
+// ROM 0x002f63b4 GetReceiver__12TInterpreterFv
 Ref
 TInterpreter::GetReceiver(void)
 {
@@ -410,7 +410,7 @@ TInterpreter::GetReceiver(void)
 }
 
 
-// ROM 0x002d0b50 GetImplementor__12TInterpreterFv
+// ROM 0x002f63c4 GetImplementor__12TInterpreterFv
 Ref
 TInterpreter::GetImplementor(void)
 {
@@ -418,7 +418,7 @@ TInterpreter::GetImplementor(void)
 }
 
 
-// ROM 0x002d0b60 IsSend__12TInterpreterFv
+// ROM 0x002f63d4 IsSend__12TInterpreterFv
 Boolean
 TInterpreter::IsSend(void)
 {
@@ -426,7 +426,7 @@ TInterpreter::IsSend(void)
 }
 
 
-// ROM 0x002d0b68 SetCallEnv__12TInterpreterFv
+// ROM 0x002f63dc SetCallEnv__12TInterpreterFv
 void
 TInterpreter::SetCallEnv(void)
 {
@@ -434,7 +434,7 @@ TInterpreter::SetCallEnv(void)
 }
 
 
-// ROM 0x002d0b74 SetSendEnv__12TInterpreterFRC6RefVarT1
+// ROM 0x002f63e8 SetSendEnv__12TInterpreterFRC6RefVarT1
 void
 TInterpreter::SetSendEnv(RefArg receiver, RefArg implementor)
 {
@@ -444,7 +444,7 @@ TInterpreter::SetSendEnv(RefArg receiver, RefArg implementor)
 }
 
 
-// ROM 0x002cc478 SetFastLoopFlag__12TInterpreterFv
+// ROM 0x002f1cec SetFastLoopFlag__12TInterpreterFv
 // FastRun may run when nothing wants SlowRun: no stack-trace accuracy,
 // tracing, breakpoints or profiling, and instructions that stay put.
 void
@@ -454,7 +454,7 @@ TInterpreter::SetFastLoopFlag(void)
 }
 
 
-// ROM 0x002cfbc8 SetFlags__12TInterpreterFv
+// ROM 0x002f543c SetFlags__12TInterpreterFv
 // The loop's view of the current function: its instructions and literals,
 // where its locals are.
 void
@@ -491,7 +491,7 @@ StackFrameWord(long base, long flags)
 }
 
 
-// ROM 0x002ceab4 TopLevelCall__12TInterpreterFRC6RefVarT1
+// ROM 0x002f4328 TopLevelCall__12TInterpreterFRC6RefVarT1
 // Start running fn (no arguments) at the top of the control stack: a
 // NewtonScript function's locals go on the value stack, its argFrame (if
 // it has one) is cloned for its closure; a 1.x CodeBlock's cloned argFrame
@@ -543,7 +543,7 @@ TInterpreter::TopLevelCall(RefArg fn, RefArg /*receiver*/)
 }
 
 
-// ROM 0x002cebc8 Call__12TInterpreterFRC6RefVarl
+// ROM 0x002f443c Call__12TInterpreterFRC6RefVarl
 // Call fn with numArgs arguments on the value stack.  A NewtonScript
 // function becomes the current one (answers false: the loop runs it); a
 // native one is called here, its result replacing the arguments, and the
@@ -593,7 +593,7 @@ TInterpreter::Call(RefArg fn, long numArgs)
 }
 
 
-// ROM 0x002cef08 Send__12TInterpreterFRC6RefVarN21l
+// ROM 0x002f477c Send__12TInterpreterFRC6RefVarN21l
 // As Call, with the receiver and implementor of the message.
 Boolean
 TInterpreter::Send(RefArg receiver, RefArg implementor, RefArg fn, long numArgs)
@@ -636,7 +636,7 @@ TInterpreter::Send(RefArg receiver, RefArg implementor, RefArg fn, long numArgs)
 }
 
 
-// ROM 0x002cf1e0 CallCodeBlock__12TInterpreterFRC6RefVarlT2
+// ROM 0x002f4a54 CallCodeBlock__12TInterpreterFRC6RefVarlT2
 // A 1.x function: the arguments go from the stack into a clone of its
 // argFrame, which is the locals frame; flags: 1 a send (the receiver and
 // implementor are the state's, stored into the frame), 2 (stack-frame bit).
@@ -671,7 +671,7 @@ TInterpreter::CallCodeBlock(RefArg fn, long numArgs, long flags)
 }
 
 
-// ROM 0x002cf390 CallPlainCodeBlock__12TInterpreterFRC6RefVarlT2
+// ROM 0x002f4c04 CallPlainCodeBlock__12TInterpreterFRC6RefVarlT2
 // A NewtonScript function: the arguments stay on the value stack, the
 // locals are pushed after them (NILREF), and the argFrame, if there is
 // one, is cloned for the closure's _nextArgFrame, _parent and
@@ -718,7 +718,7 @@ TInterpreter::CallPlainCodeBlock(RefArg fn, long numArgs, long flags)
 }
 
 
-// ROM 0x002cf534 CallCFunction__12TInterpreterFRC6RefVarli
+// ROM 0x002f4da8 CallCFunction__12TInterpreterFRC6RefVarli
 // A native function with its code in a binary: the closure (if any) goes
 // on the stack as an extra argument.  isFrame: a binCFunction frame rather
 // than a 0x232 array.  NOT YET RECONSTRUCTED: running the ARM code
@@ -734,7 +734,7 @@ TInterpreter::CallCFunction(RefArg fn, long numArgs, int /*isFrame*/)
 }
 
 
-// ROM 0x002cf718 CallPlainCFunction__12TInterpreterFRC6RefVarl
+// ROM 0x002f4f8c CallPlainCFunction__12TInterpreterFRC6RefVarl
 // A native function: called with the arguments on the value stack, its
 // result replacing them; then back to the caller's state.
 void
@@ -778,7 +778,7 @@ NoteMissingNative(ULong funcPtr)
 }
 
 
-// ROM 0x002cf8b0 CallCFuncPtr__12TInterpreterFPFRC6RefVare_ll
+// ROM 0x002f5124 CallCFuncPtr__12TInterpreterFPFRC6RefVare_ll
 // Call a C function with the receiver and the numArgs values at the top of
 // the stack, each passed as the RefVar of its slot (StackRef).  A ROM
 // address goes through the native registry (NativeFunctions.h).
@@ -817,7 +817,7 @@ TInterpreter::CallCFuncPtr(void* funcPtr, long numArgs)
 }
 
 
-// ROM 0x002cfa54 Return__12TInterpreterF19FramesProfilingKind
+// ROM 0x002f52c8 Return__12TInterpreterF19FramesProfilingKind
 // Return from the current function: its result (the top of the value
 // stack) replaces its frame when the locals were on the stack; back to the
 // caller's state, dropping the exception handlers of the frames left.
@@ -848,7 +848,7 @@ TInterpreter::Return(FramesProfilingKind /*kind*/)
 	Running
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002cc45c UndefinedBytecode__Fv
+// ROM 0x002f1cd0 UndefinedBytecode__Fv
 static void
 UndefinedBytecode(void)
 {
@@ -888,7 +888,7 @@ FreqEqual(RefArg a, RefArg b)
 }
 
 
-// ROM 0x002cc66c SlowRun__12TInterpreterFl
+// ROM 0x002f1ee0 SlowRun__12TInterpreterFl
 // The bytecode loop: instructions of the current function, until a return
 // takes the control stack below baseDepth (answers true) or the fast loop
 // may take over (false).
@@ -1438,7 +1438,7 @@ TInterpreter::SlowRun(long baseDepth)
 }
 
 
-// ROM 0x002c8848 FastRun__12TInterpreterFl
+// ROM 0x002ee0a8 FastRun__12TInterpreterFl
 // NOT YET RECONSTRUCTED: FastRun1 (0x002c88d8), the open-coded copy of the
 // loop; it computes what SlowRun does.
 Boolean
@@ -1452,7 +1452,7 @@ TInterpreter::FastRun(long baseDepth)
 }
 
 
-// ROM 0x002cc4f4 AlternatingLoops__12TInterpreterFl
+// ROM 0x002f1d68 AlternatingLoops__12TInterpreterFl
 void
 TInterpreter::AlternatingLoops(long baseDepth)
 {
@@ -1476,7 +1476,7 @@ TInterpreter::AlternatingLoops(long baseDepth)
 }
 
 
-// ROM 0x002cc540 Run__12TInterpreterFv
+// ROM 0x002f1db4 Run__12TInterpreterFv
 // Run the current function until it returns to the control depth it was
 // called at.  An exception nothing in NewtonScript handles resets the
 // stacks to what they were and goes on to the C++ handlers.
@@ -1518,7 +1518,7 @@ TInterpreter::Run(void)
 	Exceptions
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002c7370 GetStackState__Fv
+// ROM 0x002ecbd0 GetStackState__Fv
 static void
 GetStackState(StackState* state)
 {
@@ -1529,7 +1529,7 @@ GetStackState(StackState* state)
 }
 
 
-// ROM 0x002cfc64 GetStackStateBlock__Fv
+// ROM 0x002f54d8 GetStackStateBlock__Fv
 StackState*
 GetStackStateBlock(void)
 {
@@ -1541,7 +1541,7 @@ GetStackStateBlock(void)
 }
 
 
-// ROM 0x002d0c08 DisposeStackStateBlock__FP10StackState
+// ROM 0x002f647c DisposeStackStateBlock__FP10StackState
 void
 DisposeStackStateBlock(StackState* state)
 {
@@ -1549,7 +1549,7 @@ DisposeStackStateBlock(StackState* state)
 }
 
 
-// ROM 0x002ce810 ResetStack__FRC10StackState
+// ROM 0x002f4084 ResetStack__FRC10StackState
 void
 ResetStack(const StackState& state)
 {
@@ -1560,7 +1560,7 @@ ResetStack(const StackState& state)
 }
 
 
-// ROM 0x002cfe00 PopHandlers__12TInterpreterFv
+// ROM 0x002f5674 PopHandlers__12TInterpreterFv
 // Drop the handler records of control depths deeper than the current one.
 void
 TInterpreter::PopHandlers(void)
@@ -1575,7 +1575,7 @@ TInterpreter::PopHandlers(void)
 }
 
 
-// ROM 0x002d001c TranslateException__12TInterpreterFP9Exception
+// ROM 0x002f5890 TranslateException__12TInterpreterFP9Exception
 // The frame a NewtonScript handler sees: {name, and error: the code, data:
 // the ref, or message: the text}.
 Ref
@@ -1593,7 +1593,7 @@ TInterpreter::TranslateException(Exception* exception)
 }
 
 
-// ROM 0x002d0138 ExceptionBeingHandled__12TInterpreterFv
+// ROM 0x002f59ac ExceptionBeingHandled__12TInterpreterFv
 Ref
 TInterpreter::ExceptionBeingHandled(void)
 {
@@ -1610,7 +1610,7 @@ TInterpreter::ExceptionBeingHandled(void)
 }
 
 
-// ROM 0x002cfcf4 DeveloperNotified__FP9Exception
+// ROM 0x002f5568 DeveloperNotified__FP9Exception
 // NOT YET RECONSTRUCTED: the REP's record of exceptions already reported.
 static Boolean
 DeveloperNotified(Exception* /*exception*/)
@@ -1619,7 +1619,7 @@ DeveloperNotified(Exception* /*exception*/)
 }
 
 
-// ROM 0x002d0574 HandleException__12TInterpreterFP9ExceptionlR10StackState
+// ROM 0x002f5de8 HandleException__12TInterpreterFP9ExceptionlR10StackState
 // Look for a NewtonScript handler (a try in a function still on the
 // control stack, at baseDepth or deeper) whose exception name covers this
 // one: the stacks unwind to it, its frame's state is restored and the
@@ -1684,7 +1684,7 @@ TInterpreter::HandleException(Exception* exception, long baseDepth, StackState& 
 	Sends set up from C++
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002d0ba8 SetupSend__FRC6RefVarT1lR6RefVar
+// ROM 0x002f641c SetupSend__FRC6RefVarT1lR6RefVar
 // The function for a message to receiver, and its implementor; NILREF
 // when there is none and ifDefined, else an error.
 Ref
@@ -1701,7 +1701,7 @@ SetupSend(RefArg receiver, RefArg message, long ifDefined, RefVar& implementor)
 }
 
 
-// ROM 0x002d0c30 SetupResend__FRC6RefVarlR6RefVar
+// ROM 0x002f64a4 SetupResend__FRC6RefVarlR6RefVar
 // The same for a resend: from the _proto of the implementor given.
 Ref
 SetupResend(RefArg message, long ifDefined, RefVar& implementor)
@@ -1724,7 +1724,7 @@ SetupResend(RefArg message, long ifDefined, RefVar& implementor)
 }
 
 
-// ROM 0x002d0ed0 SetLexScope__FRC6RefVarN31
+// ROM 0x002f6744 SetLexScope__FRC6RefVarN31
 // A closure: fn with its argFrame's _nextArgFrame, _parent and
 // _implementor set (an argFrame of nils becomes none).
 Ref
@@ -1756,7 +1756,7 @@ SetLexScope(RefArg fn, RefArg locals, RefArg receiver, RefArg implementor)
 	The current call, seen from natives
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002cc10c StackTrace__Fv
+// ROM 0x002f1980 StackTrace__Fv
 void
 StackTrace(void)
 {
@@ -1809,7 +1809,7 @@ RunCall(RefArg fn, long numArgs, Boolean isSend, RefArg receiver, RefArg impleme
 }
 
 
-// ROM 0x002ca0c4 InterpretBlock__FRC6RefVarT1
+// ROM 0x002ef938 InterpretBlock__FRC6RefVarT1
 Ref
 InterpretBlock(RefArg fn, RefArg receiver)
 {
@@ -1819,7 +1819,7 @@ InterpretBlock(RefArg fn, RefArg receiver)
 }
 
 
-// ROM 0x002ca0fc PushArgArray__FRC6RefVar
+// ROM 0x002ef970 PushArgArray__FRC6RefVar
 long
 PushArgArray(RefArg args)
 {
@@ -1835,7 +1835,7 @@ PushArgArray(RefArg args)
 }
 
 
-// ROM 0x002ca5d4 DoCall__FRC6RefVarl
+// ROM 0x002efe48 DoCall__FRC6RefVarl
 Ref
 DoCall(RefArg fn, long numArgs)
 {
@@ -1847,7 +1847,7 @@ DoCall(RefArg fn, long numArgs)
 }
 
 
-// ROM 0x002cad28 DoSend__FRC6RefVarN21l
+// ROM 0x002f059c DoSend__FRC6RefVarN21l
 Ref
 DoSend(RefArg receiver, RefArg implementor, RefArg message, long numArgs)
 {
@@ -1860,7 +1860,7 @@ DoSend(RefArg receiver, RefArg implementor, RefArg message, long numArgs)
 }
 
 
-// ROM 0x002cc418 DoBlock__FRC6RefVarT1
+// ROM 0x002f1c8c DoBlock__FRC6RefVarT1
 Ref
 DoBlock(RefArg fn, RefArg args)
 {
@@ -1873,7 +1873,7 @@ DoBlock(RefArg fn, RefArg args)
 }
 
 
-// ROM 0x002cc28c DoScript__FRC6RefVarN21
+// ROM 0x002f1b00 DoScript__FRC6RefVarN21
 // fn as a method of receiver.
 Ref
 DoScript(RefArg receiver, RefArg fn, RefArg args)
@@ -1887,7 +1887,7 @@ DoScript(RefArg receiver, RefArg fn, RefArg args)
 }
 
 
-// ROM 0x002cb5cc DoMessage__FRC6RefVarN21
+// ROM 0x002f0e40 DoMessage__FRC6RefVarN21
 Ref
 DoMessage(RefArg receiver, RefArg message, RefArg args)
 {
@@ -1899,7 +1899,7 @@ DoMessage(RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x002cc11c DoMessageIfDefined__FRC6RefVarN21Pl
+// ROM 0x002f1990 DoMessageIfDefined__FRC6RefVarN21Pl
 Ref
 DoMessageIfDefined(RefArg receiver, RefArg message, RefArg args, long* defined)
 {
@@ -1919,7 +1919,7 @@ DoMessageIfDefined(RefArg receiver, RefArg message, RefArg args, long* defined)
 }
 
 
-// ROM 0x002cbdec DoProtoMessage__FRC6RefVarN21
+// ROM 0x002f1660 DoProtoMessage__FRC6RefVarN21
 Ref
 DoProtoMessage(RefArg receiver, RefArg message, RefArg args)
 {
@@ -1931,7 +1931,7 @@ DoProtoMessage(RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x002cc1d4 DoProtoMessageIfDefined__FRC6RefVarN21Pl
+// ROM 0x002f1a48 DoProtoMessageIfDefined__FRC6RefVarN21Pl
 Ref
 DoProtoMessageIfDefined(RefArg receiver, RefArg message, RefArg args, long* defined)
 {
@@ -1951,7 +1951,7 @@ DoProtoMessageIfDefined(RefArg receiver, RefArg message, RefArg args, long* defi
 }
 
 
-// ROM 0x002ca188 NSCall__FRC6RefVar
+// ROM 0x002ef9fc NSCall__FRC6RefVar
 Ref
 NSCall(RefArg fn)
 {
@@ -1961,7 +1961,7 @@ NSCall(RefArg fn)
 }
 
 
-// ROM 0x002ca1c0 NSCall__FRC6RefVarT1
+// ROM 0x002efa34 NSCall__FRC6RefVarT1
 Ref
 NSCall(RefArg fn, RefArg a1)
 {
@@ -1972,7 +1972,7 @@ NSCall(RefArg fn, RefArg a1)
 }
 
 
-// ROM 0x002ca210 NSCall__FRC6RefVarN21
+// ROM 0x002efa84 NSCall__FRC6RefVarN21
 Ref
 NSCall(RefArg fn, RefArg a1, RefArg a2)
 {
@@ -1984,7 +1984,7 @@ NSCall(RefArg fn, RefArg a1, RefArg a2)
 }
 
 
-// ROM 0x002ca270 NSCall__FRC6RefVarN31
+// ROM 0x002efae4 NSCall__FRC6RefVarN31
 Ref
 NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3)
 {
@@ -1997,7 +1997,7 @@ NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3)
 }
 
 
-// ROM 0x002ca2e0 NSCall__FRC6RefVarN41
+// ROM 0x002efb54 NSCall__FRC6RefVarN41
 Ref
 NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3, RefArg a4)
 {
@@ -2011,7 +2011,7 @@ NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3, RefArg a4)
 }
 
 
-// ROM 0x002ca360 NSCall__FRC6RefVarN51
+// ROM 0x002efbd4 NSCall__FRC6RefVarN51
 Ref
 NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3, RefArg a4, RefArg a5)
 {
@@ -2026,7 +2026,7 @@ NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3, RefArg a4, RefArg a5)
 }
 
 
-// ROM 0x002ca3f0 NSCall__FRC6RefVarN61
+// ROM 0x002efc64 NSCall__FRC6RefVarN61
 Ref
 NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3, RefArg a4, RefArg a5, RefArg a6)
 {
@@ -2042,7 +2042,7 @@ NSCall(RefArg fn, RefArg a1, RefArg a2, RefArg a3, RefArg a4, RefArg a5, RefArg 
 }
 
 
-// ROM 0x002ca490 NSCallWithArgArray__FRC6RefVarT1
+// ROM 0x002efd04 NSCallWithArgArray__FRC6RefVarT1
 Ref
 NSCallWithArgArray(RefArg fn, RefArg args)
 {
@@ -2053,7 +2053,7 @@ NSCallWithArgArray(RefArg fn, RefArg args)
 }
 
 
-// ROM 0x002ca4d4 NSSend__FRC6RefVarT1
+// ROM 0x002efd48 NSSend__FRC6RefVarT1
 Ref
 NSSend(RefArg receiver, RefArg message)
 {
@@ -2064,7 +2064,7 @@ NSSend(RefArg receiver, RefArg message)
 }
 
 
-// ROM 0x002ca548 NSSend__FRC6RefVarN21
+// ROM 0x002efdbc NSSend__FRC6RefVarN21
 Ref
 NSSend(RefArg receiver, RefArg message, RefArg a1)
 {
@@ -2076,7 +2076,7 @@ NSSend(RefArg receiver, RefArg message, RefArg a1)
 }
 
 
-// ROM 0x002ca6b4 NSSend__FRC6RefVarN31
+// ROM 0x002eff28 NSSend__FRC6RefVarN31
 Ref
 NSSend(RefArg receiver, RefArg message, RefArg a1, RefArg a2)
 {
@@ -2089,7 +2089,7 @@ NSSend(RefArg receiver, RefArg message, RefArg a1, RefArg a2)
 }
 
 
-// ROM 0x002ca750 NSSend__FRC6RefVarN41
+// ROM 0x002effc4 NSSend__FRC6RefVarN41
 Ref
 NSSend(RefArg receiver, RefArg message, RefArg a1, RefArg a2, RefArg a3)
 {
@@ -2103,7 +2103,7 @@ NSSend(RefArg receiver, RefArg message, RefArg a1, RefArg a2, RefArg a3)
 }
 
 
-// ROM 0x002caa60 NSSendWithArgArray__FRC6RefVarN21
+// ROM 0x002f02d4 NSSendWithArgArray__FRC6RefVarN21
 Ref
 NSSendWithArgArray(RefArg receiver, RefArg message, RefArg args)
 {
@@ -2115,7 +2115,7 @@ NSSendWithArgArray(RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x002cb154 NSSendIfDefined__FRC6RefVarT1
+// ROM 0x002f09c8 NSSendIfDefined__FRC6RefVarT1
 Ref
 NSSendIfDefined(RefArg receiver, RefArg message)
 {
@@ -2128,7 +2128,7 @@ NSSendIfDefined(RefArg receiver, RefArg message)
 }
 
 
-// ROM 0x002cb1e4 NSSendIfDefined__FRC6RefVarN21
+// ROM 0x002f0a58 NSSendIfDefined__FRC6RefVarN21
 Ref
 NSSendIfDefined(RefArg receiver, RefArg message, RefArg a1)
 {
@@ -2142,7 +2142,7 @@ NSSendIfDefined(RefArg receiver, RefArg message, RefArg a1)
 }
 
 
-// ROM 0x002cb28c NSSendIfDefined__FRC6RefVarN31
+// ROM 0x002f0b00 NSSendIfDefined__FRC6RefVarN31
 Ref
 NSSendIfDefined(RefArg receiver, RefArg message, RefArg a1, RefArg a2)
 {
@@ -2157,7 +2157,7 @@ NSSendIfDefined(RefArg receiver, RefArg message, RefArg a1, RefArg a2)
 }
 
 
-// ROM 0x002caae0 NSSendProto__FRC6RefVarT1
+// ROM 0x002f0354 NSSendProto__FRC6RefVarT1
 Ref
 NSSendProto(RefArg receiver, RefArg message)
 {
@@ -2168,7 +2168,7 @@ NSSendProto(RefArg receiver, RefArg message)
 }
 
 
-// ROM 0x002cab54 NSSendProto__FRC6RefVarN21
+// ROM 0x002f03c8 NSSendProto__FRC6RefVarN21
 Ref
 NSSendProto(RefArg receiver, RefArg message, RefArg a1)
 {
@@ -2180,7 +2180,7 @@ NSSendProto(RefArg receiver, RefArg message, RefArg a1)
 }
 
 
-// ROM 0x002cb7e0 NSSendProtoIfDefined__FRC6RefVarT1
+// ROM 0x002f1054 NSSendProtoIfDefined__FRC6RefVarT1
 Ref
 NSSendProtoIfDefined(RefArg receiver, RefArg message)
 {
@@ -2193,7 +2193,7 @@ NSSendProtoIfDefined(RefArg receiver, RefArg message)
 }
 
 
-// ROM 0x002cb870 NSSendProtoIfDefined__FRC6RefVarN21
+// ROM 0x002f10e4 NSSendProtoIfDefined__FRC6RefVarN21
 Ref
 NSSendProtoIfDefined(RefArg receiver, RefArg message, RefArg a1)
 {
@@ -2207,7 +2207,7 @@ NSSendProtoIfDefined(RefArg receiver, RefArg message, RefArg a1)
 }
 
 
-// ROM 0x002cbe6c NSGetGlobalFn__FRC6RefVar
+// ROM 0x002f16e0 NSGetGlobalFn__FRC6RefVar
 Ref
 NSGetGlobalFn(RefArg name)
 {
@@ -2218,7 +2218,7 @@ NSGetGlobalFn(RefArg name)
 }
 
 
-// ROM 0x002cbeb4 NSCallGlobalFn__FRC6RefVar
+// ROM 0x002f1728 NSCallGlobalFn__FRC6RefVar
 Ref
 NSCallGlobalFn(RefArg name)
 {
@@ -2227,7 +2227,7 @@ NSCallGlobalFn(RefArg name)
 }
 
 
-// ROM 0x002cbeec NSCallGlobalFn__FRC6RefVarT1
+// ROM 0x002f1760 NSCallGlobalFn__FRC6RefVarT1
 Ref
 NSCallGlobalFn(RefArg name, RefArg a1)
 {
@@ -2236,7 +2236,7 @@ NSCallGlobalFn(RefArg name, RefArg a1)
 }
 
 
-// ROM 0x002cbf2c NSCallGlobalFn__FRC6RefVarN21
+// ROM 0x002f17a0 NSCallGlobalFn__FRC6RefVarN21
 Ref
 NSCallGlobalFn(RefArg name, RefArg a1, RefArg a2)
 {
@@ -2245,7 +2245,7 @@ NSCallGlobalFn(RefArg name, RefArg a1, RefArg a2)
 }
 
 
-// ROM 0x002cbf74 NSCallGlobalFn__FRC6RefVarN31
+// ROM 0x002f17e8 NSCallGlobalFn__FRC6RefVarN31
 Ref
 NSCallGlobalFn(RefArg name, RefArg a1, RefArg a2, RefArg a3)
 {
@@ -2254,7 +2254,7 @@ NSCallGlobalFn(RefArg name, RefArg a1, RefArg a2, RefArg a3)
 }
 
 
-// ROM 0x002cc0cc NSCallGlobalFnWithArgArray__FRC6RefVarT1
+// ROM 0x002f1940 NSCallGlobalFnWithArgArray__FRC6RefVarT1
 Ref
 NSCallGlobalFnWithArgArray(RefArg name, RefArg args)
 {
@@ -2288,7 +2288,7 @@ MakeCodeBlockPrototype(Boolean debug)
 }
 
 
-// ROM 0x002901d8 InitFunctions__Fv
+// ROM 0x002b5104 InitFunctions__Fv
 // The global function frame, and the prototypes of code blocks
 // (CodeBlock::fgPrototype and DebugCodeBlock::fgPrototype: the ROM's
 // frames Rcodeblockprototype/Rdebugcodeblockprototype, made here when
@@ -2312,7 +2312,7 @@ InitFunctions(void)
 }
 
 
-// ROM 0x002d0ff8 InitInterpreter__Fv
+// ROM 0x002f686c InitInterpreter__Fv
 // The lookup caches, the prototype of native function objects (a map of
 // class, funcPtr, numArgs and, when wanted, docString), the global
 // function frame, the frequently called functions (from the built-in
@@ -2364,7 +2364,7 @@ InitInterpreter(void)
 }
 
 
-// ROM 0x002d0b20 GetGInterpreter__Fv
+// ROM 0x002f6394 GetGInterpreter__Fv
 TInterpreter*
 GetGInterpreter(void)
 {
@@ -2372,7 +2372,7 @@ GetGInterpreter(void)
 }
 
 
-// ROM 0x002d0b30 GetGFunctionFrame__Fv
+// ROM 0x002f63a4 GetGFunctionFrame__Fv
 Ref
 GetGFunctionFrame(void)
 {
@@ -2380,7 +2380,7 @@ GetGFunctionFrame(void)
 }
 
 
-// ROM 0x002d15f0 GetCurrentInterpreterID__Fv
+// ROM 0x002f6e34 GetCurrentInterpreterID__Fv
 long
 GetCurrentInterpreterID(void)
 {
@@ -2388,7 +2388,7 @@ GetCurrentInterpreterID(void)
 }
 
 
-// ROM 0x002d1510 GetTInterpreter__Fl
+// ROM 0x002f6d54 GetTInterpreter__Fl
 TInterpreter*
 GetTInterpreter(long id)
 {

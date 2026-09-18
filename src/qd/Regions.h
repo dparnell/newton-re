@@ -18,8 +18,8 @@
 				RECONSTRUCTED: ports; the host uses one bit per pixel).
 				Drawing (FrameRgn, PaintRgn, ...) is NOT YET RECONSTRUCTED.
 
-	Reconstructed from the MP2100 D ROM (0x00314884-0x00314988,
-	0x003150b0-0x00316dc4); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x003407cc-0x003408d0,
+	0x00340ff8-0x00342d0c); each function cites its origin.
 */
 
 #ifndef __REGIONS_H

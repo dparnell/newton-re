@@ -4,20 +4,20 @@
 	Contains:	TSingleQContainer (SingleQ.h): a singly linked list threaded
 				through a TSingleQItem inside each item, last in first out.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SingleQ.h"
 
 
-// ROM 0x001e4fd4 __ct__17TSingleQContainerFv
+// ROM 0x001e2bbc __ct__17TSingleQContainerFv
 TSingleQContainer::TSingleQContainer()
 {
 	fHead = nil;
 }
 
 
-// ROM 0x001e4fe4 Init__17TSingleQContainerFUl
+// ROM 0x001e2bcc Init__17TSingleQContainerFUl
 void
 TSingleQContainer::Init(ULong offsetToSingleQItem)
 {
@@ -26,7 +26,7 @@ TSingleQContainer::Init(ULong offsetToSingleQItem)
 }
 
 
-// ROM 0x001e4ff4 Add__17TSingleQContainerFPv
+// ROM 0x001e2bdc Add__17TSingleQContainerFPv
 void
 TSingleQContainer::Add(void* item)
 {
@@ -36,7 +36,7 @@ TSingleQContainer::Add(void* item)
 }
 
 
-// ROM 0x001e500c Remove__17TSingleQContainerFv
+// ROM 0x001e2bf4 Remove__17TSingleQContainerFv
 void*
 TSingleQContainer::Remove()
 {
@@ -48,7 +48,7 @@ TSingleQContainer::Remove()
 }
 
 
-// ROM 0x001e5030 Peek__17TSingleQContainerFv
+// ROM 0x001e2c18 Peek__17TSingleQContainerFv
 void*
 TSingleQContainer::Peek()
 {
@@ -58,7 +58,7 @@ TSingleQContainer::Peek()
 }
 
 
-// ROM 0x001e5048 GetNext__17TSingleQContainerFPv
+// ROM 0x001e2c30 GetNext__17TSingleQContainerFPv
 void*
 TSingleQContainer::GetNext(void* item)
 {

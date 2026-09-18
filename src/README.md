@@ -1,6 +1,6 @@
 # src — the reconstructed Newton OS
 
-C++ reconstruction of Newton OS 2.x from the MP2100 D ROM, organised by
+C++ reconstruction of Newton OS 2.x from the MP2x00 US ROM, organised by
 functional area so that things are easy to find, and structured for two
 long-term goals: **retargeting to other hardware** (all hardware-specific code
 behind `hal/`) and **running the user-mode side on a different host OS**
@@ -254,7 +254,7 @@ matters.
 ## Tracking progress
 
 ```
-python tools/newton-rom/analysis/coverage.py build/MP2100D --by-class --check
+python tools/newton-rom/analysis/coverage.py build/MP2x00US --by-class --check
 ```
 
 reads the `// ROM 0x... name` citations, verifies them against the symbol

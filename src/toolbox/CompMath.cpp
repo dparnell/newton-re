@@ -4,7 +4,7 @@
 	Contains:	64-bit integer arithmetic on Int64 {hi, lo} (declared in the
 				DDK's CompMath.h).  The kernel keeps time in these.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	CompFixMul follows when something needs it.
 
 	The value of an Int64 is hi * 2^32 + lo.  On the MessagePad hi and lo
@@ -35,7 +35,7 @@ Store(Int64* x, int64_t value)
 }
 
 
-// ROM 0x0007148c CompAdd
+// ROM 0x00070aec CompAdd
 void
 CompAdd(const Int64* src, Int64* dst)
 {
@@ -47,7 +47,7 @@ CompAdd(const Int64* src, Int64* dst)
 }
 
 
-// ROM 0x000714c0 CompSub
+// ROM 0x00070b20 CompSub
 void
 CompSub(const Int64* src, Int64* dst)
 {
@@ -58,7 +58,7 @@ CompSub(const Int64* src, Int64* dst)
 }
 
 
-// ROM 0x00071720 CompCompare
+// ROM 0x00070d80 CompCompare
 // -1, 0, 1 as a is less than, equal to, greater than b.  (The DDK calls the
 // second argument `minusb`; the ROM compares the values as given, hi signed.)
 long
@@ -77,7 +77,7 @@ CompCompare(const Int64* a, const Int64* b)
 }
 
 
-// ROM 0x0038b0ec CompMul
+// ROM 0x0039476c CompMul
 // The 64-bit product of two signed words (the ROM multiplies the halves).
 void
 CompMul(long src1, long src2, Int64* dst)
@@ -86,7 +86,7 @@ CompMul(long src1, long src2, Int64* dst)
 }
 
 
-// ROM 0x000714f4 CompDiv
+// ROM 0x00070b54 CompDiv
 // numerator / denominator as a signed word.  Without a remainder pointer the
 // quotient is rounded to nearest (half up); with one, truncated, and the
 // remainder takes the numerator's sign.  A quotient that does not fit in a
@@ -121,7 +121,7 @@ CompDiv(const Int64* numerator, long denominator, long* remainder)
 }
 
 
-// ROM 0x00071650 CompShift
+// ROM 0x00070cb0 CompShift
 // A positive shift is to the right, rounding half up on the last bit shifted
 // out; a negative one to the left.
 void
@@ -152,7 +152,7 @@ CompShift(Int64* srcdst, long shift)
 }
 
 
-// ROM 0x00071760 CompSquareRoot
+// ROM 0x00070dc0 CompSquareRoot
 // The integer square root of a 64-bit value (Int64), rounded to nearest:
 // the ROM's bit-by-bit method, two bits an iteration - sixteen through the
 // high word, then fourteen and two more through the low, tracking the

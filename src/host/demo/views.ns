@@ -1,7 +1,7 @@
 // A view hierarchy drawn by the reconstructed view system on the host
 // display and written out as an image.  Run from the repository root:
 //
-//   build/host/host/newtonscript --rom build/MP2100D/rom.bin --display 320x480 src/host/demo/views.ns
+//   build/host/host/newtonscript --rom build/MP2x00US/rom.bin --display 320x480 src/host/demo/views.ns
 //
 // The ROM image supplies the fonts and prototypes (protoPicker); the
 // picture lands in build/views-demo.pgm (any image viewer opens a PGM).
@@ -21,7 +21,7 @@ slip := AddView(GetRoot(), {
 		{ viewClass: 81, viewFlags: 3,		// a paragraph (TParagraphView), wrapped, read-only
 		  viewBounds: {left: 12, top: 34, right: 268, bottom: 120},
 		  viewFont: 0x3000, viewLineSpacing: 16,
-		  text: "This slip, its title and this paragraph are drawn by the reconstructed view system: TView, TTextView and TParagraphView over the reconstructed QuickDraw, with the fonts read out of the MP2100 ROM image." },
+		  text: "This slip, its title and this paragraph are drawn by the reconstructed view system: TView, TTextView and TParagraphView over the reconstructed QuickDraw, with the fonts read out of the ROM image." },
 		{ viewClass: 74, viewFlags: 1,		// a line across (viewFormat lines)
 		  viewBounds: {left: 12, top: 126, right: 268, bottom: 128},
 		  viewFormat: 0x4 },			// dark gray fill

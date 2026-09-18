@@ -46,8 +46,8 @@
 				host's destructor).  NOT YET RECONSTRUCTED: the sounds
 				(PlaySound plays nothing), gSlowMotion, the busy box.
 
-	Reconstructed from the MP2100 D ROM (0x000432bc-0x000459fc,
-	0x001c8484-0x001c8758); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x000429ec-0x0004512c,
+	0x001c60b0-0x001c6384); each function cites its origin.
 */
 
 #ifndef __ANIMATE_H
@@ -71,11 +71,11 @@ class TView;
 class TSaveScreenBits : public PixelMap
 {
 public:
-				TSaveScreenBits();								// ROM 0x001c848c __ct__15TSaveScreenBitsFv
-				~TSaveScreenBits();								// ROM 0x001c84e0 __dt__15TSaveScreenBitsFv
-	Boolean		AllocateBuffers(Rect* bounds);					// ROM 0x001c851c AllocateBuffers__15TSaveScreenBitsFP4Rect (nil: the screen; ==> whether there was memory)
-	void		SaveScreenBits(void);							// ROM 0x001c8694 SaveScreenBits__15TSaveScreenBitsFv
-	void		RestoreScreenBits(Rect* bounds, RgnHandle mask);	// ROM 0x001c86cc RestoreScreenBits__15TSaveScreenBitsFP4RectPP6Region
+				TSaveScreenBits();								// ROM 0x001c60b8 __ct__15TSaveScreenBitsFv
+				~TSaveScreenBits();								// ROM 0x001c610c __dt__15TSaveScreenBitsFv
+	Boolean		AllocateBuffers(Rect* bounds);					// ROM 0x001c6148 AllocateBuffers__15TSaveScreenBitsFP4Rect (nil: the screen; ==> whether there was memory)
+	void		SaveScreenBits(void);							// ROM 0x001c62c0 SaveScreenBits__15TSaveScreenBitsFv
+	void		RestoreScreenBits(Rect* bounds, RgnHandle mask);	// ROM 0x001c62f8 RestoreScreenBits__15TSaveScreenBitsFP4RectPP6Region
 };
 
 
@@ -90,15 +90,15 @@ public:
 		kPoofEffect = 3			// a scrub: the cloud
 	};
 
-				TAnimate();										// ROM 0x00043340 __ct__8TAnimateFv
-				~TAnimate();									// ROM 0x00043404 __dt__8TAnimateFv
+				TAnimate();										// ROM 0x00042a70 __ct__8TAnimateFv
+				~TAnimate();									// ROM 0x00042b34 __dt__8TAnimateFv
 
-	void		SetupPlainEffect(TView* view, Boolean showing, long effect);				// ROM 0x00043460 SetupPlainEffect__8TAnimateFP5TViewUcl
-	void		SetupSlideEffect(TView* view, const Rect& bounds, long distance, long direction);	// ROM 0x00043600 SetupSlideEffect__8TAnimateFP5TViewRC5TRectlT3
-	void		SetupTrashEffect(TView* view);					// ROM 0x000438e0 SetupTrashEffect__8TAnimateFP5TView
-	void		SetupPoofEffect(TView* view, const Rect& bounds);	// ROM 0x000439fc SetupPoofEffect__8TAnimateFP5TViewRC5TRect
-	void		SetupDragEffect(TView* view);					// ROM 0x000459e8 SetupDragEffect__8TAnimateFP5TView
-	void		DoEffect(RefArg sound);							// ROM 0x00043fac DoEffect__8TAnimateFRC6RefVar
+	void		SetupPlainEffect(TView* view, Boolean showing, long effect);				// ROM 0x00042b90 SetupPlainEffect__8TAnimateFP5TViewUcl
+	void		SetupSlideEffect(TView* view, const Rect& bounds, long distance, long direction);	// ROM 0x00042d30 SetupSlideEffect__8TAnimateFP5TViewRC5TRectlT3
+	void		SetupTrashEffect(TView* view);					// ROM 0x00043010 SetupTrashEffect__8TAnimateFP5TView
+	void		SetupPoofEffect(TView* view, const Rect& bounds);	// ROM 0x0004312c SetupPoofEffect__8TAnimateFP5TViewRC5TRect
+	void		SetupDragEffect(TView* view);					// ROM 0x00045118 SetupDragEffect__8TAnimateFP5TView
+	void		DoEffect(RefArg sound);							// ROM 0x000436dc DoEffect__8TAnimateFRC6RefVar
 
 	// (the drag draws the sprite itself)
 	TSaveScreenBits&	SavedBits(void)			{ return fSavedBits; }
@@ -106,12 +106,12 @@ public:
 	const Rect&			Bounds(void) const		{ return fBounds; }
 
 private:
-	void		PreSetup(TView* view, EffectKind kind);			// ROM 0x00043b24 PreSetup__8TAnimateFP5TViewQ28TAnimate10EffectKind
-	void		PostSetup(const Rect& bounds, const Rect& from, const Rect& to);	// ROM 0x00043c3c PostSetup__8TAnimateFRC5TRectN21
-	void		MultiEffect(RefArg sound);						// ROM 0x000441b4 MultiEffect__8TAnimateFRC6RefVar
-	void		CrumpleSprite(Rect* crumpleBox, Rect* spriteBox);	// ROM 0x00044d58 CrumpleSprite__8TAnimateFP5TRectT1
-	void		CrumpleEffect(void);							// ROM 0x00045298 CrumpleEffect__8TAnimateFv
-	void		PoofEffect(void);								// ROM 0x000458cc PoofEffect__8TAnimateFv
+	void		PreSetup(TView* view, EffectKind kind);			// ROM 0x00043254 PreSetup__8TAnimateFP5TViewQ28TAnimate10EffectKind
+	void		PostSetup(const Rect& bounds, const Rect& from, const Rect& to);	// ROM 0x0004336c PostSetup__8TAnimateFRC5TRectN21
+	void		MultiEffect(RefArg sound);						// ROM 0x000438e4 MultiEffect__8TAnimateFRC6RefVar
+	void		CrumpleSprite(Rect* crumpleBox, Rect* spriteBox);	// ROM 0x00044488 CrumpleSprite__8TAnimateFP5TRectT1
+	void		CrumpleEffect(void);							// ROM 0x000449c8 CrumpleEffect__8TAnimateFv
+	void		PoofEffect(void);								// ROM 0x00044ffc PoofEffect__8TAnimateFv
 	void		Disabled(TView* view);							// the kind not animated: the view and its context noted, nothing else
 
 	TSaveScreenBits	fSavedBits;		// +0x34  the screen under fSaveBounds
@@ -133,7 +133,7 @@ private:
 	ULong		fEnabled;			// +0xa8  a bit per EffectKind: ~ the noFX preference
 };
 
-void	PlaySound(RefArg context, RefArg sound);				// ROM 0x000432bc PlaySound__FRC6RefVarT1 - a symbol looked up in the context; NOT YET RECONSTRUCTED: FPlaySound
-void	TrimRect(const Rect& a, const Rect& b, Rect* result);	// ROM 0x00043b60 TrimRect__FRC5TRectT1P5TRect - a less the rows of b (b empty: a)
+void	PlaySound(RefArg context, RefArg sound);				// ROM 0x000429ec PlaySound__FRC6RefVarT1 - a symbol looked up in the context; NOT YET RECONSTRUCTED: FPlaySound
+void	TrimRect(const Rect& a, const Rect& b, Rect* result);	// ROM 0x00043290 TrimRect__FRC5TRectT1P5TRect - a less the rows of b (b empty: a)
 
 #endif	/* __ANIMATE_H */

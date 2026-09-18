@@ -12,8 +12,8 @@
 				its handler.  The persistent frames of stores and soups are
 				fault blocks too (their handler nil).
 
-	Reconstructed from the MP2100 D ROM (0x002b3d88-0x002b6004,
-	0x002ba450-0x002bae00); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x002d9b10-0x002dbd8c,
+	0x002e01d8-0x002e0b88); each function cites its origin.
 */
 
 #ifndef __ENTRIES_H
@@ -106,7 +106,7 @@ void	EntrySetHandler(RefArg entry, RefArg handler);
 Ref		ForwardEntryMessage(RefArg entry, RefArg message);
 Ref		ForwardEntryMessage(RefArg entry, RefArg message, RefArg arg);
 Boolean	IsSoupEntry(RefArg object);
-Ref		FIsValid(RefArg rcvr, RefArg obj);			// ROM 0x002f8d98 FIsValid - whether the object is still usable
+Ref		FIsValid(RefArg rcvr, RefArg obj);			// ROM 0x0031e09c FIsValid - whether the object is still usable
 Ref		EntrySoup(RefArg entry);
 long	EntrySize(PSSId id, TStoreWrapper* wrapper, Boolean withLargeBinaries);
 long	EntrySize(RefArg entry);

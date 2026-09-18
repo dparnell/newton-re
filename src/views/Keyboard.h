@@ -32,7 +32,7 @@
 				(SetKeyView, NextKeyView), the keyboard tool (TKeyboardTool)
 				that sends the events, the on-screen keyboards' registry.
 
-	Reconstructed from the MP2100 D ROM (0x002e5610-0x002eb538, the
+	Reconstructed from the MP2x00 US ROM (0x0030a948-0x0031084c, the
 	TRootView parts in RootView.cpp); each function cites its origin.
 */
 
@@ -112,30 +112,30 @@ extern Boolean			gKeyboardConnected;		// 0x0c101a24
 extern Boolean			gKeyHelpOpen;			// 0x0c10261c  the key help (command held) is showing
 extern Boolean			gInRepeatedKeyCommand;	// 0x0c102064  a key command is being sent for a repeat
 
-Ref			GetKeyTransMapping(void);								// ROM 0x002ea13c GetKeyTransMapping__Fv
-UniChar		TranslateKey(ULong keyCode, Boolean isDown, ULong modifiers, ULong* deadState);	// ROM 0x002e5610 TranslateKey__FUlUcT1PUl
-ULong		Modifiers(Boolean hard);								// ROM 0x002e69bc Modifiers__FUc
-Boolean		IsModifierKeyCode(ULong keyCode);						// ROM 0x002e69e8 IsModifierKeyCode__FUl
-UniChar		KeyLabel(ULong keyCode, Boolean hard);					// ROM 0x002e6a04 KeyLabel__FUlUc
-Boolean		KeyDown(ULong keyCode, Boolean hard);					// ROM 0x002e6090 KeyDown__FUlUc
-UniChar		KeyIn(ULong keyCode, Boolean isDown, TView* keyboard);	// ROM 0x002e6a64 KeyIn__FUlUcP5TView ((TView*) -1: the hardware keyboard)
-void		ClearHardKeymap(void);									// ROM 0x002e8e00 ClearHardKeymap__Fv
-Boolean		IsCommandKeyDown(void);									// ROM 0x002e5af8 IsCommandKeyDown__Fv
-Boolean		IsCommandKeyCode(ULong keyCode);						// ROM 0x002eaf0c IsCommandKeyCode__FUl
-Boolean		IsCommandKeystroke(UniChar ch, ULong parameter);		// ROM 0x002eaf64 IsCommandKeystroke__FUsUl
-Boolean		KeyIsPrintable(UniChar ch, TView* view);				// ROM 0x002eb01c KeyIsPrintable__FUsP5TView
-Boolean		KeyCanBeHandled(UniChar ch);							// ROM 0x002eb0e4 KeyCanBeHandled__FUs
+Ref			GetKeyTransMapping(void);								// ROM 0x0030f450 GetKeyTransMapping__Fv
+UniChar		TranslateKey(ULong keyCode, Boolean isDown, ULong modifiers, ULong* deadState);	// ROM 0x0030a948 TranslateKey__FUlUcT1PUl
+ULong		Modifiers(Boolean hard);								// ROM 0x0030bcd0 Modifiers__FUc
+Boolean		IsModifierKeyCode(ULong keyCode);						// ROM 0x0030bcfc IsModifierKeyCode__FUl
+UniChar		KeyLabel(ULong keyCode, Boolean hard);					// ROM 0x0030bd18 KeyLabel__FUlUc
+Boolean		KeyDown(ULong keyCode, Boolean hard);					// ROM 0x0030b3a4 KeyDown__FUlUc
+UniChar		KeyIn(ULong keyCode, Boolean isDown, TView* keyboard);	// ROM 0x0030bd78 KeyIn__FUlUcP5TView ((TView*) -1: the hardware keyboard)
+void		ClearHardKeymap(void);									// ROM 0x0030e114 ClearHardKeymap__Fv
+Boolean		IsCommandKeyDown(void);									// ROM 0x0030ae0c IsCommandKeyDown__Fv
+Boolean		IsCommandKeyCode(ULong keyCode);						// ROM 0x00310220 IsCommandKeyCode__FUl
+Boolean		IsCommandKeystroke(UniChar ch, ULong parameter);		// ROM 0x00310278 IsCommandKeystroke__FUsUl
+Boolean		KeyIsPrintable(UniChar ch, TView* view);				// ROM 0x00310330 KeyIsPrintable__FUsP5TView
+Boolean		KeyCanBeHandled(UniChar ch);							// ROM 0x003103f8 KeyCanBeHandled__FUs
 
-long		FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matched, Boolean* exact);	// ROM 0x002e9e44 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc - the index of the best match, -1 for none
-Ref			FindKeyCommand(TView* view, UniChar ch, ULong modifiers);	// ROM 0x002e9f9c FindKeyCommand__FP5TViewUsUl (modifiers: the parameter's bits)
-Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x002ea238 SendKeyMessage__FP5TViewRC6RefVar
+long		FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matched, Boolean* exact);	// ROM 0x0030f158 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc - the index of the best match, -1 for none
+Ref			FindKeyCommand(TView* view, UniChar ch, ULong modifiers);	// ROM 0x0030f2b0 FindKeyCommand__FP5TViewUsUl (modifiers: the parameter's bits)
+Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x0030f54c SendKeyMessage__FP5TViewRC6RefVar
 
-TView*		GetPostingView(Boolean commandKey);						// ROM 0x002eb114 GetPostingView__FUc
-void		DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode);	// ROM 0x002e5918 DoKeyEvent__FP10TResponderUlT2
-void		HandleKeyEvent(KeyboardEvent* event);					// ROM 0x002e5e0c HandleKeyEvent__FP13KeyboardEvent
-ULong		GetKeyEventNo(RefArg keys, ULong index);				// ROM 0x002e5b0c GetKeyEventNo__FRC6RefVarUl
-void		HandleKeyEvents(RefArg keys, ULong count);				// ROM 0x002e5b80 HandleKeyEvents__FRC6RefVarUl
-void		PostKeyString(TView* view, RefArg str);					// ROM 0x002eb1ec PostKeyString__FP5TViewRC6RefVar
+TView*		GetPostingView(Boolean commandKey);						// ROM 0x00310428 GetPostingView__FUc
+void		DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode);	// ROM 0x0030ac50 DoKeyEvent__FP10TResponderUlT2
+void		HandleKeyEvent(KeyboardEvent* event);					// ROM 0x0030b120 HandleKeyEvent__FP13KeyboardEvent
+ULong		GetKeyEventNo(RefArg keys, ULong index);				// ROM 0x0030ae20 GetKeyEventNo__FRC6RefVarUl
+void		HandleKeyEvents(RefArg keys, ULong count);				// ROM 0x0030ae94 HandleKeyEvents__FRC6RefVarUl
+void		PostKeyString(TView* view, RefArg str);					// ROM 0x00310500 PostKeyString__FP5TViewRC6RefVar
 
 void		RegisterKeyboardNatives(void);
 

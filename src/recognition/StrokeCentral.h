@@ -27,8 +27,8 @@
 				controller calls externally arbitrated) and disposes the
 				units itself; the journal.
 
-	Reconstructed from the MP2100 D ROM (0x00146318-0x00146800,
-	0x00146894-0x0014694c, 0x00147198-0x001471f4, 0x00147964-0x00147acc);
+	Reconstructed from the MP2x00 US ROM (0x001447c4-0x00144cac,
+	0x00144d40-0x00144df8, 0x00145644-0x001456a0, 0x00145e10-0x00145f78);
 	each function cites its origin.
 */
 
@@ -44,24 +44,24 @@ class TClickUnit;
 class StrokeCentral
 {
 public:
-						~StrokeCentral();						// ROM 0x00146318 __dt__13StrokeCentralFv
-	void				Init(void);								// ROM 0x0014662c Init__13StrokeCentralFv - the fields, the stroke queue, the tablet
-	void				InitFields(void);						// ROM 0x00146894 InitFields__13StrokeCentralFv
-	void				DoneFields(void);						// ROM 0x00147198 DoneFields__13StrokeCentralFv
+						~StrokeCentral();						// ROM 0x001447c4 __dt__13StrokeCentralFv
+	void				Init(void);								// ROM 0x00144ad8 Init__13StrokeCentralFv - the fields, the stroke queue, the tablet
+	void				InitFields(void);						// ROM 0x00144d40 InitFields__13StrokeCentralFv
+	void				DoneFields(void);						// ROM 0x00145644 DoneFields__13StrokeCentralFv
 
-	void				IdleStrokes(void);						// ROM 0x0014640c IdleStrokes__13StrokeCentralFv
-	void				StartNewStroke(TStroke* stroke);		// ROM 0x00147964 StartNewStroke__13StrokeCentralFP7TStroke - the stroke made current, the last stroke's times noted in it
-	void				DoneCurrentStroke(void);				// ROM 0x00147a68 DoneCurrentStroke__13StrokeCentralFv - its times kept as the last, the unit let go
-	void				IdleCurrentStroke(void);				// ROM 0x00147abc IdleCurrentStroke__13StrokeCentralFv - the click unit's box brought up to the stroke's
-	TStroke*			CurrentStroke(void);					// ROM 0x00146350 CurrentStroke__13StrokeCentralFv
-	void				InvalidateCurrentStroke(void);			// ROM 0x00146344 InvalidateCurrentStroke__13StrokeCentralFv
-	void				BlockStrokes(void);						// ROM 0x00146608 BlockStrokes__13StrokeCentralFv
-	void				UnblockStrokes(void);					// ROM 0x00146618 UnblockStrokes__13StrokeCentralFv
-	Boolean				FlushStrokes(void);						// ROM 0x0014664c FlushStrokes__13StrokeCentralFv - ==> whether any was thrown away
-	Boolean				BeforeLastFlush(long time);				// ROM 0x0014671c BeforeLastFlush__13StrokeCentralFl - whether the time is before the last flush (which is forgotten after ten seconds)
-	void				AddDeferredStroke(RefArg stroke, long a, long b);	// ROM 0x00146364 AddDeferredStroke__13StrokeCentralFRC6RefVarlT2
-	void				IdleCompress(void);						// ROM 0x00147050 IdleCompress__13StrokeCentralFv - the expired strokes compressed into ink once the compress time has come (no stroke current)
-	void				ExpireAll(void);						// ROM 0x0014682c ExpireAll__13StrokeCentralFv - the compress group grouped and compressed (NOT YET); the compress time cleared when no expired stroke is left
+	void				IdleStrokes(void);						// ROM 0x001448b8 IdleStrokes__13StrokeCentralFv
+	void				StartNewStroke(TStroke* stroke);		// ROM 0x00145e10 StartNewStroke__13StrokeCentralFP7TStroke - the stroke made current, the last stroke's times noted in it
+	void				DoneCurrentStroke(void);				// ROM 0x00145f14 DoneCurrentStroke__13StrokeCentralFv - its times kept as the last, the unit let go
+	void				IdleCurrentStroke(void);				// ROM 0x00145f68 IdleCurrentStroke__13StrokeCentralFv - the click unit's box brought up to the stroke's
+	TStroke*			CurrentStroke(void);					// ROM 0x001447fc CurrentStroke__13StrokeCentralFv
+	void				InvalidateCurrentStroke(void);			// ROM 0x001447f0 InvalidateCurrentStroke__13StrokeCentralFv
+	void				BlockStrokes(void);						// ROM 0x00144ab4 BlockStrokes__13StrokeCentralFv
+	void				UnblockStrokes(void);					// ROM 0x00144ac4 UnblockStrokes__13StrokeCentralFv
+	Boolean				FlushStrokes(void);						// ROM 0x00144af8 FlushStrokes__13StrokeCentralFv - ==> whether any was thrown away
+	Boolean				BeforeLastFlush(long time);				// ROM 0x00144bc8 BeforeLastFlush__13StrokeCentralFl - whether the time is before the last flush (which is forgotten after ten seconds)
+	void				AddDeferredStroke(RefArg stroke, long a, long b);	// ROM 0x00144810 AddDeferredStroke__13StrokeCentralFRC6RefVarlT2
+	void				IdleCompress(void);						// ROM 0x001454fc IdleCompress__13StrokeCentralFv - the expired strokes compressed into ink once the compress time has come (no stroke current)
+	void				ExpireAll(void);						// ROM 0x00144cd8 ExpireAll__13StrokeCentralFv - the compress group grouped and compressed (NOT YET); the compress time cleared when no expired stroke is left
 
 	Boolean				fHasCurrent;		// +0x00
 	TStroke*			fCurrentStroke;		// +0x04
@@ -81,10 +81,10 @@ public:
 	RefStruct*			fCompressBundle;	// +0x40  (NOT YET)
 };
 
-extern StrokeCentral	gStrokeWorld;						// ROM 0x0c1019b8 gStrokeWorld
+extern StrokeCentral	gStrokeWorld;						// ROM 0x0c1018cc gStrokeWorld
 
-void	IdleStrokes(void);									// ROM 0x001463cc IdleStrokes__Fv - the stroke world idled, not re-entered
-Boolean	OnlyStrokeWritten(class TStrokeUnit* unit);			// ROM 0x00209828 OnlyStrokeWritten__FP11TStrokeUnit (Recognizer.h)
+void	IdleStrokes(void);									// ROM 0x00144878 IdleStrokes__Fv - the stroke world idled, not re-entered
+Boolean	OnlyStrokeWritten(class TStrokeUnit* unit);			// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit (Recognizer.h)
 
 // the unit flag the stroke world sets on the click of the stroke in progress
 enum { kUnitStrokeInProgress = 0x04000000 };

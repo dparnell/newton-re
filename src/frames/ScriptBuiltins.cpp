@@ -21,10 +21,10 @@
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 
-// ROM 0x005d206d (object) GlobalFnExists
-// ROM 0x005d10fd (object) GlobalVarExists
-// ROM 0x005d196d (object) GetGlobalFn
-// ROM 0x005d211d (object) UnDefGlobalFn
+// ROM 0x0062faad (object) GlobalFnExists
+// ROM 0x0062e7b9 (object) GlobalVarExists
+// ROM 0x0062f379 (object) GetGlobalFn
+// ROM 0x0062fb5d (object) UnDefGlobalFn
 static const ScriptFunctionEntry gScriptBuiltins[] = {
 	{ "GlobalFnExists", "func(name) HasSlot(functions, name)" },
 	{ "GlobalVarExists", "func(name) HasSlot(vars, name)" },

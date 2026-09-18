@@ -3,7 +3,7 @@
 
 	Contains:	CMinBuffer, CBuffer and CBufferSegment (BufferSegment.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "BufferSegment.h"
@@ -16,12 +16,12 @@
 	C M i n B u f f e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00120d3c __ct__10CMinBufferFv
+// ROM 0x0011f2d4 __ct__10CMinBufferFv
 CMinBuffer::CMinBuffer()
 { }
 
 
-// ROM 0x00120d70 __dt__10CMinBufferFv
+// ROM 0x0011f308 __dt__10CMinBufferFv
 CMinBuffer::~CMinBuffer()
 { }
 
@@ -30,12 +30,12 @@ CMinBuffer::~CMinBuffer()
 	C B u f f e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0004644c __ct__7CBufferFv
+// ROM 0x00045b7c __ct__7CBufferFv
 CBuffer::CBuffer()
 { }
 
 
-// ROM 0x00048364 __dt__7CBufferFv
+// ROM 0x00047a94 __dt__7CBufferFv
 CBuffer::~CBuffer()
 { }
 
@@ -44,7 +44,7 @@ CBuffer::~CBuffer()
 	C B u f f e r S e g m e n t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00047cc4 __ct__14CBufferSegmentFv
+// ROM 0x000473f4 __ct__14CBufferSegmentFv
 CBufferSegment::CBufferSegment()
 {
 	fBuffer = nil;
@@ -59,7 +59,7 @@ CBufferSegment::CBufferSegment()
 }
 
 
-// ROM 0x00047d38 __dt__14CBufferSegmentFv
+// ROM 0x00047468 __dt__14CBufferSegmentFv
 CBufferSegment::~CBufferSegment()
 {
 	if (fFreeBuffer && fBuffer != nil)
@@ -67,7 +67,7 @@ CBufferSegment::~CBufferSegment()
 }
 
 
-// ROM 0x0004803c Init__14CBufferSegmentFl
+// ROM 0x0004776c Init__14CBufferSegmentFl
 // Over a new block of len bytes (any block of ours disposed), all of it
 // valid; a shared segment's shared memory re-pointed at it.
 NewtonErr
@@ -90,7 +90,7 @@ CBufferSegment::Init(Size len)
 }
 
 
-// ROM 0x000481b8 Init__14CBufferSegmentFPvlUcN22
+// ROM 0x000478e8 Init__14CBufferSegmentFPvlUcN22
 // Over a given block (ours to dispose when freeBuffer), the valid data
 // validCount bytes from validOff (-1: to the end).
 NewtonErr
@@ -114,7 +114,7 @@ CBufferSegment::Init(void* data, Size len, Boolean freeBuffer, Size validOff, Lo
 }
 
 
-// ROM 0x00048238 Peek__14CBufferSegmentFv
+// ROM 0x00047968 Peek__14CBufferSegmentFv
 int
 CBufferSegment::Peek(void)
 {
@@ -124,7 +124,7 @@ CBufferSegment::Peek(void)
 }
 
 
-// ROM 0x00048250 Next__14CBufferSegmentFv
+// ROM 0x00047980 Next__14CBufferSegmentFv
 // The byte after the position, the position moved to it.
 int
 CBufferSegment::Next(void)
@@ -138,7 +138,7 @@ CBufferSegment::Next(void)
 }
 
 
-// ROM 0x00048270 Skip__14CBufferSegmentFv
+// ROM 0x000479a0 Skip__14CBufferSegmentFv
 // The position moved on; -1 at the end.  (The ROM answers the old
 // position as an int otherwise, which no caller uses: 0 here.)
 int
@@ -153,7 +153,7 @@ CBufferSegment::Skip(void)
 }
 
 
-// ROM 0x00048290 Get__14CBufferSegmentFv
+// ROM 0x000479c0 Get__14CBufferSegmentFv
 int
 CBufferSegment::Get(void)
 {
@@ -163,7 +163,7 @@ CBufferSegment::Get(void)
 }
 
 
-// ROM 0x000482b4 Getn__14CBufferSegmentFPUcl
+// ROM 0x000479e4 Getn__14CBufferSegmentFPUcl
 // Up to n bytes out; ==> how many.
 Size
 CBufferSegment::Getn(UByte* p, Size n)
@@ -184,7 +184,7 @@ CBufferSegment::Getn(UByte* p, Size n)
 }
 
 
-// ROM 0x0004830c CopyOut__14CBufferSegmentFPUcRl
+// ROM 0x00047a3c CopyOut__14CBufferSegmentFPUcRl
 // Up to n bytes out, n left with how many were not; ==> -1 when the
 // data is then exhausted.
 int
@@ -201,7 +201,7 @@ CBufferSegment::CopyOut(UByte* p, Size& n)
 }
 
 
-// ROM 0x00047d98 Put__14CBufferSegmentFi
+// ROM 0x000474c8 Put__14CBufferSegmentFi
 int
 CBufferSegment::Put(int dataByte)
 {
@@ -214,7 +214,7 @@ CBufferSegment::Put(int dataByte)
 }
 
 
-// ROM 0x00047dc0 Putn__14CBufferSegmentFPCUcl
+// ROM 0x000474f0 Putn__14CBufferSegmentFPCUcl
 // Up to n bytes in; ==> how many.
 Size
 CBufferSegment::Putn(const UByte* p, Size n)
@@ -235,7 +235,7 @@ CBufferSegment::Putn(const UByte* p, Size n)
 }
 
 
-// ROM 0x00047e20 CopyIn__14CBufferSegmentFPCUcRl
+// ROM 0x00047550 CopyIn__14CBufferSegmentFPCUcRl
 // Up to n bytes in, n left with how many were not; ==> -1 when the
 // buffer is then full.
 int
@@ -251,7 +251,7 @@ CBufferSegment::CopyIn(const UByte* p, Size& n)
 }
 
 
-// ROM 0x00047e7c Reset__14CBufferSegmentFv
+// ROM 0x000475ac Reset__14CBufferSegmentFv
 // The whole block valid again, the position at its start.
 void
 CBufferSegment::Reset(void)
@@ -262,7 +262,7 @@ CBufferSegment::Reset(void)
 }
 
 
-// ROM 0x00047fd4 GetSize__14CBufferSegmentCFv
+// ROM 0x00047704 GetSize__14CBufferSegmentCFv
 Size
 CBufferSegment::GetSize(void) const
 {
@@ -270,7 +270,7 @@ CBufferSegment::GetSize(void) const
 }
 
 
-// ROM 0x00047fe4 AtEOF__14CBufferSegmentCFv
+// ROM 0x00047714 AtEOF__14CBufferSegmentCFv
 Boolean
 CBufferSegment::AtEOF(void) const
 {
@@ -278,7 +278,7 @@ CBufferSegment::AtEOF(void) const
 }
 
 
-// ROM 0x00047e94 Hide__14CBufferSegmentFli
+// ROM 0x000475c4 Hide__14CBufferSegmentFli
 // count bytes hidden at the beginning (dir -1) or the end (dir 1) of
 // the valid data (a negative count reveals them), kept within the
 // block; the position goes to that end.  ==> the bytes hidden.
@@ -325,7 +325,7 @@ CBufferSegment::Hide(Long count, int dir)
 }
 
 
-// ROM 0x00047f40 Seek__14CBufferSegmentFli
+// ROM 0x00047670 Seek__14CBufferSegmentFli
 // The position moved off bytes from the beginning (dir -1), from here
 // (0) or back from the end (1), kept within the valid data.  ==> the
 // position.
@@ -361,7 +361,7 @@ CBufferSegment::Seek(Long off, int dir)
 }
 
 
-// ROM 0x00047fbc Position__14CBufferSegmentCFv
+// ROM 0x000476ec Position__14CBufferSegmentCFv
 Size
 CBufferSegment::Position(void) const
 {
@@ -371,7 +371,7 @@ CBufferSegment::Position(void) const
 }
 
 
-// ROM 0x00048140 GetPhysicalSize__14CBufferSegmentFv
+// ROM 0x00047870 GetPhysicalSize__14CBufferSegmentFv
 Size
 CBufferSegment::GetPhysicalSize(void)
 {
@@ -379,7 +379,7 @@ CBufferSegment::GetPhysicalSize(void)
 }
 
 
-// ROM 0x00048148 SetPhysicalSize__14CBufferSegmentFl
+// ROM 0x00047878 SetPhysicalSize__14CBufferSegmentFl
 // The block resized (it may move: the position kept relative), all of
 // it valid.
 NewtonErr
@@ -402,7 +402,7 @@ CBufferSegment::SetPhysicalSize(Size len)
 }
 
 
-// ROM 0x000480ac MakeShared__14CBufferSegmentFUl
+// ROM 0x000477dc MakeShared__14CBufferSegmentFUl
 // The block made a shared memory object other tasks can copy to and
 // from, with the permissions (kSMemReadOnly or kSMemReadWrite; its size
 // fixed).
@@ -420,7 +420,7 @@ CBufferSegment::MakeShared(ULong permissions)
 }
 
 
-// ROM 0x00048000 RestoreShared__14CBufferSegmentFUl
+// ROM 0x00047730 RestoreShared__14CBufferSegmentFUl
 // The shared memory object re-pointed at the block.
 NewtonErr
 CBufferSegment::RestoreShared(ULong permissions)
@@ -431,7 +431,7 @@ CBufferSegment::RestoreShared(ULong permissions)
 }
 
 
-// ROM 0x00048108 UnShare__14CBufferSegmentFv
+// ROM 0x00047838 UnShare__14CBufferSegmentFv
 NewtonErr
 CBufferSegment::UnShare(void)
 {

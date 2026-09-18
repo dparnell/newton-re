@@ -4,7 +4,7 @@
 	Contains:	TStroke, TStrokePublic, the sample points and the Fixed
 				rectangle helpers.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Stroke.h"
@@ -17,14 +17,14 @@
 
 // the pen tip and inking defaults the strokes are made with
 ULong	gLastPenTip = 0;				// ROM 0x0c1008bc gLastPenTip
-Boolean	gDefaultInk = true;				// ROM 0x0c10197c gDefaultInk
+Boolean	gDefaultInk = true;				// ROM 0x0c101890 gDefaultInk
 
 
 /*------------------------------------------------------------------------------
 	S a m p l e   p o i n t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021e638 SampleX__FP8SamplePt
+// ROM 0x00220e80 SampleX__FP8SamplePt
 // The x in Fixed: 14 bits of eighths of a pixel.
 Fixed
 SampleX(SamplePt* pt)
@@ -33,7 +33,7 @@ SampleX(SamplePt* pt)
 }
 
 
-// ROM 0x0021f8e4 SampleY__FP8SamplePt
+// ROM 0x0022212c SampleY__FP8SamplePt
 Fixed
 SampleY(SamplePt* pt)
 {
@@ -41,7 +41,7 @@ SampleY(SamplePt* pt)
 }
 
 
-// ROM 0x0021fb7c SampleP__FP8SamplePt
+// ROM 0x002223c4 SampleP__FP8SamplePt
 // The pressure: two bits above x, one above y.
 ULong
 SampleP(SamplePt* pt)
@@ -50,7 +50,7 @@ SampleP(SamplePt* pt)
 }
 
 
-// ROM 0x00220644 SetSampleX__FP8SamplePtl
+// ROM 0x00222e8c SetSampleX__FP8SamplePtl
 // The x set (no less than 0), the pressure bits kept.
 void
 SetSampleX(SamplePt* pt, Fixed x)
@@ -61,7 +61,7 @@ SetSampleX(SamplePt* pt, Fixed x)
 }
 
 
-// ROM 0x002207cc SetSampleY__FP8SamplePtl
+// ROM 0x00223014 SetSampleY__FP8SamplePtl
 void
 SetSampleY(SamplePt* pt, Fixed y)
 {
@@ -71,7 +71,7 @@ SetSampleY(SamplePt* pt, Fixed y)
 }
 
 
-// ROM 0x0021f8f8 GetPoint__FP8SamplePtP6FPoint
+// ROM 0x00222140 GetPoint__FP8SamplePtP6FPoint
 void
 GetPoint(SamplePt* pt, FPoint* fpt)
 {
@@ -80,7 +80,7 @@ GetPoint(SamplePt* pt, FPoint* fpt)
 }
 
 
-// ROM 0x0021f924 SetPoint__FP8SamplePtP6FPoint
+// ROM 0x0022216c SetPoint__FP8SamplePtP6FPoint
 void
 SetPoint(SamplePt* pt, FPoint* fpt)
 {
@@ -89,7 +89,7 @@ SetPoint(SamplePt* pt, FPoint* fpt)
 }
 
 
-// ROM 0x0021f990 TestFlag__FP8SamplePtUl
+// ROM 0x002221d8 TestFlag__FP8SamplePtUl
 // The flag bit (bit 15 of y's word, as bit 1 of the flags).
 ULong
 TestFlag(SamplePt* pt, ULong flag)
@@ -98,7 +98,7 @@ TestFlag(SamplePt* pt, ULong flag)
 }
 
 
-// ROM 0x0021f9a8 SetFlag__FP8SamplePtUl
+// ROM 0x002221f0 SetFlag__FP8SamplePtUl
 void
 SetFlag(SamplePt* pt, ULong flag)
 {
@@ -107,7 +107,7 @@ SetFlag(SamplePt* pt, ULong flag)
 }
 
 
-// ROM 0x0021f9d8 UnsetFlag__FP8SamplePtUl
+// ROM 0x00222220 UnsetFlag__FP8SamplePtUl
 void
 UnsetFlag(SamplePt* pt, ULong flag)
 {
@@ -120,7 +120,7 @@ UnsetFlag(SamplePt* pt, ULong flag)
 	F i x e d   r e c t a n g l e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001a66f4 AddPtToRect
+// ROM 0x001a4174 AddPtToRect
 void
 AddPtToRect(const FPoint* pt, FRect* rect, Boolean first)
 {
@@ -141,7 +141,7 @@ AddPtToRect(const FPoint* pt, FRect* rect, Boolean first)
 }
 
 
-// ROM 0x001a6934 SetRectangleEmpty
+// ROM 0x001a43b4 SetRectangleEmpty
 void
 SetRectangleEmpty(FRect* rect)
 {
@@ -149,7 +149,7 @@ SetRectangleEmpty(FRect* rect)
 }
 
 
-// ROM 0x001a694c SetRectanglePoint
+// ROM 0x001a43cc SetRectanglePoint
 void
 SetRectanglePoint(FRect* rect, const FPoint* pt)
 {
@@ -158,7 +158,7 @@ SetRectanglePoint(FRect* rect, const FPoint* pt)
 }
 
 
-// ROM 0x001a66a8 RectangleCenter
+// ROM 0x001a4128 RectangleCenter
 void
 RectangleCenter(const FRect* rect, FPoint* center)
 {
@@ -167,7 +167,7 @@ RectangleCenter(const FRect* rect, FPoint* center)
 }
 
 
-// ROM 0x001a64c4 UnfixRect
+// ROM 0x001a3f44 UnfixRect
 // The Fixed rectangle rounded to pixels.
 void
 UnfixRect(const FRect* src, Rect* dst)
@@ -179,7 +179,7 @@ UnfixRect(const FRect* src, Rect* dst)
 }
 
 
-// ROM 0x001a67a4 GetMapper
+// ROM 0x001a4224 GetMapper
 // The dst rect narrowed (or shortened) about its centre to the src
 // rect's proportions, so that a mapping between them keeps shapes.
 void
@@ -207,7 +207,7 @@ GetMapper(const FRect* src, const FRect* dst)
 }
 
 
-// ROM 0x001a656c EmptyRectangle
+// ROM 0x001a3fec EmptyRectangle
 Boolean
 EmptyRectangle(const FRect* rect)
 {
@@ -215,7 +215,7 @@ EmptyRectangle(const FRect* rect)
 }
 
 
-// ROM 0x001a65a0 InsetRectangle
+// ROM 0x001a4020 InsetRectangle
 void
 InsetRectangle(FRect* rect, Fixed dx, Fixed dy)
 {
@@ -226,7 +226,7 @@ InsetRectangle(FRect* rect, Fixed dx, Fixed dy)
 }
 
 
-// ROM 0x001a65d4 PointInRectangle
+// ROM 0x001a4054 PointInRectangle
 Boolean
 PointInRectangle(const FPoint* pt, const FRect* rect)
 {
@@ -234,7 +234,7 @@ PointInRectangle(const FPoint* pt, const FRect* rect)
 }
 
 
-// ROM 0x001a6970 SetRectangleEdges
+// ROM 0x001a43f0 SetRectangleEdges
 void
 SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bottom)
 {
@@ -245,7 +245,7 @@ SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bottom)
 }
 
 
-// ROM 0x001a6618 SectRectangle
+// ROM 0x001a4098 SectRectangle
 // The rectangles' intersection; empty (and false) when they do not meet
 // or a is empty.
 Boolean
@@ -273,7 +273,7 @@ SectRectangle(FRect* result, const FRect* a, const FRect* b)
 }
 
 
-// ROM 0x001a6864 MapPoint
+// ROM 0x001a42e4 MapPoint
 // The point moved from where it lies in src to the same place in dst.
 void
 MapPoint(FPoint* pt, const FRect* src, const FRect* dst)
@@ -297,7 +297,7 @@ MapPoint(FPoint* pt, const FRect* src, const FRect* dst)
 	T S t r o k e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021fa0c Make__7TStrokeSFUl
+// ROM 0x00222254 Make__7TStrokeSFUl
 // A stroke with room for count points; nil for no memory.
 TStroke*
 TStroke::Make(ULong count)
@@ -316,7 +316,7 @@ TStroke::Make(ULong count)
 }
 
 
-// ROM 0x0021fa7c IStroke__7TStrokeFUl
+// ROM 0x002222c4 IStroke__7TStrokeFUl
 // The array of SamplePts made; the times, the box and the decimation (1:
 // every point kept) cleared; the pen tip in the flags (bits 8-15), and
 // no ink when that is the default.
@@ -344,7 +344,7 @@ TStroke::IStroke(ULong count)
 }
 
 
-// ROM 0x0021fb28 IDispose__7TStrokeFv
+// ROM 0x00222370 IDispose__7TStrokeFv
 // The points freed (the ROM: in the stroker's heap when the stroke was
 // made there).
 void
@@ -354,7 +354,7 @@ TStroke::IDispose(void)
 }
 
 
-// ROM 0x0021fb78 SizeInBytes__7TStrokeFv
+// ROM 0x002223c0 SizeInBytes__7TStrokeFv
 long
 TStroke::SizeInBytes(void)
 {
@@ -362,7 +362,7 @@ TStroke::SizeInBytes(void)
 }
 
 
-// ROM 0x0021fba8 Bifurcate__7TStrokeFv
+// ROM 0x002223f0 Bifurcate__7TStrokeFv
 // The decimation doubled (when it does not overflow) and every other
 // point dropped; the sample rate halved.
 void
@@ -385,7 +385,7 @@ TStroke::Bifurcate(void)
 }
 
 
-// ROM 0x0021fc3c TryToAddPoint__7TStrokeFv
+// ROM 0x00222484 TryToAddPoint__7TStrokeFv
 // A point added; when there is no memory the stroke is thinned
 // (Bifurcate) and the point tried again.
 SamplePt*
@@ -399,7 +399,7 @@ TStroke::TryToAddPoint(void)
 }
 
 
-// ROM 0x0021fc78 AddPoint__7TStrokeFP5TabPt
+// ROM 0x002224c0 AddPoint__7TStrokeFP5TabPt
 // A tablet point added: only every fDecimation'th (a stroke over 800
 // points is thinned first); the x and y clamped at 0, the pressure
 // clamped at 7, the flag's bit 1 kept; the box grown to it (set to it
@@ -443,7 +443,7 @@ TStroke::AddPoint(TabPt* pt)
 }
 
 
-// ROM 0x0021ff34 EndStroke__7TStrokeFv
+// ROM 0x0022277c EndStroke__7TStrokeFv
 // The stroke done: compacted, its box a unit past its points.
 void
 TStroke::EndStroke(void)
@@ -455,7 +455,7 @@ TStroke::EndStroke(void)
 }
 
 
-// ROM 0x0021ff78 GetPoint__7TStrokeFl
+// ROM 0x002227c0 GetPoint__7TStrokeFl
 SamplePt*
 TStroke::GetPoint(long index)
 {
@@ -463,7 +463,7 @@ TStroke::GetPoint(long index)
 }
 
 
-// ROM 0x0021ff80 GetTabPt__7TStrokeFlP5TabPt
+// ROM 0x002227c8 GetTabPt__7TStrokeFlP5TabPt
 void
 TStroke::GetTabPt(long index, TabPt* pt)
 {
@@ -475,7 +475,7 @@ TStroke::GetTabPt(long index, TabPt* pt)
 }
 
 
-// ROM 0x00220010 GetFPoint__7TStrokeFlP6FPoint
+// ROM 0x00222858 GetFPoint__7TStrokeFlP6FPoint
 void
 TStroke::GetFPoint(long index, FPoint* pt)
 {
@@ -485,7 +485,7 @@ TStroke::GetFPoint(long index, FPoint* pt)
 }
 
 
-// ROM 0x00220058 Rotate__7TStrokeFl
+// ROM 0x002228a0 Rotate__7TStrokeFl
 // NOT YET RECONSTRUCTED: the points turned about the box's centre (the
 // matrix utilities SetIdentityMatrix/RotateMatrix/TransformPoints).
 void
@@ -495,7 +495,7 @@ TStroke::Rotate(long /*angle*/)
 }
 
 
-// ROM 0x0022016c Scale__7TStrokeFlT1
+// ROM 0x002229b4 Scale__7TStrokeFlT1
 // NOT YET RECONSTRUCTED: the points scaled (MxScale/MxMove).
 void
 TStroke::Scale(long /*sx*/, long /*sy*/)
@@ -504,7 +504,7 @@ TStroke::Scale(long /*sx*/, long /*sy*/)
 }
 
 
-// ROM 0x002202b0 Draw__7TStrokeFv
+// ROM 0x00222af8 Draw__7TStrokeFv
 // The stroke marked drawn (and drawn-when-done when it is done); its
 // segments go to the inker unless the stroke is inkless.  NOT YET
 // RECONSTRUCTED: the inker (InkerLine).
@@ -517,7 +517,7 @@ TStroke::Draw(void)
 }
 
 
-// ROM 0x00220424 Map__7TStrokeFP5FRect
+// ROM 0x00222c6c Map__7TStrokeFP5FRect
 // The points moved from the box into the rect (GetMapper keeps their
 // proportions), which becomes the box.
 void
@@ -538,7 +538,7 @@ TStroke::Map(FRect* dst)
 }
 
 
-// ROM 0x00220550 Offset__7TStrokeFlT1
+// ROM 0x00222d98 Offset__7TStrokeFlT1
 void
 TStroke::Offset(long dx, long dy)
 {
@@ -555,7 +555,7 @@ TStroke::Offset(long dx, long dy)
 }
 
 
-// ROM 0x0022067c UpdateBBox__7TStrokeFv
+// ROM 0x00222ec4 UpdateBBox__7TStrokeFv
 // The box found again from the points, a unit past them.
 void
 TStroke::UpdateBBox(void)
@@ -571,7 +571,7 @@ TStroke::UpdateBBox(void)
 }
 
 
-// ROM 0x0022071c Done__7TStrokeFv
+// ROM 0x00222f64 Done__7TStrokeFv
 Boolean
 TStroke::Done(void)
 {
@@ -579,7 +579,7 @@ TStroke::Done(void)
 }
 
 
-// ROM 0x001fcdf0 AcquireStroke__FP7TStroke
+// ROM 0x001ff5a0 AcquireStroke__FP7TStroke
 // The inker's lock taken while the stroke is still being drawn (the
 // host has no inker task: the semaphore is nothing); ==> whether it was.
 Boolean
@@ -589,13 +589,13 @@ AcquireStroke(TStroke* stroke)
 }
 
 
-// ROM 0x001fce28 ReleaseStroke__Fv
+// ROM 0x001ff5d8 ReleaseStroke__Fv
 void
 ReleaseStroke(void)
 { }
 
 
-// ROM 0x001a5bd8 GetStrokeRect__FP7TStrokeP5TRect
+// ROM 0x001a3658 GetStrokeRect__FP7TStrokeP5TRect
 // The box rounded to pixels, made at least a pixel each way.
 void
 GetStrokeRect(TStroke* stroke, Rect* rect)
@@ -608,7 +608,7 @@ GetStrokeRect(TStroke* stroke, Rect* rect)
 }
 
 
-// ROM 0x0022b6cc AdjustForInk__FP5TRect
+// ROM 0x0022de2c AdjustForInk__FP5TRect
 // The rectangle let out a pixel, and the userPenSize preference more at
 // the right and bottom.
 void
@@ -625,7 +625,7 @@ AdjustForInk(Rect* rect)
 	T S t r o k e P u b l i c
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0014727c Make__13TStrokePublicSFP7TStrokeUc
+// ROM 0x00145728 Make__13TStrokePublicSFP7TStrokeUc
 TStrokePublic*
 TStrokePublic::Make(TStroke* stroke, Boolean owns)
 {
@@ -633,7 +633,7 @@ TStrokePublic::Make(TStroke* stroke, Boolean owns)
 }
 
 
-// ROM 0x0014728c __ct__13TStrokePublicFP7TStrokeUc
+// ROM 0x00145738 __ct__13TStrokePublicFP7TStrokeUc
 TStrokePublic::TStrokePublic(TStroke* stroke, Boolean owns)
 {
 	fUnused = 0;
@@ -646,7 +646,7 @@ TStrokePublic::TStrokePublic(TStroke* stroke, Boolean owns)
 }
 
 
-// ROM 0x001472e8 __dt__13TStrokePublicFv
+// ROM 0x00145794 __dt__13TStrokePublicFv
 TStrokePublic::~TStrokePublic()
 {
 	if (fOwnsStroke && fStroke != nil)
@@ -654,7 +654,7 @@ TStrokePublic::~TStrokePublic()
 }
 
 
-// ROM 0x00147324 Done__13TStrokePublicFv
+// ROM 0x001457d0 Done__13TStrokePublicFv
 Boolean
 TStrokePublic::Done(void)
 {
@@ -662,7 +662,7 @@ TStrokePublic::Done(void)
 }
 
 
-// ROM 0x0014732c Size__13TStrokePublicFv
+// ROM 0x001457d8 Size__13TStrokePublicFv
 long
 TStrokePublic::Size(void)
 {
@@ -670,7 +670,7 @@ TStrokePublic::Size(void)
 }
 
 
-// ROM 0x00147338 DownTime__13TStrokePublicFv
+// ROM 0x001457e4 DownTime__13TStrokePublicFv
 ULong
 TStrokePublic::DownTime(void)
 {
@@ -678,7 +678,7 @@ TStrokePublic::DownTime(void)
 }
 
 
-// ROM 0x00147344 UpTime__13TStrokePublicFv
+// ROM 0x001457f0 UpTime__13TStrokePublicFv
 ULong
 TStrokePublic::UpTime(void)
 {
@@ -686,7 +686,7 @@ TStrokePublic::UpTime(void)
 }
 
 
-// ROM 0x0014740c Bounds__13TStrokePublicFP5TRect
+// ROM 0x001458b8 Bounds__13TStrokePublicFP5TRect
 // The box in pixels, a pixel wider and taller.
 void
 TStrokePublic::Bounds(Rect* rect)
@@ -708,7 +708,7 @@ SamplePoint(SamplePt* sample)
 }
 
 
-// ROM 0x0014745c GetPoint__13TStrokePublicFl
+// ROM 0x00145908 GetPoint__13TStrokePublicFl
 // The point at the index (the last for an index past the end).
 Point
 TStrokePublic::GetPoint(long index)
@@ -723,7 +723,7 @@ TStrokePublic::GetPoint(long index)
 }
 
 
-// ROM 0x00147504 FirstPoint__13TStrokePublicFv
+// ROM 0x001459b0 FirstPoint__13TStrokePublicFv
 Point
 TStrokePublic::FirstPoint(void)
 {
@@ -740,7 +740,7 @@ TStrokePublic::FirstPoint(void)
 }
 
 
-// ROM 0x0014750c FinalPoint__13TStrokePublicFv
+// ROM 0x001459b8 FinalPoint__13TStrokePublicFv
 Point
 TStrokePublic::FinalPoint(void)
 {
@@ -748,13 +748,13 @@ TStrokePublic::FinalPoint(void)
 }
 
 
-// ROM 0x0014753c InkOn__13TStrokePublicFv
+// ROM 0x001459e8 InkOn__13TStrokePublicFv
 void
 TStrokePublic::InkOn(void)
 { }
 
 
-// ROM 0x00147540 InkOff__13TStrokePublicFUcT1
+// ROM 0x001459ec InkOff__13TStrokePublicFUcT1
 // The stroke's ink taken off the screen (once): the stroke marked
 // inkless, the inker told to stop (hobbled or not; NOT YET: the inker)
 // when the stroke is still going, and the inked rectangle either put
@@ -786,7 +786,7 @@ TStrokePublic::InkOff(Boolean invalidate, Boolean hobbled)
 }
 
 
-// ROM 0x00147620 InkOff__13TStrokePublicFUc
+// ROM 0x00145acc InkOff__13TStrokePublicFUc
 void
 TStrokePublic::InkOff(Boolean invalidate)
 {
@@ -794,7 +794,7 @@ TStrokePublic::InkOff(Boolean invalidate)
 }
 
 
-// ROM 0x0014762c GetInkedRect__13TStrokePublicFP5TRect
+// ROM 0x00145ad8 GetInkedRect__13TStrokePublicFP5TRect
 // Where the ink lies: the stroke's box let out for the pen, found once.
 void
 TStrokePublic::GetInkedRect(Rect* rect)
@@ -808,7 +808,7 @@ TStrokePublic::GetInkedRect(Rect* rect)
 }
 
 
-// ROM 0x00147674 Invalidate__13TStrokePublicFv
+// ROM 0x00145b20 Invalidate__13TStrokePublicFv
 // The inked rectangle redrawn (for an inked stroke).
 void
 TStrokePublic::Invalidate(void)

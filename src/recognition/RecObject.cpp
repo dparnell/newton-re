@@ -4,7 +4,7 @@
 	Contains:	TRecObject, TArray, TDArray, TArrayIterator and the
 				recogniser's handle functions.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "RecObject.h"
@@ -17,7 +17,7 @@
 	H a n d l e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0011d2d8 MakeHandle__Fl
+// ROM 0x0011b870 MakeHandle__Fl
 // A handle of the size, named 'rcog.
 Handle
 MakeHandle(long size)
@@ -28,7 +28,7 @@ MakeHandle(long size)
 }
 
 
-// ROM 0x0011d378 ResizeHandle__FPPcl
+// ROM 0x0011b910 ResizeHandle__FPPcl
 long
 ResizeHandle(Handle h, long size)
 {
@@ -36,7 +36,7 @@ ResizeHandle(Handle h, long size)
 }
 
 
-// ROM 0x0011d358 DeleteHandle__FPPc
+// ROM 0x0011b8f0 DeleteHandle__FPPc
 void
 DeleteHandle(Handle h)
 {
@@ -45,7 +45,7 @@ DeleteHandle(Handle h)
 }
 
 
-// ROM 0x0011d368 SizeOfHandle__FPPc
+// ROM 0x0011b900 SizeOfHandle__FPPc
 long
 SizeOfHandle(Handle h)
 {
@@ -53,7 +53,7 @@ SizeOfHandle(Handle h)
 }
 
 
-// ROM 0x0011d334 CopyHandle__FPPPc
+// ROM 0x0011b8cc CopyHandle__FPPPc
 // *h replaced by a copy of it; ==> 0, or the memory error.
 long
 CopyHandle(Handle* h)
@@ -68,7 +68,7 @@ CopyHandle(Handle* h)
 }
 
 
-// ROM 0x0011d2c0 NamePtr__FPcUl
+// ROM 0x0011b858 NamePtr__FPcUl
 // The recogniser tags its blocks for the heap's accounting; the host has no
 // pointer names.
 void
@@ -76,7 +76,7 @@ NamePtr(char* /*ptr*/, ULong /*name*/)
 { }
 
 
-// ROM 0x0011d344 GetTicks__Fv
+// ROM 0x0011b8dc GetTicks__Fv
 // The recogniser's clock: the Macintosh tick count.
 ULong
 GetTicks(void)
@@ -85,14 +85,14 @@ GetTicks(void)
 }
 
 
-// ROM 0x0011d398 NameHandle__FPPcUl
+// ROM 0x0011b930 NameHandle__FPPcUl
 // The ROM tags its handles for the memory reports; nothing here.
 void
 NameHandle(Handle /*h*/, ULong /*name*/)
 { }
 
 
-// ROM 0x0011d2d0 MoveBlock__FPcT1l
+// ROM 0x0011b868 MoveBlock__FPcT1l
 void
 MoveBlock(const void* src, void* dst, long size)
 {
@@ -100,7 +100,7 @@ MoveBlock(const void* src, void* dst, long size)
 }
 
 
-// ROM 0x0011d2cc MemoryError__Fv
+// ROM 0x0011b864 MemoryError__Fv
 // The recogniser's "no memory" error code (the ROM's is what
 // SignalMemoryError leaves; -1 here).
 long
@@ -114,19 +114,19 @@ MemoryError(void)
 	T R e c O b j e c t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021a254 __ct__10TRecObjectFv
+// ROM 0x0021c984 __ct__10TRecObjectFv
 TRecObject::TRecObject()
 {
 	fFlags = 0;
 }
 
 
-// ROM 0x0021a288 __dt__10TRecObjectFv
+// ROM 0x0021c9b8 __dt__10TRecObjectFv
 TRecObject::~TRecObject()
 { }
 
 
-// ROM 0x0021a320 Dispose__10TRecObjectFv
+// ROM 0x0021ca50 Dispose__10TRecObjectFv
 // The object deleted (the ROM: the vtable reset and the block freed).
 void
 TRecObject::Dispose(void)
@@ -135,13 +135,13 @@ TRecObject::Dispose(void)
 }
 
 
-// ROM 0x0021a318 Dump__10TRecObjectFP4TMsg
+// ROM 0x0021ca48 Dump__10TRecObjectFP4TMsg
 void
 TRecObject::Dump(TMsg* /*msg*/)
 { }
 
 
-// ROM 0x0021a31c SizeInBytes__10TRecObjectFv
+// ROM 0x0021ca4c SizeInBytes__10TRecObjectFv
 long
 TRecObject::SizeInBytes(void)
 {
@@ -149,7 +149,7 @@ TRecObject::SizeInBytes(void)
 }
 
 
-// ROM 0x0021a330 CopyInto__10TRecObjectFP10TRecObject
+// ROM 0x0021ca60 CopyInto__10TRecObjectFP10TRecObject
 long
 TRecObject::CopyInto(TRecObject* other)
 {
@@ -158,7 +158,7 @@ TRecObject::CopyInto(TRecObject* other)
 }
 
 
-// ROM 0x0021a2a0 SetFlags__10TRecObjectFUl
+// ROM 0x0021c9d0 SetFlags__10TRecObjectFUl
 void
 TRecObject::SetFlags(ULong flags)
 {
@@ -166,7 +166,7 @@ TRecObject::SetFlags(ULong flags)
 }
 
 
-// ROM 0x0021a2b0 UnsetFlags__10TRecObjectFUl
+// ROM 0x0021c9e0 UnsetFlags__10TRecObjectFUl
 void
 TRecObject::UnsetFlags(ULong flags)
 {
@@ -174,7 +174,7 @@ TRecObject::UnsetFlags(ULong flags)
 }
 
 
-// ROM 0x0021a2c0 TestFlags__10TRecObjectFUl
+// ROM 0x0021c9f0 TestFlags__10TRecObjectFUl
 Boolean
 TRecObject::TestFlags(ULong flags)
 {
@@ -182,7 +182,7 @@ TRecObject::TestFlags(ULong flags)
 }
 
 
-// ROM 0x0021a2d4 DumpObject__10TRecObjectFPc
+// ROM 0x0021ca04 DumpObject__10TRecObjectFPc
 // The object dumped through a message (TMsg, NOT YET RECONSTRUCTED: the
 // title printed, the Dump virtual given no message).
 void
@@ -198,7 +198,7 @@ TRecObject::DumpObject(char* title)
 	T A r r a y
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00206768 __ct__6TArrayFv
+// ROM 0x00208e98 __ct__6TArrayFv
 TArray::TArray()
 {
 	fElementSize = 0;
@@ -210,12 +210,12 @@ TArray::TArray()
 }
 
 
-// ROM 0x002067a8 __dt__6TArrayFv
+// ROM 0x00208ed8 __dt__6TArrayFv
 TArray::~TArray()
 { }
 
 
-// ROM 0x00206b30 Make__6TArraySFUlT1
+// ROM 0x00209260 Make__6TArraySFUlT1
 // A new array of count entries of the element size; nil for no memory.
 TArray*
 TArray::Make(ULong elementSize, ULong count)
@@ -234,7 +234,7 @@ TArray::Make(ULong elementSize, ULong count)
 }
 
 
-// ROM 0x00206d54 IArray__6TArrayFUlT1
+// ROM 0x00209484 IArray__6TArrayFUlT1
 // The array set up: a chunk of 6, spare slots (6 for an empty array),
 // the data handle made (or resized when there is one); ==> 0, or the
 // memory error (the count 0 then).
@@ -270,7 +270,7 @@ TArray::IArray(ULong elementSize, ULong count)
 }
 
 
-// ROM 0x00206e7c Dispose__6TArrayFv
+// ROM 0x002095ac Dispose__6TArrayFv
 // One user fewer; the array goes when none is left.
 void
 TArray::Dispose(void)
@@ -280,7 +280,7 @@ TArray::Dispose(void)
 }
 
 
-// ROM 0x00206ea8 IDispose__6TArrayFv
+// ROM 0x002095d8 IDispose__6TArrayFv
 // The data freed and the object deleted.
 void
 TArray::IDispose(void)
@@ -292,7 +292,7 @@ TArray::IDispose(void)
 }
 
 
-// ROM 0x00206e10 Dump__6TArrayFP4TMsg
+// ROM 0x00209540 Dump__6TArrayFP4TMsg
 void
 TArray::Dump(TMsg* /*msg*/)
 {
@@ -300,7 +300,7 @@ TArray::Dump(TMsg* /*msg*/)
 }
 
 
-// ROM 0x002067e8 SizeInBytes__6TArrayFv
+// ROM 0x00208f18 SizeInBytes__6TArrayFv
 long
 TArray::SizeInBytes(void)
 {
@@ -308,7 +308,7 @@ TArray::SizeInBytes(void)
 }
 
 
-// ROM 0x00206824 CopyInto__6TArrayFP10TRecObject
+// ROM 0x00208f54 CopyInto__6TArrayFP10TRecObject
 // The other array given a copy of the data and the sizes (no users);
 // ==> 0, or an error (1 for no data or no other).
 long
@@ -332,7 +332,7 @@ TArray::CopyInto(TRecObject* other)
 }
 
 
-// ROM 0x002068b4 Reuse__6TArrayFUl
+// ROM 0x00208fe4 Reuse__6TArrayFUl
 // The array emptied and sized for count entries (plus a chunk).
 void
 TArray::Reuse(ULong count)
@@ -343,7 +343,7 @@ TArray::Reuse(ULong count)
 }
 
 
-// ROM 0x00206908 Compact__6TArrayFv
+// ROM 0x00209038 Compact__6TArrayFv
 // The spare slots given back.
 void
 TArray::Compact(void)
@@ -357,7 +357,7 @@ TArray::Compact(void)
 }
 
 
-// ROM 0x00206938 Load__6TArrayFUlN31
+// ROM 0x00209068 Load__6TArrayFUlN31
 long
 TArray::Load(ULong, ULong, ULong, ULong)
 {
@@ -365,7 +365,7 @@ TArray::Load(ULong, ULong, ULong, ULong)
 }
 
 
-// ROM 0x00206940 LoadFromSoup__6TArrayFRC6RefVarT1Ul
+// ROM 0x00209070 LoadFromSoup__6TArrayFRC6RefVarT1Ul
 // The array's sizes read from a header binary and its data taken from
 // a data binary (the ROM: a "fake" handle over the object's bytes; the
 // host copies them).
@@ -389,7 +389,7 @@ TArray::LoadFromSoup(RefArg headers, RefArg datas, ULong index)
 }
 
 
-// ROM 0x002069e4 Save__6TArrayFUlN31
+// ROM 0x00209114 Save__6TArrayFUlN31
 // Compacted; the ROM writes a 12-byte header and the data as resources
 // (SaveResource does nothing in the ROM either).
 long
@@ -400,7 +400,7 @@ TArray::Save(ULong, ULong, ULong, ULong)
 }
 
 
-// ROM 0x00206a8c GetEntry__6TArrayFUl
+// ROM 0x002091bc GetEntry__6TArrayFUl
 char*
 TArray::GetEntry(ULong index)
 {
@@ -410,7 +410,7 @@ TArray::GetEntry(ULong index)
 }
 
 
-// ROM 0x00206ac4 GetIterator__6TArrayFP14TArrayIterator
+// ROM 0x002091f4 GetIterator__6TArrayFP14TArrayIterator
 // The iterator set at the first entry (none for an empty array); ==>
 // that entry.
 static char* IteratorGetNext(TArrayIterator* iter);
@@ -440,7 +440,7 @@ TArray::GetIterator(TArrayIterator* iter)
 }
 
 
-// ROM 0x00206b8c GetNext__FP14TArrayIterator
+// ROM 0x002092bc GetNext__FP14TArrayIterator
 // The next entry (the entry address moved along with the data when the
 // handle moved).
 static char*
@@ -457,7 +457,7 @@ IteratorGetNext(TArrayIterator* iter)
 }
 
 
-// ROM 0x00206c00 GetCur__FP14TArrayIterator
+// ROM 0x00209330 GetCur__FP14TArrayIterator
 static char*
 IteratorGetCur(TArrayIterator* iter)
 {
@@ -470,7 +470,7 @@ IteratorGetCur(TArrayIterator* iter)
 }
 
 
-// ROM 0x00206bd4 RemoveCurrent__FP14TArrayIterator
+// ROM 0x00209304 RemoveCurrent__FP14TArrayIterator
 // The current entry is gone (deleted by the caller): the cursor steps back.
 void
 TArrayIterator::RemoveCurrent(void)
@@ -481,7 +481,7 @@ TArrayIterator::RemoveCurrent(void)
 }
 
 
-// ROM 0x00206c2c Clear__6TArrayFv
+// ROM 0x0020935c Clear__6TArrayFv
 void
 TArray::Clear(void)
 {
@@ -489,7 +489,7 @@ TArray::Clear(void)
 }
 
 
-// ROM 0x00206c38 CutToIndex__6TArrayFUl
+// ROM 0x00209368 CutToIndex__6TArrayFUl
 // The entries from the index dropped: they become spare slots.
 void
 TArray::CutToIndex(ULong index)
@@ -500,7 +500,7 @@ TArray::CutToIndex(ULong index)
 }
 
 
-// ROM 0x00206c58 Add__6TArrayFv
+// ROM 0x00209388 Add__6TArrayFv
 // A slot added at the end: a spare one when there is one, else the
 // data grown by a chunk (by one when that fails); ==> the new index, -1
 // when there is no memory.  The array's flag 1 says it changed.
@@ -531,7 +531,7 @@ TArray::Add(void)
 }
 
 
-// ROM 0x00206cec AddEntry__6TArrayFv
+// ROM 0x0020941c AddEntry__6TArrayFv
 char*
 TArray::AddEntry(void)
 {
@@ -539,7 +539,7 @@ TArray::AddEntry(void)
 }
 
 
-// ROM 0x00206d1c SetEntry__6TArrayFUlPc
+// ROM 0x0020944c SetEntry__6TArrayFUlPc
 // The entry's bytes copied in from the data; ==> the entry (nil past
 // the count).
 char*
@@ -553,7 +553,7 @@ TArray::SetEntry(ULong index, const char* data)
 }
 
 
-// ROM 0x00206ed8 Clone__6TArrayFv
+// ROM 0x00209608 Clone__6TArrayFv
 void
 TArray::Clone(void)
 {
@@ -561,7 +561,7 @@ TArray::Clone(void)
 }
 
 
-// ROM 0x00206ee8 Release__6TArrayFv
+// ROM 0x00209618 Release__6TArrayFv
 Boolean
 TArray::Release(void)
 {
@@ -569,7 +569,7 @@ TArray::Release(void)
 }
 
 
-// ROM 0x00206f04 Lock__6TArrayFv
+// ROM 0x00209634 Lock__6TArrayFv
 char*
 TArray::Lock(void)
 {
@@ -579,7 +579,7 @@ TArray::Lock(void)
 }
 
 
-// ROM 0x00206f14 Unlock__6TArrayFv
+// ROM 0x00209644 Unlock__6TArrayFv
 void
 TArray::Unlock(void)
 {
@@ -592,12 +592,12 @@ TArray::Unlock(void)
 	T D A r r a y
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0020a034 __ct__7TDArrayFv
+// ROM 0x0020c764 __ct__7TDArrayFv
 TDArray::TDArray()
 { }
 
 
-// ROM 0x0020a074 Make__7TDArraySFUlT1
+// ROM 0x0020c7a4 Make__7TDArraySFUlT1
 TDArray*
 TDArray::Make(ULong elementSize, ULong count)
 {
@@ -615,7 +615,7 @@ TDArray::Make(ULong elementSize, ULong count)
 }
 
 
-// ROM 0x0020a0d0 IDArray__7TDArrayFUlT1
+// ROM 0x0020c800 IDArray__7TDArrayFUlT1
 long
 TDArray::IDArray(ULong elementSize, ULong count)
 {
@@ -625,7 +625,7 @@ TDArray::IDArray(ULong elementSize, ULong count)
 }
 
 
-// ROM 0x0020a100 Delete__7TDArrayFUl
+// ROM 0x0020c830 Delete__7TDArrayFUl
 void
 TDArray::Delete(ULong index)
 {
@@ -633,7 +633,7 @@ TDArray::Delete(ULong index)
 }
 
 
-// ROM 0x0020a10c DeleteEntries__7TDArrayFUlT1
+// ROM 0x0020c83c DeleteEntries__7TDArrayFUlT1
 // count entries from the index taken out (the rest moved down, the
 // slots kept as spare); ==> the index, -1 for an index past the end.
 ULong
@@ -658,7 +658,7 @@ TDArray::DeleteEntries(ULong index, ULong count)
 }
 
 
-// ROM 0x0020a1c8 Insert__7TDArrayFUl
+// ROM 0x0020c8f8 Insert__7TDArrayFUl
 // A slot opened at the index (at the end for an index past the count);
 // ==> its index, -1 for no memory.
 ULong
@@ -676,7 +676,7 @@ TDArray::Insert(ULong index)
 }
 
 
-// ROM 0x0020a270 InsertEntry__7TDArrayFUlPc
+// ROM 0x0020c9a0 InsertEntry__7TDArrayFUlPc
 // ==> the index, -1 for no memory
 ULong
 TDArray::InsertEntry(ULong index, const char* data)
@@ -688,7 +688,7 @@ TDArray::InsertEntry(ULong index, const char* data)
 }
 
 
-// ROM 0x0020a2c8 InsertEntries__7TDArrayFUlPcT1
+// ROM 0x0020c9f8 InsertEntries__7TDArrayFUlPcT1
 // count entries put in at the index (the data grown by them plus a
 // chunk; host: the entries located after the growth, as the handle may
 // move); ==> the index, -1 for no memory.

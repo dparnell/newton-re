@@ -3,7 +3,7 @@
 
 	Contains:	CSortedList (SortedList.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SortedList.h"
@@ -11,7 +11,7 @@
 #include "ItemComparer.h"
 
 
-// ROM 0x001e58d8 __ct__11CSortedListFP13CItemComparer
+// ROM 0x001e34c0 __ct__11CSortedListFP13CItemComparer
 CSortedList::CSortedList(CItemComparer* comparer)
 	: CList()
 {
@@ -19,12 +19,12 @@ CSortedList::CSortedList(CItemComparer* comparer)
 }
 
 
-// ROM 0x001e5914 __dt__11CSortedListFv
+// ROM 0x001e34fc __dt__11CSortedListFv
 CSortedList::~CSortedList()
 { }
 
 
-// ROM 0x001e5944 Insert__11CSortedListFPv
+// ROM 0x001e352c Insert__11CSortedListFPv
 void
 CSortedList::Insert(void* item)
 {
@@ -38,7 +38,7 @@ CSortedList::Insert(void* item)
 }
 
 
-// ROM 0x001e59a4 InsertUnique__11CSortedListFPv
+// ROM 0x001e358c InsertUnique__11CSortedListFPv
 // true if the item went in (no equal item was there).
 Boolean
 CSortedList::InsertUnique(void* item)
@@ -52,7 +52,7 @@ CSortedList::InsertUnique(void* item)
 }
 
 
-// ROM 0x001e5a08 InsertDuplicate__11CSortedListFlPvT2
+// ROM 0x001e35f0 InsertDuplicate__11CSortedListFlPvT2
 // An equal item is already there: the new one goes in front of it.
 void
 CSortedList::InsertDuplicate(ArrayIndex index, void* /*existingItem*/, void* newItem)
@@ -62,7 +62,7 @@ CSortedList::InsertDuplicate(ArrayIndex index, void* /*existingItem*/, void* new
 }
 
 
-// ROM 0x001e5a10 Search__11CSortedListFP11CItemTesterRl
+// ROM 0x001e35f8 Search__11CSortedListFP11CItemTesterRl
 // Bisection over the list, with the iterator's bounds as the interval.
 // The tester says how its item compares with the list's: less means look
 // below, greater above.  Without a match the index is the insertion point

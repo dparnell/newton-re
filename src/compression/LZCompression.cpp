@@ -4,7 +4,7 @@
 	Contains:	TLZCompressor, TLZDecompressor, TLZCallbackCompressor, the
 				match tree and the offset coders (LZCompression.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The tables (O1-O10, CL*, LL*, CopyValue, LZCopyBits) are in
 	LZTables.cpp, generated from the ROM.  The ROM's malloc/free and
 	operator new here are the memory manager's.
@@ -23,7 +23,7 @@ extern const unsigned int	CL[6], CLBase[6], CLB[6], LL[5], LLB[5], LLBase[5];
 extern const unsigned char	CopyValue[256], LZCopyBits[256];
 
 
-// ROM 0x002d7ef0 fast_copy__FPUcT1l
+// ROM 0x002fd920 fast_copy__FPUcT1l
 void
 fast_copy(UByte* from, UByte* to, long count)
 {
@@ -40,7 +40,7 @@ fast_copy(UByte* from, UByte* to, long count)
 	The match tree
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00100520 talloc__13TLZCompressorFv
+// ROM 0x000feebc talloc__13TLZCompressorFv
 // The next node of the block's pool, cleared; the pool never runs out
 // (the last node marks the tree full, so nothing more is inserted).
 TTNode*
@@ -62,7 +62,7 @@ TLZCompressor::talloc()
 }
 
 
-// ROM 0x001d0974 update_a_node1__FP6TTNode
+// ROM 0x001ce570 update_a_node1__FP6TTNode
 // The ancestors take the node's (newer) position.
 void
 update_a_node1(TTNode* node)
@@ -72,7 +72,7 @@ update_a_node1(TTNode* node)
 }
 
 
-// ROM 0x001d0918 add_first_child1__FUcP6TTNodeT2lUlP13TLZCompressor
+// ROM 0x001ce514 add_first_child1__FUcP6TTNodeT2lUlP13TLZCompressor
 // The very first node: the whole match window as the root's child, and
 // the head for its first byte.
 void
@@ -89,13 +89,13 @@ add_first_child1(UByte c, TTNode* root, TTNode* node, long position, ULong lengt
 }
 
 
-// ROM 0x001d0970 extend_a_child1__FP6TTNodeT1lT3
+// ROM 0x001ce56c extend_a_child1__FP6TTNodeT1lT3
 void
 extend_a_child1(TTNode* /*node*/, TTNode* /*newNode*/, long /*position*/, long /*length*/)
 { }
 
 
-// ROM 0x001d09ac add_a_sibling1__FP6TTNodeT1lT3
+// ROM 0x001ce5a8 add_a_sibling1__FP6TTNodeT1lT3
 // A new leaf beside a node whose first byte did not match.
 void
 add_a_sibling1(TTNode* node, TTNode* newNode, long position, long length)
@@ -114,7 +114,7 @@ add_a_sibling1(TTNode* node, TTNode* newNode, long position, long length)
 }
 
 
-// ROM 0x001d0a10 address_a_node__FUcP6TTNodeN22lT5P13TLZCompressor
+// ROM 0x001ce60c address_a_node__FUcP6TTNodeN22lT5P13TLZCompressor
 // A new leaf under the root for a first byte with no head yet.
 void
 address_a_node(UByte c, TTNode* root, TTNode* node, TTNode* newNode, long position, long length, TLZCompressor* compressor)
@@ -137,7 +137,7 @@ address_a_node(UByte c, TTNode* root, TTNode* node, TTNode* newNode, long positi
 }
 
 
-// ROM 0x001d0a8c insert_a_node1__FUcP6TTNodeN22lN25P13TLZCompressor
+// ROM 0x001ce688 insert_a_node1__FUcP6TTNodeN22lN25P13TLZCompressor
 // The match ended inside node's edge, matched bytes in: the edge is split
 // with a new internal node, and the new leaf hangs beside the rest.
 void
@@ -194,7 +194,7 @@ insert_a_node1(UByte c, TTNode* node, TTNode* newNode, TTNode* root, long positi
 }
 
 
-// ROM 0x001d04cc treesearch1m5__FPUcT1UlPlT4P6TTNodeT6lP13TLZCompressor
+// ROM 0x001ce0c8 treesearch1m5__FPUcT1UlPlT4P6TTNodeT6lP13TLZCompressor
 // The longest earlier match for the bytes at cur (at most kLZMaxMatch, and
 // never past the end): its length and how far back it starts.  The walk
 // goes from the head for the first byte down the tree, moving each hit to
@@ -375,7 +375,7 @@ LargeBandBits(const unsigned int* table, long entries, long position)
 }
 
 
-// ROM 0x00075f80 encode_offset_case10_bin__FlT1P10Pushpopper
+// ROM 0x000755e0 encode_offset_case10_bin__FlT1P10Pushpopper
 void
 encode_offset_case10_bin(long offset, long position, Pushpopper* pp)
 {
@@ -391,7 +391,7 @@ encode_offset_case10_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076010 encode_offset_case9_bin__FlT1P10Pushpopper
+// ROM 0x00075670 encode_offset_case9_bin__FlT1P10Pushpopper
 void
 encode_offset_case9_bin(long offset, long position, Pushpopper* pp)
 {
@@ -407,7 +407,7 @@ encode_offset_case9_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000766f0 encode_offset_case8_bin__FlT1P10Pushpopper
+// ROM 0x00075d50 encode_offset_case8_bin__FlT1P10Pushpopper
 void
 encode_offset_case8_bin(long offset, long position, Pushpopper* pp)
 {
@@ -423,7 +423,7 @@ encode_offset_case8_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076780 encode_offset_case7_bin__FlT1P10Pushpopper
+// ROM 0x00075de0 encode_offset_case7_bin__FlT1P10Pushpopper
 void
 encode_offset_case7_bin(long offset, long position, Pushpopper* pp)
 {
@@ -439,7 +439,7 @@ encode_offset_case7_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076810 encode_offset_case6_bin__FlT1P10Pushpopper
+// ROM 0x00075e70 encode_offset_case6_bin__FlT1P10Pushpopper
 void
 encode_offset_case6_bin(long offset, long position, Pushpopper* pp)
 {
@@ -455,7 +455,7 @@ encode_offset_case6_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000768a0 encode_offset_case5_bin__FlT1P10Pushpopper
+// ROM 0x00075f00 encode_offset_case5_bin__FlT1P10Pushpopper
 void
 encode_offset_case5_bin(long offset, long position, Pushpopper* pp)
 {
@@ -471,7 +471,7 @@ encode_offset_case5_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076930 encode_offset_case4_bin__FlT1P10Pushpopper
+// ROM 0x00075f90 encode_offset_case4_bin__FlT1P10Pushpopper
 void
 encode_offset_case4_bin(long offset, long position, Pushpopper* pp)
 {
@@ -487,7 +487,7 @@ encode_offset_case4_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000769c8 encode_offset_case3_bin__FlT1P10Pushpopper
+// ROM 0x00076028 encode_offset_case3_bin__FlT1P10Pushpopper
 void
 encode_offset_case3_bin(long offset, long position, Pushpopper* pp)
 {
@@ -503,7 +503,7 @@ encode_offset_case3_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076a60 encode_offset_case2_bin__FlT1P10Pushpopper
+// ROM 0x000760c0 encode_offset_case2_bin__FlT1P10Pushpopper
 void
 encode_offset_case2_bin(long offset, long position, Pushpopper* pp)
 {
@@ -519,7 +519,7 @@ encode_offset_case2_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076af8 encode_offset_case1_bin__FlT1P10Pushpopper
+// ROM 0x00076158 encode_offset_case1_bin__FlT1P10Pushpopper
 // The last case has no escape: an offset beyond its range is clamped.
 void
 encode_offset_case1_bin(long offset, long position, Pushpopper* pp)
@@ -538,7 +538,7 @@ encode_offset_case1_bin(long offset, long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000760a0 decode_offset_case10_bin__FlP10Pushpopper
+// ROM 0x00075700 decode_offset_case10_bin__FlP10Pushpopper
 long
 decode_offset_case10_bin(long position, Pushpopper* pp)
 {
@@ -550,7 +550,7 @@ decode_offset_case10_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076134 decode_offset_case9_bin__FlP10Pushpopper
+// ROM 0x00075794 decode_offset_case9_bin__FlP10Pushpopper
 long
 decode_offset_case9_bin(long position, Pushpopper* pp)
 {
@@ -562,7 +562,7 @@ decode_offset_case9_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000761d0 decode_offset_case8_bin__FlP10Pushpopper
+// ROM 0x00075830 decode_offset_case8_bin__FlP10Pushpopper
 long
 decode_offset_case8_bin(long position, Pushpopper* pp)
 {
@@ -574,7 +574,7 @@ decode_offset_case8_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076270 decode_offset_case7_bin__FlP10Pushpopper
+// ROM 0x000758d0 decode_offset_case7_bin__FlP10Pushpopper
 long
 decode_offset_case7_bin(long position, Pushpopper* pp)
 {
@@ -586,7 +586,7 @@ decode_offset_case7_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076310 decode_offset_case6_bin__FlP10Pushpopper
+// ROM 0x00075970 decode_offset_case6_bin__FlP10Pushpopper
 // (the second flag bit is read with popbits here: as in the ROM)
 long
 decode_offset_case6_bin(long position, Pushpopper* pp)
@@ -599,7 +599,7 @@ decode_offset_case6_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000763b0 decode_offset_case5_bin__FlP10Pushpopper
+// ROM 0x00075a10 decode_offset_case5_bin__FlP10Pushpopper
 long
 decode_offset_case5_bin(long position, Pushpopper* pp)
 {
@@ -614,7 +614,7 @@ decode_offset_case5_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076458 decode_offset_case4_bin__FlP10Pushpopper
+// ROM 0x00075ab8 decode_offset_case4_bin__FlP10Pushpopper
 long
 decode_offset_case4_bin(long position, Pushpopper* pp)
 {
@@ -626,7 +626,7 @@ decode_offset_case4_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000764fc decode_offset_case3_bin__FlP10Pushpopper
+// ROM 0x00075b5c decode_offset_case3_bin__FlP10Pushpopper
 long
 decode_offset_case3_bin(long position, Pushpopper* pp)
 {
@@ -638,7 +638,7 @@ decode_offset_case3_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x000765a0 decode_offset_case2_bin__FlP10Pushpopper
+// ROM 0x00075c00 decode_offset_case2_bin__FlP10Pushpopper
 long
 decode_offset_case2_bin(long position, Pushpopper* pp)
 {
@@ -650,7 +650,7 @@ decode_offset_case2_bin(long position, Pushpopper* pp)
 }
 
 
-// ROM 0x00076648 decode_offset_case1_bin__FlP10Pushpopper
+// ROM 0x00075ca8 decode_offset_case1_bin__FlP10Pushpopper
 long
 decode_offset_case1_bin(long position, Pushpopper* pp)
 {
@@ -666,11 +666,11 @@ decode_offset_case1_bin(long position, Pushpopper* pp)
 	TLZCompressor
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TLZCompressor)		// ROM 0x001000b8 Sizeof__13TLZCompressorSFv
-PROTOCOL_CLASSINFO(TLZCompressor, "TCompressor", "", 0, 0, nil)	// ROM 0x00380034 ClassInfo__13TLZCompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TLZCompressor)		// ROM 0x000fea54 Sizeof__13TLZCompressorSFv
+PROTOCOL_CLASSINFO(TLZCompressor, "TCompressor", "", 0, 0, nil)	// ROM 0x0038979c ClassInfo__13TLZCompressorSFv
 
 
-// ROM 0x001000c4 New__13TLZCompressorFv
+// ROM 0x000fea60 New__13TLZCompressorFv
 TLZCompressor*
 TLZCompressor::New()
 {
@@ -684,7 +684,7 @@ TLZCompressor::New()
 }
 
 
-// ROM 0x00100948 Delete__13TLZCompressorFv
+// ROM 0x000ff2e4 Delete__13TLZCompressorFv
 void
 TLZCompressor::Delete()
 {
@@ -694,7 +694,7 @@ TLZCompressor::Delete()
 }
 
 
-// ROM 0x00100af8 Init__13TLZCompressorFPv
+// ROM 0x000ff494 Init__13TLZCompressorFPv
 NewtonErr
 TLZCompressor::Init(void* /*refCon*/)
 {
@@ -702,7 +702,7 @@ TLZCompressor::Init(void* /*refCon*/)
 }
 
 
-// ROM 0x00100d00 HeaderSize__13TLZCompressorFv
+// ROM 0x000ff69c HeaderSize__13TLZCompressorFv
 ULong
 TLZCompressor::HeaderSize()
 {
@@ -710,7 +710,7 @@ TLZCompressor::HeaderSize()
 }
 
 
-// ROM 0x00100cdc SetHeader__13TLZCompressorFPvUl
+// ROM 0x000ff678 SetHeader__13TLZCompressorFPvUl
 // The eight-byte header of a compressed object: a flag word and a zero.
 NewtonErr
 TLZCompressor::SetHeader(void* header, ULong headerSize)
@@ -723,7 +723,7 @@ TLZCompressor::SetHeader(void* header, ULong headerSize)
 }
 
 
-// ROM 0x00100b00 Finish__13TLZCompressorFPvUl
+// ROM 0x000ff49c Finish__13TLZCompressorFPvUl
 // (with no header to write the ROM leaves r0 as it was - this - which no
 // caller looks at)
 NewtonErr
@@ -739,7 +739,7 @@ TLZCompressor::Finish(void* header, ULong headerSize)
 }
 
 
-// ROM 0x00100cc0 EstimatedCompressedSize__13TLZCompressorFPvUl
+// ROM 0x000ff65c EstimatedCompressedSize__13TLZCompressorFPvUl
 ULong
 TLZCompressor::EstimatedCompressedSize(void* /*src*/, ULong srcSize)
 {
@@ -747,7 +747,7 @@ TLZCompressor::EstimatedCompressedSize(void* /*src*/, ULong srcSize)
 }
 
 
-// ROM 0x00100c4c Compress__13TLZCompressorFPUlPvUlT2T3
+// ROM 0x000ff5e8 Compress__13TLZCompressorFPUlPvUlT2T3
 NewtonErr
 TLZCompressor::Compress(ULong* outSize, void* dst, ULong dstSize, void* src, ULong srcSize)
 {
@@ -761,7 +761,7 @@ TLZCompressor::Compress(ULong* outSize, void* dst, ULong dstSize, void* src, ULo
 }
 
 
-// ROM 0x00100b10 CompressChunk__13TLZCompressorFPUlPvUlT2T3
+// ROM 0x000ff4ac CompressChunk__13TLZCompressorFPUlPvUlT2T3
 // A chunk: its total length, then a block per kLZBlockSize of source.
 NewtonErr
 TLZCompressor::CompressChunk(ULong* outSize, void* dst, ULong dstSize, void* src, ULong srcSize)
@@ -810,7 +810,7 @@ TLZCompressor::CompressChunk(ULong* outSize, void* dst, ULong dstSize, void* src
 }
 
 
-// ROM 0x00100110 CompressBlock__13TLZCompressorFPUlPvUlT2T3
+// ROM 0x000feaac CompressBlock__13TLZCompressorFPUlPvUlT2T3
 // One block: the tree is rebuilt, matches of 3 or more become copies,
 // the rest literal runs; a block that does not shrink is stored instead
 // (answering -1).
@@ -884,7 +884,7 @@ store:
 }
 
 
-// ROM 0x0010039c codeword_gen_bin__13TLZCompressorFlN21PUcUl
+// ROM 0x000fed38 codeword_gen_bin__13TLZCompressorFlN21PUcUl
 // A codeword: the literal run (its length code after a copy length of 0,
 // then the bytes, which end at literals), then the copy of copyLength
 // bytes from offset back, if there is one.
@@ -913,7 +913,7 @@ TLZCompressor::codeword_gen_bin(long copyLength, long offset, long literalLength
 }
 
 
-// ROM 0x001004a8 encode_lit_len_bin__13TLZCompressorFl
+// ROM 0x000fee44 encode_lit_len_bin__13TLZCompressorFl
 // "0" for 1; otherwise the LL bands (LLB bits of LLBase + length); 63 at
 // most.
 void
@@ -938,7 +938,7 @@ TLZCompressor::encode_lit_len_bin(long length)
 }
 
 
-// ROM 0x00100588 encode_copy_length_bin_huff4__13TLZCompressorFl
+// ROM 0x000fef24 encode_copy_length_bin_huff4__13TLZCompressorFl
 // The copy length prefix code: 0, 1, 2 and 5 have codes of their own, the
 // rest come from the CL bands.
 void
@@ -965,7 +965,7 @@ TLZCompressor::encode_copy_length_bin_huff4(long length)
 }
 
 
-// ROM 0x00100624 encode_offset_bin__13TLZCompressorFlUl
+// ROM 0x000fefc0 encode_offset_bin__13TLZCompressorFlUl
 // The offset in the current case; an offset beyond the case's range sends
 // the case's escape and moves to the next, wider case for good.
 void
@@ -1067,11 +1067,11 @@ TLZCompressor::encode_offset_bin(long offset, ULong position)
 	TLZDecompressor
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TLZDecompressor)		// ROM 0x00100d08 Sizeof__15TLZDecompressorSFv
-PROTOCOL_CLASSINFO(TLZDecompressor, "TDecompressor", "", 0, 0, nil)	// ROM 0x00380180 ClassInfo__15TLZDecompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TLZDecompressor)		// ROM 0x000ff6a4 Sizeof__15TLZDecompressorSFv
+PROTOCOL_CLASSINFO(TLZDecompressor, "TDecompressor", "", 0, 0, nil)	// ROM 0x003898e8 ClassInfo__15TLZDecompressorSFv
 
 
-// ROM 0x00100d10 New__15TLZDecompressorFv
+// ROM 0x000ff6ac New__15TLZDecompressorFv
 TLZDecompressor*
 TLZDecompressor::New()
 {
@@ -1079,13 +1079,13 @@ TLZDecompressor::New()
 }
 
 
-// ROM 0x00101068 Delete__15TLZDecompressorFv
+// ROM 0x000ffa04 Delete__15TLZDecompressorFv
 void
 TLZDecompressor::Delete()
 { }
 
 
-// ROM 0x0010106c Init__15TLZDecompressorFPv
+// ROM 0x000ffa08 Init__15TLZDecompressorFPv
 NewtonErr
 TLZDecompressor::Init(void* /*refCon*/)
 {
@@ -1093,7 +1093,7 @@ TLZDecompressor::Init(void* /*refCon*/)
 }
 
 
-// ROM 0x00101394 Decompress__15TLZDecompressorFPUlPvUlT2T3
+// ROM 0x000ffd30 Decompress__15TLZDecompressorFPUlPvUlT2T3
 NewtonErr
 TLZDecompressor::Decompress(ULong* outSize, void* dst, ULong dstSize, void* src, ULong srcSize)
 {
@@ -1102,7 +1102,7 @@ TLZDecompressor::Decompress(ULong* outSize, void* dst, ULong dstSize, void* src,
 }
 
 
-// ROM 0x00101288 DecompressChunk__15TLZDecompressorFPUlPvUlT2T3
+// ROM 0x000ffc24 DecompressChunk__15TLZDecompressorFPUlPvUlT2T3
 // The chunk's blocks in turn, as far as its length word says.
 NewtonErr
 TLZDecompressor::DecompressChunk(ULong* outSize, void* dst, ULong dstSize, void* src, ULong srcSize)
@@ -1139,7 +1139,7 @@ TLZDecompressor::DecompressChunk(ULong* outSize, void* dst, ULong dstSize, void*
 }
 
 
-// ROM 0x00101074 DecompressBlock__15TLZDecompressorFPUlPvUlT2T3
+// ROM 0x000ffa10 DecompressBlock__15TLZDecompressorFPUlPvUlT2T3
 // One block (stored, or coded) to at most kLZBlockSize bytes; fConsumed
 // tells how much of the source it took.
 NewtonErr
@@ -1198,7 +1198,7 @@ TLZDecompressor::DecompressBlock(ULong* outSize, void* dst, ULong /*dstSize*/, v
 }
 
 
-// ROM 0x00100d14 codeword_dec_bin__15TLZDecompressorFPUlT1Pll
+// ROM 0x000ff6b0 codeword_dec_bin__15TLZDecompressorFPUlT1Pll
 // A codeword: a literal run's length (copy length 0), or a copy's length
 // and offset.
 void
@@ -1225,7 +1225,7 @@ TLZDecompressor::codeword_dec_bin(ULong* copyLength, ULong* offset, long* litera
 }
 
 
-// ROM 0x00100d9c decode_lit_len_bin__15TLZDecompressorFv
+// ROM 0x000ff738 decode_lit_len_bin__15TLZDecompressorFv
 long
 TLZDecompressor::decode_lit_len_bin()
 {
@@ -1253,7 +1253,7 @@ TLZDecompressor::decode_lit_len_bin()
 }
 
 
-// ROM 0x00100e88 decode_copy_length_bin_huff4__15TLZDecompressorFv
+// ROM 0x000ff824 decode_copy_length_bin_huff4__15TLZDecompressorFv
 // Eight bits looked at: LZCopyBits says how long the code is, CopyValue
 // its value; longer codes carry their low bits after.
 ULong
@@ -1271,7 +1271,7 @@ TLZDecompressor::decode_copy_length_bin_huff4()
 }
 
 
-// ROM 0x00100ef4 decode_offset_bin__15TLZDecompressorFl
+// ROM 0x000ff890 decode_offset_bin__15TLZDecompressorFl
 long
 TLZDecompressor::decode_offset_bin(long position)
 {
@@ -1347,11 +1347,11 @@ TLZDecompressor::decode_offset_bin(long position)
 	TLZCompressor, each compressed block to the write proc.
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TLZCallbackCompressor)		// ROM 0x00100864 Sizeof__21TLZCallbackCompressorSFv
-PROTOCOL_CLASSINFO(TLZCallbackCompressor, "TCallbackCompressor", "TLZRelocStoreDecompressor\0\0TLZStoreDecompressor\0\0", 0, 0, nil)	// ROM 0x003800b8 ClassInfo__21TLZCallbackCompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TLZCallbackCompressor)		// ROM 0x000ff200 Sizeof__21TLZCallbackCompressorSFv
+PROTOCOL_CLASSINFO(TLZCallbackCompressor, "TCallbackCompressor", "TLZRelocStoreDecompressor\0\0TLZStoreDecompressor\0\0", 0, 0, nil)	// ROM 0x00389820 ClassInfo__21TLZCallbackCompressorSFv
 
 
-// ROM 0x0010086c New__21TLZCallbackCompressorFv
+// ROM 0x000ff208 New__21TLZCallbackCompressorFv
 TLZCallbackCompressor*
 TLZCallbackCompressor::New()
 {
@@ -1362,7 +1362,7 @@ TLZCallbackCompressor::New()
 }
 
 
-// ROM 0x00100880 Delete__21TLZCallbackCompressorFv
+// ROM 0x000ff21c Delete__21TLZCallbackCompressorFv
 // (the ROM's operator delete is DisposPtr, which ignores nil)
 void
 TLZCallbackCompressor::Delete()
@@ -1374,7 +1374,7 @@ TLZCallbackCompressor::Delete()
 }
 
 
-// ROM 0x001008b4 Init__21TLZCallbackCompressorFPv
+// ROM 0x000ff250 Init__21TLZCallbackCompressorFPv
 NewtonErr
 TLZCallbackCompressor::Init(void* /*refCon*/)
 {
@@ -1394,7 +1394,7 @@ TLZCallbackCompressor::Init(void* /*refCon*/)
 }
 
 
-// ROM 0x00100978 Reset__21TLZCallbackCompressorFv
+// ROM 0x000ff314 Reset__21TLZCallbackCompressorFv
 NewtonErr
 TLZCallbackCompressor::Reset()
 {
@@ -1403,7 +1403,7 @@ TLZCallbackCompressor::Reset()
 }
 
 
-// ROM 0x00100984 WriteChunk__21TLZCallbackCompressorFPvl
+// ROM 0x000ff320 WriteChunk__21TLZCallbackCompressorFPvl
 NewtonErr
 TLZCallbackCompressor::WriteChunk(void* data, long size)
 {
@@ -1432,7 +1432,7 @@ TLZCallbackCompressor::WriteChunk(void* data, long size)
 }
 
 
-// ROM 0x00100a5c Flush__21TLZCallbackCompressorFv
+// ROM 0x000ff3f8 Flush__21TLZCallbackCompressorFv
 NewtonErr
 TLZCallbackCompressor::Flush()
 {

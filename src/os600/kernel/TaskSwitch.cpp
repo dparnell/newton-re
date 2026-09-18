@@ -4,7 +4,7 @@
 	Contains:	Scheduler(), SwapInGlobals, DoDeferrals and the accounting
 				system calls.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "TaskSwitch.h"
@@ -22,7 +22,7 @@
 #include "Environment.h"
 
 
-// ROM 0x001ce5c0 Scheduler
+// ROM 0x001cc1ec Scheduler
 // Asks TScheduler for the next task and, if it differs from the one being
 // charged, settles the outgoing task's accounts: memory, from the heap's
 // running totals since the last swap, and (when gCountTaskTime is on) run
@@ -83,7 +83,7 @@ Scheduler()
 }
 
 
-// ROM 0x003a4018 SWIBoot +0xb8 (the common SWI exit, assembly)
+// ROM 0x003ad698 SWIBoot +0xb8 (the common SWI exit, assembly)
 // Nothing is scheduled from inside an atomic section.  Otherwise the work
 // interrupt level deferred is done, and if a reschedule is due Scheduler()
 // picks; the time slice is armed if StartScheduler was asked for (twice in
@@ -111,7 +111,7 @@ SWIExitSchedule()
 }
 
 
-// ROM 0x003a4018 SWIBoot +0x364 (the exit path's domain access computation, assembly)
+// ROM 0x003ad698 SWIBoot +0x364 (the exit path's domain access computation, assembly)
 // A task may touch its environment's domains, those of the environment a
 // shared-memory copy switched it to, and - for a monitor task - those of
 // every task in the chain of callers it is serving.
@@ -129,7 +129,7 @@ DomainAccessFor(TTask* task)
 }
 
 
-// ROM 0x00250214 SwapInGlobals
+// ROM 0x0025215c SwapInGlobals
 void
 SwapInGlobals(TTask* task)
 {
@@ -139,7 +139,7 @@ SwapInGlobals(TTask* task)
 }
 
 
-// ROM 0x00149df4 DoDeferrals
+// ROM 0x00148298 DoDeferrals
 // Interrupt handlers set gWantDeferred instead of doing work that needs the
 // scheduler's context; the SWI exit path calls this to do it, repeating
 // while more arrives.  The external page tracker's deferral is not yet
@@ -160,7 +160,7 @@ DoDeferrals()
 }
 
 
-// ROM 0x0025010c ResetAccountTimeKernelGlue__Fv
+// ROM 0x00252054 ResetAccountTimeKernelGlue__Fv
 // GenericSWI 5.
 NewtonErr
 ResetAccountTimeKernelGlue()
@@ -180,7 +180,7 @@ ResetAccountTimeKernelGlue()
 }
 
 
-// ROM 0x00250194 GetNextTaskIdKernelGlue__FUlPUl
+// ROM 0x002520dc GetNextTaskIdKernelGlue__FUlPUl
 // GenericSWI 6: the id of the next task in object-table order after afterId
 // (0 for the first); kError_Task_Does_Not_Exist when there is none or
 // afterId is not in the table.

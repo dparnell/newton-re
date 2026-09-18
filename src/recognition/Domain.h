@@ -13,7 +13,7 @@
 				TDomain) is what the stroke world's click units are made
 				in.  The ROM's TDomain is 0x24 bytes.
 
-	Reconstructed from the MP2100 D ROM (0x0020a674-0x0020a9c0); each
+	Reconstructed from the MP2x00 US ROM (0x0020cda4-0x0020d0f0); each
 	function cites its origin.
 */
 
@@ -29,27 +29,27 @@ struct dInfoRec;
 class TDomain : public TRecObject
 {
 public:
-	static TDomain*		Make(TController* controller, ULong type, char* name);	// ROM 0x0020a858 Make__7TDomainSFP11TControllerUlPc
-	void				IDomain(TController* controller, ULong type, char* name);	// ROM 0x0020a8d8 IDomain__7TDomainFP11TControllerUlPc
-	static ULong		VUnitInClass(ULong type, ULong classType);	// ROM 0x0020a894 VUnitInClass__7TDomainSFUlT1 - whether type is a word type ('WRXR', 'JANK', 'WREC') when classType is 'WORD'
+	static TDomain*		Make(TController* controller, ULong type, char* name);	// ROM 0x0020cf88 Make__7TDomainSFP11TControllerUlPc
+	void				IDomain(TController* controller, ULong type, char* name);	// ROM 0x0020d008 IDomain__7TDomainFP11TControllerUlPc
+	static ULong		VUnitInClass(ULong type, ULong classType);	// ROM 0x0020cfc4 VUnitInClass__7TDomainSFUlT1 - whether type is a word type ('WRXR', 'JANK', 'WREC') when classType is 'WORD'
 
-	virtual void		Dispose(void);							// ROM 0x0020a924 Dispose__7TDomainFv
-	virtual void		Dump(TMsg* msg);						// ROM 0x0020a694 Dump__7TDomainFP4TMsg
-	virtual long		SizeInBytes(void);						// ROM 0x0020a954 SizeInBytes__7TDomainFv
-	virtual void		Classify(TUnit* unit);					// ROM 0x0020a9b0 Classify__7TDomainFP5TUnit (+0x10: nothing)
-	virtual void		Reclassify(TUnit* unit);				// ROM 0x0020a9b4 Reclassify__7TDomainFP5TUnit (+0x14: nothing)
-	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x0020a9b8 Group__7TDomainFP5TUnitP8dInfoRec (+0x18: 0)
-	virtual long		PreGroup(TUnit* unit);					// ROM 0x0020a674 PreGroup__7TDomainFP5TUnit (+0x1c: 0)
-	virtual void		DumpName(TMsg* msg);					// ROM 0x0020a788 DumpName__7TDomainFP4TMsg (+0x20)
-	virtual long		PruneDictionary(TUnit* unit);			// ROM 0x0020a67c PruneDictionary__7TDomainFP5TUnit (+0x24: 0)
-	virtual long		PruneConstraints(TUnit* unit);			// ROM 0x0020a684 PruneConstraints__7TDomainFP5TUnit (+0x28: 0)
-	virtual void		DomainParameter(ULong selector, ULong result, ULong arg);	// ROM 0x0020a808 DomainParameter__7TDomainFUlN21 (+0x2c)
-	virtual Boolean		SetParameters(Handle params);			// ROM 0x0020a7e4 SetParameters__7TDomainFPPc (+0x30: ==> whether they changed)
-	virtual void		InvalParameters(void);					// ROM 0x0020a7fc InvalParameters__7TDomainFv (+0x34)
-	virtual void		ConfigureSubDomain(TRecArea* area);		// ROM 0x0020a854 ConfigureSubDomain__7TDomainFP8TRecArea (+0x38: nothing)
-	virtual long		CompleteUnit(void);						// ROM 0x0020a68c CompleteUnit__7TDomainFv (+0x3c: 0)
+	virtual void		Dispose(void);							// ROM 0x0020d054 Dispose__7TDomainFv
+	virtual void		Dump(TMsg* msg);						// ROM 0x0020cdc4 Dump__7TDomainFP4TMsg
+	virtual long		SizeInBytes(void);						// ROM 0x0020d084 SizeInBytes__7TDomainFv
+	virtual void		Classify(TUnit* unit);					// ROM 0x0020d0e0 Classify__7TDomainFP5TUnit (+0x10: nothing)
+	virtual void		Reclassify(TUnit* unit);				// ROM 0x0020d0e4 Reclassify__7TDomainFP5TUnit (+0x14: nothing)
+	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x0020d0e8 Group__7TDomainFP5TUnitP8dInfoRec (+0x18: 0)
+	virtual long		PreGroup(TUnit* unit);					// ROM 0x0020cda4 PreGroup__7TDomainFP5TUnit (+0x1c: 0)
+	virtual void		DumpName(TMsg* msg);					// ROM 0x0020ceb8 DumpName__7TDomainFP4TMsg (+0x20)
+	virtual long		PruneDictionary(TUnit* unit);			// ROM 0x0020cdac PruneDictionary__7TDomainFP5TUnit (+0x24: 0)
+	virtual long		PruneConstraints(TUnit* unit);			// ROM 0x0020cdb4 PruneConstraints__7TDomainFP5TUnit (+0x28: 0)
+	virtual void		DomainParameter(ULong selector, ULong result, ULong arg);	// ROM 0x0020cf38 DomainParameter__7TDomainFUlN21 (+0x2c)
+	virtual Boolean		SetParameters(Handle params);			// ROM 0x0020cf14 SetParameters__7TDomainFPPc (+0x30: ==> whether they changed)
+	virtual void		InvalParameters(void);					// ROM 0x0020cf2c InvalParameters__7TDomainFv (+0x34)
+	virtual void		ConfigureSubDomain(TRecArea* area);		// ROM 0x0020cf84 ConfigureSubDomain__7TDomainFP8TRecArea (+0x38: nothing)
+	virtual long		CompleteUnit(void);						// ROM 0x0020cdbc CompleteUnit__7TDomainFv (+0x3c: 0)
 
-	void				AddPieceType(ULong type);				// ROM 0x0020a988 AddPieceType__7TDomainFUl
+	void				AddPieceType(ULong type);				// ROM 0x0020d0b8 AddPieceType__7TDomainFUl
 
 	ULong				Type(void) const		{ return fType; }
 	ULong				Delay(void) const		{ return fDelay; }
@@ -63,6 +63,6 @@ public:
 	Handle				fParameters;	// +0x20  -1 when invalid
 };
 
-extern TDomain*	gRootDomain;								// ROM 0x0c101970 gRootDomain - the 'ROOT' domain the clicks are made in
+extern TDomain*	gRootDomain;								// ROM 0x0c101884 gRootDomain - the 'ROOT' domain the clicks are made in
 
 #endif	/* __DOMAIN_H */

@@ -5,9 +5,9 @@
 				registry monitor, with its entry comparator and the matching
 				helpers.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The monitor entry and the class info are what ProtocolGen generated for
-	the implementation (0x0037c8e0-0x0037ca9c), re-expressed as Protocols.h
+	the implementation (0x00386040-0x003861fc), re-expressed as Protocols.h
 	describes.
 */
 
@@ -24,15 +24,15 @@ extern const ExceptionName exBusError;
 typedef unsigned int	ULong32;		// the ROM's word, for the hash arithmetic
 
 
-PROTOCOL_IMPL_SOURCE_MACRO(TClassInfoRegistryImpl)		// ROM 0x0005c0e4 Sizeof__22TClassInfoRegistryImplSFv
-PROTOCOL_CLASSINFO(TClassInfoRegistryImpl, "TClassInfoRegistry", "", 0, 0, TClassInfoRegistryImpl::MonitorEntry)	// ROM 0x0037c91c ClassInfo__22TClassInfoRegistryImplSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TClassInfoRegistryImpl)		// ROM 0x0005b74c Sizeof__22TClassInfoRegistryImplSFv
+PROTOCOL_CLASSINFO(TClassInfoRegistryImpl, "TClassInfoRegistry", "", 0, 0, TClassInfoRegistryImpl::MonitorEntry)	// ROM 0x0038607c ClassInfo__22TClassInfoRegistryImplSFv
 
 
 /* -------------------------------------------------------------------------------
 	Matching
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0005c9f0 CompareKeys__20TClassInfoComparatorCFPCvT1
+// ROM 0x0005c058 CompareKeys__20TClassInfoComparatorCFPCvT1
 // Entries order by interface hash, implementation hash, then version.
 int
 TClassInfoComparator::CompareKeys(const void* key1, const void* key2) const
@@ -55,7 +55,7 @@ TClassInfoComparator::CompareKeys(const void* key1, const void* key2) const
 }
 
 
-// ROM 0x0005c10c SatisfiesHash__FPC14SProtocolEntryUcCUsT2T3CUl
+// ROM 0x0005b774 SatisfiesHash__FPC14SProtocolEntryUcCUsT2T3CUl
 // Whether an entry is still within the run of entries a query walks: the
 // hashes it checks agree and the version is enough.  (An unchecked hash
 // ends the test early: an interface-only query walks every version and
@@ -77,7 +77,7 @@ SatisfiesHash(const SProtocolEntry* entry, Boolean checkInterface, const UShort 
 }
 
 
-// ROM 0x0005c180 Satisfies__FPC10TClassInfoPCcT2Ul
+// ROM 0x0005b7e8 Satisfies__FPC10TClassInfoPCcT2Ul
 // Whether a class info answers to the names (a nil name matches any) at
 // the version or later; a class info that cannot be read does not.
 static Boolean
@@ -99,7 +99,7 @@ Satisfies(const TClassInfo* info, const char* intf, const char* impl, ULong vers
 }
 
 
-// ROM 0x0005c25c SatisifiesCapabilities__FP14SProtocolEntryPCcT2  (sic)
+// ROM 0x0005b8c4 SatisifiesCapabilities__FP14SProtocolEntryPCcT2  (sic)
 // Whether the entry's class info has the capability, with the value when
 // one is asked for.
 static Boolean
@@ -122,7 +122,7 @@ SatisifiesCapabilities(SProtocolEntry* entry, const char* capability, const char
 	TClassInfoRegistryImpl
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0005cb40 New__22TClassInfoRegistryImplFv
+// ROM 0x0005c1a8 New__22TClassInfoRegistryImplFv
 // (the ROM's NSortedArray::Init: 0x14-byte entries, chunks of 0xa0, room
 // for 0x68, never shrinking)
 TClassInfoRegistryImpl*
@@ -138,7 +138,7 @@ TClassInfoRegistryImpl::New()
 }
 
 
-// ROM 0x0005cbc8 Delete__22TClassInfoRegistryImplFv
+// ROM 0x0005c230 Delete__22TClassInfoRegistryImplFv
 // (the comparator and the cache are not freed: as in the ROM)
 void
 TClassInfoRegistryImpl::Delete()
@@ -148,7 +148,7 @@ TClassInfoRegistryImpl::Delete()
 }
 
 
-// ROM 0x0005cbdc HashString__22TClassInfoRegistryImplCFPCc
+// ROM 0x0005c244 HashString__22TClassInfoRegistryImplCFPCc
 // A rotate-and-xor of the characters, scrambled to 16 bits; 0xffff for no
 // string.
 UShort
@@ -163,7 +163,7 @@ TClassInfoRegistryImpl::HashString(const char* s) const
 }
 
 
-// ROM 0x0005c0ec InvalidateSatisfyCache__22TClassInfoRegistryImplFv
+// ROM 0x0005b754 InvalidateSatisfyCache__22TClassInfoRegistryImplFv
 void
 TClassInfoRegistryImpl::InvalidateSatisfyCache()
 {
@@ -172,7 +172,7 @@ TClassInfoRegistryImpl::InvalidateSatisfyCache()
 }
 
 
-// ROM 0x0005cf00 Find__22TClassInfoRegistryImplCFPC10TClassInfo
+// ROM 0x0005c568 Find__22TClassInfoRegistryImplCFPC10TClassInfo
 SProtocolEntry*
 TClassInfoRegistryImpl::Find(const TClassInfo* info) const
 {
@@ -187,7 +187,7 @@ TClassInfoRegistryImpl::Find(const TClassInfo* info) const
 }
 
 
-// ROM 0x0005c2b4 Satisfy__22TClassInfoRegistryImplCFPC10TClassInfo
+// ROM 0x0005b91c Satisfy__22TClassInfoRegistryImplCFPC10TClassInfo
 // The entry a request for this class info's names and version would get:
 // the sorted array puts the highest version of the names last, so the walk
 // goes down from where a version of 0xffffffff would be.
@@ -225,7 +225,7 @@ TClassInfoRegistryImpl::Satisfy(const TClassInfo* info) const
 }
 
 
-// ROM 0x0005cc38 Register__22TClassInfoRegistryImplFPC10TClassInfoUl
+// ROM 0x0005c2a0 Register__22TClassInfoRegistryImplFPC10TClassInfoUl
 // A class info already registered has its count raised; a new one gets an
 // entry (its count 0 - the ROM's) in sorted position.  The names are read
 // first, so that an unreadable class info fails here rather than later.
@@ -268,7 +268,7 @@ TClassInfoRegistryImpl::Register(const TClassInfo* info, ULong refCon)
 }
 
 
-// ROM 0x0005cdc0 DeRegister__22TClassInfoRegistryImplFPC10TClassInfoUc
+// ROM 0x0005c428 DeRegister__22TClassInfoRegistryImplFPC10TClassInfoUc
 // The entry (this class info's, or the one satisfying its names) loses a
 // registration and goes when none is left.
 NewtonErr
@@ -302,7 +302,7 @@ TClassInfoRegistryImpl::DeRegister(const TClassInfo* info, Boolean specific)
 }
 
 
-// ROM 0x0005ced0 IsRegistered__22TClassInfoRegistryImplCFPC10TClassInfoUc
+// ROM 0x0005c538 IsRegistered__22TClassInfoRegistryImplCFPC10TClassInfoUc
 Boolean
 TClassInfoRegistryImpl::IsRegistered(const TClassInfo* info, Boolean specific) const
 {
@@ -310,7 +310,7 @@ TClassInfoRegistryImpl::IsRegistered(const TClassInfo* info, Boolean specific) c
 }
 
 
-// ROM 0x0005c45c Satisfy__22TClassInfoRegistryImplCFPCcT1Ul
+// ROM 0x0005bac4 Satisfy__22TClassInfoRegistryImplCFPCcT1Ul
 // The class info for the names at the version or later - the latest one
 // registered of the highest version.  A nil name matches any.  Exact
 // queries for any version are answered from, and enter, the cache.
@@ -369,7 +369,7 @@ TClassInfoRegistryImpl::Satisfy(const char* intf, const char* impl, ULong versio
 }
 
 
-// ROM 0x0005c6e0 Satisfy__22TClassInfoRegistryImplCFPCcN21
+// ROM 0x0005bd48 Satisfy__22TClassInfoRegistryImplCFPCcN21
 const TClassInfo*
 TClassInfoRegistryImpl::Satisfy(const char* intf, const char* impl, const char* capability) const
 {
@@ -377,7 +377,7 @@ TClassInfoRegistryImpl::Satisfy(const char* intf, const char* impl, const char* 
 }
 
 
-// ROM 0x0005c704 Satisfy__22TClassInfoRegistryImplCFPCcN31
+// ROM 0x0005bd6c Satisfy__22TClassInfoRegistryImplCFPCcN31
 // As Satisfy(intf, impl, 0), also requiring the capability (with the value,
 // if one is given); not cached.
 const TClassInfo*
@@ -406,7 +406,7 @@ TClassInfoRegistryImpl::Satisfy(const char* intf, const char* impl, const char* 
 }
 
 
-// ROM 0x0005c894 Satisfy__22TClassInfoRegistryImplCFPCcT1ClT3
+// ROM 0x0005befc Satisfy__22TClassInfoRegistryImplCFPCcT1ClT3
 // Four-character capability name and value.
 const TClassInfo*
 TClassInfoRegistryImpl::Satisfy(const char* intf, const char* impl, const long capability, const long capabilityValue) const
@@ -432,7 +432,7 @@ TClassInfoRegistryImpl::Satisfy(const char* intf, const char* impl, const long c
 }
 
 
-// ROM 0x0005ca48 Seed__22TClassInfoRegistryImplCFv
+// ROM 0x0005c0b0 Seed__22TClassInfoRegistryImplCFv
 long
 TClassInfoRegistryImpl::Seed() const
 {
@@ -440,7 +440,7 @@ TClassInfoRegistryImpl::Seed() const
 }
 
 
-// ROM 0x0005c914 First__22TClassInfoRegistryImplCFlPUl
+// ROM 0x0005bf7c First__22TClassInfoRegistryImplCFlPUl
 // (the seed is not looked at)
 const TClassInfo*
 TClassInfoRegistryImpl::First(long /*seed*/, ULong* pRefCon) const
@@ -454,7 +454,7 @@ TClassInfoRegistryImpl::First(long /*seed*/, ULong* pRefCon) const
 }
 
 
-// ROM 0x0005c964 Next__22TClassInfoRegistryImplCFlPC10TClassInfoPUl
+// ROM 0x0005bfcc Next__22TClassInfoRegistryImplCFlPC10TClassInfoPUl
 // The entry after from's, if the registry has not changed since the seed
 // was taken (a seed of 0 does not care).
 const TClassInfo*
@@ -480,7 +480,7 @@ TClassInfoRegistryImpl::Next(long seed, const TClassInfo* from, ULong* pRefCon) 
 }
 
 
-// ROM 0x0005ca50 Find__22TClassInfoRegistryImplCFPCcT1iPUl
+// ROM 0x0005c0b8 Find__22TClassInfoRegistryImplCFPCcT1iPUl
 // The skipCount'th class info (from 0) in registry order answering to the
 // names.
 const TClassInfo*
@@ -504,7 +504,7 @@ TClassInfoRegistryImpl::Find(const char* intf, const char* impl, int skipCount, 
 }
 
 
-// ROM 0x0005cae4 UpdateInstanceCount__22TClassInfoRegistryImplFPC10TClassInfol
+// ROM 0x0005c14c UpdateInstanceCount__22TClassInfoRegistryImplFPC10TClassInfol
 void
 TClassInfoRegistryImpl::UpdateInstanceCount(const TClassInfo* info, long adjustment)
 {
@@ -514,7 +514,7 @@ TClassInfoRegistryImpl::UpdateInstanceCount(const TClassInfo* info, long adjustm
 }
 
 
-// ROM 0x0005cb1c GetInstanceCount__22TClassInfoRegistryImplFPC10TClassInfo
+// ROM 0x0005c184 GetInstanceCount__22TClassInfoRegistryImplFPC10TClassInfo
 long
 TClassInfoRegistryImpl::GetInstanceCount(const TClassInfo* info)
 {

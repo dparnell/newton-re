@@ -4,7 +4,7 @@
 	Contains:	The region holders: the one-entry region cache, TRegionVar,
 				TRegion, TRegionStruct, TRectangularRegion.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "RegionVars.h"
@@ -13,10 +13,10 @@
 #include "OSErrors.h"
 
 // the cache: one region kept between uses
-static RgnHandle gCachedRgn = nil;			// ROM 0x0c1018a0 gCachedRgn
+static RgnHandle gCachedRgn = nil;			// ROM 0x0c1017b0 gCachedRgn
 
 
-// ROM 0x00199fb0 NewCachedRgn__Fv
+// ROM 0x00197964 NewCachedRgn__Fv
 // The cached region if there is one, else a new one; exOutOfMemory
 // (kError_No_Memory) when no region can be made.
 RgnHandle
@@ -35,7 +35,7 @@ NewCachedRgn(void)
 }
 
 
-// ROM 0x0019a030 DisposeCachedRgn__FPP6Region
+// ROM 0x001979e4 DisposeCachedRgn__FPP6Region
 // The region becomes the cached one when the cache is empty, else it is
 // disposed.
 void
@@ -57,7 +57,7 @@ DisposeCachedRgn(RgnHandle rgn)
 	skips destructors.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0019a054 DisposeTRegionVar__FPv
+// ROM 0x00197a08 DisposeTRegionVar__FPv
 static void
 DisposeTRegionVar(void* object)
 {
@@ -65,7 +65,7 @@ DisposeTRegionVar(void* object)
 }
 
 
-// ROM 0x0019a05c __ct__10TRegionVarFv
+// ROM 0x00197a10 __ct__10TRegionVarFv
 TRegionVar::TRegionVar()
 {
 	fRegion = NewCachedRgn();
@@ -76,7 +76,7 @@ TRegionVar::TRegionVar()
 }
 
 
-// ROM 0x0019a0b0 __ct__10TRegionVarFR7TRegion
+// ROM 0x00197a64 __ct__10TRegionVarFR7TRegion
 TRegionVar::TRegionVar(TRegion& rgn)
 {
 	fRegion = rgn.StealRegion();
@@ -87,7 +87,7 @@ TRegionVar::TRegionVar(TRegion& rgn)
 }
 
 
-// ROM 0x0019a10c __dt__10TRegionVarFv
+// ROM 0x00197ac0 __dt__10TRegionVarFv
 TRegionVar::~TRegionVar()
 {
 	RemoveExceptionHandler((CatchHeader*) &fCleanup);
@@ -97,7 +97,7 @@ TRegionVar::~TRegionVar()
 }
 
 
-// ROM 0x0019a148 __as__10TRegionVarFR7TRegion
+// ROM 0x00197afc __as__10TRegionVarFR7TRegion
 TRegionVar&
 TRegionVar::operator=(TRegion& rgn)
 {
@@ -107,7 +107,7 @@ TRegionVar::operator=(TRegion& rgn)
 }
 
 
-// ROM 0x0019a174 StealRegion__10TRegionVarFv
+// ROM 0x00197b28 StealRegion__10TRegionVarFv
 RgnHandle
 TRegionVar::StealRegion()
 {
@@ -121,7 +121,7 @@ TRegionVar::StealRegion()
 	T R e g i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0019a290 __ct__7TRegionFR10TRegionVar
+// ROM 0x00197c44 __ct__7TRegionFR10TRegionVar
 TRegion::TRegion(TRegionVar& rgn)
 {
 	fRegion = rgn.StealRegion();
@@ -136,7 +136,7 @@ TRegion::TRegion(const TRegion& rgn)
 }
 
 
-// ROM 0x0019a2cc __dt__7TRegionFv
+// ROM 0x00197c80 __dt__7TRegionFv
 TRegion::~TRegion()
 {
 	if (fRegion != nil)
@@ -144,7 +144,7 @@ TRegion::~TRegion()
 }
 
 
-// ROM 0x0019a300 StealRegion__7TRegionFv
+// ROM 0x00197cb4 StealRegion__7TRegionFv
 RgnHandle
 TRegion::StealRegion()
 {
@@ -158,21 +158,21 @@ TRegion::StealRegion()
 	T R e g i o n S t r u c t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0019a188 __ct__13TRegionStructFv
+// ROM 0x00197b3c __ct__13TRegionStructFv
 TRegionStruct::TRegionStruct()
 {
 	fRegion = NewCachedRgn();
 }
 
 
-// ROM 0x0019a1bc __dt__13TRegionStructFv
+// ROM 0x00197b70 __dt__13TRegionStructFv
 TRegionStruct::~TRegionStruct()
 {
 	DisposeCachedRgn(fRegion);
 }
 
 
-// ROM 0x0019a1ec __as__13TRegionStructFR7TRegion
+// ROM 0x00197ba0 __as__13TRegionStructFR7TRegion
 TRegionStruct&
 TRegionStruct::operator=(TRegion& rgn)
 {
@@ -186,7 +186,7 @@ TRegionStruct::operator=(TRegion& rgn)
 	T R e c t a n g u l a r R e g i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0019a314 __ct__18TRectangularRegionFRC5TRect
+// ROM 0x00197cc8 __ct__18TRectangularRegionFRC5TRect
 TRectangularRegion::TRectangularRegion(const Rect& r)
 {
 	fRegionPtr = &fData;

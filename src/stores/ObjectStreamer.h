@@ -24,7 +24,7 @@
 				TPrecedentsForReading.  The ROM's layouts: TObjectWriter 0x28,
 				TObjectReader 0x10.
 
-	Reconstructed from the MP2100 D ROM, 0x0032b0e0-0x0032ce14 (the small
+	Reconstructed from the MP2x00 US ROM, 0x0035627c-0x00357fb0 (the small
 	rects and precedents are StoreObject.h's, TPrecedentsVar ObjectHeap.h's).
 */
 

@@ -28,12 +28,12 @@
 				TLZStoreDecompressor, the Zippy and reloc variants) and
 				TStoreCompanderWrapper that drives them - they relocate the
 				NewtonScript frames in the expanded page
-				(RelocateFramesInPage, 0x000d2ca4), which is a separate
+				(RelocateFramesInPage, 0x000d1b50), which is a separate
 				unit; TXIPStoreCompander and TPixelMapCompander.
 
 	The interface has no DDK header; it follows the dispatch tables
 	tools/newton-rom/analysis/classinfo.py decodes (docs/protocols/).
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #ifndef __STORECOMPANDER_H
@@ -63,18 +63,18 @@ struct PackageRoot
 	ULong32		fKind;				// +0x0c  1 = PackageRoot, 2 = LargeObjectRoot
 	ULong32		fUnknown10;			// +0x10
 
-				PackageRoot();		// ROM 0x00162b30 __ct__11PackageRootFv
+				PackageRoot();		// ROM 0x001608a8 __ct__11PackageRootFv
 };
 
 
 // The default transaction hook a compander uses; the ROM's is a no-op.
-long	LODefaultDoTransaction(TStore* store, ULong rootId, ULong chunkTableId, long arg, UChar flag);	// ROM 0x001f80f4 LODefaultDoTransaction__FP6TStoreUlT2lUc
+long	LODefaultDoTransaction(TStore* store, ULong rootId, ULong chunkTableId, long arg, UChar flag);	// ROM 0x001fa8a4 LODefaultDoTransaction__FP6TStoreUlT2lUc
 
 // The one shared LZ compressor/decompressor pair (and its scratch buffer)
 // a compander may borrow rather than owning its own (ROM 0x001f80fc /
 // 0x001f8208); InitializeStoreCompanders makes the shared decompressor.
-long	GetSharedLZObjects(TCompressor** compressor, TDecompressor** decompressor, char** buffer, long* bufferSize);	// ROM 0x001f80fc GetSharedLZObjects__FPP11TCompressorPP13TDecompressorPPcPl
-void	ReleaseSharedLZObjects(TCompressor* compressor, TDecompressor* decompressor, char* buffer);					// ROM 0x001f8208 ReleaseSharedLZObjects__FP11TCompressorP13TDecompressorPc
+long	GetSharedLZObjects(TCompressor** compressor, TDecompressor** decompressor, char** buffer, long* bufferSize);	// ROM 0x001fa8ac GetSharedLZObjects__FPP11TCompressorPP13TDecompressorPPcPl
+void	ReleaseSharedLZObjects(TCompressor* compressor, TDecompressor* decompressor, char* buffer);					// ROM 0x001fa9b8 ReleaseSharedLZObjects__FP11TCompressorP13TDecompressorPc
 
 
 // ---------------------------------------------------------------------------
@@ -84,15 +84,15 @@ void	ReleaseSharedLZObjects(TCompressor* compressor, TDecompressor* decompressor
 PROTOCOL TStoreCompander : public TProtocol
 {
 public:
-	static TStoreCompander*	New(const char* implementation);	// ROM 0x0037dbfc New__15TStoreCompanderSFPc
-	void			Delete();										// ROM 0x0037dc28 Delete__15TStoreCompanderFv
+	static TStoreCompander*	New(const char* implementation);	// ROM 0x0038735c New__15TStoreCompanderSFPc
+	void			Delete();										// ROM 0x00387388 Delete__15TStoreCompanderFv
 
-	VIRTUAL NewtonErr	Init(TStore* store, ULong rootId, ULong arg3, UChar readOnly, UChar shared) ENDVIRTUAL;	// ROM 0x0037dc44 Init__15TStoreCompanderFP6TStoreUlT2UcT4
-	VIRTUAL ULong		BlockSize() ENDVIRTUAL;																		// ROM 0x0037dc50 BlockSize__15TStoreCompanderFv
-	VIRTUAL NewtonErr	Read(ULong offset, char* buffer, long count, ULong page) ENDVIRTUAL;						// ROM 0x0037dc5c Read__15TStoreCompanderFUlPclT1
-	VIRTUAL NewtonErr	Write(ULong offset, char* buffer, long count, ULong page) ENDVIRTUAL;					// ROM 0x0037dc68 Write__15TStoreCompanderFUlPclT1
-	VIRTUAL void		DoTransactionAgainst(long arg, ULong page) ENDVIRTUAL;									// ROM 0x0037dc74 DoTransactionAgainst__15TStoreCompanderFlUl
-	VIRTUAL Boolean		IsReadOnly() ENDVIRTUAL;																// ROM 0x0037dc80 IsReadOnly__15TStoreCompanderFv
+	VIRTUAL NewtonErr	Init(TStore* store, ULong rootId, ULong arg3, UChar readOnly, UChar shared) ENDVIRTUAL;	// ROM 0x003873a4 Init__15TStoreCompanderFP6TStoreUlT2UcT4
+	VIRTUAL ULong		BlockSize() ENDVIRTUAL;																		// ROM 0x003873b0 BlockSize__15TStoreCompanderFv
+	VIRTUAL NewtonErr	Read(ULong offset, char* buffer, long count, ULong page) ENDVIRTUAL;						// ROM 0x003873bc Read__15TStoreCompanderFUlPclT1
+	VIRTUAL NewtonErr	Write(ULong offset, char* buffer, long count, ULong page) ENDVIRTUAL;					// ROM 0x003873c8 Write__15TStoreCompanderFUlPclT1
+	VIRTUAL void		DoTransactionAgainst(long arg, ULong page) ENDVIRTUAL;									// ROM 0x003873d4 DoTransactionAgainst__15TStoreCompanderFlUl
+	VIRTUAL Boolean		IsReadOnly() ENDVIRTUAL;																// ROM 0x003873e0 IsReadOnly__15TStoreCompanderFv
 };
 
 
@@ -105,15 +105,15 @@ PROTOCOL TSimpleStoreCompander : public TStoreCompander
 public:
 	PROTOCOL_IMPL_HEADER_MACRO(TSimpleStoreCompander);
 
-	TSimpleStoreCompander*	New();				// ROM 0x001f7c4c New__21TSimpleStoreCompanderFv
-	void			Delete();					// ROM 0x001f7c5c Delete__21TSimpleStoreCompanderFv
+	TSimpleStoreCompander*	New();				// ROM 0x001fa3fc New__21TSimpleStoreCompanderFv
+	void			Delete();					// ROM 0x001fa40c Delete__21TSimpleStoreCompanderFv
 
-	NewtonErr		Init(TStore* store, ULong rootId, ULong arg3, UChar readOnly, UChar shared);	// ROM 0x001f7c60 Init__21TSimpleStoreCompanderFP6TStoreUlT2UcT4
-	ULong			BlockSize();				// ROM 0x001f7cc0 BlockSize__21TSimpleStoreCompanderFv
-	NewtonErr		Read(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001f7cc8 Read__21TSimpleStoreCompanderFUlPclT1
-	NewtonErr		Write(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001f7d7c Write__21TSimpleStoreCompanderFUlPclT1
-	void			DoTransactionAgainst(long arg, ULong page);					// ROM 0x001f7de0 DoTransactionAgainst__21TSimpleStoreCompanderFlUl
-	Boolean			IsReadOnly();				// ROM 0x001f7e0c IsReadOnly__21TSimpleStoreCompanderFv
+	NewtonErr		Init(TStore* store, ULong rootId, ULong arg3, UChar readOnly, UChar shared);	// ROM 0x001fa410 Init__21TSimpleStoreCompanderFP6TStoreUlT2UcT4
+	ULong			BlockSize();				// ROM 0x001fa470 BlockSize__21TSimpleStoreCompanderFv
+	NewtonErr		Read(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001fa478 Read__21TSimpleStoreCompanderFUlPclT1
+	NewtonErr		Write(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001fa52c Write__21TSimpleStoreCompanderFUlPclT1
+	void			DoTransactionAgainst(long arg, ULong page);					// ROM 0x001fa590 DoTransactionAgainst__21TSimpleStoreCompanderFlUl
+	Boolean			IsReadOnly();				// ROM 0x001fa5bc IsReadOnly__21TSimpleStoreCompanderFv
 
 	TStore*			fStore;				// +0x10
 	ULong			fRootId;			// +0x14  the root object (its first word names the chunk table)
@@ -131,15 +131,15 @@ PROTOCOL TLZStoreCompander : public TStoreCompander
 public:
 	PROTOCOL_IMPL_HEADER_MACRO(TLZStoreCompander);
 
-	TLZStoreCompander*	New();				// ROM 0x001f788c New__17TLZStoreCompanderFv
-	void			Delete();					// ROM 0x001f78a4 Delete__17TLZStoreCompanderFv
+	TLZStoreCompander*	New();				// ROM 0x001fa03c New__17TLZStoreCompanderFv
+	void			Delete();					// ROM 0x001fa054 Delete__17TLZStoreCompanderFv
 
-	NewtonErr		Init(TStore* store, ULong rootId, ULong arg3, UChar readOnly, UChar shared);	// ROM 0x001f78f8 Init__17TLZStoreCompanderFP6TStoreUlT2UcT4
-	ULong			BlockSize();				// ROM 0x001f7a18 BlockSize__17TLZStoreCompanderFv
-	NewtonErr		Read(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001f7a20 Read__17TLZStoreCompanderFUlPclT1
-	NewtonErr		Write(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001f7afc Write__17TLZStoreCompanderFUlPclT1
-	void			DoTransactionAgainst(long arg, ULong page);					// ROM 0x001f7b90 DoTransactionAgainst__17TLZStoreCompanderFlUl
-	Boolean			IsReadOnly();				// ROM 0x001f7bbc IsReadOnly__17TLZStoreCompanderFv
+	NewtonErr		Init(TStore* store, ULong rootId, ULong arg3, UChar readOnly, UChar shared);	// ROM 0x001fa0a8 Init__17TLZStoreCompanderFP6TStoreUlT2UcT4
+	ULong			BlockSize();				// ROM 0x001fa1c8 BlockSize__17TLZStoreCompanderFv
+	NewtonErr		Read(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001fa1d0 Read__17TLZStoreCompanderFUlPclT1
+	NewtonErr		Write(ULong offset, char* buffer, long count, ULong page);	// ROM 0x001fa2ac Write__17TLZStoreCompanderFUlPclT1
+	void			DoTransactionAgainst(long arg, ULong page);					// ROM 0x001fa340 DoTransactionAgainst__17TLZStoreCompanderFlUl
+	Boolean			IsReadOnly();				// ROM 0x001fa36c IsReadOnly__17TLZStoreCompanderFv
 
 	void*			fBuffer;			// +0x10  scratch for a compressed block (kLZCompanderBufferSize)
 	TDecompressor*	fDecompressor;		// +0x14

@@ -4,7 +4,7 @@
 	Contains:	NArray, NSortedArray, NComparator, NBlockComparator and
 				NIterator (NArray.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM's malloc/free/realloc here are NewPtr/DisposPtr/ReallocPtr.
 */
 
@@ -19,17 +19,17 @@
 	NComparator
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0012a0a4 __ct__11NComparatorFv
+// ROM 0x00128648 __ct__11NComparatorFv
 NComparator::NComparator()
 { }
 
 
-// ROM 0x0012a0d8 __dt__11NComparatorFv
+// ROM 0x0012867c __dt__11NComparatorFv
 NComparator::~NComparator()
 { }
 
 
-// ROM 0x0012a0f0 KeyOf__11NComparatorCFPCv
+// ROM 0x00128694 KeyOf__11NComparatorCFPCv
 const void*
 NComparator::KeyOf(const void* element) const
 {
@@ -37,7 +37,7 @@ NComparator::KeyOf(const void* element) const
 }
 
 
-// ROM 0x0012a0f8 CompareKeys__11NComparatorCFPCvT1
+// ROM 0x0012869c CompareKeys__11NComparatorCFPCvT1
 // The keys themselves, as unsigned numbers.
 int
 NComparator::CompareKeys(const void* key1, const void* key2) const
@@ -54,19 +54,19 @@ NComparator::CompareKeys(const void* key1, const void* key2) const
 	NBlockComparator
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0012a00c __ct__16NBlockComparatorFl
+// ROM 0x001285b0 __ct__16NBlockComparatorFl
 NBlockComparator::NBlockComparator(long size)
 {
 	fSize = size;
 }
 
 
-// ROM 0x0012a050 __dt__16NBlockComparatorFv
+// ROM 0x001285f4 __dt__16NBlockComparatorFv
 NBlockComparator::~NBlockComparator()
 { }
 
 
-// ROM 0x0012a090 CompareKeys__16NBlockComparatorCFPCvT1
+// ROM 0x00128634 CompareKeys__16NBlockComparatorCFPCvT1
 int
 NBlockComparator::CompareKeys(const void* key1, const void* key2) const
 {
@@ -78,7 +78,7 @@ NBlockComparator::CompareKeys(const void* key1, const void* key2) const
 	NArray
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00127298 __ct__6NArrayFv
+// ROM 0x0012583c __ct__6NArrayFv
 NArray::NArray()
 {
 	fElementSize = 4;
@@ -91,7 +91,7 @@ NArray::NArray()
 }
 
 
-// ROM 0x001272f4 __dt__6NArrayFv
+// ROM 0x00125898 __dt__6NArrayFv
 // The iterators are told their array is gone.
 NArray::~NArray()
 {
@@ -102,7 +102,7 @@ NArray::~NArray()
 }
 
 
-// ROM 0x0012740c Init__6NArrayFlN21Uc
+// ROM 0x001259b0 Init__6NArrayFlN21Uc
 NewtonErr
 NArray::Init(long elementSize, long chunkSize, long physicalCount, Boolean shrink)
 {
@@ -115,7 +115,7 @@ NArray::Init(long elementSize, long chunkSize, long physicalCount, Boolean shrin
 }
 
 
-// ROM 0x00127454 At__6NArrayCFl
+// ROM 0x001259f8 At__6NArrayCFl
 void*
 NArray::At(long index) const
 {
@@ -125,7 +125,7 @@ NArray::At(long index) const
 }
 
 
-// ROM 0x00127340 Contains__6NArrayCFPCv
+// ROM 0x001258e4 Contains__6NArrayCFPCv
 // A linear search comparing whole elements.
 long
 NArray::Contains(const void* element) const
@@ -144,7 +144,7 @@ NArray::Contains(const void* element) const
 }
 
 
-// ROM 0x00127404 Where__6NArrayCFPCv
+// ROM 0x001259a8 Where__6NArrayCFPCv
 long
 NArray::Where(const void* /*element*/) const
 {
@@ -152,7 +152,7 @@ NArray::Where(const void* /*element*/) const
 }
 
 
-// ROM 0x0012747c InsertElements__6NArrayFlT1PCv
+// ROM 0x00125a20 InsertElements__6NArrayFlT1PCv
 // Inserts count elements (copied from elements) before index, or at the end
 // when index is past it; the iterators are told.
 NewtonErr
@@ -180,7 +180,7 @@ NArray::InsertElements(long index, long count, const void* elements)
 }
 
 
-// ROM 0x00127548 RemoveElements__6NArrayFlT1
+// ROM 0x00125aec RemoveElements__6NArrayFlT1
 NewtonErr
 NArray::RemoveElements(long index, long count)
 {
@@ -200,7 +200,7 @@ NArray::RemoveElements(long index, long count)
 }
 
 
-// ROM 0x001275f8 SetCount__6NArrayFl
+// ROM 0x00125b9c SetCount__6NArrayFl
 NewtonErr
 NArray::SetCount(long count)
 {
@@ -213,7 +213,7 @@ NArray::SetCount(long count)
 }
 
 
-// ROM 0x00127634 SetPhysicalCount__6NArrayFl
+// ROM 0x00125bd8 SetPhysicalCount__6NArrayFl
 // Makes the block hold count elements, rounded up to whole chunks; it only
 // shrinks when fShrink is set and a whole chunk would be freed.
 NewtonErr
@@ -254,19 +254,19 @@ NArray::SetPhysicalCount(long count)
 	NSortedArray
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0012b704 __ct__12NSortedArrayFv
+// ROM 0x00129ca8 __ct__12NSortedArrayFv
 NSortedArray::NSortedArray()
 {
 	fComparator = nil;
 }
 
 
-// ROM 0x0012b74c __dt__12NSortedArrayFv
+// ROM 0x00129cf0 __dt__12NSortedArrayFv
 NSortedArray::~NSortedArray()
 { }
 
 
-// ROM 0x0012b78c Init__12NSortedArrayFP11NComparatorlN22Uc
+// ROM 0x00129d30 Init__12NSortedArrayFP11NComparatorlN22Uc
 NewtonErr
 NSortedArray::Init(NComparator* comparator, long elementSize, long chunkSize, long physicalCount, Boolean shrink)
 {
@@ -277,7 +277,7 @@ NSortedArray::Init(NComparator* comparator, long elementSize, long chunkSize, lo
 }
 
 
-// ROM 0x0012b868 Where__12NSortedArrayCFPCv
+// ROM 0x00129e0c Where__12NSortedArrayCFPCv
 // Binary search: the index after the last element whose key is not greater
 // than the element's - where an equal element goes, after those it equals.
 long
@@ -298,7 +298,7 @@ NSortedArray::Where(const void* element) const
 }
 
 
-// ROM 0x0012b7d0 Contains__12NSortedArrayCFPCv
+// ROM 0x00129d74 Contains__12NSortedArrayCFPCv
 long
 NSortedArray::Contains(const void* element) const
 {
@@ -319,7 +319,7 @@ NSortedArray::Contains(const void* element) const
 	runs round it until it is back at the array's first iterator.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0012a580 InsertElements__9NIteratorFlT1
+// ROM 0x00128b24 InsertElements__9NIteratorFlT1
 void
 NIterator::InsertElements(long index, long count)
 {
@@ -334,7 +334,7 @@ NIterator::InsertElements(long index, long count)
 }
 
 
-// ROM 0x0012a514 RemoveElements__9NIteratorFlT1
+// ROM 0x00128ab8 RemoveElements__9NIteratorFlT1
 void
 NIterator::RemoveElements(long index, long count)
 {
@@ -349,7 +349,7 @@ NIterator::RemoveElements(long index, long count)
 }
 
 
-// ROM 0x0012a5ec DeleteArray__9NIteratorFv
+// ROM 0x00128b90 DeleteArray__9NIteratorFv
 void
 NIterator::DeleteArray()
 {

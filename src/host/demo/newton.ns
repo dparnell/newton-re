@@ -3,7 +3,7 @@
 // a paragraph to click, tap and type into with the mouse and the keyboard
 // in the host window.  Run from the repository root:
 //
-//   build/host/host/newton --rom build/MP2100D/rom.bin --script src/host/demo/newton.ns
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --script src/host/demo/newton.ns
 //
 // (or --headless 2 to run it without a window and write build/newton-demo.pgm)
 

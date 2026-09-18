@@ -2,104 +2,104 @@
 
 | Implementation | Interface | Size | Version | Flags | Methods | Capabilities | Table |
 |---|---|---|---|---|---|---|---|
-| `PAppleTalkStack` | `PATStack` | 52 | 0 | 0x0 | 22 |  | 0x0037bf6c |
-| `PCirrusBatteryDriver` | `PBatteryDriver` | 156 | 0 | 0x0 | 10 |  | 0x0037c6f8 |
-| `PCECallBackWrapper` | `PCECallBack` | 20 | 131072 | 0x0 | 54 |  | 0x0037a7dc |
-| `PFlattenPtr` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x0038086c |
-| `PFlattenRef` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x00380960 |
-| `POptionDataOut` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x00380c44 |
-| `PScriptDataOut` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x00380b4c |
-| `PStreamOutRef` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x00380a54 |
-| `POptionDataIn` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x00380cc0 |
-| `PScriptDataIn` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x00380bc8 |
-| `PStreamInRef` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x00380ad0 |
-| `PUnFlattenPtr` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x003808e4 |
-| `PUnFlattenRef` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x003809d8 |
-| `PHammerInTranslator` | `PInTranslator` | 36 | 0 | 0x0 | 4 |  | 0x0037ab00 |
-| `PNTKInTranslator` | `PInTranslator` | 36 | 0 | 0x0 | 4 |  | 0x0037c124 |
-| `PNullInTranslator` | `PInTranslator` | 16 | 0 | 0x0 | 4 |  | 0x0037ac40 |
-| `PSerialInTranslator` | `PInTranslator` | 28 | 0 | 0x0 | 4 |  | 0x0037c25c |
-| `PStdioInTranslator` | `PInTranslator` | 32 | 0 | 0x0 | 4 |  | 0x0037ad7c |
-| `PLocalTalkLink` | `PLink` | 44 | 131072 | 0x0 | 8 | `atlk=llap` | 0x0037bd6c |
-| `PMuxCallBackWrapper` | `PMuxCallBack` | 20 | 131072 | 0x0 | 9 |  | 0x0037a2a4 |
-| `PMuxServiceStarter` | `PMuxService` | 20 | 0 | 0x0 | 1 |  | 0x0037a3b0 |
-| `PHammerOutTranslator` | `POutTranslator` | 24 | 0 | 0x0 | 11 |  | 0x0037ab90 |
-| `PNTKOutTranslator` | `POutTranslator` | 48 | 0 | 0x0 | 11 |  | 0x0037c1b0 |
-| `PNullOutTranslator` | `POutTranslator` | 20 | 0 | 0x0 | 11 |  | 0x0037acd0 |
-| `PSerialOutTranslator` | `POutTranslator` | 28 | 0 | 0x0 | 11 |  | 0x0037c2ec |
-| `PStdioOutTranslator` | `POutTranslator` | 20 | 0 | 0x0 | 11 |  | 0x0037ae0c |
-| `PTheSerChipRegistry` | `PSerialChipRegistry` | 92 | 65536 | 0x0 | 11 |  | 0x0037b604 |
-| `PCirrusSoundDriver` | `PSoundDriver` | 300 | 0 | 0x0 | 28 | `SoundOutput; SoundInput` | 0x0037fad0 |
-| `TATASimple` | `TATA` | 288 | 0 | 0x0 | 19 |  | 0x0037cf18 |
-| `IRProbeService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=pkir` | 0x003797ec |
-| `IRSniffService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=snif` | 0x00379760 |
-| `TAppleTalkService` | `TCMService` | 16 | 0 | 0x0 | 2 | `vern=   <02>; serv=atlk` | 0x0037bb10 |
-| `TAsyncService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=aser` | 0x003794b0 |
-| `TFaxService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=faxs` | 0x00379538 |
-| `TFramedAsyncService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=fser` | 0x003795c0 |
-| `TIRService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=slir` | 0x003796d8 |
-| `TIrDAService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=irda` | 0x00379650 |
-| `TKeyboardService` | `TCMService` | 16 | 0 | 0x0 | 2 | `auto; vern=1; serv=kybd` | 0x00379904 |
-| `TLocalTalkService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=ltlk` | 0x0037999c |
-| `TMNPService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=mnps` | 0x00379a28 |
-| `TModemService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=mods` | 0x00379ab0 |
-| `TP3Service` | `TCMService` | 16 | 0 | 0x0 | 2 | `vern=1; serv=p3  ` | 0x00379b38 |
-| `TVRemoteService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=tvir` | 0x00379878 |
-| `TArithmeticCompressor` | `TCallbackCompressor` | 212 | 0 | 0x0 | 4 |  | 0x0037fcb0 |
-| `TLZCallbackCompressor` | `TCallbackCompressor` | 40 | 0 | 0x0 | 4 | `TLZRelocStoreDecompressor; TLZStoreDecompressor` | 0x0038007c |
-| `TUnicodeCompressor` | `TCallbackCompressor` | 420 | 0 | 0x0 | 4 |  | 0x003803ac |
-| `TZippyCallbackCompressor` | `TCallbackCompressor` | 40 | 0 | 0x0 | 4 | `TZippyRelocStoreDecompressor; TZippyStoreDecompressor` | 0x00380250 |
-| `TArithmeticDecompressor` | `TCallbackDecompressor` | 216 | 0 | 0x0 | 3 |  | 0x0037fd48 |
-| `TUnicodeDecompressor` | `TCallbackDecompressor` | 292 | 0 | 0x0 | 3 |  | 0x00380440 |
-| `TCHMemModem` | `TCardHandler` | 68 | 0 | 0x0 | 16 |  | 0x0037cfd4 |
-| `TClassInfoRegistryImpl` | `TClassInfoRegistry` | 32 | 0 | 0x0 | 13 |  | 0x0037c8e0 |
-| `TLZCompressor` | `TCompressor` | 56 | 0 | 0x0 | 3 |  | 0x0037fff8 |
-| `TZippyCompressor` | `TCompressor` | 148 | 0 | 0x0 | 3 |  | 0x003801c8 |
-| `TLZDecompressor` | `TDecompressor` | 60 | 0 | 0x0 | 2 |  | 0x00380144 |
-| `TZippyDecompressor` | `TDecompressor` | 148 | 0 | 0x0 | 2 |  | 0x00380324 |
-| `TFaxDriver` | `TDotPrinterDriver` | 52 | 131072 | 0x0 | 9 |  | 0x0037eafc |
-| `TLaserWriterLSDriver` | `TDotPrinterDriver` | 388 | 131072 | 0x0 | 9 |  | 0x0037ec40 |
-| `TSWGroupDriver` | `TDotPrinterDriver` | 48 | 131072 | 0x0 | 9 |  | 0x0037eb9c |
-| `ThpPCL` | `TDotPrinterDriver` | 76 | 131072 | 0x0 | 9 |  | 0x0037ece8 |
-| `TPinPad` | `TDrawInterface` | 184 | 0 | 0x0 | 5 |  | 0x0037efa4 |
-| `TADSPEndpoint` | `TEndpoint` | 48 | 0 | 0x0 | 37 |  | 0x0037bba8 |
-| `TSerialEndpoint` | `TEndpoint` | 68 | 0 | 0x0 | 37 |  | 0x00379bc4 |
-| `THistoryCollector` | `TEventCollector` | 108 | 131072 | 0x0 | 7 |  | 0x00380588 |
-| `TFlashAMD` | `TFlash` | 76 | 0 | 0x0 | 37 |  | 0x0037d194 |
-| `TFlashSeries2` | `TFlash` | 80 | 0 | 0x0 | 37 |  | 0x0037d08c |
-| `TNewInternalFlash` | `TFlash` | 108 | 0 | 0x0 | 37 |  | 0x0037aeb8 |
-| `T28F016_SA_SVDriver` | `TFlashDriver` | 16 | 0 | 0x0 | 12 |  | 0x0037b084 |
-| `TLOPackageStore` | `TLrgObjStore` | 16 | 0 | 0x0 | 9 | `TZippyRelocStoreDecompressor; TZippyStoreDecompressor; TSimpleRelocStoreDecompressor; TLZRelocStoreDecompressor; TLZStoreDecompressor; TSimpleStoreDecompressor` | 0x0037e3e0 |
-| `TXIPPackageStore` | `TLrgObjStore` | 16 | 0 | 0x0 | 9 | `TXIPStoreCompander` | 0x0037e2a0 |
-| `TPSPAPDriver` | `TPSPrinterDriver` | 552 | 131072 | 0x0 | 10 |  | 0x0037ed84 |
-| `TGrayShrink` | `TPixelMapAntialias` | 16 | 65536 | 0x0 | 0 |  | 0x0037f3d8 |
-| `TVoyagerPlatform` | `TPlatformDriver` | 260 | 0 | 0x0 | 18 |  | 0x0037e5b8 |
-| `TDotPrinter` | `TPrinter` | 460 | 131072 | 0x0 | 9 |  | 0x0037e860 |
-| `TPSPrinter` | `TPrinter` | 496 | 131072 | 0x0 | 9 |  | 0x0037e9a8 |
-| `TQDLibraryDriver` | `TQDLibrary` | 16 | 196608 | 0x0 | 124 |  | 0x0037f02c |
-| `TSerialChip16450` | `TSerialChip` | 92 | 196608 | 0x0 | 44 | `v2.0` | 0x0037b134 |
-| `TSerialChipVoyager` | `TSerialChip` | 160 | 196608 | 0x0 | 44 | `v2.0` | 0x0037b264 |
-| `TAsyncDebugLink` | `TSerialDebugLink` | 32 | 0 | 0x0 | 9 |  | 0x0037b7a0 |
-| `TGeoPortDebugLink` | `TSerialDebugLink` | 72 | 0 | 0x0 | 9 |  | 0x0037b844 |
-| `TDTMFCodec` | `TSoundCodec` | 704 | 0 | 0x0 | 7 |  | 0x0037f800 |
-| `TGSMCodec` | `TSoundCodec` | 60 | 0 | 0x0 | 7 |  | 0x0037f890 |
-| `TIMACodec` | `TSoundCodec` | 60 | 0 | 0x0 | 7 |  | 0x0037f770 |
-| `TMuLawCodec` | `TSoundCodec` | 40 | 0 | 0x0 | 7 |  | 0x0037f6dc |
-| `TFlashStore` | `TStore` | 240 | 131072 | 0x0 | 42 | `LOBJ; rom ; sram; flsh` | 0x0037da38 |
-| `TMuxStore` | `TStore` | 28 | 0 | 0x0 | 42 |  | 0x0037d6d4 |
-| `TPackageStore` | `TStore` | 28 | 0 | 0x0 | 42 |  | 0x0037a9e4 |
-| `TLZStoreCompander` | `TStoreCompander` | 44 | 0 | 0x0 | 6 |  | 0x0037e208 |
-| `TPixelMapCompander` | `TStoreCompander` | 76 | 65536 | 0x0 | 6 | `TLZDecompressor; TLZCompressor` | 0x0037eeec |
-| `TSimpleStoreCompander` | `TStoreCompander` | 32 | 0 | 0x0 | 6 |  | 0x0037e16c |
-| `TStoreCompanderWrapper` | `TStoreCompander` | 36 | 0 | 0x0 | 6 |  | 0x0037e0d0 |
-| `TXIPStoreCompander` | `TStoreCompander` | 40 | 0 | 0x0 | 6 |  | 0x0037e520 |
-| `TLZRelocStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x0037dfa4 |
-| `TLZStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x0037ddec |
-| `TSimpleRelocStoreDecompressor` | `TStoreDecompressor` | 20 | 0 | 0x0 | 2 |  | 0x0037df0c |
-| `TSimpleStoreDecompressor` | `TStoreDecompressor` | 20 | 0 | 0x0 | 2 |  | 0x0037dd58 |
-| `TZippyRelocStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x0037e038 |
-| `TZippyStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x0037de7c |
-| `TMuxStoreMonitor` | `TStoreMonitor` | 20 | 0 | 0x0 | 28 |  | 0x0037d7ec |
-| `TResistiveTablet` | `TTabletDriver` | 180 | 0 | 0x0 | 19 |  | 0x0037c558 |
-| `TVoyagerMiscIntfImpl` | `TVoyagerMiscIntf` | 36 | 0 | 0x0 | 53 |  | 0x0037b9b8 |
-| `TRosRecognizer` | `TWRecognizer` | 356 | 0 | 0x0 | 16 |  | 0x0037f570 |
+| `PAppleTalkStack` | `PATStack` | 52 | 0 | 0x0 | 22 |  | 0x003856cc |
+| `PCirrusBatteryDriver` | `PBatteryDriver` | 156 | 0 | 0x0 | 10 |  | 0x00385e58 |
+| `PCECallBackWrapper` | `PCECallBack` | 20 | 131072 | 0x0 | 54 |  | 0x00383f3c |
+| `PFlattenPtr` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x00389fd4 |
+| `PFlattenRef` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x0038a0c8 |
+| `POptionDataOut` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x0038a3ac |
+| `PScriptDataOut` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x0038a2b4 |
+| `PStreamOutRef` | `PFrameSink` | 16 | 0 | 0x0 | 1 |  | 0x0038a1bc |
+| `POptionDataIn` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x0038a428 |
+| `PScriptDataIn` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x0038a330 |
+| `PStreamInRef` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x0038a238 |
+| `PUnFlattenPtr` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x0038a04c |
+| `PUnFlattenRef` | `PFrameSource` | 16 | 0 | 0x0 | 1 |  | 0x0038a140 |
+| `PHammerInTranslator` | `PInTranslator` | 36 | 0 | 0x0 | 4 |  | 0x00384260 |
+| `PNTKInTranslator` | `PInTranslator` | 36 | 0 | 0x0 | 4 |  | 0x00385884 |
+| `PNullInTranslator` | `PInTranslator` | 16 | 0 | 0x0 | 4 |  | 0x003843a0 |
+| `PSerialInTranslator` | `PInTranslator` | 28 | 0 | 0x0 | 4 |  | 0x003859bc |
+| `PStdioInTranslator` | `PInTranslator` | 32 | 0 | 0x0 | 4 |  | 0x003844dc |
+| `PLocalTalkLink` | `PLink` | 44 | 131072 | 0x0 | 8 | `atlk=llap` | 0x003854cc |
+| `PMuxCallBackWrapper` | `PMuxCallBack` | 20 | 131072 | 0x0 | 9 |  | 0x00383a04 |
+| `PMuxServiceStarter` | `PMuxService` | 20 | 0 | 0x0 | 1 |  | 0x00383b10 |
+| `PHammerOutTranslator` | `POutTranslator` | 24 | 0 | 0x0 | 11 |  | 0x003842f0 |
+| `PNTKOutTranslator` | `POutTranslator` | 48 | 0 | 0x0 | 11 |  | 0x00385910 |
+| `PNullOutTranslator` | `POutTranslator` | 20 | 0 | 0x0 | 11 |  | 0x00384430 |
+| `PSerialOutTranslator` | `POutTranslator` | 28 | 0 | 0x0 | 11 |  | 0x00385a4c |
+| `PStdioOutTranslator` | `POutTranslator` | 20 | 0 | 0x0 | 11 |  | 0x0038456c |
+| `PTheSerChipRegistry` | `PSerialChipRegistry` | 92 | 65536 | 0x0 | 11 |  | 0x00384d64 |
+| `PCirrusSoundDriver` | `PSoundDriver` | 300 | 0 | 0x0 | 28 | `SoundOutput; SoundInput` | 0x00389238 |
+| `TATASimple` | `TATA` | 288 | 0 | 0x0 | 19 |  | 0x00386678 |
+| `IRProbeService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=pkir` | 0x00382f4c |
+| `IRSniffService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=snif` | 0x00382ec0 |
+| `TAppleTalkService` | `TCMService` | 16 | 0 | 0x0 | 2 | `vern=   <02>; serv=atlk` | 0x00385270 |
+| `TAsyncService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=aser` | 0x00382c10 |
+| `TFaxService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=faxs` | 0x00382c98 |
+| `TFramedAsyncService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=fser` | 0x00382d20 |
+| `TIRService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=slir` | 0x00382e38 |
+| `TIrDAService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=irda` | 0x00382db0 |
+| `TKeyboardService` | `TCMService` | 16 | 0 | 0x0 | 2 | `auto; vern=1; serv=kybd` | 0x00383064 |
+| `TLocalTalkService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=ltlk` | 0x003830fc |
+| `TMNPService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=mnps` | 0x00383188 |
+| `TModemService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=mods` | 0x00383210 |
+| `TP3Service` | `TCMService` | 16 | 0 | 0x0 | 2 | `vern=1; serv=p3  ` | 0x00383298 |
+| `TVRemoteService` | `TCMService` | 16 | 131072 | 0x0 | 2 | `serv=tvir` | 0x00382fd8 |
+| `TArithmeticCompressor` | `TCallbackCompressor` | 212 | 0 | 0x0 | 4 |  | 0x00389418 |
+| `TLZCallbackCompressor` | `TCallbackCompressor` | 40 | 0 | 0x0 | 4 | `TLZRelocStoreDecompressor; TLZStoreDecompressor` | 0x003897e4 |
+| `TUnicodeCompressor` | `TCallbackCompressor` | 420 | 0 | 0x0 | 4 |  | 0x00389b14 |
+| `TZippyCallbackCompressor` | `TCallbackCompressor` | 40 | 0 | 0x0 | 4 | `TZippyRelocStoreDecompressor; TZippyStoreDecompressor` | 0x003899b8 |
+| `TArithmeticDecompressor` | `TCallbackDecompressor` | 216 | 0 | 0x0 | 3 |  | 0x003894b0 |
+| `TUnicodeDecompressor` | `TCallbackDecompressor` | 292 | 0 | 0x0 | 3 |  | 0x00389ba8 |
+| `TCHMemModem` | `TCardHandler` | 68 | 0 | 0x0 | 16 |  | 0x00386734 |
+| `TClassInfoRegistryImpl` | `TClassInfoRegistry` | 32 | 0 | 0x0 | 13 |  | 0x00386040 |
+| `TLZCompressor` | `TCompressor` | 56 | 0 | 0x0 | 3 |  | 0x00389760 |
+| `TZippyCompressor` | `TCompressor` | 148 | 0 | 0x0 | 3 |  | 0x00389930 |
+| `TLZDecompressor` | `TDecompressor` | 60 | 0 | 0x0 | 2 |  | 0x003898ac |
+| `TZippyDecompressor` | `TDecompressor` | 148 | 0 | 0x0 | 2 |  | 0x00389a8c |
+| `TFaxDriver` | `TDotPrinterDriver` | 52 | 131072 | 0x0 | 9 |  | 0x0038825c |
+| `TLaserWriterLSDriver` | `TDotPrinterDriver` | 388 | 131072 | 0x0 | 9 |  | 0x003883a0 |
+| `TSWGroupDriver` | `TDotPrinterDriver` | 48 | 131072 | 0x0 | 9 |  | 0x003882fc |
+| `ThpPCL` | `TDotPrinterDriver` | 76 | 131072 | 0x0 | 9 |  | 0x00388448 |
+| `TPinPad` | `TDrawInterface` | 184 | 0 | 0x0 | 5 |  | 0x00388704 |
+| `TADSPEndpoint` | `TEndpoint` | 48 | 0 | 0x0 | 37 |  | 0x00385308 |
+| `TSerialEndpoint` | `TEndpoint` | 68 | 0 | 0x0 | 37 |  | 0x00383324 |
+| `THistoryCollector` | `TEventCollector` | 108 | 131072 | 0x0 | 7 |  | 0x00389cf0 |
+| `TFlashAMD` | `TFlash` | 76 | 0 | 0x0 | 37 |  | 0x003868f4 |
+| `TFlashSeries2` | `TFlash` | 80 | 0 | 0x0 | 37 |  | 0x003867ec |
+| `TNewInternalFlash` | `TFlash` | 108 | 0 | 0x0 | 37 |  | 0x00384618 |
+| `T28F016_SA_SVDriver` | `TFlashDriver` | 16 | 0 | 0x0 | 12 |  | 0x003847e4 |
+| `TLOPackageStore` | `TLrgObjStore` | 16 | 0 | 0x0 | 9 | `TZippyRelocStoreDecompressor; TZippyStoreDecompressor; TSimpleRelocStoreDecompressor; TLZRelocStoreDecompressor; TLZStoreDecompressor; TSimpleStoreDecompressor` | 0x00387b40 |
+| `TXIPPackageStore` | `TLrgObjStore` | 16 | 0 | 0x0 | 9 | `TXIPStoreCompander` | 0x00387a00 |
+| `TPSPAPDriver` | `TPSPrinterDriver` | 552 | 131072 | 0x0 | 10 |  | 0x003884e4 |
+| `TGrayShrink` | `TPixelMapAntialias` | 16 | 65536 | 0x0 | 0 |  | 0x00388b40 |
+| `TVoyagerPlatform` | `TPlatformDriver` | 260 | 0 | 0x0 | 18 |  | 0x00387d18 |
+| `TDotPrinter` | `TPrinter` | 460 | 131072 | 0x0 | 9 |  | 0x00387fc0 |
+| `TPSPrinter` | `TPrinter` | 496 | 131072 | 0x0 | 9 |  | 0x00388108 |
+| `TQDLibraryDriver` | `TQDLibrary` | 16 | 0 | 0x0 | 124 |  | 0x0038878c |
+| `TSerialChip16450` | `TSerialChip` | 92 | 196608 | 0x0 | 44 | `v2.0` | 0x00384894 |
+| `TSerialChipVoyager` | `TSerialChip` | 160 | 196608 | 0x0 | 44 | `v2.0` | 0x003849c4 |
+| `TAsyncDebugLink` | `TSerialDebugLink` | 32 | 0 | 0x0 | 9 |  | 0x00384f00 |
+| `TGeoPortDebugLink` | `TSerialDebugLink` | 72 | 0 | 0x0 | 9 |  | 0x00384fa4 |
+| `TDTMFCodec` | `TSoundCodec` | 704 | 0 | 0x0 | 7 |  | 0x00388f68 |
+| `TGSMCodec` | `TSoundCodec` | 60 | 0 | 0x0 | 7 |  | 0x00388ff8 |
+| `TIMACodec` | `TSoundCodec` | 60 | 0 | 0x0 | 7 |  | 0x00388ed8 |
+| `TMuLawCodec` | `TSoundCodec` | 40 | 0 | 0x0 | 7 |  | 0x00388e44 |
+| `TFlashStore` | `TStore` | 240 | 131072 | 0x0 | 42 | `LOBJ; rom ; sram; flsh` | 0x00387198 |
+| `TMuxStore` | `TStore` | 28 | 0 | 0x0 | 42 |  | 0x00386e34 |
+| `TPackageStore` | `TStore` | 28 | 0 | 0x0 | 42 |  | 0x00384144 |
+| `TLZStoreCompander` | `TStoreCompander` | 44 | 0 | 0x0 | 6 |  | 0x00387968 |
+| `TPixelMapCompander` | `TStoreCompander` | 76 | 65536 | 0x0 | 6 | `TLZDecompressor; TLZCompressor` | 0x0038864c |
+| `TSimpleStoreCompander` | `TStoreCompander` | 32 | 0 | 0x0 | 6 |  | 0x003878cc |
+| `TStoreCompanderWrapper` | `TStoreCompander` | 36 | 0 | 0x0 | 6 |  | 0x00387830 |
+| `TXIPStoreCompander` | `TStoreCompander` | 40 | 0 | 0x0 | 6 |  | 0x00387c80 |
+| `TLZRelocStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x00387704 |
+| `TLZStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x0038754c |
+| `TSimpleRelocStoreDecompressor` | `TStoreDecompressor` | 20 | 0 | 0x0 | 2 |  | 0x0038766c |
+| `TSimpleStoreDecompressor` | `TStoreDecompressor` | 20 | 0 | 0x0 | 2 |  | 0x003874b8 |
+| `TZippyRelocStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x00387798 |
+| `TZippyStoreDecompressor` | `TStoreDecompressor` | 28 | 0 | 0x0 | 2 |  | 0x003875dc |
+| `TMuxStoreMonitor` | `TStoreMonitor` | 20 | 0 | 0x0 | 28 |  | 0x00386f4c |
+| `TResistiveTablet` | `TTabletDriver` | 180 | 0 | 0x0 | 19 |  | 0x00385cb8 |
+| `TVoyagerMiscIntfImpl` | `TVoyagerMiscIntf` | 36 | 0 | 0x0 | 53 |  | 0x00385118 |
+| `TRosRecognizer` | `TWRecognizer` | 356 | 0 | 0x0 | 16 |  | 0x00388cd8 |

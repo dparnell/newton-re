@@ -8,7 +8,7 @@
 				ArrayPosition and the built-ins over them (the objects.h
 				functions "in builtins.c").
 
-	Reconstructed from the MP2100 D ROM (0x002eee68-0x002f1318); each
+	Reconstructed from the MP2x00 US ROM (0x0031416c-0x0031661c); each
 	function cites its origin.  NOT YET RECONSTRUCTED: TRichString (strings
 	with ink runs), through which the ROM's StrMunger edits; here a string
 	is its UniChars up to the terminating 0.
@@ -23,7 +23,7 @@
 #include <string.h>
 
 
-// ROM 0x002efe38 ArrayMunger__FRC6RefVarlT2T1N22
+// ROM 0x0031513c ArrayMunger__FRC6RefVarlT2T1N22
 // Replace a1[a1start, a1start + a1count) by a2[a2start, a2start + a2count)
 // (a count of -1: to the end; a2 nil: remove).  The ranges are clipped to
 // the arrays; the two must be different objects.
@@ -81,7 +81,7 @@ ArrayMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, long
 }
 
 
-// ROM 0x002f0e60 BinaryMunger__FRC6RefVarlT2T1N22
+// ROM 0x00316164 BinaryMunger__FRC6RefVarlT2T1N22
 // The same for the bytes of binaries.
 void
 BinaryMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, long a2count)
@@ -137,7 +137,7 @@ BinaryMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, lon
 }
 
 
-// ROM 0x002eee68 StrMunger__FRC6RefVarlT2T1N22
+// ROM 0x0031416c StrMunger__FRC6RefVarlT2T1N22
 // The same for the characters of strings (counts in characters, the
 // terminating 0 kept).
 void
@@ -193,7 +193,7 @@ StrMunger(RefArg s1, long s1start, long s1count, RefArg s2, long s2start, long s
 }
 
 
-// ROM 0x0012a860 ArrayGrowAt__FRC6RefVarlT2
+// ROM 0x00128e04 ArrayGrowAt__FRC6RefVarlT2
 // count empty slots opened at the index (the end for an index outside
 // the array): the array grown and the elements from the index moved up.
 void
@@ -208,7 +208,7 @@ ArrayGrowAt(RefArg array, long index, long count)
 }
 
 
-// ROM 0x0012b5d0 Munger__FRC6RefVarlT2PcT2
+// ROM 0x00129b74 Munger__FRC6RefVarlT2PcT2
 // count bytes of the binary from start replaced by dataLength bytes of
 // the data (start and count kept within the object); a read-only object
 // is cloned first; ==> the object written.
@@ -242,7 +242,7 @@ Munger(RefArg obj, long start, long count, const void* data, long dataLength)
 }
 
 
-// ROM 0x002ee75c ArrayRemoveCount__FRC6RefVarlT2
+// ROM 0x00313a60 ArrayRemoveCount__FRC6RefVarlT2
 void
 ArrayRemoveCount(RefArg array, FastInt start, FastInt removeCount)
 {
@@ -250,7 +250,7 @@ ArrayRemoveCount(RefArg array, FastInt start, FastInt removeCount)
 }
 
 
-// ROM 0x002ee7b0 ArrayRemove__FRC6RefVarT1
+// ROM 0x00313ab4 ArrayRemove__FRC6RefVarT1
 // Remove the first slot EQ to element; whether there was one.
 Boolean
 ArrayRemove(RefArg array, RefArg element)
@@ -270,7 +270,7 @@ ArrayRemove(RefArg array, RefArg element)
 }
 
 
-// ROM 0x002f1218 ArrayInsert__FRC6RefVarT1l
+// ROM 0x0031651c ArrayInsert__FRC6RefVarT1l
 void
 ArrayInsert(RefArg array, RefArg element, long index)
 {
@@ -289,7 +289,7 @@ ArrayInsert(RefArg array, RefArg element, long index)
 }
 
 
-// ROM 0x002ef0d0 ArrayPosition__FRC6RefVarT1lT1
+// ROM 0x003143d4 ArrayPosition__FRC6RefVarT1lT1
 // The index from start of the first element EQ to item - or for which
 // test(item, element) is true - else -1.
 long
@@ -335,7 +335,7 @@ CountArg(RefArg count)
 }
 
 
-// ROM 0x002f0050 FArrayMunger
+// ROM 0x00315354 FArrayMunger
 Ref
 FArrayMunger(RefArg /*rcvr*/, RefArg a1, RefArg a1start, RefArg a1count, RefArg a2, RefArg a2start, RefArg a2count)
 {
@@ -348,7 +348,7 @@ FArrayMunger(RefArg /*rcvr*/, RefArg a1, RefArg a1start, RefArg a1count, RefArg 
 }
 
 
-// ROM 0x002f106c FBinaryMunger
+// ROM 0x00316370 FBinaryMunger
 Ref
 FBinaryMunger(RefArg /*rcvr*/, RefArg a1, RefArg a1start, RefArg a1count, RefArg a2, RefArg a2start, RefArg a2count)
 {
@@ -361,7 +361,7 @@ FBinaryMunger(RefArg /*rcvr*/, RefArg a1, RefArg a1start, RefArg a1count, RefArg
 }
 
 
-// ROM 0x002ef004 FStrMunger
+// ROM 0x00314308 FStrMunger
 Ref
 FStrMunger(RefArg /*rcvr*/, RefArg s1, RefArg s1start, RefArg s1count, RefArg s2, RefArg s2start, RefArg s2count)
 {
@@ -374,7 +374,7 @@ FStrMunger(RefArg /*rcvr*/, RefArg s1, RefArg s1start, RefArg s1count, RefArg s2
 }
 
 
-// ROM 0x002f011c FArray
+// ROM 0x00315420 FArray
 // An array of length slots, each initialValue.
 Ref
 FArray(RefArg /*rcvr*/, RefArg length, RefArg initialValue)
@@ -391,7 +391,7 @@ FArray(RefArg /*rcvr*/, RefArg length, RefArg initialValue)
 }
 
 
-// ROM 0x002ef9c4 FSetContains
+// ROM 0x00314cc8 FSetContains
 // The index of target in the array, nil if absent.
 Ref
 FSetContains(RefArg /*rcvr*/, RefArg array, RefArg target)
@@ -406,7 +406,7 @@ FSetContains(RefArg /*rcvr*/, RefArg array, RefArg target)
 }
 
 
-// ROM 0x002f01b4 FSetAdd
+// ROM 0x003154b8 FSetAdd
 // Add member to the array (unless unique and it is there already, when
 // nil is answered).
 Ref
@@ -421,7 +421,7 @@ FSetAdd(RefArg rcvr, RefArg members, RefArg member, RefArg unique)
 }
 
 
-// ROM 0x002f07cc FSetRemove
+// ROM 0x00315ad0 FSetRemove
 Ref
 FSetRemove(RefArg /*rcvr*/, RefArg members, RefArg member)
 {
@@ -433,7 +433,7 @@ FSetRemove(RefArg /*rcvr*/, RefArg members, RefArg member)
 }
 
 
-// ROM 0x002ef524 FArrayRemoveCount
+// ROM 0x00314828 FArrayRemoveCount
 Ref
 FArrayRemoveCount(RefArg /*rcvr*/, RefArg array, RefArg start, RefArg count)
 {
@@ -444,7 +444,7 @@ FArrayRemoveCount(RefArg /*rcvr*/, RefArg array, RefArg start, RefArg count)
 }
 
 
-// ROM 0x002f12d0 FArrayInsert
+// ROM 0x003165d4 FArrayInsert
 Ref
 FArrayInsert(RefArg /*rcvr*/, RefArg array, RefArg element, RefArg index)
 {
@@ -453,7 +453,7 @@ FArrayInsert(RefArg /*rcvr*/, RefArg array, RefArg element, RefArg index)
 }
 
 
-// ROM 0x002ef220 FArrayPos
+// ROM 0x00314524 FArrayPos
 Ref
 FArrayPos(RefArg /*rcvr*/, RefArg array, RefArg item, RefArg start, RefArg test)
 {

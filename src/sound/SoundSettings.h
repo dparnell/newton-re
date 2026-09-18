@@ -15,7 +15,7 @@
 				configuration's soundVolumeDb and calling SetSystemVolume,
 				which is why this is here.
 
-	Reconstructed from the MP2100 D ROM (0x001e85ac-0x001e96f8); each
+	Reconstructed from the MP2x00 US ROM (0x001e6194-0x001e72e0); each
 	function cites its origin.
 */
 

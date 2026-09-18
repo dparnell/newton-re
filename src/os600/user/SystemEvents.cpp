@@ -7,7 +7,7 @@
 				name server a message, which it delivers to every registered
 				port in turn.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SystemEvents.h"
@@ -20,7 +20,7 @@
 static const ULong kSysEventMsgType = 1;
 
 
-// ROM 0x00132dfc __ct__12TSystemEventFUl
+// ROM 0x001313a0 __ct__12TSystemEventFUl
 TSystemEvent::TSystemEvent(SystemEvent event)
 {
 	fEvent = event;
@@ -28,7 +28,7 @@ TSystemEvent::TSystemEvent(SystemEvent event)
 }
 
 
-// ROM 0x00132e58 SetEvent__12TSystemEventFUl
+// ROM 0x001313fc SetEvent__12TSystemEventFUl
 void
 TSystemEvent::SetEvent(SystemEvent event)
 {
@@ -36,7 +36,7 @@ TSystemEvent::SetEvent(SystemEvent event)
 }
 
 
-// ROM 0x00132e60 RegisterForSystemEvent__12TSystemEventFUlN21
+// ROM 0x00131404 RegisterForSystemEvent__12TSystemEventFUlN21
 NewtonErr
 TSystemEvent::RegisterForSystemEvent(TObjectId portId, ULong sendFilter, TTimeout timeout)
 {
@@ -52,7 +52,7 @@ TSystemEvent::RegisterForSystemEvent(TObjectId portId, ULong sendFilter, TTimeou
 }
 
 
-// ROM 0x00132efc UnRegisterForSystemEvent__12TSystemEventFUl
+// ROM 0x001314a0 UnRegisterForSystemEvent__12TSystemEventFUl
 NewtonErr
 TSystemEvent::UnRegisterForSystemEvent(TObjectId portId)
 {
@@ -66,7 +66,7 @@ TSystemEvent::UnRegisterForSystemEvent(TObjectId portId)
 }
 
 
-// ROM 0x00132e50 Init__16TSendSystemEventFv
+// ROM 0x001313f4 Init__16TSendSystemEventFv
 // The shared memory message that carries the event to the registrants.
 NewtonErr
 TSendSystemEvent::Init()
@@ -76,7 +76,7 @@ TSendSystemEvent::Init()
 }
 
 
-// ROM 0x00132f88 SendSystemEvent__16TSendSystemEventFPvUl
+// ROM 0x0013152c SendSystemEvent__16TSendSystemEventFPvUl
 // Synchronous: returns when every registrant has had the message (the name
 // server replies then), or at once with kError_Not_Registered if nobody has.
 NewtonErr
@@ -96,7 +96,7 @@ TSendSystemEvent::SendSystemEvent(void* message, ULong messageSize)
 }
 
 
-// ROM 0x00133034 SendSystemEvent__16TSendSystemEventFP14TUAsyncMessagePvUlT2T3
+// ROM 0x001315d8 SendSystemEvent__16TSendSystemEventFP14TUAsyncMessagePvUlT2T3
 // Asynchronous, through the caller's async message; a reply buffer (given
 // the message as its initial content) collects what a registrant replies.
 NewtonErr

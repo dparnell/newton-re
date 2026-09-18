@@ -5,7 +5,7 @@
 				Destroying a monitor we made first suspends it (a call with
 				kSuspendMonitor), so no caller is inside when it goes.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserMonitor.h"
@@ -13,21 +13,21 @@
 #include "os600/ObjectMessage.h"
 
 
-// ROM 0x00257544 __ct__9TUMonitorFUl
+// ROM 0x0025947c __ct__9TUMonitorFUl
 TUMonitor::TUMonitor(TObjectId id)
 	: TUObject(id)
 {
 }
 
 
-// ROM 0x00257644 __dt__9TUMonitorFv
+// ROM 0x0025957c __dt__9TUMonitorFv
 TUMonitor::~TUMonitor()
 {
 	DestroyObject();
 }
 
 
-// ROM 0x0025757c Init__9TUMonitorFPFPvUlT1_vUlPvT2UcT2T5
+// ROM 0x002594b4 Init__9TUMonitorFPFPvUlT1_vUlPvT2UcT2T5
 long
 TUMonitor::Init(MonitorProcPtr monitorProc, ULong stackSize, void* monitorObject, TObjectId environmentId, Boolean faultMonitor, ULong name, Boolean rebootProtected)
 {
@@ -43,7 +43,7 @@ TUMonitor::Init(MonitorProcPtr monitorProc, ULong stackSize, void* monitorObject
 }
 
 
-// ROM 0x002575c8 CopyObject__9TUMonitorFUl
+// ROM 0x00259500 CopyObject__9TUMonitorFUl
 void
 TUMonitor::CopyObject(TObjectId id)
 {
@@ -55,7 +55,7 @@ TUMonitor::CopyObject(TObjectId id)
 }
 
 
-// ROM 0x00257600 CopyObject__9TUMonitorFRC9TUMonitor
+// ROM 0x00259538 CopyObject__9TUMonitorFRC9TUMonitor
 void
 TUMonitor::CopyObject(const TUMonitor& copy)
 {
@@ -63,7 +63,7 @@ TUMonitor::CopyObject(const TUMonitor& copy)
 }
 
 
-// ROM 0x00257608 DestroyObject__9TUMonitorFv
+// ROM 0x00259540 DestroyObject__9TUMonitorFv
 void
 TUMonitor::DestroyObject()
 {

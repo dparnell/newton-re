@@ -1,7 +1,7 @@
 /*
 	File:		MemObjTables.cpp
 
-	Contains:	The memory object tables of the MP2100 D ROM - the domains (two
+	Contains:	The memory object tables of the 2.1 (717006) ROM - the domains (two
 				variants, by RAM size), the environments with their domain lists,
 				and the data areas - as MemObjManager reads them.
 
@@ -11,7 +11,7 @@
 
 #include "MemObjManager.h"
 
-// ROM 0x0c1012ac g1MegDomainTable
+// ROM 0x0c1011bc g1MegDomainTable
 const DomainTableEntry	g1MegDomainTable[] =
 {
 	{ 'krnl', 0x0C100000, 0x00100000, 0x0, 0x0, 0x0 },
@@ -26,7 +26,7 @@ const DomainTableEntry	g1MegDomainTable[] =
 	{ 0, 0, 0, 0, 0, 0 }
 };
 
-// ROM 0x0c10139c g4MegDomainTable
+// ROM 0x0c1012ac g4MegDomainTable
 const DomainTableEntry	g4MegDomainTable[] =
 {
 	{ 'krnl', 0x0C100000, 0x00100000, 0x0, 0x0, 0x0 },
@@ -41,39 +41,39 @@ const DomainTableEntry	g4MegDomainTable[] =
 	{ 0, 0, 0, 0, 0, 0 }
 };
 
-// 0x0c1014a4
-static const ULong	kDomainList_0c1014a4[] = { 'user', 'krnl', 'kstk', 0 };
-// 0x0c1014b4
-static const ULong	kDomainList_0c1014b4[] = { 'user', 'krnl', 'kstk', 'prot', 'rams', 'csk0', 'ccl0', 'romc', 0 };
-// 0x0c1014e8
-static const ULong	kDomainList_0c1014e8[] = { 'user', 'krnl', 'kstk', 'csk0', 'ccl0', 'romc', 0 };
-// 0x0c101504
-static const ULong	kDomainList_0c101504[] = { 'prot', 0 };
-// 0x0c1014d8
-static const ULong	kDomainList_0c1014d8[] = { 'kstk', 0 };
-// 0x0c1014e0
-static const ULong	kDomainList_0c1014e0[] = { 'rams', 0 };
-// 0x0c10150c
-static const ULong	kDomainList_0c10150c[] = { 'user', 'prot', 'rams', 'ccl0', 'kstk', 0 };
-// 0x0c101524
-static const ULong	kDomainList_0c101524[] = { 'romc', 0 };
+// 0x0c1013b4
+static const ULong	kDomainList_0c1013b4[] = { 'user', 'krnl', 'kstk', 0 };
+// 0x0c1013c4
+static const ULong	kDomainList_0c1013c4[] = { 'user', 'krnl', 'kstk', 'prot', 'rams', 'csk0', 'ccl0', 'romc', 0 };
+// 0x0c1013f8
+static const ULong	kDomainList_0c1013f8[] = { 'user', 'krnl', 'kstk', 'csk0', 'ccl0', 'romc', 0 };
+// 0x0c101414
+static const ULong	kDomainList_0c101414[] = { 'prot', 0 };
+// 0x0c1013e8
+static const ULong	kDomainList_0c1013e8[] = { 'kstk', 0 };
+// 0x0c1013f0
+static const ULong	kDomainList_0c1013f0[] = { 'rams', 0 };
+// 0x0c10141c
+static const ULong	kDomainList_0c10141c[] = { 'user', 'prot', 'rams', 'ccl0', 'kstk', 0 };
+// 0x0c101434
+static const ULong	kDomainList_0c101434[] = { 'romc', 0 };
 
-// ROM 0x0c10152c gEnvTable
+// ROM 0x0c10143c gEnvTable
 const EnvTableEntry	gEnvTable[] =
 {
-	{ 'krnl', 'krnl', 'kstk', 'kstk', kDomainList_0c1014a4, nil },
-	{ 'ksrv', 'kstk', 'kstk', 'kstk', kDomainList_0c1014a4, nil },
-	{ 'cdfm', 'kstk', 'kstk', 'kstk', kDomainList_0c1014a4, nil },
-	{ 'user', 'user', 'user', 'user', kDomainList_0c1014b4, nil },
-	{ 'prot', 'user', 'user', 'user', kDomainList_0c1014e8, kDomainList_0c101504 },
-	{ 'rams', 'rams', 'kstk', 'kstk', kDomainList_0c1014d8, kDomainList_0c1014e0 },
-	{ 'romc', 'kstk', 'user', 'user', kDomainList_0c10150c, kDomainList_0c101524 },
+	{ 'krnl', 'krnl', 'kstk', 'kstk', kDomainList_0c1013b4, nil },
+	{ 'ksrv', 'kstk', 'kstk', 'kstk', kDomainList_0c1013b4, nil },
+	{ 'cdfm', 'kstk', 'kstk', 'kstk', kDomainList_0c1013b4, nil },
+	{ 'user', 'user', 'user', 'user', kDomainList_0c1013c4, nil },
+	{ 'prot', 'user', 'user', 'user', kDomainList_0c1013f8, kDomainList_0c101414 },
+	{ 'rams', 'rams', 'kstk', 'kstk', kDomainList_0c1013e8, kDomainList_0c1013f0 },
+	{ 'romc', 'kstk', 'user', 'user', kDomainList_0c10141c, kDomainList_0c101434 },
 	{ 0, 0, 0, 0, nil, nil }
 };
 
 // ROM 0x00000040 DataAreaTable
 const DataAreaEntry	DataAreaTable[] =
 {
-	{ 'data', 0x006F0AE8, 0x0C100800, 0x0C102BB4, 0x23B4, 0x2328 },
+	{ 'data', 0x0071A95C, 0x0C100800, 0x0C105AF0, 0x52F0, 0x2324 },
 	{ 0, 0, 0, 0, 0, 0 }
 };

@@ -1,7 +1,9 @@
-// The collation tables (frames/SortTables.h) over the one the MP2100 D
-// ROM carries: the table read (its ranges, its single characters, its
+// The collation tables (frames/SortTables.h) over the ones the ROM
+// carries: the table read (its ranges, its single characters, its
 // ligatures and its lowest-sort table), the comparison that walks two
-// strings through it, and the registry that holds it.
+// strings through it, and the registry that holds it.  The MP2x00 US
+// ROM has two of them, ids 1 and 7; everything below is about id 1,
+// the default.
 //
 // The table is installed by InitUnicode, which InitObjects runs once the
 // ROM's objects are there; before that there is no table and the compare
@@ -65,7 +67,7 @@ main()
 	InitObjects();
 
 	// ---- the ROM's table registered by InitUnicode ---------------------
-	EXPECT(Length(RefVar(Rsorttables)) == 1);
+	EXPECT(Length(RefVar(Rsorttables)) == 2);
 	SortTableEntry* entry = gSortTables.GetTableEntry(1);
 	EXPECT(entry != nil && entry->fUsers == 1);
 	if (entry == nil)
@@ -73,6 +75,9 @@ main()
 	const TSortingTable* table = entry->fTable;
 	EXPECT(gSortTables.GetSortTable(1, nil) == table);
 	EXPECT(gSortTables.GetSortTable(2, nil) == nil);
+	// the ROM's other table, of the same shape and ten bytes shorter
+	long otherSize = 0;
+	EXPECT(gSortTables.GetSortTable(7, &otherSize) != nil && otherSize == 1474);
 
 	// ---- the table's shape ---------------------------------------------
 	EXPECT(table->Id() == 1);

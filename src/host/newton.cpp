@@ -34,7 +34,7 @@
 #include <string.h>
 
 #ifndef NEWTON_DEFAULT_ROM_IMAGE
-#define NEWTON_DEFAULT_ROM_IMAGE "build/MP2100D/rom.bin"
+#define NEWTON_DEFAULT_ROM_IMAGE "build/MP2x00US/rom.bin"
 #endif
 
 static long gScale = 1;

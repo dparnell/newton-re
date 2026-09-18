@@ -9,8 +9,8 @@
 				format spec word, the NewtonScript FormattedNumberStr's).
 				ParamString substitutes ^0..^9 in a Unicode prototype.
 
-	Reconstructed from the MP2100 D ROM (0x000ed358-0x000ed5d8,
-	0x000ee5a4-0x000ef27c); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x000ebd80-0x000ec000,
+	0x000ecfec-0x000edc24); each function cites its origin.
 */
 
 #ifndef __NUMBERFORMAT_H

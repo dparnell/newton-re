@@ -23,9 +23,9 @@
 	grafProcs +0x40, picSave +0x44, rgnSave +0x48, polySave +0x4c,
 	patAlign +0x50).
 
-	Reconstructed from the MP2100 D ROM (0x002be600-0x002bea98,
-	0x00302db4-0x00302f6c, 0x00303b00, 0x00304034-0x00304264,
-	0x0028a538-0x0028a600); each function cites its origin.  NOT YET
+	Reconstructed from the MP2x00 US ROM (0x002e4388-0x002e4818,
+	0x003280b0-0x00328268, 0x00328dfc, 0x00329330-0x00329874,
+	0x002af0e0-0x002af1a8); each function cites its origin.  NOT YET
 	RECONSTRUCTED: the screen (InitScreen: the display driver's PixelMap),
 	the per-task globals, pictures, polygons, OpenRgn/CloseRgn.
 */
@@ -53,10 +53,10 @@ struct QDGlobals
 extern QDGlobals		qdGlobals;
 
 // the random numbers (the Macintosh's generator over the seed in qdGlobals)
-long		GetRandSeed(void);					// ROM 0x003135e0 GetRandSeed__Fv
-void		SetRandSeed(long seed);				// ROM 0x003135f0 SetRandSeed__Fl
-long		Random(void);						// ROM 0x00313540 Random__Fv - -32767..32767
-long		Rand(long n);						// ROM 0x0025a67c Rand__Fl - 0..n-1
+long		GetRandSeed(void);					// ROM 0x0033f528 GetRandSeed__Fv
+void		SetRandSeed(long seed);				// ROM 0x0033f538 SetRandSeed__Fl
+long		Random(void);						// ROM 0x0033f488 Random__Fv - -32767..32767
+long		Rand(long n);						// ROM 0x0025c5b4 Rand__Fl - 0..n-1
 extern PatternHandle	stdPatterns[5];		// white, light gray, gray, dark gray, black
 extern RgnHandle		wideHandle;			// the rectangle of every coordinate
 extern GrafPort			gGrafPort;			// 0x0c103a98  the port before a task has its own

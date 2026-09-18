@@ -50,7 +50,7 @@ Ref			yylval = NILREF;
 #define YYVAL(n)	(yyvsp[(n) - count])
 
 
-// ROM 0x00300d68 SyntaxError__9TCompilerFPc
+// ROM 0x00326064 SyntaxError__9TCompilerFPc
 // "message--read <token>, but wanted <the tokens the state accepts>".
 void
 TCompiler::SyntaxError(const char* message)
@@ -88,7 +88,7 @@ TCompiler::SyntaxError(const char* message)
 }
 
 
-// ROM 0x00300c50 ParserStackOverflow__9TCompilerFv
+// ROM 0x00325f4c ParserStackOverflow__9TCompilerFv
 // Both stacks grown by a quarter; ==> true when they cannot be.
 Boolean
 TCompiler::ParserStackOverflow(void)
@@ -132,7 +132,7 @@ DuplicateWarning(TCompiler* compiler, const char* what, Ref sym)
 }
 
 
-// ROM 0x002fd9b0 Parser__9TCompilerFv
+// ROM 0x00322cac Parser__9TCompilerFv
 // ==> 0 when the input parsed (yyval holds the commands), 1 on an error.
 int
 TCompiler::Parser(void)

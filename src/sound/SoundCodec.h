@@ -81,8 +81,8 @@ struct CodecBlock
 PROTOCOL TSoundCodec : public TProtocol
 {
 public:
-	static TSoundCodec*	New(const char* implementation);		// ROM 0x0037f640 New__11TSoundCodecSFPc
-	void			Delete();								// ROM 0x0037f66c Delete__11TSoundCodecFv
+	static TSoundCodec*	New(const char* implementation);		// ROM 0x00388da8 New__11TSoundCodecSFPc
+	void			Delete();								// ROM 0x00388dd4 Delete__11TSoundCodecFv
 
 	VIRTUAL NewtonErr	Init(CodecBlock* block) ENDVIRTUAL;						// ROM 0x0037f688
 	VIRTUAL NewtonErr	Reset(CodecBlock* block) ENDVIRTUAL;					// ROM 0x0037f694
@@ -96,13 +96,13 @@ public:
 
 // The same calls with an exception handler round them, which is how the
 // sound channel makes them: a Throw out of a codec becomes an error code.
-NewtonErr	SafeCodecInit(TSoundCodec* codec, CodecBlock* block);			// ROM 0x000d3558 SafeCodecInit__FP11TSoundCodecP10CodecBlock
-NewtonErr	SafeCodecReset(TSoundCodec* codec, CodecBlock* block);			// ROM 0x001e8080 SafeCodecReset__FP11TSoundCodecP10CodecBlock
-NewtonErr	SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);			// ROM 0x001e80e0 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
-NewtonErr	SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x001e8160 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
-NewtonErr	SafeCodecStart(TSoundCodec* codec);								// ROM 0x001e81e0 SafeCodecStart__FP11TSoundCodec
-NewtonErr	SafeCodecStop(TSoundCodec* codec, int reason);					// ROM 0x001e8238 SafeCodecStop__FP11TSoundCodeci
-void		SafeCodecDelete(TSoundCodec* codec);							// ROM 0x000d35b8 SafeCodecDelete__FP11TSoundCodec
+NewtonErr	SafeCodecInit(TSoundCodec* codec, CodecBlock* block);			// ROM 0x000d2404 SafeCodecInit__FP11TSoundCodecP10CodecBlock
+NewtonErr	SafeCodecReset(TSoundCodec* codec, CodecBlock* block);			// ROM 0x001e5c68 SafeCodecReset__FP11TSoundCodecP10CodecBlock
+NewtonErr	SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);			// ROM 0x001e5cc8 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
+NewtonErr	SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x001e5d48 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
+NewtonErr	SafeCodecStart(TSoundCodec* codec);								// ROM 0x001e5dc8 SafeCodecStart__FP11TSoundCodec
+NewtonErr	SafeCodecStop(TSoundCodec* codec, int reason);					// ROM 0x001e5e20 SafeCodecStop__FP11TSoundCodeci
+void		SafeCodecDelete(TSoundCodec* codec);							// ROM 0x000d2464 SafeCodecDelete__FP11TSoundCodec
 
 
 /*------------------------------------------------------------------------------
@@ -116,21 +116,21 @@ PROTOCOL TMuLawCodec : public TSoundCodec
 public:
 	PROTOCOL_IMPL_HEADER_MACRO(TMuLawCodec);
 
-	TMuLawCodec*	New();									// ROM 0x001249d0 New__11TMuLawCodecFv
-	void			Delete();								// ROM 0x00124af0 Delete__11TMuLawCodecFv
+	TMuLawCodec*	New();									// ROM 0x00122f74 New__11TMuLawCodecFv
+	void			Delete();								// ROM 0x00123094 Delete__11TMuLawCodecFv
 
-	NewtonErr		Init(CodecBlock* block);				// ROM 0x00124af4 Init__11TMuLawCodecFP10CodecBlock
-	NewtonErr		Reset(CodecBlock* block);				// ROM 0x00124afc Reset__11TMuLawCodecFP10CodecBlock
-	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x00124b34 Produce__11TMuLawCodecFPvPUlT2P10CodecBlock
-	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x00124c10 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
-	void			Start();								// ROM 0x00124cd4 Start__11TMuLawCodecFv
-	void			Stop(int reason);						// ROM 0x00124cd8 Stop__11TMuLawCodecFi
-	Boolean			BufferCompleted();						// ROM 0x00124cdc BufferCompleted__11TMuLawCodecFv
+	NewtonErr		Init(CodecBlock* block);				// ROM 0x00123098 Init__11TMuLawCodecFP10CodecBlock
+	NewtonErr		Reset(CodecBlock* block);				// ROM 0x001230a0 Reset__11TMuLawCodecFP10CodecBlock
+	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x001230d8 Produce__11TMuLawCodecFPvPUlT2P10CodecBlock
+	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x001231b4 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
+	void			Start();								// ROM 0x00123278 Start__11TMuLawCodecFv
+	void			Stop(int reason);						// ROM 0x0012327c Stop__11TMuLawCodecFi
+	Boolean			BufferCompleted();						// ROM 0x00123280 BufferCompleted__11TMuLawCodecFv
 
 	// the codec's own copies of the conversions, without the dither the
 	// free SampleConvert.h ones apply
-	void			BlockConvertMuLawToLin16(void* dst, void* src, long count);		// ROM 0x001249e4 BlockConvertMuLawToLin16__11TMuLawCodecFPvT1l
-	void			BlockConvertLin16ToMuLaw(void* dst, const void* src, long count);	// ROM 0x00124a70 BlockConvertLin16ToMuLaw__11TMuLawCodecFPvPCvl
+	void			BlockConvertMuLawToLin16(void* dst, void* src, long count);		// ROM 0x00122f88 BlockConvertMuLawToLin16__11TMuLawCodecFPvT1l
+	void			BlockConvertLin16ToMuLaw(void* dst, const void* src, long count);	// ROM 0x00123014 BlockConvertLin16ToMuLaw__11TMuLawCodecFPvPCvl
 
 	void*			fBuffer;			// +0x10  the coded sound
 	ULong			fSize;				// +0x14  its size in mu-law bytes
@@ -153,16 +153,16 @@ PROTOCOL TIMACodec : public TSoundCodec
 public:
 	PROTOCOL_IMPL_HEADER_MACRO(TIMACodec);
 
-	TIMACodec*		New();									// ROM 0x000e98a0 New__9TIMACodecFv
-	void			Delete();								// ROM 0x000e9ca8 Delete__9TIMACodecFv
+	TIMACodec*		New();									// ROM 0x000e82c8 New__9TIMACodecFv
+	void			Delete();								// ROM 0x000e86d0 Delete__9TIMACodecFv
 
-	NewtonErr		Init(CodecBlock* block);				// ROM 0x000e9cac Init__9TIMACodecFP10CodecBlock
-	NewtonErr		Reset(CodecBlock* block);				// ROM 0x000e9cb4 Reset__9TIMACodecFP10CodecBlock
-	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x000e9cf8 Produce__9TIMACodecFPvPUlT2P10CodecBlock
-	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x000e9e20 Consume__9TIMACodecFPCvPUlT2PC10CodecBlock
-	void			Start();								// ROM 0x000e9ed8 Start__9TIMACodecFv
-	void			Stop(int reason);						// ROM 0x000e9edc Stop__9TIMACodecFi
-	Boolean			BufferCompleted();						// ROM 0x000e9ee0 BufferCompleted__9TIMACodecFv
+	NewtonErr		Init(CodecBlock* block);				// ROM 0x000e86d4 Init__9TIMACodecFP10CodecBlock
+	NewtonErr		Reset(CodecBlock* block);				// ROM 0x000e86dc Reset__9TIMACodecFP10CodecBlock
+	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x000e8720 Produce__9TIMACodecFPvPUlT2P10CodecBlock
+	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x000e8848 Consume__9TIMACodecFPCvPUlT2PC10CodecBlock
+	void			Start();								// ROM 0x000e8900 Start__9TIMACodecFv
+	void			Stop(int reason);						// ROM 0x000e8904 Stop__9TIMACodecFi
+	Boolean			BufferCompleted();						// ROM 0x000e8908 BufferCompleted__9TIMACodecFv
 
 	IMAState		fState;				// +0x10  the predictor and step index, carried between calls
 	void*			fBuffer;			// +0x18  the coded sound
@@ -180,6 +180,6 @@ public:
 // Put the ROM's codecs in the protocol registry.  NOT YET: everything else
 // the ROM's does - the sound hardware, the sound server, and the two codecs
 // beside these.
-void	InitializeSound(void);				// ROM 0x001eae0c InitializeSound__Fv
+void	InitializeSound(void);				// ROM 0x001e89f4 InitializeSound__Fv
 
 #endif	/* __SOUNDCODEC_H */

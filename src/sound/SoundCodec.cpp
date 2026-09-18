@@ -4,7 +4,7 @@
 	Contains:	TSoundCodec's Safe* wrappers, TMuLawCodec and TIMACodec
 				(SoundCodec.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The protocol's own calls are dispatch glue, which src/protocols/
 	Protocols.h answers with ordinary virtual functions.
 */
@@ -17,7 +17,7 @@
 	T S o u n d C o d e c
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0037f640 New__11TSoundCodecSFPc
+// ROM 0x00388da8 New__11TSoundCodecSFPc
 TSoundCodec*
 TSoundCodec::New(const char* implementation)
 {
@@ -26,7 +26,7 @@ TSoundCodec::New(const char* implementation)
 }
 
 
-// ROM 0x0037f66c Delete__11TSoundCodecFv
+// ROM 0x00388dd4 Delete__11TSoundCodecFv
 void
 TSoundCodec::Delete()
 {
@@ -37,7 +37,7 @@ TSoundCodec::Delete()
 // The wrappers the sound channel calls the codec through: a Throw out of a
 // codec becomes kSoundErrCodecFailed rather than unwinding into the channel.
 
-// ROM 0x000d3558 SafeCodecInit__FP11TSoundCodecP10CodecBlock
+// ROM 0x000d2404 SafeCodecInit__FP11TSoundCodecP10CodecBlock
 NewtonErr
 SafeCodecInit(TSoundCodec* codec, CodecBlock* block)
 {
@@ -55,7 +55,7 @@ SafeCodecInit(TSoundCodec* codec, CodecBlock* block)
 }
 
 
-// ROM 0x001e8080 SafeCodecReset__FP11TSoundCodecP10CodecBlock
+// ROM 0x001e5c68 SafeCodecReset__FP11TSoundCodecP10CodecBlock
 NewtonErr
 SafeCodecReset(TSoundCodec* codec, CodecBlock* block)
 {
@@ -73,7 +73,7 @@ SafeCodecReset(TSoundCodec* codec, CodecBlock* block)
 }
 
 
-// ROM 0x001e80e0 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
+// ROM 0x001e5cc8 SafeCodecProduce__FP11TSoundCodecPvPUlT3P10CodecBlock
 NewtonErr
 SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block)
 {
@@ -91,7 +91,7 @@ SafeCodecProduce(TSoundCodec* codec, void* dst, ULong* dstSize, ULong* codedSize
 }
 
 
-// ROM 0x001e8160 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
+// ROM 0x001e5d48 SafeCodecConsume__FP11TSoundCodecPCvPUlT3PC10CodecBlock
 NewtonErr
 SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block)
 {
@@ -109,7 +109,7 @@ SafeCodecConsume(TSoundCodec* codec, const void* src, ULong* srcSize, ULong* cod
 }
 
 
-// ROM 0x001e81e0 SafeCodecStart__FP11TSoundCodec
+// ROM 0x001e5dc8 SafeCodecStart__FP11TSoundCodec
 NewtonErr
 SafeCodecStart(TSoundCodec* codec)
 {
@@ -127,7 +127,7 @@ SafeCodecStart(TSoundCodec* codec)
 }
 
 
-// ROM 0x001e8238 SafeCodecStop__FP11TSoundCodeci
+// ROM 0x001e5e20 SafeCodecStop__FP11TSoundCodeci
 NewtonErr
 SafeCodecStop(TSoundCodec* codec, int reason)
 {
@@ -145,7 +145,7 @@ SafeCodecStop(TSoundCodec* codec, int reason)
 }
 
 
-// ROM 0x000d35b8 SafeCodecDelete__FP11TSoundCodec
+// ROM 0x000d2464 SafeCodecDelete__FP11TSoundCodec
 void
 SafeCodecDelete(TSoundCodec* codec)
 {
@@ -164,8 +164,8 @@ SafeCodecDelete(TSoundCodec* codec)
 	T M u L a w C o d e c
 ------------------------------------------------------------------------------*/
 
-PROTOCOL_IMPL_SOURCE_MACRO(TMuLawCodec)		// ROM 0x001249c8 Sizeof__11TMuLawCodecSFv
-PROTOCOL_CLASSINFO(TMuLawCodec, "TSoundCodec", "", 0, 0, nil)	// ROM 0x0037f718 ClassInfo__11TMuLawCodecSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TMuLawCodec)		// ROM 0x00122f6c Sizeof__11TMuLawCodecSFv
+PROTOCOL_CLASSINFO(TMuLawCodec, "TSoundCodec", "", 0, 0, nil)	// ROM 0x00388e80 ClassInfo__11TMuLawCodecSFv
 
 
 // The bias the coding splits a magnitude around; the same arithmetic as
@@ -174,7 +174,7 @@ PROTOCOL_CLASSINFO(TMuLawCodec, "TSoundCodec", "", 0, 0, nil)	// ROM 0x0037f718 
 enum { kMuLawBias = 0x21 };
 
 
-// ROM 0x001249d0 New__11TMuLawCodecFv
+// ROM 0x00122f74 New__11TMuLawCodecFv
 TMuLawCodec*
 TMuLawCodec::New()
 {
@@ -185,13 +185,13 @@ TMuLawCodec::New()
 }
 
 
-// ROM 0x00124af0 Delete__11TMuLawCodecFv
+// ROM 0x00123094 Delete__11TMuLawCodecFv
 void
 TMuLawCodec::Delete()
 { }
 
 
-// ROM 0x00124af4 Init__11TMuLawCodecFP10CodecBlock
+// ROM 0x00123098 Init__11TMuLawCodecFP10CodecBlock
 NewtonErr
 TMuLawCodec::Init(CodecBlock* /*block*/)
 {
@@ -199,7 +199,7 @@ TMuLawCodec::Init(CodecBlock* /*block*/)
 }
 
 
-// ROM 0x00124afc Reset__11TMuLawCodecFP10CodecBlock
+// ROM 0x001230a0 Reset__11TMuLawCodecFP10CodecBlock
 // Take the buffer, and start again at its beginning.
 NewtonErr
 TMuLawCodec::Reset(CodecBlock* block)
@@ -214,7 +214,7 @@ TMuLawCodec::Reset(CodecBlock* block)
 }
 
 
-// ROM 0x001249e4 BlockConvertMuLawToLin16__11TMuLawCodecFPvT1l
+// ROM 0x00122f88 BlockConvertMuLawToLin16__11TMuLawCodecFPvT1l
 void
 TMuLawCodec::BlockConvertMuLawToLin16(void* dst, void* src, long count)
 {
@@ -233,7 +233,7 @@ TMuLawCodec::BlockConvertMuLawToLin16(void* dst, void* src, long count)
 }
 
 
-// ROM 0x00124a70 BlockConvertLin16ToMuLaw__11TMuLawCodecFPvPCvl
+// ROM 0x00123014 BlockConvertLin16ToMuLaw__11TMuLawCodecFPvPCvl
 // The same exponent search as SampleConvertLin16ToMuLaw, bug included: the
 // loudest samples leave no bit in the low eight and the search runs off the
 // end (see SampleConvert.cpp).
@@ -261,7 +261,7 @@ TMuLawCodec::BlockConvertLin16ToMuLaw(void* dst, const void* src, long count)
 }
 
 
-// ROM 0x00124b34 Produce__11TMuLawCodecFPvPUlT2P10CodecBlock
+// ROM 0x001230d8 Produce__11TMuLawCodecFPvPUlT2P10CodecBlock
 // Decode the next stretch of the buffer into the caller's, and say in the
 // block what those samples now are: 16-bit linear, at the recorded rate.
 NewtonErr
@@ -294,7 +294,7 @@ TMuLawCodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* bl
 }
 
 
-// ROM 0x00124c10 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
+// ROM 0x001231b4 Consume__11TMuLawCodecFPCvPUlT2PC10CodecBlock
 // The other way: code the caller's samples into the codec's buffer.
 NewtonErr
 TMuLawCodec::Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* /*block*/)
@@ -323,19 +323,19 @@ TMuLawCodec::Consume(const void* src, ULong* srcSize, ULong* codedSize, const Co
 }
 
 
-// ROM 0x00124cd4 Start__11TMuLawCodecFv
+// ROM 0x00123278 Start__11TMuLawCodecFv
 void
 TMuLawCodec::Start()
 { }
 
 
-// ROM 0x00124cd8 Stop__11TMuLawCodecFi
+// ROM 0x0012327c Stop__11TMuLawCodecFi
 void
 TMuLawCodec::Stop(int /*reason*/)
 { }
 
 
-// ROM 0x00124cdc BufferCompleted__11TMuLawCodecFv
+// ROM 0x00123280 BufferCompleted__11TMuLawCodecFv
 Boolean
 TMuLawCodec::BufferCompleted()
 {
@@ -347,11 +347,11 @@ TMuLawCodec::BufferCompleted()
 	T I M A C o d e c
 ------------------------------------------------------------------------------*/
 
-PROTOCOL_IMPL_SOURCE_MACRO(TIMACodec)		// ROM 0x000e9898 Sizeof__9TIMACodecSFv
-PROTOCOL_CLASSINFO(TIMACodec, "TSoundCodec", "", 0, 0, nil)	// ROM 0x0037f7ac ClassInfo__9TIMACodecSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TIMACodec)		// ROM 0x000e82c0 Sizeof__9TIMACodecSFv
+PROTOCOL_CLASSINFO(TIMACodec, "TSoundCodec", "", 0, 0, nil)	// ROM 0x00388f14 ClassInfo__9TIMACodecSFv
 
 
-// ROM 0x000e98a0 New__9TIMACodecFv
+// ROM 0x000e82c8 New__9TIMACodecFv
 TIMACodec*
 TIMACodec::New()
 {
@@ -366,13 +366,13 @@ TIMACodec::New()
 }
 
 
-// ROM 0x000e9ca8 Delete__9TIMACodecFv
+// ROM 0x000e86d0 Delete__9TIMACodecFv
 void
 TIMACodec::Delete()
 { }
 
 
-// ROM 0x000e9cac Init__9TIMACodecFP10CodecBlock
+// ROM 0x000e86d4 Init__9TIMACodecFP10CodecBlock
 NewtonErr
 TIMACodec::Init(CodecBlock* /*block*/)
 {
@@ -380,7 +380,7 @@ TIMACodec::Init(CodecBlock* /*block*/)
 }
 
 
-// ROM 0x000e9cb4 Reset__9TIMACodecFP10CodecBlock
+// ROM 0x000e86dc Reset__9TIMACodecFP10CodecBlock
 // The buffer, and a fresh predictor: a stream starts from silence.
 NewtonErr
 TIMACodec::Reset(CodecBlock* block)
@@ -397,7 +397,7 @@ TIMACodec::Reset(CodecBlock* block)
 }
 
 
-// ROM 0x000e9cf8 Produce__9TIMACodecFPvPUlT2P10CodecBlock
+// ROM 0x000e8720 Produce__9TIMACodecFPvPUlT2P10CodecBlock
 // A coded block is kIMABlockBytes long and unpacks to kIMABlockSize samples,
 // so the two sides' counts are quite unlike each other: dstSize comes back
 // as the linear bytes written, codedSize as the coded bytes taken.
@@ -424,7 +424,7 @@ TIMACodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* bloc
 }
 
 
-// ROM 0x000e9e20 Consume__9TIMACodecFPCvPUlT2PC10CodecBlock
+// ROM 0x000e8848 Consume__9TIMACodecFPCvPUlT2PC10CodecBlock
 // The coding side only takes 16-bit samples, so a block is 0x80 bytes in.
 NewtonErr
 TIMACodec::Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* /*block*/)
@@ -445,19 +445,19 @@ TIMACodec::Consume(const void* src, ULong* srcSize, ULong* codedSize, const Code
 }
 
 
-// ROM 0x000e9ed8 Start__9TIMACodecFv
+// ROM 0x000e8900 Start__9TIMACodecFv
 void
 TIMACodec::Start()
 { }
 
 
-// ROM 0x000e9edc Stop__9TIMACodecFi
+// ROM 0x000e8904 Stop__9TIMACodecFi
 void
 TIMACodec::Stop(int /*reason*/)
 { }
 
 
-// ROM 0x000e9ee0 BufferCompleted__9TIMACodecFv
+// ROM 0x000e8908 BufferCompleted__9TIMACodecFv
 Boolean
 TIMACodec::BufferCompleted()
 {
@@ -465,7 +465,7 @@ TIMACodec::BufferCompleted()
 }
 
 
-// ROM 0x001eae0c InitializeSound__Fv
+// ROM 0x001e89f4 InitializeSound__Fv
 // NOT YET: the ROM also powers the sound hardware down, registers its
 // driver, starts the TSoundServer app world and sets gMaxFilterNodes from
 // the CPU type; and it registers TGSMCodec and TDTMFCodec beside these two,

@@ -4,7 +4,7 @@
 	Contains:	TPort, message completion, and the port / shared-memory
 				system calls.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	SMemCopyToKernelGlue / SMemCopyFromKernelGlue (SWI 15/16) set up a copy
 	that the SWI handler then performs in the caller's context; they belong
 	with the syscall layer and follow there.
@@ -75,7 +75,7 @@ DrainReceivers(TDoubleQContainer& queue, long result)
 }
 
 
-// ROM 0x00193b60 __dt__5TPortFv
+// ROM 0x00191b40 __dt__5TPortFv
 TPort::~TPort()
 {
 	EnterFIQAtomic();
@@ -85,7 +85,7 @@ TPort::~TPort()
 }
 
 
-// ROM 0x00193934 Reset__5TPortFUlT1
+// ROM 0x00191914 Reset__5TPortFUlT1
 // Fails the queued senders and/or receivers, as aborted or as timed out.
 NewtonErr
 TPort::Reset(ULong senderFlags, ULong receiverFlags)
@@ -100,7 +100,7 @@ TPort::Reset(ULong senderFlags, ULong receiverFlags)
 }
 
 
-// ROM 0x00193a9c ResetFilter__5TPortFP13TSharedMemMsgUl
+// ROM 0x00191a7c ResetFilter__5TPortFP13TSharedMemMsgUl
 // Changes the filter of a queued receive and delivers a now-matching sender.
 NewtonErr
 TPort::ResetFilter(TSharedMemMsg* msg, ULong filter)
@@ -125,7 +125,7 @@ TPort::ResetFilter(TSharedMemMsg* msg, ULong filter)
 }
 
 
-// ROM 0x0019413c Send__5TPortFP13TSharedMemMsgUl
+// ROM 0x0019211c Send__5TPortFP13TSharedMemMsgUl
 // `flags` are kPortFlags_* including the kernel-internal ones the glue adds.
 NewtonErr
 TPort::Send(TSharedMemMsg* msg, ULong flags)
@@ -164,7 +164,7 @@ TPort::Send(TSharedMemMsg* msg, ULong flags)
 }
 
 
-// ROM 0x00194350 Receive__5TPortFP13TSharedMemMsgUl
+// ROM 0x00192330 Receive__5TPortFP13TSharedMemMsgUl
 NewtonErr
 TPort::Receive(TSharedMemMsg* msg, ULong flags)
 {
@@ -221,7 +221,7 @@ TPort::Receive(TSharedMemMsg* msg, ULong flags)
 	Message completion
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001e293c CompleteMsg__13TSharedMemMsgFUcUll
+// ROM 0x001e0524 CompleteMsg__13TSharedMemMsgFUcUll
 // Finishes a call on this message: cancels its timer and queue membership,
 // releases any copy in progress, then tells whoever is waiting - a blocked
 // task gets the result and the message details in r0-r4 and runs next; a
@@ -292,7 +292,7 @@ TSharedMemMsg::CompleteMsg(Boolean abort, ULong flags, long result)
 }
 
 
-// ROM 0x001e292c CompleteSender__13TSharedMemMsgFl
+// ROM 0x001e0514 CompleteSender__13TSharedMemMsgFl
 // (The ROM inlines the tail of CompleteMsg; the flags forwarded to a notify
 // port are kSMemMsgFlags_CompleteToSenderPort.)
 void
@@ -302,7 +302,7 @@ TSharedMemMsg::CompleteSender(long result)
 }
 
 
-// ROM 0x001e288c CompleteReceiver__13TSharedMemMsgFP13TSharedMemMsgl
+// ROM 0x001e0474 CompleteReceiver__13TSharedMemMsgFP13TSharedMemMsgl
 // A receive has met a sender (result == noErr) or failed.  The sender's
 // identity is recorded for the receiver; unless the sender was itself a
 // completion forwarded to a port ("collected"), it is queued on this message
@@ -333,7 +333,7 @@ TSharedMemMsg::CompleteReceiver(TSharedMemMsg* sender, long result)
 }
 
 
-// ROM 0x001e2aac __dt__13TSharedMemMsgFv
+// ROM 0x001e0694 __dt__13TSharedMemMsgFv
 // Senders still waiting for our reply are failed; a call in progress on the
 // message itself is completed with an error.
 TSharedMemMsg::~TSharedMemMsg()
@@ -358,7 +358,7 @@ TSharedMemMsg::~TSharedMemMsg()
 	Deferred work
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00193e30 NotifySend__FP13TSharedMemMsg
+// ROM 0x00191e10 NotifySend__FP13TSharedMemMsg
 // A delayed or interrupt-level send whose time has come.
 void
 NotifySend(TSharedMemMsg* msg)
@@ -372,7 +372,7 @@ NotifySend(TSharedMemMsg* msg)
 }
 
 
-// ROM 0x00193e80 NotifyTimeout__FP13TSharedMemMsg
+// ROM 0x00191e60 NotifyTimeout__FP13TSharedMemMsg
 void
 NotifyTimeout(TSharedMemMsg* msg)
 {
@@ -383,7 +383,7 @@ NotifyTimeout(TSharedMemMsg* msg)
 }
 
 
-// ROM 0x00253e24 DeferredNotify__Fv
+// ROM 0x00255d70 DeferredNotify__Fv
 void
 DeferredNotify()
 {
@@ -404,7 +404,7 @@ DeferredNotify()
 }
 
 
-// ROM 0x00193dcc PortDeferredSendNotify__Fv
+// ROM 0x00191dac PortDeferredSendNotify__Fv
 void
 PortDeferredSendNotify()
 {
@@ -421,7 +421,7 @@ PortDeferredSendNotify()
 }
 
 
-// ROM 0x0014b538 CheckCopyTask__Fv
+// ROM 0x001499dc CheckCopyTask__Fv
 // Fails copies whose shared memory object has gone (or lost its owner).
 void
 CheckCopyTask()
@@ -439,7 +439,7 @@ CheckCopyTask()
 }
 
 
-// ROM 0x001e2200 LowLevelCopyDoneFromKernelGlue
+// ROM 0x001dfde8 LowLevelCopyDoneFromKernelGlue
 // SWI 26, also called internally: a shared-memory copy has finished (or must
 // be abandoned).  The task gets its result in r0, the size in r1 and resumes
 // at the pc saved when the copy was set up.
@@ -475,7 +475,7 @@ LowLevelCopyDoneFromKernelGlue(NewtonErr result, TTask* task, TRegister pc)
 	Destructors used by ObjectScavenger
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0014a480 DeletePort__FP5TPort
+// ROM 0x00148924 DeletePort__FP5TPort
 void
 DeletePort(TPort* port)
 {
@@ -484,7 +484,7 @@ DeletePort(TPort* port)
 }
 
 
-// ROM 0x0014a4b0 DeleteSharedMem__FP10TSharedMem
+// ROM 0x00148954 DeleteSharedMem__FP10TSharedMem
 // (The ROM inlines CheckCopyTask after the delete.)
 void
 DeleteSharedMem(TSharedMem* mem)
@@ -494,7 +494,7 @@ DeleteSharedMem(TSharedMem* mem)
 }
 
 
-// ROM 0x0014a4c8 DeleteSharedMemMsg__FP13TSharedMemMsg
+// ROM 0x0014896c DeleteSharedMemMsg__FP13TSharedMemMsg
 void
 DeleteSharedMemMsg(TSharedMemMsg* msg)
 {
@@ -516,7 +516,7 @@ SetResult(NewtonErr err)
 }
 
 
-// ROM 0x000dcf6c GetPortInfo
+// ROM 0x000dbccc GetPortInfo
 // SWI 0: the ids of the well-known ports.
 TObjectId
 GetPortInfo(ULong which)
@@ -531,7 +531,7 @@ GetPortInfo(ULong which)
 }
 
 
-// ROM 0x00193fa8 PortSendKernelGlue
+// ROM 0x00191f88 PortSendKernelGlue
 // SWI 1.  Sets the message up from the caller's parameters and sends it; a
 // synchronous send blocks the caller (kPortFlags_CanRemoveTask) until the
 // receiver's MsgDone completes the message into the caller's registers.
@@ -590,7 +590,7 @@ PortSendKernelGlue(TObjectId portId, TObjectId msgId, TObjectId replyMemId, ULon
 }
 
 
-// ROM 0x00194244 PortReceiveKernelGlue
+// ROM 0x00192224 PortReceiveKernelGlue
 // SWI 2.
 void
 PortReceiveKernelGlue(TObjectId portId, TObjectId msgId, ULong filter, ULong flags)
@@ -634,7 +634,7 @@ PortReceiveKernelGlue(TObjectId portId, TObjectId msgId, ULong filter, ULong fla
 }
 
 
-// ROM 0x00193a20 PortResetFilterKernelGlue
+// ROM 0x00191a00 PortResetFilterKernelGlue
 // SWI 33.
 void
 PortResetFilterKernelGlue(TObjectId portId, TObjectId msgId, ULong filter)
@@ -652,7 +652,7 @@ PortResetFilterKernelGlue(TObjectId portId, TObjectId msgId, ULong filter)
 }
 
 
-// ROM 0x00194490 PortResetKernelGlue__FUlN21
+// ROM 0x00192470 PortResetKernelGlue__FUlN21
 // GenericSWI 67.
 void
 PortResetKernelGlue(TObjectId portId, ULong senderFlags, ULong receiverFlags)
@@ -667,7 +667,7 @@ PortResetKernelGlue(TObjectId portId, ULong senderFlags, ULong receiverFlags)
 }
 
 
-// ROM 0x001e2300 SMemSetBufferKernelGlue
+// ROM 0x001dfee8 SMemSetBufferKernelGlue
 // SWI 13.
 NewtonErr
 SMemSetBufferKernelGlue(TObjectId id, void* buffer, ULong size, ULong permissions)
@@ -685,7 +685,7 @@ SMemSetBufferKernelGlue(TObjectId id, void* buffer, ULong size, ULong permission
 }
 
 
-// ROM 0x001e2350 SMemGetSizeKernelGlue
+// ROM 0x001dff38 SMemGetSizeKernelGlue
 // SWI 14: r1 = size in use, r2 = the buffer address if the caller (or a task
 // it inherits from through the bequeath chain) owns the object, r3 = the
 // user ref con if it is a message.
@@ -771,7 +771,7 @@ SetUpCopy(TSharedMem* mem, TSharedMemMsg* msg, TObjectId memId, TObjectId msgId,
 }
 
 
-// ROM 0x001e1e88 SMemCopyToKernelGlue
+// ROM 0x001dfa70 SMemCopyToKernelGlue
 // SWI 15: copy the caller's buffer into the shared memory at offset.  A
 // read-only memory refuses; a copy past the end is truncated
 // (kError_Size_To_Large_Copy_Truncated) and, unless
@@ -806,7 +806,7 @@ SMemCopyToKernelGlue(TObjectId id, void* buffer, ULong size, ULong offset, TObje
 }
 
 
-// ROM 0x001e205c SMemCopyFromKernelGlue
+// ROM 0x001dfc44 SMemCopyFromKernelGlue
 // SWI 16: copy out of the shared memory from offset into the caller's
 // buffer, no more than is in use; the size copied is reported in r1.
 long
@@ -831,7 +831,7 @@ SMemCopyFromKernelGlue(TObjectId id, void* buffer, ULong size, ULong offset, TOb
 }
 
 
-// ROM 0x001e2458 SMemMsgSetTimerParmsKernelGlue
+// ROM 0x001e0040 SMemMsgSetTimerParmsKernelGlue
 // SWI 17.  Refused while the message is on the timer queue.
 NewtonErr
 SMemMsgSetTimerParmsKernelGlue(TObjectId msgId, ULong timeout, ULong delayLo, ULong delayHi)
@@ -849,7 +849,7 @@ SMemMsgSetTimerParmsKernelGlue(TObjectId msgId, ULong timeout, ULong delayLo, UL
 }
 
 
-// ROM 0x001e24c4 SMemMsgSetMsgAvailPortKernelGlue
+// ROM 0x001e00ac SMemMsgSetMsgAvailPortKernelGlue
 // SWI 18.
 NewtonErr
 SMemMsgSetMsgAvailPortKernelGlue(TObjectId msgId, TObjectId portId)
@@ -865,7 +865,7 @@ SMemMsgSetMsgAvailPortKernelGlue(TObjectId msgId, TObjectId portId)
 }
 
 
-// ROM 0x001e251c SMemMsgGetSenderTaskIdKernelGlue
+// ROM 0x001e0104 SMemMsgGetSenderTaskIdKernelGlue
 // SWI 19: r1 = sender task.
 NewtonErr
 SMemMsgGetSenderTaskIdKernelGlue(TObjectId msgId)
@@ -878,7 +878,7 @@ SMemMsgGetSenderTaskIdKernelGlue(TObjectId msgId)
 }
 
 
-// ROM 0x001e2560 SMemMsgSetUserRefConKernelGlue
+// ROM 0x001e0148 SMemMsgSetUserRefConKernelGlue
 // SWI 20.
 NewtonErr
 SMemMsgSetUserRefConKernelGlue(TObjectId msgId, void* refCon)
@@ -891,7 +891,7 @@ SMemMsgSetUserRefConKernelGlue(TObjectId msgId, void* refCon)
 }
 
 
-// ROM 0x001e25dc SMemMsgGetUserRefConKernelGlue
+// ROM 0x001e01c4 SMemMsgGetUserRefConKernelGlue
 // SWI 21: r1 = ref con.
 NewtonErr
 SMemMsgGetUserRefConKernelGlue(TObjectId msgId)
@@ -904,7 +904,7 @@ SMemMsgGetUserRefConKernelGlue(TObjectId msgId)
 }
 
 
-// ROM 0x001e26a8 SMemMsgCheckForDoneKernelGlue
+// ROM 0x001e0290 SMemMsgCheckForDoneKernelGlue
 // SWI 22.  Reports a message's state in r0-r4; with kSMemMsgFlags_BlockTillDone
 // the caller waits for completion, with kSMemMsgFlags_Abort the call is
 // aborted.  r0 is kSMemMsgStatus_InProgress while nothing has completed.
@@ -954,7 +954,7 @@ SMemMsgCheckForDoneKernelGlue(TObjectId msgId, ULong flags)
 }
 
 
-// ROM 0x001e2620 SMemMsgMsgDoneKernelGlue
+// ROM 0x001e0208 SMemMsgMsgDoneKernelGlue
 // SWI 23: the receiver replies to the sender it took from the port.
 NewtonErr
 SMemMsgMsgDoneKernelGlue(TObjectId msgId, long result, ULong sequence)

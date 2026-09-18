@@ -10,7 +10,7 @@
 				none left, a task inside a monitor hands the exception to its
 				caller (MonitorThrowSWI), otherwise the machine reboots.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Newton.h"
@@ -36,7 +36,7 @@ enum { kMode_User = 0, kMode_FIQ = 1, kMode_IRQ = 2 };
 static const char kMsgExceptionName[] = "evt.ex.msg";
 
 
-// ROM 0x000b12b4 InitializeExceptionGlobals
+// ROM 0x000b00bc InitializeExceptionGlobals
 void
 InitializeExceptionGlobals(ExceptionGlobals* globals)
 {
@@ -44,7 +44,7 @@ InitializeExceptionGlobals(ExceptionGlobals* globals)
 }
 
 
-// ROM 0x000b15f4 GetExceptionHandler__Fv
+// ROM 0x000b03fc GetExceptionHandler__Fv
 // The head of the handler chain for the mode the CPU is in.
 CatchHeader*
 GetExceptionHandler()
@@ -59,7 +59,7 @@ GetExceptionHandler()
 }
 
 
-// ROM 0x000b1208 SetExceptionHandler__FP11CatchHeader
+// ROM 0x000b0010 SetExceptionHandler__FP11CatchHeader
 void
 SetExceptionHandler(CatchHeader* handler)
 {
@@ -72,7 +72,7 @@ SetExceptionHandler(CatchHeader* handler)
 }
 
 
-// ROM 0x000b13a0 AddExceptionHandler
+// ROM 0x000b01a8 AddExceptionHandler
 void
 AddExceptionHandler(CatchHeader* i)
 {
@@ -81,7 +81,7 @@ AddExceptionHandler(CatchHeader* i)
 }
 
 
-// ROM 0x000b13c4 RemoveExceptionHandler
+// ROM 0x000b01cc RemoveExceptionHandler
 void
 RemoveExceptionHandler(CatchHeader* i)
 {
@@ -89,7 +89,7 @@ RemoveExceptionHandler(CatchHeader* i)
 }
 
 
-// ROM 0x000b1194 Subexception
+// ROM 0x000aff9c Subexception
 // Exception names are dotted paths; a name is a sub-exception of another if
 // the other is a prefix of it.  A name may list several alternatives
 // separated by ';'.
@@ -108,7 +108,7 @@ Subexception(ExceptionName sub, ExceptionName super)
 }
 
 
-// ROM 0x002cfd9c ForgetDeveloperNotified__FPc
+// ROM 0x002f5610 ForgetDeveloperNotified__FPc
 static void
 ForgetDeveloperNotified(ExceptionName /*name*/)
 {
@@ -179,7 +179,7 @@ Dispatch(ExceptionName name, void* data, ExceptionDestructor destructor)
 }
 
 
-// ROM 0x000b12c0 Throw
+// ROM 0x000b00c8 Throw
 void
 Throw(ExceptionName name, void* data, ExceptionDestructor destructor)
 {
@@ -187,7 +187,7 @@ Throw(ExceptionName name, void* data, ExceptionDestructor destructor)
 }
 
 
-// ROM 0x000b11f0 ThrowMsg
+// ROM 0x000afff8 ThrowMsg
 void
 ThrowMsg(char* msg)
 {
@@ -195,7 +195,7 @@ ThrowMsg(char* msg)
 }
 
 
-// ROM 0x000b15e8 NextHandler
+// ROM 0x000b03f0 NextHandler
 // rethrow: the exception a handler caught goes on to the next one.
 void
 NextHandler(ExceptionHandler* i)
@@ -204,7 +204,7 @@ NextHandler(ExceptionHandler* i)
 }
 
 
-// ROM 0x000b1250 ExitHandler
+// ROM 0x000b0058 ExitHandler
 // end_try.  If the handler is no longer the innermost try handler it caught
 // an exception, which is now over: its data is destroyed.  Otherwise the
 // try block ended normally: the handler leaves the chain (searched for if

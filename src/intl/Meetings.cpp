@@ -14,7 +14,7 @@
 	an array of [date, entry] pairs - the instance at date is deleted
 	(entry nil) or replaced by entry, a meeting of its own.
 
-	Reconstructed from the MP2100 D ROM (0x0008bc98-0x0008d910); each
+	Reconstructed from the MP2x00 US ROM (0x0008aa4c-0x0008c6c4); each
 	function cites its origin.
 */
 
@@ -34,7 +34,7 @@
 	S t e p p i n g   a   d a t e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008bc98 NextDayOfWeek__FP5TDateUl
+// ROM 0x0008aa4c NextDayOfWeek__FP5TDateUl
 // The date moved to the next (this one included) of the days of the week
 // mtgInfo asks for, then, unless every week is wanted, to the next of its
 // weeks of the month (the last-week bit means the last such day of the
@@ -87,7 +87,7 @@ NextDayOfWeek(TDate* date, ULong mtgInfo)
 }
 
 
-// ROM 0x0008bdcc NextDateOfMonth__FP5TDateUl
+// ROM 0x0008ab80 NextDateOfMonth__FP5TDateUl
 // The date moved to the wanted date of the month (mtgInfo's low six bits),
 // in the next month when that is already past (or the date is 0), clamped
 // to the month's length.  The day of the week is shifted by the days
@@ -116,7 +116,7 @@ NextDateOfMonth(TDate* date, ULong mtgInfo)
 }
 
 
-// ROM 0x0008ceb4 NextDateOfYear__FP5TDateUl
+// ROM 0x0008bc68 NextDateOfYear__FP5TDateUl
 // The date moved to the wanted month (mtgInfo bits 8-15) and date (bits
 // 0-7), next year when that is already past, the date clamped to the
 // month's length.
@@ -135,7 +135,7 @@ NextDateOfYear(TDate* date, ULong mtgInfo)
 }
 
 
-// ROM 0x0008d4dc NextDateByWeekInYear__FP5TDateUl
+// ROM 0x0008c290 NextDateByWeekInYear__FP5TDateUl
 // The date moved to the wanted day of the wanted week of the wanted month
 // (mtgInfo bits 12-15) of the year: this year's when it is not yet past,
 // next year's otherwise.
@@ -169,7 +169,7 @@ NextDateByWeekInYear(TDate* date, ULong mtgInfo)
 }
 
 
-// ROM 0x0008d5a0 NextPeriod__FP5TDateUlT2
+// ROM 0x0008c354 NextPeriod__FP5TDateUlT2
 // The date moved to the next day a whole number of periods (mtgInfo bits
 // 0-7, in days) after the first instance's day (bits 8-31: its TotalDays);
 // forward to the first when before it.  The ROM's second argument is
@@ -194,7 +194,7 @@ NextPeriod(TDate* date, ULong /*unused*/, ULong mtgInfo)
 }
 
 
-// ROM 0x0008d5fc NextMeeting__FP5TDateUlN22
+// ROM 0x0008c3b0 NextMeeting__FP5TDateUlN22
 // The date moved to the repeat's next instance on or after it, by its
 // type (the ROM inlines the steppers; kNever and the unused type 6 leave
 // the date alone).
@@ -225,7 +225,7 @@ NextMeeting(TDate* date, ULong unused, ULong mtgInfo, ULong repeatType)
 }
 
 
-// ROM 0x0008cc90 simplePrevMeeting__FP5TDateUlT2
+// ROM 0x0008ba44 simplePrevMeeting__FP5TDateUlT2
 // The date moved back towards the previous instance: a month, a year or
 // two weeks back and forward again to the type's next instance (the
 // day-of-week types step forward from the month before until the date is
@@ -278,7 +278,7 @@ simplePrevMeeting(TDate* date, ULong mtgInfo, ULong repeatType)
 	T h e   i n s t a n c e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008d64c MakeMeetingFrame__FUlRC6RefVar
+// ROM 0x0008c400 MakeMeetingFrame__FUlRC6RefVar
 // An instance frame (protoInstanceOfRepeatingMeeting: viewStationery
 // 'RepeatingMeeting, class 'meeting) at minutes, of the template; a
 // cribNote template's instance is a cribNote, the viewBounds carried.
@@ -298,7 +298,7 @@ MakeMeetingFrame(ULong minutes, RefArg repeatTemplate)
 }
 
 
-// ROM 0x0008d8b0 SnoopIntegerSlot__FRC6RefVarT1l
+// ROM 0x0008c664 SnoopIntegerSlot__FRC6RefVarT1l
 // The slot set to the default unless it holds an integer.
 static void
 SnoopIntegerSlot(RefArg frame, RefArg slot, long value)
@@ -308,7 +308,7 @@ SnoopIntegerSlot(RefArg frame, RefArg slot, long value)
 }
 
 
-// ROM 0x0008be64 FixupRepeatFrame__FRC6RefVar
+// ROM 0x0008ac18 FixupRepeatFrame__FRC6RefVar
 // A template that failed to read repaired: its integer slots defaulted
 // (mtgStartDate the current hour, mtgInfo and repeatType 0, mtgStopDate
 // forever, mtgDuration an hour), the first malformed exception dropped,
@@ -358,7 +358,7 @@ FixupRepeatFrame(RefArg entry)
 }
 
 
-// ROM 0x0008cb68 FindExceptionMeetingInRange__FRC6RefVarlT2
+// ROM 0x0008b91c FindExceptionMeetingInRange__FRC6RefVarlT2
 // The exceptions of a template against a candidate instance at end: ==> 0
 // when the instance is an exception (deleted or replaced), else the
 // earliest replacement meeting's time in [start, end), else -1.
@@ -392,7 +392,7 @@ FindExceptionMeetingInRange(RefArg exceptions, long start, long end)
 }
 
 
-// ROM 0x0008d780 PopMeeting__FRC6RefVarPlP6RefVarT2
+// ROM 0x0008c534 PopMeeting__FRC6RefVarPlP6RefVarT2
 // The next instance of the list and its mtgStartDate (nil and 0 at the end).
 static void
 PopMeeting(RefArg meetings, long* index, RefVar* meeting, long* when)
@@ -410,7 +410,7 @@ PopMeeting(RefArg meetings, long* index, RefVar* meeting, long* when)
 }
 
 
-// ROM 0x0008d81c PopException__FRC6RefVarPlP6RefVarT2
+// ROM 0x0008c5d0 PopException__FRC6RefVarPlP6RefVarT2
 // The next exception of the list and its date (nil and 0 at the end).
 static void
 PopException(RefArg exceptions, long* index, RefVar* exception, long* when)
@@ -428,7 +428,7 @@ PopException(RefArg exceptions, long* index, RefVar* exception, long* when)
 }
 
 
-// ROM 0x0008c0a8 AddException__FRC6RefVarT1lT3
+// ROM 0x0008ae5c AddException__FRC6RefVarT1lT3
 // An exception's replacement meeting, when it has one in [start, end),
 // inserted into the meetings in mtgStartDate order.
 static void
@@ -444,7 +444,7 @@ AddException(RefArg meetings, RefArg exception, long start, long end)
 }
 
 
-// ROM 0x0008c180 MergeMeetingLists__FRC6RefVarN21lT4
+// ROM 0x0008af34 MergeMeetingLists__FRC6RefVarN21lT4
 // The generated instances (in time order) and the template's exceptions
 // (in date order) merged into the meetings: an exception at an instance's
 // time replaces it (its replacement meeting added when in range), the
@@ -485,7 +485,7 @@ MergeMeetingLists(RefArg meetings, RefArg instances, RefArg exceptions, long sta
 }
 
 
-// ROM 0x0008c870 GetInstanceMeetings__FRC6RefVarT1
+// ROM 0x0008b624 GetInstanceMeetings__FRC6RefVarT1
 // The entries of the cursor (the meeting soup's, over the range) into the
 // meetings array.
 void
@@ -505,7 +505,7 @@ GetInstanceMeetings(RefArg meetings, RefArg cursor)
 }
 
 
-// ROM 0x0008c374 GetRepeatingMeetings__FRC6RefVarT1UlT3Uc
+// ROM 0x0008b128 GetRepeatingMeetings__FRC6RefVarT1UlT3Uc
 // For each template the cursor yields (the repeating-meeting soup's, over
 // the templates not yet stopped): its instances in [start, end) generated
 // by NextMeeting (from the range's start, or the day after when the
@@ -595,7 +595,7 @@ GetRepeatingMeetings(RefArg meetings, RefArg cursor, ULong start, ULong end, Boo
 }
 
 
-// ROM 0x0008c908 GetAllMeetings__FRC6RefVarT1lT3Uc
+// ROM 0x0008b6bc GetAllMeetings__FRC6RefVarT1lT3Uc
 // The meetings in [start, end): the meeting soup's entries by mtgStartDate
 // (dateQuerySpec) and the repeating-meeting soup's instances (its
 // templates by mtgStopDate, repeatQuerySpec); nil when there are none.
@@ -627,7 +627,7 @@ GetAllMeetings(RefArg meetingSoup, RefArg repeatSoup, long start, long end, Bool
 	N e w t o n S c r i p t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0008ca70 FGetAllMeetings__FRC6RefVarN41
+// ROM 0x0008b824 FGetAllMeetings__FRC6RefVarN41
 // GetAllMeetings(meetingSoup, repeatSoup, start, end): end nil is a day.
 static Ref
 FGetAllMeetings(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, RefArg start, RefArg end)
@@ -638,7 +638,7 @@ FGetAllMeetings(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, RefArg s
 }
 
 
-// ROM 0x0008caec FGetAllMeetingsUnique__FRC6RefVarN41
+// ROM 0x0008b8a0 FGetAllMeetingsUnique__FRC6RefVarN41
 // The same with one instance per template.
 static Ref
 FGetAllMeetingsUnique(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, RefArg start, RefArg end)
@@ -649,7 +649,7 @@ FGetAllMeetingsUnique(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, Re
 }
 
 
-// ROM 0x0008cf14 FNextMeeting__FRC6RefVarN21
+// ROM 0x0008bcc8 FNextMeeting__FRC6RefVarN21
 // NextMeeting(startTime, repeatTemplate): the time of the template's first
 // instance at or after startTime that is not an exception (a replacement
 // meeting in between counts as the instance); 0 past the stop date, or
@@ -704,7 +704,7 @@ FNextMeeting(RefArg /*rcvr*/, RefArg startTime, RefArg repeatTemplate)
 }
 
 
-// ROM 0x0008d174 FPrevMeeting__FRC6RefVarN21
+// ROM 0x0008bf28 FPrevMeeting__FRC6RefVarN21
 // PrevMeeting(startTime, repeatTemplate): the time of the template's last
 // instance before startTime (0 when there is none): a step back with
 // simplePrevMeeting, checked and refined forward with NextMeeting so that
@@ -773,7 +773,7 @@ FPrevMeeting(RefArg rcvr, RefArg startTime, RefArg repeatTemplate)
 }
 
 
-// ROM 0x0008d494 FGetNextMeetingTime__FRC6RefVarN21
+// ROM 0x0008c248 FGetNextMeetingTime__FRC6RefVarN21
 // GetNextMeetingTime(repeatTemplate, startTime): NextMeeting the other way round.
 static Ref
 FGetNextMeetingTime(RefArg /*rcvr*/, RefArg repeatTemplate, RefArg startTime)

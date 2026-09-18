@@ -22,7 +22,7 @@
 				The tag methods (AddTags, GetTags, RemoveTags, ModifyTag,
 				the native HasTags) go to every soup (Tags.h).
 
-	Reconstructed from the MP2100 D ROM, 0x00334170-0x00335824 and the
+	Reconstructed from the MP2x00 US ROM, 0x0035f030-0x00335824 and the
 	unionSoupPrototype's objects (nsfunctions.py --object unionsoupprototype).
 */
 
@@ -52,7 +52,7 @@ Ref	FSetUnion(RefArg rcvr, RefArg array1, RefArg array2, RefArg uniqueOnly);
 	host has no sort tables (every sortID is 0), so these find nothing.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00334170 CheckSoupsSortTables__FRC6RefVarT1
+// ROM 0x0035f030 CheckSoupsSortTables__FRC6RefVarT1
 // The path of an index of soup1's persistent frame that soup2's index of
 // the same path sorts by a different table; nil when they agree.
 Ref
@@ -76,7 +76,7 @@ CheckSoupsSortTables(RefArg soupPersistent1, RefArg soupPersistent2)
 }
 
 
-// ROM 0x00327930 StoreHasSortTables__FRC6RefVar
+// ROM 0x00352acc StoreHasSortTables__FRC6RefVar
 // Whether the store's persistent frame keeps any sorting tables.
 Boolean
 StoreHasSortTables(RefArg storeObject)
@@ -108,7 +108,7 @@ CheckUnionSortTables(RefArg unionSoup)
 }
 
 
-// ROM 0x003342c8 CheckUnionStopFn__FP4SKeyT1Pv
+// ROM 0x0035f188 CheckUnionStopFn__FP4SKeyT1Pv
 // For each soup name of the checked store: the other stores' soups of that
 // name whose sort tables differ put the name in the result array.
 struct CheckUnionInfo
@@ -150,7 +150,7 @@ CheckUnionStopFn(SKey* key, SKey* data, void* refCon)
 }
 
 
-// ROM 0x00334b38 StoreCheckUnion
+// ROM 0x0035f9f8 StoreCheckUnion
 // The store's CheckUnion method: the names of its soups that sort an
 // index differently from another store's soup of the name; nil when no
 // store keeps sort tables.
@@ -205,7 +205,7 @@ StoreCheckUnion(RefArg rcvr)
 }
 
 
-// ROM 0x00334ddc StoreConvertSoupSortTables
+// ROM 0x0035fc9c StoreConvertSoupSortTables
 // The store's ConvertSoupSortTables method: its soup of the name taken
 // out of the union, its indexes rebuilt to sort as the other stores' soup
 // of the name does (the last other store that has it), and put back.
@@ -249,7 +249,7 @@ StoreConvertSoupSortTables(RefArg rcvr, RefArg name)
 	T h e   u n i o n   s o u p s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x003350a0 GetUnionSoup__FRC6RefVar
+// ROM 0x0035ff60 GetUnionSoup__FRC6RefVar
 // The union soup of the name: the cached one, else a clone of the
 // prototype over the stores' soups of that name (nil when no store has
 // it), cached, its errorCode set when the soups' sort tables differ.
@@ -284,7 +284,7 @@ GetUnionSoup(RefArg name)
 }
 
 
-// ROM 0x003352f8 GetUnionSoupAlways__FRC6RefVar
+// ROM 0x003601b8 GetUnionSoupAlways__FRC6RefVar
 // The union soup of the name, made empty (no soups, the name cloned) and
 // cached when no store has the soup yet.
 Ref
@@ -303,7 +303,7 @@ GetUnionSoupAlways(RefArg name)
 }
 
 
-// ROM 0x00335404 AddToUnionSoup__FRC6RefVarT1
+// ROM 0x003602c4 AddToUnionSoup__FRC6RefVarT1
 // The soup added to the union soup (given, or by name: nothing when there
 // is none cached of that name); the cursors told (SoupAdded, or SetSoup
 // when the sort tables now differ and the union soup is errored).
@@ -332,7 +332,7 @@ AddToUnionSoup(RefArg nameOrUnionSoup, RefArg soup)
 }
 
 
-// ROM 0x00335538 RemoveFromUnionSoup__FRC6RefVarT1
+// ROM 0x003603f8 RemoveFromUnionSoup__FRC6RefVarT1
 // The soup taken out of the union soup (given, or by name); the cursors
 // told (SoupRemoved; or SetSoup to the union soup itself when it was
 // errored and its soups now agree, to its last soup when they still
@@ -377,7 +377,7 @@ RemoveFromUnionSoup(RefArg nameOrUnionSoup, RefArg soup)
 }
 
 
-// ROM 0x0033578c CheckStoresWriteProtect__FRC6RefVar
+// ROM 0x0036064c CheckStoresWriteProtect__FRC6RefVar
 // Every soup's store of the union soup checked writable.
 void
 CheckStoresWriteProtect(RefArg unionSoup)
@@ -397,7 +397,7 @@ CheckStoresWriteProtect(RefArg unionSoup)
 	The receiver is the union soup frame.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00334444 UnionSoupAdd
+// ROM 0x0035f304 UnionSoupAdd
 // The entry added to the first soup (the ROM's prototype does not use
 // it: its Add method adds to the first store through AddToStore).
 Ref
@@ -408,7 +408,7 @@ UnionSoupAdd(RefArg rcvr, RefArg entry)
 }
 
 
-// ROM 0x003344a4 UnionSoupAddIndex
+// ROM 0x0035f364 UnionSoupAddIndex
 Ref
 UnionSoupAddIndex(RefArg rcvr, RefArg indexSpec)
 {
@@ -425,7 +425,7 @@ UnionSoupAddIndex(RefArg rcvr, RefArg indexSpec)
 }
 
 
-// ROM 0x00334540 UnionSoupRemoveIndex
+// ROM 0x0035f400 UnionSoupRemoveIndex
 Ref
 UnionSoupRemoveIndex(RefArg rcvr, RefArg path)
 {
@@ -442,7 +442,7 @@ UnionSoupRemoveIndex(RefArg rcvr, RefArg path)
 }
 
 
-// ROM 0x00334698 UnionSoupHasTags
+// ROM 0x0035f558 UnionSoupHasTags
 // Whether every soup has a tags index (none: no).
 Ref
 UnionSoupHasTags(RefArg rcvr)
@@ -471,7 +471,7 @@ CheckUnionHasTags(RefArg rcvr)
 }
 
 
-// ROM 0x003345dc UnionSoupAddTags
+// ROM 0x0035f49c UnionSoupAddTags
 Ref
 UnionSoupAddTags(RefArg rcvr, RefArg tagOrTags)
 {
@@ -488,7 +488,7 @@ UnionSoupAddTags(RefArg rcvr, RefArg tagOrTags)
 }
 
 
-// ROM 0x00334764 UnionSoupGetTags
+// ROM 0x0035f624 UnionSoupGetTags
 // The union of the soups' tags; nil when one has none.
 Ref
 UnionSoupGetTags(RefArg rcvr)
@@ -513,7 +513,7 @@ UnionSoupGetTags(RefArg rcvr)
 }
 
 
-// ROM 0x003348cc UnionSoupRemoveTags
+// ROM 0x0035f78c UnionSoupRemoveTags
 Ref
 UnionSoupRemoveTags(RefArg rcvr, RefArg tags)
 {
@@ -530,7 +530,7 @@ UnionSoupRemoveTags(RefArg rcvr, RefArg tags)
 }
 
 
-// ROM 0x00334988 UnionSoupModifyTag
+// ROM 0x0035f848 UnionSoupModifyTag
 Ref
 UnionSoupModifyTag(RefArg rcvr, RefArg oldTag, RefArg newTag)
 {
@@ -547,7 +547,7 @@ UnionSoupModifyTag(RefArg rcvr, RefArg oldTag, RefArg newTag)
 }
 
 
-// ROM 0x00334a4c UnionSoupFlush
+// ROM 0x0035f90c UnionSoupFlush
 // The NaughtyFlush method: every soup flushed.
 Ref
 UnionSoupFlush(RefArg rcvr)
@@ -556,7 +556,7 @@ UnionSoupFlush(RefArg rcvr)
 }
 
 
-// ROM 0x00334a9c UnionSoupGetSize
+// ROM 0x0035f95c UnionSoupGetSize
 Ref
 UnionSoupGetSize(RefArg rcvr)
 {
@@ -572,7 +572,7 @@ UnionSoupGetSize(RefArg rcvr)
 }
 
 
-// ROM 0x00290db4 FGetUnionSoup
+// ROM 0x002b5ce0 FGetUnionSoup
 static Ref
 FGetUnionSoup(RefArg /*rcvr*/, RefArg name)
 {
@@ -580,7 +580,7 @@ FGetUnionSoup(RefArg /*rcvr*/, RefArg name)
 }
 
 
-// ROM 0x00290dbc FGetUnionSoupAlways
+// ROM 0x002b5ce8 FGetUnionSoupAlways
 static Ref
 FGetUnionSoupAlways(RefArg /*rcvr*/, RefArg name)
 {
@@ -598,21 +598,21 @@ FGetUnionSoupAlways(RefArg /*rcvr*/, RefArg name)
 ------------------------------------------------------------------------------*/
 
 static const ScriptFunctionEntry gUnionSoupScripts[] = {
-	// ROM 0x006278bd (object) unionSoupPrototype.Add: discontinued, adds to the first store
+	// ROM 0x0062b321 (object) unionSoupPrototype.Add: discontinued, adds to the first store
 	{ "Add",
 	  "func(entry) begin\n"
 	  "  BadWickedNaughtyNoot(\"usoup:Add(\" & self:GetName() & \")\", 'discontinued);\n"
 	  "  self:AddToStore(entry, GetStores()[0])\n"
 	  "end" },
-	// ROM 0x006278f5 (object) unionSoupPrototype.flush: discontinued
+	// ROM 0x0062b359 (object) unionSoupPrototype.flush: discontinued
 	{ "flush",
 	  "func() begin\n"
 	  "  BadWickedNaughtyNoot(\"usoup:Flush(\" & self:GetName() & \")\", 'discontinued);\n"
 	  "  self:NaughtyFlush()\n"
 	  "end" },
-	// ROM 0x005d3561 (object) unionSoupPrototype.GetSoupList
+	// ROM 0x00634889 (object) unionSoupPrototype.GetSoupList
 	{ "GetSoupList", "func() Clone(self.soupList)" },
-	// ROM 0x005d2d09 (object) unionSoupPrototype.GetMember: the store's soup of the name, made from its soupDef when missing
+	// ROM 0x006341fd (object) unionSoupPrototype.GetMember: the store's soup of the name, made from its soupDef when missing
 	{ "GetMember",
 	  "func(store) begin\n"
 	  "  local name := self:GetName();\n"
@@ -620,11 +620,11 @@ static const ScriptFunctionEntry gUnionSoupScripts[] = {
 	  "  if not soup then soup := CreateUSoupMember(name, store);\n"
 	  "  soup\n"
 	  "end" },
-	// ROM 0x005d2b3d (object) unionSoupPrototype.AddToStore
+	// ROM 0x006341a1 (object) unionSoupPrototype.AddToStore
 	{ "AddToStore", "func(entry, store) self:GetMember(store):Add(entry)" },
-	// ROM 0x005d2a95 (object) unionSoupPrototype.AddToDefaultStore
+	// ROM 0x006340ad (object) unionSoupPrototype.AddToDefaultStore
 	{ "AddToDefaultStore", "func(entry) self:AddToStore(entry, GetDefaultStore())" },
-	// ROM 0x005d2fb5 (object) unionSoupPrototype.HasTags: every soup has tags, or the soupDef has a tags index
+	// ROM 0x006342bd (object) unionSoupPrototype.HasTags: every soup has tags, or the soupDef has a tags index
 	{ "HasTags",
 	  "func() begin\n"
 	  "  local i := Length(self.soupList);\n"
@@ -656,7 +656,7 @@ static const ScriptFunctionEntry gUnionSoupScripts[] = {
 // sorted by the soupDef's name; a soupDef {name, indexes, ownerApp,
 // initHook, ...} says how to create the soup on a store that lacks it.
 static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
-	// ROM 0x00589739 (object) GetSoupDef: the registry's, else the soupDef info of a store's soup of the name
+	// ROM 0x00569785 (object) GetSoupDef: the registry's, else the soupDef info of a store's soup of the name
 	{ "GetSoupDef",
 	  "func(name) begin\n"
 	  "  local reg := BFetch(UnionSoupRegistry, name, '|str<|, '[pathExpr: soupDef, name]);\n"
@@ -669,14 +669,14 @@ static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
 	  "    end;\n"
 	  "  nil\n"
 	  "end" },
-	// ROM 0x00589959 (object) CreateUSoupMember
+	// ROM 0x005699bd (object) CreateUSoupMember
 	{ "CreateUSoupMember",
 	  "func(name, store) begin\n"
 	  "  local def := GetSoupDef(name);\n"
 	  "  if def then CreateSoupFromSoupDef(def, store, '_newt)\n"
 	  "  else Throw('|evt.ex.nosoupdef;type.ref|, {errorCode: 0, value: name})\n"
 	  "end" },
-	// ROM 0x00589875 (object) CreateSoupFromSoupDef: the soup created, its soupDef info set, the initHook run
+	// ROM 0x005698c1 (object) CreateSoupFromSoupDef: the soup created, its soupDef info set, the initHook run
 	{ "CreateSoupFromSoupDef",
 	  "func(soupDef, store, xmit) begin\n"
 	  "  local soup := store:CreateSoup(soupDef.name, soupDef.indexes);\n"
@@ -691,15 +691,15 @@ static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
 	  "  if xmit then XmitSoupChange(soupDef.name, xmit, 'soupCreated, soup);\n"
 	  "  soup\n"
 	  "end" },
-	// ROM 0x005897a1 (object) SupplantSoupDef
+	// ROM 0x005697ed (object) SupplantSoupDef
 	{ "SupplantSoupDef", "func(soup, soupDef) soup:SetInfo('soupDef, soupDef)" },
-	// ROM 0x005898c5 (object) GetSoupIndexesFromSoupDef
+	// ROM 0x00569911 (object) GetSoupIndexesFromSoupDef
 	{ "GetSoupIndexesFromSoupDef",
 	  "func(name) begin\n"
 	  "  local def := GetSoupDef(name);\n"
 	  "  if def then def.indexes else nil\n"
 	  "end" },
-	// ROM 0x005895ad (object) RegUnionSoup: the app registered for the soupDef; the union soup answered
+	// ROM 0x005695f9 (object) RegUnionSoup: the app registered for the soupDef; the union soup answered
 	{ "RegUnionSoup",
 	  "func(app, soupDef) begin\n"
 	  "  local reg := BFetch(UnionSoupRegistry, soupDef.name, '|str<|, '[pathExpr: soupDef, name]);\n"
@@ -713,7 +713,7 @@ static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
 	  "  end;\n"
 	  "  GetUnionSoupAlways(soupDef.name)\n"
 	  "end" },
-	// ROM 0x0058967d (object) UnRegUnionSoup: the app unregistered; the soupDef dropped with its last app
+	// ROM 0x005696c9 (object) UnRegUnionSoup: the app unregistered; the soupDef dropped with its last app
 	{ "UnRegUnionSoup",
 	  "func(name, app) begin\n"
 	  "  local reg := BFetch(UnionSoupRegistry, name, '|str<|, '[pathExpr: soupDef, name]);\n"
@@ -724,7 +724,7 @@ static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
 	  "  end;\n"
 	  "  nil\n"
 	  "end" },
-	// ROM 0x005899d1 (object) GetDefaultStore: the store of the user's defaultStoreSig, else the first
+	// ROM 0x00569a35 (object) GetDefaultStore: the store of the user's defaultStoreSig, else the first
 	{ "GetDefaultStore",
 	  "func() begin\n"
 	  "  local sig := GetUserConfig('defaultStoreSig);\n"
@@ -734,16 +734,16 @@ static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
 	  "    if store:GetSignature() = sig then return store;\n"
 	  "  stores[0]\n"
 	  "end" },
-	// ROM 0x0058a619 (object) GetUserConfig: a slot of the userConfiguration global
+	// ROM 0x00565525 (object) GetUserConfig: a slot of the userConfiguration global
 	{ "GetUserConfig", "func(slot) userConfiguration.(slot)" },
-	// ROM 0x00589e25 (object) XmitSoupChange: the change broadcast to the apps registered for soup changes, deferred
+	// ROM 0x00569ea1 (object) XmitSoupChange: the change broadcast to the apps registered for soup changes, deferred
 	// DEVIATION: the deferred calls (AddDeferredCall) and XmitSoupChangeNow are
 	// NOT YET RECONSTRUCTED; without them the change is not broadcast.
 	{ "XmitSoupChange",
 	  "func(name, app, change, arg)\n"
 	  "  if GlobalFnExists('AddDeferredCall) and GlobalFnExists('XmitSoupChangeNow) then\n"
 	  "    AddDeferredCall(functions.XmitSoupChangeNow, [name, app, change, arg])" },
-	// ROM 0x006270e5 (object) BadWickedNaughtyNoot: a discontinued/obsolete API used - written to the REP (and the debugger entered when NoEvilLiveOn)
+	// ROM 0x0063ac05 (object) BadWickedNaughtyNoot: a discontinued/obsolete API used - written to the REP (and the debugger entered when NoEvilLiveOn)
 	{ "BadWickedNaughtyNoot",
 	  "func(what, kind) begin\n"
 	  "  local msg := if IsInteger(what) then\n"

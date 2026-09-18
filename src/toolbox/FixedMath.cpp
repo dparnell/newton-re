@@ -5,10 +5,10 @@
 				ARM assembly routines of the ROM's fplib, which work on
 				magnitudes, round to nearest and saturate on overflow.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	FixedASin/FixedACos are declared in FixedMathExtra.h (the DDK omits
 	them).  NOT YET RECONSTRUCTED: FractSin/FractCos (xFracSin/xFracCos, a
-	separate implementation) and FixMul32 (0x000b310c, a different fixed
+	separate implementation) and FixMul32 (0x000b1f14, a different fixed
 	format).
 */
 
@@ -21,7 +21,7 @@ const Fixed kFixedMax = 0x7fffffff;
 const Fixed kFixedMin = (Fixed) 0x80000000;
 
 
-// ROM 0x0038b008 FixedMultiply
+// ROM 0x00394688 FixedMultiply
 // The product of the magnitudes, shifted down by sixteen with rounding
 // (half up), the sign restored; saturated when it does not fit.
 extern "C" Fixed
@@ -37,7 +37,7 @@ FixedMultiply(Fixed a, Fixed b)
 }
 
 
-// ROM 0x0038af20 FixedDivide
+// ROM 0x003945a0 FixedDivide
 // a / b in 16.16: the quotient of the magnitudes to seventeen extra bits,
 // rounded half up, the sign restored; the largest value of the sign when
 // b is 0 or the quotient does not fit.  a == b, a == -b, a == 0 and
@@ -70,7 +70,7 @@ const Fract kFractMax = 0x7fffffff;
 const Fract kFractMin = (Fract) 0x80000000;
 
 
-// ROM 0x0038affc FractMultiply
+// ROM 0x0039467c FractMultiply
 // The product of the magnitudes in 2.30, shifted down by thirty with
 // rounding (half up), the sign restored; saturated when it does not fit.
 // The same routine as FixedMultiply with a 2.30 rather than a 16.16 shift.
@@ -87,7 +87,7 @@ FractMultiply(Fixed a, Fixed b)
 }
 
 
-// ROM 0x0038af14 FractDivide
+// ROM 0x00394594 FractDivide
 // a / b in 2.30: the quotient of the magnitudes to thirty-one bits,
 // rounded half up, the sign restored; the largest value of the sign when
 // b is 0 or the quotient does not fit.  Unlike FixedDivide it has no
@@ -110,7 +110,7 @@ FractDivide(Fixed a, Fixed b)
 }
 
 
-// ROM 0x000bed34 FixedMultiplyDivide
+// ROM 0x000bdc10 FixedMultiplyDivide
 // multiplier * dividend / divisor, carried through the 64-bit comp
 // arithmetic (CompMath.h) exactly as the ROM does: the full product, then
 // the truncating comp divide.
@@ -123,7 +123,7 @@ FixedMultiplyDivide(Fixed multiplier, Fixed dividend, Fixed divisor)
 }
 
 
-// ROM 0x0038b094 FractSquareRoot
+// ROM 0x00394714 FractSquareRoot
 // The square root of a Fract, by the ROM's non-restoring digit-by-digit
 // method (two bits an iteration, thirty-two iterations).  Transcribed
 // verbatim from the ROM's unsigned arithmetic so the rounding matches to
@@ -171,7 +171,7 @@ const Fixed kFixedHalfPi = 0x19220;			// pi/2 in 16.16 (radians)
 const Fixed kFixedPi     = 0x32440;			// pi   in 16.16
 
 
-// ROM 0x000bec4c FixedAtan2
+// ROM 0x000bdb28 FixedAtan2
 // The angle (16.16 radians, -pi..pi) of the vector (x, y): atan2(y, x).
 // It works on the magnitudes, uses the smaller-over-larger ratio through
 // the arctangent polynomial (so the argument stays in 0..1), then folds
@@ -309,7 +309,7 @@ CordicRotate(const int* param_1, int* param_2)
 }
 
 
-// ROM 0x000bed64 FractSineCosine
+// ROM 0x000bdc40 FractSineCosine
 // The sine (returned) and cosine (through the out parameter) of an angle in
 // degrees (16.16), both 2.30.  The last angle's result is memoised, so a
 // repeated angle is answered from the cache.
@@ -334,7 +334,7 @@ FractSineCosine(Fixed degrees, Fract* cosine)
 }
 
 
-// ROM 0x00253210 FixedASin__Fl
+// ROM 0x00255158 FixedASin__Fl
 // The arcsine of a Fract (2.30, -1..1), in 16.16 radians: atan2 of x and
 // sqrt(1 - x^2) through the arctangent polynomial (asin x = atan(x /
 // sqrt(1 - x^2))).  When |x| >= 1 it answers +/- pi/2.
@@ -392,7 +392,7 @@ FixedASin(Fract x)
 }
 
 
-// ROM 0x0025325c FixedACos__Fl
+// ROM 0x002551a4 FixedACos__Fl
 // The arccosine: pi/2 - arcsine.
 Fixed
 FixedACos(Fract x)

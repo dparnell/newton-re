@@ -4,7 +4,7 @@
 	Contains:	TUnit, TUnitList, TTypeList, TSIUnit, TStrokeUnit,
 				TClickUnit, TClickEventUnit.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Unit.h"
@@ -26,7 +26,7 @@ NoteUnitExpiry(TUnit* unit)
 	F i x e d   r e c t a n g l e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001a6528 FixRect
+// ROM 0x001a3fa8 FixRect
 // A pixel rectangle as Fixed.
 void
 FixRect(FRect* dst, const Rect* src)
@@ -38,7 +38,7 @@ FixRect(FRect* dst, const Rect* src)
 }
 
 
-// ROM 0x001a6750 AddRect
+// ROM 0x001a41d0 AddRect
 // dst grown to hold src - or set to it when this is the first.
 void
 AddRect(const FRect* src, FRect* dst, Boolean first)
@@ -63,17 +63,17 @@ AddRect(const FRect* src, FRect* dst, Boolean first)
 	T U n i t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0022a468 __ct__5TUnitFv
+// ROM 0x0022ccb0 __ct__5TUnitFv
 TUnit::TUnit()
 { }
 
 
-// ROM 0x0022b744 __dt__5TUnitFv
+// ROM 0x0022dea4 __dt__5TUnitFv
 TUnit::~TUnit()
 { }
 
 
-// ROM 0x0022bb5c IUnit__5TUnitFP7TDomainUlT2P6TArray
+// ROM 0x0022e2bc IUnit__5TUnitFP7TDomainUlT2P6TArray
 // A unit of a type in a domain, started now, with no strokes yet, delayed
 // as the domain says, lying in the areas.  ==> 0.
 long
@@ -102,7 +102,7 @@ TUnit::IUnit(TDomain* domain, ULong type, ULong kind, TArray* areas)
 }
 
 
-// ROM 0x0022bdcc Dispose__5TUnitFv
+// ROM 0x0022e52c Dispose__5TUnitFv
 // One user fewer; the unit goes when none is left.
 void
 TUnit::Dispose(void)
@@ -112,7 +112,7 @@ TUnit::Dispose(void)
 }
 
 
-// ROM 0x0022be00 IDispose__5TUnitFv
+// ROM 0x0022e560 IDispose__5TUnitFv
 // The areas let go and the object deleted.
 void
 TUnit::IDispose(void)
@@ -122,20 +122,20 @@ TUnit::IDispose(void)
 }
 
 
-// ROM 0x0022b978 Dump__5TUnitFP4TMsg
+// ROM 0x0022e0d8 Dump__5TUnitFP4TMsg
 // NOT YET RECONSTRUCTED: TMsg, the debugging message buffer.
 void
 TUnit::Dump(TMsg* /*msg*/)
 { }
 
 
-// ROM 0x0022b910 DumpName__5TUnitFP4TMsg
+// ROM 0x0022e070 DumpName__5TUnitFP4TMsg
 void
 TUnit::DumpName(TMsg* /*msg*/)
 { }
 
 
-// ROM 0x0022be34 SizeInBytes__5TUnitFv
+// ROM 0x0022e594 SizeInBytes__5TUnitFv
 long
 TUnit::SizeInBytes(void)
 {
@@ -146,7 +146,7 @@ TUnit::SizeInBytes(void)
 }
 
 
-// ROM 0x0022be84 Clone__5TUnitFv
+// ROM 0x0022e5e4 Clone__5TUnitFv
 void
 TUnit::Clone(void)
 {
@@ -154,7 +154,7 @@ TUnit::Clone(void)
 }
 
 
-// ROM 0x0022be94 Release__5TUnitFv
+// ROM 0x0022e5f4 Release__5TUnitFv
 // ==> whether no user is left.
 Boolean
 TUnit::Release(void)
@@ -164,7 +164,7 @@ TUnit::Release(void)
 }
 
 
-// ROM 0x0022b784 SubCount__5TUnitFv
+// ROM 0x0022dee4 SubCount__5TUnitFv
 long
 TUnit::SubCount(void)
 {
@@ -172,7 +172,7 @@ TUnit::SubCount(void)
 }
 
 
-// ROM 0x0022b78c InterpretationCount__5TUnitFv
+// ROM 0x0022deec InterpretationCount__5TUnitFv
 long
 TUnit::InterpretationCount(void)
 {
@@ -180,7 +180,7 @@ TUnit::InterpretationCount(void)
 }
 
 
-// ROM 0x0022b794 GetBestInterpretation__5TUnitFv
+// ROM 0x0022def4 GetBestInterpretation__5TUnitFv
 long
 TUnit::GetBestInterpretation(void)
 {
@@ -188,7 +188,7 @@ TUnit::GetBestInterpretation(void)
 }
 
 
-// ROM 0x0022b79c GetAreas__5TUnitFv
+// ROM 0x0022defc GetAreas__5TUnitFv
 // The areas as a list - the list itself (cloned) when there are several,
 // a new list of the one area otherwise; nil when there is none.
 TAreaList*
@@ -216,7 +216,7 @@ TUnit::GetAreas(void)
 }
 
 
-// ROM 0x0022b818 SetAreas__5TUnitFP9TAreaList
+// ROM 0x0022df78 SetAreas__5TUnitFP9TAreaList
 // The old areas let go; one area is kept by itself (cloned), several as
 // the list (cloned).
 void
@@ -246,7 +246,7 @@ TUnit::SetAreas(TAreaList* areas)
 }
 
 
-// ROM 0x0022b8b4 GetArea__5TUnitFv
+// ROM 0x0022e014 GetArea__5TUnitFv
 // The area - the last of the list when there are several.
 TRecArea*
 TUnit::GetArea(void)
@@ -260,7 +260,7 @@ TUnit::GetArea(void)
 }
 
 
-// ROM 0x0022b8f4 SetDelay__5TUnitFUl
+// ROM 0x0022e054 SetDelay__5TUnitFUl
 // The delay before arbitration, in ticks, at most 255; the unit is flagged
 // delayed while it is not 0.
 void
@@ -276,7 +276,7 @@ TUnit::SetDelay(ULong delay)
 }
 
 
-// ROM 0x0022bab0 MarkUnit__5TUnitFP9TUnitListUl
+// ROM 0x0022e210 MarkUnit__5TUnitFP9TUnitListUl
 // The unit added to the list and flagged.  ==> 0, or 1 for no memory.
 long
 TUnit::MarkUnit(TUnitList* list, ULong flags)
@@ -287,7 +287,7 @@ TUnit::MarkUnit(TUnitList* list, ULong flags)
 }
 
 
-// ROM 0x0022bae8 ClaimUnit__5TUnitFP9TUnitList
+// ROM 0x0022e248 ClaimUnit__5TUnitFP9TUnitList
 void
 TUnit::ClaimUnit(TUnitList* list)
 {
@@ -295,7 +295,7 @@ TUnit::ClaimUnit(TUnitList* list)
 }
 
 
-// ROM 0x0022baf4 Invalidate__5TUnitFv
+// ROM 0x0022e254 Invalidate__5TUnitFv
 void
 TUnit::Invalidate(void)
 {
@@ -303,7 +303,7 @@ TUnit::Invalidate(void)
 }
 
 
-// ROM 0x0022be2c DoneUsingUnit__5TUnitFv
+// ROM 0x0022e58c DoneUsingUnit__5TUnitFv
 // The areas let go.
 void
 TUnit::DoneUsingUnit(void)
@@ -318,7 +318,7 @@ TUnit::DoneUsingUnit(void)
 }
 
 
-// ROM 0x0022bafc CountStrokes__5TUnitFv
+// ROM 0x0022e25c CountStrokes__5TUnitFv
 long
 TUnit::CountStrokes(void)
 {
@@ -326,7 +326,7 @@ TUnit::CountStrokes(void)
 }
 
 
-// ROM 0x0022bb04 GetStroke__5TUnitFUl
+// ROM 0x0022e264 GetStroke__5TUnitFUl
 TStroke*
 TUnit::GetStroke(ULong /*index*/)
 {
@@ -334,7 +334,7 @@ TUnit::GetStroke(ULong /*index*/)
 }
 
 
-// ROM 0x0022bb0c GetAllStrokes__5TUnitFv
+// ROM 0x0022e26c GetAllStrokes__5TUnitFv
 TUnitList*
 TUnit::GetAllStrokes(void)
 {
@@ -342,7 +342,7 @@ TUnit::GetAllStrokes(void)
 }
 
 
-// ROM 0x0022bb14 OwnsStroke__5TUnitFv
+// ROM 0x0022e274 OwnsStroke__5TUnitFv
 Boolean
 TUnit::OwnsStroke(void)
 {
@@ -350,7 +350,7 @@ TUnit::OwnsStroke(void)
 }
 
 
-// ROM 0x0022bb1c ContextID__5TUnitFv
+// ROM 0x0022e27c ContextID__5TUnitFv
 ULong
 TUnit::ContextID(void)
 {
@@ -358,13 +358,13 @@ TUnit::ContextID(void)
 }
 
 
-// ROM 0x0022bb24 SetContextID__5TUnitFUl
+// ROM 0x0022e284 SetContextID__5TUnitFUl
 void
 TUnit::SetContextID(ULong /*id*/)
 { }
 
 
-// ROM 0x0022bb28 SetBBox__5TUnitFP5FRect
+// ROM 0x0022e288 SetBBox__5TUnitFP5FRect
 // The box, rounded to pixels.
 void
 TUnit::SetBBox(FRect* box)
@@ -376,7 +376,7 @@ TUnit::SetBBox(FRect* box)
 }
 
 
-// ROM 0x0022bb38 GetBBox__5TUnitFP5FRect
+// ROM 0x0022e298 GetBBox__5TUnitFP5FRect
 FRect*
 TUnit::GetBBox(FRect* box)
 {
@@ -385,7 +385,7 @@ TUnit::GetBBox(FRect* box)
 }
 
 
-// ROM 0x0022bcf4 MarkStrokes__FP5TUnitPcl
+// ROM 0x0022e454 MarkStrokes__FP5TUnitPcl
 // A count, per stroke index from base, of the times the stroke is under
 // the unit: a unit whose stroke range is one stroke, or all its own
 // (fSubRange == the range's length), counts its range; otherwise its subs
@@ -413,7 +413,7 @@ MarkStrokes(TUnit* unit, char* marks, long base)
 }
 
 
-// ROM 0x0022bc14 CountStrokes__FP5TUnit
+// ROM 0x0022e374 CountStrokes__FP5TUnit
 // The distinct strokes under a unit: those of its range that its subs
 // touch.
 long
@@ -452,7 +452,7 @@ CountStrokes(TUnit* unit)
 	T U n i t L i s t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0022a4a8 Make__9TUnitListSFv
+// ROM 0x0022ccf0 Make__9TUnitListSFv
 TUnitList*
 TUnitList::Make(void)
 {
@@ -470,7 +470,7 @@ TUnitList::Make(void)
 }
 
 
-// ROM 0x0022a510 IUnitList__9TUnitListFv
+// ROM 0x0022cd58 IUnitList__9TUnitListFv
 long
 TUnitList::IUnitList(void)
 {
@@ -480,7 +480,7 @@ TUnitList::IUnitList(void)
 }
 
 
-// ROM 0x0022a62c Dump__9TUnitListFP4TMsg
+// ROM 0x0022ce74 Dump__9TUnitListFP4TMsg
 void
 TUnitList::Dump(TMsg* msg)
 {
@@ -489,7 +489,7 @@ TUnitList::Dump(TMsg* msg)
 }
 
 
-// ROM 0x0022a51c Purge__9TUnitListFv
+// ROM 0x0022cd64 Purge__9TUnitListFv
 // Every unit disposed (the list itself keeps its entries).
 void
 TUnitList::Purge(void)
@@ -499,7 +499,7 @@ TUnitList::Purge(void)
 }
 
 
-// ROM 0x0022a564 AddUnit__9TUnitListFP5TUnit
+// ROM 0x0022cdac AddUnit__9TUnitListFP5TUnit
 // ==> true for no memory.
 Boolean
 TUnitList::AddUnit(TUnit* unit)
@@ -511,7 +511,7 @@ TUnitList::AddUnit(TUnit* unit)
 }
 
 
-// ROM 0x0022a594 AddUnique__9TUnitListFP5TUnit
+// ROM 0x0022cddc AddUnique__9TUnitListFP5TUnit
 // The unit added unless it is there already.  ==> true for no memory.
 Boolean
 TUnitList::AddUnique(TUnit* unit)
@@ -531,7 +531,7 @@ TUnitList::AddUnique(TUnit* unit)
 }
 
 
-// ROM 0x0022a604 GetUnit__9TUnitListFUl
+// ROM 0x0022ce4c GetUnit__9TUnitListFUl
 TUnit*
 TUnitList::GetUnit(ULong index)
 {
@@ -544,7 +544,7 @@ TUnitList::GetUnit(ULong index)
 	T T y p e L i s t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0022a24c Make__9TTypeListSFv
+// ROM 0x0022ca94 Make__9TTypeListSFv
 TTypeList*
 TTypeList::Make(void)
 {
@@ -562,7 +562,7 @@ TTypeList::Make(void)
 }
 
 
-// ROM 0x0022a2b4 ITypeList__9TTypeListFv
+// ROM 0x0022cafc ITypeList__9TTypeListFv
 long
 TTypeList::ITypeList(void)
 {
@@ -572,13 +572,13 @@ TTypeList::ITypeList(void)
 }
 
 
-// ROM 0x0022a404 Dump__9TTypeListFP4TMsg
+// ROM 0x0022cc4c Dump__9TTypeListFP4TMsg
 void
 TTypeList::Dump(TMsg* /*msg*/)
 { }
 
 
-// ROM 0x0022a2ec AddType__9TTypeListFUl
+// ROM 0x0022cb34 AddType__9TTypeListFUl
 Boolean
 TTypeList::AddType(ULong type)
 {
@@ -589,7 +589,7 @@ TTypeList::AddType(ULong type)
 }
 
 
-// ROM 0x0022a31c AddUnique__9TTypeListFUl
+// ROM 0x0022cb64 AddUnique__9TTypeListFUl
 Boolean
 TTypeList::AddUnique(ULong type)
 {
@@ -607,7 +607,7 @@ TTypeList::AddUnique(ULong type)
 }
 
 
-// ROM 0x0022a390 FindType__9TTypeListFUl
+// ROM 0x0022cbd8 FindType__9TTypeListFUl
 // ==> the type's index, -1 for not there.
 ULong
 TTypeList::FindType(ULong type)
@@ -619,7 +619,7 @@ TTypeList::FindType(ULong type)
 }
 
 
-// ROM 0x0022a3e4 GetType__9TTypeListFUl
+// ROM 0x0022cc2c GetType__9TTypeListFUl
 ULong
 TTypeList::GetType(ULong index)
 {
@@ -631,7 +631,7 @@ TTypeList::GetType(ULong index)
 	T S I U n i t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021a940 InitInterpretation__FP18UnitInterpretationUlT2
+// ROM 0x0021d070 InitInterpretation__FP18UnitInterpretationUlT2
 // An interpretation with no label, the worst score, and - when count is
 // not 0 - a TArray of count entries of elementSize as its parameter.
 // ==> 1, or 0 when the array could not be made.
@@ -654,12 +654,12 @@ InitInterpretation(UnitInterpretation* interp, ULong elementSize, ULong count)
 }
 
 
-// ROM 0x0021a340 __ct__7TSIUnitFv
+// ROM 0x0021ca70 __ct__7TSIUnitFv
 TSIUnit::TSIUnit()
 { }
 
 
-// ROM 0x0021adf8 ISIUnit__7TSIUnitFP7TDomainUlT2P6TArrayT2
+// ROM 0x0021d528 ISIUnit__7TSIUnitFP7TDomainUlT2P6TArrayT2
 // No subs, no interpretations yet (their size kept for when the list is
 // made).
 long
@@ -674,7 +674,7 @@ TSIUnit::ISIUnit(TDomain* domain, ULong type, ULong kind, TArray* areas, ULong i
 }
 
 
-// ROM 0x0021ad10 Dump__7TSIUnitFP4TMsg
+// ROM 0x0021d440 Dump__7TSIUnitFP4TMsg
 void
 TSIUnit::Dump(TMsg* msg)
 {
@@ -682,7 +682,7 @@ TSIUnit::Dump(TMsg* msg)
 }
 
 
-// ROM 0x0021b2f4 SizeInBytes__7TSIUnitFv
+// ROM 0x0021da24 SizeInBytes__7TSIUnitFv
 long
 TSIUnit::SizeInBytes(void)
 {
@@ -702,7 +702,7 @@ TSIUnit::SizeInBytes(void)
 }
 
 
-// ROM 0x0021aff8 IDispose__7TSIUnitFv
+// ROM 0x0021d728 IDispose__7TSIUnitFv
 // The sub list (not the subs) and the interpretations gone, then the
 // unit's own.
 void
@@ -719,7 +719,7 @@ TSIUnit::IDispose(void)
 }
 
 
-// ROM 0x0021b488 SubCount__7TSIUnitFv
+// ROM 0x0021dbb8 SubCount__7TSIUnitFv
 long
 TSIUnit::SubCount(void)
 {
@@ -731,7 +731,7 @@ TSIUnit::SubCount(void)
 }
 
 
-// ROM 0x0021a380 AddSub__7TSIUnitFP5TUnit
+// ROM 0x0021cab0 AddSub__7TSIUnitFP5TUnit
 // A sub added: the first is kept in place, the second makes the list.  The
 // unit's box grows to the sub's, its start time and duration cover the
 // sub's, its elapsed time is now, its stroke range takes the sub's in, and
@@ -815,7 +815,7 @@ TSIUnit::AddSub(TUnit* sub)
 }
 
 
-// ROM 0x0021a688 GetSub__7TSIUnitFUl
+// ROM 0x0021cdb8 GetSub__7TSIUnitFUl
 TUnit*
 TSIUnit::GetSub(ULong index)
 {
@@ -827,7 +827,7 @@ TSIUnit::GetSub(ULong index)
 }
 
 
-// ROM 0x0021a6e4 DeleteSub__7TSIUnitFUl
+// ROM 0x0021ce14 DeleteSub__7TSIUnitFUl
 // The sub taken out and disposed; a list left with one sub folds back to
 // keeping it in place.
 void
@@ -861,7 +861,7 @@ TSIUnit::DeleteSub(ULong index)
 }
 
 
-// ROM 0x0021a7ac MarkUnit__7TSIUnitFP9TUnitListUl
+// ROM 0x0021cedc MarkUnit__7TSIUnitFP9TUnitListUl
 // The unit flagged and its subs marked; a unit with no subs is put in the
 // list itself.  ==> 0, or 1 for no memory.
 long
@@ -881,7 +881,7 @@ TSIUnit::MarkUnit(TUnitList* list, ULong flags)
 }
 
 
-// ROM 0x0021a84c ClaimUnit__7TSIUnitFP9TUnitList
+// ROM 0x0021cf7c ClaimUnit__7TSIUnitFP9TUnitList
 void
 TSIUnit::ClaimUnit(TUnitList* list)
 {
@@ -889,7 +889,7 @@ TSIUnit::ClaimUnit(TUnitList* list)
 }
 
 
-// ROM 0x0021a858 GetSubsCopy__7TSIUnitFv
+// ROM 0x0021cf88 GetSubsCopy__7TSIUnitFv
 // The subs as a list: the list itself (cloned), or a new one of the single
 // sub; nil for none.
 TDArray*
@@ -911,7 +911,7 @@ TSIUnit::GetSubsCopy(void)
 }
 
 
-// ROM 0x0021a8d0 CloseInterpList__7TSIUnitFv
+// ROM 0x0021d000 CloseInterpList__7TSIUnitFv
 // The list disposed; its element size stays for the next one.
 void
 TSIUnit::CloseInterpList(void)
@@ -923,7 +923,7 @@ TSIUnit::CloseInterpList(void)
 }
 
 
-// ROM 0x0021a900 OpenInterpList__7TSIUnitFv
+// ROM 0x0021d030 OpenInterpList__7TSIUnitFv
 // ==> 0, or -1 for no memory.
 long
 TSIUnit::OpenInterpList(void)
@@ -937,7 +937,7 @@ TSIUnit::OpenInterpList(void)
 }
 
 
-// ROM 0x0021a998 InterpretationCount__7TSIUnitFv
+// ROM 0x0021d0c8 InterpretationCount__7TSIUnitFv
 long
 TSIUnit::InterpretationCount(void)
 {
@@ -947,7 +947,7 @@ TSIUnit::InterpretationCount(void)
 }
 
 
-// ROM 0x0021a9c4 InterpretationReuse__7TSIUnitFUlN21
+// ROM 0x0021d0f4 InterpretationReuse__7TSIUnitFUlN21
 // The interpretations cut back to count; when there are fewer, the list
 // is sized to count and - when paramCount is not 0 - the new ones are set
 // up fresh, each with a paramCount-entry parameter array of paramSize.
@@ -989,7 +989,7 @@ TSIUnit::InterpretationReuse(ULong count, ULong paramSize, ULong paramCount)
 }
 
 
-// ROM 0x0021ab10 AddInterpretation__7TSIUnitFPc
+// ROM 0x0021d240 AddInterpretation__7TSIUnitFPc
 // ==> the new interpretation's index, -1 for no memory.
 long
 TSIUnit::AddInterpretation(char* interp)
@@ -1007,7 +1007,7 @@ TSIUnit::AddInterpretation(char* interp)
 }
 
 
-// ROM 0x0021ab88 GetInterpretation__7TSIUnitFUl
+// ROM 0x0021d2b8 GetInterpretation__7TSIUnitFUl
 UnitInterpretation*
 TSIUnit::GetInterpretation(ULong index)
 {
@@ -1017,7 +1017,7 @@ TSIUnit::GetInterpretation(ULong index)
 }
 
 
-// ROM 0x0021aba8 DeleteInterpretation__7TSIUnitFUl
+// ROM 0x0021d2d8 DeleteInterpretation__7TSIUnitFUl
 // The interpretation's parameter disposed and the entry deleted; the list
 // closes when it empties.  ==> 1.
 long
@@ -1033,7 +1033,7 @@ TSIUnit::DeleteInterpretation(ULong index)
 }
 
 
-// ROM 0x0021ac08 InsertInterpretation__7TSIUnitFUl
+// ROM 0x0021d338 InsertInterpretation__7TSIUnitFUl
 // A slot opened at the index.  ==> its index, -1 for no memory.
 long
 TSIUnit::InsertInterpretation(ULong index)
@@ -1046,7 +1046,7 @@ TSIUnit::InsertInterpretation(ULong index)
 }
 
 
-// ROM 0x0021ac54 LockInterpretations__7TSIUnitFv
+// ROM 0x0021d384 LockInterpretations__7TSIUnitFv
 char*
 TSIUnit::LockInterpretations(void)
 {
@@ -1056,7 +1056,7 @@ TSIUnit::LockInterpretations(void)
 }
 
 
-// ROM 0x0021ac68 UnlockInterpretations__7TSIUnitFv
+// ROM 0x0021d398 UnlockInterpretations__7TSIUnitFv
 void
 TSIUnit::UnlockInterpretations(void)
 {
@@ -1065,7 +1065,7 @@ TSIUnit::UnlockInterpretations(void)
 }
 
 
-// ROM 0x0021ac7c CompactInterpretations__7TSIUnitFv
+// ROM 0x0021d3ac CompactInterpretations__7TSIUnitFv
 void
 TSIUnit::CompactInterpretations(void)
 {
@@ -1074,7 +1074,7 @@ TSIUnit::CompactInterpretations(void)
 }
 
 
-// ROM 0x0021ac94 GetBestInterpretation__7TSIUnitFv
+// ROM 0x0021d3c4 GetBestInterpretation__7TSIUnitFv
 // The labelled interpretation with the lowest score (below 10000); -1 for
 // none.
 long
@@ -1096,7 +1096,7 @@ TSIUnit::GetBestInterpretation(void)
 }
 
 
-// ROM 0x0021ae38 GetLabel__7TSIUnitFUl
+// ROM 0x0021d568 GetLabel__7TSIUnitFUl
 long
 TSIUnit::GetLabel(ULong index)
 {
@@ -1105,7 +1105,7 @@ TSIUnit::GetLabel(ULong index)
 }
 
 
-// ROM 0x0021ae60 GetScore__7TSIUnitFUl
+// ROM 0x0021d590 GetScore__7TSIUnitFUl
 long
 TSIUnit::GetScore(ULong index)
 {
@@ -1114,7 +1114,7 @@ TSIUnit::GetScore(ULong index)
 }
 
 
-// ROM 0x0021ae88 GetAngle__7TSIUnitFUl
+// ROM 0x0021d5b8 GetAngle__7TSIUnitFUl
 long
 TSIUnit::GetAngle(ULong index)
 {
@@ -1123,7 +1123,7 @@ TSIUnit::GetAngle(ULong index)
 }
 
 
-// ROM 0x0021aeb0 GetParam__7TSIUnitFUl
+// ROM 0x0021d5e0 GetParam__7TSIUnitFUl
 TRecObject*
 TSIUnit::GetParam(ULong index)
 {
@@ -1132,7 +1132,7 @@ TSIUnit::GetParam(ULong index)
 }
 
 
-// ROM 0x0021aed8 SetLabel__7TSIUnitFUlT1
+// ROM 0x0021d608 SetLabel__7TSIUnitFUlT1
 void
 TSIUnit::SetLabel(ULong index, ULong label)
 {
@@ -1142,7 +1142,7 @@ TSIUnit::SetLabel(ULong index, ULong label)
 }
 
 
-// ROM 0x0021af00 SetScore__7TSIUnitFUlT1
+// ROM 0x0021d630 SetScore__7TSIUnitFUlT1
 void
 TSIUnit::SetScore(ULong index, ULong score)
 {
@@ -1152,7 +1152,7 @@ TSIUnit::SetScore(ULong index, ULong score)
 }
 
 
-// ROM 0x0021af28 SetAngle__7TSIUnitFUll
+// ROM 0x0021d658 SetAngle__7TSIUnitFUll
 void
 TSIUnit::SetAngle(ULong index, long angle)
 {
@@ -1162,7 +1162,7 @@ TSIUnit::SetAngle(ULong index, long angle)
 }
 
 
-// ROM 0x0021af50 CheckInterpretationIndex__7TSIUnitFUl
+// ROM 0x0021d680 CheckInterpretationIndex__7TSIUnitFUl
 Boolean
 TSIUnit::CheckInterpretationIndex(ULong index)
 {
@@ -1170,7 +1170,7 @@ TSIUnit::CheckInterpretationIndex(ULong index)
 }
 
 
-// ROM 0x0021af90 CountStrokes__7TSIUnitFv
+// ROM 0x0021d6c0 CountStrokes__7TSIUnitFv
 // The subs' strokes together.
 long
 TSIUnit::CountStrokes(void)
@@ -1183,7 +1183,7 @@ TSIUnit::CountStrokes(void)
 }
 
 
-// ROM 0x0021b074 GetStroke__7TSIUnitFUl
+// ROM 0x0021d7a4 GetStroke__7TSIUnitFUl
 // The index-th stroke, counting across the subs.
 TStroke*
 TSIUnit::GetStroke(ULong index)
@@ -1206,7 +1206,7 @@ TSIUnit::GetStroke(ULong index)
 }
 
 
-// ROM 0x0021b140 GetAllStrokes__7TSIUnitFv
+// ROM 0x0021d870 GetAllStrokes__7TSIUnitFv
 // The units under this one that own strokes: the tree is walked down a
 // level at a time - each level's units' subs make the next - until a
 // level owns its strokes.  ==> the list, nil for no memory.
@@ -1255,7 +1255,7 @@ TSIUnit::GetAllStrokes(void)
 }
 
 
-// ROM 0x0021b290 DoneUsingUnit__7TSIUnitFv
+// ROM 0x0021d9c0 DoneUsingUnit__7TSIUnitFv
 // The interpretations and the areas let go.
 void
 TSIUnit::DoneUsingUnit(void)
@@ -1268,7 +1268,7 @@ TSIUnit::DoneUsingUnit(void)
 }
 
 
-// ROM 0x0021b3ac EndSubs__7TSIUnitFv
+// ROM 0x0021dadc EndSubs__7TSIUnitFv
 // No more subs: the delay is dropped and the list compacted.  ==> 0.
 long
 TSIUnit::EndSubs(void)
@@ -1281,7 +1281,7 @@ TSIUnit::EndSubs(void)
 }
 
 
-// ROM 0x0021b40c EndUnit__7TSIUnitFv
+// ROM 0x0021db3c EndUnit__7TSIUnitFv
 // The subs ended, the interpretations' parameter arrays compacted.
 void
 TSIUnit::EndUnit(void)
@@ -1302,7 +1302,7 @@ TSIUnit::EndUnit(void)
 	T S t r o k e U n i t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021f680 Make__11TStrokeUnitSFP7TDomainUlP7TStrokeP6TArray
+// ROM 0x00221ec8 Make__11TStrokeUnitSFP7TDomainUlP7TStrokeP6TArray
 TStrokeUnit*
 TStrokeUnit::Make(TDomain* domain, ULong kind, TStroke* stroke, TArray* areas)
 {
@@ -1316,7 +1316,7 @@ TStrokeUnit::Make(TDomain* domain, ULong kind, TStroke* stroke, TArray* areas)
 }
 
 
-// ROM 0x0021f708 IStrokeUnit__11TStrokeUnitFP7TDomainUlP7TStrokeP6TArray
+// ROM 0x00221f50 IStrokeUnit__11TStrokeUnitFP7TDomainUlP7TStrokeP6TArray
 // A 'STRK' unit over the stroke: its box, from its down time to its up
 // time; 16-byte interpretations.
 long
@@ -1332,13 +1332,13 @@ TStrokeUnit::IStrokeUnit(TDomain* domain, ULong kind, TStroke* stroke, TArray* a
 }
 
 
-// ROM 0x0021e74c Dump__11TStrokeUnitFP4TMsg
+// ROM 0x00220f94 Dump__11TStrokeUnitFP4TMsg
 void
 TStrokeUnit::Dump(TMsg* /*msg*/)
 { }
 
 
-// ROM 0x0021f788 IDispose__11TStrokeUnitFv
+// ROM 0x00221fd0 IDispose__11TStrokeUnitFv
 // The stroke goes with the unit while the unit is still a 'STRK' (a
 // domain that retypes the unit takes the stroke over).
 void
@@ -1350,7 +1350,7 @@ TStrokeUnit::IDispose(void)
 }
 
 
-// ROM 0x0021e6e0 CountStrokes__11TStrokeUnitFv
+// ROM 0x00220f28 CountStrokes__11TStrokeUnitFv
 long
 TStrokeUnit::CountStrokes(void)
 {
@@ -1358,7 +1358,7 @@ TStrokeUnit::CountStrokes(void)
 }
 
 
-// ROM 0x0021e6e8 GetStroke__11TStrokeUnitFUl
+// ROM 0x00220f30 GetStroke__11TStrokeUnitFUl
 TStroke*
 TStrokeUnit::GetStroke(ULong /*index*/)
 {
@@ -1366,7 +1366,7 @@ TStrokeUnit::GetStroke(ULong /*index*/)
 }
 
 
-// ROM 0x0021e708 GetAllStrokes__11TStrokeUnitFv
+// ROM 0x00220f50 GetAllStrokes__11TStrokeUnitFv
 // A list of the unit itself.
 TUnitList*
 TStrokeUnit::GetAllStrokes(void)
@@ -1382,7 +1382,7 @@ TStrokeUnit::GetAllStrokes(void)
 }
 
 
-// ROM 0x0021e6f0 OwnsStroke__11TStrokeUnitFv
+// ROM 0x00220f38 OwnsStroke__11TStrokeUnitFv
 Boolean
 TStrokeUnit::OwnsStroke(void)
 {
@@ -1390,7 +1390,7 @@ TStrokeUnit::OwnsStroke(void)
 }
 
 
-// ROM 0x0021e6f8 ContextID__11TStrokeUnitFv
+// ROM 0x00220f40 ContextID__11TStrokeUnitFv
 ULong
 TStrokeUnit::ContextID(void)
 {
@@ -1398,7 +1398,7 @@ TStrokeUnit::ContextID(void)
 }
 
 
-// ROM 0x0021e700 SetContextID__11TStrokeUnitFUl
+// ROM 0x00220f48 SetContextID__11TStrokeUnitFUl
 void
 TStrokeUnit::SetContextID(ULong id)
 {
@@ -1410,7 +1410,7 @@ TStrokeUnit::SetContextID(ULong id)
 	T C l i c k U n i t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021cde8 Make__10TClickUnitSFP7TDomainUlP7TStrokeP6TArray
+// ROM 0x0021f518 Make__10TClickUnitSFP7TDomainUlP7TStrokeP6TArray
 TClickUnit*
 TClickUnit::Make(TDomain* domain, ULong kind, TStroke* stroke, TArray* areas)
 {
@@ -1424,7 +1424,7 @@ TClickUnit::Make(TDomain* domain, ULong kind, TStroke* stroke, TArray* areas)
 }
 
 
-// ROM 0x0021ce70 IClickUnit__10TClickUnitFP7TDomainUlP7TStrokeP6TArray
+// ROM 0x0021f5a0 IClickUnit__10TClickUnitFP7TDomainUlP7TStrokeP6TArray
 // A 'CLIK' unit over the stroke of the pen-down: its box so far, started
 // at its down time, no duration.
 long
@@ -1439,7 +1439,7 @@ TClickUnit::IClickUnit(TDomain* domain, ULong kind, TStroke* stroke, TArray* are
 }
 
 
-// ROM 0x0021cb5c Dump__10TClickUnitFP4TMsg
+// ROM 0x0021f28c Dump__10TClickUnitFP4TMsg
 void
 TClickUnit::Dump(TMsg* msg)
 {
@@ -1447,7 +1447,7 @@ TClickUnit::Dump(TMsg* msg)
 }
 
 
-// ROM 0x0021cf10 IDispose__10TClickUnitFv
+// ROM 0x0021f640 IDispose__10TClickUnitFv
 // The stroke let out of the inker's buffer and disposed.
 void
 TClickUnit::IDispose(void)
@@ -1459,7 +1459,7 @@ TClickUnit::IDispose(void)
 }
 
 
-// ROM 0x0021ced8 MarkUnit__10TClickUnitFP9TUnitListUl
+// ROM 0x0021f608 MarkUnit__10TClickUnitFP9TUnitListUl
 // The stroke let out of the inker's buffer as the unit is marked.
 long
 TClickUnit::MarkUnit(TUnitList* list, ULong flags)
@@ -1471,7 +1471,7 @@ TClickUnit::MarkUnit(TUnitList* list, ULong flags)
 }
 
 
-// ROM 0x0021cbb4 CountStrokes__10TClickUnitFv
+// ROM 0x0021f2e4 CountStrokes__10TClickUnitFv
 long
 TClickUnit::CountStrokes(void)
 {
@@ -1479,7 +1479,7 @@ TClickUnit::CountStrokes(void)
 }
 
 
-// ROM 0x0021cbbc GetStroke__10TClickUnitFUl
+// ROM 0x0021f2ec GetStroke__10TClickUnitFUl
 TStroke*
 TClickUnit::GetStroke(ULong /*index*/)
 {
@@ -1487,7 +1487,7 @@ TClickUnit::GetStroke(ULong /*index*/)
 }
 
 
-// ROM 0x0021cbc4 OwnsStroke__10TClickUnitFv
+// ROM 0x0021f2f4 OwnsStroke__10TClickUnitFv
 Boolean
 TClickUnit::OwnsStroke(void)
 {
@@ -1499,7 +1499,7 @@ TClickUnit::OwnsStroke(void)
 	T C l i c k E v e n t U n i t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0021cbcc Make__15TClickEventUnitSFP7TDomainUlP6TArray
+// ROM 0x0021f2fc Make__15TClickEventUnitSFP7TDomainUlP6TArray
 TClickEventUnit*
 TClickEventUnit::Make(TDomain* domain, ULong kind, TArray* areas)
 {
@@ -1513,7 +1513,7 @@ TClickEventUnit::Make(TDomain* domain, ULong kind, TArray* areas)
 }
 
 
-// ROM 0x0021cc44 IClickEventUnit__15TClickEventUnitFP7TDomainUlP6TArray
+// ROM 0x0021f374 IClickEventUnit__15TClickEventUnitFP7TDomainUlP6TArray
 // A 'CEVT' unit with no interpretations; its event is read from its sub
 // (a click unit) when first asked for.
 long
@@ -1525,7 +1525,7 @@ TClickEventUnit::IClickEventUnit(TDomain* domain, ULong kind, TArray* areas)
 }
 
 
-// ROM 0x0021cc84 Event__15TClickEventUnitFv
+// ROM 0x0021f3b4 Event__15TClickEventUnitFv
 // The click event the sub's stroke carries, read once.
 long
 TClickEventUnit::Event(void)
@@ -1539,7 +1539,7 @@ TClickEventUnit::Event(void)
 }
 
 
-// ROM 0x0021ccc8 ClearEvent__15TClickEventUnitFv
+// ROM 0x0021f3f8 ClearEvent__15TClickEventUnitFv
 // The event kept in the unit and marked processed in the stroke, so the
 // stroke world does not make another unit of it.
 void
@@ -1551,7 +1551,7 @@ TClickEventUnit::ClearEvent(void)
 }
 
 
-// ROM 0x0021cd04 Dump__15TClickEventUnitFP4TMsg
+// ROM 0x0021f434 Dump__15TClickEventUnitFP4TMsg
 void
 TClickEventUnit::Dump(TMsg* msg)
 {

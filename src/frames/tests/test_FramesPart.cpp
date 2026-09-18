@@ -1,7 +1,7 @@
 // Frames part test (src/frames/FramesPart.h): the ROM's objects imported,
 // then the frames part of a package built into the ROM extension
-// (Cardfile, the Names application: build/MP2100D/rom.bin at 0x6f3444,
-// its part at +284, refs being its ROM addresses) imported and looked
+// (Cardfile, the Names application: build/MP2x00US/rom.bin at 0x7201f4,
+// its part at +296, refs being its ROM addresses) imported and looked
 // at: the top-level frame's slots (an 'auto part: installScript,
 // removeScript, partData), the part's own symbols, a NewtonScript
 // expression over it, its objects read-only, and the part removed with
@@ -27,9 +27,9 @@ static int failures = 0;
 
 static Ref SYMBOL(const char* name) { return Intern((char*) name); }
 
-const long kCardfilePackage = 0x6f3444;		// rex-packages.md
-const long kCardfilePartOffset = 284;
-const long kCardfilePartSize = 146516;
+const long kCardfilePackage = 0x7201f4;		// rex-packages.md
+const long kCardfilePartOffset = 296;
+const long kCardfilePartSize = 144308;
 
 
 static Ref

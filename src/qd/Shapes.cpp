@@ -3,15 +3,15 @@
 
 	Contains:	Lines, ovals, round rectangles and arcs.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
-	The ROM's DrawArc (0x00285f50) rasterises the shape straight into the
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
+	The ROM's DrawArc (0x002aaaf8) rasterises the shape straight into the
 	port's bits row by row (the oval's ends from BumpOval, the pen's inner
 	oval for a frame, the angles' slopes for an arc, the clip regions'
 	masks); the host builds the shape as a region from the same OvalRec
 	rows (PutOval, the ROM's own point writer for an open region) and
 	draws it through DrawRgn - the same pixels, one pass more (DEVIATION:
 	the code).  Lines are drawn as the pen swept along the line's pixels
-	(the ROM's DrawLine 0x002d277c does the same a row at a time).
+	(the ROM's DrawLine 0x002f7fc0 does the same a row at a time).
 */
 
 #include "Shapes.h"
@@ -25,7 +25,7 @@
 	T h e   o v a l   r a s t e r i s e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002fb7c8 InitOval__FP4RectP7OvalReclT3
+// ROM 0x00320ac4 InitOval__FP4RectP7OvalReclT3
 // The state for an oval of the corners' width and height (clamped to the
 // rectangle) in the rectangle: the row's ends start at the flat top edge,
 // half the oval's width in from each side; the accumulator's differences
@@ -61,7 +61,7 @@ InitOval(const Rect* r, OvalRec* oval, long ovalWidth, long ovalHeight)
 }
 
 
-// ROM 0x002fb698 BumpOval__FP7OvalRecl
+// ROM 0x00320994 BumpOval__FP7OvalRecl
 // The ends moved to row y's: widened half a pixel at a time while the
 // accumulator is below the decision term, narrowed while above.
 void
@@ -114,7 +114,7 @@ EmitPoint(short* out, const short* start, long y, long x)
 }
 
 
-// ROM 0x002fb3e8 PutOval__FP4RectlT2PPcPlT5
+// ROM 0x003206e4 PutOval__FP4RectlT2PPcPlT5
 // The shape's change points appended to the point buffer (grown as
 // needed): the top row's ends, then, for each row of the curved parts
 // (the top and bottom halves of the corner oval), the new and old end
@@ -211,7 +211,7 @@ OvalRgn(const Rect* r, long ovalWidth, long ovalHeight)
 	A r c s ,   o v a l s ,   r o u n d   r e c t a n g l e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00285f50 DrawArc__FP4RectUclN23PP8PixelMapN23
+// ROM 0x002aaaf8 DrawArc__FP4RectUclN23PP8PixelMapN23
 // The shape - an oval of the corners' size within the rectangle, or, from
 // startAngle through arcAngle, the wedge of it - drawn under the mode and
 // pattern: the whole of it, or, framed, without the same shape inset by
@@ -253,7 +253,7 @@ DrawArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mod
 }
 
 
-// ROM 0x002fb2bc StdOval
+// ROM 0x003205b8 StdOval
 // The standard oval proc: the oval fills its rectangle; frame records it
 // into an open region (PutOval).  NOT YET RECONSTRUCTED: recording into
 // an open picture.
@@ -269,7 +269,7 @@ StdOval(GrafVerb verb, Rect* r)
 }
 
 
-// ROM 0x002fb3a8 CallOval__FUcP4Rect
+// ROM 0x003206a4 CallOval__FUcP4Rect
 void
 CallOval(GrafVerb verb, const Rect* r)
 {
@@ -279,17 +279,17 @@ CallOval(GrafVerb verb, const Rect* r)
 }
 
 
-// ROM 0x002fb254 FrameOval__FP4Rect
+// ROM 0x00320550 FrameOval__FP4Rect
 void	FrameOval(const Rect* r)		{ CallOval(frame, r); }
-// ROM 0x002fb260 PaintOval__FP4Rect
+// ROM 0x0032055c PaintOval__FP4Rect
 void	PaintOval(const Rect* r)		{ CallOval(paint, r); }
-// ROM 0x002fb26c EraseOval__FP4Rect
+// ROM 0x00320568 EraseOval__FP4Rect
 void	EraseOval(const Rect* r)		{ CallOval(erase, r); }
-// ROM 0x002fb278 InvertOval__FP4Rect
+// ROM 0x00320574 InvertOval__FP4Rect
 void	InvertOval(const Rect* r)		{ CallOval(invert, r); }
 
 
-// ROM 0x002fb284 FillOval__FP4RectPP8PixelMap
+// ROM 0x00320580 FillOval__FP4RectPP8PixelMap
 void
 FillOval(const Rect* r, PatternHandle pattern)
 {
@@ -301,7 +301,7 @@ FillOval(const Rect* r, PatternHandle pattern)
 }
 
 
-// ROM 0x00318eac StdRRect
+// ROM 0x00344df4 StdRRect
 // The standard round-rectangle proc; frame records the shape into an
 // open region.  NOT YET RECONSTRUCTED: recording into an open picture.
 void
@@ -316,7 +316,7 @@ StdRRect(GrafVerb verb, Rect* r, long ovalWidth, long ovalHeight)
 }
 
 
-// ROM 0x00318fcc CallRRect__FUcP4RectlT3
+// ROM 0x00344f14 CallRRect__FUcP4RectlT3
 // Square corners make it a rectangle.
 void
 CallRRect(GrafVerb verb, const Rect* r, long ovalWidth, long ovalHeight)
@@ -332,17 +332,17 @@ CallRRect(GrafVerb verb, const Rect* r, long ovalWidth, long ovalHeight)
 }
 
 
-// ROM 0x00318e14 FrameRoundRect__FP4RectlT2
+// ROM 0x00344d5c FrameRoundRect__FP4RectlT2
 void	FrameRoundRect(const Rect* r, long ovalWidth, long ovalHeight)		{ CallRRect(frame, r, ovalWidth, ovalHeight); }
-// ROM 0x00318e28 PaintRoundRect__FP4RectlT2
+// ROM 0x00344d70 PaintRoundRect__FP4RectlT2
 void	PaintRoundRect(const Rect* r, long ovalWidth, long ovalHeight)		{ CallRRect(paint, r, ovalWidth, ovalHeight); }
-// ROM 0x00318e3c EraseRoundRect__FP4RectlT2
+// ROM 0x00344d84 EraseRoundRect__FP4RectlT2
 void	EraseRoundRect(const Rect* r, long ovalWidth, long ovalHeight)		{ CallRRect(erase, r, ovalWidth, ovalHeight); }
-// ROM 0x00318e50 InvertRoundRect__FP4RectlT2
+// ROM 0x00344d98 InvertRoundRect__FP4RectlT2
 void	InvertRoundRect(const Rect* r, long ovalWidth, long ovalHeight)		{ CallRRect(invert, r, ovalWidth, ovalHeight); }
 
 
-// ROM 0x00318e64 FillRoundRect__FP4RectlT2PP8PixelMap
+// ROM 0x00344dac FillRoundRect__FP4RectlT2PP8PixelMap
 void
 FillRoundRect(const Rect* r, long ovalWidth, long ovalHeight, PatternHandle pattern)
 {
@@ -354,7 +354,7 @@ FillRoundRect(const Rect* r, long ovalWidth, long ovalHeight, PatternHandle patt
 }
 
 
-// ROM 0x00285df8 StdArc
+// ROM 0x002aa9a0 StdArc
 // The standard arc proc: the wedge of the oval that fills the rectangle.
 // NOT YET RECONSTRUCTED: recording into an open picture or region.
 void
@@ -367,7 +367,7 @@ StdArc(GrafVerb verb, Rect* r, long startAngle, long arcAngle)
 }
 
 
-// ROM 0x00285f00 CallArc__FUcP4RectlT3
+// ROM 0x002aaaa8 CallArc__FUcP4RectlT3
 void
 CallArc(GrafVerb verb, const Rect* r, long startAngle, long arcAngle)
 {
@@ -377,17 +377,17 @@ CallArc(GrafVerb verb, const Rect* r, long startAngle, long arcAngle)
 }
 
 
-// ROM 0x00285d60 FrameArc__FP4RectlT2
+// ROM 0x002aa908 FrameArc__FP4RectlT2
 void	FrameArc(const Rect* r, long startAngle, long arcAngle)		{ CallArc(frame, r, startAngle, arcAngle); }
-// ROM 0x00285d74 PaintArc__FP4RectlT2
+// ROM 0x002aa91c PaintArc__FP4RectlT2
 void	PaintArc(const Rect* r, long startAngle, long arcAngle)		{ CallArc(paint, r, startAngle, arcAngle); }
-// ROM 0x00285d88 EraseArc__FP4RectlT2
+// ROM 0x002aa930 EraseArc__FP4RectlT2
 void	EraseArc(const Rect* r, long startAngle, long arcAngle)		{ CallArc(erase, r, startAngle, arcAngle); }
-// ROM 0x00285d9c InvertArc__FP4RectlT2
+// ROM 0x002aa944 InvertArc__FP4RectlT2
 void	InvertArc(const Rect* r, long startAngle, long arcAngle)	{ CallArc(invert, r, startAngle, arcAngle); }
 
 
-// ROM 0x00285db0 FillArc__FP4RectlT2PP8PixelMap
+// ROM 0x002aa958 FillArc__FP4RectlT2PP8PixelMap
 void
 FillArc(const Rect* r, long startAngle, long arcAngle, PatternHandle pattern)
 {
@@ -403,7 +403,7 @@ FillArc(const Rect* r, long startAngle, long arcAngle, PatternHandle pattern)
 	L i n e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002d277c DrawLine__F5PointT1
+// ROM 0x002f7fc0 DrawLine__F5PointT1
 // The line from one point to the other, the pen (its size, mode and
 // pattern) stamped at every pixel along it - hanging below and to the
 // right of the point - clipped by the port's regions; nothing while the
@@ -458,7 +458,7 @@ DrawLine(Point from, Point to)
 }
 
 
-// ROM 0x002d1eac StdLine
+// ROM 0x002f76f0 StdLine
 // The standard line proc: the line from the pen's location to the point,
 // which becomes the pen's location - recorded into an open polygon or
 // region (DoLine).  NOT YET RECONSTRUCTED: recording into an open picture.
@@ -469,7 +469,7 @@ StdLine(Point to)
 }
 
 
-// ROM 0x002d1e20 LineTo__FlT1
+// ROM 0x002f7664 LineTo__FlT1
 void
 LineTo(long h, long v)
 {
@@ -479,7 +479,7 @@ LineTo(long h, long v)
 }
 
 
-// ROM 0x002d1e7c Line__FlT1
+// ROM 0x002f76c0 Line__FlT1
 void
 Line(long dh, long dv)
 {

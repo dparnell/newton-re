@@ -5,7 +5,7 @@
 				(CompleteMsg & co.) and the destructor live in Port.cpp with
 				the port code they are entangled with.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SharedMem.h"
@@ -14,7 +14,7 @@
 #include <stddef.h>
 
 
-// ROM 0x001e1e6c Init__10TSharedMemFP12TEnvironment
+// ROM 0x001dfa54 Init__10TSharedMemFP12TEnvironment
 NewtonErr
 TSharedMem::Init(TEnvironment* environment)
 {
@@ -26,7 +26,7 @@ TSharedMem::Init(TEnvironment* environment)
 }
 
 
-// ROM 0x001e2594 __ct__13TSharedMemMsgFv
+// ROM 0x001e017c __ct__13TSharedMemMsgFv
 // The queue items construct themselves; fSenders links messages through
 // their fPortQItem (the ROM passes the literal offset 0x80).
 TSharedMemMsg::TSharedMemMsg()
@@ -35,7 +35,7 @@ TSharedMemMsg::TSharedMemMsg()
 }
 
 
-// ROM 0x001e280c Init__13TSharedMemMsgFP12TEnvironment
+// ROM 0x001e03f4 Init__13TSharedMemMsgFP12TEnvironment
 NewtonErr
 TSharedMemMsg::Init(TEnvironment* environment)
 {

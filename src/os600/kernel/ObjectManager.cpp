@@ -4,7 +4,7 @@
 	Contains:	The object manager monitor's proc, its request handlers and the
 				object table's scavenge proc.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ObjectManager.h"
@@ -27,7 +27,7 @@
 TObjectManager*	gTheObjectManager = nil;
 
 
-// ROM 0x0014ad58 __ct__14TObjectManagerFv
+// ROM 0x001491fc __ct__14TObjectManagerFv
 TObjectManager::TObjectManager()
 {
 	fTaskToDelete = 0;
@@ -43,7 +43,7 @@ TObjectManager::MonitorProcGlue(void* manager, ULong selector, void* msg)
 }
 
 
-// ROM 0x0014ad88 MonitorProc__14TObjectManagerFlP13ObjectMessage
+// ROM 0x0014922c MonitorProc__14TObjectManagerFlP13ObjectMessage
 // A task that kills itself (kObjectMgr_KillSelf) cannot be removed while it
 // is the monitor's caller, so it is marked and removed on the next request.
 NewtonErr
@@ -166,7 +166,7 @@ EnvironmentForRequest(TObjectId envId, TObjectId requesterId, TEnvironment** out
 }
 
 
-// ROM 0x0014a768 ObjectAlloc__FP13ObjectMessageUlT2PUl
+// ROM 0x00148c0c ObjectAlloc__FP13ObjectMessageUlT2PUl
 // Makes the object the message asks for and enters it in the object table
 // owned by the requester - except a task, which is owned by nobody (1) and
 // only assigned to the requester (TaskAcceptObject makes it theirs), and a
@@ -356,7 +356,7 @@ ObjectAlloc(ObjectMessage* msg, ULong size, TObjectId requesterId, TObjectId* ou
 }
 
 
-// ROM 0x0014b2a8 ObjectDestroy__FP13ObjectMessageUlT2
+// ROM 0x0014974c ObjectDestroy__FP13ObjectMessageUlT2
 // Only the owner may destroy an object (unless no requester is given).
 // The removal is TObjectTable::Remove, inlined in the ROM.
 NewtonErr
@@ -373,7 +373,7 @@ ObjectDestroy(ObjectMessage* msg, ULong size, TObjectId requesterId)
 }
 
 
-// ROM 0x0014b318 ObjectStart__FP13ObjectMessageUl
+// ROM 0x001497bc ObjectStart__FP13ObjectMessageUl
 NewtonErr
 ObjectStart(ObjectMessage* msg, ULong size)
 {
@@ -387,7 +387,7 @@ ObjectStart(ObjectMessage* msg, ULong size)
 }
 
 
-// ROM 0x0014b394 ObjectSuspend__FP13ObjectMessageUl
+// ROM 0x00149838 ObjectSuspend__FP13ObjectMessageUl
 NewtonErr
 ObjectSuspend(ObjectMessage* msg, ULong size)
 {
@@ -406,7 +406,7 @@ ObjectSuspend(ObjectMessage* msg, ULong size)
 }
 
 
-// ROM 0x0014b41c ObjectGetRegister__FP13ObjectMessageUlPUl
+// ROM 0x001498c0 ObjectGetRegister__FP13ObjectMessageUlPUl
 NewtonErr
 ObjectGetRegister(ObjectMessage* msg, ULong size, ULong* outValue)
 {
@@ -422,7 +422,7 @@ ObjectGetRegister(ObjectMessage* msg, ULong size, ULong* outValue)
 }
 
 
-// ROM 0x0014b4ac ObjectSetRegister__FP13ObjectMessageUl
+// ROM 0x00149950 ObjectSetRegister__FP13ObjectMessageUl
 NewtonErr
 ObjectSetRegister(ObjectMessage* msg, ULong size)
 {
@@ -438,7 +438,7 @@ ObjectSetRegister(ObjectMessage* msg, ULong size)
 }
 
 
-// ROM 0x0014a698 GetObjectContent__FP13ObjectMessageUlT1
+// ROM 0x00148b3c GetObjectContent__FP13ObjectMessageUlT1
 // A task's accounting figures, read with scheduling held off.
 NewtonErr
 GetObjectContent(ObjectMessage* msg, ULong size, ObjectMessage* reply)
@@ -468,7 +468,7 @@ GetObjectContent(ObjectMessage* msg, ULong size, ObjectMessage* reply)
 }
 
 
-// ROM 0x0014a5e0 SetDomainFaultMonitor__FP13ObjectMessageUlT1
+// ROM 0x00148a84 SetDomainFaultMonitor__FP13ObjectMessageUlT1
 // TKDomain::SetFaultMonitor, inlined.
 NewtonErr
 SetDomainFaultMonitor(ObjectMessage* msg, ULong size, ObjectMessage* /*reply*/)
@@ -492,7 +492,7 @@ SetDomainFaultMonitor(ObjectMessage* msg, ULong size, ObjectMessage* /*reply*/)
 	Scavenging
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0014a508 ObjectScavenger__FP13TKernelObjectUl
+// ROM 0x001489ac ObjectScavenger__FP13TKernelObjectUl
 // Names the destructor for an object the table wants to remove, or nil to
 // leave it for now: a task inside a monitor is marked kill-pending and dies
 // when the monitor lets it go, a monitor with a call in progress is
@@ -536,7 +536,7 @@ ObjectScavenger(TKernelObject* object, ULong /*unused*/)
 }
 
 
-// ROM 0x0014b5e8 DeleteTask__FP5TTask
+// ROM 0x00149a8c DeleteTask__FP5TTask
 // The task's bequeath chain is spliced (whoever bequeathed to it now
 // bequeaths to its heir), it is forgotten as the scheduler's preferred task,
 // destroyed, its objects handed to the heir, and every copy in progress whose
@@ -571,7 +571,7 @@ DeleteTask(TTask* task)
 }
 
 
-// ROM 0x0014b0a0 InitObjectManager__Fv
+// ROM 0x00149544 InitObjectManager__Fv
 // The ROM looks the kernel environment ('krnl') up in the memory object
 // manager; the caller passes it here.  The monitor is owned by nobody (1).
 void

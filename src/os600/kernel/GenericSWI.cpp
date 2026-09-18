@@ -3,7 +3,7 @@
 
 	Contains:	GenericSWIHandler.
 
-	Reconstructed from the MP2100 D ROM.  Selectors whose kernel routine is
+	Reconstructed from the MP2x00 US ROM.  Selectors whose kernel routine is
 	not reconstructed yet are marked NOT YET RECONSTRUCTED and return
 	kError_Call_Not_Implemented (the ROM's own answer for a selector it has
 	no case for is kGenericSWI_UnknownSelector, -1).
@@ -59,7 +59,7 @@ GetTaskTimeSelector(ULong taskId)
 }
 
 
-// ROM 0x000d9adc GenericSWIHandler
+// ROM 0x000d8a64 GenericSWIHandler
 long
 GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 {

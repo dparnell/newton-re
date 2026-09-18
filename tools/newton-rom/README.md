@@ -177,9 +177,11 @@ is checked in): all 52,751 symbols agree exactly, and we additionally demangle
 structs, 60 enums and 190 typedefs, plus 540 C functions and 1,300 methods.
 `parse_headers.py` normalises the files (Mac Roman, CR line endings) into a
 flat include directory, parses them as one C++98 translation unit with
-libclang configured for the MP2100 D build (`forQ` -> hasVoyager/hasCirrus/
-forSenior, `forGerman`, `__arm`; V1 headers superseded by their V2 versions and
-the NewtonScript `.f.h` files are excluded), and writes `types.json`.
+libclang configured for the MP2x00 build (`forQ` -> hasVoyager/hasCirrus/
+forSenior, `__arm`; V1 headers superseded by their V2 versions and the
+NewtonScript `.f.h` files are excluded), and writes `types.json`.  A localised
+ROM adds its language - the MP2100 D is `--define forGerman` on top of the
+defaults, which is all FOR_INTL and useLanguage depend on in ConfigGlobal.h.
 
 Memory layout is taken from clang (`--target=armeb-none-eabi -mabi=apcs-gnu`).
 Before trusting it we checked the ROM: `TAEventHandler::TAEventHandler`

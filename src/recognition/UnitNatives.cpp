@@ -16,8 +16,8 @@
 				StrokesAfterUnit (the controller), the word functions
 				(GetWordArray, GetScoreArray, GetTrainingData...).
 
-	Reconstructed from the MP2100 D ROM (0x001ec718-0x001ec784,
-	0x001a21d0-0x001a5f90); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x001ea300-0x001ea36c,
+	0x0019fc50-0x001a3a10); each function cites its origin.
 */
 
 #include "UnitPublic.h"
@@ -28,7 +28,7 @@
 #include "NewtonExceptions.h"
 
 
-// ROM 0x001ec718 UnitFromRef__FRC6RefVar
+// ROM 0x001ea300 UnitFromRef__FRC6RefVar
 // The TUnitPublic a script's unit argument stands for.
 TUnitPublic*
 UnitFromRef(RefArg unit)
@@ -40,7 +40,7 @@ UnitFromRef(RefArg unit)
 }
 
 
-// ROM 0x001ec750 StrokeFromRef__FRC6RefVar
+// ROM 0x001ea338 StrokeFromRef__FRC6RefVar
 // ... and its stroke's face.
 TStrokePublic*
 StrokeFromRef(RefArg unit)
@@ -52,7 +52,7 @@ StrokeFromRef(RefArg unit)
 }
 
 
-// ROM 0x001a5d60 FGetPoint__FRC6RefVarN21
+// ROM 0x001a37e0 FGetPoint__FRC6RefVarN21
 // GetPoint(which, unit): which 0 the first point's x, 1 its y, 4 the last
 // point's x, 5 its y, 6 the first point as a {x, y} frame, 8 the last;
 // anything else 0.
@@ -93,7 +93,7 @@ FGetPoint(RefArg /*rcvr*/, RefArg which, RefArg unit)
 }
 
 
-// ROM 0x001a21d0 FGetPointsArray__FRC6RefVarT1
+// ROM 0x0019fc50 FGetPointsArray__FRC6RefVarT1
 // GetPointsArray(unit): the stroke's points as a flat array of
 // coordinates, each point's v then its h (the tablet's order).
 static Ref
@@ -112,7 +112,7 @@ FGetPointsArray(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a25d0 FGetPointsArrayXY__FRC6RefVarT1
+// ROM 0x001a0050 FGetPointsArrayXY__FRC6RefVarT1
 // GetPointsArrayXY(unit): ... each point's x then its y.
 static Ref
 FGetPointsArrayXY(RefArg /*rcvr*/, RefArg unit)
@@ -130,7 +130,7 @@ FGetPointsArrayXY(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a29f0 FCountUnitStrokes
+// ROM 0x001a0470 FCountUnitStrokes
 static Ref
 FCountUnitStrokes(RefArg /*rcvr*/, RefArg unit)
 {
@@ -138,7 +138,7 @@ FCountUnitStrokes(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a2a1c FGestureType
+// ROM 0x001a049c FGestureType
 // GestureType(unit): the caret gesture's kind (0 for none).
 static Ref
 FGestureType(RefArg /*rcvr*/, RefArg unit)
@@ -147,7 +147,7 @@ FGestureType(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a2dbc FStrokeDone__FRC6RefVarT1
+// ROM 0x001a083c FStrokeDone__FRC6RefVarT1
 static Ref
 FStrokeDone(RefArg /*rcvr*/, RefArg unit)
 {
@@ -155,7 +155,7 @@ FStrokeDone(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a2de4 FStrokeBounds__FRC6RefVarT1
+// ROM 0x001a0864 FStrokeBounds__FRC6RefVarT1
 // StrokeBounds(unit): the unit's bounds as a bounds frame.
 static Ref
 FStrokeBounds(RefArg /*rcvr*/, RefArg unit)
@@ -166,7 +166,7 @@ FStrokeBounds(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a3104 FGetUnitStartTime__FRC6RefVarT1
+// ROM 0x001a0b84 FGetUnitStartTime__FRC6RefVarT1
 static Ref
 FGetUnitStartTime(RefArg /*rcvr*/, RefArg unit)
 {
@@ -174,7 +174,7 @@ FGetUnitStartTime(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a3124 FGetUnitEndTime__FRC6RefVarT1
+// ROM 0x001a0ba4 FGetUnitEndTime__FRC6RefVarT1
 static Ref
 FGetUnitEndTime(RefArg /*rcvr*/, RefArg unit)
 {
@@ -182,7 +182,7 @@ FGetUnitEndTime(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a4e08 FGetUnitDownTime
+// ROM 0x001a2888 FGetUnitDownTime
 static Ref
 FGetUnitDownTime(RefArg /*rcvr*/, RefArg unit)
 {
@@ -190,7 +190,7 @@ FGetUnitDownTime(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a58a0 FGetUnitUpTime
+// ROM 0x001a3320 FGetUnitUpTime
 static Ref
 FGetUnitUpTime(RefArg /*rcvr*/, RefArg unit)
 {
@@ -198,7 +198,7 @@ FGetUnitUpTime(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a384c FInkOn__FRC6RefVarT1
+// ROM 0x001a12cc FInkOn__FRC6RefVarT1
 static Ref
 FInkOn(RefArg /*rcvr*/, RefArg unit)
 {
@@ -207,7 +207,7 @@ FInkOn(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a3b98 FInkOff__FRC6RefVarT1
+// ROM 0x001a1618 FInkOff__FRC6RefVarT1
 // InkOff(unit): the stroke's ink taken off the screen.
 static Ref
 FInkOff(RefArg /*rcvr*/, RefArg unit)
@@ -217,7 +217,7 @@ FInkOff(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x001a430c FInkOffUnHobbled
+// ROM 0x001a1d8c FInkOffUnHobbled
 static Ref
 FInkOffUnHobbled(RefArg /*rcvr*/, RefArg unit)
 {
@@ -226,7 +226,7 @@ FInkOffUnHobbled(RefArg /*rcvr*/, RefArg unit)
 }
 
 
-// ROM 0x00141a04 FSetInkerPenSize__FRC6RefVarT1
+// ROM 0x0013feb8 FSetInkerPenSize__FRC6RefVarT1
 // The pen the ink is drawn with: the size is remembered in gLastPenTip,
 // which every new stroke is flagged with, and the inker is told (a
 // 'newt/'inkr message carrying the size plus 12, the pen width the inker

@@ -14,9 +14,9 @@
 				RECONSTRUCTED (the ROM's DrawArc clips the oval's rows by the
 				angles' slopes; the host draws nothing for them).
 
-	Reconstructed from the MP2100 D ROM (0x00285d60-0x00285f50,
-	0x002d1e20-0x002d1f98, 0x002d277c, 0x002fb254-0x002fb8d4,
-	0x00318e14-0x00319030); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x002aa908-0x002aaaf8,
+	0x002f7664-0x002f77dc, 0x002f7fc0, 0x00320550-0x00320bd0,
+	0x00344d5c-0x00344f78); each function cites its origin.
 */
 
 #ifndef __SHAPES_H

@@ -3,7 +3,7 @@
 
 	Contains:	CPipe, PipeCallBack and CBufferPipe (Pipes.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Pipes.h"
@@ -19,7 +19,7 @@ extern const ExceptionName exPipeException;
 	P i p e C a l l B a c k
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0018c6b4 __ct__12PipeCallBackFv
+// ROM 0x0018a694 __ct__12PipeCallBackFv
 PipeCallBack::PipeCallBack()
 {
 	fUnknown04 = -1;
@@ -27,7 +27,7 @@ PipeCallBack::PipeCallBack()
 }
 
 
-// ROM 0x0018c6f4 __dt__12PipeCallBackFv
+// ROM 0x0018a6d4 __dt__12PipeCallBackFv
 PipeCallBack::~PipeCallBack()
 { }
 
@@ -36,17 +36,17 @@ PipeCallBack::~PipeCallBack()
 	C P i p e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0018c444 __ct__5CPipeFv
+// ROM 0x0018a424 __ct__5CPipeFv
 CPipe::CPipe()
 { }
 
 
-// ROM 0x0018c478 __dt__5CPipeFv
+// ROM 0x0018a458 __dt__5CPipeFv
 CPipe::~CPipe()
 { }
 
 
-// ROM 0x0018c52c ResetRead__5CPipeFv
+// ROM 0x0018a50c ResetRead__5CPipeFv
 void
 CPipe::ResetRead(void)
 {
@@ -54,7 +54,7 @@ CPipe::ResetRead(void)
 }
 
 
-// ROM 0x0018c698 ResetWrite__5CPipeFv
+// ROM 0x0018a678 ResetWrite__5CPipeFv
 void
 CPipe::ResetWrite(void)
 {
@@ -66,7 +66,7 @@ CPipe::ResetWrite(void)
 // big-endian.  (Host: assembled from bytes; in the ROM the chunk is the
 // variable itself.)
 
-// ROM 0x0018c70c __rs__5CPipeFRc
+// ROM 0x0018a6ec __rs__5CPipeFRc
 CPipe&
 CPipe::operator>>(char& c)
 {
@@ -77,7 +77,7 @@ CPipe::operator>>(char& c)
 }
 
 
-// ROM 0x0018c774 __rs__5CPipeFRSc
+// ROM 0x0018a754 __rs__5CPipeFRSc
 CPipe&
 CPipe::operator>>(signed char& c)
 {
@@ -88,7 +88,7 @@ CPipe::operator>>(signed char& c)
 }
 
 
-// ROM 0x0018c7dc __rs__5CPipeFRUc
+// ROM 0x0018a7bc __rs__5CPipeFRUc
 CPipe&
 CPipe::operator>>(unsigned char& c)
 {
@@ -99,7 +99,7 @@ CPipe::operator>>(unsigned char& c)
 }
 
 
-// ROM 0x0018c844 __rs__5CPipeFRs
+// ROM 0x0018a824 __rs__5CPipeFRs
 CPipe&
 CPipe::operator>>(short& s)
 {
@@ -112,7 +112,7 @@ CPipe::operator>>(short& s)
 }
 
 
-// ROM 0x0018c8ac __rs__5CPipeFRUs
+// ROM 0x0018a88c __rs__5CPipeFRUs
 CPipe&
 CPipe::operator>>(unsigned short& s)
 {
@@ -125,7 +125,7 @@ CPipe::operator>>(unsigned short& s)
 }
 
 
-// ROM 0x0018c914 __rs__5CPipeFRl
+// ROM 0x0018a8f4 __rs__5CPipeFRl
 CPipe&
 CPipe::operator>>(long& l)
 {
@@ -138,7 +138,7 @@ CPipe::operator>>(long& l)
 }
 
 
-// ROM 0x0018c490 __rs__5CPipeFRUl
+// ROM 0x0018a470 __rs__5CPipeFRUl
 CPipe&
 CPipe::operator>>(unsigned long& l)
 {
@@ -151,7 +151,7 @@ CPipe::operator>>(unsigned long& l)
 }
 
 
-// ROM 0x0018c4f8 __ls__5CPipeFc
+// ROM 0x0018a4d8 __ls__5CPipeFc
 CPipe&
 CPipe::operator<<(char c)
 {
@@ -160,7 +160,7 @@ CPipe::operator<<(char c)
 }
 
 
-// ROM 0x0018c548 __ls__5CPipeFSc
+// ROM 0x0018a528 __ls__5CPipeFSc
 CPipe&
 CPipe::operator<<(signed char c)
 {
@@ -169,7 +169,7 @@ CPipe::operator<<(signed char c)
 }
 
 
-// ROM 0x0018c57c __ls__5CPipeFUc
+// ROM 0x0018a55c __ls__5CPipeFUc
 CPipe&
 CPipe::operator<<(unsigned char c)
 {
@@ -178,7 +178,7 @@ CPipe::operator<<(unsigned char c)
 }
 
 
-// ROM 0x0018c5b0 __ls__5CPipeFs
+// ROM 0x0018a590 __ls__5CPipeFs
 CPipe&
 CPipe::operator<<(short s)
 {
@@ -189,7 +189,7 @@ CPipe::operator<<(short s)
 }
 
 
-// ROM 0x0018c5f4 __ls__5CPipeFUs
+// ROM 0x0018a5d4 __ls__5CPipeFUs
 CPipe&
 CPipe::operator<<(unsigned short s)
 {
@@ -200,7 +200,7 @@ CPipe::operator<<(unsigned short s)
 }
 
 
-// ROM 0x0018c638 __ls__5CPipeFl
+// ROM 0x0018a618 __ls__5CPipeFl
 CPipe&
 CPipe::operator<<(long l)
 {
@@ -211,7 +211,7 @@ CPipe::operator<<(long l)
 }
 
 
-// ROM 0x0018c668 __ls__5CPipeFUl
+// ROM 0x0018a648 __ls__5CPipeFUl
 CPipe&
 CPipe::operator<<(unsigned long l)
 {
@@ -226,7 +226,7 @@ CPipe::operator<<(unsigned long l)
 	C B u f f e r P i p e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0004738c __ct__11CBufferPipeFv
+// ROM 0x00046abc __ct__11CBufferPipeFv
 CBufferPipe::CBufferPipe()
 {
 	fReadBuffer = nil;
@@ -236,7 +236,7 @@ CBufferPipe::CBufferPipe()
 }
 
 
-// ROM 0x000473e0 __dt__11CBufferPipeFv
+// ROM 0x00046b10 __dt__11CBufferPipeFv
 CBufferPipe::~CBufferPipe()
 {
 	if (fOwnsBuffers)
@@ -249,7 +249,7 @@ CBufferPipe::~CBufferPipe()
 }
 
 
-// ROM 0x000477fc Init__11CBufferPipeFlT1
+// ROM 0x00046f2c Init__11CBufferPipeFlT1
 // A read segment of readSize bytes (positioned at its end: nothing to
 // read yet) or, when that is 0, a write segment of writeSize.
 void
@@ -279,7 +279,7 @@ CBufferPipe::Init(long readSize, long writeSize)
 }
 
 
-// ROM 0x000478f0 Init__11CBufferPipeFP14CBufferSegmentT1Uc
+// ROM 0x00047020 Init__11CBufferPipeFP14CBufferSegmentT1Uc
 void
 CBufferPipe::Init(CBufferSegment* readBuffer, CBufferSegment* writeBuffer, Boolean ownsBuffers)
 {
@@ -300,7 +300,7 @@ Required(CBufferSegment* buffer)
 }
 
 
-// ROM 0x00047c68 ReadSeek__11CBufferPipeFli
+// ROM 0x00047398 ReadSeek__11CBufferPipeFli
 long
 CBufferPipe::ReadSeek(long offset, int mode)
 {
@@ -308,7 +308,7 @@ CBufferPipe::ReadSeek(long offset, int mode)
 }
 
 
-// ROM 0x000474b8 ReadPosition__11CBufferPipeCFv
+// ROM 0x00046be8 ReadPosition__11CBufferPipeCFv
 long
 CBufferPipe::ReadPosition(void) const
 {
@@ -316,7 +316,7 @@ CBufferPipe::ReadPosition(void) const
 }
 
 
-// ROM 0x0004745c WriteSeek__11CBufferPipeFli
+// ROM 0x00046b8c WriteSeek__11CBufferPipeFli
 long
 CBufferPipe::WriteSeek(long offset, int mode)
 {
@@ -324,7 +324,7 @@ CBufferPipe::WriteSeek(long offset, int mode)
 }
 
 
-// ROM 0x00047500 WritePosition__11CBufferPipeCFv
+// ROM 0x00046c30 WritePosition__11CBufferPipeCFv
 long
 CBufferPipe::WritePosition(void) const
 {
@@ -332,7 +332,7 @@ CBufferPipe::WritePosition(void) const
 }
 
 
-// ROM 0x0004798c ReadChunk__11CBufferPipeFPvRlRUc
+// ROM 0x000470bc ReadChunk__11CBufferPipeFPvRlRUc
 // count bytes from the read segment, Underflow asked for more (it fills
 // the segment and sets fReadHitEOF when the source has no more) until
 // they are all there or the source is exhausted; count comes back as
@@ -383,7 +383,7 @@ CBufferPipe::ReadChunk(void* data, long& count, Boolean& eof)
 }
 
 
-// ROM 0x00047b5c WriteChunk__11CBufferPipeFPvlUc
+// ROM 0x0004728c WriteChunk__11CBufferPipeFPvlUc
 // count bytes into the write segment, Overflow asked to make room (it
 // empties the segment) as it fills; FlushWrite when asked.
 void
@@ -409,7 +409,7 @@ CBufferPipe::WriteChunk(const void* data, long count, Boolean flush)
 }
 
 
-// ROM 0x00047904 Reset__11CBufferPipeFv
+// ROM 0x00047034 Reset__11CBufferPipeFv
 void
 CBufferPipe::Reset(void)
 {
@@ -418,7 +418,7 @@ CBufferPipe::Reset(void)
 }
 
 
-// ROM 0x00047930 ResetRead__11CBufferPipeFv
+// ROM 0x00047060 ResetRead__11CBufferPipeFv
 void
 CBufferPipe::ResetRead(void)
 {
@@ -428,7 +428,7 @@ CBufferPipe::ResetRead(void)
 }
 
 
-// ROM 0x00047978 ResetWrite__11CBufferPipeFv
+// ROM 0x000470a8 ResetWrite__11CBufferPipeFv
 void
 CBufferPipe::ResetWrite(void)
 {
@@ -437,7 +437,7 @@ CBufferPipe::ResetWrite(void)
 }
 
 
-// ROM 0x00047548 Peek__11CBufferPipeFUc
+// ROM 0x00046c78 Peek__11CBufferPipeFUc
 int
 CBufferPipe::Peek(Boolean /*flag*/)
 {
@@ -445,7 +445,7 @@ CBufferPipe::Peek(Boolean /*flag*/)
 }
 
 
-// ROM 0x000475d4 Next__11CBufferPipeFv
+// ROM 0x00046d04 Next__11CBufferPipeFv
 int
 CBufferPipe::Next(void)
 {
@@ -453,7 +453,7 @@ CBufferPipe::Next(void)
 }
 
 
-// ROM 0x00047660 Skip__11CBufferPipeFv
+// ROM 0x00046d90 Skip__11CBufferPipeFv
 int
 CBufferPipe::Skip(void)
 {
@@ -461,7 +461,7 @@ CBufferPipe::Skip(void)
 }
 
 
-// ROM 0x000476ec Get__11CBufferPipeFv
+// ROM 0x00046e1c Get__11CBufferPipeFv
 int
 CBufferPipe::Get(void)
 {
@@ -469,7 +469,7 @@ CBufferPipe::Get(void)
 }
 
 
-// ROM 0x00047778 Put__11CBufferPipeFi
+// ROM 0x00046ea8 Put__11CBufferPipeFi
 int
 CBufferPipe::Put(int dataByte)
 {
@@ -481,19 +481,19 @@ CBufferPipe::Put(int dataByte)
 	C M e m o r y P i p e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002b37a8 FlushRead__11CMemoryPipeFv
+// ROM 0x002d8588 FlushRead__11CMemoryPipeFv
 void
 CMemoryPipe::FlushRead(void)
 { }
 
 
-// ROM 0x002b37ac FlushWrite__11CMemoryPipeFv
+// ROM 0x002d858c FlushWrite__11CMemoryPipeFv
 void
 CMemoryPipe::FlushWrite(void)
 { }
 
 
-// ROM 0x002b37b0 Overflow__11CMemoryPipeFv
+// ROM 0x002d8590 Overflow__11CMemoryPipeFv
 // The memory is full: an error.
 void
 CMemoryPipe::Overflow(void)
@@ -502,7 +502,7 @@ CMemoryPipe::Overflow(void)
 }
 
 
-// ROM 0x002b37c8 Underflow__11CMemoryPipeFlRUc
+// ROM 0x002d85a8 Underflow__11CMemoryPipeFlRUc
 // The memory is read: the end.
 void
 CMemoryPipe::Underflow(long /*count*/, Boolean& eof)
@@ -515,17 +515,17 @@ CMemoryPipe::Underflow(long /*count*/, Boolean& eof)
 	M e m o r y P i p e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000d093c __ct__10MemoryPipeFv
+// ROM 0x000cf7e8 __ct__10MemoryPipeFv
 MemoryPipe::MemoryPipe()
 { }
 
 
-// ROM 0x000d097c __dt__10MemoryPipeFv
+// ROM 0x000cf828 __dt__10MemoryPipeFv
 MemoryPipe::~MemoryPipe()
 { }
 
 
-// ROM 0x000d0c24 FlushRead__10MemoryPipeFv
+// ROM 0x000cfad0 FlushRead__10MemoryPipeFv
 // The read segment's position to its end.
 void
 MemoryPipe::FlushRead(void)
@@ -535,7 +535,7 @@ MemoryPipe::FlushRead(void)
 }
 
 
-// ROM 0x000d1a6c FlushWrite__10MemoryPipeFv
+// ROM 0x000d0918 FlushWrite__10MemoryPipeFv
 void
 MemoryPipe::FlushWrite(void)
 {
@@ -544,7 +544,7 @@ MemoryPipe::FlushWrite(void)
 }
 
 
-// ROM 0x000d2824 Reset__10MemoryPipeFv
+// ROM 0x000d16d0 Reset__10MemoryPipeFv
 void
 MemoryPipe::Reset(void)
 {
@@ -554,7 +554,7 @@ MemoryPipe::Reset(void)
 }
 
 
-// ROM 0x000d2768 Overflow__10MemoryPipeFv
+// ROM 0x000d1614 Overflow__10MemoryPipeFv
 // The write segment written over again.
 void
 MemoryPipe::Overflow(void)
@@ -564,7 +564,7 @@ MemoryPipe::Overflow(void)
 }
 
 
-// ROM 0x000d2818 Underflow__10MemoryPipeFlRUc
+// ROM 0x000d16c4 Underflow__10MemoryPipeFlRUc
 // Nothing more comes, but it is not the end.
 void
 MemoryPipe::Underflow(long /*count*/, Boolean& eof)

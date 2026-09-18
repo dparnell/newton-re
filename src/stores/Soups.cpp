@@ -5,7 +5,7 @@
 				methods, the plain soup and its methods, index descriptions
 				and keys, adding entries and keeping the indexes.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Soups.h"
@@ -42,7 +42,7 @@ const long kMaxSoupNameLength = 39;					// UniChars (0x27)
 	I n i t i a l i s a t i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00313d24 InitQueries__Fv
+// ROM 0x0033fc6c InitQueries__Fv
 // The store, union soup and package store lists; the package store's
 // class registered (its part handler, which makes a store of a package's
 // soup part: NOT YET RECONSTRUCTED).
@@ -222,7 +222,7 @@ InitSoupPrototypes(void)
 	S t o r e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00325834 GetStores__Fv
+// ROM 0x003509d0 GetStores__Fv
 Ref
 GetStores(void)
 {
@@ -230,7 +230,7 @@ GetStores(void)
 }
 
 
-// ROM 0x00124cf8 GetStoreClassInfo__FPC6TStore
+// ROM 0x0012329c GetStoreClassInfo__FPC6TStore
 const TClassInfo*
 GetStoreClassInfo(const TStore* store)
 {
@@ -238,7 +238,7 @@ GetStoreClassInfo(const TStore* store)
 }
 
 
-// ROM 0x00156b34 GetInternalStore__Fv
+// ROM 0x00154908 GetInternalStore__Fv
 // NOT YET RECONSTRUCTED: TPSSManager - there is no internal store.
 TStore*
 GetInternalStore(void)
@@ -247,7 +247,7 @@ GetInternalStore(void)
 }
 
 
-// ROM 0x00157c00 IsValidStore__FPC6TStore
+// ROM 0x001559d4 IsValidStore__FPC6TStore
 // A registered store (the ROM asks TPSSManager; here the store frames).
 Boolean
 IsValidStore(const TStore* store)
@@ -266,7 +266,7 @@ IsValidStore(const TStore* store)
 }
 
 
-// ROM 0x00325844 CheckWriteProtect__FP6TStore
+// ROM 0x003509e0 CheckWriteProtect__FP6TStore
 void
 CheckWriteProtect(TStore* store)
 {
@@ -279,7 +279,7 @@ CheckWriteProtect(TStore* store)
 }
 
 
-// ROM 0x00325f6c CheckWriteProtect__FRC6RefVar
+// ROM 0x00351108 CheckWriteProtect__FRC6RefVar
 void
 CheckWriteProtect(RefArg storeObject)
 {
@@ -288,7 +288,7 @@ CheckWriteProtect(RefArg storeObject)
 }
 
 
-// ROM 0x00326cb8 GetStoreWrapper__FRC6RefVar
+// ROM 0x00351e54 GetStoreWrapper__FRC6RefVar
 // The store frame's wrapper; a killed frame (no _proto) is an error.
 TStoreWrapper*
 GetStoreWrapper(RefArg storeObject)
@@ -299,7 +299,7 @@ GetStoreWrapper(RefArg storeObject)
 }
 
 
-// ROM 0x0032a38c StoreFromWrapper__FRC6RefVar
+// ROM 0x00355528 StoreFromWrapper__FRC6RefVar
 TStore*
 StoreFromWrapper(RefArg storeObject)
 {
@@ -309,7 +309,7 @@ StoreFromWrapper(RefArg storeObject)
 }
 
 
-// ROM 0x003288a8 GetRandomSignature__Fv
+// ROM 0x00353a44 GetRandomSignature__Fv
 // A store's or soup's signature: a random number (never 0; the ROM keeps
 // the C library's random state for it).
 long
@@ -325,7 +325,7 @@ GetRandomSignature(void)
 }
 
 
-// ROM 0x00327490 GetStoreVersion__FP6TStorePl
+// ROM 0x0035262c GetStoreVersion__FP6TStorePl
 // The version in a store's root data (an empty root: this ROM's).
 NewtonErr
 GetStoreVersion(TStore* store, long* version)
@@ -343,7 +343,7 @@ GetStoreVersion(TStore* store, long* version)
 }
 
 
-// ROM 0x003278a4 StoreGetDirSortTable__FRC6RefVar
+// ROM 0x00352a40 StoreGetDirSortTable__FRC6RefVar
 // The sorting table the store's soup names are ordered by: the store's
 // dirSortId, looked up among the registered tables.  NOT YET
 // RECONSTRUCTED: a table the store itself carries (StoreSaveSortTable
@@ -360,27 +360,27 @@ StoreGetDirSortTable(RefArg storeObject)
 }
 
 
-// ROM 0x00327990 StoreSaveSortTable__FRC6RefVarl
+// ROM 0x00352b2c StoreSaveSortTable__FRC6RefVarl
 // NOT YET RECONSTRUCTED: the sorting tables are not kept on the store.
 void
 StoreSaveSortTable(RefArg /*storeObject*/, long /*sortId*/)
 { }
 
 
-// ROM 0x00327c10 StoreRemoveSortTable__FRC6RefVarl
+// ROM 0x00352dac StoreRemoveSortTable__FRC6RefVarl
 void
 StoreRemoveSortTable(RefArg /*storeObject*/, long /*sortId*/)
 { }
 
 
-// ROM 0x00102088 LargeBinariesStoreRemoved__FP13TStoreWrapper
+// ROM 0x00100a24 LargeBinariesStoreRemoved__FP13TStoreWrapper
 // NOT YET RECONSTRUCTED: large binaries.
 void
 LargeBinariesStoreRemoved(TStoreWrapper* /*wrapper*/)
 { }
 
 
-// ROM 0x00101f08 AbortLargeBinaries__FRC6RefVar
+// ROM 0x001008a4 AbortLargeBinaries__FRC6RefVar
 void
 AbortLargeBinaries(RefArg /*entry*/)
 { }
@@ -448,7 +448,7 @@ ThrowIndexError(int result)
 }
 
 
-// ROM 0x00328fdc MakeStoreObject__FP6TStore
+// ROM 0x00354178 MakeStoreObject__FP6TStore
 // The store frame over a new TStoreWrapper: an empty root object is
 // formatted (the persistent frame {nameIndex: a new TSoupIndex, name:
 // "Untitled", signature: the serial number for the internal store, a
@@ -556,7 +556,7 @@ MakeStoreObject(TStore* store)
 }
 
 
-// ROM 0x00329a98 RegisterTStore__FP6TStore
+// ROM 0x00354c34 RegisterTStore__FP6TStore
 // The store's frame made and added to gStores; each union soup gets the
 // store's soup of its name.
 Ref
@@ -595,7 +595,7 @@ RegisterTStore(TStore* store)
 }
 
 
-// ROM 0x003258b8 RemoveTStore__FP6TStore
+// ROM 0x00350a54 RemoveTStore__FP6TStore
 // The store's frame taken out of gStores and killed, its wrapper deleted.
 void
 RemoveTStore(TStore* store)
@@ -623,7 +623,7 @@ RemoveTStore(TStore* store)
 }
 
 
-// ROM 0x003259d8 ToObject__FP6TStore
+// ROM 0x00350b74 ToObject__FP6TStore
 Ref
 ToObject(TStore* store)
 {
@@ -638,7 +638,7 @@ ToObject(TStore* store)
 }
 
 
-// ROM 0x0032a1c4 KillStoreObject__FRC6RefVar
+// ROM 0x00355360 KillStoreObject__FRC6RefVar
 // The store frame and its soups cut off from the store: _protos nilled,
 // the soups out of the union soups, their entries invalidated, their
 // cursors told (NOT YET), the large binaries told (NOT YET).
@@ -669,7 +669,7 @@ KillStoreObject(RefArg storeObject)
 }
 
 
-// ROM 0x0032712c FlushSoupList__FRC6RefVar
+// ROM 0x003522c8 FlushSoupList__FRC6RefVar
 // Every soup flushed; ==> whether any had something to flush.
 Ref
 FlushSoupList(RefArg soups)
@@ -701,7 +701,7 @@ StorePersistent(RefArg rcvr)
 }
 
 
-// ROM 0x00325c68 StoreGetName
+// ROM 0x00350e04 StoreGetName
 Ref
 StoreGetName(RefArg rcvr)
 {
@@ -710,7 +710,7 @@ StoreGetName(RefArg rcvr)
 }
 
 
-// ROM 0x00325cec StoreSetName
+// ROM 0x00350e88 StoreSetName
 Ref
 StoreSetName(RefArg rcvr, RefArg name)
 {
@@ -722,7 +722,7 @@ StoreSetName(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00325c4c StoreGetKind
+// ROM 0x00350de8 StoreGetKind
 // The store implementation's kind as a string.
 Ref
 StoreGetKind(RefArg rcvr)
@@ -736,7 +736,7 @@ StoreGetKind(RefArg rcvr)
 }
 
 
-// ROM 0x00325d8c StoreGetSignature
+// ROM 0x00350f28 StoreGetSignature
 Ref
 StoreGetSignature(RefArg rcvr)
 {
@@ -745,7 +745,7 @@ StoreGetSignature(RefArg rcvr)
 }
 
 
-// ROM 0x00325e10 StoreSetSignature
+// ROM 0x00350fac StoreSetSignature
 Ref
 StoreSetSignature(RefArg rcvr, RefArg signature)
 {
@@ -757,7 +757,7 @@ StoreSetSignature(RefArg rcvr, RefArg signature)
 }
 
 
-// ROM 0x00325eb0 StoreGetInfo
+// ROM 0x0035104c StoreGetInfo
 // The persistent frame's info frame's slot tag.
 Ref
 StoreGetInfo(RefArg rcvr, RefArg tag)
@@ -769,7 +769,7 @@ StoreGetInfo(RefArg rcvr, RefArg tag)
 }
 
 
-// ROM 0x00325fa0 StoreSetInfo
+// ROM 0x0035113c StoreSetInfo
 Ref
 StoreSetInfo(RefArg rcvr, RefArg tag, RefArg value)
 {
@@ -793,7 +793,7 @@ StoreSetInfo(RefArg rcvr, RefArg tag, RefArg value)
 }
 
 
-// ROM 0x003260f4 StoreGetAllInfo
+// ROM 0x00351290 StoreGetAllInfo
 Ref
 StoreGetAllInfo(RefArg rcvr)
 {
@@ -803,7 +803,7 @@ StoreGetAllInfo(RefArg rcvr)
 }
 
 
-// ROM 0x00326194 StoreSetAllInfo
+// ROM 0x00351330 StoreSetAllInfo
 Ref
 StoreSetAllInfo(RefArg rcvr, RefArg info)
 {
@@ -817,7 +817,7 @@ StoreSetAllInfo(RefArg rcvr, RefArg info)
 }
 
 
-// ROM 0x003266a8 StoreGetSoupId__FRC6RefVarT1
+// ROM 0x00351844 StoreGetSoupId__FRC6RefVarT1
 // The id of the persistent frame of the soup named, from the name index;
 // 0 for none.
 PSSId
@@ -835,7 +835,7 @@ StoreGetSoupId(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00326824 StoreHasSoup
+// ROM 0x003519c0 StoreHasSoup
 Ref
 StoreHasSoup(RefArg rcvr, RefArg name)
 {
@@ -843,7 +843,7 @@ StoreHasSoup(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00326274 StoreGetSoup
+// ROM 0x00351410 StoreGetSoup
 // The soup named: the store's cached soup frame, else one made over the
 // persistent frame the name index gives (a plainSoupPrototype with its
 // fault block, tStore, storeObj, theName, entry and cursor caches, its
@@ -894,7 +894,7 @@ StoreGetSoup(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00326844 StoreCreateSoup
+// ROM 0x003519e0 StoreCreateSoup
 // A new soup: its persistent frame (plainSoupPersistent with class
 // 'DiskSoup, lastUID 0, a random signature, the mod times, the
 // _uniqueID index and the indexes asked for) stored and its name put in
@@ -945,7 +945,7 @@ StoreCreateSoup(RefArg rcvr, RefArg name, RefArg indexes)
 }
 
 
-// ROM 0x00325a8c StoreGetSoupNames
+// ROM 0x00350c28 StoreGetSoupNames
 // The names in the name index, in its order.
 Ref
 StoreGetSoupNames(RefArg rcvr)
@@ -968,7 +968,7 @@ StoreGetSoupNames(RefArg rcvr)
 }
 
 
-// ROM 0x00326d44 StoreTotalSize
+// ROM 0x00351ee0 StoreTotalSize
 Ref
 StoreTotalSize(RefArg rcvr)
 {
@@ -978,7 +978,7 @@ StoreTotalSize(RefArg rcvr)
 }
 
 
-// ROM 0x00326d78 StoreUsedSize
+// ROM 0x00351f14 StoreUsedSize
 Ref
 StoreUsedSize(RefArg rcvr)
 {
@@ -988,7 +988,7 @@ StoreUsedSize(RefArg rcvr)
 }
 
 
-// ROM 0x00326f0c StoreOverhead
+// ROM 0x003520a8 StoreOverhead
 // The name index's and the map and symbol tables' sizes.
 Ref
 StoreOverhead(RefArg rcvr)
@@ -1002,7 +1002,7 @@ StoreOverhead(RefArg rcvr)
 }
 
 
-// ROM 0x00326e60 StoreIsReadOnly
+// ROM 0x00351ffc StoreIsReadOnly
 Ref
 StoreIsReadOnly(RefArg rcvr)
 {
@@ -1012,7 +1012,7 @@ StoreIsReadOnly(RefArg rcvr)
 }
 
 
-// ROM 0x00327030 StoreIsValid
+// ROM 0x003521cc StoreIsValid
 // Registered (or a package store) and not killed.
 Ref
 StoreIsValid(RefArg rcvr)
@@ -1029,7 +1029,7 @@ StoreIsValid(RefArg rcvr)
 }
 
 
-// ROM 0x00326e9c StoreLock
+// ROM 0x00352038 StoreLock
 // The store's transaction lock taken; ==> whether it is now locked.
 Ref
 StoreLock(RefArg rcvr)
@@ -1040,7 +1040,7 @@ StoreLock(RefArg rcvr)
 }
 
 
-// ROM 0x00326ed4 StoreUnlock
+// ROM 0x00352070 StoreUnlock
 Ref
 StoreUnlock(RefArg rcvr)
 {
@@ -1050,7 +1050,7 @@ StoreUnlock(RefArg rcvr)
 }
 
 
-// ROM 0x0032a368 FStoreAbort
+// ROM 0x00355504 FStoreAbort
 // The store's transaction aborted.
 Ref
 StoreAbort(RefArg rcvr)
@@ -1060,7 +1060,7 @@ StoreAbort(RefArg rcvr)
 }
 
 
-// ROM 0x003271c4 StoreDirty__FRC6RefVar
+// ROM 0x00352360 StoreDirty__FRC6RefVar
 Ref
 StoreDirty(RefArg rcvr)
 {
@@ -1069,7 +1069,7 @@ StoreDirty(RefArg rcvr)
 }
 
 
-// ROM 0x003271e0 StoreFlush
+// ROM 0x0035237c StoreFlush
 // Every soup's dirty entries written; the store clean.
 Ref
 StoreFlush(RefArg rcvr)
@@ -1081,7 +1081,7 @@ StoreFlush(RefArg rcvr)
 }
 
 
-// ROM 0x00327250 StoreErase
+// ROM 0x003523ec StoreErase
 // The store formatted afresh and registered again in the same place.
 Ref
 StoreErase(RefArg rcvr)
@@ -1112,7 +1112,7 @@ StoreErase(RefArg rcvr)
 }
 
 
-// ROM 0x00325a74 StoreCheckWriteProtect
+// ROM 0x00350c10 StoreCheckWriteProtect
 Ref
 StoreCheckWriteProtect(RefArg rcvr)
 {
@@ -1121,7 +1121,7 @@ StoreCheckWriteProtect(RefArg rcvr)
 }
 
 
-// ROM 0x00329dd8 FReadStoreObject
+// ROM 0x00354f74 FReadStoreObject
 // A store object's bytes as a binary.
 Ref
 StoreReadObject(RefArg rcvr, RefArg id)
@@ -1135,7 +1135,7 @@ StoreReadObject(RefArg rcvr, RefArg id)
 }
 
 
-// ROM 0x00329f90 FWriteStoreObject
+// ROM 0x0035512c FWriteStoreObject
 Ref
 StoreWriteObject(RefArg rcvr, RefArg id, RefArg offset, RefArg data)
 {
@@ -1146,7 +1146,7 @@ StoreWriteObject(RefArg rcvr, RefArg id, RefArg offset, RefArg data)
 }
 
 
-// ROM 0x00329ef4 FWriteEntireStoreObject
+// ROM 0x00355090 FWriteEntireStoreObject
 Ref
 StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data)
 {
@@ -1157,7 +1157,7 @@ StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data)
 }
 
 
-// ROM 0x0032a058 FNewStoreObject
+// ROM 0x003551f4 FNewStoreObject
 Ref
 StoreNewObject(RefArg rcvr, RefArg size)
 {
@@ -1169,7 +1169,7 @@ StoreNewObject(RefArg rcvr, RefArg size)
 }
 
 
-// ROM 0x0032a0b0 FDeleteStoreObject
+// ROM 0x0035524c FDeleteStoreObject
 Ref
 StoreDeleteObject(RefArg rcvr, RefArg id)
 {
@@ -1180,7 +1180,7 @@ StoreDeleteObject(RefArg rcvr, RefArg id)
 }
 
 
-// ROM 0x0032a0fc FSetStoreObjectSize
+// ROM 0x00355298 FSetStoreObjectSize
 Ref
 StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size)
 {
@@ -1191,7 +1191,7 @@ StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size)
 }
 
 
-// ROM 0x0032a16c FGetStoreObjectSize
+// ROM 0x00355308 FGetStoreObjectSize
 Ref
 StoreGetObjectSize(RefArg rcvr, RefArg id)
 {
@@ -1234,7 +1234,7 @@ SendSoup(RefArg soup, RefArg message, RefArg arg1, RefArg arg2)
 }
 
 
-// ROM 0x00313750 PathsEqual__FRC6RefVarT1
+// ROM 0x0033f698 PathsEqual__FRC6RefVarT1
 // The same path: the same object, or arrays of the same class whose
 // elements are EQ.
 Boolean
@@ -1256,7 +1256,7 @@ PathsEqual(RefArg a, RefArg b)
 }
 
 
-// ROM 0x00313864 SoupQuery__FRC6RefVarT1
+// ROM 0x0033f7ac SoupQuery__FRC6RefVarT1
 Ref
 SoupQuery(RefArg soup, RefArg querySpec)
 {
@@ -1264,7 +1264,7 @@ SoupQuery(RefArg soup, RefArg querySpec)
 }
 
 
-// ROM 0x003138d0 SoupGetName__FRC6RefVar
+// ROM 0x0033f818 SoupGetName__FRC6RefVar
 Ref
 SoupGetName(RefArg soup)
 {
@@ -1272,7 +1272,7 @@ SoupGetName(RefArg soup)
 }
 
 
-// ROM 0x00313918 SoupGetSignature__FRC6RefVar
+// ROM 0x0033f860 SoupGetSignature__FRC6RefVar
 Ref
 SoupGetSignature(RefArg soup)
 {
@@ -1280,7 +1280,7 @@ SoupGetSignature(RefArg soup)
 }
 
 
-// ROM 0x00313960 SoupSetName__FRC6RefVarT1
+// ROM 0x0033f8a8 SoupSetName__FRC6RefVarT1
 Ref
 SoupSetName(RefArg soup, RefArg name)
 {
@@ -1288,7 +1288,7 @@ SoupSetName(RefArg soup, RefArg name)
 }
 
 
-// ROM 0x003139cc SoupSetSignature__FRC6RefVarl
+// ROM 0x0033f914 SoupSetSignature__FRC6RefVarl
 Ref
 SoupSetSignature(RefArg soup, long signature)
 {
@@ -1296,7 +1296,7 @@ SoupSetSignature(RefArg soup, long signature)
 }
 
 
-// ROM 0x00313a34 SoupGetInfo__FRC6RefVarT1
+// ROM 0x0033f97c SoupGetInfo__FRC6RefVarT1
 Ref
 SoupGetInfo(RefArg soup, RefArg tag)
 {
@@ -1304,7 +1304,7 @@ SoupGetInfo(RefArg soup, RefArg tag)
 }
 
 
-// ROM 0x00313aa0 SoupSetInfo__FRC6RefVarN21
+// ROM 0x0033f9e8 SoupSetInfo__FRC6RefVarN21
 Ref
 SoupSetInfo(RefArg soup, RefArg tag, RefArg value)
 {
@@ -1312,7 +1312,7 @@ SoupSetInfo(RefArg soup, RefArg tag, RefArg value)
 }
 
 
-// ROM 0x00313b28 SoupGetAllInfo__FRC6RefVar
+// ROM 0x0033fa70 SoupGetAllInfo__FRC6RefVar
 Ref
 SoupGetAllInfo(RefArg soup)
 {
@@ -1320,7 +1320,7 @@ SoupGetAllInfo(RefArg soup)
 }
 
 
-// ROM 0x00313b70 SoupSetAllInfo__FRC6RefVarT1
+// ROM 0x0033fab8 SoupSetAllInfo__FRC6RefVarT1
 Ref
 SoupSetAllInfo(RefArg soup, RefArg info)
 {
@@ -1328,7 +1328,7 @@ SoupSetAllInfo(RefArg soup, RefArg info)
 }
 
 
-// ROM 0x00313bdc SoupCopyEntries__FRC6RefVarT1
+// ROM 0x0033fb24 SoupCopyEntries__FRC6RefVarT1
 Ref
 SoupCopyEntries(RefArg soup, RefArg toSoup)
 {
@@ -1336,7 +1336,7 @@ SoupCopyEntries(RefArg soup, RefArg toSoup)
 }
 
 
-// ROM 0x00313c48 SoupRemoveAllEntries__FRC6RefVar
+// ROM 0x0033fb90 SoupRemoveAllEntries__FRC6RefVar
 Ref
 SoupRemoveAllEntries(RefArg soup)
 {
@@ -1344,7 +1344,7 @@ SoupRemoveAllEntries(RefArg soup)
 }
 
 
-// ROM 0x00313c94 SoupRemoveFromStore__FRC6RefVar
+// ROM 0x0033fbdc SoupRemoveFromStore__FRC6RefVar
 Ref
 SoupRemoveFromStore(RefArg soup)
 {
@@ -1352,7 +1352,7 @@ SoupRemoveFromStore(RefArg soup)
 }
 
 
-// ROM 0x00313cdc SoupFlush__FRC6RefVar
+// ROM 0x0033fc24 SoupFlush__FRC6RefVar
 Ref
 SoupFlush(RefArg soup)
 {
@@ -1360,7 +1360,7 @@ SoupFlush(RefArg soup)
 }
 
 
-// ROM 0x00313d74 SoupGetStore__FRC6RefVar
+// ROM 0x0033fcbc SoupGetStore__FRC6RefVar
 Ref
 SoupGetStore(RefArg soup)
 {
@@ -1368,7 +1368,7 @@ SoupGetStore(RefArg soup)
 }
 
 
-// ROM 0x00313dbc SoupAddIndex__FRC6RefVarT1
+// ROM 0x0033fd04 SoupAddIndex__FRC6RefVarT1
 Ref
 SoupAddIndex(RefArg soup, RefArg indexSpec)
 {
@@ -1376,7 +1376,7 @@ SoupAddIndex(RefArg soup, RefArg indexSpec)
 }
 
 
-// ROM 0x00313e28 SoupRemoveIndex__FRC6RefVarT1
+// ROM 0x0033fd70 SoupRemoveIndex__FRC6RefVarT1
 Ref
 SoupRemoveIndex(RefArg soup, RefArg path)
 {
@@ -1384,7 +1384,7 @@ SoupRemoveIndex(RefArg soup, RefArg path)
 }
 
 
-// ROM 0x00313e94 SoupGetIndexes__FRC6RefVar
+// ROM 0x0033fddc SoupGetIndexes__FRC6RefVar
 Ref
 SoupGetIndexes(RefArg soup)
 {
@@ -1392,7 +1392,7 @@ SoupGetIndexes(RefArg soup)
 }
 
 
-// ROM 0x00313edc SoupGetNextUID__FRC6RefVar
+// ROM 0x0033fe24 SoupGetNextUID__FRC6RefVar
 Ref
 SoupGetNextUID(RefArg soup)
 {
@@ -1400,7 +1400,7 @@ SoupGetNextUID(RefArg soup)
 }
 
 
-// ROM 0x00313f24 SoupAdd__FRC6RefVarT1
+// ROM 0x0033fe6c SoupAdd__FRC6RefVarT1
 Ref
 SoupAdd(RefArg soup, RefArg entry)
 {
@@ -1408,7 +1408,7 @@ SoupAdd(RefArg soup, RefArg entry)
 }
 
 
-// ROM 0x00313f90 SoupAddWithUniqueID__FRC6RefVarT1
+// ROM 0x0033fed8 SoupAddWithUniqueID__FRC6RefVarT1
 Ref
 SoupAddWithUniqueID(RefArg soup, RefArg entry)
 {
@@ -1432,7 +1432,7 @@ SoupPersistent(RefArg soup)
 }
 
 
-// ROM 0x0031c898 SoupChanged__FRC6RefVarUc
+// ROM 0x00347b08 SoupChanged__FRC6RefVarUc
 // The persistent frame's flags say the soup has changed (bits 0 and 1),
 // written when asked - nothing when they say so already.
 void
@@ -1448,7 +1448,7 @@ SoupChanged(RefArg soupPersistent, Boolean write)
 }
 
 
-// ROM 0x0031c7c4 GetTagsIndexDesc__FRC6RefVar
+// ROM 0x00347a34 GetTagsIndexDesc__FRC6RefVar
 // The soup's tags index description; nil for none.
 Ref
 GetTagsIndexDesc(RefArg soupPersistent)
@@ -1468,7 +1468,7 @@ GetTagsIndexDesc(RefArg soupPersistent)
 }
 
 
-// ROM 0x0031cb6c IndexPathsEqual__FRC6RefVarT1
+// ROM 0x00347ddc IndexPathsEqual__FRC6RefVarT1
 // Two index paths the same: both arrays of paths of the same length with
 // equal paths, or neither an array and equal paths.
 Boolean
@@ -1492,7 +1492,7 @@ IndexPathsEqual(RefArg a, RefArg b)
 }
 
 
-// ROM 0x0031cc98 IndexPathToIndexDesc__FRC6RefVarT1Pl
+// ROM 0x00347f08 IndexPathToIndexDesc__FRC6RefVarT1Pl
 // The soup's index description on path (and its index in the indexes
 // array); nil for none.
 Ref
@@ -1516,7 +1516,7 @@ IndexPathToIndexDesc(RefArg soupPersistent, RefArg path, long* index)
 }
 
 
-// ROM 0x0031cd8c GetIndexSortTable__FRC6RefVar
+// ROM 0x00347ffc GetIndexSortTable__FRC6RefVar
 // The sorting table an index description's sortId names; no sortId slot
 // means no table at all (the folding compare).
 const TSortingTable*
@@ -1529,7 +1529,7 @@ GetIndexSortTable(RefArg indexDesc)
 }
 
 
-// ROM 0x0031dbcc IndexDescToIndexInfo__FRC6RefVarP9IndexInfo
+// ROM 0x00348e3c IndexDescToIndexInfo__FRC6RefVarP9IndexInfo
 // An index description as the B-tree's IndexInfo: the data type is long
 // (a store object id), the key type from type - a multiSlot's from its
 // array of types, 4 bits each, with a bit per sub-key for ascending; a
@@ -1604,7 +1604,7 @@ IndexDescToIndexInfo(RefArg indexDesc, IndexInfo* info)
 }
 
 
-// ROM 0x0031e3a0 NewIndexDesc__FRC6RefVarN21
+// ROM 0x00349610 NewIndexDesc__FRC6RefVarN21
 // A new index description from the spec (a total clone of it, checked:
 // no index on the path already; structure 'slot or 'multiSlot - the
 // latter with arrays of at most six paths and as many types; a 'tags
@@ -1671,7 +1671,7 @@ NewIndexDesc(RefArg soupPersistent, RefArg storeObject, RefArg indexSpec)
 }
 
 
-// ROM 0x0031ea68 AddNewSoupIndexes__FRC6RefVarN21
+// ROM 0x00349cd8 AddNewSoupIndexes__FRC6RefVarN21
 // A new soup's indexes: the _uniqueID index (indexDescPrototype) first,
 // then one for each spec.
 Ref
@@ -1696,14 +1696,14 @@ AddNewSoupIndexes(RefArg soupPersistent, RefArg storeObject, RefArg indexSpecs)
 }
 
 
-// ROM 0x0031e160 GCDeleteIndexObjects__FPv
+// ROM 0x003493d0 GCDeleteIndexObjects__FPv
 // Nothing to do when the soup's index objects are collected.
 static void
 GCDeleteIndexObjects(void* /*indexObjects*/)
 { }
 
 
-// ROM 0x0031e164 CreateSoupIndexObjects__FRC6RefVar
+// ROM 0x003493d4 CreateSoupIndexObjects__FRC6RefVar
 // The soup's TSoupIndex objects, one per index description, in a C
 // object binary in its indexObjects slot; the cursors told (NOT YET).
 void
@@ -1730,7 +1730,7 @@ CreateSoupIndexObjects(RefArg soup)
 }
 
 
-// ROM 0x0031e2f4 GetSoupIndexObject__FRC6RefVarUl
+// ROM 0x00349564 GetSoupIndexObject__FRC6RefVarUl
 // The soup's TSoupIndex over info object infoId (0: the first, the
 // _uniqueID index); nil for none.
 TSoupIndex*
@@ -1748,7 +1748,7 @@ GetSoupIndexObject(RefArg soup, PSSId infoId)
 }
 
 
-// ROM 0x0031deb8 IndexEntries__FRC6RefVarT1
+// ROM 0x00349128 IndexEntries__FRC6RefVarT1
 // Every entry of the soup (walked through the _uniqueID index, read
 // through one fault block re-pointed at each) put into a new index in
 // one transaction (a tags index: each entry's tags in its own).
@@ -1797,7 +1797,7 @@ IndexEntries(RefArg soup, RefArg indexDesc)
 }
 
 
-// ROM 0x0031e794 RichStringToSKey__FRC6RefVarP4SKey
+// ROM 0x00349a04 RichStringToSKey__FRC6RefVarP4SKey
 // The plain characters of a rich string (its ink characters as 0xf702)
 // as a string key, at most 39 of them.
 void
@@ -1820,7 +1820,7 @@ RichStringToSKey(RefArg string, SKey* outKey)
 }
 
 
-// ROM 0x0031d9c8 MultiKeyToSKey__FRC6RefVarT1P4SKey
+// ROM 0x00348c38 MultiKeyToSKey__FRC6RefVarT1P4SKey
 // A multiSlot key: the sub-keys (an array of them, or one) each as an
 // SKey of its type, one after the other, padded even; a nil sub-key is
 // missing; a variable-size sub-key that would run past the end is cut
@@ -1869,7 +1869,7 @@ MultiKeyToSKey(RefArg key, RefArg types, SKey* outKey)
 }
 
 
-// ROM 0x0031fadc KeyToSKey__FRC6RefVarT1P4SKeyPsPUc
+// ROM 0x0034ad4c KeyToSKey__FRC6RefVarT1P4SKeyPsPUc
 // A key as an SKey of an index type: a string's characters (no
 // terminator; a rich string's plain characters), an int as a long, a
 // real as a double, a char as a short, a symbol's name bytes, an array
@@ -1942,7 +1942,7 @@ KeyToSKey(RefArg key, RefArg type, SKey* outKey, short* outSize, Boolean* outIsV
 }
 
 
-// ROM 0x00320968 SKeyToKey__FRC4SKeyRC6RefVarPs
+// ROM 0x0034bbd8 SKeyToKey__FRC4SKeyRC6RefVarPs
 // An SKey back as an object of the index type (outSize as KeyToSKey's).
 Ref
 SKeyToKey(const SKey& key, RefArg type, short* outSize)
@@ -2013,7 +2013,7 @@ SKeyToKey(const SKey& key, RefArg type, short* outSize)
 }
 
 
-// ROM 0x003219e8 GetEntryKey__FRC6RefVarT1
+// ROM 0x0034cc58 GetEntryKey__FRC6RefVarT1
 // The entry's value on an index path: an array of paths gives an array
 // of values (nil when every one is nil); nil when the entry has no such
 // path.
@@ -2045,7 +2045,7 @@ GetEntryKey(RefArg entry, RefArg path)
 }
 
 
-// ROM 0x00322a84 GetEntrySKey__FRC6RefVarT1P4SKeyPUc
+// ROM 0x0034dcf4 GetEntrySKey__FRC6RefVarT1P4SKeyPUc
 // The entry's key for an index description; ==> whether it has one.
 Boolean
 GetEntrySKey(RefArg entry, RefArg indexDesc, SKey* outKey, Boolean* outIsVariable)
@@ -2061,7 +2061,7 @@ GetEntrySKey(RefArg entry, RefArg indexDesc, SKey* outKey, Boolean* outIsVariabl
 }
 
 
-// ROM 0x0031c930 AlterIndexes__FUcRC6RefVarT2Ul
+// ROM 0x00347ba0 AlterIndexes__FUcRC6RefVarT2Ul
 // The entry's keys added to (or deleted from) every index of the soup
 // with store object id as their datum (the tags index: the entry's tags
 // as bits under the id).
@@ -2094,7 +2094,7 @@ AlterIndexes(Boolean add, RefArg soup, RefArg entry, PSSId id)
 }
 
 
-// ROM 0x0031d078 UpdateIndexes__FRC6RefVarN21UlPUc
+// ROM 0x003482e8 UpdateIndexes__FRC6RefVarN21UlPUc
 // The indexes brought from oldEntry's keys to newEntry's: a key that has
 // changed is deleted and added (equal ints/reals/keys are left alone);
 // tagsChanged asks for the tags index too and says whether it changed.
@@ -2153,7 +2153,7 @@ UpdateIndexes(RefArg soup, RefArg newEntry, RefArg oldEntry, PSSId id, Boolean* 
 }
 
 
-// ROM 0x0031d334 AbortSoupIndexes__FRC6RefVar
+// ROM 0x003485a4 AbortSoupIndexes__FRC6RefVar
 // Every index told its store transaction was aborted.
 void
 AbortSoupIndexes(RefArg soup)
@@ -2169,7 +2169,7 @@ AbortSoupIndexes(RefArg soup)
 }
 
 
-// ROM 0x0031d3f4 PlainSoupGetStore
+// ROM 0x00348664 PlainSoupGetStore
 Ref
 PlainSoupGetStore(RefArg rcvr)
 {
@@ -2177,7 +2177,7 @@ PlainSoupGetStore(RefArg rcvr)
 }
 
 
-// ROM 0x0031d410 SafeEntryAdd__FRC6RefVarN21Uc
+// ROM 0x00348680 SafeEntryAdd__FRC6RefVarN21Uc
 // The entry frame stored (made internal unless verbatim; its _modTime
 // set, its _uniqueID given, as the flags say) and put in the indexes;
 // a plain frame becomes a fault block (in memory unless verbatim) in
@@ -2237,7 +2237,7 @@ SafeEntryAdd(RefArg soup, RefArg entry, RefArg uniqueId, int flags)
 }
 
 
-// ROM 0x0031d720 CommonSoupAddEntry__FRC6RefVarT1UcT3
+// ROM 0x00348990 CommonSoupAddEntry__FRC6RefVarT1UcT3
 // A frame (not read-only) added to the soup in a store transaction; the
 // soup's next _uniqueID and its persistent frame's lastUID kept up.
 Ref
@@ -2291,7 +2291,7 @@ CommonSoupAddEntry(RefArg soup, RefArg entry, int flags, Boolean /*unused*/)
 }
 
 
-// ROM 0x0031db9c PlainSoupAdd
+// ROM 0x00348e0c PlainSoupAdd
 // The entry added with its _modTime set and the soup's next _uniqueID.
 Ref
 PlainSoupAdd(RefArg rcvr, RefArg entry)
@@ -2300,7 +2300,7 @@ PlainSoupAdd(RefArg rcvr, RefArg entry)
 }
 
 
-// ROM 0x0031dba8 SoupAddFlushed
+// ROM 0x00348e18 SoupAddFlushed
 // The same, the frame written as it is.
 Ref
 SoupAddFlushed(RefArg rcvr, RefArg entry)
@@ -2309,7 +2309,7 @@ SoupAddFlushed(RefArg rcvr, RefArg entry)
 }
 
 
-// ROM 0x0031dbb4 PlainSoupAddWithUniqueID
+// ROM 0x00348e24 PlainSoupAddWithUniqueID
 // The entry added with the _uniqueID it has.
 Ref
 PlainSoupAddWithUniqueID(RefArg rcvr, RefArg entry)
@@ -2318,7 +2318,7 @@ PlainSoupAddWithUniqueID(RefArg rcvr, RefArg entry)
 }
 
 
-// ROM 0x0031dbc0 SoupAddFlushedWithUniqueId
+// ROM 0x00348e30 SoupAddFlushedWithUniqueId
 Ref
 SoupAddFlushedWithUniqueId(RefArg rcvr, RefArg entry)
 {
@@ -2326,7 +2326,7 @@ SoupAddFlushedWithUniqueId(RefArg rcvr, RefArg entry)
 }
 
 
-// ROM 0x0031e808 PlainSoupAddIndex
+// ROM 0x00349a78 PlainSoupAddIndex
 // An index added: its description made and appended to the soup's, the
 // index objects remade and every entry put in.
 Ref
@@ -2365,7 +2365,7 @@ PlainSoupAddIndex(RefArg rcvr, RefArg indexSpec)
 }
 
 
-// ROM 0x0031eb78 PlainSoupRemoveIndex
+// ROM 0x00349de8 PlainSoupRemoveIndex
 // The index on path destroyed and its description taken out (never the
 // _uniqueID index's).
 Ref
@@ -2411,7 +2411,7 @@ PlainSoupRemoveIndex(RefArg rcvr, RefArg path)
 }
 
 
-// ROM 0x0031fef4 PlainSoupSetName
+// ROM 0x0034b164 PlainSoupSetName
 // The soup renamed: its name index entry replaced, its union soup
 // membership moved (NOT YET), theName set.
 Ref
@@ -2458,7 +2458,7 @@ PlainSoupSetName(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00320324 PlainSoupGetSignature
+// ROM 0x0034b594 PlainSoupGetSignature
 Ref
 PlainSoupGetSignature(RefArg rcvr)
 {
@@ -2467,7 +2467,7 @@ PlainSoupGetSignature(RefArg rcvr)
 }
 
 
-// ROM 0x003203a8 PlainSoupSetSignature
+// ROM 0x0034b618 PlainSoupSetSignature
 Ref
 PlainSoupSetSignature(RefArg rcvr, RefArg signature)
 {
@@ -2479,7 +2479,7 @@ PlainSoupSetSignature(RefArg rcvr, RefArg signature)
 }
 
 
-// ROM 0x00320464 PlainSoupGetNextUID
+// ROM 0x0034b6d4 PlainSoupGetNextUID
 Ref
 PlainSoupGetNextUID(RefArg rcvr)
 {
@@ -2487,7 +2487,7 @@ PlainSoupGetNextUID(RefArg rcvr)
 }
 
 
-// ROM 0x00320480 PlainSoupGetInfo
+// ROM 0x0034b6f0 PlainSoupGetInfo
 Ref
 PlainSoupGetInfo(RefArg rcvr, RefArg tag)
 {
@@ -2498,7 +2498,7 @@ PlainSoupGetInfo(RefArg rcvr, RefArg tag)
 }
 
 
-// ROM 0x0032053c PlainSoupSetInfo
+// ROM 0x0034b7ac PlainSoupSetInfo
 // (setting NCKLastBackupTime leaves the info mod time alone)
 Ref
 PlainSoupSetInfo(RefArg rcvr, RefArg tag, RefArg value)
@@ -2526,7 +2526,7 @@ PlainSoupSetInfo(RefArg rcvr, RefArg tag, RefArg value)
 }
 
 
-// ROM 0x00320710 PlainSoupGetAllInfo
+// ROM 0x0034b980 PlainSoupGetAllInfo
 Ref
 PlainSoupGetAllInfo(RefArg rcvr)
 {
@@ -2536,7 +2536,7 @@ PlainSoupGetAllInfo(RefArg rcvr)
 }
 
 
-// ROM 0x003207b0 PlainSoupSetAllInfo
+// ROM 0x0034ba20 PlainSoupSetAllInfo
 Ref
 PlainSoupSetAllInfo(RefArg rcvr, RefArg info)
 {
@@ -2552,7 +2552,7 @@ PlainSoupSetAllInfo(RefArg rcvr, RefArg info)
 }
 
 
-// ROM 0x003208e4 SoupGetFlags
+// ROM 0x0034bb54 SoupGetFlags
 Ref
 SoupGetFlags(RefArg rcvr)
 {
@@ -2561,7 +2561,7 @@ SoupGetFlags(RefArg rcvr)
 }
 
 
-// ROM 0x00320ca8 SoupSetFlags
+// ROM 0x0034bf18 SoupSetFlags
 Ref
 SoupSetFlags(RefArg rcvr, RefArg flags)
 {
@@ -2573,7 +2573,7 @@ SoupSetFlags(RefArg rcvr, RefArg flags)
 }
 
 
-// ROM 0x00320d5c SoupCacheRemoveAllEntries__FRC6RefVar
+// ROM 0x0034bfcc SoupCacheRemoveAllEntries__FRC6RefVar
 // Every cached entry becomes its plain frame (read for the purpose when
 // not in memory) and leaves the cache.
 void
@@ -2599,7 +2599,7 @@ SoupCacheRemoveAllEntries(RefArg soup)
 }
 
 
-// ROM 0x00320eac RemoveEntryStopFn__FP4SKeyT1Pv
+// ROM 0x0034c11c RemoveEntryStopFn__FP4SKeyT1Pv
 static int
 RemoveEntryStopFn(SKey* /*key*/, SKey* data, void* refCon)
 {
@@ -2608,7 +2608,7 @@ RemoveEntryStopFn(SKey* /*key*/, SKey* data, void* refCon)
 }
 
 
-// ROM 0x00320ed8 PlainSoupRemoveAllEntries
+// ROM 0x0034c148 PlainSoupRemoveAllEntries
 // Every entry's store object deleted (walking the _uniqueID index) and
 // every index destroyed; the cached entries become plain frames.
 Ref
@@ -2651,7 +2651,7 @@ PlainSoupRemoveAllEntries(RefArg rcvr)
 }
 
 
-// ROM 0x00321180 PlainSoupRemoveFromStore
+// ROM 0x0034c3f0 PlainSoupRemoveFromStore
 // The soup gone from its store: its entries, its indexes' info objects,
 // its name index entry and its persistent frame; the soup frame killed.
 Ref
@@ -2704,7 +2704,7 @@ PlainSoupRemoveFromStore(RefArg rcvr)
 }
 
 
-// ROM 0x00321588 PlainSoupDirty__FRC6RefVar
+// ROM 0x0034c7f8 PlainSoupDirty__FRC6RefVar
 Ref
 PlainSoupDirty(RefArg rcvr)
 {
@@ -2714,7 +2714,7 @@ PlainSoupDirty(RefArg rcvr)
 }
 
 
-// ROM 0x003215ec PlainSoupFlush
+// ROM 0x0034c85c PlainSoupFlush
 // A dirty soup's dirty cached entries written; ==> whether any was.
 Ref
 PlainSoupFlush(RefArg rcvr)
@@ -2740,7 +2740,7 @@ PlainSoupFlush(RefArg rcvr)
 }
 
 
-// ROM 0x00321710 GetSizeStopFn__FP4SKeyT1Pv
+// ROM 0x0034c980 GetSizeStopFn__FP4SKeyT1Pv
 struct SoupSizeInfo
 {
 	TStoreWrapper*	fWrapper;
@@ -2756,7 +2756,7 @@ GetSizeStopFn(SKey* /*key*/, SKey* data, void* refCon)
 }
 
 
-// ROM 0x00321748 PlainSoupGetSize
+// ROM 0x0034c9b8 PlainSoupGetSize
 // The entries' store objects and the indexes' sizes.
 Ref
 PlainSoupGetSize(RefArg rcvr)
@@ -2775,7 +2775,7 @@ PlainSoupGetSize(RefArg rcvr)
 }
 
 
-// ROM 0x00321890 PlainSoupIndexSizes
+// ROM 0x0034cb00 PlainSoupIndexSizes
 Ref
 PlainSoupIndexSizes(RefArg rcvr)
 {
@@ -2793,7 +2793,7 @@ PlainSoupIndexSizes(RefArg rcvr)
 }
 
 
-// ROM 0x00322898 PlainSoupGetIndexes
+// ROM 0x0034db08 PlainSoupGetIndexes
 // Clones of the index descriptions but the _uniqueID index's.
 Ref
 PlainSoupGetIndexes(RefArg rcvr)
@@ -2817,7 +2817,7 @@ PlainSoupGetIndexes(RefArg rcvr)
 }
 
 
-// ROM 0x003232a4 PlainSoupMakeKey
+// ROM 0x0034e514 PlainSoupMakeKey
 // A key as the index on path would keep it.
 Ref
 PlainSoupMakeKey(RefArg rcvr, RefArg key, RefArg path)
@@ -2834,7 +2834,7 @@ PlainSoupMakeKey(RefArg rcvr, RefArg key, RefArg path)
 }
 
 
-// ROM 0x003229f8 SoupIsValid
+// ROM 0x0034dc68 SoupIsValid
 Ref
 SoupIsValid(RefArg rcvr)
 {
@@ -2845,7 +2845,7 @@ SoupIsValid(RefArg rcvr)
 }
 
 
-// ROM 0x00322b68 SoupGetIndexesModTime
+// ROM 0x0034ddd8 SoupGetIndexesModTime
 Ref
 SoupGetIndexesModTime(RefArg rcvr)
 {
@@ -2854,7 +2854,7 @@ SoupGetIndexesModTime(RefArg rcvr)
 }
 
 
-// ROM 0x00322bec SoupGetInfoModTime
+// ROM 0x0034de5c SoupGetInfoModTime
 Ref
 SoupGetInfoModTime(RefArg rcvr)
 {
@@ -2863,7 +2863,7 @@ SoupGetInfoModTime(RefArg rcvr)
 }
 
 
-// ROM 0x00322c70 CommonSoupGetName
+// ROM 0x0034dee0 CommonSoupGetName
 Ref
 CommonSoupGetName(RefArg rcvr)
 {

@@ -35,10 +35,13 @@ import os
 import time
 from typing import Dict, List, Optional
 
-# Product configuration for the MP2100 D ROM: hasVoyager (-> hasCirrus,
-# forSenior) comes from forQ in ConfigGlobal.h; forGerman selects the locale;
-# __arm marks the ARM compiler (true/false keywords in NewtonTypes.h).
-DEFAULT_DEFINES = ["forQ", "forGerman", "__arm=1"]
+# Product configuration for the MP2x00 ROMs: hasVoyager (-> hasCirrus,
+# forSenior) comes from forQ in ConfigGlobal.h, and __arm marks the ARM
+# compiler (true/false keywords in NewtonTypes.h).  The localised builds
+# add one of forGerman/forFrench/forJapan, which in ConfigGlobal.h is all
+# that FOR_INTL and useLanguage depend on; the MP2100 D is `--define
+# forGerman` on top of these and the MP2x00 US is these alone.
+DEFAULT_DEFINES = ["forQ", "__arm=1"]
 
 # Headers left out of the translation unit and why.
 DEFAULT_EXCLUDES = {

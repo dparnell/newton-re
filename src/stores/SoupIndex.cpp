@@ -7,7 +7,7 @@
 				cursors use; TNodeCache's Commit and DeleteNode, which write
 				and delete nodes through the index.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM keeps nodes and keys in its own (big-endian) byte order; on
 	the host every on-store word is read and written big-endian
 	(ByteOrder.h) so that a store image means the same thing everywhere.
@@ -30,11 +30,11 @@ extern const ExceptionName exStoreError;		// "evt.ex.fr.store"
 
 
 // the key types' compare functions and fixed sizes
-// ROM 0x0c102508 fKeyCompareFns__10TSoupIndex
-// ROM 0x0c102524 fKeySizes__10TSoupIndex
-// (read with tools/newton-rom/analysis/romtable.py build/MP2100D
+// ROM 0x0c105414 fKeyCompareFns__10TSoupIndex
+// ROM 0x0c105430 fKeySizes__10TSoupIndex
+// (read with tools/newton-rom/analysis/romtable.py build/MP2x00US
 // fKeyCompareFns__10TSoupIndex:u32:7 fKeySizes__10TSoupIndex:u16:7 - the
-// functions are jump table slots, named in build/MP2100D/symbols.txt)
+// functions are jump table slots, named in build/MP2x00US/symbols.txt)
 const KeyCompareProcPtr TSoupIndex::fKeyCompareFns[kNumOfKeyTypes] = {
 	&TSoupIndex::StringKeyCompare,
 	&TSoupIndex::LongKeyCompare,
@@ -47,7 +47,7 @@ const KeyCompareProcPtr TSoupIndex::fKeyCompareFns[kNumOfKeyTypes] = {
 
 const short TSoupIndex::fKeySizes[kNumOfKeyTypes] = { 0, 4, 2, 8, 0, 0, 0 };
 
-// ROM 0x0c104b50 keyFieldBuffer__10TSoupIndex (theKeyField, savedKey and
+// ROM 0x0c107a88 keyFieldBuffer__10TSoupIndex (theKeyField, savedKey and
 // leafKey point at three of these)
 KeyField	TSoupIndex::theKeyField[kKeyFieldBufferSize];
 KeyField	TSoupIndex::savedKey[kKeyFieldBufferSize];
@@ -65,7 +65,7 @@ PadEven(long size)
 	S K e y
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c0a10 Set__4SKeyFUiPv
+// ROM 0x002e6344 Set__4SKeyFUiPv
 // size bytes of data, at most kSKeyDataSize.
 void
 SKey::Set(unsigned int size, const void* data)
@@ -77,7 +77,7 @@ SKey::Set(unsigned int size, const void* data)
 }
 
 
-// ROM 0x002c15d4 SetSize__4SKeyFs
+// ROM 0x002e6e34 SetSize__4SKeyFs
 // The size; the flags are kept.
 void
 SKey::SetSize(short size)
@@ -87,7 +87,7 @@ SKey::SetSize(short size)
 }
 
 
-// ROM 0x002c6440 SetFlags__4SKeyFUc
+// ROM 0x002ebca0 SetFlags__4SKeyFUc
 void
 SKey::SetFlags(unsigned char flags)
 {
@@ -95,7 +95,7 @@ SKey::SetFlags(unsigned char flags)
 }
 
 
-// ROM 0x002c0a78 SetMissingKey__4SKeyFi
+// ROM 0x002e63ac SetMissingKey__4SKeyFi
 // Sub-key n of a multi-key is missing.
 void
 SKey::SetMissingKey(int subKey)
@@ -104,7 +104,7 @@ SKey::SetMissingKey(int subKey)
 }
 
 
-// ROM 0x002c5ac0 Equals__4SKeyCFRC4SKey
+// ROM 0x002eb320 Equals__4SKeyCFRC4SKey
 // The same flags, size and data.
 Boolean
 SKey::Equals(const SKey& other) const
@@ -115,7 +115,7 @@ SKey::Equals(const SKey& other) const
 }
 
 
-// ROM 0x002c0a58 __as__4SKeyFRC4SKey
+// ROM 0x002e638c __as__4SKeyFRC4SKey
 SKey&
 SKey::operator=(const SKey& other)
 {
@@ -124,7 +124,7 @@ SKey::operator=(const SKey& other)
 }
 
 
-// ROM 0x002c3e60 __as__4SKeyFl
+// ROM 0x002e96c0 __as__4SKeyFl
 // A fixed-size long key is the raw value, from the first byte.
 SKey&
 SKey::operator=(long value)
@@ -134,7 +134,7 @@ SKey::operator=(long value)
 }
 
 
-// ROM 0x002c47f4 __as__4SKeyFUs
+// ROM 0x002ea054 __as__4SKeyFUs
 SKey&
 SKey::operator=(unsigned short value)
 {
@@ -143,7 +143,7 @@ SKey::operator=(unsigned short value)
 }
 
 
-// ROM 0x002c5340 __as__4SKeyFCd
+// ROM 0x002eaba0 __as__4SKeyFCd
 // Eight big-endian bytes (the ARM FPA's double is IEEE, high word first).
 SKey&
 SKey::operator=(const double value)
@@ -160,21 +160,21 @@ SKey::operator=(const double value)
 }
 
 
-// ROM 0x002c44e8 __opl__4SKeyCFv
+// ROM 0x002e9d48 __opl__4SKeyCFv
 SKey::operator long() const
 {
 	return (long) (Long32) GetBigEndianWord(this);
 }
 
 
-// ROM 0x002c4e1c __opUs__4SKeyCFv
+// ROM 0x002ea67c __opUs__4SKeyCFv
 SKey::operator unsigned short() const
 {
 	return GetBigEndianHalf(this);
 }
 
 
-// ROM 0x002c558c __opd__4SKeyCFv
+// ROM 0x002eadec __opd__4SKeyCFv
 SKey::operator double() const
 {
 	const UByte* src = (const UByte*) this;
@@ -239,7 +239,7 @@ IndexInfoFromStore(const UByte* bytes, long size, IndexInfo* info)
 	T A b s t r a c t S o u p I n d e x
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c41c4 FindPrior__18TAbstractSoupIndexFP4SKeyN21UcT4
+// ROM 0x002e9a24 FindPrior__18TAbstractSoupIndexFP4SKeyN21UcT4
 // The last entry at or before key (before it when exclusive): the key's
 // last duplicate when it is there (the entry before it when exclusive);
 // not there, the entry before where it would be (kIndexNotFound); past
@@ -277,7 +277,7 @@ TAbstractSoupIndex::FindPrior(SKey* key, SKey* outKey, SKey* outData, Boolean ex
 	Creation.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c1bf8 Create__10TSoupIndexSFP13TStoreWrapperP9IndexInfo
+// ROM 0x002e7458 Create__10TSoupIndexSFP13TStoreWrapperP9IndexInfo
 // A new index's info object: no root, 512-byte nodes.  ==> its id.
 ULong
 TSoupIndex::Create(TStoreWrapper* wrapper, IndexInfo* info)
@@ -294,7 +294,7 @@ TSoupIndex::Create(TStoreWrapper* wrapper, IndexInfo* info)
 }
 
 
-// ROM 0x002c1c3c ReadInfo__10TSoupIndexFv
+// ROM 0x002e749c ReadInfo__10TSoupIndexFv
 // The info from the store; an older, shorter one is not descending.
 NewtonErr
 TSoupIndex::ReadInfo(void)
@@ -329,7 +329,7 @@ WriteInfo(TStoreWrapper* wrapper, PSSId infoId, const IndexInfo* info)
 }
 
 
-// ROM 0x002c1cac Init__10TSoupIndexFP13TStoreWrapperUlPC13TSortingTable
+// ROM 0x002e750c Init__10TSoupIndexFP13TStoreWrapperUlPC13TSortingTable
 // The index over the info object infoId of the wrapper's store.
 void
 TSoupIndex::Init(TStoreWrapper* wrapper, PSSId infoId, const TSortingTable* sortingTable)
@@ -347,7 +347,7 @@ TSoupIndex::Init(TStoreWrapper* wrapper, PSSId infoId, const TSortingTable* sort
 }
 
 
-// ROM 0x002c1d44 StoreAborted__10TSoupIndexFv
+// ROM 0x002e75a4 StoreAborted__10TSoupIndexFv
 // The store's transaction was aborted: the cached nodes are dropped and
 // the info re-read.
 void
@@ -358,7 +358,7 @@ TSoupIndex::StoreAborted(void)
 }
 
 
-// ROM 0x002c2c50 Destroy__10TSoupIndexFv
+// ROM 0x002e84b0 Destroy__10TSoupIndexFv
 // Every node freed (the info object stays, rootless).
 void
 TSoupIndex::Destroy(void)
@@ -383,7 +383,7 @@ TSoupIndex::Destroy(void)
 }
 
 
-// ROM 0x002c2e4c TotalSize__10TSoupIndexFv
+// ROM 0x002e86ac TotalSize__10TSoupIndexFv
 // The size of the index's objects on the store.
 long
 TSoupIndex::TotalSize(void)
@@ -410,7 +410,7 @@ TSoupIndex::TotalSize(void)
 }
 
 
-// ROM 0x002c2ce8 NodeSize__10TSoupIndexFP10NodeHeaderRl
+// ROM 0x002e8548 NodeSize__10TSoupIndexFP10NodeHeaderRl
 // The node's object size plus its dup nodes' and its subtrees'; the node
 // forgotten from the cache.
 void
@@ -433,7 +433,7 @@ TSoupIndex::NodeSize(NodeHeader* node, long& size)
 }
 
 
-// ROM 0x002c2dcc DupNodeSize__10TSoupIndexFP8KeyFieldRl
+// ROM 0x002e862c DupNodeSize__10TSoupIndexFP8KeyFieldRl
 void
 TSoupIndex::DupNodeSize(KeyField* kf, long& size)
 {
@@ -454,7 +454,7 @@ TSoupIndex::DupNodeSize(KeyField* kf, long& size)
 	C o m p a r i s o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c17fc CompareKeys__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e705c CompareKeys__10TSoupIndexFRC4SKeyT1
 // The key type's compare, reversed for a descending index.
 int
 TSoupIndex::CompareKeys(const SKey& a, const SKey& b)
@@ -466,7 +466,7 @@ TSoupIndex::CompareKeys(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c1824 StringKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e7084 StringKeyCompare__10TSoupIndexFRC4SKeyT1
 // The collation compare of the texts through the index's own sorting
 // table.  With a table the compare is exact - the second order decides
 // what the primary weights leave equal - and without one it is not, which
@@ -489,7 +489,7 @@ TSoupIndex::StringKeyCompare(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c1880 LongKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e70e0 LongKeyCompare__10TSoupIndexFRC4SKeyT1
 int
 TSoupIndex::LongKeyCompare(const SKey& a, const SKey& b)
 {
@@ -497,7 +497,7 @@ TSoupIndex::LongKeyCompare(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c18ac CharacterKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e710c CharacterKeyCompare__10TSoupIndexFRC4SKeyT1
 int
 TSoupIndex::CharacterKeyCompare(const SKey& a, const SKey& b)
 {
@@ -509,7 +509,7 @@ TSoupIndex::CharacterKeyCompare(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c18e8 DoubleKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e7148 DoubleKeyCompare__10TSoupIndexFRC4SKeyT1
 int
 TSoupIndex::DoubleKeyCompare(const SKey& a, const SKey& b)
 {
@@ -521,7 +521,7 @@ TSoupIndex::DoubleKeyCompare(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c192c ASCIIKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e718c ASCIIKeyCompare__10TSoupIndexFRC4SKeyT1
 // Byte by byte with upper case folded to lower; a shorter key is less.
 int
 TSoupIndex::ASCIIKeyCompare(const SKey& a, const SKey& b)
@@ -550,7 +550,7 @@ TSoupIndex::ASCIIKeyCompare(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c19d0 RawKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e7230 RawKeyCompare__10TSoupIndexFRC4SKeyT1
 // memcmp over the shorter size; a shorter key is less.
 int
 TSoupIndex::RawKeyCompare(const SKey& a, const SKey& b)
@@ -570,7 +570,7 @@ TSoupIndex::RawKeyCompare(const SKey& a, const SKey& b)
 }
 
 
-// ROM 0x002c1a2c MultiKeyCompare__10TSoupIndexFRC4SKeyT1
+// ROM 0x002e728c MultiKeyCompare__10TSoupIndexFRC4SKeyT1
 // Sub-key by sub-key, each by its type; a missing sub-key is less than a
 // present one; a key that runs out first is less unless its flag bit 7
 // says otherwise; each sub-key's order is reversed unless its ascending
@@ -636,7 +636,7 @@ TSoupIndex::MultiKeyCompare(const SKey& a, const SKey& b)
 	K e y   f i e l d s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c46e0 kfSizeOfKey__10TSoupIndexFPv
+// ROM 0x002e9f40 kfSizeOfKey__10TSoupIndexFPv
 // The size of a key: the fixed size, else the SKey's header and data.
 long
 TSoupIndex::kfSizeOfKey(const void* key)
@@ -647,7 +647,7 @@ TSoupIndex::kfSizeOfKey(const void* key)
 }
 
 
-// ROM 0x002c4704 kfSizeOfData__10TSoupIndexFPv
+// ROM 0x002e9f64 kfSizeOfData__10TSoupIndexFPv
 long
 TSoupIndex::kfSizeOfData(const void* data)
 {
@@ -657,7 +657,7 @@ TSoupIndex::kfSizeOfData(const void* data)
 }
 
 
-// ROM 0x002c4728 kfFirstDataAdr__10TSoupIndexFP8KeyField
+// ROM 0x002e9f88 kfFirstDataAdr__10TSoupIndexFP8KeyField
 // The first datum: after the key, padded even.
 void*
 TSoupIndex::kfFirstDataAdr(KeyField* kf)
@@ -666,7 +666,7 @@ TSoupIndex::kfFirstDataAdr(KeyField* kf)
 }
 
 
-// ROM 0x002c4760 kfNextDataAdr__10TSoupIndexFP8KeyFieldPvPPv
+// ROM 0x002e9fc0 kfNextDataAdr__10TSoupIndexFP8KeyFieldPvPPv
 // The datum after data (the first for nil) in next; ==> whether there
 // is one (the data end 6 bytes before the field's end when it has
 // duplicates; a single datum ends at the end).
@@ -684,7 +684,7 @@ TSoupIndex::kfNextDataAdr(KeyField* kf, void* data, void** next)
 }
 
 
-// ROM 0x002c483c kfLastDataAdr__10TSoupIndexFP8KeyField
+// ROM 0x002ea09c kfLastDataAdr__10TSoupIndexFP8KeyField
 void*
 TSoupIndex::kfLastDataAdr(KeyField* kf)
 {
@@ -699,7 +699,7 @@ TSoupIndex::kfLastDataAdr(KeyField* kf)
 }
 
 
-// ROM 0x002c48a0 kfDupCount__10TSoupIndexFP8KeyField
+// ROM 0x002ea100 kfDupCount__10TSoupIndexFP8KeyField
 // The number of data in the field.
 long
 TSoupIndex::kfDupCount(KeyField* kf)
@@ -710,7 +710,7 @@ TSoupIndex::kfDupCount(KeyField* kf)
 }
 
 
-// ROM 0x002c48c8 kfNextDupID__10TSoupIndexFP8KeyField
+// ROM 0x002ea128 kfNextDupID__10TSoupIndexFP8KeyField
 // The first dup node's id; 0 for none.
 ULong
 TSoupIndex::kfNextDupID(KeyField* kf)
@@ -721,7 +721,7 @@ TSoupIndex::kfNextDupID(KeyField* kf)
 }
 
 
-// ROM 0x002c49f8 kfSetDupCount__10TSoupIndexFP8KeyFields
+// ROM 0x002ea258 kfSetDupCount__10TSoupIndexFP8KeyFields
 void
 TSoupIndex::kfSetDupCount(KeyField* kf, short count)
 {
@@ -730,7 +730,7 @@ TSoupIndex::kfSetDupCount(KeyField* kf, short count)
 }
 
 
-// ROM 0x002c4a30 kfSetNextDupID__10TSoupIndexFP8KeyFieldUl
+// ROM 0x002ea290 kfSetNextDupID__10TSoupIndexFP8KeyFieldUl
 void
 TSoupIndex::kfSetNextDupID(KeyField* kf, ULong id)
 {
@@ -749,7 +749,7 @@ CopyDatum(void* to, const void* data, long size)
 }
 
 
-// ROM 0x002c492c kfInsertData__10TSoupIndexFP8KeyFieldPvT2
+// ROM 0x002ea18c kfInsertData__10TSoupIndexFP8KeyFieldPvT2
 // The datum inserted at where in a field with duplicates.
 void
 TSoupIndex::kfInsertData(KeyField* kf, void* where, const void* data)
@@ -766,7 +766,7 @@ TSoupIndex::kfInsertData(KeyField* kf, void* where, const void* data)
 }
 
 
-// ROM 0x002c4aa0 kfDeleteData__10TSoupIndexFP8KeyFieldPv
+// ROM 0x002ea300 kfDeleteData__10TSoupIndexFP8KeyFieldPv
 // The datum removed from a field with duplicates.
 void
 TSoupIndex::kfDeleteData(KeyField* kf, void* data)
@@ -781,7 +781,7 @@ TSoupIndex::kfDeleteData(KeyField* kf, void* data)
 }
 
 
-// ROM 0x002c4b50 kfReplaceFirstData__10TSoupIndexFP8KeyFieldPv
+// ROM 0x002ea3b0 kfReplaceFirstData__10TSoupIndexFP8KeyFieldPv
 // The field's first datum replaced by data (the rest moved to fit).
 void
 TSoupIndex::kfReplaceFirstData(KeyField* kf, const void* data)
@@ -811,7 +811,7 @@ TSoupIndex::kfReplaceFirstData(KeyField* kf, const void* data)
 }
 
 
-// ROM 0x002c4c7c kfFindDataAdr__10TSoupIndexFP8KeyFieldPvPPv
+// ROM 0x002ea4dc kfFindDataAdr__10TSoupIndexFP8KeyFieldPvPPv
 // The field's datum equal to data (nil for none); the one before it in
 // prior when wanted.
 void*
@@ -833,7 +833,7 @@ TSoupIndex::kfFindDataAdr(KeyField* kf, const void* data, void** prior)
 }
 
 
-// ROM 0x002c4d14 kfAssembleKeyField__10TSoupIndexFP8KeyFieldPvT2
+// ROM 0x002ea574 kfAssembleKeyField__10TSoupIndexFP8KeyFieldPvT2
 // The field for a key and (optionally) its datum: no duplicates.
 KeyField*
 TSoupIndex::kfAssembleKeyField(KeyField* kf, const void* key, const void* data)
@@ -856,7 +856,7 @@ TSoupIndex::kfAssembleKeyField(KeyField* kf, const void* key, const void* data)
 }
 
 
-// ROM 0x002c4e58 kfDisassembleKeyField__10TSoupIndexFP8KeyFieldP4SKeyT2
+// ROM 0x002ea6b8 kfDisassembleKeyField__10TSoupIndexFP8KeyFieldP4SKeyT2
 // The field's key and first datum into the keys wanted.
 void
 TSoupIndex::kfDisassembleKeyField(KeyField* kf, SKey* outKey, SKey* outData)
@@ -871,7 +871,7 @@ TSoupIndex::kfDisassembleKeyField(KeyField* kf, SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c4ed0 kfConvertKeyField__10TSoupIndexFlP8KeyField
+// ROM 0x002ea730 kfConvertKeyField__10TSoupIndexFlP8KeyField
 // A field without duplicates made one with: the count (1) and dup node
 // id (none) added.
 void
@@ -890,7 +890,7 @@ TSoupIndex::kfConvertKeyField(long toDups, KeyField* kf)
 	N o d e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c1740 ReadRootNode__10TSoupIndexFUc
+// ROM 0x002e6fa0 ReadRootNode__10TSoupIndexFUc
 // The root node, from the cache or the store (created when there is none
 // and create says to); nil when there is none.
 NodeHeader*
@@ -906,7 +906,7 @@ TSoupIndex::ReadRootNode(Boolean create)
 }
 
 
-// ROM 0x002c1784 SetRootNode__10TSoupIndexFUl
+// ROM 0x002e6fe4 SetRootNode__10TSoupIndexFUl
 void
 TSoupIndex::SetRootNode(ULong id)
 {
@@ -915,7 +915,7 @@ TSoupIndex::SetRootNode(ULong id)
 }
 
 
-// ROM 0x002c4344 ReadANode__10TSoupIndexFUlT1
+// ROM 0x002e9ba4 ReadANode__10TSoupIndexFUlT1
 // The node, from the cache or the store, its id and parent set.  A node
 // read from the store is expanded: the key data moved to the end of the
 // buffer and the gap after the offsets zeroed.
@@ -940,7 +940,7 @@ TSoupIndex::ReadANode(ULong id, ULong parentId)
 }
 
 
-// ROM 0x002c443c ReadADupNode__10TSoupIndexFUl
+// ROM 0x002e9c9c ReadADupNode__10TSoupIndexFUl
 DupNodeHeader*
 TSoupIndex::ReadADupNode(ULong id)
 {
@@ -957,14 +957,14 @@ TSoupIndex::ReadADupNode(ULong id)
 }
 
 
-// ROM 0x002c451c ChangeNode__10TSoupIndexFP10NodeHeader
+// ROM 0x002e9d7c ChangeNode__10TSoupIndexFP10NodeHeader
 // Nothing (the node will be dirtied when done with).
 void
 TSoupIndex::ChangeNode(NodeHeader* /*node*/)
 { }
 
 
-// ROM 0x002c4520 UpdateNode__10TSoupIndexFP10NodeHeader
+// ROM 0x002e9d80 UpdateNode__10TSoupIndexFP10NodeHeader
 // The node written to the store compact: the header and offsets, then
 // the key data.
 void
@@ -979,7 +979,7 @@ TSoupIndex::UpdateNode(NodeHeader* node)
 }
 
 
-// ROM 0x002c459c UpdateDupNode__10TSoupIndexFP10NodeHeader
+// ROM 0x002e9dfc UpdateDupNode__10TSoupIndexFP10NodeHeader
 // A dup node is compact already.
 void
 TSoupIndex::UpdateDupNode(NodeHeader* node)
@@ -988,7 +988,7 @@ TSoupIndex::UpdateDupNode(NodeHeader* node)
 }
 
 
-// ROM 0x002c45dc NewNode__10TSoupIndexFv
+// ROM 0x002e9e3c NewNode__10TSoupIndexFv
 // A new, empty, dirty node in the cache with a new store object.
 NodeHeader*
 TSoupIndex::NewNode(void)
@@ -1001,7 +1001,7 @@ TSoupIndex::NewNode(void)
 }
 
 
-// ROM 0x002c4648 NewDupNode__10TSoupIndexFv
+// ROM 0x002e9ea8 NewDupNode__10TSoupIndexFv
 DupNodeHeader*
 TSoupIndex::NewDupNode(void)
 {
@@ -1019,7 +1019,7 @@ TSoupIndex::NewDupNode(void)
 }
 
 
-// ROM 0x002c46d8 DeleteNode__10TSoupIndexFUl
+// ROM 0x002e9f38 DeleteNode__10TSoupIndexFUl
 void
 TSoupIndex::DeleteNode(ULong id)
 {
@@ -1027,7 +1027,7 @@ TSoupIndex::DeleteNode(ULong id)
 }
 
 
-// ROM 0x002c59e4 InitNode__10TSoupIndexFP10NodeHeaderUl
+// ROM 0x002eb244 InitNode__10TSoupIndexFP10NodeHeaderUl
 // An empty node: the one offset to the empty key field at the end, with
 // no child.
 void
@@ -1045,7 +1045,7 @@ TSoupIndex::InitNode(NodeHeader* node, ULong id)
 }
 
 
-// ROM 0x002c5b28 CreateFirstRoot__10TSoupIndexFv
+// ROM 0x002eb388 CreateFirstRoot__10TSoupIndexFv
 void
 TSoupIndex::CreateFirstRoot(void)
 {
@@ -1055,7 +1055,7 @@ TSoupIndex::CreateFirstRoot(void)
 }
 
 
-// ROM 0x002c5a5c CreateNewRoot__10TSoupIndexFP8KeyFieldUl
+// ROM 0x002eb2bc CreateNewRoot__10TSoupIndexFP8KeyFieldUl
 // A new root over the old one and rightId, with the key that separates
 // them.
 void
@@ -1069,7 +1069,7 @@ TSoupIndex::CreateNewRoot(KeyField* kf, ULong rightId)
 }
 
 
-// ROM 0x002c52dc KeyFieldAdr__10TSoupIndexFP10NodeHeaderl
+// ROM 0x002eab3c KeyFieldAdr__10TSoupIndexFP10NodeHeaderl
 KeyField*
 TSoupIndex::KeyFieldAdr(NodeHeader* node, long slot)
 {
@@ -1077,7 +1077,7 @@ TSoupIndex::KeyFieldAdr(NodeHeader* node, long slot)
 }
 
 
-// ROM 0x002c52ec LeftNodeNo__10TSoupIndexFP10NodeHeaderl
+// ROM 0x002eab4c LeftNodeNo__10TSoupIndexFP10NodeHeaderl
 // The id of the child to the left of the key at slot (before the field).
 ULong
 TSoupIndex::LeftNodeNo(NodeHeader* node, long slot)
@@ -1086,7 +1086,7 @@ TSoupIndex::LeftNodeNo(NodeHeader* node, long slot)
 }
 
 
-// ROM 0x002c537c RightNodeNo__10TSoupIndexFP10NodeHeaderl
+// ROM 0x002eabdc RightNodeNo__10TSoupIndexFP10NodeHeaderl
 ULong
 TSoupIndex::RightNodeNo(NodeHeader* node, long slot)
 {
@@ -1094,7 +1094,7 @@ TSoupIndex::RightNodeNo(NodeHeader* node, long slot)
 }
 
 
-// ROM 0x002c53d4 FirstNodeNo__10TSoupIndexFP10NodeHeader
+// ROM 0x002eac34 FirstNodeNo__10TSoupIndexFP10NodeHeader
 ULong
 TSoupIndex::FirstNodeNo(NodeHeader* node)
 {
@@ -1102,7 +1102,7 @@ TSoupIndex::FirstNodeNo(NodeHeader* node)
 }
 
 
-// ROM 0x002c53dc LastNodeNo__10TSoupIndexFP10NodeHeader
+// ROM 0x002eac3c LastNodeNo__10TSoupIndexFP10NodeHeader
 ULong
 TSoupIndex::LastNodeNo(NodeHeader* node)
 {
@@ -1110,7 +1110,7 @@ TSoupIndex::LastNodeNo(NodeHeader* node)
 }
 
 
-// ROM 0x002c53e8 SetNodeNo__10TSoupIndexFP10NodeHeaderlUl
+// ROM 0x002eac48 SetNodeNo__10TSoupIndexFP10NodeHeaderlUl
 void
 TSoupIndex::SetNodeNo(NodeHeader* node, long slot, ULong id)
 {
@@ -1118,7 +1118,7 @@ TSoupIndex::SetNodeNo(NodeHeader* node, long slot, ULong id)
 }
 
 
-// ROM 0x002c5440 FirstKeyField__10TSoupIndexFP10NodeHeader
+// ROM 0x002eaca0 FirstKeyField__10TSoupIndexFP10NodeHeader
 KeyField*
 TSoupIndex::FirstKeyField(NodeHeader* node)
 {
@@ -1126,7 +1126,7 @@ TSoupIndex::FirstKeyField(NodeHeader* node)
 }
 
 
-// ROM 0x002c5448 LastKeyField__10TSoupIndexFP10NodeHeader
+// ROM 0x002eaca8 LastKeyField__10TSoupIndexFP10NodeHeader
 KeyField*
 TSoupIndex::LastKeyField(NodeHeader* node)
 {
@@ -1134,7 +1134,7 @@ TSoupIndex::LastKeyField(NodeHeader* node)
 }
 
 
-// ROM 0x002c5464 KeyFieldBase__10TSoupIndexFP10NodeHeader
+// ROM 0x002eacc4 KeyFieldBase__10TSoupIndexFP10NodeHeader
 // The lowest key field: the end of the free space.
 UByte*
 TSoupIndex::KeyFieldBase(NodeHeader* node)
@@ -1143,7 +1143,7 @@ TSoupIndex::KeyFieldBase(NodeHeader* node)
 }
 
 
-// ROM 0x002c5480 MoveKey__10TSoupIndexFP8KeyFieldT1
+// ROM 0x002eace0 MoveKey__10TSoupIndexFP8KeyFieldT1
 // The field copied; an empty one leaves to empty.  ==> whether there
 // was one.
 Boolean
@@ -1160,7 +1160,7 @@ TSoupIndex::MoveKey(KeyField* from, KeyField* to)
 }
 
 
-// ROM 0x002c54cc CopyKeyFmNode__10TSoupIndexFP8KeyFieldPUlP10NodeHeaderl
+// ROM 0x002ead2c CopyKeyFmNode__10TSoupIndexFP8KeyFieldPUlP10NodeHeaderl
 // The field at slot and its left child's id.
 void
 TSoupIndex::CopyKeyFmNode(KeyField* kf, ULong* leftId, NodeHeader* node, long slot)
@@ -1171,7 +1171,7 @@ TSoupIndex::CopyKeyFmNode(KeyField* kf, ULong* leftId, NodeHeader* node, long sl
 }
 
 
-// ROM 0x002c5528 KeyAfterNodeNo__10TSoupIndexFP10NodeHeaderUlPl
+// ROM 0x002ead88 KeyAfterNodeNo__10TSoupIndexFP10NodeHeaderUlPl
 // The field whose left child is id (the key after that subtree).
 KeyField*
 TSoupIndex::KeyAfterNodeNo(NodeHeader* node, ULong id, long* slot)
@@ -1183,7 +1183,7 @@ TSoupIndex::KeyAfterNodeNo(NodeHeader* node, ULong id, long* slot)
 }
 
 
-// ROM 0x002c55c0 KeyBeforeNodeNo__10TSoupIndexFP10NodeHeaderUlPl
+// ROM 0x002eae20 KeyBeforeNodeNo__10TSoupIndexFP10NodeHeaderUlPl
 // The field whose right child is id (the key before that subtree); nil
 // when the subtree is the leftmost.
 KeyField*
@@ -1199,7 +1199,7 @@ TSoupIndex::KeyBeforeNodeNo(NodeHeader* node, ULong id, long* slot)
 }
 
 
-// ROM 0x002c5630 KeyInNode__10TSoupIndexFP8KeyFieldP10NodeHeaderPUlPl
+// ROM 0x002eae90 KeyInNode__10TSoupIndexFP8KeyFieldP10NodeHeaderPUlPl
 // A binary search of the node for the key: found, its slot and left
 // child; not found, the slot it would be at and the child to look in.
 Boolean
@@ -1232,7 +1232,7 @@ TSoupIndex::KeyInNode(KeyField* kf, NodeHeader* node, ULong* childId, long* slot
 }
 
 
-// ROM 0x002c5700 LastSlotInNode__10TSoupIndexFP10NodeHeader
+// ROM 0x002eaf60 LastSlotInNode__10TSoupIndexFP10NodeHeader
 long
 TSoupIndex::LastSlotInNode(NodeHeader* node)
 {
@@ -1240,7 +1240,7 @@ TSoupIndex::LastSlotInNode(NodeHeader* node)
 }
 
 
-// ROM 0x002c5710 BytesInNode__10TSoupIndexFP10NodeHeader
+// ROM 0x002eaf70 BytesInNode__10TSoupIndexFP10NodeHeader
 // The node's compact size.
 long
 TSoupIndex::BytesInNode(NodeHeader* node)
@@ -1249,7 +1249,7 @@ TSoupIndex::BytesInNode(NodeHeader* node)
 }
 
 
-// ROM 0x002c5720 RoomInNode__10TSoupIndexFP10NodeHeaderP8KeyField
+// ROM 0x002eaf80 RoomInNode__10TSoupIndexFP10NodeHeaderP8KeyField
 // Room for the field, its child id and its offset.
 Boolean
 TSoupIndex::RoomInNode(NodeHeader* node, KeyField* kf)
@@ -1258,7 +1258,7 @@ TSoupIndex::RoomInNode(NodeHeader* node, KeyField* kf)
 }
 
 
-// ROM 0x002c5748 NodeUnderflow__10TSoupIndexFP10NodeHeader
+// ROM 0x002eafa8 NodeUnderflow__10TSoupIndexFP10NodeHeader
 // Less than half full.
 Boolean
 TSoupIndex::NodeUnderflow(NodeHeader* node)
@@ -1267,7 +1267,7 @@ TSoupIndex::NodeUnderflow(NodeHeader* node)
 }
 
 
-// ROM 0x002c576c PutKeyIntoNode__10TSoupIndexFP8KeyFieldUlP10NodeHeaderl
+// ROM 0x002eafcc PutKeyIntoNode__10TSoupIndexFP8KeyFieldUlP10NodeHeaderl
 // The field inserted at slot with rightId the child to its right: the
 // field goes below the others, the offsets after slot move up; the
 // field takes the left child of the one it displaces, which takes
@@ -1291,7 +1291,7 @@ TSoupIndex::PutKeyIntoNode(KeyField* kf, ULong rightId, NodeHeader* node, long s
 }
 
 
-// ROM 0x002c5888 DeleteKeyFromNode__10TSoupIndexFP10NodeHeaderl
+// ROM 0x002eb0e8 DeleteKeyFromNode__10TSoupIndexFP10NodeHeaderl
 // The field at slot removed: the one after it takes its left child, the
 // fields below it move up over it and their offsets follow.
 void
@@ -1323,7 +1323,7 @@ TSoupIndex::DeleteKeyFromNode(NodeHeader* node, long slot)
 	S e a r c h i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c5b4c FindNextKey__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
+// ROM 0x002eb3ac FindNextKey__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
 // The key after the one at slot of node into kf, node and slot moved to
 // it: the leftmost key of the subtree to its right, else the next key
 // in the node, else the key after this subtree in an ancestor.  ==>
@@ -1375,7 +1375,7 @@ TSoupIndex::FindNextKey(KeyField* kf, NodeHeader** node, long* slot)
 }
 
 
-// ROM 0x002c5ca8 FindPriorKey__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
+// ROM 0x002eb508 FindPriorKey__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
 // The key before the one at slot into kf (its last datum when it has
 // duplicates): the rightmost key of the subtree to its left, else the
 // key before it in the node, else the key before this subtree in an
@@ -1427,7 +1427,7 @@ TSoupIndex::FindPriorKey(KeyField* kf, NodeHeader** node, long* slot)
 }
 
 
-// ROM 0x002c5e14 FindFirstKey__10TSoupIndexFP10NodeHeaderP8KeyField
+// ROM 0x002eb674 FindFirstKey__10TSoupIndexFP10NodeHeaderP8KeyField
 // The leftmost key under node.
 Boolean
 TSoupIndex::FindFirstKey(NodeHeader* node, KeyField* kf)
@@ -1442,7 +1442,7 @@ TSoupIndex::FindFirstKey(NodeHeader* node, KeyField* kf)
 }
 
 
-// ROM 0x002c5e80 FindLastKey__10TSoupIndexFP10NodeHeaderP8KeyField
+// ROM 0x002eb6e0 FindLastKey__10TSoupIndexFP10NodeHeaderP8KeyField
 // The rightmost key under node, with its last datum.
 Boolean
 TSoupIndex::FindLastKey(NodeHeader* node, KeyField* kf)
@@ -1461,7 +1461,7 @@ TSoupIndex::FindLastKey(NodeHeader* node, KeyField* kf)
 }
 
 
-// ROM 0x002c5f24 Search__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
+// ROM 0x002eb784 Search__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
 // The key under node: found, kf is the field there; not found, kf is the
 // key after it (empty for none); node and slot say where.
 Boolean
@@ -1486,7 +1486,7 @@ TSoupIndex::Search(KeyField* kf, NodeHeader** node, long* slot)
 }
 
 
-// ROM 0x002c6464 SearchNext__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
+// ROM 0x002ebcc4 SearchNext__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
 // The key after kf's into kf: ==> 0 for none, -1 when kf's key was not
 // in the index (kf is the key after where it would be), 1 otherwise.
 int
@@ -1512,7 +1512,7 @@ TSoupIndex::SearchNext(KeyField* kf, NodeHeader** node, long* slot)
 }
 
 
-// ROM 0x002c6560 SearchPrior__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
+// ROM 0x002ebdc0 SearchPrior__10TSoupIndexFP8KeyFieldPP10NodeHeaderPl
 int
 TSoupIndex::SearchPrior(KeyField* kf, NodeHeader** node, long* slot)
 {
@@ -1532,7 +1532,7 @@ TSoupIndex::SearchPrior(KeyField* kf, NodeHeader** node, long* slot)
 }
 
 
-// ROM 0x002c625c SearchNextDup__10TSoupIndexFP8KeyFieldPP10NodeHeaderPlPP13DupNodeHeader
+// ROM 0x002ebabc SearchNextDup__10TSoupIndexFP8KeyFieldPP10NodeHeaderPlPP13DupNodeHeader
 // The datum after kf's for kf's key into kf: ==> 0 for none (or when the
 // key's only datum is kf's), -1 when the key or datum is not in the
 // index, 1 otherwise; dupNode is the dup node the datum came from.
@@ -1578,7 +1578,7 @@ TSoupIndex::SearchNextDup(KeyField* kf, NodeHeader** node, long* slot, DupNodeHe
 }
 
 
-// ROM 0x002c6648 SearchPriorDup__10TSoupIndexFP8KeyFieldPP10NodeHeaderPlPP13DupNodeHeader
+// ROM 0x002ebea8 SearchPriorDup__10TSoupIndexFP8KeyFieldPP10NodeHeaderPlPP13DupNodeHeader
 int
 TSoupIndex::SearchPriorDup(KeyField* kf, NodeHeader** node, long* slot, DupNodeHeader** dupNode)
 {
@@ -1626,7 +1626,7 @@ TSoupIndex::SearchPriorDup(KeyField* kf, NodeHeader** node, long* slot, DupNodeH
 	D u p l i c a t e   d a t a
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c4f68 FirstDupDataAdr__10TSoupIndexFP13DupNodeHeader
+// ROM 0x002ea7c8 FirstDupDataAdr__10TSoupIndexFP13DupNodeHeader
 void*
 TSoupIndex::FirstDupDataAdr(DupNodeHeader* node)
 {
@@ -1634,7 +1634,7 @@ TSoupIndex::FirstDupDataAdr(DupNodeHeader* node)
 }
 
 
-// ROM 0x002c4f70 NextDupDataAdr__10TSoupIndexFP13DupNodeHeaderPvPPv
+// ROM 0x002ea7d0 NextDupDataAdr__10TSoupIndexFP13DupNodeHeaderPvPPv
 // The datum after data (the first for nil) in next; ==> whether there
 // is one.
 Boolean
@@ -1651,7 +1651,7 @@ TSoupIndex::NextDupDataAdr(DupNodeHeader* node, void* data, void** next)
 }
 
 
-// ROM 0x002c4fd8 LastDupDataAdr__10TSoupIndexFP8KeyFieldPP13DupNodeHeader
+// ROM 0x002ea838 LastDupDataAdr__10TSoupIndexFP8KeyFieldPP13DupNodeHeader
 // The key's last datum: the last in the last dup node (in dupNode when
 // wanted), else the last in the field.
 void*
@@ -1680,7 +1680,7 @@ TSoupIndex::LastDupDataAdr(KeyField* kf, DupNodeHeader** dupNode)
 }
 
 
-// ROM 0x002c50a4 AppendDupData__10TSoupIndexFP13DupNodeHeaderPv
+// ROM 0x002ea904 AppendDupData__10TSoupIndexFP13DupNodeHeaderPv
 // ==> whether it fitted.
 Boolean
 TSoupIndex::AppendDupData(DupNodeHeader* node, const void* data)
@@ -1697,7 +1697,7 @@ TSoupIndex::AppendDupData(DupNodeHeader* node, const void* data)
 }
 
 
-// ROM 0x002c5154 PrependDupData__10TSoupIndexFP13DupNodeHeaderPv
+// ROM 0x002ea9b4 PrependDupData__10TSoupIndexFP13DupNodeHeaderPv
 Boolean
 TSoupIndex::PrependDupData(DupNodeHeader* node, const void* data)
 {
@@ -1715,7 +1715,7 @@ TSoupIndex::PrependDupData(DupNodeHeader* node, const void* data)
 }
 
 
-// ROM 0x002c5224 DeleteDupData__10TSoupIndexFP13DupNodeHeaderPv
+// ROM 0x002eaa84 DeleteDupData__10TSoupIndexFP13DupNodeHeaderPv
 // ==> whether the node is now empty.
 Boolean
 TSoupIndex::DeleteDupData(DupNodeHeader* node, void* data)
@@ -1731,7 +1731,7 @@ TSoupIndex::DeleteDupData(DupNodeHeader* node, void* data)
 }
 
 
-// ROM 0x002c5ffc FindDupDataAdr__10TSoupIndexFP13DupNodeHeaderPvPPv
+// ROM 0x002eb85c FindDupDataAdr__10TSoupIndexFP13DupNodeHeaderPvPPv
 // The node's datum equal to data (nil for none); the one before it in
 // prior when wanted.
 void*
@@ -1753,7 +1753,7 @@ TSoupIndex::FindDupDataAdr(DupNodeHeader* node, const void* data, void** prior)
 }
 
 
-// ROM 0x002c6094 FindNextDupDataAdr__10TSoupIndexFPP13DupNodeHeaderPvPUc
+// ROM 0x002eb8f4 FindNextDupDataAdr__10TSoupIndexFPP13DupNodeHeaderPvPUc
 // The datum after data in the chain from node (node moved to the one it
 // is in); found says whether data itself was there.
 void*
@@ -1784,7 +1784,7 @@ TSoupIndex::FindNextDupDataAdr(DupNodeHeader** node, const void* data, Boolean* 
 }
 
 
-// ROM 0x002c618c FindPriorDupDataAdr__10TSoupIndexFPP13DupNodeHeaderPvPUc
+// ROM 0x002eb9ec FindPriorDupDataAdr__10TSoupIndexFPP13DupNodeHeaderPvPUc
 // The datum before data in the chain from node (node moved to the one it
 // is in); nil when data is the first (found true) or not there (found
 // false).
@@ -1822,7 +1822,7 @@ TSoupIndex::FindPriorDupDataAdr(DupNodeHeader** node, const void* data, Boolean*
 }
 
 
-// ROM 0x002c69b8 CheckForDupData__10TSoupIndexFP8KeyFieldPv
+// ROM 0x002ec218 CheckForDupData__10TSoupIndexFP8KeyFieldPv
 // A datum being added to the key at kf: an error when the index takes no
 // duplicate keys, or the datum is already there.
 void
@@ -1852,7 +1852,7 @@ TSoupIndex::CheckForDupData(KeyField* kf, const void* data)
 }
 
 
-// ROM 0x002c6aac StoreDupData__10TSoupIndexFP8KeyFieldPv
+// ROM 0x002ec30c StoreDupData__10TSoupIndexFP8KeyFieldPv
 // Another datum for the key: at the end of its last dup node (a new one
 // when full), else at the end of the field while that stays under 100
 // bytes, else in a first dup node.
@@ -1895,7 +1895,7 @@ TSoupIndex::StoreDupData(KeyField* kf, const void* data)
 }
 
 
-// ROM 0x002c6bf8 InsertDupData__10TSoupIndexFP8KeyFieldP10NodeHeaderlPUlPUc
+// ROM 0x002ec458 InsertDupData__10TSoupIndexFP8KeyFieldP10NodeHeaderlPUlPUc
 // kf's key is already at slot of node: its datum added to the field
 // there (which is taken out, converted to one with duplicates, and put
 // back - splitting the node when it no longer fits).
@@ -1933,7 +1933,7 @@ TSoupIndex::InsertDupData(KeyField* kf, NodeHeader* node, long slot, ULong* righ
 	I n s e r t i o n   a n d   d e l e t i o n
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c6d5c InsertKey__10TSoupIndexFP8KeyFieldP10NodeHeaderPUlPUc
+// ROM 0x002ec5bc InsertKey__10TSoupIndexFP8KeyFieldP10NodeHeaderPUlPUc
 // The field inserted under node: down to the leaf it belongs in, then
 // into the nodes on the way back up while they split (kf becomes the key
 // pushed up and rightId the new node to its right; split says one is
@@ -1978,7 +1978,7 @@ TSoupIndex::InsertKey(KeyField* kf, NodeHeader* node, ULong* rightId, Boolean* s
 }
 
 
-// ROM 0x002c6ed8 InsertAfterDelete__10TSoupIndexFP8KeyFieldUlP10NodeHeader
+// ROM 0x002ec738 InsertAfterDelete__10TSoupIndexFP8KeyFieldUlP10NodeHeader
 // The field put back into node (or an ancestor) after a deletion,
 // splitting up the tree as needed; a new root when it splits the root.
 void
@@ -2007,7 +2007,7 @@ TSoupIndex::InsertAfterDelete(KeyField* kf, ULong rightId, NodeHeader* node)
 }
 
 
-// ROM 0x002c67fc SplitANode__10TSoupIndexFP8KeyFieldPUlP10NodeHeaderl
+// ROM 0x002ec05c SplitANode__10TSoupIndexFP8KeyFieldPUlP10NodeHeaderl
 // The field will not fit at slot of node: a new node takes the keys from
 // the end of node until it is half full (the field among them when slot
 // is there); the key left at the boundary comes out into kf, with the
@@ -2044,7 +2044,7 @@ TSoupIndex::SplitANode(KeyField* kf, ULong* rightId, NodeHeader* node, long slot
 }
 
 
-// ROM 0x002c7000 MergeTwoNodes__10TSoupIndexFP8KeyFieldP10NodeHeaderN22
+// ROM 0x002ec860 MergeTwoNodes__10TSoupIndexFP8KeyFieldP10NodeHeaderN22
 // The key kf (taken out of parent) and the siblings left and right
 // either side of it: when they fit in one node, right's keys go into
 // left and right is freed; otherwise keys move between them until
@@ -2112,7 +2112,7 @@ TSoupIndex::MergeTwoNodes(KeyField* kf, NodeHeader* parent, NodeHeader* left, No
 }
 
 
-// ROM 0x002c0a94 BalanceTwoNodes__10TSoupIndexFP10NodeHeaderT1l
+// ROM 0x002e63c8 BalanceTwoNodes__10TSoupIndexFP10NodeHeaderT1l
 // child, at slot of parent, has underflowed: the key at slot comes out
 // of parent and child is merged with the sibling to its right (to its
 // left when it is the last).  ==> whether parent now underflows.
@@ -2146,7 +2146,7 @@ TSoupIndex::BalanceTwoNodes(NodeHeader* parent, NodeHeader* child, long slot)
 }
 
 
-// ROM 0x002c0bd0 GetLeafKey__10TSoupIndexFP8KeyFieldP10NodeHeader
+// ROM 0x002e6504 GetLeafKey__10TSoupIndexFP8KeyFieldP10NodeHeader
 // The leftmost key under node taken out of its leaf into kf; when the
 // leaf underflows its (new) first key is saved for DeleteKey to remove
 // and re-add.  ==> whether the leaf underflows.
@@ -2171,7 +2171,7 @@ TSoupIndex::GetLeafKey(KeyField* kf, NodeHeader* node)
 }
 
 
-// ROM 0x002c0cd8 DeleteTheKey__10TSoupIndexFP10NodeHeaderlP8KeyField
+// ROM 0x002e660c DeleteTheKey__10TSoupIndexFP10NodeHeaderlP8KeyField
 // kf's datum removed from the key at slot of node: the field goes when
 // it was the only datum; otherwise the datum goes from the field (the
 // first datum of the first dup node moving in when the field's was the
@@ -2277,7 +2277,7 @@ TSoupIndex::DeleteTheKey(NodeHeader* node, long slot, KeyField* kf)
 }
 
 
-// ROM 0x002c103c DeleteKey__10TSoupIndexFP8KeyFieldP10NodeHeaderPUc
+// ROM 0x002e6970 DeleteKey__10TSoupIndexFP8KeyFieldP10NodeHeaderPUc
 // kf's key (and datum) removed from the tree under node; underflow says
 // whether node has underflowed.  ==> whether the key was there.
 Boolean
@@ -2357,7 +2357,7 @@ TSoupIndex::DeleteKey(KeyField* kf, NodeHeader* node, Boolean* underflow)
 }
 
 
-// ROM 0x002c1344 FreeNodes__10TSoupIndexFP10NodeHeader
+// ROM 0x002e6ba4 FreeNodes__10TSoupIndexFP10NodeHeader
 // The node, its dup nodes and its subtrees deleted from the store.
 void
 TSoupIndex::FreeNodes(NodeHeader* node)
@@ -2376,7 +2376,7 @@ TSoupIndex::FreeNodes(NodeHeader* node)
 }
 
 
-// ROM 0x002c13ec FreeDupNodes__10TSoupIndexFP8KeyField
+// ROM 0x002e6c4c FreeDupNodes__10TSoupIndexFP8KeyField
 void
 TSoupIndex::FreeDupNodes(KeyField* kf)
 {
@@ -2395,7 +2395,7 @@ TSoupIndex::FreeDupNodes(KeyField* kf)
 	==> kIndexOK, else kIndexNotFound / kIndexEnd.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c15fc _BTEnterKey__10TSoupIndexFP8KeyField
+// ROM 0x002e6e5c _BTEnterKey__10TSoupIndexFP8KeyField
 // The field added; a new root when the root splits.
 int
 TSoupIndex::_BTEnterKey(KeyField* kf)
@@ -2419,7 +2419,7 @@ TSoupIndex::_BTEnterKey(KeyField* kf)
 }
 
 
-// ROM 0x002c168c _BTRemoveKey__10TSoupIndexFP8KeyField
+// ROM 0x002e6eec _BTRemoveKey__10TSoupIndexFP8KeyField
 // The field removed; an emptied root gives way to its only child.
 int
 TSoupIndex::_BTRemoveKey(KeyField* kf)
@@ -2446,7 +2446,7 @@ TSoupIndex::_BTRemoveKey(KeyField* kf)
 }
 
 
-// ROM 0x002c1514 _BTGetNextKey__10TSoupIndexFP8KeyField
+// ROM 0x002e6d74 _BTGetNextKey__10TSoupIndexFP8KeyField
 int
 TSoupIndex::_BTGetNextKey(KeyField* kf)
 {
@@ -2461,7 +2461,7 @@ TSoupIndex::_BTGetNextKey(KeyField* kf)
 }
 
 
-// ROM 0x002c157c _BTGetPriorKey__10TSoupIndexFP8KeyField
+// ROM 0x002e6ddc _BTGetPriorKey__10TSoupIndexFP8KeyField
 int
 TSoupIndex::_BTGetPriorKey(KeyField* kf)
 {
@@ -2474,7 +2474,7 @@ TSoupIndex::_BTGetPriorKey(KeyField* kf)
 }
 
 
-// ROM 0x002c142c _BTGetNextDupKey__10TSoupIndexFP8KeyField
+// ROM 0x002e6c8c _BTGetNextDupKey__10TSoupIndexFP8KeyField
 int
 TSoupIndex::_BTGetNextDupKey(KeyField* kf)
 {
@@ -2490,7 +2490,7 @@ TSoupIndex::_BTGetNextDupKey(KeyField* kf)
 }
 
 
-// ROM 0x002c14a0 _BTGetPriorDupKey__10TSoupIndexFP8KeyField
+// ROM 0x002e6d00 _BTGetPriorDupKey__10TSoupIndexFP8KeyField
 int
 TSoupIndex::_BTGetPriorDupKey(KeyField* kf)
 {
@@ -2512,7 +2512,7 @@ TSoupIndex::_BTGetPriorDupKey(KeyField* kf)
 	succeeds, aborted when it throws.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c1d6c Add__10TSoupIndexFP4SKeyT1
+// ROM 0x002e75cc Add__10TSoupIndexFP4SKeyT1
 // The key and its datum added.  ==> kIndexOK.
 int
 TSoupIndex::Add(SKey* key, SKey* data)
@@ -2537,7 +2537,7 @@ TSoupIndex::Add(SKey* key, SKey* data)
 }
 
 
-// ROM 0x002c1dfc AddInTransaction__10TSoupIndexFP4SKeyT1
+// ROM 0x002e765c AddInTransaction__10TSoupIndexFP4SKeyT1
 // Added within a larger transaction: the nodes are only committed when
 // the cache grows past 32 of them.
 int
@@ -2551,7 +2551,7 @@ TSoupIndex::AddInTransaction(SKey* key, SKey* data)
 }
 
 
-// ROM 0x002c283c Delete__10TSoupIndexFP4SKeyT1
+// ROM 0x002e809c Delete__10TSoupIndexFP4SKeyT1
 // The key's datum removed.  ==> kIndexOK, kIndexNotFound.
 int
 TSoupIndex::Delete(SKey* key, SKey* data)
@@ -2577,7 +2577,7 @@ TSoupIndex::Delete(SKey* key, SKey* data)
 }
 
 
-// ROM 0x002c1e50 Find__10TSoupIndexFP4SKeyN21Uc
+// ROM 0x002e76b0 Find__10TSoupIndexFP4SKeyN21Uc
 // The key looked up: kIndexOK when it is there (outKey and outData its
 // key and first datum), kIndexNotFound when the key after it is
 // (outKey/outData that), kIndexEnd when nothing follows.  Not exact, a
@@ -2637,7 +2637,7 @@ TSoupIndex::Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact)
 }
 
 
-// ROM 0x002c28e8 First__10TSoupIndexFP4SKeyT1
+// ROM 0x002e8148 First__10TSoupIndexFP4SKeyT1
 int
 TSoupIndex::First(SKey* outKey, SKey* outData)
 {
@@ -2661,7 +2661,7 @@ TSoupIndex::First(SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c29b8 Last__10TSoupIndexFP4SKeyT1
+// ROM 0x002e8218 Last__10TSoupIndexFP4SKeyT1
 int
 TSoupIndex::Last(SKey* outKey, SKey* outData)
 {
@@ -2685,7 +2685,7 @@ TSoupIndex::Last(SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c2a88 Next__10TSoupIndexFP4SKeyT1iN21
+// ROM 0x002e82e8 Next__10TSoupIndexFP4SKeyT1iN21
 // The entry after key/data: by mode, the key's next datum then the next
 // key, the next key only, or the next datum only.
 int
@@ -2717,7 +2717,7 @@ TSoupIndex::Next(SKey* key, SKey* data, int mode, SKey* outKey, SKey* outData)
 }
 
 
-// ROM 0x002c2b70 Prior__10TSoupIndexFP4SKeyT1UcN21
+// ROM 0x002e83d0 Prior__10TSoupIndexFP4SKeyT1UcN21
 // The entry before key/data: the key's prior datum unless skipDups, then
 // the prior key.
 int
@@ -2744,7 +2744,7 @@ TSoupIndex::Prior(SKey* key, SKey* data, Boolean skipDups, SKey* outKey, SKey* o
 }
 
 
-// ROM 0x002c265c Search__10TSoupIndexFiP4SKeyT2PFP4SKeyT1Pv_iPvN22
+// ROM 0x002e7ebc Search__10TSoupIndexFiP4SKeyT2PFP4SKeyT1Pv_iPvN22
 // Forward (or backward) from key/data (from the first entry for a nil
 // key), each entry to stop until it says to stop there: outKey/outData
 // that entry.  ==> kIndexOK when stopped, kIndexEnd when the index ran
@@ -2813,7 +2813,7 @@ SetStateAtKey(TSoupIndex* index, IndexState* state)
 }
 
 
-// ROM 0x002c202c FindAndGetState__10TSoupIndexFP8KeyFieldP10IndexState
+// ROM 0x002e788c FindAndGetState__10TSoupIndexFP8KeyFieldP10IndexState
 // ==> kIndexOK found, kIndexNotFound (kf is the key after), kIndexEnd.
 int
 TSoupIndex::FindAndGetState(KeyField* kf, IndexState* state)
@@ -2833,7 +2833,7 @@ TSoupIndex::FindAndGetState(KeyField* kf, IndexState* state)
 }
 
 
-// ROM 0x002c20c8 FindLastAndGetState__10TSoupIndexFP8KeyFieldP10IndexState
+// ROM 0x002e7928 FindLastAndGetState__10TSoupIndexFP8KeyFieldP10IndexState
 // The last key with its last datum.
 int
 TSoupIndex::FindLastAndGetState(KeyField* kf, IndexState* state)
@@ -2860,7 +2860,7 @@ TSoupIndex::FindLastAndGetState(KeyField* kf, IndexState* state)
 }
 
 
-// ROM 0x002c21b4 FindPriorAndGetState__10TSoupIndexFP8KeyFieldUcP10IndexState
+// ROM 0x002e7a14 FindPriorAndGetState__10TSoupIndexFP8KeyFieldUcP10IndexState
 // The key (with its last datum), or the one before where it would be;
 // movePrior: the one before the key when it is there.
 int
@@ -2889,7 +2889,7 @@ TSoupIndex::FindPriorAndGetState(KeyField* kf, Boolean movePrior, IndexState* st
 }
 
 
-// ROM 0x002c229c MoveAndGetState__10TSoupIndexFUciP8KeyFieldP10IndexState
+// ROM 0x002e7afc MoveAndGetState__10TSoupIndexFUciP8KeyFieldP10IndexState
 // The entry after (before) kf's, searching from the root: by mode as
 // Next.  ==> kIndexOK, kIndexNotFound when kf's entry is not there,
 // kIndexEnd.
@@ -2932,7 +2932,7 @@ TSoupIndex::MoveAndGetState(Boolean forward, int mode, KeyField* kf, IndexState*
 }
 
 
-// ROM 0x002c23d4 MoveUsingState__10TSoupIndexFUciP8KeyFieldP10IndexState
+// ROM 0x002e7c34 MoveUsingState__10TSoupIndexFUciP8KeyFieldP10IndexState
 // The entry after (before) kf's from where the state says it is.
 int
 TSoupIndex::MoveUsingState(Boolean forward, int mode, KeyField* kf, IndexState* state)
@@ -3010,7 +3010,7 @@ TSoupIndex::MoveUsingState(Boolean forward, int mode, KeyField* kf, IndexState* 
 	The functions that write through the index.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002c3e9c DeleteNode__10TNodeCacheFUl
+// ROM 0x002e96fc DeleteNode__10TNodeCacheFUl
 // The cached node forgotten and its object deleted from its index's store.
 void
 TNodeCache::DeleteNode(ULong id)
@@ -3032,7 +3032,7 @@ TNodeCache::DeleteNode(ULong id)
 }
 
 
-// ROM 0x002c3fcc Commit__10TNodeCacheFP10TSoupIndex
+// ROM 0x002e982c Commit__10TNodeCacheFP10TSoupIndex
 // The index's dirty nodes written and its entries released; when no
 // other index has entries in use the cache is trimmed back to 8.
 void

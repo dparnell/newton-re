@@ -41,7 +41,7 @@ static void dbprint(const char*) { }
 	Input streams
 ------------------------------------------------------------------------------- */
 
-// ROM 0x000ec938 __ct__12TInputStreamFv
+// ROM 0x000eb360 __ct__12TInputStreamFv
 TInputStream::TInputStream()
 {
 	fLineNumber = 0;
@@ -49,12 +49,12 @@ TInputStream::TInputStream()
 }
 
 
-// ROM 0x000ec990 __dt__12TInputStreamFv
+// ROM 0x000eb3b8 __dt__12TInputStreamFv
 TInputStream::~TInputStream()
 { }
 
 
-// ROM 0x000eca3c GetFilename__12TInputStreamFv
+// ROM 0x000eb464 GetFilename__12TInputStreamFv
 const char*
 TInputStream::GetFilename(void)
 {
@@ -62,7 +62,7 @@ TInputStream::GetFilename(void)
 }
 
 
-// ROM 0x000eca44 SetFilename__12TInputStreamFPc
+// ROM 0x000eb46c SetFilename__12TInputStreamFPc
 void
 TInputStream::SetFilename(const char* name)
 {
@@ -71,7 +71,7 @@ TInputStream::SetFilename(const char* name)
 }
 
 
-// ROM 0x000eca50 __ct__18TStringInputStreamFRC6RefVar
+// ROM 0x000eb478 __ct__18TStringInputStreamFRC6RefVar
 TStringInputStream::TStringInputStream(RefArg str)
 {
 	fString = str;
@@ -79,7 +79,7 @@ TStringInputStream::TStringInputStream(RefArg str)
 }
 
 
-// ROM 0x000ecabc GetChar__18TStringInputStreamFv
+// ROM 0x000eb4e4 GetChar__18TStringInputStreamFv
 UniChar
 TStringInputStream::GetChar(void)
 {
@@ -92,7 +92,7 @@ TStringInputStream::GetChar(void)
 }
 
 
-// ROM 0x000ecb1c UngetChar__18TStringInputStreamFUs
+// ROM 0x000eb544 UngetChar__18TStringInputStreamFUs
 void
 TStringInputStream::UngetChar(UniChar c)
 {
@@ -105,7 +105,7 @@ TStringInputStream::UngetChar(UniChar c)
 }
 
 
-// ROM 0x000ecb54 End__18TStringInputStreamFv
+// ROM 0x000eb57c End__18TStringInputStreamFv
 // (the string's terminator is not read)
 Boolean
 TStringInputStream::End(void)
@@ -114,7 +114,7 @@ TStringInputStream::End(void)
 }
 
 
-// ROM 0x000ecb88 __ct__17TStdioInputStreamFP13__FILE_structPc
+// ROM 0x000eb5b0 __ct__17TStdioInputStreamFP13__FILE_structPc
 TStdioInputStream::TStdioInputStream(FILE* file, const char* filename)
 {
 	fFile = file;
@@ -122,7 +122,7 @@ TStdioInputStream::TStdioInputStream(FILE* file, const char* filename)
 }
 
 
-// ROM 0x000ecbec GetChar__17TStdioInputStreamFv
+// ROM 0x000eb614 GetChar__17TStdioInputStreamFv
 // Host: a file's line feed is the Newton's carriage return (the ROM
 // converts each byte through the compiler's encoding, two-byte
 // characters included - NOT YET RECONSTRUCTED: IsFirstByteOf2Byte).
@@ -141,7 +141,7 @@ TStdioInputStream::GetChar(void)
 }
 
 
-// ROM 0x000ec9a8 UngetChar__17TStdioInputStreamFUs
+// ROM 0x000eb3d0 UngetChar__17TStdioInputStreamFUs
 void
 TStdioInputStream::UngetChar(UniChar c)
 {
@@ -157,7 +157,7 @@ TStdioInputStream::UngetChar(UniChar c)
 }
 
 
-// ROM 0x000eca34 End__17TStdioInputStreamFv
+// ROM 0x000eb45c End__17TStdioInputStreamFv
 Boolean
 TStdioInputStream::End(void)
 {
@@ -169,7 +169,7 @@ TStdioInputStream::End(void)
 	Tokens
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00301564 ReservedWordToken__9TCompilerFPc
+// ROM 0x00326860 ReservedWordToken__9TCompilerFPc
 // The token of a reserved word (compared as symbols are: case
 // insensitively), 0 for none.
 int
@@ -182,7 +182,7 @@ TCompiler::ReservedWordToken(const char* name)
 }
 
 
-// ROM 0x003015b4 GetToken__9TCompilerFv
+// ROM 0x003268b0 GetToken__9TCompilerFv
 int
 TCompiler::GetToken(void)
 {
@@ -218,7 +218,7 @@ TCompiler::GetToken(void)
 }
 
 
-// ROM 0x003010a0 GetCharsUntil__9TCompilerFUsiRl
+// ROM 0x0032639c GetCharsUntil__9TCompilerFUsiRl
 // The characters up to terminator, escapes resolved, in a malloc'd
 // UniChar buffer (nil after an error); length is the buffer's size in
 // bytes, terminator included.  A string (isString) goes on after its
@@ -368,7 +368,7 @@ TCompiler::GetCharsUntil(UniChar terminator, Boolean isString, long& length)
 }
 
 
-// ROM 0x00302018 GetNumber__9TCompilerFUs
+// ROM 0x00327314 GetNumber__9TCompilerFUs
 // A number starting with digit c: 0x hex, an integer, or a real with a
 // fraction and/or an exponent.
 int
@@ -490,7 +490,7 @@ TCompiler::GetNumber(UniChar c)
 }
 
 
-// ROM 0x003016a0 yylex0__9TCompilerFv
+// ROM 0x0032699c yylex0__9TCompilerFv
 int
 TCompiler::yylex0(void)
 {

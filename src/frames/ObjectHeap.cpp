@@ -7,7 +7,7 @@
 				magic pointers, locking).  The collector is in GC.cpp, the
 				object-level API in Objects.cpp.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	ObjectHeap.h explains the host layout (pointer-sized Refs and header
 	words; the ROM's offsets and 4-byte rounding become sizeof-based).
 */
@@ -47,7 +47,7 @@ long			gMagicPointerTableCounts[kMagicPointerTables] = { 0 };
 	Errors
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f7c38 _RINTError__Fl
+// ROM 0x0031cf3c _RINTError__Fl
 int
 _RINTError(Ref r)
 {
@@ -57,7 +57,7 @@ _RINTError(Ref r)
 }
 
 
-// ROM 0x002f85c4 _RCHARError__Fl
+// ROM 0x0031d8c8 _RCHARError__Fl
 int
 _RCHARError(Ref r)
 {
@@ -67,7 +67,7 @@ _RCHARError(Ref r)
 }
 
 
-// ROM 0x002f80f4 _RPTRError__Fl
+// ROM 0x0031d3f8 _RPTRError__Fl
 static ULong
 _RPTRError(Ref r)
 {
@@ -81,7 +81,7 @@ _RPTRError(Ref r)
 	DeclawingRange
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002be0b8 __ct__14DeclawingRangeFUlT1P14DeclawingRange
+// ROM 0x002e3e40 __ct__14DeclawingRangeFUlT1P14DeclawingRange
 DeclawingRange::DeclawingRange(ULong start, ULong end, DeclawingRange* next)
 {
 	fNext = next;
@@ -90,7 +90,7 @@ DeclawingRange::DeclawingRange(ULong start, ULong end, DeclawingRange* next)
 }
 
 
-// ROM 0x002be0f8 InRange__14DeclawingRangeFl
+// ROM 0x002e3e80 InRange__14DeclawingRangeFl
 Boolean
 DeclawingRange::InRange(Ref r) const
 {
@@ -98,7 +98,7 @@ DeclawingRange::InRange(Ref r) const
 }
 
 
-// ROM 0x002be120 InAnyRange__14DeclawingRangeFl
+// ROM 0x002e3ea8 InAnyRange__14DeclawingRangeFl
 Boolean
 DeclawingRange::InAnyRange(Ref r) const
 {
@@ -113,7 +113,7 @@ DeclawingRange::InAnyRange(Ref r) const
 	TObjectHeap
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f77f8 __ct__11TObjectHeapFlT1
+// ROM 0x0031cafc __ct__11TObjectHeapFlT1
 // The whole area is one free block; the RefHandle table takes the top of
 // it, its handles chained free (each holding the index of the next as an
 // integer, its stack position -1).
@@ -145,7 +145,7 @@ TObjectHeap::TObjectHeap(long size, long /*allocateInTempMemory*/)
 }
 
 
-// ROM 0x002f794c DisposeMemory__11TObjectHeapFv
+// ROM 0x0031cc50 DisposeMemory__11TObjectHeapFv
 void
 TObjectHeap::DisposeMemory(void)
 {
@@ -155,7 +155,7 @@ TObjectHeap::DisposeMemory(void)
 }
 
 
-// ROM 0x002f7974 __dt__11TObjectHeapFv
+// ROM 0x0031cc78 __dt__11TObjectHeapFv
 TObjectHeap::~TObjectHeap()
 {
 	RemoveGCRoot(fResizeRoot);
@@ -163,7 +163,7 @@ TObjectHeap::~TObjectHeap()
 }
 
 
-// ROM 0x002f79bc CoalesceFreeBlocks__11TObjectHeapFP9ObjHeaderl
+// ROM 0x0031ccc0 CoalesceFreeBlocks__11TObjectHeapFP9ObjHeaderl
 // The size of the free block, after merging the free blocks that follow it
 // when it is too small; 0 for a block in use.
 ULong
@@ -190,7 +190,7 @@ TObjectHeap::CoalesceFreeBlocks(ObjHeader* block, long size)
 }
 
 
-// ROM 0x002f7a44 FindFreeBlock__11TObjectHeapFl
+// ROM 0x0031cd48 FindFreeBlock__11TObjectHeapFl
 // Round the heap from the rover for a free block of at least size bytes.
 ObjHeader*
 TObjectHeap::FindFreeBlock(long size)
@@ -207,7 +207,7 @@ TObjectHeap::FindFreeBlock(long size)
 }
 
 
-// ROM 0x002f7ab0 SplitBlock__11TObjectHeapFP9ObjHeaderl
+// ROM 0x0031cdb4 SplitBlock__11TObjectHeapFP9ObjHeaderl
 // Shrink a block to size bytes; what is left over becomes a free block if
 // there is room for a header.
 void
@@ -227,7 +227,7 @@ TObjectHeap::SplitBlock(ObjHeader* block, long size)
 }
 
 
-// ROM 0x002f7b38 MakeFreeBlock__11TObjectHeapFP9ObjHeaderl
+// ROM 0x0031ce3c MakeFreeBlock__11TObjectHeapFP9ObjHeaderl
 void
 TObjectHeap::MakeFreeBlock(ObjHeader* block, long size)
 {
@@ -237,7 +237,7 @@ TObjectHeap::MakeFreeBlock(ObjHeader* block, long size)
 }
 
 
-// ROM 0x002f7b68 AllocateBlock__11TObjectHeapFlUl
+// ROM 0x0031ce6c AllocateBlock__11TObjectHeapFlUl
 // A block of size bytes with the given flags, its GC word clear; a GC when
 // none is free, out of memory when there still is none.
 ObjHeader*
@@ -264,7 +264,7 @@ TObjectHeap::AllocateBlock(long size, ULong flags)
 }
 
 
-// ROM 0x002f7c24 KillBlock__11TObjectHeapFPc
+// ROM 0x0031cf28 KillBlock__11TObjectHeapFPc
 void
 TObjectHeap::KillBlock(ObjHeader* block)
 {
@@ -275,7 +275,7 @@ TObjectHeap::KillBlock(ObjHeader* block)
 }
 
 
-// ROM 0x002f7c70 ResizeBlock__11TObjectHeapFP9ObjHeaderl
+// ROM 0x0031cf74 ResizeBlock__11TObjectHeapFP9ObjHeaderl
 // In place when shrinking or when the free blocks after it suffice; else a
 // new block, the contents moved, the old one freed - unless the object is
 // locked, which is an error.  The new block's address is returned.
@@ -318,7 +318,7 @@ TObjectHeap::ResizeBlock(ObjHeader* block, long size)
 }
 
 
-// ROM 0x002f7db0 BlockStatistics__11TObjectHeapFP9ObjHeaderPUlPUc
+// ROM 0x0031d0b4 BlockStatistics__11TObjectHeapFP9ObjHeaderPUlPUc
 // The block after previous (the first for nil), its rounded size and
 // whether it is free; nil past the end.
 ObjHeader*
@@ -333,7 +333,7 @@ TObjectHeap::BlockStatistics(ObjHeader* previous, ULong* size, Boolean* isFree)
 }
 
 
-// ROM 0x002f7e18 Statistics__11TObjectHeapFPUlT1
+// ROM 0x0031d11c Statistics__11TObjectHeapFPUlT1
 void
 TObjectHeap::Statistics(ULong* freeSpace, ULong* largestFreeBlock)
 {
@@ -353,7 +353,7 @@ TObjectHeap::Statistics(ULong* freeSpace, ULong* largestFreeBlock)
 }
 
 
-// ROM 0x002f6ad8 InHeap__11TObjectHeapFl
+// ROM 0x0031bddc InHeap__11TObjectHeapFl
 Boolean
 TObjectHeap::InHeap(Ref r) const
 {
@@ -362,7 +362,7 @@ TObjectHeap::InHeap(Ref r) const
 }
 
 
-// ROM 0x002f7ff0 ClearRefHandles__11TObjectHeapFv
+// ROM 0x0031d2f4 ClearRefHandles__11TObjectHeapFv
 // Free the handles of RefVars deeper on the stack than the current position
 // in the current generation (the high 16 bits of gCurrentStackPos).  The
 // ROM's loop stops one short of the last handle; so does this.
@@ -382,7 +382,7 @@ TObjectHeap::ClearRefHandles(void)
 }
 
 
-// ROM 0x002f8078 AllocateObject__11TObjectHeapFlUl
+// ROM 0x0031d37c AllocateObject__11TObjectHeapFlUl
 // A block with its class slot NILREF and, for a slotted object, its slots
 // NILREF, for a binary its data zero.
 Ref
@@ -406,7 +406,7 @@ TObjectHeap::AllocateObject(long size, ULong flags)
 }
 
 
-// ROM 0x002f812c ResizeObject__11TObjectHeapFRC6RefVarl
+// ROM 0x0031d430 ResizeObject__11TObjectHeapFRC6RefVarl
 // When the object moves, what is left at the old address becomes a
 // forwarding object to the new one (references are fixed up at the next GC).
 void
@@ -427,7 +427,7 @@ TObjectHeap::ResizeObject(RefArg obj, long size)
 }
 
 
-// ROM 0x002f8244 ReplaceObject__11TObjectHeapFlT1
+// ROM 0x0031d548 ReplaceObject__11TObjectHeapFlT1
 // Make every reference to target refer to replacement: target becomes a
 // forwarding object.
 void
@@ -462,7 +462,7 @@ TObjectHeap::ReplaceObject(Ref target, Ref replacement)
 }
 
 
-// ROM 0x002f8358 AllocateBinary__11TObjectHeapFRC6RefVarl
+// ROM 0x0031d65c AllocateBinary__11TObjectHeapFRC6RefVarl
 Ref
 TObjectHeap::AllocateBinary(RefArg theClass, long length)
 {
@@ -482,7 +482,7 @@ TObjectHeap::AllocateBinary(RefArg theClass, long length)
 }
 
 
-// ROM 0x002f83fc AllocateIndirectBinary__11TObjectHeapFRC6RefVarl
+// ROM 0x0031d700 AllocateIndirectBinary__11TObjectHeapFRC6RefVarl
 // length bytes of body after the procedure-table pointer.
 Ref
 TObjectHeap::AllocateIndirectBinary(RefArg theClass, long length)
@@ -493,7 +493,7 @@ TObjectHeap::AllocateIndirectBinary(RefArg theClass, long length)
 }
 
 
-// ROM 0x002f842c AllocateArray__11TObjectHeapFRC6RefVarl
+// ROM 0x0031d730 AllocateArray__11TObjectHeapFRC6RefVarl
 Ref
 TObjectHeap::AllocateArray(RefArg theClass, long length)
 {
@@ -513,7 +513,7 @@ TObjectHeap::AllocateArray(RefArg theClass, long length)
 }
 
 
-// ROM 0x002f84d4 AllocateFrame__11TObjectHeapFv
+// ROM 0x0031d7d8 AllocateFrame__11TObjectHeapFv
 // An empty frame with an empty map of its own.
 Ref
 TObjectHeap::AllocateFrame(void)
@@ -525,7 +525,7 @@ TObjectHeap::AllocateFrame(void)
 }
 
 
-// ROM 0x002f8544 AllocateFrameWithMap__11TObjectHeapFRC6RefVar
+// ROM 0x0031d848 AllocateFrameWithMap__11TObjectHeapFRC6RefVar
 Ref
 TObjectHeap::AllocateFrameWithMap(RefArg map)
 {
@@ -536,7 +536,7 @@ TObjectHeap::AllocateFrameWithMap(RefArg map)
 }
 
 
-// ROM 0x002f8588 AllocateMap__11TObjectHeapFRC6RefVarl
+// ROM 0x0031d88c AllocateMap__11TObjectHeapFRC6RefVarl
 // A map for length tags: flags 0, the supermap, then the tags.
 Ref
 TObjectHeap::AllocateMap(RefArg superMap, long length)
@@ -549,7 +549,7 @@ TObjectHeap::AllocateMap(RefArg superMap, long length)
 }
 
 
-// ROM 0x002fa6b0 Clone__11TObjectHeapFRC6RefVar
+// ROM 0x0031f9b4 Clone__11TObjectHeapFRC6RefVar
 // A shallow copy: non-pointers and symbols are themselves; an indirect
 // binary clones through its table; a frame's map becomes shared.
 Ref
@@ -583,7 +583,7 @@ TObjectHeap::Clone(RefArg obj)
 }
 
 
-// ROM 0x002f9074 SetLength__11TObjectHeapFRC6RefVarl
+// ROM 0x0031e378 SetLength__11TObjectHeapFRC6RefVarl
 void
 TObjectHeap::SetLength(RefArg obj, long length)
 {
@@ -621,7 +621,7 @@ TObjectHeap::SetLength(RefArg obj, long length)
 }
 
 
-// ROM 0x002f91cc UnsafeSetArrayLength__11TObjectHeapFRC6RefVarl
+// ROM 0x0031e4d0 UnsafeSetArrayLength__11TObjectHeapFRC6RefVarl
 // New slots are NILREF.
 void
 TObjectHeap::UnsafeSetArrayLength(RefArg obj, long length)
@@ -646,7 +646,7 @@ TObjectHeap::UnsafeSetArrayLength(RefArg obj, long length)
 }
 
 
-// ROM 0x002f928c UnsafeSetBinaryLength__11TObjectHeapFRC6RefVarl
+// ROM 0x0031e590 UnsafeSetBinaryLength__11TObjectHeapFRC6RefVarl
 // New bytes are zero.
 void
 TObjectHeap::UnsafeSetBinaryLength(RefArg obj, long length)
@@ -676,7 +676,7 @@ TObjectHeap::UnsafeSetBinaryLength(RefArg obj, long length)
 	exception unwound past; a RefStruct's records 0 (never cleared).
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f7eac IncrementCurrentStackPos__Fv
+// ROM 0x0031d1b0 IncrementCurrentStackPos__Fv
 void
 IncrementCurrentStackPos(void)
 {
@@ -684,7 +684,7 @@ IncrementCurrentStackPos(void)
 }
 
 
-// ROM 0x002f7ec4 DecrementCurrentStackPos__Fv
+// ROM 0x0031d1c8 DecrementCurrentStackPos__Fv
 void
 DecrementCurrentStackPos(void)
 {
@@ -695,7 +695,7 @@ DecrementCurrentStackPos(void)
 // The table has run out of free handles: ask the collector for a bigger one
 // (kRefHandleTableGrowth more; SweepAndCompact moves the table's start down
 // into the free space below it) and give up if it could not.
-// ROM 0x002f7edc ExpandObjectTable__FP9RefHandle
+// ROM 0x0031d1e0 ExpandObjectTable__FP9RefHandle
 static RefHandle*
 ExpandObjectTable(RefHandle* handle)
 {
@@ -715,7 +715,7 @@ ExpandObjectTable(RefHandle* handle)
 }
 
 
-// ROM 0x002f7f68 AllocateRefHandle__Fl
+// ROM 0x0031d26c AllocateRefHandle__Fl
 RefHandle*
 AllocateRefHandle(Ref targetObj)
 {
@@ -733,7 +733,7 @@ AllocateRefHandle(Ref targetObj)
 }
 
 
-// ROM 0x002f7fac DisposeRefHandle__FP9RefHandle
+// ROM 0x0031d2b0 DisposeRefHandle__FP9RefHandle
 void
 DisposeRefHandle(RefHandle* handle)
 {
@@ -747,7 +747,7 @@ DisposeRefHandle(RefHandle* handle)
 }
 
 
-// ROM 0x002f6b68 ClearRefHandles__Fv
+// ROM 0x0031be6c ClearRefHandles__Fv
 void
 ClearRefHandles(void)
 {
@@ -770,7 +770,7 @@ IsDirectRef(Ref r)
 }
 
 
-// ROM 0x002f81d0 ForwardReference1__FP16ForwardingObject
+// ROM 0x0031d4d4 ForwardReference1__FP16ForwardingObject
 // Follow a chain of forwarding objects from one of them; it is then made to
 // point at the end, so that the next lookup is short.  What it points at is
 // a pointer ref to the final object, or the last non-pointer ref (a magic
@@ -796,7 +796,7 @@ ForwardReference1(ObjHeader* forwarder)
 }
 
 
-// ROM 0x002f8220 ForwardReference__Fl
+// ROM 0x0031d524 ForwardReference__Fl
 // A ref with forwarding followed (the ROM repeats ForwardReference1's loop).
 Ref
 ForwardReference(Ref r)
@@ -811,7 +811,7 @@ ForwardReference(Ref r)
 }
 
 
-// ROM 0x002f87d0 ResolveMagicPtr__Fl
+// ROM 0x0031dad4 ResolveMagicPtr__Fl
 // A magic pointer names a table (value >> 12) and an entry in it: table 0 is
 // the ROM's (its entries are refs to resolve again), table 1 the global
 // variables (1) and the built-in functions (2), even tables 2-8 the REx
@@ -852,7 +852,7 @@ ResolveMagicPtr(Ref r)
 // the soup entry it holds - in memory already (its object slot) or to be
 // read (FollowFaultBlock; nil instead when faultCheck).  A magic pointer
 // resolves through its table; anything else is not an object.
-// ROM 0x002f8950 ObjectPtr1__FlT1i
+// ROM 0x0031dc54 ObjectPtr1__FlT1i
 static ObjHeader*
 ObjectPtr1(Ref obj, Boolean faultCheck)
 {
@@ -897,7 +897,7 @@ ObjectPtr1(Ref obj, Boolean faultCheck)
 }
 
 
-// ROM 0x002f8a50 ObjectPtr__Fl
+// ROM 0x0031dd54 ObjectPtr__Fl
 Ptr
 ObjectPtr(Ref obj)
 {
@@ -905,7 +905,7 @@ ObjectPtr(Ref obj)
 }
 
 
-// ROM 0x002f8aa8 NoFaultObjectPtr__Fl
+// ROM 0x0031ddac NoFaultObjectPtr__Fl
 ObjHeader*
 NoFaultObjectPtr(Ref obj)
 {
@@ -915,7 +915,7 @@ NoFaultObjectPtr(Ref obj)
 }
 
 
-// ROM 0x002f8ae4 FaultCheckObjectPtr__Fl
+// ROM 0x0031dde8 FaultCheckObjectPtr__Fl
 ObjHeader*
 FaultCheckObjectPtr(Ref obj)
 {
@@ -923,7 +923,7 @@ FaultCheckObjectPtr(Ref obj)
 }
 
 
-// ROM 0x002f8b3c NoTouchObjectPtr__FlPi
+// ROM 0x0031de40 NoTouchObjectPtr__FlPi
 // ObjectPtr for FIsValid: the pointer without reading anything from a
 // store.  NOT YET RECONSTRUCTED: the large-object check (ROMDomainBase/Size
 // and the large object address test) - answers *isLargeObject = 0.
@@ -935,7 +935,7 @@ NoTouchObjectPtr(Ref obj, int* isLargeObject)
 }
 
 
-// ROM 0x002f76a4 IsFaultBlock__Fl
+// ROM 0x0031c9a8 IsFaultBlock__Fl
 Boolean
 IsFaultBlock(Ref r)
 {
@@ -943,7 +943,7 @@ IsFaultBlock(Ref r)
 }
 
 
-// ROM 0x002ba450 FollowFaultBlock__FRC6RefVar
+// ROM 0x002e01d8 FollowFaultBlock__FRC6RefVar
 // Read the entry a fault block stands for: from its store when it has one,
 // else by sending its handler EntryAccess.  The stores layer (which has
 // LoadPermObject and the entries) does it through gFollowFaultBlockProc
@@ -961,7 +961,7 @@ FollowFaultBlock(RefArg faultBlock)
 }
 
 
-// ROM 0x002f5db8 LockRef__Fl
+// ROM 0x0031b0bc LockRef__Fl
 // A locked object does not move at a GC; the count is the high byte of the
 // GC word (0xff: locked for ever).  Read-only objects never move anyway.
 void
@@ -980,7 +980,7 @@ LockRef(Ref obj)
 }
 
 
-// ROM 0x002f5e04 UnlockRef__Fl
+// ROM 0x0031b108 UnlockRef__Fl
 void
 UnlockRef(Ref obj)
 {
@@ -998,7 +998,7 @@ UnlockRef(Ref obj)
 }
 
 
-// ROM 0x002f7718 LockRefArg__FRC6RefVar
+// ROM 0x0031ca1c LockRefArg__FRC6RefVar
 void
 LockRefArg(RefArg obj)
 {
@@ -1006,7 +1006,7 @@ LockRefArg(RefArg obj)
 }
 
 
-// ROM 0x002f7724 UnlockRefArg__FRC6RefVar
+// ROM 0x0031ca28 UnlockRefArg__FRC6RefVar
 void
 UnlockRefArg(RefArg obj)
 {
@@ -1014,7 +1014,7 @@ UnlockRefArg(RefArg obj)
 }
 
 
-// ROM 0x002f7730 DirtyObject__Fl
+// ROM 0x0031ca34 DirtyObject__Fl
 void
 DirtyObject(Ref obj)
 {
@@ -1024,7 +1024,7 @@ DirtyObject(Ref obj)
 }
 
 
-// ROM 0x002f77d4 UndirtyObject__Fl
+// ROM 0x0031cad8 UndirtyObject__Fl
 void
 UndirtyObject(Ref obj)
 {
@@ -1040,12 +1040,12 @@ UndirtyObject(Ref obj)
 	keeps its object locked so that the pointer to it stays good.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f8d58 __ct__10TObjectPtrFv
+// ROM 0x0031e05c __ct__10TObjectPtrFv
 TFramesObjectPtr::TFramesObjectPtr()
 { }
 
 
-// ROM 0x002f9508 __ct__10TObjectPtrFl
+// ROM 0x0031e80c __ct__10TObjectPtrFl
 TFramesObjectPtr::TFramesObjectPtr(Ref r)
 	: fRef(r)
 {
@@ -1055,7 +1055,7 @@ TFramesObjectPtr::TFramesObjectPtr(Ref r)
 }
 
 
-// ROM 0x002f9ec0 __ct__10TObjectPtrFRC9RefStruct
+// ROM 0x0031f1c4 __ct__10TObjectPtrFRC9RefStruct
 TFramesObjectPtr::TFramesObjectPtr(const RefStruct& r)
 	: fRef(r)
 {
@@ -1065,7 +1065,7 @@ TFramesObjectPtr::TFramesObjectPtr(const RefStruct& r)
 }
 
 
-// ROM 0x002fab0c __ct__10TObjectPtrFRC6RefVar
+// ROM 0x0031fe10 __ct__10TObjectPtrFRC6RefVar
 TFramesObjectPtr::TFramesObjectPtr(const RefVar& r)
 	: fRef(r)
 {
@@ -1075,7 +1075,7 @@ TFramesObjectPtr::TFramesObjectPtr(const RefVar& r)
 }
 
 
-// ROM 0x002f5aa0 __ct__10TObjectPtrFRC10TObjectPtr
+// ROM 0x0031ada4 __ct__10TObjectPtrFRC10TObjectPtr
 TFramesObjectPtr::TFramesObjectPtr(const TFramesObjectPtr& p)
 {
 	fRef = p.fRef;
@@ -1084,7 +1084,7 @@ TFramesObjectPtr::TFramesObjectPtr(const TFramesObjectPtr& p)
 }
 
 
-// ROM 0x002f4e58 __dt__10TObjectPtrFv
+// ROM 0x0031a15c __dt__10TObjectPtrFv
 TFramesObjectPtr::~TFramesObjectPtr()
 {
 	if ((Ref) fRef != NILREF)
@@ -1092,7 +1092,7 @@ TFramesObjectPtr::~TFramesObjectPtr()
 }
 
 
-// ROM 0x002f6b24 __as__10TObjectPtrFRC10TObjectPtr
+// ROM 0x0031be28 __as__10TObjectPtrFRC10TObjectPtr
 const TFramesObjectPtr&
 TFramesObjectPtr::operator=(const TFramesObjectPtr& p)
 {
@@ -1105,7 +1105,7 @@ TFramesObjectPtr::operator=(const TFramesObjectPtr& p)
 }
 
 
-// ROM 0x002f6c88 __as__10TObjectPtrFl
+// ROM 0x0031bf8c __as__10TObjectPtrFl
 const TFramesObjectPtr&
 TFramesObjectPtr::operator=(Ref r)
 {
@@ -1118,7 +1118,7 @@ TFramesObjectPtr::operator=(Ref r)
 }
 
 
-// ROM 0x002f70a8 __opPc__10TObjectPtrCFv
+// ROM 0x0031c3ac __opPc__10TObjectPtrCFv
 TFramesObjectPtr::operator char*() const
 {
 	if ((Ref) fRef == NILREF)
@@ -1127,7 +1127,7 @@ TFramesObjectPtr::operator char*() const
 }
 
 
-// ROM 0x002f72a4 __as__7DataPtrFRC7DataPtr
+// ROM 0x0031c5a8 __as__7DataPtrFRC7DataPtr
 const TBinaryDataPtr&
 TBinaryDataPtr::operator=(const TBinaryDataPtr& p)
 {
@@ -1136,7 +1136,7 @@ TBinaryDataPtr::operator=(const TBinaryDataPtr& p)
 }
 
 
-// ROM 0x002f7418 __as__7DataPtrFl
+// ROM 0x0031c71c __as__7DataPtrFl
 const TBinaryDataPtr&
 TBinaryDataPtr::operator=(Ref r)
 {
@@ -1145,7 +1145,7 @@ TBinaryDataPtr::operator=(Ref r)
 }
 
 
-// ROM 0x002f7588 __opPc__7DataPtrCFv
+// ROM 0x0031c88c __opPc__7DataPtrCFv
 // The binary's data: through the table of an indirect binary.
 TBinaryDataPtr::operator char*() const
 {

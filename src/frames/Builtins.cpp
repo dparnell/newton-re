@@ -9,7 +9,7 @@
 				characters, globals.  RegisterBuiltinNatives binds them to
 				the ROM's function objects (NativeFunctions.h).
 
-	Reconstructed from the MP2100 D ROM (0x002900ec-0x00295100 mostly);
+	Reconstructed from the MP2x00 US ROM (0x002b5018-0x002ba02c mostly);
 	each function cites its origin.  A native function takes the receiver
 	then its arguments and answers a Ref.  NOT YET RECONSTRUCTED here: the
 	string functions (TRichString: strings with ink), Stringer, the printer
@@ -39,7 +39,7 @@ static char gFramesExceptionName[0x80];			// 0x0c102b40 gFramesExceptionName: th
 	Numbers
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002900ec NumberAdd__FRC6RefVarT1
+// ROM 0x002b5018 NumberAdd__FRC6RefVarT1
 Ref
 NumberAdd(RefArg a, RefArg b)
 {
@@ -47,7 +47,7 @@ NumberAdd(RefArg a, RefArg b)
 }
 
 
-// ROM 0x00291864 NumberSubtract__FRC6RefVarT1
+// ROM 0x002b6790 NumberSubtract__FRC6RefVarT1
 Ref
 NumberSubtract(RefArg a, RefArg b)
 {
@@ -55,7 +55,7 @@ NumberSubtract(RefArg a, RefArg b)
 }
 
 
-// ROM 0x00293800 NumberMultiply__FRC6RefVarT1
+// ROM 0x002b872c NumberMultiply__FRC6RefVarT1
 Ref
 NumberMultiply(RefArg a, RefArg b)
 {
@@ -63,7 +63,7 @@ NumberMultiply(RefArg a, RefArg b)
 }
 
 
-// ROM 0x00293d10 NumberDivide__FRC6RefVarT1
+// ROM 0x002b8c3c NumberDivide__FRC6RefVarT1
 Ref
 NumberDivide(RefArg a, RefArg b)
 {
@@ -71,7 +71,7 @@ NumberDivide(RefArg a, RefArg b)
 }
 
 
-// ROM 0x00290230 FAdd
+// ROM 0x002b515c FAdd
 Ref
 FAdd(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -81,7 +81,7 @@ FAdd(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00293578 FSubtract
+// ROM 0x002b84a4 FSubtract
 Ref
 FSubtract(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -91,7 +91,7 @@ FSubtract(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00293a88 FMultiply
+// ROM 0x002b89b4 FMultiply
 Ref
 FMultiply(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -101,7 +101,7 @@ FMultiply(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029434c FDivide
+// ROM 0x002b9278 FDivide
 // Integers divide to an integer when it comes out exact, else a real.
 Ref
 FDivide(RefArg /*rcvr*/, RefArg a, RefArg b)
@@ -118,7 +118,7 @@ FDivide(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00294660 FDiv
+// ROM 0x002b958c FDiv
 Ref
 FDiv(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -130,7 +130,7 @@ FDiv(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029026c FMod
+// ROM 0x002b5198 FMod
 Ref
 FMod(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -142,7 +142,7 @@ FMod(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00290648 FNegate
+// ROM 0x002b5574 FNegate
 Ref
 FNegate(RefArg /*rcvr*/, RefArg a)
 {
@@ -152,7 +152,7 @@ FNegate(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x00290828 FAbs
+// ROM 0x002b5754 FAbs
 Ref
 FAbs(RefArg /*rcvr*/, RefArg a)
 {
@@ -165,7 +165,7 @@ FAbs(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x00290964 FSignum
+// ROM 0x002b5890 FSignum
 Ref
 FSignum(RefArg /*rcvr*/, RefArg a)
 {
@@ -179,7 +179,7 @@ FSignum(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x00290b9c FCeiling
+// ROM 0x002b5ac8 FCeiling
 Ref
 FCeiling(RefArg /*rcvr*/, RefArg a)
 {
@@ -189,7 +189,7 @@ FCeiling(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x00290d54 FFloor
+// ROM 0x002b5c80 FFloor
 Ref
 FFloor(RefArg /*rcvr*/, RefArg a)
 {
@@ -199,7 +199,7 @@ FFloor(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x00290e80 FReal
+// ROM 0x002b5dac FReal
 Ref
 FReal(RefArg /*rcvr*/, RefArg a)
 {
@@ -244,7 +244,7 @@ CompareForOrder(RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029493c FLessThan
+// ROM 0x002b9868 FLessThan
 Ref
 FLessThan(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -252,7 +252,7 @@ FLessThan(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00294b4c FLessOrEqual
+// ROM 0x002b9a78 FLessOrEqual
 Ref
 FLessOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -260,7 +260,7 @@ FLessOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00294d60 FGreaterThan
+// ROM 0x002b9c8c FGreaterThan
 Ref
 FGreaterThan(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -268,7 +268,7 @@ FGreaterThan(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00294f70 FGreaterOrEqual
+// ROM 0x002b9e9c FGreaterOrEqual
 Ref
 FGreaterOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -296,7 +296,7 @@ NumberOrRefEqual(RefArg a, RefArg b)
 }
 
 
-// ROM 0x002946dc FEqual
+// ROM 0x002b9608 FEqual
 Ref
 FEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -304,7 +304,7 @@ FEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029480c FUnorderedLessOrGreater
+// ROM 0x002b9738 FUnorderedLessOrGreater
 Ref
 FUnorderedLessOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -329,7 +329,7 @@ NumberRelation(RefArg a, RefArg b)
 }
 
 
-// ROM 0x002902c4 FUnorderedOrGreater
+// ROM 0x002b51f0 FUnorderedOrGreater
 Ref
 FUnorderedOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -341,7 +341,7 @@ FUnorderedOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00290354 FUnorderedGreaterOrEqual
+// ROM 0x002b5280 FUnorderedGreaterOrEqual
 Ref
 FUnorderedGreaterOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -352,7 +352,7 @@ FUnorderedGreaterOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002903e4 FUnorderedOrLess
+// ROM 0x002b5310 FUnorderedOrLess
 Ref
 FUnorderedOrLess(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -364,7 +364,7 @@ FUnorderedOrLess(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00290474 FUnorderedLessOrEqual
+// ROM 0x002b53a0 FUnorderedLessOrEqual
 Ref
 FUnorderedLessOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -375,7 +375,7 @@ FUnorderedLessOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00290504 FUnorderedOrEqual
+// ROM 0x002b5430 FUnorderedOrEqual
 Ref
 FUnorderedOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -387,7 +387,7 @@ FUnorderedOrEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00295184 FUnordered
+// ROM 0x002ba0b0 FUnordered
 Ref
 FUnordered(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -398,7 +398,7 @@ FUnordered(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002951fc FLessOrGreater
+// ROM 0x002ba128 FLessOrGreater
 Ref
 FLessOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -409,7 +409,7 @@ FLessOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029528c FLessEqualOrGreater
+// ROM 0x002ba1b8 FLessEqualOrGreater
 Ref
 FLessEqualOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -420,7 +420,7 @@ FLessEqualOrGreater(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00290594 FMin
+// ROM 0x002b54c0 FMin
 Ref
 FMin(RefArg rcvr, RefArg a, RefArg b)
 {
@@ -428,7 +428,7 @@ FMin(RefArg rcvr, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002905c0 FMax
+// ROM 0x002b54ec FMax
 Ref
 FMax(RefArg rcvr, RefArg a, RefArg b)
 {
@@ -440,7 +440,7 @@ FMax(RefArg rcvr, RefArg a, RefArg b)
 	Booleans and bits
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00294574 FNot
+// ROM 0x002b94a0 FNot
 Ref
 FNot(RefArg /*rcvr*/, RefArg a)
 {
@@ -448,7 +448,7 @@ FNot(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x0029452c FBoolAnd
+// ROM 0x002b9458 FBoolAnd
 Ref
 FBoolAnd(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -456,7 +456,7 @@ FBoolAnd(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x00294550 FBoolOr
+// ROM 0x002b947c FBoolOr
 Ref
 FBoolOr(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -464,7 +464,7 @@ FBoolOr(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029440c FBitAnd
+// ROM 0x002b9338 FBitAnd
 Ref
 FBitAnd(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -472,7 +472,7 @@ FBitAnd(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x0029445c FBitOr
+// ROM 0x002b9388 FBitOr
 Ref
 FBitOr(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -480,7 +480,7 @@ FBitOr(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002944ac FBitXor
+// ROM 0x002b93d8 FBitXor
 Ref
 FBitXor(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -488,7 +488,7 @@ FBitXor(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002944fc FBitNot
+// ROM 0x002b9428 FBitNot
 Ref
 FBitNot(RefArg /*rcvr*/, RefArg a)
 {
@@ -496,7 +496,7 @@ FBitNot(RefArg /*rcvr*/, RefArg a)
 }
 
 
-// ROM 0x002942fc FLShift
+// ROM 0x002b9228 FLShift
 Ref
 FLShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -504,7 +504,7 @@ FLShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002943bc FRShift
+// ROM 0x002b92e8 FRShift
 Ref
 FRShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -516,7 +516,7 @@ FRShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 	Objects
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002907e8 FLength
+// ROM 0x002b5714 FLength
 Ref
 FLength(RefArg /*rcvr*/, RefArg obj)
 {
@@ -524,7 +524,7 @@ FLength(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002918d0 FSetLength
+// ROM 0x002b67fc FSetLength
 Ref
 FSetLength(RefArg /*rcvr*/, RefArg obj, RefArg length)
 {
@@ -533,7 +533,7 @@ FSetLength(RefArg /*rcvr*/, RefArg obj, RefArg length)
 }
 
 
-// ROM 0x00290934 FClassOf
+// ROM 0x002b5860 FClassOf
 Ref
 FClassOf(RefArg /*rcvr*/, RefArg obj)
 {
@@ -541,7 +541,7 @@ FClassOf(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290a20 FSetClass
+// ROM 0x002b594c FSetClass
 Ref
 FSetClass(RefArg /*rcvr*/, RefArg obj, RefArg theClass)
 {
@@ -550,7 +550,7 @@ FSetClass(RefArg /*rcvr*/, RefArg obj, RefArg theClass)
 }
 
 
-// ROM 0x00290a48 FPrimClassOf
+// ROM 0x002b5974 FPrimClassOf
 Ref
 FPrimClassOf(RefArg /*rcvr*/, RefArg obj)
 {
@@ -565,7 +565,7 @@ FPrimClassOf(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x0029093c FIsInstance
+// ROM 0x002b5868 FIsInstance
 Ref
 FIsInstance(RefArg /*rcvr*/, RefArg obj, RefArg theClass)
 {
@@ -573,7 +573,7 @@ FIsInstance(RefArg /*rcvr*/, RefArg obj, RefArg theClass)
 }
 
 
-// ROM 0x002909f0 FIsSubclass
+// ROM 0x002b591c FIsSubclass
 Ref
 FIsSubclass(RefArg /*rcvr*/, RefArg sub, RefArg super)
 {
@@ -581,7 +581,7 @@ FIsSubclass(RefArg /*rcvr*/, RefArg sub, RefArg super)
 }
 
 
-// ROM 0x002908c8 FClone
+// ROM 0x002b57f4 FClone
 Ref
 FClone(RefArg /*rcvr*/, RefArg obj)
 {
@@ -589,7 +589,7 @@ FClone(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002908d0 FDeepClone
+// ROM 0x002b57fc FDeepClone
 Ref
 FDeepClone(RefArg /*rcvr*/, RefArg obj)
 {
@@ -597,7 +597,7 @@ FDeepClone(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002908d8 FTotalClone
+// ROM 0x002b5804 FTotalClone
 Ref
 FTotalClone(RefArg /*rcvr*/, RefArg obj)
 {
@@ -605,7 +605,7 @@ FTotalClone(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002908e0 FEnsureInternal
+// ROM 0x002b580c FEnsureInternal
 Ref
 FEnsureInternal(RefArg /*rcvr*/, RefArg obj)
 {
@@ -613,7 +613,7 @@ FEnsureInternal(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002908e8 FReplaceObject
+// ROM 0x002b5814 FReplaceObject
 Ref
 FReplaceObject(RefArg /*rcvr*/, RefArg target, RefArg replacement)
 {
@@ -622,7 +622,7 @@ FReplaceObject(RefArg /*rcvr*/, RefArg target, RefArg replacement)
 }
 
 
-// ROM 0x00290808 FLock
+// ROM 0x002b5734 FLock
 Ref
 FLock(RefArg /*rcvr*/, RefArg obj)
 {
@@ -631,7 +631,7 @@ FLock(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002908a8 FUnlock
+// ROM 0x002b57d4 FUnlock
 Ref
 FUnlock(RefArg /*rcvr*/, RefArg obj)
 {
@@ -640,7 +640,7 @@ FUnlock(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002907c8 FRef
+// ROM 0x002b56f4 FRef
 Ref
 FRef(RefArg /*rcvr*/, RefArg n)
 {
@@ -648,7 +648,7 @@ FRef(RefArg /*rcvr*/, RefArg n)
 }
 
 
-// ROM 0x002907d8 FRefOf
+// ROM 0x002b5704 FRefOf
 Ref
 FRefOf(RefArg /*rcvr*/, RefArg obj)
 {
@@ -656,7 +656,7 @@ FRefOf(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x002905ec FGetSlot
+// ROM 0x002b5518 FGetSlot
 Ref
 FGetSlot(RefArg /*rcvr*/, RefArg frame, RefArg slot)
 {
@@ -664,7 +664,7 @@ FGetSlot(RefArg /*rcvr*/, RefArg frame, RefArg slot)
 }
 
 
-// ROM 0x0029143c FSetSlot
+// ROM 0x002b6368 FSetSlot
 Ref
 FSetSlot(RefArg /*rcvr*/, RefArg frame, RefArg slot, RefArg value)
 {
@@ -673,7 +673,7 @@ FSetSlot(RefArg /*rcvr*/, RefArg frame, RefArg slot, RefArg value)
 }
 
 
-// ROM 0x00290798 FHasSlot
+// ROM 0x002b56c4 FHasSlot
 Ref
 FHasSlot(RefArg /*rcvr*/, RefArg frame, RefArg slot)
 {
@@ -681,7 +681,7 @@ FHasSlot(RefArg /*rcvr*/, RefArg frame, RefArg slot)
 }
 
 
-// ROM 0x00290714 FRemoveSlot
+// ROM 0x002b5640 FRemoveSlot
 // A frame's slot by name, an array's by index.
 Ref
 FRemoveSlot(RefArg /*rcvr*/, RefArg obj, RefArg slot)
@@ -697,7 +697,7 @@ FRemoveSlot(RefArg /*rcvr*/, RefArg obj, RefArg slot)
 }
 
 
-// ROM 0x002906b4 FGetPath
+// ROM 0x002b55e0 FGetPath
 Ref
 FGetPath(RefArg /*rcvr*/, RefArg obj, RefArg path)
 {
@@ -705,7 +705,7 @@ FGetPath(RefArg /*rcvr*/, RefArg obj, RefArg path)
 }
 
 
-// ROM 0x002906c0 FSetPath
+// ROM 0x002b55ec FSetPath
 Ref
 FSetPath(RefArg /*rcvr*/, RefArg obj, RefArg path, RefArg value)
 {
@@ -714,7 +714,7 @@ FSetPath(RefArg /*rcvr*/, RefArg obj, RefArg path, RefArg value)
 }
 
 
-// ROM 0x002906ec FHasPath
+// ROM 0x002b5618 FHasPath
 Ref
 FHasPath(RefArg /*rcvr*/, RefArg obj, RefArg path)
 {
@@ -734,7 +734,7 @@ ThrowOutOfBounds(RefArg obj, long index)
 }
 
 
-// ROM 0x00291470 FAref
+// ROM 0x002b639c FAref
 // An array's slot or a string's character.  NOT YET RECONSTRUCTED:
 // TRichString (ink in strings) - the characters are the UniChars.
 Ref
@@ -757,7 +757,7 @@ FAref(RefArg /*rcvr*/, RefArg obj, RefArg index)
 }
 
 
-// ROM 0x002915dc FSetAref
+// ROM 0x002b6508 FSetAref
 Ref
 FSetAref(RefArg /*rcvr*/, RefArg obj, RefArg index, RefArg value)
 {
@@ -784,7 +784,7 @@ FSetAref(RefArg /*rcvr*/, RefArg obj, RefArg index, RefArg value)
 }
 
 
-// ROM 0x00291df4 FAddArraySlot
+// ROM 0x002b6d20 FAddArraySlot
 Ref
 FAddArraySlot(RefArg /*rcvr*/, RefArg array, RefArg value)
 {
@@ -793,7 +793,7 @@ FAddArraySlot(RefArg /*rcvr*/, RefArg array, RefArg value)
 }
 
 
-// ROM 0x002930cc FNewWeakArray
+// ROM 0x002b7ff8 FNewWeakArray
 Ref
 FNewWeakArray(RefArg /*rcvr*/, RefArg length)
 {
@@ -801,7 +801,7 @@ FNewWeakArray(RefArg /*rcvr*/, RefArg length)
 }
 
 
-// ROM 0x00291ee0 FMakeBinary
+// ROM 0x002b6e0c FMakeBinary
 Ref
 FMakeBinary(RefArg /*rcvr*/, RefArg length, RefArg theClass)
 {
@@ -813,7 +813,7 @@ FMakeBinary(RefArg /*rcvr*/, RefArg length, RefArg theClass)
 	Predicates
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00290aa0 FIsImmediate
+// ROM 0x002b59cc FIsImmediate
 Ref
 FIsImmediate(RefArg /*rcvr*/, RefArg obj)
 {
@@ -821,7 +821,7 @@ FIsImmediate(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290ab8 FIsBinary
+// ROM 0x002b59e4 FIsBinary
 Ref
 FIsBinary(RefArg /*rcvr*/, RefArg obj)
 {
@@ -829,7 +829,7 @@ FIsBinary(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290aec FIsArray
+// ROM 0x002b5a18 FIsArray
 Ref
 FIsArray(RefArg /*rcvr*/, RefArg obj)
 {
@@ -837,7 +837,7 @@ FIsArray(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290b10 FIsFrame
+// ROM 0x002b5a3c FIsFrame
 Ref
 FIsFrame(RefArg /*rcvr*/, RefArg obj)
 {
@@ -845,7 +845,7 @@ FIsFrame(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290b34 FIsString
+// ROM 0x002b5a60 FIsString
 Ref
 FIsString(RefArg /*rcvr*/, RefArg obj)
 {
@@ -853,7 +853,7 @@ FIsString(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290b58 FIsSymbol
+// ROM 0x002b5a84 FIsSymbol
 Ref
 FIsSymbol(RefArg /*rcvr*/, RefArg obj)
 {
@@ -861,7 +861,7 @@ FIsSymbol(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290b80 FIsMagicPtr
+// ROM 0x002b5aac FIsMagicPtr
 Ref
 FIsMagicPtr(RefArg /*rcvr*/, RefArg obj)
 {
@@ -869,7 +869,7 @@ FIsMagicPtr(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290bfc FIsFunction
+// ROM 0x002b5b28 FIsFunction
 Ref
 FIsFunction(RefArg /*rcvr*/, RefArg obj)
 {
@@ -877,7 +877,7 @@ FIsFunction(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290c20 FIsNativeFunction
+// ROM 0x002b5b4c FIsNativeFunction
 Ref
 FIsNativeFunction(RefArg /*rcvr*/, RefArg obj)
 {
@@ -885,7 +885,7 @@ FIsNativeFunction(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290c44 FIsNumber
+// ROM 0x002b5b70 FIsNumber
 Ref
 FIsNumber(RefArg /*rcvr*/, RefArg obj)
 {
@@ -893,7 +893,7 @@ FIsNumber(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290c6c FIsInteger
+// ROM 0x002b5b98 FIsInteger
 Ref
 FIsInteger(RefArg /*rcvr*/, RefArg obj)
 {
@@ -901,7 +901,7 @@ FIsInteger(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290c84 FIsReal
+// ROM 0x002b5bb0 FIsReal
 Ref
 FIsReal(RefArg /*rcvr*/, RefArg obj)
 {
@@ -909,7 +909,7 @@ FIsReal(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290cac FIsCharacter
+// ROM 0x002b5bd8 FIsCharacter
 Ref
 FIsCharacter(RefArg /*rcvr*/, RefArg obj)
 {
@@ -917,7 +917,7 @@ FIsCharacter(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290cd4 FIsPathExpr
+// ROM 0x002b5c00 FIsPathExpr
 Ref
 FIsPathExpr(RefArg /*rcvr*/, RefArg obj)
 {
@@ -925,7 +925,7 @@ FIsPathExpr(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290cf8 FIsReadOnly
+// ROM 0x002b5c24 FIsReadOnly
 Ref
 FIsReadOnly(RefArg /*rcvr*/, RefArg obj)
 {
@@ -933,7 +933,7 @@ FIsReadOnly(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00290d20 FIsDirty
+// ROM 0x002b5c4c FIsDirty
 Ref
 FIsDirty(RefArg /*rcvr*/, RefArg obj)
 {
@@ -945,7 +945,7 @@ FIsDirty(RefArg /*rcvr*/, RefArg obj)
 	Variables
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002911a8 FGetVariable
+// ROM 0x002b60d4 FGetVariable
 // A variable seen from a frame: its _proto chain, then its _parent's.
 Ref
 FGetVariable(RefArg /*rcvr*/, RefArg context, RefArg name)
@@ -954,7 +954,7 @@ FGetVariable(RefArg /*rcvr*/, RefArg context, RefArg name)
 }
 
 
-// ROM 0x002911bc FSetVariable
+// ROM 0x002b60e8 FSetVariable
 Ref
 FSetVariable(RefArg /*rcvr*/, RefArg context, RefArg name, RefArg value)
 {
@@ -963,7 +963,7 @@ FSetVariable(RefArg /*rcvr*/, RefArg context, RefArg name, RefArg value)
 }
 
 
-// ROM 0x0029131c FHasVariable
+// ROM 0x002b6248 FHasVariable
 Ref
 FHasVariable(RefArg /*rcvr*/, RefArg context, RefArg name)
 {
@@ -973,7 +973,7 @@ FHasVariable(RefArg /*rcvr*/, RefArg context, RefArg name)
 }
 
 
-// ROM 0x002911f0 FGetVar
+// ROM 0x002b611c FGetVar
 // The receiver's variable (an error when it has none).
 Ref
 FGetVar(RefArg rcvr, RefArg name)
@@ -986,7 +986,7 @@ FGetVar(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00291258 FSetVar
+// ROM 0x002b6184 FSetVar
 Ref
 FSetVar(RefArg rcvr, RefArg name, RefArg value)
 {
@@ -995,7 +995,7 @@ FSetVar(RefArg rcvr, RefArg name, RefArg value)
 }
 
 
-// ROM 0x00291278 FHasVar
+// ROM 0x002b61a4 FHasVar
 // The receiver's, or a global's.
 Ref
 FHasVar(RefArg rcvr, RefArg name)
@@ -1009,7 +1009,7 @@ FHasVar(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x00291354 FLocalVar
+// ROM 0x002b6280 FLocalVar
 Ref
 FLocalVar(RefArg rcvr, RefArg name)
 {
@@ -1018,7 +1018,7 @@ FLocalVar(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x0029238c FGetGlobals
+// ROM 0x002b72b8 FGetGlobals
 Ref
 FGetGlobals(RefArg /*rcvr*/)
 {
@@ -1026,7 +1026,7 @@ FGetGlobals(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x0029239c FSetGlobal
+// ROM 0x002b72c8 FSetGlobal
 Ref
 FSetGlobal(RefArg /*rcvr*/, RefArg value, RefArg name)
 {
@@ -1037,7 +1037,7 @@ FSetGlobal(RefArg /*rcvr*/, RefArg value, RefArg name)
 }
 
 
-// ROM 0x00292408 FDefGlobalFn
+// ROM 0x002b7334 FDefGlobalFn
 Ref
 FDefGlobalFn(RefArg /*rcvr*/, RefArg name, RefArg fn)
 {
@@ -1054,7 +1054,7 @@ FDefGlobalFn(RefArg /*rcvr*/, RefArg name, RefArg fn)
 	Calling and sending
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0029139c FApply
+// ROM 0x002b62c8 FApply
 Ref
 FApply(RefArg /*rcvr*/, RefArg fn, RefArg args)
 {
@@ -1064,7 +1064,7 @@ FApply(RefArg /*rcvr*/, RefArg fn, RefArg args)
 }
 
 
-// ROM 0x002913dc FPerform
+// ROM 0x002b6308 FPerform
 Ref
 FPerform(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 {
@@ -1072,7 +1072,7 @@ FPerform(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x002913f4 FPerformIfDefined
+// ROM 0x002b6320 FPerformIfDefined
 Ref
 FPerformIfDefined(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 {
@@ -1080,7 +1080,7 @@ FPerformIfDefined(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x0029140c FProtoPerform
+// ROM 0x002b6338 FProtoPerform
 Ref
 FProtoPerform(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 {
@@ -1088,7 +1088,7 @@ FProtoPerform(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 }
 
 
-// ROM 0x00291424 FProtoPerformIfDefined
+// ROM 0x002b6350 FProtoPerformIfDefined
 Ref
 FProtoPerformIfDefined(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg args)
 {
@@ -1096,7 +1096,7 @@ FProtoPerformIfDefined(RefArg /*rcvr*/, RefArg receiver, RefArg message, RefArg 
 }
 
 
-// ROM 0x00292490 FMap
+// ROM 0x002b73bc FMap
 // fn(tag, value) for each slot.
 Ref
 FMap(RefArg /*rcvr*/, RefArg obj, RefArg fn)
@@ -1114,7 +1114,7 @@ FMap(RefArg /*rcvr*/, RefArg obj, RefArg fn)
 }
 
 
-// ROM 0x00292554 FCollect
+// ROM 0x002b7480 FCollect
 // The array of fn(tag, value) for each slot.
 Ref
 FCollect(RefArg /*rcvr*/, RefArg obj, RefArg fn)
@@ -1164,7 +1164,7 @@ DeleteCharArray(void* text)
 }
 
 
-// ROM 0x00291f18 FThrow
+// ROM 0x002b6e44 FThrow
 // Throw name (a symbol under evt.ex) with data: a frame for a type.ref
 // name, a string's text for an evt.ex.msg name, else an error code.
 Ref
@@ -1185,7 +1185,7 @@ FThrow(RefArg /*rcvr*/, RefArg name, RefArg data)
 }
 
 
-// ROM 0x002920e0 FRethrow
+// ROM 0x002b700c FRethrow
 Ref
 FRethrow(RefArg /*rcvr*/)
 {
@@ -1209,7 +1209,7 @@ FRethrow(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x002922f4 FCurrentException
+// ROM 0x002b7220 FCurrentException
 Ref
 FCurrentException(RefArg /*rcvr*/)
 {
@@ -1217,7 +1217,7 @@ FCurrentException(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x00292304 FIsSubexception
+// ROM 0x002b7230 FIsSubexception
 Ref
 FIsSubexception(RefArg /*rcvr*/, RefArg sub, RefArg super)
 {
@@ -1238,7 +1238,7 @@ FIsSubexception(RefArg /*rcvr*/, RefArg sub, RefArg super)
 
 enum { kIterTag = 0, kIterValue, kIterObject, kIterDeeply, kIterIndex, kIterLength, kIterMap };
 
-// ROM 0x00292838 ForEachLoopNext__FRC6RefVar
+// ROM 0x002b7764 ForEachLoopNext__FRC6RefVar
 // On to the next slot (the object may have changed length); when deep, a
 // _proto slot is skipped and the end of a frame goes on into its _proto.
 // Answers whether there is one.
@@ -1282,7 +1282,7 @@ ForEachLoopNext(RefArg iter)
 }
 
 
-// ROM 0x00292674 ForEachLoopReset__FRC6RefVarT1
+// ROM 0x002b75a0 ForEachLoopReset__FRC6RefVarT1
 // Start over on obj (the _proto of the last, when deep).
 Boolean
 ForEachLoopReset(RefArg iter, RefArg obj)
@@ -1295,7 +1295,7 @@ ForEachLoopReset(RefArg iter, RefArg obj)
 }
 
 
-// ROM 0x00292760 ForEachLoopDone__FRC6RefVar
+// ROM 0x002b768c ForEachLoopDone__FRC6RefVar
 Boolean
 ForEachLoopDone(RefArg iter)
 {
@@ -1309,7 +1309,7 @@ ForEachLoopDone(RefArg iter)
 }
 
 
-// ROM 0x00292b58 FNewIterator
+// ROM 0x002b7a84 FNewIterator
 Ref
 FNewIterator(RefArg /*rcvr*/, RefArg obj, RefArg deeply)
 {
@@ -1350,7 +1350,7 @@ FNewIterator(RefArg /*rcvr*/, RefArg obj, RefArg deeply)
 	Symbols and characters
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00292ef4 FIntern
+// ROM 0x002b7e20 FIntern
 Ref
 FIntern(RefArg /*rcvr*/, RefArg str)
 {
@@ -1360,7 +1360,7 @@ FIntern(RefArg /*rcvr*/, RefArg str)
 }
 
 
-// ROM 0x00292f70 FSymbolName
+// ROM 0x002b7e9c FSymbolName
 Ref
 FSymbolName(RefArg /*rcvr*/, RefArg sym)
 {
@@ -1370,7 +1370,7 @@ FSymbolName(RefArg /*rcvr*/, RefArg sym)
 }
 
 
-// ROM 0x002910f8 FCHR
+// ROM 0x002b6024 FCHR
 Ref
 FCHR(RefArg /*rcvr*/, RefArg n)
 {
@@ -1378,7 +1378,7 @@ FCHR(RefArg /*rcvr*/, RefArg n)
 }
 
 
-// ROM 0x00290fd4 FORD
+// ROM 0x002b5f00 FORD
 Ref
 FORD(RefArg /*rcvr*/, RefArg c)
 {
@@ -1386,7 +1386,7 @@ FORD(RefArg /*rcvr*/, RefArg c)
 }
 
 
-// ROM 0x0029118c FGC
+// ROM 0x002b60b8 FGC
 Ref
 FGC(RefArg /*rcvr*/)
 {
@@ -1404,47 +1404,47 @@ FGC(RefArg /*rcvr*/)
 #define REAL_FUNCTION2(name, fn) \
 	Ref name(RefArg /*rcvr*/, RefArg a, RefArg b) { return MakeReal(fn(CoerceToDouble(a), CoerceToDouble(b))); }
 
-REAL_FUNCTION(Facos, acos)			// ROM 0x002912ec Facos
-REAL_FUNCTION(Fasin, asin)			// ROM 0x002918a0 Fasin
-REAL_FUNCTION(Fatan, atan)			// ROM 0x002922c4 Fatan
-REAL_FUNCTION(Fcos, cos)			// ROM 0x00292b28 Fcos
-REAL_FUNCTION(Fsin, sin)			// ROM 0x002931d8 Fsin
-REAL_FUNCTION(Ftan, tan)			// ROM 0x00293458 Ftan
-REAL_FUNCTION(Fcosh, cosh)			// ROM 0x00293488 Fcosh
-REAL_FUNCTION(Fsinh, sinh)			// ROM 0x002934b8 Fsinh
-REAL_FUNCTION(Ftanh, tanh)			// ROM 0x002934e8 Ftanh
-REAL_FUNCTION(Fexp, exp)			// ROM 0x00293518 Fexp
-REAL_FUNCTION(Flog, log)			// ROM 0x00293548 Flog
-REAL_FUNCTION(Flog10, log10)		// ROM 0x002935b4 Flog10
-REAL_FUNCTION(Fsqrt, sqrt)			// ROM 0x002935e4 Fsqrt
-REAL_FUNCTION(Ffabs, fabs)			// ROM 0x00293614 Ffabs
-REAL_FUNCTION2(Fatan2, atan2)		// ROM 0x00293644 Fatan2
-REAL_FUNCTION2(Fpow, pow)			// ROM 0x00293698 Fpow
-REAL_FUNCTION2(Ffmod, fmod)			// ROM 0x002936ec Ffmod
-REAL_FUNCTION2(Fhypot, hypot)		// ROM 0x00293944 Fhypot
-REAL_FUNCTION(Ftrunc, trunc)		// ROM 0x00293b54 Ftrunc
-REAL_FUNCTION(Fround, round)		// ROM 0x00293b24 Fround
-REAL_FUNCTION2(Ffmax, fmax)			// ROM 0x00293dcc Fmax
-REAL_FUNCTION2(Ffmin, fmin)			// ROM 0x00293e20 Fmin
-REAL_FUNCTION(Facosh, acosh)		// ROM 0x00293740 Facosh
-REAL_FUNCTION(Fasinh, asinh)		// ROM 0x00293770 Fasinh
-REAL_FUNCTION(Fatanh, atanh)		// ROM 0x002937a0 Fatanh
-REAL_FUNCTION(Fexpm1, expm1)		// ROM 0x002937d0 Fexpm1
-REAL_FUNCTION(Flog1p, log1p)		// ROM 0x00293890 Flog1p
-REAL_FUNCTION(Flogb, logb)			// ROM 0x002938c0 Flogb
-REAL_FUNCTION(Ferf, erf)			// ROM 0x00293998 Ferf
-REAL_FUNCTION(Ferfc, erfc)			// ROM 0x002939c8 Ferfc
-REAL_FUNCTION(Fgamma, tgamma)		// ROM 0x002939f8 Fgamma  (the ROM's gamma is the true gamma)
-REAL_FUNCTION(Flgamma, lgamma)		// ROM 0x00293a28 Flgamma
-REAL_FUNCTION(Frint, rint)			// ROM 0x00293a58 Frint
-REAL_FUNCTION(Fnearbyint, nearbyint)	// ROM 0x00293acc Fnearbyint
-REAL_FUNCTION2(Fremainder, remainder)	// ROM 0x00293b84 Fremainder
-REAL_FUNCTION2(Fcopysign, copysign)	// ROM 0x00293bd8 Fcopysign
-REAL_FUNCTION2(Fnextafterd, nextafter)	// ROM 0x00293c2c Fnextafterd
-REAL_FUNCTION2(Fdim, fdim)			// ROM 0x00293d78 Fdim
+REAL_FUNCTION(Facos, acos)			// ROM 0x002b6218 Facos
+REAL_FUNCTION(Fasin, asin)			// ROM 0x002b67cc Fasin
+REAL_FUNCTION(Fatan, atan)			// ROM 0x002b71f0 Fatan
+REAL_FUNCTION(Fcos, cos)			// ROM 0x002b7a54 Fcos
+REAL_FUNCTION(Fsin, sin)			// ROM 0x002b8104 Fsin
+REAL_FUNCTION(Ftan, tan)			// ROM 0x002b8384 Ftan
+REAL_FUNCTION(Fcosh, cosh)			// ROM 0x002b83b4 Fcosh
+REAL_FUNCTION(Fsinh, sinh)			// ROM 0x002b83e4 Fsinh
+REAL_FUNCTION(Ftanh, tanh)			// ROM 0x002b8414 Ftanh
+REAL_FUNCTION(Fexp, exp)			// ROM 0x002b8444 Fexp
+REAL_FUNCTION(Flog, log)			// ROM 0x002b8474 Flog
+REAL_FUNCTION(Flog10, log10)		// ROM 0x002b84e0 Flog10
+REAL_FUNCTION(Fsqrt, sqrt)			// ROM 0x002b8510 Fsqrt
+REAL_FUNCTION(Ffabs, fabs)			// ROM 0x002b8540 Ffabs
+REAL_FUNCTION2(Fatan2, atan2)		// ROM 0x002b8570 Fatan2
+REAL_FUNCTION2(Fpow, pow)			// ROM 0x002b85c4 Fpow
+REAL_FUNCTION2(Ffmod, fmod)			// ROM 0x002b8618 Ffmod
+REAL_FUNCTION2(Fhypot, hypot)		// ROM 0x002b8870 Fhypot
+REAL_FUNCTION(Ftrunc, trunc)		// ROM 0x002b8a80 Ftrunc
+REAL_FUNCTION(Fround, round)		// ROM 0x002b8a50 Fround
+REAL_FUNCTION2(Ffmax, fmax)			// ROM 0x002b8cf8 Fmax
+REAL_FUNCTION2(Ffmin, fmin)			// ROM 0x002b8d4c Fmin
+REAL_FUNCTION(Facosh, acosh)		// ROM 0x002b866c Facosh
+REAL_FUNCTION(Fasinh, asinh)		// ROM 0x002b869c Fasinh
+REAL_FUNCTION(Fatanh, atanh)		// ROM 0x002b86cc Fatanh
+REAL_FUNCTION(Fexpm1, expm1)		// ROM 0x002b86fc Fexpm1
+REAL_FUNCTION(Flog1p, log1p)		// ROM 0x002b87bc Flog1p
+REAL_FUNCTION(Flogb, logb)			// ROM 0x002b87ec Flogb
+REAL_FUNCTION(Ferf, erf)			// ROM 0x002b88c4 Ferf
+REAL_FUNCTION(Ferfc, erfc)			// ROM 0x002b88f4 Ferfc
+REAL_FUNCTION(Fgamma, tgamma)		// ROM 0x002b8924 Fgamma  (the ROM's gamma is the true gamma)
+REAL_FUNCTION(Flgamma, lgamma)		// ROM 0x002b8954 Flgamma
+REAL_FUNCTION(Frint, rint)			// ROM 0x002b8984 Frint
+REAL_FUNCTION(Fnearbyint, nearbyint)	// ROM 0x002b89f8 Fnearbyint
+REAL_FUNCTION2(Fremainder, remainder)	// ROM 0x002b8ab0 Fremainder
+REAL_FUNCTION2(Fcopysign, copysign)	// ROM 0x002b8b04 Fcopysign
+REAL_FUNCTION2(Fnextafterd, nextafter)	// ROM 0x002b8b58 Fnextafterd
+REAL_FUNCTION2(Fdim, fdim)			// ROM 0x002b8ca4 Fdim
 
 
-// ROM 0x0029383c Fldexp
+// ROM 0x002b8768 Fldexp
 Ref
 Fldexp(RefArg /*rcvr*/, RefArg x, RefArg n)
 {
@@ -1452,7 +1452,7 @@ Fldexp(RefArg /*rcvr*/, RefArg x, RefArg n)
 }
 
 
-// ROM 0x002938f0 Fscalb
+// ROM 0x002b881c Fscalb
 Ref
 Fscalb(RefArg /*rcvr*/, RefArg x, RefArg n)
 {
@@ -1460,7 +1460,7 @@ Fscalb(RefArg /*rcvr*/, RefArg x, RefArg n)
 }
 
 
-// ROM 0x00293afc Frinttol
+// ROM 0x002b8a28 Frinttol
 // The nearest integer (in the current rounding direction).
 Ref
 Frinttol(RefArg /*rcvr*/, RefArg x)
@@ -1469,7 +1469,7 @@ Frinttol(RefArg /*rcvr*/, RefArg x)
 }
 
 
-// ROM 0x00293c80 Fisnormal
+// ROM 0x002b8bac Fisnormal
 Ref
 Fisnormal(RefArg /*rcvr*/, RefArg x)
 {
@@ -1477,7 +1477,7 @@ Fisnormal(RefArg /*rcvr*/, RefArg x)
 }
 
 
-// ROM 0x00293cb0 Fisfinite
+// ROM 0x002b8bdc Fisfinite
 Ref
 Fisfinite(RefArg /*rcvr*/, RefArg x)
 {
@@ -1485,7 +1485,7 @@ Fisfinite(RefArg /*rcvr*/, RefArg x)
 }
 
 
-// ROM 0x00293ce0 Fisnan
+// ROM 0x002b8c0c Fisnan
 Ref
 Fisnan(RefArg /*rcvr*/, RefArg x)
 {
@@ -1493,7 +1493,7 @@ Fisnan(RefArg /*rcvr*/, RefArg x)
 }
 
 
-// ROM 0x00293d50 Fsignbit
+// ROM 0x002b8c7c Fsignbit
 // ==> non-zero for a negative sign (the sign bit as an integer).
 Ref
 Fsignbit(RefArg /*rcvr*/, RefArg x)
@@ -1502,7 +1502,7 @@ Fsignbit(RefArg /*rcvr*/, RefArg x)
 }
 
 
-// ROM 0x00293e74 Fcompound
+// ROM 0x002b8da0 Fcompound
 // (1 + rate) ^ periods (SANE's compound, 0x002a2904).
 Ref
 Fcompound(RefArg /*rcvr*/, RefArg rate, RefArg periods)
@@ -1511,7 +1511,7 @@ Fcompound(RefArg /*rcvr*/, RefArg rate, RefArg periods)
 }
 
 
-// ROM 0x00293ec8 Fannuity
+// ROM 0x002b8df4 Fannuity
 // (1 - (1 + rate) ^ -periods) / rate (SANE's annuity, 0x00285ae0).
 Ref
 Fannuity(RefArg /*rcvr*/, RefArg rate, RefArg periods)
@@ -1524,7 +1524,7 @@ Fannuity(RefArg /*rcvr*/, RefArg rate, RefArg periods)
 }
 
 
-// ROM 0x00293f1c Fremquo
+// ROM 0x002b8e48 Fremquo
 // ==> [remainder, quotient]
 Ref
 Fremquo(RefArg /*rcvr*/, RefArg x, RefArg y)
@@ -1538,7 +1538,7 @@ Fremquo(RefArg /*rcvr*/, RefArg x, RefArg y)
 }
 
 
-// ROM 0x00293ff4 Frandomx
+// ROM 0x002b8f20 Frandomx
 // SANE's randomx (0x00313ffc): the next value of the Lehmer sequence
 // x' = 7^5 x mod (2^31 - 1); ==> [value, seed] (both x').
 Ref
@@ -1558,7 +1558,7 @@ Frandomx(RefArg /*rcvr*/, RefArg x)
 	rounding-mode values are the host's, not the ARM FPE's.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00294098 Ffeclearexcept
+// ROM 0x002b8fc4 Ffeclearexcept
 Ref
 Ffeclearexcept(RefArg /*rcvr*/, RefArg excepts)
 {
@@ -1567,7 +1567,7 @@ Ffeclearexcept(RefArg /*rcvr*/, RefArg excepts)
 }
 
 
-// ROM 0x002940c8 Ffegetexcept
+// ROM 0x002b8ff4 Ffegetexcept
 // The flags raised among excepts (fegetexceptflag).
 Ref
 Ffegetexcept(RefArg /*rcvr*/, RefArg excepts)
@@ -1578,7 +1578,7 @@ Ffegetexcept(RefArg /*rcvr*/, RefArg excepts)
 }
 
 
-// ROM 0x00294120 Fferaiseexcept
+// ROM 0x002b904c Fferaiseexcept
 Ref
 Fferaiseexcept(RefArg /*rcvr*/, RefArg excepts)
 {
@@ -1587,7 +1587,7 @@ Fferaiseexcept(RefArg /*rcvr*/, RefArg excepts)
 }
 
 
-// ROM 0x00294150 Ffesetexcept
+// ROM 0x002b907c Ffesetexcept
 Ref
 Ffesetexcept(RefArg /*rcvr*/, RefArg flags, RefArg excepts)
 {
@@ -1597,7 +1597,7 @@ Ffesetexcept(RefArg /*rcvr*/, RefArg flags, RefArg excepts)
 }
 
 
-// ROM 0x002941ac Ffetestexcept
+// ROM 0x002b90d8 Ffetestexcept
 Ref
 Ffetestexcept(RefArg /*rcvr*/, RefArg excepts)
 {
@@ -1605,7 +1605,7 @@ Ffetestexcept(RefArg /*rcvr*/, RefArg excepts)
 }
 
 
-// ROM 0x002941dc Ffegetround
+// ROM 0x002b9108 Ffegetround
 Ref
 Ffegetround(RefArg /*rcvr*/)
 {
@@ -1613,7 +1613,7 @@ Ffegetround(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x002941f4 Ffesetround
+// ROM 0x002b9120 Ffesetround
 Ref
 Ffesetround(RefArg /*rcvr*/, RefArg mode)
 {
@@ -1639,7 +1639,7 @@ SetEnvironmentWord(long env)
 }
 
 
-// ROM 0x00294224 Ffegetenv
+// ROM 0x002b9150 Ffegetenv
 Ref
 Ffegetenv(RefArg /*rcvr*/)
 {
@@ -1647,7 +1647,7 @@ Ffegetenv(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x00294248 Ffeholdexcept
+// ROM 0x002b9174 Ffeholdexcept
 // ==> the environment saved; the flags cleared.
 Ref
 Ffeholdexcept(RefArg /*rcvr*/, RefArg /*env*/)
@@ -1658,7 +1658,7 @@ Ffeholdexcept(RefArg /*rcvr*/, RefArg /*env*/)
 }
 
 
-// ROM 0x00294284 Ffesetenv
+// ROM 0x002b91b0 Ffesetenv
 Ref
 Ffesetenv(RefArg /*rcvr*/, RefArg env)
 {
@@ -1667,7 +1667,7 @@ Ffesetenv(RefArg /*rcvr*/, RefArg env)
 }
 
 
-// ROM 0x002942c0 Ffeupdateenv
+// ROM 0x002b91ec Ffeupdateenv
 // The environment restored, the flags raised meanwhile raised again.
 Ref
 Ffeupdateenv(RefArg /*rcvr*/, RefArg env)
@@ -1705,7 +1705,7 @@ SeedRandom(ULong seed)
 }
 
 
-// ROM 0x0029458c FRandom
+// ROM 0x002b94b8 FRandom
 // An integer from low to high inclusive.
 Ref
 FRandom(RefArg /*rcvr*/, RefArg low, RefArg high)
@@ -1719,7 +1719,7 @@ FRandom(RefArg /*rcvr*/, RefArg low, RefArg high)
 }
 
 
-// ROM 0x00294618 FGetRandomState
+// ROM 0x002b9544 FGetRandomState
 Ref
 FGetRandomState(RefArg /*rcvr*/)
 {
@@ -1729,7 +1729,7 @@ FGetRandomState(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x002946b8 FSetRandomState
+// ROM 0x002b95e4 FSetRandomState
 Ref
 FSetRandomState(RefArg /*rcvr*/, RefArg state)
 {
@@ -1740,7 +1740,7 @@ FSetRandomState(RefArg /*rcvr*/, RefArg state)
 }
 
 
-// ROM 0x002d1844 FGetFunctionArgCount
+// ROM 0x002f7088 FGetFunctionArgCount
 Ref
 FGetFunctionArgCount(RefArg /*rcvr*/, RefArg fn)
 {
@@ -1748,7 +1748,7 @@ FGetFunctionArgCount(RefArg /*rcvr*/, RefArg fn)
 }
 
 
-// ROM 0x00292df4 FForLoop
+// ROM 0x002b7d20 FForLoop
 // fn called with each integer from start to end (a 1.x helper).
 Ref
 FForLoop(RefArg /*rcvr*/, RefArg start, RefArg end, RefArg fn)
@@ -1768,7 +1768,7 @@ FForLoop(RefArg /*rcvr*/, RefArg start, RefArg end, RefArg fn)
 }
 
 
-// ROM 0x00290600 FGetSiblingSlot
+// ROM 0x002b552c FGetSiblingSlot
 // A slot looked up along the _proto chain only (GetProtoVariable).
 Ref
 FGetSiblingSlot(RefArg /*rcvr*/, RefArg context, RefArg name)
@@ -1780,7 +1780,7 @@ FGetSiblingSlot(RefArg /*rcvr*/, RefArg context, RefArg name)
 }
 
 
-// ROM 0x00290610 FHasSiblingSlot
+// ROM 0x002b553c FHasSiblingSlot
 Ref
 FHasSiblingSlot(RefArg /*rcvr*/, RefArg context, RefArg name)
 {

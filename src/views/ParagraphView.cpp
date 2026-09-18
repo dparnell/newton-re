@@ -3,7 +3,7 @@
 
 	Contains:	TParagraphView: a view of styled text, display only.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ParagraphView.h"
@@ -46,7 +46,7 @@ const UniChar kCR = 0x0d;
 const UniChar kSP = 0x20;
 const UniChar kEllipsisChar = 0x2026;		// the ROM's U_CONST_CHAR(0xc9): Mac Roman's ellipsis as Unicode
 
-// ROM 0x0025fdf4 GetInputViewTextFlags__FUlT1
+// ROM 0x00261d2c GetInputViewTextFlags__FUlT1
 // The text flags of an input view: bits 14-16 (0x1c000) say what kind of
 // text it takes; a view without them takes anything (0xc000), one that is
 // read-only or takes no scripts (viewFlags 0x82) just the plain kind (0x4000).
@@ -59,7 +59,7 @@ GetInputViewTextFlags(ULong textFlags, ULong viewFlags)
 }
 
 
-// ROM 0x000a41fc TestLineOverlap__FP5TRectT1
+// ROM 0x000a2ffc TestLineOverlap__FP5TRectT1
 // Where a line lies against a box: 0 above it, 1 within, 2 below - by its
 // midline.
 static long
@@ -76,7 +76,7 @@ TestLineOverlap(const Rect& box, const Rect& line)
 	T P a r a g r a p h V i e w
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001803dc ClassID__14TParagraphViewCFv
+// ROM 0x0017e3ac ClassID__14TParagraphViewCFv
 long
 TParagraphView::ClassID(void) const
 {
@@ -84,7 +84,7 @@ TParagraphView::ClassID(void) const
 }
 
 
-// ROM 0x001803e4 DerivedFrom__14TParagraphViewCFl
+// ROM 0x0017e3b4 DerivedFrom__14TParagraphViewCFl
 Boolean
 TParagraphView::DerivedFrom(long id) const
 {
@@ -92,7 +92,7 @@ TParagraphView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x00180df0 Constructor__14TParagraphViewFRC6RefVarP5TView
+// ROM 0x0017edc0 Constructor__14TParagraphViewFRC6RefVarP5TView
 // The text flags unknown (-1) until SetupDone.
 void
 TParagraphView::Constructor(RefArg context, TView* parent)
@@ -106,7 +106,7 @@ TParagraphView::Constructor(RefArg context, TView* parent)
 }
 
 
-// ROM 0x00182624 __dt__14TParagraphViewFv
+// ROM 0x001805f4 __dt__14TParagraphViewFv
 // The caches go (the hilites, style records, text objects and lines);
 // NOT YET RECONSTRUCTED: the correction info, and vars.lastTextChanged /
 // lastTextHiliteChanged cleared when they name this view.
@@ -118,7 +118,7 @@ TParagraphView::~TParagraphView()
 }
 
 
-// ROM 0x00181608 SetupDone__14TParagraphViewFv
+// ROM 0x0017f5d8 SetupDone__14TParagraphViewFv
 // The view readied once its context is complete: the transfer mode
 // (viewTransferMode, srcOr when none), the line spacing (viewLineSpacing),
 // the text flags (the input view's from textFlags and viewFlags), the
@@ -155,7 +155,7 @@ TParagraphView::SetupDone(void)
 }
 
 
-// ROM 0x00180418 SetBounds__14TParagraphViewFRC5TRect
+// ROM 0x0017e3e8 SetBounds__14TParagraphViewFRC5TRect
 // The bounds set (TView); the text flags made known when they are not
 // yet; the lines laid out again when the size changed, moved along when
 // the view only moved.
@@ -184,7 +184,7 @@ TParagraphView::SetBounds(const Rect& bounds)
 	T h e   s l o t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00183034 Text__14TParagraphViewFv
+// ROM 0x00181004 Text__14TParagraphViewFv
 // The text slot as a string.
 Ref
 TParagraphView::Text(void)
@@ -193,7 +193,7 @@ TParagraphView::Text(void)
 }
 
 
-// ROM 0x00183478 Styles__14TParagraphViewFv
+// ROM 0x00181448 Styles__14TParagraphViewFv
 // The styles slot (the runs), made to cover the text.
 Ref
 TParagraphView::Styles(void)
@@ -205,7 +205,7 @@ TParagraphView::Styles(void)
 }
 
 
-// ROM 0x00183134 GetStyles__14TParagraphViewFv
+// ROM 0x00181104 GetStyles__14TParagraphViewFv
 // The styles to draw with: the runs when there are several, the one
 // style when there is a single run (the runs when it is an ink word), the
 // default view style when there are none.
@@ -230,7 +230,7 @@ TParagraphView::GetStyles(void)
 }
 
 
-// ROM 0x001834e4 Tabs__14TParagraphViewFv
+// ROM 0x001814b4 Tabs__14TParagraphViewFv
 // The tabs slot (a variable of the context).
 Ref
 TParagraphView::Tabs(void)
@@ -239,7 +239,7 @@ TParagraphView::Tabs(void)
 }
 
 
-// ROM 0x0017a9ec GetDefaultViewStyle__14TParagraphViewFv
+// ROM 0x001789bc GetDefaultViewStyle__14TParagraphViewFv
 // The view's font: viewFont from the protos, or - for a read-only view -
 // from the parents too, else the user's font preference.
 Ref
@@ -257,7 +257,7 @@ TParagraphView::GetDefaultViewStyle(void)
 }
 
 
-// ROM 0x0016b490 GetInterLineSpacing__14TParagraphViewFv
+// ROM 0x00169460 GetInterLineSpacing__14TParagraphViewFv
 // The line spacing to lay the lines out with: viewLineSpacing when the
 // view has one - for a single style only when the font fits it (the
 // font's height between eight tenths of the spacing and three more than
@@ -294,7 +294,7 @@ TParagraphView::GetInterLineSpacing(void)
 	T h e   c a c h e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0017e9fc GrowLineInfoCache__FPPP8LineInfol
+// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
 // The line cache grown to hold more lines (the ROM's cache is a
 // null-terminated array of LineInfo pointers; the host's an array of
 // records that doubles).
@@ -409,7 +409,7 @@ RunsOfRange(StyleRecord** runStyles, const short* runLengths, long runCount, lon
 }
 
 
-// ROM 0x0016dc00 ClearAllCaches__14TParagraphViewFv
+// ROM 0x0016bbd0 ClearAllCaches__14TParagraphViewFv
 // The style records, text objects and lines forgotten; the line cache
 // sized for the text (the ROM: a line per 32 characters, at most a tenth
 // of the screen's height; the host's cache grows as needed).
@@ -423,7 +423,7 @@ TParagraphView::ClearAllCaches(void)
 }
 
 
-// ROM 0x0016e28c RefillAllCaches__14TParagraphViewFv
+// ROM 0x0016c25c RefillAllCaches__14TParagraphViewFv
 // The caches cleared and filled again: the style records from the styles
 // (CreateStyleRecordCache), then the lines.
 void
@@ -437,7 +437,7 @@ TParagraphView::RefillAllCaches(void)
 }
 
 
-// ROM 0x0016dad8 CreateAllCaches__14TParagraphViewFv
+// ROM 0x0016baa8 CreateAllCaches__14TParagraphViewFv
 // The caches made: the lines laid out, the hilites' areas set up again
 // (NOT YET RECONSTRUCTED: the hilites), the bounds noted.
 void
@@ -449,7 +449,7 @@ TParagraphView::CreateAllCaches(void)
 }
 
 
-// ROM 0x0016dc68 FillAllCaches__14TParagraphViewFPs
+// ROM 0x0016bc38 FillAllCaches__14TParagraphViewFPs
 // The text wrapped into the bounds a line at a time: each line the text
 // up to a carriage return (or the end) cut to what fits the width and
 // back to a word boundary, the line the height its runs' fonts need
@@ -580,7 +580,7 @@ TParagraphView::FillAllCaches(void)
 }
 
 
-// ROM 0x0016b94c OffsetCachedBounds__14TParagraphViewFR6TPoint
+// ROM 0x0016991c OffsetCachedBounds__14TParagraphViewFR6TPoint
 // The cached lines moved with the view.
 void
 TParagraphView::OffsetCachedBounds(Point& delta)
@@ -607,7 +607,7 @@ TParagraphView::TextLength(void)
 }
 
 
-// ROM 0x00181008 SetCaretOffset__14TParagraphViewFPlT1
+// ROM 0x0017efd8 SetCaretOffset__14TParagraphViewFPlT1
 // The caret offset kept: -1 or past the text means its end; the length
 // cut to what is left.
 void
@@ -622,7 +622,7 @@ TParagraphView::SetCaretOffset(long* offset, long* length)
 }
 
 
-// ROM 0x00181080 GetSelection__14TParagraphViewFv
+// ROM 0x0017f050 GetSelection__14TParagraphViewFv
 // A paragraph caret info frame ({offset, length}): the first hilite's
 // range, or the caret offset with no length.
 Ref
@@ -643,7 +643,7 @@ TParagraphView::GetSelection(void)
 }
 
 
-// ROM 0x001811a8 SetSelection__14TParagraphViewFRC6RefVarPlT2
+// ROM 0x0017f178 SetSelection__14TParagraphViewFRC6RefVarPlT2
 // The selection restored from a caret info frame's offset and length (nil
 // length: 0): SetCaretOffset, then no length removes the hilites, a
 // length re-hilites the range (MakeHilite).  A nil frame means no
@@ -670,7 +670,7 @@ TParagraphView::SetSelection(RefArg selection, long* offset, long* length)
 }
 
 
-// ROM 0x00181308 ActivateSelection__14TParagraphViewFUc
+// ROM 0x0017f2d8 ActivateSelection__14TParagraphViewFUc
 // TView's (the viewCaretActivateScript); deactivating (losing the caret)
 // removes the selection - of the hilite view when there is one, else our
 // own.
@@ -687,7 +687,7 @@ TParagraphView::ActivateSelection(Boolean on)
 }
 
 
-// ROM 0x00176cac FlushWordAtCaret__14TParagraphViewFv
+// ROM 0x00174c7c FlushWordAtCaret__14TParagraphViewFv
 // NOT YET RECONSTRUCTED: the word being typed at the caret handed to the
 // recogniser's dictionaries (the auto-add words).
 void
@@ -695,7 +695,7 @@ TParagraphView::FlushWordAtCaret(void)
 { }
 
 
-// ROM 0x0017a728 FindLineContainingCharOffset__14TParagraphViewFl
+// ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl
 // The line the offset is on: the first whose end is past it, the last
 // for an offset at or past the text's end; -1 without lines.
 long
@@ -737,7 +737,7 @@ LineWidthTo(TParagraphView* view, const UniChar* text, const LineInfo& line, lon
 }
 
 
-// ROM 0x00179f50 OffsetToBounds__14TParagraphViewFlP5TRect
+// ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
 // The box of the character at the offset (its left edge is what the
 // caret wants): the line found, the text up to the offset measured for
 // the left, the line's top and baseline for the top and bottom; without
@@ -775,7 +775,7 @@ TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 }
 
 
-// ROM 0x00173b04 OffsetToCaret__14TParagraphViewFlP5TRect
+// ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect
 // Where the caret goes for the offset: the character's box (OffsetToBounds)
 // - past the last line's end the caret stays at that end (an offset on a
 // trailing return goes to the next line's start, NOT YET) - its left a
@@ -812,7 +812,7 @@ TParagraphView::OffsetToCaret(long offset, Rect* caret)
 }
 
 
-// ROM 0x00179550 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc
+// ROM 0x00177520 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc
 // The character offset for a point: the line whose box holds the point's
 // v (the last for a point below, the first for one above), and within it
 // the character boundary nearest the point's h (host: the prefixes
@@ -855,7 +855,7 @@ TParagraphView::PointToOffset(const Point& pt)
 }
 
 
-// ROM 0x001736f8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
+// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 // The caret rect for a tap: OffsetToCaret(0) for an empty text, else the
 // caret at the character nearest the point (PointToOffset; the ROM's
 // PointToWordBoundary, and a point below the paragraph puts the caret
@@ -876,7 +876,7 @@ TParagraphView::PointToCaret(Point& pt, Rect* caret, Rect* /*bounds*/)
 	E d i t i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0017b1d8 GetStyleAtOffset__14TParagraphViewFlPlT2
+// ROM 0x001791a8 GetStyleAtOffset__14TParagraphViewFlPlT2
 Ref
 TParagraphView::GetStyleAtOffset(long offset, long* run, long* offsetInRun)
 {
@@ -885,7 +885,7 @@ TParagraphView::GetStyleAtOffset(long offset, long* run, long* offsetInRun)
 }
 
 
-// ROM 0x0017b228 GetStylesOfRange__14TParagraphViewFlT1Uc
+// ROM 0x001791f8 GetStylesOfRange__14TParagraphViewFlT1Uc
 Ref
 TParagraphView::GetStylesOfRange(long offset, long length, Boolean clone)
 {
@@ -894,7 +894,7 @@ TParagraphView::GetStylesOfRange(long offset, long length, Boolean clone)
 }
 
 
-// ROM 0x0017b278 GetWriteableTextStylesArray__14TParagraphViewFv
+// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
 // The styles slot as a runs array of the data frame's own: made from the
 // single spec (one run over the text) when it is not one yet.
 Ref
@@ -914,7 +914,7 @@ TParagraphView::GetWriteableTextStylesArray(void)
 }
 
 
-// ROM 0x0017a778 GetStyleForInsertion__14TParagraphViewFlUcT2
+// ROM 0x00178748 GetStyleForInsertion__14TParagraphViewFlUcT2
 // The style text inserted at the offset gets: vars.nextStyle when set (a
 // style picked for what comes next; cleared by useNextStyle) - else,
 // with style runs and text, the style of the last character before the
@@ -966,7 +966,7 @@ TParagraphView::GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean 
 }
 
 
-// ROM 0x0017af04 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
+// ROM 0x00178ed4 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
 // The style runs follow a replacement: without new styles (or with
 // nothing inserted) the removed characters leave their runs and the
 // inserted ones join the run at the offset; with new styles a longer
@@ -1045,7 +1045,7 @@ TParagraphView::AdjustStyles(long offset, long removed, long inserted, RefArg st
 }
 
 
-// ROM 0x0016c854 AdjustHilites__14TParagraphViewFlT1
+// ROM 0x0016a824 AdjustHilites__14TParagraphViewFlT1
 // NOT YET RECONSTRUCTED: the hilites moved past a replacement.
 void
 TParagraphView::AdjustHilites(long /*offset*/, long /*delta*/)
@@ -1099,7 +1099,7 @@ TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
 }
 
 
-// ROM 0x0016cefc DrawHilites__14TParagraphViewFUc
+// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc
 // The hilited text inverted (the ROM fills each hilite's region into
 // offscreen bits and XORs them onto the view - PostDraw 0x0016cc84; the
 // host inverts the region over the current port directly, the same on one
@@ -1125,7 +1125,7 @@ TParagraphView::DrawHilites(Boolean scaled)
 }
 
 
-// ROM 0x0016c774 SetupArea__14TParagraphViewFP16TParagraphHilite
+// ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite
 // The region a hilite covers, worked out once and kept in it - the
 // characters are laid out in lines, so only the paragraph can say - and
 // the bounding box that goes with it.
@@ -1140,7 +1140,7 @@ TParagraphView::SetupArea(TParagraphHilite* hilite)
 }
 
 
-// ROM 0x0016c4cc MakeHilite__14TParagraphViewFlT1Uc
+// ROM 0x0016a49c MakeHilite__14TParagraphViewFlT1Uc
 // The characters between the offsets selected: clamped to the text, and
 // unioned with the existing selection (which is removed first) so a drag
 // extends it; an empty range with caretOnEmpty just moves the caret.
@@ -1189,7 +1189,7 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 }
 
 
-// ROM 0x0017b494 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
+// ROM 0x00179464 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
 // The characters from start for length given a style: the writeable
 // styles array gets the spec over the range (SetStyleOfRange, the equal
 // neighbours merged), and the range is laid out again.  DEVIATION: the
@@ -1215,7 +1215,7 @@ TParagraphView::ChangeStylesOfRange(long start, long length, RefArg style, Boole
 }
 
 
-// ROM 0x0017ba98 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar
+// ROM 0x00179a68 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar
 // The selected text (the first hilite's range) restyled.
 void
 TParagraphView::ChangeStyleOfSelection(RefArg style)
@@ -1230,7 +1230,7 @@ TParagraphView::ChangeStyleOfSelection(RefArg style)
 static const UniChar kScanInkChar = 0xf701;		// the ink-word placeholder the word scan treats as its own kind (RichString.h's kInkChar is 0xf700)
 
 
-// ROM 0x001a37d0 ScanWordStart__FPUslT2
+// ROM 0x001a1250 ScanWordStart__FPUslT2
 // The start of the word around offset: back while the characters are of
 // the same kind (all ink or all not) and not white space, no further than
 // limit.
@@ -1249,7 +1249,7 @@ ScanWordStart(const UniChar* text, long offset, long limit)
 }
 
 
-// ROM 0x001a36b4 ScanWordEnd__FPUslT2
+// ROM 0x001a1134 ScanWordEnd__FPUslT2
 // The end of the word around offset (the character after it): forward
 // while the characters are of the same kind and not white space, no
 // further than limit.
@@ -1297,7 +1297,7 @@ TParagraphView::SelectWordAt(Point pt)
 }
 
 
-// ROM 0x001772f4 HandleTap__14TParagraphViewFR6TPoint
+// ROM 0x001752c4 HandleTap__14TParagraphViewFR6TPoint
 // The caret placed at the tapped point: the selection removed, the
 // character nearest the point found (PointToOffset; before the first line
 // goes to the start, past the text to its end), the key view set there.
@@ -1320,7 +1320,7 @@ TParagraphView::HandleTap(Point& pt)
 }
 
 
-// ROM 0x00180994 Idle__14TParagraphViewFl
+// ROM 0x0017e964 Idle__14TParagraphViewFl
 // TView's idle; reason 2 is the deferred single tap - the caret placed at
 // the point kept when the tap came, once the double-tap interval has
 // passed with no second tap.  NOT YET RECONSTRUCTED: reason 1's expiry of
@@ -1360,7 +1360,7 @@ TParagraphView::PointInHilite(Point& pt)
 }
 
 
-// ROM 0x00182d14 ProcessStyles__14TParagraphViewFUc
+// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc
 // The styles checked for ink words to recognise (CheckStyles; the
 // recogniser then runs over the text).  NOT YET RECONSTRUCTED: ink -
 // nothing to process.  ==> whether anything was.
@@ -1371,7 +1371,7 @@ TParagraphView::ProcessStyles(Boolean /*redraw*/)
 }
 
 
-// ROM 0x001835e8 FixupBBox__14TParagraphViewFv
+// ROM 0x001815b8 FixupBBox__14TParagraphViewFv
 // The lines laid out again; a paragraph that calculates its bounds takes
 // the text's height (at least a line) - and, one line only, its width
 // (at least 5 wide) - as its bounds (SetBounds; the ROM writes the bounds
@@ -1409,7 +1409,7 @@ TParagraphView::FixupBBox(void)
 }
 
 
-// ROM 0x00182c08 RangeChanged__14TParagraphViewFlN21RC6RefVar
+// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar
 // The text changed: the lines laid out again (FixupBBox); once set up
 // the styles are processed (ink words recognised) and the view is told
 // Changed(slot) ('text when none was given and the styles did change)
@@ -1438,7 +1438,7 @@ TParagraphView::RangeChanged(long /*offset*/, long /*removed*/, long /*inserted*
 }
 
 
-// ROM 0x00170f30 HandleReplaceText__14TParagraphViewFRC6RefVar
+// ROM 0x0016ef00 HandleReplaceText__14TParagraphViewFRC6RefVar
 // The aeReplaceText command carried out: nothing for a read-only or
 // write-protected paragraph.  The index parameters are the offset, the
 // characters removed, the characters inserted (the command's text), the
@@ -1588,7 +1588,7 @@ TParagraphView::HandleReplaceText(RefArg cmd)
 }
 
 
-// ROM 0x0017ad8c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+// ROM 0x00178d5c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
 // An aeReplaceText command for the view (its id as the parameter) with
 // the index parameters [offset, removeLength, length, styleOffset, 1, 1,
 // typed], the styles (with the correct info, in a canonical correctInfo
@@ -1617,7 +1617,7 @@ TParagraphView::MakeAndDoReplaceCommand(ULong offset, const UniChar* text, ULong
 }
 
 
-// ROM 0x0017aa6c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
 // Text put in place of removeLength characters at the offset
 // (MakeAndDoReplaceCommand); a deletion that inserts nothing (and is not
 // a backspace) then drops the white space left at the end of the text.
@@ -1640,7 +1640,7 @@ TParagraphView::InsertStyledText(ULong offset, const UniChar* text, ULong length
 }
 
 
-// ROM 0x0017abc8 RemoveText__14TParagraphViewFUlT1
+// ROM 0x00178b98 RemoveText__14TParagraphViewFUlT1
 // A range removed, widened to take a space next to it: a range that is
 // not itself bounded by spaces (and, for one character, a word character
 // standing alone) takes the space (or two) after it, else the one (or
@@ -1686,7 +1686,7 @@ TParagraphView::RemoveText(ULong offset, ULong length)
 }
 
 
-// ROM 0x00179248 AddKeyToCurrUndo__14TParagraphViewFUsl
+// ROM 0x00177218 AddKeyToCurrUndo__14TParagraphViewFUsl
 // A typed key joined to the last undo entry when that undoes typing
 // here (an aeReplaceText for this view, typed, inserting nothing) that
 // ends at the offset and covers fewer than ten characters: the entry
@@ -1733,7 +1733,7 @@ TParagraphView::AddKeyToCurrUndo(UniChar ch, long offset)
 }
 
 
-// ROM 0x0016e688 RealDoCommand__14TParagraphViewFRC6RefVar
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar
 // The paragraph's commands.  A key down or repeat runs the key scripts
 // and key commands (HandleKeyEvent); a key nobody took, for a paragraph
 // that can be written, goes into the text: return (or the enter key, 3)
@@ -1958,7 +1958,7 @@ TParagraphView::DrawLine(const UniChar* text, const LineInfo& line, Boolean elli
 }
 
 
-// ROM 0x0016b14c RealDraw__14TParagraphViewFR5TRect
+// ROM 0x0016911c RealDraw__14TParagraphViewFR5TRect
 // The lines drawn (laid out first when they are not cached, moved along
 // when the view has moved since); an ellipsis after the last line when
 // the text goes on past it and the view does not calculate its bounds.

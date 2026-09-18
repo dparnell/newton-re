@@ -3,7 +3,7 @@
 
 	Contains:	Style runs.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "StyleRuns.h"
@@ -15,7 +15,7 @@
 const long kStylesErrReadOnly = -8009;			// the ROM's 0xffffe0b7 (ErrorNotify -8009, then evt.ex)
 
 
-// ROM 0x0017c8c4 TotalRunLength__FRC6RefVar
+// ROM 0x0017a894 TotalRunLength__FRC6RefVar
 // The characters the runs cover: the sum of the lengths (the even slots).
 long
 TotalRunLength(RefArg styles)
@@ -27,7 +27,7 @@ TotalRunLength(RefArg styles)
 }
 
 
-// ROM 0x0012aa28 RunsInsert__FRC6RefVarlT2
+// ROM 0x00128fcc RunsInsert__FRC6RefVarlT2
 // Count characters inserted at the offset: the run the offset falls in
 // grows by them - the last run when the offset is at the end.
 void
@@ -55,7 +55,7 @@ RunsInsert(RefArg styles, long offset, long count)
 }
 
 
-// ROM 0x0012a938 RunsDelete__FRC6RefVarlT2
+// ROM 0x00128edc RunsDelete__FRC6RefVarlT2
 // Count characters deleted from the offset: every run the range touches
 // loses the characters of it within the range; a run losing all of its
 // characters is removed with its style.
@@ -90,7 +90,7 @@ RunsDelete(RefArg styles, long offset, long count)
 }
 
 
-// ROM 0x0017c92c CorrectAnyBadStyleRuns__F6RefVarl
+// ROM 0x0017a8fc CorrectAnyBadStyleRuns__F6RefVarl
 // The runs made to cover the text: the last run grows to the text's
 // length, or the runs past its end are cut; read-only runs cannot be
 // corrected (ErrorNotify -8009, evt.ex).
@@ -116,7 +116,7 @@ CorrectAnyBadStyleRuns(RefArg styles, long textLength)
 }
 
 
-// ROM 0x0017c9f4 SaveStylesAndTabStopsArrays__FRC6RefVarT1
+// ROM 0x0017a9c4 SaveStylesAndTabStopsArrays__FRC6RefVarT1
 // A canonical styles frame: {styles: the runs when there are any, tabs:
 // the tab stops when there are any} (a clone of the ROM's canonicalStyles).
 Ref
@@ -131,7 +131,7 @@ SaveStylesAndTabStopsArrays(RefArg styles, RefArg tabs)
 }
 
 
-// ROM 0x0017f8dc GetStyleAtOffset__FRC6RefVarlPlT3
+// ROM 0x0017d8ac GetStyleAtOffset__FRC6RefVarlPlT3
 // The style of the character at the offset: a single spec is it; in an
 // array the run whose span holds the offset (the last for an offset past
 // the runs).  run and offsetInRun say where (0 and the offset for a
@@ -177,7 +177,7 @@ GetStyleAtOffset(RefArg styles, long offset, long* run, long* offsetInRun)
 }
 
 
-// ROM 0x0017fd68 CountStylesForLength__FRC6RefVarlT2
+// ROM 0x0017dd38 CountStylesForLength__FRC6RefVarlT2
 // How many runs from the run given it takes to cover the length (at
 // least one; 1 for a single spec).
 long
@@ -201,7 +201,7 @@ CountStylesForLength(RefArg styles, long run, long length)
 }
 
 
-// ROM 0x0017fa94 GetStylesOfRange__FRC6RefVarlT2Uc
+// ROM 0x0017da64 GetStylesOfRange__FRC6RefVarlT2Uc
 // The style runs covering the range as a new runs array (a single spec
 // makes one run of the length; the specs cloned when asked): the first
 // run cut to what lies past the offset, the last to what fits.
@@ -253,7 +253,7 @@ GetStylesOfRange(RefArg styles, long offset, long length, Boolean clone)
 }
 
 
-// ROM 0x0017bb10 SetStyleOfRange__FRC6RefVarT1ClT3
+// ROM 0x00179ae0 SetStyleOfRange__FRC6RefVarT1ClT3
 // The characters from start to end given one style: runs wholly inside
 // go, a run straddling the start is cut short (and one straddling the
 // end split, its tail kept), and a run of the range's length is put in
@@ -322,7 +322,7 @@ SetStyleOfRange(RefArg styles, RefArg style, long start, long end)
 }
 
 
-// ROM 0x0017cb94 CompactStyleRuns__FRC6RefVar
+// ROM 0x0017ab64 CompactStyleRuns__FRC6RefVar
 // Neighbouring runs of the same style (EQRef) - and empty runs - merged.
 void
 CompactStyleRuns(RefArg styles)
@@ -353,7 +353,7 @@ CompactStyleRuns(RefArg styles)
 }
 
 
-// ROM 0x0017ca88 ExtractStylesArray__FRC6RefVar
+// ROM 0x0017aa58 ExtractStylesArray__FRC6RefVar
 Ref
 ExtractStylesArray(RefArg frame)
 {
@@ -365,7 +365,7 @@ ExtractStylesArray(RefArg frame)
 }
 
 
-// ROM 0x0017cae4 ExtractTabStopsArray__FRC6RefVar
+// ROM 0x0017aab4 ExtractTabStopsArray__FRC6RefVar
 Ref
 ExtractTabStopsArray(RefArg frame)
 {
@@ -375,7 +375,7 @@ ExtractTabStopsArray(RefArg frame)
 }
 
 
-// ROM 0x0017cb3c ExtractCorrectInfo__FRC6RefVar
+// ROM 0x0017ab0c ExtractCorrectInfo__FRC6RefVar
 Ref
 ExtractCorrectInfo(RefArg frame)
 {

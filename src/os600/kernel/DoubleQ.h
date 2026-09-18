@@ -6,11 +6,11 @@
 
 				The DDK ships SingleQ.h for the singly linked variant; this is
 				the kernel-private double-ended counterpart reconstructed from
-				the MP2100 D ROM.  As with TSingleQContainer, the container is
+				the MP2x00 US ROM.  As with TSingleQContainer, the container is
 				told the offset of the TDoubleQItem inside the objects it links,
 				so callers deal in their own object pointers, not queue items.
 
-	Reconstructed from:	TDoubleQItem 0x0009d8dc, TDoubleQContainer 0x0009d914-0x0009dc48
+	Reconstructed from:	TDoubleQItem 0x0009c6dc, TDoubleQContainer 0x0009c714-0x0009ca48
 */
 
 #ifndef __DOUBLEQ_H

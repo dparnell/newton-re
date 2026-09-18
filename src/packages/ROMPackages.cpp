@@ -4,7 +4,7 @@
 	Contains:	The ROM extension's packages found and installed
 				(ROMPackages.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ROMPackages.h"
@@ -26,7 +26,7 @@
 #include <string.h>
 
 
-// ROM 0x00120978 GetRExConfigEntry
+// ROM 0x0011ef10 GetRExConfigEntry
 // The ROM does a generic system call (0x3b) and the kernel answers out of
 // the extension headers the loader found at boot.
 //
@@ -71,7 +71,7 @@ GetRExConfigEntry(ULong rexId, ULong tag, ULong* size)
 }
 
 
-// ROM 0x00120954 GetPackageList
+// ROM 0x0011eeec GetPackageList
 VAddr
 GetPackageList(ULong rexId)
 {
@@ -80,7 +80,7 @@ GetPackageList(ULong rexId)
 }
 
 
-// ROM 0x000cc7e0 InstallPart__FRC6RefVarT1RC6PartId10SourceTypeP8PartInfoT1
+// ROM 0x000cb68c InstallPart__FRC6RefVarT1RC6PartId10SourceTypeP8PartInfoT1
 // The part described to the rest of the system: a clone of
 // canonicalFramePartInstallInfo filled in and handed to the NewtonScript
 // InstallPart, which is what actually registers the application, puts it
@@ -207,7 +207,7 @@ InstallPackage(const unsigned char* rom, ULong packageAddress, ULong packageId)
 }
 
 
-// ROM 0x000e82f8 LoadHighROMFramesPackages__Fv
+// ROM 0x000e7040 LoadHighROMFramesPackages__Fv
 // The ROM calls LoadHighROMPackages, which walks the package list of each
 // of the four extensions and sends the package manager a
 // TPkBeginLoadEvent for every package in it, stopping at the first one

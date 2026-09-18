@@ -12,7 +12,7 @@
 				and indexed in turn (SlowCopyEntries).  A callback function
 				is called every so many milliseconds of either.
 
-	Reconstructed from the MP2100 D ROM, 0x00321b28-0x00322898.
+	Reconstructed from the MP2x00 US ROM, 0x0034cd98-0x0034db08.
 */
 
 #include "Soups.h"
@@ -53,7 +53,7 @@ CallBackIfDue(RefArg callback, ULong interval, TTime* lastCall)
 }
 
 
-// ROM 0x00321b28 SlowCopyEntries__FRC6RefVarN21Ul
+// ROM 0x0034cd98 SlowCopyEntries__FRC6RefVarN21Ul
 // Each entry of fromSoup (walked through its _uniqueID index) read,
 // stored on toSoup's store and put into toSoup's indexes, keeping its
 // _uniqueID; toSoup's next _uniqueID moved past the largest copied (its
@@ -112,7 +112,7 @@ SlowCopyEntries(RefArg fromSoup, RefArg toSoup, RefArg callback, ULong interval)
 }
 
 
-// ROM 0x00321e40 CompareSoupIndexes__FRC6RefVarT1
+// ROM 0x0034d0b0 CompareSoupIndexes__FRC6RefVarT1
 // Whether the two soups' persistent frames have indexes on the same
 // paths (as many, each of the first's found in the second).
 Boolean
@@ -133,7 +133,7 @@ CompareSoupIndexes(RefArg soupPersistent1, RefArg soupPersistent2)
 }
 
 
-// ROM 0x00321f44 ComparePSSIDMapping__FPCvT1
+// ROM 0x0034d1b4 ComparePSSIDMapping__FPCvT1
 // The mappings ordered by source id, for qsort and bsearch.
 static int
 ComparePSSIDMapping(const void* a, const void* b)
@@ -146,7 +146,7 @@ ComparePSSIDMapping(const void* a, const void* b)
 }
 
 
-// ROM 0x00321f64 CopyIndexStopFn__FP4SKeyT1Pv
+// ROM 0x0034d1d4 CopyIndexStopFn__FP4SKeyT1Pv
 // Each key of the source index put into the target's, in one transaction,
 // with the entry's id (the datum; the key for a tags index) translated
 // through the mapping; the callback every hundredth key when due.
@@ -191,7 +191,7 @@ CopyIndexStopFn(SKey* key, SKey* data, void* refCon)
 }
 
 
-// ROM 0x0032208c CopySoupIndexes__FRC6RefVarT1P12PSSIDMappinglT1T4
+// ROM 0x0034d2fc CopySoupIndexes__FRC6RefVarT1P12PSSIDMappinglT1T4
 // Every index of fromSoup copied into toSoup's index of the same
 // position, the ids translated, each committed as one transaction.
 void
@@ -229,7 +229,7 @@ CopySoupIndexes(RefArg fromSoup, RefArg toSoup, PSSIDMapping* mapping, long coun
 }
 
 
-// ROM 0x003222f4 CopyEntriesStopFn__FP4SKeyT1Pv
+// ROM 0x0034d564 CopyEntriesStopFn__FP4SKeyT1Pv
 // Each entry's store object copied as it lies and its ids recorded; the
 // callback when due.  Stops when the mapping is full.
 struct CopyEntriesInfo
@@ -260,7 +260,7 @@ CopyEntriesStopFn(SKey* /*key*/, SKey* data, void* refCon)
 }
 
 
-// ROM 0x003223e4 PlainSoupCopyEntriesWithCallBack
+// ROM 0x0034d654 PlainSoupCopyEntriesWithCallBack
 // The soup's entries copied to toSoup (a plain soup on a writable store);
 // callback (a function of no arguments) is called every interval
 // milliseconds.  An empty target with the same indexes takes the fast
@@ -335,7 +335,7 @@ PlainSoupCopyEntriesWithCallBack(RefArg rcvr, RefArg toSoup, RefArg callback, Re
 }
 
 
-// ROM 0x00322830 PlainSoupCopyEntries
+// ROM 0x0034daa0 PlainSoupCopyEntries
 Ref
 PlainSoupCopyEntries(RefArg rcvr, RefArg toSoup)
 {

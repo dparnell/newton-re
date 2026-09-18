@@ -3,7 +3,7 @@
 
 	Contains:	InitScriptGlobals, RunInitScripts (ScriptBoot.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ScriptBoot.h"
@@ -31,7 +31,7 @@ ReportSwallowed(const char* block, Exception* exception)
 }
 
 
-// ROM 0x001ef108 InitFormFunctions__FRC6RefVar
+// ROM 0x001eccf0 InitFormFunctions__FRC6RefVar
 // Nothing in this ROM: the form functions the name suggests are all in the
 // ROM's own function frame by the time the boot runs, so the call is left
 // where it is rather than dropped.
@@ -40,7 +40,7 @@ InitFormFunctions(RefArg /*functions*/)
 { }
 
 
-// ROM 0x001f3c40 InitScriptGlobals__Fv
+// ROM 0x001f1828 InitScriptGlobals__Fv
 // The globals frame is rebuilt on the ROM's starter map rather than grown
 // slot by slot: a clone of `Rvarsmapstarter` takes whatever gVarFrame
 // already holds and then becomes gVarFrame, so that the globals the ROM's
@@ -87,7 +87,7 @@ InitScriptGlobals(void)
 }
 
 
-// ROM 0x001f3eec RunInitScripts__Fv
+// ROM 0x001f1ad4 RunInitScripts__Fv
 // The ROM's boot block: the soups of its soupDef table made on the
 // internal store with their initial entries, and then its seven init
 // functions (@549: PreSetupUserConfig, StartAutoFaxReceive, StartSniffing,

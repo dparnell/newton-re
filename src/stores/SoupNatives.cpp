@@ -6,8 +6,8 @@
 				binding of every store, soup and entry native to the ROM's
 				function objects (RegisterSoupNatives).
 
-	Reconstructed from the MP2100 D ROM (0x00290d48-0x0029118c,
-	0x00322eb8-0x00323560); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x002b5c74-0x002b60b8,
+	0x0034e128-0x0034e7d0); each function cites its origin.
 */
 
 #include "Soups.h"
@@ -30,7 +30,7 @@ extern const ExceptionName exStoreError;
 	store.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00322eb8 MakeEntryAlias__FRC6RefVar
+// ROM 0x0034e128 MakeEntryAlias__FRC6RefVar
 Ref
 MakeEntryAlias(RefArg entry)
 {
@@ -44,7 +44,7 @@ MakeEntryAlias(RefArg entry)
 }
 
 
-// ROM 0x00322fe8 IsEntryAlias__FRC6RefVar
+// ROM 0x0034e258 IsEntryAlias__FRC6RefVar
 Boolean
 IsEntryAlias(RefArg object)
 {
@@ -52,7 +52,7 @@ IsEntryAlias(RefArg object)
 }
 
 
-// ROM 0x00323040 ResolveEntryAliasInStores__FRC6RefVarT1
+// ROM 0x0034e2b0 ResolveEntryAliasInStores__FRC6RefVarT1
 // The entry the alias names in one of the stores (frames): the soup of
 // that name whose signature matches, its entry of that _uniqueID.
 Ref
@@ -84,7 +84,7 @@ ResolveEntryAliasInStores(RefArg alias, RefArg stores)
 }
 
 
-// ROM 0x00323210 ResolveEntryAlias__FRC6RefVar
+// ROM 0x0034e480 ResolveEntryAlias__FRC6RefVar
 Ref
 ResolveEntryAlias(RefArg alias)
 {
@@ -97,7 +97,7 @@ ResolveEntryAlias(RefArg alias)
 }
 
 
-// ROM 0x003233a0 CompareAliasAndEntry__FRC6RefVarT1
+// ROM 0x0034e610 CompareAliasAndEntry__FRC6RefVarT1
 Boolean
 CompareAliasAndEntry(RefArg alias, RefArg entry)
 {
@@ -110,7 +110,7 @@ CompareAliasAndEntry(RefArg alias, RefArg entry)
 }
 
 
-// ROM 0x0032348c IsSameEntry__FRC6RefVarT1
+// ROM 0x0034e6fc IsSameEntry__FRC6RefVarT1
 // Two entries, or aliases, or one of each, for the same entry.
 Boolean
 IsSameEntry(RefArg a, RefArg b)
@@ -134,7 +134,7 @@ IsSameEntry(RefArg a, RefArg b)
 	T h e   n a t i v e s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00290dc4 FGetStores
+// ROM 0x002b5cf0 FGetStores
 static Ref
 FGetStores(RefArg /*rcvr*/)
 {
@@ -142,7 +142,7 @@ FGetStores(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x00290d48 FQuery
+// ROM 0x002b5c74 FQuery
 static Ref
 FQuery(RefArg /*rcvr*/, RefArg soup, RefArg querySpec)
 {
@@ -150,7 +150,7 @@ FQuery(RefArg /*rcvr*/, RefArg soup, RefArg querySpec)
 }
 
 
-// ROM 0x00290dc8 FIsSoupEntry
+// ROM 0x002b5cf4 FIsSoupEntry
 static Ref
 FIsSoupEntry(RefArg /*rcvr*/, RefArg object)
 {
@@ -158,7 +158,7 @@ FIsSoupEntry(RefArg /*rcvr*/, RefArg object)
 }
 
 
-// ROM 0x00290dec FEntryIsResident
+// ROM 0x002b5d18 FEntryIsResident
 static Ref
 FEntryIsResident(RefArg /*rcvr*/, RefArg entry)
 {
@@ -166,7 +166,7 @@ FEntryIsResident(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290e14 FEntryValid
+// ROM 0x002b5d40 FEntryValid
 static Ref
 FEntryValid(RefArg /*rcvr*/, RefArg entry)
 {
@@ -174,7 +174,7 @@ FEntryValid(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290e38 FEntrySoup
+// ROM 0x002b5d64 FEntrySoup
 static Ref
 FEntrySoup(RefArg /*rcvr*/, RefArg entry)
 {
@@ -182,7 +182,7 @@ FEntrySoup(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290e40 FEntryStore
+// ROM 0x002b5d6c FEntryStore
 static Ref
 FEntryStore(RefArg /*rcvr*/, RefArg entry)
 {
@@ -190,7 +190,7 @@ FEntryStore(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290e48 FEntrySize
+// ROM 0x002b5d74 FEntrySize
 static Ref
 FEntrySize(RefArg /*rcvr*/, RefArg entry)
 {
@@ -198,7 +198,7 @@ FEntrySize(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290e64 FEntrySizeWithoutVBOs
+// ROM 0x002b5d90 FEntrySizeWithoutVBOs
 static Ref
 FEntrySizeWithoutVBOs(RefArg /*rcvr*/, RefArg entry)
 {
@@ -206,7 +206,7 @@ FEntrySizeWithoutVBOs(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290eb8 FEntryTextSize
+// ROM 0x002b5de4 FEntryTextSize
 static Ref
 FEntryTextSize(RefArg /*rcvr*/, RefArg entry)
 {
@@ -214,7 +214,7 @@ FEntryTextSize(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290ed4 FEntryUniqueID
+// ROM 0x002b5e00 FEntryUniqueID
 static Ref
 FEntryUniqueID(RefArg /*rcvr*/, RefArg entry)
 {
@@ -222,7 +222,7 @@ FEntryUniqueID(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290ef0 FEntryModTime
+// ROM 0x002b5e1c FEntryModTime
 static Ref
 FEntryModTime(RefArg /*rcvr*/, RefArg entry)
 {
@@ -230,7 +230,7 @@ FEntryModTime(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290f0c FEntryChange
+// ROM 0x002b5e38 FEntryChange
 static Ref
 FEntryChange(RefArg /*rcvr*/, RefArg entry)
 {
@@ -239,7 +239,7 @@ FEntryChange(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290f28 FEntryFlush
+// ROM 0x002b5e54 FEntryFlush
 static Ref
 FEntryFlush(RefArg /*rcvr*/, RefArg entry)
 {
@@ -248,7 +248,7 @@ FEntryFlush(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290f44 FEntryChangeWithModTime
+// ROM 0x002b5e70 FEntryChangeWithModTime
 static Ref
 FEntryChangeWithModTime(RefArg /*rcvr*/, RefArg entry)
 {
@@ -257,7 +257,7 @@ FEntryChangeWithModTime(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290f60 FEntryChangeVerbatim
+// ROM 0x002b5e8c FEntryChangeVerbatim
 static Ref
 FEntryChangeVerbatim(RefArg /*rcvr*/, RefArg entry)
 {
@@ -266,7 +266,7 @@ FEntryChangeVerbatim(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290f7c FEntryUndoChanges
+// ROM 0x002b5ea8 FEntryUndoChanges
 static Ref
 FEntryUndoChanges(RefArg /*rcvr*/, RefArg entry)
 {
@@ -275,7 +275,7 @@ FEntryUndoChanges(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290f98 FEntryRemoveFromSoup
+// ROM 0x002b5ec4 FEntryRemoveFromSoup
 static Ref
 FEntryRemoveFromSoup(RefArg /*rcvr*/, RefArg entry)
 {
@@ -284,7 +284,7 @@ FEntryRemoveFromSoup(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00290fb4 FEntryReplace
+// ROM 0x002b5ee0 FEntryReplace
 static Ref
 FEntryReplace(RefArg /*rcvr*/, RefArg entry, RefArg newEntry)
 {
@@ -293,7 +293,7 @@ FEntryReplace(RefArg /*rcvr*/, RefArg entry, RefArg newEntry)
 }
 
 
-// ROM 0x00291024 FEntryReplaceWithModTime
+// ROM 0x002b5f50 FEntryReplaceWithModTime
 static Ref
 FEntryReplaceWithModTime(RefArg /*rcvr*/, RefArg entry, RefArg newEntry)
 {
@@ -302,7 +302,7 @@ FEntryReplaceWithModTime(RefArg /*rcvr*/, RefArg entry, RefArg newEntry)
 }
 
 
-// ROM 0x00291044 FEntryCopy
+// ROM 0x002b5f70 FEntryCopy
 static Ref
 FEntryCopy(RefArg /*rcvr*/, RefArg entry, RefArg soup)
 {
@@ -310,7 +310,7 @@ FEntryCopy(RefArg /*rcvr*/, RefArg entry, RefArg soup)
 }
 
 
-// ROM 0x00291050 FEntryMove
+// ROM 0x002b5f7c FEntryMove
 static Ref
 FEntryMove(RefArg /*rcvr*/, RefArg entry, RefArg soup)
 {
@@ -319,7 +319,7 @@ FEntryMove(RefArg /*rcvr*/, RefArg entry, RefArg soup)
 }
 
 
-// ROM 0x00291070 FNewProxyEntry
+// ROM 0x002b5f9c FNewProxyEntry
 static Ref
 FNewProxyEntry(RefArg /*rcvr*/, RefArg handler, RefArg object)
 {
@@ -327,7 +327,7 @@ FNewProxyEntry(RefArg /*rcvr*/, RefArg handler, RefArg object)
 }
 
 
-// ROM 0x0029107c FIsProxyEntry
+// ROM 0x002b5fa8 FIsProxyEntry
 static Ref
 FIsProxyEntry(RefArg /*rcvr*/, RefArg entry)
 {
@@ -335,7 +335,7 @@ FIsProxyEntry(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x002910a0 FEntrySetHandler
+// ROM 0x002b5fcc FEntrySetHandler
 static Ref
 FEntrySetHandler(RefArg /*rcvr*/, RefArg entry, RefArg handler)
 {
@@ -344,7 +344,7 @@ FEntrySetHandler(RefArg /*rcvr*/, RefArg entry, RefArg handler)
 }
 
 
-// ROM 0x002910c0 FEntryHandler
+// ROM 0x002b5fec FEntryHandler
 static Ref
 FEntryHandler(RefArg /*rcvr*/, RefArg entry)
 {
@@ -352,7 +352,7 @@ FEntryHandler(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x002910c8 FEntrySetCachedObject
+// ROM 0x002b5ff4 FEntrySetCachedObject
 static Ref
 FEntrySetCachedObject(RefArg /*rcvr*/, RefArg entry, RefArg object)
 {
@@ -361,7 +361,7 @@ FEntrySetCachedObject(RefArg /*rcvr*/, RefArg entry, RefArg object)
 }
 
 
-// ROM 0x002910e8 FEntryCachedObject
+// ROM 0x002b6014 FEntryCachedObject
 static Ref
 FEntryCachedObject(RefArg /*rcvr*/, RefArg entry)
 {
@@ -369,7 +369,7 @@ FEntryCachedObject(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x002910f0 FMakeEntryAlias
+// ROM 0x002b601c FMakeEntryAlias
 static Ref
 FMakeEntryAlias(RefArg /*rcvr*/, RefArg entry)
 {
@@ -377,7 +377,7 @@ FMakeEntryAlias(RefArg /*rcvr*/, RefArg entry)
 }
 
 
-// ROM 0x00291138 FIsEntryAlias
+// ROM 0x002b6064 FIsEntryAlias
 static Ref
 FIsEntryAlias(RefArg /*rcvr*/, RefArg object)
 {
@@ -385,7 +385,7 @@ FIsEntryAlias(RefArg /*rcvr*/, RefArg object)
 }
 
 
-// ROM 0x0029115c FResolveEntryAlias
+// ROM 0x002b6088 FResolveEntryAlias
 static Ref
 FResolveEntryAlias(RefArg /*rcvr*/, RefArg alias)
 {
@@ -393,7 +393,7 @@ FResolveEntryAlias(RefArg /*rcvr*/, RefArg alias)
 }
 
 
-// ROM 0x00291164 FIsSameEntry
+// ROM 0x002b6090 FIsSameEntry
 static Ref
 FIsSameEntry(RefArg /*rcvr*/, RefArg a, RefArg b)
 {

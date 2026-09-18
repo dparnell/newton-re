@@ -8,8 +8,8 @@
 				iteration, the exceptions the object system throws, and
 				InitObjects.
 
-	Reconstructed from the MP2100 D ROM (0x002f420c-0x002fb24c and the
-	class functions at 0x00299d30-0x00299eac); each function cites its
+	Reconstructed from the MP2x00 US ROM (0x00319510-0x002fb24c and the
+	class functions at 0x002bec5c-0x002bedd8); each function cites its
 	origin.  Where the ROM inlines a TObjectHeap method (AllocateBinary and
 	friends) the wrapper calls it.
 */
@@ -43,7 +43,7 @@ long	gObjectHeapSize = 0x100000;		// host: the object heap's size (the ROM sizes
 	says which kind.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002cfe94 DeleteRefStruct__FP9RefStruct
+// ROM 0x002f5708 DeleteRefStruct__FP9RefStruct
 // The destructor of a thrown frame.
 void
 DeleteRefStruct(RefStruct* r)
@@ -52,7 +52,7 @@ DeleteRefStruct(RefStruct* r)
 }
 
 
-// ROM 0x002cfebc ThrowRefException__FPcRC6RefVar
+// ROM 0x002f5730 ThrowRefException__FPcRC6RefVar
 // Throw data (a ref) under a name that is an evt.ex... with type.ref data.
 void
 ThrowRefException(ExceptionName name, RefArg data)
@@ -69,7 +69,7 @@ ThrowRefException(ExceptionName name, RefArg data)
 }
 
 
-// ROM 0x002f4dd8 ThrowBadTypeWithFrameData__FlRC6RefVar
+// ROM 0x0031a0dc ThrowBadTypeWithFrameData__FlRC6RefVar
 void
 ThrowBadTypeWithFrameData(NewtonErr errorCode, RefArg value)
 {
@@ -80,7 +80,7 @@ ThrowBadTypeWithFrameData(NewtonErr errorCode, RefArg value)
 }
 
 
-// ROM 0x002f7754 ThrowExFramesWithBadValue__FlRC6RefVar
+// ROM 0x0031ca58 ThrowExFramesWithBadValue__FlRC6RefVar
 void
 ThrowExFramesWithBadValue(NewtonErr errorCode, RefArg value)
 {
@@ -91,7 +91,7 @@ ThrowExFramesWithBadValue(NewtonErr errorCode, RefArg value)
 }
 
 
-// ROM 0x002cff9c ThrowExInterpreterWithSymbol__FlRC6RefVar
+// ROM 0x002f5810 ThrowExInterpreterWithSymbol__FlRC6RefVar
 void
 ThrowExInterpreterWithSymbol(NewtonErr errorCode, RefArg sym)
 {
@@ -119,7 +119,7 @@ ThrowOutOfBounds(Ref array, long index)
 	Allocation
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f6b78 AllocateBinary__FRC6RefVarl
+// ROM 0x0031be7c AllocateBinary__FRC6RefVarl
 Ref
 AllocateBinary(RefArg theClass, long length)
 {
@@ -127,7 +127,7 @@ AllocateBinary(RefArg theClass, long length)
 }
 
 
-// ROM 0x002f6b90 AllocateArray__FRC6RefVarl
+// ROM 0x0031be94 AllocateArray__FRC6RefVarl
 Ref
 AllocateArray(RefArg theClass, long length)
 {
@@ -135,7 +135,7 @@ AllocateArray(RefArg theClass, long length)
 }
 
 
-// ROM 0x0012ad2c MakeArray__Fl
+// ROM 0x001292d0 MakeArray__Fl
 // An array of class 'Array (the same length checks as the heap's).
 Ref
 MakeArray(long length)
@@ -144,7 +144,7 @@ MakeArray(long length)
 }
 
 
-// ROM 0x0012ad3c AddressToRef__FPv
+// ROM 0x001292e0 AddressToRef__FPv
 // A pointer as an integer Ref (pointers are word aligned: the tag bits
 // are free).
 Ref
@@ -154,7 +154,7 @@ AddressToRef(void* p)
 }
 
 
-// ROM 0x0012ad48 RefToAddress__Fl
+// ROM 0x001292ec RefToAddress__Fl
 void*
 RefToAddress(Ref r)
 {
@@ -164,7 +164,7 @@ RefToAddress(Ref r)
 }
 
 
-// ROM 0x0012b0d4 SetBoundsRect__FRC6RefVarRC5TRect
+// ROM 0x00129678 SetBoundsRect__FRC6RefVarRC5TRect
 // The rect into the frame's left, top, right and bottom slots.
 Ref
 SetBoundsRect(RefArg frame, const Rect& r)
@@ -177,7 +177,7 @@ SetBoundsRect(RefArg frame, const Rect& r)
 }
 
 
-// ROM 0x0012b1b8 ToObject__FRC5TRect
+// ROM 0x0012975c ToObject__FRC5TRect
 // A bounds frame (a clone of canonicalRect) for the rect.
 Ref
 ToObject(const Rect& r)
@@ -187,7 +187,7 @@ ToObject(const Rect& r)
 }
 
 
-// ROM 0x0012a61c FromObject__FRC6RefVarRs
+// ROM 0x00128bc0 FromObject__FRC6RefVarRs
 // An integer Ref into a short; ==> whether it was one.
 static Boolean
 FromObject(RefArg obj, short& value)
@@ -199,7 +199,7 @@ FromObject(RefArg obj, short& value)
 }
 
 
-// ROM 0x0012b200 FromObject__FRC6RefVarR5TRect
+// ROM 0x001297a4 FromObject__FRC6RefVarR5TRect
 // The rect from a bounds frame's top, left, bottom and right; ==> whether
 // all four are integers.
 Boolean
@@ -212,7 +212,7 @@ FromObject(RefArg obj, Rect& r)
 }
 
 
-// ROM 0x002f6ba8 AllocateFrame__Fv
+// ROM 0x0031beac AllocateFrame__Fv
 Ref
 AllocateFrame(void)
 {
@@ -220,7 +220,7 @@ AllocateFrame(void)
 }
 
 
-// ROM 0x002f6bb8 AllocateFrameWithMap__FRC6RefVar
+// ROM 0x0031bebc AllocateFrameWithMap__FRC6RefVar
 Ref
 AllocateFrameWithMap(RefArg map)
 {
@@ -228,7 +228,7 @@ AllocateFrameWithMap(RefArg map)
 }
 
 
-// ROM 0x002f85fc AllocateMapWithTags__FRC6RefVarT1
+// ROM 0x0031d900 AllocateMapWithTags__FRC6RefVarT1
 // A shared map holding the tags given (an array), flagged if _proto is one.
 Ref
 AllocateMapWithTags(RefArg superMap, RefArg tags)
@@ -252,7 +252,7 @@ AllocateMapWithTags(RefArg superMap, RefArg tags)
 }
 
 
-// ROM 0x002f86cc CollectFrameTags1__FP3MapPlT2
+// ROM 0x0031d9d0 CollectFrameTags1__FP3MapPlT2
 // The tags of a map chain, supermaps first, into tags from *count on.
 static void
 CollectFrameTags1(ObjHeader* map, Ref* tags, long* count)
@@ -265,7 +265,7 @@ CollectFrameTags1(ObjHeader* map, Ref* tags, long* count)
 }
 
 
-// ROM 0x002f8738 CollectFrameTags__FRC6RefVar
+// ROM 0x0031da3c CollectFrameTags__FRC6RefVar
 // An array of a frame's tags, in slot order.
 Ref
 CollectFrameTags(RefArg frame)
@@ -279,7 +279,7 @@ CollectFrameTags(RefArg frame)
 }
 
 
-// ROM 0x002f6bcc SetLength__FRC6RefVarl
+// ROM 0x0031bed0 SetLength__FRC6RefVarl
 void
 SetLength(RefArg obj, long length)
 {
@@ -287,7 +287,7 @@ SetLength(RefArg obj, long length)
 }
 
 
-// ROM 0x002f6c74 Clone__FRC6RefVar
+// ROM 0x0031bf78 Clone__FRC6RefVar
 Ref
 Clone(RefArg obj)
 {
@@ -295,7 +295,7 @@ Clone(RefArg obj)
 }
 
 
-// ROM 0x002f6cc8 ReplaceObjectRef__FlT1
+// ROM 0x0031bfcc ReplaceObjectRef__FlT1
 void
 ReplaceObjectRef(Ref target, Ref replacement)
 {
@@ -303,7 +303,7 @@ ReplaceObjectRef(Ref target, Ref replacement)
 }
 
 
-// ROM 0x002f7234 BlockStatistics__FPcPUlPUc
+// ROM 0x0031c538 BlockStatistics__FPcPUlPUc
 Ptr
 BlockStatistics(Ptr previousBlock, ULong* nextSize, Boolean* isFree)
 {
@@ -311,7 +311,7 @@ BlockStatistics(Ptr previousBlock, ULong* nextSize, Boolean* isFree)
 }
 
 
-// ROM 0x002f7250 HeapBounds__FPPcT1
+// ROM 0x0031c554 HeapBounds__FPPcT1
 void
 HeapBounds(Ptr* start, Ptr* limit)
 {
@@ -320,7 +320,7 @@ HeapBounds(Ptr* start, Ptr* limit)
 }
 
 
-// ROM 0x002f728c Statistics__FPUlT1
+// ROM 0x0031c590 Statistics__FPUlT1
 void
 Statistics(ULong* freeSpace, ULong* largestFreeBlock)
 {
@@ -328,7 +328,7 @@ Statistics(ULong* freeSpace, ULong* largestFreeBlock)
 }
 
 
-// ROM 0x002f7210 Uriah__Fv
+// ROM 0x0031c514 Uriah__Fv
 // The heap dump.  NOT YET RECONSTRUCTED: TObjectHeap::Uriah (0x002f5e50)
 // prints through the printer (InitPrinter), which is not reconstructed.
 void
@@ -338,7 +338,7 @@ Uriah(void)
 }
 
 
-// ROM 0x002f7220 UriahBinaryObjects__Fi
+// ROM 0x0031c524 UriahBinaryObjects__Fi
 void
 UriahBinaryObjects(int printStrings)
 {
@@ -360,7 +360,7 @@ TObjectHeap::UriahBinaryObjects(int /*printStrings*/)
 	Lengths, flags, data
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f8f8c ObjectFlags__Fl
+// ROM 0x0031e290 ObjectFlags__Fl
 ULong
 ObjectFlags(Ref obj)
 {
@@ -368,7 +368,7 @@ ObjectFlags(Ref obj)
 }
 
 
-// ROM 0x002f8fa8 Length__Fl
+// ROM 0x0031e2ac Length__Fl
 // Slots of an array or frame, bytes of a binary; the last answer is cached.
 long
 Length(Ref obj)
@@ -402,7 +402,7 @@ Length(Ref obj)
 }
 
 
-// ROM 0x002f75d4 Length__FRC6RefVar
+// ROM 0x0031c8d8 Length__FRC6RefVar
 long
 Length(RefArg obj)
 {
@@ -410,7 +410,7 @@ Length(RefArg obj)
 }
 
 
-// ROM 0x002f9318 ComputeMapSize__FRC6RefVar
+// ROM 0x0031e61c ComputeMapSize__FRC6RefVar
 // The slots a frame with this map has: the tags of the map and its
 // supermaps.
 long
@@ -424,7 +424,7 @@ ComputeMapSize(RefArg map)
 }
 
 
-// ROM 0x002fb104 GetMapTags__FlP12SortedMapTag
+// ROM 0x00320408 GetMapTags__FlP12SortedMapTag
 // The tags of a map and its supermaps, outermost first, each with the
 // index of its slot; ==> how many.
 long
@@ -448,7 +448,7 @@ GetMapTags(Ref map, SortedMapTag* tags)
 }
 
 
-// ROM 0x002fb178 CompareSymbols_qsort__FPCvT1
+// ROM 0x0032047c CompareSymbols_qsort__FPCvT1
 static int
 CompareSymbols_qsort(const void* a, const void* b)
 {
@@ -456,7 +456,7 @@ CompareSymbols_qsort(const void* a, const void* b)
 }
 
 
-// ROM 0x002fb184 GetFrameMapTags__FlP12SortedMapTagUc
+// ROM 0x00320488 GetFrameMapTags__FlP12SortedMapTagUc
 // A frame's tags with their slot indexes, sorted by symbol (hash, then
 // name) when asked - the order a store keeps a frame's slots in.
 void
@@ -468,7 +468,7 @@ GetFrameMapTags(Ref frame, SortedMapTag* tags, Boolean sorted)
 }
 
 
-// ROM 0x002f9380 BinaryData__Fl
+// ROM 0x0031e684 BinaryData__Fl
 Ptr
 BinaryData(Ref obj)
 {
@@ -479,7 +479,7 @@ BinaryData(Ref obj)
 }
 
 
-// ROM 0x002f93b8 Slots__Fl
+// ROM 0x0031e6bc Slots__Fl
 Ref*
 Slots(Ref obj)
 {
@@ -493,7 +493,7 @@ Slots(Ref obj)
 }
 
 
-// ROM 0x002f76ec LockedBinaryPtr__FRC6RefVar
+// ROM 0x0031c9f0 LockedBinaryPtr__FRC6RefVar
 // Lock the binary and answer its data.
 Ptr
 LockedBinaryPtr(RefArg obj)
@@ -510,7 +510,7 @@ LockedBinaryPtr(RefArg obj)
 	Array slots
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f940c GetArraySlotError__FlT1Pc
+// ROM 0x0031e710 GetArraySlotError__FlT1Pc
 // What GetArraySlotRef throws when the fast path fails: not an array, or
 // out of bounds.
 static Ref
@@ -527,7 +527,7 @@ GetArraySlotError(Ref obj, long slot, ObjHeader* o)
 }
 
 
-// ROM 0x002f9580 GetArraySlotRef__FlT1
+// ROM 0x0031e884 GetArraySlotRef__FlT1
 Ref
 GetArraySlotRef(Ref obj, long slot)
 {
@@ -538,7 +538,7 @@ GetArraySlotRef(Ref obj, long slot)
 }
 
 
-// ROM 0x002f95dc SetArraySlotError__FlT1Pc
+// ROM 0x0031e8e0 SetArraySlotError__FlT1Pc
 // What SetArraySlotRef throws when the fast path fails: not an array,
 // read-only, or out of bounds.
 static void
@@ -559,7 +559,7 @@ SetArraySlotError(Ref obj, long slot, ObjHeader* o)
 }
 
 
-// ROM 0x002f971c SetArraySlotRef__FlN21
+// ROM 0x0031ea20 SetArraySlotRef__FlN21
 void
 SetArraySlotRef(Ref obj, long slot, Ref value)
 {
@@ -576,7 +576,7 @@ SetArraySlotRef(Ref obj, long slot, Ref value)
 }
 
 
-// ROM 0x002f6be4 AddArraySlot__FRC6RefVarT1
+// ROM 0x0031bee8 AddArraySlot__FRC6RefVarT1
 void
 AddArraySlot(RefArg obj, RefArg value)
 {
@@ -596,7 +596,7 @@ AddArraySlot(RefArg obj, RefArg value)
 	chain (root first) then its own.  FindOffset finds a tag's slot index.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002fad14 SearchSortedMap__FP3MaplT2
+// ROM 0x00320018 SearchSortedMap__FP3MaplT2
 // Binary search of a sorted map's count tags (SymbolCompare order).
 long
 SearchSortedMap(ObjHeader* map, long count, Ref tag)
@@ -619,7 +619,7 @@ SearchSortedMap(ObjHeader* map, long count, Ref tag)
 }
 
 
-// ROM 0x002fad78 FindOffset1__FlT1Pl
+// ROM 0x0032007c FindOffset1__FlT1Pl
 // Search the map chain from the root down, counting slots: the index of
 // tag's slot and the map it was found in (*foundIn NILREF when not found;
 // the count is then the frame's length).  Sixteen maps are remembered on
@@ -690,7 +690,7 @@ static FindOffsetCacheEntry		gFindOffsetCache[32];				// 0x0c104cbc
 static FindOffsetCacheEntry*	gLastFindOffsetCacheEntry = gFindOffsetCache;	// 0x0c102650
 
 
-// ROM 0x002f4db0 FindOffsetCacheClear__Fv
+// ROM 0x0031a0b4 FindOffsetCacheClear__Fv
 void
 FindOffsetCacheClear(void)
 {
@@ -699,7 +699,7 @@ FindOffsetCacheClear(void)
 }
 
 
-// ROM 0x002faec8 FindOffset__FlT1
+// ROM 0x003201cc FindOffset__FlT1
 // The slot index of tag in a frame with this map, -1 if none; cached by
 // (map, tag).  _proto is looked for only in maps flagged as having it.
 long
@@ -737,7 +737,7 @@ FindOffset(Ref map, Ref tag)
 }
 
 
-// ROM 0x002fb018 GetTag__FRC6RefVarlPl
+// ROM 0x0032031c GetTag__FRC6RefVarlPl
 // The tag of slot index in a frame with this map (NILREF past the end);
 // *baseIndex tells the supermaps' slot count, or -1 when the tag was found.
 Ref
@@ -771,7 +771,7 @@ GetTag(RefArg map, long index, long* baseIndex)
 }
 
 
-// ROM 0x002fb1cc ExtendSharedMap__FRC6RefVari
+// ROM 0x003204d0 ExtendSharedMap__FRC6RefVari
 // A new map of length tags over a shared one (which becomes its supermap
 // unless it is empty), keeping its _proto flag.
 Ref
@@ -787,7 +787,7 @@ ExtendSharedMap(RefArg map, int length)
 }
 
 
-// ROM 0x002fa668 SharedFrameMap__FRC6RefVar
+// ROM 0x0031f96c SharedFrameMap__FRC6RefVar
 // A frame's map, marked shared (so that adding a slot to the frame does
 // not change it).
 Ref
@@ -801,7 +801,7 @@ SharedFrameMap(RefArg frame)
 }
 
 
-// ROM 0x002f4e98 ConvertToSortedMap__FRC6RefVarl
+// ROM 0x0031a19c ConvertToSortedMap__FRC6RefVarl
 // Sort a frame's own map's tags (selection sort), permuting the frame's
 // slots with them, and flag the map sorted; answers where the tag at
 // trackedIndex (an index among the map's tags) went.
@@ -845,7 +845,7 @@ ConvertToSortedMap(RefArg frame, long trackedIndex)
 }
 
 
-// ROM 0x002f50b0 AddSlot__FRC6RefVarT1
+// ROM 0x0031a3b4 AddSlot__FRC6RefVarT1
 // A new slot named tag: the frame grows by one; its map gets the tag - in
 // place when the map is the frame's own (kept sorted if it is sorted,
 // sorted once it passes 20 tags), else through a new map over the shared
@@ -913,7 +913,7 @@ AddSlot(RefArg frame, RefArg tag)
 }
 
 
-// ROM 0x002f5488 ShrinkArray__FRC6RefVarl
+// ROM 0x0031a78c ShrinkArray__FRC6RefVarl
 // Remove slot index of an array: the slots after it move down, the object
 // shrinks by one.
 void
@@ -940,7 +940,7 @@ ShrinkArray(RefArg array, long index)
 }
 
 
-// ROM 0x002f5310 ShrinkSharedMap__FRC6RefVarT1l
+// ROM 0x0031a614 ShrinkSharedMap__FRC6RefVarT1l
 // A frame's map without the tag at slot index, which was found in foundIn
 // (a map of the chain): a new map over foundIn's supermap holding the tags
 // of the chain from there on, less the one removed; foundIn's supermap
@@ -974,7 +974,7 @@ ShrinkSharedMap(RefArg map, RefArg foundIn, long index)
 }
 
 
-// ROM 0x002f54fc RemoveSlot__FRC6RefVarT1
+// ROM 0x0031a800 RemoveSlot__FRC6RefVarT1
 // Remove a frame's slot.  The map loses the tag: in place when the tag is
 // in the frame's own unshared map; a map of one tag is unlinked from the
 // chain (the frame or the map below it takes its supermap); else the chain
@@ -1054,7 +1054,7 @@ RemoveSlot(RefArg frame, RefArg tag)
 	Frame slots
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00290128 GlobalFunctionLookup__Fl
+// ROM 0x002b5054 GlobalFunctionLookup__Fl
 // A global function: from the function frame, else from the ROM's
 // built-in functions.
 Ref
@@ -1084,7 +1084,7 @@ GlobalFunctionLookup(Ref name)
 }
 
 
-// ROM 0x002f978c SlowGetFrameSlot__FlT1
+// ROM 0x0031ea90 SlowGetFrameSlot__FlT1
 // GetFrameSlotRef when the frame is a fault block whose entry is not in
 // memory: the slot symbol is locked while the entry is read (ObjectPtr may
 // collect), whatever happens.
@@ -1114,7 +1114,7 @@ SlowGetFrameSlot(Ref obj, Ref slot)
 }
 
 
-// ROM 0x002f9814 GetFrameSlotRef__FlT1
+// ROM 0x0031eb18 GetFrameSlotRef__FlT1
 // The slot's value, NILREF if the frame has no such slot.  The function
 // frame answers global functions.
 Ref
@@ -1141,7 +1141,7 @@ GetFrameSlotRef(Ref obj, Ref slot)
 }
 
 
-// ROM 0x002f98e0 UnsafeGetFrameSlot__FlT1Pl
+// ROM 0x0031ebe4 UnsafeGetFrameSlot__FlT1Pl
 // The slot's value and whether the frame has the slot; no checks.
 Ref
 UnsafeGetFrameSlot(Ref frame, Ref tag, long* exists)
@@ -1164,7 +1164,7 @@ UnsafeGetFrameSlot(Ref frame, Ref tag, long* exists)
 }
 
 
-// ROM 0x002f995c SetFrameSlot__FRC6RefVarN21
+// ROM 0x0031ec60 SetFrameSlot__FRC6RefVarN21
 // Set a slot, adding it if the frame has none of the name.  Setting _proto
 // or _parent invalidates the interpreter's lookup caches.
 void
@@ -1192,7 +1192,7 @@ SetFrameSlot(RefArg obj, RefArg slot, RefArg value)
 }
 
 
-// ROM 0x002f9a8c SlowFrameHasSlot__FlT1
+// ROM 0x0031ed90 SlowFrameHasSlot__FlT1
 // FrameHasSlotRef for a fault block whose entry is not in memory (as
 // SlowGetFrameSlot).
 static int
@@ -1221,7 +1221,7 @@ SlowFrameHasSlot(Ref obj, Ref slot)
 }
 
 
-// ROM 0x002f9b14 FrameHasSlotRef__FlT1
+// ROM 0x0031ee18 FrameHasSlotRef__FlT1
 int
 FrameHasSlotRef(Ref obj, Ref slot)
 {
@@ -1243,7 +1243,7 @@ FrameHasSlotRef(Ref obj, Ref slot)
 }
 
 
-// ROM 0x002fa608 FrameSlotPosition__FlT1
+// ROM 0x0031f90c FrameSlotPosition__FlT1
 long
 FrameSlotPosition(Ref frame, Ref tag)
 {
@@ -1257,7 +1257,7 @@ FrameSlotPosition(Ref frame, Ref tag)
 }
 
 
-// ROM 0x002db14c GetProtoVariable__FRC6RefVarT1Pl
+// ROM 0x00300b48 GetProtoVariable__FRC6RefVarT1Pl
 // A slot's value up the _proto chain from context; *exists tells whether
 // it was found.  NOT YET RECONSTRUCTED: the interpreter's proto caches
 // (TICache gProtoCache/gROProtoCache) and TInterpreter::TraceGet - the
@@ -1298,7 +1298,7 @@ GetProtoVariable(RefArg context, RefArg name, long* exists)
 	A path is a symbol, an integer, or an array of class pathExpr of those.
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f425c IsPathExpr__FRC6RefVar
+// ROM 0x00319560 IsPathExpr__FRC6RefVar
 Boolean
 IsPathExpr(RefArg ref)
 {
@@ -1311,7 +1311,7 @@ IsPathExpr(RefArg ref)
 }
 
 
-// ROM 0x002f9be4 GetFramePath__FRC6RefVarT1
+// ROM 0x0031eee8 GetFramePath__FRC6RefVarT1
 // The value at a path: a symbol looks up the _proto chain (or the global
 // functions), an integer indexes an array (NILREF out of bounds), a
 // pathExpr array follows its elements in turn (NILREF once nil is met).
@@ -1382,7 +1382,7 @@ GetFramePath(RefArg obj, RefArg thePath)
 }
 
 
-// ROM 0x002f9f44 SetFramePath__FRC6RefVarN21i
+// ROM 0x0031f248 SetFramePath__FRC6RefVarN21i
 // Set the value at a path; frames missing on the way are made (an integer
 // element cannot be).  ownSlots (SetFramePathFor1XFunctions) looks in each
 // frame's own slots rather than up its _proto chain.
@@ -1466,7 +1466,7 @@ SetFramePath(RefArg obj, RefArg thePath, RefArg value, int ownSlots)
 }
 
 
-// ROM 0x002fa2d8 SetFramePath__FRC6RefVarN21
+// ROM 0x0031f5dc SetFramePath__FRC6RefVarN21
 void
 SetFramePath(RefArg obj, RefArg thePath, RefArg value)
 {
@@ -1474,7 +1474,7 @@ SetFramePath(RefArg obj, RefArg thePath, RefArg value)
 }
 
 
-// ROM 0x002fa2e0 SetFramePathFor1XFunctions__FRC6RefVarN21
+// ROM 0x0031f5e4 SetFramePathFor1XFunctions__FRC6RefVarN21
 void
 SetFramePathFor1XFunctions(RefArg obj, RefArg thePath, RefArg value)
 {
@@ -1482,7 +1482,7 @@ SetFramePathFor1XFunctions(RefArg obj, RefArg thePath, RefArg value)
 }
 
 
-// ROM 0x002fa2e8 FrameHasPath__FRC6RefVarT1
+// ROM 0x0031f5ec FrameHasPath__FRC6RefVarT1
 int
 FrameHasPath(RefArg obj, RefArg thePath)
 {
@@ -1570,7 +1570,7 @@ IsExternalObject(Ref r)
 }
 
 
-// ROM 0x002fa7a0 DeepClone1__FRC6RefVarR14TPrecedentsVarT2
+// ROM 0x0031faa4 DeepClone1__FRC6RefVarR14TPrecedentsVarT2
 // Clone obj and, recursively, the objects its slots refer to; an object
 // seen before gets the clone made then.
 static Ref
@@ -1600,7 +1600,7 @@ DeepClone1(RefArg obj, TPrecedentsVar& precedents, TPrecedentsVar& clones)
 }
 
 
-// ROM 0x002fa8c4 DeepClone__FRC6RefVar
+// ROM 0x0031fbc8 DeepClone__FRC6RefVar
 Ref
 DeepClone(RefArg obj)
 {
@@ -1612,7 +1612,7 @@ DeepClone(RefArg obj)
 }
 
 
-// ROM 0x002fa924 TotalClone1__FRC6RefVarR14TPrecedentsVarT2i
+// ROM 0x0031fc28 TotalClone1__FRC6RefVarR14TPrecedentsVarT2i
 // DeepClone including maps and classes (every ref of the object, the
 // class slot first), with symbols in packages interned into RAM.  For
 // EnsureInternal (ensureInternal) objects are not copied: read-only ones
@@ -1655,7 +1655,7 @@ TotalClone1(RefArg obj, TPrecedentsVar& precedents, TPrecedentsVar& clones, int 
 }
 
 
-// ROM 0x002fab90 TotalClone__FRC6RefVar
+// ROM 0x0031fe94 TotalClone__FRC6RefVar
 Ref
 TotalClone(RefArg obj)
 {
@@ -1674,7 +1674,7 @@ TotalClone(RefArg obj)
 }
 
 
-// ROM 0x002fac4c EnsureInternal__FRC6RefVar
+// ROM 0x0031ff50 EnsureInternal__FRC6RefVar
 // obj with every symbol in a package replaced by the RAM symbol, cloning
 // only what is read-only; a package symbol itself is interned.
 Ref
@@ -1702,7 +1702,7 @@ EnsureInternal(RefArg obj)
 	Classes
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f6cf0 ClassOf__FRC6RefVar
+// ROM 0x0031bff4 ClassOf__FRC6RefVar
 // An integer is an int, a character a char, a boolean a boolean; a symbol
 // a symbol, other binaries and arrays what their class slot says (a weak
 // array a _weakarray); a frame its class slot up the _proto chain: frame
@@ -1751,7 +1751,7 @@ ClassOf(RefArg obj)
 }
 
 
-// ROM 0x002f6e2c SetClass__FRC6RefVarT1
+// ROM 0x0031c130 SetClass__FRC6RefVarT1
 void
 SetClass(RefArg obj, RefArg theClass)
 {
@@ -1773,7 +1773,7 @@ SetClass(RefArg obj, RefArg theClass)
 }
 
 
-// ROM 0x00299d30 IsSubclassRef__FlT1
+// ROM 0x002bec5c IsSubclassRef__FlT1
 // Symbols: the same, or super is the empty symbol, or sub is a dotted name
 // super prefixes ('string.foo' is a 'string), or super is reached from sub
 // through the inheritance frame.  Other classes must be EQ.
@@ -1812,7 +1812,7 @@ IsSubclassRef(Ref sub, Ref super)
 }
 
 
-// ROM 0x00299e7c IsInstance__FRC6RefVarT1
+// ROM 0x002beda8 IsInstance__FRC6RefVarT1
 int
 IsInstance(RefArg obj, RefArg super)
 {
@@ -1823,7 +1823,7 @@ IsInstance(RefArg obj, RefArg super)
 }
 
 
-// ROM 0x00299eac InitClasses__Fv
+// ROM 0x002bedd8 InitClasses__Fv
 void
 InitClasses(void)
 {
@@ -1836,7 +1836,7 @@ InitClasses(void)
 	Predicates
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f4570 IsString__FRC6RefVar
+// ROM 0x00319874 IsString__FRC6RefVar
 Boolean
 IsString(RefArg ref)
 {
@@ -1847,7 +1847,7 @@ IsString(RefArg ref)
 }
 
 
-// ROM 0x002f45d0 IsBinary__FRC6RefVar
+// ROM 0x003198d4 IsBinary__FRC6RefVar
 Boolean
 IsBinary(RefArg ref)
 {
@@ -1858,7 +1858,7 @@ IsBinary(RefArg ref)
 }
 
 
-// ROM 0x002f4628 IsArray__FRC6RefVar
+// ROM 0x0031992c IsArray__FRC6RefVar
 Boolean
 IsArray(RefArg ref)
 {
@@ -1869,7 +1869,7 @@ IsArray(RefArg ref)
 }
 
 
-// ROM 0x002f468c IsFrame__FRC6RefVar
+// ROM 0x00319990 IsFrame__FRC6RefVar
 // A fault block counts as a frame (it stands for a soup entry).
 Boolean
 IsFrame(RefArg ref)
@@ -1883,7 +1883,7 @@ IsFrame(RefArg ref)
 }
 
 
-// ROM 0x002f46e8 ISREAL__Fl
+// ROM 0x003199ec ISREAL__Fl
 int
 ISREAL(Ref r)
 {
@@ -1894,7 +1894,7 @@ ISREAL(Ref r)
 }
 
 
-// ROM 0x002f4228 IsNumber__Fl
+// ROM 0x0031952c IsNumber__Fl
 Boolean
 IsNumber(Ref ref)
 {
@@ -1902,7 +1902,7 @@ IsNumber(Ref ref)
 }
 
 
-// ROM 0x002f75e0 IsNumber__FRC6RefVar
+// ROM 0x0031c8e4 IsNumber__FRC6RefVar
 Boolean
 IsNumber(RefArg ref)
 {
@@ -1910,7 +1910,7 @@ IsNumber(RefArg ref)
 }
 
 
-// ROM 0x002f7644 IsReal__FRC6RefVar
+// ROM 0x0031c948 IsReal__FRC6RefVar
 Boolean
 IsReal(RefArg ref)
 {
@@ -1926,7 +1926,7 @@ IsReal(RefArg ref)
 	widened and narrowed as they are).
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f6ee0 MakeString__FPCc
+// ROM 0x0031c1e4 MakeString__FPCc
 Ref
 MakeString(const char* str)
 {
@@ -1939,7 +1939,7 @@ MakeString(const char* str)
 }
 
 
-// ROM 0x002f6f48 MakeString__FPCUs
+// ROM 0x0031c24c MakeString__FPCUs
 Ref
 MakeString(const UniChar* str)
 {
@@ -1950,7 +1950,7 @@ MakeString(const UniChar* str)
 }
 
 
-// ROM 0x0012ac84 MakeString__FPCUsl
+// ROM 0x00129228 MakeString__FPCUsl
 // A string of the first length UniChars (need not be terminated).
 Ref
 MakeString(const UniChar* str, long length)
@@ -1963,7 +1963,7 @@ MakeString(const UniChar* str, long length)
 }
 
 
-// ROM 0x002f6fa8 GetCString__FRC6RefVar
+// ROM 0x0031c2ac GetCString__FRC6RefVar
 // The characters of a string (which must be one).
 UniChar*
 GetCString(RefArg str)
@@ -1974,7 +1974,7 @@ GetCString(RefArg str)
 }
 
 
-// ROM 0x002f6fa4 CString__FRC6RefVar
+// ROM 0x0031c2a8 CString__FRC6RefVar
 UniChar*
 CString(RefArg str)
 {
@@ -1982,7 +1982,7 @@ CString(RefArg str)
 }
 
 
-// ROM 0x002f6fe0 ASCIIString__FRC6RefVar
+// ROM 0x0031c2e4 ASCIIString__FRC6RefVar
 // An asciiString of the string's characters, narrowed.
 Ref
 ASCIIString(RefArg str)
@@ -1994,7 +1994,7 @@ ASCIIString(RefArg str)
 }
 
 
-// ROM 0x002f7054 MakeReal__Fd
+// ROM 0x0031c358 MakeReal__Fd
 Ref
 MakeReal(double d)
 {
@@ -2004,7 +2004,7 @@ MakeReal(double d)
 }
 
 
-// ROM 0x002f70f4 CDouble__FRC6RefVar
+// ROM 0x0031c3f8 CDouble__FRC6RefVar
 double
 CDouble(RefArg d)
 {
@@ -2016,7 +2016,7 @@ CDouble(RefArg d)
 }
 
 
-// ROM 0x002f7150 CoerceToInt__FRC6RefVar
+// ROM 0x0031c454 CoerceToInt__FRC6RefVar
 long
 CoerceToInt(RefArg r)
 {
@@ -2034,7 +2034,7 @@ CoerceToInt(RefArg r)
 }
 
 
-// ROM 0x002f71b0 CoerceToDouble__FRC6RefVar
+// ROM 0x0031c4b4 CoerceToDouble__FRC6RefVar
 double
 CoerceToDouble(RefArg r)
 {
@@ -2056,7 +2056,7 @@ CoerceToDouble(RefArg r)
 	Iteration
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f58f0 OnStack__FPCv
+// ROM 0x0031abf4 OnStack__FPCv
 // Whether p is on the current task's stack.  The ROM compares with its own
 // frame and the stack top in the Newt globals; the host's thread stacks
 // come from hal (GetStackBounds).
@@ -2070,7 +2070,7 @@ OnStack(const void* p)
 }
 
 
-// ROM 0x002f5938 DisposeTObjectIterator__FPv
+// ROM 0x0031ac3c DisposeTObjectIterator__FPv
 // The cleanup an exception runs for an iterator on the stack.
 static void
 DisposeTObjectIterator(void* iterator)
@@ -2079,7 +2079,7 @@ DisposeTObjectIterator(void* iterator)
 }
 
 
-// ROM 0x002f5940 __ct__15TObjectIteratorFRC6RefVari
+// ROM 0x0031ac44 __ct__15TObjectIteratorFRC6RefVari
 // Over the slots of an array or frame; includeSiblings goes on into the
 // frame's _proto chain.  On the stack, the iterator registers an exception
 // cleanup so that a Throw frees its RefHandles.
@@ -2108,7 +2108,7 @@ TObjectIterator::TObjectIterator(RefArg obj, int includeSiblings)
 }
 
 
-// ROM 0x002f5afc __dt__15TObjectIteratorFv
+// ROM 0x0031ae00 __dt__15TObjectIteratorFv
 TObjectIterator::~TObjectIterator()
 {
 	if (fCleanup.function != nil)
@@ -2116,7 +2116,7 @@ TObjectIterator::~TObjectIterator()
 }
 
 
-// ROM 0x002f5b60 Next__15TObjectIteratorFv
+// ROM 0x0031ae64 Next__15TObjectIteratorFv
 // On to the next slot (the object may have grown or shrunk meanwhile);
 // then, with siblings, into the _proto.  Answers whether there is one.
 int
@@ -2150,7 +2150,7 @@ TObjectIterator::Next(void)
 }
 
 
-// ROM 0x002f5ca4 Done__15TObjectIteratorFv
+// ROM 0x0031afa8 Done__15TObjectIteratorFv
 int
 TObjectIterator::Done(void)
 {
@@ -2164,7 +2164,7 @@ TObjectIterator::Done(void)
 }
 
 
-// ROM 0x002f5d30 Reset__15TObjectIteratorFv
+// ROM 0x0031b034 Reset__15TObjectIteratorFv
 void
 TObjectIterator::Reset(void)
 {
@@ -2173,7 +2173,7 @@ TObjectIterator::Reset(void)
 }
 
 
-// ROM 0x002f5d3c Reset__15TObjectIteratorFRC6RefVar
+// ROM 0x0031b040 Reset__15TObjectIteratorFRC6RefVar
 void
 TObjectIterator::Reset(RefArg newObj)
 {
@@ -2188,7 +2188,7 @@ TObjectIterator::Reset(RefArg newObj)
 }
 
 
-// ROM 0x002f76d4 Tag__15TObjectIteratorFv
+// ROM 0x0031c9d8 Tag__15TObjectIteratorFv
 Ref
 TObjectIterator::Tag(void)
 {
@@ -2196,7 +2196,7 @@ TObjectIterator::Tag(void)
 }
 
 
-// ROM 0x002f76e0 Value__15TObjectIteratorFv
+// ROM 0x0031c9e4 Value__15TObjectIteratorFv
 Ref
 TObjectIterator::Value(void)
 {
@@ -2204,7 +2204,7 @@ TObjectIterator::Value(void)
 }
 
 
-// ROM 0x002f5928 NewIterator__FRC6RefVar
+// ROM 0x0031ac2c NewIterator__FRC6RefVar
 TObjectIterator*
 NewIterator(RefArg obj)
 {
@@ -2212,7 +2212,7 @@ NewIterator(RefArg obj)
 }
 
 
-// ROM 0x002f7690 NewTObjectIterator__FRC6RefVar
+// ROM 0x0031c994 NewTObjectIterator__FRC6RefVar
 TObjectIterator*
 NewTObjectIterator(RefArg obj)
 {
@@ -2220,7 +2220,7 @@ NewTObjectIterator(RefArg obj)
 }
 
 
-// ROM 0x002f7694 DeleteTObjectIterator__FP15TObjectIterator
+// ROM 0x0031c998 DeleteTObjectIterator__FP15TObjectIterator
 void
 DeleteTObjectIterator(TObjectIterator* iterator)
 {
@@ -2229,7 +2229,7 @@ DeleteTObjectIterator(TObjectIterator* iterator)
 }
 
 
-// ROM 0x002f5850 MapSlots__FRC6RefVarPFRC6RefVarT1Ul_lUl
+// ROM 0x0031ab54 MapSlots__FRC6RefVarPFRC6RefVarT1Ul_lUl
 // Call func(tag, value, anything) for each slot until it answers other
 // than NILREF.
 void
@@ -2251,13 +2251,13 @@ MapSlots(RefArg obj, MapSlotsFunction func, ULong anything)
 	Start-up
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f72e8 PatchMagicPointerTable__Fv
+// ROM 0x0031c5ec PatchMagicPointerTable__Fv
 void
 PatchMagicPointerTable(void)
 { }
 
 
-// ROM 0x002f72ec InitMagicPointerTables__Fv
+// ROM 0x0031c5f0 InitMagicPointerTables__Fv
 // NOT YET RECONSTRUCTED: InitRExMagicPointerTables (0x000d218c) reads the
 // REx export tables and resolves their imports (the ROM extension reader).
 void
@@ -2265,7 +2265,7 @@ InitMagicPointerTables(void)
 { }
 
 
-// ROM 0x002f7304 InitObjects__Fv
+// ROM 0x0031c608 InitObjects__Fv
 // The heap (its size from InternalRAMInfo in the ROM, gObjectHeapSize
 // here), the global frames, symbols, the printer, classes and the
 // interpreter.  NOT YET RECONSTRUCTED: the union soup entry cache
@@ -2295,7 +2295,7 @@ InitObjects(void)
 }
 
 
-// ROM 0x001027fc IsLargeBinary__FRC6RefVar
+// ROM 0x00101198 IsLargeBinary__FRC6RefVar
 // An indirect binary whose procedures are the large binaries' (NOT YET
 // RECONSTRUCTED: large binaries - never).
 Boolean

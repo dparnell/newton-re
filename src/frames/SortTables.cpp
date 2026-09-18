@@ -5,7 +5,7 @@
 				two strings walked through it, the five registered tables,
 				and the comparison everything that orders text goes through.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "SortTables.h"
@@ -34,7 +34,7 @@ TSortingTable::Half(const void* p, long offset)
 }
 
 
-// ROM 0x00256428 CalcSize__13TSortingTableCFv
+// ROM 0x00258360 CalcSize__13TSortingTableCFv
 // How long the binary is: the header, the projection entries of every
 // range, the single characters, the ligatures and the lowest-sort
 // halfwords.
@@ -51,7 +51,7 @@ TSortingTable::CalcSize(void) const
 }
 
 
-// ROM 0x00256270 GetProjectionEntry__13TSortingTableCFUs
+// ROM 0x002581a8 GetProjectionEntry__13TSortingTableCFUs
 // What the character sorts as, or nil when the table has never heard of
 // it.  Below 0x80 the first range is indexed straight (which is the same
 // answer the loop below would give, the ROM's built-in table starting its
@@ -90,7 +90,7 @@ TSortingTable::GetProjectionEntry(UniChar c) const
 }
 
 
-// ROM 0x0025635c GetLigatureEntry__13TSortingTableCFUs
+// ROM 0x00258294 GetLigatureEntry__13TSortingTableCFUs
 // The two characters the ligature really is.  The ROM does not count the
 // entries as it goes: a character whose projection said it was a ligature
 // is in the table, and one that is not runs off the end.
@@ -104,7 +104,7 @@ TSortingTable::GetLigatureEntry(UniChar c) const
 }
 
 
-// ROM 0x00256384 ConvertTextToLowestSort__13TSortingTableCFPUsl
+// ROM 0x002582bc ConvertTextToLowestSort__13TSortingTableCFPUsl
 // Each character replaced by the least one that sorts the same, so that
 // two keys which collate equally are equal byte for byte - which is what
 // lets a soup index compare its keys without the tables.  A character the
@@ -135,7 +135,7 @@ TSortingTable::ConvertTextToLowestSort(UniChar* text, long count) const
 	TStringToSort - one of the two strings being compared.
 ----------------------------------------------------------------------*/
 
-// ROM 0x002560a0 __ct__13TStringToSortFPCUslPC13TSortingTable
+// ROM 0x00257fd8 __ct__13TStringToSortFPCUslPC13TSortingTable
 // DEVIATION: the ROM leaves fChar and fSecondOrderChar as whatever was on
 // the stack.  Fetch always writes fChar before anyone reads it, but
 // fSecondOrderChar is only written by Project, and Project returns without
@@ -156,7 +156,7 @@ TStringToSort::TStringToSort(const UniChar* text, long length, const TSortingTab
 }
 
 
-// ROM 0x002560f4 Fetch__13TStringToSortFv
+// ROM 0x0025802c Fetch__13TStringToSortFv
 // The next character: a ligature's second character if one is waiting,
 // else the next one of the text.
 Boolean
@@ -177,7 +177,7 @@ TStringToSort::Fetch(void)
 }
 
 
-// ROM 0x0025615c Project__13TStringToSortFc
+// ROM 0x00258094 Project__13TStringToSortFc
 // The character's primary weight.  A ligature is taken apart first - its
 // first character becomes the current one and its second waits for the
 // next Fetch - and the loop goes round in case that one is a ligature too.
@@ -208,7 +208,7 @@ TStringToSort::Project(Boolean afterDifference)
 }
 
 
-// ROM 0x00256230 SecondOrderProject__13TStringToSortCFv
+// ROM 0x00258168 SecondOrderProject__13TStringToSortCFv
 // The second-order weight of the character the strings first differed at -
 // what tells a capital from a small letter and an accented one from a
 // plain one.
@@ -220,7 +220,7 @@ TStringToSort::SecondOrderProject(void) const
 }
 
 
-// ROM 0x00255fd0 CalcSecondOrderResult__FRC13TStringToSortT1
+// ROM 0x00257f08 CalcSecondOrderResult__FRC13TStringToSortT1
 // The tie broken: the second-order weights, and failing those the string
 // that had a ligature in it comes second.
 int
@@ -238,7 +238,7 @@ CalcSecondOrderResult(const TStringToSort& a, const TStringToSort& b)
 	TSortTables - the registered tables.
 ----------------------------------------------------------------------*/
 
-// ROM 0x002564a8 GetTableEntry__11TSortTablesCFl
+// ROM 0x002583e0 GetTableEntry__11TSortTablesCFl
 // The slot holding the table with this id.  It is a const method, but
 // Subscribe and Unsubscribe write through what it answers.
 SortTableEntry*
@@ -252,7 +252,7 @@ TSortTables::GetTableEntry(long id) const
 }
 
 
-// ROM 0x002564dc GetSortTable__11TSortTablesCFlPl
+// ROM 0x00258414 GetSortTable__11TSortTablesCFlPl
 // The table with this id, and how big it is.  BUG (the ROM's): when the id
 // is the default one and there is no default table - which is how the
 // system starts - a caller that wants the size reads through a nil table.
@@ -277,7 +277,7 @@ TSortTables::GetSortTable(long id, long* size) const
 }
 
 
-// ROM 0x0025659c AddSortTable__11TSortTablesFPC13TSortingTableUc
+// ROM 0x002584d4 AddSortTable__11TSortTablesFPC13TSortingTableUc
 // A table registered in the first free slot, with one user.  ==> false
 // when a table with that id is already there.  owned: the table is a
 // pointer of ours, to be disposed of when the last user has gone.
@@ -300,7 +300,7 @@ TSortTables::AddSortTable(const TSortingTable* table, Boolean owned)
 }
 
 
-// ROM 0x00256630 Subscribe__11TSortTablesFl
+// ROM 0x00258568 Subscribe__11TSortTablesFl
 void
 TSortTables::Subscribe(long id)
 {
@@ -310,7 +310,7 @@ TSortTables::Subscribe(long id)
 }
 
 
-// ROM 0x00256654 Unsubscribe__11TSortTablesFl
+// ROM 0x0025858c Unsubscribe__11TSortTablesFl
 // The last user gone: the slot is freed, and the table with it if it was
 // ours.
 void
@@ -328,7 +328,7 @@ TSortTables::Unsubscribe(long id)
 }
 
 
-// ROM 0x00256698 SetDefaultTableId__11TSortTablesFl
+// ROM 0x002585d0 SetDefaultTableId__11TSortTablesFl
 // ==> false when there is no such table (0, meaning none at all, is
 // always taken).
 Boolean
@@ -349,7 +349,7 @@ TSortTables::SetDefaultTableId(long id)
 	Comparing.
 ----------------------------------------------------------------------*/
 
-// ROM 0x00255bf8 OldCompareText__FPCUslT1T2UcPFlT1Pv_lPv
+// ROM 0x00257b30 OldCompareText__FPCUslT1T2UcPFlT1Pv_lPv
 // The compare the Newton used before there were sorting tables, and what
 // it falls back to when there is none: character by character, folded to
 // upper case without diacriticals through the Mac Roman character class
@@ -410,7 +410,7 @@ OldCompareText(const UniChar* a, long aLength, const UniChar* b, long bLength,
 }
 
 
-// ROM 0x00255d6c CompareUnicodeText__FPCUslT1T2PC13TSortingTableUcPFlT1Pv_lPv
+// ROM 0x00257ca4 CompareUnicodeText__FPCUslT1T2PC13TSortingTableUcPFlT1Pv_lPv
 // The collation: both strings walked a character at a time, each projected
 // through the sorting table, the first difference in the primary weights
 // deciding it.  A character that projects to nothing is skipped and the
@@ -501,7 +501,7 @@ CompareUnicodeText(const UniChar* a, long aLength, const UniChar* b, long bLengt
 }
 
 
-// ROM 0x00255750 CompareStringNoCase__FPUsT1
+// ROM 0x00257688 CompareStringNoCase__FPUsT1
 int
 CompareStringNoCase(const UniChar* a, const UniChar* b)
 {
@@ -511,7 +511,7 @@ CompareStringNoCase(const UniChar* a, const UniChar* b)
 }
 
 
-// ROM 0x002557a4 CompareTextNoCase__FPUslT1T2
+// ROM 0x002576dc CompareTextNoCase__FPUslT1T2
 int
 CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength)
 {
@@ -523,7 +523,7 @@ CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength
 	What a script may ask about the sorting.
 ----------------------------------------------------------------------*/
 
-// ROM 0x002566e0 FGetSortID__FRC6RefVarT1
+// ROM 0x00258618 FGetSortID__FRC6RefVarT1
 // The default table's id, and nil when there is none.  The argument is a
 // store, whose own table would be answered instead: NOT YET RECONSTRUCTED
 // (StoreGetDirSortTable's tables kept on the store), and the ROM answers
@@ -537,7 +537,7 @@ FGetSortID(RefArg /*rcvr*/, RefArg store)
 }
 
 
-// ROM 0x00256710 FSetSortID__FRC6RefVarT1
+// ROM 0x00258648 FSetSortID__FRC6RefVarT1
 // The default table chosen by id; nil means none at all.  ==> true, or
 // nil when the id is not a number or names no registered table.
 Ref

@@ -3,7 +3,7 @@
 
 	Contains:	TBits, the offscreen bits.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Bits.h"
@@ -15,7 +15,7 @@
 #include <string.h>
 
 
-// ROM 0x00042b84 __ct__5TBitsFv
+// ROM 0x000422b4 __ct__5TBitsFv
 // No bits yet; a stack instance registers its cleanup (the host's
 // destructor runs on a throw).
 TBits::TBits()
@@ -27,14 +27,14 @@ TBits::TBits()
 }
 
 
-// ROM 0x000459fc __dt__5TBitsFv
+// ROM 0x0004512c __dt__5TBitsFv
 TBits::~TBits()
 {
 	Cleanup();
 }
 
 
-// ROM 0x00045a3c Cleanup__5TBitsFv
+// ROM 0x0004516c Cleanup__5TBitsFv
 // The drawing ended and the bits disposed when they are ours.
 void
 TBits::Cleanup(void)
@@ -51,7 +51,7 @@ TBits::Cleanup(void)
 }
 
 
-// ROM 0x00042e84 InitBitMap__5TBitsSFRC5TRectP8PixelMap
+// ROM 0x000425b4 InitBitMap__5TBitsSFRC5TRectP8PixelMap
 // A handle pixel map of the screen's depth over the rectangle: the row
 // bytes the width in bits rounded up to 32, the resolution 72; ==> the
 // size of its bits.
@@ -74,7 +74,7 @@ TBits::InitBitMap(const Rect& bounds, PixelMap* map)
 }
 
 
-// ROM 0x0004388c Constructor__5TBitsFRC5TRect
+// ROM 0x00042fbc Constructor__5TBitsFRC5TRect
 // Bits for the rectangle; ==> whether there was memory (nothing for an
 // empty rectangle).
 Boolean
@@ -89,7 +89,7 @@ TBits::Constructor(const Rect& bounds)
 }
 
 
-// ROM 0x0004526c Constructor__5TBitsFRC8PixelMap
+// ROM 0x0004499c Constructor__5TBitsFRC8PixelMap
 // Over another map's bits (not ours to dispose).
 void
 TBits::Constructor(const PixelMap& map)
@@ -100,7 +100,7 @@ TBits::Constructor(const PixelMap& map)
 }
 
 
-// ROM 0x00045a84 SetBounds__5TBitsFRC5TRect
+// ROM 0x000451b4 SetBounds__5TBitsFRC5TRect
 void
 TBits::SetBounds(const Rect& newBounds)
 {
@@ -108,7 +108,7 @@ TBits::SetBounds(const Rect& newBounds)
 }
 
 
-// ROM 0x00042c5c CopyFromScreen__5TBitsFRC5TRectT1lPP6Region
+// ROM 0x0004238c CopyFromScreen__5TBitsFRC5TRectT1lPP6Region
 // The current port's pixels of src copied into dst of ours.
 void
 TBits::CopyFromScreen(const Rect& src, const Rect& dst, long mode, RgnHandle mask)
@@ -120,7 +120,7 @@ TBits::CopyFromScreen(const Rect& src, const Rect& dst, long mode, RgnHandle mas
 }
 
 
-// ROM 0x00042cac Draw__5TBitsFRC5TRectT1lPP6Region
+// ROM 0x000423dc Draw__5TBitsFRC5TRectT1lPP6Region
 // Our pixels of src copied to dst of the current port.
 void
 TBits::Draw(const Rect& src, const Rect& dst, long mode, RgnHandle mask)
@@ -132,7 +132,7 @@ TBits::Draw(const Rect& src, const Rect& dst, long mode, RgnHandle mask)
 }
 
 
-// ROM 0x00042c00 Draw__5TBitsFRC5TRectlPP6Region
+// ROM 0x00042330 Draw__5TBitsFRC5TRectlPP6Region
 void
 TBits::Draw(const Rect& dst, long mode, RgnHandle mask)
 {
@@ -141,7 +141,7 @@ TBits::Draw(const Rect& dst, long mode, RgnHandle mask)
 }
 
 
-// ROM 0x00042c3c CopyIntoBitmap__5TBitsFP8PixelMaplPP6Region
+// ROM 0x0004236c CopyIntoBitmap__5TBitsFP8PixelMaplPP6Region
 void
 TBits::CopyIntoBitmap(PixelMap* map, long mode, RgnHandle mask)
 {
@@ -149,7 +149,7 @@ TBits::CopyIntoBitmap(PixelMap* map, long mode, RgnHandle mask)
 }
 
 
-// ROM 0x00042d14 Fill__5TBitsFl
+// ROM 0x00042444 Fill__5TBitsFl
 // Every word of the bits set to the pattern (rowBytes * height bytes).
 void
 TBits::Fill(long pattern)
@@ -166,7 +166,7 @@ TBits::Fill(long pattern)
 	D r a w i n g   i n t o   t h e   b i t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00042d54 Constructor__9TBitsPortFP5TBits6TPointUc
+// ROM 0x00042484 Constructor__9TBitsPortFP5TBits6TPointUc
 // A new port over the bits made current: its portRect and visRgn the
 // map's bounds, the bits cleared when asked, the origin set.
 void
@@ -190,7 +190,7 @@ TBitsPort::Constructor(TBits* bits, Point origin, Boolean fill)
 }
 
 
-// ROM 0x00042e3c __dt__9TBitsPortFv
+// ROM 0x0004256c __dt__9TBitsPortFv
 // The port before made current again, ours closed.
 TBitsPort::~TBitsPort()
 {
@@ -200,7 +200,7 @@ TBitsPort::~TBitsPort()
 }
 
 
-// ROM 0x00045a94 BeginDrawing__5TBitsF6TPoint
+// ROM 0x000451c4 BeginDrawing__5TBitsF6TPoint
 // The bits made the current port at the origin: a TBitsPort the first
 // time (the bits cleared unless they came from the screen), else the port
 // made current again.  NOT YET RECONSTRUCTED: gSlowMotion (the screen
@@ -223,7 +223,7 @@ TBits::BeginDrawing(Point origin)
 }
 
 
-// ROM 0x00045b4c EndDrawing__5TBitsFv
+// ROM 0x0004527c EndDrawing__5TBitsFv
 // The port disposed (the port before made current).  NOT YET
 // RECONSTRUCTED: gSlowMotion's copy back from the screen.
 void
@@ -235,7 +235,7 @@ TBits::EndDrawing(void)
 }
 
 
-// ROM 0x00042cfc SetPort__5TBitsFv
+// ROM 0x0004242c SetPort__5TBitsFv
 void
 TBits::SetPort(void)
 {
@@ -243,7 +243,7 @@ TBits::SetPort(void)
 }
 
 
-// ROM 0x00042d08 RestorePort__5TBitsFv
+// ROM 0x00042438 RestorePort__5TBitsFv
 void
 TBits::RestorePort(void)
 {

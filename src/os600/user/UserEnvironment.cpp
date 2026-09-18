@@ -5,7 +5,7 @@
 				manager; the rest are the environment system calls (GenericSWI
 				0x25-0x27), dual-mode in the ROM - here the user-mode side.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UserEnvironment.h"
@@ -15,7 +15,7 @@
 #include "os600/GenericSWISelectors.h"
 
 
-// ROM 0x0025748c Init__13TUEnvironmentFPv
+// ROM 0x002593c4 Init__13TUEnvironmentFPv
 long
 TUEnvironment::Init(void* heap)
 {
@@ -25,7 +25,7 @@ TUEnvironment::Init(void* heap)
 }
 
 
-// ROM 0x002574b4 Add__13TUEnvironmentFUlUcN22
+// ROM 0x002593ec Add__13TUEnvironmentFUlUcN22
 long
 TUEnvironment::Add(TObjectId domainId, Boolean isManager, Boolean isStack, Boolean isHeap)
 {
@@ -33,7 +33,7 @@ TUEnvironment::Add(TObjectId domainId, Boolean isManager, Boolean isStack, Boole
 }
 
 
-// ROM 0x002574ec Remove__13TUEnvironmentFUl
+// ROM 0x00259424 Remove__13TUEnvironmentFUl
 long
 TUEnvironment::Remove(TObjectId domainId)
 {
@@ -41,7 +41,7 @@ TUEnvironment::Remove(TObjectId domainId)
 }
 
 
-// ROM 0x002574f4 HasDomain__13TUEnvironmentFUlPUcT2
+// ROM 0x0025942c HasDomain__13TUEnvironmentFUlPUcT2
 long
 TUEnvironment::HasDomain(TObjectId domainId, Boolean* outHasDomain, Boolean* outIsManager)
 {

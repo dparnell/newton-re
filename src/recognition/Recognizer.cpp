@@ -4,7 +4,7 @@
 	Contains:	TRecognizer, TRecognizerList, the click and click-event
 				recognisers, TRecognitionManager.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Recognizer.h"
@@ -15,19 +15,19 @@
 #include "NewtonExceptions.h"
 #include "StrokeCentral.h"
 
-TRecognitionManager	gRecognition;			// ROM 0x0c103f50 gRecognition
+TRecognitionManager	gRecognition;			// ROM 0x0c106e88 gRecognition
 
 
 /*------------------------------------------------------------------------------
 	T R e c o g n i z e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00145308 __ct__11TRecognizerFv
+// ROM 0x001437b4 __ct__11TRecognizerFv
 TRecognizer::TRecognizer()
 { }
 
 
-// ROM 0x00145488 Init__11TRecognizerFP7TDomainUlT2UcT2
+// ROM 0x00143934 Init__11TRecognizerFP7TDomainUlT2UcT2
 // The recogniser set up; no services yet.
 void
 TRecognizer::Init(TDomain* domain, ULong id, ULong command, UChar flags, ULong arbitrateTime)
@@ -41,7 +41,7 @@ TRecognizer::Init(TDomain* domain, ULong id, ULong command, UChar flags, ULong a
 }
 
 
-// ROM 0x0014535c InitServices__11TRecognizerFUlT1
+// ROM 0x00143808 InitServices__11TRecognizerFUlT1
 void
 TRecognizer::InitServices(ULong possible, ULong enabled)
 {
@@ -50,7 +50,7 @@ TRecognizer::InitServices(ULong possible, ULong enabled)
 }
 
 
-// ROM 0x00145938 Domain__11TRecognizerFv
+// ROM 0x00143de4 Domain__11TRecognizerFv
 TDomain*
 TRecognizer::Domain(void)
 {
@@ -58,7 +58,7 @@ TRecognizer::Domain(void)
 }
 
 
-// ROM 0x00145f40 ID__11TRecognizerFv
+// ROM 0x001443ec ID__11TRecognizerFv
 ULong
 TRecognizer::ID(void)
 {
@@ -66,7 +66,7 @@ TRecognizer::ID(void)
 }
 
 
-// ROM 0x0014604c Command__11TRecognizerFv
+// ROM 0x001444f8 Command__11TRecognizerFv
 ULong
 TRecognizer::Command(void)
 {
@@ -74,7 +74,7 @@ TRecognizer::Command(void)
 }
 
 
-// ROM 0x00146054 Flags__11TRecognizerFv
+// ROM 0x00144500 Flags__11TRecognizerFv
 ULong
 TRecognizer::Flags(void)
 {
@@ -82,7 +82,7 @@ TRecognizer::Flags(void)
 }
 
 
-// ROM 0x0014605c TestFlags__11TRecognizerFUc
+// ROM 0x00144508 TestFlags__11TRecognizerFUc
 Boolean
 TRecognizer::TestFlags(UChar flags)
 {
@@ -90,7 +90,7 @@ TRecognizer::TestFlags(UChar flags)
 }
 
 
-// ROM 0x0014607c ServicesPossible__11TRecognizerFv
+// ROM 0x00144528 ServicesPossible__11TRecognizerFv
 ULong
 TRecognizer::ServicesPossible(void)
 {
@@ -98,7 +98,7 @@ TRecognizer::ServicesPossible(void)
 }
 
 
-// ROM 0x0014533c ServicesEnabled__11TRecognizerFv
+// ROM 0x001437e8 ServicesEnabled__11TRecognizerFv
 ULong
 TRecognizer::ServicesEnabled(void)
 {
@@ -106,7 +106,7 @@ TRecognizer::ServicesEnabled(void)
 }
 
 
-// ROM 0x00145344 UnitConfidence__11TRecognizerFP11TUnitPublic
+// ROM 0x001437f0 UnitConfidence__11TRecognizerFP11TUnitPublic
 long
 TRecognizer::UnitConfidence(TUnitPublic* /*unit*/)
 {
@@ -114,19 +114,19 @@ TRecognizer::UnitConfidence(TUnitPublic* /*unit*/)
 }
 
 
-// ROM 0x0014534c Sleep__11TRecognizerFv
+// ROM 0x001437f8 Sleep__11TRecognizerFv
 void
 TRecognizer::Sleep(void)
 { }
 
 
-// ROM 0x00145350 WakeUp__11TRecognizerFv
+// ROM 0x001437fc WakeUp__11TRecognizerFv
 void
 TRecognizer::WakeUp(void)
 { }
 
 
-// ROM 0x00145354 ArbitrateTime__11TRecognizerFv
+// ROM 0x00143800 ArbitrateTime__11TRecognizerFv
 ULong
 TRecognizer::ArbitrateTime(void)
 {
@@ -134,13 +134,13 @@ TRecognizer::ArbitrateTime(void)
 }
 
 
-// ROM 0x00145368 BuildConfig__11TRecognizerFRC6RefVarP5TViewUl
+// ROM 0x00143814 BuildConfig__11TRecognizerFRC6RefVarP5TViewUl
 void
 TRecognizer::BuildConfig(RefArg /*config*/, TView* /*view*/, ULong /*flags*/)
 { }
 
 
-// ROM 0x0014536c EnableArea__11TRecognizerFP8TRecAreaRC6RefVar
+// ROM 0x00143818 EnableArea__11TRecognizerFP8TRecAreaRC6RefVar
 // NOT YET RECONSTRUCTED: when the config's inputMask has one of the
 // recogniser's enabled services, its type is added to the area
 // (TRecArea::AddAType with the area's hit routine and the arbitrate time).
@@ -151,7 +151,7 @@ TRecognizer::EnableArea(TRecArea* /*area*/, RefArg /*config*/)
 }
 
 
-// ROM 0x00145418 ConfigureArea__11TRecognizerFP8TRecAreaRC6RefVar
+// ROM 0x001438c4 ConfigureArea__11TRecognizerFP8TRecAreaRC6RefVar
 long
 TRecognizer::ConfigureArea(TRecArea* /*area*/, RefArg /*config*/)
 {
@@ -159,7 +159,7 @@ TRecognizer::ConfigureArea(TRecArea* /*area*/, RefArg /*config*/)
 }
 
 
-// ROM 0x00146074 HandleUnit__11TRecognizerFP11TUnitPublic
+// ROM 0x00144520 HandleUnit__11TRecognizerFP11TUnitPublic
 // ==> the command to send the view for a unit.
 ULong
 TRecognizer::HandleUnit(TUnitPublic* /*unit*/)
@@ -168,7 +168,7 @@ TRecognizer::HandleUnit(TUnitPublic* /*unit*/)
 }
 
 
-// ROM 0x001454b8 GetLearningData__11TRecognizerFP11TUnitPublic
+// ROM 0x00143964 GetLearningData__11TRecognizerFP11TUnitPublic
 Ref
 TRecognizer::GetLearningData(TUnitPublic* /*unit*/)
 {
@@ -176,7 +176,7 @@ TRecognizer::GetLearningData(TUnitPublic* /*unit*/)
 }
 
 
-// ROM 0x001454c0 DoLearning__11TRecognizerFRC6RefVarl
+// ROM 0x0014396c DoLearning__11TRecognizerFRC6RefVarl
 void
 TRecognizer::DoLearning(RefArg /*data*/, long /*arg*/)
 { }
@@ -186,7 +186,7 @@ TRecognizer::DoLearning(RefArg /*data*/, long /*arg*/)
 	T R e c o g n i z e r L i s t
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001a0140 Make__15TRecognizerListSFv
+// ROM 0x0019de84 Make__15TRecognizerListSFv
 TRecognizerList*
 TRecognizerList::Make(void)
 {
@@ -204,7 +204,7 @@ TRecognizerList::Make(void)
 }
 
 
-// ROM 0x001a01a8 IRecognizerList__15TRecognizerListFv
+// ROM 0x0019deec IRecognizerList__15TRecognizerListFv
 long
 TRecognizerList::IRecognizerList(void)
 {
@@ -212,7 +212,7 @@ TRecognizerList::IRecognizerList(void)
 }
 
 
-// ROM 0x001a01b4 AddRecognizer__15TRecognizerListFP11TRecognizer
+// ROM 0x0019def8 AddRecognizer__15TRecognizerListFP11TRecognizer
 void
 TRecognizerList::AddRecognizer(TRecognizer* recognizer)
 {
@@ -220,7 +220,7 @@ TRecognizerList::AddRecognizer(TRecognizer* recognizer)
 }
 
 
-// ROM 0x001a01d8 GetRecognizer__15TRecognizerListFUl
+// ROM 0x0019df1c GetRecognizer__15TRecognizerListFUl
 TRecognizer*
 TRecognizerList::GetRecognizer(ULong index)
 {
@@ -228,7 +228,7 @@ TRecognizerList::GetRecognizer(ULong index)
 }
 
 
-// ROM 0x001a01f8 FindRecognizer__15TRecognizerListFUl
+// ROM 0x0019df3c FindRecognizer__15TRecognizerListFUl
 // The recogniser whose id is the unit type; nil for none.
 TRecognizer*
 TRecognizerList::FindRecognizer(ULong id)
@@ -246,7 +246,7 @@ TRecognizerList::FindRecognizer(ULong id)
 	T h e   c l i c k   r e c o g n i s e r s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00036a10 OtherViewInUse__FP5TView
+// ROM 0x00036960 OtherViewInUse__FP5TView
 // NOT YET RECONSTRUCTED: whether an area of the area cache (gAreaCache)
 // other than the view's is in use (its use count above 0); the host has
 // no area cache.
@@ -257,7 +257,7 @@ OtherViewInUse(TView* /*view*/)
 }
 
 
-// ROM 0x00036a98 ClicksOnlyArea__FP5TUnit
+// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit
 // NOT YET RECONSTRUCTED: whether the unit's area accepts only clicks (one
 // type, 'CLIK'); the host's units have no areas.
 Boolean
@@ -267,7 +267,7 @@ ClicksOnlyArea(TUnit* /*unit*/)
 }
 
 
-// ROM 0x00209828 OnlyStrokeWritten__FP11TStrokeUnit
+// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit
 // NOT YET RECONSTRUCTED: whether the controller has seen no stroke after
 // the unit's (it is the last complete stroke); the host has no controller.
 Boolean
@@ -277,7 +277,7 @@ OnlyStrokeWritten(TStrokeUnit* /*unit*/)
 }
 
 
-// ROM 0x0014578c HandleUnit__16TClickRecognizerFP11TUnitPublic
+// ROM 0x00143c38 HandleUnit__16TClickRecognizerFP11TUnitPublic
 // The view under the click found (and remembered as the click view);
 // aeClick unless another view's area is in use or clicks are being
 // ignored - a click on a clicks-only area then notes that one was
@@ -299,7 +299,7 @@ TClickRecognizer::HandleUnit(TUnitPublic* unit)
 }
 
 
-// ROM 0x00145668 ID__16TEventRecognizerFv
+// ROM 0x00143b14 ID__16TEventRecognizerFv
 ULong
 TEventRecognizer::ID(void)
 {
@@ -307,7 +307,7 @@ TEventRecognizer::ID(void)
 }
 
 
-// ROM 0x00145674 HandleUnit__16TEventRecognizerFP11TUnitPublic
+// ROM 0x00143b20 HandleUnit__16TEventRecognizerFP11TUnitPublic
 // The command for the click event, when the click's stroke is the last
 // written: aeTap; aeDoubleTap and aeTapDrag only when both clicks were on
 // the same view; aeHiliteClick.
@@ -340,7 +340,7 @@ TEventRecognizer::HandleUnit(TUnitPublic* unit)
 }
 
 
-// ROM 0x00145830 InstallClickRecognizer__FP19TRecognitionManager
+// ROM 0x00143cdc InstallClickRecognizer__FP19TRecognitionManager
 // The click recogniser: 'CLIK' units, aeClick, flags 10, arbitrate time 2,
 // the vClickable service.
 void
@@ -353,7 +353,7 @@ InstallClickRecognizer(TRecognitionManager* manager)
 }
 
 
-// ROM 0x00145704 InstallEventRecognizer__FP19TRecognitionManager
+// ROM 0x00143bb0 InstallEventRecognizer__FP19TRecognitionManager
 // The click-event recogniser: 'CEVT' units, aeTap, flags 10, no arbitrate
 // time, the vGesturesAllowed service.
 void
@@ -370,7 +370,7 @@ InstallEventRecognizer(TRecognitionManager* manager)
 	T R e c o g n i t i o n M a n a g e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001a03e0 Init__19TRecognitionManagerFUc
+// ROM 0x0019e124 Init__19TRecognitionManagerFUc
 // The recognition system started at a level: 0 none, 1 clicks and strokes,
 // 2 and above the shape and word recognisers too.
 // NOT YET RECONSTRUCTED: the stroke world (StrokeCentral), the areas
@@ -394,7 +394,7 @@ TRecognitionManager::Init(UChar level)
 }
 
 
-// ROM 0x0019f6f4 InitRecognizers__19TRecognitionManagerFv
+// ROM 0x0019d438 InitRecognizers__19TRecognitionManagerFv
 // The recognisers installed and the root domain made.
 // NOT YET RECONSTRUCTED: the gesture and stroke recognisers (their
 // domains), the shape and word recognisers of level 2, ReadDomainOptions.
@@ -411,7 +411,7 @@ TRecognitionManager::InitRecognizers(void)
 }
 
 
-// ROM 0x0019f7a4 EnableModalRecognition__19TRecognitionManagerFR5TRect
+// ROM 0x0019d4e8 EnableModalRecognition__19TRecognitionManagerFR5TRect
 // Recognition confined to the bounds (a modal dialog's).
 void
 TRecognitionManager::EnableModalRecognition(Rect& bounds)
@@ -424,7 +424,7 @@ TRecognitionManager::EnableModalRecognition(Rect& bounds)
 }
 
 
-// ROM 0x0019f7fc DisableModalRecognition__19TRecognitionManagerFv
+// ROM 0x0019d540 DisableModalRecognition__19TRecognitionManagerFv
 void
 TRecognitionManager::DisableModalRecognition(void)
 {
@@ -434,7 +434,7 @@ TRecognitionManager::DisableModalRecognition(void)
 }
 
 
-// ROM 0x0019f824 ModalRecognitionOK__19TRecognitionManagerFR5TRect
+// ROM 0x0019d568 ModalRecognitionOK__19TRecognitionManagerFR5TRect
 // Whether a unit's bounds' centre lies within the modal bounds; the popup
 // is closed when it does not.
 Boolean
@@ -449,7 +449,7 @@ TRecognitionManager::ModalRecognitionOK(Rect& bounds)
 }
 
 
-// ROM 0x0019f8ec IgnoreClicks__19TRecognitionManagerFUl
+// ROM 0x0019d630 IgnoreClicks__19TRecognitionManagerFUl
 // Clicks ignored for the ticks.
 void
 TRecognitionManager::IgnoreClicks(ULong ticks)
@@ -458,7 +458,7 @@ TRecognitionManager::IgnoreClicks(ULong ticks)
 }
 
 
-// ROM 0x0019f910 SetNextClick__19TRecognitionManagerFUl
+// ROM 0x0019d654 SetNextClick__19TRecognitionManagerFUl
 // The ignoring is over unless the time falls within the second before it
 // ends.
 void
@@ -470,7 +470,7 @@ TRecognitionManager::SetNextClick(ULong time)
 }
 
 
-// ROM 0x0019f934 SaveClickView__19TRecognitionManagerFP5TView
+// ROM 0x0019d678 SaveClickView__19TRecognitionManagerFP5TView
 // The view clicked, and the one before it.
 void
 TRecognitionManager::SaveClickView(TView* view)
@@ -480,7 +480,7 @@ TRecognitionManager::SaveClickView(TView* view)
 }
 
 
-// ROM 0x0019f944 RemoveClickView__19TRecognitionManagerFP5TView
+// ROM 0x0019d688 RemoveClickView__19TRecognitionManagerFP5TView
 // A view going away is forgotten.
 void
 TRecognitionManager::RemoveClickView(TView* view)
@@ -492,7 +492,7 @@ TRecognitionManager::RemoveClickView(TView* view)
 }
 
 
-// ROM 0x001a0618 Idle__19TRecognitionManagerFv
+// ROM 0x0019e35c Idle__19TRecognitionManagerFv
 // When started: the strokes idled, the stroke world's ink compressed, the
 // controller idled (NOT YET RECONSTRUCTED: TController::Idle).
 long
@@ -507,7 +507,7 @@ TRecognitionManager::Idle(void)
 }
 
 
-// ROM 0x001a0650 NextIdle__19TRecognitionManagerFv
+// ROM 0x0019e394 NextIdle__19TRecognitionManagerFv
 // When to idle next: when started, the stroke world's compress time, or
 // the controller's next idle time (in milliseconds from now) when that
 // is earlier (NOT YET RECONSTRUCTED: TController::NextIdleTime - none);

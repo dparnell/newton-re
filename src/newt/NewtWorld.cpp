@@ -3,7 +3,7 @@
 
 	Contains:	TNewtWorld, TNewtEventHandler, the 'main' task.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "NewtWorld.h"
@@ -31,11 +31,11 @@
 #include "Screen.h"
 #include <string.h>
 
-NewtGlobals*	gNewtGlobals = nil;			// ROM 0x0c1025a4 gNewtGlobals
-TUPort*			gNewtPort = nil;			// ROM 0x0c10259c gNewtPort
-TTime			gLastWakeupTime;			// ROM 0x0c101d40 gLastWakeupTime
-TTime			gTickleTime;				// ROM 0x0c100d00 gTickleTime
-Boolean			gGoingToSleep = false;		// ROM 0x0c102614 gGoingToSleep
+NewtGlobals*	gNewtGlobals = nil;			// ROM 0x0c1054b0 gNewtGlobals
+TUPort*			gNewtPort = nil;			// ROM 0x0c1054a8 gNewtPort
+TTime			gLastWakeupTime;			// ROM 0x0c104c4c gLastWakeupTime
+TTime			gTickleTime;				// ROM 0x0c100d04 gTickleTime
+Boolean			gGoingToSleep = false;		// ROM 0x0c105520 gGoingToSleep
 void			(*gNewtHostBoot)(void) = nil;
 const char*		gNewtBootTestScript = nil;
 static const Int64	kZero = { 0, 0 };
@@ -55,7 +55,7 @@ struct KeyRepeatReply
 };
 
 
-// ROM 0x002e7844 GetNewtGlobals__Fv
+// ROM 0x0030cb58 GetNewtGlobals__Fv
 NewtGlobals*
 GetNewtGlobals(void)
 {
@@ -67,7 +67,7 @@ GetNewtGlobals(void)
 	T N e w t W o r l d
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002e76ec GetSizeOf__10TNewtWorldFv
+// ROM 0x0030ca00 GetSizeOf__10TNewtWorldFv
 ULong
 TNewtWorld::GetSizeOf()
 {
@@ -75,7 +75,7 @@ TNewtWorld::GetSizeOf()
 }
 
 
-// ROM 0x002e7790 MakeFork__10TNewtWorldFv
+// ROM 0x0030caa4 MakeFork__10TNewtWorldFv
 // A new world of the same kind (the ROM answers the object where the base
 // answers an error code; NOT YET: the forks).
 long
@@ -85,7 +85,7 @@ TNewtWorld::MakeFork()
 }
 
 
-// ROM 0x002e77c8 ForkInit__10TNewtWorldFP10TForkWorld
+// ROM 0x0030cadc ForkInit__10TNewtWorldFP10TForkWorld
 // A fork shares the parent's message, handler and port.
 long
 TNewtWorld::ForkInit(TForkWorld* parent)
@@ -102,7 +102,7 @@ TNewtWorld::ForkInit(TForkWorld* parent)
 }
 
 
-// ROM 0x002e7888 ForkConstructor__10TNewtWorldFP10TForkWorld
+// ROM 0x0030cb9c ForkConstructor__10TNewtWorldFP10TForkWorld
 // The fork's own globals: an interpreter of its own and QuickDraw's port
 // and buffers (NOT YET RECONSTRUCTED: InitForkGlobalsForFrames,
 // InitForkGlobalsForQD - the host runs no forks).
@@ -117,7 +117,7 @@ TNewtWorld::ForkConstructor(TForkWorld* parent)
 }
 
 
-// ROM 0x002e78d0 ForkDestructor__10TNewtWorldFv
+// ROM 0x0030cbe4 ForkDestructor__10TNewtWorldFv
 void
 TNewtWorld::ForkDestructor()
 {
@@ -125,7 +125,7 @@ TNewtWorld::ForkDestructor()
 }
 
 
-// ROM 0x002e790c ForkSwitch__10TNewtWorldFUc
+// ROM 0x0030cc20 ForkSwitch__10TNewtWorldFUc
 // Switching in: the fork's globals become the world's, its stack position
 // and interpreter the current ones; out: the stack position saved.
 void
@@ -142,7 +142,7 @@ TNewtWorld::ForkSwitch(Boolean in)
 }
 
 
-// ROM 0x002e7ef8 MainConstructor__10TNewtWorldFv
+// ROM 0x0030d20c MainConstructor__10TNewtWorldFv
 // The world's boot: the app world's own, the alarm message, the object
 // system (host: started by the program, which reads the ROM image in
 // first), the REP, QuickDraw and the fonts (host: the screen and the
@@ -198,7 +198,7 @@ TNewtWorld::MainConstructor()
 }
 
 
-// ROM 0x002e7854 TheMain__10TNewtWorldFv
+// ROM 0x0030cb68 TheMain__10TNewtWorldFv
 // The event loop, with 4K of stack locked down (NOT YET: LockStack).
 void
 TNewtWorld::TheMain()
@@ -207,7 +207,7 @@ TNewtWorld::TheMain()
 }
 
 
-// ROM 0x002e7a14 PreMain__10TNewtWorldFv
+// ROM 0x0030cd28 PreMain__10TNewtWorldFv
 // The boot's second half, before the loop: the strokes blocked, the wakeup
 // time noted, the ROM's frames packages loaded, the extras soup marked
 // initialised, the application Run, a reboot reason reported, the store
@@ -247,7 +247,7 @@ TNewtWorld::PreMain()
 }
 
 
-// ROM 0x002e7928 AEDispatch__10TNewtWorldFUlP10TUMsgTokenPUlP7TAEvent
+// ROM 0x0030cc3c AEDispatch__10TNewtWorldFUlP10TUMsgTokenPUlP7TAEvent
 // An event dispatched with the port set to the default one, under an
 // exception handler: the action description set, the busy box hidden
 // (0x36), the app world's dispatch, the delayed actions run, the screen
@@ -287,18 +287,18 @@ TNewtWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* e
 	T N e w t E v e n t H a n d l e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002e6dcc __ct__17TNewtEventHandlerFv
+// ROM 0x0030c0e0 __ct__17TNewtEventHandlerFv
 TNewtEventHandler::TNewtEventHandler()
 { }
 
 
-// ROM 0x002e6890 AECompletionProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x0030bba4 AECompletionProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
 void
 TNewtEventHandler::AECompletionProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*event*/)
 { }
 
 
-// ROM 0x002e8228 IdleProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x0030d53c IdleProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
 // The idle timer's: the event made an 'idle one and handled as any 'newt
 // event is dispatched (the default port, the exception handler, the
 // delayed actions after).
@@ -327,7 +327,7 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 }
 
 
-// ROM 0x002e830c AEHandlerProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
+// ROM 0x0030d620 AEHandlerProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
 // A 'newt event by its type (the word at +8): 'idle nothing here; 'keyb a
 // keyboard event - the event copied, the keyboard tool replied to at
 // once with the key repeat rates (the keyRepeatFrequency,
@@ -415,7 +415,7 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 }
 
 
-// ROM 0x002e893c SetWakeupTime__17TNewtEventHandlerFUl
+// ROM 0x0030dc50 SetWakeupTime__17TNewtEventHandlerFUl
 // The idle timer re-armed for the earliest of the application's next idle
 // time, the given ticks from now (when not 0), and the next delayed
 // action; stopped when there is nothing to wake for.
@@ -479,7 +479,7 @@ ArmIdleTimer(TNewtEventHandler* handler, TTimeout delay)
 }
 
 
-// ROM 0x002e76f4 RunDelayedActionProcs__Fv
+// ROM 0x0030ca08 RunDelayedActionProcs__Fv
 // While the system is alive, up to ten delayed actions are run, the root
 // view updated and the application idled after each; when actions were
 // run the idle timer is re-armed for the next one - within a tick when
@@ -505,7 +505,7 @@ RunDelayedActionProcs(void)
 }
 
 
-// ROM 0x002e6e0c CheckForDeferredActions__Fv
+// ROM 0x0030c120 CheckForDeferredActions__Fv
 // The idle timer re-armed for the next delayed action, within a tick.
 void
 CheckForDeferredActions(void)
@@ -515,7 +515,7 @@ CheckForDeferredActions(void)
 }
 
 
-// ROM 0x002e9b70 HandleRedrawEvent__FP18TRedrawScreenEvent
+// ROM 0x0030ee84 HandleRedrawEvent__FP18TRedrawScreenEvent
 // The rectangle invalidated in the root view and the view updated.
 void
 HandleRedrawEvent(TRedrawScreenEvent* event)
@@ -542,7 +542,7 @@ TRunScriptEvent::TRunScriptEvent(const char* variable, const char* method)
 }
 
 
-// ROM 0x002e62a0 HandleRunScriptEvent__FP15TRunScriptEvent
+// ROM 0x0030b5b4 HandleRunScriptEvent__FP15TRunScriptEvent
 // The root view's variable named in the event (kNSErrPathFailed when
 // there is none) sent the method named, with a binary of the event's
 // data as the argument (nil for none); the answer, an integer, and an
@@ -593,7 +593,7 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 	T h e   ' m a i n '   t a s k
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002e6894 UserMain__Fv
+// ROM 0x0030bba8 UserMain__Fv
 // The 'main' task: a TNewtWorld named 'newt, registered with the name
 // server, with a 10K stack (host: the task's own), made and run - Init
 // constructs it (MainConstructor), runs PreMain and the event loop, and

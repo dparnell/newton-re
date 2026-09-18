@@ -9,7 +9,7 @@
 				current index move with the elements.  kEmptyIndex (-1) is the
 				index of "nothing".
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Layout (0x1c bytes): fDynamicArray +0, fCurrentIndex +4, fLowBound +8,
 	fHighBound +0xc, fIterateForward +0x10, fPreviousLink +0x14,
 	fNextLink +0x18.
@@ -19,35 +19,35 @@
 #include "DynamicArray.h"
 
 
-// ROM 0x00038750 __ct__14CArrayIteratorFv
+// ROM 0x000386a0 __ct__14CArrayIteratorFv
 CArrayIterator::CArrayIterator()
 {
 	Init();
 }
 
 
-// ROM 0x0003883c __ct__14CArrayIteratorFP13CDynamicArray
+// ROM 0x0003878c __ct__14CArrayIteratorFP13CDynamicArray
 CArrayIterator::CArrayIterator(CDynamicArray* itsDynamicArray)
 {
 	Init(itsDynamicArray, 0, itsDynamicArray->fSize - 1, kIterateForward);
 }
 
 
-// ROM 0x000387e4 __ct__14CArrayIteratorFP13CDynamicArrayUc
+// ROM 0x00038734 __ct__14CArrayIteratorFP13CDynamicArrayUc
 CArrayIterator::CArrayIterator(CDynamicArray* itsDynamicArray, Boolean itsForward)
 {
 	Init(itsDynamicArray, 0, itsDynamicArray->fSize - 1, itsForward);
 }
 
 
-// ROM 0x00038784 __ct__14CArrayIteratorFP13CDynamicArraylT2Uc
+// ROM 0x000386d4 __ct__14CArrayIteratorFP13CDynamicArraylT2Uc
 CArrayIterator::CArrayIterator(CDynamicArray* itsDynamicArray, ArrayIndex itsLowBound, ArrayIndex itsHighBound, Boolean itsForward)
 {
 	Init(itsDynamicArray, itsLowBound, itsHighBound, itsForward);
 }
 
 
-// ROM 0x00038890 __dt__14CArrayIteratorFv
+// ROM 0x000387e0 __dt__14CArrayIteratorFv
 CArrayIterator::~CArrayIterator()
 {
 	if (fDynamicArray != nil)
@@ -55,7 +55,7 @@ CArrayIterator::~CArrayIterator()
 }
 
 
-// ROM 0x000388d4 Init__14CArrayIteratorFv
+// ROM 0x00038824 Init__14CArrayIteratorFv
 void
 CArrayIterator::Init()
 {
@@ -69,7 +69,7 @@ CArrayIterator::Init()
 }
 
 
-// ROM 0x00038900 Init__14CArrayIteratorFP13CDynamicArraylT2Uc
+// ROM 0x00038850 Init__14CArrayIteratorFP13CDynamicArraylT2Uc
 void
 CArrayIterator::Init(CDynamicArray* itsDynamicArray, ArrayIndex itsLowBound, ArrayIndex itsHighBound, Boolean itsForward)
 {
@@ -81,7 +81,7 @@ CArrayIterator::Init(CDynamicArray* itsDynamicArray, ArrayIndex itsLowBound, Arr
 }
 
 
-// ROM 0x00038488 InitBounds__14CArrayIteratorFlT1Uc
+// ROM 0x000383d8 InitBounds__14CArrayIteratorFlT1Uc
 // The bounds are clipped to the array; an empty array gives kEmptyIndex for
 // both, and the current index starts at the end the iteration begins from.
 void
@@ -114,7 +114,7 @@ CArrayIterator::InitBounds(ArrayIndex itsLowBound, ArrayIndex itsHighBound, Bool
 }
 
 
-// ROM 0x000384f4 ResetBounds__14CArrayIteratorFUc
+// ROM 0x00038444 ResetBounds__14CArrayIteratorFUc
 // The whole array, in the given direction.
 void
 CArrayIterator::ResetBounds(Boolean goForward)
@@ -126,7 +126,7 @@ CArrayIterator::ResetBounds(Boolean goForward)
 }
 
 
-// ROM 0x00038548 Reset__14CArrayIteratorFv
+// ROM 0x00038498 Reset__14CArrayIteratorFv
 void
 CArrayIterator::Reset()
 {
@@ -134,7 +134,7 @@ CArrayIterator::Reset()
 }
 
 
-// ROM 0x00038404 SwitchArray__14CArrayIteratorFP13CDynamicArrayUc
+// ROM 0x00038354 SwitchArray__14CArrayIteratorFP13CDynamicArrayUc
 void
 CArrayIterator::SwitchArray(CDynamicArray* newArray, Boolean itsForward)
 {
@@ -147,7 +147,7 @@ CArrayIterator::SwitchArray(CDynamicArray* newArray, Boolean itsForward)
 }
 
 
-// ROM 0x00038528 More__14CArrayIteratorFv
+// ROM 0x00038478 More__14CArrayIteratorFv
 Boolean
 CArrayIterator::More()
 {
@@ -155,7 +155,7 @@ CArrayIterator::More()
 }
 
 
-// ROM 0x00038590 Advance__14CArrayIteratorFv
+// ROM 0x000384e0 Advance__14CArrayIteratorFv
 // One step in the iteration's direction; kEmptyIndex past the bound.
 void
 CArrayIterator::Advance()
@@ -177,7 +177,7 @@ CArrayIterator::Advance()
 }
 
 
-// ROM 0x000386b0 CurrentIndex__14CArrayIteratorFv
+// ROM 0x00038600 CurrentIndex__14CArrayIteratorFv
 ArrayIndex
 CArrayIterator::CurrentIndex()
 {
@@ -185,7 +185,7 @@ CArrayIterator::CurrentIndex()
 }
 
 
-// ROM 0x000386c4 FirstIndex__14CArrayIteratorFv
+// ROM 0x00038614 FirstIndex__14CArrayIteratorFv
 ArrayIndex
 CArrayIterator::FirstIndex()
 {
@@ -194,7 +194,7 @@ CArrayIterator::FirstIndex()
 }
 
 
-// ROM 0x00038724 NextIndex__14CArrayIteratorFv
+// ROM 0x00038674 NextIndex__14CArrayIteratorFv
 ArrayIndex
 CArrayIterator::NextIndex()
 {
@@ -203,7 +203,7 @@ CArrayIterator::NextIndex()
 }
 
 
-// ROM 0x000385d8 RemoveElementsAt__14CArrayIteratorFlT1
+// ROM 0x00038528 RemoveElementsAt__14CArrayIteratorFlT1
 // The array removed elements: every iterator in the ring (from this one
 // round to the array's head) pulls its bounds and, if it has passed the
 // place, its current index back by the count.
@@ -228,7 +228,7 @@ CArrayIterator::RemoveElementsAt(ArrayIndex theIndex, ArrayIndex theCount)
 }
 
 
-// ROM 0x00038644 InsertElementsBefore__14CArrayIteratorFlT1
+// ROM 0x00038594 InsertElementsBefore__14CArrayIteratorFlT1
 // The counterpart for an insertion.
 void
 CArrayIterator::InsertElementsBefore(ArrayIndex theIndex, ArrayIndex theCount)
@@ -251,7 +251,7 @@ CArrayIterator::InsertElementsBefore(ArrayIndex theIndex, ArrayIndex theCount)
 }
 
 
-// ROM 0x00038560 DeleteArray__14CArrayIteratorFv
+// ROM 0x000384b0 DeleteArray__14CArrayIteratorFv
 // The array is going away: every iterator in the ring forgets it.
 void
 CArrayIterator::DeleteArray()
@@ -262,7 +262,7 @@ CArrayIterator::DeleteArray()
 }
 
 
-// ROM 0x00038464 AppendToList__14CArrayIteratorFP14CArrayIterator
+// ROM 0x000383b4 AppendToList__14CArrayIteratorFP14CArrayIterator
 // Links this iterator after toList (nil: it is the ring alone); returns the
 // ring's head.
 CArrayIterator*
@@ -278,7 +278,7 @@ CArrayIterator::AppendToList(CArrayIterator* toList)
 }
 
 
-// ROM 0x000386f0 RemoveFromList__14CArrayIteratorFv
+// ROM 0x00038640 RemoveFromList__14CArrayIteratorFv
 // Unlinks this iterator; returns the ring's new head (nil if it was alone).
 CArrayIterator*
 CArrayIterator::RemoveFromList()

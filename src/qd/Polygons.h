@@ -13,9 +13,9 @@
 				through StdPoly: framed as its lines (FrPoly), else as the
 				region of its outline (DrawPoly).
 
-	Reconstructed from the MP2100 D ROM (0x002d1f98-0x002d2098,
-	0x002d30a0-0x002d32c8, 0x0030ff38-0x00310420, 0x003150f4,
-	0x003154e4); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x002f77dc-0x002f78dc,
+	0x002f88e4-0x002f8b0c, 0x003354d0-0x003359b8, 0x0034103c,
+	0x0034142c); each function cites its origin.
 */
 
 #ifndef __POLYGONS_H

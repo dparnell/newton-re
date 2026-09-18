@@ -4,7 +4,7 @@
 	Contains:	Kernel semaphores: TSemaphore, TSemaphoreGroup, TSemaphoreOpList
 				and the system-call entry points around them.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Semaphore.h"
@@ -25,14 +25,14 @@ static inline long OpDelta(ULong item)			{ return (short) (item & 0xffff); }
 	TSemaphore
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001d7504 __ct__10TSemaphoreFv
+// ROM 0x001d5100 __ct__10TSemaphoreFv
 TSemaphore::TSemaphore()
 {
 	fValue = 0;
 }
 
 
-// ROM 0x001d7560 __dt__10TSemaphoreFv
+// ROM 0x001d515c __dt__10TSemaphoreFv
 // Tasks still waiting are released with kError_Semaphore_Group_No_Longer_Exists.
 // Their saved pc is advanced by one instruction, past the retry the SWI stub
 // would otherwise perform.
@@ -64,7 +64,7 @@ QueueHolds(TTaskQueue& queue, TTask* task)
 }
 
 
-// ROM 0x001d7634 Remove__10TSemaphoreFP5TTask
+// ROM 0x001d5230 Remove__10TSemaphoreFP5TTask
 // DEVIATION: the ROM calls fZeroTasks.RemoveFromQueue and then
 // fIncTasks.RemoveFromQueue unconditionally, and TTaskQueue::RemoveFromQueue
 // trusts the state bit rather than checking membership.  For a task waiting
@@ -85,7 +85,7 @@ TSemaphore::Remove(TTask* task)
 }
 
 
-// ROM 0x001d7668 BlockOnZero__10TSemaphoreFP5TTask8SemFlags
+// ROM 0x001d5264 BlockOnZero__10TSemaphoreFP5TTask8SemFlags
 void
 TSemaphore::BlockOnZero(TTask* task, SemFlags flags)
 {
@@ -97,7 +97,7 @@ TSemaphore::BlockOnZero(TTask* task, SemFlags flags)
 }
 
 
-// ROM 0x001d719c BlockOnInc__10TSemaphoreFP5TTask8SemFlags
+// ROM 0x001d4d98 BlockOnInc__10TSemaphoreFP5TTask8SemFlags
 void
 TSemaphore::BlockOnInc(TTask* task, SemFlags flags)
 {
@@ -109,7 +109,7 @@ TSemaphore::BlockOnInc(TTask* task, SemFlags flags)
 }
 
 
-// ROM 0x001d71d8 WakeTasksOnZero__10TSemaphoreFv
+// ROM 0x001d4dd4 WakeTasksOnZero__10TSemaphoreFv
 void
 TSemaphore::WakeTasksOnZero()
 {
@@ -124,7 +124,7 @@ TSemaphore::WakeTasksOnZero()
 }
 
 
-// ROM 0x001d721c WakeTasksOnInc__10TSemaphoreFv
+// ROM 0x001d4e18 WakeTasksOnInc__10TSemaphoreFv
 void
 TSemaphore::WakeTasksOnInc()
 {
@@ -143,7 +143,7 @@ TSemaphore::WakeTasksOnInc()
 	TSemaphoreOpList
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001d747c Init__16TSemaphoreOpListFUlPUl
+// ROM 0x001d5078 Init__16TSemaphoreOpListFUlPUl
 NewtonErr
 TSemaphoreOpList::Init(ULong count, ULong* ops)
 {
@@ -159,7 +159,7 @@ TSemaphoreOpList::Init(ULong count, ULong* ops)
 }
 
 
-// ROM 0x001d74d0 __dt__16TSemaphoreOpListFv
+// ROM 0x001d50cc __dt__16TSemaphoreOpListFv
 TSemaphoreOpList::~TSemaphoreOpList()
 {
 	if (fOps != nil)
@@ -171,7 +171,7 @@ TSemaphoreOpList::~TSemaphoreOpList()
 	TSemaphoreGroup
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001d7260 Init__15TSemaphoreGroupFUl
+// ROM 0x001d4e5c Init__15TSemaphoreGroupFUl
 NewtonErr
 TSemaphoreGroup::Init(ULong count)
 {
@@ -187,7 +187,7 @@ TSemaphoreGroup::Init(ULong count)
 }
 
 
-// ROM 0x001d72ac __dt__15TSemaphoreGroupFv
+// ROM 0x001d4ea8 __dt__15TSemaphoreGroupFv
 TSemaphoreGroup::~TSemaphoreGroup()
 {
 	if (fSemaphores != nil)
@@ -195,7 +195,7 @@ TSemaphoreGroup::~TSemaphoreGroup()
 }
 
 
-// ROM 0x001d72ec UnWindOp__15TSemaphoreGroupFP16TSemaphoreOpListl
+// ROM 0x001d4ee8 UnWindOp__15TSemaphoreGroupFP16TSemaphoreOpListl
 // Reverses the first `count` operations of the list.
 void
 TSemaphoreGroup::UnWindOp(TSemaphoreOpList* list, long count)
@@ -209,7 +209,7 @@ TSemaphoreGroup::UnWindOp(TSemaphoreOpList* list, long count)
 }
 
 
-// ROM 0x001d733c SemOp__15TSemaphoreGroupFP16TSemaphoreOpList8SemFlagsP5TTask
+// ROM 0x001d4f38 SemOp__15TSemaphoreGroupFP16TSemaphoreOpList8SemFlagsP5TTask
 // Applies the whole list or none of it.  Note the ROM's range check is
 // `semaphore <= fCount`, one past the array; kept as found.
 NewtonErr
@@ -263,7 +263,7 @@ TSemaphoreGroup::SemOp(TSemaphoreOpList* list, SemFlags flags, TTask* task)
 	Entry points
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001d70e0 MarkMessageDone__FP5TTaskl
+// ROM 0x001d4cdc MarkMessageDone__FP5TTaskl
 void
 MarkMessageDone(TTask* task, long result)
 {
@@ -271,7 +271,7 @@ MarkMessageDone(TTask* task, long result)
 }
 
 
-// ROM 0x001d70e8 DoSemaphoreOp
+// ROM 0x001d4ce4 DoSemaphoreOp
 // SWI 11.  (The ROM inlines TSemaphoreGroup::SemOp here.)
 NewtonErr
 DoSemaphoreOp(TObjectId groupId, TObjectId listId, SemFlags flags, TTask* task)
@@ -290,7 +290,7 @@ DoSemaphoreOp(TObjectId groupId, TObjectId listId, SemFlags flags, TTask* task)
 }
 
 
-// ROM 0x000da57c SemGroupSetRefCon__FUlPv
+// ROM 0x000d9504 SemGroupSetRefCon__FUlPv
 // The ROM function serves both modes: in user mode it issues GenericSWI 40
 // instead.  That path belongs to the user-side syscall layer; this is the
 // kernel-mode body.
@@ -307,7 +307,7 @@ SemGroupSetRefCon(TObjectId groupId, void* refCon)
 }
 
 
-// ROM 0x000da600 SemGroupGetRefCon__FUlPPv
+// ROM 0x000d9588 SemGroupGetRefCon__FUlPPv
 // Kernel-mode body; in user mode the ROM issues GenericSWI 41.
 NewtonErr
 SemGroupGetRefCon(TObjectId groupId, void** outRefCon)
@@ -322,7 +322,7 @@ SemGroupGetRefCon(TObjectId groupId, void** outRefCon)
 }
 
 
-// ROM 0x0014a490 DeleteSemList__FP16TSemaphoreOpList
+// ROM 0x00148934 DeleteSemList__FP16TSemaphoreOpList
 void
 DeleteSemList(TSemaphoreOpList* list)
 {
@@ -331,7 +331,7 @@ DeleteSemList(TSemaphoreOpList* list)
 }
 
 
-// ROM 0x0014a4a0 DeleteSemGroup__FP15TSemaphoreGroup
+// ROM 0x00148944 DeleteSemGroup__FP15TSemaphoreGroup
 void
 DeleteSemGroup(TSemaphoreGroup* group)
 {

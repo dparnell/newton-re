@@ -4,7 +4,7 @@
 	Contains:	CList (List.h): a CDynamicArray of pointers, searched with
 				CItemTesters (identity by a CItemComparer on the pointer).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	Size 0x18 (the CDynamicArray).
 */
 
@@ -15,18 +15,18 @@
 #include "NewtonMemory.h"
 
 
-// ROM 0x001148ac __ct__5CListFv
+// ROM 0x00113238 __ct__5CListFv
 CList::CList()
 	: CDynamicArray(sizeof(void*), kDefaultChunkSize)
 { }
 
 
-// ROM 0x001149a0 __dt__5CListFv
+// ROM 0x0011332c __dt__5CListFv
 CList::~CList()
 { }
 
 
-// ROM 0x00114610 Make__5CListSFv
+// ROM 0x00112f9c Make__5CListSFv
 CList*
 CList::Make()
 {
@@ -34,7 +34,7 @@ CList::Make()
 }
 
 
-// ROM 0x001103a0 Make__5CListSFl
+// ROM 0x0010ed2c Make__5CListSFl
 // (the size is not used)
 CList*
 CList::Make(ArrayIndex /*size*/)
@@ -43,7 +43,7 @@ CList::Make(ArrayIndex /*size*/)
 }
 
 
-// ROM 0x00114a90 At__5CListFl
+// ROM 0x0011341c At__5CListFl
 // nil outside the list.
 void*
 CList::At(ArrayIndex index)
@@ -53,7 +53,7 @@ CList::At(ArrayIndex index)
 }
 
 
-// ROM 0x00114b1c InsertAt__5CListFlPv
+// ROM 0x001134a8 InsertAt__5CListFlPv
 NewtonErr
 CList::InsertAt(ArrayIndex index, void* item)
 {
@@ -62,7 +62,7 @@ CList::InsertAt(ArrayIndex index, void* item)
 }
 
 
-// ROM 0x00114cb4 InsertUnique__5CListFPv
+// ROM 0x00113640 InsertUnique__5CListFPv
 // Appends the item unless it is already in the list; true if it was added.
 Boolean
 CList::InsertUnique(void* item)
@@ -74,7 +74,7 @@ CList::InsertUnique(void* item)
 }
 
 
-// ROM 0x00114b60 Remove__5CListFPv
+// ROM 0x001134ec Remove__5CListFPv
 // (the removal is RemoveElementsAt(index, 1), inlined in the ROM)
 NewtonErr
 CList::Remove(void* item)
@@ -86,7 +86,7 @@ CList::Remove(void* item)
 }
 
 
-// ROM 0x00114cf8 Replace__5CListFPvT1
+// ROM 0x00113684 Replace__5CListFPvT1
 NewtonErr
 CList::Replace(void* oldItem, void* newItem)
 {
@@ -98,7 +98,7 @@ CList::Replace(void* oldItem, void* newItem)
 }
 
 
-// ROM 0x00114e94 ReplaceAt__5CListFlPv
+// ROM 0x00113820 ReplaceAt__5CListFlPv
 NewtonErr
 CList::ReplaceAt(ArrayIndex index, void* newItem)
 {
@@ -107,7 +107,7 @@ CList::ReplaceAt(ArrayIndex index, void* newItem)
 }
 
 
-// ROM 0x00114644 GetIdentityIndex__5CListFPv
+// ROM 0x00112fd0 GetIdentityIndex__5CListFPv
 // The index of the item itself (pointer equality), or kEmptyIndex.
 ArrayIndex
 CList::GetIdentityIndex(void* item)
@@ -119,7 +119,7 @@ CList::GetIdentityIndex(void* item)
 }
 
 
-// ROM 0x0011467c Search__5CListFP11CItemTesterRl
+// ROM 0x00113008 Search__5CListFP11CItemTesterRl
 // The first item the tester finds equal to its criteria, and its index
 // (kEmptyIndex when none).
 void*

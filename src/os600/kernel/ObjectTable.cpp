@@ -3,7 +3,7 @@
 
 	Contains:	TObjectTable and TObjectTableIterator.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ObjectTable.h"
@@ -36,7 +36,7 @@ DefaultScavengeProc(TKernelObject* /*object*/, ULong /*unused*/)
 	TObjectTable
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f4af0 Init__12TObjectTableFv
+// ROM 0x00319df4 Init__12TObjectTableFv
 NewtonErr
 TObjectTable::Init()
 {
@@ -48,7 +48,7 @@ TObjectTable::Init()
 }
 
 
-// ROM 0x002f4b24 SetScavengeProc__12TObjectTableFPFP13TKernelObjectUl_PFP13TKernelObject_v
+// ROM 0x00319e28 SetScavengeProc__12TObjectTableFPFP13TKernelObjectUl_PFP13TKernelObject_v
 void
 TObjectTable::SetScavengeProc(ScavengeProcPtr proc)
 {
@@ -56,7 +56,7 @@ TObjectTable::SetScavengeProc(ScavengeProcPtr proc)
 }
 
 
-// ROM 0x002f4bd4 NextGlobalUniqueId__12TObjectTableFv
+// ROM 0x00319ed8 NextGlobalUniqueId__12TObjectTableFv
 ULong
 TObjectTable::NextGlobalUniqueId()
 {
@@ -70,7 +70,7 @@ TObjectTable::NextGlobalUniqueId()
 }
 
 
-// ROM 0x002f4b2c NewId__12TObjectTableF11KernelTypes
+// ROM 0x00319e30 NewId__12TObjectTableF11KernelTypes
 // Once the unique counter has wrapped, keep drawing until the id is unused.
 // Physical page ids must also be unique across the memory-architecture table.
 TObjectId
@@ -90,7 +90,7 @@ TObjectTable::NewId(KernelTypes type)
 }
 
 
-// ROM 0x002f4c10 Get__12TObjectTableFUl
+// ROM 0x00319f14 Get__12TObjectTableFUl
 TKernelObject*
 TObjectTable::Get(TObjectId id)
 {
@@ -103,7 +103,7 @@ TObjectTable::Get(TObjectId id)
 }
 
 
-// ROM 0x002f4c5c Exists__12TObjectTableFUl
+// ROM 0x00319f60 Exists__12TObjectTableFUl
 Boolean
 TObjectTable::Exists(TObjectId id)
 {
@@ -116,7 +116,7 @@ TObjectTable::Exists(TObjectId id)
 }
 
 
-// ROM 0x002f4c98 Add__12TObjectTableFP13TKernelObject11KernelTypesUl
+// ROM 0x00319f9c Add__12TObjectTableFP13TKernelObject11KernelTypesUl
 // Gives the object its id and links it in at the head of its bucket.
 // An owner of 1 means the object owns itself.
 TObjectId
@@ -148,7 +148,7 @@ CallDestructor(ObjectDestructorProcPtr destructor, TKernelObject* object)
 }
 
 
-// ROM 0x002f4cf4 Remove__12TObjectTableFUl
+// ROM 0x00319ff8 Remove__12TObjectTableFUl
 // Unlinks the object if the scavenge proc agrees, keeping the scavenge cursor
 // consistent, and runs the destructor.  Ids of kNoType are never in the table.
 NewtonErr
@@ -183,7 +183,7 @@ TObjectTable::Remove(TObjectId id)
 }
 
 
-// ROM 0x002f477c Scavenge__12TObjectTableFv
+// ROM 0x00319a80 Scavenge__12TObjectTableFv
 // Walks the next bucket removing objects whose owner has disappeared.
 void
 TObjectTable::Scavenge()
@@ -223,7 +223,7 @@ TObjectTable::Scavenge()
 }
 
 
-// ROM 0x002f4864 ScavengeAll__12TObjectTableFv
+// ROM 0x00319b68 ScavengeAll__12TObjectTableFv
 void
 TObjectTable::ScavengeAll()
 {
@@ -232,7 +232,7 @@ TObjectTable::ScavengeAll()
 }
 
 
-// ROM 0x002f4890 ReassignOwnership__12TObjectTableFUlT1
+// ROM 0x00319b94 ReassignOwnership__12TObjectTableFUlT1
 void
 TObjectTable::ReassignOwnership(TObjectId fromOwner, TObjectId toOwner)
 {
@@ -253,7 +253,7 @@ TObjectTable::ReassignOwnership(TObjectId fromOwner, TObjectId toOwner)
 	TObjectTableIterator
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f48f4 __ct__20TObjectTableIteratorFP12TObjectTableUl
+// ROM 0x00319bf8 __ct__20TObjectTableIteratorFP12TObjectTableUl
 TObjectTableIterator::TObjectTableIterator(TObjectTable* table, TObjectId startId)
 {
 	fStartIndex = ObjectTableIndex(startId);
@@ -264,7 +264,7 @@ TObjectTableIterator::TObjectTableIterator(TObjectTable* table, TObjectId startI
 }
 
 
-// ROM 0x002f4954 GetThisLineNextEntry__20TObjectTableIteratorFv
+// ROM 0x00319c58 GetThisLineNextEntry__20TObjectTableIteratorFv
 // Advances to the next object of the current bucket; at the end of a bucket
 // moves on to the next one.  Returns false once the walk has come round.
 Boolean
@@ -286,7 +286,7 @@ TObjectTableIterator::GetThisLineNextEntry()
 }
 
 
-// ROM 0x002f49cc SetCurrentPosition__20TObjectTableIteratorFUl
+// ROM 0x00319cd0 SetCurrentPosition__20TObjectTableIteratorFUl
 Boolean
 TObjectTableIterator::SetCurrentPosition(TObjectId id)
 {
@@ -302,7 +302,7 @@ TObjectTableIterator::SetCurrentPosition(TObjectId id)
 }
 
 
-// ROM 0x002f4a48 GetNextTableId__20TObjectTableIteratorFv
+// ROM 0x00319d4c GetNextTableId__20TObjectTableIteratorFv
 TObjectId
 TObjectTableIterator::GetNextTableId()
 {
@@ -317,7 +317,7 @@ TObjectTableIterator::GetNextTableId()
 }
 
 
-// ROM 0x002f4a9c GetNextTypedId__20TObjectTableIteratorF11KernelTypes
+// ROM 0x00319da0 GetNextTypedId__20TObjectTableIteratorF11KernelTypes
 TObjectId
 TObjectTableIterator::GetNextTypedId(KernelTypes type)
 {
@@ -330,7 +330,7 @@ TObjectTableIterator::GetNextTypedId(KernelTypes type)
 }
 
 
-// ROM 0x002f4acc GetNextTypedObject__20TObjectTableIteratorF11KernelTypes
+// ROM 0x00319dd0 GetNextTypedObject__20TObjectTableIteratorF11KernelTypes
 TKernelObject*
 TObjectTableIterator::GetNextTypedObject(KernelTypes type)
 {

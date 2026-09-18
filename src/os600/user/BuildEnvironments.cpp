@@ -28,7 +28,7 @@
 #include "OSErrors.h"
 
 
-// ROM 0x000ea7c8 BuildDomainsAndHeaps__FUl
+// ROM 0x000e91f0 BuildDomainsAndHeaps__FUl
 // For every domain but the kernel's (already made): a plain domain if it
 // has neither globals nor a heap, else a heap domain with its globals area
 // (copied from ROM and zeroed) and its heap (VM, segregated, persistent or
@@ -91,7 +91,7 @@ BuildDomainsAndHeaps(TObjectId envId)
 }
 
 
-// ROM 0x000eb200 BuildEnvironments__Fv
+// ROM 0x000e9c28 BuildEnvironments__Fv
 // An environment per table entry: the kernel's is the one already made;
 // the others get the default heap the table names (the kernel heap for
 // 'krnl', else the heap registered under that name) and each of their
@@ -143,7 +143,7 @@ BuildEnvironments()
 }
 
 
-// ROM 0x000ea784 InitDomainsAndEnvironments__Fv
+// ROM 0x000e91ac InitDomainsAndEnvironments__Fv
 void
 InitDomainsAndEnvironments()
 {

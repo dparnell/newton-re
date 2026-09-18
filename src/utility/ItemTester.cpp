@@ -7,7 +7,7 @@
 				their pointer value against fItem (so a list of pointers can
 				be searched for a given one).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin (the
+	Reconstructed from the MP2x00 US ROM; each function cites its origin (the
 	FXU setters the header declares are not in this ROM).
 	CItemComparer is 0xc bytes: vptr +0, fItem +4, fKey +8.
 */
@@ -15,7 +15,7 @@
 #include "ItemComparer.h"
 
 
-// ROM 0x000fa464 TestItem__11CItemTesterCFPCv
+// ROM 0x000f8e00 TestItem__11CItemTesterCFPCv
 CompareResult
 CItemTester::TestItem(const void* /*testItem*/) const
 {
@@ -23,7 +23,7 @@ CItemTester::TestItem(const void* /*testItem*/) const
 }
 
 
-// ROM 0x000fa3c8 __ct__13CItemComparerFv
+// ROM 0x000f8d64 __ct__13CItemComparerFv
 CItemComparer::CItemComparer()
 {
 	fItem = nil;
@@ -31,7 +31,7 @@ CItemComparer::CItemComparer()
 }
 
 
-// ROM 0x000fa408 __ct__13CItemComparerFPCvT1
+// ROM 0x000f8da4 __ct__13CItemComparerFPCvT1
 CItemComparer::CItemComparer(const void* testItem, const void* keyValue)
 {
 	fItem = testItem;
@@ -39,7 +39,7 @@ CItemComparer::CItemComparer(const void* testItem, const void* keyValue)
 }
 
 
-// ROM 0x000fa448 TestItem__13CItemComparerCFPCv
+// ROM 0x000f8de4 TestItem__13CItemComparerCFPCv
 // fItem against the criteria, as (unsigned) pointer values.
 CompareResult
 CItemComparer::TestItem(const void* criteria) const

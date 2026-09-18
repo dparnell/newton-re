@@ -4,7 +4,7 @@
 	Contains:	TEditView (EditView.h) - the editor's frame and the hilites
 				of its children.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The editor keeps no hilite of its own: every question about the
 	selection is put to the children that are hilited themselves, and the
 	rectangle they are gathered into starts with its top and bottom at
@@ -47,7 +47,7 @@ GatheredNothing(const Rect* bounds)
 }
 
 
-// ROM 0x000a4698 ToOutsideGrayBorder__FP5TRectPC5TRect
+// ROM 0x000a3498 ToOutsideGrayBorder__FP5TRectPC5TRect
 void
 ToOutsideGrayBorder(Rect* r, const Rect* limit)
 {
@@ -69,11 +69,11 @@ ToOutsideGrayBorder(Rect* r, const Rect* limit)
 	T E d i t V i e w
 ------------------------------------------------------------------------------*/
 
-// ROM 0x000a2c68 ClassID__9TEditViewCFv
+// ROM 0x000a1a68 ClassID__9TEditViewCFv
 long	TEditView::ClassID(void) const		{ return clEditView; }
 
 
-// ROM 0x000a2c70 DerivedFrom__9TEditViewCFl
+// ROM 0x000a1a70 DerivedFrom__9TEditViewCFl
 // TView's, not TContainerView's: an edit view answers the same questions as
 // a container but is not one.
 Boolean
@@ -83,7 +83,7 @@ TEditView::DerivedFrom(long id) const
 }
 
 
-// ROM 0x000a53f4 Constructor__9TEditViewFRC6RefVarP5TView
+// ROM 0x000a41f4 Constructor__9TEditViewFRC6RefVarP5TView
 void
 TEditView::Constructor(RefArg context, TView* parent)
 {
@@ -93,7 +93,7 @@ TEditView::Constructor(RefArg context, TView* parent)
 }
 
 
-// ROM 0x000a768c SetupDone__9TEditViewFv
+// ROM 0x000a648c SetupDone__9TEditViewFv
 // The line spacing the new paragraphs are aligned to, the text flags a
 // child paragraph inherits, no caret yet, and a selection that may not be
 // resized until something says otherwise.
@@ -110,7 +110,7 @@ TEditView::SetupDone(void)
 }
 
 
-// ROM 0x000a5370 HasHilitedChildren__9TEditViewFlPP5TView
+// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 // Whether at least `atLeast` children are hilited; `first` comes back as the
 // last one counted, when it is wanted.
 Boolean
@@ -134,7 +134,7 @@ TEditView::HasHilitedChildren(long atLeast, TView** first)
 }
 
 
-// ROM 0x000a8cbc CountHilites__9TEditViewFv
+// ROM 0x000a7abc CountHilites__9TEditViewFv
 long
 TEditView::CountHilites(void)
 {
@@ -150,7 +150,7 @@ TEditView::CountHilites(void)
 }
 
 
-// ROM 0x000a8c54 PointInHilite__9TEditViewFR6TPoint
+// ROM 0x000a7a54 PointInHilite__9TEditViewFR6TPoint
 Boolean
 TEditView::PointInHilite(Point& pt)
 {
@@ -165,7 +165,7 @@ TEditView::PointInHilite(Point& pt)
 }
 
 
-// ROM 0x000a871c HiliteAll__9TEditViewFv
+// ROM 0x000a751c HiliteAll__9TEditViewFv
 // Every child selects the whole of itself, and the caret goes wherever the
 // selection leaves it.
 void
@@ -179,7 +179,7 @@ TEditView::HiliteAll(void)
 }
 
 
-// ROM 0x000a8774 RemoveAllHilites__9TEditViewFv
+// ROM 0x000a7574 RemoveAllHilites__9TEditViewFv
 void
 TEditView::RemoveAllHilites(void)
 {
@@ -196,7 +196,7 @@ TEditView::RemoveAllHilites(void)
 }
 
 
-// ROM 0x000a8588 DetermineKeyView__9TEditViewFv
+// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
 // Where the caret goes after a selection changed: into the one selected
 // paragraph when that is all there is, else onto the editor itself with the
 // number of selected children as the length.
@@ -232,7 +232,7 @@ TEditView::DetermineKeyView(void)
 }
 
 
-// ROM 0x000a89cc GlobalHiliteBounds__9TEditViewFP5TRect
+// ROM 0x000a77cc GlobalHiliteBounds__9TEditViewFP5TRect
 // The hilited children's bounds, gathered; the answer is the click options
 // they have in common - every bit AND-ed except bit 2, which is OR-ed -
 // through the editor's own mask.  Nothing selected: the bounds keep their
@@ -258,7 +258,7 @@ TEditView::GlobalHiliteBounds(Rect* bounds)
 }
 
 
-// ROM 0x000a8a8c GlobalSelectedBounds__9TEditViewFP5TRect
+// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect
 // Not the selections but the hilited children themselves: the union of
 // their view bounds.
 void
@@ -288,7 +288,7 @@ TEditView::GlobalSelectedBounds(Rect* bounds)
 }
 
 
-// ROM 0x000a8b90 GlobalHiliteResizeBounds__9TEditViewFP5TRect
+// ROM 0x000a7990 GlobalHiliteResizeBounds__9TEditViewFP5TRect
 // Every child, hilited or not - a resize is bounded by what is around it.
 void
 TEditView::GlobalHiliteResizeBounds(Rect* bounds)
@@ -301,7 +301,7 @@ TEditView::GlobalHiliteResizeBounds(Rect* bounds)
 }
 
 
-// ROM 0x000a8c00 GlobalHilitePinnedBounds__9TEditViewFP5TRect
+// ROM 0x000a7a00 GlobalHilitePinnedBounds__9TEditViewFP5TRect
 // The caller's rectangle is added to, not started again.
 void
 TEditView::GlobalHilitePinnedBounds(Rect* bounds)
@@ -313,7 +313,7 @@ TEditView::GlobalHilitePinnedBounds(Rect* bounds)
 }
 
 
-// ROM 0x000a7470 InvalAllHilites__9TEditViewFv
+// ROM 0x000a6270 InvalAllHilites__9TEditViewFv
 // A resizable selection is drawn with a border outside the children, so
 // what has to be redrawn is more than the children themselves.
 void
@@ -329,7 +329,7 @@ TEditView::InvalAllHilites(void)
 }
 
 
-// ROM 0x000a7210 DirtyBoxHilites__9TEditViewFv
+// ROM 0x000a6010 DirtyBoxHilites__9TEditViewFv
 void
 TEditView::DirtyBoxHilites(void)
 {
@@ -343,7 +343,7 @@ TEditView::DirtyBoxHilites(void)
 }
 
 
-// ROM 0x000a7510 DrawHilitedData__9TEditViewFv
+// ROM 0x000a6310 DrawHilitedData__9TEditViewFv
 // The hilited children draw themselves again, and the pen is left as the
 // caller found it.
 void
@@ -363,7 +363,7 @@ TEditView::DrawHilitedData(void)
 }
 
 
-// ROM 0x000a729c DrawHiliting__9TEditViewFv
+// ROM 0x000a609c DrawHiliting__9TEditViewFv
 // Each hilited child draws its hilites twice, scaled false and then true:
 // the ROM's two passes, the second being what a view that draws its
 // selection differently when scaled uses.  NOT YET: the resize border round
@@ -407,7 +407,7 @@ TEditView::DrawHiliting(void)
 }
 
 
-// ROM 0x000a70b8 PostDraw__9TEditViewFR5TRect
+// ROM 0x000a5eb8 PostDraw__9TEditViewFR5TRect
 // The hiliting is drawn into an offscreen map and blitted over the view, so
 // that inverting it twice does not leave the children drawn twice.
 void
@@ -439,7 +439,7 @@ TEditView::PostDraw(Rect& drawBounds)
 	}
 }
 
-// ROM 0x000aba60 ActivateSelection__9TEditViewFUc
+// ROM 0x000aa860 ActivateSelection__9TEditViewFUc
 // Losing the caret loses the selection with it.
 void
 TEditView::ActivateSelection(Boolean on)
@@ -450,7 +450,7 @@ TEditView::ActivateSelection(Boolean on)
 }
 
 
-// ROM 0x000acbb4 BuildKeyChildList__9TEditViewFP9TViewListlT2
+// ROM 0x000ab9b4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 // The editor itself takes the caret as well as its children do - tab
 // stops on the page, not only on what is written on it - unless it is
 // read-only.
@@ -466,7 +466,7 @@ TEditView::BuildKeyChildList(TViewList* list, long a, long b)
 }
 
 
-// ROM 0x000aba94 SetCaretRectLocal__9TEditViewFRC5TRect
+// ROM 0x000aa894 SetCaretRectLocal__9TEditViewFRC5TRect
 void
 TEditView::SetCaretRectLocal(const Rect& r)
 {
@@ -474,7 +474,7 @@ TEditView::SetCaretRectLocal(const Rect& r)
 }
 
 
-// ROM 0x000abaa4 SetCaretRectGlobal__9TEditViewFRC5TRect
+// ROM 0x000aa8a4 SetCaretRectGlobal__9TEditViewFRC5TRect
 // The same, given in the coordinates the view is scrolled to.
 void
 TEditView::SetCaretRectGlobal(const Rect& r)
@@ -485,7 +485,7 @@ TEditView::SetCaretRectGlobal(const Rect& r)
 }
 
 
-// ROM 0x000abb2c GetCaretLocalTopLeft__9TEditViewFv
+// ROM 0x000aa92c GetCaretLocalTopLeft__9TEditViewFv
 Point
 TEditView::GetCaretLocalTopLeft(void)
 {
@@ -496,7 +496,7 @@ TEditView::GetCaretLocalTopLeft(void)
 }
 
 
-// ROM 0x000abb38 GetCaretGlobalTopLeft__9TEditViewFv
+// ROM 0x000aa938 GetCaretGlobalTopLeft__9TEditViewFv
 Point
 TEditView::GetCaretGlobalTopLeft(void)
 {
@@ -507,7 +507,7 @@ TEditView::GetCaretGlobalTopLeft(void)
 	return pt;
 }
 
-// ROM 0x000a40e4 OffsetToCaret__9TEditViewFlP5TRect
+// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
 // Where the caret is, in the coordinates the view is scrolled to.  The
 // offset is the paragraph's way of asking and means nothing here: the
 // editor has one caret rectangle, wherever it was last put.
@@ -525,7 +525,7 @@ TEditView::OffsetToCaret(long /*offset*/, Rect* caret)
 }
 
 
-// ROM 0x000ac090 GetHilitedViewsSorted__9TEditViewFv
+// ROM 0x000aae90 GetHilitedViewsSorted__9TEditViewFv
 // The selected children in reading order: down the page, and within
 // twelve pixels of the same top, left to right.  The array is the
 // caller's to delete[]; nil when nothing is selected.
@@ -568,7 +568,7 @@ TEditView::GetHilitedViewsSorted(void)
 }
 
 
-// ROM 0x000ac80c MoveBetweenParagraphs__9TEditViewFlT1
+// ROM 0x000ab60c MoveBetweenParagraphs__9TEditViewFlT1
 // The paragraph nearest above (direction -1) or below (+1) the line v,
 // which is how the up and down arrows leave one paragraph for the next.
 TView*
@@ -595,7 +595,7 @@ TEditView::MoveBetweenParagraphs(long v, long direction)
 	return best;
 }
 
-// ROM 0x000a3dc4 AlignToLineSpacing__9TEditViewFP5TRectlT2
+// ROM 0x000a2bc4 AlignToLineSpacing__9TEditViewFP5TRectlT2
 // A new paragraph's rectangle moved onto the ruled lines: its baseline
 // (top + ascent) onto the nearest line, and its left onto the square grid
 // when the view has one.  A line is chosen by rounding two thirds of the

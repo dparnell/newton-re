@@ -3,7 +3,7 @@
 
 	Contains:	TUnitPublic, the face of a unit the view system sees.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "UnitPublic.h"
@@ -14,7 +14,7 @@
 #include "StrokeCentral.h"
 
 
-// ROM 0x0022a688 __ct__11TUnitPublicFP5TUnitUl
+// ROM 0x0022ced0 __ct__11TUnitPublicFP5TUnitUl
 // Nothing made yet: the stroke face, shapes, word list and view hit come
 // when asked for; the word base is unknown.
 TUnitPublic::TUnitPublic(TUnit* unit, ULong /*unused*/)
@@ -33,7 +33,7 @@ TUnitPublic::TUnitPublic(TUnit* unit, ULong /*unused*/)
 }
 
 
-// ROM 0x0022a718 __dt__11TUnitPublicFv
+// ROM 0x0022cf60 __dt__11TUnitPublicFv
 // The stroke face, the polygons, the word list and the word info gone
 // (the unit itself is the recogniser's).
 TUnitPublic::~TUnitPublic()
@@ -49,7 +49,7 @@ TUnitPublic::~TUnitPublic()
 }
 
 
-// ROM 0x0022af18 GetType__11TUnitPublicFv
+// ROM 0x0022d678 GetType__11TUnitPublicFv
 ULong
 TUnitPublic::GetType(void)
 {
@@ -57,7 +57,7 @@ TUnitPublic::GetType(void)
 }
 
 
-// ROM 0x0022b1d4 StartTime__11TUnitPublicFv
+// ROM 0x0022d934 StartTime__11TUnitPublicFv
 ULong
 TUnitPublic::StartTime(void)
 {
@@ -65,7 +65,7 @@ TUnitPublic::StartTime(void)
 }
 
 
-// ROM 0x0022b308 EndTime__11TUnitPublicFv
+// ROM 0x0022da68 EndTime__11TUnitPublicFv
 // The end of the last stroke the unit covers.
 // NOT YET RECONSTRUCTED: the controller's stroke unit at fMaxStroke (its
 // start plus its duration); the unit's own end time serves the host.
@@ -76,7 +76,7 @@ TUnitPublic::EndTime(void)
 }
 
 
-// ROM 0x0022a944 ContextID__11TUnitPublicFv
+// ROM 0x0022d18c ContextID__11TUnitPublicFv
 ULong
 TUnitPublic::ContextID(void)
 {
@@ -84,7 +84,7 @@ TUnitPublic::ContextID(void)
 }
 
 
-// ROM 0x0022b4c8 Bounds__11TUnitPublicFP5TRect
+// ROM 0x0022dc28 Bounds__11TUnitPublicFP5TRect
 // The unit's bounds in pixels, a pixel wider and taller than its box - the
 // stroke's box for a recogniser flagged kRecognizerStrokeBounds.  With no
 // recogniser for the type (or no stroke) the rect's top and bottom are
@@ -115,7 +115,7 @@ TUnitPublic::Bounds(Rect* rect)
 }
 
 
-// ROM 0x0022b424 IsTap__11TUnitPublicFv
+// ROM 0x0022db84 IsTap__11TUnitPublicFv
 // A tap: the bounds under 6 pixels each way.
 Boolean
 TUnitPublic::IsTap(void)
@@ -126,7 +126,7 @@ TUnitPublic::IsTap(void)
 }
 
 
-// ROM 0x0022b47c Stroke__11TUnitPublicFv
+// ROM 0x0022dbdc Stroke__11TUnitPublicFv
 // The face of the unit's first stroke, made once (the face does not own
 // the stroke); nil when the unit has none.
 TStrokePublic*
@@ -142,7 +142,7 @@ TUnitPublic::Stroke(void)
 }
 
 
-// ROM 0x0022b1e0 FindView__11TUnitPublicFUl
+// ROM 0x0022d940 FindView__11TUnitPublicFUl
 // The view under the unit with the flags: the one found last is answered
 // when it was found with the same flags; otherwise the view under the
 // centre of the bounds, and failing that the closest within 10 pixels
@@ -167,7 +167,7 @@ TUnitPublic::FindView(ULong flags)
 }
 
 
-// ROM 0x0022b340 SetViewHit__11TUnitPublicFP5TViewUl
+// ROM 0x0022daa0 SetViewHit__11TUnitPublicFP5TViewUl
 void
 TUnitPublic::SetViewHit(TView* view, ULong flags)
 {
@@ -176,7 +176,7 @@ TUnitPublic::SetViewHit(TView* view, ULong flags)
 }
 
 
-// ROM 0x0022b34c InputMask__11TUnitPublicFv
+// ROM 0x0022daac InputMask__11TUnitPublicFv
 // The recognition bits of the view under the unit (found with the
 // recogniser's required mask); 0 for no view.
 ULong
@@ -187,7 +187,7 @@ TUnitPublic::InputMask(void)
 }
 
 
-// ROM 0x0022b3c8 RequiredMask__11TUnitPublicFv
+// ROM 0x0022db28 RequiredMask__11TUnitPublicFv
 // The services the unit's recogniser has enabled, as view flags; a stroke
 // recogniser's take the shape and word bits along, a gesture recogniser's
 // the clicks.
@@ -206,7 +206,7 @@ TUnitPublic::RequiredMask(void)
 }
 
 
-// ROM 0x0022b388 Cleanup__11TUnitPublicFv
+// ROM 0x0022dae8 Cleanup__11TUnitPublicFv
 // A click's ink taken off the screen once it is handled, and the stroke
 // world's current stroke forgotten.
 void
@@ -219,7 +219,7 @@ TUnitPublic::Cleanup(void)
 }
 
 
-// ROM 0x0022b59c Invalidate__11TUnitPublicFv
+// ROM 0x0022dcfc Invalidate__11TUnitPublicFv
 // What the unit's strokes inked given to the root view to redraw: with no
 // stroke face yet, the bounds (let out for the ink) and every stroke's
 // rect - the strokes not drawn are marked to draw no ink and their rects
@@ -266,7 +266,7 @@ TUnitPublic::Invalidate(void)
 }
 
 
-// ROM 0x0022a780 CaretType__11TUnitPublicFv
+// ROM 0x0022cfc8 CaretType__11TUnitPublicFv
 // The first interpretation's label when it is one of the caret gestures
 // (2, 3, 5, 6); else 0.
 long
@@ -279,7 +279,7 @@ TUnitPublic::CaretType(void)
 }
 
 
-// ROM 0x0022a870 GestureAngle__11TUnitPublicFv
+// ROM 0x0022d0b8 GestureAngle__11TUnitPublicFv
 // The first interpretation's angle (Fixed, rounded to degrees), snapped to
 // 0, 90, -90, 180 or 135 when within the tolerance - 30 degrees for label
 // 5, 20 for the rest; otherwise as it is.
@@ -311,7 +311,7 @@ TUnitPublic::GestureAngle(void)
 }
 
 
-// ROM 0x0022b110 Strokes__11TUnitPublicFv
+// ROM 0x0022d870 Strokes__11TUnitPublicFv
 // The word's strokes as a stroke bundle: the word info frame's strokes
 // slot.  NOT YET RECONSTRUCTED: WordInfo (MakeWordInfo); nil.
 Ref

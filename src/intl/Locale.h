@@ -10,8 +10,8 @@
 				day and month names, the number format's strings), and the
 				date and time strings (Dates.h does the work).
 
-	Reconstructed from the MP2100 D ROM (0x000ed050-0x000ee5a4,
-	0x001f36b8); each function cites its origin.  NOT YET RECONSTRUCTED:
+	Reconstructed from the MP2x00 US ROM (0x000eba78-0x000ecfec,
+	0x001f12a0); each function cites its origin.  NOT YET RECONSTRUCTED:
 	the lexical dictionaries (time, date, phone, number: the recognition
 	system's AirusA dictionaries) that CacheLocaleAttributes replaces.
 */

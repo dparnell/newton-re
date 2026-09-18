@@ -9,8 +9,8 @@
 				DrawHilites: the ROM inverts the picture), drag and drop of
 				the picture, scaled drawing.
 
-	Reconstructed from the MP2100 D ROM (0x0018ad68-0x0018ada4,
-	0x0018bb40-0x0018be1c); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x00188d38-0x00188d74,
+	0x00189b10-0x00189dec); each function cites its origin.
 */
 
 #ifndef __PICTUREVIEW_H
@@ -23,11 +23,11 @@
 class TPictureView : public TView
 {
 public:
-	virtual long	ClassID(void) const;								// ROM 0x0018ad68 ClassID__12TPictureViewCFv
-	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x0018ad70 DerivedFrom__12TPictureViewCFl
-	virtual void	RealDraw(Rect& bounds);								// ROM 0x0018bb40 RealDraw__12TPictureViewFR5TRect
+	virtual long	ClassID(void) const;								// ROM 0x00188d38 ClassID__12TPictureViewCFv
+	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x00188d40 DerivedFrom__12TPictureViewCFl
+	virtual void	RealDraw(Rect& bounds);								// ROM 0x00189b10 RealDraw__12TPictureViewFR5TRect
 
-	void		DrawUsingRect(const Rect& bounds);						// ROM 0x0018bd00 DrawUsingRect__12TPictureViewFRC5TRect
+	void		DrawUsingRect(const Rect& bounds);						// ROM 0x00189cd0 DrawUsingRect__12TPictureViewFRC5TRect
 };
 
 #endif	/* __PICTUREVIEW_H */

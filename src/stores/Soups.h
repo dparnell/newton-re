@@ -32,8 +32,8 @@
 	passwords, large binaries, the XMit (synchronising) methods, package
 	stores' part handler.  The cursors are Cursors.h, the tags Tags.h.
 
-	Reconstructed from the MP2100 D ROM (0x0031c7c4-0x00323300,
-	0x00313750-0x00313ffc, 0x00325834-0x0032a570); each function cites
+	Reconstructed from the MP2x00 US ROM (0x00347a34-0x0034e570,
+	0x0033f698-0x0033ff44, 0x003509d0-0x0035570c); each function cites
 	its origin.
 */
 

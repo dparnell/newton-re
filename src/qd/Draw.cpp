@@ -3,7 +3,7 @@
 
 	Contains:	Drawing rectangles and regions, and the blitter.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The blitter is written a pixel at a time (Draw.h says why); the ROM's
 	transfer semantics - the source inverted for the notSrc/notPat modes,
 	copy, or (a non-white gray source pixel replacing the destination's),
@@ -108,7 +108,7 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 }
 
 
-// ROM 0x00287e20 BitBlt__FP8PixelMapT1P4RectT3lPP8PixelMap
+// ROM 0x002ac9c8 BitBlt__FP8PixelMapT1P4RectT3lPP8PixelMap
 // The transfer without region clipping: dstRect is drawn as it is (the
 // caller has clipped it) from the corresponding pixels of srcRect.
 void
@@ -123,7 +123,7 @@ BitBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 }
 
 
-// ROM 0x003172e0 RgnBlt__FP8PixelMapT1P4RectT3lPP8PixelMapPP6RegionN27
+// ROM 0x00343228 RgnBlt__FP8PixelMapT1P4RectT3lPP8PixelMapPP6RegionN27
 // The transfer clipped by three regions: the destination rectangle is cut
 // to the map's bounds and the regions' boxes (nothing to do when that is
 // empty), and, when every region is a rectangle, BitBlt does the rest (a
@@ -191,7 +191,7 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 	B i t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00288eb4 StretchBits__FP8PixelMapT1P4RectT3lPP6RegionN26
+// ROM 0x002ada5c StretchBits__FP8PixelMapT1P4RectT3lPP6RegionN26
 // Bits copied between maps under the mode, clipped by two regions and a
 // mask.  NOT YET RECONSTRUCTED: the ROM's stretching and depth conversion
 // tables; rectangles of different sizes are sampled nearest-neighbour
@@ -226,7 +226,7 @@ StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRe
 }
 
 
-// ROM 0x00288abc StdBits
+// ROM 0x002ad664 StdBits
 // The standard bits proc: into the current port, clipped by its visible
 // and clip regions and the mask.  NOT YET RECONSTRUCTED: recording into
 // an open picture.
@@ -238,7 +238,7 @@ StdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask)
 }
 
 
-// ROM 0x00288a5c CallBits__FP8PixelMapP4RectT2lPP6Region
+// ROM 0x002ad604 CallBits__FP8PixelMapP4RectT2lPP6Region
 void
 CallBits(PixelMap* src, const Rect* srcRect, const Rect* dstRect, long mode, RgnHandle mask)
 {
@@ -248,7 +248,7 @@ CallBits(PixelMap* src, const Rect* srcRect, const Rect* dstRect, long mode, Rgn
 }
 
 
-// ROM 0x00289898 CopyBits__FP8PixelMapT1P4RectT3lPP6Region
+// ROM 0x002ae440 CopyBits__FP8PixelMapT1P4RectT3lPP6Region
 // Bits copied into a map: through the port's bits proc when the map is
 // the current port's (so that its regions clip), else straight in.
 void
@@ -271,7 +271,7 @@ CopyBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect,
 	V e r b s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00314cfc PushVerb__FUcPlPPP8PixelMap
+// ROM 0x00340c44 PushVerb__FUcPlPPP8PixelMap
 // The mode and pattern a verb draws with.
 void
 PushVerb(GrafVerb verb, long* mode, PatternHandle* pattern)
@@ -299,7 +299,7 @@ PushVerb(GrafVerb verb, long* mode, PatternHandle* pattern)
 }
 
 
-// ROM 0x00314d78 DrawRect__FP4RectlPP8PixelMap
+// ROM 0x00340cc0 DrawRect__FP4RectlPP8PixelMap
 // The rectangle filled in the current port under the mode and pattern,
 // clipped by the port's regions; nothing while the pen is hidden.
 void
@@ -312,7 +312,7 @@ DrawRect(const Rect* r, long mode, PatternHandle pattern)
 }
 
 
-// ROM 0x00314a80 FrRect__FP4Rect
+// ROM 0x003409c8 FrRect__FP4Rect
 // The rectangle's frame, the pen's width and height thick, in the pen's
 // mode and pattern: the whole rectangle when the pen fills it, else its
 // four sides.
@@ -346,7 +346,7 @@ FrRect(const Rect* r)
 }
 
 
-// ROM 0x00314170 StdRect
+// ROM 0x003400b8 StdRect
 // The standard rect proc: frame records the rectangle into an open
 // region (PutRect) and draws the frame, the other verbs fill.  NOT YET
 // RECONSTRUCTED: recording into an open picture.
@@ -367,7 +367,7 @@ StdRect(GrafVerb verb, Rect* r)
 }
 
 
-// ROM 0x00314844 CallRect__FUcP4Rect
+// ROM 0x0034078c CallRect__FUcP4Rect
 void
 CallRect(GrafVerb verb, const Rect* r)
 {
@@ -377,7 +377,7 @@ CallRect(GrafVerb verb, const Rect* r)
 }
 
 
-// ROM 0x003150a4 FrameRect__FP4Rect
+// ROM 0x00340fec FrameRect__FP4Rect
 void
 FrameRect(const Rect* r)
 {
@@ -385,7 +385,7 @@ FrameRect(const Rect* r)
 }
 
 
-// ROM 0x00314114 PaintRect__FP4Rect
+// ROM 0x0034005c PaintRect__FP4Rect
 void
 PaintRect(const Rect* r)
 {
@@ -393,7 +393,7 @@ PaintRect(const Rect* r)
 }
 
 
-// ROM 0x00314120 EraseRect__FP4Rect
+// ROM 0x00340068 EraseRect__FP4Rect
 void
 EraseRect(const Rect* r)
 {
@@ -401,7 +401,7 @@ EraseRect(const Rect* r)
 }
 
 
-// ROM 0x0031412c InvertRect__FP4Rect
+// ROM 0x00340074 InvertRect__FP4Rect
 void
 InvertRect(const Rect* r)
 {
@@ -409,7 +409,7 @@ InvertRect(const Rect* r)
 }
 
 
-// ROM 0x00314138 FillRect__FP4RectPP8PixelMap
+// ROM 0x00340080 FillRect__FP4RectPP8PixelMap
 // The pattern installed as the port's for the call.
 void
 FillRect(const Rect* r, PatternHandle pattern)
@@ -422,7 +422,7 @@ FillRect(const Rect* r, PatternHandle pattern)
 }
 
 
-// ROM 0x00315918 DrawRgn__FPP6RegionlPP8PixelMap
+// ROM 0x00341860 DrawRgn__FPP6RegionlPP8PixelMap
 // The region filled in the current port: the port's bits blitted onto
 // themselves under the mode and pattern, clipped by the port's regions
 // and the region itself.
@@ -436,7 +436,7 @@ DrawRgn(RgnHandle rgn, long mode, PatternHandle pattern)
 }
 
 
-// ROM 0x00315ee0 FrRgn__FPP6RegionlPP8PixelMap
+// ROM 0x00341e28 FrRgn__FPP6RegionlPP8PixelMap
 // The region's frame: a rectangular region's is FrRect's; otherwise the
 // region less itself inset by the pen is drawn.
 void
@@ -460,7 +460,7 @@ FrRgn(RgnHandle rgn, long mode, PatternHandle pattern)
 }
 
 
-// ROM 0x0031567c StdRgn
+// ROM 0x003415c4 StdRgn
 // The standard region proc.  NOT YET RECONSTRUCTED: recording into an
 // open picture or region.
 void
@@ -477,7 +477,7 @@ StdRgn(GrafVerb verb, RgnHandle rgn)
 }
 
 
-// ROM 0x0031582c CallRgn__FUcPP6Region
+// ROM 0x00341774 CallRgn__FUcPP6Region
 void
 CallRgn(GrafVerb verb, RgnHandle rgn)
 {
@@ -487,7 +487,7 @@ CallRgn(GrafVerb verb, RgnHandle rgn)
 }
 
 
-// ROM 0x003154cc FrameRgn__FPP6Region
+// ROM 0x00341414 FrameRgn__FPP6Region
 void
 FrameRgn(RgnHandle rgn)
 {
@@ -495,7 +495,7 @@ FrameRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x003154d8 PaintRgn__FPP6Region
+// ROM 0x00341420 PaintRgn__FPP6Region
 void
 PaintRgn(RgnHandle rgn)
 {
@@ -503,7 +503,7 @@ PaintRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x0031556c EraseRgn__FPP6Region
+// ROM 0x003414b4 EraseRgn__FPP6Region
 void
 EraseRgn(RgnHandle rgn)
 {
@@ -511,7 +511,7 @@ EraseRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x00315578 InvertRgn__FPP6Region
+// ROM 0x003414c0 InvertRgn__FPP6Region
 void
 InvertRgn(RgnHandle rgn)
 {
@@ -519,7 +519,7 @@ InvertRgn(RgnHandle rgn)
 }
 
 
-// ROM 0x00315584 FillRgn__FPP6RegionPP8PixelMap
+// ROM 0x003414cc FillRgn__FPP6RegionPP8PixelMap
 void
 FillRgn(RgnHandle rgn, PatternHandle pattern)
 {

@@ -31,19 +31,19 @@
 	TNSDebugAPI
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002af558 __ct__11TNSDebugAPIFP12TInterpreter
+// ROM 0x002d42e4 __ct__11TNSDebugAPIFP12TInterpreter
 TNSDebugAPI::TNSDebugAPI(TInterpreter* interpreter)
 {
 	fInterpreter = interpreter;
 }
 
 
-// ROM 0x002af588 __dt__11TNSDebugAPIFv
+// ROM 0x002d4314 __dt__11TNSDebugAPIFv
 TNSDebugAPI::~TNSDebugAPI()
 { }
 
 
-// ROM 0x002ae428 NewNSDebugAPI__FP12TInterpreter
+// ROM 0x002d31b4 NewNSDebugAPI__FP12TInterpreter
 TNSDebugAPI*
 NewNSDebugAPI(TInterpreter* interpreter)
 {
@@ -51,7 +51,7 @@ NewNSDebugAPI(TInterpreter* interpreter)
 }
 
 
-// ROM 0x002ae434 DeleteNSDebugAPI__FP11TNSDebugAPI
+// ROM 0x002d31c0 DeleteNSDebugAPI__FP11TNSDebugAPI
 void
 DeleteNSDebugAPI(TNSDebugAPI* api)
 {
@@ -59,7 +59,7 @@ DeleteNSDebugAPI(TNSDebugAPI* api)
 }
 
 
-// ROM 0x002af594 AccurateStack__11TNSDebugAPIFv
+// ROM 0x002d4320 AccurateStack__11TNSDebugAPIFv
 // The stack is exact when the interpreter runs its slow loop (SetDebugMode).
 Boolean
 TNSDebugAPI::AccurateStack(void)
@@ -68,7 +68,7 @@ TNSDebugAPI::AccurateStack(void)
 }
 
 
-// ROM 0x002af5ac NumStackFrames__11TNSDebugAPIFv
+// ROM 0x002d4338 NumStackFrames__11TNSDebugAPIFv
 // The calls on the control stack (the six-ref states, the topmost one
 // being the running call's).
 long
@@ -78,7 +78,7 @@ TNSDebugAPI::NumStackFrames(void)
 }
 
 
-// ROM 0x002ad6d8 StackFrameAt__11TNSDebugAPIFl
+// ROM 0x002d2464 StackFrameAt__11TNSDebugAPIFl
 // The state of call index (0 the outermost).
 VMState*
 TNSDebugAPI::StackFrameAt(long index)
@@ -89,7 +89,7 @@ TNSDebugAPI::StackFrameAt(long index)
 }
 
 
-// ROM 0x002ad73c Function__11TNSDebugAPIFl
+// ROM 0x002d24c8 Function__11TNSDebugAPIFl
 Ref
 TNSDebugAPI::Function(long index)
 {
@@ -97,7 +97,7 @@ TNSDebugAPI::Function(long index)
 }
 
 
-// ROM 0x002ad758 SetFunction__11TNSDebugAPIFlRC6RefVar
+// ROM 0x002d24e4 SetFunction__11TNSDebugAPIFlRC6RefVar
 void
 TNSDebugAPI::SetFunction(long index, RefArg fn)
 {
@@ -105,7 +105,7 @@ TNSDebugAPI::SetFunction(long index, RefArg fn)
 }
 
 
-// ROM 0x002ad780 PC__11TNSDebugAPIFl
+// ROM 0x002d250c PC__11TNSDebugAPIFl
 long
 TNSDebugAPI::PC(long index)
 {
@@ -114,7 +114,7 @@ TNSDebugAPI::PC(long index)
 }
 
 
-// ROM 0x002ad7a8 SetPC__11TNSDebugAPIFlT1
+// ROM 0x002d2534 SetPC__11TNSDebugAPIFlT1
 void
 TNSDebugAPI::SetPC(long index, long pc)
 {
@@ -122,7 +122,7 @@ TNSDebugAPI::SetPC(long index, long pc)
 }
 
 
-// ROM 0x002ad7cc Receiver__11TNSDebugAPIFl
+// ROM 0x002d2558 Receiver__11TNSDebugAPIFl
 Ref
 TNSDebugAPI::Receiver(long index)
 {
@@ -130,7 +130,7 @@ TNSDebugAPI::Receiver(long index)
 }
 
 
-// ROM 0x002ad7e8 SetReceiver__11TNSDebugAPIFlRC6RefVar
+// ROM 0x002d2574 SetReceiver__11TNSDebugAPIFlRC6RefVar
 void
 TNSDebugAPI::SetReceiver(long index, RefArg receiver)
 {
@@ -138,7 +138,7 @@ TNSDebugAPI::SetReceiver(long index, RefArg receiver)
 }
 
 
-// ROM 0x002ad810 Implementor__11TNSDebugAPIFl
+// ROM 0x002d259c Implementor__11TNSDebugAPIFl
 Ref
 TNSDebugAPI::Implementor(long index)
 {
@@ -146,7 +146,7 @@ TNSDebugAPI::Implementor(long index)
 }
 
 
-// ROM 0x002ad82c SetImplementor__11TNSDebugAPIFlRC6RefVar
+// ROM 0x002d25b8 SetImplementor__11TNSDebugAPIFlRC6RefVar
 void
 TNSDebugAPI::SetImplementor(long index, RefArg implementor)
 {
@@ -171,7 +171,7 @@ FunctionNumVars(RefArg fn)
 }
 
 
-// ROM 0x002ad854 Locals__11TNSDebugAPIFl
+// ROM 0x002d25e0 Locals__11TNSDebugAPIFl
 // An array of the call's variables, arguments first.
 Ref
 TNSDebugAPI::Locals(long index)
@@ -210,7 +210,7 @@ TNSDebugAPI::Locals(long index)
 }
 
 
-// ROM 0x002adb80 GetVar__11TNSDebugAPIFlT1
+// ROM 0x002d290c GetVar__11TNSDebugAPIFlT1
 // The call's variable varIndex (arguments first).
 Ref
 TNSDebugAPI::GetVar(long index, long varIndex)
@@ -239,7 +239,7 @@ TNSDebugAPI::GetVar(long index, long varIndex)
 }
 
 
-// ROM 0x002add68 SetVar__11TNSDebugAPIFlT1RC6RefVar
+// ROM 0x002d2af4 SetVar__11TNSDebugAPIFlT1RC6RefVar
 void
 TNSDebugAPI::SetVar(long index, long varIndex, RefArg value)
 {
@@ -270,7 +270,7 @@ TNSDebugAPI::SetVar(long index, long varIndex, RefArg value)
 }
 
 
-// ROM 0x002adf5c FindVar__11TNSDebugAPIFlRC6RefVar
+// ROM 0x002d2ce8 FindVar__11TNSDebugAPIFlRC6RefVar
 // A variable by name through the call's argFrame (and its parents).
 Ref
 TNSDebugAPI::FindVar(long index, RefArg name)
@@ -286,7 +286,7 @@ TNSDebugAPI::FindVar(long index, RefArg name)
 }
 
 
-// ROM 0x002adfe4 SetFindVar__11TNSDebugAPIFlRC6RefVarT2
+// ROM 0x002d2d70 SetFindVar__11TNSDebugAPIFlRC6RefVarT2
 void
 TNSDebugAPI::SetFindVar(long index, RefArg name, RefArg value)
 {
@@ -296,7 +296,7 @@ TNSDebugAPI::SetFindVar(long index, RefArg name, RefArg value)
 }
 
 
-// ROM 0x002ae060 FunctionStackSize__FRC6RefVar
+// ROM 0x002d2dec FunctionStackSize__FRC6RefVar
 // The value-stack slots a call of fn keeps its variables in: a 2.x
 // function's arguments and locals, a native's arguments; -1 for a
 // CodeBlock (they are in its argFrame).
@@ -312,7 +312,7 @@ FunctionStackSize(RefArg fn)
 }
 
 
-// ROM 0x002ae138 StackStart__11TNSDebugAPIFl
+// ROM 0x002d2ec4 StackStart__11TNSDebugAPIFl
 // The value-stack index of the call's first variable; for the index past
 // the last call, the top of the stack.
 long
@@ -324,7 +324,7 @@ TNSDebugAPI::StackStart(long index)
 }
 
 
-// ROM 0x002ae19c NumTemps__11TNSDebugAPIFl
+// ROM 0x002d2f28 NumTemps__11TNSDebugAPIFl
 // The value-stack slots above the call's variables and below the next call.
 long
 TNSDebugAPI::NumTemps(long index)
@@ -336,7 +336,7 @@ TNSDebugAPI::NumTemps(long index)
 }
 
 
-// ROM 0x002ae208 TempValue__11TNSDebugAPIFlT1
+// ROM 0x002d2f94 TempValue__11TNSDebugAPIFlT1
 Ref
 TNSDebugAPI::TempValue(long index, long tempIndex)
 {
@@ -349,7 +349,7 @@ TNSDebugAPI::TempValue(long index, long tempIndex)
 }
 
 
-// ROM 0x002ae2ac SetTempValue__11TNSDebugAPIFlT1RC6RefVar
+// ROM 0x002d3038 SetTempValue__11TNSDebugAPIFlT1RC6RefVar
 void
 TNSDebugAPI::SetTempValue(long index, long tempIndex, RefArg value)
 {
@@ -362,7 +362,7 @@ TNSDebugAPI::SetTempValue(long index, long tempIndex, RefArg value)
 }
 
 
-// ROM 0x002ae35c Return__11TNSDebugAPIFlRC6RefVar
+// ROM 0x002d30e8 Return__11TNSDebugAPIFlRC6RefVar
 // NOT YET RECONSTRUCTED: unwinding the interpreter to call index with a
 // value (the ROM throws exFrames kNSErrBadArgs... through the handlers).
 void
@@ -376,7 +376,7 @@ TNSDebugAPI::Return(long /*index*/, RefArg /*value*/)
 	Names
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001ebe34 GetNameFromDebugHash__FRC6RefVar
+// ROM 0x001e9a1c GetNameFromDebugHash__FRC6RefVar
 // The name behind a debug hash: the global function DebugHashToName's
 // answer when there is one, else the hash's digits.
 Ref
@@ -404,7 +404,7 @@ GetNameFromDebugHash(RefArg hash)
 }
 
 
-// ROM 0x002af118 FunctionDebugName__FRC6RefVar
+// ROM 0x002d3ea4 FunctionDebugName__FRC6RefVar
 // A function's name from its 'DebuggerInfo slot (an integer hash is the
 // name itself here), else from its 'debug hash.
 Ref
@@ -426,7 +426,7 @@ FunctionDebugName(RefArg fn)
 }
 
 
-// ROM 0x002ad5b4 CheckForObjectName__FRC6RefVarPcT1
+// ROM 0x002d2340 CheckForObjectName__FRC6RefVarPcT1
 // obj named as context (contextName) or as one of its slots
 // ("contextName.slot"); nil when neither.
 Ref
@@ -445,7 +445,7 @@ CheckForObjectName(RefArg context, const char* contextName, RefArg obj)
 }
 
 
-// ROM 0x002ada7c SearchForObjectName__FRC6RefVar
+// ROM 0x002d2808 SearchForObjectName__FRC6RefVar
 // The name of a well-known object: the globals frame or one of its
 // slots ("vars", "vars.foo"), the global functions ("functions.bar"),
 // the ROM's built-in functions.
@@ -481,7 +481,7 @@ FrameDebugName(RefArg frame)
 }
 
 
-// ROM 0x002ae444 NTKStackFrameInfo__FR11TNSDebugAPIl
+// ROM 0x002d31d0 NTKStackFrameInfo__FR11TNSDebugAPIl
 // The NTK's description of call index: a frame {codeBlock, programCounter,
 // receiver, implementor} (the stackFrameInfo prototype) with names where
 // they can be found.
@@ -526,7 +526,7 @@ NTKStackFrameInfo(TNSDebugAPI& api, long index)
 }
 
 
-// ROM 0x002ae784 NTKStackTrace__FPv
+// ROM 0x002d3510 NTKStackTrace__FPv
 // NOT YET RECONSTRUCTED: the NTK's stack trace over its connection.
 void
 NTKStackTrace(void* /*interpreter*/)
@@ -537,7 +537,7 @@ NTKStackTrace(void* /*interpreter*/)
 	The REP's stack trace
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ae378 PrintWellKnownObject__FRC6RefVarl
+// ROM 0x002d3104 PrintWellKnownObject__FRC6RefVarl
 // An aggregate by its well-known name ("(vars.foo)") or by address and
 // contents; anything else printed plainly.
 void
@@ -562,7 +562,7 @@ PrintWellKnownObject(RefArg obj, long indent)
 }
 
 
-// ROM 0x002ae830 REPStackTrace__FPv
+// ROM 0x002d35bc REPStackTrace__FPv
 // The calls from the innermost out: each function (by the slot it is in
 // or its well-known name, else by address), its pc (or [native]), its
 // receiver and its variables (arguments marked), printed with the
@@ -660,7 +660,7 @@ REPStackTrace(void* interpreter)
 }
 
 
-// ROM 0x002aef38 StackTrace__12TInterpreterFv
+// ROM 0x002d3cc4 StackTrace__12TInterpreterFv
 void
 TInterpreter::StackTrace(void)
 {
@@ -668,7 +668,7 @@ TInterpreter::StackTrace(void)
 }
 
 
-// ROM 0x002aef4c GetLocalFromStack__12TInterpreterFRC6RefVarT1
+// ROM 0x002d3cd8 GetLocalFromStack__12TInterpreterFRC6RefVarT1
 // A call's variable by index or by name.
 Ref
 TInterpreter::GetLocalFromStack(RefArg frameIndex, RefArg name)
@@ -680,7 +680,7 @@ TInterpreter::GetLocalFromStack(RefArg frameIndex, RefArg name)
 }
 
 
-// ROM 0x002af000 SetLocalOnStack__12TInterpreterFRC6RefVarN21
+// ROM 0x002d3d8c SetLocalOnStack__12TInterpreterFRC6RefVarN21
 void
 TInterpreter::SetLocalOnStack(RefArg frameIndex, RefArg name, RefArg value)
 {
@@ -692,7 +692,7 @@ TInterpreter::SetLocalOnStack(RefArg frameIndex, RefArg name, RefArg value)
 }
 
 
-// ROM 0x002af0b8 GetSelfFromStack__12TInterpreterFRC6RefVar
+// ROM 0x002d3e44 GetSelfFromStack__12TInterpreterFRC6RefVar
 Ref
 TInterpreter::GetSelfFromStack(RefArg frameIndex)
 {
@@ -705,7 +705,7 @@ TInterpreter::GetSelfFromStack(RefArg frameIndex)
 	The break loop and the debugging natives
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00293124 BreakLoop__Fv
+// ROM 0x002b8050 BreakLoop__Fv
 // Forms read and run until ExitBreakLoop sets the done flag.
 void
 BreakLoop(void)
@@ -716,7 +716,7 @@ BreakLoop(void)
 }
 
 
-// ROM 0x00293160 REPBreakLoop__Fv
+// ROM 0x002b808c REPBreakLoop__Fv
 void
 REPBreakLoop(void)
 {
@@ -734,7 +734,7 @@ REPBreakLoop(void)
 }
 
 
-// ROM 0x00293208 FBreakLoop
+// ROM 0x002b8134 FBreakLoop
 // A nested REP in the receiver's context.
 Ref
 FBreakLoop(RefArg rcvr)
@@ -763,7 +763,7 @@ FBreakLoop(RefArg rcvr)
 }
 
 
-// ROM 0x002932d0 FExitBreakLoop
+// ROM 0x002b81fc FExitBreakLoop
 Ref
 FExitBreakLoop(RefArg /*rcvr*/)
 {
@@ -774,7 +774,7 @@ FExitBreakLoop(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x0029331c FStackTrace
+// ROM 0x002b8248 FStackTrace
 Ref
 FStackTrace(RefArg /*rcvr*/)
 {
@@ -783,7 +783,7 @@ FStackTrace(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x00293334 FSetDebugMode
+// ROM 0x002b8260 FSetDebugMode
 // Accurate stack traces on or off (the interpreter then runs its slow
 // loop); ==> whether they were on.
 Ref
@@ -795,7 +795,7 @@ FSetDebugMode(RefArg /*rcvr*/, RefArg on)
 }
 
 
-// ROM 0x0029300c FWrite
+// ROM 0x002b7f38 FWrite
 // A string's text or a character printed as it is; anything else as
 // PrintObject prints it.
 Ref
@@ -815,7 +815,7 @@ FWrite(RefArg /*rcvr*/, RefArg obj)
 }
 
 
-// ROM 0x00293364 FLoad
+// ROM 0x002b8290 FLoad
 // A text file of NewtonScript compiled and run form by form.
 Ref
 FLoad(RefArg /*rcvr*/, RefArg filename)
@@ -825,7 +825,7 @@ FLoad(RefArg /*rcvr*/, RefArg filename)
 }
 
 
-// ROM 0x002933fc FStats
+// ROM 0x002b8328 FStats
 // The heap's free space and largest free block printed; ==> the free space.
 Ref
 FStats(RefArg /*rcvr*/)

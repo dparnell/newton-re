@@ -4,7 +4,7 @@
 	Contains:	TObjectWriter and TObjectReader, the NSOF streamer
 				(ObjectStreamer.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "ObjectStreamer.h"
@@ -33,7 +33,7 @@ const Ref kUnstreamableRef = MAKEIMMED(kImmedSpecial, 5);
 static inline long XLongSize(long value)		{ return (value >= 0 && value < 0xff) ? 1 : 5; }
 
 
-// ROM 0x0032b230 LongToPipe__FR5CPipel
+// ROM 0x003563cc LongToPipe__FR5CPipel
 // An xlong: one byte for 0..254, else 0xff and the four bytes.
 void
 LongToPipe(CPipe& pipe, long value)
@@ -53,7 +53,7 @@ LongToPipe(CPipe& pipe, long value)
 }
 
 
-// ROM 0x0032b2bc LongFromPipe__FR5CPipe
+// ROM 0x00356458 LongFromPipe__FR5CPipe
 long
 LongFromPipe(CPipe& pipe)
 {
@@ -73,7 +73,7 @@ LongFromPipe(CPipe& pipe)
 	T O b j e c t W r i t e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0032b0e0 __ct__13TObjectWriterFRC6RefVarR5CPipei
+// ROM 0x0035627c __ct__13TObjectWriterFRC6RefVarR5CPipei
 // The precedents are the shared ones when free, else a new set.
 TObjectWriter::TObjectWriter(RefArg obj, CPipe& pipe, Boolean includeProto)
 {
@@ -98,7 +98,7 @@ TObjectWriter::TObjectWriter(RefArg obj, CPipe& pipe, Boolean includeProto)
 }
 
 
-// ROM 0x0032b1b0 __dt__13TObjectWriterFv
+// ROM 0x0035634c __dt__13TObjectWriterFv
 TObjectWriter::~TObjectWriter()
 {
 	if (fPrecedents == gPrecedentsForWriting)
@@ -111,7 +111,7 @@ TObjectWriter::~TObjectWriter()
 }
 
 
-// ROM 0x0032b224 SetCompressLargeBinaries__13TObjectWriterFv
+// ROM 0x003563c0 SetCompressLargeBinaries__13TObjectWriterFv
 void
 TObjectWriter::SetCompressLargeBinaries(void)
 {
@@ -119,7 +119,7 @@ TObjectWriter::SetCompressLargeBinaries(void)
 }
 
 
-// ROM 0x0032b300 Size__13TObjectWriterFv
+// ROM 0x0035649c Size__13TObjectWriterFv
 // The stream's size in bytes, counted once (Prescan; the version byte
 // too).
 long
@@ -135,7 +135,7 @@ TObjectWriter::Size(void)
 }
 
 
-// ROM 0x0032b340 Write__13TObjectWriterFv
+// ROM 0x003564dc Write__13TObjectWriterFv
 void
 TObjectWriter::Write(void)
 {
@@ -148,7 +148,7 @@ TObjectWriter::Write(void)
 #define DESCEND(part)		{ *fStack.fTop++ = fObject; fObject = (part); Scan(); fObject = *--fStack.fTop; }
 #define PRESCEND(part)		{ *fStack.fTop++ = fObject; fObject = (part); Prescan(); fObject = *--fStack.fTop; }
 
-// ROM 0x0032b370 Prescan__13TObjectWriterFv
+// ROM 0x0035650c Prescan__13TObjectWriterFv
 // The bytes fObject will take in the stream added to fSize, every pointer
 // object entered as a precedent so that its later occurrences count as
 // one.
@@ -249,7 +249,7 @@ TObjectWriter::Prescan(void)
 }
 
 
-// ROM 0x0032b9c4 Scan__13TObjectWriterFv
+// ROM 0x00356b60 Scan__13TObjectWriterFv
 // fObject written: its tag and parts, its pointer parts recursively (the
 // stack keeps the way down for the collector).
 void
@@ -381,7 +381,7 @@ TObjectWriter::Scan(void)
 	T O b j e c t R e a d e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0032c1cc __ct__13TObjectReaderFR5CPipe
+// ROM 0x00357368 __ct__13TObjectReaderFR5CPipe
 TObjectReader::TObjectReader(CPipe& pipe)
 {
 	fStore = nil;
@@ -391,7 +391,7 @@ TObjectReader::TObjectReader(CPipe& pipe)
 }
 
 
-// ROM 0x0032c278 __ct__13TObjectReaderFR5CPipeRC6RefVar
+// ROM 0x00357414 __ct__13TObjectReaderFR5CPipeRC6RefVar
 // With the store (a store or soup frame) large binaries are created on.
 TObjectReader::TObjectReader(CPipe& pipe, RefArg storeOrSoup)
 {
@@ -410,7 +410,7 @@ TObjectReader::TObjectReader(CPipe& pipe, RefArg storeOrSoup)
 }
 
 
-// ROM 0x0032c218 __dt__13TObjectReaderFv
+// ROM 0x003573b4 __dt__13TObjectReaderFv
 TObjectReader::~TObjectReader()
 {
 	if (fPrecedents == gPrecedentsForReading)
@@ -423,7 +423,7 @@ TObjectReader::~TObjectReader()
 }
 
 
-// ROM 0x0032c334 SetPrecedentsForReading__13TObjectReaderFv
+// ROM 0x003574d0 SetPrecedentsForReading__13TObjectReaderFv
 // The shared precedents when free, else a new set.
 void
 TObjectReader::SetPrecedentsForReading(void)
@@ -444,7 +444,7 @@ TObjectReader::SetPrecedentsForReading(void)
 }
 
 
-// ROM 0x0032c3a0 SetAllowFunctions__13TObjectReaderFUc
+// ROM 0x0035753c SetAllowFunctions__13TObjectReaderFUc
 void
 TObjectReader::SetAllowFunctions(Boolean allow)
 {
@@ -452,7 +452,7 @@ TObjectReader::SetAllowFunctions(Boolean allow)
 }
 
 
-// ROM 0x0032c3a8 Read__13TObjectReaderFv
+// ROM 0x00357544 Read__13TObjectReaderFv
 Ref
 TObjectReader::Read(void)
 {
@@ -464,7 +464,7 @@ TObjectReader::Read(void)
 }
 
 
-// ROM 0x0032cca0 Scan__13TObjectReaderFv
+// ROM 0x00357e3c Scan__13TObjectReaderFv
 // One object by its tag; a function refused when not allowed.
 Ref
 TObjectReader::Scan(void)
@@ -502,7 +502,7 @@ TObjectReader::Scan(void)
 }
 
 
-// ROM 0x0032c3fc ReadImmediate__13TObjectReaderFv
+// ROM 0x00357598 ReadImmediate__13TObjectReaderFv
 // An xlong that is the ref itself (never a pointer).
 Ref
 TObjectReader::ReadImmediate(void)
@@ -514,7 +514,7 @@ TObjectReader::ReadImmediate(void)
 }
 
 
-// ROM 0x0032c444 ReadCharacter__13TObjectReaderFv
+// ROM 0x003575e0 ReadCharacter__13TObjectReaderFv
 Ref
 TObjectReader::ReadCharacter(void)
 {
@@ -524,7 +524,7 @@ TObjectReader::ReadCharacter(void)
 }
 
 
-// ROM 0x0032c478 ReadUnicodeCharacter__13TObjectReaderFv
+// ROM 0x00357614 ReadUnicodeCharacter__13TObjectReaderFv
 Ref
 TObjectReader::ReadUnicodeCharacter(void)
 {
@@ -534,7 +534,7 @@ TObjectReader::ReadUnicodeCharacter(void)
 }
 
 
-// ROM 0x0032c4d0 ReadBinaryObject__13TObjectReaderFUc
+// ROM 0x0035766c ReadBinaryObject__13TObjectReaderFUc
 // The length, the class (a string's is 'string), then the data; the
 // object is a precedent before its class is read.
 Ref
@@ -563,7 +563,7 @@ TObjectReader::ReadBinaryObject(UByte tag)
 }
 
 
-// ROM 0x0032c5d0 ReadArray__13TObjectReaderFUc
+// ROM 0x0035776c ReadArray__13TObjectReaderFUc
 Ref
 TObjectReader::ReadArray(UByte tag)
 {
@@ -587,7 +587,7 @@ TObjectReader::ReadArray(UByte tag)
 }
 
 
-// ROM 0x0032c6e4 ReadFrame__13TObjectReaderFv
+// ROM 0x00357880 ReadFrame__13TObjectReaderFv
 // The slot symbols into a map, the frame made over it (its precedent
 // place reserved first), then the values.
 Ref
@@ -614,7 +614,7 @@ TObjectReader::ReadFrame(void)
 }
 
 
-// ROM 0x0032c83c ReadSymbol__13TObjectReaderFv
+// ROM 0x003579d8 ReadSymbol__13TObjectReaderFv
 // The name (at most 255 bytes), interned.
 Ref
 TObjectReader::ReadSymbol(void)
@@ -633,7 +633,7 @@ TObjectReader::ReadSymbol(void)
 }
 
 
-// ROM 0x0032c8f8 ReadPrecedent__13TObjectReaderFv
+// ROM 0x00357a94 ReadPrecedent__13TObjectReaderFv
 Ref
 TObjectReader::ReadPrecedent(void)
 {
@@ -642,7 +642,7 @@ TObjectReader::ReadPrecedent(void)
 }
 
 
-// ROM 0x0032c924 ReadSmallRect__13TObjectReaderFv
+// ROM 0x00357ac0 ReadSmallRect__13TObjectReaderFv
 Ref
 TObjectReader::ReadSmallRect(void)
 {
@@ -654,7 +654,7 @@ TObjectReader::ReadSmallRect(void)
 }
 
 
-// ROM 0x0032c9dc ReadLargeBinary__13TObjectReaderFv
+// ROM 0x00357b78 ReadLargeBinary__13TObjectReaderFv
 // NOT YET RECONSTRUCTED: the class, the compress flag, the stream size,
 // the compander name and parameter sizes, a reserved long, the name and
 // parameters, then CreateLargeObject from the stream on fStore

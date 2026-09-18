@@ -11,8 +11,8 @@
 				against the entry's bits from the index (TagsValidTest) -
 				without reading the entry.
 
-	Reconstructed from the MP2100 D ROM (0x002abd78-0x002ac49c,
-	0x0031ce04, 0x0031ee94-0x0031fdcc, 0x00323580).
+	Reconstructed from the MP2x00 US ROM (0x002d0b04-0x002d1228,
+	0x00348074, 0x0034a104-0x0034b03c, 0x0034e7f0).
 */
 
 #ifndef __TAGS_H

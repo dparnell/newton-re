@@ -4,7 +4,7 @@
 	Contains:	TPackageStore (PackageStore.h): the read-only store over a
 				package's soup part.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "PackageStore.h"
@@ -13,10 +13,10 @@
 #include "ByteOrder.h"
 
 
-PROTOCOL_CLASSINFO(TPackageStore, "TStore", "", 0, 0, nil)	// ROM 0x0037aa20 ClassInfo__13TPackageStoreSFv
+PROTOCOL_CLASSINFO(TPackageStore, "TStore", "", 0, 0, nil)	// ROM 0x00384180 ClassInfo__13TPackageStoreSFv
 
 
-// ROM 0x00162ae8 Sizeof__13TPackageStoreSFv
+// ROM 0x00160860 Sizeof__13TPackageStoreSFv
 size_t
 TPackageStore::Sizeof()
 {
@@ -24,7 +24,7 @@ TPackageStore::Sizeof()
 }
 
 
-// ROM 0x00162afc New__13TPackageStoreFv
+// ROM 0x00160874 New__13TPackageStoreFv
 TPackageStore*
 TPackageStore::New()
 {
@@ -35,13 +35,13 @@ TPackageStore::New()
 }
 
 
-// ROM 0x00162b10 Delete__13TPackageStoreFv
+// ROM 0x00160888 Delete__13TPackageStoreFv
 void
 TPackageStore::Delete()
 { }
 
 
-// ROM 0x00162b14 Init__13TPackageStoreFPvUlT2iT2T1
+// ROM 0x0016088c Init__13TPackageStoreFPvUlT2iT2T1
 // The store is the package data given.
 NewtonErr
 TPackageStore::Init(void* storeAddress, ULong storeSize, ULong /*arg3*/, int /*socketNumber*/, ULong /*flags*/, void* /*pssInfo*/)
@@ -52,7 +52,7 @@ TPackageStore::Init(void* storeAddress, ULong storeSize, ULong /*arg3*/, int /*s
 }
 
 
-// ROM 0x00162b24 NeedsFormat__13TPackageStoreFPUc
+// ROM 0x0016089c NeedsFormat__13TPackageStoreFPUc
 NewtonErr
 TPackageStore::NeedsFormat(Boolean* needsFormat)
 {
@@ -61,7 +61,7 @@ TPackageStore::NeedsFormat(Boolean* needsFormat)
 }
 
 
-// ROM 0x001625ec Format__13TPackageStoreFv
+// ROM 0x00160364 Format__13TPackageStoreFv
 NewtonErr
 TPackageStore::Format()
 {
@@ -69,7 +69,7 @@ TPackageStore::Format()
 }
 
 
-// ROM 0x00162924 GetRootId__13TPackageStoreFPUl
+// ROM 0x0016069c GetRootId__13TPackageStoreFPUl
 NewtonErr
 TPackageStore::GetRootId(PSSId* rootId)
 {
@@ -78,7 +78,7 @@ TPackageStore::GetRootId(PSSId* rootId)
 }
 
 
-// ROM 0x001625f8 NewObject__13TPackageStoreFlPUl
+// ROM 0x00160370 NewObject__13TPackageStoreFlPUl
 NewtonErr
 TPackageStore::NewObject(long /*size*/, PSSId* /*id*/)
 {
@@ -86,7 +86,7 @@ TPackageStore::NewObject(long /*size*/, PSSId* /*id*/)
 }
 
 
-// ROM 0x00162604 EraseObject__13TPackageStoreFUl
+// ROM 0x0016037c EraseObject__13TPackageStoreFUl
 NewtonErr
 TPackageStore::EraseObject(PSSId /*id*/)
 {
@@ -94,7 +94,7 @@ TPackageStore::EraseObject(PSSId /*id*/)
 }
 
 
-// ROM 0x00162610 DeleteObject__13TPackageStoreFUl
+// ROM 0x00160388 DeleteObject__13TPackageStoreFUl
 NewtonErr
 TPackageStore::DeleteObject(PSSId /*id*/)
 {
@@ -102,7 +102,7 @@ TPackageStore::DeleteObject(PSSId /*id*/)
 }
 
 
-// ROM 0x0016261c SetObjectSize__13TPackageStoreFUll
+// ROM 0x00160394 SetObjectSize__13TPackageStoreFUll
 NewtonErr
 TPackageStore::SetObjectSize(PSSId /*id*/, long /*size*/)
 {
@@ -110,7 +110,7 @@ TPackageStore::SetObjectSize(PSSId /*id*/, long /*size*/)
 }
 
 
-// ROM 0x00162938 GetObjectSize__13TPackageStoreFUlPl
+// ROM 0x001606b0 GetObjectSize__13TPackageStoreFUlPl
 // The distance between an object's offset and the next.
 NewtonErr
 TPackageStore::GetObjectSize(PSSId id, long* size)
@@ -122,7 +122,7 @@ TPackageStore::GetObjectSize(PSSId id, long* size)
 }
 
 
-// ROM 0x00162628 Write__13TPackageStoreFUllPcT2
+// ROM 0x001603a0 Write__13TPackageStoreFUllPcT2
 NewtonErr
 TPackageStore::Write(PSSId /*id*/, long /*offset*/, char* /*buffer*/, long /*count*/)
 {
@@ -130,7 +130,7 @@ TPackageStore::Write(PSSId /*id*/, long /*offset*/, char* /*buffer*/, long /*cou
 }
 
 
-// ROM 0x00162978 Read__13TPackageStoreFUllPcT2
+// ROM 0x001606f0 Read__13TPackageStoreFUllPcT2
 // count bytes of the object from offset; what there is of a range past
 // the end is copied and kSError_ObjectOverRun answered.
 NewtonErr
@@ -153,7 +153,7 @@ TPackageStore::Read(PSSId id, long offset, char* buffer, long count)
 }
 
 
-// ROM 0x00162a04 GetStoreSizes__13TPackageStoreFPlT1
+// ROM 0x0016077c GetStoreSizes__13TPackageStoreFPlT1
 // The package data is all used.
 NewtonErr
 TPackageStore::GetStoreSizes(long* totalSize, long* usedSize)
@@ -164,7 +164,7 @@ TPackageStore::GetStoreSizes(long* totalSize, long* usedSize)
 }
 
 
-// ROM 0x00162634 IsReadOnly__13TPackageStoreFPUc
+// ROM 0x001603ac IsReadOnly__13TPackageStoreFPUc
 NewtonErr
 TPackageStore::IsReadOnly(Boolean* isReadOnly)
 {
@@ -173,7 +173,7 @@ TPackageStore::IsReadOnly(Boolean* isReadOnly)
 }
 
 
-// ROM 0x001627b0 LockStore__13TPackageStoreFv
+// ROM 0x00160528 LockStore__13TPackageStoreFv
 NewtonErr
 TPackageStore::LockStore()
 {
@@ -182,7 +182,7 @@ TPackageStore::LockStore()
 }
 
 
-// ROM 0x001627c4 UnlockStore__13TPackageStoreFv
+// ROM 0x0016053c UnlockStore__13TPackageStoreFv
 NewtonErr
 TPackageStore::UnlockStore()
 {
@@ -191,7 +191,7 @@ TPackageStore::UnlockStore()
 }
 
 
-// ROM 0x001627d8 Abort__13TPackageStoreFv
+// ROM 0x00160550 Abort__13TPackageStoreFv
 NewtonErr
 TPackageStore::Abort()
 {
@@ -200,7 +200,7 @@ TPackageStore::Abort()
 }
 
 
-// ROM 0x00162644 Idle__13TPackageStoreFPUcT1
+// ROM 0x001603bc Idle__13TPackageStoreFPUcT1
 NewtonErr
 TPackageStore::Idle(Boolean* arg1, Boolean* arg2)
 {
@@ -210,7 +210,7 @@ TPackageStore::Idle(Boolean* arg1, Boolean* arg2)
 }
 
 
-// ROM 0x00162654 NextObject__13TPackageStoreFUlPUl
+// ROM 0x001603cc NextObject__13TPackageStoreFUlPUl
 // Not iterable: no next object.
 NewtonErr
 TPackageStore::NextObject(PSSId /*id*/, PSSId* nextId)
@@ -220,7 +220,7 @@ TPackageStore::NextObject(PSSId /*id*/, PSSId* nextId)
 }
 
 
-// ROM 0x00162660 CheckIntegrity__13TPackageStoreFPUl
+// ROM 0x001603d8 CheckIntegrity__13TPackageStoreFPUl
 NewtonErr
 TPackageStore::CheckIntegrity(ULong* /*arg*/)
 {
@@ -228,7 +228,7 @@ TPackageStore::CheckIntegrity(ULong* /*arg*/)
 }
 
 
-// ROM 0x001627a0 SetBuddy__13TPackageStoreFP6TStore
+// ROM 0x00160518 SetBuddy__13TPackageStoreFP6TStore
 NewtonErr
 TPackageStore::SetBuddy(TStore* /*buddy*/)
 {
@@ -236,7 +236,7 @@ TPackageStore::SetBuddy(TStore* /*buddy*/)
 }
 
 
-// ROM 0x001627a8 OwnsObject__13TPackageStoreFUl
+// ROM 0x00160520 OwnsObject__13TPackageStoreFUl
 Boolean
 TPackageStore::OwnsObject(PSSId /*id*/)
 {
@@ -244,7 +244,7 @@ TPackageStore::OwnsObject(PSSId /*id*/)
 }
 
 
-// ROM 0x0016280c Address__13TPackageStoreFUl
+// ROM 0x00160584 Address__13TPackageStoreFUl
 void*
 TPackageStore::Address(PSSId /*id*/)
 {
@@ -252,7 +252,7 @@ TPackageStore::Address(PSSId /*id*/)
 }
 
 
-// ROM 0x00162814 StoreKind__13TPackageStoreFv
+// ROM 0x0016058c StoreKind__13TPackageStoreFv
 const char*
 TPackageStore::StoreKind()
 {
@@ -260,7 +260,7 @@ TPackageStore::StoreKind()
 }
 
 
-// ROM 0x00162804 SetStore__13TPackageStoreFP6TStoreUl
+// ROM 0x0016057c SetStore__13TPackageStoreFP6TStoreUl
 NewtonErr
 TPackageStore::SetStore(TStore* /*store*/, ULong /*arg*/)
 {
@@ -268,7 +268,7 @@ TPackageStore::SetStore(TStore* /*store*/, ULong /*arg*/)
 }
 
 
-// ROM 0x001627fc IsSameStore__13TPackageStoreFPvUl
+// ROM 0x00160574 IsSameStore__13TPackageStoreFPvUl
 Boolean
 TPackageStore::IsSameStore(void* /*data*/, ULong /*size*/)
 {
@@ -276,7 +276,7 @@ TPackageStore::IsSameStore(void* /*data*/, ULong /*size*/)
 }
 
 
-// ROM 0x001627e8 IsLocked__13TPackageStoreFv
+// ROM 0x00160560 IsLocked__13TPackageStoreFv
 Boolean
 TPackageStore::IsLocked()
 {
@@ -284,7 +284,7 @@ TPackageStore::IsLocked()
 }
 
 
-// ROM 0x0016290c VppOff__13TPackageStoreFv
+// ROM 0x00160684 VppOff__13TPackageStoreFv
 NewtonErr
 TPackageStore::VppOff()
 {
@@ -292,7 +292,7 @@ TPackageStore::VppOff()
 }
 
 
-// ROM 0x00162914 Sleep__13TPackageStoreFv
+// ROM 0x0016068c Sleep__13TPackageStoreFv
 NewtonErr
 TPackageStore::Sleep()
 {
@@ -300,7 +300,7 @@ TPackageStore::Sleep()
 }
 
 
-// ROM 0x0016291c IsROM__13TPackageStoreFv
+// ROM 0x00160694 IsROM__13TPackageStoreFv
 Boolean
 TPackageStore::IsROM()
 {
@@ -308,7 +308,7 @@ TPackageStore::IsROM()
 }
 
 
-// ROM 0x00162a70 NewWithinTransaction__13TPackageStoreFlPUl
+// ROM 0x001607e8 NewWithinTransaction__13TPackageStoreFlPUl
 NewtonErr
 TPackageStore::NewWithinTransaction(long size, PSSId* id)
 {
@@ -316,7 +316,7 @@ TPackageStore::NewWithinTransaction(long size, PSSId* id)
 }
 
 
-// ROM 0x00162a74 StartTransactionAgainst__13TPackageStoreFUl
+// ROM 0x001607ec StartTransactionAgainst__13TPackageStoreFUl
 NewtonErr
 TPackageStore::StartTransactionAgainst(PSSId /*id*/)
 {
@@ -324,7 +324,7 @@ TPackageStore::StartTransactionAgainst(PSSId /*id*/)
 }
 
 
-// ROM 0x00162a8c SeparatelyAbort__13TPackageStoreFUl
+// ROM 0x00160804 SeparatelyAbort__13TPackageStoreFUl
 NewtonErr
 TPackageStore::SeparatelyAbort(PSSId /*id*/)
 {
@@ -332,7 +332,7 @@ TPackageStore::SeparatelyAbort(PSSId /*id*/)
 }
 
 
-// ROM 0x00162a94 AddToCurrentTransaction__13TPackageStoreFUl
+// ROM 0x0016080c AddToCurrentTransaction__13TPackageStoreFUl
 NewtonErr
 TPackageStore::AddToCurrentTransaction(PSSId /*id*/)
 {
@@ -340,7 +340,7 @@ TPackageStore::AddToCurrentTransaction(PSSId /*id*/)
 }
 
 
-// ROM 0x00162a9c InSeparateTransaction__13TPackageStoreFUl
+// ROM 0x00160814 InSeparateTransaction__13TPackageStoreFUl
 Boolean
 TPackageStore::InSeparateTransaction(PSSId /*id*/)
 {
@@ -348,7 +348,7 @@ TPackageStore::InSeparateTransaction(PSSId /*id*/)
 }
 
 
-// ROM 0x00162aa4 LockReadOnly__13TPackageStoreFv
+// ROM 0x0016081c LockReadOnly__13TPackageStoreFv
 NewtonErr
 TPackageStore::LockReadOnly()
 {
@@ -356,7 +356,7 @@ TPackageStore::LockReadOnly()
 }
 
 
-// ROM 0x00162aac UnlockReadOnly__13TPackageStoreFUc
+// ROM 0x00160824 UnlockReadOnly__13TPackageStoreFUc
 NewtonErr
 TPackageStore::UnlockReadOnly(Boolean /*reset*/)
 {
@@ -364,7 +364,7 @@ TPackageStore::UnlockReadOnly(Boolean /*reset*/)
 }
 
 
-// ROM 0x00162ab4 InTransaction__13TPackageStoreFv
+// ROM 0x0016082c InTransaction__13TPackageStoreFv
 Boolean
 TPackageStore::InTransaction()
 {
@@ -372,7 +372,7 @@ TPackageStore::InTransaction()
 }
 
 
-// ROM 0x00162ad0 NewObject__13TPackageStoreFPclPUl
+// ROM 0x00160848 NewObject__13TPackageStoreFPclPUl
 NewtonErr
 TPackageStore::NewObject(char* /*data*/, long /*size*/, PSSId* /*id*/)
 {
@@ -380,7 +380,7 @@ TPackageStore::NewObject(char* /*data*/, long /*size*/, PSSId* /*id*/)
 }
 
 
-// ROM 0x00162adc ReplaceObject__13TPackageStoreFUlPcl
+// ROM 0x00160854 ReplaceObject__13TPackageStoreFUlPcl
 NewtonErr
 TPackageStore::ReplaceObject(PSSId /*id*/, char* /*data*/, long /*size*/)
 {
@@ -388,7 +388,7 @@ TPackageStore::ReplaceObject(PSSId /*id*/, char* /*data*/, long /*size*/)
 }
 
 
-// ROM 0x00162ab8 CalcXIPObjectSize__13TPackageStoreFlT1Pl
+// ROM 0x00160830 CalcXIPObjectSize__13TPackageStoreFlT1Pl
 NewtonErr
 TPackageStore::CalcXIPObjectSize(long /*arg1*/, long /*arg2*/, long* /*size*/)
 {
@@ -396,7 +396,7 @@ TPackageStore::CalcXIPObjectSize(long /*arg1*/, long /*arg2*/, long* /*size*/)
 }
 
 
-// ROM 0x00162ac4 NewXIPObject__13TPackageStoreFlPUl
+// ROM 0x0016083c NewXIPObject__13TPackageStoreFlPUl
 NewtonErr
 TPackageStore::NewXIPObject(long /*size*/, PSSId* /*id*/)
 {
@@ -404,7 +404,7 @@ TPackageStore::NewXIPObject(long /*size*/, PSSId* /*id*/)
 }
 
 
-// ROM 0x00162af0 GetXIPObjectInfo__13TPackageStoreFUlPUlN22
+// ROM 0x00160868 GetXIPObjectInfo__13TPackageStoreFUlPUlN22
 NewtonErr
 TPackageStore::GetXIPObjectInfo(PSSId /*id*/, ULong* /*arg1*/, ULong* /*arg2*/, ULong* /*arg3*/)
 {

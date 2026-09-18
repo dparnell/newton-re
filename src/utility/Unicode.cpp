@@ -13,7 +13,7 @@
 #include "Unicode.h"
 
 
-// ROM 0x002544a4 Ustrcpy
+// ROM 0x002563f0 Ustrcpy
 UniChar*
 Ustrcpy(UniChar* dest, const UniChar* src)
 {
@@ -24,7 +24,7 @@ Ustrcpy(UniChar* dest, const UniChar* src)
 }
 
 
-// ROM 0x002544cc Ustrncpy
+// ROM 0x00256418 Ustrncpy
 // At most n UniChars of the string, and a terminator after them when
 // the string is longer (dest holds n + 1).
 UniChar*
@@ -47,7 +47,7 @@ Ustrncpy(UniChar* dest, const UniChar* src, long n)
 }
 
 
-// ROM 0x002547ec Ustrcat
+// ROM 0x00256738 Ustrcat
 UniChar*
 Ustrcat(UniChar* dest, const UniChar* src)
 {
@@ -60,7 +60,7 @@ Ustrcat(UniChar* dest, const UniChar* src)
 }
 
 
-// ROM 0x00254828 Ustrncat
+// ROM 0x00256774 Ustrncat
 UniChar*
 Ustrncat(UniChar* dest, const UniChar* src, long n)
 {
@@ -81,7 +81,7 @@ Ustrncat(UniChar* dest, const UniChar* src, long n)
 }
 
 
-// ROM 0x0025489c Ustrlen
+// ROM 0x002567e8 Ustrlen
 long
 Ustrlen(const UniChar* s)
 {
@@ -92,7 +92,7 @@ Ustrlen(const UniChar* s)
 }
 
 
-// ROM 0x002548c4 Ustrchr
+// ROM 0x00256810 Ustrchr
 UniChar*
 Ustrchr(const UniChar* s, UniChar c)
 {
@@ -107,7 +107,7 @@ Ustrchr(const UniChar* s, UniChar c)
 }
 
 
-// ROM 0x002548f4 Umbstrlen
+// ROM 0x00256840 Umbstrlen
 // (the same as Ustrlen: the ROM's strings hold no multi-byte characters)
 long
 Umbstrlen(const UniChar* s)
@@ -116,7 +116,7 @@ Umbstrlen(const UniChar* s)
 }
 
 
-// ROM 0x0025491c Umbstrnlen
+// ROM 0x00256868 Umbstrnlen
 // The length of s, at most n.
 long
 Umbstrnlen(const UniChar* s, long /*unused*/, long n)
@@ -132,7 +132,7 @@ Umbstrnlen(const UniChar* s, long /*unused*/, long n)
 }
 
 
-// ROM 0x0025495c Ustrcmp
+// ROM 0x002568a8 Ustrcmp
 int
 Ustrcmp(const UniChar* a, const UniChar* b)
 {
@@ -149,7 +149,7 @@ Ustrcmp(const UniChar* a, const UniChar* b)
 }
 
 
-// ROM 0x0025498c Umemset
+// ROM 0x002568d8 Umemset
 void
 Umemset(UniChar* dest, UniChar c, long n)
 {
@@ -158,12 +158,12 @@ Umemset(UniChar* dest, UniChar c, long n)
 }
 
 
-CharEncoding	gUnicode[kNumberOfEncodings];		// ROM 0x0c104858 gUnicode
+CharEncoding	gUnicode[kNumberOfEncodings];		// ROM 0x0c107790 gUnicode
 static long		gEncodingCount = 0;					// ROM 0x0c1048a8
-Boolean			gUnicodeInited = false;				// ROM 0x0c101fd4 gUnicodeInited
-Boolean			gHasUnicode = false;				// ROM 0x0c101fd0 gHasUnicode
-const UniChar*	gASCIItoUnicodeTable = nil;			// ROM 0x0c101fd8 gASCIItoUnicodeTable
-const unsigned char*	gASCIIBreakTable = nil;		// ROM 0x0c101fdc gASCIIBreakTable
+Boolean			gUnicodeInited = false;				// ROM 0x0c104ee0 gUnicodeInited
+Boolean			gHasUnicode = false;				// ROM 0x0c104edc gHasUnicode
+const UniChar*	gASCIItoUnicodeTable = nil;			// ROM 0x0c104ee4 gASCIItoUnicodeTable
+const unsigned char*	gASCIIBreakTable = nil;		// ROM 0x0c104ee8 gASCIIBreakTable
 const unsigned char*	gCharClass = nil;			// ROM 0x0c1048ac
 const unsigned char*	gTypeList = nil;			// ROM 0x0c1048b0
 const signed char*		gUpperList = nil;			// ROM 0x0c1048b4
@@ -180,7 +180,7 @@ MapHalf(const unsigned char* p)
 }
 
 
-// ROM 0x00256014 GetMappingInfo__FPvP12TEncodingMapPPFv_l
+// ROM 0x00257f4c GetMappingInfo__FPvP12TEncodingMapPPFv_l
 // The map filled from the mapping binary's header (kind, size, flags,
 // segment count) and its tables located: kind 0's UniChars follow the
 // header; kind 4's ends, starts and offsets (segment count halfwords
@@ -215,7 +215,7 @@ GetMappingInfo(const void* mapping, TEncodingMap* map, void** converter)
 }
 
 
-// ROM 0x002555ec InstallCharEncoding__FUsPcT2PFPCUsPvT2l_vPFPCvPUsPvl_v
+// ROM 0x00257524 InstallCharEncoding__FUsPcT2PFPCUsPvT2l_vPFPCvPUsPvl_v
 // An encoding's maps and converters put in the table (ids 0-4; both
 // converters needed).
 void
@@ -259,7 +259,7 @@ MapChar(const UniChar* table, long i)
 }
 
 
-// ROM 0x00256548 ConvertToUnicodeFunc_Contiguous8__FPCvPUsPvl
+// ROM 0x00258480 ConvertToUnicodeFunc_Contiguous8__FPCvPUsPvl
 // Each byte looked up in the map's 256 UniChars, to a 0 or n.
 void
 ConvertToUnicodeFunc_Contiguous8(const void* src, UniChar* dest, void* map, long n)
@@ -276,7 +276,7 @@ ConvertToUnicodeFunc_Contiguous8(const void* src, UniChar* dest, void* map, long
 }
 
 
-// ROM 0x00256784 ConvertFromUnicodeFunc_Segmented16__FPCUsPUcPvl
+// ROM 0x002586bc ConvertFromUnicodeFunc_Segmented16__FPCUsPUcPvl
 // Each character's segment is the first whose end is not below it; a
 // character below the segment's start has no byte (0x1a), else the byte
 // is the table's at the character plus the segment's offset.
@@ -305,7 +305,7 @@ ConvertFromUnicodeFunc_Segmented16(const UniChar* src, void* dest, void* map, lo
 }
 
 
-// ROM 0x002553a0 ConvertToUnicode__FPCvPUslT3
+// ROM 0x002572ec ConvertToUnicode__FPCvPUslT3
 // Through the encoding's converter once the tables are in (nothing for
 // an encoding without one); before that bytes widened as they are, to a
 // 0 or n.
@@ -329,7 +329,7 @@ ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n)
 }
 
 
-// ROM 0x002568b8 ConvertFromUnicode__FPCUsPvlT3
+// ROM 0x002587f0 ConvertFromUnicode__FPCUsPvlT3
 // Through the encoding's converter once the tables are in; before that
 // characters over 0x7f become 0x1a.
 void
@@ -357,7 +357,7 @@ ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n)
 	Characters
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002553d4 U_CONST_CHAR
+// ROM 0x00257320 U_CONST_CHAR
 UniChar
 U_CONST_CHAR(unsigned char c)
 {
@@ -368,7 +368,7 @@ U_CONST_CHAR(unsigned char c)
 }
 
 
-// ROM 0x002553f0 A_CONST_CHAR
+// ROM 0x0025733c A_CONST_CHAR
 char
 A_CONST_CHAR(UniChar c)
 {
@@ -379,7 +379,7 @@ A_CONST_CHAR(UniChar c)
 }
 
 
-// ROM 0x002557ec ConvertTextCase__FPUslPSc
+// ROM 0x00257724 ConvertTextCase__FPUslPSc
 // Each character (to a 0 or n) taken to Mac Roman (as it is below 0x80),
 // its class's delta added (none for 0x1a: no Mac Roman character), and
 // the result taken back to Unicode when it is over 0x7f.
@@ -400,7 +400,7 @@ ConvertTextCase(UniChar* text, long n, const signed char* deltas)
 }
 
 
-// ROM 0x0025587c UppercaseText__FPUsl
+// ROM 0x002577b4 UppercaseText__FPUsl
 // (host: Latin-1's letters before InitUnicode)
 void
 UppercaseText(UniChar* text, long n)
@@ -413,7 +413,7 @@ UppercaseText(UniChar* text, long n)
 }
 
 
-// ROM 0x0025588c LowercaseText__FPUsl
+// ROM 0x002577c4 LowercaseText__FPUsl
 void
 LowercaseText(UniChar* text, long n)
 {
@@ -425,7 +425,7 @@ LowercaseText(UniChar* text, long n)
 }
 
 
-// ROM 0x0025589c NoDiacriticsText__FPUsl
+// ROM 0x002577d4 NoDiacriticsText__FPUsl
 // (host: nothing before InitUnicode)
 void
 NoDiacriticsText(UniChar* text, long n)
@@ -435,7 +435,7 @@ NoDiacriticsText(UniChar* text, long n)
 }
 
 
-// ROM 0x002559f4 UppercaseNoDiacriticsText__FPUsl
+// ROM 0x0025792c UppercaseNoDiacriticsText__FPUsl
 // (host: UppercaseText before InitUnicode)
 void
 UppercaseNoDiacriticsText(UniChar* text, long n)
@@ -447,7 +447,7 @@ UppercaseNoDiacriticsText(UniChar* text, long n)
 }
 
 
-// ROM 0x00255a04 ToggleCase__FUs
+// ROM 0x0025793c ToggleCase__FUs
 // Lowercased when that changes it, else uppercased.
 UniChar
 ToggleCase(UniChar c)
@@ -460,7 +460,7 @@ ToggleCase(UniChar c)
 }
 
 
-// ROM 0x00255a54 UToLower__FUs
+// ROM 0x0025798c UToLower__FUs
 // LowercaseText's one character.  Host: before InitUnicode (no tables)
 // ASCII and Latin-1 letters.
 UniChar
@@ -494,7 +494,7 @@ UToUpper(UniChar c)
 }
 
 
-// ROM 0x00255428 IsAlphabet__FUs
+// ROM 0x00257374 IsAlphabet__FUs
 // A letter: uppercased without diacriticals it is A-Z (or the German sharp
 // s, 0xdf, which has no upper case).  Host: before InitUnicode Latin-1's
 // letters are taken.
@@ -514,7 +514,7 @@ IsAlphabet(UniChar c)
 }
 
 
-// ROM 0x00255494 IsDigit__FUs
+// ROM 0x002573cc IsDigit__FUs
 Boolean
 IsDigit(UniChar c)
 {
@@ -522,7 +522,7 @@ IsDigit(UniChar c)
 }
 
 
-// ROM 0x002554bc IsHexDigit__FUs
+// ROM 0x002573f4 IsHexDigit__FUs
 Boolean
 IsHexDigit(UniChar c)
 {
@@ -530,7 +530,7 @@ IsHexDigit(UniChar c)
 }
 
 
-// ROM 0x00255514 IsAlphaNumeric__FUs
+// ROM 0x0025744c IsAlphaNumeric__FUs
 Boolean
 IsAlphaNumeric(UniChar c)
 {
@@ -538,7 +538,7 @@ IsAlphaNumeric(UniChar c)
 }
 
 
-// ROM 0x002555b4 IsSpace__FUs
+// ROM 0x002574ec IsSpace__FUs
 Boolean
 IsSpace(UniChar c)
 {
@@ -546,7 +546,7 @@ IsSpace(UniChar c)
 }
 
 
-// ROM 0x002555d0 IsTab__FUs
+// ROM 0x00257508 IsTab__FUs
 Boolean
 IsTab(UniChar c)
 {
@@ -554,7 +554,7 @@ IsTab(UniChar c)
 }
 
 
-// ROM 0x00255658 IsBreaker__FUs
+// ROM 0x00257590 IsBreaker__FUs
 Boolean
 IsBreaker(UniChar c)
 {
@@ -562,7 +562,7 @@ IsBreaker(UniChar c)
 }
 
 
-// ROM 0x0025563c IsReturn__FUs
+// ROM 0x00257574 IsReturn__FUs
 Boolean
 IsReturn(UniChar c)
 {
@@ -570,7 +570,7 @@ IsReturn(UniChar c)
 }
 
 
-// ROM 0x00255678 IsDelimiter__FUs
+// ROM 0x002575b0 IsDelimiter__FUs
 // The ASCII break table's byte for the Mac Roman character.  Host:
 // before InitUnicode anything but a letter or digit.
 Boolean
@@ -583,7 +583,7 @@ IsDelimiter(UniChar c)
 }
 
 
-// ROM 0x0025555c IsWhiteSpace__FUs
+// ROM 0x00257494 IsWhiteSpace__FUs
 Boolean
 IsWhiteSpace(UniChar c)
 {

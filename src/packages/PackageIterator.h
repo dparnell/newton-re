@@ -22,8 +22,8 @@
 				The ROM's layouts: TPrivatePackageIterator 0x20, TPackageIterator
 				0x28; the directory structures as in the package.
 
-	Reconstructed from the MP2100 D ROM (0x001964fc-0x00196a10,
-	0x0015e7e0-0x0015f638); each function cites its origin.  The format
+	Reconstructed from the MP2x00 US ROM (0x001944dc-0x001949f0,
+	0x0015c558-0x0015d3b0); each function cites its origin.  The format
 	is also described by tools/newton-rom/analysis/packages.py, which
 	lists the packages built into the ROM extension.
 */
@@ -195,7 +195,7 @@ public:
 					~TPackageIterator();
 
 	NewtonErr		Init(void);
-	TPackageIterator*	InitFields(void)	{ return this; }	// ROM 0x0015efbc InitFields__16TPackageIteratorFv - a no-op in this ROM
+	TPackageIterator*	InitFields(void)	{ return this; }	// ROM 0x0015cd34 InitFields__16TPackageIteratorFv - a no-op in this ROM
 	void			DisposeDirectory(void);
 	NewtonErr		ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& dataSize);
 	NewtonErr		SetupRelocationData(ULong directoryOffset, ULong* relocationSize);
@@ -213,10 +213,10 @@ public:
 	Boolean			ForDispatchOnly(void);
 	Boolean			CopyProtected(void);
 	const UniChar*	Copyright(void);
-	const UniChar*	PackageName(void)		{ return TPrivatePackageIterator::PackageName(); }	// ROM 0x0015efb4 PackageName__16TPackageIteratorFv - forwards to TPrivatePackageIterator
+	const UniChar*	PackageName(void)		{ return TPrivatePackageIterator::PackageName(); }	// ROM 0x0015cd2c PackageName__16TPackageIteratorFv - forwards to TPrivatePackageIterator
 	void			GetPartInfo(ULong partIndex, PartInfo* const info);
 	ULong			ProcessorTypeOfPart(ULong partIndex);
-	ULong			GetPartDataOffset(ULong partIndex)	{ return TPrivatePackageIterator::GetPartDataOffset(partIndex); }	// ROM 0x0015efb8 GetPartDataOffset__16TPackageIteratorFUl - forwards to TPrivatePackageIterator
+	ULong			GetPartDataOffset(ULong partIndex)	{ return TPrivatePackageIterator::GetPartDataOffset(partIndex); }	// ROM 0x0015cd30 GetPartDataOffset__16TPackageIteratorFUl - forwards to TPrivatePackageIterator
 	// NOT YET RECONSTRUCTED: Store(TStore*, ULong, TCallbackCompressor*, TLOCallback*) - the package as a large object on a store
 
 	Boolean			fFromPipe;				// +0x20

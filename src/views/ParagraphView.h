@@ -34,8 +34,8 @@
 				the view keeps its bounds), the locale's break tables in
 				the word breaks (see FindWordBreaks), printing.
 
-	Reconstructed from the MP2100 D ROM (0x0016b14c-0x0016e290,
-	0x0017a778-0x0017aa60, 0x00180df0-0x001835b0); each function cites its
+	Reconstructed from the MP2x00 US ROM (0x0016911c-0x0016c260,
+	0x00178748-0x00178a30, 0x0017edc0-0x00181580); each function cites its
 	origin.
 */
 
@@ -71,67 +71,67 @@ struct LineInfo
 class TParagraphHilite;
 
 // The text flags of an input view: what kind of text it takes.
-ULong	GetInputViewTextFlags(ULong textFlags, ULong viewFlags);	// ROM 0x0025fdf4 GetInputViewTextFlags__FUlT1
+ULong	GetInputViewTextFlags(ULong textFlags, ULong viewFlags);	// ROM 0x00261d2c GetInputViewTextFlags__FUlT1
 
 class TParagraphView : public TDataView
 {
 public:
-	virtual long	ClassID(void) const;								// ROM 0x001803dc ClassID__14TParagraphViewCFv
-	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x001803e4 DerivedFrom__14TParagraphViewCFl
-	virtual			~TParagraphView();									// ROM 0x00182624 __dt__14TParagraphViewFv
-	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x00180df0 Constructor__14TParagraphViewFRC6RefVarP5TView
-	virtual void	SetupDone(void);									// ROM 0x00181608 SetupDone__14TParagraphViewFv
-	virtual long	Idle(long reason);									// ROM 0x00180994 Idle__14TParagraphViewFl - reason 2 runs a deferred tap
-	virtual void	HandleTap(Point& pt);								// ROM 0x001772f4 HandleTap__14TParagraphViewFR6TPoint (vtable +0x11c) - the caret placed at the tap
+	virtual long	ClassID(void) const;								// ROM 0x0017e3ac ClassID__14TParagraphViewCFv
+	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x0017e3b4 DerivedFrom__14TParagraphViewCFl
+	virtual			~TParagraphView();									// ROM 0x001805f4 __dt__14TParagraphViewFv
+	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x0017edc0 Constructor__14TParagraphViewFRC6RefVarP5TView
+	virtual void	SetupDone(void);									// ROM 0x0017f5d8 SetupDone__14TParagraphViewFv
+	virtual long	Idle(long reason);									// ROM 0x0017e964 Idle__14TParagraphViewFl - reason 2 runs a deferred tap
+	virtual void	HandleTap(Point& pt);								// ROM 0x001752c4 HandleTap__14TParagraphViewFR6TPoint (vtable +0x11c) - the caret placed at the tap
 	virtual Boolean	PointInHilite(Point& pt);							// host: the point tested against the selection region (the ROM TView::PointInHilite 0x0026051c asks each hilite Encloses)
-	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016b14c RealDraw__14TParagraphViewFR5TRect
-	virtual void	SetBounds(const Rect& bounds);						// ROM 0x00180418 SetBounds__14TParagraphViewFRC5TRect
-	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x00181008 SetCaretOffset__14TParagraphViewFPlT1
-	virtual Ref		GetSelection(void);									// ROM 0x00181080 GetSelection__14TParagraphViewFv
-	virtual void	SetSelection(RefArg selection, long* offset, long* length);	// ROM 0x001811a8 SetSelection__14TParagraphViewFRC6RefVarPlT2
-	virtual void	ActivateSelection(Boolean on);						// ROM 0x00181308 ActivateSelection__14TParagraphViewFUc
-	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00173b04 OffsetToCaret__14TParagraphViewFlP5TRect
-	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0016e688 RealDoCommand__14TParagraphViewFRC6RefVar
-	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001736f8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
+	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016911c RealDraw__14TParagraphViewFR5TRect
+	virtual void	SetBounds(const Rect& bounds);						// ROM 0x0017e3e8 SetBounds__14TParagraphViewFRC5TRect
+	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x0017efd8 SetCaretOffset__14TParagraphViewFPlT1
+	virtual Ref		GetSelection(void);									// ROM 0x0017f050 GetSelection__14TParagraphViewFv
+	virtual void	SetSelection(RefArg selection, long* offset, long* length);	// ROM 0x0017f178 SetSelection__14TParagraphViewFRC6RefVarPlT2
+	virtual void	ActivateSelection(Boolean on);						// ROM 0x0017f2d8 ActivateSelection__14TParagraphViewFUc
+	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect
+	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar
+	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
-	Ref			Text(void);												// ROM 0x00183034 Text__14TParagraphViewFv
-	Ref			Styles(void);											// ROM 0x00183478 Styles__14TParagraphViewFv
-	Ref			GetStyles(void);										// ROM 0x00183134 GetStyles__14TParagraphViewFv
-	Ref			Tabs(void);												// ROM 0x001834e4 Tabs__14TParagraphViewFv
-	Ref			GetDefaultViewStyle(void);								// ROM 0x0017a9ec GetDefaultViewStyle__14TParagraphViewFv
-	long		GetInterLineSpacing(void);								// ROM 0x0016b490 GetInterLineSpacing__14TParagraphViewFv
-	void		CreateAllCaches(void);									// ROM 0x0016dad8 CreateAllCaches__14TParagraphViewFv
-	void		ClearAllCaches(void);									// ROM 0x0016dc00 ClearAllCaches__14TParagraphViewFv
-	void		RefillAllCaches(void);									// ROM 0x0016e28c RefillAllCaches__14TParagraphViewFv
-	void		FillAllCaches(void);									// ROM 0x0016dc68 FillAllCaches__14TParagraphViewFPs
-	void		OffsetCachedBounds(Point& delta);						// ROM 0x0016b94c OffsetCachedBounds__14TParagraphViewFR6TPoint
-	long		FindLineContainingCharOffset(long offset);				// ROM 0x0017a728 FindLineContainingCharOffset__14TParagraphViewFl (host: the line's index, -1 for none)
-	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00179f50 OffsetToBounds__14TParagraphViewFlP5TRect
-	long		PointToOffset(const Point& pt);							// ROM 0x00179550 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc (host: the nearest character)
-	void		FlushWordAtCaret(void);									// ROM 0x00176cac FlushWordAtCaret__14TParagraphViewFv
+	Ref			Text(void);												// ROM 0x00181004 Text__14TParagraphViewFv
+	Ref			Styles(void);											// ROM 0x00181448 Styles__14TParagraphViewFv
+	Ref			GetStyles(void);										// ROM 0x00181104 GetStyles__14TParagraphViewFv
+	Ref			Tabs(void);												// ROM 0x001814b4 Tabs__14TParagraphViewFv
+	Ref			GetDefaultViewStyle(void);								// ROM 0x001789bc GetDefaultViewStyle__14TParagraphViewFv
+	long		GetInterLineSpacing(void);								// ROM 0x00169460 GetInterLineSpacing__14TParagraphViewFv
+	void		CreateAllCaches(void);									// ROM 0x0016baa8 CreateAllCaches__14TParagraphViewFv
+	void		ClearAllCaches(void);									// ROM 0x0016bbd0 ClearAllCaches__14TParagraphViewFv
+	void		RefillAllCaches(void);									// ROM 0x0016c25c RefillAllCaches__14TParagraphViewFv
+	void		FillAllCaches(void);									// ROM 0x0016bc38 FillAllCaches__14TParagraphViewFPs
+	void		OffsetCachedBounds(Point& delta);						// ROM 0x0016991c OffsetCachedBounds__14TParagraphViewFR6TPoint
+	long		FindLineContainingCharOffset(long offset);				// ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl (host: the line's index, -1 for none)
+	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
+	long		PointToOffset(const Point& pt);							// ROM 0x00177520 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc (host: the nearest character)
+	void		FlushWordAtCaret(void);									// ROM 0x00174c7c FlushWordAtCaret__14TParagraphViewFv
 
 	// editing
-	void		HandleReplaceText(RefArg cmd);							// ROM 0x00170f30 HandleReplaceText__14TParagraphViewFRC6RefVar
-	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x0017aa6c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
-	void		RemoveText(ULong offset, ULong length);					// ROM 0x0017abc8 RemoveText__14TParagraphViewFUlT1
-	void		MakeAndDoReplaceCommand(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x0017ad8c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
-	Boolean		AddKeyToCurrUndo(UniChar ch, long offset);				// ROM 0x00179248 AddKeyToCurrUndo__14TParagraphViewFUsl
-	void		AdjustStyles(long offset, long removed, long inserted, RefArg styles, long styleOffset);	// ROM 0x0017af04 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
-	void		AdjustHilites(long offset, long delta);					// ROM 0x0016c854 AdjustHilites__14TParagraphViewFlT1
-	void		ChangeStyleOfSelection(RefArg style);					// ROM 0x0017ba98 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar - the selected text restyled
-	void		ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw);	// ROM 0x0017b494 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
-	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016c4cc MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
-	void		DrawHilites(Boolean scaled);							// ROM 0x0016cefc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
-	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016c774 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once
+	void		HandleReplaceText(RefArg cmd);							// ROM 0x0016ef00 HandleReplaceText__14TParagraphViewFRC6RefVar
+	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+	void		RemoveText(ULong offset, ULong length);					// ROM 0x00178b98 RemoveText__14TParagraphViewFUlT1
+	void		MakeAndDoReplaceCommand(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178d5c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+	Boolean		AddKeyToCurrUndo(UniChar ch, long offset);				// ROM 0x00177218 AddKeyToCurrUndo__14TParagraphViewFUsl
+	void		AdjustStyles(long offset, long removed, long inserted, RefArg styles, long styleOffset);	// ROM 0x00178ed4 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
+	void		AdjustHilites(long offset, long delta);					// ROM 0x0016a824 AdjustHilites__14TParagraphViewFlT1
+	void		ChangeStyleOfSelection(RefArg style);					// ROM 0x00179a68 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar - the selected text restyled
+	void		ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw);	// ROM 0x00179464 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
+	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016a49c MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
+	void		DrawHilites(Boolean scaled);							// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
+	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once
 	Boolean		SelectionRegion(long start, long end, RgnHandle rgn);	// host: the region covering a range of the text
 	Boolean		SelectWordAt(Point pt);									// the word under the point selected (the ROM's aeDoubleTap case of RealDoCommand at 0x0016e688, over ScanWordStart/End 0x001a37d0/0x001a36b4)
-	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x0017a778 GetStyleForInsertion__14TParagraphViewFlUcT2
-	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x0017b1d8 GetStyleAtOffset__14TParagraphViewFlPlT2
-	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x0017b228 GetStylesOfRange__14TParagraphViewFlT1Uc
-	Ref			GetWriteableTextStylesArray(void);						// ROM 0x0017b278 GetWriteableTextStylesArray__14TParagraphViewFv
-	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00182c08 RangeChanged__14TParagraphViewFlN21RC6RefVar
-	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00182d14 ProcessStyles__14TParagraphViewFUc
-	void		FixupBBox(void);										// ROM 0x001835e8 FixupBBox__14TParagraphViewFv
+	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x00178748 GetStyleForInsertion__14TParagraphViewFlUcT2
+	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x001791a8 GetStyleAtOffset__14TParagraphViewFlPlT2
+	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x001791f8 GetStylesOfRange__14TParagraphViewFlT1Uc
+	Ref			GetWriteableTextStylesArray(void);						// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
+	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar
+	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc
+	void		FixupBBox(void);										// ROM 0x001815b8 FixupBBox__14TParagraphViewFv
 	long		TextLength(void);										// the text's characters (host)
 
 	long		LineCount(void) const				{ return fLineCount; }
@@ -169,6 +169,6 @@ private:
 	RefStruct		fRunSpecs;		// the specs of the runs (an array; a single spec's run covers the text)
 };
 
-void	GrowLineInfoCache(LineInfo** cache, long* capacity);			// ROM 0x0017e9fc GrowLineInfoCache__FPPP8LineInfol
+void	GrowLineInfoCache(LineInfo** cache, long* capacity);			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
 
 #endif	/* __PARAGRAPHVIEW_H */

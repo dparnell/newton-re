@@ -15,8 +15,8 @@
 				instead (TFramePartHandler::Expand reads it with
 				TObjectReader) and needs no import.
 
-	Reconstructed from the MP2100 D ROM (FramePartToplevelFrame
-	0x000d2898); the import is a host stand-in for the part being mapped.
+	Reconstructed from the MP2x00 US ROM (FramePartToplevelFrame
+	0x000d1744); the import is a host stand-in for the part being mapped.
 */
 
 #ifndef __FRAMESPART_H

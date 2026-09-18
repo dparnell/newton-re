@@ -19,8 +19,8 @@
 				that fails part way is better than no boot at all, and the
 				ROM takes the same view.
 
-	Not in the DDK; reconstructed from the MP2100 D ROM (0x001f3c40,
-	0x001f3eec, 0x001ef108), each function citing its origin.
+	Not in the DDK; reconstructed from the MP2x00 US ROM (0x001f1828,
+	0x001f1ad4, 0x001eccf0), each function citing its origin.
 */
 
 #ifndef __SCRIPTBOOT_H
@@ -31,8 +31,8 @@
 #endif
 
 
-void	InitScriptGlobals(void);				// ROM 0x001f3c40 InitScriptGlobals__Fv
-void	RunInitScripts(void);					// ROM 0x001f3eec RunInitScripts__Fv
-void	InitFormFunctions(RefArg functions);	// ROM 0x001ef108 InitFormFunctions__FRC6RefVar (nothing, in this ROM)
+void	InitScriptGlobals(void);				// ROM 0x001f1828 InitScriptGlobals__Fv
+void	RunInitScripts(void);					// ROM 0x001f1ad4 RunInitScripts__Fv
+void	InitFormFunctions(RefArg functions);	// ROM 0x001eccf0 InitFormFunctions__FRC6RefVar (nothing, in this ROM)
 
 #endif	/* __SCRIPTBOOT_H */

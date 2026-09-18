@@ -4,7 +4,7 @@
 	Contains:	The stroke queue between the inker and the stroke world, the
 				click-event watcher, TSStroke.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "StrokeQueue.h"
@@ -13,19 +13,19 @@
 #include "FixedMath.h"
 #include <stdio.h>
 
-static StrokeQueue	sQ;								// ROM 0x0c103e4c sQ - the queue gStrokeQ points to
-StrokeQueue*	gStrokeQ = &sQ;						// ROM 0x0c101988 gStrokeQ
-Boolean		gStrokeValid = true;					// ROM 0x0c101d24 gStrokeValid
-ULong		gTickOff = 0;							// ROM 0x0c101d18 gTickOff
-UShort		gHiliteDistance = 4;					// ROM 0x0c101d28 gHiliteDistance
-UShort		gMaxTapSize = 6;						// ROM 0x0c101d2c gMaxTapSize
-UShort		gDoubleTapDistance = 6;					// ROM 0x0c101d30 gDoubleTapDistance
-Fixed		gSamplesToTicks = 0x10000;				// ROM 0x0c101d34 gSamplesToTicks
-ULong		gDoubleTapInterval = 27;				// ROM 0x0c101940 gDoubleTapInterval
-ULong		useStylus = 0x10000;					// ROM 0x0c10124c useStylus
-FPoint		gTabScale = { 0x80000, 0x80000 };		// ROM 0x0c101980 gTabScale
-StrokeHiliteState	oldHilite;						// ROM 0x0c103fa0 oldHilite
-StrokeHiliteState	newHilite;						// ROM 0x0c103fbc newHilite
+static StrokeQueue	sQ;								// ROM 0x0c106d84 sQ - the queue gStrokeQ points to
+StrokeQueue*	gStrokeQ = &sQ;						// ROM 0x0c10189c gStrokeQ
+Boolean		gStrokeValid = true;					// ROM 0x0c104c30 gStrokeValid
+ULong		gTickOff = 0;							// ROM 0x0c104c24 gTickOff
+UShort		gHiliteDistance = 4;					// ROM 0x0c104c34 gHiliteDistance
+UShort		gMaxTapSize = 6;						// ROM 0x0c104c38 gMaxTapSize
+UShort		gDoubleTapDistance = 6;					// ROM 0x0c104c3c gDoubleTapDistance
+Fixed		gSamplesToTicks = 0x10000;				// ROM 0x0c104c40 gSamplesToTicks
+ULong		gDoubleTapInterval = 27;				// ROM 0x0c101854 gDoubleTapInterval
+ULong		useStylus = 0x10000;					// ROM 0x0c10115c useStylus
+FPoint		gTabScale = { 0x80000, 0x80000 };		// ROM 0x0c101894 gTabScale
+StrokeHiliteState	oldHilite;						// ROM 0x0c106ed8 oldHilite
+StrokeHiliteState	newHilite;						// ROM 0x0c106ef4 newHilite
 static Boolean	gPenDown = false;					// (the ROM's byte at 0x0c101d38) the pen is down (RealStrokeTime has seen its first point)
 extern ULong	gLastPenTip;						// ROM 0x0c1008bc gLastPenTip (Stroke.cpp)
 
@@ -34,7 +34,7 @@ extern ULong	gLastPenTip;						// ROM 0x0c1008bc gLastPenTip (Stroke.cpp)
 	T h e   t a b l e t   g l u e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0011d348 TabInit__Fv
+// ROM 0x0011b8e0 TabInit__Fv
 void
 TabInit(void)
 {
@@ -42,7 +42,7 @@ TabInit(void)
 }
 
 
-// ROM 0x0011d34c TabOn__Fv
+// ROM 0x0011b8e4 TabOn__Fv
 void
 TabOn(void)
 {
@@ -50,7 +50,7 @@ TabOn(void)
 }
 
 
-// ROM 0x0011d350 GetTabPt__FP5TabPt
+// ROM 0x0011b8e8 GetTabPt__FP5TabPt
 Boolean
 GetTabPt(TabPt* pt)
 {
@@ -58,7 +58,7 @@ GetTabPt(TabPt* pt)
 }
 
 
-// ROM 0x0011d354 LastTabPt__FP5TabPt
+// ROM 0x0011b8ec LastTabPt__FP5TabPt
 Boolean
 LastTabPt(TabPt* pt)
 {
@@ -66,7 +66,7 @@ LastTabPt(TabPt* pt)
 }
 
 
-// ROM 0x0011d35c GetDownTime__Fv
+// ROM 0x0011b8f4 GetDownTime__Fv
 ULong
 GetDownTime(void)
 {
@@ -74,7 +74,7 @@ GetDownTime(void)
 }
 
 
-// ROM 0x0011d360 GetUpTime__Fv
+// ROM 0x0011b8f8 GetUpTime__Fv
 ULong
 GetUpTime(void)
 {
@@ -82,7 +82,7 @@ GetUpTime(void)
 }
 
 
-// ROM 0x0011d364 GetTabScale__FP6FPoint
+// ROM 0x0011b8fc GetTabScale__FP6FPoint
 void
 GetTabScale(FPoint* scale)
 {
@@ -90,7 +90,7 @@ GetTabScale(FPoint* scale)
 }
 
 
-// ROM 0x001f6f50 CheapDistPoint__FP6FPointT1
+// ROM 0x001f9660 CheapDistPoint__FP6FPointT1
 // The distance between two points, roughly: the longer leg plus a
 // fraction of the shorter (the ROM's shifts).
 long
@@ -114,7 +114,7 @@ CheapDistPoint(const FPoint* a, const FPoint* b)
 }
 
 
-// ROM 0x001a6908 GetMidPoint
+// ROM 0x001a4388 GetMidPoint
 void
 GetMidPoint(const FPoint* a, const FPoint* b, FPoint* mid)
 {
@@ -127,7 +127,7 @@ GetMidPoint(const FPoint* a, const FPoint* b, FPoint* mid)
 	T S S t r o k e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x00220804 Make__8TSStrokeSFUl
+// ROM 0x0022304c Make__8TSStrokeSFUl
 TSStroke*
 TSStroke::Make(ULong count)
 {
@@ -150,7 +150,7 @@ TSStroke::Make(ULong count)
 }
 
 
-// ROM 0x00220724 AddPoint__8TSStrokeFP5TabPt
+// ROM 0x00222f6c AddPoint__8TSStrokeFP5TabPt
 // The point added; the first is kept, and the inker's next point set when
 // it has none pending.  ==> 0, or 1 for no memory.
 long
@@ -177,7 +177,7 @@ TSStroke::AddPoint(TabPt* pt)
 	T h e   c l i c k - e v e n t   w a t c h e r
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001fd068 InitHiliteGlobals__FP17StrokeHiliteState
+// ROM 0x001ff818 InitHiliteGlobals__FP17StrokeHiliteState
 // Nothing known: no event, not a tap, all decided, no times.
 void
 InitHiliteGlobals(StrokeHiliteState* state)
@@ -190,7 +190,7 @@ InitHiliteGlobals(StrokeHiliteState* state)
 }
 
 
-// ROM 0x001fd094 InitHiliteState__FP7TStrokeP17StrokeHiliteStateT2
+// ROM 0x001ff844 InitHiliteState__FP7TStrokeP17StrokeHiliteStateT2
 // The state for a new stroke: its first point and down time; a double
 // tap is still possible when the last stroke was a tap and this one came
 // within gDoubleTapInterval of its pen-up; a tap-and-drag when the last
@@ -229,7 +229,7 @@ InitHiliteState(TStroke* stroke, StrokeHiliteState* last, StrokeHiliteState* sta
 }
 
 
-// ROM 0x001fd184 CheckHiliteState__FP7TStrokeP17StrokeHiliteStateT2Uc
+// ROM 0x001ff934 CheckHiliteState__FP7TStrokeP17StrokeHiliteStateT2Uc
 // The stroke's newest point judged (done: it is the pen-up).  While the
 // pen has not moved twice gHiliteDistance from the start, holding it 45
 // ticks within gHiliteDistance (or 90 within twice) makes a hilite click
@@ -320,7 +320,7 @@ CheckHiliteState(TStroke* stroke, StrokeHiliteState* last, StrokeHiliteState* st
 	T h e   q u e u e
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001fc7f8 SetupDistances__Fv
+// ROM 0x001fefa8 SetupDistances__Fv
 // The distances scaled to the screen: 4, 6 and 6 points at the screen's
 // resolution (NOT YET RECONSTRUCTED: the gestalt's screen resolution -
 // 100 dpi, the MP2100's), and the ticks a sample takes.
@@ -337,7 +337,7 @@ SetupDistances(void)
 }
 
 
-// ROM 0x001fc8dc RealStrokeInit__Fv
+// ROM 0x001ff08c RealStrokeInit__Fv
 // The queue made empty with a stroke ready at the head, the watcher
 // reset, the distances set up (NOT YET: the queue's semaphore, the inker's).
 void
@@ -354,7 +354,7 @@ RealStrokeInit(void)
 }
 
 
-// ROM 0x001fd39c StrokeInit__Fv
+// ROM 0x001ffb4c StrokeInit__Fv
 // Nothing: the inker task does RealStrokeInit when it starts.
 // DEVIATION: the host has no inker task, so the queue is made here.
 void
@@ -364,7 +364,7 @@ StrokeInit(void)
 }
 
 
-// ROM 0x001fd530 StrokeReInit__Fv
+// ROM 0x001ffce0 StrokeReInit__Fv
 // The queue emptied, a stroke ready at the head, the tablet turned on.
 void
 StrokeReInit(void)
@@ -381,7 +381,7 @@ StrokeReInit(void)
 }
 
 
-// ROM 0x001fcd2c StrokeNext__Fv
+// ROM 0x001ff4dc StrokeNext__Fv
 // A new stroke started in the slot after the head (locked in the heap
 // and flagged as the inker's); none when the slot is still in use.
 // ==> whether there is a stroke to write to (gStrokeValid).
@@ -409,7 +409,7 @@ StrokeNext(void)
 }
 
 
-// ROM 0x001fcc04 StrokeGet__Fv
+// ROM 0x001ff3b4 StrokeGet__Fv
 // The next stroke for the stroke world: the one at the tail when it has
 // not been taken (the tail moves on past a taken or empty slot); a stroke
 // with points is marked taken (and inkless when the default ink is off)
@@ -447,7 +447,7 @@ StrokeGet(void)
 }
 
 
-// ROM 0x001fcdec StrokeTime__Fv
+// ROM 0x001ff59c StrokeTime__Fv
 // The ROM's does nothing: the inker task reads the tablet.  DEVIATION:
 // the host has no TInker - the tablet buffer is read here, as the inker's
 // LCD entry would (its own read index just follows the writer's: no ink
@@ -465,7 +465,7 @@ StrokeTime(void)
 }
 
 
-// ROM 0x001fce38 RealStrokeTime__Fv
+// ROM 0x001ff5e8 RealStrokeTime__Fv
 // The tablet's points read into the stroke at the head until something
 // happens: a point while a stroke is being written is added to it - the
 // first point takes the pen-down time and the pen tip and starts the
@@ -553,7 +553,7 @@ RealStrokeTime(void)
 }
 
 
-// ROM 0x001fd3a0 StrokeUpdate__FP5FRect
+// ROM 0x001ffb50 StrokeUpdate__FP5FRect
 // The queued strokes still the inker's, with points, that are not done
 // or lie in the rect, drawn.  NOT YET RECONSTRUCTED: the inker (Draw only
 // flags them).
@@ -582,7 +582,7 @@ StrokeUpdate(FRect* rect)
 }
 
 
-// ROM 0x001fd474 UnbufferStroke__FP7TStroke
+// ROM 0x001ffc24 UnbufferStroke__FP7TStroke
 // The stroke taken out of the queue (a unit that owns it is about to
 // dispose of it).  The ROM holds the queue's semaphore meanwhile.
 void
@@ -597,7 +597,7 @@ UnbufferStroke(TStroke* stroke)
 }
 
 
-// ROM 0x001fd4dc ClearStrokeBuf__Fv
+// ROM 0x001ffc8c ClearStrokeBuf__Fv
 // Every queued stroke disposed.
 void
 ClearStrokeBuf(void)
@@ -614,7 +614,7 @@ ClearStrokeBuf(void)
 }
 
 
-// ROM 0x001fd59c CheckStrokeQueueEvents__FUlT1
+// ROM 0x001ffd4c CheckStrokeQueueEvents__FUlT1
 // Whether an untaken stroke with points went down within the interval.
 Boolean
 CheckStrokeQueueEvents(ULong start, ULong duration)
@@ -623,7 +623,7 @@ CheckStrokeQueueEvents(ULong start, ULong duration)
 }
 
 
-// ROM 0x001fd5a4 ScanStrokeQueueEvents__FUlT1Uc
+// ROM 0x001ffd54 ScanStrokeQueueEvents__FUlT1Uc
 // ... counting the taken ones too when asked.
 Boolean
 ScanStrokeQueueEvents(ULong start, ULong duration, Boolean takenToo)
@@ -644,7 +644,7 @@ ScanStrokeQueueEvents(ULong start, ULong duration, Boolean takenToo)
 }
 
 
-// ROM 0x001fd660 AbandonedStroke__FP7TStrokeUl
+// ROM 0x001ffe10 AbandonedStroke__FP7TStrokeUl
 // An untaken, done stroke with points whose pen-up was before the time.
 Boolean
 AbandonedStroke(TStroke* stroke, ULong before)
@@ -653,7 +653,7 @@ AbandonedStroke(TStroke* stroke, ULong before)
 }
 
 
-// ROM 0x001fc9e0 NukeEgregiousStrokes__FP5FRect
+// ROM 0x001ff190 NukeEgregiousStrokes__FP5FRect
 // The strokes nobody took for ten seconds disposed - from the tail while
 // they are abandoned (the tail moving on; the queue re-started when it
 // empties), then the rest of the ring - their boxes united into the rect.

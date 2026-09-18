@@ -4,7 +4,7 @@
 	Contains:	TUnicodeCompressor and TUnicodeDecompressor
 				(UnicodeCompression.h).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	gUnicodeLookupTable is in UnicodeTables.cpp, generated from the ROM.
 */
 
@@ -25,11 +25,11 @@ IsRunCoded(UByte high)
 	TUnicodeCompressor
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TUnicodeCompressor)		// ROM 0x00254d28 Sizeof__18TUnicodeCompressorSFv
-PROTOCOL_CLASSINFO(TUnicodeCompressor, "TCallbackCompressor", "", 0, 0, nil)	// ROM 0x003803e8 ClassInfo__18TUnicodeCompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TUnicodeCompressor)		// ROM 0x00256c74 Sizeof__18TUnicodeCompressorSFv
+PROTOCOL_CLASSINFO(TUnicodeCompressor, "TCallbackCompressor", "", 0, 0, nil)	// ROM 0x00389b50 ClassInfo__18TUnicodeCompressorSFv
 
 
-// ROM 0x00254d30 New__18TUnicodeCompressorFv
+// ROM 0x00256c7c New__18TUnicodeCompressorFv
 TUnicodeCompressor*
 TUnicodeCompressor::New()
 {
@@ -39,13 +39,13 @@ TUnicodeCompressor::New()
 }
 
 
-// ROM 0x00254f80 Delete__18TUnicodeCompressorFv
+// ROM 0x00256ecc Delete__18TUnicodeCompressorFv
 void
 TUnicodeCompressor::Delete()
 { }
 
 
-// ROM 0x00254f84 Init__18TUnicodeCompressorFPv
+// ROM 0x00256ed0 Init__18TUnicodeCompressorFPv
 NewtonErr
 TUnicodeCompressor::Init(void* /*refCon*/)
 {
@@ -53,7 +53,7 @@ TUnicodeCompressor::Init(void* /*refCon*/)
 }
 
 
-// ROM 0x00254f8c Reset__18TUnicodeCompressorFv
+// ROM 0x00256ed8 Reset__18TUnicodeCompressorFv
 NewtonErr
 TUnicodeCompressor::Reset()
 {
@@ -72,7 +72,7 @@ TUnicodeCompressor::Reset()
 	} while (0)
 
 
-// ROM 0x00254fa0 WriteRun__18TUnicodeCompressorFv
+// ROM 0x00256eec WriteRun__18TUnicodeCompressorFv
 // The gathered run: high byte, count, low bytes.
 NewtonErr
 TUnicodeCompressor::WriteRun()
@@ -89,7 +89,7 @@ TUnicodeCompressor::WriteRun()
 }
 
 
-// ROM 0x002550c0 WriteChunk__18TUnicodeCompressorFPvl
+// ROM 0x0025700c WriteChunk__18TUnicodeCompressorFPvl
 // Whole characters only; a character continues the run if its high byte
 // is the run's, else the run goes out and a new one starts - or the
 // character goes out as is when its block is not run-coded.
@@ -136,7 +136,7 @@ TUnicodeCompressor::WriteChunk(void* data, long size)
 }
 
 
-// ROM 0x00255250 Flush__18TUnicodeCompressorFv
+// ROM 0x0025719c Flush__18TUnicodeCompressorFv
 NewtonErr
 TUnicodeCompressor::Flush()
 {
@@ -153,11 +153,11 @@ TUnicodeCompressor::Flush()
 	TUnicodeDecompressor
 ------------------------------------------------------------------------------- */
 
-PROTOCOL_IMPL_SOURCE_MACRO(TUnicodeDecompressor)		// ROM 0x00255290 Sizeof__20TUnicodeDecompressorSFv
-PROTOCOL_CLASSINFO(TUnicodeDecompressor, "TCallbackDecompressor", "", 0, 0, nil)	// ROM 0x0038047c ClassInfo__20TUnicodeDecompressorSFv
+PROTOCOL_IMPL_SOURCE_MACRO(TUnicodeDecompressor)		// ROM 0x002571dc Sizeof__20TUnicodeDecompressorSFv
+PROTOCOL_CLASSINFO(TUnicodeDecompressor, "TCallbackDecompressor", "", 0, 0, nil)	// ROM 0x00389be4 ClassInfo__20TUnicodeDecompressorSFv
 
 
-// ROM 0x00255298 New__20TUnicodeDecompressorFv
+// ROM 0x002571e4 New__20TUnicodeDecompressorFv
 TUnicodeDecompressor*
 TUnicodeDecompressor::New()
 {
@@ -170,13 +170,13 @@ TUnicodeDecompressor::New()
 }
 
 
-// ROM 0x00254d44 Delete__20TUnicodeDecompressorFv
+// ROM 0x00256c90 Delete__20TUnicodeDecompressorFv
 void
 TUnicodeDecompressor::Delete()
 { }
 
 
-// ROM 0x00254d48 Init__20TUnicodeDecompressorFPv
+// ROM 0x00256c94 Init__20TUnicodeDecompressorFPv
 NewtonErr
 TUnicodeDecompressor::Init(void* /*refCon*/)
 {
@@ -184,7 +184,7 @@ TUnicodeDecompressor::Init(void* /*refCon*/)
 }
 
 
-// ROM 0x00254d50 Reset__20TUnicodeDecompressorFv
+// ROM 0x00256c9c Reset__20TUnicodeDecompressorFv
 NewtonErr
 TUnicodeDecompressor::Reset()
 {
@@ -193,7 +193,7 @@ TUnicodeDecompressor::Reset()
 }
 
 
-// ROM 0x00254d68 ReadChunk__20TUnicodeDecompressorFPvPlPUc
+// ROM 0x00256cb4 ReadChunk__20TUnicodeDecompressorFPvPlPUc
 // Characters into the buffer until it is full or the source is used up
 // (*size then tells how many bytes, and *underflow is set).
 NewtonErr

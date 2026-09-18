@@ -7,7 +7,7 @@
 				FromObject), and the host's setup of the view system (the
 				slot cache symbols, the prototype frames, the root view).
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "RootView.h"
@@ -28,7 +28,7 @@
 #include "NewtonExceptions.h"
 
 
-// ROM 0x001f18dc BadWickedNaughtyNoot__Fl
+// ROM 0x001ef4c4 BadWickedNaughtyNoot__Fl
 // A warning to the developer: the global BadWickedNaughtyNoot (a
 // NewtonScript function) is called with the number, when there is one.
 void
@@ -43,7 +43,7 @@ BadWickedNaughtyNoot(long which)
 	C o n t e x t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0025c598 GetCacheContext__FRC6RefVar
+// ROM 0x0025e4d0 GetCacheContext__FRC6RefVar
 // A template's _cacheContext (a context kept for it) cloned, protoed to
 // the template and parented to the root's context; nil when it has none.
 Ref
@@ -60,7 +60,7 @@ GetCacheContext(RefArg templ)
 }
 
 
-// ROM 0x0025c634 BuildContext__5TViewFRC6RefVarUc
+// ROM 0x0025e56c BuildContext__5TViewFRC6RefVarUc
 // The context a view runs in, from its template.  A template without a
 // viewClass names a viewStationery (an ink slot makes it 'poly): the
 // stationery's form in vars.stdForms supplies the class; a class with
@@ -130,7 +130,7 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 }
 
 
-// ROM 0x0025ca18 BuildView__FP5TViewRC6RefVar
+// ROM 0x0025e950 BuildView__FP5TViewRC6RefVar
 // The C++ object for the context's viewClass, constructed under the
 // parent; a Throw in the Constructor removes the view again.  NOT YET
 // RECONSTRUCTED: the subclasses - every class gets a TView (the ROM makes
@@ -212,7 +212,7 @@ BuildView(TView* parent, RefArg context)
 	F i n d i n g   v i e w s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0025f4c4 GetView__FRC6RefVar
+// ROM 0x002613fc GetView__FRC6RefVar
 // The view of a context (its viewCObject, found through the proto and
 // parent chains), nil when none.
 TView*
@@ -227,7 +227,7 @@ GetView(RefArg context)
 }
 
 
-// ROM 0x0025f524 GetFrontCommandKeyView__Fv
+// ROM 0x0026145c GetFrontCommandKeyView__Fv
 // NOT YET RECONSTRUCTED: the front-most visible child of the root view's
 // command-key view (TextFlags).
 static TView*
@@ -237,7 +237,7 @@ GetFrontCommandKeyView(void)
 }
 
 
-// ROM 0x0025f5a8 GetView__FRC6RefVarT1
+// ROM 0x002614e0 GetView__FRC6RefVarT1
 // The view a name means from a context: nil the context's own view (via
 // its preallocatedContext); a frame with a viewCObject its view, another
 // frame the view whose data it is (SoupEQ, from the root down); the
@@ -298,7 +298,7 @@ GetView(RefArg context, RefArg name)
 }
 
 
-// ROM 0x001efe1c FailGetView__FRC6RefVar
+// ROM 0x001eda04 FailGetView__FRC6RefVar
 TView*
 FailGetView(RefArg context)
 {
@@ -309,7 +309,7 @@ FailGetView(RefArg context)
 }
 
 
-// ROM 0x001f0258 FailGetView__FRC6RefVarT1
+// ROM 0x001ede40 FailGetView__FRC6RefVarT1
 TView*
 FailGetView(RefArg context, RefArg name)
 {
@@ -320,7 +320,7 @@ FailGetView(RefArg context, RefArg name)
 }
 
 
-// ROM 0x00262a98 ProtoEQ__FRC6RefVarT1
+// ROM 0x002649d0 ProtoEQ__FRC6RefVarT1
 // Whether the frame is the other or in its proto chain.
 Boolean
 ProtoEQ(RefArg a, RefArg b)
@@ -336,7 +336,7 @@ ProtoEQ(RefArg a, RefArg b)
 }
 
 
-// ROM 0x002638e4 SoupEQ__FRC6RefVarT1
+// ROM 0x0026581c SoupEQ__FRC6RefVarT1
 // The same soup entry (both have a _uniqueId and they match), else
 // ProtoEQ.
 Boolean
@@ -353,7 +353,7 @@ SoupEQ(RefArg a, RefArg b)
 }
 
 
-// ROM 0x0025fe48 Exists__FP9TViewListRC6RefVar
+// ROM 0x00261d80 Exists__FP9TViewListRC6RefVar
 // The view in the list whose context is protoed to the template.
 TView*
 Exists(TViewList* list, RefArg templ)
@@ -366,7 +366,7 @@ Exists(TViewList* list, RefArg templ)
 }
 
 
-// ROM 0x0025f84c DataExists__FP9TViewListRC6RefVar
+// ROM 0x00261784 DataExists__FP9TViewListRC6RefVar
 // The view in the list whose data frame is the frame.
 TView*
 DataExists(TViewList* list, RefArg data)
@@ -433,7 +433,7 @@ InitViewPrototypes(void)
 }
 
 
-// ROM 0x001f3c40 InitScriptGlobals__Fv (the part that keeps the slot cache table)
+// ROM 0x001f1828 InitScriptGlobals__Fv (the part that keeps the slot cache table)
 // and the root view's making (the ROM's boot: the root template is the
 // ROM's Rviewroot, whose viewSetupFormScript 0x00438a65 makes
 // vars.displayParams and takes its viewBounds from the params'
@@ -474,7 +474,7 @@ MakeRootTemplate(void)
 	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
 	SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
 	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
-	// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
+	// ROM 0x0041a52d (object) Rviewroot.viewSetupFormScript (the display params made already)
 	SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
 	SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
 	return templ;
@@ -515,7 +515,7 @@ InitViewSystem(RefArg rootTemplate)
 		SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
 		SetFrameSlot(templ, RSSYMviewformat, RefVar(MAKEINT(vfFillWhite)));
 		SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(port->portRect)));
-		// ROM 0x00438a65 (object) Rviewroot.viewSetupFormScript (the display params made already)
+		// ROM 0x0041a52d (object) Rviewroot.viewSetupFormScript (the display params made already)
 		SetFrameSlot(templ, RSSYMviewsetupformscript, RefVar(CompileScriptFunction("func() self.viewBounds := displayParams.rootBounds")));
 		SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
 	}

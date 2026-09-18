@@ -4,7 +4,7 @@
 	Contains:	The safe heap (SafeHeap.h): pages, blocks, the wired heap's
 				pages.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include <new>				// before the DDK headers
@@ -31,7 +31,7 @@ const ULong kSafeMinimumPartialPage = kSafePageHeaderSize + kSafeBlockHeaderSize
 	Blocks
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001c81ec Next__14SSafeHeapBlockFv
+// ROM 0x001c5e18 Next__14SSafeHeapBlockFv
 // The block after this one in its page; nil at the sentinel.
 SSafeHeapBlock*
 SSafeHeapBlock::Next()
@@ -43,7 +43,7 @@ SSafeHeapBlock::Next()
 }
 
 
-// ROM 0x001c7b6c SafeHeapBlockSize__FPv
+// ROM 0x001c5798 SafeHeapBlockSize__FPv
 // The size the client asked for.
 long
 SafeHeapBlockSize(const void* data)
@@ -55,7 +55,7 @@ SafeHeapBlockSize(const void* data)
 }
 
 
-// ROM 0x001c82d4 SafeHeapEndSentinelFor__FPv
+// ROM 0x001c5f00 SafeHeapEndSentinelFor__FPv
 // The last word of the address's page: it holds the page.
 void**
 SafeHeapEndSentinelFor(const void* addr)
@@ -68,7 +68,7 @@ SafeHeapEndSentinelFor(const void* addr)
 	SSafeHeapPage
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001c7ba0 Init__13SSafeHeapPageFUlP5TPhysP13SSafeHeapPage
+// ROM 0x001c57cc Init__13SSafeHeapPageFUlP5TPhysP13SSafeHeapPage
 // Lays the page out (from its address, which need not be a page's start,
 // to the sentinel) as one free block, and chains it after the heap's last
 // page - every page of the heap then names it as the last.
@@ -99,7 +99,7 @@ SSafeHeapPage::Init(ULong physId, TPhys* phys, SSafeHeapPage* heap)
 }
 
 
-// ROM 0x001c7b88 FirstPage__13SSafeHeapPageFv
+// ROM 0x001c57b4 FirstPage__13SSafeHeapPageFv
 SSafeHeapPage*
 SSafeHeapPage::FirstPage()
 {
@@ -110,7 +110,7 @@ SSafeHeapPage::FirstPage()
 }
 
 
-// ROM 0x001c7c70 Alloc__13SSafeHeapPageFlT1
+// ROM 0x001c589c Alloc__13SSafeHeapPageFlT1
 // A block of physicalSize bytes (header and rounding included) from this
 // page: the remembered free block if it fits, else the first free block
 // that does, merging consecutive free blocks on the way.  The block records
@@ -171,7 +171,7 @@ SSafeHeapPage::Alloc(long physicalSize, long requestedSize)
 }
 
 
-// ROM 0x001c7dcc Free__13SSafeHeapPageFPv
+// ROM 0x001c59f8 Free__13SSafeHeapPageFPv
 // Frees a block of this page, merging it with the remembered free block if
 // they touch (the larger of the two is remembered otherwise); a whole page
 // left empty leaves the heap and goes back where it came from.
@@ -210,7 +210,7 @@ done:
 }
 
 
-// ROM 0x001c7f18 GetPage__13SSafeHeapPageFv
+// ROM 0x001c5b44 GetPage__13SSafeHeapPageFv
 // A page from the page manager, chained onto the heap.  The heap's
 // semaphore is let go meanwhile.
 SSafeHeapPage*
@@ -232,7 +232,7 @@ SSafeHeapPage::GetPage()
 }
 
 
-// ROM 0x001c7f9c FreePage__13SSafeHeapPageFv
+// ROM 0x001c5bc8 FreePage__13SSafeHeapPageFv
 void
 SSafeHeapPage::FreePage()
 {
@@ -244,7 +244,7 @@ SSafeHeapPage::FreePage()
 }
 
 
-// ROM 0x001c7a6c GetNewPageFromPageMgr__FPPvPUlPP5TPhys
+// ROM 0x001c5698 GetNewPageFromPageMgr__FPPvPUlPP5TPhys
 long
 GetNewPageFromPageMgr(void** /*outPage*/, ULong* /*outPhysId*/, TPhys** /*outPhys*/)
 {
@@ -258,7 +258,7 @@ GetNewPageFromPageMgr(void** /*outPage*/, ULong* /*outPhysId*/, TPhys** /*outPhy
 	The safe heap
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001c80a0 InitSafeHeap__FPP13SSafeHeapPage
+// ROM 0x001c5ccc InitSafeHeap__FPP13SSafeHeapPage
 // The kernel heap: its first page.
 long
 InitSafeHeap(SSafeHeapPage** outHeap)
@@ -277,7 +277,7 @@ InitSafeHeap(SSafeHeapPage** outHeap)
 }
 
 
-// ROM 0x001c82e8 AddPartialPageToSafeHeap__FPvP13SSafeHeapPage
+// ROM 0x001c5f14 AddPartialPageToSafeHeap__FPvP13SSafeHeapPage
 // The rest of a page (what the kernel's globals left of one) joins the heap.
 void
 AddPartialPageToSafeHeap(void* area, SSafeHeapPage* heap)
@@ -291,7 +291,7 @@ AddPartialPageToSafeHeap(void* area, SSafeHeapPage* heap)
 }
 
 
-// ROM 0x001c8320 IsSafeHeap__FPv
+// ROM 0x001c5f4c IsSafeHeap__FPv
 Boolean
 IsSafeHeap(const void* heap)
 {
@@ -299,7 +299,7 @@ IsSafeHeap(const void* heap)
 }
 
 
-// ROM 0x001c8340 SafeHeapIsEmpty__FP13SSafeHeapPage
+// ROM 0x001c5f6c SafeHeapIsEmpty__FP13SSafeHeapPage
 Boolean
 SafeHeapIsEmpty(SSafeHeapPage* heap)
 {
@@ -307,7 +307,7 @@ SafeHeapIsEmpty(SSafeHeapPage* heap)
 }
 
 
-// ROM 0x001c8360 SafeHeapAlloc__FlP13SSafeHeapPage
+// ROM 0x001c5f8c SafeHeapAlloc__FlP13SSafeHeapPage
 // From the last page, then any page, then a new page.
 void*
 SafeHeapAlloc(long size, SSafeHeapPage* heap)
@@ -332,7 +332,7 @@ SafeHeapAlloc(long size, SSafeHeapPage* heap)
 }
 
 
-// ROM 0x001c83f0 SafeHeapRealloc__FPvl
+// ROM 0x001c601c SafeHeapRealloc__FPvl
 // (always a new block, in the kernel heap)
 void*
 SafeHeapRealloc(void* data, long size)
@@ -350,7 +350,7 @@ SafeHeapRealloc(void* data, long size)
 }
 
 
-// ROM 0x001c8458 SafeHeapFree__FPv
+// ROM 0x001c6084 SafeHeapFree__FPv
 void
 SafeHeapFree(void* data)
 {
@@ -365,7 +365,7 @@ SafeHeapFree(void* data)
 	The wired heap
 ------------------------------------------------------------------------------- */
 
-// ROM 0x001c8210 GrowByOnePage__15SWiredHeapDescrFv
+// ROM 0x001c5e3c GrowByOnePage__15SWiredHeapDescrFv
 // One more page of the area, wired.
 long
 SWiredHeapDescr::GrowByOnePage()
@@ -383,7 +383,7 @@ SWiredHeapDescr::GrowByOnePage()
 }
 
 
-// ROM 0x001c8284 ShrinkByOnePage__15SWiredHeapDescrFv
+// ROM 0x001c5eb0 ShrinkByOnePage__15SWiredHeapDescrFv
 void
 SWiredHeapDescr::ShrinkByOnePage()
 {
@@ -394,7 +394,7 @@ SWiredHeapDescr::ShrinkByOnePage()
 }
 
 
-// ROM 0x001c8000 New__14SWiredHeapPageSFP15SWiredHeapDescr
+// ROM 0x001c5c2c New__14SWiredHeapPageSFP15SWiredHeapDescr
 // The wired heap's first page, at the start of the descriptor's area.
 SSafeHeapPage*
 SWiredHeapPage::New(SWiredHeapDescr* descr)
@@ -413,7 +413,7 @@ SWiredHeapPage::New(SWiredHeapDescr* descr)
 }
 
 
-// ROM 0x001c8080 Destroy__14SWiredHeapPageFv
+// ROM 0x001c5cac Destroy__14SWiredHeapPageFv
 long
 SWiredHeapPage::Destroy()
 {
@@ -422,7 +422,7 @@ SWiredHeapPage::Destroy()
 }
 
 
-// ROM 0x001c8108 GetPage__14SWiredHeapPageFv
+// ROM 0x001c5d34 GetPage__14SWiredHeapPageFv
 // The next page of the area.
 SSafeHeapPage*
 SWiredHeapPage::GetPage()
@@ -437,7 +437,7 @@ SWiredHeapPage::GetPage()
 }
 
 
-// ROM 0x001c816c FreePage__14SWiredHeapPageFv
+// ROM 0x001c5d98 FreePage__14SWiredHeapPageFv
 // The pages above the highest still in use are given back.
 void
 SWiredHeapPage::FreePage()

@@ -1430,8 +1430,8 @@ TestEditView()
 static void
 TestKeyboard()
 {
-	const ULong kGermanyBundle = 0x003c10ed;		// the ROM's locale bundle 'Germany
-	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	const ULong kUSABundle = 0x004a4d09;		// the ROM's locale bundle 'USA
+	RefVar bundle(TranslateROMRef(kUSABundle));
 	RefVar intl(AllocateFrame());
 	RefVar keyboard(AllocateFrame());
 	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
@@ -1443,13 +1443,14 @@ TestKeyboard()
 	EXPECT(TranslateKey(0, true, 0, &dead) == 'a' && TranslateKey(0, true, kShiftModifier, &dead) == 'A' && TranslateKey(0, true, kCapsLockModifier, &dead) == 'A');
 	EXPECT(TranslateKey(0x12, true, 0, &dead) == '1' && TranslateKey(0x12, true, kShiftModifier, &dead) == '!' && TranslateKey(0x12, true, kOptionModifier, &dead) == 0xa1);	// option-1: inverted ! (Mac Roman 0xc1)
 	EXPECT(TranslateKey(0x7a, true, 0, &dead) == 0xf721 && TranslateKey(0x60, true, 0, &dead) == 0xf725 && dead == 0);
-	// a dead key: the acute accent, then a completed and an uncompleted character
-	EXPECT(TranslateKey(0x18, true, 0, &dead) == 0xb4 && dead != 0);
+	// a dead key: option-e is the acute accent on the U.S. keyboard, then a
+	// completed and an uncompleted character
+	EXPECT(TranslateKey(0x0e, true, kOptionModifier, &dead) == 0xb4 && dead != 0);
 	EXPECT(TranslateKey(0, true, 0, &dead) == 0xe1 && dead == 0);			// a acute
-	TranslateKey(0x18, true, 0, &dead);
+	TranslateKey(0x0e, true, kOptionModifier, &dead);
 	EXPECT(TranslateKey(0x12, true, 0, &dead) == '1' && dead == 0);		// no completion for 1: as it is
-	TranslateKey(0x18, true, 0, &dead);
-	EXPECT(TranslateKey(0x18, true, 0, &dead) == 0xb4 && dead == 0);		// the accent itself again
+	TranslateKey(0x0e, true, kOptionModifier, &dead);
+	EXPECT(TranslateKey(0x0e, true, kOptionModifier, &dead) == 0xb4 && dead == 0);	// the accent itself again
 	// the hard key map: modifiers and caps lock through KeyIn
 	ClearHardKeymap();
 	EXPECT(KeyIn(0, true, (TView*) -1) == 'a' && KeyDown(0, true) && !KeyDown(1, true));
@@ -1468,8 +1469,10 @@ TestKeyboard()
 	EXPECT(!gHardCapsLock && Modifiers(true) == 0);
 	KeyIn(kCapsLockKey, false, (TView*) -1);
 	// a dead key through KeyIn: nothing until it completes
-	EXPECT(KeyIn(0x18, true, (TView*) -1) == 0 && gHardKeyDeadState != 0);
-	KeyIn(0x18, false, (TView*) -1);
+	KeyIn(kOptionKey, true, (TView*) -1);
+	EXPECT(KeyIn(0x0e, true, (TView*) -1) == 0 && gHardKeyDeadState != 0);
+	KeyIn(0x0e, false, (TView*) -1);
+	KeyIn(kOptionKey, false, (TView*) -1);
 	EXPECT(KeyIn(0, true, (TView*) -1) == 0xe1 && gHardKeyDeadState == 0);
 	KeyIn(0, false, (TView*) -1);
 	EXPECT(IsCommandKeyCode(0x35) && IsCommandKeyCode(0x7a) && !IsCommandKeyCode(0x66) && !IsCommandKeyCode(0));
@@ -1704,8 +1707,8 @@ TypeKey(ULong keyCode)
 static void
 TestTyping()
 {
-	const ULong kGermanyBundle = 0x003c10ed;
-	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	const ULong kUSABundle = 0x004a4d09;
+	RefVar bundle(TranslateROMRef(kUSABundle));
 	RefVar intl(AllocateFrame());
 	RefVar keyboard(AllocateFrame());
 	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
@@ -1727,7 +1730,7 @@ TestTyping()
 	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Hellox World\")")) && p->fCaretOffset == 6 && gRootView->fCaretOffset == 6);
 	EXPECT(RINT(Eval("Length(ctxT.changes)")) == 1 && EQRef(Eval("ctxT.changes[0]"), RSSYMtext));
 	EXPECT(ISNIL(Eval("ctxT.styles")));		// a single run of the view's font: no styles slot
-	TypeKey(6);		// y (the German layout: key 16 is z)
+	TypeKey(16);	// y (key 6 is z on the U.S. layout)
 	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"Helloxy World\")")) && p->fCaretOffset == 7);
 	Refresh();
 	EXPECT(p->Line(0).fBounds.right - p->Line(0).fBounds.left > helloWidth);
@@ -1758,7 +1761,7 @@ TestTyping()
 	// styled: a paragraph with style runs keeps them around the insertion
 	Eval("ctxT.text := \"ab\"; ctxT.styles := [1, espy12, 1, {family: 'geneva, face: 1, size: 12}]; ctxT:SyncView()");
 	Eval("SetKeyView(ctxT, 1)");
-	TypeKey(16);	// z
+	TypeKey(6);		// z
 	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"azb\")")) && RINT(Eval("Length(ctxT.styles)")) == 4 && RINT(Eval("ctxT.styles[0]")) == 2 && RINT(Eval("ctxT.styles[2]")) == 1);
 	// backspace at the start does nothing; a control character is not typed
 	Eval("SetKeyView(ctxT, 0)");
@@ -2096,7 +2099,7 @@ TestPickView()
 	EXPECT(p->fPicked.fItem == 1);
 	// through the ROM's viewKeyDownScript (PickViewKeyDown) from a key event to the popup
 	{
-		RefVar bundle(TranslateROMRef(0x003c10ed));
+		RefVar bundle(TranslateROMRef(0x004a4d09));
 		RefVar intl(AllocateFrame());
 		RefVar keyboard(AllocateFrame());
 		SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
@@ -2268,8 +2271,8 @@ TestEffects()
 static void
 TestKeyChain()
 {
-	const ULong kGermanyBundle = 0x003c10ed;
-	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	const ULong kUSABundle = 0x004a4d09;
+	RefVar bundle(TranslateROMRef(kUSABundle));
 	RefVar intl(AllocateFrame());
 	RefVar keyboard(AllocateFrame());
 	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
@@ -2333,8 +2336,8 @@ HiliteRange(TParagraphView* view, Boolean wantStart)
 static void
 TestSelection()
 {
-	const ULong kGermanyBundle = 0x003c10ed;
-	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	const ULong kUSABundle = 0x004a4d09;
+	RefVar bundle(TranslateROMRef(kUSABundle));
 	RefVar intl(AllocateFrame());
 	RefVar keyboard(AllocateFrame());
 	SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
@@ -2394,7 +2397,7 @@ TestSelection()
 	p->RemoveAllHilites();
 	p->MakeHilite(0, 5, false);		// select "Hello"
 	EXPECT(NOTNIL(p->FirstHilite()));
-	TypeKey(6);		// y (German layout): replaces the selection
+	TypeKey(16);	// y: replaces the selection
 	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"y World\")")) && ISNIL(p->FirstHilite()) && p->fCaretOffset == 1);
 	// backspace over a selection deletes it
 	p->MakeHilite(0, 2, false);		// select "y "
@@ -2451,8 +2454,8 @@ TestSelection()
 static void
 TestParagraphTap()
 {
-	const ULong kGermanyBundle = 0x003c10ed;
-	RefVar bundle(TranslateROMRef(kGermanyBundle));
+	const ULong kUSABundle = 0x004a4d09;
+	RefVar bundle(TranslateROMRef(kUSABundle));
 	RefVar intl(AllocateFrame());
 	SetFrameSlot(intl, RSSYMcurrentlocalebundle, bundle);
 	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);

@@ -35,7 +35,7 @@
 				big-endian whatever the host is; the accessors below read it
 				that way rather than casting a struct over it.
 
-	Reconstructed from the MP2100 D ROM (0x00255750-0x00256760); each
+	Reconstructed from the MP2x00 US ROM (0x00257688-0x00258698); each
 	function cites its origin.
 */
 

@@ -21,17 +21,17 @@
 				source.  "Or" on a gray map is the ROM's: every non-white
 				source pixel replaces the destination pixel.
 
-	The ROM's blitter (RgnBlt 0x003172e0, BitBlt 0x00287e20 and the BB*
+	The ROM's blitter (RgnBlt 0x00343228, BitBlt 0x002ac9c8 and the BB*
 	routines) works a word at a time in the map's depth; the host works a
 	pixel at a time with the same results (DEVIATION: the code, not the
 	pixels).  NOT YET RECONSTRUCTED: lines, ovals, round rectangles, arcs,
 	polygons, pictures, text, StretchBits (CopyBits between rectangles of
 	different sizes), the screen locking around a blit (QDStartDrawing).
 
-	Reconstructed from the MP2100 D ROM (0x00314114-0x00314170,
-	0x00314844, 0x00314a80-0x00314de0, 0x003154cc-0x003155bc, 0x0031567c,
-	0x0031582c, 0x00315918, 0x00315ee0, 0x00287e20, 0x00288a5c-0x00288abc,
-	0x00289898, 0x003172e0); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x0034005c-0x003400b8,
+	0x0034078c, 0x003409c8-0x00340d28, 0x00341414-0x00341504, 0x003415c4,
+	0x00341774, 0x00341860, 0x00341e28, 0x002ac9c8, 0x002ad604-0x002ad664,
+	0x002ae440, 0x00343228); each function cites its origin.
 */
 
 #ifndef __DRAW_H

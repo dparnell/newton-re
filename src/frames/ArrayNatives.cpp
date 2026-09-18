@@ -70,7 +70,7 @@ public:
 };
 
 
-// ROM 0x002f1318 __ct__21TGeneralizedTestFnVarFRC6RefVarT1i
+// ROM 0x0031661c __ct__21TGeneralizedTestFnVarFRC6RefVarT1i
 TGeneralizedTestFnVar::TGeneralizedTestFnVar(RefArg test, RefArg key, int eqMode)
 {
 	if (!IsSymbol(test))
@@ -152,7 +152,7 @@ TGeneralizedTestFnVar::TGeneralizedTestFnVar(RefArg test, RefArg key, int eqMode
 }
 
 
-// ROM 0x002f169c ApplyKey__21TGeneralizedTestFnVarFPl
+// ROM 0x003169a0 ApplyKey__21TGeneralizedTestFnVarFPl
 // The element's key.
 Ref
 TGeneralizedTestFnVar::ApplyKey(Ref element)
@@ -170,7 +170,7 @@ TGeneralizedTestFnVar::ApplyKey(Ref element)
 }
 
 
-// ROM 0x002f1728 TestNumsRealUtil__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316a2c TestNumsRealUtil__21TGeneralizedTestFnVarFPlT1
 int
 TGeneralizedTestFnVar::TestNumsRealUtil(Ref a, Ref b)
 {
@@ -180,7 +180,7 @@ TGeneralizedTestFnVar::TestNumsRealUtil(Ref a, Ref b)
 }
 
 
-// ROM 0x002f17a0 TestNumbers__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316aa4 TestNumbers__21TGeneralizedTestFnVarFPlT1
 int
 TGeneralizedTestFnVar::TestNumbers(Ref a, Ref b)
 {
@@ -193,7 +193,7 @@ TGeneralizedTestFnVar::TestNumbers(Ref a, Ref b)
 }
 
 
-// ROM 0x002f1810 TestUniStrings__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316b14 TestUniStrings__21TGeneralizedTestFnVarFPlT1
 int
 TGeneralizedTestFnVar::TestUniStrings(Ref a, Ref b)
 {
@@ -204,7 +204,7 @@ TGeneralizedTestFnVar::TestUniStrings(Ref a, Ref b)
 }
 
 
-// ROM 0x002f18b4 TestUniChars__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316bb8 TestUniChars__21TGeneralizedTestFnVarFPlT1
 int
 TGeneralizedTestFnVar::TestUniChars(Ref a, Ref b)
 {
@@ -213,7 +213,7 @@ TGeneralizedTestFnVar::TestUniChars(Ref a, Ref b)
 }
 
 
-// ROM 0x002f1944 TestSymbols__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316c48 TestSymbols__21TGeneralizedTestFnVarFPlT1
 int
 TGeneralizedTestFnVar::TestSymbols(Ref a, Ref b)
 {
@@ -222,7 +222,7 @@ TGeneralizedTestFnVar::TestSymbols(Ref a, Ref b)
 }
 
 
-// ROM 0x002f1c44 TestEQ__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316f48 TestEQ__21TGeneralizedTestFnVarFPlT1
 // ==> 0 when equal.
 int
 TGeneralizedTestFnVar::TestEQ(Ref a, Ref b)
@@ -231,7 +231,7 @@ TGeneralizedTestFnVar::TestEQ(Ref a, Ref b)
 }
 
 
-// ROM 0x002f1c6c TestClosure__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316f70 TestClosure__21TGeneralizedTestFnVarFPlT1
 // The closure's integer result.
 int
 TGeneralizedTestFnVar::TestClosure(Ref a, Ref b)
@@ -245,7 +245,7 @@ TGeneralizedTestFnVar::TestClosure(Ref a, Ref b)
 }
 
 
-// ROM 0x002f1cbc TestEQClosure__21TGeneralizedTestFnVarFPlT1
+// ROM 0x00316fc0 TestEQClosure__21TGeneralizedTestFnVarFPlT1
 // The closure's integer result, or 0 (equal) for true and 1 for nil.
 int
 TGeneralizedTestFnVar::TestEQClosure(Ref a, Ref b)
@@ -263,7 +263,7 @@ TGeneralizedTestFnVar::TestEQClosure(Ref a, Ref b)
 	Sorting
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002ee8f0 QSUtil__FPlT1P21TGeneralizedTestFnVar
+// ROM 0x00313bf4 QSUtil__FPlT1P21TGeneralizedTestFnVar
 // Quicksort of the slots lo..hi inclusive: median-of-three partitioning,
 // the smaller part iterated and the larger pushed, runs of ten or fewer
 // finished by insertion.
@@ -362,7 +362,7 @@ QSUtil(Ref* lo, Ref* hi, TGeneralizedTestFnVar* test)
 }
 
 
-// ROM 0x002eecdc QSort__FRC6RefVarP21TGeneralizedTestFnVar
+// ROM 0x00313fe0 QSort__FRC6RefVarP21TGeneralizedTestFnVar
 static void
 QSort(RefArg array, TGeneralizedTestFnVar* test)
 {
@@ -383,7 +383,7 @@ QSort(RefArg array, TGeneralizedTestFnVar* test)
 }
 
 
-// ROM 0x002eed94 SortArray__FRC6RefVarN21
+// ROM 0x00314098 SortArray__FRC6RefVarN21
 void
 SortArray(RefArg array, RefArg test, RefArg key)
 {
@@ -392,7 +392,7 @@ SortArray(RefArg array, RefArg test, RefArg key)
 }
 
 
-// ROM 0x002eedf4 FQuickSort
+// ROM 0x003140f8 FQuickSort
 // Sort(array, test, key): the array sorted in place (not stably).
 Ref
 FQuickSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
@@ -403,7 +403,7 @@ FQuickSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 }
 
 
-// ROM 0x002f3394 ShellSortUtil__FRC6RefVarP21TGeneralizedTestFnVarl
+// ROM 0x00318698 ShellSortUtil__FRC6RefVarP21TGeneralizedTestFnVarl
 // Shell sort from the gap given, the gaps dividing by three.
 static void
 ShellSortUtil(RefArg array, TGeneralizedTestFnVar* test, long gap)
@@ -443,7 +443,7 @@ ShellSortUtil(RefArg array, TGeneralizedTestFnVar* test, long gap)
 }
 
 
-// ROM 0x002f3554 FShellSort
+// ROM 0x00318858 FShellSort
 Ref
 FShellSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 {
@@ -457,7 +457,7 @@ FShellSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 }
 
 
-// ROM 0x002f35fc FInsertionSort
+// ROM 0x00318900 FInsertionSort
 Ref
 FInsertionSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 {
@@ -467,7 +467,7 @@ FInsertionSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 }
 
 
-// ROM 0x002f3674 MergeUtil__FPllT1T2T1P21TGeneralizedTestFnVar
+// ROM 0x00318978 MergeUtil__FPllT1T2T1P21TGeneralizedTestFnVar
 // The sorted runs a and b merged into dest (which may be where b starts,
 // b being consumed no faster than dest fills); equal keys keep a first.
 static void
@@ -503,7 +503,7 @@ MergeUtil(Ref* a, long aCount, Ref* b, long bCount, Ref* dest, TGeneralizedTestF
 }
 
 
-// ROM 0x002f3778 MergeSortUtil__FPlT1lT3P21TGeneralizedTestFnVar
+// ROM 0x00318a7c MergeSortUtil__FPlT1lT3P21TGeneralizedTestFnVar
 // count slots at src sorted: in place (the halves sorted into temp and
 // merged back) or into temp (the halves sorted in place and merged out).
 static void
@@ -550,7 +550,7 @@ MergeSortUtil(Ref* src, Ref* temp, long count, long inPlace, TGeneralizedTestFnV
 }
 
 
-// ROM 0x002f3928 MergeSort__FRC6RefVarP21TGeneralizedTestFnVar
+// ROM 0x00318c2c MergeSort__FRC6RefVarP21TGeneralizedTestFnVar
 // A stable sort: blocks of up to half the array (as much as a temporary
 // array can hold, after a collection if need be) are merge-sorted through
 // the temporary and merged from the end into the sorted tail.
@@ -607,7 +607,7 @@ MergeSort(RefArg array, TGeneralizedTestFnVar* test)
 }
 
 
-// ROM 0x002ee87c FStableSort
+// ROM 0x00313b80 FStableSort
 Ref
 FStableSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 {
@@ -621,7 +621,7 @@ FStableSort(RefArg /*rcvr*/, RefArg array, RefArg test, RefArg key)
 	Searching
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f1d24 LSearch__FRC6RefVarN41
+// ROM 0x00317028 LSearch__FRC6RefVarN41
 // The index of the first element from start whose key the test finds
 // equal to item, -1 for none.  A plain '|=| search compares the elements
 // with EQ directly.
@@ -673,7 +673,7 @@ LSearch(RefArg array, RefArg item, RefArg start, RefArg test, RefArg key)
 }
 
 
-// ROM 0x002f1f94 FLSearch
+// ROM 0x00317298 FLSearch
 Ref
 FLSearch(RefArg /*rcvr*/, RefArg array, RefArg item, RefArg start, RefArg test, RefArg key)
 {
@@ -682,7 +682,7 @@ FLSearch(RefArg /*rcvr*/, RefArg array, RefArg item, RefArg start, RefArg test, 
 }
 
 
-// ROM 0x002f1fdc FLFetch
+// ROM 0x003172e0 FLFetch
 // The element LSearch finds, nil for none.
 Ref
 FLFetch(RefArg /*rcvr*/, RefArg array, RefArg item, RefArg start, RefArg test, RefArg key)
@@ -694,7 +694,7 @@ FLFetch(RefArg /*rcvr*/, RefArg array, RefArg item, RefArg start, RefArg test, R
 }
 
 
-// ROM 0x002f2028 BSearchRight__FRC6RefVarT1P21TGeneralizedTestFnVar
+// ROM 0x0031732c BSearchRight__FRC6RefVarT1P21TGeneralizedTestFnVar
 // In a sorted array, the index of the last element whose key is not
 // greater than the key given (-1 when all are greater).
 static long
@@ -728,7 +728,7 @@ BSearchRight(RefArg array, RefArg key, TGeneralizedTestFnVar* test)
 }
 
 
-// ROM 0x002f2148 FBSearchRight
+// ROM 0x0031744c FBSearchRight
 Ref
 FBSearchRight(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
 {
@@ -737,7 +737,7 @@ FBSearchRight(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg key
 }
 
 
-// ROM 0x002f21c0 BSearchLeft__FRC6RefVarT1P21TGeneralizedTestFnVar
+// ROM 0x003174c4 BSearchLeft__FRC6RefVarT1P21TGeneralizedTestFnVar
 // In a sorted array, the index of the first element whose key is not less
 // than the key given (the length when all are less).
 static long
@@ -771,7 +771,7 @@ BSearchLeft(RefArg array, RefArg key, TGeneralizedTestFnVar* test)
 }
 
 
-// ROM 0x002f22e0 FBSearchLeft
+// ROM 0x003175e4 FBSearchLeft
 Ref
 FBSearchLeft(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
 {
@@ -790,7 +790,7 @@ KeyMatchesAt(RefArg array, long index, RefArg key, TGeneralizedTestFnVar* test)
 }
 
 
-// ROM 0x002f25e8 FBInsert
+// ROM 0x003178ec FBInsert
 // element inserted before the first element not less than it; with
 // uniqueOnly an equal element already there is not added (nil, or the
 // existing element for 'returnElt).  ==> the index, or the element for
@@ -808,7 +808,7 @@ FBInsert(RefArg /*rcvr*/, RefArg array, RefArg element, RefArg test, RefArg keyP
 }
 
 
-// ROM 0x002f2464 FBInsertRight
+// ROM 0x00317768 FBInsertRight
 // element inserted after the last element not greater than it.
 Ref
 FBInsertRight(RefArg /*rcvr*/, RefArg array, RefArg element, RefArg test, RefArg keyPath, RefArg uniqueOnly)
@@ -823,7 +823,7 @@ FBInsertRight(RefArg /*rcvr*/, RefArg array, RefArg element, RefArg test, RefArg
 }
 
 
-// ROM 0x002f2774 FBDelete
+// ROM 0x00317a78 FBDelete
 // The elements whose key equals key removed (up to count of them, all for
 // nil); ==> how many.
 Ref
@@ -849,7 +849,7 @@ FBDelete(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath,
 }
 
 
-// ROM 0x002f29a4 FBFind
+// ROM 0x00317ca8 FBFind
 // The index of the first element whose key equals key, nil for none.
 Ref
 FBFind(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
@@ -862,7 +862,7 @@ FBFind(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
 }
 
 
-// ROM 0x002f28c4 FBFindRight
+// ROM 0x00317bc8 FBFindRight
 // The index of the last element whose key equals key, nil for none.
 Ref
 FBFindRight(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
@@ -875,7 +875,7 @@ FBFindRight(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPa
 }
 
 
-// ROM 0x002f2b88 FBFetch
+// ROM 0x00317e8c FBFetch
 Ref
 FBFetch(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
 {
@@ -887,7 +887,7 @@ FBFetch(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
 }
 
 
-// ROM 0x002f2a94 FBFetchRight
+// ROM 0x00317d98 FBFetchRight
 Ref
 FBFetchRight(RefArg /*rcvr*/, RefArg array, RefArg key, RefArg test, RefArg keyPath)
 {
@@ -918,7 +918,7 @@ const long kGOSOPSkipDupsB = 0x20;
 typedef long (*OrderedSetOpFn)(long comparison, long uniqueOnly);
 
 
-// ROM 0x002f2c8c GenOrderedSetOp__FRC6RefVarN31lPFlT1_iN35
+// ROM 0x00317f90 GenOrderedSetOp__FRC6RefVarN31lPFlT1_iN35
 // ==> a new array of resultSize (trimmed) built by op from the sorted
 // arrays a and b; a's rest and b's rest are copied after one runs out
 // when copyRestA/copyRestB say so.
@@ -1008,7 +1008,7 @@ GenOrderedSetOp(RefArg a, RefArg b, RefArg test, RefArg keyPath, long uniqueOnly
 }
 
 
-// ROM 0x002f3100 GOSOP_Merge__FlT1
+// ROM 0x00318404 GOSOP_Merge__FlT1
 static long
 GOSOP_Merge(long comparison, long uniqueOnly)
 {
@@ -1025,7 +1025,7 @@ GOSOP_Merge(long comparison, long uniqueOnly)
 }
 
 
-// ROM 0x002f3134 GOSOP_Intersection__FlT1
+// ROM 0x00318438 GOSOP_Intersection__FlT1
 static long
 GOSOP_Intersection(long comparison, long uniqueOnly)
 {
@@ -1042,7 +1042,7 @@ GOSOP_Intersection(long comparison, long uniqueOnly)
 }
 
 
-// ROM 0x002f320c GOSOP_Difference__FlT1
+// ROM 0x00318510 GOSOP_Difference__FlT1
 static long
 GOSOP_Difference(long comparison, long /*uniqueOnly*/)
 {
@@ -1054,7 +1054,7 @@ GOSOP_Difference(long comparison, long /*uniqueOnly*/)
 }
 
 
-// ROM 0x002f3224 FBMerge
+// ROM 0x00318528 FBMerge
 // The sorted arrays merged into a new sorted array; with uniqueOnly one
 // of each pair of equal elements.
 Ref
@@ -1064,7 +1064,7 @@ FBMerge(RefArg /*rcvr*/, RefArg a, RefArg b, RefArg test, RefArg keyPath, RefArg
 }
 
 
-// ROM 0x002f32a4 FBIntersect
+// ROM 0x003185a8 FBIntersect
 // The elements the sorted arrays share (both copies unless uniqueOnly).
 Ref
 FBIntersect(RefArg /*rcvr*/, RefArg a, RefArg b, RefArg test, RefArg keyPath, RefArg uniqueOnly)
@@ -1080,7 +1080,7 @@ FBIntersect(RefArg /*rcvr*/, RefArg a, RefArg b, RefArg test, RefArg keyPath, Re
 }
 
 
-// ROM 0x002f3338 FBDifference
+// ROM 0x0031863c FBDifference
 // The elements of sorted a not in sorted b.
 Ref
 FBDifference(RefArg /*rcvr*/, RefArg a, RefArg b, RefArg test, RefArg keyPath)
@@ -1093,7 +1093,7 @@ FBDifference(RefArg /*rcvr*/, RefArg a, RefArg b, RefArg test, RefArg keyPath)
 	Unordered sets
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f1138 FSetOverlaps
+// ROM 0x0031643c FSetOverlaps
 // The index of the first element of array that is in targetArray (EQ),
 // nil for none.
 Ref
@@ -1113,7 +1113,7 @@ FSetOverlaps(RefArg /*rcvr*/, RefArg array, RefArg targetArray)
 }
 
 
-// ROM 0x002f1970 FSetUnion
+// ROM 0x00316c74 FSetUnion
 // A new array of both arrays' elements (each once with uniqueOnly); a nil
 // array counts as empty, a lone array is cloned.
 Ref
@@ -1168,7 +1168,7 @@ FSetUnion(RefArg rcvr, RefArg array1, RefArg array2, RefArg uniqueOnly)
 }
 
 
-// ROM 0x002f2358 FSetDifference
+// ROM 0x0031765c FSetDifference
 // A clone of array1 without the elements of array2 (nil for a nil array1).
 Ref
 FSetDifference(RefArg /*rcvr*/, RefArg array1, RefArg array2)
@@ -1197,7 +1197,7 @@ FSetDifference(RefArg /*rcvr*/, RefArg array1, RefArg array2)
 	Binary objects
 ------------------------------------------------------------------------------- */
 
-// ROM 0x002f3164 BinEqual__FRC6RefVarT1
+// ROM 0x00318468 BinEqual__FRC6RefVarT1
 Boolean
 BinEqual(RefArg a, RefArg b)
 {
@@ -1212,7 +1212,7 @@ BinEqual(RefArg a, RefArg b)
 }
 
 
-// ROM 0x002ee854 FBinEqual
+// ROM 0x00313b58 FBinEqual
 Ref
 FBinEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
@@ -1220,7 +1220,7 @@ FBinEqual(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
-// ROM 0x002f0230 BoundsCheck__FRC6RefVarlUi
+// ROM 0x00315534 BoundsCheck__FRC6RefVarlUi
 // obj must be a binary with size bytes at offset.
 static void
 BoundsCheck(RefArg obj, long offset, ULong size)
@@ -1232,7 +1232,7 @@ BoundsCheck(RefArg obj, long offset, ULong size)
 }
 
 
-// ROM 0x002f02a4 BoundsWriteCheck__FRC6RefVarlUi
+// ROM 0x003155a8 BoundsWriteCheck__FRC6RefVarlUi
 // ... and writable.
 static void
 BoundsWriteCheck(RefArg obj, long offset, ULong size)
@@ -1251,7 +1251,7 @@ BoundsWriteCheck(RefArg obj, long offset, ULong size)
 }
 
 
-// ROM 0x002f0334 FExtractChar
+// ROM 0x00315638 FExtractChar
 // The byte at offset as a character (through the Mac Roman encoding).
 Ref
 FExtractChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
@@ -1265,7 +1265,7 @@ FExtractChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f03c0 FStuffChar
+// ROM 0x003156c4 FStuffChar
 Ref
 FStuffChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 {
@@ -1280,7 +1280,7 @@ FStuffChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 }
 
 
-// ROM 0x002f0498 FExtractUniChar
+// ROM 0x0031579c FExtractUniChar
 Ref
 FExtractUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
@@ -1291,7 +1291,7 @@ FExtractUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f0510 FStuffUniChar
+// ROM 0x00315814 FStuffUniChar
 Ref
 FStuffUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 {
@@ -1306,7 +1306,7 @@ FStuffUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 }
 
 
-// ROM 0x002f05d4 FExtractByte
+// ROM 0x003158d8 FExtractByte
 Ref
 FExtractByte(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
@@ -1316,7 +1316,7 @@ FExtractByte(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f0628 FStuffByte
+// ROM 0x0031592c FStuffByte
 Ref
 FStuffByte(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
@@ -1329,7 +1329,7 @@ FStuffByte(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 }
 
 
-// ROM 0x002f06bc FExtractWord
+// ROM 0x003159c0 FExtractWord
 // The signed big-endian 16-bit word at offset.
 Ref
 FExtractWord(RefArg /*rcvr*/, RefArg obj, RefArg offset)
@@ -1341,7 +1341,7 @@ FExtractWord(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f0734 FStuffWord
+// ROM 0x00315a38 FStuffWord
 Ref
 FStuffWord(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
@@ -1364,7 +1364,7 @@ LongAt(RefArg obj, long index)
 }
 
 
-// ROM 0x002f081c FExtractLong
+// ROM 0x00315b20 FExtractLong
 // The signed 32-bit word at offset; one that does not fit an integer ref
 // (30 bits) is an error.
 Ref
@@ -1379,7 +1379,7 @@ FExtractLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f08cc FStuffLong
+// ROM 0x00315bd0 FStuffLong
 // (the ROM checks the bounds but not that the object is writable)
 Ref
 FStuffLong(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
@@ -1396,7 +1396,7 @@ FStuffLong(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 }
 
 
-// ROM 0x002f096c FExtractXLong
+// ROM 0x00315c70 FExtractXLong
 // The 32-bit word at offset without its low three bits (a value that
 // always fits).
 Ref
@@ -1408,7 +1408,7 @@ FExtractXLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f09f4 FExtractCString
+// ROM 0x00315cf8 FExtractCString
 // The NUL-terminated C string at offset, as a string.
 Ref
 FExtractCString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
@@ -1432,7 +1432,7 @@ FExtractCString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f0ae0 FStuffCString
+// ROM 0x00315de4 FStuffCString
 Ref
 FStuffCString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 {
@@ -1446,7 +1446,7 @@ FStuffCString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 }
 
 
-// ROM 0x002f0b88 FExtractPString
+// ROM 0x00315e8c FExtractPString
 // The Pascal string (a length byte then its characters) at offset.
 Ref
 FExtractPString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
@@ -1460,7 +1460,7 @@ FExtractPString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 }
 
 
-// ROM 0x002f0c38 FStuffPString
+// ROM 0x00315f3c FStuffPString
 Ref
 FStuffPString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 {
@@ -1479,7 +1479,7 @@ FStuffPString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 }
 
 
-// ROM 0x002f0d24 FExtractBytes
+// ROM 0x00316028 FExtractBytes
 // A new binary of class theClass holding count bytes (nil: to the end)
 // from offset.
 Ref

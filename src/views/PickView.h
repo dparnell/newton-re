@@ -28,7 +28,7 @@
 				(DrawStrokeBundle), the pickable test inside a grid picture
 				(FPtInPicture), the flashing of the picked item (Wait).
 
-	Reconstructed from the MP2100 D ROM (0x00185690-0x0018a800); each
+	Reconstructed from the MP2x00 US ROM (0x00183660-0x001887d0); each
 	function cites its origin.
 */
 
@@ -67,40 +67,40 @@ struct PickGridInfo
 class TPickView : public TView
 {
 public:
-	virtual long	ClassID(void) const;								// ROM 0x00185854 ClassID__9TPickViewCFv
-	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x00186c70 DerivedFrom__9TPickViewCFl
-	virtual			~TPickView();										// ROM 0x00189878 __dt__9TPickViewFv
-	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x001885c0 Constructor__9TPickViewFRC6RefVarP5TView
-	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x001890f4 RealDoCommand__9TPickViewFRC6RefVar
-	virtual void	SetupForm(void);									// ROM 0x00187350 SetupForm__9TPickViewFv
-	virtual void	Hide(void);											// ROM 0x00188fa4 Hide__9TPickViewFv
-	virtual void	RealDraw(Rect& bounds);								// ROM 0x001885e0 RealDraw__9TPickViewFR5TRect
+	virtual long	ClassID(void) const;								// ROM 0x00183824 ClassID__9TPickViewCFv
+	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x00184c40 DerivedFrom__9TPickViewCFl
+	virtual			~TPickView();										// ROM 0x00187848 __dt__9TPickViewFv
+	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x00186590 Constructor__9TPickViewFRC6RefVarP5TView
+	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x001870c4 RealDoCommand__9TPickViewFRC6RefVar
+	virtual void	SetupForm(void);									// ROM 0x00185320 SetupForm__9TPickViewFv
+	virtual void	Hide(void);											// ROM 0x00186f74 Hide__9TPickViewFv
+	virtual void	RealDraw(Rect& bounds);								// ROM 0x001865b0 RealDraw__9TPickViewFR5TRect
 
-	PickGridInfo*	GetGridInfo(RefArg item, const Rect& bounds);		// ROM 0x00185690 GetGridInfo__9TPickViewFRC6RefVarP5TRect
-	Ref			GetDisplayIcon(RefArg item);							// ROM 0x00186d38 GetDisplayIcon__9TPickViewFRC6RefVar
-	long		GetDisplayIndent(RefArg item);							// ROM 0x00186d7c GetDisplayIndent__9TPickViewFRC6RefVar
-	long		GetDisplayFixedHeight(RefArg item);						// ROM 0x00186e00 GetDisplayFixedHeight__9TPickViewFRC6RefVar
-	Ref			GetDisplayItem(long index, Boolean* pickable, UniChar* mark);	// ROM 0x00189ed8 GetDisplayItem__9TPickViewFlPUcPUs
-	Ref			GetItemNoText(long index);								// ROM 0x0018a118 GetItemNoText__9TPickViewFl
-	Ref			GetOverflows(void);										// ROM 0x00187098 GetOverflows__9TPickViewFv
-	void		Scroll(RefArg direction, Boolean unpick);				// ROM 0x0018718c Scroll__9TPickViewFRC6RefVarUc
-	void		GetItemRect(PickStuff* item, Rect* r);					// ROM 0x001893b4 GetItemRect__9TPickViewFP9PickStuffP5TRect
-	void		GetGridItemRect(PickStuff* item, Rect* r);				// ROM 0x001892dc GetGridItemRect__9TPickViewFP9PickStuffP5TRect
-	void		InvertItem(PickStuff* item);							// ROM 0x00189478 InvertItem__9TPickViewFP9PickStuff
-	void		FlashItem(PickStuff* item);								// ROM 0x0018949c FlashItem__9TPickViewFP9PickStuff
-	void		TrackStroke(TStrokePublic* stroke, PickStuff* item);	// ROM 0x00189948 TrackStroke__9TPickViewFP13TStrokePublicP9PickStuff
-	void		SubItem(Point& pt, PickStuff* item);					// ROM 0x001894e4 SubItem__9TPickViewFR6TPointP9PickStuff
-	void		Item(Point& pt, PickStuff* item);						// ROM 0x001895b8 Item__9TPickViewFR6TPointP9PickStuff
-	void		PickableItem(Point& pt, PickStuff* item);				// ROM 0x0018966c PickableItem__9TPickViewFR6TPointP9PickStuff
-	void		PickItem(PickStuff* item);								// ROM 0x00189a7c PickItem__9TPickViewFP9PickStuff
-	void		GetItemFlags(PickStuff* item, Boolean* pickable, UniChar* mark);	// ROM 0x00189e38 GetItemFlags__9TPickViewFP9PickStuffPUcPUs
-	Boolean		IsItemNoPickable(long index);							// ROM 0x00189e64 IsItemNoPickable__9TPickViewFl
-	Boolean		HandleKeyDown(UniChar ch, ULong parameter);				// ROM 0x0018a4b0 HandleKeyDown__9TPickViewFUsUl
-	void		KeyToNextItem(long from);								// ROM 0x0018a17c KeyToNextItem__9TPickViewFl
-	void		KeyToPrevItem(long from);								// ROM 0x0018a320 KeyToPrevItem__9TPickViewFl
-	void		SetItemFlags(PickStuff* item, Boolean pickable, UniChar mark);	// ROM 0x00189e7c SetItemFlags__9TPickViewFP9PickStuffUcUs
-	long		GetItemLength(long index);								// ROM 0x00189ea0 GetItemLength__9TPickViewFl
-	void		SetItemLength(PickStuff* item, long length);			// ROM 0x00189eb4 SetItemLength__9TPickViewFP9PickStuffl
+	PickGridInfo*	GetGridInfo(RefArg item, const Rect& bounds);		// ROM 0x00183660 GetGridInfo__9TPickViewFRC6RefVarP5TRect
+	Ref			GetDisplayIcon(RefArg item);							// ROM 0x00184d08 GetDisplayIcon__9TPickViewFRC6RefVar
+	long		GetDisplayIndent(RefArg item);							// ROM 0x00184d4c GetDisplayIndent__9TPickViewFRC6RefVar
+	long		GetDisplayFixedHeight(RefArg item);						// ROM 0x00184dd0 GetDisplayFixedHeight__9TPickViewFRC6RefVar
+	Ref			GetDisplayItem(long index, Boolean* pickable, UniChar* mark);	// ROM 0x00187ea8 GetDisplayItem__9TPickViewFlPUcPUs
+	Ref			GetItemNoText(long index);								// ROM 0x001880e8 GetItemNoText__9TPickViewFl
+	Ref			GetOverflows(void);										// ROM 0x00185068 GetOverflows__9TPickViewFv
+	void		Scroll(RefArg direction, Boolean unpick);				// ROM 0x0018515c Scroll__9TPickViewFRC6RefVarUc
+	void		GetItemRect(PickStuff* item, Rect* r);					// ROM 0x00187384 GetItemRect__9TPickViewFP9PickStuffP5TRect
+	void		GetGridItemRect(PickStuff* item, Rect* r);				// ROM 0x001872ac GetGridItemRect__9TPickViewFP9PickStuffP5TRect
+	void		InvertItem(PickStuff* item);							// ROM 0x00187448 InvertItem__9TPickViewFP9PickStuff
+	void		FlashItem(PickStuff* item);								// ROM 0x0018746c FlashItem__9TPickViewFP9PickStuff
+	void		TrackStroke(TStrokePublic* stroke, PickStuff* item);	// ROM 0x00187918 TrackStroke__9TPickViewFP13TStrokePublicP9PickStuff
+	void		SubItem(Point& pt, PickStuff* item);					// ROM 0x001874b4 SubItem__9TPickViewFR6TPointP9PickStuff
+	void		Item(Point& pt, PickStuff* item);						// ROM 0x00187588 Item__9TPickViewFR6TPointP9PickStuff
+	void		PickableItem(Point& pt, PickStuff* item);				// ROM 0x0018763c PickableItem__9TPickViewFR6TPointP9PickStuff
+	void		PickItem(PickStuff* item);								// ROM 0x00187a4c PickItem__9TPickViewFP9PickStuff
+	void		GetItemFlags(PickStuff* item, Boolean* pickable, UniChar* mark);	// ROM 0x00187e08 GetItemFlags__9TPickViewFP9PickStuffPUcPUs
+	Boolean		IsItemNoPickable(long index);							// ROM 0x00187e34 IsItemNoPickable__9TPickViewFl
+	Boolean		HandleKeyDown(UniChar ch, ULong parameter);				// ROM 0x00188480 HandleKeyDown__9TPickViewFUsUl
+	void		KeyToNextItem(long from);								// ROM 0x0018814c KeyToNextItem__9TPickViewFl
+	void		KeyToPrevItem(long from);								// ROM 0x001882f0 KeyToPrevItem__9TPickViewFl
+	void		SetItemFlags(PickStuff* item, Boolean pickable, UniChar mark);	// ROM 0x00187e4c SetItemFlags__9TPickViewFP9PickStuffUcUs
+	long		GetItemLength(long index);								// ROM 0x00187e70 GetItemLength__9TPickViewFl
+	void		SetItemLength(PickStuff* item, long length);			// ROM 0x00187e84 SetItemLength__9TPickViewFP9PickStuffl
 
 	long		ItemTop(long index) const	{ return index == 0 ? 0 : fItemBottoms[index - 1]; }
 	long		ItemBottom(long index) const	{ return fItemBottoms[index]; }
@@ -130,7 +130,7 @@ public:
 };
 
 void	RegisterPickNatives(void);												// PickViewKeyDown (the ROM's protoPicker viewKeyDownScript)
-void	GetAppAreaBounds(Rect* bounds);										// ROM 0x001858f4 GetAppAreaBounds__FP5TRect - vars.displayParams' application area
-Boolean	AdjustPopupInRect(Rect& bounds, long width, long height, const Rect& within, short frame);	// ROM 0x00186e84 AdjustPopupInRect__FR5TRectlT2RC5TRects - ==> placed above
+void	GetAppAreaBounds(Rect* bounds);										// ROM 0x001838c4 GetAppAreaBounds__FP5TRect - vars.displayParams' application area
+Boolean	AdjustPopupInRect(Rect& bounds, long width, long height, const Rect& within, short frame);	// ROM 0x00184e54 AdjustPopupInRect__FR5TRectlT2RC5TRects - ==> placed above
 
 #endif	/* __PICKVIEW_H */

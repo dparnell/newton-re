@@ -6,7 +6,7 @@
 				port, with the name and type strings passed in two shared
 				memory objects the client keeps for the purpose.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "NameServer.h"
@@ -22,14 +22,14 @@
 const char kTUPort[] = "TUPort";
 
 
-// ROM 0x00132408 __ct__18TNameServerRequestFv
+// ROM 0x001309ac __ct__18TNameServerRequestFv
 TNameServerRequest::TNameServerRequest()
 {
 	fCommand = kRegisterName;
 }
 
 
-// ROM 0x00132a3c __ct__12TNameRequestFv
+// ROM 0x00130fe0 __ct__12TNameRequestFv
 TNameRequest::TNameRequest()
 {
 	fCommand = kLookup;
@@ -40,7 +40,7 @@ TNameRequest::TNameRequest()
 }
 
 
-// ROM 0x00133184 __ct__16TSysEventRequestFv
+// ROM 0x00131728 __ct__16TSysEventRequestFv
 TSysEventRequest::TSysEventRequest()
 {
 	fCommand = kRegisterForSystemEvent;
@@ -51,7 +51,7 @@ TSysEventRequest::TSysEventRequest()
 }
 
 
-// ROM 0x00133894 __ct__15TGestaltRequestFv
+// ROM 0x00131e38 __ct__15TGestaltRequestFv
 TGestaltRequest::TGestaltRequest()
 {
 	fCommand = kGestalt;
@@ -59,7 +59,7 @@ TGestaltRequest::TGestaltRequest()
 }
 
 
-// ROM 0x001338dc __ct__22TResArbitrationRequestFv
+// ROM 0x00131e80 __ct__22TResArbitrationRequestFv
 TResArbitrationRequest::TResArbitrationRequest()
 {
 	fCommand = kResourceArbitration;
@@ -69,7 +69,7 @@ TResArbitrationRequest::TResArbitrationRequest()
 }
 
 
-// ROM 0x0013392c __ct__16TNameServerReplyFv
+// ROM 0x00131ed0 __ct__16TNameServerReplyFv
 TNameServerReply::TNameServerReply()
 {
 	fResult = noErr;
@@ -82,7 +82,7 @@ TNameServerReply::TNameServerReply()
 	TUNameServer
 ------------------------------------------------------------------------------- */
 
-// ROM 0x00131f1c __ct__12TUNameServerFv
+// ROM 0x001304c0 __ct__12TUNameServerFv
 // The name server port, and a shared memory object each for the name and
 // the type strings of a request.
 TUNameServer::TUNameServer()
@@ -97,7 +97,7 @@ TUNameServer::TUNameServer()
 }
 
 
-// ROM 0x00131fa0 __dt__12TUNameServerFv
+// ROM 0x00130544 __dt__12TUNameServerFv
 TUNameServer::~TUNameServer()
 {
 	if (fMsgName != nil)
@@ -107,7 +107,7 @@ TUNameServer::~TUNameServer()
 }
 
 
-// ROM 0x00132014 RegisterName__12TUNameServerFPcT1UlT3
+// ROM 0x001305b8 RegisterName__12TUNameServerFPcT1UlT3
 NewtonErr
 TUNameServer::RegisterName(char* name, char* type, ULong thing, ULong spec)
 {
@@ -127,7 +127,7 @@ TUNameServer::RegisterName(char* name, char* type, ULong thing, ULong spec)
 }
 
 
-// ROM 0x00132114 UnRegisterName__12TUNameServerFPcT1
+// ROM 0x001306b8 UnRegisterName__12TUNameServerFPcT1
 NewtonErr
 TUNameServer::UnRegisterName(char* name, char* type)
 {
@@ -145,7 +145,7 @@ TUNameServer::UnRegisterName(char* name, char* type)
 }
 
 
-// ROM 0x00132204 WaitForRegister__12TUNameServerFPcT1PUlT3
+// ROM 0x001307a8 WaitForRegister__12TUNameServerFPcT1PUlT3
 // Blocks until the name is registered (the name server holds the reply).
 NewtonErr
 TUNameServer::WaitForRegister(char* name, char* type, ULong* thing, ULong* spec)
@@ -170,7 +170,7 @@ TUNameServer::WaitForRegister(char* name, char* type, ULong* thing, ULong* spec)
 }
 
 
-// ROM 0x00132318 WaitForUnregister__12TUNameServerFPcT1
+// ROM 0x001308bc WaitForUnregister__12TUNameServerFPcT1
 NewtonErr
 TUNameServer::WaitForUnregister(char* name, char* type)
 {
@@ -188,7 +188,7 @@ TUNameServer::WaitForUnregister(char* name, char* type)
 }
 
 
-// ROM 0x00132438 Lookup__12TUNameServerFPcT1PUlT3
+// ROM 0x001309dc Lookup__12TUNameServerFPcT1PUlT3
 NewtonErr
 TUNameServer::Lookup(char* name, char* type, ULong* thing, ULong* spec)
 {
@@ -237,7 +237,7 @@ ResourceArbitrationRequest(TUPort& port, TUSharedMem* msgName, TUSharedMem* msgT
 }
 
 
-// ROM 0x0013254c ResourceClaim__12TUNameServerFPcT1UlT3
+// ROM 0x00130af0 ResourceClaim__12TUNameServerFPcT1UlT3
 NewtonErr
 TUNameServer::ResourceClaim(char* name, char* type, TObjectId ownerPortId, TObjectId applicationNameId)
 {
@@ -245,7 +245,7 @@ TUNameServer::ResourceClaim(char* name, char* type, TObjectId ownerPortId, TObje
 }
 
 
-// ROM 0x00132658 ResourcePassiveClaim__12TUNameServerFPcT1UlT3
+// ROM 0x00130bfc ResourcePassiveClaim__12TUNameServerFPcT1UlT3
 NewtonErr
 TUNameServer::ResourcePassiveClaim(char* name, char* type, TObjectId ownerPortId, TObjectId applicationNameId)
 {
@@ -253,7 +253,7 @@ TUNameServer::ResourcePassiveClaim(char* name, char* type, TObjectId ownerPortId
 }
 
 
-// ROM 0x00132764 ResourceUnclaim__12TUNameServerFPcT1
+// ROM 0x00130d08 ResourceUnclaim__12TUNameServerFPcT1
 NewtonErr
 TUNameServer::ResourceUnclaim(char* name, char* type)
 {
@@ -261,7 +261,7 @@ TUNameServer::ResourceUnclaim(char* name, char* type)
 }
 
 
-// ROM 0x00132860 ResourcePassiveUnclaim__12TUNameServerFPcT1
+// ROM 0x00130e04 ResourcePassiveUnclaim__12TUNameServerFPcT1
 NewtonErr
 TUNameServer::ResourcePassiveUnclaim(char* name, char* type)
 {

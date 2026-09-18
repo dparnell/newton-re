@@ -5,11 +5,11 @@
 				(a width to fit, alignment, justification) and paragraphs
 				wrapped into a rectangle.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The ROM composes a chunk's glyphs into a one-bit slab (DrTextChunk
-	0x00331794) and blits it; the host draws each glyph as a region
+	0x0035c788) and blits it; the host draws each glyph as a region
 	through DrawRgn - the same pixels for an unscaled strike (DEVIATION:
-	the code).  The ROM's text object (NewText 0x00330e68: the text, its
+	the code).  The ROM's text object (NewText 0x0035bfc4: the text, its
 	length, styles, runs, location, options, and the measured widths) is
 	the layout's working state here, on the stack (DEVIATION: no object).
 */
@@ -86,7 +86,7 @@ struct TextLayout
 };
 
 
-// ROM 0x00330948 MeasureGlyphWidths__Fl
+// ROM 0x0035baa4 MeasureGlyphWidths__Fl
 // Every character's advance in its run's font; with a width to fit, the
 // text is cut before the first character that would cross it, the width
 // so far kept in the options.  ==> the count that fits.
@@ -138,7 +138,7 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 }
 
 
-// ROM 0x0033057c JustifyText__Fl
+// ROM 0x0035b6d8 JustifyText__Fl
 // The slack (the width to fit less the text's width) times the options'
 // justification spread over the characters but the last: a space gets
 // nine shares, another character one - or, for a text wider than the
@@ -180,7 +180,7 @@ JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout*
 }
 
 
-// ROM 0x0032f2bc DoTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfoUc
+// ROM 0x0035a418 DoTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfoUc
 // The text as one text object: measured (MeasureGlyphWidths: the
 // characters that fit the options' width), laid out (JustifyText) and
 // drawn when asked, its bounds calculated when wanted.  Each run
@@ -305,7 +305,7 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 }
 
 
-// ROM 0x0032eec8 DrawTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfo
+// ROM 0x0035a024 DrawTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfo
 void
 DrawTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
 {
@@ -313,7 +313,7 @@ DrawTextOnce(const void* text, long length, StyleRecord** styles, const short* r
 }
 
 
-// ROM 0x0032ef18 MeasureTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfo
+// ROM 0x0035a074 MeasureTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfo
 void
 MeasureTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
 {
@@ -321,7 +321,7 @@ MeasureTextOnce(const void* text, long length, StyleRecord** styles, const short
 }
 
 
-// ROM 0x0025fd08 MeasureOnce__FPUslP11StyleRecord
+// ROM 0x00261c40 MeasureOnce__FPUslP11StyleRecord
 // A string's width in the style, in pixels.
 long
 MeasureOnce(const UniChar* text, long length, StyleRecord* style)
@@ -334,7 +334,7 @@ MeasureOnce(const UniChar* text, long length, StyleRecord* style)
 }
 
 
-// ROM 0x0025fd78 MeasureOnceFont__FPUslRC6RefVar
+// ROM 0x00261cb0 MeasureOnceFont__FPUslRC6RefVar
 long
 MeasureOnceFont(const UniChar* text, long length, RefArg fontSpec)
 {
@@ -350,7 +350,7 @@ MeasureOnceFont(const UniChar* text, long length, RefArg fontSpec)
 	R i c h   s t r i n g s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0032f008 DoRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfoUc
+// ROM 0x0035a164 DoRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfoUc
 // The rich string's characters from start, as one text.  NOT YET
 // RECONSTRUCTED: the ink words (the ROM makes a style and a run for each
 // ink word and text run between them); the text is drawn as it is.
@@ -365,7 +365,7 @@ DoRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FP
 }
 
 
-// ROM 0x0032ef68 DrawRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
+// ROM 0x0035a0c4 DrawRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
 void
 DrawRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
 {
@@ -373,7 +373,7 @@ DrawRichString(TRichString& rich, ULong start, long length, StyleRecord* style, 
 }
 
 
-// ROM 0x0032efb8 MeasureRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
+// ROM 0x0035a114 MeasureRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfo
 long
 MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds)
 {
@@ -381,7 +381,7 @@ MeasureRichString(TRichString& rich, ULong start, long length, StyleRecord* styl
 }
 
 
-// ROM 0x001ecf64 FStyledStrTruncate__FRC6RefVarN31
+// ROM 0x001eab4c FStyledStrTruncate__FRC6RefVarN31
 // The string cut to the width in the font: when it does not fit, the
 // characters that fit beside an ellipsis are kept and the ellipsis put
 // after them (in place).  ==> the string.
@@ -417,7 +417,7 @@ StyledStrTruncate(RefArg str, long width, RefArg fontSpec)
 }
 
 
-// ROM 0x001ec784 FStrTruncate__FRC6RefVarN21
+// ROM 0x001ea36c FStrTruncate__FRC6RefVarN21
 // StrTruncate(str, width): in the receiver's viewFont.
 static Ref
 FStrTruncate(RefArg rcvr, RefArg str, RefArg width)
@@ -438,7 +438,7 @@ FStyledStrTruncate(RefArg /*rcvr*/, RefArg str, RefArg width, RefArg fontSpec)
 	P a r a g r a p h s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0017f0a0 ConvertToQDFlush__FUlPl
+// ROM 0x0017d070 ConvertToQDFlush__FUlPl
 // The viewJustify text bits as a QD flush: vjLeftH 0, vjRightH 1.0,
 // vjCenterH 0.5; vjFullH is flush left with full justification.
 Fixed
@@ -456,7 +456,7 @@ ConvertToQDFlush(ULong justify, Fixed* justification)
 }
 
 
-// ROM 0x000ed674 FindWordBreaks__FPUsUlT2Uc6RefVarPUlT6
+// ROM 0x000ec09c FindWordBreaks__FPUsUlT2Uc6RefVarPUlT6
 // The word around the offset: wordStart and wordEnd (offsets into the
 // text).  The ROM classifies the characters through the locale's
 // lineBreakTable (a binary: a class per character, a state machine for
@@ -491,7 +491,7 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 }
 
 
-// ROM 0x0017ec24 SkipUpToTwoSpacesAndCR__FPUsT1
+// ROM 0x0017cbf4 SkipUpToTwoSpacesAndCR__FPUsT1
 // After a line: up to two spaces, then a carriage return, are skipped.
 const UniChar*
 SkipUpToTwoSpacesAndCR(const UniChar* text, const UniChar* end)
@@ -504,7 +504,7 @@ SkipUpToTwoSpacesAndCR(const UniChar* text, const UniChar* end)
 }
 
 
-// ROM 0x0017e0e4 DrawSimpleLine__FR11TRichStringUlP6FPointPP11StyleRecordP11TextOptionsRC6RefVarPlUc
+// ROM 0x0017c0b4 DrawSimpleLine__FR11TRichStringUlP6FPointPP11StyleRecordP11TextOptionsRC6RefVarPlUc
 // One line of the paragraph from start: the text up to the carriage
 // return (a return alone is an empty line), as many characters as fit the
 // options' width, cut back to the start of the word the width falls in
@@ -550,7 +550,7 @@ DrawSimpleLine(TRichString& rich, ULong start, FPoint* where, StyleRecord** styl
 }
 
 
-// ROM 0x0017de74 DrawSimpleParagraph__FR11TRichStringRC6RefVarP5TRectlUcT4
+// ROM 0x0017be44 DrawSimpleParagraph__FR11TRichStringRC6RefVarP5TRectlUcT4
 // The rich string wrapped into the box's width (any width for a box 0
 // wide) line by line, the lines the font's height (ascent + descent +
 // leading) apart from the box's top, as many as fit its height (any
@@ -602,7 +602,7 @@ DrawSimpleParagraph(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify
 }
 
 
-// ROM 0x0017de44 TextBounds__FR11TRichStringRC6RefVarP5TRectl
+// ROM 0x0017be14 TextBounds__FR11TRichStringRC6RefVarP5TRectl
 void
 TextBounds(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify)
 {
@@ -610,7 +610,7 @@ TextBounds(TRichString& rich, RefArg fontSpec, Rect* box, long hJustify)
 }
 
 
-// ROM 0x0017dd5c TextBox__FR11TRichStringRC6RefVarRC5TRectlN24
+// ROM 0x0017bd2c TextBox__FR11TRichStringRC6RefVarRC5TRectlN24
 // The rich string drawn in the box: with a vertical justification the
 // text is measured first (in a copy of the box with no height) and the
 // box moved down by the room left (half of it for vjCenterV, all for
@@ -649,7 +649,7 @@ FontSpecInfo(RefArg fontSpec, FontInfo* fontInfo)
 }
 
 
-// ROM 0x001efeb4 FFontAscent__FRC6RefVarT1
+// ROM 0x001eda9c FFontAscent__FRC6RefVarT1
 static Ref
 FFontAscent(RefArg /*rcvr*/, RefArg fontSpec)
 {
@@ -659,7 +659,7 @@ FFontAscent(RefArg /*rcvr*/, RefArg fontSpec)
 }
 
 
-// ROM 0x001eff24 FFontDescent__FRC6RefVarT1
+// ROM 0x001edb0c FFontDescent__FRC6RefVarT1
 static Ref
 FFontDescent(RefArg /*rcvr*/, RefArg fontSpec)
 {
@@ -669,7 +669,7 @@ FFontDescent(RefArg /*rcvr*/, RefArg fontSpec)
 }
 
 
-// ROM 0x001eff94 FFontLeading__FRC6RefVarT1
+// ROM 0x001edb7c FFontLeading__FRC6RefVarT1
 static Ref
 FFontLeading(RefArg /*rcvr*/, RefArg fontSpec)
 {
@@ -679,7 +679,7 @@ FFontLeading(RefArg /*rcvr*/, RefArg fontSpec)
 }
 
 
-// ROM 0x001f0004 FFontHeight__FRC6RefVarT1
+// ROM 0x001edbec FFontHeight__FRC6RefVarT1
 // The ascent, descent and leading together.
 static Ref
 FFontHeight(RefArg /*rcvr*/, RefArg fontSpec)
@@ -690,7 +690,7 @@ FFontHeight(RefArg /*rcvr*/, RefArg fontSpec)
 }
 
 
-// ROM 0x001f2648 FStrFontWidth__FRC6RefVarN21
+// ROM 0x001f0230 FStrFontWidth__FRC6RefVarN21
 // StrFontWidth(string, fontSpec): the string's width in the font, in
 // pixels (a rich string's ink NOT YET: its text is measured).
 static Ref
@@ -710,7 +710,7 @@ FStrFontWidth(RefArg /*rcvr*/, RefArg str, RefArg fontSpec)
 }
 
 
-// ROM 0x000e4808 FTextBox
+// ROM 0x000e3550 FTextBox
 // view:TextBox(string, {font, justification}, bounds): the string drawn
 // in the bounds (relative to the view: its top left added), in the
 // style's font, aligned 'left, 'right or 'center.  DEVIATION: the ROM

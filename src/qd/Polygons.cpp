@@ -3,7 +3,7 @@
 
 	Contains:	Recording shapes into regions and polygons; the polygon verbs.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "Polygons.h"
@@ -20,7 +20,7 @@ const long kPolyHeaderSize = 12;			// polySize, filler, polyBBox
 	R e g i o n s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x003150f4 OpenRgn__Fv
+// ROM 0x0034103c OpenRgn__Fv
 // A point buffer opened for the region: the globals' handle, offset and
 // size, the port's rgnSave, and the pen hidden - the lines are recorded,
 // not drawn.
@@ -38,7 +38,7 @@ OpenRgn(void)
 }
 
 
-// ROM 0x003154e4 CloseRgn__FPP6Region
+// ROM 0x0034142c CloseRgn__FPP6Region
 // The recorded points sorted, culled (pairs at one place cancel) and
 // packed into the region; the buffer given back, the pen shown.
 void
@@ -67,7 +67,7 @@ PutPoint(char* out, long v, long h)
 }
 
 
-// ROM 0x002d30a0 PutLine__F5PointT1PPcPlT4
+// ROM 0x002f88e4 PutLine__F5PointT1PPcPlT4
 // The line's inversion points appended to the buffer (grown when they
 // would not fit: the smaller of the line's extents, plus one, pairs).
 // A horizontal line: its two ends on its row.  Any other: from the upper
@@ -174,7 +174,7 @@ RecordLine(GrafPort* port, Point from, Point to)
 }
 
 
-// ROM 0x002d1f98 DoLine__F5Point
+// ROM 0x002f77dc DoLine__F5Point
 // A line from the pen to the point: recorded into the open polygon or
 // region, drawn (when the pen shows), the pen moved to the point.
 void
@@ -192,7 +192,7 @@ DoLine(Point to)
 	P o l y g o n s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0030ff38 OpenPoly__Fv
+// ROM 0x003354d0 OpenPoly__Fv
 // A polygon opened: its handle in the globals and the port's polySave,
 // empty (the header alone, no bounds), the pen hidden.
 PolyHandle
@@ -213,7 +213,7 @@ OpenPoly(void)
 }
 
 
-// ROM 0x0030ffa4 ClosePoly__Fv
+// ROM 0x0033553c ClosePoly__Fv
 // The open polygon finished: its bounds the points' extent, its handle
 // cut to its size, the pen shown.
 void
@@ -248,7 +248,7 @@ ClosePoly(void)
 }
 
 
-// ROM 0x00310278 KillPoly__FPP7Polygon
+// ROM 0x00335810 KillPoly__FPP7Polygon
 void
 KillPoly(PolyHandle poly)
 {
@@ -256,7 +256,7 @@ KillPoly(PolyHandle poly)
 }
 
 
-// ROM 0x0031027c OffsetPoly__FPP7PolygonlT2
+// ROM 0x00335814 OffsetPoly__FPP7PolygonlT2
 // The points and the bounds moved.
 void
 OffsetPoly(PolyHandle poly, long dh, long dv)
@@ -272,7 +272,7 @@ OffsetPoly(PolyHandle poly, long dh, long dv)
 }
 
 
-// ROM 0x00310084 MapPoly__FPP7PolygonP4RectT2
+// ROM 0x0033561c MapPoly__FPP7PolygonP4RectT2
 // The bounds and points mapped from one rectangle to another (nothing
 // for the same rectangle).
 void
@@ -287,7 +287,7 @@ MapPoly(PolyHandle poly, const Rect* src, const Rect* dst)
 }
 
 
-// ROM 0x0031014c FrPoly__FPP7Polygonl
+// ROM 0x003356e4 FrPoly__FPP7Polygonl
 // The polygon's outline as lines from its first point (nothing for no
 // points); an xor mode (the mode's low bits 2) has every point's line
 // drawn twice, from the first - as the ROM has it.
@@ -312,7 +312,7 @@ FrPoly(PolyHandle poly, long mode)
 }
 
 
-// ROM 0x00310204 DrawPoly__FPP7PolygonlPP8PixelMap
+// ROM 0x0033579c DrawPoly__FPP7PolygonlPP8PixelMap
 // The polygon's inside: its outline, closed back to the first point,
 // recorded into a region (nothing while the pen is hidden), drawn in the
 // mode and pattern.
@@ -333,7 +333,7 @@ DrawPoly(PolyHandle poly, long mode, PatternHandle pattern)
 }
 
 
-// ROM 0x00310364 StdPoly
+// ROM 0x003358fc StdPoly
 // The standard polygon proc: framed as its lines in the pen's mode; the
 // other verbs draw the inside (DrawPoly) when its bounds meet the port's
 // clip and visible regions.  NOT YET RECONSTRUCTED: recording into an
@@ -357,7 +357,7 @@ StdPoly(GrafVerb verb, PolyHandle poly)
 }
 
 
-// ROM 0x0031010c CallPoly__FUcPP7Polygon
+// ROM 0x003356a4 CallPoly__FUcPP7Polygon
 void
 CallPoly(GrafVerb verb, PolyHandle poly)
 {
@@ -367,17 +367,17 @@ CallPoly(GrafVerb verb, PolyHandle poly)
 }
 
 
-// ROM 0x003102fc FramePoly__FPP7Polygon
+// ROM 0x00335894 FramePoly__FPP7Polygon
 void	FramePoly(PolyHandle poly)		{ CallPoly(frame, poly); }
-// ROM 0x00310308 PaintPoly__FPP7Polygon
+// ROM 0x003358a0 PaintPoly__FPP7Polygon
 void	PaintPoly(PolyHandle poly)		{ CallPoly(paint, poly); }
-// ROM 0x00310314 ErasePoly__FPP7Polygon
+// ROM 0x003358ac ErasePoly__FPP7Polygon
 void	ErasePoly(PolyHandle poly)		{ CallPoly(erase, poly); }
-// ROM 0x00310320 InvertPoly__FPP7Polygon
+// ROM 0x003358b8 InvertPoly__FPP7Polygon
 void	InvertPoly(PolyHandle poly)		{ CallPoly(invert, poly); }
 
 
-// ROM 0x0031032c FillPoly__FPP7PolygonPP8PixelMap
+// ROM 0x003358c4 FillPoly__FPP7PolygonPP8PixelMap
 void
 FillPoly(PolyHandle poly, PatternHandle pattern)
 {

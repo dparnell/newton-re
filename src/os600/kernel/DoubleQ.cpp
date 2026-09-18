@@ -3,7 +3,7 @@
 
 	Contains:	Doubly linked queues used throughout the kernel.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	The original constructors self-allocate (`if (this == 0) this = new ...`),
 	which was the compiler's idiom, not application logic, and is not
 	reproduced.
@@ -18,7 +18,7 @@
 	TDoubleQItem
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0009d8dc __ct__12TDoubleQItemFv
+// ROM 0x0009c6dc __ct__12TDoubleQItemFv
 TDoubleQItem::TDoubleQItem()
 {
 	fNext = nil;
@@ -31,21 +31,21 @@ TDoubleQItem::TDoubleQItem()
 	TDoubleQContainer
 ------------------------------------------------------------------------------- */
 
-// ROM 0x0009dad0 __ct__17TDoubleQContainerFv
+// ROM 0x0009c8d0 __ct__17TDoubleQContainerFv
 TDoubleQContainer::TDoubleQContainer()
 {
 	Init(0);
 }
 
 
-// ROM 0x0009db08 __ct__17TDoubleQContainerFPc
+// ROM 0x0009c908 __ct__17TDoubleQContainerFPc
 TDoubleQContainer::TDoubleQContainer(ULong offsetToDoubleQItem)
 {
 	Init(offsetToDoubleQItem);
 }
 
 
-// ROM 0x0009db44 __ct__17TDoubleQContainerFPcPFPvT1_vPv
+// ROM 0x0009c944 __ct__17TDoubleQContainerFPcPFPvT1_vPv
 TDoubleQContainer::TDoubleQContainer(ULong offsetToDoubleQItem, DestructorProcPtr destructor, void* destructorInstance)
 {
 	Init(offsetToDoubleQItem);
@@ -54,7 +54,7 @@ TDoubleQContainer::TDoubleQContainer(ULong offsetToDoubleQItem, DestructorProcPt
 }
 
 
-// ROM 0x0009db90 Init__17TDoubleQContainerFPc
+// ROM 0x0009c990 Init__17TDoubleQContainerFPc
 void
 TDoubleQContainer::Init(ULong offsetToDoubleQItem)
 {
@@ -66,7 +66,7 @@ TDoubleQContainer::Init(ULong offsetToDoubleQItem)
 }
 
 
-// ROM 0x0009dbac CheckBeforeAdd__17TDoubleQContainerFPv
+// ROM 0x0009c9ac CheckBeforeAdd__17TDoubleQContainerFPv
 // A no-op in the release ROM (returns this); presumably a debug hook.
 void
 TDoubleQContainer::CheckBeforeAdd(void* /*item*/)
@@ -86,7 +86,7 @@ static inline void* ObjectOf(TDoubleQItem* item, ULong offset)
 }
 
 
-// ROM 0x0009dbb0 Add__17TDoubleQContainerFPv
+// ROM 0x0009c9b0 Add__17TDoubleQContainerFPv
 void
 TDoubleQContainer::Add(void* item)
 {
@@ -110,7 +110,7 @@ TDoubleQContainer::Add(void* item)
 }
 
 
-// ROM 0x0009dc08 AddToFront__17TDoubleQContainerFPv
+// ROM 0x0009ca08 AddToFront__17TDoubleQContainerFPv
 void
 TDoubleQContainer::AddToFront(void* item)
 {
@@ -130,7 +130,7 @@ TDoubleQContainer::AddToFront(void* item)
 }
 
 
-// ROM 0x0009d914 AddBefore__17TDoubleQContainerFPvT1
+// ROM 0x0009c714 AddBefore__17TDoubleQContainerFPvT1
 void
 TDoubleQContainer::AddBefore(void* existingItem, void* item)
 {
@@ -151,7 +151,7 @@ TDoubleQContainer::AddBefore(void* existingItem, void* item)
 }
 
 
-// ROM 0x0009d97c Remove__17TDoubleQContainerFv
+// ROM 0x0009c77c Remove__17TDoubleQContainerFv
 void*
 TDoubleQContainer::Remove()
 {
@@ -170,7 +170,7 @@ TDoubleQContainer::Remove()
 }
 
 
-// ROM 0x0009d9c4 RemoveFromQueue__17TDoubleQContainerFPv
+// ROM 0x0009c7c4 RemoveFromQueue__17TDoubleQContainerFPv
 Boolean
 TDoubleQContainer::RemoveFromQueue(void* item)
 {
@@ -210,7 +210,7 @@ TDoubleQContainer::RemoveFromQueue(void* item)
 }
 
 
-// ROM 0x0009da44 DeleteFromQueue__17TDoubleQContainerFPv
+// ROM 0x0009c844 DeleteFromQueue__17TDoubleQContainerFPv
 Boolean
 TDoubleQContainer::DeleteFromQueue(void* item)
 {
@@ -228,7 +228,7 @@ TDoubleQContainer::DeleteFromQueue(void* item)
 }
 
 
-// ROM 0x0009da84 Peek__17TDoubleQContainerFv
+// ROM 0x0009c884 Peek__17TDoubleQContainerFv
 void*
 TDoubleQContainer::Peek()
 {
@@ -238,7 +238,7 @@ TDoubleQContainer::Peek()
 }
 
 
-// ROM 0x0009da9c GetNext__17TDoubleQContainerFPv
+// ROM 0x0009c89c GetNext__17TDoubleQContainerFPv
 void*
 TDoubleQContainer::GetNext(void* item)
 {

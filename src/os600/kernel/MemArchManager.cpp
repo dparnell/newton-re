@@ -3,7 +3,7 @@
 
 	Contains:	TMemArchManager.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "MemArchManager.h"
@@ -15,7 +15,7 @@
 TMemArchManager*	gTheMemArchManager = nil;
 
 
-// ROM 0x000b03d0 __ct__15TMemArchManagerFv
+// ROM 0x000af1d8 __ct__15TMemArchManagerFv
 TMemArchManager::TMemArchManager()
 {
 	fEnvironments = nil;
@@ -24,7 +24,7 @@ TMemArchManager::TMemArchManager()
 }
 
 
-// ROM 0x000b0410 AddEnvironment__15TMemArchManagerFP12TEnvironment
+// ROM 0x000af218 AddEnvironment__15TMemArchManagerFP12TEnvironment
 // A new environment starts with the default access word.
 void
 TMemArchManager::AddEnvironment(TEnvironment* env)
@@ -35,7 +35,7 @@ TMemArchManager::AddEnvironment(TEnvironment* env)
 }
 
 
-// ROM 0x000b0478 RemoveEnvironment__15TMemArchManagerFP12TEnvironment
+// ROM 0x000af280 RemoveEnvironment__15TMemArchManagerFP12TEnvironment
 // Unlinks the environment and marks it removed, so that the last
 // DecrRefCount reports it can be deleted.
 // DEVIATION: the ROM's loop never advances to the next environment (nor
@@ -61,7 +61,7 @@ TMemArchManager::RemoveEnvironment(TEnvironment* env)
 }
 
 
-// ROM 0x000b04c0 AddDomainWithDomainNumber__15TMemArchManagerFP8TKDomainl
+// ROM 0x000af2c8 AddDomainWithDomainNumber__15TMemArchManagerFP8TKDomainl
 NewtonErr
 TMemArchManager::AddDomainWithDomainNumber(TKDomain* domain, long domainNumber)
 {
@@ -74,7 +74,7 @@ TMemArchManager::AddDomainWithDomainNumber(TKDomain* domain, long domainNumber)
 }
 
 
-// ROM 0x000b0508 AddDomain__15TMemArchManagerFP8TKDomain
+// ROM 0x000af310 AddDomain__15TMemArchManagerFP8TKDomain
 NewtonErr
 TMemArchManager::AddDomain(TKDomain* domain)
 {
@@ -87,7 +87,7 @@ TMemArchManager::AddDomain(TKDomain* domain)
 }
 
 
-// ROM 0x000b054c RemoveDomain__15TMemArchManagerFP8TKDomain
+// ROM 0x000af354 RemoveDomain__15TMemArchManagerFP8TKDomain
 // Unlinks the domain; its number is not returned to fDomainsInUse.
 void
 TMemArchManager::RemoveDomain(TKDomain* domain)
@@ -109,7 +109,7 @@ TMemArchManager::RemoveDomain(TKDomain* domain)
 }
 
 
-// ROM 0x000b05a4 DomainRangeIsFree__15TMemArchManagerFUlT1
+// ROM 0x000af3ac DomainRangeIsFree__15TMemArchManagerFUlT1
 // end is the last address of the range (TKDomain::Init passes base + size - 1).
 Boolean
 TMemArchManager::DomainRangeIsFree(VAddr base, VAddr end)

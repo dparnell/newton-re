@@ -3,7 +3,7 @@
 
 	Contains:	TTimerEngine and the alarm interrupt.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "TimerEngine.h"
@@ -15,7 +15,7 @@
 #include <stddef.h>
 
 
-// ROM 0x002536d8 SetAlarmAtomic__FR5TTime
+// ROM 0x00255620 SetAlarmAtomic__FR5TTime
 Boolean
 SetAlarmAtomic(const TTime* time)
 {
@@ -26,7 +26,7 @@ SetAlarmAtomic(const TTime* time)
 }
 
 
-// ROM 0x00253cb8 ClearAlarmAtomic__Fv
+// ROM 0x00255c04 ClearAlarmAtomic__Fv
 void
 ClearAlarmAtomic()
 {
@@ -36,7 +36,7 @@ ClearAlarmAtomic()
 }
 
 
-// ROM 0x00253e00 QueueNotify__FP13TSharedMemMsg
+// ROM 0x00255d4c QueueNotify__FP13TSharedMemMsg
 // Timeouts and delayed sends are not completed from the interrupt: the
 // message goes onto gTimerDeferred and gWantDeferred asks the scheduler
 // path (SWI 34 on the next ExitAtomic) to deal with it.
@@ -48,21 +48,21 @@ QueueNotify(void* msg)
 }
 
 
-// ROM 0x00253fa0 __ct__12TTimerEngineFv
+// ROM 0x00255eec __ct__12TTimerEngineFv
 TTimerEngine::TTimerEngine()
 	: TDoubleQContainer(offsetof(TSharedMemMsg, fTimerQItem))
 {
 }
 
 
-// ROM 0x00253fd8 Init__12TTimerEngineFv
+// ROM 0x00255f24 Init__12TTimerEngineFv
 void
 TTimerEngine::Init()
 {
 }
 
 
-// ROM 0x00253f9c Start__12TTimerEngineFv
+// ROM 0x00255ee8 Start__12TTimerEngineFv
 void
 TTimerEngine::Start()
 {
@@ -76,7 +76,7 @@ ExpiryOf(void* msg)
 }
 
 
-// ROM 0x00253d64 Alarm__12TTimerEngineFv
+// ROM 0x00255cb0 Alarm__12TTimerEngineFv
 // Fires every message whose time has come, then arms the alarm for the new
 // head; if that one is already due, goes round again.
 void
@@ -106,7 +106,7 @@ TTimerEngine::Alarm()
 }
 
 
-// ROM 0x0013eb48 TimerInterruptHandler
+// ROM 0x0013cfc0 TimerInterruptHandler
 // The alarm interrupt; the same as Alarm() on gTimerEngine, counted.
 void
 TimerInterruptHandler()
@@ -116,7 +116,7 @@ TimerInterruptHandler()
 }
 
 
-// ROM 0x00254200 Queue__12TTimerEngineFP13TSharedMemMsg
+// ROM 0x0025614c Queue__12TTimerEngineFP13TSharedMemMsg
 // Inserts in time order.  A message that would become the head is only
 // queued if the alarm can still be armed for it; otherwise it is already due,
 // the engine runs Alarm() for whatever is queued and returns false, and the
@@ -162,7 +162,7 @@ TTimerEngine::Queue(TSharedMemMsg* msg)
 }
 
 
-// ROM 0x00253fdc QueueTimer__12TTimerEngineFP13TSharedMemMsgUlPvPFPv_v
+// ROM 0x00255f28 QueueTimer__12TTimerEngineFP13TSharedMemMsgUlPvPFPv_v
 // A generic one-shot timer `delay` ticks from now; does nothing if the
 // message is already queued.
 Boolean
@@ -189,7 +189,7 @@ TTimerEngine::QueueTimer(TSharedMemMsg* msg, ULong delay, void* data, TimerNotif
 }
 
 
-// ROM 0x002540b0 QueueTimeout__12TTimerEngineFP13TSharedMemMsg
+// ROM 0x00255ffc QueueTimeout__12TTimerEngineFP13TSharedMemMsg
 Boolean
 TTimerEngine::QueueTimeout(TSharedMemMsg* msg)
 {
@@ -213,7 +213,7 @@ TTimerEngine::QueueTimeout(TSharedMemMsg* msg)
 }
 
 
-// ROM 0x0025417c QueueDelay__12TTimerEngineFP13TSharedMemMsg
+// ROM 0x002560c8 QueueDelay__12TTimerEngineFP13TSharedMemMsg
 // A delayed send: fExpiryTime is already the absolute time wanted.
 Boolean
 TTimerEngine::QueueDelay(TSharedMemMsg* msg)
@@ -234,7 +234,7 @@ TTimerEngine::QueueDelay(TSharedMemMsg* msg)
 }
 
 
-// ROM 0x00253cd4 Remove__12TTimerEngineFP13TSharedMemMsg
+// ROM 0x00255c20 Remove__12TTimerEngineFP13TSharedMemMsg
 // Takes a message out of the timer (or deferred) queue, re-arming the alarm
 // if it was the head.
 void
@@ -259,7 +259,7 @@ TTimerEngine::Remove(TSharedMemMsg* msg)
 }
 
 
-// ROM 0x0013eb6c InitTime
+// ROM 0x0013cfe4 InitTime
 void
 InitTime()
 {

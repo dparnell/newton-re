@@ -14,7 +14,7 @@
 				aeDropChild commands through the application (Application.h)
 				to the views, as the ROM does.
 
-	Reconstructed from the MP2100 D ROM; each function cites its origin.
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
 #include "RootView.h"
@@ -39,7 +39,7 @@
 #include "DragDrop.h"
 
 
-// ROM 0x001f0234 FGetView__FRC6RefVarT1
+// ROM 0x001ede1c FGetView__FRC6RefVarT1
 // GetView(name): the context of the view the name means (GetView).
 static Ref
 FGetView(RefArg rcvr, RefArg name)
@@ -49,7 +49,7 @@ FGetView(RefArg rcvr, RefArg name)
 }
 
 
-// ROM 0x001b7cf4 FGetRoot
+// ROM 0x001b581c FGetRoot
 static Ref
 FGetRoot(RefArg /*rcvr*/)
 {
@@ -57,7 +57,7 @@ FGetRoot(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f19ac FGetFlags__FRC6RefVarT1
+// ROM 0x001ef594 FGetFlags__FRC6RefVarT1
 // GetViewFlags(view): the view's flags word (the private bits too), 0 for
 // no view.
 static Ref
@@ -68,7 +68,7 @@ FGetFlags(RefArg rcvr, RefArg context)
 }
 
 
-// ROM 0x0025c9e4 FBuildContext
+// ROM 0x0025e91c FBuildContext
 // BuildContext(template): the context a view would run in.
 static Ref
 FBuildContext(RefArg rcvr, RefArg templ)
@@ -78,7 +78,7 @@ FBuildContext(RefArg rcvr, RefArg templ)
 }
 
 
-// ROM 0x001f1fa0 FAddView__FRC6RefVarN21
+// ROM 0x001efb88 FAddView__FRC6RefVarN21
 // AddView(parent, template): the template's view made under the parent
 // and the template added to the parent's viewChildren; ==> the context.
 static Ref
@@ -102,7 +102,7 @@ FAddView(RefArg rcvr, RefArg parent, RefArg templ)
 }
 
 
-// ROM 0x001f1fac FAddStepView__FRC6RefVarN21
+// ROM 0x001efb94 FAddStepView__FRC6RefVarN21
 static Ref
 FAddStepView(RefArg rcvr, RefArg parent, RefArg templ)
 {
@@ -124,7 +124,7 @@ FAddStepView(RefArg rcvr, RefArg parent, RefArg templ)
 }
 
 
-// ROM 0x001f1fb8 CommonRemoveView__FRC6RefVarN31
+// ROM 0x001efba0 CommonRemoveView__FRC6RefVarN31
 // RemoveView/RemoveStepView(parent, child): the child's view (found by its
 // context, or as the child whose template is the frame) removed and its
 // template taken out of the parent's array of the name (unless the array
@@ -168,7 +168,7 @@ CommonRemoveView(RefArg rcvr, RefArg parent, RefArg child, RefArg arrayName)
 }
 
 
-// ROM 0x001f2160 FRemoveView__FRC6RefVarN21
+// ROM 0x001efd48 FRemoveView__FRC6RefVarN21
 static Ref
 FRemoveView(RefArg rcvr, RefArg parent, RefArg child)
 {
@@ -176,7 +176,7 @@ FRemoveView(RefArg rcvr, RefArg parent, RefArg child)
 }
 
 
-// ROM 0x001f216c FRemoveStepView__FRC6RefVarN21
+// ROM 0x001efd54 FRemoveStepView__FRC6RefVarN21
 static Ref
 FRemoveStepView(RefArg rcvr, RefArg parent, RefArg child)
 {
@@ -184,7 +184,7 @@ FRemoveStepView(RefArg rcvr, RefArg parent, RefArg child)
 }
 
 
-// ROM 0x001f1934 FSetValue__FRC6RefVarN31
+// ROM 0x001ef51c FSetValue__FRC6RefVarN31
 // SetValue(view, slot, value): through the view when there is one (the
 // view synced, Changed sent), else the slot set in the frame.
 static Ref
@@ -199,7 +199,7 @@ FSetValue(RefArg rcvr, RefArg context, RefArg slot, RefArg value)
 }
 
 
-// ROM 0x001f1890 FGetValue__FRC6RefVarN31
+// ROM 0x001ef478 FGetValue__FRC6RefVarN31
 // GetValue(view, slot, type): through the view when there is one, else
 // the slot through the frame's proto chain.
 static Ref
@@ -214,7 +214,7 @@ FGetValue(RefArg rcvr, RefArg context, RefArg slot, RefArg type)
 }
 
 
-// ROM 0x001f1bfc FRelBounds__FRC6RefVarN41
+// ROM 0x001ef7e4 FRelBounds__FRC6RefVarN41
 // RelBounds(left, top, width, height): a bounds frame.
 static Ref
 FRelBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg width, RefArg height)
@@ -225,7 +225,7 @@ FRelBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg width, RefArg height
 }
 
 
-// ROM 0x001f1cd0 FSetBounds__FRC6RefVarN41
+// ROM 0x001ef8b8 FSetBounds__FRC6RefVarN41
 // SetBounds(left, top, right, bottom): a bounds frame.
 static Ref
 FSetBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
@@ -236,7 +236,7 @@ FSetBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom
 }
 
 
-// ROM 0x001f2178 FRefreshViews__FRC6RefVar
+// ROM 0x001efd60 FRefreshViews__FRC6RefVar
 // RefreshViews(): the update regions redrawn.
 static Ref
 FRefreshViews(RefArg /*rcvr*/)
@@ -250,7 +250,7 @@ FRefreshViews(RefArg /*rcvr*/)
 	T h e   v i e w   m e t h o d s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001f3c10 FDirtyX
+// ROM 0x001f17f8 FDirtyX
 static Ref
 FDirtyX(RefArg rcvr)
 {
@@ -261,7 +261,7 @@ FDirtyX(RefArg rcvr)
 }
 
 
-// ROM 0x001ec828 FDirtyBoxX
+// ROM 0x001ea410 FDirtyBoxX
 // :DirtyBox(bounds): the part of the view in the bounds frame.
 static Ref
 FDirtyBoxX(RefArg rcvr, RefArg bounds)
@@ -274,7 +274,7 @@ FDirtyBoxX(RefArg rcvr, RefArg bounds)
 }
 
 
-// ROM 0x001ec99c FShowX
+// ROM 0x001ea584 FShowX
 // :Show(): aeShow dispatched to the view through the application.
 static Ref
 FShowX(RefArg rcvr)
@@ -291,7 +291,7 @@ FShowX(RefArg rcvr)
 }
 
 
-// ROM 0x001eca14 FHideX
+// ROM 0x001ea5fc FHideX
 // :Hide(): aeHide dispatched to the view (NOT YET RECONSTRUCTED: the
 // modal-safe views list under a modal dialog, RemoveModalSafeView).
 static Ref
@@ -309,7 +309,7 @@ FHideX(RefArg rcvr)
 }
 
 
-// ROM 0x001f3a50 RealOpenX__FRC6RefVarUc
+// ROM 0x001f1638 RealOpenX__FRC6RefVarUc
 // The view opened: aeAddChild dispatched to its _parent's view (with
 // the template as the frame parameter) when there is none, aeShow to it
 // when it is hidden - the parameter kNoModalCheck for a modal one; ==>
@@ -337,7 +337,7 @@ RealOpenX(RefArg context, Boolean modal)
 }
 
 
-// ROM 0x001b7cbc FSetPopupX
+// ROM 0x001b57e4 FSetPopupX
 // :SetPopup(): the view made the root's popup (a picker: closed by a tap
 // elsewhere, NOT YET).
 static Ref
@@ -352,7 +352,7 @@ FSetPopupX(RefArg rcvr)
 
 static Ref FOpenX(RefArg rcvr);		// (defined below)
 
-// ROM 0x001f2a3c FDoPopup__FRC6RefVarN41
+// ROM 0x001f0624 FDoPopup__FRC6RefVarN41
 // :DoPopup(pickItems, x, y, callbackContext): a popup menu (the ROM's
 // canonicalPopup, a picker) opened over the items at (x, y).  When x is a
 // bounds frame it is used as the popup's box (relative to the receiver
@@ -423,7 +423,7 @@ FDoPopup(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackConte
 	T h e   k e y   v i e w
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001f0288 FSetKeyView__FRC6RefVarN21
+// ROM 0x001ede70 FSetKeyView__FRC6RefVarN21
 // SetKeyView(view, offsetOrInfo): the view (a name from the context; nil
 // clears the key view) made the key view with a paragraph caret info of
 // the offset (nil: 0) and no length, or with the caret info frame given.
@@ -446,7 +446,7 @@ FSetKeyView(RefArg rcvr, RefArg name, RefArg offsetOrInfo)
 }
 
 
-// ROM 0x001f039c FGetKeyView
+// ROM 0x001edf84 FGetKeyView
 static Ref
 FGetKeyView(RefArg /*rcvr*/)
 {
@@ -454,7 +454,7 @@ FGetKeyView(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f03c0 FNextKeyView
+// ROM 0x001edfa8 FNextKeyView
 // NextKeyView(view, direction, kind): the context of the view that follows
 // (direction 1) or precedes (-1) the given view in the tab order of the
 // kind; nil when there is none.
@@ -469,7 +469,7 @@ FNextKeyView(RefArg /*rcvr*/, RefArg viewRef, RefArg direction, RefArg kind)
 }
 
 
-// ROM 0x001f0444 FGetCaretBox
+// ROM 0x001ee02c FGetCaretBox
 // The caret's rectangle as a bounds frame with the key view and its
 // offset (-1 for a selection); nil when no caret shows.
 static Ref
@@ -487,7 +487,7 @@ FGetCaretBox(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f12ac FGetCaretInfo
+// ROM 0x001eee94 FGetCaretInfo
 // {view: the key view's context, info: its selection}; nil for none.
 static Ref
 FGetCaretInfo(RefArg /*rcvr*/)
@@ -502,7 +502,7 @@ FGetCaretInfo(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f0500 FSetRemoteWriting
+// ROM 0x001ee0e8 FSetRemoteWriting
 static Ref
 FSetRemoteWriting(RefArg /*rcvr*/, RefArg on)
 {
@@ -511,7 +511,7 @@ FSetRemoteWriting(RefArg /*rcvr*/, RefArg on)
 }
 
 
-// ROM 0x001f0534 FGetRemoteWriting
+// ROM 0x001ee11c FGetRemoteWriting
 static Ref
 FGetRemoteWriting(RefArg /*rcvr*/)
 {
@@ -519,7 +519,7 @@ FGetRemoteWriting(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f0560 FKeyboardConnected
+// ROM 0x001ee148 FKeyboardConnected
 static Ref
 FKeyboardConnected(RefArg /*rcvr*/)
 {
@@ -527,7 +527,7 @@ FKeyboardConnected(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f058c FCommandKeyboardConnected
+// ROM 0x001ee174 FCommandKeyboardConnected
 static Ref
 FCommandKeyboardConnected(RefArg /*rcvr*/)
 {
@@ -535,7 +535,7 @@ FCommandKeyboardConnected(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001b6830 FRestoreKeyView
+// ROM 0x001b4358 FRestoreKeyView
 // RestoreKeyView(view): the newest stacked key view within it made the key view again
 static Ref
 FRestoreKeyView(RefArg /*rcvr*/, RefArg context)
@@ -545,7 +545,7 @@ FRestoreKeyView(RefArg /*rcvr*/, RefArg context)
 }
 
 
-// ROM 0x001b66c4 FGetSelectionStack
+// ROM 0x001b41ec FGetSelectionStack
 static Ref
 FGetSelectionStack(RefArg /*rcvr*/)
 {
@@ -553,7 +553,7 @@ FGetSelectionStack(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f05b8 FRegisterOpenKeyboard
+// ROM 0x001ee1a0 FRegisterOpenKeyboard
 // RegisterOpenKeyboard(flags): the context registered as an on-screen keyboard
 static Ref
 FRegisterOpenKeyboard(RefArg rcvr, RefArg flags)
@@ -563,7 +563,7 @@ FRegisterOpenKeyboard(RefArg rcvr, RefArg flags)
 }
 
 
-// ROM 0x001f0600 FUnregisterOpenKeyboard
+// ROM 0x001ee1e8 FUnregisterOpenKeyboard
 static Ref
 FUnregisterOpenKeyboard(RefArg rcvr)
 {
@@ -571,7 +571,7 @@ FUnregisterOpenKeyboard(RefArg rcvr)
 }
 
 
-// ROM 0x001f1348 FViewContainsCaretView
+// ROM 0x001eef30 FViewContainsCaretView
 static Ref
 FViewContainsCaretView(RefArg /*rcvr*/, RefArg context)
 {
@@ -582,7 +582,7 @@ FViewContainsCaretView(RefArg /*rcvr*/, RefArg context)
 }
 
 
-// ROM 0x001ecaa8 FTrackHiliteX
+// ROM 0x001ea690 FTrackHiliteX
 // :TrackHilite(unit): the unit's stroke's ink taken off; the view hilited
 // while the pen is inside it (within 10 pixels) and un-hilited when it
 // leaves, a tick at a time, until the stroke ends; ==> whether the pen
@@ -637,7 +637,7 @@ FTrackHiliteX(RefArg rcvr, RefArg unit)
 }
 
 
-// ROM 0x001ecd9c FTrackButtonX
+// ROM 0x001ea984 FTrackButtonX
 // :TrackButton(unit): TrackHilite, then the buttonClickScript when the
 // pen ended inside; the view is un-hilited after, even when a script
 // throws.  ==> TrackHilite's answer.
@@ -662,7 +662,7 @@ FTrackButtonX(RefArg rcvr, RefArg unit)
 }
 
 
-// ROM 0x001ece78 FHiliteX
+// ROM 0x001eaa60 FHiliteX
 // :Hilite(on): the view selected (hilited) or not.
 static Ref
 FHiliteX(RefArg rcvr, RefArg on)
@@ -674,7 +674,7 @@ FHiliteX(RefArg rcvr, RefArg on)
 }
 
 
-// ROM 0x001eceb4 FHiliteUniqueX
+// ROM 0x001eaa9c FHiliteUniqueX
 // :HiliteUnique(on): the view selected (hilited) or not, its siblings
 // un-hilited first.
 static Ref
@@ -687,7 +687,7 @@ FHiliteUniqueX(RefArg rcvr, RefArg on)
 }
 
 
-// ROM 0x001ee9e8 FSetupIdleX
+// ROM 0x001ec5d0 FSetupIdleX
 // :SetupIdle(milliseconds): the view's idler set (0 removes it) - its
 // viewIdleScript runs when the time comes, its answer the next delay.
 static Ref
@@ -718,7 +718,7 @@ FIdleViews(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001f3b54 FOpenX
+// ROM 0x001f173c FOpenX
 static Ref
 FOpenX(RefArg rcvr)
 {
@@ -726,7 +726,7 @@ FOpenX(RefArg rcvr)
 }
 
 
-// ROM 0x001f3b70 FCloseX
+// ROM 0x001f1758 FCloseX
 // :Close(): aeDropChild dispatched to the parent - the view hidden and
 // removed; a view still being set up is marked for deletion instead
 // (the Constructor throws -8501).
@@ -752,7 +752,7 @@ FCloseX(RefArg rcvr)
 }
 
 
-// ROM 0x001ec87c FToggleX
+// ROM 0x001ea464 FToggleX
 // :_Toggle(): the view closed when it exists, else opened under its
 // _parent's view.
 static Ref
@@ -783,7 +783,7 @@ FToggleX(RefArg rcvr)
 }
 
 
-// ROM 0x001f3a40 FParentX
+// ROM 0x001f1628 FParentX
 // :Parent(): the _parent frame.
 static Ref
 FParentX(RefArg rcvr)
@@ -794,7 +794,7 @@ FParentX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed4b4 FChildViewFramesX
+// ROM 0x001eb09c FChildViewFramesX
 static Ref
 FChildViewFramesX(RefArg rcvr)
 {
@@ -802,7 +802,7 @@ FChildViewFramesX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed4cc FSyncViewX
+// ROM 0x001eb0b4 FSyncViewX
 static Ref
 FSyncViewX(RefArg rcvr)
 {
@@ -811,7 +811,7 @@ FSyncViewX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed2a4 FSyncChildrenX
+// ROM 0x001eae8c FSyncChildrenX
 // :SyncChildren(): the children brought up to date with viewChildren
 // (a view still being set up: NOT YET: the ROM delays it).
 static Ref
@@ -837,7 +837,7 @@ FSyncChildrenX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed198 FRedoChildrenX
+// ROM 0x001ead80 FRedoChildrenX
 // :RedoChildren(): the children removed (a view still being set up: NOT
 // YET: the ROM delays it; a Throw clears the deletion marks).
 static Ref
@@ -863,7 +863,7 @@ FRedoChildrenX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed3ec FMoveBehindX
+// ROM 0x001eafd4 FMoveBehindX
 // :MoveBehind(view): behind the other view (nil: to the front; 'first?..
 // the ROM's other symbol: to the back as a floater... NOT YET: taken as
 // to the front).
@@ -895,7 +895,7 @@ FMoveBehindX(RefArg rcvr, RefArg behind)
 }
 
 
-// ROM 0x001ed4e8 CommonBox__FRC6RefVarP5TRect
+// ROM 0x001eb0d0 CommonBox__FRC6RefVarP5TRect
 // The view's bounds: as set, or, while it is being set up, justified
 // from its template.
 static Boolean
@@ -914,7 +914,7 @@ CommonBox(RefArg rcvr, Rect* bounds)
 }
 
 
-// ROM 0x001ed580 FGlobalBoxX
+// ROM 0x001eb168 FGlobalBoxX
 static Ref
 FGlobalBoxX(RefArg rcvr)
 {
@@ -925,7 +925,7 @@ FGlobalBoxX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed5b0 FLocalBoxX
+// ROM 0x001eb198 FLocalBoxX
 // :LocalBox(): the bounds with the top left at (0, 0).
 static Ref
 FLocalBoxX(RefArg rcvr)
@@ -938,7 +938,7 @@ FLocalBoxX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed67c FGlobalOuterBoxX
+// ROM 0x001eb264 FGlobalOuterBoxX
 static Ref
 FGlobalOuterBoxX(RefArg rcvr)
 {
@@ -948,7 +948,7 @@ FGlobalOuterBoxX(RefArg rcvr)
 }
 
 
-// ROM 0x001ed6ac FVisibleBox
+// ROM 0x001eb294 FVisibleBox
 // :VisibleBox(): the bounds cut to the port's visible region.
 static Ref
 FVisibleBox(RefArg rcvr)
@@ -962,7 +962,7 @@ FVisibleBox(RefArg rcvr)
 }
 
 
-// ROM 0x001ec7e4 FGetDrawBoxX
+// ROM 0x001ea3cc FGetDrawBoxX
 // :GetDrawBox(): the port's visible region's bounds - what a draw script
 // is asked to draw.
 static Ref
@@ -974,7 +974,7 @@ FGetDrawBoxX(RefArg /*rcvr*/)
 }
 
 
-// ROM 0x001ee950 FSetOriginX
+// ROM 0x001ec538 FSetOriginX
 // :SetOrigin(x, y): the contents scrolled to the origin.
 static Ref
 FSetOriginX(RefArg rcvr, RefArg x, RefArg y)
@@ -990,7 +990,7 @@ FSetOriginX(RefArg rcvr, RefArg x, RefArg y)
 	E f f e c t s   a n d   d r a g g i n g
 ------------------------------------------------------------------------------*/
 
-// ROM 0x001ecef0 FDragX
+// ROM 0x001eaad8 FDragX
 // :Drag(unit, bounds): the view dragged with the unit's stroke, kept
 // within the bounds frame (nil: the application area).  ==> true.
 static Ref
@@ -1009,7 +1009,7 @@ FDragX(RefArg rcvr, RefArg unit, RefArg bounds)
 }
 
 
-// ROM 0x001f2f74 FDragAndDrop
+// ROM 0x001f0b5c FDragAndDrop
 // :DragAndDrop(unit, bounds, limit, copy, dragItems): the view's data
 // (the dragItems array) dragged with the unit's stroke and dropped on the
 // view under the pen at the end.  ==> whether it was dropped.
@@ -1030,7 +1030,7 @@ FDragAndDrop(RefArg rcvr, RefArg unit, RefArg bounds, RefArg limit, RefArg copy,
 }
 
 
-// ROM 0x001ee22c FDeleteX
+// ROM 0x001ebe14 FDeleteX
 // :Delete(message, args): the view crumpled into the trash - the trash
 // effect set up, the message sent to the view (which removes it), the
 // effect run.  ==> nil.
@@ -1049,7 +1049,7 @@ FDeleteX(RefArg rcvr, RefArg message, RefArg args)
 }
 
 
-// ROM 0x001ee2cc FEffectX
+// ROM 0x001ebeb4 FEffectX
 // :Effect(effect, offScreen, sound, message, args): a plain effect of the
 // effect word (nil: the viewEffect) set up as a show (offScreen non-nil:
 // the image drawn from the view) or a hide, the message sent to the view
@@ -1070,7 +1070,7 @@ FEffectX(RefArg rcvr, RefArg effect, RefArg offScreen, RefArg sound, RefArg mess
 }
 
 
-// ROM 0x001ee3b0 FSlideEffectX
+// ROM 0x001ebf98 FSlideEffectX
 // :SlideEffect(distance, direction, sound, message, args): the view's
 // outer bounds slid (TAnimate::SetupSlideEffect), the message sent, the
 // effect run.  ==> nil.
@@ -1092,7 +1092,7 @@ FSlideEffectX(RefArg rcvr, RefArg distance, RefArg direction, RefArg sound, RefA
 }
 
 
-// ROM 0x001ee4a4 FRevealEffectX
+// ROM 0x001ec08c FRevealEffectX
 // :RevealEffect(distance, bounds, sound, message, args): the bounds frame
 // (local to the view) slid the distance with new contents coming in from
 // no direction (0), the message sent, the effect run.  ==> nil.
@@ -1117,7 +1117,7 @@ FRevealEffectX(RefArg rcvr, RefArg distance, RefArg bounds, RefArg sound, RefArg
 }
 
 
-// ROM 0x001ee620 FDoScrubEffect__FRC6RefVarT1
+// ROM 0x001ec208 FDoScrubEffect__FRC6RefVarT1
 // DoScrubEffect(view, unit): the poof over the unit's bounds, its ink
 // left; ==> nil.
 static Ref
@@ -1136,9 +1136,9 @@ FDoScrubEffect(RefArg rcvr, RefArg unit)
 
 
 // the ROM's NewtonScript view functions, as source
-// ROM 0x00438ae9 (object) Visible
-// ROM 0x004724dd (object) Rviewroot.Open (DEVIATION: the screen rotation prompt for a small display is not asked)
-// ROM 0x00472439 (object) Rviewroot.Toggle
+// ROM 0x0041a751 (object) Visible
+// ROM 0x00448dc5 (object) Rviewroot.Open (DEVIATION: the screen rotation prompt for a small display is not asked)
+// ROM 0x00448c65 (object) Rviewroot.Toggle
 static const ScriptFunctionEntry gViewScriptFunctions[] = {
 	{ "Visible", "func(view) band(GetViewFlags(view), 1) <> 0" },
 	{ nil, nil }
@@ -1147,7 +1147,7 @@ static const char* const kOpenSource = "func() :_Open()";
 static const char* const kToggleSource = "func() if not viewCObject or not Visible(self) then :Open() else :close()";
 
 
-// ROM 0x001ef3dc TableLookup
+// ROM 0x001ecfc4 TableLookup
 // An association list looked up: the array is key, value, key, value, ...
 // and one last slot, the answer when no key matches.  The keys are
 // compared with EQ, so symbols and integers match and strings do not.
@@ -1170,7 +1170,7 @@ FTableLookup(RefArg /*rcvr*/, RefArg table, RefArg key)
 }
 
 
-// ROM 0x001f2a20 FModalState
+// ROM 0x001f0608 FModalState
 // Whether a modal dialog is up: the ROM counts them in gModalCount
 // (0x0c102618), which the modal dialog code raises and lowers.
 //
