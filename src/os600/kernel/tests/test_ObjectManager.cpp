@@ -16,6 +16,7 @@
 #include "KernelGlobals.h"
 #include "OSErrors.h"
 
+#include <new>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -30,9 +31,23 @@ static TObjectManager manager;
 static TMonitor monitor;
 static TDoubleQContainer copyTasks(offsetof(TTask, fCopyQItem));
 
+// The ROM's ObjectAlloc hands out memory that has been cleared, and a
+// kernel object's constructor clears only the fields the ROM's does - a
+// TSemaphoreGroup's semaphore array and its count are not among them.  An
+// object made by hand here has to start cleared for the same reason, or
+// its destructor frees whatever the host's heap happened to leave behind:
+// the test segfaulted on about one run in fifteen, always while destroying
+// the semaphore group.
+template <class T> static T* NewCleared()
+{
+	void* memory = ::operator new(sizeof(T));
+	memset(memory, 0, sizeof(T));
+	return new (memory) T;
+}
+
 static TTask* MakeTask(ULong priority, TObjectId owner = 1)
 {
-	TTask* t = new TTask;
+	TTask* t = NewCleared<TTask>();
 	t->fPriority = priority;
 	table.Add(t, kTaskType, owner);
 	return t;
@@ -124,10 +139,10 @@ int main()
 	EXPECT(Request(owner, kObjectMgr_GetContent, m) == kError_Bad_Parameters);
 
 	// --- domains and environments -----------------------------------------------------
-	TKDomain* domain = new TKDomain;
+	TKDomain* domain = NewCleared<TKDomain>();
 	table.Add(domain, kDomainType, owner->fId);
 	memArch.AddDomain(domain);
-	TEnvironment* env = new TEnvironment;
+	TEnvironment* env = NewCleared<TEnvironment>();
 	table.Add(env, kEnvironmentType, owner->fId);
 	env->Init(nil);
 	m = Msg(kObjectMessage_AddDomainSize, env->fId);
@@ -151,7 +166,7 @@ int main()
 	EXPECT(Request(owner, kObjectMgr_SetFaultMonitor, m) == kError_Bad_Parameters);
 
 	// --- destroy: owners only; the scavenger picks the destructor --------------------------
-	TPort* port = new TPort;
+	TPort* port = NewCleared<TPort>();
 	TObjectId portId = table.Add(port, kPortType, owner->fId);
 	m = Msg(kObjectMessage_HeaderSize, portId);
 	EXPECT(Request(other, kObjectMgr_Destroy, m) == kError_Object_Not_Owned_By_Task && table.Get(portId) != nil);
@@ -166,16 +181,16 @@ int main()
 	worker->fInsideMonitorId = monitor.fId;
 	EXPECT(ObjectScavenger(worker, 0) == nil && (worker->fState & kTaskState_KillPending));
 	// a busy monitor is suspended and left for later; an idle one goes
-	TMonitor* busy = new TMonitor;
+	TMonitor* busy = NewCleared<TMonitor>();
 	table.Add(busy, kMonitorType, owner->fId);
 	busy->fCaller = worker;
 	EXPECT(ObjectScavenger(busy, 0) == nil && busy->fSuspended == kMonitor_Suspended);
 	busy->fCaller = nil;
 	EXPECT(ObjectScavenger(busy, 0) == (ObjectDestructorProcPtr) DeleteMonitor);
-	TPort* port2 = new TPort;
+	TPort* port2 = NewCleared<TPort>();
 	table.Add(port2, kPortType, owner->fId);
 	EXPECT(ObjectScavenger(port2, 0) == (ObjectDestructorProcPtr) DeletePort);
-	TSemaphoreGroup* group = new TSemaphoreGroup;
+	TSemaphoreGroup* group = NewCleared<TSemaphoreGroup>();
 	table.Add(group, kSemGroupType, owner->fId);
 	EXPECT(ObjectScavenger(group, 0) == (ObjectDestructorProcPtr) DeleteSemGroup);
 
@@ -191,7 +206,7 @@ int main()
 
 	// --- a destroyed task's leftovers are scavenged at the end of the request ------------------
 	gTaskDestroyed = true;
-	TPort* orphan = new TPort;
+	TPort* orphan = NewCleared<TPort>();
 	TObjectId orphanId = table.Add(orphan, kPortType, 0x9990 | kTaskType);	// owner does not exist
 	m = Msg(kObjectMessage_GetRegisterSize, worker->fId);
 	EXPECT(Request(owner, kObjectMgr_GetRegister, m) == noErr);
