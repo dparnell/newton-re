@@ -28,6 +28,7 @@
 #include "Words.h"
 #include "RootView.h"
 #include "StrokeCentral.h"
+#include "Areas.h"
 #include "Interpreter.h"
 #include "NewtonExceptions.h"
 
@@ -371,6 +372,29 @@ FFlushStrokes(RefArg /*rcvr*/)
 	return MAKEBOOLEAN(gStrokeWorld.FlushStrokes());
 }
 
+// ROM 0x0019d1a0 FPurgeAreaCache
+// PurgeAreaCache(): the recogniser's cache of the areas it built for the
+// views emptied, so that the next stroke builds them again - what a
+// script calls when it has changed something they were built from.
+static Ref
+FPurgeAreaCache(RefArg /*rcvr*/)
+{
+	PurgeAreaCache();
+	return NILREF;
+}
+
+// ROM 0x0019d1b8 FRecSettingsChanged
+// RecSettingsChanged(): what a script calls when it has changed the
+// recognition settings - the areas built from them are thrown away, and
+// the caret is taken away if the view it is in no longer wants one.
+static Ref
+FRecSettingsChanged(RefArg /*rcvr*/)
+{
+	PurgeAreaCache();
+	gRootView->CheckForCaretRemoval();
+	return NILREF;
+}
+
 void
 RegisterUnitNatives(void)
 {
@@ -397,4 +421,6 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FBlockStrokes", (void*) FBlockStrokes, 0);
 	RegisterNativeFunction("FUnblockStrokes", (void*) FUnblockStrokes, 0);
 	RegisterNativeFunction("FFlushStrokes", (void*) FFlushStrokes, 0);
+	RegisterNativeFunction("FPurgeAreaCache", (void*) FPurgeAreaCache, 0);
+	RegisterNativeFunction("FRecSettingsChanged", (void*) FRecSettingsChanged, 0);
 }

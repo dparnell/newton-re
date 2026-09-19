@@ -326,3 +326,25 @@ TTypeAssoc::GetAssoc(ULong index)
 void
 TTypeAssoc::Dump(TMsg* /*msg*/)
 { }
+
+// ROM 0x0c1008a0 gAreaCache
+TArray*	gAreaCache = nil;
+
+
+// ROM 0x0003485c PurgeAreaCache__Fv
+// Every area in the cache let go, then the array emptied and its spare
+// slots given back.  A script asks for this when it has changed something
+// the areas were built from, so that they are built again.
+void
+PurgeAreaCache(void)
+{
+	if (gAreaCache == nil)
+		return;		// (NOT YET RECONSTRUCTED: nothing builds the cache, so it is always this)
+	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
+	{
+		TRecArea** entry = (TRecArea**) gAreaCache->GetEntry(i);
+		(*entry)->Dispose();
+	}
+	gAreaCache->Clear();
+	gAreaCache->Compact();
+}

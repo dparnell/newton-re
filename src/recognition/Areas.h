@@ -103,4 +103,13 @@ public:
 	TRecArea*			GetMergedArea(void);					// ROM 0x0021c6dc GetMergedArea__9TAreaListFv - the last one
 };
 
+// The areas built for the views the pen has been over, kept so that the
+// next stroke in the same view does not have to build them again.
+//
+// NOT YET RECONSTRUCTED: everything that fills it (InitAreas,
+// GetAreasHit); with nothing in it there is nothing to purge either.
+extern TArray*	gAreaCache;								// ROM 0x0c1008a0 gAreaCache
+
+void	PurgeAreaCache(void);							// ROM 0x0003485c PurgeAreaCache__Fv - every area in it let go, the array emptied and shrunk
+
 #endif	/* __AREAS_H */
