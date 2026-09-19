@@ -42,8 +42,22 @@ FGetCardInfo(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x0030c980 FCheckCardBattery
+// CheckCardBattery(): every socket asked how its card's battery is
+// doing - a 0x68 to the card server for each of gNumberOfHWSockets.
+// ==> nil either way.
+//
+// NOT YET RECONSTRUCTED: the card server.  A machine with no sockets
+// asks nobody, which is what the ROM does too and is what this answers.
+Ref
+FCheckCardBattery(RefArg /*rcvr*/)
+{
+	return NILREF;
+}
+
 void
 RegisterCardNatives(void)
 {
 	RegisterNativeFunction("FGetCardInfo", (void*) FGetCardInfo, 0);
+	RegisterNativeFunction("FCheckCardBattery", (void*) FCheckCardBattery, 0);
 }

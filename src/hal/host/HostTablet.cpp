@@ -88,9 +88,31 @@ HostTabletPenUp(ULong time)
 }
 
 
+// The queue is the wait hook's, and the wait hook only runs when there
+// is no inker task - a task's Wait sleeps in the kernel, so nothing would
+// ever feed it.  With the inker running, a queued record therefore goes
+// straight into the tablet buffer, where the inker reads it, which is
+// also what the window does with a real pen.  Without that, a script's
+// pen would never reach the ROM's own tracking loops: they read the
+// stroke over and over without waiting, and would spin for ever.
+static Boolean				gInkerRunning = false;
+
+
+static Boolean
+FeedDirectly(void)
+{
+	return gInkerRunning;
+}
+
+
 void
 HostTabletQueuePenDown(long x, long y, ULong time)
 {
+	if (FeedDirectly())
+	{
+		HostTabletPenDown(x, y, time);
+		return;
+	}
 	Enqueue(kTabletPenDown, time);
 	Enqueue(HostTabletSample(x, y, 3), 0);
 }
@@ -99,6 +121,11 @@ HostTabletQueuePenDown(long x, long y, ULong time)
 void
 HostTabletQueuePenMove(long x, long y, ULong pressure)
 {
+	if (FeedDirectly())
+	{
+		HostTabletPenMove(x, y, pressure);
+		return;
+	}
 	Enqueue(HostTabletSample(x, y, pressure), 0);
 }
 
@@ -106,6 +133,11 @@ HostTabletQueuePenMove(long x, long y, ULong pressure)
 void
 HostTabletQueuePenUp(ULong time)
 {
+	if (FeedDirectly())
+	{
+		HostTabletPenUp(time);
+		return;
+	}
 	Enqueue(kTabletPenUp, time);
 }
 
@@ -159,7 +191,6 @@ HostTabletWait(ULong ticks)
 ------------------------------------------------------------------------------*/
 
 static std::atomic<bool>	gInkerStop(false);
-static Boolean				gInkerRunning = false;
 static TUPort*				gInkerNewtPort = nil;
 
 // the task: every tick the queued records (a test's) and the buffer read

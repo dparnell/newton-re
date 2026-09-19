@@ -23,6 +23,7 @@
 
 
 Ref		FGetCardInfo(RefArg rcvr);			// ROM 0x00053ccc FGetCardInfo
+Ref		FCheckCardBattery(RefArg rcvr);		// ROM 0x0030c980 FCheckCardBattery
 
 // the card functions bound to the ROM's native function objects
 void	RegisterCardNatives(void);
