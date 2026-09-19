@@ -1993,6 +1993,17 @@ TestClicks()
 	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 2 && ISNIL(Eval("ctxC.clicks[1][0]")) && NOTNIL(Eval("ctxC.clicks[1][1]")) && NOTNIL(Eval("ctxC.clicks[1][3]")));
 	EXPECT(RINT(Eval("Length(ctxC.clicks[1][2])")) == 10 && RINT(Eval("ctxC.clicks[1][2][6]")) == 150 && RINT(Eval("ctxC.clicks[1][2][9]")) == 65);
 	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && (v->fFlags & vSelected) != 0 && HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil);
+	// RangeDistance: 0 when one range holds the other, 1 when they only
+	// overlap, the gap when they are apart
+	EXPECT(RangeDistance(10, 20, 12, 18) == 0);		// b inside a
+	EXPECT(RangeDistance(12, 18, 10, 20) == 0);		// a inside b
+	EXPECT(RangeDistance(10, 20, 10, 20) == 0);		// the same range
+	EXPECT(RangeDistance(10, 20, 15, 25) == 1);		// b starts inside a
+	EXPECT(RangeDistance(15, 25, 10, 20) == 1);		// a starts inside b
+	EXPECT(RangeDistance(10, 20, 20, 30) == 1);		// touching counts as overlapping
+	EXPECT(RangeDistance(10, 20, 26, 30) == 6);		// b is six past a
+	EXPECT(RangeDistance(26, 30, 10, 20) == 6);		// and the other way round
+
 	// FlushStrokes: the strokes waiting in the queue thrown away.  The pen
 	// is still down when the flush starts, and the wait the loop takes
 	// between turns is what lets the rest of the stroke through - here the

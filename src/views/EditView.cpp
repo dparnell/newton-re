@@ -1155,3 +1155,26 @@ TEditView::JamText(UniChar* text, ULong length)
 	fCaretRect.top = kNoBounds;
 	fCaretRect.bottom = kNoBounds;
 }
+
+// ROM 0x000a2670 RangeDistance__FlN31
+// How far apart two ranges are.  One range wholly inside the other is 0
+// - they are as together as they can be - and ranges that merely overlap
+// are 1; anything else is the gap between them.  The editor asks this of
+// two views' tops and bottoms to decide whether they are on the same
+// line, and of their lefts and rights for the same column.
+long
+RangeDistance(long aLow, long aHigh, long bLow, long bHigh)
+{
+	if (aLow <= bLow && aHigh >= bHigh)
+		return 0;					// b inside a
+	if (bLow <= aLow && bHigh >= aHigh)
+		return 0;					// a inside b
+	if (aLow <= bLow && bLow <= aHigh)
+		return 1;					// b starts inside a
+	if (bLow <= aLow && aLow <= bHigh)
+		return 1;					// a starts inside b
+	long gap = bLow - aHigh;		// b is after a
+	if (gap <= 0)
+		gap = aLow - bHigh;			// no: a is after b
+	return gap;
+}

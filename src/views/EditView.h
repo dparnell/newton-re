@@ -112,6 +112,12 @@ void	ToOutsideGrayBorder(Rect* r, const Rect* limit);		// ROM 0x000a3498 ToOutsi
 // The value moved to the nearest multiple of the grid (an edit view's
 // line spacing), rounding to the nearer; a grid of nothing leaves it as
 // it was.
+// How far apart two ranges are, which is what tells the editor whether
+// two things are on the same line or in the same column: 0 when one
+// range holds the other, 1 when they merely overlap, and the gap between
+// them when they do not.
+long	RangeDistance(long aLow, long aHigh, long bLow, long bHigh);	// ROM 0x000a2670 RangeDistance__FlN31
+
 long	AlignToGrid(long v, long grid);						// ROM 0x002628c8 AlignToGrid__FlT1
 
 // Whether the view takes ink words (bit 0) or text (bit 1) from the
