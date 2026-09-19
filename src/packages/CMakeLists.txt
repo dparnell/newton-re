@@ -7,7 +7,9 @@ add_library(packages STATIC
     PackageIterator.cpp
     ROMPackages.cpp
 )
-target_link_libraries(packages PUBLIC newton_config utility os600_user toolbox frames)
+# stores: a package may carry a store part of its own (the WorldData
+# package's cities), which is mounted as a TPackageStore
+target_link_libraries(packages PUBLIC newton_config utility os600_user toolbox frames stores)
 target_include_directories(packages PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

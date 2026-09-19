@@ -218,7 +218,7 @@ FixedReal(Fixed value)
 // coming in, or an empty frame when the power manager will not say.  A
 // reading of -1 means the machine cannot tell, and its slot is left as
 // the canonical frame has it - nil.
-static Ref
+Ref
 FBatteryStatus(RefArg /*rcvr*/, RefArg which)
 {
 	RefVar result(AllocateFrame());
@@ -274,10 +274,47 @@ FBatteryStatus(RefArg /*rcvr*/, RefArg which)
 	return result;
 }
 
+// ROM 0x002018f8 SleepUntilNextWakeup__Fv
+// The machine put to sleep until something wakes it: the backlight off,
+// the power cycled (the hard keymap cleared if it came back), the
+// contrast set from the preference again and the power event handed on.
+//
+// NOT YET RECONSTRUCTED: FBackLight 0x00201a3c, CyclePower, the power
+// events.  Nothing on a host sleeps, and its only caller below never
+// gets here, because the host's power plant never reports a flat
+// battery.
+static void
+SleepUntilNextWakeup(void)
+{ }
+
+
+// ROM 0x002019a0 FMinimumBatteryCheck
+// The machine held until there is enough power to go on: while it is not
+// on the mains and the battery has fallen to the level called dead, it
+// sleeps.  ==> true when it had to sleep at all, nil when it did not.
+// A reading that cannot be taken is simply asked for again.
+Ref
+FMinimumBatteryCheck(RefArg /*rcvr*/)
+{
+	Boolean slept = false;
+	for (;;)
+	{
+		PowerPlantStatus status;
+		while (GetBatteryStatus(0, &status, false) != noErr)
+			;
+		if (status.fACPower == 1 || status.fBatteryDead < status.fBatteryCapacity)
+			break;
+		slept = true;
+		SleepUntilNextWakeup();
+	}
+	return MAKEBOOLEAN(slept);
+}
+
 void
 RegisterSystemNatives(void)
 {
 	RegisterNativeFunction("FGetSerialNumber", (void*) FGetSerialNumber, 0);
 	RegisterNativeFunction("FGestalt", (void*) FGestalt, 1);
 	RegisterNativeFunction("FBatteryStatus", (void*) FBatteryStatus, 1);
+	RegisterNativeFunction("FMinimumBatteryCheck", (void*) FMinimumBatteryCheck, 0);
 }

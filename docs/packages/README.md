@@ -92,6 +92,30 @@ A part of kind `kFrames` is an object area (`docs/frames/README.md`,
 the package is loaded.  `src/frames/FramesPart.h` imports one into a
 host object area; the frames part handler that installs it is not yet.
 
+## Store parts
+
+A part of kind `kRaw` whose type is `'soup` is a store the package
+carries: a read-only `TPackageStore` (`src/stores/PackageStore.h`) over
+the part's bytes where they lie.  `TPackageStorePartHandler::Install`
+0x001601dc makes one by name, hands it to `MakeStoreObject` and adds the
+store frame to `gPackageStores`, which is the array `GetPackageStore`
+looks through.
+
+There is one such part in this ROM, and it matters more than its size
+suggests: the **WorldData** package's 225,736-byte store of the world's
+countries and cities.  The Setup assistant's "where are you" page gets
+at it with `GetLocationSoup`, which is `GetPackageStore("WorldData")`
+followed by `:GetSoup`, and then queries the soup it finds - so with the
+store unmounted that page sends `Query` to nil and the assistant stops
+there.
+
+DEVIATION: the part handlers are NOT YET RECONSTRUCTED, so
+`InstallPackage` mounts the store part itself rather than the package
+manager handing it to the handler - the same DEVIATION as for the frames
+parts.  `TPackageStore` has to be in the protocol registry first, which
+the ROM does in `InitPackageSoups` 0x00162a1c and the host does in
+`HostMountStores`.
+
 ## Not yet
 
 The package loader (`TPackageLoader`, `TPackageBlock`), the package

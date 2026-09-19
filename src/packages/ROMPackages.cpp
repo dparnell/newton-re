@@ -8,6 +8,8 @@
 */
 
 #include "ROMPackages.h"
+#include "Store.h"
+#include "Soups.h"
 #include "ROMExtension.h"
 #include "PackageIterator.h"
 #include "FramesPart.h"
@@ -224,6 +226,56 @@ TranslateExports(ULong rexId, const unsigned char* rom, ULong partAddress, ULong
 }
 
 
+// a package's own store, the part type the ROM's TPackageStorePartHandler
+// is registered for
+const PartType kStorePartType = 'soup';
+
+
+// ROM 0x001601dc Install__24TPackageStorePartHandlerFRC6PartId10SourceTypeP8PartInfo
+// A 'soup part - a store built into the package, read-only, holding the
+// data an application ships with (the WorldData package's cities and
+// countries, which the Setup assistant's city picker queries) - mounted:
+// a TPackageStore over the part's bytes where they lie, made into a store
+// frame and added to gPackageStores, which is what GetPackageStore looks
+// through.
+//
+// DEVIATION: the part handlers are NOT YET RECONSTRUCTED, so this is
+// called from the loop below rather than by the package manager handing
+// the part to TPackageStorePartHandler.  The ROM removes the store again
+// if MakeStoreObject throws anything but an evt.ex; here a throw is
+// reported and the store let go, as the frames parts are.
+static void
+InstallStorePart(TPackageIterator& iter, ULong index, const PartInfo& part, ULong packageId)
+{
+	TStore* store = TStore::New("TPackageStore");
+	if (store == nil)
+	{
+		Say(packageId, index, "no memory for its store");
+		return;
+	}
+	void* data = (void*) ((char*) iter.fPackage + iter.GetPartDataOffset(index));
+	if (store->Init(data, part.sizeInMemory, 0, 0, 0, nil) != noErr)
+	{
+		Say(packageId, index, "its store would not mount");
+		store->Delete();
+		return;
+	}
+	newton_try
+	{
+		RefVar storeObject(MakeStoreObject(store));
+		RefVar stores(gPackageStores);
+		AddArraySlot(stores, storeObject);
+	}
+	newton_catch_all
+	{
+		fprintf(stderr, "[packages] the store part %lu of package %lu threw %s while mounting\n",
+				(unsigned long) index, (unsigned long) packageId, CurrentException()->name);
+		fflush(stderr);
+		store->Delete();
+	}
+	end_try;
+}
+
 static void
 InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULong packageId)
 {
@@ -240,8 +292,13 @@ InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULon
 		PartInfo part;
 		memset(&part, 0, sizeof(part));
 		iter.GetPartInfo(i, &part);
+		if (part.kind == kRaw && part.type == kStorePartType)
+		{
+			InstallStorePart(iter, i, part, packageId);
+			continue;
+		}
 		if (part.kind != kFrames)
-			continue;								// the protocols and the raw parts are somebody else's
+			continue;								// the protocols are somebody else's
 		RefVar partType(PartTypeSymbol(part.type));
 		if (ISNIL(partType))
 		{

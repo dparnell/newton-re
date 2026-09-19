@@ -9,6 +9,7 @@
 #include "FactorySoups.h"
 #include "Soups.h"
 #include "Store.h"
+#include "Protocols.h"
 #include "host/HostStore.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
@@ -61,6 +62,15 @@ HostMountStores(void)
 	// taking the machine down over: the boot goes on without one
 	newton_try
 	{
+		// the store implementations the rest of the boot makes by name: the
+		// ROM registers TFlashStore and TMuxStore in InitPSSManager
+		// 0x001575f8 and TPackageStore in InitPackageSoups 0x00162a1c, both
+		// of which are NOT YET RECONSTRUCTED.  The package loader needs
+		// TPackageStore for a package that carries a store part of its own.
+		// (newtonscript mounts a store without the OS running, and there is
+		// no registry then - nothing makes a store by name there either)
+		if (gProtocolRegistry != nil)
+			RegisterStoreImplementations();
 		InitQueries();
 
 		TStore* store = (TStore*) THostStore::ClassInfo()->New();

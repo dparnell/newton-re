@@ -9,6 +9,7 @@
 // is then stopped by a 'host/'quit event handled by a handler the test
 // installs.
 #include "NewtWorld.h"
+#include "SystemNatives.h"
 #include "Notebook.h"
 #include "HostViews.h"
 #include "HostScreen.h"
@@ -86,6 +87,8 @@ static const char* kSetupSource =
 	"    local tickled := GetRoot():EventPause(true); "			// the tickle: nothing has happened since
 	"    local since := GetRoot():EventPause(nil); "
 	"    if tickled = 0 and IsInteger(since) and since >= 0 then 1 else 0 end, "
+	"  worldData: func(data) "
+	"    if GetPackageStore(\"WorldData\") then 1 else 0, "		// the store part of the WorldData package, mounted
 	"  battery: func(data) begin "
 	"    local b := BatteryStatus(0); "
 	"    if b.batteryType = 'alkaline and b.batteryCapacity = 100 and b.acPower = 'no "
@@ -105,6 +108,8 @@ static long gScriptErr = -1;
 static long gTextLength = 0;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
+static Boolean gMinimumBatteryOk = false;
+static Boolean gWorldDataOk = false;
 static long gMainDone = 0;
 static Boolean gAliveAfterBoot = false;
 
@@ -118,6 +123,10 @@ TestBoot(void)
 	HostBootNewtWorld();
 	gWorldTaskId = gCurrentTaskId;
 	gAliveAfterBoot = gNewtIsAliveAndWell;
+	// the machine has enough power to go on (the ROM's own scripts reach
+	// FMinimumBatteryCheck through a function object with no name)
+	gMinimumBatteryOk = ISNIL(FMinimumBatteryCheck(RefVar(NILREF)));
+
 	gQuitHandler = new TQuitHandler;
 	gQuitHandler->Init('quit', 'host');
 	gEvalHandler = new TEvalHandler;
@@ -182,6 +191,9 @@ Scenario(void)
 		TRunScriptEvent battery("testApp", "battery");
 		newtPort.SendRPC(&replySize, &battery, sizeof(battery), &battery, sizeof(battery));
 		gBatteryOk = battery.fError == 0 && battery.fResult == 1;
+		TRunScriptEvent world("testApp", "worldData");
+		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
+		gWorldDataOk = world.fError == 0 && world.fResult == 1;
 	}
 	// a key typed into the paragraph: the keyboard tool's 'keyb event, the
 	// repeat rates replied
@@ -234,6 +246,8 @@ int main()
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);
 	EXPECT(gBatteryOk);
+	EXPECT(gMinimumBatteryOk);
+	EXPECT(gWorldDataOk);
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gRedraws == 1);
 	if (failures == 0)

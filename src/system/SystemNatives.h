@@ -31,6 +31,8 @@
 #include "objects.h"
 
 Ref		FGetSerialNumber(RefArg rcvr);
+Ref		FBatteryStatus(RefArg rcvr, RefArg which);	// ROM 0x00203db8 FBatteryStatus
+Ref		FMinimumBatteryCheck(RefArg rcvr);			// ROM 0x002019a0 FMinimumBatteryCheck - the ROM holds no name for it, so only the ROM's own scripts reach it
 
 void	RegisterSystemNatives(void);
 
