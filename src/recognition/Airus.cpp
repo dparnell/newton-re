@@ -886,7 +886,7 @@ static ULong	gAirusVerifyAttribute = 0;
 static ULong	gAirusVerifyExtra = 0;
 
 
-// ROM 0x0002e6e0 Astrlen__FPc, 0x0002e738 Astrcpy__FPcT1, 0x0002e764 Ashortstrcpy__FPUsT1
+// ROM 0x0002e6e0 Astrlen__FPc
 // The engine's own string handling, over the bytes and the UniChars it
 // keeps words in.
 long
@@ -896,6 +896,7 @@ Astrlen(const char* s)
 }
 
 
+// ROM 0x0002e738 Astrcpy__FPcT1
 void
 Astrcpy(char* dest, const char* src)
 {
@@ -903,6 +904,7 @@ Astrcpy(char* dest, const char* src)
 }
 
 
+// ROM 0x0002e764 Ashortstrcpy__FPUsT1
 void
 Ashortstrcpy(UniChar* dest, const UniChar* src)
 {
