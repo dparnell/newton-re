@@ -20,9 +20,14 @@
 long				airusResult = 0;
 
 // (0x0c100814, which the ROM keeps no symbol for)
-// The word every new dictionary carries in its parameter block.  The ROM
-// keeps the engine's own version here; nothing reads it back but the
-// engine, so a host starts it at zero as the zero-initialised data does.
+// The word every new dictionary carries in its parameter block.  The
+// ROM's initialised copy of it holds 0x00028d78 - the address of a word
+// of padding just before NewDictionary - so it is a tag the engine knows
+// its own blocks by rather than a number that means anything.
+//
+// DEVIATION: that address is the ROM's, and means nothing here; the host
+// keeps zero, which is what the block carries and what nothing outside
+// the engine reads.
 ULong				gAirusVersion = 0;
 
 // ROM 0x0c10082c AE_Parms
