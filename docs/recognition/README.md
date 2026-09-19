@@ -361,6 +361,39 @@ well-formed word comes back as one they do not have - which is what a
 machine whose user dictionary is empty says about a person's name
 anyway.
 
+## The dictionaries (`recognition/Words.h`)
+
+The word sources are frames in `vars.dictionaries`, each with a `dictID`
+of its own; `GetDictionary(id)` (`FindDictionaryFrame` 0x0013e558) walks
+the list and answers the one that matches.  `InitDictionaries`
+0x0013de2c builds the list out of the ROM's own descriptors
+(`Rdictionarylist`, 27 of them): each is wrapped in a clone of
+`canonicalDictRAMFrame` whose `_proto` is the descriptor, and its `dict`
+slot gets the `TDictionary` the ROM built for it - out of the ROM's word
+data for most, empty (`NewDictionary`) for the three a user writes into:
+31 the user dictionary, 35 the expand dictionary, 36.
+
+That much is reconstructed.  The dictionaries **themselves** are NOT YET:
+`InitROMDictionaryData`, `GetROMDictionaryData`, `BuildDictionaryFromPtr`,
+`NewDictionary`, the trie, `gDictList`, and the Airus engine the frames'
+methods go through (`FAirusLookupWord` 0x0008fb28 over `GetScriptDictRef`,
+`VerifyStart`, `VerifyString`).  Every frame's `dict` slot therefore
+stays nil.
+
+This is where the Setup assistant stops.  Leaving its "Enter your name"
+page runs, from the Continue button:
+
+```
+buttonClickScript -> TearDown -> AddWordsToDict -> AddWord -> DoAddWord
+                  -> AddEncodedWord -> AddOneEncodedWord -> LookupWord
+```
+
+- the last being the user dictionary's own `LookupWord`, which is the
+Airus native.  The assistant is adding the name that was typed to the
+user dictionary, as a machine does so that the recogniser will read it
+back later, and there is no dictionary for it to go into.  Typing nothing
+and tapping Continue gets past, because there is then no word to add.
+
 NOT YET: TController and the arbiter, the domains (stroke, edge-list
 gestures, shapes, words), the area cache (`InitAreas`,
 `GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the

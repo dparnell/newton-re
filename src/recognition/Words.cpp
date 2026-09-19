@@ -17,6 +17,9 @@
 #include "Words.h"
 #include "Frames.h"
 #include "NativeFunctions.h"
+#include "RSSymbols.h"
+#include "ObjectHeap.h"
+#include "ROMConstants.h"
 
 #include <string.h>
 
@@ -108,6 +111,46 @@ StripRecognitionWord(UniChar* word)
 }
 
 
+// ROM 0x0008ebfc StripRecognitionWordDiacritsOK__FPUs
+// The punctuation taken off both ends and nothing else: for the
+// languages whose words are not the same without their diacriticals.
+void
+StripRecognitionWordDiacritsOK(UniChar* word)
+{
+	long length = Ustrlen(word);
+	long start = 0;
+	while (start < length && IsPunctSymbol(word, start))
+		start++;
+	if (start != 0)
+		memmove(word, word + start, (length - start + 1) * sizeof(UniChar));
+	for (long i = Ustrlen(word) - 1; i >= 1; i--)
+	{
+		if (!IsPunctSymbol(word, i))
+			break;
+		word[i] = 0;
+	}
+}
+
+
+// ROM 0x0008ec9c EncodeRecognitionWord__FPUs
+// The word stripped where it lies; ==> 0x80 when what is left starts
+// with a capital.
+ULong
+EncodeRecognitionWord(UniChar* word)
+{
+	StripRecognitionWord(word);
+	return UToLower(word[0]) != word[0] ? kCapStartsUpper : 0;
+}
+
+
+// ROM 0x0008ecbc EncodeRecognitionWordDiacritsOK__FPUs
+ULong
+EncodeRecognitionWordDiacritsOK(UniChar* word)
+{
+	StripRecognitionWordDiacritsOK(word);
+	return UToLower(word[0]) != word[0] ? kCapStartsUpper : 0;
+}
+
 // ROM 0x0008ec34 CheckCapAttributes__FPUs
 // How the word is capitalised: 0x80 when its first letter is a
 // a capital, 0x40 when the whole word is capitals.
@@ -125,6 +168,102 @@ CheckCapAttributes(const UniChar* word)
 	return attributes;
 }
 
+
+/*------------------------------------------------------------------------------
+	T h e   d i c t i o n a r i e s
+
+	The word sources are frames in `vars.dictionaries`, each with a
+	`dictID` of its own; a script asks for one by that id.  What is in
+	them, and the looking up itself, is NOT YET RECONSTRUCTED
+	(InitDictionaries 0x0013de2c and everything under it), so the list is
+	empty and every id answers nil - which is what a machine that has
+	loaded no dictionary answers too.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c101844 gWordID
+// DEVIATION: the word recogniser is NOT YET RECONSTRUCTED, so nothing
+// ever sets this and the system is told the recogniser is not reading.
+ULong	gWordID = 0;
+
+
+// ROM 0x0014444c FWRecIsBeingUsed
+// WRecIsBeingUsed(): true while the word recogniser is the one reading
+// what is written - it puts its own four characters in gWordID.
+Ref
+FWRecIsBeingUsed(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gWordID == 'WREC');
+}
+
+// ROM 0x0013de2c InitDictionaries__Fv
+// The dictionaries built and put in `vars.dictionaries`: the ROM's own
+// (the words, the auxiliary lists, the expansions), then the user's off
+// the system soup.
+//
+// The list itself is the ROM's own (`Rdictionarylist`, cloned), and each
+// of its descriptors is wrapped in a clone of `canonicalDictRAMFrame`
+// with the descriptor as its `_proto`, which is what gives every
+// dictionary the frame a script talks to and the `dictID` it is found
+// by.
+//
+// NOT YET RECONSTRUCTED: the dictionaries themselves - the ROM's word
+// data (InitROMDictionaryData, GetROMDictionaryData,
+// BuildDictionaryFromPtr), the empty ones the user's words go into
+// (NewDictionary), the trie, and gDictList.  Each frame's `dict` slot
+// therefore stays nil, which is what it holds for a dictionary the
+// machine could not build.
+void
+InitDictionaries(void)
+{
+	// DEVIATION: a host that has not imported the ROM's objects has no
+	// list to clone; an empty one keeps everything that takes its Length
+	// happy, which is what the list is for.
+	RefVar list(IsArray(RefVar(Rdictionarylist)) ? Clone(RefVar(Rdictionarylist)) : MakeArray(0));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMdictionaries, list);
+	long count = Length(list);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar descriptor(GetArraySlotRef(list, i));
+		RefVar romDictId(GetProtoVariable(descriptor, RSSYMromdictid, nil));
+		RefVar frame(Clone(RefVar(Rcanonicaldictramframe)));
+		SetFrameSlot(frame, RSSYM_proto, descriptor);
+		SetFrameSlot(frame, RSSYMromdictid, romDictId);
+		SetArraySlotRef(list, i, frame);
+	}
+}
+
+// ROM 0x0013d460 Dictionaries__Fv
+Ref
+Dictionaries(void)
+{
+	return GetFrameSlotRef(gVarFrame, RSSYMdictionaries);
+}
+
+
+// ROM 0x0013e558 FindDictionaryFrame__FUl
+// The dictionary of that id, or nil when none of them has it.
+Ref
+FindDictionaryFrame(ULong id)
+{
+	RefVar dictionaries(Dictionaries());
+	long count = Length(dictionaries);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar dictionary(GetArraySlotRef(dictionaries, i));
+		if ((ULong) RINT(GetProtoVariable(dictionary, RSSYMdictid, nil)) == id)
+			return dictionary;
+	}
+	return NILREF;
+}
+
+
+// ROM 0x0013e988 FFindDictionaryFrame
+// GetDictionary(id)
+Ref
+FFindDictionaryFrame(RefArg /*rcvr*/, RefArg id)
+{
+	return FindDictionaryFrame((ULong) RINT(id));
+}
 
 // ROM 0x0008ed50 FValidateWord
 // ValidateWord(word, options): the word looked over and looked up, its
@@ -184,6 +323,23 @@ FValidateWord(RefArg /*rcvr*/, RefArg word, RefArg /*options*/)
 }
 
 
+// ROM 0x0008eff4 FStripRecognitionWord
+// StripRecognitionWord(word): the string stripped where it lies; ==> the
+// capitalisation bit.
+Ref
+FStripRecognitionWord(RefArg /*rcvr*/, RefArg word)
+{
+	return MAKEINT(EncodeRecognitionWord((UniChar*) BinaryData(word)));
+}
+
+
+// ROM 0x0008f030 FStripRecognitionWordDiacritsOK
+Ref
+FStripRecognitionWordDiacritsOK(RefArg /*rcvr*/, RefArg word)
+{
+	return MAKEINT(EncodeRecognitionWordDiacritsOK((UniChar*) BinaryData(word)));
+}
+
 // ROM 0x0008ef38 FLookupWord__FRC6RefVarT1
 // LookupWord(word): a copy of the word as ValidateWord leaves it -
 // stripped of its punctuation - when it is a well-formed word the
@@ -206,4 +362,8 @@ RegisterWordNatives(void)
 {
 	RegisterNativeFunction("FValidateWord", (void*) FValidateWord, 2);
 	RegisterNativeFunction("FLookupWord__FRC6RefVarT1", (void*) FLookupWord, 1);
+	RegisterNativeFunction("FFindDictionaryFrame", (void*) FFindDictionaryFrame, 1);
+	RegisterNativeFunction("FWRecIsBeingUsed", (void*) FWRecIsBeingUsed, 0);
+	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);
+	RegisterNativeFunction("FStripRecognitionWordDiacritsOK", (void*) FStripRecognitionWordDiacritsOK, 1);
 }

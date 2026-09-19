@@ -50,10 +50,27 @@ Boolean	HasSpaces(const UniChar* word);				// ROM 0x00256460 HasSpaces__FPUs
 Boolean	HasChars(const UniChar* word);				// ROM 0x002564d4 HasChars__FPUs - a Roman letter anywhere in it
 Boolean	IsPunctSymbol(const UniChar* word, long index);	// ROM 0x00256524 IsPunctSymbol__FPUsl
 void	StripRecognitionWord(UniChar* word);		// ROM 0x0008eb8c StripRecognitionWord__FPUs - the punctuation taken off both ends
+void	StripRecognitionWordDiacritsOK(UniChar* word);	// ROM 0x0008ebfc StripRecognitionWordDiacritsOK__FPUs - the same, the diacriticals left on
+ULong	EncodeRecognitionWord(UniChar* word);			// ROM 0x0008ec9c EncodeRecognitionWord__FPUs - stripped; ==> 0x80 when it starts with a capital
+ULong	EncodeRecognitionWordDiacritsOK(UniChar* word);	// ROM 0x0008ecbc EncodeRecognitionWordDiacritsOK__FPUs
 ULong	CheckCapAttributes(const UniChar* word);	// ROM 0x0008ec34 CheckCapAttributes__FPUs
+
+// the dictionaries the words are looked up in: vars.dictionaries, a
+// frame each, told apart by their dictID
+// the word recogniser's own id, 'WREC when it is the one reading; 0
+// while it is NOT YET RECONSTRUCTED
+extern ULong	gWordID;						// ROM 0x0c101844 gWordID
+
+void	InitDictionaries(void);					// ROM 0x0013de2c InitDictionaries__Fv
+Ref		Dictionaries(void);						// ROM 0x0013d460 Dictionaries__Fv
+Ref		FindDictionaryFrame(ULong id);			// ROM 0x0013e558 FindDictionaryFrame__FUl
 
 Ref		FValidateWord(RefArg rcvr, RefArg word, RefArg options);	// ROM 0x0008ed50 FValidateWord
 Ref		FLookupWord(RefArg rcvr, RefArg word);					// ROM 0x0008ef38 FLookupWord__FRC6RefVarT1
+Ref		FFindDictionaryFrame(RefArg rcvr, RefArg id);			// ROM 0x0013e988 FFindDictionaryFrame
+Ref		FWRecIsBeingUsed(RefArg rcvr);							// ROM 0x0014444c FWRecIsBeingUsed
+Ref		FStripRecognitionWord(RefArg rcvr, RefArg word);			// ROM 0x0008eff4 FStripRecognitionWord
+Ref		FStripRecognitionWordDiacritsOK(RefArg rcvr, RefArg word);	// ROM 0x0008f030 FStripRecognitionWordDiacritsOK
 
 void	RegisterWordNatives(void);
 

@@ -136,6 +136,24 @@ main()
 	EXPECT(ISNIL(FLookupWord(RefVar(NILREF), RefVar(Str("two words")))));
 	EXPECT(ISNIL(FLookupWord(RefVar(NILREF), RefVar(Str("1234")))));
 
+	// the punctuation stripped where it lies, and the capitalisation bit
+	RefVar shouted(Str("(Smith)"));
+	EXPECT(RINT(FStripRecognitionWord(RefVar(NILREF), shouted)) == kCapStartsUpper && RefIs(shouted, "Smith"));
+	RefVar quiet(Str("smith,"));
+	EXPECT(RINT(FStripRecognitionWord(RefVar(NILREF), quiet)) == 0 && RefIs(quiet, "smith"));
+
+	// the word recogniser is not the one reading here
+	EXPECT(ISNIL(FWRecIsBeingUsed(RefVar(NILREF))));
+	gWordID = 'WREC';
+	EXPECT(NOTNIL(FWRecIsBeingUsed(RefVar(NILREF))));
+	gWordID = 0;
+
+	// the dictionaries: without the ROM's objects there is no list to
+	// clone, so it comes out empty and every id answers nil
+	InitDictionaries();
+	EXPECT(IsArray(RefVar(Dictionaries())));
+	EXPECT(ISNIL(FFindDictionaryFrame(RefVar(NILREF), RefVar(MAKEINT(31)))));
+
 	printf("test_Words: %d failures\n", failures);
 	return failures != 0;
 }

@@ -8,6 +8,7 @@
 */
 
 #include "Recognizer.h"
+#include "Words.h"
 #include "UnitPublic.h"
 #include "Commands.h"
 #include "RootView.h"
@@ -389,7 +390,10 @@ TRecognitionManager::Init(UChar level)
 	fModalBounds = nil;
 	fRecognizers = TRecognizerList::Make();
 	if (fLevel != 0)
+	{
+		InitDictionaries();
 		InitRecognizers();
+	}
 	return 0;
 }
 
