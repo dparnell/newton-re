@@ -103,7 +103,7 @@ struct AirusAParmBlock
 };
 
 extern long				airusResult;	// ROM 0x0c100810 airusResult - what the last call left
-extern ULong			gAirusVersion;	// ROM 0x0c100814 - the word every new dictionary carries
+extern ULong			gAirusVersion;	// (0x0c100814, which the ROM keeps no symbol for) the word every new dictionary carries
 extern AirusAParmBlock*	AE_Parms;		// ROM 0x0c10082c AE_Parms - the block being worked on
 
 // the container
@@ -114,7 +114,7 @@ void	SlideUp(long offset, long count);					// ROM 0x00028ec4 SlideUp__FUlT1 - th
 void	SlideDown(long offset, long count);					// ROM 0x00028f18 SlideDown__FUlT1 - ... and up, making room
 
 // the data, big-endian as it lies
-ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes
+ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__FUli
 
 // the dispatcher
 void	CallAirusA(Handle dictionary, long selector);		// ROM 0x0002d41c CallAirusA - the Handle locked first when the dictionary asks for it

@@ -19,7 +19,7 @@
 // ROM 0x0c100810 airusResult
 long				airusResult = 0;
 
-// ROM 0x0c100814
+// (0x0c100814, which the ROM keeps no symbol for)
 // The word every new dictionary carries in its parameter block.  The ROM
 // keeps the engine's own version here; nothing reads it back but the
 // engine, so a host starts it at zero as the zero-initialised data does.
@@ -158,7 +158,7 @@ SlideDown(long offset, long count)
 }
 
 
-// ROM 0x0002a178 GetDictBytes
+// ROM 0x0002a178 GetDictBytes__FUli
 // Count bytes of the dictionary from that offset, as one big-endian
 // number; nothing (0) for a count of none.
 ULong
