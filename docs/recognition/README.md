@@ -325,6 +325,42 @@ it worked; `savecalibration` then finds no calibration to read and saves
 nothing.  That is what lets the Setup assistant go past its calibration
 page.
 
+## Is this a word? (`recognition/Words.h`)
+
+Before the system keeps a word - one the recogniser read, or one typed
+into a field - it asks `ValidateWord` 0x0008ed50 about it.  That cuts it
+down to 63 characters, strips the punctuation off both ends
+(`StripRecognitionWord` 0x0008eb8c, which takes the diacriticals off
+first unless the word recogniser wrote it), notes how it is capitalised
+(`CheckCapAttributes` 0x0008ec34: 0x80 its first letter is a capital,
+0x40 the whole word is), looks it up in the dictionaries
+(`LookupWordOrVariant`, NOT YET) and answers a word of bits.
+
+The bit the callers want is 0x80.  It is set when the dictionaries
+already have the word, when they have it under another capitalisation,
+and when it is not a word at all: fewer than two characters, with spaces
+in it (`HasSpaces` 0x00256460), without a Roman letter anywhere
+(`HasChars` 0x002564d4 - it tests the two ASCII ranges, so a word of
+nothing but accented letters has none), or with a character the word
+recogniser does not write (`WRecVerifyWordSymbols` 0x001444c8, NOT YET).
+`LookupWord` 0x0008ef38 is that question with the answer thrown away: a
+copy of the word, stripped, when 0x80 is clear, and nil when it is set -
+"is this a new word?", which is what the Setup assistant asks of each
+part of the name that is typed into it.
+
+The punctuation set is `!"'(),.:;?` and the four curly quotes, in that
+order, and the search gives up once it has gone past.  A closing bracket
+or a curly right single quote after an `s` is not punctuation, so that a
+possessive the recogniser wrote keeps its quote and `(s)` keeps its
+bracket; the plain apostrophe is punctuation wherever it stands, and
+survives in the middle of a word only because the stripping works from
+the ends inwards.
+
+DEVIATION: with no dictionaries nothing is ever found, so every
+well-formed word comes back as one they do not have - which is what a
+machine whose user dictionary is empty says about a person's name
+anyway.
+
 NOT YET: TController and the arbiter, the domains (stroke, edge-list
 gestures, shapes, words), the area cache (`InitAreas`,
 `GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the

@@ -11,3 +11,7 @@ add_test(NAME recognition.Unit COMMAND test_Unit)
 add_executable(test_Areas test_Areas.cpp)
 target_link_libraries(test_Areas PRIVATE recognition)
 add_test(NAME recognition.Areas COMMAND test_Areas)
+
+add_executable(test_Words test_Words.cpp)
+target_link_libraries(test_Words PRIVATE recognition)
+add_test(NAME recognition.Words COMMAND test_Words)

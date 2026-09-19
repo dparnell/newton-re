@@ -274,6 +274,18 @@ FBatteryStatus(RefArg /*rcvr*/, RefArg which)
 	return result;
 }
 
+// ROM 0x00203510 FBatteryCount
+// BatteryCount(): how many batteries the machine has, 0 when the power
+// manager will not say (a 'newt/'pg&e RPC of its own).
+//
+// DEVIATION: the power manager is NOT YET RECONSTRUCTED; the count comes
+// from hal/Power.h with the rest of the readings.
+static Ref
+FBatteryCount(RefArg /*rcvr*/)
+{
+	return MAKEINT(GetPowerPlantCount());
+}
+
 // ROM 0x002018f8 SleepUntilNextWakeup__Fv
 // The machine put to sleep until something wakes it: the backlight off,
 // the power cycled (the hard keymap cleared if it came back), the
@@ -317,4 +329,5 @@ RegisterSystemNatives(void)
 	RegisterNativeFunction("FGestalt", (void*) FGestalt, 1);
 	RegisterNativeFunction("FBatteryStatus", (void*) FBatteryStatus, 1);
 	RegisterNativeFunction("FMinimumBatteryCheck", (void*) FMinimumBatteryCheck, 0);
+	RegisterNativeFunction("FBatteryCount", (void*) FBatteryCount, 0);
 }

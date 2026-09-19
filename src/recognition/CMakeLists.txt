@@ -24,6 +24,7 @@ add_library(recognition STATIC
     StrokeCentral.cpp
     HandleUnit.cpp
     UnitNatives.cpp
+    Words.cpp
 )
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # (the strokes tell the root view what to redraw; the views track strokes:

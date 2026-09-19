@@ -25,6 +25,7 @@
 #include "Frames.h"
 #include "NativeFunctions.h"
 #include "ROMConstants.h"
+#include "Words.h"
 #include "RootView.h"
 #include "Interpreter.h"
 #include "NewtonExceptions.h"
@@ -341,6 +342,7 @@ void
 RegisterUnitNatives(void)
 {
 	RegisterNativeFunction("FSetInkerPenSize__FRC6RefVarT1", (void*) FSetInkerPenSize, 1);
+	RegisterWordNatives();
 	RegisterNativeFunction("FGetCalibration__FRC6RefVar", (void*) FGetCalibration, 0);
 	RegisterNativeFunction("FSetCalibration__FRC6RefVarT1", (void*) FSetCalibration, 1);
 	RegisterNativeFunction("FIsTabletCalibrationNeeded", (void*) FIsTabletCalibrationNeeded, 0);

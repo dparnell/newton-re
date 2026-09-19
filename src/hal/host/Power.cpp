@@ -36,3 +36,11 @@ GetPowerPlantStatus(long /*which*/, PowerPlantStatus* status)
 	status->fBatteryTemp = 20 * kFixedOne;
 	return noErr;
 }
+
+
+// One set of cells, as a MessagePad has.
+extern "C" long
+GetPowerPlantCount(void)
+{
+	return 1;
+}

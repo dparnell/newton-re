@@ -63,6 +63,8 @@ struct PowerPlantStatus
 extern "C" {
 // which battery (0 is the main one) -> its status; an error leaves it alone
 NewtonErr	GetPowerPlantStatus(long which, PowerPlantStatus* status);
+// how many batteries the machine has (0 when it cannot say)
+long		GetPowerPlantCount(void);
 }
 
 #endif	/* __HAL_POWER_H */
