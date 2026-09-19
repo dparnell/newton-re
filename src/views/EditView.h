@@ -70,6 +70,12 @@ public:
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
 	TView*			TextContainingPoint(Point& pt, Rect* box, long* score);	// ROM 0x000a8844 TextContainingPoint__9TEditViewFR6TPointP5TRectPl
 	TView*			AddForm(RefArg form);					// ROM 0x000ab28c AddForm__9TEditViewFRC6RefVar - the context frame made a child, undoably
+	void			JamText(UniChar* text, ULong length);	// ROM 0x000ab70c JamText__9TEditViewFPUsUl - typed text put on the page as a word
+	// the editor's own, which is not TDataView's: the box the word
+	// filled and the box it may grow into, the unit it came from, the
+	// style it is in, and where in the text it ended up
+	long			HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
+							   class TUnitPublic* unit, RefArg info, long* outOffset);	// ROM 0x000abaa4 HandleWord__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPl
 	void			InvalAllHilites(void);					// ROM 0x000a6270 InvalAllHilites__9TEditViewFv
 	void			ResetHilitesForNewWord(void);			// ROM 0x000a4204 ResetHilitesForNewWord__9TEditViewFv
 	Boolean			ValidateCaret(Boolean scrolled);			// ROM 0x000aa9b0 ValidateCaret__9TEditViewFUc - ==> whether the caret is still this view's

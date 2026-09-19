@@ -18,6 +18,9 @@
 #include "ParagraphView.h"
 #include "RootView.h"
 #include "Application.h"
+#include "RichString.h"
+#include "Text.h"
+#include "Keyboard.h"
 #include "Commands.h"
 #include "UnitPublic.h"
 #include "StrokeQueue.h"
@@ -896,6 +899,41 @@ TEditView::RealDoCommand(RefArg cmd)
 		CommandSetResult(cmd, id != aeWord ? 1 : 0);
 		return 1;
 	}
+	if (id == aeKeyDown || id == aeKeyRepeat)
+	{
+		// a key typed at the page.  The view's own key scripts get it
+		// first (TView::HandleKeyEvent, which says whether anything took
+		// it); what is left and can be printed is put on the page as a
+		// word of one character.  The Newton's enter key comes through as
+		// 3 and goes on the page as a carriage return.
+		Boolean taken = false;
+		if (HandleKeyEvent(cmd, id, &taken))
+			return 1;
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0 || taken)
+			return 1;
+		UniChar ch = (UniChar) CommandParameter(cmd);
+		if (ch == 8)				// backspace
+			;	// NOT YET RECONSTRUCTED: DeleteHilitedViews 0x000a8750
+		else
+		{
+			if (ch == 3)
+				ch = 0x0d;			// the Newton's enter key writes a carriage return
+			if (KeyIsPrintable(ch, this))
+				JamText(&ch, 1);
+		}
+		return 1;
+	}
+	if (id == aeKeyString)
+	{
+		// a whole string typed at once (the keyboard tool's)
+		Boolean taken = false;
+		if (HandleKeyEvent(cmd, id, &taken))
+			return 1;
+		RefVar typed(CommandFrameParameter(cmd));
+		UniChar* chars = (UniChar*) BinaryData(typed);
+		JamText(chars, Ustrlen(chars));
+		return 1;
+	}
 	if (id != aeTap)
 		return TView::RealDoCommand(cmd);	// NOT YET: the rest of the editor's own
 	// 0x2000 of the textFlags slot - not the viewFlags, and what it is
@@ -1017,4 +1055,103 @@ TEditView::AddForm(RefArg form)
 	}
 	end_try;
 	return (TView*) CommandParameter(cmd);
+}
+
+// The text with a nul after it, when it has not got one: TextBounds
+// measures a C string and the caller's run may not be terminated.
+static UniChar*
+NullTerminated(const UniChar* text, ULong length)
+{
+	UniChar* copy = new UniChar[length + 1];
+	if (copy == nil)
+		return nil;
+	memcpy(copy, text, length * sizeof(UniChar));
+	copy[length] = 0;
+	return copy;
+}
+
+
+// ROM 0x000abaa4 HandleWord__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPl
+// A word - written and recognised, or typed and made to look like one -
+// put on the page.  It begins by making sure the caret belongs here: the
+// key view has to be this editor or one of its children, and anything
+// else is dropped so that the word does not go into somebody else's
+// text.
+//
+// NOT YET RECONSTRUCTED: the rest of it, which is where the word goes -
+// into the paragraph the box falls in when there is one, and into a new
+// one (AddNewParagraph 0x000a1b2c) when there is not.  Until that is
+// here a typed character reaches this point and stops, so nothing
+// appears on the page.
+long
+TEditView::HandleWord(UniChar* /*text*/, ULong /*length*/, Rect& box, Rect& /*room*/,
+					  TUnitPublic* /*unit*/, RefArg /*info*/, long* /*outOffset*/)
+{
+	TView* key = gRootView->fCaretView;
+	if (key != this
+		&& (key == nil || (key->fParent != this
+						   && (key->fParent == nil || key->fParent->fParent != this))))
+	{
+		gRootView->SetKeyView(nil, 0, 0, false);
+		key = this;
+	}
+	ValidateCaret(true);
+	Boolean emptyBox = box.left == 0 && box.right == 0 && box.top == 0 && box.bottom == 0;
+	(void) emptyBox;	// NOT YET: what the rest of the function does with it
+	return 0;
+}
+
+
+// ROM 0x000ab70c JamText__9TEditViewFPUsUl
+// Typed text put on the page.  The Newton has no text cursor of its own
+// on a page like this: what is typed is made to look like a word that
+// has just been written and handed to the same HandleWord the recogniser
+// uses, so that typing and writing end in the same place.
+//
+// With no caret - nothing has been tapped, or it has been taken away -
+// one is put on the line after the last thing on the page: a line's
+// spacing below the lowest child (or the top of the page when there are
+// none), twelve pixels in from its left edge.
+void
+TEditView::JamText(UniChar* text, ULong length)
+{
+	ResetHilitesForNewWord();
+	ValidateCaret(true);
+	if (fCaretRect.top == kNoBounds)
+	{
+		RefVar spacing(GetVar(RSSYMviewlinespacing));
+		Point pt;
+		pt.v = ISNIL(spacing) ? 20 : (short) RINT(spacing);
+		pt.h = 12;
+		short lowest = viewBounds.top;
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+			if (child->viewBounds.bottom > lowest)
+				lowest = child->viewBounds.bottom;
+		pt.v += lowest;
+		pt.h += viewBounds.left;
+		PositionCaret(pt, false);
+	}
+	// the box the text will fill, at the caret
+	RefVar font(GetProto(RSSYMviewfont));
+	if (ISNIL(font))
+		font = GetPreference(RSSYMuserfont);
+	Rect box;
+	box.top = box.left = box.bottom = box.right = 0;
+	UniChar* measured = text;
+	if (text[length] != 0)
+		measured = NullTerminated(text, length);
+	{
+		TRichString rich(measured, length * sizeof(UniChar) + sizeof(UniChar));
+		TextBounds(rich, font, &box, 0);
+	}
+	Point caret = GetCaretGlobalTopLeft();
+	OffsetRect(&box, caret.h, caret.v);
+	if (measured != text)
+		delete[] measured;
+	RefVar word;
+	HandleWord(text, length, box, box, nil, word, nil);
+	fCaretRect.top = kNoBounds;
+	fCaretRect.bottom = kNoBounds;
 }
