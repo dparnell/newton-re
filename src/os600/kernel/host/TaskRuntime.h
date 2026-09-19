@@ -58,6 +58,15 @@ void		HostTaskDeleted(TTask* task);			// ~TTask: forget the task's thread
 void		HostAlienThread();						// the calling thread is not a task's
 Boolean		HostIsAlienThread();					// whether it said so
 
+// DEVIATION: the ARM takes a timer interrupt at whatever instruction a
+// task is on, so the MessagePad's kernel can preempt a task that never
+// enters it at all.  The host cannot - its interrupts are delivered
+// where a task calls into the kernel and in the idle task - so a task
+// that only computes keeps the baton for ever, and the ROM has loops
+// that count on being preempted.  A long-running loop offers this as a
+// point the kernel may take one at instead.
+void		HostPreemptionPoint();					// a due interrupt taken here; the baton may be handed on
+
 extern Boolean	gHostTasksStopping;
 
 #endif	/* __HOST_TASKRUNTIME_H */

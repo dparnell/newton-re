@@ -29,6 +29,8 @@
 #include "TimerEngine.h"
 #include "KernelGlobals.h"
 #include "CompMath.h"
+#include "hal/Atomic.h"
+
 #include "hal/Timer.h"
 #include "hal/RealTimeClock.h"
 #include "RealTimeClock.h"
@@ -291,6 +293,27 @@ HostStopTasks()
 // any, is parked in WaitForBaton and never runs again; its context stays
 // allocated for it, only the task is forgotten - a new TTask at the same
 // address must get a context (and thread) of its own.
+// The point a loop that never enters the kernel offers it to preempt
+// the task at (see TaskRuntime.h).  What the ROM's view tracking does
+// is the case that needs it: a NewtonScript loop reads the stroke over
+// and over without ever waiting, and on the MessagePad the inker task
+// still gets the processor and finishes the stroke, so the loop ends.
+// Here nothing would, and the machine would spin for good.
+//
+// Nothing happens unless an interrupt is actually due, and never inside
+// an atomic section - SWIExitSchedule would refuse to switch there
+// anyway - so a run on the controllable clock stays as deterministic as
+// it was.
+void
+HostPreemptionPoint()
+{
+	TTask* self = gCurrentTask;
+	if (self == nil || gHostTasksStopping || HostIsAlienThread() || InAtomicSection())
+		return;
+	HostSWIExit(self, self->fRegister[kcPC]);
+}
+
+
 // The threads that are none of the machine's (see TaskRuntime.h).
 static thread_local Boolean	gAlienThread = false;
 

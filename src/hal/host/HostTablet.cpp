@@ -92,8 +92,8 @@ HostTabletNow(void)
 void
 HostTabletPenDown(long x, long y, ULong time)
 {
-	if (time == 0)
-		time = HostTabletNow();
+	if (time == 0)
+		time = HostTabletNow();
 	InsertTabletSample(kTabletPenDown, time);
 	InsertTabletSample(HostTabletSample(x, y, 3), 0);
 }
@@ -109,8 +109,8 @@ HostTabletPenMove(long x, long y, ULong pressure)
 void
 HostTabletPenUp(ULong time)
 {
-	if (time == 0)
-		time = HostTabletNow();
+	if (time == 0)
+		time = HostTabletNow();
 	InsertTabletSample(kTabletPenUp, time);
 }
 

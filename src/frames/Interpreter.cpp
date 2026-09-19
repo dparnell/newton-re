@@ -28,8 +28,12 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 
+#include "host/TaskRuntime.h"
+
 #include <stdio.h>
 #include <string.h>
+
+static ULong	gInterpreterPreemptCount = 0;	// the bytecodes between preemption points
 
 TInterpreter*	gInterpreter = nil;
 TInterpreter*	gInterpreterList = nil;
@@ -907,6 +911,13 @@ TInterpreter::SlowRun(long baseDepth)
 	{
 		Boolean returned = false;
 		do {
+			// DEVIATION: the host cannot interrupt a task at an arbitrary
+			// instruction, so the loop offers the kernel a point to preempt
+			// it at every so often (kernel/host/TaskRuntime.h).  A ROM
+			// script that polls without ever waiting - the views' tracking
+			// loops do - would otherwise keep the processor for good.
+			if ((++gInterpreterPreemptCount & 0x3ff) == 0)
+				HostPreemptionPoint();
 			if (gFramesBreakPointsEnabled)
 				HandleBreakPoints();
 			const unsigned char* instr = (const unsigned char*) BinaryData(fInstructions) + fPC;
