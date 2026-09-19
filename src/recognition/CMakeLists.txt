@@ -24,6 +24,7 @@ add_library(recognition STATIC
     StrokeCentral.cpp
     HandleUnit.cpp
     UnitNatives.cpp
+    Airus.cpp
     Words.cpp
 )
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
