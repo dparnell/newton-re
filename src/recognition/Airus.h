@@ -88,7 +88,7 @@ const long	kAirusExpandFailed	= 2;
 struct AirusAParmBlock
 {
 	ULong		fVersion;			// +0x00  the engine's version word (gAirusVersion)
-	long		fField04;			// +0x04  -1
+	long		fDictID;			// +0x04  which dictionary it is (InitDictionaries puts it there; NewDictionary leaves -1)
 	Handle		fDataHandle;		// +0x08  the dictionary's bytes
 	Ptr			fData;				// +0x0c  *fDataHandle, as it lies now
 	Ptr			fDataEnd;			// +0x10  one past the last byte in use

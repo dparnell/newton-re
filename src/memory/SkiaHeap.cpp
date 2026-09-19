@@ -701,7 +701,10 @@ FindSmallestSlide(void** blockData, Size size, Size size2)
 		return block->Following();
 	char* blockEnd = (char*) block + blockSize;
 	SkiaBlock* result = SlideBlocksDown(bestLow, (SkiaBlock*) blockEnd);
-	*blockData = (char*) *blockData - (uintptr_t) blockEnd + (uintptr_t) (char*) result;
+	// the named block moved down by as much as the slide did; the ROM adds
+	// the two addresses to the pointer, which on a host is arithmetic on a
+	// pointer that is briefly nowhere, so the distance is worked out first
+	*blockData = (char*) *blockData + ((char*) result - blockEnd);
 	return result;
 }
 

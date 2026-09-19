@@ -17,6 +17,8 @@
 #include "Words.h"
 #include "Frames.h"
 #include "NativeFunctions.h"
+#include "Airus.h"
+#include "Unicode.h"
 #include "RSSymbols.h"
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
@@ -229,6 +231,23 @@ InitDictionaries(void)
 		SetFrameSlot(frame, RSSYM_proto, descriptor);
 		SetFrameSlot(frame, RSSYMromdictid, romDictId);
 		SetArraySlotRef(list, i, frame);
+		long id = RINT(GetProtoVariable(descriptor, RSSYMdictid, nil));
+		Handle dictionary = nil;
+		if (ISNIL(romDictId))
+		{
+			// the three a user writes into start empty
+			if (id == kUserDictionary || id == kExpandDictionary || id == kAutoAddDictionary)
+				dictionary = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
+			// NOT YET RECONSTRUCTED: gTrie, which is dictionary 32
+		}
+		// NOT YET RECONSTRUCTED: the ones built out of the ROM's own word
+		// data (GetROMDictionaryData 0x0013dd28, BuildDictionaryFromPtr
+		// 0x0002d624), and gDictList beside them
+		if (dictionary != nil)
+		{
+			((AirusAParmBlock*) *dictionary)->fDictID = id & 0xffff;
+			SetFrameSlot(frame, RSSYMdict, RefVar(AddressToRef(dictionary)));
+		}
 	}
 }
 
@@ -263,6 +282,80 @@ Ref
 FFindDictionaryFrame(RefArg /*rcvr*/, RefArg id)
 {
 	return FindDictionaryFrame((ULong) RINT(id));
+}
+
+// ROM 0x0008ea78 GetScriptDictRef__FRC6RefVar
+// The engine's dictionary behind a script's dictionary frame: the `dict`
+// slot, which holds its address for one that lives in memory.
+//
+// NOT YET RECONSTRUCTED: ReadRefDictionary 0x0002d6a0, which builds one
+// out of a binary in the slot - how a dictionary that came off a store
+// or out of a package is reached.
+Handle
+GetScriptDictRef(RefArg dictionary)
+{
+	RefVar dict(GetFrameSlotRef(dictionary, RSSYMdict));
+	if (ISNIL(dict))
+		ThrowMsg("dict not initialized");
+	if (((Ref) dict & 3) == 0)
+		return (Handle) RefToAddress(dict);
+	return nil;
+}
+
+
+// ROM 0x0008ee98 FAirusNew
+// The frame given a dictionary of its own: an empty one of that kind,
+// with that many bytes of attribute per word, remembered in its `dict`
+// slot.  ==> what the engine made of it (0 when it worked).
+Ref
+FAirusNew(RefArg rcvr, RefArg type, RefArg attributeSize)
+{
+	Handle dictionary = NewDictionary((UByte) RINT(type), RINT(attributeSize));
+	if (airusResult >= 0)
+		SetFrameSlot(rcvr, RSSYMdict, RefVar(AddressToRef(dictionary)));
+	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0008fb28 FAirusLookupWord
+// LookupWord(word, result) on a dictionary frame: the word looked up,
+// and, when it is one the dictionary has, the frame handed in given its
+// `attribute` and the `terminalClass` - the character that would come
+// next, when only one would.  ==> what the engine made of it: 1 the word
+// is only the beginning of others, 2 it is that and a word too, 3 it is
+// a word and nothing goes on from it, -6 nothing begins that way.
+Ref
+FAirusLookupWord(RefArg rcvr, RefArg word, RefArg result)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
+	VerifyStart(dictionary);
+	void* terminal = nil;
+	ULong* attribute = nil;
+	VerifyString(dictionary, text, &terminal, &attribute, nil);
+	if ((airusResult == kAirusIsPrefixAndWord || airusResult == kAirusIsWord) && NOTNIL(result))
+	{
+		SetFrameSlot(result, RSSYMattribute,
+					 attribute == nil ? RefVar(NILREF) : RefVar(MAKEINT(*attribute)));
+		SetFrameSlot(result, RSSYMterminalclass,
+					 terminal == nil ? RefVar(NILREF) : RefVar(MAKEINT(*(UByte*) terminal)));
+	}
+	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0008fc3c FAirusAddWord
+// AddWord(word, attribute) on a dictionary frame.  ==> 0 it went in, 4
+// it was there already.
+Ref
+FAirusAddWord(RefArg rcvr, RefArg word, RefArg attribute)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
+	AddWord(dictionary, 0, text, (ULong) RINT(attribute));
+	return MAKEINT(airusResult);
 }
 
 // ROM 0x0008ed50 FValidateWord
@@ -363,6 +456,9 @@ RegisterWordNatives(void)
 	RegisterNativeFunction("FValidateWord", (void*) FValidateWord, 2);
 	RegisterNativeFunction("FLookupWord__FRC6RefVarT1", (void*) FLookupWord, 1);
 	RegisterNativeFunction("FFindDictionaryFrame", (void*) FFindDictionaryFrame, 1);
+	RegisterNativeFunction("FAirusNew", (void*) FAirusNew, 2);
+	RegisterNativeFunction("FAirusLookupWord", (void*) FAirusLookupWord, 2);
+	RegisterNativeFunction("FAirusAddWord", (void*) FAirusAddWord, 2);
 	RegisterNativeFunction("FWRecIsBeingUsed", (void*) FWRecIsBeingUsed, 0);
 	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);
 	RegisterNativeFunction("FStripRecognitionWordDiacritsOK", (void*) FStripRecognitionWordDiacritsOK, 1);

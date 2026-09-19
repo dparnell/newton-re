@@ -77,7 +77,7 @@ NewDictionary(UByte type, long attributeSize)
 	parms->fWord = ((type & 7) == kAirusKindEnum16 || (type & 7) == kAirusKindAL16)
 					? gAirusScratch16 : gAirusScratch8;
 	parms->fGrowBy = 100;
-	parms->fField04 = -1;
+	parms->fDictID = -1;
 	parms->fField3c = 1;
 	parms->fField38 = 0;
 	parms->fCurrent = handle;

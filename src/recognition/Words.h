@@ -20,6 +20,9 @@
 #ifndef __UNICODE_H
 #include "Unicode.h"
 #endif
+#ifndef __NEWTONMEMORY_H
+#include "NewtonMemory.h"
+#endif
 
 // what ValidateWord answers (the bits it sets in its result)
 enum
@@ -61,6 +64,11 @@ ULong	CheckCapAttributes(const UniChar* word);	// ROM 0x0008ec34 CheckCapAttribu
 // while it is NOT YET RECONSTRUCTED
 extern ULong	gWordID;						// ROM 0x0c101844 gWordID
 
+// the dictionaries a user writes into, which start empty
+const long	kUserDictionary		= 31;
+const long	kExpandDictionary	= 35;
+const long	kAutoAddDictionary	= 36;
+
 void	InitDictionaries(void);					// ROM 0x0013de2c InitDictionaries__Fv
 Ref		Dictionaries(void);						// ROM 0x0013d460 Dictionaries__Fv
 Ref		FindDictionaryFrame(ULong id);			// ROM 0x0013e558 FindDictionaryFrame__FUl
@@ -69,6 +77,10 @@ Ref		FValidateWord(RefArg rcvr, RefArg word, RefArg options);	// ROM 0x0008ed50 
 Ref		FLookupWord(RefArg rcvr, RefArg word);					// ROM 0x0008ef38 FLookupWord__FRC6RefVarT1
 Ref		FFindDictionaryFrame(RefArg rcvr, RefArg id);			// ROM 0x0013e988 FFindDictionaryFrame
 Ref		FWRecIsBeingUsed(RefArg rcvr);							// ROM 0x0014444c FWRecIsBeingUsed
+Handle	GetScriptDictRef(RefArg dictionary);					// ROM 0x0008ea78 GetScriptDictRef__FRC6RefVar
+Ref		FAirusNew(RefArg rcvr, RefArg type, RefArg attributeSize);	// ROM 0x0008ee98 FAirusNew
+Ref		FAirusLookupWord(RefArg rcvr, RefArg word, RefArg result);	// ROM 0x0008fb28 FAirusLookupWord
+Ref		FAirusAddWord(RefArg rcvr, RefArg word, RefArg attribute);	// ROM 0x0008fc3c FAirusAddWord
 Ref		FStripRecognitionWord(RefArg rcvr, RefArg word);			// ROM 0x0008eff4 FStripRecognitionWord
 Ref		FStripRecognitionWordDiacritsOK(RefArg rcvr, RefArg word);	// ROM 0x0008f030 FStripRecognitionWordDiacritsOK
 

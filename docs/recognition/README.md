@@ -373,28 +373,89 @@ slot gets the `TDictionary` the ROM built for it - out of the ROM's word
 data for most, empty (`NewDictionary`) for the three a user writes into:
 31 the user dictionary, 35 the expand dictionary, 36.
 
-That much is reconstructed.  The dictionaries **themselves** are NOT YET:
-`InitROMDictionaryData`, `GetROMDictionaryData`, `BuildDictionaryFromPtr`,
-`NewDictionary`, the trie, `gDictList`, and the Airus engine the frames'
-methods go through (`FAirusLookupWord` 0x0008fb28 over `GetScriptDictRef`,
-`VerifyStart`, `VerifyString`).  Every frame's `dict` slot therefore
-stays nil.
+The three a user writes into - 31 the user dictionary, 35 the expand
+dictionary and 36 - start empty (`NewDictionary`); the rest are built
+out of the ROM's own word data, which is NOT YET
+(`InitROMDictionaryData`, `GetROMDictionaryData`,
+`BuildDictionaryFromPtr`, the trie that is dictionary 32, and
+`gDictList` beside them).
 
-This is where the Setup assistant stops.  Leaving its "Enter your name"
-page runs, from the Continue button:
+## The Airus engine (`recognition/Airus.h`)
+
+A dictionary is a trie in a byte stream, kept in a Handle, with an
+`AirusAParmBlock` of 0x58 bytes in front of it: where the data is, how
+big it is, how far it has been filled, the word being looked at, and
+where the last walk got to.  The block lives behind a Handle of its own
+and is what everything outside calls a dictionary; the engine works on
+one at a time, through the global `AE_Parms`.
+
+The data begins with two bytes saying what it is: `'a'`, then a byte
+whose low three bits are the kind, bit 3 "lock the Handle while a walker
+runs", and high four the size of the attribute each word carries.  The
+kind picks the family of walkers: `AL` and `AL16` for the lexicons built
+into the ROM (NOT YET), `AEnum` for the ones the machine writes, which
+is what the user's words go in.  Everything goes through `CallAirusA`
+0x0002d41c with one of ten selectors - StartA, ExitA, Verify, AddWord,
+DeleteWord, FirstLast, NextPrevious, ChangeAttribute, NextSet,
+NextSet9.
+
+### A node
 
 ```
-buttonClickScript -> TearDown -> AddWordsToDict -> AddWord -> DoAddWord
-                  -> AddEncodedWord -> AddOneEncodedWord -> LookupWord
+character | flags | sibling offset | attribute | children... | sibling
 ```
 
-- the last being the user dictionary's own `LookupWord`, which is the
-Airus native.  The assistant is adding the name that was typed to the
-user dictionary, as a machine does so that the recogniser will read it
-back later, and there is no dictionary for it to go into.  Typing nothing
-and tapping Continue gets past, because there is then no word to add.
+The flags byte carries the size class of the sibling offset in bits 7-6,
+"no children" in bit 5, "an attribute follows" in bit 4, and the top
+nibble of the offset in bits 3-0.  The offset is counted from the end of
+the attribute and reaches over every child, which is what makes it the
+way to the next node of the same row.  Two generated tables decode it
+(`AirusTables.cpp`, from the initialised read-write data): the masks
+`{0xffffffff, 0xf, 0xfff, 0xffffffff}` and the node sizes `{2, 2, 3,
+5}`.  The offset itself is counted in nibbles - one, three or seven -
+the first of them in the flag byte.
 
-NOT YET: TController and the arbiter, the domains (stroke, edge-list
+### Looking up
+
+`VerifyStart` 0x0002c760 puts every dictionary of a chain back to its
+beginning; `VerifyString` 0x0002cd20 then follows a whole word down,
+through `AE8_Verify` 0x0002b048, and leaves `airusResult` saying what it
+is: 1 the beginning of other words and not one itself, 2 both, 3 a word
+with nothing going on from it, -6 nothing begins that way.  It hands
+back pointers to the word's attribute and to the character that would
+come next when only one would.  The walk can also be taken one character
+at a time, which is what the recogniser does as it reads.
+
+### Writing
+
+`AddWord` 0x0002c48c puts a word in.  `FindInsertionPoint` 0x00029630
+follows it down for as long as it is already there and says where the
+rest goes - before a node that sorts after it, as the first child of a
+word that ended there until now, or past everything the last row leads
+to.  `PutWord` 0x00029360 writes what is left as a row of single nodes,
+the last carrying the attribute.  Making room moves everything after it,
+so `FixupPointers` 0x000294a8 then makes every sibling offset that
+reached over that place reach over it still - each may need more bytes,
+which moves things again, so what has grown is carried along the stack
+of nodes `FindInsertionPoint` put aside on the way down.
+
+### What a script sees
+
+A dictionary frame's `dict` slot holds the engine's dictionary by
+address (`GetScriptDictRef` 0x0008ea78).  `FAirusNew` 0x0008ee98 makes
+one, `FAirusLookupWord` 0x0008fb28 looks a word up and fills in the
+`attribute` and `terminalClass` of the frame it is handed, and
+`FAirusAddWord` 0x0008fc3c adds one.  That is the chain the Setup
+assistant's Continue button runs down when a name has been typed in, and
+with it the assistant goes on to its next page.
+
+NOT YET: the AL and AL16 walkers, AE16, deleting and the iterators
+(`AEnum_DeleteWord`, `AEnum_FirstLast`, `AEnum_NextPrevious`,
+`AEnum_ChangeAttribute`, `AEnum_NextSet`, `TAirusIterator`), and
+`ReadRefDictionary`, which builds a dictionary out of a binary rather
+than making an empty one.
+
+NOT YET: TController and the arbiter, the domains (stroke, edge-listNOT YET: TController and the arbiter, the domains (stroke, edge-list
 gestures, shapes, words), the area cache (`InitAreas`,
 `GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the
 inker and ink (`StrokeUpdate`, `TStroke::Draw`, the expired strokes'
