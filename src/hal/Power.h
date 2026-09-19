@@ -60,11 +60,37 @@ struct PowerPlantStatus
 	Fixed	fBatteryTemp;		// +0x30
 };
 
+// The bits of a power event, as the machine reports what brought it back
+// (TVoyagerPlatform::TranslatePowerEvent 0x0026ca40 reads them)
+enum
+{
+	kPowerEventAlarm		= 0x00000004,	// the real-time clock's alarm
+	kPowerEventCardLock		= 0x00008000,	// the card lock switch
+	kPowerEventSerialGPI	= 0x00800000,	// the serial port's general-purpose input
+	kPowerEventInterconnect	= 0x01000000	// the interconnect port
+};
+
+// what a wakeup is put down to (FPowerOff answers the matching symbol)
+enum
+{
+	kWokeBecause		= 1,		// nothing in particular
+	kWokeSerialGPI		= 2,
+	kWokeAlarm			= 3,
+	kWokeUser			= 4,		// the power switch
+	kWokeCardLock		= 5,
+	kWokeInterconnect	= 7
+};
+
 extern "C" {
 // which battery (0 is the main one) -> its status; an error leaves it alone
 NewtonErr	GetPowerPlantStatus(long which, PowerPlantStatus* status);
 // how many batteries the machine has (0 when it cannot say)
 long		GetPowerPlantCount(void);
+// the machine powered down until something brings it back; ==> the
+// power event word saying what did (0 for nothing in particular)
+ULong		CyclePower(void);
+// that word as one of the kWoke... reasons
+long		TranslatePowerEvent(ULong event);
 }
 
 #endif	/* __HAL_POWER_H */

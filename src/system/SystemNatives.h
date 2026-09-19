@@ -16,11 +16,16 @@
 	(DEVIATION: the power manager, which the ROM asks with an RPC, is
 	NOT YET RECONSTRUCTED).
 
+	FPowerOff 0x00201b00 - the machine asleep and awake again - belongs
+	here too, and is in newt/NewtWorld.cpp instead, because it notes the
+	time the machine woke in the newt world's gLastWakeupTime, which is
+	above this library.  SleepUntilNextWakeup, which it shares with the
+	battery check, is here.
+
 	NOT YET RECONSTRUCTED: the rest of the battery (FBatteryRawStatus
-	0x002017d4, FBatteryLevel 0x00201804, FMinimumBatteryCheck
-	0x002019a0), the backlight
-	(FBackLightStatus 0x00201a0c, FBackLight 0x00201a3c), FPowerOff
-	0x00201b00 and FSetRandomSeed 0x002017a4.
+	0x002017d4, FBatteryLevel 0x00201804), the backlight
+	(FBackLightStatus 0x00201a0c, FBackLight 0x00201a3c) and
+	FSetRandomSeed 0x002017a4.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -33,6 +38,7 @@
 Ref		FGetSerialNumber(RefArg rcvr);
 Ref		FBatteryStatus(RefArg rcvr, RefArg which);	// ROM 0x00203db8 FBatteryStatus
 Ref		FMinimumBatteryCheck(RefArg rcvr);			// ROM 0x002019a0 FMinimumBatteryCheck - the ROM holds no name for it, so only the ROM's own scripts reach it
+long	SleepUntilNextWakeup(void);					// ROM 0x002018f8 SleepUntilNextWakeup__Fv - ==> a kWoke... reason (hal/Power.h)
 
 void	RegisterSystemNatives(void);
 

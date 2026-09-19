@@ -7,6 +7,9 @@
 */
 
 #include "NewtWorld.h"
+#include "SystemNatives.h"
+#include "Locale.h"
+#include "hal/Power.h"
 #include "Notebook.h"
 #include "RootView.h"
 #include "Keyboard.h"
@@ -181,6 +184,7 @@ TNewtWorld::MainConstructor()
 	TURealTimeAlarm::NewName(&NewtAlarmName);	// (0, and the slot it takes still reads as free:
 												// see TRealTimeClock::NewName)
 	RegisterAlarmNatives();
+	RegisterPowerNatives();
 	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
 	InitializeCompression();
 	if (gNewtHostBoot != nil)
@@ -758,6 +762,51 @@ FEventPause(RefArg /*rcvr*/, RefArg tickle)
 	TTime since = now;
 	CompSub(&latest->time, &since.time);
 	return MAKEINT(since.ConvertTo(kSeconds));
+}
+
+
+// ROM 0x00201b00 FPowerOff
+// PowerOff(): the machine asleep until something wakes it, and then put
+// back the way it was.  ==> a symbol saying what woke it.
+//
+// It belongs with the machine's other natives (system/SystemNatives.h)
+// and is here because of its last line: the time the machine woke is
+// kept in this world's gLastWakeupTime, which is what holds the
+// automatic power-off off until the machine has been left alone again.
+// Without it the machine tries to power off over and over.
+//
+// The order is the ROM's, and it matters: the machine sleeps first and
+// everything after that is the waking up.  There has to be enough power
+// to go on (FMinimumBatteryCheck sleeps again if there is not), and the
+// tablet's calibration is read back unless the blessed application is
+// the setup assistant, which is still asking for it.
+//
+// NOT YET RECONSTRUCTED: LoadInkerCalibration 0x0013fc2c, which reads
+// the calibration back.
+Ref
+FPowerOff(RefArg rcvr)
+{
+	long reason = SleepUntilNextWakeup();
+	FMinimumBatteryCheck(rcvr);
+	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))
+		;		// NOT YET RECONSTRUCTED: LoadInkerCalibration()
+	gLastWakeupTime = GetGlobalTime();
+	switch (reason)
+	{
+	case kWokeSerialGPI:		return RSSYMserialgpi;
+	case kWokeAlarm:			return RSSYMalarm;
+	case kWokeUser:				return RSSYMuser;
+	case kWokeCardLock:			return RSSYMcardlock;
+	case kWokeInterconnect:		return RSSYMinterconnect;
+	default:					return RSSYMbecause;
+	}
+}
+
+
+void
+RegisterPowerNatives(void)
+{
+	RegisterNativeFunction("FPowerOff", (void*) FPowerOff, 0);
 }
 
 

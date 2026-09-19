@@ -124,6 +124,11 @@ void	RegisterBusyBoxNatives(void);
 Ref		FSetSysAlarm(RefArg rcvr, RefArg time, RefArg func, RefArg args);	// ROM 0x0030eeec FSetSysAlarm
 void	RegisterAlarmNatives(void);
 
+// the power switch as a script sees it (system/SystemNatives.h says why
+// it is here rather than with the machine's other natives)
+Ref		FPowerOff(RefArg rcvr);							// ROM 0x00201b00 FPowerOff
+void	RegisterPowerNatives(void);
+
 
 // a 'newt/'idle/'scpt event: a method of a root variable run with a binary
 // of the data (0x9c bytes); the error and the result (an integer) come

@@ -16,6 +16,9 @@
 #include "hal/Power.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
+#include "Screen.h"
+#include "Keyboard.h"
+#include "Locale.h"
 
 
 // ROM 0x0020171c FGetSerialNumber
@@ -290,14 +293,22 @@ FBatteryCount(RefArg /*rcvr*/)
 // The machine put to sleep until something wakes it: the backlight off,
 // the power cycled (the hard keymap cleared if it came back), the
 // contrast set from the preference again and the power event handed on.
+// ==> what woke it, as one of the kWoke... reasons.
 //
-// NOT YET RECONSTRUCTED: FBackLight 0x00201a3c, CyclePower, the power
-// events.  Nothing on a host sleeps, and its only caller below never
-// gets here, because the host's power plant never reports a flat
-// battery.
-static void
+// NOT YET RECONSTRUCTED: FBackLight 0x00201a3c, which turns the
+// backlight off first.  The sleep itself is hal/Power.h's CyclePower,
+// and on a host it does not sleep at all.
+long
 SleepUntilNextWakeup(void)
-{ }
+{
+	// NOT YET RECONSTRUCTED: FBackLight(nil, nil)
+	ULong event = CyclePower();
+	if (event != 0)
+		ClearHardKeymap();		// a key held down through the sleep is not a keypress
+	RefVar contrast(GetPreference(RSSYMlcdcontrast));
+	FSetLCDContrast(RefVar(NILREF), contrast);
+	return TranslatePowerEvent(event);
+}
 
 
 // ROM 0x002019a0 FMinimumBatteryCheck

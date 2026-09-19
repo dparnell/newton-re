@@ -44,3 +44,44 @@ GetPowerPlantCount(void)
 {
 	return 1;
 }
+
+// ROM 0x00192764 CyclePower__Fv
+// On a MessagePad this sends the power-off system event, shuts the
+// battery, screen and tablet down, waits for any flash erase to finish,
+// and then, with the scheduler held and the stack locked, turns the
+// system off and on again in a loop until something real wakes it - the
+// power switch, the card lock, the serial port's general-purpose input,
+// the interconnect, or the real-time clock's alarm.  What woke it is the
+// word it answers.
+//
+// DEVIATION: a host cannot power itself down, so the machine simply does
+// not sleep and comes straight back with nothing to report.  The caller
+// treats that as an ordinary wakeup, which is what the reconstruction
+// needs: FPowerOff notes the time it woke, and that is what puts the
+// automatic power-off off until the machine has been idle again.
+extern "C" ULong
+CyclePower(void)
+{
+	return 0;
+}
+
+
+// ROM 0x0026ca40 TranslatePowerEvent__16TVoyagerPlatformFUl
+// The power event word as a reason.  The interconnect and the card lock
+// answer whatever the platform driver was told to call them (the fields
+// RegisterPowerSwitchInterrupt and its like fill in), and with nothing
+// there they fall through to the tests below them; so does a word with
+// neither bit in it.
+//
+// NOT YET RECONSTRUCTED: the platform driver (TVoyagerPlatform) and the
+// two registered reasons, so the fields are always empty here and the
+// three plain tests are what is left.
+extern "C" long
+TranslatePowerEvent(ULong event)
+{
+	if ((event & kPowerEventSerialGPI) != 0)
+		return kWokeSerialGPI;
+	if ((event & kPowerEventAlarm) != 0)
+		return kWokeAlarm;
+	return kWokeBecause;
+}

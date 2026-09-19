@@ -93,6 +93,10 @@ static const char* kSetupSource =
 	"    local b := BatteryStatus(0); "
 	"    if b.batteryType = 'alkaline and b.batteryCapacity = 100 and b.acPower = 'no "
 	"       and b.chargeState = 'discharging and b.batteryVoltage > 5.0 then 1 else 0 end, "
+	// PowerOff: the ROM's own wrapper round the native - the machine
+	// asleep and awake again
+	"  powerOff: func(data) "
+	"    if PowerOff(nil) then 1 else 0, "
 	"  countClicks: func(data) clicks, "
 	"  countTaps: func(data) taps, "
 	"  textLength: func(data) StrLen(para.text) "
@@ -109,6 +113,7 @@ static long gTextLength = 0;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
 static Boolean gMinimumBatteryOk = false;
+static Boolean gPowerOffOk = false;
 static Boolean gWorldDataOk = false;
 static long gMainDone = 0;
 static Boolean gAliveAfterBoot = false;
@@ -194,6 +199,15 @@ Scenario(void)
 		TRunScriptEvent world("testApp", "worldData");
 		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
 		gWorldDataOk = world.fError == 0 && world.fResult == 1;
+		// PowerOff: the machine asleep and awake again.  A host does not
+		// sleep, so it comes straight back with nothing in particular to
+		// blame - and it notes the time it woke, which is what holds the
+		// automatic power-off off until the machine is left alone again.
+		TTime wokeBefore = gLastWakeupTime;
+		TRunScriptEvent off("testApp", "powerOff");
+		newtPort.SendRPC(&replySize, &off, sizeof(off), &off, sizeof(off));
+		gPowerOffOk = off.fError == 0 && off.fResult == 1
+					  && CompCompare(&gLastWakeupTime.time, &wokeBefore.time) > 0;
 	}
 	// a key typed into the paragraph: the keyboard tool's 'keyb event, the
 	// repeat rates replied
@@ -247,6 +261,7 @@ int main()
 	EXPECT(gPauseOk);
 	EXPECT(gBatteryOk);
 	EXPECT(gMinimumBatteryOk);
+	EXPECT(gPowerOffOk);
 	EXPECT(gWorldDataOk);
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gRedraws == 1);
