@@ -146,6 +146,19 @@ ULong	GetAttr(long offset);								// ROM 0x0002b6b4 GetAttr__FUl - the attribut
 long	FollowLeft(long node);								// ROM 0x00028fa0 FollowLeft__FUl - the offset of its first child
 ULong	GetSymbol(long node);								// ROM 0x00029318 GetSymbol__FUl - its character
 
+// writing a node
+void	PutDictBytes(long offset, long count, ULong value);	// ROM 0x000298b0 PutDictBytes__FUliT1
+long	Ashortstrlen(const UniChar* s);						// ROM 0x0002e6fc Ashortstrlen__FPUs - twice the characters in it
+UniChar*	CopyBufferHack(UByte* bytes, UniChar* chars, long back);	// ROM 0x00029a20 CopyBufferHack__FPUcPUsi
+long	RPNibbleSize(long node);							// ROM 0x0002af64 RPNibbleSize__FUl
+ULong	GetRP(long node);									// ROM 0x0002900c GetRP__FUl - the offset to its sibling
+void	SetRPFlags(long node, long size);					// ROM 0x0002b654 SetRPFlags__FUli
+long	FollowRight(long node);								// ROM 0x000290c4 FollowRight__FUl - the offset of its sibling
+long	ClearRP(long node);									// ROM 0x00029158 ClearRP__FUl
+long	PutRP(long node, ULong offset);						// ROM 0x0002919c PutRP__FUlT1 - ==> how much the data grew
+long	PutAttr(long offset);								// ROM 0x0002b708 PutAttr__FUl
+long	ClearAttr(long offset);								// ROM 0x00028f6c ClearAttr__FUl
+
 // walking
 long	AE8_Verify(AirusAParmBlock* parms);					// ROM 0x0002b048 AE8_Verify__FP15AirusAParmBlock
 long	AEnum_Verify(AirusAParmBlock* parms);				// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock - AE8 or AE16 by the dictionary's kind

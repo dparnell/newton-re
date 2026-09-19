@@ -274,6 +274,224 @@ GetSymbol(long node)
 
 
 /*------------------------------------------------------------------------------
+	W r i t i n g   a   n o d e
+
+	The sibling offset - the ROM calls it the RP - is kept in nibbles: one
+	in the flag byte's low half, and the rest in the bytes after it.  Its
+	size class says how many: one nibble, three, or seven.  Changing it
+	means making room or taking it away, which moves everything after this
+	node along, and is why adding a word ends by fixing up the offsets that
+	pointed over the place it grew.
+------------------------------------------------------------------------------*/
+
+// ROM 0x000298b0 PutDictBytes__FUliT1
+// Count bytes of that value written big-endian at the offset.
+void
+PutDictBytes(long offset, long count, ULong value)
+{
+	while (count > 0)
+	{
+		char byte;
+		if (count == 4)
+			byte = (char) (value >> 24);
+		else if (count == 3)
+			byte = (char) (value >> 16);
+		else if (count == 2)
+			byte = (char) (value >> 8);
+		else
+			byte = (char) value;
+		AE_Parms->fData[offset] = byte;
+		count--;
+		offset++;
+	}
+}
+
+
+// ROM 0x0002e6fc Ashortstrlen__FPUs
+// The bytes a UniChar string takes, not counting its terminator - twice
+// the characters in it.
+long
+Ashortstrlen(const UniChar* s)
+{
+	const UniChar* p = s;
+	while (*p++ != 0)
+		;
+	return ((p - s) * 2) - 2;
+}
+
+
+// ROM 0x00029a20 CopyBufferHack__FPUcPUsi
+// The word moved between the bytes the caller handed in and the UniChars
+// the adding works in.  A 16-bit dictionary's word is already UniChars,
+// so nothing is copied and the buffer it was in is the answer.
+UniChar*
+CopyBufferHack(UByte* bytes, UniChar* chars, long back)
+{
+	long kind = (UByte) (*AE_Parms->fDataHandle)[1] & 7;
+	if (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+		return back == 0 ? (UniChar*) bytes : chars;
+	if (back == 0)
+	{
+		long length = (long) strlen((const char*) bytes);
+		long i = 0;
+		for (; i < length; i++)
+			chars[i] = bytes[i];
+		chars[i] = 0;
+		return chars + i;
+	}
+	long length = Ashortstrlen(chars) / 2;
+	long i = 0;
+	for (; i < length; i++)
+		bytes[i] = (UByte) chars[i];
+	bytes[i] = 0;
+	return (UniChar*) (bytes + i);
+}
+
+
+// ROM 0x0002af64 RPNibbleSize__FUl
+// The nibbles the node's sibling offset takes, by its size class.
+long
+RPNibbleSize(long node)
+{
+	long size = (UByte) AE_Parms->fData[node + AirusCharSize()] >> 6;
+	if (size == 0)
+		return 0;
+	if (size == 1)
+		return 1;
+	if (size == 2)
+		return 3;
+	if (size == 3)
+		return 7;
+	return 0;
+}
+
+
+// ROM 0x0002900c GetRP__FUl
+// The node's sibling offset: the low nibble of its flags at the top, and
+// the bytes after them below.
+ULong
+GetRP(long node)
+{
+	long nibbles = RPNibbleSize(node);
+	if (nibbles <= 0)
+		return 0;
+	ULong value = GetDictBytes(node + AirusCharSize(), 1);
+	nibbles--;
+	value = (value & 0x0f) << (nibbles * 4);
+	if (nibbles > 0)
+		value |= GetDictBytes(node + AirusCharSize() + 1, nibbles / 2);
+	return value;
+}
+
+
+// ROM 0x0002b654 SetRPFlags__FUli
+// The node's size class, the rest of its flags left as they are.
+void
+SetRPFlags(long node, long size)
+{
+	UByte flags = (UByte) AE_Parms->fData[node + AirusCharSize()];
+	flags = (UByte) ((flags & 0x3f) | ((size & 3) << 6));
+	AE_Parms->fData[node + AirusCharSize()] = (char) flags;
+}
+
+
+// ROM 0x000290c4 FollowRight__FUl
+// The offset of the node's sibling: past its own bytes, past its
+// attribute when it has one, and on by its sibling offset - which is
+// what carries it over all of its children.
+long
+FollowRight(long node)
+{
+	UByte flags = (UByte) AE_Parms->fData[node + AirusCharSize()];
+	if ((flags & kAirusHasAttribute) != 0 && AE_Parms->fAttributeSize != 0)
+		return SkipNode(node) + AE_Parms->fAttributeSize + GetRP(node);
+	return SkipNode(node) + GetRP(node);
+}
+
+
+// ROM 0x00029158 ClearRP__FUl
+// The node's sibling offset taken away; ==> the bytes that went.
+long
+ClearRP(long node)
+{
+	long size = RPByteSize(node);
+	if (size > 0)
+		SlideUp(SkipNode(node), size);
+	SetRPFlags(node, 0);
+	return size;
+}
+
+
+// ROM 0x0002919c PutRP__FUlT1
+// The node given that sibling offset, in as few nibbles as will hold it,
+// the bytes after the flags made to fit; ==> how much the data grew (or
+// shrank, as a negative).
+//
+// The ROM has no case for an offset of 0x10000000 or more: it uses
+// whatever was left in the registers.  A dictionary that big cannot say
+// where its siblings are, so the largest class is taken here and the
+// offset written as far as it goes - which is the nearest thing to what
+// the ROM does that can be written down.
+long
+PutRP(long node, ULong offset)
+{
+	long was = RPByteSize(node);
+	long nibbles = 7;
+	long size = 3;
+	if ((offset & ~0x0fUL) == 0)
+	{
+		nibbles = 1;
+		size = 1;
+	}
+	else if ((long) offset >> 12 == 0)
+	{
+		nibbles = 3;
+		size = 2;
+	}
+	long grew = (nibbles / 2) - was;
+	if (grew > 0)
+		SlideDown(node + AirusCharSize() + 1, grew);
+	else if (grew < 0)
+		SlideUp(SkipNode(node), -grew);
+	SetRPFlags(node, size);
+	nibbles--;
+	ULong top = (offset >> (nibbles * 4)) & 0x0f;
+	ULong flags = GetDictBytes(node + AirusCharSize(), 1);
+	PutDictBytes(node + AirusCharSize(), 1, (flags & 0xf0) | top);
+	if (nibbles > 0)
+		PutDictBytes(node + AirusCharSize() + 1, nibbles / 2, offset);
+	return grew;
+}
+
+
+// ROM 0x0002b708 PutAttr__FUl
+// Room made at the offset for this dictionary's attribute, and the one
+// in the block written there; ==> the bytes it took.
+long
+PutAttr(long offset)
+{
+	long size = AE_Parms->fAttributeSize;
+	if (size > 0)
+	{
+		SlideDown(offset, size);
+		PutDictBytes(offset, size, AE_Parms->fAttribute);
+	}
+	return size;
+}
+
+
+// ROM 0x00028f6c ClearAttr__FUl
+// ... and taken away again; ==> the bytes that went.
+long
+ClearAttr(long offset)
+{
+	long size = AE_Parms->fAttributeSize;
+	if (size > 0)
+		SlideUp(offset + size, size);
+	return size;
+}
+
+/*------------------------------------------------------------------------------
 	L o o k i n g   a   w o r d   u p
 ------------------------------------------------------------------------------*/
 
