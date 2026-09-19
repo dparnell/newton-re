@@ -443,32 +443,20 @@ InitViewPrototypes(void)
 // setup form script as source, _proto the view methods} and its display
 // params are the port's rectangle (the application area the whole of it);
 // the application (gApplication, a plain TApplication) is made first.
-// The root's template: the ROM's own Rviewroot - 263 slots, the methods
-// every application sends to the root (Notify, BlessApp, CloseSlips,
-// GotoSleep, ...) and its setup scripts - with the C view methods put
-// under it as its _proto, the ROM's copy having none.  Without the ROM's
+// The root's template is the ROM's own Rviewroot, handed over as it lies:
+// 263 slots - the methods every application sends to the root (Notify,
+// BlessApp, _BlessedOpen, CloseSlips, GotoSleep, ...), its setup scripts,
+// and the fifty-nine children that are the system's views, none of them
+// visible, each opened when something asks for it.  Without the ROM's
 // objects there is the host's stand-in instead: a plain root that fills
-// white and takes its bounds from the display params.
+// white and takes its bounds from the display params, with the C view
+// methods as its _proto.
 Ref
 MakeRootTemplate(void)
 {
 	GrafPort* port = GetCurrentPort();
 	if (NOTNIL(Rviewroot))
-	{
-		RefVar templ(Clone(RefVar(Rviewroot)));
-		SetFrameSlot(templ, RSSYM_proto, RefVar(MakeViewMethods()));
-		// DEVIATION: the ROM's viewChildren is one of its own objects and
-		// so read-only, and FAddView appends to whatever the proto chain
-		// answers - so a script that adds a view to the root writes a
-		// read-only object and gets kNSErrObjectReadOnly.  Nothing in the
-		// ROM adds to the root that way (its applications are opened, not
-		// added), but the host's demos and tests do, so the array is
-		// copied into the clone.
-		RefVar children(GetFrameSlotRef(templ, RSSYMviewchildren));
-		if (NOTNIL(children))
-			SetFrameSlot(templ, RSSYMviewchildren, RefVar(Clone(children)));
-		return templ;
-	}
+		return Rviewroot;			// the ROM's own template, fifty-nine children and all
 	RefVar templ(AllocateFrame());
 	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clRootView)));
 	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible | vApplication)));
@@ -527,4 +515,15 @@ InitViewSystem(RefArg rootTemplate)
 	TRootView* root = new TRootView;
 	gRootView = root;
 	root->Constructor(templ);
+	// DEVIATION: the root's viewChildren is one of the ROM's own objects
+	// and so read-only, and FAddView appends to whatever the proto chain
+	// answers - so a script that adds a view to the root writes a read-only
+	// object and gets kNSErrObjectReadOnly.  The ROM never adds to the root
+	// that way (an application is installed by putting its context in a
+	// slot of the root, InstallFormPart, and opened from there), but the
+	// host's demos and tests do, so the root's own context is given a copy
+	// of the array to append to.  The template itself is left alone.
+	RefVar children(root->GetProto(RSSYMviewchildren));
+	if (NOTNIL(children))
+		root->SetContextSlot(RSSYMviewchildren, RefVar(Clone(children)));
 }

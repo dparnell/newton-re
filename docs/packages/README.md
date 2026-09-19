@@ -51,14 +51,36 @@ package written to a store as a large object through
 built into the ROM extension (below) from memory and through a
 pipe.
 
+## The frame export table (`fexp`)
+
+A package NTK builds refers to the objects of the system, and to the
+objects of the other packages built with it, through *magic pointers*: a
+ref whose value is a table number and an index into it
+(`docs/frames/README.md`; table 0 is the ROM's own, table 1 the global
+variables and the built-in functions, the even tables from 2 up the ROM
+extensions' export tables).  A ROM extension carries its table as its
+`fexp` configuration entry, beside `pkgl`: a flat array of refs, one per
+exported object, each an address inside one of the extension's own
+packages.  The MP2x00 US extension exports 166 of them.
+
+Nothing resolves until that table is in place, and a great deal points
+through it: an application's InstallScript, its views, its soup
+definitions.  `ROMPackages.cpp` copies the table into
+`gMagicPointerTables[2]` as the parts are imported - DEVIATION: on the
+Newton the entries are addresses of objects that are simply there, while
+the host imports each part into an object area of its own, so every entry
+is translated as its part arrives (`TImportedObjectArea::TranslateRef`)
+and an entry whose part has not been imported is left nil, answering
+`kNSErrBadMagicPointer` the way a missing entry does on the Newton.
+
 ## The packages built into the ROM extension
 
 The REx's `pkgl` entry holds ten packages (`rex-packages.md`, from
 `packages.py build/MP2x00US --parts`): six NTK applications with frames
-parts (Cardfile - the Names application, Verbindung - the connection
-utility, FaxViewer, Tabellen, Profil, and the help book), two protocol
-code packages (ScreenBuffer, ScreenDrivers: raw ARM code, not portable)
-and the WorldData soup package (a raw part read by `TPackageStore`,
+parts (Cardfile - the Names application, Connection, FaxViewer, Formulas,
+Setup, and the help book), ListView, two protocol code packages
+(ScreenBuffer, ScreenDrivers: raw ARM code, not portable) and the
+WorldData soup package (a raw part read by `TPackageStore`,
 `src/stores/PackageStore.h`).  `packages.py --extract DIR` writes them out
 as `.pkg` files.
 

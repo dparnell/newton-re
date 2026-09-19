@@ -149,8 +149,83 @@ Say(ULong packageId, ULong partIndex, const char* why)
 
 
 // one package's frames parts installed
+/*------------------------------------------------------------------------------
+	T h e   f r a m e   e x p o r t   t a b l e
+
+	A package built by NTK refers to the objects of the system, and to the
+	objects of the other packages built with it, through magic pointers: a
+	ref whose value is a table number and an index into it
+	(ObjectHeap.h's ResolveMagicPtr - table 0 is the ROM's own, table 1 the
+	global variables and the built-in functions, the even tables from 2 up
+	the ROM extensions' export tables).  A ROM extension carries its table
+	as its `fexp` configuration entry: a flat array of refs, one per
+	exported object, pointing into the extension's own packages.
+
+	On the Newton those refs are addresses of objects that are simply
+	there, and ResolveMagicPtr reads the entry as it lies.  DEVIATION: the
+	host imports each part into an object area of its own
+	(frames/FramesPart.h), so the addresses in the table mean nothing until
+	the part they point into has been imported - the table is copied into
+	gMagicPointerTables with each entry translated, and an entry whose part
+	has not been imported (a streamed one, which is NOT YET) is left nil
+	and answers kNSErrBadMagicPointer if anything asks for it, as a missing
+	entry does on the Newton.
+------------------------------------------------------------------------------*/
+
+// the table a ROM extension's exports live in: 2 for the first extension,
+// 4 for the second, and so on (ResolveMagicPtr)
+static long
+ExportTableFor(ULong rexId)
+{
+	return 2 + 2 * (long) rexId;
+}
+
+
+// The extension's export table made, empty, before its parts are imported.
 static void
-InstallPackage(const unsigned char* rom, ULong packageAddress, ULong packageId)
+MakeExportTable(ULong rexId)
+{
+	ULong size = 0;
+	VAddr table = GetRExConfigEntry(rexId, 'fexp', &size);
+	long which = ExportTableFor(rexId);
+	if (table == 0 || size < kARMWord || which >= kMagicPointerTables)
+		return;
+	long count = (long) (size / kARMWord);
+	Ref* entries = new Ref[count];
+	if (entries == nil)
+		return;
+	for (long i = 0; i < count; i++)
+		entries[i] = NILREF;
+	delete[] gMagicPointerTables[which];
+	gMagicPointerTables[which] = entries;
+	gMagicPointerTableCounts[which] = count;
+}
+
+
+// The entries of the extension's export table that point into the part
+// just imported, translated to the host's refs.
+static void
+TranslateExports(ULong rexId, const unsigned char* rom, ULong partAddress, ULong partSize,
+				 const TImportedObjectArea* area)
+{
+	ULong size = 0;
+	VAddr table = GetRExConfigEntry(rexId, 'fexp', &size);
+	long which = ExportTableFor(rexId);
+	if (table == 0 || which >= kMagicPointerTables || gMagicPointerTables[which] == nil)
+		return;
+	long count = gMagicPointerTableCounts[which];
+	for (long i = 0; i < count; i++)
+	{
+		ULong32 ref = GetBigEndianWord(rom + (ULong) table + i * kARMWord);
+		if (ref < partAddress || ref >= partAddress + partSize)
+			continue;
+		gMagicPointerTables[which][i] = area->TranslateRef(ref);
+	}
+}
+
+
+static void
+InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULong packageId)
 {
 	TPackageIterator iter((void*) (rom + packageAddress));
 	if (iter.Init() != noErr)
@@ -184,6 +259,7 @@ InstallPackage(const unsigned char* rom, ULong packageAddress, ULong packageId)
 			Say(packageId, i, "its bytes are not a run of objects");
 			continue;
 		}
+		TranslateExports(rexId, rom, packageAddress + offset, part.size, area);
 		RefVar frame(FramePartToplevelFrame(area->fArea));
 		if (ISNIL(frame))
 		{
@@ -238,6 +314,7 @@ LoadHighROMFramesPackages(void)
 		ULong end = at + listSize;
 		if (end > imageSize)
 			end = imageSize;
+		MakeExportTable(rexId);
 		ULong packageId = 0;
 		while (at + sizeof(PackageDirectory) <= end)
 		{
@@ -249,7 +326,7 @@ LoadHighROMFramesPackages(void)
 			ULong size = GetBigEndianWord(rom + at + 0x1c);
 			if (size < sizeof(PackageDirectory) || at + size > end)
 				break;
-			InstallPackage(rom, at, packageId++);
+			InstallPackage(rexId, rom, at, packageId++);
 			at = (at + size + 3) & ~3u;
 		}
 	}
