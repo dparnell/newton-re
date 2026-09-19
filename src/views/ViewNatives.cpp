@@ -27,6 +27,9 @@
 #include "NewtonTime.h"
 #include "CompMath.h"
 #include "Rects.h"
+#include "Pictures.h"
+#include "Regions.h"
+#include "RegionVars.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
@@ -1217,10 +1220,96 @@ FLayoutVerticallyX(RefArg rcvr, RefArg entries, RefArg index)
 	return result;
 }
 
+// ROM 0x000e3490 ToGlobalCoordinates__FRC6RefVarPsN32
+// A point (or two) in the view's own coordinates moved into the screen's:
+// the x's take the view's left edge, the y's its top.  Any of the four
+// may be nil.
+void
+ToGlobalCoordinates(RefArg context, short* x, short* y, short* x2, short* y2)
+{
+	TView* view = FailGetView(context);
+	Rect bounds = view->viewBounds;
+	if (x != nil)
+		*x = (short) (*x + bounds.left);
+	if (x2 != nil)
+		*x2 = (short) (*x2 + bounds.left);
+	if (y != nil)
+		*y = (short) (*y + bounds.top);
+	if (y2 != nil)
+		*y2 = (short) (*y2 + bounds.top);
+}
+
+
+// ROM 0x0003e85c FCopyBits
+// :CopyBits(picture, x, y, mode): a bitmap or picture frame drawn with
+// its top left at that point of the view.  The box handed to DrawPicture
+// is the point alone, so the picture is drawn at its own size.
+static Ref
+FCopyBits(RefArg rcvr, RefArg picture, RefArg x, RefArg y, RefArg mode)
+{
+	if (!ISINT(x))
+		ThrowMsg("param not an integer");
+	if (!ISINT(y))
+		ThrowMsg("param not an integer");
+	short px = (short) RINT(x);
+	short py = (short) RINT(y);
+	ToGlobalCoordinates(rcvr, &px, &py, nil, nil);
+	Rect box;
+	box.top = py;
+	box.left = px;
+	box.bottom = py;
+	box.right = px;
+	DrawPicture(picture, box, 0, ISNIL(mode) ? 0 : RINT(mode));
+	return NILREF;
+}
+
+
+// ROM 0x001edcbc FDoDrawing
+// :DoDrawing(message, args): the view's own message sent with the port
+// set to the view's visible region, so that a script may draw outside a
+// viewDrawScript.  The caret is taken down first when it stands over the
+// view, and the port's clipping and the caret are put back however the
+// message ends.  A view that is not visible all the way up is not drawn
+// in at all, and the message is not sent.
+static Ref
+FDoDrawing(RefArg rcvr, RefArg message, RefArg args)
+{
+	TView* view = FailGetView(rcvr);
+	RefVar result;
+	if (view->VisibleDeep())
+	{
+		TRegion vis(view->SetupVisRgn());
+		TRegionVar saved(vis);
+		Rect caret;
+		gRootView->GetCaretRect(&caret);
+		Rect bounds;
+		view->OuterBounds(&bounds);
+		Boolean overCaret = Overlaps(&caret, &bounds);
+		unwind_protect
+		{
+			if (overCaret)
+				gRootView->HideCaret();
+			result = DoMessage(rcvr, message, args);
+		}
+		on_unwind
+		{
+			GrafPort* port;
+			GetPort(&port);
+			CopyRgn(saved, port->visRgn);
+			if (overCaret)
+				gRootView->ShowCaret();
+		}
+		end_unwind;
+	}
+	return result;
+}
+
 void
 RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FLayoutVerticallyX", (void*) FLayoutVerticallyX, 2);
+	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
+	RegisterNativeFunction("FDoDrawing", (void*) FDoDrawing, 2);
 	RegisterNativeFunction("FModalState", (void*) FModalState, 0);
 	RegisterNativeFunction("TableLookup", (void*) FTableLookup, 2);
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
@@ -1315,6 +1404,7 @@ MakeViewMethods(void)
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
 		{ "LayoutColumn", (void*) FLayoutVerticallyX, 2 },
+		{ "CopyBits", (void*) FCopyBits, 4 }, { "DoDrawing", (void*) FDoDrawing, 2 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)

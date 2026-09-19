@@ -314,6 +314,36 @@ CheapDistance(const Point& a, const Point& b)
 	return (dh < dv) ? dv + (dh >> 1) : dh + (dv >> 1);
 }
 
+// ROM 0x001976b0 Intersects__5TRectCFRC5TRect
+// Whether the two rectangles have anything in common.
+Boolean
+Intersects(const Rect* r, const Rect* other)
+{
+	Rect sect;
+	return SectRect(other, r, &sect);
+}
+
+
+// ROM 0x001991fc Overlaps__5TRectCFRC5TRect
+// Intersects, but a rectangle with no width or height is given a pixel
+// of it first, so that a caret - which is a line - still overlaps what it
+// stands on.
+Boolean
+Overlaps(const Rect* r, const Rect* other)
+{
+	Rect mine = *r;
+	Rect theirs = *other;
+	if (mine.left == mine.right)
+		mine.right++;
+	if (mine.top == mine.bottom)
+		mine.bottom++;
+	if (theirs.left == theirs.right)
+		theirs.right++;
+	if (theirs.top == theirs.bottom)
+		theirs.bottom++;
+	return Intersects(&mine, &theirs);
+}
+
 // ROM 0x001976d8 CoveredBy__5TRectCFRC5TRect
 // How much of r, as a percentage, the intersection with other covers.  A
 // rectangle with no width or height would intersect nothing, so each is

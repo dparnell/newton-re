@@ -376,6 +376,7 @@ TView*		GetView(RefArg context, RefArg name);					// ROM 0x002614e0 GetView__FRC
 TView*		FailGetView(RefArg context);							// ROM 0x001eda04 FailGetView__FRC6RefVar
 TView*		FailGetView(RefArg context, RefArg name);				// ROM 0x001ede40 FailGetView__FRC6RefVarT1
 TView*		BuildView(TView* parent, RefArg context);				// ROM 0x0025e950 BuildView__FP5TViewRC6RefVar
+void		ToGlobalCoordinates(RefArg context, short* x, short* y, short* x2, short* y2);	// ROM 0x000e3490 ToGlobalCoordinates__FRC6RefVarPsN32 - the view's own coordinates turned into the screen's
 Ref			DoPopupMenu(RefArg rcvr, RefArg pickItems, RefArg x, RefArg y, RefArg callbackContext);	// ROM 0x001f0624 FDoPopup__FRC6RefVarN41 - a popup menu opened over the items
 TView*		Exists(TViewList* list, RefArg templ);					// ROM 0x00261d80 Exists__FP9TViewListRC6RefVar
 TView*		DataExists(TViewList* list, RefArg data);				// ROM 0x00261784 DataExists__FP9TViewListRC6RefVar

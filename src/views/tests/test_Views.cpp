@@ -901,6 +901,28 @@ TestShapes()
 	EXPECT(RINT(Eval("ShapeBounds(OffsetShape(MakePolygon([0, 0, 10, 0, 5, 8]), 4, 4)).left")) == 4);
 	EXPECT(EQRef(ClassOf(Eval("MakeRegion(MakeRect(2, 2, 6, 6))")), RSSYMregion) && RINT(Eval("ShapeBounds(MakeRegion(MakeRect(2, 2, 6, 6))).right")) == 6);
 
+	// CopyBits puts a bitmap at a point of the view and DoDrawing lets a
+	// script draw outside a viewDrawScript, both in the view's coordinates
+	{
+		static const unsigned char kBox[4] = { 0xf0, 0x90, 0x90, 0xf0 };		// a hollow 4 x 4 box
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "pict")), RefVar(MakeBitmap(kBox, 8, 4)));
+		TView* d = ViewOf("ctxD := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 120, bottom: 90}, PaintIt: func() begin :CopyBits(pict, 2, 2, nil); :DrawShape(MakeRect(20, 20, 30, 26), {fillPattern: 5}) end})");
+		EXPECT(d != nil);
+		Refresh();
+		EXPECT(InkIn(0, 0, kWidth, kHeight) == 0);
+		Eval("ctxD:DoDrawing('PaintIt, nil)");
+		EXPECT(Pixel(22, 12) == 1 && Pixel(25, 12) == 1 && Pixel(23, 13) == 0);	// the box's outline
+		EXPECT(InkIn(40, 30, 50, 36) == 60);									// the filled rectangle
+		// a view that is not visible is not drawn in at all
+		Eval("ctxD:Hide()");
+		Refresh();
+		EXPECT(InkIn(0, 0, kWidth, kHeight) == 0);
+		Eval("ctxD:DoDrawing('PaintIt, nil)");
+		EXPECT(InkIn(0, 0, kWidth, kHeight) == 0);
+		Eval("ctxD:Close()");
+		Refresh();
+	}
+
 	// drawn from a view's viewDrawScript: the origin is the view's top left
 	Eval("shapes := nil; shapeStyle := nil");
 	TView* v = ViewOf("ctxS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 120, bottom: 90}, viewDrawScript: func() :DrawShape(shapes, shapeStyle)})");
@@ -1266,6 +1288,11 @@ TestDataHilites()
 	EXPECT(CoveredBy(&qtr, &half) == 100);
 	EXPECT(CoveredBy(&half, &away) == 0);
 	EXPECT(CoveredBy(&half, &line) == 10);		// the line given a row of its own
+	// Intersects and Overlaps, which DoDrawing asks of the caret's rectangle
+	EXPECT(Intersects(&half, &qtr) && !Intersects(&half, &away));
+	EXPECT(!Intersects(&half, &line));		// a rectangle with no height meets nothing
+	EXPECT(Overlaps(&half, &line));			// but Overlaps gives it a row first
+	EXPECT(Overlaps(&line, &half) && !Overlaps(&line, &away));
 
 	Eval("ctxDH:Close()");
 	Refresh();
