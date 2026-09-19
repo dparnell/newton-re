@@ -72,6 +72,10 @@ enum
 const long	kAirusNoSuchDictionary	= -12;	// the chain is shorter than the position asked for
 const long	kAirusAlreadyThere		= 4;	// the word was in the dictionary already
 const long	kAirusEmptyWord			= 5;
+const long	kAirusIsPrefix			= 1;	// after VerifyString: the beginning of other words, and not one itself
+const long	kAirusIsPrefixAndWord	= 2;	// ... and one as well
+const long	kAirusIsWord			= 3;	// a word, with nothing going on from it
+const long	kAirusNotAWord			= -6;
 
 // airusResult, and what ExpandDict leaves in the block
 const long	kAirusNoMemory		= -2;
@@ -99,9 +103,9 @@ struct AirusAParmBlock
 	long		fAttributeSize;		// +0x34  bytes of attribute per word
 	long		fField38;			// +0x38  0
 	long		fField3c;			// +0x3c  1
-	Handle		fSelf;				// +0x40  the block's own Handle
+	Handle		fCurrent;			// +0x40  the dictionary of the chain the walk is on (NewDictionary sets it to the block's own Handle)
 	Handle		fNext;				// +0x44  the next dictionary of the chain (nil: none)
-	long		fField48;			// +0x48  0
+	ULong		fField48;			// +0x48  0 - what VerifyString hands back beside the attribute
 	long		fField4c;			// +0x4c  1
 	long		fField50;
 	long		fField54;
@@ -173,6 +177,17 @@ void	AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute);	/
 
 // the data, big-endian as it lies
 ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__FUli
+
+// the engine's own string handling
+long	Astrlen(const char* s);								// ROM 0x0002e6e0 Astrlen__FPc
+void	Astrcpy(char* dest, const char* src);				// ROM 0x0002e738 Astrcpy__FPcT1
+void	Ashortstrcpy(UniChar* dest, const UniChar* src);	// ROM 0x0002e764 Ashortstrcpy__FPUsT1
+
+// the way in
+Boolean	HasActualOrImpliedAtr(Handle dictionary);			// ROM 0x0002c770 HasActualOrImpliedAtr__FPP15AirusAParmBlock
+void	NewVerifyReset(Handle dictionary, ULong position, long node, const UByte* word);	// ROM 0x0002c6a8 NewVerifyReset
+void	VerifyStart(Handle dictionary);						// ROM 0x0002c760 VerifyStart__FPP15AirusAParmBlock
+void	VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attribute, ULong* extra);	// ROM 0x0002cd20 VerifyString
 
 // the dispatcher
 void	CallAirusA(Handle dictionary, long selector);		// ROM 0x0002d41c CallAirusA - the Handle locked first when the dictionary asks for it

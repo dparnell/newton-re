@@ -37,7 +37,7 @@ main()
 	Handle dictionary = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
 	EXPECT(dictionary != nil && airusResult == 0);
 	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
-	EXPECT(parms->fSelf == dictionary && parms->fAttributeSize == 1 && parms->fGrowBy == 100);
+	EXPECT(parms->fCurrent == dictionary && parms->fAttributeSize == 1 && parms->fGrowBy == 100);
 	EXPECT(parms->fSize == 2 && parms->fDataEnd - parms->fData == 2);
 	EXPECT((UByte) parms->fData[0] == 'a');
 	// the kind, with the size of each word's attribute above it
@@ -212,6 +212,34 @@ main()
 		word[0] = 0;
 		AddWord(words, 0, word, 1);
 		EXPECT(airusResult == kAirusEmptyWord);
+
+		// the way a caller really uses it: the chain put back to the start,
+		// then a whole word at once
+		{
+			void* terminal = (void*) 1;
+			ULong* attribute = (ULong*) 1;
+			VerifyStart(words);
+			EXPECT(airusResult == 0);
+			VerifyString(words, "and", &terminal, &attribute, nil);
+			EXPECT(airusResult == kAirusIsWord);		// a word, with nothing going on from it
+			EXPECT(attribute != nil && *attribute == 9);
+			EXPECT(terminal == nil);					// so there is no character after it
+
+			VerifyStart(words);
+			VerifyString(words, "an", &terminal, &attribute, nil);
+			EXPECT(airusResult == kAirusIsPrefixAndWord);	// a word, and the start of others
+			EXPECT(attribute != nil && *attribute == 8);
+
+			VerifyStart(words);
+			VerifyString(words, "b", &terminal, &attribute, nil);
+			EXPECT(airusResult == kAirusIsPrefix && attribute == nil);
+			// only "be" goes on from it, so the next character is named
+			EXPECT(terminal != nil && *(UByte*) terminal == 'e');
+
+			VerifyStart(words);
+			VerifyString(words, "zoo", &terminal, &attribute, nil);
+			EXPECT(airusResult == kAirusNotAWord && attribute == nil);
+		}
 
 		// the chain: there is only one dictionary here
 		EXPECT(PositionToHandle(words, 0) == words && airusResult == 0);

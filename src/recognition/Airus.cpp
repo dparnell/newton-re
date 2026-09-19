@@ -80,7 +80,7 @@ NewDictionary(UByte type, long attributeSize)
 	parms->fField04 = -1;
 	parms->fField3c = 1;
 	parms->fField38 = 0;
-	parms->fSelf = handle;
+	parms->fCurrent = handle;
 	parms->fField4c = 1;
 	parms->fNext = nil;
 	parms->fAttributeSize = attributeSize;
@@ -864,6 +864,184 @@ AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute)
 		airusResult = 0;
 	else
 		airusResult = result == 1 ? kAirusAlreadyThere : kAirusNoMemory;
+}
+
+/*------------------------------------------------------------------------------
+	T h e   w a y   i n
+
+	A caller does not touch the block: it asks VerifyStart to put the
+	dictionaries of a chain back to their beginning, and then VerifyString
+	for a whole word at once.  What comes back is airusResult, and
+	pointers to the character that would come next and to the word's
+	attribute - both into the engine's own globals, and nil when there is
+	none.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c100818, 0x0c10081c, 0x0c100824, 0x0c100828
+// Where VerifyString leaves what it found, so that it can hand back a
+// pointer to it.
+static UByte	gAirusTerminal8 = 0;
+static UniChar	gAirusTerminal16 = 0;
+static ULong	gAirusVerifyAttribute = 0;
+static ULong	gAirusVerifyExtra = 0;
+
+
+// ROM 0x0002e6e0 Astrlen__FPc, 0x0002e738 Astrcpy__FPcT1, 0x0002e764 Ashortstrcpy__FPUsT1
+// The engine's own string handling, over the bytes and the UniChars it
+// keeps words in.
+long
+Astrlen(const char* s)
+{
+	return (long) strlen(s);
+}
+
+
+void
+Astrcpy(char* dest, const char* src)
+{
+	strcpy(dest, src);
+}
+
+
+void
+Ashortstrcpy(UniChar* dest, const UniChar* src)
+{
+	while ((*dest++ = *src++) != 0)
+		;
+}
+
+
+// ROM 0x0002c770 HasActualOrImpliedAtr__FPP15AirusAParmBlock
+// Whether a word of this dictionary carries an attribute at all: one it
+// keeps, or the 0x80 the plain enumerated kind is taken to mean.
+Boolean
+HasActualOrImpliedAtr(Handle dictionary)
+{
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	if (parms->fAttributeSize != 0)
+		return true;
+	return ((UByte) (*parms->fDataHandle)[1] & 7) == kAirusKindEnum;
+}
+
+
+// ROM 0x0002c6a8 NewVerifyReset
+// Every dictionary of the chain put back to its beginning, and the one
+// at that position made the one the walk is on.  A word given here is
+// the one it will start from.
+void
+NewVerifyReset(Handle dictionary, ULong position, long node, const UByte* word)
+{
+	Handle at = PositionToHandle(dictionary, position);
+	if (airusResult != 0)
+		return;
+	Handle p = dictionary;
+	do
+	{
+		AirusAParmBlock* parms = (AirusAParmBlock*) *p;
+		parms->fIndex = 0;
+		parms->fResult = 0;
+		parms->fWord = gAirusScratch8;
+		parms->fCurrent = at;
+		if (p == at)
+		{
+			parms->fNode = node;
+			if (word != nil && word[0] != 0)
+			{
+				Astrcpy((char*) gAirusScratch8, (const char*) word);
+				parms->fIndex = Astrlen((const char*) word);
+			}
+		}
+		else
+			parms->fNode = 0;
+		p = parms->fNext;
+	}
+	while (p != nil);
+}
+
+
+// ROM 0x0002c760 VerifyStart__FPP15AirusAParmBlock
+// The chain put back to the beginning, with nothing looked at yet.
+void
+VerifyStart(Handle dictionary)
+{
+	NewVerifyReset(dictionary, 0, 0, nil);
+}
+
+
+// ROM 0x0002cd20 VerifyString
+// A whole word looked up.  airusResult afterwards: 1 the word is the
+// beginning of others and is not one itself, 2 it is the beginning of
+// others and is one as well, 3 it is a word and nothing goes on from it,
+// -6 nothing begins that way.  `terminal` is given the character that
+// would come next when there is only one, and `attribute` the word's
+// attribute; either is nil when there is none.
+//
+// The ROM's callers hand in four arguments where it takes five, so its
+// last out-parameter is whatever was in the register.  Nothing here
+// passes anything but nil for it.
+void
+VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attribute, ULong* extra)
+{
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean wide = kind == kAirusKindEnum16 || kind == kAirusKindAL16;
+	ULong* foundAttribute = &gAirusVerifyAttribute;
+	ULong found = gAirusVerifyExtra;
+	void* foundTerminal;
+	long length;
+	if (!wide)
+	{
+		Astrcpy((char*) gAirusScratch8, (const char*) word);
+		parms->fWord = gAirusScratch8;
+		length = Astrlen((const char*) gAirusScratch8);
+		foundTerminal = &gAirusTerminal8;
+	}
+	else
+	{
+		Ashortstrcpy((UniChar*) gAirusScratch16, (const UniChar*) word);
+		parms->fWord = gAirusScratch16;
+		length = Ashortstrlen((const UniChar*) gAirusScratch16) / 2;
+		foundTerminal = &gAirusTerminal16;
+	}
+	parms->fIndex = length - 1;
+	parms->fNode = 0;
+	CallAirusA(dictionary, kAirusVerify);
+	parms = (AirusAParmBlock*) *dictionary;
+	long symbol = (long) parms->fSymbol;
+	if (symbol == -1)
+		foundTerminal = nil;
+	else if (!wide)
+		gAirusTerminal8 = (UByte) symbol;
+	else
+		gAirusTerminal16 = (UniChar) symbol;
+	switch (parms->fResult)
+	{
+	case kAirusPrefix:
+		foundAttribute = nil;
+		airusResult = kAirusIsPrefix;
+		found = 0;
+		break;
+	case kAirusPrefixWithAttr:
+	case kAirusLeaf:
+		airusResult = parms->fResult == kAirusPrefixWithAttr ? kAirusIsPrefixAndWord : kAirusIsWord;
+		if (!HasActualOrImpliedAtr(dictionary))
+			foundAttribute = nil;
+		else
+			gAirusVerifyAttribute = parms->fAttribute;
+		found = HasActualOrImpliedAtr(dictionary) ? parms->fField48 : 0;
+		break;
+	case kAirusNoMatch:
+		foundAttribute = nil;
+		airusResult = kAirusNotAWord;
+		found = 0;
+		break;
+	}
+	if (terminal != nil)
+		*terminal = foundTerminal;
+	if (attribute != nil)
+		*attribute = foundAttribute;
+	if (extra != nil)
+		*extra = found;
 }
 
 /*------------------------------------------------------------------------------
