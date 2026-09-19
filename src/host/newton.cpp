@@ -33,6 +33,26 @@
 #include "Interpreter.h"
 #include <stdio.h>
 #include <signal.h>
+
+// Just enough of Windows to be told the machine fell over; including
+// <windows.h> here would bring in its own Polygon and Sleep, which are
+// the Newton's names too.
+extern "C" {
+struct HostExceptionRecord
+{
+	unsigned long	fCode;
+	unsigned long	fFlags;
+	void*			fNext;
+	void*			fAddress;
+};
+struct HostExceptionPointers
+{
+	HostExceptionRecord*	fRecord;
+	void*					fContext;
+};
+typedef long (__stdcall *HostExceptionFilter)(HostExceptionPointers*);
+__declspec(dllimport) HostExceptionFilter __stdcall SetUnhandledExceptionFilter(HostExceptionFilter filter);
+}
 #include <stdlib.h>
 #include <string.h>
 
@@ -92,9 +112,12 @@ KernelServices(void)
 // it prints, and printing is not safe here - but it is a good deal
 // better than an exit code, and the process is going down anyway.
 static void
-HostCrashed(int signal)
+HostCrashed(const char* what, unsigned long code, void* where)
 {
-	fprintf(stderr, "[host] the machine fell over (signal %d)\n", signal);
+	static long once = 0;
+	if (once++ != 0)
+		_exit(139);
+	fprintf(stderr, "[host] the machine fell over: %s (%#lx) at %p\n", what, code, where);
 	if (gREPout != nil && gInterpreter != nil)
 		gREPout->StackTrace(gInterpreter);
 	fflush(stderr);
@@ -102,13 +125,33 @@ HostCrashed(int signal)
 }
 
 
+static void
+HostCrashedSignal(int signal)
+{
+	HostCrashed("a signal", (unsigned long) signal, nil);
+}
+
+
+// On Windows a bad access is a structured exception rather than a signal,
+// and nothing turns it into one here, so the filter is what actually
+// catches the machine falling over - including in the window's own
+// thread.
+static long __stdcall
+HostCrashedFilter(HostExceptionPointers* info)
+{
+	HostCrashed("an exception", info->fRecord->fCode, info->fRecord->fAddress);
+	return 0;		// (never reached: HostCrashed does not come back)
+}
+
+
 int
 main(int argc, char** argv)
 {
-	signal(SIGSEGV, HostCrashed);
-	signal(SIGILL, HostCrashed);
-	signal(SIGFPE, HostCrashed);
-	signal(SIGABRT, HostCrashed);
+	SetUnhandledExceptionFilter(HostCrashedFilter);
+	signal(SIGSEGV, HostCrashedSignal);
+	signal(SIGILL, HostCrashedSignal);
+	signal(SIGFPE, HostCrashedSignal);
+	signal(SIGABRT, HostCrashedSignal);
 	const char* romImage = NEWTON_DEFAULT_ROM_IMAGE;
 	long heapSize = 0x400000;
 	long width = 320, height = 480, depth = 4;
