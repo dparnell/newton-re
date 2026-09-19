@@ -1200,6 +1200,60 @@ and drop, `TrackScale`/`TrackDistort`, the commands (`RealDoCommand`,
 `GetValue`, `SetValue`) and the drawing of the resize border itself
 (`DrawResizeBorder`, `TRect::Scale` over `gEditViewTransform`).
 
+## How the machine's own views get on screen, and where it stops
+
+The root's fifty-nine children are the system's views - the keyboards,
+the slips, the alerts, the applications - and *none* of them is visible.
+Each is opened when something asks for it, and the asking starts with the
+root's own scripts:
+
+- `viewRoot.viewSetupChildrenScript` (ROM object 0x0041a54d), which
+  `TView::AddViews` runs before it builds any child, does nothing but
+  `AddDeferredSend(self, '_OpenLater, nil)`.
+- `viewRoot._OpenLater` (0x0041a481) then does three things: it sends
+  `InitButtonBar` to `self.buttons` - the button bar along the bottom,
+  which is what puts the *first* child on the root - it reads
+  `userConfiguration.blessedapp` (defaulting it to `'paperroll`, the
+  Notepad, when unset) and it calls `self:_BlessedOpen` on that
+  application, under a handler that notifies "the new Backdrop failed to
+  open" and puts the old one back.
+- `_BlessedOpen` (0x0041a4f5) takes the floating bit off the
+  application's viewFlags, gives it Close/Hide/Toggle slots of its own,
+  locks the screen, opens it, and moves it behind
+  `GetRoot():ChildViewFrames()[0]` - the button bar.
+- `buttons.InitButtonBar` (0x00550ec9) is `if
+  displayParams.buttonBarPosition <> 'none then self:Open()`.
+
+So the button bar and the backdrop application are opened the same way,
+through `Open`, and neither of them opens here.  `Open` is
+`viewRoot.Open` -> `_Open` -> `FOpenX` -> `RealOpenX`, which dispatches
+`aeAddChild` to the parent; `TView::RealDoCommand` answers that with
+`AddChild`, which asks `AddView`; and `AddView` refuses a template whose
+viewFlags lack `vVisible`, either in `BuildContext` (which returns nil on
+that test when its `forceVisible` argument is false) or in the
+`preallocatedContext` branch's own test of the same bit.
+
+Every step of that is a transcription of the ROM, read from its assembly
+rather than only its decompilation: `TView::AddView` 0x0025f1ac (`tst
+r0,#0x1; beq` on the preallocated path), `TView::BuildContext` 0x0025e56c
+(the same test when `r9` is 0), `TView::RealDoCommand` 0x00268d38 case
+0x29, `TView::AddChild` 0x00265e4c, `TView::Constructor` 0x00266368 (which
+builds the preallocated contexts with `forceVisible` true but does *not*
+build views for them), and `TRootView::RealDoCommand` 0x001b31f0, which
+has no case for `aeAddChild` at all.  `TView::Show` 0x00265e80 tests bit
+0, so `vVisible` is bit 0 and nothing else.
+
+And the data says the same: the button bar's template (magic pointer 692)
+has viewFlags 0xa00 and the Setup application's `theForm` has 100, in both
+the MP2x00 US and the MP2100 D.  Not one of the fifty-nine is visible.
+
+So the ROM, read straight, cannot open its own button bar - which is
+absurd, and means a premise is wrong somewhere that reading has not
+found.  What is certain is the consequence: relax that one test and the
+boot goes a long way further, into the applications' own setup, where the
+next thing it wants is `Gestalt`.  Finding what really sets `vVisible` -
+or what makes the open path skip the test - is the thing to do next.
+
 ## Not yet
 
 The rest of the
