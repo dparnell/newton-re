@@ -5,17 +5,19 @@
 
 				A MessagePad's ROM extension carries the applications the
 				machine boots with - on this ROM: Cardfile (the Names
-				application), Verbindung, FaxViewer, Tabellen, the help
-				book, ListView, Profil and WorldData - as packages listed in
+				application), Connection, FaxViewer, Formulas, the help
+				book, ListView, Setup and WorldData - as packages listed in
 				its `pkgl` configuration entry.  The boot loads them:
 				LoadHighROMFramesPackages for the frames parts (the
 				applications), LoadHighROMDriverPackages for the drivers.
 
-				Their install scripts are what make the soups and the
-				globals the rest of the ROM's boot expects; without them
-				bootRunInitScripts' PreSetupUserConfig asks for a "Names"
-				soup that nobody made and the rest of its init functions
-				never run.
+				Their install scripts are what make the globals and the
+				registrations the rest of the boot expects.  They do not,
+				though, make the soups: PreMain loads them after
+				InitToolbox has already run the init scripts, and an
+				application makes its soup when it is first used - which is
+				why bootRunInitScripts' PreSetupUserConfig asks for a
+				"Names" soup that nobody has made (docs/newt/README.md).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */

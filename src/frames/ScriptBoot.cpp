@@ -100,14 +100,18 @@ InitScriptGlobals(void)
 // That is what happens here, and it is the ROM's own doing.
 // PreSetupUserConfig, the first of them, asks the internal store for a
 // soup called "Names" and sends Query to what it gets, without looking to
-// see whether it got one.  Nothing in this ROM makes a soup of that name:
-// its boot table makes twelve, and the Names application's is "Directory"
-// (userName "Verzeichnis", ownerApp 'systemDirectory).  The string "Names"
-// appears exactly once in the whole German ROM - the constant this
-// function pushes - where the US ROM has it five times, so the German
-// build renamed the soup and left this one function behind.  Soup names
-// are not localised otherwise: "To do" and "To Do List" keep their English
-// names beside their German userNames.
+// see whether it got one.  Nothing the boot does makes a soup of that
+// name: the boot table makes twelve (SystemAlarmSoup, InBox, OutBox,
+// Packages, Notes, Calendar, Repeat Meetings, Calendar Notes, Repeat
+// Notes, To do, To Do List, Directory), and the ROM extension's packages
+// do not install until PreMain, which is after this.  "Names" is the
+// Cardfile's own soup, and the Cardfile makes it when it is first
+// used rather than when it installs.  Both ROMs we have are the same
+// here - the MP2100 D and the MP2x00 US boot tables both lack it - so
+// this is not a localisation slip but something the machine gets away
+// with because the internal store of a Newton that has ever run the
+// Names application already has the soup.  On a store that has never
+// been written to, which is what the host starts with, it throws.
 //
 // It costs the six init functions after it: StartAutoFaxReceive,
 // StartSniffing, StartAutoCallReceive, SetBatteryTypes, CheckSerialNumber

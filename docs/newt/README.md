@@ -255,18 +255,23 @@ and then invokes the seven init functions of `@549` one after another:
 
 `PreSetupUserConfig`, the first of them, builds the owner personae: it
 asks the internal store for a soup called `"Names"` and sends `Query` to
-what it gets, with a tagspec of `_ownerNames`.  The ROM's boot table does
-not make a `"Names"` soup - the Names application's soup is made by the
-**Cardfile** package in the ROM extension (`analysis/packages.py
-build/MP2x00US --parts` lists it, an `'auto'` frames part), which cannot
-install while `LoadHighROMFramesPackages` and the package part handlers
-are NOT YET RECONSTRUCTED.  So the soup is nil, `Query` is sent to nil,
-and the other six init functions never run.  The second exception - index
-nought of an empty array - is the same script on the idle pass afterwards.
+what it gets, with a tagspec of `_ownerNames`.  The boot table does not
+make a `"Names"` soup, and neither does anything else the boot does:
+`"Names"` is the **Cardfile**'s own soup, the Cardfile makes it when it is
+first used rather than when it installs, and the ROM extension's packages
+do not install until `PreMain`, which is after this.  So the soup is nil,
+`Query` is sent to nil, and the other six init functions never run.  The
+second exception - index nought of an empty array - is the same script on
+the idle pass afterwards.
 
-Neither is a missing native or a store gap.  What they want is the ROM's
-own applications installed, and `frames/FramesPart.h`'s `ImportFramesPart`
-and `packages/PackageIterator.h` are most of what that needs.
+Both ROMs are the same here, so it is not a localisation slip; what the
+machine gets away with is that the internal store of a Newton which has
+ever run the Names application already has the soup.  The host starts
+with a store that has never been written to, and there the ROM's own
+omission shows.  Making a soup called `"Names"` before the init scripts
+run lets all seven of them through, which is how the diagnosis was
+checked; what the host should do about it - a store prepared the way a
+shipped machine's is - is an open question.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
