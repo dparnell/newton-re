@@ -908,11 +908,12 @@ AddKeyCommand(RefArg view, RefArg command)
 
 
 // ROM 0x0030b28c FAddKeyCommand
-// AddKeyCommand(view, command).  ==> nil.
+// :AddKeyCommand(command): the command added to the view it is sent to.
+// ==> nil.
 static Ref
-FAddKeyCommand(RefArg /*rcvr*/, RefArg view, RefArg command)
+FAddKeyCommand(RefArg rcvr, RefArg command)
 {
-	AddKeyCommand(view, command);
+	AddKeyCommand(rcvr, command);
 	return NILREF;
 }
 
@@ -920,7 +921,7 @@ void
 RegisterKeyboardNatives(void)
 {
 	RegisterNativeFunction("FKeyIn", (void*) FKeyIn, 2);
-	RegisterNativeFunction("FAddKeyCommand", (void*) FAddKeyCommand, 2);
+	RegisterNativeFunction("FAddKeyCommand", (void*) FAddKeyCommand, 1);
 	RegisterNativeFunction("FTranslateKey", (void*) FTranslateKey, 3);
 	RegisterNativeFunction("FIsKeyDown", (void*) FIsKeyDown, 2);
 	RegisterNativeFunction("FGetTrueModifiers", (void*) FGetTrueModifiers, 0);

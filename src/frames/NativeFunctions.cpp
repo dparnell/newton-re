@@ -12,6 +12,7 @@
 #include "ObjectHeap.h"
 
 #include <string.h>
+#include <stdio.h>
 
 struct NativeBinding
 {
@@ -35,6 +36,16 @@ RegisterNativeFunction(const char* symbol, void* fn, long numArgs)
 		const ROMNativeEntry& entry = i < gROMNativeCount ? gROMNativeEntries[i] : gROMMethodEntries[i - gROMNativeCount];
 		if (strcmp(entry.fSymbol, symbol) != 0)
 			continue;
+		// The ROM's own function object says how many arguments it is called
+		// with, and the interpreter passes that many; a host implementation
+		// that expects a different number reads one argument past the end of
+		// the stack, which is a crash a long way from here.  Say so instead.
+		if (entry.fNumArgs != numArgs)
+		{
+			fprintf(stderr, "[frames] %s is registered for %ld arguments, the ROM calls it with %ld\n",
+					symbol, numArgs, entry.fNumArgs);
+			fflush(stderr);
+		}
 		Boolean bound = false;
 		for (long j = 0; j < gNativeBindingCount; j++)
 			if (gNativeBindings[j].fFuncPtr == entry.fFuncPtr)

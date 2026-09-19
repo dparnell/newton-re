@@ -485,9 +485,9 @@ RegisterSoupNatives(void)
 	RegisterNativeFunction("FStoreAbort", (void*) StoreAbort, 0);
 	RegisterNativeFunction("StoreErase", (void*) StoreErase, 0);
 	RegisterNativeFunction("StoreCheckWriteProtect", (void*) StoreCheckWriteProtect, 0);
-	RegisterNativeFunction("FReadStoreObject", (void*) StoreReadObject, 1);
-	RegisterNativeFunction("FWriteStoreObject", (void*) StoreWriteObject, 3);
-	RegisterNativeFunction("FWriteEntireStoreObject", (void*) StoreWriteWholeObject, 2);
+	RegisterNativeFunction("FReadStoreObject", (void*) StoreReadObject, 3);
+	RegisterNativeFunction("FWriteStoreObject", (void*) StoreWriteObject, 4);
+	RegisterNativeFunction("FWriteEntireStoreObject", (void*) StoreWriteWholeObject, 4);
 	RegisterNativeFunction("FNewStoreObject", (void*) StoreNewObject, 1);
 	RegisterNativeFunction("FDeleteStoreObject", (void*) StoreDeleteObject, 1);
 	RegisterNativeFunction("FSetStoreObjectSize", (void*) StoreSetObjectSize, 2);

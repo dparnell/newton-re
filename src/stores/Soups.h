@@ -115,9 +115,9 @@ Ref		StoreDirty(RefArg rcvr);
 Ref		StoreFlush(RefArg rcvr);
 Ref		StoreErase(RefArg rcvr);
 Ref		StoreCheckWriteProtect(RefArg rcvr);
-Ref		StoreReadObject(RefArg rcvr, RefArg id);								// FReadStoreObject
-Ref		StoreWriteObject(RefArg rcvr, RefArg id, RefArg offset, RefArg data);	// FWriteStoreObject
-Ref		StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data);				// FWriteEntireStoreObject
+Ref		StoreReadObject(RefArg rcvr, RefArg id, RefArg size, RefArg offset);	// FReadStoreObject
+Ref		StoreWriteObject(RefArg rcvr, RefArg id, RefArg data, RefArg length, RefArg offset);	// FWriteStoreObject
+Ref		StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data, RefArg, RefArg);	// FWriteEntireStoreObject
 Ref		StoreNewObject(RefArg rcvr, RefArg size);								// FNewStoreObject
 Ref		StoreDeleteObject(RefArg rcvr, RefArg id);								// FDeleteStoreObject
 Ref		StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size);				// FSetStoreObjectSize

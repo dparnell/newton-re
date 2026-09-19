@@ -249,7 +249,7 @@ Ref		FPrint(RefArg rcvr, RefArg obj);
 Ref		FDisplay(RefArg rcvr, RefArg obj);
 Ref		FSPrintObject(RefArg rcvr, RefArg obj);
 Ref		FFramesStringer(RefArg rcvr, RefArg array);
-Ref		FEvalStringer(RefArg rcvr, RefArg array);
+Ref		FEvalStringer(RefArg rcvr, RefArg context, RefArg array);
 void	RegisterPrinterNatives(void);
 
 #endif	/* __REPTRANSLATORS_H */

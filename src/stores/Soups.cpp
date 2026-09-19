@@ -1154,33 +1154,38 @@ StoreCheckWriteProtect(RefArg rcvr)
 
 
 // ROM 0x00354f74 FReadStoreObject
-// A store object's bytes as a binary.
+// :ReadObject(id, size, offset): that many of the object's bytes from
+// that offset, as a binary of no class - the caller says how much it
+// wants rather than the whole object.
 Ref
-StoreReadObject(RefArg rcvr, RefArg id)
+StoreReadObject(RefArg rcvr, RefArg id, RefArg size, RefArg offset)
 {
+	RefVar data(AllocateBinary(RefVar(NILREF), RINT(size)));
 	TStore* store = StoreFromWrapper(rcvr);
-	long size;
-	OSErrIf(store->GetObjectSize((PSSId) RINT(id), &size));
-	RefVar data(AllocateBinary(RSSYMbinary, size));
-	OSErrIf(store->Read((PSSId) RINT(id), 0, BinaryData(data), size));
+	OSErrIf(store->Read((PSSId) RINT(id), RINT(offset), BinaryData(data), RINT(size)));
 	return data;
 }
 
 
 // ROM 0x0035512c FWriteStoreObject
+// :WriteObject(id, data, length, offset): that many of the binary's
+// bytes written into the object at that offset.
 Ref
-StoreWriteObject(RefArg rcvr, RefArg id, RefArg offset, RefArg data)
+StoreWriteObject(RefArg rcvr, RefArg id, RefArg data, RefArg length, RefArg offset)
 {
 	TStore* store = StoreFromWrapper(rcvr);
 	CheckWriteProtect(store);
-	OSErrIf(store->Write((PSSId) RINT(id), RINT(offset), BinaryData(data), Length(data)));
+	OSErrIf(store->Write((PSSId) RINT(id), RINT(offset), BinaryData(data), RINT(length)));
 	return NILREF;
 }
 
 
 // ROM 0x00355090 FWriteEntireStoreObject
+// :WriteWholeObject(id, data, ...): the whole binary written over the
+// object from its start.  The ROM's function object is called with two
+// more arguments than the function looks at.
 Ref
-StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data)
+StoreWriteWholeObject(RefArg rcvr, RefArg id, RefArg data, RefArg, RefArg)
 {
 	TStore* store = StoreFromWrapper(rcvr);
 	CheckWriteProtect(store);

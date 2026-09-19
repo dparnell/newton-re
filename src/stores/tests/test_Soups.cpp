@@ -181,9 +181,18 @@ TestStoreFrame()
 	EXPECT(RINT(StoreGetObjectSize(storeObject, id)) == 6);
 	RefVar data(AllocateBinary(RSSYMbinary, 6));
 	memcpy(BinaryData(data), "abcdef", 6);
-	StoreWriteWholeObject(storeObject, id, data);
-	RefVar back(StoreReadObject(storeObject, id));
+	StoreWriteWholeObject(storeObject, id, data, RefVar(NILREF), RefVar(NILREF));
+	// ReadObject says how much it wants and from where
+	RefVar back(StoreReadObject(storeObject, id, RefVar(MAKEINT(6)), RefVar(MAKEINT(0))));
 	EXPECT(Length(back) == 6 && memcmp(BinaryData(back), "abcdef", 6) == 0);
+	RefVar tail(StoreReadObject(storeObject, id, RefVar(MAKEINT(3)), RefVar(MAKEINT(3))));
+	EXPECT(Length(tail) == 3 && memcmp(BinaryData(tail), "def", 3) == 0);
+	// WriteObject writes a run of bytes at an offset
+	RefVar two(AllocateBinary(RSSYMbinary, 2));
+	memcpy(BinaryData(two), "XY", 2);
+	StoreWriteObject(storeObject, id, two, RefVar(MAKEINT(2)), RefVar(MAKEINT(1)));
+	back = StoreReadObject(storeObject, id, RefVar(MAKEINT(6)), RefVar(MAKEINT(0)));
+	EXPECT(memcmp(BinaryData(back), "aXYdef", 6) == 0);
 	StoreDeleteObject(storeObject, id);
 
 	// killed and gone

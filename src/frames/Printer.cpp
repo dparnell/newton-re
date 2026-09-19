@@ -867,10 +867,11 @@ FFramesStringer(RefArg /*rcvr*/, RefArg array)
 
 
 // ROM 0x002b6c34 FEvalStringer
-// Each symbol among the elements stands for the receiver's variable of
-// that name.
+// EvalStringer(context, array): the elements stringed together, with
+// each symbol among them standing for the variable of that name in the
+// context given - not in the receiver, which the ROM does not look at.
 Ref
-FEvalStringer(RefArg rcvr, RefArg array)
+FEvalStringer(RefArg /*rcvr*/, RefArg context, RefArg array)
 {
 	long count = Length(array);
 	RefVar parts(Clone(array));
@@ -880,7 +881,7 @@ FEvalStringer(RefArg rcvr, RefArg array)
 		element = GetArraySlotRef(array, i);
 		if (EQRef(ClassOf(element), RSSYMsymbol))
 		{
-			element = GetVariable(rcvr, element, nil, 0);
+			element = GetVariable(context, element, nil, 0);
 			SetArraySlotRef(parts, i, element);
 		}
 	}
@@ -937,5 +938,5 @@ RegisterPrinterNatives(void)
 	RegisterNativeFunction("FDisplay", (void*) FDisplay, 1);
 	RegisterNativeFunction("FSPrintObject__FRC6RefVarT1", (void*) FSPrintObject, 1);
 	RegisterNativeFunction("FFramesStringer", (void*) FFramesStringer, 1);
-	RegisterNativeFunction("FEvalStringer", (void*) FEvalStringer, 1);
+	RegisterNativeFunction("FEvalStringer", (void*) FEvalStringer, 2);
 }
