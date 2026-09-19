@@ -102,6 +102,24 @@ public:
 
 void	HandleAlarmEvent(TAlarmEvent* event);		// ROM 0x0030eee0 HandleAlarmEvent__FP11TAlarmEvent
 
+// a 'newt/'inkr event asking the inker to turn the busy box on or off
+// (0x10 bytes; the commands are 0x33 to 0x37, what BusyBoxControl's
+// -2 to 2 become)
+class TBusyBoxEvent : public TAEvent
+{
+public:
+	long				fCommand;		// +0x08
+	ULong				fUnused0c;		// +0x0c
+};
+
+const long kBusyBoxAllow = 0x35;				// BusyBoxControl(0); 0x36 hides it, 0x34 shows it
+const TTimeout kBusyBoxSendTimeout = 0xa8c000;	// (the ROM's: about three seconds)
+
+extern TUPort*	gTheInkerPort;					// ROM 0x0c101658 gTheInkerPort - nil on the host
+void	BusyBoxSend(long command);				// ROM 0x0030dd60 BusyBoxSend__Fl
+Ref		FBusyBoxControl(RefArg rcvr, RefArg what);	// ROM 0x0030ddec FBusyBoxControl
+void	RegisterBusyBoxNatives(void);
+
 // the NewtonScript side
 Ref		FSetSysAlarm(RefArg rcvr, RefArg time, RefArg func, RefArg args);	// ROM 0x0030eeec FSetSysAlarm
 void	RegisterAlarmNatives(void);

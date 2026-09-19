@@ -178,7 +178,8 @@ TNewtWorld::MainConstructor()
 		return err;
 	TURealTimeAlarm::NewName(&NewtAlarmName);	// (0, and the slot it takes still reads as free:
 												// see TRealTimeClock::NewName)
-	RegisterAlarmNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
+	RegisterAlarmNatives();
+	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
 	InitializeCompression();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
@@ -596,6 +597,61 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 			event->fError = (long) (Long) exception->data;
 	}
 	end_try;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   b u s y   b o x
+
+	The little box that blinks in the corner while the machine is working.
+	It belongs to the inker task, which is the only thing that keeps
+	drawing while a script has the processor, so turning it on and off is a
+	message to the inker's port rather than a call.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c101658 gTheInkerPort
+// DEVIATION: the host has no inker task - hal/host/HostTablet.h reads the
+// tablet buffer on the wait hook instead (Notebook.cpp's InitInker) - so
+// there is no port to send to and the busy box never appears.  Everything
+// that asks for it goes through BusyBoxSend, which does nothing while this
+// is nil, exactly as it does on the Newton before the inker is started.
+TUPort*	gTheInkerPort = nil;
+
+
+// ROM 0x0030dd60 BusyBoxSend__Fl
+// The command sent to the inker as a 'newt/'inkr event; nothing at all
+// when the inker is not there.
+void
+BusyBoxSend(long command)
+{
+	if (gTheInkerPort == nil)
+		return;
+	TBusyBoxEvent event;
+	event.fAEventClass = kNewtEventClass;
+	event.fAEventID = kNewtInkerEvent;
+	event.fCommand = command;
+	gTheInkerPort->Send(&event, sizeof(event), kBusyBoxSendTimeout);
+}
+
+
+// ROM 0x0030ddec FBusyBoxControl
+// BusyBoxControl(n): the busy box turned on or off.  The argument is one
+// of -2..2 and the command sent is 0x35 away from it (kBusyBoxAllow and
+// its neighbours); anything else is ignored.
+Ref
+FBusyBoxControl(RefArg /*rcvr*/, RefArg what)
+{
+	long command = RINT(what);
+	if (command > -3 && command < 3)
+		BusyBoxSend(command + kBusyBoxAllow);
+	return NILREF;
+}
+
+
+void
+RegisterBusyBoxNatives(void)
+{
+	RegisterNativeFunction("FBusyBoxControl", (void*) FBusyBoxControl, 1);
 }
 
 
