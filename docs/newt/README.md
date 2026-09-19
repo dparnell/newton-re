@@ -278,12 +278,37 @@ extension's packages by `analysis/soupdefs.py` - there is exactly one,
 the Cardfile's `"Names"`).  All seven init functions then run.
 
 What is left of the two exceptions is the second one, and it belongs to
-the view system rather than the store: a boot script opens a view and
-then indexes `GetRoot():ChildViewFrames()[0]`, and the host's root view
-has no children because its root template is the reconstruction's own
-(`views/BuildView.cpp`'s `MakeRootTemplate`, a DEVIATION - the ROM's
-`viewRoot` wants the whole system).  Give the root a child, as
-`host/demo/newton.ns` does, and it does not happen.
+the view system rather than the store.  The script is the root's own
+`_BlessedOpen`: the backdrop application - the one that fills the screen,
+and on a machine that has never been set up that is the **Setup**
+assistant - is opened and then moved behind the root's frontmost child,
+`GetRoot():ChildViewFrames()[0]`.  The root has no built children
+because the open does nothing, so the array is empty.
+
+### Why an application does not open yet
+
+`RealOpenX` (`views/ViewNatives.cpp`) dispatches `aeAddChild` when the
+context has no view, `TView::RealDoCommand` answers it with `AddChild`,
+and `AddChild` asks `AddView` - which refuses a template whose viewFlags
+lack `vVisible`, whether it goes through `BuildContext` (the Setup
+application, no `preallocatedContext`, viewFlags 100) or through the
+`preallocatedContext` branch (the Notepad, viewFlags 4).  None of the
+root's fifty-nine children is visible either.
+
+Every one of those is a transcription of the ROM's own code, checked
+against it again: `TView::AddView` 0x0025f1ac, `TView::BuildContext`
+0x0025e56c (which returns nil on the same test when its `forceVisible`
+argument is false), `TView::RealDoCommand` 0x00268d38 and
+`TView::AddChild` 0x00265e4c, and `TRootView::RealDoCommand` 0x001b31f0
+adds no case of its own for `aeAddChild`.  Setting `vVisible` on the
+application's context by hand and opening it then works: the view is
+built, its setup scripts run, and the root has a child.  So something in
+the ROM's boot puts `vVisible` on an application before it is opened and
+the reconstruction does not yet do it; finding what is the next step.
+
+(`AddView(GetRoot(), GetRoot().setup)` from a script does build it,
+because the NewtonScript `AddView` - `FAddView` - passes `forceVisible`
+true where the open path passes false.)
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
