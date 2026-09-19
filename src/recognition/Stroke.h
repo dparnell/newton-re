@@ -85,6 +85,7 @@ void	SetRectangleEdges(FRect* rect, Fixed left, Fixed top, Fixed right, Fixed bo
 
 extern Boolean	gDefaultInk;								// ROM 0x0c101890 gDefaultInk - strokes are inked unless told otherwise
 extern ULong	gLastPenTip;								// ROM 0x0c1008bc gLastPenTip - the pen tip new strokes are flagged with
+extern long		gInkerCalibrated;							// ROM 0x0c101654 gInkerCalibrated - set once the tablet has been calibrated
 
 class TStroke : public TDArray
 {

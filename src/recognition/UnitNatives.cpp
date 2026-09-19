@@ -25,6 +25,8 @@
 #include "Frames.h"
 #include "NativeFunctions.h"
 #include "ROMConstants.h"
+#include "RootView.h"
+#include "Interpreter.h"
 #include "NewtonExceptions.h"
 
 
@@ -245,10 +247,104 @@ FSetInkerPenSize(RefArg /*rcvr*/, RefArg size)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   t a b l e t ' s   c a l i b r a t i o n
+
+	The four points the tablet's coordinates are mapped through live in
+	the inker task, and a script reaches them by sending it a 'newt/'inkr
+	RPC: 0x16 to read them, 0x17 to write them, 5 to run the calibration
+	itself (the assistant's "tap the targets" page).
+
+	DEVIATION: TInker is NOT YET RECONSTRUCTED, so the host has no inker
+	port to ask and no tablet of its own to calibrate - the host's pen
+	is already in the display's coordinates
+	(hal/host/HostTablet.h).  Reading and setting the calibration answer
+	as a machine whose inker did not reply would, and calibrating answers
+	that it worked, which is what leaves the Setup assistant free to go
+	on.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c101654 gInkerCalibrated
+long	gInkerCalibrated = 0;
+
+
+// ROM 0x0013fda4 FGetCalibration__FRC6RefVar
+// GetCalibration(): the inker's 0x14-byte calibration as a 'calibration
+// binary, or nil when it did not answer with one.
+static Ref
+FGetCalibration(RefArg /*rcvr*/)
+{
+	// NOT YET RECONSTRUCTED: the 'newt/'inkr 0x16 RPC to the inker
+	return NILREF;
+}
+
+
+// ROM 0x0013fcb8 FSetCalibration__FRC6RefVarT1
+// SetCalibration(binary): the inker given a calibration back, a binary
+// of any other length (or nil) ignored.  ==> nil either way.
+static Ref
+FSetCalibration(RefArg /*rcvr*/, RefArg calibration)
+{
+	if (NOTNIL(calibration) && Length(calibration) == 0x14)
+	{
+		// NOT YET RECONSTRUCTED: the 'newt/'inkr 0x17 RPC to the inker
+	}
+	return NILREF;
+}
+
+
+// ROM 0x0014132c FIsTabletCalibrationNeeded
+// IsTabletCalibrationNeeded(): true when the tablet's hardware says its
+// calibration is not good.  The ROM answers nil when there is no inker
+// port to ask, which is the host's answer too.
+static Ref
+FIsTabletCalibrationNeeded(RefArg /*rcvr*/)
+{
+	// NOT YET RECONSTRUCTED: CheckTabletHWCalibration 0x0014121c
+	return NILREF;
+}
+
+
+// ROM 0x00141098 CalibrateInker__Fv
+// The inker asked to calibrate the tablet ('newt/'inkr command 5, with
+// the sleep time - at most ten minutes - as the RPC's own timeout, so
+// the machine does not fall asleep in the middle).  When it worked the
+// tablet is marked calibrated and the ROM's `savecalibration` block puts
+// the new calibration in the system soup.  ==> 0, or the error.
+//
+// DEVIATION: there is no inker to ask on the host, and the host's pen
+// needs no calibration, so it answers as a calibration that worked.
+// `savecalibration` then asks GetCalibration, gets nil and saves
+// nothing, which is what a machine whose inker kept quiet would do.
+long
+CalibrateInker(void)
+{
+	gInkerCalibrated = 1;
+	DoBlock(RefVar(Rsavecalibration), RefVar(NILREF));
+	return 0;
+}
+
+
+// ROM 0x001411dc FCalibrateTablet__FRC6RefVar
+// CalibrateTablet(): the tablet calibrated and the whole screen redrawn
+// over whatever the calibration drew on it.  ==> nil when it worked, the
+// error as an integer when it did not.
+static Ref
+FCalibrateTablet(RefArg /*rcvr*/)
+{
+	long err = CalibrateInker();
+	gRootView->Dirty(nil);
+	return err == 0 ? NILREF : MAKEINT(err);
+}
+
 void
 RegisterUnitNatives(void)
 {
 	RegisterNativeFunction("FSetInkerPenSize__FRC6RefVarT1", (void*) FSetInkerPenSize, 1);
+	RegisterNativeFunction("FGetCalibration__FRC6RefVar", (void*) FGetCalibration, 0);
+	RegisterNativeFunction("FSetCalibration__FRC6RefVarT1", (void*) FSetCalibration, 1);
+	RegisterNativeFunction("FIsTabletCalibrationNeeded", (void*) FIsTabletCalibrationNeeded, 0);
+	RegisterNativeFunction("FCalibrateTablet__FRC6RefVar", (void*) FCalibrateTablet, 0);
 	RegisterNativeFunction("FGetPoint__FRC6RefVarN21", (void*) FGetPoint, 2);
 	RegisterNativeFunction("FGetPointsArray__FRC6RefVarT1", (void*) FGetPointsArray, 1);
 	RegisterNativeFunction("FGetPointsArrayXY__FRC6RefVarT1", (void*) FGetPointsArrayXY, 1);

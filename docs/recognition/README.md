@@ -299,6 +299,32 @@ blocks that belong to the entries - telling the domain first
 (`DomainParameter` with selector 3) - and leaves alone any marked as
 someone else's.  (`test_Areas`.)
 
+## The tablet's calibration
+
+The four points the tablet's coordinates are mapped through belong to
+the inker task, and a script reaches them by sending it a 'newt/'inkr
+RPC: 0x16 reads them (`GetCalibration` 0x0013fda4, a 0x14-byte
+'calibration binary), 0x17 writes them back (`SetCalibration`
+0x0013fcb8, which ignores a binary of any other length), and 5 runs the
+calibration itself - the Setup assistant's "tap the targets" page
+(`CalibrateInker` 0x00141098, which gives the RPC the sleep time, at
+most ten minutes, as its timeout so the machine does not fall asleep in
+the middle).  When it worked, `gInkerCalibrated` is set and the ROM's
+`savecalibration` block puts the new calibration in the system soup
+under "Calibration"; `CalibrateTablet` 0x001411dc then dirties the whole
+root view and answers nil, or the error as an integer.
+`IsTabletCalibrationNeeded` 0x0014132c asks the tablet hardware
+(`CheckTabletHWCalibration` 0x0014121c) and answers nil when there is no
+inker port to ask.
+
+DEVIATION: `TInker` is NOT YET, so the host has no inker port and no
+tablet of its own - its pen is already in the display's coordinates
+(`hal/host/HostTablet.h`).  Reading and setting the calibration answer
+as a machine whose inker kept quiet would, and calibrating answers that
+it worked; `savecalibration` then finds no calibration to read and saves
+nothing.  That is what lets the Setup assistant go past its calibration
+page.
+
 NOT YET: TController and the arbiter, the domains (stroke, edge-list
 gestures, shapes, words), the area cache (`InitAreas`,
 `GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the
