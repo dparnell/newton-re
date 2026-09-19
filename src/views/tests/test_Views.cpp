@@ -27,6 +27,7 @@
 #include "UnitPublic.h"
 #include "Recognizer.h"
 #include "StrokeCentral.h"
+#include "StrokeQueue.h"
 #include "HostTablet.h"
 #include "hal/host/Host.h"
 #include "StyleRuns.h"
@@ -1992,6 +1993,20 @@ TestClicks()
 	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 2 && ISNIL(Eval("ctxC.clicks[1][0]")) && NOTNIL(Eval("ctxC.clicks[1][1]")) && NOTNIL(Eval("ctxC.clicks[1][3]")));
 	EXPECT(RINT(Eval("Length(ctxC.clicks[1][2])")) == 10 && RINT(Eval("ctxC.clicks[1][2][6]")) == 150 && RINT(Eval("ctxC.clicks[1][2][9]")) == 65);
 	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && (v->fFlags & vSelected) != 0 && HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil);
+	// FlushStrokes: the strokes waiting in the queue thrown away.  The pen
+	// is still down when the flush starts, and the wait the loop takes
+	// between turns is what lets the rest of the stroke through - here the
+	// host's wait hook feeds a queued record a tick, where the machine has
+	// the inker task.  Without that wait the loop would never see the pen
+	// go up, and would hold the processor for good.
+	HostTabletPenDown(90, 60, 6000);		// straight in, so there is a stroke to flush
+	StrokeTime();
+	HostTabletQueuePenMove(95, 62);			// the rest a record a tick, as the flush waits
+	HostTabletQueuePenMove(100, 65);
+	HostTabletQueuePenUp(6030);
+	EXPECT(NOTNIL(Eval("FlushStrokes()")));
+	EXPECT(HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil);
+	EXPECT(ISNIL(Eval("FlushStrokes()")));	// and nothing left to throw away
 	Eval("ctxC:Hilite(nil)");
 	// two taps close together: a tap, then a double tap (both on the same view; the clicks not taken)
 	Eval("ctxC.viewClickScript := func(unit) begin AddArraySlot(clicks, GetPoint(6, unit)); nil end");

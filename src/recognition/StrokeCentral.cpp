@@ -258,9 +258,15 @@ StrokeCentral::UnblockStrokes(void)
 
 // ROM 0x00144af8 FlushStrokes__13StrokeCentralFv
 // Every queued stroke taken and thrown away: made a click unit whose ink
-// is taken off and whose bounds are invalidated, waited for until done
-// (NOT YET: Wait(1) between turns - the host's inker runs in StrokeTime),
-// then disposed.  ==> whether there was any.
+// is taken off and whose bounds are invalidated, waited for until the pen
+// has finished it, then disposed.  ==> whether there was any.
+//
+// The wait between turns is the ROM's and it matters: this loop runs in
+// the application's task, and without it nothing else gets the processor
+// - not the inker that reads the pen's samples, and on a host not the
+// kernel either, because a task that never enters it is never preempted
+// (kernel/host/TaskRuntime.h).  A pen still down would then hold the
+// machine for good.
 Boolean
 StrokeCentral::FlushStrokes(void)
 {
@@ -276,7 +282,10 @@ StrokeCentral::FlushStrokes(void)
 			pub.Invalidate();
 		}
 		while (!stroke->Done())
+		{
 			StrokeTime();
+			Wait(1);
+		}
 		unit->Dispose();
 	}
 	return any;
