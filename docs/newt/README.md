@@ -359,6 +359,16 @@ An application puts the caret on its page as it opens, which is why
 `PositionCaret` is on this path at all; `docs/views/README.md` has what
 the edit view does with it.
 
+The host's internal store is a `THostStore` in memory, so nothing is
+remembered between runs and every boot starts at the assistant again.
+`src/host/demo/setup.ns` taps its way through to the end, which is the
+quick way to get to the Notepad:
+
+```
+build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+    --scale 2 --script src/host/demo/setup.ns
+```
+
 NOT YET on this path: `TParagraphView::HandleWord`, so the editor finds
 no text under a point - right for an empty page, wrong for one that has
 been written on; `GetRecognitionView` and `BuildRecConfig`, so a tap on

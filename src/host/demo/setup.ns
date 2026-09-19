@@ -1,0 +1,51 @@
+// The Setup assistant walked through to the end, so that the machine is
+// sitting on the Notepad rather than on its "Welcome" page.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --scale 2 --script src/host/demo/setup.ns
+//
+// The host's internal store is a THostStore in memory (DEVIATION: the
+// flash and TPSSManager are NOT YET), so nothing is remembered between
+// runs and every boot starts at the assistant.  This taps its way
+// through: past "Welcome", a name typed on the "Enter your Name" page,
+// then Continue on each of the pages that follow - country, time zone,
+// date, time, handwriting, signature - and Done on "Congratulations",
+// which sets the backdrop to the Notepad and opens it.
+//
+// The taps are where the buttons are on a 320x480 screen: Continue at
+// the bottom right, Done a few pixels further right on the last page.
+// Nothing here is the ROM's; it is the pen and the keyboard a person
+// would use, driven from a script (host/HostViews.cpp's PenDown, PenUp,
+// IdleStrokes and KeyEvent).
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+// "Daniel", in the ADB key codes host/HostKeyboard.cpp maps a PC
+// keyboard to (D a n i e l)
+name := [2, 0, 45, 34, 14, 37];
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      begin
+        call tapAt with (297, 468);			// Done, on "Congratulations"
+        AddDelayedCall(func() Print("setup: the Notepad is up"), nil, 3000);
+      end;
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
