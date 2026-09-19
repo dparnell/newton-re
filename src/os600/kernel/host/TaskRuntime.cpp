@@ -20,6 +20,8 @@
 #include <condition_variable>		// before the DDK headers, whose macros upset libc++
 #include <map>
 #include <mutex>
+#include <atomic>
+#include <chrono>
 #include <thread>
 
 #include "TaskRuntime.h"
@@ -53,6 +55,7 @@ static std::mutex						gBaton;
 static std::condition_variable			gBatonChanged;
 static std::map<TTask*, HostTaskContext*>	gContexts;
 static TTask*							gRunningTask = nil;		// whose thread holds the baton
+static std::atomic<unsigned long>		gHandovers(0);			// bumped every time the baton is taken
 static Boolean							gStopRequested = false;
 Boolean									gHostTasksStopping = false;
 
@@ -88,6 +91,7 @@ WaitForBaton(TTask* task, std::unique_lock<std::mutex>& lock)
 		gBatonChanged.wait(lock, [] { return false; });
 	}
 	gRunningTask = task;
+	gHandovers.fetch_add(1);
 }
 
 
@@ -304,6 +308,86 @@ HostStopTasks()
 // an atomic section - SWIExitSchedule would refuse to switch there
 // anyway - so a run on the controllable clock stays as deterministic as
 // it was.
+// The four characters of a task's name, as the kernel keeps it.
+static void
+TaskName(TTask* task, char* out)
+{
+	ULong name = task != nil ? task->fName : 0;
+	for (long i = 0; i < 4; i++)
+	{
+		char c = (char) (name >> (24 - i * 8));
+		out[i] = (c >= 32 && c < 127) ? c : '?';
+	}
+	out[4] = 0;
+}
+
+
+// What every task was doing when the machine stopped.
+static void
+ReportTheStall(long seconds)
+{
+	char name[8];
+	fprintf(stderr, "[host] the machine has not run a task for %ld seconds:\n", seconds);
+	TaskName(gCurrentTask, name);
+	fprintf(stderr, "[host]   the kernel's current task is %s (%p)\n",
+			gCurrentTask != nil ? name : "none", (void*) gCurrentTask);
+	TaskName(gRunningTask, name);
+	fprintf(stderr, "[host]   the baton was last taken by %s (%p)\n",
+			gRunningTask != nil ? name : "none", (void*) gRunningTask);
+	fprintf(stderr, "[host]   alarm %s, time slice %s, interrupts %s, deferred %s, schedule %s\n",
+			gHostAlarmArmed ? "armed" : "off",
+			gHostTimeSliceArmed ? "armed" : "off",
+			gHostInterruptEnabled ? "on" : "off",
+			gWantDeferred ? "wanted" : "none",
+			gSchedule ? "wanted" : "none");
+	for (std::map<TTask*, HostTaskContext*>::iterator i = gContexts.begin(); i != gContexts.end(); ++i)
+	{
+		TaskName(i->first, name);
+		fprintf(stderr, "[host]   task %s (%p) state %#lx priority %lu%s\n",
+				name, (void*) i->first, (unsigned long) i->first->fState,
+				(unsigned long) i->first->fPriority,
+				i->second->fRunning ? "  <- holds the baton" : "");
+	}
+	fflush(stderr);
+}
+
+
+static void
+WatchdogMain(long seconds)
+{
+	unsigned long was = gHandovers.load();
+	long quiet = 0;
+	Boolean told = false;
+	while (!gStopRequested)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		unsigned long now = gHandovers.load();
+		if (now != was)
+		{
+			was = now;
+			quiet = 0;
+			told = false;
+			continue;
+		}
+		if (++quiet >= seconds && !told)
+		{
+			told = true;
+			ReportTheStall(quiet);
+		}
+	}
+}
+
+
+void
+HostWatchdogStart(long seconds)
+{
+	if (seconds <= 0)
+		return;
+	std::thread watchdog(WatchdogMain, seconds);
+	watchdog.detach();
+}
+
+
 void
 HostPreemptionPoint()
 {

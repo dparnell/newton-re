@@ -36,6 +36,7 @@
 #include "os600/kernel/host/TaskRuntime.h"
 #include "hal/host/Host.h"
 #include "HostStores.h"
+#include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
 #include <stdio.h>
@@ -204,6 +205,8 @@ main(int argc, char** argv)
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
 	HostSetStoreFile(storeFile);
+	// a machine that stops dead says so rather than sitting there looking idle
+	HostWatchdogStart(10);
 	HostUseRealClock(true);
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;

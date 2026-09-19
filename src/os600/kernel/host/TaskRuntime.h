@@ -67,6 +67,14 @@ Boolean		HostIsAlienThread();					// whether it said so
 // point the kernel may take one at instead.
 void		HostPreemptionPoint();					// a due interrupt taken here; the baton may be handed on
 
+// A machine that has stopped.  Every task blocked with nobody able to
+// run looks exactly like an idle one from outside - the window still
+// repaints, the CPU is quiet - so the watchdog says so instead: a
+// thread of the host's own that notices the baton has not been handed
+// on for that many seconds and prints what every task was doing.  It
+// only watches; it never touches the runtime.
+void		HostWatchdogStart(long seconds);
+
 extern Boolean	gHostTasksStopping;
 
 #endif	/* __HOST_TASKRUNTIME_H */

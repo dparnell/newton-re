@@ -45,14 +45,19 @@ HostKeyboardQuit(void)
 
 
 // The Newton's key codes (the ADB keyboard's) for the keys of a PC
-// keyboard, by their letters and names: a Windows virtual key code, which
-// is the ASCII code for the letters and digits.
+// keyboard.  The two that are easy to get wrong are Z and Y: the ADB
+// code 6 is Z and 16 is Y, which is a QWERTY keyboard's order; they were
+// the other way round here, which is where they sit on the German
+// QWERTZ one, so typing Z gave a y and Y gave a z.
+//
+// A key is named by its Windows virtual key code, which for the letters
+// and digits is the ASCII code.
 long
 HostKeyCodeForVirtualKey(long vk)
 {
 	static const struct { long vk; long code; } kMap[] = {
-		{ 'A', 0 }, { 'S', 1 }, { 'D', 2 }, { 'F', 3 }, { 'H', 4 }, { 'G', 5 }, { 'Y', 6 }, { 'X', 7 }, { 'C', 8 }, { 'V', 9 },
-		{ 'B', 11 }, { 'Q', 12 }, { 'W', 13 }, { 'E', 14 }, { 'R', 15 }, { 'Z', 16 }, { 'T', 17 },
+		{ 'A', 0 }, { 'S', 1 }, { 'D', 2 }, { 'F', 3 }, { 'H', 4 }, { 'G', 5 }, { 'Z', 6 }, { 'X', 7 }, { 'C', 8 }, { 'V', 9 },
+		{ 'B', 11 }, { 'Q', 12 }, { 'W', 13 }, { 'E', 14 }, { 'R', 15 }, { 'Y', 16 }, { 'T', 17 },
 		{ '1', 18 }, { '2', 19 }, { '3', 20 }, { '4', 21 }, { '6', 22 }, { '5', 23 }, { '9', 25 }, { '7', 26 }, { '8', 28 }, { '0', 29 },
 		{ 'O', 31 }, { 'U', 32 }, { 'I', 34 }, { 'P', 35 }, { 0x0d, 36 }, { 'L', 37 }, { 'J', 38 }, { 'K', 40 },
 		{ 0xbc, 43 }, { 0xbf, 44 }, { 'N', 45 }, { 'M', 46 }, { 0xbe, 47 }, { 0x09, 48 }, { 0x20, 49 }, { 0x08, 51 }, { 0x1b, 53 },
