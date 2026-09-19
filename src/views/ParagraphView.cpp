@@ -1993,3 +1993,99 @@ TParagraphView::RealDraw(Rect& /*bounds*/)
 	// the selection over the text (the ROM does this in PostDraw)
 	DrawHilites(false);
 }
+
+// ROM 0x000a2e24 GetJustificationOfDroppedText__FRC6RefVar
+// What a piece of text that has been written or dropped asks for in the
+// way of justification: the low two bits of its viewJustify.  It only
+// counts when the view it came from works out its own bounds
+// (vCalculateBounds), because a view with bounds of its own has already
+// been justified inside them.  ==> 0 for nothing asked, the two bits
+// when they are asked for, and 4 for a justification that is there but
+// is not the caller's business.
+long
+GetJustificationOfDroppedText(RefArg info)
+{
+	RefVar justify(GetProtoVariable(info, RSSYMviewjustify, nil));
+	if (ISNIL(justify))
+		return 0;
+	long bits = RINT(justify) & 3;
+	if (bits == 0)
+		return 0;
+	RefVar flags(GetProtoVariable(info, RSSYMviewflags, nil));
+	if (NOTNIL(flags) && (RINT(flags) & vCalculateBounds) != 0)
+		return bits;
+	return 4;
+}
+
+
+// ROM 0x0017a4d8 MakeParagraphForm__FPUslRC5TRectRC6RefVarUc
+// The context frame a new paragraph is built from: a clone of the ROM's
+// starterParagraph with the bounds and the text put into it, and then
+// whatever `info` - the style of the word that is going in - has to say.
+// The styles, the tabs and the correction information are carried over;
+// the text flags only when they differ from protoParagraph's, and the
+// justification only when the text asked for one.
+//
+// A style array of exactly two whose second element is not an ink word
+// is one font for the whole paragraph, so it becomes the viewFont and
+// the styles go; with no styles at all the font is the user's, and that
+// is only written down when it differs from protoParagraph's.
+Ref
+MakeParagraphForm(UniChar* text, long length, const Rect& bounds, RefArg info, Boolean /*flag*/)
+{
+	RefVar form(Clone(RefVar(Rstarterparagraph)));
+	SetFrameSlot(form, RSSYMviewbounds, RefVar(ToObject(bounds)));
+	SetFrameSlot(form, RSSYMtext, RefVar(MakeString(text, length)));
+	RefVar styles;
+	RefVar font(GetPreference(RSSYMuserfont));
+	if (NOTNIL(info))
+	{
+		long justify = GetJustificationOfDroppedText(info);
+		if (justify != 0 && justify != 4)
+			SetFrameSlot(form, RSSYMviewjustify, RefVar(MAKEINT(justify)));
+		RefVar slot(GetProtoVariable(info, RSSYMstyles, nil));
+		if (NOTNIL(slot))
+		{
+			styles = slot;
+			SetFrameSlot(form, RSSYMstyles, RefVar(Clone(slot)));
+		}
+		else
+		{
+			slot = GetProtoVariable(info, RSSYMviewfont, nil);
+			if (NOTNIL(slot))
+				font = slot;
+		}
+		slot = GetProtoVariable(info, RSSYMtabs, nil);
+		if (NOTNIL(slot))
+			SetFrameSlot(form, RSSYMtabs, RefVar(Clone(slot)));
+		slot = GetProtoVariable(info, RSSYMtextflags, nil);
+		if (NOTNIL(slot))
+		{
+			RefVar standard(GetProtoVariable(RefVar(Rprotoparagraph), RSSYMtextflags, nil));
+			if (RINT(standard) != RINT(slot))
+				SetFrameSlot(form, RSSYMtextflags, slot);
+		}
+		slot = GetProtoVariable(info, RSSYMcorrectinfo, nil);
+		if (NOTNIL(slot))
+			SetFrameSlot(form, RSSYMcorrectinfo, slot);
+	}
+	if (NOTNIL(styles))
+	{
+		if (Length(styles) == 2)
+		{
+			RefVar only(GetArraySlotRef(styles, 1));
+			if (!IsInkWord(only))
+			{
+				RemoveSlot(form, RSSYMstyles);
+				SetFrameSlot(form, RSSYMviewfont, only);
+			}
+		}
+	}
+	else
+	{
+		RefVar standard(GetProtoVariable(RefVar(Rprotoparagraph), RSSYMviewfont, nil));
+		if (!EQRef(font, standard))
+			SetFrameSlot(form, RSSYMviewfont, RefVar(Clone(font)));
+	}
+	return form;
+}

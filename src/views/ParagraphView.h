@@ -171,4 +171,17 @@ private:
 
 void	GrowLineInfoCache(LineInfo** cache, long* capacity);			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
 
+// The horizontal justification a piece of dropped or written text asks
+// for: the low two bits of its viewJustify, but only when the view it
+// came from was told to calculate its own bounds (vCalculateBounds).
+// ==> 0 when it asks for nothing, 4 when it has a justification the
+// caller should ignore.
+long	GetJustificationOfDroppedText(RefArg info);		// ROM 0x000a2e24 GetJustificationOfDroppedText__FRC6RefVar
+
+// The context frame of a new paragraph: a clone of the ROM's
+// starterParagraph with the bounds and the text put in, and whatever the
+// `info` frame says about how it should look.
+Ref		MakeParagraphForm(UniChar* text, long length, const Rect& bounds,
+						  RefArg info, Boolean flag);		// ROM 0x0017a4d8 MakeParagraphForm__FPUslRC5TRectRC6RefVarUc
+
 #endif	/* __PARAGRAPHVIEW_H */
