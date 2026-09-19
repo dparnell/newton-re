@@ -6,6 +6,7 @@
 
 #include "HostStores.h"
 
+#include "FactorySoups.h"
 #include "Soups.h"
 #include "Store.h"
 #include "host/HostStore.h"
@@ -21,6 +22,32 @@
 enum { kHostStoreSize = 4 * 1024 * 1024 };
 
 static bool	gMounted = false;
+
+
+// The store prepared the way a used machine's is: the soups the ROM's own
+// applications keep, made if they are not there already.  Their names and
+// index lists are the ROM's (FactorySoups.h, generated from the packages'
+// soup supervisors by analysis/soupdefs.py), so nothing here is invented -
+// only the moment is, the applications having made them long before the
+// boot on a machine that has ever been switched on.
+void
+HostPrepareStore(RefArg store)
+{
+	for (long i = 0; i < gFactorySoupCount; i++)
+	{
+		RefVar name(MakeString(gFactorySoups[i].fName));
+		if (NOTNIL(StoreHasSoup(store, name)))
+			continue;
+		RefVar indexes(MAKEMAGICPTR(gFactorySoups[i].fIndexes));
+		if (!IsArray(indexes))
+		{
+			fprintf(stderr, "[host] no indexes for the %s soup: the ROM's objects are not in\n",
+					gFactorySoups[i].fName);
+			continue;
+		}
+		StoreCreateSoup(store, name, indexes);
+	}
+}
 
 
 void
@@ -47,7 +74,12 @@ HostMountStores(void)
 			if (err != noErr)
 				fprintf(stderr, "[host] the internal store would not format (%ld)\n", (long) err);
 			else
+			{
 				RegisterTStore(store);
+				RefVar stores(GetStores());
+				if (IsArray(stores) && Length(stores) > 0)
+					HostPrepareStore(RefVar(GetArraySlotRef(stores, 0)));
+			}
 		}
 	}
 	newton_catch_all

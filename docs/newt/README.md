@@ -268,10 +268,22 @@ Both ROMs are the same here, so it is not a localisation slip; what the
 machine gets away with is that the internal store of a Newton which has
 ever run the Names application already has the soup.  The host starts
 with a store that has never been written to, and there the ROM's own
-omission shows.  Making a soup called `"Names"` before the init scripts
-run lets all seven of them through, which is how the diagnosis was
-checked; what the host should do about it - a store prepared the way a
-shipped machine's is - is an open question.
+omission shows.
+
+So the host prepares its store rather than mounting an empty one
+(`host/HostStores.h`): before anything runs, the soups the ROM's own
+applications keep are made on it, from the names and index lists those
+applications carry (`host/FactorySoups.h`, generated from the ROM
+extension's packages by `analysis/soupdefs.py` - there is exactly one,
+the Cardfile's `"Names"`).  All seven init functions then run.
+
+What is left of the two exceptions is the second one, and it belongs to
+the view system rather than the store: a boot script opens a view and
+then indexes `GetRoot():ChildViewFrames()[0]`, and the host's root view
+has no children because its root template is the reconstruction's own
+(`views/BuildView.cpp`'s `MakeRootTemplate`, a DEVIATION - the ROM's
+`viewRoot` wants the whole system).  Give the root a child, as
+`host/demo/newton.ns` does, and it does not happen.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages

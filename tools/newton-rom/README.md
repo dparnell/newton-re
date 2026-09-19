@@ -57,6 +57,7 @@ tools/newton-rom/
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
+    soupdefs.py           the soups the ROM's applications keep -> src/host/FactorySoups.cpp
     regenerate.py         run every generator above against one ROM (--list, --only NAME)
     romid.py              which ROM a build directory holds (the version string it carries)
   requirements.txt      libclang pin

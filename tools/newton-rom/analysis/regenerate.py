@@ -4,7 +4,7 @@
 Usage:
     python regenerate.py build/MP2x00US [--list] [--only NAME]...
 
-Fourteen files under `src/` and four under `docs/` are read out of the
+Fifteen files under `src/` and four under `docs/` are read out of the
 ROM rather than written by hand, each by one of the scripts in this
 directory, and each says in its header which command made it.  That is
 fine while there is one ROM, but pointing the reconstruction at another
@@ -63,6 +63,8 @@ GENERATED = [
      "packages.py", ["{build}", "--doc", "docs/packages/rex-packages.md"]),
     ("classinfos",
      "classinfo.py", ["{build}", "--all", "-o", "docs/protocols/classinfos.md"]),
+    ("factorysoups",
+     "soupdefs.py", ["{build}", "-o", "src/host/FactorySoups.cpp"]),
 ]
 
 # The windowed sinc of ResampleTables.cpp, by its first words: the ROM has
