@@ -46,6 +46,7 @@ ctest --test-dir build/host
 | `tools/newton-rom/` | **Our tooling**: ROM extraction, demangling, Ghidra import — see its [README](tools/newton-rom/README.md) |
 | `src/` | The reconstruction itself, organised by functional area and buildable on a host — see [src/README.md](src/README.md) |
 | `docs/` | Reverse-engineering notes per subsystem, starting with the kernel ([docs/os600](docs/os600/README.md)); generated tables are marked as such |
+| `docs/curiosities.md` | The findings worth telling somebody about: clever tricks, shipped bugs, and the compiler idioms that are easy to misread |
 | `tools/mpdumper/` | Alexey Danilchenko's 2004 symbol dumper (libiberty demangler) and its pre-generated symbol listings for the US ROM; used as the reference oracle for our demangler |
 
 ## Reproducing the Ghidra project
