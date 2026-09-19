@@ -623,3 +623,208 @@ TEditView::AlignToLineSpacing(Rect* r, long top, long ascent)
 	if (down != 0 || across != 0)
 		OffsetRect(r, across, down);
 }
+
+/* -------------------------------------------------------------------------------
+	T h e   c a r e t
+------------------------------------------------------------------------------- */
+
+// ROM 0x0c100cf0 gAboutToOpenSoftKeyboard
+Boolean	gAboutToOpenSoftKeyboard = false;
+
+// ROM 0x0c100ce0 gLassoedDrag
+Boolean	gLassoedDrag = false;
+
+
+// ROM 0x002628c8 AlignToGrid__FlT1
+// The value moved to the nearest multiple of the grid, rounding to the
+// nearer (half a grid is added before the division); a grid of nothing
+// leaves the value as it was.  The answer is cut to a short, as every
+// coordinate in the view system is.
+long
+AlignToGrid(long v, long grid)
+{
+	long result = v;
+	if (grid != 0)
+		result = grid * ((v + (grid >> 1)) / grid);
+	return (short) result;
+}
+
+
+// ROM 0x001a2aa4 TextOrInkWordsEnabled__FP5TView
+// Whether the view takes words from the recogniser: bit 0 when ink words
+// are wanted, bit 1 when text is.  The ROM asks the view its recognition
+// settings are configured from (GetRecognitionView) for a configuration
+// frame built out of its flags (BuildRecConfig), and reads
+// doInkWordRecognition and doTextRecognition out of it.
+//
+// NOT YET RECONSTRUCTED: GetRecognitionView 0x001a2a24 and BuildRecConfig
+// 0x001a1e5c, which are the whole of it.  With no configuration to ask,
+// nothing is enabled - so a tap on the empty part of a page does not open
+// a paragraph to write in, where the machine would.
+long
+TextOrInkWordsEnabled(TView* /*view*/)
+{
+	return 0;
+}
+
+
+// ROM 0x000a8844 TextContainingPoint__9TEditViewFR6TPointP5TRectPl
+// The child whose text the point falls in.  Each child that is visible
+// and holds data is asked how well it would take a single letter written
+// at the point - HandleWord with an 'A' and no unit, which is the
+// question the recogniser would ask - and the best answer wins.
+//
+// ==> that child, with `score` left holding its answer: 0 nobody wants
+// the point, 1 it is in a view's text, 2 it is in one only just.  A score
+// of 0 answers no view, and so does a score of 2 while a lasso drag is
+// going on, because the point belongs to the drag.
+//
+// `box` is how big the thing written at the point is; with none it is a
+// single pixel.
+TView*
+TEditView::TextContainingPoint(Point& pt, Rect* box, long* score)
+{
+	long best = 0;
+	TView* bestView = nil;		// (the ROM leaves the register as it found it,
+								//  which is safe: a best of 0 answers nothing)
+	UniChar letter[2];
+	letter[0] = 'A';
+	letter[1] = 0;
+	Rect at;
+	at.top = pt.v;
+	at.left = pt.h;
+	at.bottom = pt.v + 1;
+	at.right = box == nil ? pt.h + 1 : pt.h + (box->right - box->left);
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if ((child->fFlags & vVisible) != 0 && child->DerivedFrom(clDataView))
+		{
+			RefVar word;
+			long wants = ((TDataView*) child)->HandleWord(letter, 1, at, pt, 0, 0,
+														  word, false, nil, nil);
+			if (best < wants)
+			{
+				best = wants;
+				bestView = child;
+			}
+		}
+	}
+	if (score != nil)
+		*score = best;
+	if (best == 0 || (best == 2 && gLassoedDrag))
+		bestView = nil;
+	return bestView;
+}
+
+// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc
+// The caret put where the point says, in the coordinates the page is
+// scrolled to.  Three things can happen:
+//
+//   The point is in a child's text (score 1).  That child becomes the key
+//   view with the caret at the character the point falls on - before the
+//   first when the point is above the child, after the last when it is
+//   below - and the editor itself is left alone.
+//
+//   The point is in a child's text but only just (score 2), or there is
+//   no text there at all and the child says so.  The caret goes just
+//   under that child, where the next line would start, and the editor
+//   becomes the key view.
+//
+//   There is no text anywhere near.  The caret is made from the view's
+//   own text style - as tall as the font's ascent and two pixels wide -
+//   at the point, lined up with the page's ruled grid, and the editor
+//   becomes the key view.  A page that takes neither text nor ink words,
+//   and has no keyboard up, does nothing at all here.
+//
+// `click` asks for the click the machine makes when the caret moves.
+//
+// NOT YET RECONSTRUCTED: FClicker 0x001e6578, the click itself.
+void
+TEditView::PositionCaret(Point& pt, Boolean click)
+{
+	RemoveAllHilites();
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+		return;
+	long score = 0;
+	TView* container = TextContainingPoint(pt, nil, &score);
+	TParagraphView* para = container != nil
+						 ? (TParagraphView*) ((TDataView*) container)->GetTextView() : nil;
+	Boolean underTheChild = false;
+	if (para != nil && (para->fFlags & (vReadOnly | vWriteProtected)) == 0 && score > 0)
+	{
+		if (score != 2)
+		{
+			// the point is on a character of the child's text
+			para->RemoveAllHilites();
+			long offset = para->PointToOffset(pt);
+			if (offset < 0)
+				offset = para->viewBounds.top > pt.v
+					   ? 0 : (Length(RefVar(para->Text())) - 2) / 2;
+			gRootView->SetKeyView(para, offset, 0, false);
+			if (click && gRootView->CaretEnabled())
+				;	// NOT YET RECONSTRUCTED: FClicker(nil)
+			return;
+		}
+		underTheChild = true;
+	}
+	else if (score == 2)
+		underTheChild = true;
+
+	if (underTheChild)
+	{
+		// just under the child, where the line after it would start
+		Rect caret = para->viewBounds;
+		pt.v = caret.bottom + 5;
+		para->PointToCaret(pt, &caret, nil);
+		SetCaretRectGlobal(caret);
+	}
+	else
+	{
+		if (!gAboutToOpenSoftKeyboard && TextOrInkWordsEnabled(this) == 0
+			&& !gRootView->KeyboardActive())
+			return;		// the page takes no writing and nothing is typing at it
+		if (fLineSpacing != 0)
+		{
+			// lined up with the page's ruling, in the view's own coordinates
+			short height = (short) (viewBounds.bottom - viewBounds.top);
+			Point origin = ContentsOrigin();
+			pt.v -= origin.v;
+			pt.h -= origin.h;
+			short was = pt.v;
+			pt.v = (short) AlignToGrid(pt.v, fLineSpacing);
+			// the first line when the point rounded above the page, and the
+			// point itself when even the first line would be off the bottom
+			if (pt.v == 0)
+			{
+				pt.v = fLineSpacing <= height ? fLineSpacing : was;
+			}
+			else if (pt.v > height && fLineSpacing > height)
+				pt.v = was;
+			pt.v -= 4;
+			origin = ContentsOrigin();
+			pt.v += origin.v;
+			pt.h += origin.h;
+		}
+		// as tall as the font's ascent and two pixels wide
+		StyleRecord style;
+		FontInfo font;
+		style.fPattern = nil;		// (the ROM clears it before asking, and
+									//  disposes whatever came back)
+		GetTextStyleRecord(&style);
+		GetStyleFontInfo(&style, &font);
+		Rect caret;
+		caret.top = (short) -font.ascent;
+		caret.left = 0;
+		caret.bottom = 0;
+		caret.right = 2;
+		OffsetRect(&caret, pt.h, pt.v);
+		SetCaretRectGlobal(caret);
+		if (style.fPattern != nil)
+			DisposePattern(style.fPattern);
+	}
+	gRootView->SetKeyView(this, 0, 0, true);
+	if (click && gRootView->CaretEnabled())
+		;	// NOT YET RECONSTRUCTED: FClicker(nil)
+}

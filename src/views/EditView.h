@@ -21,7 +21,7 @@
 	0x000abb40), each function citing its origin.  NOT YET: everything the
 	recogniser drives (HandleWord, HandleInk, HandleShape, HandleCaret,
 	HandleLineGesture, Scrub, JamText, AddNewParagraph, PlaybackInk), the
-	caret and selection (PositionCaret, SetSelection, GetSelection,
+	caret and selection (SetSelection, GetSelection,
 	ValidateCaret, the caret rectangle), drag and drop, TrackScale and
 	TrackDistort, the commands (RealDoCommand, GetValue, SetValue) and the
 	drawing of the resize border itself (DrawResizeBorder, TRect::Scale over
@@ -56,12 +56,16 @@ public:
 	virtual void	ActivateSelection(Boolean on);		// ROM 0x000aa860 ActivateSelection__9TEditViewFUc
 	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000ab9b4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
+	// the editor's own virtuals, which start after TView's at +0x11c
+	// (NOT YET RECONSTRUCTED: DrawScaledViews, the one at +0x11c)
+	virtual void	PositionCaret(Point& pt, Boolean click);	// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc (vtable +0x120)
 
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
 	long			CountHilites(void);						// ROM 0x000a7abc CountHilites__9TEditViewFv
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
+	TView*			TextContainingPoint(Point& pt, Rect* box, long* score);	// ROM 0x000a8844 TextContainingPoint__9TEditViewFR6TPointP5TRectPl
 	void			InvalAllHilites(void);					// ROM 0x000a6270 InvalAllHilites__9TEditViewFv
 	void			DirtyBoxHilites(void);					// ROM 0x000a6010 DirtyBoxHilites__9TEditViewFv
 
@@ -90,5 +94,17 @@ public:
 // A rectangle grown to the outside of the gray resize border (twelve pixels),
 // kept within limit when there is one.
 void	ToOutsideGrayBorder(Rect* r, const Rect* limit);		// ROM 0x000a3498 ToOutsideGrayBorder__FP5TRectPC5TRect
+
+// The value moved to the nearest multiple of the grid (an edit view's
+// line spacing), rounding to the nearer; a grid of nothing leaves it as
+// it was.
+long	AlignToGrid(long v, long grid);						// ROM 0x002628c8 AlignToGrid__FlT1
+
+// Whether the view takes ink words (bit 0) or text (bit 1) from the
+// recogniser.
+long	TextOrInkWordsEnabled(TView* view);					// ROM 0x001a2aa4 TextOrInkWordsEnabled__FP5TView
+
+extern Boolean	gAboutToOpenSoftKeyboard;					// ROM 0x0c100cf0 gAboutToOpenSoftKeyboard
+extern Boolean	gLassoedDrag;								// ROM 0x0c100ce0 gLassoedDrag
 
 #endif	/* __EDITVIEW_H */

@@ -18,6 +18,7 @@
 */
 
 #include "RootView.h"
+#include "EditView.h"
 #include "DrawShape.h"
 #include "Application.h"
 #include "Commands.h"
@@ -584,6 +585,32 @@ FViewContainsCaretView(RefArg /*rcvr*/, RefArg context)
 		return NILREF;
 	TView* view = FailGetView(context);
 	return MAKEBOOLEAN(gRootView->ViewContainsCaretView(view));
+}
+
+
+// ROM 0x001ef240 FPositionCaret
+// :PositionCaret(x, y, click): the caret put where the point says in an
+// edit view - the page of a notebook application - which is what an
+// application does when it opens, so that whatever is typed or written
+// next has somewhere to go.  The point is given in the view's own
+// coordinates and moved by where the page is scrolled to.  `click` asks
+// for the click the machine makes when the caret moves.  ==> nil.
+static Ref
+FPositionCaret(RefArg rcvr, RefArg x, RefArg y, RefArg click)
+{
+	TView* view = FailGetView(rcvr);
+	if (!view->DerivedFrom(clEditView))
+		ThrowMsg("not an edit view");
+	if ((view->fFlags & (vReadOnly | vWriteProtected)) != 0)
+		ThrowMsg("read-only view");
+	Point pt;
+	pt.h = (short) RINT(x);
+	pt.v = (short) RINT(y);
+	Point origin = view->ContentsOrigin();
+	pt.v += origin.v;
+	pt.h += origin.h;
+	((TEditView*) view)->PositionCaret(pt, NOTNIL(click));
+	return NILREF;
 }
 
 
@@ -1369,6 +1396,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FUnregisterOpenKeyboard", (void*) FUnregisterOpenKeyboard, 0);
 	RegisterNativeFunction("FViewContainsCaretView", (void*) FViewContainsCaretView, 1);
 	RegisterNativeFunction("FTrackHiliteX", (void*) FTrackHiliteX, 1);
+	RegisterNativeFunction("FPositionCaret", (void*) FPositionCaret, 3);
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
 	RegisterNativeFunction("FHiliteUniqueX", (void*) FHiliteUniqueX, 1);
