@@ -24,6 +24,8 @@
 #include "ViewFlags.h"
 #include "Rects.h"
 #include "Regions.h"
+#include "RegionVars.h"
+#include "Locale.h"
 #include "Draw.h"
 #include "Ports.h"
 #include "Frames.h"
@@ -905,4 +907,87 @@ TEditView::RealDoCommand(RefArg cmd)
 	fTapPoint = unit->Stroke()->FirstPoint();
 	gRootView->AddIdler(this, 0x50 + (gDoubleTapInterval << 4), 2);
 	return 1;
+}
+
+// ROM 0x000a4204 ResetHilitesForNewWord__9TEditViewFv
+// The selection made ready for a word about to be written or typed.
+// More than one child selected is no place to put a word, so the whole
+// selection goes and the caret with it; one selected paragraph becomes
+// the key view with its selected characters, so the word replaces them;
+// one selected polygon is no place either.  Nothing selected is left
+// alone, which is the empty page's case.
+void
+TEditView::ResetHilitesForNewWord(void)
+{
+	TView* first = nil;
+	if (HasHilitedChildren(2, &first))
+	{
+		gRootView->SetPreserveHilites(true);
+		gRootView->SetKeyView(nil, 0, 0, false);
+		gRootView->SetPreserveHilites(false);
+		RemoveAllHilites();
+		fCaretRect.top = kNoBounds;
+		fCaretRect.bottom = kNoBounds;
+		return;
+	}
+	if (first == nil)
+		return;
+	if (first->DerivedFrom(clParagraphView))
+	{
+		RefVar hilite(first->FirstHilite());
+		TParagraphHilite* selection = (TParagraphHilite*) RefToAddress(hilite);
+		gRootView->SetKeyView(first, selection->fStart,
+							  selection->fEnd - selection->fStart, false);
+	}
+	else if (first->DerivedFrom(clPolygonView))
+	{
+		gRootView->SetPreserveHilites(true);
+		gRootView->SetKeyView(nil, 0, 0, false);
+		gRootView->SetPreserveHilites(false);
+		RemoveAllHilites();
+	}
+}
+
+
+// ROM 0x000aa9b0 ValidateCaret__9TEditViewFUc
+// The caret thrown away when it has gone out of sight, so that what is
+// written next does not go somewhere nobody can see.  It is out of sight
+// when nothing of it is left in the port's clipping region, and -
+// `scrolled` asking for it - when it has come within fifty pixels of the
+// right edge or ten of the top or bottom, which is the ROM's margin for
+// a page that is about to scroll.  ==> whether the caret is still this
+// view's afterwards.
+//
+// The whole of it is behind the remoteWriting preference: with none set
+// the caret is never taken away, which is the machine as it boots.
+Boolean
+TEditView::ValidateCaret(Boolean scrolled)
+{
+	if (gRootView->fCaretView == this && NOTNIL(RefVar(GetPreference(RSSYMremotewriting))))
+	{
+		Rect caret = fCaretRect;
+		Point origin = ContentsOrigin();
+		OffsetRect(&caret, origin.h, origin.v);
+		TRegion saved(SetupVisRgn());
+		TRegionVar visible(saved);
+		GrafPort* port;
+		GetPort(&port);
+		RgnHandle clip = port->clipRgn;
+		Rect clipBox = (*clip)->rgnBBox;
+		TRegionVar showing;
+		RectRgn(showing, &caret);
+		SectRgn(showing, clip, showing);
+		if (EmptyRgn(showing)
+			|| (scrolled && (clipBox.right - 50 < caret.right
+							 || clipBox.top + 10 > caret.bottom
+							 || clipBox.bottom - 10 < caret.bottom)))
+		{
+			fCaretRect.top = kNoBounds;
+			fCaretRect.bottom = kNoBounds;
+			gRootView->SetKeyView(nil, 0, 0, false);
+		}
+		GetPort(&port);
+		CopyRgn(visible, port->clipRgn);
+	}
+	return gRootView->fCaretView == this;
 }
