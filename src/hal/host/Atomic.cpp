@@ -17,6 +17,14 @@ static std::recursive_mutex	gAtomicLock;
 static int					gAtomicNestCount = 0;
 static int					gAtomicFIQNestCount = 0;
 
+// host: what the watchdog prints when the machine has stopped
+extern "C" void
+HostAtomicNesting(int* atomic, int* fiq)
+{
+	*atomic = gAtomicNestCount;
+	*fiq = gAtomicFIQNestCount;
+}
+
 extern "C" void
 EnterAtomic(void)
 {

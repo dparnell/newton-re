@@ -56,6 +56,7 @@ static std::condition_variable			gBatonChanged;
 static std::map<TTask*, HostTaskContext*>	gContexts;
 static TTask*							gRunningTask = nil;		// whose thread holds the baton
 static std::atomic<unsigned long>		gHandovers(0);			// bumped every time the baton is taken
+void									(*gHostStallReportHook)(void) = nil;
 static Boolean							gStopRequested = false;
 Boolean									gHostTasksStopping = false;
 
@@ -334,6 +335,10 @@ ReportTheStall(long seconds)
 	TaskName(gRunningTask, name);
 	fprintf(stderr, "[host]   the baton was last taken by %s (%p)\n",
 			gRunningTask != nil ? name : "none", (void*) gRunningTask);
+	int atomic = 0, fiq = 0;
+	HostAtomicNesting(&atomic, &fiq);
+	fprintf(stderr, "[host]   atomic sections: %d, FIQ atomic: %d%s\n", atomic, fiq,
+			atomic + fiq > 0 ? "  <- the scheduler may not switch here" : "");
 	fprintf(stderr, "[host]   alarm %s, time slice %s, interrupts %s, deferred %s, schedule %s\n",
 			gHostAlarmArmed ? "armed" : "off",
 			gHostTimeSliceArmed ? "armed" : "off",
@@ -348,6 +353,8 @@ ReportTheStall(long seconds)
 				(unsigned long) i->first->fPriority,
 				i->second->fRunning ? "  <- holds the baton" : "");
 	}
+	if (gHostStallReportHook != nil)
+		gHostStallReportHook();
 	fflush(stderr);
 }
 

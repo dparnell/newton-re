@@ -28,6 +28,10 @@ void	ExitFIQAtomic(void);
 // scheduling then; the ROM reads the four gAtomic*NestCount globals)
 Boolean	InAtomicSection(void);
 
+// host: the two nesting counts, for the watchdog's report of a machine
+// that has stopped
+void	HostAtomicNesting(int* atomic, int* fiq);
+
 // atomic exchange (the ARM swp / swpb instructions; ROM 0x003a4b84, 0x003a4b8c)
 ULong	Swap(ULong* address, ULong value);
 UChar	SwapByte(UChar* address, UChar value);

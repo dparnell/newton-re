@@ -75,6 +75,12 @@ void		HostPreemptionPoint();					// a due interrupt taken here; the baton may be
 // only watches; it never touches the runtime.
 void		HostWatchdogStart(long seconds);
 
+// What the watchdog prints after the task report, when a host program
+// has something to add - the newt world sets it to print the
+// NewtonScript stack, which says whether the stuck task is running one
+// of the ROM's own scripts and which.
+extern void	(*gHostStallReportHook)(void);
+
 extern Boolean	gHostTasksStopping;
 
 #endif	/* __HOST_TASKRUNTIME_H */

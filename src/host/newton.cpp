@@ -120,6 +120,18 @@ KernelServices(void)
 // running.  The handler is not what a signal handler is supposed to do -
 // it prints, and printing is not safe here - but it is a good deal
 // better than an exit code, and the process is going down anyway.
+// the watchdog's extra line: what the interpreter was in the middle of
+static void
+ReportTheScript(void)
+{
+	if (gREPout != nil && gInterpreter != nil)
+	{
+		fprintf(stderr, "[host]   the NewtonScript stack:\n");
+		gREPout->StackTrace(gInterpreter);
+	}
+}
+
+
 static void
 HostCrashed(const char* what, unsigned long code, void* where)
 {
@@ -205,7 +217,9 @@ main(int argc, char** argv)
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
 	HostSetStoreFile(storeFile);
-	// a machine that stops dead says so rather than sitting there looking idle
+	// a machine that stops dead says so rather than sitting there looking
+	// idle, and says what script it was running when it stopped
+	gHostStallReportHook = ReportTheScript;
 	HostWatchdogStart(10);
 	HostUseRealClock(true);
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
