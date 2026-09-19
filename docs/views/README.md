@@ -1265,6 +1265,36 @@ The one visible difference `BuildView` makes is whose frame becomes the
 view's context: `AddView` would have built a fresh context protoed from
 the one it was given, whereas `AddChild` builds the view on that frame
 itself, so `Open`ing a context sets that context's own `viewCObject`.
+## Drawing from a script (`views/ViewNatives.cpp`)
+
+Three of the root template's methods let a script put pixels on the
+screen outside a `viewDrawScript`:
+
+- `:CopyBits(picture, x, y, mode)` 0x0003e85c draws a bitmap or picture
+  frame with its top left at that point of the view.  The box it hands
+  `DrawPicture` is the point alone, so the picture is drawn at its own
+  size.
+- `:DrawXBitmap(bounds, picture, index, mode)` 0x0003ead4 draws one image
+  out of a strip of them: the picture holds several side by side, all the
+  width of the bounds, and `index` says which, counting from 0.  The
+  source rectangle is the bounds moved to that cell (`index * (right -
+  left)` across, plus the picture's own origin), and the whole thing is
+  `CopyBits` between the picture's pixel map and the port's.  It is what
+  draws the lettered index tabs down the side of the Setup assistant's
+  country list.
+- `:DoDrawing(message, args)` 0x001edcbc sends the view one of its own
+  messages with the port set to the view's visible region.  The caret
+  comes down first when its rectangle overlaps the view's
+  (`TRect::Overlaps` 0x001991fc, which gives a rectangle with no width or
+  height a pixel of it first so that a caret, which is a line, still
+  overlaps what it stands on), and the port's clipping and the caret are
+  put back however the message ends.  A view that is not visible all the
+  way up is not drawn in at all and the message is not sent.
+
+A point in a view's own coordinates becomes one on the screen through
+`ToGlobalCoordinates` 0x000e3490, which adds the view's left edge to the
+x's and its top to the y's.
+
 ## Not yet
 
 The rest of the

@@ -923,6 +923,30 @@ TestShapes()
 		Refresh();
 	}
 
+	// DrawXBitmap: one image out of a strip of them, all the width of the
+	// bounds.  The picture is an 8 x 4 row holding a hollow 4 x 4 box in
+	// its left half and nothing in its right, so cell 0 is the box and
+	// cell 1 is blank.
+	{
+		static const unsigned char kStrip[4] = { 0xf0, 0x90, 0x90, 0xf0 };
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "strip")), RefVar(MakeBitmap(kStrip, 8, 4)));
+		TView* x = ViewOf("ctxX := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 120, bottom: 90}, "
+			"PaintIt: func() :DrawXBitmap({left: 0, top: 0, right: 4, bottom: 4}, strip, cell, 0)})");
+		EXPECT(x != nil);
+		Refresh();
+		Eval("cell := 0");
+		Eval("ctxX:DoDrawing('PaintIt, nil)");
+		EXPECT(Pixel(20, 10) == 1 && Pixel(23, 10) == 1 && Pixel(21, 11) == 0 && Pixel(24, 10) == 0);
+		Eval("ctxX:Dirty()");
+		Refresh();
+		EXPECT(InkIn(0, 0, kWidth, kHeight) == 0);
+		Eval("cell := 1");
+		Eval("ctxX:DoDrawing('PaintIt, nil)");
+		EXPECT(InkIn(0, 0, kWidth, kHeight) == 0);		// the strip's right half is empty
+		Eval("ctxX:Close()");
+		Refresh();
+	}
+
 	// drawn from a view's viewDrawScript: the origin is the view's top left
 	Eval("shapes := nil; shapeStyle := nil");
 	TView* v = ViewOf("ctxS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 120, bottom: 90}, viewDrawScript: func() :DrawShape(shapes, shapeStyle)})");

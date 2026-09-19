@@ -28,6 +28,8 @@
 #include "CompMath.h"
 #include "Rects.h"
 #include "Pictures.h"
+#include "Draw.h"
+#include "DrawShape.h"
 #include "Regions.h"
 #include "RegionVars.h"
 #include "Ports.h"
@@ -1304,11 +1306,48 @@ FDoDrawing(RefArg rcvr, RefArg message, RefArg args)
 	return result;
 }
 
+// ROM 0x0003ead4 FDrawXBitmap
+// :DrawXBitmap(bounds, picture, index, mode): one image out of a strip.
+// The picture holds several of them side by side, all the width of the
+// bounds; `index` says which, counting from 0.  The bounds are the
+// view's own, so they are moved to the screen first, and the piece of
+// the picture to take is the bounds moved to that cell of the strip.
+// Nothing is drawn for a negative index or a context with no view.
+static Ref
+FDrawXBitmap(RefArg rcvr, RefArg bounds, RefArg picture, RefArg index, RefArg mode)
+{
+	TView* view = GetView(rcvr);
+	long which = RINT(index);
+	if (which < 0 || view == nil)
+		return NILREF;
+	TPixelObj pix;
+	unwind_protect
+	{
+		Rect dst;
+		if (!FromObject(bounds, dst))
+			Throw((ExceptionName) "evt.ex.graf", (void*) -8801, nil);	// (the graf error DrawShape.cpp names kGrafErrBadBounds)
+		OffsetRect(&dst, view->viewBounds.left, view->viewBounds.top);
+		pix.Init(picture);
+		Rect src = dst;
+		const Rect& pixels = pix.Pixels()->bounds;
+		OffsetRect(&src, which * (dst.right - dst.left) + (pixels.left - dst.left),
+				   pixels.top - dst.top);
+		GrafPort* port;
+		GetPort(&port);
+		CopyBits(pix.Pixels(), &port->portBits, &src, &dst, RINT(mode), nil);
+	}
+	on_unwind
+	{ }
+	end_unwind;
+	return NILREF;
+}
+
 void
 RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FLayoutVerticallyX", (void*) FLayoutVerticallyX, 2);
 	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
+	RegisterNativeFunction("FDrawXBitmap", (void*) FDrawXBitmap, 4);
 	RegisterNativeFunction("FDoDrawing", (void*) FDoDrawing, 2);
 	RegisterNativeFunction("FModalState", (void*) FModalState, 0);
 	RegisterNativeFunction("TableLookup", (void*) FTableLookup, 2);
@@ -1405,6 +1444,7 @@ MakeViewMethods(void)
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
 		{ "LayoutColumn", (void*) FLayoutVerticallyX, 2 },
 		{ "CopyBits", (void*) FCopyBits, 4 }, { "DoDrawing", (void*) FDoDrawing, 2 },
+		{ "DrawXBitmap", (void*) FDrawXBitmap, 4 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)
