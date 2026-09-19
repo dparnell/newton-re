@@ -157,6 +157,38 @@ RSect(Rect* result, long count, const Rect* first, ...)
 }
 
 
+// ROM 0x001975ec Union__5TRectF6TPoint
+// The point taken into the rectangle.  A top of -0x8000 is the ROM's
+// "nothing yet" mark: the rectangle then becomes the point alone, which
+// is how MakeShape grows the bounds of a run of points.  Note the
+// horizontal test is an either/or while the vertical one is not, so a
+// point left of the left edge never moves the right edge - which is what
+// the ROM does and is right for a rectangle that already holds a point.
+void
+UnionPt(Rect* r, Point pt)
+{
+	if (r->top == (short) 0x8000)
+	{
+		r->top = pt.v;
+		r->left = pt.h;
+		r->bottom = pt.v;
+		r->right = pt.h;
+		return;
+	}
+	if (pt.h <= r->left)
+		r->left = pt.h;
+	else if (pt.h >= r->right)
+		r->right = pt.h;
+	if (pt.v <= r->top)
+	{
+		r->top = pt.v;
+		return;
+	}
+	if (pt.v < r->bottom)
+		return;
+	r->bottom = pt.v;
+}
+
 // ROM 0x00340d88 UnionRect__FP4RectN21
 // The smallest rectangle holding both; an empty one contributes nothing.
 void

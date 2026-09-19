@@ -837,6 +837,41 @@ InkIn(long left, long top, long right, long bottom)
 static void
 TestShapes()
 {
+	// MakeShape of whatever it is given
+	EXPECT(EQRef(ClassOf(Eval("MakeShape({left: 1, top: 2, right: 3, bottom: 4})")), RSSYMrectangle)
+		&& RINT(Eval("ShapeBounds(MakeShape({left: 1, top: 2, right: 3, bottom: 4})).right")) == 3);
+	EXPECT(EQRef(ClassOf(Eval("MakeShape(MakeOval(0, 0, 8, 8))")), RSSYMoval));
+	EXPECT(IsArray(RefVar(Eval("MakeShape([MakeRect(0, 0, 5, 5)])"))));
+	EXPECT(EQRef(ClassOf(Eval("MakeShape({bounds: {left: 0, top: 0, right: 8, bottom: 8}, bits: \"x\"})")), RSSYMbitmap)
+		&& RINT(Eval("ShapeBounds(MakeShape({bounds: {left: 0, top: 0, right: 8, bottom: 8}, bits: \"x\"})).bottom")) == 8);
+	// the recogniser's 'polygonShape binary: a verb, a count and the points
+	{
+		RefVar poly(AllocateBinary(RSSYMpolygonshape, 4 + 3 * sizeof(Point)));
+		short* w = (short*) BinaryData(poly);
+		w[0] = 1;						// a polygon
+		w[1] = 3;
+		Point* pts = (Point*) (w + 2);
+		pts[0] = MakePoint(10, 20);
+		pts[1] = MakePoint(30, 5);
+		pts[2] = MakePoint(0, 40);
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "poly")), poly);
+		Eval("Print(ShapeBounds(MakeShape(poly)))");
+		// the points' bounds, which ShapeBounds gives a pixel more of
+		EXPECT(EQRef(ClassOf(Eval("MakeShape(poly)")), RSSYMpolygon)
+			&& RINT(Eval("ShapeBounds(MakeShape(poly)).left")) == 0
+			&& RINT(Eval("ShapeBounds(MakeShape(poly)).right")) == 31
+			&& RINT(Eval("ShapeBounds(MakeShape(poly)).top")) == 5
+			&& RINT(Eval("ShapeBounds(MakeShape(poly)).bottom")) == 41);
+		// verb 10 or 11 is a rectangle of the same points, verb 0 an oval
+		w = (short*) BinaryData(RefVar(Eval("poly")));
+		w[0] = 10;
+		EXPECT(EQRef(ClassOf(Eval("MakeShape(poly)")), RSSYMrectangle)
+			&& RINT(Eval("ShapeBounds(MakeShape(poly)).right")) == 30
+			&& RINT(Eval("ShapeBounds(MakeShape(poly)).bottom")) == 40);
+		w = (short*) BinaryData(RefVar(Eval("poly")));
+		w[0] = 0;
+		EXPECT(EQRef(ClassOf(Eval("MakeShape(poly)")), RSSYMoval));
+	}
 	// LayoutColumn: as many entries as fit down the view, the one that
 	// crosses the bottom edge included
 	Eval("ctxL := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 50, bottom: 30}})");

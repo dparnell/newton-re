@@ -982,6 +982,106 @@ FOffsetShape(RefArg rcvr, RefArg shape, RefArg dx, RefArg dy)
 }
 
 
+// ROM 0x000dc8fc FMakeShape
+// MakeShape(object): a shape made of whatever it is given.
+//
+//   - a 'polygonShape binary - what the recogniser answers, a verb and a
+//     run of points - becomes an oval (verb 0) or a rectangle (verb 10
+//     or 11) of the points' bounds, or a 'polygon shape holding them;
+//   - a 'picture binary (a QuickDraw picture, its frame in the eight
+//     bytes after the size) becomes a picture shape;
+//   - a frame with a `bits` or `colorData` slot - a bitmap frame -
+//     becomes a bitmap shape with the same data, bounds and mask;
+//   - an array (a shape list), a bounds frame (a rectangle) or a shape
+//     already is taken as it stands;
+//   - anything else that is a view's context becomes a picture of the
+//     view.
+//
+// DEVIATION: the ROM locks the object it reads (TObjectPtr) and works
+// from the pointer; here the data is fetched again after each allocation
+// instead, which is the same thing on a heap that may move it.
+static Ref
+FMakeShape(RefArg /*rcvr*/, RefArg obj)
+{
+	RefVar shape;
+	RefVar cls(ClassOf(obj));
+	Rect bounds;
+	if (EQRef(cls, RSSYMpolygonshape))
+	{
+		long verb = *(const short*) BinaryData(obj);
+		long count = *(const short*) (BinaryData(obj) + 2);
+		if (verb == 0 || verb == 10 || verb == 11)
+		{
+			shape = AllocateBinary(verb == 0 ? RSSYMoval : RSSYMrectangle, sizeof(Rect));
+			Rect* r = (Rect*) BinaryData(shape);
+			// the mark UnionPt reads as "nothing yet"; left and right are
+			// left as they lie, which shows with no points at all
+			r->top = (short) 0x8000;
+			r->bottom = (short) 0x8000;
+			const Point* points = (const Point*) (BinaryData(obj) + 4);
+			for (long i = 0; i < count; i++)
+				UnionPt(r, points[i]);
+		}
+		else
+		{
+			long size = count * 4 + 12;
+			shape = Clone(RefVar(Rcanonicalpolygonshape));
+			RefVar data(AllocateBinary(RSSYMpolygondata, size));
+			SetFrameSlot(shape, RSSYMdata, data);
+			Polygon* poly = (Polygon*) BinaryData(data);
+			poly->polySize = (short) size;
+			Rect box;
+			box.top = (short) 0x8000;
+			box.bottom = (short) 0x8000;
+			const Point* points = (const Point*) (BinaryData(obj) + 4);
+			for (long i = 0; i < count; i++)
+			{
+				UnionPt(&box, points[i]);
+				poly->polyPoints[i] = points[i];
+			}
+			poly->polyBBox = box;
+		}
+	}
+	else if (EQRef(cls, RSSYMpicture) && IsBinary(obj))
+	{
+		memmove(&bounds, BinaryData(obj) + 2, sizeof(Rect));
+		shape = Clone(RefVar(Rcanonicalpictureshape));
+		RefVar box(AllocateBinary(RSSYMboundsrect, sizeof(Rect)));
+		SetFrameSlot(shape, RSSYMbounds, box);
+		memmove(BinaryData(box), &bounds, sizeof(Rect));
+		SetFrameSlot(shape, RSSYMdata, obj);
+	}
+	else if (EQRef(cls, RSSYMframe) && (FrameHasSlot(obj, RSSYMbits) || FrameHasSlot(obj, RSSYMcolordata)))
+	{
+		if (!FromObject(RefVar(GetProtoVariable(obj, RSSYMbounds, nil)), bounds))
+			Throw((ExceptionName) kGrafException, (void*) kGrafErrBadBounds, nil);
+		RefVar box(AllocateBinary(RSSYMboundsrect, sizeof(Rect)));
+		memmove(BinaryData(box), &bounds, sizeof(Rect));
+		shape = Clone(RefVar(Rcanonicalbitmapshape));
+		SetFrameSlot(shape, RSSYMcolordata, RefVar(GetFrameSlotRef(obj, RSSYMcolordata)));
+		SetFrameSlot(shape, RSSYMdata, RefVar(GetFrameSlotRef(obj, RSSYMbits)));
+		SetFrameSlot(shape, RSSYMbounds, box);
+		if (FrameHasSlot(obj, RSSYMmask))
+			SetFrameSlot(shape, RSSYMmask, RefVar(GetFrameSlotRef(obj, RSSYMmask)));
+	}
+	else if (IsArray(obj))
+		shape = obj;
+	else if (IsFrame(obj) && FromObject(obj, bounds))
+	{
+		shape = AllocateBinary(RSSYMrectangle, sizeof(Rect));
+		memmove(BinaryData(shape), &bounds, sizeof(Rect));
+	}
+	else if (IsPrimShape(obj))
+		shape = obj;
+	else if (GetView(obj) != nil)
+	{
+		// NOT YET RECONSTRUCTED: the view's own picture - the ROM asks the
+		// view for its bounds and hands them to CommonMakePict 0x000dc8c0,
+		// which is not reconstructed; nil stands in for the picture.
+	}
+	return shape;
+}
+
 // ROM 0x000dda3c FIsPrimShape
 static Ref
 FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
@@ -1005,5 +1105,6 @@ RegisterShapeNatives(void)
 	RegisterNativeFunction("FMakeTextBox", (void*) FMakeTextBox, 5);
 	RegisterNativeFunction("FShapeBounds", (void*) FShapeBounds, 1);
 	RegisterNativeFunction("FOffsetShape", (void*) FOffsetShape, 3);
+	RegisterNativeFunction("FMakeShape", (void*) FMakeShape, 1);
 	RegisterNativeFunction("FIsPrimShape", (void*) FIsPrimShape, 1);
 }
