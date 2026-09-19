@@ -490,9 +490,12 @@ TestScripts()
 	Eval("ctxU := BuildContext(templU)");
 	EXPECT(GetView(RefVar(Eval("ctxU"))) == nil && ISNIL(Eval("ctxU.viewCObject")));
 	Eval("ctxU:Open()");
-	EXPECT(gRootView->fChildren->Count() == 1 && ISNIL(Eval("ctxU.viewCObject")));	// the view's own context protos to ctxU
+	// aeAddChild goes to AddChild, which builds the view on the context it
+	// was given rather than on a context of its own, so ctxU is the view's
+	// context and takes the viewCObject slot
+	EXPECT(gRootView->fChildren->Count() == 1 && NOTNIL(Eval("ctxU.viewCObject")));
 	TView* u = gRootView->fChildren->At(0);
-	EXPECT(u->ProtoedFrom(RefVar(Eval("ctxU"))) && (u->fFlags & vVisible));
+	EXPECT(GetView(RefVar(Eval("ctxU"))) == u && (u->fFlags & vVisible));
 	Eval("ctxU:Open()");		// open already: nothing
 	EXPECT(gRootView->fChildren->Count() == 1);
 	// Toggle on an open view's context closes it

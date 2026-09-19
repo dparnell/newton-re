@@ -1200,12 +1200,12 @@ and drop, `TrackScale`/`TrackDistort`, the commands (`RealDoCommand`,
 `GetValue`, `SetValue`) and the drawing of the resize border itself
 (`DrawResizeBorder`, `TRect::Scale` over `gEditViewTransform`).
 
-## How the machine's own views get on screen, and where it stops
+## How the machine's own views get on screen
 
 The root's fifty-nine children are the system's views - the keyboards,
-the slips, the alerts, the applications - and *none* of them is visible.
-Each is opened when something asks for it, and the asking starts with the
-root's own scripts:
+the slips, the alerts, the applications - and *none* of them is visible:
+each is a `preallocatedContext` that waits to be opened.  The asking
+starts with the root's own scripts:
 
 - `viewRoot.viewSetupChildrenScript` (ROM object 0x0041a54d), which
   `TView::AddViews` runs before it builds any child, does nothing but
@@ -1214,46 +1214,57 @@ root's own scripts:
   `InitButtonBar` to `self.buttons` - the button bar along the bottom,
   which is what puts the *first* child on the root - it reads
   `userConfiguration.blessedapp` (defaulting it to `'paperroll`, the
-  Notepad, when unset) and it calls `self:_BlessedOpen` on that
-  application, under a handler that notifies "the new Backdrop failed to
-  open" and puts the old one back.
+  Notepad, when unset) and it calls `self:_BlessedOpen` on
+  `self.<that symbol>` - the application's own preallocated context -
+  under a handler that notifies "the new Backdrop failed to open" and
+  puts the old one back.
 - `_BlessedOpen` (0x0041a4f5) takes the floating bit off the
-  application's viewFlags, gives it Close/Hide/Toggle slots of its own,
-  locks the screen, opens it, and moves it behind
+  application's viewFlags (`viewFlags := viewFlags band -65`, written
+  onto the context), gives it Close/Hide/Toggle slots of its own, locks
+  the screen, opens it, and moves it behind
   `GetRoot():ChildViewFrames()[0]` - the button bar.
 - `buttons.InitButtonBar` (0x00550ec9) is `if
   displayParams.buttonBarPosition <> 'none then self:Open()`.
 
-So the button bar and the backdrop application are opened the same way,
-through `Open`, and neither of them opens here.  `Open` is
-`viewRoot.Open` -> `_Open` -> `FOpenX` -> `RealOpenX`, which dispatches
-`aeAddChild` to the parent; `TView::RealDoCommand` answers that with
-`AddChild`, which asks `AddView`; and `AddView` refuses a template whose
-viewFlags lack `vVisible`, either in `BuildContext` (which returns nil on
-that test when its `forceVisible` argument is false) or in the
-`preallocatedContext` branch's own test of the same bit.
+### Open does not go through AddView
 
-Every step of that is a transcription of the ROM, read from its assembly
-rather than only its decompilation: `TView::AddView` 0x0025f1ac (`tst
-r0,#0x1; beq` on the preallocated path), `TView::BuildContext` 0x0025e56c
-(the same test when `r9` is 0), `TView::RealDoCommand` 0x00268d38 case
-0x29, `TView::AddChild` 0x00265e4c, `TView::Constructor` 0x00266368 (which
-builds the preallocated contexts with `forceVisible` true but does *not*
-build views for them), and `TRootView::RealDoCommand` 0x001b31f0, which
-has no case for `aeAddChild` at all.  `TView::Show` 0x00265e80 tests bit
-0, so `vVisible` is bit 0 and nothing else.
+`Open` is `viewRoot.Open` -> `_Open` -> `FOpenX` 0x001f173c ->
+`RealOpenX` 0x001f1638, which, when the context has no `viewCObject`
+yet, dispatches `aeAddChild` to the view of the context's `_parent`.
+`TView::RealDoCommand` 0x00268d38 answers that with `AddChild`
+0x00265e4c - and `AddChild` is four instructions long:
 
-And the data says the same: the button bar's template (magic pointer 692)
-has viewFlags 0xa00 and the Setup application's `theForm` has 100, in both
-the MP2x00 US and the MP2100 D.  Not one of the fifty-nine is visible.
+```
+00265e60  ldr r0,[r0,#0x20]     ; fChildren
+00265e64  bl  Exists(TViewList*, RefArg)
+00265e68  teq r0,#0x0
+00265e78  beq BuildView(TView*, RefArg)     ; tail call
+```
 
-So the ROM, read straight, cannot open its own button bar - which is
-absurd, and means a premise is wrong somewhere that reading has not
-found.  What is certain is the consequence: relax that one test and the
-boot goes a long way further, into the applications' own setup, where the
-next thing it wants is `Gestalt`.  Finding what really sets `vVisible` -
-or what makes the open path skip the test - is the thing to do next.
+It calls **`BuildView`**, not `AddView`.  That matters, because
+`TView::AddView(RefArg)` 0x0025f1ac is the one place with a `vVisible`
+test: a template with a `preallocatedContext` is refused unless that
+context's `viewFlags` has bit 0, and a template without one goes to
+`BuildContext(templ, false)` 0x0025e56c, which returns nil on the same
+test.  `AddView` is what `TView::AddViews` 0x00262c0c calls for each of
+`viewChildren`/`stepChildren`, so an invisible child in a parent's
+viewChildren is quietly skipped - that is what the test is for.  The
+open path skips it entirely, which is how a view that was preallocated
+*invisible* can be opened at all.
 
+The data only makes sense that way round.  The button bar's template
+(magic pointer 692) has `viewFlags` 2560 while its own `_proto` (@511)
+has 2561: the template deliberately takes `vVisible` off.  Its
+`_cacheContext` (ROM object 0x006306a1), which `GetCacheContext`
+0x0025e4d0 clones to make the context, carries `viewFlags` 2560 as a
+slot of its own.  Of the 423 frames in the ROM that have a `viewFlags`
+slot, 305 *do* have `vVisible`; the sixty in the root's
+`allocateContext` are exactly the ones that do not.
+
+The one visible difference `BuildView` makes is whose frame becomes the
+view's context: `AddView` would have built a fresh context protoed from
+the one it was given, whereas `AddChild` builds the view on that frame
+itself, so `Open`ing a context sets that context's own `viewCObject`.
 ## Not yet
 
 The rest of the

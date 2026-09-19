@@ -282,33 +282,25 @@ the view system rather than the store.  The script is the root's own
 `_BlessedOpen`: the backdrop application - the one that fills the screen,
 and on a machine that has never been set up that is the **Setup**
 assistant - is opened and then moved behind the root's frontmost child,
-`GetRoot():ChildViewFrames()[0]`.  The root has no built children
-because the open does nothing, so the array is empty.
+`GetRoot():ChildViewFrames()[0]`.  That array was empty because the
+opens before it did nothing, which was a fault of the reconstruction's
+own `AddChild` rather than of the ROM (below).
 
-### Why an application does not open yet
+### How an application opens
 
 `RealOpenX` (`views/ViewNatives.cpp`) dispatches `aeAddChild` when the
 context has no view, `TView::RealDoCommand` answers it with `AddChild`,
-and `AddChild` asks `AddView` - which refuses a template whose viewFlags
-lack `vVisible`, whether it goes through `BuildContext` (the Setup
-application, no `preallocatedContext`, viewFlags 100) or through the
-`preallocatedContext` branch (the Notepad, viewFlags 4).  None of the
-root's fifty-nine children is visible either.
+and `AddChild` tail-calls `BuildView` on that very context.  It does
+*not* go through `AddView`, which is the one place that refuses a
+context whose viewFlags lack `vVisible` - and none of the root's
+preallocated children has it (the Notepad's context is 4, the button
+bar's 2560).  `AddView` is for the children a parent names in
+`viewChildren`, where an invisible one is meant to be skipped; the open
+path is for a view that has been waiting, invisible, to be asked for.
+The detail, with the ROM addresses, is in `docs/views/README.md`.
 
-Every one of those is a transcription of the ROM's own code, checked
-against it again: `TView::AddView` 0x0025f1ac, `TView::BuildContext`
-0x0025e56c (which returns nil on the same test when its `forceVisible`
-argument is false), `TView::RealDoCommand` 0x00268d38 and
-`TView::AddChild` 0x00265e4c, and `TRootView::RealDoCommand` 0x001b31f0
-adds no case of its own for `aeAddChild`.  Setting `vVisible` on the
-application's context by hand and opening it then works: the view is
-built, its setup scripts run, and the root has a child.  So something in
-the ROM's boot puts `vVisible` on an application before it is opened and
-the reconstruction does not yet do it; finding what is the next step.
-
-(`AddView(GetRoot(), GetRoot().setup)` from a script does build it,
-because the NewtonScript `AddView` - `FAddView` - passes `forceVisible`
-true where the open path passes false.)
+With that right, `_OpenLater` opens the button bar and the backdrop
+application, and the boot carries on into the applications' own setup.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages

@@ -2000,13 +2000,19 @@ TView::AddView(TView* child)
 
 
 // ROM 0x00265e4c AddChild__5TViewFRC6RefVar
-// The template's view when it is already a child, else a new one.
+// The context's view when it is already a child, else a new one.  This is
+// what aeAddChild - the command Open dispatches - comes to, and it goes
+// straight to BuildView: unlike AddView, it does not ask the context
+// whether it is vVisible.  That is how a view that was preallocated
+// invisible (the root's allocateContext children: the button bar's context
+// has viewFlags 2560, the Notepad's 4) is opened at all, and why the same
+// context is refused when it turns up in a parent's viewChildren.
 TView*
 TView::AddChild(RefArg templ)
 {
 	TView* child = Exists(fChildren, templ);
 	if (child == nil)
-		child = AddView(templ);
+		child = BuildView(this, templ);
 	return child;
 }
 
