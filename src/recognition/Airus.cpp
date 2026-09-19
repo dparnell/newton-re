@@ -82,7 +82,7 @@ NewDictionary(UByte type, long attributeSize)
 	parms->fField38 = 0;
 	parms->fSelf = handle;
 	parms->fField4c = 1;
-	parms->fField44 = 0;
+	parms->fNext = nil;
 	parms->fAttributeSize = attributeSize;
 	parms->fAttribute = 0;
 	parms->fField48 = 0;
@@ -616,6 +616,257 @@ AEnum_Verify(AirusAParmBlock* parms)
 }
 
 /*------------------------------------------------------------------------------
+	A d d i n g   a   w o r d
+
+	The word is followed down the trie as far as it already goes, and what
+	is left of it written in as a row of nodes.  Making room for them moves
+	everything after the place they went, so every sibling offset that
+	reached over that place has to be made longer - which may itself need
+	more bytes, which moves things again.  The nodes whose offsets those
+	are were put on a stack on the way down.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c105df4, 0x0c100830
+// The nodes whose sibling offsets will have to be fixed after the word
+// goes in, and where the top of that stack is: 0x3f is empty, and it
+// grows downwards.
+static ULong	gAirusFixups[0x3f];
+static long		gAirusFixupTop = 0x3f;
+
+
+// ROM 0x00029630 FindInsertionPoint__FPPUsPUl
+// The word followed down the trie for as long as it is already there.
+// What is left of it is left in `word`, and where the rest of it goes in
+// `node`; the nodes passed on the way whose sibling offsets reach over
+// that place are put on the fixup stack.  ==> how much the data grew,
+// which is not nothing when a sibling offset had to be written to reach
+// the new row.
+static long
+FindInsertionPoint(UniChar** word, long* node)
+{
+	if (AE_Parms->fDataEnd - AE_Parms->fData == 2)
+	{
+		// nothing in it yet: the first word goes straight after the header
+		*node = 2;
+		return 0;
+	}
+	long at = 2;
+	long grew = 0;
+	*node = 0;
+	for (;;)
+	{
+		UniChar ch = **word;
+		if (ch == 0 || *node != 0)
+			return grew;
+		long charSize = AirusCharSize();
+		ULong symbol = GetSymbol(at);
+		if (ch < symbol)
+		{
+			// the new node goes in front of this one, which keeps its place
+			*node = at;
+			gAirusFixups[--gAirusFixupTop] = at;
+		}
+		else if (ch == symbol)
+		{
+			(*word)++;
+			if (((UByte) AE_Parms->fData[at + charSize] >> 6) != 0)
+				gAirusFixups[--gAirusFixupTop] = at;
+			if (**word == 0)
+			{
+				// the whole word was there already
+				*node = at;
+				if (((UByte) AE_Parms->fData[at + charSize] >> 6) != 0 && gAirusFixupTop < 0x3f)
+					gAirusFixupTop++;		// nothing grew, so that one needs nothing
+			}
+			else if (((UByte) AE_Parms->fData[at + charSize] & kAirusNoChildren) != 0)
+			{
+				// a word that ends here until now: it grows children
+				AE_Parms->fData[at + charSize] = (char) ((UByte) AE_Parms->fData[at + charSize] & ~kAirusNoChildren);
+				*node = FollowLeft(at);
+			}
+			else
+				at = FollowLeft(at);
+		}
+		else if (((UByte) AE_Parms->fData[at + charSize] >> 6) == 0)
+		{
+			// past the last of this row: the new node goes after everything
+			// the row leads to, and this one is given the offset to reach it
+			long after = gAirusFixupTop == 0x3f ? 0 : (long) gAirusFixups[gAirusFixupTop];
+			after = after == 0 ? (long) (AE_Parms->fDataEnd - AE_Parms->fData) : FollowRight(after);
+			*node = after;
+			grew += PutRP(at, (ULong) (*node - FollowLeft(at)));
+			*node = *node + grew;
+		}
+		else
+			at = FollowRight(at);
+	}
+}
+
+
+// ROM 0x00029360 PutWord__FUlPUs
+// What is left of the word written in at that offset, one node per
+// character, each the only one of its row; the last of them carries the
+// attribute and has no children.  ==> the bytes it took.
+static long
+PutWord(long node, const UniChar* word)
+{
+	long grew = 0;
+	long charSize = AirusCharSize();
+	long nodeSize = charSize + 1;
+	SlideDown(node, nodeSize * (Ashortstrlen(word) / 2));
+	while (*word != 0)
+	{
+		PutDictBytes(node, charSize, *word);
+		PutDictBytes(node + charSize, 1, 0);
+		node += nodeSize;
+		grew += nodeSize;
+		word++;
+	}
+	long last = node - nodeSize;
+	AE_Parms->fData[last + charSize] = (char) ((UByte) AE_Parms->fData[last + charSize] | kAirusHasAttribute);
+	AE_Parms->fData[last + charSize] = (char) ((UByte) AE_Parms->fData[last + charSize] | kAirusNoChildren);
+	return PutAttr(SkipNode(last)) + grew;
+}
+
+
+// ROM 0x000294a8 FixupPointers__FUl9Operation
+// The sibling offsets that reached over the place the word went, made to
+// reach over it still.  Each may take more bytes than it did, which
+// moves everything after it again, so what has grown is carried along
+// the stack.
+//
+// NOT YET RECONSTRUCTED: the other operation, which is what deleting a
+// word asks for.
+static void
+FixupPointers(long grew, long operation)
+{
+	if (grew == 0)
+		return;
+	if (operation != 0)
+		return;
+	while (gAirusFixupTop != 0x3f)
+	{
+		long node = gAirusFixupTop < 0x3f ? (long) gAirusFixups[gAirusFixupTop++] : 0;
+		long charSize = AirusCharSize();
+		ULong value;
+		if (((UByte) AE_Parms->fData[node + charSize] >> 6) == 0)
+		{
+			// it had no sibling before: the one it has now lies just past
+			// what went in
+			ULong attribute = ((UByte) AE_Parms->fData[node + charSize] & kAirusHasAttribute) != 0
+							? (ULong) AE_Parms->fAttributeSize : 0;
+			value = (ULong) (grew - (charSize + 1)) - attribute;
+		}
+		else
+			value = GetRP(node) + grew;
+		grew += PutRP(node, value);
+	}
+}
+
+
+// ROM 0x00029b10 AEnum_AddWord__FP15AirusAParmBlock
+// The word in the block's buffer put into the dictionary.  A word that
+// is already there is left alone and its attribute read back instead,
+// unless it had none, in which case it is given the one in the block.
+// The block's fResult says which: 0 it went in, 1 it was already there.
+long
+AEnum_AddWord(AirusAParmBlock* parms)
+{
+	CheckDictPtrs(parms);
+	UniChar buffer[256];
+	CopyBufferHack(AE_Parms->fWord, buffer, 0);
+	UniChar* word = buffer;
+	long characters = Ashortstrlen(word) / 2;
+	long charSize = AirusCharSize();
+	long result = ExpandDict((charSize + 1) * characters + AE_Parms->fAttributeSize + 100);
+	if (result == 0)
+	{
+		gAirusFixupTop = 0x3f;
+		long node = 0;
+		long grew = FindInsertionPoint(&word, &node);
+		if (*word == 0)
+		{
+			// every character of it was there already
+			char* flags = &AE_Parms->fData[node + charSize];
+			if (((UByte) *flags & kAirusHasAttribute) == 0)
+			{
+				*flags = (char) ((UByte) *flags | kAirusHasAttribute);
+				grew += PutAttr(SkipNode(node));
+				result = 0;
+			}
+			else
+			{
+				AE_Parms->fAttribute = GetAttr(SkipNode(node));
+				result = 1;
+			}
+		}
+		else
+		{
+			grew += PutWord(node, word);
+			result = 0;
+		}
+		if (gAirusFixupTop != 0x3f)
+			FixupPointers(grew, 0);
+	}
+	AE_Parms->fResult = result;
+	return result;
+}
+
+
+// ROM 0x0002d658 PositionToHandle
+// The nth dictionary of a chain, counting from the one handed in.  Nil,
+// and airusResult -12, when the chain is shorter than that.
+Handle
+PositionToHandle(Handle dictionary, ULong position)
+{
+	for (ULong i = 0; i < position; i++)
+	{
+		dictionary = ((AirusAParmBlock*) *dictionary)->fNext;
+		if (dictionary == nil)
+		{
+			airusResult = kAirusNoSuchDictionary;
+			return nil;
+		}
+	}
+	airusResult = 0;
+	return dictionary;
+}
+
+
+// ROM 0x0002c48c AddWord__FPP15AirusAParmBlockUlPUcT2
+// A word added to the nth dictionary of the chain, with the attribute to
+// give it.  airusResult afterwards: 0 it went in, 4 it was already
+// there, 5 the word was empty, -2 there was no room.
+void
+AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute)
+{
+	Handle h = PositionToHandle(dictionary, position);
+	if (airusResult != 0)
+		return;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *h;
+	parms->fWord = word;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean empty = (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+				   ? *(const UniChar*) word == 0 : word[0] == 0;
+	if (empty)
+	{
+		airusResult = kAirusEmptyWord;
+		return;
+	}
+	if (parms->fAttributeSize == 1)
+		parms->fAttribute = attribute & 0xff;
+	else if (parms->fAttributeSize == 2 || parms->fAttributeSize == 4)
+		parms->fAttribute = attribute;
+	parms->fField48 = 0;
+	CallAirusA(h, kAirusAddWord);
+	long result = ((AirusAParmBlock*) *h)->fResult;
+	if (result == 0)
+		airusResult = 0;
+	else
+		airusResult = result == 1 ? kAirusAlreadyThere : kAirusNoMemory;
+}
+
+/*------------------------------------------------------------------------------
 	T h e   d i s p a t c h e r
 
 	Every call into the engine names a dictionary and one of ten things to
@@ -642,6 +893,9 @@ CallAirusANoLock(Handle dictionary, long selector)
 	case kAirusKindEnumRAM:
 		switch (selector)
 		{
+		case kAirusAddWord:
+			AEnum_AddWord(parms);
+			break;
 		case kAirusVerify:
 			AEnum_Verify(parms);
 			break;

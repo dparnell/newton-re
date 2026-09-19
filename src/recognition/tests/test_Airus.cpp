@@ -13,6 +13,19 @@ static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 
+
+// the word looked up, as a caller of the engine would
+static long
+Lookup(AirusAParmBlock* d, const char* text)
+{
+	static UByte buffer[64];
+	strcpy((char*) buffer, text);
+	d->fWord = buffer;
+	d->fNode = 0;
+	d->fIndex = (long) strlen(text) - 1;
+	return AE8_Verify(d);
+}
+
 int
 main()
 {
@@ -149,6 +162,60 @@ main()
 		d->fNode = 0;
 		d->fIndex = 0;
 		EXPECT(AE8_Verify(d) == kAirusNoMatch);
+	}
+
+	// words put in, and found again: the whole of the engine end to end
+	{
+		Handle words = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
+		EXPECT(words != nil);
+		UByte word[32];
+		static const struct { const char* fText; long fAttribute; } kWords[] = {
+			{ "at", 7 }, { "an", 8 }, { "and", 9 },
+			{ "be", 10 }, { "a", 11 }, { "ant", 12 }, { nil, 0 }
+		};
+		for (long i = 0; kWords[i].fText != nil; i++)
+		{
+			strcpy((char*) word, kWords[i].fText);
+			AddWord(words, 0, word, (ULong) kWords[i].fAttribute);
+			EXPECT(airusResult == 0);
+		}
+		AirusAParmBlock* d = (AirusAParmBlock*) *words;
+		CheckDictPtrs(d);
+
+		// each of them is there, with the attribute it went in with
+		for (long i = 0; kWords[i].fText != nil; i++)
+		{
+			long found = Lookup(d, kWords[i].fText);
+			EXPECT(found == kAirusLeaf || found == kAirusPrefixWithAttr);
+			EXPECT((long) d->fAttribute == kWords[i].fAttribute);
+		}
+		// the ones that end where another word goes on lead on; the rest do not
+		EXPECT(Lookup(d, "and") == kAirusLeaf);
+		EXPECT(Lookup(d, "an") == kAirusPrefixWithAttr);	// "and" and "ant" go on from it
+		EXPECT(Lookup(d, "be") == kAirusLeaf);
+
+		// and what is not in it is not found
+		EXPECT(Lookup(d, "ax") == kAirusNoMatch);
+		EXPECT(Lookup(d, "b") == kAirusPrefix);			// "be" begins that way, but "b" is not a word
+		EXPECT(Lookup(d, "bee") == kAirusNoMatch);
+		EXPECT(Lookup(d, "c") == kAirusNoMatch);
+		EXPECT(Lookup(d, "ands") == kAirusNoMatch);
+
+		// a word that is already there keeps the attribute it had
+		strcpy((char*) word, "and");
+		AddWord(words, 0, word, 99);
+		EXPECT(airusResult == kAirusAlreadyThere);
+		CheckDictPtrs(d);
+		EXPECT(Lookup(d, "and") == kAirusLeaf && d->fAttribute == 9);
+
+		// an empty word is refused
+		word[0] = 0;
+		AddWord(words, 0, word, 1);
+		EXPECT(airusResult == kAirusEmptyWord);
+
+		// the chain: there is only one dictionary here
+		EXPECT(PositionToHandle(words, 0) == words && airusResult == 0);
+		EXPECT(PositionToHandle(words, 1) == nil && airusResult == kAirusNoSuchDictionary);
 	}
 
 	printf("test_Airus: %d failures\n", failures);

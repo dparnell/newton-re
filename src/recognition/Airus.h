@@ -68,6 +68,11 @@ enum
 	kAirusNextSet9			= 9
 };
 
+// what airusResult may hold
+const long	kAirusNoSuchDictionary	= -12;	// the chain is shorter than the position asked for
+const long	kAirusAlreadyThere		= 4;	// the word was in the dictionary already
+const long	kAirusEmptyWord			= 5;
+
 // airusResult, and what ExpandDict leaves in the block
 const long	kAirusNoMemory		= -2;
 const long	kAirusExpandFailed	= 2;
@@ -95,7 +100,7 @@ struct AirusAParmBlock
 	long		fField38;			// +0x38  0
 	long		fField3c;			// +0x3c  1
 	Handle		fSelf;				// +0x40  the block's own Handle
-	long		fField44;			// +0x44  0
+	Handle		fNext;				// +0x44  the next dictionary of the chain (nil: none)
 	long		fField48;			// +0x48  0
 	long		fField4c;			// +0x4c  1
 	long		fField50;
@@ -162,6 +167,9 @@ long	ClearAttr(long offset);								// ROM 0x00028f6c ClearAttr__FUl
 // walking
 long	AE8_Verify(AirusAParmBlock* parms);					// ROM 0x0002b048 AE8_Verify__FP15AirusAParmBlock
 long	AEnum_Verify(AirusAParmBlock* parms);				// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock - AE8 or AE16 by the dictionary's kind
+long	AEnum_AddWord(AirusAParmBlock* parms);				// ROM 0x00029b10 AEnum_AddWord__FP15AirusAParmBlock
+Handle	PositionToHandle(Handle dictionary, ULong position);	// ROM 0x0002d658 PositionToHandle
+void	AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute);	// ROM 0x0002c48c AddWord__FPP15AirusAParmBlockUlPUcT2				// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock - AE8 or AE16 by the dictionary's kind
 
 // the data, big-endian as it lies
 ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__FUli
