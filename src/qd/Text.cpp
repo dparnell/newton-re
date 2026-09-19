@@ -743,6 +743,36 @@ FTextBox(RefArg rcvr, RefArg str, RefArg style, RefArg bounds)
 }
 
 
+// ROM 0x000e36a4 FTextBounds
+// TextBounds(text, fontOrStyle, box): the box's right and bottom moved
+// to where the text ends when laid out in it, and the box answered.
+// The second argument is a font spec, or a style frame whose `font`
+// slot is one (the frame itself when it has no such slot).  Nothing is
+// done at all when the text or the font is nil.
+static Ref
+FTextBounds(RefArg /*rcvr*/, RefArg text, RefArg fontOrStyle, RefArg box)
+{
+	if (ISNIL(text) || ISNIL(fontOrStyle))
+		return box;
+	RefVar font;
+	if (!ISPTR(fontOrStyle))
+		font = fontOrStyle;
+	else
+	{
+		font = GetFrameSlotRef(fontOrStyle, RSSYMfont);
+		if (ISNIL(font))
+			font = fontOrStyle;
+	}
+	Rect r;
+	FromObject(box, r);
+	TRichString rich(text);
+	TextBounds(rich, font, &r, 0);
+	SetFrameSlot(box, RSSYMright, RefVar(MAKEINT(r.right)));
+	SetFrameSlot(box, RSSYMbottom, RefVar(MAKEINT(r.bottom)));
+	return box;
+}
+
+
 void
 RegisterTextNatives(void)
 {
@@ -752,6 +782,7 @@ RegisterTextNatives(void)
 	RegisterNativeFunction("FFontHeight__FRC6RefVarT1", (void*) FFontHeight, 1);
 	RegisterNativeFunction("FStrFontWidth__FRC6RefVarN21", (void*) FStrFontWidth, 2);
 	RegisterNativeFunction("FTextBox", (void*) FTextBox, 3);
+	RegisterNativeFunction("FTextBounds", (void*) FTextBounds, 3);
 	RegisterNativeFunction("FStrTruncate__FRC6RefVarN21", (void*) FStrTruncate, 2);
 	RegisterNativeFunction("FStyledStrTruncate__FRC6RefVarN31", (void*) FStyledStrTruncate, 3);
 }

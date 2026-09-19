@@ -404,11 +404,32 @@ FIsSameEntry(RefArg /*rcvr*/, RefArg a, RefArg b)
 // The host implementations bound to the ROM's function objects: the
 // built-ins by their F symbols, the store and soup prototypes' methods by
 // theirs (ROMNatives.cpp lists both).
+// ROM 0x0016059c FGetPackageStore
+// GetPackageStore(name): the package store of that name (the stores a
+// package's soup part is read through, gPackageStores), compared
+// without case; nil when there is none.
+static Ref
+FGetPackageStore(RefArg /*rcvr*/, RefArg name)
+{
+	RefVar stores(gPackageStores);
+	long count = Length(stores);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar store(GetArraySlotRef(stores, i));
+		RefVar storeName(StoreGetName(store));
+		if (CompareStringNoCase(GetCString(name), GetCString(storeName)) == 0)
+			return store;
+	}
+	return NILREF;
+}
+
+
 void
 RegisterSoupNatives(void)
 {
 	RegisterNativeFunction("FIsValid", (void*) FIsValid, 1);
 	RegisterNativeFunction("FGetStores", (void*) FGetStores, 0);
+	RegisterNativeFunction("FGetPackageStore", (void*) FGetPackageStore, 1);
 	RegisterNativeFunction("FQuery", (void*) FQuery, 2);
 	RegisterNativeFunction("FIsSoupEntry", (void*) FIsSoupEntry, 1);
 	RegisterNativeFunction("FEntryIsResident", (void*) FEntryIsResident, 1);
