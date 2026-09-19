@@ -69,6 +69,7 @@ public:
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
 	TView*			TextContainingPoint(Point& pt, Rect* box, long* score);	// ROM 0x000a8844 TextContainingPoint__9TEditViewFR6TPointP5TRectPl
+	TView*			AddForm(RefArg form);					// ROM 0x000ab28c AddForm__9TEditViewFRC6RefVar - the context frame made a child, undoably
 	void			InvalAllHilites(void);					// ROM 0x000a6270 InvalAllHilites__9TEditViewFv
 	void			ResetHilitesForNewWord(void);			// ROM 0x000a4204 ResetHilitesForNewWord__9TEditViewFv
 	Boolean			ValidateCaret(Boolean scrolled);			// ROM 0x000aa9b0 ValidateCaret__9TEditViewFUc - ==> whether the caret is still this view's

@@ -17,6 +17,7 @@
 #include "DataView.h"
 #include "ParagraphView.h"
 #include "RootView.h"
+#include "Application.h"
 #include "Commands.h"
 #include "UnitPublic.h"
 #include "StrokeQueue.h"
@@ -990,4 +991,30 @@ TEditView::ValidateCaret(Boolean scrolled)
 		CopyRgn(visible, port->clipRgn);
 	}
 	return gRootView->fCaretView == this;
+}
+
+// ROM 0x000ab28c AddForm__9TEditViewFRC6RefVar
+// The context frame made into a child of the editor - a new paragraph,
+// usually.  It does not add the view itself: it sends itself an
+// aeAddData command through the application, which is what puts the
+// child in the soup and posts the aeRemoveData that undoes it, and then
+// answers the view that command made.  A throw on the way is let past
+// once the view has been read out of the command.
+TView*
+TEditView::AddForm(RefArg form)
+{
+	RefVar cmd(MakeCommand(aeAddData, this, kNoParameter));
+	CommandSetFrameParameter(cmd, form);
+	newton_try
+	{
+		gApplication->DispatchCommand(cmd);
+	}
+	newton_catch_all
+	{
+		// (the ROM reads the command's parameter here too, on the way out,
+		//  because the two paths share a tail; nothing can see it)
+		rethrow;
+	}
+	end_try;
+	return (TView*) CommandParameter(cmd);
 }
