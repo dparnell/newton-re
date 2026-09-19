@@ -11,6 +11,8 @@
 #include "UserTasks.h"
 #include "UserPorts.h"
 #include "KernelGlobals.h"
+#include "hal/Timer.h"
+#include "NewtonTime.h"
 #include <atomic>
 
 struct HostTabletRecord
@@ -66,9 +68,32 @@ HostTabletSample(long x, long y, ULong pressure)
 }
 
 
+// The time a record is stamped with.
+//
+// The ROM's tablet driver calls InsertTabletSample from its sampling
+// interrupt, and an interrupt runs in supervisor mode, where
+// GetGlobalTime reads the kernel's clock straight off the timer.  A task
+// asking the same question makes a system call instead, and that is what
+// Ticks() would do here - which is fatal from the host's window thread:
+// it is not a Newton task at all, so the SWI would run the kernel's glue
+// and its exit path on a thread the runtime knows nothing about, with
+// gCurrentTask still pointing at the machine's own.  The host therefore
+// stamps the record itself, off the same clock the supervisor would read,
+// and never leaves the time as 0 for the buffer to fill in.
+static ULong
+HostTabletNow(void)
+{
+	TTime now;
+	GetClock(&now.time);
+	return now.ConvertTo(kMacTicks) & 0x7fffffff;
+}
+
+
 void
 HostTabletPenDown(long x, long y, ULong time)
 {
+	if (time == 0)
+		time = HostTabletNow();
 	InsertTabletSample(kTabletPenDown, time);
 	InsertTabletSample(HostTabletSample(x, y, 3), 0);
 }
@@ -84,6 +109,8 @@ HostTabletPenMove(long x, long y, ULong pressure)
 void
 HostTabletPenUp(ULong time)
 {
+	if (time == 0)
+		time = HostTabletNow();
 	InsertTabletSample(kTabletPenUp, time);
 }
 

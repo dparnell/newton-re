@@ -28,6 +28,7 @@
 #include "OSErrors.h"
 
 #include <string.h>
+#include <stdio.h>
 
 
 // The exit for a glue that left the result in the caller's saved r0.
@@ -55,11 +56,27 @@ ExitWithResult(TTask* self, long result)
 // (build/host/host/newtonscript is one), or once the run has ended (static
 // destructors, say): the call is refused rather than crashing on a task
 // that is not there.
+//
+// A thread of the host's own that is none of the machine's is refused for
+// the same reason and a louder one: it would take gCurrentTask for itself
+// and the exit path would hand the baton away and park it, leaving two
+// threads running as the same task over the same heaps.  The window's
+// thread is one of those, and it says so (HostAlienThread).
 static inline TTask*
 Enter()
 {
 	if (gHostTasksStopping || gCurrentTask == nil)
 		return nil;
+	if (HostIsAlienThread())
+	{
+		static Boolean told = false;
+		if (!told)
+		{
+			told = true;
+			fprintf(stderr, "[host] a system call from a thread that is not a task's, refused\n");
+		}
+		return nil;
+	}
 	TTask* self = gCurrentTask;
 	self->fRegister[kcPC] = kResumeInStub;
 	return self;

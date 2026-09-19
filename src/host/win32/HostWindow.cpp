@@ -22,6 +22,7 @@ void	HostWindowPenMove(long x, long y);
 void	HostWindowPenUp(void);
 void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
+void	HostWindowThreadStarted(void);
 }
 
 #define nil 0
@@ -131,6 +132,9 @@ WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static void
 WindowThread(void)
 {
+	// this thread is none of the machine's: it must never make a Newton
+	// system call (host/HostKeyboard.cpp, kernel/host/TaskRuntime.h)
+	HostWindowThreadStarted();
 	WNDCLASSA wc;
 	memset(&wc, 0, sizeof(wc));
 	wc.lpfnWndProc = WindowProc;

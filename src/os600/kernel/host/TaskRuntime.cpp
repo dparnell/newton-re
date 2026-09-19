@@ -291,6 +291,23 @@ HostStopTasks()
 // any, is parked in WaitForBaton and never runs again; its context stays
 // allocated for it, only the task is forgotten - a new TTask at the same
 // address must get a context (and thread) of its own.
+// The threads that are none of the machine's (see TaskRuntime.h).
+static thread_local Boolean	gAlienThread = false;
+
+void
+HostAlienThread()
+{
+	gAlienThread = true;
+}
+
+
+Boolean
+HostIsAlienThread()
+{
+	return gAlienThread;
+}
+
+
 void
 HostTaskDeleted(TTask* task)
 {

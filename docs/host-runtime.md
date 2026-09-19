@@ -90,6 +90,32 @@ kernel source is unchanged.
   runner they only need the nesting counts, which the exit path consults
   (`InAtomicSection`).
 
+## Threads that are none of the machine's
+
+A host program may have threads of its own that are not tasks at all: the
+window on Windows (`src/host/win32/HostWindow.cpp`) runs its message loop
+on one, and that is where the mouse and the keyboard arrive.  Such a
+thread must never make a Newton system call.  A stub begins by taking
+`gCurrentTask` for itself (`Enter`), and the exit path may then hand the
+baton to another task and park the caller in `WaitForBaton` - so the
+window's thread would be parked in the runtime's place while the real
+task's thread went on running, two threads both believing they are the
+current task, over the same heaps.  The result is not a hang but
+corruption, and it shows up later as a crash somewhere else entirely.
+
+The rule is therefore that everything such a thread does has to be a plain
+memory write into a queue a task reads.  The keyboard's ring is one
+(`src/host/HostKeyboard.cpp`); the pen's tablet buffer is the other, and
+it stands in for the ROM's tablet interrupt, which is why
+`hal/host/HostTablet.cpp` stamps its pen-down and pen-up records with the
+clock itself (`HostTabletNow`) rather than letting `InsertTabletSample`
+call `Ticks()`: on the ROM that call is made in supervisor mode and reads
+the clock directly, while here it would be a `GenericSWI`.
+
+As a backstop the window's thread says what it is once it starts
+(`HostAlienThread`, `HostIsAlienThread`), and `Enter` refuses its calls
+with a line on stderr instead of corrupting the runtime.
+
 ## Where the pieces live
 
 | ROM | Host |

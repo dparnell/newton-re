@@ -139,4 +139,14 @@ HostWindowClosed(void)
 	HostKeyboardQuit();
 }
 
+// The window's thread has started.  It is not a Newton task, so the
+// system-call stubs must refuse it rather than take gCurrentTask for it
+// (kernel/host/TaskRuntime.h): everything it does from here - the pen
+// records, the key queue - has to be a plain memory write.
+void
+HostWindowThreadStarted(void)
+{
+	HostAlienThread();
+}
+
 }

@@ -50,6 +50,14 @@ void		HostDeliverInterrupts();				// run the handlers of due alarms (called with
 void		HostIdleTask();							// the idle task's body: wait for the next deadline, deliver, reschedule
 void		HostTaskDeleted(TTask* task);			// ~TTask: forget the task's thread
 
+// A host thread that is none of the machine's - the window's, say - must
+// not make a system call: a stub would take gCurrentTask for its own and
+// the exit path would park the wrong thread in the runtime's place, with
+// two threads then believing they are the running task.  Such a thread
+// says so once, and the stubs refuse its calls instead.
+void		HostAlienThread();						// the calling thread is not a task's
+Boolean		HostIsAlienThread();					// whether it said so
+
 extern Boolean	gHostTasksStopping;
 
 #endif	/* __HOST_TASKRUNTIME_H */
