@@ -884,8 +884,9 @@ TEditView::RealDoCommand(RefArg cmd)
 {
 	long id = CommandID(cmd);
 	if ((fFlags & (vReadOnly | vWriteProtected)) != 0
-		&& id != aeClick && id != 0x37 && id != aeKeyString && id != aeKeyDown
-		&& id != aeTap && id != aeLine && id != 0x48 && id != 0x34 && id != 0x2f)
+		&& id != aeClick && id != aeTapDrag && id != aeShow && id != aeHide
+		&& id != aeTap && id != aeLine && id != aeRemoveHilite
+		&& id != aeHiliteClick && id != aeGesture2f)
 	{
 		// a page that may not be written on answers everything but these,
 		// and answers them all as done (aeWord alone as not)
