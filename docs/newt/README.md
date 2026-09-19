@@ -331,7 +331,42 @@ A script that wants to photograph it has to wait for the assistant -
 the snapshot in an `AddDelayedCall(func() ScreenSnapshot("x.pgm"), nil,
 3000)`.
 
-NOT YET: the forks, the package part handlers, the card, battery, power,
+### Through the assistant, and on to the Notepad
+
+The assistant runs to the end: the name, the country, the time zone, the
+date and time, the handwriting style, the signature and the
+"Congratulations" page, and then its **Done**.  What that asks for, one
+piece at a time, was a run of natives that were not reconstructed, each
+of which threw `evt.ex.fr.intrp` out of a unit handler and left the page
+blank or the machine spinning:
+
+| what it asks for | where it is |
+|---|---|
+| `BlockStrokes`, `UnblockStrokes`, `FlushStrokes` | `recognition/UnitNatives.cpp`, over `StrokeCentral` |
+| `SubstituteChars` | `frames/StringNatives.cpp` |
+| `PowerOff` | `newt/NewtWorld.cpp` (it notes the time in `gLastWakeupTime`) |
+| `GetPackages` | `packages/ROMPackages.cpp` |
+| `PositionCaret` | `views/ViewNatives.cpp`, over `TEditView::PositionCaret` |
+| `PurgeAreaCache`, `RecSettingsChanged` | `recognition/UnitNatives.cpp` |
+
+Done sets the backdrop to the **Notepad** - the root's `paperroll` - and
+it opens: the ruled page, the "Unfiled Notes" title bar with the date,
+and the button bar along the bottom (Extras, In/Out, Names, Dates, Undo,
+Find, Assist).  That is the machine's home screen, and the boot now
+reaches it without help.
+
+An application puts the caret on its page as it opens, which is why
+`PositionCaret` is on this path at all; `docs/views/README.md` has what
+the edit view does with it.
+
+NOT YET on this path: `TParagraphView::HandleWord`, so the editor finds
+no text under a point - right for an empty page, wrong for one that has
+been written on; `GetRecognitionView` and `BuildRecConfig`, so a tap on
+the empty part of a page does not open a paragraph to write in; the
+inker's own drawing (`TStroke::Draw` and `InkerLine`), so a stroke is
+recorded and recognised but never appears.
+
+NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
 and the extras soup, activateStorePackages, the boot test script, the
 'aliv event, the inker calibration, the librarian, the splash screen, the
