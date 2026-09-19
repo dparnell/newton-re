@@ -103,6 +103,16 @@ call), the root view updated and the application idled after each, and
 re-arms the timer (within a tick when ten ran); `CheckForDeferredActions`
 0x002e6e0c re-arms it within a tick.
 
+`:EventPause(tickle)` 0x000afaac - a method of the root template - is
+how long the machine has been left alone, in seconds, which is what the
+power manager sleeps on.  It measures from the latest of four moments:
+`gLastIOEvent` 0x0c100d0c (set to now whenever `vars.ioBusy` is set),
+`gLastPenupTime` 0x0c100d14 (worked out from the stroke world's
+`fLastUpTime`, a tick count, whenever that is not zero),
+`gLastWakeupTime` 0x0c104c4c and `gTickleTime` 0x0c100d04.  Called with
+an argument that is not nil it instead sets `gTickleTime` to now - the
+tickle that says the machine has just been used - and answers 0.
+
 ## The notebook
 
 `TNotebook` (`TApplication` + nothing: 0x3c bytes; `TARMNotebook` class

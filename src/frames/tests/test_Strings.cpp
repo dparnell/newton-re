@@ -215,6 +215,16 @@ TestStringFunctions()
 	EXPECT_STRING("TrimString(\"  hello  \")", "hello");
 	EXPECT_STRING("TrimString(\"\\t x\")", "x");
 	EXPECT_STRING("TrimString(\"   \")", "");
+	// StringFilter: the six modes, over the characters in the set
+	EXPECT_STRING("StringFilter(\"a1b2c3\", \"0123456789\", 'passAll)", "123");
+	EXPECT_STRING("StringFilter(\"a1b2c3\", \"0123456789\", 'rejectAll)", "abc");
+	EXPECT_STRING("StringFilter(\"aa  bb   cc\", \" \", 'passOne)", "aa bb cc");		// a run in the set cut to one
+	EXPECT_STRING("StringFilter(\"aa  bb   cc\", \" \", 'rejectOne)", "a  b   c");	// a run outside it cut to one
+	EXPECT_STRING("StringFilter(\"  hello  world \", \" \", 'rejectBeginning)", "hello  world ");
+	EXPECT_STRING("StringFilter(\"xxABCxx\", \"ABC\", 'passBeginning)", "ABCxx");
+	EXPECT_STRING("StringFilter(\"abc\", \"\", 'rejectAll)", "abc");					// an empty set matches nothing
+	EXPECT_STRING("StringFilter(\"abc\", \"\", 'passAll)", "");
+	EXPECT_STRING("StringFilter(\"\", \" \", 'rejectBeginning)", "");
 	EXPECT_INT("CharPos(\"hello\", $l, 0)", 2);
 	EXPECT_INT("CharPos(\"hello\", $l, 3)", 3);
 	EXPECT_NIL("CharPos(\"hello\", $z, 0)");

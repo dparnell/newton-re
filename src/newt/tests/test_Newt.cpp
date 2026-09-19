@@ -82,6 +82,10 @@ static const char* kSetupSource =
 	"      viewGestureScript: func(unit, kind) begin testApp.taps := testApp.taps + 1; true end}); "
 	"    self.para := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 100, right: 300, bottom: 130}, viewFormat: 0x111, viewFont: 0x3000, text: \"Type here\"}); "
 	"    view:Dirty(); para:Dirty(); KeyboardConnect(true); SetKeyView(para, 4); 1 end, "
+	"  pause: func(data) begin "
+	"    local tickled := GetRoot():EventPause(true); "			// the tickle: nothing has happened since
+	"    local since := GetRoot():EventPause(nil); "
+	"    if tickled = 0 and IsInteger(since) and since >= 0 then 1 else 0 end, "
 	"  countClicks: func(data) clicks, "
 	"  countTaps: func(data) taps, "
 	"  textLength: func(data) StrLen(para.text) "
@@ -95,6 +99,7 @@ static long gTapsSeen = 0;
 static long gRedraws = 0;
 static long gScriptErr = -1;
 static long gTextLength = 0;
+static Boolean gPauseOk = false;
 static long gMainDone = 0;
 static Boolean gAliveAfterBoot = false;
 
@@ -163,6 +168,11 @@ Scenario(void)
 		TRunScriptEvent taps("testApp", "countTaps");
 		newtPort.SendRPC(&replySize, &taps, sizeof(taps), &taps, sizeof(taps));
 		gTapsSeen = taps.fResult;
+		// EventPause: how long the machine has been left alone, and the
+		// tickle that says it has just been used
+		TRunScriptEvent pause("testApp", "pause");
+		newtPort.SendRPC(&replySize, &pause, sizeof(pause), &pause, sizeof(pause));
+		gPauseOk = pause.fError == 0 && pause.fResult == 1;
 	}
 	// a key typed into the paragraph: the keyboard tool's 'keyb event, the
 	// repeat rates replied
@@ -213,6 +223,7 @@ int main()
 	EXPECT(gNewtPort != nil && gRecognition.fLevel == 1 && gRecognition.fRecognizers != nil);
 	EXPECT(gScriptErr == 0);
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
+	EXPECT(gPauseOk);
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gRedraws == 1);
 	if (failures == 0)

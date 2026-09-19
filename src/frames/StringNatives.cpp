@@ -935,6 +935,135 @@ FParamStr(RefArg /*rcvr*/, RefArg templateStr, RefArg params)
 	Registration
 ------------------------------------------------------------------------------- */
 
+// ROM 0x001fcc48 FStringFilter
+// StringFilter(str, chars, mode): the string with some of its characters
+// taken out, by which of the six modes is asked for.  `chars` is a string
+// of the characters to look for; a character is "in" when it appears in
+// it.  The modes come in pairs, one looking at the characters in the set
+// and one at the characters outside it:
+//
+//   'passAll          only the characters in the set are kept
+//   'rejectAll        only the characters outside it are kept
+//   'passOne          a run of characters in the set is cut down to its
+//                     first
+//   'rejectOne        a run of characters outside it is cut down to its
+//                     first
+//   'passBeginning    the leading characters that are not in the set are
+//                     dropped, and from the first one that is, the rest
+//                     of the string stands
+//   'rejectBeginning  the leading characters that are in the set are
+//                     dropped - trimming leading spaces, say - and the
+//                     rest stands
+//
+// A rich string keeps its ink: the two beginning modes delete the range
+// they dropped from a clone of the original (so the ink moves with the
+// text), and 'passOne and 'rejectAll copy the ink block over and write
+// the new character count into the trailing word.  'passAll and
+// 'rejectOne do not, so a rich string filtered by those loses its ink -
+// the ROM's own omission, kept here.
+static Ref
+FStringFilter(RefArg /*rcvr*/, RefArg str, RefArg chars, RefArg mode)
+{
+	Boolean isRich = IsRichString(str);
+	long size = Length(str);
+	Length(chars);				// (the ROM asks and throws away the answer)
+	RefVar result(AllocateBinary(RSSYMstring, size));
+	const UniChar* srcBase = (const UniChar*) BinaryData(str);
+	const UniChar* src = srcBase;
+	UniChar* dst = (UniChar*) BinaryData(result);
+	UniChar* out = dst;
+	const UniChar* filter = (const UniChar*) BinaryData(chars);
+	Boolean stopped = false;
+	long taken = 0;				// how many characters of the source were looked at
+	long run = 0;
+	for (;;)
+	{
+		UniChar ch = *src++;
+		*out = ch;
+		UniChar* next = out + 1;
+		if (ch == 0)
+			break;
+		long nextRun = run;
+		if (!stopped)
+		{
+			Boolean inSet = false;
+			for (long i = 0; filter[i] != 0; i++)
+			{
+				if (filter[i] == ch)
+				{
+					inSet = true;
+					break;
+				}
+			}
+			if (inSet)
+			{
+				if (EQRef(mode, RSSYMrejectall) || EQRef(mode, RSSYMrejectbeginning))
+					next = out;
+				if (EQRef(mode, RSSYMpassone))
+				{
+					nextRun = run + 1;
+					if (run > 0)
+						next--;
+				}
+				if (EQRef(mode, RSSYMpassbeginning))
+				{
+					if (isRich)
+						break;
+					stopped = true;
+				}
+				if (EQRef(mode, RSSYMrejectone))
+					nextRun = 0;
+			}
+			else
+			{
+				if (EQRef(mode, RSSYMpassall) || EQRef(mode, RSSYMpassbeginning))
+					next = out;
+				if (EQRef(mode, RSSYMrejectone))
+				{
+					nextRun = run + 1;
+					if (run > 0)
+						next--;
+				}
+				if (EQRef(mode, RSSYMrejectbeginning))
+				{
+					if (isRich)
+						break;
+					stopped = true;
+				}
+				if (EQRef(mode, RSSYMpassone))
+					nextRun = 0;
+			}
+		}
+		taken++;
+		out = next;
+		run = nextRun;
+	}
+	long length = Ustrlen(dst);
+	long used = (length + 1) * sizeof(UniChar);
+	if (isRich)
+	{
+		if (EQRef(mode, RSSYMrejectbeginning) || EQRef(mode, RSSYMpassbeginning))
+		{
+			// the text and its ink kept together: what was dropped is taken
+			// out of a copy of the original instead
+			result = Clone(str);
+			TRichString rich(result);
+			rich.DeleteRange(0, taken);
+			return result;
+		}
+		if (EQRef(mode, RSSYMpassone) || EQRef(mode, RSSYMrejectall))
+		{
+			long srcText = ((Ustrlen(srcBase) + 1) * (long) sizeof(UniChar) + 3) & ~3;
+			long inkSize = Length(str) - srcText;
+			memmove((char*) dst + ((used + 3) & ~3), (const char*) srcBase + srcText, inkSize);
+			used = ((used + 3) & ~3) + inkSize;
+			*(ULong*) ((char*) dst + used - 4) = (ULong) ((length << 4) | 1);
+		}
+	}
+	SetLength(result, used);
+	return result;
+}
+
 void
 RegisterStringNatives(void)
 {
@@ -970,4 +1099,5 @@ RegisterStringNatives(void)
 	RegisterNativeFunction("FFindStringInArray__FRC6RefVarN21", (void*) FFindStringInArray, 2);
 	RegisterNativeFunction("FFindStringInFrame__FRC6RefVarN31", (void*) FFindStringInFrame, 3);
 	RegisterNativeFunction("FParamStr__FRC6RefVarN21", (void*) FParamStr, 2);
+	RegisterNativeFunction("FStringFilter", (void*) FStringFilter, 3);
 }

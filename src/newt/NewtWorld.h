@@ -192,6 +192,8 @@ extern ULong			NewtAlarmName;						// ROM 0x0c10551c NewtAlarmName - the world's
 extern Boolean			gNewtIsAliveAndWell;				// ROM 0x0c105510 gNewtIsAliveAndWell (views/Application.cpp)
 extern TTime			gLastWakeupTime;					// ROM 0x0c104c4c gLastWakeupTime
 extern TTime			gTickleTime;						// ROM 0x0c100d04 gTickleTime - the last user activity (the 'ext / 'bklt events)
+extern TTime			gLastIOEvent;						// ROM 0x0c100d0c gLastIOEvent - the last event that came in while vars.ioBusy was set
+extern TTime			gLastPenupTime;						// ROM 0x0c100d14 gLastPenupTime - the stroke world's last pen-up, as a time
 extern Boolean			gGoingToSleep;						// ROM 0x0c105520 gGoingToSleep
 
 void	RunDelayedActionProcs(void);						// ROM 0x0030ca08 RunDelayedActionProcs__Fv - up to ten delayed actions run (the root view updated and the application idled after each), the idle timer re-armed

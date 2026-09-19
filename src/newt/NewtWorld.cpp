@@ -39,6 +39,8 @@ NewtGlobals*	gNewtGlobals = nil;			// ROM 0x0c1054b0 gNewtGlobals
 TUPort*			gNewtPort = nil;			// ROM 0x0c1054a8 gNewtPort
 TTime			gLastWakeupTime;			// ROM 0x0c104c4c gLastWakeupTime
 TTime			gTickleTime;				// ROM 0x0c100d04 gTickleTime
+TTime			gLastIOEvent;				// ROM 0x0c100d0c gLastIOEvent
+TTime			gLastPenupTime;				// ROM 0x0c100d14 gLastPenupTime
 Boolean			gGoingToSleep = false;		// ROM 0x0c105520 gGoingToSleep
 void			(*gNewtHostBoot)(void) = nil;
 const char*		gNewtBootTestScript = nil;
@@ -714,10 +716,56 @@ FSetSysAlarm(RefArg /*rcvr*/, RefArg time, RefArg func, RefArg args)
 }
 
 
+// ROM 0x000afaac FEventPause
+// EventPause(tickle): how long, in seconds, the machine has been left
+// alone - which is what the power manager sleeps on.  With an argument
+// that is not nil it instead marks the machine as used just now (the
+// tickle) and answers 0.
+//
+// The moment it measures from is the latest of four: the last event that
+// came in while `vars.ioBusy` was set, the last pen-up (the stroke
+// world's tick count, turned into a time), the last wake-up and the last
+// tickle.
+static Ref
+FEventPause(RefArg /*rcvr*/, RefArg tickle)
+{
+	TTime now = GetGlobalTime();
+	ULong lastUp = gStrokeWorld.fLastUpTime;
+	if (NOTNIL(GetFrameSlotRef(gVarFrame, RSSYMiobusy)))
+		gLastIOEvent = now;
+	TTime* latest;
+	if (ISNIL(tickle))
+	{
+		if (lastUp != 0)
+		{
+			TTime ago((Ticks() - lastUp) / 60, kSeconds);
+			gLastPenupTime = now;
+			CompSub(&ago.time, &gLastPenupTime.time);
+		}
+		latest = &gLastPenupTime;
+		if (CompCompare(&gLastIOEvent.time, &latest->time) > 0)
+			latest = &gLastIOEvent;
+		if (CompCompare(&gLastWakeupTime.time, &latest->time) > 0)
+			latest = &gLastWakeupTime;
+		if (CompCompare(&gTickleTime.time, &latest->time) > 0)
+			latest = &gTickleTime;
+	}
+	else
+	{
+		gTickleTime = now;
+		latest = &gTickleTime;
+	}
+	TTime since = now;
+	CompSub(&latest->time, &since.time);
+	return MAKEINT(since.ConvertTo(kSeconds));
+}
+
+
 void
 RegisterAlarmNatives(void)
 {
 	RegisterNativeFunction("FSetSysAlarm", (void*) FSetSysAlarm, 3);
+	RegisterNativeFunction("FEventPause", (void*) FEventPause, 1);
 }
 
 

@@ -371,6 +371,21 @@ the locale's number format are not here) and `ParamStr` (`^0`..`^9`
 substituted in three passes then `^^`/`^|` stripped; `^?N<yes>|<no>|`
 by whether parameter N is present).
 
+`StringFilter(str, chars, mode)` 0x001fcc48 takes characters out of a
+string by one of six modes, which come in pairs - one looking at the
+characters in `chars`, the other at those outside it.  `'passAll` keeps
+only the characters in the set and `'rejectAll` only those outside it;
+`'passOne` cuts a run of characters in the set down to its first and
+`'rejectOne` does the same for a run outside it; `'passBeginning` drops
+the leading characters that are not in the set, and `'rejectBeginning`
+the leading characters that are - trimming leading spaces, which is what
+the Setup assistant filters a typed name with.  A rich string keeps its
+ink through the two beginning modes (the dropped range is deleted from a
+clone of the original) and through `'passOne` and `'rejectAll` (the ink
+block is copied over and the trailing word rewritten with the new
+character count), but not through `'passAll` or `'rejectOne`, which have
+no case of their own - the ROM's own omission, kept.
+
 `ArrayNatives.cpp` has `TGeneralizedTestFnVar`, the comparison object
 behind the sorts, searches and ordered set operations: a test symbol
 (`'|<|` `'|>|` numbers, `'|str<|` `'|str>|` strings, `'|chr<|` `'|chr>|`
