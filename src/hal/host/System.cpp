@@ -69,8 +69,13 @@ GetRamSize(void)
 extern "C" NewtonErr
 GetSystemSerialNumber(ULong serialNumber[2])
 {
+	// the second word is what the internal store is signed with
+	// (MakeStoreObject), and a script reads it back with ExtractLong, which
+	// throws on anything that is not a 30-bit NewtonScript integer - so the
+	// top two bits stay clear, as they do on a machine whose number comes
+	// off the chip
 	serialNumber[0] = 0x00004e65;		// 'Ne'
-	serialNumber[1] = 0x77746f6e;		// 'wton'
+	serialNumber[1] = 0x0077746f;		// 'wto'
 	return noErr;
 }
 

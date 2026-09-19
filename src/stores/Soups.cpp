@@ -9,6 +9,7 @@
 */
 
 #include "Soups.h"
+#include "hal/System.h"
 #include "Cursors.h"
 #include "Tags.h"
 #include "StoreObject.h"
@@ -239,11 +240,26 @@ GetStoreClassInfo(const TStore* store)
 
 
 // ROM 0x00154908 GetInternalStore__Fv
-// NOT YET RECONSTRUCTED: TPSSManager - there is no internal store.
+// The store the machine boots with - the flash the PSS manager formats
+// and mounts.
+//
+// DEVIATION: TPSSManager is NOT YET RECONSTRUCTED, so nothing here knows
+// which store is the flash; a port says so with SetInternalStore before
+// it registers the store (the host does it in HostMountStores).  Nil
+// until one does, as it was before.
+static TStore*	gInternalStore = nil;
+
 TStore*
 GetInternalStore(void)
 {
-	return nil;
+	return gInternalStore;
+}
+
+
+void
+SetInternalStore(TStore* store)
+{
+	gInternalStore = store;
 }
 
 
@@ -495,8 +511,24 @@ MakeStoreObject(TStore* store)
 				if (gSortTables.fDefaultId != 0)
 					SetFrameSlot(persistent, RSSYMdirsortid, RefVar(MAKEINT(gSortTables.fDefaultId)));
 				SetFrameSlot(persistent, RSSYMname, RefVar(MakeString("Untitled")));
-				// NOT YET RECONSTRUCTED: the internal store's signature is the system serial number
-				SetFrameSlot(persistent, RSSYMsignature, RefVar(MAKEINT(GetRandomSignature())));
+				// the internal store is signed with the machine's own serial
+				// number - its second word - so that the system can tell its
+				// flash from a card's store; any other store gets a random
+				// signature.  A store whose signature does not match is the one
+				// the ROM notifies about ("The internal store's signature has
+				// been altered"), which on the machine a hard reset puts right
+				// by formatting the flash again - which is this branch.
+				long signature;
+				if (GetInternalStore() == store)
+				{
+					ULong serialNumber[2];
+					signature = 0;
+					if (GetSystemSerialNumber(serialNumber) == noErr)
+						signature = (long) serialNumber[1];
+				}
+				else
+					signature = GetRandomSignature();
+				SetFrameSlot(persistent, RSSYMsignature, RefVar(MAKEINT(signature)));
 				rootData.fMapTableId = TStoreHashTable::Create(store);
 				wrapper->fMapTable = new TStoreHashTable(store, rootData.fMapTableId);
 				if (wrapper->fMapTable == nil)

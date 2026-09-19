@@ -11,6 +11,7 @@
 // collect cursor).  Runs over a standalone kernel heap and object heap.
 
 #include "Soups.h"
+#include "hal/System.h"
 #include "Cursors.h"
 #include "Tags.h"
 #include "Entries.h"
@@ -132,7 +133,21 @@ TestStoreFrame()
 	EXPECT(GetStoreWrapper(storeObject)->Store() == store);
 	EXPECT(StringIs(RefVar(StoreGetName(storeObject)), "Untitled"));
 	EXPECT(StringIs(RefVar(StoreGetKind(storeObject)), store->StoreKind()));
+	// a store that is not the machine's own is signed at random
 	EXPECT(ISINT(StoreGetSignature(storeObject)) && RINT(StoreGetSignature(storeObject)) != 0);
+	{
+		// ... and the internal one with the machine's serial number, its
+		// second word, which is what the ROM's boot checks it against
+		TStore* internal = (TStore*) THostStore::ClassInfo()->New();
+		EXPECT(internal != nil && internal->Init(nil, 0x8000, 0, 0, kStoreIsInternal, nil) == noErr);
+		SetInternalStore(internal);
+		EXPECT(GetInternalStore() == internal && internal->Format() == noErr);
+		RefVar internalObject(MakeStoreObject(internal));
+		ULong serialNumber[2];
+		EXPECT(GetSystemSerialNumber(serialNumber) == noErr);
+		EXPECT(RINT(StoreGetSignature(internalObject)) == (long) serialNumber[1]);
+		SetInternalStore(nil);
+	}
 	EXPECT(RINT(StoreTotalSize(storeObject)) == 0x80000);
 	EXPECT(RINT(StoreUsedSize(storeObject)) > 0 && RINT(StoreUsedSize(storeObject)) < 0x2000);
 	EXPECT(RINT(StoreOverhead(storeObject)) > 0);

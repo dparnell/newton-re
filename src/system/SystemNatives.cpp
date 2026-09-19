@@ -14,6 +14,7 @@
 #include "Frames.h"
 #include "hal/System.h"
 #include "hal/Power.h"
+#include "ByteOrder.h"
 #include "OSErrors.h"
 
 
@@ -22,13 +23,24 @@
 // 'serialNumber; nil when the serial number ROM cannot be read
 // (hal/System.h's GetSystemSerialNumber - the host has a number of its
 // own, see hal/host/System.cpp).
+//
+// DEVIATION: the ROM stores the two words straight into the binary,
+// which on the Newton puts them there big-endian; a script reads them
+// back with ExtractLong, which is big-endian everywhere, so on a
+// little-endian host they have to be written that way explicitly.  The
+// second word is what the internal store is signed with, so getting this
+// wrong is what makes the machine say its store's signature has been
+// altered.
 Ref
 FGetSerialNumber(RefArg /*rcvr*/)
 {
-	RefVar binary(AllocateBinary(RefVar(RSSYMserialnumber), 2 * sizeof(ULong)));
-	ULong* serialNumber = (ULong*) BinaryData(binary);
+	ULong serialNumber[2];
 	if (GetSystemSerialNumber(serialNumber) != noErr)
 		return NILREF;
+	RefVar binary(AllocateBinary(RefVar(RSSYMserialnumber), 2 * sizeof(ULong32)));
+	char* data = BinaryData(binary);
+	PutBigEndianWord(data, serialNumber[0]);
+	PutBigEndianWord(data + sizeof(ULong32), serialNumber[1]);
 	return binary;
 }
 

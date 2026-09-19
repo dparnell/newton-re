@@ -69,7 +69,8 @@ Ref		RegisterTStore(TStore* store);		// added to gStores (and the union soups)
 void	RemoveTStore(TStore* store);
 Ref		ToObject(TStore* store);			// the store frame; nil when not registered
 Boolean	IsValidStore(const TStore* store);	// registered
-TStore*	GetInternalStore(void);				// NOT YET: nil
+TStore*	GetInternalStore(void);				// ROM 0x00154908 GetInternalStore__Fv - the machine's own store (the flash)
+void	SetInternalStore(TStore* store);		// DEVIATION: a port names it, TPSSManager being NOT YET
 const TClassInfo*	GetStoreClassInfo(const TStore* store);
 TStoreWrapper*	GetStoreWrapper(RefArg storeObject);		// throws when the frame has been killed
 TStore*	StoreFromWrapper(RefArg storeObject);

@@ -23,7 +23,7 @@ add_library(stores STATIC
 	ObjectStreamer.cpp
 	StoreCompander.cpp
 )
-target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression)
+target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression hal_host)
 target_include_directories(stores PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

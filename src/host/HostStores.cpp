@@ -69,6 +69,11 @@ HostMountStores(void)
 		else
 		{
 			NewtonErr err = store->Init(nil, kHostStoreSize, 0, 0, kStoreIsInternal, nil);
+			// said before it is formatted: MakeStoreObject signs the internal
+			// store with the machine's serial number and any other store at
+			// random, and the ROM notifies about a store whose signature does
+			// not match the machine's
+			SetInternalStore(store);
 			if (err == noErr)
 				err = store->Format();
 			if (err != noErr)

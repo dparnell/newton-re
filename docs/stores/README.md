@@ -301,13 +301,44 @@ capability, which the host store is; `TEphemeralTracker` is NOT YET.
 `MakeStoreObject(store)` (0x00328fdc) makes a store's frame: a
 `TStoreWrapper` over it; an empty root object is formatted - the
 persistent frame (`storePersistent`: `nameIndex` a new `TSoupIndex` of
-string keys, `name` "Untitled", `signature` a random number, `ephemerals`)
+string keys, `name` "Untitled", `signature`, `ephemerals`)
 stored, the map and symbol tables made, the root data (`'WALY'`, version
 4, the three ids) written - otherwise the root data is checked and the
 persistent frame loaded.  The frame is a clone of `storePrototype` with
 `_proto` the persistent frame's fault block, `store` the wrapper (a raw
 pointer in a slot, as the ROM keeps it), `soups` an entry cache and
-`version`.  `RegisterTStore` puts it in `gStores` (and the union soups:
+`version`.
+
+### The internal store's signature
+
+A store formatted for the first time is signed.  The **internal** store -
+the machine's own flash, which `GetInternalStore` 0x00154908 names - is
+signed with the machine's serial number, its second word
+(`TSerialNumberROM::GetSystemSerialNumber`, `hal/System.h`), and 0 when
+that cannot be read; every other store gets a random number
+(`GetRandomSignature` 0x00353a44).  That is how the system tells its own
+flash from a card's store.
+
+A boot script (the ROM object 0x005692f1) checks it: it reads the serial
+number, takes its second word with `ExtractLong(serial, 4)` and compares
+that with `GetStores()[0]:GetSignature()`.  A signature of 0 gets "The
+internal store's signature is invalid", any other mismatch "The internal
+store's signature has been altered", and a serial number that cannot be
+read "This unit's serial number cannot be read" - each notified over
+whatever is on screen.  On the machine, the fix is the hard reset that
+erases and reformats the flash, which is the formatting branch above
+doing its work again.
+
+Two things make that come out right on a host and are worth knowing about
+because each of them, got wrong, produces exactly that notification: the
+port has to say which store is the internal one (`SetInternalStore`,
+a DEVIATION - `TPSSManager` is NOT YET, so nothing else knows), and the
+serial number's second word has to be a 30-bit NewtonScript integer
+written into the binary big-endian, because `ExtractLong` reads
+big-endian everywhere and throws on anything that will not fit
+(`system/SystemNatives.cpp`, `hal/host/System.cpp`).
+
+`RegisterTStore` puts it in `gStores` (and the union soups:
 NOT YET), `RemoveTStore` takes it out and `KillStoreObject` cuts the
 frame and its soups off (`_proto` nil, entries invalidated); `StoreErase`
 formats and re-registers.  `InitQueries` makes `gStores`, `gUnionSoups`,
