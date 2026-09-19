@@ -215,6 +215,17 @@ TestStringFunctions()
 	EXPECT_STRING("TrimString(\"  hello  \")", "hello");
 	EXPECT_STRING("TrimString(\"\\t x\")", "x");
 	EXPECT_STRING("TrimString(\"   \")", "");
+	// SplitString: the words between the spaces.  The array starts one slot
+	// long and grows, so a string with no words in it answers [nil].
+	EXPECT_INT("Length(SplitString(\"Daniel Parnell\"))", 2);
+	EXPECT_STRING("SplitString(\"Daniel Parnell\")[0]", "Daniel");
+	EXPECT_STRING("SplitString(\"Daniel Parnell\")[1]", "Parnell");
+	EXPECT_INT("Length(SplitString(\"  John   Q  Public  \"))", 3);
+	EXPECT_STRING("SplitString(\"  John   Q  Public  \")[2]", "Public");
+	EXPECT_STRING("SplitString(\"one\")[0]", "one");
+	EXPECT_INT("Length(SplitString(\"\"))", 1);
+	EXPECT_NIL("SplitString(\"\")[0]");
+	EXPECT_NIL("SplitString(\"   \")[0]");
 	// StringFilter: the six modes, over the characters in the set
 	EXPECT_STRING("StringFilter(\"a1b2c3\", \"0123456789\", 'passAll)", "123");
 	EXPECT_STRING("StringFilter(\"a1b2c3\", \"0123456789\", 'rejectAll)", "abc");

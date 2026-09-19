@@ -386,6 +386,21 @@ block is copied over and the trailing word rewritten with the new
 character count), but not through `'passAll` or `'rejectOne`, which have
 no case of their own - the ROM's own omission, kept.
 
+`SplitString(str)` 0x000833e4 answers the string's words - the runs
+between spaces - as an array of strings; the assistant splits a typed
+name with it.  It converts the text to single bytes first
+(`NewASCIIString` 0x0007d78c) and gathers each word in a locked 'string
+binary grown a byte at a time.  Two things about it are worth keeping in
+mind: the array starts one slot long and is grown as words are found, so
+a string with no words in it answers `[nil]` rather than `[]`; and
+`StringRightTrim` 0x0008418c, which is meant to give the end of the last
+word, starts one past the terminating nul, so its first step lands on the
+nul - which is not a space - and it stops there every time.  It therefore
+always answers the string's length and trims nothing, a ROM bug its only
+caller does not notice, because trailing spaces are separators to it
+anyway.  `StringLeftTrim` 0x0008421c does work, stopping at the nul so
+that an all-blank string does not run off the end.
+
 `ArrayNatives.cpp` has `TGeneralizedTestFnVar`, the comparison object
 behind the sorts, searches and ordered set operations: a test symbol
 (`'|<|` `'|>|` numbers, `'|str<|` `'|str>|` strings, `'|chr<|` `'|chr>|`

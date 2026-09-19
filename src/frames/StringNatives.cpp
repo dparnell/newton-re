@@ -1064,6 +1064,140 @@ FStringFilter(RefArg /*rcvr*/, RefArg str, RefArg chars, RefArg mode)
 	return result;
 }
 
+// ROM 0x0007d78c NewASCIIString__FRC6RefVar
+// The string's text as single bytes (Mac Roman), in a pointer the caller
+// disposes of; nil when there was no room for it.
+static char*
+NewASCIIString(RefArg str)
+{
+	long size = Length(str);
+	char* text = (char*) NewPtr(size / 2);
+	if (text != nil)
+		ConvertFromUnicode(GetCString(str), text, kMacRomanEncoding, 0x7fffffff);
+	return text;
+}
+
+
+// ROM 0x0008421c StringLeftTrim__FRC6RefVar
+// The index of the first character that is not a space.  It stops at the
+// last character of the object - the terminating nul - so a string of
+// nothing but spaces answers that index rather than running off the end.
+static ULong
+StringLeftTrim(RefArg str)
+{
+	ULong count = (ULong) Length(str) / sizeof(UniChar);	// the characters, the nul among them
+	const UniChar* text = (const UniChar*) BinaryData(str);
+	ULong i = 0;
+	if (count != 1)
+	{
+		do
+		{
+			if (text[i] != ' ')
+				break;
+			i++;
+		}
+		while (i < count - 1);
+	}
+	return i;
+}
+
+
+// ROM 0x0008418c StringRightTrim__FRC6RefVar
+// Meant to be the index just past the last character that is not a space
+// - but it starts one past the terminating nul, so its first step lands
+// on the nul, which is not a space, and it stops there every time.  It
+// therefore always answers the string's length and trims nothing: a ROM
+// bug, kept.  SplitString, its only caller, does not notice, because the
+// trailing spaces it hands back are separators there anyway.
+static ULong
+StringRightTrim(RefArg str)
+{
+	ULong i = (ULong) Length(str) / sizeof(UniChar);
+	const UniChar* text = (const UniChar*) BinaryData(str);
+	do
+		i--;
+	while (text[i] == ' ');
+	return i;
+}
+
+
+// ROM 0x000833e4 SplitString__FRC6RefVarT1
+// SplitString(str): the string's words - the runs of characters between
+// spaces - as an array of strings.  The assistant splits a typed name
+// with it.  The array is made one slot long to start with and grown as
+// words are found, so a string with no words in it answers [nil] rather
+// than an empty array.
+//
+// The word being gathered is kept as single bytes in a 'string binary
+// that is locked while it is written to and grown a byte at a time; each
+// word becomes a string of its own through MakeString.
+Ref
+SplitString(RefArg /*rcvr*/, RefArg str)
+{
+	RefVar result;
+	RefVar piece;
+	long size = Length(str);
+	char* ascii = NewASCIIString(str);
+	result = AllocateArray(RSSYMarray, 1);
+	piece = AllocateBinary(RSSYMstring, 1);
+	LockRef(piece);
+	if (size != 0)
+	{
+		long slot = 0;
+		ULong i = StringLeftTrim(str);
+		ULong end = StringRightTrim(str);
+		long length = 0;
+		if (i < end)
+		{
+			do
+			{
+				if (ascii[i] == ' ')
+				{
+					if (length != 0)
+					{
+						UnlockRef(piece);
+						SetLength(piece, length + 1);
+						LockRef(piece);
+						char* word = BinaryData(piece);
+						word[length] = ' ';
+						SetLength(result, slot + 1);
+						SetArraySlotRef(result, slot, MakeString(word));
+						length = 0;
+						UnlockRef(piece);
+						piece = AllocateBinary(RSSYMstring, 1);
+						LockRef(piece);
+						slot++;
+					}
+				}
+				else
+				{
+					UnlockRef(piece);
+					SetLength(piece, length + 1);
+					LockRef(piece);
+					char* word = BinaryData(piece);
+					word[length] = ascii[i];
+					length++;
+				}
+				i++;
+			}
+			while (i < end);
+			if (length != 0)
+			{
+				UnlockRef(piece);
+				SetLength(piece, length + 1);
+				LockRef(piece);
+				char* word = BinaryData(piece);
+				word[length] = ' ';
+				SetLength(result, slot + 1);
+				SetArraySlotRef(result, slot, MakeString(word));
+			}
+		}
+	}
+	UnlockRef(piece);
+	DisposPtr(ascii);
+	return result;
+}
+
 void
 RegisterStringNatives(void)
 {
@@ -1100,4 +1234,5 @@ RegisterStringNatives(void)
 	RegisterNativeFunction("FFindStringInFrame__FRC6RefVarN31", (void*) FFindStringInFrame, 3);
 	RegisterNativeFunction("FParamStr__FRC6RefVarN21", (void*) FParamStr, 2);
 	RegisterNativeFunction("FStringFilter", (void*) FStringFilter, 3);
+	RegisterNativeFunction("SplitString__FRC6RefVarT1", (void*) SplitString, 1);
 }

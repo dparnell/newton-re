@@ -86,6 +86,10 @@ static const char* kSetupSource =
 	"    local tickled := GetRoot():EventPause(true); "			// the tickle: nothing has happened since
 	"    local since := GetRoot():EventPause(nil); "
 	"    if tickled = 0 and IsInteger(since) and since >= 0 then 1 else 0 end, "
+	"  battery: func(data) begin "
+	"    local b := BatteryStatus(0); "
+	"    if b.batteryType = 'alkaline and b.batteryCapacity = 100 and b.acPower = 'no "
+	"       and b.chargeState = 'discharging and b.batteryVoltage > 5.0 then 1 else 0 end, "
 	"  countClicks: func(data) clicks, "
 	"  countTaps: func(data) taps, "
 	"  textLength: func(data) StrLen(para.text) "
@@ -100,6 +104,7 @@ static long gRedraws = 0;
 static long gScriptErr = -1;
 static long gTextLength = 0;
 static Boolean gPauseOk = false;
+static Boolean gBatteryOk = false;
 static long gMainDone = 0;
 static Boolean gAliveAfterBoot = false;
 
@@ -173,6 +178,10 @@ Scenario(void)
 		TRunScriptEvent pause("testApp", "pause");
 		newtPort.SendRPC(&replySize, &pause, sizeof(pause), &pause, sizeof(pause));
 		gPauseOk = pause.fError == 0 && pause.fResult == 1;
+		// BatteryStatus: the host's power plant, as a script sees it
+		TRunScriptEvent battery("testApp", "battery");
+		newtPort.SendRPC(&replySize, &battery, sizeof(battery), &battery, sizeof(battery));
+		gBatteryOk = battery.fError == 0 && battery.fResult == 1;
 	}
 	// a key typed into the paragraph: the keyboard tool's 'keyb event, the
 	// repeat rates replied
@@ -224,6 +233,7 @@ int main()
 	EXPECT(gScriptErr == 0);
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);
+	EXPECT(gBatteryOk);
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gRedraws == 1);
 	if (failures == 0)

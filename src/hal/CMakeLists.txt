@@ -7,6 +7,7 @@ add_library(hal_host STATIC
     host/RealTimeClock.cpp
     host/System.cpp
     host/MMU.cpp
+    host/Power.cpp
 )
 target_link_libraries(hal_host PUBLIC newton_config toolbox)
 

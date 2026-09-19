@@ -13,6 +13,7 @@
 #include "ROMConstants.h"
 #include "Frames.h"
 #include "hal/System.h"
+#include "hal/Power.h"
 #include "OSErrors.h"
 
 
@@ -171,9 +172,100 @@ FGestalt(RefArg /*rcvr*/, RefArg selector)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   b a t t e r i e s
+------------------------------------------------------------------------------*/
+
+// ROM 0x002037bc GetBatteryStatus__FlP16PowerPlantStatusUc
+// The power manager asked for a battery's status: a 'newt/'pg&e RPC,
+// command 4 for the reading it keeps and 5 for a fresh one, whose reply
+// carries the 0x34-byte PowerPlantStatus.
+//
+// DEVIATION: the power manager is NOT YET RECONSTRUCTED and a host has
+// no batteries, so the reading comes from hal/Power.h instead and the
+// `raw` argument makes no difference.
+static NewtonErr
+GetBatteryStatus(long which, PowerPlantStatus* status, Boolean /*raw*/)
+{
+	if (status == nil)
+		return kError_Bad_Parameters;
+	return GetPowerPlantStatus(which, status);
+}
+
+
+// a Fixed reading as a real
+static Ref
+FixedReal(Fixed value)
+{
+	return MakeReal((double) value / 65536.0);
+}
+
+
+// ROM 0x00203db8 FBatteryStatus
+// BatteryStatus(which): a frame describing that battery and the power
+// coming in, or an empty frame when the power manager will not say.  A
+// reading of -1 means the machine cannot tell, and its slot is left as
+// the canonical frame has it - nil.
+static Ref
+FBatteryStatus(RefArg /*rcvr*/, RefArg which)
+{
+	RefVar result(AllocateFrame());
+	PowerPlantStatus status;
+	if (GetBatteryStatus(RINT(which), &status, false) != noErr)
+		return result;
+	result = Clone(RefVar(Rcanonicalbatterystatus));
+	switch (status.fBatteryType)
+	{
+	case kBatteryAlkaline:	SetFrameSlot(result, RSSYMbatterytype, RSSYMalkaline);	break;
+	case kBatteryNiCd:		SetFrameSlot(result, RSSYMbatterytype, RSSYMnicd);		break;
+	case kBatteryNiMH:		SetFrameSlot(result, RSSYMbatterytype, RSSYMnimh);		break;
+	case kBatteryLithium:	SetFrameSlot(result, RSSYMbatterytype, RSSYMlithium);	break;
+	case -1:				break;													// (not known)
+	default:				SetFrameSlot(result, RSSYMbatterytype, RefVar(MAKEINT(status.fBatteryType)));	break;
+	}
+	if (status.fBatteryVoltage != -1)
+		SetFrameSlot(result, RSSYMbatteryvoltage, RefVar(FixedReal(status.fBatteryVoltage)));
+	if (status.fBatteryCapacity != -1)
+		SetFrameSlot(result, RSSYMbatterycapacity, RefVar(MAKEINT(status.fBatteryCapacity)));
+	if (status.fBatteryLow != -1)
+		SetFrameSlot(result, RSSYMbatterylow, RefVar(MAKEINT(status.fBatteryLow)));
+	if (status.fBatteryDead != -1)
+		SetFrameSlot(result, RSSYMbatterydead, RefVar(MAKEINT(status.fBatteryDead)));
+	if (status.fBatteryCurrent != -1)
+		SetFrameSlot(result, RSSYMbatterycurrent, RefVar(FixedReal(status.fBatteryCurrent)));
+	if (status.fChargeCurrent != -1)
+		SetFrameSlot(result, RSSYMchargecurrent, RefVar(FixedReal(status.fChargeCurrent)));
+	if (status.fACPower == 0)
+		SetFrameSlot(result, RSSYMacpower, RSSYMno);
+	if (status.fACPower == 1)
+		SetFrameSlot(result, RSSYMacpower, RSSYMyes);
+	if (status.fACVoltage != -1)
+		SetFrameSlot(result, RSSYMacvoltage, RefVar(FixedReal(status.fACVoltage)));
+	switch (status.fChargeState)
+	{
+	case kChargeDischarging:		SetFrameSlot(result, RSSYMchargestate, RSSYMdischarging);			break;
+	case kChargeTrickle:			SetFrameSlot(result, RSSYMchargestate, RSSYMtricklecharging);		break;
+	case kChargeFast:				SetFrameSlot(result, RSSYMchargestate, RSSYMfastcharging);			break;
+	case kChargeFullyCharged:		SetFrameSlot(result, RSSYMchargestate, RSSYMfullycharged);			break;
+	case kChargePreliminary:		SetFrameSlot(result, RSSYMchargestate, RSSYMpreliminarycharge);		break;
+	case kChargeTrickleContinuous:	SetFrameSlot(result, RSSYMchargestate, RSSYMtricklechargecontinuous);	break;
+	case kChargeDeepToast:			SetFrameSlot(result, RSSYMchargestate, RSSYMdeeptoast);				break;
+	case -1:						break;
+	default:						SetFrameSlot(result, RSSYMchargestate, RefVar(MAKEINT(status.fChargeState)));	break;
+	}
+	if (status.fChargeRate != -1)
+		SetFrameSlot(result, RSSYMchargerate, RefVar(FixedReal(status.fChargeRate)));
+	if (status.fAmbientTemp != -1)
+		SetFrameSlot(result, RSSYMambienttemp, RefVar(FixedReal(status.fAmbientTemp)));
+	if (status.fBatteryTemp != -1)
+		SetFrameSlot(result, RSSYMbatterytemp, RefVar(FixedReal(status.fBatteryTemp)));
+	return result;
+}
+
 void
 RegisterSystemNatives(void)
 {
 	RegisterNativeFunction("FGetSerialNumber", (void*) FGetSerialNumber, 0);
 	RegisterNativeFunction("FGestalt", (void*) FGestalt, 1);
+	RegisterNativeFunction("FBatteryStatus", (void*) FBatteryStatus, 1);
 }

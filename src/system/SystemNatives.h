@@ -11,9 +11,14 @@
 				is reached through hal/System.h, so a port supplies the
 				machine and this supplies the script's view of it.
 
-	NOT YET RECONSTRUCTED: the battery (FBatteryRawStatus 0x002017d4,
-	FBatteryLevel 0x00201804, FMinimumBatteryCheck 0x002019a0 - they read
-	a PowerPlantStatus off the power manager), the backlight
+	The batteries a script sees are FBatteryStatus 0x00203db8 over
+	GetBatteryStatus 0x002037bc, whose reading comes from hal/Power.h
+	(DEVIATION: the power manager, which the ROM asks with an RPC, is
+	NOT YET RECONSTRUCTED).
+
+	NOT YET RECONSTRUCTED: the rest of the battery (FBatteryRawStatus
+	0x002017d4, FBatteryLevel 0x00201804, FMinimumBatteryCheck
+	0x002019a0), the backlight
 	(FBackLightStatus 0x00201a0c, FBackLight 0x00201a3c), FPowerOff
 	0x00201b00 and FSetRandomSeed 0x002017a4.
 
