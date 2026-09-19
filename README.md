@@ -14,8 +14,7 @@ a second opinion rather than as the subject.
 The reconstruction in `src/` boots.  Running
 
 ```powershell
-build\host\host
-ewton --rom "DebugRom\MP2x00 US\Senior CirrusNoDebug image" --display 320x480
+build\host\host\newton --rom "DebugRom\MP2x00 US\Senior CirrusNoDebug image" --display 320x480
 ```
 
 starts the kernel, the frames heap and the NewtonScript interpreter,
