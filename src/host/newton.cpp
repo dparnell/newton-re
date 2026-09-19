@@ -29,7 +29,10 @@
 #include "os600/kernel/Boot.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "hal/host/Host.h"
+#include "REPTranslators.h"
+#include "Interpreter.h"
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -83,9 +86,29 @@ KernelServices(void)
 }
 
 
+// A machine that falls over takes its NewtonScript stack with it, and
+// that is the part worth seeing: which of the ROM's own scripts was
+// running.  The handler is not what a signal handler is supposed to do -
+// it prints, and printing is not safe here - but it is a good deal
+// better than an exit code, and the process is going down anyway.
+static void
+HostCrashed(int signal)
+{
+	fprintf(stderr, "[host] the machine fell over (signal %d)\n", signal);
+	if (gREPout != nil && gInterpreter != nil)
+		gREPout->StackTrace(gInterpreter);
+	fflush(stderr);
+	_exit(139);
+}
+
+
 int
 main(int argc, char** argv)
 {
+	signal(SIGSEGV, HostCrashed);
+	signal(SIGILL, HostCrashed);
+	signal(SIGFPE, HostCrashed);
+	signal(SIGABRT, HostCrashed);
 	const char* romImage = NEWTON_DEFAULT_ROM_IMAGE;
 	long heapSize = 0x400000;
 	long width = 320, height = 480, depth = 4;
