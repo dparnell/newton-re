@@ -17,6 +17,9 @@
 #include "DataView.h"
 #include "ParagraphView.h"
 #include "RootView.h"
+#include "Commands.h"
+#include "UnitPublic.h"
+#include "StrokeQueue.h"
 #include "Bits.h"
 #include "ViewFlags.h"
 #include "Rects.h"
@@ -104,7 +107,7 @@ TEditView::SetupDone(void)
 	fLineSpacing = (short) (ISNIL(spacing) ? 0 : RINT(spacing));
 	fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
 	fClickOptions = ~2;
-	fUnknown40 = false;
+	fTapPending = false;
 	StartGathering(&fCaretRect);
 	TView::SetupDone();
 }
@@ -827,4 +830,78 @@ TEditView::PositionCaret(Point& pt, Boolean click)
 	gRootView->SetKeyView(this, 0, 0, true);
 	if (click && gRootView->CaretEnabled())
 		;	// NOT YET RECONSTRUCTED: FClicker(nil)
+}
+
+// ROM 0x000aaba4 HandleTap__9TEditViewFR6TPoint
+// A tap on the page puts the caret where it was.
+void
+TEditView::HandleTap(Point& pt)
+{
+	PositionCaret(pt, true);
+}
+
+
+// ROM 0x000a9f64 Idle__9TEditViewFl
+// Reason 2 is the tap waiting to become a caret: a tap arrives, the
+// editor remembers where it was and asks the root view to come back after
+// the double-tap interval, and if nothing has taken the tap away by then
+// it is a single tap and the caret goes there.  Any other reason is the
+// view's own viewIdleScript, whose answer is when to idle next.
+long
+TEditView::Idle(long reason)
+{
+	if (reason != 2)
+	{
+		RefVar result(RunCacheScript(kIndexViewIdleScript, RefVar(NILREF), false));
+		return (NOTNIL(result) && ISINT(result)) ? RINT(result) : 0;
+	}
+	if (fTapPending)
+		HandleTap(fTapPoint);
+	fTapPending = false;
+	return 0;
+}
+
+
+// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar
+// The editor's commands.  The ROM's is the largest function in the view
+// system - the whole of scrubbing, the caret, the line and shape
+// gestures, the ink, the drag and the undo - and what is here is the
+// beginning of it: the guard a read-only page puts on the commands it
+// will take at all, and the tap.
+//
+// A tap is not acted on where it arrives.  The editor notes where it was
+// and asks the root view to idle it after the double-tap interval
+// (Idle, reason 2); a second tap in that time turns it into something
+// else, and if none comes the caret goes where the tap was.  The view's
+// own viewGestureScript gets first refusal when the view takes gestures
+// (the vGesturesAllowed bit of its text flags).
+//
+// NOT YET RECONSTRUCTED: every other command the editor answers.  They
+// go to TView::RealDoCommand, which runs the view's scripts for them, as
+// they did before this function existed.
+Boolean
+TEditView::RealDoCommand(RefArg cmd)
+{
+	long id = CommandID(cmd);
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0
+		&& id != aeClick && id != 0x37 && id != aeKeyString && id != aeKeyDown
+		&& id != aeTap && id != aeLine && id != 0x48 && id != 0x34 && id != 0x2f)
+	{
+		// a page that may not be written on answers everything but these,
+		// and answers them all as done (aeWord alone as not)
+		CommandSetResult(cmd, id != aeWord ? 1 : 0);
+		return 1;
+	}
+	if (id != aeTap)
+		return TView::RealDoCommand(cmd);	// NOT YET: the rest of the editor's own
+	// 0x2000 of the textFlags slot - not the viewFlags, and what it is
+	// called is not yet known; the ROM tests it before letting the view's
+	// own scripts see the tap
+	if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd) != 0)
+		return 1;							// the view's gesture script took it
+	fTapPending = true;
+	TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+	fTapPoint = unit->Stroke()->FirstPoint();
+	gRootView->AddIdler(this, 0x50 + (gDoubleTapInterval << 4), 2);
+	return 1;
 }

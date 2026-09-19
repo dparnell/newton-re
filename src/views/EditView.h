@@ -56,9 +56,12 @@ public:
 	virtual void	ActivateSelection(Boolean on);		// ROM 0x000aa860 ActivateSelection__9TEditViewFUc
 	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000ab9b4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
+	virtual Boolean	RealDoCommand(RefArg cmd);				// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar (partial: see the definition)
+	virtual long	Idle(long reason);						// ROM 0x000a9f64 Idle__9TEditViewFl
 	// the editor's own virtuals, which start after TView's at +0x11c
 	// (NOT YET RECONSTRUCTED: DrawScaledViews, the one at +0x11c)
 	virtual void	PositionCaret(Point& pt, Boolean click);	// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc (vtable +0x120)
+	virtual void	HandleTap(Point& pt);					// ROM 0x000aaba4 HandleTap__9TEditViewFR6TPoint (vtable +0x124)
 
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
@@ -84,8 +87,10 @@ public:
 	// +0x32 not yet known
 	long			fClickOptions;		// +0x34  the mask GlobalHiliteBounds answers through (~2: not resizable)
 	Rect			fCaretRect;			// +0x38  top == -32768 while there is none
-	Boolean			fUnknown40;			// +0x40  0 from SetupDone
-	// +0x41..0x47 not yet known
+	Boolean			fTapPending;		// +0x40  a tap is waiting to become a caret (cleared by SetupDone)
+	// +0x41..0x43 not yet known
+	Point			fTapPoint;			// +0x44  where that tap was
+	// +0x46..0x47 not yet known
 	long			fTextFlags;			// +0x48  GetInputViewTextFlags of the view's own
 	Boolean			fUnknown4C;			// +0x4c  0 from the constructor
 };
