@@ -137,6 +137,11 @@ ULong		GetKeyEventNo(RefArg keys, ULong index);				// ROM 0x0030ae20 GetKeyEvent
 void		HandleKeyEvents(RefArg keys, ULong count);				// ROM 0x0030ae94 HandleKeyEvents__FRC6RefVarUl
 void		PostKeyString(TView* view, RefArg str);					// ROM 0x00310500 PostKeyString__FP5TViewRC6RefVar
 
+// A key command added to the view's own _keyCommands array - what a
+// script does to give a view a key of its own (FindKeyCommand looks
+// through them when a key reaches the view).
+void		AddKeyCommand(RefArg view, RefArg command);			// ROM 0x0030b1c4 AddKeyCommand__FRC6RefVarT1
+
 void		RegisterKeyboardNatives(void);
 
 #endif	/* __KEYBOARD_H */

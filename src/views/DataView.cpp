@@ -66,3 +66,30 @@ TDataView::HandleWord(const UniChar* /*text*/, ULong /*length*/, const Rect& /*b
 {
 	return 0;
 }
+
+// ROM 0x000a3038 GetEnclosingEditView__9TDataViewFv
+// The editor this view is written on: its parent when that is one, and
+// the parent's parent when the parent is a container gathering it with
+// others.  ==> nil when it is on neither.
+TView*
+TDataView::GetEnclosingEditView(void)
+{
+	TView* parent = fParent;
+	if (parent->DerivedFrom(clEditView))
+		return parent;
+	if (parent->DerivedFrom(clContainerView))
+		return parent->fParent;
+	return nil;
+}
+
+
+// ROM 0x000a31c4 HiliteText__9TDataViewFlT1Uc
+// The run of characters hilited, or the hilite taken off it.  The base
+// has no text, so it does nothing; a paragraph is where it means
+// something.
+//
+// NOT YET RECONSTRUCTED: TParagraphView::HiliteText, which is the one
+// that matters.
+void
+TDataView::HiliteText(long /*offset*/, long /*length*/, Boolean /*on*/)
+{ }

@@ -879,10 +879,48 @@ FClearHardKeymap(RefArg /*rcvr*/)
 }
 
 
+void	ArrayInsert(RefArg array, RefArg element, long index);		// frames/Munger.cpp
+
+
+// ROM 0x0030b1c4 AddKeyCommand__FRC6RefVarT1
+// The command put at the front of the view's `_keyCommands`.  The view
+// gets an array of its own the first time, and a clone of the one it
+// inherits when that one is read-only - a ROM array is, and the views
+// that share it must not be written through.
+void
+AddKeyCommand(RefArg view, RefArg command)
+{
+	RefVar commands(GetProtoVariable(view, RSSYM_keycommands, nil));
+	if (ISNIL(commands))
+	{
+		commands = AllocateArray(RefVar(RSSYMarray), 1);
+		SetArraySlotRef(commands, 0, command);
+		SetFrameSlot(view, RSSYM_keycommands, commands);
+		return;
+	}
+	if ((ObjectFlags(commands) & kObjReadOnly) != 0)
+	{
+		commands = Clone(commands);
+		SetFrameSlot(view, RSSYM_keycommands, commands);
+	}
+	ArrayInsert(commands, command, 0);
+}
+
+
+// ROM 0x0030b28c FAddKeyCommand
+// AddKeyCommand(view, command).  ==> nil.
+static Ref
+FAddKeyCommand(RefArg /*rcvr*/, RefArg view, RefArg command)
+{
+	AddKeyCommand(view, command);
+	return NILREF;
+}
+
 void
 RegisterKeyboardNatives(void)
 {
 	RegisterNativeFunction("FKeyIn", (void*) FKeyIn, 2);
+	RegisterNativeFunction("FAddKeyCommand", (void*) FAddKeyCommand, 2);
 	RegisterNativeFunction("FTranslateKey", (void*) FTranslateKey, 3);
 	RegisterNativeFunction("FIsKeyDown", (void*) FIsKeyDown, 2);
 	RegisterNativeFunction("FGetTrueModifiers", (void*) FGetTrueModifiers, 0);

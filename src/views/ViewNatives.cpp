@@ -19,6 +19,7 @@
 
 #include "RootView.h"
 #include "EditView.h"
+#include "DataView.h"
 #include "DrawShape.h"
 #include "Application.h"
 #include "Commands.h"
@@ -585,6 +586,48 @@ FViewContainsCaretView(RefArg /*rcvr*/, RefArg context)
 		return NILREF;
 	TView* view = FailGetView(context);
 	return MAKEBOOLEAN(gRootView->ViewContainsCaretView(view));
+}
+
+
+// ROM 0x001ebcb4 FSetHiliteNoUpdateX
+// :SetHiliteNoUpdate(start, end, exclusive): the characters from `start`
+// to `end` hilited in a view that holds data.  `exclusive` first takes
+// the hilites off everything else in the editor the view is written on -
+// a paragraph asks the editor, so that the selection moves rather than
+// being added to; any other data view clears only itself.  ==> true when
+// the view could take a selection at all, nil when it could not.
+static Ref
+FSetHiliteNoUpdateX(RefArg rcvr, RefArg start, RefArg end, RefArg exclusive)
+{
+	TView* view = GetView(rcvr);
+	if (view == nil || !view->DerivedFrom(clDataView))
+		return NILREF;
+	if (NOTNIL(exclusive))
+	{
+		TView* owner = view;
+		if (view->DerivedFrom(clParagraphView))
+		{
+			owner = ((TDataView*) view)->GetEnclosingEditView();
+			if (owner == nil)
+				owner = view;
+		}
+		owner->RemoveAllHilites();
+	}
+	// (the ROM reads `start` twice, once for each side of the subtraction)
+	((TDataView*) view)->HiliteText(RINT(start), RINT(end) - RINT(start), true);
+	return TRUEREF;
+}
+
+
+// ROM 0x001ebdc8 FSetHiliteX
+// The same, and the screen brought up to date when anything was hilited.
+static Ref
+FSetHiliteX(RefArg rcvr, RefArg start, RefArg end, RefArg exclusive)
+{
+	RefVar hilited(FSetHiliteNoUpdateX(rcvr, start, end, exclusive));
+	if (NOTNIL(hilited))
+		gRootView->Update(nil);
+	return hilited;
 }
 
 
@@ -1397,6 +1440,8 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FViewContainsCaretView", (void*) FViewContainsCaretView, 1);
 	RegisterNativeFunction("FTrackHiliteX", (void*) FTrackHiliteX, 1);
 	RegisterNativeFunction("FPositionCaret", (void*) FPositionCaret, 3);
+	RegisterNativeFunction("FSetHiliteNoUpdateX", (void*) FSetHiliteNoUpdateX, 3);
+	RegisterNativeFunction("FSetHiliteX", (void*) FSetHiliteX, 3);
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
 	RegisterNativeFunction("FHiliteUniqueX", (void*) FHiliteUniqueX, 1);

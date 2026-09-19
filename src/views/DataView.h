@@ -26,7 +26,9 @@ class TDataView : public TView
 public:
 	virtual long	ClassID(void) const;								// ROM 0x000a2fc0 ClassID__9TDataViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x000a2fc8 DerivedFrom__9TDataViewCFl
+	// declared in the vtable's order, which starts at +0x13c
 	virtual TView*	GetHiliteView(void);								// ROM 0x000a31bc GetHiliteView__9TDataViewFv (vtable +0x13c)
+	virtual TView*	GetEnclosingEditView(void);						// ROM 0x000a3038 GetEnclosingEditView__9TDataViewFv (vtable +0x140)
 	virtual TView*	GetTextView(void);								// ROM 0x000a31c0 GetTextView__9TDataViewFv (vtable +0x144)
 	// How well the view would take the word written at the point - what
 	// the recogniser asks before handing a word over, and what the edit
@@ -35,6 +37,7 @@ public:
 	virtual long	HandleWord(const UniChar* text, ULong length, const Rect& box,
 							   const Point& pt, ULong a, ULong b, RefArg word,
 							   Boolean flag, long* outOffset, TUnitPublic* unit);	// ROM 0x000a3458 HandleWord__9TDataViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic (vtable +0x148)
+	virtual void	HiliteText(long offset, long length, Boolean on);	// ROM 0x000a31c4 HiliteText__9TDataViewFlT1Uc (vtable +0x14c)
 };
 
 #endif	/* __DATAVIEW_H */
