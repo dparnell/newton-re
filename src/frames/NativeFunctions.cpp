@@ -64,13 +64,19 @@ RegisterNativeFunction(const char* symbol, void* fn, long numArgs)
 
 
 // Host: the ROM's own name for the native at an address, so that a boot
-// which asks for one we have not written yet says which.
+// which asks for one we have not written yet says which.  Both tables are
+// searched: a native reached as a method of one of the ROM's prototype
+// frames is in the second, and looking only in the first left the boot
+// reporting a bare jump-table address for those.
 const ROMNativeEntry*
 ROMNativeAt(unsigned int funcPtr)
 {
 	for (long i = 0; i < gROMNativeCount; i++)
 		if (gROMNativeEntries[i].fFuncPtr == funcPtr)
 			return &gROMNativeEntries[i];
+	for (long i = 0; i < gROMMethodCount; i++)
+		if (gROMMethodEntries[i].fFuncPtr == funcPtr)
+			return &gROMMethodEntries[i];
 	return nil;
 }
 

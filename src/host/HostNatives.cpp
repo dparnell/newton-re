@@ -4,6 +4,7 @@
 	Contains:	RegisterAllNatives (HostNatives.h).
 */
 
+#include "ROMPackages.h"
 #include "HostNatives.h"
 
 #include "NativeFunctions.h"
@@ -57,6 +58,9 @@ RegisterAllNatives(void)
 	RegisterLocaleNatives();
 	RegisterDateNatives();
 	RegisterMeetingNatives();
+
+	// the packages installed
+	RegisterPackageNatives();
 
 	// the cards
 	RegisterCardNatives();

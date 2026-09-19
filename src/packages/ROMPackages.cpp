@@ -7,6 +7,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "NativeFunctions.h"
 #include "ROMPackages.h"
 #include "Store.h"
 #include "Soups.h"
@@ -276,12 +277,16 @@ InstallStorePart(TPackageIterator& iter, ULong index, const PartInfo& part, ULon
 	end_try;
 }
 
+static void	RememberInstalledPackage(void* bytes, ULong packageId);
+
+
 static void
 InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULong packageId)
 {
 	TPackageIterator iter((void*) (rom + packageAddress));
 	if (iter.Init() != noErr)
 		return;
+	RememberInstalledPackage((void*) (rom + packageAddress), packageId);
 	RefVar name;
 	const UniChar* packageName = iter.PackageName();
 	if (packageName != nil)
@@ -340,6 +345,48 @@ InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULon
 }
 
 
+// The host's note of the packages it installed, which stands in for the
+// package manager's list (ROMPackages.h).  The bytes stay where they
+// are - they are the ROM extension's own - so only the address and the
+// id it was installed under are kept.
+struct HostInstalledPackage
+{
+	void*	fBytes;
+	ULong	fPackageId;
+};
+const long kMaxInstalledPackages = 64;
+static HostInstalledPackage	gInstalledPackages[kMaxInstalledPackages];
+static long					gInstalledPackageCount = 0;
+
+static void
+RememberInstalledPackage(void* bytes, ULong packageId)
+{
+	if (gInstalledPackageCount >= kMaxInstalledPackages)
+		return;
+	gInstalledPackages[gInstalledPackageCount].fBytes = bytes;
+	gInstalledPackages[gInstalledPackageCount].fPackageId = packageId;
+	gInstalledPackageCount++;
+}
+
+
+long
+InstalledPackageCount(void)
+{
+	return gInstalledPackageCount;
+}
+
+
+void*
+InstalledPackageAt(long index, ULong* packageId)
+{
+	if (index < 0 || index >= gInstalledPackageCount)
+		return nil;
+	if (packageId != nil)
+		*packageId = gInstalledPackages[index].fPackageId;
+	return gInstalledPackages[index].fBytes;
+}
+
+
 // ROM 0x000e7040 LoadHighROMFramesPackages__Fv
 // The ROM calls LoadHighROMPackages, which walks the package list of each
 // of the four extensions and sends the package manager a
@@ -387,4 +434,65 @@ LoadHighROMFramesPackages(void)
 			at = (at + size + 3) & ~3u;
 		}
 	}
+}
+
+// ROM 0x001fb630 IteratorToPackageFrame__FP11TPMIterator
+// One package as a script sees it: a clone of the ROM's
+// canonicalTPMIteratorPackageFrame with what the package says about
+// itself put into it.  The ROM reads those facts off a TPMIterator, whose
+// fields the package manager filled in when it installed the package;
+// they are the same facts the package's own directory carries, which is
+// where the host reads them.
+//
+// NOT YET RECONSTRUCTED: IdToStore, which adds the `store` and `pssid`
+// slots for a package that lives on a store.  These are in the ROM, so
+// they are on no store, and the ROM leaves both slots out for those too.
+static Ref
+IteratorToPackageFrame(TPackageIterator& iter, ULong packageId)
+{
+	RefVar frame(Clone(RefVar(Rcanonicaltpmiteratorpackageframe)));
+	// the ROM answers the package manager's id for the package; the host's
+	// is the one it installed the package's parts under
+	SetFrameSlot(frame, RSSYMid, RefVar(MAKEINT(packageId)));
+	SetFrameSlot(frame, RSSYMsize, RefVar(MAKEINT(iter.PackageSize())));
+	const UniChar* name = iter.PackageName();
+	SetFrameSlot(frame, RSSYMtitle, name != nil ? RefVar(MakeString(name)) : RefVar(NILREF));
+	SetFrameSlot(frame, RSSYMversion, RefVar(MAKEINT(iter.GetVersion())));
+	SetFrameSlot(frame, RSSYMtimestamp, RefVar(MAKEINT(iter.CreationDate())));
+	SetFrameSlot(frame, RSSYMcopyprotection, RefVar(MAKEBOOLEAN(iter.CopyProtected())));
+	return frame;
+}
+
+
+// ROM 0x001fbaf8 FGetPackages__FRC6RefVar
+// GetPackages(): an array with a frame for every package installed - what
+// the setup assistant asks for when it has finished with the signature.
+//
+// DEVIATION: the ROM forks the application world first (TForkWorld::Fork,
+// throwing "couldn't fork it over" when it cannot) so that the walk
+// happens away from the caller, and then walks the package manager's
+// TPMIterator.  Neither the fork nor the package manager is reconstructed;
+// the host walks the packages it installed itself, in the order it
+// installed them.
+Ref
+FGetPackages(RefArg /*rcvr*/)
+{
+	RefVar packages(MakeArray(0));
+	for (long i = 0; i < InstalledPackageCount(); i++)
+	{
+		ULong packageId = 0;
+		void* bytes = InstalledPackageAt(i, &packageId);
+		TPackageIterator iter(bytes);
+		if (iter.Init() != noErr)
+			continue;
+		AddArraySlot(packages, RefVar(IteratorToPackageFrame(iter, packageId)));
+	}
+	return packages;
+}
+
+
+void
+RegisterPackageNatives(void)
+{
+	RegisterNativeFunction("FGetPackages__FRC6RefVar", (void*) FGetPackages, 0);
 }

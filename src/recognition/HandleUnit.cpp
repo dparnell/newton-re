@@ -18,6 +18,7 @@
 #include "NewtonExceptions.h"
 #include "Frames.h"
 #include "REPTranslators.h"
+#include <stdio.h>
 #include <string.h>
 
 Boolean	gInhibitPopup = false;					// ROM 0x0c101948 gInhibitPopup
@@ -26,12 +27,30 @@ static TUnit*	gUnitBeingHandled = nil;		// (the ROM's word at 0x0c103f8c) the un
 
 // ROM 0x00036a3c SafeExceptionNotify__FP9Exception
 // The exception shown to the user (ExceptionNotify) with a handler round
-// it, so that a failure in the showing is dropped.  NOT YET RECONSTRUCTED:
-// ExceptionNotify (the host prints it).
+// it, so that a failure in the showing is dropped.
+//
+// NOT YET RECONSTRUCTED: ExceptionNotify, which puts the notify slip up.
+// The host prints it instead, and prints what it is carrying with it: one
+// of the object system's exceptions holds either a frame saying what went
+// wrong (the names that end in type.ref.frame) or an error code, and
+// without either the name alone says almost nothing - every mistake a ROM
+// script makes arrives here as evt.ex.fr.intrp.
 static void
 SafeExceptionNotify(Exception* exception)
 {
-	printf("exception in a unit handler: %s\n", exception->name);
+	fprintf(stderr, "exception in a unit handler: %s", exception->name);
+	if (Subexception(exception->name, (ExceptionName) "type.ref"))
+	{
+		fprintf(stderr, "\n");
+		if (gREPout != nil && exception->data != nil)
+		{
+			PrintObject(*(RefStruct*) exception->data, 0);
+			fprintf(stderr, "\n");
+		}
+	}
+	else
+		fprintf(stderr, " (%ld)\n", (long) (Long) exception->data);
+	fflush(stderr);
 }
 
 

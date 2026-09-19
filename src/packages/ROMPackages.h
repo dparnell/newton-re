@@ -47,4 +47,14 @@ Ref		InstallPart(RefArg partType, RefArg partFrame, RefArg packageName,
 // Every frames part of every package in the ROM extensions installed.
 void	LoadHighROMFramesPackages(void);							// ROM 0x000e7040 LoadHighROMFramesPackages__Fv
 
+// The packages a script can ask about.  On the machine that is the
+// package manager's business and the answer comes off a TPMIterator;
+// DEVIATION: the package manager is NOT YET RECONSTRUCTED, so the host
+// keeps its own note of what it installed above and reads the same
+// facts out of the package's own directory.
+long	InstalledPackageCount(void);								// how many were installed
+void*	InstalledPackageAt(long index, ULong* packageId);		// its bytes, and the id it was installed under
+Ref		FGetPackages(RefArg rcvr);								// ROM 0x001fbaf8 FGetPackages__FRC6RefVar
+void	RegisterPackageNatives(void);
+
 #endif	/* __ROMPACKAGES_H */
