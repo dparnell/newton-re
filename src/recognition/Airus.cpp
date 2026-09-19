@@ -74,7 +74,7 @@ NewDictionary(UByte type, long attributeSize)
 	}
 	AirusAParmBlock* parms = (AirusAParmBlock*) *handle;
 	parms->fVersion = gAirusVersion;
-	parms->fScratch = ((type & 7) == kAirusKindEnum16 || (type & 7) == kAirusKindAL16)
+	parms->fWord = ((type & 7) == kAirusKindEnum16 || (type & 7) == kAirusKindAL16)
 					? gAirusScratch16 : gAirusScratch8;
 	parms->fGrowBy = 100;
 	parms->fField04 = -1;
@@ -84,7 +84,7 @@ NewDictionary(UByte type, long attributeSize)
 	parms->fField4c = 1;
 	parms->fField44 = 0;
 	parms->fAttributeSize = attributeSize;
-	parms->fField24 = 0;
+	parms->fAttribute = 0;
 	parms->fField48 = 0;
 	parms->fSize = 2;
 
@@ -126,7 +126,7 @@ ExpandDict(long extra)
 		CheckDictPtrs(AE_Parms);
 		AE_Parms->fSize += AE_Parms->fGrowBy;
 	}
-	AE_Parms->fError = err;
+	AE_Parms->fResult = err;
 	return err;
 }
 
@@ -189,6 +189,215 @@ GetDictBytes(long offset, long count)
 
 
 /*------------------------------------------------------------------------------
+	R e a d i n g   a   n o d e
+
+	The trie is a run of nodes.  Each begins with its character and a byte
+	of flags; the flags' top two bits say how many more bytes the offset to
+	the next sibling takes, bit 5 that the node has no children, and bit 4
+	that an attribute follows.  The children come next, one after another,
+	and the sibling after the last of them - which is what the offset
+	skips over.
+------------------------------------------------------------------------------*/
+
+// The characters of the dictionary being walked.  The ROM writes this
+// test out wherever it needs it rather than calling anything.
+long
+AirusCharSize(void)
+{
+	long kind = (UByte) (*AE_Parms->fDataHandle)[1] & 7;
+	return (kind == kAirusKindEnum16 || kind == kAirusKindAL16) ? 2 : 1;
+}
+
+
+// ROM 0x0002b5a4 RPByteSize__FUl
+// How many bytes past the flags the node's sibling offset takes: none
+// for the two small classes (it is in the flags themselves), one for the
+// next and three for the largest.
+long
+RPByteSize(long node)
+{
+	long size = ((UByte) AE_Parms->fData[node + AirusCharSize()] & kAirusSizeMask) >> 6;
+	if (size == 0 || size == 1)
+		return 0;
+	if (size == 2)
+		return 1;
+	if (size == 3)
+		return 3;
+	return 0;
+}
+
+
+// ROM 0x0002b608 SkipNode__FUl
+// The offset just past the node's character, flags and sibling offset -
+// where its attribute lies, when it has one, and its first child when it
+// does not.
+long
+SkipNode(long node)
+{
+	return node + AirusCharSize() + 1 + RPByteSize(node);
+}
+
+
+// ROM 0x0002b6b4 GetAttr__FUl
+// The attribute lying at that offset, as many bytes as this dictionary
+// gives each word.  A dictionary that gives none answers 0x80 when it is
+// of the plain enumerated kind and nothing otherwise.
+ULong
+GetAttr(long offset)
+{
+	if (AE_Parms->fAttributeSize > 0)
+		return GetDictBytes(offset, AE_Parms->fAttributeSize);
+	return ((UByte) (*AE_Parms->fDataHandle)[1] & 7) == kAirusKindEnum ? 0x80 : 0;
+}
+
+
+// ROM 0x00028fa0 FollowLeft__FUl
+// The offset of the node's first child: past its own bytes, and past its
+// attribute when it has one.
+long
+FollowLeft(long node)
+{
+	UByte flags = (UByte) AE_Parms->fData[node + AirusCharSize()];
+	if ((flags & kAirusHasAttribute) != 0 && AE_Parms->fAttributeSize > 0)
+		return SkipNode(node) + AE_Parms->fAttributeSize;
+	return SkipNode(node);
+}
+
+
+// ROM 0x00029318 GetSymbol__FUl
+// The node's character.
+ULong
+GetSymbol(long node)
+{
+	return GetDictBytes(node, AirusCharSize()) & 0xffff;
+}
+
+
+/*------------------------------------------------------------------------------
+	L o o k i n g   a   w o r d   u p
+------------------------------------------------------------------------------*/
+
+// ROM 0x0002b048 AE8_Verify__FP15AirusAParmBlock
+// The characters in the block's word buffer followed down the trie, from
+// the root or from the node a previous call stopped at (fNode), up to
+// and including the character fIndex names.  What it finds is left in the block: fNode the node it
+// ended at, fIndex how far it got, fAttribute the attribute of the word
+// when it has one, fSymbol the character of the only child when there is
+// only one, and fResult one of:
+//
+//   kAirusNoMatch (3)         no word begins that way
+//   kAirusLeaf (2)            the word ends there and the node has no children
+//   kAirusPrefixWithAttr (1)  the word leads on, and carries an attribute
+//   kAirusPrefix (0)          the word leads on, and carries none
+long
+AE8_Verify(AirusAParmBlock* parms)
+{
+	CheckDictPtrs(parms);
+	long node = AE_Parms->fNode;
+	if (node == 0)
+		node = 2;						// the root, just past the two bytes that say what this is
+	Ptr p = parms->fData + node;
+	UByte flags = (UByte) p[1];
+	const UByte* word = parms->fWord;
+	long attrSize = parms->fAttributeSize;
+	long limit = AE_Parms->fIndex;		// the index of the last character to match
+	AE_Parms->fSymbol = (ULong) -1;
+
+	Boolean fresh = AE_Parms->fNode == 0;
+	if (fresh)
+	{
+		AE_Parms->fIndex = 0;
+		if (AE_Parms->fDataEnd - AE_Parms->fData == 2)
+		{
+			// nothing has been put in this dictionary yet
+			AE_Parms->fResult = kAirusNoMatch;
+			return kAirusNoMatch;
+		}
+	}
+	UByte ch = 0;
+	for (;;)
+	{
+		if (!fresh)
+		{
+			// down to the first child of the node the last call stopped at
+			if ((flags & kAirusNoChildren) != 0)
+			{
+				AE_Parms->fResult = kAirusNoMatch;
+				return kAirusNoMatch;
+			}
+			long size = (flags & kAirusSizeMask) >> 6;
+			p += kAirusNodeSize[size];
+			p += (flags & kAirusHasAttribute) != 0 ? attrSize : 0;
+			flags = (UByte) p[1];
+		}
+		fresh = false;
+		ch = word[AE_Parms->fIndex];
+
+		// along the children until the character is found, or passed
+		while ((UByte) p[0] < ch && (flags & kAirusSizeMask) != 0)
+		{
+			long size = (flags & kAirusSizeMask) >> 6;
+			Ptr next = p + kAirusNodeSize[size];
+			next += (flags & kAirusHasAttribute) != 0 ? attrSize : 0;
+			ULong delta;
+			if (size == 3)
+				delta = ((((ULong) (flags & 0x0f) << 8 | (UByte) p[2]) << 8
+						| (UByte) p[3]) << 8) | (UByte) p[4];
+			else
+				delta = (((ULong) flags << 8) | (UByte) p[size]) & kAirusRPMask[size];
+			p = next + delta;
+			flags = (UByte) p[1];
+		}
+		if ((UByte) p[0] != ch)
+		{
+			AE_Parms->fResult = kAirusNoMatch;
+			return kAirusNoMatch;
+		}
+		node = p - AE_Parms->fData;
+		AE_Parms->fNode = node;
+		long index = AE_Parms->fIndex;
+		AE_Parms->fIndex = index + 1;
+		if (index >= limit)
+			break;
+	}
+
+	// every character matched: what is at the end of them
+	long charSize = AirusCharSize();
+	Boolean hasAttribute = ((UByte) AE_Parms->fData[node + charSize] & kAirusHasAttribute) != 0;
+	if (hasAttribute)
+		AE_Parms->fAttribute = GetAttr(SkipNode(node));
+	if (((UByte) AE_Parms->fData[node + charSize] & kAirusNoChildren) != 0)
+	{
+		AE_Parms->fResult = kAirusLeaf;
+		return kAirusLeaf;
+	}
+	// when the only way on is one character, say which
+	long child = FollowLeft(node);
+	if ((((UByte) AE_Parms->fData[child + charSize] & kAirusSizeMask) >> 6) == 0)
+		AE_Parms->fSymbol = GetSymbol(child);
+	long result = hasAttribute ? kAirusPrefixWithAttr : kAirusPrefix;
+	AE_Parms->fResult = result;
+	return result;
+}
+
+
+// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock
+// AE8 or AE16, by the characters the dictionary is written in.
+long
+AEnum_Verify(AirusAParmBlock* parms)
+{
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	if (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+	{
+		// NOT YET RECONSTRUCTED: AE16_Verify 0x0002b2cc - the same walk over
+		// two-byte characters
+		parms->fResult = kAirusNoMatch;
+		return kAirusNoMatch;
+	}
+	return AE8_Verify(parms);
+}
+
+/*------------------------------------------------------------------------------
 	T h e   d i s p a t c h e r
 
 	Every call into the engine names a dictionary and one of ten things to
@@ -215,14 +424,17 @@ CallAirusANoLock(Handle dictionary, long selector)
 	case kAirusKindEnumRAM:
 		switch (selector)
 		{
+		case kAirusVerify:
+			AEnum_Verify(parms);
+			break;
 		case kAirusStartA:
 		case kAirusExitA:
 			// the two that only say nothing has gone wrong yet
 			// (AEnum_StartA 0x0002a148, AEnum_ExitA 0x0002a160)
-			parms->fError = 0;
+			parms->fResult = 0;
 			break;
 		default:
-			// NOT YET RECONSTRUCTED: the AEnum walkers - Verify 0x0002b584,
+			// NOT YET RECONSTRUCTED: the rest of the AEnum walkers -
 			// AddWord 0x00029b10, DeleteWord 0x00029e3c, FirstLast
 			// 0x0002a1f4, NextPrevious 0x0002a244, ChangeAttribute
 			// 0x0002a7cc, NextSet 0x0002afd0, NextSet9 0x0002af18

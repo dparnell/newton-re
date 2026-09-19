@@ -85,12 +85,12 @@ struct AirusAParmBlock
 	Ptr			fDataEnd;			// +0x10  one past the last byte in use
 	long		fSize;				// +0x14  the Handle's size
 	long		fGrowBy;			// +0x18  how much ExpandDict adds at a time
-	UByte*		fScratch;			// +0x1c  the walker's state area (one per kind, shared)
-	long		fField20;
-	long		fField24;			// +0x24  0
-	long		fField28;
-	long		fError;				// +0x2c  what the last walker left
-	long		fField30;
+	UByte*		fWord;				// +0x1c  the characters being looked at (one buffer per kind, shared)
+	long		fIndex;				// +0x20  in: the index of the last character to match; out: how far it got
+	ULong		fAttribute;			// +0x24  the attribute of the word that was found
+	long		fNode;				// +0x28  the node reached, as an offset into the data (0: start at the root)
+	long		fResult;			// +0x2c  what the walker found
+	ULong		fSymbol;			// +0x30  the character after the word, when there is only one
 	long		fAttributeSize;		// +0x34  bytes of attribute per word
 	long		fField38;			// +0x38  0
 	long		fField3c;			// +0x3c  1
@@ -112,6 +112,43 @@ void	CheckDictPtrs(AirusAParmBlock* parms);				// ROM 0x00029944 CheckDictPtrs__
 long	ExpandDict(long extra);								// ROM 0x0002998c ExpandDict__FUl - room made for that many more bytes; ==> 0, or 2 when there is none
 void	SlideUp(long offset, long count);					// ROM 0x00028ec4 SlideUp__FUlT1 - the bytes from offset moved down over count of them
 void	SlideDown(long offset, long count);					// ROM 0x00028f18 SlideDown__FUlT1 - ... and up, making room
+
+// A node of the trie, in order:
+//   the character  (one byte, or two in a 16-bit dictionary)
+//   the flags      (one byte: bits 7-6 the size class of the sibling
+//                   offset, bit 5 "no children", bit 4 "an attribute
+//                   follows", bits 3-0 the top of the sibling offset)
+//   the sibling offset (kAirusRPByteSize more bytes, by the size class)
+//   the attribute  (fAttributeSize bytes, when bit 4 is set)
+//   then the first child, and after all the children the sibling.
+// The sibling offset is counted from the end of the attribute.
+const UByte	kAirusSizeMask		= 0xc0;		// the size class of the sibling offset
+const UByte	kAirusNoChildren	= 0x20;
+const UByte	kAirusHasAttribute	= 0x10;
+
+// what a walk of the trie found (the block's fResult)
+enum
+{
+	kAirusPrefix			= 0,	// the word leads somewhere, and carries no attribute
+	kAirusPrefixWithAttr	= 1,	// ... and carries one
+	kAirusLeaf				= 2,	// the word is a whole one: the node it ends at has no children
+	kAirusNoMatch			= 3		// no word begins that way
+};
+
+extern const unsigned int	kAirusRPMask[4];	// AirusTables.cpp, generated
+extern const unsigned int	kAirusNodeSize[4];
+
+// reading a node
+long	AirusCharSize(void);								// the characters of the dictionary being walked: 2 in a 16-bit one, else 1 (the ROM writes the test out wherever it needs it)
+long	RPByteSize(long node);								// ROM 0x0002b5a4 RPByteSize__FUl - the bytes the node's sibling offset takes
+long	SkipNode(long node);								// ROM 0x0002b608 SkipNode__FUl - the offset just past its character, flags and sibling offset
+ULong	GetAttr(long offset);								// ROM 0x0002b6b4 GetAttr__FUl - the attribute lying there
+long	FollowLeft(long node);								// ROM 0x00028fa0 FollowLeft__FUl - the offset of its first child
+ULong	GetSymbol(long node);								// ROM 0x00029318 GetSymbol__FUl - its character
+
+// walking
+long	AE8_Verify(AirusAParmBlock* parms);					// ROM 0x0002b048 AE8_Verify__FP15AirusAParmBlock
+long	AEnum_Verify(AirusAParmBlock* parms);				// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock - AE8 or AE16 by the dictionary's kind
 
 // the data, big-endian as it lies
 ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__FUli

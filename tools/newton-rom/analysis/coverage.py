@@ -20,10 +20,13 @@ is checked, the offset is documentation.
 
 A few static functions have no debug symbol at all (the ROM's symbol table
 only names externally visible functions and the static ones the linker
-happened to keep).  These are cited as `// ROM 0x002ebce8 (unnamed)`; the
-address must lie in the ROM and must *not* carry a symbol (otherwise cite
-the symbol).  They are counted as citations but not as reconstructed
-functions, since the function total comes from the symbol table.
+happened to keep), and so do some of the tables in the initialised
+read-write data.  These are cited as `// ROM 0x002ebce8 (unnamed)`; the
+address must lie in the ROM or in the initialised data (layout.json's
+ram_init region, which is where romtable.py finds such a table) and must
+*not* carry a symbol (otherwise cite the symbol).  They are counted as
+citations but not as reconstructed functions, since the function total
+comes from the symbol table.
 
 NewtonScript functions the ROM keeps as objects (the script methods of its
 prototype frames, its script built-ins) have no symbol either; code that
@@ -57,7 +60,13 @@ def main(argv=None) -> int:
     with open(os.path.join(args.build_dir, "symbols.json")) as f:
         data = json.load(f)
     with open(os.path.join(args.build_dir, "layout.json")) as f:
-        rom_size = json.load(f)["rom_size"]
+        layout = json.load(f)
+    rom_size = layout["rom_size"]
+    # the initialised read-write data: a global there is as much the ROM's
+    # as one in the code area, and the tables romtable.py reads out of the
+    # ROM's copy of it are cited by their RAM address
+    ram_init = next(((r["address"], r["address"] + r["size"])
+                     for r in layout["regions"] if r["kind"] == "ram_init"), (0, 0))
     by_addr = collections.defaultdict(set)
     by_name = {s["name"]: s["address"] for s in data["symbols"] if "jt_index" not in s}
     with open(os.path.join(args.build_dir, "rom.bin"), "rb") as f:
@@ -92,8 +101,8 @@ def main(argv=None) -> int:
                     if name == "(unnamed)":
                         if addr in by_addr:
                             errors.append(f"{where}: {addr:#x} has a symbol ({', '.join(sorted(by_addr[addr]))}); cite it")
-                        elif addr >= rom_size or addr % 4:
-                            errors.append(f"{where}: {addr:#x} is not a ROM code address")
+                        elif addr % 4 or not (addr < rom_size or ram_init[0] <= addr < ram_init[1]):
+                            errors.append(f"{where}: {addr:#x} is neither a ROM address nor one in the initialised data")
                         else:
                             cited.setdefault(addr, where)
                     elif name == "(object)":

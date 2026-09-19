@@ -25,6 +25,7 @@ add_library(recognition STATIC
     HandleUnit.cpp
     UnitNatives.cpp
     Airus.cpp
+    AirusTables.cpp
     Words.cpp
 )
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
