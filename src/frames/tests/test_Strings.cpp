@@ -236,6 +236,16 @@ TestStringFunctions()
 	EXPECT_STRING("StringFilter(\"abc\", \"\", 'rejectAll)", "abc");					// an empty set matches nothing
 	EXPECT_STRING("StringFilter(\"abc\", \"\", 'passAll)", "");
 	EXPECT_STRING("StringFilter(\"\", \" \", 'rejectBeginning)", "");
+	// SubstituteChars: a character for the one in the same place in the
+	// replacement, the replacement starting again when it is the shorter
+	EXPECT_STRING("SubstituteChars(\"a-b-c\", \"-\", \"+\")", "a+b+c");
+	EXPECT_STRING("SubstituteChars(\"abcd\", \"abc\", \"xyz\")", "xyzd");
+	EXPECT_STRING("SubstituteChars(\"abcd\", \"abc\", \"z\")", "zzzd");
+	EXPECT_STRING("SubstituteChars(\"hello\", \"xyz\", \"abc\")", "hello");
+	// nothing substituted: the very string that went in comes back
+	EXPECT_TRUE("local s := \"hello\"; SubstituteChars(s, \"xyz\", \"abc\") = s");
+	// something substituted: a clone, the original left as it was
+	EXPECT_STRING("local s := \"a-b\"; SubstituteChars(s, \"-\", \"+\"); s", "a-b");
 	EXPECT_INT("CharPos(\"hello\", $l, 0)", 2);
 	EXPECT_INT("CharPos(\"hello\", $l, 3)", 3);
 	EXPECT_NIL("CharPos(\"hello\", $z, 0)");

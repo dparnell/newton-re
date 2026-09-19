@@ -935,6 +935,60 @@ FParamStr(RefArg /*rcvr*/, RefArg templateStr, RefArg params)
 	Registration
 ------------------------------------------------------------------------------- */
 
+// ROM 0x001fc9f4 FSubstituteChars
+// SubstituteChars(str, oldChars, newChars): the string with each of the
+// characters of `oldChars` replaced by the character in the same place in
+// `newChars` - what turns the assistant's typed text into the form a soup
+// entry keeps.  The string itself is never written on: the first
+// substitution clones it and the clone is what is changed and answered, so
+// a string with nothing to substitute comes back as the very object that
+// went in.  A rich string keeps its ink, the replacement going in through
+// TRichString::MungeRange; kInkChar is never substituted, because it
+// stands for an ink word rather than being a character of its own.
+//
+// `newChars` is walked in step with `oldChars` and starts again from its
+// beginning when it is the shorter of the two.  ROM BUG: the wrap looks at
+// the character after the one it just used, so with an empty `newChars`
+// the first look is already one past the end of the string; the ROM reads
+// it too, and the reconstruction reads the same word rather than guarding
+// a case the ROM does not.
+static Ref
+FSubstituteChars(RefArg /*rcvr*/, RefArg str, RefArg oldChars, RefArg newChars)
+{
+	TRichString result;
+	TRichString replacement(newChars);
+	RefVar clone;				// nil until a character really is replaced
+	for (long i = 0; ; i++)
+	{
+		// re-read each turn: a Clone or a MungeRange may have moved the
+		// blocks these point into
+		UniChar ch = ((const UniChar*) BinaryData(str))[i];
+		if (ch == 0)
+			break;
+		const UniChar* from = (const UniChar*) BinaryData(oldChars);
+		const UniChar* to = (const UniChar*) BinaryData(newChars);
+		long k = 0;
+		for (long j = 0; from[j] != 0; j++)
+		{
+			if (from[j] == ch && ch != kInkChar)
+			{
+				if (ISNIL(clone))
+				{
+					clone = Clone(str);
+					result.SetStringData(clone);
+				}
+				result.MungeRange(i, 1, &replacement, k, 1);
+				break;
+			}
+			k++;
+			if (to[k] == 0)
+				k = 0;
+		}
+	}
+	return NOTNIL(clone) ? (Ref) clone : (Ref) str;
+}
+
+
 // ROM 0x001fcc48 FStringFilter
 // StringFilter(str, chars, mode): the string with some of its characters
 // taken out, by which of the six modes is asked for.  `chars` is a string
@@ -1234,5 +1288,6 @@ RegisterStringNatives(void)
 	RegisterNativeFunction("FFindStringInFrame__FRC6RefVarN31", (void*) FFindStringInFrame, 3);
 	RegisterNativeFunction("FParamStr__FRC6RefVarN21", (void*) FParamStr, 2);
 	RegisterNativeFunction("FStringFilter", (void*) FStringFilter, 3);
+	RegisterNativeFunction("FSubstituteChars", (void*) FSubstituteChars, 3);
 	RegisterNativeFunction("SplitString__FRC6RefVarT1", (void*) SplitString, 1);
 }

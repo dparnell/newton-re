@@ -27,6 +27,7 @@
 #include "ROMConstants.h"
 #include "Words.h"
 #include "RootView.h"
+#include "StrokeCentral.h"
 #include "Interpreter.h"
 #include "NewtonExceptions.h"
 
@@ -338,6 +339,28 @@ FCalibrateTablet(RefArg /*rcvr*/)
 	return err == 0 ? NILREF : MAKEINT(err);
 }
 
+// ROM 0x00144c2c FBlockStrokes
+// BlockStrokes(): the stroke world told to hold the strokes back.  The
+// count nests, and IdleStrokes gives up after ten idles of it, so a
+// caller that forgets to unblock does not stop the pen for good.
+static Ref
+FBlockStrokes(RefArg /*rcvr*/)
+{
+	gStrokeWorld.BlockStrokes();
+	return NILREF;
+}
+
+
+// ROM 0x00144c4c FUnblockStrokes
+// UnblockStrokes(): one BlockStrokes taken back (never below none).
+static Ref
+FUnblockStrokes(RefArg /*rcvr*/)
+{
+	gStrokeWorld.UnblockStrokes();
+	return NILREF;
+}
+
+
 void
 RegisterUnitNatives(void)
 {
@@ -361,4 +384,6 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FInkOn__FRC6RefVarT1", (void*) FInkOn, 1);
 	RegisterNativeFunction("FInkOff__FRC6RefVarT1", (void*) FInkOff, 1);
 	RegisterNativeFunction("FInkOffUnHobbled", (void*) FInkOffUnHobbled, 1);
+	RegisterNativeFunction("FBlockStrokes", (void*) FBlockStrokes, 0);
+	RegisterNativeFunction("FUnblockStrokes", (void*) FUnblockStrokes, 0);
 }
