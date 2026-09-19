@@ -1184,9 +1184,43 @@ FModalState(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x001eb2f4 FLayoutVerticallyX
+// :LayoutColumn(entries, index): as many of the entries from index on as
+// fit down the view, in a new array.  Each entry's own `height` is asked
+// of it, unless the view says `allCollapsed` or the entry says
+// `collapsed`, when the view's `collapsedHeight` (nil meaning none) is
+// taken instead.  The list is built until the heights fill the view, so
+// the one that crosses the bottom edge is included.
+static Ref
+FLayoutVerticallyX(RefArg rcvr, RefArg entries, RefArg index)
+{
+	TView* view = FailGetView(rcvr);
+	long height = (short) ((unsigned short) view->viewBounds.bottom - (unsigned short) view->viewBounds.top);
+	long slot = RINT(index);
+	long count = Length(entries);
+	Boolean allCollapsed = NOTNIL(GetProtoVariable(rcvr, RSSYMallcollapsed, nil));
+	RefVar collapsedHeightRef(GetVariable(rcvr, RSSYMcollapsedheight, nil, false));
+	long collapsedHeight = ISNIL(collapsedHeightRef) ? 0 : RINT(collapsedHeightRef);
+	RefVar result(MakeArray(0));
+	RefVar entry;
+	long used = 0;
+	while (used < height && slot < count)
+	{
+		entry = GetArraySlotRef(entries, slot);
+		slot++;
+		long h = RINT(GetProtoVariable(entry, RSSYMheight, nil));
+		if (allCollapsed || NOTNIL(GetProtoVariable(entry, RSSYMcollapsed, nil)))
+			h = collapsedHeight;
+		used += h;
+		AddArraySlot(result, entry);
+	}
+	return result;
+}
+
 void
 RegisterViewNatives(void)
 {
+	RegisterNativeFunction("FLayoutVerticallyX", (void*) FLayoutVerticallyX, 2);
 	RegisterNativeFunction("FModalState", (void*) FModalState, 0);
 	RegisterNativeFunction("TableLookup", (void*) FTableLookup, 2);
 	RegisterNativeFunction("FSetupIdleX", (void*) FSetupIdleX, 1);
@@ -1280,6 +1314,7 @@ MakeViewMethods(void)
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
+		{ "LayoutColumn", (void*) FLayoutVerticallyX, 2 },
 		{ nil, nil, 0 } };
 	RefVar methods(AllocateFrame());
 	for (long i = 0; kMethods[i].fName != nil; i++)

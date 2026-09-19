@@ -837,6 +837,20 @@ InkIn(long left, long top, long right, long bottom)
 static void
 TestShapes()
 {
+	// LayoutColumn: as many entries as fit down the view, the one that
+	// crosses the bottom edge included
+	Eval("ctxL := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 50, bottom: 30}})");
+	Eval("entries := [{height: 12}, {height: 12}, {height: 12}, {height: 12}]");
+	EXPECT(RINT(Eval("Length(ctxL:LayoutColumn(entries, 0))")) == 3);
+	EXPECT(RINT(Eval("Length(ctxL:LayoutColumn(entries, 2))")) == 2);
+	// a collapsed entry, or a view that says allCollapsed, takes the view's
+	// collapsedHeight instead of the entry's own height
+	Eval("ctxL.collapsedHeight := 5");
+	Eval("entries := [{height: 12, collapsed: true}, {height: 12, collapsed: true}, {height: 12}, {height: 12}]");
+	EXPECT(RINT(Eval("Length(ctxL:LayoutColumn(entries, 0))")) == 4);
+	Eval("ctxL.allCollapsed := true");
+	EXPECT(RINT(Eval("Length(ctxL:LayoutColumn(entries, 0))")) == 4);
+	Eval("ctxL:Close()");
 	// the shape objects
 	EXPECT(EQRef(ClassOf(Eval("MakeRect(10, 10, 30, 20)")), RSSYMrectangle) && RINT(Eval("Length(MakeRect(10, 10, 30, 20))")) == 8);
 	EXPECT(RINT(Eval("ShapeBounds(MakeRect(10, 10, 30, 20)).right")) == 30 && RINT(Eval("ShapeBounds(MakeRect(10, 10, 30, 20)).top")) == 10);
