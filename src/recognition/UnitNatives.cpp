@@ -361,6 +361,16 @@ FUnblockStrokes(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x00144c04 FFlushStrokes
+// FlushStrokes(): the strokes waiting in the queue thrown away - each
+// made into a click whose ink is taken off, so nothing of them is left
+// on the screen either.  ==> true when there was anything to throw away.
+static Ref
+FFlushStrokes(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gStrokeWorld.FlushStrokes());
+}
+
 void
 RegisterUnitNatives(void)
 {
@@ -386,4 +396,5 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FInkOffUnHobbled", (void*) FInkOffUnHobbled, 1);
 	RegisterNativeFunction("FBlockStrokes", (void*) FBlockStrokes, 0);
 	RegisterNativeFunction("FUnblockStrokes", (void*) FUnblockStrokes, 0);
+	RegisterNativeFunction("FFlushStrokes", (void*) FFlushStrokes, 0);
 }
