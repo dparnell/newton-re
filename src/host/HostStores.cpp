@@ -22,6 +22,22 @@
 // much room there is gets an answer of about the right size.
 enum { kHostStoreSize = 4 * 1024 * 1024 };
 
+static const char*	gStoreFile = nil;
+static Boolean		gRestored = false;
+
+void
+HostSetStoreFile(const char* path)
+{
+	gStoreFile = path;
+}
+
+
+Boolean
+HostStoreWasRestored(void)
+{
+	return gRestored;
+}
+
 static bool	gMounted = false;
 
 
@@ -84,7 +100,11 @@ HostMountStores(void)
 			// random, and the ROM notifies about a store whose signature does
 			// not match the machine's
 			SetInternalStore(store);
-			if (err == noErr)
+			// the file it is kept in, if one was named: a store that comes
+			// back out of it is a machine that has been used before, and
+			// must not be formatted over
+			gRestored = ((THostStore*) store)->SetBackingFile(gStoreFile);
+			if (err == noErr && !gRestored)
 				err = store->Format();
 			if (err != noErr)
 				fprintf(stderr, "[host] the internal store would not format (%ld)\n", (long) err);

@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 
 PROTOCOL_CLASSINFO(THostStore, "TStore", "", 0, 0, nil)
@@ -50,6 +51,8 @@ THostStore::New()
 	fFormatted = false;
 	fReadOnly = false;
 	fReadOnlyLocks = 0;
+	fBackingFile = nil;
+	fLoading = false;
 	return this;
 }
 
@@ -252,6 +255,8 @@ THostStore::Commit(Boolean separateToo)
 			Forget(object);
 		}
 	}
+	// what the flash would have written by now
+	Save();
 }
 
 
@@ -753,4 +758,146 @@ THostStore::NumObjects()
 		if (fObjects[i].fExists)
 			count++;
 	return count;
+}
+
+/* -------------------------------------------------------------------------------
+	T h e   f i l e   i t   i s   k e p t   i n
+
+	The machine keeps its internal store in flash, which is still there
+	when it is switched off; the host keeps it in a file, so that a
+	machine which has been set up is still set up the next time it is
+	run.  The file holds what the last finished transaction left: every
+	object that exists, its id and its bytes.  The journal is not in it,
+	because a save only happens on a commit, when there is nothing in
+	flight.
+
+	The words are big-endian whatever the host is, as every persistent
+	format in this tree is.
+------------------------------------------------------------------------------- */
+
+const ULong kHostStoreMagic = 0x4e485331;	// 'NHS1'
+
+static void
+PutWord(FILE* f, ULong value)
+{
+	unsigned char bytes[4];
+	bytes[0] = (unsigned char) (value >> 24);
+	bytes[1] = (unsigned char) (value >> 16);
+	bytes[2] = (unsigned char) (value >> 8);
+	bytes[3] = (unsigned char) value;
+	fwrite(bytes, 1, 4, f);
+}
+
+
+static Boolean
+GetWord(FILE* f, ULong* value)
+{
+	unsigned char bytes[4];
+	if (fread(bytes, 1, 4, f) != 4)
+		return false;
+	*value = ((ULong) bytes[0] << 24) | ((ULong) bytes[1] << 16)
+		   | ((ULong) bytes[2] << 8) | (ULong) bytes[3];
+	return true;
+}
+
+
+// Every object that exists written out, the root among them.
+NewtonErr
+THostStore::Save()
+{
+	if (fBackingFile == nil || fLoading || !fFormatted)
+		return noErr;
+	FILE* f = fopen(fBackingFile, "wb");
+	if (f == nil)
+	{
+		fprintf(stderr, "[host] the store's file %s will not open to write\n", fBackingFile);
+		return kSError_StoreNotFound;
+	}
+	PutWord(f, kHostStoreMagic);
+	PutWord(f, (ULong) fNextId);
+	PutWord(f, fStoreSize);
+	PutWord(f, (ULong) NumObjects());
+	for (long i = 0; i < fCapacity; i++)
+	{
+		SHostStoreObject* object = &fObjects[i];
+		if (!object->fExists)
+			continue;
+		PutWord(f, (ULong) i);
+		PutWord(f, (ULong) object->fSize);
+		if (object->fSize > 0 && object->fData != nil)
+			fwrite(object->fData, 1, (size_t) object->fSize, f);
+	}
+	fclose(f);
+	return noErr;
+}
+
+
+// The file read back, if there is one.  ==> whether a store came out of
+// it; a file that is not one of ours, or is cut short, is left alone and
+// the caller formats instead.
+Boolean
+THostStore::SetBackingFile(const char* path)
+{
+	free(fBackingFile);
+	fBackingFile = nil;
+	if (path == nil || *path == 0)
+		return false;
+	fBackingFile = (char*) malloc(strlen(path) + 1);
+	if (fBackingFile == nil)
+		return false;
+	strcpy(fBackingFile, path);
+
+	FILE* f = fopen(fBackingFile, "rb");
+	if (f == nil)
+		return false;		// no store yet: the caller formats one
+	ULong magic = 0, nextId = 0, storeSize = 0, count = 0;
+	if (!GetWord(f, &magic) || magic != kHostStoreMagic
+		|| !GetWord(f, &nextId) || !GetWord(f, &storeSize) || !GetWord(f, &count))
+	{
+		fclose(f);
+		fprintf(stderr, "[host] %s is not a store of this machine's\n", fBackingFile);
+		return false;
+	}
+	fLoading = true;
+	Clear();
+	fFormatted = true;
+	Boolean ok = true;
+	for (ULong n = 0; n < count && ok; n++)
+	{
+		ULong id = 0, size = 0;
+		if (!GetWord(f, &id) || !GetWord(f, &size))
+		{
+			ok = false;
+			break;
+		}
+		if (Grow((PSSId) id) != noErr)
+		{
+			ok = false;
+			break;
+		}
+		SHostStoreObject* object = &fObjects[id];
+		object->fExists = true;
+		object->fSize = (long) size;
+		object->fData = nil;
+		if (size > 0)
+		{
+			object->fData = (char*) malloc(size);
+			if (object->fData == nil || fread(object->fData, 1, size, f) != size)
+			{
+				ok = false;
+				break;
+			}
+		}
+		fUsed += size;
+	}
+	fclose(f);
+	if (!ok)
+	{
+		fprintf(stderr, "[host] %s is cut short; starting with an empty store\n", fBackingFile);
+		Clear();
+	}
+	else
+		fNextId = (PSSId) nextId;
+	fLoading = false;
+	return ok;
 }

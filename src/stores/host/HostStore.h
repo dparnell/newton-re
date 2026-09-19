@@ -92,6 +92,15 @@ public:
 	// the host's own
 	long		NumObjects();			// existing objects, the root included
 
+	// The file the store is kept in between runs, which is what the
+	// flash is on the machine.  Setting it reads the file in when there is
+	// one (and answers whether there was); from then on every commit
+	// writes it out again, so what is on the disk is what the last
+	// finished transaction left.  Without a file the store is memory only,
+	// as it was.
+	Boolean		SetBackingFile(const char* path);	// ==> whether a store was read in
+	NewtonErr	Save();					// written out now, whatever the transaction is doing
+
 private:
 	void		Clear();									// every object gone
 	SHostStoreObject*	Object(PSSId id);					// nil when there is none
@@ -115,6 +124,8 @@ private:
 	Boolean		fFormatted;
 	Boolean		fReadOnly;				// Init's flags said so
 	long		fReadOnlyLocks;			// LockReadOnly's count
+	char*		fBackingFile;			// the file it is kept in, nil for memory only
+	Boolean		fLoading;				// (no saving while the file is being read back)
 };
 
 #endif	/* __HOSTSTORE_H */

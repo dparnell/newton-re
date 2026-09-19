@@ -281,6 +281,54 @@ TestPackageStore()
 }
 
 
+// The file the host's store is kept in between runs, which is what the
+// flash is on the machine: what one store commits comes back out of the
+// file in the next, and a file that is not a store of ours is left alone.
+static void
+TestBackingFile(void)
+{
+	const char* path = "test-store.bin";
+	remove(path);
+	PSSId id = 0;
+	{
+		THostStore* store = (THostStore*) THostStore::ClassInfo()->New();
+		EXPECT(store != nil);
+		EXPECT(store->Init(nil, 0x10000, 0, 0, kStoreIsInternal, nil) == noErr);
+		EXPECT(!store->SetBackingFile(path));	// no file yet
+		EXPECT(store->Format() == noErr);
+		// a transaction, so that the commit is what writes the file
+		EXPECT(store->LockStore() == noErr);
+		EXPECT(store->NewObject((char*) "persist me", 10, &id) == noErr);
+		EXPECT(store->UnlockStore() == noErr);
+		store->Delete();
+	}
+	{
+		THostStore* store = (THostStore*) THostStore::ClassInfo()->New();
+		EXPECT(store != nil);
+		EXPECT(store->Init(nil, 0x10000, 0, 0, kStoreIsInternal, nil) == noErr);
+		EXPECT(store->SetBackingFile(path));		// and now there is one
+		Boolean needsFormat = true;
+		EXPECT(store->NeedsFormat(&needsFormat) == noErr && !needsFormat);
+		long size = 0;
+		EXPECT(store->GetObjectSize(id, &size) == noErr && size == 10);
+		char back[10];
+		EXPECT(store->Read(id, 0, back, 10) == noErr && memcmp(back, "persist me", 10) == 0);
+		store->Delete();
+	}
+	{
+		// something that is not one of ours: left alone, and the caller formats
+		FILE* f = fopen(path, "wb");
+		EXPECT(f != nil);
+		fwrite("not a store at all", 1, 18, f);
+		fclose(f);
+		THostStore* store = (THostStore*) THostStore::ClassInfo()->New();
+		EXPECT(store->Init(nil, 0x10000, 0, 0, kStoreIsInternal, nil) == noErr);
+		EXPECT(!store->SetBackingFile(path));
+		store->Delete();
+	}
+	remove(path);
+}
+
 static void
 StoreScenario()
 {
@@ -305,6 +353,7 @@ StoreScenario()
 		store->Delete();
 	}
 	TestPackageStore();
+	TestBackingFile();
 	HostStopTasks();
 }
 

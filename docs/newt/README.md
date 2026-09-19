@@ -359,15 +359,24 @@ An application puts the caret on its page as it opens, which is why
 `PositionCaret` is on this path at all; `docs/views/README.md` has what
 the edit view does with it.
 
-The host's internal store is a `THostStore` in memory, so nothing is
-remembered between runs and every boot starts at the assistant again.
-`src/host/demo/setup.ns` taps its way through to the end, which is the
-quick way to get to the Notepad:
+The machine keeps its internal store in flash, which is still there when
+it is switched off; the host keeps it in a file, named with `--store`.
+Set the machine up once and every boot after that comes straight up on
+the Notepad:
 
 ```
 build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-    --scale 2 --script src/host/demo/setup.ns
+    --scale 2 --store build/newton.store --script src/host/demo/setup.ns
+build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+    --scale 2 --store build/newton.store
 ```
+
+`src/host/demo/setup.ns` taps its way through the assistant, which is
+what the first of those does.  `--erase` throws the file away and starts
+again at "Welcome" - the machine's own way back is to hold the power
+switch down through a reset, which asks whether to erase the internal
+store, and this is that.  With no `--store` the machine is memory only
+and starts at the assistant every time, as it did before.
 
 NOT YET on this path: `TParagraphView::HandleWord`, so the editor finds
 no text under a point - right for an empty page, wrong for one that has

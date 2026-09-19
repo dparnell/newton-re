@@ -13,10 +13,16 @@
 				runs its bootTestScript.
 
 	newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]
-	       [--script file.ns] [--headless seconds]
+	       [--script file.ns] [--headless seconds] [--store file] [--erase]
 
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot).
+
+	--store names the file the internal store is kept in between runs,
+	which is what the flash is on the machine: set the machine up once and
+	every boot after that comes up on the Notepad.  --erase throws that
+	file away first and starts again at the Setup assistant, which is what
+	holding the power switch down through a reset does on the machine.
 */
 
 #include "NewtWorld.h"
@@ -29,6 +35,7 @@
 #include "os600/kernel/Boot.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "hal/host/Host.h"
+#include "HostStores.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
 #include <stdio.h>
@@ -68,7 +75,8 @@ static Boolean gWindowed = true;
 static int
 Usage(void)
 {
-	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n] [--script file.ns] [--headless seconds]\n");
+	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
+					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n");
 	return 2;
 }
 
@@ -156,6 +164,12 @@ main(int argc, char** argv)
 	long heapSize = 0x400000;
 	long width = 320, height = 480, depth = 4;
 	const char* script = nil;
+	// the file the internal store is kept in between runs, and whether
+	// to throw it away first - which is the machine's own way back to
+	// the Setup assistant (holding the power switch down through a reset
+	// asks whether to erase the internal store, and this is that)
+	const char* storeFile = nil;
+	Boolean erase = false;
 	for (int i = 1; i < argc; i++)
 	{
 		if (strcmp(argv[i], "--rom") == 0 && i + 1 < argc)
@@ -180,9 +194,16 @@ main(int argc, char** argv)
 			gHeadlessSeconds = strtol(argv[++i], nil, 0);
 			gWindowed = false;
 		}
+		else if (strcmp(argv[i], "--store") == 0 && i + 1 < argc)
+			storeFile = argv[++i];
+		else if (strcmp(argv[i], "--erase") == 0)
+			erase = true;
 		else
 			return Usage();
 	}
+	if (erase && storeFile != nil && remove(storeFile) == 0)
+		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
+	HostSetStoreFile(storeFile);
 	HostUseRealClock(true);
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;

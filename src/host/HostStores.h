@@ -14,7 +14,8 @@
 				puts a THostStore (stores/host/HostStore.h, the in-memory
 				one) in its place - formatted empty, marked internal, and
 				registered so that GetStores answers it.  What the store
-				holds does not survive the program.
+				holds survives the program when one is named
+				(HostSetStoreFile, below) and not when none is.
 
 				DEVIATION: and the store is then *prepared*, because an
 				empty one is not what the ROM's boot expects either.  A
@@ -43,6 +44,17 @@
 // prepared.  Wants the object system started (InitObjects); does nothing
 // the second time.
 void	HostMountStores(void);
+
+// The file the internal store is kept in between runs, which is what
+// the flash is on the machine: named before HostMountStores, it is read
+// in if it is there and written out again on every commit.  With none
+// named the store is memory only and the machine starts at the Setup
+// assistant every time.
+void	HostSetStoreFile(const char* path);
+
+// Whether the store was read back from that file rather than formatted
+// fresh - which is to say whether the machine has been used before.
+Boolean	HostStoreWasRestored(void);
 
 // The soups a used machine's store already has, made on the store if they
 // are not there.  HostMountStores does this; a test that mounts its own
