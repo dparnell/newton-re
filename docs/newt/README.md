@@ -299,8 +299,27 @@ bar's 2560).  `AddView` is for the children a parent names in
 path is for a view that has been waiting, invisible, to be asked for.
 The detail, with the ROM addresses, is in `docs/views/README.md`.
 
-With that right, `_OpenLater` opens the button bar and the backdrop
-application, and the boot carries on into the applications' own setup.
+With that right the boot runs to the end on its own.  The root's
+`viewSetupChildrenScript` queues `_OpenLater`, the delayed action runs
+after the first event (`RunDelayedActionProcs` in `newt/NewtWorld.cpp`),
+the button bar opens along the bottom and the backdrop application -
+the **Setup** assistant, on a machine that has never been set up - over
+the whole screen, and the assistant's own setup runs: its "Welcome"
+page with the Continue button, and a notification over it saying "The
+internal store's signature has been altered", which is what the ROM
+makes of a store that is not a Newton's own.
+
+That is the whole of the machine's own boot: nothing the ROM's
+NewtonScript runs is unbound any more.  To see it:
+
+```
+build/host/host/newton --rom "DebugRom/MP2x00 US/Senior CirrusNoDebug image" --display 320x480
+```
+
+A script that wants to photograph it has to wait for the assistant -
+`--script` runs as a delayed action, and its turn comes first - so put
+the snapshot in an `AddDelayedCall(func() ScreenSnapshot("x.pgm"), nil,
+3000)`.
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages

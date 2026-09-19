@@ -9,6 +9,34 @@ newer operating system but a German one, with no English locale and German
 strings built into the applications in its ROM extension, so it is kept as
 a second opinion rather than as the subject.
 
+## Where it has got to
+
+The reconstruction in `src/` boots.  Running
+
+```powershell
+build\host\host
+ewton --rom "DebugRom\MP2x00 US\Senior CirrusNoDebug image" --display 320x480
+```
+
+starts the kernel, the frames heap and the NewtonScript interpreter,
+imports the ROM's own objects, mounts a store, installs the packages in
+the ROM extension, runs the ROM's boot blocks and init scripts, builds
+the ROM's own `viewRoot`, and lets the machine open its own interface:
+the button bar along the bottom and, on a machine that has never been
+set up, the Setup assistant's "Welcome" page - all of it drawn by the
+ROM's own code through the reconstructed view system and QuickDraw.
+Nothing the ROM's NewtonScript boot runs is unbound.  What that boot
+does step by step, and what is still NOT YET, is in
+[docs/newt/README.md](docs/newt/README.md).
+
+Build and test it with:
+
+```powershell
+cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=%CD%/src/cmake/zig-toolchain.cmake
+cmake --build build/host
+ctest --test-dir build/host
+```
+
 ## Contents
 
 | Path | What it is |
