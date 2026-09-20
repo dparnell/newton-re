@@ -353,9 +353,11 @@ answers a single run's style itself, or `GetDefaultViewStyle` 0x0017a9ec
 the userFont preference - when there are none).  `SetupDone` 0x00181608
 reads viewTransferMode, viewLineSpacing, the text flags
 (`GetInputViewTextFlags` 0x0025fdf4), the locale's break tables, and
-builds the caches.  NOT YET: editing, hilites, the caret, ink, tabs (drawn
-as characters), the text objects, the parents' bounds narrowing the
-lines, the empty last line after a final carriage return.
+builds the caches.  A final carriage return leaves an empty line behind
+it - the line the caret goes to when the return is typed, and the line
+that makes a view which sizes itself to its text grow by one.  NOT YET:
+editing, hilites, the caret, ink, tabs (drawn as characters), the text
+objects, the parents' bounds narrowing the lines.
 
 **TGaugeView** (`GaugeView.h`, clGaugeView 92: protoGauge, protoSlider):
 a bar filled black from the left in proportion to `viewValue` between

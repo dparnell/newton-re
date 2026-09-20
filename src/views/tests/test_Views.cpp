@@ -2327,6 +2327,37 @@ TestCaretGesture()
 // out, and then to take it.  HandleScrub is what the gesture recogniser
 // reaches through the page (TEditView::Scrub); here it is called
 // directly, so no pen is needed.
+// The empty line a final carriage return leaves behind: the caret goes
+// on it, and it is inside the view, so the editor that scrolls until
+// the caret is in sight (the ROM's checkCaret) is not left scrolling
+// for ever.
+static void
+TestTrailingReturn()
+{
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxCR := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 200, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"one\\ntwo\\n\"})");
+	EXPECT(p != nil && p->TextLength() == 8);
+	Refresh();
+
+	// the three lines: "one", "two", and the empty one after the last return
+	Rect first, second, third;
+	p->OffsetToCaret(0, &first);
+	p->OffsetToCaret(4, &second);
+	p->OffsetToCaret(8, &third);
+	EXPECT(second.top > first.top);
+	EXPECT(third.top > second.top);
+	EXPECT(third.top - second.top == second.top - first.top);
+	// and the caret on it starts at the line's left edge
+	EXPECT(third.left == first.left);
+
+	// with the caret there, the view does not think it is out of sight
+	gRootView->SetKeyView(p, 8, 0, false);
+	EXPECT(p->CaretRelativeToVisibleRect(p->viewBounds) == 1);
+
+	Eval("RemoveView(GetRoot(), ctxCR)");
+	Refresh();
+}
+
+
 static void
 TestScrubbing()
 {
@@ -3254,6 +3285,7 @@ main()
 		TestExtractData();
 		TestDatesDrawing();
 		TestClicks();
+		TestTrailingReturn();
 		TestScrubbing();
 		TestCaretGesture();
 		TestEffects();

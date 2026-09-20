@@ -554,3 +554,35 @@ It saves eight bytes. It is also why a reconstruction that lays the four
 tables out as four C arrays is bigger than the ROM's, and why
 `analysis/romtable.py` is asked for 46 entries of the second table
 explicitly: counting to the next symbol would have stopped short.
+
+## The loop that scrolls until the caret is in sight
+
+The editor a note is written on keeps the caret on screen with a
+NewtonScript method called `checkCaret`, queued half a second after every
+edit through `AddProcrastinatedSend`. Its shape is this:
+
+    loop
+        info := GetCaretInfo();
+        ...give up if there is no caret, or it is not in this view...
+        where := info.view:CaretRelativeToVisibleRect(box);
+        if where = 'top then layout:PixelScrollBy(...)
+        else if where = 'bottom then layout:PixelScrollBy(...)
+        else break;
+
+There is no iteration count and no guard: the loop ends only when
+`CaretRelativeToVisibleRect` (0x00171e8c) stops saying the caret is above
+or below the visible rectangle. The scrolling itself redraws the page, so
+a loop that never ends does not merely hang - it rolls the display
+upwards for ever, a line at a time, like a television with no vertical
+hold.
+
+What keeps it honest is the paragraph's line cache. The first question
+`CaretRelativeToVisibleRect` asks is the cheap one: is the caret's
+character offset past the end of the last cached line? For that answer to
+be right, a paragraph whose text ends in a carriage return must cache the
+empty line the return leaves behind, because that is the line the caret
+is on. Leave that line out - as this reconstruction did until the bug was
+found by typing "hello" and pressing return - and the caret is for ever
+one character past the last line, for ever "below", and the page scrolls
+for ever. A line nobody can see turns out to be the thing that stops the
+screen rolling.

@@ -459,12 +459,13 @@ TParagraphView::CreateAllCaches(void)
 // (or the inter-line spacing), one below the other from the top; a line
 // whose midline falls below the bottom is not kept (TestLineOverlap)
 // unless the view calculates its bounds.  The lines' union is the text
-// bounds; the last line's height the line height.  The lines are moved
-// down by the vertical text bits when the text is shorter than the
-// bounds: centred, or to the bottom.  NOT YET RECONSTRUCTED: the ROM's
-// LineLoop (tabs, the text objects it makes for every run of a line, the
-// parents' bounds narrowing the lines, the empty last line after a final
-// carriage return).
+// bounds; the last line's height the line height.  A final carriage
+// return leaves an empty line behind it, which is where the caret goes
+// when it is typed.  The lines are moved down by the vertical text bits
+// when the text is shorter than the bounds: centred, or to the bottom.
+// NOT YET RECONSTRUCTED: the ROM's LineLoop (tabs, the text objects it
+// makes for every run of a line, the parents' bounds narrowing the
+// lines).
 void
 TParagraphView::FillAllCaches(void)
 {
@@ -501,8 +502,16 @@ TParagraphView::FillAllCaches(void)
 	origin.y = 0;
 	long y = 0;
 	long pos = 0;
-	while (pos < length)
+	// A final carriage return leaves an empty line behind it: the
+	// caret goes on that line, and a view that sizes itself to its
+	// text grows by it.  (The ROM's LineLoop hands the empty line out
+	// like any other; here it is one more turn of the loop with
+	// nothing to fit in it.)
+	Boolean trailingLine = length > 0 && text[length - 1] == kCR;
+	while (pos < length || trailingLine)
 	{
+		if (pos >= length)
+			trailingLine = false;
 		long lineEnd = pos;
 		while (lineEnd < length && text[lineEnd] != kCR)
 			lineEnd++;
