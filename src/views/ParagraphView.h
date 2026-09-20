@@ -88,6 +88,7 @@ public:
 	virtual void	SetBounds(const Rect& bounds);						// ROM 0x0017e3e8 SetBounds__14TParagraphViewFRC5TRect
 	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x0017efd8 SetCaretOffset__14TParagraphViewFPlT1
 	virtual Ref		GetSelection(void);									// ROM 0x0017f050 GetSelection__14TParagraphViewFv
+	virtual void	SetValue(RefArg slot, RefArg value);				// ROM 0x0018081c SetValue__14TParagraphViewFRC6RefVarT1
 	virtual void	SetSelection(RefArg selection, long* offset, long* length);	// ROM 0x0017f178 SetSelection__14TParagraphViewFRC6RefVarPlT2
 	virtual void	ActivateSelection(Boolean on);						// ROM 0x0017f2d8 ActivateSelection__14TParagraphViewFUc
 	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect

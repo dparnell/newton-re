@@ -25,6 +25,8 @@
 #include "Ports.h"
 #include "Fonts.h"
 #include "RichString.h"
+#include "REPTranslators.h"
+#include "Areas.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
@@ -651,6 +653,66 @@ TParagraphView::GetSelection(void)
 	SetFrameSlot(info, RSSYMoffset, RefVar(MAKEINT(offset)));
 	SetFrameSlot(info, RSSYMlength, RefVar(MAKEINT(length)));
 	return info;
+}
+
+
+// ROM 0x0018081c SetValue__14TParagraphViewFRC6RefVarT1
+// A slot of the paragraph set.  The four that change what is drawn -
+// text, styles, viewFont and textFlags - are written into the data frame
+// (or the view's own field) and then RangeChanged, which lays the lines
+// out again; without that the line cache still describes the text that
+// was there and the view draws the wrong number of characters from the
+// new one.  New text also drops the styles, the correction info and the
+// hilites, and puts the caret at the end when this view holds it.  The
+// rest is TView's, with the recogniser's area cache purged for the three
+// slots that can change what a view takes in writing (the ROM inlines
+// TView::SetValue here).
+//
+// NOT YET RECONSTRUCTED: a rich string (ink) as the text - the ROM makes
+// the text and style slots out of it (TRichString::MakeParagraphTextSlot
+// and MakeParagraphStylesSlot); RemoveCorrectionInfo, which belongs to
+// the corrector; and the vCalculateBounds paragraph whose text has just
+// become empty, which asks its parent to remove it (an aeRemoveData
+// command) unless the parent's text flags say not to.
+void
+TParagraphView::SetValue(RefArg slot, RefArg value)
+{
+	long wasLength = (Length(RefVar(Text())) - 2) / 2;
+	Boolean relayout = false;
+	if (EQRef(slot, RSSYMtext))
+	{
+		RefVar text(value);
+		if (IsRichString(value))
+			text = value;			// NOT YET: the ink taken apart into text and styles
+		else
+			RemoveSlot(RefVar(DataFrame()), RefVar(RSSYMstyles));
+		// NOT YET: RemoveCorrectionInfo(this)
+		RemoveAllHilites();
+		SetFrameSlot(RefVar(DataFrame()), RefVar(RSSYMtext), text);
+		if (gRootView->fCaretView == this)
+			gRootView->SetKeyView(this, 99999, 0, false);
+		relayout = true;
+	}
+	else if (EQRef(slot, RSSYMstyles) || EQRef(slot, RSSYMviewfont))
+	{
+		RemoveSlot(RefVar(DataFrame()), RefVar(RSSYMstyles));
+		SetFrameSlot(RefVar(DataFrame()), slot, value);
+		relayout = true;
+	}
+	else if (EQRef(slot, RSSYMtextflags))
+	{
+		fTextFlags = GetInputViewTextFlags(ISINT(value) ? RINT(value) : 0, fFlags);
+		relayout = true;
+	}
+	if (relayout)
+	{
+		long nowLength = (Length(RefVar(Text())) - 2) / 2;
+		RangeChanged(0, wasLength, nowLength, slot);
+		return;
+	}
+	if (EQRef(slot, RSSYMviewflags) || EQRef(slot, RSSYMrecconfig) || EQRef(slot, RSSYMdictionaries))
+		PurgeAreaCache();		// what this view takes in writing has changed
+	TView::SetValue(slot, value);
 }
 
 
