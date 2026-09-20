@@ -316,6 +316,40 @@ TestStringFunctions()
 }
 
 
+// SmartStart/SmartConcat/SmartStop build a string a piece at a time in one
+// object: a buffer, the pieces written at the count the last call gave
+// back, and the object cut to fit at the end.
+static void
+TestSmartStrings()
+{
+	EXPECT_STRING("local s := SmartStart(64); local n := 0; "
+				  "n := SmartConcat(s, n, \"Hello\"); n := SmartConcat(s, n, \" \"); "
+				  "n := SmartConcat(s, n, \"world\"); SmartStop(s, n); s", "Hello world");
+	// a single character is a piece too
+	EXPECT_STRING("local s := SmartStart(64); local n := SmartConcat(s, 0, \"ab\"); "
+				  "n := SmartConcat(s, n, $c); SmartStop(s, n); s", "abc");
+	// the count that comes back is the characters written so far
+	EXPECT_INT("local s := SmartStart(64); SmartConcat(s, 0, \"abc\")", 3);
+	EXPECT_INT("local s := SmartStart(64); SmartConcat(s, 3, $x)", 4);
+	// SmartStop cuts the object back to the text and its terminator
+	EXPECT_INT("local s := SmartStart(100); local n := SmartConcat(s, 0, \"abc\"); "
+			   "SmartStop(s, n); Length(s)", 8);
+	// a buffer too small for the pieces grows as they go in
+	EXPECT_INT("local s := SmartStart(4); local n := 0; "
+			   "for i := 1 to 40 do n := SmartConcat(s, n, \"ab\"); SmartStop(s, n); StrLen(s)", 80);
+	EXPECT_TRUE("local s := SmartStart(4); local n := 0; "
+				"for i := 1 to 40 do n := SmartConcat(s, n, $z); SmartStop(s, n); "
+				"StrLen(s) = 40 and BeginsWith(s, \"zzzz\")");
+	// and a piece longer than the 0x80 bytes it grows by makes room for itself
+	EXPECT_INT("local s := SmartStart(4); local long := SmartStart(400); "
+			   "local m := 0; for i := 1 to 150 do m := SmartConcat(long, m, $q); SmartStop(long, m); "
+			   "local n := SmartConcat(s, 0, long); SmartStop(s, n); StrLen(s)", 150);
+	// a character that cannot go into a string
+	EXPECT_THROWS("local s := SmartStart(8); SmartConcat(s, 0, $\\u0000)", kNSErrNotACharacter);
+	EXPECT_THROWS("local s := SmartStart(8); SmartConcat(s, 0, $\\uF700)", kNSErrNotACharacter);
+}
+
+
 static void
 TestSorting()
 {
@@ -619,6 +653,7 @@ main()
 		TestUnicodeTables();
 		TestRichString();
 		TestStringFunctions();
+		TestSmartStrings();
 		TestSorting();
 		TestSearching();
 		TestSets();

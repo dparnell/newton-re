@@ -216,6 +216,150 @@ FStrConcat(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
+/* -------------------------------------------------------------------------------
+	Building a string a piece at a time
+
+	SmartStart, SmartConcat and SmartStop are how a script builds a long
+	string without making a new object for every piece: SmartStart(size)
+	hands back a string object of that many bytes with nothing in it,
+	SmartConcat(str, count, item) writes the next piece at the character
+	`count` and answers the count the next call should use, and
+	SmartStop(str, count) cuts the object back to what was written.
+
+	Ink is what makes them "smart".  Once a rich string goes in, the
+	buffer has to become a rich string too - and a rich string keeps its
+	own length, so from then on the count the caller passes is ignored and
+	the string's length is the answer.
+------------------------------------------------------------------------------- */
+
+// The frame SmartConcat throws for a character that cannot go into a
+// string: {errorCode, value}, under the interpreter's exception rather
+// than the frames one (ThrowExFramesWithBadValue, Objects.cpp, is the same
+// frame under the other name).  The ROM builds it inline in each branch.
+static void
+ThrowExInterpreterWithBadValue(NewtonErr errorCode, RefArg value)
+{
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RSSYMerrorcode, RefVar(MAKEINT(errorCode)));
+	SetFrameSlot(frame, RSSYMvalue, value);
+	ThrowRefException(exInterpreterWithFrameData, frame);
+}
+
+
+// A character that may be written into a string: neither a NUL, which
+// would end it, nor the ink character, which stands for a word of ink and
+// may only be put there by the ink itself.
+static UniChar
+SmartChar(RefArg item)
+{
+	UniChar ch = (UniChar) RCHAR((Ref) item);
+	if (ch == 0 || ch == kInkChar)
+		ThrowExInterpreterWithBadValue(kNSErrNotACharacter, item);
+	return ch;
+}
+
+
+// ROM 0x001fd0d8 FSmartStart__FRC6RefVarT1
+// An empty string of `size` bytes to build in.  Only the first character
+// is cleared - the rest of the object is whatever AllocateBinary left
+// there, which is why SmartStop has to cut the object back afterwards.
+// (A size of less than two writes past the end of the object; the ROM
+// does not check, and nor does this.)
+Ref
+FSmartStart(RefArg /*rcvr*/, RefArg size)
+{
+	RefVar str(AllocateBinary(RefVar(RSSYMstring), RINT(size)));
+	*(UniChar*) BinaryData(str) = 0;
+	return str;
+}
+
+
+// ROM 0x001fd13c FSmartConcat__FRC6RefVarN31
+// `item` - a string or a single character - written into the buffer at
+// character `count`, and the count for the next piece.  The buffer grows
+// by 0x80 bytes, or by the item's length when that is more, whenever the
+// piece would not fit.
+Ref
+FSmartConcat(RefArg /*rcvr*/, RefArg str, RefArg count, RefArg item)
+{
+	if (IsRichString(str))
+	{
+		// the buffer already carries ink, so the piece goes on the end
+		// through the rich string and `count` is not looked at
+		TRichString dst(str);
+		if (ISCHAR((Ref) item))
+		{
+			UniChar text[2];
+			text[0] = SmartChar(item);
+			text[1] = 0;
+			TRichString src(text);
+			dst.InsertRange(src, 0, src.Length(), dst.Length());
+		}
+		else
+		{
+			TRichString src(item);
+			dst.InsertRange(src, 0, src.Length(), dst.Length());
+		}
+		return MAKEINT(dst.Length());
+	}
+
+	if (ISCHAR((Ref) item))
+	{
+		UniChar ch = SmartChar(item);			// checked before the room is made
+		long size = Length(str);
+		long at = RINT(count);
+		long length = at * 2 + 2;
+		if ((ULong) (size - 2) < (ULong) length)
+			SetLength(str, size + 0x80);
+		// (the ROM stores the character's two bytes itself, high one
+		//  first, which is a UniChar written the ARM's way round)
+		GetCString(str)[at] = ch;
+		return MAKEINT(length >> 1);
+	}
+
+	if (IsRichString(item))
+	{
+		// ink into a plain buffer: the buffer becomes a rich string, so it
+		// is first cut back to the text written so far - the room left to
+		// build in goes with it
+		SetLength(str, Ustrlen((UniChar*) BinaryData(str)) * 2 + 2);
+		TRichString dst(str);
+		TRichString src(item);
+		dst.InsertRange(src, 0, src.Length(), dst.Length());
+		return MAKEINT(dst.Length());
+	}
+
+	long size = Length(str);
+	long itemLength = Length(item) - 2;			// its text, without the terminator
+	long at = RINT(count) * 2;
+	long length = at + itemLength;
+	if ((ULong) (size - 2) < (ULong) length)
+	{
+		long grow = itemLength + 2;
+		if (grow < 0x80)
+			grow = 0x80;
+		SetLength(str, grow + size);
+	}
+	UniChar* from = GetCString(item);
+	UniChar* to = GetCString(str);
+	Ustrcpy(to + (at >> 1), from);
+	return MAKEINT(length >> 1);
+}
+
+
+// ROM 0x001fd5f0 FSmartStop__FRC6RefVarN21
+// The object cut back to the `count` characters written into it and the
+// NUL after them.  A buffer that has become a rich string is left alone:
+// it is already exactly as long as its text and its ink.
+Ref
+FSmartStop(RefArg /*rcvr*/, RefArg str, RefArg count)
+{
+	if (!IsRichString(str))
+		SetLength(str, RINT(count) * 2 + 2);
+	return NILREF;
+}
+
+
 // ROM 0x00314c1c TrimString__FRC6RefVar
 // The white space at both ends removed, in place.
 void
@@ -1265,6 +1409,9 @@ RegisterStringNatives(void)
 	RegisterNativeFunction("FEndsWith", (void*) FEndsWith, 2);
 	RegisterNativeFunction("FSubstr", (void*) FSubstr, 3);
 	RegisterNativeFunction("FStrConcat__FRC6RefVarN21", (void*) FStrConcat, 2);
+	RegisterNativeFunction("FSmartStart__FRC6RefVarT1", (void*) FSmartStart, 1);
+	RegisterNativeFunction("FSmartConcat__FRC6RefVarN31", (void*) FSmartConcat, 3);
+	RegisterNativeFunction("FSmartStop__FRC6RefVarN21", (void*) FSmartStop, 2);
 	RegisterNativeFunction("FTrimString", (void*) FTrimString, 1);
 	RegisterNativeFunction("FCharPos", (void*) FCharPos, 3);
 	RegisterNativeFunction("FStrPos", (void*) FStrPos, 3);

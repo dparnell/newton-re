@@ -371,6 +371,23 @@ the locale's number format are not here) and `ParamStr` (`^0`..`^9`
 substituted in three passes then `^^`/`^|` stripped; `^?N<yes>|<no>|`
 by whether parameter N is present).
 
+`SmartStart` 0x001fd0d8, `SmartConcat` 0x001fd13c and `SmartStop`
+0x001fd5f0 are how a script builds a long string without making a new
+object for every piece.  `SmartStart(size)` allocates a string of that
+many bytes and clears its first character; `SmartConcat(str, count,
+item)` writes a string or a single character at character `count` and
+answers the count for the next piece, growing the object by 0x80 bytes
+(or by the item's length, when that is more) whenever the piece would
+not fit; `SmartStop(str, count)` cuts the object back to that many
+characters and their terminator.  A NUL or the ink character is refused
+(`errorCode` -48815 under `evt.ex.fr.intrp;type.ref.frame`).
+
+Ink is what makes them "smart": as soon as a rich string goes in, the
+buffer has to become one too, so it is first cut back to the text written
+so far - the room left to build in goes with it - and from then on the
+pieces are inserted through `TRichString` and the string's own length is
+the answer, the caller's count being ignored.
+
 `StringFilter(str, chars, mode)` 0x001fcc48 takes characters out of a
 string by one of six modes, which come in pairs - one looking at the
 characters in `chars`, the other at those outside it.  `'passAll` keeps
