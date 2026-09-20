@@ -1293,6 +1293,140 @@ FLayoutVerticallyX(RefArg rcvr, RefArg entries, RefArg index)
 	return result;
 }
 
+// ROM 0x001eb4b0 FLayoutTableX
+// :LayoutTable(spec, column, row): the cells of a table, as view
+// templates, in a new array - as many of them as fit in the view.
+//
+// The spec frame says how big the table is - `tabAcross` columns and
+// `tabDown` rows - and what a cell is made of: `tabProtos` the prototype,
+// `tabValues` what goes in the slot `tabValueSlot` names, `tabWidths` and
+// `tabHeights` the sizes, `indentx` and `indenty` where the first cell
+// starts.  Each of the four may be an array, which is walked round and
+// round for as long as the cells last - seven widths for the days of a
+// week, one height for each row of it - or a single value every cell
+// takes.  The walk does not start at the beginning: the proto and value
+// arrays are entered at `across * row + column`, so a table laid out from
+// the middle picks up the prototype the cell there should have.
+//
+// `tabSetup`, when the spec has one, is sent to it for every cell as
+// :tabSetup(cell, column, row) - with the column and row *counted from
+// one*, since both are the counter after it has been stepped on.
+//
+// The rows overlap by a pixel: a row's top is the last one's bottom less
+// one, so a grid of framed cells draws its lines once rather than twice.
+// The columns do not overlap - a cell's left is the last one's right.
+//
+// The laying out stops at the first cell that would cross the view's
+// right edge and at the first row that would cross the bottom one, so a
+// table too big for its view comes back cut short rather than clipped.
+static Ref
+FLayoutTableX(RefArg rcvr, RefArg spec, RefArg column, RefArg row)
+{
+	TView* view = FailGetView(rcvr);
+	Rect bounds = view->viewBounds;
+	long across = RINT(GetVariable(spec, RSSYMtabacross, nil, false));
+	long down = RINT(GetVariable(spec, RSSYMtabdown, nil, false));
+	if (down == 0 || across == 0)
+		return NILREF;
+
+	RefVar protos(GetVariable(spec, RSSYMtabprotos, nil, false));
+	long protoCount = IsArray(protos) ? Length(protos) : 0;
+	RefVar valueSlot(GetVariable(spec, RSSYMtabvalueslot, nil, false));
+	RefVar values(GetVariable(spec, RSSYMtabvalues, nil, false));
+	long valueCount = IsArray(values) ? Length(values) : 0;
+	RefVar heights(GetVariable(spec, RSSYMtabheights, nil, false));
+	long heightCount = IsArray(heights) ? Length(heights) : 0;
+	RefVar widths(GetVariable(spec, RSSYMtabwidths, nil, false));
+	long widthCount = IsArray(widths) ? Length(widths) : 0;
+
+	RefVar result(MakeArray(0));
+	RefVar cell;
+	long firstRow = RINT(row);
+	long protoIndex = protoCount != 0 ? (across * firstRow + RINT(column)) % protoCount : 0;
+	long valueIndex = valueCount != 0 ? (across * firstRow + RINT(column)) % valueCount : 0;
+	long heightIndex = heightCount != 0 ? firstRow % heightCount : 0;
+
+	RefVar indentX(GetVariable(spec, RefVar(Intern((char*) "indentx")), nil, false));
+	RefVar indentY(GetVariable(spec, RefVar(Intern((char*) "indenty")), nil, false));
+	long y = ISNIL(indentY) ? 0 : RINT(indentY);
+
+	long thisRow = firstRow;
+	long nextRow = firstRow + 1;
+	while (thisRow < down)
+	{
+		long thisColumn = RINT(column);
+		long x = ISNIL(indentX) ? 0 : RINT(indentX);
+		long widthIndex = widthCount != 0 ? thisColumn % widthCount : 0;
+
+		Rect box;
+		box.top = (short) y;
+		if (heightCount == 0)
+			box.bottom = (short) (RINT(heights) + y);
+		else
+		{
+			box.bottom = (short) (RINT(GetArraySlotRef(heights, heightIndex)) + y);
+			if (++heightIndex >= heightCount)
+				heightIndex = 0;
+		}
+		y = box.bottom - 1;					// the next row starts on this one's last line
+		if (y >= (short) (bounds.bottom - bounds.top))
+			break;
+
+		RefVar rowNumber(MAKEINT(nextRow));
+		while (thisColumn++ < across)
+		{
+			box.left = (short) x;
+			if (widthCount == 0)
+				box.right = (short) (RINT(widths) + x);
+			else
+			{
+				box.right = (short) (RINT(GetArraySlotRef(widths, widthIndex)) + x);
+				if (++widthIndex >= widthCount)
+					widthIndex = 0;
+			}
+			x = box.right;
+			if (x > (short) (bounds.right - bounds.left))
+				break;
+
+			cell = AllocateFrame();
+			if (protoCount == 0)
+				SetFrameSlot(cell, RSSYM_proto, protos);
+			else
+			{
+				SetFrameSlot(cell, RSSYM_proto, RefVar(GetArraySlotRef(protos, protoIndex)));
+				if (++protoIndex >= protoCount)
+					protoIndex = 0;
+			}
+			if (NOTNIL(valueSlot))
+			{
+				if (valueCount == 0)
+					SetFrameSlot(cell, valueSlot, values);
+				else
+				{
+					SetFrameSlot(cell, valueSlot, RefVar(GetArraySlotRef(values, valueIndex)));
+					if (++valueIndex >= valueCount)
+						valueIndex = 0;
+				}
+			}
+			SetFrameSlot(cell, RSSYMviewbounds, RefVar(ToObject(box)));
+
+			RefVar setup(GetVariable(spec, RSSYMtabsetup, nil, false));
+			if (NOTNIL(setup))
+			{
+				RefVar args(MakeArray(3));
+				SetArraySlot(args, 0, cell);
+				SetArraySlot(args, 1, RefVar(MAKEINT(thisColumn)));
+				SetArraySlot(args, 2, rowNumber);
+				DoMessage(spec, RSSYMtabsetup, args);
+			}
+			AddArraySlot(result, cell);
+		}
+		thisRow = nextRow++;
+	}
+	return result;
+}
+
+
 // ROM 0x000e3490 ToGlobalCoordinates__FRC6RefVarPsN32
 // A point (or two) in the view's own coordinates moved into the screen's:
 // the x's take the view's left edge, the y's its top.  Any of the four
@@ -1498,6 +1632,7 @@ void
 RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FLayoutVerticallyX", (void*) FLayoutVerticallyX, 2);
+	RegisterNativeFunction("FLayoutTableX", (void*) FLayoutTableX, 3);
 	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
 	RegisterNativeFunction("FDrawXBitmap", (void*) FDrawXBitmap, 4);
 	RegisterNativeFunction("FDoDrawing", (void*) FDoDrawing, 2);
@@ -1600,7 +1735,7 @@ MakeViewMethods(void)
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
-		{ "LayoutColumn", (void*) FLayoutVerticallyX, 2 },
+		{ "LayoutColumn", (void*) FLayoutVerticallyX, 2 }, { "LayoutTable", (void*) FLayoutTableX, 3 },
 		{ "CopyBits", (void*) FCopyBits, 4 }, { "DoDrawing", (void*) FDoDrawing, 2 },
 		{ "DrawXBitmap", (void*) FDrawXBitmap, 4 },
 		{ nil, nil, 0 } };

@@ -1295,6 +1295,40 @@ A point in a view's own coordinates becomes one on the screen through
 `ToGlobalCoordinates` 0x000e3490, which adds the view's left edge to the
 x's and its top to the y's.
 
+## Laying children out (`views/ViewNatives.cpp`)
+
+Two of the root template's methods build the templates for a view's
+children rather than drawing anything, and both stop when the view is
+full rather than making children that would be clipped.
+
+`:LayoutColumn(entries, index)` 0x001eb2f4 answers as many of the entries
+from `index` on as fit down the view, asking each one its own `height` -
+or the view's `collapsedHeight` when the view says `allCollapsed` or the
+entry says `collapsed`.
+
+`:LayoutTable(spec, column, row)` 0x001eb4b0 answers the cells of a table
+as view templates, and is what the Dates application's month and week
+views are drawn from. The spec says how big the table is (`tabAcross`
+columns, `tabDown` rows) and what a cell is: `tabProtos` the prototype,
+`tabValues` what goes in the slot `tabValueSlot` names, `tabWidths` and
+`tabHeights` the sizes, `indentx` and `indenty` where the first cell
+starts. Each of those four may be an array, walked round and round for
+as long as the cells last - seven widths for the days of a week, one
+height for each row of it - or a single value every cell takes. The
+walk does not start at the beginning: the proto and value arrays are
+entered at `across * row + column`, so a table laid out from the middle
+picks up the prototype and the value the cell there should have.
+
+`tabSetup`, when the spec has one, is sent to the spec for every cell as
+`:tabSetup(cell, column, row)` - with the column and row counted from
+one, since both are the loop counter after it has been stepped on.
+
+The rows overlap by a pixel: a row's top is the last one's bottom less
+one, so a grid of framed cells draws each line once rather than twice.
+The columns do not overlap - a cell's left is the last one's right.
+Laying out stops at the first cell that would cross the view's right
+edge and at the first row that would cross the bottom one.
+
 ## The on-screen keyboard (`views/KeyboardView.h`)
 
 A keyboard is a `keyDefinitions` array of rows, each row `[pitch, height,

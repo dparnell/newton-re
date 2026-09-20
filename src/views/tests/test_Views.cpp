@@ -1946,6 +1946,60 @@ TestIdlers()
 // pen (its viewClickScript, with the unit) at the pen-down and the click
 // events (aeTap, aeDoubleTap: viewGestureScript) at the pen-up; a click
 // script's TrackHilite follows a stroke fed a tick at a time.
+// :LayoutTable(spec, column, row) lays a grid of cell templates out in
+// the view - what the Dates application's month and week views are drawn
+// from.  Three columns of 10, 20 and 10 across a view 100 wide, two rows
+// of 12 down one 50 tall, indented one and two.
+static void
+TestLayoutTable()
+{
+	ViewOf("ctxT := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		   "viewBounds: {left: 10, top: 10, right: 110, bottom: 60}})");
+	Eval("tabSpec := {tabAcross: 3, tabDown: 2, tabWidths: [10, 20, 10], tabHeights: 12, "
+		 "indentx: 1, indenty: 2, tabProtos: [{viewClass: 74}], "
+		 "tabValues: [1, 2, 3, 4, 5, 6], tabValueSlot: 'cellValue, "
+		 "tabSetup: func(cell, col, row) cell.tag := col * 10 + row}");
+	Eval("cells := ctxT:LayoutTable(tabSpec, 0, 0)");
+	EXPECT(RINT(Eval("Length(cells)")) == 6);
+
+	// the first row: the three widths from the indent, the height below it
+	EXPECT(RINT(Eval("cells[0].viewBounds.left")) == 1 && RINT(Eval("cells[0].viewBounds.right")) == 11);
+	EXPECT(RINT(Eval("cells[1].viewBounds.left")) == 11 && RINT(Eval("cells[1].viewBounds.right")) == 31);
+	EXPECT(RINT(Eval("cells[2].viewBounds.left")) == 31 && RINT(Eval("cells[2].viewBounds.right")) == 41);
+	EXPECT(RINT(Eval("cells[0].viewBounds.top")) == 2 && RINT(Eval("cells[0].viewBounds.bottom")) == 14);
+
+	// the second row starts on the first one's last line, and its columns
+	// start again from the indent
+	EXPECT(RINT(Eval("cells[3].viewBounds.top")) == 13 && RINT(Eval("cells[3].viewBounds.bottom")) == 25);
+	EXPECT(RINT(Eval("cells[3].viewBounds.left")) == 1 && RINT(Eval("cells[5].viewBounds.right")) == 41);
+
+	// the values are walked in order, and tabSetup saw the column and row
+	// counted from one
+	EXPECT(RINT(Eval("cells[0].cellValue")) == 1 && RINT(Eval("cells[5].cellValue")) == 6);
+	EXPECT(RINT(Eval("cells[0].tag")) == 11 && RINT(Eval("cells[2].tag")) == 31);
+	EXPECT(RINT(Eval("cells[3].tag")) == 12 && RINT(Eval("cells[5].tag")) == 32);
+	EXPECT(NOTNIL(Eval("cells[0]._proto")));
+
+	// a table laid out from the middle enters the value array where that
+	// cell is: row 1, column 0 is the fourth value
+	Eval("cells := ctxT:LayoutTable(tabSpec, 0, 1)");
+	EXPECT(RINT(Eval("Length(cells)")) == 3 && RINT(Eval("cells[0].cellValue")) == 4);
+
+	// cells that would cross the view's edges are left out: four columns
+	// of 40 do not fit across 100, and six rows of 12 do not fit down 50
+	Eval("wide := {tabAcross: 4, tabDown: 1, tabWidths: 40, tabHeights: 12, tabProtos: {viewClass: 74}}");
+	EXPECT(RINT(Eval("Length(ctxT:LayoutTable(wide, 0, 0))")) == 2);
+	Eval("tall := {tabAcross: 1, tabDown: 6, tabWidths: 10, tabHeights: 12, tabProtos: {viewClass: 74}}");
+	EXPECT(RINT(Eval("Length(ctxT:LayoutTable(tall, 0, 0))")) == 4);
+
+	// a table of no size at all is nil
+	EXPECT(ISNIL(Eval("ctxT:LayoutTable({tabAcross: 0, tabDown: 3}, 0, 0)")));
+	EXPECT(ISNIL(Eval("ctxT:LayoutTable({tabAcross: 3, tabDown: 0}, 0, 0)")));
+	Eval("ctxT:Close()");
+	Refresh();
+}
+
+
 static void
 TestClicks()
 {
@@ -2758,6 +2812,7 @@ main()
 		TestParagraphTap();
 		TestIdlers();
 		TestPickView();
+		TestLayoutTable();
 		TestClicks();
 		TestEffects();
 	}

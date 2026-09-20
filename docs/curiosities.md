@@ -404,3 +404,32 @@ tag bits and all. One `RINT` then does the work of two.
 
 And the answer is rounded to the nearest ten by `(d + 6) / 10 * 10`. Six is
 not half of ten, so a distance of 344 km comes back as 350 rather than 340.
+
+---
+
+## One subtraction for two edges
+
+`FLayoutTableX` (0x001eb4b0) asks twice whether the table still fits: is
+this row's bottom above the view's, and is this cell's right edge inside
+it. A `Rect` is four halfwords - top, left, bottom, right - so the two
+questions want `bottom - top` and `right - left`, which sit one word
+apart.
+
+For the horizontal one the compiler loads both *words* and subtracts them
+whole:
+
+    ldr r0,[sp,#0x58]      ; the (bottom, right) word
+    ldr r1,[sp,#0x54]      ; the (top, left) word
+    sub r0,r0,r1
+    mov r0,r0, lsl #0x10
+    cmp r9,r0, asr #0x10   ; the low half: right - left
+
+One subtraction computes both differences at once, packed into the two
+halves of a register, and the shifts pick the one wanted. It is safe
+whichever way round the rectangle is: a borrow out of the low half can
+only corrupt the high half, which is thrown away.
+
+The vertical test, a few instructions earlier, does not use the trick -
+it loads the two halfwords separately through the `ldr [x+2]` rotate.
+The same compiler, on the same rectangle, two different ways within a
+dozen instructions.
