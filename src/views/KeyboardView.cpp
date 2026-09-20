@@ -21,6 +21,16 @@
 #include "REPTranslators.h"
 #include "Unicode.h"
 #include "RSSymbols.h"
+#include "RootView.h"
+#include "Application.h"
+#include "Commands.h"
+#include "Regions.h"
+#include "RegionVars.h"
+#include "Screen.h"
+#include "UnitPublic.h"
+#include "Stroke.h"
+#include "NewtonExceptions.h"
+#include "NewtonTime.h"
 
 
 /*------------------------------------------------------------------------------
@@ -703,4 +713,351 @@ TKeyboardView::RealDraw(Rect& bounds)
 	}
 	while (!done);
 	PenNormal();
+}
+
+
+// The auto-repeat, in the units the Newton keeps time in (1/3686400 of a
+// second): a key held down for three fifths of a second starts repeating,
+// and repeats every fifth of a second after that.
+enum
+{
+	kKeyRepeatDelay		= 0x0021bf10,
+	kKeyRepeatInterval	= 0x000b3fb0
+};
+
+// The bit of a key's info word that says it changes when it is pressed.
+// A key without it - the space bar on some keyboards - is left alone.
+enum { kKeyHilites = 0x10000000 };
+
+
+// ROM 0x000fc1f8 GetKeyReceiver__FRC6RefVarT1
+TView*
+GetKeyReceiver(RefArg context, RefArg name)
+{
+	TView* view = GetView(context, name);
+	if (view == nil)
+		view = gRootView->fCaretView;
+	return view;
+}
+
+
+// ROM 0x000fc220 PostKeypressCommands__13TKeyboardViewFRC6RefVar
+// A key whose result is a string: every character of it posted to the
+// receiver as a key down and a key up, one after another.  The receiver
+// is asked for again between characters, because handling one of them may
+// have moved the caret somewhere else.
+void
+TKeyboardView::PostKeypressCommands(RefArg text)
+{
+	UniChar chars[0x40];
+	long length = 0;
+	StringObject(text, chars, length, 0x3f);
+	for (long i = 0; chars[i] != 0; i++)
+	{
+		TView* receiver = GetKeyReceiver(fContext, fKeyReceiverView);
+		if (receiver == nil)
+			break;
+		RefVar cmd(MakeCommand(aeKeyDown, receiver, chars[i]));
+		gApplication->DispatchCommand(cmd);
+		cmd = MakeCommand(aeKeyUp, receiver, chars[i]);
+		gApplication->DispatchCommand(cmd);
+	}
+}
+
+
+// ROM 0x000fc300 HandleKeyPress__13TKeyboardViewFR15TVisKeyIteratorRC6RefVar
+// The key turned into key events.  A keyboard of key codes goes the long
+// way round: the code is put into the key map (KeyIn) as a press and a
+// release, and the modifiers that were held down are released with it -
+// which is what makes shift on the soft keyboard a *sticky* shift, on for
+// exactly one key.  Shift and option are toggled rather than pressed, and
+// the keyboard redraws itself when anything of that changed, so the keys
+// show their new legends.
+//
+// The character KeyIn answers is then posted to the receiver as a key
+// down and a key up, with the key code and the modifiers packed into the
+// command's parameter.  With no receiver at all the root view beeps.
+//
+// A keyboard whose results are not key codes has nothing to translate:
+// the result goes straight out as characters (PostKeypressCommands).
+void
+TKeyboardView::HandleKeyPress(TVisKeyIterator& /*iter*/, RefArg result)
+{
+	ULong modifiers = Modifiers(false);
+	long ch = 0;
+	if (ISINT((Ref) result) && fResultsAreKeycodes)
+	{
+		Boolean optionDown = KeyDown(kOptionKey, false);
+		Boolean commandDown = KeyDown(kCommandKey, false);
+		Boolean controlDown = KeyDown(kControlKey, false);
+		Boolean shiftDown = KeyDown(kShiftKey, false);
+		Boolean capsDown = KeyDown(kCapsLockKey, false);
+		long code = RINT(result);
+		ULong deadWas = gSoftKeyDeadState;
+		Boolean changed = false;
+		switch (code)
+		{
+		case kCommandKey:
+			KeyIn(kCommandKey, !commandDown, this);
+			changed = true;
+			break;
+		case kShiftKey:
+			KeyIn(kShiftKey, !shiftDown, this);
+			if (capsDown)
+				KeyIn(kCapsLockKey, false, this);
+			changed = true;
+			break;
+		case kCapsLockKey:
+			KeyIn(kCapsLockKey, true, this);
+			KeyIn(kCapsLockKey, false, this);
+			if (shiftDown)
+				KeyIn(kShiftKey, false, this);
+			changed = true;
+			break;
+		case kOptionKey:
+			KeyIn(kOptionKey, !optionDown, this);
+			changed = true;
+			break;
+		case kControlKey:
+			KeyIn(kControlKey, !controlDown, this);
+			changed = true;
+			break;
+		default:
+			ch = KeyIn((ULong) code, true, this);
+			KeyIn((ULong) code, false, this);
+			// the modifiers let go with the key they modified
+			if (shiftDown)		{ KeyIn(kShiftKey, false, this); changed = true; }
+			if (optionDown)		{ KeyIn(kOptionKey, false, this); changed = true; }
+			if (commandDown)	{ KeyIn(kCommandKey, false, this); changed = true; }
+			if (controlDown)	{ KeyIn(kControlKey, false, this); changed = true; }
+			break;
+		}
+		if (gSoftKeyDeadState != deadWas || changed)
+		{
+			Dirty(nil);					// the legends have changed
+			gRootView->Update(nil);
+		}
+		if (ch != 0)
+		{
+			TView* receiver = GetKeyReceiver(fContext, fKeyReceiverView);
+			if (receiver == nil)
+				gRootView->RunScript(RSSYMsysbeep, RefVar(MakeArray(0)), false, nil);
+			else
+			{
+				// (the ROM plays the keyboard's keySound here - FPlaySound,
+				//  sound/SoundSettings.h - which the view system does not
+				//  reach; NOT YET, as in TGaugeView and TAnimate)
+				ULong parameter = (ULong) ch | ((ULong) code << 16)
+								| (modifiers << 25) | 0x1000000;
+				RefVar cmd(MakeCommand(aeKeyDown, receiver, (Long) parameter));
+				gApplication->DispatchCommand(cmd);
+				// (the view may have gone, and the caret may have moved,
+				//  while the key was being handled)
+				if (GetView(fContext) != nil)
+				{
+					receiver = GetKeyReceiver(fContext, fKeyReceiverView);
+					if (receiver != nil)
+					{
+						cmd = MakeCommand(aeKeyUp, receiver, (Long) parameter);
+						gApplication->DispatchCommand(cmd);
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		// (the keySound again)
+		PostKeypressCommands(result);
+	}
+	gRootView->Update(nil);
+}
+
+
+// ROM 0x000fc7ec DoKey__13TKeyboardViewFR15TVisKeyIterator
+// One key done.  The view's keyPressScript is given the result first and
+// may take it; otherwise it goes to HandleKeyPress.  ==> whether the key
+// was a modifier, which is what tells TrackStroke to leave it drawn
+// pressed.
+Boolean
+TKeyboardView::DoKey(TVisKeyIterator& iter)
+{
+	RefVar result(GetResultRef(iter));
+	RefVar args(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(args, 0, result);
+	RefVar context(fContext);
+	Boolean ran = false;
+	RefVar answer(RunCacheScript(kIndexKeyPressScript, args, true, &ran));
+	if (ran && NOTNIL(GetProtoVariable(context, RSSYMnewt_feature, nil)))
+		ran = NOTNIL(answer);		// a newer script says so by what it answers
+	if (!ran)
+		HandleKeyPress(iter, result);
+	if (ISINT((Ref) result) && fResultsAreKeycodes)
+		return IsModifierKeyCode((ULong) RINT(result));
+	return false;
+}
+
+
+// ROM 0x000fc760 InsideView__13TKeyboardViewFR6TPoint
+// A keyboard is only where its keys are: a tap in one of the gaps between
+// them goes to whatever is underneath.
+Boolean
+TKeyboardView::InsideView(Point& pt)
+{
+	if (!PtInRect(pt, &viewBounds))
+		return false;
+	Point at;
+	at.v = viewBounds.top;
+	at.h = viewBounds.left;
+	TVisKeyIterator iter(fKeyDefinitions, fCell, at);
+	return iter.FindEnclosingKey(pt);
+}
+
+
+// ROM 0x000fc958 TrackStroke__13TKeyboardViewFP13TStrokePublicP15TVisKeyIterator
+// The pen followed over the keyboard until it is lifted.  The key under
+// it is drawn pressed, and redrawn as the pen slides from one key to the
+// next, so a finger can be run along the keys and land on the right one.
+// The key is done when the pen comes up - and, when it has been held
+// still on one key for three fifths of a second, over and over until it
+// moves or is lifted.
+//
+// While that is going on the view's visible region is taken over so that
+// the pressed keys can be drawn without the view system's help; it is put
+// back at the end.
+//
+// ==> whether the stroke was on a key at all; a stroke that was not is
+// left for whatever is underneath.
+Boolean
+TKeyboardView::TrackStroke(TStrokePublic* stroke, TVisKeyIterator* /*unused*/)
+{
+	Point origin;
+	origin.v = viewBounds.top;
+	origin.h = viewBounds.left;
+	TVisKeyIterator last(fKeyDefinitions, fCell, origin);
+	TVisKeyIterator iter(fKeyDefinitions, fCell, origin);
+	// (the ROM holds the busy box off here - BusyBoxSend 0x35,
+	//  newt/NewtWorld.h - and lets it go again at the end.  NOT YET
+	//  RECONSTRUCTED here: the view system does not depend on the
+	//  application world, as TGaugeView's tracking does not either.)
+	stroke->InkOff(true);
+	gRootView->Update(nil);
+	if (!iter.FindEnclosingKey(stroke->FirstPoint()))
+		return false;
+	PenNormal();
+	TTime repeatAt = GetGlobalTime() + TTime(kKeyRepeatDelay);
+	Boolean noRepeat = NOTNIL(GetProto(RSSYM_norepeat));
+	RgnHandle saved = nil;
+	Boolean pressed = false;
+	Boolean repeated = false;
+	Boolean found = false;
+	RefVar context(fContext);
+	newton_try
+	{
+		for (;;)
+		{
+			found = iter.FindEnclosingKey(stroke->FinalPoint());
+			if (found != pressed || iter.fRowIndex != last.fRowIndex
+				|| iter.fKeyIndex != last.fKeyIndex)
+			{
+				if (saved == nil)
+					saved = SetupVisRgn().StealRegion();
+				StartDrawing(nil, nil);
+				if (pressed && (last.fInfo & kKeyHilites) != 0)
+					DrawKey(last, false, true);
+				if (found && (iter.fInfo & kKeyHilites) != 0)
+					DrawKey(iter, true, true);
+				StopDrawing(nil, nil);
+				pressed = found;
+				repeatAt = GetGlobalTime() + TTime(kKeyRepeatDelay);
+				repeated = false;
+				iter.CopyInto(&last);
+			}
+			else
+				Wait(1);
+			if (GetView(context) == nil)
+				break;					// the keyboard has gone
+			if (stroke->Done() || noRepeat)
+				break;
+			if (!found)
+				continue;
+			if (GetGlobalTime() > repeatAt)
+			{
+				// held still on a key: it repeats
+				if (saved != nil)
+				{
+					GrafPort* port;
+					GetPort(&port);
+					CopyRgn(saved, port->visRgn);
+					DisposeCachedRgn(saved);
+					saved = nil;
+				}
+				noRepeat = DoKey(iter);
+				repeatAt = GetGlobalTime() + TTime(kKeyRepeatInterval);
+				repeated = true;
+			}
+		}
+		if (GetView(context) != nil && found)
+		{
+			StartDrawing(nil, nil);
+			if ((last.fInfo & kKeyHilites) != 0)
+			{
+				if (saved == nil)
+					saved = SetupVisRgn().StealRegion();
+				DrawKey(last, false, true);
+			}
+			if (!repeated)
+			{
+				if (saved != nil)
+				{
+					GrafPort* port;
+					GetPort(&port);
+					CopyRgn(saved, port->visRgn);
+					DisposeCachedRgn(saved);
+					saved = nil;
+				}
+				DoKey(last);
+			}
+			StopDrawing(nil, nil);
+		}
+	}
+	newton_catch_all
+	{
+		if (saved != nil)
+		{
+			GrafPort* port;
+			GetPort(&port);
+			CopyRgn(saved, port->visRgn);
+			DisposeCachedRgn(saved);
+		}
+		rethrow;
+	}
+	end_try;
+	if (saved != nil)
+	{
+		GrafPort* port;
+		GetPort(&port);
+		CopyRgn(saved, port->visRgn);
+		DisposeCachedRgn(saved);
+	}
+	return true;
+}
+
+
+// ROM 0x000fcf80 RealDoCommand__13TKeyboardViewFRC6RefVar
+// A click on the keyboard is tracked; anything the keyboard did not take
+// goes on to TView.
+Boolean
+TKeyboardView::RealDoCommand(RefArg cmd)
+{
+	if (CommandID(cmd) == aeClick)
+	{
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		if (TrackStroke(unit->Stroke(), nil))
+		{
+			CommandSetResult(cmd, 1);
+			return true;
+		}
+	}
+	return TView::RealDoCommand(cmd);
 }

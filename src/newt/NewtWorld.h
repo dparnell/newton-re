@@ -112,7 +112,8 @@ public:
 	ULong				fUnused0c;		// +0x0c
 };
 
-const long kBusyBoxAllow = 0x35;				// BusyBoxControl(0); 0x36 hides it, 0x34 shows it
+const long kBusyBoxAllow = 0x35;				// BusyBoxControl(0)
+const long kBusyBoxHide = 0x36;					// (0x34 shows it)
 const TTimeout kBusyBoxSendTimeout = 0xa8c000;	// (the ROM's: about three seconds)
 
 extern TUPort*	gTheInkerPort;					// ROM 0x0c101658 gTheInkerPort - nil on the host

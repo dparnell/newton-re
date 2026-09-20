@@ -133,6 +133,23 @@ public:
 	virtual Boolean	DerivedFrom(long id) const;					// ROM 0x000fb228 DerivedFrom__13TKeyboardViewCFl
 	virtual void	Constructor(RefArg context, TView* parent);	// ROM 0x000fb25c Constructor__13TKeyboardViewFRC6RefVarP5TView
 	virtual void	RealDraw(Rect& bounds);						// ROM 0x000fbfd4 RealDraw__13TKeyboardViewFR5TRect
+	virtual Boolean	InsideView(Point& pt);						// ROM 0x000fc760 InsideView__13TKeyboardViewFR6TPoint
+	virtual Boolean	RealDoCommand(RefArg cmd);					// ROM 0x000fcf80 RealDoCommand__13TKeyboardViewFRC6RefVar
+
+	// The pen followed over the keys until it is lifted, the key under it
+	// drawn pressed and given to DoKey when it is let go (and again every
+	// fifth of a second while it is held, unless the keyboard says
+	// _noRepeat).  ==> whether the stroke was on a key at all.
+	Boolean			TrackStroke(class TStrokePublic* stroke, TVisKeyIterator* unused);	// ROM 0x000fc958 TrackStroke__13TKeyboardViewFP13TStrokePublicP15TVisKeyIterator
+	// One key done: the view's keyPressScript first refusal, and then
+	// HandleKeyPress.  ==> whether it was a modifier, which is what keeps
+	// it drawn pressed afterwards.
+	Boolean			DoKey(TVisKeyIterator& iter);				// ROM 0x000fc7ec DoKey__13TKeyboardViewFR15TVisKeyIterator
+	// The key turned into key events for whatever is to receive them.
+	void			HandleKeyPress(TVisKeyIterator& iter, RefArg result);	// ROM 0x000fc300 HandleKeyPress__13TKeyboardViewFR15TVisKeyIteratorRC6RefVar
+	// A key whose result is a string: each of its characters posted as a
+	// key down and a key up.
+	void			PostKeypressCommands(RefArg text);			// ROM 0x000fc220 PostKeypressCommands__13TKeyboardViewFRC6RefVar
 
 	// What is drawn on a key, and what it produces.  Either may be an
 	// array - one entry per keyboard state, picked by keyArrayIndex - or
@@ -156,5 +173,9 @@ public:
 	Rect			fCell;				// +0x88  the unit a key's eighths are of, worked out from the bounds
 	Boolean			fHasKeySound;		// +0x90  the context has a keySound
 };
+
+// Where a keyboard's keys are to be sent: the view its keyReceiverView
+// names, and the view holding the caret when it names none.
+TView*	GetKeyReceiver(RefArg context, RefArg name);			// ROM 0x000fc1f8 GetKeyReceiver__FRC6RefVarT1
 
 #endif	/* __KEYBOARDVIEW_H */

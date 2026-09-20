@@ -1295,31 +1295,51 @@ A point in a view's own coordinates becomes one on the screen through
 `ToGlobalCoordinates` 0x000e3490, which adds the view's left edge to the
 x's and its top to the y's.
 
-## The on-screen keyboard, and why it opens blank
+## The on-screen keyboard (`views/KeyboardView.h`)
 
-Tapping the keyboard button on the status bar, or pressing a key that
-asks for the soft keyboard, opens a slip with nothing in it but a close
-box.  The slip itself is fine - it is `protoKeyboard`, an ordinary
-floating view - and what is missing is its one child: a view of class 79,
-`clKeyboardView`.  `BuildView` has no `TKeyboardView`, so class 79 falls
-through to the list of classes that get a plain `TView`, and a plain
-`TView` draws nothing.
+A keyboard is a `keyDefinitions` array of rows, each row `[pitch, height,
+legend, result, info, legend, result, info, ...]` (`Rnumerickeys`,
+`Ralphakeys`).  The `info` word is packed - the key's width and height in
+eighths of the keyboard's unit cell in bits 8-15 and 0-7, a 3-D depth in
+23-24, an inset in 25-27, whether the key hilites when pressed in bit 28,
+and bit 29 saying the entry is a gap rather than a key.  A legend is a
+character, a string, a number, a bitmap frame, an array indexed by
+`keyArrayIndex` (which is how one keyboard has a shifted and an unshifted
+face), or a function of the view answering any of those.
 
-The work it needs is the ROM's 0x000fac10-0x000fd1fc: `TRawKeyIterator`
-and `TVisKeyIterator`, which walk a `keyDefinitions` array and work out
-where each key goes, and `TKeyboardView` itself, which draws the keys,
-hit-tests them, tracks the pen over them and posts the key commands.
+`TRawKeyIterator` (0x000fac10) walks the definition; `TVisKeyIterator`
+(0x000fd0ac) walks it as it is laid out, keeping a pen at the end of the
+last key and answering three rectangles for each - its cell, its face and
+its shadow.  `TKeyboardView` (0x000fb220-0x000fcfec) draws them, and the
+keyboard's *cell* is worked out from the bounds it is given rather than
+the other way about: as wide as the view over the widest row, as tall as
+the view over all the rows' pitches, rounded down through a table of
+`qdConstants` so that no key's eighths land between pixels.  A keyboard
+therefore fills whatever it is put in.
 
-The definitions are worth a look (`Rnumerickeys`, `Ralphakeys`): an array
-of rows, each row `[pitch, height, legend, result, info, legend, result,
-info, ...]`.  The `info` word is packed - the key's width and height in
-eighths of the row's unit in bits 8-15 and 0-7, a 3-D depth in bits
-23-24, an inset in 25-27, and bit 29 saying the entry is a gap rather
-than a key.  A legend is a character, a string or a bitmap frame.
+`TrackStroke` (0x000fc958) follows the pen: the key under it is drawn
+pressed and redrawn as the pen slides from one to the next, so a finger
+can be run along and land on the right one.  It takes the view's visible
+region over for the duration so that it can draw without the view system,
+and puts it back afterwards.  A key held still for three fifths of a
+second repeats every fifth of a second, unless the keyboard says
+`_noRepeat`.
+
+`HandleKeyPress` (0x000fc300) is where the shift key turns out to be
+*sticky*: a key code goes into the key map as a press and a release, and
+every modifier that was held goes out with it, so shift is on for exactly
+one key and then off again.  Tapping shift itself toggles it, and the
+keyboard redraws so the legends change.  `InsideView` (0x000fc760) is
+worth noting too - a keyboard is only where its keys are, so a tap in the
+gaps between them falls through to whatever is underneath.
+
+NOT YET: the busy box the ROM holds off while the pen is on the keyboard,
+and the `keySound` it plays, both of which live outside the view system
+(as they do for `TGaugeView`'s tracking).
 
 ## Not yet
 
-The on-screen keyboard views (see above).  The rest of the
+The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the drag icon
