@@ -111,6 +111,11 @@ void	DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style);			// RO
 // MakeLine, MakeWedge, MakePolygon, MakeRegion, MakeText, MakeTextBox,
 // ShapeBounds, OffsetShape, IsPrimShape
 void	RegisterShapeNatives(void);
+// Whether the point is in the shape, and - for a list of shapes - which
+// of them.  `path` comes back with the index of the shape that was hit at
+// each level of the list, outermost last.
+Boolean	HitShape(RefArg shape, const Point& pt, RefArg path);		// ROM 0x000e17bc HitShape__FRC6RefVarRC6TPointT1
+
 Ref		FDrawShape(RefArg rcvr, RefArg shape, RefArg style);						// ROM 0x000dc844 FDrawShape - a view's DrawShape method
 
 #endif	/* __DRAWSHAPE_H */

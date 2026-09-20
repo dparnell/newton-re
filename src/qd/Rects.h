@@ -38,6 +38,13 @@ void	JoinRect(const Rect* a, const Rect* b, Rect* result);		// the bounds of bot
 void	UnionPt(Rect* r, Point pt);									// ROM 0x001975ec Union__5TRectF6TPoint - the point taken into the rectangle, a top of -0x8000 meaning it holds nothing yet
 Boolean	RSect(Rect* result, long count, const Rect* first, ...);	// the intersection of count rects
 
+// Whether the point lies on the line between two others, and where along
+// it: 0 not on it at all, 1 past `a`, 2 past `b`, 3 between the two.  The
+// tolerance is generous - the cross product has to be less than ten times
+// the line's width plus its height - because this is what a pen tapping a
+// drawn line is tested against.
+long	Aligned(Point pt, const Point& a, const Point& b);			// ROM 0x00198df0 Aligned__6TPointCFRC6TPointT1
+
 // mapping between coordinate systems
 long	MapCoord(long x, long srcStart, long srcSize, long dstStart, long dstSize);
 void	MapPt(Point* pt, const Rect* src, const Rect* dst);

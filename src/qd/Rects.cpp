@@ -367,3 +367,39 @@ CoveredBy(const Rect* r, const Rect* other)
 	long whole = (long) (mine.bottom - mine.top) * (mine.right - mine.left);
 	return covered * 100 / whole;
 }
+
+
+// ROM 0x00198df0 Aligned__6TPointCFRC6TPointT1
+// Where the point stands on the line from `a` to `b`.  The cross product
+// of (b - a) and (pt - a) is how far off the line it is, times the line's
+// length; rather than divide, the ROM compares it with ten times the sum
+// of the line's width and height, which is a tolerance that grows with
+// the line.  ==> 0 off the line, 1 past the `a` end, 2 past the `b` end,
+// 3 between them.
+long
+Aligned(Point pt, const Point& a, const Point& b)
+{
+	long dh = pt.h - a.h;
+	long dv = b.v - a.v;
+	long acrossLine = dv * dh;
+	long width = b.h - a.h;
+	long down = pt.v - a.v;
+	long cross = acrossLine - down * width;
+	if (cross < 0)
+		cross = -cross;
+	long tolerance = (width < 0 ? -width : width) + (dv < 0 ? -dv : dv);
+	tolerance = tolerance + tolerance * 4;		// five times, then doubled below
+	if (cross >= tolerance * 2)
+		return 0;
+	// past the `a` end
+	if (b.h < a.h && a.h < pt.h)	return 1;
+	if (b.v < a.v && a.v < pt.v)	return 1;
+	if (pt.h < a.h && a.h < b.h)	return 1;
+	if (pt.v < a.v && a.v < b.v)	return 1;
+	// past the `b` end
+	if (a.h < b.h && b.h < pt.h)	return 2;
+	if (a.v < b.v && b.v < pt.v)	return 2;
+	if (pt.h < b.h && b.h < a.h)	return 2;
+	if (pt.v < b.v && b.v < a.v)	return 2;
+	return 3;
+}

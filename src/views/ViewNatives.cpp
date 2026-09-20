@@ -1460,6 +1460,40 @@ FDropHilites(RefArg rcvr)
 }
 
 
+// ROM 0x001f1014 FGetHilitedTextItems__FRC6RefVar
+// GetHilitedTextItems() - the text of everything that is selected, as an
+// array of strings.  The root view knows which view owns the hilites; it
+// is asked for them as a list of [context, start, end] and each range is
+// turned back into text by the view it came from, so a selection that
+// spans several paragraphs answers one string per paragraph.
+static Ref
+FGetHilitedTextItems(RefArg /*rcvr*/)
+{
+	TView* hiliter = gRootView->fHiliter;
+	if (hiliter == nil)
+		return NILREF;
+	RefVar hilites(hiliter->GetValue(RSSYMhilites, RSSYMoffset));
+	if (ISNIL(hilites))
+		return NILREF;
+	long count = Length(hilites);
+	if (count <= 0)
+		return NILREF;
+	RefVar items(MakeArray(0));
+	for (long i = 0; i < count; i++)
+	{
+		RefVar entry(GetArraySlotRef(hilites, i));
+		RefVar context(GetArraySlotRef(entry, 0));
+		RefVar end(GetArraySlotRef(entry, 2));
+		RefVar start(GetArraySlotRef(entry, 1));
+		TView* view = FailGetView(context);
+		RefVar text(view->GetRangeText(RINT(start), RINT(end) - RINT(start)));
+		if (NOTNIL(text))
+			AddArraySlot(items, text);
+	}
+	return items;
+}
+
+
 void
 RegisterViewNatives(void)
 {
@@ -1494,6 +1528,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
 	RegisterNativeFunction("FCaretRelativeToVisibleRect", (void*) FCaretRelativeToVisibleRect, 1);
 	RegisterNativeFunction("FDropHilites", (void*) FDropHilites, 0);
+	RegisterNativeFunction("FGetHilitedTextItems__FRC6RefVar", (void*) FGetHilitedTextItems, 0);
 	RegisterNativeFunction("FHiliteUniqueX", (void*) FHiliteUniqueX, 1);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();

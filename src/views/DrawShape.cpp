@@ -756,6 +756,127 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	N a t i v e s
 ------------------------------------------------------------------------------*/
 
+// ROM 0x000e17bc HitShape__FRC6RefVarRC6TPointT1
+// Whether the point is in the shape.  A list of shapes is walked - the
+// frames in it are the style frames, and are skipped - and the index of
+// the first one that is hit is added to `path`; because the walk is
+// recursive and each level adds its index on the way out, the path comes
+// out innermost first (FHitShape turns it round).
+//
+// Everything is cut to the shape's bounds first.  A rectangle, a bitmap,
+// a piece of text and a picture are then their bounds and nothing more; a
+// line is tested with a tolerance that grows with its length (Aligned); a
+// region is tested against its own bytes.  Anything else - an oval, a
+// round rectangle, a polygon, a wedge - is *drawn* into a region and the
+// point tested against that, which is the same rasteriser that would have
+// put it on the screen, so what is hit is exactly what is seen.
+Boolean
+HitShape(RefArg shape, const Point& pt, RefArg path)
+{
+	Boolean hit = false;
+	if (IsArray(shape))
+	{
+		long index = 0;
+		TObjectIterator* iter = NewTObjectIterator(shape);
+		for (; !iter->Done(); iter->Next(), index++)
+		{
+			RefVar value(iter->Value());
+			if (ISNIL(value) || EQRef(ClassOf(value), RSSYMframe))
+				continue;					// a style frame, not a shape
+			hit = HitShape(value, pt, path);
+			if (hit)
+			{
+				AddArraySlot(path, RefVar(MAKEINT(index)));
+				break;
+			}
+		}
+		DeleteTObjectIterator(iter);
+		return hit;
+	}
+
+	Rect bounds;
+	ShapeBounds(shape, &bounds);
+	if (!PtInRect(pt, &bounds))
+		return false;
+	RefVar shapeClass(ClassOf(shape));
+	if (EQRef(shapeClass, RSSYMrectangle) || EQRef(shapeClass, RSSYMbitmap)
+		|| EQRef(shapeClass, RSSYMtext) || EQRef(shapeClass, RSSYMpicture))
+		return true;						// the bounds are the shape
+	if (EQRef(shapeClass, RSSYMline))
+	{
+		// a line's bounds are its two ends, in order
+		Point from, to;
+		from.v = bounds.top;
+		from.h = bounds.left;
+		to.v = bounds.bottom;
+		to.h = bounds.right;
+		return Aligned(pt, from, to) == 3;
+	}
+	if (EQRef(shapeClass, RSSYMregion))
+	{
+		// the region's bytes are already a Macintosh region; a handle is
+		// faked round them rather than copying them
+		RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
+		TBinaryDataPtr bits(data);
+		Handle fake = NewFakeHandle((Ptr) (char*) bits, Length(data));
+		hit = PtInRgn(pt, (RgnHandle) fake);
+		DisposHandle(fake);
+		return hit;
+	}
+
+	// anything else: drawn into a region, and the point tested against it
+	TRegionVar rgn;
+	OpenRgn();
+	// (the ROM turns the QD scaler off around this - TQDScaler::ForceScaling
+	//  0x002f8e28 - so that the shape records at its own size.  NOT YET
+	//  RECONSTRUCTED: the scaler, so there is nothing to turn off.)
+	Point origin;
+	origin.h = 0;
+	origin.v = 0;
+	newton_try
+	{
+		DrawShape(shape, RefVar(NILREF), origin);
+	}
+	newton_catch_all
+	{
+		CloseRgn(rgn);
+		rethrow;
+	}
+	end_try;
+	CloseRgn(rgn);
+	return PtInRgn(pt, rgn);
+}
+
+
+// ROM 0x000e1640 FHitShape
+// HitShape(shape, x, y) - whether the point is in the shape.  A plain
+// shape answers true or nil; a list of shapes answers the path down to
+// the one that was hit, outermost first, which is what a script indexes
+// the list with to find out what was tapped.
+static Ref
+FHitShape(RefArg /*rcvr*/, RefArg shape, RefArg x, RefArg y)
+{
+	Point pt;
+	pt.h = (short) RINT(x);
+	pt.v = (short) RINT(y);
+	RefVar path(AllocateArray(RSSYMpathexpr, 0));
+	Boolean hit = HitShape(shape, pt, path);
+	long depth = Length(path);
+	if (depth == 0)
+		return MAKEBOOLEAN(hit);
+	// the path was built innermost first
+	RefVar swap;
+	for (long i = 0; i < depth / 2; i++)
+	{
+		long j = depth - 1 - i;
+		swap = GetArraySlotRef(path, j);
+		SetArraySlot(path, j, RefVar(GetArraySlotRef(path, i)));
+		SetArraySlot(path, i, swap);
+	}
+	return path;
+}
+
+
 // ROM 0x000dc844 FDrawShape
 // DrawShape(shape, style) on a view: drawn from the view's top left (a
 // slot of the ROM's root template, so every view has it).
@@ -1094,6 +1215,7 @@ void
 RegisterShapeNatives(void)
 {
 	RegisterNativeFunction("FDrawShape", (void*) FDrawShape, 2);
+	RegisterNativeFunction("FHitShape", (void*) FHitShape, 3);
 	RegisterNativeFunction("FMakeRect", (void*) FMakeRect, 4);
 	RegisterNativeFunction("FMakeOval", (void*) FMakeOval, 4);
 	RegisterNativeFunction("FMakeRoundRect", (void*) FMakeRoundRect, 5);
