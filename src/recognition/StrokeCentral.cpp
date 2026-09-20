@@ -12,24 +12,28 @@
 #include "UnitPublic.h"
 #include "Recognizer.h"
 #include "Domain.h"
+#include "Controller.h"
+#include "Arbiter.h"
 #include "Frames.h"
+
+#include <string.h>
 
 StrokeCentral	gStrokeWorld;						// ROM 0x0c1018cc gStrokeWorld
 static Boolean	gIdlingStrokes = false;				// (the ROM's byte at 0x0c1019f0) IdleStrokes is running
 
 
-// NOT YET RECONSTRUCTED: TController.  DEVIATION: the host hands a new
-// unit straight to the unit handler, as the ROM does when the controller
-// finds it externally arbitrated (StrokeCentral::IdleStrokes below), and
-// disposes it afterwards unless it is the click of the stroke in progress
-// (DoneCurrentStroke lets that one go).
+// A unit handed to the unit handler on its own, which is what the ROM
+// does for a click the controller finds externally arbitrated: the
+// handler takes a list of arbitration matches, and the unit is the first
+// word of one.
 static void
-HostClassify(TUnit* unit)
+HandleOneUnit(TUnit* unit)
 {
-	TArray* list = TArray::Make(0x28, 1);
+	TArray* list = TArray::Make(sizeof(BestMatch), 1);
 	if (list != nil)
 	{
-		*(TUnit**) list->GetEntry(0) = unit;
+		memset(list->GetEntry(0), 0, sizeof(BestMatch));
+		((BestMatch*) list->GetEntry(0))->fUnit = unit;
 		HandleUnit(list);
 		list->Dispose();
 	}
@@ -130,7 +134,7 @@ StrokeCentral::IdleStrokes(void)
 	for (;;)
 	{
 		StrokeTime();
-		if (fCurrentStroke == nil)		// (the ROM: and the controller not busy)
+		if (!gController->CheckBusy() && fCurrentStroke == nil)
 		{
 			if (fBlocked != 0)
 				return;
@@ -142,7 +146,9 @@ StrokeCentral::IdleStrokes(void)
 				if (fCurrentUnit != nil)
 				{
 					fCurrentUnit->SetFlags(kUnitStrokeInProgress);
-					HostClassify(fCurrentUnit);		// (the ROM: gController->NewClassification, then HandleUnit when IsExternallyArbitrated)
+					gController->NewClassification(fCurrentUnit);
+					if (gController->IsExternallyArbitrated(fCurrentUnit))
+						HandleOneUnit(fCurrentUnit);
 				}
 			}
 		}
@@ -163,8 +169,7 @@ StrokeCentral::IdleStrokes(void)
 						eventUnit->ClearEvent();
 					if (acquired)
 						ReleaseStroke();
-					HostClassify(eventUnit);		// (the ROM: gController->NewClassification)
-					eventUnit->Dispose();
+					gController->NewClassification(eventUnit);
 				}
 			}
 		}
@@ -172,7 +177,7 @@ StrokeCentral::IdleStrokes(void)
 			return;
 		// (the ROM: JournalRecordAStroke when journalling - NOT YET)
 		DoneCurrentStroke();
-		// (the ROM: gController->TriggerRecognition - NOT YET)
+		gController->TriggerRecognition();
 	}
 }
 
@@ -193,7 +198,9 @@ StrokeCentral::StartNewStroke(TStroke* stroke)
 
 // ROM 0x00145f14 DoneCurrentStroke__13StrokeCentralFv
 // The current stroke's times kept as the last, the stroke and its unit
-// let go (the unit's in-progress flag cleared), the time noted.
+// let go (the unit's in-progress flag cleared), the time noted.  The
+// unit itself is not disposed: the controller has it on its piece list
+// and its clean-up is what takes it away.
 void
 StrokeCentral::DoneCurrentStroke(void)
 {
@@ -202,8 +209,7 @@ StrokeCentral::DoneCurrentStroke(void)
 	fHasCurrent = false;
 	fCurrentStroke = nil;
 	fCurrentUnit->UnsetFlags(kUnitStrokeInProgress);
-	fCurrentUnit->Dispose();			// DEVIATION: the ROM's controller keeps the unit (NOT YET)
-	fCurrentUnit = nil;
+	fCurrentUnit = nil;					// (the controller holds it now)
 	fNextCompressTime = GetGlobalTime();
 }
 

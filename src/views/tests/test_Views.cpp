@@ -2236,16 +2236,19 @@ TestClicks()
 	// a tap: the click at the pen-down (the stroke already done here), and - the click script not having taken it - the tap at the pen-up
 	HostTabletPenDown(90, 60, 1000);
 	HostTabletPenUp(1004);
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 1 && RINT(Eval("ctxC.clicks[0][0]")) == 90 && RINT(Eval("ctxC.clicks[0][1]")) == 60 && NOTNIL(Eval("ctxC.clicks[0][2]")));
 	EXPECT(RINT(Eval("ctxC.clicks[0][3].left")) == 90 && RINT(Eval("ctxC.clicks[0][3].bottom")) == 61 && RINT(Eval("ctxC.clicks[0][4]")) == 1000 && RINT(Eval("ctxC.clicks[0][5]")) == 1);
 	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && RINT(Eval("ctxC.gestures[0][0]")) == aeTap && RINT(Eval("ctxC.gestures[0][1]")) == 90 && RINT(Eval("ctxC.gestures[0][3]")) == 1004 && RINT(Eval("ctxC.gestures[0][4].y")) == 60);
 	EXPECT(gRecognition.fClickView == v && gStrokeWorld.CurrentStroke() == nil);
-	// a tap where no view takes clicks: nothing, and no click view
+	// a tap where no view takes clicks: nothing at all.  The unit gets no
+	// area (GetAreasHit answers an input mask of zero), so the controller
+	// claims it and it never reaches a recogniser - which also means the
+	// click view the tap before left is not touched.
 	HostTabletPenDown(10, 90, 2000);
 	HostTabletPenUp(2003);
-	IdleStrokes();
-	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 1 && RINT(Eval("Length(ctxC.gestures)")) == 1 && gRecognition.fClickView == nil);
+	gRecognition.Idle();
+	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 1 && RINT(Eval("Length(ctxC.gestures)")) == 1 && gRecognition.fClickView == v);
 	// a press and drag, fed a record a tick as the click script's TrackHilite waits: hilited inside, not outside, ended inside; the click taken (true), so no gesture follows
 	Eval("ctxC.viewClickScript := func(unit) begin AddArraySlot(clicks, [StrokeDone(unit), :TrackHilite(unit), GetPointsArrayXY(unit), StrokeDone(unit)]); true end");
 	HostTabletQueuePenDown(90, 60, 3000);
@@ -2255,7 +2258,7 @@ TestClicks()
 	HostTabletQueuePenMove(110, 65);
 	HostTabletQueuePenUp(3040);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 2 && ISNIL(Eval("ctxC.clicks[1][0]")) && NOTNIL(Eval("ctxC.clicks[1][1]")) && NOTNIL(Eval("ctxC.clicks[1][3]")));
 	EXPECT(RINT(Eval("Length(ctxC.clicks[1][2])")) == 10 && RINT(Eval("ctxC.clicks[1][2][6]")) == 150 && RINT(Eval("ctxC.clicks[1][2][9]")) == 65);
 	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && (v->fFlags & vSelected) != 0 && HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil);
@@ -2332,10 +2335,10 @@ TestClicks()
 	Eval("ctxC.viewClickScript := func(unit) begin AddArraySlot(clicks, GetPoint(6, unit)); nil end");
 	HostTabletPenDown(90, 60, 5000);
 	HostTabletPenUp(5003);
-	IdleStrokes();
+	gRecognition.Idle();
 	HostTabletPenDown(91, 61, 5010);
 	HostTabletPenUp(5013);
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 3 && RINT(Eval("ctxC.gestures[1][0]")) == aeTap && RINT(Eval("ctxC.gestures[2][0]")) == aeDoubleTap);
 	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 4 && RINT(Eval("ctxC.clicks[3].x")) == 91);
 	Eval("ctxC:Hilite(nil)");
@@ -2353,14 +2356,14 @@ TestClicks()
 	HostTabletQueuePenMove(90, 55);				// 70
 	HostTabletQueuePenUp(6040);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(RINT(Eval("ctxS.viewValue")) == 70 && RINT(Eval("Length(ctxS.changes)")) == 1 && RINT(Eval("ctxS.changes[0][0]")) == 30 && RINT(Eval("ctxS.changes[0][1]")) == 70);
 	EXPECT(HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil && slider->fFlags & vVisible);
 	// a read-only gauge ignores the pen
 	Eval("SetValue(ctxS, 'viewFlags, 3 + 0x200)");
 	HostTabletPenDown(40, 55, 7000);
 	HostTabletPenUp(7003);
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(RINT(Eval("ctxS.viewValue")) == 70 && RINT(Eval("Length(ctxS.changes)")) == 1);
 	Eval("RemoveView(GetRoot(), ctxS)");
 	Refresh();
@@ -2376,7 +2379,7 @@ TestClicks()
 	HostTabletQueuePenMove(left + 10, top + 40);			// Gamma
 	HostTabletQueuePenUp(8040);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(RINT(Eval("picked")) == 3 && gRootView->fChildren->Count() == 0 && HostTabletQueued() == 0);
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "picker picked and closed"));
@@ -2389,7 +2392,7 @@ TestClicks()
 	HostTabletQueuePenMove(left + 10, top + 60);			// off the picker
 	HostTabletQueuePenUp(9020);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("cancelled")) && ISNIL(Eval("picked")) && gRootView->fChildren->Count() == 0);		// (the ROM: the cancel script, then the action script with nil)
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "picker cancelled and closed"));
@@ -2406,7 +2409,7 @@ TestClicks()
 	HostAdvanceClock(60 * 60 * 0xf000);		// so the tap is well after any prior click
 	HostTabletPenDown(box4.left + 1, tpy, 0);
 	HostTabletPenUp(0);
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(tp->fTapped && gRootView->fCaretView != tp);		// deferred, not yet placed
 	HostAdvanceClock(kSeconds);								// past the double-tap interval
 	gRootView->IdleViews();
@@ -2425,7 +2428,7 @@ TestClicks()
 	HostAdvanceClock(kSeconds);
 	HostTabletPenDown((caretRect.left + caretRect.right) / 2, (caretRect.top + caretRect.bottom) / 2, 0);
 	HostTabletPenUp(0);
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(gRootView->fChildren->Count() == caretChildren + 1);		// the popup opened
 	TView* caretPop = gRootView->fChildren->Last();
 	EXPECT(caretPop->ClassID() == clPickView);
@@ -2458,7 +2461,7 @@ TestClicks()
 	HostTabletQueuePenMove(125, 55);		// over the target
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"hi there\")")));		// the target's drop script got the data
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
@@ -2484,7 +2487,7 @@ TestClicks()
 	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"and again\")")));
 	// and the limits in their other shapes: a plain rectangle, 'none, nil
 	Eval("dropped := nil");
@@ -2496,7 +2499,7 @@ TestClicks()
 	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"a rectangle\")")));
 	Eval("dropped := nil");
 	Eval("ctxDS.viewClickScript := func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), 'none, nil, "
@@ -2507,7 +2510,7 @@ TestClicks()
 	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"anywhere\")")));
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
@@ -2710,7 +2713,7 @@ TestEffects()
 	Refresh();
 	HostTabletPenDown(80, 50, 11000);
 	HostTabletPenUp(11003);
-	IdleStrokes();
+	gRecognition.Idle();
 	Refresh();
 	EXPECT(InkIn(10, 10, 150, 90) == 0);		// (the frame is a pixel: viewFormat 1 has none)
 	Eval("RemoveView(GetRoot(), ctxP)");
@@ -2729,7 +2732,7 @@ TestEffects()
 	HostTabletQueuePenMove(90, 65);
 	HostTabletQueuePenUp(12040);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("ctxD.dragged")) && d->viewBounds.left == 70 && d->viewBounds.top == 50 && d->viewBounds.right == 110 && d->viewBounds.bottom == 80);
 	EXPECT(RINT(Eval("ctxD.viewBounds.left")) == 70 && RINT(Eval("ctxD.viewBounds.top")) == 50 && HostTabletQueued() == 0);
 	Refresh();
@@ -2740,7 +2743,7 @@ TestEffects()
 	HostTabletQueuePenMove(200, 65);
 	HostTabletQueuePenUp(13020);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(d->viewBounds.right == 160 && d->viewBounds.left == 120 && d->viewBounds.top == 50);
 	Refresh();
 	EXPECT(InkIn(120, 50, 160, 80) == 40 * 30 && InkIn(0, 0, 120, 100) == 0);
@@ -2750,7 +2753,7 @@ TestEffects()
 	HostTabletQueuePenMove(141, 65);
 	HostTabletQueuePenUp(14010);
 	HostTabletPump();
-	IdleStrokes();
+	gRecognition.Idle();
 	EXPECT(NOTNIL(Eval("ctxD.dragged")) && d->viewBounds.left == 120 && d->viewBounds.top == 50);
 	Refresh();
 	EXPECT(InkIn(120, 50, 160, 80) == 40 * 30 && InkIn(0, 0, 120, 100) == 0);

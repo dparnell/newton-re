@@ -10,6 +10,7 @@
 */
 
 #include "Recognizer.h"
+#include "Controller.h"
 #include "UnitPublic.h"
 #include "StrokeCentral.h"
 #include "Commands.h"
@@ -179,14 +180,13 @@ HandleUnitList(TArray* units)
 			{
 				pub.Cleanup();
 				pub.Invalidate();
-				// (the ROM: gController->MarkUnits(unit, kClaimedUnit) - NOT YET)
-				unit->SetFlags(kClaimedUnit);
+				gController->MarkUnits(unit, kClaimedUnit);
 			}
 			anyHandled = 1;
 			if (gRecognition.fClickSwallowed)
 			{
 				gRecognition.SaveClickView(nil);
-				// (the ROM: gController->TriggerRecognition() - NOT YET)
+				gController->TriggerRecognition();
 			}
 		}
 next:

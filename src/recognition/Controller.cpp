@@ -665,7 +665,7 @@ TController::QueuePiece(TUnit* piece, TRecArea* area)
 		Assoc copy = *assoc;
 		if (piece->fType == copy.fType && copy.fArbitrateTime != kArbitrateExternally)
 		{
-			ArbiterEntry* entry = (ArbiterEntry*) fArbiter->Pending()->AddEntry();
+			BestMatch* entry = (BestMatch*) fArbiter->Pending()->AddEntry();
 			if (entry == nil)
 				return 1;
 			entry->fUnit = piece;

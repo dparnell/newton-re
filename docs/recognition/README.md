@@ -646,33 +646,86 @@ the domains are numbered.
 
 ## The arbiter (`recognition/Arbiter.h`)
 
-`TArbiter` decides between the units the domains have built over the
-same strokes.  Its seven lists are two of pending and active entries,
-two of winners and losers, and three working lists of unit pointers; an
-entry carries the unit, the association its area gave it, and the time
-it is arbitrated at.  `CleanUp` is what clears up afterwards: the subs
-of a claimed unit that was not invalidated are offered to the domains
-again - the strokes of a word that lost may still make something else -
-and the claimed units and pieces are taken out of the controller's
-lists, a claimed stroke piece marked invalid going to the expire routine
-on the way, which is what leaves it on the screen as ink.  A click the
-pen is still writing is never touched.
+`TArbiter` (`gArbiter`) decides between the units the domains have built
+over the same strokes.  A piece whose area arbitrates its type is entered
+on the arbiter's *pending* list when it is classified - one `BestMatch`
+per type the area takes it as, carrying the unit and the area's
+association for it (the recogniser, its parameters, the handler and the
+arbitrate time).
 
-NOT YET: the deciding itself (`DoArbitration`, `GatherUnits`,
-`ArbitrateUnits`, `ArbitrateGraphicsWords`, `WaitingForOtherUnits`,
-`AllUnitsPresent`), so nothing is claimed yet and the entries stay
-pending.
+`DoArbitration` takes each pending entry in turn:
 
-NOT YET: the arbiter's deciding, the domains above the stroke domain
-(edge-list gestures, shapes, words), the inker and ink
+- a type the area arbitrates **at once** - or the only such type the area
+  has - simply wins and goes straight to the area's handler.  An invalid
+  unit is thrown away instead.
+- anything else is **held**.  It may still decide early (`ArbitrateEarly`:
+  a scrub over a single stroke that nothing else was written with), and
+  otherwise it joins the *active* list and waits.
+- `WaitingForOtherUnits` is the wait: the first active unit that has
+  reached the area's own level (`fMaxLevel`, what `BuildGTypes` worked
+  out) is the one a gather is run from, and if that gather does not cover
+  every stroke, something is still to come.
+- `GatherUnits` is the covering test, and the neat part of the design.
+  The strokes under the unit are put in a sorted set with a count beside
+  each - how many more units must still cover it, one for each ring of
+  domains between the stroke and the top.  Every active entry whose
+  stroke range meets the set is taken in, its own strokes folded into the
+  set (`UnionStrokes`, which may widen it - and does when a word covers
+  strokes the first unit did not), and the rounds go on until every count
+  has run down to zero or nothing new is taken in.
+- `ArbitrateUnits` then picks.  The rule comes from
+  `GetRecognitionCase(area)` - the number of scrub types the area takes,
+  plus 2 for shapes and 4 for words: with a scrub among them nothing is
+  chosen between (`ArbitrateWithScrubs`: everything that is not a scrub
+  wins), with shapes and words together the two are weighed against each
+  other (`ArbitrateGraphicsWords`, NOT YET), and otherwise the lowest
+  score wins (`GetBestInterpretation`).
+
+The winners go to the area's handler - `HandleUnit`, which posts the
+command to the view under the unit - with the controller marked busy, so
+that nothing the view does in answer is taken for writing.  Then the
+winners that were arbitrated at once, and are not scrubs, are marked
+claimed and invalid, and `CleanUp` takes them out: a claimed unit that
+was not invalidated has its subs offered to the domains again (the
+strokes of a word that lost may still make something else), and a claimed
+stroke piece that was marked invalid goes to the expire routine, which is
+what leaves it on the screen as ink.  A click the pen is still writing is
+never touched.
+
+One ROM bug is kept: the last loop of `DoArbitration` walks the gather and
+tests each entry's flags, but marks the unit in hand rather than the
+entry's own - the register holding it is never reloaded.  Marking the same
+unit twice does no harm, and the entries that should have been marked are
+left for the round after.
+
+## What happens when the pen goes down
+
+With all of that in place the path from the tablet to a view's script is
+the ROM's own:
+
+1. the inker's strokes reach `StrokeCentral::IdleStrokes`, which makes a
+   `TClickUnit` of each and gives it to `TController::NewClassification`;
+2. the hit test builds (or finds) the area of the view under it, and the
+   area says which domains run over a click and which types are
+   arbitrated how;
+3. `'CLIK'` is arbitrated externally, so the click goes to `HandleUnit`
+   at once, while the pen is still down - that is what lets a button
+   hilite under the finger and a slider follow it;
+4. a tap or double tap noted in the stroke becomes a `TClickEventUnit`,
+   which is *not* externally arbitrated: it waits for the arbitration,
+   which is run from `TRecognitionManager::Idle` out of the application's
+   idle loop, and reaches the view as `aeTap`;
+5. when the stroke finishes, `TStrokeDomain::Group` makes the `'STRK'`
+   unit, `DoClassify` offers it upwards, and (in a view that asks for raw
+   strokes) the stroke recogniser answers it with `aeStroke`.
+
+A view that takes no writing at all gets an input mask of zero and so no
+area: the piece is nobody's, the controller claims it, and it never
+reaches a recogniser - which also means the click view of the tap before
+is left as it was.
+
+NOT YET: the domains above the stroke domain (edge-list gestures, shapes,
+words), `ArbitrateGraphicsWords`, the inker and ink
 (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.
-
-DEVIATION: the stroke world still hands every unit it makes straight to
-`HandleUnit` rather than to the controller.  The ROM gives a click to
-`NewClassification` and then, when the area says the type is externally
-arbitrated, to `HandleUnit`; a click *event* - a tap or a double tap -
-goes only to `NewClassification` and reaches its view through the
-arbiter.  Until the arbiter decides, taking that path would mean no tap
-ever arrived, so the host keeps the short cut.

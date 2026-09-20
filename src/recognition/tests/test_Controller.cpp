@@ -111,7 +111,7 @@ main()
 	gController = controller;
 	TArbiter* arbiter = TArbiter::Make(controller);
 	EXPECT(arbiter != nil && controller->fArbiter == arbiter);
-	EXPECT(arbiter->Pending()->ElementSize() == (long) sizeof(ArbiterEntry));
+	EXPECT(arbiter->Pending()->ElementSize() == (long) sizeof(BestMatch));
 
 	// nothing is due yet and there is nothing to wait for
 	EXPECT(controller->Idle() == -1);
@@ -196,7 +196,7 @@ main()
 	EXPECT(controller->fGroupQ->Count() == 1);
 	EXPECT(((GroupEntry*) controller->fGroupQ->GetEntry(0))->fDomain == words);
 	EXPECT(arbiter->Pending()->Count() == 1);
-	EXPECT(((ArbiterEntry*) arbiter->Pending()->GetEntry(0))->fUnit == strokeUnit);
+	EXPECT(((BestMatch*) arbiter->Pending()->GetEntry(0))->fUnit == strokeUnit);
 
 	// the word domain is offered it and does not take it, so the entry stays
 	controller->DoGroup();

@@ -56,6 +56,8 @@ enum
 	kClickEventUnit		= 'CEVT',
 	kWordUnit			= 'WORD',
 	kShapeUnit			= 'GSHP',
+	kScrubUnit			= 'SCRB',		// the scrub-out gesture
+	kReplayUnit			= 'WRPL',		// a unit the journal is replaying
 	kRootDomainType		= 'ROOT'
 };
 
@@ -67,7 +69,8 @@ enum
 	kInvalidatedUnit	= 0x08000000,
 	kInvalidUnit		= 0x00400000,
 	kPassedOnUnit		= 0x00080000,		// set on a TSIUnit when a sub has it
-	kAreaListUnit		= 0x00020000			// fAreas is a TAreaList, not a TRecArea
+	kAreaListUnit		= 0x00020000,		// fAreas is a TAreaList, not a TRecArea
+	kGatheredUnit		= 0x00800000		// the arbitration has this one in hand
 };
 
 // the click events a stroke can carry (TStroke::fClickEvent)

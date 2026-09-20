@@ -123,12 +123,15 @@ FPenUp(RefArg /*rcvr*/)
 static Ref
 FIdleStrokes(RefArg /*rcvr*/)
 {
+	// (the whole recogniser's idle, as the application's would be: the
+	// strokes, the ink and the controller's four passes - a tap reaches
+	// its view through the arbitration, not out of IdleStrokes itself)
 	while (HostTabletQueued() > 0)
 	{
 		HostTabletPump();
-		IdleStrokes();
+		gRecognition.Idle();
 	}
-	IdleStrokes();
+	gRecognition.Idle();
 	return NILREF;
 }
 

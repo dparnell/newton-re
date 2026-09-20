@@ -532,6 +532,7 @@ TRecognitionManager::Idle(void)
 	{
 		IdleStrokes();
 		fStrokeWorld->IdleCompress();
+		fController->Idle();
 	}
 	return 0;
 }
