@@ -3,7 +3,7 @@
 // regions painted and framed, clipping by the clip region and by a
 // complex region, the pen state, the origin; CopyBits between maps in the
 // source modes and between depths; a four-bit gray map and the ROM's gray
-// "or".  Every result is checked pixel by pixel.  Runs over a standalone
+// "or"; and the inker's line (InkerLine) in every direction.  Every result is checked pixel by pixel.  Runs over a standalone
 // kernel heap.
 #include "Draw.h"
 #include "memory/host/KernelHeap.h"
@@ -362,6 +362,132 @@ TestOrigin()
 }
 
 
+// The inker's line.  What is checked is the shape of what it draws - the
+// ink stays inside the rectangle it says it damaged, every row of that
+// rectangle gets something, and a segment drawn backwards leaves exactly
+// the same mark as one drawn forwards - and, as much as anything, that it
+// survives being asked: a line drawn leftwards or upwards subtracts its
+// coordinates the other way round, and a nearly horizontal one gets a
+// slope back from FixedDivide that has saturated.  Those are what made the
+// first cut of it trap on the host while the ARM would have shrugged.
+static long
+InkedPixels(const PixelMap* pm, Rect* bounds)
+{
+	long count = 0;
+	SetRect(bounds, 0x7fff, 0x7fff, -0x8000, -0x8000);
+	for (long y = pm->bounds.top; y < pm->bounds.bottom; y++)
+		for (long x = pm->bounds.left; x < pm->bounds.right; x++)
+			if (GetPixel(pm, x, y) != 0)
+			{
+				count++;
+				if (x < bounds->left)		bounds->left = (short) x;
+				if (x + 1 > bounds->right)	bounds->right = (short) (x + 1);
+				if (y < bounds->top)		bounds->top = (short) y;
+				if (y + 1 > bounds->bottom)	bounds->bottom = (short) (y + 1);
+			}
+	return count;
+}
+
+static Point
+Pt(long h, long v)
+{
+	Point pt;
+	pt.h = (short) h;
+	pt.v = (short) v;
+	return pt;
+}
+
+static void
+TestInker()
+{
+	static unsigned char bits[kSize * kSize];
+	static unsigned char other[kSize * kSize];
+	PixelMap pm = MakeMap(bits, 1);
+	PixelMap pm2 = MakeMap(other, 1);
+	Point pen = Pt(2, 2);
+
+	// the eight directions, and the degenerate ones
+	static const short kLines[][4] =
+	{
+		{  8,  8, 40, 40 },		// right and down
+		{ 40, 40,  8,  8 },		// left and up
+		{ 40,  8,  8, 40 },		// left and down
+		{  8, 40, 40,  8 },		// right and up
+		{  8, 20, 40, 20 },		// horizontal, rightwards
+		{ 40, 20,  8, 20 },		// horizontal, leftwards
+		{ 20,  8, 20, 40 },		// vertical, downwards
+		{ 20, 40, 20,  8 },		// vertical, upwards
+		{  8, 30, 56, 31 },		// nearly horizontal: the slope saturates
+		{ 56, 31,  8, 30 },		// and back
+		{ 20, 20, 20, 20 },		// a point
+	};
+	for (long i = 0; i < (long) (sizeof(kLines) / sizeof(kLines[0])); i++)
+	{
+		memset(bits, 0, sizeof(bits));
+		Point from = Pt(kLines[i][0], kLines[i][1]);
+		Point to = Pt(kLines[i][2], kLines[i][3]);
+		Rect damaged;
+		InkerLine(from, to, &damaged, pen, &pm);
+		Rect inked;
+		long count = InkedPixels(&pm, &inked);
+		EXPECT(count > 0);
+		// nothing is drawn outside what it said it damaged
+		EXPECT(inked.left >= damaged.left && inked.right <= damaged.right
+			&& inked.top >= damaged.top && inked.bottom <= damaged.bottom);
+		// and the damage reaches the ends of the segment
+		EXPECT(damaged.left <= (from.h < to.h ? from.h : to.h)
+			&& damaged.top <= (from.v < to.v ? from.v : to.v));
+	}
+
+	// a segment and its reverse leave the same mark
+	for (long i = 0; i < 4; i++)
+	{
+		Point from = Pt(kLines[i * 2][0], kLines[i * 2][1]);
+		Point to = Pt(kLines[i * 2][2], kLines[i * 2][3]);
+		Rect damaged;
+		memset(bits, 0, sizeof(bits));
+		InkerLine(from, to, &damaged, pen, &pm);
+		memset(other, 0, sizeof(other));
+		InkerLine(to, from, &damaged, pen, &pm2);
+		EXPECT(memcmp(bits, other, sizeof(bits)) == 0);
+	}
+
+	// a 45 degree line puts something on every row it covers
+	memset(bits, 0, sizeof(bits));
+	Rect damaged;
+	InkerLine(Pt(8, 8), Pt(40, 40), &damaged, pen, &pm);
+	for (long y = 8; y < 40; y++)
+	{
+		long on = 0;
+		for (long x = 0; x < kSize; x++)
+			on += GetPixel(&pm, x, y) != 0;
+		EXPECT(on > 0);
+	}
+
+	// off the map altogether: nothing drawn, and the damage is empty
+	memset(bits, 0, sizeof(bits));
+	InkerLine(Pt(200, 200), Pt(220, 230), &damaged, pen, &pm);
+	Rect inked;
+	EXPECT(InkedPixels(&pm, &inked) == 0);
+
+	// the ink is ORed in, so drawing a segment twice is the segment
+	memset(bits, 0, sizeof(bits));
+	InkerLine(Pt(10, 12), Pt(50, 30), &damaged, pen, &pm);
+	memcpy(other, bits, sizeof(bits));
+	InkerLine(Pt(10, 12), Pt(50, 30), &damaged, pen, &pm);
+	EXPECT(memcmp(bits, other, sizeof(bits)) == 0);
+
+	// a map a few pixels wide clips what is drawn rather than running off it
+	PixelMap narrow = MakeMap(bits, 1);
+	SetRect(&narrow.bounds, 0, 0, 16, 16);
+	narrow.rowBytes = 2;
+	memset(bits, 0, sizeof(bits));
+	InkerLine(Pt(-20, -20), Pt(60, 60), &damaged, pen, &narrow);
+	EXPECT(damaged.left >= 0 && damaged.top >= 0 && damaged.right <= 16 && damaged.bottom <= 16);
+	EXPECT(InkedPixels(&narrow, &inked) > 0);
+}
+
+
 int
 main()
 {
@@ -380,6 +506,7 @@ main()
 	TestBits();
 	TestGray();
 	TestOrigin();
+	TestInker();
 	if (failures == 0)
 		printf("test_Draw: all passed\n");
 	else

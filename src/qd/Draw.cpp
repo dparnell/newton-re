@@ -583,13 +583,20 @@ InkerLine(const Point from, const Point to, Rect* damaged, const Point pen, cons
 		return;
 	Rect clip = *damaged;
 
+	// The arithmetic below goes through Ports.h's ToFixed/AddFixed/
+	// ScaleFixed rather than the plain operators: every one of these
+	// numbers can be negative (a line drawn leftwards or upwards, a point
+	// off the left of the screen) and the slope of a nearly horizontal
+	// line comes back from FixedDivide saturated to 0x7fffffff, so the
+	// shifts, the additions and the multiply all overflow in the ordinary
+	// course of inking.  The ARM wraps; C++ has nothing to say about it.
 	Fixed slope;				// dx/dy, 16.16
 	Fixed left, right;			// where the nib's two edges are on the row, 16.16
 	if (from.v == to.v)
 	{
 		slope = 0;
-		left = 0x8000 + ((from.h >= to.h ? to.h : from.h) << 16);
-		right = 0x8000 + (clip.right << 16);
+		left = AddFixed(0x8000, ToFixed(from.h >= to.h ? to.h : from.h));
+		right = AddFixed(0x8000, ToFixed(clip.right));
 	}
 	else
 	{
@@ -600,34 +607,34 @@ InkerLine(const Point from, const Point to, Rect* damaged, const Point pen, cons
 			upper = to;
 			lower = from;
 		}
-		left = 0x8000 + (upper.h << 16);
-		right = left + (pen.h << 16);
-		slope = FixedDivide((lower.h - upper.h) << 16, (lower.v - upper.v) << 16);
-		long lean = pen.v * slope;		// how far the nib leans over its own height
-		left += slope >> 1;
-		right += slope >> 1;
+		left = AddFixed(0x8000, ToFixed(upper.h));
+		right = AddFixed(left, ToFixed(pen.h));
+		slope = FixedDivide(ToFixed(lower.h - upper.h), ToFixed(lower.v - upper.v));
+		Fixed lean = ScaleFixed(slope, pen.v);	// how far the nib leans over its own height
+		left = AddFixed(left, slope >> 1);
+		right = AddFixed(right, slope >> 1);
 		if (slope >= 0)
 		{
-			left -= lean;
+			left = AddFixed(left, -lean);
 			if (slope >= 0x10000)
-				right -= 0x10000;
+				right = AddFixed(right, -0x10000);
 			else
-				left += slope;
+				left = AddFixed(left, slope);
 		}
 		else
 		{
-			right -= lean;
+			right = AddFixed(right, -lean);
 			if (slope < -0x10000)
-				left += 0x10000;
+				left = AddFixed(left, 0x10000);
 			else
-				right += slope;
+				right = AddFixed(right, slope);
 		}
 		if (box.top != clip.top)
 		{
 			// the rows above the clip stepped over
-			long skip = (clip.top - box.top) * slope;
-			left += skip;
-			right += skip;
+			Fixed skip = ScaleFixed(slope, clip.top - box.top);
+			left = AddFixed(left, skip);
+			right = AddFixed(right, skip);
 		}
 	}
 
@@ -644,8 +651,8 @@ InkerLine(const Point from, const Point to, Rect* damaged, const Point pen, cons
 			b = clip.right;
 		for (long x = a; x < b; x++)
 			SetPixel((PixelMap*) map, x, y, GetPixel(map, x, y) | black);
-		left += slope;
-		right += slope;
+		left = AddFixed(left, slope);
+		right = AddFixed(right, slope);
 	}
 	QDStopDrawing((PixelMap*) map, damaged);
 }

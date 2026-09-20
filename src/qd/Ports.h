@@ -37,6 +37,21 @@
 #include "Regions.h"
 #endif
 
+// Fixed-point arithmetic the way the ARM does it, which is to say
+// wrapping.  QuickDraw works in 16.16 on numbers that go negative - a
+// coordinate off the left of the screen, a descent below the baseline, a
+// slope that has run away - and on values that FixedDivide has already
+// saturated to 0x7fffffff.  Shifting a negative signed long left and
+// overflowing a signed multiply or addition are both undefined in C++ and
+// both perfectly ordinary on the ARM, so every such place in the
+// reconstruction goes through one of these and computes what the machine
+// computed.
+inline Fixed	ToFixed(long n)					{ return (Fixed) ((ULong) n << 16); }
+inline Fixed	AddFixed(Fixed a, Fixed b)		{ return (Fixed) ((ULong) a + (ULong) b); }
+inline Fixed	ScaleFixed(Fixed f, long n)		{ return (Fixed) ((ULong) f * (ULong) n); }
+inline long		RoundFixed(Fixed f)				{ return AddFixed(f, 0x8000) >> 16; }
+
+
 // the QuickDraw globals (ROM 0x0c104e3c stdPatterns, 0x0c104e50 qdGlobals)
 struct QDGlobals
 {

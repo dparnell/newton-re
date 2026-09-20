@@ -47,20 +47,10 @@ static inline ULong	Get16(const char* p)	{ return (Get8(p) << 8) | Get8(p + 1); 
 static inline long	GetS16(const char* p)	{ return (short) Get16(p); }
 static inline ULong	Get32(const char* p)	{ return (Get16(p) << 16) | Get16(p + 2); }
 
-// A whole number as a Fixed.  The ROM writes `mov r0,r0,lsl #16`, which
-// the ARM is happy to do to a negative value; shifting a negative signed
-// long left is undefined in C++, and a font with a negative descent or a
-// negative width adjustment does turn up, so the shift is done in
-// unsigned and the bits read back as signed - which is the same thing the
-// ARM does.
-static inline Fixed	ToFixed(long n)			{ return (Fixed) ((ULong) n << 16); }
-
-// A Fixed rounded to the nearest whole number, as `add r0,r0,#0x8000`
-// followed by `mov r0,r0,asr #16`.  The addition is done in unsigned
-// because it can overflow - a StyleRecord that nobody filled in (see
-// CreateTextStyleRecord) gives FixedMultiply something to saturate on -
-// and the ARM wraps where C++ would have nothing to say.
-static inline long	RoundFixed(Fixed f)		{ return ((Fixed) ((ULong) f + 0x8000)) >> 16; }
+// (ToFixed and RoundFixed are Ports.h's: a whole number shifted into a
+// Fixed, and a Fixed rounded back, both wrapping as the ARM's do.  A font
+// with a negative descent, and a StyleRecord that nobody filled in - see
+// CreateTextStyleRecord - are what make that matter here.)
 
 
 /*------------------------------------------------------------------------------
