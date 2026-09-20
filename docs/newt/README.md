@@ -391,3 +391,28 @@ and the extras soup, activateStorePackages, the boot test script, the
 'aliv event, the inker calibration, the librarian, the splash screen, the
 boot sound, the print drivers, the font loader, RunInitScripts, DarkStar
 and the busy box.
+
+
+## What opens, and what does not
+
+Driving the machine from a script (`src/host/demo/`) is the quickest way
+to find the next thing worth reconstructing: tap the button bar, and what
+is missing says so on stderr as `native not reconstructed` or throws.  As
+of the soft keyboard and HitShape going in:
+
+| tapped   | what happens                                              |
+|----------|-----------------------------------------------------------|
+| Notepad  | writes, types, takes ink; new notes on the enter key       |
+| In/Out   | opens; "There are no Items in this folder"                 |
+| Names    | opens with its alphabet tabs and its buttons               |
+| Find     | opens with "Look for", the Where buttons and Find          |
+| Dates    | throws: `LayoutTable` (0x001eb4b0) is NOT YET              |
+| Assist   | throws: `GenFullCommands` (0x00085bf0) is NOT YET          |
+| Extras   | throws -48200 - `ObjectPtr` of nil - from a child's        |
+|          | `viewSetupFormScript`, four frames into `ButtonToggle`     |
+| keyboard | draws, tracks the pen, types at the caret                  |
+
+The Extras drawer's failure is the interesting one: it is not a missing
+native but something handing nil to a routine that wants an object, and it
+may be downstream of the two ROM extension packages that do not install
+("its bytes are not a run of objects" - the help book and ListView).
