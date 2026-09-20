@@ -25,6 +25,10 @@ void	CorrectAnyBadStyleRuns(RefArg styles, long textLength);	// the runs made to
 Ref		SaveStylesAndTabStopsArrays(RefArg styles, RefArg tabs);	// a canonical styles frame {styles, tabs}
 Ref		GetStyleAtOffset(RefArg styles, long offset, long* run, long* offsetInRun);	// ROM 0x0017d8ac GetStyleAtOffset__FRC6RefVarlPlT3 - the style of the character (a single spec: itself)
 Ref		GetStylesOfRange(RefArg styles, long offset, long length, Boolean clone);	// ROM 0x0017da64 GetStylesOfRange__FRC6RefVarlT2Uc - the runs covering the range
+
+// A piece of a paragraph's text as a string of its own (the styles kept
+// when the piece has ink in it).
+Ref		ExtractRichStringFromParaSlots(RefArg text, RefArg styles, ULong start, ULong count);	// ROM 0x0017d6c0 ExtractRichStringFromParaSlots__FRC6RefVarT1UlT3
 long	CountStylesForLength(RefArg styles, long run, long length);	// ROM 0x0017dd38 CountStylesForLength__FRC6RefVarlT2 - the runs from run covering length characters
 void	SetStyleOfRange(RefArg styles, RefArg style, long start, long end);	// ROM 0x00179ae0 SetStyleOfRange__FRC6RefVarT1ClT3 - the range's runs replaced by one
 void	CompactStyleRuns(RefArg styles);							// ROM 0x0017ab64 CompactStyleRuns__FRC6RefVar - equal neighbours merged

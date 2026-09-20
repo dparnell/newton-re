@@ -7,6 +7,7 @@
 */
 
 #include "StyleRuns.h"
+#include "RichString.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "NewtonExceptions.h"
@@ -198,6 +199,42 @@ CountStylesForLength(RefArg styles, long run, long length)
 	if (i == count)
 		i--;
 	return i - run + 1;
+}
+
+
+// ROM 0x0017d6c0 ExtractRichStringFromParaSlots__FRC6RefVarT1UlT3
+// A piece of a paragraph as a string of its own: `count` characters from
+// `start` of its text, kept rich when any of the styles covering them is
+// ink.  A start or a count past the end of the text is cut back to it.
+//
+// NOT YET RECONSTRUCTED: MakeRichString, so a piece with ink in it comes
+// back as its plain characters - the ink characters without their ink.
+Ref
+ExtractRichStringFromParaSlots(RefArg text, RefArg styles, ULong start, ULong count)
+{
+	TRichString rich(text);
+	ULong length = (ULong) rich.Length();
+	if (length < start)
+		start = length;
+	if (length < start + count)
+		count = length - start;
+	RefVar result(AllocateBinary(RefVar(RSSYMstring), (long) count * 2 + 2));
+	// (both pointers taken after the allocation: the heap may have moved
+	//  the text while the string was being made)
+	UniChar* from = (UniChar*) BinaryData(text);
+	UniChar* to = (UniChar*) BinaryData(result);
+	BlockMove(from + start, to, (Size) count * 2);
+	to[count] = 0;
+	if (!IsArray(styles) || Length(styles) < 1)
+		return result;
+	RefVar runs(GetStylesOfRange(styles, (long) start, (long) count, false));
+	long runCount = Length(runs);
+	for (long i = 1; i < runCount; i += 2)
+	{
+		if (IsInkWord(RefVar(GetArraySlotRef(runs, i))))
+			return result;			// NOT YET: MakeRichString(result, runs, false)
+	}
+	return result;
 }
 
 

@@ -2082,6 +2082,32 @@ TestFontQueries()
 }
 
 
+// ExtractData(data, separator, maxLength) is the line the Notes overview
+// shows for a note: its children's words run together, the text first and
+// the drawings after, in the order they sit down the page.
+static void
+TestExtractData()
+{
+	Eval("noteData := ["
+		 "{viewStationery: 'para, viewBounds: {top: 40, left: 0, bottom: 60, right: 100}, text: \"second\"}, "
+		 "{viewStationery: 'para, viewBounds: {top: 10, left: 0, bottom: 30, right: 100}, text: \"first\"}, "
+		 "{viewStationery: 'poly, viewBounds: {top: 70, left: 0, bottom: 90, right: 100}}]");
+	// sorted down the page, and the shape after the words whatever its place
+	EXPECT(Eval("StrEqual(ExtractData(noteData, \"; \", 50), \"first; second;  -shape- \")") == TRUEREF);
+	// cut at the length asked for (the separator counts towards it)
+	EXPECT(Eval("StrEqual(ExtractData(noteData, \"; \", 8), \"first; s; \")") == TRUEREF);
+	// a sketch says so rather than saying nothing
+	EXPECT(Eval("StrEqual(ExtractData([{viewStationery: 'poly, ink: MakeBinary(4, 'inkWord)}], \"; \", 50), \" -sketch- \")") == TRUEREF);
+	// anything else with a stationery of its own says only "data"
+	EXPECT(Eval("StrEqual(ExtractData([{viewStationery: 'weird}], \"; \", 50), \"data\")") == TRUEREF);
+	// returns and tabs become spaces, so the one line stays one line
+	EXPECT(Eval("StrEqual(ExtractData([{text: \"a\\nb\\tc\"}], \"; \", 50), \"a b c\")") == TRUEREF);
+	// nothing at all is the empty string, not nil
+	EXPECT(Eval("StrEqual(ExtractData(nil, \"; \", 50), \"\")") == TRUEREF);
+	EXPECT(Eval("StrEqual(ExtractData([], \"; \", 50), \"\")") == TRUEREF);
+}
+
+
 static void
 TestClicks()
 {
@@ -2899,6 +2925,7 @@ main()
 		TestTimeDownAView();
 		TestHiliteOffsets();
 		TestFontQueries();
+		TestExtractData();
 		TestClicks();
 		TestEffects();
 	}

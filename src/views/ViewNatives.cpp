@@ -21,6 +21,10 @@
 #include "EditView.h"
 #include "DataView.h"
 #include "ParagraphView.h"
+#include "StyleRuns.h"
+#include "RichString.h"
+#include "REPTranslators.h"
+#include "Unicode.h"
 #include "DrawShape.h"
 #include "Application.h"
 #include "Commands.h"
@@ -1499,6 +1503,144 @@ FLayoutTableX(RefArg rcvr, RefArg spec, RefArg column, RefArg row)
 }
 
 
+// ROM 0x00191800 PolygonDescription__FRC6RefVar
+// What a drawing is called when it has to be described in words: the
+// ROM's " -sketch- " when it carries ink, " -shape- " when it does not.
+static Ref
+PolygonDescription(RefArg item)
+{
+	return NOTNIL(RefVar(GetProtoVariable(item, RSSYMink, nil))) ? Rinkname : Rshapename;
+}
+
+
+// ROM 0x001ed314 FExtractData__FRC6RefVarN31
+// ExtractData(data, separator, maxLength): everything a note says, in one
+// string - the line the Notes overview shows for it.  `data` is the
+// note's children (paragraphs, sketches, shapes and whatever else has
+// been dropped on it) and the answer is their text run together with the
+// separator between the pieces, stopping at maxLength characters.
+//
+// The children are read in the order they sit on the page - sorted by
+// viewBounds.top - but only when there are fewer than forty of them.
+// Past that the sort is skipped and they come out in the order the note
+// stored them: a long note is not worth sorting for one line of summary.
+//
+// The words come first, in one pass over the children, and the drawings
+// in a second, so a note that begins with a sketch still reads as its
+// text first.  A child that is the same object as the one before it is
+// passed over.  Anything with a stationery of its own that is neither
+// 'para nor 'poly says only "data".
+//
+// Carriage returns and tabs in the answer become spaces, so that the one
+// line stays one line.
+static Ref
+FExtractData(RefArg /*rcvr*/, RefArg data, RefArg separator, RefArg maxLength)
+{
+	if (ISNIL(data) || Length(data) == 0)
+		return MakeString("");
+
+	long count = Length(data);
+	long separatorLength = (Length(separator) - 2) / 2;
+	long maxChars = RINT(maxLength);
+	RefVar items;
+	RefVar item;
+	RefVar stationery;
+	RefVar piece;
+	RefVar previous;
+	RefVar pieces(MakeArray(count * 2 - 1));
+	long used = 0;						// characters in the answer so far
+	long written = 0;					// pieces written
+	long slot = 0;
+
+	if (count < 40)
+	{
+		RefVar path(AllocateArray(RefVar(RSSYMpathexpr), 2));
+		SetArraySlot(path, 0, RefVar(RSSYMviewbounds));
+		SetArraySlot(path, 1, RefVar(RSSYMtop));
+		items = Clone(data);
+		SortArray(items, RefVar(RSSYM_3C), path);
+	}
+	else
+		items = data;
+
+	// the text
+	for (long i = 0; i < count && used < maxChars; i++)
+	{
+		item = GetArraySlotRef(items, i);
+		if ((Ref) item != (Ref) previous)
+		{
+			stationery = GetProtoVariable(item, RSSYMviewstationery, nil);
+			if (EQRef(stationery, RSSYMpara) || ISNIL(stationery))
+			{
+				RefVar text(GetProtoVariable(item, RSSYMtext, nil));
+				if (NOTNIL(text))
+				{
+					long room = maxChars - used;
+					long length = Ustrlen((UniChar*) BinaryData(text));
+					if (length > room)
+						length = room;
+					piece = ExtractRichStringFromParaSlots(text,
+								RefVar(GetProtoVariable(item, RSSYMstyles, nil)), 0, (ULong) length);
+					SetArraySlot(pieces, slot++, piece);
+					TRichString rich(piece);
+					used += rich.Length();
+					if (++written < count)
+					{
+						SetArraySlot(pieces, slot++, separator);
+						used += separatorLength;
+					}
+				}
+			}
+		}
+		previous = item;
+	}
+
+	// and the drawings
+	previous = NILREF;
+	for (long i = 0; i < count && used < maxChars; i++)
+	{
+		item = GetArraySlotRef(items, i);
+		if ((Ref) item != (Ref) previous)
+		{
+			stationery = GetProtoVariable(item, RSSYMviewstationery, nil);
+			if (ISNIL(RefVar(GetProtoVariable(item, RSSYMink, nil))))
+			{
+				if (ISNIL(stationery) || EQRef(stationery, RSSYMpara))
+					piece = NILREF;					// a paragraph: its text went in above
+				else if (EQRef(stationery, RSSYMpoly))
+					piece = PolygonDescription(item);
+				else
+					piece = Rdataname;				// "data", for anything else
+			}
+			else
+				piece = PolygonDescription(item);
+			if (NOTNIL(piece))
+			{
+				SetArraySlot(pieces, slot++, piece);
+				used += (Length(piece) - 2) / 2;
+				if (++written < count)
+				{
+					SetArraySlot(pieces, slot++, separator);
+					used += separatorLength;
+				}
+			}
+		}
+		previous = item;
+	}
+
+	RefVar result(Stringer(pieces));
+	TRichString rich(result);
+	long length = rich.Length();
+	UniChar* text = (UniChar*) BinaryData(result);
+	for (long i = 0; i < length; i++)
+	{
+		if (text[i] == 0x0d || text[i] == 0x09)		// a return or a tab
+			text[i] = ' ';
+	}
+	return result;
+}
+
+
 // ROM 0x001f0f10 FGetHiliteOffsets__FRC6RefVar
 // GetHiliteOffsets(): where the current selection is - the `offset` of
 // the `hilites` of whichever view owns them - or nil when nothing is
@@ -1722,6 +1864,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FPositionToTime__FRC6RefVarN21", (void*) FPositionToTime, 2);
 	RegisterNativeFunction("FTimeToPosition__FRC6RefVarN21", (void*) FTimeToPosition, 2);
 	RegisterNativeFunction("FGetHiliteOffsets__FRC6RefVar", (void*) FGetHiliteOffsets, 0);
+	RegisterNativeFunction("FExtractData__FRC6RefVarN31", (void*) FExtractData, 3);
 	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
 	RegisterNativeFunction("FDrawXBitmap", (void*) FDrawXBitmap, 4);
 	RegisterNativeFunction("FDoDrawing", (void*) FDoDrawing, 2);

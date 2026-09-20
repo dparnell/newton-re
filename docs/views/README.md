@@ -1329,6 +1329,33 @@ The columns do not overlap - a cell's left is the last one's right.
 Laying out stops at the first cell that would cross the view's right
 edge and at the first row that would cross the bottom one.
 
+## What a note says (`views/ViewNatives.cpp`)
+
+`ExtractData(data, separator, maxLength)` 0x001ed314 is the line the
+Notes overview shows for a note - the Notes stationery's `StringExtract`
+calls it from `Abstract`, which is why every boot with a store full of
+notes asks for it. `data` is the note's children, and the answer is
+their words run together with the separator between them, stopping at
+`maxLength` characters.
+
+The children are read in the order they sit down the page (sorted by
+`viewBounds.top` through `SortArray` with a `pathExpr` key), but only
+when there are fewer than forty of them: past that the sort is skipped
+and they come out in the order the note stored them, a long note not
+being worth sorting for one line of summary. The words come first, in
+one pass, and the drawings in a second, so a note that begins with a
+sketch still reads as its text first; a child that is the same object as
+the one before it is passed over.
+
+A paragraph contributes `ExtractRichStringFromParaSlots` 0x0017d6c0 of
+its text - the characters asked for, kept rich when a style covering
+them is ink (`MakeRichString` is NOT YET, so the ink is dropped and its
+characters stay). A drawing contributes `PolygonDescription` 0x00191800,
+which is the ROM's `" -sketch- "` when it carries ink and `" -shape- "`
+when it does not. Anything else with a stationery of its own
+contributes the word `"data"`. Carriage returns and tabs in the answer
+become spaces, so that the one line stays one line.
+
 ## A time down a view
 
 The Dates application's day view is a strip of one day: the top of it is
