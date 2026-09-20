@@ -54,9 +54,22 @@ DeleteRefStruct(RefStruct* r)
 
 // ROM 0x002f5730 ThrowRefException__FPcRC6RefVar
 // Throw data (a ref) under a name that is an evt.ex... with type.ref data.
+//
+// With NEWTON_TRACE_EXCEPTIONS set in the environment the script stack is
+// printed here, where it still stands - by the time the exception is
+// caught and reported the interpreter has unwound and there is nothing
+// left to see.  This is how a mistake in one of the ROM's own scripts is
+// tracked down to the script that made it.
 void
 ThrowRefException(ExceptionName name, RefArg data)
 {
+	if (getenv("NEWTON_TRACE_EXCEPTIONS") != nil && gREPout != nil)
+	{
+		gREPout->Print("--- %s: ", name);
+		PrintObject(data, 0);
+		gREPout->Print("\n");
+		StackTrace();
+	}
 	if (!Subexception(name, (ExceptionName) "evt.ex") || !Subexception(name, (ExceptionName) "type.ref"))
 	{
 		RefVar sym(Intern((char*) name));

@@ -644,6 +644,16 @@ and to hand an unwanted stroke to `HandleExpiredStroke`, the recognisers
 are installed (the click-event, stroke and click ones at level 1) and
 the domains are numbered.
 
+The ROM starts it at **level 2** - clicks and strokes, and the shapes and
+words above them - and that is what the host does too, because level 2 is
+also what builds the dictionaries (`InitDictionaries`).  The Setup
+assistant asks for one as soon as a name has been typed: its Continue
+button runs `AddWordsToDict` -> `AddWord` -> `SetUpDictionary` ->
+`GetDictionary(31)`, which takes the `Length` of `vars.dictionaries` and
+throws if the list was never built.  The shape, word and WRec recognisers
+of level 2 are still NOT YET, so nothing else about the level is true
+yet.
+
 ## The arbiter (`recognition/Arbiter.h`)
 
 `TArbiter` (`gArbiter`) decides between the units the domains have built

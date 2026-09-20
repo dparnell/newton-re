@@ -99,7 +99,11 @@ TNotebook::InitToolbox(void)
 	}
 	else
 		SetOrientation(RINT(orientation));
-	gRecognition.Init(1);
+	// the ROM starts it at 2 - clicks and strokes, and the shapes and
+	// words above them.  The shape and word recognisers themselves are
+	// NOT YET, so level 2 here means only that the dictionaries are built
+	// and the word half of the system is meant to be on.
+	gRecognition.Init(2);
 	RunInitScripts();
 	gStrokeWorld.Init();
 }

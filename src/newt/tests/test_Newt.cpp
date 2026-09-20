@@ -274,7 +274,7 @@ int main()
 	OsBoot();
 	EXPECT(gWorldTaskId != 0 && !gAliveAfterBoot);		// the world booted in the 'main' task, before PreMain
 	EXPECT(gNewtIsAliveAndWell && gApplication != nil && gApplication->ClassID() == clARMNotebook && gRootView != nil);
-	EXPECT(gNewtPort != nil && gRecognition.fLevel == 1 && gRecognition.fRecognizers != nil);
+	EXPECT(gNewtPort != nil && gRecognition.fLevel == 2 && gRecognition.fRecognizers != nil);
 	EXPECT(gScriptErr == 0);
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);

@@ -424,9 +424,11 @@ TRecognitionManager::Init(UChar level)
 
 
 // ROM 0x0019d438 InitRecognizers__19TRecognitionManagerFv
-// The recognisers installed and the root domain made.
+// The recognisers installed and the root domain made.  The ROM installs
+// the gesture, click-event, stroke and click recognisers at any level,
+// and the shape, word and WRec ones above level 1.
 // NOT YET RECONSTRUCTED: the gesture recogniser and its edge-list domain,
-// the shape and word recognisers of level 2, ReadDomainOptions.
+// the three of level 2, ReadDomainOptions.
 long
 TRecognitionManager::InitRecognizers(void)
 {

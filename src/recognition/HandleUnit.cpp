@@ -19,6 +19,9 @@
 #include "NewtonExceptions.h"
 #include "Frames.h"
 #include "REPTranslators.h"
+#include "Interpreter.h"
+
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -53,6 +56,8 @@ SafeExceptionNotify(Exception* exception)
 		fprintf(stderr, ": %s\n", (const char*) exception->data);	// ThrowMsg carries the words
 	else
 		fprintf(stderr, " (%ld)\n", (long) (Long) exception->data);
+	if (getenv("NEWTON_TRACE_EXCEPTIONS") != nil && gREPout != nil)
+		StackTrace();
 	fflush(stderr);
 }
 
