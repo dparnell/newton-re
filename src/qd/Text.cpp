@@ -773,6 +773,28 @@ FTextBounds(RefArg /*rcvr*/, RefArg text, RefArg fontOrStyle, RefArg box)
 }
 
 
+// ROM 0x001ec198 FGetFontSize
+// GetFontSize(spec): the size a font spec asks for.  A frame with no
+// `size` anywhere in its protos answers nil rather than the nought
+// GetFontSize (Fonts.h) would give it.
+static Ref
+FGetFontSize(RefArg /*rcvr*/, RefArg spec)
+{
+	if (IsFrame(spec) && ISNIL(GetProtoVariable(spec, RSSYMsize, nil)))
+		return NILREF;
+	return MAKEINT(GetFontSize(spec));
+}
+
+
+// ROM 0x001ed1f4 FGetFontFamilySym
+// GetFontFamilySym(spec): the family's symbol ('espy, 'newYork, ...).
+static Ref
+FGetFontFamilySym(RefArg /*rcvr*/, RefArg spec)
+{
+	return GetFontFamilySym(spec);
+}
+
+
 void
 RegisterTextNatives(void)
 {
@@ -785,4 +807,6 @@ RegisterTextNatives(void)
 	RegisterNativeFunction("FTextBounds", (void*) FTextBounds, 3);
 	RegisterNativeFunction("FStrTruncate__FRC6RefVarN21", (void*) FStrTruncate, 2);
 	RegisterNativeFunction("FStyledStrTruncate__FRC6RefVarN31", (void*) FStyledStrTruncate, 3);
+	RegisterNativeFunction("FGetFontSize", (void*) FGetFontSize, 1);
+	RegisterNativeFunction("FGetFontFamilySym", (void*) FGetFontFamilySym, 1);
 }

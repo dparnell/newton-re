@@ -1293,6 +1293,78 @@ FLayoutVerticallyX(RefArg rcvr, RefArg entries, RefArg index)
 	return result;
 }
 
+/* -------------------------------------------------------------------------------
+	A time down a view
+
+	The Dates application's day view is a strip of the day: the top of it
+	is midnight and the bottom is midnight again, so a y in the view is a
+	time and a time is a y.  The ROM keeps the arithmetic with the meeting
+	views it is for (0x001ca128, beside LayoutMeeting and TMeetingView);
+	the two natives that reach it are here, in the view functions, which
+	is where their callers look for them.
+
+	Both snap the time to the nearest quarter of an hour, and both do it
+	with the same expression - `t - ((t + 8) mod 15 - 8)` - which tips at
+	*seven* minutes past the quarter rather than seven and a half: 7 comes
+	back as 15 but 6 as 0.
+------------------------------------------------------------------------------- */
+
+// The whole day the view's height stands for (intl/Dates.h has the same
+// constant; the ROM writes 1440 into each of the two natives).
+const long kDayMinutes = 1440;
+
+// The nearest quarter of an hour, as the two below round (the ROM writes
+// this out in each of them).
+static long
+RoundToQuarterHour(long minutes)
+{
+	return minutes - ((minutes + 8) % 15 - 8);
+}
+
+
+// ROM 0x001ca128 TimeToPosition__FlN31
+// How far down an `extent` of pixels the time is, `span` minutes being
+// the whole of it and `base` the time at the top.
+long
+TimeToPosition(long time, long extent, long base, long span)
+{
+	return extent * (RoundToQuarterHour(time) - base) / span;
+}
+
+
+// ROM 0x001ca16c PositionToTime__FlN31
+// And back: the time at that many pixels down.
+long
+PositionToTime(long position, long extent, long base, long span)
+{
+	return RoundToQuarterHour(span * position / extent + base);
+}
+
+
+// ROM 0x001ecc1c FPositionToTime__FRC6RefVarN21
+// PositionToTime(view, y): the time y pixels down the view, the view's
+// height being the whole day (1440 minutes from midnight).
+static Ref
+FPositionToTime(RefArg /*rcvr*/, RefArg context, RefArg position)
+{
+	long y = RINT(position);
+	TView* view = FailGetView(context);
+	long height = (short) ((unsigned short) view->viewBounds.bottom - (unsigned short) view->viewBounds.top);
+	return MAKEINT(PositionToTime(y, height, 0, kDayMinutes));
+}
+
+
+// ROM 0x001ecc88 FTimeToPosition__FRC6RefVarN21
+// TimeToPosition(view, minutes): and back again.
+static Ref
+FTimeToPosition(RefArg /*rcvr*/, RefArg context, RefArg time)
+{
+	TView* view = FailGetView(context);
+	long height = (short) ((unsigned short) view->viewBounds.bottom - (unsigned short) view->viewBounds.top);
+	return MAKEINT(TimeToPosition(RINT(time), height, 0, kDayMinutes));
+}
+
+
 // ROM 0x001eb4b0 FLayoutTableX
 // :LayoutTable(spec, column, row): the cells of a table, as view
 // templates, in a new array - as many of them as fit in the view.
@@ -1424,6 +1496,20 @@ FLayoutTableX(RefArg rcvr, RefArg spec, RefArg column, RefArg row)
 		thisRow = nextRow++;
 	}
 	return result;
+}
+
+
+// ROM 0x001f0f10 FGetHiliteOffsets__FRC6RefVar
+// GetHiliteOffsets(): where the current selection is - the `offset` of
+// the `hilites` of whichever view owns them - or nil when nothing is
+// selected anywhere.
+static Ref
+FGetHiliteOffsets(RefArg /*rcvr*/)
+{
+	TView* hiliter = gRootView->fHiliter;
+	if (hiliter == nil)
+		return NILREF;
+	return hiliter->GetValue(RSSYMhilites, RSSYMoffset);
 }
 
 
@@ -1633,6 +1719,9 @@ RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FLayoutVerticallyX", (void*) FLayoutVerticallyX, 2);
 	RegisterNativeFunction("FLayoutTableX", (void*) FLayoutTableX, 3);
+	RegisterNativeFunction("FPositionToTime__FRC6RefVarN21", (void*) FPositionToTime, 2);
+	RegisterNativeFunction("FTimeToPosition__FRC6RefVarN21", (void*) FTimeToPosition, 2);
+	RegisterNativeFunction("FGetHiliteOffsets__FRC6RefVar", (void*) FGetHiliteOffsets, 0);
 	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
 	RegisterNativeFunction("FDrawXBitmap", (void*) FDrawXBitmap, 4);
 	RegisterNativeFunction("FDoDrawing", (void*) FDoDrawing, 2);

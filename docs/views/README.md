@@ -1329,6 +1329,25 @@ The columns do not overlap - a cell's left is the last one's right.
 Laying out stops at the first cell that would cross the view's right
 edge and at the first row that would cross the bottom one.
 
+## A time down a view
+
+The Dates application's day view is a strip of one day: the top of it is
+midnight and the bottom is midnight again, so a y in the view is a time
+and a time is a y. `PositionToTime(view, y)` 0x001ecc1c and
+`TimeToPosition(view, minutes)` 0x001ecc88 convert between them over the
+view's own height, the whole day being 1440 minutes; the arithmetic
+itself (0x001ca128, 0x001ca16c) the ROM keeps with the meeting views it
+is for.
+
+Both snap the time to the nearest quarter of an hour with the same
+expression, `t - ((t + 8) mod 15 - 8)`, which tips at *seven* minutes
+past the quarter rather than seven and a half: 9:07 lands on 9:15 and
+9:06 on 9:00.
+
+`GetHiliteOffsets()` 0x001f0f10 answers where the current selection is -
+the `offset` value of the `hilites` of whichever view owns them
+(`TRootView::fHiliter`) - and nil when nothing is selected anywhere.
+
 ## The on-screen keyboard (`views/KeyboardView.h`)
 
 A keyboard is a `keyDefinitions` array of rows, each row `[pitch, height,

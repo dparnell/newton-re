@@ -2000,6 +2000,64 @@ TestLayoutTable()
 }
 
 
+// PositionToTime(view, y) and TimeToPosition(view, minutes) map a day
+// down a view's height - what the Dates day view is drawn on - snapping
+// to the quarter hour as they go.  A view 240 tall is a minute every ten
+// pixels less a sixth: 1440 minutes over 240 pixels is six a pixel.
+static void
+TestTimeDownAView()
+{
+	ViewOf("ctxD := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		   "viewBounds: {left: 0, top: 0, right: 100, bottom: 240}})");
+	// the top is midnight, the bottom the end of the day
+	EXPECT(RINT(Eval("PositionToTime(ctxD, 0)")) == 0);
+	EXPECT(RINT(Eval("PositionToTime(ctxD, 240)")) == 1440);
+	EXPECT(RINT(Eval("PositionToTime(ctxD, 120)")) == 720);		// noon, halfway down
+	EXPECT(RINT(Eval("TimeToPosition(ctxD, 0)")) == 0);
+	EXPECT(RINT(Eval("TimeToPosition(ctxD, 720)")) == 120);
+	EXPECT(RINT(Eval("TimeToPosition(ctxD, 1440)")) == 240);
+
+	// a time is snapped to the quarter hour first, so 9:00 and 9:07 are
+	// the same place and 9:06 is the one before
+	EXPECT(RINT(Eval("TimeToPosition(ctxD, 9 * 60)")) == 90);
+	EXPECT(RINT(Eval("TimeToPosition(ctxD, 9 * 60 + 7)")) == RINT(Eval("TimeToPosition(ctxD, 9 * 60 + 15)")));
+	EXPECT(RINT(Eval("TimeToPosition(ctxD, 9 * 60 + 6)")) == 90);
+
+	// and a position answers a whole quarter hour, never anything between
+	for (long y = 0; y <= 240; y += 7)
+	{
+		char source[64];
+		snprintf(source, sizeof(source), "PositionToTime(ctxD, %ld)", y);
+		EXPECT(RINT(Eval(source)) % 15 == 0);
+	}
+	Eval("ctxD:Close()");
+	Refresh();
+}
+
+
+// GetHiliteOffsets() answers where the selection is, and nil when there
+// is none - which is the truth until something is selected.
+static void
+TestHiliteOffsets()
+{
+	EXPECT(ISNIL(Eval("GetHiliteOffsets()")));
+}
+
+
+// GetFontSize and GetFontFamilySym read a font spec, packed or a frame.
+static void
+TestFontQueries()
+{
+	EXPECT(RINT(Eval("GetFontSize(0x3000)")) == 12);			// espy 12 bold, packed
+	EXPECT(Eval("GetFontFamilySym(0x3000)") == Intern((char*) "espy"));
+	EXPECT(RINT(Eval("GetFontSize({family: 'newYork, size: 18, face: 0})")) == 18);
+	EXPECT(Eval("GetFontFamilySym({family: 'newYork, size: 18, face: 0})") == Intern((char*) "newYork"));
+	// a frame with no size anywhere answers nil rather than nought
+	EXPECT(ISNIL(Eval("GetFontSize({family: 'espy})")));
+	EXPECT(ISNIL(Eval("GetFontFamilySym(\"not a font\")")));
+}
+
+
 static void
 TestClicks()
 {
@@ -2813,6 +2871,9 @@ main()
 		TestIdlers();
 		TestPickView();
 		TestLayoutTable();
+		TestTimeDownAView();
+		TestHiliteOffsets();
+		TestFontQueries();
 		TestClicks();
 		TestEffects();
 	}
