@@ -8,6 +8,7 @@
 */
 
 #include "Recognizer.h"
+#include "Areas.h"
 #include "Words.h"
 #include "UnitPublic.h"
 #include "Commands.h"
@@ -248,12 +249,26 @@ TRecognizerList::FindRecognizer(ULong id)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x00036960 OtherViewInUse__FP5TView
-// NOT YET RECONSTRUCTED: whether an area of the area cache (gAreaCache)
-// other than the view's is in use (its use count above 0); the host has
-// no area cache.
+// Whether any recognition area in the cache belongs to a view other than
+// this one and is still being used - one stroke of somebody else's is
+// still on its way through, and a word must not be put down on top of
+// it.
+//
+// Nothing builds the area cache yet (NOT YET: InitAreas, GetAreasHit),
+// so with an empty one nobody else is ever writing, which is the answer
+// on a machine that is only being typed at.
 Boolean
-OtherViewInUse(TView* /*view*/)
+OtherViewInUse(TView* view)
 {
+	ULong id = view != nil ? (ULong) view->fId : 0;
+	if (gAreaCache == nil)
+		return false;
+	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
+	{
+		TRecArea* area = *(TRecArea**) gAreaCache->GetEntry(i);
+		if (area->fViewId != id && area->fUsers > 0)
+			return true;
+	}
 	return false;
 }
 

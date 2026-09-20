@@ -121,6 +121,36 @@ written twice.
 
 ---
 
+## The keyboard takes the short way through
+
+`TEditView::AddNewParagraph` (0x000a1b2c) is 721 instructions, and most
+of them are geometry: measure the text, line the result up with the page's
+other children (`AlignBounds`), line it up with the ruled lines
+(`AlignToLineSpacing`). One test at 0x000a1e94 decides whether any of that
+runs:
+
+```
+teq r8,#0x0            ; is there a unit?
+ldreq r1,[sp,#0x54]    ; no - is there an ink font?
+teqeq r1,#0x0
+beq  0x000a22c0        ; neither: jump over all of it
+```
+
+A written word arrives with a unit and goes the long way. A typed one
+arrives with neither, because the keyboard has already measured its own
+box in `JamText`, so it jumps straight to the tail: make the paragraph
+form, add it, make it the key view. Typing is about eighty instructions of
+a seven-hundred-instruction function.
+
+The last of those is what makes the *second* keystroke cheap too. The new
+paragraph's text view becomes the key view with the caret after the word,
+so the next character never comes back to the editor at all - it goes
+straight into `TParagraphView`.
+
+*`src/views/EditView.cpp`.*
+
+---
+
 ## The mu-law coder never clamps
 
 The 8-bit mu-law encoder in `sound/SampleConvert.h` has the shape of

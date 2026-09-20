@@ -68,6 +68,9 @@ TObjectIterator*	NewTObjectIterator(RefArg obj);
 void	DeleteTObjectIterator(TObjectIterator* iterator);
 Boolean	RegisterRangeForDeclawing(ULong start, ULong end);
 
+// the globals frame, which is gVarFrame
+Ref		FGetGlobals(RefArg rcvr);			// ROM 0x002b72b8 FGetGlobals
+
 // the sorted-array natives (ArrayNatives.cpp) other units call: BInsert(array, element, test, keyPath, uniqueOnly)
 Ref		FBInsert(RefArg rcvr, RefArg array, RefArg element, RefArg test, RefArg keyPath, RefArg uniqueOnly);
 

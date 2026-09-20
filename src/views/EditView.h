@@ -18,13 +18,17 @@
 				round it.
 
 	Not in the DDK; reconstructed from the MP2x00 US ROM (0x000a1a68-
-	0x000abb40), each function citing its origin.  NOT YET: everything the
-	recogniser drives (HandleWord, HandleInk, HandleShape, HandleCaret,
-	HandleLineGesture, Scrub, JamText, AddNewParagraph, PlaybackInk), the
-	caret and selection (SetSelection, GetSelection,
-	ValidateCaret, the caret rectangle), drag and drop, TrackScale and
-	TrackDistort, the commands (RealDoCommand, GetValue, SetValue) and the
-	drawing of the resize border itself (DrawResizeBorder, TRect::Scale over
+	0x000abb40), each function citing its origin.  Typing is here end to
+	end - a key becomes a word (JamText), the word is offered to the
+	children that hold text (HandleWord) and becomes a paragraph of its
+	own when nobody takes it (AddNewParagraph) - along with the tap that
+	puts the caret where the typing goes.  NOT YET: the rest of what the
+	recogniser drives (HandleInk, HandleShape, HandleCaret,
+	HandleLineGesture, Scrub, PlaybackInk, and the geometry
+	AddNewParagraph uses for a written word), the selection (SetSelection,
+	GetSelection), drag and drop, TrackScale and TrackDistort, most of the
+	commands (RealDoCommand answers the keys and the tap) and the drawing
+	of the resize border itself (DrawResizeBorder, TRect::Scale over
 	gEditViewTransform).
 */
 
@@ -73,9 +77,14 @@ public:
 	void			JamText(UniChar* text, ULong length);	// ROM 0x000ab70c JamText__9TEditViewFPUsUl - typed text put on the page as a word
 	// the editor's own, which is not TDataView's: the box the word
 	// filled and the box it may grow into, the unit it came from, the
-	// style it is in, and where in the text it ended up
-	long			HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
+	// style it is in, and where in the text it ended up.  ==> the view
+	// the word went into.
+	TView*			HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 							   class TUnitPublic* unit, RefArg info, long* outOffset);	// ROM 0x000abaa4 HandleWord__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPl
+	// A word that no child would take, made into a paragraph of its own.
+	TView*			AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
+									class TUnitPublic* unit, RefArg info, long* outOffset,
+									RefArg inkFont);	// ROM 0x000a1b2c AddNewParagraph__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPlT6
 	void			InvalAllHilites(void);					// ROM 0x000a6270 InvalAllHilites__9TEditViewFv
 	void			ResetHilitesForNewWord(void);			// ROM 0x000a4204 ResetHilitesForNewWord__9TEditViewFv
 	Boolean			ValidateCaret(Boolean scrolled);			// ROM 0x000aa9b0 ValidateCaret__9TEditViewFUc - ==> whether the caret is still this view's
@@ -129,7 +138,19 @@ long	AlignToGrid(long v, long grid);						// ROM 0x002628c8 AlignToGrid__FlT1
 // recogniser.
 long	TextOrInkWordsEnabled(TView* view);					// ROM 0x001a2aa4 TextOrInkWordsEnabled__FP5TView
 
+// Whether the corrector - the list of alternative readings a written
+// word can be put right from - is on the screen.
+Boolean	CorrectorUp(void);									// ROM 0x001767b8 CorrectorUp__Fv
+
+// The view whose text was last changed remembered in the globals, which
+// is what `lastTextChanged` answers a script.
+void	TimeStampTextChange(TView* view);					// ROM 0x000a39f4 TimeStampTextChange__FP5TView
+
 extern Boolean	gAboutToOpenSoftKeyboard;					// ROM 0x0c100cf0 gAboutToOpenSoftKeyboard
 extern Boolean	gLassoedDrag;								// ROM 0x0c100ce0 gLassoedDrag
+// Whether a word put on a page is offered to the dictionary as one it
+// might learn.  HandleWord sets it on the way in; the recogniser clears
+// it for words it is sure it already knows.
+extern Boolean	gAddWordInfo;								// ROM 0x0c101710 gAddWordInfo
 
 #endif	/* __EDITVIEW_H */

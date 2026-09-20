@@ -20,6 +20,9 @@
 #include "Application.h"
 #include "RichString.h"
 #include "Text.h"
+#include "Fonts.h"
+#include "ObjectHeap.h"
+#include "NewtonTime.h"
 #include "Keyboard.h"
 #include "Commands.h"
 #include "UnitPublic.h"
@@ -1071,6 +1074,34 @@ NullTerminated(const UniChar* text, ULong length)
 }
 
 
+// ROM 0x0c101710 gAddWordInfo
+Boolean	gAddWordInfo = false;
+
+
+// ROM 0x001767b8 CorrectorUp__Fv
+// Whether the corrector is up: the root view's `correct` variable is the
+// corrector's context, and a context that has been built has a
+// viewCObject.
+Boolean
+CorrectorUp(void)
+{
+	RefVar corrector(gRootView->GetVar(RSSYMcorrect));
+	return NOTNIL(GetFrameSlotRef(corrector, RSSYMviewcobject));
+}
+
+
+// ROM 0x000a39f4 TimeStampTextChange__FP5TView
+// The view whose text has just changed put in the globals as
+// `lastTextChanged`, which is how a script - the assistant's, for one -
+// finds out where the last word went.
+void
+TimeStampTextChange(TView* view)
+{
+	RefVar globals(FGetGlobals(RefVar()));
+	SetFrameSlot(globals, RSSYMlasttextchanged, view->fContext);
+}
+
+
 // ROM 0x000abaa4 HandleWord__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPl
 // A word - written and recognised, or typed and made to look like one -
 // put on the page.  It begins by making sure the caret belongs here: the
@@ -1078,14 +1109,28 @@ NullTerminated(const UniChar* text, ULong length)
 // else is dropped so that the word does not go into somebody else's
 // text.
 //
-// NOT YET RECONSTRUCTED: the rest of it, which is where the word goes -
-// into the paragraph the box falls in when there is one, and into a new
-// one (AddNewParagraph 0x000a1b2c) when there is not.  Until that is
-// here a typed character reaches this point and stops, so nothing
-// appears on the page.
-long
-TEditView::HandleWord(UniChar* /*text*/, ULong /*length*/, Rect& box, Rect& /*room*/,
-					  TUnitPublic* /*unit*/, RefArg /*info*/, long* /*outOffset*/)
+// Then every visible child that holds data is asked how well it would
+// take the word, exactly as TextContainingPoint asks them where a point
+// is (the child whose data frame *is* this word's is skipped, so a word
+// is not offered back to itself).  The best answer wins; 6 is as good as
+// it gets and stops the search.  The winner is asked again, this time
+// for real - the second call's `insert` is true, and that is what makes
+// it take the word rather than measure it - and if nobody wanted the
+// word at all it becomes a paragraph of its own (AddNewParagraph).
+//
+// `box` is where the word was written; an empty one means nowhere in
+// particular, and goes straight to a new paragraph.
+//
+// ==> the view the word ended up in.
+//
+// NOT YET RECONSTRUCTED: the remote-writing and corrector path
+// (0x000abe58-0x000ac0ac), which is where a recognised word goes when
+// the assistant is taking dictation into another view or the corrector
+// is up - it inserts the word at the caret through DoInsertItems rather
+// than handing it to a child.  Nothing typed goes that way.
+TView*
+TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
+					  TUnitPublic* unit, RefArg info, long* outOffset)
 {
 	TView* key = gRootView->fCaretView;
 	if (key != this
@@ -1097,8 +1142,97 @@ TEditView::HandleWord(UniChar* /*text*/, ULong /*length*/, Rect& box, Rect& /*ro
 	}
 	ValidateCaret(true);
 	Boolean emptyBox = box.left == 0 && box.right == 0 && box.top == 0 && box.bottom == 0;
-	(void) emptyBox;	// NOT YET: what the rest of the function does with it
-	return 0;
+	Boolean handled = false;
+	gAddWordInfo = true;
+
+	// where on the page the word is, which is what a child measures
+	// against: the middle of the unit's base line for a written word, the
+	// bottom left of the box for a typed one.  A written word's middle is
+	// pulled back into the box when it falls outside it.
+	ULong startTime, endTime;
+	Point pt;
+	if (unit != nil)
+	{
+		startTime = unit->StartTime();
+		endTime = unit->EndTime();
+		const Rect& base = unit->fWordBase;
+		pt.v = (short) ((short) (base.top + base.bottom) >> 1);
+		pt.h = (short) ((short) (base.left + base.right) >> 1);
+		if (box.left > pt.h || pt.h > box.right)
+			pt.h = box.left;
+		if (pt.v < box.top || box.bottom < pt.v)
+			pt.v = box.bottom;
+	}
+	else
+	{
+		startTime = 0;
+		endTime = 0;
+		pt.v = box.bottom;
+		pt.h = box.left;
+	}
+
+	// whether a child of this editor holds the caret and has a selection
+	// in it with the corrector down, which is the one case the plain path
+	// below is not taken
+	Boolean corrector = key != nil
+						&& (key->fParent == this
+							|| (key->fParent != nil && key->fParent->fParent == this))
+						&& key->Hilited() && !CorrectorUp();
+
+	TView* best = nil;
+	long bestScore = 0;
+	if (!emptyBox)
+	{
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			if ((child->fFlags & vVisible) == 0)
+				continue;
+			if (EQRef(child->DataFrame(), info))		// not back into itself
+				continue;
+			if (!child->DerivedFrom(clDataView))
+				continue;
+			long wants = ((TDataView*) child)->HandleWord(text, length, box, pt,
+														  startTime, endTime, info,
+														  false, nil, unit);
+			if (wants > bestScore)
+			{
+				best = child;
+				bestScore = wants;
+			}
+			if (wants == 6)				// as good as it gets
+				break;
+		}
+		if (unit != nil && (NOTNIL(GetPreference(RSSYMremotewriting)) || corrector))
+		{
+			// NOT YET RECONSTRUCTED: the word inserted at the caret
+			// (0x000abe58); nothing typed comes here.
+			handled = true;
+		}
+		else if (bestScore != 0)
+		{
+			if (bestScore != 6)
+				((TDataView*) best)->HandleWord(text, length, box, pt,
+												startTime, endTime, info,
+												true, outOffset, unit);
+			handled = true;
+		}
+	}
+
+	if (!handled)
+	{
+		RefVar noInkFont;
+		best = AddNewParagraph(text, length, box, room, unit, info, outOffset, noInkFont);
+	}
+	else if (ISNIL(GetPreference(RSSYMremotewriting)) && !corrector)
+	{
+		TView* textView = ((TDataView*) best)->GetTextView();
+		TimeStampTextChange(textView);
+		// (the ROM offers the word to the dictionary here when it came
+		//  from the recogniser - AddWordInfo 0x00079790, NOT YET)
+	}
+	return best;
 }
 
 
@@ -1155,6 +1289,144 @@ TEditView::JamText(UniChar* text, ULong length)
 	fCaretRect.top = kNoBounds;
 	fCaretRect.bottom = kNoBounds;
 }
+
+// ROM 0x000a1b2c AddNewParagraph__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPlT6
+// A word nobody would take made into a paragraph of its own.
+//
+// The style it goes in is `vars.nextStyle` when a script has set one -
+// and setting one is a single use, so it is taken back out of the
+// globals here - and the user's font otherwise.  An ink font, when there
+// is one, wins over both.
+//
+// Where it goes is `room` - the box the caller says the word may grow
+// into - in the editor's own coordinates, moved down by the word info's
+// `offset` when it has one.  MakeParagraphForm turns the text and that
+// box into a paragraph's context frame, the page's `editAddWordScript`
+// gets a chance to replace the frame with one of its own, and AddForm
+// makes it a child through the undoable aeAddData command.  The new
+// paragraph's text view then becomes the key view with the caret after
+// the word, which is what lets the next character typed go straight into
+// the paragraph rather than back through here.
+//
+// ==> the view that was made, or nil.
+//
+// NOT YET RECONSTRUCTED: the geometry (0x000a1eb4-0x000a22bc), which is
+// the path taken when the word came from the recogniser or has an ink
+// font - it measures the text with TextBounds, lines the result up with
+// the page's other children (AlignBounds) and with its ruled lines
+// (AlignToLineSpacing), and is what makes handwriting tidy itself into
+// columns.  Typed text does not go that way: the keyboard has already
+// measured its own box, so the ROM jumps straight over the whole section
+// (the test at 0x000a1e94).  The remote-writing caret (0x000a1b98) and
+// the text view's own notification (vtable +0x150) are NOT YET for the
+// same reason.
+TView*
+TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
+						   TUnitPublic* unit, RefArg info, long* outOffset, RefArg inkFont)
+{
+	Boolean remoteCaret = false;
+	if (NOTNIL(GetPreference(RSSYMremotewriting)) && gRootView->fCaretView == this)
+	{
+		remoteCaret = true;
+		// NOT YET RECONSTRUCTED: the box the caret is in worked out from
+		// the editor's own caret rectangle (0x000a1b98-0x000a1ca4), which
+		// only the geometry section below reads.
+	}
+	Boolean hasInkFont = NOTNIL(inkFont);
+	RefVar theInfo(info);
+	RefVar style;
+
+	// the style: a script's nextStyle, used once and taken back out of the
+	// globals, or the user's font; an ink font beats both
+	RefVar nextStyle(GetFrameSlotRef(gVarFrame, RSSYMnextstyle));
+	if (NOTNIL(nextStyle) && !hasInkFont)
+	{
+		RefVar globals(gVarFrame);
+		SetFrameSlot(globals, RSSYMnextstyle, RefVar());
+		style = nextStyle;
+	}
+	else
+	{
+		nextStyle = GetPreference(RSSYMuserfont);
+		style = hasInkFont ? (Ref) inkFont : (Ref) nextStyle;
+	}
+	if (unit != nil)
+	{
+		// a written word carries its style to the paragraph as a style run
+		// covering the whole of it
+		if (ISNIL(theInfo))
+			theInfo = AllocateFrame();
+		RefVar styles(AllocateArray(RSSYMstyles, 2));
+		SetFrameSlot(theInfo, RSSYMstyles, styles);
+		SetArraySlot(styles, 0, MAKEINT(length));
+		SetArraySlot(styles, 1, nextStyle);
+	}
+
+	StyleRecord styleRecord;
+	CreateTextStyleRecord(style, &styleRecord);
+	FontInfo fontInfo;
+	GetStyleFontInfo(&styleRecord, &fontInfo);
+
+	TView* view = nil;
+	if (unit != nil || hasInkFont)
+	{
+		// NOT YET RECONSTRUCTED: the geometry (see above).  Falling through
+		// to the typed path would put the word in the wrong place, so a
+		// recognised word is dropped instead of being put down wrongly.
+		DisposeStyleRecord(&styleRecord);
+		return nil;
+	}
+
+	// what the recogniser's path would have worked out: where the word is,
+	// and the box it is to fill
+	Point pt;
+	pt.v = box.bottom;
+	pt.h = (box.left + box.right) / 2;
+	Rect area = room;
+	Point origin = ContentsOrigin();
+	OffsetRect(&area, -origin.h, -origin.v);
+	if (NOTNIL(theInfo))
+	{
+		RefVar offset(GetFrameSlotRef(theInfo, RSSYMoffset));
+		if (NOTNIL(offset))
+			area.top += RINT(offset);
+	}
+
+	RefVar form(MakeParagraphForm(text, length, area, theInfo, false));
+	long hasScript = 0;
+	GetProtoVariable(fContext, RSSYMeditaddwordscript, &hasScript);
+	if (hasScript != 0)
+	{
+		// the page may make the paragraph itself: it is handed the frame
+		// and the room, and whatever it answers is what goes down
+		Rect where = room;
+		Point at = ContentsOrigin();
+		OffsetRect(&where, -at.h, -at.v);
+		RefVar args(MakeArray(2));
+		SetArraySlot(args, 0, form);
+		SetArraySlot(args, 1, ToObject(where));
+		form = RunScript(RSSYMeditaddwordscript, args, true, nil);
+	}
+
+	view = AddForm(form);
+	if (view != nil)
+	{
+		TView* textView = ((TDataView*) view)->GetTextView();
+		gRootView->SetKeyView(textView, length, 0, false);
+		if (outOffset != nil)
+			*outOffset = 0;
+		ULong stamp = unit != nil ? unit->EndTime() : Ticks();
+		(void) stamp;		// (the recogniser's path tells the text view about it)
+		TimeStampTextChange(((TDataView*) view)->GetTextView());
+		// (the ROM offers the word to the dictionary here - AddWordInfo
+		//  0x00079790, NOT YET - when it came from the recogniser)
+	}
+	DisposeStyleRecord(&styleRecord);
+	(void) remoteCaret;
+	(void) pt;
+	return view;
+}
+
 
 // ROM 0x000a2670 RangeDistance__FlN31
 // How far apart two ranges are.  One range wholly inside the other is 0

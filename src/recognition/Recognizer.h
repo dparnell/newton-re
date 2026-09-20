@@ -160,7 +160,7 @@ extern Boolean	gInhibitPopup;							// ROM 0x0c101948 gInhibitPopup
 void	InstallClickRecognizer(TRecognitionManager* manager);	// ROM 0x00143cdc InstallClickRecognizer__FP19TRecognitionManager
 void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00143bb0 InstallEventRecognizer__FP19TRecognitionManager
 Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit (NOT YET: true)
-Boolean	OtherViewInUse(TView* view);						// ROM 0x00036960 OtherViewInUse__FP5TView (NOT YET: false)
+Boolean	OtherViewInUse(TView* view);						// ROM 0x00036960 OtherViewInUse__FP5TView - somebody else's writing is still in hand
 Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit (NOT YET: false)
 
 #endif	/* __RECOGNIZER_H */

@@ -27,7 +27,9 @@
 #include "ROMConstants.h"
 #include "Words.h"
 #include "RootView.h"
+#include "View.h"
 #include "StrokeCentral.h"
+#include "Recognizer.h"
 #include "Areas.h"
 #include "Interpreter.h"
 #include "NewtonExceptions.h"
@@ -395,6 +397,20 @@ FRecSettingsChanged(RefArg /*rcvr*/)
 	return NILREF;
 }
 
+// ROM 0x001a030c FOtherViewInUse
+// OtherViewInUse(view) - whether somebody else's writing is still in
+// hand.  A nil view asks about no view at all, which is how a script
+// asks whether *anybody* is using one.
+static Ref
+FOtherViewInUse(RefArg /*rcvr*/, RefArg view)
+{
+	TView* theView = nil;
+	if (NOTNIL(view))
+		theView = FailGetView(view);
+	return MAKEBOOLEAN(OtherViewInUse(theView));
+}
+
+
 void
 RegisterUnitNatives(void)
 {
@@ -423,4 +439,5 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FFlushStrokes", (void*) FFlushStrokes, 0);
 	RegisterNativeFunction("FPurgeAreaCache", (void*) FPurgeAreaCache, 0);
 	RegisterNativeFunction("FRecSettingsChanged", (void*) FRecSettingsChanged, 0);
+	RegisterNativeFunction("FOtherViewInUse", (void*) FOtherViewInUse, 1);
 }
