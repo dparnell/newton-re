@@ -481,3 +481,43 @@ twice.
 A host that installs them at every boot is exactly that something, and
 the answer was a drawer with seven Docks in it. The fix is to write the
 slot the ROM only ever reads.
+
+
+---
+
+## Three handles a date
+
+`TDate` is a plain value class - a year, a month, a date and the rest -
+with three Refs on the end for the format frames it fetches out of the
+locale. In the ROM's constructor (0x00089ad0) each of the three is made
+like this:
+
+    mov  r0,#0x2            ; NILREF
+    bl   AllocateRefHandle
+    str  r0,[r4,#0x1c]
+    str  r5,[r0,#0x4]!      ; r5 = 0: the handle's stack position
+
+A `RefVar` writes `gCurrentStackPos` into that second word; writing 0
+instead is what makes it a `RefStruct`, and a `RefStruct`'s handle
+survives `ClearRefHandles`. It has to: a `TDate` is embedded in a view
+(`TMonthView::fDate` at +0x60), and the view outlives by a long way the
+event that constructed it. Had they been `RefVar`s, the next end of
+event would have put all three handles back on the free chain while the
+month view still held them, and the first write through one of them -
+`fLongDateFormat = GetProtoVariable(...)` on the next draw - would have
+put a pointer where the chain keeps an index. The allocation after that
+reads the pointer as the index of the next free handle and the frames
+heap is gone. (That is not hypothetical: it is precisely what the
+reconstruction did until the three fields were changed, and the crash it
+gives is a wild read inside `AllocateRefHandle` a good second after the
+damage was done.)
+
+There is no `__dt__5TDate` symbol anywhere in the ROM, so nothing ever
+gives the three handles back by that name; whether a stack `TDate`'s
+handles are reclaimed depends on the compiler having inlined the
+member destructors at each site. A `TDate` that lives in a view is
+never destroyed at all while the view is up, which is the case that
+matters: three of the table's 256 entries belong to the month view for
+as long as it exists, and the table grows (by 512 bytes at a time, the
+collector sliding it down into the free space below it) when enough of
+them accumulate.

@@ -94,9 +94,16 @@ public:
 	long		fMinute;			// +0x10
 	long		fSecond;			// +0x14
 	long		fDayOfWeek;			// +0x18  0 Sunday
-	RefVar		fLongDateFormat;	// +0x1c
-	RefVar		fShortDateFormat;	// +0x20
-	RefVar		fTimeFormat;		// +0x24
+	// The three format frames are RefStructs, not RefVars: the ROM's
+	// constructor writes 0 into each handle's stack position, so
+	// ClearRefHandles leaves them alone.  It has to - a TDate is
+	// embedded in a view (TMonthView's fDate), which outlives the
+	// event that made it, and a freed handle written through later
+	// corrupts the free chain.  There is no ~TDate in the ROM, so
+	// the three handles are leaked; see docs/curiosities.md.
+	RefStruct	fLongDateFormat;	// +0x1c
+	RefStruct	fShortDateFormat;	// +0x20
+	RefStruct	fTimeFormat;		// +0x24
 };
 
 Boolean	operator<(const TDate& a, const TDate& b);

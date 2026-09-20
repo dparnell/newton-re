@@ -60,6 +60,7 @@ struct HostExceptionPointers
 };
 typedef long (__stdcall *HostExceptionFilter)(HostExceptionPointers*);
 __declspec(dllimport) HostExceptionFilter __stdcall SetUnhandledExceptionFilter(HostExceptionFilter filter);
+__declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
 }
 #include <stdlib.h>
 #include <string.h>
@@ -138,7 +139,12 @@ HostCrashed(const char* what, unsigned long code, void* where)
 	static long once = 0;
 	if (once++ != 0)
 		_exit(139);
-	fprintf(stderr, "[host] the machine fell over: %s (%#lx) at %p\n", what, code, where);
+	// the address on its own says nothing - the image is loaded wherever
+	// Windows puts it - so the offset into the image goes with it, which
+	// is what tools/host/whichfunction.py takes to name the function
+	void* base = GetModuleHandleA(nil);
+	fprintf(stderr, "[host] the machine fell over: %s (%#lx) at %p (image + %#lx)\n",
+		what, code, where, (unsigned long) ((char*) where - (char*) base));
 	if (gREPout != nil && gInterpreter != nil)
 		gREPout->StackTrace(gInterpreter);
 	fflush(stderr);
