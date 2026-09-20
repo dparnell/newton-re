@@ -30,7 +30,10 @@
 
 #include "host/TaskRuntime.h"
 
+#include "REPTranslators.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static ULong	gInterpreterPreemptCount = 0;	// the bytecodes between preemption points
@@ -769,6 +772,10 @@ TInterpreter::CallPlainCFunction(RefArg fn, long numArgs)
 // say which one, so that the next thing to reconstruct is obvious rather
 // than a bare error code.  The boot is full of these while it is being
 // filled in, and this is how they are found.
+//
+// With NEWTON_TRACE_MISSING set in the environment it also prints the
+// script stack that asked for it, which is how to tell which of the ROM's
+// own functions wants the thing.
 static void
 NoteMissingNative(ULong funcPtr)
 {
@@ -779,6 +786,8 @@ NoteMissingNative(ULong funcPtr)
 	else
 		fprintf(stderr, "[frames] native not reconstructed: funcPtr 0x%08lx\n",
 			(unsigned long) funcPtr);
+	if (getenv("NEWTON_TRACE_MISSING") != nil && gREPout != nil)
+		StackTrace();
 }
 
 
