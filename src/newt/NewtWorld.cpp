@@ -7,6 +7,7 @@
 */
 
 #include "NewtWorld.h"
+#include "SoundCodec.h"
 #include "SystemNatives.h"
 #include "Locale.h"
 #include "hal/Power.h"
@@ -187,6 +188,11 @@ TNewtWorld::MainConstructor()
 	RegisterPowerNatives();
 	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
 	InitializeCompression();
+	// DEVIATION: the ROM starts the sound manager from the loader
+	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the
+	// codecs and the volume information it registers are wanted by the
+	// time a script runs, so the newt world does it here instead.
+	InitializeSound();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
 	else

@@ -27,6 +27,8 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include <stdint.h>
+
 #ifndef __SOUNDCHANNEL_H
 #define __SOUNDCHANNEL_H
 
@@ -61,15 +63,35 @@ struct TUSoundReply					// 0x14 bytes
 	long		fValue;				// +0x10
 };
 
-// kGestalt_Ext_VolumeInfo's parameter block: only the byte the channel
-// reads is known (the server can be asked for the volume).
+// kGestalt_Ext_VolumeInfo's parameter block, which the ROM's sound
+// driver registers (PCirrusSoundDriver::New 0x00059a9c) and both the
+// sound channel and the Extras drawer read.  Its shape is the template
+// the drawer asks for it with - ['struct, 'boolean, 'boolean, 'boolean,
+// 'boolean, 'Real, 'long, 'long] - so four flag bytes, a double and two
+// longs, twenty bytes in all.
 struct TGestaltVolumeInfo			// 0x14 bytes
 {
 	UByte		fUnknown00;
 	UByte		fUnknown01;
-	Boolean		fServerAnswersVolume;	// +0x02
-	UByte		fRest[0x11];
+	Boolean		fServerAnswersVolume;	// +0x02  the server answers GetVolume
+	UByte		fUnknown03;
+	// +0x04  a double, held as two 32-bit words: a double of its own would
+	// be eight-aligned here, where the ARM puts it on a four-byte
+	// boundary, and ULong is pointer-sized in this reconstruction - a
+	// parameter block has to be laid out in the widths the machine uses
+	uint32_t	fDecibelRange[2];
+	int32_t		fHighestSetting;		// +0x0c  the loudest setting's number
+	int32_t		fUnknown10;				// +0x10
 };
+
+// DEVIATION: the ROM's sound driver registers the block above at boot;
+// the host has no sound hardware and no driver, so it registers one of
+// its own with what the reconstruction already knows (sound/
+// SoundSettings.h): five settings, 0 to 4, spanning the 18.0618 decibels
+// between silence-but-audible and full, and no sound server to answer
+// the volume.  Without it the Extras drawer, which asks for this to size
+// its volume slider, gets nothing and cannot open.
+void	RegisterHostVolumeInfo(void);
 
 // fFlags (+0x14)
 enum {

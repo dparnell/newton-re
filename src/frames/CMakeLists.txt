@@ -6,6 +6,7 @@
 # the ROM's constants by tools/newton-rom/analysis/romconstants.py.
 add_library(frames STATIC
     ObjectHeap.cpp
+    Marshalling.cpp
     GC.cpp
     Objects.cpp
     ScriptBoot.cpp

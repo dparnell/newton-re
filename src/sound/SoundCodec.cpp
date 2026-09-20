@@ -10,6 +10,7 @@
 */
 
 #include "SoundCodec.h"
+#include "SoundChannel.h"
 #include "NewtonExceptions.h"
 
 
@@ -475,4 +476,7 @@ InitializeSound(void)
 {
 	TMuLawCodec::ClassInfo()->Register();
 	TIMACodec::ClassInfo()->Register();
+	// DEVIATION: the volume information the ROM's sound driver registers
+	// (SoundChannel.h), which the host has no driver to register
+	RegisterHostVolumeInfo();
 }

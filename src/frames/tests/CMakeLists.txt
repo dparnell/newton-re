@@ -41,3 +41,8 @@ target_link_libraries(test_SortTables PRIVATE frames)
 target_compile_definitions(test_SortTables PRIVATE "NEWTON_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
 add_test(NAME frames.SortTables COMMAND test_SortTables)
 set_tests_properties(frames.SortTables PROPERTIES TIMEOUT 120)
+
+add_executable(test_Marshalling test_Marshalling.cpp)
+target_link_libraries(test_Marshalling PRIVATE frames)
+target_compile_definitions(test_Marshalling PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME frames.Marshalling COMMAND test_Marshalling)

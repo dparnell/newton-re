@@ -408,11 +408,16 @@ of the soft keyboard and HitShape going in:
 | Find     | opens with "Look for", the Where buttons and Find          |
 | Dates    | throws: `LayoutTable` (0x001eb4b0) is NOT YET              |
 | Assist   | throws: `GenFullCommands` (0x00085bf0) is NOT YET          |
-| Extras   | throws -48200 - `ObjectPtr` of nil - from a child's        |
-|          | `viewSetupFormScript`, four frames into `ButtonToggle`     |
+| Extras   | opens, with its icons and its volume and battery strips    |
 | keyboard | draws, tracks the pen, types at the caret                  |
 
-The Extras drawer's failure is the interesting one: it is not a missing
-native but something handing nil to a routine that wants an object, and it
-may be downstream of the two ROM extension packages that do not install
-("its bytes are not a run of objects" - the help book and ListView).
+The Extras drawer was the interesting one for a while.  It threw -48200,
+`ObjectPtr` of nil, from the third bytecode of a child's
+`viewSetupFormScript` - and the nil turned out to be what `Gestalt`
+answered when asked for the volume information in its *array* form, which
+is how a script asks for one of the extended gestalts and gets the
+parameter block back as values rather than a frame.  Three things were
+missing under that: `ExtendedGestalt`, the unmarshalling that reads a
+block by a template (`frames/Marshalling.h`), and anything at all to
+register `kGestalt_Ext_VolumeInfo` - the ROM's sound driver does it, and
+the host has no sound hardware.

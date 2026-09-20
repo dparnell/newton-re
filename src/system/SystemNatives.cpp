@@ -10,6 +10,8 @@
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
 #include "NewtonGestalt.h"
+#include "Marshalling.h"
+#include <stdlib.h>
 #include "ROMConstants.h"
 #include "Frames.h"
 #include "hal/System.h"
@@ -57,10 +59,71 @@ FGetSerialNumber(RefArg /*rcvr*/)
 	a selector the machine cannot answer gives nil rather than an error.
 ------------------------------------------------------------------------------*/
 
+// The buffer the last extended gestalt wanted, remembered so that the
+// next one of the same size does not have to be asked twice.
+// (ROM 0x0c104c54, in gLastWakeupTime's neighbourhood.)
+static long	gExtendedGestaltSize = 0;
+
+
+// ROM 0x00201bfc ExtendedGestalt
+// Gestalt([selector, template, encoding]) - the array form, which is how
+// a script asks for one of the extended gestalts and gets the parameter
+// block back as NewtonScript values rather than a frame the ROM knows how
+// to build.  The template says what is in the block (Marshalling.h), and
+// the answer is an array of its fields.
+//
+// The selectors in the base range (0x01000001 to 0x02000000) are refused
+// here: those are the ones FGestalt answers with a frame of its own.
+//
+// The buffer is guessed at the size the last call wanted; the system
+// answers with the size it really needs, and the call is made again when
+// that was more.
+static Ref
+ExtendedGestalt(RefArg args)
+{
+	RefVar result;
+	TUGestalt gestalt;
+	if (!ISINT(GetArraySlotRef(args, 0)))
+		return NILREF;
+	long selector = RINT(GetArraySlotRef(args, 0));
+	if (!IsArray(RefVar(GetArraySlotRef(args, 1))) || !ISINT(GetArraySlotRef(args, 2)))
+		return NILREF;
+	if (selector > 0x01000000 && selector <= 0x02000000)
+		return NILREF;					// FGestalt's own range
+
+	long size = gExtendedGestaltSize;
+	char* block = (char*) malloc(size);
+	if (block == nil)
+		return NILREF;
+	ULong wanted = (ULong) size;
+	NewtonErr err = gestalt.Gestalt(selector, block, &wanted);
+	if ((long) wanted > gExtendedGestaltSize)
+	{
+		// it wants more than was guessed: ask again with room for it
+		gExtendedGestaltSize = (long) wanted;
+		free(block);
+		block = (char*) malloc((size_t) wanted);
+		if (block != nil)
+			err = gestalt.Gestalt(selector, block, &wanted);
+	}
+	if (block != nil)
+	{
+		if (err == noErr)
+		{
+			long failed = 0;
+			result = ConstructReturnValue(block, RefVar(GetArraySlotRef(args, 1)),
+										  &failed, (int) RINT(GetArraySlotRef(args, 2)));
+		}
+		free(block);
+	}
+	return err == noErr ? (Ref) result : NILREF;
+}
+
+
 // ROM 0x00201e0c FGestalt
 // Gestalt(selector): a frame describing that part of the machine, or nil.
 // The selectors are kGestalt_Base + 1 up; an array asks the extended
-// gestalts instead (ExtendedGestalt 0x00201bfc, NOT YET RECONSTRUCTED).
+// gestalts instead (ExtendedGestalt, above).
 // kGestalt_SoundInfo and kGestalt_PCMCIAInfo answer nil: the ROM has a case
 // for each and neither does anything.
 Ref
@@ -69,10 +132,7 @@ FGestalt(RefArg /*rcvr*/, RefArg selector)
 	RefVar result;
 	TUGestalt gestalt;
 	if (!ISINT(selector))
-	{
-		// NOT YET RECONSTRUCTED: ExtendedGestalt, the array form
-		return NILREF;
-	}
+		return ExtendedGestalt(selector);		// the array form
 	switch (RINT(selector))
 	{
 	case kGestalt_Version:

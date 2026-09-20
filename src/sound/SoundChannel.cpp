@@ -55,6 +55,27 @@ TUSoundChannel::TUSoundChannel()
 }
 
 
+// Host: the volume information the ROM's sound driver would have
+// registered (see SoundChannel.h).  Called from InitializeSound, which is
+// where the ROM registers its driver.
+void
+RegisterHostVolumeInfo(void)
+{
+	// the name server keeps the block's *address*, so it has to outlive
+	// this call - the ROM's is a field of the sound driver
+	static TGestaltVolumeInfo info;
+	memset(&info, 0, sizeof(info));
+	info.fServerAnswersVolume = false;			// there is no sound server
+	info.fHighestSetting = 4;					// five settings, 0 to 4
+	// the decibels between the quietest audible setting and full, which is
+	// what VolumeToDecibels(1) says: -18.0618 dB in 16.16
+	double range = -(double) 0x00121FD2 / 65536.0;
+	memcpy(info.fDecibelRange, &range, sizeof(info.fDecibelRange));
+	TUGestalt gestalt;
+	gestalt.RegisterGestalt(kGestalt_Ext_VolumeInfo, &info, sizeof(info));
+}
+
+
 // ROM 0x0025b0fc SendImmediate__14TUSoundChannelFUlN21P12TUSoundReplyT1
 // One 'newt/'usnd event carrying {command, channel, value}, sent to the
 // sound server's port and answered on the spot.
