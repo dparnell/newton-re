@@ -274,11 +274,46 @@ FPlaySoundEffect(RefArg rcvr, RefArg sound, RefArg volume, RefArg kind)
 }
 
 
+// ROM 0x001e6578 FClicker
+// clicker() - the noise the pen makes when the caret moves, and the one
+// place in the machine where a sound is a *tune*.  `vars._clickSong` is an
+// array the clicks are taken from in turn - the ROM's own is _clickSong -
+// and `vars._curClick` remembers how far through it the machine is, so
+// successive clicks are successive notes and wrap round at the end.
+//
+// An entry is either a sound frame to play or an integer indexing the
+// ROM's `clicks` array.  Nothing happens at all when the pen sound
+// effects preference is off.  ==> nil.
+static Ref
+FClicker(RefArg /*rcvr*/)
+{
+	if (ISNIL(GetPreference(RefVar(RSSYMpensoundeffects))))
+		return NILREF;
+	RefVar current(GetFrameSlotRef(gVarFrame, RSSYM_curclick));
+	long at = ISINT(current) ? RINT(current) : 0;
+	RefVar song(GetFrameSlotRef(gVarFrame, RSSYM_clicksong));
+	if (ISNIL(song))
+		song = R_clicksong;
+	long next = at + 1;
+	if ((ULong) next >= (ULong) Length(song))
+		next = 0;
+	RefVar click(GetArraySlotRef(song, next));
+	if (ISINT(click))
+		FPlaySoundIrregardless(RefVar(NILREF), RefVar(GetArraySlotRef(RefVar(Rclicks), RINT(click))));
+	else
+		FPlaySoundIrregardless(RefVar(NILREF), click);
+	RefVar globals(gVarFrame);
+	SetFrameSlot(globals, RSSYM_curclick, RefVar(MAKEINT(next)));
+	return NILREF;
+}
+
+
 void
 RegisterSoundNatives(void)
 {
 	RegisterNativeFunction("FSoundPlayEnabled", (void*) FSoundPlayEnabled, 1);
 	RegisterNativeFunction("FPlaySoundIrregardless", (void*) FPlaySoundIrregardless, 1);
+	RegisterNativeFunction("FClicker", (void*) FClicker, 0);
 	RegisterNativeFunction("FPlaySoundSync", (void*) FPlaySoundSync, 1);
 	RegisterNativeFunction("FPlaySound__FRC6RefVarT1", (void*) FPlaySound, 1);
 	RegisterNativeFunction("FPlaySoundEffect", (void*) FPlaySoundEffect, 3);

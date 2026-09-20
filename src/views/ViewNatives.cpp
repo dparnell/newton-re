@@ -1436,6 +1436,30 @@ FCaretRelativeToVisibleRect(RefArg rcvr, RefArg bounds)
 }
 
 
+// ROM 0x001f11f4 FDropHilites
+// DropHilites() - the selection taken off, when it belongs to this view
+// or to something inside it.  The root view knows which view owns the
+// hilites; this walks up from it looking for the receiver, and only if it
+// finds it does anything happen, so a view cannot drop somebody else's
+// selection.  The hilites go through the undoable aeRemoveAllHilites
+// command, and the caret goes with them.  ==> nil.
+static Ref
+FDropHilites(RefArg rcvr)
+{
+	TView* view = GetView(rcvr);
+	TView* hiliter = gRootView->fHiliter;
+	if (view == nil || hiliter == nil)
+		return NILREF;
+	for (TView* walk = hiliter; walk != view; walk = walk->fParent)
+		if (walk == (TView*) gRootView)
+			return NILREF;				// the selection is somewhere else
+	RefVar cmd(MakeCommand(aeRemoveAllHilites, hiliter, 0x8000000));
+	gApplication->DispatchCommand(cmd);
+	gRootView->SetKeyView(nil, 0, 0, false);
+	return NILREF;
+}
+
+
 void
 RegisterViewNatives(void)
 {
@@ -1469,6 +1493,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
 	RegisterNativeFunction("FCaretRelativeToVisibleRect", (void*) FCaretRelativeToVisibleRect, 1);
+	RegisterNativeFunction("FDropHilites", (void*) FDropHilites, 0);
 	RegisterNativeFunction("FHiliteUniqueX", (void*) FHiliteUniqueX, 1);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();
