@@ -22,11 +22,13 @@
 #include "Text.h"
 #include "Fonts.h"
 #include "ObjectHeap.h"
+#include "Interpreter.h"
 #include "NewtonTime.h"
 #include "Keyboard.h"
 #include "Commands.h"
 #include "UnitPublic.h"
 #include "StrokeQueue.h"
+#include "RecConfig.h"
 #include "Bits.h"
 #include "ViewFlags.h"
 #include "Rects.h"
@@ -664,19 +666,40 @@ AlignToGrid(long v, long grid)
 
 // ROM 0x001a2aa4 TextOrInkWordsEnabled__FP5TView
 // Whether the view takes words from the recogniser: bit 0 when ink words
-// are wanted, bit 1 when text is.  The ROM asks the view its recognition
-// settings are configured from (GetRecognitionView) for a configuration
-// frame built out of its flags (BuildRecConfig), and reads
-// doInkWordRecognition and doTextRecognition out of it.
+// are wanted, bit 1 when text is.  The view its recognition settings
+// belong to (GetRecognitionView - a paragraph's are the page's) is asked
+// for a configuration built out of its flags (BuildRecConfig), and
+// doInkWordRecognition and doTextRecognition are read out of it.
 //
-// NOT YET RECONSTRUCTED: GetRecognitionView 0x001a2a24 and BuildRecConfig
-// 0x001a1e5c, which are the whole of it.  With no configuration to ask,
-// nothing is enabled - so a tap on the empty part of a page does not open
-// a paragraph to write in, where the machine would.
+// Text is decided twice over: a view that allows everything is asked its
+// configuration, because the answer is a preference the user can turn
+// off; a view that allows only some things is not asked at all, because
+// a date field takes text whatever the preference says.
+//
+// This is what lets a tap on the empty part of a page open a caret to
+// type or write at: PositionCaret does nothing at all on a view that
+// takes neither.
 long
-TextOrInkWordsEnabled(TView* /*view*/)
+TextOrInkWordsEnabled(TView* view)
 {
-	return 0;
+	long enabled = 0;
+	TView* recView = GetRecognitionView(view);
+	ULong flags = recView->fFlags & vRecognitionAllowed;
+	Boolean anything = (flags & vAnythingAllowed) == vAnythingAllowed;
+	RefVar config(BuildRecConfig(recView, flags));
+	if (NOTNIL(GetVariable(config, RSSYMdoinkwordrecognition, nil, 0)))
+		enabled = 1;
+	if (anything)
+	{
+		if (NOTNIL(GetVariable(config, RSSYMdotextrecognition, nil, 0)))
+			enabled |= 2;
+	}
+	else if ((flags & (vCharsAllowed | vNumbersAllowed | vLettersAllowed
+					   | vPunctuationAllowed | vMathAllowed | vPhoneField
+					   | vDateField | vTimeField | vAddressField | vNameField
+					   | vCustomDictionaries)) != 0)
+		enabled |= 2;
+	return enabled;
 }
 
 

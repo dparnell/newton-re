@@ -299,6 +299,51 @@ blocks that belong to the entries - telling the domain first
 (`DomainParameter` with selector 3) - and leaves alone any marked as
 someone else's.  (`test_Areas`.)
 
+## The recognition configuration (`recognition/RecConfig.h`)
+
+Between a view's `viewFlags` and the recognisers stands a configuration
+frame.  `BuildRecConfig(view, flags)` (ROM 0x00034b70) builds it, and
+everything that wants to know what may be written where goes through it -
+`TextOrInkWordsEnabled` (which is what lets a tap on a blank page open a
+caret), `ViewAllowsInk`, and the areas the controller makes.
+
+Three things go into it:
+
+- **the view's recognition bits.**  `vAnythingAllowed` (0x01fffe00) is
+  every one of them; a view that has them all is a page, and a view that
+  has only some is a field - `vDateField`, `vNameField`, `vNumbersAllowed`
+  and the rest.
+- **`vars.userConfiguration`,** which is what the Handwriting Recognition
+  preferences were set to.
+- **the view's own,** a `recConfig` in its context or a `_recogSettings`
+  it carries.
+
+The starting point depends on which kind of view it is.  A page is read
+against the user's preferences (`Rrcprefsconfig`), and its input mask is
+*built* from them by `BuildInputMask` (0x0019d1f8) - words, letters,
+numbers, punctuation and shapes, each a bit, and punctuation only when one
+of the others is on.  A field starts from `Rrcnorecog` and keeps the mask
+its own flags make, so a date field reads dates whatever the preferences
+say.  `vars.userConfiguration.testConfig`, which the handwriting test
+screens set and which is nil in ordinary use, replaces the preferences for
+a page when it is there.
+
+Nothing is copied.  `PrepRecConfig` (0x00035298) clones `protoRecConfig`
+and hangs the configuration off it as `_proto` with the preferences as
+`_parent`, so the chain is read through rather than flattened and a
+preference changed afterwards is seen straight away.  A view with
+`_recogSettings` of its own has them expanded by the NewtonScript
+`ExpandSettings` and put in between.
+
+`CountCustomDictionaries` (0x0013f9c0) is worth a look for the shape of
+its test: a view that allows everything has no custom dictionaries
+whatever its `dictionaries` slot says, because `vAnythingAllowed` is
+checked before the `vCustomDictionaries` bit is.
+
+Reconstructed in `src/recognition/RecConfig.h`; `test_RecConfig` builds
+the chains against the ROM's own prototypes with the preferences made by
+hand.
+
 ## The tablet's calibration
 
 The four points the tablet's coordinates are mapped through belong to

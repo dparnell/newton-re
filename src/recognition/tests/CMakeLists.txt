@@ -19,3 +19,8 @@ add_test(NAME recognition.Words COMMAND test_Words)
 add_executable(test_Airus test_Airus.cpp)
 target_link_libraries(test_Airus PRIVATE recognition)
 add_test(NAME recognition.Airus COMMAND test_Airus)
+
+add_executable(test_RecConfig test_RecConfig.cpp)
+target_link_libraries(test_RecConfig PRIVATE recognition)
+target_compile_definitions(test_RecConfig PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME recognition.RecConfig COMMAND test_RecConfig)

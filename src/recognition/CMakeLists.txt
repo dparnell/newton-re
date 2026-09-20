@@ -2,7 +2,8 @@
 # TRecObject, TArray, TDArray), the strokes (Stroke.h: TStroke and its
 # public face TStrokePublic), the units the recognisers make (Unit.h:
 # TUnit, TSIUnit, TStrokeUnit, TClickUnit, TClickEventUnit) and the face
-# the views see (UnitPublic.h), the areas (Areas.h), the domains' base
+# the views see (UnitPublic.h), the areas (Areas.h) and the
+# configuration they are built from (RecConfig.h), the domains' base
 # (Domain.h) and the recognisers' front (Recognizer.h: TRecognizer, the
 # click recognisers, TRecognitionManager).  The recognisers themselves
 # The tablet buffer (TabletBuffer.h) and the stroke queue (StrokeQueue.h)
@@ -17,6 +18,7 @@ add_library(recognition STATIC
     Unit.cpp
     UnitPublic.cpp
     Areas.cpp
+    RecConfig.cpp
     Domain.cpp
     Recognizer.cpp
     TabletBuffer.cpp
