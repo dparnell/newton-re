@@ -785,7 +785,16 @@ second arm.
 
 NOT YET: what a view does with a gesture - `TParagraphView` answers none
 of the pen commands yet, so a scrub over text is recognised and posted
-and then nothing happens.  Also the domains above this one (shapes,
+and then nothing happens.  The path it would take is
+`TParagraphView::RealDoCommand`'s `aeScrub` case (0x0016c658, the 0xd
+arm): `ScrubHilite` (0x00173ea8) first, which deletes the selection when
+the scrub covers it (`DeleteHilitedTextOnly`), and otherwise
+`HandleScrub` (0x00173fac) - `ScrubLines` (0x001748b8), then `ScrubWords`
+(0x001740c4) over `ScrubCharacter` (0x00174808) - ending in `RemoveText`,
+which is already here.  A scrub that deleted something gets the poof
+effect (`TAnimate::SetupPoofEffect`, also already here) and takes its own
+ink off.
+  Also the domains above this one (shapes,
 words), `ArbitrateGraphicsWords`, the inker and ink (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.
