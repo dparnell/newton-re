@@ -10,6 +10,7 @@
 #include "NativeFunctions.h"
 #include "SortTables.h"
 #include "Application.h"
+#include "Assistant.h"
 #include "Cursors.h"
 #include "Coordinates.h"
 #include "Dates.h"
@@ -71,6 +72,9 @@ RegisterAllNatives(void)
 
 	// the volume
 	RegisterSoundNatives();
+
+	// the Intelligent Assistant
+	RegisterAssistantNatives();
 
 	// the machine itself
 	RegisterSystemNatives();

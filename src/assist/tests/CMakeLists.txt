@@ -1,0 +1,5 @@
+add_executable(test_Assistant test_Assistant.cpp)
+target_link_libraries(test_Assistant PRIVATE assist)
+target_compile_definitions(test_Assistant PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME assist.Assistant COMMAND test_Assistant)
+set_tests_properties(assist.Assistant PROPERTIES TIMEOUT 120)
