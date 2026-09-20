@@ -63,7 +63,14 @@
 struct LineInfo
 {
 	long		fStart;				// +0x00  the line's first character
-	long		fEnd;				// +0x04  after its last
+	long		fEnd;				// +0x04  where the next line starts: after
+									//        the spaces and the return that
+									//        end this one, as the ROM's
+									//        LineLoop leaves it
+	long		fTextEnd;			// (host) after the line's last drawn
+									//        character - what the ROM's text
+									//        objects hold, and what this
+									//        reconstruction measures instead
 	long		fFirstObj;			// +0x08  its first text object (host: the first style run)
 	long		fEndObj;			// +0x0c  after its last
 	Boolean		fEndsWithSpace;		// +0x10

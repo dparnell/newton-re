@@ -558,9 +558,14 @@ TParagraphView::FillAllCaches(void)
 		long lineHeight = spacing != 0 ? spacing : ascent + descent + leading;
 		if (fLineCount == fLineCapacity)
 			GrowLineInfoCache(&fLines, &fLineCapacity);
+		// The line takes the spaces and the return that end it with it:
+		// fEnd is where the next line starts, so an offset at the end of
+		// a line is on that line and not at the start of the next one.
+		const UniChar* next = SkipUpToTwoSpacesAndCR(text + pos + fitted, text + length);
 		LineInfo& line = fLines[fLineCount];
 		line.fStart = pos;
-		line.fEnd = pos + fitted;
+		line.fEnd = (long) (next - text);
+		line.fTextEnd = pos + fitted;
 		line.fFirstObj = firstRun;
 		line.fEndObj = firstRun + runs;
 		line.fEndsWithSpace = fitted > 0 && text[pos + fitted - 1] == kSP;
@@ -574,7 +579,6 @@ TParagraphView::FillAllCaches(void)
 		fLineCount++;
 		fLineHeight = lineHeight;
 		y += lineHeight;
-		const UniChar* next = SkipUpToTwoSpacesAndCR(text + pos + fitted, text + length);
 		pos = (long) (next - text);
 	}
 	rich.ReleasePtr();
@@ -860,8 +864,7 @@ TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 
 // ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect
 // Where the caret goes for the offset: the character's box (OffsetToBounds)
-// - past the last line's end the caret stays at that end (an offset on a
-// trailing return goes to the next line's start, NOT YET) - its left a
+// - past the last line's end the caret stays at that end - its left a
 // pixel in, kept inside the view's sides and its bottom (the baseline)
 // inside the view unless it calculates its bounds; the rect is 2 wide.
 // Empty when the offset is outside the cached range.
@@ -920,7 +923,7 @@ TParagraphView::PointToOffset(const Point& pt)
 	const UniChar* text = rich.GrabPtr();
 	long best = line.fStart;
 	long bestDistance = 0x7fffffff;
-	long end = line.fEnd;
+	long end = line.fTextEnd;
 	if (end > line.fStart && line.fEndsWithSpace)
 		end--;
 	for (long offset = line.fStart; offset <= end; offset++)
@@ -1152,7 +1155,7 @@ TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
 	{
 		const LineInfo& line = fLines[i];
 		long selStart = start > line.fStart ? start : line.fStart;
-		long selEnd = end < line.fEnd ? end : line.fEnd;
+		long selEnd = end < line.fTextEnd ? end : line.fTextEnd;
 		if (selEnd <= selStart)
 			continue;
 		Rect leftBox;
@@ -1699,7 +1702,7 @@ TParagraphView::ScrubCharacter(long line, const Rect& bounds, long* outOffset)
 	if (line < 0 || line >= fLineCount)
 		return false;
 	const LineInfo& info = fLines[line];
-	for (long offset = info.fStart; offset < info.fEnd; offset++)
+	for (long offset = info.fStart; offset < info.fTextEnd; offset++)
 	{
 		Rect box, next;
 		OffsetToBounds(offset, &box);
@@ -2874,13 +2877,13 @@ TParagraphView::DrawLine(const UniChar* text, const LineInfo& line, Boolean elli
 	StyleRecord** lineStyles = (StyleRecord**) NewPtrClear(fRunCount * sizeof(StyleRecord*));
 	short* lineLengths = (short*) NewPtrClear(fRunCount * sizeof(short));
 	long firstRun;
-	long runs = RunsOfRange(fRunStyles, fRunLengths, fRunCount, line.fStart, line.fEnd - line.fStart, lineStyles, lineLengths, &firstRun);
+	long runs = RunsOfRange(fRunStyles, fRunLengths, fRunCount, line.fStart, line.fTextEnd - line.fStart, lineStyles, lineLengths, &firstRun);
 	TextOptions options = fTextOptions;
 	FPoint where;
 	where.x = ToFixed(viewBounds.left);
 	where.y = ToFixed(line.fBounds.top + line.fAscent);
-	if (line.fEnd > line.fStart)
-		DoTextOnce(text + line.fStart, line.fEnd - line.fStart, lineStyles, lineLengths, where, &options, nil, true);
+	if (line.fTextEnd > line.fStart)
+		DoTextOnce(text + line.fStart, line.fTextEnd - line.fStart, lineStyles, lineLengths, where, &options, nil, true);
 	if (ellipsis)
 	{
 		// the ellipsis in the style the text would be inserted in at the line's end, after what fit

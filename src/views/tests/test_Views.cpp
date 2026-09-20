@@ -2349,6 +2349,14 @@ TestTrailingReturn()
 	// and the caret on it starts at the line's left edge
 	EXPECT(third.left == first.left);
 
+	// an offset at the end of a line is on that line, not at the start
+	// of the next one: the line keeps the return that ends it
+	Rect endOfFirst, endOfSecond;
+	p->OffsetToCaret(3, &endOfFirst);
+	p->OffsetToCaret(7, &endOfSecond);
+	EXPECT(endOfFirst.top == first.top && endOfFirst.left > first.left);
+	EXPECT(endOfSecond.top == second.top && endOfSecond.left > second.left);
+
 	// with the caret there, the view does not think it is out of sight
 	gRootView->SetKeyView(p, 8, 0, false);
 	EXPECT(p->CaretRelativeToVisibleRect(p->viewBounds) == 1);
