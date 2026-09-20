@@ -1993,6 +1993,49 @@ TestClicks()
 	EXPECT(RINT(Eval("Length(ctxC.clicks)")) == 2 && ISNIL(Eval("ctxC.clicks[1][0]")) && NOTNIL(Eval("ctxC.clicks[1][1]")) && NOTNIL(Eval("ctxC.clicks[1][3]")));
 	EXPECT(RINT(Eval("Length(ctxC.clicks[1][2])")) == 10 && RINT(Eval("ctxC.clicks[1][2][6]")) == 150 && RINT(Eval("ctxC.clicks[1][2][9]")) == 65);
 	EXPECT(RINT(Eval("Length(ctxC.gestures)")) == 1 && (v->fFlags & vSelected) != 0 && HostTabletQueued() == 0 && gStrokeWorld.CurrentStroke() == nil);
+	// AlignBounds: a new paragraph lined up with the children it is nearly
+	// aligned with already.  An edit view with two paragraphs on it: one at
+	// the top left, one below it and slightly indented.
+	{
+		TEditView* editor = (TEditView*) ViewOf(
+			"ctxE := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+			"viewBounds: {left: 20, top: 20, right: 300, bottom: 400}, viewChildren: ["
+
+			"{viewClass: 81, viewFlags: 1, viewBounds: {left: 40, top: 40, right: 140, bottom: 60}, text: \"one\"}, "
+
+			"{viewClass: 81, viewFlags: 1, viewBounds: {left: 44, top: 100, right: 144, bottom: 120}, text: \"two\"}]})");
+		EXPECT(editor != nil && editor->ClassID() == clEditView);
+		// the children are laid out inside the editor, so they sit at
+		// 60,60 - 160,80 and 64,120 - 164,140
+		Rect result;
+		Rect want, measured;
+		// written just inside the first child's box: its left edge lines up
+		// with the child's, and vertically it is already centred on the child,
+		// so the centre-to-centre alignment wins with nothing to do
+		want.left = 63; want.top = 62; want.right = 110; want.bottom = 78;
+		measured = want;
+		editor->AlignBounds(want, measured, &result);
+		EXPECT(result.left == 60 && result.top == 62);
+		// written just above the first child and overlapping it across: the
+		// new paragraph's bottom goes to the child's top, which is the
+		// edge-to-the-opposite-edge alignment tucking it onto the line above
+		want.left = 43; want.top = 44; want.right = 90; want.bottom = 58;
+		measured = want;
+		editor->AlignBounds(want, measured, &result);
+		EXPECT(result.bottom == 60 && result.top == 46);
+		// far from anything: left where it was
+		want.left = 200; want.top = 300; want.right = 260; want.bottom = 318;
+		measured = want;
+		editor->AlignBounds(want, measured, &result);
+		EXPECT(result.left == 200 && result.top == 300);
+		// off the top left of the page: pulled back inside it
+		want.left = 0; want.top = 0; want.right = 60; want.bottom = 18;
+		measured = want;
+		editor->AlignBounds(want, measured, &result);
+		EXPECT(result.left >= 20 && result.top >= 20);
+		Eval("ctxE:Close()");
+	}
+
 	// RangeDistance: 0 when one range holds the other, 1 when they only
 	// overlap, the gap when they are apart
 	EXPECT(RangeDistance(10, 20, 12, 18) == 0);		// b inside a

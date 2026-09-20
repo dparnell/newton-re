@@ -90,6 +90,11 @@ public:
 	// the children that are selected, and the way between them
 	TView**		GetHilitedViewsSorted(void);		// ROM 0x000aae90 GetHilitedViewsSorted__9TEditViewFv - CountHilites of them, the caller's to delete[]
 	TView*			MoveBetweenParagraphs(long v, long direction);	// ROM 0x000ab60c MoveBetweenParagraphs__9TEditViewFlT1
+	// Where a new paragraph should really go: `want` is where it was put,
+	// `measured` is the box its text needs, and `result` comes back as
+	// `measured` moved to line up with whatever of the editor's children it
+	// is nearly aligned with already.  ==> 0.
+	long			AlignBounds(Rect& want, Rect& measured, Rect* result);	// ROM 0x000a26c4 AlignBounds__9TEditViewFR5TRectT1P5TRect
 	void			AlignToLineSpacing(Rect* r, long top, long ascent);	// ROM 0x000a2bc4 AlignToLineSpacing__9TEditViewFP5TRectlT2
 
 	short			fLineSpacing;		// +0x30  viewLineSpacing, read by SetupDone

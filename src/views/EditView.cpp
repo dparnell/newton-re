@@ -1178,3 +1178,103 @@ RangeDistance(long aLow, long aHigh, long bLow, long bHigh)
 		gap = aLow - bHigh;			// no: a is after b
 	return gap;
 }
+
+// How far out an edge may be and still be worth lining up with.
+enum { kAlignTolerance = 10 };
+
+// One alignment tried.  `apart` is how far the child's edge is from where
+// the new paragraph was put; when that is closer than the best so far, the
+// paragraph will move by `shift` - which is the same edge measured against
+// the box the text actually needs, because that is what will be offset.
+static inline void
+TryAlignment(long apart, long shift, long& bestShift, long& best, long& bestRange, long range)
+{
+	long near = apart < 0 ? -apart : apart;
+	long sofar = best < 0 ? -best : best;
+	if (near < sofar)
+	{
+		bestShift = shift;
+		best = apart;
+		bestRange = range;
+	}
+}
+
+
+// ROM 0x000a26c4 AlignBounds__9TEditViewFR5TRectT1P5TRect
+// Why a page of Newton handwriting looks tidier than what was actually
+// written.  A paragraph about to go down is lined up with whatever of the
+// editor's children it is nearly aligned with already: five alignments on
+// each axis - edge to the same edge, edge to the opposite edge, and centre
+// to centre - and the one that is out by least wins, so long as it is out
+// by less than ten pixels.
+//
+// The two axes are crossed, which is the point of it: children that
+// overlap the new paragraph *vertically* have their *horizontal* edges
+// lined up, so two words on a line share a left edge, and children that
+// overlap horizontally have their vertical edges lined up, so two lines in
+// a column share a top.  A child that overlaps a good deal more than the
+// best one so far opens the ten pixels up again, so a near neighbour is
+// not held to a distant one's alignment.
+//
+// `want` is where the paragraph was put, `measured` is the box its text
+// needs, and `result` comes back as `measured` moved - never off the top
+// or left of the editor, never past its right or bottom.
+long
+TEditView::AlignBounds(Rect& want, Rect& measured, Rect* result)
+{
+	long hBest = kAlignTolerance, hShift = 0, hRange = 0x7fffffff;
+	long vBest = kAlignTolerance, vShift = 0, vRange = 0x7fffffff;
+	long wantCentreX = (want.left + want.right) / 2;
+	long wantCentreY = (want.bottom + want.top) / 2;
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		const Rect& at = child->viewBounds;
+		long across = RangeDistance(at.left, at.right, want.left, want.right);
+		long down = RangeDistance(at.top, at.bottom, want.top, want.bottom);
+		if (down <= vRange)
+		{
+			// it is on the same line: line the sides up
+			long centre = (at.left + at.right) / 2;
+			if (down < vRange / 2)
+				hBest = kAlignTolerance;
+			TryAlignment(at.left - want.left, at.left - measured.left, hShift, hBest, vRange, down);
+			TryAlignment(at.right - want.right, at.right - measured.right, hShift, hBest, vRange, down);
+			TryAlignment(at.left - want.right, at.left - measured.right, hShift, hBest, vRange, down);
+			TryAlignment(at.right - want.left, at.right - measured.left, hShift, hBest, vRange, down);
+			TryAlignment(centre - wantCentreX,
+						 centre - (measured.right + measured.left) / 2, hShift, hBest, vRange, down);
+		}
+		if (across <= hRange)
+		{
+			// it is in the same column: line the tops and bottoms up
+			long centre = (at.top + at.bottom) / 2;
+			if (across < hRange / 2)
+				vBest = kAlignTolerance;
+			TryAlignment(at.top - want.top, at.top - measured.top, vShift, vBest, hRange, across);
+			TryAlignment(at.bottom - want.bottom, at.bottom - measured.bottom, vShift, vBest, hRange, across);
+			TryAlignment(at.top - want.bottom, at.top - measured.bottom, vShift, vBest, hRange, across);
+			TryAlignment(at.bottom - want.top, at.bottom - measured.top, vShift, vBest, hRange, across);
+			TryAlignment(centre - wantCentreY,
+						 centre - (measured.top + measured.bottom) / 2, vShift, vBest, hRange, across);
+		}
+	}
+	*result = measured;
+	// nothing came within the ten pixels on that axis: leave it where it is
+	if ((hBest < 0 ? -hBest : hBest) >= kAlignTolerance)
+		hShift = 0;
+	if ((vBest < 0 ? -vBest : vBest) >= kAlignTolerance)
+		vShift = 0;
+	// and never off the top or left of the page
+	if (result->left + hShift < viewBounds.left)
+		hShift = viewBounds.left - result->left;
+	if (result->top + vShift < viewBounds.top)
+		vShift = viewBounds.top - result->top;
+	OffsetRect(result, hShift, vShift);
+	if (viewBounds.right < result->right)
+		result->right = viewBounds.right;
+	if (viewBounds.bottom < result->bottom)
+		result->bottom = viewBounds.bottom;
+	return 0;
+}
