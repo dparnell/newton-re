@@ -756,6 +756,132 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	N a t i v e s
 ------------------------------------------------------------------------------*/
 
+// (defined below, with the other shape makers)
+static Ref	FMakeText(RefArg rcvr, RefArg str, RefArg left, RefArg top, RefArg right, RefArg bottom);
+
+
+// The width of a run of the string, in whole pixels.
+static long
+RunWidth(TRichString& rich, long start, long length, StyleRecord* style)
+{
+	FPoint where;
+	where.x = 0;
+	where.y = 0;
+	TextBoundsInfo bounds;
+	MeasureRichString(rich, (ULong) start, length, style, where, nil, &bounds);
+	return (short) RoundFixed(bounds.fWidth);
+}
+
+
+// ROM 0x000dd234 FMakeTextLines
+// MakeTextLines(text, bounds, lineHeight, font) - the text broken into
+// lines that fit the bounds, each line a MakeText shape of its own, as an
+// array ready to be drawn or put in a shape list.  With no line height it
+// is the font's ascent, descent and leading.
+//
+// The wrapping is the ordinary one done the ordinary way: walk to the end
+// of a word, measure from the start of the line, and if it still fits
+// remember where the word ended and go on to the next.  When it does not
+// fit, the line breaks at the last word that did - and when even the
+// first word of the line is too wide, the line is backed off a character
+// at a time until what is left fits, so a long word is broken rather than
+// lost.
+//
+// ==> nil when the bounds are not even one line tall; an array otherwise,
+// shortened to the lines actually used when the text runs out before the
+// bounds do.
+static Ref
+FMakeTextLines(RefArg /*rcvr*/, RefArg text, RefArg boundsFrame, RefArg lineHeightRef, RefArg font)
+{
+	Rect bounds;
+	FromObject(boundsFrame, bounds);
+	TRichString rich(text);
+	StyleRecord style;
+	style.fFontPattern = NILREF;
+	style.fPattern = nil;
+	CreateTextStyleRecord(font, &style);
+	FontInfo info;
+	GetStyleFontInfo(&style, &info);
+	long lineHeight = ISNIL(lineHeightRef)
+					? info.ascent + info.descent + info.leading
+					: RINT(lineHeightRef);
+	long lines = (bounds.bottom - bounds.top) / lineHeight;
+	if (lines <= 0)
+	{
+		DisposeStyleRecord(&style);
+		return NILREF;
+	}
+	long fits = bounds.right - bounds.left;
+	RefVar result(MakeArray(lines));
+	RefVar piece;
+	long used = 0;				// lines filled so far
+	long lineStart = 0;			// the first character of the line being built
+	long at = 0;				// where the walk has got to
+	long lastBreak = -1;		// the end of the last word that fitted
+	long y = bounds.top;
+	for (;;)
+	{
+		// on to the end of the word
+		UniChar ch;
+		while ((ch = rich.GetChar((ULong) at)) != 0 && !IsWhiteSpace(ch))
+			at++;
+		long width = RunWidth(rich, lineStart, at - lineStart, &style);
+		if (IsSpace(ch) && width <= fits)
+		{
+			// it still fits: remember the break and take the next word too
+			lastBreak = at;
+			while ((ch = rich.GetChar((ULong) at)) != 0 && IsSpace(ch))
+				at++;
+			continue;
+		}
+		if (width > fits && lastBreak == -1)
+		{
+			// the first word of the line is wider than the line: back off
+			// a character at a time until what is left fits
+			do
+			{
+				at--;
+				if (at == lineStart)
+					break;
+				width = RunWidth(rich, lineStart, at - lineStart, &style);
+			}
+			while (width >= fits);
+			if (at == lineStart)
+			{
+				SetLength(result, used);		// nothing more will fit
+				break;
+			}
+		}
+		if (width > fits)
+			at = lastBreak;						// break at the last word that did
+		ch = rich.GetChar((ULong) at);
+		// the whole string, when it is one line and starts at the beginning
+		piece = (ch == 0 && lineStart == 0) ? (Ref) text
+			  : Substring(text, lineStart, at - lineStart);
+		long line = used++;
+		RefVar shape(FMakeText(RefVar(NILREF), piece,
+							   RefVar(MAKEINT(bounds.left)), RefVar(MAKEINT(y)),
+							   RefVar(MAKEINT(bounds.right)), RefVar(MAKEINT(y + lineHeight))));
+		SetArraySlot(result, line, shape);
+		if (ch == 0)
+		{
+			SetLength(result, used);			// the text ran out first
+			break;
+		}
+		if (used == lines)
+			break;								// the bounds ran out first
+		// past the whitespace, and on to the next line
+		while ((ch = rich.GetChar((ULong) at)) != 0 && IsWhiteSpace(ch))
+			at++;
+		lineStart = at;
+		lastBreak = -1;
+		y += lineHeight;
+	}
+	DisposeStyleRecord(&style);
+	return result;
+}
+
+
 // ROM 0x000e17bc HitShape__FRC6RefVarRC6TPointT1
 // Whether the point is in the shape.  A list of shapes is walked - the
 // frames in it are the style frames, and are skipped - and the index of
@@ -1216,6 +1342,7 @@ RegisterShapeNatives(void)
 {
 	RegisterNativeFunction("FDrawShape", (void*) FDrawShape, 2);
 	RegisterNativeFunction("FHitShape", (void*) FHitShape, 3);
+	RegisterNativeFunction("FMakeTextLines", (void*) FMakeTextLines, 4);
 	RegisterNativeFunction("FMakeRect", (void*) FMakeRect, 4);
 	RegisterNativeFunction("FMakeOval", (void*) FMakeOval, 4);
 	RegisterNativeFunction("FMakeRoundRect", (void*) FMakeRoundRect, 5);
