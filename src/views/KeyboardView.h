@@ -46,6 +46,8 @@
 #ifndef __VIEW_H
 #include "View.h"
 #endif
+#include "Fonts.h"
+#include "Text.h"
 
 
 // The bits of a key's `info` word.
@@ -121,5 +123,38 @@ public:
 	long			fRowHeight;		// +0x70  how tall this row is drawn
 };
 
+
+
+// The on-screen keyboard.  The ROM's object is 0x94 bytes.
+class TKeyboardView : public TView
+{
+public:
+	virtual long	ClassID(void) const;						// ROM 0x000fb220 ClassID__13TKeyboardViewCFv
+	virtual Boolean	DerivedFrom(long id) const;					// ROM 0x000fb228 DerivedFrom__13TKeyboardViewCFl
+	virtual void	Constructor(RefArg context, TView* parent);	// ROM 0x000fb25c Constructor__13TKeyboardViewFRC6RefVarP5TView
+	virtual void	RealDraw(Rect& bounds);						// ROM 0x000fbfd4 RealDraw__13TKeyboardViewFR5TRect
+
+	// What is drawn on a key, and what it produces.  Either may be an
+	// array - one entry per keyboard state, picked by keyArrayIndex - or
+	// a function of the view, in which case what it answers is used.  A
+	// key with no legend is drawn with its result.
+	Ref				GetLegendRef(TRawKeyIterator& iter);		// ROM 0x000fb660 GetLegendRef__13TKeyboardViewFR15TRawKeyIterator
+	Ref				GetResultRef(TRawKeyIterator& iter);		// ROM 0x000fb81c GetResultRef__13TKeyboardViewFR15TRawKeyIterator
+
+	void			DrawKey(TVisKeyIterator& iter, Boolean hilited, Boolean keepBackground);			// ROM 0x000fb944 DrawKey__13TKeyboardViewFR15TVisKeyIteratorUcT2
+	void			DrawKeyFrame(TVisKeyIterator& iter, Boolean fill, Boolean keepBackground);		// ROM 0x000fbde0 DrawKeyFrame__13TKeyboardViewFR15TVisKeyIteratorUcT2
+
+	long			fKeyArrayIndex;		// +0x30  which of an array legend or result is this keyboard's
+	Boolean			fResultsAreKeycodes;// +0x34  the results are key codes rather than characters
+	RefStruct		fKeyDefinitions;	// +0x38
+	RefStruct		fKeyReceiverView;	// +0x3c  where the keys are sent ('viewFrontKey by default)
+	StyleRecord		fStyle;				// +0x40  the legends' font
+	StyleRecord*	fStylePtr;			// +0x60  &fStyle, which is what DrawTextOnce wants
+	TextOptions		fTextOptions;		// +0x64  centred, in the transfer mode a pressed key asks for
+	long			fAscent;			// +0x80  the legends' font, so that they sit on a baseline
+	long			fDescent;			// +0x84
+	Rect			fCell;				// +0x88  the unit a key's eighths are of, worked out from the bounds
+	Boolean			fHasKeySound;		// +0x90  the context has a keySound
+};
 
 #endif	/* __KEYBOARDVIEW_H */

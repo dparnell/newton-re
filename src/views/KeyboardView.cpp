@@ -10,6 +10,17 @@
 #include "Rects.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
+#include "Interpreter.h"
+#include "ViewFlags.h"
+#include "Keyboard.h"
+#include "Draw.h"
+#include "Shapes.h"
+#include "Ports.h"
+#include "Pictures.h"
+#include "Text.h"
+#include "REPTranslators.h"
+#include "Unicode.h"
+#include "RSSymbols.h"
 
 
 /*------------------------------------------------------------------------------
@@ -333,4 +344,363 @@ TVisKeyIterator::CopyInto(TVisKeyIterator* other)
 	other->fY = fY;
 	other->fRowPitch = fRowPitch;
 	other->fRowHeight = fRowHeight;
+}
+
+
+/*------------------------------------------------------------------------------
+	T K e y b o a r d V i e w
+------------------------------------------------------------------------------*/
+
+// How coarsely the keyboard's cell has to be rounded for every key's
+// width (or height) in eighths to come out a whole number of pixels,
+// indexed by the low three bits of all the keys' eighths ORed together.
+// The mask is this with 0xfff8 over it: widths that are all multiples of
+// eight will divide anything, one that is a multiple of four needs an
+// even cell, and anything else needs a multiple of eight.
+//
+// (ROM 0x00371a44, in qdConstants' neighbourhood; eight bytes.)
+static const unsigned char kCellRounding[8] = { 7, 0, 4, 0, 6, 0, 4, 0 };
+
+
+// ROM 0x000fb220 ClassID__13TKeyboardViewCFv
+long
+TKeyboardView::ClassID(void) const
+{
+	return clKeyboardView;
+}
+
+
+// ROM 0x000fb228 DerivedFrom__13TKeyboardViewCFl
+Boolean
+TKeyboardView::DerivedFrom(long id) const
+{
+	return id == clKeyboardView || TView::DerivedFrom(id);
+}
+
+
+// ROM 0x000fb25c Constructor__13TKeyboardViewFRC6RefVarP5TView
+// The keyboard read out of the context, and its cell worked out from the
+// bounds it has been given: the cell is as wide as the view divided by
+// the widest row and as tall as the view divided by all the rows' pitches
+// - so a keyboard fills whatever it is put in - and then rounded down so
+// that no key's eighths land between pixels.
+void
+TKeyboardView::Constructor(RefArg context, TView* parent)
+{
+	TView::Constructor(context, parent);
+	long exists = 0;
+	fKeyDefinitions = GetProtoVariable(fContext, RSSYMkeydefinitions, nil);
+	Ref value = GetProtoVariable(fContext, RSSYMkeyarrayindex, &exists);
+	fKeyArrayIndex = exists ? RINT(value) : 0;
+	value = GetProtoVariable(fContext, RSSYMkeyresultsarekeycodes, &exists);
+	fResultsAreKeycodes = exists ? NOTNIL(value) : false;
+	value = GetProtoVariable(fContext, RSSYMkeysound, &exists);
+	fHasKeySound = exists ? NOTNIL(value) : false;
+
+	CreateTextStyleRecord(RefVar(GetVariable(fContext, RSSYMviewfont, nil, 0)), &fStyle);
+	fStylePtr = &fStyle;
+	FontInfo info;
+	GetStyleFontInfo(&fStyle, &info);
+	fAscent = info.ascent;
+	fDescent = info.descent;
+	fTextOptions.fAlignment = 0x8000;		// centred
+	fTextOptions.fJustification = 0;
+	fTextOptions.fWidth = 0;
+	fTextOptions.fFittedWidth = 0;
+	fTextOptions.fTransferMode = 1;
+	fTextOptions.fReserved = 0;
+	fTextOptions.fReserved2 = 0;
+
+	fKeyReceiverView = GetProtoVariable(fContext, RSSYMkeyreceiverview, &exists);
+	if (!exists)
+		fKeyReceiverView = RSSYMviewfrontkey;
+
+	// the widest row, the rows' pitches, and the eighths every key asks for
+	long widest = 0;
+	long down = 0;
+	long widthBits = 0;
+	long heightBits = 0;
+	long tallestKey = 0;
+	{
+		TRawKeyIterator iter(fKeyDefinitions);
+		long across = 0;
+		heightBits = RINT(GetArraySlotRef(iter.fRow, 0));
+		while (!iter.Done())
+		{
+			if (iter.fKeyIndex <= 0)
+			{
+				across = 0;
+				tallestKey = 0;
+				down += RINT(GetArraySlotRef(iter.fRow, 0)) & 0xff;
+			}
+			long wide = (iter.fInfo >> kKeyWidthShift) & kKeyWidthMask;
+			across += wide;
+			long high = iter.fInfo & kKeyHeightMask;
+			if ((ULong) high > (ULong) tallestKey)
+				tallestKey = high;			// (worked out and not used)
+			widthBits |= wide;
+			heightBits |= high;
+			if (iter.fKeyIndex + 1 >= iter.fRowKeys && across > widest)
+				widest = across;
+			if (iter.Next())
+				break;
+		}
+	}
+	long cellWidth = ((viewBounds.right - viewBounds.left) * 8) / widest;
+	cellWidth &= 0xfff8 | kCellRounding[widthBits & 7];
+	long cellHeight = ((viewBounds.bottom - viewBounds.top) * 8) / down;
+	cellHeight &= 0xfff8 | kCellRounding[heightBits & 7];
+	SetRect(&fCell, 0, 0, cellWidth, cellHeight);
+}
+
+
+// One of a key's two slots, taken through the same two turns: an array
+// is this keyboard's entry of it, and a function is called on the view
+// and its answer taken (and taken through the array turn again).
+static Ref
+KeySlot(TKeyboardView* view, RefArg slot, long index)
+{
+	RefVar it(slot);
+	if (EQRef(ClassOf(it), RSSYMarray))
+		it = GetArraySlotRef(it, index);
+	else if (IsFunction(it))
+	{
+		it = DoScript(view->fContext, it, RefVar(NILREF));
+		if (EQRef(ClassOf(it), RSSYMarray))
+			it = GetArraySlotRef(it, index);
+	}
+	return it;
+}
+
+
+// ROM 0x000fb660 GetLegendRef__13TKeyboardViewFR15TRawKeyIterator
+// What is drawn on the key: its legend, or its result when it has no
+// legend of its own.
+Ref
+TKeyboardView::GetLegendRef(TRawKeyIterator& iter)
+{
+	RefVar legend(iter.fLegend);
+	if (ISNIL(legend))
+		legend = (Ref) iter.fResult;
+	return KeySlot(this, legend, fKeyArrayIndex);
+}
+
+
+// ROM 0x000fb81c GetResultRef__13TKeyboardViewFR15TRawKeyIterator
+// What the key produces.
+Ref
+TKeyboardView::GetResultRef(TRawKeyIterator& iter)
+{
+	return KeySlot(this, RefVar(iter.fResult), fKeyArrayIndex);
+}
+
+
+// ROM 0x000fbde0 DrawKeyFrame__13TKeyboardViewFR15TVisKeyIteratorUcT2
+// The key's outline, rounded by as much as its info word asks for and
+// drawn with a pen as thick as its 3-D depth.  `fill` paints it solid,
+// which is what a pressed or hilited key gets.
+//
+// The four bits at 0x10000 are how a key is made to have square corners
+// on the sides where it meets the edge of the keyboard: the rectangle is
+// pushed a hundred pixels out on those sides, so its rounded corner is
+// far away, and the drawing is clipped back to where the key really is.
+void
+TKeyboardView::DrawKeyFrame(TVisKeyIterator& iter, Boolean fill, Boolean keepBackground)
+{
+	Rect face = iter.fKeyFace;
+	long round = 2 + 2 * ((iter.fInfo >> 20) & 7);
+	long squared = (iter.fInfo >> 16) & 0xf;
+	long depth = (iter.fInfo >> kKeyDepthShift) & kKeyDepthMask;
+	Rect clip = face;
+	if (squared != 0)
+	{
+		if (iter.fInfo & 0x80000)	face.left = (short) (face.left - 100);
+		if (iter.fInfo & 0x20000)	face.top = (short) (face.top - 100);
+		if (iter.fInfo & 0x10000)	face.right = (short) (face.right + 100);
+		if (iter.fInfo & 0x40000)	face.bottom = (short) (face.bottom + 100);
+	}
+	if (fill)
+	{
+		if (squared != 0)
+			ClipRect(&clip);
+		// (the ROM has a PaintRect here for a rounding of nothing, which
+		//  cannot happen: the rounding is two plus twice a field)
+		if (round != 0)
+			PaintRoundRect(&face, round, round);
+		else
+			PaintRect(&face);
+	}
+	else if (depth != 0)
+	{
+		PenSize(depth, depth);
+		if (squared != 0)
+			ClipRect(&clip);
+		Boolean erase = keepBackground || (fViewFormat & 0xf) != 1;
+		if (round != 0)
+		{
+			if (erase)
+				EraseRoundRect(&face, round, round);
+			FrameRoundRect(&face, round, round);
+		}
+		else
+		{
+			if (erase)
+				EraseRect(&face);
+			FrameRect(&face);
+		}
+		PenNormal();
+	}
+	if (squared != 0)
+	{
+		Rect wide;
+		SetRect(&wide, -32767, -32767, 32766, 32766);
+		ClipRect(&wide);
+	}
+}
+
+
+// ROM 0x000fb944 DrawKey__13TKeyboardViewFR15TVisKeyIteratorUcT2
+// A key drawn: its outline, and then its legend centred in it.  A legend
+// is a string, a character, a bitmap frame, or a number - which is a key
+// code to be labelled when the keyboard's results are key codes, and a
+// number to be written out when they are not.  A keyboard of key codes
+// also draws a key that is being held down as though it were hilited,
+// which is what keeps shift and the option keys looking pressed.
+void
+TKeyboardView::DrawKey(TVisKeyIterator& iter, Boolean hilited, Boolean keepBackground)
+{
+	RefVar legend(GetLegendRef(iter));
+	long code = -1;
+	Boolean hasText = false;
+	Boolean isBitmap = false;
+	UniChar oneChar[2];
+	UniChar number[32];
+	const UniChar* text = nil;
+	long length = 0;
+	Point bitmapSize;
+	bitmapSize.h = 0;
+	bitmapSize.v = 0;
+
+	if (EQRef(ClassOf(legend), RSSYMstring))
+	{
+		hasText = true;
+		text = (const UniChar*) BinaryData(legend);
+		length = (Length(legend) - sizeof(UniChar)) / sizeof(UniChar);
+	}
+	else if (ISCHAR((Ref) legend))
+	{
+		hasText = true;
+		oneChar[0] = RCHAR(legend);
+		text = oneChar;
+		length = 1;
+	}
+	else if (ISINT((Ref) legend) && fResultsAreKeycodes)
+	{
+		hasText = true;
+		code = RINT(legend);
+		oneChar[0] = KeyLabel((ULong) code, false);
+		text = oneChar;
+		length = 1;
+	}
+	else if (ISINT((Ref) legend))
+	{
+		hasText = true;
+		IntegerString(RINT(legend), number);
+		text = number;
+		length = Ustrlen(number);
+	}
+	else if (EQRef(ClassOf(legend), RSSYMframe) && FrameHasSlotRef(legend, RSSYMbits))
+	{
+		isBitmap = true;
+		Rect bounds;
+		FromObject(RefVar(GetFrameSlotRef(legend, RSSYMbounds)), bounds);
+		bitmapSize.h = (short) (bounds.right - bounds.left);
+		bitmapSize.v = (short) (bounds.bottom - bounds.top);
+	}
+	else
+		return;					// nothing to draw it with
+
+	if (fResultsAreKeycodes)
+	{
+		if (code == -1)
+		{
+			RefVar result(GetResultRef(iter));
+			if (ISINT((Ref) result))
+				code = RINT(result);
+		}
+		if (code != -1 && KeyDown((ULong) code, false))
+			hilited = true;
+	}
+	DrawKeyFrame(iter, hilited, keepBackground);
+
+	if (isBitmap)
+	{
+		// centred in the key's shadow rectangle, which is the face
+		// without its raised edge
+		Rect at;
+		at.left = (short) (((iter.fKeyShadow.left + iter.fKeyShadow.right) - bitmapSize.h) / 2);
+		at.right = (short) (at.left + bitmapSize.h);
+		at.top = (short) (((iter.fKeyShadow.top + iter.fKeyShadow.bottom) - bitmapSize.v) / 2);
+		at.bottom = (short) (at.top + bitmapSize.v);
+		DrawBitmap(legend, &at, hilited ? 3 : 1);
+	}
+	else if (hasText)
+	{
+		fTextOptions.fTransferMode = hilited ? 3 : 1;
+		fTextOptions.fWidth = ToFixed(iter.fKeyShadow.right - iter.fKeyShadow.left + 6);
+		FPoint where;
+		where.x = ToFixed(iter.fKeyShadow.left - 3);
+		long spare = (iter.fKeyShadow.top + iter.fKeyShadow.bottom) - (fAscent + fDescent);
+		where.y = ToFixed(fAscent + (spare + ((ULong) spare >> 31)) / 2);
+		DrawTextOnce(text, length, &fStylePtr, nil, where, &fTextOptions, nil);
+	}
+}
+
+
+// ROM 0x000fbfd4 RealDraw__13TKeyboardViewFR5TRect
+// The keys drawn, from the top left of the view.  A row whose rectangle
+// is nowhere near what has to be redrawn is stepped over whole rather
+// than key by key, which is what makes a keyboard cheap to update when a
+// single key changes.  keyHighlightKeys names the results whose keys are
+// to be drawn pressed.
+void
+TKeyboardView::RealDraw(Rect& bounds)
+{
+	RefVar highlight(GetProtoVariable(fContext, RSSYMkeyhighlightkeys, nil));
+	long highlights = ISNIL(highlight) ? 0 : Length(highlight);
+	RefVar index(GetProtoVariable(fContext, RSSYMkeyarrayindex, nil));
+	fKeyArrayIndex = ISNIL(index) ? 0 : RINT(index);
+	PenNormal();
+	Point at;
+	at.v = viewBounds.top;
+	at.h = viewBounds.left;
+	TVisKeyIterator iter(fKeyDefinitions, fCell, at);
+	Boolean done;
+	do
+	{
+		if (iter.fRowHasKeys && iter.fKeyIndex == iter.fFirstKey
+			&& !Intersects(&iter.fRowBounds, &bounds))
+		{
+			done = iter.SkipToStartOfNextRow();
+			continue;
+		}
+		if (Intersects(&iter.fKeyFace, &bounds) && (iter.fInfo & kKeyIsGap) == 0)
+		{
+			Boolean hilited = false;
+			if (highlights > 0)
+			{
+				RefVar result(GetResultRef(iter));
+				for (long i = 0; i < highlights; i++)
+					if (EQRef(GetArraySlotRef(highlight, i), result))
+					{
+						hilited = true;
+						break;
+					}
+			}
+			DrawKey(iter, hilited, false);
+		}
+		done = iter.Next();
+	}
+	while (!done);
+	PenNormal();
 }

@@ -18,6 +18,7 @@
 #include "EditView.h"
 #include "Application.h"
 #include "GaugeView.h"
+#include "KeyboardView.h"
 #include "PickView.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -134,12 +135,12 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // The C++ object for the context's viewClass, constructed under the
 // parent; a Throw in the Constructor removes the view again.  NOT YET
 // RECONSTRUCTED: the subclasses - every class gets a TView (the ROM makes
-// TEditView, TKeyboardView, TMonthView, TPolygonView, TMathExpView,
+// TEditView, TMonthView, TPolygonView, TMathExpView,
 // TMathOpView, TMathLineView, TRemoteView, TPrintView, TMeetingView,
 // TSliderView, TListView, TClipboard, TOutline, THelpOutline, TXView for
 // classes 75-108, and -8501 for any other); TTextView (97, 98),
 // TPictureView (75, 76), TParagraphView (81), TDataView (83), TPickView
-// (89-91) and TGaugeView (92) are here.
+// (89-91), TGaugeView (92) and TKeyboardView (79) are here.
 TView*
 BuildView(TView* parent, RefArg context)
 {
@@ -148,7 +149,6 @@ BuildView(TView* parent, RefArg context)
 	switch (viewClass)
 	{
 	case clView:
-	case clKeyboardView:
 	case clMonthView:
 	case clPolygonView:
 	case clMathExpView:
@@ -164,6 +164,9 @@ BuildView(TView* parent, RefArg context)
 	case clHelpOutline - 1: case clHelpOutline:
 	case clTXView:
 		view = new TView;
+		break;
+	case clKeyboardView:
+		view = new TKeyboardView;
 		break;
 	case clTextView - 1: case clTextView:
 		view = new TTextView;
