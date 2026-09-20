@@ -47,6 +47,21 @@ static inline ULong	Get16(const char* p)	{ return (Get8(p) << 8) | Get8(p + 1); 
 static inline long	GetS16(const char* p)	{ return (short) Get16(p); }
 static inline ULong	Get32(const char* p)	{ return (Get16(p) << 16) | Get16(p + 2); }
 
+// A whole number as a Fixed.  The ROM writes `mov r0,r0,lsl #16`, which
+// the ARM is happy to do to a negative value; shifting a negative signed
+// long left is undefined in C++, and a font with a negative descent or a
+// negative width adjustment does turn up, so the shift is done in
+// unsigned and the bits read back as signed - which is the same thing the
+// ARM does.
+static inline Fixed	ToFixed(long n)			{ return (Fixed) ((ULong) n << 16); }
+
+// A Fixed rounded to the nearest whole number, as `add r0,r0,#0x8000`
+// followed by `mov r0,r0,asr #16`.  The addition is done in unsigned
+// because it can overflow - a StyleRecord that nobody filled in (see
+// CreateTextStyleRecord) gives FixedMultiply something to saturate on -
+// and the ARM wraps where C++ would have nothing to say.
+static inline long	RoundFixed(Fixed f)		{ return ((Fixed) ((ULong) f + 0x8000)) >> 16; }
+
 
 /*------------------------------------------------------------------------------
 	T h e   ' s f n t '   e n g i n e
@@ -210,7 +225,7 @@ SFNTGetGlyphInfo(long ch, long glyph, FontEngineInfo* info)
 				long advance = 0;
 				if (imageFormat == 1 || imageFormat == 6)
 					advance = Get8(data + 4);
-				info->fGlyphAdvance = (Fixed) ((info->fWidthAdjust + advance) << 16);
+				info->fGlyphAdvance = ToFixed(info->fWidthAdjust + advance);
 				info->fIndexSubTable = subTable;
 				info->fGlyphData = data;
 				return;
@@ -711,13 +726,13 @@ GetStyleFontInfo(StyleRecord* style, FontInfo* fontInfo)
 	}
 	else
 	{
-		fontInfo->ascent = (short) ((FixedMultiply((Fixed) (info.fAscent << 16), info.fScaleY) + 0x8000) >> 16);
-		fontInfo->descent = (short) ((FixedMultiply((Fixed) (info.fDescent << 16), info.fScaleY) + 0x8000) >> 16);
-		fontInfo->leading = (short) ((FixedMultiply((Fixed) (info.fLeading << 16), info.fScaleY) + 0x8000) >> 16);
+		fontInfo->ascent = (short) RoundFixed(FixedMultiply(ToFixed(info.fAscent), info.fScaleY));
+		fontInfo->descent = (short) RoundFixed(FixedMultiply(ToFixed(info.fDescent), info.fScaleY));
+		fontInfo->leading = (short) RoundFixed(FixedMultiply(ToFixed(info.fLeading), info.fScaleY));
 	}
 	fontInfo->widMax = info.fWidMax;
 	if (info.fScaleX != 0x10000)
-		fontInfo->widMax = (short) ((FixedMultiply((Fixed) (info.fWidMax << 16), info.fScaleX) + 0x8000) >> 16);
+		fontInfo->widMax = (short) RoundFixed(FixedMultiply(ToFixed(info.fWidMax), info.fScaleX));
 	CloseFont(&info);
 }
 
@@ -841,6 +856,16 @@ PackedFontFamilyFrame(long font)
 // symbol through vars.fonts, the color a pattern), or an ink word (NOT
 // YET).  No family means the user's preference (userFont), else the
 // system font.
+//
+// ROM BUG, kept: a spec that is none of those - a nil `styles` slot, for
+// one, which is what TParagraphView::GetInterLineSpacing hands over for a
+// paragraph that has no style runs - leaves the size and the face as the
+// caller left them, and every caller builds its StyleRecord on the stack.
+// The family is put right afterwards (it is a RefStruct, so it starts
+// nil), but the size is whatever was underneath, and the font engine then
+// scales a strike to it.  Nothing crashes on the machine, because the ARM
+// is content to shift and multiply nonsense; on the host the arithmetic is
+// written so that it wraps in the same way rather than trapping.
 void
 CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 {
@@ -857,7 +882,7 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 	else if (IsFrame(fontSpec))
 	{
 		style->fFontFamily = GetFontFamily(RefVar(GetFrameSlotRef(fontSpec, RSSYMfamily)));
-		style->fFontSize = (Fixed) (RINT(GetFrameSlotRef(fontSpec, RSSYMsize)) << 16);
+		style->fFontSize = ToFixed(RINT(GetFrameSlotRef(fontSpec, RSSYMsize)));
 		style->fFontFace = RINT(GetFrameSlotRef(fontSpec, RSSYMface));
 		RefVar color(GetFrameSlotRef(fontSpec, RSSYMcolor));
 		if ((Ref) color != NILREF)
