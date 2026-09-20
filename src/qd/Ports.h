@@ -57,8 +57,8 @@ struct QDGlobals
 {
 	long		fRandSeed;			// +0x00  1 from InitGraf: the seed of Random (GetRandSeed/SetRandSeed)
 	PixelMap	fScreenBits;		// +0x04  the screen's pixel map (a port starts with it)
-	long		fReserved20;		// +0x20
-	long		fReserved24;		// +0x24
+	long		fPicOffset;			// +0x20  how far into the picture being played StdGetPic has read
+	Handle		fPicHandle;			// +0x24  the picture it is reading (DrawPicture, NOT YET)
 	long		fPolySize;			// +0x28  OpenPoly's buffer
 	Handle		fPolyHandle;		// +0x2c
 	long		fRgnSize;			// +0x30  OpenRgn's point buffer

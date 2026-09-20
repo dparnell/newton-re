@@ -352,9 +352,16 @@ Justify(Rect* r, const Rect& box, ULong justify)
 // bounds justified into the box ("bad pictBounds frame" without proper
 // bounds); mode 8 (patCopy) draws the mask first in srcBic and the bits
 // in srcOr - a masked copy; a negative mode draws the mask itself in the
-// mode negated.  NOT YET RECONSTRUCTED: 'picture binaries (QuickDraw
-// pictures, DrawPicture 0x0030e270) and shapes (DrawShape) - nothing is
-// drawn for them.
+// mode negated.
+//
+// NOT YET RECONSTRUCTED: 'picture binaries and shapes (DrawShape) -
+// nothing is drawn for them.  A 'picture binary is a QuickDraw picture,
+// played by DrawPicture(Picture**, Rect*, Boolean) (0x003337fc) over
+// ParsePicCodes (0x0033249c) and its opcode readers; the ROM's own
+// pictures include the world map the Time Zones application draws
+// (Rworldmapbitmap, a version 1 picture whose one opcode is a
+// PackBitsRect of a 360x179 bitmap), so that map is blank until the
+// picture player is here.
 void
 DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 {
