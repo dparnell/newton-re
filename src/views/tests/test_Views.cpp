@@ -401,6 +401,20 @@ TestJustify()
 	TView* l = ViewOf("ctxL := AddView(ctxP, {viewClass: 74, viewFlags: 1, viewJustify: vjChildrenLasso, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewChildren: [{viewClass: 74, viewFlags: 1, viewBounds: {left: 3, top: 4, right: 13, bottom: 14}}, {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 8, right: 30, bottom: 28}}]})");
 	EXPECT(BoundsAre(l, 20, 10, 47, 34));		// the children's union (3,4)-(30,28) at the view's own origin
 	EXPECT(RINT(Eval("ctxL.viewBounds.right")) == 27 && RINT(Eval("ctxL.viewBounds.bottom")) == 24);
+	// :RedoChildren(): every child thrown away and the whole lot built
+	// again out of viewChildren as it now stands, the view left dirty.  It
+	// is how a view whose children come out of something that has changed
+	// (a list of countries scrolled to another letter) is made to look
+	// again - RemoveAllViews alone would leave it empty.
+	Eval("ctxR := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 60, bottom: 60},"
+		" viewChildren: [{viewClass: 74, viewFlags: 1, viewBounds: {left: 1, top: 1, right: 11, bottom: 11}, debug: 'r1}]})");
+	EXPECT(RINT(Eval("Length(ctxR:ChildViewFrames())")) == 1);
+	Eval("ctxR.viewChildren := [{viewClass: 74, viewFlags: 1, viewBounds: {left: 1, top: 1, right: 11, bottom: 11}, debug: 'r2},"
+		" {viewClass: 74, viewFlags: 1, viewBounds: {left: 20, top: 20, right: 30, bottom: 30}, debug: 'r3}]");
+	EXPECT(NOTNIL(Eval("ctxR:RedoChildren()")));
+	EXPECT(RINT(Eval("Length(ctxR:ChildViewFrames())")) == 2);
+	EXPECT(EQRef(Eval("ctxR:ChildViewFrames()[0].debug"), Eval("'r2")));
+	Eval("ctxR:Close()");
 	Eval("ctxP:Close()");
 	Refresh();
 }

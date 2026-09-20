@@ -896,8 +896,11 @@ FSyncViewX(RefArg rcvr)
 
 
 // ROM 0x001eae8c FSyncChildrenX
-// :SyncChildren(): the children brought up to date with viewChildren
-// (a view still being set up: NOT YET: the ROM delays it).
+// :SyncChildren(): the children brought up to date with viewChildren.
+//
+// A view that is still being built (or taken apart) cannot have its
+// children changed under it, so the ROM complains and puts the work off
+// to a delayed action on itself, which runs once the setup has finished.
 static Ref
 FSyncChildrenX(RefArg rcvr)
 {
@@ -905,7 +908,8 @@ FSyncChildrenX(RefArg rcvr)
 	if (view->fFlags & vIsInSetupForm)
 	{
 		BadWickedNaughtyNoot(0x1271);
-		return NILREF;
+		gApplication->AddDelayedAction(rcvr, RSSYMsyncchildren, RefVar(NILREF), RefVar(NILREF));
+		return TRUEREF;
 	}
 	newton_try
 	{
@@ -917,13 +921,25 @@ FSyncChildrenX(RefArg rcvr)
 		NextHandler(&_info);
 	}
 	end_try;
-	return NILREF;
+	return TRUEREF;
 }
 
 
 // ROM 0x001ead80 FRedoChildrenX
-// :RedoChildren(): the children removed (a view still being set up: NOT
-// YET: the ROM delays it; a Throw clears the deletion marks).
+// :RedoChildren(): the view's children made again from its viewChildren
+// and stepChildren - every child thrown away, the whole lot built afresh
+// and the view marked dirty so what came out is drawn.  It is how a view
+// whose children come out of something that has changed (the list a
+// picker offers, the rows of a soup a list view shows) is told to look
+// again.
+//
+// A view that is still being built cannot have its children pulled out
+// from under it, so that is complained about and put off to a delayed
+// action on the view itself, which runs once the setup has finished.
+//
+// A Throw out of any of the three leaves the view part-built, so the
+// deletion marks RemoveAllViews set are cleared before the exception
+// goes on its way.
 static Ref
 FRedoChildrenX(RefArg rcvr)
 {
@@ -931,11 +947,14 @@ FRedoChildrenX(RefArg rcvr)
 	if (view->fFlags & vIsInSetupForm)
 	{
 		BadWickedNaughtyNoot(0x1270);
-		return NILREF;
+		gApplication->AddDelayedAction(rcvr, RSSYMredochildren, RefVar(NILREF), RefVar(NILREF));
+		return TRUEREF;
 	}
 	newton_try
 	{
 		view->RemoveAllViews();
+		view->AddViews(false);
+		view->Dirty(nil);
 	}
 	newton_catch_all
 	{
@@ -943,7 +962,7 @@ FRedoChildrenX(RefArg rcvr)
 		NextHandler(&_info);
 	}
 	end_try;
-	return NILREF;
+	return TRUEREF;
 }
 
 

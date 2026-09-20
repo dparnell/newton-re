@@ -257,6 +257,24 @@ the root context resolves to the root view (`RealOpenX` then does
 nothing): the ROM's own applications name a `preallocatedContext`, and a
 context from `BuildContext` has its own nil `viewCObject`.
 
+`SyncChildren` and `RedoChildren` (`FSyncChildrenX` 0x001eae8c,
+`FRedoChildrenX` 0x001ead80) are the two ways a view is told its children
+are out of date.  `SyncChildren` brings them up to date with the
+template's `viewChildren`, adding and removing as needed
+(`TView::AddViews(true)`).  `RedoChildren` does not: it throws every
+child away (`RemoveAllViews`), builds the whole lot again
+(`AddViews(false)`) and marks the view dirty, which is what a view whose
+children come out of something that has *changed* needs - the Setup
+assistant's list of countries, for one, whose `PickLetterScript` moves
+the soup cursor and then calls `:RedoChildren()` to draw the page the
+cursor now points at.  Both refuse while the view is still in its setup
+(`vIsInSetupForm`): they complain (`BadWickedNaughtyNoot`) and put the
+work off with `AddDelayedAction(view, 'RedoChildren, nil, nil)`, which
+runs once the setup is done.  A Throw out of either clears the deletion
+marks (`vIsBeingDeleted`, 0x90000000) before letting the exception go on,
+so a part-built view is not left looking as though it were being deleted.
+Both answer `true`.
+
 **TTextView** (`TextView.h`, clTextView 98: protoTitle, protoTextButton
 and the like): its text slot in its viewFont - a single line
 (viewJustify's `oneLineOnly` 0x800000) laid across the bounds' width by
