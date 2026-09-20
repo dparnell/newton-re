@@ -5,6 +5,7 @@
 */
 
 #include "HostViews.h"
+#include <time.h>
 #include "HostStores.h"
 #include "HostNatives.h"
 #include "HostScreen.h"
@@ -251,6 +252,10 @@ HostDisplay(void)
 }
 
 
+// the seconds between the two epochs: the Newton counts from 1904 and a
+// host from 1970
+const unsigned long long kSecondsFrom1904To1970 = 2082844800ULL;
+
 // the display the newt world is to boot over (HostBootNewtWorld)
 static long	gNewtDisplayWidth = 320;
 static long	gNewtDisplayHeight = 480;
@@ -285,4 +290,11 @@ HostBootNewtWorld(void)
 	HostStartDisplay(gNewtDisplayWidth, gNewtDisplayHeight, gNewtDisplayDepth);
 	HostInitViewToolbox();
 	HostAdvanceClock(60 * 60 * 0xf000);
+	// DEVIATION: the machine reads the date out of a battery-backed clock
+	// chip, which the host has not got: its own clock stood at midnight on
+	// 1 January 1904 until something set it, so every note was stamped
+	// with that and the status bar said so.  The host's clock is the
+	// nearest thing to a battery-backed one, in seconds from 1904 as the
+	// Newton counts them.
+	SetRealClockSeconds((ULong) ((unsigned long long) time(nil) + kSecondsFrom1904To1970));
 }

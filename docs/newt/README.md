@@ -421,3 +421,30 @@ missing under that: `ExtendedGestalt`, the unmarshalling that reads a
 block by a template (`frames/Marshalling.h`), and anything at all to
 register `kGestalt_Ext_VolumeInfo` - the ROM's sound driver does it, and
 the host has no sound hardware.
+
+## The clock, and a store written before the integers were right
+
+The machine reads the date out of a battery-backed clock chip. The host
+has not got one, so its clock stood at midnight on 1 January 1904 until
+something set it: `HostBootNewtWorld` now sets it from the host's own
+clock (`DEVIATION`, `host/HostViews.cpp`), which is why the status bar
+reads the real date and notes are stamped with it.
+
+`TimeInSeconds` counts from the start of 1993 and a Newton integer holds
+thirty bits, so it runs out in 2010 and wraps from then on. That is the
+machine's own limit, not the host's - a real MP2100 with today's date in
+it does the same - and it is why an alarm set now falls in the past.
+
+A store written by a build from before integers were cut to thirty bits
+(`docs/frames/README.md`) has an alarm in it whose index key no entry
+has, and every boot after that fails to set the To Do list's roll-over
+alarm - which that application reports as *"There is not enough space in
+the internal memory"*. Nothing is wrong with the memory.
+`src/host/demo/repair-alarms.ns` drops the alarm soup, which the ROM
+builds again:
+
+    build/host/host/newton --rom build/MP2x00US/rom.bin --headless 5 \
+        --store build/newton.store --script src/host/demo/repair-alarms.ns
+
+(The run itself prints a couple of `Query` exceptions from the code still
+holding the soup it removed; the next boot is clean.)

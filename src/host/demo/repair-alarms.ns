@@ -1,0 +1,34 @@
+// Repair a store written before integers were cut to the machine's thirty
+// bits (frames/README.md, "An integer is thirty bits, however wide the
+// host's word is").
+//
+// While the host's integers could be wider than the Newton's, an alarm
+// went into the SystemAlarmSoup with an index key that narrowed the moment
+// it was written, so the index holds a key no entry has.  The alarm can
+// never be removed again, and because AddAlarm removes the alarm it
+// replaces, every boot from then on fails to set the To Do list's
+// roll-over alarm - which that application reports as
+//
+//     "There is not enough space in the internal memory to automatically
+//      roll-over To Do tasks.  Deleting some data and resetting may help."
+//
+// Nothing is wrong with the memory, and nothing else in the store is
+// affected: it is only the alarm soup's indexes.  This drops that soup,
+// which the ROM builds again the next time an alarm is set.  Alarms
+// already set are lost, which on a machine that cannot set one is no loss.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 5 \
+//       --store build/newton.store --script src/host/demo/repair-alarms.ns
+//
+// Then start the machine as usual; the message should be gone.
+
+begin
+	local soup := GetStores()[0]:GetSoup("SystemAlarmSoup");
+	if soup then
+		begin
+			soup:RemoveFromStore();
+			Print("repair-alarms: the alarm soup is gone; the ROM will make a new one");
+		end
+	else
+		Print("repair-alarms: there is no alarm soup - nothing to repair");
+end;
