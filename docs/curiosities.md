@@ -264,6 +264,35 @@ to whatever is underneath it.
 
 ---
 
+## A pointer-sized word is fine until something has to be a parameter block
+
+This reconstruction makes `Ref` and `ULong` pointer-sized so that the
+object system can carry host pointers, which is the right call and costs
+nothing almost everywhere. It costs something in exactly one place: a
+structure whose bytes are *shared with something else*.
+
+`kGestalt_Ext_VolumeInfo`'s parameter block is twenty bytes - four flag
+bytes, a double, two longs - and the Extras drawer reads it back through
+the template `['struct, 'boolean, 'boolean, 'boolean, 'boolean, 'Real,
+'long, 'long]`. Declared with `ULong fDecibelRange[2]` the double lands at
+offset eight instead of four on a 64-bit host, and every field after it
+reads four bytes late: the drawer got the double's high word where the
+number of volume settings should have been.
+
+The same edge has a second side to it. A double sits on a *four*-byte
+boundary in an ARM structure, where a host compiler wants eight, so
+`UnmarshalValue` takes its bytes with `memcpy` rather than dereferencing a
+`double*` - the host traps on the misaligned load that the ARM is happy
+to do.
+
+The rule that falls out: anything that is a layout rather than a value -
+a parameter block, a persistent format, a packet - is declared in fixed
+widths, and read by its bytes.
+
+*`src/frames/Marshalling.cpp`; `src/sound/SoundChannel.h`.*
+
+---
+
 ## The mu-law coder never clamps
 
 The 8-bit mu-law encoder in `sound/SampleConvert.h` has the shape of
