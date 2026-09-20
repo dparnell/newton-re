@@ -112,6 +112,20 @@ static const char* kSetupSource =
 	"        if seen.(k) then twice := true else seen.(k) := true end; "
 	"      e := c:Next() end; "
 	"    if twice then 0 else 1 end, "
+	// MapCursor walks a clone, so the cursor it is given is left where it
+	// was, and an answer of nil is left out of the array it gives back
+	"  mapcursor: func(data) begin "
+	"    local soup := GetStores()[0]:GetSoup(\"Packages\"); "
+	"    if not soup then return 0; "
+	"    local c := Query(soup, {type: 'index}); "
+	"    local first := c:Entry(); "
+	"    if not first then return 0; "
+	"    local all := MapCursor(c, nil); "
+	"    local apps := MapCursor(c, func(e) e.app); "
+	"    if c:Entry() <> first then return 0; "
+	"    if Length(all) < 1 or Length(apps) > Length(all) then return 0; "
+	"    if Length(MapCursor(c, func(e) nil)) <> 0 then return 0; "
+	"    1 end, "
 	"  countClicks: func(data) clicks, "
 	"  countTaps: func(data) taps, "
 	"  textLength: func(data) StrLen(para.text) "
@@ -128,6 +142,7 @@ static long gTextLength = 0;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
 static Boolean gExtrasOk = false;
+static Boolean gMapCursorOk = false;
 static Boolean gMinimumBatteryOk = false;
 static Boolean gPowerOffOk = false;
 static Boolean gWorldDataOk = false;
@@ -215,6 +230,9 @@ Scenario(void)
 		TRunScriptEvent extras("testApp", "extras");
 		newtPort.SendRPC(&replySize, &extras, sizeof(extras), &extras, sizeof(extras));
 		gExtrasOk = extras.fError == 0 && extras.fResult == 1;
+		TRunScriptEvent mapCursor("testApp", "mapcursor");
+		newtPort.SendRPC(&replySize, &mapCursor, sizeof(mapCursor), &mapCursor, sizeof(mapCursor));
+		gMapCursorOk = mapCursor.fError == 0 && mapCursor.fResult == 1;
 		TRunScriptEvent world("testApp", "worldData");
 		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
 		gWorldDataOk = world.fError == 0 && world.fResult == 1;
@@ -279,6 +297,7 @@ int main()
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);
 	EXPECT(gBatteryOk);
+	EXPECT(gMapCursorOk);	// MapCursor maps a cursor's entries without moving it
 	EXPECT(gExtrasOk);		// one Extras entry for each application, and marked so it stays that way
 	EXPECT(gMinimumBatteryOk);
 	EXPECT(gPowerOffOk);

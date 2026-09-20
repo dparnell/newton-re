@@ -33,6 +33,7 @@
 #include "Application.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "Cursors.h"
 #include "PickView.h"
 #include "ROMConstants.h"
 #include "NewtonTime.h"
@@ -1774,6 +1775,36 @@ PolygonDescription(RefArg item)
 }
 
 
+// ROM 0x001ed1fc FMapCursor__FRC6RefVarN21
+// MapCursor(cursor, func): the function run over every entry a cursor
+// still has to give, and the answers collected into an array.  The cursor
+// itself is not moved - a clone of it is walked - and an answer of nil is
+// left out, so the function is a filter as well as a map.  With no
+// function the entries themselves are collected.
+static Ref
+FMapCursor(RefArg /*rcvr*/, RefArg cursor, RefArg func)
+{
+	RefVar walk(CursorClone(cursor));
+	RefVar result(MakeArray(0));
+	RefVar args(MakeArray(1));
+	RefVar entry(CursorEntry(walk));
+	RefVar value;
+	while (NOTNIL(entry))
+	{
+		value = entry;
+		if (NOTNIL(func))
+		{
+			SetArraySlot(args, 0, entry);
+			value = DoBlock(func, args);
+		}
+		if (NOTNIL(value))
+			AddArraySlot(result, value);
+		entry = CursorNext(walk);
+	}
+	return result;
+}
+
+
 // ROM 0x001ed314 FExtractData__FRC6RefVarN31
 // ExtractData(data, separator, maxLength): everything a note says, in one
 // string - the line the Notes overview shows for it.  `data` is the
@@ -2128,6 +2159,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FPositionToTime__FRC6RefVarN21", (void*) FPositionToTime, 2);
 	RegisterNativeFunction("FTimeToPosition__FRC6RefVarN21", (void*) FTimeToPosition, 2);
 	RegisterNativeFunction("FGetHiliteOffsets__FRC6RefVar", (void*) FGetHiliteOffsets, 0);
+	RegisterNativeFunction("FMapCursor__FRC6RefVarN21", (void*) FMapCursor, 2);
 	RegisterNativeFunction("FExtractData__FRC6RefVarN31", (void*) FExtractData, 3);
 	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
 	RegisterNativeFunction("FDrawXBitmap", (void*) FDrawXBitmap, 4);

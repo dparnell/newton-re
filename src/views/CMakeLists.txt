@@ -37,7 +37,7 @@ add_library(views STATIC
 # (the root view tracks clicks on the caret through the recognition units;
 # the recogniser posts to the views: the two static libraries depend on
 # each other)
-target_link_libraries(views PUBLIC newton_config qd frames intl utility recognition)
+target_link_libraries(views PUBLIC newton_config qd frames intl utility recognition stores)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)
