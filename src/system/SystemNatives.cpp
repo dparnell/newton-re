@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include "ROMConstants.h"
 #include "Frames.h"
+#include "ObjectHeap.h"
+#include "SkiaHeap.h"
+#include "NewtonMemory.h"
 #include "hal/System.h"
 #include "hal/Power.h"
 #include "ByteOrder.h"
@@ -393,6 +396,125 @@ FMinimumBatteryCheck(RefArg /*rcvr*/)
 	return MAKEBOOLEAN(slept);
 }
 
+/* -------------------------------------------------------------------------------
+	What the memory looks like
+
+	Three heaps answer for the machine's memory: the pointer heap and the
+	handle heap the memory manager keeps (memory/SkiaHeap.h), and the
+	frames heap the object system allocates in (frames/ObjectHeap.h).
+	GetHeapStats reports all three, and what the system has left over
+	besides.
+------------------------------------------------------------------------------- */
+
+// ROM 0x00202f08 GetActualHeapInfo__FPvPPvT2PlT4
+// A heap walked a block at a time: where its first block starts, where
+// its last one ends, how many blocks there are and how many bytes of
+// them are free.
+//
+// A walk is only good while the heap holds still.  NextHeapBlock answers
+// kMM_HeapSeedFailure when another task has allocated since the seed was
+// taken, and then the whole walk starts again from nothing - which is
+// why the counters are cleared inside the loop rather than before it.
+static void
+GetActualHeapInfo(Heap heap, void** start, void** end, long* blockCount, long* freeBytes)
+{
+	for (;;)
+	{
+		*blockCount = 0;
+		*freeBytes = 0;
+		long seed = HeapSeed(heap);
+		Boolean first = true;
+		void* block = nil;
+		Size size = 0;
+		TObjectId owner = 0;
+		int type;
+		while ((type = NextHeapBlock(heap, seed, block, &block, nil, nil, nil, &size, &owner)) != kMM_HeapSeedFailure)
+		{
+			if (type == kMM_HeapEndBlock)
+				return;
+			if (first)
+			{
+				*start = block;
+				*end = block;
+				first = false;
+			}
+			(*blockCount)++;
+			*end = (char*) *end + size;
+			if (type == kMM_HeapFreeBlock)
+				*freeBytes += size;
+		}
+	}
+}
+
+
+// An address as the ROM hands one to a script: the low two bits masked
+// off make it an integer Ref of the address divided by four, which is
+// near enough for a number to print.  (A host pointer is wider than the
+// Newton's, but a Ref here is pointer-sized, so it still fits.)
+static Ref
+AddressRef(const void* address)
+{
+	return (Ref) ((ULong) address & ~(ULong) 3);
+}
+
+
+// ROM 0x00202ff4 FGetHeapStats
+// GetHeapStats(options): a frame of where each heap is, how big it is and
+// how much of it is free.  `options` may say `garbageCollectFrames`, when
+// the frames heap is collected before it is measured, and
+// `includeSystemReleasable`, when the memory the system could give back
+// counts as free.
+//
+// NOT YET RECONSTRUCTED: `includeSystemReleasable` (GetSystemReleasable
+// 0x0014312c and ROMDomainManagerFreePageCount 0x0027f594), so the
+// system's free space is what it has this moment, not what it could
+// release.
+static Ref
+FGetHeapStats(RefArg /*rcvr*/, RefArg options)
+{
+	RefVar collect;
+	RefVar releasable;
+	if (NOTNIL(options))
+	{
+		collect = GetFrameSlotRef(options, RefVar(Intern((char*) "garbageCollectFrames")));
+		releasable = GetFrameSlotRef(options, RefVar(Intern((char*) "includeSystemReleasable")));
+	}
+
+	void* start = nil;
+	void* end = nil;
+	long blockCount = 0;
+	long freeBytes = 0;
+	RefVar stats(AllocateFrame());
+
+	GetActualHeapInfo(GetFixedHeap(GetHeap()), &start, &end, &blockCount, &freeBytes);
+	SetFrameSlot(stats, RefVar(Intern((char*) "ptrHeapStart")), RefVar(AddressRef(start)));
+	SetFrameSlot(stats, RefVar(Intern((char*) "ptrHeapSize")), RefVar(MAKEINT((char*) end - (char*) start)));
+	SetFrameSlot(stats, RefVar(Intern((char*) "ptrFreeSize")), RefVar(MAKEINT(freeBytes)));
+
+	GetActualHeapInfo(GetRelocHeap(GetHeap()), &start, &end, &blockCount, &freeBytes);
+	SetFrameSlot(stats, RefVar(Intern((char*) "handleHeapStart")), RefVar(AddressRef(start)));
+	SetFrameSlot(stats, RefVar(Intern((char*) "handleHeapSize")), RefVar(MAKEINT((char*) end - (char*) start)));
+	SetFrameSlot(stats, RefVar(Intern((char*) "handleFreeSize")), RefVar(MAKEINT(freeBytes)));
+
+	if (NOTNIL(collect))
+		gHeap->GC();
+	Ptr heapStart, heapLimit;
+	HeapBounds(&heapStart, &heapLimit);
+	ULong framesFree = 0;
+	ULong largestFree = 0;
+	gHeap->Statistics(&framesFree, &largestFree);
+	SetFrameSlot(stats, RefVar(Intern((char*) "framesHeapStart")), RefVar(AddressRef(heapStart)));
+	SetFrameSlot(stats, RefVar(Intern((char*) "framesHeapSize")), RefVar(MAKEINT(heapLimit - heapStart)));
+	SetFrameSlot(stats, RefVar(Intern((char*) "framesFreeSize")), RefVar(MAKEINT((long) framesFree)));
+
+	Size systemFree = TotalSystemFree();
+	// (NOT YET: + GetSystemReleasable + ROMDomainManagerFreePageCount * 4096
+	//  when `includeSystemReleasable` is asked for)
+	SetFrameSlot(stats, RefVar(Intern((char*) "systemFreeSize")), RefVar(MAKEINT(systemFree)));
+	return stats;
+}
+
+
 void
 RegisterSystemNatives(void)
 {
@@ -401,4 +523,5 @@ RegisterSystemNatives(void)
 	RegisterNativeFunction("FBatteryStatus", (void*) FBatteryStatus, 1);
 	RegisterNativeFunction("FMinimumBatteryCheck", (void*) FMinimumBatteryCheck, 0);
 	RegisterNativeFunction("FBatteryCount", (void*) FBatteryCount, 0);
+	RegisterNativeFunction("FGetHeapStats", (void*) FGetHeapStats, 1);
 }

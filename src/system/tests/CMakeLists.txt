@@ -1,0 +1,4 @@
+add_executable(test_SystemNatives test_SystemNatives.cpp)
+target_link_libraries(test_SystemNatives PRIVATE system)
+add_test(NAME system.SystemNatives COMMAND test_SystemNatives)
+set_tests_properties(system.SystemNatives PROPERTIES TIMEOUT 60)

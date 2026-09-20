@@ -8,3 +8,5 @@ add_library(system STATIC
 )
 target_link_libraries(system PUBLIC newton_config frames qd views hal_host os600_user)
 target_include_directories(system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(tests)

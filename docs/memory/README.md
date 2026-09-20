@@ -129,12 +129,20 @@ range.
 ## Host stand-ins and gaps
 
 * The page manager is not reconstructed, so `GetNewPageFromPageMgr`,
-  `SSafeHeapPage::FreePage`, `NewWiredPtr`/`DisposeWiredPtr`,
-  `TotalSystemFree` and `SystemRAMSize` are `NOT YET RECONSTRUCTED`. The
-  host kernel heap (`memory/host/KernelHeap.cpp`) is a 4 MB Skia heap over
-  a plain allocation, made at the end of `InitMemObjDatabase` where the
-  ROM's `VMemInit` would have built the safe heap; host tests that use the
-  memory manager without booting call `InitHostStandaloneHeap()`.
+  `SSafeHeapPage::FreePage` and `NewWiredPtr`/`DisposeWiredPtr` are `NOT
+  YET RECONSTRUCTED`. The host kernel heap
+  (`memory/host/KernelHeap.cpp`) is a Skia heap over a plain allocation,
+  made at the end of `InitMemObjDatabase` where the ROM's `VMemInit`
+  would have built the safe heap; host tests that use the memory manager
+  without booting call `InitHostStandaloneHeap()`.
+* `DEVIATION` (`TotalSystemFree`, `SystemRAMSize`): the ROM asks the page
+  manager how much RAM nobody has spoken for, and how much there is
+  altogether. With no page manager, and one heap where the machine has a
+  domain each, the host answers from that heap instead - the bytes in its
+  free blocks plus the room it may still grow into, and the size of the
+  area it was made over. Both of them used to answer **0** while the page
+  manager was NOT YET, which told everything that asked that the machine
+  was out of memory; `GetHeapStats` (below) is what showed it up.
 * The stack manager on the host (`os600/user/host/StackManager.cpp`) hands
   out page-aligned areas from the host allocator; `LockHeapRange`/
   `UnlockHeapRange` are no-ops there.
@@ -144,3 +152,31 @@ range.
 * `DEVIATION` (SkiaHeap.cpp, `RelocateHeap`): the ROM adds the delta to the
   free master list's terminating nil as well, leaving the list ending in a
   bad pointer; the reconstruction stops at nil.
+
+## What a script sees (`system/SystemNatives.h`)
+
+`GetHeapStats(options)` 0x00202ff4 is the ROM's own report on all of it,
+and the way to see what the reconstruction is doing with memory:
+
+    build/host/host/newton --rom build/MP2x00US/rom.bin --headless 3 \
+        --script <a script calling GetHeapStats({garbageCollectFrames: true})>
+
+It answers a frame of `ptrHeapStart`/`ptrHeapSize`/`ptrFreeSize`,
+`handleHeapStart`/`handleHeapSize`/`handleFreeSize`,
+`framesHeapStart`/`framesHeapSize`/`framesFreeSize` and
+`systemFreeSize`. The first two triples come from `GetActualHeapInfo`
+0x00202f08, which walks a heap a block at a time (`HeapSeed`/
+`NextHeapBlock`) and counts what it finds; a walk is only good while the
+heap holds still, so when `NextHeapBlock` reports that the seed has
+changed under it the whole walk starts again from nothing. The frames
+triple is `HeapBounds` and `TObjectHeap::Statistics`, with a collection
+first when `options.garbageCollectFrames` asks for one.
+
+The starts are addresses with their low two bits masked off, which makes
+them integer Refs of the address divided by four - a number to print
+rather than a pointer to use.
+
+`options.includeSystemReleasable` is `NOT YET RECONSTRUCTED`
+(`GetSystemReleasable` 0x0014312c, `ROMDomainManagerFreePageCount`
+0x0027f594), so the system's free space is what it has this moment rather
+than what it could release.

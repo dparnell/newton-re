@@ -494,20 +494,34 @@ DisposeWiredPtr(Ptr /*p*/)
 
 
 // ROM 0x001430bc TotalSystemFree
+// DEVIATION: the ROM asks the page manager how many pages of RAM nobody
+// has spoken for (`SystemFreePageCount() << 12`).  The host has no page
+// manager, and one heap where the machine has a domain each, so what it
+// answers is that heap's room: the bytes in its free blocks plus what it
+// may still grow into.  It used to answer 0 while the page manager was
+// NOT YET, which told everything that asked - GetHeapStats among them -
+// that the machine had no memory left at all.
 extern "C" Size
 TotalSystemFree(void)
 {
-	// NOT YET RECONSTRUCTED: SystemFreePageCount() << 12 (the page manager)
-	return 0;
+	SkiaHeap* heap = (SkiaHeap*) GetHeap();
+	if (heap == nil)
+		return 0;
+	return heap->fFree + (heap->fMaxSize - heap->fExtent);
 }
 
 
 // ROM 0x001430d4 SystemRAMSize
+// DEVIATION: the ROM answers the RAM the machine has less the part of it
+// the internal store was cut out of (`TRAMTable::GetRAMSize() -
+// InternalStoreInfo(1)`).  The host's RAM is the area its heap was made
+// over, and its store is a file rather than a piece of RAM, so there is
+// nothing to subtract.
 extern "C" Size
 SystemRAMSize(void)
 {
-	// NOT YET RECONSTRUCTED: TRAMTable::GetRAMSize() - InternalStoreInfo(1)
-	return 0;
+	SkiaHeap* heap = (SkiaHeap*) GetHeap();
+	return heap != nil ? heap->fMaxSize : 0;
 }
 
 
