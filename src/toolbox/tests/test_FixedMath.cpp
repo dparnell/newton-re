@@ -179,6 +179,24 @@ TestAsinAcos()
 }
 
 
+// FractSin/FractCos take 16.16 radians and answer a 2.30 sine or cosine.
+static void
+TestFractSinCos()
+{
+	EXPECT(FractSin(0) == 0);
+	EXPECT(FractCos(0) == kFrac1);
+	for (int i = -6; i <= 6; i++)
+	{
+		double rad = i / 2.0;								// -3 .. 3 radians
+		Fixed x = (Fixed) (rad * kFix);
+		double diff_s = (double) FractSin(x) - sin(rad) * kFrac;
+		double diff_c = (double) FractCos(x) - cos(rad) * kFrac;
+		EXPECT(diff_s > -80000.0 && diff_s < 80000.0);
+		EXPECT(diff_c > -80000.0 && diff_c < 80000.0);
+	}
+}
+
+
 int main()
 {
 	TestFixedMul();
@@ -189,6 +207,7 @@ int main()
 	TestMultiplyDivide();
 	TestAtan2();
 	TestSinCos();
+	TestFractSinCos();
 	TestAsinAcos();
 	if (failures == 0)
 		printf("test_FixedMath: all passed\n");

@@ -7,9 +7,8 @@
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	FixedASin/FixedACos are declared in FixedMathExtra.h (the DDK omits
-	them).  NOT YET RECONSTRUCTED: FractSin/FractCos (xFracSin/xFracCos, a
-	separate implementation) and FixMul32 (0x000b1f14, a different fixed
-	format).
+	them).  NOT YET RECONSTRUCTED: FixMul32 (0x000b1f14, a
+	different fixed format).
 */
 
 #include "FixedMath.h"
@@ -331,6 +330,34 @@ FractSineCosine(Fixed degrees, Fract* cosine)
 	}
 	*cosine = sLastCosine;
 	return sLastSine;
+}
+
+
+// The degrees in a radian, 16.16 (57.29578).
+const Fixed kFixedRadiansToDegrees = 0x00394bc0;
+
+
+// ROM 0x00038060 xFracSin__Fl
+// The sine (2.30) of an angle in 16.16 radians.  FractSineCosine works in
+// degrees, so the angle is converted first; the exported FractSin
+// (0x0011b850) is a branch straight to this.
+Fract
+FractSin(Fixed radians)
+{
+	Fract cosine;
+	return FractSineCosine(FixedMultiply(radians, kFixedRadiansToDegrees), &cosine);
+}
+
+
+// ROM 0x00038088 xFracCos__Fl
+// The cosine, which is the one FractSineCosine answers through its out
+// parameter (FractCos 0x0011b854 branches here).
+Fract
+FractCos(Fixed radians)
+{
+	Fract cosine;
+	FractSineCosine(FixedMultiply(radians, kFixedRadiansToDegrees), &cosine);
+	return cosine;
 }
 
 

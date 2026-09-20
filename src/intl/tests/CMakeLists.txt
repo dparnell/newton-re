@@ -4,6 +4,11 @@ target_compile_definitions(test_Dates PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN
 add_test(NAME intl.Dates COMMAND test_Dates)
 set_tests_properties(intl.Dates PROPERTIES TIMEOUT 120)
 
+add_executable(test_Coordinates test_Coordinates.cpp)
+target_link_libraries(test_Coordinates PRIVATE intl)
+add_test(NAME intl.Coordinates COMMAND test_Coordinates)
+set_tests_properties(intl.Coordinates PROPERTIES TIMEOUT 120)
+
 add_executable(test_Meetings test_Meetings.cpp)
 target_link_libraries(test_Meetings PRIVATE intl_meetings)
 add_test(NAME intl.Meetings COMMAND test_Meetings)

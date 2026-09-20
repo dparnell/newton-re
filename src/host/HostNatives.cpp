@@ -11,6 +11,7 @@
 #include "SortTables.h"
 #include "Application.h"
 #include "Cursors.h"
+#include "Coordinates.h"
 #include "Dates.h"
 #include "Keyboard.h"
 #include "Locale.h"
@@ -58,6 +59,7 @@ RegisterAllNatives(void)
 	RegisterLocaleNatives();
 	RegisterDateNatives();
 	RegisterMeetingNatives();
+	RegisterCoordinateNatives();
 
 	// the packages installed
 	RegisterPackageNatives();

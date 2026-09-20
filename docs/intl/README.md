@@ -234,6 +234,38 @@ carried) and merges them with the template's exceptions
 replaces it, replacement meetings in the range are added, everything
 kept in `mtgStartDate` order with `BInsert`); nil when there is nothing.
 
+## The world map's coordinates
+
+`intl/Coordinates.h` is the arithmetic the Time Zones application's map of
+the world is driven by.  A place's longitude and latitude are integers of
+2^28 to a half turn (so the whole map is 2^29 across and the poles are at
++/-2^27), which is exactly a 2.30 `Fract` of a turn once doubled - and
+doubling is all `LongitudeToCoordinate` 0x002551c0 does before adding half
+a map and scaling by the map's width:
+
+    x = FractMultiply(width, longitude * 2 + 0x20000000)
+
+`LatitudeToCoordinate` 0x00255220 takes the latitude four times over and
+measures down from the top (`0x20000000 - latitude * 4`), since a latitude
+only reaches a quarter turn.
+
+`CoordinateToLongitude` 0x00255280 and `CoordinateToLatitude` 0x002552e4
+undo them through `FractDivide`.  The longitude's inverse *adds* half a
+turn where it ought to subtract one - `(FractDivide(x, width) * 4 +
+0x80000000) / 8` - and gets the right answer because the two halves
+overflow to nothing on an ARM; the reconstruction does the same arithmetic
+in `uint32_t` so that the host wraps where the ARM wraps.  A coordinate of
+exactly 2^28 overflows the other way, which is why both ends of the date
+line are the left edge of the map.
+
+`CircleDistance` 0x00255348 (`CircleDistance(long1, lat1, long2, lat2,
+units)`) is the spherical law of cosines over the same units - the angles
+scaled to 16.16 radians by `pi/2`, `FractSin`/`FractCos` (0x00038060,
+0x00038088: `FractSineCosine` with the radians turned into degrees first)
+for the sines and cosines, `FixedACos` for the arc - times 3959 for
+`'miles` or 6371 otherwise, and rounded to the nearest ten.  An arc below
+0x60 (a sixty-fourth of a degree) is called zero.
+
 ## Not yet reconstructed
 
 - Reading dates and times out of strings (`StringToDateFields`, the

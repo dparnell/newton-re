@@ -377,3 +377,30 @@ have become bugs:
 The citation check (`analysis/coverage.py --check`) caught the second one by
 refusing the address. For the view system, transcribe from the disassembly
 and use the decompiler for control flow only.
+
+---
+
+## Half a turn there, and half a turn back again
+
+The world map's `CoordinateToLongitude` (0x00255280) is the inverse of
+`LongitudeToCoordinate` (0x002551c0), which puts Greenwich in the middle of
+the picture by adding half a turn:
+
+    x         = FractMultiply(width, longitude * 2 + 0x20000000)
+    longitude = (FractDivide(x, width) * 4 + 0x80000000) / 8
+
+The way back adds half a turn again instead of subtracting it. It comes out
+right because the two halves make a whole turn, which overflows a 32-bit
+word to nothing - the code is written for a machine where that is simply
+what addition does. Ported to a host where signed overflow is undefined it
+has to be spelled out in unsigned arithmetic, or the optimiser is entitled
+to decide that the sum can never be negative.
+
+The same trust in the machine shows up in `CircleDistance` (0x00255348),
+which needs the difference of two longitudes and takes it *without
+unpacking either of them*: an integer Ref is the number shifted up by two,
+so the difference of two integer Refs is already the Ref of the difference,
+tag bits and all. One `RINT` then does the work of two.
+
+And the answer is rounded to the nearest ten by `(d + 6) / 10 * 10`. Six is
+not half of ten, so a distance of 344 km comes back as 350 rather than 340.
