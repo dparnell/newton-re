@@ -55,9 +55,30 @@ FCheckCardBattery(RefArg /*rcvr*/)
 	return NILREF;
 }
 
+
+// ROM 0x0030c7f4 FGetCardTypes
+// GetCardTypes(): an array with one entry per hardware socket, saying what
+// kind of card is in it.  The ROM makes an array of gNumberOfHWSockets
+// slots and, for each socket, asks the card server (a 0x6e message) for
+// the card's function types; the four function ids the answer carries are
+// turned into symbols (FourCharToSymbol) and the socket's slot is set to
+// the one symbol when there is only one, or to the array of them when
+// there are more.  A socket the server would not answer for is left nil.
+//
+// NOT YET RECONSTRUCTED: the card server.  A machine with no card hardware
+// has gNumberOfHWSockets zero and answers an empty array without asking
+// anybody, which is what this does.
+Ref
+FGetCardTypes(RefArg /*rcvr*/)
+{
+	return AllocateArray(RefVar(RSSYMarray), 0);
+}
+
+
 void
 RegisterCardNatives(void)
 {
 	RegisterNativeFunction("FGetCardInfo", (void*) FGetCardInfo, 0);
 	RegisterNativeFunction("FCheckCardBattery", (void*) FCheckCardBattery, 0);
+	RegisterNativeFunction("FGetCardTypes", (void*) FGetCardTypes, 0);
 }
