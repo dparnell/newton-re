@@ -449,7 +449,7 @@ void
 TRecognitionManager::EnableModalRecognition(Rect& bounds)
 {
 	if (fModalBounds != nil)
-		ThrowMsg("Can't nest modal bounds");
+		ThrowMsg((char*) "Can't nest modal bounds");
 	fModalBounds = new Rect;
 	if (fModalBounds != nil)
 		*fModalBounds = bounds;
