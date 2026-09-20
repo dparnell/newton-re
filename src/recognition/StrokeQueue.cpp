@@ -450,17 +450,45 @@ StrokeGet(void)
 // ROM 0x001ff59c StrokeTime__Fv
 // The ROM's does nothing: the inker task reads the tablet.  DEVIATION:
 // the host has no TInker - the tablet buffer is read here, as the inker's
-// LCD entry would (its own read index just follows the writer's: no ink
-// is drawn, NOT YET), until nothing is left; ==> whether a stroke
-// changed (the inker then wakes the newt world: hal/host/HostTablet.h).
+// LCD entry would (its own read index just follows the writer's), until
+// nothing is left; ==> whether a stroke changed (the inker then wakes the
+// newt world: hal/host/HostTablet.h).
+//
+// The ink goes down here too.  The ROM's TInker::LCDEntry inks each
+// sample as it converts it, from the point before to the point just read
+// (DrawInk, 0x0021765c); the host has no converter, and the points are
+// already in the stroke by the time this is reached, so the stroke being
+// written is drawn instead.  What lands on the screen is the same, and
+// drawing it again costs nothing but time: the ink is ORed in, so a
+// segment drawn twice is the segment.
+// The stroke inked, whatever of it has been drawn before.  The ink is
+// ORed into the screen, so a segment drawn twice is the segment; what it
+// costs is the walk over the points, and the pen puts down few enough of
+// them between ticks that it does not show.
+static void
+InkStroke(TSStroke* stroke)
+{
+	if (stroke != nil && stroke->Count() != 0)
+		stroke->Draw();
+}
+
 long
 StrokeTime(void)
 {
 	while (!TBCInkerBufferEmpty())
 		TBCIncInkerIndex(1);
+	long head = gStrokeQ != nil ? gStrokeQ->fHead : 0;
 	long changed = 0;
 	while (RealStrokeTime() != 0)
 		changed = 1;
+	if (gStrokeQ != nil)
+	{
+		// the stroke that was being written when this began, and the one
+		// that took over from it if the pen came up in the middle
+		InkStroke(gStrokeQ->fStrokes[head]);
+		if (gStrokeQ->fHead != head)
+			InkStroke(gStrokeQ->fStrokes[gStrokeQ->fHead]);
+	}
 	return changed;
 }
 

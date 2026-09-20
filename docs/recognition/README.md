@@ -299,6 +299,34 @@ blocks that belong to the entries - telling the domain first
 (`DomainParameter` with selector 3) - and leaves alone any marked as
 someone else's.  (`test_Areas`.)
 
+## The ink
+
+`TStroke::Draw` (0x00222af8) is what puts ink on the screen: it walks the
+stroke's samples and draws the segment between each pair with `InkerLine`
+(0x002f7c64, `qd/Draw.h`), which writes straight into the screen's pixel
+map - no port, no pen, no clipping region, because the inker runs on its
+own task at the tablet's rate.  The nib is a square whose size is the
+second byte of the stroke's flags, and whose top left follows the line, so
+a segment is the parallelogram the nib sweeps out.  Segments whose two
+samples round to the same pixel are skipped, which is most of them while
+the pen is still.
+
+`kStrokeDrawn` and `kStrokeDrawnWhenDone` say what has been drawn;
+`StrokeUpdate` puts back the queued strokes that something has drawn over.
+A stroke marked `kStrokeNoInk` - a tap, or a view that does not want ink -
+is marked and left.
+
+On the machine the inker task inks each tablet sample as it converts it
+(`TInker::LCDEntry` 0x0021781c, `DrawInk` 0x0021765c).  DEVIATION: the
+host has no `TInker`, so `StrokeTime` (`recognition/StrokeQueue.h`) draws
+the stroke that is being written once the points have been read into it.
+The ink is ORed in, so a segment drawn twice is the segment, and what
+lands on the screen is the same.
+
+NOT YET: `InkerOff` (0x00140dcc), which is what takes the ink off again
+when the recogniser has turned the strokes into something - so a stroke
+drawn on the host's Notepad stays where it was drawn.
+
 ## The recognition configuration (`recognition/RecConfig.h`)
 
 Between a view's `viewFlags` and the recognisers stands a configuration

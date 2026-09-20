@@ -14,6 +14,7 @@
 
 #include "Draw.h"
 #include "Screen.h"
+#include "FixedMath.h"
 #include "OSErrors.h"
 #include <string.h>
 
@@ -528,4 +529,123 @@ FillRgn(RgnHandle rgn, PatternHandle pattern)
 	port->fgPat = pattern;
 	CallRgn(fill, rgn);
 	port->fgPat = saved;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   i n k e r ' s   l i n e
+------------------------------------------------------------------------------*/
+
+// ROM 0x002f7c3c InkerLine__FC5PointT1P4RectT1
+// The screen's map when none is named.
+void
+InkerLine(const Point from, const Point to, Rect* damaged, const Point pen)
+{
+	InkerLine(from, to, damaged, pen, &qdGlobals.fScreenBits);
+}
+
+
+// ROM 0x002f7c64 InkerLine__FC5PointT1P4RectT1PC8PixelMap
+// The segment between two pen samples, inked into the map.  There is no
+// port, no pen state and no clipping region: the inker runs at interrupt
+// time behind the view system's back, so it walks the pixels itself and
+// stops at the map's own edge.
+//
+// The nib is a rectangle `pen` wide and tall whose top left follows the
+// line, so what is drawn is the parallelogram the nib sweeps out.  That
+// is why there are two x accumulators rather than one: `left` follows the
+// leading edge and `right` the trailing one, both stepped by the same
+// dx/dy each row, and the two are pulled apart at the start by the pen's
+// width - which way round depends on the sign of the slope, because a
+// line going right has its left edge at the bottom of the nib and one
+// going left has it at the top.
+//
+// A horizontal segment has no rows to walk, so it is drawn as a single
+// row from the leftmost of the two points to the clipped right edge.
+//
+// `damaged` comes back as the part of the map drawn on - the line's box
+// grown by the nib, cut to the map - and is empty (and nothing drawn)
+// when the line is off the map altogether.
+//
+// (The ROM fills each row a word at a time through three tables of
+// qdConstants indexed by the map's depth - a mask for the first word, one
+// for the last and all-ones between.  The reconstruction sets the pixels
+// one at a time, as the rest of the blitter does; the result is the same
+// run of pixels ORed to black.)
+void
+InkerLine(const Point from, const Point to, Rect* damaged, const Point pen, const PixelMap* map)
+{
+	Rect box;
+	Pt2Rect(from, to, &box);
+	box.right = (short) (box.right + pen.h);
+	box.bottom = (short) (box.bottom + pen.v);
+	if (!RSect(damaged, 2, &map->bounds, &box))
+		return;
+	Rect clip = *damaged;
+
+	Fixed slope;				// dx/dy, 16.16
+	Fixed left, right;			// where the nib's two edges are on the row, 16.16
+	if (from.v == to.v)
+	{
+		slope = 0;
+		left = 0x8000 + ((from.h >= to.h ? to.h : from.h) << 16);
+		right = 0x8000 + (clip.right << 16);
+	}
+	else
+	{
+		Point upper = from;
+		Point lower = to;
+		if (from.v > to.v)
+		{
+			upper = to;
+			lower = from;
+		}
+		left = 0x8000 + (upper.h << 16);
+		right = left + (pen.h << 16);
+		slope = FixedDivide((lower.h - upper.h) << 16, (lower.v - upper.v) << 16);
+		long lean = pen.v * slope;		// how far the nib leans over its own height
+		left += slope >> 1;
+		right += slope >> 1;
+		if (slope >= 0)
+		{
+			left -= lean;
+			if (slope >= 0x10000)
+				right -= 0x10000;
+			else
+				left += slope;
+		}
+		else
+		{
+			right -= lean;
+			if (slope < -0x10000)
+				left += 0x10000;
+			else
+				right += slope;
+		}
+		if (box.top != clip.top)
+		{
+			// the rows above the clip stepped over
+			long skip = (clip.top - box.top) * slope;
+			left += skip;
+			right += skip;
+		}
+	}
+
+	long depth = PixelMapDepth(map);
+	long black = (1L << depth) - 1;
+	QDStartDrawing((PixelMap*) map, damaged);
+	for (long y = clip.top; y < clip.bottom; y++)
+	{
+		long a = left >> 16;
+		if (a < clip.left)
+			a = clip.left;
+		long b = right >> 16;
+		if (b > clip.right)
+			b = clip.right;
+		for (long x = a; x < b; x++)
+			SetPixel((PixelMap*) map, x, y, GetPixel(map, x, y) | black);
+		left += slope;
+		right += slope;
+	}
+	QDStopDrawing((PixelMap*) map, damaged);
 }

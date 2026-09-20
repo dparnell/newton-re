@@ -1,0 +1,34 @@
+// Ink: a stroke drawn on the Notepad with the pen, and a picture of it.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --scale 2 --store build/newton.store --script src/host/demo/ink.ns
+//
+// or, without a window:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --store build/newton.store --script src/host/demo/ink.ns --headless 12
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/ink.pgm build/ink.png
+//
+// With a window, just drag the mouse across the page: the ink follows it.
+// What draws it is TStroke::Draw over InkerLine (qd/Draw.h), reached from
+// StrokeTime as the ROM's inker task reaches it from TInker::LCDEntry.
+//
+// The ink stays where it was drawn once the pen is lifted, because what
+// would take it off again - InkerOff, and the recogniser turning the
+// stroke into a paragraph - is NOT YET.
+
+AddDelayedCall(func() begin
+    PenDown(60, 120);
+    for i := 1 to 30 do
+      begin
+        PenMove(60 + i * 5, 120 + (i * i) div 12);
+        IdleStrokes();					// a tick of the inker
+      end;
+    PenUp();
+    IdleStrokes();
+    AddDelayedCall(func() begin
+        ScreenSnapshot("build/ink.pgm");
+        Print("ink: written build/ink.pgm");
+      end, nil, 1200);
+  end, nil, 2500);						// after the boot
+Print("ink: the script is loaded");

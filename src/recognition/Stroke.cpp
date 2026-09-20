@@ -8,6 +8,7 @@
 */
 
 #include "Stroke.h"
+#include "Draw.h"
 #include "Rects.h"
 #include "Screen.h"
 #include "RootView.h"
@@ -505,15 +506,53 @@ TStroke::Scale(long /*sx*/, long /*sy*/)
 
 
 // ROM 0x00222af8 Draw__7TStrokeFv
-// The stroke marked drawn (and drawn-when-done when it is done); its
-// segments go to the inker unless the stroke is inkless.  NOT YET
-// RECONSTRUCTED: the inker (InkerLine).
+// The stroke inked: the segment between each pair of samples drawn
+// straight into the screen's pixel map (InkerLine), so that the ink keeps
+// up with the pen whatever the view system is doing.  The stroke is
+// marked drawn - and drawn-when-done when the pen has been lifted - so
+// that StrokeUpdate knows which of the queued strokes still have to be
+// put back when something draws over them.
+//
+// A stroke that is inkless (kStrokeNoInk - a tap, or a view that does not
+// want ink) is marked and left; segments whose two samples round to the
+// same pixel are skipped, which is most of them while the pen is still.
+// The nib's size is the second byte of the stroke's flags, square.
 void
 TStroke::Draw(void)
 {
 	SetFlags(kStrokeDrawn);
 	if (Done())
 		SetFlags(kStrokeDrawnWhenDone);
+	if (TestFlags(kStrokeNoInk))
+		return;
+	Boolean acquired = AcquireStroke(this);
+	long count = Count();
+	if (count != 0)
+	{
+		Lock();
+		SamplePt* sample = GetPoint(0);
+		Point at;
+		at.h = (short) ((SampleX(sample) + 0x8000) >> 16);
+		at.v = (short) ((SampleY(sample) + 0x8000) >> 16);
+		Point pen;
+		pen.h = pen.v = (short) ((fFlags & 0xff00) >> 8);
+		sample++;
+		for (long i = 1; i < count; i++, sample++)
+		{
+			Point was = at;
+			at.h = (short) ((SampleX(sample) + 0x8000) >> 16);
+			at.v = (short) ((SampleY(sample) + 0x8000) >> 16);
+			SampleP(sample);		// (the ROM reads the pressure and drops it)
+			if (was.h != at.h || was.v != at.v)
+			{
+				Rect damaged;
+				InkerLine(was, at, &damaged, pen);
+			}
+		}
+		Unlock();
+	}
+	if (acquired)
+		ReleaseStroke();
 }
 
 

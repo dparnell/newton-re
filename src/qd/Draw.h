@@ -73,4 +73,13 @@ void	StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* 
 void	RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, PatternHandle pattern, RgnHandle clip1, RgnHandle clip2, RgnHandle clip3);
 void	BitBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, PatternHandle pattern);
 
+// The inker's line: the segment from one pen sample to the next, drawn
+// straight into a pixel map (the screen's, when none is named) without a
+// port, a pen or a clipping region - which is what lets ink keep up with
+// the pen while the view system is busy.  `pen` is the nib's size, and
+// `damaged` comes back as the part of the map that was drawn on.
+void	InkerLine(const Point from, const Point to, Rect* damaged, const Point pen);	// ROM 0x002f7c3c InkerLine__FC5PointT1P4RectT1
+void	InkerLine(const Point from, const Point to, Rect* damaged, const Point pen,
+				  const PixelMap* map);		// ROM 0x002f7c64 InkerLine__FC5PointT1P4RectT1PC8PixelMap
+
 #endif	/* __DRAW_H */

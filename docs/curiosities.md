@@ -186,6 +186,31 @@ time.
 
 ---
 
+## The ink is drawn behind the view system's back
+
+`InkerLine` (0x002f7c64) takes no port, no pen state and no clipping
+region. It is handed two points, a nib size and a pixel map, and it walks
+the pixels itself. That is the whole point of it: the inker runs on its own
+task, at the tablet's rate, and cannot wait for whatever the view system is
+doing to finish.
+
+The nib is a rectangle whose *top left* follows the line, so what gets
+drawn is the parallelogram the nib sweeps out. That is why there are two x
+accumulators rather than one - a leading edge and a trailing edge, both
+stepped by the same dx/dy - and why they are pulled apart at the start by a
+term that depends on the sign of the slope. A line going right has its
+leading edge at the bottom of the nib; one going left has it at the top.
+
+Each row is then filled a *word* at a time: a mask for the first word, one
+for the last, and all-ones for everything between, with the masks and the
+shifts read out of three little tables in `qdConstants` indexed by the
+map's depth. A 32-pixel-wide word at one bit deep is filled with a single
+`str`.
+
+*`src/qd/Draw.cpp`; `src/recognition/Stroke.cpp`.*
+
+---
+
 ## The mu-law coder never clamps
 
 The 8-bit mu-law encoder in `sound/SampleConvert.h` has the shape of
