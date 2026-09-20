@@ -943,6 +943,19 @@ FTicks(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x00255548 FSleep
+// Sleep(ticks): the task waits that many sixtieths of a second (Wait,
+// os600/user/NewtonTime.h - a send to the null port with the timeout).
+// The time and date setters call it between the steps of a held arrow,
+// which is what paces them.  ==> nil.
+static Ref
+FSleep(RefArg /*rcvr*/, RefArg ticks)
+{
+	Wait(RINT(ticks));
+	return NILREF;
+}
+
+
 // ROM 0x00089b88 FIsValidDate__FRC6RefVarT1
 // A string parsed, or a date frame's fields.
 static Ref
@@ -1211,6 +1224,7 @@ RegisterDateNatives(void)
 	RegisterNativeFunction("FTime__FRC6RefVar", (void*) FTime, 0);
 	RegisterNativeFunction("FTimeInSeconds__FRC6RefVar", (void*) FTimeInSeconds, 0);
 	RegisterNativeFunction("FTicks__FRC6RefVar", (void*) FTicks, 0);
+	RegisterNativeFunction("FSleep", (void*) FSleep, 1);
 	RegisterNativeFunction("FIsValidDate__FRC6RefVarT1", (void*) FIsValidDate, 1);
 	RegisterNativeFunction("FStringToTime__FRC6RefVarT1", (void*) FStringToTime, 1);
 	RegisterNativeFunction("FHourMinute__FRC6RefVarT1", (void*) FHourMinute, 1);
