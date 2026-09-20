@@ -461,3 +461,28 @@ Arcs of less than a full turn, QuickDraw pictures and shapes,
 `ScrollRect`, `ZoomRect`, the screen update task and the alert screen
 info, the per-task globals, `StretchBits` proper, the font cache, text layout
 (justification, wrapping), the `TQDLibraryDriver` protocol.
+
+## Transforms (`qd/Transform.h`)
+
+`view:DrawShape(shape, {transform: ...})` draws the shape somewhere other
+than where its own coordinates put it.  The slot holds either
+`[srcRect, dstRect]` - map the one rectangle onto the other - or
+`[dx, dy]`, a pair of numbers, which `TStyleSave::SetStyle` turns into two
+ten-by-ten rectangles offset by them: a transform that scales by one and
+only moves.  `TTransform::Setup` (0x001973e8) works out the scale each way
+and keeps both rectangles; `Scale` maps a point or a rectangle's two
+corners through them.
+
+That is how a list draws the hilite of any of its rows out of a single
+shape.  `protoOverview`'s `hiliter` is
+`self:DrawShape(shape, {transform: [0, index * lineHeight]})` - one row's
+rectangle, moved down to the row that is hilited - and the country picker
+in the Setup assistant is one of these.
+
+NOT YET: `TQDScaler` (0x00196018-0x001973c8), which is what the ROM maps
+the drawing through: it replaces the port's regions, scales the pen, and
+puts every coordinate QuickDraw is given through the stack of transforms
+in force.  What stands in its place keeps that stack and answers the
+offset it comes to.  DEVIATION: `views/DrawShape.cpp` adds that offset to
+what it draws, where the ROM adds nothing and leaves the mapping to the
+scaler; a transform that really scales is still drawn unscaled.

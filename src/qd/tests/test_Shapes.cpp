@@ -5,6 +5,7 @@
 // pen location LineTo/Line leave, regions recorded from lines and
 // polygons.  Runs over a standalone kernel heap.
 #include "Shapes.h"
+#include "Transform.h"
 #include "Polygons.h"
 #include "Draw.h"
 #include "FixedMath.h"
@@ -416,6 +417,78 @@ TestPolygons()
 	KillPoly(poly);
 }
 
+// TTransform: the mapping a `transform` style slot sets up, and the
+// offsets the scaler's stack of them comes to.
+static void
+TestTransforms()
+{
+	// [dx, dy] in a style frame is two ten-by-ten rectangles offset by
+	// them: a transform that moves and does not scale
+	Rect src, dst;
+	SetRect(&src, 0, 0, 10, 10);
+	SetRect(&dst, 0, 0, 10, 10);
+	OffsetRect(&dst, 3, 24);
+	TTransform move;
+	move.fFlags = 0;
+	move.Setup(&src, &dst, false);
+	EXPECT(move.fScaleH == 0x10000 && move.fScaleV == 0x10000);
+	EXPECT((move.fFlags & kTransformSetUp) != 0 && (move.fFlags & kTransformNoScale) != 0);
+	Point pt;
+	pt.h = 5;
+	pt.v = 7;
+	Scale(&pt, move);
+	EXPECT(pt.h == 8 && pt.v == 31);
+	Rect r;
+	SetRect(&r, 1, 2, 11, 12);
+	Scale(&r, move);
+	EXPECT(r.left == 4 && r.top == 26 && r.right == 14 && r.bottom == 36);
+
+	// one that does scale: twice as wide, half as high
+	SetRect(&dst, 0, 0, 20, 5);
+	TTransform stretch;
+	stretch.fFlags = 0;
+	stretch.Setup(&src, &dst, false);
+	EXPECT(stretch.fScaleH == 0x20000 && stretch.fScaleV == 0x8000);
+	EXPECT((stretch.fFlags & kTransformNoScale) == 0);
+	SetRect(&r, 0, 0, 10, 10);
+	Scale(&r, stretch);
+	EXPECT(r.right == 20 && r.bottom == 5);
+
+	// `square` keeps the shape: the smaller scale for both, and the
+	// destination cut back to what that leaves
+	SetRect(&dst, 0, 0, 20, 5);
+	TTransform square;
+	square.fFlags = 0;
+	square.Setup(&src, &dst, true);
+	EXPECT(square.fScaleH == 0x8000 && square.fScaleV == 0x8000);
+	EXPECT(square.fDst.right == 5 && square.fDst.bottom == 5);
+
+	// the stack: the offsets of the transforms that do not scale add up,
+	// and one that does scale is left out of it (NOT YET)
+	EXPECT(TQDScaler::GetTransformLevel() == 0);
+	Point none = TQDScaler::Offset();
+	EXPECT(none.h == 0 && none.v == 0);
+	TQDScaler::StartScaling(move);
+	EXPECT(TQDScaler::GetTransformLevel() == 1);
+	Point one = TQDScaler::Offset();
+	EXPECT(one.h == 3 && one.v == 24);
+	TQDScaler::StartScaling(move);
+	Point two = TQDScaler::Offset();
+	EXPECT(two.h == 6 && two.v == 48);
+	TQDScaler::StartScaling(stretch);
+	Point three = TQDScaler::Offset();
+	EXPECT(three.h == 6 && three.v == 48);		// the stretching one adds nothing
+	TQDScaler::StopScaling();
+	TQDScaler::ReplaceScaling(square);
+	EXPECT(TQDScaler::GetTransformLevel() == 2);
+	TQDScaler::StopScaling();
+	TQDScaler::StopScaling();
+	EXPECT(TQDScaler::GetTransformLevel() == 0);
+	Point back = TQDScaler::Offset();
+	EXPECT(back.h == 0 && back.v == 0);
+}
+
+
 int
 main()
 {
@@ -434,6 +507,7 @@ main()
 	RectRgn(gPort.visRgn, &gMap.bounds);
 	EXPECT(FixedMultiply(0x18000, 0x20000) == 0x30000 && FixedMultiply(-0x10000, 0x8000) == -0x8000);
 	EXPECT(FixedDivide(0x30000, 0x20000) == 0x18000 && FixedDivide(0x10000, 0x30000) == 0x5555 && FixedDivide(1, 0) == 0x7fffffff);
+	TestTransforms();
 	TestOvals();
 	TestRoundRects();
 	TestLines();

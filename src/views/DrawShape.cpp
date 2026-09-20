@@ -8,6 +8,7 @@
 */
 
 #include "DrawShape.h"
+#include "Transform.h"
 #include "Rects.h"
 #include "Regions.h"
 #include "RegionVars.h"
@@ -124,7 +125,10 @@ void
 TStyleSave::EndLevel(void)
 {
 	if (fLevel->fFlags & 1)
+	{
+		TQDScaler::StopScaling();
 		fTransformDepth--;
+	}
 	if (fLevel->fFlags & 2)
 	{
 		SetClip(fLevel->fClip);
@@ -222,7 +226,44 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 		if (!keepTransform)
 		{
 			value = GetProtoVariable(style, RSSYMtransform, nil);
-			// NOT YET RECONSTRUCTED: TTransform::Setup and TQDScaler::StartScaling from [srcRect, dstRect] or [dx, dy]
+			if (ISNIL(value))
+				fLevel->fFlags &= ~1;
+			else
+			{
+				// [srcRect, dstRect], or [dx, dy] - which stands for two
+				// ten-by-ten rectangles offset by them, so it only moves
+				Rect src, dst;
+				RefVar first(GetArraySlotRef(value, 0));
+				if (ISINT(first))
+				{
+					SetRect(&src, 0, 0, 10, 10);
+					SetRect(&dst, 0, 0, 10, 10);
+					OffsetRect(&dst, RINT(first), RINT(RefVar(GetArraySlotRef(value, 1))));
+				}
+				else
+				{
+					FromObject(first, src);
+					FromObject(RefVar(GetArraySlotRef(value, 1)), dst);
+				}
+				if (!EqualRect(&src, &dst))
+				{
+					// the origin goes into the first transform, which is
+					// why the drawing below does not add it again
+					if (fTransformDepth == 0)
+						OffsetRect(&dst, origin.h, origin.v);
+					TTransform transform;
+					transform.fFlags = 0;
+					transform.Setup(&src, &dst, false);
+					if ((fLevel->fFlags & 1) == 0)
+					{
+						TQDScaler::StartScaling(transform);
+						fLevel->fFlags |= 1;
+					}
+					else
+						TQDScaler::ReplaceScaling(transform);
+					fTransformDepth++;
+				}
+			}
 		}
 		value = GetProtoVariable(style, RSSYMselection, nil);
 		if (NOTNIL(value))
@@ -450,6 +491,22 @@ ShapeBounds(RefArg shape, Rect* bounds)
 }
 
 
+// Where a shape is drawn: the caller's origin, or - while a transform is
+// in force - the offset the transforms come to, because SetStyle folded
+// the origin into the first of them.
+//
+// DEVIATION: the ROM adds the origin only when there is no transform and
+// leaves the mapping to TQDScaler, which puts every coordinate QuickDraw
+// is given through the stack of them.  That scaler is NOT YET (see
+// qd/Transform.h), so the offset is added here instead; a transform that
+// really scales is still drawn unscaled.
+static Point
+DrawOrigin(const Point& origin, TStyleSave* style)
+{
+	return style->fTransformDepth == 0 ? origin : TQDScaler::Offset();
+}
+
+
 // ROM 0x000dfc60 GetBoundsRect__FRC6RefVarP5TRectRC6TPointP10TStyleSave
 // A shape's bounds slot, offset by the origin (not when scaling).
 void
@@ -457,8 +514,8 @@ GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style
 {
 	RefVar data(GetProtoVariable(shape, RSSYMbounds, nil));
 	RectOf(data, bounds);
-	if (style->fTransformDepth == 0)
-		OffsetRect(bounds, origin.h, origin.v);
+	Point at = DrawOrigin(origin, style);
+	OffsetRect(bounds, at.h, at.v);
 }
 
 
@@ -585,8 +642,10 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	RefVar cls(ClassOf(shape));
 	Rect bounds;
 	ShapeBounds(shape, &bounds);
-	if (style->fTransformDepth == 0)
-		OffsetRect(&bounds, origin.h, origin.v);
+	{
+		Point at = DrawOrigin(origin, style);
+		OffsetRect(&bounds, at.h, at.v);
+	}
 	if (style->fClipDepth != 0 && style->fTransformDepth == 0)
 	{
 		GrafPort* port;
@@ -600,8 +659,10 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	{
 		Rect r;
 		RectOf(shape, &r);
-		if (style->fTransformDepth == 0)
-			OffsetRect(&r, origin.h, origin.v);
+		{
+			Point at = DrawOrigin(origin, style);
+			OffsetRect(&r, at.h, at.v);
+		}
 		Boolean oval = EQRef(cls, RSSYMoval);
 		if (style->fFill)
 			oval ? PaintOval(&r) : PaintRect(&r);
@@ -616,8 +677,10 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	{
 		Rect r;
 		RectOf(shape, &r);
-		if (style->fTransformDepth == 0)
-			OffsetRect(&r, origin.h, origin.v);
+		{
+			Point at = DrawOrigin(origin, style);
+			OffsetRect(&r, at.h, at.v);
+		}
 		SetPenPattern(style);
 		MoveTo(r.left, r.top);
 		LineTo(r.right, r.bottom);
@@ -627,8 +690,8 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	{
 		struct { Rect fRect; short fA; short fB; } data;
 		memmove(&data, BinaryData(shape), sizeof(data));
-		if (style->fTransformDepth == 0)
-			OffsetRect(&data.fRect, origin.h, origin.v);
+		Point at = DrawOrigin(origin, style);
+		OffsetRect(&data.fRect, at.h, at.v);
 		if (EQRef(cls, RSSYMwedge))
 		{
 			if (style->fFill)
@@ -660,8 +723,8 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 		if (h != nil)
 		{
 			memmove(*h, BinaryData(data), Length(data));
-			if (style->fTransformDepth == 0)
-				isPoly ? OffsetPoly((PolyHandle) h, origin.h, origin.v) : OffsetRgn((RgnHandle) h, origin.h, origin.v);
+			Point at = DrawOrigin(origin, style);
+			isPoly ? OffsetPoly((PolyHandle) h, at.h, at.v) : OffsetRgn((RgnHandle) h, at.h, at.v);
 			if (style->fFill)
 				isPoly ? PaintPoly((PolyHandle) h) : PaintRgn((RgnHandle) h);
 			if (style->fPen)

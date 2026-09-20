@@ -18,6 +18,7 @@ add_library(qd STATIC
     Fonts.cpp
     Text.cpp
     Pictures.cpp
+    Transform.cpp
     Screen.cpp
     ScreenNatives.cpp
     RectNatives.cpp
