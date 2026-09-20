@@ -225,7 +225,12 @@ TestStrings()
 	EXPECT(Eval("IsValidDate({year: 1996, month: 2, date: 29})") == TRUEREF);
 	EXPECT(RINT(Eval("Time()")) > 0 && RINT(Eval("Ticks()")) >= 0);
 	EXPECT(RINT(Eval("Date(Time()).year")) >= 2024);
-	EXPECT(RINT(Eval("DateFromSeconds(TimeInSeconds()).year")) == RINT(Eval("Date(Time()).year")));
+	// TimeInSeconds counts from the start of 1993 and a Newton integer
+	// holds thirty bits, so it runs out in 2010 and wraps from then on -
+	// the machine's own limit, which the host's clock is well past.  What
+	// still holds is the round trip through a time it can hold.
+	EXPECT(RINT(Eval("DateFromSeconds(500000000).year")) == 2008);
+	EXPECT(RINT(Eval("TimeInSeconds()")) != RINT(Eval("TotalSeconds(Date(Time()))")));
 	EXPECT(StringIs(RefVar(Eval("TimeFrameStr({hour: 7, minute: 30, second: 5}, 0)")), "7:30:05 am"));
 	// the locale
 	EXPECT(EQRef(Eval("GetLocale()"), GetCurrentLocale()));

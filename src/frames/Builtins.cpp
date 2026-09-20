@@ -641,6 +641,16 @@ FUnlock(RefArg /*rcvr*/, RefArg obj)
 
 
 // ROM 0x002b56f4 FRef
+// The pair below hands a Ref to a script as a number and takes it back
+// again: on the machine the number is the Ref shifted up by two, which
+// round-trips because a Ref is a word.
+//
+// DEVIATION: a Ref here is pointer-sized, and an integer holds the
+// machine's thirty bits, so RefOf of an object in the heap answers a
+// number with the top of its address cut off and Ref cannot put it back.
+// They are debugging functions - a script that prints a Ref to see what
+// it is - and what they answer for an immediate (an integer, a character,
+// a magic pointer) is still right.
 Ref
 FRef(RefArg /*rcvr*/, RefArg n)
 {

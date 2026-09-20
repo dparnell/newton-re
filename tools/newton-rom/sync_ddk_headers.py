@@ -121,7 +121,13 @@ PATCHES = {
          "typedef Long Ref;\t\t/* the ARM's word: pointer-sized on a host (sync_ddk_headers.py) */\n\nconst long kRefTagBits = 2;"),
         ("typedef long Ref;\n\n", ""),
         ("#define\tMAKEINT(i)\t\t\t(((long) (i)) << kRefTagBits)",
-         "#define\tMAKEINT(i)\t\t\t((Ref) (((ULong) (Ref) (i)) << kRefTagBits))"),		# (shifted unsigned: a negative shifted left is undefined)
+         "#define\tMAKEINT(i)\t\t\t((Ref) (int) (((ULong32) (Ref) (i)) << kRefTagBits))"),
+        # the shift is unsigned (a negative shifted left is undefined) and in
+        # 32 bits, sign-extended back: an integer Ref holds exactly what the
+        # ARM's word would, so the machine's integers are the Newton's 30-bit
+        # ones however wide a Ref is here.  A host that kept the extra bits
+        # would compute sums the device could not hold, and they would change
+        # under it the moment they were written to a store.
         ("#define\tMAKEIMMED(t, v)\t\t((((((long) (v)) << kRefImmedBits) | ((long) (t))) << kRefTagBits) | kTagImmed)",
          "#define\tMAKEIMMED(t, v)\t\t((((((Ref) (v)) << kRefImmedBits) | ((Ref) (t))) << kRefTagBits) | kTagImmed)"),
         ("#define MAKEMAGICPTR(index)\t((Ref) (((long) (index)) << kRefTagBits) | kTagMagicPtr)",

@@ -513,7 +513,10 @@ TestBinaries()
 	EXPECT_STRING(BIN("StuffCString(b, 0, \"hi\"); ExtractCString(b, 0)"), "hi");
 	EXPECT_STRING(BIN("StuffPString(b, 0, \"hey\"); ExtractPString(b, 0)"), "hey");
 	EXPECT_INT(BIN("StuffPString(b, 0, \"hey\"); ExtractByte(b, 0)"), 3);
-	EXPECT_INT(BIN("StuffLong(b, 0, 0x3fffffff); ExtractLong(b, 0)"), 0x3fffffff);
+	// 0x3fffffff is thirty ones, and a Newton integer is thirty bits, so
+	// the literal is -1 before it ever reaches StuffLong - which is what
+	// comes back out of the four bytes it wrote
+	EXPECT_INT(BIN("StuffLong(b, 0, 0x3fffffff); ExtractLong(b, 0)"), -1);
 	// errors
 	EXPECT_THROWS(BIN("ExtractByte(b, 8)"), kNSErrBadArgs);
 	EXPECT_THROWS(BIN("ExtractLong(b, 5)"), kNSErrBadArgs);
@@ -575,6 +578,28 @@ TestComparisons()
 	EXPECT_TRUE("local f := {_proto: {x: 1}, y: 2}; hasSiblingSlot(f, 'x)");
 	EXPECT_NIL("local f := {_proto: {x: 1}, y: 2}; hasSiblingSlot(f, 'z)");
 	EXPECT_THROWS("getSiblingSlot(nil, 'x)", kNSErrNilContext);
+}
+
+
+// A NewtonScript integer is thirty bits, whatever the host's word is: a
+// Ref is the machine's word with two tag bits, and everything that makes
+// one cuts it back to that.  Arithmetic wraps where the ARM wraps, and a
+// literal too big to hold is a compile error.
+static void
+TestThirtyBitIntegers()
+{
+	// the ends of the range, and over each of them
+	EXPECT_INT("536870911", 536870911);
+	EXPECT_INT("-536870912", -536870912);
+	EXPECT_INT("local a := 536870911; local b := 1; a + b", -536870912);
+	EXPECT_INT("local a := -536870912; local b := 1; a - b", 536870911);
+	EXPECT_INT("local a := 536870911; a * 2", -2);
+	EXPECT_INT("1000000000 + 1000000000", -147483648);
+	EXPECT_INT("local a := 400000000; local b := 400000000; a + b", -273741824);
+	// a hexadecimal literal of thirty ones is -1, not a thousand million
+	EXPECT_INT("0x3fffffff", -1);
+	// and one that cannot be held at all does not compile
+	EXPECT_THROWS("1073741824", kNSErrIntegerTooLarge);
 }
 
 
@@ -659,6 +684,7 @@ main()
 		TestSets();
 		TestBinaries();
 		TestComparisons();
+		TestThirtyBitIntegers();
 		TestMath();
 	}
 	newton_catch_all

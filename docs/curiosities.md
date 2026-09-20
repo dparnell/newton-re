@@ -433,3 +433,30 @@ The vertical test, a few instructions earlier, does not use the trick -
 it loads the two halfwords separately through the `ldr [x+2]` rotate.
 The same compiler, on the same rectangle, two different ways within a
 dozen instructions.
+
+---
+
+## The machine says it is out of memory when it means it lost a key
+
+The To Do list rolls its unfinished tasks over at three in the morning,
+and asks for an alarm to wake it up. Its install script does that inside
+a `try`:
+
+    try
+        AddAlarm("To Do", tomorrowAtThree, nil, theRollOverFunction, []);
+        RegSetTime('todo, ...);
+    onexception |evt.ex| do
+        GetRoot():Notify(3, "To Do",
+            "There is not enough space in the internal memory to
+             automatically roll-over To Do tasks. Deleting some data and
+             resetting may help.")
+
+The handler catches `|evt.ex|` - *every* exception - and blames memory
+for all of them. What actually went wrong in the reconstruction was that
+`AddAlarm` starts by removing the alarm it is about to replace, the
+index could not find the key to remove, and the store error came out
+here as a full disk.
+
+Two hours of the chase were spent on the memory: the heaps, the page
+manager, `TotalSystemFree`. The message was never about memory at all.
+

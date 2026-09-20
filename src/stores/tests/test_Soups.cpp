@@ -1021,6 +1021,47 @@ TestTags()
 	store objects copied as they lie) and the slow one, with a callback.
 ------------------------------------------------------------------------------*/
 
+// An indexed number is the same in the heap and on the store, so that an
+// entry can be found again by the key it went in under.
+//
+// A store holds a Ref in the machine's thirty-two bit word, so an integer
+// slot comes back from it as the thirty bits a Newton integer has.  While
+// the host kept more than that - a Ref is pointer-sized here - a sum that
+// overflowed stayed wide in the heap and narrowed the moment it was
+// written, and the index then held a key the entry no longer had: adding
+// the alarm the To Do list rolls over with worked, and removing it
+// answered "not found", which the application reported as the machine
+// being out of memory.
+static void
+TestIndexKeysSurviveTheStore()
+{
+	TStore* store = NewStore();
+	RefVar storeObject(RegisterTStore(store));
+	RefVar specs(AllocateArray(RSSYMarray, 1));
+	SetArraySlotRef(specs, 0, IndexSpec("k", "int"));
+	RefVar soup(StoreCreateSoup(storeObject, RefVar(MakeString("Wide")), specs));
+
+	// a number wider than the machine can hold: MAKEINT answers the thirty
+	// bits it would have had, which is what the store will hold too
+	const long kTooWide = 1486438832;
+	EXPECT(RINT(MAKEINT(kTooWide)) == 412697008);
+	RefVar entry(AllocateFrame());
+	SetFrameSlot(entry, RefVar(Intern((char*) "k")), RefVar(MAKEINT(kTooWide)));
+	SetFrameSlot(entry, RefVar(Intern((char*) "note")), RefVar(MakeString("an alarm")));
+	RefVar added(SoupAddFlushed(soup, entry));
+	EXPECT(RINT(GetFrameSlotRef(added, RefVar(Intern((char*) "k")))) == 412697008);
+
+	// it is found again by the key it went in under, and it goes out again
+	// - which is what used to answer "not found" and be reported as the
+	// machine being out of memory
+	Eval("theStore := GetStores()[0]; wide := theStore:GetSoup(\"Wide\")");
+	EXPECT(NOTNIL(Eval("wide:Query({indexPath: 'k, beginKey: 412697008, endKey: 412697008}):Entry()")));
+	EntryRemoveFromSoup(added);
+	EXPECT(ISNIL(Eval("wide:Query({indexPath: 'k, beginKey: 412697008, endKey: 412697008}):Entry()")));
+	PlainSoupRemoveFromStore(soup);
+}
+
+
 static void
 TestCopyEntries()
 {
@@ -1134,6 +1175,7 @@ main()
 		TestCursors();
 		TestUnionSoups();
 		TestTags();
+		TestIndexKeysSurviveTheStore();
 		TestCopyEntries();
 	}
 	newton_catch_all

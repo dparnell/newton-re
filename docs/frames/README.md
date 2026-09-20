@@ -735,3 +735,39 @@ the heap dump `Uriah` (the printer), the REx magic pointer tables
 (`InitRExMagicPointerTables`), the frames function profiler hooks in
 `GC`, and what `InitObjects` starts around the interpreter:
 `InitPrinter`, `MakeEntryCache`, the package store part handler.
+
+## An integer is thirty bits, however wide the host's word is
+
+A Ref is the machine's 32-bit word with two tag bits, so a NewtonScript
+integer runs from -536870912 to 536870911 and arithmetic on one wraps
+where the ARM wraps. A Ref here is pointer-sized - it has to hold a host
+pointer - and that must not make the *integers* any wider than the
+machine's, so everything that makes one cuts it back:
+
+- `MAKEINT` (patched into `ddk/objects.h` by `sync_ddk_headers.py`)
+  shifts in 32 bits and sign-extends the result, so an integer Ref holds
+  exactly the word the ARM would have held.
+- the interpreter's `+` and `-` add the two Refs as they stand, as the
+  machine does, and cut the sum back to a word (`WordRef`,
+  `Interpreter.cpp`).
+- the lexer already refused a literal it could not hold
+  (`kNSErrIntegerTooLarge`).
+
+This is not tidiness. A store holds a Ref in 32 bits, so an integer slot
+written to a soup comes back as thirty bits whatever the heap had. While
+the host kept more than that, a sum that overflowed stayed wide in the
+heap and narrowed the moment it was written - and an index built from the
+heap's value then held a key the entry on the store no longer had. The
+alarm the To Do list rolls over with went in and could not be taken out
+again: `RemoveAlarm` answered "not found", which the application reported
+as *"There is not enough space in the internal memory to automatically
+roll-over To Do tasks"*. `test_Soups`'s `TestIndexKeysSurviveTheStore`
+pins it, and `test_Strings`'s `TestThirtyBitIntegers` pins the
+arithmetic.
+
+Two host-side places keep a pointer where the machine kept a word, and
+say so: a command's `parameter` (`views/Commands.cpp`, which is a unit's
+address as often as it is a number) keeps a pointer whole as a pointer
+Ref, and `RefOf` (`Builtins.cpp`) cannot answer the address of a heap
+object as a number at all.
+

@@ -55,7 +55,7 @@ enum {
 	kImmedReserved
 };
 
-#define	MAKEINT(i)			((Ref) (((ULong) (Ref) (i)) << kRefTagBits))
+#define	MAKEINT(i)			((Ref) (int) (((ULong32) (Ref) (i)) << kRefTagBits))
 #define	MAKEIMMED(t, v)		((((((Ref) (v)) << kRefImmedBits) | ((Ref) (t))) << kRefTagBits) | kTagImmed)
 #define	MAKECHAR(c)			MAKEIMMED(kImmedChar, (unsigned) c)
 #define	MAKEBOOLEAN(b)		(b ? TRUEREF : FALSEREF)

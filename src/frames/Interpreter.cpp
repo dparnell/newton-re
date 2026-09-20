@@ -768,6 +768,18 @@ TInterpreter::CallPlainCFunction(RefArg fn, long numArgs)
 }
 
 
+// The machine adds and subtracts two integer Refs as they stand - both
+// have a tag of nought, so the words add - and the result wraps in the
+// ARM's thirty-two bits, which is what makes a NewtonScript integer a
+// thirty-bit one.  A Ref here is pointer-sized, so the sum is cut back to
+// the word the machine would have had.
+static inline Ref
+WordRef(Ref value)
+{
+	return (Ref) (int) (ULong32) value;
+}
+
+
 // Host: a script that asks for a ROM native we have not written yet should
 // say which one, so that the next thing to reconstruct is obvious rather
 // than a bare error code.  The boot is full of these while it is being
@@ -1287,7 +1299,7 @@ TInterpreter::SlowRun(long baseDepth)
 					Ref rb = POP();
 					Ref ra = TOP();
 					if (((ra | rb) & 3) == 0)
-						TOP() = ra + rb;
+						TOP() = WordRef(ra + rb);
 					else
 					{
 						arg1 = ra;
@@ -1305,7 +1317,7 @@ TInterpreter::SlowRun(long baseDepth)
 					Ref rb = POP();
 					Ref ra = TOP();
 					if (((ra | rb) & 3) == 0)
-						TOP() = ra - rb;
+						TOP() = WordRef(ra - rb);
 					else
 					{
 						arg1 = ra;

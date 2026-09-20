@@ -17,6 +17,35 @@
 
 // ROM 0x00070424 MakeCommand__FUlP10TResponderl
 // A command frame (a clone of protoCommand) with the id, the receiver's
+// DEVIATION: a command's parameter is one 32-bit word, and it is
+// sometimes a number (a key code, a view's index) and sometimes a pointer
+// (the unit a click carries).  The ROM keeps it as an integer Ref - the
+// word shifted up by two - which round-trips a pointer because the
+// machine's RAM lives below 0x40000000.  A host pointer does not fit in
+// the thirty bits a Newton integer holds, so one that does not is kept
+// whole as a pointer Ref instead (AddressToRef, the convention the view
+// objects already use), and told apart on the way out by being wider than
+// a Newton word.  A parameter that does fit is the integer the ROM would
+// have written, which is what a script reading cmd.parameter sees.
+static Ref
+ParameterRef(Long parameter)
+{
+	Ref value = MAKEINT(parameter);
+	if ((Long) RVALUE(value) == parameter)
+		return value;
+	return AddressToRef((void*) parameter);
+}
+
+
+static Long
+ParameterValue(Ref value)
+{
+	if (value == (Ref) (int) value)			// a Newton-sized word
+		return (Long) RVALUE(value);
+	return (Long) RefToAddress(value);
+}
+
+
 // context ('application for the application) and the parameter.
 //
 // DEVIATION: the ROM does not look at the receiver, it takes the address
@@ -39,7 +68,7 @@ MakeCommand(ULong id, TResponder* receiver, Long parameter)
 		SetFrameSlot(cmd, RSSYMreceiver, RefVar(NILREF));
 	else
 		SetFrameSlot(cmd, RSSYMreceiver, ((TView*) receiver)->fContext);
-	SetFrameSlot(cmd, RSSYMparameter, RefVar(MAKEINT(parameter)));
+	SetFrameSlot(cmd, RSSYMparameter, RefVar(ParameterRef(parameter)));
 	return cmd;
 }
 
@@ -101,7 +130,7 @@ CommandParameter(RefArg cmd)
 	RefVar parameter(GetFrameSlotRef(cmd, RSSYMparameter));
 	if (!ISINT(parameter))
 		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, parameter);
-	return RVALUE(parameter);
+	return ParameterValue(parameter);
 }
 
 
@@ -109,7 +138,7 @@ CommandParameter(RefArg cmd)
 void
 CommandSetParameter(RefArg cmd, Long parameter)
 {
-	SetFrameSlot(cmd, RSSYMparameter, RefVar(MAKEINT(parameter)));
+	SetFrameSlot(cmd, RSSYMparameter, RefVar(ParameterRef(parameter)));
 }
 
 
@@ -153,7 +182,7 @@ CommandIndexParameter(RefArg cmd, long index)
 	RefVar params(GetFrameSlotRef(cmd, RSSYMparams));
 	if (ISNIL(params) || Length(params) < index + 1)
 		return 0;
-	return RVALUE(GetArraySlotRef(params, index));
+	return ParameterValue(GetArraySlotRef(params, index));
 }
 
 
@@ -162,7 +191,7 @@ void
 CommandSetIndexParameter(RefArg cmd, long index, Long parameter)
 {
 	RefVar params(CommandParams(cmd, index));
-	SetArraySlotRef(params, index, MAKEINT(parameter));
+	SetArraySlotRef(params, index, ParameterRef(parameter));
 }
 
 
