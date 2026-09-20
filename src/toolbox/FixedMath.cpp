@@ -426,3 +426,42 @@ FixedACos(Fract x)
 {
 	return kFixedHalfPi - FixedASin(x);
 }
+
+
+// ROM 0x000bd87c FixedLength
+// The length of a vector without a square root: the greater of |dx| and
+// |dy| plus a fraction of the lesser, the fraction chosen by which of the
+// two halves of the octant the vector is in - a shift-and-add
+// approximation that over-estimates by up to three per cent.  The shifts are
+// the ROM's arithmetic ones, which is safe here because both have been
+// made positive first.
+extern "C" Fixed
+FixedLength(Fixed dx, Fixed dy)
+{
+	if (dx < 0)
+		dx = -dx;
+	if (dy < 0)
+		dy = -dy;
+	if (dy <= dx)
+	{
+		if (dy < (dx >> 1))
+			return dx + (dy >> 2) - (dy >> 7) - (dy >> 8) - (dy >> 9);
+		return dx - (dx >> 3) - (dx >> 5) - (dx >> 6) + (dy >> 1) + (dy >> 4) + (dy >> 5);
+	}
+	if (dx < (dy >> 1))
+		return dy + (dx >> 2) - (dx >> 7) - (dx >> 8) - (dx >> 9);
+	return dy - (dy >> 3) - (dy >> 5) - (dy >> 6) + (dx >> 1) + (dx >> 4) + (dx >> 5);
+}
+
+
+// ROM 0x000bd904 FixedRoundBy
+// A fixed-point value rounded to a multiple of unit: divided by it, the
+// fraction of the quotient dropped, multiplied back.  Half the unit is
+// added first to round to nearest - less one, so a value exactly half way
+// rounds down.
+extern "C" Fixed
+FixedRoundBy(Fixed value, Fixed unit)
+{
+	Fixed quotient = FixedDivide(value + (unit >> 1) - 1, unit);
+	return FixedMultiply((Fixed) ((ULong) quotient & 0xffff0000), unit);
+}

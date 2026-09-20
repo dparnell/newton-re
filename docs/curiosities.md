@@ -521,3 +521,36 @@ matters: three of the table's 256 entries belong to the month view for
 as long as it exists, and the table grows (by 512 bytes at a time, the
 collector sliding it down into the free space below it) when enough of
 them accumulate.
+
+
+---
+
+## Two tables in the same eight bytes
+
+`AngleFromSlope` (0x002aa530) is the arctangent the recogniser and the
+gesture tests measure everything with: a 16.16 slope in, a whole number
+of degrees out. It works by table lookup - a byte table says roughly
+which degree the slope is in, and a table of the tangents of the half
+degrees says whether to step on - and it has two of each, one pair for a
+slope below one and one for a slope of one or more:
+
+    0x00380d8e  64 bytes   the degree of a slope's fraction (frac >> 10)
+    0x00380dd0  46 longs   tan(0.5 deg) .. tan(44.5 deg), then 0xffff
+    0x00380e80  64 bytes   the degree of a slope's whole part (slope >> 13)
+    0x00380ec0  46 longs   tan(45.5 deg) .. tan(89.5 deg), then 0xffffffff
+
+The third table starts at 0x380e80. The second one, 46 longs from
+0x380dd0, ends at 0x380e88 - eight bytes *past* where the third begins.
+They are not two tables laid out badly; they are two tables sharing eight
+bytes, and both are read as written. The trick is in the index: the
+byte table is only ever reached as `table[slope >> 13]`, and that branch
+is taken only when the whole part of the slope is at least 1, so the
+index is at least 8. Entries 0 to 7 of the byte table can never be
+asked for, and Apple put the last two tangents there - 0x0000fb92,
+tan(44.5 degrees), and 0x0000ffff, the sentinel that no fraction can
+exceed.
+
+It saves eight bytes. It is also why a reconstruction that lays the four
+tables out as four C arrays is bigger than the ROM's, and why
+`analysis/romtable.py` is asked for 46 entries of the second table
+explicitly: counting to the next symbol would have stopped short.

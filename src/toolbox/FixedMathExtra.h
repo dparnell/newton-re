@@ -21,6 +21,11 @@
 #include "FixedMath.h"
 #endif
 
+extern "C" {
+Fixed	FixedLength(Fixed dx, Fixed dy);	// ROM 0x000bd87c FixedLength - no square root: a shift-and-add approximation
+Fixed	FixedRoundBy(Fixed value, Fixed unit);	// ROM 0x000bd904 FixedRoundBy - rounded to a multiple of unit
+}
+
 Fixed	FixedASin(Fract x);		// ROM 0x00255158 FixedASin__Fl
 Fixed	FixedACos(Fract x);		// ROM 0x002551a4 FixedACos__Fl
 

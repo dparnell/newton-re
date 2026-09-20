@@ -101,7 +101,9 @@ def main(argv=None) -> int:
                     if name == "(unnamed)":
                         if addr in by_addr:
                             errors.append(f"{where}: {addr:#x} has a symbol ({', '.join(sorted(by_addr[addr]))}); cite it")
-                        elif addr % 4 or not (addr < rom_size or ram_init[0] <= addr < ram_init[1]):
+                        # a table of bytes need only be halfword aligned (the angle
+                        # tables' kDegreesOfFraction starts at an odd halfword)
+                        elif addr % 2 or not (addr < rom_size or ram_init[0] <= addr < ram_init[1]):
                             errors.append(f"{where}: {addr:#x} is neither a ROM address nor one in the initialised data")
                         else:
                             cited.setdefault(addr, where)
