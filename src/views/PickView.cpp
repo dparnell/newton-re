@@ -1404,8 +1404,8 @@ TPickView::RealDraw(Rect& /*bounds*/)
 			long length = GetItemLength(i);
 			long count = length < 0 ? -length : length;
 			FPoint where;
-			where.x = (Fixed) x << 16;
-			where.y = (Fixed) baseline << 16;
+			where.x = ToFixed(x);
+			where.y = ToFixed(baseline);
 			TextBoundsInfo textBounds;
 			DrawRichString(rich, 0, count, &fStyle, where, nil, &textBounds);
 			if (length < 0)
@@ -1455,8 +1455,8 @@ TPickView::RealDraw(Rect& /*bounds*/)
 		{
 			StyleRecord* style = &fStyle;
 			FPoint at;
-			at.x = (Fixed) (viewBounds.left + fMarkLeft) << 16;
-			at.y = (Fixed) markBaseline << 16;
+			at.x = ToFixed(viewBounds.left + fMarkLeft);
+			at.y = ToFixed(markBaseline);
 			DrawTextOnce(&mark, 1, &style, nil, at, nil, nil);
 		}
 	}

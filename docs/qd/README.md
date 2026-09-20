@@ -152,6 +152,27 @@ and rect, `visRgn` the screen and `clipRgn` wide open (`InitPortRgns`
 `SetOrigin` 0x002be758 shifts the bits' bounds, the port rect and the
 visible region.
 
+### 16.16 the way the ARM does it
+
+`Ports.h` has four inline helpers - `ToFixed`, `AddFixed`, `ScaleFixed`,
+`RoundFixed` - and **every place in the reconstruction that makes or
+combines a 16.16 number goes through them**, in the view system as much
+as here.
+
+The reason is that QuickDraw works on numbers that go negative (a
+coordinate off the left of the screen, a descent below the baseline, a
+paragraph whose right edge is inside its left one) and on values
+`FixedDivide` has already saturated to 0x7fffffff. Shifting a negative
+signed long left, and overflowing a signed multiply or addition, are
+both undefined in C++ and both perfectly ordinary on the ARM: a host
+build with the sanitiser on stops dead where the machine would have
+carried on. `(Fixed) width << 16` with a width of -3 is a crash;
+`ToFixed(width)` is 0xfffd0000, which is what the ARM's `mov r0,r0,lsl
+#16` leaves behind.
+
+They are not a correction - they compute the same bits the ROM computed.
+Writing the shift out by hand is the bug.
+
 ## Drawing (`src/qd/Draw.h`)
 
 `FrameRect`/`PaintRect`/`EraseRect`/`InvertRect`/`FillRect`

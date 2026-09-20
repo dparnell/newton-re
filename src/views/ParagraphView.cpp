@@ -488,7 +488,7 @@ TParagraphView::FillAllCaches(void)
 	long height = viewBounds.bottom - viewBounds.top;
 	memset(&fTextOptions, 0, sizeof(fTextOptions));
 	fTextOptions.fAlignment = ConvertToQDFlush(fViewJustify & vjJustifyMask, &fTextOptions.fJustification);
-	fTextOptions.fWidth = (Fixed) width << 16;
+	fTextOptions.fWidth = ToFixed(width);
 	fTextOptions.fTransferMode = fTransferMode;
 	long spacing = GetInterLineSpacing();
 	StyleRecord** lineStyles = (StyleRecord**) NewPtrClear(fRunCount * sizeof(StyleRecord*));
@@ -1950,8 +1950,8 @@ TParagraphView::DrawLine(const UniChar* text, const LineInfo& line, Boolean elli
 	long runs = RunsOfRange(fRunStyles, fRunLengths, fRunCount, line.fStart, line.fEnd - line.fStart, lineStyles, lineLengths, &firstRun);
 	TextOptions options = fTextOptions;
 	FPoint where;
-	where.x = (Fixed) viewBounds.left << 16;
-	where.y = (Fixed) (line.fBounds.top + line.fAscent) << 16;
+	where.x = ToFixed(viewBounds.left);
+	where.y = ToFixed(line.fBounds.top + line.fAscent);
 	if (line.fEnd > line.fStart)
 		DoTextOnce(text + line.fStart, line.fEnd - line.fStart, lineStyles, lineLengths, where, &options, nil, true);
 	if (ellipsis)
@@ -1970,7 +1970,7 @@ TParagraphView::DrawLine(const UniChar* text, const LineInfo& line, Boolean elli
 			left += slack;
 		else if (options.fAlignment == 0x8000)
 			left += slack / 2;
-		at.x = (Fixed) (left + textWidth) << 16;
+		at.x = ToFixed(left + textWidth);
 		at.y = where.y;
 		DoTextOnce(&dots, 1, &style, nil, at, &dotOptions, nil, true);
 	}

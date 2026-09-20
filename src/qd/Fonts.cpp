@@ -308,7 +308,7 @@ SetupWidthsFont(Fixed size, const char* sfnt, FontEngineInfo* info, long* face)
 	info->fNumHMetrics = Get16(hhea + 0x22);
 	info->fHmtx = FindFontTable(sfnt, kTagHmtx);
 	const char* head = FindFontTable(sfnt, kTagHead);
-	Fixed scale = FixedDivide(size, (Fixed) (Get16(head + 0x12) << 16));
+	Fixed scale = FixedDivide(size, ToFixed(Get16(head + 0x12)));
 	info->fWidthsScale = scale;
 	long remaining = *face & ~Get16(head + 0x2c);
 	const char* hsty = FindFontTable(sfnt, kTagHsty);
@@ -866,7 +866,7 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 	{
 		long font = RINT(spec);
 		style->fFontFamily = PackedFontFamilyFrame(font);
-		style->fFontSize = (Fixed) (PackedFontSize(font) << 16);
+		style->fFontSize = ToFixed(PackedFontSize(font));
 		style->fFontFace = PackedFontFace(font);
 	}
 	else if (IsFrame(fontSpec))

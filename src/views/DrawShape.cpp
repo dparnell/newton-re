@@ -738,11 +738,11 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 			memset(&options, 0, sizeof(options));
 			options.fJustification = style->fJustification;
 			options.fAlignment = style->fAlignment;
-			options.fWidth = (Fixed) (box.right - box.left) << 16;
+			options.fWidth = ToFixed(box.right - box.left);
 			options.fTransferMode = style->fTransferMode == patCopy ? srcOr : style->fTransferMode;
 			FPoint where;
-			where.x = (Fixed) box.left << 16;
-			where.y = (Fixed) (box.top + fontInfo.ascent) << 16;
+			where.x = ToFixed(box.left);
+			where.y = ToFixed(box.top + fontInfo.ascent);
 			DrawRichString(rich, 0, rich.Length(), &record, where, &options, nil);
 		}
 		DisposeStyleRecord(&record);

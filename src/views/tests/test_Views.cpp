@@ -758,6 +758,30 @@ TestParagraphView()
 }
 
 
+// A paragraph whose right edge is to the left of its left edge: the width
+// its lines are measured against comes out negative.  The ARM shifts that
+// into the text options' fixed-point width and thinks nothing of it, and
+// so must the host - one of the ROM's own slips builds a paragraph this
+// way before its parent has sized it.  A line then fits no characters, so
+// the line breaking puts one on each.
+static void
+TestNegativeWidthParagraph()
+{
+	TView* p = ViewOf("ctxN := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+					  "viewBounds: {left: 40, top: 10, right: 37, bottom: 44}, "
+					  "viewFont: 0x3000, viewLineSpacing: 10, text: \"abc\"})");
+	EXPECT(p != nil && p->ClassID() == clParagraphView);
+	Eval("ctxN:Dirty()");
+	Refresh();
+	EXPECT(RINT(Eval("StrLen(ctxN.text)")) == 3);
+	// and the view is still a view: it answers where its caret would go
+	EXPECT(NOTNIL(Eval("ctxN:LocalBox()")));
+	Eval("ctxN:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "the negative-width paragraph closed"));
+}
+
+
 static void
 TestGaugeView()
 {
@@ -2855,6 +2879,7 @@ main()
 		TestTextView();
 		TestPictureView();
 		TestParagraphView();
+		TestNegativeWidthParagraph();
 		TestGaugeView();
 		TestShapes();
 		TestCommands();

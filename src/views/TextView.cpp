@@ -65,13 +65,13 @@ TTextView::RealDraw(Rect& /*bounds*/)
 	StyleRecord style;
 	CreateTextStyleRecord(font, &style);
 	options.fAlignment = ConvertToQDFlush(justify & vjJustifyMask, &options.fJustification);
-	options.fWidth = (Fixed) (viewBounds.right - viewBounds.left) << 16;
+	options.fWidth = ToFixed(viewBounds.right - viewBounds.left);
 	options.fTransferMode = fTransferMode;
 	FontInfo fontInfo;
 	GetStyleFontInfo(&style, &fontInfo);
 	FPoint where;
-	where.x = (Fixed) viewBounds.left << 16;
-	where.y = (Fixed) (viewBounds.top + fontInfo.ascent - 1) << 16;
+	where.x = ToFixed(viewBounds.left);
+	where.y = ToFixed(viewBounds.top + fontInfo.ascent - 1);
 	Fixed extra = (Fixed) (((viewBounds.bottom - viewBounds.top) - (fontInfo.descent + fontInfo.ascent)) * 0x10000);
 	switch (justify & vjVMask)
 	{
@@ -79,7 +79,7 @@ TTextView::RealDraw(Rect& /*bounds*/)
 		{
 			RefVar spacing(GetProto(RSSYMviewlinespacing));
 			if (NOTNIL(spacing))
-				where.y = (Fixed) (viewBounds.top + RINT(spacing)) << 16;
+				where.y = ToFixed(viewBounds.top + RINT(spacing));
 		}
 		break;
 	case vjCenterV:
