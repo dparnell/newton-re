@@ -33,7 +33,7 @@
 // start).  ==> the imported area (nil when the bytes are not a run of
 // objects), whose first object is the part's array.  The area lives until
 // RemoveFramesPart.
-TImportedObjectArea*	ImportFramesPart(const void* part, ULong size, ULong32 refBase);
+TImportedObjectArea*	ImportFramesPart(const void* part, ULong size, ULong32 refBase, long align = 4);
 void					RemoveFramesPart(TImportedObjectArea* area);		// refs into it are declawed
 Boolean					InFramesPartArea(Ref r);							// an object of an imported part
 

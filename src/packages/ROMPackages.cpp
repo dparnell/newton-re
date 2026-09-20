@@ -311,13 +311,18 @@ InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULon
 			continue;
 		}
 		ULong offset = iter.GetPartDataOffset(i);
-		// the part's refs take its first byte to be at its ROM address
+		// the part's refs take its first byte to be at its ROM address.
+		// A version 0 package packs its objects to eight bytes rather than
+		// four, with a fill pattern in the gaps, so the walk has to be
+		// told which kind it is reading.
+		long align = iter.PackageFormatVersion() == 0 ? 8 : 4;
 		TImportedObjectArea* area = ImportFramesPart(rom + packageAddress + offset, part.size,
-													packageAddress + offset);
+													packageAddress + offset, align);
 		if (area == nil)
 		{
-			// a streamed part is NSOF, which TFramePartHandler::Expand
-			// reads with a TObjectReader: NOT YET RECONSTRUCTED
+			// (a part whose bytes are a NSOF stream rather than a run of
+			//  objects would land here too; TFramePartHandler::Expand
+			//  reads those with a TObjectReader, which is NOT YET)
 			Say(packageId, i, "its bytes are not a run of objects");
 			continue;
 		}

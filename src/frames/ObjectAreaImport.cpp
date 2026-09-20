@@ -105,7 +105,7 @@ SourceSymbolName(const unsigned char* bytes, ULong32 base, ULong32 size, ULong32
 
 
 NewtonErr
-TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 size, OutsideRefTranslator outside, void* refCon)
+TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 size, OutsideRefTranslator outside, void* refCon, long align)
 {
 	Dispose();
 	fBase = base;
@@ -132,7 +132,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 			hostSize = BinaryObjSize(objSize - kARMObjBodySize);
 		total += AlignedSize(hostSize);
 		count++;
-		a += (objSize + 3) & ~3;
+		a += (objSize + align - 1) & ~(align - 1);
 	}
 	if (a != size)
 		return kError_Bad_Parameters;
@@ -180,7 +180,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 		o->fSizeAndFlags = (hostSize << kObjSizeShift) | (header & 0xff);
 		o->fGCStuff = 0;
 		p += AlignedSize(hostSize);
-		a += (objSize + 3) & ~3;
+		a += (objSize + align - 1) & ~(align - 1);
 	}
 
 	// translate the refs, and the binary data whose words the host reads
@@ -232,7 +232,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 				}
 			}
 		}
-		a += (objSize + 3) & ~3;
+		a += (objSize + align - 1) & ~(align - 1);
 	}
 	return noErr;
 }

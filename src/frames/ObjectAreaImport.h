@@ -50,7 +50,11 @@ public:
 	// The area's bytes (size of them) as they lie at address base in the
 	// source's address space; kError_Bad_Parameters when they are not a
 	// run of objects, kError_No_Memory when the host area cannot be made.
-	NewtonErr	Import(const unsigned char* bytes, ULong32 base, ULong32 size, OutsideRefTranslator outside, void* refCon);
+	// `align` is what the objects are packed to in the source bytes: four
+	// for a frames part out of a version 1 package, eight for one out of a
+	// version 0 package, whose gaps are filled with a pattern that is not
+	// an object header.
+	NewtonErr	Import(const unsigned char* bytes, ULong32 base, ULong32 size, OutsideRefTranslator outside, void* refCon, long align = 4);
 	void		Dispose(void);
 
 	ObjHeader*	ObjectAt(ULong32 address) const;		// the host object of a source address; nil when none starts there

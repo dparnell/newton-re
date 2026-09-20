@@ -125,3 +125,22 @@ loading, removing, registering part handlers, backup), the part handlers
 object heap, `TFormPartHandler`, `TBookPartHandler`,
 `TPackageStorePartHandler`), `LoadPackage`/`RemovePackage`, patches, the
 NewtonScript package functions.
+
+
+## Two package formats, and where the difference shows
+
+The signature is "package0" or "package1", and the difference that
+matters when reading a frames part is how tightly its objects are packed.
+A version 1 package packs them to **four** bytes; a version 0 package -
+Newton 1.x's format, which the MP2x00's ROM extension still has two of -
+packs them to **eight**, and fills the gaps with a pattern (0xbf, 0xba)
+that is not a valid object header.
+
+Walking a version 0 part four bytes at a time therefore stops at the
+third object, which is what made the ROM extension's help book and
+ListView refuse to install for a long time ("its bytes are not a run of
+objects").  With eight they walk to the last byte exactly: 834 objects
+for the help book, 2967 for ListView.
+
+`TPackageIterator::PackageFormatVersion` answers which it is, and
+`ImportFramesPart` takes the alignment to walk with.

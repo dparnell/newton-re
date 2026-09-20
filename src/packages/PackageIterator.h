@@ -207,6 +207,11 @@ public:
 	ULong			DirectorySize(void);
 	ULong			GetPackageId(void);
 	ULong			GetVersion(void);
+	// The package format: 0 or 1, the last character of the signature.
+	// The two lay a frames part's objects out differently - a version 0
+	// package aligns them to eight bytes and a version 1 package to four -
+	// so whoever reads the objects has to be told which it is.
+	ULong			PackageFormatVersion(void);
 	ULong			CreationDate(void);
 	ULong			ModifyDate(void);
 	ULong			PackageFlags(void);

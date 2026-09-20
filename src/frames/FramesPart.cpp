@@ -34,12 +34,12 @@ OutsidePartRef(ULong32 ref, void* /*refCon*/)
 
 
 TImportedObjectArea*
-ImportFramesPart(const void* part, ULong size, ULong32 refBase)
+ImportFramesPart(const void* part, ULong size, ULong32 refBase, long align)
 {
 	FramesPartArea* entry = new FramesPartArea;
 	if (entry == nil)
 		return nil;
-	if (entry->fArea.Import((const unsigned char*) part, refBase, (ULong32) size, OutsidePartRef, nil) != noErr)
+	if (entry->fArea.Import((const unsigned char*) part, refBase, (ULong32) size, OutsidePartRef, nil, align) != noErr)
 	{
 		delete entry;
 		return nil;

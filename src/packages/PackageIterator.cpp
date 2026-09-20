@@ -109,6 +109,16 @@ TPrivatePackageIterator::DisposeDirectory(void)
 }
 
 
+// The package format: the last character of the signature, which
+// CheckHeader has already made sure is '0' or '1'.  A version 0 package
+// is a Newton 1.x one; the ROM extension still has two of them.
+ULong
+TPackageIterator::PackageFormatVersion(void)
+{
+	return (ULong) (fDirectory->fSignature[7] - '0');
+}
+
+
 // ROM 0x001947e8 CheckHeader__23TPrivatePackageIteratorFv
 NewtonErr
 TPrivatePackageIterator::CheckHeader(void)
