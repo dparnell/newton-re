@@ -35,7 +35,7 @@ static TUnit*	gUnitBeingHandled = nil;		// (the ROM's word at 0x0c103f8c) the un
 // wrong (the names that end in type.ref.frame) or an error code, and
 // without either the name alone says almost nothing - every mistake a ROM
 // script makes arrives here as evt.ex.fr.intrp.
-static void
+void
 SafeExceptionNotify(Exception* exception)
 {
 	fprintf(stderr, "exception in a unit handler: %s", exception->name);

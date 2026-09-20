@@ -1211,3 +1211,70 @@ TController::CleanupAfterError(void)
 	if (click != nil)
 		NewClassification(click);
 }
+
+
+// ROM 0x0021c7cc BuildGTypes__11TControllerFP8TRecArea
+// The domains an area must run, worked out from the unit types its
+// recognisers take.
+//
+// A recogniser asks for a type ('STRK', 'WORD', ...); the domain of that
+// type is found among the controller's, and what that domain needs is its
+// *piece* types - so the area must also run whatever makes those, and so
+// on down until nothing new is found.  Each round takes the types found
+// last time, looks up the domains of those types and writes their piece
+// types (paired with the domain that wants them) into the area's
+// `fDomains`; the two lists are swapped and the round run again.  The
+// area's level is the furthest any of those domains stood from the
+// strokes, which is how many rounds of arbitration it will take.
+void
+TController::BuildGTypes(TRecArea* area)
+{
+	area->fDomains->Clear();
+	TTypeAssoc* wanted = area->fTypes->Copy();
+	if (wanted == nil)
+		return;
+	TTypeAssoc* needed = TTypeAssoc::Make();
+	if (needed == nil)
+	{
+		wanted->Dispose();
+		return;
+	}
+
+	ULong maxLevel = 0;
+	while (wanted->Count() != 0)
+	{
+		TArrayIterator iter;
+		TDomain** slot = (TDomain**) fDomains->GetIterator(&iter);
+		for (ULong i = 0; i < (ULong) iter.fCount; i++, slot = (TDomain**) iter.GetNext())
+		{
+			TDomain* domain = *slot;
+			for (ULong j = 0; j < (ULong) wanted->Count(); j++)
+			{
+				if (domain->fType != wanted->GetAssoc(j)->fType)
+					continue;
+				if (maxLevel < (ULong) domain->fLevel)
+					maxLevel = domain->fLevel;
+				TArrayIterator pieceIter;
+				ULong* piece = (ULong*) domain->fPieceTypes->GetIterator(&pieceIter);
+				for (ULong k = 0; k < (ULong) pieceIter.fCount; k++, piece = (ULong*) pieceIter.GetNext())
+				{
+					if (domain->fType == *piece)
+						continue;			// a domain that takes its own type would not end
+					Assoc assoc;
+					memset(&assoc, 0, sizeof(assoc));
+					assoc.fType = *piece;
+					assoc.fDomain = domain;
+					needed->AddAssoc(&assoc);
+				}
+			}
+		}
+		area->fDomains->MergeAssoc(needed);
+		wanted->CutToIndex(0);
+		TTypeAssoc* swap = wanted;
+		wanted = needed;
+		needed = swap;
+	}
+	area->fMaxLevel = maxLevel;
+	wanted->Dispose();
+	needed->Dispose();
+}

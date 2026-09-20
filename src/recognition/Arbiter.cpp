@@ -9,6 +9,8 @@
 #include "Arbiter.h"
 #include "Controller.h"
 
+TArbiter*	gArbiter = nil;						// ROM 0x0c101880 gArbiter
+
 
 // ROM 0x00207d2c IArbiter__8TArbiterFP11TController
 // The seven lists: four of arbitration entries and three of bare unit
@@ -21,8 +23,8 @@ TArbiter::IArbiter(TController* controller)
 	fController = controller;
 	fLists[kArbiterPending] = TDArray::Make(sizeof(ArbiterEntry), 0);
 	fLists[kArbiterActive] = TDArray::Make(sizeof(ArbiterEntry), 0);
+	fLists[kArbiterGathered] = TArray::Make(sizeof(ArbiterEntry), 0);
 	fLists[kArbiterWinners] = TArray::Make(sizeof(ArbiterEntry), 0);
-	fLists[kArbiterLosers] = TArray::Make(sizeof(ArbiterEntry), 0);
 	fLists[kArbiterUnitsA] = TDArray::Make(sizeof(TUnit*), 0);
 	fLists[kArbiterUnitsB] = TDArray::Make(sizeof(TUnit*), 0);
 	fLists[kArbiterUnitsC] = TDArray::Make(sizeof(TUnit*), 0);

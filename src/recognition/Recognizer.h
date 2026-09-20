@@ -39,6 +39,7 @@
 
 #include "Unit.h"
 #include "Domain.h"
+#include "Areas.h"
 #include "NewtonTime.h"
 
 class TView;
@@ -140,6 +141,7 @@ public:
 	Rect*				fModalBounds;		// +0x28
 	TView*				fPrevClickView;		// +0x2c
 	TView*				fClickView;			// +0x30
+	AreaHandler			fUnitHandler;		// +0x34  what an area's winning units are handed to: HandleUnit, or the journal's replay
 	Boolean				fClickSwallowed;	// +0x38  a click on a clicks-only area went unhandled: the click view forgotten, recognition triggered
 	ULong				fUnused3c;			// +0x3c
 };
@@ -155,8 +157,10 @@ long	PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask);	// ROM 0x00
 long	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl - command 0x14 to the view under the unit
 void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit - a stroke no recogniser took (NOT YET: to the stroke world's expired strokes; the ink taken off while the arbiter is modal)
 void	UpdateStroke(TUnit* unit);						// ROM 0x0019db84 UpdateStroke__FP5TUnit - the unit's stroke's ink taken off and the root view updated
+void	SafeExceptionNotify(Exception* exception);	// ROM 0x00036a3c SafeExceptionNotify__FP9Exception - an exception out of a handler reported, not thrown
 extern Boolean	gInhibitPopup;							// ROM 0x0c101948 gInhibitPopup
 
+void	InstallStrokeRecognizer(TRecognitionManager* manager);	// ROM 0x00143d64 InstallStrokeRecognizer__FP19TRecognitionManager
 void	InstallClickRecognizer(TRecognitionManager* manager);	// ROM 0x00143cdc InstallClickRecognizer__FP19TRecognitionManager
 void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00143bb0 InstallEventRecognizer__FP19TRecognitionManager
 Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit (NOT YET: true)

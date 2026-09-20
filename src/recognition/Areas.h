@@ -27,6 +27,15 @@
 
 class TDictChain;
 class TDomain;
+class TController;
+class TUnit;
+class TView;
+class TArray;
+struct dInfoRec;
+
+// What a recogniser's winning units are handed to: the unit handler
+// (`HandleUnit`), or the journal's when a session is being replayed.
+typedef long (*AreaHandler)(TArray* units);
 
 
 // One entry of a TTypeAssoc: a unit type, the domain that handles it, the
@@ -38,7 +47,7 @@ struct Assoc
 	TDomain*	fDomain;		// +0x04  the recogniser that handles it
 	Handle		fParams;		// +0x08  its parameter block
 	void*		fInfo;			// +0x0c  the domain's own record (a dInfoRec); part of what makes an entry unique
-	ULong		fUnknown10;		// +0x10  and so is this
+	AreaHandler	fHandler;		// +0x10  what the arbitration hands its winners to (the unit handler, HandleUnit)
 	ULong		fArbitrateTime;	// +0x14  how its units are arbitrated (kArbitrateExternally: not by the arbiter at all)
 	Boolean		fSharedParams;	// +0x18  the parameters are someone else's: not freed with the entry
 };
@@ -81,6 +90,7 @@ public:
 	virtual long		SizeInBytes(void);						// ROM 0x0021c704 SizeInBytes__8TRecAreaFv
 	virtual void		IDispose(void);							// ROM 0x0021c38c IDispose__8TRecAreaFv
 
+	void				AddAType(ULong type, AreaHandler handler, ULong arbitrateTime, dInfoRec* info);	// ROM 0x0021c74c AddAType__8TRecAreaFUlPFP6TArray_UlT1P8dInfoRec - a type the area takes
 	Handle				GetInfoFor(ULong type, Boolean make);	// ROM 0x0021c288 GetInfoFor__8TRecAreaFUlUc - the parameter block the area runs a domain with
 	void				ParamsAllSet(ULong type);				// ROM 0x0021c400 ParamsAllSet__8TRecAreaFUl - the domain told its parameters are complete
 
@@ -89,10 +99,10 @@ public:
 
 	long				fUsers;			// +0x08  Clone/Release (0: one user)
 	ULong				fViewFlags;		// +0x0c  the recognition bits of the view's viewFlags
-	ULong				fUnused10;		// +0x10
-	long				fArbitrateNow;	// +0x14  the types added with arbitrate time 1
-	TTypeAssoc*			fTypes;			// +0x18  the unit types -> recognisers (NOT YET)
-	TTypeAssoc*			fDomains;		// +0x1c  the domains to run, with their parameter blocks (NOT YET)
+	ULong				fMaxLevel;		// +0x10  the furthest its domains are from the strokes (BuildGTypes)
+	long				fArbitrateNow;	// +0x14  how many of its types are arbitrated at once (arbitrate time 1)
+	TTypeAssoc*			fTypes;			// +0x18  the unit types the recognisers take, with the handler each is answered through
+	TTypeAssoc*			fDomains;		// +0x1c  the domains to run, with their parameter blocks (BuildGTypes)
 	TDictChain*			fDictionaries[3];	// +0x20  the word recogniser's chains (NOT YET)
 	ULong				fViewId;		// +0x2c  the view's id (TView::fId)
 };
@@ -119,6 +129,24 @@ public:
 // NOT YET RECONSTRUCTED: everything that fills it (InitAreas,
 // GetAreasHit); with nothing in it there is nothing to purge either.
 extern TArray*	gAreaCache;								// ROM 0x0c1008a0 gAreaCache
+
+// One line of the area cache: an area, the input mask it was built for,
+// and when it was last used (it is thrown away ten seconds after that).
+struct AreaCacheEntry
+{
+	TRecArea*	fArea;			// +0x00
+	ULong		fInputMask;		// +0x04
+	ULong		fLastUsed;		// +0x08  Ticks()
+};
+
+void		InitAreas(void);							// ROM 0x00034834 InitAreas__Fv
+TRecArea*	FindMatchingArea(TView* view, ULong inputMask);	// ROM 0x00035674 FindMatchingArea__FP5TViewUl - the cached area for a view and mask, built if there is none
+TRecArea*	MakeArea(TController* controller, TView* view, ULong flags);	// ROM 0x00035434 MakeArea__FP11TControllerP5TViewUl
+TRecArea*	MakeArea(TController* controller, TView* view, ULong flags, RefArg config);	// ROM 0x00035484 MakeArea__FP11TControllerP5TViewUlRC6RefVar
+void		SetUpArea(TRecArea* area, RefArg config);	// ROM 0x0003495c SetUpArea__FP8TRecAreaRC6RefVar - every recogniser asked to enable itself in it
+void		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x000349bc ConfigureArea__FP8TRecAreaRC6RefVar - and then to configure itself in it
+ULong		GetAreasHit(TUnit* unit, TArray* areas);	// ROM 0x00036bc8 GetAreasHit__FP5TUnitP6TArray - the controller's hit test, under an exception handler
+ULong		TryGetAreasHit(TUnit* unit, TArray* areas);	// ROM 0x00036aa4 TryGetAreasHit__FP5TUnitP6TArray - ==> whether the areas were set on the unit here
 
 void	PurgeAreaCache(void);							// ROM 0x0003485c PurgeAreaCache__Fv - every area in it let go, the array emptied and shrunk
 

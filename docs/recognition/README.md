@@ -587,6 +587,63 @@ NOT YET: `RecognizeInArea` (re-recognising the strokes of an area),
 `UpdateInk`, `BuildGTypes`, and the debugging state
 (`SaveRecognitionState`, `RestoreRecognitionState`).
 
+## The areas a piece is written in (`recognition/Areas.h`)
+
+An **area** is what a view looks like to the recogniser.  The chain from
+one to the other is:
+
+    view + viewFlags -> BuildRecConfig -> a configuration frame with an
+    inputMask -> SetUpArea -> the types the recognisers take ->
+    BuildGTypes -> the domains those types need -> ConfigureArea
+
+`SetUpArea` asks every installed recogniser, in turn, whether it wants
+anything written here: `TRecognizer::EnableArea` (0x00143818) looks at
+the configuration's `inputMask`, and if any of the services the
+recogniser provides is in it, adds its unit type to the area's `fTypes`
+with `TRecArea::AddAType` (0x0021c74c) - together with the routine the
+winning units are answered through (`gRecognition.fUnitHandler`, which
+is `HandleUnit`) and the arbitrate time the recogniser was installed
+with.  A type added with arbitrate time 1 is counted in `fArbitrateNow`;
+arbitrate time 2 means the type is not arbitrated at all, which is how a
+click reaches its view while the pen is still down.
+
+`TController::BuildGTypes` (0x0021c7cc) then turns those types into the
+`fDomains` list - the domains the area must actually *run*.  A type is
+made by the domain of that type, and that domain needs its piece types,
+which need the domains that make *those*, and so on: each round looks up
+the domains of the types found last time and writes their piece types
+(paired with the domain that wants them) into `fDomains`, until a round
+finds nothing new.  The area's `fMaxLevel` is the furthest any of those
+domains stood from the strokes (`TController::Initialize`), which is how
+many rounds of arbitration it will take.
+
+Areas are cached, because the next stroke in the same field would
+otherwise build the same one again: `gAreaCache` holds an area, the
+input mask it was built for and when it was last used, and
+`FindMatchingArea` (0x00035674) answers the cached one for a view and
+mask or builds a new one with `MakeArea`.  Every look also ages the
+cache - a line untouched for ten seconds is let go, which is what makes
+a handwriting preference changed while nothing is being written take
+effect - and `PurgeAreaCache` throws the lot away when a script has
+changed something the areas were built from.
+
+`GetAreasHit` (0x00036bc8) is the routine the controller hit-tests with.
+It finds the view under the piece that takes what it is
+(`TUnitPublic::FindView` over the recogniser's required mask) and that
+view's area for its input mask.  A view that takes no writing at all
+answers an input mask of zero and gets no area, so the piece is nobody's
+and the controller claims it; a click there also closes any popup that
+was open, which is how tapping outside a menu dismisses it.  The whole
+thing runs under an exception handler, so an `evt.ex` out of a view's
+scripts is reported rather than thrown at the recogniser.
+
+`TRecognitionManager::Init` (0x0019e124) is where all of this is put
+together: the stroke world, the area cache, the controller and the
+arbiter are made, the controller is told to hit-test with `GetAreasHit`
+and to hand an unwanted stroke to `HandleExpiredStroke`, the recognisers
+are installed (the click-event, stroke and click ones at level 1) and
+the domains are numbered.
+
 ## The arbiter (`recognition/Arbiter.h`)
 
 `TArbiter` decides between the units the domains have built over the
@@ -607,10 +664,15 @@ NOT YET: the deciding itself (`DoArbitration`, `GatherUnits`,
 pending.
 
 NOT YET: the arbiter's deciding, the domains above the stroke domain
-(edge-list gestures, shapes, words), the area cache (`InitAreas`,
-`GetAreasHit`, `OtherViewInUse`, `ClicksOnlyArea`), the inker and ink
+(edge-list gestures, shapes, words), the inker and ink
 (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
-journal, the caret popup.  `TRecognitionManager::Init` does not make a
-controller yet, so the stroke world still hands its clicks straight to
-`HandleUnit` (above).
+journal, the caret popup.
+
+DEVIATION: the stroke world still hands every unit it makes straight to
+`HandleUnit` rather than to the controller.  The ROM gives a click to
+`NewClassification` and then, when the area says the type is externally
+arbitrated, to `HandleUnit`; a click *event* - a tap or a double tap -
+goes only to `NewClassification` and reaches its view through the
+arbiter.  Until the arbiter decides, taking that path would mean no tap
+ever arrived, so the host keeps the short cut.

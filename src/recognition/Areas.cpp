@@ -8,7 +8,13 @@
 
 #include "Areas.h"
 #include "Domain.h"
+#include "Controller.h"
+#include "Recognizer.h"
+#include "RecConfig.h"
+#include "UnitPublic.h"
+#include "RootView.h"
 #include "OSErrors.h"
+#include "NewtonExceptions.h"
 
 
 /*------------------------------------------------------------------------------
@@ -33,8 +39,39 @@ TRecArea::Make(ULong viewFlags, ULong flags)
 		area->fDictionaries[i] = nil;
 	area->fViewId = 0;
 	area->fUsers = 0;
-	area->fUnused10 = 0;
-	return area;
+	area->fMaxLevel = 0;
+	area->fTypes = TTypeAssoc::Make();
+	if (area->fTypes != nil)
+	{
+		area->fDomains = TTypeAssoc::Make();
+		if (area->fDomains != nil)
+			return area;
+	}
+	area->Dispose();
+	return nil;
+}
+
+
+// ROM 0x0021c74c AddAType__8TRecAreaFUlPFP6TArray_UlT1P8dInfoRec
+// A unit type the area takes, with the routine its winning units are
+// handed to, when they are arbitrated, and the domain's own record for
+// it.  The domain itself is left nil: which domains that implies is
+// worked out afterwards by TController::BuildGTypes.  An arbitrate time
+// of 1 - decide as soon as the unit is ready - is counted, because the
+// arbiter asks how many of them an area has.
+void
+TRecArea::AddAType(ULong type, AreaHandler handler, ULong arbitrateTime, dInfoRec* info)
+{
+	Assoc assoc;
+	memset(&assoc, 0, sizeof(assoc));
+	assoc.fType = type;
+	assoc.fInfo = info;
+	assoc.fHandler = handler;
+	assoc.fArbitrateTime = arbitrateTime;
+	long before = fTypes->Count();
+	fTypes->AddAssoc(&assoc);
+	if (arbitrateTime == kArbitrateAtOnce && before < fTypes->Count())
+		fArbitrateNow++;
 }
 
 
@@ -348,7 +385,7 @@ TTypeAssoc::AddAssoc(const Assoc* assoc)
 		if (assoc->fType == entry->fType
 			&& (ULong) assoc->fDomain == (ULong) entry->fDomain
 			&& assoc->fInfo == entry->fInfo
-			&& assoc->fUnknown10 == entry->fUnknown10)
+			&& assoc->fHandler == entry->fHandler)
 			return at;
 		at++;
 	}
@@ -407,4 +444,236 @@ PurgeAreaCache(void)
 	}
 	gAreaCache->Clear();
 	gAreaCache->Compact();
+}
+
+
+#pragma mark - the area cache
+
+// ROM 0x00036294 GetElapsedTicks__FUl
+// How long ago something was.  (The ROM tests whether the clock has
+// wrapped and then subtracts either way, which comes to the same thing:
+// unsigned arithmetic wraps with it.)
+static ULong
+GetElapsedTicks(ULong since)
+{
+	return GetTicks() - since;
+}
+
+
+// ROM 0x00034834 InitAreas__Fv
+void
+InitAreas(void)
+{
+	gAreaCache = TDArray::Make(sizeof(AreaCacheEntry), 0);
+}
+
+
+// ROM 0x0003495c SetUpArea__FP8TRecAreaRC6RefVar
+// Every recogniser asked whether it wants anything written here: each
+// one whose enabled services meet the configuration's inputMask adds its
+// unit type to the area (TRecognizer::EnableArea).
+void
+SetUpArea(TRecArea* area, RefArg config)
+{
+	ULong count = gRecognition.fRecognizers->Count();
+	for (ULong i = 0; i < count; i++)
+		gRecognition.fRecognizers->GetRecognizer(i)->EnableArea(area, config);
+}
+
+
+// ROM 0x000349bc ConfigureArea__FP8TRecAreaRC6RefVar
+// And then each one asked to set itself up in the area it has just been
+// enabled in - which for the word recognisers is where their dictionary
+// chains are built.
+void
+ConfigureArea(TRecArea* area, RefArg config)
+{
+	ULong count = gRecognition.fRecognizers->Count();
+	for (ULong i = 0; i < count; i++)
+		gRecognition.fRecognizers->GetRecognizer(i)->ConfigureArea(area, config);
+}
+
+
+// ROM 0x00035484 MakeArea__FP11TControllerP5TViewUlRC6RefVar
+// The area for a view: its recognition configuration built (RecConfig.h),
+// the recognisers enabled in it, the domains that implies worked out, and
+// the recognisers configured.
+TRecArea*
+MakeArea(TController* controller, TView* view, ULong flags, RefArg config)
+{
+	RefVar built(config);
+	TRecArea* area = TRecArea::Make(0, 0);
+	if (area != nil)
+	{
+		built = (view == nil) ? BuildRCProto(nil, built) : BuildRecConfig(view, flags);
+		SetUpArea(area, built);
+		controller->BuildGTypes(area);
+		ConfigureArea(area, built);
+	}
+	return area;
+}
+
+
+// ROM 0x00035434 MakeArea__FP11TControllerP5TViewUl
+TRecArea*
+MakeArea(TController* controller, TView* view, ULong flags)
+{
+	return MakeArea(controller, view, flags, RefVar(NILREF));
+}
+
+
+// ROM 0x00035674 FindMatchingArea__FP5TViewUl
+// The cached area for a view and an input mask, or a new one.  Every look
+// also ages the cache: a line untouched for ten seconds is let go, which
+// is what makes a preference changed while nothing is being written take
+// effect.
+TRecArea*
+FindMatchingArea(TView* view, ULong inputMask)
+{
+	TRecArea* found = nil;
+	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
+	{
+		AreaCacheEntry* entry = (AreaCacheEntry*) gAreaCache->GetEntry(i);
+		if (entry->fInputMask == inputMask && entry->fArea->fViewId == view->fId)
+		{
+			entry->fLastUsed = GetTicks();
+			found = entry->fArea;
+			break;
+		}
+	}
+	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
+	{
+		AreaCacheEntry* entry = (AreaCacheEntry*) gAreaCache->GetEntry(i);
+		if (GetElapsedTicks(entry->fLastUsed) > 600)
+		{
+			entry->fArea->Dispose();
+			((TDArray*) gAreaCache)->Delete(i);
+			i--;
+		}
+	}
+	if (found == nil)
+	{
+		gRecognition.fUnitHandler = HandleUnit;		// (the journal's HandleReplayUnit is NOT YET)
+		found = MakeArea(gController, view, inputMask);
+		if (found == nil)
+			return nil;
+		AreaCacheEntry entry;
+		entry.fArea = found;
+		entry.fInputMask = inputMask;
+		entry.fLastUsed = GetTicks();
+		memcpy(gAreaCache->AddEntry(), &entry, sizeof(entry));
+		gAreaCache->Compact();
+	}
+	found->fViewId = view->fId;
+	return found;
+}
+
+
+// ROM 0x00036aa4 TryGetAreasHit__FP5TUnitP6TArray
+// Which areas a piece lies in: the view under it that takes what it is
+// (TUnitPublic::FindView over the recogniser's required mask), and that
+// view's area for its input mask.  ==> whether the areas were put on the
+// unit here, in which case the controller leaves them alone.
+//
+// A view that takes no writing at all answers an input mask of zero and
+// gets no area, so the piece is nobody's and the controller claims it;
+// a click there also closes any popup that was open, which is how tapping
+// outside a menu dismisses it.
+ULong
+TryGetAreasHit(TUnit* unit, TArray* areas)
+{
+	TUnitPublic pub(unit, nil);
+	ULong made = 0;
+	TView* view = pub.FindView(pub.RequiredMask());
+	ULong inputMask = pub.InputMask();
+	if (inputMask == 0)
+	{
+		if (pub.GetType() == kClickUnit)
+		{
+			if (gRootView->fPopup != nil)
+				gRootView->SetPopup(nil, true);
+			gInhibitPopup = false;
+		}
+		pub.Cleanup();
+	}
+	else if (!((TAreaList*) areas)->FindMatchingView(view->fId))
+	{
+		if (areas->Count() != 0)
+		{
+			TAreaList* list = TAreaList::Make();
+			if (list != nil)
+			{
+				areas = list;
+				made = 1;
+			}
+		}
+		TRecArea* area = FindMatchingArea(view, inputMask);
+		if (area != nil)
+			((TAreaList*) areas)->AddArea(area);
+		if (made != 0)
+		{
+			unit->SetAreas((TAreaList*) areas);
+			areas->Dispose();
+		}
+	}
+	return made;
+}
+
+
+// ROM 0x00036bc8 GetAreasHit__FP5TUnitP6TArray
+// The same under an exception handler: an `evt.ex` out of a view's
+// scripts is reported rather than thrown at the recogniser.
+ULong
+GetAreasHit(TUnit* unit, TArray* areas)
+{
+	ULong made = 0;
+	newton_try
+	{
+		made = TryGetAreasHit(unit, areas);
+	}
+	newton_catch_all
+	{
+		if (Subexception(CurrentException()->name, "evt.ex"))
+			SafeExceptionNotify(CurrentException());
+		else
+			NextHandler(&_info);
+	}
+	end_try;
+	return made;
+}
+
+
+// ROM 0x00036960 OtherViewInUse__FP5TView
+// Whether somebody else's writing is still in hand: an area in the cache
+// that stands for another view and is still being used by a unit.
+Boolean
+OtherViewInUse(TView* view)
+{
+	ULong id = (view != nil) ? view->fId : 0;
+	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
+	{
+		AreaCacheEntry* entry = (AreaCacheEntry*) gAreaCache->GetEntry(i);
+		if (entry->fArea->fViewId != id && entry->fArea->fUsers > 0)
+			return true;
+	}
+	return false;
+}
+
+
+// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit
+// Whether the only thing the unit's area takes is clicks.
+//
+// DEVIATION: the ROM reads the area without looking, because a unit only
+// ever reaches a recogniser through the controller, which gives it one.
+// The host's stroke world still hands its units straight to HandleUnit
+// (StrokeCentral.h), so they have no areas at all until the arbiter can
+// decide; an arealess unit is not a clicks-only one.
+Boolean
+ClicksOnlyArea(TUnit* unit)
+{
+	TRecArea* area = unit->GetArea();
+	if (area == nil)
+		return false;
+	TTypeAssoc* types = area->fTypes;
+	return types->Count() == 1 && types->GetAssoc(0)->fType == kClickUnit;
 }

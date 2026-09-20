@@ -16,6 +16,11 @@
 // takes.
 
 #include "RecConfig.h"
+#include "Areas.h"
+#include "Controller.h"
+#include "Arbiter.h"
+#include "Domain.h"
+#include "Recognizer.h"
 #include "ViewFlags.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -149,6 +154,54 @@ main()
 				 RSSYMtestconfig, testConfig);
 	RefVar tested(BuildRecConfig(nil, vAnythingAllowed));
 	EXPECT(RINT(GetFrameSlotRef(tested, RSSYMinputmask)) == 0x4321);
+
+	// ---- the area a configuration becomes ----
+	// starting the recogniser makes the controller, the arbiter, the area
+	// cache and the three recognisers of level 1
+	gRecognition.Init(1);
+	EXPECT(gController != nil && gArbiter != nil && gAreaCache != nil);
+	EXPECT(gStrokeDomain != nil && gStrokeDomain->fLevel == 2);
+
+	// an area for a configuration whose mask allows clicks, gestures and
+	// raw strokes: each recogniser whose service is in the mask adds its
+	// type, with the arbitrate time it was installed with
+	// (FindMatchingArea is what normally sets the handler the types are
+	// answered through; nothing is being written here, so set it by hand)
+	gRecognition.fUnitHandler = HandleUnit;
+	RefVar areaConfig(AllocateFrame());
+	SetFrameSlot(areaConfig, RSSYMinputmask,
+				 RefVar(MAKEINT(vClickable | vGesturesAllowed | vStrokesAllowed)));
+	TRecArea* area = MakeArea(gController, nil, 0, areaConfig);
+	EXPECT(area != nil && area->fTypes->Count() == 3);
+	Assoc* click = nil;
+	Assoc* stroke = nil;
+	for (long i = 0; i < area->fTypes->Count(); i++)
+	{
+		Assoc* assoc = area->fTypes->GetAssoc(i);
+		if (assoc->fType == kClickUnit)
+			click = assoc;
+		else if (assoc->fType == kStrokeUnit)
+			stroke = assoc;
+	}
+	EXPECT(click != nil && click->fArbitrateTime == kArbitrateExternally && click->fHandler == HandleUnit);
+	EXPECT(stroke != nil && stroke->fArbitrateTime == kArbitrateAtOnce);
+	EXPECT(area->fArbitrateNow == 1);		// only the stroke type is arbitrated at once
+
+	// BuildGTypes turned those types into the domains that make them: the
+	// stroke domain takes clicks, so the area runs it over 'CLIK'
+	EXPECT(area->fDomains->Count() == 1);
+	EXPECT(area->fDomains->GetAssoc(0)->fType == kClickUnit);
+	EXPECT(area->fDomains->GetAssoc(0)->fDomain == gStrokeDomain);
+	EXPECT(area->fMaxLevel == 2);			// the strokes are as far as it goes
+
+	// a mask that allows nothing but clicks needs no domain at all
+	RefVar clickConfig(AllocateFrame());
+	SetFrameSlot(clickConfig, RSSYMinputmask, RefVar(MAKEINT(vClickable)));
+	TRecArea* clicksOnly = MakeArea(gController, nil, 0, clickConfig);
+	EXPECT(clicksOnly != nil && clicksOnly->fTypes->Count() == 1);
+	EXPECT(clicksOnly->fTypes->GetAssoc(0)->fType == kClickUnit);
+	EXPECT(clicksOnly->fDomains->Count() == 0 && clicksOnly->fMaxLevel == 0);
+	EXPECT(clicksOnly->fArbitrateNow == 0);
 
 	printf("test_RecConfig: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;

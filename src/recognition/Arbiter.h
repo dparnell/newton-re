@@ -58,8 +58,8 @@ enum
 {
 	kArbiterPending = 0,		// entries waiting for their units (0x28 bytes each)
 	kArbiterActive,				// the ones this arbitration is deciding between
-	kArbiterWinners,			// what it settled on
-	kArbiterLosers,
+	kArbiterGathered,			// the units it gathered to decide between
+	kArbiterWinners,			// what it settled on, and hands to the area's handler
 	kArbiterUnitsA,				// three working lists of unit pointers
 	kArbiterUnitsB,
 	kArbiterUnitsC,
@@ -85,5 +85,7 @@ public:
 	Boolean				fWaiting;		// +0x21  an entry is waiting on units not yet made
 	ULong				fUnused24;		// +0x24
 };
+
+extern TArbiter*	gArbiter;							// ROM 0x0c101880 gArbiter
 
 #endif	/* __ARBITER_H */

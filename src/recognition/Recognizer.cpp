@@ -16,6 +16,11 @@
 #include "Rects.h"
 #include "NewtonExceptions.h"
 #include "StrokeCentral.h"
+#include "Interpreter.h"
+#include "RSSymbols.h"
+#include "Controller.h"
+#include "Arbiter.h"
+#include "Domain.h"
 
 TRecognitionManager	gRecognition;			// ROM 0x0c106e88 gRecognition
 
@@ -143,12 +148,17 @@ TRecognizer::BuildConfig(RefArg /*config*/, TView* /*view*/, ULong /*flags*/)
 
 
 // ROM 0x00143818 EnableArea__11TRecognizerFP8TRecAreaRC6RefVar
-// NOT YET RECONSTRUCTED: when the config's inputMask has one of the
-// recogniser's enabled services, its type is added to the area
-// (TRecArea::AddAType with the area's hit routine and the arbitrate time).
+// The recogniser asked whether it wants anything written here.  If the
+// configuration's inputMask has any of the services the recogniser
+// provides, its unit type is added to the area, answered through the
+// unit handler and arbitrated at the time the recogniser was installed
+// with.
 long
-TRecognizer::EnableArea(TRecArea* /*area*/, RefArg /*config*/)
+TRecognizer::EnableArea(TRecArea* area, RefArg config)
 {
+	ULong mask = RINT(RefVar(GetVariable(config, RSSYMinputmask, nil, 0)));
+	if ((ServicesEnabled() & mask) != 0)
+		area->AddAType(ID(), gRecognition.fUnitHandler, ArbitrateTime(), nil);
 	return 0;
 }
 
@@ -247,41 +257,6 @@ TRecognizerList::FindRecognizer(ULong id)
 /*------------------------------------------------------------------------------
 	T h e   c l i c k   r e c o g n i s e r s
 ------------------------------------------------------------------------------*/
-
-// ROM 0x00036960 OtherViewInUse__FP5TView
-// Whether any recognition area in the cache belongs to a view other than
-// this one and is still being used - one stroke of somebody else's is
-// still on its way through, and a word must not be put down on top of
-// it.
-//
-// Nothing builds the area cache yet (NOT YET: InitAreas, GetAreasHit),
-// so with an empty one nobody else is ever writing, which is the answer
-// on a machine that is only being typed at.
-Boolean
-OtherViewInUse(TView* view)
-{
-	ULong id = view != nil ? (ULong) view->fId : 0;
-	if (gAreaCache == nil)
-		return false;
-	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
-	{
-		TRecArea* area = *(TRecArea**) gAreaCache->GetEntry(i);
-		if (area->fViewId != id && area->fUsers > 0)
-			return true;
-	}
-	return false;
-}
-
-
-// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit
-// NOT YET RECONSTRUCTED: whether the unit's area accepts only clicks (one
-// type, 'CLIK'); the host's units have no areas.
-Boolean
-ClicksOnlyArea(TUnit* /*unit*/)
-{
-	return false;
-}
-
 
 // ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit
 // NOT YET RECONSTRUCTED: whether the controller has seen no stroke after
@@ -386,16 +361,36 @@ InstallEventRecognizer(TRecognitionManager* manager)
 	T R e c o g n i t i o n M a n a g e r
 ------------------------------------------------------------------------------*/
 
+// ROM 0x00143d64 InstallStrokeRecognizer__FP19TRecognitionManager
+// The stroke recogniser: the stroke domain made, and 'STRK' units
+// answered with aeStroke (viewStrokeScript) as soon as they are ready.
+// Its service is vStrokesAllowed, so a view that asks for raw strokes is
+// the only one it is enabled in.
+void
+InstallStrokeRecognizer(TRecognitionManager* manager)
+{
+	gStrokeDomain = TStrokeDomain::Make(manager->fController);
+	TRecognizer* recognizer = new TRecognizer;
+	recognizer->Init(gStrokeDomain, gStrokeDomain->fType, aeStroke,
+		kRecognizerStrokeBounds | kRecognizerArbitrated, kArbitrateAtOnce);
+	recognizer->InitServices(vStrokesAllowed, vStrokesAllowed);
+	*(TRecognizer**) manager->fRecognizers->AddEntry() = recognizer;
+}
+
+
 // ROM 0x0019e124 Init__19TRecognitionManagerFUc
-// The recognition system started at a level: 0 none, 1 clicks and strokes,
-// 2 and above the shape and word recognisers too.
-// NOT YET RECONSTRUCTED: the stroke world (StrokeCentral), the areas
-// (InitAreas), the controller and its arbiter and hit-test routines, the
-// dictionaries.
+// The recognition system started at a level: 0 none, 1 clicks and
+// strokes, 2 shapes and words as well.  The stroke world, the area
+// cache, the controller and the arbiter are made, the controller is told
+// how to find a unit's areas and what to do with a stroke nobody wanted,
+// and then the recognisers are installed and the domains ordered.
+//
+// NOT YET RECONSTRUCTED: InitializeParagraphCompression and
+// SetContextUnitRoutine(HandleGetContextUnits).
 long
 TRecognitionManager::Init(UChar level)
 {
-	fStrokeWorld = &gStrokeWorld;
+	fStrokeWorld = nil;
 	fController = nil;
 	fArbiter = nil;
 	fAreas = nil;
@@ -406,8 +401,23 @@ TRecognitionManager::Init(UChar level)
 	fRecognizers = TRecognizerList::Make();
 	if (fLevel != 0)
 	{
+		gStrokeWorld.Init();
+		fStrokeWorld = &gStrokeWorld;
+		InitAreas();
+		fAreas = (TRecObject*) gAreaCache;
+		gController = TController::Make();
+		fController = gController;
+		gArbiter = TArbiter::Make(fController);
+		fArbiter = gArbiter;
+		fController->SetHitTestRoutine(GetAreasHit);
+		fController->SetExpireStrokeRoutine(HandleExpiredStroke);
+	}
+	if (fLevel > 1)
 		InitDictionaries();
+	if (fLevel != 0)
+	{
 		InitRecognizers();
+		fController->Initialize();
 	}
 	return 0;
 }
@@ -415,14 +425,15 @@ TRecognitionManager::Init(UChar level)
 
 // ROM 0x0019d438 InitRecognizers__19TRecognitionManagerFv
 // The recognisers installed and the root domain made.
-// NOT YET RECONSTRUCTED: the gesture and stroke recognisers (their
-// domains), the shape and word recognisers of level 2, ReadDomainOptions.
+// NOT YET RECONSTRUCTED: the gesture recogniser and its edge-list domain,
+// the shape and word recognisers of level 2, ReadDomainOptions.
 long
 TRecognitionManager::InitRecognizers(void)
 {
 	if (fLevel != 0)
 	{
 		InstallEventRecognizer(this);
+		InstallStrokeRecognizer(this);
 		InstallClickRecognizer(this);
 		gRootDomain = TDomain::Make(fController, kRootDomainType, (char*) "TDomain");
 	}

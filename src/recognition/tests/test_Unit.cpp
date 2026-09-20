@@ -56,12 +56,15 @@ main()
 	InitObjects();
 	gRecognition.Init(1);
 	EXPECT(gRootDomain != nil && gRootDomain->fType == kRootDomainType && gRootDomain->fDelay == 0 && gRootDomain->fPieceTypes->Count() == 0);
-	EXPECT(gRecognition.fRecognizers->Count() == 2);
+	EXPECT(gRecognition.fRecognizers->Count() == 3);	// the click-event, stroke and click recognisers
 	TRecognizer* clicks = gRecognition.fRecognizers->FindRecognizer(kClickUnit);
 	TRecognizer* events = gRecognition.fRecognizers->FindRecognizer(kClickEventUnit);
 	EXPECT(clicks != nil && clicks->Command() == aeClick && clicks->TestFlags(kRecognizerStrokeBounds) && clicks->ArbitrateTime() == 2 && clicks->ServicesEnabled() == 0x200);
 	EXPECT(events != nil && events->ID() == kClickEventUnit && events->Command() == aeTap && gRecognition.fRecognizers->FindRecognizer(kWordUnit) == nil);
-	EXPECT(gRecognition.fRecognizers->GetRecognizer(1) == clicks);
+	EXPECT(gRecognition.fRecognizers->GetRecognizer(2) == clicks);
+	TRecognizer* strokeRec = gRecognition.fRecognizers->FindRecognizer(kStrokeUnit);
+	EXPECT(strokeRec != nil && strokeRec->Command() == aeStroke && strokeRec->Domain() == gStrokeDomain
+		&& strokeRec->ArbitrateTime() == kArbitrateAtOnce && strokeRec->ServicesEnabled() == vStrokesAllowed);
 
 	// a click unit over a stroke
 	TStroke* stroke = MakeStroke(10, 20, 30, 40, 1000, 1010);

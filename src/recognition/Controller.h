@@ -141,6 +141,7 @@ public:
 	void				CleanupAfterError(void);				// ROM 0x0020be44 CleanupAfterError__11TControllerFv
 
 	void				SetExpireStrokeRoutine(void (*routine)(TUnit*));	// ROM 0x0020bd94 SetExpireStrokeRoutine__11TControllerFPFP5TUnit_v
+	void				BuildGTypes(TRecArea* area);			// ROM 0x0021c7cc BuildGTypes__11TControllerFP8TRecArea - the domains an area must run for the types its recognisers take
 	void				SetHitTestRoutine(ULong (*routine)(TUnit*, TArray*));	// ROM 0x0021c7c4 SetHitTestRoutine__11TControllerFPFP5TUnitP6TArray_Ul
 
 	TUnitList*			fPieces;		// +0x08  what the domains group: the clicks and the units handed on
