@@ -20,6 +20,7 @@
 #include "DrawShape.h"
 #include "Soups.h"
 #include "Text.h"
+#include "Pictures.h"
 #include "Screen.h"
 #include "RectNatives.h"
 #include "View.h"
@@ -40,6 +41,7 @@ RegisterAllNatives(void)
 	// text and the view system
 	RegisterTextNatives();
 	RegisterScreenNatives();
+	RegisterPictureNatives();
 	RegisterRectNatives();
 	RegisterViewNatives();
 	RegisterShapeNatives();

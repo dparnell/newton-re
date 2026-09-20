@@ -69,4 +69,13 @@ void	DrawBitmap(RefArg bitmap, Rect* box, long mode);					// the bitmap copied i
 void	Justify(Rect* r, const Rect& box, ULong justify);					// r placed in the box by the viewJustify bits
 void	DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode);	// a bitmap frame drawn in the box, justified
 
+// Asking a bitmap about a point, from its own origin: whether it is in
+// the picture, or (wantsPixel) the pixel's value, -1 outside the mask.
+Ref		PtInPicture(RefArg x, RefArg y, RefArg picture, Boolean wantsPixel);	// ROM 0x0003f3f0 PtInPicture__FRC6RefVarN21Uc
+
+Ref		FPtInPicture(RefArg rcvr, RefArg x, RefArg y, RefArg picture);		// ROM 0x0003f3c0 FPtInPicture__FRC6RefVarN31
+Ref		FGetBitmapPixel(RefArg rcvr, RefArg x, RefArg y, RefArg picture);	// ROM 0x0003f3d8 FGetBitmapPixel__FRC6RefVarN31
+
+void	RegisterPictureNatives(void);
+
 #endif	/* __PICTURES_H */

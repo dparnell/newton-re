@@ -82,6 +82,8 @@ inline long	PixelMapDepth(const PixelMap* pm)	{ return pm->pixMapFlags & kPixMap
 Ptr			GetPixelMapBits(const PixelMap* pm);
 long		GetPixelMapSize(const PixelMap* pm);
 Boolean		PtInPixelMap(const PixelMap* pm, long x, long y);	// the pixel (from the map's origin) is not white
+long		PtInCPixelMap(const PixelMap* pm, long x, long y);	// that pixel's value, -1 outside the map
+long		PtInMask(const PixelMap* pm, long x, long y);		// 0 where the mask is set, -1 where it is not
 long		GetPixel(const PixelMap* pm, long x, long y);		// host: a pixel's value, coordinates in the map's bounds
 void		SetPixel(PixelMap* pm, long x, long y, long value);
 

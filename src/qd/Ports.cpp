@@ -83,6 +83,32 @@ PtInPixelMap(const PixelMap* pm, long x, long y)
 }
 
 
+// ROM 0x002af1fc PtInCPixelMap__FP8PixelMaplT2
+// The value of the pixel x across and y down from the map's origin, and
+// -1 outside the map.  (The ROM reaches the pixel through tables of
+// shifts and masks by depth; GetPixel below works it out.)
+long
+PtInCPixelMap(const PixelMap* pm, long x, long y)
+{
+	if (x < 0 || x >= pm->bounds.right - pm->bounds.left || y < 0 || y >= pm->bounds.bottom - pm->bounds.top)
+		return -1;
+	return GetPixel(pm, pm->bounds.left + x, pm->bounds.top + y);
+}
+
+
+// ROM 0x002af2c0 PtInMask__FP8PixelMaplT2
+// Zero where the mask is set, -1 where it is clear or outside the map:
+// the answer to look for is the -1, which is how a caller asks whether a
+// point falls outside the picture.
+long
+PtInMask(const PixelMap* pm, long x, long y)
+{
+	if (x < 0 || x >= pm->bounds.right - pm->bounds.left || y < 0 || y >= pm->bounds.bottom - pm->bounds.top)
+		return -1;
+	return GetPixel(pm, pm->bounds.left + x, pm->bounds.top + y) != 0 ? 0 : -1;
+}
+
+
 // Host: a pixel read and written in the map's big-endian rows (the ROM's
 // blitter works on words; Draw.cpp works a pixel at a time).
 long

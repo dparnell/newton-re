@@ -333,7 +333,21 @@ rectangle (a rectangle of no width takes the bits' size); `Justify`
 box of no size takes the picture's; centring never goes above or left of
 the box); `DrawPicture` 0x0018b82c draws a bitmap frame so - mode 8
 (patCopy) meaning the mask in srcBic then the bits in srcOr, a negative
-mode the mask itself.  NOT YET: `'picture` binaries (QuickDraw pictures,
+mode the mask itself. `PtInPicture`
+0x0003f3f0 asks a bitmap about a point, taken from the bitmap's own
+origin, and is two functions in one: `PtInPicture(x, y, bitmap)`
+0x0003f3c0 answers whether the point is in the picture, and
+`GetBitmapPixel(x, y, bitmap)` 0x0003f3d8 answers the pixel under it.
+A bitmap with a mask is the shape the mask draws, so that is what the
+point is tried against (`PtInMask` 0x002af2c0, whose answer is 0 where
+the mask is set and -1 where it is not); one without a mask is its own
+shape, and a pixel that is not white is inside it (`PtInPixelMap`
+0x002af130).  Asked for the pixel, the mask only says whether there is
+one - outside it the answer is -1 - and the value comes from the bits
+(`PtInCPixelMap` 0x002af1fc).  The exception handler around it is the
+ROM's own: a picture that is not a bitmap throws out of `Init`, and a
+Throw is a longjmp, which would otherwise leave the `TPixelObj` holding
+the frame locked.  NOT YET: `'picture` binaries (QuickDraw pictures,
 `DrawPicture` 0x0030e270), shapes (`DrawShape` 0x000e0a68, `ShapeBounds`
 0x000e21cc), the colour tables as gray tables.
 

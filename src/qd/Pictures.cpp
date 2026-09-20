@@ -2,7 +2,8 @@
 	File:		qd/Pictures.cpp
 
 	Contains:	Drawing bitmap frames: TPixelObj, DrawBitmap, Justify,
-				DrawPicture.
+				DrawPicture, and asking a bitmap about a point
+				(PtInPicture).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -14,6 +15,7 @@
 #include "ObjectHeap.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "NativeFunctions.h"
 #include "ByteOrder.h"
 #include <string.h>
 
@@ -222,6 +224,73 @@ DrawBitmap(RefArg bitmap, Rect* box, long mode)
 	GrafPort* port;
 	GetPort(&port);
 	CopyBits(map, &port->portBits, &map->bounds, box, mode, nil);
+}
+
+
+// ROM 0x0003f3f0 PtInPicture__FRC6RefVarN21Uc
+// Whether the point (x, y) - taken from the bitmap's own origin - is in
+// the picture, or, when `wantsPixel`, what the pixel there is.
+//
+// A bitmap with a mask is the shape the mask draws, so that is what the
+// point is tried against; one without is its own shape, and a pixel that
+// is not white is inside it.  Asked for the pixel, the mask only says
+// whether there is one: outside it the answer is -1, and inside it the
+// value comes from the bits.
+//
+// The exception handler is the ROM's: it is what gives the TPixelObj back
+// when Init throws for a picture that is not a bitmap, since a Throw is a
+// longjmp and skips the destructor.
+Ref
+PtInPicture(RefArg x, RefArg y, RefArg picture, Boolean wantsPixel)
+{
+	RefVar result;
+	TPixelObj obj;
+	newton_try
+	{
+		obj.Init(picture, wantsPixel);
+		PixelMap* mask = obj.Mask();
+		PixelMap* pixels = obj.Pixels();
+		long px = RINT(x);
+		long py = RINT(y);
+		if (!wantsPixel)
+			result = MAKEBOOLEAN(PtInPixelMap(mask != nil ? mask : pixels, px, py));
+		else if (mask != nil && PtInMask(mask, px, py) == -1)
+			result = MAKEINT(-1);
+		else
+			result = MAKEINT(PtInCPixelMap(pixels, px, py));
+	}
+	cleanup
+	{
+		obj.~TPixelObj();
+	}
+	end_try;
+	return result;
+}
+
+
+// ROM 0x0003f3c0 FPtInPicture__FRC6RefVarN31
+// PtInPicture(x, y, bitmap)
+Ref
+FPtInPicture(RefArg /*rcvr*/, RefArg x, RefArg y, RefArg picture)
+{
+	return PtInPicture(x, y, picture, false);
+}
+
+
+// ROM 0x0003f3d8 FGetBitmapPixel__FRC6RefVarN31
+// GetBitmapPixel(x, y, bitmap)
+Ref
+FGetBitmapPixel(RefArg /*rcvr*/, RefArg x, RefArg y, RefArg picture)
+{
+	return PtInPicture(x, y, picture, true);
+}
+
+
+void
+RegisterPictureNatives(void)
+{
+	RegisterNativeFunction("FPtInPicture__FRC6RefVarN31", (void*) FPtInPicture, 3);
+	RegisterNativeFunction("FGetBitmapPixel__FRC6RefVarN31", (void*) FGetBitmapPixel, 3);
 }
 
 

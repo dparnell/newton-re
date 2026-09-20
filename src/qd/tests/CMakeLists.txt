@@ -8,6 +8,11 @@ target_link_libraries(test_Draw PRIVATE qd)
 add_test(NAME qd.Draw COMMAND test_Draw)
 set_tests_properties(qd.Draw PROPERTIES TIMEOUT 60)
 
+add_executable(test_Pictures test_Pictures.cpp)
+target_link_libraries(test_Pictures PRIVATE qd)
+add_test(NAME qd.Pictures COMMAND test_Pictures)
+set_tests_properties(qd.Pictures PROPERTIES TIMEOUT 60)
+
 add_executable(test_Shapes test_Shapes.cpp)
 target_link_libraries(test_Shapes PRIVATE qd)
 add_test(NAME qd.Shapes COMMAND test_Shapes)
