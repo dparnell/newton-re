@@ -29,6 +29,7 @@ add_library(views STATIC
     DrawShape.cpp
     Commands.cpp
     Keyboard.cpp
+    KeyboardView.cpp
     Bits.cpp
     Application.cpp
     PickView.cpp

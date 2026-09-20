@@ -3,3 +3,8 @@ target_link_libraries(test_Views PRIVATE views recognition hal_host_tablet)
 target_compile_definitions(test_Views PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME views.Views COMMAND test_Views)
 set_tests_properties(views.Views PROPERTIES TIMEOUT 120)
+
+add_executable(test_KeyboardView test_KeyboardView.cpp)
+target_link_libraries(test_KeyboardView PRIVATE views)
+target_compile_definitions(test_KeyboardView PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME views.KeyboardView COMMAND test_KeyboardView)
