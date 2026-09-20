@@ -9,8 +9,9 @@
 # The tablet buffer (TabletBuffer.h) and the stroke queue (StrokeQueue.h)
 # bring the pen's points in as strokes; the stroke world (StrokeCentral.h)
 # makes clicks of them and the unit handler (HandleUnit.cpp) posts the
-# commands to the views.  The controller, the arbiter and the domains are
-# NOT YET.  Over frames (the units and strokes are handed to NewtonScript
+# commands to the views.  The controller (Controller.h) groups, classifies
+# and arbitrates them through the domains; the arbiter's deciding and the
+# domains above the stroke domain are NOT YET.  Over frames (the units and strokes are handed to NewtonScript
 # as address refs) and qd.
 add_library(recognition STATIC
     RecObject.cpp
@@ -20,6 +21,8 @@ add_library(recognition STATIC
     Areas.cpp
     RecConfig.cpp
     Domain.cpp
+    Controller.cpp
+    Arbiter.cpp
     Recognizer.cpp
     TabletBuffer.cpp
     StrokeQueue.cpp

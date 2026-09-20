@@ -48,6 +48,66 @@ TRecArea::Dispose(void)
 }
 
 
+// ROM 0x0021c288 GetInfoFor__8TRecAreaFUlUc
+// The parameter block the area runs a domain with, found by the domain's
+// *own* type rather than the piece type the entry is for.  With `make`
+// the block is built the first time it is asked for: the domain is asked
+// how big it is (DomainParameter selector 0) and then to fill it in
+// (selector 1).  The iterator is stepped after the handle is made,
+// because making it can move the array's data.
+Handle
+TRecArea::GetInfoFor(ULong type, Boolean make)
+{
+	TArrayIterator iter;
+	Assoc* assoc = (Assoc*) fDomains->GetIterator(&iter);
+	for (ULong i = 0; i < (ULong) iter.fCount; i++, assoc = (Assoc*) iter.GetNext())
+	{
+		if (assoc->fDomain->fType != type)
+			continue;
+		if (assoc->fParams != nil)
+			return assoc->fParams;
+		if (!make)
+			return nil;
+		TDomain* domain = assoc->fDomain;
+		ULong size = 0;
+		domain->DomainParameter(0, (ULong) &size, 0);
+		Handle params = nil;
+		if (size != 0)
+		{
+			params = MakeHandle(size);
+			NameHandle(params, 'info');
+			if (params != nil)
+				domain->DomainParameter(1, 0, (ULong) params);
+			assoc = (Assoc*) iter.GetNext();
+		}
+		assoc->fParams = params;
+		return params;
+	}
+	return nil;
+}
+
+
+// ROM 0x0021c400 ParamsAllSet__8TRecAreaFUl
+// The domain told that its parameters are complete: it is asked to work
+// out what it can from them (InvalParameters) and to set up whatever it
+// keeps per area (ConfigureSubDomain).
+void
+TRecArea::ParamsAllSet(ULong type)
+{
+	TArrayIterator iter;
+	Assoc* assoc = (Assoc*) fDomains->GetIterator(&iter);
+	for (ULong i = 0; i < (ULong) iter.fCount; i++, assoc = (Assoc*) iter.GetNext())
+	{
+		if (assoc->fDomain->fType == type)
+		{
+			assoc->fDomain->InvalParameters();
+			assoc->fDomain->ConfigureSubDomain(this);
+			return;
+		}
+	}
+}
+
+
 // ROM 0x0021c38c IDispose__8TRecAreaFv
 // The associations and chains disposed with it.
 void
@@ -287,7 +347,7 @@ TTypeAssoc::AddAssoc(const Assoc* assoc)
 			break;
 		if (assoc->fType == entry->fType
 			&& (ULong) assoc->fDomain == (ULong) entry->fDomain
-			&& assoc->fUnknown0C == entry->fUnknown0C
+			&& assoc->fInfo == entry->fInfo
 			&& assoc->fUnknown10 == entry->fUnknown10)
 			return at;
 		at++;

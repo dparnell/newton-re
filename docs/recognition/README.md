@@ -528,9 +528,89 @@ NOT YET: the AL and AL16 walkers, AE16, deleting and the iterators
 `ReadRefDictionary`, which builds a dictionary out of a binary rather
 than making an empty one.
 
-NOT YET: TController and the arbiter, the domains (stroke, edge-listNOT YET: TController and the arbiter, the domains (stroke, edge-list
-gestures, shapes, words), the area cache (`InitAreas`,
-`GetAreasHit`, `BuildRecConfig`, `OtherViewInUse`, `ClicksOnlyArea`), the
-inker and ink (`StrokeUpdate`, `TStroke::Draw`, the expired strokes'
-grouping and compression, the stroke bundles), the word list and
-dictionaries, the tablet driver, the journal, the caret popup.
+## The controller (`recognition/Controller.h`)
+
+Between the stroke world and the recognisers stands `TController`
+(`gController`, ROM 0x00209e84-0x0020c7a0).  It holds two lists and one
+queue and works them in four passes.
+
+A **piece** is something the domains may build on; a **unit** is what a
+domain has built.  The stroke world offers each click it makes to
+`NewClassification`, which puts it on the *piece* list, asks the
+hit-test routine which areas it lies in, and - out of the area's
+`fDomains` associations - queues one **group entry** per domain that
+takes pieces of that type.  Out of the area's `fTypes` associations it
+also enters the piece with the arbiter, unless the type's arbitrate time
+is 2: that is `IsExternallyArbitrated`, the mark that says "handle this
+at once", and it is what lets a click reach its view while the pen is
+still down.
+
+- **Group** (`DoGroup`) offers every queued entry to its domain.
+  `TStrokeDomain::Group` keeps the click's box and duration up to date
+  while the pen writes and answers 0, so the entry stays queued and is
+  offered again next time; once the stroke is finished it makes a
+  `'STRK'` unit with the click as its only sub, gives it to `NewGroup`,
+  and answers 1 so the entry is dropped.  An entry whose piece has gone
+  (`CleanGroupQ` empties it rather than removing it) or has been claimed
+  is dropped too.
+- **Classify** (`DoClassify`) hands every unit to the domain that made
+  it.  A domain's `Classify` is `NewClassification` again, so the unit
+  becomes a piece in its turn and the tree grows: a stroke is a word's
+  piece and a word a sentence's.  A unit that is still delayed is left
+  where it is and the pass asked for again at the time its delay runs
+  out.  Units that have been handed on are taken off the unit list at
+  the end of the pass.
+- **Arbitrate** (`DoArbitration`) is the arbiter's (below).
+- **Clean up** (`CleanUp`) compacts the three.
+
+`Idle` runs whichever passes are due and answers how many milliseconds
+to wait before the next (`NextIdleTime` asks without running anything;
+`TriggerRecognition` makes all four due at once).  With no pass due and
+a click still being written the answer is "nothing to wait for" - the
+pen itself will wake the recogniser.  With no pass due, no click and
+pieces still on the list, something has gone wrong: the controller
+signals a memory error, which throws everything away
+(`CleanupAfterError`) and puts the click in hand back as a new piece.
+
+`NoEventsWithinDelay` is what decides whether a delayed unit's time is
+really up.  Anything written in the same view inside the delay is an
+event and the unit waits; a click that is still being written is not an
+event by itself, but once its stroke has more than fifty points the
+domain is asked (`PreGroup`) whether it would take it, and if it would,
+the unit waits for it properly.
+
+`Initialize` numbers the domains by how far their type is from the
+strokes - the stroke domain is 2, what takes strokes is 3, and so on -
+by walking outwards over the piece types.
+
+NOT YET: `RecognizeInArea` (re-recognising the strokes of an area),
+`UpdateInk`, `BuildGTypes`, and the debugging state
+(`SaveRecognitionState`, `RestoreRecognitionState`).
+
+## The arbiter (`recognition/Arbiter.h`)
+
+`TArbiter` decides between the units the domains have built over the
+same strokes.  Its seven lists are two of pending and active entries,
+two of winners and losers, and three working lists of unit pointers; an
+entry carries the unit, the association its area gave it, and the time
+it is arbitrated at.  `CleanUp` is what clears up afterwards: the subs
+of a claimed unit that was not invalidated are offered to the domains
+again - the strokes of a word that lost may still make something else -
+and the claimed units and pieces are taken out of the controller's
+lists, a claimed stroke piece marked invalid going to the expire routine
+on the way, which is what leaves it on the screen as ink.  A click the
+pen is still writing is never touched.
+
+NOT YET: the deciding itself (`DoArbitration`, `GatherUnits`,
+`ArbitrateUnits`, `ArbitrateGraphicsWords`, `WaitingForOtherUnits`,
+`AllUnitsPresent`), so nothing is claimed yet and the entries stay
+pending.
+
+NOT YET: the arbiter's deciding, the domains above the stroke domain
+(edge-list gestures, shapes, words), the area cache (`InitAreas`,
+`GetAreasHit`, `OtherViewInUse`, `ClicksOnlyArea`), the inker and ink
+(`StrokeUpdate`, the expired strokes' grouping and compression, the
+stroke bundles), the word list and dictionaries, the tablet driver, the
+journal, the caret popup.  `TRecognitionManager::Init` does not make a
+controller yet, so the stroke world still hands its clicks straight to
+`HandleUnit` (above).

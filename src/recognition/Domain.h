@@ -59,9 +59,25 @@ public:
 	ULong				fType;			// +0x10
 	char*				fName;			// +0x14
 	ULong				fDelay;			// +0x18  ticks its units wait before arbitration
-	ULong				fUnused1c;		// +0x1c
+	long				fLevel;			// +0x1c  how far its type is from the strokes (TController::Initialize)
 	Handle				fParameters;	// +0x20  -1 when invalid
 };
+
+// The stroke domain ('STRK'), the first domain above the stroke world:
+// it takes the clicks the pen makes and, as each one's stroke finishes,
+// turns it into a stroke unit - the piece everything else is built from.
+class TStrokeDomain : public TDomain
+{
+public:
+	static TStrokeDomain*	Make(TController* controller);		// ROM 0x00220e94 Make__13TStrokeDomainSFP11TController
+	void				IStrokeDomain(TController* controller);	// ROM 0x00220edc IStrokeDomain__13TStrokeDomainFP11TController
+
+	virtual void		Dispose(void);							// ROM 0x0022105c Dispose__13TStrokeDomainFv
+	virtual void		Classify(TUnit* unit);					// ROM 0x00221ec0 Classify__13TStrokeDomainFP5TUnit - the stroke unit offered as a piece
+	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x00221dc0 Group__13TStrokeDomainFP5TUnitP8dInfoRec - a finished click made into a stroke unit
+};
+
+extern TStrokeDomain*	gStrokeDomain;						// ROM 0x0c101680 gStrokeDomain
 
 extern TDomain*	gRootDomain;								// ROM 0x0c101884 gRootDomain - the 'ROOT' domain the clicks are made in
 

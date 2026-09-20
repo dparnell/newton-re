@@ -23,7 +23,7 @@ MakeAssoc(ULong type, long domain, ULong a, ULong b)
 	memset(&assoc, 0, sizeof(assoc));
 	assoc.fType = type;
 	assoc.fDomain = (TDomain*) domain;		// only ever compared and copied here
-	assoc.fUnknown0C = a;
+	assoc.fInfo = (void*) a;
 	assoc.fUnknown10 = b;
 	assoc.fSharedParams = true;				// nothing of ours to free
 	return assoc;

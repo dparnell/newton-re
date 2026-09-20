@@ -13,9 +13,8 @@
 				TRecArea is 0x30 bytes.
 
 				NOT YET RECONSTRUCTED: the area cache (gAreaCache: the areas
-				built for the views hit,
-				InitAreas/GetAreasHit), GetInfoFor and ParamsAllSet (the
-				domains' parameter blocks), the dictionary chains.
+				built for the views hit, InitAreas/GetAreasHit) and the
+				dictionary chains.
 
 	Reconstructed from the MP2x00 US ROM (0x0021c1ac-0x0021c7c4); each
 	function cites its origin.
@@ -30,18 +29,26 @@ class TDictChain;
 class TDomain;
 
 
-// One entry of a TTypeAssoc: a unit type, the domain that handles it, and
-// the parameter block it is handled with.  The last three words are the
-// domain's to read; what they mean is still to be found.
+// One entry of a TTypeAssoc: a unit type, the domain that handles it, the
+// parameter block it is handled with, the record the domain keeps about
+// it, and when its units are arbitrated.
 struct Assoc
 {
 	ULong		fType;			// +0x00  the unit type this entry is for
 	TDomain*	fDomain;		// +0x04  the recogniser that handles it
 	Handle		fParams;		// +0x08  its parameter block
-	ULong		fUnknown0C;		// +0x0c  part of what makes an entry unique
+	void*		fInfo;			// +0x0c  the domain's own record (a dInfoRec); part of what makes an entry unique
 	ULong		fUnknown10;		// +0x10  and so is this
-	ULong		fUnknown14;		// +0x14
+	ULong		fArbitrateTime;	// +0x14  how its units are arbitrated (kArbitrateExternally: not by the arbiter at all)
 	Boolean		fSharedParams;	// +0x18  the parameters are someone else's: not freed with the entry
+};
+
+// The arbitrate times an association can carry.  Anything else is a
+// number of ticks the arbiter waits.
+enum
+{
+	kArbitrateAtOnce		= 1,	// as soon as the unit is ready (TRecArea::fArbitrateNow counts these)
+	kArbitrateExternally	= 2		// not through the arbiter: handled the moment it is made
 };
 
 
@@ -73,6 +80,9 @@ public:
 	virtual void		Dump(TMsg* msg);						// ROM 0x0021c7c0 Dump__8TRecAreaFP4TMsg (nothing)
 	virtual long		SizeInBytes(void);						// ROM 0x0021c704 SizeInBytes__8TRecAreaFv
 	virtual void		IDispose(void);							// ROM 0x0021c38c IDispose__8TRecAreaFv
+
+	Handle				GetInfoFor(ULong type, Boolean make);	// ROM 0x0021c288 GetInfoFor__8TRecAreaFUlUc - the parameter block the area runs a domain with
+	void				ParamsAllSet(ULong type);				// ROM 0x0021c400 ParamsAllSet__8TRecAreaFUl - the domain told its parameters are complete
 
 	void				Clone(void);							// ROM 0x0021c67c Clone__8TRecAreaFv
 	Boolean				Release(void);							// ROM 0x0021c6e8 Release__8TRecAreaFv - ==> whether no user is left

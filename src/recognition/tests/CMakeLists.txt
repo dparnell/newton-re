@@ -24,3 +24,7 @@ add_executable(test_RecConfig test_RecConfig.cpp)
 target_link_libraries(test_RecConfig PRIVATE recognition)
 target_compile_definitions(test_RecConfig PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME recognition.RecConfig COMMAND test_RecConfig)
+
+add_executable(test_Controller test_Controller.cpp)
+target_link_libraries(test_Controller PRIVATE recognition)
+add_test(NAME recognition.Controller COMMAND test_Controller)

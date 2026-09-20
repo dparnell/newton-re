@@ -8,6 +8,8 @@
 
 #include "Domain.h"
 #include "Areas.h"
+#include "Controller.h"
+#include "Stroke.h"
 
 TDomain*	gRootDomain = nil;			// ROM 0x0c101884 gRootDomain
 
@@ -34,7 +36,7 @@ TDomain::IDomain(TController* controller, ULong type, char* name)
 	fType = type;
 	fName = name;
 	fDelay = 0;
-	fUnused1c = 0;
+	fLevel = 0;
 	fPieceTypes = TTypeList::Make();
 	fParameters = nil;
 	NamePtr((char*) this, 0xd4446f6d);		// the block named 'Dom' with the top bit set
@@ -177,4 +179,88 @@ TDomain::AddPieceType(ULong type)
 {
 	fPieceTypes->AddUnique(type);
 	fPieceTypes->Compact();
+}
+
+
+#pragma mark - TStrokeDomain
+
+TStrokeDomain*	gStrokeDomain = nil;		// ROM 0x0c101680 gStrokeDomain
+
+
+// ROM 0x00220e94 Make__13TStrokeDomainSFP11TController
+TStrokeDomain*
+TStrokeDomain::Make(TController* controller)
+{
+	TStrokeDomain* domain = new TStrokeDomain;
+	if (domain != nil)
+		domain->IStrokeDomain(controller);
+	return domain;
+}
+
+
+// ROM 0x00220edc IStrokeDomain__13TStrokeDomainFP11TController
+// 'STRK', made out of 'CLIK' pieces, and registered with the controller
+// (the ROM puts it on the controller's list here rather than through
+// RegisterDomain, having just set fController itself).
+void
+TStrokeDomain::IStrokeDomain(TController* controller)
+{
+	IDomain(controller, kStrokeUnit, (char*) "Stroke");
+	AddPieceType(kClickUnit);
+	fController = controller;
+	*(TDomain**) controller->fDomains->AddEntry() = this;
+	controller->fDomains->Compact();
+}
+
+
+// ROM 0x0022105c Dispose__13TStrokeDomainFv
+void
+TStrokeDomain::Dispose(void)
+{
+	fPieceTypes->Dispose();
+	delete this;
+}
+
+
+// ROM 0x00221dc0 Group__13TStrokeDomainFP5TUnitP8dInfoRec
+// A click offered to the stroke domain.  Its box and duration are brought
+// up to the stroke's as it is being written, and answered 0 - the entry
+// stays on the group queue and is offered again next time round.  Once
+// the stroke is finished the click's duration is taken from the pen-up
+// time, the inker's hold on the stroke is let go, and a 'STRK' unit is
+// made with the click as its only sub: that is the piece the rest of the
+// recogniser works on.
+long
+TStrokeDomain::Group(TUnit* unit, dInfoRec* /*info*/)
+{
+	TStroke* stroke = ((TClickUnit*) unit)->fStroke;
+	unit->SetBBox(&stroke->fBBox);
+	unit->fDuration = GetTicks() - unit->fStartTime;
+	if (!stroke->Done())
+		return 0;
+
+	unit->fDuration = stroke->fUpTime - unit->fStartTime;
+	stroke->UnsetFlags(kBufferedStroke);
+	TAreaList* areas = unit->GetAreas();
+	TStrokeUnit* strokeUnit = TStrokeUnit::Make(this, 2, stroke, areas);
+	if (areas != nil)
+		areas->Dispose();
+	if (strokeUnit == nil)
+		return 0;
+
+	stroke->Clone();				// the stroke unit holds it too
+	strokeUnit->AddSub(unit);
+	strokeUnit->EndSubs();
+	fController->NewGroup(strokeUnit);
+	UnbufferStroke(stroke);
+	return 1;
+}
+
+
+// ROM 0x00221ec0 Classify__13TStrokeDomainFP5TUnit
+// A stroke unit is a piece for everything above it.
+void
+TStrokeDomain::Classify(TUnit* unit)
+{
+	fController->NewClassification(unit);
 }
