@@ -1049,6 +1049,32 @@ TestShapes()
 	Eval("ctxS:Close()");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "shapes closed"));
+	// ScaleShape(shape, src, dst): the shape stretched in place, as though
+	// src had been pulled into dst and the shape had come with it
+	EXPECT(RINT(Eval("local r := MakeRect(0, 0, 10, 10); "
+					 "ScaleShape(r, {left: 0, top: 0, right: 10, bottom: 10}, {left: 0, top: 0, right: 20, bottom: 40}); "
+					 "ShapeBounds(r).bottom")) == 40);
+	// a nil source is the shape's own bounds, so it is simply fitted
+	EXPECT(RINT(Eval("local o := MakeOval(0, 0, 8, 8); "
+					 "ScaleShape(o, nil, {left: 10, top: 10, right: 30, bottom: 50}); ShapeBounds(o).left")) == 10);
+	EXPECT(RINT(Eval("local o := MakeOval(0, 0, 8, 8); "
+					 "ScaleShape(o, nil, {left: 10, top: 10, right: 30, bottom: 50}); ShapeBounds(o).bottom")) == 50);
+	// a line moves by its two ends
+	EXPECT(RINT(Eval("local l := MakeLine(0, 0, 10, 10); "
+					 "ScaleShape(l, nil, {left: 0, top: 0, right: 20, bottom: 20}); ShapeBounds(l).right")) == 20);
+	// a polygon through its own points
+	EXPECT(RINT(Eval("local p := MakePolygon([0, 0, 10, 0, 10, 10]); "
+					 "ScaleShape(p, nil, {left: 0, top: 0, right: 30, bottom: 30}); ShapeBounds(p).right")) >= 30);
+	// a region: its data is mapped and written back at the size the
+	// mapped region came out
+	EXPECT(RINT(Eval("local g := MakeRegion([MakeRect(0, 0, 10, 10), MakeRect(20, 20, 30, 30)]); "
+					 "ScaleShape(g, nil, {left: 0, top: 0, right: 60, bottom: 60}); ShapeBounds(g).right")) == 60);
+	// a list is mapped member by member out of the list's own bounds, so
+	// the members keep their places in it
+	EXPECT(RINT(Eval("local a := [MakeRect(0, 0, 5, 5), MakeRect(5, 5, 10, 10)]; "
+					 "ScaleShape(a, nil, {left: 0, top: 0, right: 20, bottom: 20}); ShapeBounds(a[0]).right")) == 10);
+	EXPECT(RINT(Eval("local a := [MakeRect(0, 0, 5, 5), MakeRect(5, 5, 10, 10)]; "
+					 "ScaleShape(a, nil, {left: 0, top: 0, right: 20, bottom: 20}); ShapeBounds(a[1]).left")) == 10);
 }
 
 

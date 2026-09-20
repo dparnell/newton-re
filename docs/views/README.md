@@ -337,8 +337,20 @@ diameter, or the angles), or a frame: `'polygon` (`MakePolygon`
 `'textBox`), `'bitmap`, `'picture`, `'ink`.  `ShapeBounds` 0x000e21cc
 gives a shape's or a list's bounds (a line's ends put in order and at
 least a pixel wide, a polygon's box a pixel wider), `OffsetShape`
-0x000ded00 moves one in place, `IsPrimShape` 0x000deac8 tells a single
-shape from a list.
+0x000ded00 moves one in place, `ScaleShape` 0x000ddd84 stretches one in
+place - as though the rectangle `src` had been pulled into `dst` and the
+shape had come with it, a nil `src` meaning the shape's own bounds, so
+that the shape is simply fitted into `dst` - and `IsPrimShape`
+0x000deac8 tells a single shape from a list.
+
+Each kind is scaled the way QuickDraw maps it: a region and a polygon
+through their own data (`MapRgn`, `MapPoly`), a line through its two
+points, and everything else through the rectangle it keeps - `bounds` for
+a bitmap, picture, text or ink, and the binary itself otherwise. A list
+is scaled member by member out of the list's own bounds, so the members
+keep their places within it, and the style frames in it are left alone. A
+mapped region is not the size it was, so its data is resized to the
+region that came back.
 
 `DrawShape` 0x000e0a68 (`view:DrawShape(shape, style)` - `FDrawShape`
 0x000ddae4 is a slot of the ROM's root template, drawing from the

@@ -1186,6 +1186,107 @@ FShapeBounds(RefArg /*rcvr*/, RefArg shape)
 }
 
 
+// ROM 0x000ddd84 FScaleShape
+// ScaleShape(shape, src, dst): the shape stretched in place, as though
+// the rectangle `src` had been pulled into `dst` and the shape had come
+// with it.  A nil `src` means the shape's own bounds, so the shape is
+// simply fitted into `dst`.
+//
+// Each kind of shape is mapped the way QuickDraw maps it: a region and a
+// polygon through their own data (MapRgn, MapPoly), a line through its
+// two points, and everything else through the rectangle it keeps - its
+// `bounds` for a bitmap, picture, text or ink, and the binary itself for
+// the rest.  A list of shapes is mapped member by member from the list's
+// own bounds, the style frames in it left alone.
+//
+// A mapped region is not the size it was, so its data is grown or shrunk
+// to the region that came back.
+static Ref
+FScaleShape(RefArg rcvr, RefArg shape, RefArg src, RefArg dst)
+{
+	RefVar cls(ClassOf(shape));
+	Boolean ownBounds = ISNIL(src);				// (nil: the shape's own bounds)
+	Rect from;
+	Rect to;
+	if ((!ownBounds && !FromObject(src, from)) || !FromObject(dst, to))
+		return shape;
+
+	if (IsArray(shape))
+	{
+		// a list: the members are mapped out of the list's own bounds, so
+		// that they keep their places within it
+		RefVar listSrc(src);
+		if (ownBounds)
+		{
+			Rect bounds;
+			ShapeBounds(shape, &bounds);
+			listSrc = ToObject(bounds);
+		}
+		for (TObjectIterator iter(shape, false); !iter.Done(); iter.Next())
+		{
+			RefVar member(iter.Value());
+			if (NOTNIL(member) && !EQRef(ClassOf(member), RSSYMframe))
+				FScaleShape(rcvr, member, listSrc, dst);
+		}
+		return shape;
+	}
+
+	if (EQRef(cls, RSSYMregion))
+	{
+		RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
+		TRegionVar region;
+		LockRef(data);
+		Handle fake = NewFakeHandle(BinaryData(data), Length(data));
+		CopyRgn((RgnHandle) fake, region);
+		DisposHandle(fake);
+		UnlockRef(data);
+		if (ownBounds)
+			from = (*(RgnHandle) region)->rgnBBox;
+		MapRgn(region, &from, &to);
+		Size size = GetHandleSize((Handle) (RgnHandle) region);
+		SetLength(data, size);
+		BlockMove(*(RgnHandle) region, BinaryData(data), size);
+		return shape;
+	}
+
+	if (EQRef(cls, RSSYMpolygon))
+	{
+		RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
+		LockRef(data);
+		PolyHandle poly = (PolyHandle) NewFakeHandle(BinaryData(data), Length(data));
+		if (ownBounds)
+			from = (*poly)->polyBBox;
+		MapPoly(poly, &from, &to);
+		DisposHandle((Handle) poly);
+		UnlockRef(data);
+		return shape;
+	}
+
+	if (EQRef(cls, RSSYMline))
+	{
+		if (ownBounds)
+			ShapeBounds(shape, &from);
+		LockRef(shape);
+		Point* points = (Point*) BinaryData(shape);
+		MapPt(&points[0], &from, &to);
+		MapPt(&points[1], &from, &to);
+		UnlockRef(shape);
+		return shape;
+	}
+
+	RefVar binary(shape);
+	if (EQRef(cls, RSSYMbitmap) || EQRef(cls, RSSYMpicture) || EQRef(cls, RSSYMtext) || EQRef(cls, RSSYMink))
+		binary = GetProtoVariable(shape, RSSYMbounds, nil);
+	LockRef(binary);
+	Rect* rect = (Rect*) BinaryData(binary);
+	if (ownBounds)
+		from = *rect;
+	MapRect(rect, &from, &to);
+	UnlockRef(binary);
+	return shape;
+}
+
+
 // ROM 0x000dda60 FOffsetShape
 // The shape moved in place: a list's members each (styles left alone); a
 // region's or polygon's data offset; a bitmap's, picture's, text's or
@@ -1354,6 +1455,7 @@ RegisterShapeNatives(void)
 	RegisterNativeFunction("FMakeTextBox", (void*) FMakeTextBox, 5);
 	RegisterNativeFunction("FShapeBounds", (void*) FShapeBounds, 1);
 	RegisterNativeFunction("FOffsetShape", (void*) FOffsetShape, 3);
+	RegisterNativeFunction("FScaleShape", (void*) FScaleShape, 3);
 	RegisterNativeFunction("FMakeShape", (void*) FMakeShape, 1);
 	RegisterNativeFunction("FIsPrimShape", (void*) FIsPrimShape, 1);
 }

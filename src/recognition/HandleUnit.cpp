@@ -48,6 +48,8 @@ SafeExceptionNotify(Exception* exception)
 			fprintf(stderr, "\n");
 		}
 	}
+	else if (Subexception(exception->name, (ExceptionName) "evt.ex.msg") && exception->data != nil)
+		fprintf(stderr, ": %s\n", (const char*) exception->data);	// ThrowMsg carries the words
 	else
 		fprintf(stderr, " (%ld)\n", (long) (Long) exception->data);
 	fflush(stderr);
