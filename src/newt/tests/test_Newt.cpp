@@ -97,6 +97,21 @@ static const char* kSetupSource =
 	// asleep and awake again
 	"  powerOff: func(data) "
 	"    if PowerOff(nil) then 1 else 0, "
+	// the ROM's packages are installed once, not at every boot: the
+	// Packages soup is marked so the Extras drawer does not make another
+	// icon for each form part next time, and no two entries name the same
+	// application
+	"  extras: func(data) begin "
+	"    local soup := GetStores()[0]:GetSoup(\"Packages\"); "
+	"    if not soup then return 0; "
+	"    if not soup:GetInfo('extrasState) then return 0; "
+	"    local seen := {}; local twice := nil; "
+	"    local c := Query(soup, {type: 'index}); local e := c:Entry(); "
+	"    while e do begin "
+	"      if e.app then begin local k := EnsureInternal(e.app); "
+	"        if seen.(k) then twice := true else seen.(k) := true end; "
+	"      e := c:Next() end; "
+	"    if twice then 0 else 1 end, "
 	"  countClicks: func(data) clicks, "
 	"  countTaps: func(data) taps, "
 	"  textLength: func(data) StrLen(para.text) "
@@ -112,6 +127,7 @@ static long gScriptErr = -1;
 static long gTextLength = 0;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
+static Boolean gExtrasOk = false;
 static Boolean gMinimumBatteryOk = false;
 static Boolean gPowerOffOk = false;
 static Boolean gWorldDataOk = false;
@@ -196,6 +212,9 @@ Scenario(void)
 		TRunScriptEvent battery("testApp", "battery");
 		newtPort.SendRPC(&replySize, &battery, sizeof(battery), &battery, sizeof(battery));
 		gBatteryOk = battery.fError == 0 && battery.fResult == 1;
+		TRunScriptEvent extras("testApp", "extras");
+		newtPort.SendRPC(&replySize, &extras, sizeof(extras), &extras, sizeof(extras));
+		gExtrasOk = extras.fError == 0 && extras.fResult == 1;
 		TRunScriptEvent world("testApp", "worldData");
 		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
 		gWorldDataOk = world.fError == 0 && world.fResult == 1;
@@ -260,6 +279,7 @@ int main()
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);
 	EXPECT(gBatteryOk);
+	EXPECT(gExtrasOk);		// one Extras entry for each application, and marked so it stays that way
 	EXPECT(gMinimumBatteryOk);
 	EXPECT(gPowerOffOk);
 	EXPECT(gWorldDataOk);

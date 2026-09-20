@@ -144,3 +144,33 @@ for the help book, 2967 for ListView.
 
 `TPackageIterator::PackageFormatVersion` answers which it is, and
 `ImportFramesPart` takes the alignment to walk with.
+
+## Installed once, not at every boot
+
+The machine installs the packages built into its ROM **once** - at a hard
+reset - and the package manager keeps them installed from then on,
+re-activating their parts at each boot rather than installing them again.
+The host has no package manager (`packages/ROMPackages.h`), so it walks
+the extension's package lists and installs the parts itself every time it
+starts.
+
+That difference shows in the Extras drawer. The ROM's `InstallPart`
+finishes a HighROM package by sending the drawer
+`ExtrasDrawer:HandleNewHighROMPart`, which makes the drawer's entry for a
+form part - a `ROMFormEntry` row in the `Packages` soup - whenever that
+soup has no `extrasState` in its info. Nothing in the ROM ever writes
+one, because on the machine the question never comes up twice. On the
+host it came up at every boot, and the Dock, Formulas and Setup icons
+multiplied: one more of each, every time the machine started.
+
+`DEVIATION`: `LoadHighROMFramesPackages` writes `extrasState` into the
+soup's info once the parts of a boot are in, which is the ROM's own
+guard. The entries are made the first time a store sees these packages
+and left alone afterwards - what the machine's registry would have done.
+
+A store written before that fix has the extra icons in it;
+`src/host/demo/repair-extras.ns` takes the soup back to one entry for
+each application:
+
+    build/host/host/newton --rom build/MP2x00US/rom.bin --headless 5 \
+        --store build/newton.store --script src/host/demo/repair-extras.ns

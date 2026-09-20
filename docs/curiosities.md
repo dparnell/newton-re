@@ -460,3 +460,24 @@ here as a full disk.
 Two hours of the chase were spent on the memory: the heaps, the page
 manager, `TotalSystemFree`. The message was never about memory at all.
 
+
+---
+
+## The drawer that filled up
+
+The Extras drawer's icon for a package's form part is a soup entry, and
+the ROM makes it in `ExtrasDrawer:HandleNewHighROMPart`:
+
+    if info.partType = 'form and not soup:GetInfo('extrasState) then
+        ... make the entry ...
+
+`extrasState` is read there and **written nowhere in the ROM** - the
+symbol appears in that function's literals and in no other code. The
+guard is dead on a real machine, because the packages built into the ROM
+are installed once at a hard reset and never installed again; the
+question the guard asks can only arise on something that installs them
+twice.
+
+A host that installs them at every boot is exactly that something, and
+the answer was a drawer with seven Docks in it. The fix is to write the
+slot the ROM only ever reads.

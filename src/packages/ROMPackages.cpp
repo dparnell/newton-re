@@ -326,7 +326,7 @@ InstallPackage(ULong rexId, const unsigned char* rom, ULong packageAddress, ULon
 			Say(packageId, i, "its bytes are not a run of objects");
 			continue;
 		}
-		TranslateExports(rexId, rom, packageAddress + offset, part.size, area);
+		TranslateExports(rexId, rom, packageAddress + offset, part.size, area);
 		RefVar frame(FramePartToplevelFrame(area->fArea));
 		if (ISNIL(frame))
 		{
@@ -392,6 +392,34 @@ InstalledPackageAt(long index, ULong* packageId)
 }
 
 
+// DEVIATION: the machine installs the packages built into its ROM once -
+// at a hard reset - and the package manager keeps them installed from
+// then on, re-activating their parts at every boot rather than installing
+// them again.  The host has no package manager (see
+// LoadHighROMFramesPackages below) and installs them from the ROM every
+// time it starts, which is how an application ends up with another icon
+// in the Extras drawer at each boot: the ROM's own
+// ExtrasDrawer:HandleNewHighROMPart makes the drawer's entry for a form
+// part whenever the Packages soup has no `extrasState` in its info, and
+// nothing in the ROM ever writes one - on the machine it never has to,
+// because the part is only ever installed once.
+//
+// So the host writes it, once the parts of the first boot are in: the
+// entries are made the first time a store sees these packages and left
+// alone afterwards, which is what the machine's registry would have done.
+static void
+MarkExtrasEntriesMade(void)
+{
+	RefVar stores(gStores);
+	if (ISNIL(stores) || Length(stores) == 0)
+		return;
+	RefVar store(GetArraySlotRef(stores, 0));
+	RefVar soup(StoreGetSoup(store, RefVar(MakeString("Packages"))));
+	if (NOTNIL(soup))
+		SoupSetInfo(soup, RSSYMextrasstate, RefVar(TRUEREF));
+}
+
+
 // ROM 0x000e7040 LoadHighROMFramesPackages__Fv
 // The ROM calls LoadHighROMPackages, which walks the package list of each
 // of the four extensions and sends the package manager a
@@ -423,7 +451,7 @@ LoadHighROMFramesPackages(void)
 		ULong end = at + listSize;
 		if (end > imageSize)
 			end = imageSize;
-		MakeExportTable(rexId);
+		MakeExportTable(rexId);
 		ULong packageId = 0;
 		while (at + sizeof(PackageDirectory) <= end)
 		{
@@ -439,6 +467,7 @@ LoadHighROMFramesPackages(void)
 			at = (at + size + 3) & ~3u;
 		}
 	}
+	MarkExtrasEntriesMade();
 }
 
 // ROM 0x001fb630 IteratorToPackageFrame__FP11TPMIterator

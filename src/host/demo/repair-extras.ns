@@ -1,0 +1,48 @@
+// Repair a store written before the host stopped installing the ROM's own
+// packages over and over (docs/packages/README.md, "Installed once, not at
+// every boot").
+//
+// The machine installs the packages built into its ROM once and its
+// package manager keeps them installed; the host, which has no package
+// manager, installed them again at every boot, and the ROM's Extras
+// drawer made a new icon for each form part every time.  A store that saw
+// a few of those boots has the Dock, Formulas and Setup icons several
+// times over.
+//
+// This takes the Packages soup back to one entry for each application and
+// marks the soup as the drawer having its entries, which is what stops
+// them being made again.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 5 \
+//       --store build/newton.store --script src/host/demo/repair-extras.ns
+//
+// Nothing else in the store is touched, and an application's own data is
+// in its own soup, not this one.
+
+begin
+	local soup := GetStores()[0]:GetSoup("Packages");
+	if not soup then
+		begin
+			Print("repair-extras: there is no Packages soup - nothing to repair");
+			return nil;
+		end;
+	local seen := {};
+	local extra := [];
+	local cursor := Query(soup, {type: 'index});
+	local entry := cursor:Entry();
+	while entry do
+		begin
+			if entry.app then
+				begin
+					local key := EnsureInternal(entry.app);
+					if seen.(key) then
+						AddArraySlot(extra, entry)
+					else
+						seen.(key) := true;
+				end;
+			entry := cursor:Next();
+		end;
+	foreach e in extra do EntryRemoveFromSoup(e);
+	soup:SetInfo('extrasState, true);
+	Print("repair-extras: " & Length(extra) & " duplicate entries removed");
+end;
