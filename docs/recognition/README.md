@@ -783,18 +783,24 @@ and passes `Interpolate` the *ratio* of the two lengths where
 lands all but on top of the joint instead of an arm's length down the
 second arm.
 
-NOT YET: what a view does with a gesture - `TParagraphView` answers none
-of the pen commands yet, so a scrub over text is recognised and posted
-and then nothing happens.  The path it would take is
-`TParagraphView::RealDoCommand`'s `aeScrub` case (0x0016c658, the 0xd
-arm): `ScrubHilite` (0x00173ea8) first, which deletes the selection when
-the scrub covers it (`DeleteHilitedTextOnly`), and otherwise
-`HandleScrub` (0x00173fac) - `ScrubLines` (0x001748b8), then `ScrubWords`
-(0x001740c4) over `ScrubCharacter` (0x00174808) - ending in `RemoveText`,
-which is already here.  A scrub that deleted something gets the poof
-effect (`TAnimate::SetupPoofEffect`, also already here) and takes its own
-ink off.
-  Also the domains above this one (shapes,
-words), `ArbitrateGraphicsWords`, the inker and ink (`StrokeUpdate`, the expired strokes' grouping and compression, the
+A scrub now reaches the text.  The command goes to the view the stroke
+was written in, which on a page is the `TEditView`, not the paragraph:
+`TEditView::Scrub` asks the selection first (`ScrubHilite`), and
+otherwise asks every child what it would take out
+(`TParagraphView::HandleScrub` with -1 and nothing done), takes the
+largest answer and asks the children that answered to do that one thing.
+A child left with nothing (answer 5) is removed from the page as an
+`aeRemoveData` command.  Then the scrub's own ink comes off and the hole
+puffs away.  `TParagraphView::HandleScrub` empties the paragraph when the
+scrub covers more than seventy per cent of it, and otherwise deletes the
+lines it covers (`ScrubLines`: more than sixty per cent of a line's box).
+
+NOT YET: `ScrubWords` (0x001740c4) and `ScrubCharacter` (0x00174808)
+under it, which is how a scrub over part of a line takes out only the
+words it crossed; they want the word boundaries (`PointToWordBoundary`,
+`PointToWord`) and the ROM's text objects.  The caret and line gestures
+(`aeCaret`, `aeLine`) are not answered either.  Also the domains above
+this one (shapes, words), `ArbitrateGraphicsWords`, the inker and ink
+(`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.

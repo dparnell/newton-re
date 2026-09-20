@@ -32,6 +32,8 @@
 #include "Bits.h"
 #include "ViewFlags.h"
 #include "Rects.h"
+#include "Animate.h"
+#include "ROMConstants.h"
 #include "Regions.h"
 #include "RegionVars.h"
 #include "Locale.h"
@@ -894,6 +896,148 @@ TEditView::Idle(long reason)
 }
 
 
+// ROM 0x000a8750 DeleteHilitedViews__9TEditViewFv
+// Every hilited child of the page deleted, one at a time: each round
+// looks for the first child that still has a hilite and tells it to
+// delete it, until none is left.  The children are looked for again each
+// round because deleting one can take others with it.  The caret goes to
+// the top of the page afterwards.
+//
+// NOT YET RECONSTRUCTED: SetCorrectorBusy/RestoreCorrectorBusy, which
+// keep the corrector from following the text that is going away.
+void
+TEditView::DeleteHilitedViews(void)
+{
+	InvalAllHilites();
+	for (;;)
+	{
+		TView* hilited = nil;
+		RefVar hilite;
+		TListLoop loop(fChildren);
+		for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+		{
+			hilite = child->FirstHilite();
+			if (NOTNIL(hilite))
+			{
+				hilited = child;
+				break;
+			}
+		}
+		if (hilited == nil)
+			break;
+		hilited->DeleteHilited(hilite);
+	}
+	gRootView->SetKeyView(this, 0, 0, false);
+	gRootView->fDirtyFlag = true;
+}
+
+
+// ROM 0x000a75f4 ScrubHilite__9TEditViewFRC5TRect
+// Whether the scrub went over the selection - in which case the selection
+// is what it takes out, whatever else it covers.  A page whose selection
+// may be resized is asked for the selection's bounds as a whole (the grey
+// border round it counts); otherwise every hilite of every child is asked
+// whether the scrub overlaps it, in that child's own coordinates.
+Boolean
+TEditView::ScrubHilite(const Rect& bounds)
+{
+	if ((fClickOptions & 2) != 0)
+	{
+		Rect selection;
+		SetRect(&selection, -0x8000, -0x8000, -0x8000, -0x8000);
+		GlobalHiliteResizeBounds(&selection);
+		ToOutsideGrayBorder(&selection, &viewBounds);
+		Boolean hit = Overlaps(&selection, &bounds);
+		if (hit)
+			DeleteHilitedViews();
+		return hit;
+	}
+	TListLoop loop(fChildren);
+	for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+	{
+		Rect r = bounds;
+		OffsetRect(&r, -child->viewBounds.left, -child->viewBounds.top);
+		HiliteLoop hilites(child);
+		while (hilites.Next())
+			if (hilites.fCurrent->Overlaps(r))
+			{
+				DeleteHilitedViews();
+				return true;
+			}
+	}
+	return false;
+}
+
+
+// ROM 0x000a6d38 Scrub__9TEditViewFP11TUnitPublic
+// A scrub on the page.  The selection goes first if the scrub touched it;
+// otherwise every child is asked what it would take out (HandleScrub with
+// -1 and nothing done), the biggest answer wins, and the children that
+// gave an answer at all are asked again - this time for real - for that
+// one kind.  A child that answers 5 has nothing left in it: the page
+// removes it from the soup, unless its own text flags say it keeps its
+// children, in which case the child is told to empty itself instead.
+//
+// The hilites are preserved across all of it (SetPreserveHilites), and a
+// scrub that did anything takes its own ink off and puffs the hole away.
+// ==> whether anything was done.
+long
+TEditView::Scrub(TUnitPublic* unit)
+{
+	Boolean savedPreserve = gRootView->SetPreserveHilites(true);
+	Rect bounds;
+	unit->Bounds(&bounds);
+	long done = ScrubHilite(bounds);
+	if (done == 0)
+	{
+		long best = 0;
+		CList* takers = CList::Make();
+		{
+			TListLoop loop(fChildren);
+			for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+			{
+				long kind = child->HandleScrub(bounds, -1, unit, false);
+				if (best <= kind)
+					best = kind;
+				if (kind != 0)
+					takers->InsertLast(child);
+			}
+		}
+		if (best != 0)
+		{
+			TListLoop loop(takers);
+			for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+			{
+				// a child the last round took away is not asked again
+				if (fChildren->GetIdentityIndex(child) == kEmptyIndex)
+					continue;
+				if (child->HandleScrub(bounds, best, unit, best != 5) == 5)
+				{
+					if ((TextFlags() & 0x80) == 0)
+						gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, child->fId)));
+					else
+						child->HandleScrub(bounds, 5, unit, true);
+				}
+			}
+			done = 1;
+		}
+		delete takers;
+	}
+	if (done != 0)
+	{
+		gRootView->fDirtyFlag = true;
+		unit->Stroke()->InkOff(false);
+		TAnimate effect;
+		AdjustForInk(&bounds);
+		Dirty(&bounds);
+		effect.SetupPoofEffect(this, bounds);
+		effect.DoEffect(RefVar(Rpoof));
+	}
+	gRootView->SetPreserveHilites(savedPreserve);
+	return done;
+}
+
+
 // ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar
 // The editor's commands.  The ROM's is the largest function in the view
 // system - the whole of scrubbing, the caret, the line and shape
@@ -925,6 +1069,14 @@ TEditView::RealDoCommand(RefArg cmd)
 		CommandSetResult(cmd, id != aeWord ? 1 : 0);
 		return 1;
 	}
+	if (id == aeScrub)
+	{
+		// (textFlags bit 0x2000: the page answers the pen itself first)
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		return Scrub((TUnitPublic*) CommandParameter(cmd)) != 0;
+	}
+
 	if (id == aeKeyDown || id == aeKeyRepeat)
 	{
 		// a key typed at the page.  The view's own key scripts get it
@@ -939,7 +1091,7 @@ TEditView::RealDoCommand(RefArg cmd)
 			return 1;
 		UniChar ch = (UniChar) CommandParameter(cmd);
 		if (ch == 8)				// backspace
-			;	// NOT YET RECONSTRUCTED: DeleteHilitedViews 0x000a8750
+			DeleteHilitedViews();
 		else
 		{
 			if (ch == 3)

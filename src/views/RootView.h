@@ -103,7 +103,7 @@ public:
 	TView*		FindRestorableKeyView(TView* view, ULong* index);		// ROM 0x001b41fc FindRestorableKeyView__9TRootViewFP5TViewPUl
 	Boolean		RestoreKeyView(TView* view);							// ROM 0x001b42b4 RestoreKeyView__9TRootViewFP5TView
 	Boolean		GetPreserveHilites(void);								// ROM 0x001b455c GetPreserveHilites__9TRootViewFv
-	void		SetPreserveHilites(Boolean preserve);					// ROM 0x001b4548 SetPreserveHilites__9TRootViewFUc
+	Boolean		SetPreserveHilites(Boolean preserve);					// ROM 0x001b4548 SetPreserveHilites__9TRootViewFUc - ==> what it was
 	Boolean		GetRemoteWriting(void);									// ROM 0x001b4a6c GetRemoteWriting__9TRootViewFv
 	void		SetRemoteWriting(Boolean on);							// ROM 0x001b4a94 SetRemoteWriting__9TRootViewFUc
 	Boolean		CaretEnabled(void);										// ROM 0x001b4ba4 CaretEnabled__9TRootViewFv

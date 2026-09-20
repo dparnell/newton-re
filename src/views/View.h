@@ -222,7 +222,7 @@ public:
 	virtual void	DrawHiliting(void);									// ROM 0x00267188 DrawHiliting__5TViewFv
 	virtual void	DrawHilitedData(void);								// ROM 0x0026715c DrawHilitedData__5TViewFv
 	virtual Boolean	HandleHilite(TUnitPublic* unit, long arg, Boolean on);	// ROM 0x00262150 HandleHilite__5TViewFP11TUnitPubliclUc
-	virtual Boolean	HandleScrub(const Rect& bounds, long arg, TUnitPublic* unit, Boolean on);	// ROM 0x00262528 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
+	virtual long	HandleScrub(const Rect& bounds, long arg, TUnitPublic* unit, Boolean on);	// ROM 0x00262528 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
 	virtual Boolean	Hilited(void);										// ROM 0x00261de4 Hilited__5TViewFv
 	virtual void	DrawHilites(Boolean on);							// ROM 0x00261e94 DrawHilites__5TViewFUc
 	virtual Boolean	IsCompletelyHilited(RefArg hilite);					// ROM 0x00262000 IsCompletelyHilited__5TViewFRC6RefVar

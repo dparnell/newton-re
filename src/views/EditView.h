@@ -66,6 +66,7 @@ public:
 	// (NOT YET RECONSTRUCTED: DrawScaledViews, the one at +0x11c)
 	virtual void	PositionCaret(Point& pt, Boolean click);	// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc (vtable +0x120)
 	virtual void	HandleTap(Point& pt);					// ROM 0x000aaba4 HandleTap__9TEditViewFR6TPoint (vtable +0x124)
+	virtual long	Scrub(class TUnitPublic* unit);				// ROM 0x000a6d38 Scrub__9TEditViewFP11TUnitPublic (vtable +0x128)
 
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
@@ -86,6 +87,8 @@ public:
 									class TUnitPublic* unit, RefArg info, long* outOffset,
 									RefArg inkFont);	// ROM 0x000a1b2c AddNewParagraph__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPlT6
 	void			InvalAllHilites(void);					// ROM 0x000a6270 InvalAllHilites__9TEditViewFv
+	Boolean			ScrubHilite(const Rect& bounds);			// ROM 0x000a75f4 ScrubHilite__9TEditViewFRC5TRect - a scrub over the selection deletes it
+	void			DeleteHilitedViews(void);				// ROM 0x000a8750 DeleteHilitedViews__9TEditViewFv
 	void			ResetHilitesForNewWord(void);			// ROM 0x000a4204 ResetHilitesForNewWord__9TEditViewFv
 	Boolean			ValidateCaret(Boolean scrolled);			// ROM 0x000aa9b0 ValidateCaret__9TEditViewFUc - ==> whether the caret is still this view's
 	void			DirtyBoxHilites(void);					// ROM 0x000a6010 DirtyBoxHilites__9TEditViewFv

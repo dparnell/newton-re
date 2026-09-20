@@ -14,6 +14,7 @@
 #include "RootView.h"
 #include "Application.h"
 #include "Commands.h"
+#include "Animate.h"
 #include "UnitPublic.h"
 #include "Stroke.h"
 #include "StrokeQueue.h"
@@ -1521,6 +1522,178 @@ TParagraphView::RangeChanged(long /*offset*/, long /*removed*/, long /*inserted*
 }
 
 
+/*------------------------------------------------------------------------------
+	S c r u b b i n g
+------------------------------------------------------------------------------*/
+
+// The view the recogniser last put a word into, when it did so and
+// where the word ended.  Nothing writes them yet - HandleWord is NOT
+// YET - so the guard they serve in ScrubLines never fires.
+TView*	gLastAddedWordView = nil;			// ROM 0x0c101714 gLastAddedWordView
+ULong	gLastAddedWordAddTime = 0;			// ROM 0x0c101724 gLastAddedWordAddTime
+long	gLastAddedWordEndOffset = 0;		// ROM 0x0c10172c gLastAddedWordEndOffset
+
+
+// ROM 0x0016c63c GetLastAddedWordView__Fv
+TView*
+GetLastAddedWordView(void)
+{
+	return gLastAddedWordView;
+}
+
+
+// ROM 0x0017a310 ContainsOnlyWhiteSpace__FPUsUl
+// Whether the first count characters are all white space; the string's
+// end stops the walk early, so a count of -1 means to the end.
+Boolean
+ContainsOnlyWhiteSpace(const UniChar* text, ULong count)
+{
+	for (ULong i = 0; i < count && *text != 0; text++, i++)
+		if (!IsWhiteSpace(*text))
+			return false;
+	return true;
+}
+
+
+// ROM 0x00174dbc DeleteHilitedTextOnly__14TParagraphViewFRC6RefVar
+// The hilited characters removed and the caret left where they were.
+void
+TParagraphView::DeleteHilitedTextOnly(RefArg hilite)
+{
+	TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+	long start = h->fStart;
+	RemoveText(start, h->fEnd - start);
+	gRootView->SetKeyView(this, start, 0, false);
+}
+
+
+// ROM 0x00173ea8 ScrubHilite__14TParagraphViewFRC5TRect
+// A scrub that touches the selection takes the selection out, whatever
+// else it covers.  The scrub's bounds are global and a paragraph hilite's
+// area is kept in the view's own coordinates, so they are moved over by
+// the view's top left first.  ==> whether there was a selection to delete.
+Boolean
+TParagraphView::ScrubHilite(const Rect& bounds)
+{
+	RefVar hilite(FirstHilite());
+	if (NOTNIL(hilite))
+	{
+		Rect r = bounds;
+		OffsetRect(&r, -viewBounds.left, -viewBounds.top);
+		if (((THilite*) RefToAddress(hilite))->Overlaps(r))
+		{
+			DeleteHilitedTextOnly(hilite);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+// ROM 0x001748b8 ScrubLines__14TParagraphViewFRC5TRectP11TUnitPublicUc
+// The lines the scrub covers taken out.  A line counts when more than
+// sixty per cent of its box lies under the scrub; an empty line has a box
+// one pixel wide, so it is widened to the view before it is measured.
+// The run of covered lines stops at the first line that is not covered
+// once one has been.
+//
+// A single line that ends exactly where the recogniser last put a word,
+// in this view, is left alone when the scrub was begun before that word
+// was added: the pen was writing, not scrubbing.
+//
+// ==> 3 (lines) when it took something out, 5 when what is left is white
+// space and the whole text went with it, 0 when no line was covered.
+// `reallyDoIt` false asks the question without doing anything.
+long
+TParagraphView::ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt)
+{
+	long count = 0;
+	long first = -1;
+	long last = 0;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		const LineInfo& line = fLines[i];
+		Rect box = line.fBounds;
+		if (box.right - box.left == 1)
+			box.right = viewBounds.right;		// an empty line: the whole width of the view
+		if (CoveredBy(&box, &bounds) < 61)
+		{
+			if (count > 0)
+				break;
+		}
+		else
+		{
+			count++;
+			if (first == -1)
+				first = line.fStart;
+			last = line.fEnd;
+		}
+	}
+	if (count <= 0)
+		return 0;
+	if (count == 1 && GetLastAddedWordView() == this && last == gLastAddedWordEndOffset
+		&& unit->StartTime() < gLastAddedWordAddTime)
+		return 0;
+	if (reallyDoIt)
+	{
+		RefVar textRef(Text());
+		TRichString rich(textRef);
+		const UniChar* text = rich.GrabPtr();
+		Boolean nothingLeft = ContainsOnlyWhiteSpace(text, (ULong) first)
+							  && ContainsOnlyWhiteSpace(text + last, (ULong) -1);
+		rich.ReleasePtr();
+		if (nothingLeft)
+		{
+			if ((fFlags & vCalculateBounds) == 0)
+				RemoveText(0, TextLength());
+			return 5;
+		}
+		if (last - first > 0)
+			RemoveText(first, last - first);
+	}
+	return 3;
+}
+
+
+// ROM 0x00173fac HandleScrub__14TParagraphViewFRC5TRectlP11TUnitPublicUc
+// What a scrub over the paragraph takes out.  A scrub covering more than
+// seventy per cent of the whole paragraph (or any of a write-protected
+// one) empties it; otherwise the lines it covers are tried, and then the
+// words.  `kind` asks for one of those in particular - 5 the whole
+// paragraph, 3 lines, 2 words - and -1 for whichever answers first, which
+// is what a gesture asks.  ==> the kind that answered, 0 for none.
+//
+// NOT YET RECONSTRUCTED: ScrubWords (0x001740c4) and the ScrubCharacter
+// (0x00174808) under it, which need the word boundaries
+// (PointToWordBoundary, PointToWord) and the ROM's text objects; a scrub
+// over part of a line therefore does nothing yet.
+long
+TParagraphView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt)
+{
+	if (fLines == nil)
+		CreateAllCaches();
+	if (!Overlaps(&viewBounds, &bounds))
+		return 0;
+	if (kind == 5 || kind == -1)
+	{
+		long covered = CoveredBy(&fCachedBounds, &bounds);
+		if (covered > 70 || ((fFlags & vWriteProtected) != 0 && covered != 0))
+		{
+			if (reallyDoIt)
+				RemoveText(0, TextLength());
+			return 5;
+		}
+	}
+	if (kind == 3 || kind == -1)
+	{
+		long done = ScrubLines(bounds, unit, reallyDoIt);
+		if (done != 0)
+			return done;
+	}
+	return 0;
+}
+
+
 // ROM 0x0016ef00 HandleReplaceText__14TParagraphViewFRC6RefVar
 // The aeReplaceText command carried out: nothing for a read-only or
 // write-protected paragraph.  The index parameters are the offset, the
@@ -1970,6 +2143,33 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		HandleReplaceText(cmd);
 		return true;
 	}
+	if (id == aeScrub)
+	{
+		// (textFlags bit 0x2000: the view answers the pen itself first)
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if ((fFlags & (vReadOnly | vCalculateBounds)) != 0)
+			return TView::RealDoCommand(cmd);
+		if ((fFlags & vWriteProtected) != 0)
+		{
+			CommandSetResult(cmd, 1);		// taken, and nothing done
+			return true;
+		}
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		Rect bounds;
+		unit->Bounds(&bounds);
+		if (!ScrubHilite(bounds))
+			return HandleScrub(bounds, -1, unit, true) != 0;
+		// the selection went: the scrub's own ink comes off and the hole
+		// it left puffs away
+		unit->Stroke()->InkOff(false);
+		TAnimate effect;
+		effect.SetupPoofEffect(this, bounds);
+		effect.DoEffect(RefVar(Rpoof));
+		CommandSetResult(cmd, 1);
+		return true;
+	}
+
 	if (id == aeTap)
 	{
 		// defer placing the caret until the double-tap interval passes, so

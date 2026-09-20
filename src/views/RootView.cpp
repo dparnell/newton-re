@@ -927,10 +927,13 @@ TRootView::GetPreserveHilites(void)
 
 
 // ROM 0x001b4548 SetPreserveHilites__9TRootViewFUc
-void
+// ==> what it was, so a caller can put it back.
+Boolean
 TRootView::SetPreserveHilites(Boolean preserve)
 {
+	Boolean was = fPreserveHilites;
 	fPreserveHilites = preserve;
+	return was;
 }
 
 

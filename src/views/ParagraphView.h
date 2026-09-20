@@ -73,6 +73,18 @@ class TParagraphHilite;
 // The text flags of an input view: what kind of text it takes.
 ULong	GetInputViewTextFlags(ULong textFlags, ULong viewFlags);	// ROM 0x00261d2c GetInputViewTextFlags__FUlT1
 
+// Whether every character of the run is white space (a count of -1: to
+// the end of the string).
+Boolean	ContainsOnlyWhiteSpace(const UniChar* text, ULong count);	// ROM 0x0017a310 ContainsOnlyWhiteSpace__FPUsUl
+
+// The view the recogniser last put a word into, and where it put it.  A
+// scrub that arrived before the word did is not allowed to take it away.
+class TView;
+TView*	GetLastAddedWordView(void);							// ROM 0x0016c63c GetLastAddedWordView__Fv
+extern TView*	gLastAddedWordView;							// ROM 0x0c101714 gLastAddedWordView
+extern ULong	gLastAddedWordAddTime;						// ROM 0x0c101724 gLastAddedWordAddTime
+extern long		gLastAddedWordEndOffset;					// ROM 0x0c10172c gLastAddedWordEndOffset
+
 class TParagraphView : public TDataView
 {
 public:
@@ -93,6 +105,7 @@ public:
 	virtual void	ActivateSelection(Boolean on);						// ROM 0x0017f2d8 ActivateSelection__14TParagraphViewFUc
 	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect
 	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar
+	virtual long	HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x00173fac HandleScrub__14TParagraphViewFRC5TRectlP11TUnitPublicUc
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
 	Ref			Text(void);												// ROM 0x00181004 Text__14TParagraphViewFv
@@ -122,6 +135,9 @@ public:
 
 	// editing
 	void		HandleReplaceText(RefArg cmd);							// ROM 0x0016ef00 HandleReplaceText__14TParagraphViewFRC6RefVar
+	Boolean		ScrubHilite(const Rect& bounds);							// ROM 0x00173ea8 ScrubHilite__14TParagraphViewFRC5TRect - a scrub over the selection deletes it
+	long		ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x001748b8 ScrubLines__14TParagraphViewFRC5TRectP11TUnitPublicUc
+	void		DeleteHilitedTextOnly(RefArg hilite);					// ROM 0x00174dbc DeleteHilitedTextOnly__14TParagraphViewFRC6RefVar
 	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
 	void		RemoveText(ULong offset, ULong length);					// ROM 0x00178b98 RemoveText__14TParagraphViewFUlT1
 	void		MakeAndDoReplaceCommand(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178d5c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc

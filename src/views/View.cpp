@@ -1368,7 +1368,7 @@ TView::HandleHilite(TUnitPublic* unit, long gesture, Boolean doIt)
 // the scrub covers more than 75 per cent of it.  A read-only or
 // write-protected view takes none.  The base only answers - the caller is
 // what acts - so the unit and `doIt` go unused here.
-Boolean
+long
 TView::HandleScrub(const Rect& bounds, long gesture, TUnitPublic* /*unit*/, Boolean /*doIt*/)
 {
 	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
