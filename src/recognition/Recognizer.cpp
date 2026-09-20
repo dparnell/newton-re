@@ -21,6 +21,9 @@
 #include "Controller.h"
 #include "Arbiter.h"
 #include "Domain.h"
+#include "EdgeList.h"
+#include "StrokeQueue.h"
+#include "UserTasks.h"
 
 TRecognitionManager	gRecognition;			// ROM 0x0c106e88 gRecognition
 
@@ -259,12 +262,26 @@ TRecognizerList::FindRecognizer(ULong id)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit
-// NOT YET RECONSTRUCTED: whether the controller has seen no stroke after
-// the unit's (it is the last complete stroke); the host has no controller.
+// Whether this stroke is the only one in hand: no other unclaimed
+// 'STRK' piece is waiting in the controller, and no further stroke
+// arrived in the queue within 255 ticks of this one's pen-up.  Nothing
+// that has to stand alone - a gesture, a click - is acted on while
+// another stroke is still about.
 Boolean
-OnlyStrokeWritten(TStrokeUnit* /*unit*/)
+OnlyStrokeWritten(TStrokeUnit* unit)
 {
-	return true;
+	TArrayIterator iter;
+	TUnit** entry = (TUnit**) gController->fPieces->GetIterator(&iter);
+	for (long i = 0; i < iter.fCount; i++)
+	{
+		TUnit* piece = *entry;
+		if (piece->fType == kStrokeUnit && !piece->TestFlags(kClaimedUnit) && piece != (TUnit*) unit)
+			return false;
+		entry = (TUnit**) iter.GetNext();
+	}
+	if (unit == nil)
+		return true;
+	return !CheckStrokeQueueEvents(unit->fStroke->fUpTime, 0xff);
 }
 
 
@@ -307,7 +324,7 @@ TEventRecognizer::HandleUnit(TUnitPublic* unit)
 {
 	ULong command = 0;
 	TClickEventUnit* eventUnit = (TClickEventUnit*) unit->fUnit;
-	if (OnlyStrokeWritten(nil))		// (the ROM: the controller's stroke unit at eventUnit->fMinStroke)
+	if (OnlyStrokeWritten((TStrokeUnit*) gController->GetIndexedStroke(eventUnit->fMinStroke)))
 	{
 		switch (eventUnit->Event())
 		{
@@ -360,6 +377,58 @@ InstallEventRecognizer(TRecognitionManager* manager)
 /*------------------------------------------------------------------------------
 	T R e c o g n i t i o n M a n a g e r
 ------------------------------------------------------------------------------*/
+
+// ROM 0x00143a00 HandleUnit__16TScrubRecognizerFP11TUnitPublic
+// The command a recognised gesture asks for.  A gesture written within
+// half a second of the stroke before it, while the last thing handled
+// went to the word recogniser, is not one: somebody is writing.  The
+// rest waits out the fifth of a second after the pen came up in which
+// another stroke could still arrive, and gives up if one did.  A
+// gesture whose bounds are tiny is a tap after all.
+ULong
+TScrubRecognizer::HandleUnit(TUnitPublic* unit)
+{
+	TUnit* theUnit = unit->fUnit;
+	TStroke* stroke = theUnit->GetStroke(0);
+	if (gRecognition.fAfterWriting && stroke->fDownTime <= stroke->fPrevUpTime + 30)
+		return 0;
+	long label = ((TSIUnit*) theUnit)->GetInterpretation(0)->label;
+	long wait = 20 - (long) (GetTicks() - stroke->fUpTime);
+	if (wait > 0)
+		::Sleep(wait * kTicksToTimeUnits);		// (the global: TRecognizer has a Sleep of its own)
+	if (!OnlyStrokeWritten((TStrokeUnit*) gController->GetIndexedStroke(theUnit->fMinStroke)))
+		return 0;
+	if (unit->IsTap())
+		return aeTap;
+	switch (label)
+	{
+	case kGestureScrub:		return aeScrub;
+	case kGestureCaret:
+	case kGestureCaret4:
+	case kGestureCaret4Open:
+	case kGestureCaretFlat:	return aeCaret;
+	case kGestureLine:		return aeLine;
+	default:				return 0;
+	}
+}
+
+
+// ROM 0x00143970 InstallGestureRecognizer__FP19TRecognitionManager
+// The gesture recogniser: the edge-list domain made, and its 'SCRB'
+// units answered with aeScrub - the command the recogniser's HandleUnit
+// then narrows to whichever gesture it turned out to be.  Its service
+// is vGesturesAllowed.
+void
+InstallGestureRecognizer(TRecognitionManager* manager)
+{
+	gEdgeListDomain = TEdgeListDomain::Make(manager->fController);
+	TRecognizer* recognizer = new TScrubRecognizer;
+	recognizer->Init(gEdgeListDomain, gEdgeListDomain->fType, aeScrub,
+		kRecognizerArbitrated, kArbitrateAtOnce);
+	recognizer->InitServices(vGesturesAllowed, vGesturesAllowed);
+	*(TRecognizer**) manager->fRecognizers->AddEntry() = recognizer;
+}
+
 
 // ROM 0x00143d64 InstallStrokeRecognizer__FP19TRecognitionManager
 // The stroke recogniser: the stroke domain made, and 'STRK' units
@@ -434,6 +503,7 @@ TRecognitionManager::InitRecognizers(void)
 {
 	if (fLevel != 0)
 	{
+		InstallGestureRecognizer(this);
 		InstallEventRecognizer(this);
 		InstallStrokeRecognizer(this);
 		InstallClickRecognizer(this);

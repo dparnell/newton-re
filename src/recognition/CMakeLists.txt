@@ -21,6 +21,7 @@ add_library(recognition STATIC
     Areas.cpp
     RecConfig.cpp
     Domain.cpp
+    EdgeList.cpp
     Controller.cpp
     Arbiter.cpp
     Recognizer.cpp

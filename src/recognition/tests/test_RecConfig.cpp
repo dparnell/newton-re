@@ -16,6 +16,7 @@
 // takes.
 
 #include "RecConfig.h"
+#include "EdgeList.h"
 #include "Areas.h"
 #include "Controller.h"
 #include "Arbiter.h"
@@ -157,7 +158,7 @@ main()
 
 	// ---- the area a configuration becomes ----
 	// starting the recogniser makes the controller, the arbiter, the area
-	// cache and the three recognisers of level 1
+	// cache and the four recognisers of level 1
 	gRecognition.Init(1);
 	EXPECT(gController != nil && gArbiter != nil && gAreaCache != nil);
 	EXPECT(gStrokeDomain != nil && gStrokeDomain->fLevel == 2);
@@ -172,7 +173,7 @@ main()
 	SetFrameSlot(areaConfig, RSSYMinputmask,
 				 RefVar(MAKEINT(vClickable | vGesturesAllowed | vStrokesAllowed)));
 	TRecArea* area = MakeArea(gController, nil, 0, areaConfig);
-	EXPECT(area != nil && area->fTypes->Count() == 3);
+	EXPECT(area != nil && area->fTypes->Count() == 4);	// 'CLIK', 'EVNT', 'STRK' and the gestures' 'SCRB'
 	Assoc* click = nil;
 	Assoc* stroke = nil;
 	for (long i = 0; i < area->fTypes->Count(); i++)
@@ -185,14 +186,17 @@ main()
 	}
 	EXPECT(click != nil && click->fArbitrateTime == kArbitrateExternally && click->fHandler == HandleUnit);
 	EXPECT(stroke != nil && stroke->fArbitrateTime == kArbitrateAtOnce);
-	EXPECT(area->fArbitrateNow == 1);		// only the stroke type is arbitrated at once
+	EXPECT(area->fArbitrateNow == 2);		// the stroke and gesture types are arbitrated at once
 
 	// BuildGTypes turned those types into the domains that make them: the
 	// stroke domain takes clicks, so the area runs it over 'CLIK'
-	EXPECT(area->fDomains->Count() == 1);
+	EXPECT(area->fDomains->Count() == 2);
 	EXPECT(area->fDomains->GetAssoc(0)->fType == kClickUnit);
 	EXPECT(area->fDomains->GetAssoc(0)->fDomain == gStrokeDomain);
-	EXPECT(area->fMaxLevel == 2);			// the strokes are as far as it goes
+	// ... and the gesture domain over 'STRK', which is what makes 'SCRB'
+	EXPECT(area->fDomains->GetAssoc(1)->fType == kStrokeUnit);
+	EXPECT(area->fDomains->GetAssoc(1)->fDomain == gEdgeListDomain);
+	EXPECT(area->fMaxLevel == 3);			// clicks, strokes, gestures
 
 	// a mask that allows nothing but clicks needs no domain at all
 	RefVar clickConfig(AllocateFrame());

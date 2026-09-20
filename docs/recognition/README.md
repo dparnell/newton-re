@@ -734,8 +734,58 @@ area: the piece is nobody's, the controller claims it, and it never
 reaches a recogniser - which also means the click view of the tap before
 is left as it was.
 
-NOT YET: the domains above the stroke domain (edge-list gestures, shapes,
-words), `ArbitrateGraphicsWords`, the inker and ink
-(`StrokeUpdate`, the expired strokes' grouping and compression, the
+## The gesture domain
+
+`TEdgeListDomain` (`'SCRB'`, `src/recognition/EdgeList.h`) is the first
+domain above the strokes and the only one every level of recognition
+has.  It groups each `'STRK'` piece on its own into a `TEdgeListUnit`
+and then classifies it by shape, in three steps:
+
+1. **the corners.**  `FindCorners` runs the stroke's sample points
+   through a recursive splitter (0x0020e3f8, no debug symbol).  It takes
+   the chord from the first point to the last, makes two axes from it -
+   one along, one across, each scaled to a twelfth of the chord - and
+   measures every point in between against both, keeping how far each
+   run has got and where it turned back.  When a point goes further back
+   than the last turn did, the axis is *flipped* and the search starts
+   again the other way, which is what lets a stroke that doubles back be
+   split at its own extremes rather than only at its furthest point from
+   the chord.  Whichever axis swings widest, if it swings wider than
+   four pixels, gives the split, and the two halves are done again.
+
+2. **the tidying.**  `Collapse2` drops corners within seven units of one
+   another (keeping whichever of the two turns more sharply) and then
+   corners whose two edges differ by less than about nine degrees.
+
+3. **the tests**, tried in order and stopping at the first that
+   recognises anything:
+
+   | test | corners | what it wants | label |
+   | --- | --- | --- | --- |
+   | `TestLine` | 2 | nothing else | 4 |
+   | `TestCarets` | 3 or 4 | the arms within a factor of two of each other and meeting at 100 degrees or less (or one of two looser cases) | 2, 3, 5, 6 |
+   | `TestScrub` | 5 to 39 | turns that alternate, at least three of them sharper than 110 degrees, and all pointing within half a turn of each other | 1 |
+
+`TScrubRecognizer::HandleUnit` turns the label into the command:
+`aeScrub` for 1, `aeCaret` for 2, 3, 5 and 6, `aeLine` for 4.  Before
+it does, it drops the gesture altogether if the stroke came within half
+a second of the one before it while the last thing handled went to the
+word recogniser (somebody is writing, not gesturing), waits out the
+fifth of a second after the pen came up in which another stroke could
+still arrive, and answers `aeTap` instead when the gesture's bounds turn
+out to be tiny.  Each of those commands runs the view's
+`viewGestureScript(unit, kind)`.
+
+One ROM bug is kept, in `TestCarets`: when one arm is more than twice
+the length of the other it splits the longer one so that the two match,
+and passes `Interpolate` the *ratio* of the two lengths where
+`Interpolate` wants a distance along the line.  The new corner therefore
+lands all but on top of the joint instead of an arm's length down the
+second arm.
+
+NOT YET: what a view does with a gesture - `TParagraphView` answers none
+of the pen commands yet, so a scrub over text is recognised and posted
+and then nothing happens.  Also the domains above this one (shapes,
+words), `ArbitrateGraphicsWords`, the inker and ink (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.

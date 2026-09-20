@@ -101,6 +101,21 @@ public:
 };
 
 // the click recogniser: ==> 0 when another view's area is in use
+// A tick of the 60 Hz clock in the units Sleep counts: the Newton's
+// timer runs at 3.6864 MHz, so a sixtieth of a second is 61440 of them.
+enum { kTicksToTimeUnits = 0xf000 };
+
+
+// The gesture recogniser, over the edge-list domain (EdgeList.h).  It
+// turns the label the domain's shape tests put on a unit into the
+// command the view under it answers.
+class TScrubRecognizer : public TRecognizer
+{
+public:
+	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00143a00 HandleUnit__16TScrubRecognizerFP11TUnitPublic
+};
+
+
 class TClickRecognizer : public TRecognizer
 {
 public:
@@ -163,7 +178,8 @@ extern Boolean	gInhibitPopup;							// ROM 0x0c101948 gInhibitPopup
 void	InstallStrokeRecognizer(TRecognitionManager* manager);	// ROM 0x00143d64 InstallStrokeRecognizer__FP19TRecognitionManager
 void	InstallClickRecognizer(TRecognitionManager* manager);	// ROM 0x00143cdc InstallClickRecognizer__FP19TRecognitionManager
 void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00143bb0 InstallEventRecognizer__FP19TRecognitionManager
-Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit (NOT YET: true)
+void	InstallGestureRecognizer(TRecognitionManager* manager);	// ROM 0x00143970 InstallGestureRecognizer__FP19TRecognitionManager
+Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit - no other stroke is in hand and none followed this one
 Boolean	OtherViewInUse(TView* view);						// ROM 0x00036960 OtherViewInUse__FP5TView - somebody else's writing is still in hand
 Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit (NOT YET: false)
 
