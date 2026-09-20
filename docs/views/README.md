@@ -1295,9 +1295,31 @@ A point in a view's own coordinates becomes one on the screen through
 `ToGlobalCoordinates` 0x000e3490, which adds the view's left edge to the
 x's and its top to the y's.
 
+## The on-screen keyboard, and why it opens blank
+
+Tapping the keyboard button on the status bar, or pressing a key that
+asks for the soft keyboard, opens a slip with nothing in it but a close
+box.  The slip itself is fine - it is `protoKeyboard`, an ordinary
+floating view - and what is missing is its one child: a view of class 79,
+`clKeyboardView`.  `BuildView` has no `TKeyboardView`, so class 79 falls
+through to the list of classes that get a plain `TView`, and a plain
+`TView` draws nothing.
+
+The work it needs is the ROM's 0x000fac10-0x000fd1fc: `TRawKeyIterator`
+and `TVisKeyIterator`, which walk a `keyDefinitions` array and work out
+where each key goes, and `TKeyboardView` itself, which draws the keys,
+hit-tests them, tracks the pen over them and posts the key commands.
+
+The definitions are worth a look (`Rnumerickeys`, `Ralphakeys`): an array
+of rows, each row `[pitch, height, legend, result, info, legend, result,
+info, ...]`.  The `info` word is packed - the key's width and height in
+eighths of the row's unit in bits 8-15 and 0-7, a 3-D depth in bits
+23-24, an inset in 25-27, and bit 29 saying the entry is a gap rather
+than a key.  A legend is a character, a string or a bitmap frame.
+
 ## Not yet
 
-The rest of the
+The on-screen keyboard views (see above).  The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the drag icon
