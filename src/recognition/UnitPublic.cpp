@@ -280,6 +280,22 @@ TUnitPublic::CaretType(void)
 }
 
 
+// ROM 0x0022d01c GesturePoint__11TUnitPublicFl
+// A corner of the gesture's polyline as a pixel point, rounded.  The
+// caret and line gestures are placed by these: the point of the caret,
+// where its arms end, and the ends of a line.
+Point
+TUnitPublic::GesturePoint(long index)
+{
+	TDArray* corners = ((TEdgeListUnit*) fUnit)->GetCorners();
+	const FPoint* corner = (const FPoint*) corners->GetEntry((ULong) index);
+	Point pt;
+	pt.v = (short) ((corner->y + 0x8000) >> 16);
+	pt.h = (short) ((corner->x + 0x8000) >> 16);
+	return pt;
+}
+
+
 // ROM 0x0022d0a8 CountGesturePoints__FP11TUnitPublic
 // The corners of the unit's polyline (a gesture unit's interpretation),
 // which is what the gesture was recognised from.

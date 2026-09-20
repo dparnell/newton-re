@@ -25,6 +25,24 @@ TDataView::DerivedFrom(long id) const
 }
 
 
+// ROM 0x000a3460 HandleCaret__9TDataViewFUllR6TPointN33
+// The base takes no caret gesture.
+long
+TDataView::HandleCaret(ULong /*kind*/, long /*angle*/, Point& /*armA*/, Point& /*point*/,
+					   Point& /*armB*/, Point& /*tail*/)
+{
+	return 0;
+}
+
+
+// ROM 0x000a3468 HandleLineGesture__9TDataViewFlR6TPointT2
+long
+TDataView::HandleLineGesture(long /*angle*/, Point& /*from*/, Point& /*to*/)
+{
+	return 0;
+}
+
+
 // ROM 0x000a31bc GetHiliteView__9TDataViewFv
 // The view a selection in this one belongs to: itself, unless a
 // subclass says otherwise (a container answers for its children).

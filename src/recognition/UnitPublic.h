@@ -18,8 +18,7 @@
 				ExtractWords, Word, Words, WordScore, WordInfo, SetWordBase,
 				Strokes, TrainingData: TWordList, the dictionaries), the
 				shape side (RoughShape, CleanShape, ShapeType: AsPolygon,
-				TGeneralShapeUnit), GesturePoint (the gesture unit's
-				points), the arbiter's whole-screen mode that FindView looks
+				TGeneralShapeUnit), the arbiter's whole-screen mode that FindView looks
 				at (gArbiter), and EndTime's controller stroke (the unit's
 				own end time is used).
 
@@ -58,8 +57,9 @@ public:
 	long				CaretType(void);						// ROM 0x0022cfc8 CaretType__11TUnitPublicFv - the first interpretation's label when it is a caret kind (2, 3, 5, 6), else 0
 	long				GestureAngle(void);						// ROM 0x0022d0b8 GestureAngle__11TUnitPublicFv - the first interpretation's angle, snapped to 0, 90, -90, 180 or 135 within 20 degrees (30 for label 5)
 
+	Point				GesturePoint(long index);				// ROM 0x0022d01c GesturePoint__11TUnitPublicFl - the index-th corner of the gesture's polyline, in pixels
+
 	// NOT YET RECONSTRUCTED
-	Point				GesturePoint(void);						// ROM 0x0022d01c GesturePoint__11TUnitPublicFl
 	Handle				RoughShape(void);						// ROM 0x0022d198 RoughShape__11TUnitPublicFv
 	Handle				CleanShape(void);						// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv
 	ULong				ShapeType(void);						// ROM 0x0022d234 ShapeType__11TUnitPublicFv

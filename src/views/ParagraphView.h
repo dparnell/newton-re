@@ -26,8 +26,10 @@
 				keys merged by AddKeyToCurrUndo), the caret moved, the lines
 				laid out again (RangeChanged).  NOT YET RECONSTRUCTED: the
 				hilites (a selection typed over), ink words, the recogniser's
-				word handling and the caret and line gestures (the scrub is
-				here: HandleScrub, ScrubLines, ScrubWords), the correction
+				word handling and the line gesture (the scrub and the caret
+				are here: HandleScrub, ScrubLines, ScrubWords, HandleCaret,
+				InsertHorizontalSpace - but not the caret's vertical half,
+				InsertVerticalSpace and CheckAndDoJoin), the correction
 				info, the other edit commands (styles changed, cut and
 				paste), the tab stops
 				(tabs draw as characters), the text objects (each line is
@@ -114,6 +116,8 @@ public:
 	virtual void	OffsetToCaret(long offset, Rect* caret);			// ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect
 	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar
 	virtual long	HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x00173fac HandleScrub__14TParagraphViewFRC5TRectlP11TUnitPublicUc
+	virtual long	HandleCaret(ULong kind, long angle, Point& armA, Point& point,
+								Point& armB, Point& tail);			// ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
 	Ref			Text(void);												// ROM 0x00181004 Text__14TParagraphViewFv
@@ -146,6 +150,20 @@ public:
 	Boolean		ScrubHilite(const Rect& bounds);							// ROM 0x00173ea8 ScrubHilite__14TParagraphViewFRC5TRect - a scrub over the selection deletes it
 	long		ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x001748b8 ScrubLines__14TParagraphViewFRC5TRectP11TUnitPublicUc
 	long		ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x001740c4 ScrubWords__14TParagraphViewFRC5TRectP11TUnitPublicUc
+	// The caret gesture's insertion.  `width` is how wide the caret was (-1
+	// for a plain one, which is a single space); `height` how tall, which is
+	// what says how many line breaks to put in when there is no width.
+	long		InsertHorizontalSpace(Point& pt, long width, long height, Boolean typed);	// ROM 0x00175dac InsertHorizontalSpace__14TParagraphViewFR6TPointlT2Uc
+	// The line nearest a point's v: the ROM measures each line's box less
+	// the leading it carries, which this cache does not keep apart, so the
+	// box's top is what is measured.  ==> its index, -1 for none, and -1
+	// too when the point is further past the last line than the line
+	// spacing.
+	long		FindClosestBaseline(short v);							// ROM 0x00178548 FindClosestBaseline__14TParagraphViewFs
+	// The line a word written in the box belongs to: the box's middle is
+	// tried first (flag 1), then its top (2), then its bottom (4), and
+	// whichever baseline is nearest wins.
+	long		FindLineForWord(const Rect& box, long flags);			// ROM 0x00175840 FindLineForWord__14TParagraphViewFRC5TRectl
 	Boolean		ScrubCharacter(long line, const Rect& bounds, long* outOffset);	// ROM 0x00174808 ScrubCharacter__14TParagraphViewFP8LineInfolRC5TRectPl (host: no text objects - see the definition)
 	// The word a point is in, and the boundary of it the point is nearest.
 	// (host: the ROM asks its text objects, and answers the line, the run

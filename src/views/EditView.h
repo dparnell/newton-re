@@ -67,6 +67,8 @@ public:
 	virtual void	PositionCaret(Point& pt, Boolean click);	// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc (vtable +0x120)
 	virtual void	HandleTap(Point& pt);					// ROM 0x000aaba4 HandleTap__9TEditViewFR6TPoint (vtable +0x124)
 	virtual long	Scrub(class TUnitPublic* unit);				// ROM 0x000a6d38 Scrub__9TEditViewFP11TUnitPublic (vtable +0x128)
+	virtual long	HandleCaret(class TUnitPublic* unit);	// ROM 0x000ab334 HandleCaret__9TEditViewFP11TUnitPublic
+	virtual long	HandleLineGesture(class TUnitPublic* unit);	// ROM 0x000ab528 HandleLineGesture__9TEditViewFP11TUnitPublic
 
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
@@ -125,6 +127,14 @@ public:
 // A rectangle grown to the outside of the gray resize border (twelve pixels),
 // kept within limit when there is one.
 void	ToOutsideGrayBorder(Rect* r, const Rect* limit);		// ROM 0x000a3498 ToOutsideGrayBorder__FP5TRectPC5TRect
+
+// Whether a caret gesture is one a text editor takes: the caret kinds 2
+// and 3 (the plain caret and the one with a tail) pointing up, right or
+// down, 5 pointing up, and 6 at 135 degrees.
+Boolean	ValidTextEditCaret(class TUnitPublic* unit);			// ROM 0x000ab490 ValidTextEditCaret__FP11TUnitPublic
+// Whether a line gesture is one a text editor takes: up, down, right or
+// left.
+Boolean	ValidLineGesture(class TUnitPublic* unit);			// ROM 0x000ab6dc ValidLineGesture__FP11TUnitPublic
 
 // The value moved to the nearest multiple of the grid (an edit view's
 // line spacing), rounding to the nearer; a grid of nothing leaves it as

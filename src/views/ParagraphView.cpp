@@ -1710,6 +1710,362 @@ TParagraphView::ScrubCharacter(long line, const Rect& bounds, long* outOffset)
 }
 
 
+// The width of a space in the style text put in at the offset would take
+// (host: the ROM makes a paragraph style record out of
+// GetStyleForInsertion and measures a space text object with it; the same
+// style spec goes through MeasureTextOnce here).
+static long
+SpaceWidthAt(TParagraphView* view, long offset)
+{
+	RefVar spec(view->GetStyleForInsertion(offset, false, true));
+	if (ISNIL(spec))
+		spec = view->GetDefaultViewStyle();
+	StyleRecord record;
+	CreateTextStyleRecord(spec, &record);
+	StyleRecord* styles[1];
+	styles[0] = &record;
+	short lengths[1];
+	lengths[0] = 1;
+	UniChar space = ' ';
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	FPoint where;
+	where.x = 0;
+	where.y = 0;
+	TextBoundsInfo info;
+	MeasureTextOnce(&space, 1, styles, lengths, where, &options, &info);
+	DisposeStyleRecord(&record);
+	return (info.fRight - info.fLeft) >> 16;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   c a r e t   g e s t u r e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00178548 FindClosestBaseline__14TParagraphViewFs
+// The line whose baseline is nearest the given v, or none when the point is
+// further below the last line than one line's spacing (the spacing being
+// the gap between the last two lines, or a third again the ascent when
+// there is only one).
+//
+// (the ROM writes a line's baseline as its box's bottom less the field at
+// +0x18 of its LineInfo, which is the descent below the baseline; this
+// cache keeps the ascent instead, so the baseline is the box's top plus
+// that.)
+long
+TParagraphView::FindClosestBaseline(short v)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	if (fLineCount == 0)
+		return -1;
+	const LineInfo& last = fLines[fLineCount - 1];
+	long lastBaseline = last.fBounds.top + last.fAscent;
+	long spacing;
+	if (fLineCount < 2)
+		spacing = (last.fAscent * 4) / 3;
+	else
+		spacing = lastBaseline - (fLines[fLineCount - 2].fBounds.top + fLines[fLineCount - 2].fAscent);
+	long belowLast = v - (lastBaseline + spacing);
+	if (belowLast < 0)
+		belowLast = -belowLast;
+	long fromLast = v - lastBaseline;
+	if (fromLast < 0)
+		fromLast = -fromLast;
+	if (fromLast > belowLast)
+		return -1;				// past the end of the text altogether
+	long best = -1;
+	long nearest = 10000;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		long distance = v - (fLines[i].fBounds.top + fLines[i].fAscent);
+		if (distance < 0)
+			distance = -distance;
+		if (distance < nearest)
+		{
+			nearest = distance;
+			best = i;
+		}
+	}
+	return best;
+}
+
+
+// ROM 0x00175840 FindLineForWord__14TParagraphViewFRC5TRectl
+// Which line something written in the box belongs to.  The box's middle
+// is tried first when flag 1 is asked for, and taken when the line it
+// lands on actually straddles the box; otherwise the box's top (flag 2)
+// and bottom (flag 4) are tried and whichever baseline is nearer wins -
+// the bottom only when the top is more than eight pixels out.
+long
+TParagraphView::FindLineForWord(const Rect& box, long flags)
+{
+	if ((flags & 1) != 0)
+	{
+		long middle = FindClosestBaseline((short) ((box.top + box.bottom) >> 1));
+		if (middle >= 0)
+		{
+			long baseline = fLines[middle].fBounds.top + fLines[middle].fAscent;
+			if (baseline > box.top && baseline < box.bottom)
+				return middle;		// it straddles the box: that is the line
+		}
+	}
+	long fromTop = 10000;
+	long fromBottom = 10000;
+	long atTop = -1;
+	long atBottom = -1;
+	if ((flags & 2) != 0)
+	{
+		atTop = FindClosestBaseline(box.top);
+		if (atTop >= 0)
+		{
+			fromTop = (fLines[atTop].fBounds.top + fLines[atTop].fAscent) - box.top;
+			if (fromTop < 0)
+				fromTop = -fromTop;
+		}
+	}
+	if ((flags & 4) != 0 && fromTop > 8)
+	{
+		atBottom = FindClosestBaseline(box.bottom);
+		if (atBottom >= 0)
+		{
+			fromBottom = (fLines[atBottom].fBounds.top + fLines[atBottom].fAscent) - box.bottom;
+			if (fromBottom < 0)
+				fromBottom = -fromBottom;
+		}
+	}
+	return fromTop < fromBottom ? atTop : atBottom;
+}
+
+
+// ROM 0x00175dac InsertHorizontalSpace__14TParagraphViewFR6TPointlT2Uc
+// What a caret gesture actually does: spaces, or line breaks, put in at
+// the point.
+//
+// A plain caret (width -1) is one space.  A caret with a tail is as many
+// spaces as the tail is wide, measured against the width of a space in
+// the style the text would be inserted in.  With no width at all it is
+// line breaks instead: one for a caret with no height either, or as many
+// as the height is worth in lines - and then the white space already at
+// the point is stepped over first, so the break lands after it.
+//
+// (host: the ROM inserts through DoInsertItems, the same path a dropped
+// item takes; InsertStyledText is the host's equivalent - it makes the
+// same aeReplaceText command, with the same undo.  SaveInsertArea, which
+// remembers where the recogniser put something, and CheckAndDoSplitInk
+// are NOT YET: the insert-run list and ink.)
+long
+TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolean typed)
+{
+	long line = FindClosestBaseline(pt.v);
+	if (line < 0)
+		return 0;
+	long lineHeight = fLines[line].fAscent + fLines[line].fHeight;
+	long offset = PointToOffset(pt);
+	long spaces = width == -1 ? 1 : 0;
+	long breaks = 0;
+	Boolean stepOverWhite = false;
+	if (width != -1)
+	{
+		breaks = height == -1 ? 1 : 0;
+		if (height == -1)
+			stepOverWhite = true;
+		else if (width < 1)
+		{
+			if (height > 0)
+			{
+				breaks = (height + lineHeight / 2) / lineHeight + 1;
+				if (breaks > 0)
+					stepOverWhite = true;
+			}
+		}
+		else
+		{
+			long space = SpaceWidthAt(this, offset);
+			spaces = space > 0 ? width / space : 0;
+		}
+	}
+	RefVar textRef(Text());
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	if (stepOverWhite)
+	{
+		long length = (long) Ustrlen(text);
+		while ((IsTab(text[offset]) || IsSpace(text[offset])) && offset < length)
+			offset++;
+	}
+	rich.ReleasePtr();
+
+	// ROM bug kept: with neither a width worth a space nor a height worth a
+	// line the ROM inserts the buffer it never filled in, which is whatever
+	// was on the stack.  DEVIATION: the host cannot reproduce which bytes
+	// those are, and putting arbitrary text into somebody's note is worse
+	// than useless, so the buffer starts empty and nothing goes in.
+	UniChar buffer[41];
+	buffer[0] = 0;
+	UniChar* chars = buffer;
+	UniChar* allocated = nil;
+	long count = 0;
+	if (spaces >= 1 || breaks >= 1)
+	{
+		count = spaces >= 1 ? spaces : breaks;
+		UniChar fill = spaces >= 1 ? ' ' : 0x0d;
+		if (count > 40)
+		{
+			allocated = new UniChar[count + 1];
+			if (allocated == nil)
+				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+			chars = allocated;
+		}
+		for (long i = 0; i < count; i++)
+			chars[i] = fill;
+		chars[count] = 0;
+	}
+
+	// NOT YET: CheckAndDoSplitInk, which a caret over ink splits instead
+	InsertStyledText((ULong) offset, chars, (ULong) count, RefVar(NILREF), RefVar(NILREF), 0, 0, !typed);
+	// the caret goes where the insertion was, but only when more than one
+	// space or any line break went in
+	if (typed && (spaces > 1 || breaks > 0))
+		gRootView->SetKeyView(this, offset, 0, false);
+	if (allocated != nil)
+		delete[] allocated;
+	return 1;
+}
+
+
+// ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
+// A caret gesture offered to the paragraph.  Its point has to be within
+// the view grown by the height of the caret's arms - a caret drawn just
+// above or below a line still belongs to it - and an upside-down caret is
+// placed by its arm instead of its point.  A caret pointing right has to
+// be in the left margin: within ten pixels outside the view's left edge
+// or twenty inside it.
+//
+// What it then does depends on the kind and the angle: the plain caret
+// (2) pointing up is one space, pointing right a line break, pointing
+// down joins the paragraph to the one after; the caret with a tail (3) is
+// as many spaces as the tail is wide, or as many line breaks as it is
+// tall; the open one (5) is line breaks unless the view is one line only;
+// the flat one (6), which only a one-line view takes, is a single space
+// when both its arms are short.
+//
+// NOT YET RECONSTRUCTED: CheckAndDoJoin (0x00175964), which joins this
+// paragraph to the next, and InsertVerticalSpace (0x001764c4), which
+// splits a line - both want the ROM's text objects (the Finder).  The
+// gestures that ask for them answer 0.
+long
+TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
+							Point& armB, Point& tail)
+{
+	Rect box = viewBounds;
+	long reach = point.v - armA.v;
+	if (reach < 0)
+		reach = -reach;
+	InsetRect(&box, 0, -reach);
+	short wasBottom = box.bottom;
+	Point at = point;
+	if (kind == 2)
+	{
+		if (angle == 180)
+			at = armA;
+	}
+	else if (kind == 6)
+	{
+		box.right = (short) (box.right + 1000);
+		box.bottom = wasBottom;
+	}
+	if (!PtInRect(at, &box))
+		return 0;
+	if ((kind == 2 || kind == 3) && angle == 90)
+	{
+		// it has to be in the left margin
+		long outside = viewBounds.left - point.h;
+		long limit = 10;
+		if (outside < 11)
+		{
+			outside = point.h - viewBounds.left;
+			limit = 20;
+		}
+		if (outside > limit)
+			return 0;
+	}
+
+	long width = 0;
+	long height = 0;
+	Boolean typed = true;
+	Boolean vertical = false;
+	if (kind == 2)
+	{
+		if (angle == 0)
+			width = -1;
+		else if (angle == 90)
+		{
+			height = -1;
+			vertical = true;
+		}
+		else if (angle == 180)
+			return 0;			// NOT YET: CheckAndDoJoin(armA, point, armB)
+		else
+			return 0;
+	}
+	else if (kind == 3)
+	{
+		if (angle == 0)
+		{
+			width = tail.h - point.h;
+			if (width < 0)
+				width = -width;
+		}
+		else
+		{
+			height = tail.v - point.v;
+			if (height < 0)
+				height = -height;
+			vertical = angle == 90;
+		}
+	}
+	else if (kind == 5)
+	{
+		if ((fViewJustify & vjOneLineOnly) != 0)
+			return 0;
+		height = tail.v - point.v;
+		if (height < 0)
+			height = -height;
+		vertical = angle == 90;
+	}
+	else if (kind == 6)
+	{
+		if ((fViewJustify & vjOneLineOnly) == 0)
+			return 0;
+		long armOne = CheapDistance(point, armA);
+		long armTwo = CheapDistance(point, armB);
+		if (armTwo > 10 || armOne > 10)
+			return 0;			// both arms have to be short
+		width = -1;
+		typed = false;
+	}
+	else
+		return 0;
+
+	if (vertical)
+		return 0;				// NOT YET: InsertVerticalSpace(point, height)
+
+	// the line the caret was drawn over, from the box its point and its arm
+	// make, and then the insertion at that line's top
+	Rect written;
+	SetRect(&written, armA.h, armA.v, point.h, armA.v);
+	long line = FindLineForWord(written, 6);
+	if (line < 0)
+		return 0;
+	Point where;
+	where.v = (short) (fLines[line].fBounds.top + fLines[line].fAscent);
+	where.h = point.h;
+	return InsertHorizontalSpace(where, width, height, typed);
+}
+
+
 // ROM 0x001740c4 ScrubWords__14TParagraphViewFRC5TRectP11TUnitPublicUc
 // The word or words the scrub crossed taken out.
 //
@@ -1742,12 +2098,12 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	for (long i = 0; i < fLineCount; i++)
 	{
 		const Rect& box = fLines[i].fBounds;
-		// (host: the ROM measures the line's box less the field at +0x18 of
-		// its LineInfo, which is the leading it carries; this cache keeps no
-		// leading of its own - fHeight is the whole box - so the box is what
-		// the scrub is measured against.)
+		// the line from its top down to its baseline, which is where the
+		// glyphs are (the ROM writes it as the box's bottom less the field at
+		// +0x18 of the LineInfo, its descent; this cache keeps the ascent, so
+		// the baseline is the top plus that)
 		Rect lineRows;
-		SetRect(&lineRows, 0, box.top, 1, box.bottom);
+		SetRect(&lineRows, 0, box.top, 1, (short) (box.top + fLines[i].fAscent));
 		if (Overlaps(&box, &bounds)
 			&& (CoveredBy(&lineRows, &scrubRows) >= 50 || CoveredBy(&scrubRows, &lineRows) == 100))
 		{

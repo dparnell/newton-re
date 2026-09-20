@@ -896,6 +896,94 @@ TEditView::Idle(long reason)
 }
 
 
+// ROM 0x000ab490 ValidTextEditCaret__FP11TUnitPublic
+// Which of the caret family a text editor will take, and pointing which
+// way: the plain caret (2) up, right or down; the one with a tail (3) up
+// or right; the open one (5) up; and the flat one (6) leaning at 135.
+Boolean
+ValidTextEditCaret(TUnitPublic* unit)
+{
+	long kind = unit->CaretType();
+	long angle = unit->GestureAngle();
+	switch (kind)
+	{
+	case 2:		return angle == 0 || angle == 90 || angle == 180;
+	case 3:		return angle == 0 || angle == 90;
+	case 5:		return angle == 0;
+	case 6:		return angle == 135;
+	default:	return false;
+	}
+}
+
+
+// ROM 0x000ab6dc ValidLineGesture__FP11TUnitPublic
+// A line an editor takes is one of the four square ones.
+Boolean
+ValidLineGesture(TUnitPublic* unit)
+{
+	long angle = unit->GestureAngle();
+	return angle == 0 || angle == 180 || angle == 90 || angle == -90;
+}
+
+
+// ROM 0x000ab334 HandleCaret__9TEditViewFP11TUnitPublic
+// A caret gesture on the page offered to each visible child that holds
+// data, with the gesture's kind, its angle and the corners of its
+// polyline: the point, the two arms, and - for the kinds that have one -
+// the tail.  The first child that takes it wins, and the page's hilites
+// go.
+long
+TEditView::HandleCaret(TUnitPublic* unit)
+{
+	if (!ValidTextEditCaret(unit))
+		return 0;
+	ULong kind = (ULong) unit->CaretType();
+	long angle = unit->GestureAngle();
+	Point point = unit->GesturePoint(0);
+	Point armA = unit->GesturePoint(1);
+	Point armB = unit->GesturePoint(2);
+	Point tail;
+	if (kind == 3 || kind == 5)
+		tail = unit->GesturePoint(3);
+	else
+	{
+		tail.v = (short) 0x8000;		// no tail
+		tail.h = 0;
+	}
+	long done = 0;
+	TListLoop loop(fChildren);
+	for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+		if ((child->fFlags & vVisible) != 0 && child->DerivedFrom(clDataView)
+			&& ((TDataView*) child)->HandleCaret(kind, angle, point, armA, armB, tail))
+		{
+			done = 1;
+			break;
+		}
+	if (done != 0)
+		RemoveAllHilites();
+	return done;
+}
+
+
+// ROM 0x000ab528 HandleLineGesture__9TEditViewFP11TUnitPublic
+// A line gesture offered the same way, with its angle and its two ends.
+long
+TEditView::HandleLineGesture(TUnitPublic* unit)
+{
+	long angle = unit->GestureAngle();
+	Point from = unit->GesturePoint(0);
+	Point to = unit->GesturePoint(1);
+	if (!ValidLineGesture(unit))
+		return 0;
+	TListLoop loop(fChildren);
+	for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+		if ((child->fFlags & vVisible) != 0 && child->DerivedFrom(clDataView)
+			&& ((TDataView*) child)->HandleLineGesture(angle, from, to))
+			return 1;
+	return 0;
+}
+
+
 // ROM 0x000a8750 DeleteHilitedViews__9TEditViewFv
 // Every hilited child of the page deleted, one at a time: each round
 // looks for the first child that still has a hilite and tells it to
@@ -1069,6 +1157,29 @@ TEditView::RealDoCommand(RefArg cmd)
 		CommandSetResult(cmd, id != aeWord ? 1 : 0);
 		return 1;
 	}
+	if (id == aeCaret)
+	{
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if (HandleCaret((TUnitPublic*) CommandParameter(cmd)))
+		{
+			CommandSetResult(cmd, 1);
+			return true;
+		}
+		return TView::RealDoCommand(cmd);
+	}
+	if (id == aeLine)
+	{
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if (HandleLineGesture((TUnitPublic*) CommandParameter(cmd)))
+		{
+			CommandSetResult(cmd, 1);
+			return true;
+		}
+		return TView::RealDoCommand(cmd);
+	}
+
 	if (id == aeScrub)
 	{
 		// (textFlags bit 0x2000: the page answers the pen itself first)

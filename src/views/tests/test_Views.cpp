@@ -2265,6 +2265,64 @@ TestDatesDrawing()
 }
 
 
+// The caret gesture: a paragraph handed the corners of a caret drawn
+// over it.  HandleCaret is what TEditView::HandleCaret reaches through
+// the page; here it is called directly, so no pen is needed.
+static void
+TestCaretGesture()
+{
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxCg := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 200, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"onetwo\"})");
+	EXPECT(p != nil && p->TextLength() == 6);
+	Refresh();
+
+	// where the third character starts, and the line's baseline
+	Rect box;
+	p->OffsetToBounds(3, &box);
+	short at = box.left;
+	short baseline = (short) (p->fLines[0].fBounds.top + p->fLines[0].fAscent);
+
+	// a caret pointing up: its two arms below the baseline, its point above
+	Point armA, point, armB, tail;
+	armA.h = (short) (at - 8);	armA.v = (short) (baseline + 6);
+	point.h = at;				point.v = (short) (baseline - 10);
+	armB.h = (short) (at + 8);	armB.v = (short) (baseline + 6);
+	tail.v = (short) 0x8000;	tail.h = 0;
+	EXPECT(p->HandleCaret(2, 0, armA, point, armB, tail) == 1);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxCg.text, \"one two\")")));
+
+	// the same caret drawn miles below the text belongs to no line
+	Eval("SetValue(ctxCg, 'text, \"onetwo\")");
+	Refresh();
+	armA.v = (short) (baseline + 200);
+	point.v = (short) (baseline + 184);
+	armB.v = (short) (baseline + 200);
+	EXPECT(p->HandleCaret(2, 0, armA, point, armB, tail) == 0);
+	EXPECT(p->TextLength() == 6);
+
+	// a caret with a tail as wide as three spaces puts three in
+	armA.v = (short) (baseline + 6);
+	point.v = (short) (baseline - 10);
+	armB.v = (short) (baseline + 6);
+	p->OffsetToBounds(4, &box);
+	long character = box.left - at;			// one character of the text
+	tail.v = (short) (baseline - 10);
+	tail.h = (short) (at + character * 3);
+	EXPECT(p->HandleCaret(3, 0, armA, point, armB, tail) == 1);
+	// how many depends on how wide a space is in the font, which is
+	// narrower than the character box the tail was measured against
+	EXPECT(p->TextLength() > 7 && p->TextLength() < 30);
+
+	// a caret pointing down asks to join the paragraphs, which is NOT YET
+	Eval("SetValue(ctxCg, 'text, \"onetwo\")");
+	Refresh();
+	EXPECT(p->HandleCaret(2, 180, armA, point, armB, tail) == 0);
+	EXPECT(p->TextLength() == 6);
+
+	Eval("RemoveView(GetRoot(), ctxCg)");
+	Refresh();
+}
+
+
 // Scrubbing: a paragraph asked what a rectangle over its text would take
 // out, and then to take it.  HandleScrub is what the gesture recogniser
 // reaches through the page (TEditView::Scrub); here it is called
@@ -3197,6 +3255,7 @@ main()
 		TestDatesDrawing();
 		TestClicks();
 		TestScrubbing();
+		TestCaretGesture();
 		TestEffects();
 	}
 	newton_catch_all
