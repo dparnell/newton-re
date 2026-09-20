@@ -1,0 +1,37 @@
+// Typing on the Notepad, driven from a script: the page tapped to put the
+// caret down, then "hello" typed at it, then a picture of the result.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --scale 2 --store build/newton.store --script src/host/demo/typing.ns
+//
+// or, without a window:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --store build/newton.store --script src/host/demo/typing.ns --headless 12
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/typed.pgm build/typed.png
+//
+// It wants a machine that is already past the Setup assistant, which is
+// what --store gives it (src/host/demo/setup.ns makes one); with no store
+// the boot stops on "Welcome" and the taps here land on that instead.
+//
+// Nothing here is the ROM's: it is the pen and the keyboard a person would
+// use, driven through host/HostViews.cpp's PenDown, PenUp, IdleStrokes and
+// KeyEvent.  The key codes are the ADB ones host/HostKeyboard.cpp maps a
+// PC keyboard to.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+keys := [4, 14, 37, 37, 31];			// h e l l o
+
+AddDelayedCall(func() begin
+    call tapAt with (80, 120);			// the caret on to the page
+    AddDelayedCall(func() begin
+        foreach c in keys do call typeKey with (c);
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/typed.pgm");
+            Print("typing: written build/typed.pgm");
+          end, nil, 1500);
+      end, nil, 1200);					// past the double-tap interval
+  end, nil, 2500);						// after the boot
+Print("typing: the script is loaded");

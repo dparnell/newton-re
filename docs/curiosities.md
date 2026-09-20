@@ -151,6 +151,41 @@ straight into `TParagraphView`.
 
 ---
 
+## A paragraph wraps at its parent's right edge, not its own
+
+A word typed or written on a Notepad page becomes a paragraph exactly as
+wide as the first character. Every character after it would wrap onto a
+line of its own, because the only thing that can widen the view -
+`FixupBBox` (0x001815b8) - takes the width its *lines* came out at.
+
+What breaks the circle is two instructions in `LineLoop`'s constructor
+(0x0010d9d0):
+
+```
+mov  r0,r5              ; the paragraph
+add  pc,r1,#0x20        ; TextFlags()
+tst  r0,#0x4
+moveq r0,r7             ; not growing: its own bounds
+addne r0,r8,#0x10       ; growing:     its PARENT's bounds
+ldr  r0,[r0,#0x6]       ; .right
+```
+
+Bit 2 of a view's text flags means "size yourself to your text", and a
+view that does lays its lines out to its *parent's* right edge. So the
+paragraph grows rightwards, a character at a time, until it reaches the
+edge of the page - and only then wraps.
+
+`FixupBBox` then has a matching trick. It does not set its own bounds: it
+offsets them back by the parent's contents origin, writes them to the
+`viewBounds` slot and tells the parent `ChildBoundsChanged`. Setting them
+directly would put the parent's scroll origin on a second time, and a
+paragraph typed into on a scrolled page would walk down it a line at a
+time.
+
+*`src/views/ParagraphView.cpp`.*
+
+---
+
 ## The mu-law coder never clamps
 
 The 8-bit mu-law encoder in `sound/SampleConvert.h` has the shape of

@@ -109,6 +109,15 @@ public:
 	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
 	long		PointToOffset(const Point& pt);							// ROM 0x00177520 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc (host: the nearest character)
 	void		FlushWordAtCaret(void);									// ROM 0x00174c7c FlushWordAtCaret__14TParagraphViewFv
+	// Which way the caret has gone out of a rectangle, which is what tells
+	// a scrolling view where to scroll to: 0 it has not gone out (and 0
+	// for a view that does not hold the caret at all), 1 it is inside, 2
+	// below, 3 above, 4 left of it, 5 right of it.  The line cache is
+	// asked first - the caret's character offset against the first and
+	// last cached lines - and the view's own bounds when there are no
+	// lines cached; only when neither has it out is the root view asked
+	// where the caret actually is.
+	long		CaretRelativeToVisibleRect(const Rect& visible);			// ROM 0x00171e8c CaretRelativeToVisibleRect__14TParagraphViewFRC5TRect
 
 	// editing
 	void		HandleReplaceText(RefArg cmd);							// ROM 0x0016ef00 HandleReplaceText__14TParagraphViewFRC6RefVar
@@ -170,6 +179,9 @@ private:
 };
 
 void	GrowLineInfoCache(LineInfo** cache, long* capacity);			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
+
+// The view as a paragraph, or a throw saying that it is not one.
+TParagraphView*	FailGetParagraphView(RefArg context);				// ROM 0x001ee218 FailGetParagraphView__FRC6RefVar
 
 // The horizontal justification a piece of dropped or written text asks
 // for: the low two bits of its viewJustify, but only when the view it

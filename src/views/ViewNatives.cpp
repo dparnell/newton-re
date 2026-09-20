@@ -20,6 +20,7 @@
 #include "RootView.h"
 #include "EditView.h"
 #include "DataView.h"
+#include "ParagraphView.h"
 #include "DrawShape.h"
 #include "Application.h"
 #include "Commands.h"
@@ -1412,6 +1413,29 @@ FDrawXBitmap(RefArg rcvr, RefArg bounds, RefArg picture, RefArg index, RefArg mo
 	return NILREF;
 }
 
+// ROM 0x001ee9c8 FCaretRelativeToVisibleRect
+// CaretRelativeToVisibleRect(bounds) - which way the caret has gone out
+// of the bounds frame: nil when it has not gone out at all, 'inBox when
+// it is in, and 'top, 'bottom, 'left or 'right for the side it is past.
+// A scrolling view asks this to work out where it has to scroll to.
+static Ref
+FCaretRelativeToVisibleRect(RefArg rcvr, RefArg bounds)
+{
+	TParagraphView* para = FailGetParagraphView(rcvr);
+	Rect visible;
+	FromObject(bounds, visible);
+	switch (para->CaretRelativeToVisibleRect(visible))
+	{
+	case 1:		return RSSYMinbox;
+	case 2:		return RSSYMbottom;
+	case 3:		return RSSYMtop;
+	case 4:		return RSSYMleft;
+	case 5:		return RSSYMright;
+	}
+	return NILREF;
+}
+
+
 void
 RegisterViewNatives(void)
 {
@@ -1444,6 +1468,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FSetHiliteX", (void*) FSetHiliteX, 3);
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
+	RegisterNativeFunction("FCaretRelativeToVisibleRect", (void*) FCaretRelativeToVisibleRect, 1);
 	RegisterNativeFunction("FHiliteUniqueX", (void*) FHiliteUniqueX, 1);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "IdleViews")), RefVar(MakeCFunction((void*) FIdleViews, 0, nil)));
 	RegisterShapeNatives();

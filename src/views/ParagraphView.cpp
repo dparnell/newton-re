@@ -473,7 +473,18 @@ TParagraphView::FillAllCaches(void)
 	TRichString rich(textRef);
 	long length = rich.Length();
 	const UniChar* text = rich.GrabPtr();
-	long width = viewBounds.right - viewBounds.left;
+	// The lines run from the view's left edge to its right - except for a
+	// view that sizes itself to its text (bit 2 of the text flags), which
+	// runs to its *parent's* right edge instead (the ROM's LineLoop
+	// constructor, 0x0010d9d0).  That is what lets a word typed or written
+	// on a page grow to the right as it is added to: the paragraph starts
+	// as wide as the first character and would otherwise wrap every
+	// character after it onto a line of its own, because FixupBBox can
+	// only grow the view to the width its lines came out.
+	long left = viewBounds.left;
+	long right = (TextFlags() & 4) != 0 && fParent != nil
+			   ? fParent->viewBounds.right : viewBounds.right;
+	long width = right - left;
 	long height = viewBounds.bottom - viewBounds.top;
 	memset(&fTextOptions, 0, sizeof(fTextOptions));
 	fTextOptions.fAlignment = ConvertToQDFlush(fViewJustify & vjJustifyMask, &fTextOptions.fJustification);
@@ -1374,9 +1385,9 @@ TParagraphView::ProcessStyles(Boolean /*redraw*/)
 // ROM 0x001815b8 FixupBBox__14TParagraphViewFv
 // The lines laid out again; a paragraph that calculates its bounds takes
 // the text's height (at least a line) - and, one line only, its width
-// (at least 5 wide) - as its bounds (SetBounds; the ROM writes the bounds
-// and tells the parent ChildBoundsChanged).  NOT YET: the hilites' areas
-// remade.
+// (at least 5 wide) - as its bounds, written to its viewBounds slot and
+// the parent told (ChildBoundsChanged).  NOT YET: the hilites' areas
+// remade (UpdateHiliteArea).
 void
 TParagraphView::FixupBBox(void)
 {
@@ -1401,8 +1412,18 @@ TParagraphView::FixupBBox(void)
 			bounds.right = fTextBounds.right;
 		if (!EqualRect(&viewBounds, &bounds))
 		{
+			// the new bounds are in the parent's contents coordinates
+			// before they are written, because that is what the view's
+			// viewBounds slot holds; writing the global ones straight
+			// through SetBounds would add the parent's scroll origin to
+			// them a second time, and a paragraph on a scrolled page
+			// would walk down it a line at a time as it was typed into
+			Rect was = viewBounds;
 			fCachesValid = false;
-			SetBounds(bounds);
+			Point origin = fParent->ContentsOrigin();
+			OffsetRect(&bounds, -origin.h, -origin.v);
+			WriteBounds(bounds);
+			fParent->ChildBoundsChanged(this, was);
 			fCachesValid = true;
 		}
 	}
@@ -2088,4 +2109,78 @@ MakeParagraphForm(UniChar* text, long length, const Rect& bounds, RefArg info, B
 			SetFrameSlot(form, RSSYMviewfont, RefVar(Clone(font)));
 	}
 	return form;
+}
+
+
+// ROM 0x00171e8c CaretRelativeToVisibleRect__14TParagraphViewFRC5TRect
+// Which way the caret has gone out of `visible`, which is what tells a
+// scrolling view where it has to scroll to.  0 it has not (and 0 for a
+// view that does not hold the caret at all), 1 it is inside, 2 below, 3
+// above, 4 left, 5 right.
+//
+// Three questions in order, and the cheapest first.  The line cache is
+// asked by character offset: a caret past the last cached line's end is
+// below, one before the first cached line's start is above, and no
+// measuring is needed to say so.  With no lines cached the view's own
+// bounds are compared with the rectangle, which answers for a paragraph
+// wholly off the edge.  Only when neither has put the caret out is the
+// root view asked where it actually is - and a caret that has never been
+// placed (-32768) answers 0.
+//
+// (The ROM's line cache is a nil-terminated array of LineInfo pointers
+// counted by CacheLength 0x0017c8b0; the reconstruction keeps the same
+// records in a flat array with a count, so the two ends of it are
+// fLines[0] and fLines[fLineCount - 1].)
+long
+TParagraphView::CaretRelativeToVisibleRect(const Rect& visible)
+{
+	long where = 0;
+	if (gRootView->fCaretView != this)
+		return 0;
+	long lines = fLineCount;
+	if (lines > 0)
+	{
+		if (fLines[lines - 1].fEnd < fCaretOffset)
+			where = 2;
+		else if (fLines[0].fStart > fCaretOffset)
+			where = 3;
+	}
+	else
+	{
+		Rect box = viewBounds;
+		if (box.bottom < visible.top)
+			where = 3;
+		else if (visible.bottom < box.top)
+			where = 2;
+		else if (box.right < visible.left)
+			where = 4;
+		else if (box.left > visible.right)
+			where = 5;
+	}
+	if (where != 0)
+		return where;
+	Point caret;
+	gRootView->GetCaretPoint(&caret);
+	if (caret.v == -32768)			// there is no caret to be out of anything
+		return 0;
+	if (caret.v < visible.top)
+		where = 3;
+	else if (visible.bottom < caret.v)
+		where = 2;
+	else if (caret.h < visible.left)
+		where = 4;
+	else
+		where = caret.h > visible.right ? 5 : 1;
+	return where;
+}
+
+
+// ROM 0x001ee218 FailGetParagraphView__FRC6RefVar
+TParagraphView*
+FailGetParagraphView(RefArg context)
+{
+	TView* view = FailGetView(context);
+	if (!view->DerivedFrom(clParagraphView))
+		ThrowMsg((char*) "not a paragraph view");
+	return (TParagraphView*) view;
 }
