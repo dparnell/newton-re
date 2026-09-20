@@ -23,6 +23,10 @@
 #include "ParagraphView.h"
 #include "StyleRuns.h"
 #include "RichString.h"
+#include "Dates.h"
+#include "Locale.h"
+#include "Shapes.h"
+#include "Screen.h"
 #include "REPTranslators.h"
 #include "Unicode.h"
 #include "DrawShape.h"
@@ -1110,6 +1114,86 @@ FDragAndDrop(RefArg rcvr, RefArg unit, RefArg bounds, RefArg limit, RefArg copy,
 }
 
 
+// ROM 0x001f0c28 FDragAndDropLtd
+// :DragAndDropLtd(unit, bounds, limits, copy, dragItems): the drag the
+// plain :DragAndDrop does, with the three rectangles it does not take.
+// `limits` says which:
+//
+//   pinBounds    where the dragged view itself may go ('none: anywhere;
+//                the slot missing: no further than the bounds given)
+//   limitBounds  the rectangle the drag is kept inside ('none: the whole
+//                screen)
+//   clipBounds   the slop, how far outside the drag may stray
+//
+// `limits` of 'none, or a plain rectangle rather than a frame of those
+// three, is a limitBounds; nil leaves the view pinned to its bounds.
+static Ref
+FDragAndDropLtd(RefArg rcvr, RefArg unit, RefArg boundsRef, RefArg limits, RefArg copy, RefArg dragItems)
+{
+	TView* view = FailGetView(rcvr);
+	Rect bounds;
+	FromObject(boundsRef, bounds);
+	Rect screen;
+	SetRect(&screen, 0, 0, (short) screenWidth, (short) screenHeight);
+	Rect pin;
+	Rect clip;
+	Rect* limit = &bounds;
+	Rect* slop = nil;
+	Rect* dragBounds = nil;
+
+	if (EQRef(limits, RSSYMnone))
+		dragBounds = &screen;
+	else if (NOTNIL(limits))
+	{
+		Boolean plain = true;					// (no slot of the three seen yet)
+		if (FrameHasSlotRef(limits, RSSYMpinbounds))
+		{
+			RefVar value(GetFrameSlotRef(limits, RSSYMpinbounds));
+			if (NOTNIL(value))
+			{
+				if (EQRef(value, RSSYMnone))
+					limit = nil;
+				else
+				{
+					FromObject(value, pin);
+					limit = &pin;
+				}
+			}
+			plain = false;
+		}
+		if (FrameHasSlotRef(limits, RSSYMlimitbounds))
+		{
+			RefVar value(GetFrameSlotRef(limits, RSSYMlimitbounds));
+			if (NOTNIL(value))
+			{
+				if (!EQRef(value, RSSYMnone))
+					FromObject(value, screen);
+				dragBounds = &screen;
+			}
+			plain = false;
+		}
+		if (FrameHasSlotRef(limits, RSSYMclipbounds))
+		{
+			RefVar value(GetFrameSlotRef(limits, RSSYMclipbounds));
+			if (NOTNIL(value))
+			{
+				FromObject(value, clip);
+				slop = &clip;
+			}
+		}
+		else if (plain)
+		{
+			FromObject(limits, screen);
+			dragBounds = &screen;
+		}
+	}
+
+	TDragInfo dragInfo(dragItems);
+	Boolean did = view->DragAndDrop(StrokeFromRef(unit), bounds, limit, slop, NOTNIL(copy), dragInfo, dragBounds);
+	return MAKEBOOLEAN(did);
+}
+
+
 // ROM 0x001ebe14 FDeleteX
 // :Delete(message, args): the view crumpled into the trash - the trash
 // effect set up, the message sent to the view (which removes it), the
@@ -1366,6 +1450,164 @@ FTimeToPosition(RefArg /*rcvr*/, RefArg context, RefArg time)
 	TView* view = FailGetView(context);
 	long height = (short) ((unsigned short) view->viewBounds.bottom - (unsigned short) view->viewBounds.top);
 	return MAKEINT(TimeToPosition(RINT(time), height, 0, kDayMinutes));
+}
+
+
+// ROM 0x001efdf0 FDrawMeetingGrid__FRC6RefVarT1
+// :DrawMeetingGrid(step): the rules the Dates day view's meetings are
+// drawn between - a line across the view every `step` pixels, one for
+// each half hour, with the whole hours named down the eighteen-pixel
+// gutter on the left - and a rule down the left edge of every child but
+// the first, which is what separates the days of a week.
+//
+// Which half hour the first line is comes from the view's child origin:
+// the view is taller than the day it shows and is scrolled through it, so
+// the origin divided by the step says where the day has got to, and the
+// view's height in steps says how many lines there is room for.
+//
+// The hour's name is right-aligned in the gutter, and "am" or "pm" goes
+// under the first hour drawn and under noon.  The lines are drawn light
+// grey for the hours and grey for the half hours, which is the way round
+// the ROM has it.
+static Ref
+FDrawMeetingGrid(RefArg rcvr, RefArg stepRef)
+{
+	TView* view = FailGetView(rcvr);
+	Rect bounds = view->viewBounds;
+	long lineWidth = (bounds.right - bounds.left) - 18;
+	long step = RINT(stepRef);
+	PenState pen;
+	GetPenState(&pen);
+	PenNormal();
+	Point origin;
+	view->GetChildOrigin(&origin);
+	long firstLine = origin.v / step;
+	long lineCount = (bounds.bottom - bounds.top) / step;
+	TDate date;
+	long lineLeft = bounds.left + 18;
+
+	RefVar font(GetVariable(rcvr, RSSYMhourfont, nil, 0));
+	StyleRecord style;
+	style.fPattern = nil;					// (the rest is only read when there is a font)
+	StyleRecord* stylePtr = &style;
+	if (NOTNIL(font))
+		CreateTextStyleRecord(font, &style);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fAlignment = 0x10000;			// right, in the gutter
+	options.fWidth = ToFixed(18);
+	options.fTransferMode = 1;
+
+	long y = bounds.top - 1;
+	long lastLine = firstLine + lineCount;
+	RefVar format(GetProtoVariable(RefVar(GetCurrentLocale()), RSSYMtimeformat, nil));
+	Boolean twelveHour = RINT(GetProtoVariable(format, RSSYMtimecycle, nil)) == 1;
+	Fixed x = ToFixed(bounds.left - 1);
+	UniChar text[8];
+	for (long line = firstLine; line <= lastLine; line++)
+	{
+		y += step;
+		if (line % 2 == 0 && NOTNIL(font))
+		{
+			date.fHour = line / 2;
+			date.TimeString(1, text, 8);
+			FPoint where;
+			where.x = x;
+			where.y = ToFixed(y - 2);
+			// (the ROM works out here whether the hour is past noon and
+			//  does nothing with the answer)
+			(void) (twelveHour && date.fHour >= 12);
+			DrawTextOnce(text, Ustrlen(text), &stylePtr, nil, where, &options, nil);
+			if (line == firstLine || date.fHour == 12)
+			{
+				long skip = 0;
+				date.TimeString(4, text, 8);		// "am" or "pm"
+				long length = Ustrlen(text);
+				if (length > 0 && IsSpace(text[0]))
+				{
+					skip = 1;
+					length--;
+				}
+				where.y = AddFixed(where.y, ToFixed(GetFontSize(font)));
+				DrawTextOnce(text + skip, length, &stylePtr, nil, where, &options, nil);
+			}
+		}
+		SetFgPattern(GetStdPattern(line % 2 != 0 ? grayPat : ltGrayPat));
+		MoveTo(lineLeft, y);
+		Line(lineWidth, 0);
+	}
+
+	// the children's left edges: the first child is the day the view
+	// starts with, and has no rule of its own
+	PenNormal();
+	TViewList* children = view->fChildren;
+	long childCount = children->GetArraySize();
+	for (long i = 1; i < childCount; i++)
+	{
+		Rect box = children->At(i)->viewBounds;
+		MoveTo(box.left, box.top);
+		LineTo(box.left, box.bottom);
+	}
+	SetPenState(&pen);
+	if (NOTNIL(font))
+		DisposeStyleRecord(&style);
+	return NILREF;
+}
+
+
+// ROM 0x001f030c FDrawDateLabels__FRC6RefVarN21
+// :DrawDateLabels(bounds, dates): the dates written under the columns of
+// the Dates week and month views - one label to each column of the
+// bounds, centred, ten pixels below it.
+//
+// A day apart (the week view) each label is the day of the week and the
+// date; anything else takes the view's own `dayStrSpec`.  Printing takes
+// the long form instead, out of the ROM's date-and-time format specs.
+static Ref
+FDrawDateLabels(RefArg rcvr, RefArg boundsRef, RefArg dates)
+{
+	long count = Length(dates);
+	if (count <= 1)
+		return NILREF;
+	long first = RINT(GetArraySlotRef(dates, 0));
+	long second = RINT(GetArraySlotRef(dates, 1));
+	Rect bounds;
+	FromObject(boundsRef, bounds);
+	long step = (bounds.right - bounds.left) / count;
+	long spec = RINT(GetVariable(rcvr, RSSYMdaystrspec, nil, 0));
+
+	TDate date;
+	StyleRecord style;
+	style.fPattern = nil;
+	StyleRecord* stylePtr = &style;
+	CreateTextStyleRecord(RefVar(GetVariable(rcvr, RSSYMlabelfont, nil, 0)), &style);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fAlignment = 0x8000;			// centred over the column
+	options.fWidth = ToFixed(step);
+	options.fTransferMode = 1;
+	SetFgPattern(GetStdPattern(blackPat));
+
+	FPoint where;
+	where.y = ToFixed(bounds.bottom + 10);
+	long x = bounds.left;
+	Boolean printing = FailGetView(rcvr)->Printing();
+	UniChar text[20];
+	for (long i = 0; i < count; i++)
+	{
+		date.InitWithMinutes((ULong) RINT(GetArraySlotRef(dates, i)));
+		if (printing)
+			date.LongDateString((ULong) RINT(GetProtoVariable(RefVar(Rdatetimestrspecs), RSSYMdaystrspec, nil)), text, 20);
+		else if (second - first == kDayMinutes)
+			date.DateElementString(2, 2, text, 20, true);
+		else
+			date.ShortDateString((ULong) spec, text, 20);
+		where.x = ToFixed(x);
+		DrawTextOnce(text, Ustrlen(text), &stylePtr, nil, where, &options, nil);
+		x += step;
+	}
+	DisposeStyleRecord(&style);
+	return NILREF;
 }
 
 
@@ -1861,6 +2103,9 @@ RegisterViewNatives(void)
 {
 	RegisterNativeFunction("FLayoutVerticallyX", (void*) FLayoutVerticallyX, 2);
 	RegisterNativeFunction("FLayoutTableX", (void*) FLayoutTableX, 3);
+	RegisterNativeFunction("FDrawMeetingGrid__FRC6RefVarT1", (void*) FDrawMeetingGrid, 1);
+	RegisterNativeFunction("FDrawDateLabels__FRC6RefVarN21", (void*) FDrawDateLabels, 2);
+	RegisterNativeFunction("FDragAndDropLtd", (void*) FDragAndDropLtd, 5);
 	RegisterNativeFunction("FPositionToTime__FRC6RefVarN21", (void*) FPositionToTime, 2);
 	RegisterNativeFunction("FTimeToPosition__FRC6RefVarN21", (void*) FTimeToPosition, 2);
 	RegisterNativeFunction("FGetHiliteOffsets__FRC6RefVar", (void*) FGetHiliteOffsets, 0);
@@ -1962,7 +2207,7 @@ MakeViewMethods(void)
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
 		{ "SetOrigin", (void*) FSetOriginX, 2 },
-		{ "Drag", (void*) FDragX, 2 }, { "DragAndDrop", (void*) FDragAndDrop, 5 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
+		{ "Drag", (void*) FDragX, 2 }, { "DragAndDrop", (void*) FDragAndDrop, 5 }, { "DragAndDropLtd", (void*) FDragAndDropLtd, 5 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
 		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },

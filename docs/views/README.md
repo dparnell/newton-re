@@ -1329,6 +1329,37 @@ The columns do not overlap - a cell's left is the last one's right.
 Laying out stops at the first cell that would cross the view's right
 edge and at the first row that would cross the bottom one.
 
+## The Dates views' own drawing (`views/ViewNatives.cpp`)
+
+`:DrawMeetingGrid(step)` 0x001efdf0 draws the rules a day's meetings are
+laid between: a line across the view every `step` pixels - one to each
+half hour - with the whole hours named down the eighteen-pixel gutter on
+the left, right-aligned in it, and "am" or "pm" under the first hour
+drawn and under noon. Which half hour the first line is comes from the
+view's child origin divided by the step, since the view is taller than
+the day it shows and is scrolled through it. The hour rules are drawn
+light grey and the half hours grey, which is the way round the ROM has
+it. Afterwards it rules down the left edge of every child but the
+first, which is what separates the days of a week.
+
+`:DrawDateLabels(bounds, dates)` 0x001f030c writes the dates under the
+columns, one to each, centred in `(right - left) / count` pixels and ten
+below the bounds. Dates a day apart (the week view) get the day and the
+date; anything else takes the view's own `dayStrSpec`, and printing
+takes the long form out of the ROM's date-and-time specs.
+
+Both are global natives whose receiver is the view they are called from,
+so a script in the view calls `DrawMeetingGrid(20)` without a receiver.
+
+`:DragAndDropLtd(unit, bounds, limits, copy, dragItems)` 0x001f0c28 is
+the drag the plain `:DragAndDrop` does with the three rectangles it does
+not take: `limits.pinBounds` is where the dragged view itself may go
+(`'none`: anywhere; the slot missing: no further than the bounds given),
+`limits.limitBounds` the rectangle the drag is kept inside (`'none`: the
+whole screen), and `limits.clipBounds` the slop. A `limits` of `'none`,
+or a plain rectangle rather than a frame of those three, is a
+limitBounds.
+
 ## What a note says (`views/ViewNatives.cpp`)
 
 `ExtractData(data, separator, maxLength)` 0x001ed314 is the line the

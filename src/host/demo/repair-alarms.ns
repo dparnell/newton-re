@@ -28,6 +28,8 @@ begin
 		begin
 			soup:RemoveFromStore();
 			Print("repair-alarms: the alarm soup is gone; the ROM will make a new one");
+			Print("repair-alarms: the Query exceptions after this are the alarm code");
+			Print("repair-alarms: finding the soup it was holding gone - the next boot is clean");
 		end
 	else
 		Print("repair-alarms: there is no alarm soup - nothing to repair");

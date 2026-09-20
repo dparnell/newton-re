@@ -11,6 +11,7 @@
 // Runs over a standalone kernel heap with the ROM's objects imported (for
 // the fonts of the text views).
 #include "RootView.h"
+#include "Locale.h"
 #include "TextView.h"
 #include "ParagraphView.h"
 #include "Hilites.h"
@@ -2108,6 +2109,69 @@ TestExtractData()
 }
 
 
+// The Dates views' two drawing functions.  Both are global natives whose
+// receiver is the view they are called from, so the view is given a
+// method that calls them.
+static void
+TestDatesDrawing()
+{
+	// what the boot script makes, which the hour labels ask for the time
+	// cycle (the tests before this one take it away again)
+	const ULong kUSABundle = 0x004a4d09;		// the ROM's locale bundle 'USA
+	RefVar intl(AllocateFrame());
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(TranslateROMRef(kUSABundle)));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	EXPECT(InitInternationalUtils() == noErr);
+
+	// a view 120 x 100 with two children: an hour grid every twenty pixels
+	ViewOf("ctxG := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		   "viewBounds: {left: 0, top: 0, right: 120, bottom: 100}, "
+		   "HourFont: 0x3000, "
+		   "viewChildren: [{viewClass: 74, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 70, bottom: 100}}, "
+		   "{viewClass: 74, viewFlags: 1, viewBounds: {left: 70, top: 0, right: 120, bottom: 100}}], "
+		   "Grid: func() begin DrawMeetingGrid(20); true end})");
+	Eval("ctxG:Grid()");
+	// a rule at the top of each half hour, across the view from the
+	// eighteen-pixel gutter, and nothing between them
+	EXPECT(InkIn(18, 19, 120, 20) > 0);
+	EXPECT(InkIn(18, 39, 120, 40) > 0);
+	EXPECT(InkIn(18, 5, 60, 6) == 0);		// (past 60 is the second child's own rule)
+	// the hours named in the gutter (6am and 7am here: the view's origin
+	// is nought, so the first line is the first half hour of the day)
+	EXPECT(InkIn(0, 0, 18, 100) > 0);
+	// and the second child's left edge ruled down the view (the first
+	// child's is not)
+	EXPECT(InkIn(70, 0, 71, 100) > 50);
+	Eval("ctxG:Close()");
+	Refresh();
+
+	// the date labels: two dates a day apart, centred under the columns
+	ViewOf("ctxL := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		   "viewBounds: {left: 0, top: 0, right: 120, bottom: 40}, "
+		   "labelFont: 0x3000, dayStrSpec: 80466, "
+		   "Labels: func() begin DrawDateLabels({left: 0, top: 0, right: 120, bottom: 20}, "
+		   "[Time(), Time() + 1440]); true end})");
+	Eval("ctxL:Labels()");
+	// drawn ten pixels below the bounds it was given
+	EXPECT(InkIn(0, 20, 120, 40) > 0);
+	EXPECT(InkIn(0, 0, 120, 18) == 0);
+	// one date to a column: something in each half
+	EXPECT(InkIn(0, 20, 60, 40) > 0 && InkIn(60, 20, 120, 40) > 0);
+	// a single date draws nothing at all
+	Eval("ctxL:Close()");
+	Refresh();
+	ViewOf("ctxL := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		   "viewBounds: {left: 0, top: 0, right: 120, bottom: 40}, "
+		   "labelFont: 0x3000, dayStrSpec: 80466, "
+		   "Labels: func() begin DrawDateLabels({left: 0, top: 0, right: 120, bottom: 20}, [Time()]); true end})");
+	Eval("ctxL:Labels()");
+	EXPECT(MapIs(ExpWhite, "one date draws nothing"));
+	Eval("ctxL:Close()");
+	Refresh();
+	Eval("RemoveSlot(vars, 'international)");
+}
+
+
 static void
 TestClicks()
 {
@@ -2359,6 +2423,55 @@ TestClicks()
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "drag and drop closed"));
+
+	// the same through :DragAndDropLtd, which takes the three rectangles
+	// the plain one does not: the drag kept inside limitBounds, the view
+	// free to go anywhere ('none pinBounds)
+	Eval("dropped := nil");
+	ViewOf("ctxDS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
+		"viewClickScript: func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), "
+		"{pinBounds: 'none, limitBounds: {left: 0, top: 0, right: 160, bottom: 120}}, nil, "
+		"[{types: ['text], dragRef: \"and again\"}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
+	Eval("ctxDT := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 100, top: 40, right: 150, bottom: 70}, viewFormat: 1, "
+		"viewGetDropTypesScript: func(pt) ['text], "
+		"viewDropScript: func(dropType, dropData, pt) begin dropped := dropData; true end})");
+	Eval("ctxDS:Dirty(); ctxDT:Dirty()");
+	Refresh();
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(40, 55, 0);
+	HostTabletQueuePenMove(70, 55);
+	HostTabletQueuePenMove(100, 55);
+	HostTabletQueuePenMove(125, 55);
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"and again\")")));
+	// and the limits in their other shapes: a plain rectangle, 'none, nil
+	Eval("dropped := nil");
+	Eval("ctxDS.viewClickScript := func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), "
+		 "{left: 0, top: 0, right: 160, bottom: 120}, nil, [{types: ['text], dragRef: \"a rectangle\"}]); true end");
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(40, 55, 0);
+	HostTabletQueuePenMove(100, 55);
+	HostTabletQueuePenMove(125, 55);
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"a rectangle\")")));
+	Eval("dropped := nil");
+	Eval("ctxDS.viewClickScript := func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), 'none, nil, "
+		 "[{types: ['text], dragRef: \"anywhere\"}]); true end");
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(40, 55, 0);
+	HostTabletQueuePenMove(100, 55);
+	HostTabletQueuePenMove(125, 55);
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	IdleStrokes();
+	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"anywhere\")")));
+	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "the limited drag and drop closed"));
 }
 
 
@@ -2926,6 +3039,7 @@ main()
 		TestHiliteOffsets();
 		TestFontQueries();
 		TestExtractData();
+		TestDatesDrawing();
 		TestClicks();
 		TestEffects();
 	}
