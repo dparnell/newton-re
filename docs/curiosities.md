@@ -211,6 +211,59 @@ map's depth. A 32-pixel-wide word at one bit deep is filled with a single
 
 ---
 
+## A key is given square corners by drawing it somewhere else
+
+Every key of the soft keyboard is a rounded rectangle, except the ones at
+the edges of the keyboard, which are square on the side they meet.
+`TKeyboardView::DrawKeyFrame` (0x000fbde0) does not have a second way of
+drawing those. It pushes the rectangle a *hundred pixels* out on the sides
+that want square corners - so the rounded corner is off somewhere else
+entirely - and clips the drawing back to where the key really is:
+
+```
+if (info & 0x80000) face.left   -= 100;
+if (info & 0x20000) face.top    -= 100;
+if (info & 0x10000) face.right  += 100;
+if (info & 0x40000) face.bottom += 100;
+ClipRect(&theKeyItself);
+FrameRoundRect(&face, round, round);
+```
+
+Four bits and one clip, instead of a rounded-rectangle routine that takes
+a corner mask.
+
+*`src/views/KeyboardView.cpp`.*
+
+---
+
+## The shift key on the soft keyboard is sticky, and that is not a special case
+
+`TKeyboardView::HandleKeyPress` (0x000fc300) puts a tapped key into the
+key map as a press *and a release* - and then releases every modifier that
+was down with it:
+
+```
+ch = KeyIn(code, true, this);
+KeyIn(code, false, this);
+if (shiftDown)   KeyIn(kShiftKey, false, this);
+if (optionDown)  KeyIn(kOptionKey, false, this);
+...
+```
+
+So shift stays on for exactly one key and then lets go by itself, which is
+what you want when you are tapping keys with one pen and cannot hold two
+down at once. Tapping shift itself toggles it instead, and the keyboard
+dirties itself so the legends change.
+
+The hit test is worth a look too. `TKeyboardView::InsideView` (0x000fc760)
+answers false unless the point is actually on a key, so a tap in one of
+the gaps between the keys is not the keyboard's at all and falls through
+to whatever is underneath it.
+
+*`src/views/KeyboardView.cpp`.*
+
+---
+
 ## The mu-law coder never clamps
 
 The 8-bit mu-law encoder in `sound/SampleConvert.h` has the shape of
