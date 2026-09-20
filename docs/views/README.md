@@ -275,6 +275,40 @@ marks (`vIsBeingDeleted`, 0x90000000) before letting the exception go on,
 so a part-built view is not left looking as though it were being deleted.
 Both answer `true`.
 
+**TMonthView** (`MonthView.h`, clMonthView 80): the calendar - a month
+laid out as seven columns of days under a row of weekday letters.  It is
+the grid in the Dates app, the one the Setup assistant asks today's date
+on, and the one behind every date picker.
+
+`RealDraw` works the month out afresh each time: the bounds give a label
+rectangle (the top nine pixels) and a grid under it; the month comes from
+`selectedDates` - the minutes of each selected day - and when the first
+and last of them fall in different months the context's own `month` says
+which of the two is on show, the other end being folded into it by a
+month's worth of days.  The month and year are then written *back* onto
+the context, which is what the pickers around the calendar read: the
+Setup assistant's year picker does `yearPicker:SetYear(monthView.year)`
+as soon as anything changes, so a calendar that never drew left it nil.
+The cells are what is left divided seven ways across and five or six down,
+depending on whether the month fits in five weeks.
+
+`firstDayOfWeek` (the view's, the user's preference, or the locale's)
+decides which column a day falls in, and every other piece of geometry
+follows from it: `DateRect` answers a day's cell, `PointToDate` the day a
+point is over (pinned to the grid, so a pen dragged off the calendar still
+picks something), and `UpdateRangeRect` the one or two rounded rectangles
+a range of days covers - `InvertSelection` turns them over.  `HandleClick`
+follows the pen: in the grid it picks a day and, without `singleDay`,
+drags a range out (kept inside one week, the pen wrapping round rather
+than running on); on the labels it picks a weekday column down the whole
+month.  What the pen settled on becomes `selectedDates` again
+(`UpdateFrame`) and the `monthChangedScript` is run.
+
+NOT YET: `DrawMonthOverView` (0x00122174), the Dates app's month
+overview, which draws a bar across each day that has meetings in it - it
+needs the meeting and repeat soups.  Until it is there an overview draws
+its dates like any other month.
+
 **TTextView** (`TextView.h`, clTextView 98: protoTitle, protoTextButton
 and the like): its text slot in its viewFont - a single line
 (viewJustify's `oneLineOnly` 0x800000) laid across the bounds' width by

@@ -30,6 +30,7 @@ add_library(views STATIC
     Commands.cpp
     Keyboard.cpp
     KeyboardView.cpp
+    MonthView.cpp
     Bits.cpp
     Application.cpp
     PickView.cpp

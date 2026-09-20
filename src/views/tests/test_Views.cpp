@@ -26,6 +26,7 @@
 #include "Bits.h"
 #include "Application.h"
 #include "UnitPublic.h"
+#include "MonthView.h"
 #include "Recognizer.h"
 #include "StrokeCentral.h"
 #include "StrokeQueue.h"
@@ -2208,6 +2209,58 @@ TestDatesDrawing()
 	EXPECT(MapIs(ExpWhite, "one date draws nothing"));
 	Eval("ctxL:Close()");
 	Refresh();
+
+	// ---- the calendar (TMonthView) ----
+	// a month view 140 x 90 over September 2026, with the 10th selected
+	// 2026-09-10 in minutes since 1904, which is what a date is here
+	Eval("monthDates := [64530720]");
+	TView* month = ViewOf("ctxM := AddView(GetRoot(), {viewClass: 80, viewFlags: 1 + 0x200, "
+		   "viewBounds: {left: 0, top: 0, right: 140, bottom: 90}, "
+		   "labelFont: 0x3000, datesFont: 0x3000, firstDayOfWeek: 0, "
+		   "selectedDates: monthDates, singleDay: true, "
+		   "monthChangedScript: func() changed := true})");
+	Eval("ctxM:Dirty()");
+	Refresh();
+	TMonthView* calendar = (TMonthView*) month;
+	EXPECT(calendar->ClassID() == clMonthView && calendar->DerivedFrom(clView));
+	// the month it settled on is written back for the pickers around it
+	EXPECT(RINT(Eval("ctxM.year")) == 2026 && RINT(Eval("ctxM.month")) == 9);
+	// seven columns across the grid, and five rows: September 2026 starts
+	// on a Tuesday and has thirty days, so it fits in five weeks
+	EXPECT(calendar->fCellWidth == (calendar->fGridRect.right - calendar->fGridRect.left + 2) / 7);
+	EXPECT(calendar->fCellHeight == (calendar->fGridRect.bottom - calendar->fGridRect.top) / 5);
+	EXPECT(calendar->FirstColumn() == 2);		// the 1st is a Tuesday
+	// the cell of a day, and the day of a point in it
+	Rect cell;
+	calendar->DateRect(cell, 10);
+	EXPECT(cell.left == calendar->fGridRect.left + calendar->fCellWidth * 4);
+	EXPECT(cell.top == calendar->fGridRect.top + calendar->fCellHeight + 1);
+	Point middle;
+	middle.h = (short) (cell.left + 1);
+	middle.v = (short) (cell.top + 1);
+	EXPECT(calendar->PointToDate(middle) == 10);
+	// a point off the end of the grid comes back to the last cell
+	Point outside;
+	outside.h = 1000;
+	outside.v = 1000;
+	// (thirty days from the Tuesday column fit in five rows, so the last
+	// row is row four)
+	EXPECT(calendar->PointToDate(outside) == 4 * 7 + 6 - 2 + 1);
+	// the selection is the tenth's cell, and there is no second rectangle
+	EXPECT(EqualRect(&calendar->fRangeRect, &cell) && EmptyRect(&calendar->fRangeRect2));
+	// something was drawn in the labels and in the grid
+	EXPECT(InkIn(calendar->fLabelRect.left, calendar->fLabelRect.top, calendar->fLabelRect.right, calendar->fLabelRect.bottom) > 0);
+	EXPECT(InkIn(calendar->fGridRect.left, calendar->fGridRect.top, calendar->fGridRect.right, calendar->fGridRect.bottom) > 0);
+	// a range across a week's end takes two rectangles
+	calendar->UpdateRangeRect(5, 9);
+	EXPECT(!EmptyRect(&calendar->fRangeRect2));
+	// and the days it covers are written back as selectedDates
+	calendar->UpdateFrame(10, 10);
+	EXPECT(RINT(Eval("Length(ctxM.selectedDates)")) == 1);
+	EXPECT(RINT(Eval("ctxM.selectedDates[0]")) == 64530720);
+	Eval("ctxM:Close()");
+	Refresh();
+
 	Eval("RemoveSlot(vars, 'international)");
 }
 
