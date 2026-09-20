@@ -7,6 +7,7 @@
 */
 
 #include "UnitPublic.h"
+#include "EdgeList.h"
 #include "Recognizer.h"
 #include "RootView.h"
 #include "ViewFlags.h"
@@ -276,6 +277,16 @@ TUnitPublic::CaretType(void)
 	if (label != 2 && label != 3 && label != 5 && label != 6)
 		label = 0;
 	return label;
+}
+
+
+// ROM 0x0022d0a8 CountGesturePoints__FP11TUnitPublic
+// The corners of the unit's polyline (a gesture unit's interpretation),
+// which is what the gesture was recognised from.
+long
+CountGesturePoints(TUnitPublic* unit)
+{
+	return ((TEdgeListUnit*) unit->fUnit)->GetCorners()->fCount;
 }
 
 

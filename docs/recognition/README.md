@@ -795,12 +795,42 @@ puffs away.  `TParagraphView::HandleScrub` empties the paragraph when the
 scrub covers more than seventy per cent of it, and otherwise deletes the
 lines it covers (`ScrubLines`: more than sixty per cent of a line's box).
 
-NOT YET: `ScrubWords` (0x001740c4) and `ScrubCharacter` (0x00174808)
-under it, which is how a scrub over part of a line takes out only the
-words it crossed; they want the word boundaries (`PointToWordBoundary`,
-`PointToWord`) and the ROM's text objects.  The caret and line gestures
-(`aeCaret`, `aeLine`) are not answered either.  Also the domains above
-this one (shapes, words), `ArbitrateGraphicsWords`, the inker and ink
+`TParagraphView::ScrubWords` is what takes out less than a whole line.
+It finds the line the scrub is on, takes the scrub's left and right edges
+at that line's middle and asks each for the word boundary it is nearest
+(`PointToWordBoundary`, biased towards the word's start on the left and
+its end on the right), and what lies between them is the candidate.
+Whether it goes depends on how much of it the scrub covers:
+
+| the candidate | what the scrub must do |
+| --- | --- |
+| two or more characters on one line | span more than half of it |
+| two ends on different lines | nothing: it goes |
+| nothing (the ends met) | contain, or be contained by, one character (`ScrubCharacter`) - and a scrub wider than five pixels may only claim a character if it was drawn with seven corners or more |
+| a word whose box it only overlaps | cover sixty per cent of the word |
+| white space | cover ninety per cent of it - or, for a single space, the same five-pixels-or-seven-corners rule |
+
+The corner count is `CountGesturePoints`, which is simply how many
+corners the gesture domain's polyline came down to: a real to-and-fro
+has several, a flick across a letter has two or three.  It is what stops
+a stray stroke taking a character with it.
+
+Taking out the last of the text answers 5 rather than 2, which is what
+tells the page to remove the view; `RemoveText` widens the range it is
+given to take a neighbouring space, so scrubbing a word in a sentence
+takes the space after it too.
+
+(host: the ROM does all of this over its text objects - `PointToWord`
+asks the object under the point for its own text and runs `FindWordBreaks`
+over it, `OffsetInRunToBounds` and `CharBounds` measure characters within
+a run, and `ScrubCharacter` goes through `ReplaceCharacter` with an empty
+replacement string just to find the character a rectangle picks out.  The
+text objects are NOT YET, so the line cache and the paragraph's own
+measuring stand in for them; the decisions above are the ROM's.)
+
+NOT YET: the caret and line gestures (`aeCaret`, `aeLine`) are not
+answered, nor the shape and word domains above this one, nor
+`ArbitrateGraphicsWords`, the inker and ink
 (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.

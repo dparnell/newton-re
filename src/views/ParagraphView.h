@@ -26,8 +26,10 @@
 				keys merged by AddKeyToCurrUndo), the caret moved, the lines
 				laid out again (RangeChanged).  NOT YET RECONSTRUCTED: the
 				hilites (a selection typed over), ink words, the recogniser's
-				word and gesture handling, the correction info, the other
-				edit commands (styles changed, cut and paste), the tab stops
+				word handling and the caret and line gestures (the scrub is
+				here: HandleScrub, ScrubLines, ScrubWords), the correction
+				info, the other edit commands (styles changed, cut and
+				paste), the tab stops
 				(tabs draw as characters), the text objects (each line is
 				laid out from the text when drawn), the bounds recalculation
 				of vCalculateBounds paragraphs (the lines are all laid out;
@@ -76,6 +78,12 @@ ULong	GetInputViewTextFlags(ULong textFlags, ULong viewFlags);	// ROM 0x00261d2c
 // Whether every character of the run is white space (a count of -1: to
 // the end of the string).
 Boolean	ContainsOnlyWhiteSpace(const UniChar* text, ULong count);	// ROM 0x0017a310 ContainsOnlyWhiteSpace__FPUsUl
+
+// Which of a word's two edges a point is nearest, with a bias: a positive
+// bias takes the right edge only once the point is that far (per cent)
+// across the word, a negative one takes it unless the point is within
+// that much of the right edge.
+long	FindNearestWordBoundary(const Point& pt, long left, long right, long bias);	// ROM 0x0017d2a0 FindNearestWordBoundary__FRC6TPointlN22
 
 // The view the recogniser last put a word into, and where it put it.  A
 // scrub that arrived before the word did is not allowed to take it away.
@@ -137,6 +145,14 @@ public:
 	void		HandleReplaceText(RefArg cmd);							// ROM 0x0016ef00 HandleReplaceText__14TParagraphViewFRC6RefVar
 	Boolean		ScrubHilite(const Rect& bounds);							// ROM 0x00173ea8 ScrubHilite__14TParagraphViewFRC5TRect - a scrub over the selection deletes it
 	long		ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x001748b8 ScrubLines__14TParagraphViewFRC5TRectP11TUnitPublicUc
+	long		ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x001740c4 ScrubWords__14TParagraphViewFRC5TRectP11TUnitPublicUc
+	Boolean		ScrubCharacter(long line, const Rect& bounds, long* outOffset);	// ROM 0x00174808 ScrubCharacter__14TParagraphViewFP8LineInfolRC5TRectPl (host: no text objects - see the definition)
+	// The word a point is in, and the boundary of it the point is nearest.
+	// (host: the ROM asks its text objects, and answers the line, the run
+	// and whether the character is a tab; here the line's index is enough
+	// and a tab is a character like any other.)
+	Boolean		PointToWord(const Point& pt, long* start, long* end, long* outLine);	// ROM 0x001776f0 PointToWord__14TParagraphViewFRC6TPointPlT210MarginSizePP8LineInfoT2PUc
+	long		PointToWordBoundary(const Point& pt, long bias, long* outLine);	// ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc - -1 for no word there
 	void		DeleteHilitedTextOnly(RefArg hilite);					// ROM 0x00174dbc DeleteHilitedTextOnly__14TParagraphViewFRC6RefVar
 	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
 	void		RemoveText(ULong offset, ULong length);					// ROM 0x00178b98 RemoveText__14TParagraphViewFUlT1

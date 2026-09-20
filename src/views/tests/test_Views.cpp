@@ -2265,6 +2265,65 @@ TestDatesDrawing()
 }
 
 
+// Scrubbing: a paragraph asked what a rectangle over its text would take
+// out, and then to take it.  HandleScrub is what the gesture recogniser
+// reaches through the page (TEditView::Scrub); here it is called
+// directly, so no pen is needed.
+static void
+TestScrubbing()
+{
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxSc := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 200, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"one two three\"})");
+	EXPECT(p != nil && p->TextLength() == 13);
+	Refresh();
+
+	// where the words are: the box of each character's left edge
+	Rect box;
+	p->OffsetToBounds(4, &box);
+	long twoLeft = box.left;
+	p->OffsetToBounds(7, &box);
+	long twoRight = box.left;
+	EXPECT(twoRight > twoLeft);
+	const Rect& line = p->viewBounds;
+
+	// a rectangle over the middle word alone: asked without doing it, it
+	// answers 2 (words) and the text is untouched
+	Rect scrub;
+	SetRect(&scrub, (short) (twoLeft - 1), (short) (line.top + 2), (short) (twoRight + 1), (short) (line.top + 18));
+	EXPECT(p->HandleScrub(scrub, -1, nil, false) == 2);
+	EXPECT(p->TextLength() == 13);
+	// and then for real: "two " goes, the trailing space with it
+	EXPECT(p->HandleScrub(scrub, -1, nil, true) == 2);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxSc.text, \"one three\")")));
+
+	// a rectangle over one letter takes the letter
+	p->OffsetToBounds(1, &box);
+	long nLeft = box.left;
+	p->OffsetToBounds(2, &box);
+	long nRight = box.left;
+	// a narrow one, inside the letter, so no gesture is needed to justify it
+	SetRect(&scrub, (short) (nLeft + 1), (short) (line.top + 2), (short) (nLeft + 4), (short) (line.top + 18));
+	EXPECT(p->HandleScrub(scrub, -1, nil, true) == 2);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxSc.text, \"oe three\")")));
+
+	// a rectangle over the whole paragraph empties it (the answer is 5:
+	// nothing is left, which is what tells a page to take the view away)
+	SetRect(&scrub, (short) (line.left - 2), (short) (line.top - 2), (short) (line.right + 2), (short) (line.bottom + 2));
+	EXPECT(p->HandleScrub(scrub, -1, nil, true) == 5);
+	EXPECT(p->TextLength() == 0);
+
+	// a rectangle nowhere near it takes nothing
+	p->SetValue(RefVar(RSSYMtext), RefVar(Eval("\"one two three\"")));
+	Refresh();
+	EXPECT(p->TextLength() == 13);
+	SetRect(&scrub, 0, (short) (line.bottom + 20), 10, (short) (line.bottom + 30));
+	EXPECT(p->HandleScrub(scrub, -1, nil, true) == 0);
+	EXPECT(p->TextLength() == 13);
+
+	Eval("RemoveView(GetRoot(), ctxSc)");
+	Refresh();
+}
+
+
 static void
 TestClicks()
 {
@@ -3137,6 +3196,7 @@ main()
 		TestExtractData();
 		TestDatesDrawing();
 		TestClicks();
+		TestScrubbing();
 		TestEffects();
 	}
 	newton_catch_all
@@ -3145,7 +3205,6 @@ main()
 		fprintf(stderr, "FAIL: unhandled exception %s (%ld)\n", _info.exception.name, (long) (Long) _info.exception.data);
 		if (strncmp(_info.exception.name, "evt.ex.fr", 9) == 0)
 		{
-			HostInitREP(stderr, nil);
 			PrintObject(*(RefStruct*) _info.exception.data, 0);
 			fprintf(stderr, "\n");
 		}

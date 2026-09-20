@@ -1590,6 +1590,300 @@ TParagraphView::ScrubHilite(const Rect& bounds)
 }
 
 
+// ROM 0x0017d2a0 FindNearestWordBoundary__FRC6TPointlN22
+// Which edge of a word the point is nearest, as a percentage of the
+// word's width measured against the bias.  A positive bias asks how far
+// across the word the point is and takes the right edge at that much or
+// more; a negative one asks how far from the right edge it is and takes
+// the right edge when it is within that much.
+long
+FindNearestWordBoundary(const Point& pt, long left, long right, long bias)
+{
+	if (left == right)
+		return left;
+	long span = right - left;
+	if (bias >= 0)
+		return ((pt.h - left) * 100) / span >= bias ? right : left;
+	return ((right - pt.h) * 100) / span < -bias ? right : left;
+}
+
+
+// ROM 0x001776f0 PointToWord__14TParagraphViewFRC6TPointPlT210MarginSizePP8LineInfoT2PUc
+// The word the point is in: the line it is on by its v alone (the ROM's
+// MarginSize 1 widens each line's box by a thousand pixels either way, so
+// only the v counts), the character nearest its h, and the word breaks
+// round that character.
+//
+// (host: the ROM finds the text object under the point and asks
+// FindWordBreaks over that object's own text, which is also how it knows
+// the run and whether the character is a tab.  Here the whole line is one
+// run and the breaks are scanned over the paragraph's text.)
+Boolean
+TParagraphView::PointToWord(const Point& pt, long* start, long* end, long* outLine)
+{
+	if (fLines == nil || !fCachesValid)
+		CreateAllCaches();
+	if (fLineCount == 0)
+		return false;
+	long index = fLineCount - 1;
+	for (long i = 0; i < fLineCount; i++)
+		if (pt.v < fLines[i].fBounds.bottom)
+		{
+			index = i;
+			break;
+		}
+	long offset = PointToOffset(pt);
+	long length = TextLength();
+	if (offset >= length)
+		offset = length - 1;
+	if (offset < 0)
+		return false;
+	RefVar textRef(Text());
+	if (ISNIL(textRef))
+		return false;
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	long from = ScanWordStart(text, offset, 0);
+	long to = ScanWordEnd(text, offset, length);
+	rich.ReleasePtr();
+	*start = from;
+	*end = to;
+	if (outLine != nil)
+		*outLine = index;
+	return true;
+}
+
+
+// ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc
+// The end of the word at the point that the point is nearest, biased.
+// ==> the character offset of that end, or -1 when there is no word
+// there at all.
+long
+TParagraphView::PointToWordBoundary(const Point& pt, long bias, long* outLine)
+{
+	long start, end;
+	if (!PointToWord(pt, &start, &end, outLine))
+		return -1;
+	Rect box;
+	OffsetToBounds(start, &box);
+	long left = box.left;
+	OffsetToBounds(end, &box);
+	long right = box.left;
+	return FindNearestWordBoundary(pt, left, right, bias) == left ? start : end;
+}
+
+
+// ROM 0x00174808 ScrubCharacter__14TParagraphViewFP8LineInfolRC5TRectPl
+// The single character of the line that the scrub is over, when there is
+// one: the scrub and the character must contain one another
+// horizontally, one way or the other.  ==> whether one was found, and
+// its offset.
+//
+// (host: the ROM asks ReplaceCharacter, which walks the line's text
+// objects with an empty replacement string just to find the character
+// the rectangle picks out - the same containment test, over CharBounds.
+// The text objects are NOT YET, so the line's characters are measured
+// here instead.)
+Boolean
+TParagraphView::ScrubCharacter(long line, const Rect& bounds, long* outOffset)
+{
+	if (line < 0 || line >= fLineCount)
+		return false;
+	const LineInfo& info = fLines[line];
+	for (long offset = info.fStart; offset < info.fEnd; offset++)
+	{
+		Rect box, next;
+		OffsetToBounds(offset, &box);
+		OffsetToBounds(offset + 1, &next);
+		long left = box.left;
+		long right = next.left;
+		if (right <= left)
+			continue;
+		if ((bounds.left <= left && right <= bounds.right)
+			|| (left <= bounds.left && bounds.right <= right))
+		{
+			*outOffset = offset;
+			return true;
+		}
+	}
+	return false;
+}
+
+
+// ROM 0x001740c4 ScrubWords__14TParagraphViewFRC5TRectP11TUnitPublicUc
+// The word or words the scrub crossed taken out.
+//
+// The line is the first whose top falls inside the scrub's vertical span
+// (or, failing that, one whose top pixel row holds the whole scrub); the
+// walk gives up once the scrub is above the line it has reached.  The
+// scrub's left and right edges, taken at that line's middle, give two
+// word boundaries - the left one biased towards the word's start, the
+// right one towards its end - and between them is what would go.
+//
+// Whether it actually goes depends on how much of it the scrub covers.
+// Two or more characters on one line have to be more than half spanned
+// by the scrub; a range that came out empty asks ScrubCharacter for the
+// one character under the scrub instead (which a scrub wider than five
+// pixels may only have if it was drawn with seven corners or more - a
+// real to-and-fro, not a flick), and failing that the word's own box
+// must be sixty per cent under the scrub.  White space is held to ninety
+// per cent, and a single space to the same five-pixels-or-seven-corners
+// rule.
+//
+// ==> 2 (words) when it took something out, 5 when what was left is
+// white space and the whole text went with it, 0 when nothing did.
+long
+TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean reallyDoIt)
+{
+	// the scrub's vertical span, a pixel wide, to measure the lines against
+	Rect scrubRows;
+	SetRect(&scrubRows, 0, bounds.top, 1, bounds.bottom);
+	long line = -1;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		const Rect& box = fLines[i].fBounds;
+		// (host: the ROM measures the line's box less the field at +0x18 of
+		// its LineInfo, which is the leading it carries; this cache keeps no
+		// leading of its own - fHeight is the whole box - so the box is what
+		// the scrub is measured against.)
+		Rect lineRows;
+		SetRect(&lineRows, 0, box.top, 1, box.bottom);
+		if (Overlaps(&box, &bounds)
+			&& (CoveredBy(&lineRows, &scrubRows) >= 50 || CoveredBy(&scrubRows, &lineRows) == 100))
+		{
+			line = i;
+			break;
+		}
+		if (bounds.bottom < box.top)
+			return 0;			// the scrub is above this line: there is no more to find
+	}
+	if (line < 0)
+		return 0;
+
+	const Rect& lineBox = fLines[line].fBounds;
+	Point at;
+	at.v = (short) (lineBox.top + (lineBox.bottom - lineBox.top) / 2);
+	at.h = bounds.left;
+	long lineA = -1;
+	long start = PointToWordBoundary(at, -50, &lineA);
+	if (start < 0)
+		return 0;
+	at.h = bounds.right;
+	long lineB = -1;
+	long end = PointToWordBoundary(at, 50, &lineB);
+	if (end < 0)
+		return 0;
+
+	long width = bounds.right - bounds.left;
+	Boolean scrubbed = false;
+	Boolean tookCharacter = false;
+	long character = 0;
+	if (end - start > 1)
+	{
+		if (lineA != lineB)
+			scrubbed = true;		// the two ends are not even on the same line
+		else
+		{
+			Rect from, to;
+			OffsetToBounds(start, &from);
+			OffsetToBounds(end, &to);
+			long span = to.left - from.left;
+			if (span != 0 && (width * 100) / span > 50)
+				scrubbed = true;
+		}
+	}
+	if (!scrubbed)
+	{
+		if (ScrubCharacter(lineA, bounds, &character)
+			|| (lineA != lineB && ScrubCharacter(lineB, bounds, &character)))
+		{
+			// a scrub wider than five pixels has to have been drawn as one:
+			// seven corners or more, not a flick across a letter
+			if (width > 5 && CountGesturePoints(unit) < 7)
+				return 0;
+			tookCharacter = true;
+		}
+		if (start == end)
+		{
+			at.h = bounds.left;
+			PointToWord(at, &start, &end, nil);
+		}
+		else if (start > end)
+		{
+			long swap = start;
+			start = end;
+			end = swap;
+		}
+		if (tookCharacter)
+		{
+			scrubbed = true;
+			start = character;
+			end = character + 1;
+		}
+		else
+		{
+			Rect from, to;
+			OffsetToBounds(start, &from);
+			OffsetToBounds(end - 1, &to);
+			Rect word, scrub;
+			SetRect(&word, from.left, 0, to.right, 1);
+			SetRect(&scrub, bounds.left, 0, bounds.right, 1);
+			if (CoveredBy(&scrub, &word) >= 60)
+				scrubbed = true;
+		}
+	}
+
+	long count = end - start;
+	if (!scrubbed)
+		return 0;
+	Boolean nothingLeft = false;
+	{
+		RefVar textRef(Text());
+		TRichString rich(textRef);
+		const UniChar* text = rich.GrabPtr();
+		if (ContainsOnlyWhiteSpace(text + start, (ULong) count))
+		{
+			if (count == 1 && IsSpace(text[start]))
+			{
+				if (width > 5 && CountGesturePoints(unit) < 7)
+					scrubbed = false;
+			}
+			else
+			{
+				Rect from, to;
+				OffsetToBounds(start, &from);
+				OffsetToBounds(end - 1, &to);
+				long span = to.right - from.left;
+				if (span <= 0)
+					span = lineBox.right - from.left;	// it runs to the end of the line
+				if (span != 0 && (width * 100) / span < 90)
+					scrubbed = false;
+			}
+		}
+		if (scrubbed && reallyDoIt)
+			nothingLeft = ContainsOnlyWhiteSpace(text, (ULong) start)
+						   && ContainsOnlyWhiteSpace(text + end, (ULong) -1);
+		rich.ReleasePtr();
+	}
+	if (!scrubbed)
+		return 0;
+	if (GetLastAddedWordView() == this && end == gLastAddedWordEndOffset
+		&& unit->StartTime() < gLastAddedWordAddTime)
+		return 0;
+	if (!reallyDoIt)
+		return 2;
+	if (nothingLeft)
+	{
+		if ((fFlags & vCalculateBounds) == 0)
+			RemoveText(0, TextLength());
+		return 5;
+	}
+	if (count > 0)
+		RemoveText(start, count);
+	return 2;
+}
+
+
 // ROM 0x001748b8 ScrubLines__14TParagraphViewFRC5TRectP11TUnitPublicUc
 // The lines the scrub covers taken out.  A line counts when more than
 // sixty per cent of its box lies under the scrub; an empty line has a box
@@ -1687,6 +1981,12 @@ TParagraphView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Bo
 	if (kind == 3 || kind == -1)
 	{
 		long done = ScrubLines(bounds, unit, reallyDoIt);
+		if (done != 0)
+			return done;
+	}
+	if (kind == 2 || kind == -1)
+	{
+		long done = ScrubWords(bounds, unit, reallyDoIt);
 		if (done != 0)
 			return done;
 	}

@@ -90,6 +90,11 @@ public:
 };
 
 // the NewtonScript side (UnitNatives.cpp)
+// How many corners the gesture came down to (EdgeList.h): a scrub drawn
+// with a real to-and-fro has several, a flick has two or three, which is
+// how a paragraph tells a deliberate scrub from a stray stroke.
+long	CountGesturePoints(TUnitPublic* unit);				// ROM 0x0022d0a8 CountGesturePoints__FP11TUnitPublic
+
 TUnitPublic*	UnitFromRef(RefArg unit);					// ROM 0x001ea300 UnitFromRef__FRC6RefVar - the unit a script argument stands for (a throw for nil)
 TStrokePublic*	StrokeFromRef(RefArg unit);					// ROM 0x001ea338 StrokeFromRef__FRC6RefVar - its stroke's face
 Ref		FSetInkerPenSize(RefArg rcvr, RefArg size);			// ROM 0x0013feb8 FSetInkerPenSize__FRC6RefVarT1
