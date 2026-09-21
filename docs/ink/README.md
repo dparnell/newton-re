@@ -280,18 +280,33 @@ first point of a stroke moves the pen and the rest are lines from it.
 the scale as 16.16 values.  The ROM keeps twenty points back at a time
 and draws them in one go, which saves calls and nothing else.
 
+`GetPackedInkWordInfoFromStrokes` (0x00140a4c) is what fills an ink
+word's eight bytes in: the width and the height are the strokes' own box
+with the pen's two pixels in them, the ascent is where
+`WRecFindBaseline` says the short letters stand (held down to the height
+in case it says something silly) and the x-height is how far the line
+they reach up to is from that, the scale is the `inkWordScaling`
+preference as a fraction of a hundred and the pen is `userPenSize`.
+
+`FindBaseline` (0x00065b2c, `recognition/Words.h`) is the one that
+answers the ascent, and the ROM's own function has two paths.  It asks
+the CIC library's feature extractor first - `low_level` over the trace,
+which among everything else says where the short letters stand and how
+far up they reach - and when that cannot be done it falls back to the
+strokes' own box, the word then sitting entirely above its baseline, and
+answers 1 rather than 0 to say so.  That extractor is the handwriting
+recogniser itself and is NOT YET, so the second path is the one taken:
+an ink word made here is the right size and in the right place, but the
+line its short letters stand on is the bottom of it rather than where a
+reader would put it.
+
 ## NOT YET
 
-An ink word's measurements.  `GetPackedInkWordInfoFromStrokes`
-(0x00140a4c) works the eight bytes out from the strokes themselves - the
-width and height of their box, the ascent and x-height from
-`WRecFindBaseline`, the scale from the `inkWordScaling` preference and
-the pen from `userPenSize` - and that baseline finder belongs to the word
-recogniser, which is not here.  So an ink word made by `InkCompress`
-carries nothing but nought after its strokes, and has to be told its
-size by whoever makes it.
+The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which
+is what would read a word rather than just measure it.
 
-And everything that keeps ink for a view: `MakeInkPoly`/`MakeInkWordPoly`
+And everything that keeps ink for a view:
+`MakeInkPoly`/`MakeInkWordPoly`
 (0x001a31bc, 0x001a3250), `GetInkAt` (0x001a170c) and `NextInkIndex`,
 `SplitInkAt` and `MergeInk` (0x001a2c60, 0x001a2fc4 - both expand the ink
 to strokes, work on those, and compress the answer, which they can now
