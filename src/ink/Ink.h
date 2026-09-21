@@ -153,6 +153,13 @@ void		InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y,
 						  Fixed scaleX, Fixed scaleY);				// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
 
 
+// What a word of strokes measures, for the eight bytes an ink word
+// carries.  The ascent and the x-height come from where the recogniser
+// says the word sits (FindBaseline); the scale and the pen from the
+// user's preferences.
+void		GetPackedInkWordInfoFromStrokes(TStroke** strokes, PackedInkWordInfo* packed);	// ROM 0x00140a4c GetPackedInkWordInfoFromStrokes__FPP7TStrokeP17PackedInkWordInfo
+
+
 // How far outside the strokes themselves the ink reaches.
 const long kInkSlop = 2;
 

@@ -32,6 +32,8 @@
 #include "Shapes.h"			// LineTo
 #include "Unit.h"			// FixRect
 #include "Locale.h"			// GetPreference
+#include "Words.h"			// WRecFindBaseline
+#include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "FixedMath.h"
@@ -124,9 +126,8 @@ PGCGetPointProc(short what, InkPoint* pt, void* refCon)
 // A list of strokes packed into a binary: 'ink2 for raw ink, or
 // 'inkWord with the word's measurements after it.
 //
-// NOT YET RECONSTRUCTED: the ink word's eight bytes, which the ROM works
-// out from the strokes themselves (GetPackedInkWordInfoFromStrokes
-// 0x00140a4c); an ink word made here carries nothing but nought.
+// An ink word carries what GetPackedInkWordInfoFromStrokes measures of
+// the strokes after them.
 Ref
 InkCompress(TStroke** strokes, Boolean asWord)
 {
@@ -146,7 +147,11 @@ InkCompress(TStroke** strokes, Boolean asWord)
 	char* data = (char*) BinaryData(ink);
 	BlockMove(bits, data, size);
 	if (asWord)
-		memset(data + size, 0, sizeof(PackedInkWordInfo));
+	{
+		PackedInkWordInfo info;
+		GetPackedInkWordInfoFromStrokes(strokes, &info);
+		BlockMove(&info, data + size, sizeof(info));
+	}
 	DisposPtr((Ptr) bits);
 	return ink;
 }
@@ -255,6 +260,39 @@ MoveToOrigin(TStroke** strokes, Rect* box)
 	OffsetStrokes(strokes, (long) ((ULong) -(box->left - kInkSlop) << 16),
 						   (long) ((ULong) -(box->top - kInkSlop) << 16));
 	InsetRect(box, -kInkSlop, -kInkSlop);
+}
+
+
+// ROM 0x00140a4c GetPackedInkWordInfoFromStrokes__FPP7TStrokeP17PackedInkWordInfo
+// What a word of strokes measures.  The width and the height are its own
+// box with the pen's two pixels in them; the ascent is where the
+// recogniser says the short letters stand, held down to the height in
+// case it says something silly, and the x-height is how far the line they
+// reach up to is from that, held down the same way.  The scale is the
+// user's inkWordScaling preference as a fraction of a hundred, and the
+// pen size is the user's.
+void
+GetPackedInkWordInfoFromStrokes(TStroke** strokes, PackedInkWordInfo* packed)
+{
+	Rect box;
+	UnionBounds(strokes, &box);
+	long height = (box.bottom - box.top) + kInkSlop;
+	Point sits[4];
+	WRecFindBaseline(strokes, sits);
+	long ascent = (short) ((sits[2].v + sits[3].v) >> 1);
+	if (ascent > height)
+		ascent = height;
+	long xHeight = ((sits[1].v + sits[0].v) >> 1) - ascent;
+	if (xHeight < 0)
+		xHeight = -xHeight;
+	if (xHeight > ascent)
+		xHeight = ascent;
+	RefVar scaling(GetPreference(RefVar(RSSYMinkwordscaling)));
+	Fixed scale = FixedDivide((Fixed) ((ULong) (ISINT(scaling) ? RVALUE(scaling) : 0) << 16), 0x640000);
+	RefVar size(GetPreference(RefVar(RSSYMuserpensize)));
+	ULong pen = (ULong) (ISINT(size) ? RVALUE(size) : 1);
+	PackInkWordInfo(packed, (ULong) ((box.right - box.left) + kInkSlop), (ULong) ascent,
+					(ULong) (height - ascent), (ULong) xHeight, scale, 0, pen);
 }
 
 

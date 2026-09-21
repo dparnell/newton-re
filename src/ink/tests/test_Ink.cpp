@@ -15,6 +15,7 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
+#include "ObjectHeap.h"
 #include "FixedMath.h"
 #include "Ports.h"		// ToFixed, RoundFixed
 #include "memory/host/KernelHeap.h"
@@ -1280,10 +1281,21 @@ TestStrokeRoundTrip()
 	}
 	EXPECT(worst <= 3 * 3);		// within three pixels of the stroke
 
-	// and an ink word carries the eight bytes after its strokes
+	// and an ink word carries what it measures after its strokes: it is
+	// as wide as its box, and with no recogniser to say where its
+	// baseline is the whole of it stands above one
 	RefVar word(InkCompress(list, true));
 	EXPECT(NOTNIL(word) && IsInkWord(word));
 	EXPECT(Length(word) == Length(ink) + (long) sizeof(PackedInkWordInfo));
+	{
+		InkWordInfo info;
+		GetInkWordInfo(word, &info);
+		EXPECT(info.fWidth == (ULong) (px[kPoints - 1] - px[0] + 2));
+		EXPECT(info.fPenSize == 2);
+		EXPECT(info.fScale == 0x10000);		// a hundred per cent
+		EXPECT(info.fDescent == 0 && info.fAscent > 0);
+		EXPECT(info.fXHeight > 0 && info.fXHeight <= info.fAscent);
+	}
 	TStroke** wordBack = InkExpand(word, 1, 0, 0);
 	EXPECT(wordBack != nil && wordBack[0] != nil);
 
@@ -1500,6 +1512,14 @@ main()
 	}
 	gObjectHeapSize = 0x100000;
 	InitObjects();
+	// an ink word asks the user's preferences for its scale and its pen;
+	// on a Newton the boot has set them long before anything makes one
+	{
+		RefVar config(AllocateFrame());
+		SetFrameSlot(config, RefVar(RSSYMinkwordscaling), RefVar(MAKEINT(100)));
+		SetFrameSlot(config, RefVar(RSSYMuserpensize), RefVar(MAKEINT(2)));
+		SetFrameSlot(RefVar(gVarFrame), RefVar(RSSYMuserconfiguration), config);
+	}
 
 	TestClasses();
 	TestFaces();

@@ -15,6 +15,9 @@
 */
 
 #include "Words.h"
+#include "Stroke.h"
+#include "Unit.h"			// AddRect
+#include "Ports.h"			// RoundFixed
 #include "Frames.h"
 #include "NativeFunctions.h"
 #include "Airus.h"
@@ -463,3 +466,77 @@ RegisterWordNatives(void)
 	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);
 	RegisterNativeFunction("FStripRecognitionWordDiacritsOK", (void*) FStripRecognitionWordDiacritsOK, 1);
 }
+
+
+/*------------------------------------------------------------------------------
+	W h e r e   a   w o r d   s i t s
+------------------------------------------------------------------------------*/
+
+// ROM 0x00065b2c FindBaseline__FPP7TStrokeP5Point
+// The four corners a word of strokes would be laid out in.
+//
+// The recogniser is asked first: the strokes are turned into the trace
+// its feature extractor works on and `low_level` is run over it, which
+// among everything else says where the short letters stand and how far
+// up they reach.  When that cannot be done the strokes' own box is used
+// instead - the word then sits entirely above its baseline, which is the
+// best that can be said without reading it - and the answer is 1 rather
+// than 0 to say so.
+//
+// A box with no width, or none with no height, is given one, because
+// nothing downstream divides by nought happily.
+//
+// NOT YET RECONSTRUCTED: GetTraceFromStrokes and low_level - the CIC
+// handwriting library's feature extractor, which is what would read the
+// word - so this always takes the second path.
+long
+FindBaseline(TStroke** strokes, Point* out)
+{
+	long failed = 1;			// (0 once low_level has been asked and answered)
+	long upper = 0;
+	long upperRight = 0;
+	long base = 0;
+	long baseRight = 0;
+
+	FRect box;
+	Boolean first = true;
+	for (long i = 0; strokes[i] != nil; i++)
+	{
+		AddRect(&strokes[i]->fBBox, &box, first);
+		first = false;
+	}
+	if (first)
+		SetRectangleEmpty(&box);
+	long left = RoundFixed(box.left);
+	long right = RoundFixed(box.right);
+	if (left == right)
+		right = right + 1;
+	if (base == 0)
+	{
+		upper = RoundFixed(box.top);
+		base = RoundFixed(box.bottom);
+		upperRight = upper;
+		baseRight = base;
+		if (upper == base)
+		{
+			base = base + 1;
+			baseRight = base;
+		}
+	}
+	out[0].h = (short) left;	out[0].v = (short) upper;
+	out[1].h = (short) right;	out[1].v = (short) upperRight;
+	out[2].h = (short) left;	out[2].v = (short) base;
+	out[3].h = (short) right;	out[3].v = (short) baseRight;
+	return failed;
+}
+
+
+// ROM 0x001444c4 WRecFindBaseline__FPP7TStrokeP5Point
+// The word recogniser's name for it; in the ROM one instruction that
+// branches straight to FindBaseline.
+long
+WRecFindBaseline(TStroke** strokes, Point* out)
+{
+	return FindBaseline(strokes, out);
+}
+

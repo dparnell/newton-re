@@ -49,6 +49,20 @@ enum
 	kCapAllUpper			= 0x40
 };
 
+// Where a word of strokes sits: the four corners of the box the
+// recogniser would lay it out in - the two ends of the line its short
+// letters reach up to, and the two ends of the line they stand on.
+//
+//	out[0]	the left of the upper line		out[1]	its right
+//	out[2]	the left of the baseline		out[3]	its right
+//
+// ==> 0 when the recogniser worked them out, 1 when it could not and the
+// strokes' own box was used instead.
+class TStroke;
+long	FindBaseline(TStroke** strokes, Point* out);	// ROM 0x00065b2c FindBaseline__FPP7TStrokeP5Point
+long	WRecFindBaseline(TStroke** strokes, Point* out);	// ROM 0x001444c4 WRecFindBaseline__FPP7TStrokeP5Point
+
+
 Boolean	HasSpaces(const UniChar* word);				// ROM 0x00256460 HasSpaces__FPUs
 Boolean	HasChars(const UniChar* word);				// ROM 0x002564d4 HasChars__FPUs - a Roman letter anywhere in it
 Boolean	IsPunctSymbol(const UniChar* word, long index);	// ROM 0x00256524 IsPunctSymbol__FPUsl
