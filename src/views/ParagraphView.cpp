@@ -1947,6 +1947,104 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 }
 
 
+
+// ROM 0x001764c4 InsertVerticalSpace__14TParagraphViewFR6TPointl
+// A caret drawn between two lines opens the space of a line between
+// them: as many carriage returns as the caret's height is worth go in at
+// the start of the line the caret points into, and the caret follows
+// them.
+//
+// The line is the first whose midline is below the point, so a point
+// anywhere in a line's top half picks that line.  Two things then
+// disqualify it: the point more than a quarter of a line above the line
+// before's baseline (the first line's top standing in for it - a caret
+// drawn well clear of the text above is not aimed between the lines at
+// all), and the point below the line's own midline, which the search
+// has already ruled out.
+//
+// The count is the height rounded to lines (at least one), and one more
+// unless there is already a carriage return at the insertion point or
+// just before it - a break in the middle of a line costs a return to
+// make, and one to keep the line that was there.  The caret then goes
+// after the first of them, or at the insertion point itself when a
+// return was already before it.
+//
+// (host: the ROM inserts through AddWord, the recogniser's path into a
+// paragraph; InsertStyledText is the host's equivalent - the same
+// aeReplaceText command with the same undo.  SaveInsertArea, which
+// remembers where the recogniser put something, is NOT YET.)
+long
+TParagraphView::InsertVerticalSpace(Point& pt, long height)
+{
+	if (fLines == nil || fLineCount == 0)
+		return 0;
+	// the baseline of the line before the one being looked at; before the
+	// first line, that line's own top
+	long previous = fLines[0].fBounds.top;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		const LineInfo& line = fLines[i];
+		long lineHeight = line.fBounds.bottom - line.fBounds.top;
+		if (line.fBounds.top + lineHeight / 2 <= pt.v)
+		{
+			previous = line.fBounds.top + line.fAscent;
+			continue;
+		}
+		if (previous - pt.v > lineHeight / 4)
+			return 0;
+		if (pt.v - line.fBounds.top > lineHeight / 2)
+			return 0;			// (the search has already said otherwise)
+
+		long offset = line.fStart;
+		long count = 1;
+		if (height != -1)
+		{
+			count = (height + lineHeight / 2) / lineHeight;
+			if (count == 0)
+				count = 1;
+		}
+		RefVar textRef(Text());
+		TRichString rich(textRef);
+		const UniChar* text = rich.GrabPtr();
+		Boolean atBreak = text[offset] == kCR || (offset > 0 && text[offset - 1] == kCR);
+		rich.ReleasePtr();
+		if (!atBreak)
+			count++;
+
+		UniChar buffer[41];
+		UniChar* chars = buffer;
+		UniChar* allocated = nil;
+		if (count > 40)
+		{
+			allocated = new UniChar[count + 1];
+			if (allocated == nil)
+				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+			chars = allocated;
+		}
+		for (long j = 0; j < count; j++)
+			chars[j] = kCR;
+		chars[count] = 0;
+		InsertStyledText((ULong) offset, chars, (ULong) count, RefVar(NILREF), RefVar(NILREF), 0, 0, false);
+		if (allocated != nil)
+			delete[] allocated;
+
+		// the caret after the first return that went in - unless there
+		// was one before the insertion already, when it stays put
+		long delta = 1;
+		RefVar afterRef(Text());
+		TRichString after(afterRef);
+		const UniChar* newText = after.GrabPtr();
+		if (offset > 1 && newText[offset - 1] == kCR)
+			delta = 0;
+		after.ReleasePtr();
+		gRootView->SetKeyView(this, offset + delta, 0, false);
+		// NOT YET: SaveInsertArea(fInsertRunList, offset, count)
+		return 1;
+	}
+	return 0;
+}
+
+
 // ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
 // A caret gesture offered to the paragraph.  Its point has to be within
 // the view grown by the height of the caret's arms - a caret drawn just
@@ -1964,9 +2062,7 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 // when both its arms are short.
 //
 // NOT YET RECONSTRUCTED: CheckAndDoJoin (0x00175964), which joins this
-// paragraph to the next, and InsertVerticalSpace (0x001764c4), which
-// splits a line - both want the ROM's text objects (the Finder).  The
-// gestures that ask for them answer 0.
+// paragraph to the one after it; the caret that asks for it answers 0.
 long
 TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 							Point& armB, Point& tail)
@@ -2062,7 +2158,7 @@ TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 		return 0;
 
 	if (vertical)
-		return 0;				// NOT YET: InsertVerticalSpace(point, height)
+		return InsertVerticalSpace(point, height);
 
 	// the line the caret was drawn over, from the box its point and its arm
 	// make, and then the insertion at that line's top

@@ -2318,6 +2318,35 @@ TestCaretGesture()
 	EXPECT(p->HandleCaret(2, 180, armA, point, armB, tail) == 0);
 	EXPECT(p->TextLength() == 6);
 
+
+	// a caret pointing right, drawn in the left margin between two lines,
+	// opens a line between them (InsertVerticalSpace)
+	Eval("RemoveView(GetRoot(), ctxCg)");
+	p = (TParagraphView*) ViewOf("ctxCg := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 200, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"one\\ntwo\"})");
+	EXPECT(p != nil && p->TextLength() == 7);
+	Refresh();
+	EXPECT(p->fLineCount == 2);
+
+	// the point just inside the second line's top, and in the left margin
+	armA.h = (short) (p->viewBounds.left + 4);
+	armB.h = armA.h;
+	point.h = (short) (p->viewBounds.left + 4);
+	point.v = (short) (p->fLines[1].fBounds.top + 1);
+	armA.v = (short) (point.v - 8);
+	armB.v = (short) (point.v + 8);
+	tail.v = (short) 0x8000;	tail.h = 0;
+	EXPECT(p->HandleCaret(2, 90, armA, point, armB, tail) == 1);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxCg.text, \"one\\n\\ntwo\")")));
+
+	// and the same caret drawn far below the text belongs to no line
+	Eval("SetValue(ctxCg, 'text, \"one\\ntwo\")");
+	Refresh();
+	point.v = (short) (p->viewBounds.bottom + 100);
+	armA.v = (short) (point.v - 8);
+	armB.v = (short) (point.v + 8);
+	EXPECT(p->HandleCaret(2, 90, armA, point, armB, tail) == 0);
+	EXPECT(p->TextLength() == 7);
+
 	Eval("RemoveView(GetRoot(), ctxCg)");
 	Refresh();
 }

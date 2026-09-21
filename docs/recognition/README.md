@@ -846,18 +846,30 @@ left edge or twenty inside it).  What it then does:
 | kind | angle | what goes in |
 | --- | --- | --- |
 | 2, the plain caret | up | one space |
-| 2 | right | a line break (NOT YET) |
+| 2 | right | a line break |
 | 2 | down | the paragraphs joined (NOT YET) |
 | 3, with a tail | up | as many spaces as the tail is wide |
-| 3 | right | as many line breaks as it is tall (NOT YET) |
-| 5, the open one | up | line breaks, unless the view is one line only (NOT YET) |
+| 3 | right | as many line breaks as it is tall |
+| 5, the open one | up | line breaks, unless the view is one line only |
 | 6, the flat one | 135 | one space, in a one-line view, when both arms are short |
 
-`InsertHorizontalSpace` is what puts them in.  A width of -1 is the
-single space; a real width is divided by the width of a space in the
+`InsertHorizontalSpace` is what puts the spaces in.  A width of -1 is
+the single space; a real width is divided by the width of a space in the
 style the text would be inserted in, so a wide tail gives a wide gap.
 Line breaks step over the white space already at the point first, so the
 break lands after it.
+
+`InsertVerticalSpace` (0x001764c4) is the vertical half, and it works by
+lines rather than by characters.  The line it opens is the first whose
+midline is below the caret's point, so a point anywhere in a line's top
+half picks that line; the point must also be no more than a quarter of a
+line above the line before's baseline, which is what keeps a caret drawn
+well clear of the text from splitting anything.  The carriage returns go
+in at that line's start - the height rounded to lines, at least one, and
+one more unless there is a return at the insertion point or just before
+it, because a break in the middle of a line costs one return to make and
+one to keep the line that was there.  The caret then follows the first
+of them.
 
 One ROM bug is kept and commented: a caret whose tail is narrower than a
 space gives neither a space nor a break, and the ROM then inserts the
@@ -865,9 +877,8 @@ buffer it never filled - whatever was on the stack.  The host cannot
 reproduce which bytes those are and will not put arbitrary text into a
 note, so the buffer starts empty there and nothing goes in.
 
-NOT YET: `InsertVerticalSpace` (0x001764c4) and `CheckAndDoJoin`
-(0x00175964), which are the line-break and join halves of the table
-above - both want the ROM's text objects (the `Finder`).  The line
+NOT YET: `CheckAndDoJoin` (0x00175964), the join half of the table
+above, which wants the ROM's text objects (the `Finder`).  The line
 gesture (`aeLine`) is not answered either: in a paragraph it is the
 case-change gesture, and it wants `DoInsertItems` and `GetStylesOfRange`.
 Nor are the shape and word domains above this one, nor
