@@ -7,6 +7,7 @@ add_library(ink STATIC
     InkCodec.cpp
     CICDecoder.cpp
     CICCodeBook.cpp
+    CICTables.cpp
 )
 target_link_libraries(ink PUBLIC newton_config frames qd)
 target_include_directories(ink PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

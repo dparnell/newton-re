@@ -255,6 +255,163 @@ TestCodeBooks()
 	EXPECT(LockCodeBook(7) == (void*) 7 && UnlockCodeBook(7));
 }
 
+
+// A bit stream written the way the codec reads one: least significant
+// bit of each byte first, and the bits of a value in that order too.
+struct BitWriter
+{
+	UByte	fBytes[256];
+	ULong	fPos;
+};
+
+static void
+StartBits(BitWriter* w)
+{
+	memset(w->fBytes, 0, sizeof(w->fBytes));
+	w->fPos = 0;
+}
+
+static void
+PutBits(BitWriter* w, ULong value, ULong n)
+{
+	for (ULong i = 0; i < n; i++)
+	{
+		if ((value & (1UL << i)) != 0)
+			w->fBytes[w->fPos >> 3] = (UByte) (w->fBytes[w->fPos >> 3] | (1 << (w->fPos & 7)));
+		w->fPos++;
+	}
+}
+
+static void
+OpenOver(CICDecoder* d, const BitWriter* w)
+{
+	memset(d, 0, sizeof(*d));
+	d->fData = w->fBytes;
+	d->fBitCount = w->fPos;
+}
+
+
+// The entropy decoder over the two static tables and over a real one out
+// of the ROM's code book.
+static void
+TestDecodeWord()
+{
+	// kInkStrokeCodes: one bit set is a long stroke, "01" a short one,
+	// "0001" the end of the group
+	BitWriter w;
+	StartBits(&w);
+	PutBits(&w, 1, 1);
+	PutBits(&w, 2, 2);
+	PutBits(&w, 8, 4);
+	CICDecoder d;
+	OpenOver(&d, &w);
+	short value = -1;
+	EXPECT(DecodeWord_NEW(&d, kInkStrokeCodes, &value) && value == kCICLongStroke);
+	EXPECT(DecodeWord_NEW(&d, kInkStrokeCodes, &value) && value == kCICShortStroke);
+	EXPECT(DecodeWord_NEW(&d, kInkStrokeCodes, &value) && value == kCICEndOfGroup);
+	EXPECT(d.fBitPos == 7 && d.fTotalBits == 7);
+	// and the stream runs out
+	EXPECT(!DecodeWord_NEW(&d, kInkStrokeCodes, &value) && d.fError != 0);
+
+	// kInkFormatCodes: a single bit, 0 for 7 and 1 for 8
+	StartBits(&w);
+	PutBits(&w, 0, 1);
+	PutBits(&w, 1, 1);
+	OpenOver(&d, &w);
+	EXPECT(DecodeWord_NEW(&d, kInkFormatCodes, &value) && value == 7);
+	EXPECT(DecodeWord_NEW(&d, kInkFormatCodes, &value) && value == 8);
+
+	// bits that are no code at all: nothing but zeros never matches, and
+	StartBits(&w);		// the walk gives up when the table runs out
+	PutBits(&w, 0, 12);
+	OpenOver(&d, &w);
+	EXPECT(!DecodeWord_NEW(&d, kInkStrokeCodes, &value) && value == 0);
+	EXPECT(d.fBitPos == 4);		// four bits is as far as the table goes
+}
+
+
+// A table out of the ROM's own code book, read with the codes the table
+// itself gives.
+static void
+TestCodeBookTables()
+{
+	CICDecoder d;
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 1;
+	EXPECT(DcdrSelectCodeBook(&d));
+	EXPECT(d.fScale == 0x800 && d.fUnit == 1024 && d.fOne == 1);
+	EXPECT(d.fTables[0] == gCodeBook);
+	// the eight tables lie one after another and fill the book exactly
+	long total = 0;
+	for (long i = 0; i < 8; i++)
+	{
+		EXPECT(d.fTables[i] == (const char*) gCodeBook + total);
+		total += (long) CodeTableSize(d.fTables[i]);
+	}
+	EXPECT(total == Length(RefVar(Rparagraphcodebook1)));
+	// each table's size is its header and its entries
+	for (long i = 0; i < 8; i++)
+		EXPECT((long) CodeTableSize(d.fTables[i])
+			   == kCodeTableHeaderSize + (long) CodeTableCount(d.fTables[i]) * kCodeTableEntrySize);
+	// the ink book too, with the other step
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 2;
+	EXPECT(DcdrSelectCodeBook(&d) && d.fScale == 0x2000 && d.fTables[0] == gInkCodeBook);
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 3;
+	EXPECT(DcdrSelectCodeBook(&d) && d.fScale == 0x2000 && d.fTables[0] == gInkCodeBook);
+
+	// the first few entries of a table, fed back to the decoder as the
+	// bits they say they are
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 1;
+	EXPECT(DcdrSelectCodeBook(&d));
+	const void* table = d.fTables[0];
+	long tried = 0;
+	for (long i = 0; i < (long) CodeTableCount(table) && tried < 8; i++)
+	{
+		short expect = CodeTableValue(table, i);
+		if (expect == CodeTableEscapeUp(table) || expect == CodeTableEscapeDown(table))
+			continue;				// an escape wants another word after it
+		BitWriter w;
+		StartBits(&w);
+		PutBits(&w, CodeTableCode(table, i), CodeTableLength(table, i));
+		CICDecoder one;
+		OpenOver(&one, &w);
+		short got = 0;
+		EXPECT(DecodeWord_OLD(&one, table, &got));
+		EXPECT(got == expect);
+		EXPECT(one.fBitPos == CodeTableLength(table, i));
+		tried++;
+	}
+	EXPECT(tried == 8);
+
+	// an escape: the code for 30000 followed by the code for a small
+	// value gives that value on top of the table's upward base
+	long escape = -1;
+	long small = -1;
+	for (long i = 0; i < (long) CodeTableCount(table); i++)
+	{
+		if (escape < 0 && CodeTableValue(table, i) == CodeTableEscapeUp(table))
+			escape = i;
+		if (small < 0 && CodeTableValue(table, i) == 0)
+			small = i;
+	}
+	EXPECT(escape >= 0 && small >= 0);
+	if (escape >= 0 && small >= 0)
+	{
+		BitWriter w;
+		StartBits(&w);
+		PutBits(&w, CodeTableCode(table, escape), CodeTableLength(table, escape));
+		PutBits(&w, CodeTableCode(table, small), CodeTableLength(table, small));
+		CICDecoder one;
+		OpenOver(&one, &w);
+		short got = 0;
+		EXPECT(DecodeWord_OLD(&one, table, &got));
+		EXPECT(got == CodeTableBaseUp(table));
+	}
+}
+
 int
 main()
 {
@@ -276,6 +433,8 @@ main()
 	TestCodecs();
 	TestBitReader();
 	TestCodeBooks();
+	TestDecodeWord();
+	TestCodeBookTables();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

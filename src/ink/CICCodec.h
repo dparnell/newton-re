@@ -43,14 +43,84 @@ struct CICDecoder
 {
 	InkPointProc	fSink;			// +0x00  where the points go
 	void*			fSinkData;		// +0x04  the sink's own working store
+	ULong			fError;			// +0x08  the stream ran out (a halfword)
 	void*			fRefCon;		// +0x14  what the caller passed
 	const UByte*	fData;			// +0x20  the bits
 	ULong			fBitCount;		// +0x28  how many there are
 	ULong			fBitPos;		// +0x2c  where the reader has got to
 	ULong			fStrokeBits;	// +0x30  bits read, counted twice over
 	ULong			fTotalBits;		// +0x34
-	ULong			fCodeBook;		// +0x76  which code book the run uses
+	long			fX;				// +0x38  where the pen is, in the book's units
+	long			fY;				// +0x3c
+	ULong			fUnit;			// +0x40  (a halfword, always 1024)
+	ULong			fOne;			// +0x42  (a halfword, always 1)
+	long			fLimitA;		// +0x44  two lengths the book is measured in
+	long			fLimitB;		// +0x48
+	long			fScaleA;		// +0x4c
+	long			fScale;			// +0x50  what one decoded step is worth
+	const void*		fTables[8];		// +0x54 to +0x70  the book's eight tables
+	ULong			fBookNumber;	// +0x74  the book in use (a halfword)
+	ULong			fMode;			// +0x76  the mode the run was opened with
+	ULong			fFirst;			// +0x78  the run has not started yet
 };
+
+
+// A code word table as the ROM keeps one: four halfwords to an entry -
+// the value, how many bits its code is, and the code in two halves - and
+// a zero length ends it.  The entries are in order of length, which is
+// what lets the decoder read a bit at a time and only look at the
+// entries whose codes are as long as what it has.
+inline short	CodeWordValue(const unsigned short* t, long i)	{ return (short) t[i * 4]; }
+inline ULong	CodeWordLength(const unsigned short* t, long i)	{ return t[i * 4 + 1]; }
+inline ULong	CodeWordCode(const unsigned short* t, long i)	{ return ((ULong) t[i * 4 + 2] << 16) | t[i * 4 + 3]; }
+
+extern const unsigned short	kInkFormatCodes[12];	// ROM 0x0c104fe8
+extern const unsigned short	kInkStrokeCodes[16];	// ROM 0x0c105000
+
+
+// A table of a code book (the CIC library's _CODETABLE), which is a
+// block of big-endian halfwords in the ROM: a twelve-byte header and
+// then eight bytes an entry, the same shape as a code word.  The
+// header's first halfword is the table's whole size, which is how the
+// eight tables of a book are found one after another; the second is how
+// many entries it has.  The other four are two escape values and the
+// base each of them counts from - a value of 30000 means "too big to
+// hold, read another word and add it to this base", and -30000 the same
+// downwards.
+const long kCodeTableHeaderSize = 12;
+const long kCodeTableEntrySize = 8;
+
+ULong	CodeTableSize(const void* table);
+ULong	CodeTableCount(const void* table);
+short	CodeTableBaseDown(const void* table);
+short	CodeTableBaseUp(const void* table);
+short	CodeTableEscapeUp(const void* table);
+short	CodeTableEscapeDown(const void* table);
+short	CodeTableValue(const void* table, long i);
+ULong	CodeTableLength(const void* table, long i);
+ULong	CodeTableCode(const void* table, long i);
+
+
+// ROM 0x00280df0 DcdrSelectCodeBook__FP4_DCC
+// The book the run is to use opened, and its eight tables found.
+Boolean	DcdrSelectCodeBook(CICDecoder* decoder);
+
+// ROM 0x00281b90 DecodeWord_NEW__FP4_DCCP9_CODEWORDPs
+// One word out of a static code word table.
+Boolean	DecodeWord_NEW(CICDecoder* decoder, const unsigned short* table, short* out);
+
+// ROM 0x00281c48 DecodeWord_OLD__FP4_DCCP10_CODETABLEPs
+// One word out of a code book's table, escapes followed.
+Boolean	DecodeWord_OLD(CICDecoder* decoder, const void* table, short* out);
+
+// ROM 0x00280f1c ReadNewStroke__FP4_DCCPs
+// The next stroke's kind, and the pen moved to where it starts.
+Boolean	ReadNewStroke(CICDecoder* decoder, short* outKind);
+
+// What ReadNewStroke answers: a long stroke, a short one, or the end.
+const short kCICLongStroke	= 0;
+const short kCICShortStroke	= 1;
+const short kCICEndOfGroup	= 2;
 
 
 // The two code books, and who has them open.  A book is a block of
