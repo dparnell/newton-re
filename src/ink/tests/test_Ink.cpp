@@ -505,6 +505,64 @@ TestShortStroke()
 	EXPECT(!ReadShortStroke(&d) && d.fError != 0);
 }
 
+
+// A segment of a long stroke: where it ends and the four numbers that
+// bend it, and the seventeen points they come to.
+static void
+TestSegment()
+{
+	CICDecoder d;
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 1;
+	EXPECT(DcdrSelectCodeBook(&d));
+
+	BitWriter w;
+	StartBits(&w);
+	EXPECT(PutValue(&w, d.fTables[2], 10));		// the chord: ten steps right,
+	EXPECT(PutValue(&w, d.fTables[3], 4));		// four down
+	EXPECT(PutValue(&w, d.fTables[4], 0));		// and no bend at all
+	EXPECT(PutValue(&w, d.fTables[5], 0));
+	EXPECT(PutValue(&w, d.fTables[6], 0));
+	EXPECT(PutValue(&w, d.fTables[7], 0));
+	PutBits(&w, 0, 1);							// the format table's 7: the last segment
+	d.fData = w.fBytes;
+	d.fBitCount = w.fPos;
+	d.fX = 0;
+	d.fY = 0;
+
+	short tag = -1;
+	EXPECT(ReadSegmentNear(&d, &tag));
+	EXPECT(tag == 7);
+	EXPECT(d.fSegStartX == 0 && d.fSegStartY == 0);
+	EXPECT(d.fSegEndX == 0x800 * 10 && d.fSegEndY == 0x800 * 4);
+	EXPECT(d.fSegX[2] == 0 && d.fSegX[3] == 0);
+	EXPECT(d.fSegX[0] == (d.fSegStartX + d.fSegEndX) / 2);
+	EXPECT(d.fSegX[1] == (d.fSegStartX - d.fSegEndX) / 2);
+
+	// with nothing bending it the seventeen points are a straight line
+	// from where the segment starts to where it ends
+	long px[kCICSegmentPoints];
+	long py[kCICSegmentPoints];
+	RestoreSegment(px, d.fSegX);
+	RestoreSegment(py, d.fSegY);
+	EXPECT(px[kCICSegmentMiddle] == (d.fSegStartX + d.fSegEndX) / 2);
+	EXPECT(px[0] == d.fSegStartX && px[kCICSegmentPoints - 1] == d.fSegEndX);
+	EXPECT(py[0] == d.fSegStartY && py[kCICSegmentPoints - 1] == d.fSegEndY);
+	Boolean even = true;
+	long stepX = px[1] - px[0];
+	for (long i = 1; i < kCICSegmentPoints; i++)
+		if (px[i] - px[i - 1] != stepX)
+			even = false;
+	EXPECT(even && stepX == (d.fSegEndX - d.fSegStartX) / 16);
+
+	// a bend pulls the middle off the chord, and the ends stay put
+	d.fSegX[2] = 1000 << 10;
+	d.fSegX[0] = ((d.fSegStartX + d.fSegEndX) >> 1) - d.fSegX[2];
+	RestoreSegment(px, d.fSegX);
+	EXPECT(px[0] == d.fSegStartX && px[kCICSegmentPoints - 1] == d.fSegEndX);
+	EXPECT(px[kCICSegmentMiddle] != (d.fSegStartX + d.fSegEndX) / 2);
+}
+
 int
 main()
 {
@@ -529,6 +587,7 @@ main()
 	TestDecodeWord();
 	TestCodeBookTables();
 	TestShortStroke();
+	TestSegment();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

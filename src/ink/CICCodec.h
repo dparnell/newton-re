@@ -65,6 +65,12 @@ struct CICDecoder
 	ULong			fPointCount;	// +0x7a  how many points the stroke came to
 	long			fPointsX[33];	// +0x7c  and where they are, in units of
 	long			fPointsY[33];	// +0x100  a thousand and twenty-fourth
+	long			fSegX[4];		// +0x184  the segment being drawn out
+	long			fSegY[4];		// +0x194
+	long			fSegStartX;		// +0x1a4  where it begins
+	long			fSegStartY;		// +0x1a8
+	long			fSegEndX;		// +0x1ac  and where it ends
+	long			fSegEndY;		// +0x1b0
 };
 
 // How many points either buffer holds - the ROM's are the 33 longs
@@ -123,6 +129,20 @@ Boolean	DecodeWord_OLD(CICDecoder* decoder, const void* table, short* out);
 // ROM 0x00280f1c ReadNewStroke__FP4_DCCPs
 // The next stroke's kind, and the pen moved to where it starts.
 Boolean	ReadNewStroke(CICDecoder* decoder, short* outKind);
+
+// ROM 0x00281240 ReadSegmentNear__FP4_DCCPs
+// One segment of a long stroke read: where it ends and the four numbers
+// that bend it.  ==> and the word that says whether the stroke goes on.
+Boolean	ReadSegmentNear(CICDecoder* decoder, short* outTag);
+
+// ROM 0x00281a70 RestoreSegment__FPlT1
+// A segment's four numbers opened out into seventeen points.
+void	RestoreSegment(long* points, const long* seg);
+
+// How many points a segment comes to, and which of them is its middle.
+const long kCICSegmentPoints = 17;
+const long kCICSegmentMiddle = 8;
+
 
 // ROM 0x00281424 ReadShortStroke__FP4_DCC
 // A short stroke's points collected into the context's two buffers.

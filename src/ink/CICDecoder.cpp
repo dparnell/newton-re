@@ -338,6 +338,103 @@ ReadNewStroke(CICDecoder* decoder, short* outKind)
 
 
 
+
+
+/*------------------------------------------------------------------------------
+	A   l o n g   s t r o k e ' s   s e g m e n t s
+------------------------------------------------------------------------------*/
+
+// ROM 0x00281240 ReadSegmentNear__FP4_DCCPs
+// A long stroke is written as a chain of curved segments.  Each one
+// carries where it ends - a step in x and y, out of the same two tables
+// a short stroke's steps come from - and then four numbers that bend it,
+// two out of the fifth and sixth tables and two out of the seventh and
+// eighth, each worth one of the two lengths the book was opened with.
+//
+// Those four are turned into the segment's own numbers here: the middle
+// of the chord less the first pair, and half the chord less the second.
+// A word out of the format table follows and says whether the stroke
+// goes on (8) or this was its last segment (7).
+Boolean
+ReadSegmentNear(CICDecoder* decoder, short* outTag)
+{
+	decoder->fSegStartX = decoder->fX;
+	decoder->fSegStartY = decoder->fY;
+	short dx, dy;
+	if (!DecodeWord_OLD(decoder, decoder->fTables[2], &dx))
+		return false;
+	if (!DecodeWord_OLD(decoder, decoder->fTables[3], &dy))
+		return false;
+	decoder->fX += decoder->fScaleA * dx;
+	decoder->fSegEndX = decoder->fX;
+	decoder->fY += decoder->fScaleA * dy;
+	decoder->fSegEndY = decoder->fY;
+
+	short a, b;
+	if (!DecodeWord_OLD(decoder, decoder->fTables[4], &a))
+		return false;
+	if (!DecodeWord_OLD(decoder, decoder->fTables[5], &b))
+		return false;
+	decoder->fSegX[2] = decoder->fLimitA * a;
+	decoder->fSegY[2] = decoder->fLimitA * b;
+	if (!DecodeWord_OLD(decoder, decoder->fTables[6], &a))
+		return false;
+	if (!DecodeWord_OLD(decoder, decoder->fTables[7], &b))
+		return false;
+	decoder->fSegX[3] = decoder->fLimitB * a;
+	decoder->fSegY[3] = decoder->fLimitB * b;
+
+	decoder->fSegX[0] = ((decoder->fSegStartX + decoder->fSegEndX) >> 1) - decoder->fSegX[2];
+	decoder->fSegY[0] = ((decoder->fSegStartY + decoder->fSegEndY) >> 1) - decoder->fSegY[2];
+	decoder->fSegX[1] = ((decoder->fSegStartX - decoder->fSegEndX) >> 1) - decoder->fSegX[3];
+	decoder->fSegY[1] = ((decoder->fSegStartY - decoder->fSegEndY) >> 1) - decoder->fSegY[3];
+	return DecodeWord_NEW(decoder, kInkFormatCodes, outTag);
+}
+
+
+// ROM 0x00281a70 RestoreSegment__FPlT1
+// A segment's four numbers drawn out into seventeen points by forward
+// differences: the middle one first, then eight forward and eight back,
+// each got from the one before by adding a step, and each step from the
+// one before by adding a second difference that itself grows by a fixed
+// amount.  The two halves differ only in the sign of that growth and in
+// the step they start from, so the curve is symmetrical about its
+// middle.  With both of the bending numbers nought it comes out a
+// straight line from where the segment starts to where it ends.
+//
+// The points are in the thousand-and-twenty-fourths the codec counts in,
+// which is what the shift of six at the end brings them back to.
+void
+RestoreSegment(long* points, const long* seg)
+{
+	long first = seg[2] >> 10;
+	long second = seg[3] >> 10;
+	long value = (long) ((ULong) ((seg[0] >> 10) - first) << 16);
+	long step = first * 0x800 + (second * 3 - (seg[1] >> 10)) * 0x2000 - second * 0x200;
+	long growth = first << 12;
+	points[kCICSegmentMiddle] = value >> 6;
+	for (long i = 1; i < 9; i++)
+	{
+		growth -= second * 0xc00;
+		value += step;
+		step += growth;
+		points[kCICSegmentMiddle + i] = value >> 6;
+	}
+	first = seg[2] >> 10;
+	second = seg[3] >> 10;
+	value = (long) ((ULong) ((seg[0] >> 10) - first) << 16);
+	step = first * 0x800 + (seg[1] >> 10) * 0x2000 - second * 0x6000 + second * 0x200;
+	growth = first << 12;
+	for (long i = 1; i < 9; i++)
+	{
+		growth += second * 0xc00;
+		value += step;
+		step += growth;
+		points[kCICSegmentMiddle - i] = value >> 6;
+	}
+}
+
+
 /*------------------------------------------------------------------------------
 	A   s h o r t   s t r o k e
 ------------------------------------------------------------------------------*/
