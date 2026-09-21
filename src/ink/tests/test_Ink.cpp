@@ -890,6 +890,84 @@ TestEncodeStroke()
 	EXPECT(QvantUN(0, 2048) == 0);
 }
 
+
+// The trace the encoder builds a stroke up in, and the pieces that work
+// over it.
+static void
+TestTrace()
+{
+	// the whole square root
+	EXPECT(SQRT32(0) == 0 && SQRT32(1) == 1 && SQRT32(3) == 1 && SQRT32(4) == 2);
+	EXPECT(SQRT32(99) == 9 && SQRT32(100) == 10);
+	EXPECT(SQRT32(0xffffUL * 0xffffUL) == 0xffff);
+	EXPECT(SQRT32(0xfffffffful) == 0xffff);
+	for (ULong n = 0; n < 2000; n += 7)
+	{
+		long r = SQRT32(n);
+		EXPECT((ULong) (r * r) <= n && (ULong) ((r + 1) * (r + 1)) > n);
+	}
+
+	CICEncoder e;
+	memset(&e, 0, sizeof(e));
+	e.fUnit = 1024;
+	e.fOne = 1;
+	InkPoint pt;
+
+	// the first point has no step and no length
+	pt.x = 10;	pt.y = 20;
+	EXPECT(AddPointToOdata(&e, &pt) == 1);
+	EXPECT(e.fPointCount == 1);
+	EXPECT(e.fTrace[0].x == 10 * 1024 && e.fTrace[0].y == 20 * 1024);
+	EXPECT(e.fTrace[0].fLength == 0 && e.fTrace[0].fArc == 0);
+
+	// a step of three by four is five units long, and the arc adds up
+	pt.x = 13;	pt.y = 24;
+	EXPECT(AddPointToOdata(&e, &pt) == 1);
+	EXPECT(e.fTrace[1].dx == 3 * 1024 && e.fTrace[1].dy == 4 * 1024);
+	EXPECT(e.fTrace[1].fLength == 5 * 1024);
+	EXPECT(e.fTrace[1].fArc == 5 * 1024);
+	pt.x = 13;	pt.y = 34;
+	EXPECT(AddPointToOdata(&e, &pt) == 1);
+	EXPECT(e.fTrace[2].fLength == 10 * 1024 && e.fTrace[2].fArc == 15 * 1024);
+	EXPECT(e.fPointCount == 3);
+
+	// a point too near the one before is not kept
+	pt.x = 13;	pt.y = 34;
+	EXPECT(AddPointToOdata(&e, &pt) == 0);
+	EXPECT(e.fPointCount == 3);
+
+	// the nine places spread evenly along what there is
+	ResetParam(&e);
+	long step = (15 * 1024) / 9;
+	for (long i = 0; i < kCICSamples; i++)
+	{
+		EXPECT(e.fSamples[i].fStep == step);
+		EXPECT(e.fSamples[i].fAt == step * i);
+	}
+
+	// kept and put back
+	StoreContext(&e);
+	e.fPointCount = 99;
+	for (long i = 0; i < kCICSamples; i++)
+	{
+		e.fSamples[i].fAt = -1;
+		e.fSamples[i].fStep = -1;
+	}
+	RestoreContext(&e);
+	EXPECT(e.fPointCount == 3);
+	for (long i = 0; i < kCICSamples; i++)
+		EXPECT(e.fSamples[i].fAt == step * i && e.fSamples[i].fStep == step);
+
+	// how far apart two sets of samples are
+	CICSample a[2], b[2];
+	memset(a, 0, sizeof(a));
+	memset(b, 0, sizeof(b));
+	EXPECT(MSQError(2, a, b) == 0);
+	a[0].x = 3;	a[0].y = 4;
+	b[1].x = -5;
+	EXPECT(MSQError(2, a, b) == 9 + 16 + 25);
+}
+
 int
 main()
 {
@@ -919,6 +997,7 @@ main()
 	TestDecodeRun();
 	TestEncodeWord();
 	TestEncodeStroke();
+	TestTrace();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

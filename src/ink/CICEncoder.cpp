@@ -138,6 +138,159 @@ EncodeWord_NEW(CICEncoder* encoder, short value, const unsigned short* table)
 }
 
 
+
+
+/*------------------------------------------------------------------------------
+	T h e   t r a c e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00283c1c SQRT32__FUl
+// A whole square root, a bit at a time: at each step the next bit of the
+// answer is set if what is left is at least the trial value that bit
+// would make, and taken away if it is.  The ROM writes the sixteen steps
+// out one after another; they are all the same.
+long
+SQRT32(ULong n)
+{
+	ULong root = 0;
+	for (long shift = 30; shift >= 0; shift -= 2)
+	{
+		ULong trial = (root * 4 + 1) << shift;
+		if (n < trial)
+			root = root * 2;
+		else
+		{
+			n -= trial;
+			root = root * 2 + 1;
+		}
+	}
+	return (long) root;
+}
+
+
+// ROM 0x002802c4 AddPointToOdata__FP4_CDCP6_POINT
+// A point added to the trace: where it is in the codec's own units, the
+// step from the point before, how long that step was and how far along
+// the stroke it is.
+//
+// The length is a square root, and the two sides are brought down by
+// halves until their sum and the larger of them will fit in sixteen
+// bits, so that squaring them cannot overflow; the answer is then shifted
+// back up.  A point nearer than about one tablet unit to the one before
+// is not kept at all.
+//
+// ==> 1 when the point was taken, 0 when it was too near the one before,
+// -1 when the trace has no room left.
+long
+AddPointToOdata(CICEncoder* encoder, const InkPoint* pt)
+{
+	CICTracePoint* at = &encoder->fTrace[encoder->fPointCount];
+	at->x = (encoder->fUnit * pt->x) / (long) encoder->fOne;
+	at->y = (encoder->fUnit * pt->y) / (long) encoder->fOne;
+	if (encoder->fPointCount == 0)
+	{
+		at->dx = 0;
+		at->dy = 0;
+		at->fLength = 0;
+		at->fArc = 0;
+	}
+	else
+	{
+		long dx = at->x - at[-1].x;
+		long dy = at->y - at[-1].y;
+		at->dx = dx;
+		at->dy = dy;
+		if (dx < 0)
+			dx = -dx;
+		if (dy < 0)
+			dy = -dy;
+		long bigger = dy < dx ? dx : dy;
+		ULong room = (ULong) (dx + dy + bigger);
+		ULong shift = 0;
+		while ((room >>= 1) > 0xffff)
+		{
+			dx >>= 1;
+			dy >>= 1;
+			shift++;
+		}
+		long length = SQRT32((ULong) (dy * dy + dx * dx)) << shift;
+		at->fLength = length;
+		at->fArc = at[-1].fArc + length;
+		if (length < kCICShortestStep)
+			return 0;
+	}
+	// (the ROM asks the same question twice)
+	if (encoder->fPointCount != 0 && at->fLength < kCICShortestStep)
+		return 0;
+	encoder->fPointCount++;
+	return encoder->fPointCount == (ULong) kCICTraceFull ? -1 : 1;
+}
+
+
+/*------------------------------------------------------------------------------
+	W h e r e   t h e   f i t t i n g   l o o k s
+------------------------------------------------------------------------------*/
+
+// ROM 0x0027f8cc ResetParam__FP4_CDC
+// The nine places spread evenly along the stroke so far: a ninth of its
+// whole length apart, the first at nought.
+void
+ResetParam(CICEncoder* encoder)
+{
+	long step = encoder->fTrace[encoder->fPointCount - 1].fArc / kCICSamples;
+	for (long i = 0; i < kCICSamples; i++)
+	{
+		encoder->fSamples[i].fStep = step;
+		encoder->fSamples[i].fAt = step * i;
+	}
+}
+
+
+// ROM 0x00280440 StoreContext__FP4_CDC
+// How far the trace had got and where the nine places were, kept so that
+// a try that comes to nothing can be undone.
+void
+StoreContext(CICEncoder* encoder)
+{
+	encoder->fSavedCount = encoder->fPointCount;
+	for (long i = 0; i < kCICSamples; i++)
+	{
+		encoder->fSavedSamples[i].fAt = encoder->fSamples[i].fAt;
+		encoder->fSavedSamples[i].fStep = encoder->fSamples[i].fStep;
+	}
+}
+
+
+// ROM 0x0028049c RestoreContext__FP4_CDC
+void
+RestoreContext(CICEncoder* encoder)
+{
+	encoder->fPointCount = encoder->fSavedCount;
+	for (long i = 0; i < kCICSamples; i++)
+	{
+		encoder->fSamples[i].fAt = encoder->fSavedSamples[i].fAt;
+		encoder->fSamples[i].fStep = encoder->fSavedSamples[i].fStep;
+	}
+}
+
+
+// ROM 0x002833c8 MSQError__FUsP6_RPR_PT2
+// How far apart two sets of samples are: the squares of the distances,
+// added up.
+long
+MSQError(ULong count, const CICSample* a, const CICSample* b)
+{
+	long total = 0;
+	for (ULong i = 0; i < count; i++)
+	{
+		long dx = a[i].x - b[i].x;
+		long dy = a[i].y - b[i].y;
+		total += dy * dy + dx * dx;
+	}
+	return total;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   b o o k ,   a n d   r o u n d i n g
 ------------------------------------------------------------------------------*/

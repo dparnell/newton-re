@@ -180,16 +180,43 @@ Boolean	ReadShortStroke(CICDecoder* decoder);
 Boolean	DecodeShortStroke(CICDecoder* decoder);
 
 
-// One point of the trace the encoder is working from.  The ROM's record
-// is 0x18 bytes; the rest of it is what the segment fitting works in.
+// One point of the trace the encoder is working from (the CIC library's
+// _ORG_P): where it is, the step from the point before, how long that
+// step was, and how far along the stroke it is.  All of it is in the
+// thousand-and-twenty-fourths the codec counts in.
 struct CICTracePoint
 {
 	long	x;				// +0x00
 	long	y;				// +0x04
+	long	dx;				// +0x08  the step from the point before
+	long	dy;				// +0x0c
+	long	fLength;		// +0x10  how long that step was
+	long	fArc;			// +0x14  and how far along the stroke this is
 };
 
-// How many of them the ROM's context has room for.
+// How many of them the ROM's context has room for.  A stroke that
+// reaches the last of them is told so.
 const long kCICMaxTracePoints = 128;
+const long kCICTraceFull = 0x7f;
+
+// The shortest step worth keeping: a point nearer than this to the one
+// before it is thrown away.
+const long kCICShortestStep = 0x401;
+
+
+// One of the nine places along a segment the fitting works at (the CIC
+// library's _RPR_P): where the curve is there, and how far along the
+// stroke that is.
+struct CICSample
+{
+	long	x;				// +0x00
+	long	y;				// +0x04
+	long	fStep;			// +0x08  the distance between samples
+	long	fAt;			// +0x0c  and where this one is
+};
+
+// How many of them there are.
+const long kCICSamples = 9;
 
 
 // The encoder's context (the CIC library's _CDC; as with the decoder's,
@@ -198,8 +225,15 @@ struct CICEncoder
 {
 	UByte*			fOut;			// +0x38    where the bits go
 	ULong			fError;			// +0x3c    what went wrong (a halfword)
+	CICSample		fSamples[kCICSamples];		// +0x40   where the fitting is looking
+	CICSample		fResampled[kCICSamples];	// +0xd0   and what it found there
+	long			fCoefX[4];		// +0x160   the segment being fitted
+	long			fCoefY[4];		// +0x170
+	long			fWasX[4];		// +0x1a0   and what it was on the try before
+	long			fWasY[4];		// +0x1b0
 	CICTracePoint	fTrace[kCICMaxTracePoints];	// +0x1c0  the stroke being written
 	ULong			fPointCount;	// +0xdc0   how many points it has (a halfword)
+	ULong			fSavedCount;	// +0xdc2   and what it was at the last save
 	long			fPenX;			// +0xdc4   where the pen is
 	long			fPenY;			// +0xdc8
 	long			fStrokeX;		// +0xdd4   where this stroke began
@@ -221,11 +255,37 @@ struct CICEncoder
 	const void*		fTables[8];		// +0xe38 to +0xe54
 	ULong			fBookNumber;	// +0xe58   the book in use (a halfword)
 	ULong			fFirst;			// +0xe5a   this is the run's first stroke
+	long			fMoved;			// +0xe5c   how far the last try moved the curve
+	CICSample		fSavedSamples[kCICSamples];	// +0xd8, sharing fResampled's
+								//          two spare fields - see StoreContext
 };
 
 // What the encoder puts in fError.
 const ULong kCICNoRoom		= 5;
 const ULong kCICNoBuffer	= 15;
+
+
+// ROM 0x00283c1c SQRT32__FUl
+// A whole square root, a bit at a time.
+long	SQRT32(ULong n);
+
+// ROM 0x002802c4 AddPointToOdata__FP4_CDCP6_POINT
+// A point added to the trace.  ==> 1 when it was taken, 0 when it was
+// too near the one before, -1 when the trace is now full.
+long	AddPointToOdata(CICEncoder* encoder, const InkPoint* pt);
+
+// ROM 0x0027f8cc ResetParam__FP4_CDC
+// The nine sample places spread evenly along the stroke so far.
+void	ResetParam(CICEncoder* encoder);
+
+// ROM 0x00280440 StoreContext__FP4_CDC
+// Where the fitting had got to, kept and put back.
+void	StoreContext(CICEncoder* encoder);
+void	RestoreContext(CICEncoder* encoder);	// ROM 0x0028049c RestoreContext__FP4_CDC
+
+// ROM 0x002833c8 MSQError__FUsP6_RPR_PT2
+// How far apart two sets of samples are, squared and summed.
+long	MSQError(ULong count, const CICSample* a, const CICSample* b);
 
 
 // ROM 0x00282758 QvantUN__FlT1
