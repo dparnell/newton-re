@@ -213,7 +213,7 @@ AddPointToOdata(CICEncoder* encoder, const InkPoint* pt)
 			dy >>= 1;
 			shift++;
 		}
-		long length = SQRT32((ULong) (dy * dy + dx * dx)) << shift;
+		long length = SQRT32((ULong) dy * (ULong) dy + (ULong) dx * (ULong) dx) << shift;
 		at->fLength = length;
 		at->fArc = at[-1].fArc + length;
 		if (length < kCICShortestStep)
@@ -240,22 +240,34 @@ AddPointToOdata(CICEncoder* encoder, const InkPoint* pt)
 // its cosine (0.9239).  The shifts are one less in the forward
 // transform, which doubles them, and the whole answer is divided by
 // eight at the end.
+// (the ROM's multiplies are ARM's, which wrap; the host's must wrap the
+// same way rather than trap, so they are done unsigned and read back as
+// signed)
+static inline long
+WrapMul(long v, ULong by)
+{
+	return (long) ((ULong) v * by);
+}
+
 static inline long
 RootHalf(long v, long shift)
 {
-	return (v * 0xb5 >> shift) + (v * 4 >> (shift + 8)) + (v * 0xf3 >> (shift + 16));
+	return (WrapMul(v, 0xb5) >> shift) + (WrapMul(v, 4) >> (shift + 8))
+		 + (WrapMul(v, 0xf3) >> (shift + 16));
 }
 
 static inline long
 SinEighth(long v, long shift)
 {
-	return (v * 0x61 >> shift) + (v * 0xf7 >> (shift + 8)) + (v * 0x8a >> (shift + 16));
+	return (WrapMul(v, 0x61) >> shift) + (WrapMul(v, 0xf7) >> (shift + 8))
+		 + (WrapMul(v, 0x8a) >> (shift + 16));
 }
 
 static inline long
 CosEighth(long v, long shift)
 {
-	return (v * 0xec >> shift) + (v * 0x83 >> (shift + 8)) + (v * 0x5e >> (shift + 16));
+	return (WrapMul(v, 0xec) >> shift) + (WrapMul(v, 0x83) >> (shift + 8))
+		 + (WrapMul(v, 0x5e) >> (shift + 16));
 }
 
 
@@ -405,20 +417,20 @@ Boolean
 TryQuantVariant(const long* coef, const long* trial, long best, long* outError)
 {
 	Boolean better = false;
-	long d = coef[2] - trial[2];
-	long error = d * d;
+	ULong d = (ULong) (coef[2] - trial[2]);
+	long error = (long) (d * d);
 	if (error <= best)
 	{
-		d = coef[3] - trial[3];
-		error += d * d;
+		d = (ULong) (coef[3] - trial[3]);
+		error = (long) ((ULong) error + d * d);
 		if (error <= best)
 		{
-			d = (coef[0] - (trial[0] + trial[1]) / 2) + trial[2];
-			error += d * d;
+			d = (ULong) ((coef[0] - (trial[0] + trial[1]) / 2) + trial[2]);
+			error = (long) ((ULong) error + d * d);
 			if (error <= best)
 			{
-				d = (coef[1] - (trial[0] - trial[1]) / 2) + trial[3];
-				error += d * d;
+				d = (ULong) ((coef[1] - (trial[0] - trial[1]) / 2) + trial[3]);
+				error = (long) ((ULong) error + d * d);
 				if (error <= best)
 					better = true;
 			}
@@ -571,14 +583,14 @@ Repar(const CICTracePoint* last, const CICTracePoint* first,
 	}
 	for (long round = 0; round < 12; round++)
 	{
-		remainder *= 2;
+		remainder = (long) ((ULong) remainder * 2);
 		ratio *= 2;
 		if (total < remainder)
 		{
 			remainder -= total;
 			ratio++;
 		}
-		remainder *= 2;
+		remainder = (long) ((ULong) remainder * 2);
 		ratio *= 2;
 		if (total < remainder)
 		{
@@ -614,7 +626,7 @@ Repar(const CICTracePoint* last, const CICTracePoint* first,
 		}
 		for (long bit = 1; bit <= 10; bit++)
 		{
-			into *= 2;
+			into = (long) ((ULong) into * 2);
 			if (length <= into)
 			{
 				into -= length;
@@ -687,7 +699,7 @@ Tracing(long count, CICSample* samples)
 			shift++;
 			room >>= 1;
 		}
-		long length = SQRT32((ULong) (dy * dy + dx * dx)) << shift;
+		long length = SQRT32((ULong) dy * (ULong) dy + (ULong) dx * (ULong) dx) << shift;
 		samples[i + 1].fStep = length;
 		arc += length;
 		samples[i + 1].fAt = arc;
@@ -701,14 +713,16 @@ Tracing(long count, CICSample* samples)
 long
 MSQError(ULong count, const CICSample* a, const CICSample* b)
 {
-	long total = 0;
+	// (the sum wraps, as the ROM's does: early in a fit the places can
+	// be far enough apart that the squares pass what a word holds)
+	ULong total = 0;
 	for (ULong i = 0; i < count; i++)
 	{
-		long dx = a[i].x - b[i].x;
-		long dy = a[i].y - b[i].y;
+		ULong dx = (ULong) (a[i].x - b[i].x);
+		ULong dy = (ULong) (a[i].y - b[i].y);
 		total += dy * dy + dx * dx;
 	}
-	return total;
+	return (long) total;
 }
 
 
@@ -966,7 +980,8 @@ TestStrokeSeg(CICEncoder* encoder, ULong allowance, ULong tries)
 		{
 			long dx = encoder->fCoefX[i] - encoder->fWasX[i];
 			long dy = encoder->fCoefY[i] - encoder->fWasY[i];
-			moved += (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy);
+			moved = (long) ((ULong) moved + (ULong) (dx < 0 ? -dx : dx)
+									 + (ULong) (dy < 0 ? -dy : dy));
 		}
 		encoder->fMoved = moved;
 		if (moved < 0x50)

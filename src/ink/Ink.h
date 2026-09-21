@@ -123,6 +123,18 @@ Ref		SetInkWordPenSize(RefArg ink, ULong size);		// ROM 0x000dc1f4 SetInkWordPen
 Ref		SetInkWordScale(RefArg ink, long scale);		// ROM 0x000dc24c SetInkWordScale__FRC6RefVarl
 Ref		SetInkWordFontFace(RefArg ink, ULong face);		// ROM 0x000dbebc SetInkWordFontFace__FRC6RefVarUl
 
+// The strokes the pen left packed into a binary, and read back out of
+// one.  A block of ink is 'ink2, or 'inkWord with the word's
+// measurements after it; InkExpand answers a list of strokes ended by a
+// nil, made with NewPtr.
+class TStroke;
+Ref			InkCompress(TStroke** strokes, Boolean asWord);			// ROM 0x00140b78 InkCompress__FPP7TStrokeUc
+TStroke**	InkExpand(RefArg ink, ULong group, long x, long y);		// ROM 0x00140c98 InkExpand__FRC6RefVarUllT3
+
+// ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
+void		DisposeTStrokes(TStroke** strokes);
+
+
 // The x-height brought back to something believable.
 void	AdjustInkWordXHeight(RefArg ink, Boolean forNumbers);	// ROM 0x00140940 AdjustInkWordXHeight__FRC6RefVarUc
 

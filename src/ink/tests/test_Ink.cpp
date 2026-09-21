@@ -7,6 +7,7 @@
 #include "CICCodec.h"
 #include "ROMImport.h"
 #include "NewtonMemory.h"
+#include "Stroke.h"
 #include "ROMConstants.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -1211,6 +1212,96 @@ TestEncodeRun()
 	DisposPtr((Ptr) ink);
 }
 
+
+// Strokes into ink and back out again.
+static void
+TestStrokeRoundTrip()
+{
+	InitializeParagraphCompression();
+	// a stroke of sixteen points along a gentle curve, in pixels
+	const long kPoints = 16;
+	short px[kPoints];
+	short py[kPoints];
+	TStroke* stroke = TStroke::Make(0);		// (a count makes that many points, not room for them)
+	EXPECT(stroke != nil);
+	if (stroke == nil)
+		return;
+	for (long i = 0; i < kPoints; i++)
+	{
+		px[i] = (short) (20 + i * 4);
+		py[i] = (short) (40 + (i * i) / 6);
+		TabPt tab;
+		tab.x = ToFixed(px[i]);
+		tab.y = ToFixed(py[i]);
+		tab.z = 0;
+		tab.p = 0;
+			EXPECT(stroke->AddPoint(&tab) == 0);
+	}
+	stroke->EndStroke();
+	TStroke* list[2];
+	list[0] = stroke;
+	list[1] = nil;
+
+	RefVar ink(InkCompress(list, false));
+	EXPECT(NOTNIL(ink));
+	EXPECT(IsRawInk(ink) && !IsInkWord(ink));
+	EXPECT(Length(ink) > 0 && Length(ink) < kPoints * 4);
+
+	TStroke** back = InkExpand(ink, 1, 0, 0);
+	EXPECT(back != nil);
+	if (back == nil)
+		return;
+	EXPECT(back[0] != nil && back[1] == nil);
+	long count = (long) back[0]->fCount;
+	// a long stroke comes back with sixteen points to a segment, so
+	// there are more of them than went in
+	// every point that came back is near the curve that went in
+	long worst = 0;
+	for (long i = 0; i < count; i++)
+	{
+		FPoint at;
+		back[0]->GetFPoint(i, &at);
+		long x = RoundFixed(at.x);
+		long y = RoundFixed(at.y);
+		long nearest = 0x7fffffff;
+		for (long j = 0; j < kPoints; j++)
+		{
+			long dx = x - px[j];
+			long dy = y - py[j];
+			long d = dx * dx + dy * dy;
+			if (d < nearest)
+				nearest = d;
+		}
+		if (nearest > worst)
+			worst = nearest;
+	}
+	EXPECT(worst <= 3 * 3);		// within three pixels of the stroke
+
+	// and an ink word carries the eight bytes after its strokes
+	RefVar word(InkCompress(list, true));
+	EXPECT(NOTNIL(word) && IsInkWord(word));
+	EXPECT(Length(word) == Length(ink) + (long) sizeof(PackedInkWordInfo));
+	TStroke** wordBack = InkExpand(word, 1, 0, 0);
+	EXPECT(wordBack != nil && wordBack[0] != nil);
+
+	// the ink put down somewhere else moves with it
+	TStroke** moved = InkExpand(ink, 1, 8 * 100, 0);
+	EXPECT(moved != nil && moved[0] != nil);
+	if (moved != nil && moved[0] != nil && back[0] != nil)
+	{
+		FPoint first, shifted;
+		back[0]->GetFPoint(0, &first);
+		moved[0]->GetFPoint(0, &shifted);
+		EXPECT(RoundFixed(shifted.x) == RoundFixed(first.x) + 100);
+		EXPECT(RoundFixed(shifted.y) == RoundFixed(first.y));
+	}
+
+	DisposeTStrokes(moved);
+	DisposeTStrokes(wordBack);
+	DisposeTStrokes(back);
+	stroke->IDispose();
+}
+
 int
 main()
 {
@@ -1244,6 +1335,7 @@ main()
 	TestTransform();
 	TestRepar();
 	TestEncodeRun();
+	TestStrokeRoundTrip();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");
