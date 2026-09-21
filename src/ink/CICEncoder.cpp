@@ -388,6 +388,47 @@ RestoreContext(CICEncoder* encoder)
 }
 
 
+// ROM 0x00283d9c Tracing__FlP6_RPR_P
+// The places measured along the curve they now sit on: the distance from
+// each to the next, and how far along the whole thing that comes to.
+// The first is nought and nought, and every other one is written as the
+// *next* record's pair - so the walk runs one past the end (see the
+// comment on CICEncoder::fSamples).
+//
+// The length is the same square root AddPointToOdata takes, with the
+// room test made on twice the sum rather than the sum.
+void
+Tracing(long count, CICSample* samples)
+{
+	long arc = 0;
+	samples[0].fStep = 0;
+	samples[0].fAt = 0;
+	for (long i = 0; i < count; i++)
+	{
+		long dx = samples[i + 1].x - samples[i].x;
+		long dy = samples[i + 1].y - samples[i].y;
+		if (dx < 0)
+			dx = -dx;
+		if (dy < 0)
+			dy = -dy;
+		long bigger = dy < dx ? dx : dy;
+		ULong room = (ULong) ((dx + dy + bigger) * 2);
+		ULong shift = 0;
+		while (room > 0xffff)
+		{
+			dx >>= 1;
+			dy >>= 1;
+			shift++;
+			room >>= 1;
+		}
+		long length = SQRT32((ULong) (dy * dy + dx * dx)) << shift;
+		samples[i + 1].fStep = length;
+		arc += length;
+		samples[i + 1].fAt = arc;
+	}
+}
+
+
 // ROM 0x002833c8 MSQError__FUsP6_RPR_PT2
 // How far apart two sets of samples are: the squares of the distances,
 // added up.

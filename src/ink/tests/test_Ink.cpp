@@ -958,6 +958,24 @@ TestTrace()
 	for (long i = 0; i < kCICSamples; i++)
 		EXPECT(e.fSamples[i].fAt == step * i && e.fSamples[i].fStep == step);
 
+	// the nine places measured along the curve they sit on
+	{
+		CICSample line[kCICSamples + 1];
+		memset(line, 0, sizeof(line));
+		for (long i = 0; i <= kCICSamples; i++)
+		{
+			line[i].x = i * 30;
+			line[i].y = i * 40;
+		}
+		Tracing(kCICSamples, line);
+		EXPECT(line[0].fStep == 0 && line[0].fAt == 0);
+		for (long i = 1; i <= kCICSamples; i++)
+		{
+			EXPECT(line[i].fStep == 50);		// three by four is five
+			EXPECT(line[i].fAt == 50 * i);
+		}
+	}
+
 	// how far apart two sets of samples are
 	CICSample a[2], b[2];
 	memset(a, 0, sizeof(a));

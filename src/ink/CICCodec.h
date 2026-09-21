@@ -225,7 +225,13 @@ struct CICEncoder
 {
 	UByte*			fOut;			// +0x38    where the bits go
 	ULong			fError;			// +0x3c    what went wrong (a halfword)
-	CICSample		fSamples[kCICSamples];		// +0x40   where the fitting is looking
+	// (one more than there are, because Tracing writes the step and the
+	// distance of the place *after* the one it is looking at, and so
+	// runs one past the end.  In the ROM that tenth record is the first
+	// of the resampled array, whose two spare fields are also where
+	// StoreContext keeps the first sample's - so the ROM's Tracing
+	// walks over the saved pair, and TestStrokeSeg does the same here.)
+	CICSample		fSamples[kCICSamples + 1];	// +0x40   where the fitting is looking
 	CICSample		fResampled[kCICSamples];	// +0xd0   and what it found there
 	long			fCoefX[4];		// +0x160   the segment being fitted
 	long			fCoefY[4];		// +0x170
@@ -294,6 +300,11 @@ void	ResetParam(CICEncoder* encoder);
 // Where the fitting had got to, kept and put back.
 void	StoreContext(CICEncoder* encoder);
 void	RestoreContext(CICEncoder* encoder);	// ROM 0x0028049c RestoreContext__FP4_CDC
+
+// ROM 0x00283d9c Tracing__FlP6_RPR_P
+// The nine places measured along the curve they now sit on: how far
+// each is from the one before, and how far along it is altogether.
+void	Tracing(long count, CICSample* samples);
 
 // ROM 0x002833c8 MSQError__FUsP6_RPR_PT2
 // How far apart two sets of samples are, squared and summed.
