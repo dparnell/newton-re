@@ -501,7 +501,7 @@ PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 }
 
 
-// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUlllUc
+// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
 // Ink drawn into the current port at a place and a scale.
 void
 InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY)

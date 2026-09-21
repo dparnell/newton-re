@@ -150,7 +150,7 @@ Ref			TStrokesToInkWord(TStroke** strokes, Rect* outRect);	// ROM 0x001404f0 TSt
 // one draws it the size it was written.
 void		InkDraw(RefArg ink, ULong group, long x, long y);		// ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
 void		InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y,
-						  Fixed scaleX, Fixed scaleY);				// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUlllUc
+						  Fixed scaleX, Fixed scaleY);				// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
 
 
 // How far outside the strokes themselves the ink reaches.
