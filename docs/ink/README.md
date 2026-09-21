@@ -178,15 +178,51 @@ staircase across the diagonal and the middle of them is better thrown
 away.  `ClearSkipPoint` (0x002819a0) drains what is still held when the
 stroke ends.
 
+## Writing a block of ink (`CICCodec.h`)
+
+The encoder is the same machine backwards.  `PutBits` (0x00282aa0) lays
+bits in least significant first, a piece at a time - as much of the
+current byte as is left - and disturbs only the bits it writes, which is
+what lets the encoder try a stroke two ways and keep the shorter.
+`EncodeWord_OLD` (0x00282c04) writes a value through one of a book's
+tables: between the two bases it goes out as its own code, and at or
+beyond either base as that escape followed by what is left of it once
+the base is taken away - which may itself be out of range, so it is the
+same call again.  `EncodeWord_NEW` (0x00282d38) does the same over the
+static tables, of which the encoder has its own pair, byte for byte the
+same as the reader's.  `FindCodeWord` (0x00282bb8) is how an entry is
+found: the decoder can walk the entries in order of code length, but the
+encoder has only the value and has to look at all of them.
+
+`QvantUN` (0x00282758) is the rounding everything goes through - a
+length over a step, to the nearest whole one, a half away from nought -
+and `EcdrSelectCodeBook` (0x0028294c) is `DcdrSelectCodeBook` the other
+way about.  `WriteNewStroke` (0x00282d84) writes a stroke's kind and
+where it starts, and settles the run's format on the first stroke;
+`WriteShortStroke` (0x00283240) writes the points as they were drawn.
+
+One ROM bug is kept and commented: a first stroke of the newer format
+that starts exactly where the pen is - both steps nought - sets the
+width of the coordinates to eight but never sets the byte that says so,
+and writes whatever was in the register.
+
 ## NOT YET
 
-The encoder.  `InkCompress` (0x00140b78) hands the strokes to
-`CSCompress` (0x001543fc), which is `EncoderOpen`/`Run`/`Close`
-(0x0027f938, 0x002804f8, 0x0027fae8) and the twenty-odd functions
-between them - the segment fitting, the vector quantisation and the
-code book selection that turn points back into the bits the decoder
-reads.  Until it is reconstructed ink can be read, measured, scaled and
-stored, but not made from strokes.
+The rest of the encoder: how a stroke is cut into segments.
+`EncoderRun` (0x002804f8) pulls points from a callback and, once it has
+two, hands the stroke to `WriteLongStroke` (0x0027fffc) - a stroke of
+fewer than two points is the only one that goes out as a short one.
+`WriteLongStroke` adds points (`AddPointToOdata` 0x002802c4) while
+`TestStrokeSeg` (0x0027fde0) says a segment still fits, saving and
+restoring its state around each try (`StoreContext`, `RestoreContext`,
+`ResetParam`), and then `WriteSegment` (0x0028303c) writes the one it
+settled on.  Under `TestStrokeSeg` is the fitting itself: `Repar`
+(0x00283424) and the transform pair `RFFT_9_4_X`/`RIFT_4_9_X` and their
+y twins, which take nine points to four numbers and back, `MSQError`
+(0x002833c8), `SegVectQuant` (0x0028279c) and `TryQuantVariant`
+(0x0028333c).  Until those are reconstructed ink can be read, measured,
+scaled and stored, and a stroke can be written a point at a time by
+hand, but `TCICInkCodec::Encode` cannot yet make ink out of strokes.
 
 With it would come the rest: `TStrokesToInk`/`TStrokesToInkWord`
 (0x00140608, 0x001404f0), `InkBounds` (0x001a3728),
