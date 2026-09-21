@@ -41,6 +41,7 @@
 #define __INK_H
 
 #ifndef __OBJECTS_H
+#include "Stroke.h"
 #include "objects.h"
 #endif
 #ifndef __RICHSTRING_H
@@ -183,8 +184,7 @@ const long kInkSlop = 2;
 
 
 // ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
-long		CountTStrokes(TStroke** strokes);						// ROM 0x001a3420 CountTStrokes__FPP7TStroke
-void		DisposeTStrokes(TStroke** strokes);
+
 
 
 // The x-height brought back to something believable.

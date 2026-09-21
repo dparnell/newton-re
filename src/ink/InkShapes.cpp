@@ -31,6 +31,9 @@
 #include "ParagraphView.h"
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
+#include "OSErrors.h"
+#include "StrokeBundle.h"
+#include "ROMConstants.h"
 #include "Unicode.h"
 
 
@@ -232,6 +235,83 @@ MergeInk(RefArg first, RefArg second)
 
 
 /*------------------------------------------------------------------------------
+	S t r o k e   b u n d l e s   a n d   i n k
+------------------------------------------------------------------------------*/
+
+// ROM 0x001406bc StrokeBundleToInkWord__FRC6RefVar
+// The ink word a bundle of strokes makes.  The answer is kept in the
+// bundle's own `inkWord` slot, so a bundle handed round several views is
+// only packed once.
+Ref
+StrokeBundleToInkWord(RefArg bundle)
+{
+	RefVar ink(GetProtoVariable(bundle, RSSYMinkword, nil));
+	if (ISNIL(ink))
+	{
+		TStroke** strokes = StrokeBundleToTStrokes(bundle);
+		ink = TStrokesToInkWord(strokes, nil);
+		SetFrameSlot(bundle, RSSYMinkword, ink);
+		DisposeTStrokes(strokes);
+	}
+	return ink;
+}
+
+
+// ROM 0x001a2090 CompressStrokes__FRC6RefVar
+// A bundle as a shape: an ink word, laid out as a word would be.
+Ref
+CompressStrokes(RefArg bundle)
+{
+	TStroke** strokes = StrokeBundleToTStrokes(bundle);
+	if (strokes == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	RefVar form(MakeInkWordPoly(strokes));
+	DisposeTStrokes(strokes);
+	return form;
+}
+
+
+// ROM 0x001a2100 CompressStrokesToInk__FRC6RefVar
+// ... and as a sketch, kept the size it was drawn.
+Ref
+CompressStrokesToInk(RefArg bundle)
+{
+	TStroke** strokes = StrokeBundleToTStrokes(bundle);
+	if (strokes == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	RefVar form(MakeInkPoly(strokes));
+	DisposeTStrokes(strokes);
+	return form;
+}
+
+
+// ROM 0x001a2344 ExpandInk__FRC6RefVarl
+// The other way about: an ink shape opened back up into a bundle of
+// strokes, which is what a script gets when it asks for the writing
+// behind a piece of ink.  (The format is read and thrown away - the
+// strokes always come back in eighths of a pixel.)
+Ref
+ExpandInk(RefArg form, long format)
+{
+	RefVar bundle;
+	TStroke** strokes = GetPolyAsTStrokes(form, 0);
+	if (strokes != nil)
+	{
+		long count = CountTStrokes(strokes);
+		RefVar list(AllocateArray(RSSYMarray, count));
+		for (long i = 0; strokes[i] != nil; i++)
+			SetArraySlot(list, i, RefVar(MakeStrokeRef(strokes[i])));
+		bundle = Clone(RefVar(Rstrokebundle));
+		SetFrameSlot(bundle, RSSYMbounds,
+					 RefVar(GetProtoVariable(form, RSSYMviewbounds, nil)));
+		SetFrameSlot(bundle, RSSYMstrokes, list);
+		DisposeTStrokes(strokes);
+	}
+	return bundle;
+}
+
+
+/*------------------------------------------------------------------------------
 	T h e   i n k   i n   a   p a r a g r a p h
 ------------------------------------------------------------------------------*/
 
@@ -327,6 +407,38 @@ FNextInkIndex(RefArg rcvr, RefArg para, RefArg index)
 }
 
 
+// ROM 0x0014074c FStrokeBundleToInkWord
+static Ref
+FStrokeBundleToInkWord(RefArg rcvr, RefArg bundle)
+{
+	return StrokeBundleToInkWord(bundle);
+}
+
+
+// ROM 0x0019fef8 FCompressStrokes
+static Ref
+FCompressStrokes(RefArg rcvr, RefArg bundle)
+{
+	return CompressStrokes(bundle);
+}
+
+
+// ROM 0x0019ff00 FCompressStrokesToInk
+static Ref
+FCompressStrokesToInk(RefArg rcvr, RefArg bundle)
+{
+	return CompressStrokesToInk(bundle);
+}
+
+
+// ROM 0x0019ff08 FExpandInk
+static Ref
+FExpandInk(RefArg rcvr, RefArg form, RefArg format)
+{
+	return ExpandInk(form, RINT(format));
+}
+
+
 // ROM 0x001a3a60 FGetInkAt
 static Ref
 FGetInkAt(RefArg rcvr, RefArg view, RefArg offset)
@@ -343,4 +455,8 @@ RegisterInkNatives(void)
 	RegisterNativeFunction("FMergeInk", (void*) FMergeInk, 2);
 	RegisterNativeFunction("FNextInkIndex", (void*) FNextInkIndex, 2);
 	RegisterNativeFunction("FGetInkAt", (void*) FGetInkAt, 2);
+	RegisterNativeFunction("FStrokeBundleToInkWord", (void*) FStrokeBundleToInkWord, 1);
+	RegisterNativeFunction("FCompressStrokes", (void*) FCompressStrokes, 1);
+	RegisterNativeFunction("FCompressStrokesToInk", (void*) FCompressStrokesToInk, 1);
+	RegisterNativeFunction("FExpandInk", (void*) FExpandInk, 2);
 }

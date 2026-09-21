@@ -16,6 +16,7 @@
 add_library(recognition STATIC
     RecObject.cpp
     Stroke.cpp
+    StrokeBundle.cpp
     Unit.cpp
     UnitPublic.cpp
     Areas.cpp

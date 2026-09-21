@@ -31,6 +31,7 @@
 #include "SystemNatives.h"
 #include "ConfigServer.h"
 #include "InkShapes.h"
+#include "StrokeBundle.h"
 
 
 void
@@ -53,6 +54,7 @@ RegisterAllNatives(void)
 
 	// the recogniser's units, and the ink the pen leaves
 	RegisterUnitNatives();
+	RegisterStrokeBundleNatives();
 	RegisterInkNatives();
 
 	// the stores and soups

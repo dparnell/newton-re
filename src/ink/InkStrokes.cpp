@@ -42,35 +42,6 @@
 #include <string.h>
 
 
-// ROM 0x001a3420 CountTStrokes__FPP7TStroke
-// How many strokes a list holds.
-long
-CountTStrokes(TStroke** strokes)
-{
-	long n = 0;
-	if (strokes != nil)
-		while (strokes[n] != nil)
-			n++;
-	return n;
-}
-
-
-// ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
-// A list of strokes and the strokes in it given back.  Dispose rather
-// than IDispose: a stroke is only really freed when the last user of it
-// lets go, which is what lets SplitInkAt put the same strokes in two
-// lists and give all three back.
-void
-DisposeTStrokes(TStroke** strokes)
-{
-	if (strokes == nil)
-		return;
-	for (long i = 0; strokes[i] != nil; i++)
-		strokes[i]->Dispose();
-	DisposPtr((Ptr) strokes);
-}
-
-
 /*------------------------------------------------------------------------------
 	S t r o k e s   i n
 ------------------------------------------------------------------------------*/

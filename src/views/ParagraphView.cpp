@@ -8,6 +8,7 @@
 
 #include "ParagraphView.h"
 #include "Ink.h"
+#include "InkShapes.h"
 #include "Hilites.h"
 #include "OSErrors.h"
 #include "StyleRuns.h"
@@ -2948,6 +2949,24 @@ TParagraphView::InsertStyledText(ULong offset, const UniChar* text, ULong length
 		kept--;
 	if (kept < textLength)
 		MakeAndDoReplaceCommand(kept, nil, 0, RefVar(NILREF), RefVar(NILREF), 0, textLength - kept, false);
+}
+
+
+// ROM 0x001814c0 InsertInk__14TParagraphViewFUlRC6RefVarT1
+// A bundle of strokes put into the text.  An ink word is one character -
+// 0xf701 - whose style is the ink word binary itself, so the styles
+// handed to the replace command are the pair (1 character, the ink).
+void
+TParagraphView::InsertInk(ULong offset, RefArg bundle, ULong removeLength)
+{
+	UniChar text[2];
+	text[0] = kInkWordChar;
+	text[1] = 0;
+	RefVar styles(AllocateArray(RSSYMstyles, 2));
+	RefVar ink(StrokeBundleToInkWord(bundle));
+	SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 1, ink);
+	MakeAndDoReplaceCommand(offset, text, 1, styles, RefVar(NILREF), 0, removeLength, false);
 }
 
 

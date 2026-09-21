@@ -183,6 +183,9 @@ public:
 	long		PointToWordBoundary(const Point& pt, long bias, long* outLine);	// ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc - -1 for no word there
 	void		DeleteHilitedTextOnly(RefArg hilite);					// ROM 0x00174dbc DeleteHilitedTextOnly__14TParagraphViewFRC6RefVar
 	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
+	// A bundle of strokes put into the text as one ink word: the
+	// character 0xf701, whose style is the ink itself.
+	void		InsertInk(ULong offset, RefArg bundle, ULong removeLength);	// ROM 0x001814c0 InsertInk__14TParagraphViewFUlRC6RefVarT1
 	void		RemoveText(ULong offset, ULong length);					// ROM 0x00178b98 RemoveText__14TParagraphViewFUlT1
 	void		MakeAndDoReplaceCommand(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178d5c MakeAndDoReplaceCommand__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
 	Boolean		AddKeyToCurrUndo(UniChar ch, long offset);				// ROM 0x00177218 AddKeyToCurrUndo__14TParagraphViewFUsl

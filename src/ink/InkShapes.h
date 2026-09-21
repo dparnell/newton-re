@@ -56,6 +56,16 @@ long		NextInkIndex(RefArg para, long index);			// ROM 0x001a163c NextInkIndex__F
 // where the paragraph draws it; nil when there is no ink there.
 Ref			GetInkAt(TParagraphView* para, long offset);	// ROM 0x001a170c GetInkAt__FP14TParagraphViewl
 
+// A bundle of strokes packed up as ink - a word, a sketch, or the ink
+// word a paragraph keeps in its text.  The bundle remembers the word it
+// was made into, so asking twice costs nothing.
+Ref			StrokeBundleToInkWord(RefArg bundle);			// ROM 0x001406bc StrokeBundleToInkWord__FRC6RefVar
+Ref			CompressStrokes(RefArg bundle);					// ROM 0x001a2090 CompressStrokes__FRC6RefVar
+Ref			CompressStrokesToInk(RefArg bundle);			// ROM 0x001a2100 CompressStrokesToInk__FRC6RefVar
+
+// ... and the other way: an ink shape back into a bundle of strokes.
+Ref			ExpandInk(RefArg form, long format);			// ROM 0x001a2344 ExpandInk__FRC6RefVarl
+
 void		RegisterInkNatives(void);
 
 #endif	/* __INKSHAPES_H */

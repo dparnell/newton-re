@@ -124,6 +124,12 @@ public:
 // the inker's lock on the stroke being drawn (the host has no inker task)
 Boolean	AcquireStroke(TStroke* stroke);						// ROM 0x001ff5a0 AcquireStroke__FP7TStroke - ==> whether it was taken (to release)
 void	ReleaseStroke(void);								// ROM 0x001ff5d8 ReleaseStroke__Fv
+// A list of strokes ended by a nil, which is how the ink and the
+// recogniser pass a handful of them about.  Dispose releases rather than
+// frees, so the same stroke may be in more than one list at once.
+long	CountTStrokes(TStroke** strokes);					// ROM 0x001a3420 CountTStrokes__FPP7TStroke
+void	DisposeTStrokes(TStroke** strokes);					// ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
+
 void	GetStrokeRect(TStroke* stroke, Rect* rect);			// ROM 0x001a3658 GetStrokeRect__FP7TStrokeP5TRect - the box in pixels, at least a pixel each way
 void	AdjustForInk(Rect* rect);							// ROM 0x0022de2c AdjustForInk__FP5TRect - let out for the pen size
 

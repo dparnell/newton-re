@@ -12,6 +12,8 @@
 #include "Draw.h"
 #include "Regions.h"
 #include "InkShapes.h"
+#include "StrokeBundle.h"
+#include "ROMConstants.h"
 #include "DrawShape.h"
 #include "Rects.h"
 #include "ROMConstants.h"
@@ -1631,6 +1633,91 @@ TestInkShapes()
 }
 
 
+// Stroke bundles: the NewtonScript form of a handful of strokes, and
+// the ink they pack up into.
+static void
+TestStrokeBundles()
+{
+	InitializeParagraphCompression();
+	TStroke* one = MakeLine(10, 20, 30, 40, 10);
+	TStroke* two = MakeLine(60, 20, 80, 40, 10);
+
+	RefVar bundle(Clone(RefVar(Rstrokebundle)));
+	RefVar list(AllocateArray(RSSYMarray, 2));
+	SetArraySlot(list, 0, RefVar(MakeStrokeRef(one)));
+	SetArraySlot(list, 1, RefVar(MakeStrokeRef(two)));
+	SetFrameSlot(bundle, RSSYMstrokes, list);
+	CalcBundleBounds(bundle);
+
+	EXPECT(CountStrokes(bundle) == 2);
+	RefVar first(GetStroke(bundle, 0));
+	EXPECT(CountPoints(first) == one->Count());
+
+	// a point comes back in pixels, or in the eighths it is kept in
+	Point at;
+	GetStrokePoint(first, 0, &at, 0);
+	EXPECT(at.h == 10 && at.v == 20);
+	GetStrokePoint(first, 0, &at, 2);
+	EXPECT(at.h == 80 && at.v == 160);
+
+	Rect box;
+	GetStrokeBounds(first, &box);
+	EXPECT(box.left == 10 && box.top == 20 && box.right == 30 && box.bottom == 40);
+	Rect all;
+	GetBundleBounds(bundle, &all);
+	EXPECT(all.left == 10 && all.right == 80);
+	Rect stored;
+	EXPECT(FromObject(RefVar(GetFrameSlot(bundle, RSSYMbounds)), stored));
+	EXPECT(stored.left == all.left && stored.right == all.right);
+
+	// every point, v before h; and the same asked for thinned, which
+	// keeps the first and then only those far enough from the one before
+	RefVar points(GetStrokePointsArray(first, 1));
+	EXPECT(Length(points) == one->Count() * 2);
+	EXPECT(RINT(GetArraySlot(points, 0)) == 20 && RINT(GetArraySlot(points, 1)) == 10);
+	RefVar thinned(GetStrokePointsArray(first, 0x1000));	// ten pixels apart
+	EXPECT(Length(thinned) < Length(points) && Length(thinned) >= 2);
+	RefVar xy(GetStrokePointsArray(first, 0x10001));
+	EXPECT(RINT(GetArraySlot(xy, 0)) == 10 && RINT(GetArraySlot(xy, 1)) == 20);
+
+	// a bundle made from such an array is the one it came from
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, points);
+	RefVar remade(MakeStrokeBundle(arrays, 1));
+	EXPECT(CountStrokes(remade) == 1);
+	Rect remadeBox;
+	GetBundleBounds(remade, &remadeBox);
+	EXPECT(remadeBox.left == box.left && remadeBox.right == box.right);
+
+	// and back into strokes
+	TStroke** back = StrokeBundleToTStrokes(bundle);
+	EXPECT(CountTStrokes(back) == 2);
+	if (CountTStrokes(back) == 2)
+	{
+		Rect where;
+		UnionBounds(back, &where);
+		EXPECT(where.left == 10 && where.top == 20);
+	}
+	DisposeTStrokes(back);
+
+	// the ink word a bundle makes is kept in the bundle
+	RefVar ink(StrokeBundleToInkWord(bundle));
+	EXPECT(IsInkWord(ink));
+	EXPECT(EQ(ink, RefVar(StrokeBundleToInkWord(bundle))));
+
+	// a shape of it, and that shape opened back up into a bundle again
+	RefVar form(CompressStrokes(bundle));
+	EXPECT(IsInkWord(RefVar(GetFrameSlot(form, RSSYMink))));
+	RefVar again(ExpandInk(form, 0));
+	EXPECT(CountStrokes(again) == 2);
+	RefVar sketch(CompressStrokesToInk(bundle));
+	EXPECT(IsRawInk(RefVar(GetFrameSlot(sketch, RSSYMink))));
+
+	one->Dispose();
+	two->Dispose();
+}
+
+
 int
 main()
 {
@@ -1676,6 +1763,7 @@ main()
 	TestStrokesToInk();
 	TestInkDraw();
 	TestInkShapes();
+	TestStrokeBundles();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");
