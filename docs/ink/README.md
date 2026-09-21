@@ -77,6 +77,48 @@ below the baseline is one where the recogniser found no ascenders or
 descenders to measure against, digits having none, so its x-height is too
 big and fifty-five hundredths of the ascent goes in.
 
+## Where the codec stops and the system begins (`InkCodec.h`)
+
+Apple's side of the ink is three layers deep.  `InkCompress`,
+`InkExpand`, `InkDraw` and `InkMakePaths` call `CSCompress`,
+`CSExpandGroup`, `CSDraw` and `CSMakePathsGroup` (0x001543fc onwards),
+which call `Decode` (0x001539c8) and `GenericCSCompress` (0x0015362c),
+which call `EncoderOpen`/`Run`/`Close` and `DecoderOpen`/`Run`/`Close`
+(0x0027f938, 0x0028240c).  The line between the third layer and the
+fourth is where Apple's code stops and the CIC handwriting library's
+begins, and it is already a stream interface: strokes in and bits out,
+bits in and a stream of points out.
+
+`TInkCodec` is that line made explicit.  It is not in the ROM - the ROM
+has one codec and calls it - but it is the ROM's own seam, so the
+reconstruction of the CIC codec (`CICCodec.h`, `TCICInkCodec`) is one
+implementation of it and a modern one can be another, without the views,
+the paragraphs or the stores knowing which is in use.
+
+A decoder hands its points out through a callback, as the ROM's does:
+`kInkBegin`, then a `kInkPoint` for each point of each stroke with
+`kInkEndStroke` between them, then `kInkEnd`.  The ROM has three
+callbacks over the same traversal - `PGCStorePointProc` builds strokes,
+`PGCDrawPointProc` draws, `CSMakePathsGroup` makes paths - and passes
+its decoder context as the callback's third argument, the callback
+finding its own working store hanging off it; here the caller's
+reference is passed as itself.  The points are in tablet units as 16.16
+values; `PGCDrawPointProc` divides by `gTabScale` (8.0) to get pixels.
+
+What cannot be swapped is the *reading* of ink already written: a note
+written on a real Newton is in the CIC format for ever, so that decoder
+has to stay whatever else is added.  `GetInkFormat` (0x00280950) reads a
+format out of the first byte - the low nibble is 8 in every form the
+codec writes, and then bit 7 marks one and bit 6 another, anything else
+being the old uncompressed ink - so choosing a codec per object rather
+than once for the machine is what the format was built for.
+`InkCodecFor` does that: the first registered codec that says it can
+read the format gets it.
+
+The bit stream itself is read least significant bit first within each
+byte, and the bits of a value come out in that order too (`GetNBit`
+0x00280d88), which is the one piece of the codec reconstructed so far.
+
 ## NOT YET
 
 The stroke compression itself.  `InkCompress` (0x00140b78) hands the

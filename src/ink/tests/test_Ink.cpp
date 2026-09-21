@@ -4,6 +4,7 @@
 // the object heap is, because ink lives in binaries.
 
 #include "Ink.h"
+#include "CICCodec.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
@@ -169,6 +170,59 @@ TestXHeight()
 }
 
 
+
+// The codec boundary: the format in a block of ink, and which codec
+// answers for it.
+static void
+TestCodecs()
+{
+	// the low nibble is 8 in every form the codec writes
+	unsigned char data[4];
+	data[0] = 0x00; EXPECT(GetInkFormat(data) == kInkFormatOld);
+	data[0] = 0x17; EXPECT(GetInkFormat(data) == kInkFormatOld);
+	data[0] = 0x08; EXPECT(GetInkFormat(data) == kInkFormatCompressed);
+	data[0] = 0x88; EXPECT(GetInkFormat(data) == kInkFormatHigh);
+	data[0] = 0x48; EXPECT(GetInkFormat(data) == kInkFormatWide);
+	data[0] = 0xc8; EXPECT(GetInkFormat(data) == kInkFormatHigh);		// bit 7 first
+
+	InitializeInkCodecs();
+	EXPECT(CountInkCodecs() == 1);
+	EXPECT(IndexedInkCodec(0) == &gCICInkCodec);
+	InitializeInkCodecs();		// registering twice does not add it twice
+	EXPECT(CountInkCodecs() == 1);
+	data[0] = 0x08;
+	EXPECT(InkCodecFor(data) == &gCICInkCodec);
+	data[0] = 0x00;
+	EXPECT(InkCodecFor(data) == nil);		// nobody reads the old ink yet
+	EXPECT(InkCodecForWriting() == nil);	// and nobody writes any
+}
+
+
+// The bit reader: bytes are read from the least significant bit up, and
+// the bits of a value come out in that order too.
+static void
+TestBitReader()
+{
+	const UByte bits[] = { 0x4d, 0x80, 0xff };		// 0100 1101, ...
+	CICDecoder decoder;
+	decoder.fData = bits;
+	decoder.fBitPos = 0;
+	decoder.fStrokeBits = 0;
+	decoder.fTotalBits = 0;
+	EXPECT(GetNBit(&decoder, 1) == 1);		// 0x4d bit 0
+	EXPECT(GetNBit(&decoder, 1) == 0);
+	EXPECT(GetNBit(&decoder, 2) == 3);		// bits 2 and 3, least first
+	EXPECT(GetNBit(&decoder, 4) == 4);		// bits 4..7: 0,0,1,0 -> 0b0100
+	EXPECT(decoder.fBitPos == 8 && decoder.fStrokeBits == 8 && decoder.fTotalBits == 8);
+	// across a byte boundary
+	EXPECT(GetNBit(&decoder, 8) == 0x80);
+	EXPECT(GetNBit(&decoder, 0) == 0);
+	EXPECT(decoder.fBitPos == 16);
+	// and a whole word of ones
+	EXPECT(GetNBit(&decoder, 8) == 0xff);
+	EXPECT(decoder.fTotalBits == 24);
+}
+
 int
 main()
 {
@@ -182,6 +236,8 @@ main()
 	TestPacking();
 	TestInkWord();
 	TestXHeight();
+	TestCodecs();
+	TestBitReader();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

@@ -4,6 +4,8 @@
 # compression underneath it (the CIC encoder and decoder) is NOT YET.
 add_library(ink STATIC
     Ink.cpp
+    InkCodec.cpp
+    CICDecoder.cpp
 )
 target_link_libraries(ink PUBLIC newton_config frames qd)
 target_include_directories(ink PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
