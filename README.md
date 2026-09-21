@@ -47,6 +47,7 @@ ctest --test-dir build/host
 | `src/` | The reconstruction itself, organised by functional area and buildable on a host — see [src/README.md](src/README.md) |
 | `docs/` | Reverse-engineering notes per subsystem, starting with the kernel ([docs/os600](docs/os600/README.md)); generated tables are marked as such |
 | `docs/curiosities.md` | The findings worth telling somebody about: clever tricks, shipped bugs, and the compiler idioms that are easy to misread |
+| `docs/next-steps.md` | Where the last piece of work left off and what is obviously next, with the groundwork already read out of the ROM |
 | `tools/mpdumper/` | Alexey Danilchenko's 2004 symbol dumper (libiberty demangler) and its pre-generated symbol listings for the US ROM; used as the reference oracle for our demangler |
 
 ## Reproducing the Ghidra project

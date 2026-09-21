@@ -60,7 +60,7 @@ Build/test: `cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=$PWD/src
 
 ## Reverse-engineering notes
 
-RE findings go under `docs/<subsystem>/` (kernel: `docs/os600/`). Tables derived from the ROM must be produced by a script in `tools/newton-rom/analysis/` (e.g. `swi_table.py` → `docs/os600/swi-table.md`) and say so in their header, so they can be regenerated after a re-import; hand-written pages state how each fact was established. Kernel-side classes (`TTask`, `TPort`, `TObjectTable`, …) have no DDK headers; only the user-side `TU*` API does.
+`docs/next-steps.md` says where the last piece of work left off and what is next; read it when picking the work up again, and keep it current as pieces are finished. RE findings go under `docs/<subsystem>/` (kernel: `docs/os600/`). Tables derived from the ROM must be produced by a script in `tools/newton-rom/analysis/` (e.g. `swi_table.py` → `docs/os600/swi-table.md`) and say so in their header, so they can be regenerated after a re-import; hand-written pages state how each fact was established. Kernel-side classes (`TTask`, `TPort`, `TObjectTable`, …) have no DDK headers; only the user-side `TU*` API does.
 
 ## Working with the repository files
 
