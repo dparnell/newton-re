@@ -8,6 +8,9 @@
 #include "ROMImport.h"
 #include "NewtonMemory.h"
 #include "Stroke.h"
+#include "Ports.h"
+#include "Draw.h"
+#include "Regions.h"
 #include "ROMConstants.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -1380,6 +1383,112 @@ TestStrokesToInk()
 	wide->IDispose();
 }
 
+
+// Ink drawn into an offscreen port.
+static const long kDrawWidth = 128;
+static const long kDrawHeight = 64;
+static unsigned char	gDrawBits[kDrawWidth * kDrawHeight / 8];
+static PixelMap			gDrawMap;
+static GrafPort			gDrawPort;
+
+static long
+DrawnPixels(void)
+{
+	long lit = 0;
+	for (long y = 0; y < kDrawHeight; y++)
+		for (long x = 0; x < kDrawWidth; x++)
+			if (GetPixel(&gDrawMap, x, y) != 0)
+				lit++;
+	return lit;
+}
+
+
+static void
+TestInkDraw()
+{
+	InitializeParagraphCompression();
+	InitGraf();
+	gDrawMap.baseAddr = (Ptr) gDrawBits;
+	gDrawMap.rowBytes = kDrawWidth / 8;
+	SetRect(&gDrawMap.bounds, 0, 0, kDrawWidth, kDrawHeight);
+	gDrawMap.pixMapFlags = kPixMapPtr | 1;
+	gDrawMap.deviceRes.v = kDefaultDPI;
+	gDrawMap.deviceRes.h = kDefaultDPI;
+	gDrawMap.grayTable = nil;
+	OpenPort(&gDrawPort);
+	SetPortBits(&gDrawMap);
+	gDrawPort.portRect = gDrawMap.bounds;
+	RectRgn(gDrawPort.visRgn, &gDrawMap.bounds);
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+
+	// a stroke straight across, forty pixels of it
+	TStroke* stroke = TStroke::Make(0);
+	EXPECT(stroke != nil);
+	if (stroke == nil)
+		return;
+	for (long i = 0; i <= 20; i++)
+	{
+		TabPt tab;
+		tab.x = ToFixed(i * 2);
+		tab.y = ToFixed(10);
+		tab.z = 0;
+		tab.p = 0;
+		stroke->AddPoint(&tab);
+	}
+	stroke->EndStroke();
+	TStroke* list[2];
+	list[0] = stroke;
+	list[1] = nil;
+	Rect where;
+	RefVar ink(TStrokesToInk(list, &where));
+	EXPECT(NOTNIL(ink));
+
+	EXPECT(DrawnPixels() == 0);
+	InkDraw(ink, 1, 20, 30);
+	long lit = DrawnPixels();
+	EXPECT(lit > 20 && lit < 80);		// a line about forty pixels long
+
+	// it lands where it was told to: the row it was drawn on is lit and
+	// the ones well away from it are not
+	long onRow = 0;
+	for (long x = 0; x < kDrawWidth; x++)
+		if (GetPixel(&gDrawMap, x, 32) != 0)
+			onRow++;
+	EXPECT(onRow > 20);
+	for (long x = 0; x < kDrawWidth; x++)
+		EXPECT(GetPixel(&gDrawMap, x, 10) == 0);
+
+	// and drawn again ten to the right it moves with it
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	InkDraw(ink, 1, 30, 30);
+	long first = -1;
+	for (long x = 0; x < kDrawWidth; x++)
+		if (GetPixel(&gDrawMap, x, 32) != 0)
+		{
+			first = x;
+			break;
+		}
+	EXPECT(first >= 30 && first <= 34);
+
+	// half the size is half as wide
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	InkDrawScaled(ink, 1, ToFixed(0), ToFixed(4), 0x8000, 0x8000);
+	long widest = 0;
+	for (long y = 0; y < kDrawHeight; y++)
+	{
+		long across = 0;
+		for (long x = 0; x < kDrawWidth; x++)
+			if (GetPixel(&gDrawMap, x, y) != 0)
+				across++;
+		if (across > widest)
+			widest = across;
+	}
+	EXPECT(widest > 10 && widest < 30);
+
+	stroke->IDispose();
+	ClosePort(&gDrawPort);
+}
+
 int
 main()
 {
@@ -1415,6 +1524,7 @@ main()
 	TestEncodeRun();
 	TestStrokeRoundTrip();
 	TestStrokesToInk();
+	TestInkDraw();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

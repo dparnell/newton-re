@@ -29,6 +29,7 @@
 #include "NewtonMemory.h"
 #include "Ports.h"			// RoundFixed
 #include "Rects.h"
+#include "Shapes.h"			// LineTo
 #include "Unit.h"			// FixRect
 #include "Locale.h"			// GetPreference
 #include "NewtonExceptions.h"
@@ -431,3 +432,105 @@ InkExpand(RefArg ink, ULong group, long x, long y)
 	}
 	return strokes;
 }
+
+
+/*------------------------------------------------------------------------------
+	I n k   d r a w n
+------------------------------------------------------------------------------*/
+
+// What PGCDrawPointProc is drawing with: where the ink is to go, how
+// much it is to be scaled, and whether the next point starts a line.
+struct InkDrawing
+{
+	Fixed	fX;				// where the ink's origin goes
+	Fixed	fY;
+	Fixed	fScaleX;		// and what it is scaled by first
+	Fixed	fScaleY;
+	Boolean	fStarting;		// the next point begins a stroke
+};
+
+
+// (a point of ink, in whole tablet units, brought to a pixel of the
+// port: divided by the tablet scale, scaled, and moved)
+static long
+InkPixel(long value, Fixed scale, Fixed offset, Fixed tabScale)
+{
+	Fixed at = (Fixed) ((ULong) value << 16);
+	if (at < 0)
+		at = 0;
+	at = tabScale == 0x80000 ? at >> 3 : FixedDivide(at, tabScale);
+	if (scale != 0x10000)
+		at = FixedMultiply(at, scale);
+	return (offset + at + 0x8000) >> 16;
+}
+
+
+// ROM 0x00154194 PGCDrawPointProc__FsP6_POINTP4_DCC
+// The points the decoder hands out drawn as they come: the first of a
+// stroke moves the pen and the rest are lines from it.
+//
+// (The ROM keeps twenty points back at a time and draws them in one go,
+// which saves calls and nothing else, and has a second way of drawing
+// them - InkerLine with a pen of its own - which is the live inker's and
+// is NOT YET.)
+static short
+PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
+{
+	InkDrawing* to = (InkDrawing*) refCon;
+	switch (what)
+	{
+	case kInkBegin:
+	case kInkEndStroke:
+		to->fStarting = true;
+		return 1;
+	case kInkPoint:
+		break;
+	default:
+		return 1;
+	}
+	long h = InkPixel(pt->x, to->fScaleX, to->fX, gTabScale.x);
+	long v = InkPixel(pt->y, to->fScaleY, to->fY, gTabScale.y);
+	if (to->fStarting)
+	{
+		MoveTo(h, v);
+		to->fStarting = false;
+	}
+	else
+		LineTo(h, v);
+	return 1;
+}
+
+
+// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUlllUc
+// Ink drawn into the current port at a place and a scale.
+void
+InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY)
+{
+	if (ISNIL(ink) || !IsBinary(ink))
+		return;
+	const void* data = BinaryData(ink);
+	TInkCodec* codec = InkCodecFor(data);
+	if (codec == nil)
+		return;
+	long size = Length(ink);
+	if (IsInkWord(ink))
+		size -= (long) sizeof(PackedInkWordInfo);
+	InkDrawing to;
+	to.fX = x;
+	to.fY = y;
+	to.fScaleX = scaleX;
+	to.fScaleY = scaleY;
+	to.fStarting = true;
+	codec->Decode(data, size, group, PGCDrawPointProc, &to);
+}
+
+
+// ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
+// The same, at the size it was written.
+void
+InkDraw(RefArg ink, ULong group, long x, long y)
+{
+	InkDrawScaled(ink, group, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16),
+				  0x10000, 0x10000);
+}
+

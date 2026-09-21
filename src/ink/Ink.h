@@ -145,6 +145,14 @@ void		ScaleStrokesForInkWord(TStroke** strokes, Rect* rect);	// ROM 0x00140318 S
 Ref			TStrokesToInk(TStroke** strokes, Rect* outRect);			// ROM 0x00140608 TStrokesToInk__FPP7TStrokeP5TRect
 Ref			TStrokesToInkWord(TStroke** strokes, Rect* outRect);	// ROM 0x001404f0 TStrokesToInkWord__FPP7TStrokeP5TRect
 
+// Ink drawn into the current port, its top-left at (x, y).  The scale
+// is applied to the ink's own coordinates before the offset - a whole
+// one draws it the size it was written.
+void		InkDraw(RefArg ink, ULong group, long x, long y);		// ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
+void		InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y,
+						  Fixed scaleX, Fixed scaleY);				// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUlllUc
+
+
 // How far outside the strokes themselves the ink reaches.
 const long kInkSlop = 2;
 
