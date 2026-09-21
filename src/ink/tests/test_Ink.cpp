@@ -1,10 +1,12 @@
-// Ink test: the three classes of ink binary told apart, and the eight
-// bytes an ink word carries about itself packed, read back, opened out
-// and changed.  No ROM image is needed - nothing here reads one - but
-// the object heap is, because ink lives in binaries.
+// Ink test: the three classes of ink binary told apart, the eight bytes
+// an ink word carries about itself packed, read back, opened out and
+// changed, and the codec boundary - the format in a block of ink, the
+// bit reader, and the two code books, which are ROM objects.
 
 #include "Ink.h"
 #include "CICCodec.h"
+#include "ROMImport.h"
+#include "ROMConstants.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
@@ -223,10 +225,45 @@ TestBitReader()
 	EXPECT(decoder.fTotalBits == 24);
 }
 
+
+// The code books: two binaries in the ROM, put in place by
+// InitializeParagraphCompression and handed out by number.
+static void
+TestCodeBooks()
+{
+	EXPECT(gCodeBook == nil && gInkCodeBook == nil);
+	InitializeParagraphCompression();
+	EXPECT(gCodeBook != nil && gInkCodeBook != nil);
+	EXPECT(gCodeBook != gInkCodeBook);
+	EXPECT(gCodeBook == BinaryData(RefVar(Rparagraphcodebook1)));
+	EXPECT(gInkCodeBook == BinaryData(RefVar(Rparagraphcodebook2)));
+
+	// opened by number, and counted while it is open
+	EXPECT(CodeBookUseCount(1) == 0);
+	EXPECT(LockCodeBook(1) == gCodeBook);
+	EXPECT(CodeBookUseCount(1) == 1);
+	EXPECT(LockCodeBook(1) == gCodeBook);
+	EXPECT(CodeBookUseCount(1) == 2);
+	UnlockCodeBook(1);
+	EXPECT(CodeBookUseCount(1) == 1);
+	UnlockCodeBook(1);
+	UnlockCodeBook(1);		// one too many is not an error, and does not go below nought
+	EXPECT(CodeBookUseCount(1) == 0);
+	EXPECT(LockCodeBook(2) == gInkCodeBook && CodeBookUseCount(2) == 1);
+	UnlockCodeBook(2);
+	// and a number that is no book at all comes back as itself
+	EXPECT(LockCodeBook(7) == (void*) 7 && UnlockCodeBook(7));
+}
+
 int
 main()
 {
 	InitHostStandaloneHeap();
+	if (ImportROMObjectsFromFile(NEWTON_ROM_IMAGE) != noErr)
+	{
+		printf("test_Ink: cannot import %s\n", NEWTON_ROM_IMAGE);
+		return 1;
+	}
 	gObjectHeapSize = 0x100000;
 	InitObjects();
 
@@ -238,6 +275,7 @@ main()
 	TestXHeight();
 	TestCodecs();
 	TestBitReader();
+	TestCodeBooks();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

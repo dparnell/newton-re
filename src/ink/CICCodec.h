@@ -53,6 +53,21 @@ struct CICDecoder
 };
 
 
+// The two code books, and who has them open.  A book is a block of
+// bytes in the ROM; InitializeParagraphCompression is what says where.
+struct BookEntry;
+
+extern void*	gCodeBook;		// ROM 0x0c104fc8 globalCodeBookPtr - the writing book
+extern void*	gInkCodeBook;	// ROM 0x0c104fcc globalCodeBookPtrInk - the ink book
+
+void	InitializeParagraphCompression(void);	// ROM 0x001543a4 InitializeParagraphCompression__Fv
+void*	LockBook(const char* name, BookEntry* entry);	// ROM 0x002806cc LockBook__FPcP10_BOOKENTRY
+Boolean	UnlockBook(BookEntry* entry);			// ROM 0x002808ac UnlockBook__FP10_BOOKENTRY
+void*	LockCodeBook(ULong which);				// ROM 0x002808d4 LockCodeBook__FUs
+Boolean	UnlockCodeBook(ULong which);			// ROM 0x00280914 UnlockCodeBook__FUs
+ULong	CodeBookUseCount(ULong which);			// host: what the tests ask
+
+
 // ROM 0x00280d88 GetNBit__FP4_DCCUs
 // The next n bits, least significant first.
 ULong	GetNBit(CICDecoder* decoder, ULong n);

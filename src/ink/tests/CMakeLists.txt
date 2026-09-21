@@ -1,4 +1,5 @@
 add_executable(test_Ink test_Ink.cpp)
 target_link_libraries(test_Ink PRIVATE ink frames qd os600_kernel os600_user)
+target_compile_definitions(test_Ink PRIVATE "NEWTON_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
 add_test(NAME ink.Ink COMMAND test_Ink)
 set_tests_properties(ink.Ink PROPERTIES TIMEOUT 60)
