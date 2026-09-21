@@ -12,7 +12,8 @@
 #include <string.h>
 
 
-// ROM 0x0c104fc8 globalCodeBookPtr, 0x0c104fcc globalCodeBookPtrInk
+// ROM 0x0c104fc8 globalCodeBookPtr
+// ROM 0x0c104fcc globalCodeBookPtrInk
 // The two books, once somebody has said where they are.
 void*	gCodeBook = nil;
 void*	gInkCodeBook = nil;
@@ -28,7 +29,8 @@ struct BookEntry
 	void*	fData;			// +0x08
 };
 
-// ROM 0x0c104fd0 BookList, and the second entry at 0x0c104fdc
+// ROM 0x0c104fd0 BookList
+// (the second entry is the four words after it, at 0x0c104fdc)
 static BookEntry	gBookList[2];
 
 
