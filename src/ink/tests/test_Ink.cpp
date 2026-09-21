@@ -1302,6 +1302,84 @@ TestStrokeRoundTrip()
 	stroke->IDispose();
 }
 
+
+// A stroke made into a sketch and into a word.
+static void
+TestStrokesToInk()
+{
+	InitializeParagraphCompression();
+	// a stroke from (50, 60) to (70, 80)
+	TStroke* stroke = TStroke::Make(0);
+	EXPECT(stroke != nil);
+	if (stroke == nil)
+		return;
+	for (long i = 0; i <= 10; i++)
+	{
+		TabPt tab;
+		tab.x = ToFixed(50 + i * 2);
+		tab.y = ToFixed(60 + i * 2);
+		tab.z = 0;
+		tab.p = 0;
+		stroke->AddPoint(&tab);
+	}
+	stroke->EndStroke();
+	TStroke* list[2];
+	list[0] = stroke;
+	list[1] = nil;
+
+	Rect box;
+	UnionBounds(list, &box);
+	EXPECT(box.left == 50 && box.top == 60);
+	EXPECT(box.right >= 70 && box.bottom >= 80);
+	Rect inked;
+	InkBounds(list, &inked);
+	EXPECT(inked.left == box.left - 2 && inked.top == box.top - 2);
+	EXPECT(inked.right == box.right + 2 && inked.bottom == box.bottom + 2);
+
+	// made into a sketch: the strokes come away to the origin and the
+	// box says where they were
+	Rect where;
+	RefVar ink(TStrokesToInk(list, &where));
+	EXPECT(NOTNIL(ink) && IsRawInk(ink));
+	EXPECT(where.left == 48 && where.top == 58);
+	Rect moved;
+	UnionBounds(list, &moved);
+	EXPECT(moved.left == 2 && moved.top == 2);
+
+	// and read back it starts where it now is
+	TStroke** back = InkExpand(ink, 1, 0, 0);
+	EXPECT(back != nil && back[0] != nil);
+	if (back != nil && back[0] != nil)
+	{
+		FPoint at;
+		back[0]->GetFPoint(0, &at);
+		EXPECT(RoundFixed(at.x) == 2 && RoundFixed(at.y) == 2);
+	}
+	DisposeTStrokes(back);
+	stroke->IDispose();
+
+	// a word too wide for a line is brought down to two hundred and
+	// forty pixels, and keeps its shape
+	TStroke* wide = TStroke::Make(0);
+	for (long i = 0; i <= 10; i++)
+	{
+		TabPt tab;
+		tab.x = ToFixed(i * 48);		// 480 across
+		tab.y = ToFixed(i * 3);			// 30 down
+		tab.z = 0;
+		tab.p = 0;
+		wide->AddPoint(&tab);
+	}
+	wide->EndStroke();
+	list[0] = wide;
+	UnionBounds(list, &box);
+	EXPECT(box.right - box.left >= 480);
+	ScaleStrokesForInkWord(list, &box);
+	EXPECT(box.right - box.left == 240);
+	EXPECT(box.bottom - box.top >= 14 && box.bottom - box.top <= 17);	// half of thirty-odd
+	wide->IDispose();
+}
+
 int
 main()
 {
@@ -1336,6 +1414,7 @@ main()
 	TestRepar();
 	TestEncodeRun();
 	TestStrokeRoundTrip();
+	TestStrokesToInk();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

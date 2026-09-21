@@ -28,6 +28,11 @@
 #include "RSSymbols.h"
 #include "NewtonMemory.h"
 #include "Ports.h"			// RoundFixed
+#include "Rects.h"
+#include "Unit.h"			// FixRect
+#include "Locale.h"			// GetPreference
+#include "NewtonExceptions.h"
+#include "OSErrors.h"
 #include "FixedMath.h"
 
 #include <string.h>
@@ -142,6 +147,156 @@ InkCompress(TStroke** strokes, Boolean asWord)
 	if (asWord)
 		memset(data + size, 0, sizeof(PackedInkWordInfo));
 	DisposPtr((Ptr) bits);
+	return ink;
+}
+
+
+
+
+/*------------------------------------------------------------------------------
+	W h e r e   t h e   s t r o k e s   a r e
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a36bc UnionBounds__FPP7TStrokeP5TRect
+// The box all the strokes together cover.  (The ROM starts with the top
+// and the bottom at -32768, which is what says a rectangle holds nothing
+// yet, and leaves the sides alone; the host sets all four, because a
+// local that is never read on the Newton is still a local here.)
+void
+UnionBounds(TStroke** strokes, Rect* rect)
+{
+	SetRect(rect, -0x8000, -0x8000, -0x8000, -0x8000);
+	for (long i = 0; strokes[i] != nil; i++)
+	{
+		Rect one;
+		GetStrokeRect(strokes[i], &one);
+		UnionRect(rect, &one, rect);
+	}
+}
+
+
+// ROM 0x001a3750 OffsetStrokes__FPP7TStrokelT2
+// Every stroke of the list moved.
+void
+OffsetStrokes(TStroke** strokes, long dx, long dy)
+{
+	for (long i = 0; strokes[i] != nil; i++)
+		strokes[i]->Offset(dx, dy);
+}
+
+
+// ROM 0x001a3728 InkBounds__FPP7TStrokeP5TRect
+// Where the ink of a list of strokes reaches: their own box, and two
+// pixels more each way for the pen.
+void
+InkBounds(TStroke** strokes, Rect* rect)
+{
+	UnionBounds(strokes, rect);
+	rect->top = (short) (rect->top - kInkSlop);
+	rect->left = (short) (rect->left - kInkSlop);
+	rect->bottom = (short) (rect->bottom + kInkSlop);
+	rect->right = (short) (rect->right + kInkSlop);
+}
+
+
+// ROM 0x00140318 ScaleStrokesForInkWord__FPP7TStrokeP5TRect
+// A word written larger than a line of text can hold is brought down to
+// fit: two hundred and forty pixels across and sixty down are the most,
+// and whichever of the two wants the smaller scale is the one used, so
+// the word keeps its shape.  A word that already fits is left alone.
+//
+// Each stroke is mapped from its own box into that box scaled about the
+// word's top-left corner, which moves the strokes as well as shrinking
+// them.
+void
+ScaleStrokesForInkWord(TStroke** strokes, Rect* rect)
+{
+	Fixed width = (Fixed) ((ULong) (rect->right - rect->left) << 16);
+	Fixed height = (Fixed) ((ULong) (rect->bottom - rect->top) << 16);
+	Fixed across = 0;
+	Fixed down = 0;
+	if (width > 0xf00000)
+		across = FixedDivide(0xf00000, width);
+	if (height > 0x3c0000)
+		down = FixedDivide(0x3c0000, height);
+	Fixed scale = down;
+	if (across != 0 && (down == 0 || across <= down))
+		scale = across;
+	if (scale == 0)
+		return;
+	FRect box;
+	FixRect(&box, rect);
+	for (long i = 0; strokes[i] != nil; i++)
+	{
+		TStroke* stroke = strokes[i];
+		FRect to;
+		to.left = FixedMultiply(stroke->fBBox.left - box.left, scale) + box.left;
+		to.top = FixedMultiply(stroke->fBBox.top - box.top, scale) + box.top;
+		to.right = FixedMultiply(stroke->fBBox.right - box.left, scale) + box.left;
+		to.bottom = FixedMultiply(stroke->fBBox.bottom - box.top, scale) + box.top;
+		stroke->Map(&to);
+	}
+	rect->right = (short) (rect->left + RoundFixed(FixedMultiply(width, scale)));
+	rect->bottom = (short) (rect->top + RoundFixed(FixedMultiply(height, scale)));
+}
+
+
+/*------------------------------------------------------------------------------
+	S t r o k e s   m a d e   i n t o   i n k
+------------------------------------------------------------------------------*/
+
+// (the strokes moved so that their box, grown by the pen's two pixels,
+// starts at the origin - ink is kept where it was drawn, not where it is
+// to go)
+static void
+MoveToOrigin(TStroke** strokes, Rect* box)
+{
+	OffsetStrokes(strokes, (long) ((ULong) -(box->left - kInkSlop) << 16),
+						   (long) ((ULong) -(box->top - kInkSlop) << 16));
+	InsetRect(box, -kInkSlop, -kInkSlop);
+}
+
+
+// ROM 0x00140608 TStrokesToInk__FPP7TStrokeP5TRect
+// A sketch: the strokes moved to the origin and packed, and the box they
+// came from answered.
+Ref
+TStrokesToInk(TStroke** strokes, Rect* outRect)
+{
+	Rect box;
+	UnionBounds(strokes, &box);
+	MoveToOrigin(strokes, &box);
+	if (outRect != nil)
+		*outRect = box;
+	RefVar ink(InkCompress(strokes, false));
+	if (ISNIL(ink))
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	return ink;
+}
+
+
+// ROM 0x001404f0 TStrokesToInkWord__FPP7TStrokeP5TRect
+// A word: the same, with the strokes first brought down to a size a line
+// of text can hold, and the box given the pen's width on its bottom and
+// right because that is where the ink of the last stroke spills.
+Ref
+TStrokesToInkWord(TStroke** strokes, Rect* outRect)
+{
+	Rect box;
+	UnionBounds(strokes, &box);
+	ScaleStrokesForInkWord(strokes, &box);
+	MoveToOrigin(strokes, &box);
+	if (outRect != nil)
+	{
+		*outRect = box;
+		RefVar size(GetPreference(RefVar(RSSYMuserpensize)));
+		short pen = (short) (ISINT(size) ? RVALUE(size) : 0);
+		outRect->bottom = (short) (outRect->bottom + pen);
+		outRect->right = (short) (outRect->right + pen);
+	}
+	RefVar ink(InkCompress(strokes, true));
+	if (ISNIL(ink))
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 	return ink;
 }
 

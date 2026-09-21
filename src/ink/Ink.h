@@ -131,6 +131,24 @@ class TStroke;
 Ref			InkCompress(TStroke** strokes, Boolean asWord);			// ROM 0x00140b78 InkCompress__FPP7TStrokeUc
 TStroke**	InkExpand(RefArg ink, ULong group, long x, long y);		// ROM 0x00140c98 InkExpand__FRC6RefVarUllT3
 
+// The box a list of strokes covers, and the strokes moved.
+void		UnionBounds(TStroke** strokes, Rect* rect);				// ROM 0x001a36bc UnionBounds__FPP7TStrokeP5TRect
+void		OffsetStrokes(TStroke** strokes, long dx, long dy);		// ROM 0x001a3750 OffsetStrokes__FPP7TStrokelT2
+void		InkBounds(TStroke** strokes, Rect* rect);				// ROM 0x001a3728 InkBounds__FPP7TStrokeP5TRect
+
+// A word's strokes brought down to a size a line of text can hold.
+void		ScaleStrokesForInkWord(TStroke** strokes, Rect* rect);	// ROM 0x00140318 ScaleStrokesForInkWord__FPP7TStrokeP5TRect
+
+// The strokes made into ink, and where they ended up.  Both move the
+// strokes to the origin first, so the ink is kept where it was drawn
+// rather than where it is to go; both throw if there is no memory.
+Ref			TStrokesToInk(TStroke** strokes, Rect* outRect);			// ROM 0x00140608 TStrokesToInk__FPP7TStrokeP5TRect
+Ref			TStrokesToInkWord(TStroke** strokes, Rect* outRect);	// ROM 0x001404f0 TStrokesToInkWord__FPP7TStrokeP5TRect
+
+// How far outside the strokes themselves the ink reaches.
+const long kInkSlop = 2;
+
+
 // ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
 void		DisposeTStrokes(TStroke** strokes);
 
