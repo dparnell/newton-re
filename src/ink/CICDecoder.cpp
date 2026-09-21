@@ -413,7 +413,7 @@ RestoreSegment(long* points, const long* seg)
 	long second = seg[3] >> 10;
 	long value = (long) ((ULong) ((seg[0] >> 10) - first) << 16);
 	long step = first * 0x800 + (second * 3 - (seg[1] >> 10)) * 0x2000 - second * 0x200;
-	long growth = first << 12;
+	long growth = (long) ((ULong) first << 12);
 	points[kCICSegmentMiddle] = value >> 6;
 	for (long i = 1; i < 9; i++)
 	{
@@ -426,7 +426,7 @@ RestoreSegment(long* points, const long* seg)
 	second = seg[3] >> 10;
 	value = (long) ((ULong) ((seg[0] >> 10) - first) << 16);
 	step = first * 0x800 + (seg[1] >> 10) * 0x2000 - second * 0x6000 + second * 0x200;
-	growth = first << 12;
+	growth = (long) ((ULong) first << 12);
 	for (long i = 1; i < 9; i++)
 	{
 		growth += second * 0xc00;

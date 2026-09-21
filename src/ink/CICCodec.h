@@ -265,6 +265,18 @@ const ULong kCICNoRoom		= 5;
 const ULong kCICNoBuffer	= 15;
 
 
+// The transform the fitting turns on: nine samples of a segment into
+// the four numbers that describe it, and back again.  The four are the
+// segment's own - the same four ReadSegmentNear reads - so the first two
+// come out of the endpoints once the other two are known.
+//
+// The ROM has each of them twice over, once for each coordinate.
+void	RFFT_9_4_X(const CICSample* samples, long* coef, long first, long last);	// ROM 0x002836a4 RFFT_9_4_X__FP6_RPR_PPllT3
+void	RFFT_9_4_Y(const CICSample* samples, long* coef, long first, long last);	// ROM 0x002837d8 RFFT_9_4_Y__FP6_RPR_PPllT3
+void	RIFT_4_9_X(CICSample* samples, const long* coef);		// ROM 0x0028390c RIFT_4_9_X__FP6_RPR_PPl
+void	RIFT_4_9_Y(CICSample* samples, const long* coef);		// ROM 0x00283a94 RIFT_4_9_Y__FP6_RPR_PPl
+
+
 // ROM 0x00283c1c SQRT32__FUl
 // A whole square root, a bit at a time.
 long	SQRT32(ULong n);

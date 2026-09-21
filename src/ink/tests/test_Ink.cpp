@@ -968,6 +968,70 @@ TestTrace()
 	EXPECT(MSQError(2, a, b) == 9 + 16 + 25);
 }
 
+
+// Nine samples into four numbers and back.  The four are a curve in a
+// cosine basis - the samples are not evenly spaced in the parameter -
+// and they are the same four the decoder's RestoreSegment draws out.
+static void
+TestTransform()
+{
+	CICSample p[kCICSamples];
+	long c[4];
+	long got[4];
+	memset(p, 0, sizeof(p));
+
+	// coefficients out and back again
+	static const long kCoef[3][4] = {
+		{ 40 * 1024, -40 * 1024, 0, 0 },			// no bend: a chord
+		{ 50 * 1024, -30 * 1024, 4 * 1024, 0 },
+		{ 0, 100 * 1024, -7 * 1024, 3 * 1024 },
+	};
+	for (long k = 0; k < 3; k++)
+	{
+		for (long i = 0; i < 4; i++)
+			c[i] = kCoef[k][i];
+		memset(p, 0, sizeof(p));
+		RIFT_4_9_X(p, c);
+		RIFT_4_9_Y(p, c);
+		// the ends are exactly what the coefficients say
+		EXPECT(p[0].x == c[0] + c[2] + c[1] + c[3]);
+		EXPECT(p[8].x == c[0] + c[2] - c[1] - c[3]);
+		EXPECT(p[0].y == p[0].x && p[8].y == p[8].x);
+		RFFT_9_4_X(p, got, p[0].x, p[8].x);
+		for (long i = 0; i < 4; i++)
+			EXPECT(got[i] >= c[i] - 8 && got[i] <= c[i] + 8);
+		RFFT_9_4_Y(p, got, p[0].y, p[8].y);
+		for (long i = 0; i < 4; i++)
+			EXPECT(got[i] >= c[i] - 8 && got[i] <= c[i] + 8);
+	}
+
+	// The encoder and the decoder draw the same curve, but not at the
+	// same places along it: the decoder steps evenly through the
+	// parameter (RestoreSegment, seventeen points) and the fitting looks
+	// at the nine where the cosine of an even step lands, which is what
+	// makes the transform a cosine one.  The two grids share three
+	// points - the ends and the middle - and there the answers agree.
+	for (long k = 0; k < 3; k++)
+	{
+		long seg[4];
+		for (long i = 0; i < 4; i++)
+			seg[i] = kCoef[k][i];
+		memset(p, 0, sizeof(p));
+		RIFT_4_9_X(p, seg);
+		long drawn[kCICSegmentPoints];
+		RestoreSegment(drawn, seg);
+		static const long kShared[3][2] = { { 0, 0 }, { 4, 8 }, { 8, 16 } };
+		for (long i = 0; i < 3; i++)
+		{
+			long d = drawn[kShared[i][1]] - p[kShared[i][0]].x;
+			if (d < 0)
+				d = -d;
+			EXPECT(d <= 0x40);		// (a sixteenth of a tablet unit)
+		}
+	}
+}
+
+
 int
 main()
 {
@@ -998,6 +1062,7 @@ main()
 	TestEncodeWord();
 	TestEncodeStroke();
 	TestTrace();
+	TestTransform();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

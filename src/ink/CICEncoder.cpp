@@ -227,6 +227,120 @@ AddPointToOdata(CICEncoder* encoder, const InkPoint* pt)
 }
 
 
+
+
+/*------------------------------------------------------------------------------
+	N i n e   s a m p l e s ,   f o u r   n u m b e r s
+------------------------------------------------------------------------------*/
+
+// The three constants the transform turns on, each written out as a
+// twenty-four bit fraction in three bytes so that an ARM can multiply by
+// it without a long multiply: 0xb504f3 is a root half (0.7071),
+// 0x61f78a the sine of an eighth of a right angle (0.3827) and 0xec835e
+// its cosine (0.9239).  The shifts are one less in the forward
+// transform, which doubles them, and the whole answer is divided by
+// eight at the end.
+static inline long
+RootHalf(long v, long shift)
+{
+	return (v * 0xb5 >> shift) + (v * 4 >> (shift + 8)) + (v * 0xf3 >> (shift + 16));
+}
+
+static inline long
+SinEighth(long v, long shift)
+{
+	return (v * 0x61 >> shift) + (v * 0xf7 >> (shift + 8)) + (v * 0x8a >> (shift + 16));
+}
+
+static inline long
+CosEighth(long v, long shift)
+{
+	return (v * 0xec >> shift) + (v * 0x83 >> (shift + 8)) + (v * 0x5e >> (shift + 16));
+}
+
+
+// Nine samples into the four numbers that describe the segment through
+// them.  The two that bend it are worked out from the samples alone; the
+// other two follow from where the segment starts and ends, exactly as
+// ReadSegmentNear works them out the other way about.
+static void
+RFFT_9_4(const CICSample* p, long* c, long first, long last, Boolean isY)
+{
+	const long* at = isY ? &p[0].y : &p[0].x;
+	const long kStride = (long) (sizeof(CICSample) / sizeof(long));
+	long v0 = at[0 * kStride], v1 = at[1 * kStride], v2 = at[2 * kStride];
+	long v3 = at[3 * kStride], v4 = at[4 * kStride], v5 = at[5 * kStride];
+	long v6 = at[6 * kStride], v7 = at[7 * kStride], v8 = at[8 * kStride];
+
+	long alternating = ((v1 - v3) - v5) + v7;
+	c[2] = (v0 + v8 - v4 * 2 + RootHalf(alternating, 7)) >> 3;
+	c[0] = ((first + last) >> 1) - c[2];
+
+	long outer = v1 - v7;
+	long middle = v6 - v2;
+	long inner = v5 - v3;
+	c[3] = ((v0 - v8) + SinEighth(outer, 7) + RootHalf(middle, 7) + CosEighth(inner, 7)) >> 3;
+	c[1] = ((first - last) >> 1) - c[3];
+}
+
+
+// And the four numbers back into nine samples.
+static void
+RIFT_4_9(CICSample* p, const long* c, Boolean isY)
+{
+	long* at = isY ? &p[0].y : &p[0].x;
+	const long kStride = (long) (sizeof(CICSample) / sizeof(long));
+	long difference = c[1] - c[3];
+	long sum = c[1] + c[3];
+	long middle = c[0] + c[2];
+	at[0 * kStride] = middle + sum;
+	at[8 * kStride] = middle - sum;
+	at[4 * kStride] = c[0] - c[2];
+	long quarter = RootHalf(difference, 8);
+	at[2 * kStride] = c[0] + quarter;
+	at[6 * kStride] = c[0] - quarter;
+	long a = CosEighth(c[1], 8) + SinEighth(c[3], 8);
+	long b = SinEighth(c[1], 8) - CosEighth(c[3], 8);
+	long g = RootHalf(c[2], 8);
+	at[1 * kStride] = c[0] + a + g;
+	at[3 * kStride] = (c[0] + b) - g;
+	at[5 * kStride] = (c[0] - b) - g;
+	at[7 * kStride] = (c[0] - a) + g;
+}
+
+
+// ROM 0x002836a4 RFFT_9_4_X__FP6_RPR_PPllT3
+void
+RFFT_9_4_X(const CICSample* samples, long* coef, long first, long last)
+{
+	RFFT_9_4(samples, coef, first, last, false);
+}
+
+
+// ROM 0x002837d8 RFFT_9_4_Y__FP6_RPR_PPllT3
+void
+RFFT_9_4_Y(const CICSample* samples, long* coef, long first, long last)
+{
+	RFFT_9_4(samples, coef, first, last, true);
+}
+
+
+// ROM 0x0028390c RIFT_4_9_X__FP6_RPR_PPl
+void
+RIFT_4_9_X(CICSample* samples, const long* coef)
+{
+	RIFT_4_9(samples, coef, false);
+}
+
+
+// ROM 0x00283a94 RIFT_4_9_Y__FP6_RPR_PPl
+void
+RIFT_4_9_Y(CICSample* samples, const long* coef)
+{
+	RIFT_4_9(samples, coef, true);
+}
+
+
 /*------------------------------------------------------------------------------
 	W h e r e   t h e   f i t t i n g   l o o k s
 ------------------------------------------------------------------------------*/
