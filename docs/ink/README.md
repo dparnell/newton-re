@@ -346,13 +346,46 @@ word is usually shorter than the line is tall.  `GetInkAt` (0x001a170c)
 wraps that up as a shape, with the user's current pen rather than the
 word's.
 
+## Ink on a page
+
+`TEditView::HandleInk` (`views/EditView.h`) is where writing nobody is
+to read ends up.  All the ways in - a unit's stroke, a bundle of strokes
+from the recogniser, the strokes themselves - come together in the free
+`HandleInk` (0x00140834): the strokes are packed as a sketch, the box
+they came from is brought back into the page's own coordinates, and the
+shape goes to `TEditView::AddForm`.
+
+What comes out of `MakePolygonForm` is a piece of *stationery* rather
+than a view template - the ROM's `Rstarterink` is `{ink: nil,
+viewBounds: nil}` and `Rstarterpolygon` is `{viewStationery: 'poly,
+viewBounds: nil, points: nil}` - so `AddForm` does not make a view of it
+directly.  It sends itself an `aeAddData` command, and `TView::AddToSoup`
+offers the frame to the page's own `viewAddChildScript`, which is the
+application's business: the Notes application is what turns a piece of
+ink stationery into a child view.
+
+`TEditView::RealDoCommand` takes `aeRawInk` (0x15) that way.  The view's
+own `viewRawInkScript` is asked first; then each visible data-view child
+is asked how well it would take the ink (`TDataView::HandleInk`, which a
+plain data view answers 0 to), the best answer gets it, and if none will
+the page keeps it itself.  `aeInkWord` (0x18) is the other half -
+`TEditView::HandleInkWord` makes a paragraph of one character out of it,
+the ink word standing as 0xf701 with the ink as its style, after
+`AdjustInkWordXHeight` has been told whether the view is after numbers
+(`ViewExpectsNumbers`, which reads the view's text flags, its
+recognition flags and its custom dictionary).  A container offers an ink
+word to its children the same way (`TContainerView::HandleInkWord`), the
+writing's box let out by five pixels so that a word written just outside
+a field still belongs in it.
+
 ## NOT YET
 
 The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which
 is what would read a word rather than just measure it.
 
-And the rest of the view side: `TParagraphView::InsertInk`,
-`TEditView::HandleInk`, `TInkWordGlyph` (the glyph an ink word draws as
-in a line of text) and `TLiveInker` (the ink that follows the pen while
-it is still down, which is the other way the ROM's draw proc can draw -
-`InkerLine` with a pen of its own).
+And the rest of the view side: the `aeInkWord` case of
+`TEditView::RealDoCommand` (the corrector and the hilites it resets
+first), `TInkWordGlyph` (the glyph an ink word draws as in a line of
+text) and `TLiveInker` (the ink that follows the pen while it is still
+down, which is the other way the ROM's draw proc can draw - `InkerLine`
+with a pen of its own).

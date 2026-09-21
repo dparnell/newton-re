@@ -17,6 +17,9 @@
 #include "Hilites.h"
 #include "ContainerView.h"
 #include "EditView.h"
+#include "Ink.h"
+#include "StrokeBundle.h"
+#include "CICCodec.h"
 #include "GaugeView.h"
 #include "PickView.h"
 #include "DrawShape.h"
@@ -3358,6 +3361,53 @@ TestParagraphTap()
 }
 
 
+// Ink put on a page: the strokes handed to an edit view are packed up
+// as an ink shape and offered to the page as a child of its own.  What
+// the page does with it is the application's business - the frame the
+// ROM makes is a piece of stationery, not a view template, and it is the
+// page's viewAddChildScript that turns it into a view - so the test
+// stands in for that script and looks at what it is handed.
+static void
+TestInkOnThePage()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	TEditView* editor = (TEditView*) ViewOf("ctxIV := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 200, bottom: 150}, viewChildren: [], added: nil, viewAddChildScript: func(t) begin added := t; t end})");
+
+	// a bundle of one stroke - the array is v, h, v, h, in pixels
+	RefVar points(Eval("[20, 10, 30, 20, 40, 30]"));
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, points);
+	RefVar bundle(MakeStrokeBundle(arrays, 1));
+	EXPECT(CountStrokes(bundle) == 1);
+	Rect box;
+	GetBundleBounds(bundle, &box);
+	EXPECT(box.left == 10 && box.top == 20 && box.right == 30 && box.bottom == 40);
+
+	EXPECT(HandleInk(editor, bundle) == 1);
+	RefVar added(Eval("ctxIV.added"));
+	EXPECT(IsFrame(added));
+	EXPECT(IsRawInk(RefVar(GetFrameSlot(added, RSSYMink))));
+	Rect where;
+	EXPECT(FromObject(RefVar(GetFrameSlot(added, RSSYMviewbounds)), where));
+	// the shape sits where the strokes were, let out for the pen
+	EXPECT(where.left <= 10 && where.right >= 30 && where.top <= 20 && where.bottom >= 40);
+
+	// the same through the aeRawInk command, which the page takes itself
+	// when no child will have it
+	Eval("ctxIV.added := nil");
+	RefVar cmd(MakeCommand(aeRawInk, editor, 0));
+	CommandSetFrameParameter(cmd, bundle);
+	gApplication->DispatchCommand(cmd);
+	EXPECT(IsFrame(RefVar(Eval("ctxIV.added"))));
+
+	// a view that takes only numbers says so; one that takes letters does not
+	TView* numbers = ViewOf("ctxNum := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x2000, viewBounds: {left: 0, top: 0, right: 10, bottom: 10}})");
+	TView* words = ViewOf("ctxWord := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x4000, viewBounds: {left: 0, top: 0, right: 10, bottom: 10}})");
+	EXPECT(ViewExpectsNumbers(numbers));
+	EXPECT(!ViewExpectsNumbers(words));
+}
+
 int
 main()
 {
@@ -3447,7 +3497,8 @@ main()
 		TestScrubbing();
 		TestCaretGesture();
 		TestLineGesture();
-		TestEffects();
+		TestEffects();
+		TestInkOnThePage();
 	}
 	newton_catch_all
 	{

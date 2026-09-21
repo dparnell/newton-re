@@ -7,6 +7,7 @@
 */
 
 #include "Notebook.h"
+#include "CICCodec.h"
 #include "ScriptBoot.h"
 #include "RootView.h"
 #include "Recognizer.h"
@@ -103,6 +104,13 @@ TNotebook::InitToolbox(void)
 	// words above them.  The shape and word recognisers themselves are
 	// NOT YET, so level 2 here means only that the dictionaries are built
 	// and the word half of the system is meant to be on.
+	// (DEVIATION: the ROM's TRecognitionManager::Init starts the stroke
+	// compression itself.  The ink area sits above the recogniser here -
+	// it reaches the strokes through it - so the two are started from
+	// outside instead, and InitializeInkCodecs registers the CIC codec
+	// with the seam the ROM does not have.)
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
 	gRecognition.Init(2);
 	RunInitScripts();
 	gStrokeWorld.Init();

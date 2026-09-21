@@ -454,8 +454,10 @@ InstallStrokeRecognizer(TRecognitionManager* manager)
 // how to find a unit's areas and what to do with a stroke nobody wanted,
 // and then the recognisers are installed and the domains ordered.
 //
-// NOT YET RECONSTRUCTED: InitializeParagraphCompression and
-// SetContextUnitRoutine(HandleGetContextUnits).
+// (InitializeParagraphCompression, which the ROM calls here, is started
+// from outside instead - see TNotebook::InitToolbox.)
+//
+// NOT YET RECONSTRUCTED: SetContextUnitRoutine(HandleGetContextUnits).
 long
 TRecognitionManager::Init(UChar level)
 {

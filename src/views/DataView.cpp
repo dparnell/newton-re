@@ -43,6 +43,24 @@ TDataView::HandleLineGesture(long /*angle*/, Point& /*from*/, Point& /*to*/)
 }
 
 
+// ROM 0x000a3478 HandleInk__9TDataViewFRC6RefVarUc
+// A plain data view takes no ink.
+long
+TDataView::HandleInk(RefArg cmd, Boolean reallyDoIt)
+{
+	return 0;
+}
+
+
+// ROM 0x000a3470 HandleInkWord__9TDataViewFRC6RefVarUc
+// ... nor an ink word.
+long
+TDataView::HandleInkWord(RefArg cmd, Boolean reallyDoIt)
+{
+	return 0;
+}
+
+
 // ROM 0x000a31bc GetHiliteView__9TDataViewFv
 // The view a selection in this one belongs to: itself, unless a
 // subclass says otherwise (a container answers for its children).

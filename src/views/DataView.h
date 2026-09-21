@@ -27,8 +27,8 @@ public:
 	virtual long	ClassID(void) const;								// ROM 0x000a2fc0 ClassID__9TDataViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x000a2fc8 DerivedFrom__9TDataViewCFl
 	// declared in the vtable's order, which starts at +0x120.  The slots
-	// from +0x128 to +0x138 are NOT YET RECONSTRUCTED, so nothing stands
-	// between the two gestures here and GetHiliteView.
+	// from +0x130 to +0x138 are NOT YET RECONSTRUCTED, so nothing stands
+	// between HandleInkWord here and GetHiliteView.
 	// A caret gesture over the view: its kind (TUnitPublic::CaretType), the
 	// angle it points at, and the polyline's corners - the first arm, the
 	// caret's own point, the second arm, and a fourth for the kinds that
@@ -37,6 +37,12 @@ public:
 								Point& armB, Point& tail);			// ROM 0x000a3460 HandleCaret__9TDataViewFUllR6TPointN33 (vtable +0x120: 0)
 	// A line gesture: its angle and its two ends.
 	virtual long	HandleLineGesture(long angle, Point& from, Point& to);	// ROM 0x000a3468 HandleLineGesture__9TDataViewFlR6TPointT2 (vtable +0x124: 0)
+	// Ink written over the view, as the aeAddInk command that carries the
+	// stroke bundle.  `reallyDoIt` false only asks how well it would take
+	// it, which is how a container picks the child that gets it; ==> 0
+	// for not at all, and a plain data view takes neither.
+	virtual long	HandleInk(RefArg cmd, Boolean reallyDoIt);			// ROM 0x000a3478 HandleInk__9TDataViewFRC6RefVarUc (vtable +0x128: 0)
+	virtual long	HandleInkWord(RefArg cmd, Boolean reallyDoIt);		// ROM 0x000a3470 HandleInkWord__9TDataViewFRC6RefVarUc (vtable +0x12c: 0)
 	// declared in the vtable's order, which starts at +0x13c
 	virtual TView*	GetHiliteView(void);								// ROM 0x000a31bc GetHiliteView__9TDataViewFv (vtable +0x13c)
 	virtual TView*	GetEnclosingEditView(void);						// ROM 0x000a3038 GetEnclosingEditView__9TDataViewFv (vtable +0x140)

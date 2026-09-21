@@ -246,6 +246,10 @@ public:
 	};
 };
 
+// The stroke a unit was made from, which is the only thing a view that
+// only wants the ink needs of it.
+TStroke*	GetTStroke(TUnit* unit);					// ROM 0x00145dfc GetTStroke__FP5TUnit
+
 class TStrokeUnit : public TSIUnit
 {
 public:

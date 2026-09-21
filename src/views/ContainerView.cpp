@@ -113,6 +113,53 @@ TContainerView::IsCompletelyHilited(RefArg hilite)
 }
 
 
+// ROM 0x00073584 HandleInkWord__14TContainerViewFRC6RefVarUc
+// An ink word written over the container.  The command carries a stroke
+// bundle whose `bounds` say where it was written; if that misses the
+// container altogether nobody is asked.  Otherwise each visible child
+// whose box the writing touches - with five pixels of slack, because a
+// word written just outside a field still belongs in it - is asked how
+// well it would take the word, and the best answer wins.  `reallyDoIt`
+// false only asks, which is what lets a container inside a container
+// answer for its own children before anything is changed.
+//
+// DEVIATION: the ROM dispatches through the child's vtable slot for
+// HandleInkWord whatever the child is, so a child that is not a data
+// view at all is called through a slot it does not have.  The host
+// cannot do that, so the class is asked first.
+long
+TContainerView::HandleInkWord(RefArg cmd, Boolean reallyDoIt)
+{
+	RefVar bundle(CommandFrameParameter(cmd));
+	Rect box;
+	FromObject(RefVar(GetFrameSlot(bundle, RSSYMbounds)), box);
+	if (!Overlaps(&viewBounds, &box))
+		return 0;
+	long best = 0;
+	TView* bestView = nil;
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if ((child->fFlags & vVisible) == 0)
+			continue;
+		Rect room = child->viewBounds;
+		InsetRect(&room, -5, -5);
+		if (!Overlaps(&room, &box) || !child->DerivedFrom(clDataView))
+			continue;
+		long score = ((TDataView*) child)->HandleInkWord(cmd, false);
+		if (score > best)
+		{
+			best = score;
+			bestView = child;
+		}
+	}
+	if (reallyDoIt && bestView != nil)
+		((TDataView*) bestView)->HandleInkWord(cmd, true);
+	return best;
+}
+
+
 // ROM 0x00073c78 GetHiliteView__14TContainerViewFv
 // Which view the selection really belongs to: this one when the whole
 // container is selected, else the first child that is hilited itself.

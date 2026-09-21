@@ -70,6 +70,10 @@ public:
 
 	// the container's own
 	virtual void	MakeHilite(long child, TView* view);	// ROM 0x000748d0 MakeHilite__14TContainerViewFlP5TView
+	// An ink word written over the container: the visible children whose
+	// boxes it touches (with five pixels of slack) are asked how well
+	// they would take it, and the best one gets it.
+	virtual long	HandleInkWord(RefArg cmd, Boolean reallyDoIt);		// ROM 0x00073584 HandleInkWord__14TContainerViewFRC6RefVarUc (vtable +0x12c)
 	virtual TView*	GetHiliteView(void);					// ROM 0x00073c78 GetHiliteView__14TContainerViewFv
 
 	long			fUnknown30;			// +0x30  5 from the constructor; nothing reconstructed reads them

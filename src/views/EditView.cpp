@@ -13,6 +13,12 @@
 */
 
 #include "EditView.h"
+#include "Ink.h"
+#include "RecConfig.h"		// GetRecognitionView
+#include "InkShapes.h"
+#include "StrokeBundle.h"
+#include "DrawShape.h"
+#include "Locale.h"			// GetPreference
 #include "Hilites.h"
 #include "DataView.h"
 #include "ParagraphView.h"
@@ -1180,6 +1186,40 @@ TEditView::RealDoCommand(RefArg cmd)
 		return TView::RealDoCommand(cmd);
 	}
 
+	if (id == aeRawInk)
+	{
+		// ink nobody is to read, written over the page.  The view's own
+		// viewRawInkScript gets it first; then the visible data-view
+		// children the writing touches are asked how well they would take
+		// it and the best one gets it, and if none will it becomes a
+		// sketch of the page's own.
+		if (TView::RealDoCommand(cmd))
+			return true;
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+			return TView::RealDoCommand(cmd);	// (the ROM's shared exit runs the scripts again)
+		RefVar bundle(CommandFrameParameter(cmd));
+		long best = 0;
+		TView* bestView = nil;
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			if ((child->fFlags & vVisible) == 0 || !child->DerivedFrom(clDataView))
+				continue;
+			long score = ((TDataView*) child)->HandleInk(bundle, false);
+			if (score > best)
+			{
+				best = score;
+				bestView = child;
+			}
+		}
+		if (best != 0)
+			((TDataView*) bestView)->HandleInk(bundle, true);
+		else
+			::HandleInk(this, bundle);
+		return true;
+	}
+
 	if (id == aeScrub)
 	{
 		// (textFlags bit 0x2000: the page answers the pen itself first)
@@ -1319,6 +1359,130 @@ TEditView::ValidateCaret(Boolean scrolled)
 	}
 	return gRootView->fCaretView == this;
 }
+
+/*------------------------------------------------------------------------------
+	I n k   o n   t h e   p a g e
+------------------------------------------------------------------------------*/
+
+// (the id of the ROM's numbers dictionary, which the ROM writes in
+// here as a bare number)
+const long kNumbersDictionaryId = 117;
+
+
+// ROM 0x0017fb04 ViewExpectsNumbers__FP5TView
+// Whether the view is after numbers rather than words.  Three things say
+// so: a bit of its text flags; its recognition flags leaving numbers, a
+// time or a phone number as the only thing it will take; or it naming a
+// single custom dictionary, that dictionary being the numbers one.
+//
+// (The text-flag bit has no name in the ROM's own headers.)
+Boolean
+ViewExpectsNumbers(TView* view)
+{
+	TView* rec = GetRecognitionView(view);
+	if ((rec->TextFlags() & 0x200) != 0)
+		return true;
+	ULong flags = rec->fFlags & (vCharsAllowed | vNumbersAllowed | vLettersAllowed
+								 | vPunctuationAllowed | vShapesAllowed | vMathAllowed
+								 | vPhoneField | vDateField | vTimeField | vAddressField
+								 | vNameField | vCapsRequired | vCustomDictionaries);
+	if ((flags & ~(ULong) (vCustomDictionaries | vTimeField | vPhoneField | vNumbersAllowed)) != 0)
+		return false;
+	if (flags == vNumbersAllowed || flags == vTimeField || flags == vPhoneField)
+		return true;
+	if (flags == vCustomDictionaries)
+	{
+		RefVar dictionaries(rec->GetProto(RSSYMdictionaries));
+		if (IsArray(dictionaries) && Length(dictionaries) == 1)
+			dictionaries = GetArraySlot(dictionaries, 0);
+		if (EQRef(dictionaries, MAKEINT(kNumbersDictionaryId)))
+			return true;
+	}
+	return false;
+}
+
+
+// ROM 0x00140834 HandleInk__FP9TEditViewPP7TStroke
+// Strokes put on the page as ink of their own: they are packed up as a
+// sketch, the box they came from is brought back into the page's own
+// coordinates, and the shape is added as a child.
+void
+HandleInk(TEditView* view, TStroke** strokes)
+{
+	Rect box;
+	RefVar ink(TStrokesToInk(strokes, &box));
+	Point origin = view->ContentsOrigin();
+	OffsetRect(&box, (short) -origin.h, (short) -origin.v);
+	RefVar form(MakePolygonForm(nil, 0, kInkVerb, box,
+								RINT(GetPreference(RSSYMuserpensize))));
+	SetFrameSlot(form, RSSYMink, ink);
+	view->AddForm(form);
+}
+
+
+// ROM 0x00140754 HandleInk__FP9TEditViewRC6RefVar
+// The same from a bundle of strokes.
+long
+HandleInk(TEditView* view, RefArg bundle)
+{
+	TStroke** strokes = StrokeBundleToTStrokes(bundle);
+	HandleInk(view, strokes);
+	DisposeTStrokes(strokes);
+	return 1;
+}
+
+
+// ROM 0x000a6798 HandleInk__9TEditViewFP11TUnitPublic
+// One unit's stroke put on the page.
+long
+TEditView::HandleInk(TUnitPublic* unit)
+{
+	TStroke* list[2];
+	list[0] = GetTStroke(unit->fUnit);
+	list[1] = nil;
+	::HandleInk(this, list);
+	return 1;
+}
+
+
+// ROM 0x000a6854 HandleInk__9TEditViewFRC6RefVar
+// ... and a whole bundle of them.
+long
+TEditView::HandleInk(RefArg bundle)
+{
+	TStroke** strokes = StrokeBundleToTStrokes(bundle);
+	::HandleInk(this, strokes);
+	DisposeTStrokes(strokes);
+	return 1;
+}
+
+
+// ROM 0x000a6888 HandleInkWord__9TEditViewFRC6RefVar
+// A word the recogniser could not read, or was not asked to, put on the
+// page as a paragraph of one character: the ink word itself, standing as
+// 0xf701 with the ink as its style.  The word's x-height is adjusted
+// first for a view that is after numbers, which sit differently on the
+// line from letters.
+void
+TEditView::HandleInkWord(RefArg cmd)
+{
+	UniChar text[2];
+	text[0] = kInkWordChar;
+	text[1] = 0;
+	RefVar bundle(CommandFrameParameter(cmd));
+	RefVar ink(StrokeBundleToInkWord(bundle));
+	AdjustInkWordXHeight(ink, ViewExpectsNumbers(this));
+	Rect box;
+	FromObject(RefVar(GetFrameSlot(bundle, RSSYMbounds)), box);
+	RefVar info(AllocateFrame());
+	RefVar styles(AllocateArray(RSSYMstyles, 2));
+	SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 1, ink);
+	SetFrameSlot(info, RSSYMstyles, styles);
+	long offset = 0;
+	AddNewParagraph(text, 1, box, box, nil, info, &offset, ink);
+}
+
 
 // ROM 0x000ab28c AddForm__9TEditViewFRC6RefVar
 // The context frame made into a child of the editor - a new paragraph,

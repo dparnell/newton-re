@@ -76,6 +76,14 @@ public:
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
 	TView*			TextContainingPoint(Point& pt, Rect* box, long* score);	// ROM 0x000a8844 TextContainingPoint__9TEditViewFR6TPointP5TRectPl
+	// Ink handed to the page: a unit's stroke, a bundle of strokes from
+	// the recogniser, or the strokes themselves.  All three end in the
+	// free HandleInk below, which makes an ink shape of them and adds it
+	// as a child.  HandleInkWord is the other way a word can end up on
+	// the page - as an ink word in a paragraph of its own.
+	long			HandleInk(TUnitPublic* unit);			// ROM 0x000a6798 HandleInk__9TEditViewFP11TUnitPublic
+	long			HandleInk(RefArg bundle);				// ROM 0x000a6854 HandleInk__9TEditViewFRC6RefVar
+	void			HandleInkWord(RefArg cmd);				// ROM 0x000a6888 HandleInkWord__9TEditViewFRC6RefVar
 	TView*			AddForm(RefArg form);					// ROM 0x000ab28c AddForm__9TEditViewFRC6RefVar - the context frame made a child, undoably
 	void			JamText(UniChar* text, ULong length);	// ROM 0x000ab70c JamText__9TEditViewFPUsUl - typed text put on the page as a word
 	// the editor's own, which is not TDataView's: the box the word
@@ -165,5 +173,19 @@ extern Boolean	gLassoedDrag;								// ROM 0x0c100ce0 gLassoedDrag
 // might learn.  HandleWord sets it on the way in; the recogniser clears
 // it for words it is sure it already knows.
 extern Boolean	gAddWordInfo;								// ROM 0x0c101710 gAddWordInfo
+
+class TStroke;
+
+// Whether the view expects numbers rather than words, which is what says
+// how tall the x-height of an ink word written into it should be.  Its
+// text flags say so outright, or its recognition flags leave numbers,
+// the time or a phone number as the only thing it takes, or it names one
+// custom dictionary and that dictionary is the numbers one.
+Boolean	ViewExpectsNumbers(TView* view);					// ROM 0x0017fb04 ViewExpectsNumbers__FP5TView
+
+// Strokes, or a bundle of them, made into an ink shape and added to the
+// page as a child of its own.
+void	HandleInk(TEditView* view, TStroke** strokes);		// ROM 0x00140834 HandleInk__FP9TEditViewPP7TStroke
+long	HandleInk(TEditView* view, RefArg bundle);			// ROM 0x00140754 HandleInk__FP9TEditViewRC6RefVar
 
 #endif	/* __EDITVIEW_H */

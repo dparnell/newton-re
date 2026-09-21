@@ -1298,6 +1298,16 @@ TSIUnit::EndUnit(void)
 }
 
 
+// ROM 0x00145dfc GetTStroke__FP5TUnit
+// The unit's first stroke; in the ROM one instruction, a jump straight
+// through the unit's own GetStroke.
+TStroke*
+GetTStroke(TUnit* unit)
+{
+	return unit->GetStroke(0);
+}
+
+
 /*------------------------------------------------------------------------------
 	T S t r o k e U n i t
 ------------------------------------------------------------------------------*/
