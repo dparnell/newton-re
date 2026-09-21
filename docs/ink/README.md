@@ -115,22 +115,78 @@ than once for the machine is what the format was built for.
 `InkCodecFor` does that: the first registered codec that says it can
 read the format gets it.
 
-The bit stream itself is read least significant bit first within each
-byte, and the bits of a value come out in that order too (`GetNBit`
-0x00280d88), which is the one piece of the codec reconstructed so far.
+## Reading a block of ink (`CICCodec.h`)
+
+The bit stream is read least significant bit first within each byte, and
+the bits of a value come out in that order too (`GetNBit` 0x00280d88).
+
+**The code books.**  A book is eight tables laid end to end, each
+starting with its own size in bytes, which is how `DcdrSelectCodeBook`
+(0x00280df0) finds them.  A table's header says how many entries it has
+and carries two escape values with the base each counts from - 30000
+means "too big to hold, another word follows to be added to this base"
+and -30000 the same downwards - and its entries are eight bytes each:
+the value, the length of its code in bits, and the code.  The entries
+are in order of length, so `DecodeWord_OLD` (0x00281c48) can read a bit
+at a time and only look at the entries whose codes are as long as what
+it has.  `DecodeWord_NEW` (0x00281b90) does the same over the two little
+static tables in RAM: one says whether the next stroke is long, short or
+the end of the group, and the other is the two-entry table a segment's
+continue-or-stop word comes from.
+
+There are two books.  Book 1 is for writing and book 2 for ink; book 3
+is book 2's tables with book 2's step.  The step is what a decoded
+number is worth - 0x800 for the writing book and 0x2000 for the ink one
+- and the codec counts in thousand-and-twenty-fourths of a tablet unit,
+so a step is two units in one book and eight in the other.
+
+**A stroke.**  `ReadNewStroke` (0x00280f1c) reads the next stroke's kind
+and moves the pen to where it starts.  The first stroke of a run carries
+the format: a kind of 2 there is not the end of the group but the marker
+for the newer format, and four bits follow saying how wide the starting
+coordinates are (nothing, eight, twelve or sixteen bits) and which book
+to read with.  The older format has no marker - book 2, nine bits each -
+and one trick of its own: a first stroke that is short and starts at
+(511, 511), which is no place at all, is a marker too, and the real
+first stroke follows it.
+
+A **short** stroke (`ReadShortStroke` 0x00281424) is written as it was
+drawn: a step in x and a step in y for each point after the first, until
+a word comes back 7.
+
+A **long** stroke (`DecodeLongStroke` 0x00281dd0) is a chain of curved
+segments.  `ReadSegmentNear` (0x00281240) reads where a segment ends and
+four numbers that bend it, and `RestoreSegment` (0x00281a70) draws those
+out into seventeen points by forward differences - the middle one first,
+then eight forward and eight back, each from the one before by adding a
+step, each step by adding a second difference, and that difference
+itself growing by a fixed amount.  The two halves differ only in the
+sign of that growth, so the curve is symmetrical about its middle; with
+both bending numbers nought it comes out a straight line in sixteen even
+steps.  Sixteen of the seventeen go out - the seventeenth is the next
+segment's first - and the first of them is not the segment's own point
+but the average of it and where the segment starts, which is what joins
+one segment smoothly to the last.
+
+**Thinning.**  The `group` a caller asks for is really a mode.  Mode 1
+thins by hand: a point within a unit of the last one let through, in
+both x and y, is dropped.  Anything else goes through `GetSkipPoint`
+(0x0028153c), which cuts the plane into cells eight units square and
+keeps only the point nearest each cell's middle - and holds three cells
+back, because three in a row that step once in x and once in y are a
+staircase across the diagonal and the middle of them is better thrown
+away.  `ClearSkipPoint` (0x002819a0) drains what is still held when the
+stroke ends.
 
 ## NOT YET
 
-The stroke compression itself.  `InkCompress` (0x00140b78) hands the
-strokes to `CSCompress` (0x001543fc) and gets back a block of bytes;
-`InkExpand` (0x00140c98) and `InkDraw` hand them to `GenericCSExpandGroup`
-(0x00153934), which decodes them a point at a time through a callback.
-Underneath both is a codec of about forty functions (`EncoderOpen`
-0x0027f938, `DecoderOpen` 0x0028240c and everything between them) with
-its own code books, vector quantisation and bit reader - the CIC
-handwriting library's, not Apple's.  Until it is reconstructed ink can be
-carried about, measured, scaled and stored, but not made from strokes,
-expanded back into them, or drawn.
+The encoder.  `InkCompress` (0x00140b78) hands the strokes to
+`CSCompress` (0x001543fc), which is `EncoderOpen`/`Run`/`Close`
+(0x0027f938, 0x002804f8, 0x0027fae8) and the twenty-odd functions
+between them - the segment fitting, the vector quantisation and the
+code book selection that turn points back into the bits the decoder
+reads.  Until it is reconstructed ink can be read, measured, scaled and
+stored, but not made from strokes.
 
 With it would come the rest: `TStrokesToInk`/`TStrokesToInkWord`
 (0x00140608, 0x001404f0), `InkBounds` (0x001a3728),

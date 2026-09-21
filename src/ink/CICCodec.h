@@ -36,6 +36,29 @@
 #endif
 
 
+// The point thinner a decoded stroke goes through (the CIC library's
+// tag_SKP).  The plane is cut into cells eight units square; of all the
+// points that fall in one cell only the one nearest its middle is kept,
+// and three cells are held back so that three in a row making a single
+// step across the diagonal can have their middle thrown away - which is
+// what takes the staircase off a line drawn nearly straight.
+struct CICSkipPoints
+{
+	long		fStarted;		// +0x00  the filter is in use
+	short		fHalfCell;		// +0x04  four: the middle of a cell
+	short		fCellSize;		// +0x06  eight: and how big one is
+	InkPoint	fIn;			// +0x08  the point coming in
+	InkPoint	fCell;			// +0x0c  the cell it falls in
+	InkPoint	fOut;			// +0x10  the point going out
+	long		fDist;			// +0x14  how far it is from its cell's middle
+	long		fBest;			// +0x18  and the best so far in that cell
+	InkPoint	fCells[3];		// +0x1c  the cells held
+	InkPoint	fPoints[3];		// +0x28  and the point kept in each
+	long		fCount;			// +0x34  whether one is ready to come out
+	short		fIndex;			// +0x38  how many are held, less one
+};
+
+
 // The decoder's context (the CIC library's _DCC, 0x1f0 bytes; the ROM
 // offsets of the fields that are known are noted, but the struct is the
 // host's own - it never leaves the codec).
@@ -71,6 +94,7 @@ struct CICDecoder
 	long			fSegStartY;		// +0x1a8
 	long			fSegEndX;		// +0x1ac  and where it ends
 	long			fSegEndY;		// +0x1b0
+	CICSkipPoints	fSkip;			// +0x1b4  the thinner the points go through
 };
 
 // How many points either buffer holds - the ROM's are the 33 longs
@@ -151,6 +175,29 @@ Boolean	ReadShortStroke(CICDecoder* decoder);
 // ROM 0x002820c8 DecodeShortStroke__FP4_DCC
 // And handed to the sink.
 Boolean	DecodeShortStroke(CICDecoder* decoder);
+
+
+// ROM 0x0028153c GetSkipPoint__FP7tag_SKPsT2
+// A point offered to the thinner.  ==> whether one has come out the far
+// end, which is then in fOut.
+Boolean	GetSkipPoint(CICSkipPoints* skip, short x, short y);
+
+// ROM 0x002819a0 ClearSkipPoint__FP7tag_SKP
+// The next point still held, at the end of a stroke.
+Boolean	ClearSkipPoint(CICSkipPoints* skip);
+
+// ROM 0x00281dd0 DecodeLongStroke__FP4_DCC
+// A long stroke read segment by segment and handed to the sink.
+Boolean	DecodeLongStroke(CICDecoder* decoder);
+
+// ROM 0x0028240c DecoderOpen__FUsUlT1T2T1
+// A context made ready to read a block of ink.
+void	DecoderOpen(CICDecoder* decoder, const void* data, long size,
+					InkPointProc sink, void* refCon, ULong mode);
+
+// ROM 0x00282518 DecoderRun__FUl
+// Stroke after stroke read out of it.
+Boolean	DecoderRun(CICDecoder* decoder);
 
 
 // What ReadNewStroke answers: a long stroke, a short one, or the end.

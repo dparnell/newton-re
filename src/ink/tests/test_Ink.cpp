@@ -563,6 +563,150 @@ TestSegment()
 	EXPECT(px[kCICSegmentMiddle] != (d.fSegStartX + d.fSegEndX) / 2);
 }
 
+
+static long gBegins = 0;
+static long gEnds = 0;
+static long gStrokeEnds = 0;
+
+static short
+CollectAll(short what, const InkPoint* pt, void* refCon)
+{
+	gLastRefCon = refCon;
+	if (what == kInkBegin)
+		gBegins++;
+	else if (what == kInkEnd)
+		gEnds++;
+	else if (what == kInkEndStroke)
+		gStrokeEnds++;
+	else if (what == kInkPoint && gPointCount < 64)
+		gPoints[gPointCount++] = *pt;
+	return 1;
+}
+
+
+// A whole block of ink read from end to end: the newer format's header,
+// one long stroke of one straight segment, and the word that ends the
+// group.
+static void
+TestDecodeRun()
+{
+	InitializeParagraphCompression();
+	CICDecoder d;
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 1;
+	EXPECT(DcdrSelectCodeBook(&d));
+
+	BitWriter w;
+	StartBits(&w);
+	PutBits(&w, 8, 4);			// the stroke table's 2: the newer format's marker
+	PutBits(&w, 1, 4);			// eight-bit coordinates, and the writing book
+	PutBits(&w, 20, 8);			// where the first stroke starts
+	PutBits(&w, 30, 8);
+	PutBits(&w, 1, 1);			// the stroke table's 0: a long stroke
+	EXPECT(PutValue(&w, d.fTables[2], 10));		// the segment's chord
+	EXPECT(PutValue(&w, d.fTables[3], 4));
+	EXPECT(PutValue(&w, d.fTables[4], 0));		// and no bend
+	EXPECT(PutValue(&w, d.fTables[5], 0));
+	EXPECT(PutValue(&w, d.fTables[6], 0));
+	EXPECT(PutValue(&w, d.fTables[7], 0));
+	PutBits(&w, 0, 1);			// the format table's 7: the stroke's last segment
+	PutBits(&w, 8, 4);			// the stroke table's 2: the end of the group
+	long size = (long) ((w.fPos + 7) / 8);
+
+	gPointCount = 0;
+	gBegins = gEnds = gStrokeEnds = 0;
+	EXPECT(gCICInkCodec.Decode(w.fBytes, size, 1, CollectAll, (void*) &w));
+	EXPECT(gBegins == 1 && gEnds == 1 && gStrokeEnds == 1);
+	EXPECT(gLastRefCon == (void*) &w);
+	// the pen starts where the header said, in tablet units - a step of
+	// the writing book is worth two of them
+	EXPECT(gPointCount >= 5 && gPointCount <= 17);
+	EXPECT(gPoints[0].x == 40 && gPoints[0].y == 60);
+	EXPECT(gPoints[gPointCount - 1].x == 60 && gPoints[gPointCount - 1].y == 68);
+	Boolean rising = true;
+	for (long i = 1; i < gPointCount; i++)
+		if (gPoints[i].x < gPoints[i - 1].x || gPoints[i].y < gPoints[i - 1].y)
+			rising = false;
+	EXPECT(rising);
+
+	// the same block read the other way about: the cell thinner leaves
+	// fewer points, and the stroke still starts and ends where it did
+	long handThinned = gPointCount;
+	gPointCount = 0;
+	gBegins = gEnds = gStrokeEnds = 0;
+	EXPECT(gCICInkCodec.Decode(w.fBytes, size, 0, CollectAll, (void*) &w));
+	EXPECT(gBegins == 1 && gEnds == 1 && gStrokeEnds == 1);
+	EXPECT(gPointCount > 0 && gPointCount <= handThinned);
+	// the thinner keeps whichever point of a cell is nearest its middle,
+	// so the first one out is near where the stroke starts rather than on
+	// it - but the last is the stroke's end, which is let out whole
+	EXPECT(gPoints[0].x >= 40 && gPoints[0].x <= 47);
+	EXPECT(gPoints[0].y >= 60 && gPoints[0].y <= 63);
+	EXPECT(gPoints[gPointCount - 1].x == 60 && gPoints[gPointCount - 1].y == 68);
+
+	// a block that stops in the middle is not a run
+	gPointCount = 0;
+	gBegins = gEnds = gStrokeEnds = 0;
+	EXPECT(!gCICInkCodec.Decode(w.fBytes, 2, 1, CollectAll, (void*) &w));
+	EXPECT(gBegins == 1 && gEnds == 1);
+}
+
+
+// The thinner on its own: points crowded into one cell come out as one,
+// and a staircase loses its middle.
+static void
+TestSkipPoints()
+{
+	CICSkipPoints skip;
+	memset(&skip, 0, sizeof(skip));
+	skip.fStarted = 1;
+	skip.fIndex = -1;
+	skip.fHalfCell = 4;
+	skip.fCellSize = 8;
+
+	// three points in the cell at (0, 0): nothing comes out, and the one
+	// kept is the one nearest the cell's middle at (4, 4)
+	EXPECT(!GetSkipPoint(&skip, 0, 0));
+	EXPECT(!GetSkipPoint(&skip, 3, 3));
+	EXPECT(!GetSkipPoint(&skip, 7, 7));
+	EXPECT(skip.fPoints[0].x == 3 && skip.fPoints[0].y == 3);
+
+	// three cells are held, so it is the fourth that pushes the first out
+	EXPECT(!GetSkipPoint(&skip, 40, 40));
+	EXPECT(!GetSkipPoint(&skip, 80, 80));
+	EXPECT(GetSkipPoint(&skip, 120, 120));
+	EXPECT(skip.fOut.x == 3 && skip.fOut.y == 3);
+	// and what is left drains, oldest first
+	EXPECT(ClearSkipPoint(&skip) && skip.fOut.x == 40 && skip.fOut.y == 40);
+	EXPECT(ClearSkipPoint(&skip) && skip.fOut.x == 80 && skip.fOut.y == 80);
+	EXPECT(ClearSkipPoint(&skip) && skip.fOut.x == 120 && skip.fOut.y == 120);
+	EXPECT(!ClearSkipPoint(&skip));
+
+	// a staircase: cells (0,0), (1,0) and (1,1) step once in x and once
+	// in y, so when the fourth cell arrives the middle of the three is
+	// thrown away instead of being let out
+	memset(&skip, 0, sizeof(skip));
+	skip.fStarted = 1;
+	skip.fIndex = -1;
+	EXPECT(!GetSkipPoint(&skip, 4, 4));			// cell (0, 0)
+	EXPECT(!GetSkipPoint(&skip, 12, 4));		// cell (1, 0)
+	EXPECT(!GetSkipPoint(&skip, 12, 12));		// cell (1, 1)
+	EXPECT(GetSkipPoint(&skip, 44, 44));		// cell (5, 5)
+	EXPECT(skip.fOut.x == 4 && skip.fOut.y == 4);
+	EXPECT(skip.fIndex == 1);					// the middle was thrown away
+	EXPECT(skip.fPoints[0].x == 12 && skip.fPoints[0].y == 12);
+	EXPECT(skip.fPoints[1].x == 44 && skip.fPoints[1].y == 44);
+	// three cells that are not a staircase keep all three
+	memset(&skip, 0, sizeof(skip));
+	skip.fStarted = 1;
+	skip.fIndex = -1;
+	EXPECT(!GetSkipPoint(&skip, 4, 4));			// cell (0, 0)
+	EXPECT(!GetSkipPoint(&skip, 12, 4));		// cell (1, 0)
+	EXPECT(!GetSkipPoint(&skip, 20, 4));		// cell (2, 0): straight on
+	EXPECT(GetSkipPoint(&skip, 44, 44));
+	EXPECT(skip.fIndex == 2 && skip.fPoints[0].x == 12);
+}
+
 int
 main()
 {
@@ -588,6 +732,8 @@ main()
 	TestCodeBookTables();
 	TestShortStroke();
 	TestSegment();
+	TestSkipPoints();
+	TestDecodeRun();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

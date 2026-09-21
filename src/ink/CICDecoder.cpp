@@ -7,6 +7,8 @@
 #include "CICCodec.h"
 #include "ByteOrder.h"
 
+#include <string.h>
+
 
 // ROM 0x00280d88 GetNBit__FP4_DCCUs
 // The next n bits of the stream.  A byte is read from its least
@@ -497,6 +499,263 @@ DecodeShortStroke(CICDecoder* decoder)
 }
 
 
+
+
+/*------------------------------------------------------------------------------
+	T h e   p o i n t   t h i n n e r
+------------------------------------------------------------------------------*/
+
+static inline long
+CICAbs(long n)
+{
+	return n < 0 ? -n : n;
+}
+
+
+// ROM 0x0028153c GetSkipPoint__FP7tag_SKPsT2
+// A point offered to the thinner.  The plane is cut into cells eight
+// units square: of all the points falling in one cell only the one
+// nearest its middle is kept, so a stroke that dawdles comes out as one
+// point rather than a cluster.
+//
+// Three cells are held back before anything comes out, because of the
+// one shape worth undoing: three cells in a row where the second is one
+// step from the first and the third one step from the second, both in x
+// and in y, is a staircase across the diagonal, and the middle of it is
+// thrown away.  Anything else lets the oldest of the three out.
+//
+// (The four and the eight are kept in the context and then hard-coded
+// here, which is the ROM's doing, not this reconstruction's.)
+Boolean
+GetSkipPoint(CICSkipPoints* skip, short x, short y)
+{
+	if (skip->fStarted == 0)
+	{
+		skip->fCount = 1;
+		skip->fOut.x = x;
+		skip->fOut.y = y;
+		return true;
+	}
+	skip->fCount = 0;
+	skip->fIn.x = x;
+	skip->fIn.y = y;
+	skip->fCell.x = (short) (x >> 3);
+	skip->fCell.y = (short) (y >> 3);
+	long dx = (skip->fCell.x * 8 + 4) - x;
+	long dy = (skip->fCell.y * 8 + 4) - y;
+	skip->fDist = dy * dy + dx * dx;
+
+	long index = skip->fIndex;
+	if (index == -1)
+	{
+		skip->fIndex = 0;
+		skip->fPoints[0] = skip->fIn;
+		skip->fCells[0] = skip->fCell;
+		skip->fBest = skip->fDist;
+		return false;
+	}
+	if (skip->fCells[index].x != skip->fCell.x || skip->fCells[index].y != skip->fCell.y)
+	{
+		skip->fIndex = (short) (index + 1);
+		if (skip->fIndex == 3)
+		{
+			skip->fOut = skip->fPoints[0];
+			skip->fCount = 1;
+			if (CICAbs(skip->fCells[1].x - skip->fCells[0].x)
+					+ CICAbs(skip->fCells[2].x - skip->fCells[1].x) == 1
+				&& CICAbs(skip->fCells[1].y - skip->fCells[0].y)
+					+ CICAbs(skip->fCells[2].y - skip->fCells[1].y) == 1)
+			{
+				// a staircase: the middle one goes
+				skip->fPoints[0] = skip->fPoints[2];
+				skip->fCells[0] = skip->fCells[2];
+				skip->fIndex = 1;
+			}
+			else
+			{
+				skip->fPoints[0] = skip->fPoints[1];
+				skip->fCells[0] = skip->fCells[1];
+				skip->fPoints[1] = skip->fPoints[2];
+				skip->fCells[1] = skip->fCells[2];
+				skip->fIndex = 2;
+			}
+		}
+		skip->fPoints[skip->fIndex] = skip->fIn;
+		skip->fCells[skip->fIndex] = skip->fCell;
+	}
+	else
+	{
+		// the same cell again: whichever point is nearer its middle wins
+		if (skip->fBest <= skip->fDist)
+			return skip->fCount != 0;
+		skip->fPoints[index] = skip->fIn;
+	}
+	skip->fBest = skip->fDist;
+	return skip->fCount != 0;
+}
+
+
+// ROM 0x002819a0 ClearSkipPoint__FP7tag_SKP
+// The next point still held, at the end of a stroke: the oldest comes
+// out and the rest move up.
+Boolean
+ClearSkipPoint(CICSkipPoints* skip)
+{
+	if (skip->fStarted == 0)
+		return false;
+	if (skip->fIndex == -1)
+		skip->fCount = 0;
+	else
+	{
+		skip->fCount = 1;
+		skip->fOut = skip->fPoints[0];
+		for (long i = 0; i < skip->fIndex; i++)
+			skip->fPoints[i] = skip->fPoints[i + 1];
+		skip->fIndex = (short) (skip->fIndex - 1);
+	}
+	return skip->fCount != 0;
+}
+
+
+/*------------------------------------------------------------------------------
+	A   l o n g   s t r o k e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00281dd0 DecodeLongStroke__FP4_DCC
+// Segment after segment, each drawn out into seventeen points of which
+// the first sixteen go to the sink - the seventeenth is the next
+// segment's first.  The very first of the sixteen is not the segment's
+// own point but the average of it and where the segment starts, which is
+// what joins one segment smoothly to the last.
+//
+// In mode 1 the points are thinned by hand: one within a unit of the
+// last one let through, in both x and y, is dropped.  Otherwise they go
+// through GetSkipPoint, which thins them by cells and can undo a
+// staircase.  Either way the comparison starts each segment from
+// (-1000, -1000), which is no place at all, so the first point always
+// goes out.
+//
+// When the segment was the stroke's last its end point goes out too, and
+// then whatever the thinner is still holding.
+Boolean
+DecodeLongStroke(CICDecoder* decoder)
+{
+	for (;;)
+	{
+		short tag;
+		if (!ReadSegmentNear(decoder, &tag))
+			return false;
+		RestoreSegment(decoder->fPointsX, decoder->fSegX);
+		RestoreSegment(decoder->fPointsY, decoder->fSegY);
+		InkPoint last;
+		last.x = -1000;
+		last.y = -1000;
+		for (long i = 0; i < 16; i++)
+		{
+			InkPoint pt;
+			if (i == 0)
+			{
+				pt.x = (short) ((decoder->fPointsX[0] + decoder->fSegStartX) >> 11);
+				pt.y = (short) ((decoder->fPointsY[0] + decoder->fSegStartY) >> 11);
+			}
+			else
+			{
+				pt.x = (short) (decoder->fPointsX[i] >> 10);
+				pt.y = (short) (decoder->fPointsY[i] >> 10);
+			}
+			if (decoder->fMode == 1)
+			{
+				if (CICAbs(pt.x - last.x) < 2 && CICAbs(pt.y - last.y) < 2)
+					continue;
+			}
+			else
+			{
+				if (!GetSkipPoint(&decoder->fSkip, pt.x, pt.y))
+					continue;
+				pt = decoder->fSkip.fOut;
+			}
+			last = pt;
+			if (decoder->fSink != nil)
+				decoder->fSink(kInkPoint, &pt, decoder->fRefCon);
+		}
+		if (tag != 7)
+			continue;
+		InkPoint end;
+		end.x = (short) (decoder->fSegEndX >> 10);
+		end.y = (short) (decoder->fSegEndY >> 10);
+		if (decoder->fMode == 3)
+		{
+			if (GetSkipPoint(&decoder->fSkip, end.x, end.y))
+			{
+				end = decoder->fSkip.fOut;
+				if (decoder->fSink != nil)
+					decoder->fSink(kInkPoint, &end, decoder->fRefCon);
+			}
+			while (ClearSkipPoint(&decoder->fSkip))
+			{
+				end = decoder->fSkip.fOut;
+				if (decoder->fSink != nil)
+					decoder->fSink(kInkPoint, &end, decoder->fRefCon);
+			}
+		}
+		else if (decoder->fSink != nil)
+			decoder->fSink(kInkPoint, &end, decoder->fRefCon);
+		return true;
+	}
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   r u n
+------------------------------------------------------------------------------*/
+
+// ROM 0x0028240c DecoderOpen__FUsUlT1T2T1
+// A context made ready.  (The ROM allocates one and hands back a
+// handle; the host is given the room to work in, the context never
+// leaving the codec.)
+void
+DecoderOpen(CICDecoder* decoder, const void* data, long size,
+			InkPointProc sink, void* refCon, ULong mode)
+{
+	memset(decoder, 0, sizeof(*decoder));
+	decoder->fSink = sink;
+	decoder->fRefCon = refCon;
+	decoder->fData = (const UByte*) data;
+	decoder->fBitCount = (ULong) size * 8;
+	decoder->fMode = mode;
+	decoder->fFirst = 1;
+}
+
+
+// ROM 0x00282518 DecoderRun__FUl
+// The sink told the run has begun, then stroke after stroke until one
+// says the group has ended, each followed by the end-of-stroke word.
+Boolean
+DecoderRun(CICDecoder* decoder)
+{
+	if (decoder->fSink != nil && decoder->fSink(kInkBegin, nil, decoder->fRefCon) == 0)
+		return false;
+	decoder->fSkip.fStarted = 1;
+	decoder->fSkip.fCount = 0;
+	decoder->fSkip.fIndex = -1;
+	decoder->fSkip.fHalfCell = 4;
+	decoder->fSkip.fCellSize = 8;
+	short kind;
+	while (ReadNewStroke(decoder, &kind))
+	{
+		if (kind == kCICEndOfGroup)
+			return true;
+		if (kind == kCICLongStroke && !DecodeLongStroke(decoder))
+			break;
+		if (kind == kCICShortStroke && !DecodeShortStroke(decoder))
+			break;
+		if (decoder->fSink != nil)
+			decoder->fSink(kInkEndStroke, nil, decoder->fRefCon);
+	}
+	return false;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   c o d e c
 ------------------------------------------------------------------------------*/
@@ -527,13 +786,25 @@ TCICInkCodec::CanEncode(void) const
 }
 
 
+// ROM 0x001539c8 Decode__FP14CSStrokeHeaderUsPvPFsP6_POINTP4_DCC_s
+// The ROM's Decode, which is what CSExpandGroup and CSDraw reach the
+// codec through: a context opened over the block, run, and the sink
+// told when it is over.  The group is a mode rather than an index - 1
+// thins the points by hand and anything else by cells.
 Boolean
-TCICInkCodec::Decode(const void* /*data*/, long /*size*/, ULong /*group*/,
-					 InkPointProc /*sink*/, void* /*refCon*/) const
+TCICInkCodec::Decode(const void* data, long size, ULong group,
+					 InkPointProc sink, void* refCon) const
 {
-	// NOT YET: DecoderRun (0x00282518) - ReadNewStroke, DecodeLongStroke
-	// and DecodeShortStroke over the code books
-	return false;
+	CICDecoder decoder;
+	DecoderOpen(&decoder, data, size, sink, refCon, group == 1 ? 1 : 3);
+	Boolean ok = DecoderRun(&decoder);
+	if (sink != nil)
+		ok = sink(kInkEnd, nil, refCon) != 0 && ok;
+	if (decoder.fBookNumber == 1)
+		UnlockCodeBook(1);
+	else if (decoder.fBookNumber == 2 || decoder.fBookNumber == 3)
+		UnlockCodeBook(2);
+	return ok;
 }
 
 
