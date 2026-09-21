@@ -1050,6 +1050,73 @@ TestTransform()
 }
 
 
+
+// The nine places found on the stroke itself.
+static void
+TestRepar()
+{
+	CICEncoder e;
+	memset(&e, 0, sizeof(e));
+	e.fUnit = 1024;
+	e.fOne = 1;
+	// a straight stroke of nine points, ten tablet units apart
+	for (long i = 0; i < 9; i++)
+	{
+		InkPoint pt;
+		pt.x = (short) (i * 10);
+		pt.y = 0;
+		EXPECT(AddPointToOdata(&e, &pt) == 1);
+	}
+	EXPECT(e.fPointCount == 9);
+	EXPECT(e.fTrace[8].fArc == 80 * 1024);
+	ResetParam(&e);
+	// the nine places stop eight ninths of the way along, so the ratio
+	// that brings them back to the whole stroke is about nine eighths -
+	// exactly the stroke's length over the last place's distance, to
+	// twenty-four binary places
+	ULong ratio = Repar(&e.fTrace[8], &e.fTrace[0], e.fSamples, e.fResampled);
+	ULong want = (ULong) (((long long) e.fTrace[8].fArc << 24) / e.fSamples[8].fAt);
+	EXPECT(ratio == want);
+	EXPECT(ratio > (9UL << 24) / 8 && ratio < (9UL << 24) / 8 + (1UL << 16));
+	// and they land at the eighths of a straight stroke
+	EXPECT(e.fResampled[0].x == 0 && e.fResampled[0].y == 0);
+	EXPECT(e.fResampled[8].x == 80 * 1024 && e.fResampled[8].y == 0);
+	for (long i = 1; i < 8; i++)
+	{
+		long want = i * 10 * 1024;
+		EXPECT(e.fResampled[i].x >= want - 64 && e.fResampled[i].x <= want + 64);
+		EXPECT(e.fResampled[i].y == 0);
+	}
+
+	// a stroke that turns a corner: the ends are still exact, and the
+	// places walk round the corner in order
+	memset(&e, 0, sizeof(e));
+	e.fUnit = 1024;
+	e.fOne = 1;
+	static const short kX[] = { 0, 20, 40, 40, 40, 40 };
+	static const short kY[] = { 0,  0,  0, 20, 40, 60 };
+	for (long i = 0; i < 6; i++)
+	{
+		InkPoint pt;
+		pt.x = kX[i];
+		pt.y = kY[i];
+		EXPECT(AddPointToOdata(&e, &pt) == 1);
+	}
+	ResetParam(&e);
+	Repar(&e.fTrace[5], &e.fTrace[0], e.fSamples, e.fResampled);
+	EXPECT(e.fResampled[0].x == 0 && e.fResampled[0].y == 0);
+	EXPECT(e.fResampled[8].x == 40 * 1024 && e.fResampled[8].y == 60 * 1024);
+	Boolean along = true;
+	for (long i = 1; i < kCICSamples; i++)
+		if (e.fResampled[i].x < e.fResampled[i - 1].x
+			|| e.fResampled[i].y < e.fResampled[i - 1].y)
+			along = false;
+	EXPECT(along);
+	// the corner is at forty units of x, so no place passes it
+	for (long i = 0; i < kCICSamples; i++)
+		EXPECT(e.fResampled[i].x <= 40 * 1024);
+}
+
 int
 main()
 {
@@ -1081,6 +1148,7 @@ main()
 	TestEncodeStroke();
 	TestTrace();
 	TestTransform();
+	TestRepar();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

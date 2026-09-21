@@ -301,6 +301,14 @@ void	ResetParam(CICEncoder* encoder);
 void	StoreContext(CICEncoder* encoder);
 void	RestoreContext(CICEncoder* encoder);	// ROM 0x0028049c RestoreContext__FP4_CDC
 
+// ROM 0x00283424 Repar__FP6_ORG_PT1P6_RPR_PT3
+// The nine places found on the stroke itself: each sample's distance
+// along the curve, taken as the same fraction of the stroke's whole
+// length, and the point that far along the trace.  ==> the ratio of the
+// two lengths, as a fraction of twenty-four bits.
+ULong	Repar(const CICTracePoint* last, const CICTracePoint* first,
+			  const CICSample* samples, CICSample* out);
+
 // ROM 0x00283d9c Tracing__FlP6_RPR_P
 // The nine places measured along the curve they now sit on: how far
 // each is from the one before, and how far along it is altogether.

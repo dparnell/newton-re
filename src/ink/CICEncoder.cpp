@@ -388,6 +388,133 @@ RestoreContext(CICEncoder* encoder)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   n i n e   p l a c e s   o n   t h e   s t r o k e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00283424 Repar__FP6_ORG_PT1P6_RPR_PT3
+// Where the nine places the fitting looks at fall on the stroke itself.
+//
+// The places are spread along the *curve*, and the stroke is a chain of
+// straight steps, so the two are of different lengths.  The ratio of one
+// to the other is worked out first, to twenty-four binary places, by
+// long division - the whole part by taking the divisor away while it
+// will go, and then twelve rounds of two bits each.  Each place's
+// distance along the curve, multiplied by that ratio, says how far along
+// the stroke to look; the step that distance falls in is found by
+// walking the trace, and the point is that far into it.
+//
+// Dividing into the step is a long division too, and it is done on the
+// step's own two sides at once: the quotient is never formed, its bits
+// are used as they come out to add a halving of each side.  The first
+// eleven bits are written out one after another and the rest go round a
+// loop until both sides have been shifted away to nothing.
+//
+// The first and last places are the stroke's own ends, taken as they
+// are.  ==> the ratio, which is what tells the caller how far the fit
+// has stretched the curve.
+ULong
+Repar(const CICTracePoint* last, const CICTracePoint* first,
+	  const CICSample* samples, CICSample* out)
+{
+	out[0].x = first->x;
+	out[0].y = first->y;
+	out[8].x = last->x;
+	out[8].y = last->y;
+
+	long total = samples[8].fAt;
+	long remainder = last->fArc;
+	ULong ratio = 0;
+	while (total < remainder)
+	{
+		remainder -= total;
+		ratio++;
+	}
+	for (long round = 0; round < 12; round++)
+	{
+		remainder *= 2;
+		ratio *= 2;
+		if (total < remainder)
+		{
+			remainder -= total;
+			ratio++;
+		}
+		remainder *= 2;
+		ratio *= 2;
+		if (total < remainder)
+		{
+			remainder -= total;
+			ratio++;
+		}
+	}
+
+	const CICTracePoint* at = first + 1;
+	for (long i = 1; i < 8; i++)
+	{
+		long along = samples[i].fAt;
+		// the distance times the ratio, a byte of it at a time
+		long want = ((long) ratio >> 24) * along
+				  + ((long) (((ratio & 0xff0000) >> 16) * (ULong) along) >> 8)
+				  + ((long) (((ratio & 0xff00) >> 8) * (ULong) along) >> 16)
+				  + ((long) ((ratio & 0xff) * (ULong) along) >> 24);
+		while (at->fArc <= want)
+			at++;
+		long length = at->fLength;
+		long into = length - (at->fArc - want);
+		long dx = at->dx;
+		long dy = at->dy;
+		long sideX = dx < 0 ? -dx : dx;
+		long sideY = dy < 0 ? -dy : dy;
+		long partX = 0;
+		long partY = 0;
+		if (length <= into)
+		{
+			into -= length;
+			partY = sideY;
+			partX = sideX;
+		}
+		for (long bit = 1; bit <= 10; bit++)
+		{
+			into *= 2;
+			if (length <= into)
+			{
+				into -= length;
+				partX += sideX >> bit;
+				partY += sideY >> bit;
+			}
+		}
+		sideX >>= 11;
+		sideY >>= 11;
+		do
+		{
+			into *= 2;
+			if (length <= into)
+			{
+				into -= length;
+				partX += sideX;
+				partY += sideY;
+			}
+			into *= 2;
+			if (length <= into)
+			{
+				into -= length;
+				partX += sideX >> 1;
+				partY += sideY >> 1;
+			}
+			sideX >>= 2;
+			sideY >>= 2;
+		} while (sideX != 0 || sideY != 0);
+		if (dx < 1)
+			partX = -partX;
+		if (dy < 1)
+			partY = -partY;
+		out[i].x = at[-1].x + partX;
+		out[i].y = at[-1].y + partY;
+	}
+	return ratio;
+}
+
+
 // ROM 0x00283d9c Tracing__FlP6_RPR_P
 // The places measured along the curve they now sit on: the distance from
 // each to the next, and how far along the whole thing that comes to.
