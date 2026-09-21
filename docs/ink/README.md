@@ -206,25 +206,53 @@ that starts exactly where the pen is - both steps nought - sets the
 width of the coordinates to eight but never sets the byte that says so,
 and writes whatever was in the register.
 
+The rest of it is the fitting.  `EncoderRun` (0x002804f8) tells the
+source to begin and then pulls points; a stroke of one point is a dot
+and goes out as a short stroke, and anything longer goes to
+`WriteLongStroke` (0x0027fffc), which grows the trace a point at a time
+while a curve will still go through it, puts it back to the last point
+that worked when one will not, fits again with no allowance at all -
+which always answers - writes that segment, moves the points after it
+down to the front of the trace, and begins again.
+
+`TestStrokeSeg` (0x0027fde0) is the fit itself.  Each try finds where
+the nine places fall on the stroke (`Repar` 0x00283424), turns those
+into the four numbers (`RFFT_9_4`), puts the four back into the nine
+places on the new curve (`RIFT_4_9`), and measures the nine against the
+stroke again (`Tracing` 0x00283d9c) so that the next try looks in better
+places.  It stops when the places it found and the places the curve puts
+them agree to within the allowance and the stroke is not stretched by
+more than about a sixteenth, or when the curve stops moving, or when
+there is nothing left to fit.
+
+`Repar` is the bridge between the two: the nine places are spread along
+the *curve* and the stroke is a chain of straight steps, so the ratio of
+the two lengths is worked out to twenty-four binary places by long
+division, each place's distance is multiplied by it a byte at a time,
+and the step that distance falls in is walked to.  Dividing into the
+step is a long division done on the step's two sides at once, the
+quotient never formed - its bits are used as they come out to add a
+halving of each side.
+
+`SegVectQuant` (0x0028279c) is the last touch.  The three numbers of a
+coordinate - where the segment ends and its two bends - have each been
+rounded to a whole step on their own, but the roundings are not
+independent: the decoder works the other two numbers out from all three
+at once, so a rounding that is worse on its own can come out better
+together.  All twenty-seven ways of nudging the three by one either way
+are tried against the fitted segment (`TryQuantVariant` 0x0028333c) and
+the nearest is kept.
+
+`TInkCodec::Encode` takes a *source* of points rather than a list of
+strokes, which is the ROM's own layering: its encoder is opened on such
+a proc too, and `GenericCSCompress` only puts `PGCGetPointProc` in place
+of the default one to read a list of `TStroke`s.  So the codec knows
+nothing about strokes, and neither does this area.
+
 ## NOT YET
 
-The rest of the encoder: how a stroke is cut into segments.
-`EncoderRun` (0x002804f8) pulls points from a callback and, once it has
-two, hands the stroke to `WriteLongStroke` (0x0027fffc) - a stroke of
-fewer than two points is the only one that goes out as a short one.
-`WriteLongStroke` adds points (`AddPointToOdata` 0x002802c4) while
-`TestStrokeSeg` (0x0027fde0) says a segment still fits, saving and
-restoring its state around each try (`StoreContext`, `RestoreContext`,
-`ResetParam`), and then `WriteSegment` (0x0028303c) writes the one it
-settled on.  Under `TestStrokeSeg` is the fitting itself: `Repar`
-(0x00283424) and the transform pair `RFFT_9_4_X`/`RIFT_4_9_X` and their
-y twins, which take nine points to four numbers and back, `MSQError`
-(0x002833c8), `SegVectQuant` (0x0028279c) and `TryQuantVariant`
-(0x0028333c).  Until those are reconstructed ink can be read, measured,
-scaled and stored, and a stroke can be written a point at a time by
-hand, but `TCICInkCodec::Encode` cannot yet make ink out of strokes.
-
-With it would come the rest: `TStrokesToInk`/`TStrokesToInkWord`
+Everything above the codec.  Ink can now be read and written; what is
+still missing is what the rest of the system does with it: `TStrokesToInk`/`TStrokesToInkWord`
 (0x00140608, 0x001404f0), `InkBounds` (0x001a3728),
 `MakeInkPoly`/`MakeInkWordPoly` (0x001a31bc, 0x001a3250), `SplitInkAt`
 and `MergeInk` (0x001a2c60, 0x001a2fc4 - both expand the ink to strokes,
