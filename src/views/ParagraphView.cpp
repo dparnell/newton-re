@@ -7,6 +7,7 @@
 */
 
 #include "ParagraphView.h"
+#include "Ink.h"
 #include "Hilites.h"
 #include "OSErrors.h"
 #include "StyleRuns.h"
@@ -968,6 +969,33 @@ TParagraphView::GetStyleAtOffset(long offset, long* run, long* offsetInRun)
 {
 	RefVar styles(GetStyles());
 	return ::GetStyleAtOffset(styles, offset, run, offsetInRun);
+}
+
+
+// ROM 0x00178210 GetInkRefAndBounds__14TParagraphViewFlP5TRect
+// The ink word at an offset and the box it is drawn in.  An ink word is
+// its own style - the 'inkWord binary sits in the styles array where a
+// font frame would - so the style at the offset is the ink itself when
+// there is ink there.
+//
+// The character's box comes out of OffsetToBounds, which is the line's
+// box: the word may be shorter than the line is tall, so the top is
+// moved down to the baseline less the word's own ascent and the bottom
+// to a word's height below that.
+Ref
+TParagraphView::GetInkRefAndBounds(long offset, Rect* bounds)
+{
+	RefVar style(GetStyleAtOffset(offset, nil, nil));
+	if (NOTNIL(style) && IsInkWord(style))
+	{
+		InkWordInfo info;
+		GetInkWordInfo(style, &info);
+		long line = FindLineContainingCharOffset(offset);
+		OffsetToBounds(offset, bounds);
+		bounds->top = (short) (fLines[line].fAscent + bounds->top - info.fScaledAscent);
+		bounds->bottom = (short) (bounds->top + info.fScaledHeight);
+	}
+	return style;
 }
 
 

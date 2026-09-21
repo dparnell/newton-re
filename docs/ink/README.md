@@ -260,7 +260,10 @@ proc and `GenericCSCompress` only puts `PGCGetPointProc` in place of the
 default one.  Points cross in whole tablet units, so they are multiplied
 by the tablet scale going in and divided coming out; both the ROM and
 this take the usual scale of eight as a shift, because `FixedMultiply`
-and `FixedDivide` overflow on a whole coordinate.
+and `FixedDivide` overflow on a whole coordinate.  Where the ink is to
+go is *not* in those units: a point read back is brought to pixels
+first, then scaled, and only then moved, so the offset `InkExpand`
+takes is in pixels like every other coordinate.
 
 `TStrokesToInk` (0x00140608) and `TStrokesToInkWord` (0x001404f0) are
 what the rest of the system calls.  Both move the strokes to the origin
@@ -300,18 +303,56 @@ an ink word made here is the right size and in the right place, but the
 line its short letters stand on is the bottom of it rather than where a
 reader would put it.
 
+## Ink as a shape
+
+Everything above ink passes writing about as a *shape frame*, which is
+what `views/DrawShape.h`'s `MakePolygonForm` (0x00191600) makes: the
+ROM's `Rstarterink` frame cloned, given a `viewBounds` and - the ink
+verb carrying no points of its own - an `ink` slot with the ink in it.
+`DrawOneShape` knows the class and draws it out of the box it was made
+in (`originalBounds`) and into the one it is to fill (`bounds`), which
+is `InkDrawInRect` (0x00140d14) and is how a sketch that has been
+resized stretches.  `MakeInkPoly` and `MakeInkWordPoly` (0x001a31bc,
+0x001a3250) make the two kinds from a list of strokes; the word's box is
+its own measurements rather than the strokes' box, so that a line of
+text can put it where it belongs.
+
+`ink/InkShapes.h` is the other side: `GetPolyAsTStrokes` (0x001a3340)
+expands a shape's ink at the place its bounds put it, and `AddInk`
+(0x001a2b70) hands a shape to the edit view it is to become a child of.
+
+The two editing operations both go all the way down to the strokes and
+back.  `SplitInkAt` (0x001a2c60) cuts a word at a caret: the x it is
+given is a coordinate of the view, so it is first put back into the
+ink's own coordinates - as far along the unscaled width as it is along
+the drawn one - and then each stroke goes to whichever side of the cut
+its middle is on.  Two things stop it, and both answer nil and change
+nothing: a stroke written right across the cut with slop to spare on
+both sides, and one side coming out empty.  `MergeInk` (0x001a2fc4) is
+the other way round, the second word's strokes moved up against the
+first's right edge and the two lists laid end to end.  Neither copies a
+stroke: `TArray::Clone` marks one as having another user, so the same
+stroke can be in the list it came from and in one of the two halves at
+once, and `DisposeTStrokes` - which releases rather than frees outright -
+gives all three lists back safely.
+
+A paragraph keeps its ink words in its text, as the character 0xf701
+with the `'inkWord` binary in the styles array where a font frame would
+be.  `NextInkIndex` (0x001a163c) walks the text for the next one and
+`TParagraphView::GetInkRefAndBounds` (0x00178210) answers the ink at an
+offset together with the box the view draws it in - the line's box with
+the top moved down to the baseline less the word's own ascent, because a
+word is usually shorter than the line is tall.  `GetInkAt` (0x001a170c)
+wraps that up as a shape, with the user's current pen rather than the
+word's.
+
 ## NOT YET
 
 The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which
 is what would read a word rather than just measure it.
 
-And everything that keeps ink for a view:
-`MakeInkPoly`/`MakeInkWordPoly`
-(0x001a31bc, 0x001a3250), `GetInkAt` (0x001a170c) and `NextInkIndex`,
-`SplitInkAt` and `MergeInk` (0x001a2c60, 0x001a2fc4 - both expand the ink
-to strokes, work on those, and compress the answer, which they can now
-do), `AddInk` (0x001a2b70), `TParagraphView::InsertInk` and
-`GetInkRefAndBounds`, `TEditView::HandleInk`, `TInkWordGlyph` (the glyph
-an ink word draws as in a line of text) and `TLiveInker` (the ink that
-follows the pen while it is still down, which is the other way the ROM's
-draw proc can draw - `InkerLine` with a pen of its own).
+And the rest of the view side: `TParagraphView::InsertInk`,
+`TEditView::HandleInk`, `TInkWordGlyph` (the glyph an ink word draws as
+in a line of text) and `TLiveInker` (the ink that follows the pen while
+it is still down, which is the other way the ROM's draw proc can draw -
+`InkerLine` with a pen of its own).

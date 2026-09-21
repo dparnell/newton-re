@@ -24,13 +24,14 @@
 				measurements scaled by the scale - which are what a line
 				of text is laid out from.
 
-	NOT YET RECONSTRUCTED: the stroke compression itself (the CIC
-	encoder and decoder, EncoderOpen/DecoderOpen and their code books,
-	ROM 0x0027f938 onwards), so ink can be carried about, measured and
-	scaled here but not made from strokes, expanded back into them, or
-	drawn.  Nor are the ink word's glyph (TInkWordGlyph), the live
-	inker (TLiveInker) and the ink a view keeps (AddInk, SplitInkAt,
-	MergeInk).
+	The stroke compression underneath is ink/CICCodec.h, reached
+	through the codec seam in ink/InkCodec.h; the glue between it and
+	the strokes the pen leaves is ink/InkStrokes.cpp, and ink as a
+	shape frame is ink/InkShapes.h.
+
+	NOT YET RECONSTRUCTED: the ink word's glyph (TInkWordGlyph, an ink
+	word drawn in a line of text) and the live inker (TLiveInker, the
+	ink that follows the pen).
 
 	Reconstructed from the MP2x00 US ROM (0x000dbebc-0x000dc314,
 	0x0013ffb8-0x00140310, 0x00140940); each function cites its origin.
@@ -172,11 +173,17 @@ Ref			MakeInkWordPoly(TStroke** strokes);						// ROM 0x001a3250 MakeInkWordPoly
 void		GetPackedInkWordInfoFromStrokes(TStroke** strokes, PackedInkWordInfo* packed);	// ROM 0x00140a4c GetPackedInkWordInfoFromStrokes__FPP7TStrokeP17PackedInkWordInfo
 
 
+// The character an ink word stands as in a paragraph's text (the ROM's
+// IsInkChar also takes 0xf700 and 0xf702, which are raw ink).
+const UniChar kInkWordChar = 0xf701;
+
+
 // How far outside the strokes themselves the ink reaches.
 const long kInkSlop = 2;
 
 
 // ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
+long		CountTStrokes(TStroke** strokes);						// ROM 0x001a3420 CountTStrokes__FPP7TStroke
 void		DisposeTStrokes(TStroke** strokes);
 
 

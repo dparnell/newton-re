@@ -197,6 +197,9 @@ public:
 	Boolean		SelectWordAt(Point pt);									// the word under the point selected (the ROM's aeDoubleTap case of RealDoCommand at 0x0016e688, over ScanWordStart/End 0x001a37d0/0x001a36b4)
 	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x00178748 GetStyleForInsertion__14TParagraphViewFlUcT2
 	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x001791a8 GetStyleAtOffset__14TParagraphViewFlPlT2
+	// The ink word at an offset, if the style there is one, and the box
+	// the view draws it in; nil when the character there is ordinary text.
+	Ref			GetInkRefAndBounds(long offset, Rect* bounds);			// ROM 0x00178210 GetInkRefAndBounds__14TParagraphViewFlP5TRect
 	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x001791f8 GetStylesOfRange__14TParagraphViewFlT1Uc
 	Ref			GetWriteableTextStylesArray(void);						// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
 	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar

@@ -1,0 +1,346 @@
+/*
+	File:		ink/InkShapes.cpp
+
+	Contains:	Ink as a shape frame, and the two editing operations over
+				one - InkShapes.h.
+
+				A shape is what the rest of the system passes writing
+				about: MakePolygonForm's ink verb over a viewBounds, with
+				the ink itself in an `ink` slot.  GetPolyAsTStrokes opens
+				one back up, expanding the ink at the place the bounds
+				put it, and SplitInkAt and MergeInk work on the strokes
+				and pack them up again - which is all a word being cut in
+				two at a caret, or two words being joined, really are.
+*/
+
+#include "InkShapes.h"
+#include "Stroke.h"
+#include "Objects.h"
+#include "ObjectHeap.h"
+#include "RichString.h"
+#include "Frames.h"
+#include "RSSymbols.h"
+#include "NewtonMemory.h"
+#include "Rects.h"
+#include "Ports.h"			// RoundFixed
+#include "Locale.h"			// GetPreference
+#include "DrawShape.h"		// MakePolygonForm, kInkVerb
+#include "View.h"
+#include "ViewFlags.h"		// clEditView
+#include "EditView.h"
+#include "ParagraphView.h"
+#include "NativeFunctions.h"
+#include "NewtonExceptions.h"
+#include "Unicode.h"
+
+
+/*------------------------------------------------------------------------------
+	A   s h a p e   t a k e n   a p a r t
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a3340 GetPolyAsTStrokes__FRC6RefVarUl
+// The strokes of an ink shape, put back where the shape's viewBounds say
+// they are.  The group is the thinning the codec is to use.
+TStroke**
+GetPolyAsTStrokes(RefArg form, ULong group)
+{
+	RefVar ink(GetProtoVariable(form, RSSYMink, nil));
+	if (ISNIL(ink))
+		return nil;
+	RefVar bounds(GetProtoVariable(form, RSSYMviewbounds, nil));
+	long x = RINT(GetFrameSlot(bounds, RSSYMleft));
+	long y = RINT(GetFrameSlot(bounds, RSSYMtop));
+	return InkExpand(ink, group, x, y);
+}
+
+
+/*------------------------------------------------------------------------------
+	A   s h a p e   g i v e n   t o   a   v i e w
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a2b70 AddInk__FP5TViewRC6RefVar
+// An ink shape made a child of an edit view.  The frame that comes in is
+// remade rather than used as it stands: the word's own pen size is what
+// the new one is given, and its bounds are taken from the old one's
+// viewBounds, which is where the caller has put it.
+void
+AddInk(TView* view, RefArg form)
+{
+	if (!view->DerivedFrom(clEditView))
+		return;
+	RefVar ink(GetProtoVariable(form, RSSYMink, nil));
+	InkWordInfo info;
+	GetInkWordInfo(ink, &info);
+	Rect box;
+	RefVar bounds(GetProtoVariable(form, RSSYMviewbounds, nil));
+	FromObject(bounds, box);
+	RefVar shape(MakePolygonForm(nil, 0, kInkVerb, box, (long) info.fPenSize));
+	SetFrameSlot(shape, RSSYMink, ink);
+	((TEditView*) view)->AddForm(shape);
+}
+
+
+/*------------------------------------------------------------------------------
+	A   w o r d   c u t   i n   t w o
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a2c60 SplitInkAt__FRC6RefVarlT2
+// An ink word cut at x, which is a coordinate of the view the shape sits
+// in: the word may have been scaled, so x is first put back into the
+// ink's own coordinates - as far along the unscaled width as it is along
+// the drawn one.
+//
+// Each stroke then goes to whichever side of the cut its middle is on,
+// and the two heaps are packed up as ink words of their own carrying the
+// original's scale and pen size.  Two things stop it: a stroke that
+// crosses the cut with slop to spare on both sides (a letter written
+// across it, which cannot be divided), and one side coming out empty.
+// Either way the answer is nil and nothing is changed.
+//
+// The strokes are not copied.  Clone marks one as having another user,
+// so the same stroke can be in the list it came from and in one of the
+// two heaps at once, and all three lists can be given back at the end.
+Ref
+SplitInkAt(RefArg form, long x, long slop)
+{
+	RefVar result;
+	Rect box;
+	RefVar bounds(GetProtoVariable(form, RSSYMviewbounds, nil));
+	FromObject(bounds, box);
+	RefVar ink(GetProtoVariable(form, RSSYMink, nil));
+	if (!IsInkWord(ink))
+		return result;
+
+	InkWordInfo info;
+	GetInkWordInfo(ink, &info);
+	x = box.left + (long) (((ULong) info.fWidth * (ULong) (x - box.left))
+						   / (ULong) (box.right - box.left));
+
+	TStroke** strokes = GetPolyAsTStrokes(form, 0);
+	if (strokes == nil)
+		return result;
+	Size size = GetPtrSize((Ptr) strokes);
+	TStroke** left = (TStroke**) NewPtrClear(size);
+	TStroke** right = (TStroke**) NewPtrClear(size);
+	newton_try
+	{
+		if (left != nil && right != nil)
+		{
+			long nLeft = 0;
+			long nRight = 0;
+			long lo = x - slop;
+			long hi = x + slop;
+			Boolean crossed = false;
+			for (long i = 0; strokes[i] != nil; i++)
+			{
+				TStroke* stroke = strokes[i];
+				long a = (short) RoundFixed(stroke->fBBox.left);
+				long b = (short) RoundFixed(stroke->fBBox.right);
+				if (lo > a && hi < b)
+				{
+					crossed = true;
+					break;
+				}
+				stroke->Clone();
+				if (x > ((a + b) >> 1))
+					left[nLeft++] = stroke;
+				else
+					right[nRight++] = stroke;
+			}
+			if (!crossed && nLeft != 0 && nRight != 0)
+			{
+				result = MakeArray(2);
+				RefVar half(MakeInkWordPoly(left));
+				RefVar halfInk(GetFrameSlot(half, RSSYMink));
+				halfInk = SetInkWordScale(halfInk, info.fScale);
+				halfInk = SetInkWordPenSize(halfInk, info.fPenSize);
+				SetArraySlot(result, 0, half);
+				half = MakeInkWordPoly(right);
+				halfInk = GetFrameSlot(half, RSSYMink);
+				halfInk = SetInkWordScale(halfInk, info.fScale);
+				halfInk = SetInkWordPenSize(halfInk, info.fPenSize);
+				SetArraySlot(result, 1, half);
+			}
+		}
+	}
+	newton_catch(exRootException)
+	{
+		// (whatever has been made so far is the answer; the ROM swallows
+		// an object-system exception here rather than let the strokes go
+		// unreturned)
+	}
+	end_try;
+	DisposeTStrokes(strokes);
+	DisposeTStrokes(right);
+	DisposeTStrokes(left);
+	return result;
+}
+
+
+/*------------------------------------------------------------------------------
+	T w o   w o r d s   j o i n e d
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a2fc4 MergeInk__FRC6RefVarT1
+// Two ink words put together.  The second's strokes are moved along so
+// that its left edge sits at the first's right, the two lists are laid
+// end to end, and the word that comes out carries the first one's scale
+// and pen size.
+//
+// The joined list holds the same strokes the two came out of rather than
+// copies, so it is emptied before being given back - its strokes belong
+// to the lists that are disposed above it.
+Ref
+MergeInk(RefArg first, RefArg second)
+{
+	RefVar result;
+	RefVar firstInk(GetProtoVariable(first, RSSYMink, nil));
+	RefVar secondInk(GetProtoVariable(second, RSSYMink, nil));
+	if (!IsInkWord(firstInk) || !IsInkWord(secondInk))
+		return result;
+
+	InkWordInfo info;
+	GetInkWordInfo(firstInk, &info);
+	TStroke** a = GetPolyAsTStrokes(first, 0);
+	TStroke** b = GetPolyAsTStrokes(second, 0);
+	Rect boxA;
+	Rect boxB;
+	InkBounds(a, &boxA);
+	InkBounds(b, &boxB);
+	OffsetStrokes(b, (long) ((ULong) (boxA.right - boxB.left) << 16), 0);
+	TStroke** both = (TStroke**) NewPtrClear((CountTStrokes(a) + CountTStrokes(b) + 1)
+											 * (long) sizeof(TStroke*));
+	if (a != nil && b != nil && both != nil)
+	{
+		long n = 0;
+		for (long i = 0; (both[n] = a[i]) != nil; i++)
+			n++;
+		for (long i = 0; (both[n] = b[i]) != nil; i++)
+			n++;
+		result = MakeInkWordPoly(both);
+		RefVar ink(GetFrameSlot(result, RSSYMink));
+		SetInkWordScale(ink, info.fScale);
+		SetInkWordPenSize(ink, info.fPenSize);
+	}
+	DisposeTStrokes(a);
+	DisposeTStrokes(b);
+	if (both != nil)
+		both[0] = nil;
+	DisposeTStrokes(both);
+	return result;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   i n k   i n   a   p a r a g r a p h
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a163c NextInkIndex__FRC6RefVarl
+// The next ink word in a paragraph's text after an offset.  An ink word
+// stands in the text as the character 0xf701, so the walk is simply for
+// the next one of those; ==> its offset, or -1 when the text runs out
+// first.
+long
+NextInkIndex(RefArg para, long index)
+{
+	long found = -1;
+	RefVar text(GetProtoVariable(para, RSSYMtext, nil));
+	if (IsString(text))
+	{
+		TRichString rich(text);
+		const UniChar* s = rich.GrabPtr();
+		ULong length = Ustrlen(s);
+		ULong i = (ULong) (index + 1);
+		if (i < length)
+		{
+			while (s[i] != 0)
+			{
+				found = (long) i;
+				if (s[i] == kInkWordChar)
+					break;
+				found = -1;
+				i++;
+			}
+		}
+	}
+	return found;
+}
+
+
+// ROM 0x001a170c GetInkAt__FP14TParagraphViewl
+// The ink word at an offset in a paragraph, as a shape frame placed
+// where the paragraph draws it.  The pen is the user's own rather than
+// the word's, which is how ink pulled out of a paragraph comes out at
+// the width the user is writing with now.
+Ref
+GetInkAt(TParagraphView* para, long offset)
+{
+	RefVar form;
+	Rect box;
+	RefVar ink(para->GetInkRefAndBounds(offset, &box));
+	if (!IsInkWord(ink))
+		ink = NILREF;
+	else if (NOTNIL(ink))
+	{
+		form = MakePolygonForm(nil, 0, kInkVerb, box, RINT(GetPreference(RSSYMuserpensize)));
+		SetFrameSlot(form, RSSYMink, ink);
+	}
+	return form;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   N e w t o n S c r i p t   f u n c t i o n s
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a015c FAddInk
+static Ref
+FAddInk(RefArg rcvr, RefArg view, RefArg form)
+{
+	AddInk(FailGetView(view), form);
+	return NILREF;
+}
+
+
+// ROM 0x001a0184 FSplitInkAt
+static Ref
+FSplitInkAt(RefArg rcvr, RefArg form, RefArg x, RefArg slop)
+{
+	return SplitInkAt(form, RINT(x), RINT(slop));
+}
+
+
+// ROM 0x001a01e0 FMergeInk
+static Ref
+FMergeInk(RefArg rcvr, RefArg first, RefArg second)
+{
+	return MergeInk(first, second);
+}
+
+
+// ROM 0x001a3a10 FNextInkIndex
+static Ref
+FNextInkIndex(RefArg rcvr, RefArg para, RefArg index)
+{
+	long next = NextInkIndex(para, ISNIL(index) ? -1 : RINT(index));
+	return next < 0 ? NILREF : MAKEINT(next);
+}
+
+
+// ROM 0x001a3a60 FGetInkAt
+static Ref
+FGetInkAt(RefArg rcvr, RefArg view, RefArg offset)
+{
+	return GetInkAt((TParagraphView*) FailGetView(view), RINT(offset));
+}
+
+
+void
+RegisterInkNatives(void)
+{
+	RegisterNativeFunction("FAddInk", (void*) FAddInk, 2);
+	RegisterNativeFunction("FSplitInkAt", (void*) FSplitInkAt, 3);
+	RegisterNativeFunction("FMergeInk", (void*) FMergeInk, 2);
+	RegisterNativeFunction("FNextInkIndex", (void*) FNextInkIndex, 2);
+	RegisterNativeFunction("FGetInkAt", (void*) FGetInkAt, 2);
+}

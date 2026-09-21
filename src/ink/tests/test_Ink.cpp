@@ -11,6 +11,7 @@
 #include "Ports.h"
 #include "Draw.h"
 #include "Regions.h"
+#include "InkShapes.h"
 #include "DrawShape.h"
 #include "Rects.h"
 #include "ROMConstants.h"
@@ -1302,7 +1303,7 @@ TestStrokeRoundTrip()
 	EXPECT(wordBack != nil && wordBack[0] != nil);
 
 	// the ink put down somewhere else moves with it
-	TStroke** moved = InkExpand(ink, 1, 8 * 100, 0);
+	TStroke** moved = InkExpand(ink, 1, 100, 0);
 	EXPECT(moved != nil && moved[0] != nil);
 	if (moved != nil && moved[0] != nil && back[0] != nil)
 	{
@@ -1532,6 +1533,104 @@ TestInkDraw()
 	ClosePort(&gDrawPort);
 }
 
+// A stroke of `n` points from (x0, y0) to (x1, y1), finished.
+static TStroke*
+MakeLine(long x0, long y0, long x1, long y1, long n)
+{
+	TStroke* stroke = TStroke::Make(0);
+	for (long i = 0; i <= n; i++)
+	{
+		TabPt tab;
+		tab.x = ToFixed(x0 + (x1 - x0) * i / n);
+		tab.y = ToFixed(y0 + (y1 - y0) * i / n);
+		tab.z = 0;
+		tab.p = 0;
+		stroke->AddPoint(&tab);
+	}
+	stroke->EndStroke();
+	return stroke;
+}
+
+
+// Ink as a shape: the frame a word is passed about in, taken apart
+// again, cut in two and put back together.
+static void
+TestInkShapes()
+{
+	InitializeParagraphCompression();
+
+	// two strokes with a clear gap between them
+	TStroke* list[3];
+	list[0] = MakeLine(10, 20, 30, 40, 10);
+	list[1] = MakeLine(60, 20, 80, 40, 10);
+	list[2] = nil;
+	RefVar form(MakeInkWordPoly(list));
+	EXPECT(NOTNIL(form));
+	RefVar ink(GetFrameSlot(form, RSSYMink));
+	EXPECT(IsInkWord(ink));
+	Rect box;
+	EXPECT(FromObject(RefVar(GetFrameSlot(form, RSSYMviewbounds)), box));
+
+	// the shape opened back up gives the strokes where the bounds say
+	TStroke** back = GetPolyAsTStrokes(form, 0);
+	EXPECT(back != nil);
+	EXPECT(CountTStrokes(back) == 2);
+	if (back != nil && CountTStrokes(back) == 2)
+	{
+		Rect where;
+		UnionBounds(back, &where);
+		// the bounds are the inked box, so the strokes themselves start
+		// the pen's slop inside them
+		EXPECT(where.left == box.left + kInkSlop);
+	}
+	DisposeTStrokes(back);
+
+	// cut between the two strokes: one each side
+	RefVar halves(SplitInkAt(form, (box.left + box.right) / 2, 2));
+	EXPECT(IsArray(halves) && Length(halves) == 2);
+	if (IsArray(halves) && Length(halves) == 2)
+	{
+		RefVar first(GetArraySlot(halves, 0));
+		RefVar second(GetArraySlot(halves, 1));
+		EXPECT(IsInkWord(RefVar(GetFrameSlot(first, RSSYMink))));
+		EXPECT(IsInkWord(RefVar(GetFrameSlot(second, RSSYMink))));
+		TStroke** left = GetPolyAsTStrokes(first, 0);
+		TStroke** right = GetPolyAsTStrokes(second, 0);
+		EXPECT(CountTStrokes(left) == 1);
+		EXPECT(CountTStrokes(right) == 1);
+		DisposeTStrokes(left);
+		DisposeTStrokes(right);
+
+		// and joined again it is one word of two strokes, as wide as
+		// the two of them
+		RefVar joined(MergeInk(first, second));
+		EXPECT(NOTNIL(joined));
+		RefVar joinedInk(GetFrameSlot(joined, RSSYMink));
+		EXPECT(IsInkWord(joinedInk));
+		TStroke** both = GetPolyAsTStrokes(joined, 0);
+		EXPECT(CountTStrokes(both) == 2);
+		DisposeTStrokes(both);
+		InkWordInfo whole;
+		InkWordInfo half;
+		GetInkWordInfo(joinedInk, &whole);
+		GetInkWordInfo(RefVar(GetFrameSlot(first, RSSYMink)), &half);
+		EXPECT(whole.fWidth > half.fWidth);
+	}
+	list[0]->Dispose();
+	list[1]->Dispose();
+
+	// a single stroke written right across the cut cannot be divided
+	TStroke* wide[2];
+	wide[0] = MakeLine(10, 20, 80, 40, 20);
+	wide[1] = nil;
+	RefVar oneWord(MakeInkWordPoly(wide));
+	Rect wideBox;
+	FromObject(RefVar(GetFrameSlot(oneWord, RSSYMviewbounds)), wideBox);
+	EXPECT(ISNIL(SplitInkAt(oneWord, (wideBox.left + wideBox.right) / 2, 2)));
+	wide[0]->Dispose();
+}
+
+
 int
 main()
 {
@@ -1576,6 +1675,7 @@ main()
 	TestStrokeRoundTrip();
 	TestStrokesToInk();
 	TestInkDraw();
+	TestInkShapes();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

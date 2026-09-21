@@ -42,15 +42,31 @@
 #include <string.h>
 
 
+// ROM 0x001a3420 CountTStrokes__FPP7TStroke
+// How many strokes a list holds.
+long
+CountTStrokes(TStroke** strokes)
+{
+	long n = 0;
+	if (strokes != nil)
+		while (strokes[n] != nil)
+			n++;
+	return n;
+}
+
+
 // ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
-// A list of strokes and the strokes in it given back.
+// A list of strokes and the strokes in it given back.  Dispose rather
+// than IDispose: a stroke is only really freed when the last user of it
+// lets go, which is what lets SplitInkAt put the same strokes in two
+// lists and give all three back.
 void
 DisposeTStrokes(TStroke** strokes)
 {
 	if (strokes == nil)
 		return;
 	for (long i = 0; strokes[i] != nil; i++)
-		strokes[i]->IDispose();
+		strokes[i]->Dispose();
 	DisposPtr((Ptr) strokes);
 }
 
@@ -354,8 +370,10 @@ struct StrokeSink
 	long		fStroke;		// the one being filled
 	TStroke*	fCurrent;
 	long		fCount;			// how many points it has taken
-	long		fOffsetX;		// where the ink is to be put
-	long		fOffsetY;
+	Fixed		fOffsetX;		// where the ink is to be put, in pixels
+	Fixed		fOffsetY;
+	Fixed		fScaleX;		// and what it is scaled by first
+	Fixed		fScaleY;
 	Boolean		fFailed;
 };
 
@@ -419,13 +437,25 @@ PGCStorePointProc(short what, const InkPoint* pt, void* refCon)
 	}
 	if (sink->fCurrent == nil)
 		return 0;
+	// the point comes in as whole tablet units: a negative one (the ink
+	// was written off the left or the top) is brought back to nought,
+	// and the rest is the tablet scale out, the scale asked for, and the
+	// place the ink is to go - in that order, all in 16.16 pixels.
 	TabPt tab;
-	long x = pt->x + sink->fOffsetX;
-	long y = pt->y + sink->fOffsetY;
-	tab.x = gTabScale.x == 0x80000 ? (Fixed) ((ULong) x << 13)
-								   : FixedDivide(ToFixed(x), gTabScale.x);
-	tab.y = gTabScale.y == 0x80000 ? (Fixed) ((ULong) y << 13)
-								   : FixedDivide(ToFixed(y), gTabScale.y);
+	Fixed x = ToFixed(pt->x);
+	Fixed y = ToFixed(pt->y);
+	if (x < 0)
+		x = 0;
+	if (y < 0)
+		y = 0;
+	x = gTabScale.x == 0x80000 ? (Fixed) ((ULong) x >> 3) : FixedDivide(x, gTabScale.x);
+	y = gTabScale.y == 0x80000 ? (Fixed) ((ULong) y >> 3) : FixedDivide(y, gTabScale.y);
+	if (sink->fScaleX != 0x10000)
+		x = FixedMultiply(x, sink->fScaleX);
+	if (sink->fScaleY != 0x10000)
+		y = FixedMultiply(y, sink->fScaleY);
+	tab.x = AddFixed(x, sink->fOffsetX);
+	tab.y = AddFixed(y, sink->fOffsetY);
 	tab.z = 0;
 	tab.p = 0;
 	if (sink->fCurrent->AddPoint(&tab) != 0)
@@ -461,8 +491,12 @@ InkExpand(RefArg ink, ULong group, long x, long y)
 	memset(&sink, 0, sizeof(sink));
 	sink.fStrokes = strokes;
 	sink.fRoom = kRoom;
-	sink.fOffsetX = x;
-	sink.fOffsetY = y;
+	// (CSExpandGroup, which is what InkExpand really is, always asks for
+	// a scale of one; only the generic form takes another)
+	sink.fOffsetX = (Fixed) ((ULong) x << 16);
+	sink.fOffsetY = (Fixed) ((ULong) y << 16);
+	sink.fScaleX = 0x10000;
+	sink.fScaleY = 0x10000;
 	codec->Decode(data, size, group, PGCStorePointProc, &sink);
 	if (sink.fFailed)
 	{

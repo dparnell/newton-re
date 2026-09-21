@@ -30,6 +30,7 @@
 #include "SoundSettings.h"
 #include "SystemNatives.h"
 #include "ConfigServer.h"
+#include "InkShapes.h"
 
 
 void
@@ -50,8 +51,9 @@ RegisterAllNatives(void)
 	RegisterKeyboardNatives();
 	RegisterApplicationNatives();
 
-	// the recogniser's units
+	// the recogniser's units, and the ink the pen leaves
 	RegisterUnitNatives();
+	RegisterInkNatives();
 
 	// the stores and soups
 	RegisterSoupNatives();
