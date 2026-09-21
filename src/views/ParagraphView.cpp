@@ -2149,6 +2149,146 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 }
 
 
+// ROM 0x0016a490 HiliteText__14TParagraphViewFlT1Uc
+// A range selected by its start and length.  (The ROM's is three
+// instructions that fall into MakeHilite, and they throw the flag they
+// were given away: an empty range always moves the caret.)
+void
+TParagraphView::HiliteText(long start, long length, Boolean /*caretOnEmpty*/)
+{
+	MakeHilite(start, start + length, true);
+}
+
+
+// ROM 0x00176bd4 HandleLineGesture__14TParagraphViewFlR6TPointT2
+// A line drawn up or down through the selected text changes its case:
+// up (angle 0) makes it upper case, down (180) lower case.  A line
+// gesture's angle is measured from the vertical - PtsToAngle divides dx
+// by dy, so a line straight up is 0 and one straight down is 180 - and
+// the editor also takes the two horizontal ones (90 and -90) and offers
+// them to its other children.  Only a paragraph that has a selection
+// takes one at all.
+//
+// A line drawn upwards is turned round first, so either way `from` is
+// the end at the top and `to` the end at the bottom.  The box of the
+// two has to touch the view (grown six pixels to the left), and then
+// each selection in turn is asked whether the line spans it: the line
+// must begin at or above the selection's top and end at or below its
+// bottom, and be no taller than three selections plus the slack - fifty
+// pixels at the least, and twelve more each way when the whole
+// paragraph is selected, since a line drawn over everything need not be
+// neat.
+//
+// What changes case is either the whole selection or just its first
+// character: the first character alone when the line's middle is within
+// six pixels of that character's box.  So a line drawn through the
+// first letter of a selected word capitalises the letter, and one drawn
+// through the middle of the word capitalises the word.  The text goes
+// back in through the same replace command any other edit uses, with
+// the styles it had, and the range is selected again afterwards.
+//
+// (host: the ROM replaces the range through DoInsertItems, the same path
+// a dropped item takes, carrying a canonicalTextAndStyles frame;
+// InsertStyledText is this reconstruction's equivalent - the same
+// aeReplaceText command with the same undo, and it takes the text and
+// the styles as they are.
+//
+// The ROM moves the two corners into the view's own coordinates, because
+// that is where it keeps a hilite's bounding box; this reconstruction's
+// SetupArea leaves the box where the region is, in the port's, so the
+// comparison is made there instead and the corners are left alone.  The
+// ROM's conversion is done to the caller's own points, so the next view
+// the editor offers the gesture to sees them already moved; that is not
+// reproduced here, but the turning round of a left-to-right line is,
+// since it is the caller's points the ROM swaps.)
+long
+TParagraphView::HandleLineGesture(long angle, Point& from, Point& to)
+{
+	// where the line's middle is, before either end is touched
+	Point mid;
+	mid.h = (short) ((from.h + to.h) / 2);
+	mid.v = (short) ((from.v + to.v) / 2);
+	RefVar first(FirstHilite());
+	long slack = NOTNIL(first) && IsCompletelyHilited(first) ? 12 : 0;
+	Rect grown = viewBounds;
+	grown.left = (short) (grown.left - 6);
+	if ((angle != 0 && angle != 180) || !Hilited())
+		return 0;
+	if (angle == 0)
+	{
+		Point swap = from;
+		from = to;
+		to = swap;
+	}
+	if (from.v >= to.v)
+		return 0;
+	Rect box;
+	box.left = from.h < to.h ? from.h : to.h;
+	box.right = from.h < to.h ? to.h : from.h;
+	box.top = from.v < to.v ? from.v : to.v;
+	box.bottom = from.v < to.v ? to.v : from.v;
+	if (!Overlaps(&grown, &box))
+		return 0;
+
+	long done = 0;
+	HiliteLoop loop(this);
+	while (loop.Next())
+	{
+		TParagraphHilite* hilite = (TParagraphHilite*) loop.fCurrent;
+		if (hilite == nil)
+			continue;
+		SetupArea(hilite);		// (the ROM leaves this to the drawing, which has happened by the time a pen gesture arrives)
+		Rect hbox = hilite->fBounds;
+		hbox.left = (short) (hbox.left - 6);
+		long reach = (hilite->fBounds.bottom - hilite->fBounds.top) * 3 + slack * 2;
+		if (reach < 50)
+			reach = 50;
+		if (!Overlaps(&hbox, &box))
+			continue;
+		// the line has to cover the selection, and not by too much
+		if (from.v > hilite->fBounds.top)
+			continue;
+		if (hilite->fBounds.bottom > to.v || to.v - from.v > reach)
+			continue;
+
+		long start = hilite->fStart;
+		long length = hilite->fEnd - start;
+		// the selection and the character after it (the ROM copies one
+		// past the range, and terminates the copy itself)
+		UniChar* chars = new UniChar[length + 1];
+		RefVar textRef(Text());
+		TRichString rich(textRef);
+		BlockMove(rich.GrabPtr() + start, chars, (length + 1) * sizeof(UniChar));
+		rich.ReleasePtr();
+		long lead = 0;
+		long copied = (long) Ustrlen(chars);
+		while (IsWhiteSpace(chars[lead]) && lead < copied)
+			lead++;
+		// the whole selection, or just its first character when the
+		// line's middle is over that character's box
+		long count = length;
+		Rect firstChar;
+		OffsetToBounds(start + lead, &firstChar);
+		long right = firstChar.right > firstChar.left + 6 ? firstChar.right : firstChar.left + 6;
+		if (mid.h >= firstChar.left - 6 && right >= mid.h)
+			count = lead + 1;
+		chars[count] = 0;
+		if (angle == 0)
+			UppercaseText(chars, 0x7fffffff);
+		else
+			LowercaseText(chars, 0x7fffffff);
+		RefVar styles(GetStylesOfRange(start, length, false));
+		InsertStyledText((ULong) start, chars, (ULong) count, styles, RefVar(NILREF), 0, (ULong) count, false);
+		HiliteText(start, length, true);
+		delete[] chars;
+		gRootView->fDirtyFlag = true;
+		done = 1;
+		break;
+	}
+	return done;
+}
+
+
 // ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
 // A caret gesture offered to the paragraph.  Its point has to be within
 // the view grown by the height of the caret's arms - a caret drawn just

@@ -25,13 +25,12 @@
 				(AdjustStyles), the inverse posted for undo (consecutive
 				keys merged by AddKeyToCurrUndo), the caret moved, the lines
 				laid out again (RangeChanged).  NOT YET RECONSTRUCTED: the
-				hilites (a selection typed over), ink words, the recogniser's
-				word handling and the line gesture (the scrub and the caret
-				are here: HandleScrub, ScrubLines, ScrubWords, HandleCaret,
-				InsertHorizontalSpace, InsertVerticalSpace,
-				CheckAndDoJoin), the correction
-				info, the other edit commands (styles changed, cut and
-				paste), the tab stops
+				hilites (a selection typed over), ink words and the
+				recogniser's word handling (the pen gestures are here:
+				HandleScrub, ScrubLines, ScrubWords, HandleCaret,
+				InsertHorizontalSpace, InsertVerticalSpace, CheckAndDoJoin,
+				HandleLineGesture), the correction info, the other edit
+				commands (styles changed, cut and paste), the tab stops
 				(tabs draw as characters), the text objects (each line is
 				laid out from the text when drawn), the bounds recalculation
 				of vCalculateBounds paragraphs (the lines are all laid out;
@@ -125,6 +124,8 @@ public:
 	virtual long	HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x00173fac HandleScrub__14TParagraphViewFRC5TRectlP11TUnitPublicUc
 	virtual long	HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 								Point& armB, Point& tail);			// ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
+	virtual long	HandleLineGesture(long angle, Point& from, Point& to);	// ROM 0x00176bd4 HandleLineGesture__14TParagraphViewFlR6TPointT2
+	virtual void	HiliteText(long start, long length, Boolean caretOnEmpty);	// ROM 0x0016a490 HiliteText__14TParagraphViewFlT1Uc
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
 	Ref			Text(void);												// ROM 0x00181004 Text__14TParagraphViewFv

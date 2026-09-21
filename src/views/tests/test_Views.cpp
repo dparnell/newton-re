@@ -2268,6 +2268,85 @@ TestDatesDrawing()
 // The caret gesture: a paragraph handed the corners of a caret drawn
 // over it.  HandleCaret is what TEditView::HandleCaret reaches through
 // the page; here it is called directly, so no pen is needed.
+// The view's text, compared exactly - NewtonScript's StrEqual ignores
+// case, which is the only thing the line gesture changes.
+static Boolean
+TextIs(TParagraphView* view, const char* expect)
+{
+	RefVar text(view->Text());
+	if (ISNIL(text))
+		return false;
+	const UniChar* chars = (const UniChar*) BinaryData(text);
+	for (long i = 0; ; i++)
+	{
+		if (chars[i] != (UniChar) (unsigned char) expect[i])
+			return false;
+		if (expect[i] == 0)
+			return true;
+	}
+}
+
+// The line gesture: a line drawn up through the selected text puts it in
+// upper case, one drawn down in lower case, and a line over the first
+// letter alone takes that letter only.
+static void
+TestLineGesture()
+{
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxLg := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 200, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"one two three\"})");
+	EXPECT(p != nil && p->TextLength() == 13);
+	Refresh();
+
+	// "two" selected, and the line's box around it
+	Rect box;
+	p->OffsetToBounds(4, &box);
+	short wordLeft = box.left;
+	p->OffsetToBounds(7, &box);
+	short wordRight = box.left;
+	short above = (short) (p->fLines[0].fBounds.top - 2);
+	short below = (short) (p->fLines[0].fBounds.bottom + 2);
+	p->MakeHilite(4, 7, false);
+	Refresh();
+
+	// drawn upwards through the middle of the word: the word goes up
+	Point from, to;
+	from.h = (short) ((wordLeft + wordRight) / 2);	from.v = below;
+	to.h = from.h;								to.v = above;
+	EXPECT(p->HandleLineGesture(0, from, to) == 1);
+	EXPECT(TextIs(p, "one TWO three"));
+
+	// and drawn downwards through it again: back to lower case
+	from.h = (short) ((wordLeft + wordRight) / 2);	from.v = above;
+	to.h = from.h;								to.v = below;
+	EXPECT(p->HandleLineGesture(180, from, to) == 1);
+	EXPECT(TextIs(p, "one two three"));
+
+	// over the first letter alone: only the letter goes up
+	from.h = (short) (wordLeft + 1);	from.v = below;
+	to.h = from.h;						to.v = above;
+	EXPECT(p->HandleLineGesture(0, from, to) == 1);
+	EXPECT(TextIs(p, "one Two three"));
+
+	// a line that does not span the selection does nothing
+	Eval("SetValue(ctxLg, 'text, \"one two three\")");
+	Refresh();
+	p->MakeHilite(4, 7, false);
+	Refresh();
+	from.h = (short) ((wordLeft + wordRight) / 2);	from.v = (short) (above + 6);
+	to.h = from.h;								to.v = (short) (above + 8);
+	EXPECT(p->HandleLineGesture(0, from, to) == 0);
+	EXPECT(TextIs(p, "one two three"));
+
+	// and neither does one over a paragraph with nothing selected
+	p->RemoveAllHilites();
+	Refresh();
+	from.h = (short) ((wordLeft + wordRight) / 2);	from.v = below;
+	to.h = from.h;								to.v = above;
+	EXPECT(p->HandleLineGesture(0, from, to) == 0);
+
+	Eval("RemoveView(GetRoot(), ctxLg)");
+	Refresh();
+}
+
 static void
 TestCaretGesture()
 {
@@ -3344,6 +3423,7 @@ main()
 		TestTrailingReturn();
 		TestScrubbing();
 		TestCaretGesture();
+		TestLineGesture();
 		TestEffects();
 	}
 	newton_catch_all

@@ -889,10 +889,44 @@ the last character steps forward one) and the first run of white space
 between them goes, however long it is: a join over "one   two" takes all
 three spaces, and one over a word takes nothing.  Joining two *ink* words
 instead - both characters 0xf701, the ink word character of the three the
-ROM's `IsInkChar` takes - is NOT YET, and so is the line
-gesture (`aeLine`), which in a paragraph is the case-change gesture and
-wants `DoInsertItems` and `GetStylesOfRange`.
-Nor are the shape and word domains above this one, nor
+ROM's `IsInkChar` takes - is NOT YET.
+
+## The line gesture
+
+A line (`aeLine`, two corners and nothing between them) carries the slope
+of those two corners, and a line gesture's angle is measured *from the
+vertical*: `PtsToAngle` divides dx by dy, so a line drawn straight up is
+0 and one drawn straight down is 180.  `ValidLineGesture` (0x000ab6dc)
+takes only the four square ones - 0, 180, 90 and -90 - and
+`TEditView::HandleLineGesture` (0x000ab674) offers the line, with its two
+corners, to each visible child that holds data.
+
+In a paragraph (`TParagraphView::HandleLineGesture` 0x00176bd4) it is the
+case-change gesture, and only the two vertical angles mean anything: a
+line drawn **up** through the selected text puts it in upper case, one
+drawn **down** in lower case.  The paragraph must already have a
+selection.
+
+A line drawn upwards is turned round first, so either way the first
+corner is the end at the top and the second the end at the bottom.  The
+box of the two has to touch the view (grown six pixels to the left), and
+then each selection in turn is asked whether the line spans it: the line
+must begin at or above the selection's top and end at or below its
+bottom, and be no taller than three selections plus the slack - fifty
+pixels at the least, and twelve more each way when the whole paragraph is
+selected, since a line drawn over everything need not be neat.
+
+What changes case is either the whole selection or just its first
+character: the first character alone when the line's middle is within six
+pixels of that character's box.  So a line through the first letter of a
+selected word capitalises the letter, and one through the middle of the
+word capitalises the word.  The text goes back in through the same
+aeReplaceText command any other edit uses, with the styles
+`GetStylesOfRange` answers, and the range is selected again afterwards
+(`HiliteText` 0x0016a490, three instructions that fall into `MakeHilite`
+and throw away the flag they were given).
+
+NOT YET: the shape and word domains above this one, nor
 `ArbitrateGraphicsWords`, the inker and ink
 (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
