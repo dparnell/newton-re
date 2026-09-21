@@ -177,6 +177,40 @@ Boolean	ReadShortStroke(CICDecoder* decoder);
 Boolean	DecodeShortStroke(CICDecoder* decoder);
 
 
+// The encoder's context (the CIC library's _CDC; as with the decoder's,
+// the fields are the ROM's but the offsets are not).
+struct CICEncoder
+{
+	UByte*		fOut;			// +0x38    where the bits go
+	ULong		fError;			// +0x3c    what went wrong (a halfword)
+	ULong		fBitLimit;		// +0xdfc   how many bits there is room for
+	ULong		fHighWater;		// +0xe00   the furthest the writer has got
+	ULong		fBitPos;		// +0xe04   and where it is now
+};
+
+// What the encoder puts in fError.
+const ULong kCICNoRoom		= 5;
+const ULong kCICNoBuffer	= 15;
+
+
+// ROM 0x00282aa0 PutBits__FP4_CDCUlUs
+// n bits of a value written where the writer has got to, least
+// significant first.
+Boolean	PutBits(CICEncoder* encoder, ULong value, ULong n);
+
+// ROM 0x00282bb8 FindCodeWord__FsUsP9_CODEWORD
+// Which entry of a code book's table holds a value, or -1.
+long	FindCodeWord(short value, ULong count, const void* table);
+
+// ROM 0x00282c04 EncodeWord_OLD__FP4_CDCsP10_CODETABLE
+// A value written through one of a book's tables, escapes and all.
+Boolean	EncodeWord_OLD(CICEncoder* encoder, short value, const void* table);
+
+// ROM 0x00282d38 EncodeWord_NEW__FP4_CDCsP9_CODEWORD
+// And through one of the static ones.
+Boolean	EncodeWord_NEW(CICEncoder* encoder, short value, const unsigned short* table);
+
+
 // ROM 0x0028153c GetSkipPoint__FP7tag_SKPsT2
 // A point offered to the thinner.  ==> whether one has come out the far
 // end, which is then in fOut.

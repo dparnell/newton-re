@@ -6,6 +6,7 @@ add_library(ink STATIC
     Ink.cpp
     InkCodec.cpp
     CICDecoder.cpp
+    CICEncoder.cpp
     CICCodeBook.cpp
     CICTables.cpp
 )

@@ -707,6 +707,87 @@ TestSkipPoints()
 	EXPECT(skip.fIndex == 2 && skip.fPoints[0].x == 12);
 }
 
+
+// The bit writer and the word encoders, against the readers.
+static void
+TestEncodeWord()
+{
+	// what PutBits writes, GetNBit reads back
+	UByte bytes[64];
+	memset(bytes, 0xa5, sizeof(bytes));		// (the writer only disturbs the bits it writes)
+	CICEncoder e;
+	memset(&e, 0, sizeof(e));
+	e.fOut = bytes;
+	e.fBitLimit = sizeof(bytes) * 8;
+	static const ULong kValues[] = { 1, 0, 3, 0x55, 0x1ff, 0xffff, 7, 0x3ffff };
+	static const ULong kWidths[] = { 1, 1, 2,    8,     9,     16, 3,     18 };
+	for (long i = 0; i < 8; i++)
+		EXPECT(PutBits(&e, kValues[i], kWidths[i]));
+	EXPECT(e.fBitPos == 1 + 1 + 2 + 8 + 9 + 16 + 3 + 18);
+	EXPECT(e.fHighWater == e.fBitPos);
+	CICDecoder d;
+	memset(&d, 0, sizeof(d));
+	d.fData = bytes;
+	d.fBitCount = e.fBitPos;
+	for (long i = 0; i < 8; i++)
+		EXPECT(GetNBit(&d, kWidths[i]) == kValues[i]);
+	EXPECT(d.fError == 0);
+
+	// and it will not write past the end
+	memset(&e, 0, sizeof(e));
+	e.fOut = bytes;
+	e.fBitLimit = 10;
+	EXPECT(PutBits(&e, 0x3ff, 10));
+	EXPECT(!PutBits(&e, 1, 1) && e.fError == kCICNoRoom);
+	e.fOut = nil;
+	EXPECT(!PutBits(&e, 1, 1) && e.fError == kCICNoBuffer);
+
+	// a value through a book's table and back
+	InitializeParagraphCompression();
+	CICDecoder book;
+	memset(&book, 0, sizeof(book));
+	book.fBookNumber = 1;
+	EXPECT(DcdrSelectCodeBook(&book));
+	const void* table = book.fTables[0];
+	EXPECT(CodeTableBaseUp(table) == 307 && CodeTableBaseDown(table) == -802);
+	static const short kWords[] = { 0, 1, -1, 5, -5, 306, -801, 307, -802, 500, -1000, 2000, -3000 };
+	for (long i = 0; i < 13; i++)
+	{
+		memset(&e, 0, sizeof(e));
+		e.fOut = bytes;
+		e.fBitLimit = sizeof(bytes) * 8;
+		EXPECT(EncodeWord_OLD(&e, kWords[i], table));
+		memset(&d, 0, sizeof(d));
+		d.fData = bytes;
+		d.fBitCount = e.fBitPos;
+		short got = 0;
+		EXPECT(DecodeWord_OLD(&d, table, &got));
+		EXPECT(got == kWords[i]);
+		EXPECT(d.fBitPos == e.fBitPos);
+	}
+
+	// and through the static tables
+	static const short kKinds[] = { kCICLongStroke, kCICShortStroke, kCICEndOfGroup };
+	for (long i = 0; i < 3; i++)
+	{
+		memset(&e, 0, sizeof(e));
+		e.fOut = bytes;
+		e.fBitLimit = sizeof(bytes) * 8;
+		EXPECT(EncodeWord_NEW(&e, kKinds[i], kInkStrokeCodes));
+		memset(&d, 0, sizeof(d));
+		d.fData = bytes;
+		d.fBitCount = e.fBitPos;
+		short got = -1;
+		EXPECT(DecodeWord_NEW(&d, kInkStrokeCodes, &got) && got == kKinds[i]);
+	}
+	memset(&e, 0, sizeof(e));
+	e.fOut = bytes;
+	e.fBitLimit = sizeof(bytes) * 8;
+	EXPECT(!EncodeWord_NEW(&e, 99, kInkStrokeCodes));		// no such word
+	EXPECT(EncodeWord_NEW(&e, 7, kInkFormatCodes));
+	EXPECT(EncodeWord_NEW(&e, 8, kInkFormatCodes));
+}
+
 int
 main()
 {
@@ -734,6 +815,7 @@ main()
 	TestSegment();
 	TestSkipPoints();
 	TestDecodeRun();
+	TestEncodeWord();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");
