@@ -249,15 +249,54 @@ a proc too, and `GenericCSCompress` only puts `PGCGetPointProc` in place
 of the default one to read a list of `TStroke`s.  So the codec knows
 nothing about strokes, and neither does this area.
 
+## Strokes, ink and the screen (`Ink.h`, `InkStrokes.cpp`)
+
+`InkCompress` and `InkExpand` are where the strokes and the codec meet,
+and the only part of this area that knows what a stroke is.
+`PGCGetPointProc` hands the codec the points of a list of `TStroke`s and
+`PGCStorePointProc` builds strokes out of the ones the decoder gives
+back - the ROM's own arrangement, since its codec is opened on a point
+proc and `GenericCSCompress` only puts `PGCGetPointProc` in place of the
+default one.  Points cross in whole tablet units, so they are multiplied
+by the tablet scale going in and divided coming out; both the ROM and
+this take the usual scale of eight as a shift, because `FixedMultiply`
+and `FixedDivide` overflow on a whole coordinate.
+
+`TStrokesToInk` (0x00140608) and `TStrokesToInkWord` (0x001404f0) are
+what the rest of the system calls.  Both move the strokes to the origin
+before packing them - ink is kept where it was drawn, not where it is to
+go - and answer the box the strokes came from, grown by the two pixels
+the pen spills outside them (`InkBounds` 0x001a3728 is that growing on
+its own).  A word gets one more step: `ScaleStrokesForInkWord`
+(0x00140318) brings a word written larger than a line of text can hold
+down to fit - two hundred and forty pixels across and sixty down are the
+most, and whichever wants the smaller scale is the one used, so the word
+keeps its shape - and the word's box then gets the user's pen width on
+its bottom and right.
+
+`InkDraw` (0x00140cd0) walks a block of ink into the current port: the
+first point of a stroke moves the pen and the rest are lines from it.
+`InkDrawScaled` is the ROM's `GenericCSDraw`, which takes the place and
+the scale as 16.16 values.  The ROM keeps twenty points back at a time
+and draws them in one go, which saves calls and nothing else.
+
 ## NOT YET
 
-Everything above the codec.  Ink can now be read and written; what is
-still missing is what the rest of the system does with it: `TStrokesToInk`/`TStrokesToInkWord`
-(0x00140608, 0x001404f0), `InkBounds` (0x001a3728),
-`MakeInkPoly`/`MakeInkWordPoly` (0x001a31bc, 0x001a3250), `SplitInkAt`
-and `MergeInk` (0x001a2c60, 0x001a2fc4 - both expand the ink to strokes,
-work on those, and compress the answer), `AddInk` (0x001a2b70),
-`TParagraphView::InsertInk` and `GetInkRefAndBounds`,
-`TEditView::HandleInk`, `TInkWordGlyph` (the glyph an ink word draws as
-in a line of text) and `TLiveInker` (the ink that follows the pen while
-it is still down).
+An ink word's measurements.  `GetPackedInkWordInfoFromStrokes`
+(0x00140a4c) works the eight bytes out from the strokes themselves - the
+width and height of their box, the ascent and x-height from
+`WRecFindBaseline`, the scale from the `inkWordScaling` preference and
+the pen from `userPenSize` - and that baseline finder belongs to the word
+recogniser, which is not here.  So an ink word made by `InkCompress`
+carries nothing but nought after its strokes, and has to be told its
+size by whoever makes it.
+
+And everything that keeps ink for a view: `MakeInkPoly`/`MakeInkWordPoly`
+(0x001a31bc, 0x001a3250), `GetInkAt` (0x001a170c) and `NextInkIndex`,
+`SplitInkAt` and `MergeInk` (0x001a2c60, 0x001a2fc4 - both expand the ink
+to strokes, work on those, and compress the answer, which they can now
+do), `AddInk` (0x001a2b70), `TParagraphView::InsertInk` and
+`GetInkRefAndBounds`, `TEditView::HandleInk`, `TInkWordGlyph` (the glyph
+an ink word draws as in a line of text) and `TLiveInker` (the ink that
+follows the pen while it is still down, which is the other way the ROM's
+draw proc can draw - `InkerLine` with a pen of its own).
