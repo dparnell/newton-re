@@ -788,6 +788,108 @@ TestEncodeWord()
 	EXPECT(EncodeWord_NEW(&e, 8, kInkFormatCodes));
 }
 
+
+// A stroke written by the encoder and read back by the decoder.
+static void
+TestEncodeStroke()
+{
+	InitializeParagraphCompression();
+	UByte bytes[256];
+	memset(bytes, 0, sizeof(bytes));
+	CICEncoder e;
+	memset(&e, 0, sizeof(e));
+	e.fOut = bytes;
+	e.fBitLimit = sizeof(bytes) * 8;
+	e.fBookNumber = 1;
+	e.fFirst = 1;
+	EXPECT(EcdrSelectCodeBook(&e));
+	EXPECT(e.fStep == 0x800 && e.fTables[0] == gCodeBook);
+
+	// a stroke of three points.  The writing book's step is two tablet
+	// units, so only even ones come back exactly.
+	static const short kX[] = { 40, 46, 52 };
+	static const short kY[] = { 60, 64, 60 };
+	for (long i = 0; i < 3; i++)
+	{
+		e.fTrace[i].x = kX[i] * 1024;
+		e.fTrace[i].y = kY[i] * 1024;
+	}
+	e.fPointCount = 3;
+	EXPECT(WriteNewStroke(&e, kCICShortStroke));
+	EXPECT(e.fPenX == 40 * 1024 && e.fPenY == 60 * 1024);
+	EXPECT(WriteShortStroke(&e));
+	EXPECT(e.fPenX == 52 * 1024 && e.fPenY == 60 * 1024);
+	EXPECT(WriteNewStroke(&e, kCICEndOfGroup));
+	EXPECT(e.fError == 0);
+	long size = (long) ((e.fBitPos + 7) / 8);
+
+	gPointCount = 0;
+	gBegins = gEnds = gStrokeEnds = 0;
+	EXPECT(gCICInkCodec.Decode(bytes, size, 1, CollectAll, nil));
+	EXPECT(gBegins == 1 && gEnds == 1 && gStrokeEnds == 1);
+	EXPECT(gPointCount == 3);
+	for (long i = 0; i < gPointCount && i < 3; i++)
+		EXPECT(gPoints[i].x == kX[i] && gPoints[i].y == kY[i]);
+
+	// two strokes, the second written as a step from where the first
+	// left off
+	memset(bytes, 0, sizeof(bytes));
+	memset(&e, 0, sizeof(e));
+	e.fOut = bytes;
+	e.fBitLimit = sizeof(bytes) * 8;
+	e.fBookNumber = 1;
+	e.fFirst = 1;
+	EXPECT(EcdrSelectCodeBook(&e));
+	e.fTrace[0].x = 10 * 1024;	e.fTrace[0].y = 10 * 1024;
+	e.fTrace[1].x = 20 * 1024;	e.fTrace[1].y = 10 * 1024;
+	e.fPointCount = 2;
+	EXPECT(WriteNewStroke(&e, kCICShortStroke) && WriteShortStroke(&e));
+	e.fTrace[0].x = 100 * 1024;	e.fTrace[0].y = 50 * 1024;
+	e.fTrace[1].x = 100 * 1024;	e.fTrace[1].y = 70 * 1024;
+	e.fPointCount = 2;
+	EXPECT(WriteNewStroke(&e, kCICShortStroke) && WriteShortStroke(&e));
+	EXPECT(WriteNewStroke(&e, kCICEndOfGroup));
+	size = (long) ((e.fBitPos + 7) / 8);
+
+	gPointCount = 0;
+	gBegins = gEnds = gStrokeEnds = 0;
+	EXPECT(gCICInkCodec.Decode(bytes, size, 1, CollectAll, nil));
+	EXPECT(gStrokeEnds == 2);
+	EXPECT(gPointCount == 4);
+	EXPECT(gPoints[0].x == 10 && gPoints[0].y == 10);
+	EXPECT(gPoints[1].x == 20 && gPoints[1].y == 10);
+	EXPECT(gPoints[2].x == 100 && gPoints[2].y == 50);
+	EXPECT(gPoints[3].x == 100 && gPoints[3].y == 70);
+
+	// the ink book, whose step is eight units
+	memset(bytes, 0, sizeof(bytes));
+	memset(&e, 0, sizeof(e));
+	e.fOut = bytes;
+	e.fBitLimit = sizeof(bytes) * 8;
+	e.fBookNumber = 2;
+	e.fFirst = 1;
+	EXPECT(EcdrSelectCodeBook(&e) && e.fStep == 0x2000);
+	e.fTrace[0].x = 80 * 1024;	e.fTrace[0].y = 40 * 1024;
+	e.fTrace[1].x = 96 * 1024;	e.fTrace[1].y = 40 * 1024;
+	e.fPointCount = 2;
+	EXPECT(WriteNewStroke(&e, kCICShortStroke) && WriteShortStroke(&e));
+	EXPECT(WriteNewStroke(&e, kCICEndOfGroup));
+	size = (long) ((e.fBitPos + 7) / 8);
+	gPointCount = 0;
+	EXPECT(gCICInkCodec.Decode(bytes, size, 1, CollectAll, nil));
+	EXPECT(gPointCount == 2);
+	EXPECT(gPoints[0].x == 80 && gPoints[0].y == 40);
+	EXPECT(gPoints[1].x == 96 && gPoints[1].y == 40);
+
+	// rounding: half a step goes away from nought
+	EXPECT(QvantUN(2048, 2048) == 1);
+	EXPECT(QvantUN(1024, 2048) == 1);
+	EXPECT(QvantUN(1023, 2048) == 0);
+	EXPECT(QvantUN(-1024, 2048) == -1);
+	EXPECT(QvantUN(-1023, 2048) == 0);
+	EXPECT(QvantUN(0, 2048) == 0);
+}
+
 int
 main()
 {
@@ -816,6 +918,7 @@ main()
 	TestSkipPoints();
 	TestDecodeRun();
 	TestEncodeWord();
+	TestEncodeStroke();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

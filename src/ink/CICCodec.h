@@ -113,6 +113,9 @@ inline ULong	CodeWordCode(const unsigned short* t, long i)	{ return ((ULong) t[i
 
 extern const unsigned short	kInkFormatCodes[12];	// ROM 0x0c104fe8
 extern const unsigned short	kInkStrokeCodes[16];	// ROM 0x0c105000
+// The encoder has its own pair, byte for byte the same as the reader's.
+extern const unsigned short	kInkEncFormatCodes[12];	// ROM 0x0c105020
+extern const unsigned short	kInkEncStrokeCodes[16];	// ROM 0x0c105038
 
 
 // A table of a code book (the CIC library's _CODETABLE), which is a
@@ -177,20 +180,71 @@ Boolean	ReadShortStroke(CICDecoder* decoder);
 Boolean	DecodeShortStroke(CICDecoder* decoder);
 
 
+// One point of the trace the encoder is working from.  The ROM's record
+// is 0x18 bytes; the rest of it is what the segment fitting works in.
+struct CICTracePoint
+{
+	long	x;				// +0x00
+	long	y;				// +0x04
+};
+
+// How many of them the ROM's context has room for.
+const long kCICMaxTracePoints = 128;
+
+
 // The encoder's context (the CIC library's _CDC; as with the decoder's,
 // the fields are the ROM's but the offsets are not).
 struct CICEncoder
 {
-	UByte*		fOut;			// +0x38    where the bits go
-	ULong		fError;			// +0x3c    what went wrong (a halfword)
-	ULong		fBitLimit;		// +0xdfc   how many bits there is room for
-	ULong		fHighWater;		// +0xe00   the furthest the writer has got
-	ULong		fBitPos;		// +0xe04   and where it is now
+	UByte*			fOut;			// +0x38    where the bits go
+	ULong			fError;			// +0x3c    what went wrong (a halfword)
+	CICTracePoint	fTrace[kCICMaxTracePoints];	// +0x1c0  the stroke being written
+	ULong			fPointCount;	// +0xdc0   how many points it has (a halfword)
+	long			fPenX;			// +0xdc4   where the pen is
+	long			fPenY;			// +0xdc8
+	long			fStrokeX;		// +0xdd4   where this stroke began
+	long			fStrokeY;		// +0xdd8
+	long			fLastX;			// +0xde4   and the last point written
+	long			fLastY;			// +0xde8
+	ULong			fBitLimit;		// +0xdfc   how many bits there is room for
+	ULong			fHighWater;		// +0xe00   the furthest the writer has got
+	ULong			fBitPos;		// +0xe04   and where it is now
+	ULong			fUnit;			// +0xe10   (a halfword, always 1024)
+	ULong			fOne;			// +0xe12   (a halfword, always 1)
+	ULong			fSlack;			// +0xe14   (a halfword, always thirty)
+	ULong			fSlack2;		// +0xe16   (likewise)
+	long			fLimitA;		// +0xe18   the two lengths the book is measured in
+	long			fLimitB;		// +0xe1c
+	long			fStepA;			// +0xe20   what one step is worth
+	long			fStep;			// +0xe24
+	long			fError2;		// +0xe28   (the fitting's allowance)
+	const void*		fTables[8];		// +0xe38 to +0xe54
+	ULong			fBookNumber;	// +0xe58   the book in use (a halfword)
+	ULong			fFirst;			// +0xe5a   this is the run's first stroke
 };
 
 // What the encoder puts in fError.
 const ULong kCICNoRoom		= 5;
 const ULong kCICNoBuffer	= 15;
+
+
+// ROM 0x00282758 QvantUN__FlT1
+// A length in the encoder's units divided by a step, rounded to the
+// nearest whole one - away from nought when it falls half way.
+long	QvantUN(long value, long step);
+
+// ROM 0x0028294c EcdrSelectCodeBook__FP4_CDC
+// The book the run is to use, and what a step in it is worth; the
+// mirror of DcdrSelectCodeBook.
+Boolean	EcdrSelectCodeBook(CICEncoder* encoder);
+
+// ROM 0x00282d84 WriteNewStroke__FP4_CDCs
+// A stroke's kind and where it starts.
+Boolean	WriteNewStroke(CICEncoder* encoder, short kind);
+
+// ROM 0x00283240 WriteShortStroke__FP4_CDC
+// And its points, as they were drawn.
+Boolean	WriteShortStroke(CICEncoder* encoder);
 
 
 // ROM 0x00282aa0 PutBits__FP4_CDCUlUs
