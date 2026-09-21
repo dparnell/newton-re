@@ -125,6 +125,128 @@ TestUnicodeTables()
 }
 
 
+// A rich string built by hand: the text in ASCII, with '#' standing for an
+// ink word, and the ink words' bytes in text order.  The layout is the
+// one SetFormatAndLength reads - the text, padding to a word, a blob per
+// ink word (its length halfword, its bytes, padding) and the trailer.
+static Ref
+MakeInkString(const char* text, const char* const* inks, long inkCount)
+{
+	long length = (long) strlen(text);
+	long inkOffset = (length * (long) sizeof(UniChar) + 5) & ~3;
+	long inkBytes = 0;
+	for (long i = 0; i < inkCount; i++)
+		inkBytes += (long) InkBlobSize((ULong) strlen(inks[i]));
+	RefVar str(AllocateBinary(RSSYMstring, inkOffset + inkBytes + 4));
+	char* base = (char*) BinaryData(str);
+	UniChar* chars = (UniChar*) base;
+	for (long i = 0; i < length; i++)
+		chars[i] = text[i] == '#' ? kInkChar : (UniChar) text[i];
+	chars[length] = 0;
+	char* ink = base + inkOffset;
+	for (long i = 0; i < inkCount; i++)
+	{
+		long n = (long) strlen(inks[i]);
+		*(UniChar*) ink = (UniChar) n;
+		memcpy(ink + sizeof(UniChar), inks[i], (size_t) n);
+		ink += InkBlobSize((ULong) n);
+	}
+	ULong trailer = ((ULong) length << 4) | 1;
+	UniChar* end = (UniChar*) (base + inkOffset + inkBytes + 4);
+	end[-2] = (UniChar) (trailer >> 16);
+	end[-1] = (UniChar) trailer;
+	return str;
+}
+
+
+// The string's characters, with '#' for each ink word.
+static Boolean
+InkTextIs(const TRichString& r, const char* expect)
+{
+	if (r.Length() != (long) strlen(expect))
+		return false;
+	const UniChar* text = r.GrabPtr();
+	Boolean same = true;
+	for (long i = 0; expect[i] != 0; i++)
+	{
+		UniChar want = expect[i] == '#' ? kInkChar : (UniChar) expect[i];
+		if (text[i] != want)
+			same = false;
+	}
+	r.ReleasePtr();
+	return same;
+}
+
+
+// A rich string's ink: the blobs are kept in text order after the text,
+// moved with the characters they belong to, and compared by their bytes.
+static void
+TestRichStringInk()
+{
+	const char* two[] = { "AAAA", "BB" };
+	RefVar str(MakeInkString("a#b#c", two, 2));
+	TRichString r(str);
+	EXPECT(r.Verify() == 0);
+	EXPECT(r.Format() == kRichStringFormatInk && r.Length() == 5);
+	EXPECT(r.NumInkWords() == 2);
+	EXPECT(r.NumInkWordsInRange(0, 2) == 1 && r.NumInkWordsInRange(2, 3) == 1);
+	EXPECT(r.NumInkWordsInRange(0, 5) == 2 && r.NumInkWordsInRange(0, 1) == 0);
+	EXPECT(r.InkWordNoAtOffset(1) == 0 && r.InkWordNoAtOffset(3) == 1);
+	EXPECT(r.InkWordNoAtOffset(0) == -1 && r.InkWordNoAtOffset(4) == -1);
+	// "a", the first ink word, "b", the second, "c"
+	EXPECT(r.NumInkAndTextRunsInRange(0, 5) == 5);
+	EXPECT(r.NumInkAndTextRunsInRange(0, 3) == 3);
+
+	ULong offset, size;
+	r.GetInkData(0, 5, &offset, &size);
+	EXPECT(offset == 0 && size == InkBlobSize(4) + InkBlobSize(2));
+	r.GetInkData(2, 3, &offset, &size);
+	EXPECT(offset == InkBlobSize(4) && size == InkBlobSize(2));
+	r.GetInkData(0, 1, &offset, &size);
+	EXPECT(size == 0);
+	RefVar word(r.CloneInkWordNo(1));
+	EXPECT(IsInkWord(word) && Length(word) == 2 && memcmp(BinaryData(word), "BB", 2) == 0);
+
+	// the first ink word deleted: the second moves up with its character
+	r.DeleteRange(1, 1);
+	EXPECT(InkTextIs(r, "ab#c"));
+	EXPECT(r.Format() == kRichStringFormatInk && r.NumInkWords() == 1);
+	EXPECT(Length(str) == (long) (((4 * sizeof(UniChar) + 5) & ~3) + InkBlobSize(2) + 4));
+	word = r.CloneInkWordNo(0);
+	EXPECT(Length(word) == 2 && memcmp(BinaryData(word), "BB", 2) == 0);
+
+	// and the last one: with no ink left the string is plain again
+	r.DeleteRange(2, 1);
+	EXPECT(InkTextIs(r, "abc"));
+	EXPECT(r.Format() == kRichStringFormatPlain && r.NumInkWords() == 0);
+	EXPECT(Length(str) == 4 * (long) sizeof(UniChar));
+	EXPECT(StringEquals(str, "abc"));
+
+	// ink put into a plain string makes it rich, and brings its blob
+	const char* one[] = { "CCC" };
+	RefVar source(MakeInkString("<#>", one, 1));
+	TRichString src(source);
+	r.InsertRange(src, 1, 1, 1);
+	EXPECT(InkTextIs(r, "a#bc"));
+	EXPECT(r.Format() == kRichStringFormatInk && r.NumInkWords() == 1);
+	EXPECT(r.Verify() == 0);
+	word = r.CloneInkWordNo(0);
+	EXPECT(Length(word) == 3 && memcmp(BinaryData(word), "CCC", 3) == 0);
+
+	// two ink words compare by their data, not as the character that
+	// stands for them
+	const char* aa[] = { "AAAA" };
+	const char* bb[] = { "AAAB" };
+	RefVar first(MakeInkString("#", aa, 1));
+	RefVar second(MakeInkString("#", bb, 1));
+	RefVar same(MakeInkString("#", aa, 1));
+	TRichString sf(first), ss(second), sm(same);
+	EXPECT(sf.CompareSubStringCommon(sm, 0, -1, false) == 0);
+	EXPECT(sf.CompareSubStringCommon(ss, 0, -1, false) < 0);
+	EXPECT(ss.CompareSubStringCommon(sf, 0, -1, false) > 0);
+}
+
+
 static void
 TestRichString()
 {
@@ -677,6 +799,7 @@ main()
 	{
 		TestUnicodeTables();
 		TestRichString();
+		TestRichStringInk();
 		TestStringFunctions();
 		TestSmartStrings();
 		TestSorting();

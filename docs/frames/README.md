@@ -352,12 +352,33 @@ functions work through: a string object (locked while its text is in
 use) or a C UniChar string, its length in characters and its format - a
 rich string keeps ink words after the text and ends in a trailer word
 (`text length << 4 | 1`, the low two bits of the last UniChar say the
-format); `MungeRange` replaces a range of characters from another
-TRichString, growing or shrinking the object (the ink is NOT YET
-RECONSTRUCTED: a munged rich string comes out plain), and
-`CompareSubStringCommon` compares a range with `CompareUnicodeText` (the
-collation tables below; NOT YET: `CompareInkProc` 0x001ade0c, so ink
-collates as the character standing for it).
+format).
+
+The ink region holds one blob per `kInkChar` (0xf700) of the text, in
+text order: a halfword giving the blob's length, that many bytes, and
+padding to a word, so a blob takes `(length + 5) & ~3` bytes.  Those
+bytes are an ink word's data - `CloneInkWordNo` hands them out as an
+`'inkWord` binary of their own.  `GetInkData` answers where the ink of a
+range of characters is and how much of it there is, and
+`GetInkWordNoInfoOffset`, `NumInkWords`, `NumInkWordsInRange`,
+`InkWordNoAtOffset` and `NumInkAndTextRunsInRange` are the rest of the
+questions asked of it.
+
+`MungeRange` replaces a range of characters from another TRichString,
+growing or shrinking the object, and moves each blob with the character
+it belongs to.  The text and the ink move separately, because the ink
+region starts on a word boundary after the text: an odd number of
+characters going in or out moves the text by two bytes and the ink by
+nought or four, and which moves first depends on which way they are
+going.  A string that ends up with ink where it had none gains the
+four-byte trailer; one that loses all its ink loses the trailer and is
+plain again.  `CompareSubStringCommon` compares a range with
+`CompareUnicodeText`, handing it `CompareInkProc` so that two ink words
+are compared by their bytes rather than collating as the character that
+stands for them.  NOT YET: the ink words' structure in `Verify`, and
+`GetLengthsAndDataInRange`/`MakeParagraphTextSlot`/
+`MakeParagraphStylesSlot`, which make a paragraph's text and styles out
+of a string of mixed ink and text.
 `StringNatives.cpp` has the string functions over it - `StrLen`,
 `StrConcat`, `SubStr`, `StrEqual`/`StrExactCompare`/`StrCompare`,
 `BeginsWith`/`EndsWith`, `Upcase`/`Downcase`/`Capitalize`/`CapitalizeWords`

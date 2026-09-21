@@ -6,12 +6,20 @@
 				after the text (a trailer word ends the object: text
 				length << 4 | 1).  The string functions work through it.
 
-	NOT YET RECONSTRUCTED: the ink - a rich string's text is read and
-	written (its format and lengths are computed as the ROM computes them)
-	but MungeRange keeps no ink data and the ink word functions
-	(GetInkData, NumInkWords, ...) are not here, so the comparisons hand
-	CompareUnicodeText (frames/SortTables.h) no ink-comparing function and
-	a string of ink collates as its kInkChars.
+	The ink region holds one blob per kInkChar of the text, in text
+	order: a halfword giving the blob's length, that many bytes, and
+	padding to a word - so a blob takes (length + 5) & ~3 bytes.  The
+	blob is an ink word's data, the same bytes the 'inkWord binary
+	CloneInkWordNo makes carries.  MungeRange moves the blobs with the
+	characters they belong to, and the comparisons hand
+	CompareUnicodeText (frames/SortTables.h) CompareInkProc so two ink
+	words are compared by their bytes rather than collating as the
+	kInkChar that stands for them.
+
+	NOT YET RECONSTRUCTED: the ink words' structure in Verify, and
+	GetLengthsAndDataInRange / MakeParagraphTextSlot /
+	MakeParagraphStylesSlot, which are how a paragraph's text and styles
+	are made out of a string of mixed ink and text.
 
 	The DDK has no header for TRichString; the layout is the ROM's (0x28).
 */
@@ -56,6 +64,19 @@ public:
 	int			CompareSubStringCommon(const TRichString& other, ULong start, long count, Boolean exact) const;
 	long		Verify(void) const;				// 0 when well formed
 
+	// The ink.  An offset "in the ink" is a byte offset from the start of
+	// the ink region (fInkStart); GetInkWordNoInfoOffset answers one from
+	// the start of the object instead, because that is what its callers
+	// add to GrabPtr.
+	void		GetInkData(ULong start, ULong count, ULong* offset, ULong* size) const;	// ROM 0x001ab7f4 GetInkData__11TRichStringCFUlT1PUlT3
+	ULong		GetInkWordNoInfoOffset(ULong index) const;	// ROM 0x001abe2c GetInkWordNoInfoOffset__11TRichStringCFUl
+	Ref			CloneInkWordNo(ULong index) const;			// ROM 0x001abeb8 CloneInkWordNo__11TRichStringCFUl
+	long		NumInkWords(void) const;					// ROM 0x001abb10 NumInkWords__11TRichStringCFv
+	long		NumInkWordsInRange(ULong start, ULong count) const;	// ROM 0x001abb78 NumInkWordsInRange__11TRichStringCFUlT1
+	long		InkWordNoAtOffset(ULong offset) const;		// ROM 0x001abc20 InkWordNoAtOffset__11TRichStringCFUl
+	long		NumInkAndTextRunsInRange(ULong start, ULong count) const;	// ROM 0x001abc88 NumInkAndTextRunsInRange__11TRichStringCFUlT1
+	int			CompareInk(const TRichString* other, ULong offset, ULong otherOffset) const;	// ROM 0x001aba5c CompareInk__11TRichStringCFPC11TRichStringUlT2
+
 	UniChar*	GrabPtr(void) const;			// the text, the object locked
 	void		ReleasePtr(void) const;
 	void		SetObjectSize(long size);
@@ -73,6 +94,22 @@ public:
 };
 
 Boolean	IsInkWord(RefArg obj);				// an 'inkWord binary (the ink of a word not yet recognised)
+
+// The bytes an ink word's blob takes in a rich string's ink region: its
+// length halfword, its data, and the padding that keeps the next blob on
+// a word boundary.
+inline ULong	InkBlobSize(ULong length)	{ return (length + 5) & ~3UL; }
+
+// What CompareInkProc is given as its refCon: the two strings being
+// compared and where in the first one the comparison started.
+struct CompareInkInfo
+{
+	const TRichString*	fString;		// +0x00
+	long				fStart;			// +0x04
+	const TRichString*	fOther;			// +0x08
+};
+
+long	CompareInkProc(long offset, long otherOffset, void* refCon);	// ROM 0x001ab9a0 CompareInkProc__FlT1Pv
 
 
 #endif	/* __RICHSTRING_H */

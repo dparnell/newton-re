@@ -218,38 +218,355 @@ TRichString::InsertRange(const TRichString& src, ULong srcStart, ULong count, UL
 
 // ROM 0x001ab31c MungeRange__11TRichStringFUlT1PC11TRichStringN21
 // count characters at start replaced by srcCount characters of src from
-// srcStart (a deletion for no src, an insertion for count 0); the
-// object grows or shrinks.  NOT YET RECONSTRUCTED: the ink data moved
-// with the text and the trailer of a rich result - the result is plain.
+// srcStart (a deletion for no src, an insertion for count 0), and the ink
+// of those characters replaced by the ink of the source's; the object
+// grows or shrinks.
+//
+// The two are moved separately, because the ink region starts on a word
+// boundary after the text: an odd number of characters going in or out
+// moves the text by two bytes and the ink by nought or four, and which of
+// the two has to move first depends on which way they are going.  A
+// string that ends up with ink where it had none gains the four-byte
+// trailer, and one that loses all its ink loses it again.
+//
+// (host: the trailer and the blobs' length halfwords are written as the
+// UniChars they are read back as, rather than as the ROM's four and two
+// bytes, so that a string object's halfwords stay in the host's order -
+// SetFormatAndLength reads the trailer the same way.)
 void
 TRichString::MungeRange(ULong start, ULong count, const TRichString* src, ULong srcStart, ULong srcCount)
 {
-	long delta = ((long) srcCount - (long) count) * sizeof(UniChar);
-	long newLength = fLength + (long) srcCount - (long) count;
-	long newSize = (newLength + 1) * sizeof(UniChar);
-	long oldSize = fSize;
-	if (newSize > oldSize)
-		SetObjectSize(newSize);
+	long oldLength = fLength;
+	long oldSize = (long) fSize;
+	ULong srcInkOffset = 0, srcInkSize = 0;
+	if (src != nil)
+		src->GetInkData(srcStart, srcCount, &srcInkOffset, &srcInkSize);
+	ULong myInkOffset = 0, myInkSize = 0;
+	GetInkData(start, count, &myInkOffset, &myInkSize);
+
+	long textDelta = ((long) srcCount - (long) count) * (long) sizeof(UniChar);
+	long inkDelta = (long) srcInkSize - (long) myInkSize;
+	long trailerDelta = 0;
+	long newFormat = fFormat;
+	Boolean formatChanges = false;
+	if (newFormat == kRichStringFormatPlain)
+	{
+		if (inkDelta > 0)
+		{
+			newFormat = kRichStringFormatInk;		// ink where there was none: the trailer comes too
+			trailerDelta = 4;
+			formatChanges = true;
+		}
+	}
+	else if (srcInkSize == 0 && (long) myInkSize == oldSize - (long) fInkStart - 4)
+	{
+		newFormat = kRichStringFormatPlain;		// all of the ink goes and none comes in
+		trailerDelta = -4;
+		formatChanges = true;
+	}
+
+	long newInkOffset = (oldLength + 1) * (long) sizeof(UniChar) + textDelta;
+	if (newFormat != kRichStringFormatPlain)
+		newInkOffset = (newInkOffset + 3) & ~3;
+	long inkShift = newInkOffset - (long) fInkOffset;
+	long shift = (newFormat == kRichStringFormatPlain && !formatChanges) ? textDelta : inkShift;
+	long sizeDelta = shift + inkDelta + trailerDelta;
+	if (sizeDelta > 0)
+		SetObjectSize(oldSize + sizeDelta);
+
 	UniChar* srcText = src != nil ? src->GrabPtr() : nil;
 	UniChar* text = GrabPtr();
-	// the tail after the range moves by delta; the range takes the source
-	long tail = fLength - (start + count);
-	if (tail > 0 && delta != 0)
-		BlockMove(text + start + count, text + start + srcCount, tail * sizeof(UniChar));
+	char* base = (char*) text;
+	if (textDelta != 0)
+	{
+		char* tail = base + (start + count) * sizeof(UniChar);
+		if ((textDelta & 3) == 0 || fFormat == kRichStringFormatPlain)
+			BlockMove(tail, tail + textDelta, oldSize - (tail - base));
+		else
+		{
+			// the ink moves by a different amount from the text: whichever
+			// is going backwards goes first, so that neither is written
+			// over before it has been read
+			char* ink = base + fInkStart;
+			long inkBytes = oldSize - (long) fInkStart;
+			long tailBytes = ((oldLength + 1) - (long) (start + count)) * (long) sizeof(UniChar);
+			if (textDelta < 0)
+			{
+				BlockMove(tail, tail + textDelta, tailBytes);
+				if (inkShift != 0)
+					BlockMove(ink, ink + inkShift, inkBytes);
+			}
+			else
+			{
+				if (inkShift != 0)
+					BlockMove(ink, ink + inkShift, inkBytes);
+				BlockMove(tail, tail + textDelta, tailBytes);
+			}
+		}
+	}
+	long newSize = oldSize + inkShift;
 	if (src != nil && srcCount != 0)
 		BlockMove(srcText + srcStart, text + start, srcCount * sizeof(UniChar));
-	text[newLength] = 0;
+
+	long newLength = oldLength + textDelta / (long) sizeof(UniChar);
+	fFormat = newFormat;
+	fLength = newLength;
+	fSize = (ULong) ((long) fSize + sizeDelta);
+	if (newFormat == kRichStringFormatInk)
+	{
+		ULong offset = (ULong) ((newLength * (long) sizeof(UniChar) + 5) & ~3);
+		fInkOffset = offset;
+		fInkStart = offset;
+	}
+	char* ink = base + fInkStart;
+	if (srcInkSize != myInkSize)
+	{
+		char* after = ink + myInkOffset + myInkSize;
+		BlockMove(after, after + inkDelta, newSize - (after - base));
+		newSize += inkDelta;
+	}
+	newSize += trailerDelta;
+	if (src != nil && srcInkSize != 0)
+		BlockMove((char*) srcText + src->fInkStart + srcInkOffset, ink + myInkOffset, srcInkSize);
+	text[newLength] = 0;		// (the ROM moves the terminator along with the tail)
+	if (newFormat == kRichStringFormatInk)
+	{
+		ULong trailer = ((ULong) newLength << 4) | 1;
+		UniChar* end = (UniChar*) (base + newSize);
+		end[-2] = (UniChar) (trailer >> 16);
+		end[-1] = (UniChar) trailer;
+		fInkSize = newSize - (long) fInkStart - 4;
+	}
+	else
+	{
+		fInkStart = 0;
+		fInkOffset = (ULong) newSize;
+		fInkSize = 0;
+	}
+	fInkSize2 = fInkSize;
 	ReleasePtr();
 	if (src != nil)
 		src->ReleasePtr();
-	if (newSize < oldSize)
+	if (sizeDelta < 0)
 		SetObjectSize(newSize);
-	fFormat = kRichStringFormatPlain;
-	fLength = newLength;
-	fSize = newSize;
-	fInkStart = 0;
-	fInkOffset = newSize;
-	fInkSize = fInkSize2 = 0;
+}
+
+
+// ROM 0x001ab7f4 GetInkData__11TRichStringCFUlT1PUlT3
+// Where the ink of count characters at start is, and how much of it there
+// is: both byte counts within the ink region.  The characters up to the
+// range are walked for the offset and those in it for the size, each
+// kInkChar stepping over its blob.
+void
+TRichString::GetInkData(ULong start, ULong count, ULong* outOffset, ULong* outSize) const
+{
+	const char* base = (const char*) GrabPtr();
+	const UniChar* text = (const UniChar*) base;
+	const char* ink = base + fInkStart;
+	ULong before = 0;
+	ULong total = 0;
+	Boolean inRange = false;
+	for (ULong left = start + count; left != 0; )
+	{
+		left--;
+		UniChar c = *text++;
+		if (c != kInkChar)
+			continue;
+		ULong size = InkBlobSize(*(const UniChar*) ink);
+		ULong next = total;
+		if (left < count)
+		{
+			if (!inRange)
+			{
+				inRange = true;
+				next = 0;
+				before = total;
+			}
+		}
+		else
+			before = total + size;
+		total = next + size;
+		ink += size;
+	}
+	ReleasePtr();
+	*outOffset = before;
+	*outSize = inRange ? total : 0;
+}
+
+
+// ROM 0x001abe2c GetInkWordNoInfoOffset__11TRichStringCFUl
+// Where the index'th ink word's blob is, as a byte offset from the start
+// of the object - 0 when there is no such ink word.
+ULong
+TRichString::GetInkWordNoInfoOffset(ULong index) const
+{
+	const char* base = (const char*) GrabPtr();
+	const UniChar* text = (const UniChar*) base;
+	ULong offset = fInkStart;
+	ULong found = 0;
+	for (UniChar c = *text; c != 0; c = *text)
+	{
+		text++;
+		if (c != kInkChar)
+			continue;
+		if (index == 0)
+		{
+			found = offset;
+			break;
+		}
+		index--;
+		offset += InkBlobSize(*(const UniChar*) (base + offset));
+	}
+	ReleasePtr();
+	return found;
+}
+
+
+// ROM 0x001abeb8 CloneInkWordNo__11TRichStringCFUl
+// The index'th ink word's data as an 'inkWord binary of its own.
+Ref
+TRichString::CloneInkWordNo(ULong index) const
+{
+	const char* base = (const char*) GrabPtr();
+	ULong offset = GetInkWordNoInfoOffset(index);
+	long length = *(const UniChar*) (base + offset);
+	RefVar word(AllocateBinary(RSSYMinkword, length));
+	BlockMove(base + offset + sizeof(UniChar), BinaryData(word), length);
+	ReleasePtr();
+	return word;
+}
+
+
+// ROM 0x001abb10 NumInkWords__11TRichStringCFv
+long
+TRichString::NumInkWords(void) const
+{
+	if (Format() == kRichStringFormatPlain)
+		return 0;
+	const UniChar* text = GrabPtr();
+	long count = 0;
+	for (UniChar c = *text; c != 0; c = *text)
+	{
+		text++;
+		if (c == kInkChar)
+			count++;
+	}
+	ReleasePtr();
+	return count;
+}
+
+
+// ROM 0x001abb78 NumInkWordsInRange__11TRichStringCFUlT1
+// The ink words among count characters at start - the walk stops at the
+// text's end wherever the count would have taken it.
+long
+TRichString::NumInkWordsInRange(ULong start, ULong count) const
+{
+	if (Format() == kRichStringFormatPlain)
+		return 0;
+	const UniChar* text = GrabPtr();
+	long found = 0;
+	for (; start != 0; start--)
+		if (*text++ == 0)
+		{
+			ReleasePtr();
+			return 0;
+		}
+	for (; count != 0; count--)
+	{
+		UniChar c = *text++;
+		if (c == 0)
+			break;
+		if (c == kInkChar)
+			found++;
+	}
+	ReleasePtr();
+	return found;
+}
+
+
+// ROM 0x001abc20 InkWordNoAtOffset__11TRichStringCFUl
+// Which ink word the character at the offset is, or -1 when it is not one.
+long
+TRichString::InkWordNoAtOffset(ULong offset) const
+{
+	const UniChar* text = GrabPtr();
+	long found = -1;
+	if (text[offset] == kInkChar)
+	{
+		found = -1;
+		for (ULong left = offset + 1; left != 0; left--)
+		{
+			UniChar c = *text++;
+			if (c == 0)
+				break;
+			if (c == kInkChar)
+				found++;
+		}
+	}
+	ReleasePtr();
+	return found;
+}
+
+
+// ROM 0x001abc88 NumInkAndTextRunsInRange__11TRichStringCFUlT1
+// How many runs of plain text and single ink words count characters at
+// start come to - each ink word is a run of its own and everything
+// between two of them is one.
+long
+TRichString::NumInkAndTextRunsInRange(ULong start, ULong count) const
+{
+	const UniChar* text = GrabPtr() + start;
+	long runs = 0;
+	if ((ULong) fLength < start + count)
+		count = (ULong) fLength - start;
+	while ((long) count > 0)
+	{
+		count--;
+		if (*text++ != kInkChar)
+			while (count != 0 && *text != kInkChar)
+			{
+				count--;
+				text++;
+			}
+		runs++;
+	}
+	ReleasePtr();
+	return runs;
+}
+
+
+// ROM 0x001aba5c CompareInk__11TRichStringCFPC11TRichStringUlT2
+// Two ink words compared by their data: the shorter prefix first, and
+// the shorter word first when they agree on it.
+int
+TRichString::CompareInk(const TRichString* other, ULong offset, ULong otherOffset) const
+{
+	const char* base = (const char*) GrabPtr();
+	const char* otherBase = (const char*) other->GrabPtr();
+	ULong mine = GetInkWordNoInfoOffset((ULong) InkWordNoAtOffset(offset));
+	long myLength = *(const UniChar*) (base + mine);
+	ULong theirs = other->GetInkWordNoInfoOffset((ULong) other->InkWordNoAtOffset(otherOffset));
+	long theirLength = *(const UniChar*) (otherBase + theirs);
+	long shared = myLength < theirLength ? myLength : theirLength;
+	int result = memcmp(base + mine + sizeof(UniChar), otherBase + theirs + sizeof(UniChar), (size_t) shared);
+	if (result == 0)
+		result = (int) (myLength - theirLength);
+	ReleasePtr();
+	other->ReleasePtr();
+	return result;
+}
+
+
+// ROM 0x001ab9a0 CompareInkProc__FlT1Pv
+// What CompareUnicodeText calls when both strings have an ink word where
+// it has got to.  The offsets are the characters', counted from where the
+// comparison started in each string.
+long
+CompareInkProc(long offset, long otherOffset, void* refCon)
+{
+	CompareInkInfo* info = (CompareInkInfo*) refCon;
+	return info->fString->CompareInk(info->fOther, (ULong) (info->fStart + offset), (ULong) otherOffset);
 }
 
 
@@ -263,10 +580,14 @@ TRichString::CompareSubStringCommon(const TRichString& other, ULong start, long 
 		count = fLength - start;
 	UniChar* text = GrabPtr();
 	UniChar* otherText = other.GrabPtr();
-	// NOT YET RECONSTRUCTED: CompareInkProc (0x001ade0c), which compares
-	// two ink words - so ink collates as the kInkChar standing for it.
+	// two ink words are compared by their data (CompareInkProc), not by
+	// the kInkChar that stands for them
+	CompareInkInfo info;
+	info.fString = this;
+	info.fStart = (long) start;
+	info.fOther = &other;
 	int result = CompareUnicodeText(text + start, count, otherText, other.fLength,
-									kDefaultSortTable, exact, nil, nil);
+									kDefaultSortTable, exact, CompareInkProc, &info);
 	other.ReleasePtr();
 	ReleasePtr();
 	return result;
