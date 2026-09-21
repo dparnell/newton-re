@@ -62,7 +62,14 @@ struct CICDecoder
 	ULong			fBookNumber;	// +0x74  the book in use (a halfword)
 	ULong			fMode;			// +0x76  the mode the run was opened with
 	ULong			fFirst;			// +0x78  the run has not started yet
+	ULong			fPointCount;	// +0x7a  how many points the stroke came to
+	long			fPointsX[33];	// +0x7c  and where they are, in units of
+	long			fPointsY[33];	// +0x100  a thousand and twenty-fourth
 };
+
+// How many points either buffer holds - the ROM's are the 33 longs
+// between the fields that follow them.
+const long kCICMaxPoints = 33;
 
 
 // A code word table as the ROM keeps one: four halfwords to an entry -
@@ -116,6 +123,15 @@ Boolean	DecodeWord_OLD(CICDecoder* decoder, const void* table, short* out);
 // ROM 0x00280f1c ReadNewStroke__FP4_DCCPs
 // The next stroke's kind, and the pen moved to where it starts.
 Boolean	ReadNewStroke(CICDecoder* decoder, short* outKind);
+
+// ROM 0x00281424 ReadShortStroke__FP4_DCC
+// A short stroke's points collected into the context's two buffers.
+Boolean	ReadShortStroke(CICDecoder* decoder);
+
+// ROM 0x002820c8 DecodeShortStroke__FP4_DCC
+// And handed to the sink.
+Boolean	DecodeShortStroke(CICDecoder* decoder);
+
 
 // What ReadNewStroke answers: a long stroke, a short one, or the end.
 const short kCICLongStroke	= 0;

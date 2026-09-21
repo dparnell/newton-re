@@ -336,6 +336,70 @@ ReadNewStroke(CICDecoder* decoder, short* outKind)
 }
 
 
+
+
+/*------------------------------------------------------------------------------
+	A   s h o r t   s t r o k e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00281424 ReadShortStroke__FP4_DCC
+// A short stroke is written out as it was drawn: the point it starts at
+// (where ReadNewStroke has already left the pen), and then a step in x
+// and a step in y for each point after it, until a word out of the
+// format table comes back 7.  Both steps are read out of the third and
+// fourth tables of the book and are worth the book's step each.
+//
+// DEVIATION: the ROM writes past the end of its two buffers if a stroke
+// has more points than they hold; the host stops taking them.
+Boolean
+ReadShortStroke(CICDecoder* decoder)
+{
+	decoder->fPointsX[0] = decoder->fX;
+	decoder->fPointsY[0] = decoder->fY;
+	decoder->fPointCount = 1;
+	for (;;)
+	{
+		short tag;
+		if (!DecodeWord_NEW(decoder, kInkFormatCodes, &tag))
+			return false;
+		if (tag == 7)
+			return true;
+		short dx, dy;
+		if (!DecodeWord_OLD(decoder, decoder->fTables[2], &dx))
+			return false;
+		if (!DecodeWord_OLD(decoder, decoder->fTables[3], &dy))
+			return false;
+		decoder->fX += decoder->fScaleA * dx;
+		decoder->fY += decoder->fScaleA * dy;
+		if (decoder->fPointCount >= (ULong) kCICMaxPoints)
+			continue;
+		decoder->fPointsX[decoder->fPointCount] = decoder->fX;
+		decoder->fPointsY[decoder->fPointCount] = decoder->fY;
+		decoder->fPointCount++;
+	}
+}
+
+
+// ROM 0x002820c8 DecodeShortStroke__FP4_DCC
+// The points handed to the sink, each brought down from the thousand
+// and twenty-fourths the codec counts in to whole tablet units.
+Boolean
+DecodeShortStroke(CICDecoder* decoder)
+{
+	if (!ReadShortStroke(decoder))
+		return false;
+	for (ULong i = 0; i < decoder->fPointCount; i++)
+	{
+		InkPoint pt;
+		pt.x = (short) (decoder->fPointsX[i] >> 10);
+		pt.y = (short) (decoder->fPointsY[i] >> 10);
+		if (decoder->fSink != nil)
+			decoder->fSink(kInkPoint, &pt, decoder->fRefCon);	// (the ROM hands the sink its context)
+	}
+	return true;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   c o d e c
 ------------------------------------------------------------------------------*/

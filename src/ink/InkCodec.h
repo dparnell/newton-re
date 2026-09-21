@@ -53,19 +53,28 @@
 #include "FixedMath.h"
 #endif
 
-struct FPoint;
 class TStroke;
 
 
-// What a point sink is told.  The points are in tablet units, as 16.16
-// values; a stroke ends with kInkEndStroke and the group with kInkEnd.
-// A sink answers 0 to give up.
+// A point as the codec hands it out: the CIC library's _POINT, two
+// whole numbers of tablet units.  What reads them treats each as the
+// whole part of a 16.16 value and divides by the tablet scale (8.0) to
+// get pixels.
+struct InkPoint
+{
+	short	x;			// +0x00
+	short	y;			// +0x02
+};
+
+
+// What a point sink is told: a stroke ends with kInkEndStroke and the
+// group with kInkEnd.  A sink answers 0 to give up.
 const short kInkBegin		= 1;
 const short kInkEndStroke	= 2;
 const short kInkPoint		= 3;
 const short kInkEnd			= 4;
 
-typedef short (*InkPointProc)(short what, const FPoint* pt, void* refCon);
+typedef short (*InkPointProc)(short what, const InkPoint* pt, void* refCon);
 
 
 // The ink formats GetInkFormat tells apart, by the first byte of the

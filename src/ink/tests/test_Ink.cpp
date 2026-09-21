@@ -412,6 +412,99 @@ TestCodeBookTables()
 	}
 }
 
+
+// The code for a value out of one of a book's tables.
+static Boolean
+PutValue(BitWriter* w, const void* table, short value)
+{
+	for (long i = 0; i < (long) CodeTableCount(table); i++)
+		if (CodeTableValue(table, i) == value)
+		{
+			PutBits(w, CodeTableCode(table, i), CodeTableLength(table, i));
+			return true;
+		}
+	return false;
+}
+
+
+// Where the points went.
+static InkPoint	gPoints[64];
+static long		gPointCount = 0;
+static void*	gLastRefCon = nil;
+
+static short
+CollectPoint(short what, const InkPoint* pt, void* refCon)
+{
+	gLastRefCon = refCon;
+	if (what == kInkPoint && gPointCount < 64)
+		gPoints[gPointCount++] = *pt;
+	return 1;
+}
+
+
+// A short stroke: the point it starts at and a step in x and y for each
+// point after it, ended by a 7 out of the format table.
+static void
+TestShortStroke()
+{
+	CICDecoder d;
+	memset(&d, 0, sizeof(d));
+	d.fBookNumber = 1;
+	EXPECT(DcdrSelectCodeBook(&d));
+
+	BitWriter w;
+	StartBits(&w);
+	// two more points: (+3, -2) and (+1, +4), then the end
+	PutBits(&w, 1, 1);							// the format table's 8: another point
+	EXPECT(PutValue(&w, d.fTables[2], 3));
+	EXPECT(PutValue(&w, d.fTables[3], -2));
+	PutBits(&w, 1, 1);
+	EXPECT(PutValue(&w, d.fTables[2], 1));
+	EXPECT(PutValue(&w, d.fTables[3], 4));
+	PutBits(&w, 0, 1);							// the format table's 7: the end
+	d.fData = w.fBytes;
+	d.fBitCount = w.fPos;
+	d.fBitPos = 0;
+	d.fX = 100 << 10;			// the codec counts in thousand-and-twenty-fourths
+	d.fY = 200 << 10;
+
+	EXPECT(ReadShortStroke(&d));
+	EXPECT(d.fPointCount == 3);
+	EXPECT(d.fPointsX[0] == (100 << 10) && d.fPointsY[0] == (200 << 10));
+	EXPECT(d.fPointsX[1] == (100 << 10) + 0x800 * 3);
+	EXPECT(d.fPointsY[1] == (200 << 10) - 0x800 * 2);
+	EXPECT(d.fPointsX[2] == d.fPointsX[1] + 0x800);
+	EXPECT(d.fPointsY[2] == d.fPointsY[1] + 0x800 * 4);
+
+	// and the same stroke handed to a sink, in whole tablet units
+	d.fBitPos = 0;
+	d.fX = 100 << 10;
+	d.fY = 200 << 10;
+	d.fSink = CollectPoint;
+	d.fRefCon = (void*) &w;
+	gPointCount = 0;
+	EXPECT(DecodeShortStroke(&d));
+	EXPECT(gPointCount == 3);
+	EXPECT(gLastRefCon == (void*) &w);
+	EXPECT(gPoints[0].x == 100 && gPoints[0].y == 200);
+	EXPECT(gPoints[1].x == 100 + 6 && gPoints[1].y == 200 - 4);		// a step is two units
+	EXPECT(gPoints[2].x == 100 + 8 && gPoints[2].y == 200 + 4);
+
+	// a stroke that never ends runs the stream out
+	StartBits(&w);
+	for (long i = 0; i < 4; i++)
+	{
+		PutBits(&w, 1, 1);
+		PutValue(&w, d.fTables[2], 1);
+		PutValue(&w, d.fTables[3], 1);
+	}
+	d.fData = w.fBytes;
+	d.fBitCount = w.fPos;
+	d.fBitPos = 0;
+	d.fError = 0;
+	EXPECT(!ReadShortStroke(&d) && d.fError != 0);
+}
+
 int
 main()
 {
@@ -435,6 +528,7 @@ main()
 	TestCodeBooks();
 	TestDecodeWord();
 	TestCodeBookTables();
+	TestShortStroke();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");
