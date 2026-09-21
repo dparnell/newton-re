@@ -6,6 +6,7 @@
 #include "Ink.h"
 #include "CICCodec.h"
 #include "ROMImport.h"
+#include "NewtonMemory.h"
 #include "ROMConstants.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -196,7 +197,7 @@ TestCodecs()
 	EXPECT(InkCodecFor(data) == &gCICInkCodec);
 	data[0] = 0x00;
 	EXPECT(InkCodecFor(data) == nil);		// nobody reads the old ink yet
-	EXPECT(InkCodecForWriting() == nil);	// and nobody writes any
+	EXPECT(InkCodecForWriting() == &gCICInkCodec);	// and it is what writes it too
 }
 
 
@@ -1117,6 +1118,99 @@ TestRepar()
 		EXPECT(e.fResampled[i].x <= 40 * 1024);
 }
 
+
+// Points handed to the encoder and read back out of the ink it wrote.
+struct Trace
+{
+	const short*	fX;
+	const short*	fY;
+	long			fCount;
+	long			fAt;
+};
+
+static short
+HandOutPoints(short what, InkPoint* pt, void* refCon)
+{
+	Trace* t = (Trace*) refCon;
+	if (what == kInkAskBegin)
+	{
+		t->fAt = 0;
+		return 1;
+	}
+	if (t->fAt >= t->fCount)
+		return kInkEnd;
+	pt->x = t->fX[t->fAt];
+	pt->y = t->fY[t->fAt];
+	t->fAt++;
+	return kInkPoint;
+}
+
+
+static void
+TestEncodeRun()
+{
+	InitializeParagraphCompression();
+	EXPECT(gCICInkCodec.CanEncode());
+
+	// a curve of twenty points, a quarter turn of a circle of radius
+	// eighty about (100, 100)
+	short xs[20];
+	short ys[20];
+	for (long i = 0; i < 20; i++)
+	{
+		double a = 3.14159265358979 / 2 * i / 19;
+		xs[i] = (short) (100 + 80 * (1 - (a * a) / 2 + (a * a * a * a) / 24));
+		ys[i] = (short) (100 + 80 * (a - (a * a * a) / 6));
+	}
+	Trace t;
+	t.fX = xs;
+	t.fY = ys;
+	t.fCount = 20;
+	t.fAt = 0;
+
+	long size = 0;
+	void* ink = gCICInkCodec.Encode(HandOutPoints, &t, &size);
+	EXPECT(ink != nil && size > 0);
+	if (ink == nil)
+		return;
+	// what came out is a block the reader knows
+	EXPECT(GetInkFormat(ink) == kInkFormatCompressed);
+	EXPECT(InkCodecFor(ink) == &gCICInkCodec);
+	// and it is smaller than the points were
+	EXPECT(size < 20 * 4);
+
+	gPointCount = 0;
+	gBegins = gEnds = gStrokeEnds = 0;
+	EXPECT(gCICInkCodec.Decode(ink, size, 1, CollectAll, nil));
+	EXPECT(gBegins == 1 && gEnds == 1 && gStrokeEnds == 1);
+	EXPECT(gPointCount > 4);
+
+	// every point that comes back is near the curve that went in
+	long worst = 0;
+	for (long i = 0; i < gPointCount; i++)
+	{
+		long nearest = 0x7fffffff;
+		for (long j = 0; j < 20; j++)
+		{
+			long dx = gPoints[i].x - xs[j];
+			long dy = gPoints[i].y - ys[j];
+			long d = dx * dx + dy * dy;
+			if (d < nearest)
+				nearest = d;
+		}
+		if (nearest > worst)
+			worst = nearest;
+	}
+	EXPECT(worst <= 16 * 16);		// (within sixteen tablet units, which is two pixels)
+
+	// and it starts and ends where the stroke did
+	EXPECT(gPoints[0].x >= xs[0] - 8 && gPoints[0].x <= xs[0] + 8);
+	EXPECT(gPoints[0].y >= ys[0] - 8 && gPoints[0].y <= ys[0] + 8);
+	EXPECT(gPoints[gPointCount - 1].x >= xs[19] - 8 && gPoints[gPointCount - 1].x <= xs[19] + 8);
+	EXPECT(gPoints[gPointCount - 1].y >= ys[19] - 8 && gPoints[gPointCount - 1].y <= ys[19] + 8);
+	DisposPtr((Ptr) ink);
+}
+
 int
 main()
 {
@@ -1149,6 +1243,7 @@ main()
 	TestTrace();
 	TestTransform();
 	TestRepar();
+	TestEncodeRun();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

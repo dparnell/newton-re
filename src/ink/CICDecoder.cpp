@@ -6,6 +6,7 @@
 
 #include "CICCodec.h"
 #include "ByteOrder.h"
+#include "NewtonMemory.h"
 
 #include <string.h>
 
@@ -782,7 +783,7 @@ TCICInkCodec::CanDecode(long format) const
 Boolean
 TCICInkCodec::CanEncode(void) const
 {
-	return false;		// NOT YET: EncoderRun and what it calls
+	return true;
 }
 
 
@@ -808,12 +809,46 @@ TCICInkCodec::Decode(const void* data, long size, ULong group,
 }
 
 
+// ROM 0x0015362c GenericCSCompress__FPP7TStrokeUs
+// The ROM's compressor: a context opened over a buffer four bytes a
+// point and a hundred more, run, and what it wrote copied out.  The
+// ROM's buffer is a handle it frees; the host's is a plain block.
 void*
-TCICInkCodec::Encode(TStroke** /*strokes*/, long* outSize) const
+TCICInkCodec::Encode(InkPointSource source, void* refCon, long* outSize) const
 {
 	if (outSize != nil)
 		*outSize = 0;
-	return nil;
+	if (source == nil)
+		return nil;
+	const long kRoom = kCICMaxTracePoints * 4 + 100;
+	UByte* bits = (UByte*) NewPtrClear(kRoom);
+	if (bits == nil)
+		return nil;
+	CICEncoder encoder;
+	if (!EncoderOpen(&encoder, source, refCon, bits, kRoom, 1))
+	{
+		DisposPtr((Ptr) bits);
+		return nil;
+	}
+	Boolean ok = EncoderRun(&encoder);
+	UnlockCodeBook(encoder.fBookNumber);
+	if (!ok)
+	{
+		DisposPtr((Ptr) bits);
+		return nil;
+	}
+	long size = (long) ((encoder.fHighWater + 7) / 8);
+	void* ink = NewPtr(size);
+	if (ink == nil)
+	{
+		DisposPtr((Ptr) bits);
+		return nil;
+	}
+	BlockMove(bits, ink, size);
+	DisposPtr((Ptr) bits);
+	if (outSize != nil)
+		*outSize = size;
+	return ink;
 }
 
 

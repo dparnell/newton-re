@@ -388,6 +388,145 @@ RestoreContext(CICEncoder* encoder)
 }
 
 
+
+
+/*------------------------------------------------------------------------------
+	R o u n d i n g   a   s e g m e n t
+------------------------------------------------------------------------------*/
+
+// ROM 0x0028333c TryQuantVariant__FPlT1lT1
+// How far a rounded segment is from the fitted one: the squares of the
+// four differences, added up and given up on as soon as they pass the
+// best so far.  The first two numbers are compared as they stand; the
+// other two are what the decoder will work out from the segment's two
+// ends, so they are compared the same way round - half the sum of the
+// ends less the first bend, and half their difference less the second.
+Boolean
+TryQuantVariant(const long* coef, const long* trial, long best, long* outError)
+{
+	Boolean better = false;
+	long d = coef[2] - trial[2];
+	long error = d * d;
+	if (error <= best)
+	{
+		d = coef[3] - trial[3];
+		error += d * d;
+		if (error <= best)
+		{
+			d = (coef[0] - (trial[0] + trial[1]) / 2) + trial[2];
+			error += d * d;
+			if (error <= best)
+			{
+				d = (coef[1] - (trial[0] - trial[1]) / 2) + trial[3];
+				error += d * d;
+				if (error <= best)
+					better = true;
+			}
+		}
+	}
+	*outError = error;
+	return better;
+}
+
+
+// ROM 0x0028279c SegVectQuant__FP4_CDCPsUi
+// The three numbers of one coordinate - where the segment ends, and its
+// two bends - have each been rounded to a whole step on their own.  The
+// three roundings are not independent, though: the decoder works the
+// other two numbers out from all three at once, so a rounding that is
+// worse on its own can come out better together.  So all twenty-seven
+// ways of nudging the three by one either way are tried, and whichever
+// comes nearest the fitted segment is kept.
+//
+// ROM bug kept: which of the twenty-seven was best is only written down
+// when one of them is better than the best so far, and the best so far
+// starts at a number large enough that the first try all but always
+// takes it - all but.  DEVIATION: the host starts the three at the first
+// try's own offsets, where the ROM would use whatever was in the
+// registers.
+void
+SegVectQuant(CICEncoder* encoder, short* rounded, ULong which)
+{
+	long step = encoder->fStepA;
+	long limitB = encoder->fLimitB;
+	long limitA = encoder->fLimitA;
+	const long* coef = which == 0 ? encoder->fCoefX : encoder->fCoefY;
+	long trial[4];
+	trial[0] = which == 0 ? encoder->fPenX : encoder->fPenY;
+	trial[1] = (rounded[1] * step + trial[0]) - step;
+	trial[2] = limitA * rounded[2] - limitA;
+	trial[3] = limitB * rounded[3] - limitB;
+	long best = 0x40000000;
+	long bestEnd = -1;
+	long bestFirst = -1;
+	long bestSecond = -1;
+	for (long end = -1; end < 2; end++)
+	{
+		for (long first = -1; first < 2; first++)
+		{
+			for (long second = -1; second < 2; second++)
+			{
+				long error;
+				if (TryQuantVariant(coef, trial, best, &error))
+				{
+					best = error;
+					bestEnd = end;
+					bestFirst = first;
+					bestSecond = second;
+				}
+				trial[3] += limitB;
+			}
+			trial[3] -= limitB * 3;
+			trial[2] += limitA;
+		}
+		trial[2] -= limitA * 3;
+		trial[1] += step;
+	}
+	rounded[1] = (short) (rounded[1] + bestEnd);
+	rounded[2] = (short) (rounded[2] + bestFirst);
+	rounded[3] = (short) (rounded[3] + bestSecond);
+}
+
+
+// ROM 0x0028303c WriteSegment__FP4_CDCs
+// A segment written out: where it ends, as a step from where the stroke
+// last was, and the two numbers that bend each coordinate, each rounded
+// to a whole one of the two lengths the book was opened with.  The
+// roundings are then nudged together (SegVectQuant) unless the fitting
+// was told not to bother.  The word at the end says whether the stroke
+// goes on.
+Boolean
+WriteSegment(CICEncoder* encoder, short tag)
+{
+	short x[4];
+	short y[4];
+	x[0] = 0;
+	y[0] = 0;
+	x[1] = (short) QvantUN(encoder->fLastX - encoder->fStrokeX, encoder->fStepA);
+	y[1] = (short) QvantUN(encoder->fLastY - encoder->fStrokeY, encoder->fStepA);
+	x[2] = (short) QvantUN(encoder->fCoefX[2], encoder->fLimitA);
+	y[2] = (short) QvantUN(encoder->fCoefY[2], encoder->fLimitA);
+	x[3] = (short) QvantUN(encoder->fCoefX[3], encoder->fLimitB);
+	y[3] = (short) QvantUN(encoder->fCoefY[3], encoder->fLimitB);
+	if (encoder->fSlack != 0 && encoder->fSlack2 != 0)
+	{
+		SegVectQuant(encoder, x, 0);
+		SegVectQuant(encoder, y, 1);
+	}
+	encoder->fPenX += encoder->fStepA * x[1];
+	encoder->fLastX = encoder->fPenX;
+	encoder->fPenY += encoder->fStepA * y[1];
+	encoder->fLastY = encoder->fPenY;
+	return EncodeWord_OLD(encoder, x[1], encoder->fTables[2])
+		&& EncodeWord_OLD(encoder, y[1], encoder->fTables[3])
+		&& EncodeWord_OLD(encoder, x[2], encoder->fTables[4])
+		&& EncodeWord_OLD(encoder, y[2], encoder->fTables[5])
+		&& EncodeWord_OLD(encoder, x[3], encoder->fTables[6])
+		&& EncodeWord_OLD(encoder, y[3], encoder->fTables[7])
+		&& EncodeWord_NEW(encoder, tag, kInkEncFormatCodes);
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   n i n e   p l a c e s   o n   t h e   s t r o k e
 ------------------------------------------------------------------------------*/
@@ -770,5 +909,323 @@ WriteShortStroke(CICEncoder* encoder)
 		encoder->fPenY += encoder->fStepA * dy;
 	}
 	return EncodeWord_NEW(encoder, 7, kInkEncFormatCodes);
+}
+
+
+/*------------------------------------------------------------------------------
+	F i t t i n g   a   s e g m e n t
+------------------------------------------------------------------------------*/
+
+// ROM 0x0027fde0 TestStrokeSeg__FP4_CDCUlUs
+// The curve fitted to the trace, over and over until it settles.
+//
+// Each try finds where the nine places fall on the stroke (Repar), turns
+// those into the four numbers (RFFT), puts the four back into the nine
+// places on the new curve (RIFT), and then measures the nine against the
+// stroke again (Tracing) so that the next try looks in better places.
+//
+// It stops when the curve is close enough - the places it found and the
+// places the curve puts them agreeing to within the allowance, and the
+// stroke not stretched more than about seventeen sixteenths - or when
+// the curve stops moving, or when the stroke has become so short that
+// there is nothing left to fit.  A stroke stretched past sixteen times
+// is given up on.
+//
+// The ROM's Tracing writes one record past the nine, and that record is
+// where the first sample's saved pair lives; so the walk over the saved
+// pair is done here, where the ROM's memory does it by itself.
+Boolean
+TestStrokeSeg(CICEncoder* encoder, ULong allowance, ULong tries)
+{
+	CICSample* samples = encoder->fSamples;
+	CICSample* resampled = encoder->fResampled;
+	CICTracePoint* trace = encoder->fTrace;
+	long last = (long) encoder->fPointCount - 1;
+	long x0 = trace[0].x;
+	long y0 = trace[0].y;
+	long x1 = trace[last].x;
+	long y1 = trace[last].y;
+	for (ULong tried = 0; tried < tries; tried++)
+	{
+		encoder->fWasX[2] = encoder->fCoefX[2];
+		encoder->fWasY[2] = encoder->fCoefY[2];
+		encoder->fWasX[3] = encoder->fCoefX[3];
+		encoder->fWasY[3] = encoder->fCoefY[3];
+		long stretch = (long) Repar(&trace[last], trace, samples, resampled);
+		RFFT_9_4_X(resampled, encoder->fCoefX, x0, x1);
+		RIFT_4_9_X(samples, encoder->fCoefX);
+		RFFT_9_4_Y(resampled, encoder->fCoefY, y0, y1);
+		RIFT_4_9_Y(samples, encoder->fCoefY);
+		if (stretch < 0x11a9561 && allowance != 0
+			&& (ULong) MSQError(kCICSamples, samples, resampled) < allowance)
+			return true;
+		if (stretch > 0x10000000)
+			return false;
+		long moved = 0;
+		for (long i = 2; i < 4; i++)
+		{
+			long dx = encoder->fCoefX[i] - encoder->fWasX[i];
+			long dy = encoder->fCoefY[i] - encoder->fWasY[i];
+			moved += (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy);
+		}
+		encoder->fMoved = moved;
+		if (moved < 0x50)
+		{
+			if (allowance != 0)
+				return false;
+			if (tried != 0)
+				return false;
+		}
+		Tracing(kCICSamples, samples);
+		encoder->fSavedSamples[0].fStep = samples[kCICSamples].fStep;
+		encoder->fSavedSamples[0].fAt = samples[kCICSamples].fAt;
+		if ((ULong) samples[8].fAt < 0x400)
+		{
+			ResetParam(encoder);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+/*------------------------------------------------------------------------------
+	A   s t r o k e ,   a   s e g m e n t   a t   a   t i m e
+------------------------------------------------------------------------------*/
+
+// (the source asked for one more point; the answer says what came)
+static long
+NextPoint(CICEncoder* encoder, InkPoint* pt)
+{
+	return encoder->fSource(kInkAskNext, pt, encoder->fRefCon);
+}
+
+
+// ROM 0x0027fffc WriteLongStroke__FP4_CDC
+// A stroke written as a chain of curved segments.
+//
+// The trace is grown a point at a time while the fitting still says a
+// curve will go through it; when it will not, the trace is put back to
+// what it was at the last point that worked and the curve is fitted
+// again with no allowance at all, which always answers.  That segment is
+// written, the points after the one it ended on move down to the front
+// of the trace, and the whole thing begins again.  The last segment of a
+// stroke is written with a 7 rather than an 8.
+Boolean
+WriteLongStroke(CICEncoder* encoder)
+{
+	encoder->fCoefX[2] = 1000000;
+	encoder->fCoefY[2] = 1000000;
+	encoder->fCoefX[3] = 1000000;
+	encoder->fCoefY[3] = 1000000;
+	ResetParam(encoder);
+	StoreContext(encoder);
+	encoder->fEndOfStroke = 0;
+	ULong had = 0;
+	for (;;)
+	{
+		Boolean more = true;
+		while (more)
+		{
+			if (!TestStrokeSeg(encoder, (ULong) encoder->fError2, encoder->fSlack))
+				break;
+			StoreContext(encoder);
+			if (encoder->fError != 0)
+				return false;
+			if (encoder->fEndOfStroke != 0)
+				break;
+			long added;
+			for (;;)
+			{
+				InkPoint pt;
+				long what = NextPoint(encoder, &pt);
+				if (what == kInkEndStroke)
+				{
+					encoder->fEndOfStroke = 1;
+					goto done;
+				}
+				if (what == kInkEnd)
+				{
+					encoder->fDone = 1;
+					encoder->fEndOfStroke = 1;
+					goto done;
+				}
+				if (what != kInkPoint)
+					break;					// nothing this time: fit again
+				added = AddPointToOdata(encoder, &pt);
+				if (added != 0)
+				{
+					if (added == -1)
+						more = false;		// the trace is full
+					break;
+				}
+			}
+		}
+	done:
+		if (encoder->fError != 0)
+			return false;
+		if (encoder->fEndOfStroke == 0)
+		{
+			had = encoder->fPointCount;
+			RestoreContext(encoder);
+		}
+		TestStrokeSeg(encoder, 0, encoder->fSlack2);
+		if (encoder->fError != 0)
+			return false;
+		encoder->fStrokeX = encoder->fPenX;
+		encoder->fStrokeY = encoder->fPenY;
+		long ended = (long) encoder->fPointCount - 1;
+		encoder->fLastX = encoder->fTrace[ended].x;
+		encoder->fLastY = encoder->fTrace[ended].y;
+		if (encoder->fEndOfStroke != 0)
+			break;
+		// the points from the one the segment ended on to the ones
+		// already read move down to the front, and their distances
+		// along are worked out again from there
+		ULong to = 0;
+		for (long from = ended; from < (long) had; from++)
+		{
+			encoder->fTrace[to].x = encoder->fTrace[from].x;
+			encoder->fTrace[to].y = encoder->fTrace[from].y;
+			if (to == 0)
+			{
+				encoder->fTrace[0].dx = 0;
+				encoder->fTrace[0].dy = 0;
+				encoder->fTrace[0].fLength = 0;
+				encoder->fTrace[0].fArc = 0;
+			}
+			else
+			{
+				encoder->fTrace[to].dx = encoder->fTrace[from].dx;
+				encoder->fTrace[to].dy = encoder->fTrace[from].dy;
+				long length = encoder->fTrace[from].fLength;
+				encoder->fTrace[to].fLength = length;
+				encoder->fTrace[to].fArc = encoder->fTrace[to - 1].fArc + length;
+			}
+			to++;
+		}
+		encoder->fPointCount = to;
+		while (encoder->fPointCount < 2)
+		{
+			InkPoint pt;
+			long what = NextPoint(encoder, &pt);
+			if (what == kInkEndStroke)
+			{
+				encoder->fEndOfStroke = 1;
+				break;
+			}
+			if (what == kInkEnd)
+			{
+				encoder->fDone = 1;
+				encoder->fEndOfStroke = 1;
+				break;
+			}
+			if (what == kInkPoint)
+				AddPointToOdata(encoder, &pt);
+		}
+		if (encoder->fPointCount <= 1)
+			break;
+		if (!WriteSegment(encoder, 8))
+			return false;
+		encoder->fCoefX[2] = 1000000;
+		encoder->fCoefY[2] = 1000000;
+		encoder->fCoefX[3] = 1000000;
+		encoder->fCoefY[3] = 1000000;
+		ResetParam(encoder);
+	}
+	return WriteSegment(encoder, 7);
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   r u n
+------------------------------------------------------------------------------*/
+
+// ROM 0x0027f938 EncoderOpen__FUsUlT1T2T1
+// A context made ready.  (The ROM allocates one; the host is given the
+// room to work in, as with the decoder.)  The four numbers that bend a
+// segment start at a million, which is far enough out that the first try
+// of the fitting always counts as having moved.
+Boolean
+EncoderOpen(CICEncoder* encoder, InkPointSource source, void* refCon,
+			UByte* out, long size, ULong book)
+{
+	memset(encoder, 0, sizeof(*encoder));
+	encoder->fSource = source;
+	encoder->fRefCon = refCon;
+	encoder->fOut = out;
+	encoder->fBitLimit = (ULong) size * 8;
+	encoder->fFirst = 1;
+	encoder->fCoefX[2] = 1000000;
+	encoder->fCoefY[2] = 1000000;
+	encoder->fCoefX[3] = 1000000;
+	encoder->fCoefY[3] = 1000000;
+	encoder->fBookNumber = book;
+	return EcdrSelectCodeBook(encoder);
+}
+
+
+// ROM 0x002804f8 EncoderRun__FUl
+// The source told to begin, and then stroke after stroke: points are
+// pulled until there are two, and a stroke of two or more is written as
+// a chain of segments.  A stroke of one is a dot, and goes out as a
+// short stroke with nothing after its first point.  The run ends with
+// the word that says so.
+Boolean
+EncoderRun(CICEncoder* encoder)
+{
+	if (encoder->fSource == nil)
+	{
+		encoder->fError = 7;
+		return false;
+	}
+	InkPoint pt;
+	if (encoder->fSource(kInkAskBegin, &pt, encoder->fRefCon) == 0)
+	{
+		encoder->fError = 12;
+		return false;
+	}
+	encoder->fDone = 0;
+	for (;;)
+	{
+		if (encoder->fDone != 0)
+		{
+			WriteNewStroke(encoder, kCICEndOfGroup);
+			break;
+		}
+		encoder->fPointCount = 0;
+		while (encoder->fPointCount < 2)
+		{
+			long what = NextPoint(encoder, &pt);
+			if (what == kInkEndStroke)
+			{
+				encoder->fEndOfStroke = 1;
+				break;
+			}
+			if (what == kInkEnd)
+			{
+				encoder->fDone = 1;
+				encoder->fEndOfStroke = 1;
+				break;
+			}
+			if (what == kInkPoint)
+				AddPointToOdata(encoder, &pt);
+		}
+		if (encoder->fDone != 0)
+		{
+			WriteNewStroke(encoder, kCICEndOfGroup);
+			break;
+		}
+		if (encoder->fPointCount == 0)
+			continue;
+		Boolean ok;
+		if (encoder->fPointCount < 2)
+			ok = WriteNewStroke(encoder, kCICShortStroke) && WriteShortStroke(encoder);
+		else
+			ok = WriteNewStroke(encoder, kCICLongStroke) && WriteLongStroke(encoder);
+		if (!ok)
+			break;
+	}
+	return encoder->fError == 0;
 }
 

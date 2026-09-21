@@ -261,6 +261,10 @@ struct CICEncoder
 	const void*		fTables[8];		// +0xe38 to +0xe54
 	ULong			fBookNumber;	// +0xe58   the book in use (a halfword)
 	ULong			fFirst;			// +0xe5a   this is the run's first stroke
+	InkPointSource	fSource;		// +0x1c    where the points come from
+	void*			fRefCon;		// +0x18    and what it is given
+	ULong			fEndOfStroke;	// +0xdf8   the stroke has ended
+	ULong			fDone;			// +0xdf4   and so has the run
 	long			fMoved;			// +0xe5c   how far the last try moved the curve
 	CICSample		fSavedSamples[kCICSamples];	// +0xd8, sharing fResampled's
 								//          two spare fields - see StoreContext
@@ -300,6 +304,47 @@ void	ResetParam(CICEncoder* encoder);
 // Where the fitting had got to, kept and put back.
 void	StoreContext(CICEncoder* encoder);
 void	RestoreContext(CICEncoder* encoder);	// ROM 0x0028049c RestoreContext__FP4_CDC
+
+// ROM 0x0027fde0 TestStrokeSeg__FP4_CDCUlUs
+// The curve fitted to the trace, over and over until it settles or the
+// tries run out.  ==> whether it came within the allowance.
+Boolean	TestStrokeSeg(CICEncoder* encoder, ULong allowance, ULong tries);
+
+// ROM 0x0027fffc WriteLongStroke__FP4_CDC
+// A stroke written as a chain of segments, points pulled from the
+// source as the fitting asks for them.
+Boolean	WriteLongStroke(CICEncoder* encoder);
+
+// ROM 0x0027f938 EncoderOpen__FUsUlT1T2T1
+// A context made ready to write a block of ink.
+Boolean	EncoderOpen(CICEncoder* encoder, InkPointSource source, void* refCon,
+					UByte* out, long size, ULong book);
+
+// ROM 0x002804f8 EncoderRun__FUl
+// Stroke after stroke written into it.
+Boolean	EncoderRun(CICEncoder* encoder);
+
+// How much the fitting is allowed to be out by, and how many tries it
+// gets - the numbers EcdrSelectCodeBook puts in the context.
+const long kCICAllowance = 0xf0bc10;
+
+
+// ROM 0x0028333c TryQuantVariant__FPlT1lT1
+// How far a rounded segment is from the fitted one, in all four of its
+// numbers.  ==> whether it came to less than the best so far, which is
+// in `outError` either way.
+Boolean	TryQuantVariant(const long* coef, const long* trial, long best, long* outError);
+
+// ROM 0x0028279c SegVectQuant__FP4_CDCPsUi
+// The three rounded numbers of one coordinate nudged, each by one
+// either way, to whichever of the twenty-seven comes nearest.
+void	SegVectQuant(CICEncoder* encoder, short* rounded, ULong which);
+
+// ROM 0x0028303c WriteSegment__FP4_CDCs
+// A segment written: where it ends and the four numbers that bend it,
+// and the word that says whether the stroke goes on.
+Boolean	WriteSegment(CICEncoder* encoder, short tag);
+
 
 // ROM 0x00283424 Repar__FP6_ORG_PT1P6_RPR_PT3
 // The nine places found on the stroke itself: each sample's distance
@@ -414,7 +459,7 @@ public:
 	virtual Boolean		CanEncode(void) const;
 	virtual Boolean		Decode(const void* data, long size, ULong group,
 							   InkPointProc sink, void* refCon) const;
-	virtual void*		Encode(TStroke** strokes, long* outSize) const;
+	virtual void*		Encode(InkPointSource source, void* refCon, long* outSize) const;
 };
 
 extern TCICInkCodec	gCICInkCodec;

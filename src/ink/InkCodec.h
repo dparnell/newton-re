@@ -77,6 +77,19 @@ const short kInkEnd			= 4;
 typedef short (*InkPointProc)(short what, const InkPoint* pt, void* refCon);
 
 
+// And the other way about: what the encoder asks for its points.  It is
+// told to begin, and then asked for one point after another; the answer
+// says what came - a point, the end of a stroke, or the end of it all.
+// The ROM's encoder is opened on such a proc too (GetInputTraceDefault
+// is its own, and GenericCSCompress puts PGCGetPointProc in its place to
+// read a list of TStrokes), which is why the codec need know nothing
+// about strokes.
+const short kInkAskBegin	= 1;
+const short kInkAskNext		= 0;
+
+typedef short (*InkPointSource)(short what, InkPoint* pt, void* refCon);
+
+
 // The ink formats GetInkFormat tells apart, by the first byte of the
 // data.  0, 1 and 3 are the compressed forms the CIC codec writes; 2 is
 // anything else, which is the old uncompressed ink.
@@ -109,9 +122,10 @@ public:
 	virtual Boolean		Decode(const void* data, long size, ULong group,
 							   InkPointProc sink, void* refCon) const = 0;
 
-	// The strokes packed into a newly allocated block (NewPtr, the
-	// caller disposes of it), and its size.  nil when it cannot.
-	virtual void*		Encode(TStroke** strokes, long* outSize) const = 0;
+	// The points a source hands out, packed into a newly allocated block
+	// (NewPtr, the caller disposes of it), and its size.  nil when it
+	// cannot.
+	virtual void*		Encode(InkPointSource source, void* refCon, long* outSize) const = 0;
 };
 
 
