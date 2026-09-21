@@ -2312,11 +2312,30 @@ TestCaretGesture()
 	// narrower than the character box the tail was measured against
 	EXPECT(p->TextLength() > 7 && p->TextLength() < 30);
 
-	// a caret pointing down asks to join the paragraphs, which is NOT YET
-	Eval("SetValue(ctxCg, 'text, \"onetwo\")");
+	// a caret drawn upside down across the line closes up the space its
+	// arms straddle (CheckAndDoJoin)
+	Eval("SetValue(ctxCg, 'text, \"one two three\")");
 	Refresh();
+	p->OffsetToBounds(3, &box);
+	armA.h = box.left;			armA.v = baseline;
+	p->OffsetToBounds(4, &box);
+	armB.h = box.left;			armB.v = baseline;
+	point.h = (short) ((armA.h + armB.h) / 2);
+	point.v = (short) (baseline + 8);
+	tail.v = (short) 0x8000;	tail.h = 0;
+	EXPECT(p->HandleCaret(2, 180, armA, point, armB, tail) == 1);
+	EXPECT(NOTNIL(Eval("StrEqual(ctxCg.text, \"onetwo three\")")));
+
+	// the same caret over the middle of a word has no space to close
+	Eval("SetValue(ctxCg, 'text, \"one two three\")");
+	Refresh();
+	p->OffsetToBounds(9, &box);
+	armA.h = box.left;
+	p->OffsetToBounds(10, &box);
+	armB.h = box.left;
+	point.h = (short) ((armA.h + armB.h) / 2);
 	EXPECT(p->HandleCaret(2, 180, armA, point, armB, tail) == 0);
-	EXPECT(p->TextLength() == 6);
+	EXPECT(p->TextLength() == 13);
 
 
 	// a caret pointing right, drawn in the left margin between two lines,

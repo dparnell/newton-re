@@ -847,7 +847,7 @@ left edge or twenty inside it).  What it then does:
 | --- | --- | --- |
 | 2, the plain caret | up | one space |
 | 2 | right | a line break |
-| 2 | down | the paragraphs joined (NOT YET) |
+| 2 | down | the space between two words closed up |
 | 3, with a tail | up | as many spaces as the tail is wide |
 | 3 | right | as many line breaks as it is tall |
 | 5, the open one | up | line breaks, unless the view is one line only |
@@ -877,10 +877,21 @@ buffer it never filled - whatever was on the stack.  The host cannot
 reproduce which bytes those are and will not put arbitrary text into a
 note, so the buffer starts empty there and nothing goes in.
 
-NOT YET: `CheckAndDoJoin` (0x00175964), the join half of the table
-above, which wants the ROM's text objects (the `Finder`).  The line
-gesture (`aeLine`) is not answered either: in a paragraph it is the
-case-change gesture, and it wants `DoInsertItems` and `GetStylesOfRange`.
+`CheckAndDoJoin` (0x00175964) is the join: a caret drawn upside down
+across a line closes up the white space its two arms straddle.  The arms
+have to be within fifteen pixels of each other vertically and within half
+an ascent of the line's baseline - which is what keeps a caret drawn
+between two lines from joining either - and both are taken to the
+baseline before the characters under them are asked for, so a badly drawn
+caret still picks the characters its arms cross.  From those two the
+gesture works outwards (an arm on white space steps back one, an arm on
+the last character steps forward one) and the first run of white space
+between them goes, however long it is: a join over "one   two" takes all
+three spaces, and one over a word takes nothing.  Joining two *ink* words
+instead - both characters 0xf701, the ink word character of the three the
+ROM's `IsInkChar` takes - is NOT YET, and so is the line
+gesture (`aeLine`), which in a paragraph is the case-change gesture and
+wants `DoInsertItems` and `GetStylesOfRange`.
 Nor are the shape and word domains above this one, nor
 `ArbitrateGraphicsWords`, the inker and ink
 (`StrokeUpdate`, the expired strokes' grouping and compression, the

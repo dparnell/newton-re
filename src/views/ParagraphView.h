@@ -28,7 +28,7 @@
 				hilites (a selection typed over), ink words, the recogniser's
 				word handling and the line gesture (the scrub and the caret
 				are here: HandleScrub, ScrubLines, ScrubWords, HandleCaret,
-				InsertHorizontalSpace, InsertVerticalSpace - but not
+				InsertHorizontalSpace, InsertVerticalSpace,
 				CheckAndDoJoin), the correction
 				info, the other edit commands (styles changed, cut and
 				paste), the tab stops
@@ -162,6 +162,7 @@ public:
 	// what says how many line breaks to put in when there is no width.
 	long		InsertHorizontalSpace(Point& pt, long width, long height, Boolean typed);	// ROM 0x00175dac InsertHorizontalSpace__14TParagraphViewFR6TPointlT2Uc
 	long		InsertVerticalSpace(Point& pt, long height);			// ROM 0x001764c4 InsertVerticalSpace__14TParagraphViewFR6TPointl
+	long		CheckAndDoJoin(Point& armA, Point& point, Point& armB);	// ROM 0x00175964 CheckAndDoJoin__14TParagraphViewFR6TPointN21
 	// The line nearest a point's v: the ROM measures each line's box less
 	// the leading it carries, which this cache does not keep apart, so the
 	// box's top is what is measured.  ==> its index, -1 for none, and -1

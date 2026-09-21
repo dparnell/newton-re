@@ -2045,6 +2045,110 @@ TParagraphView::InsertVerticalSpace(Point& pt, long height)
 }
 
 
+// the second of the three ink characters the ROM's IsInkChar (0x001fe914)
+// takes - 0xf700, 0xf701 and 0xf702 - and the only one a join merges
+const UniChar kJoinableInkChar = 0xf701;
+
+
+// ROM 0x00175964 CheckAndDoJoin__14TParagraphViewFR6TPointN21
+// A caret drawn upside down across a line - the join gesture - closes up
+// the white space between the two words its arms are over.
+//
+// Its two arms have to be within fifteen pixels of each other vertically,
+// and the line is the one whose baseline is nearest the right-hand arm
+// (FindLineForWord over a box from the caret's point to that arm).  Both
+// arms then have to lie within half an ascent of that line's baseline,
+// which is what keeps a caret drawn between two lines from joining
+// either; and both are taken to the baseline before the characters under
+// them are asked for, so a badly drawn caret still picks the characters
+// its arms cross.
+//
+// From those two characters the gesture works outwards: an arm on white
+// space steps back one (the character the space follows), and an arm on
+// the last character steps forward one.  Then the first white space at or
+// after the left character, as long as it comes before the right one, is
+// the run that goes - however many spaces, tabs and returns follow it.
+// So a join drawn over "one   two" takes all three spaces, and one drawn
+// over a word takes nothing.
+//
+// (host: the ROM removes the run through DoInsertItems, the same path a
+// dropped item takes; InsertStyledText is the host's equivalent - it
+// makes the same aeReplaceText command, with the same undo.)
+//
+// NOT YET RECONSTRUCTED: two ink words joined into one, which is what
+// happens when both characters are 0xf701 - the ink word character (the
+// ROM's IsInkChar takes 0xf700, 0xf701 and 0xf702, and only the word is
+// joinable).  GetInkAt, MergeInk and AdjustInkWordXHeight are all ink.
+long
+TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
+{
+	long arms = armA.v - armB.v;
+	if (arms < 0)
+		arms = -arms;
+	if (arms > 15)
+		return 0;
+	Point left = armA.h < armB.h ? armA : armB;
+	Point right = armA.h < armB.h ? armB : armA;
+
+	Rect written;
+	SetRect(&written, point.h, point.v, right.h, right.v);
+	long index = FindLineForWord(written, 4);
+	if (index < 0)
+		return 0;
+	const LineInfo& line = fLines[index];
+	long half = line.fAscent / 2;
+	long baseline = line.fBounds.top + line.fAscent;
+	long fromLeft = baseline - left.v;
+	long fromRight = baseline - right.v;
+	// both arms within half an ascent of the baseline, below it and above
+	if ((fromLeft > half ? fromLeft : fromRight) > half)
+		return 0;
+	if ((fromLeft >= -half ? fromRight : fromLeft) < -half)
+		return 0;
+
+	left.v = (short) baseline;
+	right.v = (short) baseline;
+	long start = PointToOffset(left);
+	long end = PointToOffset(right);
+
+	RefVar textRef(Text());
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	if (IsWhiteSpace(text[start]) && start != 0)
+		start--;
+	if (IsWhiteSpace(text[end]) && text[end] != 0)
+		end++;
+	long count = 0;
+	Boolean join = false;
+	if (text[start] == kJoinableInkChar && text[end] == kJoinableInkChar)
+	{
+		// NOT YET: the two ink words merged (GetInkAt, MergeInk,
+		// AdjustInkWordXHeight) and put in in place of both
+	}
+	else if (!IsWhiteSpace(text[start]) && !IsWhiteSpace(text[end]))
+	{
+		do
+		{
+			start++;
+			if (start >= end)
+				break;
+		} while (!IsWhiteSpace(text[start]));
+		if (start != end)
+		{
+			for (long i = start; IsWhiteSpace(text[i]); i++)
+				count++;
+			join = true;
+		}
+	}
+	rich.ReleasePtr();
+	if (!join)
+		return 0;
+	UniChar none = 0;
+	InsertStyledText((ULong) start, &none, 0, RefVar(NILREF), RefVar(NILREF), 0, (ULong) count, false);
+	return 1;
+}
+
+
 // ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
 // A caret gesture offered to the paragraph.  Its point has to be within
 // the view grown by the height of the caret's arms - a caret drawn just
@@ -2055,14 +2159,14 @@ TParagraphView::InsertVerticalSpace(Point& pt, long height)
 //
 // What it then does depends on the kind and the angle: the plain caret
 // (2) pointing up is one space, pointing right a line break, pointing
-// down joins the paragraph to the one after; the caret with a tail (3) is
+// down closes up the space between two words; the caret with a tail (3) is
 // as many spaces as the tail is wide, or as many line breaks as it is
 // tall; the open one (5) is line breaks unless the view is one line only;
 // the flat one (6), which only a one-line view takes, is a single space
 // when both its arms are short.
 //
-// NOT YET RECONSTRUCTED: CheckAndDoJoin (0x00175964), which joins this
-// paragraph to the one after it; the caret that asks for it answers 0.
+// NOT YET RECONSTRUCTED: the ink half of CheckAndDoJoin, which joins two
+// ink words rather than closing up the space between two of text.
 long
 TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 							Point& armB, Point& tail)
@@ -2114,7 +2218,7 @@ TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 			vertical = true;
 		}
 		else if (angle == 180)
-			return 0;			// NOT YET: CheckAndDoJoin(armA, point, armB)
+			return CheckAndDoJoin(armA, point, armB);
 		else
 			return 0;
 	}
