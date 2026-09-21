@@ -931,3 +931,36 @@ NOT YET: the shape and word domains above this one, nor
 (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.
+
+## Stroke bundles (`recognition/StrokeBundle.h`)
+
+A *stroke bundle* is the NewtonScript form of a handful of strokes, and
+what a recogniser hands a view when the writing is to be kept rather
+than read.  It is a frame of class `'strokeBundle`, cloned from the
+ROM's `Rstrokebundle`, with a `strokes` array, a `bounds`, and the
+`startTime` and `endTime` of the writing.  Each member of the array is a
+binary of class `'stroke`: one four-byte Point per sample, v then h,
+both in eighths of a pixel and big-endian, because a bundle can go into
+a soup.
+
+The eighths are the ROM's own resolution rather than the tablet's.
+Every function here takes a *format*: under two means pixels, and a
+point is rounded to them with `(value + 4) >> 3`; two or more asks for
+the eighths themselves.  `GetStrokePointsArray` reads two more things
+out of the upper bytes of the same word - how far apart the points are
+to be (one no further than that from the one before is dropped, though
+the first is always kept, and the distance is the cheap one: the longer
+side plus half the shorter) and whether they are wanted h before v
+rather than in the Point order, which is the difference between
+`GetPointsArray` and `GetPointsArrayXY`.
+
+`StrokeBundle` (0x00144e54) makes one out of the units a recogniser has
+finished with, the box let out by the two pixels the pen spills;
+`MakeStrokeBundle` out of arrays of numbers a script hands in.
+`StrokeBundleToTStrokes` turns one back into the recogniser's own
+objects, `DrawStrokeBundle` draws it stretched from the box it was
+written in into another, and `ink/InkShapes.h`'s `StrokeBundleToInkWord`
+packs it up as ink - keeping the answer in the bundle's own `inkWord`
+slot, so a bundle passed round several views is only packed once.
+`TParagraphView::InsertInk` is what puts the result into a paragraph, as
+the single character an ink word stands as.
