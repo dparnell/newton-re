@@ -8,6 +8,7 @@
 */
 
 #include "DrawShape.h"
+#include "Ink.h"
 #include "Transform.h"
 #include "Rects.h"
 #include "Regions.h"
@@ -712,6 +713,30 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 				FrameRoundRect(&data.fRect, data.fA, data.fA);
 			}
 		}
+		return;
+	}
+	if (EQRef(cls, RSSYMink))
+	{
+		// ink is drawn out of the box it was made in (originalBounds)
+		// and into the one it is to fill now, so a sketch that has been
+		// resized stretches; the pen's width is what says how the points
+		// are to be thinned on the way.
+		Rect to;
+		Rect from;
+		RectOf(RefVar(GetProtoVariable(shape, RSSYMbounds, nil)), &to);
+		RectOf(RefVar(GetProtoVariable(shape, RSSYMoriginalbounds, nil)), &from);
+		if (style->fTransformDepth == 0)
+		{
+			Point at = DrawOrigin(origin, style);
+			OffsetRect(&to, at.h, at.v);
+			OffsetRect(&from, at.h, at.v);
+		}
+		if (style->fPen)
+			SetPenPattern(style);
+		PenState pen;
+		GetPenState(&pen);
+		InkDrawInRect(RefVar(GetProtoVariable(shape, RSSYMdata, nil)), (ULong) pen.pnSize.h,
+					  &from, &to);
 		return;
 	}
 	if (EQRef(cls, RSSYMpolygon) || EQRef(cls, RSSYMregion))
@@ -1521,4 +1546,38 @@ RegisterShapeNatives(void)
 	RegisterNativeFunction("FScaleShape", (void*) FScaleShape, 3);
 	RegisterNativeFunction("FMakeShape", (void*) FMakeShape, 1);
 	RegisterNativeFunction("FIsPrimShape", (void*) FIsPrimShape, 1);
+}
+
+
+// ROM 0x00191600 MakePolygonForm__FP6TPointlT2RC5TRectT2
+// The shape frame a polygon is drawn from: the ROM's starter frame
+// cloned, the points put in a 'polygonShape binary after a halfword verb
+// and a halfword count, and the box as the bounds.  Ink is the odd verb
+// out - it has a starter frame of its own and no points at all, the
+// drawing coming from an `ink` slot whoever makes the shape adds.
+//
+// A pen of two is what a shape has already, so only another size is
+// written, into the frame's viewFormat where the pen bits are.
+Ref
+MakePolygonForm(const Point* points, long count, long verb, const Rect& box, long pen)
+{
+	RefVar form;
+	if (verb == kInkVerb)
+		form = Clone(RefVar(Rstarterink));
+	else
+	{
+		form = Clone(RefVar(Rstarterpolygon));
+		RefVar shape(AllocateBinary(RSSYMpolygonshape, count * (long) sizeof(Point) + 4));
+		UByte* data = (UByte*) BinaryData(shape);
+		BlockMove(points, data + 4, count * (long) sizeof(Point));
+		data[0] = (UByte) (verb >> 8);
+		data[1] = (UByte) verb;
+		data[2] = (UByte) (count >> 8);
+		data[3] = (UByte) count;
+		SetFrameSlot(form, RSSYMpoints, shape);
+	}
+	SetFrameSlot(form, RSSYMviewbounds, RefVar(ToObject(box)));
+	if (pen != 2)
+		SetFrameSlot(form, RSSYMviewformat, RefVar(MAKEINT(pen << 8)));
+	return form;
 }

@@ -118,4 +118,14 @@ Boolean	HitShape(RefArg shape, const Point& pt, RefArg path);		// ROM 0x000e17bc
 
 Ref		FDrawShape(RefArg rcvr, RefArg shape, RefArg style);						// ROM 0x000dc844 FDrawShape - a view's DrawShape method
 
+// ROM 0x00191600 MakePolygonForm__FP6TPointlT2RC5TRectT2
+// A shape frame for a polygon, or - for verb 14 - for ink, which carries
+// no points of its own and is drawn from the `ink` slot the caller adds.
+// A pen size other than the two a shape has by default goes into the
+// frame's viewFormat.
+Ref		MakePolygonForm(const Point* points, long count, long verb, const Rect& box, long pen);
+
+// The verb that says a shape is ink rather than a polygon.
+const long kInkVerb = 14;
+
 #endif	/* __DRAWSHAPE_H */

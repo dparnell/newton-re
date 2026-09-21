@@ -33,6 +33,7 @@
 #include "Unit.h"			// FixRect
 #include "Locale.h"			// GetPreference
 #include "Words.h"			// WRecFindBaseline
+#include "DrawShape.h"		// MakePolygonForm
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
@@ -563,6 +564,24 @@ InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed sca
 }
 
 
+// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
+// Ink drawn stretched out of the box it was made in and into another:
+// the scale is what one box is of the other, in both directions, and the
+// ink goes to the destination's top-left corner.
+void
+InkDrawInRect(RefArg ink, ULong group, const Rect* from, const Rect* to)
+{
+	FRect dst;
+	FixRect(&dst, to);
+	Fixed width = (Fixed) ((ULong) (from->right - from->left) << 16);
+	Fixed height = (Fixed) ((ULong) (from->bottom - from->top) << 16);
+	if (width == 0 || height == 0)
+		return;
+	InkDrawScaled(ink, group, dst.left, dst.top,
+				  FixedDivide(dst.right - dst.left, width),
+				  FixedDivide(dst.bottom - dst.top, height));
+}
+
 // ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
 // The same, at the size it was written.
 void
@@ -572,3 +591,49 @@ InkDraw(RefArg ink, ULong group, long x, long y)
 				  0x10000, 0x10000);
 }
 
+
+/*------------------------------------------------------------------------------
+	I n k   a s   a   s h a p e
+------------------------------------------------------------------------------*/
+
+// (the pen the user writes with, or one when nobody has said)
+static long
+UserPenSize(void)
+{
+	RefVar size(GetPreference(RefVar(RSSYMuserpensize)));
+	return ISINT(size) ? RVALUE(size) : 1;
+}
+
+
+// ROM 0x001a31bc MakeInkPoly__FPP7TStroke
+// A sketch as a shape: the strokes packed into ink, a shape frame of the
+// ink verb over the box they came from, and the ink hung off it.
+Ref
+MakeInkPoly(TStroke** strokes)
+{
+	Rect box;
+	RefVar ink(TStrokesToInk(strokes, &box));
+	RefVar form(MakePolygonForm(nil, 0, kInkVerb, box, UserPenSize()));
+	SetFrameSlot(form, RSSYMink, ink);
+	return form;
+}
+
+
+// ROM 0x001a3250 MakeInkWordPoly__FPP7TStroke
+// A word as a shape.  The box is not the one the strokes came out of but
+// the one the word's own measurements make - as wide as the word and as
+// tall as its ascent and descent together, with the pen in both - so
+// that a line of text can put it where it belongs.
+Ref
+MakeInkWordPoly(TStroke** strokes)
+{
+	Rect box;
+	RefVar ink(TStrokesToInkWord(strokes, &box));
+	InkWordInfo info;
+	GetInkWordInfo(ink, &info);
+	box.right = (short) (box.left + info.fWidth + info.fPenSize);
+	box.bottom = (short) (box.top + info.fAscent + info.fDescent + info.fPenSize);
+	RefVar form(MakePolygonForm(nil, 0, kInkVerb, box, (long) info.fPenSize));
+	SetFrameSlot(form, RSSYMink, ink);
+	return form;
+}

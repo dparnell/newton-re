@@ -11,6 +11,8 @@
 #include "Ports.h"
 #include "Draw.h"
 #include "Regions.h"
+#include "DrawShape.h"
+#include "Rects.h"
 #include "ROMConstants.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -1496,6 +1498,35 @@ TestInkDraw()
 			widest = across;
 	}
 	EXPECT(widest > 10 && widest < 30);
+
+	// the same ink as a shape, drawn through the shape machinery: a
+	// frame of class 'ink with the box it was made in, the box it is to
+	// fill now, and the ink itself
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	{
+		Rect from;
+		UnionBounds(list, &from);
+		RefVar shape(AllocateFrame());
+		SetClass(shape, RefVar(RSSYMink));
+		SetFrameSlot(shape, RefVar(RSSYMdata), ink);
+		SetFrameSlot(shape, RefVar(RSSYMoriginalbounds), RefVar(ToObject(from)));
+		Rect to = from;
+		OffsetRect(&to, 10, 20);
+		SetFrameSlot(shape, RefVar(RSSYMbounds), RefVar(ToObject(to)));
+		Point origin;
+		origin.h = 0;
+		origin.v = 0;
+		DrawShape(shape, RefVar(NILREF), origin);
+		EXPECT(DrawnPixels() > 20);
+		// and stretched to twice the width it covers twice as much
+		long plain = DrawnPixels();
+		memset(gDrawBits, 0, sizeof(gDrawBits));
+		to.right = (short) (to.left + (from.right - from.left) * 2);
+		SetFrameSlot(shape, RefVar(RSSYMbounds), RefVar(ToObject(to)));
+		DrawShape(shape, RefVar(NILREF), origin);
+		long stretched = DrawnPixels();
+		EXPECT(stretched > plain);
+	}
 
 	stroke->IDispose();
 	ClosePort(&gDrawPort);

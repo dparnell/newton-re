@@ -152,6 +152,18 @@ void		InkDraw(RefArg ink, ULong group, long x, long y);		// ROM 0x00140cd0 InkDr
 void		InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y,
 						  Fixed scaleX, Fixed scaleY);				// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
 
+// Ink drawn stretched from the box it was made in into another one,
+// which is how a sketch that has been resized is drawn.
+void		InkDrawInRect(RefArg ink, ULong group, const Rect* from, const Rect* to);	// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
+
+
+// A shape frame that draws a list of strokes as ink: the strokes packed
+// and hung off the frame's `ink` slot, the frame's bounds where they
+// were.  The word's one is sized by the word's own measurements rather
+// than by the box the strokes came out of.
+Ref			MakeInkPoly(TStroke** strokes);							// ROM 0x001a31bc MakeInkPoly__FPP7TStroke
+Ref			MakeInkWordPoly(TStroke** strokes);						// ROM 0x001a3250 MakeInkWordPoly__FPP7TStroke
+
 
 // What a word of strokes measures, for the eight bytes an ink word
 // carries.  The ascent and the x-height come from where the recogniser
