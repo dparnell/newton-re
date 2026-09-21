@@ -2307,6 +2307,18 @@ TestLineGesture()
 	p->MakeHilite(4, 7, false);
 	Refresh();
 
+	// a hilite keeps its area and its box in the view's own coordinates,
+	// so GlobalHiliteBounds is what puts it back where the word is
+	{
+		TParagraphHilite* h = (TParagraphHilite*) RefToAddress(RefVar(p->FirstHilite()));
+		EXPECT(h != nil && h->fBounds.top == 0);
+		Rect global;
+		SetEmptyRect(&global);
+		p->GlobalHiliteBounds(&global);
+		EXPECT(global.left == wordLeft);
+		EXPECT(global.top == p->fLines[0].fBounds.top);
+	}
+
 	// drawn upwards through the middle of the word: the word goes up
 	Point from, to;
 	from.h = (short) ((wordLeft + wordRight) / 2);	from.v = below;
@@ -2542,6 +2554,17 @@ TestScrubbing()
 	SetRect(&scrub, 0, (short) (line.bottom + 20), 10, (short) (line.bottom + 30));
 	EXPECT(p->HandleScrub(scrub, -1, nil, true) == 0);
 	EXPECT(p->TextLength() == 13);
+
+	// a scrub that goes over the selection takes the selection, whatever
+	// else it covers.  The scrub arrives in the port's coordinates and a
+	// hilite keeps its area in the view's own, so ScrubHilite moves it
+	// there first - if the two ever disagree this finds nothing.
+	p->MakeHilite(4, 7, false);
+	Refresh();
+	p->OffsetToBounds(5, &box);
+	SetRect(&scrub, (short) (box.left), (short) (line.top + 2), (short) (box.left + 3), (short) (line.top + 18));
+	EXPECT(p->ScrubHilite(scrub));
+	EXPECT(p->TextLength() < 13);
 
 	Eval("RemoveView(GetRoot(), ctxSc)");
 	Refresh();

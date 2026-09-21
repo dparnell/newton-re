@@ -1109,6 +1109,11 @@ of an empty line still overlaps it), `Encloses`, `Clone`/`CopyFrom`.
 whose region only the paragraph can work out - the characters are laid
 out in lines - so `TParagraphView::SetupArea` 0x0016c774 computes it once
 and keeps it in the hilite, `fBounds` being that region's bounding box.
+The lines are laid out in the port's coordinates, so `TParagraphView::Area`
+0x0016a92c moves the region into the view's own at the end - a hilite's
+area and box are always the view's own, which is why `GlobalHiliteBounds`
+and `TEditView::ScrubHilite` convert, and why `DrawHilites` is the one
+place that moves the region back to draw it.
 NOT YET: the copy of the selected text the ROM's carries for the undo of
 a replacement.
 

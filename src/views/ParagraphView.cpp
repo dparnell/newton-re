@@ -1138,11 +1138,18 @@ TParagraphView::AdjustHilites(long /*offset*/, long /*delta*/)
 { }
 
 
-// host: the region covering the characters a hilite selects, in the view's
-// coordinates - the union, over the lines the hilite touches, of the box
-// from the first selected character's left edge to the last's (or the
-// line's right when the selection runs on past it).  ==> whether it is
-// non-empty.
+// host: the region covering the characters a hilite selects - the union,
+// over the lines the hilite touches, of the box from the first selected
+// character's left edge to the last's (or the line's right when the
+// selection runs on past it).  ==> whether it is non-empty.
+//
+// The lines are laid out in the port's coordinates, so the region is
+// moved into the view's own at the end, which is where a hilite keeps
+// its area and its bounding box (the ROM's TParagraphView::Area
+// 0x0016a92c ends with the same OffsetRgn).  Everything that looks at a
+// hilite - TView::RemoveHilite's dirty rectangle, GlobalHiliteBounds,
+// TEditView::ScrubHilite - works in those coordinates, so the drawing is
+// the one place that has to move it back.
 Boolean
 TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
 {
@@ -1181,6 +1188,7 @@ TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
 			UnionRgn(rgn, lineRgn, rgn);
 		}
 	}
+	OffsetRgn(rgn, -viewBounds.left, -viewBounds.top);
 	return !EmptyRgn(rgn);
 }
 
@@ -1205,6 +1213,7 @@ TParagraphView::DrawHilites(Boolean scaled)
 		SetupArea(hilite);
 		TRegionVar rgn;
 		hilite->Area(rgn);
+		OffsetRgn(rgn, viewBounds.left, viewBounds.top);		// the area is the view's own; the port is drawn in
 		if (!EmptyRgn(rgn))
 			InvertRgn(rgn);
 	}
@@ -1424,14 +1433,16 @@ TParagraphView::Idle(long reason)
 }
 
 
-// host: whether the point falls within the selected text (the ROM TView::PointInHilite 0x0026051c iterates the hilites, asking each Encloses)
-// Whether the point falls within the selected text: it is tested against
-// each hilite's region (built by SelectionRegion).  DEVIATION: the ROM
-// asks each C++ TParagraphHilite's Encloses in the view's local
-// coordinates; the host builds the region from the frame.
+// host: whether the point falls within the selected text (the ROM
+// TView::PointInHilite 0x0026051c iterates the hilites, asking each
+// Encloses).  The point comes in the port's coordinates and a hilite's
+// area is the view's own, so it is moved first.
 Boolean
 TParagraphView::PointInHilite(Point& pt)
 {
+	Point local = pt;
+	local.h = (short) (local.h - viewBounds.left);
+	local.v = (short) (local.v - viewBounds.top);
 	HiliteLoop loop(this);
 	while (loop.Next())
 	{
@@ -1439,7 +1450,7 @@ TParagraphView::PointInHilite(Point& pt)
 		if (hilite == nil)
 			continue;
 		SetupArea(hilite);
-		if (hilite->Encloses(pt))
+		if (hilite->Encloses(local))
 			return true;
 	}
 	return false;
@@ -2187,20 +2198,19 @@ TParagraphView::HiliteText(long start, long length, Boolean /*caretOnEmpty*/)
 // back in through the same replace command any other edit uses, with
 // the styles it had, and the range is selected again afterwards.
 //
+// A hilite's bounding box is in the view's own coordinates, so the two
+// ends and the middle are moved there before they are compared with it -
+// and the middle is moved back when it is compared with the character
+// box OffsetToBounds answers, which is the port's.  The ROM moves the
+// caller's own points, which are the editor's, so the next view it
+// offers the gesture to sees them already moved; that is ported as it
+// stands, and so is the turning round of a line drawn upwards.
+//
 // (host: the ROM replaces the range through DoInsertItems, the same path
 // a dropped item takes, carrying a canonicalTextAndStyles frame;
 // InsertStyledText is this reconstruction's equivalent - the same
 // aeReplaceText command with the same undo, and it takes the text and
-// the styles as they are.
-//
-// The ROM moves the two corners into the view's own coordinates, because
-// that is where it keeps a hilite's bounding box; this reconstruction's
-// SetupArea leaves the box where the region is, in the port's, so the
-// comparison is made there instead and the corners are left alone.  The
-// ROM's conversion is done to the caller's own points, so the next view
-// the editor offers the gesture to sees them already moved; that is not
-// reproduced here, but the turning round of a left-to-right line is,
-// since it is the caller's points the ROM swaps.)
+// the styles as they are.)
 long
 TParagraphView::HandleLineGesture(long angle, Point& from, Point& to)
 {
@@ -2229,6 +2239,14 @@ TParagraphView::HandleLineGesture(long angle, Point& from, Point& to)
 	box.bottom = from.v < to.v ? to.v : from.v;
 	if (!Overlaps(&grown, &box))
 		return 0;
+	// into the view's own coordinates, where the hilites are
+	OffsetRect(&box, -viewBounds.left, -viewBounds.top);
+	mid.h = (short) (mid.h - viewBounds.left);
+	mid.v = (short) (mid.v - viewBounds.top);
+	from.h = (short) (from.h - viewBounds.left);
+	from.v = (short) (from.v - viewBounds.top);
+	to.h = (short) (to.h - viewBounds.left);
+	to.v = (short) (to.v - viewBounds.top);
 
 	long done = 0;
 	HiliteLoop loop(this);
@@ -2270,7 +2288,8 @@ TParagraphView::HandleLineGesture(long angle, Point& from, Point& to)
 		Rect firstChar;
 		OffsetToBounds(start + lead, &firstChar);
 		long right = firstChar.right > firstChar.left + 6 ? firstChar.right : firstChar.left + 6;
-		if (mid.h >= firstChar.left - 6 && right >= mid.h)
+		long midH = mid.h + viewBounds.left;		// the character box is the port's
+		if (midH >= firstChar.left - 6 && right >= midH)
 			count = lead + 1;
 		chars[count] = 0;
 		if (angle == 0)
