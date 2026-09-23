@@ -271,3 +271,18 @@ BuildRecConfig(TView* view, ULong flags)
 		return BuildRCView(view, flags);
 	return BuildInkOrTextConfig(config, view, flags);
 }
+
+
+// ROM 0x000362c8 UsesLetters__FP5TView
+// Whether the view is one whose recognition configuration says it is
+// read a letter at a time (`rcSingleLetters`) rather than a word at a
+// time.  A character written over another in such a view is read as
+// itself rather than being made to fit a word.
+Boolean
+UsesLetters(TView* view)
+{
+	RefVar config(view->GetVar(RSSYMrecconfig));
+	if (ISNIL(config))
+		return false;
+	return NOTNIL(RefVar(GetVariable(config, RSSYMrcsingleletters, nil, 0)));
+}

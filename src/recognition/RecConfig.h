@@ -82,4 +82,8 @@ ULong	BuildInputMask(RefArg config, ULong mask, Boolean force);	// ROM 0x0019d1f
 // allow only some things.
 long	CountCustomDictionaries(TView* view);				// ROM 0x0013f9c0 CountCustomDictionaries__FP5TView
 
+// Whether the view is read a letter at a time rather than a word at a
+// time (`rcSingleLetters`).
+Boolean	UsesLetters(TView* view);							// ROM 0x000362c8 UsesLetters__FP5TView
+
 #endif	/* __RECCONFIG_H */

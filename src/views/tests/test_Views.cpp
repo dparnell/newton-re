@@ -4489,11 +4489,27 @@ TestWordIntoParagraph()
 	EXPECT(domain != nil && unit != nil);
 	if (unit == nil)
 		return;
+	// the reading the engine came back with, so the unit has a word
+	long interp = unit->AddWordInterpretation();
+	EXPECT(interp == 0);
+	UniChar reading[4];
+	reading[0] = U_CONST_CHAR('t');
+	reading[1] = U_CONST_CHAR('e');
+	reading[2] = U_CONST_CHAR('n');
+	reading[3] = 0;
+	EXPECT(unit->SetWordString(0, reading) != nil);
 	TUnitPublic pub(unit, 0);
 	pub.fWordBase.top = (short) base;
 	pub.fWordBase.bottom = (short) base;
 	pub.fWordBase.left = (short) (right + 6);
 	pub.fWordBase.right = (short) (right + 30);
+
+	// the word info the engine would have left on the unit: the
+	// ink-only engine here reads nothing, so it is filled in by hand as
+	// a word that *was* read
+	RefVar wordInfo(pub.WordInfo());
+	SetWordList(wordInfo, RefVar(Eval("[\"ten\"]")));
+	ClearWordInfoFlags(wordInfo, kWordInfoIsInk);
 
 	Rect room = editor->viewBounds;
 	RefVar info;
@@ -4508,6 +4524,15 @@ TestWordIntoParagraph()
 	// can carry on from it
 	EXPECT(gLastAddedWordView == (TView*) para);
 	EXPECT(gLastAddedWordEndOffset == 11);
+	// and the word is registered with the machine, so the corrector can
+	// still be asked about it: the entry covers where it landed
+	RefVar registered(FindWordInfo(para, 8));
+	EXPECT(IsFrame(registered));
+	EXPECT(RINT(RefVar(GetFrameSlotRef(registered, RSSYMstart))) == 8);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(registered, RSSYMstop))) == 11);
+	EXPECT(Ustrcmp(GetCString(RefVar(GetNthWord(registered, 0))), Uni("ten")) == 0);
+	EXPECT(TestWordInfoFlags(registered, kWordInfoKnown));
+	RemoveCorrectionInfo(para);
 
 	unit->Dispose();
 	domain->Dispose();

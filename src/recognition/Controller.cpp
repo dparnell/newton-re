@@ -1293,3 +1293,25 @@ SetDomainDelays(TController* controller, ULong delay)
 			domain->fDelay = delay;
 	}
 }
+
+
+// ROM 0x0020c018 AreStrokesAfterUnit__FP5TUnit
+// Whether anything has been written since this unit's last stroke: any
+// piece still waiting in the controller whose last stroke is a later one
+// than the unit's.  What it is for is telling a correction from a
+// continuation - a character written over a word is only a *replacement*
+// while the writer has not moved on.
+Boolean
+AreStrokesAfterUnit(TUnit* unit)
+{
+	UShort last = unit->fMaxStroke;
+	TArrayIterator iter;
+	char* entry = gController->fPieces->GetIterator(&iter);
+	for (long i = 0; i < iter.fCount; i++)
+	{
+		if (last < (*(TUnit**) entry)->fMaxStroke)
+			return true;
+		entry = iter.GetNext();
+	}
+	return false;
+}

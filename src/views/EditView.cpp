@@ -13,6 +13,7 @@
 */
 
 #include "EditView.h"
+#include "CorrectInfo.h"
 #include "Ink.h"
 #include "RecConfig.h"		// GetRecognitionView
 #include "InkShapes.h"
@@ -1861,8 +1862,13 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 	{
 		TView* textView = ((TDataView*) best)->GetTextView();
 		TimeStampTextChange(textView);
-		// (the ROM offers the word to the dictionary here when it came
-		//  from the recogniser - AddWordInfo 0x00079790, NOT YET)
+		// a word the recogniser read is registered with the machine, so
+		// that the corrector can still be asked about it afterwards
+		// (gAddWordInfo is cleared by the path that puts the word in at
+		//  the caret instead, which registers it for itself)
+		if (unit != nil && gAddWordInfo && outOffset != nil)
+			AddWordInfo(((TDataView*) best)->GetTextView(), *outOffset,
+						*outOffset + (long) length, unit);
 	}
 	return best;
 }

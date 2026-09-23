@@ -760,3 +760,176 @@ InsertRange(RefArg list, RefArg range, TView* view)
 			AddWordInfo(list, word);
 	}
 }
+
+
+/*------------------------------------------------------------------------------
+	T h e   r e a d i n g s ,   o n e   b y   o n e
+------------------------------------------------------------------------------*/
+
+// The corrector rewrites a word info's readings as the writer chooses
+// between them, so the list has to be editable a reading at a time.
+
+// ROM 0x000774c8 FindMatchingWord__FRC6RefVarT1
+// Which reading has this word, comparing the characters rather than the
+// objects.  ==> its index, -1 for none.
+long
+FindMatchingWord(RefArg info, RefArg word)
+{
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (ISNIL(words))
+		return -1;
+	const UniChar* wanted = GetCString(word);
+	long count = Length(words);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar entry(GetFrameSlotRef(RefVar(GetArraySlotRef(words, i)), RSSYMword));
+		if (Ustrcmp(wanted, GetCString(entry)) == 0)
+			return i;
+	}
+	return -1;
+}
+
+
+// ROM 0x00077644 InsertWordInterp__FRC6RefVarT1l
+// A reading put in at an index - at the end when the index is past it,
+// which is also what a negative index means.  A frame with no readings
+// at all gets an array first.
+void
+InsertWordInterp(RefArg info, RefArg interp, long index)
+{
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (ISNIL(words))
+		words = MakeArray(0);
+	if (index < 0 || Length(words) <= index)
+		AddArraySlot(words, interp);
+	else
+	{
+		RefVar one(MakeArray(1));
+		SetArraySlot(one, 0, interp);
+		ArrayMunger(words, index, 0, one, 0, 1);
+	}
+}
+
+
+// ROM 0x000776e4 RemoveWordInterp__FRC6RefVarl
+void
+RemoveWordInterp(RefArg info, long index)
+{
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (NOTNIL(words))
+		ArrayRemoveCount(words, index, 1);
+}
+
+
+// ROM 0x0017b18c DeleteMatchingWord__FRC6RefVarT1
+// The reading with this word taken out, if there is one.
+void
+DeleteMatchingWord(RefArg info, RefArg word)
+{
+	long index = FindMatchingWord(info, word);
+	if (index < 0)
+		return;
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (NOTNIL(words))
+		ArrayRemoveCount(words, index, 1);
+}
+
+
+/*------------------------------------------------------------------------------
+	L e a r n i n g   f r o m   t h e   l i s t
+------------------------------------------------------------------------------*/
+
+// The list is not only a record.  A word falling off the end of it is the
+// machine's last chance to learn from what the writer did with it, and a
+// word the writer accepted is a candidate for the dictionary.
+
+// ROM 0x00077ea0 DoEntryLearning__FRC6RefVarl
+// What the writer settled on, given to the engine so that it reads the
+// same writing better next time.  Only an entry that carries training
+// data (flag 1) and has kept it (`unitData`) has anything to teach, and
+// only a reading the recogniser actually proposed (index >= 0) counts -
+// a word the machine made up out of the letters tells it nothing.
+// Afterwards the training data goes, because it has been used.
+//
+// NOT YET RECONSTRUCTED: DoIndexedLearning 0x000797ec, which is the
+// engine's side of it.
+Ref
+DoEntryLearning(RefArg info, long which)
+{
+	if (!TestWordInfoFlags(info, kWordInfoHasTrainingData))
+		return info;
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (ISNIL(words))
+		return info;
+	RefVar entry(GetArraySlotRef(words, which));
+	long index = RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex)));
+	RefVar data(GetFrameSlotRef(info, RSSYMunitdata));
+	if (index >= 0 && NOTNIL(data))
+	{
+		// DoIndexedLearning(UnitID(info), info, index);
+		ClearWordInfoFlags(info, kWordInfoHasTrainingData);
+		SetFrameSlot(info, RSSYMunitdata, RefVar(NILREF));
+	}
+	return info;
+}
+
+
+// ROM 0x000793d0 DoOverflowLearning__FRC6RefVar
+// Room made for one more word: while the list is at its `max`, the
+// oldest entry is learned from (its first reading, which is the one that
+// went onto the page) and dropped.  The empty entries go first, so the
+// machine does not spend its one lesson on a word it invented.
+void
+DoOverflowLearning(RefArg list)
+{
+	RefVar max(GetFrameSlotRef(list, RSSYMmax));
+	if (ISNIL(max))
+		return;
+	ClearEmptyEntries(list);
+	RefVar info(GetFrameSlotRef(list, RSSYMinfo));
+	while (RINT(max) <= Length(info))
+	{
+		RefVar oldest(GetArraySlotRef(info, 0));
+		DoEntryLearning(oldest, 0);
+		ArrayRemoveCount(info, 0, 1);
+	}
+}
+
+
+// ROM 0x000794ec AutoAdd__FRC6RefVar
+// A word the writer has just put on the page offered to the dictionary,
+// unless the view says not to (`_noAutoAdd`).  The entry is marked as
+// having been added so that `AutoRemove` can take it back out again if
+// the word goes.
+//
+// NOT YET RECONSTRUCTED: AddAutoAdd 0x0013e42c, the dictionary's side -
+// so nothing is ever added and the flag is never set.
+void
+AutoAdd(RefArg info)
+{
+	if (ISNIL(RefVar(GetFrameSlotRef(info, RSSYMwords))))
+		return;
+	RefVar word(GetNthWord(info, 0));
+	if (ISNIL(word) || (Length(word) - 2) / (long) sizeof(UniChar) == 0)
+		return;
+	if (NOTNIL(RefVar(GetProtoVariable(info, RSSYM_noautoadd, nil))))
+		return;
+	// if (AddAutoAdd(GetCString(word)))
+	//     SetWordInfoFlags(info, kWordInfoAutoAdded);
+}
+
+
+// ROM 0x00079790 AddWordInfo__FP5TViewlT2P11TUnitPublic
+// The word the recogniser has just put onto a page registered with the
+// machine: room made for it, the unit's own frame put on the list saying
+// where it landed, and the word offered to the dictionary.
+Ref
+AddWordInfo(TView* view, long start, long stop, TUnitPublic* unit)
+{
+	RefVar list(CorrectInfo());
+	DoOverflowLearning(list);
+	RefVar info(AddWordInfo(list, view, start, stop, unit));
+	if (ISNIL(RefVar(view->GetProto(RSSYM_noautoadd))))
+		AutoAdd(info);
+	return info;
+}

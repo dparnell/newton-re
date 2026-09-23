@@ -45,6 +45,7 @@ class TUnitPublic;
 // WordInfo.h; these are the ones the correction list sets.)
 enum
 {
+	kWordInfoHasTrainingData= 0x0001,	// the entry carries the engine's training data
 	kWordInfoKnown			= 0x0002,	// the corrector knows about this word
 	kWordInfoAutoAdded		= 0x0004	// the word was added to the dictionary for it
 };
@@ -113,5 +114,21 @@ void	MergeStrokes(RefArg bundle, RefArg other);		// ROM 0x00078840 MergeStrokes_
 // back, which is how an undo keeps a deleted word's alternatives.
 Ref		ExtractRange(RefArg list, TView* view, long from, long to);	// ROM 0x00077190 ExtractRange__FRC6RefVarP5TViewlT3
 void	InsertRange(RefArg list, RefArg range, TView* view);	// ROM 0x00077378 InsertRange__FRC6RefVarT1P5TView
+
+// The readings edited one at a time, which is what the corrector does
+// as the writer chooses between them.
+long	FindMatchingWord(RefArg info, RefArg word);		// ROM 0x000774c8 FindMatchingWord__FRC6RefVarT1 - by characters; -1 for none
+void	InsertWordInterp(RefArg info, RefArg interp, long index);	// ROM 0x00077644 InsertWordInterp__FRC6RefVarT1l
+void	RemoveWordInterp(RefArg info, long index);		// ROM 0x000776e4 RemoveWordInterp__FRC6RefVarl
+void	DeleteMatchingWord(RefArg info, RefArg word);	// ROM 0x0017b18c DeleteMatchingWord__FRC6RefVarT1
+
+// Learning from the list: a word falling off the end of it is the
+// machine's last chance to learn from what the writer did with it.
+Ref		DoEntryLearning(RefArg info, long which);		// ROM 0x00077ea0 DoEntryLearning__FRC6RefVarl
+void	DoOverflowLearning(RefArg list);				// ROM 0x000793d0 DoOverflowLearning__FRC6RefVar
+void	AutoAdd(RefArg info);							// ROM 0x000794ec AutoAdd__FRC6RefVar
+// The word the recogniser has just put onto a page registered with the
+// machine.
+Ref		AddWordInfo(TView* view, long start, long stop, TUnitPublic* unit);	// ROM 0x00079790 AddWordInfo__FP5TViewlT2P11TUnitPublic
 
 #endif	/* __CORRECTINFO_H */

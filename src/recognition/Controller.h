@@ -177,4 +177,7 @@ void	SetDomainDelays(TController* controller, ULong delay);	// ROM 0x0020c4f4 Se
 
 extern TController*	gController;							// ROM 0x0c10187c gController
 
+// Whether anything has been written since a unit's last stroke.
+Boolean	AreStrokesAfterUnit(TUnit* unit);						// ROM 0x0020c018 AreStrokesAfterUnit__FP5TUnit
+
 #endif	/* __CONTROLLER_H */

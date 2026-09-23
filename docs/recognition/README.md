@@ -906,9 +906,28 @@ the ROM does.  (DEVIATION: the machine's starter globals come with a
 `correctInfo` frame; a host that has not run the ROM's boot block has
 none, so `InitCorrection` makes one.)
 
-NOT YET: the dictionary's side - `AutoAdd`, `RemoveAutoAdd` and
-`DoOverflowLearning`, which put a corrected word into the dictionary and
-learn from an entry falling off the end of the list.
+### Learning from the list
+
+The list is not only a record.  It is forty deep, and a word falling off
+the end of it is the machine's last chance to learn from what the writer
+did with it: `DoOverflowLearning` (0x000793d0) drops the empty entries
+first, then hands the oldest to `DoEntryLearning` (0x00077ea0) and takes
+it off.  An entry only has something to teach when it kept the engine's
+training data (flag 1, `unitData`) *and* the reading that went onto the
+page is one the recogniser actually proposed - a word the machine made
+up out of the letters (index -1 or -2) tells it nothing.  Afterwards the
+training data goes, because it has been used.
+
+`AddWordInfo(view, start, stop, unit)` (0x00079790) is what the edit
+view calls at the end of `TEditView::HandleWord` once a recognised word
+has gone onto a page: room made, the unit's own frame put on the list
+saying where it landed, and the word offered to the dictionary
+(`AutoAdd`, 0x000794ec, unless the view says `_noAutoAdd`).  That is
+what makes the list live - before it, nothing ever went on.
+
+NOT YET: the dictionary's own side - `AddAutoAdd`, `RemoveAutoAdd` and
+`DoIndexedLearning` - so nothing is added and nothing is learnt, but
+everything above them runs.
 
 ## The caret gesture
 
