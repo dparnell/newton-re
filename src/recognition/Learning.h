@@ -51,6 +51,12 @@ Boolean	Capitalized(UniChar* word);						// ROM 0x001aa8ec Capitalized__FPUs
 // the word itself is moved down over its leading punctuation.
 void	CollectPunctSymbols(UniChar* word, UniChar** leading, UniChar** trailing);	// ROM 0x001aa680 CollectPunctSymbols__FPUsPPUsT2
 
+// The contraction taken off the end of a word (a possessive "s" and
+// the quote in front of it), so that what is looked up is the word
+// itself.  `leading` is always answered nil (see the note in the
+// source).
+void	CollectContractions(UniChar* word, UniChar** leading, UniChar** trailing);	// ROM 0x001aa810 CollectContractions__FPUsPPUsT2
+
 // Whether the expand dictionary knows this word, and where its expansion
 // is in the dictionary frame's `list`.
 Boolean	GetExpandIndex(const UniChar* word, ULong* index);	// ROM 0x001aa600 GetExpandIndex__FPUsPUl

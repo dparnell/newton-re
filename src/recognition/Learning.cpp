@@ -92,6 +92,48 @@ CollectPunctSymbols(UniChar* word, UniChar** leading, UniChar** trailing)
 }
 
 
+// ROM 0x001aa810 CollectContractions__FPUsPPUsT2
+// The contraction taken off the end of a word, so that what is looked
+// up is the word itself: "dog's" becomes "dog" with "'s" handed back
+// separately, to be put on again afterwards.  Either quote counts - the
+// plain apostrophe and the curly right single one - and only an "s"
+// after it.
+//
+// (BUG, kept: `leading` is set to nil and never written.  The function
+//  is shaped like `CollectPunctSymbols`, which answers both ends, but
+//  there is nothing a contraction can leave at the front, and the ROM
+//  kept the parameter rather than the code.)
+void
+CollectContractions(UniChar* word, UniChar** leading, UniChar** trailing)
+{
+	long length = Ustrlen(word);
+	long last = length - 1;
+	*leading = nil;
+	*trailing = nil;
+	long cut = last;
+	if (last > 0
+		&& (word[length - 2] == 0x2019 || word[length - 2] == 0x0027)
+		&& (word[last] == 's' || word[last] == 'S'))
+		cut = length - 3;
+	if (cut < last)
+	{
+		long count = length - cut;
+		*trailing = (UniChar*) NewPtr((Size) count * sizeof(UniChar));
+		if (*trailing != nil)
+		{
+			BlockMove(word + cut + 1, *trailing, count * sizeof(UniChar));
+			(*trailing)[count - 1] = 0;
+		}
+	}
+	long keep = cut + 1;
+	if (keep < 1)
+		keep = 0;
+	else
+		BlockMove(word, word, keep * sizeof(UniChar));
+	word[keep] = 0;
+}
+
+
 // ROM 0x001aa600 GetExpandIndex__FPUsPUl
 // The expand dictionary asked about a word.  What it stores beside a word
 // is not the expansion but where the expansion is: the index of the slot

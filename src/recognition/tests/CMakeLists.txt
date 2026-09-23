@@ -45,3 +45,8 @@ add_executable(test_Dictionaries test_Dictionaries.cpp)
 target_link_libraries(test_Dictionaries PRIVATE recognition)
 target_compile_definitions(test_Dictionaries PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME recognition.Dictionaries COMMAND test_Dictionaries)
+
+add_executable(test_Spelling test_Spelling.cpp)
+target_link_libraries(test_Spelling PRIVATE recognition)
+target_compile_definitions(test_Spelling PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME recognition.Spelling COMMAND test_Spelling)
