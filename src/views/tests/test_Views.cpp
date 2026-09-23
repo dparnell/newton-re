@@ -38,6 +38,7 @@
 #include "WordUnit.h"
 #include "WordList.h"
 #include "WordInfo.h"
+#include "CorrectInfo.h"
 #include "Words.h"
 #include "Controller.h"
 #include "StrokeQueue.h"
@@ -4718,6 +4719,108 @@ TestRichStringIntoParagraph()
 }
 
 
+// The correction information: what the machine remembers about the
+// words already on a page, so that one can still be corrected long
+// after it was written.
+static void
+TestCorrectInfo()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// the list the boot makes, emptied
+	Eval("correctInfo := {}");
+	InitCorrection();
+	RefVar list(CorrectInfo());
+	EXPECT(IsFrame(list));
+	EXPECT(IsArray(RefVar(GetFrameSlotRef(list, RSSYMinfo))));
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(list, RSSYMmax))) == 0x28);
+
+	// one reading, and a word info around it
+	RefVar interp(MakeWordInterp(RefVar(MakeString("hello")), 7, 1, kWordLabelWord));
+	EXPECT(IsFrame(interp));
+	EXPECT(RINT(RefVar(GetFrameSlotRef(interp, RSSYMscore))) == 7);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(interp, RSSYMindex))) == 1);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(interp, RSSYMlabel))) == kWordLabelWord);
+
+	RefVar info(MakeWordInfo(RefVar(MakeString("hello"))));
+	EXPECT(IsFrame(info));
+	EXPECT(Length(RefVar(GetFrameSlotRef(info, RSSYMwords))) == 1);
+	RefVar first(GetNthWord(info, 0));
+	EXPECT(IsString(first) && Ustrcmp(GetCString(first), Uni("hello")) == 0);
+	EXPECT(ISNIL(RefVar(GetNthWord(info, 3))));
+	// and one made of writing instead carries the strokes and no reading
+	RefVar bundleArrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(bundleArrays, 0, RefVar(Eval("[20, 10, 30, 20]")));
+	RefVar bundle(MakeStrokeBundle(bundleArrays, 1));
+	RefVar written(MakeWordInfo(bundle));
+	EXPECT(Length(RefVar(GetFrameSlotRef(written, RSSYMwords))) == 0);
+	EXPECT(NOTNIL(RefVar(GetFrameSlotRef(written, RSSYMstrokes))));
+
+	// the flags
+	SetFrameSlot(info, RSSYMflags, RefVar(MAKEINT(0)));
+	SetWordInfoFlags(info, kWordInfoKnown | kWordInfoAutoAdded);
+	EXPECT(TestWordInfoFlags(info, kWordInfoKnown));
+	EXPECT(TestWordInfoFlags(info, kWordInfoKnown | kWordInfoAutoAdded));
+	EXPECT(!TestWordInfoFlags(info, kWordInfoIsInk));
+	// AutoRemove takes the "added to the dictionary" flag off again
+	AutoRemove(info);
+	EXPECT(!TestWordInfoFlags(info, kWordInfoAutoAdded));
+	EXPECT(TestWordInfoFlags(info, kWordInfoKnown));
+
+	// a paragraph, and a word info that says where in it the word went
+	TParagraphView* p = (TParagraphView*) ViewOf(
+		"ctxCI := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewId: 4242, "
+		"viewBounds: {left: 5, top: 5, right: 150, bottom: 60}, "
+		"viewFont: espy12, text: \"one two three\"})");
+	EXPECT(p != nil);
+	Refresh();
+	SetOffsetInfo(info, p, 4, 7, kWordInfoKnown);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMid))) == p->fId);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstart))) == 4);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstop))) == 7);
+
+	// it goes on the list, and can be found again from any offset it covers
+	AddWordInfo(list, info);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	EXPECT(FindWordInfoIndex(list, p, 4) == 0);
+	EXPECT(FindWordInfoIndex(list, p, 6) == 0);
+	EXPECT(FindWordInfoIndex(list, p, 7) == -1);		// stop is past the end
+	EXPECT(FindWordInfoIndex(list, p, 3) == -1);
+	EXPECT(EQRef(RefVar(FindWordInfo(list, p, 5)), info));
+	EXPECT(EQRef(RefVar(FindWordInfo(p, 5)), info));	// the machine's own list
+	EXPECT(ISNIL(RefVar(FindWordInfo(p, 0))));
+
+	// a reading that is not a single word is not kept: the corrector has
+	// nothing to offer for it
+	RefVar two(MakeWordInfo(RefVar(MakeString("one two"))));
+	SetOffsetInfo(two, p, 0, 7, kWordInfoKnown);
+	AddWordInfo(list, two);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+
+	// a word info for a stretch of text nobody wrote: its one reading is
+	// the characters themselves
+	RefVar typed(MakeWordInfo(p, 8, 5));
+	EXPECT(IsFrame(typed));
+	RefVar read(GetNthWord(typed, 0));
+	EXPECT(IsString(read) && Ustrcmp(GetCString(read), Uni("three")) == 0);
+
+	// the readings replaced wholesale
+	SetWordList(info, RefVar(Eval("[\"hello\", \"hallo\"]")));
+	EXPECT(Length(RefVar(GetFrameSlotRef(info, RSSYMwords))) == 2);
+	EXPECT(Ustrcmp(GetCString(RefVar(GetNthWord(info, 1))), Uni("hallo")) == 0);
+	SetWordList(info, RefVar(NILREF));
+	EXPECT(ISNIL(RefVar(GetFrameSlotRef(info, RSSYMwords))));
+
+	InitCorrection();
+	EXPECT(Length(RefVar(GetFrameSlotRef(RefVar(CorrectInfo()), RSSYMinfo))) == 0);
+	Eval("RemoveView(GetRoot(), ctxCI)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -4835,6 +4938,7 @@ main()
 		TestInkWordAtPageCaret();
 		TestRemoteForCorrector();
 		TestRichStringIntoParagraph();
+		TestCorrectInfo();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();

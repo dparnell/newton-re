@@ -153,6 +153,11 @@ extern ULong	gLastAddedWordInkEndTime;					// ROM 0x0c101720 gLastAddedWordInkEn
 Rect*	GetLastAddedWordBox(void);							// ROM 0x0016c64c GetLastAddedWordBox__Fv
 Point*	GetLastAddedWordBase(void);							// ROM 0x00170094 GetLastAddedWordBase__Fv
 
+// The word around a character offset: forward or back while the
+// characters are of the same kind (text or ink) and not white space.
+long	ScanWordStart(const UniChar* text, long offset, long limit);	// ROM 0x001a1250 ScanWordStart__FPUslT2
+long	ScanWordEnd(const UniChar* text, long offset, long limit);	// ROM 0x001a1134 ScanWordEnd__FPUslT2
+
 // The room a paragraph allows around itself when it is asked whether a
 // word written on the page belongs to it.
 void	AddMarginsToBounds(Rect* bounds);					// ROM 0x00172048 AddMarginsToBounds__FP5TRect

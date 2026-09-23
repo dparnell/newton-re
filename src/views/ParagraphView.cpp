@@ -1445,7 +1445,7 @@ static const UniChar kScanInkChar = 0xf701;		// the ink-word placeholder the wor
 // The start of the word around offset: back while the characters are of
 // the same kind (all ink or all not) and not white space, no further than
 // limit.
-static long
+long
 ScanWordStart(const UniChar* text, long offset, long limit)
 {
 	Boolean startInk = text[offset] == kScanInkChar;
@@ -1464,7 +1464,7 @@ ScanWordStart(const UniChar* text, long offset, long limit)
 // The end of the word around offset (the character after it): forward
 // while the characters are of the same kind and not white space, no
 // further than limit.
-static long
+long
 ScanWordEnd(const UniChar* text, long offset, long limit)
 {
 	Boolean startInk = text[offset] == kScanInkChar;

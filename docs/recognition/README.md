@@ -828,6 +828,47 @@ replacement string just to find the character a rectangle picks out.  The
 text objects are NOT YET, so the line cache and the paragraph's own
 measuring stand in for them; the decisions above are the ROM's.)
 
+## The correction information (`recognition/CorrectInfo.h`)
+
+A word info frame says what the recogniser made of one piece of writing.
+The *correction information* is the list of them: `vars.correctInfo`, a
+frame whose `info` array holds one word info per word that has gone onto
+a page, each carrying where it went - the view's id, and the `start` and
+`stop` character offsets.  That is what lets a word be corrected long
+after it was written: the corrector asks `FindWordInfo` for the word at
+a character offset and gets back the readings the recogniser had to
+choose between.
+
+It is a list of forty (`InitCorrection`, 0x00076bf0, which sets `max`),
+and a frame only goes on it when its first reading is a *single* word -
+`AddWordInfo` (0x000770cc) scans the reading with `ScanWordEnd` and
+drops anything that ends before the string does, because the corrector
+has nothing to offer for "one two".
+
+A word info in the list is not always the recogniser's.
+`MakeWordInfo(view, offset, length)` (0x0007824c) makes one for a
+stretch of text nobody wrote - typed, or pasted: the writing at the
+offset when there is any (`GetStrokesAt`, 0x00078960, which opens an ink
+word back out into a stroke bundle), and otherwise the characters
+themselves as its single reading.  So the corrector can be asked about
+typed text too.
+
+The rest is small and mechanical: `MakeWordInterp` (0x00078548,
+0x00078598) for one reading, `SetWordList` (0x00078340) to replace them
+all with plain words, `SetOffsetInfo` (0x00078438) for where the word
+went, `GetNthEntry`/`GetNthWord` (0x00077c64, 0x00077ce0) to read them
+back, `UnitID` (0x00077be4) for the four characters of the unit's type,
+and `TestWordInfoFlags`/`ClearWordInfoFlags` (0x00077d34, 0x00077e30).
+`AutoRemove` (0x0007959c) takes a word the machine added to the
+dictionary on an entry's account back out again when the entry goes -
+the dictionary's own side of that (`RemoveAutoAdd`) is NOT YET, but the
+flag is cleared as the ROM clears it.
+
+NOT YET: the editing half - `OffsetCorrectionInfo`, `ClearCorrectionRange`,
+`ExtractRange`/`InsertRange`, `MergeWords` and `RemoveCorrectionInfo` -
+which is what keeps the offsets right as the text around them is edited,
+and `GetWordInfo`, which finds or makes the frame for a range.
+
 ## The caret gesture
 
 A caret (`aeCaret`) goes to the page the same way a scrub does, and

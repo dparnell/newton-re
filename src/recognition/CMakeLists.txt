@@ -20,6 +20,7 @@ add_library(recognition STATIC
     WordUnit.cpp
     WordList.cpp
     WordInfo.cpp
+    CorrectInfo.cpp
     InkRecognizer.cpp
     WRecDomain.cpp
     Unit.cpp
