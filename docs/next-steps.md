@@ -64,22 +64,23 @@ Nothing on the writing path is blocked on a single big piece any more.
 What is left there is a handful of named holes, each small and each
 with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
 
-- **The correction information** (`src/recognition/`, the ROM's
-  0x000761f0-0x000795e0): the `correctInfo` frame a paragraph keeps so
-  that a word already on the page can still be corrected - `CorrectInfo`,
-  `FindWordInfo`, `AddWordInfo`, `GetWordInfo`, `MergeWords`,
-  `ExtractRange`/`InsertRange`, `OffsetCorrectionInfo`,
-  `RemoveCorrectionInfo`.  Half a dozen `NOT YET` comments in
-  `ParagraphView.cpp` and `EditView.cpp` are waiting on it, and so is
-  the next item.
 - **`TParagraphView::ReplaceCharacter`** (0x00174e14), the Finder's
   strongest claim - a character written over a character of the text
   replaces it, and the paragraph answers 6, which stops
   `TEditView::HandleWord` asking anybody else.  It is the one branch of
-  `FindWordInRun` that is not there.  Its own work is small; it is
-  `DoReplaceSym` (0x0017b1b8) underneath it that wants the correction
-  information, plus `WordOverSpaces` (0x0017bc84) and
-  `CoordToInterCharGap` (0x0017d614), which are small.
+  `FindWordInRun` that is not there.  Its own work is small - two
+  coordinate-to-character questions (`CoordToChar`,
+  `CoordToInterCharGap` 0x0017d614) and `WordOverSpaces` (0x0017bc84),
+  all small - but it hands the work to **`DoReplaceSym`**
+  (0x0017b1b8), which is 700 instructions and wants a handful of
+  engine-side pieces that do not exist yet:
+  `ReclassifyCharacter` (the engine asked to read the writing again
+  as a single character of a known height),
+  `GetInterpretationsCopy`/`SetInterpretationsCopy`/
+  `DeleteInterpretationsCopy` (the unit's readings saved and put back
+  around that), `UsesLetters`, `AreStrokesAfterUnit`,
+  `DeleteMatchingWord` and `InsertWordInterp`.  The correction
+  information it writes into is all there now.
 - **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
   `correct` to find in the root view's context.  It answers false out
   of hand today, which is right for a machine that has no corrector
