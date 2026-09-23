@@ -62,6 +62,10 @@ main()
 	RefVar intl(AllocateFrame());
 	SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(AllocateFrame()));
 	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	// a machine at this level builds no dictionaries, and the ROM then
+	// reads the dictionary preferences over a list that is not there (the
+	// bug written down in ReadDictPrefs); an empty list stands in for it
+	SetFrameSlot(RefVar(gVarFrame), RSSYMdictionaries, RefVar(MakeArray(0)));
 	gRecognition.Init(1);
 	EXPECT(gRootDomain != nil && gRootDomain->fType == kRootDomainType && gRootDomain->fDelay == 0 && gRootDomain->fPieceTypes->Count() == 0);
 	EXPECT(gRecognition.fRecognizers->Count() == 4);	// the gesture, click-event, stroke and click recognisers

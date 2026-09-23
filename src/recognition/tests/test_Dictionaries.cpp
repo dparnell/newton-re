@@ -22,6 +22,7 @@
 #include "ROMImport.h"
 #include "RSSymbols.h"
 #include "Unicode.h"
+#include "Locale.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -58,6 +59,10 @@ static const UByte kNamesAL[] = {
 	'b', 0,							// +12
 	'e', 0							// +14
 };
+
+
+// the ROM's U.S. locale bundle (nsfunctions.py --object 0x4a4d09)
+const ULong kUSABundle = 0x004a4d09;
 
 
 static UByte gWordsBytes[sizeof(kWordsAL)];
@@ -318,6 +323,13 @@ main()
 	// gDictList; the words looked up below are the ROM's, out of its own
 	// lexicons, read where they lie in the image.
 	{
+		// what the boot script makes: vars.international with the U.S.
+		// locale bundle, which is where the four lexicons the locale
+		// carries and the words that replace the ROM's come from
+		RefVar intl(AllocateFrame());
+		SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(TranslateROMRef(kUSABundle)));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+
 		InitDictionaries();
 		RefVar list(Dictionaries());
 		EXPECT(Length(list) == 27);
@@ -348,6 +360,30 @@ main()
 		attribute = 0x40;
 		EXPECT(LookupWordOrVariant(word, &attribute, variant) != -1);
 		EXPECT(variant[0] == 'h' && variant[4] == 'o');
+
+		// the four the locale carries, which are binaries in the bundle
+		// rather than slots of the ROM's word data
+		EXPECT(gTimeLexDictionary != nil && gDateLexDictionary != nil);
+		EXPECT(gPhoneLexDictionary != nil && gNumberLexDictionary != nil);
+
+		// ... and the ones it names by slot.  Dictionary 111 reads times;
+		// the U.S. bundle says its words are slot 16 of the ROM's data, so
+		// ReadDictPrefs opens that in place of whatever the descriptor
+		// named and writes the slot into the frame.
+		RefVar times(FindDictionaryFrame(111));
+		EXPECT(NOTNIL(times));
+		ReadDictPrefs();
+		EXPECT(RINT(RefVar(GetProtoVariable(times, RSSYMromdictid, nil))) == 16);
+		dictListEntry* timeEntry = FindDictionaryEntry(111);
+		EXPECT(timeEntry != nil && timeEntry->fDictionary != nil);
+		// ... and doing it twice changes nothing, because the dictionary is
+		// already open on those very bytes
+		ReadDictPrefs();
+		EXPECT(FindDictionaryEntry(111)->fDictionary == timeEntry->fDictionary);
+
+		// the words are still there afterwards
+		attribute = 0;
+		EXPECT(LookUp("hello", &attribute) != -1);
 	}
 
 	if (failures == 0)

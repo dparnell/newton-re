@@ -555,10 +555,45 @@ matter, because the `FindDictionaryEntry` that follows may move the
 list out from under it; here a Handle is pointer-sized, so the whole
 entry is copied instead.
 
+### What the locale has to say
+
+The list of dictionaries is the ROM's whatever language the machine is
+set to; what changes is the data behind them.  A descriptor's
+`localDictSlot` names a slot of the locale bundle, and what is in that
+slot is either an integer - a slot of the ROM's own word data - or a
+binary of words the locale brought with it.  `ReplaceLocalDictionary`
+0x0013e384 works out which, and the two `ReplaceDictionary`s (0x0013ec74
+over a binary, 0x0013f14c over the ROM's data) dispose of the dictionary
+that was open and put the new one in its place, in the list entry and in
+the frame's `dict` slot.  A dictionary already open on those very bytes
+is left alone.  `ReadDictPrefs` 0x0013e4a4 does that for every
+dictionary of the list, and `ReadCursiveOptions` calls it, so a change
+of locale changes the words the machine reads.
+
+`ReadRefDictionary` 0x0002d6a0 is what opens a dictionary over a binary
+object - a locale's words, a store's, a package's - and
+`DisposDictionary` 0x0002d6f4 gives one back.  `GetScriptDictRef` uses
+the first, which is how a dictionary frame whose `dict` slot holds the
+words themselves rather than an address is reached.
+
+The locale also carries four lexicons that are in no list at all - the
+time, date, phone and number ones - which `InitDictionaries` opens into
+`gTimeLexDictionary` and its three neighbours for the lexical analysis
+to use.
+
+BUG (kept): `ReadDictPrefs` does not check that there is a list.
+`TRecognitionManager::Init` builds one only above level 1 but calls
+`InitRecognizers` - and so `ReadDomainOptions`, and so this - at every
+level, so a machine started at level 1 throws on a `vars.dictionaries`
+that was never made.  The MP2x00 always starts at level 2, so nobody
+ever saw it; the tests that do start at level 1 put an empty list there.
+
 `test_Dictionaries` builds a list of two AL dictionaries by hand and
-checks all of this: the id substitutions and the fallback, the three
-chains, the link from one dictionary to another, the custom
-dictionaries a configuration names, and the words found in them.
+checks the id substitutions and the fallback, the three chains, the link
+from one dictionary to another, the custom dictionaries a configuration
+names, and the words found in them; then it runs `InitDictionaries` and
+`ReadDictPrefs` for real against the U.S. locale bundle and looks real
+words up in what comes out.
 
 ## The Airus engine (`recognition/Airus.h`)
 

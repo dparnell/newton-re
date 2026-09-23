@@ -238,11 +238,9 @@ FFindDictionaryFrame(RefArg /*rcvr*/, RefArg id)
 
 // ROM 0x0008ea78 GetScriptDictRef__FRC6RefVar
 // The engine's dictionary behind a script's dictionary frame: the `dict`
-// slot, which holds its address for one that lives in memory.
-//
-// NOT YET RECONSTRUCTED: ReadRefDictionary 0x0002d6a0, which builds one
-// out of a binary in the slot - how a dictionary that came off a store
-// or out of a package is reached.
+// slot, which holds its address for one that lives in memory, and the
+// words themselves for one that came off a store or out of a package - a
+// dictionary is then opened over them each time it is asked for.
 Handle
 GetScriptDictRef(RefArg dictionary)
 {
@@ -251,7 +249,7 @@ GetScriptDictRef(RefArg dictionary)
 		ThrowMsg("dict not initialized");
 	if (((Ref) dict & 3) == 0)
 		return (Handle) RefToAddress(dict);
-	return nil;
+	return ReadRefDictionary(dict);
 }
 
 

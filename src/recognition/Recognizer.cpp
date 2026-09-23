@@ -770,11 +770,9 @@ GetDefaultedPreference(RefArg slot, long deflt)
 // how *close* letters may be, and the slip offers how far apart.
 //
 // NOT YET RECONSTRUCTED: `SetUpRosetta` and `SetUpParaGraph`, which
-// hand the letter set to the two engines; `ReadDictPrefs`, which reads
-// which dictionaries are turned on; `BuildInputMask`, which works the
-// configuration's `inputMask` out of the text-recognition options; and
-// the `_recognizerUserChoices` frame this puts on the root view for the
-// slip to read back.  All four belong to parts that are NOT YET.
+// hand the letter set to the two engines, and the
+// `_recognizerUserChoices` frame this puts on the root view for the
+// slip to read back.  Both belong to parts that are NOT YET.
 Ref
 FReadCursiveOptions(RefArg /*rcvr*/)
 {
@@ -800,6 +798,9 @@ FReadCursiveOptions(RefArg /*rcvr*/)
 	// the language the dictionaries are read in: 8 when the locale names
 	// one, 1 when it does not
 	gEnabledLanguage = NOTNIL(RefVar(GetLocaleSlot(RSSYMenabledlanguage))) ? 8 : 1;
+
+	// ... and the words it reads against, which the locale may replace
+	ReadDictPrefs();
 
 	RefVar config(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration));
 	gSaveWordTrainingData =

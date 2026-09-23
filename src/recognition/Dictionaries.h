@@ -84,6 +84,15 @@ const long	kDictChainOrdinary	= 0;
 const long	kDictChainSpecial	= 1;
 const long	kDictChainException	= 2;
 
+// The four lexicons the locale carries for reading dates, times, phone
+// numbers and numbers out of what is written.  They are not in the list:
+// InitDictionaries opens each of them from the current locale bundle and
+// leaves it here for the lexical analysis to use.
+extern Handle	gTimeLexDictionary;		// ROM 0x0c100f8c gTimeLexDictionary
+extern Handle	gDateLexDictionary;		// ROM 0x0c100f90 gDateLexDictionary
+extern Handle	gPhoneLexDictionary;	// ROM 0x0c100f94 gPhoneLexDictionary
+extern Handle	gNumberLexDictionary;	// ROM 0x0c100f98 gNumberLexDictionary
+
 extern TDArray*	gDictList;			// ROM 0x0c10162c gDictList - one dictListEntry per frame
 
 // The list built: every dictionary of the ROM opened and put in
@@ -98,6 +107,18 @@ dictListEntry*	FindDictionaryEntry(ULong id);				// ROM 0x0013d4ac FindDictionar
 // The dictionaries a configuration names by hand.
 long	CountCustomDictionaries(RefArg config);				// ROM 0x0013fa44 CountCustomDictionaries__FRC6RefVar
 ULong	GetCustomDictionary(RefArg config, ULong index);	// ROM 0x0013fa9c GetCustomDictionary__FRC6RefVarUl
+
+// A dictionary of the list replaced by another: the one the frame's
+// `dictId` names is disposed of and a new one opened over the bytes
+// given, which go in the frame's `dict` slot.  ==> whether one was.
+Boolean	ReplaceDictionary(RefArg frame, RefArg binary);		// ROM 0x0013ec74 ReplaceDictionary__F6RefVarT1
+Boolean	ReplaceDictionary(RefArg frame, ULong romDictID, const char* data, ULong size);	// ROM 0x0013f14c ReplaceDictionary__F6RefVarUlPcT2
+// ... the one a locale bundle carries in place of this dictionary, if it
+// carries one (the frame's `localDictSlot` names the bundle's slot).
+Boolean	ReplaceLocalDictionary(RefArg localeBundle, RefArg frame);	// ROM 0x0013e384 ReplaceLocalDictionary__F6RefVarT1
+// ... and every dictionary of the list asked that question at once,
+// which is how a change of locale changes the words the machine reads.
+void	ReadDictPrefs(void);								// ROM 0x0013e4a4 ReadDictPrefs__Fv
 
 // The chains: built for one lookup and thrown away again.
 void	AddToChain(TDictChain** chains, dictListEntry* entry);	// ROM 0x0013d628 AddToChain__FPP10TDictChainP13dictListEntry

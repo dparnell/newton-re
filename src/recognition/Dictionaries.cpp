@@ -10,6 +10,7 @@
 #include "Dictionaries.h"
 #include "Airus.h"
 #include "ROMDictionaryData.h"
+#include "Locale.h"			// IntlResources
 #include "RecConfig.h"
 #include "View.h"
 #include "RootView.h"
@@ -25,6 +26,12 @@
 
 // ROM 0x0c10162c gDictList
 TDArray*	gDictList = nil;
+
+// ROM 0x0c100f8c-0x0c100f98 - the lexicons the locale carries
+Handle		gTimeLexDictionary = nil;
+Handle		gDateLexDictionary = nil;
+Handle		gPhoneLexDictionary = nil;
+Handle		gNumberLexDictionary = nil;
 
 
 /*------------------------------------------------------------------------------
@@ -81,6 +88,24 @@ FindDictionaryEntry(ULong id)
 	B u i l d i n g   t h e   l i s t
 ------------------------------------------------------------------------------*/
 
+// One of the four lexicons the locale carries, opened over the binary in
+// the named slot of the current locale bundle.  Written out four times in
+// the ROM, once per lexicon.
+static void
+OpenLocaleLexicon(RefArg slot, Handle* where)
+{
+	RefVar words(GetLocaleSlot(slot));
+	if (ISNIL(words))
+		return;
+	Handle dictionary = ReadRefDictionary(words);
+	if (dictionary != nil && *dictionary != nil)
+	{
+		((AirusAParmBlock*) *dictionary)->fField4c = 1;
+		*where = dictionary;
+	}
+}
+
+
 // ROM 0x0013de2c InitDictionaries__Fv
 // The dictionaries built and put in `vars.dictionaries`, with `gDictList`
 // beside them.
@@ -98,9 +123,9 @@ FindDictionaryEntry(ULong id)
 // walks (`dictType` under 2, or 4, the exceptions); the rest are
 // described but never built.
 //
-// NOT YET RECONSTRUCTED: `gTrie`, which is dictionary 32, and the four
-// lexicons the locale carries as binaries (the time, date, phone and
-// number ones, which come in through `ReadRefDictionary`).
+// NOT YET RECONSTRUCTED: `gTrie`, which would be dictionary 32 if that
+// descriptor had no `romDictID` - it has one, so this ROM never takes
+// that path.
 void
 InitDictionaries(void)
 {
@@ -162,6 +187,135 @@ InitDictionaries(void)
 		*(dictListEntry*) gDictList->AddEntry() = entry;
 	}
 	gDictList->Compact();
+
+	// the four the locale carries, which are not in the list at all
+	OpenLocaleLexicon(RSSYMtimedictionary, &gTimeLexDictionary);
+	OpenLocaleLexicon(RSSYMdatedictionary, &gDateLexDictionary);
+	OpenLocaleLexicon(RSSYMphonedictionary, &gPhoneLexDictionary);
+	OpenLocaleLexicon(RSSYMnumberdictionary, &gNumberLexDictionary);
+}
+
+
+/*------------------------------------------------------------------------------
+	R e p l a c i n g   o n e
+------------------------------------------------------------------------------*/
+
+// ROM 0x0013ec74 ReplaceDictionary__F6RefVarT1
+// The dictionary the frame names replaced by one over the bytes of a
+// binary object.  The old one is disposed of first, so a dictionary that
+// was open on the ROM's own words is closed before the locale's take
+// their place.
+//
+// A frame of a kind no lookup walks is a mistake rather than a thing to
+// ignore, and is thrown on.
+Boolean
+ReplaceDictionary(RefArg frame, RefArg binary)
+{
+	long id = RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
+	long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
+	Handle dictionary = nil;
+	Boolean replaced = false;
+	if (type < 2 || type == 4)
+	{
+		dictionary = FindDictionaryEntry((ULong) id)->fDictionary;
+		if (dictionary != nil)
+			DisposDictionary(&dictionary);
+		dictionary = ReadRefDictionary(binary);
+		((AirusAParmBlock*) *dictionary)->fDictID = id;
+		replaced = true;
+		((AirusAParmBlock*) *dictionary)->fField4c = 1;
+	}
+	else
+		ThrowMsg("unknown dictionary type");
+
+	FindDictionaryEntry((ULong) id)->fDictionary = dictionary;
+	SetFrameSlot(frame, RSSYMdict,
+				 RefVar(dictionary == nil ? NILREF : AddressToRef(dictionary)));
+	return replaced;
+}
+
+
+// ROM 0x0013f14c ReplaceDictionary__F6RefVarUlPcT2
+// The same over a slot of the ROM's own word data, which is what a locale
+// that names one of the ROM's lexicons rather than carrying its own gets.
+// A dictionary already open on those very bytes is left alone.
+Boolean
+ReplaceDictionary(RefArg frame, ULong romDictID, const char* data, ULong size)
+{
+	long id = RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
+	long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
+	Handle dictionary = nil;
+	Boolean replaced = false;
+	if (type < 2 || type == 4)
+	{
+		dictionary = FindDictionaryEntry((ULong) id)->fDictionary;
+		if (dictionary != nil)
+		{
+			if (*((AirusAParmBlock*) *dictionary)->fDataHandle == (Ptr) data)
+				return false;
+			DisposDictionary(&dictionary);
+		}
+		dictionary = BuildDictionaryFromPtr((void*) data, (Size) size);
+		((AirusAParmBlock*) *dictionary)->fDictID = id & 0xffff;
+		replaced = true;
+		((AirusAParmBlock*) *dictionary)->fField4c = 1;
+
+		FindDictionaryEntry((ULong) id)->fDictionary = dictionary;
+		SetFrameSlot(frame, RSSYMdict,
+					 RefVar(dictionary == nil ? NILREF : AddressToRef(dictionary)));
+		SetFrameSlot(frame, RSSYMromdictid, RefVar(MAKEINT((long) romDictID)));
+	}
+	else
+		ThrowMsg("unknown dictionary type");
+	return replaced;
+}
+
+
+// ROM 0x0013e384 ReplaceLocalDictionary__F6RefVarT1
+// What the locale has to say about one dictionary.  The frame's
+// `localDictSlot` is the name of the slot of the locale bundle that
+// carries this dictionary's words: an integer there is a slot of the
+// ROM's own word data, and anything else is a binary of words the locale
+// brought with it.  A frame with no `localDictSlot`, or a bundle with
+// nothing in that slot, is left as it is.
+Boolean
+ReplaceLocalDictionary(RefArg localeBundle, RefArg frame)
+{
+	Boolean replaced = false;
+	RefVar slot(GetProtoVariable(frame, RSSYMlocaldictslot, nil));
+	RefVar words(ISNIL(slot) ? NILREF : GetProtoVariable(localeBundle, slot, nil));
+	if (ISINT(words))
+	{
+		ULong size = 0;
+		const void* data = GetROMDictionaryData((ULong) RINT(words), &size);
+		replaced = ReplaceDictionary(frame, (ULong) RINT(words), (const char*) data, size);
+	}
+	else if (NOTNIL(words))
+		replaced = ReplaceDictionary(frame, words);
+	return replaced;
+}
+
+
+// ROM 0x0013e4a4 ReadDictPrefs__Fv
+// Every dictionary of the list asked what the current locale has to say
+// about it.  That is how a machine set to another language reads other
+// words: the list of dictionaries is the ROM's either way, and the locale
+// bundle replaces the data behind the ones it has its own words for.
+//
+// BUG (kept): the list is not checked.  `TRecognitionManager::Init`
+// builds it only above level 1, but calls `InitRecognizers` - and so
+// `ReadDomainOptions` and this - at every level, so a machine started at
+// level 1 throws here on a `vars.dictionaries` that was never made.  The
+// MP2x00 always starts at level 2, so nobody ever saw it.
+void
+ReadDictPrefs(void)
+{
+	RefVar list(Dictionaries());
+	RefVar intl(IntlResources());
+	RefVar bundle(GetProtoVariable(intl, RSSYMcurrentlocalebundle, nil));
+	long count = Length(list);
+	for (long i = 0; i < count; i++)
+		ReplaceLocalDictionary(bundle, RefVar(GetArraySlotRef(list, i)));
 }
 
 

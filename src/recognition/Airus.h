@@ -39,6 +39,9 @@
 #ifndef __NEWTONMEMORY_H
 #include "NewtonMemory.h"
 #endif
+#ifndef __OBJECTS_H
+#include "objects.h"
+#endif
 
 // the kinds a dictionary's second byte may name (its low three bits)
 enum
@@ -122,6 +125,12 @@ Handle	NewDictionary(UByte type, long attributeSize);		// ROM 0x00028d7c NewDict
 // into the ROM, which are read where they lie rather than copied.
 Handle	BuildDictionaryFromHandle(Handle data);				// ROM 0x0002d0b0 BuildDictionaryFromHandle
 Handle	BuildDictionaryFromPtr(void* data, Size size);		// ROM 0x0002d624 BuildDictionaryFromPtr
+// ... and over the bytes of a binary object, which is how a dictionary
+// that came off a store, out of a package or out of a locale bundle is
+// opened.
+Handle	ReadRefDictionary(RefArg binary);					// ROM 0x0002d6a0 ReadRefDictionary__FRC6RefVar
+// The dictionary given back: its data and then the block itself.
+void	DisposDictionary(Handle* dictionary);				// ROM 0x0002d6f4 DisposDictionary
 void	CheckDictPtrs(AirusAParmBlock* parms);				// ROM 0x00029944 CheckDictPtrs__FP15AirusAParmBlock - the pointers re-read after the Handle may have moved, and AE_Parms set
 long	ExpandDict(long extra);								// ROM 0x0002998c ExpandDict__FUl - room made for that many more bytes; ==> 0, or 2 when there is none
 void	SlideUp(long offset, long count);					// ROM 0x00028ec4 SlideUp__FUlT1 - the bytes from offset moved down over count of them

@@ -116,6 +116,32 @@ BuildDictionaryFromPtr(void* data, Size size)
 }
 
 
+// ROM 0x0002d6a0 ReadRefDictionary__FRC6RefVar
+// A dictionary over the bytes of a binary object.  Nothing is copied:
+// the object itself is the dictionary's data, which is why the frames
+// heap must not move it while the dictionary is open.
+Handle
+ReadRefDictionary(RefArg binary)
+{
+	return BuildDictionaryFromPtr((void*) BinaryData(binary), (Size) Length(binary));
+}
+
+
+// ROM 0x0002d6f4 DisposDictionary
+// The data handle and the block, and the caller's pointer cleared.
+void
+DisposDictionary(Handle* dictionary)
+{
+	if (*dictionary != nil)
+	{
+		DisposeHandle(((AirusAParmBlock*) **dictionary)->fDataHandle);
+		DisposeHandle(*dictionary);
+		*dictionary = nil;
+	}
+	airusResult = 0;
+}
+
+
 // ROM 0x00029944 CheckDictPtrs__FP15AirusAParmBlock
 // The block's pointers read again after the Handle may have moved, and
 // the block made the one the walkers work on.  The end moves with the
