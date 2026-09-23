@@ -76,6 +76,7 @@ const long	kAirusIsPrefix			= 1;	// after VerifyString: the beginning of other w
 const long	kAirusIsPrefixAndWord	= 2;	// ... and one as well
 const long	kAirusIsWord			= 3;	// a word, with nothing going on from it
 const long	kAirusNotAWord			= -6;
+const long	kAirusBadDictionary		= -3;	// the bytes are not a dictionary
 
 // airusResult, and what ExpandDict leaves in the block
 const long	kAirusNoMemory		= -2;
@@ -117,6 +118,10 @@ extern AirusAParmBlock*	AE_Parms;		// ROM 0x0c10082c AE_Parms - the block being 
 
 // the container
 Handle	NewDictionary(UByte type, long attributeSize);		// ROM 0x00028d7c NewDictionary - an empty one; nil, with airusResult, when there is no room
+// A dictionary opened over bytes that already exist - the ones built
+// into the ROM, which are read where they lie rather than copied.
+Handle	BuildDictionaryFromHandle(Handle data);				// ROM 0x0002d0b0 BuildDictionaryFromHandle
+Handle	BuildDictionaryFromPtr(void* data, Size size);		// ROM 0x0002d624 BuildDictionaryFromPtr
 void	CheckDictPtrs(AirusAParmBlock* parms);				// ROM 0x00029944 CheckDictPtrs__FP15AirusAParmBlock - the pointers re-read after the Handle may have moved, and AE_Parms set
 long	ExpandDict(long extra);								// ROM 0x0002998c ExpandDict__FUl - room made for that many more bytes; ==> 0, or 2 when there is none
 void	SlideUp(long offset, long count);					// ROM 0x00028ec4 SlideUp__FUlT1 - the bytes from offset moved down over count of them

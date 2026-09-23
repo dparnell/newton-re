@@ -89,6 +89,26 @@ TestALLexicon(void)
 	block.fAttributeSize = 1;
 
 	// a whole word, with the attribute that was stored with it
+	// ... and the same dictionary opened the way a ROM one is: a block
+	// built over bytes that already exist, read where they lie
+	{
+		Handle opened = BuildDictionaryFromPtr(bytes, (Size) sizeof(kSmallAL));
+		EXPECT(opened != nil && airusResult == 0);
+		if (opened != nil)
+		{
+			AirusAParmBlock* p = (AirusAParmBlock*) *opened;
+			EXPECT(p->fAttributeSize == 1 && p->fSize == (long) sizeof(kSmallAL));
+			EXPECT(p->fDataEnd - p->fData == (long) sizeof(kSmallAL));
+			EXPECT(p->fCurrent == opened && p->fNext == nil);
+			EXPECT(LookUpAL(p, "an") == kAirusLeaf && p->fAttribute == 4);
+			EXPECT(LookUpAL(p, "zz") == kAirusNoMatch);
+		}
+		// bytes that are not a dictionary are refused
+		UByte junk[4] = { 1, 2, 3, 4 };
+		EXPECT(BuildDictionaryFromPtr(junk, 4) == nil);
+		EXPECT(airusResult == kAirusBadDictionary);
+	}
+
 	EXPECT(LookUpAL(&block, "at") == kAirusLeaf);
 	EXPECT(block.fAttribute == 3);
 	EXPECT(block.fIndex == 2);

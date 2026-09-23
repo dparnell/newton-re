@@ -41,6 +41,81 @@ static UByte		gAirusScratch8[256];		// ROM 0x0c105af4
 static UByte		gAirusScratch16[256];		// ROM 0x0c105bf4
 
 
+// ROM 0x0002d0b0 BuildDictionaryFromHandle
+// A dictionary opened over bytes that already exist - the ones built
+// into the ROM.  It is `NewDictionary` the other way round: rather than
+// making an empty trie to write into, it takes a finished one and fills
+// in the block that describes it, reading the attribute size and the
+// kind out of the second header byte.
+//
+// The bytes are not copied and not owned: a ROM dictionary is read where
+// it lies.  ==> the block's Handle, or nil with `airusResult` saying
+// why.
+Handle
+BuildDictionaryFromHandle(Handle data)
+{
+	Handle handle = NewHandle(sizeof(AirusAParmBlock));
+	if (handle == nil)
+	{
+		airusResult = kAirusNoMemory;
+		return nil;
+	}
+	AirusAParmBlock* parms = (AirusAParmBlock*) *handle;
+	parms->fVersion = gAirusVersion;
+	parms->fGrowBy = 100;
+	parms->fDictID = 0;
+	parms->fField3c = 1;
+	parms->fField38 = 0;
+	parms->fCurrent = handle;
+	parms->fNext = nil;
+	parms->fField4c = 1;
+	parms->fDataHandle = data;
+	parms->fData = *data;
+	long size = GetHandleSize(data);
+	parms->fSize = size;
+
+	long kind = size >= 2 ? ((UByte) parms->fData[1] & 7) : 0;
+	if (size < 2 || (UByte) parms->fData[0] != kAirusSignature
+		|| !(kind == kAirusKindAL || kind == kAirusKindAL16
+			 || kind == kAirusKindEnum || kind == kAirusKindEnum16
+			 || kind == kAirusKindEnumRAM || kind == 6))
+	{
+		// (kind 6 is accepted here and nowhere else; no dictionary in
+		//  this ROM is one)
+		DisposHandle(handle);
+		airusResult = kAirusBadDictionary;
+		return nil;
+	}
+
+	parms->fDataEnd = parms->fData + size;
+	parms->fAttributeSize = (UByte) parms->fData[1] >> 4;
+	parms->fAttribute = 0;
+	parms->fField48 = 0;
+	parms->fVersion = gAirusVersion;
+	parms->fWord = (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+				   ? gAirusScratch16 : gAirusScratch8;
+	airusResult = 0;
+	return handle;
+}
+
+
+// ROM 0x0002d624 BuildDictionaryFromPtr
+// The same over bytes that are not in a Handle at all, which is how the
+// ROM's own dictionaries are opened: a fake Handle is made over them
+// first.
+Handle
+BuildDictionaryFromPtr(void* data, Size size)
+{
+	Handle fake = NewFakeHandle(data, size);
+	if (fake == nil)
+	{
+		airusResult = kAirusNoMemory;
+		return nil;
+	}
+	return BuildDictionaryFromHandle(fake);
+}
+
+
 // ROM 0x00029944 CheckDictPtrs__FP15AirusAParmBlock
 // The block's pointers read again after the Handle may have moved, and
 // the block made the one the walkers work on.  The end moves with the
