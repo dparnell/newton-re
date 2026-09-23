@@ -409,9 +409,10 @@ InkOpenFont(PixelMap* pm, StyleRecord* style, RefArg ink, Fixed xScale, Fixed yS
 	info->fReserved38 = 0;
 	if (faceBits != 0)
 	{
-		// (the ROM asks UpdateStyleTable for the table scaled by the
-		//  size first, as its own font opener does: NOT YET there either)
-		const unsigned char* row = kStyleTable + 2;
+		// the table scaled to the size, as the ROM's own font opener
+		// asks for it
+		const unsigned char* table = UpdateStyleTable(xScale, yScale);
+		const unsigned char* row = table + 2;
 		for (ULong bits = faceBits; bits != 0; bits >>= 1, row += 3)
 			if (bits & 1)
 			{
@@ -420,9 +421,9 @@ InkOpenFont(PixelMap* pm, StyleRecord* style, RefArg ink, Fixed xScale, Fixed yS
 			}
 		if (faceBits & kUnderlineFace)
 		{
-			info->fStyleAdjust[2] = kStyleTable[0x17] - info->fBaselineShift;
-			info->fStyleAdjust[3] = kStyleTable[0x18];
-			info->fStyleAdjust[4] = kStyleTable[0x19];
+			info->fStyleAdjust[2] = table[0x17] - info->fBaselineShift;
+			info->fStyleAdjust[3] = table[0x18];
+			info->fStyleAdjust[4] = table[0x19];
 		}
 	}
 	info->fReopen = InkReopenFont;

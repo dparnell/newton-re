@@ -142,6 +142,7 @@ struct FontEngineInfo
 // add there, what to add to the width - and at 0x17-0x19 the
 // underline's offset, thickness and extra.
 extern const unsigned char kStyleTable[0x1c];
+const unsigned char*	UpdateStyleTable(Fixed xScale, Fixed yScale);	// ROM 0x002e2724 UpdateStyleTable__FlT1 - the table scaled to the size
 
 // An ink word standing in for a font: the style's family is the ink
 // itself (or an integer that is the address of one), and the font has

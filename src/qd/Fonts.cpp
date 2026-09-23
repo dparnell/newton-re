@@ -494,6 +494,63 @@ SFNTCloseFont(FontEngineInfo* info)
 }
 
 
+// ROM 0x002e2724 UpdateStyleTable__FlT1
+// The style table scaled to the size a font is being drawn at.  A face
+// that QuickDraw synthesises - bold, italic, underline, outline, shadow
+// - is made out of fixed numbers of pixels (how far the bold smear
+// goes, how thick the underline is), and those numbers are right for a
+// font drawn as it is.  A font drawn scaled has to have them scaled
+// with it, or a big letter gets a hairline underline.
+//
+// Only some of the table's bytes are measurements: the rest are which
+// adjustment a face touches, and those are left alone.  The horizontal
+// ones go by the horizontal scale, the vertical ones by the vertical,
+// and the two that are neither (the outline's spread) by the mean of
+// the two.
+//
+// (BUG, kept: the bytes are read unsigned, so the one entry that is a
+//  negative adjustment - 0xff, minus one - comes out of the scaling as
+//  255 times the scale rather than minus the scale.  It only matters
+//  for a font that is being scaled at all.)
+//
+// DEVIATION: the ROM keeps the scaled table in the open font's own
+// entry of the global font array (gGlobalFontArray, 56 bytes an entry),
+// which the reconstruction's font cache is NOT YET.  One scaled table
+// is kept here and remade whenever the scale changes, which comes to
+// the same thing while one font is opened at a time.
+const unsigned char*
+UpdateStyleTable(Fixed xScale, Fixed yScale)
+{
+	if (xScale == ToFixed(1) && yScale == ToFixed(1))
+		return kStyleTable;
+
+	static unsigned char	sScaled[sizeof(kStyleTable)];
+	static Fixed			sScaledX = 0;
+	static Fixed			sScaledY = 0;
+	if (sScaledX == xScale && sScaledY == yScale)
+		return sScaled;
+	sScaledX = xScale;
+	sScaledY = yScale;
+
+	Fixed mean = (xScale + yScale) >> 1;
+	memcpy(sScaled, kStyleTable, sizeof(sScaled));
+	// which byte goes by which scale
+	static const unsigned char kAcross[] = { 3, 4, 12, 13, 18, 19, 21, 22 };
+	static const unsigned char kDown[] = { 23, 25 };
+	static const unsigned char kMean[] = { 15, 16, 24 };
+	for (ULong i = 0; i < sizeof(kAcross); i++)
+		sScaled[kAcross[i]] = (unsigned char)
+			(((ULong) xScale * sScaled[kAcross[i]] + 0x8000) >> 16);
+	for (ULong i = 0; i < sizeof(kDown); i++)
+		sScaled[kDown[i]] = (unsigned char)
+			(((ULong) yScale * sScaled[kDown[i]] + 0x8000) >> 16);
+	for (ULong i = 0; i < sizeof(kMean); i++)
+		sScaled[kMean[i]] = (unsigned char)
+			(((ULong) mean * sScaled[kMean[i]] + 0x8000) >> 16);
+	return sScaled;
+}
+
+
 // ROM 0x000adf2c SFNTOpenFont__FP8PixelMapP11StyleRecordRC6RefVarlT4P14FontEngineInfo
 // The info filled for the style in the family: the size scaled by
 // xScale (a superscript or subscript at four fifths of it, raised or
@@ -558,8 +615,10 @@ SFNTOpenFont(PixelMap* /*pm*/, StyleRecord* style, RefArg fontFamily, Fixed xSca
 	info->fReserved38 = 0;
 	if (face != 0)
 	{
-		// (the ROM scales the table's entries by the size for a scaled font: NOT YET)
-		const unsigned char* row = kStyleTable + 2;
+		// the table scaled to the size the font is drawn at, so that a
+		// big letter does not get a hairline underline
+		const unsigned char* table = UpdateStyleTable(xScale, yScale);
+		const unsigned char* row = table + 2;
 		for (long bits = face; bits != 0; bits >>= 1, row += 3)
 			if (bits & 1)
 			{
@@ -568,9 +627,9 @@ SFNTOpenFont(PixelMap* /*pm*/, StyleRecord* style, RefArg fontFamily, Fixed xSca
 			}
 		if (face & kUnderlineFace)
 		{
-			info->fStyleAdjust[2] = kStyleTable[0x17] - info->fBaselineShift;
-			info->fStyleAdjust[3] = kStyleTable[0x18];
-			info->fStyleAdjust[4] = kStyleTable[0x19];
+			info->fStyleAdjust[2] = table[0x17] - info->fBaselineShift;
+			info->fStyleAdjust[3] = table[0x18];
+			info->fStyleAdjust[4] = table[0x19];
 		}
 	}
 	info->fReopen = SFNTReopenFont;

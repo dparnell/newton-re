@@ -340,6 +340,48 @@ TestLayout()
 }
 
 
+// The style table the synthesised faces are made with, scaled to the
+// size a font is drawn at.
+static void
+TestStyleTable()
+{
+	// drawn as it is, the table itself is answered
+	EXPECT(UpdateStyleTable(ToFixed(1), ToFixed(1)) == kStyleTable);
+
+	// drawn at twice the size, the measurements double and the rest is
+	// left alone
+	const unsigned char* twice = UpdateStyleTable(ToFixed(2), ToFixed(2));
+	EXPECT(twice != kStyleTable);
+	EXPECT(twice[3] == kStyleTable[3] * 2);			// the bold smear
+	EXPECT(twice[0x17] == kStyleTable[0x17] * 2);	// the underline's offset
+	EXPECT(twice[0x18] == kStyleTable[0x18] * 2);	// and its thickness
+	// which adjustment each face touches is not a measurement
+	EXPECT(twice[2] == kStyleTable[2]);
+	EXPECT(twice[5] == kStyleTable[5]);
+	EXPECT(twice[8] == kStyleTable[8]);
+
+	// the same scale answers the same table without making it again
+	EXPECT(UpdateStyleTable(ToFixed(2), ToFixed(2)) == twice);
+
+	// the two axes are taken separately: the bold smear is horizontal,
+	// the underline's offset vertical, and its thickness neither - it
+	// goes by the mean of the two, which for three and one is two
+	const unsigned char* wide = UpdateStyleTable(ToFixed(3), ToFixed(1));
+	EXPECT(wide[3] == kStyleTable[3] * 3);
+	EXPECT(wide[0x17] == kStyleTable[0x17]);
+	EXPECT(wide[0x19] == kStyleTable[0x19]);
+	EXPECT(wide[0x18] == kStyleTable[0x18] * 2);
+
+	// (BUG, kept: the one negative entry is read unsigned, so scaling it
+	//  gives 255 times the scale rather than minus the scale.  It is
+	//  0xff at 0x13 - what an italic adds to the width, which is
+	//  nothing - and halved it becomes 127 rather than staying -1.)
+	EXPECT(kStyleTable[0x13] == 0xff);
+	const unsigned char* half = UpdateStyleTable(ToFixed(1) / 2, ToFixed(1) / 2);
+	EXPECT(half[0x13] == 0x80);
+}
+
+
 int
 main()
 {
@@ -386,6 +428,7 @@ main()
 		TestDrawing();
 		TestNatives();
 		TestLayout();
+		TestStyleTable();
 	}
 	newton_catch_all
 	{
