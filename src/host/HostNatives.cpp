@@ -26,6 +26,7 @@
 #include "RectNatives.h"
 #include "View.h"
 #include "UnitPublic.h"
+#include "CorrectInfo.h"
 #include "CardInfo.h"
 #include "SoundSettings.h"
 #include "SystemNatives.h"
@@ -54,6 +55,7 @@ RegisterAllNatives(void)
 
 	// the recogniser's units, and the ink the pen leaves
 	RegisterUnitNatives();
+	RegisterCorrectInfoNatives();
 	RegisterStrokeBundleNatives();
 	RegisterInkNatives();
 

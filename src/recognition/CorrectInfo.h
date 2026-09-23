@@ -131,4 +131,37 @@ void	AutoAdd(RefArg info);							// ROM 0x000794ec AutoAdd__FRC6RefVar
 // machine.
 Ref		AddWordInfo(TView* view, long start, long stop, TUnitPublic* unit);	// ROM 0x00079790 AddWordInfo__FP5TViewlT2P11TUnitPublic
 
+// The corrector put up over a word of a view's text: where the word is
+// and the box it occupies, handed to the ROM's own `DoCorrection`, which
+// builds the corrector view out of the word's alternatives and opens it.
+void	Correct(TView* view, UniChar* word, long length, long offset, const Rect& bounds);	// ROM 0x0007929c Correct__FP5TViewPUslT3RC5TRect
+// ... and the numeric keypad, which is what a field with no word in it
+// gets instead.
+void	OpenKeypadFor(TView* view);								// ROM 0x000791f8 OpenKeypadFor__FP5TView
+
+// correctInfo:FindNew(view, offset, length): what the machine
+// remembers about the word at that offset, or a fresh entry for it.
+Ref		FFindNewInfo(RefArg rcvr, RefArg context, RefArg offset, RefArg length);	// ROM 0x00079a44 FFindNewInfo
+
+// wordInfo:GetWords(): the readings the entry holds, as plain words.
+Ref		FGetWordList(RefArg rcvr);								// ROM 0x00079c94 FGetWordList
+
+// The readings the corrector added while it was up taken back out.
+void	RemoveToggledEntries(RefArg info, long from);			// ROM 0x000778b8 RemoveToggledEntries__FRC6RefVarl
+Ref		FRemoveToggledEntries(RefArg rcvr, RefArg from);		// ROM 0x0007973c FRemoveToggledEntries
+
+// A reading brought to the front of the entry, and the other
+// capitalisation of the first reading put in front of it.
+Ref		GetToggledWord(RefArg word);							// ROM 0x000790f0 GetToggledWord__FRC6RefVar
+void	MoveWordFirst(RefArg info, RefArg word);				// ROM 0x000777f0 MoveWordFirst__FRC6RefVarT1
+void	AddCapitalizedEntry(RefArg info);						// ROM 0x00077988 AddCapitalizedEntry__FRC6RefVar
+Ref		FAddCapitalizedEntry(RefArg rcvr);						// ROM 0x00079778 FAddCapitalizedEntry
+
+// The array operations the corrector works its list with.
+void	InsertArrayElement(RefArg array, long index, RefArg value);	// ROM 0x00078ea4 InsertArrayElement__F6RefVarlT1
+Ref		RemoveArrayElement(RefArg array, long index);			// ROM 0x00078f38 RemoveArrayElement__F6RefVarl
+void	MoveArrayElement(RefArg array, long from, long to);		// ROM 0x00078fc4 MoveArrayElement__F6RefVarlT2
+
+void	RegisterCorrectInfoNatives(void);
+
 #endif	/* __CORRECTINFO_H */

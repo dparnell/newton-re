@@ -1511,6 +1511,80 @@ TParagraphView::SelectWordAt(Point pt)
 }
 
 
+// ROM 0x00177cbc FindWordOffset__14TParagraphViewF6TPointPlP6TPoint
+// The word under a point: where it starts in the text, where its first
+// character sits on the screen, and how long it is.  ==> 0 when there is
+// no word there - past the end of a line, or on a space.
+long
+TParagraphView::FindWordOffset(Point pt, long* offset, Point* where)
+{
+	if (fLines == nil)
+		CreateAllCaches();
+	long start, end;
+	// (the ROM also refuses a tab, which it knows from the text object
+	//  the point is in; here the whole line is one run)
+	if (!PointToWord(pt, &start, &end, nil))
+		return 0;
+	RefVar textRef(Text());
+	if (ISNIL(textRef))
+		return 0;
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	UniChar first = text[start];
+	rich.ReleasePtr();
+	if (first == ' ')
+		return 0;
+	// (the ROM asks OffsetInRunToBounds, which is the same box for a
+	//  paragraph whose line is one run)
+	Rect bounds;
+	OffsetToBounds(start, &bounds);
+	*offset = start;
+	where->h = bounds.left;
+	where->v = bounds.top;
+	return end - start;
+}
+
+
+// ROM 0x00171344 HitsHilitedInkWord__FP5TView6TPoint
+// Whether the point is on an ink word inside the view's selection - a
+// word of writing that has been selected and tapped again, which is
+// asking for it to be read rather than corrected.
+Boolean
+HitsHilitedInkWord(TView* view, Point pt)
+{
+	if (!view->DerivedFrom(clParagraphView))
+		return false;
+	TParagraphView* para = (TParagraphView*) view;
+	RefVar hiliteRef(para->FirstHilite());
+	if (ISNIL(hiliteRef))
+		return false;
+	TParagraphHilite* hilite = HiliteOf(hiliteRef);
+	if (hilite == nil)
+		return false;
+	RefVar textRef(para->Text());
+	TRichString rich(textRef);
+	const UniChar* text = rich.GrabPtr();
+	Boolean hit = false;
+	for (long offset = hilite->fStart; offset < hilite->fEnd; offset++)
+	{
+		RefVar style(para->GetStyleAtOffset(offset, nil, nil));
+		if (text[offset] != kInkWordChar || !IsInkWord(style))
+			continue;
+		Rect box, next;
+		para->OffsetToBounds(offset, &box);
+		para->OffsetToBounds(offset + 1, &next);
+		box.right = next.left;
+		if (PtInRect(pt, &box))
+		{
+			hit = true;
+			break;
+		}
+	}
+	rich.ReleasePtr();
+	return hit;
+}
+
+
 // ROM 0x001752c4 HandleTap__14TParagraphViewFR6TPoint
 // The caret placed at the tapped point: the selection removed, the
 // character nearest the point found (PointToOffset; before the first line
@@ -5299,14 +5373,77 @@ TParagraphView::RealDoCommand(RefArg cmd)
 	}
 	if (id == aeDoubleTap)
 	{
-		// the pending single tap cancelled; the word under the tap selected
+		// The second tap on a word: the corrector goes up over it.  The
+		// pending single tap is cancelled first, so the caret is not
+		// placed as well.
+		//
+		// NOT YET RECONSTRUCTED: the two branches that ask for a word of
+		// writing to be read again rather than corrected - a tap on an
+		// ink word inside the selection, and a tap on an ink word the
+		// corrector knows nothing about.  Both post a command to the
+		// application that the re-recognition path answers, and that
+		// path (`RecognizeInArea`) is NOT YET; here they fall through to
+		// the corrector, which is what a word of text gets.
 		fTapped = false;
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+			return TView::RealDoCommand(cmd);
+
 		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 		Point pt = unit->Stroke()->FirstPoint();
-		if (PtInRect(pt, &viewBounds) && SelectWordAt(pt))
-			CommandSetResult(cmd, 1);
-		else
-			HandleTap(pt);		// no word there: just the caret
+		if (PtInRect(pt, &viewBounds))
+		{
+			long offset = 0;
+			Point where;
+			long length = FindWordOffset(pt, &offset, &where);
+			if (length != 0)
+			{
+				RefVar textRef(Text());
+				TRichString rich(textRef);
+				const UniChar* text = rich.GrabPtr();
+				offset = ScanWordStart(text, offset, 0);
+				length = ScanWordEnd(text, offset, Ustrlen(text)) - offset;
+				rich.ReleasePtr();
+			}
+			if (length == 0)
+			{
+				// nothing to correct: the caret goes where the tap was and
+				// the keypad is offered - unless the view works out its own
+				// bounds, which is a paragraph of a page rather than a field
+				if ((fFlags & vCalculateBounds) == 0)
+				{
+					HandleTap(pt);
+					OpenKeypadFor(this);
+				}
+			}
+			else
+			{
+				// a word the corrector already knows about is corrected
+				// as a whole, however much of it was tapped
+				RefVar info(FindWordInfo(this, offset));
+				if (NOTNIL(info))
+				{
+					long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+					long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+					if (start <= offset && offset + length <= stop)
+					{
+						length = stop - start;
+						offset = start;
+					}
+				}
+				Rect bounds, end;
+				OffsetToBounds(offset, &bounds);
+				OffsetToBounds(offset + length, &end);
+				bounds.right = end.left;
+				RefVar textRef(Text());
+				TRichString rich(textRef);
+				UniChar* text = (UniChar*) rich.GrabPtr();
+				Correct(this, text + offset, length, offset, bounds);
+				rich.ReleasePtr();
+			}
+		}
+		CommandSetResult(cmd, 1);
 		return true;
 	}
 	if (id == kInsertItemsCommand && (fFlags & (vReadOnly | vWriteProtected)) == 0)

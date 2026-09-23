@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `24f78e4`)
+## State at 2026-09-24 (commit `e7e1b6e`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8677 citations, 0 bad;
-  4693 of 16671 functions (28.15%).
+- `analysis/coverage.py build/MP2x00US --check`: 8693 citations, 0 bad;
+  4704 of 16671 functions (28.22%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -71,6 +71,10 @@ The last run of work closed, in order:
   `FindWordInRun` and the only claim that scores 6 - and with it the
   remote-writing bracket the corrector puts round a word, and a rich
   string keeping its writing when it is dropped into a paragraph.
+- **the whole of the writing path above the engine**: the machine boots
+  into the Setup assistant, walks through it to the Notepad, opens
+  Names, Dates, Extras and the Preferences roll, takes writing and keeps
+  it, and a double tap on a word asks for the corrector.
 - **the dictionaries**, end to end: the list and the three chains a
   lookup walks (`recognition/Dictionaries.h`), the 129 lexicons built
   into the ROM opened where they lie
@@ -114,11 +118,31 @@ the two large open areas below.
       and the sixteen-bit walkers (AE16, `AE16_NextSet9`).
     - `gTrie`, which would be dictionary 32 if its descriptor had no
       `romDictID` - it has one, so this ROM never takes that path.
-- **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
-  `correct` to find in the root view's context.  It answers false out
-  of hand today, which is right for a machine that has no corrector
-  but is not what the ROM does.  (The remote-writing bracket around
-  it - `SetRemoteForCorrector`/`RestoreRemoteForCorrector` - is done.)
+- **The corrector** is now wired from the pen down to the ROM's own
+  `DoCorrection`: a double tap travels from the click-event recogniser
+  to the edit view, down to the paragraph under the point, and out
+  through `Correct` (`docs/recognition/README.md`, "The corrector").
+  What stops it is the **spelling checker**, which is where
+  `DoCorrection` goes next - `SpellDocBegin` (0x001f6360) makes a
+  `spell_state` with its own dictionary chains (`InitSpellChains`,
+  `InitNumberChains`, `MakeSpellFrame` 0x001f62ac, `GetSpeller`
+  0x001f6314, `FSpellDocEnd`, `FSpellSkip`), and `FSpellCheck`
+  (0x001f41bc), `FSpellCorrect` (0x001f44c8) and `CorrectWordInChain`
+  (0x001f49ac) are the work.  With the dictionaries in place the
+  chains it wants are there.
+  Reproduce it with `build/host/host/newton --rom build/MP2x00US/rom.bin
+  --display 320x480 --headless 48 --script <setup.ns + type a word +
+  double tap>`: the run stops at `native not reconstructed:
+  SpellDocBegin`.
+- **The two ink arms of the double tap**, which ask for a word of
+  writing to be read again rather than corrected: one for a tap on an
+  ink word inside the selection (`HitsHilitedInkWord` is reconstructed
+  and waiting), one for a tap on an ink word the corrector knows
+  nothing about.  Both post a command to the application that the
+  re-recognition path (`RecognizeInArea`) answers, and that is NOT YET.
+- `CorrectorUp` (0x001767b8) still answers false out of hand: it asks
+  the root view for a `correct` view, which only exists once the
+  corrector has actually opened.
 
 ## Also still open
 

@@ -21,6 +21,9 @@
 #include "RSSymbols.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
+#include "NativeFunctions.h"
+#include "Interpreter.h"	// DoBlock
+#include "Rects.h"
 
 
 /*------------------------------------------------------------------------------
@@ -927,4 +930,300 @@ AddWordInfo(TView* view, long start, long stop, TUnitPublic* unit)
 	if (ISNIL(RefVar(view->GetProto(RSSYM_noautoadd))))
 		AutoAdd(info);
 	return info;
+}
+
+/*------------------------------------------------------------------------------
+	P u t t i n g   t h e   c o r r e c t o r   u p
+------------------------------------------------------------------------------*/
+
+// ROM 0x000791f8 OpenKeypadFor__FP5TView
+// The numeric keypad opened over a view, which is what a double tap on a
+// field that has no word in it gets.  The whole of it is the ROM's own
+// `OpenKeypadFor` function; this only hands the view's context to it.
+void
+OpenKeypadFor(TView* view)
+{
+	RefVar args(MakeArray(1));
+	SetArraySlot(args, 0, RefVar(view->fContext));
+	DoBlock(RefVar(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMopenkeypadfor)), args);
+}
+
+
+// ROM 0x0007929c Correct__FP5TViewPUslT3RC5TRect
+// The corrector put up over a word: the view's context, where the word
+// is in its text and the box it occupies, handed to the ROM's own
+// `DoCorrection`.  That builds the corrector view out of the word's
+// alternatives - `correctInfo:FindNew` for what is remembered about the
+// word, `wordInfo:GetWords` for the readings - and opens it, unless the
+// view's `viewCorrectionPopupScript` says not to; a field whose text is
+// empty gets the keypad instead.
+//
+// The word itself is handed in and never used: `DoCorrection` reads it
+// out of the view's own text at the offset.  The parameter is kept
+// because the ROM has it.
+void
+Correct(TView* view, UniChar* /*word*/, long length, long offset, const Rect& bounds)
+{
+	RefVar args(MakeArray(4));
+	SetArraySlot(args, 0, RefVar(view->fContext));
+	SetArraySlot(args, 1, RefVar(MAKEINT(offset)));
+	SetArraySlot(args, 2, RefVar(MAKEINT(length)));
+	SetArraySlot(args, 3, RefVar(ToObject(bounds)));
+	DoBlock(RefVar(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMdocorrection)), args);
+}
+
+// ROM 0x00079a44 FFindNewInfo
+// correctInfo:FindNew(view, offset, length): what the machine remembers
+// about the word at that offset, or a fresh entry for it.
+//
+// An entry is only the one wanted when it covers exactly that range; a
+// word that has been edited since is no longer the word the corrector
+// was told about, so the range is cleared and a new entry made from
+// whatever is there now.  An empty word (length 0) gets an entry of its
+// own that is not put on the list.
+Ref
+FFindNewInfo(RefArg rcvr, RefArg context, RefArg offsetRef, RefArg lengthRef)
+{
+	long length = RINT(lengthRef);
+	long offset = RINT(offsetRef);
+	TView* view = GetView(context);
+	long slot = FindWordInfoIndex(rcvr, view, offset);
+	RefVar list(GetFrameSlotRef(rcvr, RSSYMinfo));
+	RefVar info;
+	if (slot >= 0)
+	{
+		info = GetArraySlotRef(list, slot);
+		long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+		long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+		if (offset != start || offset + length != stop)
+			info = NILREF;
+	}
+	if (ISNIL(info))
+	{
+		ClearCorrectionRange(rcvr, view, offset, length);
+		info = MakeWordInfo(view, offset, length);
+		SetOffsetInfo(info, view, offset, offset + length, 0);
+		if (length > 0)
+		{
+			ClearEmptyEntries(rcvr);
+			AddWordInfo(rcvr, info);
+		}
+	}
+	return info;
+}
+
+
+// ROM 0x00079c94 FGetWordList
+// wordInfo:GetWords(): the readings the entry holds, as plain words -
+// the `word` slot of each, which is what the corrector offers.
+Ref
+FGetWordList(RefArg rcvr)
+{
+	RefVar words(GetFrameSlotRef(rcvr, RSSYMwords));
+	if (ISNIL(words))
+		return NILREF;
+	long count = Length(words);
+	RefVar list(MakeArray(count));
+	for (long i = 0; i < count; i++)
+	{
+		RefVar entry(GetArraySlotRef(words, i));
+		SetArraySlot(list, i, RefVar(GetFrameSlotRef(entry, RSSYMword)));
+	}
+	return list;
+}
+
+
+// ROM 0x000778b8 RemoveToggledEntries__FRC6RefVarl
+// The readings the corrector added to an entry while it was up taken
+// back out, from the index given on.  A reading the recogniser proposed
+// carries the index it had in the recogniser's own list; one the
+// corrector put there itself - a word from the keyboard, or one the
+// writer picked out of the dictionary - carries -2, and those are the
+// ones that go when the corrector is dismissed without a choice.
+void
+RemoveToggledEntries(RefArg info, long from)
+{
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (ISNIL(words))
+		return;
+	long count = Length(words);
+	for (long i = from; i < count; i++)
+	{
+		RefVar entry(GetArraySlotRef(words, i));
+		if (RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex))) == -2)
+		{
+			ArrayRemoveCount(words, i, 1);
+			i--;
+			count--;
+		}
+	}
+}
+
+
+// ROM 0x0007973c FRemoveToggledEntries
+// wordInfo:RemoveAddedEntries(from)
+Ref
+FRemoveToggledEntries(RefArg rcvr, RefArg from)
+{
+	RemoveToggledEntries(rcvr, RINT(from));
+	return NILREF;
+}
+
+
+/*------------------------------------------------------------------------------
+	A r r a y s ,   t h e   c o r r e c t o r ' s   w a y
+------------------------------------------------------------------------------*/
+
+// ROM 0x00078ea4 InsertArrayElement__F6RefVarlT1
+void
+InsertArrayElement(RefArg array, long index, RefArg value)
+{
+	RefVar one(MakeArray(1));
+	SetArraySlot(one, 0, value);
+	ArrayMunger(array, index, 0, one, 0, 1);
+}
+
+
+// ROM 0x00078f38 RemoveArrayElement__F6RefVarl
+// ==> what was there.
+Ref
+RemoveArrayElement(RefArg array, long index)
+{
+	RefVar was(GetArraySlotRef(array, index));
+	ArrayMunger(array, index, 1, RefVar(NILREF), 0, 0);
+	return was;
+}
+
+
+// ROM 0x00078fc4 MoveArrayElement__F6RefVarlT2
+// Two neighbours are swapped; anything else is taken out and put back.
+void
+MoveArrayElement(RefArg array, long from, long to)
+{
+	long distance = from - to;
+	if (distance < 0)
+		distance = -distance;
+	if (distance == 1)
+	{
+		RefVar a(GetArraySlotRef(array, from));
+		RefVar b(GetArraySlotRef(array, to));
+		SetArraySlot(array, to, a);
+		SetArraySlot(array, from, b);
+	}
+	else if (from != to)
+	{
+		RefVar was(RemoveArrayElement(array, from));
+		InsertArrayElement(array, to, was);
+	}
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   o t h e r   c a p i t a l i s a t i o n
+------------------------------------------------------------------------------*/
+
+// ROM 0x000790b0 (unnamed) - AllCapitals
+// Whether every character of the word is a capital Roman letter.  An
+// empty word is.
+static Boolean
+AllCapitals(const UniChar* word)
+{
+	for (long i = 0; word[i] != 0; i++)
+		if (word[i] < 'A' || word[i] > 'Z')
+			return false;
+	return true;
+}
+
+
+// ROM 0x000790f0 GetToggledWord__FRC6RefVar
+// The word with its capitalisation the other way round, which is what
+// the corrector offers beside the reading itself: a word in capitals
+// comes back in lower case, and anything else has its first letter
+// turned over.  A word that does not begin with a letter has no other
+// capitalisation and answers nil.
+Ref
+GetToggledWord(RefArg word)
+{
+	const UniChar* text = (const UniChar*) BinaryData(word);
+	if (!IsAlphabet(text[0]))
+		return NILREF;
+	RefVar other(Clone(word));
+	UniChar* out = (UniChar*) BinaryData(other);
+	if (AllCapitals(out))
+		LowercaseText(out, Ustrlen(out));
+	else
+		out[0] = ToggleCase(out[0]);
+	return other;
+}
+
+
+// ROM 0x000777f0 MoveWordFirst__FRC6RefVarT1
+// A reading brought to the front of the entry's list, so that it is what
+// the corrector offers first.  One that is not on the list is put there
+// as a reading of the corrector's own (index -2), which is what
+// `RemoveToggledEntries` takes out again if the writer picks nothing.
+void
+MoveWordFirst(RefArg info, RefArg word)
+{
+	long at = FindMatchingWord(info, word);
+	if (at > 0)
+	{
+		RefVar words(GetFrameSlotRef(info, RSSYMwords));
+		if (NOTNIL(words))
+			MoveArrayElement(words, at, 0);
+	}
+	else if (at < 0)
+	{
+		RefVar interp(MakeWordInterp(word));
+		SetFrameSlot(interp, RSSYMindex, RefVar(MAKEINT(-2)));
+		RefVar words(GetFrameSlotRef(info, RSSYMwords));
+		if (NOTNIL(words))
+			InsertArrayElement(words, 0, interp);
+	}
+}
+
+
+// ROM 0x00077988 AddCapitalizedEntry__FRC6RefVar
+// The first reading's other capitalisation put in front of it, and the
+// reading itself back in front of that - so the corrector offers the
+// word as it stands, then the same word capitalised the other way.
+void
+AddCapitalizedEntry(RefArg info)
+{
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	RefVar first;
+	if (NOTNIL(words) && Length(words) > 0)
+		first = GetArraySlotRef(words, 0);
+	RefVar word;
+	if (NOTNIL(first))
+		word = GetFrameSlotRef(first, RSSYMword);
+	if (ISNIL(word))
+		return;
+	RefVar other(GetToggledWord(word));
+	if (NOTNIL(other))
+	{
+		MoveWordFirst(info, other);
+		MoveWordFirst(info, word);
+	}
+}
+
+
+// ROM 0x00079778 FAddCapitalizedEntry
+// wordInfo:AddCapitalized()
+Ref
+FAddCapitalizedEntry(RefArg rcvr)
+{
+	AddCapitalizedEntry(rcvr);
+	return NILREF;
+}
+
+
+// The correction natives a script reaches.
+void
+RegisterCorrectInfoNatives(void)
+{
+	RegisterNativeFunction("FFindNewInfo", (void*) FFindNewInfo, 3);
+	RegisterNativeFunction("FGetWordList", (void*) FGetWordList, 0);
+	RegisterNativeFunction("FRemoveToggledEntries", (void*) FRemoveToggledEntries, 1);
+	RegisterNativeFunction("FAddCapitalizedEntry", (void*) FAddCapitalizedEntry, 0);
 }

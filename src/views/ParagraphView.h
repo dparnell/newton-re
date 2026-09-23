@@ -184,6 +184,8 @@ Point*	GetLastAddedWordBase(void);							// ROM 0x00170094 GetLastAddedWordBase_
 
 // The word around a character offset: forward or back while the
 // characters are of the same kind (text or ink) and not white space.
+// Whether the point is on an ink word inside the view's selection.
+Boolean	HitsHilitedInkWord(TView* view, Point pt);			// ROM 0x00171344 HitsHilitedInkWord__FP5TView6TPoint
 long	ScanWordStart(const UniChar* text, long offset, long limit);	// ROM 0x001a1250 ScanWordStart__FPUslT2
 long	ScanWordEnd(const UniChar* text, long offset, long limit);	// ROM 0x001a1134 ScanWordEnd__FPUslT2
 
@@ -323,6 +325,9 @@ public:
 	void		DrawHilites(Boolean scaled);							// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
 	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once
 	Boolean		SelectionRegion(long start, long end, RgnHandle rgn);	// host: the region covering a range of the text
+	// The word under a point: where it starts and where it sits; ==> how
+	// long it is, 0 when there is no word there.
+	long		FindWordOffset(Point pt, long* offset, Point* where);	// ROM 0x00177cbc FindWordOffset__14TParagraphViewF6TPointPlP6TPoint
 	Boolean		SelectWordAt(Point pt);									// the word under the point selected (the ROM's aeDoubleTap case of RealDoCommand at 0x0016e688, over ScanWordStart/End 0x001a37d0/0x001a36b4)
 	Ref			GetStyleForInsertion(long offset, Boolean useNextStyle, Boolean skipWhiteSpace);	// ROM 0x00178748 GetStyleForInsertion__14TParagraphViewFlUcT2
 	Ref			GetStyleAtOffset(long offset, long* run, long* offsetInRun);	// ROM 0x001791a8 GetStyleAtOffset__14TParagraphViewFlPlT2

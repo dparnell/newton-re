@@ -1202,6 +1202,68 @@ The dictionary's own side of all of it - `AddAutoAdd`,
 `RemoveAutoAdd` and `DoIndexedLearning` - is `recognition/Learning.h`
 and `recognition/Recognizer.h`.
 
+## The corrector (`recognition/CorrectInfo.h`, `views/ParagraphView.h`)
+
+A second tap on a word asks for it to be corrected.  The command travels
+a little way before it gets to the word:
+
+1. The click-event recogniser makes a `kDoubleTapClick` and turns it
+   into `aeDoubleTap`, but only when both taps were on the same view
+   (`TEventRecognizer::HandleUnit`).
+2. `PostAndDoCommand` sends it to the view the *area* belongs to, which
+   for a page of the Notepad is the edit view, not the paragraph.
+3. `TEditView::RealDoCommand` walks its children backwards - topmost
+   first - and offers the command to the first whose bounds hold the
+   point.  That is how the paragraph gets it.
+4. `TParagraphView::RealDoCommand` finds the word under the point
+   (`FindWordOffset` 0x00177cbc over `PointToWord`, then
+   `ScanWordStart`/`ScanWordEnd` to take in the whole of it), widens it
+   to whatever the corrector already remembers about it
+   (`FindWordInfo`), works out the box it occupies
+   (`OffsetToBounds` at both ends) and calls `Correct` 0x0007929c.  A
+   tap with no word under it puts the caret there and offers the
+   numeric keypad (`OpenKeypadFor` 0x000791f8) instead.
+
+`Correct` is the seam: everything above it is C++, and everything below
+is the ROM's own NewtonScript.  It hands the view's context, the word's
+offset and length and its bounds to the global `DoCorrection`, which
+makes the corrector view out of magic pointer 30, asks
+`correctInfo:FindNew` for what the machine remembers about that word and
+`wordInfo:GetWords` for the readings, and opens it - unless the view's
+`viewCorrectionPopupScript` says not to.
+
+The natives that script uses are the other half of this:
+
+- `FFindNewInfo` 0x00079a44 (`FindNew`) answers the entry for the word,
+  but only when it covers exactly that range: a word that has been
+  edited since is no longer the word the corrector was told about, so
+  the range is cleared and a fresh entry made from what is there now.
+- `FGetWordList` 0x00079c94 (`GetWords`) is the readings as plain words.
+- `AddCapitalizedEntry` 0x00077988 (`AddCapitalized`) puts the first
+  reading's other capitalisation in front of it and then the reading
+  itself back in front of that, so the corrector offers the word as it
+  stands and then the same word capitalised the other way.
+  `GetToggledWord` 0x000790f0 is what "the other way" means: a word in
+  capitals comes back in lower case, and anything else has its first
+  letter turned over.
+- `RemoveToggledEntries` 0x000778b8 (`RemoveAddedEntries`) takes those
+  back out again.  A reading the recogniser proposed carries the index
+  it had in the recogniser's own list; one the corrector added carries
+  -2, and those are the ones that go.
+
+The list operations they work with are the ROM's own
+(`InsertArrayElement` 0x00078ea4, `RemoveArrayElement` 0x00078f38,
+`MoveArrayElement` 0x00078fc4, which swaps two neighbours and otherwise
+takes the element out and puts it back).
+
+NOT YET: the spelling checker, which is where `DoCorrection` goes next
+(`SpellDocBegin` 0x001f6360 and the `spell_state` behind it,
+`FSpellCheck`, `FSpellCorrect`, `CorrectWordInChain`); the two arms of
+the double tap that ask for a word of *writing* to be read again rather
+than corrected, which want the re-recognition path; and
+`HitsHilitedInkWord` 0x00171344 is reconstructed but nothing takes the
+branch that uses it yet.
+
 ## The caret gesture
 
 A caret (`aeCaret`) goes to the page the same way a scrub does, and

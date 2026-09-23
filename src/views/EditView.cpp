@@ -1397,6 +1397,30 @@ TEditView::RealDoCommand(RefArg cmd)
 		JamText(chars, Ustrlen(chars));
 		return 1;
 	}
+	if (id == aeDoubleTap)
+	{
+		// The second tap goes to whatever is under it: the page itself
+		// has nothing to correct, so the topmost child whose bounds hold
+		// the point is offered the command, and the first that takes it
+		// ends it.  That is how a double tap on a word of a paragraph
+		// reaches `TParagraphView::RealDoCommand` and puts the corrector
+		// up.
+		//
+		// NOT YET RECONSTRUCTED: the other arm, for a page that takes
+		// text and was tapped on ink - the writing is gathered up and
+		// offered to the recogniser again rather than corrected, which
+		// wants the re-recognition path (`RecognizeInArea`).
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return 1;
+		fTapPending = false;
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		Point pt = unit->Stroke()->FirstPoint();
+		TBackwardViewListLoop loop(fChildren);
+		for (TView* child = loop.Next(); child != nil; child = loop.Next())
+			if (PtInRect(pt, &child->viewBounds) && child->DoCommand(cmd))
+				break;
+		return 1;
+	}
 	if (id != aeTap)
 		return TView::RealDoCommand(cmd);	// NOT YET: the rest of the editor's own
 	// 0x2000 of the textFlags slot - not the viewFlags, and what it is
