@@ -67,20 +67,30 @@ with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
 - **`TParagraphView::ReplaceCharacter`** (0x00174e14), the Finder's
   strongest claim - a character written over a character of the text
   replaces it, and the paragraph answers 6, which stops
-  `TEditView::HandleWord` asking anybody else.  It is the one branch of
-  `FindWordInRun` that is not there.  Its own work is small - two
-  coordinate-to-character questions (`CoordToChar`,
-  `CoordToInterCharGap` 0x0017d614) and `WordOverSpaces` (0x0017bc84),
-  all small - but it hands the work to **`DoReplaceSym`**
-  (0x0017b1b8), which is 700 instructions and wants a handful of
-  engine-side pieces that do not exist yet:
-  `ReclassifyCharacter` (the engine asked to read the writing again
-  as a single character of a known height),
-  `GetInterpretationsCopy`/`SetInterpretationsCopy`/
-  `DeleteInterpretationsCopy` (the unit's readings saved and put back
-  around that), `UsesLetters`, `AreStrokesAfterUnit`,
-  `DeleteMatchingWord` and `InsertWordInterp`.  The correction
-  information it writes into is all there now.
+  `TEditView::HandleWord` asking anybody else.  It is the one branch
+  of `FindWordInRun` that is not there.  Most of what it wanted is now
+  in place - the correction information, `AreStrokesAfterUnit`,
+  `UsesLetters`, the reading editors.  What is left:
+    - `WordOverSpaces` (0x0017bc84) and `CoordToInterCharGap`
+      (0x0017d614), both small; the second wants the host treatment the
+      rest of `FindWordInRun` got, because it asks a text object.
+    - **`DoReplaceSym`** (0x0017b1b8), 700 instructions.  It is
+      readable and its shape is understood: find the word the writing
+      fell on (`FindWordBreaks` over the paragraph's word break
+      table), find or make its correction entry, ask the unit for its
+      readings again, and put the single character in through
+      `HandleInsertItems`.  One branch of it needs the engine:
+      `ReclassifyCharacter` (0x000348e4), over `MakeCharArea`
+      (0x00035a50) and `TController::ClassifyInArea` (0x00209f78),
+      asks the engine to read the writing again as a single character
+      of a known height - which our ink-only engine cannot do, so that
+      branch would be NOT YET whatever happens.  The `UsesLetters`
+      branch (the single-letter fields: names, dates, numbers) does not
+      need it.
+    - `GetInterpretationsCopy`/`SetInterpretationsCopy`/
+      `DeleteInterpretationsCopy` (0x0021f6a8-), which save and put
+      back the unit's readings around that reclassification - so they
+      are only wanted with it.
 - **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
   `correct` to find in the root view's context.  It answers false out
   of hand today, which is right for a machine that has no corrector
