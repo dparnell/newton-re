@@ -9,6 +9,7 @@
 
 #include "Dictionaries.h"
 #include "Airus.h"
+#include "ROMDictionaryData.h"
 #include "RecConfig.h"
 #include "View.h"
 #include "RootView.h"
@@ -73,6 +74,94 @@ FindDictionaryEntry(ULong id)
 			fallback = entry;
 	}
 	return fallback;
+}
+
+
+/*------------------------------------------------------------------------------
+	B u i l d i n g   t h e   l i s t
+------------------------------------------------------------------------------*/
+
+// ROM 0x0013de2c InitDictionaries__Fv
+// The dictionaries built and put in `vars.dictionaries`, with `gDictList`
+// beside them.
+//
+// The list itself is the ROM's own (`Rdictionarylist`, cloned), and each
+// of its descriptors is wrapped in a clone of `canonicalDictRAMFrame`
+// with the descriptor as its `_proto`, which is what gives every
+// dictionary the frame a script talks to and the `dictID` it is found by.
+//
+// A descriptor with no `romDictID` names one of the dictionaries the
+// machine makes for itself: 31 the user dictionary, 35 the expand
+// dictionary and 36 the auto-add one start empty, and 32 is the trie.
+// Every other descriptor names a slot of the ROM's own word data, which
+// is opened where it lies - but only for the kinds of dictionary a lookup
+// walks (`dictType` under 2, or 4, the exceptions); the rest are
+// described but never built.
+//
+// NOT YET RECONSTRUCTED: `gTrie`, which is dictionary 32, and the four
+// lexicons the locale carries as binaries (the time, date, phone and
+// number ones, which come in through `ReadRefDictionary`).
+void
+InitDictionaries(void)
+{
+	InitROMDictionaryData();
+	// DEVIATION: a host that has not imported the ROM's objects has no
+	// list to clone; an empty one keeps everything that takes its Length
+	// happy, which is what the list is for.
+	RefVar list(IsArray(RefVar(Rdictionarylist)) ? Clone(RefVar(Rdictionarylist)) : MakeArray(0));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMdictionaries, list);
+	gDictList = TDArray::Make(sizeof(dictListEntry), 0);
+	long count = Length(list);
+	for (long slot = 0; slot < count; slot++)
+	{
+		RefVar descriptor(GetArraySlotRef(list, slot));
+		long id = RINT(RefVar(GetProtoVariable(descriptor, RSSYMdictid, nil)));
+		RefVar romDictId(GetProtoVariable(descriptor, RSSYMromdictid, nil));
+		RefVar frame(Clone(RefVar(Rcanonicaldictramframe)));
+		SetFrameSlot(frame, RSSYM_proto, descriptor);
+		SetFrameSlot(frame, RSSYMromdictid, romDictId);
+		SetArraySlotRef(list, slot, frame);
+
+		Handle dictionary = nil;
+		if (ISNIL(romDictId))
+		{
+			if (id == kUserDictionary || id == kExpandDictionary || id == kAutoAddDictionary)
+				dictionary = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
+			// NOT YET RECONSTRUCTED: gTrie, which is dictionary 32
+		}
+		else
+		{
+			ULong size = 0;
+			const void* data = GetROMDictionaryData((ULong) RINT(romDictId), &size);
+			long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
+			if (type < 2 || type == 4)
+			{
+				dictionary = BuildDictionaryFromPtr((void*) data, (Size) size);
+				if (dictionary != nil)
+					((AirusAParmBlock*) *dictionary)->fField4c = 1;
+			}
+		}
+
+		dictListEntry entry;
+		memset(&entry, 0, sizeof(entry));
+		entry.fDictionary = dictionary;
+		entry.fIndex = (UByte) slot;
+		entry.fStatus = (UByte) RINT(RefVar(GetProtoVariable(frame, RSSYMstatus, nil)));
+		entry.fDisabled = 0;
+
+		Ref dict = NILREF;
+		if (dictionary != nil)
+		{
+			((AirusAParmBlock*) *dictionary)->fDictID = id & 0xffff;
+			dict = AddressToRef(dictionary);
+		}
+		SetFrameSlot(frame, RSSYMdict, RefVar(dict));
+		// DEVIATION: the ROM copies the eight bytes of the entry into the
+		// new slot; here a Handle is pointer-sized, so the whole entry is
+		// assigned instead.
+		*(dictListEntry*) gDictList->AddEntry() = entry;
+	}
+	gDictList->Compact();
 }
 
 

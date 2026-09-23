@@ -106,7 +106,6 @@ const long	kUserDictionary		= 31;
 const long	kExpandDictionary	= 35;
 const long	kAutoAddDictionary	= 36;
 
-void	InitDictionaries(void);					// ROM 0x0013de2c InitDictionaries__Fv
 Ref		Dictionaries(void);						// ROM 0x0013d460 Dictionaries__Fv
 Ref		FindDictionaryFrame(ULong id);			// ROM 0x0013e558 FindDictionaryFrame__FUl
 

@@ -11,6 +11,7 @@
 #include "WRecDomain.h"
 #include "WordInfo.h"
 #include "Words.h"			// gWordID
+#include "Dictionaries.h"	// InitDictionaries
 #include "RecConfig.h"
 #include "Areas.h"
 #include "Controller.h"

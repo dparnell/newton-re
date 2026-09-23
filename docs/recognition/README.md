@@ -448,9 +448,46 @@ data for most, empty (`NewDictionary`) for the three a user writes into:
 
 The three a user writes into - 31 the user dictionary, 35 the expand
 dictionary and 36 - start empty (`NewDictionary`); the rest are built
-out of the ROM's own word data, which is NOT YET
-(`InitROMDictionaryData`, `GetROMDictionaryData` and the trie that is
-dictionary 32).
+out of the ROM's own word data.
+
+### The ROM's word data (`recognition/ROMDictionaryData.h`)
+
+The ROM carries 129 lexicons - the letters, the word lists (general,
+locale, shorthand, US), the days and months, the phone, date, money,
+number, postcode and symbol lexicons, and a great many empty ones -
+each beginning with a big-endian size word and then an Airus trie.  The
+`gLex8*` ones are AL dictionaries, the `gEnum8*` ones are the
+enumerated kind; nothing else is needed to read them.
+
+They are reached through `gROMDictionaryData` (ROM 0x0c106840), a table
+of 129 pointers that lives in RAM and is written by
+`InitROMDictionaryData` (ROM 0x0019b0d4).  A dictionary descriptor's
+`romDictID` is the slot of that table its data is in;
+`GetROMDictionaryData` 0x0019b078 reads the size word, steps over it and
+answers the trie, which is what `BuildDictionaryFromPtr` opens a
+dictionary over - the data is never copied, on the machine or here.
+
+The table is not in the ROM to be read: `InitROMDictionaryData` is a
+straight line of `ldr`/`str` pairs, one per lexicon, so it has to be
+recovered from the code that writes it.  That is
+`tools/newton-rom/analysis/romdicts.py`, and
+`recognition/ROMDictionaryTable.cpp` is what it wrote.
+
+DEVIATION: the addresses the ROM stores are the machine's own, where the
+ROM is simply there to be read.  The host takes them as offsets into the
+image the frames were imported from (`frames/ROMImport.h`), so a host
+that has imported no image gets no dictionaries at all - which is the
+same as a machine whose lexicons could not be built.
+
+`InitDictionaries` 0x0013de2c then puts it all together: the ROM's list
+of 27 descriptors is cloned, each wrapped in a clone of
+`canonicalDictRAMFrame`, and a dictionary opened for it - empty for the
+three a user writes into, and over the ROM's word data for the rest, but
+only for the kinds a lookup walks (`dictType` under 2, or 4).
+`gDictList` is built alongside, one entry per frame.  NOT YET: `gTrie`,
+which would be dictionary 32 if that descriptor had no `romDictID` (it
+has one, so this ROM never takes that path), and the four lexicons the
+locale carries as binaries, which come in through `ReadRefDictionary`.
 
 ## The chains a lookup walks (`recognition/Dictionaries.h`)
 

@@ -203,60 +203,6 @@ FWRecIsBeingUsed(RefArg /*rcvr*/)
 	return MAKEBOOLEAN(gWordID == 'WREC');
 }
 
-// ROM 0x0013de2c InitDictionaries__Fv
-// The dictionaries built and put in `vars.dictionaries`: the ROM's own
-// (the words, the auxiliary lists, the expansions), then the user's off
-// the system soup.
-//
-// The list itself is the ROM's own (`Rdictionarylist`, cloned), and each
-// of its descriptors is wrapped in a clone of `canonicalDictRAMFrame`
-// with the descriptor as its `_proto`, which is what gives every
-// dictionary the frame a script talks to and the `dictID` it is found
-// by.
-//
-// NOT YET RECONSTRUCTED: the dictionaries themselves - the ROM's word
-// data (InitROMDictionaryData, GetROMDictionaryData,
-// BuildDictionaryFromPtr), the empty ones the user's words go into
-// (NewDictionary), the trie, and gDictList.  Each frame's `dict` slot
-// therefore stays nil, which is what it holds for a dictionary the
-// machine could not build.
-void
-InitDictionaries(void)
-{
-	// DEVIATION: a host that has not imported the ROM's objects has no
-	// list to clone; an empty one keeps everything that takes its Length
-	// happy, which is what the list is for.
-	RefVar list(IsArray(RefVar(Rdictionarylist)) ? Clone(RefVar(Rdictionarylist)) : MakeArray(0));
-	SetFrameSlot(RefVar(gVarFrame), RSSYMdictionaries, list);
-	long count = Length(list);
-	for (long i = 0; i < count; i++)
-	{
-		RefVar descriptor(GetArraySlotRef(list, i));
-		RefVar romDictId(GetProtoVariable(descriptor, RSSYMromdictid, nil));
-		RefVar frame(Clone(RefVar(Rcanonicaldictramframe)));
-		SetFrameSlot(frame, RSSYM_proto, descriptor);
-		SetFrameSlot(frame, RSSYMromdictid, romDictId);
-		SetArraySlotRef(list, i, frame);
-		long id = RINT(GetProtoVariable(descriptor, RSSYMdictid, nil));
-		Handle dictionary = nil;
-		if (ISNIL(romDictId))
-		{
-			// the three a user writes into start empty
-			if (id == kUserDictionary || id == kExpandDictionary || id == kAutoAddDictionary)
-				dictionary = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
-			// NOT YET RECONSTRUCTED: gTrie, which is dictionary 32
-		}
-		// NOT YET RECONSTRUCTED: the ones built out of the ROM's own word
-		// data (GetROMDictionaryData 0x0013dd28, BuildDictionaryFromPtr
-		// 0x0002d624), and gDictList beside them
-		if (dictionary != nil)
-		{
-			((AirusAParmBlock*) *dictionary)->fDictID = id & 0xffff;
-			SetFrameSlot(frame, RSSYMdict, RefVar(AddressToRef(dictionary)));
-		}
-	}
-}
-
 // ROM 0x0013d460 Dictionaries__Fv
 Ref
 Dictionaries(void)

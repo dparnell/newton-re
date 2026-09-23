@@ -5,6 +5,7 @@
 // natives answer Refs; without the ROM's objects the Unicode tables are
 // the host's Latin-1 fallbacks, which is enough for these words.
 #include "Words.h"
+#include "Dictionaries.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
 #include "memory/host/KernelHeap.h"

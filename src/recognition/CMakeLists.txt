@@ -39,6 +39,8 @@ add_library(recognition STATIC
     UnitNatives.cpp
     Airus.cpp
     Dictionaries.cpp
+    ROMDictionaryData.cpp
+    ROMDictionaryTable.cpp
     AirusTables.cpp
     Words.cpp
 )

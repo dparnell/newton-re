@@ -56,6 +56,8 @@ tools/newton-rom/
                           --doc docs/packages/rex-packages.md
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
+    romdicts.py           the table of lexicons built into the ROM, recovered from the code
+                          that writes it -> src/recognition/ROMDictionaryTable.cpp
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
     soupdefs.py           the soups the ROM's applications keep -> src/host/FactorySoups.cpp
@@ -301,6 +303,16 @@ initialised RAM area and is read from the ROM's copy of it; a table the
 debug symbols do not name is given its address instead and the name is
 ours, as `kResampleFilter@0x0036dbe8:i32:262` for the resampler's sinc,
 which is then cited `(unnamed)`), and
+`analysis/romdicts.py build/MP2x00US -o src/recognition` is the odd one
+out: the table it emits is not in the ROM to be read.  The 129 lexicons
+built into the ROM are reached through `gROMDictionaryData`, a table of
+pointers in RAM that `InitROMDictionaryData` fills in at boot with a
+straight line of `ldr`/`str` pairs, one per lexicon, so the table has to
+be recovered from the code that writes it.  The script decodes those two
+instruction forms out of the ROM's own bytes, keeping a value per
+register, and refuses anything else, so a ROM whose function is shaped
+differently is noticed rather than half-read.
+
 `analysis/romconstants.py build/MP2x00US -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
 name and hash from the object the constant refers to), the 1102 `R`/`RS`

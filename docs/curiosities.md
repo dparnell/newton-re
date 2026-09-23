@@ -751,3 +751,51 @@ the right one in the eight-bit lexicons, which is a difficult thing to
 notice when the two are reached through the same call.
 
 *`src/recognition/Airus.cpp`; `test_Airus.cpp` pins both behaviours.*
+
+
+## A table that is not in the ROM
+
+The Newton's 129 built-in lexicons - the letters, the word lists, the
+days and months, the phone and money and postcode lexicons - are reached
+through one table of pointers, `gROMDictionaryData`. A dictionary
+descriptor's `romDictID` is a slot in it, and `GetROMDictionaryData`
+just indexes it.
+
+The table itself is in RAM, and it is filled in at boot by
+`InitROMDictionaryData` (ROM 0x0019b0d4), which is nothing but this,
+about seven hundred instructions of it:
+
+```
+  0019b0d8  ldr r1,[0x19b384]
+  0019b0dc  ldr r0,[0x19b388]
+  0019b0e0  str r1,[r0,#0x10]   ; gEnum80Empty
+  0019b0e4  str r1,[r0,#0x14]   ; gEnum80Empty
+  ...
+  0019b104  ldr r2,[0x19b38c]
+  0019b108  str r2,[r0,#0x3c]   ; gLex8phone
+```
+
+Every one of the 129 addresses is a constant known at build time, and
+every one of them points into the ROM. The table could have been a
+static array in the ROM and cost nothing; instead it is 0x2b0 bytes of
+RAM that must be written before any dictionary can be opened. It is what
+a C file full of
+
+```c
+gROMDictionaryData[kEmpty1] = gEnum80Empty;
+```
+
+compiles to when the initialiser is written as code rather than as data,
+which is what happens when the array is a global whose entries are set
+by an `Init` function - the compiler has no way to know that what it is
+being asked to do is describe a constant.
+
+For the reconstruction this has a practical consequence: the table
+cannot be read out of the ROM the way every other table is. It has to be
+recovered from the instructions that write it, which is what
+`tools/newton-rom/analysis/romdicts.py` does - it decodes the two
+instruction forms, keeps a value per register, and refuses anything
+else.
+
+*`src/recognition/ROMDictionaryData.cpp`, `ROMDictionaryTable.cpp`
+(generated); `test_Dictionaries.cpp` looks real words up in the result.*

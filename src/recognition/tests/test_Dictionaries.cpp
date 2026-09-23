@@ -1,18 +1,18 @@
 // The dictionaries the machine knows, the chains a lookup walks, and the
 // lookup itself (recognition/Dictionaries.h).
 //
-// The machine's own list is built by InitDictionaries out of the ROM's
-// dictionary descriptors and the word data beside them, neither of which
-// is reconstructed yet; so the list here is made by hand - two frames and
+// The chains are checked first over a list made by hand - two frames and
 // two small AL dictionaries laid out the way test_Airus lays them out -
-// and what is checked is everything above it: which chain a dictionary
-// goes into, the links between them, what BuildChains picks out of a
-// recognition configuration, and whether a word is found.
+// so that what a chain does is visible: which chain a dictionary goes
+// into, the links between them, what BuildChains picks out of a
+// recognition configuration, and whether a word is found.  Then
+// InitDictionaries is run for real and the same questions are put to the
+// twenty-seven dictionaries the ROM carries.
 //
-// The ROM's objects are imported for `rcbuildchains`, the starting
-// configuration LookupWord falls back on when nothing is being written
-// on; its input mask is 0x1000, which is why the general lexicon below
-// has that as its domain.
+// The ROM's objects are imported for its list of descriptors and for
+// `rcbuildchains`, the starting configuration LookupWord falls back on
+// when nothing is being written on; its input mask is 0x1000, which is
+// why the hand-made general lexicon below has that as its domain.
 
 #include "Dictionaries.h"
 #include "Airus.h"
@@ -310,6 +310,44 @@ main()
 		ULong attribute = 0x40;
 		EXPECT(LookupWordOrVariant(at, &attribute, out) == 6);
 		EXPECT(out[0] == 'a' && out[1] == 't' && attribute == 3);
+	}
+
+	// ---- the dictionaries the ROM itself carries ----
+	// InitDictionaries clones the ROM's own list of descriptors, opens a
+	// dictionary over the word data each of them names, and rebuilds
+	// gDictList; the words looked up below are the ROM's, out of its own
+	// lexicons, read where they lie in the image.
+	{
+		InitDictionaries();
+		RefVar list(Dictionaries());
+		EXPECT(Length(list) == 27);
+		EXPECT(gDictList != nil && gDictList->Count() == Length(list));
+
+		// the general lexicon is there, and it is a dictionary of the
+		// ROM's own bytes
+		dictListEntry* entry = FindDictionaryEntry(0);
+		EXPECT(entry != nil && entry->fDictionary != nil);
+		if (entry != nil && entry->fDictionary != nil)
+			EXPECT(((AirusAParmBlock*) *entry->fDictionary)->fDictID == 0);
+
+		// and the words of the language are in it
+		ULong attribute = 0;
+		EXPECT(LookUp("hello", &attribute) != -1);
+		EXPECT(LookUp("notebook", &attribute) != -1);
+		EXPECT(LookUp("the", &attribute) != -1);
+		EXPECT(LookUp("qqxyzzy", &attribute) == -1);
+
+		// a word written in capitals is not in the lexicon as it stands,
+		// but one of its capitalisations is
+		UniChar word[16];
+		UniChar variant[16];
+		word[0] = 'H'; word[1] = 'E'; word[2] = 'L'; word[3] = 'L';
+		word[4] = 'O'; word[5] = 0;
+		attribute = 0;
+		EXPECT(LookupWord(word, &attribute) == -1);
+		attribute = 0x40;
+		EXPECT(LookupWordOrVariant(word, &attribute, variant) != -1);
+		EXPECT(variant[0] == 'h' && variant[4] == 'o');
 	}
 
 	if (failures == 0)

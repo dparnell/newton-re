@@ -86,6 +86,10 @@ const long	kDictChainException	= 2;
 
 extern TDArray*	gDictList;			// ROM 0x0c10162c gDictList - one dictListEntry per frame
 
+// The list built: every dictionary of the ROM opened and put in
+// vars.dictionaries, with gDictList beside it.
+void	InitDictionaries(void);								// ROM 0x0013de2c InitDictionaries__Fv
+
 // The frames: vars.dictionaries, and the one with a given id.
 // The list entry for an id.  Some ids stand for others, and an id that
 // names nothing falls back on the one the list calls 6.
