@@ -30,11 +30,12 @@
 				recogniser makes and throws away word lists on every
 				stroke, so this keeps the pointer heap from churning.
 
-	NOT YET RECONSTRUCTED: `Reorder` (0x0022f0a8), which moves the
-	one-character guesses '0', '1', 'l' and '|' up or down the list
-	depending on what the writer has been writing - it needs the word
-	recogniser's character classes (`IsCircular`, `IsLinear`,
-	`gTryString`).  `BubbleGuess`, which does the moving, is here.
+				`Reorder` is where the list stops being the recogniser's
+				opinion alone.  A recogniser cannot tell '0' from 'O' or
+				'1' from 'l' by the writing, so the list remembers what
+				the writer has lately been choosing by hand - the *try
+				string* - and moves the round and straight guesses up or
+				down accordingly.
 
 	Reconstructed from the MP2x00 US ROM (0x0022eb28-0x0022f2b8); each
 	function cites its origin.
@@ -63,6 +64,31 @@ long		Wstrlen(const UniChar* str);					// ROM 0x0022ef8c Wstrlen__FPUs
 UniChar*	Wstrcpy(UniChar* to, const UniChar* from);		// ROM 0x0022f190 Wstrcpy__FPUsT1 - NUL-terminated
 
 
+// The character classes the reordering asks about: the round guesses
+// ('0', 'O', 'o') and the straight ones ('1', 'I', 'l', 'i', '|'), which
+// are the pairs a recogniser cannot tell apart from the writing alone.
+UChar	IsSlash(UniChar c);								// ROM 0x0022ef20 IsSlash__FUs
+UChar	IsCircular(UniChar c);							// ROM 0x0022ef3c IsCircular__FUs
+UChar	IsLinear(UniChar c);							// ROM 0x0022ef60 IsLinear__FUs
+
+
+// The try string: the characters the writer last chose by hand out of a
+// list of guesses, which is how the recogniser remembers whether it is
+// being written digits or letters at the moment.  It means to be a ring
+// of two, and a character that is already in it clears it first -
+// choosing the same character twice says the writer has settled on it
+// rather than that they are alternating.
+//
+// ROM 0x0c104d64 gTryString / 0x0c104d6c gTryIndex
+extern UniChar	gTryString[4];
+extern long		gTryIndex;
+
+void	ClearTryString(void);							// ROM 0x0022ee14 ClearTryString__Fv
+void	AddTryString(UniChar c);						// ROM 0x0022ee38 AddTryString__FUs
+UChar	InTryString(UniChar c);							// ROM 0x0022eed8 InTryString__FUs
+long	TryStringLength(void);							// ROM 0x0022ee08 TryStringLength__Fv
+
+
 class TWordList
 {
 public:
@@ -82,6 +108,7 @@ public:
 	UniChar*			ScanTo(long index);					// ROM 0x0022ed60 ScanTo__9TWordListFl - the n-th word in the handle; nil past the end
 	long				Find(UniChar** word);				// ROM 0x0022f1cc Find__9TWordListFPPUs - its index, -1 for not there
 	void				SwapSingleCharacterGuesses(long a, long b);	// ROM 0x0022ec3c SwapSingleCharacterGuesses__9TWordListFlT1
+	void				Reorder(void);						// ROM 0x0022f0a8 Reorder__9TWordListFv - the single-character guesses moved by what has been written lately
 	void				BubbleGuess(UniChar c, WordCharTestProc test, long towardsFront);	// ROM 0x0022efbc BubbleGuess__9TWordListFUsPFUs_Ucl
 
 	UShort				fScores[kMaxWordListEntries];	// +0x00

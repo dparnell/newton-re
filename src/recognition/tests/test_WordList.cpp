@@ -3,8 +3,9 @@
 // What is checked is the packing - every word in one handle, separated
 // by 0xFFFF and terminated by NUL, which is what Wstrlen and Wstrcpy
 // read and what ScanTo walks - the scores and labels that come with
-// them, the sixteen-reading ceiling, the lookup and the bubbling of
-// single-character guesses, and the pool the lists are made out of.
+// them, the sixteen-reading ceiling, the lookup, the try string and
+// the reordering of single-character guesses it drives, and the pool
+// the lists are made out of.
 
 #include "WordList.h"
 #include "Unicode.h"
@@ -202,6 +203,76 @@ TestBubble(void)
 
 
 static void
+TestTryString(void)
+{
+	// the characters the writer last chose by hand
+	ClearTryString();
+	EXPECT(TryStringLength() == 0);
+	EXPECT(InTryString('a') == 0);
+	AddTryString('a');
+	EXPECT(TryStringLength() == 1 && InTryString('a') != 0);
+	AddTryString('b');
+	EXPECT(TryStringLength() == 2 && InTryString('b') != 0);
+	// (BUG, kept: the index wraps after the write rather than before,
+	//  so the third character lands on the terminator and stays there
+	//  for ever - the ring is of two but the string is three long)
+	AddTryString('c');
+	EXPECT(TryStringLength() == 3);
+	EXPECT(gTryString[0] == 'a' && gTryString[1] == 'b' && gTryString[2] == 'c');
+	AddTryString('d');
+	EXPECT(gTryString[0] == 'd' && gTryString[2] == 'c');
+	AddTryString('e');
+	EXPECT(gTryString[1] == 'e' && gTryString[2] == 'c');
+	// choosing one that is already there says the writer has settled on
+	// it, so the string starts again
+	AddTryString('e');
+	EXPECT(TryStringLength() == 1 && gTryString[0] == 'e');
+	EXPECT(InTryString('c') == 0);
+}
+
+
+static void
+TestReorder(void)
+{
+	// having last written a letter, the round and straight guesses go to
+	// the back of the list
+	TWordList* list = new TWordList;
+	Insert(list, "0", 90, 0);
+	Insert(list, "O", 80, 1);
+	Insert(list, "1", 70, 2);
+	Insert(list, "l", 60, 3);
+	ClearTryString();
+	AddTryString('e');
+	list->Reorder();
+	EXPECT(*list->ScanTo(0) == 'O');
+	EXPECT(*list->ScanTo(1) == '0');
+	EXPECT(*list->ScanTo(2) == 'l');
+	EXPECT(*list->ScanTo(3) == '1');
+
+	// and having last written a digit, they come forward again
+	ClearTryString();
+	AddTryString('7');
+	list->Reorder();
+	EXPECT(*list->ScanTo(0) == '0');
+	EXPECT(*list->ScanTo(1) == 'O');
+	EXPECT(*list->ScanTo(2) == '1');
+	EXPECT(*list->ScanTo(3) == 'l');
+
+	// a first try character that is neither leaves the list alone
+	ClearTryString();
+	AddTryString('!');
+	list->Reorder();
+	EXPECT(*list->ScanTo(0) == '0' && *list->ScanTo(2) == '1');
+	delete list;
+
+	// the classes themselves
+	EXPECT(IsCircular('0') && IsCircular('O') && IsCircular('o') && !IsCircular('1'));
+	EXPECT(IsLinear('1') && IsLinear('I') && IsLinear('l') && IsLinear('i') && IsLinear('|'));
+	EXPECT(!IsLinear('0') && IsSlash('/') && !IsSlash('7'));
+}
+
+
+static void
 TestPool(void)
 {
 	// the first twelve lists come out of the pool, in order, and a slot
@@ -235,6 +306,8 @@ main()
 	TestPacking();
 	TestFull();
 	TestBubble();
+	TestTryString();
+	TestReorder();
 	TestPool();
 
 	if (failures == 0)

@@ -308,6 +308,147 @@ TWordList::SwapSingleCharacterGuesses(long a, long b)
 }
 
 
+/*------------------------------------------------------------------------------
+	W h a t   t h e   w r i t e r   h a s   b e e n   w r i t i n g
+------------------------------------------------------------------------------*/
+
+// The characters a recogniser cannot tell apart from the writing alone.
+// A '0' and an 'O' are the same shape; so are '1', 'I', 'l', 'i' and
+// '|'.  All the recogniser can do is offer both and let the list decide
+// which to put first.
+
+// ROM 0x0022ef20 IsSlash__FUs
+UChar
+IsSlash(UniChar c)
+{
+	return (UChar) (c == '/');
+}
+
+
+// ROM 0x0022ef3c IsCircular__FUs
+UChar
+IsCircular(UniChar c)
+{
+	return (UChar) (c == 'o' || c == 'O' || c == '0');
+}
+
+
+// ROM 0x0022ef60 IsLinear__FUs
+UChar
+IsLinear(UniChar c)
+{
+	return (UChar) (c == '1' || c == 'I' || c == 'l' || c == 'i' || c == '|');
+}
+
+
+// ROM 0x0c104d64 gTryString / 0x0c104d6c gTryIndex
+UniChar		gTryString[4];
+long		gTryIndex;
+
+
+// ROM 0x0022ee08 TryStringLength__Fv
+long
+TryStringLength(void)
+{
+	return Ustrlen(gTryString);
+}
+
+
+// ROM 0x0022ee14 ClearTryString__Fv
+void
+ClearTryString(void)
+{
+	gTryString[0] = 0;
+	gTryIndex = 0;
+}
+
+
+// ROM 0x0022eed8 InTryString__FUs
+// Whether the writer has lately chosen this character by hand.
+UChar
+InTryString(UniChar c)
+{
+	for (const UniChar* at = gTryString; ; at++)
+	{
+		UniChar d = *at;
+		if (d == 0)
+			return 0;
+		if (d == c)
+			return 1;
+	}
+}
+
+
+// ROM 0x0022ee38 AddTryString__FUs
+// A character the writer picked out of a list of guesses.  A character
+// that is already there clears the string first: choosing the same one
+// twice says the writer has settled on it, not that they are
+// alternating between two.
+//
+// (BUG, kept: this means to be a ring of two, and the index does cycle
+//  0, 1, 0, 1 - but the wrap happens *after* the write, so the third
+//  character lands on the terminator and the string becomes three long.
+//  The third character then stays there for ever, because nothing
+//  writes position 2 again.  Nothing notices: the only thing ever asked
+//  of the string is its first character and whether a character is in
+//  it.)
+void
+AddTryString(UniChar c)
+{
+	if (InTryString(c))
+		ClearTryString();
+	long length = Ustrlen(gTryString);
+	long index = gTryIndex;
+	gTryIndex = index + 1;
+	if (length >= 2)
+	{
+		gTryString[index] = c;
+		if (gTryIndex >= 2)
+			gTryIndex = 0;
+	}
+	else
+	{
+		gTryString[index] = c;
+		gTryString[gTryIndex] = 0;
+	}
+}
+
+
+// ROM 0x0022f0a8 Reorder__9TWordListFv
+// The single-character guesses moved by what the writer has lately been
+// choosing: writing letters pushes '0', '1' and '|' towards the back of
+// the list, and writing digits or a slash pulls '0' and '1' towards the
+// front.  With one guess there is nothing to reorder, and with a first
+// try character that is neither a letter nor a digit nor a slash there
+// is nothing to go on.
+//
+// (The two sides are not mirror images: the letters case moves three
+//  guesses and the digits case only two - '|' is pushed away from
+//  letters but never pulled towards digits.)
+void
+TWordList::Reorder(void)
+{
+	if (Count() <= 1)
+		return;
+	UniChar tried = gTryString[0];
+	Boolean alphabetic = IsAlphabet(tried) != 0;
+	Boolean numeric = (IsDigit(tried) != 0 || IsSlash(tried) != 0);
+	if (alphabetic)
+	{
+		BubbleGuess('0', IsCircular, 0);
+		BubbleGuess('1', IsLinear, 0);
+		BubbleGuess('|', IsLinear, 0);
+	}
+	else
+	{
+		if (!numeric)
+			return;
+		BubbleGuess('0', IsCircular, 1);
+		BubbleGuess('1', IsLinear, 1);
+	}
+}
+
+
 // ROM 0x0022efbc BubbleGuess__9TWordListFUsPFUs_Ucl
 // The one-character reading `c` moved along the list, past every
 // neighbour that is also a single character of the class `test` asks

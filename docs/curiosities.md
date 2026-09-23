@@ -622,3 +622,44 @@ delete` make sure of - there is no separate free list. The recogniser
 makes and throws away word lists on every stroke the user writes, so
 between the pool and the packing, a whole reading of a word costs one
 allocation, and usually none at all.
+
+
+## The recogniser remembers being corrected
+
+A handwriting recogniser cannot tell a '0' from an 'O', or a '1' from an
+'l' or a '|'. Nothing in the ink distinguishes them; the difference is in
+what the writer meant. The MP2x00 ROM's answer is to remember being
+corrected.
+
+When a reading is chosen by hand out of the list of guesses, the
+character goes into the *try string* (`AddTryString`, 0x0022ee38) - a
+tiny buffer of the last characters the writer picked for themselves.
+Afterwards, every word list the recogniser produces is passed through
+`TWordList::Reorder` (0x0022f0a8), which looks at the first character of
+that buffer: if it was a letter, the guesses '0', '1' and '|' are bubbled
+towards the *back* of the list; if it was a digit or a slash, '0' and '1'
+are bubbled towards the *front*. The recogniser's own scores are left
+exactly where they are - only the characters move (`BubbleGuess` and
+`SwapSingleCharacterGuesses` exchange first characters, not entries), so
+this is a reordering of the guesses rather than a re-scoring of the
+readings. Someone writing a date gets digits; someone writing a sentence
+gets letters; and the machine works it out from the last correction
+rather than from a mode switch.
+
+Two details are worth keeping. Choosing a character that is *already* in
+the try string clears the string first, because picking the same
+character twice says the writer has settled on it rather than that they
+are alternating between two - the buffer is a record of indecision, and
+decisiveness empties it. And the two directions are not mirror images:
+writing letters pushes three guesses away ('0', '1' and '|'), while
+writing digits pulls only two back ('0' and '1'). The bar '|' is
+something you can be written out of but never written into.
+
+The buffer itself has a small bug, kept here. It is meant to be a ring
+of two: an index cycles 0, 1, 0, 1 as characters arrive. But the wrap
+happens *after* the write rather than before, so the third character
+lands on the terminator instead of overwriting the first, the string
+quietly becomes three long, and that third character stays there for
+ever - no later write ever reaches position 2 again. Nothing notices,
+because the only questions ever asked of the string are what its first
+character is and whether a given character is in it somewhere.
