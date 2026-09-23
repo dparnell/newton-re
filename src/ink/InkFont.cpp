@@ -335,7 +335,6 @@ InkCloseFont(FontEngineInfo* info)
 	TInkWordGlyph* word = (TInkWordGlyph*) info->fCmap;
 	if (word == nil)
 		return;
-	delete word->fInk;
 	delete word;
 	info->fCmap = nil;
 }
@@ -433,10 +432,28 @@ InkOpenFont(PixelMap* pm, StyleRecord* style, RefArg ink, Fixed xScale, Fixed yS
 }
 
 
-// (host) The opener handed to the font engine - Fonts.h says why it is
+// (host) The size and face an ink word is laid out with, which only a
+// glyph made for it can answer - the other half of the seam in Fonts.h.
+// ==> whether the spec was an ink word at all.
+static Boolean
+InkWordFontParms(RefArg fontSpec, long* outSize, long* outFace)
+{
+	if (!IsInkWord(fontSpec))
+		return false;
+	TInkWordGlyph word(fontSpec, (ULong) -1, (ULong) -1);
+	if (outSize != nil)
+		*outSize = (long) word.fFontSize;
+	if (outFace != nil)
+		*outFace = (long) word.fFace;
+	return true;
+}
+
+
+// (host) What the font engine is handed - Fonts.h says why these are
 // registered rather than called.
 void
 InitializeInkFont(void)
 {
 	gInkOpenFont = InkOpenFont;
+	gInkFontParms = InkWordFontParms;
 }

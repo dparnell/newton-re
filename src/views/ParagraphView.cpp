@@ -357,10 +357,6 @@ CreateParagraphStyleRecord(RefArg fontSpec, StyleRecord* style, ULong textFlags,
 		style->fReserved14 = 0;
 		style->fReserved18 = 0;
 		style->fPattern = nil;
-		// (the ROM's glyph is on the stack, so only the handle it made
-		//  for the ink is given back)
-		delete word.fInk;
-		word.fInk = nil;
 		return;
 	}
 	if (NOTNIL(spec))

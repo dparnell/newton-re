@@ -59,8 +59,11 @@ class TInkWordGlyph
 public:
 					TInkWordGlyph(RefArg ink, ULong fontSize, ULong face);	// ROM 0x000dc314 __ct__13TInkWordGlyphFRC6RefVarUlT2
 
-	// (the ROM's object has no destructor in its vtable at all: InkCloseFont
-	//  gives the ink handle back and frees the block itself)
+	// (the ROM's object has no destructor at all: InkCloseFont gives the
+	//  ink handle back and frees the block itself, and every caller that
+	//  makes one on the stack disposes the handle by hand.  One
+	//  destructor here does for all of them.)
+					~TInkWordGlyph()						{ delete fInk; fInk = nil; }
 
 	// What the word measures at the size and face it was made for.
 	virtual void	ReadMetrics(void);						// ROM 0x000dc394 ReadMetrics__13TInkWordGlyphFv (vtable +0x00)

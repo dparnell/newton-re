@@ -144,6 +144,11 @@ typedef long	(*FontInkOpenProc)(PixelMap* pm, StyleRecord* style, RefArg ink,
 								   Fixed xScale, Fixed yScale, FontEngineInfo* info);
 extern FontInkOpenProc	gInkOpenFont;
 
+// ... and the size and face an ink word is laid out with, which come
+// from a glyph made for it.  ==> whether the spec was one.
+typedef Boolean	(*FontInkParmsProc)(RefArg fontSpec, long* outSize, long* outFace);
+extern FontInkParmsProc	gInkFontParms;
+
 // the font engine
 long		FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face);	// ==> the strike's size, 16.16 (0: no font); face left with what must be synthesised
 Ref			ChooseStrike(long face, RefArg fontFamily, long* faceUsed);				// the 'sfnt' for the face
@@ -164,8 +169,8 @@ Boolean		EqualStyle(const StyleRecord* a, const StyleRecord* b);
 void		DisposeStyleRecord(StyleRecord* style);				// host: the pattern CreateTextStyleRecord made
 
 // a font spec's parts: a packed integer's fields, a font frame's slots
-long		GetFontSize(RefArg fontSpec);						// (an ink word NOT YET: 0)
-long		GetFontFace(RefArg fontSpec);
+long		GetFontSize(RefArg fontSpec);						// ROM 0x0017aca8 GetFontSize__FRC6RefVar
+long		GetFontFace(RefArg fontSpec);						// ROM 0x0017bbc4 GetFontFace__FRC6RefVar
 Ref			GetFontFamilySym(RefArg fontSpec);					// nil when there is none
 Ref			FamilyNumToSym(long family);						// 'espy, 'newYork, 'geneva, 'handwriting; nil beyond
 

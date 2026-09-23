@@ -1811,6 +1811,13 @@ TestInkFont()
 	EXPECT(smallFont.fAscent < font.fAscent + 1);
 	CloseFont(&smallFont);
 
+	// the size and face a font spec asks for: an ink word answers its
+	// own, which only a glyph made for it knows
+	EXPECT(GetFontSize(word) == (long) info.fScaledFontSize);
+	EXPECT(GetFontFace(word) == (long) info.fFace);
+	EXPECT(GetFontSize(RefVar(MAKEINT(PackFont(2, 12, 1)))) == 12);
+	EXPECT(GetFontFace(RefVar(MAKEINT(PackFont(2, 12, 1)))) == 1);
+
 	list[0]->Dispose();
 }
 

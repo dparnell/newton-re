@@ -651,8 +651,10 @@ SearchFont(long macFontID, const UniChar* name)
 }
 
 
-// The ink font's opener, registered from outside (Fonts.h says why).
+// The ink font's opener and its measurements, registered from outside
+// (Fonts.h says why).
 FontInkOpenProc	gInkOpenFont = nil;
+FontInkParmsProc	gInkFontParms = nil;
 
 
 // ROM 0x002e229c OpenFont__FP8PixelMapP11StyleRecordlT3P14FontEngineInfo
@@ -807,15 +809,21 @@ FamilyNumToSym(long family)
 
 // ROM 0x0017aca8 GetFontSize__FRC6RefVar
 // The size of a packed font spec, or a font frame's size slot (an
-// integer, else type.ref.frame); 0 for anything else (an ink word NOT
-// YET RECONSTRUCTED: the ROM measures its glyph).
+// integer, else type.ref.frame).  An ink word is laid out at the size
+// its own glyph answers; anything else is 0.
 long
 GetFontSize(RefArg fontSpec)
 {
 	if (ISINT(fontSpec))
 		return PackedFontSize(RVALUE(fontSpec));
 	if (!IsFrame(fontSpec))
+	{
+		long size = 0;
+		long face = 0;
+		if (gInkFontParms != nil && gInkFontParms(fontSpec, &size, &face))
+			return size;
 		return 0;
+	}
 	RefVar size(GetFrameSlotRef(fontSpec, RSSYMsize));
 	if (!ISINT(size))
 		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, size);
@@ -824,14 +832,20 @@ GetFontSize(RefArg fontSpec)
 
 
 // ROM 0x0017bbc4 GetFontFace__FRC6RefVar
-// The face likewise (the face slot).
+// The face likewise (the face slot, and the word's own face for ink).
 long
 GetFontFace(RefArg fontSpec)
 {
 	if (ISINT(fontSpec))
 		return PackedFontFace(RVALUE(fontSpec));
 	if (!IsFrame(fontSpec))
+	{
+		long size = 0;
+		long face = 0;
+		if (gInkFontParms != nil && gInkFontParms(fontSpec, &size, &face))
+			return face;
 		return 0;
+	}
 	RefVar face(GetFrameSlotRef(fontSpec, RSSYMface));
 	if (!ISINT(face))
 		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, face);
