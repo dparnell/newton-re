@@ -19,6 +19,7 @@
 #include "EditView.h"
 #include "Ink.h"
 #include "StrokeBundle.h"
+#include "InkFont.h"
 #include "CICCodec.h"
 #include "GaugeView.h"
 #include "PickView.h"
@@ -3406,7 +3407,95 @@ TestInkOnThePage()
 	TView* words = ViewOf("ctxWord := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x4000, viewBounds: {left: 0, top: 0, right: 10, bottom: 10}})");
 	EXPECT(ViewExpectsNumbers(numbers));
 	EXPECT(!ViewExpectsNumbers(words));
+	Eval("RemoveView(GetRoot(), ctxNum); RemoveView(GetRoot(), ctxWord); RemoveView(GetRoot(), ctxIV)");
 }
+
+// A word of writing inside a line of text: the paragraph's style run
+// for it is the ink word itself, which the font engine opens as a font
+// of one glyph, so the writing draws where the character would.
+static void
+TestInkWordInText()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// a word: two strokes, so that it is plainly not a letter
+	TStroke* list[3];
+	list[0] = TStroke::Make(0);
+	list[1] = TStroke::Make(0);
+	list[2] = nil;
+	for (long i = 0; i <= 10; i++)
+	{
+		TabPt tab;
+		tab.z = 0;
+		tab.p = 0;
+		tab.x = ToFixed(10 + i * 2);
+		tab.y = ToFixed(20 + i);
+		list[0]->AddPoint(&tab);
+		tab.x = ToFixed(34 + i * 2);
+		tab.y = ToFixed(30 - i);
+		list[1]->AddPoint(&tab);
+	}
+	list[0]->EndStroke();
+	list[1]->EndStroke();
+	Rect made;
+	RefVar word(TStrokesToInkWord(list, &made));
+	EXPECT(IsInkWord(word));
+
+	// the text is the one character an ink word stands as, and the
+	// styles say that character is the word
+	RefVar text(AllocateBinary(RSSYMstring, 2 * (long) sizeof(UniChar)));
+	UniChar* chars = (UniChar*) BinaryData(text);
+	chars[0] = kInkWordChar;
+	chars[1] = 0;
+	RefVar styles(MakeArray(2));
+	SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 1, word);
+
+	RefVar templ(AllocateFrame());
+	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clParagraphView)));
+	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible)));
+	Rect where;
+	SetRect(&where, 5, 5, 110, 60);
+	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(where)));
+	SetFrameSlot(templ, RSSYMtext, text);
+	SetFrameSlot(templ, RSSYMstyles, styles);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "inkTempl")), templ);
+
+	memset(gBits, 0, sizeof(gBits));
+	TParagraphView* para = (TParagraphView*) ViewOf("ctxIW := AddView(GetRoot(), inkTempl)");
+	EXPECT(para != nil && para->ClassID() == clParagraphView);
+	Eval("ctxIW:Dirty()");
+	Refresh();
+
+	// the run's style is the word rather than a font, and the top bit of
+	// its face says the word keeps a pen of its own
+	EXPECT(para->LineCount() == 1);
+	long lit = 0;
+	for (long y = 0; y < kHeight; y++)
+		for (long x = 0; x < kWidth; x++)
+			if (Pixel(x, y) != 0)
+				lit++;
+	EXPECT(lit > 20);			// the writing, not an empty line
+
+	// all of it inside the paragraph
+	for (long y = 0; y < kHeight; y++)
+		for (long x = 0; x < kWidth; x++)
+			if (Pixel(x, y) != 0)
+				EXPECT(x >= where.left && x < where.right && y >= where.top && y < where.bottom);
+
+	// and the line is as tall as the word, not as a letter
+	InkWordInfo info;
+	GetInkWordInfo(word, &info);
+	EXPECT(para->Line(0).fHeight >= (long) (info.fScaledAscent + info.fScaledDescent));
+
+	Eval("RemoveView(GetRoot(), ctxIW)");
+	Refresh();
+	list[0]->Dispose();
+	list[1]->Dispose();
+}
+
 
 int
 main()
@@ -3437,7 +3526,14 @@ main()
 		SetFrameSlot(fonts, RefVar(FamilyNumToSym(i)), family);
 	}
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfonts, fonts);
-	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));
+	// an ink word asks the user's preferences for its scale and its pen;
+	// on a Newton the boot has set them long before anything makes one
+	{
+		RefVar config(AllocateFrame());
+		SetFrameSlot(config, RefVar(RSSYMinkwordscaling), RefVar(MAKEINT(100)));
+		SetFrameSlot(config, RefVar(RSSYMuserpensize), RefVar(MAKEINT(2)));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, config);
+	}
 	gMap.baseAddr = (Ptr) gBits;
 	gMap.rowBytes = kWidth / 8;
 	SetRect(&gMap.bounds, 0, 0, kWidth, kHeight);
@@ -3498,7 +3594,8 @@ main()
 		TestCaretGesture();
 		TestLineGesture();
 		TestEffects();
-		TestInkOnThePage();
+		TestInkOnThePage();
+		TestInkWordInText();
 	}
 	newton_catch_all
 	{

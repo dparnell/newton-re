@@ -9,6 +9,7 @@
 #include "ParagraphView.h"
 #include "Ink.h"
 #include "InkShapes.h"
+#include "InkFont.h"
 #include "Hilites.h"
 #include "OSErrors.h"
 #include "StyleRuns.h"
@@ -295,6 +296,78 @@ TParagraphView::GetInterLineSpacing(void)
 }
 
 
+// ROM 0x00179f08 IsFontFrame__FRC6RefVar
+// A font frame names a family; anything else in a style slot is not one.
+Boolean
+IsFontFrame(RefArg fontSpec)
+{
+	return IsFrame(fontSpec) && FrameHasSlot(fontSpec, RSSYMfamily);
+}
+
+
+// ROM 0x00179f58 CreateParagraphStyleRecord__FRC6RefVarP11StyleRecordUlT1
+// The style record a run of a paragraph is laid out and drawn with.
+//
+// A packed integer or a font frame is a font as usual, except that a
+// view whose text flags have bit 3 takes the default font for every run
+// whatever the run says.  Anything else that is not an ink word falls
+// back on the default font too.
+//
+// An ink word is not a font at all.  The record keeps the word itself
+// where the family would be - OpenFont sees it there and opens the word
+// as a font of one glyph - and takes the size and face a glyph made for
+// the word answers, with the top bit of the face set to say that the
+// word has a pen of its own.  A view whose text flags have bit 4 wants
+// its writing laid out at the text's size instead, and then the size
+// and the face come from the default font and the top bit is left
+// alone.
+void
+CreateParagraphStyleRecord(RefArg fontSpec, StyleRecord* style, ULong textFlags,
+						   RefArg defaultFont)
+{
+	RefVar deflt(defaultFont);
+	RefVar spec;
+	if (ISNIL(deflt))
+		deflt = GetPreference(RSSYMuserfont);
+	if (ISINT(fontSpec) || IsFontFrame(fontSpec))
+		spec = (textFlags & 8) != 0 ? (Ref) deflt : (Ref) fontSpec;
+	else if (!IsInkWord(fontSpec))
+		spec = deflt;
+	else
+	{
+		// the word measured as it would be drawn at its own size
+		TInkWordGlyph word(fontSpec, (ULong) -1, (ULong) -1);
+		style->fFontFamily = fontSpec;
+		if ((textFlags & 0x10) == 0)
+		{
+			style->fFontSize = ToFixed((long) word.fFontSize);
+			style->fFontFace = (long) word.fFace;
+			style->fFontFace |= (long) 0x80000000;
+		}
+		else
+		{
+			StyleRecord text;
+			CreateTextStyleRecord(deflt, &text);
+			style->fFontSize = text.fFontSize;
+			style->fFontFace = text.fFontFace;
+			DisposeStyleRecord(&text);
+		}
+		style->fFontPattern = NILREF;
+		style->fTransferMode = 0;
+		style->fReserved14 = 0;
+		style->fReserved18 = 0;
+		style->fPattern = nil;
+		// (the ROM's glyph is on the stack, so only the handle it made
+		//  for the ink is given back)
+		delete word.fInk;
+		word.fInk = nil;
+		return;
+	}
+	if (NOTNIL(spec))
+		CreateTextStyleRecord(spec, style);
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   c a c h e s
 ------------------------------------------------------------------------------*/
@@ -341,7 +414,8 @@ TParagraphView::LayoutRuns(RefArg styles, long textLength)
 			if (i == count - 1 && covered + runLength < textLength)
 				runLength = textLength - covered;
 			fRunStyles[i] = new StyleRecord;
-			CreateTextStyleRecord(spec, fRunStyles[i]);
+			CreateParagraphStyleRecord(spec, fRunStyles[i], (ULong) TextFlags(),
+									   RefVar(GetDefaultViewStyle()));
 			fRunLengths[i] = (short) runLength;
 			covered += runLength;
 			fRunCount = i + 1;
@@ -353,7 +427,8 @@ TParagraphView::LayoutRuns(RefArg styles, long textLength)
 		fRunStyles = (StyleRecord**) NewPtrClear(sizeof(StyleRecord*));
 		fRunLengths = (short*) NewPtrClear(sizeof(short));
 		fRunStyles[0] = new StyleRecord;
-		CreateTextStyleRecord(spec, fRunStyles[0]);
+		CreateParagraphStyleRecord(spec, fRunStyles[0], (ULong) TextFlags(),
+								   RefVar(GetDefaultViewStyle()));
 		fRunLengths[0] = (short) textLength;
 		fRunCount = 1;
 	}

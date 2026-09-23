@@ -286,6 +286,10 @@ InkGetGlyph(long ch, long glyph, FontEngineInfo* info)
 
 	long rowBytes = (long) (((ULong) info->fGlyphWidth + 0x1f) & ~0x1fUL) >> 3;
 	long length = rowBytes * info->fGlyphHeight;
+	// ROM BUG, kept: a block already here is dropped rather than given
+	// back, so asking an open ink font for its glyph twice loses the
+	// first one.  Nothing does: a run of an ink word is one character
+	// long, and the font is closed after it.
 	info->fInkGlyphBits = QDNewTempPtr(length);
 	if (info->fInkGlyphBits == nil)
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);

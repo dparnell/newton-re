@@ -83,6 +83,23 @@ class TParagraphHilite;
 // The text flags of an input view: what kind of text it takes.
 ULong	GetInputViewTextFlags(ULong textFlags, ULong viewFlags);	// ROM 0x00261d2c GetInputViewTextFlags__FUlT1
 
+// Whether a font spec is a font frame (it names a family) rather than
+// something else a style slot may hold.
+Boolean	IsFontFrame(RefArg fontSpec);						// ROM 0x00179f08 IsFontFrame__FRC6RefVar
+
+// The style record a run of a paragraph is laid out and drawn with.
+// This is CreateTextStyleRecord with the two things a paragraph knows
+// about on top: the view's own default font, and ink words - a run
+// whose "font" is an 'inkWord binary is a word of writing, and the
+// record made for it is what qd/Fonts.h's OpenFont turns into a font of
+// one glyph (ink/InkFont.h).
+//
+// `textFlags` are the view's: bit 3 says every run takes the default
+// font whatever its own spec says, and bit 4 that an ink word is to be
+// laid out at the text's size rather than its own.
+void	CreateParagraphStyleRecord(RefArg fontSpec, StyleRecord* style, ULong textFlags,
+								   RefArg defaultFont);		// ROM 0x00179f58 CreateParagraphStyleRecord__FRC6RefVarP11StyleRecordUlT1
+
 // Whether every character of the run is white space (a count of -1: to
 // the end of the string).
 Boolean	ContainsOnlyWhiteSpace(const UniChar* text, ULong count);	// ROM 0x0017a310 ContainsOnlyWhiteSpace__FPUsUl
