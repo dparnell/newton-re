@@ -15,6 +15,13 @@
 #include "Arbiter.h"
 #include "Domain.h"
 #include "Unit.h"
+#include "UnitPublic.h"
+#include "Recognizer.h"
+#include "Words.h"
+#include "Commands.h"
+#include "Frames.h"
+#include "ObjectHeap.h"
+#include "RSSymbols.h"
 #include "Stroke.h"
 #include "Unicode.h"
 #include "Ports.h"			// ToFixed
@@ -351,11 +358,82 @@ TestGrouping(TWRecDomain* domain, TController* controller)
 }
 
 
+// The recogniser the domain is driven from, installed as the
+// recognition manager installs it: asleep, with the word command and
+// the word services, and not in use until something puts it in use.
+static void
+TestInstall(TController* controller)
+{
+	gRecognition.fController = controller;
+	gRecognition.fRecognizers = TRecognizerList::Make();
+	EXPECT(gRecognition.fRecognizers != nil);
+
+	long slept = gCalls.fSleep;
+	InstallWRecRecognizer(&gRecognition);
+	TRecognizer* recognizer = gRecognition.fRecognizers->FindRecognizer(kWRecDomainType);
+	EXPECT(recognizer != nil);
+	if (recognizer == nil)
+		return;
+	EXPECT(recognizer->ID() == kWRecDomainType);
+	EXPECT(recognizer->Command() == aeWord);
+	EXPECT(recognizer->TestFlags(kRecognizerIsWriting));
+	EXPECT(recognizer->ArbitrateTime() == 1);
+	EXPECT(recognizer->ServicesPossible() == kWRecServices);
+	// installed asleep, and offering nothing until it is woken
+	EXPECT(recognizer->ServicesEnabled() == 0);
+	EXPECT(gCalls.fSleep == slept + 1);
+	TWRecDomain* domain = (TWRecDomain*) recognizer->Domain();
+	EXPECT(domain != nil && domain->fType == kWRecDomainType);
+
+	// nothing is the word recogniser until one is put in use
+	EXPECT(gWordID == 0);
+	long woken = gCalls.fWakeUp;
+	EXPECT(SetWordRecognizer(kWRecDomainType));
+	EXPECT(gWordID == kWRecDomainType);
+	EXPECT(gCalls.fWakeUp == woken + 1);
+	EXPECT(recognizer->ServicesEnabled() == kWRecServices);
+	// which is what FWRecIsBeingUsed answers
+	EXPECT(NOTNIL(FWRecIsBeingUsed(RefVar(NILREF))));
+	// and what UseWRec sets, by the four characters of the type
+	UniChar name[5] = { 'W', 'R', 'E', 'C', 0 };
+	RefVar wrec(MakeString(name));
+	EXPECT(GetIDFromRef(wrec) == kWRecDomainType);
+	EXPECT(NOTNIL(FUseWRec(RefVar(NILREF), wrec)));		// already in use
+	UniChar other[5] = { 'X', 'R', 'W', 'R', 0 };
+	EXPECT(ISNIL(FUseWRec(RefVar(NILREF), RefVar(MakeString(other)))));
+	// ... and asking for one that is not there puts the one that was to
+	// sleep all the same, so nothing reads writing any more
+	EXPECT(gWordID == 0);
+	EXPECT(recognizer->ServicesEnabled() == 0);
+	EXPECT(gCalls.fSleep == slept + 2);
+
+	// what a unit it could not read comes to
+	TWRecUnit* unit = TWRecUnit::Make(domain, 1, nil);
+	EXPECT(unit != nil);
+	if (unit != nil)
+	{
+		TUnitPublic pub(unit, 0);
+		// the stub engine answers ink for everything, and with no view
+		// under the writing there is no ink command to send
+		EXPECT(recognizer->UnitConfidence(&pub) == kWRecInk);
+		unit->Dispose();
+	}
+}
+
+
 // (the protocol registry is a monitor, so the test runs as the kernel
 //  services task rather than over the standalone heap)
 static void
 WRecScenario(void)
 {
+	// the object heap: the word info side of a recogniser is all
+	// NewtonScript
+	gObjectHeapSize = 0x80000;
+	InitObjects();
+	// the preferences the install reads (the boot has made these
+	//  long before recognition starts)
+	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));
+
 	TController* controller = TController::Make();
 	gController = controller;
 	TArbiter* arbiter = TArbiter::Make(controller);
@@ -369,6 +447,7 @@ WRecScenario(void)
 		TestUnit(domain);
 		TestGrouping(domain, controller);
 		TestClassify(domain, controller);
+		TestInstall(controller);
 	}
 
 	HostStopTasks();

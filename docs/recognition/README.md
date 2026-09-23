@@ -1064,6 +1064,74 @@ NOT YET: `EndInkStrokeGroup` (the CIC library's
 `SetParameters` - the area information a recogniser keeps for each place
 that is written in.
 
+## The word recogniser and where ink comes from
+
+`TWRecRecognizer` (installed by `InstallWRecRecognizer`, 0x00144094) is
+the application-side face of the word domain.  Almost all of it hands
+questions straight to the domain - `UnitConfidence`, `Sleep`, `WakeUp` -
+and what it adds is `HandleUnit`, which is where a piece of writing
+finds out what it is going to be.
+
+Installing it is in three parts.  First the engine registers itself,
+unless the `inhibitBaseRomWRecRegistration` preference says to leave the
+ROM's own alone and let something else supply one; then, if no engine
+answers to `TWRecognizer` at all, nothing is installed.  Then the domain
+is made and the recogniser put on the list, with the word command
+(aeWord), the "reads writing" flag, an arbitration time of one tick and
+the word services (0x017EF000).  It is installed **asleep** and offering
+none of its services.
+
+Nothing wakes it until `SetWordRecognizer` (0x001442a0) puts it in use.
+Only one word recogniser may be in use at a time - the MP2x00 has two,
+this one and the Airus/Rosetta one - so putting one in turns the other's
+services off and puts it to sleep, and `gWordID` holds the unit type of
+whichever it is.  That one global is how the rest of the system knows
+which units carry readings: `TUnitPublic::MakeWordList` gathers
+interpretations only for units of that type.  The script side reaches it
+through `UseWRec("XRWR")` (`FUseWRec`, 0x001443f4, over `GetIDFromRef`,
+which turns a four-character string into a four-character type) and
+`WRecIsBeingUsed`.  The area cache is purged on every change, because
+the services a recogniser offers are what areas are built from.
+
+`WordRecognizerHandleUnit` (0x00143f00) is the decision itself, and both
+word recognisers share it.  The base line is worked out first
+(`SetWordBase`), because everything that lays the writing out wants it.
+Then:
+
+  - a unit small enough to be a tap is a tap, whatever was written in
+    it;
+  - a unit the engine could not read (`UnitConfidence` answering
+    `kWRecInk`) is ink: its word info frame is marked as ink, and
+    `GetInkCommand` (0x00143dec) decides which ink command the view
+    gets;
+  - anything else is a word, and the recogniser's own aeWord stands.
+
+`GetInkCommand` asks the view under the middle of the writing what it
+wants.  A view whose recognition configuration has
+`doInkWordRecognition` takes it as an ink *word* - something that sits
+in a line of text and may be read later - and gets `aeInkWord`.  Any
+other view gets `aeRawInk`, and the writing is drawn where it was
+written.  With no view under it there is no command at all and the
+writing is dropped.
+
+Two warnings hang off the same function, because this is the one place
+that knows both that something has been left as ink and that the
+recogniser has been running out of memory (`gRecMemErrCount`, which
+`TWRecDomain::SignalMemoryError` counts).  Each is shown at most once a
+day, `RealClock()` being in minutes so that dividing by 1440 gives the
+day.  Both are switched on by `gRecInkNotifyFlags`, which starts at zero
+and which nothing in the ROM ever writes - it is there for a patch or a
+diagnostic build.
+
+NOT YET: `RegisterWRec` (0x001b5bb4), which is the ROM's own handwriting
+engine registering itself, so nothing answers to `TWRecognizer` and
+nothing is installed until a host supplies an engine.
+`TWRecRecognizer::ConfigureArea` (0x00144178), which hands the engine
+the parameters an area is to be read with, needs the area-information
+side of `TWRecDomain`.  `ReadDomainOptions` (0x0019cfd8) is what reads
+the writer's recognition preferences at boot and calls
+`SetWordRecognizer`.
+
 ## Stroke bundles (`recognition/StrokeBundle.h`)
 
 A *stroke bundle* is the NewtonScript form of a handful of strokes, and

@@ -8,6 +8,13 @@
 */
 
 #include "Recognizer.h"
+#include "WRecDomain.h"
+#include "WordInfo.h"
+#include "Words.h"			// gWordID
+#include "RecConfig.h"
+#include "Protocols.h"
+#include "NewtonTime.h"
+#include "Locale.h"			// GetPreference
 #include "Areas.h"
 #include "Words.h"
 #include "UnitPublic.h"
@@ -447,6 +454,239 @@ InstallStrokeRecognizer(TRecognitionManager* manager)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   w o r d   r e c o g n i s e r
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c101688 gRecInkNotifyFlags / 0x0c101684 gLastInkWordWarning
+// Both start at zero and nothing in the ROM's own code ever writes the
+// flags - they are there for a patch or a diagnostic build to turn the
+// warnings on with.  Bit 1 warns about the recogniser running out of
+// memory, bit 4 warns the writer the first time something is left as
+// ink, and bit 8 decides which of the two warnings the script shows.
+ULong	gRecInkNotifyFlags = 0;
+ULong	gLastInkWordWarning = 0;
+
+// How many minutes the real-time clock counts to a day.
+enum { kMinutesPerDay = 24 * 60 };
+
+
+// ROM 0x00143dec GetInkCommand__FRC6RefVar
+// Which command a view is sent for writing that was not read: the view
+// under the middle of the writing is asked what it wants.  A view whose
+// recognition configuration has `doInkWordRecognition` takes the
+// writing as an ink *word* - something that sits in a line of text and
+// may be recognised later - and any other view takes it as raw ink, to
+// be drawn where it was written.  ==> 0 when there is no writing or no
+// view under it.
+ULong
+GetInkCommand(RefArg wordInfo)
+{
+	ULong command = 0;
+	RefVar strokes(GetFrameSlot(wordInfo, RSSYMstrokes));
+	if (ISNIL(strokes))
+		return command;
+	Rect box;
+	FromObject(RefVar(GetFrameSlot(strokes, RSSYMbounds)), box);
+	TView* view = gRootView->FindView(MidPoint(box), vAnythingAllowed, nil);
+	if (view == nil)
+		return command;
+	RefVar config(BuildRecConfig(view, view->fFlags & vRecognitionAllowed));
+	command = ISNIL(RefVar(GetVariable(config, RSSYMdoinkwordrecognition, nil, 0)))
+			  ? (ULong) aeRawInk : (ULong) aeInkWord;
+	return command;
+}
+
+
+// ROM 0x00143f00 WordRecognizerHandleUnit__FP11TRecognizerP11TUnitPublic
+// What a word unit that has won its arbitration comes to.  The base
+// line is worked out first, because everything that lays the writing
+// out wants it.  Then:
+//
+//   - a unit small enough to be a tap is a tap, whatever was written in
+//     it;
+//   - a unit the engine could not read is ink, and which ink command
+//     the view gets is `GetInkCommand`'s business;
+//   - anything else is a word, and the recogniser's own command
+//     (aeWord) stands.
+//
+// The two warnings hang off the same call because this is the one place
+// that knows both that something was left as ink and that the
+// recogniser has been running out of memory.  Each is shown at most
+// once a day.
+ULong
+WordRecognizerHandleUnit(TRecognizer* recognizer, TUnitPublic* unit)
+{
+	ULong command = recognizer->Command();
+	unit->SetWordBase();
+	if (unit->IsTap())
+		command = aeTap;
+	else if (recognizer->UnitConfidence(unit) == kWRecInk)
+	{
+		RefVar info(unit->WordInfo());
+		SetWordInfoFlags(info, kWordInfoIsInk);
+		command = GetInkCommand(info);
+		if ((gRecInkNotifyFlags & 4) != 0)
+		{
+			ULong today = RealClock() / kMinutesPerDay;
+			if (today > gLastInkWordWarning)
+			{
+				NSCallGlobalFn(RSSYMrecognitioninkwordwarning,
+							   RefVar((gRecInkNotifyFlags & 8) != 0 ? TRUEREF : NILREF));
+				gLastInkWordWarning = today;
+			}
+		}
+	}
+	if (gRecMemErrCount != 0 && (gRecInkNotifyFlags & 1) != 0)
+	{
+		RefVar warned(GetPreference(RSSYMlastrecmemwarning));
+		long day = ISINT((Ref) warned) ? RINT(warned) : 0;
+		// having already told the writer today, the errors are forgotten
+		if (RealClock() / kMinutesPerDay == (ULong) day)
+			gRecMemErrCount = 0;
+	}
+	return command;
+}
+
+
+// ROM 0x00144238 UnitConfidence__15TWRecRecognizerFP11TUnitPublic
+long
+TWRecRecognizer::UnitConfidence(TUnitPublic* unit)
+{
+	return ((TWRecDomain*) Domain())->UnitConfidence((TSIUnit*) unit->fUnit);
+}
+
+
+// ROM 0x00144260 Sleep__15TWRecRecognizerFv
+void
+TWRecRecognizer::Sleep(void)
+{
+	((TWRecDomain*) Domain())->Sleep();
+}
+
+
+// ROM 0x00144280 WakeUp__15TWRecRecognizerFv
+void
+TWRecRecognizer::WakeUp(void)
+{
+	((TWRecDomain*) Domain())->WakeUp();
+}
+
+
+// ROM 0x00144174 HandleUnit__15TWRecRecognizerFP11TUnitPublic
+// One instruction in the ROM: a branch straight to the shared handler,
+// which the Airus word recogniser uses as well.
+ULong
+TWRecRecognizer::HandleUnit(TUnitPublic* unit)
+{
+	return WordRecognizerHandleUnit(this, unit);
+}
+
+
+// ROM 0x00144380 GetIDFromRef__FRC6RefVar
+// A four-character type out of a four-character string, a byte from
+// each character.  ==> 0 for anything else.
+ULong
+GetIDFromRef(RefArg spec)
+{
+	if (!IsString(spec))
+		return 0;
+	const UniChar* text = GetCString(spec);
+	if (Ustrlen(text) != 4)
+		return 0;
+	return ((ULong) text[0] << 24) | ((ULong) (text[1] & 0xff) << 16)
+		   | ((ULong) (text[2] & 0xff) << 8) | (ULong) (text[3] & 0xff);
+}
+
+
+// ROM 0x001442a0 (unnamed) - SetWordRecognizer
+// Which word recogniser is in use.  Only one may be: the one in use has
+// its services turned off and is put to sleep, and the one taking over
+// has its services turned back on and is woken.  `gWordID` holds the
+// unit type of whichever it is, which is how everything else - the word
+// list, the arbiter, the natives - knows which units carry readings.
+// The area cache is purged because the services a recogniser offers are
+// what areas are built from.  ==> whether there is now one in use.
+Boolean
+SetWordRecognizer(ULong id)
+{
+	Boolean set = false;
+	TRecognizer* wanted = gRecognition.fRecognizers->FindRecognizer(id);
+	TRecognizer* current = gRecognition.fRecognizers->FindRecognizer(gWordID);
+	if (current != nil)
+	{
+		current->InitServices(current->ServicesPossible(), 0);
+		current->Sleep();
+		gWordID = 0;
+	}
+	if (wanted != nil)
+	{
+		wanted->InitServices(wanted->ServicesPossible(), wanted->ServicesPossible());
+		gWordID = id;
+		wanted->WakeUp();
+		set = true;
+	}
+	PurgeAreaCache();
+	return set;
+}
+
+
+// ROM 0x001443f4 FUseWRec
+// UseWRec("XRWR"): the word recogniser named by its four characters put
+// in use.  ==> true when it is (including when it already was), nil
+// when there is no such recogniser.
+Ref
+FUseWRec(RefArg /*rcvr*/, RefArg name)
+{
+	if (!IsString(name))
+		return NILREF;
+	ULong id = GetIDFromRef(name);
+	if (id == gWordID)
+		return TRUEREF;
+	return SetWordRecognizer(id) ? TRUEREF : NILREF;
+}
+
+
+// ROM 0x001b5bb4 RegisterWRec__Fv
+// NOT YET RECONSTRUCTED: the ROM's own handwriting engine (the CIC
+// library's) registering itself as an implementation of TWRecognizer.
+// With nothing registered, InstallWRecRecognizer finds no engine and
+// installs no recogniser - which is also what a host that has not
+// supplied an engine of its own wants.
+void
+RegisterWRec(void)
+{
+}
+
+
+// ROM 0x00144094 InstallWRecRecognizer__FP19TRecognitionManager
+// The recogniser that drives a handwriting engine through the
+// TWRecognizer protocol.  The engine registers itself first, unless the
+// `inhibitBaseRomWRecRegistration` preference says to leave the ROM's
+// own alone and let something else supply one; if there is no engine at
+// all there is nothing to install.
+//
+// It is installed asleep.  Nothing wakes it until `SetWordRecognizer`
+// puts it in use, which is what stops two word recognisers reading the
+// same writing.
+void
+InstallWRecRecognizer(TRecognitionManager* manager)
+{
+	if (ISNIL(RefVar(GetPreference(RSSYMinhibitbaseromwrecregistration))))
+		RegisterWRec();
+	if (ClassInfoByName("TWRecognizer", nil, 0) == nil)
+		return;
+	TDomain* domain = TWRecDomain::Make(manager->fController);
+	if (domain == nil)
+		return;
+	TWRecRecognizer* recognizer = new TWRecRecognizer;
+	recognizer->Init(domain, domain->fType, aeWord, kRecognizerIsWriting, 1);
+	recognizer->InitServices(kWRecServices, 0);
+	manager->fRecognizers->AddRecognizer(recognizer);
+	recognizer->Sleep();
+}
+
+
 // ROM 0x0019e124 Init__19TRecognitionManagerFUc
 // The recognition system started at a level: 0 none, 1 clicks and
 // strokes, 2 shapes and words as well.  The stroke world, the area
@@ -511,6 +751,15 @@ TRecognitionManager::InitRecognizers(void)
 		InstallClickRecognizer(this);
 		gRootDomain = TDomain::Make(fController, kRootDomainType, (char*) "TDomain");
 	}
+	if (fLevel >= 2)
+	{
+		// NOT YET: InstallShapeRecognizer (0x0014456c) and
+		// InstallWordRecognizer (0x00166efc, the Airus one)
+		InstallWRecRecognizer(this);
+	}
+	// NOT YET: ReadDomainOptions (0x0019cfd8), which reads the writer's
+	// recognition preferences and, among much else, calls
+	// SetWordRecognizer to put one of the word recognisers in use
 	return 0;
 }
 

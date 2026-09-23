@@ -53,7 +53,8 @@ class StrokeCentral;
 enum
 {
 	kRecognizerStrokeBounds	= 8,		// a unit's bounds are its stroke's
-	kRecognizerArbitrated	= 2			// competes in arbitration
+	kRecognizerArbitrated	= 2,		// competes in arbitration
+	kRecognizerIsWriting	= 1		// it reads writing (TRecognitionManager::fAfterWriting)
 };
 
 class TRecognizer
@@ -129,6 +130,49 @@ public:
 	virtual ULong		ID(void);								// ROM 0x00143b14 ID__16TEventRecognizerFv ('CEVT')
 	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00143b20 HandleUnit__16TEventRecognizerFP11TUnitPublic
 };
+
+class TRecognitionManager;
+
+// The word recogniser, which drives a handwriting engine through the
+// TWRecognizer protocol (WRecDomain.h).  It answers every question by
+// handing it to its domain; what it adds is HandleUnit, the decision
+// about what the view under the writing is told.
+class TWRecRecognizer : public TRecognizer
+{
+public:
+	virtual long		UnitConfidence(TUnitPublic* unit);		// ROM 0x00144238 UnitConfidence__15TWRecRecognizerFP11TUnitPublic
+	virtual void		Sleep(void);							// ROM 0x00144260 Sleep__15TWRecRecognizerFv
+	virtual void		WakeUp(void);							// ROM 0x00144280 WakeUp__15TWRecRecognizerFv
+	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00144174 HandleUnit__15TWRecRecognizerFP11TUnitPublic
+	// NOT YET: ConfigureArea (0x00144178), which hands the engine the
+	// parameters an area is to be read with - it needs the area
+	// information side of TWRecDomain, which is NOT YET
+};
+
+// The services a word recogniser can provide: everything a field can
+// ask to have read, which is vAnythingAllowed less the strokes and
+// clicks it does not deal in.
+enum { kWRecServices = 0x017ef000 };
+
+void	InstallWRecRecognizer(TRecognitionManager* manager);	// ROM 0x00144094 InstallWRecRecognizer__FP19TRecognitionManager
+void	RegisterWRec(void);									// ROM 0x001b5bb4 RegisterWRec__Fv (NOT YET: the ROM's own engine)
+
+// What a word unit that has won its arbitration comes to: a tap, a
+// word, or one of the two ink commands.  The Airus word recogniser
+// answers through the same function.
+ULong	WordRecognizerHandleUnit(TRecognizer* recognizer, TUnitPublic* unit);	// ROM 0x00143f00 WordRecognizerHandleUnit__FP11TRecognizerP11TUnitPublic
+ULong	GetInkCommand(RefArg wordInfo);						// ROM 0x00143dec GetInkCommand__FRC6RefVar - aeRawInk or aeInkWord, by what the view wants
+
+// Which word recogniser is in use.
+ULong	GetIDFromRef(RefArg spec);							// ROM 0x00144380 GetIDFromRef__FRC6RefVar - a four-character type out of a four-character string
+Boolean	SetWordRecognizer(ULong id);						// ROM 0x001442a0 (unnamed) - SetWordRecognizer
+Ref		FUseWRec(RefArg rcvr, RefArg name);					// ROM 0x001443f4 FUseWRec
+
+// ROM 0x0c101688 gRecInkNotifyFlags / 0x0c101684 gLastInkWordWarning
+// Whether to warn the writer about ink and about the recogniser running
+// out of memory, and the day the ink warning was last shown.
+extern ULong	gRecInkNotifyFlags;
+extern ULong	gLastInkWordWarning;
 
 class TRecognitionManager
 {

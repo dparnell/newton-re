@@ -413,9 +413,15 @@ NewByName(const char* abstract, const char* implementation, const char* capabili
 
 
 // ROM 0x0005ca30 ClassInfoByName__FPCcT1Ul
+// (DEVIATION: the Newton's registry is a monitor started with the
+//  operating system and is always there.  A host program that runs
+//  parts of the system without booting has none, and nothing is
+//  registered, which is the same answer.)
 const TClassInfo*
 ClassInfoByName(const char* abstract, const char* implementation, ULong version)
 {
+	if (gProtocolRegistry == nil)
+		return nil;
 	return gProtocolRegistry->Satisfy(abstract, implementation, version);
 }
 
