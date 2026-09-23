@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `8cbe323`)
+## State at 2026-09-23 (commit `f57a2ff`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 75/75.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8604 citations, 0 bad;
-  4639 of 16671 functions (27.83%).
+- `analysis/coverage.py build/MP2x00US --check`: 8666 citations, 0 bad;
+  4687 of 16671 functions (28.11%).
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
   --headless 45 --script src/host/demo/ink.ns` boots, and writing on the
   Notepad stays on the page (`build/ink-kept.pgm`).
@@ -67,6 +67,15 @@ The last run of work closed, in order:
   `FindWordInRun` and the only claim that scores 6 - and with it the
   remote-writing bracket the corrector puts round a word, and a rich
   string keeping its writing when it is dropped into a paragraph.
+- **the dictionaries**, end to end: the list and the three chains a
+  lookup walks (`recognition/Dictionaries.h`), the 129 lexicons built
+  into the ROM opened where they lie
+  (`recognition/ROMDictionaryData.h`, whose table
+  `analysis/romdicts.py` recovers from the code that writes it), the
+  words the locale brings with it, the Airus delete path, and the
+  writer's own dictionaries - the expansions and the words the machine
+  adds on their behalf (`recognition/Learning.h`).  `LookupWord` now
+  answers out of the ROM's own word lists.
 
 ## Next
 
@@ -85,31 +94,25 @@ the two large open areas below.
   `MakeCharArea` 0x00035a50 and `TController::ClassifyInArea`
   0x00209f78, with `GetInterpretationsCopy` and its two companions
   around it), and `TWRecognizer::EndInkStrokeGroup`.
-- **The dictionaries.**  The engine underneath them is now whole:
-  `recognition/Airus.h` can both write a dictionary (the AEnum walkers)
-  and read the read-only lexicons the ROM ships with (AL and AL16).
-  What is missing is the layer above - the list of dictionaries and
-  the chains a lookup walks:
-    - `Dictionaries` (0x0013d460), `FindDictionaryEntry` (0x0013d4ac),
-      `FindDictionaryFrame` (0x0013e558) and `InitDictionaries`
-      (0x0013de2c), which builds `vars.dictionaries` out of
-      `Rdictionarylist` and opens each one.  That one needs
-      `InitROMDictionaryData` (0x0019b0d4) - a large table of pointers
-      to the ROM's own dictionary data, so a job for `romtable.py` -
-      and `BuildDictionaryFromPtr` (0x0002d624), which is the read-only
-      twin of `NewDictionary` and is small.
-    - `AddToChain` (0x0013d628), `BuildChains` (0x0013d808 and
-      0x0013d9dc), `CompactChains`, `DoneChains`.
-    - `LookupWordInChain` (0x0013f430), `LookupWord` (0x0013f4f4),
-      `LookupWordOrVariant` (0x0013f570) and `BuildCaseVariant`
-      (0x0013f2fc).
-    - `AddAutoAdd` (0x001aaee4), `RemoveAutoAdd` (0x001ab0f8),
-      `ExpandWord` (0x001aa930) and `DoIndexedLearning` (0x001a0cc4),
-      which are what `AutoAdd`/`AutoRemove` and `DoEntryLearning` are
-      already written to call.
-  Until they are there a word list comes out in the order a machine
-  with an empty dictionary would put it, nothing is ever "known", and
-  nothing is learnt.
+- **The dictionaries** are done, and the machine now reads against the
+  ROM's own words.  `recognition/Dictionaries.h` has the list, the three
+  chains and the lookups; `recognition/ROMDictionaryData.h` opens the
+  129 lexicons built into the ROM where they lie (their table is
+  recovered from the code that writes it by
+  `tools/newton-rom/analysis/romdicts.py`); `recognition/Learning.h`
+  has the writer's own dictionaries, the expansions and the words the
+  machine adds on their behalf.  What is left of that area:
+    - The Airus iterators - `WalkDictionary` (0x0002e0f0) over
+      `A8_PrefixCompletions` (0x0002d73c), `A8_WalkNextChars`
+      (0x0002d890) and `AEnum_NextSet` (0x0002afd0, over the
+      hand-optimised `AE8_NextSet9` 0x0002a9f4) - which is what
+      `FAirusWalkDictionary` and the Prefs slips' listing of the user's
+      words need, and what `DeleteWordWithCount` falls back on when a
+      frame's count has reached nothing.
+    - `AEnum_FirstLast`, `AEnum_NextPrevious`, `AEnum_ChangeAttribute`
+      and the AE16 walkers.
+    - `gTrie`, which would be dictionary 32 if its descriptor had no
+      `romDictID` - it has one, so this ROM never takes that path.
 - **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
   `correct` to find in the root view's context.  It answers false out
   of hand today, which is right for a machine that has no corrector
@@ -118,8 +121,9 @@ the two large open areas below.
 
 ## Also still open
 
-- `SetUpRosetta`, `SetUpParaGraph` and `ReadDictPrefs`, which
-  `ReadCursiveOptions` would call: all three belong to the engines.
+- `SetUpRosetta` and `SetUpParaGraph`, which `ReadCursiveOptions` would
+  call: both belong to the engines.  (`ReadDictPrefs`, the third, is
+  done and is called.)
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
   `FramePaths`), which want the PostScript path machinery.
 - `TWRecognizer::EndInkStrokeGroup` (the CIC library's
