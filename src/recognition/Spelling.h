@@ -59,13 +59,18 @@ const long	kSpellWordMax		= 0x32;		// the longest word it will look at
 // pointer-sized, so it is not - nothing outside reads it by offset.)
 struct spell_state
 {
-	long		fField00[6];			// +0x00  what the guessing walks with
+	void*		fWork;					// +0x00  the table a correction walks in
+	long		fField04;
+	long		fField08;
+	long		fField0c;
+	char*		fScratch;				// +0x10  the spelling being tried
+	long		fField14;
 	SpellGuess*	fGuesses;				// +0x18  kSpellGuessCount of them
 	long		fGuessCount;			// +0x1c
 	TDictChain*	fChains[kDictChainCount];		// +0x20  the dictionaries a word is checked against
 	TDictChain*	fNumberChains[kDictChainCount];	// +0x2c  ... and the ones a number-like word is
 	TDictChain*	fChain;					// +0x38  the chain being walked
-	long		fField3c;
+	Handle		fDictionary;			// +0x3c  the one of it being asked now
 	Handle		fIgnore;				// +0x40  the words this session was told to skip
 	UByte		fQuoted;				// +0x44  the word had a curly quote in it
 	long		fField48;
@@ -105,6 +110,26 @@ Boolean	SpellAllCapitals(const UniChar* word);				// ROM 0x001f5d10 (unnamed) - 
 // anything was learnt.
 Ref		FSpellDocBegin(RefArg rcvr);						// ROM 0x001f6360 FSpellDocBegin
 Ref		FSpellDocEnd(RefArg rcvr, RefArg frame);			// ROM 0x001f63f8 FSpellDocEnd
+
+// Is this a word?  One dictionary, the whole of the session's chain,
+// or the dictionaries that hold numbers.  ==> the id of the dictionary
+// it was found in, or -1.
+long	ValidateWord(Handle dictionary, char* word, ULong* attribute);	// ROM 0x001f4dc8 ValidateWord__FPP15AirusAParmBlockPcPUl
+// ... and the same with the first letter's case turned over as well.
+long	ValidateWord2(Handle dictionary, char* word, ULong* attribute);	// ROM 0x001f4e48 ValidateWord2__FPP15AirusAParmBlockPcPUl
+long	ValidateWordInChain(char* word, ULong* attribute, Boolean skipped);	// ROM 0x001f4bcc ValidateWordInChain__FPcPUlUc
+long	ValidateWordInNumberChain(char* word);				// ROM 0x001f4c68 ValidateWordInNumberChain__FPc
+
+// Whether the word is made of things the checker looks at at all
+// (letters and the two apostrophes), and whether a word with a digit in
+// it is one the number dictionaries know.
+Boolean	CheckSymbols(const UniChar* word);					// ROM 0x001f4cdc CheckSymbols__FPUs
+Boolean	CheckNumbers(const UniChar* word);					// ROM 0x001f54e4 CheckNumbers__FPUs
+
+// SpellCheck(frame, word): nil when the spelling is right, true when
+// the dictionaries do not have the word at all, 128 when they have it
+// only with a capital first letter and 192 when only in capitals.
+Ref		FSpellCheck(RefArg rcvr, RefArg frame, RefArg word);	// ROM 0x001f41bc FSpellCheck
 
 void	RegisterSpellingNatives(void);
 

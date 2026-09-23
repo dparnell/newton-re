@@ -18,6 +18,7 @@
 #include "ROMConstants.h"
 
 #include <string.h>
+#include <ctype.h>
 
 
 // ROM 0x0c101b20 gSpeller
@@ -219,9 +220,264 @@ FSpellDocEnd(RefArg /*rcvr*/, RefArg frame)
 }
 
 
+/*------------------------------------------------------------------------------
+	I s   t h i s   a   w o r d ?
+------------------------------------------------------------------------------*/
+
+// ROM 0x001f4dc8 ValidateWord__FPP15AirusAParmBlockPcPUl
+// One dictionary asked about one word.  ==> the dictionary's id when it
+// has it - as a word, whether or not other words go on from it - and -1
+// when it does not; `attribute` comes back with whatever was stored
+// beside it, which for a word dictionary is how it is capitalised.
+long
+ValidateWord(Handle dictionary, char* word, ULong* attribute)
+{
+	long found = -1;
+	ULong* stored = nil;
+	*attribute = 0;
+	VerifyString(dictionary, word, nil, &stored, nil);
+	if (airusResult == kAirusIsPrefixAndWord || airusResult == kAirusIsWord)
+	{
+		found = ((AirusAParmBlock*) *dictionary)->fDictID;
+		if (stored != nil)
+			*attribute = *stored;
+	}
+	return found;
+}
+
+
+// ROM 0x001f4e48 ValidateWord2__FPP15AirusAParmBlockPcPUl
+// The same, and then again with the first letter's case turned over - so
+// that a word the dictionary holds in lower case is still found when it
+// was written with a capital, and the other way round.  The attribute
+// answered is not the dictionary's: it is 0x80 when the spelling that
+// was found begins with a capital, which is what the caller wants to
+// know.  The word is put back as it was found.
+long
+ValidateWord2(Handle dictionary, char* word, ULong* attribute)
+{
+	long found = -1;
+	// (the ROM reads the C library's character table directly: bit 0x10
+	//  is "upper case" and bit 8 "lower case")
+	char was = word[0];
+	Boolean upper = isupper((UByte) was) != 0;
+	Boolean lower = islower((UByte) was) != 0;
+	*attribute = 0;
+	VerifyString(dictionary, word, nil, nil, nil);
+	if (airusResult == kAirusIsPrefixAndWord || airusResult == kAirusIsWord)
+	{
+		*attribute = upper ? 0x80 : 0;
+		return ((AirusAParmBlock*) *dictionary)->fDictID;
+	}
+	if (upper)
+		word[0] = (char) tolower((UByte) was);
+	else if (lower)
+		word[0] = (char) toupper((UByte) was);
+	if (was != word[0])
+	{
+		*attribute = 0;
+		VerifyString(dictionary, word, nil, nil, nil);
+		if (airusResult == kAirusIsPrefixAndWord || airusResult == kAirusIsWord)
+		{
+			found = ((AirusAParmBlock*) *dictionary)->fDictID;
+			*attribute = lower ? 0x80 : 0;
+		}
+		word[0] = was;
+	}
+	return found;
+}
+
+
+// ROM 0x001f4bcc ValidateWordInChain__FPcPUlUc
+// Every dictionary of the session's chain asked in turn, and the words
+// this session was told to skip asked first when `skipped` says so.
+long
+ValidateWordInChain(char* word, ULong* attribute, Boolean skipped)
+{
+	long found = -1;
+	TDictChain* chain = gSpeller->fChain;
+	if (skipped && gSpeller->fIgnore != nil)
+	{
+		found = ValidateWord(gSpeller->fIgnore, word, attribute);
+		if (found != -1)
+			return found;
+	}
+	ULong count = (ULong) chain->fCount;
+	for (ULong i = 0; i < count; i++)
+	{
+		found = ValidateWord(*(Handle*) chain->GetEntry(i), word, attribute);
+		if (found != -1)
+			return found;
+	}
+	return -1;
+}
+
+
+// ROM 0x001f4c68 ValidateWordInNumberChain__FPc
+// ... and the same over the dictionaries that hold numbers, dates and
+// money, which are all of the kind that is only consulted for particular
+// fields - so the chain they land in is the exceptions one.
+long
+ValidateWordInNumberChain(char* word)
+{
+	TDictChain* chain = gSpeller->fNumberChains[kDictChainException];
+	ULong count = (ULong) chain->fCount;
+	ULong attribute;
+	for (ULong i = 0; i < count; i++)
+	{
+		long found = ValidateWord(*(Handle*) chain->GetEntry(i), word, &attribute);
+		if (found != -1)
+			return found;
+	}
+	return -1;
+}
+
+
+// ROM 0x001f4cdc CheckSymbols__FPUs
+// Whether the word is made of things the checker can look up at all:
+// letters, and the two apostrophes.  Anything else - a digit, a bracket,
+// a symbol - and it is left alone.
+Boolean
+CheckSymbols(const UniChar* word)
+{
+	long length = Ustrlen(word);
+	for (long i = 0; i < length; i++)
+		if (!IsAlphabet(word[i]) && word[i] != 0x0027 && word[i] != 0x2019)
+			return false;
+	return true;
+}
+
+
+// ROM 0x001f54e4 CheckNumbers__FPUs
+// Whether a word with a digit anywhere in it is one the number
+// dictionaries know - a date, a time, an amount of money.  A word with
+// no digit in it at all is not one of theirs.
+Boolean
+CheckNumbers(const UniChar* word)
+{
+	long length = Ustrlen(word);
+	for (long i = 0; i < length; i++)
+		if (word[i] >= '0' && word[i] <= '9')
+		{
+			char bytes[kSpellWordMax + 2];
+			ConvertFromUnicode(word, bytes, 1, kSpellWordMax);
+			return ValidateWordInNumberChain(bytes) != -1;
+		}
+	return false;
+}
+
+
+// ROM 0x001f41bc FSpellCheck
+// SpellCheck(frame, word): what is wrong with the spelling of a word.
+//
+// ==> nil when nothing is - which includes a word too short to judge
+// (one character), one the number dictionaries know, and one made of
+// characters the checker does not look at; true when the dictionaries do
+// not have it at all; 128 when they have it but only with a capital
+// first letter, and 192 when they have it only in capitals.
+//
+// The word is taken apart first - the punctuation off both ends, a
+// possessive off the end, the capitalisation noted and taken off - and
+// then looked up three ways: as it stands, with a capital first letter,
+// and in capitals.  The first that answers decides, and the answer says
+// how what was written differs from what was found.
+Ref
+FSpellCheck(RefArg /*rcvr*/, RefArg frame, RefArg word)
+{
+	if (ISNIL(frame))
+		return NILREF;
+	gSpeller = GetSpeller(frame);
+
+	RefVar copy(Clone(word));
+	UniChar* text = CString(copy);
+	UniChar* leading;
+	UniChar* trailing;
+	UniChar* contractionLeading;
+	UniChar* contraction;
+	CollectPunctSymbols(text, &leading, &trailing);
+	CollectContractions(text, &contractionLeading, &contraction);
+
+	Boolean capitalized = Capitalized(text);
+	Boolean allCapitals = SpellAllCapitals(text);
+	if (capitalized || allCapitals)
+		LowercaseText(text, allCapitals ? Ustrlen(text) : 1);
+	ULong written = 0;
+	if (capitalized)
+		written = 0x80;
+	if (allCapitals)
+		written |= 0x40;
+
+	Ref answer = NILREF;
+	if (Ustrlen(text) >= 2 && !CheckNumbers(text))
+	{
+		if (!CheckSymbols(text))
+			answer = TRUEREF;			// nothing the checker can judge
+		else if (Ustrlen(text) < kSpellWordMax && Ustrlen(text) != 0)
+		{
+			Boolean skipped = ISNIL(RefVar(GetFrameSlotRef(frame,
+														   RSSYMcountskippedasmisspelled)));
+			char bytes[kSpellWordMax + 2];
+			ULong found = 0;
+			ConvertFromUnicode(text, bytes, 1, kSpellWordMax);
+			FixQuotes(bytes);
+			long where = ValidateWordInChain(bytes, &found, skipped);
+			if (where != -1)
+			{
+				// it is a word: the only question left is whether it was
+				// written with the capitalisation the dictionary holds
+				if (written != found)
+				{
+					if ((found & 0x40) != 0 && (written & 0x40) == 0)
+						answer = MAKEINT(0xc0);
+					else if ((found & 0x80) != 0 && (written & 0x80) == 0)
+						answer = MAKEINT(0x80);
+				}
+			}
+			else
+			{
+				// ... with a capital first letter?
+				UppercaseText(text, 1);
+				ConvertFromUnicode(text, bytes, 1, kSpellWordMax);
+				FixQuotes(bytes);
+				where = ValidateWordInChain(bytes, &found, skipped);
+				if (where != -1)
+				{
+					if (written == 0)
+						answer = MAKEINT(0x80);
+				}
+				else
+				{
+					// ... or in capitals?
+					UppercaseText(text, Ustrlen(text));
+					ConvertFromUnicode(text, bytes, 1, kSpellWordMax);
+					FixQuotes(bytes);
+					where = ValidateWordInChain(bytes, &found, skipped);
+					if (where != -1)
+					{
+						if (written != 0xc0)
+							answer = MAKEINT(0xc0);
+					}
+					else
+						answer = TRUEREF;		// no spelling of it is a word
+				}
+			}
+		}
+	}
+
+	if (leading != nil)
+		DisposePtr((Ptr) leading);
+	if (trailing != nil)
+		DisposePtr((Ptr) trailing);
+	if (contraction != nil)
+		DisposePtr((Ptr) contraction);
+	return answer;
+}
+
+
 void
 RegisterSpellingNatives(void)
 {
 	RegisterNativeFunction("FSpellDocBegin", (void*) FSpellDocBegin, 0);
 	RegisterNativeFunction("FSpellDocEnd", (void*) FSpellDocEnd, 1);
+	RegisterNativeFunction("FSpellCheck", (void*) FSpellCheck, 2);
 }

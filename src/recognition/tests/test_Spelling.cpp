@@ -156,6 +156,49 @@ main()
 		EXPECT(leading == nil && trailing == nil);
 	}
 
+	// ---- is this a word? ----
+	// The checker over the ROM's own lexicons: a word spelled right
+	// answers nil, one the dictionaries do not have answers true, and
+	// one they only hold capitalised answers how it should have been.
+	{
+		RefVar frame(FSpellDocBegin(RefVar(NILREF)));
+		UniChar text[64];
+
+		Uni(text, "notebook");
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+		Uni(text, "hello");
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+		// a word nothing has heard of
+		Uni(text, "qqxyzzy");
+		EXPECT(EQRef(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))), TRUEREF));
+		// one character is too little to judge
+		Uni(text, "q");
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+		// and a word with a bracket in it is not the checker's business
+		Uni(text, "qq(zz");
+		EXPECT(EQRef(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))), TRUEREF));
+
+		// the punctuation round a word does not count against it
+		Uni(text, "(hello),");
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+		// nor does a possessive
+		Uni(text, "notebook's");
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+
+		// a name the lexicon holds capitalised, written in lower case:
+		// 0x80 says it should start with a capital
+		Uni(text, "newton");
+		RefVar answer(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))));
+		EXPECT(ISINT(answer) && RINT(answer) == 0x80);
+		Uni(text, "Newton");
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+		// ... and a misspelling of a real word is just as unknown
+		Uni(text, "recieve");
+		EXPECT(EQRef(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))), TRUEREF));
+
+		FSpellDocEnd(RefVar(NILREF), frame);
+	}
+
 	if (failures == 0)
 		printf("test_Spelling: all passed\n");
 	else
