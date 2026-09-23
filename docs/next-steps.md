@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `826c902`)
+## State at 2026-09-23 (commit `2345d68`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 75/75.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8528 citations, 0 bad;
-  4567 of 16671 functions (27.39%).
+- `analysis/coverage.py build/MP2x00US --check`: 8551 citations, 0 bad;
+  4587 of 16671 functions (27.51%).
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
   --headless 50 --script src/host/demo/ink.ns` boots, and writing on the
   Notepad stays on the page (`build/ink-kept.pgm`).
@@ -50,6 +50,13 @@ The last run of work closed, in order:
 - **`CheckAndDoSplitInk`**, a word of writing cut in two at a caret -
   and with it `OffsetToBounds` answering a character's right edge as
   well as its left.
+- **`TParagraphView::HandleWord`** and everything under it - the
+  Finder, `FindWordInRun`/`FindWordInParagraph`/
+  `SetFinderBelowParagraph`, `AddWord`, the last-added-word geometry -
+  so a recognised word goes into the paragraph it was written on, and
+  `TextContainingPoint` finally finds the text under a point;
+- the **third case of `aeInkWord`**, a word that starts a new line in
+  the paragraph above the caret.
 
 ## Next: things that are still stubs on paths that now work
 
@@ -57,16 +64,15 @@ Nothing on the writing path is blocked on a single big piece any more.
 What is left there is a handful of named holes, each small and each
 with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
 
-- **`TParagraphView::HandleWord`** (0x00172760, vtable +0x148).  Three
-  things want it.  `TEditView::TextContainingPoint` asks every data-view
-  child how well it would take a single letter at a point, which is how
-  the caret is placed and how a word finds its view - our
-  `TDataView::HandleWord` answers 0, so nothing ever "wants" a point and
-  the whole question is answered by the default.  The third case of
-  `aeInkWord` (the caret on the page itself with a text view just under
-  it) sends it a carriage return to start the line.  And it is what puts
-  a *recognised* word into an existing paragraph rather than into a new
-  one.
+- **`TParagraphView::ReplaceCharacter`** (0x00174e14), the Finder's
+  strongest claim - a character written over a character of the text
+  replaces it, and the paragraph answers 6, which stops
+  `TEditView::HandleWord` asking anybody else.  It is the one branch of
+  `FindWordInRun` that is not there.  It walks the line's text objects
+  (`GetTextObjBounds`, `GetTextObjField`, `CharBounds`), which this
+  reconstruction does not have, so it wants the same treatment the rest
+  of `FindWordInRun` got: the line's characters measured through
+  `OffsetToBounds` instead.
 - **The corrector**: `SetRemoteForCorrector` (0x00176844) /
   `RestoreRemoteForCorrector` (0x001768fc), and a `correct` view for
   `CorrectorUp` (0x001767b8) to find - it answers false out of hand
@@ -76,6 +82,14 @@ with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
   `TRichString::MakeParagraphTextSlot` (0x001abf6c) and
   `MakeParagraphStylesSlot` (0x001ac038).  One goes in as a plain string
   today, so its own ink is lost.
+- **`GetRecognitionView` and `BuildRecConfig`**, so that a tap on the
+  empty part of a page opens a paragraph to write in.  The caret is now
+  placed correctly on a page that has been written on
+  (`TextContainingPoint` finally answers), which makes this the next
+  thing a user would notice.
+- **The inker's own drawing** (`TStroke::Draw`, `InkerLine`), so a
+  stroke appears while it is being written rather than only after the
+  recogniser has finished with it.
 
 ## Also still open
 
@@ -129,6 +143,11 @@ with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
   A Python helper must read and write with `newline=''` and splice with
   the endings the file already has, or the whole file shows up as
   changed. `sed -i` is safe; a bare `io.open(p, 'w')` is not.
+- A Bash heredoc whose delimiter is *not* quoted (`<<PY`, not
+  `<<'PY'`) runs command substitution on the backticks inside it,
+  which silently mangles any Python that writes Markdown.  Quote the
+  delimiter and put paths in the script rather than interpolating
+  them.
 - A `\n` inside a C string literal written through a Bash heredoc loses
   a backslash. Use the Write/Edit tools for those, or build the two
   characters as `chr(92) + 'n'` in a Python helper.
