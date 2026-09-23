@@ -3587,6 +3587,84 @@ TestInkWordOnThePage()
 	Eval("RemoveView(GetRoot(), ctxIW)");
 }
 
+// A word the recogniser read, put on the page as a paragraph of its
+// own.  Unlike an ink word it is measured - the text is laid out to find
+// out how wide it is - and then lined up with whatever the page already
+// has on it and with its ruled lines.
+static void
+TestRecognisedWord()
+{
+	TEditView* editor = (TEditView*) ViewOf(
+		"ctxRW := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 20, top: 20, right: 300, bottom: 400}, viewChildren: [], "
+		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
+	EXPECT(editor != nil);
+	if (editor == nil)
+		return;
+
+	// the font a page is written in, which the boot sets long before
+	// anything is written on one (family 0, 12 point, plain)
+	Eval("userConfiguration.userFont := 0 + (12 << 10)");
+
+	TDomain* domain = TDomain::Make(gController, kWRecDomainType, (char*) "word");
+	TWRecUnit* word = TWRecUnit::Make(domain, 1, nil);
+	EXPECT(domain != nil && word != nil);
+	if (word == nil)
+		return;
+
+	// the writing stood on a level base line from 60,200 to 120,200
+	TUnitPublic pub(word, 0);
+	pub.fWordBase.top = 200;
+	pub.fWordBase.left = 60;
+	pub.fWordBase.bottom = 200;
+	pub.fWordBase.right = 120;
+
+	UniChar text[3] = { 'h', 'i', 0 };
+	Rect box;
+	SetRect(&box, 60, 180, 120, 210);
+	Rect room;
+	SetRect(&room, 40, 100, 280, 380);
+	RefVar info;
+	long offset = 0;
+	RefVar noInkFont;
+	// (the add-child script above takes the template, so nothing is
+	//  built from it: a starterParagraph form is built through the
+	//  'para stationery, which only a booted Notepad has registered.
+	//  What is checked here is the form, which is what the geometry
+	//  makes.)
+	editor->AddNewParagraph(text, 2, box, room, &pub, info, &offset, noInkFont);
+
+	RefVar added(Eval("ctxRW.added"));
+	EXPECT(IsFrame(added));
+	if (!IsFrame(added))
+		return;
+	RefVar wrote(GetFrameSlot(added, RSSYMtext));
+	EXPECT(IsString(wrote) && Ustrcmp(GetCString(wrote), text) == 0);
+	// the unit's own style covers the whole word, which is one font for
+	// the whole paragraph, so MakeParagraphForm writes it down as the
+	// viewFont and drops the run
+	EXPECT(ISNIL(RefVar(GetFrameSlot(added, RSSYMstyles))));
+	EXPECT(RINT(RefVar(GetFrameSlot(added, RSSYMviewfont)))
+		   == RINT(RefVar(Eval("userConfiguration.userFont"))));
+
+	Rect where;
+	EXPECT(FromObject(RefVar(GetFrameSlot(added, RSSYMviewbounds)), where));
+	// it was measured, so it has a width of its own - unlike an ink
+	// word, which is as wide as the writing was
+	EXPECT(where.right > where.left);
+	EXPECT(where.bottom > where.top);
+	// and it stands on the line the writing stood on, in the editor's
+	// own coordinates (the page starts at 20,20)
+	EXPECT(where.top < 200 - 20 && where.bottom > 200 - 20 - 4);
+	// it fits the room it was given, which the page's own bounds clip
+	EXPECT(where.left >= 0 && where.right <= 280);
+
+	word->Dispose();
+	domain->Dispose();
+	Eval("RemoveView(GetRoot(), ctxRW)");
+}
+
+
 // A word of writing inside a line of text: the paragraph's style run
 // for it is the ink word itself, which the font engine opens as a font
 // of one glyph, so the writing draws where the character would.
@@ -3882,6 +3960,7 @@ main()
 		TestEffects();
 		TestInkOnThePage();
 		TestInkWordOnThePage();
+		TestRecognisedWord();
 		TestInkWordInText();
 		TestInkInRichString();
 		TestWordInfo();

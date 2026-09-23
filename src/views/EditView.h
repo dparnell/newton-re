@@ -185,6 +185,7 @@ Boolean	ViewExpectsNumbers(TView* view);					// ROM 0x0017fb04 ViewExpectsNumber
 
 // Strokes, or a bundle of them, made into an ink shape and added to the
 // page as a child of its own.
+UniChar*	MakeNullTerminatedString(UniChar* text, ULong length);	// ROM 0x000a3e70 MakeNullTerminatedString__FPUsUl (the caller frees it)
 void	HandleInk(TEditView* view, TStroke** strokes);		// ROM 0x00140834 HandleInk__FP9TEditViewPP7TStroke
 long	HandleInk(TEditView* view, RefArg bundle);			// ROM 0x00140754 HandleInk__FP9TEditViewRC6RefVar
 

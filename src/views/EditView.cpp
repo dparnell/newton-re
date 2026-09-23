@@ -1794,6 +1794,19 @@ TEditView::JamText(UniChar* text, ULong length)
 	fCaretRect.bottom = kNoBounds;
 }
 
+// ROM 0x000a3e70 MakeNullTerminatedString__FPUsUl
+// A copy of the text with a NUL after it, for the things that measure a
+// string rather than a counted range.  The caller frees it.
+UniChar*
+MakeNullTerminatedString(UniChar* text, ULong length)
+{
+	UniChar* copy = new UniChar[length + 1];
+	BlockMove(text, copy, (long) (length * sizeof(UniChar)));
+	copy[length] = 0;
+	return copy;
+}
+
+
 // ROM 0x000a1b2c AddNewParagraph__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPlT6
 // A word nobody would take made into a paragraph of its own.
 //
@@ -1892,29 +1905,54 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 			pt.h = (short) ((box.left + box.right) / 2);
 		}
 
-		if (unit != nil || ISNIL(inkFont))
+		if (hasInkFont)
 		{
-			// NOT YET RECONSTRUCTED: a word the recogniser read
-			// (0x000a20f0-0x000a22bc).  It is measured with TextBounds,
-			// lined up with the page's other children (AlignBounds) and
-			// then with its ruled lines (AlignToLineSpacing) - which is
-			// what makes handwriting tidy itself into columns.  Falling
-			// through would put the word down in the wrong place, so it
-			// is dropped instead.
-			DisposeStyleRecord(&styleRecord);
-			return nil;
+			// An ink word, which has already been brought down to a size
+			// a line of text can hold: it is as wide as the word
+			// measures at its own scale and one line of the paragraph's
+			// font tall, from the point rightwards.
+			InkWordInfo wordInfo;
+			GetInkWordInfo(inkFont, &wordInfo);
+			area.top = (short) (pt.v - fontInfo.ascent);
+			area.left = pt.h;
+			area.right = (short) (area.left + wordInfo.fScaledWidth);
+			area.bottom = (short) (pt.v + fontInfo.descent + fontInfo.leading);
 		}
+		else
+		{
+			// A word the recogniser read.  It is measured first: a box
+			// one line of the font tall, standing on the line the
+			// writing stood on and with no width at all, which
+			// TextBounds fills in.
+			Rect measured;
+			measured.top = (short) (pt.v - fontInfo.ascent);
+			measured.left = room.left;
+			measured.bottom = (short) (pt.v + fontInfo.descent + fontInfo.leading);
+			measured.right = room.left;
+			{
+				UniChar* measuredText = text;
+				if (text[length] != 0)
+					measuredText = MakeNullTerminatedString(text, length);
+				TRichString rich(measuredText, (ULong) (length * 2 + 2));
+				TextBounds(rich, style, &measured, 0);
+				if (measuredText != text)
+					delete[] measuredText;
+			}
 
-		// An ink word, which has already been brought down to a size a
-		// line of text can hold: it is as wide as the word measures at
-		// its own scale and one line of the paragraph's font tall, from
-		// the point rightwards.
-		InkWordInfo wordInfo;
-		GetInkWordInfo(inkFont, &wordInfo);
-		area.top = (short) (pt.v - fontInfo.ascent);
-		area.left = pt.h;
-		area.right = (short) (area.left + wordInfo.fScaledWidth);
-		area.bottom = (short) (pt.v + fontInfo.descent + fontInfo.leading);
+			// then lined up with whatever the page already has on it -
+			// the other children's edges - within the room it was given,
+			// which is what makes handwriting tidy itself into columns
+			Rect want = room;
+			want.bottom = pt.v;
+			AlignBounds(want, measured, &area);
+			// and then, only if that left the line alone, with the
+			// page's ruled lines
+			Boolean moved = (area.top != measured.top || area.bottom != measured.bottom);
+			Point origin = ContentsOrigin();
+			OffsetRect(&area, -origin.h, -origin.v);
+			if (!moved)
+				AlignToLineSpacing(&area, pt.v - origin.v, fontInfo.ascent);
+		}
 	}
 	else
 	{
