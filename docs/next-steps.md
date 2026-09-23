@@ -8,14 +8,14 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `2345d68`)
+## State at 2026-09-23 (commit `8cbe323`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 75/75.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8551 citations, 0 bad;
-  4587 of 16671 functions (27.51%).
+- `analysis/coverage.py build/MP2x00US --check`: 8604 citations, 0 bad;
+  4639 of 16671 functions (27.83%).
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
-  --headless 50 --script src/host/demo/ink.ns` boots, and writing on the
+  --headless 45 --script src/host/demo/ink.ns` boots, and writing on the
   Notepad stays on the page (`build/ink-kept.pgm`).
 
 Writing travels the whole way from the tablet to a paragraph; the route
@@ -57,40 +57,40 @@ The last run of work closed, in order:
   `TextContainingPoint` finally finds the text under a point;
 - the **third case of `aeInkWord`**, a word that starts a new line in
   the paragraph above the caret.
+- **the correction information** (`recognition/CorrectInfo.h`), the list
+  of what the machine remembers about the words already on a page -
+  made, found, kept up to date as the text is edited, learnt from when
+  a word falls off the end of it, and written to at last by
+  `TEditView::HandleWord`;
+- **a letter written over a letter of a word**
+  (`ReplaceCharacter`/`DoReplaceSym`), the last branch of
+  `FindWordInRun` and the only claim that scores 6 - and with it the
+  remote-writing bracket the corrector puts round a word, and a rich
+  string keeping its writing when it is dropped into a paragraph.
 
-## Next: things that are still stubs on paths that now work
+## Next
 
-Nothing on the writing path is blocked on a single big piece any more.
-What is left there is a handful of named holes, each small and each
-with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
+The writing path is closed end to end now: a stroke is inked as it is
+drawn, read (or not), placed in or beside the text it was written on,
+registered with the corrector, and a letter written over a letter
+corrects the word.  What is left on it are two named holes, and then
+the two large open areas below.
 
-- **`TParagraphView::ReplaceCharacter`** (0x00174e14), the Finder's
-  strongest claim - a character written over a character of the text
-  replaces it, and the paragraph answers 6, which stops
-  `TEditView::HandleWord` asking anybody else.  It is the one branch
-  of `FindWordInRun` that is not there.  Most of what it wanted is now
-  in place - the correction information, `AreStrokesAfterUnit`,
-  `UsesLetters`, the reading editors.  What is left:
-    - `WordOverSpaces` (0x0017bc84) and `CoordToInterCharGap`
-      (0x0017d614), both small; the second wants the host treatment the
-      rest of `FindWordInRun` got, because it asks a text object.
-    - **`DoReplaceSym`** (0x0017b1b8), 700 instructions.  It is
-      readable and its shape is understood: find the word the writing
-      fell on (`FindWordBreaks` over the paragraph's word break
-      table), find or make its correction entry, ask the unit for its
-      readings again, and put the single character in through
-      `HandleInsertItems`.  One branch of it needs the engine:
-      `ReclassifyCharacter` (0x000348e4), over `MakeCharArea`
-      (0x00035a50) and `TController::ClassifyInArea` (0x00209f78),
-      asks the engine to read the writing again as a single character
-      of a known height - which our ink-only engine cannot do, so that
-      branch would be NOT YET whatever happens.  The `UsesLetters`
-      branch (the single-letter fields: names, dates, numbers) does not
-      need it.
-    - `GetInterpretationsCopy`/`SetInterpretationsCopy`/
-      `DeleteInterpretationsCopy` (0x0021f6a8-), which save and put
-      back the unit's readings around that reclassification - so they
-      are only wanted with it.
+- **The engine.** Everything above the socket is there; nothing reads
+  anything.  `TInkOnlyRecognizer` (`recognition/InkRecognizer.h`) is
+  where the ROM's CIC handwriting library - or a modern recogniser -
+  plugs in, and nothing above it would change.  Two things in the tree
+  are waiting only on this: the `!UsesLetters` branch of
+  `DoReplaceSym` (`ReclassifyCharacter` 0x000348e4 over
+  `MakeCharArea` 0x00035a50 and `TController::ClassifyInArea`
+  0x00209f78, with `GetInterpretationsCopy` and its two companions
+  around it), and `TWRecognizer::EndInkStrokeGroup`.
+- **The dictionaries** (`LookupWord` 0x0013f4f4, `ExpandWord`
+  0x001aa930, `BuildChains` 0x0013d808, `LookupWordOrVariant`
+  0x0008f098, and - now that the correction list is live - `AddAutoAdd`,
+  `RemoveAutoAdd` and `DoIndexedLearning`).  With none of them a word
+  list comes out in the order a machine with an empty dictionary would
+  put it, nothing is ever "known", and nothing is learnt.
 - **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
   `correct` to find in the root view's context.  It answers false out
   of hand today, which is right for a machine that has no corrector
@@ -99,16 +99,6 @@ with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
 
 ## Also still open
 
-- The **dictionaries** (`LookupWord` 0x0013f4f4, `ExpandWord`
-  0x001aa930, `BuildChains` 0x0013d808, `LookupWordOrVariant` 0x0008f098
-  and everything under them).  This is the other large open area.  With
-  none of them, a word list comes out in the order a machine with an
-  empty dictionary would put it, an area has no chains, and nothing is
-  ever "known".
-- An engine that reads something: the ROM's own is the CIC handwriting
-  library, and `TInkOnlyRecognizer` (`recognition/InkRecognizer.h`) is
-  the socket it - or a modern one - plugs into.  Nothing above the
-  socket would change.
 - `SetUpRosetta`, `SetUpParaGraph` and `ReadDictPrefs`, which
   `ReadCursiveOptions` would call: all three belong to the engines.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
