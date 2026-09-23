@@ -1218,6 +1218,206 @@ FAddCapitalizedEntry(RefArg rcvr)
 }
 
 
+// ROM 0x00079630 FAutoRemove
+// wordInfo:AutoRemove(): the word the machine added to the dictionary
+// on this entry's account taken back out.  The corrector calls it when
+// the writer picks a different reading, so that what was learnt from
+// the wrong one goes with it.
+Ref
+FAutoRemove(RefArg rcvr)
+{
+	AutoRemove(rcvr);
+	return NILREF;
+}
+
+
+/*------------------------------------------------------------------------------
+	W h a t   a   s c r i p t   m a y   a s k   o f   a l l   t h i s
+
+	The corrector is a NewtonScript view, and these are the methods it
+	works its entry with.  Most are a line each over what is above.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00079618 FAutoAdd
+// wordInfo:AutoAdd(): the reading put into the dictionary on this
+// entry's account.
+Ref
+FAutoAdd(RefArg rcvr)
+{
+	AutoAdd(rcvr);
+	return NILREF;
+}
+
+
+// ROM 0x00079648 FDoEntryLearning
+// wordInfo:Learn(which): the reading the writer settled on given to the
+// engine that read it.  Only an entry that still carries its training
+// data has anything to teach, and only a reading the recogniser actually
+// proposed (index >= 0) counts.
+Ref
+FDoEntryLearning(RefArg rcvr, RefArg which)
+{
+	long at = RINT(which);
+	if (TestWordInfoFlags(rcvr, kWordInfoHasTrainingData))
+	{
+		RefVar words(GetFrameSlotRef(rcvr, RSSYMwords));
+		if (NOTNIL(words))
+		{
+			RefVar entry(GetArraySlotRef(words, at));
+			long index = RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex)));
+			RefVar data(GetFrameSlotRef(rcvr, RSSYMunitdata));
+			if (index >= 0 && NOTNIL(data))
+			{
+				DoIndexedLearning(UnitID(rcvr), rcvr, (ULong) index);
+				ClearWordInfoFlags(rcvr, kWordInfoHasTrainingData);
+				SetFrameSlot(rcvr, RSSYMunitdata, RefVar(NILREF));
+			}
+		}
+	}
+	return rcvr;
+}
+
+
+// ROM 0x00079680 FTestWordInfoFlags
+Ref
+FTestWordInfoFlags(RefArg rcvr, RefArg flags)
+{
+	return MAKEBOOLEAN(TestWordInfoFlags(rcvr, RINT(flags)));
+}
+
+
+// ROM 0x000796c4 FSetWordInfoFlags
+Ref
+FSetWordInfoFlags(RefArg rcvr, RefArg flags)
+{
+	SetWordInfoFlags(rcvr, RINT(flags));
+	return NILREF;
+}
+
+
+// ROM 0x00079700 FClearWordInfoFlags
+Ref
+FClearWordInfoFlags(RefArg rcvr, RefArg flags)
+{
+	ClearWordInfoFlags(rcvr, RINT(flags));
+	return NILREF;
+}
+
+
+// ROM 0x00079828 FMoveWordFirst
+// wordInfo:MoveFirst(word): that reading brought to the front, which is
+// what picking one out of the corrector does.
+Ref
+FMoveWordFirst(RefArg rcvr, RefArg word)
+{
+	MoveWordFirst(rcvr, word);
+	return NILREF;
+}
+
+
+// ROM 0x00079840 FGetID
+// GetViewID(view): the id the correction list files a view's words under.
+Ref
+FGetID(RefArg /*rcvr*/, RefArg context)
+{
+	return MAKEINT(GetView(context)->fId);
+}
+
+
+// ROM 0x00079860 FGetWordInfo
+// GetCorrectionWordInfo(unit): the unit's own word info, made the first
+// time it is asked for and kept on the unit after that.
+Ref
+FGetWordInfo(RefArg /*rcvr*/, RefArg unitRef)
+{
+	TUnitPublic* unit = (TUnitPublic*) RefToAddress(unitRef);
+	if (ISNIL(unit->fWordInfo->ref))
+		unit->fWordInfo->ref = MakeWordInfo(unit);
+	return unit->fWordInfo->ref;
+}
+
+
+// ROM 0x00079880 FMergeStrokes
+Ref
+FMergeStrokes(RefArg /*rcvr*/, RefArg bundle, RefArg other)
+{
+	MergeStrokes(bundle, other);
+	return NILREF;
+}
+
+
+// ROM 0x000798a0 FOffsetCorrectionInfo
+// correctInfo:offset(view, at, removed, inserted)
+Ref
+FOffsetCorrectionInfo(RefArg rcvr, RefArg context, RefArg at, RefArg removed,
+					  RefArg inserted)
+{
+	OffsetCorrectionInfo(rcvr, GetView(context), RINT(at), RINT(removed), RINT(inserted));
+	return NILREF;
+}
+
+
+// ROM 0x0007993c FRemoveCorrectionInfo
+Ref
+FRemoveCorrectionInfo(RefArg rcvr, RefArg context)
+{
+	RemoveCorrectionInfo(rcvr, GetView(context));
+	return NILREF;
+}
+
+
+// ROM 0x00079b04 FClearCorrectionInfo
+Ref
+FClearCorrectionInfo(RefArg rcvr, RefArg context, RefArg at, RefArg length)
+{
+	ClearCorrectionRange(rcvr, GetView(context), RINT(at), RINT(length));
+	return NILREF;
+}
+
+
+// ROM 0x00079b78 FMergeWordInfo
+Ref
+FMergeWordInfo(RefArg rcvr, RefArg first, RefArg second)
+{
+	MergeWordInfo(rcvr, RINT(first), RINT(second));
+	return NILREF;
+}
+
+
+// ROM 0x00079c7c FSetWordList
+Ref
+FSetWordList(RefArg rcvr, RefArg words)
+{
+	SetWordList(rcvr, words);
+	return NILREF;
+}
+
+
+// ROM 0x00079968 FFindWordInfo
+// correctInfo:FindWordInfo(view, offset): the entry whose range holds
+// that offset, or nil.  (`FindWordInfoIndex` does the same walk for the
+// C++ side; this is the ROM's second copy of it, written out in the
+// native rather than called.)
+Ref
+FFindWordInfo(RefArg rcvr, RefArg context, RefArg offsetRef)
+{
+	long offset = RINT(offsetRef);
+	long id = GetView(context)->fId;
+	RefVar list(GetFrameSlotRef(rcvr, RSSYMinfo));
+	long count = Length(list);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar info(GetArraySlotRef(list, i));
+		if (RINT(RefVar(GetFrameSlotRef(info, RSSYMid))) != id)
+			continue;
+		if (RINT(RefVar(GetFrameSlotRef(info, RSSYMstart))) <= offset
+			&& offset < RINT(RefVar(GetFrameSlotRef(info, RSSYMstop))))
+			return info;
+	}
+	return NILREF;
+}
+
+
 // The correction natives a script reaches.
 void
 RegisterCorrectInfoNatives(void)
@@ -1226,4 +1426,20 @@ RegisterCorrectInfoNatives(void)
 	RegisterNativeFunction("FGetWordList", (void*) FGetWordList, 0);
 	RegisterNativeFunction("FRemoveToggledEntries", (void*) FRemoveToggledEntries, 1);
 	RegisterNativeFunction("FAddCapitalizedEntry", (void*) FAddCapitalizedEntry, 0);
+	RegisterNativeFunction("FAutoRemove", (void*) FAutoRemove, 0);
+	RegisterNativeFunction("FAutoAdd", (void*) FAutoAdd, 0);
+	RegisterNativeFunction("FDoEntryLearning", (void*) FDoEntryLearning, 1);
+	RegisterNativeFunction("FTestWordInfoFlags", (void*) FTestWordInfoFlags, 1);
+	RegisterNativeFunction("FSetWordInfoFlags", (void*) FSetWordInfoFlags, 1);
+	RegisterNativeFunction("FClearWordInfoFlags", (void*) FClearWordInfoFlags, 1);
+	RegisterNativeFunction("FMoveWordFirst", (void*) FMoveWordFirst, 1);
+	RegisterNativeFunction("FGetID", (void*) FGetID, 1);
+	RegisterNativeFunction("FGetWordInfo", (void*) FGetWordInfo, 1);
+	RegisterNativeFunction("FMergeStrokes", (void*) FMergeStrokes, 2);
+	RegisterNativeFunction("FOffsetCorrectionInfo", (void*) FOffsetCorrectionInfo, 4);
+	RegisterNativeFunction("FRemoveCorrectionInfo", (void*) FRemoveCorrectionInfo, 1);
+	RegisterNativeFunction("FClearCorrectionInfo", (void*) FClearCorrectionInfo, 3);
+	RegisterNativeFunction("FMergeWordInfo", (void*) FMergeWordInfo, 2);
+	RegisterNativeFunction("FSetWordList", (void*) FSetWordList, 1);
+	RegisterNativeFunction("FFindWordInfo", (void*) FFindWordInfo, 2);
 }

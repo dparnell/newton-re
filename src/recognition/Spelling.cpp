@@ -1380,6 +1380,60 @@ FSpellCorrect(RefArg /*rcvr*/, RefArg frame, RefArg word)
 }
 
 
+// ROM 0x001f651c FSpellSkip
+// SpellSkip(frame, word): a word this session is to stop complaining
+// about.  It goes into the session's own dictionary with the
+// capitalisation it was written in as its attribute, so that from here
+// on it looks to the checker like a word the writer had added - and it
+// goes when the session does.
+Ref
+FSpellSkip(RefArg /*rcvr*/, RefArg frame, RefArg word)
+{
+	if (ISNIL(frame))
+		return NILREF;
+	gSpeller = GetSpeller(frame);
+	if (gSpeller == nil || gSpeller->fIgnore == nil)
+		return NILREF;
+
+	RefVar copy(Clone(word));
+	UniChar* text = CString(copy);
+	UniChar* leading;
+	UniChar* trailing;
+	UniChar* contractionLeading;
+	UniChar* contraction;
+	CollectPunctSymbols(text, &leading, &trailing);
+	CollectContractions(text, &contractionLeading, &contraction);
+
+	Boolean capitalized = Capitalized(text);
+	Boolean allCapitals = SpellAllCapitals(text);
+	long length = Ustrlen(text);
+	if (capitalized || allCapitals)
+		LowercaseText(text, allCapitals ? length : 1);
+
+	UByte* bytes = new UByte[length + 1];
+	if (bytes != nil)
+	{
+		ConvertFromUnicode(text, bytes, 1, kSpellWordMax);
+		FixQuotes((char*) bytes);
+		ULong attribute = 0;
+		if (capitalized)
+			attribute = 0x80;
+		if (allCapitals)
+			attribute |= 0x40;
+		AddWord(gSpeller->fIgnore, 0, bytes, attribute);
+		delete[] bytes;
+	}
+
+	if (leading != nil)
+		DisposePtr((Ptr) leading);
+	if (trailing != nil)
+		DisposePtr((Ptr) trailing);
+	if (contraction != nil)
+		DisposePtr((Ptr) contraction);
+	return NILREF;
+}
+
+
 void
 RegisterSpellingNatives(void)
 {
@@ -1387,4 +1441,5 @@ RegisterSpellingNatives(void)
 	RegisterNativeFunction("FSpellDocEnd", (void*) FSpellDocEnd, 1);
 	RegisterNativeFunction("FSpellCheck", (void*) FSpellCheck, 2);
 	RegisterNativeFunction("FSpellCorrect", (void*) FSpellCorrect, 2);
+	RegisterNativeFunction("FSpellSkip", (void*) FSpellSkip, 2);
 }

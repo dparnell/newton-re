@@ -6,8 +6,9 @@
 // or, without a window:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --script src/host/demo/correct.ns --headless 48
+//       --script src/host/demo/correct.ns --headless 58
 //   build/venv/Scripts/python tools/imaging/pgm2png.py build/correct.pgm build/correct.png
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/picked.pgm build/picked.png
 //
 // A double tap on a word is the Newton's way of asking "what else might
 // this be".  The command travels further than it looks: the click-event
@@ -21,6 +22,10 @@
 // The Setup assistant is walked through first (src/host/demo/setup.ns, the
 // same taps), because the host's store is in memory and every boot starts
 // there.
+//
+// Two pictures are taken: build/correct.pgm with the corrector open over
+// the word, and build/picked.pgm after one of its alternatives has been
+// tapped and put on the page in place of what was written.
 //
 // It also prints what the spelling checker makes of a handful of
 // misspellings, which is the same machinery without the view.
@@ -81,6 +86,15 @@ AddDelayedCall(func() begin
             AddDelayedCall(func() begin
                 ScreenSnapshot("build/correct.pgm");
                 Print("correct: written build/correct.pgm");
+                // ... and one of the alternatives picked: the word on
+                // the page is replaced with it
+                AddDelayedCall(func() begin
+                    call tapAt with (105, 152);
+                    AddDelayedCall(func() begin
+                        ScreenSnapshot("build/picked.pgm");
+                        Print("correct: written build/picked.pgm");
+                      end, nil, 2500);
+                  end, nil, 1500);
               end, nil, 3000);
           end, nil, 2000);
       end, nil, 2000);

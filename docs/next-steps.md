@@ -8,11 +8,11 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `3ebcbe9`)
+## State at 2026-09-24 (commit `0091ef5`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8744 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 8763 citations, 0 bad;
   4747 of 16671 functions (28.47%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -132,8 +132,9 @@ the two large open areas below.
   double tap on a word of the Notepad now opens the corrector:
   `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
   --headless 50 --script src/host/demo/correct.ns` photographs it.
-  What is left of the checker is `SpellSkip` (0x001f651c) and the
-  learn/unlearn pair.
+  Picking one of its alternatives puts that word on the page.  What is
+  left of the checker is the learn/unlearn pair, which are the ROM's own
+  scripts rather than natives.
 - **The two ink arms of the double tap**, which ask for a word of
   writing to be read again rather than corrected: one for a tap on an
   ink word inside the selection (`HitsHilitedInkWord` is reconstructed

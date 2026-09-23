@@ -2067,6 +2067,53 @@ FDrawXBitmap(RefArg rcvr, RefArg bounds, RefArg picture, RefArg index, RefArg mo
 	return NILREF;
 }
 
+// ROM 0x00170e90 (unnamed) - SendViewCommand
+// A command of that id sent to the view behind a context, with a frame
+// parameter.  It is how a script hands a view one of the commands the
+// C++ side answers rather than one of its own scripts.
+static long
+SendViewCommand(RefArg context, long id, RefArg parameter)
+{
+	long result = 0;
+	RefVar object(GetFrameSlotRef(context, RSSYMviewcobject));
+	if (NOTNIL(object))
+	{
+		TView* view = (TView*) RefToAddress(object);
+		RefVar cmd(Clone(RefVar(Rprotocommand)));
+		SetFrameSlot(cmd, RSSYMid, RefVar(MAKEINT(id)));
+		SetFrameSlot(cmd, RSSYMreceiver, RefVar(view->fContext));
+		SetFrameSlot(cmd, RSSYMframeparameter, parameter);
+		result = view->DoCommand(cmd);
+	}
+	return result;
+}
+
+
+// ROM 0x001710f0 FHandleInsertItems
+// HandleInsertItems(items) on a view: the command a paragraph answers
+// for everything put into it from outside.  The corrector sends it to
+// put the reading the writer picked in place of the word that was
+// there.  ==> whether the view took it.
+static Ref
+FHandleInsertItems(RefArg rcvr, RefArg items)
+{
+	return MAKEBOOLEAN(SendViewCommand(rcvr, kInsertItemsCommand, items) != 0);
+}
+
+
+// ROM 0x001ee980 FGetStyleAtOffset
+// GetStyleAtOffset(offset) on a paragraph: the style of the character
+// at that offset, as a single spec.  The corrector asks it so that a
+// word it replaces keeps the style the word it replaced had.
+static Ref
+FGetStyleAtOffset(RefArg rcvr, RefArg offset)
+{
+	TParagraphView* para = FailGetParagraphView(rcvr);
+	RefVar styles(para->GetStyles());
+	return GetStyleAtOffset(styles, RINT(offset), nil, nil);
+}
+
+
 // ROM 0x001ee9c8 FCaretRelativeToVisibleRect
 // CaretRelativeToVisibleRect(bounds) - which way the caret has gone out
 // of the bounds frame: nil when it has not gone out at all, 'inBox when
@@ -2189,6 +2236,8 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FSetHiliteX", (void*) FSetHiliteX, 3);
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
+	RegisterNativeFunction("FHandleInsertItems", (void*) FHandleInsertItems, 1);
+	RegisterNativeFunction("FGetStyleAtOffset", (void*) FGetStyleAtOffset, 1);
 	RegisterNativeFunction("FCaretRelativeToVisibleRect", (void*) FCaretRelativeToVisibleRect, 1);
 	RegisterNativeFunction("FDropHilites", (void*) FDropHilites, 0);
 	RegisterNativeFunction("FGetHilitedTextItems__FRC6RefVar", (void*) FGetHilitedTextItems, 0);

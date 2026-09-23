@@ -288,6 +288,24 @@ main()
 		EXPECT(strcmp(word, "NEWTON") == 0);
 	}
 
+	// ---- a word the session is told to skip ----
+	// It goes into the session's own dictionary, so the checker stops
+	// complaining about it - until the session ends, when it goes too.
+	{
+		RefVar frame(FSpellDocBegin(RefVar(NILREF)));
+		UniChar text[64];
+		Uni(text, "qqxyzzy");
+		EXPECT(EQRef(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))), TRUEREF));
+		FSpellSkip(RefVar(NILREF), frame, RefVar(MakeString(text)));
+		EXPECT(ISNIL(RefVar(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))))));
+		FSpellDocEnd(RefVar(NILREF), frame);
+
+		// a new session has never heard of it
+		RefVar again(FSpellDocBegin(RefVar(NILREF)));
+		EXPECT(EQRef(FSpellCheck(RefVar(NILREF), again, RefVar(MakeString(text))), TRUEREF));
+		FSpellDocEnd(RefVar(NILREF), again);
+	}
+
 	if (failures == 0)
 		printf("test_Spelling: all passed\n");
 	else

@@ -1317,8 +1317,10 @@ written with.
 gives "receive" and "seperate" gives "separate", and what was written
 round the word comes back round the guesses.
 
-NOT YET: `SpellSkip` 0x001f651c (the word added to the session's skip
-dictionary), and the learn/unlearn pair.
+NOT YET: the learn/unlearn pair, which are the ROM's own scripts rather
+than natives.  (`SpellSkip` 0x001f651c is done: a word the session is to
+stop complaining about goes into the session's own dictionary with the
+capitalisation it was written in, and goes when the session does.)
 
 ## The corrector (`recognition/CorrectInfo.h`, `views/ParagraphView.h`)
 
@@ -1376,8 +1378,23 @@ takes the element out and puts it back).
 
 The spelling checker `DoCorrection` asks for the alternatives is the
 section above; with it in place a double tap on a word of a Notepad page
-opens the corrector, which is what `src/host/demo/correct.ns`
-photographs.
+opens the corrector, and picking one of its alternatives puts that word
+on the page - which is what `src/host/demo/correct.ns` photographs.
+
+Picking one goes back through the natives too: `MoveFirst` brings the
+reading the writer chose to the front of the entry, `Learn` hands it to
+the recogniser that read it, `AutoRemove` takes back out of the
+dictionary whatever was added on the strength of the reading that was
+there before, `GetStyleAtOffset` asks the paragraph what style the old
+word had, and `HandleInsertItems` sends the paragraph the command it
+answers for everything put into it from outside.  The rest of the
+cluster - `AutoAdd`, the flag pair, `GetCorrectionWordInfo`,
+`GetViewID`, `MergeStrokes`, `offset`, `FindWordInfo`,
+`MergeWordInfo`, `SetWordList` and the two range natives - are a line
+each over what is above them.
+
+NOT YET of the natives: `FAddUnitInfo`, `FAddWordInfo`, `FExtractRange`,
+`FInsertRange` and `FMoveCorrectionInfo`.
 
 NOT YET: the two arms of the double tap that ask for a word of *writing*
 to be read again rather than corrected, which want the re-recognition

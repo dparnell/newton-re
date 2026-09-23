@@ -162,6 +162,28 @@ void	InsertArrayElement(RefArg array, long index, RefArg value);	// ROM 0x00078e
 Ref		RemoveArrayElement(RefArg array, long index);			// ROM 0x00078f38 RemoveArrayElement__F6RefVarl
 void	MoveArrayElement(RefArg array, long from, long to);		// ROM 0x00078fc4 MoveArrayElement__F6RefVarlT2
 
+// wordInfo:AutoRemove(): what was learnt from this entry taken back
+// out, which is what happens when the writer picks another reading.
+Ref		FAutoRemove(RefArg rcvr);							// ROM 0x00079630 FAutoRemove
+
+// The rest of what the corrector asks of its entry, a line each over
+// what is above.
+Ref		FAutoAdd(RefArg rcvr);								// ROM 0x00079618 FAutoAdd
+Ref		FDoEntryLearning(RefArg rcvr, RefArg which);		// ROM 0x00079648 FDoEntryLearning
+Ref		FTestWordInfoFlags(RefArg rcvr, RefArg flags);		// ROM 0x00079680 FTestWordInfoFlags
+Ref		FSetWordInfoFlags(RefArg rcvr, RefArg flags);		// ROM 0x000796c4 FSetWordInfoFlags
+Ref		FClearWordInfoFlags(RefArg rcvr, RefArg flags);		// ROM 0x00079700 FClearWordInfoFlags
+Ref		FMoveWordFirst(RefArg rcvr, RefArg word);			// ROM 0x00079828 FMoveWordFirst
+Ref		FGetID(RefArg rcvr, RefArg context);				// ROM 0x00079840 FGetID
+Ref		FGetWordInfo(RefArg rcvr, RefArg unit);				// ROM 0x00079860 FGetWordInfo
+Ref		FMergeStrokes(RefArg rcvr, RefArg bundle, RefArg other);	// ROM 0x00079880 FMergeStrokes
+Ref		FOffsetCorrectionInfo(RefArg rcvr, RefArg context, RefArg at, RefArg removed, RefArg inserted);	// ROM 0x000798a0 FOffsetCorrectionInfo
+Ref		FRemoveCorrectionInfo(RefArg rcvr, RefArg context);	// ROM 0x0007993c FRemoveCorrectionInfo
+Ref		FClearCorrectionInfo(RefArg rcvr, RefArg context, RefArg at, RefArg length);	// ROM 0x00079b04 FClearCorrectionInfo
+Ref		FMergeWordInfo(RefArg rcvr, RefArg first, RefArg second);	// ROM 0x00079b78 FMergeWordInfo
+Ref		FSetWordList(RefArg rcvr, RefArg words);			// ROM 0x00079c7c FSetWordList
+Ref		FFindWordInfo(RefArg rcvr, RefArg context, RefArg offset);	// ROM 0x00079968 FFindWordInfo
+
 void	RegisterCorrectInfoNatives(void);
 
 #endif	/* __CORRECTINFO_H */

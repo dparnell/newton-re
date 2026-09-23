@@ -227,6 +227,10 @@ Ref		RestorePunctSymbols(RefArg word, const UniChar* leading, const UniChar* tra
 // as an array of spellings, nearest first.
 Ref		FSpellCorrect(RefArg rcvr, RefArg frame, RefArg word);	// ROM 0x001f44c8 FSpellCorrect
 
+// SpellSkip(frame, word): a word this session is to stop complaining
+// about.  It goes into the session's own dictionary and goes with it.
+Ref		FSpellSkip(RefArg rcvr, RefArg frame, RefArg word);	// ROM 0x001f651c FSpellSkip
+
 void	RegisterSpellingNatives(void);
 
 #endif	/* __SPELLING_H */
