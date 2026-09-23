@@ -74,6 +74,26 @@ context").  The work is in whatever answers 0x4d.
   `frames/RichString.h`'s `NumInkAndTextRunsInRange` already counts them
   and `GetInkData` fetches each word's bytes.
 
+## What the machine actually does today
+
+Worth knowing before picking the next piece, because it was measured
+rather than reasoned about (`src/host/demo/ink.ns`, which walks the
+setup assistant and then draws a stroke on the Notepad):
+
+- The **live inker works**.  Drag the pen across the Notepad and the ink
+  follows it, drawn by `TStroke::Draw` over `InkerLine` out of
+  `StrokeTime`.
+- **On pen-up the ink vanishes.**  The stroke goes to the recogniser,
+  which takes the ink off the screen and would put a paragraph or an ink
+  word in its place - and the domains that would do that are NOT YET.
+  So everything the view side of ink can now do is still only reachable
+  from tests.
+- `IdleStrokes()` must not be called while the pen is down.  It runs the
+  click through to the view under it, and a view that tracks the pen
+  waits for pen-up, which only the script could queue and which is
+  exactly what is blocked.  The inker task pumps the queued records
+  every tick anyway, so a script never needs to.
+
 ## After the ink: the recogniser
 
 The owner's order was the view side first, then the recogniser.  Nothing
@@ -81,6 +101,14 @@ generates `aeRawInk` or `aeInkWord` yet, because the domains above the
 gesture domain are NOT YET - so the ink view side is reachable only from
 tests until that is done.  In rough order:
 
+- The shortest way to something visible is the *shell* of the word
+  recogniser rather than the engine inside it.  `WordRecognizerHandleUnit`
+  (0x00143f00) asks the recogniser what the unit is; when the answer is
+  2 it is ink, and `GetInkCommand` over the unit's word info picks
+  `aeRawInk` or `aeInkWord` for the view.  A recogniser that always
+  answers ink is what the ROM itself comes to when the engine cannot
+  read the writing, and it would put everything the view side can now do
+  on the screen.
 - `low_level` and `GetTraceFromStrokes` - the CIC feature extractor.
   `recognition/Words.h`'s `FindBaseline` already has the ROM's fallback
   path and will start answering properly once these exist.

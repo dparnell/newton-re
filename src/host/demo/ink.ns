@@ -1,4 +1,4 @@
-// Ink: a stroke drawn on the Notepad with the pen, and a picture of it.
+// Ink: a stroke drawn with the pen, and a picture of it.
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
 //       --scale 2 --store build/newton.store --script src/host/demo/ink.ns
@@ -6,29 +6,67 @@
 // or, without a window:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --store build/newton.store --script src/host/demo/ink.ns --headless 12
+//       --store build/newton.store --script src/host/demo/ink.ns --headless 45
 //   build/venv/Scripts/python tools/imaging/pgm2png.py build/ink.pgm build/ink.png
 //
 // With a window, just drag the mouse across the page: the ink follows it.
 // What draws it is TStroke::Draw over InkerLine (qd/Draw.h), reached from
 // StrokeTime as the ROM's inker task reaches it from TInker::LCDEntry.
 //
-// The ink stays where it was drawn once the pen is lifted, because what
-// would take it off again - InkerOff, and the recogniser turning the
-// stroke into a paragraph - is NOT YET.
+// The setup assistant is walked through first (src/host/demo/setup.ns, the
+// same taps), because the host's store is in memory and every boot starts
+// there; without it the stroke lands on the "Enter your Name" page.
+//
+// The picture is taken with the pen still down.  Once it is lifted the ink
+// goes away again: the stroke is handed to the recogniser, which takes the
+// ink off the screen and would put a paragraph or an ink word in its place
+// - and the domains that would do that (the word and shape recognisers)
+// are NOT YET.  So this is what the inker draws, not what is kept.
+//
+// IdleStrokes() must not be called while the pen is down.  It runs the
+// click through to the view under it, and a view that tracks the pen waits
+// for the pen to come up - which only this script could queue, and it is
+// the thing that is waiting.  The inker task pumps the queued pen records
+// every tick on its own, so nothing here needs to.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
 
 AddDelayedCall(func() begin
-    PenDown(60, 120);
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// the Notepad is up by now: a stroke across it, and its picture while the
+// pen is still down
+AddDelayedCall(func() begin
+    PenDown(60, 160);
     for i := 1 to 30 do
-      begin
-        PenMove(60 + i * 5, 120 + (i * i) div 12);
-        IdleStrokes();					// a tick of the inker
-      end;
-    PenUp();
-    IdleStrokes();
+      PenMove(60 + i * 5, 160 + (i * i) div 12);
     AddDelayedCall(func() begin
         ScreenSnapshot("build/ink.pgm");
         Print("ink: written build/ink.pgm");
-      end, nil, 1200);
-  end, nil, 2500);						// after the boot
+        PenUp();
+        IdleStrokes();
+      end, nil, 900);
+  end, nil, 27000);
 Print("ink: the script is loaded");
