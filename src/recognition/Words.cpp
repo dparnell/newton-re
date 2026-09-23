@@ -21,6 +21,7 @@
 #include "Frames.h"
 #include "NativeFunctions.h"
 #include "Airus.h"
+#include "Recognizer.h"
 #include "Unicode.h"
 #include "RSSymbols.h"
 #include "ObjectHeap.h"
@@ -463,6 +464,7 @@ RegisterWordNatives(void)
 	RegisterNativeFunction("FAirusLookupWord", (void*) FAirusLookupWord, 2);
 	RegisterNativeFunction("FAirusAddWord", (void*) FAirusAddWord, 2);
 	RegisterNativeFunction("FWRecIsBeingUsed", (void*) FWRecIsBeingUsed, 0);
+	RegisterNativeFunction("FUseWRec", (void*) FUseWRec, 1);
 	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);
 	RegisterNativeFunction("FStripRecognitionWordDiacritsOK", (void*) FStripRecognitionWordDiacritsOK, 1);
 }

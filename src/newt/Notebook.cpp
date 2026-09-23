@@ -12,6 +12,7 @@
 #include "ScriptBoot.h"
 #include "RootView.h"
 #include "Recognizer.h"
+#include "InkRecognizer.h"
 #include "StrokeCentral.h"
 #include "Ports.h"
 #include "Regions.h"
@@ -113,7 +114,17 @@ TNotebook::InitToolbox(void)
 	InitializeInkCodecs();
 	InitializeParagraphCompression();
 	InitializeInkFont();
+	// (DEVIATION: the ROM's own handwriting engine is the CIC
+	// library, which is NOT YET.  The reconstruction's ink-only
+	// engine stands in its place, so that writing becomes ink rather
+	// than being dropped: recognition/InkRecognizer.h.)
+	RegisterInkOnlyRecognizer();
 	gRecognition.Init(2);
+	// (NOT YET: on the Newton a script chooses which of the two word
+	//  recognisers is in use, with UseWRec; with one engine here the
+	//  host puts it in use itself, so that writing is read - or, as it
+	//  is, left as ink - rather than dropped.)
+	SetWordRecognizer(kWRecDomainType);
 	RunInitScripts();
 	gStrokeWorld.Init();
 }

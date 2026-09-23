@@ -1220,6 +1220,60 @@ TEditView::RealDoCommand(RefArg cmd)
 		return true;
 	}
 
+	if (id == aeInkWord)
+	{
+		// A word of writing nobody read.  The view's own
+		// viewInkWordScript gets it first; then the command's parameter
+		// - the unit the recogniser sends - is exchanged for the unit's
+		// strokes, because everything below here works in stroke
+		// bundles.  The visible data-view children are asked how well
+		// they would take the word and the best one gets it, and if
+		// none will, the page takes it itself as a paragraph of one ink
+		// character.
+		//
+		// NOT YET RECONSTRUCTED: the corrector
+		// (SetRemoteForCorrector/CorrectorUp) and, after the children
+		// have refused, the caret: the ROM looks at the view the caret
+		// is in and, when it is this page's, puts the word into the
+		// paragraph the caret is in rather than starting a new one -
+		// with `remoteWriting` deciding whether the writing may come
+		// from somewhere other than where the caret is.  Here every ink
+		// word starts a paragraph of its own.
+		if (TView::RealDoCommand(cmd))
+			return true;
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+			return TView::RealDoCommand(cmd);	// (the ROM's shared exit runs the scripts again)
+		ResetHilitesForNewWord();
+		ValidateCaret(true);
+		RefVar param(GetFrameSlot(cmd, RSSYMparameter));
+		if (NOTNIL(param))
+		{
+			TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+			if (unit != nil)
+				CommandSetFrameParameter(cmd, RefVar(unit->Strokes()));
+		}
+		long best = 0;
+		TView* bestView = nil;
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			if ((child->fFlags & vVisible) == 0 || !child->DerivedFrom(clDataView))
+				continue;
+			long score = ((TDataView*) child)->HandleInkWord(cmd, false);
+			if (score > best)
+			{
+				best = score;
+				bestView = child;
+			}
+		}
+		if (best != 0)
+			((TDataView*) bestView)->HandleInkWord(cmd, true);
+		else
+			HandleInkWord(cmd);
+		return true;
+	}
+
 	if (id == aeScrub)
 	{
 		// (textFlags bit 0x2000: the page answers the pen itself first)
