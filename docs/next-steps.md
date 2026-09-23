@@ -121,5 +121,11 @@ tests until that is done.  In rough order:
 - A `\n` inside a C string literal written through a Bash heredoc loses
   a backslash. Use the Write/Edit tools for those, or build the two
   characters as `chr(92) + 'n'` in a Python helper.
+- `RemoveView(parent, child)` takes two arguments; calling it with one
+  throws `evt.ex.fr.intrp` from inside `Eval`, which is easy to misread
+  as a fault in whatever was being tested.
+- A `StyleRecord` holds a `RefStruct`, so it must be filled in field by
+  field - `memset`ing one over dereferences a null handle on the next
+  assignment.
 - `coverage.py --check` matches one citation per line; a second name on
   the same line (or a trailing comma) breaks the match.
