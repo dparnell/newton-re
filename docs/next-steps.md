@@ -8,90 +8,107 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `00966da`)
+## State at 2026-09-23 (commit `c1e44ab`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 73/73.
-- `analysis/coverage.py build/MP2x00US --check`: 8378 citations, 0 bad;
-  4435 of 16671 functions (26.60%).
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 75/75.
+- `analysis/coverage.py build/MP2x00US --check`: 8497 citations, 0 bad;
+  4547 of 16671 functions (27.27%).
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
   --headless 20 --store <file>` boots.
 
-The view side of ink is now finished as far as it can go without the
-recogniser.  A word of writing draws as a shape, on a page, as a style
-run of a paragraph, as a glyph of a font, and inside a rich string.
+**Writing is now kept.** A stroke drawn on the Notepad becomes an ink
+word in a paragraph of its own. The route crosses five areas and is
+written out in `docs/ink/README.md` ("From the pen to ink on the page");
+`src/host/demo/ink.ns` takes a picture of it with the pen down and
+another after the recogniser has finished.
 
-The last run of work added, after the font piece:
+The last run of work added, from the bottom up:
 
-- `GetFontSize`/`GetFontFace` answer an ink word's own size and face,
-  through a second registered proc beside the opener.
-- `qd/Text.h`'s `DoRichString` cuts a range with ink in it into text and
-  ink runs, over the new `TRichString::GetLengthsAndDataInRange`, and
-  gives an ink run the address of its blob as its font.
-- `PackedInkWordInfo` is eight big-endian bytes again.  It was a pair of
-  `ULong`s, and a `ULong` here is pointer-sized, so the Newton's eight
-  bytes were sixteen little-endian ones - inside a string object that
-  goes into a soup as it stands.
+- `TWordList` (`recognition/WordList.h`) - the readings a word unit came
+  to, sixteen of them packed into one handle with 0xFFFF between them,
+  out of a pool of twelve lists; and the try string, which is how the
+  recogniser remembers being corrected about '0' against 'O'
+  (`docs/curiosities.md`).
+- The word info frame (`recognition/WordInfo.h`) - what a script is told
+  about a piece of writing - and the `TUnitPublic` side under it
+  (`MakeWordList`, `Words`, `WordInfo`, `SetWordBase`, `TrainingData`),
+  plus `ExpandUnit`.
+- `TWRecRecognizer`, `InstallWRecRecognizer`, `WordRecognizerHandleUnit`
+  and `GetInkCommand` (`recognition/Recognizer.h`), with
+  `SetWordRecognizer`/`UseWRec` deciding which word recogniser is in
+  use.
+- `TInkOnlyRecognizer` (`recognition/InkRecognizer.h`) - an engine that
+  gathers strokes into words and says it cannot read any of them, which
+  is the answer the ROM's own engine gives for writing it cannot make
+  out. The host registers it and puts it in use.
+- The `aeInkWord` case of `TEditView::RealDoCommand`, the ink-word half
+  of `AddNewParagraph`'s geometry, and the ink-word branch of
+  `CreateTextStyleRecord` that had been missing.
 
 ## What the machine actually does today
 
-Measured rather than reasoned about, with `src/host/demo/ink.ns` (which
-walks the setup assistant first, because the host's store is in memory
-and every boot starts there):
+Measured rather than reasoned about, with `src/host/demo/ink.ns`:
 
-- The **live inker works**.  Drag the pen across the Notepad and the ink
-  follows it, drawn by `TStroke::Draw` over `InkerLine` out of
-  `StrokeTime`.
-- **On pen-up the ink vanishes**, because nothing claims the stroke.
-  Everything the view side of ink can now do is still reachable only
-  from tests.
-- `IdleStrokes()` must not be called while the pen is down.  It runs the
+- The live inker works: drag the pen across the Notepad and the ink
+  follows it.
+- On pen-up the writing is claimed by the word domain, found to be
+  unreadable, and put on the page as an ink word - smaller than it was
+  written, because an ink word is brought down to a size a line of text
+  can hold, and starting at the middle of the box it was written in,
+  which is what the ROM's arithmetic says.
+- `IdleStrokes()` must not be called while the pen is down. It runs the
   click through to the view under it, and a view that tracks the pen
   waits for pen-up, which only the script could queue and which is
-  exactly what is blocked.  The inker task pumps the queued records
+  exactly what is blocked. The inker task pumps the queued records
   every tick anyway, so a script never needs to.
 
-## Next: the word domain, and a recogniser that answers "ink"
+## Next: a word the recogniser *reads*
 
-This is what would put writing on the page, and it is the last thing
-between the view side of ink and something visible.  The chain, read out
-of the ROM:
+Everything is in place except the geometry for a word that was read
+rather than left as ink. `TEditView::AddNewParagraph` still drops such a
+word rather than putting it down wrongly; the section is the ROM's
+0x000a20f0-0x000a22bc and it is the one thing between here and text
+appearing where it was written:
 
-- `TRecognitionManager::InitRecognizers` (0x0019d438) installs the
-  gesture, event, stroke and click recognisers at any level, and above
-  level 1 the shape (`InstallShapeRecognizer` 0x0014456c) and word
-  (`InstallWRecRecognizer` 0x00144094) ones.  Only the first four are
-  reconstructed, which is why no unit is ever made for a finished
-  stroke.
-- `InstallWRecRecognizer` makes a `TWRecDomain` over the controller and
-  a `TRecognizer` over that with services 0x17ef000 - but it gives up
-  first if `ClassInfoByName("TWRecognizer")` finds nothing.  That
-  protocol is the handwriting engine, and `RegisterWRec` registers the
-  ROM's.  **A registration that always answers "ink" is enough**: it is
-  the answer the ROM itself comes to when the engine cannot read the
-  writing.
-- `WordRecognizerHandleUnit` (0x00143f00) is the shell above it.  It
-  asks the recogniser what the unit is (vtable +0x24); when the answer
-  is 2 the unit is ink, and `GetInkCommand` (0x00143dec) over the unit's
-  word info picks the command for the view.
-- `GetInkCommand` reads the word info's `strokes` - a stroke bundle,
-  which `recognition/StrokeBundle.h` already makes - takes the midpoint
-  of its `bounds`, finds the view under it, and asks that view's
-  recognition configuration for `doInkWordRecognition`: set means
-  `aeInkWord`, clear means `aeRawInk`.  Both of those the view side
-  already answers (`views/EditView.h`).
-- The word info itself is `MakeWordInfo(TUnitPublic*)` (0x00077fd8): the
-  ROM's `protoWordInfo` cloned, with `unitId`, `strokes` (`ExpandUnit`
-  0x001a2554), `words` (`MakeWordList`) and `unitData`
-  (`TUnitPublic::TrainingData`).  For ink the last two are empty and
-  flag 8 goes on (`SetWordInfoFlags` 0x00077dc0).
-  `TUnitPublic::WordInfo` (0x0022d684) makes it once and keeps it.
+- the word is measured with `TextBounds` over a `TRichString` of it -
+  our `TextBounds` takes a font spec where the ROM's takes the
+  `StyleRecord` the function has already built, so it wants an overload;
+- `AlignBounds` (0x000a26c4, reconstructed and tested) lines the result
+  up with the page's other children;
+- `AlignToLineSpacing` (0x000a2bc4, reconstructed) then lines it up with
+  the page's ruled lines - but only when `AlignBounds` did not move it,
+  which is what the comparison after `AlignBounds` decides;
+- the result is put into the editor's own coordinates with
+  `ContentsOrigin`/`OffsetRect`, which the ink-word path does *not* do -
+  worth checking whether that is a ROM quirk or a misreading.
 
-The real work in this is `TWRecDomain` - the domain that decides which
-strokes belong to the same word, by where and when they were written.
-Everything above it is small.
+The point the word is placed around is already reconstructed for both
+kinds: the middle of the base line for a word the recogniser read (the
+unit's `fWordBase`), the middle of the top of the box for an ink word.
+
+After that, the obvious next piece is an engine that reads something -
+either the ROM's own (the CIC handwriting library) or a modern one, both
+of which plug into `TWRecognizer` beside `TInkOnlyRecognizer` and need
+nothing above them changed.
 
 ## Also still open
 
+- The caret side of `aeInkWord` (0x000a51b0): the ROM looks at the view
+  the caret is in and, when it is this page's, puts the word into the
+  paragraph the caret is in rather than starting a new one, with
+  `remoteWriting` deciding whether the writing may come from somewhere
+  other than where the caret is. The corrector
+  (`SetRemoteForCorrector`, `CorrectorUp`) goes with it.
+- `TWRecRecognizer::ConfigureArea` (0x00144178) and the area information
+  a recogniser keeps per writing area (`TWRecDomain::DomainParameter`,
+  `SetParameters`, `ConfigureArea`), which want `DomainOn` and
+  `BuildChains`.
+- `ReadDomainOptions`/`FReadCursiveOptions` (0x0019cfd8), which reads
+  the writer's recognition preferences at boot; the host does its job by
+  hand at the moment.
+- The dictionaries (`LookupWord` 0x0013f4f4, `ExpandWord` 0x001aa930 and
+  everything under them), which is what would order a word list properly
+  and let `TWordList::Reorder` matter.
 - `DoInsertItems` (0x00170f7c) and `TParagraphView::HandleInsertItems`
   (0x001700a0), the paragraph's general insert path - and
   `CheckAndDoSplitInk` (0x00176208), which is blocked on it.
@@ -102,9 +119,6 @@ Everything above it is small.
   what `CheckAndDoSplitInk` needs.
 - The ink half of `TParagraphView::CheckAndDoJoin` - `MergeInk` is ready
   for it.
-- The `aeInkWord` case of `TEditView::RealDoCommand` (0x000a51b0): it
-  wants `SetRemoteForCorrector`, `CorrectorUp` and
-  `ResetHilitesForNewWord` first.
 - `TInkWordGlyph::SetFontParms` (over `SetInkWordFontParms` 0x000dbd0c)
   and the printing path's outlined paths (`CSMakePathsGroup`,
   `FramePaths`).
@@ -115,7 +129,10 @@ Everything above it is small.
 
 - Unaligned `ldr rN,[X+2]` rotates the aligned word right by 16 - read
   halfword loads out of the disassembly, never the decompiler. Halfword
-  stores come out as two `strb`.
+  stores come out as two `strb`. This matters most in functions that
+  build `Rect`s and `Point`s on the stack: Ghidra's output for
+  `AddNewParagraph`'s geometry is almost unreadable, and the assembly is
+  not.
 - `__rt_sdiv`/`__rt_udiv` take (divisor, dividend) and answer the
   quotient in r0.
 - `TArray::IArray(elementSize, count)` sets `fCount = count`: the array
@@ -130,8 +147,11 @@ Everything above it is small.
 - `RemoveView(parent, child)` takes two arguments; calling it with one
   throws `evt.ex.fr.intrp` from inside `Eval`, which is easy to misread
   as a fault in whatever was being tested.
-- A `StyleRecord` holds a `RefStruct`, so it must be filled in field by
-  field - `memset`ing one over dereferences a null handle on the next
-  assignment.
+- A `StyleRecord`'s scalars now start clear (`qd/Fonts.h`), because the
+  ROM's callers allocate theirs in cleared memory and rely on it. It
+  holds a `RefStruct`, so it still must not be `memset`.
+- A test that needs the protocol registry (anything making an instance
+  by name) must run as the kernel services task: `gHostKernelServicesTask
+  = ...; OsBoot();`, ending with `HostStopTasks()`.
 - `coverage.py --check` matches one citation per line; a second name on
   the same line (or a trailing comma) breaks the match.
