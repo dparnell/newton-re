@@ -44,6 +44,9 @@
 #include "Stroke.h"
 #include "objects.h"
 #endif
+#ifndef __BYTEORDER_H
+#include "ByteOrder.h"
+#endif
 #ifndef __RICHSTRING_H
 #include "RichString.h"		// IsInkWord
 #endif
@@ -68,11 +71,20 @@ Boolean	IsOldRawInk(RefArg obj);				// ROM 0x000dc0c0 IsOldRawInk__FRC6RefVar
 //	word 1:	31..22	the x-height
 //			21..6	the scale, a 16.16 Fixed to eight fractional bits
 //			 5..0	the type face, as GetRawFace packs it
+// (host: the two words are kept as bytes rather than as ULongs, because
+// a ULong here is pointer-sized and the host is little-endian, and these
+// eight bytes sit inside a string object that goes into a soup as it
+// stands - they have to be the Newton's eight, most significant byte
+// first.)
 struct PackedInkWordInfo
 {
-	ULong	fWord0;			// +0x00
-	ULong	fWord1;			// +0x04
-};
+	ULong	Word0(void) const		{ return GetBigEndianWord(fBytes); }
+	ULong	Word1(void) const		{ return GetBigEndianWord(fBytes + 4); }
+	void	SetWord0(ULong word)	{ PutBigEndianWord(fBytes, (unsigned int) word); }
+	void	SetWord1(ULong word)	{ PutBigEndianWord(fBytes + 4, (unsigned int) word); }
+
+	UByte	fBytes[8];		// +0x00
+};							// 8 bytes
 
 
 // The same, opened out, with what follows from it.  The first seven

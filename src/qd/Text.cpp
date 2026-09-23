@@ -351,15 +351,92 @@ MeasureOnceFont(const UniChar* text, long length, RefArg fontSpec)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0035a164 DoRichString__FR11TRichStringUllP11StyleRecord6FPointP11TextOptionsP14TextBoundsInfoUc
-// The rich string's characters from start, as one text.  NOT YET
-// RECONSTRUCTED: the ink words (the ROM makes a style and a run for each
-// ink word and text run between them); the text is drawn as it is.
+// The rich string's characters from start, drawn or measured.
+//
+// A plain string, or one whose ink is all outside the range, is one run
+// in the caller's style.  Otherwise the range is cut into runs - each
+// ink character is a run of its own and the text between two of them is
+// a run - and each run gets a copy of the caller's style with one field
+// changed: an ink run's "font family" is the *address* of its blob,
+// which qd/Fonts.h's OpenFont recognises as an ink word and opens as a
+// font of one glyph.  That is what draws a word of writing in the
+// middle of a line of text.
+//
+// The copies are given no pattern of their own, so the runs draw with
+// the port's - and the caller's pattern is disposed here, which is odd
+// but is what the ROM does.  A caller that made a pattern for its style
+// and then disposes the style itself therefore disposes it twice;
+// nothing does yet, because a pattern only comes from a colour in the
+// font spec and CreateTextStyleRecord does not act on one.
 long
 DoRichString(TRichString& rich, ULong start, long length, StyleRecord* style, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw)
 {
 	UniChar* text = rich.GrabPtr();
-	StyleRecord* styles[1] = { style };
-	long drawn = DoTextOnce(text + start, length, styles, nil, where, options, bounds, draw);
+	if (rich.Format() == kRichStringFormatPlain)
+	{
+		StyleRecord* plain[1] = { style };
+		long drawn = DoTextOnce(text + start, length, plain, nil, where, options, bounds, draw);
+		rich.ReleasePtr();
+		return drawn;
+	}
+	StyleRecord** styles = nil;
+	StyleRecord* records = nil;
+	short* lengths = nil;
+	void** data = nil;
+	long runs = 0;
+	if (rich.NumInkWordsInRange(start, (ULong) length) != 0)
+	{
+		runs = rich.NumInkAndTextRunsInRange(start, (ULong) length);
+		data = (void**) QDNewTempPtr(runs * (long) sizeof(void*));
+		if (data == nil)
+		{
+			rich.ReleasePtr();
+			return 0;
+		}
+		lengths = (short*) QDNewTempPtr(runs * (long) sizeof(short));
+		if (lengths == nil)
+		{
+			QDDisposeTempPtr(data);
+			rich.ReleasePtr();
+			return 0;
+		}
+		rich.GetLengthsAndDataInRange(start, (ULong) length, lengths, data);
+		records = new StyleRecord[runs];
+		styles = new StyleRecord*[runs];
+		RefVar font(style->fFontFamily);
+		for (long i = 0; i < runs; i++)
+		{
+			styles[i] = &records[i];
+			if (data[i] == nil)
+				records[i].fFontFamily = font;
+			else
+				records[i].fFontFamily = RefVar(AddressToRef(data[i]));
+			records[i].fFontSize = style->fFontSize;
+			records[i].fFontFace = style->fFontFace;
+			records[i].fFontPattern = style->fFontPattern;
+			records[i].fTransferMode = style->fTransferMode;
+			records[i].fReserved14 = style->fReserved14;
+			records[i].fReserved18 = style->fReserved18;
+			// (the ROM makes its array with a constructor and never
+			//  writes this field: the runs draw with the port's pattern)
+			records[i].fPattern = nil;
+		}
+		if (style->fPattern != nil)
+			DisposePattern(style->fPattern);
+	}
+	else
+	{
+		styles = &style;
+		lengths = nil;
+	}
+	long drawn = DoTextOnce(text + start, length, styles, lengths, where, options, bounds, draw);
+	if (records != nil)
+	{
+		delete[] records;
+		delete[] styles;
+		QDDisposeTempPtr(lengths);
+		QDDisposeTempPtr(data);
+	}
 	rich.ReleasePtr();
 	return drawn;
 }

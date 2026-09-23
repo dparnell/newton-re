@@ -20,6 +20,7 @@
 #include "Ink.h"
 #include "StrokeBundle.h"
 #include "InkFont.h"
+#include "RichString.h"
 #include "CICCodec.h"
 #include "GaugeView.h"
 #include "PickView.h"
@@ -3497,6 +3498,115 @@ TestInkWordInText()
 }
 
 
+// A rich string with a word of writing in the middle of it: the string
+// is cut into runs - text, ink, text - and the ink run's style carries
+// the blob's address, which the font engine opens as a font of one
+// glyph.
+static void
+TestInkInRichString()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// a word of writing, and its bytes
+	TStroke* list[2];
+	list[0] = TStroke::Make(0);
+	list[1] = nil;
+	for (long i = 0; i <= 12; i++)
+	{
+		TabPt tab;
+		tab.z = 0;
+		tab.p = 0;
+		tab.x = ToFixed(10 + i * 2);
+		tab.y = ToFixed(20 + (i & 1) * 6);
+		list[0]->AddPoint(&tab);
+	}
+	list[0]->EndStroke();
+	Rect made;
+	RefVar word(TStrokesToInkWord(list, &made));
+	EXPECT(IsInkWord(word));
+	long inkLength = Length(word);
+
+	// "a?b" with the word where the ? is, laid out the way
+	// SetFormatAndLength reads it: the text, padding to a word, the
+	// blob (its length halfword, its bytes, padding), the trailer
+	const long kChars = 3;
+	long inkOffset = (kChars * (long) sizeof(UniChar) + 5) & ~3;
+	long blob = (long) InkBlobSize((ULong) inkLength);
+	RefVar str(AllocateBinary(RSSYMstring, inkOffset + blob + 4));
+	char* base = (char*) BinaryData(str);
+	UniChar* chars = (UniChar*) base;
+	chars[0] = 'a';
+	chars[1] = kInkChar;
+	chars[2] = 'b';
+	chars[3] = 0;
+	*(UniChar*) (base + inkOffset) = (UniChar) inkLength;
+	memcpy(base + inkOffset + sizeof(UniChar), BinaryData(word), (size_t) inkLength);
+	ULong trailer = ((ULong) kChars << 4) | 1;
+	UniChar* end = (UniChar*) (base + inkOffset + blob + 4);
+	end[-2] = (UniChar) (trailer >> 16);
+	end[-1] = (UniChar) trailer;
+
+	TRichString rich(str);
+	EXPECT(rich.Format() == kRichStringFormatInk);
+	EXPECT(rich.Length() == kChars && rich.NumInkWords() == 1);
+
+	// three runs: the letter, the writing, the letter
+	EXPECT(rich.NumInkAndTextRunsInRange(0, kChars) == 3);
+	short lengths[3];
+	void* data[3];
+	rich.GetLengthsAndDataInRange(0, kChars, lengths, data);
+	EXPECT(lengths[0] == 1 && lengths[1] == 1 && lengths[2] == 1);
+	EXPECT(data[0] == nil && data[1] != nil && data[2] == nil);
+	// the run's data is the blob, and it reads back as the word
+	EXPECT(*(const UniChar*) data[1] == (UniChar) inkLength);
+	InkWordInfo blobInfo;
+	GetInkWordAddrInfo(RefVar(AddressToRef(data[1])), &blobInfo);
+	InkWordInfo wordInfo;
+	GetInkWordInfo(word, &wordInfo);
+	EXPECT(blobInfo.fWidth == wordInfo.fWidth && blobInfo.fAscent == wordInfo.fAscent);
+
+	// the same characters without the ink region: a plain string
+	RefVar plain(AllocateBinary(RSSYMstring, (kChars + 1) * (long) sizeof(UniChar)));
+	UniChar* plainChars = (UniChar*) BinaryData(plain);
+	plainChars[0] = 'a';
+	plainChars[1] = kInkChar;
+	plainChars[2] = 'b';
+	plainChars[3] = 0;
+	TRichString plainRich(plain);
+	EXPECT(plainRich.Format() == kRichStringFormatPlain);
+
+	StyleRecord style;
+	CreateTextStyleRecord(RefVar(MAKEINT(PackFont(0, 12, 0))), &style);
+	FPoint where;
+	where.x = ToFixed(4);
+	where.y = ToFixed(40);
+
+	memset(gBits, 0, sizeof(gBits));
+	DrawRichString(plainRich, 0, plainRich.Length(), &style, where, nil, nil);
+	long withoutInk = 0;
+	for (long y = 0; y < kHeight; y++)
+		for (long x = 0; x < kWidth; x++)
+			if (Pixel(x, y) != 0)
+				withoutInk++;
+
+	memset(gBits, 0, sizeof(gBits));
+	DrawRichString(rich, 0, rich.Length(), &style, where, nil, nil);
+	long withInk = 0;
+	for (long y = 0; y < kHeight; y++)
+		for (long x = 0; x < kWidth; x++)
+			if (Pixel(x, y) != 0)
+				withInk++;
+	EXPECT(withoutInk > 0);					// the two letters
+	EXPECT(withInk > withoutInk + 15);		// and the writing between them
+
+	DisposeStyleRecord(&style);
+	memset(gBits, 0, sizeof(gBits));
+	list[0]->Dispose();
+}
+
+
 int
 main()
 {
@@ -3595,7 +3705,8 @@ main()
 		TestLineGesture();
 		TestEffects();
 		TestInkOnThePage();
-		TestInkWordInText();
+		TestInkWordInText();
+		TestInkInRichString();
 	}
 	newton_catch_all
 	{

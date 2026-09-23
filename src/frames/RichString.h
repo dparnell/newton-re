@@ -75,6 +75,12 @@ public:
 	long		NumInkWordsInRange(ULong start, ULong count) const;	// ROM 0x001abb78 NumInkWordsInRange__11TRichStringCFUlT1
 	long		InkWordNoAtOffset(ULong offset) const;		// ROM 0x001abc20 InkWordNoAtOffset__11TRichStringCFUl
 	long		NumInkAndTextRunsInRange(ULong start, ULong count) const;	// ROM 0x001abc88 NumInkAndTextRunsInRange__11TRichStringCFUlT1
+	// Those runs one by one: how many characters each covers, and - for
+	// an ink run, which is always one character - where its blob is.  A
+	// text run's `data` is nil.  Both arrays want room for as many runs
+	// as NumInkAndTextRunsInRange counted.
+	void		GetLengthsAndDataInRange(ULong start, ULong count, short* lengths,
+										 void** data) const;	// ROM 0x001abd20 GetLengthsAndDataInRange__11TRichStringCFUlT1PsPc
 	int			CompareInk(const TRichString* other, ULong offset, ULong otherOffset) const;	// ROM 0x001aba5c CompareInk__11TRichStringCFPC11TRichStringUlT2
 
 	UniChar*	GrabPtr(void) const;			// the text, the object locked

@@ -37,18 +37,22 @@
 void*
 GetInkWordAddrData(RefArg ink)
 {
-	return (UByte*) RefToAddress(ink) + 2;
+	return (UByte*) RefToAddress(ink) + sizeof(UniChar);
 }
 
 
 // ROM 0x000dc2c4 GetInkWordAddrInfo__FRC6RefVarP11InkWordInfo
 // ... and its measurements, six bytes back from the end of it (the two
 // the length itself takes up are part of the length).
+//
+// (host: the length is read as the UniChar a rich string writes it as,
+// which is the same thing on the ROM's big-endian ARM - see
+// frames/RichString.cpp's MungeRange.)
 void
 GetInkWordAddrInfo(RefArg ink, InkWordInfo* info)
 {
 	const UByte* block = (const UByte*) RefToAddress(ink);
-	long length = (block[0] << 8) | block[1];
+	long length = *(const UniChar*) block;
 	PackedInkWordInfo packed;
 	BlockMove(block + length - 6, &packed, sizeof(packed));
 	ExpandPackedInkWordInfo(&packed, info);
@@ -64,10 +68,10 @@ GlyphInkData(RefArg ink, long* outSize)
 	if (!ISINT(ink))
 		return InkData(ink, outSize);
 	const UByte* block = (const UByte*) RefToAddress(ink);
-	long length = (block[0] << 8) | block[1];
+	long length = *(const UniChar*) block;
 	if (outSize != nil)
-		*outSize = length - 2 - (long) sizeof(PackedInkWordInfo);
-	return block + 2;
+		*outSize = length - (long) sizeof(UniChar) - (long) sizeof(PackedInkWordInfo);
+	return block + sizeof(UniChar);
 }
 
 

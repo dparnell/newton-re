@@ -15,7 +15,7 @@ add_library(ink STATIC
 )
 # (the glue between the strokes and the codec is the one part of this
 # area that knows what a stroke is)
-target_link_libraries(ink PUBLIC newton_config frames qd recognition)
+target_link_libraries(ink PUBLIC newton_config frames qd recognition toolbox)
 target_include_directories(ink PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

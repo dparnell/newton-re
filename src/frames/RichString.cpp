@@ -394,6 +394,57 @@ TRichString::GetInkData(ULong start, ULong count, ULong* outOffset, ULong* outSi
 }
 
 
+// ROM 0x001abd20 GetLengthsAndDataInRange__11TRichStringCFUlT1PsPc
+// The runs of a range one by one: an ink character is a run of its own,
+// and the text between two of them is a run.  For an ink run the answer
+// is where its blob is, which is what the text engine turns into a font
+// of one glyph; for a text run it is nil.
+void
+TRichString::GetLengthsAndDataInRange(ULong start, ULong count, short* lengths,
+									  void** data) const
+{
+	const char* base = (const char*) GrabPtr();
+	const UniChar* text = (const UniChar*) base;
+	if (fLength < start + count)
+		count = fLength - start;
+	// which ink word the range starts at
+	ULong wordNo = 0;
+	for (ULong i = 0; i < start; i++)
+		if (text[i] == kInkChar)
+			wordNo++;
+	const UniChar* at = text + start;
+	while (count != 0)
+	{
+		short length;
+		if (*at == kInkChar)
+		{
+			*data = (void*) (base + GetInkWordNoInfoOffset(wordNo));
+			length = 1;
+			count--;
+			at++;
+			wordNo++;
+		}
+		else
+		{
+			*data = nil;
+			length = 0;
+			UniChar c = 0;
+			do
+			{
+				length++;
+				count--;
+				if (count != 0)
+					c = *++at;
+			}
+			while (count != 0 && c != kInkChar);
+		}
+		data++;
+		*lengths++ = length;
+	}
+	ReleasePtr();
+}
+
+
 // ROM 0x001abe2c GetInkWordNoInfoOffset__11TRichStringCFUl
 // Where the index'th ink word's blob is, as a byte offset from the start
 // of the object - 0 when there is no such ink word.

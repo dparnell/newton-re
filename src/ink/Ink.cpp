@@ -104,8 +104,8 @@ void
 PackInkWordInfo(PackedInkWordInfo* packed, ULong width, ULong ascent, ULong descent,
 				ULong xHeight, Fixed scale, ULong face, ULong penSize)
 {
-	packed->fWord0 = (width << 22) | (ascent << 12) | (descent << 2) | (penSize - 1);
-	packed->fWord1 = (xHeight << 22) | ((((ULong) scale) & 0xffff00) >> 2) | GetRawFace(face);
+	packed->SetWord0((width << 22) | (ascent << 12) | (descent << 2) | (penSize - 1));
+	packed->SetWord1((xHeight << 22) | ((((ULong) scale) & 0xffff00) >> 2) | GetRawFace(face));
 }
 
 
@@ -118,13 +118,15 @@ PackInkWordInfo(PackedInkWordInfo* packed, ULong width, ULong ascent, ULong desc
 void
 ExpandPackedInkWordInfo(const PackedInkWordInfo* packed, InkWordInfo* info)
 {
-	info->fWidth = packed->fWord0 >> 22;
-	info->fAscent = (packed->fWord0 >> 12) & 0x3ff;
-	info->fDescent = (packed->fWord0 >> 2) & 0x3ff;
-	info->fPenSize = (packed->fWord0 & 3) + 1;
-	info->fXHeight = packed->fWord1 >> 22;
-	info->fScale = (Fixed) ((packed->fWord1 & 0x3fffc0) << 2);
-	info->fFace = GetQDFace(packed->fWord1 & 0x3f);
+	ULong word0 = packed->Word0();
+	ULong word1 = packed->Word1();
+	info->fWidth = word0 >> 22;
+	info->fAscent = (word0 >> 12) & 0x3ff;
+	info->fDescent = (word0 >> 2) & 0x3ff;
+	info->fPenSize = (word0 & 3) + 1;
+	info->fXHeight = word1 >> 22;
+	info->fScale = (Fixed) ((word1 & 0x3fffc0) << 2);
+	info->fFace = GetQDFace(word1 & 0x3f);
 
 	info->fFontSize = GetInkWordFontSize(info->fXHeight);
 	info->fScaledFontSize = RoundFixed(FixedMultiply(ToFixed(info->fFontSize), info->fScale));
@@ -195,7 +197,7 @@ SetInkWordPenSize(RefArg ink, ULong size)
 {
 	PackedInkWordInfo packed;
 	GetPackedInkWordInfo(ink, &packed);
-	packed.fWord0 = (packed.fWord0 & ~3UL) | ((size - 1) & 3);
+	packed.SetWord0((packed.Word0() & ~(ULong) 3) | ((size - 1) & 3));
 	SetPackedInkWordInfo(ink, &packed);
 	return ink;
 }
@@ -207,7 +209,7 @@ SetInkWordScale(RefArg ink, long scale)
 {
 	PackedInkWordInfo packed;
 	GetPackedInkWordInfo(ink, &packed);
-	packed.fWord1 = (packed.fWord1 & 0xffc0003f) | ((((ULong) scale) & 0xffff00) >> 2);
+	packed.SetWord1((packed.Word1() & 0xffc0003f) | ((((ULong) scale) & 0xffff00) >> 2));
 	SetPackedInkWordInfo(ink, &packed);
 	return ink;
 }
@@ -219,7 +221,7 @@ SetInkWordFontFace(RefArg ink, ULong face)
 {
 	PackedInkWordInfo packed;
 	GetPackedInkWordInfo(ink, &packed);
-	packed.fWord1 = (packed.fWord1 & ~0x3fUL) | GetRawFace(face);
+	packed.SetWord1((packed.Word1() & ~(ULong) 0x3f) | GetRawFace(face));
 	SetPackedInkWordInfo(ink, &packed);
 	return ink;
 }
@@ -246,10 +248,10 @@ AdjustInkWordXHeight(RefArg ink, Boolean forNumbers)
 {
 	PackedInkWordInfo packed;
 	GetPackedInkWordInfo(ink, &packed);
-	ULong width = packed.fWord0 >> 22;
-	ULong ascent = (packed.fWord0 >> 12) & 0x3ff;
-	ULong descent = (packed.fWord0 >> 2) & 0x3ff;
-	ULong xHeight = packed.fWord1 >> 22;
+	ULong width = packed.Word0() >> 22;
+	ULong ascent = (packed.Word0() >> 12) & 0x3ff;
+	ULong descent = (packed.Word0() >> 2) & 0x3ff;
+	ULong xHeight = packed.Word1() >> 22;
 	ULong wanted = xHeight;
 	Fixed factor = 0;
 	if (!forNumbers)
@@ -265,7 +267,7 @@ AdjustInkWordXHeight(RefArg ink, Boolean forNumbers)
 		wanted = (ULong) RoundFixed(FixedMultiply(factor, ToFixed((long) ascent)));
 	if (wanted != xHeight)
 	{
-		packed.fWord1 = (packed.fWord1 & 0x3fffff) | (wanted << 22);
+		packed.SetWord1((packed.Word1() & 0x3fffff) | (wanted << 22));
 		SetPackedInkWordInfo(ink, &packed);
 	}
 }
