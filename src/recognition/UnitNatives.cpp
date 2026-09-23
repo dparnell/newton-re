@@ -440,4 +440,5 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FPurgeAreaCache", (void*) FPurgeAreaCache, 0);
 	RegisterNativeFunction("FRecSettingsChanged", (void*) FRecSettingsChanged, 0);
 	RegisterNativeFunction("FOtherViewInUse", (void*) FOtherViewInUse, 1);
+	RegisterNativeFunction("FReadCursiveOptions__FRC6RefVar", (void*) FReadCursiveOptions, 0);
 }

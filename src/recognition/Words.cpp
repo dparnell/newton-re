@@ -95,13 +95,11 @@ IsPunctSymbol(const UniChar* word, long index)
 // language is the one that keeps them (8) or the word recogniser wrote
 // it, then the punctuation taken off the front and off the end.
 //
-// DEVIATION: gEnabledLanguage and gWordID belong to the word recogniser,
-// which is NOT YET RECONSTRUCTED; with neither set the diacriticals
-// always come off, which is what a machine writing English does.
 void
 StripRecognitionWord(UniChar* word)
 {
-	NoDiacriticsText(word, 0x7fffffff);
+	if (gEnabledLanguage != 8 && ISNIL(RefVar(FWRecIsBeingUsed(RefVar(NILREF)))))
+		NoDiacriticsText(word, 0x7fffffff);
 	long length = Ustrlen(word);
 	long start = 0;
 	while (start < length && IsPunctSymbol(word, start))
@@ -185,6 +183,10 @@ CheckCapAttributes(const UniChar* word)
 	empty and every id answers nil - which is what a machine that has
 	loaded no dictionary answers too.
 ------------------------------------------------------------------------------*/
+
+// ROM 0x0c101848 gEnabledLanguage
+long	gEnabledLanguage = 1;
+
 
 // ROM 0x0c101844 gWordID
 // DEVIATION: the word recogniser is NOT YET RECONSTRUCTED, so nothing

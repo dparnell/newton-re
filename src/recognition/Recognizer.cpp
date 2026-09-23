@@ -13,6 +13,9 @@
 #include "Words.h"			// gWordID
 #include "RecConfig.h"
 #include "Areas.h"
+#include "Controller.h"
+#include "StrokeQueue.h"	// gDoubleTapInterval
+#include "Entries.h"		// EntryChange, EntryValid
 #include "Protocols.h"
 #include "NewtonTime.h"
 #include "Locale.h"			// GetPreference
@@ -713,6 +716,112 @@ InstallWRecRecognizer(TRecognitionManager* manager)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   w r i t e r ' s   p r e f e r e n c e s
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c10184c gLetterSetSelection / 0x0c101850 gRecognitionTimeout /
+// 0x0c101858 gRecognitionLetterSpacing / 0x0c101868 gUseBigTrainingData
+//
+// What the writer has asked for, read out of the preferences at boot
+// and whenever they are changed.
+long	gLetterSetSelection = 2;
+ULong	gRecognitionTimeout = 0x28;
+long	gRecognitionLetterSpacing = 5;
+Boolean	gUseBigTrainingData = false;
+
+
+// ROM 0x0019cc04 GetDefaultedPreference__FRC6RefVarl
+// A preference, and the default written down as the writer's own when
+// there is none.  The configuration is a soup entry, so it is told it
+// has changed.
+long
+GetDefaultedPreference(RefArg slot, long deflt)
+{
+	RefVar value(GetPreference(slot));
+	if (NOTNIL(value))
+		return RINT(value);
+	RefVar config(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration));
+	SetVariable(config, slot, RefVar(MAKEINT(deflt)));
+	// (DEVIATION: the ROM tells the entry it has changed without
+	//  looking, the configuration always being one on a machine that has
+	//  booted.  A host program running part of the system may have a
+	//  plain frame there, and telling a frame it has changed throws.)
+	if (EntryValid(config))
+		EntryChange(config);
+	return deflt;
+}
+
+
+// ROM 0x0019cfd8 FReadCursiveOptions__FRC6RefVar
+// ReadCursiveOptions(): the recognition preferences read and put into
+// force.  The Prefs slip calls it whenever the writer changes one of
+// them, and the boot calls it through ReadDomainOptions.
+//
+// The timeout is how long the recogniser waits after the pen stops
+// before it decides the writing is finished, in sixtieths of a second,
+// and it is kept between a quarter of a second and a second.  Every
+// domain that waits at all is made to wait that long, and the interval
+// two taps have to fall within to count as a double tap is worked out
+// from it: half way between a quarter of a second and the timeout.  The
+// letter spacing is stored the other way up from the way it is asked
+// for - nine less what the writer chose - because the recogniser wants
+// how *close* letters may be, and the slip offers how far apart.
+//
+// NOT YET RECONSTRUCTED: `SetUpRosetta` and `SetUpParaGraph`, which
+// hand the letter set to the two engines; `ReadDictPrefs`, which reads
+// which dictionaries are turned on; `BuildInputMask`, which works the
+// configuration's `inputMask` out of the text-recognition options; and
+// the `_recognizerUserChoices` frame this puts on the root view for the
+// slip to read back.  All four belong to parts that are NOT YET.
+Ref
+FReadCursiveOptions(RefArg /*rcvr*/)
+{
+	gLetterSetSelection = GetDefaultedPreference(RSSYMlettersetselection, 2);
+
+	gRecognitionTimeout = (ULong) GetDefaultedPreference(RSSYMtimeoutcursiveoption, 0x28);
+	if (gRecognitionTimeout < 0xf)
+		gRecognitionTimeout = 0xf;
+	else if (gRecognitionTimeout > 0x3c)
+		gRecognitionTimeout = 0x3c;
+	SetDomainDelays(gController, gRecognitionTimeout);
+	gDoubleTapInterval = ((gRecognitionTimeout - 0xf) >> 1) + 0xf;
+
+	gRecognitionLetterSpacing = 9 - GetDefaultedPreference(RSSYMletterspacecursiveoption, 4);
+
+	// the configuration's own input mask, which every area built from it
+	// starts with: strokes and gestures, plus whatever the
+	// text-recognition options add
+	RefVar prefs(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration));
+	SetFrameSlot(prefs, RSSYMinputmask,
+				 RefVar(MAKEINT(BuildInputMask(prefs, vStrokesAllowed | vGesturesAllowed, true))));
+
+	// the language the dictionaries are read in: 8 when the locale names
+	// one, 1 when it does not
+	gEnabledLanguage = NOTNIL(RefVar(GetLocaleSlot(RSSYMenabledlanguage))) ? 8 : 1;
+
+	RefVar config(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration));
+	gSaveWordTrainingData =
+		NOTNIL(RefVar(GetProtoVariable(config, RSSYMlearningenabledoption, nil)));
+	gUseBigTrainingData =
+		NOTNIL(RefVar(GetProtoVariable(config, RSSYMbiglearningenabled, nil)));
+
+	// the areas were built from the old answers
+	PurgeAreaCache();
+	return NILREF;
+}
+
+
+// ROM 0x0019d1e0 ReadDomainOptions
+// What the boot calls: the cursive options and nothing else.
+Ref
+ReadDomainOptions(void)
+{
+	FReadCursiveOptions(RefVar(NILREF));
+	return NILREF;
+}
+
+
 // ROM 0x0019e124 Init__19TRecognitionManagerFUc
 // The recognition system started at a level: 0 none, 1 clicks and
 // strokes, 2 shapes and words as well.  The stroke world, the area
@@ -783,9 +892,8 @@ TRecognitionManager::InitRecognizers(void)
 		// InstallWordRecognizer (0x00166efc, the Airus one)
 		InstallWRecRecognizer(this);
 	}
-	// NOT YET: ReadDomainOptions (0x0019cfd8), which reads the writer's
-	// recognition preferences and, among much else, calls
-	// SetWordRecognizer to put one of the word recognisers in use
+	// the writer's recognition preferences put into force
+	ReadDomainOptions();
 	return 0;
 }
 

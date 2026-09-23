@@ -93,6 +93,12 @@ Handle	ExpandWord(UniChar* word);								// ROM 0x001aa930 ExpandWord__FPUs
 // what they write (the "learning" preference).
 extern Boolean	gSaveWordTrainingData;		// ROM 0x0c101864 gSaveWordTrainingData
 
+// ROM 0x0c101848 gEnabledLanguage
+// Which language the dictionaries are read in: 8 when the locale
+// names one - and a language that names itself keeps its
+// diacriticals - 1 when it does not.
+extern long		gEnabledLanguage;
+
 extern ULong	gWordID;						// ROM 0x0c101844 gWordID
 
 // the dictionaries a user writes into, which start empty

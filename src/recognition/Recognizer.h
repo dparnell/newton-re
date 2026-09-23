@@ -152,6 +152,19 @@ public:
 // clicks it does not deal in.
 enum { kWRecServices = 0x017ef000 };
 
+// The writer's recognition preferences, read at boot and whenever the
+// Prefs slip changes one of them.
+long	GetDefaultedPreference(RefArg slot, long deflt);		// ROM 0x0019cc04 GetDefaultedPreference__FRC6RefVarl - the default written down when there is none
+Ref		FReadCursiveOptions(RefArg rcvr);					// ROM 0x0019cfd8 FReadCursiveOptions__FRC6RefVar
+Ref		ReadDomainOptions(void);							// ROM 0x0019d1e0 ReadDomainOptions
+
+// ROM 0x0c10184c gLetterSetSelection / 0x0c101850 gRecognitionTimeout /
+// 0x0c101858 gRecognitionLetterSpacing / 0x0c101868 gUseBigTrainingData
+extern long		gLetterSetSelection;		// which letter set the engines read
+extern ULong	gRecognitionTimeout;		// ticks the recogniser waits after the pen stops (15 to 60)
+extern long		gRecognitionLetterSpacing;	// how close letters may be (nine less what the slip offers)
+extern Boolean	gUseBigTrainingData;		// the learning keeps more about each word
+
 void	InstallWRecRecognizer(TRecognitionManager* manager);	// ROM 0x00144094 InstallWRecRecognizer__FP19TRecognitionManager
 void	RegisterWRec(void);									// ROM 0x001b5bb4 RegisterWRec__Fv (NOT YET: the ROM's own engine)
 

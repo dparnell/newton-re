@@ -2699,6 +2699,14 @@ TestWordInfo()
 static void
 TestClicks()
 {
+	// the locale the recognition system asks which language it is
+	// reading, which the boot has set long before any of this (an
+	// earlier test may have taken it away again)
+	{
+		RefVar intl(AllocateFrame());
+		SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(AllocateFrame()));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	}
 	gRecognition.Init(1);
 	gStrokeWorld.Init();
 	HostTabletInit();
@@ -4002,6 +4010,14 @@ main()
 		SetFrameSlot(config, RefVar(RSSYMinkwordscaling), RefVar(MAKEINT(100)));
 		SetFrameSlot(config, RefVar(RSSYMuserpensize), RefVar(MAKEINT(2)));
 		SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, config);
+	}
+	// ... and the recognition system asks the locale which language it
+	// is reading, which the boot has also set (the tests that want a
+	// real bundle put one here themselves)
+	{
+		RefVar intl(AllocateFrame());
+		SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(AllocateFrame()));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
 	}
 	gMap.baseAddr = (Ptr) gBits;
 	gMap.rowBytes = kWidth / 8;

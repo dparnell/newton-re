@@ -173,6 +173,8 @@ Boolean	UnitsHitSameArea(TUnit* a, TUnit* b);			// ROM 0x0021c68c UnitsHitSameAr
 void	TimeOutSubs(TSIUnit* unit);						// ROM 0x0020b58c TimeOutSubs__FP7TSIUnit
 void	HandleAreaSwitched(TDomain* domain, Handle params);	// ROM 0x0020ac84 HandleAreaSwitched__FP7TDomainPPc
 
+void	SetDomainDelays(TController* controller, ULong delay);	// ROM 0x0020c4f4 SetDomainDelays__FP11TControllerUl - every domain that waits made to wait this long
+
 extern TController*	gController;							// ROM 0x0c10187c gController
 
 #endif	/* __CONTROLLER_H */

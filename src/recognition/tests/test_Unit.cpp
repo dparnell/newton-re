@@ -21,6 +21,8 @@
 #include "Rects.h"
 #include "memory/host/KernelHeap.h"
 #include "Frames.h"
+#include "RSSymbols.h"
+#include "ObjectHeap.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -54,6 +56,12 @@ main()
 	InitHostStandaloneHeap();
 	gObjectHeapSize = 0x80000;
 	InitObjects();
+	// the preferences and the locale the recognition system reads when
+	// it starts, which the boot has made long before anything is written
+	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, RefVar(AllocateFrame()));
+	RefVar intl(AllocateFrame());
+	SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(AllocateFrame()));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
 	gRecognition.Init(1);
 	EXPECT(gRootDomain != nil && gRootDomain->fType == kRootDomainType && gRootDomain->fDelay == 0 && gRootDomain->fPieceTypes->Count() == 0);
 	EXPECT(gRecognition.fRecognizers->Count() == 4);	// the gesture, click-event, stroke and click recognisers

@@ -1151,6 +1151,49 @@ side of `TWRecDomain`.  `ReadDomainOptions` (0x0019cfd8) is what reads
 the writer's recognition preferences at boot and calls
 `SetWordRecognizer`.
 
+## The writer's recognition preferences
+
+`ReadCursiveOptions` (`FReadCursiveOptions`, 0x0019cfd8, reached at boot
+through `ReadDomainOptions` and again whenever the Prefs slip changes
+something) is the recognition system reading what the writer has asked
+for and putting it into force:
+
+  - the **timeout** (`timeoutCursiveOption`) is how long the recogniser
+    waits after the pen stops before it decides the writing is
+    finished, in sixtieths of a second, kept between a quarter of a
+    second and a whole one.  `SetDomainDelays` then makes every domain
+    that waits at all wait that long; a domain whose delay is already
+    nought - the strokes' and the clicks', which are ready the moment
+    the pen lifts - is left alone.
+  - the **double-tap interval** is worked out from the timeout rather
+    than asked for: half way between a quarter of a second and it.
+  - the **letter spacing** (`letterSpaceCursiveOption`) is stored the
+    other way up from the way it is asked for - nine less what the
+    writer chose - because the recogniser wants how *close* letters may
+    be and the slip offers how far apart.
+  - the **input mask** the configuration carries is rebuilt from the
+    text-recognition options (`BuildInputMask` over strokes and
+    gestures), which is what every area built from it starts with.
+  - the **language** (`gEnabledLanguage`) is 8 when the locale names
+    one and 1 when it does not; a language that names itself keeps its
+    diacriticals, and so does writing the WRec engine read, which is
+    what `StripRecognitionWord` asks before it strips them.
+  - the **learning** (`learningEnabledOption`, `bigLearningEnabled`) is
+    off unless the writer asked for it, and that is what decides
+    whether a unit carries any training data at all.
+
+Anything not set is written down as the writer's own, by
+`GetDefaultedPreference` (0x0019cc04) - the configuration is a soup
+entry, so it is told it has changed.  The area cache is purged at the
+end, because the areas in it were built from the old answers.
+
+NOT YET: `SetUpRosetta` and `SetUpParaGraph`, which hand the letter set
+to the two engines; `ReadDictPrefs`, which reads which dictionaries are
+turned on; and the `_recognizerUserChoices` frame this leaves on the
+root view for the slip to read back.  All three belong to parts that are
+NOT YET.  Nothing here chooses *which* word recogniser is in use: that
+is `UseWRec`'s, called from a script.
+
 ## Stroke bundles (`recognition/StrokeBundle.h`)
 
 A *stroke bundle* is the NewtonScript form of a handful of strokes, and

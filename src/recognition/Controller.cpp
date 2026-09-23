@@ -1278,3 +1278,18 @@ TController::BuildGTypes(TRecArea* area)
 	wanted->Dispose();
 	needed->Dispose();
 }
+// ROM 0x0020c4f4 SetDomainDelays__FP11TControllerUl
+// Every domain that waits at all is made to wait the writer's timeout.
+// A domain whose delay is already nought - the strokes' and the clicks',
+// which are ready the moment the pen lifts - is left alone.
+void
+SetDomainDelays(TController* controller, ULong delay)
+{
+	ULong count = (ULong) controller->fDomains->Count();
+	for (ULong i = 0; i < count; i++)
+	{
+		TDomain* domain = *(TDomain**) controller->fDomains->GetEntry(i);
+		if (domain->fDelay != 0)
+			domain->fDelay = delay;
+	}
+}

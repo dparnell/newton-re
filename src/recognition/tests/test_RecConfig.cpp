@@ -22,6 +22,8 @@
 #include "Arbiter.h"
 #include "Domain.h"
 #include "Recognizer.h"
+#include "StrokeQueue.h"
+#include "Words.h"
 #include "ViewFlags.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -159,6 +161,13 @@ main()
 	// ---- the area a configuration becomes ----
 	// starting the recogniser makes the controller, the arbiter, the area
 	// cache and the four recognisers of level 1
+	// the locale the recognition system asks which language it is
+	// reading, which the boot has set long before it starts
+	{
+		RefVar intl(AllocateFrame());
+		SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(AllocateFrame()));
+		SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+	}
 	gRecognition.Init(1);
 	EXPECT(gController != nil && gArbiter != nil && gAreaCache != nil);
 	EXPECT(gStrokeDomain != nil && gStrokeDomain->fLevel == 2);
@@ -206,6 +215,62 @@ main()
 	EXPECT(clicksOnly->fTypes->GetAssoc(0)->fType == kClickUnit);
 	EXPECT(clicksOnly->fDomains->Count() == 0 && clicksOnly->fMaxLevel == 0);
 	EXPECT(clicksOnly->fArbitrateNow == 0);
+
+	// ---- the writer's recognition preferences ----
+	RefVar config(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration));
+
+	// a preference that is not set is written down as the writer's own
+	RemoveSlot(config, RSSYMtimeoutcursiveoption);
+	EXPECT(GetDefaultedPreference(RSSYMtimeoutcursiveoption, 0x28) == 0x28);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(config, RSSYMtimeoutcursiveoption))) == 0x28);
+	// and one that is set is answered as it stands
+	SetFrameSlot(config, RSSYMtimeoutcursiveoption, RefVar(MAKEINT(30)));
+	EXPECT(GetDefaultedPreference(RSSYMtimeoutcursiveoption, 0x28) == 30);
+
+	// the timeout is kept between a quarter of a second and a second,
+	// and the double-tap interval is worked out from it
+	SetFrameSlot(config, RSSYMtimeoutcursiveoption, RefVar(MAKEINT(30)));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(gRecognitionTimeout == 30);
+	EXPECT(gDoubleTapInterval == (ULong) (((30 - 15) >> 1) + 15));
+	SetFrameSlot(config, RSSYMtimeoutcursiveoption, RefVar(MAKEINT(2)));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(gRecognitionTimeout == 15);
+	SetFrameSlot(config, RSSYMtimeoutcursiveoption, RefVar(MAKEINT(500)));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(gRecognitionTimeout == 60);
+
+	// every domain that waits at all now waits that long; one that is
+	// ready the moment the pen lifts is left alone
+	EXPECT(gStrokeDomain != nil && gStrokeDomain->fDelay == 0);
+	if (gEdgeListDomain != nil)
+		EXPECT(gEdgeListDomain->fDelay == 0 || gEdgeListDomain->fDelay == 60);
+
+	// the letter spacing is stored the other way up from the way it is
+	// asked for: the slip offers how far apart, the recogniser wants how
+	// close
+	SetFrameSlot(config, RSSYMletterspacecursiveoption, RefVar(MAKEINT(4)));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(gRecognitionLetterSpacing == 5);
+	SetFrameSlot(config, RSSYMletterspacecursiveoption, RefVar(MAKEINT(1)));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(gRecognitionLetterSpacing == 8);
+
+	// the learning is off unless the writer asked for it
+	EXPECT(!gSaveWordTrainingData && !gUseBigTrainingData);
+	SetFrameSlot(config, RSSYMlearningenabledoption, RefVar(TRUEREF));
+	SetFrameSlot(config, RSSYMbiglearningenabled, RefVar(TRUEREF));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(gSaveWordTrainingData && gUseBigTrainingData);
+	SetFrameSlot(config, RSSYMlearningenabledoption, RefVar(NILREF));
+	SetFrameSlot(config, RSSYMbiglearningenabled, RefVar(NILREF));
+	FReadCursiveOptions(RefVar(NILREF));
+	EXPECT(!gSaveWordTrainingData);
+
+	// the locale does not name a language here, so the diacriticals come
+	// off what is read
+	EXPECT(gEnabledLanguage == 1);
+
 
 	printf("test_RecConfig: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;
