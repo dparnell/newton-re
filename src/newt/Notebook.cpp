@@ -8,6 +8,7 @@
 
 #include "Notebook.h"
 #include "CICCodec.h"
+#include "InkFont.h"
 #include "ScriptBoot.h"
 #include "RootView.h"
 #include "Recognizer.h"
@@ -111,6 +112,7 @@ TNotebook::InitToolbox(void)
 	// with the seam the ROM does not have.)
 	InitializeInkCodecs();
 	InitializeParagraphCompression();
+	InitializeInkFont();
 	gRecognition.Init(2);
 	RunInitScripts();
 	gStrokeWorld.Init();

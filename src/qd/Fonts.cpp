@@ -16,13 +16,11 @@
 #include "RSSymbols.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
+#include "RichString.h"		// IsInkWord
 #include "OSErrors.h"
 #include <string.h>
 
-// ROM 0x00377324: the style table - for each face bit from bit 0, three
-// bytes: the fStyleAdjust index, what to add there, what to add to the
-// width; bytes 0x17-0x19 the underline's offset, thickness and extra
-static const unsigned char kStyleTable[0x1c] = {
+const unsigned char kStyleTable[0x1c] = {
 	0x50, 0x50, 0x00, 0x01, 0x01, 0x01, 0x08, 0x00, 0x00, 0x00, 0x00, 0x05, 0x01, 0x01,
 	0x05, 0x02, 0x02, 0x00, 0x00, 0xff, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00
 };
@@ -653,17 +651,45 @@ SearchFont(long macFontID, const UniChar* name)
 }
 
 
+// The ink font's opener, registered from outside (Fonts.h says why).
+FontInkOpenProc	gInkOpenFont = nil;
+
+
 // ROM 0x002e229c OpenFont__FP8PixelMapP11StyleRecordlT3P14FontEngineInfo
 // The info for the style (the system font when it names none): the
-// family's 'sfnt' opened at the scales.  NOT YET RECONSTRUCTED: the
-// four-entry cache of open fonts (each call opens afresh), ink fonts,
-// the PostScript printer's font substitution.
+// family's 'sfnt' opened at the scales.
+//
+// A style whose "family" is an ink word - or an integer, which is the
+// address of one kept outside the object heap - is not a font at all,
+// and goes to the ink opener instead: that is how a word of writing is
+// laid out and drawn among real characters.
+//
+// NOT YET RECONSTRUCTED: the four-entry cache of open fonts (each call
+// opens afresh), the PostScript printer's font substitution.
 long
 OpenFont(PixelMap* pm, StyleRecord* style, Fixed xScale, Fixed yScale, FontEngineInfo* info)
 {
 	RefVar family(style->fFontFamily);
 	if ((Ref) family == NILREF)
 		family = GetFontFamily(RefVar(Rsystemfont));
+	if (IsInkWord(family) || ISINT(family))
+	{
+		if (gInkOpenFont == nil)
+		{
+			info->fScaling = kNoFont;
+			return kNoFont;
+		}
+		memset(info, 0, sizeof(FontEngineInfo));
+		info->fFontData = new RefStruct;
+		long inked = gInkOpenFont(pm, style, family, xScale, yScale, info);
+		if (inked == kNoFont)
+		{
+			delete info->fFontData;
+			info->fFontData = nil;
+			info->fScaling = kNoFont;
+		}
+		return inked;
+	}
 	if (!IsFrame(family))
 	{
 		info->fScaling = kNoFont;

@@ -6,6 +6,7 @@ add_library(ink STATIC
     Ink.cpp
     InkStrokes.cpp
     InkShapes.cpp
+    InkFont.cpp
     InkCodec.cpp
     CICDecoder.cpp
     CICEncoder.cpp

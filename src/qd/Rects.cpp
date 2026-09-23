@@ -324,6 +324,17 @@ Intersects(const Rect* r, const Rect* other)
 }
 
 
+// ROM 0x00197564 Encloses__5TRectCFRC5TRect
+// Whether the other rectangle lies wholly inside this one; touching
+// edges count as inside.
+Boolean
+Encloses(const Rect* r, const Rect* other)
+{
+	return other->top >= r->top && other->bottom <= r->bottom
+		&& other->left >= r->left && other->right <= r->right;
+}
+
+
 // ROM 0x001991fc Overlaps__5TRectCFRC5TRect
 // Intersects, but a rectangle with no width or height is given a pixel
 // of it first, so that a caret - which is a line - still overlaps what it

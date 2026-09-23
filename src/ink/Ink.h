@@ -130,6 +130,11 @@ Ref		SetInkWordFontFace(RefArg ink, ULong face);		// ROM 0x000dbebc SetInkWordFo
 // measurements after it; InkExpand answers a list of strokes ended by a
 // nil, made with NewPtr.
 class TStroke;
+// (host) An ink object's packed strokes and how many bytes of them
+// there are - the eight an ink word carries its measurements in are not
+// part of them.  ==> nil when the object is not ink at all.
+const void*	InkData(RefArg ink, long* outSize);
+
 Ref			InkCompress(TStroke** strokes, Boolean asWord);			// ROM 0x00140b78 InkCompress__FPP7TStrokeUc
 TStroke**	InkExpand(RefArg ink, ULong group, long x, long y);		// ROM 0x00140c98 InkExpand__FRC6RefVarUllT3
 
@@ -155,12 +160,21 @@ Ref			TStrokesToInkWord(TStroke** strokes, Rect* outRect);	// ROM 0x001404f0 TSt
 // `useInker` says the ink is wholly inside the clip, which lets the ROM
 // draw it with the live inker's own line drawer instead of QuickDraw's
 // (NOT YET: it is drawn the slow way either way).
+// The two that take the ink itself take it as the ROM's do: a pointer
+// to the packed strokes, which is not always a binary object - a word
+// handed over by the recogniser is a block outside the object heap.
+// (`size` is this reconstruction's: the ROM's decoder reads the length
+// out of the block, and the seam here is given it instead.)
 void		InkDraw(RefArg ink, ULong pen, long x, long y, Boolean useInker);	// ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
-void		InkDrawScaled(RefArg ink, ULong pen, Fixed x, Fixed y,
+void		InkDrawScaled(const void* data, long size, ULong pen, Fixed x, Fixed y,
 						  Fixed scaleX, Fixed scaleY, Boolean useInker);	// ROM 0x00153884 GenericCSDraw__FP14CSStrokeHeaderUllN33Uc
 
 // Ink drawn stretched from the box it was made in into another one,
-// which is how a sketch that has been resized is drawn.
+// which is how a sketch that has been resized is drawn.  The size it was
+// made at is given as a width and a height rather than a box, because
+// what it is stretched onto is a 16.16 rectangle.
+void		InkDrawInFRect(const void* data, long size, ULong pen, Fixed width, Fixed height,
+							const FRect* to, Boolean useInker);		// ROM 0x001544bc CSDrawInRect__FP14CSStrokeHeaderUllT3P5FRectUc
 void		InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean useInker);	// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
 
 

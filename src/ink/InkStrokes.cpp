@@ -547,6 +547,24 @@ PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 }
 
 
+// (host) The packed strokes of an ink object and their length.  The
+// ROM's drawing functions are handed the block itself and read the
+// length out of its header; this reconstruction's codec seam is given
+// the length, so the two are worked out together here.
+const void*
+InkData(RefArg ink, long* outSize)
+{
+	if (ISNIL(ink) || !IsBinary(ink))
+		return nil;
+	long size = Length(ink);
+	if (IsInkWord(ink))
+		size -= (long) sizeof(PackedInkWordInfo);
+	if (outSize != nil)
+		*outSize = size;
+	return BinaryData(ink);
+}
+
+
 // ROM 0x00153884 GenericCSDraw__FP14CSStrokeHeaderUllN33Uc
 // Ink drawn into the current port at a place and a scale.
 //
@@ -557,18 +575,14 @@ PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 // reads.  The ROM sets it in DrawBufferedPoints, once per batch of
 // twenty; here it is set once, which comes to the same thing.
 void
-InkDrawScaled(RefArg ink, ULong pen, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY,
-			  Boolean useInker)
+InkDrawScaled(const void* data, long size, ULong pen, Fixed x, Fixed y,
+			  Fixed scaleX, Fixed scaleY, Boolean useInker)
 {
-	if (ISNIL(ink) || !IsBinary(ink))
+	if (data == nil)
 		return;
-	const void* data = BinaryData(ink);
 	TInkCodec* codec = InkCodecFor(data);
 	if (codec == nil)
 		return;
-	long size = Length(ink);
-	if (IsInkWord(ink))
-		size -= (long) sizeof(PackedInkWordInfo);
 	// (the ROM leaves the pen alone when it is going to use InkerLine,
 	// which carries its own; this draws with QuickDraw either way)
 	PenSize((long) pen, (long) pen);
@@ -582,22 +596,33 @@ InkDrawScaled(RefArg ink, ULong pen, Fixed x, Fixed y, Fixed scaleX, Fixed scale
 }
 
 
+// ROM 0x001544bc CSDrawInRect__FP14CSStrokeHeaderUllT3P5FRectUc
+// Ink drawn stretched out of the size it was made at and into a
+// rectangle: the scale is what the rectangle is of that size, in both
+// directions, and the ink goes to the rectangle's top-left corner.
+void
+InkDrawInFRect(const void* data, long size, ULong pen, Fixed width, Fixed height,
+			   const FRect* to, Boolean useInker)
+{
+	if (width == 0 || height == 0)
+		return;
+	InkDrawScaled(data, size, pen, to->left, to->top,
+				  FixedDivide(to->right - to->left, width),
+				  FixedDivide(to->bottom - to->top, height), useInker);
+}
+
+
 // ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
-// Ink drawn stretched out of the box it was made in and into another:
-// the scale is what one box is of the other, in both directions, and the
-// ink goes to the destination's top-left corner.
+// The same when both boxes are whole pixels.
 void
 InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean useInker)
 {
+	long size = 0;
+	const void* data = InkData(ink, &size);
 	FRect dst;
 	FixRect(&dst, to);
-	Fixed width = (Fixed) ((ULong) (from->right - from->left) << 16);
-	Fixed height = (Fixed) ((ULong) (from->bottom - from->top) << 16);
-	if (width == 0 || height == 0)
-		return;
-	InkDrawScaled(ink, pen, dst.left, dst.top,
-				  FixedDivide(dst.right - dst.left, width),
-				  FixedDivide(dst.bottom - dst.top, height), useInker);
+	InkDrawInFRect(data, size, pen, (Fixed) ((ULong) (from->right - from->left) << 16),
+				   (Fixed) ((ULong) (from->bottom - from->top) << 16), &dst, useInker);
 }
 
 
@@ -608,7 +633,9 @@ InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean u
 void
 InkDraw(RefArg ink, ULong pen, long x, long y, Boolean useInker)
 {
-	InkDrawScaled(ink, pen, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16),
+	long size = 0;
+	const void* data = InkData(ink, &size);
+	InkDrawScaled(data, size, pen, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16),
 				  0x10000, 0x10000, useInker);
 }
 

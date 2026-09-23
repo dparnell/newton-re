@@ -13,6 +13,8 @@
 #include "Regions.h"
 #include "InkShapes.h"
 #include "StrokeBundle.h"
+#include "InkFont.h"
+#include "Fonts.h"
 #include "ROMConstants.h"
 #include "DrawShape.h"
 #include "Rects.h"
@@ -1489,7 +1491,11 @@ TestInkDraw()
 
 	// half the size is half as wide
 	memset(gDrawBits, 0, sizeof(gDrawBits));
-	InkDrawScaled(ink, 1, ToFixed(0), ToFixed(4), 0x8000, 0x8000, false);
+	{
+		long inkSize = 0;
+		const void* inkData = InkData(ink, &inkSize);
+		InkDrawScaled(inkData, inkSize, 1, ToFixed(0), ToFixed(4), 0x8000, 0x8000, false);
+	}
 	long widest = 0;
 	for (long y = 0; y < kDrawHeight; y++)
 	{
@@ -1718,6 +1724,97 @@ TestStrokeBundles()
 }
 
 
+// An ink word opened as a font: the text engine sees a font with one
+// glyph, and asking for that glyph draws the writing into a bitmap.
+static void
+TestInkFont()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	TStroke* list[2];
+	list[0] = MakeLine(10, 20, 40, 44, 12);
+	list[1] = nil;
+	Rect box;
+	RefVar word(TStrokesToInkWord(list, &box));
+	EXPECT(IsInkWord(word));
+	InkWordInfo info;
+	GetInkWordInfo(word, &info);
+
+	// the style whose font is the word itself
+	// (a StyleRecord holds a RefStruct, so it is filled in rather than
+	//  cleared; CreateTextStyleRecord does not know about ink words -
+	//  the paragraph's own CreateParagraphStyleRecord is what puts one
+	//  here, and is NOT YET)
+	StyleRecord style;
+	style.fFontFamily = word;
+	style.fFontSize = ToFixed(info.fScaledFontSize);
+	style.fFontFace = 0;
+	style.fFontPattern = NILREF;
+	style.fPattern = nil;
+	style.fTransferMode = 0;
+
+	FontEngineInfo font;
+	EXPECT(OpenFont(&gDrawMap, &style, 0x10000, 0x10000, &font) == 0);
+	// its line metrics are the word's own
+	EXPECT(font.fAscent > 0 && font.fDescent >= 0);
+	EXPECT(font.fAscent == (long) info.fScaledAscent);
+	EXPECT(font.fDescent == (long) info.fScaledDescent);
+	EXPECT(font.fMaxBeforeBL == font.fAscent && font.fMinAfterBL == -font.fDescent);
+	EXPECT(font.fGetGlyph != nil && font.fMap != nil && font.fClose != nil);
+
+	// one glyph, and a blank one for the space
+	EXPECT(font.fMap(0x41, font.fCmap) == 0);
+	EXPECT(font.fMap(' ', font.fCmap) == 0xffff);
+	font.fGetGlyphInfo(0, 0, &font);
+	Fixed advance = font.fGlyphAdvance;
+	EXPECT(advance > 0);
+	EXPECT(RoundFixed(advance) >= (long) info.fWidth);	// the slop is in it
+	font.fGetGlyphInfo(' ', 0, &font);
+	EXPECT(font.fGlyphAdvance > 0 && font.fGlyphAdvance < advance);
+
+	// the glyph itself: the word drawn into a bitmap of its own
+	font.fGetGlyph(0, 0, &font);
+	EXPECT(font.fGlyphBits != nil);
+	EXPECT(font.fGlyphWidth == RoundFixed(advance));
+	EXPECT(font.fGlyphHeight == font.fAscent + font.fDescent);
+	EXPECT(font.fGlyphBearingX == 0 && font.fGlyphBearingY == font.fAscent);
+	EXPECT(font.fGlyphRowBytes * 8 >= font.fGlyphWidth);
+	long inked = 0;
+	for (long i = 0; i < font.fGlyphRowBytes * font.fGlyphHeight; i++)
+		for (long bit = 0; bit < 8; bit++)
+			if (font.fGlyphBits[i] & (1 << bit))
+				inked++;
+	EXPECT(inked > 20);			// a line of about forty pixels
+
+	// and the space draws nothing
+	font.fGetGlyph(' ', 0, &font);
+	EXPECT(font.fGlyphBits == nil && font.fGlyphWidth == 0);
+
+	CloseFont(&font);
+	EXPECT(font.fInkGlyphBits == nil && font.fCmap == nil);
+
+	// asked for at half the size the word is half as wide and the pen
+	// comes from the size rather than from the word
+	StyleRecord small;
+	small.fFontFamily = word;
+	small.fFontSize = ToFixed(info.fFontSize / 2);
+	small.fFontFace = 0;
+	small.fFontPattern = NILREF;
+	small.fPattern = nil;
+	small.fTransferMode = 0;
+	FontEngineInfo smallFont;
+	EXPECT(OpenFont(&gDrawMap, &small, 0x10000, 0x10000, &smallFont) == 0);
+	smallFont.fGetGlyphInfo(0, 0, &smallFont);
+	EXPECT(smallFont.fGlyphAdvance < advance);
+	EXPECT(smallFont.fAscent < font.fAscent + 1);
+	CloseFont(&smallFont);
+
+	list[0]->Dispose();
+}
+
+
 int
 main()
 {
@@ -1764,6 +1861,7 @@ main()
 	TestInkDraw();
 	TestInkShapes();
 	TestStrokeBundles();
+	TestInkFont();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

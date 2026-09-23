@@ -32,6 +32,10 @@ Boolean	EqualRect(const Rect* a, const Rect* b);
 Boolean	SectRect(const Rect* a, const Rect* b, Rect* result);		// ==> whether they intersect (result empty when not)
 long	CoveredBy(const Rect* r, const Rect* other);		// ROM 0x001976d8 CoveredBy__5TRectCFRC5TRect - how much of r (per cent) their intersection covers
 Boolean	Intersects(const Rect* r, const Rect* other);				// ROM 0x001976b0 Intersects__5TRectCFRC5TRect
+// ==> whether the other rectangle lies wholly inside this one (its
+// edges may touch).
+Boolean	Encloses(const Rect* r, const Rect* other);					// ROM 0x00197564 Encloses__5TRectCFRC5TRect
+
 Boolean	Overlaps(const Rect* r, const Rect* other);					// ROM 0x001991fc Overlaps__5TRectCFRC5TRect - Intersects, each rectangle given a pixel where it has none
 void	UnionRect(const Rect* a, const Rect* b, Rect* result);		// an empty one ignored
 void	JoinRect(const Rect* a, const Rect* b, Rect* result);		// the bounds of both (an empty one ignored)

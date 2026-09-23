@@ -109,8 +109,8 @@ struct FontEngineInfo
 	FontGlyphProc	fGetGlyph;			// +0x7c
 	FontCloseProc	fClose;				// +0x80
 	long			fScaling;			// +0x84  0 the size as is, 2 scaled, 3 no font
-	long			fReserved88;		// +0x88
-	long			fReserved8c;		// +0x8c
+	void*			fInkGlyphBits;		// +0x88  an ink font's rendered glyph (the ROM leaves these two spare for the engine in use)
+	long			fInkGlyphSize;		// +0x8c  how many bytes of it
 	FontEngineInfo*	fCached;			// +0x90  the font cache's copy (NOT YET: none)
 	const char*		fSfnt;				// +0x94  the 'sfnt' data
 	const char*		fCmap;				// +0x98  its cmap subtable
@@ -125,6 +125,24 @@ struct FontEngineInfo
 	Fixed			fWidthsScale;		// +0xbc
 	RefStruct*		fFontData;			// +0xc0  the 'sfnt' object, locked while open
 };
+
+// ROM 0x00377324: the style table the synthesised faces are made with,
+// three bytes per face bit from bit 0 - the fStyleAdjust index, what to
+// add there, what to add to the width - and at 0x17-0x19 the
+// underline's offset, thickness and extra.
+extern const unsigned char kStyleTable[0x1c];
+
+// An ink word standing in for a font: the style's family is the ink
+// itself (or an integer that is the address of one), and the font has
+// the one glyph.
+//
+// DEVIATION: the ROM's OpenFont calls InkOpenFont straight out.  The
+// ink area sits above QuickDraw here - it reaches the strokes through
+// the recogniser, which draws through the views - so the opener is
+// registered instead (ink/InkFont.h's InitializeInkFont).
+typedef long	(*FontInkOpenProc)(PixelMap* pm, StyleRecord* style, RefArg ink,
+								   Fixed xScale, Fixed yScale, FontEngineInfo* info);
+extern FontInkOpenProc	gInkOpenFont;
 
 // the font engine
 long		FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face);	// ==> the strike's size, 16.16 (0: no font); face left with what must be synthesised
