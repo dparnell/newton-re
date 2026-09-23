@@ -187,8 +187,12 @@ long	ClearAttr(long offset);								// ROM 0x00028f6c ClearAttr__FUl
 long	AE8_Verify(AirusAParmBlock* parms);					// ROM 0x0002b048 AE8_Verify__FP15AirusAParmBlock
 long	AEnum_Verify(AirusAParmBlock* parms);				// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock - AE8 or AE16 by the dictionary's kind
 long	AEnum_AddWord(AirusAParmBlock* parms);				// ROM 0x00029b10 AEnum_AddWord__FP15AirusAParmBlock
+long	AEnum_DeleteWord(AirusAParmBlock* parms);			// ROM 0x00029e3c AEnum_DeleteWord__FP15AirusAParmBlock				// ROM 0x00029b10 AEnum_AddWord__FP15AirusAParmBlock
 Handle	PositionToHandle(Handle dictionary, ULong position);	// ROM 0x0002d658 PositionToHandle
 void	AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute);	// ROM 0x0002c48c AddWord__FPP15AirusAParmBlockUlPUcT2				// ROM 0x0002b584 AEnum_Verify__FP15AirusAParmBlock - AE8 or AE16 by the dictionary's kind
+// ... and one taken out; airusResult 0 it went, 4 it was not there, 5
+// the word was empty, -2 the Handle could not be resized.
+void	DeleteWord(Handle dictionary, UByte* word);			// ROM 0x0002c56c DeleteWord
 
 // the data, big-endian as it lies
 ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__FUli

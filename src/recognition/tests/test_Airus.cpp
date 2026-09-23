@@ -437,6 +437,63 @@ main()
 			EXPECT(airusResult == kAirusNotAWord && attribute == nil);
 		}
 
+		// ---- words taken out again ----
+		// "and" is a leaf, and "ant" goes on from the same "an", so
+		// deleting it takes its node out and leaves everything else
+		strcpy((char*) word, "and");
+		DeleteWord(words, word);
+		EXPECT(airusResult == 0);
+		CheckDictPtrs(d);
+		EXPECT(Lookup(d, "and") == kAirusNoMatch);
+		EXPECT(Lookup(d, "ant") == kAirusLeaf && d->fAttribute == 12);
+		EXPECT(Lookup(d, "an") == kAirusPrefixWithAttr && d->fAttribute == 8);
+		EXPECT(Lookup(d, "at") == kAirusLeaf && d->fAttribute == 7);
+		EXPECT(Lookup(d, "be") == kAirusLeaf && d->fAttribute == 10);
+
+		// "an" is a word that other words go on from: it loses its
+		// attribute and keeps its place
+		strcpy((char*) word, "an");
+		DeleteWord(words, word);
+		EXPECT(airusResult == 0);
+		CheckDictPtrs(d);
+		EXPECT(Lookup(d, "an") == kAirusPrefix);
+		EXPECT(Lookup(d, "ant") == kAirusLeaf && d->fAttribute == 12);
+
+		// the last word of its row goes, and its row with it
+		strcpy((char*) word, "be");
+		DeleteWord(words, word);
+		EXPECT(airusResult == 0);
+		CheckDictPtrs(d);
+		EXPECT(Lookup(d, "be") == kAirusNoMatch);
+		EXPECT(Lookup(d, "b") == kAirusNoMatch);
+		EXPECT(Lookup(d, "at") == kAirusLeaf && d->fAttribute == 7);
+		EXPECT(Lookup(d, "ant") == kAirusLeaf && d->fAttribute == 12);
+		EXPECT(Lookup(d, "a") == kAirusPrefixWithAttr && d->fAttribute == 11);
+
+		// a word put back in afterwards is found again, so the trie is
+		// still whole
+		strcpy((char*) word, "and");
+		AddWord(words, 0, word, 21);
+		EXPECT(airusResult == 0);
+		CheckDictPtrs(d);
+		EXPECT(Lookup(d, "and") == kAirusLeaf && d->fAttribute == 21);
+		EXPECT(Lookup(d, "ant") == kAirusLeaf && d->fAttribute == 12);
+		EXPECT(Lookup(d, "at") == kAirusLeaf && d->fAttribute == 7);
+		EXPECT(Lookup(d, "a") == kAirusPrefixWithAttr && d->fAttribute == 11);
+
+		// an empty word is refused, and one that was never there is
+		// reported as gone (the ROM bug written down in
+		// AEnum_DeleteWord)
+		word[0] = 0;
+		DeleteWord(words, word);
+		EXPECT(airusResult == kAirusEmptyWord);
+		strcpy((char*) word, "zoo");
+		DeleteWord(words, word);
+		EXPECT(airusResult == kAirusAlreadyThere);	// ... "not there"
+		strcpy((char*) word, "an");					// a path that is not a word
+		DeleteWord(words, word);
+		EXPECT(airusResult == 0);					// ... and the bug says it went
+
 		// the chain: there is only one dictionary here
 		EXPECT(PositionToHandle(words, 0) == words && airusResult == 0);
 		EXPECT(PositionToHandle(words, 1) == nil && airusResult == kAirusNoSuchDictionary);

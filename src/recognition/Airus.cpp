@@ -836,13 +836,25 @@ PutWord(long node, const UniChar* word)
 // moves everything after it again, so what has grown is carried along
 // the stack.
 //
-// NOT YET RECONSTRUCTED: the other operation, which is what deleting a
-// word asks for.
+// Deleting asks for the other operation: the offsets shrink instead,
+// and a node that had no sibling is left alone - what was taken out was
+// under it, not after it.
 static void
 FixupPointers(long grew, long operation)
 {
 	if (grew == 0)
 		return;
+	if (operation == 1)
+	{
+		while (gAirusFixupTop != 0x3f)
+		{
+			long node = gAirusFixupTop < 0x3f ? (long) gAirusFixups[gAirusFixupTop++] : 0;
+			long charSize = AirusCharSize();
+			if (((UByte) AE_Parms->fData[node + charSize] >> 6) != 0)
+				grew -= PutRP(node, GetRP(node) - grew);
+		}
+		return;
+	}
 	if (operation != 0)
 		return;
 	while (gAirusFixupTop != 0x3f)
@@ -911,6 +923,224 @@ AEnum_AddWord(AirusAParmBlock* parms)
 	}
 	AE_Parms->fResult = result;
 	return result;
+}
+
+
+// ROM 0x00029c88 (unnamed) - FindDeletionPoint
+// The word followed down the trie, as far as it goes.  What comes back
+// is the node the word ends at (`node`), the sibling in front of it
+// (`previous`), and where the bytes after it begin (`after`); the
+// ancestors are left on the fixup stack.  ==> 1 when the word is not in
+// the dictionary at all.
+static long
+FindDeletionPoint(const UniChar* word, ULong* previous, ULong* node, long* after)
+{
+	long at = 2;
+	*node = 2;
+	*previous = 2;
+	*after = (long) (AE_Parms->fDataEnd - AE_Parms->fData);
+	for (;;)
+	{
+		if (*word == 0)
+			return 0;
+		long charSize = AirusCharSize();
+		if (GetSymbol(at) != *word)
+		{
+			do
+			{
+				charSize = AirusCharSize();
+				if (((UByte) AE_Parms->fData[at + charSize] >> 6) == 0)
+					return 1;			// the row ran out: it is not here
+				*previous = (ULong) at;
+				at = FollowRight(at);
+				*node = (ULong) at;
+			}
+			while (GetSymbol(at) != *word);
+		}
+		gAirusFixups[--gAirusFixupTop] = (ULong) at;
+		word++;
+
+		charSize = AirusCharSize();
+		// (the ROM asks the block's fResult here, which DeleteWord has
+		//  just set to 0, so the second arm never runs from there)
+		if (AE_Parms->fResult == 0)
+			*after = FollowLeft(at);
+		else
+			*after = ((UByte) AE_Parms->fData[at + charSize] >> 6) == 0
+					 ? *after : FollowRight(at);
+
+		charSize = AirusCharSize();
+		UByte flags = (UByte) AE_Parms->fData[at + charSize];
+		if ((flags & kAirusNoChildren) != 0 && *word != 0)
+			return 1;					// it stops short of the word
+		at = FollowLeft(at);
+	}
+}
+
+
+// ROM 0x00029e3c AEnum_DeleteWord__FP15AirusAParmBlock
+// The word in the block's buffer taken out of the dictionary.
+//
+// A word that other words go on from keeps its nodes and only loses its
+// attribute - it stops being a word without stopping being a path.  A
+// word nothing goes on from has its nodes taken out as well, back up the
+// trie as far as the first ancestor that is a word itself or has another
+// child; the bytes between are slid away and every sibling offset that
+// reached over them is shortened.  The Handle is given back a growth
+// unit at a time when the data has shrunk enough to spare one.
+//
+// The block's fResult afterwards: 0 it went, 1 it was not there, 2 the
+// Handle could not be resized.
+//
+// (BUG, kept: a word whose last node carries no attribute - a path that
+//  is not a word - returns without setting fResult, which DeleteWord had
+//  already set to 0, so deleting a word that is not there is reported as
+//  success.)
+long
+AEnum_DeleteWord(AirusAParmBlock* parms)
+{
+	long result;
+	CheckDictPtrs(parms);
+	if (AE_Parms->fDataEnd - AE_Parms->fData == 2)
+	{
+		result = 1;						// nothing in it
+		AE_Parms->fResult = result;
+		return result;
+	}
+
+	UniChar buffer[256];
+	CopyBufferHack(AE_Parms->fWord, buffer, 0);
+	gAirusFixupTop = 0x3f;
+	ULong previous, node;
+	long after;
+	if (FindDeletionPoint(buffer, &previous, &node, &after) != 0)
+	{
+		result = 1;
+		AE_Parms->fResult = result;
+		return result;
+	}
+
+	long at = gAirusFixupTop < 0x3f ? (long) gAirusFixups[gAirusFixupTop++] : 0;
+	long removed = 0;
+	Boolean wasLast = false;
+	long charSize = AirusCharSize();
+	Boolean removing = AE_Parms->fResult != 0;
+	if (!removing)
+	{
+		UByte flags = (UByte) AE_Parms->fData[at + charSize];
+		if ((flags & kAirusHasAttribute) == 0)
+			return AE_Parms->fResult;	// not a word: nothing to take out
+		if ((flags & kAirusNoChildren) != 0)
+			removing = true;
+		else
+		{
+			// words go on from it: only the attribute goes
+			AE_Parms->fData[at + charSize] =
+				(char) ((UByte) AE_Parms->fData[at + charSize] & ~kAirusHasAttribute);
+			long shrank = ClearAttr(SkipNode(at));
+			FixupPointers(shrank, 1);
+		}
+	}
+
+	if (removing)
+	{
+		Boolean done = false;
+		for (;;)
+		{
+			charSize = AirusCharSize();
+			if (((UByte) AE_Parms->fData[at + charSize] >> 6) != 0)
+			{
+				// it has a sibling, so its row stays: only it goes
+				removed = after - at;
+				done = true;
+				break;
+			}
+			ULong parent = gAirusFixupTop == 0x3f ? 0 : gAirusFixups[gAirusFixupTop];
+			if (parent < node)
+				at = 0;
+			else if (gAirusFixupTop < 0x3f)
+				at = (long) gAirusFixups[gAirusFixupTop++];
+			else
+				at = 0;
+			if (at == 0)
+			{
+				// back at the top: the whole row from the node goes
+				removed = after - (long) node;
+				wasLast = true;
+				done = true;
+				break;
+			}
+			charSize = AirusCharSize();
+			if (((UByte) AE_Parms->fData[at + charSize] & kAirusHasAttribute) != 0)
+				break;					// an ancestor that is a word itself
+		}
+		if (!done)
+		{
+			// that ancestor keeps its node and loses its children
+			removed = after - FollowLeft(at);
+			charSize = AirusCharSize();
+			AE_Parms->fData[at + charSize] =
+				(char) ((UByte) AE_Parms->fData[at + charSize] | kAirusNoChildren);
+			gAirusFixups[--gAirusFixupTop] = (ULong) at;
+		}
+
+		SlideUp(after, removed);
+		if (AE_Parms->fDataEnd - AE_Parms->fData != 2)
+		{
+			if (wasLast)
+				removed += ClearRP((long) previous);
+			FixupPointers(removed, 1);
+		}
+		// the room the data no longer needs given back, a growth unit at
+		// a time
+		while ((ULong) AE_Parms->fSize > (ULong) AE_Parms->fGrowBy
+			   && (ULong) (AE_Parms->fSize - AE_Parms->fGrowBy)
+				  >= (ULong) (AE_Parms->fDataEnd - AE_Parms->fData))
+		{
+			SetHandleSize(AE_Parms->fDataHandle, AE_Parms->fSize - AE_Parms->fGrowBy);
+			if (MemError() != noErr)
+			{
+				result = 2;
+				AE_Parms->fResult = result;
+				return result;
+			}
+			CheckDictPtrs(AE_Parms);
+			AE_Parms->fSize -= AE_Parms->fGrowBy;
+		}
+	}
+
+	result = 0;
+	AE_Parms->fResult = result;
+	return result;
+}
+
+
+// ROM 0x0002c56c DeleteWord
+// A word taken out of a dictionary.  airusResult afterwards: 0 it went,
+// 4 it was not there, 5 the word was empty, -2 the Handle could not be
+// resized.
+void
+DeleteWord(Handle dictionary, UByte* word)
+{
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	parms->fResult = 0;
+	parms->fWord = word;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean empty = (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+				   ? *(const UniChar*) word == 0 : word[0] == 0;
+	if (empty)
+	{
+		airusResult = kAirusEmptyWord;
+		return;
+	}
+	CallAirusA(dictionary, kAirusDeleteWord);
+	long result = ((AirusAParmBlock*) *dictionary)->fResult;
+	if (result != 0)
+	{
+		airusResult = result == 1 ? kAirusAlreadyThere : kAirusNoMemory;
+		return;
+	}
+	airusResult = 0;
 }
 
 
@@ -1658,6 +1888,9 @@ CallAirusANoLock(Handle dictionary, long selector)
 		case kAirusAddWord:
 			AEnum_AddWord(parms);
 			break;
+		case kAirusDeleteWord:
+			AEnum_DeleteWord(parms);
+			break;
 		case kAirusVerify:
 			AEnum_Verify(parms);
 			break;
@@ -1669,9 +1902,9 @@ CallAirusANoLock(Handle dictionary, long selector)
 			break;
 		default:
 			// NOT YET RECONSTRUCTED: the rest of the AEnum walkers -
-			// AddWord 0x00029b10, DeleteWord 0x00029e3c, FirstLast
-			// 0x0002a1f4, NextPrevious 0x0002a244, ChangeAttribute
-			// 0x0002a7cc, NextSet 0x0002afd0, NextSet9 0x0002af18
+			// FirstLast 0x0002a1f4, NextPrevious 0x0002a244,
+			// ChangeAttribute 0x0002a7cc, NextSet 0x0002afd0, NextSet9
+			// 0x0002af18
 			break;
 		}
 		break;

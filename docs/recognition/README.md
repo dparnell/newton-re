@@ -687,6 +687,32 @@ reached over that place reach over it still - each may need more bytes,
 which moves things again, so what has grown is carried along the stack
 of nodes `FindInsertionPoint` put aside on the way down.
 
+### Deleting
+
+`DeleteWord` 0x0002c56c takes a word out, through `AEnum_DeleteWord`
+0x00029e3c.  A word that other words go on from keeps its nodes and
+loses only its attribute - it stops being a word without stopping being
+a path.  A word nothing goes on from has its nodes taken out as well:
+`FindDeletionPoint` (0x00029c88, which the ROM keeps no symbol for)
+follows the word down leaving its ancestors on the same stack
+`FindInsertionPoint` uses, and the walk then goes back up that stack as
+far as the first ancestor that is a word itself or has another child.
+The bytes between are slid away, `FixupPointers` with the other
+operation *shrinks* every sibling offset that reached over them (a node
+with no sibling is left alone: what went was under it, not after it),
+and the Handle is given a growth unit back whenever the data has shrunk
+enough to spare one.
+
+BUG (kept): a word whose last node carries no attribute - a path that is
+not a word - returns without setting the block's result, which
+`DeleteWord` had just set to 0, so deleting a word that was never there
+is reported as success.  Deleting a word that begins nothing at all is
+reported properly, as "not there".
+
+`test_Airus` builds a six-word dictionary, takes the words out one at a
+time in the three shapes above and puts one back, checking after each
+that the others are still found with the attributes they went in with.
+
 ### What a script sees
 
 A dictionary frame's `dict` slot holds the engine's dictionary by
@@ -697,11 +723,9 @@ one, `FAirusLookupWord` 0x0008fb28 looks a word up and fills in the
 assistant's Continue button runs down when a name has been typed in, and
 with it the assistant goes on to its next page.
 
-NOT YET: AE16, deleting and the iterators
-(`AEnum_DeleteWord`, `AEnum_FirstLast`, `AEnum_NextPrevious`,
-`AEnum_ChangeAttribute`, `AEnum_NextSet`, `TAirusIterator`), and
-`ReadRefDictionary`, which builds a dictionary out of a binary rather
-than making an empty one.
+NOT YET: AE16 and the iterators (`AEnum_FirstLast`,
+`AEnum_NextPrevious`, `AEnum_ChangeAttribute`, `AEnum_NextSet`,
+`WalkDictionary`, `TAirusIterator`).
 
 ## The controller (`recognition/Controller.h`)
 
