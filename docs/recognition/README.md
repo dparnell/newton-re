@@ -932,6 +932,79 @@ NOT YET: the shape and word domains above this one, nor
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.
 
+## The word domain (`recognition/WRecDomain.h`)
+
+`TWRecDomain` ('WREC') is the domain a handwriting engine is driven
+from.  It takes strokes as its pieces ('STRK') and does almost nothing
+itself: every question the controller asks goes straight to a
+`TWRecognizer`, the protocol an engine plugs into.  What the domain adds
+is a heap and an exception handler.  The ROM makes the engine a 222 KB
+virtual-memory heap of its own (`NewVMHeap`, 0x37400 bytes), makes that
+heap current around every call into it and puts the task's own back
+afterwards, and treats anything thrown out of the engine as its having
+run out of memory: `SignalMemoryError` tells the controller, counts the
+failure in `gRecMemErrCount` - the number the word recogniser warns the
+user about once a day - and the engine is put to sleep rather than asked
+anything else.  DEVIATION: the host has one heap, so only the handler is
+left, and where the ROM gives the engine back by destroying the heap it
+lived in, this deletes it.
+
+`IWRecDomain` finds the engine by name in the protocol registry
+(`NewByName("TWRecognizer")`), hands it the domain it hangs off - one
+store, at +0x10 of the protocol instance, which is how everything the
+engine calls back reaches the controller - and calls its `Initialize`.
+The delay is 0x78, a hundred and twenty ticks: a word waits that long
+before the arbiter looks at it, which is the room the writer has to add
+another stroke to the same word.
+
+The traffic goes both ways.  Downward, `Group` offers a stroke,
+`Classify` asks for a reading, `Reclassify` asks for another, and the
+domain's own `VerifyWordSymbols`, `UnitConfidence`, `Sleep` and `WakeUp`
+are the questions the recogniser above it puts.  A unit the engine made
+nothing of is marked `kInvalidUnit` and closed; one still worth
+something goes back to the controller as a piece for the domains above.
+
+Upward, the engine calls the protocol's *own* methods - not dispatched,
+had by being a `TWRecognizer` - and that is where the grouping is kept:
+
+  - `GetPartialGroup` answers the word still being built, which is the
+    last of the domain's units the controller is holding back (its delay
+    list), and says whether there was one;
+  - `MakeNewGroupFromStroke` starts one - a unit of the domain's type
+    over the stroke's own areas, the stroke as its first sub, and the
+    controller told with `NewGroup`.  A word that cannot be made is
+    thrown rather than answered, because the engine has nowhere to put
+    the stroke;
+  - `AddSub` adds another stroke to it and `EndSubs` closes it, which
+    drops the delay so the arbiter can have it;
+  - `AddWordInterpretation`, `SetWordString`/`SetCharWordString`,
+    `SetLabel` and `SetScore` are how a reading is put on the unit, and
+    `NewClassification` offers the read word to the controller;
+  - `StrokeUnitStroke`, `StrokeSize`, `GetSamplePtAddress`,
+    `StrokeSampleX`/`Y`, `GetStartTime` and `GetEndTime` are how the
+    engine reads the writing itself;
+  - `UnitInfoGetPtr`/`SetPtr` keep the engine's own working store on the
+    unit, and it goes back through the domain (`UnitInfoFreePtr`) when
+    the unit does, because only the domain knows which heap it came out
+    of.
+
+Under the domain are the units.  `TStdWordUnit` is a `TSIUnit` whose
+interpretations carry a word: each one's parameter is a handle holding
+the string that was read, which is why `DeleteInterpretation` is
+overridden - the handle has to go back as a handle rather than as the
+recogniser object a `TSIUnit`'s parameter would be, and the label is put
+to -1 first so nothing picks the interpretation as the best one on the
+way out.  `InsertWordInterpretation` makes the handle before inserting
+anything, so a failure leaves the unit as it was.  With nothing measured
+the word stands on the bottom edge of its box (`GetWordBase`), and a
+recogniser that has measured the writing answers better.  `TRecUnit`
+adds the engine's working store, `TWRecUnit` is what the domain makes.
+
+NOT YET: `EndInkStrokeGroup` (the CIC library's
+`WRecEndInkStrokeGroup`), `ConfigureArea`, `DomainParameter` and
+`SetParameters` - the area information a recogniser keeps for each place
+that is written in.
+
 ## Stroke bundles (`recognition/StrokeBundle.h`)
 
 A *stroke bundle* is the NewtonScript form of a handful of strokes, and

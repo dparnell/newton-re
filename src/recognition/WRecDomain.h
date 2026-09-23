@@ -27,9 +27,9 @@
 	`DestroyVMHeap` are NOT YET, so the engine runs in the ordinary heap
 	and the domain only keeps the exception handler.
 
-	NOT YET RECONSTRUCTED: the protocol's own methods listed above (the
-	engine's side of the grouping), `ConfigureArea` and the area
-	information a recogniser keeps per writing area.
+	NOT YET RECONSTRUCTED: `EndInkStrokeGroup` (the CIC library's
+	`WRecEndInkStrokeGroup`), `ConfigureArea` and the area information a
+	recogniser keeps per writing area.
 
 	Reconstructed from the MP2x00 US ROM (0x0026d84c-0x0026e808); the
 	protocol's interface follows the ROM's dispatch table
@@ -50,6 +50,7 @@
 class TStroke;
 class TStrokeUnit;
 class TController;
+class TWRecDomain;
 
 // the domain's type, and the piece type it takes
 const ULong kWRecDomainType = 'WREC';
@@ -87,6 +88,57 @@ public:
 	VIRTUAL long		UnitConfidence(TWRecUnit* unit) ENDVIRTUAL;							// ROM 0x00388cb4
 	VIRTUAL void		Sleep(void) ENDVIRTUAL;												// ROM 0x00388cc0
 	VIRTUAL void		WakeUp(void) ENDVIRTUAL;											// ROM 0x00388ccc
+
+	// What the engine calls back into, which is where the grouping is
+	// kept.  These are the protocol's own, not dispatched: an engine
+	// gets them by being one.  Each puts the task's heap back before
+	// doing anything that allocates and makes its own current again
+	// afterwards, so that the recogniser's objects stay out of the
+	// engine's heap.
+	TUnit*		MakeNewGroupFromStroke(TStrokeUnit* stroke);	// ROM 0x0026ddbc MakeNewGroupFromStroke__12TWRecognizerFP11TStrokeUnit
+	TUnit*		GetPartialGroup(UChar* found);				// ROM 0x0026de70 GetPartialGroup__12TWRecognizerFPUc - the word still being built
+	long		AddSub(TWRecUnit* group, TStrokeUnit* stroke);	// ROM 0x0026dff4 AddSub__12TWRecognizerFP9TWRecUnitP11TStrokeUnit
+	long		EndSubs(TWRecUnit* group);					// ROM 0x0026e038 EndSubs__12TWRecognizerFP9TWRecUnit
+	void		EndInkStrokeGroup(TStrokeUnit** strokes);	// ROM 0x0026e074 EndInkStrokeGroup__12TWRecognizerFPP11TStrokeUnit (NOT YET: WRecEndInkStrokeGroup)
+	void		NewClassification(TWRecUnit* unit);			// ROM 0x0026df88 NewClassification__12TWRecognizerFP9TWRecUnit
+
+	void		InvalidateUnit(TWRecUnit* unit);			// ROM 0x0026df20 InvalidateUnit__12TWRecognizerFP9TWRecUnit
+	ULong		TestInvalidUnit(TWRecUnit* unit);			// ROM 0x0026df64 TestInvalidUnit__12TWRecognizerFP9TWRecUnit
+	void		RejectUnit(TWRecUnit* unit);				// ROM 0x0026df70 RejectUnit__12TWRecognizerFP9TWRecUnit
+	ULong		TestRejectedUnit(TWRecUnit* unit);			// ROM 0x0026df7c TestRejectedUnit__12TWRecognizerFP9TWRecUnit
+	ULong		TestClassifiedUnit(TWRecUnit* unit);		// ROM 0x0026dfc8 TestClassifiedUnit__12TWRecognizerFP9TWRecUnit
+
+	long		SubCount(TWRecUnit* unit);					// ROM 0x0026dfd4 SubCount__12TWRecognizerFP9TWRecUnit
+	TUnit*		GetSub(TWRecUnit* unit, ULong index);		// ROM 0x0026dfe0 GetSub__12TWRecognizerFP9TWRecUnitUl
+
+	long		AddWordInterpretation(TWRecUnit* unit);		// ROM 0x0026e1a4 AddWordInterpretation__12TWRecognizerFP9TWRecUnit
+	void		SetCharWordString(TWRecUnit* unit, ULong index, const char* str);	// ROM 0x0026e1e8 SetCharWordString__12TWRecognizerFP9TWRecUnitUlPc
+	UniChar*	SetWordString(TWRecUnit* unit, ULong index, const UniChar* str);	// ROM 0x0026e234 SetWordString__12TWRecognizerFP9TWRecUnitUlPUs
+	Handle		GetWordString(TWRecUnit* unit, ULong index);	// ROM 0x0026e280 GetWordString__12TWRecognizerFP9TWRecUnitUl
+	void		SetLabel(TWRecUnit* unit, ULong index, ULong label);	// ROM 0x0026e294 SetLabel__12TWRecognizerFP9TWRecUnitUlT2
+	long		GetLabel(TWRecUnit* unit, ULong index);		// ROM 0x0026e2b0 GetLabel__12TWRecognizerFP9TWRecUnitUl
+	void		SetScore(TWRecUnit* unit, ULong index, ULong score);	// ROM 0x0026e2c4 SetScore__12TWRecognizerFP9TWRecUnitUlT2
+	long		GetScore(TWRecUnit* unit, ULong index);		// ROM 0x0026e2e0 GetScore__12TWRecognizerFP9TWRecUnitUl
+	long		InterpretationCount(TWRecUnit* unit);		// ROM 0x0026e2f4 InterpretationCount__12TWRecognizerFP9TWRecUnit
+
+	// the strokes themselves, as the engine reads them
+	TStroke*	StrokeUnitStroke(TStrokeUnit* unit);		// ROM 0x0026e300 StrokeUnitStroke__12TWRecognizerFP11TStrokeUnit
+	long		StrokeSize(TStrokeUnit* unit);				// ROM 0x0026e41c StrokeSize__12TWRecognizerFP11TStrokeUnit
+	long		StrokeSize(TStroke* stroke);				// ROM 0x0026e428 StrokeSize__12TWRecognizerFP7TStroke
+	SamplePt*	GetSamplePtAddress(TStrokeUnit* unit, ULong index);	// ROM 0x0026e430 GetSamplePtAddress__12TWRecognizerFP11TStrokeUnitUl
+	SamplePt*	GetSamplePtAddress(TStroke* stroke, ULong index);	// ROM 0x0026e43c GetSamplePtAddress__12TWRecognizerFP7TStrokeUl
+	Fixed		StrokeSampleX(SamplePt* pt);				// ROM 0x0026e448 StrokeSampleX__12TWRecognizerFP12WrecSamplePt
+	Fixed		StrokeSampleY(SamplePt* pt);				// ROM 0x0026e450 StrokeSampleY__12TWRecognizerFP12WrecSamplePt
+
+	ULong		GetStartTime(TUnit* unit);					// ROM 0x0026e458 GetStartTime__12TWRecognizerFP5TUnit
+	ULong		GetStartTime(TStroke* stroke);				// ROM 0x0026e460 GetStartTime__12TWRecognizerFP7TStroke
+	ULong		GetEndTime(TUnit* unit);					// ROM 0x0026e524 GetEndTime__12TWRecognizerFP5TUnit
+	ULong		GetEndTime(TStroke* stroke);				// ROM 0x0026e534 GetEndTime__12TWRecognizerFP7TStroke
+
+	char*		UnitInfoGetPtr(TWRecUnit* unit);			// ROM 0x0026e56c UnitInfoGetPtr__12TWRecognizerFP9TWRecUnit
+	void		UnitInfoSetPtr(TWRecUnit* unit, char* info);	// ROM 0x0026e574 UnitInfoSetPtr__12TWRecognizerFP9TWRecUnitPc
+
+	TWRecDomain*	fDomain;	// +0x10  the domain that made it
 };
 
 

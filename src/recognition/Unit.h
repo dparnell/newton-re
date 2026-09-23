@@ -70,7 +70,8 @@ enum
 	kInvalidUnit		= 0x00400000,
 	kPassedOnUnit		= 0x00080000,		// set on a TSIUnit when a sub has it
 	kAreaListUnit		= 0x00020000,		// fAreas is a TAreaList, not a TRecArea
-	kGatheredUnit		= 0x00800000		// the arbitration has this one in hand
+	kGatheredUnit		= 0x00800000,		// the arbitration has this one in hand
+	kClassifiedUnit		= 0x00200000		// it has been classified already
 };
 
 // the click events a stroke can carry (TStroke::fClickEvent)

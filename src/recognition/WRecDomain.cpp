@@ -19,6 +19,7 @@
 
 #include "WRecDomain.h"
 #include "Controller.h"
+#include "Stroke.h"
 #include "NewtonExceptions.h"
 
 #include <string.h>
@@ -72,6 +73,161 @@ TWRecognizer::Delete(void)
 
 
 /*------------------------------------------------------------------------------
+	W h a t   t h e   e n g i n e   c a l l s   b a c k
+------------------------------------------------------------------------------*/
+
+// These are the protocol's own rather than dispatched: an engine has
+// them by being a TWRecognizer.  Each puts the task's heap back before
+// doing anything that allocates - the recogniser's units belong to the
+// system, not to the engine's heap - and makes the engine's current
+// again on the way out.  (DEVIATION: with one heap here there is
+// nothing to switch.)
+
+// ROM 0x0026ddbc MakeNewGroupFromStroke__12TWRecognizerFP11TStrokeUnit
+// A word started from a stroke: a unit of the domain's type over the
+// same areas, the stroke as its first sub, and the controller told.  A
+// word that cannot be made is thrown rather than answered, because the
+// engine has nowhere to put the stroke.
+TUnit*
+TWRecognizer::MakeNewGroupFromStroke(TStrokeUnit* stroke)
+{
+	TArray* areas = (TArray*) stroke->GetAreas();
+	TWRecUnit* group = TWRecUnit::Make(fDomain, (ULong) (stroke->fKind + 1), areas);
+	if (areas != nil)
+		areas->Dispose();
+	if (group == nil)
+		Throw(exAbort, nil, nil);
+	group->AddSub(stroke);
+	fDomain->fController->NewGroup(group);
+	return group;
+}
+
+
+// ROM 0x0026de70 GetPartialGroup__12TWRecognizerFPUc
+// The word still being built, which is the last of the domain's units
+// the controller is holding back.  `found` says whether there was one.
+TUnit*
+TWRecognizer::GetPartialGroup(UChar* found)
+{
+	TUnit* group = nil;
+	TUnitList* delayed = fDomain->fController->GetDelayList(fDomain, fDomain->fType);
+	if (delayed == nil)
+		Throw(exAbort, nil, nil);
+	if (delayed->Count() == 0)
+		*found = 0;
+	else
+	{
+		group = delayed->GetUnit(delayed->Count() - 1);
+		*found = 1;
+	}
+	delayed->Dispose();
+	return group;
+}
+
+
+// ROM 0x0026dff4 AddSub__12TWRecognizerFP9TWRecUnitP11TStrokeUnit
+// Another stroke of the same word.
+long
+TWRecognizer::AddSub(TWRecUnit* group, TStrokeUnit* stroke)
+{
+	return group->AddSub(stroke);
+}
+
+
+// ROM 0x0026e038 EndSubs__12TWRecognizerFP9TWRecUnit
+// No more: the word stops waiting and can be arbitrated.
+long
+TWRecognizer::EndSubs(TWRecUnit* group)
+{
+	return group->EndSubs();
+}
+
+
+// ROM 0x0026e074 EndInkStrokeGroup__12TWRecognizerFPP11TStrokeUnit
+// NOT YET RECONSTRUCTED: WRecEndInkStrokeGroup, which is what closes a
+// run of strokes the engine has decided are ink rather than writing.
+void
+TWRecognizer::EndInkStrokeGroup(TStrokeUnit** /*strokes*/)
+{
+}
+
+
+// ROM 0x0026df88 NewClassification__12TWRecognizerFP9TWRecUnit
+// A word the engine has read, offered to the controller as a piece for
+// the domains above.
+void
+TWRecognizer::NewClassification(TWRecUnit* unit)
+{
+	fDomain->fController->NewClassification(unit);
+}
+
+
+// ROM 0x0026df20 InvalidateUnit__12TWRecognizerFP9TWRecUnit
+void		TWRecognizer::InvalidateUnit(TWRecUnit* unit)	{ unit->Invalidate(); }
+// ROM 0x0026df64 TestInvalidUnit__12TWRecognizerFP9TWRecUnit
+ULong		TWRecognizer::TestInvalidUnit(TWRecUnit* unit)	{ return unit->TestFlags(kInvalidatedUnit); }
+// ROM 0x0026df70 RejectUnit__12TWRecognizerFP9TWRecUnit
+void		TWRecognizer::RejectUnit(TWRecUnit* unit)		{ unit->SetFlags(kInvalidUnit); }
+// ROM 0x0026df7c TestRejectedUnit__12TWRecognizerFP9TWRecUnit
+ULong		TWRecognizer::TestRejectedUnit(TWRecUnit* unit)	{ return unit->TestFlags(kInvalidUnit); }
+// ROM 0x0026dfc8 TestClassifiedUnit__12TWRecognizerFP9TWRecUnit
+ULong		TWRecognizer::TestClassifiedUnit(TWRecUnit* unit)	{ return unit->TestFlags(kClassifiedUnit); }
+
+// ROM 0x0026dfd4 SubCount__12TWRecognizerFP9TWRecUnit
+long		TWRecognizer::SubCount(TWRecUnit* unit)			{ return unit->SubCount(); }
+// ROM 0x0026dfe0 GetSub__12TWRecognizerFP9TWRecUnitUl
+TUnit*		TWRecognizer::GetSub(TWRecUnit* unit, ULong index)	{ return unit->GetSub(index); }
+
+// ROM 0x0026e1a4 AddWordInterpretation__12TWRecognizerFP9TWRecUnit
+long		TWRecognizer::AddWordInterpretation(TWRecUnit* unit)	{ return unit->AddWordInterpretation(); }
+// ROM 0x0026e1e8 SetCharWordString__12TWRecognizerFP9TWRecUnitUlPc
+void		TWRecognizer::SetCharWordString(TWRecUnit* unit, ULong index, const char* str)	{ unit->SetCharWordString(index, str); }
+// ROM 0x0026e234 SetWordString__12TWRecognizerFP9TWRecUnitUlPUs
+UniChar*	TWRecognizer::SetWordString(TWRecUnit* unit, ULong index, const UniChar* str)	{ return unit->SetWordString(index, str); }
+// ROM 0x0026e280 GetWordString__12TWRecognizerFP9TWRecUnitUl
+Handle		TWRecognizer::GetWordString(TWRecUnit* unit, ULong index)	{ return unit->GetString(index); }
+// ROM 0x0026e294 SetLabel__12TWRecognizerFP9TWRecUnitUlT2
+void		TWRecognizer::SetLabel(TWRecUnit* unit, ULong index, ULong label)	{ unit->SetLabel(index, label); }
+// ROM 0x0026e2b0 GetLabel__12TWRecognizerFP9TWRecUnitUl
+long		TWRecognizer::GetLabel(TWRecUnit* unit, ULong index)	{ return unit->GetLabel(index); }
+// ROM 0x0026e2c4 SetScore__12TWRecognizerFP9TWRecUnitUlT2
+void		TWRecognizer::SetScore(TWRecUnit* unit, ULong index, ULong score)	{ unit->SetScore(index, score); }
+// ROM 0x0026e2e0 GetScore__12TWRecognizerFP9TWRecUnitUl
+long		TWRecognizer::GetScore(TWRecUnit* unit, ULong index)	{ return unit->GetScore(index); }
+// ROM 0x0026e2f4 InterpretationCount__12TWRecognizerFP9TWRecUnit
+long		TWRecognizer::InterpretationCount(TWRecUnit* unit)	{ return unit->InterpretationCount(); }
+
+// ROM 0x0026e300 StrokeUnitStroke__12TWRecognizerFP11TStrokeUnit
+TStroke*	TWRecognizer::StrokeUnitStroke(TStrokeUnit* unit)	{ return unit->fStroke; }
+// ROM 0x0026e41c StrokeSize__12TWRecognizerFP11TStrokeUnit
+long		TWRecognizer::StrokeSize(TStrokeUnit* unit)		{ return unit->fStroke->Count(); }
+// ROM 0x0026e428 StrokeSize__12TWRecognizerFP7TStroke
+long		TWRecognizer::StrokeSize(TStroke* stroke)		{ return stroke->Count(); }
+// ROM 0x0026e430 GetSamplePtAddress__12TWRecognizerFP11TStrokeUnitUl
+SamplePt*	TWRecognizer::GetSamplePtAddress(TStrokeUnit* unit, ULong index)	{ return unit->fStroke->GetPoint((long) index); }
+// ROM 0x0026e43c GetSamplePtAddress__12TWRecognizerFP7TStrokeUl
+SamplePt*	TWRecognizer::GetSamplePtAddress(TStroke* stroke, ULong index)	{ return stroke->GetPoint((long) index); }
+// ROM 0x0026e448 StrokeSampleX__12TWRecognizerFP12WrecSamplePt
+Fixed		TWRecognizer::StrokeSampleX(SamplePt* pt)		{ return SampleX(pt); }
+// ROM 0x0026e450 StrokeSampleY__12TWRecognizerFP12WrecSamplePt
+Fixed		TWRecognizer::StrokeSampleY(SamplePt* pt)		{ return SampleY(pt); }
+
+// ROM 0x0026e458 GetStartTime__12TWRecognizerFP5TUnit
+ULong		TWRecognizer::GetStartTime(TUnit* unit)			{ return unit->fStartTime; }
+// ROM 0x0026e460 GetStartTime__12TWRecognizerFP7TStroke
+ULong		TWRecognizer::GetStartTime(TStroke* stroke)		{ return stroke->fDownTime; }
+// ROM 0x0026e524 GetEndTime__12TWRecognizerFP5TUnit
+ULong		TWRecognizer::GetEndTime(TUnit* unit)			{ return unit->EndTime(); }
+// ROM 0x0026e534 GetEndTime__12TWRecognizerFP7TStroke
+ULong		TWRecognizer::GetEndTime(TStroke* stroke)		{ return stroke->fUpTime; }
+
+// ROM 0x0026e56c UnitInfoGetPtr__12TWRecognizerFP9TWRecUnit
+char*		TWRecognizer::UnitInfoGetPtr(TWRecUnit* unit)	{ return unit->fUnitInfo; }
+// ROM 0x0026e574 UnitInfoSetPtr__12TWRecognizerFP9TWRecUnitPc
+void		TWRecognizer::UnitInfoSetPtr(TWRecUnit* unit, char* info)	{ unit->fUnitInfo = info; }
+
+
+/*------------------------------------------------------------------------------
 	T h e   d o m a i n
 ------------------------------------------------------------------------------*/
 
@@ -118,6 +274,9 @@ TWRecDomain::IWRecDomain(TController* controller)
 	fRecognizer = TWRecognizer::New(nil);
 	if (fRecognizer == nil)
 		Throw(exAbort, nil, nil);
+	// the engine is given the domain it hangs off, which is how its own
+	// calls back reach the controller
+	fRecognizer->fDomain = this;
 	fRecognizer->Initialize();
 	SetFlags(0x80000000);
 	AddPieceType(kStrokeUnitType);

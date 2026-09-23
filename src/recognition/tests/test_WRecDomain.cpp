@@ -83,7 +83,21 @@ PROTOCOL_CLASSINFO(TTestWRecognizer, "TWRecognizer", "", 0, 0, nil)
 TTestWRecognizer*	TTestWRecognizer::New(void)			{ return this; }
 void	TTestWRecognizer::Delete(void)					{ }
 void	TTestWRecognizer::Initialize(void)				{ gCalls.fInitialize++; }
-void	TTestWRecognizer::Group(TStrokeUnit*)			{ gCalls.fGroup++; if (gEngineThrows) Throw(exAbort, nil, nil); }
+// the ROM's own engines all group this way: the word still being built
+// takes the stroke, or a new one is started from it
+void
+TTestWRecognizer::Group(TStrokeUnit* stroke)
+{
+	gCalls.fGroup++;
+	if (gEngineThrows)
+		Throw(exAbort, nil, nil);
+	UChar found = 0;
+	TWRecUnit* group = (TWRecUnit*) GetPartialGroup(&found);
+	if (found == 0)
+		MakeNewGroupFromStroke(stroke);
+	else
+		AddSub(group, stroke);
+}
 long	TTestWRecognizer::Classify(TWRecUnit*)			{ gCalls.fClassify++; if (gEngineThrows) Throw(exAbort, nil, nil); return 0; }
 long	TTestWRecognizer::Reclassify(TWRecUnit*)		{ gCalls.fReclassify++; return 0; }
 long	TTestWRecognizer::FindBaseline(TStroke**, Point*)	{ return 1; }
@@ -247,6 +261,96 @@ TestClassify(TWRecDomain* domain, TController* controller)
 }
 
 
+static TStroke*
+MakeStroke(long x0, long y0, long x1, long y1, ULong down, ULong up)
+{
+	TStroke* stroke = TStroke::Make(0);
+	TabPt pt;
+	pt.z = 3;
+	pt.p = 0;
+	pt.x = ToFixed(x0);
+	pt.y = ToFixed(y0);
+	stroke->AddPoint(&pt);
+	pt.x = ToFixed(x1);
+	pt.y = ToFixed(y1);
+	stroke->AddPoint(&pt);
+	stroke->fDownTime = down;
+	stroke->fUpTime = up;
+	stroke->EndStroke();
+	return stroke;
+}
+
+
+// Two strokes offered to the domain end up in one word, because the
+// engine asks for the word still being built and adds to it.
+static void
+TestGrouping(TWRecDomain* domain, TController* controller)
+{
+	TStroke* first = MakeStroke(10, 20, 30, 40, 100, 110);
+	TStroke* second = MakeStroke(32, 20, 50, 40, 120, 130);
+	TStrokeUnit* a = TStrokeUnit::Make(gRootDomain, 1, first, nil);
+	TStrokeUnit* b = TStrokeUnit::Make(gRootDomain, 1, second, nil);
+	EXPECT(a != nil && b != nil);
+	if (a == nil || b == nil)
+		return;
+
+	long groups = gCalls.fGroup;
+	domain->Group(a, nil);
+	EXPECT(gCalls.fGroup == groups + 1);
+	// the word the engine started is being held back, so the next
+	// stroke finds it
+	UChar found = 0;
+	TWRecUnit* word = (TWRecUnit*) domain->fRecognizer->GetPartialGroup(&found);
+	EXPECT(found != 0 && word != nil);
+	if (word == nil)
+		return;
+	EXPECT(word->fType == kWRecDomainType);
+	EXPECT(word->SubCount() == 1 && word->GetSub(0) == a);
+
+	domain->Group(b, nil);
+	EXPECT(word->SubCount() == 2 && word->GetSub(1) == b);
+	// the word covers both strokes, in space and in time
+	EXPECT(domain->fRecognizer->GetStartTime(word) == 100);
+	EXPECT(domain->fRecognizer->GetEndTime(word) >= 130);
+	EXPECT(domain->fRecognizer->StrokeSize(a) == first->Count());
+	EXPECT(domain->fRecognizer->StrokeUnitStroke(a) == first);
+	EXPECT(domain->fRecognizer->GetStartTime(first) == 100);
+	EXPECT(domain->fRecognizer->GetEndTime(first) == 110);
+
+	// a reading put on it through the protocol's own calls
+	long interp = domain->fRecognizer->AddWordInterpretation(word);
+	EXPECT(interp == 0);
+	UniChar hi[3] = { 'h', 'i', 0 };
+	EXPECT(domain->fRecognizer->SetWordString(word, 0, hi) != nil);
+	domain->fRecognizer->SetLabel(word, 0, 2);
+	domain->fRecognizer->SetScore(word, 0, 9);
+	EXPECT(domain->fRecognizer->GetLabel(word, 0) == 2);
+	EXPECT(domain->fRecognizer->GetScore(word, 0) == 9);
+	EXPECT(domain->fRecognizer->InterpretationCount(word) == 1);
+	EXPECT(Ustrcmp((UniChar*) *domain->fRecognizer->GetWordString(word, 0), hi) == 0);
+
+	// the flags the engine works in
+	EXPECT(domain->fRecognizer->TestRejectedUnit(word) == 0);
+	domain->fRecognizer->RejectUnit(word);
+	EXPECT(domain->fRecognizer->TestRejectedUnit(word) != 0);
+	EXPECT(domain->fRecognizer->TestInvalidUnit(word) == 0);
+	domain->fRecognizer->InvalidateUnit(word);
+	EXPECT(domain->fRecognizer->TestInvalidUnit(word) != 0);
+
+	// its own working store, kept on the unit
+	char store[8];
+	domain->fRecognizer->UnitInfoSetPtr(word, store);
+	EXPECT(domain->fRecognizer->UnitInfoGetPtr(word) == store);
+	domain->fRecognizer->UnitInfoSetPtr(word, nil);
+
+	// closed: it stops waiting
+	EXPECT(word->fDelay != 0);
+	domain->fRecognizer->EndSubs(word);
+	EXPECT(word->fDelay == 0);
+	controller->CleanUp();
+}
+
+
 // (the protocol registry is a monitor, so the test runs as the kernel
 //  services task rather than over the standalone heap)
 static void
@@ -263,6 +367,7 @@ WRecScenario(void)
 	if (domain != nil)
 	{
 		TestUnit(domain);
+		TestGrouping(domain, controller);
 		TestClassify(domain, controller);
 	}
 
