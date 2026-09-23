@@ -157,6 +157,9 @@ enum { kWRecServices = 0x017ef000 };
 long	GetDefaultedPreference(RefArg slot, long deflt);		// ROM 0x0019cc04 GetDefaultedPreference__FRC6RefVarl - the default written down when there is none
 Ref		FReadCursiveOptions(RefArg rcvr);					// ROM 0x0019cfd8 FReadCursiveOptions__FRC6RefVar
 Ref		ReadDomainOptions(void);							// ROM 0x0019d1e0 ReadDomainOptions
+// What the writer settled on handed to the recogniser of that unit
+// type, so that it reads the same writing better next time.
+void	DoIndexedLearning(ULong id, RefArg data, ULong which);	// ROM 0x001a0cc4 DoIndexedLearning__FUlRC6RefVarT1
 
 // ROM 0x0c10184c gLetterSetSelection / 0x0c101850 gRecognitionTimeout /
 // 0x0c101858 gRecognitionLetterSpacing / 0x0c101868 gUseBigTrainingData

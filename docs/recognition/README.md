@@ -616,9 +616,39 @@ big-endian - and puts the two bytes back.  Written out, it is "was the
 first letter a capital, and leave the word alone".
 
 `LastWordSame` 0x001aae08 is the one-word memory the auto-add dictionary
-keeps in its frame's `last` slot: a word has to be written twice running
-before anything is done with it, and a different word in between starts
-the count again.
+keeps in its frame's `last` slot: the same word written twice running is
+added only once, and a different word in between lets it be offered
+again.
+
+### Adding a word on the writer's behalf
+
+`AddAutoAdd` 0x001aaee4 is what the corrector calls when a word the
+writer has settled on goes onto the page (`AutoAdd` in
+`recognition/CorrectInfo.h`).  It is only done when the writer has asked
+for it (`doAutoAdd`), only for a word the handwriting recogniser read
+(`gWordID` is `'WREC'`), only for a word the auto-add dictionary was not
+offered last time, and only for a well-formed word the dictionaries do
+not already have.  The word then goes into two dictionaries: the
+auto-add one plain, which is the machine's record of what it did, and
+the user dictionary encoded, which is what the recogniser reads against.
+Every twentieth word the `autoAdd` view is told, which is what puts up
+the slip offering to show the writer what has been learnt.
+
+BUG (kept): the answer is set to true before the second add is checked,
+so a word whose user-dictionary entry failed - and which is therefore
+taken straight out of the auto-add dictionary again - is still reported
+as added.
+
+`RemoveAutoAdd` 0x001ab0f8 takes it back out of both, which is what
+happens when the entry the word was learnt from goes; both go through
+`DeleteWordWithCount` 0x001aacdc, the counting other half of
+`AddWordWithCount`.  `DoIndexedLearning` 0x001a0cc4 is the other side of
+learning: what the writer settled on handed to the recogniser of that
+unit type, so that it reads the same writing better next time.
+
+NOT YET: the recount `DeleteWordWithCount` falls back on when a frame's
+count has reached nothing, which walks the dictionary and so needs the
+Airus iterators.
 
 `test_Dictionaries` builds a list of two AL dictionaries by hand and
 checks the id substitutions and the fallback, the three chains, the link

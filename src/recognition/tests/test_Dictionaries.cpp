@@ -485,6 +485,40 @@ main()
 		EXPECT(!LastWordSame(RefVar(MakeString(word))));
 		Uni(word, "notebook");
 		EXPECT(!LastWordSame(RefVar(MakeString(word))));
+		// ---- the words the machine adds on the writer's behalf ----
+		// Only when the writer has asked for it, and only for a word the
+		// handwriting recogniser read.
+		RefVar prefs(AllocateFrame());
+		SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, prefs);
+		UniChar learnt[32];
+		Uni(learnt, "zorblat");
+		ULong where = 0;
+		EXPECT(LookUp("zorblat", &where) == -1);
+
+		// with the preference off, nothing is learnt
+		gWordID = 'WREC';
+		EXPECT(!AddAutoAdd(learnt));
+		// ... and with it on but the word typed rather than written
+		SetFrameSlot(prefs, RSSYMdoautoadd, RefVar(TRUEREF));
+		gWordID = 0;
+		EXPECT(!AddAutoAdd(learnt));
+
+		// written, and asked for: the word goes into the user dictionary
+		// and into the machine's own record of what it added
+		gWordID = 'WREC';
+		EXPECT(AddAutoAdd(learnt));
+		EXPECT(LookUp("zorblat", &where) == kUserDictionary);
+		EXPECT(RINT(RefVar(GetProtoVariable(RefVar(FindDictionaryFrame(kAutoAddDictionary)),
+											  RSSYMcount, nil))) == 1);
+		// the same word again is the one it was offered last time, so it
+		// is left alone; and it is in the dictionaries now anyway
+		EXPECT(!AddAutoAdd(learnt));
+
+		// and taken back out of both when the entry it was learnt from goes
+		RemoveAutoAdd(learnt);
+		EXPECT(LookUp("zorblat", &where) == -1);
+		EXPECT(RINT(RefVar(GetProtoVariable(RefVar(FindDictionaryFrame(kAutoAddDictionary)),
+											  RSSYMcount, nil))) == 0);
 	}
 
 	if (failures == 0)

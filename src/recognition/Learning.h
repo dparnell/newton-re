@@ -69,4 +69,13 @@ long	AddWordWithCount(long id, UByte* word, ULong attribute);	// ROM 0x001aab74 
 // once.  A word that is not the last one becomes the last one.
 Boolean	LastWordSame(RefArg word);						// ROM 0x001aae08 LastWordSame__FRC6RefVar
 
+// ... and one taken out again, with the count put down by one; ==>
+// airusResult.
+long	DeleteWordWithCount(long id, UByte* word);		// ROM 0x001aacdc DeleteWordWithCount__FlPUc
+
+// A word the machine adds to the writer's dictionaries on their behalf,
+// and one taken back out again.  ==> whether it was added.
+Boolean	AddAutoAdd(UniChar* word);						// ROM 0x001aaee4 AddAutoAdd__FPUs
+void	RemoveAutoAdd(UniChar* word);					// ROM 0x001ab0f8 RemoveAutoAdd__FPUs
+
 #endif	/* __LEARNING_H */

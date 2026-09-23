@@ -13,6 +13,9 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
+#include "Interpreter.h"	// NSSend
+#include "Locale.h"		// GetPreference
+#include "RootView.h"
 
 #include <string.h>
 
@@ -220,9 +223,9 @@ AddWordWithCount(long id, UByte* word, ULong attribute)
 // ROM 0x001aae08 LastWordSame__FRC6RefVar
 // Whether this is the word the auto-add dictionary was offered last
 // time.  The word is kept in the dictionary frame's `last` slot, and a
-// word that is not the one there takes its place - so a word has to be
-// written twice running before anything is done with it, and a different
-// word in between starts the count again.
+// word that is not the one there takes its place - so the same word
+// written twice running is only added once, and a different word in
+// between lets it be offered again.
 Boolean
 LastWordSame(RefArg word)
 {
@@ -235,4 +238,145 @@ LastWordSame(RefArg word)
 		return true;
 	SetFrameSlot(frame, RSSYMlast, word);
 	return false;
+}
+
+
+// ROM 0x001aacdc DeleteWordWithCount__FlPUc
+// A word taken out of one of the writer's own dictionaries, with the
+// count the frame keeps put down by one.  ==> airusResult.
+//
+// NOT YET RECONSTRUCTED: the recount.  A frame whose count has fallen to
+// nothing is counted again by walking the dictionary, which needs the
+// Airus iterators (`WalkDictionary`, `AEnum_NextSet`); with none, the
+// walk answers nothing, which is what it would answer for a dictionary
+// that is already empty.
+long
+DeleteWordWithCount(long id, UByte* word)
+{
+	Boolean counted = false;
+	long count = 0;
+	dictListEntry* entry = FindDictionaryEntry((ULong) id);
+	RefVar frame(GetArraySlotRef(RefVar(Dictionaries()), entry->fIndex));
+	RefVar value(GetProtoVariable(frame, RSSYMcount, nil));
+	if (NOTNIL(value))
+	{
+		counted = true;
+		count = RINT(value);
+	}
+
+	DeleteWord(entry->fDictionary, word);
+	if (airusResult == 0 && counted)
+	{
+		if (count < 1)
+			count = 0 + 1;				// (WalkDictionary(dictionary, "", Reset, nil) + 1)
+		SetFrameSlot(frame, RSSYMcount, RefVar(MAKEINT(count - 1)));
+	}
+	return airusResult;
+}
+
+
+// ROM 0x001aaee4 AddAutoAdd__FPUs
+// A word the machine adds to the writer's dictionary on their behalf.
+//
+// It is only done when the writer has asked for it (`doAutoAdd`) and the
+// word came from the handwriting recogniser rather than from the
+// keyboard or a script; a word the auto-add dictionary was offered last
+// time is skipped, so the same word twice running is only added once;
+// and only a well-formed word the dictionaries do not already have is
+// added.
+//
+// The word goes into two dictionaries: the auto-add one plain, which is
+// the machine's record of what it did, and the user dictionary encoded,
+// which is what the recogniser reads against.  Every twentieth word the
+// `autoAdd` view is told, which is what puts up the slip offering to
+// show the writer what has been learnt.
+//
+// (BUG, kept: the answer is set to true before the second add is
+//  checked, so a word whose user-dictionary entry failed - and which is
+//  therefore taken out of the auto-add dictionary again - is still
+//  reported as added.)
+Boolean
+AddAutoAdd(UniChar* word)
+{
+	Boolean added = false;
+	if (ISNIL(RefVar(GetPreference(RSSYMdoautoadd))) || gWordID != 'WREC')
+		return false;
+
+	RefVar str(MakeString(word));
+	if (LastWordSame(str))
+		return false;
+	str = FLookupWord(RefVar(NILREF), str);
+	if (ISNIL(str))
+		return false;
+
+	UniChar* chars = CString(str);
+	Size size = (Size) Ustrlen(chars) + 1;
+	if (size > 0x1f)
+		return false;
+	UByte* bytes = (UByte*) NewPtr(size);
+	if (bytes == nil)
+		return false;
+
+	ConvertFromUnicode(chars, bytes, 1, size);
+	long count = AddWordWithCount(kAutoAddDictionary, bytes, 0);
+	if (airusResult == 0)
+	{
+		Boolean undo = true;
+		UniChar* copy = (UniChar*) NewPtr(size * sizeof(UniChar));
+		if (copy != nil)
+		{
+			Ustrcpy(copy, chars);
+			ULong attribute = EncodeRecognitionWord(copy);
+			ConvertFromUnicode(copy, bytes, 1, size);
+			AddWordWithCount(kUserDictionary, bytes, attribute);
+			// DEVIATION: the ROM has a root view by the time anything is
+			// written; a host may run the recogniser without a view system,
+			// and then there is nobody to tell.
+			if (count % 20 == 0 && gRootView != nil)
+				NSSend(RefVar(gRootView->GetVar(RSSYMautoadd)), RSSYMaddnotification);
+			added = true;
+			DisposePtr((Ptr) copy);
+			if (airusResult == 0)
+				undo = false;
+		}
+		if (undo)
+		{
+			// the auto-add entry taken back out, so that the two
+			// dictionaries say the same thing
+			ConvertFromUnicode(chars, bytes, 1, size);
+			DeleteWordWithCount(kAutoAddDictionary, bytes);
+		}
+	}
+	DisposePtr((Ptr) bytes);
+	return added;
+}
+
+
+// ROM 0x001ab0f8 RemoveAutoAdd__FPUs
+// A word the machine added taken back out of both dictionaries - the
+// auto-add one plain and the user dictionary encoded - which is what
+// happens when the entry the word was learnt from goes.
+void
+RemoveAutoAdd(UniChar* word)
+{
+	Size size = (Size) Ustrlen(word) + 1;
+	UByte* bytes = (UByte*) NewPtr(size);
+	UniChar* copy = (UniChar*) NewPtr(size * sizeof(UniChar));
+	if (bytes != nil && copy != nil)
+	{
+		Ustrcpy(copy, word);
+		StripRecognitionWordDiacritsOK(copy);
+		ConvertFromUnicode(copy, bytes, 1, size);
+		DeleteWordWithCount(kAutoAddDictionary, bytes);
+		if (airusResult == 0)
+		{
+			EncodeRecognitionWord(copy);
+			ConvertFromUnicode(copy, bytes, 1, size);
+			DeleteWordWithCount(kUserDictionary, bytes);
+		}
+	}
+	if (bytes != nil)
+		DisposePtr((Ptr) bytes);
+	if (copy != nil)
+		DisposePtr((Ptr) copy);
 }

@@ -7,6 +7,8 @@
 */
 
 #include "CorrectInfo.h"
+#include "Learning.h"
+#include "Recognizer.h"
 #include "WordInfo.h"
 #include "UnitPublic.h"
 #include "StrokeBundle.h"
@@ -346,9 +348,8 @@ AddWordInfo(RefArg list, TView* view, long start, long stop, TUnitPublic* unit)
 // A word the machine put into the dictionary on this entry's account
 // taken out again, because the entry is going.
 //
-// NOT YET RECONSTRUCTED: RemoveAutoAdd 0x0013e4b4, which is the
-// dictionary's side of it - the whole dictionary area is NOT YET.  The
-// flag is cleared either way, as the ROM clears it.
+// The flag is cleared whether or not there was a word to take out, as
+// the ROM clears it.
 void
 AutoRemove(RefArg info)
 {
@@ -356,7 +357,7 @@ AutoRemove(RefArg info)
 		return;
 	RefVar word(GetNthWord(info, 0));
 	if (NOTNIL(word) && (Length(word) - 2) / (long) sizeof(UniChar) != 0)
-		;	// RemoveAutoAdd(GetCString(word));
+		RemoveAutoAdd(CString(word));
 	ClearWordInfoFlags(info, kWordInfoAutoAdded);
 }
 
@@ -731,12 +732,10 @@ ExtractRange(RefArg list, TView* view, long from, long to)
 // The other way: the entries of a range put onto a list and told which
 // view they now belong to.  An undo puts its saved words back this way.
 //
-// NOT YET RECONSTRUCTED: the dictionary side - DoOverflowLearning
-// 0x00079704, which learns from an entry about to fall off the end of
-// the machine's list, and AutoAdd 0x000793d8, which puts a word the
-// writer has corrected into the dictionary (unless the view's
-// `_noAutoAdd` says not to).  Both belong to the dictionaries, which are
-// NOT YET.
+// A word put onto the machine's own list is learnt from twice over:
+// room is made for it by learning from whatever falls off the end
+// (`DoOverflowLearning`), and the word itself is offered to the
+// dictionary (`AutoAdd`, unless the view's `_noAutoAdd` says not to).
 void
 InsertRange(RefArg list, RefArg range, TView* view)
 {
@@ -752,9 +751,9 @@ InsertRange(RefArg list, RefArg range, TView* view)
 		SetFrameSlot(word, RSSYMid, RefVar(MAKEINT(id)));
 		if (EQRef(list, own))
 		{
-			// DoOverflowLearning(list);
+			DoOverflowLearning(list);
 			AddWordInfo(list, word);
-			// if (ISNIL(view->GetProto(RSSYM_noautoadd))) AutoAdd(word);
+			AutoAdd(word);
 		}
 		else
 			AddWordInfo(list, word);
@@ -851,8 +850,6 @@ DeleteMatchingWord(RefArg info, RefArg word)
 // a word the machine made up out of the letters tells it nothing.
 // Afterwards the training data goes, because it has been used.
 //
-// NOT YET RECONSTRUCTED: DoIndexedLearning 0x000797ec, which is the
-// engine's side of it.
 Ref
 DoEntryLearning(RefArg info, long which)
 {
@@ -866,7 +863,7 @@ DoEntryLearning(RefArg info, long which)
 	RefVar data(GetFrameSlotRef(info, RSSYMunitdata));
 	if (index >= 0 && NOTNIL(data))
 	{
-		// DoIndexedLearning(UnitID(info), info, index);
+		DoIndexedLearning(UnitID(info), info, (ULong) index);
 		ClearWordInfoFlags(info, kWordInfoHasTrainingData);
 		SetFrameSlot(info, RSSYMunitdata, RefVar(NILREF));
 	}
@@ -902,8 +899,6 @@ DoOverflowLearning(RefArg list)
 // having been added so that `AutoRemove` can take it back out again if
 // the word goes.
 //
-// NOT YET RECONSTRUCTED: AddAutoAdd 0x0013e42c, the dictionary's side -
-// so nothing is ever added and the flag is never set.
 void
 AutoAdd(RefArg info)
 {
@@ -914,8 +909,8 @@ AutoAdd(RefArg info)
 		return;
 	if (NOTNIL(RefVar(GetProtoVariable(info, RSSYM_noautoadd, nil))))
 		return;
-	// if (AddAutoAdd(GetCString(word)))
-	//     SetWordInfoFlags(info, kWordInfoAutoAdded);
+	if (AddAutoAdd(CString(word)))
+		SetWordInfoFlags(info, kWordInfoAutoAdded);
 }
 
 

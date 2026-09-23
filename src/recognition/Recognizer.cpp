@@ -814,6 +814,18 @@ FReadCursiveOptions(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x001a0cc4 DoIndexedLearning__FUlRC6RefVarT1
+// What the writer settled on handed to the recogniser that read it, by
+// unit type, so that it reads the same writing better next time.
+void
+DoIndexedLearning(ULong id, RefArg data, ULong which)
+{
+	if (ISNIL(data))
+		return;
+	gRecognition.fRecognizers->FindRecognizer(id)->DoLearning(data, (long) which);
+}
+
+
 // ROM 0x0019d1e0 ReadDomainOptions
 // What the boot calls: the cursive options and nothing else.
 Ref
