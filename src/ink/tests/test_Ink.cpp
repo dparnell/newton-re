@@ -1724,6 +1724,79 @@ TestStrokeBundles()
 }
 
 
+// An ink word restyled from a font spec frame - the same frame a
+// paragraph's style run carries, so that restyling a run of text
+// restyles the writing in it.
+static void
+TestInkWordFontParms()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	TStroke* list[2];
+	list[0] = MakeLine(10, 20, 40, 44, 12);
+	list[1] = nil;
+	Rect box;
+	RefVar word(TStrokesToInkWord(list, &box));
+	EXPECT(IsInkWord(word));
+	InkWordInfo was;
+	GetInkWordInfo(word, &was);
+
+	// a spec that says nothing changes nothing
+	RefVar spec(AllocateFrame());
+	SetInkWordFontParms(word, spec);
+	InkWordInfo now;
+	GetInkWordInfo(word, &now);
+	EXPECT(now.fScale == was.fScale && now.fFace == was.fFace
+		   && now.fPenSize == was.fPenSize);
+
+	// `scale` is a percentage of the word's own size
+	SetFrameSlot(spec, RSSYMscale, MAKEINT(50));
+	SetInkWordFontParms(word, spec);
+	GetInkWordInfo(word, &now);
+	EXPECT(now.fScale == ToFixed(1) / 2);
+	EXPECT(now.fScaledWidth < was.fWidth);
+
+	// `size` is a point size, which comes to a scale against the size
+	// the word's x-height makes it; `scale` wins when both are there
+	RefVar sized(AllocateFrame());
+	SetFrameSlot(sized, RSSYMsize, MAKEINT(was.fFontSize * 2));
+	SetInkWordFontParms(word, sized);
+	GetInkWordInfo(word, &now);
+	EXPECT(now.fScale == ToFixed(2));
+	SetFrameSlot(sized, RSSYMscale, MAKEINT(100));
+	SetInkWordFontParms(word, sized);
+	GetInkWordInfo(word, &now);
+	EXPECT(now.fScale == ToFixed(1));
+
+	// the face is packed down to the six bits an ink word has room for,
+	// and the pen size is kept as it comes
+	RefVar faced(AllocateFrame());
+	SetFrameSlot(faced, RSSYMface, MAKEINT(kBoldFace | kItalicFace));
+	SetFrameSlot(faced, RSSYMpensize, MAKEINT(3));
+	SetInkWordFontParms(word, faced);
+	GetInkWordInfo(word, &now);
+	EXPECT(now.fFace == (ULong) (kBoldFace | kItalicFace));
+	EXPECT(now.fPenSize == 3);
+	// and the scale it was left at is kept, the spec not saying
+	EXPECT(now.fScale == ToFixed(1));
+
+	// the glyph asks the word again once it has been restyled
+	TInkWordGlyph glyph(word, (ULong) -1, (ULong) -1);
+	long wide = glyph.fWidth;
+	RefVar bigger(AllocateFrame());
+	SetFrameSlot(bigger, RSSYMscale, MAKEINT(200));
+	EXPECT(NOTNIL(RefVar(glyph.SetFontParms(bigger))));
+	// the size and face go back to "the word's own", which ReadMetrics
+	// then fills in from the word it has just been told about
+	EXPECT(glyph.fFontSize == (ULong) glyph.fInfo.fScaledFontSize);
+	EXPECT(glyph.fFace == glyph.fInfo.fFace);
+	EXPECT(glyph.fWidth > wide);
+	EXPECT(glyph.fInfo.fScale == ToFixed(2));
+}
+
+
 // An ink word opened as a font: the text engine sees a font with one
 // glyph, and asking for that glyph draws the writing into a bitmap.
 static void
@@ -1869,6 +1942,7 @@ main()
 	TestInkShapes();
 	TestStrokeBundles();
 	TestInkFont();
+	TestInkWordFontParms();
 
 	if (failures == 0)
 		printf("test_Ink: all passed\n");

@@ -29,14 +29,14 @@
 				the object heap, which the recogniser hands over without
 				copying (`GetInkWordAddrData`, `GetInkWordAddrInfo`).
 
-	NOT YET RECONSTRUCTED: `TInkWordGlyph::SetFontParms` (the word
-	restyled from a font spec, over SetInkWordFontParms), and the
+	NOT YET RECONSTRUCTED: the
 	printing path - on a printer port the ROM draws the word as real
 	outlined paths (`CSMakePathsGroup`, `FramePaths`) rather than as
 	QuickDraw lines.
 
 	Reconstructed from the MP2x00 US ROM (0x000ada30-0x000adf20,
-	0x000dc2a4-0x000dc568); each function cites its origin.
+	0x000dbd0c-0x000dbf78, 0x000dc2a4-0x000dc568); each function cites
+	its origin.
 */
 
 #ifndef __INKFONT_H
@@ -70,7 +70,8 @@ public:
 	// Drawn into the current port with its baseline's left end at
 	// (x, y) - the place a glyph is drawn at.
 	virtual void	DrawAt(ULong x, ULong y);				// ROM 0x000dc568 DrawAt__13TInkWordGlyphFUlT1 (vtable +0x04)
-	// NOT YET: SetFontParms (vtable +0x08)
+	// The word restyled from a font spec frame, and measured again.
+	virtual Ref		SetFontParms(RefArg fontSpec);			// ROM 0x000dbf14 SetFontParms__13TInkWordGlyphFRC6RefVar (vtable +0x08)
 
 	RefStruct*	fInk;			// +0x04  the ink word, or an integer that is its address
 	ULong		fFace;			// +0x08  the face it is drawn with (-1: the word's own)

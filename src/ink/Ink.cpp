@@ -173,6 +173,53 @@ GetInkWordInfo(RefArg ink, InkWordInfo* info)
 	C h a n g i n g   o n e
 ------------------------------------------------------------------------------*/
 
+// ROM 0x000dbd0c SetInkWordFontParms__FRC6RefVarT1
+// An ink word restyled from a font spec frame - the same frame a
+// paragraph's style run is written with, so that changing the style of a
+// run of text changes the writing in it too.  What the spec does not
+// say, the word keeps.
+//
+//   scale     a percentage of the word's own size
+//   size      a point size, which comes to a scale against the size the
+//             word's x-height makes it
+//   face      the type face, packed down to the six bits an ink word
+//             has room for
+//   penSize   how thick the pen is
+//
+// `scale` wins over `size` when both are there.  ==> the ink word.
+Ref
+SetInkWordFontParms(RefArg ink, RefArg fontSpec)
+{
+	InkWordInfo info;
+	GetInkWordInfo(ink, &info);
+
+	RefVar slot(GetFrameSlot(fontSpec, RSSYMscale));
+	Fixed scale;
+	if (NOTNIL(slot))
+		scale = FixedDivide(ToFixed(RINT(slot)), ToFixed(100));
+	else
+	{
+		slot = GetFrameSlot(fontSpec, RSSYMsize);
+		if (NOTNIL(slot))
+			scale = FixedDivide(ToFixed(RINT(slot)), ToFixed(info.fFontSize));
+		else
+			scale = info.fScale;
+	}
+
+	slot = GetFrameSlot(fontSpec, RSSYMface);
+	ULong face = NOTNIL(slot) ? GetRawFace((ULong) RINT(slot)) : info.fFace;
+
+	slot = GetFrameSlot(fontSpec, RSSYMpensize);
+	ULong pen = NOTNIL(slot) ? (ULong) RINT(slot) : info.fPenSize;
+
+	PackedInkWordInfo packed;
+	PackInkWordInfo(&packed, info.fWidth, info.fAscent, info.fDescent,
+					info.fXHeight, scale, face, pen);
+	SetPackedInkWordInfo(ink, &packed);
+	return ink;
+}
+
+
 // ROM 0x000dc180 SetInkWordFontSize__FRC6RefVarUl
 // The word drawn at a font size: the scale is the size asked for over
 // the size the x-height comes to, so the ink is stretched to fit the

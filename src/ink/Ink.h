@@ -132,6 +132,7 @@ void	GetInkWordInfo(RefArg ink, InkWordInfo* info);					// ROM 0x001402ec GetInk
 
 // An ink word's font size, pen size, scale and face changed.  Each
 // answers the ink word it was given.
+Ref		SetInkWordFontParms(RefArg ink, RefArg fontSpec);	// ROM 0x000dbd0c SetInkWordFontParms__FRC6RefVarT1 - restyled from a font spec frame
 Ref		SetInkWordFontSize(RefArg ink, ULong size);		// ROM 0x000dc180 SetInkWordFontSize__FRC6RefVarUl
 Ref		SetInkWordPenSize(RefArg ink, ULong size);		// ROM 0x000dc1f4 SetInkWordPenSize__FRC6RefVarUl
 Ref		SetInkWordScale(RefArg ink, long scale);		// ROM 0x000dc24c SetInkWordScale__FRC6RefVarl

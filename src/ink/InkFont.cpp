@@ -157,6 +157,24 @@ TInkWordGlyph::ReadMetrics(void)
 }
 
 
+// ROM 0x000dbf14 SetFontParms__13TInkWordGlyphFRC6RefVar
+// The word restyled, and the glyph measured again for it.  The size and
+// face go back to "the word's own", because the word has just been told
+// what they are.  ==> the ink word.
+Ref
+TInkWordGlyph::SetFontParms(RefArg fontSpec)
+{
+	if (IsInkWord(*fInk))
+	{
+		*fInk = SetInkWordFontParms(*fInk, fontSpec);
+		fFontSize = (ULong) -1;
+		fFace = (ULong) -1;
+		ReadMetrics();
+	}
+	return *fInk;
+}
+
+
 // ROM 0x000dc568 DrawAt__13TInkWordGlyphFUlT1
 // The word drawn into the current port with the left end of its
 // baseline at (x, y), which is where the text engine puts a glyph.
