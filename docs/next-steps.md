@@ -64,32 +64,27 @@ Nothing on the writing path is blocked on a single big piece any more.
 What is left there is a handful of named holes, each small and each
 with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
 
+- **The correction information** (`src/recognition/`, the ROM's
+  0x000761f0-0x000795e0): the `correctInfo` frame a paragraph keeps so
+  that a word already on the page can still be corrected - `CorrectInfo`,
+  `FindWordInfo`, `AddWordInfo`, `GetWordInfo`, `MergeWords`,
+  `ExtractRange`/`InsertRange`, `OffsetCorrectionInfo`,
+  `RemoveCorrectionInfo`.  Half a dozen `NOT YET` comments in
+  `ParagraphView.cpp` and `EditView.cpp` are waiting on it, and so is
+  the next item.
 - **`TParagraphView::ReplaceCharacter`** (0x00174e14), the Finder's
   strongest claim - a character written over a character of the text
   replaces it, and the paragraph answers 6, which stops
   `TEditView::HandleWord` asking anybody else.  It is the one branch of
-  `FindWordInRun` that is not there.  It walks the line's text objects
-  (`GetTextObjBounds`, `GetTextObjField`, `CharBounds`), which this
-  reconstruction does not have, so it wants the same treatment the rest
-  of `FindWordInRun` got: the line's characters measured through
-  `OffsetToBounds` instead.
-- **The corrector**: `SetRemoteForCorrector` (0x00176844) /
-  `RestoreRemoteForCorrector` (0x001768fc), and a `correct` view for
-  `CorrectorUp` (0x001767b8) to find - it answers false out of hand
-  today, because the root view has no such child and the ROM's
-  `GetFrameSlotRef` would throw on nil.
-- **A rich string as an insert item**, whose text and styles come out of
-  `TRichString::MakeParagraphTextSlot` (0x001abf6c) and
-  `MakeParagraphStylesSlot` (0x001ac038).  One goes in as a plain string
-  today, so its own ink is lost.
-- **`GetRecognitionView` and `BuildRecConfig`**, so that a tap on the
-  empty part of a page opens a paragraph to write in.  The caret is now
-  placed correctly on a page that has been written on
-  (`TextContainingPoint` finally answers), which makes this the next
-  thing a user would notice.
-- **The inker's own drawing** (`TStroke::Draw`, `InkerLine`), so a
-  stroke appears while it is being written rather than only after the
-  recogniser has finished with it.
+  `FindWordInRun` that is not there.  Its own work is small; it is
+  `DoReplaceSym` (0x0017b1b8) underneath it that wants the correction
+  information, plus `WordOverSpaces` (0x0017bc84) and
+  `CoordToInterCharGap` (0x0017d614), which are small.
+- **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
+  `correct` to find in the root view's context.  It answers false out
+  of hand today, which is right for a machine that has no corrector
+  but is not what the ROM does.  (The remote-writing bracket around
+  it - `SetRemoteForCorrector`/`RestoreRemoteForCorrector` - is done.)
 
 ## Also still open
 

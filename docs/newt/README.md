@@ -378,10 +378,12 @@ switch down through a reset, which asks whether to erase the internal
 store, and this is that.  With no `--store` the machine is memory only
 and starts at the assistant every time, as it did before.
 
-NOT YET on this path: `GetRecognitionView` and `BuildRecConfig`, so a tap on
-the empty part of a page does not open a paragraph to write in; the
-inker's own drawing (`TStroke::Draw` and `InkerLine`), so a stroke is
-recorded and recognised but never appears.
+A tap on the empty part of a page puts the caret there
+(`TEditView::PositionCaret` over `GetRecognitionView` /
+`BuildRecConfig`), a stroke is inked as it is drawn (`TStroke::Draw`
+over `InkerLine`), and what the recogniser makes of it goes onto the
+page.  NOT YET on this path: the corrector, so a word already written
+cannot be corrected, and the click the caret makes (`FClicker`).
 
 NOT YET: the forks, the package part handlers, the card, battery, power,
 alarm, interconnect, IR, store and backlight events, the ROM packages
