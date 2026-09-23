@@ -88,13 +88,8 @@ TDataView::GetTextView(void)
 
 // ROM 0x000a3458 HandleWord__9TDataViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic
 // How well the view would take the word: the base takes nothing, and a
-// subclass that holds text answers how well the word fits it.
-//
-// NOT YET RECONSTRUCTED: TParagraphView::HandleWord 0x00172760, which is
-// the answer that matters - a paragraph says how well a word written at
-// the point falls in its text.  Until it is there the edit view finds no
-// text under any point, which is right for an empty page and wrong for
-// one that has been written on.
+// subclass that holds text answers how well the word fits it
+// (TParagraphView::HandleWord 0x00172760 is the answer that matters).
 long
 TDataView::HandleWord(const UniChar* /*text*/, ULong /*length*/, const Rect& /*box*/,
 					  const Point& /*pt*/, ULong /*a*/, ULong /*b*/, RefArg /*word*/,

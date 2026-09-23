@@ -12,6 +12,7 @@
 #include "Words.h"			// IsPunctSymbol
 #include "WordInfo.h"		// kWordInfoIsInk
 #include "EditView.h"		// ViewExpectsNumbers
+#include "TextView.h"		// vjOneLineOnly
 #include "InkFont.h"
 #include "Hilites.h"
 #include "OSErrors.h"
@@ -2248,6 +2249,625 @@ TParagraphView::InsertVerticalSpace(Point& pt, long height)
 // the second of the three ink characters the ROM's IsInkChar (0x001fe914)
 // takes - 0xf700, 0xf701 and 0xf702 - and the only one a join merges
 const UniChar kJoinableInkChar = 0xf701;
+
+
+/*------------------------------------------------------------------------------
+	W h e r e   t h e   w o r d   g o e s
+------------------------------------------------------------------------------*/
+
+// A `Finder` carries a word written on the page into the paragraph and
+// comes back saying where in the text it belongs: the offset, how many
+// characters it replaces, and whether it starts a new line.  The three
+// functions below fill it in; `AddWord` is what acts on it.
+
+// ROM 0x001733e4 MinWidthToIntuitTab__FPCUsRC5TRect
+// How wide a gap has to be before it is taken for a tab rather than for
+// a space: four times the average width of a character of the word that
+// was written, and never less than 22 pixels.  The narrow letters count
+// half, because a word of i's and l's is not as wide as its letter count
+// suggests - and when that discount makes the average implausibly wide
+// (over fifteen pixels) the plain letter count is used instead.
+//
+// FindTab answers nothing in this ROM, so the number is only ever used
+// to ask AdjacentBoxes whether a gap is small enough to be a space.
+long
+MinWidthToIntuitTab(const UniChar* text, const Rect& box)
+{
+	long narrow = 0;
+	long length = Ustrlen(text);
+	for (long i = 0; i < length; i++)
+		if (text[i] == U_CONST_CHAR('i') || text[i] == U_CONST_CHAR('l')
+			|| text[i] == U_CONST_CHAR('I'))
+			narrow++;
+	long count = length - (narrow + 1) / 2;
+	if (count == 0)
+		count = 1;
+	// (the box's width divided by the letters it holds; the ROM divides
+	//  by the box and would trap on a box of no width at all)
+	long width = (short) (box.right - box.left);
+	long average = width / count;
+	if (average > 15)
+		average = width / length;
+	average = average * 4;
+	if (average < 0x17)
+		average = 0x16;
+	return average;
+}
+
+
+// ROM 0x00173cc4 NearTabStop__14TParagraphViewFl
+// The paragraph's tab stop within ten pixels of x, or -1 when there is
+// none.  ==> its index in the `tabs` array.
+long
+TParagraphView::NearTabStop(long x)
+{
+	RefVar tabs(Tabs());
+	if (NOTNIL(tabs))
+	{
+		long count = Length(tabs);
+		for (long i = 0; i < count; i++)
+		{
+			long at = RINT(RefVar(GetArraySlotRef(tabs, i))) - x;
+			if (at < 0)
+				at = -at;
+			if (at < 10)
+				return i;
+		}
+	}
+	return -1;
+}
+
+
+// ROM 0x00173ea0 FindTab__14TParagraphViewFP6Finderl
+// Which tab stop the word was written at.  The shipping ROM's answer is
+// always "none": the whole tab-intuiting path - AddTabStop, the tab
+// characters AddWord would put in front of the word - is dead code
+// behind it, which is why writing in columns on a Newton gives spaces
+// rather than tabs.  Kept as it is.
+long
+TParagraphView::FindTab(Finder* /*finder*/, long /*x*/)
+{
+	return 0;
+}
+
+
+// ROM 0x00173268 PreviousLineNeedsCR__14TParagraphViewFPUsT1
+// Whether a carriage return is wanted before the word.  Another one the
+// ROM answers no to out of hand.
+Boolean
+TParagraphView::PreviousLineNeedsCR(UniChar* /*text*/, UniChar* /*word*/)
+{
+	return false;
+}
+
+
+// ROM 0x00173668 FindWordInRun__14TParagraphViewFP6Finder
+// Where a word written *over* the paragraph's own text belongs.  The line
+// it was written on is the one nearest its box (`FindLineForWord` with
+// the middle, the top and the bottom all tried), and then where on that
+// line it falls decides:
+//
+//   left of the line      at the line's start
+//   past the end of it    at the line's end
+//   over the text         over a run of spaces, it replaces them; over a
+//                         word, it goes before or after that word,
+//                         whichever edge it was written nearer
+//
+// ==> whether the word belongs to a line at all.
+//
+// (host: the ROM walks the line's text objects - GetTextObjField,
+// CharLeftEdge, CoordToChar - and asks TabBounds for a tab's box.  The
+// text objects are NOT YET, so the line's characters are measured
+// through OffsetToBounds and PointToOffset instead, and a tab is a
+// character like any other.  NOT YET RECONSTRUCTED: ReplaceCharacter
+// 0x00174e14, the path that has a written character replace the one
+// under it and answers the Finder's strongest claim.)
+Boolean
+TParagraphView::FindWordInRun(Finder* finder)
+{
+	long wordLeft = finder->fBox.left;
+	long index = FindLineForWord(finder->fBox, 5);
+	if (index < 0)
+		return false;
+	const LineInfo& line = fLines[index];
+	Point pt;
+	pt.h = (short) wordLeft;
+	pt.v = (short) ((line.fBounds.top + line.fBounds.bottom) / 2);
+	RefVar textRef(Text());
+	const UniChar* text = GetCString(textRef);
+
+	if (wordLeft < line.fBounds.left)
+	{
+		// written out in the left margin: the word goes at the line's
+		// start, and does not need a new line when the line already
+		// begins one
+		finder->fView = this;
+		finder->fOffset = line.fStart;
+		finder->fReplaceLength = 0;
+		if (line.fStart != 0 && text[line.fStart - 1] == 0x0d)
+			finder->fNewLine = true;
+	}
+	else if (wordLeft < line.fBounds.right)
+	{
+		// written over the line's own text
+		long start = 0;
+		long end = 0;
+		long onLine = 0;
+		PointToWord(pt, &start, &end, &onLine);
+		Rect box;
+		OffsetToBounds(start, &box);
+		long leftEdge = box.left;
+		OffsetToBounds(end, &box);
+		long rightEdge = box.left;
+
+		if (text[start] == U_CONST_CHAR(' ')
+			&& (rightEdge >= finder->fBox.right || end == line.fEnd))
+		{
+			// written over a run of spaces: it takes their place, from
+			// the character its left edge is over to the character its
+			// right edge is over (or to the end of the line)
+			long at = PointToOffset(pt);
+			long to = end;
+			if (end != line.fEnd)
+			{
+				Point right;
+				right.v = pt.v;
+				right.h = finder->fBox.right;
+				to = PointToOffset(right) + 1;
+			}
+			finder->fView = this;
+			finder->fOffset = at;
+			finder->fReplaceLength = to - at;
+			return true;
+		}
+
+		// before or after the word it was written over, whichever edge
+		// it was written nearer
+		if (wordLeft - leftEdge < rightEdge - wordLeft)
+		{
+			finder->fOffset = start;
+			if (start != 0 && text[start - 1] == 0x0d)
+				finder->fNewLine = true;
+		}
+		else
+			finder->fOffset = end;
+		finder->fView = this;
+		finder->fReplaceLength = 0;
+	}
+	else
+	{
+		// written past the end of the line
+		if (line.fStart - 1 < 0 || text[line.fStart - 1] == 0x0d)
+			finder->fTab = FindTab(finder, line.fBounds.right);
+		finder->fView = this;
+		finder->fOffset = line.fEnd;
+		finder->fReplaceLength = 0;
+	}
+	return true;
+}
+
+
+// ROM 0x001735e4 SetFinderBelowParagraph__14TParagraphViewFP6Finder
+// The word goes at the very end of the text, on a line of its own - and
+// it starts that new line unless the view holds one line only, or a word
+// has already gone in somewhere (in which case the one before it has
+// started the line already).
+void
+TParagraphView::SetFinderBelowParagraph(Finder* finder)
+{
+	finder->fOffset = TextLength();
+	finder->fReplaceLength = 0;
+	finder->fView = this;
+	finder->fNewLine = (fViewJustify & vjOneLineOnly) == 0
+					   && gLastAddedWordView == nil;
+	finder->fTab = FindTab(finder, viewBounds.left);
+}
+
+
+// ROM 0x0017348c FindWordInParagraph__14TParagraphViewFP6Finder
+// Where a word written on the page belongs in this paragraph.  It is
+// over the text (`FindWordInRun`), or it carries on from the word that
+// went in before - beside the last one this view took, or beside the end
+// of its last line when it has taken none - in which case it goes at the
+// end of the text; or it is on a line of its own below the paragraph.
+void
+TParagraphView::FindWordInParagraph(Finder* finder)
+{
+	if (FindWordInRun(finder))
+		return;
+
+	Rect last;
+	BoundsOfLastLine(&last);
+	Rect from;
+	Point fromBase;
+	if (GetLastAddedWordView() == this)
+	{
+		from = gLastAddedWordBox;
+		fromBase = gLastAddedWordBase;
+	}
+	else
+	{
+		from = last;
+		fromBase.v = last.bottom;		// the end of the last line
+		fromBase.h = last.right;
+	}
+
+	if (!AdjacentBoxes(from, finder->fBox, fromBase, finder->fBase, 1000))
+	{
+		SetFinderBelowParagraph(finder);
+		return;
+	}
+
+	// it carries on from what is already there
+	finder->fOffset = TextLength();
+	finder->fView = this;
+	finder->fReplaceLength = 0;
+	finder->fNewLine = false;
+	if ((fViewJustify & 3) != vjCenterH && (fViewJustify & 3) != vjRightH)
+	{
+		// a gap wider than a word's worth of letters would be a tab
+		long wide = MinWidthToIntuitTab(finder->fText, finder->fBox);
+		if (!AdjacentBoxes(from, finder->fBox, fromBase, finder->fBase, wide))
+		{
+			finder->fTab = FindTab(finder, last.right);
+			return;
+		}
+	}
+	finder->fTab = 0;
+}
+
+
+// ROM 0x00172eb4 AddWord__14TParagraphViewFP6FinderPCUsUlRC6RefVarPl
+// The word put into the text where the Finder says.  It is not inserted
+// as it stands: the characters that have to go in front of it - the tabs
+// it was written at, the carriage return that starts its line, the space
+// that keeps it off the word before - are built up in a buffer in front
+// of a copy of the word, and the whole lot goes in as one replacement.
+// That is what `styleOffset` is for: it tells `InsertStyledText` how
+// many of the characters going in are the run-up rather than the word,
+// so the word's own styles land on the word.
+//
+// A view whose text flags say the text may not be rearranged (bit 1)
+// skips all of it and puts the word in bare.
+//
+// ==> through `outOffset`, where the word itself landed.
+void
+TParagraphView::AddWord(Finder* finder, const UniChar* text, ULong length,
+						RefArg info, long* outOffset)
+{
+	ULong styleOffset = 0;
+	Boolean munge = (TextFlags() & 2) == 0;
+	UniChar buffer[128];
+	UniChar* allocated = nil;
+	UniChar* word = nil;
+
+	if (munge)
+	{
+		// seventeen characters of room in front of the word and four
+		// after it
+		UniChar* start = buffer;
+		if (length + 0x15 >= 0x80)
+		{
+			allocated = new UniChar[length + 0x15];
+			if (allocated == nil)
+				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+			start = allocated;
+		}
+		word = start + 0x11;
+		BlockMove(text, word, length * (long) sizeof(UniChar));
+		UniChar* first = word;
+
+		RefVar textRef(Text());
+		const UniChar* all = GetCString(textRef);
+		long offset = finder->fOffset;
+		if (offset != 0)
+		{
+			// the tabs it was written at (FindTab answers none in this
+			// ROM, so never)
+			long tabs = finder->fTab;
+			if (tabs > 0)
+			{
+				if (tabs > 11)
+					tabs = 12;
+				for (long i = 0; i < tabs; i++)
+				{
+					*--word = U_CONST_CHAR('\t');
+					length++;
+				}
+			}
+			if (finder->fNewLine)
+			{
+				// a return, but only when the character before is not a
+				// break already and the word is going in at the very end
+				if (!IsBreaker(all[offset - 1]) && all[offset] == 0)
+				{
+					*--word = 0x0d;
+					length++;
+				}
+			}
+			else if (IsBreaker(all[offset - 1]))
+				// the word takes the place of the break before it
+				finder->fOffset--;
+
+			if (!finder->fExact)
+			{
+				// and a space between it and what is already there
+				UniChar delimiter[6];
+				GetAppendDelimiter(delimiter, all, word,
+								   (ULong) finder->fOffset, length);
+				long n = Ustrlen(delimiter);
+				if (n > 0)
+				{
+					word -= n;
+					BlockMove(delimiter, word, n * (long) sizeof(UniChar));
+					length += n;
+				}
+			}
+		}
+		if (!finder->fExact)
+		{
+			// and one between it and whatever follows
+			const UniChar* after = all + finder->fOffset + finder->fReplaceLength;
+			if (after[0] != 0)
+			{
+				UniChar delimiter[6];
+				GetAppendDelimiter(delimiter, word, after, length,
+								   (ULong) Ustrlen(after));
+				long n = Ustrlen(delimiter);
+				if (n > 0)
+				{
+					BlockMove(delimiter, word + length,
+							  n * (long) sizeof(UniChar));
+					length += n;
+				}
+			}
+		}
+		styleOffset = (ULong) (first - word);
+		// (NOT YET RECONSTRUCTED: AddTabStop 0x00173b34, which the ROM
+		//  calls when the word was written at a tab stop.  FindTab
+		//  answers none in this ROM, so fTab is always 0 and the call
+		//  never happens.)
+	}
+
+	RefVar styles;
+	RefVar correctInfo;
+	if (NOTNIL(info))
+	{
+		styles = GetFrameSlot(info, RSSYMstyles);
+		correctInfo = GetFrameSlot(info, RSSYMcorrectinfo);
+	}
+	InsertStyledText((ULong) finder->fOffset, munge ? word : text, length,
+					 styles, correctInfo, styleOffset,
+					 (ULong) finder->fReplaceLength, false);
+	if (outOffset != nil)
+		*outOffset = finder->fOffset + (long) styleOffset;
+	if (allocated != nil)
+		delete[] allocated;
+}
+
+
+// ROM 0x00172584 IsMidWordLetterInsertion__FP14TParagraphViewP11TUnitPublic
+// Whether the writer is putting a single letter into the middle of a
+// word at the caret - one character read, the caret in this paragraph
+// with nothing selected, and letters on both sides of it.  A letter
+// going in there wants no space around it.
+Boolean
+IsMidWordLetterInsertion(TParagraphView* para, TUnitPublic* unit)
+{
+	Handle word = unit->Word();
+	long length = Ustrlen(*(UniChar**) word);
+	DisposHandle(word);
+	if (length != 1)
+		return false;
+	if (gRootView->fCaretView != (TView*) para || gRootView->fCaretLength != 0)
+		return false;
+	long textLength = para->TextLength();
+	RefVar textRef(para->Text());
+	const UniChar* text = GetCString(textRef);
+	long caret = gRootView->fCaretOffset;
+	if (caret == textLength || caret == 0)
+		return false;
+	return !IsWhiteSpace(text[caret - 1]) && !IsWhiteSpace(text[caret]);
+}
+
+
+// ROM 0x00172760 HandleWord__14TParagraphViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic
+// How well this paragraph would take a word written on the page, and -
+// when `reallyDoIt` says so - the word put in.  This is the answer the
+// recogniser's `TEditView::HandleWord` collects from every child before
+// it picks one, and it is also what `TextContainingPoint` asks with a
+// single letter to find out what text a point is in.
+//
+// The score:
+//
+//   0  not at all
+//   1  the word overlaps the paragraph
+//   2  it is on the line below the paragraph's text
+//   3  the last word to go in went into this view
+//   4  it is over the paragraph's last line
+//   5  the paragraph covers half the word's box or more
+//   6  it replaces a character of the text exactly (NOT YET)
+//
+// A score below four only says how well the word fits; four and above
+// are taken as certain, which is why they go on to place the word even
+// when only asked.
+//
+// The room a word may fall in is the view's bounds with the margins
+// added (ten pixels left, thirty right) and one more line's worth of
+// slack on the right, worked out from how wide the word's letters are -
+// an ink word standing for a hundred pixels' worth.
+//
+// Two words written one after another belong together even when the
+// second falls outside the paragraph the first made: when the last word
+// to go in went into this view and this one was written beside it or on
+// the line under it, the word is treated as though it had been written
+// just after the last one in the text - five pixels past the end of the
+// last character, on that line.  More than a second between them, or a
+// word written above or to the left of the paragraph, and the tie is
+// forgotten.
+long
+TParagraphView::HandleWord(const UniChar* text, ULong length, const Rect& box,
+						   const Point& pt, ULong startTime, ULong endTime,
+						   RefArg info, Boolean reallyDoIt, long* outOffset,
+						   TUnitPublic* unit)
+{
+	if (fLines == nil)
+		CreateAllCaches();
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+		return 0;
+
+	Rect room = viewBounds;
+	long score = 0;
+	if (pt.v > room.top)
+	{
+		if (CoveredBy(&box, &room) >= 0x32)
+			score = 5;
+		else if (WordOnLastLine(box))
+			score = 4;
+	}
+
+	// how much slack the word gets past the right edge: six times the
+	// width of one of its letters, an ink word standing for a hundred
+	long slack;
+	if (text[0] == kInkWordChar)
+		slack = 100;
+	else
+		slack = (short) (6 * (((ULong) (short) (box.right - box.left)) / length));
+	AddMarginsToBounds(&room);
+	room.right = (short) (room.right + slack);
+
+	// the tie to the word that went in before: gone when there are no
+	// times at all (nobody is writing - this is the edit view asking what
+	// text a point is in), when a second has passed since that word's ink
+	// ended, or when this word was written above the paragraph or to the
+	// left of it
+	if ((startTime == 0 && endTime == 0)
+		|| (ULong) (startTime - gLastAddedWordInkEndTime) > 0x3c
+		|| (gLastAddedWordView == this
+			&& (box.right < room.left || box.bottom < room.top)))
+	{
+		gLastAddedWordView = nil;
+		gLastAddedWordBox.top = -0x8000;
+		gLastAddedWordBox.bottom = -0x8000;
+		gLastAddedWordBase.v = -0x8000;
+	}
+	if (score == 0 && GetLastAddedWordView() == this)
+		score = 3;
+
+	// one of the word's edges has to fall in the room
+	if ((box.left >= room.left && box.left < room.right)
+		|| (box.right > room.left && box.right <= room.right))
+	{
+		if (score == 0)
+		{
+			if (ISNIL(RefVar(GetVar(RSSYMonelineparagraphs)))
+				&& WordOnLineBelowParagraph(box, pt))
+				score = 2;
+			if (score == 0)
+			{
+				if (!Overlaps(&box, &room))
+					return 0;
+				score = 1;
+			}
+		}
+	}
+	if (score == 0)
+		return 0;
+	if (!reallyDoIt && score <= 3)
+		return score;
+
+	// a word written beside the last one, or on the line under it, is
+	// placed as though it had been written just after it in the text
+	Rect wordBox = box;
+	Point wordPt = pt;
+	if (reallyDoIt && gLastAddedWordView == this
+		&& startTime < gLastAddedWordAddTime)
+	{
+		Boolean adjacent = AdjacentBoxes(gLastAddedWordBox, box,
+										 gLastAddedWordBase, pt, 1000);
+		Boolean above = !adjacent && BoxAboveBox(gLastAddedWordBox, box);
+		if (adjacent || above)
+		{
+			if (gLastAddedWordEndOffset == 0)
+				gLastAddedWordEndOffset = TextLength();
+			Rect endBox;
+			OffsetToBounds(gLastAddedWordEndOffset - 1, &endBox);
+			long middle = endBox.top
+						  + (((short) (endBox.bottom - endBox.top)) >> 1);
+			if (adjacent || middle > gLastAddedWordBase.v)
+			{
+				short width = (short) (box.right - box.left);
+				wordBox.left = (short) (endBox.right + 5);
+				wordBox.right = (short) (wordBox.left + width);
+				wordBox.top = endBox.top;
+				wordBox.bottom = endBox.bottom;
+				// (ROM bug: the new middle is *added* to the point's h
+				//  rather than replacing it.  It is harmless - nothing
+				//  reads this point's h again, only its v, which
+				//  AdjacentBoxes compares - so it is kept.)
+				wordPt.h = (short) (wordBox.left + (width >> 1) + wordPt.h);
+				wordPt.v = wordBox.bottom;
+			}
+		}
+	}
+
+	Finder finder;
+	finder.fBox = wordBox;
+	finder.fBase = wordPt;
+	finder.fText = text;
+	finder.fLength = length;
+	finder.fView = nil;
+	finder.fOffset = 0;
+	finder.fReplaceLength = 0;
+	finder.fExact = false;
+	finder.fNewLine = false;
+	finder.fReallyDoIt = reallyDoIt;
+	finder.fTab = 0;
+	finder.fUnit = unit;
+
+	if (score == 2)
+		SetFinderBelowParagraph(&finder);
+	else
+	{
+		FindWordInParagraph(&finder);
+		if (finder.fExact)
+			score = 6;
+		if (!reallyDoIt)
+			return score;
+	}
+	if (finder.fLength == 0)
+		return score;
+
+	long at = finder.fOffset;
+	if (score != 6)
+	{
+		// the word goes in at the caret instead when the writer has said
+		// writing may come from anywhere and the caret is here (or the
+		// word is on the line below); a word that brings its own data
+		// frame is always placed rather than inserted
+		Boolean atCaret = gRootView->fCaretView != nil
+						  && NOTNIL(RefVar(GetPreference(RSSYMremotewriting)))
+						  && (gRootView->fCaretView == this || score == 2);
+		if (unit == nil || !atCaret || NOTNIL(info))
+			AddWord(&finder, finder.fText, finder.fLength, info, &at);
+		else
+		{
+			RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+			SetFrameSlot(spec, RSSYMinsertitems, RefVar(unit->WordInfo()));
+			SetFrameSlot(spec, RSSYMaddspace,
+						 RefVar(MAKEBOOLEAN(!IsMidWordLetterInsertion(this, unit))));
+			InsertItemsAtCaret(spec);
+			gAddWordInfo = false;
+			at = RINT(RefVar(GetFrameSlot(spec, RSSYMinsertoffset)));
+			finder.fLength = (ULong) RINT(RefVar(GetFrameSlot(spec, RSSYMreplacechars)));
+		}
+	}
+	if (outOffset != nil)
+		*outOffset = at;
+	SaveAddedUnitBounds(wordBox, wordPt, endTime);
+	gLastAddedWordEndOffset = (long) finder.fLength + at;
+	return score;
+}
 
 
 /*------------------------------------------------------------------------------

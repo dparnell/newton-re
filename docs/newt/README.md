@@ -378,9 +378,7 @@ switch down through a reset, which asks whether to erase the internal
 store, and this is that.  With no `--store` the machine is memory only
 and starts at the assistant every time, as it did before.
 
-NOT YET on this path: `TParagraphView::HandleWord`, so the editor finds
-no text under a point - right for an empty page, wrong for one that has
-been written on; `GetRecognitionView` and `BuildRecConfig`, so a tap on
+NOT YET on this path: `GetRecognitionView` and `BuildRecConfig`, so a tap on
 the empty part of a page does not open a paragraph to write in; the
 inker's own drawing (`TStroke::Draw` and `InkerLine`), so a stroke is
 recorded and recognised but never appears.

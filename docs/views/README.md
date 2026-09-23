@@ -921,6 +921,106 @@ use for, and undoes the lot.
 `MakeParagraphStylesSlot` 0x001ac038; one goes in as a plain string, so
 its own ink is lost.
 
+### A word written on the page (`TParagraphView::HandleWord` 0x00172760)
+
+Every paragraph on a page is asked, before a word is put down, how well
+it would take that word - and the best answer gets it
+(`TEditView::HandleWord`).  The same question with a single letter 'A'
+and no unit is how `TextContainingPoint` finds what text a point is in,
+which is what places the caret; the two share one implementation, so a
+tap and a written word always agree about where they land.
+
+The score a paragraph answers:
+
+| score | why |
+| --- | --- |
+| 0 | not at all |
+| 1 | the word's box overlaps the paragraph |
+| 2 | it is on the line below the paragraph's text |
+| 3 | the last word to go in went into this view |
+| 4 | it is over the paragraph's last line |
+| 5 | the paragraph covers half the word's box or more (`CoveredBy`) |
+| 6 | it replaces a character of the text exactly (`ReplaceCharacter`, NOT YET) |
+
+Below four is only an opinion; four and above are taken as certain, and
+the paragraph goes on to place the word even when it was only asked.
+`TEditView::HandleWord` stops asking as soon as one answers 6.
+
+The room a word may fall in is the view's bounds with the margins added
+(`AddMarginsToBounds`: ten pixels to the left, thirty to the right,
+because writing runs on past the right edge far more often than it
+starts before the left one) and one more line's worth of slack on the
+right, guessed from how wide the word's own letters are - six times the
+box's width divided by its letter count, or a flat hundred for an ink
+word.
+
+**Two words written one after the other belong together**, even when the
+second falls outside the paragraph the first one made.  The globals
+`gLastAddedWord*` carry the tie: the view a word last went into, the box
+it was written in, the middle of its base line, and when its ink ended
+and when it went in (`SaveAddedUnitBounds`, the vtable's +0x150).  When
+the last word went into this view and this one was written beside it
+(`AdjacentBoxes`, a thousand pixels of slack) or on the line under it
+(`BoxAboveBox`), the word is placed *as though it had been written just
+after the last one in the text* - five pixels past the end of the last
+character, on that line.  More than a second between them, or a word
+written above the paragraph or to the left of it, and the tie is
+forgotten.
+
+> A slip kept as it is: the adjusted base point's h is *added* to the
+> old one rather than replacing it.  Nothing reads that h again - only
+> its v, which `AdjacentBoxes` compares - so it never showed.
+
+#### Where in the text it goes (the `Finder`)
+
+A `Finder` carries the word in - its box, its base point, its text and
+the unit it came from - and comes back with the view, the offset, how
+many characters the word replaces, and whether it starts a new line.
+
+`FindWordInRun` (0x00173668) answers for a word written *over* the
+text.  The line is the one nearest its box (`FindLineForWord` tries the
+middle, the top and the bottom), and then: written out in the left
+margin it goes at the line's start; past the right end of the line it
+goes at the line's end; over the text it goes before or after the word
+it was written over, whichever edge it was written nearer - unless it
+was written over a run of spaces, in which case it takes their place.
+
+`FindWordInParagraph` (0x0017348c) is the whole question: over the text,
+or carrying on from the last word (beside the last one this view took,
+or beside the end of its last line when it has taken none) in which case
+it goes at the end of the text, or on a line of its own below the
+paragraph (`SetFinderBelowParagraph`, 0x001735e4).
+
+`AddWord` (0x00172eb4) acts on the Finder.  The word is copied into the
+middle of a buffer with seventeen characters of room in front of it, and
+what has to go before it is built up backwards into that room: the tabs
+it was written at, the carriage return that starts its line, and the
+space that keeps it off the word before (`GetAppendDelimiter`, the same
+rule dropped items go through).  A space after it goes on the end.  The
+whole lot is one `InsertStyledText`, and how many characters the run-up
+came to is the `styleOffset` argument - which is what makes the word's
+own styles land on the word rather than on the space in front of it.
+
+Tabs are dead code in this ROM: `FindTab` (0x00173ea0) answers "no tab"
+out of hand, so `AddTabStop` and the tab characters `AddWord` would put
+in are never reached.  That is why writing in columns on a Newton gives
+you spaces.  `PreviousLineNeedsCR` (0x00173268) is another that answers
+no and nothing else.  `MinWidthToIntuitTab` (0x001733e4) survives
+because `FindWordInParagraph` still uses its number to ask whether a gap
+is small enough to be a space: four times the average width of one of
+the word's letters (the narrow ones - i, l, I - counting half), never
+less than 22 pixels.
+
+When the writer has asked for remote writing and the caret is here, the
+word is not placed at all: its word-info frame goes to
+`InsertItemsAtCaret` instead, with `addSpace` off when
+`IsMidWordLetterInsertion` (0x00172584) says a single letter is going
+into the middle of a word at the caret.
+
+`test_Views`'s `TestWordGeometry` checks the predicates and
+`TestWordIntoParagraph` writes a word past the end of a paragraph's line
+and finds it in that paragraph's text.
+
 ### Tapping a paragraph (`HandleTap` 0x001772f4, the double tap)
 
 A tap on a paragraph (aeTap) is deferred by the double-tap interval so a

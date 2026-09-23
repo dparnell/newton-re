@@ -78,6 +78,36 @@ struct LineInfo
 	Rect		fBounds;			// +0x1c  its box (the text's width)
 };
 
+// Where a word written on the page goes in a paragraph.  The word comes
+// in - the box it was written in, the middle of its base line, its text
+// and the unit it came from - and the three Find functions leave the
+// answer in the rest: which view, at which offset, over how many
+// characters, and whether it starts a new line.
+class TParagraphView;
+class TUnitPublic;
+struct Finder					// 0x2c bytes
+{
+	Rect		fBox;				// +0x00  where the word was written
+	Point		fBase;				// +0x08  the middle of its base line
+	const UniChar*	fText;			// +0x0c  the word
+	ULong		fLength;			// +0x10  its characters
+	TParagraphView*	fView;			// +0x14  the view it belongs to
+	long		fOffset;			// +0x18  the character offset it goes at
+	long		fReplaceLength;		// +0x1c  how many characters it replaces
+	Boolean		fExact;				// +0x20  it replaces a character exactly (score 6)
+	Boolean		fNewLine;			// +0x21  it starts a new line
+	Boolean		fReallyDoIt;		// +0x22  the word is really going in
+	long		fTab;				// +0x24  the tab stop it was written at (always 0)
+	TUnitPublic*	fUnit;			// +0x28  the unit it came from, if any
+};
+
+// How wide a gap has to be before it is taken for a tab rather than a
+// space.
+// Whether the writer is putting a single letter into the middle of a
+// word at the caret, which wants no space around it.
+Boolean	IsMidWordLetterInsertion(TParagraphView* para, TUnitPublic* unit);	// ROM 0x00172584 IsMidWordLetterInsertion__FP14TParagraphViewP11TUnitPublic
+long	MinWidthToIntuitTab(const UniChar* text, const Rect& box);	// ROM 0x001733e4 MinWidthToIntuitTab__FPCUsRC5TRect
+
 class TParagraphHilite;
 
 // The text flags of an input view: what kind of text it takes.
@@ -157,6 +187,9 @@ public:
 								Point& armB, Point& tail);			// ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
 	virtual long	HandleLineGesture(long angle, Point& from, Point& to);	// ROM 0x00176bd4 HandleLineGesture__14TParagraphViewFlR6TPointT2
 	virtual void	HiliteText(long start, long length, Boolean caretOnEmpty);	// ROM 0x0016a490 HiliteText__14TParagraphViewFlT1Uc
+	virtual long	HandleWord(const UniChar* text, ULong length, const Rect& box,
+							   const Point& pt, ULong startTime, ULong endTime, RefArg info,
+							   Boolean reallyDoIt, long* outOffset, TUnitPublic* unit);	// ROM 0x00172760 HandleWord__14TParagraphViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic (vtable +0x148)
 	virtual void	SaveAddedUnitBounds(const Rect& box, const Point& base, ULong inkEndTime);	// ROM 0x00172e68 SaveAddedUnitBounds__14TParagraphViewFRC5TRectRC6TPointUl (vtable +0x150)
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
@@ -197,6 +230,17 @@ public:
 	long		InsertVerticalSpace(Point& pt, long height);			// ROM 0x001764c4 InsertVerticalSpace__14TParagraphViewFR6TPointl
 	// A caret drawn over a word of writing cuts it in two rather than
 	// opening space in the text.
+	// The word put into the text where the Finder says.
+	void		AddWord(Finder* finder, const UniChar* text, ULong length,
+						RefArg info, long* outOffset);		// ROM 0x00172eb4 AddWord__14TParagraphViewFP6FinderPCUsUlRC6RefVarPl
+	// Where a word written on the page goes in the text.
+	void		FindWordInParagraph(Finder* finder);		// ROM 0x0017348c FindWordInParagraph__14TParagraphViewFP6Finder
+	Boolean		FindWordInRun(Finder* finder);				// ROM 0x00173668 FindWordInRun__14TParagraphViewFP6Finder
+	void		SetFinderBelowParagraph(Finder* finder);	// ROM 0x001735e4 SetFinderBelowParagraph__14TParagraphViewFP6Finder
+	long		FindTab(Finder* finder, long x);			// ROM 0x00173ea0 FindTab__14TParagraphViewFP6Finderl - always 0
+	long		NearTabStop(long x);						// ROM 0x00173cc4 NearTabStop__14TParagraphViewFl
+	Boolean		PreviousLineNeedsCR(UniChar* text, UniChar* word);	// ROM 0x00173268 PreviousLineNeedsCR__14TParagraphViewFPUsT1 - always false
+
 	// Where a word written on the page falls in relation to this
 	// paragraph, which is what says whether it belongs to it.
 	Boolean		WordOnLastLine(const Rect& box);			// ROM 0x00172008 WordOnLastLine__14TParagraphViewFRC5TRect

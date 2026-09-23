@@ -501,8 +501,9 @@ from `TextContainingPoint`, which is the caret sitting where that view's
 next line would start.  The ROM sends that view a `HandleWord` of a
 single carriage return, which starts the line and moves the caret into
 it, and then puts the word in at the caret.
-`TParagraphView::HandleWord` 0x00172760 is NOT YET, so the word starts a
-paragraph of its own instead.)
+The `HandleWord` it wants is reconstructed
+now; the geometry the ROM builds for that one call is not, so the word
+still starts a paragraph of its own.)
 
 The placing is `TEditView::AddNewParagraph`'s.  An ink word has already
 been brought down to a size a line of text can hold, so the paragraph is
@@ -530,4 +531,5 @@ what the page kept.
 NOT YET on this route: the corrector (`SetRemoteForCorrector` /
 `RestoreRemoteForCorrector`, which put its view out of the way while
 the word is placed, and `CorrectorUp`, which has no `correct` view to
-find), and `TParagraphView::HandleWord` for the third case above.
+find), and `TParagraphView::ReplaceCharacter`, the Finder's
+strongest claim - a written character that replaces the one under it.

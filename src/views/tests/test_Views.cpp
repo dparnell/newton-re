@@ -4432,6 +4432,87 @@ TestWordGeometry()
 }
 
 
+// A word the recogniser read, written over a paragraph that is already
+// on the page: it goes into that paragraph's text rather than starting a
+// new paragraph of its own, and the paragraph says how well it would
+// take it before it is handed over.
+static void
+TestWordIntoParagraph()
+{
+	TEditView* editor = (TEditView*) ViewOf(
+		"ctxWP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 0, right: 300, bottom: 200}, viewChildren: [], "
+		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
+	EXPECT(editor != nil);
+	TParagraphView* para = (TParagraphView*) ViewOf(
+		"ctxWPP := AddView(ctxWP, {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 10, top: 10, right: 200, bottom: 40}, "
+		"viewFont: espy12, text: \"one two\"})");
+	EXPECT(para != nil && para->TextLength() == 7);
+	Eval("ctxWP.added := nil");			// (adding the paragraph ran the script)
+	Refresh();
+	gLastAddedWordView = nil;
+
+	long right = para->TextBounds().right;
+	long base = para->viewBounds.top + para->Line(0).fAscent;
+
+	// asked on its own, the paragraph says how well it would take a word
+	// written just past the end of its line
+	Rect box;
+	SetRect(&box, right + 6, base - 10, right + 30, base + 3);
+	Point pt;
+	pt.h = (short) (right + 18);
+	pt.v = (short) base;
+	UniChar text[4];
+	text[0] = U_CONST_CHAR('t');
+	text[1] = U_CONST_CHAR('e');
+	text[2] = U_CONST_CHAR('n');
+	text[3] = 0;
+	RefVar none;
+	long wants = para->HandleWord(text, 3, box, pt, 0, 0, none, false, nil, nil);
+	EXPECT(wants > 0);
+	// and nothing at all about a word written half a page below it
+	Rect far;
+	SetRect(&far, right + 6, base + 140, right + 30, base + 153);
+	Point farPt;
+	farPt.h = (short) (right + 18);
+	farPt.v = (short) (base + 150);
+	EXPECT(para->HandleWord(text, 3, far, farPt, 0, 0, none, false, nil, nil) == 0);
+
+	// the same word offered to the page goes into the paragraph
+	TDomain* domain = TDomain::Make(gController, kWRecDomainType, (char*) "word");
+	TWRecUnit* unit = TWRecUnit::Make(domain, 1, nil);
+	EXPECT(domain != nil && unit != nil);
+	if (unit == nil)
+		return;
+	TUnitPublic pub(unit, 0);
+	pub.fWordBase.top = (short) base;
+	pub.fWordBase.bottom = (short) base;
+	pub.fWordBase.left = (short) (right + 6);
+	pub.fWordBase.right = (short) (right + 30);
+
+	Rect room = editor->viewBounds;
+	RefVar info;
+	long offset = -1;
+	TView* into = editor->HandleWord(text, 3, box, room, &pub, info, &offset);
+	EXPECT(into == (TView*) para);
+	EXPECT(ISNIL(Eval("ctxWP.added")));		// no new paragraph
+	EXPECT(NOTNIL(Eval("StrEqual(ctxWPP.text, \"one two ten\")")));
+	// the word itself landed after the space that was put in front of it
+	EXPECT(offset == 8);
+	// and the paragraph remembers where the word went, so the next one
+	// can carry on from it
+	EXPECT(gLastAddedWordView == (TView*) para);
+	EXPECT(gLastAddedWordEndOffset == 11);
+
+	unit->Dispose();
+	domain->Dispose();
+	gLastAddedWordView = nil;
+	Eval("RemoveView(GetRoot(), ctxWP)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -4545,6 +4626,7 @@ main()
 		TestJoinInk();
 		TestSplitInk();
 		TestWordGeometry();
+		TestWordIntoParagraph();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();
