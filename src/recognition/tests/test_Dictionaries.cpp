@@ -23,6 +23,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "Locale.h"
+#include "Learning.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -101,6 +102,28 @@ EntryFor(ULong id)
 {
 	dictListEntry* entry = FindDictionaryEntry(id);
 	return entry == nil ? nil : entry->fDictionary;
+}
+
+
+// a UniChar string of an ASCII one
+static void
+Uni(UniChar* out, const char* text)
+{
+	long i = 0;
+	for (; text[i] != 0; i++)
+		out[i] = (UniChar) (UByte) text[i];
+	out[i] = 0;
+}
+
+
+static Boolean
+Is(const UniChar* text, const char* expected)
+{
+	long i = 0;
+	for (; expected[i] != 0; i++)
+		if (text[i] != (UniChar) (UByte) expected[i])
+			return false;
+	return text[i] == 0;
 }
 
 
@@ -384,6 +407,84 @@ main()
 		// the words are still there afterwards
 		attribute = 0;
 		EXPECT(LookUp("hello", &attribute) != -1);
+	}
+
+	// ---- the words the machine keeps of its own ----
+	// The three dictionaries the writer fills start empty; what is
+	// checked here is the counting, the expansion, and the one-word
+	// memory the auto-add dictionary keeps.
+	{
+		// an expansion put in by hand: the word goes in the dictionary
+		// with the index of its expansion as its attribute, and the
+		// expansion itself goes in the frame's `list`
+		RefVar frame(FindDictionaryFrame(kExpandDictionary));
+		EXPECT(NOTNIL(frame));
+		RefVar expansions(MakeArray(1));
+		UniChar full[64];
+		Uni(full, "as soon as possible");
+		SetArraySlot(expansions, 0, RefVar(MakeString(full)));
+		SetFrameSlot(frame, RSSYMlist, expansions);
+		EXPECT(RINT(RefVar(GetProtoVariable(frame, RSSYMcount, nil))) == 0);
+		EXPECT(AddWordWithCount(kExpandDictionary, (UByte*) "asap", 0) == 0);
+		EXPECT(airusResult == 0);
+		EXPECT(RINT(RefVar(GetProtoVariable(frame, RSSYMcount, nil))) == 1);
+
+		// the word written out in full
+		UniChar word[64];
+		Uni(word, "asap");
+		Handle out = ExpandWord(word);
+		EXPECT(out != nil && Is((const UniChar*) *out, "as soon as possible"));
+		if (out != nil)
+			DisposeHandle(out);
+		// ... with what was written around it put back
+		Uni(word, "(asap),");
+		out = ExpandWord(word);
+		EXPECT(out != nil && Is((const UniChar*) *out, "(as soon as possible),"));
+		if (out != nil)
+			DisposeHandle(out);
+		// ... and a capital carried over
+		Uni(word, "Asap");
+		out = ExpandWord(word);
+		EXPECT(out != nil && Is((const UniChar*) *out, "As soon as possible"));
+		if (out != nil)
+			DisposeHandle(out);
+		// a word the dictionary has never heard of expands into nothing
+		Uni(word, "qqxyzzy");
+		EXPECT(ExpandWord(word) == nil);
+
+		// the limit: a dictionary as full as its frame says is refused
+		SetFrameSlot(frame, RSSYMlimit, RefVar(MAKEINT(1)));
+		EXPECT(AddWordWithCount(kExpandDictionary, (UByte*) "btw", 0) == 1);
+		EXPECT(airusResult == kAirusDictionaryFull);
+		EXPECT(RINT(RefVar(GetProtoVariable(frame, RSSYMcount, nil))) == 1);
+
+		// the punctuation at the ends, on its own
+		Uni(word, "\"quoted.\"");
+		UniChar* leading;
+		UniChar* trailing;
+		CollectPunctSymbols(word, &leading, &trailing);
+		EXPECT(Is(word, "quoted"));
+		EXPECT(leading != nil && Is(leading, "\""));
+		EXPECT(trailing != nil && Is(trailing, ".\""));
+		if (leading != nil)
+			DisposePtr((Ptr) leading);
+		if (trailing != nil)
+			DisposePtr((Ptr) trailing);
+
+		// a capital is noticed without the word being changed
+		Uni(word, "Hello");
+		EXPECT(Capitalized(word) && Is(word, "Hello"));
+		Uni(word, "hello");
+		EXPECT(!Capitalized(word) && Is(word, "hello"));
+
+		// the auto-add dictionary remembers the last word it was offered
+		Uni(word, "notebook");
+		EXPECT(!LastWordSame(RefVar(MakeString(word))));
+		EXPECT(LastWordSame(RefVar(MakeString(word))));
+		Uni(word, "elsewhere");
+		EXPECT(!LastWordSame(RefVar(MakeString(word))));
+		Uni(word, "notebook");
+		EXPECT(!LastWordSame(RefVar(MakeString(word))));
 	}
 
 	if (failures == 0)

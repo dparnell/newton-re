@@ -41,6 +41,7 @@ add_library(recognition STATIC
     Dictionaries.cpp
     ROMDictionaryData.cpp
     ROMDictionaryTable.cpp
+    Learning.cpp
     AirusTables.cpp
     Words.cpp
 )

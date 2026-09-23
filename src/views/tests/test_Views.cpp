@@ -40,6 +40,7 @@
 #include "WordInfo.h"
 #include "CorrectInfo.h"
 #include "Words.h"
+#include "Dictionaries.h"
 #include "Controller.h"
 #include "StrokeQueue.h"
 #include "HostTablet.h"
@@ -2708,10 +2709,10 @@ TestClicks()
 		SetFrameSlot(intl, RSSYMcurrentlocalebundle, RefVar(AllocateFrame()));
 		SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
 	}
-	// a machine at this level builds no dictionaries, and the ROM then
-	// reads the dictionary preferences over a list that is not there (the
-	// bug written down in ReadDictPrefs); an empty list stands in for it
-	SetFrameSlot(RefVar(gVarFrame), RSSYMdictionaries, RefVar(MakeArray(0)));
+	// A machine at this level builds no dictionaries, but the ROM reads
+	// the dictionary preferences and expands words at every level (the
+	// bug written down in ReadDictPrefs), so they are built here.
+	InitDictionaries();
 	gRecognition.Init(1);
 	gStrokeWorld.Init();
 	HostTabletInit();

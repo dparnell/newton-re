@@ -588,12 +588,45 @@ level, so a machine started at level 1 throws on a `vars.dictionaries`
 that was never made.  The MP2x00 always starts at level 2, so nobody
 ever saw it; the tests that do start at level 1 put an empty list there.
 
+## What the machine keeps (`recognition/Learning.h`)
+
+Three of the dictionaries are the writer's own and start empty: 31 the
+user dictionary, 35 the expand dictionary and 36 the auto-add one.  A
+word goes into one of them through `AddWordWithCount` 0x001aab74, which
+keeps the dictionary frame's `count` in step and refuses to go past its
+`limit` (a hundred) - `airusResult` comes back -15, which is what the
+Prefs slip turns into "the dictionary is full".
+
+The expand dictionary is a dictionary and an array together: what the
+Airus trie stores beside a word is not the expansion but the *index* of
+the expansion in the frame's `list`.  `ExpandWord` 0x001aa930 puts the
+pieces back: `CollectPunctSymbols` 0x001aa680 takes the punctuation off
+both ends and hands the two runs back, `GetExpandIndex` 0x001aa600 asks
+the dictionary, and what comes out is the leading punctuation, the
+expansion and the trailing punctuation - with a capital carried over
+when the abbreviation had one and the expansion does not.  Only the
+first letter is lowered before the lookup, so "Asap" expands and "ASAP"
+does not.
+
+`Capitalized` 0x001aa8ec is how the capital is noticed, and it is worth
+a look: the ROM reads the first *two* characters as one word, lowers the
+first, compares the top halfword of what it read with the top halfword
+of what is there now - the first character, the machine being
+big-endian - and puts the two bytes back.  Written out, it is "was the
+first letter a capital, and leave the word alone".
+
+`LastWordSame` 0x001aae08 is the one-word memory the auto-add dictionary
+keeps in its frame's `last` slot: a word has to be written twice running
+before anything is done with it, and a different word in between starts
+the count again.
+
 `test_Dictionaries` builds a list of two AL dictionaries by hand and
 checks the id substitutions and the fallback, the three chains, the link
 from one dictionary to another, the custom dictionaries a configuration
 names, and the words found in them; then it runs `InitDictionaries` and
-`ReadDictPrefs` for real against the U.S. locale bundle and looks real
-words up in what comes out.
+`ReadDictPrefs` for real against the U.S. locale bundle, looks real
+words up in what comes out, and puts an expansion in and takes it out
+again.
 
 ## The Airus engine (`recognition/Airus.h`)
 

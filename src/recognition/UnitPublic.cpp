@@ -18,6 +18,7 @@
 #include "WordInfo.h"
 #include "StrokeBundle.h"
 #include "Words.h"			// gWordID, LookupWord, ExpandWord
+#include "Learning.h"			// gWordID, LookupWord, ExpandWord
 #include "Unicode.h"
 #include "Ports.h"			// RoundFixed
 #include "Frames.h"

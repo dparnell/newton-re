@@ -491,16 +491,3 @@ WRecFindBaseline(TStroke** strokes, Point* out)
 // Set by ReadDomainOptions out of the "learning enabled" preference,
 // which is NOT YET: nothing is kept.
 Boolean	gSaveWordTrainingData = false;
-
-
-
-
-// ROM 0x001aa930 ExpandWord__FPUs
-// NOT YET RECONSTRUCTED: CollectPunctSymbols and the expansion
-// dictionary.  Nothing expands, so no variant is offered beside a
-// reading.
-Handle
-ExpandWord(UniChar* /*word*/)
-{
-	return nil;
-}

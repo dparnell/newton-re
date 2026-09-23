@@ -80,6 +80,7 @@ const long	kAirusIsPrefixAndWord	= 2;	// ... and one as well
 const long	kAirusIsWord			= 3;	// a word, with nothing going on from it
 const long	kAirusNotAWord			= -6;
 const long	kAirusBadDictionary		= -3;	// the bytes are not a dictionary
+const long	kAirusDictionaryFull	= -15;	// the dictionary frame's `limit` was reached (AddWordWithCount)
 
 // airusResult, and what ExpandDict leaves in the block
 const long	kAirusNoMemory		= -2;

@@ -87,7 +87,6 @@ class TDictChain;
 void	BuildChains(TDictChain** chains, RefArg config);		// ROM 0x0013d808 BuildChains__FPP10TDictChainRC6RefVar (NOT YET: no chains)
 
 long	LookupWord(const UniChar* word, ULong* where);		// ROM 0x0013f4f4 LookupWord__FPUsPUl (recognition/Dictionaries.cpp)
-Handle	ExpandWord(UniChar* word);								// ROM 0x001aa930 ExpandWord__FPUs
 
 // Whether the writer has asked for the recogniser to be taught by
 // what they write (the "learning" preference).

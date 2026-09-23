@@ -62,6 +62,7 @@ long	FrameSlotPosition(Ref frame, Ref tag);
 void	SetFramePathFor1XFunctions(RefArg obj, RefArg thePath, RefArg value);
 Ref		SharedFrameMap(RefArg frame);
 UniChar* CString(RefArg str);
+Ref		FStrEqual(RefArg rcvr, RefArg a, RefArg b);	(StringNatives.cpp: ROM 0x001fedf4) - the same characters, cases apart
 Boolean	IsReal(RefArg ref);
 Ref		MakeSymbol(char* name);
 TObjectIterator*	NewTObjectIterator(RefArg obj);
