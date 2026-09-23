@@ -92,4 +92,26 @@ Ref		GetStrokesAt(TView* view, long offset);			// ROM 0x00078960 GetStrokesAt__F
 // again, because the entry is going.
 void	AutoRemove(RefArg info);						// ROM 0x0007959c AutoRemove__FRC6RefVar
 
+// Keeping up with the text: every edit of a paragraph has to be
+// answered here, or the corrector would offer a word's alternatives for
+// whatever now sits at its offsets.
+void	OffsetCorrectionInfo(RefArg list, TView* view, long at, long removed, long inserted);	// ROM 0x000762c0 OffsetCorrectionInfo__FRC6RefVarP5TViewlN23
+void	OffsetCorrectionInfo(TView* view, long at, long removed, long inserted);	// ROM 0x0007779c OffsetCorrectionInfo__FP5TViewlN22
+void	ClearCorrectionRange(RefArg list, TView* view, long at, long length);	// ROM 0x000765bc ClearCorrectionRange__FRC6RefVarP5TViewlT3
+void	DeletedCorrectionInfo(RefArg list, TView* view);	// ROM 0x00076758 DeletedCorrectionInfo__FRC6RefVarP5TView
+void	RemoveCorrectionInfo(RefArg list, TView* view);	// ROM 0x00076830 RemoveCorrectionInfo__FRC6RefVarP5TView
+void	RemoveCorrectionInfo(TView* view);				// ROM 0x00077d88 RemoveCorrectionInfo__FP5TView
+void	ClearEmptyEntries(RefArg list);					// ROM 0x00078d04 ClearEmptyEntries__FRC6RefVar
+// The entry for a range of a view's text, made when there is none.
+Ref		GetWordInfo(RefArg list, TView* view, long at, long length);	// ROM 0x00076f58 GetWordInfo__FRC6RefVarP5TViewlT3
+// Two entries made into one, and the pieces of that.
+void	MergeWordInfo(RefArg list, long first, long second);	// ROM 0x00076dc0 MergeWordInfo__FRC6RefVarlT2
+Ref		MergeWords(RefArg first, RefArg second);		// ROM 0x00076c48 MergeWords__FRC6RefVarT1
+Ref		MakeWordList(RefArg interp);					// ROM 0x0007866c MakeWordList__FRC6RefVar
+void	MergeStrokes(RefArg bundle, RefArg other);		// ROM 0x00078840 MergeStrokes__FRC6RefVarT1
+// The entries covering a range of a view's text taken away and put
+// back, which is how an undo keeps a deleted word's alternatives.
+Ref		ExtractRange(RefArg list, TView* view, long from, long to);	// ROM 0x00077190 ExtractRange__FRC6RefVarP5TViewlT3
+void	InsertRange(RefArg list, RefArg range, TView* view);	// ROM 0x00077378 InsertRange__FRC6RefVarT1P5TView
+
 #endif	/* __CORRECTINFO_H */

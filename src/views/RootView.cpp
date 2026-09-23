@@ -8,6 +8,7 @@
 */
 
 #include "RootView.h"
+#include "CorrectInfo.h"
 #include "Keyboard.h"
 #include "Bits.h"
 #include "ParagraphView.h"
@@ -96,6 +97,8 @@ TRootView::Constructor(RefArg templ)
 	RefVar context(Clone(RefVar(Rrootcontext)));
 	SetFrameSlot(context, RSSYM_proto, templ);
 	TView::Constructor(context, this);
+	// the list the corrector keeps of the words already on the page
+	InitCorrection();
 	Dirty(nil);
 }
 

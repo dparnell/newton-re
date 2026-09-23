@@ -864,10 +864,51 @@ dictionary on an entry's account back out again when the entry goes -
 the dictionary's own side of that (`RemoveAutoAdd`) is NOT YET, but the
 flag is cleared as the ROM clears it.
 
-NOT YET: the editing half - `OffsetCorrectionInfo`, `ClearCorrectionRange`,
-`ExtractRange`/`InsertRange`, `MergeWords` and `RemoveCorrectionInfo` -
-which is what keeps the offsets right as the text around them is edited,
-and `GetWordInfo`, which finds or makes the frame for a range.
+### Keeping up with the text
+
+The offsets are into a paragraph's text, so every edit has to be
+answered here or the corrector would offer a word's alternatives for
+whatever now sits at those offsets.  `TParagraphView::HandleReplaceText`
+is where it happens, and it does three things.
+
+`OffsetCorrectionInfo` (0x000762c0) answers the change itself.  An entry
+that straddles the edited range goes - its word no longer means
+anything - one entirely after it has both its offsets moved along, and
+one before it is left alone.  The one case that *gains* is a backspace
+(one character out, nothing in), which may have closed the gap between
+two words: the entry ending where the character was and the one
+beginning just after it are merged back into one (`MergeWordInfo`,
+0x00076dc0), their words run together (`MergeWords`) and their writing
+joined (`MergeStrokes`).  That last only happens when *both* entries
+carry writing; two typed words joined by a backspace simply lose the
+second entry.
+
+`ExtractRange` (0x00077190) and `InsertRange` (0x00077378) are the undo.
+Before a deletion the entries covering the range are copied out and
+rebased to the start of it, and they ride in the undo command's frame
+parameter as its `correctInfo`; carrying the undo out puts them back
+(moved to wherever the text is going) with `InsertRange`.  So undoing a
+deletion restores not just the words but their alternatives.
+
+The rest: `ClearCorrectionRange` (0x000765bc) takes every entry
+overlapping a range off without moving what is left, for when the range
+is about to be something else; `RemoveCorrectionInfo` (0x00076830)
+takes a whole view's entries, which `TParagraphView::SetValue` does when
+the text is replaced wholesale; `DeletedCorrectionInfo` (0x00076758)
+gives back the dictionary words a view's entries were responsible for;
+`ClearEmptyEntries` (0x00078d04) drops entries that hold nothing the
+recogniser actually proposed (fewer than three readings, all of them
+index -1 or -2 - the word as written and the same word capitalised);
+and `GetWordInfo` (0x00076f58) finds the entry for a range or makes one.
+
+`TRootView::Constructor` calls `InitCorrection` to start the list, as
+the ROM does.  (DEVIATION: the machine's starter globals come with a
+`correctInfo` frame; a host that has not run the ROM's boot block has
+none, so `InitCorrection` makes one.)
+
+NOT YET: the dictionary's side - `AutoAdd`, `RemoveAutoAdd` and
+`DoOverflowLearning`, which put a corrected word into the dictionary and
+learn from an entry falling off the end of the list.
 
 ## The caret gesture
 

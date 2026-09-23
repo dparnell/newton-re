@@ -11,6 +11,7 @@
 #include "InkShapes.h"
 #include "Words.h"			// IsPunctSymbol
 #include "WordInfo.h"		// kWordInfoIsInk
+#include "CorrectInfo.h"
 #include "EditView.h"		// ViewExpectsNumbers
 #include "TextView.h"		// vjOneLineOnly
 #include "InkFont.h"
@@ -762,8 +763,7 @@ TParagraphView::GetSelection(void)
 //
 // NOT YET RECONSTRUCTED: a rich string (ink) as the text - the ROM makes
 // the text and style slots out of it (TRichString::MakeParagraphTextSlot
-// and MakeParagraphStylesSlot); RemoveCorrectionInfo, which belongs to
-// the corrector; and the vCalculateBounds paragraph whose text has just
+// and MakeParagraphStylesSlot); and the vCalculateBounds paragraph whose text has just
 // become empty, which asks its parent to remove it (an aeRemoveData
 // command) unless the parent's text flags say not to.
 void
@@ -778,7 +778,7 @@ TParagraphView::SetValue(RefArg slot, RefArg value)
 			text = value;			// NOT YET: the ink taken apart into text and styles
 		else
 			RemoveSlot(RefVar(DataFrame()), RefVar(RSSYMstyles));
-		// NOT YET: RemoveCorrectionInfo(this)
+		RemoveCorrectionInfo(this);
 		RemoveAllHilites();
 		SetFrameSlot(RefVar(DataFrame()), RefVar(RSSYMtext), text);
 		if (gRootView->fCaretView == this)
@@ -4403,7 +4403,16 @@ TParagraphView::HandleReplaceText(RefArg cmd)
 			if (ISNIL(myStyles) || Length(myStyles) > 0)
 				oldStyles = GetStylesOfRange(offset, removed, false);
 			RefVar saved(SaveStylesAndTabStopsArrays(oldStyles, tabsToKeep));
-			// NOT YET RECONSTRUCTED: the correction info of the range (ExtractRange)
+			// the words about to go, kept with their alternatives and
+			// rebased to the start of the range, so that undoing the
+			// deletion puts them back where they were
+			RefVar taken(ExtractRange(RefVar(CorrectInfo()), this,
+									  offset, offset + removed));
+			if (NOTNIL(taken))
+			{
+				OffsetCorrectionInfo(taken, this, 0, offset, 0);
+				SetFrameSlot(saved, RSSYMcorrectinfo, taken);
+			}
 			CommandSetFrameParameter(undo, saved);
 		}
 	}
@@ -4422,8 +4431,15 @@ TParagraphView::HandleReplaceText(RefArg cmd)
 		gApplication->PostUndoCommand(undo);
 	AdjustStyles(offset, removed, inserted, styles, styleOffset);
 	AdjustHilites(offset, inserted - removed);
-	// NOT YET RECONSTRUCTED: OffsetCorrectionInfo, the correctInfo inserted
-	(void) correctInfo;
+	// the machine's own list brought up to date with the change, and
+	// then whatever the command brought with it - an undo's saved
+	// words - moved to where they are going and put back on
+	OffsetCorrectionInfo(this, offset, removed, inserted);
+	if (NOTNIL(correctInfo))
+	{
+		OffsetCorrectionInfo(correctInfo, nil, 0, 0, offset);
+		InsertRange(RefVar(CorrectInfo()), correctInfo, this);
+	}
 	if (!removedHasTab)
 	{
 		if (inserted != 0 && NOTNIL(tabs) && ISNIL(myTabs))

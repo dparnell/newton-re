@@ -4179,8 +4179,11 @@ TestInsertItems()
 	DoInsertItems(p, info, false, true, 1, 0, true, RefVar(NILREF));
 	EXPECT(p->TextLength() == 3);
 	EXPECT(GetCString(RefVar(p->Text()))[1] == kInkWordChar);
-	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMstart))) == 0);
-	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMstop))) == 1);
+	// where it landed: HandleInsertItems writes the offsets down
+	// relative to the text going in, and HandleReplaceText then moves
+	// them to where that text went (the insertion point, 1)
+	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMstart))) == 1);
+	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMstop))) == 2);
 	// noted as ink (8) and as a word the corrector knows about (2)
 	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMflags))) == 10);
 
@@ -4196,8 +4199,8 @@ TestInsertItems()
 	SetFrameSlot(read, RSSYMflags, RefVar(MAKEINT(0)));
 	DoInsertItems(p, read, false, true, 1, 0, true, RefVar(NILREF));
 	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("ahib")) == 0);
-	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMstart))) == 0);
-	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMstop))) == 2);
+	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMstart))) == 1);
+	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMstop))) == 3);
 	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMflags))) == 2);
 
 	// an item of a kind the paragraph has no use for is passed over
@@ -4821,6 +4824,154 @@ TestCorrectInfo()
 }
 
 
+// The correction information keeping up with the text.  Every edit of a
+// paragraph has to be answered, or a word's alternatives would be
+// offered for whatever now happens to sit at its offsets.
+static void
+TestCorrectInfoEditing()
+{
+	Eval("correctInfo := {}");
+	InitCorrection();
+	RefVar list(CorrectInfo());
+	TParagraphView* p = (TParagraphView*) ViewOf(
+		"ctxCE := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 5, top: 5, right: 200, bottom: 60}, "
+		"viewFont: espy12, text: \"one two three\"})");
+	EXPECT(p != nil && p->TextLength() == 13);
+	Refresh();
+
+	// an entry over "two" (4..7) and one over "three" (8..13)
+	RefVar two(MakeWordInfo(RefVar(MakeString("two"))));
+	SetOffsetInfo(two, p, 4, 7, kWordInfoKnown);
+	AddWordInfo(list, two);
+	RefVar three(MakeWordInfo(RefVar(MakeString("three"))));
+	SetOffsetInfo(three, p, 8, 13, kWordInfoKnown);
+	AddWordInfo(list, three);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 2);
+
+	// two characters put in at the front: both move along, neither is
+	// dropped
+	OffsetCorrectionInfo(list, p, 0, 0, 2);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(two, RSSYMstart))) == 6);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(two, RSSYMstop))) == 9);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(three, RSSYMstart))) == 10);
+	// and the word can still be found at its new place
+	EXPECT(EQRef(RefVar(FindWordInfo(list, p, 7)), two));
+	EXPECT(ISNIL(RefVar(FindWordInfo(list, p, 4))));
+
+	// an edit that straddles the first entry takes it away; the one
+	// after it moves
+	OffsetCorrectionInfo(list, p, 7, 1, 1);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	EXPECT(EQRef(RefVar(GetArraySlot(RefVar(GetFrameSlotRef(list, RSSYMinfo)), 0)), three));
+
+	// an entry belonging to another view is left alone
+	RefVar elsewhere(MakeWordInfo(RefVar(MakeString("x"))));
+	SetOffsetInfo(elsewhere, gRootView, 0, 1, kWordInfoKnown);
+	AddWordInfo(list, elsewhere);
+	OffsetCorrectionInfo(list, p, 0, 0, 5);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(elsewhere, RSSYMstart))) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(elsewhere, RSSYMstop))) == 1);
+
+	// a backspace that closes the gap between two words joins their
+	// entries back into one
+	InitCorrection();
+	list = CorrectInfo();
+	RefVar left(MakeWordInfo(RefVar(MakeString("one"))));
+	SetOffsetInfo(left, p, 0, 3, kWordInfoKnown);
+	AddWordInfo(list, left);
+	RefVar right(MakeWordInfo(RefVar(MakeString("two"))));
+	SetOffsetInfo(right, p, 4, 7, kWordInfoKnown);
+	AddWordInfo(list, right);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 2);
+	OffsetCorrectionInfo(list, p, 3, 1, 0);		// the space at 3 removed
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	// neither carries writing, so the second is simply dropped and the
+	// first keeps its own range: the ROM only joins the ranges and the
+	// words when both entries have strokes to join
+	EXPECT(RINT(RefVar(GetFrameSlotRef(left, RSSYMstart))) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(left, RSSYMstop))) == 3);
+
+	// with writing on both, the ranges and the words do join
+	InitCorrection();
+	list = CorrectInfo();
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, RefVar(Eval("[20, 10, 30, 20]")));
+	RefVar wrote(MakeWordInfo(RefVar(MakeStrokeBundle(arrays, 1))));
+	SetWordList(wrote, RefVar(Eval("[\"on\"]")));
+	SetOffsetInfo(wrote, p, 0, 2, kWordInfoKnown);
+	AddWordInfo(list, wrote);
+	RefVar arrays2(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays2, 0, RefVar(Eval("[40, 10, 50, 20]")));
+	RefVar wrote2(MakeWordInfo(RefVar(MakeStrokeBundle(arrays2, 1))));
+	SetWordList(wrote2, RefVar(Eval("[\"e\"]")));
+	SetOffsetInfo(wrote2, p, 3, 4, kWordInfoKnown);
+	AddWordInfo(list, wrote2);
+	OffsetCorrectionInfo(list, p, 2, 1, 0);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(wrote, RSSYMstop))) == 3);
+	EXPECT(Ustrcmp(GetCString(RefVar(GetNthWord(wrote, 0))), Uni("one")) == 0);
+	// the two lots of writing are one bundle now
+	EXPECT(Length(RefVar(GetFrameSlotRef(RefVar(GetFrameSlotRef(wrote, RSSYMstrokes)), RSSYMstrokes))) == 2);
+	// and the merged entry is marked as one the corrector knows
+	EXPECT(TestWordInfoFlags(wrote, kWordInfoKnown));
+
+	// a range taken away and put back, which is what an undo does
+	InitCorrection();
+	list = CorrectInfo();
+	RefVar word(MakeWordInfo(RefVar(MakeString("two"))));
+	SetOffsetInfo(word, p, 4, 7, kWordInfoKnown);
+	AddWordInfo(list, word);
+	RefVar taken(ExtractRange(list, p, 4, 7));
+	EXPECT(NOTNIL(taken));
+	EXPECT(Length(RefVar(GetFrameSlotRef(taken, RSSYMinfo))) == 1);
+	EXPECT(ISNIL(RefVar(ExtractRange(list, p, 20, 30))));
+	// rebased to the start of the range, as HandleReplaceText rebases it
+	OffsetCorrectionInfo(taken, p, 0, 4, 0);
+	RefVar copy(GetArraySlot(RefVar(GetFrameSlotRef(taken, RSSYMinfo)), 0));
+	EXPECT(RINT(RefVar(GetFrameSlotRef(copy, RSSYMstart))) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(copy, RSSYMstop))) == 3);
+	// and back, at a different place
+	InitCorrection();
+	list = CorrectInfo();
+	OffsetCorrectionInfo(taken, nil, 0, 0, 9);
+	InsertRange(list, taken, p);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(RefVar(FindWordInfo(list, p, 9)), RSSYMstop))) == 12);
+
+	// entries the recogniser never proposed anything for are cleared out
+	InitCorrection();
+	list = CorrectInfo();
+	RefVar madeUp(Clone(RefVar(Rprotowordinfo)));
+	RefVar only(MakeArray(1));
+	SetArraySlot(only, 0, RefVar(MakeWordInterp(RefVar(MakeString("aa")), 0, -1, 0)));
+	SetFrameSlot(madeUp, RSSYMwords, only);
+	SetOffsetInfo(madeUp, p, 0, 2, 0);
+	AddWordInfo(list, madeUp);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	ClearEmptyEntries(list);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 0);
+
+	// GetWordInfo finds the entry for a range, or makes one
+	InitCorrection();
+	list = CorrectInfo();
+	RefVar made(GetWordInfo(list, p, 4, 3));
+	EXPECT(IsFrame(made));
+	EXPECT(Ustrcmp(GetCString(RefVar(GetNthWord(made, 0))), Uni("two")) == 0);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+	EXPECT(EQRef(RefVar(GetWordInfo(list, p, 4, 3)), made));	// found, not made again
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 1);
+
+	// and the whole view's entries go when it does
+	RemoveCorrectionInfo(list, p);
+	EXPECT(Length(RefVar(GetFrameSlotRef(list, RSSYMinfo))) == 0);
+
+	InitCorrection();
+	Eval("RemoveView(GetRoot(), ctxCE)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -4939,6 +5090,7 @@ main()
 		TestRemoteForCorrector();
 		TestRichStringIntoParagraph();
 		TestCorrectInfo();
+		TestCorrectInfoEditing();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();
