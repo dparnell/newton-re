@@ -3752,6 +3752,111 @@ TestInkWordInText()
 }
 
 
+// Two words of writing joined into one by a caret drawn upside down
+// across the space between them, which is the same gesture that closes
+// up the space between two words of text.
+static void
+TestJoinInk()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// two words, each a single stroke
+	TStroke* first[2];
+	first[0] = TStroke::Make(0);
+	first[1] = nil;
+	TStroke* second[2];
+	second[0] = TStroke::Make(0);
+	second[1] = nil;
+	for (long i = 0; i <= 10; i++)
+	{
+		TabPt tab;
+		tab.z = 0;
+		tab.p = 0;
+		tab.x = ToFixed(10 + i * 2);
+		tab.y = ToFixed(20 + i);
+		first[0]->AddPoint(&tab);
+		tab.x = ToFixed(60 + i * 2);
+		tab.y = ToFixed(30 - i);
+		second[0]->AddPoint(&tab);
+	}
+	first[0]->EndStroke();
+	second[0]->EndStroke();
+	Rect made;
+	RefVar wordA(TStrokesToInkWord(first, &made));
+	RefVar wordB(TStrokesToInkWord(second, &made));
+	EXPECT(IsInkWord(wordA) && IsInkWord(wordB));
+
+	// a paragraph reading "<ink> <ink>": two ink word characters with a
+	// space between them
+	RefVar text(AllocateBinary(RSSYMstring, 4 * (long) sizeof(UniChar)));
+	UniChar* chars = (UniChar*) BinaryData(text);
+	chars[0] = kInkWordChar;
+	chars[1] = ' ';
+	chars[2] = kInkWordChar;
+	chars[3] = 0;
+	RefVar styles(MakeArray(6));
+	SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 1, wordA);
+	SetArraySlot(styles, 2, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 3, RefVar(Eval("espy12")));
+	SetArraySlot(styles, 4, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 5, wordB);
+
+	RefVar templ(AllocateFrame());
+	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clParagraphView)));
+	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible)));
+	Rect where;
+	SetRect(&where, 5, 5, 200, 60);
+	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(where)));
+	SetFrameSlot(templ, RSSYMtext, text);
+	SetFrameSlot(templ, RSSYMstyles, styles);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "joinTempl")), templ);
+
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxJI := AddView(GetRoot(), joinTempl)");
+	EXPECT(p != nil && p->TextLength() == 3);
+	Eval("ctxJI:Dirty()");
+	Refresh();
+
+	// the caret drawn upside down with an arm over each word
+	Rect box;
+	p->OffsetToBounds(0, &box);
+	short baseline = (short) (p->fLines[0].fBounds.top + p->fLines[0].fAscent);
+	Point armA, point, armB, tail;
+	armA.h = (short) (box.left + 1);
+	armA.v = baseline;
+	p->OffsetToBounds(2, &box);
+	armB.h = (short) (box.left + 1);
+	armB.v = baseline;
+	point.h = (short) ((armA.h + armB.h) / 2);
+	point.v = (short) (baseline + 8);
+	tail.v = (short) 0x8000;
+	tail.h = 0;
+	EXPECT(p->HandleCaret(2, 180, armA, point, armB, tail) == 1);
+
+	// the two words and the space between them are now one word
+	EXPECT(p->TextLength() == 1);
+	RefVar joinedText(p->Text());
+	EXPECT(*(const UniChar*) BinaryData(joinedText) == kInkWordChar);
+	RefVar joinedStyles(Eval("ctxJI.styles"));
+	EXPECT(IsArray(joinedStyles) && Length(joinedStyles) == 2);
+	RefVar joined(GetArraySlot(joinedStyles, 1));
+	EXPECT(IsInkWord(joined));
+	// and the word that came out is wider than either of the two that
+	// went in, being both of them side by side
+	InkWordInfo one, all;
+	GetInkWordInfo(wordA, &one);
+	GetInkWordInfo(joined, &all);
+	EXPECT(all.fWidth > one.fWidth);
+
+	Eval("RemoveView(GetRoot(), ctxJI)");
+	Refresh();
+	first[0]->Dispose();
+	second[0]->Dispose();
+}
+
+
 // A rich string with a word of writing in the middle of it: the string
 // is cut into runs - text, ink, text - and the ink run's style carries
 // the blob's address, which the font engine opens as a font of one
@@ -3957,11 +4062,12 @@ main()
 		TestScrubbing();
 		TestCaretGesture();
 		TestLineGesture();
-		TestEffects();
-		TestInkOnThePage();
+		TestEffects();
+		TestInkOnThePage();
 		TestInkWordOnThePage();
 		TestRecognisedWord();
-		TestInkWordInText();
+		TestInkWordInText();
+		TestJoinInk();
 		TestInkInRichString();
 		TestWordInfo();
 	}

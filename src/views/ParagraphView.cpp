@@ -9,6 +9,7 @@
 #include "ParagraphView.h"
 #include "Ink.h"
 #include "InkShapes.h"
+#include "EditView.h"		// ViewExpectsNumbers
 #include "InkFont.h"
 #include "Hilites.h"
 #include "OSErrors.h"
@@ -2186,10 +2187,11 @@ const UniChar kJoinableInkChar = 0xf701;
 // dropped item takes; InsertStyledText is the host's equivalent - it
 // makes the same aeReplaceText command, with the same undo.)
 //
-// NOT YET RECONSTRUCTED: two ink words joined into one, which is what
-// happens when both characters are 0xf701 - the ink word character (the
-// ROM's IsInkChar takes 0xf700, 0xf701 and 0xf702, and only the word is
-// joinable).  GetInkAt, MergeInk and AdjustInkWordXHeight are all ink.
+// Two ink words are joined instead of white space being closed up: when
+// both characters are 0xf701 - the ink word character, and the only one
+// of the three the ROM's IsInkChar takes that is joinable - the two
+// words are merged into one, all the way down to the strokes and back,
+// and that one replaces both of them and everything between.
 long
 TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 {
@@ -2233,8 +2235,35 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 	Boolean join = false;
 	if (text[start] == kJoinableInkChar && text[end] == kJoinableInkChar)
 	{
-		// NOT YET: the two ink words merged (GetInkAt, MergeInk,
-		// AdjustInkWordXHeight) and put in in place of both
+		// Two words of writing joined into one.  Nothing but white space
+		// may lie between them - a join drawn across a word in between
+		// is not a join of the two outer ones - and then the two ink
+		// words are merged, all the way down to the strokes and back,
+		// and the one that comes out replaces both of them and
+		// everything that was between.
+		long after = start + 1;
+		while (IsWhiteSpace(text[after]))
+			after++;
+		if (after != end)
+		{
+			rich.ReleasePtr();
+			return 0;
+		}
+		RefVar merged(MergeInk(RefVar(GetInkAt(this, start)),
+							   RefVar(GetInkAt(this, end))));
+		RefVar ink(GetFrameSlot(merged, RSSYMink));
+		AdjustInkWordXHeight(ink, ViewExpectsNumbers(this));
+		rich.ReleasePtr();
+		// (host: the ROM puts the word in through DoInsertItems; one ink
+		//  word is one character with the word as its style run, which
+		//  is what InsertStyledText takes)
+		UniChar one = kInkWordChar;
+		RefVar styles(AllocateArray(RSSYMstyles, 2));
+		SetArraySlot(styles, 0, MAKEINT(1));
+		SetArraySlot(styles, 1, ink);
+		InsertStyledText((ULong) start, &one, 1, styles, RefVar(NILREF), 0,
+						 (ULong) (end - start + 1), false);
+		return 1;
 	}
 	else if (!IsWhiteSpace(text[start]) && !IsWhiteSpace(text[end]))
 	{
