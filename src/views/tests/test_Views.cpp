@@ -3974,6 +3974,188 @@ TestInkInRichString()
 }
 
 
+// A Unicode literal, for the delimiter rule below.
+static UniChar*
+Uni(const char* s)
+{
+	static UniChar gBuffers[2][32];
+	static long gNext = 0;
+	UniChar* out = gBuffers[gNext++ & 1];
+	long i = 0;
+	for (; s[i] != 0 && i < 31; i++)
+		out[i] = U_CONST_CHAR((unsigned char) s[i]);
+	out[i] = 0;
+	return out;
+}
+
+
+// Things put into a paragraph from outside: a dropped clipping, a word
+// the recogniser read, an ink word.  They all arrive as command 0x4d
+// with a spec saying what and where, and the paragraph gathers them into
+// one replacement - with a delimiter worked out between each pair, which
+// is why two words dropped together come out spaced apart but a word and
+// a comma do not.
+static void
+TestInsertItems()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// the delimiter rule on its own
+	UniChar delimiter[8];
+	GetAppendDelimiter(delimiter, Uni("one"), Uni("two"), 3, 3);
+	EXPECT(Ustrlen(delimiter) == 1 && delimiter[0] == U_CONST_CHAR(' '));
+	GetAppendDelimiter(delimiter, Uni("one"), Uni(","), 3, 1);
+	EXPECT(Ustrlen(delimiter) == 0);		// punctuation joins up
+	GetAppendDelimiter(delimiter, Uni("one"), Uni("("), 3, 1);
+	EXPECT(Ustrlen(delimiter) == 1);		// ... but an open bracket does not
+	GetAppendDelimiter(delimiter, Uni("one-"), Uni("two"), 4, 3);
+	EXPECT(Ustrlen(delimiter) == 0);		// a hyphen holds them together
+	GetAppendDelimiter(delimiter, Uni("one "), Uni("two"), 4, 3);
+	EXPECT(Ustrlen(delimiter) == 0);		// there is a space there already
+	GetAppendDelimiter(delimiter, Uni("("), Uni("two"), 1, 3);
+	EXPECT(Ustrlen(delimiter) == 0);
+	GetAppendDelimiter(delimiter, Uni(""), Uni("two"), 0, 3);
+	EXPECT(Ustrlen(delimiter) == 0);
+
+	TParagraphView* p = (TParagraphView*) ViewOf(
+		"ctxII := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 5, top: 5, right: 150, bottom: 90}, "
+		"viewFont: espy12, text: \"one four\"})");
+	EXPECT(p != nil && p->ClassID() == clParagraphView);
+	EXPECT(p->TextLength() == 8);
+	Refresh();
+
+	// two strings dropped in the middle: a space between them, and one
+	// between them and what was already there
+	RefVar items(MakeArray(2));
+	SetArraySlot(items, 0, RefVar(MakeString("two")));
+	SetArraySlot(items, 1, RefVar(MakeString("three")));
+	RefVar spec(DoInsertItems(p, items, true, true, 4, 0, true, RefVar(NILREF)));
+	EXPECT(NOTNIL(spec));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("one two three four")) == 0);
+	// and the spec comes back saying what actually went in: "two three "
+	EXPECT(RINT(RefVar(GetFrameSlot(spec, RSSYMinsertoffset))) == 4);
+	EXPECT(RINT(RefVar(GetFrameSlot(spec, RSSYMreplacechars))) == 10);
+
+	// a comma needs no space in front of it
+	Eval("SetValue(ctxII, 'text, \"one two\")");
+	Refresh();
+	DoInsertItems(p, RefVar(MakeString(",")), true, true, 7, 0, true,
+				  RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("one two,")) == 0);
+
+	// without addSpace nothing goes between them at all
+	Eval("SetValue(ctxII, 'text, \"onetwo\")");
+	Refresh();
+	DoInsertItems(p, RefVar(MakeString("X")), false, true, 3, 0, true,
+				  RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("oneXtwo")) == 0);
+
+	// characters taken out and replaced
+	Eval("SetValue(ctxII, 'text, \"one two\")");
+	Refresh();
+	DoInsertItems(p, RefVar(MakeString("six")), false, true, 4, 3, true,
+				  RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("one six")) == 0);
+
+	// two items in the same style come out as one run rather than two
+	Eval("SetValue(ctxII, 'text, \"\")");
+	Refresh();
+	RefVar pair(MakeArray(2));
+	SetArraySlot(pair, 0, RefVar(MakeString("aa")));
+	SetArraySlot(pair, 1, RefVar(MakeString("bb")));
+	DoInsertItems(p, pair, false, true, 0, 0, true, RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("aabb")) == 0);
+	RefVar styles(p->Styles());
+	EXPECT(ISNIL(styles) || (IsArray(styles) && Length(styles) == 2));
+
+	// an ink word goes in as the one character it stands as, with the
+	// word itself as the style of that character
+	Eval("SetValue(ctxII, 'text, \"ab\")");
+	Refresh();
+	TStroke* list[2];
+	list[0] = TStroke::Make(0);
+	list[1] = nil;
+	for (long i = 0; i <= 10; i++)
+	{
+		TabPt tab;
+		tab.z = 0;
+		tab.p = 0;
+		tab.x = ToFixed(10 + i * 2);
+		tab.y = ToFixed(20 + i);
+		list[0]->AddPoint(&tab);
+	}
+	list[0]->EndStroke();
+	Rect made;
+	RefVar word(TStrokesToInkWord(list, &made));
+	EXPECT(IsInkWord(word));
+	DoInsertItems(p, word, false, true, 1, 0, true, RefVar(NILREF));
+	EXPECT(p->TextLength() == 3);
+	EXPECT(GetCString(RefVar(p->Text()))[1] == kInkWordChar);
+	styles = p->Styles();
+	Boolean carried = false;
+	for (long i = 1; NOTNIL(styles) && i < Length(styles); i += 2)
+		if (IsInkWord(RefVar(GetArraySlot(styles, i))))
+			carried = true;
+	EXPECT(carried);
+
+	// a word-info frame the recogniser marked as ink: the writing goes
+	// in the same way, and the frame is told where it landed so that the
+	// corrector can find it again
+	Eval("SetValue(ctxII, 'text, \"ab\")");
+	Refresh();
+	RefVar info(AllocateFrame());
+	SetFrameSlot(info, RSSYMwords, RefVar(MakeArray(0)));
+	SetFrameSlot(info, RSSYMflags, RefVar(MAKEINT(kWordInfoIsInk)));
+	SetFrameSlot(info, RSSYMink, word);
+	DoInsertItems(p, info, false, true, 1, 0, true, RefVar(NILREF));
+	EXPECT(p->TextLength() == 3);
+	EXPECT(GetCString(RefVar(p->Text()))[1] == kInkWordChar);
+	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMstart))) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMstop))) == 1);
+	// noted as ink (8) and as a word the corrector knows about (2)
+	EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMflags))) == 10);
+
+	// ... and one it read goes in as the word itself
+	Eval("SetValue(ctxII, 'text, \"ab\")");
+	Refresh();
+	RefVar read(AllocateFrame());
+	RefVar words(MakeArray(1));
+	RefVar reading(AllocateFrame());
+	SetFrameSlot(reading, RSSYMword, RefVar(MakeString("hi")));
+	SetArraySlot(words, 0, reading);
+	SetFrameSlot(read, RSSYMwords, words);
+	SetFrameSlot(read, RSSYMflags, RefVar(MAKEINT(0)));
+	DoInsertItems(p, read, false, true, 1, 0, true, RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("ahib")) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMstart))) == 0);
+	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMstop))) == 2);
+	EXPECT(RINT(RefVar(GetFrameSlot(read, RSSYMflags))) == 2);
+
+	// an item of a kind the paragraph has no use for is passed over
+	Eval("SetValue(ctxII, 'text, \"ab\")");
+	Refresh();
+	DoInsertItems(p, RefVar(MAKEINT(42)), false, true, 1, 0, true, RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("ab")) == 0);
+
+	// and the undo the insert made puts the paragraph back
+	Eval("SetValue(ctxII, 'text, \"one four\")");
+	Refresh();
+	Eval("ClearUndoStacks()");
+	DoInsertItems(p, RefVar(MakeString("two")), true, true, 4, 0, true,
+				  RefVar(NILREF));
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("one two four")) == 0);
+	Eval("Undo()");
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("one four")) == 0);
+
+	list[0]->Dispose();
+	Eval("RemoveView(GetRoot(), ctxII)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -4086,6 +4268,7 @@ main()
 		TestJoinInk();
 		TestInkInRichString();
 		TestWordInfo();
+		TestInsertItems();
 	}
 	newton_catch_all
 	{

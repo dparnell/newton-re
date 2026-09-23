@@ -199,6 +199,11 @@ public:
 	Boolean		PointToWord(const Point& pt, long* start, long* end, long* outLine);	// ROM 0x001776f0 PointToWord__14TParagraphViewFRC6TPointPlT210MarginSizePP8LineInfoT2PUc
 	long		PointToWordBoundary(const Point& pt, long bias, long* outLine);	// ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc - -1 for no word there
 	void		DeleteHilitedTextOnly(RefArg hilite);					// ROM 0x00174dbc DeleteHilitedTextOnly__14TParagraphViewFRC6RefVar
+	// Things put into the paragraph from outside - a recognised word,
+	// a dropped clipping, an ink word split off another - which the
+	// view is sent as command 0x4d.
+	Boolean		HandleInsertItems(RefArg spec);			// ROM 0x001700a0 HandleInsertItems__14TParagraphViewFRC6RefVar
+
 	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
 	// A bundle of strokes put into the text as one ink word: the
 	// character 0xf701, whose style is the ink itself.
@@ -279,5 +284,23 @@ long	GetJustificationOfDroppedText(RefArg info);		// ROM 0x000a2e24 GetJustifica
 // `info` frame says about how it should look.
 Ref		MakeParagraphForm(UniChar* text, long length, const Rect& bounds,
 						  RefArg info, Boolean flag);		// ROM 0x0017a4d8 MakeParagraphForm__FPUslRC5TRectRC6RefVarUc
+
+// The command a view is sent to have things put into it, and the two
+// ways of sending it.
+enum { kInsertItemsCommand = 0x4d };
+
+Ref		DoInsertItems(TView* view, RefArg items, Boolean addSpace, Boolean undoable,
+					  long insertOffset, long replaceChars, Boolean moveCaret,
+					  RefArg defaultFontSpec);	// ROM 0x00170f7c DoInsertItems__FP5TViewRC6RefVarUcT3lT5T3T2
+Boolean	InsertItemsAtCaret(RefArg spec);			// ROM 0x00171168 InsertItemsAtCaret__FRC6RefVar
+
+// What goes between two pieces of text being joined: a space, or
+// nothing.
+void	GetAppendDelimiter(UniChar* out, const UniChar* left, const UniChar* right,
+						   const ULong leftLength, const ULong rightLength);	// ROM 0x000edc24 GetAppendDelimiter__FPUsPCUsT2CUlT4
+// Whether two style runs are the same style.
+Boolean	EqualStyles(RefArg a, RefArg b);			// ROM 0x0016fa08 EqualStyles__FRC6RefVarT1
+// The frame the corrector keeps its alternatives in.
+Ref		NewCorrectInfo(void);						// ROM 0x0007623c NewCorrectInfo__Fv
 
 #endif	/* __PARAGRAPHVIEW_H */

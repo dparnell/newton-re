@@ -9,6 +9,8 @@
 #include "ParagraphView.h"
 #include "Ink.h"
 #include "InkShapes.h"
+#include "Words.h"			// IsPunctSymbol
+#include "WordInfo.h"		// kWordInfoIsInk
 #include "EditView.h"		// ViewExpectsNumbers
 #include "InkFont.h"
 #include "Hilites.h"
@@ -2162,6 +2164,575 @@ TParagraphView::InsertVerticalSpace(Point& pt, long height)
 const UniChar kJoinableInkChar = 0xf701;
 
 
+/*------------------------------------------------------------------------------
+	T h i n g s   p u t   i n t o   a   p a r a g r a p h
+------------------------------------------------------------------------------*/
+
+// A recognised word, a dropped clipping, an ink word split off another -
+// everything that arrives at a paragraph from outside arrives the same
+// way: a frame saying what to put in and where, sent to the view as
+// command 0x4d.  The paragraph works out the text and the style runs
+// the whole lot comes to, and hands them to the same HandleReplaceText
+// that typing goes through.
+//
+// The items are appended one after another, with a delimiter worked out
+// between each pair - which is why "one" and "two" dropped together
+// come out as "one two" but "one" and "," come out as "one,".
+
+// ROM 0x000edc24 GetAppendDelimiter__FPUsPCUsT2CUlT4
+// What goes between two pieces of text being joined: a space, or
+// nothing.  Nothing when either side is empty, when there is white
+// space at the join already, when the left ends in a hyphen or an open
+// bracket, when the right starts with a hyphen, when the right is a
+// single punctuation mark that is not an open bracket, or when the left
+// ends in a punctuation mark standing on its own.
+void
+GetAppendDelimiter(UniChar* out, const UniChar* left, const UniChar* right,
+				   const ULong leftLength, const ULong rightLength)
+{
+	out[0] = 0;
+	if (leftLength == 0 || rightLength == 0)
+		return;
+	UniChar last = left[leftLength - 1];
+	UniChar first = right[0];
+	if (IsWhiteSpace(last) || IsWhiteSpace(first))
+		return;
+	// whether the left's last character is a word of its own
+	Boolean alone;
+	if (leftLength == 1)
+		alone = true;
+	else
+		alone = IsWhiteSpace(left[leftLength - 2]) != 0;
+
+	if (last == U_CONST_CHAR('-') || last == U_CONST_CHAR('('))
+		return;
+	if (first == U_CONST_CHAR('-'))
+		return;
+	if (rightLength == 1 && IsPunctSymbol(&first, 0) && first != U_CONST_CHAR('('))
+		return;
+	if (alone && IsPunctSymbol(&last, 0))
+		return;
+	out[0] = U_CONST_CHAR(' ');
+	out[1] = 0;
+}
+
+
+// ROM 0x0016f954 (unnamed) - GrowInsertText
+// Room for `add` more characters in the text being built, rounded up to
+// a multiple of forty so that a long insert does not resize once per
+// item.  `used` is advanced whether or not the binary grew.
+static void
+GrowInsertText(RefArg text, long* used, long add)
+{
+	long size = Length(text);
+	long need = *used + add;
+	if (need > size / 2)
+		SetLength(text, (need + (0x28 - need % 0x28)) * (long) sizeof(UniChar));
+	*used = need;
+}
+
+
+// ROM 0x0016f9b0 (unnamed) - GrowInsertStyles
+// The same for the styles array, rounded up to a multiple of ten - five
+// runs, each being a length and a style.
+static void
+GrowInsertStyles(RefArg styles, long* used, long add)
+{
+	long size = Length(styles);
+	long need = *used + add;
+	if (need > size)
+		SetLength(styles, need + (10 - need % 10));
+	*used = need;
+}
+
+
+// ROM 0x0016fa08 EqualStyles__FRC6RefVarT1
+// Whether two style runs are the same style, which is what decides
+// whether a new run is needed at all.  Two font frames are the same when
+// their size, face and family are; anything else - a packed font
+// integer, an ink word - only when it is the same object.
+Boolean
+EqualStyles(RefArg a, RefArg b)
+{
+	if (!IsFrame(a) || !IsFrame(b))
+		return EQRef(a, b);
+	if (!EQRef(RefVar(GetFrameSlot(a, RSSYMsize)), RefVar(GetFrameSlot(b, RSSYMsize))))
+		return false;
+	if (!EQRef(RefVar(GetFrameSlot(a, RSSYMface)), RefVar(GetFrameSlot(b, RSSYMface))))
+		return false;
+	return EQRef(RefVar(GetFrameSlot(a, RSSYMfamily)),
+				 RefVar(GetFrameSlot(b, RSSYMfamily)));
+}
+
+
+// ROM 0x0016fba8 (unnamed) - AppendStyleRun
+// Another run of `count` characters in `style`, merged into the last run
+// when it is the same style.  The array is pairs: a length and a style.
+static void
+AppendStyleRun(RefArg styles, long* used, long count, RefArg style)
+{
+	if (*used != 0)
+	{
+		RefVar last(GetArraySlotRef(styles, *used - 1));
+		if (EqualStyles(style, last))
+		{
+			long at = *used - 2;
+			long length = RINT(RefVar(GetArraySlotRef(styles, at)));
+			SetArraySlot(styles, at, RefVar(MAKEINT(length + count)));
+			return;
+		}
+	}
+	long at = *used;
+	GrowInsertStyles(styles, used, 2);
+	SetArraySlot(styles, at, RefVar(MAKEINT(count)));
+	SetArraySlot(styles, at + 1, style);
+}
+
+
+// ROM 0x0016fcc8 (unnamed) - StyleBeforeIndex
+// The style of the last run that is not an ink word, working backwards
+// from `index` a run at a time.  An ink word is not a style anything
+// else can be written in, so a run that follows one takes the style of
+// whatever was being written before it.
+static Ref
+StyleBeforeIndex(RefArg styles, long index)
+{
+	if (Length(styles) == 0)
+		return NILREF;
+	RefVar found(NILREF);
+	while (index >= 0)
+	{
+		RefVar style(GetArraySlotRef(styles, index));
+		if (!IsInkWord(style))
+		{
+			found = style;
+			break;
+		}
+		index -= 2;					// a run is a length and a style
+	}
+	return found;
+}
+
+
+// ROM 0x0016fd7c (unnamed) - AppendInsertItem
+// One item appended to the text and styles being built, with the
+// delimiter that belongs in front of it.
+//
+// The delimiter is worked out between the item and whatever comes before
+// it: the paragraph's own text up to the insertion point for the first
+// item (`lastText` with `lastLength`), and the text built so far for
+// every item after that - which is why the caller drops `lastText` once
+// the first item is in.  How long it came to is answered through
+// `outDelimiter`, because the correction information has to know where
+// the item really starts.
+//
+// An item that brings its own style runs has them copied in as they
+// stand.  One that brings a single style - or none, in which case the
+// last run's style is taken, and failing that the default - gets one run
+// over the whole of it.
+static void
+AppendInsertItem(RefArg lastText, long lastLength, RefArg text, RefArg styles,
+				 long* usedText, long* usedStyles, Boolean addSpace,
+				 RefArg itemText, RefArg itemStyles, RefArg defaultStyle,
+				 long* outDelimiter)
+{
+	if (!addSpace)
+		*outDelimiter = 0;
+	else
+	{
+		UniChar delimiter[6];
+		if (NOTNIL(lastText))
+			GetAppendDelimiter(delimiter, GetCString(lastText), GetCString(itemText),
+							   (ULong) lastLength,
+							   (ULong) Ustrlen(GetCString(itemText)));
+		else
+			GetAppendDelimiter(delimiter, GetCString(text), GetCString(itemText),
+							   (ULong) Ustrlen(GetCString(text)),
+							   (ULong) Ustrlen(GetCString(itemText)));
+		*outDelimiter = Ustrlen(delimiter);
+		if (*outDelimiter > 0)
+		{
+			long at = *usedText;
+			GrowInsertText(text, usedText, *outDelimiter);
+			BlockMove(delimiter, (UniChar*) BinaryData(text) + at,
+					  *outDelimiter * (long) sizeof(UniChar));
+			AppendStyleRun(styles, usedStyles, *outDelimiter, defaultStyle);
+		}
+	}
+
+	// the item's own characters, without its terminator
+	long count = Length(itemText) / (long) sizeof(UniChar) - 1;
+	long at = *usedText;
+	GrowInsertText(text, usedText, count);
+	BlockMove(BinaryData(itemText), (UniChar*) BinaryData(text) + at,
+			  count * (long) sizeof(UniChar));
+
+	if (IsArray(itemStyles))
+	{
+		long runs = Length(itemStyles);
+		long first = *usedStyles;
+		GrowInsertStyles(styles, usedStyles, runs);
+		ArrayMunger(styles, first, runs, itemStyles, 0, runs);
+	}
+	else
+	{
+		RefVar style(itemStyles);
+		if (ISNIL(style))
+			style = StyleBeforeIndex(styles, *usedStyles - 1);
+		if (ISNIL(style))
+			style = defaultStyle;
+		AppendStyleRun(styles, usedStyles, count, style);
+	}
+}
+
+
+// ROM 0x00170064 (unnamed) - InsertItemCount
+// The items may be an array of them or just the one.
+static long
+InsertItemCount(RefArg items)
+{
+	return IsArray(items) ? Length(items) : 1;
+}
+
+
+// ROM 0x00170030 (unnamed) - InsertItemAt
+static Ref
+InsertItemAt(RefArg items, long index)
+{
+	return IsArray(items) ? GetArraySlotRef(items, index) : (Ref) items;
+}
+
+
+// ROM 0x0007623c NewCorrectInfo__Fv
+// The frame the corrector keeps what it would need to put a word right
+// in: a clone of protoCorrectInfo with an empty `info` array.
+Ref
+NewCorrectInfo(void)
+{
+	RefVar info(Clone(RefVar(Rprotocorrectinfo)));
+	SetFrameSlot(info, RSSYMinfo, RefVar(MakeArray(0)));
+	return info;
+}
+
+
+// (host) The one character an ink word stands as, as a string object -
+// the ROM builds it by hand at each of the two places that need one.
+static Ref
+MakeInkWordCharacter(void)
+{
+	RefVar one(AllocateBinary(RSSYMstring, 2 * (long) sizeof(UniChar)));
+	UniChar* chars = (UniChar*) BinaryData(one);
+	chars[0] = kInkWordChar;
+	chars[1] = 0;
+	return one;
+}
+
+
+// ROM 0x001700a0 HandleInsertItems__14TParagraphViewFRC6RefVar
+// The command a paragraph answers when something is to be put into it.
+// The spec says what (`insertItems`, one item or an array of them),
+// where (`insertOffset`, the caret's offset when there is none), how
+// much to take out (`replaceChars`, the selection's length when there
+// is none), and whether to space the items apart (`addSpace`), to make
+// it undoable (`undoable`) and to move the caret after it (`moveCaret`).
+// `defaultFontSpec` is the style anything that brings none is written
+// in; with none, whatever the paragraph would use at that offset.
+//
+// The items are gathered into one text binary and one styles array -
+// with a delimiter worked out between each pair, so that two words
+// dropped together come out with a space between them but a word and a
+// comma do not - and the lot is handed to the same HandleReplaceText
+// that typing goes through, which is what gives it its undo.
+//
+// The kinds of item:
+//
+//   a string              put in as it is
+//   an ink word           one 0xF701 character, the word as its style
+//   a frame with `text`   its text, with its `styles`
+//   a frame with `words`  what the recogniser made of a piece of
+//                         writing: the first reading's `word`, unless
+//                         the frame is flagged as ink, in which case
+//                         its `ink` - or its `strokes`, packed - goes
+//                         in as one 0xF701 character
+//
+// Anything else is passed over.  A word-info frame also leaves a note in
+// the correction information - where it landed, whether it was ink and
+// whether it carries training data - so that the corrector can offer
+// alternatives for it later.
+//
+// NOT YET RECONSTRUCTED: a *rich* string item, whose text and styles
+// come out of TRichString::MakeParagraphTextSlot and
+// MakeParagraphStylesSlot; one goes in as a plain string, so its ink is
+// lost.
+Boolean
+TParagraphView::HandleInsertItems(RefArg spec)
+{
+	RefVar items(GetFrameSlot(spec, RSSYMinsertitems));
+	RefVar text(AllocateBinary(RSSYMstring, 0));
+	RefVar styles(AllocateArray(RSSYMstyles, 0));
+	long usedText = 0;
+	long usedStyles = 0;
+	RefVar correctInfo;
+
+	// a paragraph whose text flags have bit 1 never spaces its items
+	Boolean addSpace = (TextFlags() & 2) == 0;
+	if (addSpace && FrameHasSlot(spec, RSSYMaddspace))
+		addSpace = NOTNIL(RefVar(GetFrameSlot(spec, RSSYMaddspace)));
+
+	RefVar slot(GetFrameSlot(spec, RSSYMinsertoffset));
+	long insertOffset = ISNIL(slot) ? fCaretOffset : RINT(slot);
+
+	Boolean undoable = true;
+	if (FrameHasSlot(spec, RSSYMundoable))
+		undoable = NOTNIL(RefVar(GetFrameSlot(spec, RSSYMundoable)));
+	Boolean moveCaret = true;
+	if (FrameHasSlot(spec, RSSYMmovecaret))
+		moveCaret = NOTNIL(RefVar(GetFrameSlot(spec, RSSYMmovecaret)));
+
+	// how much goes out: what the spec says, or whatever is selected
+	long replaceChars;
+	slot = GetFrameSlot(spec, RSSYMreplacechars);
+	if (NOTNIL(slot))
+		replaceChars = RINT(slot);
+	else
+	{
+		RefVar hilite(FirstHilite());
+		if (ISNIL(hilite))
+			replaceChars = 0;
+		else
+		{
+			TParagraphHilite* range = (TParagraphHilite*) RefToAddress(hilite);
+			replaceChars = range->fEnd - range->fStart;
+		}
+	}
+
+	// the selection goes as soon as the insert is under way, unless
+	// something is holding on to it
+	if (!gRootView->GetPreserveHilites())
+	{
+		TView* owner = GetEnclosingEditView();
+		if (owner == nil)
+			owner = this;
+		owner->RemoveAllHilites();
+	}
+
+	RefVar defaultStyle(GetFrameSlot(spec, RSSYMdefaultfontspec));
+	if (ISNIL(defaultStyle))
+		defaultStyle = GetStyleForInsertion(insertOffset, true, true);
+
+	long count = InsertItemCount(items);
+	// the text the first item's delimiter is measured against; dropped
+	// once an item is in, so that the rest measure against what has been
+	// built
+	RefVar before(Text());
+	long delimiter = 0;
+
+	for (long i = 0; i < count; i++)
+	{
+		RefVar item(InsertItemAt(items, i));
+		RefVar itemText;
+		RefVar itemStyles;
+
+		if (IsInstance(item, RSSYMstring))
+		{
+			// (NOT YET: a rich string's own text and styles slots)
+			AppendInsertItem(before, insertOffset, text, styles,
+							 &usedText, &usedStyles, addSpace,
+							 item, itemStyles, defaultStyle, &delimiter);
+		}
+		else if (IsInkWord(item))
+		{
+			itemText = MakeInkWordCharacter();
+			itemStyles = AllocateArray(RSSYMstyles, 2);
+			SetArraySlot(itemStyles, 0, RefVar(MAKEINT(1)));
+			SetArraySlot(itemStyles, 1, item);
+			AppendInsertItem(before, insertOffset, text, styles,
+							 &usedText, &usedStyles, addSpace,
+							 itemText, itemStyles, defaultStyle, &delimiter);
+		}
+		else if (IsFrame(item) && FrameHasSlot(item, RSSYMtext))
+		{
+			itemText = GetFrameSlot(item, RSSYMtext);
+			itemStyles = GetFrameSlot(item, RSSYMstyles);
+			AppendInsertItem(before, insertOffset, text, styles,
+							 &usedText, &usedStyles, addSpace,
+							 itemText, itemStyles, defaultStyle, &delimiter);
+		}
+		else if (IsFrame(item) && FrameHasSlot(item, RSSYMwords))
+		{
+			// what the recogniser made of a piece of writing
+			long startedAt = usedText;
+			RefVar scratch(GetFrameSlot(item, RSSYMwords));
+			Boolean asInk = ISNIL(scratch);
+			if (!asInk)
+				asInk = (RINT(RefVar(GetFrameSlot(item, RSSYMflags)))
+						 & kWordInfoIsInk) != 0;
+
+			if (!asInk)
+			{
+				// the best reading
+				scratch = GetArraySlotRef(scratch, 0);
+				itemText = GetFrameSlot(scratch, RSSYMword);
+				AppendInsertItem(before, insertOffset, text, styles,
+								 &usedText, &usedStyles, addSpace,
+								 itemText, itemStyles, defaultStyle, &delimiter);
+			}
+			else
+			{
+				// the writing itself: already packed, or a bundle of
+				// strokes to pack
+				scratch = GetFrameSlot(item, RSSYMink);
+				if (ISNIL(scratch))
+				{
+					scratch = GetFrameSlot(item, RSSYMstrokes);
+					if (NOTNIL(scratch))
+						scratch = CompressStrokes(scratch);
+				}
+				if (NOTNIL(scratch))
+				{
+					if (!IsInkWord(scratch))
+						scratch = GetFrameSlot(scratch, RSSYMink);
+					itemText = MakeInkWordCharacter();
+					itemStyles = AllocateArray(RSSYMstyles, 2);
+					SetArraySlot(itemStyles, 0, RefVar(MAKEINT(1)));
+					SetArraySlot(itemStyles, 1, scratch);
+					AppendInsertItem(before, insertOffset, text, styles,
+									 &usedText, &usedStyles, addSpace,
+									 itemText, itemStyles, defaultStyle, &delimiter);
+				}
+			}
+
+			// where it landed, and what the corrector would need to know
+			// (a word that could not be put in at all still gets a note,
+			//  an empty one)
+			long length = NOTNIL(itemText) ? Ustrlen(GetCString(itemText)) : 0;
+			SetFrameSlot(item, RSSYMstart, RefVar(MAKEINT(startedAt + delimiter)));
+			SetFrameSlot(item, RSSYMstop,
+						 RefVar(MAKEINT(startedAt + length + delimiter)));
+			long noteFlags = IsInkWord(scratch) ? 10 : 2;
+			if (NOTNIL(RefVar(GetFrameSlot(item, RSSYMunitdata))))
+				noteFlags |= 1;
+			SetFrameSlot(item, RSSYMflags, RefVar(MAKEINT(noteFlags)));
+			if (ISNIL(correctInfo))
+				correctInfo = NewCorrectInfo();
+			AddArraySlot(RefVar(GetFrameSlot(correctInfo, RSSYMinfo)), item);
+		}
+
+		// the next item measures its delimiter against what has been
+		// built rather than against the paragraph
+		before = RefVar(NILREF);
+	}
+
+	// and a delimiter after the last item, when the paragraph goes on
+	if (addSpace)
+	{
+		RefVar after(Text());
+		long length = Ustrlen(GetCString(after));
+		if (insertOffset + replaceChars < length
+			&& !IsWhiteSpace(GetCString(after)[insertOffset + replaceChars]))
+		{
+			// (the ROM looks at the character after what is being
+			//  replaced but measures the delimiter against the text from
+			//  the insertion point, so a replacement is measured against
+			//  the characters it is about to take out)
+			UniChar trailing[6];
+			GetAppendDelimiter(trailing, GetCString(text),
+							   GetCString(after) + insertOffset,
+							   (ULong) usedText, (ULong) (length - insertOffset));
+			long n = Ustrlen(trailing);
+			long at = usedText;
+			GrowInsertText(text, &usedText, n);
+			BlockMove(trailing, (UniChar*) BinaryData(text) + at,
+					  n * (long) sizeof(UniChar));
+			AppendStyleRun(styles, &usedStyles, n, defaultStyle);
+		}
+	}
+
+	SetLength(text, usedText * (long) sizeof(UniChar));
+	SetLength(styles, usedStyles);
+
+	RefVar cmd(MakeCommand(aeReplaceText, this, fId));
+	CommandSetText(cmd, text);
+	RefVar params(AllocateArray(RSSYMarray, 7));
+	SetArraySlot(params, 0, RefVar(MAKEINT(insertOffset)));
+	SetArraySlot(params, 1, RefVar(MAKEINT(replaceChars)));
+	SetArraySlot(params, 2, RefVar(MAKEINT(usedText)));
+	SetArraySlot(params, 3, RefVar(MAKEINT(0)));
+	SetArraySlot(params, 4, RefVar(MAKEINT(undoable)));
+	SetArraySlot(params, 5, RefVar(MAKEINT(moveCaret)));
+	SetArraySlot(params, 6, RefVar(MAKEINT(0)));
+	SetFrameSlot(cmd, RSSYMparams, params);
+
+	RefVar frame(styles);
+	if (NOTNIL(correctInfo))
+	{
+		frame = Clone(RefVar(Rcanonicalstyles));
+		SetFrameSlot(frame, RSSYMstyles, styles);
+		SetFrameSlot(frame, RSSYMcorrectinfo, correctInfo);
+	}
+	CommandSetFrameParameter(cmd, frame);
+	HandleReplaceText(cmd);
+
+	// what actually went in, for whoever asked
+	SetFrameSlot(spec, RSSYMinsertoffset, RefVar(MAKEINT(insertOffset)));
+	SetFrameSlot(spec, RSSYMreplacechars, RefVar(MAKEINT(usedText)));
+	return true;
+}
+
+
+// ROM 0x00170e90 (unnamed) - SendInsertCommand
+// The spec sent to a view as command 0x4d.  ==> whether it took it.
+static Boolean
+SendInsertCommand(TView* view, ULong id, RefArg spec)
+{
+	if (view == nil)
+		return false;
+	RefVar cmd(Clone(RefVar(Rprotocommand)));
+	SetFrameSlot(cmd, RSSYMid, RefVar(MAKEINT(id)));
+	SetFrameSlot(cmd, RSSYMreceiver, RefVar(view->fContext));
+	SetFrameSlot(cmd, RSSYMframeparameter, spec);
+	return view->DoCommand(cmd);
+}
+
+
+// ROM 0x00170f7c DoInsertItems__FP5TViewRC6RefVarUcT3lT5T3T2
+// Items put into a named view: the spec built out of the starter and
+// sent on.  ==> the spec, which comes back saying what actually went in.
+Ref
+DoInsertItems(TView* view, RefArg items, Boolean addSpace, Boolean undoable,
+			  long insertOffset, long replaceChars, Boolean moveCaret,
+			  RefArg defaultFontSpec)
+{
+	RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+	SetFrameSlot(spec, RSSYMinsertitems, items);
+	SetFrameSlot(spec, RSSYMaddspace, RefVar(MAKEBOOLEAN(addSpace)));
+	SetFrameSlot(spec, RSSYMundoable, RefVar(MAKEBOOLEAN(undoable)));
+	SetFrameSlot(spec, RSSYMinsertoffset, RefVar(MAKEINT(insertOffset)));
+	SetFrameSlot(spec, RSSYMreplacechars, RefVar(MAKEINT(replaceChars)));
+	SetFrameSlot(spec, RSSYMmovecaret, RefVar(MAKEBOOLEAN(moveCaret)));
+	SetFrameSlot(spec, RSSYMdefaultfontspec, defaultFontSpec);
+	SendInsertCommand(view, kInsertItemsCommand, spec);
+	return spec;
+}
+
+
+// ROM 0x00171168 InsertItemsAtCaret__FRC6RefVar
+// The same, put wherever the caret is.  Nothing takes it when there is
+// no caret, or when the view the caret is in will not have it, and then
+// the machine beeps.  ==> whether anything took it.
+Boolean
+InsertItemsAtCaret(RefArg spec)
+{
+	TView* caret = gRootView->fCaretView;
+	Boolean taken = false;
+	if (caret != nil)
+		taken = SendInsertCommand(caret, kInsertItemsCommand, spec);
+	if (!taken)
+		gRootView->RunScript(RSSYMsysbeep, RefVar(MakeArray(0)), false, nil);
+	return taken;
+}
+
+
 // ROM 0x00175964 CheckAndDoJoin__14TParagraphViewFR6TPointN21
 // A caret drawn upside down across a line - the join gesture - closes up
 // the white space between the two words its arms are over.
@@ -3366,6 +3937,14 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		else
 			HandleTap(pt);		// no word there: just the caret
 		return true;
+	}
+	if (id == kInsertItemsCommand && (fFlags & (vReadOnly | vWriteProtected)) == 0)
+	{
+		// something put into the paragraph from outside.  A paragraph
+		// that will not take it - or one that may not be written on -
+		// lets the view's own scripts have the command instead.
+		if (HandleInsertItems(RefVar(CommandFrameParameter(cmd))))
+			return true;
 	}
 	return TView::RealDoCommand(cmd);
 }

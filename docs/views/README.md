@@ -829,6 +829,98 @@ shrank).  `GetStyleAtOffset` 0x0017f8dc, `GetStylesOfRange` 0x0017fa94,
 `GetWriteableTextStylesArray` 0x0017b278 makes the styles slot a runs
 array when it was a single spec.
 
+### Things put into a paragraph (`HandleInsertItems` 0x001700a0)
+
+Typing is not the only way text gets into a paragraph.  A word the
+recogniser read, an ink word the pen left, a clipping dragged from
+somewhere else, an ink word split off another - all of them arrive the
+same way, as command **0x4d** with a frame saying what and where, and
+the paragraph gathers the lot into one `aeReplaceText`, so that the
+whole insert is one thing to undo.
+
+`DoInsertItems` 0x00170f7c builds the spec for a named view: a clone of
+`Rstarterinsertspec` with `insertItems` (one item or an array of them),
+`addSpace`, `undoable`, `insertOffset`, `replaceChars`, `moveCaret` and
+`defaultFontSpec`, sent on with the view's `DoCommand`.
+`InsertItemsAtCaret` 0x00171168 sends the same spec to whatever view
+the caret is in, and beeps (the root view's `SysBeep` script) when
+nothing takes it.  Both go through the same little sender at
+0x00170e90, which clones `protoCommand` and fills in `id`, `receiver`
+and `frameParameter`.
+
+`TParagraphView::HandleInsertItems` 0x001700a0 does the work.  It reads
+the spec's slots (the caret's offset for a missing `insertOffset`, the
+selection's length for a missing `replaceChars`), takes the selection
+away unless `TRootView::GetPreserveHilites` says to keep it, and works
+out the style anything that brings none is written in
+(`GetStyleForInsertion` at the insertion point).  Then it appends each
+item in turn into a text binary and a styles array it grows as it goes,
+and hands them to the same `HandleReplaceText` that typing goes
+through.  Afterwards it writes back into the spec what actually went
+in, so the caller can see it: `insertOffset` where, `replaceChars` how
+many characters.
+
+The item kinds:
+
+| item | what goes in |
+| --- | --- |
+| a string | the string |
+| an ink word (`'inkWord`) | one 0xF701 character, the word as its style |
+| a frame with `text` | its text, with its `styles` |
+| a frame with `words` (the recogniser's word info) | the first reading's `word` - or, when the frame is flagged `kWordInfoIsInk`, its `ink` (or its `strokes`, packed with `CompressStrokes`) as one 0xF701 character |
+| anything else | nothing |
+
+A word-info frame also leaves a note in the **correction information**:
+its `start` and `stop` are set to where it landed and its `flags` to
+what it was (2 a word the corrector knows, +8 ink, +1 it carries
+training data), and the frame is added to a `NewCorrectInfo`
+0x0007623c - a clone of `protoCorrectInfo` with an empty `info` array -
+which rides along in the replace command's frame parameter beside the
+styles.  That is how the corrector can later offer alternatives for a
+word that is already on the page.
+
+#### The delimiter between two items
+
+The appender at 0x0016fd7c is the piece that makes two things dropped
+together read like two words rather than one.  Before each item it asks
+`GetAppendDelimiter` 0x000edc24 what belongs between what came before
+and what is about to go in, and the answer is a space or nothing:
+nothing when either side is empty, when there is white space at the
+join already, when the left ends in `-` or `(`, when the right starts
+with `-`, when the right is a single punctuation mark that is not `(`,
+or when the left ends in a punctuation mark standing on its own.  So
+"one" and "two" come out `one two`, but "one" and "," come out `one,`.
+
+What "what came before" means changes after the first item: the first
+is measured against the paragraph's own text up to the insertion point,
+and every one after it against the text built so far.  A delimiter is
+also put *after* the last item when the paragraph goes on past the
+insertion and the character there is not white space already.
+
+> The ROM tests the character at `insertOffset + replaceChars` - the
+> first character that survives the replacement - but measures the
+> delimiter from `insertOffset`, so a replacement is measured against
+> the characters it is about to take out.  Kept as it is.
+
+Style runs are appended beside the text, merged with the run before
+them when `EqualStyles` 0x0016fa08 says they match - two font frames
+match when their `size`, `face` and `family` do, anything else only
+when it is the same object.  An item that brings its own runs has them
+copied in; one that brings a single style, or none, gets one run over
+the whole of it, taking the style of the last run that is not an ink
+word (0x0016fcc8) and failing that the default.  The two binaries grow
+in steps - forty characters (0x0016f954), ten style slots (0x0016f9b0)
+- so a long insert does not resize once per item.
+
+`test_Views`'s `TestInsertItems` drops strings, an ink word, a
+recogniser's word info of each kind and something the paragraph has no
+use for, and undoes the lot.
+
+**NOT YET**: a *rich* string item, whose text and styles come out of
+`TRichString::MakeParagraphTextSlot` 0x001abf6c and
+`MakeParagraphStylesSlot` 0x001ac038; one goes in as a plain string, so
+its own ink is lost.
+
 ### Tapping a paragraph (`HandleTap` 0x001772f4, the double tap)
 
 A tap on a paragraph (aeTap) is deferred by the double-tap interval so a
