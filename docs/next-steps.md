@@ -85,12 +85,31 @@ the two large open areas below.
   `MakeCharArea` 0x00035a50 and `TController::ClassifyInArea`
   0x00209f78, with `GetInterpretationsCopy` and its two companions
   around it), and `TWRecognizer::EndInkStrokeGroup`.
-- **The dictionaries** (`LookupWord` 0x0013f4f4, `ExpandWord`
-  0x001aa930, `BuildChains` 0x0013d808, `LookupWordOrVariant`
-  0x0008f098, and - now that the correction list is live - `AddAutoAdd`,
-  `RemoveAutoAdd` and `DoIndexedLearning`).  With none of them a word
-  list comes out in the order a machine with an empty dictionary would
-  put it, nothing is ever "known", and nothing is learnt.
+- **The dictionaries.**  The engine underneath them is now whole:
+  `recognition/Airus.h` can both write a dictionary (the AEnum walkers)
+  and read the read-only lexicons the ROM ships with (AL and AL16).
+  What is missing is the layer above - the list of dictionaries and
+  the chains a lookup walks:
+    - `Dictionaries` (0x0013d460), `FindDictionaryEntry` (0x0013d4ac),
+      `FindDictionaryFrame` (0x0013e558) and `InitDictionaries`
+      (0x0013de2c), which builds `vars.dictionaries` out of
+      `Rdictionarylist` and opens each one.  That one needs
+      `InitROMDictionaryData` (0x0019b0d4) - a large table of pointers
+      to the ROM's own dictionary data, so a job for `romtable.py` -
+      and `BuildDictionaryFromPtr` (0x0002d624), which is the read-only
+      twin of `NewDictionary` and is small.
+    - `AddToChain` (0x0013d628), `BuildChains` (0x0013d808 and
+      0x0013d9dc), `CompactChains`, `DoneChains`.
+    - `LookupWordInChain` (0x0013f430), `LookupWord` (0x0013f4f4),
+      `LookupWordOrVariant` (0x0013f570) and `BuildCaseVariant`
+      (0x0013f2fc).
+    - `AddAutoAdd` (0x001aaee4), `RemoveAutoAdd` (0x001ab0f8),
+      `ExpandWord` (0x001aa930) and `DoIndexedLearning` (0x001a0cc4),
+      which are what `AutoAdd`/`AutoRemove` and `DoEntryLearning` are
+      already written to call.
+  Until they are there a word list comes out in the order a machine
+  with an empty dictionary would put it, nothing is ever "known", and
+  nothing is learnt.
 - **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
   `correct` to find in the root view's context.  It answers false out
   of hand today, which is right for a machine that has no corrector
