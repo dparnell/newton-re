@@ -162,6 +162,10 @@ long	TextOrInkWordsEnabled(TView* view);					// ROM 0x001a2aa4 TextOrInkWordsEna
 // Whether the corrector - the list of alternative readings a written
 // word can be put right from - is on the screen.
 Boolean	CorrectorUp(void);									// ROM 0x001767b8 CorrectorUp__Fv
+// Remote writing turned off while the corrector is up, and put back
+// afterwards.  ==> 1 the corrector was up, 2 remote writing was on.
+ULong	SetRemoteForCorrector(void);						// ROM 0x00177470 SetRemoteForCorrector__Fv
+void	RestoreRemoteForCorrector(ULong state);				// ROM 0x001774e0 RestoreRemoteForCorrector__Fl
 
 // The view whose text was last changed remembered in the globals, which
 // is what `lastTextChanged` answers a script.

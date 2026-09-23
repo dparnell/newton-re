@@ -529,8 +529,15 @@ pictures: one with the pen still down, which is what the inker drew, and
 one after it has been lifted and the recogniser has finished, which is
 what the page kept.
 
-NOT YET on this route: the corrector (`SetRemoteForCorrector` /
-`RestoreRemoteForCorrector`, which put its view out of the way while
-the word is placed, and `CorrectorUp`, which has no `correct` view to
-find), and `TParagraphView::ReplaceCharacter`, the Finder's
-strongest claim - a written character that replaces the one under it.
+The corrector's own side of this is `SetRemoteForCorrector` (0x00177470)
+and `RestoreRemoteForCorrector` (0x001774e0), which bracket the whole
+command: while the corrector's slip is up a word has to go where it was
+written, so remote writing is taken away for the duration.  (A ROM bug
+is kept there: the restore tests for either of its two bits rather than
+both, so a word written with the corrector up and remote writing *off*
+leaves remote writing switched on.)
+
+NOT YET on this route: the corrector view itself, so `CorrectorUp` has
+no `correct` to find, and `TParagraphView::ReplaceCharacter`, the
+Finder's strongest claim - a written character that replaces the one
+under it.

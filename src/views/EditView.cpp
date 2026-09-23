@@ -1241,13 +1241,14 @@ TEditView::RealDoCommand(RefArg cmd)
 		// corrector is not up).  Otherwise the word starts a paragraph
 		// of its own.
 		//
-		// NOT YET RECONSTRUCTED: SetRemoteForCorrector 0x00176844 /
-		// RestoreRemoteForCorrector 0x001768fc, which put the
-		// corrector's own view out of the way while the word is placed.
+		// While the corrector is up the word has to go where it was
+		// written, so remote writing is turned off for the duration
+		// (SetRemoteForCorrector) and put back at the end.
 		if (TView::RealDoCommand(cmd))
 			return true;
 		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
 			return TView::RealDoCommand(cmd);	// (the ROM's shared exit runs the scripts again)
+		ULong remote = SetRemoteForCorrector();
 		if (CorrectorUp())
 			RemoveAllHilites();
 		else
@@ -1347,6 +1348,7 @@ TEditView::RealDoCommand(RefArg cmd)
 			else
 				((TDataView*) bestView)->HandleInkWord(cmd, true);
 		}
+		RestoreRemoteForCorrector(remote);
 		CommandSetResult(cmd, 1);
 		return true;
 	}
@@ -1675,6 +1677,48 @@ CorrectorUp(void)
 	if (ISNIL(corrector))
 		return false;
 	return NOTNIL(GetFrameSlotRef(corrector, RSSYMviewcobject));
+}
+
+
+// ROM 0x00177470 SetRemoteForCorrector__Fv
+// Remote writing turned off while the corrector is up, and what was
+// there before remembered so it can be put back.
+//
+// The corrector is the slip that offers a word's other readings.  While
+// it is up, writing that arrives has to go where it was written - if
+// remote writing were left on, every word would be posted to whatever
+// the corrector's own caret happens to be in.
+//
+// ==> two bits: 1 the corrector was up, 2 remote writing was on.
+ULong
+SetRemoteForCorrector(void)
+{
+	Boolean up = CorrectorUp();
+	ULong state = up ? 1 : 0;
+	Boolean remote = NOTNIL(RefVar(GetPreference(RSSYMremotewriting)));
+	if (remote)
+		state |= 2;
+	if (up && remote)
+		SetPreference(RSSYMremotewriting, RefVar(NILREF));
+	return state;
+}
+
+
+// ROM 0x001774e0 RestoreRemoteForCorrector__Fl
+// Remote writing put back after the corrector has had its turn.
+//
+// ROM BUG, kept: the test is "either bit", not "both bits".  The
+// preference is only ever taken away when the corrector was up *and*
+// remote writing was on, so only that case should put it back - but a
+// session where the corrector was up with remote writing off ends with
+// remote writing switched on, and it stays on.  Writing a word anywhere
+// on a page with the corrector up is enough to change a preference the
+// writer never touched.
+void
+RestoreRemoteForCorrector(ULong state)
+{
+	if ((state & 3) != 0)
+		SetPreference(RSSYMremotewriting, RefVar(TRUEREF));
 }
 
 

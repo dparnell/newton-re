@@ -4574,6 +4574,49 @@ TestInkWordAtPageCaret()
 }
 
 
+// Remote writing turned off while the corrector is up.  A word that
+// arrives while the corrector's slip is on screen has to go where it was
+// written, not to whatever caret the slip happens to hold.
+static void
+TestRemoteForCorrector()
+{
+	// nothing up and nothing on: nothing to save and nothing to put back
+	Eval("userConfiguration.remoteWriting := nil");
+	EXPECT(!CorrectorUp());
+	EXPECT(SetRemoteForCorrector() == 0);
+	EXPECT(ISNIL(Eval("userConfiguration.remoteWriting")));
+
+	// remote writing on with the corrector down: it is left alone
+	Eval("userConfiguration.remoteWriting := true");
+	EXPECT(SetRemoteForCorrector() == 2);
+	EXPECT(NOTNIL(Eval("userConfiguration.remoteWriting")));
+
+	// the corrector up: remote writing is taken away for the duration
+	// and put back afterwards
+	Eval("GetRoot().correct := {viewCObject: 1}");
+	EXPECT(CorrectorUp());
+	ULong state = SetRemoteForCorrector();
+	EXPECT(state == 3);
+	EXPECT(ISNIL(Eval("userConfiguration.remoteWriting")));
+	RestoreRemoteForCorrector(state);
+	EXPECT(NOTNIL(Eval("userConfiguration.remoteWriting")));
+
+	// the ROM's bug, kept: with the corrector up and remote writing
+	// already off, nothing was taken away - but the restore tests for
+	// either bit rather than both, so it switches remote writing ON
+	Eval("userConfiguration.remoteWriting := nil");
+	state = SetRemoteForCorrector();
+	EXPECT(state == 1);
+	EXPECT(ISNIL(Eval("userConfiguration.remoteWriting")));
+	RestoreRemoteForCorrector(state);
+	EXPECT(NOTNIL(Eval("userConfiguration.remoteWriting")));
+
+	Eval("userConfiguration.remoteWriting := nil");
+	Eval("GetRoot().correct := nil");
+	EXPECT(!CorrectorUp());
+}
+
+
 int
 main()
 {
@@ -4689,6 +4732,7 @@ main()
 		TestWordGeometry();
 		TestWordIntoParagraph();
 		TestInkWordAtPageCaret();
+		TestRemoteForCorrector();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();
