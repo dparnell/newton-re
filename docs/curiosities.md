@@ -663,3 +663,45 @@ quietly becomes three long, and that third character stays there for
 ever - no later write ever reaches position 2 again. Nothing notices,
 because the only questions ever asked of the string are what its first
 character is and whether a given character is in it somewhere.
+
+---
+
+## Writing in columns gives you spaces, because `FindTab` was switched off
+
+`TParagraphView` has a whole apparatus for intuiting tab stops from
+handwriting. `MinWidthToIntuitTab` (0x001733e4) works out how wide a gap
+has to be before it counts as a tab rather than a space - four times the
+average width of one of the word's letters, the narrow ones (i, l, I)
+counting half, never less than 22 pixels. `NearTabStop` (0x00173cc4)
+finds an existing stop within ten pixels of a coordinate. `AddTabStop`
+(0x00173b34) adds a new one. `AddWord` (0x00172eb4) will put up to twelve
+tab characters in front of a word, and `FindWordInRun`,
+`FindWordInParagraph` and `SetFinderBelowParagraph` each ask, at the
+right moment, which tab stop the word was written at.
+
+They ask `FindTab` (0x00173ea0). In the shipping MP2x00 ROM that
+function is:
+
+```
+FindTab:
+  00173ea0  mov r0,#0x0
+  00173ea4  mov pc,lr
+```
+
+Two instructions. Every caller gets "no tab", so `AddTabStop` is never
+reached, the tab characters are never inserted, and the tab stops array
+a paragraph can hold is never written by the recogniser. The only piece
+that survives is `MinWidthToIntuitTab`, and only because
+`FindWordInParagraph` reuses its number for a different question - is
+this gap small enough to be a space?
+
+`PreviousLineNeedsCR` (0x00173268) is the same story in two
+instructions: it decides whether a carriage return is wanted before a
+word, and always says no.
+
+Whoever cut these left every caller in place. From the outside the
+machine looks as though it is thinking about tabs on every single word;
+it is asking a function that was answered once, at build time, with a
+constant.
+
+*`src/views/ParagraphView.cpp`.*
