@@ -1,0 +1,493 @@
+/*
+	File:		recognition/Dictionaries.cpp
+
+	Contains:	The dictionaries the machine knows, and how a word is
+				looked up in them - Dictionaries.h.
+
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
+*/
+
+#include "Dictionaries.h"
+#include "Airus.h"
+#include "RecConfig.h"
+#include "View.h"
+#include "RootView.h"
+#include "Frames.h"
+#include "ObjectHeap.h"
+#include "Interpreter.h"	// GetVariable
+#include "RSSymbols.h"
+#include "ROMConstants.h"
+#include "Unicode.h"
+
+#include <string.h>
+
+
+// ROM 0x0c10162c gDictList
+TDArray*	gDictList = nil;
+
+
+/*------------------------------------------------------------------------------
+	T h e   l i s t
+------------------------------------------------------------------------------*/
+
+// ROM 0x0013d4ac FindDictionaryEntry__FUl
+// The list entry for a dictionary id.
+//
+// A dozen ids stand for others - a lexicon that was folded into another
+// one, or a name the outside world uses for a dictionary the list keeps
+// under a different number - and the substitution is written out here as
+// a switch rather than kept in the frames.  An id that names nothing at
+// all falls back on whatever the list calls 6, which is the general
+// lexicon: asking for a dictionary that is not there gets you the
+// ordinary words rather than nothing.
+dictListEntry*
+FindDictionaryEntry(ULong id)
+{
+	switch (id)
+	{
+	case 13:
+	case 0x29:	id = 0x18;	break;
+	case 1:
+	case 7:
+	case 9:
+	case 0x14:
+	case 0x2a:	id = 6;		break;
+	case 2:		id = 3;		break;
+	case 10:	id = 0x2d;	break;
+	case 0x2b:
+	case 0x2c:	id = 0x1a;	break;
+	default:				break;
+	}
+
+	RefVar list(Dictionaries());
+	dictListEntry* fallback = nil;
+	ULong count = (ULong) gDictList->fCount;
+	for (ULong i = 0; i < count; i++)
+	{
+		dictListEntry* entry = (dictListEntry*) gDictList->GetEntry(i);
+		RefVar frame(GetArraySlotRef(list, entry->fIndex));
+		ULong was = (ULong) RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
+		if (was == id)
+			return entry;
+		if (was == 6)
+			fallback = entry;
+	}
+	return fallback;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   c h a i n
+------------------------------------------------------------------------------*/
+
+// ROM 0x0020cab0 __ct__10TDictChainFv
+TDictChain::TDictChain()
+{
+}
+
+
+// ROM 0x0020cb44 IDictChain__10TDictChainFUlT1
+long
+TDictChain::IDictChain(ULong count, ULong position)
+{
+	fData = nil;
+	long err = IDArray(sizeof(Handle), count);
+	if (err == 0)
+		fPosition = (long) position;
+	return err;
+}
+
+
+// ROM 0x0020caf0 Make__10TDictChainSFUlT1
+TDictChain*
+TDictChain::Make(ULong count, ULong position)
+{
+	TDictChain* chain = new TDictChain;
+	if (chain != nil && chain->IDictChain(count, position) != 0)
+	{
+		chain->Dispose();
+		chain = nil;
+	}
+	return chain;
+}
+
+
+// ROM 0x0020cbf0 PositionToHandle__10TDictChainFUl
+Handle
+TDictChain::PositionToHandle(ULong position)
+{
+	Handle* entry = (Handle*) GetEntry(position);
+	return entry == nil ? nil : *entry;
+}
+
+
+// ROM 0x0020cc18 HandleToPosition__10TDictChainFPP15AirusAParmBlock
+ULong
+TDictChain::HandleToPosition(Handle dictionary)
+{
+	Lock();
+	ULong at = 0;
+	for (; at < (ULong) fCount; at++)
+		if (*(Handle*) GetEntry(at) == dictionary)
+			break;
+	Unlock();
+	return at;
+}
+
+
+// ROM 0x0020cbc8 AddDictToChain__10TDictChainFPP15AirusAParmBlock
+void
+TDictChain::AddDictToChain(Handle dictionary)
+{
+	InsertEntry((ULong) fCount, (const char*) &dictionary);
+}
+
+
+// ROM 0x0020cb7c RemoveDictFromChain__10TDictChainFPP15AirusAParmBlock
+long
+TDictChain::RemoveDictFromChain(Handle dictionary)
+{
+	ULong at = HandleToPosition(dictionary);
+	Delete(at);
+	if (fPosition == (long) at)
+		fPosition = -1;
+	return 0;
+}
+
+
+// ROM 0x0013d628 AddToChain__FPP10TDictChainP13dictListEntry
+// A dictionary put into whichever of the three chains its frame says it
+// belongs in - and then the dictionary that one is linked to, and the
+// one after that, for up to a hundred links or until the ring closes.
+//
+// A dictionary already in the chain is not added twice.  Which chain a
+// dictionary goes in comes out of its `dictType`: 0 the ordinary ones,
+// 1 the ones only consulted for particular fields, 4 the exceptions; a
+// frame that says anything else stops the walk.
+void
+AddToChain(TDictChain** chains, dictListEntry* entry)
+{
+	UByte first = entry->fIndex;
+	long links = 0;
+	for (;;)
+	{
+		// DEVIATION: the ROM copies the seven bytes of the entry that
+		// matter, because the next FindDictionaryEntry may move the list
+		// out from under it; here a Handle is pointer-sized, so the whole
+		// entry is copied instead of the ROM's seven bytes.
+		dictListEntry copy = *entry;
+		RefVar frame(GetArraySlotRef(RefVar(Dictionaries()), copy.fIndex));
+		long which;
+		switch (RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil))))
+		{
+		case 0:		which = kDictChainOrdinary;		break;
+		case 1:		which = kDictChainSpecial;		break;
+		case 4:		which = kDictChainException;	break;
+		default:	return;
+		}
+
+		if (copy.fDictionary != nil)
+		{
+			TDictChain* chain = chains[which];
+			Boolean already = false;
+			if (chain == nil)
+			{
+				chain = TDictChain::Make(0, 0xffffffff);
+				if (chain == nil)
+					return;
+				chains[which] = chain;
+			}
+			else
+			{
+				for (ULong i = 0; i < (ULong) chain->fCount; i++)
+					if (*(Handle*) chain->GetEntry(i) == copy.fDictionary)
+					{
+						already = true;
+						break;
+					}
+			}
+			if (!already)
+				*(Handle*) chain->GetEntry((ULong) chain->Add()) = copy.fDictionary;
+		}
+
+		RefVar linked(GetProtoVariable(frame, RSSYMlinkeddictid, nil));
+		if (ISNIL(linked))
+			break;
+		entry = FindDictionaryEntry((ULong) RINT(linked));
+		if (entry == nil || entry->fIndex == first)
+			break;
+		if (++links >= 100)
+			break;
+	}
+}
+
+
+// ROM 0x0013fa44 CountCustomDictionaries__FRC6RefVar
+// How many dictionaries a configuration names by hand.  One that names a
+// single dictionary rather than an array of them counts as one.
+long
+CountCustomDictionaries(RefArg config)
+{
+	RefVar named(GetProtoVariable(config, RSSYMdictionaries, nil));
+	if (ISNIL(named))
+		return 0;
+	return ISINT(named) ? 1 : Length(named);
+}
+
+
+// ROM 0x0013fa9c GetCustomDictionary__FRC6RefVarUl
+ULong
+GetCustomDictionary(RefArg config, ULong index)
+{
+	RefVar named(GetProtoVariable(config, RSSYMdictionaries, nil));
+	if (ISINT(named))
+		return (ULong) RINT(named);
+	return (ULong) RINT(RefVar(GetArraySlotRef(named, (long) index)));
+}
+
+
+// ROM 0x0013db74 CompactChains__FPP10TDictChain
+void
+CompactChains(TDictChain** chains)
+{
+	for (long i = 0; i < kDictChainCount; i++)
+		if (chains[i] != nil)
+			chains[i]->Compact();
+}
+
+
+// ROM 0x0013dbac DoneChains__FPP10TDictChain
+void
+DoneChains(TDictChain** chains)
+{
+	for (long i = 0; i < kDictChainCount; i++)
+		if (chains[i] != nil)
+		{
+			chains[i]->Dispose();
+			chains[i] = nil;
+		}
+}
+
+
+// ROM 0x0013d808 BuildChains__FPP10TDictChainRC6RefVar
+// The three chains filled in for one lookup: the dictionaries the
+// configuration names by hand first, so that a field's own dictionary is
+// asked before the general ones; then every dictionary of the list whose
+// `domainType` overlaps the configuration's input mask; and then the
+// symbols dictionary, unless the configuration says to leave it out.
+void
+BuildChains(TDictChain** chains, RefArg config)
+{
+	ULong mask = (ULong) RINT(RefVar(GetVariable(config, RSSYMinputmask, nil, 0)));
+	for (long i = 0; i < kDictChainCount; i++)
+		chains[i] = nil;
+
+	long custom = CountCustomDictionaries(config);
+	for (long i = 0; i < custom; i++)
+	{
+		dictListEntry* entry = FindDictionaryEntry(GetCustomDictionary(config, (ULong) i));
+		if (entry != nil)
+			AddToChain(chains, entry);
+	}
+
+	RefVar list(Dictionaries());
+	ULong count = gDictList != nil ? (ULong) gDictList->fCount : 0;
+	for (ULong i = 0; i < count; i++)
+	{
+		dictListEntry* entry = (dictListEntry*) gDictList->GetEntry(i);
+		if (entry == nil || entry->fDictionary == nil || entry->fStatus == 0
+			|| entry->fDisabled != 0)
+			continue;
+		RefVar frame(GetArraySlotRef(list, entry->fIndex));
+		ULong domain = (ULong) RINT(RefVar(GetProtoVariable(frame, RSSYMdomaintype, nil)));
+		if ((domain & 0x1fff000 & mask) != 0)
+			AddToChain(chains, entry);
+	}
+
+	if (ISNIL(RefVar(GetProtoVariable(config, RSSYMinhibitsymbolsdictionary, nil))))
+	{
+		dictListEntry* entry = FindDictionaryEntry(0x28);
+		if (entry != nil)
+			AddToChain(chains, entry);
+	}
+	CompactChains(chains);
+}
+
+
+// ROM 0x0013d9dc BuildChains__FPP10TDictChain
+// The same for whatever is being written on now: the recognition
+// configuration of the view the caret is in, or - when there is none, or
+// it takes ink rather than words - the starter `rcBuildChains` with the
+// view's input mask and its own dictionaries written into it.
+void
+BuildChains(TDictChain** chains)
+{
+	RefVar config;
+	ULong mask = 0;
+	TView* view = nil;
+	if (gRootView != nil && gRootView->fCaretView != nil)
+		view = GetRecognitionView(gRootView->fCaretView);
+	if (view != nil)
+	{
+		mask = view->fFlags & 0x1ffff00;
+		config = GetProtoVariable(RefVar(view->fContext), RSSYMrecconfig, nil);
+		if (NOTNIL(config))
+		{
+			if (InkTextEnabled(view, mask, config))
+				config = NILREF;
+			else
+			{
+				config = PrepRecConfig(view, config);
+				SetFrameSlot(config, RSSYMinhibitsymbolsdictionary, RefVar(TRUEREF));
+			}
+		}
+	}
+	if (ISNIL(config))
+	{
+		config = Clone(RefVar(Rrcbuildchains));
+		if (view != nil && mask != 0)
+		{
+			SetFrameSlot(config, RSSYMinputmask, RefVar(MAKEINT(mask)));
+			SetFrameSlot(config, RSSYMdictionaries,
+						 RefVar(view->GetVar(RSSYMdictionaries)));
+		}
+	}
+	BuildChains(chains, config);
+}
+
+
+/*------------------------------------------------------------------------------
+	L o o k i n g   a   w o r d   u p
+------------------------------------------------------------------------------*/
+
+// ROM 0x0013f430 LookupWordInChain__FPUcP10TDictChainPUl
+// Each dictionary of the chain asked in turn, and the first that says
+// anything better than "no" wins.  "The beginning of other words" is not
+// an answer: what is being asked is whether the word is a word.
+//
+// ==> the id of the dictionary it was found in, -1 for none.
+long
+LookupWordInChain(const UByte* word, TDictChain* chain, ULong* attribute)
+{
+	if (chain == nil)
+		return -1;
+	ULong count = (ULong) chain->fCount;
+	for (ULong i = 0; i < count; i++)
+	{
+		Handle dictionary = *(Handle*) chain->GetEntry(i);
+		void* terminal = nil;
+		ULong* found = nil;
+		VerifyString(dictionary, word, &terminal, &found, nil);
+		if (airusResult != kAirusNotAWord && airusResult != kAirusIsPrefix)
+		{
+			long id = ((AirusAParmBlock*) *dictionary)->fDictID;
+			if (found != nil)
+				*attribute = *found;
+			return id;
+		}
+	}
+	return -1;
+}
+
+
+// ROM 0x0013f4f4 LookupWord__FPUsPUl
+// Is this a word?  The chains are built for whatever is being written on,
+// the word is brought down to eight-bit characters, and the ordinary
+// chain is asked and then the exceptions.
+long
+LookupWord(const UniChar* word, ULong* attribute)
+{
+	TDictChain* chains[kDictChainCount];
+	UByte bytes[64];
+	*attribute = 0;
+	BuildChains(chains);
+	ConvertFromUnicode(word, bytes, 1, 0x3f);
+	long found = LookupWordInChain(bytes, chains[kDictChainOrdinary], attribute);
+	if (found == -1)
+		found = LookupWordInChain(bytes, chains[kDictChainException], attribute);
+	DoneChains(chains);
+	return found;
+}
+
+
+// ROM 0x0013f2fc BuildCaseVariant__FPUsUlT2T1
+// The index'th capitalisation of a word, built on top of the one before
+// it - so the caller walks the index up until this answers no.
+//
+// Nought is the word as it was written.  After that, what is tried
+// depends on the flags: with 0x40, everything up to and including the
+// first letter that was already lower case is lowered and that letter
+// raised; with 0x80, and only once, the letters are lowered one at a
+// time until one of them changes.  Sixteen is as far as it goes.
+//
+// (The 0x40 variant of a word like "Hello" comes out as "hEllo", which
+//  is not a capitalisation anyone would write.  It is what the ROM
+//  builds, and it is looked up like any other.)
+Boolean
+BuildCaseVariant(const UniChar* word, ULong flags, ULong index, UniChar* out)
+{
+	if (index > 0x10)
+		return false;
+	if (index == 0)
+	{
+		Ustrcpy(out, word);
+		return true;
+	}
+	if ((flags & 0x40) != 0)
+	{
+		for (long i = 0; out[i] != 0; i++)
+		{
+			UniChar was = out[i];
+			if (!IsAlphabet(was))
+				continue;
+			LowercaseText(out + i, 1);
+			if (out[i] == was)
+			{
+				UppercaseText(out + i, 1);
+				if (out[i] != was)
+					break;
+			}
+		}
+		return Ustrcmp(word, out) != 0;
+	}
+	if ((flags & 0x80) != 0 && index == 1)
+	{
+		for (long i = 0; out[i] != 0; i++)
+		{
+			LowercaseText(out + i, 1);
+			if (out[i] != word[i])
+				return true;
+		}
+	}
+	return false;
+}
+
+
+// ROM 0x0013f570 LookupWordOrVariant__FPUsPUlT1
+// The word looked up, and then its capitalisations one at a time until
+// one of them is a word or there are no more.  `attribute` carries the
+// flags in and the answer out; `variant` comes back with the spelling
+// that was found.
+long
+LookupWordOrVariant(const UniChar* word, ULong* attribute, UniChar* variant)
+{
+	TDictChain* chains[kDictChainCount];
+	UByte bytes[64];
+	ULong flags = *attribute;
+	long found = -1;
+	*attribute = 0;
+	BuildChains(chains);
+	for (ULong index = 0; ; index++)
+	{
+		if (!BuildCaseVariant(word, flags, index, variant))
+			break;
+		ConvertFromUnicode(variant, bytes, 1, 0x3f);
+		found = LookupWordInChain(bytes, chains[kDictChainOrdinary], attribute);
+		if (found == -1)
+			found = LookupWordInChain(bytes, chains[kDictChainException], attribute);
+		if (found != -1)
+			break;
+	}
+	DoneChains(chains);
+	return found;
+}

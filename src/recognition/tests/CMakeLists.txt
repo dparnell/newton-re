@@ -40,3 +40,8 @@ add_test(NAME recognition.WRecDomain COMMAND test_WRecDomain)
 add_executable(test_WordList test_WordList.cpp)
 target_link_libraries(test_WordList PRIVATE recognition)
 add_test(NAME recognition.WordList COMMAND test_WordList)
+
+add_executable(test_Dictionaries test_Dictionaries.cpp)
+target_link_libraries(test_Dictionaries PRIVATE recognition)
+target_compile_definitions(test_Dictionaries PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME recognition.Dictionaries COMMAND test_Dictionaries)

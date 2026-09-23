@@ -449,9 +449,79 @@ data for most, empty (`NewDictionary`) for the three a user writes into:
 The three a user writes into - 31 the user dictionary, 35 the expand
 dictionary and 36 - start empty (`NewDictionary`); the rest are built
 out of the ROM's own word data, which is NOT YET
-(`InitROMDictionaryData`, `GetROMDictionaryData`,
-`BuildDictionaryFromPtr`, the trie that is dictionary 32, and
-`gDictList` beside them).
+(`InitROMDictionaryData`, `GetROMDictionaryData` and the trie that is
+dictionary 32).
+
+## The chains a lookup walks (`recognition/Dictionaries.h`)
+
+`vars.dictionaries` is the list as a script sees it; `gDictList` (ROM
+0x0c10162c) runs alongside it, one `dictListEntry` of eight bytes per
+frame, holding the opened Airus dictionary itself, which frame of the
+list it belongs to, whether anything was opened for it, and whether it
+has been switched off.
+
+`FindDictionaryEntry` 0x0013d4ac is how an id becomes one of those
+entries, and it does two things worth knowing.  A dozen ids stand for
+others - 13 and 0x29 are the names dictionary; 1, 7, 9, 0x14 and 0x2a
+the general lexicon; 2 is 3; 10 is 0x2d; 0x2b and 0x2c are 0x1a - and
+the substitution is written out as a `switch` in the code rather than
+kept in the frames, so a lexicon that was folded into another one still
+answers under its old number.  Then an id that names nothing at all
+falls back on whatever the list calls 6, the general lexicon: asking
+for a dictionary that is not there gets you the ordinary words rather
+than nothing.
+
+A lookup does not walk that list.  It walks a **chain** - a
+`TDictChain` (ROM 0x0020cab0-0x0020cc40), a `TDArray` of dictionary
+Handles with one thing of its own, how far along it the walk has got -
+and there are three of them, picked by the frame's `dictType`: 0 the
+ordinary lexicons, 1 the ones consulted only for particular fields, and
+4 the exceptions, which is chain 2.  A frame whose `dictType` is
+anything else is in no chain at all.
+
+`BuildChains` 0x0013d808 fills the three in from a recognition
+configuration: the dictionaries it names by hand first, so that a
+field's own dictionary is asked before the general ones; then every
+dictionary of the list whose `domainType` overlaps the configuration's
+`inputmask` (in the bits 0x1fff000); and then the symbols dictionary
+(0x28) unless `inhibitSymbolsDictionary` says to leave it out.  Each of
+them goes in through `AddToChain` 0x0013d628, which then follows the
+frame's `linkedDictID` to the next dictionary and the next, for up to a
+hundred links or until the ring closes back on the one it started from
+- which is how asking for the general lexicon gets you the names
+dictionary with it.  A dictionary already in the chain is not added
+twice.  `BuildChains` 0x0013d9dc is the same for whatever is being
+written on now: the recognition configuration of the view the caret is
+in, or - when there is none, or it takes ink rather than words - a
+clone of the ROM's own `rcbuildchains`, whose mask is 0x1000.  A chain
+is built for one lookup and thrown away again (`DoneChains`).
+
+`LookupWordInChain` 0x0013f430 asks each dictionary of a chain in turn
+and stops at the first that says anything better than "no"; "the
+beginning of other words" is not an answer, because what is being asked
+is whether the word is a word.  `LookupWord` 0x0013f4f4 is what
+everything else calls: it builds the chains, brings the word down to
+eight-bit characters, and asks the ordinary chain and then the
+exceptions.  Both answer the `dictID` the word was found in, or -1, and
+leave behind the attribute that was stored beside it.
+
+`LookupWordOrVariant` 0x0013f570 tries the word's capitalisations as
+well, walking `BuildCaseVariant` 0x0013f2fc up from nought until it
+says there are no more (sixteen is as far as it goes).  Each variant is
+built on top of the one before it rather than on the original, so the
+sequence for "HELLO" is "HELLO", "hello", "Hello", "hEllo" - the last
+of which is not a capitalisation anyone would write, and is looked up
+like any other.
+
+DEVIATION: `AddToChain` copies the seven bytes of a list entry that
+matter, because the `FindDictionaryEntry` that follows may move the
+list out from under it; here a Handle is pointer-sized, so the whole
+entry is copied instead.
+
+`test_Dictionaries` builds a list of two AL dictionaries by hand and
+checks all of this: the id substitutions and the fallback, the three
+chains, the link from one dictionary to another, the custom
+dictionaries a configuration names, and the words found in them.
 
 ## The Airus engine (`recognition/Airus.h`)
 
@@ -466,8 +536,8 @@ The data begins with two bytes saying what it is: `'a'`, then a byte
 whose low three bits are the kind, bit 3 "lock the Handle while a walker
 runs", and high four the size of the attribute each word carries.  The
 kind picks the family of walkers: `AL` and `AL16` for the lexicons built
-into the ROM (NOT YET), `AEnum` for the ones the machine writes, which
-is what the user's words go in.  Everything goes through `CallAirusA`
+into the ROM, `AEnum` for the ones the machine writes, which is what
+the user's words go in.  Everything goes through `CallAirusA`
 0x0002d41c with one of ten selectors - StartA, ExitA, Verify, AddWord,
 DeleteWord, FirstLast, NextPrevious, ChangeAttribute, NextSet,
 NextSet9.
@@ -522,7 +592,7 @@ one, `FAirusLookupWord` 0x0008fb28 looks a word up and fills in the
 assistant's Continue button runs down when a name has been typed in, and
 with it the assistant goes on to its next page.
 
-NOT YET: the AL and AL16 walkers, AE16, deleting and the iterators
+NOT YET: AE16, deleting and the iterators
 (`AEnum_DeleteWord`, `AEnum_FirstLast`, `AEnum_NextPrevious`,
 `AEnum_ChangeAttribute`, `AEnum_NextSet`, `TAirusIterator`), and
 `ReadRefDictionary`, which builds a dictionary out of a binary rather
