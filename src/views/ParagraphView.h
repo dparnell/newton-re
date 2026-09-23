@@ -117,6 +117,20 @@ TView*	GetLastAddedWordView(void);							// ROM 0x0016c63c GetLastAddedWordView_
 extern TView*	gLastAddedWordView;							// ROM 0x0c101714 gLastAddedWordView
 extern ULong	gLastAddedWordAddTime;						// ROM 0x0c101724 gLastAddedWordAddTime
 extern long		gLastAddedWordEndOffset;					// ROM 0x0c10172c gLastAddedWordEndOffset
+extern Rect		gLastAddedWordBox;							// ROM 0x0c101718 gLastAddedWordBox
+extern Point	gLastAddedWordBase;							// ROM 0x0c101728 gLastAddedWordBase
+extern ULong	gLastAddedWordInkEndTime;					// ROM 0x0c101720 gLastAddedWordInkEndTime
+Rect*	GetLastAddedWordBox(void);							// ROM 0x0016c64c GetLastAddedWordBox__Fv
+Point*	GetLastAddedWordBase(void);							// ROM 0x00170094 GetLastAddedWordBase__Fv
+
+// The room a paragraph allows around itself when it is asked whether a
+// word written on the page belongs to it.
+void	AddMarginsToBounds(Rect* bounds);					// ROM 0x00172048 AddMarginsToBounds__FP5TRect
+// Whether one box was written beside another on the same line, and
+// whether one is on the line above the other.
+Boolean	AdjacentBoxes(const Rect& box, const Rect& next, const Point& base,
+				  const Point& nextBase, long gap);			// ROM 0x0017b010 AdjacentBoxes__FRC5TRectT1RC6TPointT3l
+Boolean	BoxAboveBox(const Rect& box, const Rect& below);		// ROM 0x0017b08c BoxAboveBox__FRC5TRectT1
 
 class TParagraphView : public TDataView
 {
@@ -143,6 +157,7 @@ public:
 								Point& armB, Point& tail);			// ROM 0x001753b4 HandleCaret__14TParagraphViewFUllR6TPointN33
 	virtual long	HandleLineGesture(long angle, Point& from, Point& to);	// ROM 0x00176bd4 HandleLineGesture__14TParagraphViewFlR6TPointT2
 	virtual void	HiliteText(long start, long length, Boolean caretOnEmpty);	// ROM 0x0016a490 HiliteText__14TParagraphViewFlT1Uc
+	virtual void	SaveAddedUnitBounds(const Rect& box, const Point& base, ULong inkEndTime);	// ROM 0x00172e68 SaveAddedUnitBounds__14TParagraphViewFRC5TRectRC6TPointUl (vtable +0x150)
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
 
 	Ref			Text(void);												// ROM 0x00181004 Text__14TParagraphViewFv
@@ -182,6 +197,12 @@ public:
 	long		InsertVerticalSpace(Point& pt, long height);			// ROM 0x001764c4 InsertVerticalSpace__14TParagraphViewFR6TPointl
 	// A caret drawn over a word of writing cuts it in two rather than
 	// opening space in the text.
+	// Where a word written on the page falls in relation to this
+	// paragraph, which is what says whether it belongs to it.
+	Boolean		WordOnLastLine(const Rect& box);			// ROM 0x00172008 WordOnLastLine__14TParagraphViewFRC5TRect
+	void		BoundsOfLastLine(Rect* bounds);				// ROM 0x001721ac BoundsOfLastLine__14TParagraphViewFP5TRect
+	Boolean		WordOnLineBelowParagraph(const Rect& box, const Point& base);	// ROM 0x0017207c WordOnLineBelowParagraph__14TParagraphViewFRC5TRectRC6TPoint
+
 	long		CheckAndDoSplitInk(Point& pt, long offset);	// ROM 0x00176208 CheckAndDoSplitInk__14TParagraphViewFR6TPointl
 	long		CheckAndDoJoin(Point& armA, Point& point, Point& armB);	// ROM 0x00175964 CheckAndDoJoin__14TParagraphViewFR6TPointN21
 	// The line nearest a point's v: the ROM measures each line's box less

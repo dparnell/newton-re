@@ -4327,6 +4327,111 @@ TestSplitInk()
 }
 
 
+// Where a word written on the page falls in relation to a paragraph,
+// which is the arithmetic that decides whether the word belongs to it.
+static void
+TestWordGeometry()
+{
+	// the margins: ten pixels to the left, thirty to the right, because
+	// writing runs on past the right edge far more often than it starts
+	// before the left one
+	Rect room;
+	SetRect(&room, 20, 10, 120, 50);
+	AddMarginsToBounds(&room);
+	EXPECT(room.left == 10 && room.right == 150
+		   && room.top == 10 && room.bottom == 50);
+
+	// side by side on the same line
+	Rect first, second;
+	Point base, nextBase;
+	SetRect(&first, 20, 10, 60, 30);			// l, t, r, b
+	base.h = 40;
+	base.v = 28;
+	SetRect(&second, 62, 10, 100, 30);
+	nextBase.h = 80;
+	nextBase.v = 28;
+	EXPECT(AdjacentBoxes(first, second, base, nextBase, 100));
+	// too far to the right
+	SetRect(&second, 200, 10, 240, 30);
+	EXPECT(!AdjacentBoxes(first, second, base, nextBase, 100));
+	EXPECT(AdjacentBoxes(first, second, base, nextBase, 1000));
+	// far enough left to be inside the first
+	SetRect(&second, 50, 10, 90, 30);
+	EXPECT(!AdjacentBoxes(first, second, base, nextBase, 100));
+	// on the same line but with the base lines too far apart
+	SetRect(&second, 62, 10, 100, 30);
+	nextBase.v = 60;
+	EXPECT(!AdjacentBoxes(first, second, base, nextBase, 100));
+	nextBase.v = 28;
+	// the empty box nothing is beside
+	Rect empty;
+	SetRect(&empty, -0x8000, -0x8000, -0x8000, -0x8000);
+	EXPECT(!AdjacentBoxes(empty, second, base, nextBase, 1000));
+	EXPECT(!AdjacentBoxes(first, empty, base, nextBase, 1000));
+
+	// one box on the line above another
+	Rect below;
+	SetRect(&below, 20, 32, 60, 52);
+	EXPECT(BoxAboveBox(first, below));
+	// half a page down
+	SetRect(&below, 20, 200, 60, 220);
+	EXPECT(!BoxAboveBox(first, below));
+	// on the same line
+	EXPECT(!BoxAboveBox(first, second));
+	EXPECT(!BoxAboveBox(empty, below));
+
+	// a paragraph, and a word written over its last line
+	TParagraphView* p = (TParagraphView*) ViewOf(
+		"ctxWG := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 20, top: 10, right: 120, bottom: 40}, "
+		"viewFont: espy12, text: \"one two\"})");
+	EXPECT(p != nil);
+	Refresh();
+	Rect word;
+	SetRect(&word, 30, p->viewBounds.bottom - 5, 70, p->viewBounds.bottom + 5);
+	EXPECT(p->WordOnLastLine(word));
+	SetRect(&word, 30, p->viewBounds.top - 40, 70, p->viewBounds.top - 30);
+	EXPECT(!p->WordOnLastLine(word));
+
+	// the last line's box is the line's, not the view's
+	Rect last;
+	p->BoundsOfLastLine(&last);
+	EXPECT(p->LineCount() > 0);
+	EXPECT(last.top == p->Line(p->LineCount() - 1).fBounds.top);
+
+	// a word on the line after the text belongs to the paragraph; one
+	// well below it does not
+	// (the strip is measured from the bounds the lines were laid out in,
+	//  which is the view's own, not from the text's)
+	gLastAddedWordView = nil;
+	long under = p->viewBounds.bottom;
+	Point wordBase;
+	wordBase.h = 40;
+	wordBase.v = (short) (under + 8);
+	SetRect(&word, 30, under + 2, 70, under + 12);
+	EXPECT(p->WordOnLineBelowParagraph(word, wordBase));
+	SetRect(&word, 30, under + 200, 70, under + 210);
+	wordBase.v = (short) (under + 206);
+	EXPECT(!p->WordOnLineBelowParagraph(word, wordBase));
+
+	// ... unless it carries on from the word that last went in here
+	Rect there;
+	SetRect(&there, 30, under + 180, 70, under + 200);
+	Point thereBase;
+	thereBase.h = 50;
+	thereBase.v = (short) (under + 196);
+	p->SaveAddedUnitBounds(there, thereBase, 0);
+	EXPECT(gLastAddedWordView == (TView*) p);
+	EXPECT(GetLastAddedWordBox()->top == there.top);
+	EXPECT(GetLastAddedWordBase()->v == thereBase.v);
+	EXPECT(p->WordOnLineBelowParagraph(word, wordBase));
+	gLastAddedWordView = nil;
+
+	Eval("RemoveView(GetRoot(), ctxWG)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -4439,6 +4544,7 @@ main()
 		TestInkWordInText();
 		TestJoinInk();
 		TestSplitInk();
+		TestWordGeometry();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();

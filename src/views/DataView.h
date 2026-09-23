@@ -55,6 +55,10 @@ public:
 							   const Point& pt, ULong a, ULong b, RefArg word,
 							   Boolean flag, long* outOffset, TUnitPublic* unit);	// ROM 0x000a3458 HandleWord__9TDataViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic (vtable +0x148)
 	virtual void	HiliteText(long offset, long length, Boolean on);	// ROM 0x000a31c4 HiliteText__9TDataViewFlT1Uc (vtable +0x14c)
+	// A word has gone into this view: where it was written, the middle of
+	// its base line and when its ink ended, which the next word is
+	// measured against.  A plain data view keeps none of it.
+	virtual void	SaveAddedUnitBounds(const Rect& box, const Point& base, ULong inkEndTime);	// ROM 0x000a3480 SaveAddedUnitBounds__9TDataViewFRC5TRectRC6TPointUl (vtable +0x150: nothing)
 };
 
 #endif	/* __DATAVIEW_H */

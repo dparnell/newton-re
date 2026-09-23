@@ -103,6 +103,16 @@ TDataView::HandleWord(const UniChar* /*text*/, ULong /*length*/, const Rect& /*b
 	return 0;
 }
 
+// ROM 0x000a3480 SaveAddedUnitBounds__9TDataViewFRC5TRectRC6TPointUl
+// A plain data view keeps nothing about the word that went into it;
+// TParagraphView is what records it.
+void
+TDataView::SaveAddedUnitBounds(const Rect& /*box*/, const Point& /*base*/,
+							   ULong /*inkEndTime*/)
+{
+}
+
+
 // ROM 0x000a3038 GetEnclosingEditView__9TDataViewFv
 // The editor this view is written on: its parent when that is one, and
 // the parent's parent when the parent is a container gathering it with

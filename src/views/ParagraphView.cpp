@@ -21,6 +21,7 @@
 #include "Application.h"
 #include "Commands.h"
 #include "Animate.h"
+#include "NewtonTime.h"
 #include "UnitPublic.h"
 #include "Stroke.h"
 #include "StrokeQueue.h"
@@ -2263,6 +2264,172 @@ const UniChar kJoinableInkChar = 0xf701;
 // The items are appended one after another, with a delimiter worked out
 // between each pair - which is why "one" and "two" dropped together
 // come out as "one two" but "one" and "," come out as "one,".
+
+/*------------------------------------------------------------------------------
+	W h e r e   a   w o r d   w a s   w r i t t e n
+------------------------------------------------------------------------------*/
+
+// Before a paragraph can say whether a word written on the page belongs
+// to it, it has to work out where the word is in relation to its own
+// text - and to the word that went in before, because two words written
+// one after the other on the same line belong together even when the
+// second one falls outside the paragraph the first one made.
+//
+// That is what the "last added word" globals are: the view a word last
+// went into, the box it was written in, the middle of its base line, and
+// the two times (when the ink ended, and when the word was put in).
+// `SaveAddedUnitBounds` records them and the paragraph reads them back
+// through the three accessors.
+
+Rect	gLastAddedWordBox = { 0, 0, 0, 0 };	// ROM 0x0c101718 gLastAddedWordBox
+Point	gLastAddedWordBase = { 0, 0 };		// ROM 0x0c101728 gLastAddedWordBase
+ULong	gLastAddedWordInkEndTime = 0;		// ROM 0x0c101720 gLastAddedWordInkEndTime
+
+
+// ROM 0x0016c64c GetLastAddedWordBox__Fv
+Rect*
+GetLastAddedWordBox(void)
+{
+	return &gLastAddedWordBox;
+}
+
+
+// ROM 0x00170094 GetLastAddedWordBase__Fv
+Point*
+GetLastAddedWordBase(void)
+{
+	return &gLastAddedWordBase;
+}
+
+
+// ROM 0x00172e68 SaveAddedUnitBounds__14TParagraphViewFRC5TRectRC6TPointUl
+// A word has gone into this paragraph: where it was written, the middle
+// of its base line, when its ink ended, and - from the clock - when it
+// went in.
+void
+TParagraphView::SaveAddedUnitBounds(const Rect& box, const Point& base, ULong inkEndTime)
+{
+	gLastAddedWordBox = box;
+	gLastAddedWordBase = base;
+	gLastAddedWordView = this;
+	gLastAddedWordInkEndTime = inkEndTime;
+	gLastAddedWordAddTime = Ticks();
+}
+
+
+// ROM 0x00172048 AddMarginsToBounds__FP5TRect
+// The room a paragraph allows around itself when it is asked whether a
+// word belongs to it: ten pixels to the left of it and thirty to the
+// right, because writing runs on past the right edge far more often than
+// it starts before the left one.
+void
+AddMarginsToBounds(Rect* bounds)
+{
+	bounds->left = (short) (bounds->left - 10);
+	bounds->right = (short) (bounds->right + 30);
+}
+
+
+// ROM 0x0017b010 AdjacentBoxes__FRC5TRectT1RC6TPointT3l
+// Whether `next` was written beside `box`, on the same line: it starts no
+// more than five pixels to the left of the box's right edge (so a little
+// overlap still counts) and no further than `gap` to the right of it, and
+// the two base lines are within nineteen pixels of each other.  A box
+// whose top is -32768 is the empty one nothing is beside.
+Boolean
+AdjacentBoxes(const Rect& box, const Rect& next, const Point& base,
+			  const Point& nextBase, long gap)
+{
+	if (box.top == -0x8000 || next.top == -0x8000)
+		return false;
+	if (box.right - 5 < next.left && next.left - box.right <= gap)
+	{
+		long dv = base.v - nextBase.v;
+		if (dv < 0)
+			dv = -dv;
+		if (dv < 0x13)
+			return true;
+	}
+	return false;
+}
+
+
+// ROM 0x0017b08c BoxAboveBox__FRC5TRectT1
+// Whether `box` is on the line above `below`: its own middle is above the
+// other's top, and the gap between them is less than the taller of the
+// two plus ten - so a word written on the very next line belongs to the
+// one before it, and one written half a page down does not.
+Boolean
+BoxAboveBox(const Rect& box, const Rect& below)
+{
+	if (box.top == -0x8000 || below.top == -0x8000)
+		return false;
+	long height = (short) (box.bottom - box.top);
+	long other = (short) (below.bottom - below.top);
+	long taller = height > other ? height : other;
+	return box.bottom - height / 2 < below.top
+		   && below.top - box.bottom < taller + 10;
+}
+
+
+// ROM 0x00172008 WordOnLastLine__14TParagraphViewFRC5TRect
+// Whether the word was written over the paragraph's last line - the
+// bottom of the view, one line tall.
+Boolean
+TParagraphView::WordOnLastLine(const Rect& box)
+{
+	Rect last = viewBounds;
+	last.top = (short) (last.bottom - fLineHeight);
+	return Overlaps(&last, &box);
+}
+
+
+// ROM 0x001721ac BoundsOfLastLine__14TParagraphViewFP5TRect
+// The box of the paragraph's last line, or the whole view when it has no
+// lines laid out.
+void
+TParagraphView::BoundsOfLastLine(Rect* bounds)
+{
+	*bounds = viewBounds;
+	if (fLines != nil && fLineCount > 0)
+		*bounds = fLines[fLineCount - 1].fBounds;
+}
+
+
+// ROM 0x0017207c WordOnLineBelowParagraph__14TParagraphViewFRC5TRectRC6TPoint
+// Whether the word was written on the line *after* the paragraph's text:
+// the strip below the laid-out bounds, a line tall (or as tall as the
+// last word that went in, whichever is more) and with the margins added.
+//
+// A word further down than that still belongs here when it carries on
+// from the word that last went into this view - either on the line under
+// it (`BoxAboveBox`) or beside it with a thousand pixels of slack
+// (`AdjacentBoxes`), which is what lets someone write a long line across
+// a page and have it all end up in one paragraph.
+Boolean
+TParagraphView::WordOnLineBelowParagraph(const Rect& box, const Point& base)
+{
+	Rect below = fCachedBounds;
+	below.top = below.bottom;
+	long height = 0;
+	if (GetLastAddedWordView() == this)
+		height = (short) (gLastAddedWordBox.bottom - gLastAddedWordBox.top);
+	if (fLineHeight > height)
+		height = fLineHeight;
+	below.bottom = (short) (below.bottom + height);
+	AddMarginsToBounds(&below);
+
+	if (box.top >= below.top && box.top < below.bottom)
+		return true;
+	if (box.top < fCachedBounds.bottom)
+		return false;
+	if (GetLastAddedWordView() != this)
+		return false;
+	if (BoxAboveBox(gLastAddedWordBox, box))
+		return true;
+	return AdjacentBoxes(gLastAddedWordBox, box, gLastAddedWordBase, base, 1000) != 0;
+}
+
 
 // ROM 0x000edc24 GetAppendDelimiter__FPUsPCUsT2CUlT4
 // What goes between two pieces of text being joined: a space, or
