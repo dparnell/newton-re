@@ -6,8 +6,8 @@
 				selector call everything else goes through.
 
 				NOT YET RECONSTRUCTED: the walkers themselves - AL, AL16
-				and AEnum - so CallAirusA answers "nothing happened" for
-				every selector but the two that only clear the error.
+				and the two lexicon walkers, AL and AL16, which look a
+				word up in the dictionaries built into the ROM.
 */
 
 #include "Airus.h"
@@ -1054,6 +1054,487 @@ VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attri
 	walkers answers, and whether its Handle has to be locked down first.
 ------------------------------------------------------------------------------*/
 
+/*------------------------------------------------------------------------------
+	T h e   R O M ' s   o w n   l e x i c o n s   ( A L ,   A L 1 6 )
+------------------------------------------------------------------------------*/
+
+// The dictionaries built into the ROM are not the ones the machine
+// writes.  They are read-only tries in a different shape, and they have
+// their own walker - two of them, one for eight-bit characters and one
+// for sixteen.
+//
+// A node is:
+//
+//     +0  the offset of its character set, sixteen bits
+//     +2  flags: 1 it carries an attribute, 2 it has no children,
+//         4 it is the last of its siblings
+//     +3  the offset of its first child, sixteen bits - absent when the
+//         node has no children, so a leaf is three bytes and any other
+//         node five, plus the dictionary's attribute size
+//
+// The character set is what makes this shape worth having: a node does
+// not stand for one character but for a *set* of them, all of which lead
+// to the same place.  Matching a character means looking for it in that
+// set; the sets are shared, which is where the saving is.
+//
+// The walk itself is the same both ways: match a character in the node's
+// set, step to the child, and go on until the word runs out or nothing
+// matches.  What comes back is one of the four answers `VerifyString`
+// hands on - a prefix, a prefix that is also a word, a whole word, or
+// nothing - and, when the word can only go on one way, the single
+// character it must go on with.
+
+// ROM 0x0002c440 (unnamed) - AL_Prep
+// The block made current and its pointers re-read, the Handle having
+// possibly moved since the last call.  (`AL16_Prep` 0x0002bda8 is the
+// same function again; the two walkers keep their own copy of it and
+// their own current block.)
+static void
+AL_Prep(AirusAParmBlock* parms)
+{
+	AE_Parms = parms;
+	Ptr now = *parms->fDataHandle;
+	if (now < parms->fData)
+		parms->fDataEnd = parms->fDataEnd - (parms->fData - now);
+	else
+		parms->fDataEnd = parms->fDataEnd + (now - parms->fData);
+	parms->fData = *parms->fDataHandle;
+}
+
+
+// ROM 0x0002c3f8 (unnamed) - the offset of a node's character set
+static long
+AL_SymbolOffset(long node)
+{
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	return (data[node] << 8) | data[node + 1];
+}
+
+
+// ROM 0x0002c41c (unnamed) - the offset of a node's first child
+static long
+AL_FollowLeft(long node)
+{
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	return (data[node + 3] << 8) | data[node + 4];
+}
+
+
+// The bytes a node takes: three for a leaf, five for anything else,
+// plus the dictionary's attribute.
+static long
+AL_NodeSize(UByte flags)
+{
+	return ((flags & 2) != 0 ? 3 : 5) + AE_Parms->fAttributeSize;
+}
+
+
+// ROM 0x0002be40 AL_GetAttribute__FUl
+// The attribute lying after the node, as many bytes of it as the
+// dictionary says, most significant first.
+static void
+AL_GetAttribute(long node)
+{
+	AE_Parms->fAttribute = 0;
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	long at = node + ((data[node + 2] & 2) == 0 ? 5 : 3);
+	switch (AE_Parms->fAttributeSize)
+	{
+	case 1:
+		AE_Parms->fAttribute = data[at];
+		break;
+	case 2:
+		AE_Parms->fAttribute = ((ULong) data[at] << 8) | data[at + 1];
+		break;
+	case 4:
+		AE_Parms->fAttribute = ((ULong) data[at] << 24) | ((ULong) data[at + 1] << 16)
+							   | ((ULong) data[at + 2] << 8) | data[at + 3];
+		break;
+	default:
+		break;
+	}
+}
+
+
+// ROM 0x0002bf28 AL_GetAttribute2__FUl
+// What lies after the node's character set, which is what the caller
+// gets back beside the attribute.
+static void
+AL_GetAttribute2(long node)
+{
+	const char* set = AE_Parms->fData + AL_SymbolOffset(node);
+	AE_Parms->fField48 = (ULong) (uintptr_t) (set + Astrlen(set) + 1);
+}
+
+
+// ROM 0x0002bf78 AL_Verify__FP15AirusAParmBlock
+// The word walked into the lexicon as far as it goes.
+//
+// `fNode` says where to start: nought is the root (the two header bytes
+// are skipped), and anything else carries on from a node a previous call
+// left.  `fIndex` is how far along the word to go; it comes back as how
+// far the walk actually got, and `fNode` as the node it ended on.
+void
+AL_Verify(AirusAParmBlock* parms)
+{
+	ULong only = 0;			// the one character the word can go on with
+	AL_Prep(parms);
+	long node = AE_Parms->fNode;
+	if (node == 0)
+		node = 2;			// past the two header bytes
+	long want = AE_Parms->fIndex;
+	long result = kAirusNoMatch;
+	AE_Parms->fSymbol = 0xffffffff;
+
+	Boolean descend = AE_Parms->fNode != 0;
+	if (!descend)
+	{
+		AE_Parms->fIndex = 0;
+		if (AE_Parms->fDataEnd - AE_Parms->fData == 2)
+		{
+			// nothing in it but the header
+			AE_Parms->fResult = kAirusNoMatch;
+			return;
+		}
+	}
+
+	long child = 0;
+	Boolean tail = false;
+	for (;;)
+	{
+		if (descend)
+		{
+			// the node matched: on to its children
+			if ((((const UByte*) AE_Parms->fData)[node + 2] & 2) != 0)
+			{
+				result = kAirusNoMatch;
+				break;
+			}
+			node = AL_FollowLeft(node);
+			descend = false;
+		}
+
+		char c = ((const char*) AE_Parms->fWord)[AE_Parms->fIndex];
+		Boolean matched = false;
+		for (;;)
+		{
+			const char* set = AE_Parms->fData + AL_SymbolOffset(node);
+			for (const char* p = set; *p != 0; p++)
+			{
+				if (c == *p)
+				{
+					matched = true;
+					break;
+				}
+			}
+			if (matched)
+				break;
+			UByte flags = ((const UByte*) AE_Parms->fData)[node + 2];
+			if ((flags & 4) != 0)
+				break;			// the last sibling: no word begins that way
+			node = node + AL_NodeSize(flags);
+		}
+		if (!matched)
+		{
+			result = kAirusNoMatch;
+			break;
+		}
+
+		AE_Parms->fNode = node;
+		AL_GetAttribute(node);
+		AL_GetAttribute2(node);
+		long was = AE_Parms->fIndex;
+		AE_Parms->fIndex = was + 1;
+		if (was < want)
+		{
+			descend = true;
+			continue;
+		}
+		// the word is used up
+		UByte flags = ((const UByte*) AE_Parms->fData)[node + 2];
+		result = (flags & 1) != 0 ? kAirusPrefixWithAttr : kAirusPrefix;
+		if ((flags & 2) != 0)
+		{
+			result = kAirusLeaf;	// nothing goes on from here
+			break;
+		}
+		child = AL_FollowLeft(node);
+		tail = true;
+		break;
+	}
+
+	// when everything that could follow is the same single character,
+	// that character is handed back: it is what the corrector offers
+	while (tail)
+	{
+		const UByte* data = (const UByte*) AE_Parms->fData;
+		long at = AL_SymbolOffset(child);
+		if (data[at + 1] != 0)
+			break;				// more than one character here
+		ULong c = data[at];
+		if (only != 0 && c != only)
+			break;				// and they are not all the same
+		only = c;
+		UByte flags = data[child + 2];
+		if ((flags & 4) != 0)
+		{
+			AE_Parms->fSymbol = only;
+			break;
+		}
+		child = child + AL_NodeSize(flags);
+	}
+	AE_Parms->fResult = result;
+}
+
+
+// ROM 0x0002e7a8 Astrchr__FPcc
+// The first of that character in the string, or nil.
+char*
+Astrchr(char* str, char c)
+{
+	for (; *str != c && *str != 0; str++)
+		;
+	return *str == c ? str : nil;
+}
+
+
+// ROM 0x0002c170 AL_FilterString__FPc
+// A string with its repeated characters taken out, which is what a
+// character set is: each character once, in the order it first appeared.
+void
+AL_FilterString(char* str)
+{
+	char seen[256];
+	long length = Astrlen(str);
+	seen[0] = 0;
+	long kept = 0;
+	for (long i = 0; i < length; i++)
+	{
+		if (Astrchr(seen, str[i]) == nil)
+		{
+			seen[kept++] = str[i];
+			seen[kept] = 0;
+		}
+	}
+	Astrcpy(str, seen);
+}
+
+
+// ROM 0x0002bdf4 AirusAL__FUlP15AirusAParmBlock
+// The eight-bit lexicon's three operations.  (Anything else is not
+// something a read-only dictionary can do.)
+long
+AirusAL(ULong selector, AirusAParmBlock* parms)
+{
+	if (selector == kAirusVerify)
+		AL_Verify(parms);
+	// NOT YET RECONSTRUCTED: AL_NextSet 0x0002c214 and AL_NextSet9
+	// 0x0002c268, which walk the set of characters that may follow -
+	// what the corrector's completions are built from.
+	return parms->fResult;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   s i x t e e n - b i t   o n e
+------------------------------------------------------------------------------*/
+
+// The same walk again over sixteen-bit characters.  The ROM keeps the
+// two apart rather than parameterising them, down to its own copy of the
+// preparation and its own current block, so they are kept apart here.
+
+// ROM 0x0002bda8 AL16_Prep__FP15AirusAParmBlock
+static void
+AL16_Prep(AirusAParmBlock* parms)
+{
+	Ptr now = *parms->fDataHandle;
+	if (now < parms->fData)
+		parms->fDataEnd = parms->fDataEnd - (parms->fData - now);
+	else
+		parms->fDataEnd = parms->fDataEnd + (now - parms->fData);
+	AE_Parms = parms;
+	parms->fData = *parms->fDataHandle;
+}
+
+
+// ROM 0x0002bd60 AL16_ClassOffset__FUl
+static long
+AL16_ClassOffset(long node)
+{
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	return (data[node] << 8) | data[node + 1];
+}
+
+
+// ROM 0x0002bd84 AL16_LBNode__FUl
+static long
+AL16_LBNode(long node)
+{
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	return (data[node + 3] << 8) | data[node + 4];
+}
+
+
+// The characters of a sixteen-bit node's set, big-endian in the data.
+static ULong
+AL16_Symbol(long at)
+{
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	return ((ULong) data[at] << 8) | data[at + 1];
+}
+
+
+// ROM 0x0002b7dc AL16_GetAttribute__FUl
+static void
+AL16_GetAttribute(long node)
+{
+	AL_GetAttribute(node);		// (the ROM writes the same code out twice)
+}
+
+
+// ROM 0x0002b8c4 AL16_GetAttribute2__FUl
+static void
+AL16_GetAttribute2(long node)
+{
+	long at = AL16_ClassOffset(node);
+	while (AL16_Symbol(at) != 0)
+		at += 2;
+	AE_Parms->fField48 = (ULong) (uintptr_t) (AE_Parms->fData + at + 2);
+}
+
+
+// ROM 0x0002b918 AL16_Verify__FP15AirusAParmBlock
+// The sixteen-bit walk.  It is `AL_Verify` again with two-byte
+// characters, and with one difference that is not deliberate.
+//
+// ROM BUG, kept: the tail - the loop that works out the single character
+// a word can only go on with - tests the "last sibling" flag the wrong
+// way round.  Where the eight-bit walker stops at the last sibling and
+// hands the character back, this one stops at every sibling *but* the
+// last, and on the last one steps past the end of the list and carries
+// on reading whatever lies there.  It leaves the loop only when those
+// bytes happen to disagree, and the character it hands back is the one
+// before the end rather than the one after it.
+void
+AL16_Verify(AirusAParmBlock* parms)
+{
+	ULong only = 0;
+	AL16_Prep(parms);
+	long node = AE_Parms->fNode;
+	if (node == 0)
+		node = 2;
+	long want = AE_Parms->fIndex;
+	long result = kAirusNoMatch;
+	AE_Parms->fSymbol = 0xffffffff;
+
+	Boolean descend = AE_Parms->fNode != 0;
+	if (!descend)
+	{
+		AE_Parms->fIndex = 0;
+		if (AE_Parms->fDataEnd - AE_Parms->fData == 2)
+		{
+			AE_Parms->fResult = kAirusNoMatch;
+			return;
+		}
+	}
+
+	long child = 0;
+	Boolean tail = false;
+	for (;;)
+	{
+		if (descend)
+		{
+			if ((((const UByte*) AE_Parms->fData)[node + 2] & 2) != 0)
+			{
+				result = kAirusNoMatch;
+				break;
+			}
+			node = AL16_LBNode(node);
+			descend = false;
+		}
+
+		ULong c = ((const UniChar*) AE_Parms->fWord)[AE_Parms->fIndex];
+		Boolean matched = false;
+		for (;;)
+		{
+			long at = AL16_ClassOffset(node);
+			for (ULong s = AL16_Symbol(at); s != 0; at += 2, s = AL16_Symbol(at))
+			{
+				if (c == s)
+				{
+					matched = true;
+					break;
+				}
+			}
+			if (matched)
+				break;
+			UByte flags = ((const UByte*) AE_Parms->fData)[node + 2];
+			if ((flags & 4) != 0)
+				break;
+			node = node + AL_NodeSize(flags);
+		}
+		if (!matched)
+		{
+			result = kAirusNoMatch;
+			break;
+		}
+
+		AE_Parms->fNode = node;
+		AL16_GetAttribute(node);
+		AL16_GetAttribute2(node);
+		AE_Parms->fIndex = AE_Parms->fIndex + 1;
+		if (AE_Parms->fIndex <= want)
+		{
+			descend = true;
+			continue;
+		}
+		UByte flags = ((const UByte*) AE_Parms->fData)[node + 2];
+		result = (flags & 1) != 0 ? kAirusPrefixWithAttr : kAirusPrefix;
+		if ((flags & 2) != 0)
+		{
+			result = kAirusLeaf;
+			break;
+		}
+		child = AL16_LBNode(node);
+		tail = true;
+		break;
+	}
+
+	while (tail)
+	{
+		const UByte* data = (const UByte*) AE_Parms->fData;
+		long at = AL16_ClassOffset(child);
+		if (data[at + 2] != 0)
+			break;
+		ULong c = AL16_Symbol(at);
+		if (only != 0 && c != only)
+			break;
+		only = c;
+		UByte flags = data[child + 2];
+		// (the inverted test - see above)
+		if ((flags & 4) == 0)
+		{
+			AE_Parms->fSymbol = only;
+			break;
+		}
+		child = child + AL_NodeSize(flags);
+	}
+	AE_Parms->fResult = result;
+}
+
+
+// ROM 0x0002b790 AirusAL16__FUlP15AirusAParmBlock
+long
+AirusAL16(ULong selector, AirusAParmBlock* parms)
+{
+	if (selector == kAirusVerify)
+		AL16_Verify(parms);
+	// NOT YET RECONSTRUCTED: AL16_NextSet 0x0002bba4 and AL16_NextSet9
+	// 0x0002bbe4.
+	return parms->fResult;
+}
+
+
 // ROM 0x0002d574 CallAirusANoLock
 void
 CallAirusANoLock(Handle dictionary, long selector)
@@ -1063,10 +1544,10 @@ CallAirusANoLock(Handle dictionary, long selector)
 	switch (kind)
 	{
 	case kAirusKindAL:
-		// NOT YET RECONSTRUCTED: AL_Shell 0x0002b758
+		AirusAL(selector, parms);		// (AL_Shell 0x0002b758)
 		break;
 	case kAirusKindAL16:
-		// NOT YET RECONSTRUCTED: AL16_Shell 0x0002b774
+		AirusAL16(selector, parms);		// (AL16_Shell 0x0002b774)
 		break;
 	case kAirusKindEnum:
 	case kAirusKindEnum16:

@@ -705,3 +705,49 @@ it is asking a function that was answered once, at build time, with a
 constant.
 
 *`src/views/ParagraphView.cpp`.*
+
+---
+
+## The sixteen-bit dictionary walker tests a flag the wrong way round
+
+Every dictionary lookup in the Newton can answer a fourth question
+besides "is this a word": *if the word can only go on one way, which
+character is it?* That is what offers you the rest of a word as you
+write it. The walker works it out by stepping along the children of the
+node it stopped at: if every one of them has a character set of exactly
+one character, and they are all the same character, then that is the
+only way the word can continue.
+
+The eight-bit walker (`AL_Verify`, 0x0002bf78) stops that loop on the
+*last* child:
+
+```
+  0002c134  tst r0,#0x4        ; the "last sibling" flag
+  0002c138  bne 0x0002c158     ; -> hand the character back and stop
+```
+
+The sixteen-bit one (`AL16_Verify`, 0x0002b918) is the same function
+again, written out a second time for two-byte characters - and there the
+test is inverted:
+
+```
+  0002bb18  tst r0,#0x4
+  0002bb1c  beq 0x0002bb3c     ; -> hand the character back and stop
+```
+
+So it stops at every child *but* the last. Two things follow. When a
+node has several children, it hands back the first child's character as
+though it were the only possibility - "a" in a dictionary holding "at"
+and "an" comes back as "must be followed by t". And when a node has
+exactly one child, which is the common case and the only one the answer
+is meant for, it does not stop at all: it adds the node's size to the
+last child's offset and carries on reading whatever bytes lie beyond the
+end of the sibling list, leaving only when those bytes happen to
+disagree.
+
+Nothing crashes, because a ROM dictionary is followed by more ROM. The
+feature simply gives the wrong answer in the sixteen-bit lexicons and
+the right one in the eight-bit lexicons, which is a difficult thing to
+notice when the two are reached through the same call.
+
+*`src/recognition/Airus.cpp`; `test_Airus.cpp` pins both behaviours.*

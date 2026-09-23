@@ -26,10 +26,186 @@ Lookup(AirusAParmBlock* d, const char* text)
 	return AE8_Verify(d);
 }
 
+/*------------------------------------------------------------------------------
+	T h e   R O M ' s   o w n   l e x i c o n s
+------------------------------------------------------------------------------*/
+
+// A small AL dictionary laid out by hand from the node format, holding
+// "at", "an" and "be".  The bytes are written here rather than built by
+// a writer of ours, so that what is being checked is the reader against
+// the format as it is written down.
+//
+//   header   'a', then the kind (1) with the attribute size (1) above it
+//   a node   the offset of its character set (two bytes, high first),
+//            its flags (1 an attribute, 2 no children, 4 the last of its
+//            siblings), the offset of its first child (two bytes, absent
+//            when it has no children), then the attribute
+static const UByte kSmallAL[] = {
+	'a', 0x11,							// +0   the header
+	0, 26,   0x00, 0, 14,   1,			// +2   'a', has children -> 14, not last
+	0, 28,   0x04, 0, 22,   2,			// +8   'b', has children -> 22, last
+	0, 30,   0x03,          3,			// +14  't', a leaf with an attribute
+	0, 32,   0x07,          4,			// +18  'n', ... and the last of them
+	0, 34,   0x07,          5,			// +22  'e', ... under the 'b'
+	'a', 0,								// +26  the character sets
+	'b', 0,								// +28
+	't', 0,								// +30
+	'n', 0,								// +32
+	'e', 0								// +34
+};
+
+
+// The word looked up, as `VerifyString` would: the characters in the
+// block's buffer, the index of the last one to match, and the walk
+// started at the root.
+static long
+LookUpAL(AirusAParmBlock* parms, const char* word)
+{
+	Astrcpy((char*) parms->fWord, word);
+	parms->fIndex = Astrlen(word) - 1;
+	parms->fNode = 0;
+	parms->fAttribute = 0;
+	AL_Verify(parms);
+	return parms->fResult;
+}
+
+
+static void
+TestALLexicon(void)
+{
+	UByte bytes[sizeof(kSmallAL)];
+	memcpy(bytes, kSmallAL, sizeof(kSmallAL));
+	Ptr data = (Ptr) bytes;
+	char buffer[64];
+
+	AirusAParmBlock block;
+	memset(&block, 0, sizeof(block));
+	Handle fake = (Handle) &data;		// the bytes, as a Handle over them
+	block.fDataHandle = fake;
+	block.fData = data;
+	block.fDataEnd = data + sizeof(kSmallAL);
+	block.fSize = (long) sizeof(kSmallAL);
+	block.fWord = (UByte*) buffer;
+	block.fAttributeSize = 1;
+
+	// a whole word, with the attribute that was stored with it
+	EXPECT(LookUpAL(&block, "at") == kAirusLeaf);
+	EXPECT(block.fAttribute == 3);
+	EXPECT(block.fIndex == 2);
+	EXPECT(LookUpAL(&block, "an") == kAirusLeaf);
+	EXPECT(block.fAttribute == 4);
+	EXPECT(LookUpAL(&block, "be") == kAirusLeaf);
+	EXPECT(block.fAttribute == 5);
+
+	// the beginning of two words is a prefix and nothing more, and there
+	// is no one character it must go on with
+	EXPECT(LookUpAL(&block, "a") == kAirusPrefix);
+	EXPECT(block.fSymbol == 0xffffffff);
+
+	// the beginning of one word says which character that is, which is
+	// what the corrector offers
+	EXPECT(LookUpAL(&block, "b") == kAirusPrefix);
+	EXPECT(block.fSymbol == (ULong) 'e');
+
+	// nothing begins that way
+	EXPECT(LookUpAL(&block, "ax") == kAirusNoMatch);
+	EXPECT(LookUpAL(&block, "c") == kAirusNoMatch);
+	EXPECT(LookUpAL(&block, "bee") == kAirusNoMatch);
+
+	// an empty dictionary answers nothing to everything
+	AirusAParmBlock empty;
+	memset(&empty, 0, sizeof(empty));
+	UByte header[2] = { 'a', 0x11 };
+	Ptr headerData = (Ptr) header;
+	empty.fDataHandle = (Handle) &headerData;
+	empty.fData = headerData;
+	empty.fDataEnd = headerData + 2;
+	empty.fWord = (UByte*) buffer;
+	empty.fAttributeSize = 1;
+	EXPECT(LookUpAL(&empty, "at") == kAirusNoMatch);
+
+	// a character set is each character once
+	char set[16];
+	Astrcpy(set, "aabbcaz");
+	AL_FilterString(set);
+	EXPECT(Astrlen(set) == 4 && set[0] == 'a' && set[1] == 'b'
+		   && set[2] == 'c' && set[3] == 'z');
+	EXPECT(Astrchr(set, 'c') == set + 2 && Astrchr(set, 'q') == nil);
+}
+
+
+// The same again with sixteen-bit characters: "at" and "an", the
+// characters and their set terminators two bytes each.
+static const UByte kSmallAL16[] = {
+	'a', 0x12,							// +0   the header: kind 2, attribute size 1
+	0, 16,   0x04, 0, 8,    1,			// +2   'a', has children -> 8, last
+	0, 20,   0x03,          2,			// +8   't', a leaf, not the last
+	0, 24,   0x07,          3,			// +12  'n', a leaf, the last
+	0, 0x61, 0, 0,						// +16  the character sets
+	0, 0x74, 0, 0,						// +20
+	0, 0x6e, 0, 0						// +24
+};
+
+
+static long
+LookUpAL16(AirusAParmBlock* parms, const char* word)
+{
+	UniChar* chars = (UniChar*) parms->fWord;
+	long i = 0;
+	for (; word[i] != 0; i++)
+		chars[i] = (UniChar) (UByte) word[i];
+	chars[i] = 0;
+	parms->fIndex = i - 1;
+	parms->fNode = 0;
+	parms->fAttribute = 0;
+	AL16_Verify(parms);
+	return parms->fResult;
+}
+
+
+static void
+TestAL16Lexicon(void)
+{
+	UByte bytes[sizeof(kSmallAL16)];
+	memcpy(bytes, kSmallAL16, sizeof(kSmallAL16));
+	Ptr data = (Ptr) bytes;
+	UniChar buffer[64];
+
+	AirusAParmBlock block;
+	memset(&block, 0, sizeof(block));
+	Handle fake = (Handle) &data;
+	block.fDataHandle = fake;
+	block.fData = data;
+	block.fDataEnd = data + sizeof(kSmallAL16);
+	block.fSize = (long) sizeof(kSmallAL16);
+	block.fWord = (UByte*) buffer;
+	block.fAttributeSize = 1;
+
+	EXPECT(LookUpAL16(&block, "at") == kAirusLeaf);
+	EXPECT(block.fAttribute == 2);
+	EXPECT(LookUpAL16(&block, "an") == kAirusLeaf);
+	EXPECT(block.fAttribute == 3);
+	EXPECT(LookUpAL16(&block, "ax") == kAirusNoMatch);
+	EXPECT(LookUpAL16(&block, "b") == kAirusNoMatch);
+
+	// "a" is the beginning of two words, so there is no one character it
+	// must go on with - and here is the ROM bug this walker has and the
+	// eight-bit one does not.  Its tail tests the "last sibling" flag the
+	// wrong way round, so it stops at the *first* child and hands that
+	// character back as though it were the only one.  The eight-bit
+	// walker, given the same shape, answers "no single character".
+	EXPECT(LookUpAL16(&block, "a") == kAirusPrefix);
+	EXPECT(block.fSymbol == (ULong) 't');		// (and 'n' was just as possible)
+}
+
+
 int
 main()
 {
 	InitHostStandaloneHeap();
+
+	TestALLexicon();
+	TestAL16Lexicon();
 
 	// an empty dictionary of the kind the machine writes into
 	// (the type InitDictionaries asks for: the walkers the machine writes

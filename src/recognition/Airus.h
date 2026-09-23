@@ -181,6 +181,7 @@ ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__
 // the engine's own string handling
 long	Astrlen(const char* s);								// ROM 0x0002e6e0 Astrlen__FPc
 void	Astrcpy(char* dest, const char* src);				// ROM 0x0002e738 Astrcpy__FPcT1
+char*	Astrchr(char* str, char c);							// ROM 0x0002e7a8 Astrchr__FPcc
 void	Ashortstrcpy(UniChar* dest, const UniChar* src);	// ROM 0x0002e764 Ashortstrcpy__FPUsT1
 
 // the way in
@@ -190,6 +191,15 @@ void	VerifyStart(Handle dictionary);						// ROM 0x0002c760 VerifyStart__FPP15Ai
 void	VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attribute, ULong* extra);	// ROM 0x0002cd20 VerifyString
 
 // the dispatcher
+// The ROM's own lexicons: read-only tries whose nodes stand for a set
+// of characters rather than for one.  ==> the block's result.
+long	AirusAL(ULong selector, AirusAParmBlock* parms);		// ROM 0x0002bdf4 AirusAL__FUlP15AirusAParmBlock
+long	AirusAL16(ULong selector, AirusAParmBlock* parms);	// ROM 0x0002b790 AirusAL16__FUlP15AirusAParmBlock
+void	AL_Verify(AirusAParmBlock* parms);					// ROM 0x0002bf78 AL_Verify__FP15AirusAParmBlock
+void	AL16_Verify(AirusAParmBlock* parms);				// ROM 0x0002b918 AL16_Verify__FP15AirusAParmBlock
+// A string with its repeated characters taken out.
+void	AL_FilterString(char* str);							// ROM 0x0002c170 AL_FilterString__FPc
+
 void	CallAirusA(Handle dictionary, long selector);		// ROM 0x0002d41c CallAirusA - the Handle locked first when the dictionary asks for it
 void	CallAirusANoLock(Handle dictionary, long selector);	// ROM 0x0002d574 CallAirusANoLock
 
