@@ -17,6 +17,8 @@ add_library(recognition STATIC
     RecObject.cpp
     Stroke.cpp
     StrokeBundle.cpp
+    WordUnit.cpp
+    WRecDomain.cpp
     Unit.cpp
     UnitPublic.cpp
     Areas.cpp
