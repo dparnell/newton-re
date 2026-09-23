@@ -82,6 +82,10 @@ ULong	CheckCapAttributes(const UniChar* word);	// ROM 0x0008ec34 CheckCapAttribu
 // caller's to dispose), nil when there is nothing to expand.  Both
 // are NOT YET: with no dictionaries nothing is found and nothing
 // expands.
+class TRecArea;
+class TDictChain;
+void	BuildChains(TDictChain** chains, RefArg config);		// ROM 0x0013d808 BuildChains__FPP10TDictChainRC6RefVar (NOT YET: no chains)
+
 long	LookupWord(UniChar* word, ULong* where);				// ROM 0x0013f4f4 LookupWord__FPUsPUl
 Handle	ExpandWord(UniChar* word);								// ROM 0x001aa930 ExpandWord__FPUs
 

@@ -570,3 +570,15 @@ ExpandWord(UniChar* /*word*/)
 {
 	return nil;
 }
+// ROM 0x0013d808 BuildChains__FPP10TDictChainRC6RefVar
+// The three dictionary chains an area is read against, out of the
+// recognition configuration's dictionary lists.  NOT YET RECONSTRUCTED:
+// the dictionaries; with none of them an area has no chains, which is
+// the same as a machine whose user dictionary is empty and whose
+// built-in ones have been turned off.
+void
+BuildChains(TDictChain** chains, RefArg /*config*/)
+{
+	for (long i = 0; i < kAreaDictChains; i++)
+		chains[i] = nil;
+}

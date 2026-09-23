@@ -1059,10 +1059,29 @@ the word stands on the bottom edge of its box (`GetWordBase`), and a
 recogniser that has measured the writing answers better.  `TRecUnit`
 adds the engine's working store, `TWRecUnit` is what the domain makes.
 
+Every place that is written in - a field, a page - is a recognition
+area, and an engine may want its own block of parameters for each one:
+which dictionaries to read against, whether the field takes letters or
+numbers, how much of the writing to keep.  The block belongs to the area
+(`TRecArea` makes and frees it) and everything that happens to it is
+asked of the engine through the domain: `DomainParameter` for how big
+one is, for filling a new one in with the engine's defaults and for
+letting go of whatever the engine hangs off one; `ConfigureArea` for
+filling it in from the area's recognition configuration; and
+`SetParameters` for handing over the block in force.  The handle is
+locked around each, because the engine is given a pointer into it and
+the heap compacts handles.  `TWRecRecognizer::ConfigureArea` is what
+drives that from above, along with the area's three dictionary chains
+(`BuildChains`; the dictionaries are NOT YET, so an area has none).
+
+`TWRecDomain::SetParameters` carries two ROM quirks, kept: it does not
+call the base, so `fParameters` is never written down and the controller
+hands the block over before every unit rather than only when it changes;
+and its answer is the wrong way round, saying "the parameters changed"
+exactly when the engine has just run out of memory.
+
 NOT YET: `EndInkStrokeGroup` (the CIC library's
-`WRecEndInkStrokeGroup`), `ConfigureArea`, `DomainParameter` and
-`SetParameters` - the area information a recogniser keeps for each place
-that is written in.
+`WRecEndInkStrokeGroup`).
 
 ## The word recogniser and where ink comes from
 

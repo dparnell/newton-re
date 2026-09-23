@@ -19,6 +19,7 @@
 
 #include "WRecDomain.h"
 #include "Controller.h"
+#include "NewtonMemory.h"
 #include "Stroke.h"
 #include "NewtonExceptions.h"
 
@@ -311,6 +312,103 @@ TWRecDomain::SignalMemoryError(void)
 {
 	fController->SignalMemoryError();
 	gRecMemErrCount++;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   a r e a   i n f o r m a t i o n
+------------------------------------------------------------------------------*/
+
+// Every place that is written in - a field, a page - is a recognition
+// area, and an engine may want its own block of parameters for each
+// one: which dictionaries to read against, whether the field takes
+// letters or numbers, how much of the writing to keep.  The block is
+// the area's (it is made and freed by TRecArea), and everything that
+// happens to it is asked of the engine through these four.
+//
+// The handle is locked around each of them, because the engine is given
+// a pointer into it and the heap compacts handles.
+
+// ROM 0x0026e57c DomainParameter__11TWRecDomainFUlN21
+// What the area wants done with an engine's parameter block:
+//
+//   0   how big one is (written through `result`)
+//   1   a new one filled in with the engine's defaults
+//   2   whether `result` is a selector this domain answers at all
+//   3   whatever the engine hangs off one let go, before the block is
+//
+// (The ROM works out a result for this - -1 for a selector it does not
+//  know, and -1 when the engine throws - and then has nowhere to put
+//  it: the virtual answers nothing, so no caller can read it.)
+void
+TWRecDomain::DomainParameter(ULong selector, ULong result, ULong info)
+{
+	if (info != 0)
+		HLock((Handle) info);
+	WREC_TRY
+		switch (selector)
+		{
+		case 0:
+			*(long*) result = fRecognizer->AreaInfoGetSize();
+			break;
+		case 1:
+			fRecognizer->AreaInfoFillDefaults((Handle) info);
+			break;
+		case 2:
+			// (the answer would be whether `result` is 0, 1, 2 or 3)
+			break;
+		case 3:
+			fRecognizer->AreaInfoFreeDependents((Handle) info);
+			break;
+		default:
+			break;
+		}
+	WREC_CATCH
+	WREC_END;
+	if (info != 0)
+		HUnlock((Handle) info);
+}
+
+
+// ROM 0x0026e6ac ConfigureArea__11TWRecDomainFRC6RefVarUl
+// The engine's block filled in from the area's recognition
+// configuration - the frame a view's recognition flags and its
+// `recConfig` slot come to.
+void
+TWRecDomain::ConfigureArea(RefArg config, ULong info)
+{
+	if (info != 0)
+		HLock((Handle) info);
+	WREC_TRY
+		fRecognizer->AreaInfoConfigure((Handle) info, config);
+	WREC_CATCH
+	WREC_END;
+	if (info != 0)
+		HUnlock((Handle) info);
+}
+
+
+// ROM 0x0026e768 SetParameters__11TWRecDomainFPPc
+// The block the domain is to work with from now on: the controller
+// hands it over before classifying a unit written in a different area
+// from the last one.
+//
+// (BUG, kept: the override does not call the base, so `fParameters` is
+//  never written down - the controller therefore hands the block over
+//  again before every unit rather than only when it changes.  And the
+//  answer is the wrong way round: "the parameters changed" is what it
+//  says when the engine has just run out of memory, and "unchanged"
+//  every other time.)
+Boolean
+TWRecDomain::SetParameters(Handle params)
+{
+	Boolean failed = false;
+	WREC_TRY
+		fRecognizer->AreaInfoSetParameters(params);
+	WREC_CATCH
+		failed = true;
+	WREC_END;
+	return failed;
 }
 
 

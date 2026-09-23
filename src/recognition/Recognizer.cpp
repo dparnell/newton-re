@@ -12,6 +12,7 @@
 #include "WordInfo.h"
 #include "Words.h"			// gWordID
 #include "RecConfig.h"
+#include "Areas.h"
 #include "Protocols.h"
 #include "NewtonTime.h"
 #include "Locale.h"			// GetPreference
@@ -580,6 +581,31 @@ ULong
 TWRecRecognizer::HandleUnit(TUnitPublic* unit)
 {
 	return WordRecognizerHandleUnit(this, unit);
+}
+
+
+// ROM 0x00144178 ConfigureArea__15TWRecRecognizerFP8TRecAreaRC6RefVar
+// An area the word domain is running over, set up from its recognition
+// configuration: the engine's own parameter block for the area is made
+// if it has none, filled in from the configuration, and the area's
+// three dictionary chains are built alongside it.  The domain is then
+// told its parameters are complete.
+//
+// An area this domain is not running over has nothing to set up.
+long
+TWRecRecognizer::ConfigureArea(TRecArea* area, RefArg config)
+{
+	if (!DomainOn(area, ID()))
+		return 0;
+	TWRecDomain* domain = (TWRecDomain*) Domain();
+	Handle info = area->GetInfoFor(kWRecDomainType, true);
+	domain->ConfigureArea(config, (ULong) info);
+	TDictChain* chains[kAreaDictChains];
+	BuildChains(chains, config);
+	for (long i = 0; i < kAreaDictChains; i++)
+		area->fDictionaries[i] = chains[i];
+	area->ParamsAllSet(kWRecDomainType);
+	return 0;
 }
 
 

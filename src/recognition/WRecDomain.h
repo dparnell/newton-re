@@ -28,8 +28,7 @@
 	and the domain only keeps the exception handler.
 
 	NOT YET RECONSTRUCTED: `EndInkStrokeGroup` (the CIC library's
-	`WRecEndInkStrokeGroup`), `ConfigureArea` and the area information a
-	recogniser keeps per writing area.
+	`WRecEndInkStrokeGroup`).
 
 	Reconstructed from the MP2x00 US ROM (0x0026d84c-0x0026e808); the
 	protocol's interface follows the ROM's dispatch table
@@ -152,9 +151,11 @@ public:
 	virtual void		Classify(TUnit* unit);					// ROM 0x0026e0a8 Classify__11TWRecDomainFP5TUnit (+0x10)
 	virtual void		Reclassify(TUnit* unit);				// ROM 0x0026e308 Reclassify__11TWRecDomainFP5TUnit (+0x14)
 	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x0026e478 Group__11TWRecDomainFP5TUnitP8dInfoRec (+0x18)
-	// NOT YET: DomainParameter (+0x2c), SetParameters (+0x30) and
-	// ConfigureArea (+0x40), which are the area information a
-	// recogniser keeps for each place that is written in
+	// the area information an engine keeps for each place that is
+	// written in
+	virtual void		DomainParameter(ULong selector, ULong result, ULong info);	// ROM 0x0026e57c DomainParameter__11TWRecDomainFUlN21 (+0x2c)
+	virtual Boolean		SetParameters(Handle params);			// ROM 0x0026e768 SetParameters__11TWRecDomainFPPc (+0x30)
+	virtual void		ConfigureArea(RefArg config, ULong info);	// ROM 0x0026e6ac ConfigureArea__11TWRecDomainFRC6RefVarUl (+0x40)
 
 	// the engine asked, each with its heap made current and an
 	// exception handler round it

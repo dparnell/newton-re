@@ -143,10 +143,8 @@ public:
 	virtual long		UnitConfidence(TUnitPublic* unit);		// ROM 0x00144238 UnitConfidence__15TWRecRecognizerFP11TUnitPublic
 	virtual void		Sleep(void);							// ROM 0x00144260 Sleep__15TWRecRecognizerFv
 	virtual void		WakeUp(void);							// ROM 0x00144280 WakeUp__15TWRecRecognizerFv
+	virtual long		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x00144178 ConfigureArea__15TWRecRecognizerFP8TRecAreaRC6RefVar
 	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00144174 HandleUnit__15TWRecRecognizerFP11TUnitPublic
-	// NOT YET: ConfigureArea (0x00144178), which hands the engine the
-	// parameters an area is to be read with - it needs the area
-	// information side of TWRecDomain, which is NOT YET
 };
 
 // The services a word recogniser can provide: everything a field can

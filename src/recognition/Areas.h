@@ -26,6 +26,9 @@
 #include "RecObject.h"
 
 class TDictChain;
+
+// how many dictionary chains an area is read against
+enum { kAreaDictChains = 3 };
 class TDomain;
 class TController;
 class TUnit;
@@ -103,7 +106,7 @@ public:
 	long				fArbitrateNow;	// +0x14  how many of its types are arbitrated at once (arbitrate time 1)
 	TTypeAssoc*			fTypes;			// +0x18  the unit types the recognisers take, with the handler each is answered through
 	TTypeAssoc*			fDomains;		// +0x1c  the domains to run, with their parameter blocks (BuildGTypes)
-	TDictChain*			fDictionaries[3];	// +0x20  the word recogniser's chains (NOT YET)
+	TDictChain*			fDictionaries[kAreaDictChains];	// +0x20  the word recogniser's chains (BuildChains; the dictionaries are NOT YET)
 	ULong				fViewId;		// +0x2c  the view's id (TView::fId)
 };
 
@@ -148,6 +151,7 @@ void		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x000349bc ConfigureA
 ULong		GetAreasHit(TUnit* unit, TArray* areas);	// ROM 0x00036bc8 GetAreasHit__FP5TUnitP6TArray - the controller's hit test, under an exception handler
 ULong		TryGetAreasHit(TUnit* unit, TArray* areas);	// ROM 0x00036aa4 TryGetAreasHit__FP5TUnitP6TArray - ==> whether the areas were set on the unit here
 
+Boolean	DomainOn(TRecArea* area, ULong type);			// ROM 0x001438cc DomainOn__FP8TRecAreaUl - whether the area runs a domain of the type
 void	PurgeAreaCache(void);							// ROM 0x0003485c PurgeAreaCache__Fv - every area in it let go, the array emptied and shrunk
 
 #endif	/* __AREAS_H */

@@ -14,6 +14,8 @@
 #include "Controller.h"
 #include "Arbiter.h"
 #include "Domain.h"
+#include "Areas.h"
+#include "RSSymbols.h"
 #include "Unit.h"
 #include "UnitPublic.h"
 #include "Recognizer.h"
@@ -52,7 +54,17 @@ struct EngineCalls
 	long	fWakeUp;
 	long	fVerify;
 	long	fConfidence;
+	long	fAreaSize;
+	long	fAreaFill;
+	long	fAreaConfigure;
+	long	fAreaFree;
+	long	fAreaSetParams;
 };
+
+// what a block of this engine's area parameters is, and what it holds
+// once the engine has filled it in
+enum { kTestAreaInfoSize = 12, kTestAreaInfoFilled = 0x5a5a5a5a };
+static Handle	gLastAreaInfo = nil;
 static EngineCalls	gCalls;
 static Boolean		gEngineThrows = false;
 static const char*	gLastFreed = nil;
@@ -109,11 +121,11 @@ long	TTestWRecognizer::Classify(TWRecUnit*)			{ gCalls.fClassify++; if (gEngineT
 long	TTestWRecognizer::Reclassify(TWRecUnit*)		{ gCalls.fReclassify++; return 0; }
 long	TTestWRecognizer::FindBaseline(TStroke**, Point*)	{ return 1; }
 void	TTestWRecognizer::GroupInkStroke(TStrokeUnit*, ULong, ULong, Boolean)	{ }
-long	TTestWRecognizer::AreaInfoGetSize(void)			{ return 0; }
-void	TTestWRecognizer::AreaInfoFillDefaults(Handle)	{ }
-void	TTestWRecognizer::AreaInfoConfigure(Handle, RefArg)	{ }
-void	TTestWRecognizer::AreaInfoFreeDependents(Handle)	{ }
-void	TTestWRecognizer::AreaInfoSetParameters(Handle)	{ }
+long	TTestWRecognizer::AreaInfoGetSize(void)			{ gCalls.fAreaSize++; return kTestAreaInfoSize; }
+void	TTestWRecognizer::AreaInfoFillDefaults(Handle info)	{ gCalls.fAreaFill++; gLastAreaInfo = info; *(long*) *info = kTestAreaInfoFilled; }
+void	TTestWRecognizer::AreaInfoConfigure(Handle info, RefArg)	{ gCalls.fAreaConfigure++; gLastAreaInfo = info; }
+void	TTestWRecognizer::AreaInfoFreeDependents(Handle info)	{ gCalls.fAreaFree++; gLastAreaInfo = info; }
+void	TTestWRecognizer::AreaInfoSetParameters(Handle info)	{ gCalls.fAreaSetParams++; gLastAreaInfo = info; if (gEngineThrows) Throw(exAbort, nil, nil); }
 void	TTestWRecognizer::UnitInfoFreePtr(char* info)	{ gCalls.fUnitInfoFree++; gLastFreed = info; }
 Boolean	TTestWRecognizer::VerifyWordSymbols(UniChar*)	{ gCalls.fVerify++; return true; }
 long	TTestWRecognizer::UnitConfidence(TWRecUnit*)	{ gCalls.fConfidence++; return kWRecInk; }
@@ -421,6 +433,68 @@ TestInstall(TController* controller)
 }
 
 
+// The area information: every place that is written in may have a
+// block of the engine's own parameters, and everything that happens to
+// one is asked of the engine through the domain.
+static void
+TestAreaInfo(TWRecDomain* domain, TController* controller)
+{
+	TRecArea* area = TRecArea::Make(0, 0);
+	EXPECT(area != nil);
+	if (area == nil)
+		return;
+	// the area runs this domain (what BuildGTypes would have put there)
+	Assoc assoc;
+	memset(&assoc, 0, sizeof(assoc));
+	assoc.fType = kStrokeUnitType;
+	assoc.fDomain = domain;
+	area->fDomains->AddAssoc(&assoc);
+	EXPECT(DomainOn(area, kWRecDomainType));
+	EXPECT(!DomainOn(area, kClickUnit));
+
+	// the block is made the first time it is asked for: the domain asks
+	// the engine how big one is and then to fill it in
+	long sized = gCalls.fAreaSize;
+	long filled = gCalls.fAreaFill;
+	Handle info = area->GetInfoFor(kWRecDomainType, true);
+	EXPECT(info != nil);
+	EXPECT(gCalls.fAreaSize == sized + 1 && gCalls.fAreaFill == filled + 1);
+	EXPECT(SizeOfHandle(info) == kTestAreaInfoSize);
+	EXPECT(*(long*) *info == kTestAreaInfoFilled);
+	// and answered as it stands from then on
+	EXPECT(area->GetInfoFor(kWRecDomainType, false) == info);
+	EXPECT(gCalls.fAreaSize == sized + 1);
+
+	// configured from the area's recognition configuration
+	RefVar config(AllocateFrame());
+	SetFrameSlot(config, RSSYMinputmask, MAKEINT(0));
+	long configured = gCalls.fAreaConfigure;
+	domain->ConfigureArea(config, (ULong) info);
+	EXPECT(gCalls.fAreaConfigure == configured + 1);
+	EXPECT(gLastAreaInfo == info);
+
+	// handed over as the parameters in force
+	long set = gCalls.fAreaSetParams;
+	EXPECT(!domain->SetParameters(info));		// (0 means "unchanged")
+	EXPECT(gCalls.fAreaSetParams == set + 1);
+	// ... and an engine that throws answers the other way round
+	gEngineThrows = true;
+	EXPECT(domain->SetParameters(info));
+	gEngineThrows = false;
+
+	// whatever the engine hangs off the block let go before the block is
+	long freed = gCalls.fAreaFree;
+	domain->DomainParameter(3, 0, (ULong) info);
+	EXPECT(gCalls.fAreaFree == freed + 1 && gLastAreaInfo == info);
+	// a selector the domain does not know does nothing at all
+	domain->DomainParameter(99, 0, 0);
+	EXPECT(gCalls.fAreaFree == freed + 1);
+
+	area->Dispose();
+	(void) controller;
+}
+
+
 // (the protocol registry is a monitor, so the test runs as the kernel
 //  services task rather than over the standalone heap)
 static void
@@ -447,6 +521,7 @@ WRecScenario(void)
 		TestUnit(domain);
 		TestGrouping(domain, controller);
 		TestClassify(domain, controller);
+		TestAreaInfo(domain, controller);
 		TestInstall(controller);
 	}
 

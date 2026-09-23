@@ -52,6 +52,22 @@ TRecArea::Make(ULong viewFlags, ULong flags)
 }
 
 
+// ROM 0x001438cc DomainOn__FP8TRecAreaUl
+// Whether the area is running a domain of this type at all.  A
+// recogniser asks before it configures an area: an area that does not
+// run its domain has nothing to configure.
+Boolean
+DomainOn(TRecArea* area, ULong type)
+{
+	TArrayIterator iter;
+	Assoc* assoc = (Assoc*) area->fDomains->GetIterator(&iter);
+	for (ULong i = 0; i < (ULong) iter.fCount; i++, assoc = (Assoc*) iter.GetNext())
+		if (assoc->fDomain->fType == type)
+			return true;
+	return false;
+}
+
+
 // ROM 0x0021c74c AddAType__8TRecAreaFUlPFP6TArray_UlT1P8dInfoRec
 // A unit type the area takes, with the routine its winning units are
 // handed to, when they are arbitrated, and the domain's own record for
@@ -90,8 +106,8 @@ TRecArea::Dispose(void)
 // *own* type rather than the piece type the entry is for.  With `make`
 // the block is built the first time it is asked for: the domain is asked
 // how big it is (DomainParameter selector 0) and then to fill it in
-// (selector 1).  The iterator is stepped after the handle is made,
-// because making it can move the array's data.
+// (selector 1).  The entry is asked of the iterator again after the
+// handle is made, because making it can move the array's data.
 Handle
 TRecArea::GetInfoFor(ULong type, Boolean make)
 {
@@ -115,7 +131,9 @@ TRecArea::GetInfoFor(ULong type, Boolean make)
 			NameHandle(params, 'info');
 			if (params != nil)
 				domain->DomainParameter(1, 0, (ULong) params);
-			assoc = (Assoc*) iter.GetNext();
+			// (the entry is asked for again, not stepped past: making
+			//  the handle may have moved the array's data)
+			assoc = (Assoc*) iter.GetCur();
 		}
 		assoc->fParams = params;
 		return params;
@@ -349,7 +367,7 @@ TTypeAssoc::IDispose(void)
 		Assoc* assoc = GetAssoc(i);
 		if (assoc->fParams != nil && !assoc->fSharedParams)
 		{
-			assoc->fDomain->DomainParameter(3, 0, 0);
+			assoc->fDomain->DomainParameter(3, 0, (ULong) assoc->fParams);
 			DisposeHandle(assoc->fParams);
 		}
 	}
