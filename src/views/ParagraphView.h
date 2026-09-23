@@ -180,6 +180,9 @@ public:
 	// what says how many line breaks to put in when there is no width.
 	long		InsertHorizontalSpace(Point& pt, long width, long height, Boolean typed);	// ROM 0x00175dac InsertHorizontalSpace__14TParagraphViewFR6TPointlT2Uc
 	long		InsertVerticalSpace(Point& pt, long height);			// ROM 0x001764c4 InsertVerticalSpace__14TParagraphViewFR6TPointl
+	// A caret drawn over a word of writing cuts it in two rather than
+	// opening space in the text.
+	long		CheckAndDoSplitInk(Point& pt, long offset);	// ROM 0x00176208 CheckAndDoSplitInk__14TParagraphViewFR6TPointl
 	long		CheckAndDoJoin(Point& armA, Point& point, Point& armB);	// ROM 0x00175964 CheckAndDoJoin__14TParagraphViewFR6TPointN21
 	// The line nearest a point's v: the ROM measures each line's box less
 	// the leading it carries, which this cache does not keep apart, so the

@@ -902,9 +902,11 @@ LineWidthTo(TParagraphView* view, const UniChar* text, const LineInfo& line, lon
 
 // ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
 // The box of the character at the offset (its left edge is what the
-// caret wants): the line found, the text up to the offset measured for
-// the left, the line's top and baseline for the top and bottom; without
-// lines (no text) the view's top-left in the default style's height.
+// caret wants, its width what an ink word's box is worked out from):
+// the line found, the text up to the offset measured for the left and
+// up to the next character for the right, the line's top and baseline
+// for the top and bottom; without lines (no text) the view's top-left
+// in the default style's height.
 void
 TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 {
@@ -930,9 +932,18 @@ TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 	TRichString rich(textRef);
 	const UniChar* text = rich.GrabPtr();
 	long width = LineWidthTo(this, text, line, offset, fRunStyles, fRunLengths, fRunCount);
-	rich.ReleasePtr();
 	bounds->left = line.fBounds.left + width;
+	// the character's own right edge, which is where the next one
+	// starts.  (The ROM ends in CharBounds over the line's text runs,
+	// which answers the character's box; here the width of one more
+	// character is measured instead.  The last character of a line and
+	// the end of the text have no character after them, and the box is
+	// then empty - which is what a caret wants.)
 	bounds->right = bounds->left;
+	if (offset < line.fTextEnd)
+		bounds->right = line.fBounds.left
+						+ LineWidthTo(this, text, line, offset + 1, fRunStyles, fRunLengths, fRunCount);
+	rich.ReleasePtr();
 	bounds->top = line.fBounds.top;
 	bounds->bottom = line.fBounds.top + line.fAscent;		// the baseline
 }
@@ -2049,7 +2060,14 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 		chars[count] = 0;
 	}
 
-	// NOT YET: CheckAndDoSplitInk, which a caret over ink splits instead
+	// a caret that opens no space at all, drawn over a word of writing,
+	// cuts the word in two instead
+	if (count == 0 && CheckAndDoSplitInk(pt, offset))
+	{
+		if (allocated != nil)
+			delete[] allocated;
+		return 1;
+	}
 	InsertStyledText((ULong) offset, chars, (ULong) count, RefVar(NILREF), RefVar(NILREF), 0, 0, !typed);
 	// the caret goes where the insertion was, but only when more than one
 	// space or any line break went in
@@ -2060,6 +2078,73 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 	return 1;
 }
 
+
+
+// ROM 0x00176208 CheckAndDoSplitInk__14TParagraphViewFR6TPointl
+// A caret drawn over a word of writing cuts it in two rather than
+// opening space in the text: the caret gesture's other answer, for a
+// paragraph whose characters are ink.
+//
+// One of the two characters the caret's offset lies between has to be an
+// ink word, and which of them it is the caret's own point decides: to
+// the left of where the offset draws its caret the word before it is
+// meant, to the right the word after.  (A caret drawn exactly on the
+// boundary picks neither and nothing happens.)
+//
+// The word is then cut at the caret's x (`SplitInkAt` with eight pixels
+// of slop, which is what lets a letter written across the cut stop it),
+// each half brought back to the x-height this view writes in, and the
+// two put in where the one was - through `DoInsertItems`, so the cut is
+// one thing to undo.  The white space after the word goes with it when
+// there is any, because the two halves are spaced apart by the insert
+// itself.
+//
+// ==> whether the word was cut.
+long
+TParagraphView::CheckAndDoSplitInk(Point& pt, long offset)
+{
+	// (the ROM reads the characters out of a RefVar it lets go of at
+	//  once and keeps the bare pointer; the object is held here, which
+	//  comes to the same thing and does not go stale if the heap moves)
+	RefVar object(Text());
+	const UniChar* text = GetCString(object);
+	long length = Ustrlen(text);
+	Boolean inkBefore = offset > 0 && text[offset - 1] == kInkWordChar;
+	Boolean inkAfter = offset < length && text[offset] == kInkWordChar;
+	long removeLength = 1;
+	if (!inkBefore && !inkAfter)
+		return 0;
+
+	Rect caret;
+	OffsetToBounds(offset, &caret);
+	long at = -1;
+	if (inkBefore && pt.h < caret.left)
+		at = offset - 1;
+	else if (inkAfter && pt.h > caret.left)
+		at = offset;
+
+	// (the ROM asks this before it knows whether there is a word at all,
+	//  so with none it reads the character at the offset for nothing)
+	if (at + 1 < length && IsWhiteSpace(text[at + 1]))
+		removeLength = 2;
+	if (at < 0)
+		return 0;
+
+	RefVar form(GetInkAt(this, at));
+	RefVar pieces(SplitInkAt(form, pt.h, 8));
+	if (ISNIL(pieces))
+		return 0;
+
+	Boolean numbers = ViewExpectsNumbers(this);
+	for (long i = 0; i < 2; i++)
+	{
+		RefVar piece(GetFrameSlot(RefVar(GetArraySlotRef(pieces, i)), RSSYMink));
+		AdjustInkWordXHeight(piece, numbers);
+		SetArraySlot(pieces, i, piece);
+	}
+	DoInsertItems(this, pieces, true, true, at, removeLength, false, RefVar(NILREF));
+	return 1;
+}
 
 
 // ROM 0x001764c4 InsertVerticalSpace__14TParagraphViewFR6TPointl

@@ -4221,6 +4221,112 @@ TestInsertItems()
 }
 
 
+// A caret drawn over a word of writing cuts it in two rather than
+// opening space in the text: the other answer the caret gesture has for
+// a paragraph whose characters are ink.
+static void
+TestSplitInk()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// a word of two strokes with a clear gap between them
+	TStroke* list[3];
+	list[0] = TStroke::Make(0);
+	list[1] = TStroke::Make(0);
+	list[2] = nil;
+	for (long i = 0; i <= 10; i++)
+	{
+		TabPt tab;
+		tab.z = 0;
+		tab.p = 0;
+		tab.x = ToFixed(10 + i);
+		tab.y = ToFixed(20 + i);
+		list[0]->AddPoint(&tab);
+		tab.x = ToFixed(50 + i);
+		tab.y = ToFixed(30 - i);
+		list[1]->AddPoint(&tab);
+	}
+	list[0]->EndStroke();
+	list[1]->EndStroke();
+	Rect made;
+	RefVar word(TStrokesToInkWord(list, &made));
+	EXPECT(IsInkWord(word));
+
+	// a paragraph holding it between two letters
+	RefVar text(AllocateBinary(RSSYMstring, 4 * (long) sizeof(UniChar)));
+	UniChar* chars = (UniChar*) BinaryData(text);
+	chars[0] = U_CONST_CHAR('a');
+	chars[1] = kInkWordChar;
+	chars[2] = U_CONST_CHAR('b');
+	chars[3] = 0;
+	RefVar styles(MakeArray(6));
+	SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 1, RefVar(Eval("espy12")));
+	SetArraySlot(styles, 2, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 3, word);
+	SetArraySlot(styles, 4, RefVar(MAKEINT(1)));
+	SetArraySlot(styles, 5, RefVar(Eval("espy12")));
+	RefVar templ(AllocateFrame());
+	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clParagraphView)));
+	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible)));
+	Rect where;
+	SetRect(&where, 5, 5, 150, 60);
+	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(where)));
+	SetFrameSlot(templ, RSSYMtext, text);
+	SetFrameSlot(templ, RSSYMstyles, styles);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "splitTempl")), templ);
+	TParagraphView* para = (TParagraphView*) ViewOf("ctxSI := AddView(GetRoot(), splitTempl)");
+	EXPECT(para != nil && para->TextLength() == 3);
+	Eval("ctxSI:Dirty()");
+	Refresh();
+
+	// where the word sits on the page
+	Rect box;
+	EXPECT(IsInkWord(RefVar(para->GetInkRefAndBounds(1, &box))));
+	Rect caret;
+	para->OffsetToBounds(1, &caret);
+
+	// a caret to the left of the offset means the character before it,
+	// which is a letter: nothing happens
+	Point pt;
+	pt.v = (short) ((box.top + box.bottom) / 2);
+	pt.h = (short) (caret.left - 2);
+	EXPECT(para->CheckAndDoSplitInk(pt, 1) == 0);
+	EXPECT(para->TextLength() == 3);
+
+	// a caret through the middle of the word cuts it in two
+	pt.h = (short) ((box.left + box.right) / 2);
+	EXPECT(para->CheckAndDoSplitInk(pt, 1) == 1);
+	// "a<space><ink><space><ink><space>b": the two halves go in as two
+	// items, and DoInsertItems spaces them apart like any other pair
+	EXPECT(para->TextLength() == 7);
+	RefVar nowText(para->Text());
+	const UniChar* now = GetCString(nowText);
+	EXPECT(now[0] == U_CONST_CHAR('a') && now[2] == kInkWordChar
+		   && now[4] == kInkWordChar && now[6] == U_CONST_CHAR('b'));
+	EXPECT(now[1] == U_CONST_CHAR(' ') && now[3] == U_CONST_CHAR(' ')
+		   && now[5] == U_CONST_CHAR(' '));
+	// both halves are ink words of their own, and neither is the one
+	// that went in
+	RefVar after(para->Styles());
+	long words = 0;
+	for (long i = 1; NOTNIL(after) && i < Length(after); i += 2)
+		if (IsInkWord(RefVar(GetArraySlot(after, i))))
+		{
+			words++;
+			EXPECT(!EQRef(RefVar(GetArraySlot(after, i)), word));
+		}
+	EXPECT(words == 2);
+
+	Eval("RemoveView(GetRoot(), ctxSI)");
+	Refresh();
+	list[0]->Dispose();
+	list[1]->Dispose();
+}
+
+
 int
 main()
 {
@@ -4332,6 +4438,7 @@ main()
 		TestRecognisedWord();
 		TestInkWordInText();
 		TestJoinInk();
+		TestSplitInk();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();

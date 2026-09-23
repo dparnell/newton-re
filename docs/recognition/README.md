@@ -887,9 +887,22 @@ caret still picks the characters its arms cross.  From those two the
 gesture works outwards (an arm on white space steps back one, an arm on
 the last character steps forward one) and the first run of white space
 between them goes, however long it is: a join over "one   two" takes all
-three spaces, and one over a word takes nothing.  Joining two *ink* words
-instead - both characters 0xf701, the ink word character of the three the
-ROM's `IsInkChar` takes - is NOT YET.
+three spaces, and one over a word takes nothing.  Two *ink* words - both
+characters 0xf701 - are joined instead, all the way down to the strokes
+and back (`MergeInk`).
+
+`CheckAndDoSplitInk` (0x00176208) is the other thing a caret can do to
+ink, and `InsertHorizontalSpace` tries it whenever the caret would open
+no space at all.  One of the two characters the caret's offset lies
+between has to be an ink word, and the caret's own x says which: to the
+left of where that offset draws its caret the word before it is meant,
+to the right the word after, and a caret exactly on the boundary picks
+neither.  The word is cut at the caret's x (`SplitInkAt` with eight
+pixels of slop), each half is brought back to the x-height the view
+writes in, and the two go in where the one was through `DoInsertItems` -
+so the cut is one thing to undo, and the halves come out spaced apart
+like any other pair of items.  The white space after the word goes with
+it when there is any, because the insert puts its own back.
 
 ## The line gesture
 
