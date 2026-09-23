@@ -916,10 +916,16 @@ in steps - forty characters (0x0016f954), ten style slots (0x0016f9b0)
 recogniser's word info of each kind and something the paragraph has no
 use for, and undoes the lot.
 
-**NOT YET**: a *rich* string item, whose text and styles come out of
-`TRichString::MakeParagraphTextSlot` 0x001abf6c and
-`MakeParagraphStylesSlot` 0x001ac038; one goes in as a plain string, so
-its own ink is lost.
+A *rich* string item - a string with writing in it - comes apart first.
+A rich string and a paragraph keep the same thing two different ways: a
+rich string is one object, the characters with 0xf700 standing for each
+word of writing and a region after them holding the writing itself; a
+paragraph is two, a plain string with 0xf701 for each word and a styles
+array whose run for that character *is* the `'inkWord` binary.
+`TRichString::MakeParagraphTextSlot` (0x001abf6c) and
+`MakeParagraphStylesSlot` (0x001ac038) make the second form out of the
+first, which is what lets a note dropped from somewhere else keep its
+writing.
 
 ### A word written on the page (`TParagraphView::HandleWord` 0x00172760)
 

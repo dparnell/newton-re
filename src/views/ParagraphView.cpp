@@ -3332,10 +3332,9 @@ MakeInkWordCharacter(void)
 // whether it carries training data - so that the corrector can offer
 // alternatives for it later.
 //
-// NOT YET RECONSTRUCTED: a *rich* string item, whose text and styles
-// come out of TRichString::MakeParagraphTextSlot and
-// MakeParagraphStylesSlot; one goes in as a plain string, so its ink is
-// lost.
+// A *rich* string - one with writing in it - comes apart first
+// (TRichString::MakeParagraphTextSlot / MakeParagraphStylesSlot), so
+// its writing arrives as style runs rather than being lost.
 Boolean
 TParagraphView::HandleInsertItems(RefArg spec)
 {
@@ -3407,10 +3406,23 @@ TParagraphView::HandleInsertItems(RefArg spec)
 
 		if (IsInstance(item, RSSYMstring))
 		{
-			// (NOT YET: a rich string's own text and styles slots)
-			AppendInsertItem(before, insertOffset, text, styles,
-							 &usedText, &usedStyles, addSpace,
-							 item, itemStyles, defaultStyle, &delimiter);
+			if (!IsRichString(item))
+				AppendInsertItem(before, insertOffset, text, styles,
+								 &usedText, &usedStyles, addSpace,
+								 item, itemStyles, defaultStyle, &delimiter);
+			else
+			{
+				// a string with writing in it comes apart into the two
+				// halves a paragraph keeps: the text with each word of
+				// writing standing as one character, and the styles that
+				// carry the words themselves
+				TRichString rich(item);
+				itemText = rich.MakeParagraphTextSlot();
+				itemStyles = rich.MakeParagraphStylesSlot(defaultStyle);
+				AppendInsertItem(before, insertOffset, text, styles,
+								 &usedText, &usedStyles, addSpace,
+								 itemText, itemStyles, defaultStyle, &delimiter);
+			}
 		}
 		else if (IsInkWord(item))
 		{

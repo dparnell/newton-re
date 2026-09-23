@@ -81,6 +81,11 @@ public:
 	// as NumInkAndTextRunsInRange counted.
 	void		GetLengthsAndDataInRange(ULong start, ULong count, short* lengths,
 										 void** data) const;	// ROM 0x001abd20 GetLengthsAndDataInRange__11TRichStringCFUlT1PsPc
+	// The two halves of the same text as a paragraph keeps it: a plain
+	// string whose every word of writing is the character 0xf701, and
+	// a styles array whose run for that character is the word itself.
+	Ref			MakeParagraphTextSlot(void) const;			// ROM 0x001abf6c MakeParagraphTextSlot__11TRichStringCFv
+	Ref			MakeParagraphStylesSlot(RefArg style) const;	// ROM 0x001ac038 MakeParagraphStylesSlot__11TRichStringCFRC6RefVar
 	int			CompareInk(const TRichString* other, ULong offset, ULong otherOffset) const;	// ROM 0x001aba5c CompareInk__11TRichStringCFPC11TRichStringUlT2
 
 	UniChar*	GrabPtr(void) const;			// the text, the object locked

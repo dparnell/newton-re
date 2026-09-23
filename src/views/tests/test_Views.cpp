@@ -4617,6 +4617,107 @@ TestRemoteForCorrector()
 }
 
 
+// A rich string - a string with writing in it - dropped into a
+// paragraph: it comes apart into the two halves a paragraph keeps, so
+// the writing survives the move instead of being dropped.
+static void
+TestRichStringIntoParagraph()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+
+	// a word of writing, and a rich string "a?b" holding it
+	TStroke* list[2];
+	list[0] = TStroke::Make(0);
+	list[1] = nil;
+	for (long i = 0; i <= 12; i++)
+	{
+		TabPt tab;
+		tab.z = 0;
+		tab.p = 0;
+		tab.x = ToFixed(10 + i * 2);
+		tab.y = ToFixed(20 + (i & 1) * 6);
+		list[0]->AddPoint(&tab);
+	}
+	list[0]->EndStroke();
+	Rect made;
+	RefVar word(TStrokesToInkWord(list, &made));
+	EXPECT(IsInkWord(word));
+	long inkLength = Length(word);
+
+	const long kChars = 3;
+	long inkOffset = (kChars * (long) sizeof(UniChar) + 5) & ~3;
+	long blob = (long) InkBlobSize((ULong) inkLength);
+	RefVar str(AllocateBinary(RSSYMstring, inkOffset + blob + 4));
+	char* base = (char*) BinaryData(str);
+	UniChar* chars = (UniChar*) base;
+	chars[0] = U_CONST_CHAR('a');
+	chars[1] = kInkChar;
+	chars[2] = U_CONST_CHAR('b');
+	chars[3] = 0;
+	*(UniChar*) (base + inkOffset) = (UniChar) inkLength;
+	memcpy(base + inkOffset + sizeof(UniChar), BinaryData(word), (size_t) inkLength);
+	ULong trailer = ((ULong) kChars << 4) | 1;
+	UniChar* end = (UniChar*) (base + inkOffset + blob + 4);
+	end[-2] = (UniChar) (trailer >> 16);
+	end[-1] = (UniChar) trailer;
+	EXPECT(NOTNIL(str) && IsRichString(str));
+
+	// the two halves on their own
+	{
+		TRichString rich(str);
+		RefVar text(rich.MakeParagraphTextSlot());
+		EXPECT(IsString(text) && Ustrlen(GetCString(text)) == 3);
+		const UniChar* got = GetCString(text);
+		EXPECT(got[0] == U_CONST_CHAR('a') && got[1] == kInkWordChar
+			   && got[2] == U_CONST_CHAR('b'));
+		RefVar plain(MAKEINT(0x1234));
+		RefVar styles(rich.MakeParagraphStylesSlot(plain));
+		// three runs: the letter, the writing, the letter
+		EXPECT(IsArray(styles) && Length(styles) == 6);
+		EXPECT(RINT(RefVar(GetArraySlot(styles, 0))) == 1);
+		EXPECT(EQRef(RefVar(GetArraySlot(styles, 1)), plain));
+		EXPECT(RINT(RefVar(GetArraySlot(styles, 2))) == 1);
+		EXPECT(IsInkWord(RefVar(GetArraySlot(styles, 3))));
+		EXPECT(Length(RefVar(GetArraySlot(styles, 3))) == inkLength);
+		EXPECT(RINT(RefVar(GetArraySlot(styles, 4))) == 1);
+		EXPECT(EQRef(RefVar(GetArraySlot(styles, 5)), plain));
+	}
+	// a plain string is one run over the whole of it
+	{
+		TRichString flat(RefVar(MakeString("hello")));
+		RefVar plain(MAKEINT(0x1234));
+		RefVar styles(flat.MakeParagraphStylesSlot(plain));
+		EXPECT(IsArray(styles) && Length(styles) == 2);
+		EXPECT(RINT(RefVar(GetArraySlot(styles, 0))) == 5);
+	}
+
+	// and dropped into a paragraph
+	TParagraphView* p = (TParagraphView*) ViewOf(
+		"ctxRS := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 5, top: 5, right: 150, bottom: 60}, "
+		"viewFont: espy12, text: \"\"})");
+	EXPECT(p != nil);
+	Refresh();
+	DoInsertItems(p, str, false, true, 0, 0, true, RefVar(NILREF));
+	EXPECT(p->TextLength() == 3);
+	const UniChar* now = GetCString(RefVar(p->Text()));
+	EXPECT(now[0] == U_CONST_CHAR('a') && now[1] == kInkWordChar
+		   && now[2] == U_CONST_CHAR('b'));
+	RefVar kept(p->Styles());
+	Boolean carried = false;
+	for (long i = 1; NOTNIL(kept) && i < Length(kept); i += 2)
+		if (IsInkWord(RefVar(GetArraySlot(kept, i))))
+			carried = true;
+	EXPECT(carried);
+
+	Eval("RemoveView(GetRoot(), ctxRS)");
+	Refresh();
+	list[0]->Dispose();
+}
+
+
 int
 main()
 {
@@ -4733,6 +4834,7 @@ main()
 		TestWordIntoParagraph();
 		TestInkWordAtPageCaret();
 		TestRemoteForCorrector();
+		TestRichStringIntoParagraph();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();

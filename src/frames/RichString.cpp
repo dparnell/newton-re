@@ -473,6 +473,126 @@ TRichString::GetInkWordNoInfoOffset(ULong index) const
 }
 
 
+/*------------------------------------------------------------------------------
+	A   r i c h   s t r i n g   a s   a   p a r a g r a p h
+------------------------------------------------------------------------------*/
+
+// A rich string and a paragraph keep the same thing two different ways.
+// A rich string is one object: the characters, with 0xf700 standing for
+// each word of writing, followed by a region holding the writing itself.
+// A paragraph is two: a plain string in which each word of writing is
+// the character 0xf701, and a styles array whose run for that character
+// *is* the 'inkWord binary.  These two make the second form out of the
+// first, which is what lets a rich string - a note dropped from
+// somewhere else, a clipping off the clipboard - be put into a
+// paragraph without losing its writing.
+
+// The character a paragraph stands a word of writing as.  It is
+// `ink/Ink.h`'s kInkWordChar; the ink area is built on this one, not
+// the other way round, so the constant is repeated here as the ROM
+// repeats it.
+const UniChar kParagraphInkChar = 0xf701;
+
+
+// ROM 0x001abf6c MakeParagraphTextSlot__11TRichStringCFv
+// The text a paragraph would hold: the characters copied out (with the
+// terminator), every 0xf700 turned into the 0xf701 a paragraph uses.
+Ref
+TRichString::MakeParagraphTextSlot(void) const
+{
+	long size = fLength * (long) sizeof(UniChar) + (long) sizeof(UniChar);
+	RefVar text(AllocateBinary(RSSYMstring, size));
+	UniChar* chars = (UniChar*) BinaryData(text);
+	BlockMove(GrabPtr(), chars, size);
+	for (long i = 0; i < fLength; i++)
+		if (chars[i] == kInkChar)
+			chars[i] = kParagraphInkChar;
+	ReleasePtr();
+	return text;
+}
+
+
+// ROM 0x001ac038 MakeParagraphStylesSlot__11TRichStringCFRC6RefVar
+// The styles array that goes with it: pairs of (how many characters,
+// what style).  A stretch of ordinary characters is one run in `style`;
+// each word of writing is a run of one character whose style is a copy
+// of the word's own 'inkWord binary, which is how the font engine finds
+// it again.  A string with no writing in it is one run over the whole
+// of it.
+Ref
+TRichString::MakeParagraphStylesSlot(RefArg style) const
+{
+	RefVar styles;
+	if (NumInkWords() == 0)
+	{
+		styles = AllocateArray(RSSYMstyles, 2);
+		SetArraySlot(styles, 0, RefVar(MAKEINT(fLength)));
+		SetArraySlot(styles, 1, style);
+		return styles;
+	}
+
+	const UniChar* text = GrabPtr();
+	// how many runs there are: each word of writing is one, and each
+	// stretch between them is one
+	long runs = 0;
+	long at = 0;
+	while (text[at] != 0)
+	{
+		if (text[at] == kInkChar)
+			at++;
+		else
+			while (text[at] != kInkChar && text[at] != 0)
+				at++;
+		runs++;
+	}
+	styles = AllocateArray(RSSYMstyles, runs * 2);
+
+	long run = 0;				// the run being written
+	long word = 0;				// which word of writing
+	long count = 0;				// the plain characters gathered so far
+	at = 0;
+	while (text[at] != 0)
+	{
+		if (text[at] == kInkChar)
+		{
+			if (count != 0)
+			{
+				// the stretch before it
+				SetArraySlot(styles, run * 2, RefVar(MAKEINT(count)));
+				SetArraySlot(styles, run * 2 + 1, style);
+				run++;
+			}
+			// the word itself, out of the ink region: a halfword of size
+			// and then the blob
+			ULong offset = GetInkWordNoInfoOffset((ULong) word);
+			const char* bytes = (const char*) text + offset;
+			long size = *(const UniChar*) bytes;
+			RefVar blob(AllocateBinary(RSSYMinkword, size));
+			BlockMove(bytes + sizeof(UniChar), BinaryData(blob), size);
+			word++;
+			SetArraySlot(styles, run * 2, RefVar(MAKEINT(1)));
+			SetArraySlot(styles, run * 2 + 1, blob);
+			run++;
+			at++;
+			count = 0;
+		}
+		else
+			while (text[at] != kInkChar && text[at] != 0)
+			{
+				at++;
+				count++;
+			}
+	}
+	if (count != 0)
+	{
+		SetArraySlot(styles, run * 2, RefVar(MAKEINT(count)));
+		SetArraySlot(styles, run * 2 + 1, style);
+	}
+	ReleasePtr();
+	return styles;
+}
+
+
 // ROM 0x001abeb8 CloneInkWordNo__11TRichStringCFUl
 // The index'th ink word's data as an 'inkWord binary of its own.
 Ref
