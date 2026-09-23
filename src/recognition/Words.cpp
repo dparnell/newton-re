@@ -539,4 +539,32 @@ WRecFindBaseline(TStroke** strokes, Point* out)
 {
 	return FindBaseline(strokes, out);
 }
+// ROM 0x0c101864 gSaveWordTrainingData
+// Set by ReadDomainOptions out of the "learning enabled" preference,
+// which is NOT YET: nothing is kept.
+Boolean	gSaveWordTrainingData = false;
 
+
+// ROM 0x0013f4f4 LookupWord__FPUsPUl
+// NOT YET RECONSTRUCTED: the dictionaries (BuildChains,
+// LookupWordInChain).  With none of them, no word is ever found - which
+// is the answer a machine with an empty user dictionary gives about a
+// person's name anyway.
+long
+LookupWord(UniChar* /*word*/, ULong* where)
+{
+	if (where != nil)
+		*where = 0;
+	return -1;
+}
+
+
+// ROM 0x001aa930 ExpandWord__FPUs
+// NOT YET RECONSTRUCTED: CollectPunctSymbols and the expansion
+// dictionary.  Nothing expands, so no variant is offered beside a
+// reading.
+Handle
+ExpandWord(UniChar* /*word*/)
+{
+	return nil;
+}

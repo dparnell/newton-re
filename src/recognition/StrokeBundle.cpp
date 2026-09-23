@@ -550,3 +550,37 @@ RegisterStrokeBundleNatives(void)
 	RegisterNativeFunction("FPointsArrayToStroke", (void*) FPointsArrayToStroke, 2);
 	RegisterNativeFunction("FMakeStrokeBundle", (void*) FMakeStrokeBundle, 2);
 }
+// ROM 0x001a2554 ExpandUnit__FP11TUnitPublic
+// The writing under one unit as a stroke bundle: every stroke of every
+// sub of it, in the order they were written, and the unit's own bounds.
+// This is what the word info frame's `strokes` slot holds, and what
+// ends up on the page as ink when nothing could read it.
+//
+// A unit with no strokes at all answers nil rather than an empty
+// bundle.
+Ref
+ExpandUnit(TUnitPublic* unit)
+{
+	RefVar bundle(NILREF);
+	TUnitList* strokes = unit->fUnit->GetAllStrokes();
+	if (strokes != nil)
+	{
+		long count = strokes->Count();
+		RefVar array(AllocateArray(RSSYMarray, count));
+		Rect box;
+		unit->Bounds(&box);
+		RefVar bounds(ToObject(box));
+		for (long i = 0; i < count; i++)
+		{
+			TUnit* sub = strokes->GetUnit((ULong) i);
+			RefVar stroke(MakeStrokeRef(sub->GetStroke(0)));
+			SetArraySlot(array, i, stroke);
+		}
+		bundle = Clone(RefVar(Rstrokebundle));
+		SetFrameSlot(bundle, RSSYMbounds, bounds);
+		SetFrameSlot(bundle, RSSYMstrokes, array);
+		// (the list is the unit's answer, not its own: it goes back)
+		strokes->Dispose();
+	}
+	return bundle;
+}

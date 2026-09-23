@@ -932,6 +932,65 @@ NOT YET: the shape and word domains above this one, nor
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.
 
+## What a script is told about writing (`recognition/WordInfo.h`)
+
+Everything NewtonScript learns about a piece of writing arrives in one
+frame, the *word info* frame, cloned from the ROM's `protoWordInfo`
+(0x00077fd8 `MakeWordInfo`) and hung off the unit's public face so that
+it is made once:
+
+  - `unitID` - the unit's four-character type as a string.
+    `EncodeUnitID` (0x00077bb0) makes it by reading those four bytes as
+    *two Unicode characters* rather than four ASCII ones, so 'STRK'
+    becomes the two characters 0x5354 0x524B.  It is meaningless as
+    text, unique per type, and costs nothing to make; the script side
+    only ever compares one with another.
+  - `words` - an array of `protoWordInterp` frames, one per reading,
+    each with its `word`, `score`, `index` and `label`
+    (`MakeWordList`, 0x000786b4, over the unit's `TWordList`).
+  - `strokes` - a stroke bundle of the writing itself (`ExpandUnit`,
+    0x001a2554: every stroke of every sub of the unit, in the order they
+    were written, with the unit's own bounds).
+  - `unitData` - what the recogniser would learn from this, but only
+    when the writer has asked for the learning to be kept
+    (`TUnitPublic::TrainingData`, `gSaveWordTrainingData`).
+  - `flags` - what the system makes of it.  The one that matters is 8,
+    "this is ink": the unit was never read at all, or the recogniser
+    answers `kWRecInk` for it.  `MakeWordInfo` sets the flag *and*
+    empties the `words` array, so a frame never offers a reading and ink
+    at the same time.
+  - `ink` - filled in later, by the view that keeps the writing.
+
+Under it, `TUnitPublic::MakeWordList` (0x0022d268) turns the unit's
+interpretations into the `TWordList`.  Only the unit type the word
+recogniser in use makes (`gWordID`) has readings to gather; anything
+else answers nothing.  The list is built in two passes, and that is what
+orders it: the first takes every reading *except* an ordinary word the
+dictionaries have never heard of, and the second takes exactly those -
+so what the machine knows comes before what it is guessing at.  A
+two-character reading ending in '.' or ')' is left alone, being an
+abbreviation or a list marker rather than a word, and so is anything
+that does not start with a letter.  Five readings are kept, and a word
+that expands (an abbreviation) goes in ahead of the word itself.
+
+A list that ends up with nothing at all gets one empty reading scoring
+1000 - which is what a unit nobody could read comes to, and which is
+what makes it ink.
+
+`TUnitPublic::SetWordBase` (0x0022d764) remembers where the writing
+stands, as a rectangle that is really a line: the "top" is the height of
+the left end of the base line and the "bottom" the height of the right,
+so writing running uphill can be laid out along its own slope.  A single
+'?' or '!' is the exception - it has a descender the recogniser measures
+the base from, so the base it answers is too low, and the bottom of the
+unit's bounds is used for both ends instead.
+
+NOT YET: `LookupWord` (0x0013f4f4) and `ExpandWord` (0x001aa930) are the
+dictionaries', which are NOT YET (see `Words.cpp`).  With no dictionary
+nothing is found and nothing expands, so every ordinary word falls
+through to the second pass - the same readings come out, in the order a
+machine with an empty dictionary would put them.
+
 ## The word domain (`recognition/WRecDomain.h`)
 
 `TWRecDomain` ('WREC') is the domain a handwriting engine is driven

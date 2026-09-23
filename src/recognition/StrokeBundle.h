@@ -63,6 +63,7 @@ Ref		GetStrokePointsArray(RefArg stroke, long format);	// ROM 0x001a1b88 GetStro
 // for the pen).
 Ref		MakeStrokeBundle(RefArg strokes, long format);		// ROM 0x001a1db4 MakeStrokeBundle__FRC6RefVarl
 Ref		StrokeBundle(TUnitPublic** units, Rect* bounds);	// ROM 0x00144e54 StrokeBundle__FPP11TUnitPublicP5TRect
+Ref		ExpandUnit(TUnitPublic* unit);					// ROM 0x001a2554 ExpandUnit__FP11TUnitPublic - one unit's strokes as a bundle
 
 // A bundle back into strokes, and drawn from the box it was written in
 // into another.

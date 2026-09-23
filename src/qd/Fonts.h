@@ -62,6 +62,17 @@ inline long	PackFont(long family, long size, long face)	{ return (family & 0x3ff
 
 struct StyleRecord
 {
+	// The scalars start clear.  The ROM's callers allocate their style
+	// records in cleared memory and rely on it: CreateParagraphStyleRecord
+	// writes nothing at all into a record whose font spec comes to nil,
+	// and DisposeStyleRecord then reads fPattern.  (Host: the ROM's C++
+	// leaves an ordinary `new StyleRecord` uninitialised, so a garbage
+	// fPattern is disposed as a pattern handle.)
+					StyleRecord()
+						: fFontSize(0), fFontFace(0), fFontPattern(NILREF),
+						  fTransferMode(0), fReserved14(0), fReserved18(0),
+						  fPattern(nil)	{ }
+
 	RefStruct		fFontFamily;	// +0x00  the font family frame
 	Fixed			fFontSize;		// +0x04  16.16
 	long			fFontFace;		// +0x08

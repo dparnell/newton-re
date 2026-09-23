@@ -59,19 +59,21 @@ public:
 
 	Point				GesturePoint(long index);				// ROM 0x0022d01c GesturePoint__11TUnitPublicFl - the index-th corner of the gesture's polyline, in pixels
 
+	// what was read
+	TWordList*			MakeWordList(Boolean raw, Boolean tryString);	// ROM 0x0022d268 MakeWordList__11TUnitPublicFUcT1 - the readings, ordered by the dictionaries
+	void				ExtractWords(void);						// ROM 0x0022d6c4 ExtractWords__11TUnitPublicFv - the list made once and kept
+	Handle				Word(void);								// ROM 0x0022d6f8 Word__11TUnitPublicFv - the best reading
+	ULong				WordScore(void);						// ROM 0x0022d71c WordScore__11TUnitPublicFv
+	TWordList*			Words(void);							// ROM 0x0022d740 Words__11TUnitPublicFv - the list handed over, not lent
+	Ref					WordInfo(void);							// ROM 0x0022d684 WordInfo__11TUnitPublicFv - the word info frame, made once
+	void				SetWordBase(void);						// ROM 0x0022d764 SetWordBase__11TUnitPublicFv - the line the writing stands on
+	Ref					Strokes(void);							// ROM 0x0022d870 Strokes__11TUnitPublicFv - the word info frame's stroke bundle
+	Ref					TrainingData(void);						// ROM 0x0022d8b4 TrainingData__11TUnitPublicFv - what the recogniser would learn from
+
 	// NOT YET RECONSTRUCTED
 	Handle				RoughShape(void);						// ROM 0x0022d198 RoughShape__11TUnitPublicFv
 	Handle				CleanShape(void);						// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv
 	ULong				ShapeType(void);						// ROM 0x0022d234 ShapeType__11TUnitPublicFv
-	TWordList*			MakeWordList(Boolean, Boolean);			// ROM 0x0022d268 MakeWordList__11TUnitPublicFUcT1
-	Ref					WordInfo(void);							// ROM 0x0022d684 WordInfo__11TUnitPublicFv
-	void				ExtractWords(void);						// ROM 0x0022d6c4 ExtractWords__11TUnitPublicFv
-	Handle				Word(void);								// ROM 0x0022d6f8 Word__11TUnitPublicFv
-	ULong				WordScore(void);						// ROM 0x0022d71c WordScore__11TUnitPublicFv
-	TWordList*			Words(void);							// ROM 0x0022d740 Words__11TUnitPublicFv
-	void				SetWordBase(void);						// ROM 0x0022d764 SetWordBase__11TUnitPublicFv
-	Ref					Strokes(void);							// ROM 0x0022d870 Strokes__11TUnitPublicFv
-	Ref					TrainingData(void);						// ROM 0x0022d8b4 TrainingData__11TUnitPublicFv
 
 	TUnit*				fUnit;			// +0x00
 	TWordList*			fWordList;		// +0x04

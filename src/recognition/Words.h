@@ -76,6 +76,19 @@ ULong	CheckCapAttributes(const UniChar* word);	// ROM 0x0008ec34 CheckCapAttribu
 // frame each, told apart by their dictID
 // the word recogniser's own id, 'WREC when it is the one reading; 0
 // while it is NOT YET RECONSTRUCTED
+// The dictionaries, as the word list asks them: LookupWord answers
+// where the word was found, -1 for nowhere, and ExpandWord answers
+// the word as it would be written out in full (a handle, the
+// caller's to dispose), nil when there is nothing to expand.  Both
+// are NOT YET: with no dictionaries nothing is found and nothing
+// expands.
+long	LookupWord(UniChar* word, ULong* where);				// ROM 0x0013f4f4 LookupWord__FPUsPUl
+Handle	ExpandWord(UniChar* word);								// ROM 0x001aa930 ExpandWord__FPUs
+
+// Whether the writer has asked for the recogniser to be taught by
+// what they write (the "learning" preference).
+extern Boolean	gSaveWordTrainingData;		// ROM 0x0c101864 gSaveWordTrainingData
+
 extern ULong	gWordID;						// ROM 0x0c101844 gWordID
 
 // the dictionaries a user writes into, which start empty

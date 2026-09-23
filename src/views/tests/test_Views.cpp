@@ -34,6 +34,12 @@
 #include "MonthView.h"
 #include "Recognizer.h"
 #include "StrokeCentral.h"
+#include "WRecDomain.h"
+#include "WordUnit.h"
+#include "WordList.h"
+#include "WordInfo.h"
+#include "Words.h"
+#include "Controller.h"
 #include "StrokeQueue.h"
 #include "HostTablet.h"
 #include "hal/host/Host.h"
@@ -2576,6 +2582,120 @@ TestScrubbing()
 }
 
 
+// The word info frame: what a piece of writing looks like to a script.
+// A word unit with no reading at all comes out marked as ink and with
+// its words taken away; one that was read carries the reading, and the
+// strokes are there either way.
+static void
+TestWordInfo()
+{
+	gWordID = kWRecDomainType;
+	TDomain* domain = TDomain::Make(gController, kWRecDomainType, (char*) "word");
+	EXPECT(domain != nil);
+	// a unit has no bounds without a recogniser for its type, and the
+	// word info frame asks the recogniser what it makes of the unit
+	// (InstallWRecRecognizer, which would put the real one here, is NOT
+	// YET)
+	TRecognizer* recognizer = new TRecognizer;
+	recognizer->Init(domain, kWRecDomainType, aeWord, 0, 1);
+	recognizer->InitServices(0, 0);
+	gRecognition.fRecognizers->AddRecognizer(recognizer);
+
+	TStroke* stroke = TStroke::Make(0);
+	TabPt pt;
+	pt.z = 3;
+	pt.p = 0;
+	pt.x = ToFixed(70);
+	pt.y = ToFixed(50);
+	stroke->AddPoint(&pt);
+	pt.x = ToFixed(90);
+	pt.y = ToFixed(70);
+	stroke->AddPoint(&pt);
+	stroke->fDownTime = 100;
+	stroke->fUpTime = 110;
+	stroke->EndStroke();
+	TStrokeUnit* strokeUnit = TStrokeUnit::Make(gRootDomain, 1, stroke, nil);
+	TWRecUnit* word = TWRecUnit::Make(domain, 1, nil);
+	EXPECT(strokeUnit != nil && word != nil);
+	if (strokeUnit == nil || word == nil)
+		return;
+	word->AddSub(strokeUnit);
+	word->EndSubs();
+
+	{
+		// nothing read: the frame says ink and carries no words
+				TUnitPublic pub(word, 0);
+		RefVar info(pub.WordInfo());
+				EXPECT(NOTNIL(info));
+		EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMflags))) == kWordInfoIsInk);
+		EXPECT(Length(RefVar(GetFrameSlot(info, RSSYMwords))) == 0);
+		// the unit id is the type's own four bytes read as two Unicode
+		// characters
+		RefVar id(GetFrameSlot(info, RSSYMunitid));
+		EXPECT(IsString(id) && Length(id) == 3 * (long) sizeof(UniChar));
+		const UniChar* text = (const UniChar*) BinaryData(id);
+		EXPECT(text[0] == (('W' << 8) | 'R') && text[1] == (('E' << 8) | 'C'));
+		// and the strokes are a stroke bundle of what was written
+		RefVar strokes(GetFrameSlot(info, RSSYMstrokes));
+		EXPECT(NOTNIL(strokes) && CountStrokes(strokes) == 1);
+		EXPECT(CountPoints(RefVar(GetStroke(strokes, 0))) == 2);
+		RefVar bounds(GetFrameSlot(strokes, RSSYMbounds));
+		Rect unitBounds;
+		pub.Bounds(&unitBounds);
+		EXPECT(RINT(RefVar(GetFrameSlot(bounds, RSSYMleft))) == unitBounds.left);
+		EXPECT(RINT(RefVar(GetFrameSlot(bounds, RSSYMtop))) == unitBounds.top);
+		EXPECT(unitBounds.left == 70 && unitBounds.top == 50);
+		// Strokes() is the same slot
+		EXPECT(EQ(pub.Strokes(), strokes));
+		// asked again it is the same frame, not another one
+		EXPECT(EQ(pub.WordInfo(), info));
+	}
+
+	{
+		// read as a word: the reading is in the frame and the ink flag
+		// is not
+		UniChar hello[6] = { 'h', 'e', 'l', 'l', 'o', 0 };
+		EXPECT(word->AddWordInterpretation() == 0);
+		EXPECT(word->SetWordString(0, hello) != nil);
+		word->SetLabel(0, kWordLabelWord);
+		word->SetScore(0, 55);
+
+		TUnitPublic pub(word, 0);
+		RefVar info(pub.WordInfo());
+		EXPECT(RINT(RefVar(GetFrameSlot(info, RSSYMflags))) == 0);
+		RefVar words(GetFrameSlot(info, RSSYMwords));
+		EXPECT(Length(words) == 1);
+		RefVar first(GetArraySlot(words, 0));
+		RefVar read(GetFrameSlot(first, RSSYMword));
+		EXPECT(Ustrcmp((const UniChar*) BinaryData(read), hello) == 0);
+		EXPECT(RINT(RefVar(GetFrameSlot(first, RSSYMscore))) == 55);
+		EXPECT(RINT(RefVar(GetFrameSlot(first, RSSYMindex))) == 0);
+		EXPECT(RINT(RefVar(GetFrameSlot(first, RSSYMlabel))) == kWordLabelWord);
+		// the list is handed over, so asking twice makes a second one
+		TWordList* list = pub.Words();
+		EXPECT(list != nil && list->Count() == 1);
+		delete list;
+	}
+
+	// the base line: with nothing measured it is the bottom of the box,
+	// from its left edge to its right
+	{
+		TUnitPublic pub(word, 0);
+		pub.SetWordBase();
+		FRect box;
+		word->GetBBox(&box);
+		EXPECT(pub.fWordBase.left == (short) RoundFixed(box.left));
+		EXPECT(pub.fWordBase.right == (short) RoundFixed(box.right));
+		EXPECT(pub.fWordBase.top == (short) RoundFixed(box.bottom));
+		EXPECT(pub.fWordBase.bottom == (short) RoundFixed(box.bottom));
+	}
+
+	word->Dispose();
+	domain->Dispose();
+	gWordID = 0;
+}
+
+
 static void
 TestClicks()
 {
@@ -3707,6 +3827,7 @@ main()
 		TestInkOnThePage();
 		TestInkWordInText();
 		TestInkInRichString();
+		TestWordInfo();
 	}
 	newton_catch_all
 	{

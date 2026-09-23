@@ -13,6 +13,16 @@
 #include "ViewFlags.h"
 #include "Rects.h"
 #include "StrokeCentral.h"
+#include "WordList.h"
+#include "WordUnit.h"
+#include "WordInfo.h"
+#include "StrokeBundle.h"
+#include "Words.h"			// gWordID, LookupWord, ExpandWord
+#include "Unicode.h"
+#include "Ports.h"			// RoundFixed
+#include "Frames.h"
+#include "RSSymbols.h"
+#include "NewtonMemory.h"
 
 
 // ROM 0x0022ced0 __ct__11TUnitPublicFP5TUnitUl
@@ -338,11 +348,279 @@ TUnitPublic::GestureAngle(void)
 }
 
 
+/*------------------------------------------------------------------------------
+	W h a t   w a s   r e a d
+------------------------------------------------------------------------------*/
+
+// ROM 0x0022d268 MakeWordList__11TUnitPublicFUcT1
+// The unit's interpretations gathered into a word list.  Only the unit
+// type the word recogniser in use makes has readings to gather, so any
+// other answers nothing at all.
+//
+// The list is built in two passes, which is what orders it: with `raw`
+// false, the first pass takes every reading *except* an ordinary word
+// the dictionaries have never heard of, and the second takes exactly
+// those - so what the machine knows comes before what it is guessing
+// at.  A two-character reading ending in '.' or ')' is left alone,
+// being an abbreviation or a list marker rather than a word, and so is
+// anything that does not start with a letter.
+//
+// `raw` says the readings are to be taken as they come: no variant of a
+// word is offered alongside it and no capital is forced, and only
+// single-character readings are considered at all.  The passes then
+// split on the try string instead of on the dictionaries.
+//
+// Five readings is as many as are kept, and a list that ends up with
+// none at all gets one empty reading scoring 1000 - which is what a
+// unit that was never read comes to, and what makes it ink.
+//
+// (NOT YET: `LookupWord` and `ExpandWord` are the dictionaries', which
+//  are NOT YET - see Words.cpp.  With no dictionary nothing is found,
+//  so every ordinary word falls through to the second pass and no
+//  variants are offered; the same readings come out, in the order a
+//  machine with an empty dictionary would put them.)
+TWordList*
+TUnitPublic::MakeWordList(Boolean raw, Boolean tryString)
+{
+	if (GetType() != gWordID)
+		return nil;
+	TWordList* list = new TWordList;
+	if (list == nil)
+		return nil;
+
+	long count = fUnit->InterpretationCount();
+	long added = 0;
+	ULong mask = InputMask();
+	// a field that is restricted in some way and asks for capitals
+	Boolean upperFirst = ((mask & vAnythingAllowed) != vAnythingAllowed)
+						 && (mask & vCapsRequired) != 0;
+	// a field that takes numbers and nothing wordlike
+	Boolean numbersOnly = (mask & vNumbersAllowed) != 0
+						  && (mask & (vCharsAllowed | vLettersAllowed | vMathAllowed
+									  | vPhoneField | vDateField | vTimeField
+									  | vAddressField | vNameField
+									  | vCustomDictionaries)) == 0;
+
+	for (long pass = 0; pass < 2; pass++)
+	{
+		for (long i = 0; i < count; i++)
+		{
+			// (the ROM dispatches straight through the vtable: the type gate
+			//  above says the unit is the word recogniser's own, which is a
+			//  TStdWordUnit)
+			TStdWordUnit* unit = (TStdWordUnit*) fUnit;
+			UnitInterpretation* interp = unit->GetInterpretation((ULong) i);
+			long score = interp->score;
+			long label = interp->label;
+			if (label == -1)
+				continue;
+			Handle word = unit->GetString((ULong) i);
+			long length = Ustrlen((UniChar*) *word);
+			UniChar first = *(UniChar*) *word;
+			if (first == 0)
+				continue;
+
+			if (!raw)
+			{
+				// an ordinary word that is neither an abbreviation nor
+				// something starting with a digit is taken in the pass
+				// its being in the dictionaries puts it in; everything
+				// else belongs to the first pass
+				Boolean wanted = (pass == 0);
+				if (label == kWordLabelWord
+					&& !(length == 2 && (((UniChar*) *word)[1] == '.'
+										 || ((UniChar*) *word)[1] == ')'))
+					&& IsAlphabet(first))
+				{
+					ULong junk;
+					Boolean known = (LookupWord((UniChar*) *word, &junk) != -1);
+					wanted = (known == (pass == 0));
+				}
+				if (!wanted)
+					continue;
+				if (upperFirst)
+					UppercaseText((UniChar*) *word, 1);
+			}
+			else
+			{
+				if (label != kWordLabelWord || length > 1
+					|| (tryString && InTryString(first) == (pass == 0))
+					|| (numbersOnly && !IsDigit(first)))
+					continue;
+			}
+
+			if (word == nil)
+				break;
+			if (!raw)
+			{
+				// the word as the dictionaries would expand it goes in
+				// ahead of the word itself
+				HLock(word);
+				Handle variant = (Handle) ExpandWord((UniChar*) *word);
+				if (variant != nil)
+				{
+					if (list->Find((UniChar**) variant) < 0)
+					{
+						list->InsertLast((UniChar**) variant, score, label);
+						added++;
+					}
+					// (BUG, kept: the unlock is inside this arm, so a
+					//  word with no variant stays locked for ever)
+					HUnlock(word);
+					DisposHandle(variant);
+				}
+			}
+			if (list->Find((UniChar**) word) < 0)
+			{
+				list->InsertLast((UniChar**) word, score, label);
+				added++;
+			}
+			if (added >= 5)
+				break;
+		}
+
+		if (!raw)
+		{
+			if (numbersOnly)
+				break;
+		}
+		else
+		{
+			// one character, written in one stroke, with one character
+			// in the try string: the guesses are reordered by what the
+			// writer has lately been choosing
+			if (tryString && pass == 0 && TryStringLength() == 1
+				&& fUnit->CountStrokes() == 1)
+				list->Reorder();
+			if (!tryString)
+				break;
+		}
+	}
+
+	if (added == 0)
+	{
+		UniChar empty[1];
+		empty[0] = 0;
+		UniChar* p = empty;
+		list->InsertLast(&p, 1000, -1);
+	}
+	return list;
+}
+
+
+// ROM 0x0022d6c4 ExtractWords__11TUnitPublicFv
+// The word list made once and kept.
+void
+TUnitPublic::ExtractWords(void)
+{
+	if (fWordList == nil)
+		fWordList = MakeWordList(false, false);
+}
+
+
+// ROM 0x0022d6f8 Word__11TUnitPublicFv
+Handle
+TUnitPublic::Word(void)
+{
+	ExtractWords();
+	return fWordList->Word(0);
+}
+
+
+// ROM 0x0022d71c WordScore__11TUnitPublicFv
+ULong
+TUnitPublic::WordScore(void)
+{
+	ExtractWords();
+	return (ULong) fWordList->Score(0);
+}
+
+
+// ROM 0x0022d740 Words__11TUnitPublicFv
+// The word list handed over rather than lent: whoever asks owns it, and
+// the unit will make another if it is asked again.
+TWordList*
+TUnitPublic::Words(void)
+{
+	ExtractWords();
+	TWordList* list = fWordList;
+	fWordList = nil;
+	return list;
+}
+
+
+// ROM 0x0022d684 WordInfo__11TUnitPublicFv
+// The word info frame, made once per unit.
+Ref
+TUnitPublic::WordInfo(void)
+{
+	if (ISNIL(fWordInfo->ref))
+		fWordInfo->ref = MakeWordInfo(this);
+	return fWordInfo->ref;
+}
+
+
+// ROM 0x0022d764 SetWordBase__11TUnitPublicFv
+// Where the writing stands, remembered as a rectangle from the left end
+// of the base line to the right - which is a line rather than a box,
+// the "top" being the left end's height and the "bottom" the right
+// end's, so that writing running uphill can be laid out along its own
+// slope.
+//
+// A single '?' or '!' is the exception: it has a descender a recogniser
+// measures the base from, so the base it answers is too low.  The
+// bottom of the unit's bounds is used for both ends instead.
+void
+TUnitPublic::SetWordBase(void)
+{
+	FPoint left;
+	FPoint right;
+	((TStdWordUnit*) fUnit)->GetWordBase(&left, &right, 0);
+	fWordBase.top = (short) RoundFixed(left.y);
+	fWordBase.left = (short) RoundFixed(left.x);
+	fWordBase.bottom = (short) RoundFixed(right.y);
+	fWordBase.right = (short) RoundFixed(right.x);
+
+	Handle word = ((TStdWordUnit*) fUnit)->GetString(0);
+	if (word == nil)
+		return;
+	if (Ustrlen((UniChar*) *word) != 1)
+		return;
+	UniChar c = *(UniChar*) *word;
+	if (c != '?' && c != '!')
+		return;
+	Rect bounds;
+	Bounds(&bounds);
+	fWordBase.bottom = bounds.bottom;
+	fWordBase.top = bounds.bottom;
+}
+
+
+// ROM 0x0022d8b4 TrainingData__11TUnitPublicFv
+// What the recogniser wants kept about how this was written, so that it
+// can learn from it - nothing at all unless the user has asked for the
+// learning to be saved.
+Ref
+TUnitPublic::TrainingData(void)
+{
+	RefVar data(NILREF);
+	if (gSaveWordTrainingData)
+	{
+		TRecognizer* recognizer =
+			gRecognition.fRecognizers->FindRecognizer(GetType());
+		if (recognizer != nil)
+			data = recognizer->GetLearningData(this);
+	}
+	return data;
+}
+
+
 // ROM 0x0022d870 Strokes__11TUnitPublicFv
 // The word's strokes as a stroke bundle: the word info frame's strokes
-// slot.  NOT YET RECONSTRUCTED: WordInfo (MakeWordInfo); nil.
+// slot.
 Ref
 TUnitPublic::Strokes(void)
 {
-	return NILREF;
+	RefVar info(WordInfo());
+	return GetFrameSlot(info, RSSYMstrokes);
 }
