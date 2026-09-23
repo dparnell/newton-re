@@ -36,3 +36,7 @@ add_test(NAME recognition.EdgeList COMMAND test_EdgeList)
 add_executable(test_WRecDomain test_WRecDomain.cpp)
 target_link_libraries(test_WRecDomain PRIVATE recognition)
 add_test(NAME recognition.WRecDomain COMMAND test_WRecDomain)
+
+add_executable(test_WordList test_WordList.cpp)
+target_link_libraries(test_WordList PRIVATE recognition)
+add_test(NAME recognition.WordList COMMAND test_WordList)

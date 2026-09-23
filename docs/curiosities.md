@@ -586,3 +586,39 @@ found by typing "hello" and pressing return - and the caret is for ever
 one character past the last line, for ever "below", and the page scrolls
 for ever. A line nobody can see turns out to be the thing that stops the
 screen rolling.
+
+
+## Sixteen words in one handle
+
+`TWordList` (0x0022eb28) is what a recogniser's readings come out as: up
+to sixteen guesses at what was written, each with a score and a label.
+The obvious way to hold them is an array of sixteen string handles. The
+ROM holds them in **one**.
+
+Inside the list's single handle the words are packed end to end,
+separated by 0xFFFF and terminated by a NUL:
+
+    h e l l o FFFF h e l l FFFF h e 0000
+
+So a word ends at 0xFFFF as well as at NUL, and the area carries its own
+pair of string functions - `Wstrlen` (0x0022ef8c) and `Wstrcpy`
+(0x0022f190) - that stop at either. `ScanTo` (0x0022ed60) walks to the
+n-th word by counting separators. `InsertLast` (0x0022ec90) appends by
+overwriting the NUL that ended the last word with a separator and
+writing the new word where it stood; the very first insert therefore
+needs no special case, because the empty list already holds its own
+terminator. The scores and labels stay as two arrays of sixteen
+halfwords at the front of the object, which is where the sixteen-guess
+ceiling comes from: `InsertLast` simply returns once the count reaches
+it.
+
+The same object goes further. `TWordList::operator new` (0x0022edb0)
+keeps a pool of twelve lists in RAM (`gPreallocWordLists`, 0x0c107030,
+0x360 bytes) and only falls back on the heap when all twelve are in
+use; `operator delete` (0x0022ede0) decides which it is by comparing the
+address against the pool's bounds. A slot is *free* when its handle
+field is nil, which is the one thing both the destructor and `operator
+delete` make sure of - there is no separate free list. The recogniser
+makes and throws away word lists on every stroke the user writes, so
+between the pool and the packing, a whole reading of a word costs one
+allocation, and usually none at all.
