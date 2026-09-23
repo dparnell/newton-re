@@ -424,6 +424,27 @@ than QuickDraw's.  On a printer port it takes another path entirely and
 makes real outlined paths of the strokes, so that a PostScript printer
 gets outlines rather than a bitmap.
 
+## A word of writing in the middle of a line (`qd/Text.h`)
+
+A rich string keeps its ink beside its text: one blob per `kInkChar`
+(0xf700) of the string, in text order, in the region after the
+characters (`docs/frames/README.md`).  `DoRichString` (0x0035a164) is
+what draws such a string.
+
+A range with no ink in it is one run in the caller's style.  Otherwise
+the range is cut into runs - each ink character is a run of its own and
+the text between two of them is a run
+(`TRichString::GetLengthsAndDataInRange` 0x001abd20) - and each run gets
+a copy of the caller's style with one field changed: an ink run's "font
+family" is the *address* of its blob, as an integer Ref.  That is what
+the integer form in `InkOpenFont` is for, and `GetInkWordAddrData` and
+`GetInkWordAddrInfo` are how the glyph reads a word that is a plain
+block of memory rather than a binary object.
+
+The copies are given no pattern of their own, so the runs draw with the
+port's - and the caller's pattern is disposed, which is odd but is what
+the ROM does.
+
 ## NOT YET
 
 The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which

@@ -8,85 +8,41 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `96e5bd0`)
+## State at 2026-09-23 (commit `00966da`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 73/73.
-- `analysis/coverage.py build/MP2x00US --check`: 8377 citations, 0 bad;
-  4434 of 16671 functions (26.60%).
+- `analysis/coverage.py build/MP2x00US --check`: 8378 citations, 0 bad;
+  4435 of 16671 functions (26.60%).
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
   --headless 20 --store <file>` boots.
 
-The last run of work made **an ink word draw inside a line of text**,
-four commits from `ac70775` to `96e5bd0`:
+The view side of ink is now finished as far as it can go without the
+recogniser.  A word of writing draws as a shape, on a page, as a style
+run of a paragraph, as a glyph of a font, and inside a rich string.
 
-- `ink/InkFont.h`: `TInkWordGlyph` and `InkOpenFont` with its five
-  procs.  A style whose "font" is an `'inkWord` binary (or an integer,
-  which is the address of one outside the object heap) opens as a font
-  with a single glyph; asking for the glyph draws the writing into a
-  bitmap the text engine blits.
-- `views/ParagraphView.h`: `CreateParagraphStyleRecord` and
-  `IsFontFrame`, which is what puts the ink word into the style record
-  in the first place.  `LayoutRuns` uses it now instead of
-  `CreateTextStyleRecord`.
-- `qd/Fonts.h` gained the `gInkOpenFont` hook (a DEVIATION: the ROM
-  calls `InkOpenFont` straight out, but the ink area sits above
-  QuickDraw here), `kStyleTable` became visible, and the two spare
-  `FontEngineInfo` fields are named for what the ink font puts in them.
-- `qd/Rects.h` gained `Encloses`.
+The last run of work added, after the font piece:
 
-Before that a fault in the draw path had to be fixed (`ac70775`): the
-pen was being handed to the decoder as its *group*, so a pen of one
-quietly asked for a different thinning mode, and both draw entries were
-missing the flag that says the ink is wholly inside the clip.  While
-fixing it the scaled entry's citation turned out to name the wrong one
-of the two `GenericCSDraw`s.
-
-`test_Views`'s `TestInkWordInText` is the end-to-end check: a word of
-writing put in a paragraph's text draws, the line is as tall as the
-word, and every lit pixel is one of the glyph's.
-
-## Next: `DoInsertItems`, and `CheckAndDoSplitInk`
-
-`TParagraphView::CheckAndDoSplitInk` (0x00176208) is the ink half of the
-caret gesture - a caret drawn through an ink word splits it, which
-`SplitInkAt` can now do.  It is blocked only on `DoInsertItems`
-(0x00170f7c), which is the paragraph's *general* insert path and would
-also replace three places where this reconstruction does the equivalent
-by hand (see the `(host: the ROM inserts through DoInsertItems ...)`
-comments in `views/ParagraphView.cpp`).
-
-`DoInsertItems` itself is small: it clones `Rstarterinsertspec`, fills
-in `insertItems`, `addSpace`, `undoable`, `insertOffset`,
-`replaceChars`, `moveCaret` and `defaultFontSpec`, and sends the view
-command 0x4d with that frame as the frame parameter (the helper at
-0x00170e90 is "post a command with a frame parameter to the view of this
-context").  The work is in whatever answers 0x4d.
-
-## Also now within reach
-
-- `GetFontSize` (0x0017ad54) and `GetFontFace` (0x0017bc70) make a
-  `TInkWordGlyph` for the same reason `CreateParagraphStyleRecord` does:
-  they answer a style's size and face, and an ink word's come from the
-  glyph.  Both are small.
-- `qd/Text.h`'s `DoRichString` says NOT YET against "the ink words (the
-  ROM makes a style and a run for each ink word and text run between
-  them)".  That is now only a matter of splitting the string into runs -
-  `frames/RichString.h`'s `NumInkAndTextRunsInRange` already counts them
-  and `GetInkData` fetches each word's bytes.
+- `GetFontSize`/`GetFontFace` answer an ink word's own size and face,
+  through a second registered proc beside the opener.
+- `qd/Text.h`'s `DoRichString` cuts a range with ink in it into text and
+  ink runs, over the new `TRichString::GetLengthsAndDataInRange`, and
+  gives an ink run the address of its blob as its font.
+- `PackedInkWordInfo` is eight big-endian bytes again.  It was a pair of
+  `ULong`s, and a `ULong` here is pointer-sized, so the Newton's eight
+  bytes were sixteen little-endian ones - inside a string object that
+  goes into a soup as it stands.
 
 ## What the machine actually does today
 
-Worth knowing before picking the next piece, because it was measured
-rather than reasoned about (`src/host/demo/ink.ns`, which walks the
-setup assistant and then draws a stroke on the Notepad):
+Measured rather than reasoned about, with `src/host/demo/ink.ns` (which
+walks the setup assistant first, because the host's store is in memory
+and every boot starts there):
 
 - The **live inker works**.  Drag the pen across the Notepad and the ink
   follows it, drawn by `TStroke::Draw` over `InkerLine` out of
   `StrokeTime`.
-- **On pen-up the ink vanishes.**  The stroke goes to the recogniser,
-  which takes the ink off the screen and would put a paragraph or an ink
-  word in its place - and the domains that would do that are NOT YET.
-  So everything the view side of ink can now do is still only reachable
+- **On pen-up the ink vanishes**, because nothing claims the stroke.
+  Everything the view side of ink can now do is still reachable only
   from tests.
 - `IdleStrokes()` must not be called while the pen is down.  It runs the
   click through to the view under it, and a view that tracks the pen
@@ -94,36 +50,58 @@ setup assistant and then draws a stroke on the Notepad):
   exactly what is blocked.  The inker task pumps the queued records
   every tick anyway, so a script never needs to.
 
-## After the ink: the recogniser
+## Next: the word domain, and a recogniser that answers "ink"
 
-The owner's order was the view side first, then the recogniser.  Nothing
-generates `aeRawInk` or `aeInkWord` yet, because the domains above the
-gesture domain are NOT YET - so the ink view side is reachable only from
-tests until that is done.  In rough order:
+This is what would put writing on the page, and it is the last thing
+between the view side of ink and something visible.  The chain, read out
+of the ROM:
 
-- The shortest way to something visible is the *shell* of the word
-  recogniser rather than the engine inside it.  `WordRecognizerHandleUnit`
-  (0x00143f00) asks the recogniser what the unit is; when the answer is
-  2 it is ink, and `GetInkCommand` over the unit's word info picks
-  `aeRawInk` or `aeInkWord` for the view.  A recogniser that always
-  answers ink is what the ROM itself comes to when the engine cannot
-  read the writing, and it would put everything the view side can now do
-  on the screen.
-- `low_level` and `GetTraceFromStrokes` - the CIC feature extractor.
-  `recognition/Words.h`'s `FindBaseline` already has the ROM's fallback
-  path and will start answering properly once these exist.
-- `TWRecDomain`/`TWRecognizer`, `TRosRecognizer`, the Airus
-  dictionaries.
-- The shape domain.
+- `TRecognitionManager::InitRecognizers` (0x0019d438) installs the
+  gesture, event, stroke and click recognisers at any level, and above
+  level 1 the shape (`InstallShapeRecognizer` 0x0014456c) and word
+  (`InstallWRecRecognizer` 0x00144094) ones.  Only the first four are
+  reconstructed, which is why no unit is ever made for a finished
+  stroke.
+- `InstallWRecRecognizer` makes a `TWRecDomain` over the controller and
+  a `TRecognizer` over that with services 0x17ef000 - but it gives up
+  first if `ClassInfoByName("TWRecognizer")` finds nothing.  That
+  protocol is the handwriting engine, and `RegisterWRec` registers the
+  ROM's.  **A registration that always answers "ink" is enough**: it is
+  the answer the ROM itself comes to when the engine cannot read the
+  writing.
+- `WordRecognizerHandleUnit` (0x00143f00) is the shell above it.  It
+  asks the recogniser what the unit is (vtable +0x24); when the answer
+  is 2 the unit is ink, and `GetInkCommand` (0x00143dec) over the unit's
+  word info picks the command for the view.
+- `GetInkCommand` reads the word info's `strokes` - a stroke bundle,
+  which `recognition/StrokeBundle.h` already makes - takes the midpoint
+  of its `bounds`, finds the view under it, and asks that view's
+  recognition configuration for `doInkWordRecognition`: set means
+  `aeInkWord`, clear means `aeRawInk`.  Both of those the view side
+  already answers (`views/EditView.h`).
+- The word info itself is `MakeWordInfo(TUnitPublic*)` (0x00077fd8): the
+  ROM's `protoWordInfo` cloned, with `unitId`, `strokes` (`ExpandUnit`
+  0x001a2554), `words` (`MakeWordList`) and `unitData`
+  (`TUnitPublic::TrainingData`).  For ink the last two are empty and
+  flag 8 goes on (`SetWordInfoFlags` 0x00077dc0).
+  `TUnitPublic::WordInfo` (0x0022d684) makes it once and keeps it.
 
-## Odds and ends still open
+The real work in this is `TWRecDomain` - the domain that decides which
+strokes belong to the same word, by where and when they were written.
+Everything above it is small.
 
-- The ink half of `TParagraphView::CheckAndDoJoin` (merging two ink
-  words when a caret joins them) - `MergeInk` is ready for it.
-- `TLiveInker` (0x00113840 onwards): the ink that follows the pen while
-  it is still down.  It is also the fast line drawer `TInkWordGlyph::
-  DrawAt` asks for when the clip holds the whole word, so it would take
-  the `useInker` flag out of NOT YET as well.
+## Also still open
+
+- `DoInsertItems` (0x00170f7c) and `TParagraphView::HandleInsertItems`
+  (0x001700a0), the paragraph's general insert path - and
+  `CheckAndDoSplitInk` (0x00176208), which is blocked on it.
+  `DoInsertItems` is small (it clones `Rstarterinsertspec` and sends the
+  view command 0x4d); `HandleInsertItems` is ~460 lines of decompiled
+  output and branches over every kind of item that can be inserted, so
+  the sensible first cut is the string and ink-word kinds, which are
+  what `CheckAndDoSplitInk` needs.
+- The ink half of `TParagraphView::CheckAndDoJoin` - `MergeInk` is ready
+  for it.
 - The `aeInkWord` case of `TEditView::RealDoCommand` (0x000a51b0): it
   wants `SetRemoteForCorrector`, `CorrectorUp` and
   `ResetHilitesForNewWord` first.
