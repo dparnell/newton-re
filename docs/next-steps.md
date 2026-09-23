@@ -8,12 +8,16 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `f57a2ff`)
+## State at 2026-09-24 (commit `24f78e4`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8666 citations, 0 bad;
-  4687 of 16671 functions (28.11%).
+- `analysis/coverage.py build/MP2x00US --check`: 8677 citations, 0 bad;
+  4693 of 16671 functions (28.15%).
+- The machine boots into the Setup assistant, `src/host/demo/setup.ns`
+  taps its way through to the Notepad, and Names, Dates, Extras and the
+  Preferences roll (down to the Handwriting Recognition slip and its
+  Options popup) all open and draw.
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
   --headless 45 --script src/host/demo/ink.ns` boots, and writing on the
   Notepad stays on the page (`build/ink-kept.pgm`).
@@ -102,15 +106,12 @@ the two large open areas below.
   `tools/newton-rom/analysis/romdicts.py`); `recognition/Learning.h`
   has the writer's own dictionaries, the expansions and the words the
   machine adds on their behalf.  What is left of that area:
-    - The Airus iterators - `WalkDictionary` (0x0002e0f0) over
-      `A8_PrefixCompletions` (0x0002d73c), `A8_WalkNextChars`
-      (0x0002d890) and `AEnum_NextSet` (0x0002afd0, over the
-      hand-optimised `AE8_NextSet9` 0x0002a9f4) - which is what
-      `FAirusWalkDictionary` and the Prefs slips' listing of the user's
-      words need, and what `DeleteWordWithCount` falls back on when a
-      frame's count has reached nothing.
+  The iterators are there too now (`AEnum_NextSet`, `WalkDictionary`,
+  `DeletePrefix`, and the `Walk`/`PrivateDeleteWord`/`DeletePrefix` a
+  script sees), so a dictionary can be read out word by word.  What is
+  left of that area:
     - `AEnum_FirstLast`, `AEnum_NextPrevious`, `AEnum_ChangeAttribute`
-      and the AE16 walkers.
+      and the sixteen-bit walkers (AE16, `AE16_NextSet9`).
     - `gTrie`, which would be dictionary 32 if its descriptor had no
       `romDictID` - it has one, so this ROM never takes that path.
 - **The corrector view itself**, so `CorrectorUp` (0x001767b8) has a
@@ -122,8 +123,7 @@ the two large open areas below.
 ## Also still open
 
 - `SetUpRosetta` and `SetUpParaGraph`, which `ReadCursiveOptions` would
-  call: both belong to the engines.  (`ReadDictPrefs`, the third, is
-  done and is called.)
+  call: both belong to the engines.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
   `FramePaths`), which want the PostScript path machinery.
 - `TWRecognizer::EndInkStrokeGroup` (the CIC library's

@@ -799,3 +799,45 @@ else.
 
 *`src/recognition/ROMDictionaryData.cpp`, `ROMDictionaryTable.cpp`
 (generated); `test_Dictionaries.cpp` looks real words up in the result.*
+
+## One field, two byte orders
+
+Every word in a Newton dictionary can carry an *attribute* — a small
+number stored beside it in the trie. How many bytes it takes is a
+property of the dictionary; one, two and four are all allowed.
+
+`PutAttr` writes it with `PutDictBytes`, which lays the bytes down high
+one first — the first byte it writes is `value >> 24` for a four-byte
+attribute, `value >> 16` for a three-byte one, and so on down. `GetAttr`
+reads it back with `GetDictBytes`, the matching reader, also high byte
+first. So far so consistent, and so it should be: everything
+else in the format — the character sets, the sibling offsets — is
+big-endian, because the machine is.
+
+Then there is the other way of reading a dictionary. `AE8_NextSet9`
+walks one row of the trie and hands each child to a callback, along with
+whatever that child carries. It assembles the attribute like this
+(ROM 0x0002aba8):
+
+```
+  0002aba8  ldrb r6,[r5,r0]        ; byte 0
+  0002abb4  ldrbgt r1,[r0,#0x1]
+  0002abb8  orrgt r6,r6,r1, lsl #0x8    ; byte 1 << 8
+  0002abc0  ldrbgt r1,[r0,#0x2]
+  0002abc4  orrgt r6,r6,r1, lsl #0x10   ; byte 2 << 16
+  0002abcc  ldrbgt r0,[r0,#0x3]
+  0002abd0  orrgt r6,r6,r0, lsl #0x18   ; byte 3 << 24
+```
+
+Low byte first. The same bytes, read the other way round from the way
+they were written.
+
+It has no consequences, and that is why it is still there. Every
+dictionary the machine writes into — the user dictionary, the expansion
+dictionary, the auto-add dictionary — is made with
+`NewDictionary(kind, 1)`: one byte of attribute, where the two orders
+agree. The multi-byte case exists in the format and in both readers, and
+nothing in the ROM ever takes it.
+
+*`src/recognition/Airus.cpp`; `test_Airus.cpp` walks a one-byte
+dictionary, where the bug is invisible, exactly as the ROM does.*

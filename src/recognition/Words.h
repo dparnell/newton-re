@@ -116,6 +116,9 @@ Handle	GetScriptDictRef(RefArg dictionary);					// ROM 0x0008ea78 GetScriptDictR
 Ref		FAirusNew(RefArg rcvr, RefArg type, RefArg attributeSize);	// ROM 0x0008ee98 FAirusNew
 Ref		FAirusLookupWord(RefArg rcvr, RefArg word, RefArg result);	// ROM 0x0008fb28 FAirusLookupWord
 Ref		FAirusAddWord(RefArg rcvr, RefArg word, RefArg attribute);	// ROM 0x0008fc3c FAirusAddWord
+Ref		FAirusDeleteWord(RefArg rcvr, RefArg word);				// ROM 0x0008fcb4 FAirusDeleteWord
+Ref		FAirusDeletePrefix(RefArg rcvr, RefArg word);			// ROM 0x0008fd08 FAirusDeletePrefix
+Ref		FAirusWalkDictionary(RefArg rcvr, RefArg prefix, RefArg fn);	// ROM 0x0008f44c FAirusWalkDictionary
 Ref		FStripRecognitionWord(RefArg rcvr, RefArg word);			// ROM 0x0008eff4 FStripRecognitionWord
 Ref		FStripRecognitionWordDiacritsOK(RefArg rcvr, RefArg word);	// ROM 0x0008f030 FStripRecognitionWordDiacritsOK
 

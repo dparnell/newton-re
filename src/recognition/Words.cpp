@@ -26,6 +26,7 @@
 #include "RSSymbols.h"
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
+#include "Interpreter.h"	// DoBlock
 
 #include <string.h>
 
@@ -267,6 +268,15 @@ FAirusNew(RefArg rcvr, RefArg type, RefArg attributeSize)
 }
 
 
+// What a script asks for when it walks a dictionary: the function to
+// call and the array of four its arguments are written into.
+struct ScriptWalkContext
+{
+	RefStruct	fFunction;
+	RefStruct	fArgs;
+};
+
+
 // ROM 0x0008fb28 FAirusLookupWord
 // LookupWord(word, result) on a dictionary frame: the word looked up,
 // and, when it is one the dictionary has, the frame handed in given its
@@ -306,6 +316,76 @@ FAirusAddWord(RefArg rcvr, RefArg word, RefArg attribute)
 	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
 	AddWord(dictionary, 0, text, (ULong) RINT(attribute));
 	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0008fcb4 FAirusDeleteWord
+// PrivateDeleteWord(word) on a dictionary frame.  ==> airusResult.
+Ref
+FAirusDeleteWord(RefArg rcvr, RefArg word)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
+	DeleteWord(dictionary, text);
+	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0008fd08 FAirusDeletePrefix
+// DeletePrefix(word): the word and everything that goes on from it.
+Ref
+FAirusDeletePrefix(RefArg rcvr, RefArg word)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
+	DeletePrefix(dictionary, text);
+	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0008f2e4 (unnamed) - ScriptWalkProc
+// What a script's walk function is called through: the four things the
+// walk knows are written into one array, which is passed to the function
+// each time rather than a fresh one being made - so a script that wants
+// to keep a word has to copy it.  ==> whether to go on, which is
+// whatever the function answered.
+static Boolean
+ScriptWalkProc(UByte* word, ULong attribute, UByte terminal, long count, void* context)
+{
+	ScriptWalkContext* walk = (ScriptWalkContext*) context;
+	UniChar text[64];
+	ConvertToUnicode(word, text, kMacRomanEncoding, 0x7fffffff);
+	RefVar args(walk->fArgs);
+	SetArraySlot(args, 0, RefVar(MakeString(text)));
+	SetArraySlot(args, 1, RefVar(MAKEINT((long) attribute)));
+	SetArraySlot(args, 2, RefVar(MAKEINT(terminal)));
+	SetArraySlot(args, 3, RefVar(MAKEINT(count)));
+	return NOTNIL(RefVar(DoBlock(RefVar(walk->fFunction), args)));
+}
+
+
+// ROM 0x0008f44c FAirusWalkDictionary
+// Walk(prefix, fn) on a dictionary frame: every word of it that begins
+// with the prefix handed to the function, which is given the word, its
+// attribute, the one character that could follow it and how many words
+// have come so far, and answers whether to go on.  A nil function walks
+// it all the same and only counts.  ==> how many words were reached.
+Ref
+FAirusWalkDictionary(RefArg rcvr, RefArg prefix, RefArg fn)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(prefix), text, kMacRomanEncoding, 0x3f);
+	ScriptWalkContext walk;
+	walk.fFunction = fn;
+	walk.fArgs = MakeArray(4);
+	Boolean counting = ISNIL(fn);
+	long count = WalkDictionary(dictionary, text,
+								counting ? (DictWalkProc) nil : ScriptWalkProc,
+								counting ? nil : &walk);
+	return MAKEINT(count);
 }
 
 // ROM 0x0008ed50 FValidateWord
@@ -409,6 +489,9 @@ RegisterWordNatives(void)
 	RegisterNativeFunction("FAirusNew", (void*) FAirusNew, 2);
 	RegisterNativeFunction("FAirusLookupWord", (void*) FAirusLookupWord, 2);
 	RegisterNativeFunction("FAirusAddWord", (void*) FAirusAddWord, 2);
+	RegisterNativeFunction("FAirusDeleteWord", (void*) FAirusDeleteWord, 1);
+	RegisterNativeFunction("FAirusDeletePrefix", (void*) FAirusDeletePrefix, 1);
+	RegisterNativeFunction("FAirusWalkDictionary", (void*) FAirusWalkDictionary, 2);
 	RegisterNativeFunction("FWRecIsBeingUsed", (void*) FWRecIsBeingUsed, 0);
 	RegisterNativeFunction("FUseWRec", (void*) FUseWRec, 1);
 	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);

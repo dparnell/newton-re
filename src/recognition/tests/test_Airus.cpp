@@ -219,6 +219,36 @@ TestAL16Lexicon(void)
 }
 
 
+// the words a walk reaches, in the order it reaches them
+static char	gWalked[256];
+static long	gWalkedCount;
+static long	gWalkStopAfter;
+
+static Boolean
+Collect(UByte* word, ULong attribute, UByte terminal, long count, void* context)
+{
+	if (gWalkedCount != 0)
+		strcat(gWalked, " ");
+	strcat(gWalked, (const char*) word);
+	char tail[32];
+	sprintf(tail, "/%lu/%c/%ld", (unsigned long) attribute,
+			terminal == 0 ? (char) '-' : (char) terminal, count);
+	strcat(gWalked, tail);
+	gWalkedCount++;
+	EXPECT(context == (void*) &gWalkedCount);
+	return gWalkStopAfter == 0 || gWalkedCount < gWalkStopAfter;
+}
+
+
+static long
+Walk(Handle dictionary, const char* prefix)
+{
+	gWalked[0] = 0;
+	gWalkedCount = 0;
+	return WalkDictionary(dictionary, (const UByte*) prefix, Collect, &gWalkedCount);
+}
+
+
 int
 main()
 {
@@ -493,6 +523,79 @@ main()
 		strcpy((char*) word, "an");					// a path that is not a word
 		DeleteWord(words, word);
 		EXPECT(airusResult == 0);					// ... and the bug says it went
+
+		// ---- what may come next, and walking the whole thing ----
+		// The dictionary now holds "a", "and", "ant", "at" (and "an" is
+		// a path that is not a word, after the deletions above).
+		{
+			// the characters that may follow a prefix, in order
+			UByte set[64];
+			AirusAParmBlock* p = (AirusAParmBlock*) *words;
+			CheckDictPtrs(p);
+			p->fWord = set;
+			p->fNode = 0;						// the top row
+			AEnum_NextSet(p);
+			EXPECT(p->fResult == 0 && strcmp((const char*) set, "a") == 0);
+
+			// under "a": "n" and "t"
+			strcpy((char*) word, "a");
+			p->fWord = word;
+			p->fIndex = 0;
+			p->fNode = 0;
+			AEnum_Verify(p);
+			long aNode = p->fNode;
+			p->fWord = set;
+			p->fNode = aNode;
+			AEnum_NextSet(p);
+			EXPECT(p->fResult == 0 && strcmp((const char*) set, "nt") == 0);
+
+			// a node nothing goes on from has no set at all
+			strcpy((char*) word, "at");
+			p->fWord = word;
+			p->fIndex = 1;
+			p->fNode = 0;
+			AEnum_Verify(p);
+			long atNode = p->fNode;
+			p->fWord = set;
+			p->fNode = atNode;
+			AEnum_NextSet(p);
+			EXPECT(p->fResult == 1 && set[0] == 0);
+
+			// the whole dictionary, in order, with what is stored beside
+			// each word, the one character that could follow it, and the
+			// running count
+			gWalkStopAfter = 0;
+			EXPECT(Walk(words, "") == 4);
+			EXPECT(strcmp(gWalked, "a/11/-/1 and/21/-/2 ant/12/-/3 at/7/-/4") == 0);
+
+			// ... and only the words under a prefix
+			EXPECT(Walk(words, "an") == 2);
+			EXPECT(strcmp(gWalked, "and/21/-/1 ant/12/-/2") == 0);
+			EXPECT(Walk(words, "at") == 1);
+			EXPECT(strcmp(gWalked, "at/7/-/1") == 0);
+			EXPECT(Walk(words, "z") == 0 && gWalked[0] == 0);
+
+			// a callback that says to stop is not called again
+			gWalkStopAfter = 2;
+			EXPECT(Walk(words, "") == 2);
+			EXPECT(strcmp(gWalked, "a/11/-/1 and/21/-/2") == 0);
+			gWalkStopAfter = 0;
+
+			// no callback at all: the walk still counts
+			EXPECT(WalkDictionary(words, (const UByte*) "", nil, nil) == 4);
+			EXPECT(WalkDictionary(words, nil, nil, nil) == 4);
+
+			// a prefix taken out takes everything under it
+			strcpy((char*) word, "an");
+			DeletePrefix(words, word);
+			EXPECT(airusResult == 0);
+			CheckDictPtrs(d);
+			EXPECT(Walk(words, "") == 2);
+			EXPECT(strcmp(gWalked, "a/11/-/1 at/7/-/2") == 0);
+			EXPECT(Lookup(d, "and") == kAirusNoMatch);
+			EXPECT(Lookup(d, "ant") == kAirusNoMatch);
+			EXPECT(Lookup(d, "at") == kAirusLeaf && d->fAttribute == 7);
+		}
 
 		// the chain: there is only one dictionary here
 		EXPECT(PositionToHandle(words, 0) == words && airusResult == 0);

@@ -245,11 +245,9 @@ LastWordSame(RefArg word)
 // A word taken out of one of the writer's own dictionaries, with the
 // count the frame keeps put down by one.  ==> airusResult.
 //
-// NOT YET RECONSTRUCTED: the recount.  A frame whose count has fallen to
-// nothing is counted again by walking the dictionary, which needs the
-// Airus iterators (`WalkDictionary`, `AEnum_NextSet`); with none, the
-// walk answers nothing, which is what it would answer for a dictionary
-// that is already empty.
+// A frame whose count has fallen to nothing is counted again by walking
+// the whole dictionary, so that a count that has drifted is put right
+// rather than going negative.
 long
 DeleteWordWithCount(long id, UByte* word)
 {
@@ -268,7 +266,7 @@ DeleteWordWithCount(long id, UByte* word)
 	if (airusResult == 0 && counted)
 	{
 		if (count < 1)
-			count = 0 + 1;				// (WalkDictionary(dictionary, "", Reset, nil) + 1)
+			count = WalkDictionary(GetScriptDictRef(frame), (const UByte*) "", nil, nil) + 1;
 		SetFrameSlot(frame, RSSYMcount, RefVar(MAKEINT(count - 1)));
 	}
 	return airusResult;

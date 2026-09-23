@@ -86,6 +86,12 @@ const long	kAirusDictionaryFull	= -15;	// the dictionary frame's `limit` was rea
 const long	kAirusNoMemory		= -2;
 const long	kAirusExpandFailed	= 2;
 
+// What AEnum_NextSet calls for each character that may follow a node:
+// the context it was given, the character, the node it stands for (its
+// offset, with its "carries an attribute" and "has no children" flags in
+// the top two bits) and the attribute it carries.
+typedef void (*AirusNextSetProc)(void* context, ULong character, ULong node, ULong attribute);
+
 // 0x58 bytes, always reached through a Handle.  The fields named by their
 // offset are the ones the walkers use and this reconstruction has not
 // needed yet; they are set as the ROM sets them so that a dictionary this
@@ -112,8 +118,8 @@ struct AirusAParmBlock
 	Handle		fNext;				// +0x44  the next dictionary of the chain (nil: none)
 	ULong		fField48;			// +0x48  0 - what VerifyString hands back beside the attribute
 	long		fField4c;			// +0x4c  1
-	long		fField50;
-	long		fField54;
+	void*		fWalkContext;		// +0x50  what NextSet hands its callback
+	AirusNextSetProc fWalkProc;		// +0x54  ... and the callback itself
 };
 
 extern long				airusResult;	// ROM 0x0c100810 airusResult - what the last call left
@@ -218,6 +224,39 @@ void	AL_Verify(AirusAParmBlock* parms);					// ROM 0x0002bf78 AL_Verify__FP15Air
 void	AL16_Verify(AirusAParmBlock* parms);				// ROM 0x0002b918 AL16_Verify__FP15AirusAParmBlock
 // A string with its repeated characters taken out.
 void	AL_FilterString(char* str);							// ROM 0x0002c170 AL_FilterString__FPc
+
+// What may come next: one row of the trie.
+void	AE8_NextSet9(AirusAParmBlock* parms);				// ROM 0x0002a9f4 AE8_NextSet9__FP15AirusAParmBlock
+void	AE8_NextSetCB(void* context, ULong character, ULong node, ULong attribute);	// ROM 0x0002af38 AE8_NextSetCB__FUlN31
+// The characters that may follow the block's node, written into its word
+// buffer and terminated.
+void	AEnum_NextSet(AirusAParmBlock* parms);				// ROM 0x0002afd0 AEnum_NextSet__FP15AirusAParmBlock
+
+// Walking a whole dictionary.  The callback is given the word, the
+// attribute stored with it, the one character that could follow it (0
+// when there is not exactly one) and how many words have been reached;
+// it answers whether to go on.
+typedef Boolean (*DictWalkProc)(UByte* word, ULong attribute, UByte terminal,
+								long count, void* context);
+
+// What the walk carries with it (the ROM's own, 0x50 bytes: the word
+// buffer is the rest of it).
+struct DictWalkBlock
+{
+	Handle			fDictionary;	// +0x00
+	long			fCount;			// +0x04  how many words have been reached
+	DictWalkProc	fProc;			// +0x08
+	void*			fContext;		// +0x0c
+	UByte			fWord[64];		// +0x10  the word the walk is standing on
+};
+
+Boolean	A8_PrefixCompletions(DictWalkBlock* block);			// ROM 0x0002d73c A8_PrefixCompletions__FP13DictWalkBlock
+Boolean	A8_WalkNextChars(DictWalkBlock* block, long length);	// ROM 0x0002d890 A8_WalkNextChars__FP13DictWalkBlockUl
+// ==> how many words were reached.  A nil callback only counts.
+long	WalkDictionary(Handle dictionary, const UByte* prefix, DictWalkProc proc, void* context);	// ROM 0x0002e0f0 WalkDictionary__FPP15AirusAParmBlockPUcPFPUcUlUcT2Pv_UcPv
+
+// A word and everything that goes on from it taken out at once.
+void	DeletePrefix(Handle dictionary, UByte* word);		// ROM 0x0002c60c DeletePrefix
 
 void	CallAirusA(Handle dictionary, long selector);		// ROM 0x0002d41c CallAirusA - the Handle locked first when the dictionary asks for it
 void	CallAirusANoLock(Handle dictionary, long selector);	// ROM 0x0002d574 CallAirusANoLock

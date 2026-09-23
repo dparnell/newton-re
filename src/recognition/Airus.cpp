@@ -961,8 +961,10 @@ FindDeletionPoint(const UniChar* word, ULong* previous, ULong* node, long* after
 		word++;
 
 		charSize = AirusCharSize();
-		// (the ROM asks the block's fResult here, which DeleteWord has
-		//  just set to 0, so the second arm never runs from there)
+		// The block's result going in is the mode: 0 take this word out,
+		// anything else take the whole prefix out (DeletePrefix sets it
+		// to 1).  Where the bytes after the word begin differs between
+		// the two.
 		if (AE_Parms->fResult == 0)
 			*after = FollowLeft(at);
 		else
@@ -989,8 +991,10 @@ FindDeletionPoint(const UniChar* word, ULong* previous, ULong* node, long* after
 // reached over them is shortened.  The Handle is given back a growth
 // unit at a time when the data has shrunk enough to spare one.
 //
-// The block's fResult afterwards: 0 it went, 1 it was not there, 2 the
-// Handle could not be resized.
+// The block's fResult going in is the mode - 0 for one word,
+// anything else (which is what `DeletePrefix` sets) for the word and
+// everything under it - and afterwards it says what happened: 0 it
+// went, 1 it was not there, 2 the Handle could not be resized.
 //
 // (BUG, kept: a word whose last node carries no attribute - a path that
 //  is not a word - returns without setting fResult, which DeleteWord had
@@ -1141,6 +1145,270 @@ DeleteWord(Handle dictionary, UByte* word)
 		return;
 	}
 	airusResult = 0;
+}
+
+
+/*------------------------------------------------------------------------------
+	W h a t   m a y   c o m e   n e x t
+
+	The other way of reading a dictionary: not "is this a word" but "what
+	characters may follow what I have so far".  That is one row of the
+	trie, and it is what walking a whole dictionary is built on.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0002a9f4 AE8_NextSet9__FP15AirusAParmBlock
+// Every child of the block's node offered to the block's callback, in the
+// order they lie - which is sorted, so the characters come out sorted.
+// A node of 0 means the root, and the row walked is the top one.
+//
+// (BUG, kept: the attribute handed to the callback is assembled from its
+//  bytes low one first, where `PutAttr` writes it and `GetAttr` reads it
+//  high one first.  A one-byte attribute - which is what every dictionary
+//  the machine writes has - is the same either way, so nobody ever saw
+//  it; a two- or four-byte one comes out of here byte-reversed.)
+//
+// The ROM writes the loop out twice, once for a dictionary whose words
+// carry no attribute at all and once for the rest; the two differ only in
+// whether the attribute is read, and the step to the next sibling is the
+// same either way, so it is one loop here.
+void
+AE8_NextSet9(AirusAParmBlock* parms)
+{
+	CheckDictPtrs(parms);
+	long node = AE_Parms->fNode;
+	long at = node == 0 ? 2 : node;
+	long result = 1;
+	if (AE_Parms->fWalkProc != nil)
+	{
+		long attributeSize = AE_Parms->fAttributeSize;
+		void* context = AE_Parms->fWalkContext;
+		if (AE_Parms->fDataEnd - AE_Parms->fData == 2)
+		{
+			AE_Parms->fResult = 1;		// nothing in it
+			return;
+		}
+		if (node != 0)
+		{
+			if (((UByte) AE_Parms->fData[at + 1] & kAirusNoChildren) != 0)
+			{
+				AE_Parms->fResult = 1;	// nothing goes on from it
+				return;
+			}
+			at = FollowLeft(at);
+		}
+		Boolean implied = ((UByte) (*AE_Parms->fDataHandle)[1] & 7) == kAirusKindEnum;
+		for (;;)
+		{
+			UByte flags = (UByte) AE_Parms->fData[at + 1];
+			ULong attribute = 0;
+			if ((attributeSize != 0 || implied)
+				&& (flags & kAirusHasAttribute) != 0 && attributeSize > 0)
+			{
+				const UByte* bytes = (const UByte*) AE_Parms->fData + SkipNode(at);
+				for (long i = 0; i < attributeSize; i++)
+					attribute |= (ULong) bytes[i] << (i * 8);
+			}
+			AE_Parms->fWalkProc(context, (ULong) (UByte) AE_Parms->fData[at],
+								(ULong) at | ((ULong) ((flags >> 4) & 3) << 30), attribute);
+			if ((flags & 0xc0) == 0)
+				break;
+			at = FollowRight(at);
+		}
+		result = 0;
+	}
+	AE_Parms->fResult = result;
+}
+
+
+// ROM 0x0002af38 AE8_NextSetCB__FUlN31
+// The callback `AEnum_NextSet` uses: the characters written out one after
+// another into the caller's buffer, through a pointer the caller keeps.
+void
+AE8_NextSetCB(void* context, ULong character, ULong /*node*/, ULong /*attribute*/)
+{
+	UByte** where = (UByte**) context;
+	*(*where)++ = (UByte) character;
+}
+
+
+// ROM 0x0002afd0 AEnum_NextSet__FP15AirusAParmBlock
+// The set of characters that may follow the block's node, written into
+// the block's word buffer and terminated.
+//
+// NOT YET RECONSTRUCTED: the sixteen-bit walk (AE16_NextSet9 0x0002af18,
+// AE16_NextSetCB), which is what a dictionary of UniChars would need; the
+// ones the machine writes are all eight-bit.
+void
+AEnum_NextSet(AirusAParmBlock* parms)
+{
+	UByte* out = parms->fWord;
+	parms->fWalkContext = &out;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	if (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+	{
+		parms->fWalkProc = nil;			// AE16_NextSetCB
+		parms->fResult = 1;				// AE16_NextSet9(parms)
+		*out++ = 0;
+	}
+	else
+	{
+		parms->fWalkProc = AE8_NextSetCB;
+		AE8_NextSet9(parms);
+	}
+	*out = 0;
+}
+
+
+/*------------------------------------------------------------------------------
+	W a l k i n g   a   w h o l e   d i c t i o n a r y
+
+	Every word of it, or every word under a prefix, handed to a callback
+	in order.  It is a recursion over the two questions above: what the
+	word so far is (Verify), and what may follow it (NextSet).
+------------------------------------------------------------------------------*/
+
+// ROM 0x0002d73c A8_PrefixCompletions__FP13DictWalkBlock
+// The word the block holds looked up, and the walk carried on from what
+// comes back: a prefix of other words is followed on down, a word is
+// reported, and a word that is also a prefix is both.
+//
+// ==> false when the callback asked to stop.
+Boolean
+A8_PrefixCompletions(DictWalkBlock* block)
+{
+	Handle dictionary = block->fDictionary;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	UByte* word = block->fWord;
+	parms->fWord = word;
+	CallAirusA(dictionary, kAirusVerify);
+	parms = (AirusAParmBlock*) *dictionary;
+	long result = parms->fResult;
+	if (result == kAirusPrefix)
+		return A8_WalkNextChars(block, parms->fIndex);
+	if (result != kAirusPrefixWithAttr && result != kAirusLeaf)
+		return true;				// nothing begins that way
+
+	block->fCount++;
+	ULong attribute = parms->fAttribute;
+	UByte terminal = parms->fField48 != 0 ? *(const UByte*) parms->fField48 : 0;
+	word[parms->fIndex] = 0;
+	if (result == kAirusPrefixWithAttr)
+	{
+		if (block->fProc != nil
+			&& !block->fProc(word, attribute, terminal, block->fCount, block->fContext))
+			return false;
+		return A8_WalkNextChars(block, ((AirusAParmBlock*) *dictionary)->fIndex);
+	}
+	if (block->fProc == nil)
+		return true;
+	return block->fProc(word, attribute, terminal, block->fCount, block->fContext);
+}
+
+
+// ROM 0x0002d890 A8_WalkNextChars__FP13DictWalkBlockUl
+// Each character that may follow the word so far tried in turn.  When
+// only one may - which is what `fSymbol` says - it is taken straight;
+// otherwise the whole set is asked for and walked.
+Boolean
+A8_WalkNextChars(DictWalkBlock* block, long length)
+{
+	Handle dictionary = block->fDictionary;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	UByte* word = block->fWord;
+	long symbol = (long) parms->fSymbol;
+	if (symbol == -1)
+	{
+		UByte set[256];
+		long node = parms->fNode;
+		strncpy((char*) set, (const char*) word, (size_t) length);
+		parms->fIndex = length - 1;
+		parms->fWord = set;
+		CallAirusA(dictionary, kAirusNextSet);
+		parms = (AirusAParmBlock*) *dictionary;
+		if (parms->fResult == 0)
+		{
+			for (long i = 0; set[i] != 0; i++)
+			{
+				word[length] = set[i];
+				word[length + 1] = 0;
+				parms = (AirusAParmBlock*) *dictionary;
+				parms->fNode = node;
+				parms->fIndex = length;
+				if (!A8_PrefixCompletions(block))
+					return false;
+			}
+		}
+	}
+	else
+	{
+		word[length] = (UByte) symbol;
+		word[length + 1] = 0;
+		parms->fIndex = length;
+		if (!A8_PrefixCompletions(block))
+			return false;
+	}
+	return true;
+}
+
+
+// ROM 0x0002e0f0 WalkDictionary__FPP15AirusAParmBlockPUcPFPUcUlUcT2Pv_UcPv
+// Every word of a dictionary, or every word that begins with a prefix,
+// handed to the callback in order.  A nil callback walks it all the same
+// and only counts.  ==> how many words were reached.
+long
+WalkDictionary(Handle dictionary, const UByte* prefix, DictWalkProc proc, void* context)
+{
+	DictWalkBlock block;
+	block.fDictionary = dictionary;
+	block.fCount = 0;
+	block.fProc = proc;
+	block.fContext = context;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	if (prefix != nil)
+	{
+		long length = (long) strlen((const char*) prefix);
+		strcpy((char*) block.fWord, (const char*) prefix);
+		if (length != 0)
+		{
+			parms->fNode = 0;
+			parms->fIndex = length - 1;
+			A8_PrefixCompletions(&block);
+			return block.fCount;
+		}
+	}
+	else
+		block.fWord[0] = 0;
+	parms->fNode = 0;
+	parms->fSymbol = (ULong) -1;
+	A8_WalkNextChars(&block, 0);
+	return block.fCount;
+}
+
+
+// ROM 0x0002c60c DeletePrefix
+// A word and everything that goes on from it taken out at once.  It is
+// `DeleteWord` with the block's result set to 1 rather than 0 going in,
+// which is the flag the walker reads as "take the whole row out" rather
+// than "take this word out".
+void
+DeletePrefix(Handle dictionary, UByte* word)
+{
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	parms->fResult = 1;
+	parms->fWord = word;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean empty = (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+				   ? *(const UniChar*) word == 0 : word[0] == 0;
+	if (empty)
+	{
+		airusResult = kAirusEmptyWord;
+		return;
+	}
+	CallAirusA(dictionary, kAirusDeleteWord);
+	airusResult = 0;
+	long result = ((AirusAParmBlock*) *dictionary)->fResult;
+	if (result != 0)
+		airusResult = result == 1 ? kAirusAlreadyThere : kAirusNoMemory;
 }
 
 
@@ -1891,6 +2159,9 @@ CallAirusANoLock(Handle dictionary, long selector)
 		case kAirusDeleteWord:
 			AEnum_DeleteWord(parms);
 			break;
+		case kAirusNextSet:
+			AEnum_NextSet(parms);
+			break;
 		case kAirusVerify:
 			AEnum_Verify(parms);
 			break;
@@ -1903,8 +2174,7 @@ CallAirusANoLock(Handle dictionary, long selector)
 		default:
 			// NOT YET RECONSTRUCTED: the rest of the AEnum walkers -
 			// FirstLast 0x0002a1f4, NextPrevious 0x0002a244,
-			// ChangeAttribute 0x0002a7cc, NextSet 0x0002afd0, NextSet9
-			// 0x0002af18
+			// ChangeAttribute 0x0002a7cc, NextSet9 0x0002af18
 			break;
 		}
 		break;

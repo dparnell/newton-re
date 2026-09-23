@@ -407,7 +407,7 @@ down to 63 characters, strips the punctuation off both ends
 first unless the word recogniser wrote it), notes how it is capitalised
 (`CheckCapAttributes` 0x0008ec34: 0x80 its first letter is a capital,
 0x40 the whole word is), looks it up in the dictionaries
-(`LookupWordOrVariant`, NOT YET) and answers a word of bits.
+(`LookupWordOrVariant`) and answers a word of bits.
 
 The bit the callers want is 0x80.  It is set when the dictionaries
 already have the word, when they have it under another capitalisation,
@@ -646,9 +646,6 @@ happens when the entry the word was learnt from goes; both go through
 learning: what the writer settled on handed to the recogniser of that
 unit type, so that it reads the same writing better next time.
 
-NOT YET: the recount `DeleteWordWithCount` falls back on when a frame's
-count has reached nothing, which walks the dictionary and so needs the
-Airus iterators.
 
 `test_Dictionaries` builds a list of two AL dictionaries by hand and
 checks the id substitutions and the fallback, the three chains, the link
@@ -743,6 +740,53 @@ reported properly, as "not there".
 time in the three shapes above and puts one back, checking after each
 that the others are still found with the attributes they went in with.
 
+### Reading a dictionary the other way
+
+`Verify` answers "is this a word".  The other question is "what
+characters may follow what I have so far", which is one row of the
+trie: `AEnum_NextSet` 0x0002afd0 over `AE8_NextSet9` 0x0002a9f4 walks
+the children of a node and hands each one to a callback, and the
+callback `AEnum_NextSet` uses (`AE8_NextSetCB` 0x0002af38) simply
+writes the characters out into the block's word buffer.  They come out
+sorted, because the row is.
+
+BUG (kept): `AE8_NextSet9` assembles the attribute it hands the callback
+from its bytes low one first, where `PutAttr` writes it and `GetAttr`
+reads it high one first.  A one-byte attribute - which is what every
+dictionary the machine writes has - is the same either way, so nobody
+ever saw it; a two- or four-byte one comes out of that call
+byte-reversed.
+
+Walking a whole dictionary is the two questions in a recursion.
+`WalkDictionary` 0x0002e0f0 sets up a `DictWalkBlock` - the dictionary,
+a count, the callback and the word the walk is standing on - and
+`A8_PrefixCompletions` 0x0002d73c looks that word up: a prefix of other
+words is followed on down, a word is reported, a word that is also a
+prefix is both, and nothing at all stops that branch.  Following down is
+`A8_WalkNextChars` 0x0002d890, which takes the one character that may
+follow when `fSymbol` says there is only one, and otherwise asks for the
+whole set and tries each in turn.  The callback is given the word, its
+attribute, the one character that could follow it and how many words
+have come so far, and answers whether to go on; a nil callback walks it
+all the same and only counts, which is how `DeleteWordWithCount` puts a
+count right that has drifted to nothing.
+
+`DeletePrefix` 0x0002c60c is the same idea on the writing side: it is
+`DeleteWord` with the block's result set to 1 rather than 0 going in,
+which is the flag `AEnum_DeleteWord` reads as "take the whole row out"
+rather than "take this word out" - so the mode is carried *in* the field
+that carries the answer back out.
+
+A script reaches all of this through the dictionary frame: `Walk(prefix,
+fn)` (`FAirusWalkDictionary` 0x0008f44c, which writes the four things
+into one array and calls the function with it each time - so a script
+that wants to keep a word has to copy it), `PrivateDeleteWord(word)` and
+`DeletePrefix(word)`.
+
+`test_Airus` walks the six-word dictionary it built, in whole and under
+a prefix, stops the walk from the callback, counts without one, and
+takes a prefix out.
+
 ### What a script sees
 
 A dictionary frame's `dict` slot holds the engine's dictionary by
@@ -753,9 +797,9 @@ one, `FAirusLookupWord` 0x0008fb28 looks a word up and fills in the
 assistant's Continue button runs down when a name has been typed in, and
 with it the assistant goes on to its next page.
 
-NOT YET: AE16 and the iterators (`AEnum_FirstLast`,
-`AEnum_NextPrevious`, `AEnum_ChangeAttribute`, `AEnum_NextSet`,
-`WalkDictionary`, `TAirusIterator`).
+NOT YET: the sixteen-bit walkers (AE16, `AE16_NextSet9`) and the
+iterators `AEnum_FirstLast`, `AEnum_NextPrevious`,
+`AEnum_ChangeAttribute` and `TAirusIterator`.
 
 ## The controller (`recognition/Controller.h`)
 
@@ -1089,9 +1133,9 @@ went, `GetNthEntry`/`GetNthWord` (0x00077c64, 0x00077ce0) to read them
 back, `UnitID` (0x00077be4) for the four characters of the unit's type,
 and `TestWordInfoFlags`/`ClearWordInfoFlags` (0x00077d34, 0x00077e30).
 `AutoRemove` (0x0007959c) takes a word the machine added to the
-dictionary on an entry's account back out again when the entry goes -
-the dictionary's own side of that (`RemoveAutoAdd`) is NOT YET, but the
-flag is cleared as the ROM clears it.
+dictionary on an entry's account back out again when the entry goes,
+through `RemoveAutoAdd` (`recognition/Learning.h`); the flag is cleared
+whether or not there was a word to take out, as the ROM clears it.
 
 ### Keeping up with the text
 
@@ -1154,9 +1198,9 @@ saying where it landed, and the word offered to the dictionary
 (`AutoAdd`, 0x000794ec, unless the view says `_noAutoAdd`).  That is
 what makes the list live - before it, nothing ever went on.
 
-NOT YET: the dictionary's own side - `AddAutoAdd`, `RemoveAutoAdd` and
-`DoIndexedLearning` - so nothing is added and nothing is learnt, but
-everything above them runs.
+The dictionary's own side of all of it - `AddAutoAdd`,
+`RemoveAutoAdd` and `DoIndexedLearning` - is `recognition/Learning.h`
+and `recognition/Recognizer.h`.
 
 ## The caret gesture
 
@@ -1328,11 +1372,10 @@ so writing running uphill can be laid out along its own slope.  A single
 the base from, so the base it answers is too low, and the bottom of the
 unit's bounds is used for both ends instead.
 
-NOT YET: `LookupWord` (0x0013f4f4) and `ExpandWord` (0x001aa930) are the
-dictionaries', which are NOT YET (see `Words.cpp`).  With no dictionary
-nothing is found and nothing expands, so every ordinary word falls
-through to the second pass - the same readings come out, in the order a
-machine with an empty dictionary would put them.
+`LookupWord` (0x0013f4f4) and `ExpandWord` (0x001aa930) are the
+dictionaries' (`recognition/Dictionaries.h`, `recognition/Learning.h`):
+a reading the dictionaries know is put ahead of one they do not, and a
+reading that is an abbreviation has its expansion put in ahead of it.
 
 ## The word domain (`recognition/WRecDomain.h`)
 
@@ -1415,7 +1458,7 @@ filling it in from the area's recognition configuration; and
 locked around each, because the engine is given a pointer into it and
 the heap compacts handles.  `TWRecRecognizer::ConfigureArea` is what
 drives that from above, along with the area's three dictionary chains
-(`BuildChains`; the dictionaries are NOT YET, so an area has none).
+(`BuildChains`, `recognition/Dictionaries.h`).
 
 `TWRecDomain::SetParameters` carries two ROM quirks, kept: it does not
 call the base, so `fParameters` is never written down and the controller
@@ -1530,12 +1573,14 @@ Anything not set is written down as the writer's own, by
 entry, so it is told it has changed.  The area cache is purged at the
 end, because the areas in it were built from the old answers.
 
+`ReadDictPrefs` is called from here, which is what lets a change of
+locale change the words the machine reads against.
+
 NOT YET: `SetUpRosetta` and `SetUpParaGraph`, which hand the letter set
-to the two engines; `ReadDictPrefs`, which reads which dictionaries are
-turned on; and the `_recognizerUserChoices` frame this leaves on the
-root view for the slip to read back.  All three belong to parts that are
-NOT YET.  Nothing here chooses *which* word recogniser is in use: that
-is `UseWRec`'s, called from a script.
+to the two engines, and the `_recognizerUserChoices` frame this leaves
+on the root view for the slip to read back; both belong to parts that
+are NOT YET.  Nothing here chooses *which* word recogniser is in use:
+that is `UseWRec`'s, called from a script.
 
 ## Stroke bundles (`recognition/StrokeBundle.h`)
 
