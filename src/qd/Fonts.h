@@ -28,7 +28,7 @@
 	0x002618b8-0x00261d2c, 0x002e1e60-0x002e2d10, 0x00359be8-0x00359d40,
 	0x0035a54c); each function cites its origin.  NOT YET RECONSTRUCTED:
 	the four-entry font cache (OpenFont opens afresh), scaled bitmaps
-	(a strike is drawn at its own size), ink fonts (InkOpenFont), the
+	(a strike is drawn at its own size), the
 	PostScript printer's font substitution, the 'font' part handler.
 */
 

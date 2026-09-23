@@ -378,6 +378,52 @@ word to its children the same way (`TContainerView::HandleInkWord`), the
 writing's box let out by five pixels so that a word written just outside
 a field still belongs in it.
 
+## A word of writing as a font (`InkFont.h`)
+
+An ink word is drawn inside a line of text by *being a font* - one with
+a single glyph.
+
+A paragraph keeps an ink word in its text as the single character
+0xf701, and the style for that run is the `'inkWord` binary itself
+rather than a font frame.  `views/ParagraphView.h`'s
+`CreateParagraphStyleRecord` (0x00179f58) is what puts it there, and
+`qd/Fonts.h`'s `OpenFont` recognises it: a "family" that is an ink word,
+or an integer (which is the *address* of an ink word kept outside the
+object heap, the way the recogniser hands one over without copying),
+goes to `InkOpenFont` (0x000ada30) instead of the 'sfnt' opener.
+
+`InkOpenFont` fills in a `FontEngineInfo` like any other opener.  The
+line metrics are the word's own measurements; the glyph object lives in
+the `cmap` field, which an ink font has no other use for, and the ink in
+the field the 'sfnt' would be locked in.  The superscript and subscript
+shift and the synthesised faces' adjustments are done exactly as the
+real opener does them.  `InkCharToGlyph` answers glyph 0 for anything
+except a space, which gets a blank glyph a fifth of the line height
+wide, and `InkGetGlyph` draws the writing into a bitmap of its own - out
+of QuickDraw's temporary store, so that `InkCloseFont` gives it back -
+which the text engine then blits like any other glyph.
+
+`TInkWordGlyph` is the glyph.  It is made for a font size and a face,
+and `ReadMetrics` works out what the word measures drawn that way.  At
+the size the word was last drawn at everything is already in the packed
+measurements; at any other size the scale is what the wanted size is of
+the word's own, and the ascent, descent and width follow from it.  The
+pen is the standard one for the size (`GetStdInkWordPenWidth`) unless
+the top bit of the face is set, which asks for the word's own pen scaled
+instead - and that bit is exactly what `CreateParagraphStyleRecord` puts
+there.  The *slop* is a tenth of the word's font size at that scale, and
+the word is given twice as much room as that, because the pen spills
+outside the strokes.
+
+`DrawAt` puts the word about the baseline: the slop comes off each side
+and the pen off the bottom and the right, since the pen hangs outside
+the line rather than inside it.  When the clip is a plain rectangle that
+holds the whole box, nothing has to be clipped and the ROM says so to
+the drawing, which then uses the live inker's own line drawer rather
+than QuickDraw's.  On a printer port it takes another path entirely and
+makes real outlined paths of the strokes, so that a PostScript printer
+gets outlines rather than a bitmap.
+
 ## NOT YET
 
 The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which
@@ -385,7 +431,7 @@ is what would read a word rather than just measure it.
 
 And the rest of the view side: the `aeInkWord` case of
 `TEditView::RealDoCommand` (the corrector and the hilites it resets
-first), `TInkWordGlyph` (the glyph an ink word draws as in a line of
-text) and `TLiveInker` (the ink that follows the pen while it is still
-down, which is the other way the ROM's draw proc can draw - `InkerLine`
-with a pen of its own).
+first), `TLiveInker` (the ink that follows the pen while it is still
+down, which is also the fast line drawer `DrawAt` asks for when nothing
+needs clipping), `TInkWordGlyph::SetFontParms` (a word restyled from a
+font spec) and the printing path's outlined paths.
