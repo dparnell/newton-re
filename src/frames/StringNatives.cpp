@@ -6,11 +6,14 @@
 				StrPos, Upcase, TrimString, ParamStr, ...), over TRichString
 				(RichString.h) and the Unicode utilities (utility/Unicode.h).
 
-	NOT YET RECONSTRUCTED: the ink of rich strings (MakeRichString,
-	DecodeRichString, StripInk, the ink word counts answer as for plain
-	text), the number parser TNumberParser (StringToNumber reads with the
-	C library), the international number formats (FormattedNumberStr), the
-	sort tables behind the comparisons and StripDiacriticals.
+	The rich-string natives (MakeRichString, DecodeRichString, StripInk)
+	are in frames/RichString.cpp, beside the class they work on; they are
+	registered here with the rest.
+
+	NOT YET RECONSTRUCTED: the ink word counts the length functions
+	answer as for plain text, the number parser TNumberParser
+	(StringToNumber reads with the C library), the international number
+	formats (FormattedNumberStr) and StripDiacriticals.
 */
 
 #include "Frames.h"
@@ -1402,6 +1405,9 @@ RegisterStringNatives(void)
 	RegisterNativeFunction("FStrLen__FRC6RefVarT1", (void*) FStrLen, 1);
 	RegisterNativeFunction("FStrFilled", (void*) FStrFilled, 1);
 	RegisterNativeFunction("FStrEqual__FRC6RefVarN21", (void*) FStrEqual, 2);
+	RegisterNativeFunction("FMakeRichString__FRC6RefVarN21", (void*) FMakeRichString, 2);
+	RegisterNativeFunction("FDecodeRichString__FRC6RefVarN21", (void*) FDecodeRichString, 2);
+	RegisterNativeFunction("FStripInk", (void*) FStripInk, 2);
 	RegisterNativeFunction("FStrExactCompare__FRC6RefVarN21", (void*) FStrExactCompare, 2);
 	RegisterNativeFunction("FStrCompare", (void*) FStrCompare, 2);
 	RegisterNativeFunction("FSymbolCompareLex", (void*) FSymbolCompareLex, 2);

@@ -16,10 +16,12 @@
 	words are compared by their bytes rather than collating as the
 	kInkChar that stands for them.
 
-	NOT YET RECONSTRUCTED: the ink words' structure in Verify, and
-	GetLengthsAndDataInRange / MakeParagraphTextSlot /
-	MakeParagraphStylesSlot, which are how a paragraph's text and styles
-	are made out of a string of mixed ink and text.
+	MakeParagraphTextSlot and MakeParagraphStylesSlot are how a
+	paragraph's text and styles are made out of a string of mixed ink and
+	text; MakeRichString goes the other way, and StripInk takes the ink
+	characters out of one.
+
+	NOT YET RECONSTRUCTED: the ink words' structure in Verify.
 
 	The DDK has no header for TRichString; the layout is the ROM's (0x28).
 */
@@ -122,5 +124,13 @@ struct CompareInkInfo
 
 long	CompareInkProc(long offset, long otherOffset, void* refCon);	// ROM 0x001ab9a0 CompareInkProc__FlT1Pv
 
+
+// The rich-string natives: a string made out of a paragraph's text and
+// styles and taken apart again, and the ink characters stripped out of
+// one.  (Registered by frames/StringNatives.cpp.)
+extern const UniChar kParagraphInkChar;	// 0xf701, the character a paragraph uses
+Ref		FMakeRichString(RefArg rcvr, RefArg text, RefArg styles);	// ROM 0x001fe4e4 FMakeRichString__FRC6RefVarN21
+Ref		FDecodeRichString(RefArg rcvr, RefArg string, RefArg style);	// ROM 0x001fe4f4 FDecodeRichString__FRC6RefVarN21
+Ref		FStripInk(RefArg rcvr, RefArg string, RefArg replacement);	// ROM 0x001fe990 FStripInk
 
 #endif	/* __RICHSTRING_H */

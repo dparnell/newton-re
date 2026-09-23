@@ -797,3 +797,116 @@ IsInkWord(RefArg obj)
 		return false;
 	return EQRef(ClassOf(obj), RSSYMinkword);
 }
+
+// ROM 0x001fe4e4 FMakeRichString__FRC6RefVarN21
+// MakeRichString(text, styles): a string with the writing in it.
+//
+// A paragraph keeps its ink as an `'inkWord` binary in the style run of
+// the character that stands for it, which is why the two halves have to
+// be carried separately.  A *rich string* carries both in one object:
+// the text, then one blob per ink character - a halfword of length, the
+// blob, and padding to a word - and a trailer word of the character
+// count with a 1 in its low nibble that says the string has ink in it.
+//
+// The paragraph's ink character (0xf701) becomes the rich string's own
+// (0xf700) on the way.  A text with no ink in its styles is just cloned.
+Ref
+FMakeRichString(RefArg /*rcvr*/, RefArg text, RefArg styles)
+{
+	if (ISNIL(styles) || ISINT(styles))
+		return Clone(text);
+
+	long textSize = Length(text);
+	long total = (textSize + 3) & ~3;
+	long pairs = Length(styles) / 2;
+	long inkCount = 0;
+	for (long i = 0; i < pairs; i++)
+	{
+		RefVar style(GetArraySlotRef(styles, i * 2 + 1));
+		if (IsInkWord(style))
+		{
+			total += (Length(style) + 5) & ~3;
+			inkCount++;
+		}
+	}
+	if (inkCount == 0)
+		return Clone(text);
+
+	RefVar rich(AllocateBinary(RSSYMstring, total + 4));
+	UByte* data = (UByte*) BinaryData(rich);
+	BlockMove(BinaryData(text), data, textSize);
+	long characters = (textSize >> 1) - 1;		// without the terminator
+	UniChar* chars = (UniChar*) data;
+	for (long i = 0; i < characters; i++)
+		if (chars[i] == kParagraphInkChar)
+			chars[i] = kInkChar;
+
+	UByte* out = data + ((textSize + 3) & ~3);
+	for (long i = 0; i < pairs; i++)
+	{
+		RefVar style(GetArraySlotRef(styles, i * 2 + 1));
+		if (!IsInkWord(style))
+			continue;
+		long size = Length(style);
+		out[0] = (UByte) (size >> 8);
+		out[1] = (UByte) size;
+		BlockMove(BinaryData(style), out + 2, size);
+		out += (size + 5) & ~3;
+	}
+	ULong trailer = (((ULong) characters & 0x0fffffff) << 4) | kRichStringFormatInk;
+	out[0] = (UByte) (trailer >> 24);
+	out[1] = (UByte) (trailer >> 16);
+	out[2] = (UByte) (trailer >> 8);
+	out[3] = (UByte) trailer;
+	return rich;
+}
+
+
+// ROM 0x001fe4f4 FDecodeRichString__FRC6RefVarN21
+// DecodeRichString(string, style): the other way - a frame of the `text`
+// and `styles` slots a paragraph wants, with the ink taken back out of
+// the string and put into the style runs.
+Ref
+FDecodeRichString(RefArg /*rcvr*/, RefArg string, RefArg style)
+{
+	TRichString rich(string);
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RSSYMtext, RefVar(rich.MakeParagraphTextSlot()));
+	SetFrameSlot(frame, RSSYMstyles, RefVar(rich.MakeParagraphStylesSlot(style)));
+	return frame;
+}
+
+
+// ROM 0x001fe990 FStripInk
+// StripInk(string, replacement): the ink characters taken out of a rich
+// string, or replaced by a character of the caller's choosing.  The
+// string is changed in place and answered.
+//
+// (The blobs are left where they are: what goes is only the character
+//  that stands for them, so the string still carries the writing and
+//  still says it is a rich string.  That is the ROM's own doing.)
+Ref
+FStripInk(RefArg /*rcvr*/, RefArg string, RefArg replacement)
+{
+	TRichString rich(string);
+	if (ISNIL(replacement))
+	{
+		ULong at = 0;
+		while (rich.GetChar(at) != 0)
+		{
+			if (rich.GetChar(at) == kInkChar)
+				rich.DeleteRange(at, 1);
+			else
+				at++;
+		}
+	}
+	else if (ISCHAR(replacement))
+	{
+		UniChar with = XRCHAR(replacement);
+		long length = rich.Length();
+		for (long at = 0; at < length; at++)
+			if (rich.GetChar((ULong) at) == kInkChar)
+				rich.SetChar((ULong) at, with);
+	}
+	return string;
+}

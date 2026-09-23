@@ -305,7 +305,17 @@ NativeEntry(RefArg fn, long numArgs, RefHandle** closure)
 		return (void*) ObjArraySlots(OBJ(fn))[kNativeFuncPtrSlot];
 	}
 	if (c == kBinaryNativeFuncClass || EQRef(c, RSSYMbincfunction))
+	{
+		// Host: a function whose body is ARM code in a binary object - what
+		// NTK calls a native function.  There is nothing to call on another
+		// machine, so it has to be reconstructed by hand; say which one it
+		// is rather than throwing a bare code.
+		fprintf(stderr, "[frames] a native (ARM) function (class %08lx)%s",
+				(unsigned long) c, "\n");
+		if (getenv("NEWTON_TRACE_MISSING") != nil && gREPout != nil)
+			StackTrace();
 		Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);
+	}
 	return nil;
 }
 
