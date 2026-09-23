@@ -8,19 +8,20 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-23 (commit `c3cb664`)
+## State at 2026-09-23 (commit `826c902`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 75/75.
-- `analysis/coverage.py build/MP2x00US --check`: 8513 citations, 0 bad;
-  4560 of 16671 functions (27.35%).
+  (`intl.Dates` fails about one run in ten: it reads the real clock.)
+- `analysis/coverage.py build/MP2x00US --check`: 8528 citations, 0 bad;
+  4567 of 16671 functions (27.39%).
 - `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
-  --headless 20 --store <file>` boots, and writing on the Notepad stays
-  on the page.
+  --headless 50 --script src/host/demo/ink.ns` boots, and writing on the
+  Notepad stays on the page (`build/ink-kept.pgm`).
 
-Writing now travels the whole way from the tablet to a paragraph; the
-route across the five areas is `docs/ink/README.md`'s "From the pen to
-ink on the page", and `src/host/demo/ink.ns` photographs it with the pen
-down and again after the recogniser has finished.
+Writing travels the whole way from the tablet to a paragraph; the route
+across the five areas is `docs/ink/README.md`'s "From the pen to ink on
+the page", and `src/host/demo/ink.ns` photographs it with the pen down
+and again after the recogniser has finished.
 
 The last run of work closed, in order:
 
@@ -38,58 +39,43 @@ The last run of work closed, in order:
   one;
 - the area information an engine keeps per writing area
   (`DomainParameter`, `ConfigureArea`, `SetParameters`, `DomainOn`);
-- the writer's recognition preferences (`ReadCursiveOptions`).
+- the writer's recognition preferences (`ReadCursiveOptions`);
+- **things put into a paragraph from outside**
+  (`TParagraphView::HandleInsertItems` and the eleven-argument appender
+  under it, `DoInsertItems`, `InsertItemsAtCaret`,
+  `GetAppendDelimiter`), which was the piece three others were waiting
+  on;
+- the **caret side of `aeInkWord`**: a page whose caret is in one of its
+  own paragraphs now takes the word into that paragraph;
+- **`CheckAndDoSplitInk`**, a word of writing cut in two at a caret -
+  and with it `OffsetToBounds` answering a character's right edge as
+  well as its left.
 
-## Next: what a paragraph does with things dropped into it
+## Next: things that are still stubs on paths that now work
 
-`TParagraphView::HandleInsertItems` (0x001700a0) is the one big piece
-left on the writing path, and three things are waiting on it:
+Nothing on the writing path is blocked on a single big piece any more.
+What is left there is a handful of named holes, each small and each
+with its ROM address already in a `NOT YET RECONSTRUCTED` comment:
 
-- the **caret side of `aeInkWord`** (the tail of 0x000a51b0).  The ROM
-  looks at the view the caret is in and, when it belongs to this page,
-  puts the word into the paragraph the caret is in rather than starting
-  a new one.  The end of that path is short and already read:
-  `StrokeBundleToInkWord`, `AdjustInkWordXHeight` over
-  `ViewExpectsNumbers`, a frame whose `insertItems` slot is the word,
-  and `InsertItemsAtCaret`.
-- **`CheckAndDoSplitInk`** (0x00176208), which cuts an ink word in two
-  at a caret - `SplitInkAt` is ready for it.
-- dropped items generally.
-
-The groundwork already read out of the ROM:
-
-- `InsertItemsAtCaret` (0x00171168) clones `protoCommand`, sets `id` to
-  0x4d and `receiver` to the caret view's context, puts the spec in
-  `frameParameter`, and sends it with the view's `DoCommand` (vtable
-  +0x10); when nobody takes it, the root view's `SysBeep` script runs.
-  `DoInsertItems` (0x00170f7c) is the same but for a named view, and it
-  builds the spec first: a clone of `Rstarterinsertspec` with
-  `insertItems`, `addSpace`, `undoable`, `insertOffset`,
-  `replaceChars`, `moveCaret` and `defaultFontSpec`.  (Careful: the
-  ROM's fifth argument goes to `insertOffset` and the sixth to
-  `replaceChars`.)
-- `HandleInsertItems` reads those slots, takes the hilites away unless
-  `TRootView::GetPreserveHilites` says not to, builds a new text binary
-  and styles array by appending each item in turn, and hands them to
-  `HandleReplaceText`.  Its item kinds are: a string; an ink word; a
-  frame with a `text` slot (with `styles`); a frame with an `ink`,
-  `strokes` or `points` slot (compressed with `CompressStrokes` and put
-  in as one 0xF701 character); and anything else, which is skipped.
-- Five small helpers go with it, all in the same ROM file:
-  - 0x00170064 `ItemCount(items)`: `IsArray(items) ? Length(items) : 1`.
-  - 0x00170030 `ItemAt(items, i)`: `IsArray(items) ? items[i] : items`.
-  - 0x0016f954 grows the text binary, rounding up to a multiple of forty
-    characters.
-  - 0x0016f9b0 grows the styles array, rounding up to a multiple of ten.
-  - 0x0016fba8 merges a run with the last one when `EqualStyles`
-    (0x0016fa08) says the styles match.
-- **The hard part is 0x0016fd7c**, the appender: eleven arguments, and
-  the decompiler's output for it is unusable (it sets the stack
-  arguments by hand).  It has to be read out of the assembly.  What it
-  does is work out the delimiter between the last item and this one
-  (`GetAppendDelimiter`, 0x000edc24), append that and then the item's
-  text to the binary, and append the item's styles to the array,
-  merging with the last run when they match.
+- **`TParagraphView::HandleWord`** (0x00172760, vtable +0x148).  Three
+  things want it.  `TEditView::TextContainingPoint` asks every data-view
+  child how well it would take a single letter at a point, which is how
+  the caret is placed and how a word finds its view - our
+  `TDataView::HandleWord` answers 0, so nothing ever "wants" a point and
+  the whole question is answered by the default.  The third case of
+  `aeInkWord` (the caret on the page itself with a text view just under
+  it) sends it a carriage return to start the line.  And it is what puts
+  a *recognised* word into an existing paragraph rather than into a new
+  one.
+- **The corrector**: `SetRemoteForCorrector` (0x00176844) /
+  `RestoreRemoteForCorrector` (0x001768fc), and a `correct` view for
+  `CorrectorUp` (0x001767b8) to find - it answers false out of hand
+  today, because the root view has no such child and the ROM's
+  `GetFrameSlotRef` would throw on nil.
+- **A rich string as an insert item**, whose text and styles come out of
+  `TRichString::MakeParagraphTextSlot` (0x001abf6c) and
+  `MakeParagraphStylesSlot` (0x001ac038).  One goes in as a plain string
+  today, so its own ink is lost.
 
 ## Also still open
 
@@ -122,6 +108,11 @@ The groundwork already read out of the ROM:
   build `Rect`s and `Point`s on the stack: Ghidra's output for
   `AddNewParagraph`'s geometry is almost unreadable, and the assembly is
   not.
+- The view classes have no vtable in `romfacts.json` - they are built
+  by `BuildView`, not by a self-allocating constructor - so a virtual
+  call like `add pc,r3,#0x148` cannot be named from it.
+  `analysis/vtable.py build/MP2x00US --find <mangled name> --slot 0x148`
+  works back from any method of the class to the table it sits in.
 - A function with more than four arguments spills the rest above the
   frame: with `sub r11,r12,#N`, argument five is at `[r11,#N]`. The
   decompiler often loses these entirely.
