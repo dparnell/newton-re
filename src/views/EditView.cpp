@@ -1227,23 +1227,31 @@ TEditView::RealDoCommand(RefArg cmd)
 		// - the unit the recogniser sends - is exchanged for the unit's
 		// strokes, because everything below here works in stroke
 		// bundles.  The visible data-view children are asked how well
-		// they would take the word and the best one gets it, and if
-		// none will, the page takes it itself as a paragraph of one ink
-		// character.
+		// they would take the word and the best one gets it.
 		//
-		// NOT YET RECONSTRUCTED: the corrector
-		// (SetRemoteForCorrector/CorrectorUp) and, after the children
-		// have refused, the caret: the ROM looks at the view the caret
-		// is in and, when it is this page's, puts the word into the
-		// paragraph the caret is in rather than starting a new one -
-		// with `remoteWriting` deciding whether the writing may come
-		// from somewhere other than where the caret is.  Here every ink
-		// word starts a paragraph of its own.
+		// What happens when none of them will depends on where the caret
+		// is.  A page whose caret is in one of its own paragraphs takes
+		// the word into that paragraph, at the caret, rather than
+		// starting a new one somewhere else - which is what lets a word
+		// written anywhere on the page carry on the line being written.
+		// That only happens when the writer has asked for it: the
+		// `remoteWriting` preference says writing may come from
+		// somewhere other than the caret, and without it the caret has
+		// to be asking for the word itself (it is hilited, and the
+		// corrector is not up).  Otherwise the word starts a paragraph
+		// of its own.
+		//
+		// NOT YET RECONSTRUCTED: SetRemoteForCorrector 0x00176844 /
+		// RestoreRemoteForCorrector 0x001768fc, which put the
+		// corrector's own view out of the way while the word is placed.
 		if (TView::RealDoCommand(cmd))
 			return true;
 		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
 			return TView::RealDoCommand(cmd);	// (the ROM's shared exit runs the scripts again)
-		ResetHilitesForNewWord();
+		if (CorrectorUp())
+			RemoveAllHilites();
+		else
+			ResetHilitesForNewWord();
 		ValidateCaret(true);
 		RefVar param(GetFrameSlot(cmd, RSSYMparameter));
 		if (NOTNIL(param))
@@ -1267,10 +1275,67 @@ TEditView::RealDoCommand(RefArg cmd)
 				bestView = child;
 			}
 		}
-		if (best != 0)
-			((TDataView*) bestView)->HandleInkWord(cmd, true);
+
+		// the view the caret is in, when it is one of this page's (a
+		// child or a grandchild of it)
+		TView* caretView = gRootView->fCaretView;
+		Boolean caretIsOurs = caretView != nil
+							  && (caretView->fParent == this
+								  || (caretView->fParent != nil
+									  && caretView->fParent->fParent == this));
+		Boolean caretAsksForIt = caretIsOurs && caretView->Hilited() && !CorrectorUp();
+
+		if (ISNIL(RefVar(GetPreference(RSSYMremotewriting))) && !caretAsksForIt)
+		{
+			// the word goes where it was written
+			if (best != 0)
+				((TDataView*) bestView)->HandleInkWord(cmd, true);
+			else
+				HandleInkWord(cmd);
+		}
 		else
-			HandleInkWord(cmd);
+		{
+			Boolean atTheCaret = caretIsOurs;
+			if (!atTheCaret && caretView == this)
+			{
+				// the caret is on the page itself rather than in a
+				// paragraph: the word goes to the caret only when there
+				// is text right under it that would only just take it
+				// (score 2 - the caret sits at the end of that view's
+				// last line, where the next line would start)
+				Point where = GetCaretGlobalTopLeft();
+				long score = 0;
+				if (TextContainingPoint(where, nil, &score) != nil && score == 2)
+				{
+					// NOT YET RECONSTRUCTED: the ROM sends that view a
+					// HandleWord (vtable +0x148) of a single carriage
+					// return in a one-pixel box at its bottom left,
+					// which starts the new line and moves the caret into
+					// it, and then goes on to put the word in at the
+					// caret.  TParagraphView::HandleWord 0x00172760 is
+					// not reconstructed, so the word starts a paragraph
+					// of its own instead.
+					atTheCaret = false;
+				}
+			}
+
+			if (atTheCaret)
+			{
+				// the word put in at the caret, as an item the paragraph
+				// inserts: the strokes made into an ink word and brought
+				// to the x-height the caret's view writes in
+				RefVar spec(AllocateFrame());
+				RefVar ink(StrokeBundleToInkWord(RefVar(CommandFrameParameter(cmd))));
+				AdjustInkWordXHeight(ink, ViewExpectsNumbers(caretView));
+				SetFrameSlot(spec, RSSYMinsertitems, ink);
+				InsertItemsAtCaret(spec);
+			}
+			else if (caretView == this || best == 0)
+				HandleInkWord(cmd);
+			else
+				((TDataView*) bestView)->HandleInkWord(cmd, true);
+		}
+		CommandSetResult(cmd, 1);
 		return true;
 	}
 
@@ -1590,6 +1655,13 @@ Boolean
 CorrectorUp(void)
 {
 	RefVar corrector(gRootView->GetVar(RSSYMcorrect));
+	// NOT YET RECONSTRUCTED: the corrector itself.  On the machine the
+	// root view's context always has a `correct` view frame - the
+	// corrector is one of the root's own children - so the ROM asks it
+	// for its viewCObject straight away; here there is no corrector at
+	// all and the slot is nil, which GetFrameSlotRef would throw on.
+	if (ISNIL(corrector))
+		return false;
 	return NOTNIL(GetFrameSlotRef(corrector, RSSYMviewcobject));
 }
 

@@ -450,9 +450,8 @@ the ROM does.
 The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which
 is what would read a word rather than just measure it.
 
-And the rest of the view side: the `aeInkWord` case of
-`TEditView::RealDoCommand` (the corrector and the hilites it resets
-first), `TLiveInker` (the ink that follows the pen while it is still
+And the rest of the view side: the corrector the `aeInkWord` case of
+`TEditView::RealDoCommand` puts out of the way, `TLiveInker` (the ink that follows the pen while it is still
 down, which is also the fast line drawer `DrawAt` asks for when nothing
 needs clipping), `TInkWordGlyph::SetFontParms` (a word restyled from a
 font spec) and the printing path's outlined paths.
@@ -478,9 +477,32 @@ setting the route out in one place because it crosses five areas:
      `doInkWordRecognition` - the Notepad's - and `aeRawInk` otherwise;
   5. `TEditView::RealDoCommand` answers `aeInkWord`: the unit is
      exchanged for its strokes, the children are offered the word, and
-     failing that `TEditView::HandleInkWord` packs the strokes into an
-     ink word (`StrokeBundleToInkWord`) and makes a paragraph of the one
-     character `0xF701` with the word as its style run.
+     failing that the word goes either into the paragraph the caret is
+     in or on to the page as a paragraph of its own.
+
+Which of those two it is, is the question the command's tail asks.  The
+view the caret is in has to be one of this page's - a child or a
+grandchild of it - and then either the `remoteWriting` preference is set
+(the writer has said writing may come from somewhere other than the
+caret) or the caret's view is hilited and the corrector is not up (the
+caret is asking for the word itself).  When it is, the strokes are made
+into an ink word, brought to the x-height the caret's view writes in
+(`AdjustInkWordXHeight` over `ViewExpectsNumbers`) and handed to
+`InsertItemsAtCaret` as an `insertItems` slot - so the word goes in
+through `TParagraphView::HandleInsertItems` like anything else dropped
+into a paragraph, spaced off from the text around it.  Otherwise
+`TEditView::HandleInkWord` packs the strokes into an ink word
+(`StrokeBundleToInkWord`) and makes a paragraph of the one character
+`0xF701` with the word as its style run.
+
+(There is a third case in the ROM: the caret on the page itself with a
+text view right under it that would only just take the point - score 2
+from `TextContainingPoint`, which is the caret sitting where that view's
+next line would start.  The ROM sends that view a `HandleWord` of a
+single carriage return, which starts the line and moves the caret into
+it, and then puts the word in at the caret.
+`TParagraphView::HandleWord` 0x00172760 is NOT YET, so the word starts a
+paragraph of its own instead.)
 
 The placing is `TEditView::AddNewParagraph`'s.  An ink word has already
 been brought down to a size a line of text can hold, so the paragraph is
@@ -505,9 +527,7 @@ pictures: one with the pen still down, which is what the inker drew, and
 one after it has been lifted and the recogniser has finished, which is
 what the page kept.
 
-NOT YET on this route: the corrector, and the caret side of `aeInkWord`
-- the ROM puts a word into the paragraph the caret is in rather than
-starting a new one - and the geometry that lines a *recognised* word up
-with the page's other children and its ruled lines
-(`AlignBounds`/`AlignToLineSpacing`, 0x000a20f0-0x000a22bc), so a word
-the recogniser reads is still dropped rather than put down wrongly.
+NOT YET on this route: the corrector (`SetRemoteForCorrector` /
+`RestoreRemoteForCorrector`, which put its view out of the way while
+the word is placed, and `CorrectorUp`, which has no `correct` view to
+find), and `TParagraphView::HandleWord` for the third case above.

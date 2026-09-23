@@ -3595,6 +3595,71 @@ TestInkWordOnThePage()
 	Eval("RemoveView(GetRoot(), ctxIW)");
 }
 
+// A word of writing put in at the caret.  A page whose caret is in one
+// of its own paragraphs takes the word into that paragraph rather than
+// starting a new one where the writing happens to be - which is what
+// lets a word written anywhere carry on the line being written - but
+// only when the writer has asked for it.
+static void
+TestInkWordAtTheCaret()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+	TEditView* editor = (TEditView*) ViewOf(
+		"ctxIC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 0, right: 200, bottom: 150}, viewChildren: [], "
+		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
+	EXPECT(editor != nil);
+	TParagraphView* para = (TParagraphView*) ViewOf(
+		"ctxICP := AddView(ctxIC, {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 10, top: 10, right: 150, bottom: 40}, "
+		"viewFont: espy12, text: \"ab\"})");
+	EXPECT(para != nil && para->TextLength() == 2);
+	Eval("ctxIC.added := nil");			// (adding the paragraph ran the script)
+	Refresh();
+	Eval("SetKeyView(ctxICP, 1)");
+	EXPECT(gRootView->fCaretView == (TView*) para);
+
+	// the writer has said writing may come from somewhere other than
+	// the caret
+	Eval("userConfiguration.remoteWriting := true");
+
+	// a bundle of one stroke, written well away from the paragraph
+	RefVar points(Eval("[100, 60, 110, 70, 120, 80]"));
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, points);
+	RefVar cmd(MakeCommand(aeInkWord, editor, 0));
+	CommandSetFrameParameter(cmd, RefVar(MakeStrokeBundle(arrays, 1)));
+	gApplication->DispatchCommand(cmd);
+
+	// no new paragraph: the word went into the one the caret was in,
+	// where it stands as a single character
+	EXPECT(ISNIL(Eval("ctxIC.added")));
+	// "a<space><ink><space>b": a word written into the text is spaced
+	// off from it like any other word
+	EXPECT(para->TextLength() == 5);
+	EXPECT(GetCString(RefVar(para->Text()))[2] == kInkWordChar);
+	RefVar styles(para->Styles());
+	Boolean carried = false;
+	for (long i = 1; NOTNIL(styles) && i < Length(styles); i += 2)
+		if (IsInkWord(RefVar(GetArraySlot(styles, i))))
+			carried = true;
+	EXPECT(carried);
+
+	// without the preference, and with nothing hilited at the caret to
+	// ask for it, the word starts a paragraph of its own again
+	Eval("userConfiguration.remoteWriting := nil");
+	cmd = MakeCommand(aeInkWord, editor, 0);
+	CommandSetFrameParameter(cmd, RefVar(MakeStrokeBundle(arrays, 1)));
+	gApplication->DispatchCommand(cmd);
+	EXPECT(IsFrame(RefVar(Eval("ctxIC.added"))));
+	EXPECT(para->TextLength() == 5);
+
+	Eval("RemoveView(GetRoot(), ctxIC)");
+	Refresh();
+}
+
 // A word the recogniser read, put on the page as a paragraph of its
 // own.  Unlike an ink word it is measured - the text is laid out to find
 // out how wide it is - and then lined up with whatever the page already
@@ -4263,6 +4328,7 @@ main()
 		TestEffects();
 		TestInkOnThePage();
 		TestInkWordOnThePage();
+		TestInkWordAtTheCaret();
 		TestRecognisedWord();
 		TestInkWordInText();
 		TestJoinInk();

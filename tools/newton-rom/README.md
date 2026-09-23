@@ -42,7 +42,8 @@ tools/newton-rom/
     xrefs.py              who references a symbol (finds who initialises a global)
     memobj_tables.py      the memory object tables -> docs/os600/memobj-tables.md and src/os600/kernel/MemObjTables.cpp
     exception_names.py    the exception name strings -> src/os600/user/ExceptionNames.cpp
-    vtable.py             the entries of a vtable (slot -> method), from rom.bin + symbols.json
+    vtable.py             the entries of a vtable (slot -> method), from rom.bin + symbols.json;
+                          --find NAME|ADDR [--slot N] finds the vtables a method is in
     classinfo.py          decode protocol class-info tables (names, dispatch slots, monitor selectors);
                           --all -> docs/protocols/classinfos.md
     romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp,
@@ -272,7 +273,15 @@ re-analysis needed.) (One Ghidra process at a time: the project is locked while 
 run the analysis tools sequentially; `decompile.py --range START END` does a
 whole subsystem in one start.)  `analysis/vtable.py build/MP2x00US 0x20730` lists a
 vtable's slots by method name (the address is the literal a constructor
-stores at `[this,#0]`), which is how a `add pc,r12,#0x50` is resolved.
+stores at `[this,#0]`), which is how a `add pc,r12,#0x50` is resolved.  The
+view classes are built by `BuildView` rather than by a self-allocating
+constructor, so their vtables are in no constructor and not in
+`romfacts.json`; `analysis/vtable.py build/MP2x00US --find
+HandleTap__14TParagraphViewFR6TPoint --slot 0x11c` works back from a
+method to the table it sits in - it scans the ROM for every `B` that
+lands on the method (either form of an exported one's address: a vtable
+branches to the jump table slot) and, given the offset a virtual call
+uses, prints the table those branches imply.
 
 Protocol implementations (ProtocolGen output) dispatch through a second kind
 of table Ghidra leaves as undefined data: the `TClassInfo` (self-relative
