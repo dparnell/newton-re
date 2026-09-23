@@ -946,7 +946,7 @@ The score a paragraph answers:
 | 3 | the last word to go in went into this view |
 | 4 | it is over the paragraph's last line |
 | 5 | the paragraph covers half the word's box or more (`CoveredBy`) |
-| 6 | it replaces a character of the text exactly (`ReplaceCharacter`, NOT YET) |
+| 6 | it replaces a character of the text exactly (`ReplaceCharacter`) |
 
 Below four is only an opinion; four and above are taken as certain, and
 the paragraph goes on to place the word even when it was only asked.
@@ -976,6 +976,64 @@ forgotten.
 > A slip kept as it is: the adjusted base point's h is *added* to the
 > old one rather than replacing it.  Nothing reads that h again - only
 > its v, which `AdjacentBoxes` compares - so it never showed.
+
+#### A letter written over a letter (`ReplaceCharacter` 0x00174e14)
+
+The strongest claim a paragraph can make on a piece of writing, and the
+only one that scores 6: the writer has written one letter over another
+letter of a word, meaning to correct it.
+
+`FindWordInRun` asks it first, before anything else it might do with the
+writing.  It has to fall on the line horizontally, and then either -
+with a unit - cover no more than three characters and not be over a run
+of spaces (`WordOverSpaces`, 0x0017bc84: as many spaces as the writing
+is wide, never fewer than three, counted forward and then backwards),
+or - without one, which is the edit view's probe for what text a point
+is in - be no more than two character gaps wide.  The character it lands
+on is the one under the middle of its box, stepped back over any tabs
+and returns and back one more when it is the character the line ends at.
+
+Whether that character is *replaced* or the writing goes beside it is
+then worked out from the two boxes: writing that covers the character
+replaces it, writing clear of it on one side goes on that side, and
+writing that overlaps it is decided by which half of the character its
+middle is in.  A space is treated more carefully - writing over the last
+space of a line, with another space before it, is not a correction at
+all.
+
+`DoReplaceSym` (0x0017b1b8) does the rest, and the thing worth knowing
+about it is that **the word is replaced, not the letter**.  The word
+around the hit is found (`FindWordBreaks` over the paragraph's own word
+break table) together with the correction entry covering it - made on
+the spot when there is none, and widened to take in the neighbours when
+the "word" turns out to be nothing but white space.  The word's
+characters are copied into a buffer; then every reading of the unit that
+is a *single character* is tried in the place the writing landed, and
+each one makes a whole candidate word which goes into a frame of
+readings.  That frame is handed to `HandleInsertItems` with the word's
+offsets, so what goes onto the page is the new word with a new set of
+alternatives, and the correction information ends up describing it.
+
+The unit's own score is only used as a floor when the writing was more
+than a letter or two, or the character being replaced is a space, so
+that a single deliberate letter always wins.  The last replacement is
+remembered (`gLastReplacedIndex`, `gLastReplacedWord`): a writer
+correcting the same letter of the same word again is understood to be
+choosing between its readings, so the try string is kept rather than
+cleared, and `TWordList::Reorder` moves the guesses they have been
+picking to the front.
+
+NOT YET: the branch for a view read a word at a time rather than a
+letter at a time (`!UsesLetters`).  There the ROM asks the engine to
+read the writing *again* as one character of a known height -
+`ReclassifyCharacter` 0x000348e4 over `MakeCharArea` and
+`TController::ClassifyInArea` - with the unit's readings saved and put
+back around it.  An engine that reads nothing has nothing to say to it,
+so the readings the unit already has are used either way.
+
+`test_Views`'s `TestReplaceCharacter` writes an "o" over the middle
+letter of "cat" and finds "cot" on the page with a correction entry
+covering it.
 
 #### Where in the text it goes (the `Finder`)
 

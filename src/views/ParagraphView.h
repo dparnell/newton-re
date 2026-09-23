@@ -101,6 +101,35 @@ struct Finder					// 0x2c bytes
 	TUnitPublic*	fUnit;			// +0x28  the unit it came from, if any
 };
 
+// What a character written over a character of the text is told about
+// where it landed, on its way to DoReplaceSym.
+struct WordHit					// 0x28 bytes
+{
+	const UniChar*	fText;			// +0x00  the line's characters
+	long		fIndexInRun;		// +0x04  the character it landed on, in the line
+	long		fIndex;				// +0x08  the same, in the whole text
+	long		fReplaceLength;		// +0x0c  1 it replaces that character, 0 it goes beside it
+	long		fBaseline;			// +0x10  the line's bottom
+	long		fUnused14;			// +0x14
+	class TUnitPublic*	fUnit;		// +0x18  the writing, if it came from the pen
+	const UniChar*	fWord;			// +0x1c  what was read
+	struct LineInfo*	fLine;		// +0x20
+	Boolean		fReallyDoIt;		// +0x24
+};
+
+// The last replacement, so that a writer correcting the same letter of
+// the same word again is understood to be choosing between its readings.
+extern long		gLastReplacedIndex;					// ROM 0x0c101740
+extern UniChar*	gLastReplacedWord;					// ROM 0x0c101744
+// The one-character string a replacement's answer is handed back as.
+extern UniChar	gAlternateWord[4];					// ROM 0x0c101738 gAlternateWord
+
+// The letter under the writing replaced by what the recogniser read, and
+// the word it belongs to given a new set of readings.
+Boolean	DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable);	// ROM 0x0017b1b8 DoReplaceSym__FP14TParagraphViewP7WordHitPUsRC6RefVar
+// Whether the writing between two characters is over a run of spaces.
+Boolean	WordOverSpaces(const UniChar* text, const long from, const long to);	// ROM 0x0017bc84 WordOverSpaces__FPUsClT2
+
 // How wide a gap has to be before it is taken for a tab rather than a
 // space.
 // Whether the writer is putting a single letter into the middle of a
@@ -241,6 +270,8 @@ public:
 	// Where a word written on the page goes in the text.
 	void		FindWordInParagraph(Finder* finder);		// ROM 0x0017348c FindWordInParagraph__14TParagraphViewFP6Finder
 	Boolean		FindWordInRun(Finder* finder);				// ROM 0x00173668 FindWordInRun__14TParagraphViewFP6Finder
+	// A character written over a character of the text replaces it.
+	Boolean		ReplaceCharacter(const LineInfo* line, const long run, Finder* finder);	// ROM 0x00174e14 ReplaceCharacter__14TParagraphViewFPC8LineInfoClP6Finder
 	void		SetFinderBelowParagraph(Finder* finder);	// ROM 0x001735e4 SetFinderBelowParagraph__14TParagraphViewFP6Finder
 	long		FindTab(Finder* finder, long x);			// ROM 0x00173ea0 FindTab__14TParagraphViewFP6Finderl - always 0
 	long		NearTabStop(long x);						// ROM 0x00173cc4 NearTabStop__14TParagraphViewFl

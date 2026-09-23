@@ -4997,6 +4997,120 @@ TestCorrectInfoEditing()
 }
 
 
+// A letter written over a letter of a word replaces it - the strongest
+// claim a paragraph can make on a piece of writing, and the one that
+// stops the edit view asking anybody else.
+static void
+TestReplaceCharacter()
+{
+	Eval("correctInfo := {}");
+	InitCorrection();
+	Eval("userConfiguration.remoteWriting := nil");
+	TParagraphView* p = (TParagraphView*) ViewOf(
+		"ctxRC := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 5, top: 5, right: 200, bottom: 60}, "
+		"viewFont: espy12, text: \"cat\"})");
+	EXPECT(p != nil && p->TextLength() == 3);
+	Refresh();
+	gLastAddedWordView = nil;
+	gLastReplacedIndex = 100;
+
+	// where the middle letter is
+	Rect middle;
+	p->OffsetToBounds(1, &middle);
+	EXPECT(middle.right > middle.left);
+
+	// a unit that read "o", written over that letter
+	TDomain* domain = TDomain::Make(gController, kWRecDomainType, (char*) "word");
+	TWRecUnit* unit = TWRecUnit::Make(domain, 1, nil);
+	EXPECT(domain != nil && unit != nil);
+	if (unit == nil)
+		return;
+	EXPECT(unit->AddWordInterpretation() == 0);
+	UniChar reading[2];
+	reading[0] = U_CONST_CHAR('o');
+	reading[1] = 0;
+	EXPECT(unit->SetWordString(0, reading) != nil);
+	// how sure the engine is: an interpretation starts at the worst
+	// score there is, and a replacement only happens for a better one
+	unit->GetInterpretation(0)->score = 100;
+	unit->GetInterpretation(0)->label = kWordLabelWord;
+	// nothing has been written since (the controller still holds the
+	// pieces earlier tests made): a correction is only a correction
+	// while the writer has not moved on
+	unit->fMaxStroke = 0xfffe;
+	TUnitPublic pub(unit, 0);
+	// the word recogniser's own unit type, which the readings are only
+	// gathered for (SetWordRecognizer sets it on a real machine)
+	ULong wasWordID = gWordID;
+	gWordID = kWRecDomainType;
+
+	Finder finder;
+	memset(&finder, 0, sizeof(finder));
+	SetRect(&finder.fBox, middle.left + 1, p->viewBounds.top + 1,
+			middle.right - 1, p->viewBounds.top + 14);
+	finder.fBase.h = (short) ((middle.left + middle.right) / 2);
+	finder.fBase.v = (short) (p->viewBounds.top + 12);
+	finder.fText = reading;
+	finder.fLength = 1;
+	finder.fUnit = &pub;
+	finder.fReallyDoIt = true;
+
+	EXPECT(p->FindWordInRun(&finder));
+	// the finder came back with the strongest claim
+	EXPECT(finder.fExact);
+	EXPECT(finder.fView == p);
+	EXPECT(finder.fOffset == 1);
+	EXPECT(finder.fReplaceLength == 1);
+	// and the word was replaced rather than the letter: "cat" -> "cot"
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("cot")) == 0);
+	// the correction entry covers the new word and offers it
+	RefVar entry(FindWordInfo(p, 1));
+	EXPECT(IsFrame(entry));
+	if (IsFrame(entry))
+	{
+		EXPECT(RINT(RefVar(GetFrameSlotRef(entry, RSSYMstart))) == 0);
+		EXPECT(RINT(RefVar(GetFrameSlotRef(entry, RSSYMstop))) == 3);
+		EXPECT(Ustrcmp(GetCString(RefVar(GetNthWord(entry, 0))), Uni("cot")) == 0);
+	}
+	// the replacement is remembered, so writing over the same letter
+	// again goes on choosing between the readings rather than starting
+	// the choice over
+	EXPECT(gLastReplacedIndex == 1);
+	EXPECT(gLastReplacedWord != nil && Ustrcmp(gLastReplacedWord, Uni("cot")) == 0);
+
+	// writing that covers more than three characters is not a
+	// replacement at all
+	Eval("SetValue(ctxRC, 'text, \"cat\")");
+	Refresh();
+	Finder wide;
+	memset(&wide, 0, sizeof(wide));
+	Rect all;
+	p->OffsetToBounds(0, &all);
+	Rect last;
+	p->OffsetToBounds(2, &last);
+	SetRect(&wide.fBox, all.left, p->viewBounds.top + 1, last.right + 40,
+			p->viewBounds.top + 14);
+	wide.fBase.h = (short) all.left;
+	wide.fBase.v = (short) (p->viewBounds.top + 12);
+	wide.fText = reading;
+	wide.fLength = 1;
+	wide.fUnit = &pub;
+	wide.fReallyDoIt = true;
+	EXPECT(!p->ReplaceCharacter(&p->Line(0), 0, &wide));
+	EXPECT(!wide.fExact);
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("cat")) == 0);
+
+	gWordID = wasWordID;
+	unit->Dispose();
+	domain->Dispose();
+	InitCorrection();
+	gLastAddedWordView = nil;
+	Eval("RemoveView(GetRoot(), ctxRC)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -5116,6 +5230,7 @@ main()
 		TestRichStringIntoParagraph();
 		TestCorrectInfo();
 		TestCorrectInfoEditing();
+		TestReplaceCharacter();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();

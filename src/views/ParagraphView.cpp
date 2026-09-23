@@ -12,6 +12,9 @@
 #include "Words.h"			// IsPunctSymbol
 #include "WordInfo.h"		// kWordInfoIsInk
 #include "CorrectInfo.h"
+#include "WordList.h"		// TWordList, the try string
+#include "Controller.h"		// AreStrokesAfterUnit
+#include "RecConfig.h"		// UsesLetters
 #include "EditView.h"		// ViewExpectsNumbers
 #include "TextView.h"		// vjOneLineOnly
 #include "InkFont.h"
@@ -2252,6 +2255,471 @@ const UniChar kJoinableInkChar = 0xf701;
 
 
 /*------------------------------------------------------------------------------
+	A   c h a r a c t e r   w r i t t e n   o v e r   a   c h a r a c t e r
+------------------------------------------------------------------------------*/
+
+// The writer can correct a word by writing one letter over another
+// letter of it.  That is not an insertion: what has to happen is that
+// the recogniser reads the new letter, the letter it was written over is
+// replaced by it, and the *word* the letter belongs to gets a new set of
+// readings - because a word whose third letter has just changed is a
+// different word, and the corrector should offer alternatives for the
+// new one.
+
+// The last replacement, so that a writer correcting the same letter of
+// the same word over and over is understood to be choosing between the
+// readings rather than starting again.  The index is 100 - out of range
+// of any word - when there is none.
+long		gLastReplacedIndex = 100;			// ROM 0x0c101740
+UniChar*	gLastReplacedWord = nil;			// ROM 0x0c101744
+// The one-character string a replacement's answer is handed back as.
+UniChar		gAlternateWord[4] = { 0, 0, 0, 0 };	// ROM 0x0c101738
+
+
+// ROM 0x0017b1b8 DoReplaceSym__FP14TParagraphViewP7WordHitPUsRC6RefVar
+// The letter under the writing replaced by what the recogniser read.
+//
+//   - the word around the hit is found (`FindWordBreaks` over the
+//     paragraph's own word break table) and, with it, the correction
+//     entry that covers it - made on the spot when there is none, and
+//     widened to take in the neighbouring words when the "word" turns
+//     out to be nothing but white space;
+//   - the word's characters are copied into a buffer, and the character
+//     the writing landed on is noted;
+//   - the unit is asked for its readings again, and every reading that
+//     is a *single character* is tried in that buffer's place: each one
+//     makes a whole candidate word, which goes into the frame of
+//     readings being built;
+//   - and the lot goes in through `HandleInsertItems`, replacing the
+//     word rather than the letter, so the correction information ends
+//     up describing the new word.
+//
+// The unit's own score is only used as a floor when the writing was more
+// than a letter or two (or the character being replaced is a space), so
+// that a single letter written deliberately always wins.
+//
+// ==> whether anything was replaced; `out` is the character chosen.
+//
+// NOT YET RECONSTRUCTED: the branch for a view that is read a word at a
+// time rather than a letter at a time (`!UsesLetters`).  There the ROM
+// asks the engine to read the writing *again* as one character of a
+// known height - `ReclassifyCharacter` 0x000348e4 over `MakeCharArea`
+// and `TController::ClassifyInArea` - with the unit's readings saved and
+// put back around it (`GetInterpretationsCopy` 0x0021f6a8 and its two
+// companions).  Our engine reads nothing, so there would be nothing to
+// ask; the readings the unit already has are used either way.
+Boolean
+DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable)
+{
+	if (gLastReplacedWord == nil)
+	{
+		gLastReplacedWord = new UniChar[1];
+		gLastReplacedWord[0] = 0;
+	}
+	Boolean done = false;
+	UniChar* buf = nil;
+	long n = 0;
+	long where = 0;
+
+	long wordLength = Ustrlen(hit->fWord);
+	if (hit->fUnit == nil)
+	{
+		// nothing was written: a deletion is a replacement too
+		if (wordLength == 0)
+			done = true;
+	}
+	else if (!AreStrokesAfterUnit(hit->fUnit->fUnit))
+	{
+		ULong textLength = (ULong) Ustrlen(hit->fText);
+		ULong start = 0;
+		ULong end = 0;
+		FindWordBreaks(hit->fText, textLength, (ULong) hit->fIndexInRun, true,
+					   breakTable, &start, &end);
+		if (start < textLength)
+		{
+			long count = (long) (end - start);
+			long at = hit->fIndex - (hit->fIndexInRun - (long) start);
+			long minScore = 1000;
+			RefVar item;
+			RefVar info(FindWordInfo(para, at));
+			if (ISNIL(info) && count != 0)
+			{
+				if (ContainsOnlyWhiteSpace(hit->fText + start, (ULong) count))
+				{
+					// the writing landed in a gap: the words on either
+					// side of it are part of what is being corrected
+					RefVar before(FindWordInfo(para, at - 1));
+					if (NOTNIL(before))
+					{
+						long was = RINT(RefVar(GetFrameSlotRef(before, RSSYMstart)));
+						long to = RINT(RefVar(GetFrameSlotRef(before, RSSYMstop)));
+						at = was;
+						count += to - was;
+						start -= (ULong) (to - was);
+					}
+					RefVar after(FindWordInfo(para, at + count));
+					if (NOTNIL(after))
+					{
+						long was = RINT(RefVar(GetFrameSlotRef(after, RSSYMstart)));
+						long to = RINT(RefVar(GetFrameSlotRef(after, RSSYMstop)));
+						count += to - was;
+						end += (ULong) (to - was);
+					}
+				}
+				info = MakeWordInfo(para, at, count);
+				SetOffsetInfo(info, para, at, at + count, 0);
+				SetWordInfoFlags(info, kWordInfoAutoAdded);
+				AutoRemove(info);
+			}
+			if (NOTNIL(info))
+			{
+				// an empty frame for the readings to be gathered into
+				item = MakeWordInfo(RefVar(NILREF));
+				long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+				long to = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+				if (at >= was && at + count <= to)
+				{
+					// the entry covers more than the word breaks found:
+					// the whole of it is what is being replaced
+					start -= (ULong) (at - was);
+					count = to - was;
+					end = start + (ULong) count;
+					at = was;
+				}
+			}
+
+			n = (long) (end - start);
+			buf = new UniChar[n + 1];
+			Ustrncpy(buf, hit->fText + start, n);
+			buf[n] = 0;
+			where = hit->fIndexInRun - (long) start;
+			UniChar was = buf[where];
+
+			// how good a reading has to be: the unit's own score, but
+			// only when the writing was more than a letter or two - a
+			// single letter written over a letter is meant
+			Handle read = hit->fUnit->Word();
+			long chars = Ustrlen(*(UniChar**) read);
+			if (chars > 2 || (was == U_CONST_CHAR(' ') && chars > 1))
+				minScore = (long) hit->fUnit->WordScore();
+			DisposHandle(read);
+
+			// the writer correcting the same letter of the same word
+			// again is choosing between its readings; anything else
+			// starts the choice over
+			if (where != gLastReplacedIndex || Ustrcmp(gLastReplacedWord, buf) != 0)
+				ClearTryString();
+			AddTryString(was);
+
+			TWordList* words = hit->fUnit->MakeWordList(true, true);
+			if (words != nil)
+			{
+				if (words->Score(0) < minScore)
+				{
+					UniChar best = 0;
+					long bestScore = 1000;
+					long bestLabel = 0;
+					for (long i = 0; i < words->Count(); i++)
+					{
+						long score = 0;
+						long label = 0;
+						Handle reading = words->Ith(i, &score, &label);
+						if (Ustrlen(*(UniChar**) reading) == 1)
+						{
+							UniChar c = (*(UniChar**) reading)[0];
+							buf[where] = c;
+							RefVar word(MakeString(buf, n));
+							RefVar interp(MakeWordInterp(word, score, -1, label));
+							if (best == 0 && c != was)
+							{
+								// the first reading that is not what is
+								// already there is the answer
+								best = c;
+								out[0] = c;
+								bestScore = score;
+								bestLabel = label;
+							}
+							done = true;
+							if (NOTNIL(item))
+							{
+								DeleteMatchingWord(item, word);
+								InsertWordInterp(item, interp, -1);
+							}
+						}
+						DisposHandle(reading);
+					}
+					if (minScore == 1000 && bestScore < 1000)
+					{
+						// nothing was holding the readings to a floor, so
+						// the best of them goes to the front as well
+						out[0] = best;
+						buf[where] = best;
+						RefVar word(MakeString(buf, n));
+						RefVar interp(MakeWordInterp(word, bestScore, -1, bestLabel));
+						done = true;
+						if (NOTNIL(item))
+						{
+							DeleteMatchingWord(item, word);
+							InsertWordInterp(item, interp, 0);
+						}
+					}
+				}
+
+				if (NOTNIL(item) && done)
+				{
+					// the word replaced, with its new readings: the
+					// paragraph puts it in as an item like any other
+					RefVar style(para->GetStyleAtOffset(at, nil, nil));
+					if (IsInkWord(style))
+						style = para->GetStyleForInsertion(at, false, false);
+					RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+					SetFrameSlot(spec, RSSYMinsertitems, item);
+					SetFrameSlot(spec, RSSYMaddspace, RefVar(NILREF));
+					SetFrameSlot(spec, RSSYMinsertoffset, RefVar(MAKEINT(at)));
+					SetFrameSlot(spec, RSSYMreplacechars, RefVar(MAKEINT(count)));
+					SetFrameSlot(spec, RSSYMdefaultfontspec, style);
+					SetFrameSlot(spec, RSSYMmovecaret, RefVar(NILREF));
+					para->HandleInsertItems(spec);
+				}
+				delete words;
+			}
+		}
+	}
+
+	// what was replaced, for the next time round
+	gLastReplacedIndex = 100;
+	if (done && buf != nil)
+	{
+		if (gLastReplacedWord != nil)
+			delete[] gLastReplacedWord;
+		gLastReplacedWord = new UniChar[n + 1];
+		if (gLastReplacedWord != nil)
+		{
+			buf[where] = out[0];
+			Ustrncpy(gLastReplacedWord, buf, n);
+			gLastReplacedWord[n] = 0;
+			gLastReplacedIndex = where;
+		}
+	}
+	if (buf != nil)
+		delete[] buf;
+	return done;
+}
+
+
+// (host: the ROM asks a text object which character an x falls on
+// (CoordToChar) and which character *gap* it is nearest
+// (CoordToInterCharGap 0x0017d614, over PointToChar).  The text objects
+// are NOT YET, so the line's own characters are measured instead; the
+// answers are relative to the line's first character, as the ROM's are
+// to the run's.)
+static long
+CharAtCoord(TParagraphView* para, const LineInfo* line, long x)
+{
+	for (long i = line->fStart; i < line->fTextEnd; i++)
+	{
+		Rect box;
+		para->OffsetToBounds(i, &box);
+		if (x < box.right)
+			return i - line->fStart;
+	}
+	return line->fTextEnd - line->fStart;
+}
+
+
+static long
+GapAtCoord(TParagraphView* para, const LineInfo* line, long x)
+{
+	long at = CharAtCoord(para, line, x) + line->fStart;
+	Rect box;
+	para->OffsetToBounds(at, &box);
+	if (x > (box.left + box.right) / 2)
+		at++;
+	return at - line->fStart;
+}
+
+
+// ROM 0x0017bc84 WordOverSpaces__FPUsClT2
+// Whether the writing between two characters is over a run of spaces
+// rather than over anything to correct: at least as many spaces as the
+// writing is wide (and never fewer than three) counted forward from the
+// first character, and - when that run covered the whole of it -
+// backwards from the character before as well.
+Boolean
+WordOverSpaces(const UniChar* text, const long from, const long to)
+{
+	long span = to - from;
+	long wanted = span < 4 ? 3 : span;
+	long spaces = 0;
+	const UniChar* at = text + from;
+	const UniChar* forward = at;
+	while (*forward == U_CONST_CHAR(' '))
+	{
+		forward++;
+		spaces++;
+		if (wanted <= spaces)
+			return true;
+	}
+	if (span <= spaces)
+	{
+		while (--at >= text && *at == U_CONST_CHAR(' '))
+		{
+			spaces++;
+			if (wanted <= spaces)
+				return true;
+		}
+	}
+	return false;
+}
+
+
+// ROM 0x00174e14 ReplaceCharacter__14TParagraphViewFPC8LineInfoClP6Finder
+// A character written over a character of the text replaces it, which is
+// the strongest claim a paragraph can make on a piece of writing: it
+// answers 6, and `TEditView::HandleWord` stops asking anybody else.
+//
+// The writing has to fall on the line horizontally, and either (with a
+// unit) cover no more than three characters and not be over a run of
+// spaces, or (without one - the edit view's probe for what text a point
+// is in) be no more than two character gaps wide.  The character it
+// lands on is the one under the middle of its box, stepped back over any
+// tabs and returns, and back one more when it is the character the line
+// ends at.
+//
+// Whether that character is *replaced* or the writing goes before or
+// after it is then worked out from the two boxes: writing that covers
+// the character replaces it, writing clear of it on one side goes on
+// that side, and writing that overlaps it is decided by which half of
+// the character its middle is in.  A space is treated more carefully -
+// writing over the last space of a line, with another space before it,
+// is not a correction at all.
+//
+// `DoReplaceSym` does the rest.  What comes back is a character, which
+// may not be the one the recogniser first read: when it differs, the
+// finder's word is pointed at `gAlternateWord` so that the caller puts
+// *that* character in.
+//
+// (host: the ROM asks the line's text objects for the boxes and for the
+// character at a coordinate - GetTextObjBounds, GetTextObjField,
+// CoordToChar, CoordToInterCharGap, CharBounds.  The text objects are
+// NOT YET, so the line's own bounds and OffsetToBounds/PointToOffset
+// answer instead, as they do for the rest of FindWordInRun.)
+Boolean
+TParagraphView::ReplaceCharacter(const LineInfo* line, const long run, Finder* finder)
+{
+	(void) run;
+	Rect lineBox = line->fBounds;
+	RefVar textRef(Text());
+	const UniChar* text = GetCString(textRef);
+	long runStart = line->fStart;
+
+	// the writing's box, clipped to the line
+	Rect box = finder->fBox;
+	if (box.top < lineBox.top)
+		box.top = lineBox.top;
+	if (box.bottom > lineBox.bottom)
+		box.bottom = lineBox.bottom;
+	Point mid = MidPoint(box);
+	if (box.right + 3 <= lineBox.left || lineBox.right + 3 < box.left)
+		return false;
+
+	if (finder->fUnit != nil)
+	{
+		// no more than three characters, and not over a run of spaces
+		long right = CharAtCoord(this, line, box.right);
+		long left = CharAtCoord(this, line, box.left);
+		if (right - left > 3)
+			return false;
+		if (WordOverSpaces(text + runStart, left, right))
+			return false;
+	}
+	else if (GapAtCoord(this, line, box.right) - GapAtCoord(this, line, box.left) > 2)
+		return false;
+
+	// the character under the middle of the writing, past the tabs and
+	// returns, and not the one the line ends at
+	long at = CharAtCoord(this, line, mid.h) + runStart;
+	while (text[at] == U_CONST_CHAR('\t') || text[at] == 0x0d)
+		at--;
+	if (line->fEnd == at)
+		at--;
+
+	long replaced = 1;
+	if (finder->fUnit != nil)
+	{
+		Rect charBox;
+		OffsetToBounds(at, &charBox);
+		UniChar c = text[at];
+		if (c == U_CONST_CHAR(' ') || c == 0xca)
+		{
+			if (line->fEnd - 1 == at)
+			{
+				// the last space of the line: writing over it is only a
+				// correction when there is something before it
+				if (at - 1 < line->fStart || text[at - 1] == U_CONST_CHAR(' '))
+					return false;
+				replaced = 0;
+			}
+			else if ((box.left > charBox.left && box.right >= charBox.right)
+					 || (box.left < charBox.left && box.right <= charBox.right))
+				replaced = 1;		// the writing and the space cover one another
+			else if (mid.h <= (charBox.left + charBox.right) / 2)
+				replaced = 0;		// before it
+			else
+			{
+				at++;				// after it
+				replaced = 0;
+			}
+		}
+		else if (at == runStart && mid.h < charBox.left)
+			replaced = 0;			// before the line's first character
+		else if (mid.h > charBox.right)
+		{
+			at++;
+			replaced = 0;			// past the character
+		}
+	}
+
+	WordHit hit;
+	hit.fText = text + runStart;
+	hit.fIndexInRun = at - runStart;
+	hit.fIndex = at;
+	hit.fReplaceLength = replaced;
+	hit.fBaseline = lineBox.bottom;
+	hit.fUnused14 = 0;
+	hit.fUnit = finder->fUnit;
+	hit.fWord = finder->fText;
+	hit.fLine = (LineInfo*) line;
+	hit.fReallyDoIt = finder->fReallyDoIt;
+
+	UniChar chosen[2];
+	chosen[0] = finder->fText[0];
+	chosen[1] = 0;
+	if (!DoReplaceSym(this, &hit, chosen, RefVar(fWordBreakTable)))
+		return false;
+
+	if (finder->fText[0] != chosen[0])
+	{
+		// the recogniser's second thoughts go in instead
+		gAlternateWord[0] = chosen[0];
+		gAlternateWord[1] = 0;
+		finder->fText = gAlternateWord;
+		finder->fLength = 1;
+	}
+	finder->fView = this;
+	finder->fExact = true;
+	finder->fOffset = at;
+	finder->fReplaceLength = hit.fReplaceLength;
+	if (hit.fReplaceLength == 1)
+		gAddWordInfo = false;		// the word it belongs to is what went in
+	if (finder->fOffset == line->fStart && finder->fOffset != 0
+		&& text[finder->fOffset - 1] == 0x0d)
+		finder->fNewLine = true;
+	return true;
+}
+
+
+/*------------------------------------------------------------------------------
 	W h e r e   t h e   w o r d   g o e s
 ------------------------------------------------------------------------------*/
 
@@ -2359,9 +2827,7 @@ TParagraphView::PreviousLineNeedsCR(UniChar* /*text*/, UniChar* /*word*/)
 // CharLeftEdge, CoordToChar - and asks TabBounds for a tab's box.  The
 // text objects are NOT YET, so the line's characters are measured
 // through OffsetToBounds and PointToOffset instead, and a tab is a
-// character like any other.  NOT YET RECONSTRUCTED: ReplaceCharacter
-// 0x00174e14, the path that has a written character replace the one
-// under it and answers the Finder's strongest claim.)
+// character like any other.)
 Boolean
 TParagraphView::FindWordInRun(Finder* finder)
 {
@@ -2375,6 +2841,11 @@ TParagraphView::FindWordInRun(Finder* finder)
 	pt.v = (short) ((line.fBounds.top + line.fBounds.bottom) / 2);
 	RefVar textRef(Text());
 	const UniChar* text = GetCString(textRef);
+
+	// a character written over a character of the text replaces it,
+	// which is the strongest claim this paragraph can make
+	if (finder->fUnit != nil && ReplaceCharacter(&line, index, finder))
+		return true;
 
 	if (wordLeft < line.fBounds.left)
 	{
