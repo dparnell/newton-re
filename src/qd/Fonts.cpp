@@ -882,10 +882,14 @@ PackedFontFamilyFrame(long font)
 
 // ROM 0x002618b8 CreateTextStyleRecord__FRC6RefVarP11StyleRecord
 // A style from a font spec: a packed integer (the ROM font list index,
-// size and face), or a frame {family, size, face, color} (the family a
-// symbol through vars.fonts, the color a pattern), or an ink word (NOT
-// YET).  No family means the user's preference (userFont), else the
-// system font.
+// size and face), or an ink word, or a frame {family, size, face, color}
+// (the family a symbol through vars.fonts, the color a pattern).  No
+// family means the user's preference (userFont), else the system font.
+//
+// An ink word is not a font at all: the word itself goes where the
+// family would, and OpenFont hands it to the ink font engine, which
+// makes a font of one glyph out of it.  The size and face are the
+// word's own.
 //
 // ROM BUG, kept: a spec that is none of those - a nil `styles` slot, for
 // one, which is what TParagraphView::GetInterLineSpacing hands over for a
@@ -901,6 +905,8 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 {
 	style->fFontPattern = NILREF;
 	style->fPattern = nil;
+	long inkSize = 0;
+	long inkFace = 0;
 	Ref spec = fontSpec;
 	if (ISINT(spec))
 	{
@@ -908,6 +914,18 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 		style->fFontFamily = PackedFontFamilyFrame(font);
 		style->fFontSize = ToFixed(PackedFontSize(font));
 		style->fFontFace = PackedFontFace(font);
+	}
+	else if (gInkFontParms != nil && gInkFontParms(fontSpec, &inkSize, &inkFace))
+	{
+		// (the ROM reads the word's own measurements here - its scaled
+		//  font size and its face - which is what the seam answers)
+		style->fFontFamily = fontSpec;
+		style->fFontSize = ToFixed(inkSize);
+		style->fFontFace = inkFace;
+		style->fTransferMode = 0;
+		style->fReserved14 = 0;
+		style->fReserved18 = 0;
+		return;
 	}
 	else if (IsFrame(fontSpec))
 	{

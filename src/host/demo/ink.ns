@@ -1,4 +1,4 @@
-// Ink: a stroke drawn with the pen, and a picture of it.
+// Ink: a stroke drawn with the pen, and the page keeping it.
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
 //       --scale 2 --store build/newton.store --script src/host/demo/ink.ns
@@ -6,22 +6,26 @@
 // or, without a window:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --store build/newton.store --script src/host/demo/ink.ns --headless 45
-//   build/venv/Scripts/python tools/imaging/pgm2png.py build/ink.pgm build/ink.png
+//       --store build/newton.store --script src/host/demo/ink.ns --headless 50
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/ink-kept.pgm build/ink-kept.png
 //
-// With a window, just drag the mouse across the page: the ink follows it.
-// What draws it is TStroke::Draw over InkerLine (qd/Draw.h), reached from
-// StrokeTime as the ROM's inker task reaches it from TInker::LCDEntry.
+// With a window, just drag the mouse across the page: the ink follows it,
+// and stays when the pen is lifted.  What draws it while the pen is down
+// is TStroke::Draw over InkerLine (qd/Draw.h), reached from StrokeTime as
+// the ROM's inker task reaches it from TInker::LCDEntry; what keeps it
+// afterwards is the word recogniser deciding it cannot read the writing
+// (recognition/InkRecognizer.h) and the edit view putting it down as a
+// paragraph of one ink word (views/EditView.h's aeInkWord).
 //
 // The setup assistant is walked through first (src/host/demo/setup.ns, the
 // same taps), because the host's store is in memory and every boot starts
 // there; without it the stroke lands on the "Enter your Name" page.
 //
-// The picture is taken with the pen still down.  Once it is lifted the ink
-// goes away again: the stroke is handed to the recogniser, which takes the
-// ink off the screen and would put a paragraph or an ink word in its place
-// - and the domains that would do that (the word and shape recognisers)
-// are NOT YET.  So this is what the inker draws, not what is kept.
+// Two pictures are taken: build/ink.pgm with the pen still down, which is
+// what the inker drew, and build/ink-kept.pgm a few seconds after the pen
+// is lifted, which is what the page kept.  The two differ: the writing is
+// brought down to a size a line of text can hold, and the ROM starts it at
+// the middle of the box it was written in.
 //
 // IdleStrokes() must not be called while the pen is down.  It runs the
 // click through to the view under it, and a view that tracks the pen waits
@@ -67,6 +71,12 @@ AddDelayedCall(func() begin
         Print("ink: written build/ink.pgm");
         PenUp();
         IdleStrokes();
+        // the word is not finished with until the pen has been still for
+        // the domain's delay, and the arbiter then has to let it win
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/ink-kept.pgm");
+            Print("ink: written build/ink-kept.pgm");
+          end, nil, 5000);
       end, nil, 900);
   end, nil, 27000);
 Print("ink: the script is loaded");

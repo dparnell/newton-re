@@ -1872,28 +1872,64 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 	GetStyleFontInfo(&styleRecord, &fontInfo);
 
 	TView* view = nil;
+	Rect area;
 	if (unit != nil || hasInkFont)
 	{
-		// NOT YET RECONSTRUCTED: the geometry (see above).  Falling through
-		// to the typed path would put the word in the wrong place, so a
-		// recognised word is dropped instead of being put down wrongly.
-		DisposeStyleRecord(&styleRecord);
-		return nil;
-	}
+		// A word that came from the pen goes where it was written rather
+		// than where a caret is.  Both kinds are placed around a point:
+		// the middle of the base line the writing stands on, for a word
+		// the recogniser read, and the middle of the top of the box it
+		// was measured in, for a word that was not read.
+		Point pt;
+		if (unit != nil)
+		{
+			pt.v = (short) ((unit->fWordBase.top + unit->fWordBase.bottom) / 2);
+			pt.h = (short) ((unit->fWordBase.left + unit->fWordBase.right) / 2);
+		}
+		else
+		{
+			pt.v = (short) (box.top + fontInfo.ascent);
+			pt.h = (short) ((box.left + box.right) / 2);
+		}
 
-	// what the recogniser's path would have worked out: where the word is,
-	// and the box it is to fill
-	Point pt;
-	pt.v = box.bottom;
-	pt.h = (box.left + box.right) / 2;
-	Rect area = room;
-	Point origin = ContentsOrigin();
-	OffsetRect(&area, -origin.h, -origin.v);
-	if (NOTNIL(theInfo))
+		if (unit != nil || ISNIL(inkFont))
+		{
+			// NOT YET RECONSTRUCTED: a word the recogniser read
+			// (0x000a20f0-0x000a22bc).  It is measured with TextBounds,
+			// lined up with the page's other children (AlignBounds) and
+			// then with its ruled lines (AlignToLineSpacing) - which is
+			// what makes handwriting tidy itself into columns.  Falling
+			// through would put the word down in the wrong place, so it
+			// is dropped instead.
+			DisposeStyleRecord(&styleRecord);
+			return nil;
+		}
+
+		// An ink word, which has already been brought down to a size a
+		// line of text can hold: it is as wide as the word measures at
+		// its own scale and one line of the paragraph's font tall, from
+		// the point rightwards.
+		InkWordInfo wordInfo;
+		GetInkWordInfo(inkFont, &wordInfo);
+		area.top = (short) (pt.v - fontInfo.ascent);
+		area.left = pt.h;
+		area.right = (short) (area.left + wordInfo.fScaledWidth);
+		area.bottom = (short) (pt.v + fontInfo.descent + fontInfo.leading);
+	}
+	else
 	{
-		RefVar offset(GetFrameSlotRef(theInfo, RSSYMoffset));
-		if (NOTNIL(offset))
-			area.top += RINT(offset);
+		// Typed text: the keyboard has measured its own box already, so
+		// the word simply fills the room it was given, moved down by the
+		// word info's offset when it has one.
+		area = room;
+		Point origin = ContentsOrigin();
+		OffsetRect(&area, -origin.h, -origin.v);
+		if (NOTNIL(theInfo))
+		{
+			RefVar offset(GetFrameSlotRef(theInfo, RSSYMoffset));
+			if (NOTNIL(offset))
+				area.top += RINT(offset);
+		}
 	}
 
 	RefVar form(MakeParagraphForm(text, length, area, theInfo, false));
@@ -1927,7 +1963,6 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 	}
 	DisposeStyleRecord(&styleRecord);
 	(void) remoteCaret;
-	(void) pt;
 	return view;
 }
 

@@ -3531,6 +3531,62 @@ TestInkOnThePage()
 	Eval("RemoveView(GetRoot(), ctxNum); RemoveView(GetRoot(), ctxWord); RemoveView(GetRoot(), ctxIV)");
 }
 
+// A word of writing put on the page as a paragraph of its own: the
+// aeInkWord command the word recogniser sends when it could not read
+// the writing.  The paragraph holds one character, the ink word, and is
+// placed on the line the writing was on.
+static void
+TestInkWordOnThePage()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+	TEditView* editor = (TEditView*) ViewOf(
+		"ctxIW := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 0, right: 200, bottom: 150}, viewChildren: [], "
+		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
+	EXPECT(editor != nil);
+
+	// a bundle of one stroke - the array is v, h, v, h, in pixels
+	RefVar points(Eval("[20, 10, 30, 20, 40, 30]"));
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, points);
+	RefVar bundle(MakeStrokeBundle(arrays, 1));
+	Rect box;
+	GetBundleBounds(bundle, &box);
+
+	RefVar cmd(MakeCommand(aeInkWord, editor, 0));
+	CommandSetFrameParameter(cmd, bundle);
+	gApplication->DispatchCommand(cmd);
+
+	RefVar added(Eval("ctxIW.added"));
+	EXPECT(IsFrame(added));
+	if (!IsFrame(added))
+		return;
+	// one character of text, and its style run is the ink word itself
+	RefVar text(GetFrameSlot(added, RSSYMtext));
+	EXPECT(IsString(text) && Ustrlen(GetCString(text)) == 1);
+	EXPECT(*GetCString(text) == kInkWordChar);
+	RefVar styles(GetFrameSlot(added, RSSYMstyles));
+	EXPECT(IsArray(styles) && Length(styles) == 2);
+	EXPECT(RINT(RefVar(GetArraySlot(styles, 0))) == 1);
+	EXPECT(IsInkWord(RefVar(GetArraySlot(styles, 1))));
+
+	// and it sits on the line the writing was on, as wide as the word
+	// measures once it has been brought down to a size a line of text
+	// can hold
+	Rect where;
+	EXPECT(FromObject(RefVar(GetFrameSlot(added, RSSYMviewbounds)), where));
+	EXPECT(where.top == box.top);
+	// (the ROM starts the word at the middle of the box it was written
+	//  in, not at its left edge)
+	EXPECT(where.left == (box.left + box.right) / 2);
+	EXPECT(where.right > where.left && where.bottom > where.top);
+	EXPECT(where.bottom - where.top < box.bottom - box.top + 20);
+
+	Eval("RemoveView(GetRoot(), ctxIW)");
+}
+
 // A word of writing inside a line of text: the paragraph's style run
 // for it is the ink word itself, which the font engine opens as a font
 // of one glyph, so the writing draws where the character would.
@@ -3825,6 +3881,7 @@ main()
 		TestLineGesture();
 		TestEffects();
 		TestInkOnThePage();
+		TestInkWordOnThePage();
 		TestInkWordInText();
 		TestInkInRichString();
 		TestWordInfo();

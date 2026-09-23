@@ -456,3 +456,58 @@ first), `TLiveInker` (the ink that follows the pen while it is still
 down, which is also the fast line drawer `DrawAt` asks for when nothing
 needs clipping), `TInkWordGlyph::SetFontParms` (a word restyled from a
 font spec) and the printing path's outlined paths.
+
+
+## From the pen to ink on the page
+
+A stroke written on a page now travels the whole way, and it is worth
+setting the route out in one place because it crosses five areas:
+
+  1. the tablet's samples become a `TStroke` and a click unit
+     (`recognition/StrokeCentral.h`), which the controller offers to the
+     domains the area runs;
+  2. the word domain takes it (`recognition/WRecDomain.h`) and hands it
+     to the engine, which gathers strokes into words;
+  3. the engine reads nothing (`recognition/InkRecognizer.h` - the ROM's
+     own is the CIC library, NOT YET), so the word is classified with
+     one empty reading and `UnitConfidence` answers `kWRecInk`;
+  4. the arbiter lets the word win, and
+     `WordRecognizerHandleUnit` marks its word info frame as ink and
+     asks `GetInkCommand` which command the view under it wants:
+     `aeInkWord` for a view whose recognition configuration has
+     `doInkWordRecognition` - the Notepad's - and `aeRawInk` otherwise;
+  5. `TEditView::RealDoCommand` answers `aeInkWord`: the unit is
+     exchanged for its strokes, the children are offered the word, and
+     failing that `TEditView::HandleInkWord` packs the strokes into an
+     ink word (`StrokeBundleToInkWord`) and makes a paragraph of the one
+     character `0xF701` with the word as its style run.
+
+The placing is `TEditView::AddNewParagraph`'s.  An ink word has already
+been brought down to a size a line of text can hold, so the paragraph is
+as wide as the word measures at its own scale (`InkWordInfo`'s
+`fScaledWidth`) and one line of the paragraph's font tall, around a
+point: `pt.v` is the top of the box the writing was in plus the font's
+ascent, and `pt.h` is the middle of that box.  The word is then laid out
+from `pt.h` *rightwards*, so the ROM starts an ink word at the middle of
+where it was written rather than at its left edge.
+
+The font of that paragraph is the ink word itself.
+`CreateTextStyleRecord` recognises one and puts the word where the
+family would go, with the word's own size and face; `OpenFont` sees it
+there and hands it to the ink font engine (`ink/InkFont.h`), which makes
+a font of one glyph out of it.  Without that branch the style record
+keeps a size of zero, the line has no height, and the paragraph is laid
+down with nothing in it - which is what happened until it was found by
+looking at a blank page where the writing should have been.
+
+`src/host/demo/ink.ns` writes a stroke on the Notepad and takes two
+pictures: one with the pen still down, which is what the inker drew, and
+one after it has been lifted and the recogniser has finished, which is
+what the page kept.
+
+NOT YET on this route: the corrector, and the caret side of `aeInkWord`
+- the ROM puts a word into the paragraph the caret is in rather than
+starting a new one - and the geometry that lines a *recognised* word up
+with the page's other children and its ruled lines
+(`AlignBounds`/`AlignToLineSpacing`, 0x000a20f0-0x000a22bc), so a word
+the recogniser reads is still dropped rather than put down wrongly.
