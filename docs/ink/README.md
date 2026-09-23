@@ -495,15 +495,16 @@ into a paragraph, spaced off from the text around it.  Otherwise
 (`StrokeBundleToInkWord`) and makes a paragraph of the one character
 `0xF701` with the word as its style run.
 
-(There is a third case in the ROM: the caret on the page itself with a
-text view right under it that would only just take the point - score 2
-from `TextContainingPoint`, which is the caret sitting where that view's
-next line would start.  The ROM sends that view a `HandleWord` of a
-single carriage return, which starts the line and moves the caret into
-it, and then puts the word in at the caret.
-The `HandleWord` it wants is reconstructed
-now; the geometry the ROM builds for that one call is not, so the word
-still starts a paragraph of its own.)
+(There is a third case: the caret on the page itself with a text view
+right under it that would only just take the point - score 2 from
+`TextContainingPoint`, which on a ruled page is the caret sitting where
+that view's next line would start.  The page sends that view a
+`HandleWord` of a single carriage return in a one-pixel box at its
+bottom right corner, which starts the new line and moves the caret into
+it, and then puts the word in at the caret as above.  A slip kept as it
+is: the x-height the word is brought to is asked of the *page* rather
+than of the paragraph the caret has just moved into, because the ROM
+never updates the view it is holding.)
 
 The placing is `TEditView::AddNewParagraph`'s.  An ink word has already
 been brought down to a size a line of text can hold, so the paragraph is
