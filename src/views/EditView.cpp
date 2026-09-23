@@ -1305,17 +1305,29 @@ TEditView::RealDoCommand(RefArg cmd)
 				// last line, where the next line would start)
 				Point where = GetCaretGlobalTopLeft();
 				long score = 0;
-				if (TextContainingPoint(where, nil, &score) != nil && score == 2)
+				TView* under = TextContainingPoint(where, nil, &score);
+				if (under != nil && score == 2)
 				{
-					// NOT YET RECONSTRUCTED: the ROM sends that view a
-					// HandleWord (vtable +0x148) of a single carriage
-					// return in a one-pixel box at its bottom left,
-					// which starts the new line and moves the caret into
-					// it, and then goes on to put the word in at the
-					// caret.  TParagraphView::HandleWord 0x00172760 is
-					// not reconstructed, so the word starts a paragraph
-					// of its own instead.
-					atTheCaret = false;
+					// a carriage return written in a one-pixel box at
+					// that view's bottom right corner: it starts the new
+					// line and moves the caret into it, and the word
+					// then goes in at the caret like any other item
+					UniChar cr[2];
+					cr[0] = 0x0d;
+					cr[1] = 0;
+					Point corner;
+					corner.v = (short) (under->viewBounds.bottom - 1);
+					corner.h = (short) (under->viewBounds.right - 1);
+					Rect box;
+					SetRect(&box, 0, 0, 1, 1);
+					OffsetRect(&box, corner.h, corner.v);
+					RefVar none;
+					((TDataView*) under)->HandleWord(cr, 1, box, corner, 0, 0,
+													 none, true, nil, nil);
+					// (the ROM asks the *page* what x-height the word wants
+					//  below, not the paragraph the caret has just moved
+					//  into; kept as it is)
+					atTheCaret = true;
 				}
 			}
 

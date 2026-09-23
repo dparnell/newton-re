@@ -4513,6 +4513,67 @@ TestWordIntoParagraph()
 }
 
 
+// The caret on the page itself, just under a paragraph, with a word
+// written somewhere else: the page starts a new line in that paragraph -
+// a carriage return written into it at its bottom corner, which is what
+// moves the caret in - and the word goes in at the caret.
+static void
+TestInkWordAtPageCaret()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+	TEditView* editor = (TEditView*) ViewOf(
+		"ctxPC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 0, right: 300, bottom: 200}, viewChildren: [], "
+		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
+	EXPECT(editor != nil);
+	TParagraphView* para = (TParagraphView*) ViewOf(
+		"ctxPCP := AddView(ctxPC, {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 10, top: 10, right: 120, bottom: 30}, "
+		"viewFont: espy12, text: \"one\"})");
+	EXPECT(para != nil && para->TextLength() == 3);
+	Eval("ctxPC.added := nil");
+	Refresh();
+	gLastAddedWordView = nil;
+	gLastAddedWordEndOffset = 0;
+
+	// the caret put just under the paragraph: the page keeps it, because
+	// the point is only just in the paragraph's text (score 2)
+	Point pt;
+	pt.h = (short) 15;
+	pt.v = (short) (para->viewBounds.bottom + 2);
+	editor->PositionCaret(pt, false);
+	EXPECT(gRootView->fCaretView == (TView*) editor);
+	// ... and moved down to where the page's ruling would put it, on
+	// the line under the paragraph (which is what the grid path of
+	// PositionCaret does on a ruled page)
+	Rect caret;
+	SetRect(&caret, 15, para->viewBounds.bottom + 2, 17, para->viewBounds.bottom + 14);
+	editor->SetCaretRectGlobal(caret);
+
+	Eval("userConfiguration.remoteWriting := true");
+	RefVar points(Eval("[100, 60, 110, 70, 120, 80]"));
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, points);
+	RefVar cmd(MakeCommand(aeInkWord, editor, 0));
+	CommandSetFrameParameter(cmd, RefVar(MakeStrokeBundle(arrays, 1)));
+	gApplication->DispatchCommand(cmd);
+	Eval("userConfiguration.remoteWriting := nil");
+
+	// no new paragraph: the return and the word both went into the one
+	// that was there, and the word stands as a single character
+	EXPECT(ISNIL(Eval("ctxPC.added")));
+	EXPECT(para->TextLength() == 5);
+	const UniChar* now = GetCString(RefVar(para->Text()));
+	EXPECT(now[3] == 0x0d && now[4] == kInkWordChar);
+
+	gLastAddedWordView = nil;
+	Eval("RemoveView(GetRoot(), ctxPC)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -4627,6 +4688,7 @@ main()
 		TestSplitInk();
 		TestWordGeometry();
 		TestWordIntoParagraph();
+		TestInkWordAtPageCaret();
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();
