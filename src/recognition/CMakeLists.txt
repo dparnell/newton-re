@@ -43,6 +43,7 @@ add_library(recognition STATIC
     ROMDictionaryTable.cpp
     Learning.cpp
     Spelling.cpp
+    SpellMaps.cpp
     AirusTables.cpp
     Words.cpp
 )

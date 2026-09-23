@@ -56,6 +56,9 @@ tools/newton-rom/
                           --doc docs/packages/rex-packages.md
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
+    spellmaps.py          the spelling checker's character maps (what a letter may be read
+                          as, and the letter groups written for one another)
+                          -> src/recognition/SpellMaps.cpp
     romdicts.py           the table of lexicons built into the ROM, recovered from the code
                           that writes it -> src/recognition/ROMDictionaryTable.cpp
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
@@ -303,6 +306,14 @@ initialised RAM area and is read from the ROM's copy of it; a table the
 debug symbols do not name is given its address instead and the name is
 ours, as `kResampleFilter@0x0036dbe8:i32:262` for the resampler's sinc,
 which is then cited `(unnamed)`), and
+`analysis/spellmaps.py build/MP2x00US -o src/recognition` is another
+that has to follow pointers: the spelling checker's two character maps
+are tables of pointers in the initialised RAM area, each entry a pattern
+and a list of the spellings it may stand for, and the list overloads a
+pointer with a small integer (the cost of the spellings after it, and 9
+to end).  The script follows them and writes the strings out, keeping
+that overload explicit.
+
 `analysis/romdicts.py build/MP2x00US -o src/recognition` is the odd one
 out: the table it emits is not in the ROM to be read.  The 129 lexicons
 built into the ROM are reached through `gROMDictionaryData`, a table of

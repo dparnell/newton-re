@@ -1,0 +1,88 @@
+// The corrector: a word typed onto the Notepad and tapped twice.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --scale 2 --script src/host/demo/correct.ns
+//
+// or, without a window:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/correct.ns --headless 48
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/correct.pgm build/correct.png
+//
+// A double tap on a word is the Newton's way of asking "what else might
+// this be".  The command travels further than it looks: the click-event
+// recogniser makes it only when both taps were on the same view, it is
+// posted to the *edit* view (the page) rather than to the paragraph, the
+// edit view hands it down to the child under the point, and the paragraph
+// then finds the word, works out the box it occupies and calls Correct -
+// which is the seam where the ROM's own NewtonScript takes over and
+// builds the corrector out of what the spelling checker suggests.
+//
+// The Setup assistant is walked through first (src/host/demo/setup.ns, the
+// same taps), because the host's store is in memory and every boot starts
+// there.
+//
+// It also prints what the spelling checker makes of a handful of
+// misspellings, which is the same machinery without the view.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+hello := [4, 14, 37, 37, 31];				// "hello"
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// what the spelling checker makes of a few misspellings, with no view in
+// the way: SpellDocBegin builds the chains out of the machine's own
+// dictionaries, SpellCorrect walks them
+AddDelayedCall(func() begin
+    local f := SpellDocBegin();
+    foreach w in ["teh", "recieve", "seperate", "helllo", "wrod", "notebok"] do
+      begin
+        local guesses := SpellCorrect(f, w);
+        local line := w & " ->";
+        if guesses then foreach g in guesses do line := line & " " & g;
+        Print(line);
+      end;
+    SpellDocEnd(f);
+  end, nil, 29000);
+
+// the Notepad is up by now: a word typed on it, then tapped twice
+AddDelayedCall(func() begin
+    call tapAt with (80, 120);				// the caret onto the page
+    AddDelayedCall(func() begin
+        foreach c in hello do call typeKey with (c);
+        AddDelayedCall(func() begin
+            // two taps in a row, close enough together to be a double tap
+            PenDown(90, 112); PenUp();
+            PenDown(90, 112); PenUp();
+            IdleStrokes();
+            AddDelayedCall(func() begin
+                ScreenSnapshot("build/correct.pgm");
+                Print("correct: written build/correct.pgm");
+              end, nil, 3000);
+          end, nil, 2000);
+      end, nil, 2000);
+  end, nil, 32000);
+Print("correct: the script is loaded");

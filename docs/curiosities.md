@@ -841,3 +841,47 @@ nothing in the ROM ever takes it.
 
 *`src/recognition/Airus.cpp`; `test_Airus.cpp` walks a one-byte
 dictionary, where the bug is invisible, exactly as the ROM does.*
+
+## A hundred and eighty-one ways to spell a sound
+
+The Newton's spelling corrector does not work by edit distance. It works
+by *pronunciation*, out of a table of letter groups that get written for
+one another:
+
+```c
+{ "a" }, { nil, 2 }, { "A" }, { nil, 3 }, { "ai" }, { nil, 4 },
+{ "ay" }, { "ah" }, { "aa" }, { "aw" }, { nil, 6 }, { "ae" }, { "au" },
+{ "augh" }, { "eig" }, { "eigh" }, { "ey" }, { "al" }, { "e" }, { "ea" },
+{ "ei" }, { "i" }, { "ia" }, { "ie" }, { "io" }, { "o" }, { "oa" },
+{ "oe" }, { "ou" }, { "ow" }, { "u" }, { "ua" }, { "ue" }, { "ao" }
+```
+
+That is the entry for `a`: an `a` in what was written may stand for an
+`a` in the dictionary at no cost, for an `A` at a cost of two, for `ai`
+at three, for `ay`, `ah`, `aa` or `aw` at four, and for two dozen more —
+`augh`, `eigh`, `ough` — at six. There are 181 such entries, one for
+every letter and every group of letters English spells a sound with, and
+they are sorted so the matcher can stop early.
+
+The corrector walks that table and the dictionary's trie *at the same
+time*. At each step it asks the trie which characters can follow what it
+has built so far, and only tries the table's alternatives that begin
+with one of them — so it never wanders into spellings the dictionary
+could not reach anyway. That is what makes it affordable on a twenty
+megahertz ARM: the search is pruned by the data rather than by a cutoff.
+
+The result is a corrector that is good at exactly the mistakes people
+make. "seperate" comes back as "separate" because `e` may stand for `a`;
+"recieve" comes back as "receive" because `ie` may stand for `ei`.
+Neither is within one edit of the right word in the way a dictionary of
+words would measure, and both are one *substitution* away in the way a
+speaker would.
+
+The table is a table of pointers in RAM, filled in at build time, and
+each alternatives list overloads a pointer with a small integer: a value
+below ten is not a spelling but the cost of the spellings after it, and
+nine ends the list. `tools/newton-rom/analysis/spellmaps.py` follows the
+pointers and writes the strings out, keeping that overload explicit.
+
+*`src/recognition/Spelling.cpp`, `SpellMaps.cpp` (generated);
+`src/host/demo/correct.ns` runs it on the machine.*

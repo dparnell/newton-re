@@ -36,6 +36,31 @@ Uni(UniChar* out, const char* text)
 }
 
 
+// the guesses a correction answers, as one string
+static void
+Guesses(RefArg frame, const char* word, char* out)
+{
+	UniChar text[64];
+	Uni(text, word);
+	RefVar list(FSpellCorrect(RefVar(NILREF), frame, RefVar(MakeString(text))));
+	out[0] = 0;
+	if (ISNIL(list))
+		return;
+	long count = Length(list);
+	for (long i = 0; i < count; i++)
+	{
+		if (i != 0)
+			strcat(out, " ");
+		RefVar one(GetArraySlotRef(list, i));
+		const UniChar* chars = CString(one);
+		long at = (long) strlen(out);
+		for (long k = 0; chars[k] != 0; k++)
+			out[at + k] = (char) chars[k];
+		out[at + Ustrlen(chars)] = 0;
+	}
+}
+
+
 int
 main()
 {
@@ -197,6 +222,70 @@ main()
 		EXPECT(EQRef(FSpellCheck(RefVar(NILREF), frame, RefVar(MakeString(text))), TRUEREF));
 
 		FSpellDocEnd(RefVar(NILREF), frame);
+	}
+
+	// ---- what it might have been meant to be ----
+	// The five kinds of change a misspelling is put through, over the
+	// ROM's own lexicons: the right word comes out of each of them.
+	{
+		RefVar frame(FSpellDocBegin(RefVar(NILREF)));
+		char guesses[512];
+
+		// two letters the wrong way round
+		Guesses(frame, "wrod", guesses);
+		EXPECT(strstr(guesses, "word") != nil);
+		// one letter too many
+		Guesses(frame, "helllo", guesses);
+		EXPECT(strstr(guesses, "hello") != nil);
+		// one too few
+		Guesses(frame, "notebok", guesses);
+		EXPECT(strstr(guesses, "notebook") != nil);
+		// one letter read as another
+		Guesses(frame, "recieve", guesses);
+		EXPECT(strstr(guesses, "receive") != nil);
+		Guesses(frame, "seperate", guesses);
+		EXPECT(strstr(guesses, "separate") != nil);
+
+		// there are never more than seven, and they come nearest first
+		Guesses(frame, "teh", guesses);
+		EXPECT(strstr(guesses, "the") != nil);
+		long count = 1;
+		for (const char* p = guesses; *p != 0; p++)
+			if (*p == ' ')
+				count++;
+		EXPECT(count <= kSpellGuessCount);
+
+		// what was written round the word is put back on the guesses
+		Guesses(frame, "(wrod),", guesses);
+		EXPECT(strstr(guesses, "(word),") != nil);
+		// ... and so is the capitalisation it was written with
+		Guesses(frame, "Wrod", guesses);
+		EXPECT(strstr(guesses, "Word") != nil);
+
+		FSpellDocEnd(RefVar(NILREF), frame);
+	}
+
+	// ---- the pieces the guessing is built of ----
+	{
+		char word[32];
+		strcpy(word, "abcd");
+		SwapTwo(word, 0, 1);
+		EXPECT(strcmp(word, "bacd") == 0);
+
+		// the same word is no distance at all; a different one of the
+		// same letters costs the five a difference is charged
+		EXPECT(MeasureDistance("word", 4, "word", 4) == 0);
+		EXPECT(MeasureDistance("wrod", 4, "word", 4) == 5);
+		// ... and the brackets the walk puts round a word are not counted
+		EXPECT(MeasureDistance("$word@", 6, "word", 4) == 0);
+
+		// the capitalisation the dictionary says the word has
+		strcpy(word, "newton");
+		FixCapitalization(word, 0x80);
+		EXPECT(strcmp(word, "Newton") == 0);
+		strcpy(word, "newton");
+		FixCapitalization(word, 0x40);
+		EXPECT(strcmp(word, "NEWTON") == 0);
 	}
 
 	if (failures == 0)

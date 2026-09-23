@@ -1202,6 +1202,124 @@ The dictionary's own side of all of it - `AddAutoAdd`,
 `RemoveAutoAdd` and `DoIndexedLearning` - is `recognition/Learning.h`
 and `recognition/Recognizer.h`.
 
+## The spelling checker (`recognition/Spelling.h`)
+
+A thing of its own sitting on the dictionaries.  It knows nothing about
+the recogniser, and the recogniser reaches it only through the
+NewtonScript functions the ROM gives it - `SpellDocBegin`, `SpellCheck`,
+`SpellCorrect`, `SpellSkip`, `SpellDocEnd` and the learn/unlearn pair -
+so that seam is where a modern checker would go in, and it is where the
+file boundary is drawn.
+
+### A session
+
+`SpellDocBegin` 0x001f6360 makes a `spell_state` and answers the frame a
+script holds it by (`MakeSpellFrame` 0x001f62ac; `GetSpeller` 0x001f6314
+goes back the other way).  It builds two sets of chains out of the
+machine's dictionaries as they stand: `InitSpellChains` 0x001f1b74 takes
+every dictionary whose `domainType` says it holds words (0x1000, less
+the ones whose bottom bit marks them as not to be offered), and
+`InitNumberChains` 0x001f40a4 takes the ones that hold numbers, dates,
+times and money (0x1c2000).  The second set is empty until `ReadDictPrefs`
+has run: the date, time, phone and money dictionaries have no words of
+their own until the locale gives them some.  A session also holds an
+empty dictionary for the words it is told to skip, given the *user*
+dictionary's id so that a skipped word looks to the rest of the checker
+like a word the writer added.  `SpellDocEnd` 0x001f63f8 gives it all
+back and writes the user dictionary out when anything was learnt.
+
+The words are eight-bit throughout: the checker works in Mac Roman, and
+the curly right single quote a paragraph writes is turned into a plain
+apostrophe on the way in (`FixQuotes` 0x001f5d50) and back on the way out
+(`RestoreQuotes` 0x001f5da0), because the dictionaries hold the plain
+one.
+
+### Is it spelled right?
+
+`SpellCheck` 0x001f41bc takes the word apart - the punctuation off both
+ends (`CollectPunctSymbols`), a possessive off the end
+(`CollectContractions` 0x001aa810), the capitalisation noted and taken
+off - and looks it up three ways: as it stands, with a capital first
+letter, and in capitals.  The first that answers decides, and what comes
+back says how what was written differs from what was found: nil when
+nothing does, true when no spelling of it is a word, 128 when the
+dictionaries hold it only with a capital, 192 when only in capitals.  A
+word of one character, a word with a digit in it that the number
+dictionaries know (`CheckNumbers` 0x001f54e4), and a word with anything
+but letters and apostrophes in it (`CheckSymbols` 0x001f4cdc) are all
+left alone.
+
+Under it, `ValidateWord` 0x001f4dc8 asks one dictionary, `ValidateWord2`
+0x001f4e48 asks it again with the first letter's case turned over, and
+`ValidateWordInChain` 0x001f4bcc walks the session's chain - asking the
+words the session was told to skip first.
+
+### What might it have been?
+
+`SpellCorrect` 0x001f44c8 answers up to seven spellings, nearest first.
+`CorrectWordInChain` 0x001f49ac asks each dictionary of the chain in
+turn, and `CheckWord` 0x001f4aac puts the word through five kinds of
+change against it:
+
+- **transpositions** (0x001f4f90): each neighbouring pair swapped.  Two
+  pairs at once (0x001f5068) is only tried when nothing else was found.
+- **deletions** (0x001f5170): each character dropped.
+- **insertions** (0x001f5248): a character put in at each place.
+- **splits** (0x001f52f0): the word cut in two, when both halves are
+  words.
+- **substitutions** (0x001f546c): each character read as another.
+
+The first, second and fourth make a candidate and look it up.  The other
+two do not try one letter at a time: they put a `?` where the change
+goes and hand the word to `DoWord` 0x001f55ac, which walks the
+dictionary and a *map* together.
+
+A map is a sorted list of (what is written, what it might stand for)
+pairs.  `wc_map` says what a character may be read as and what `?` may
+stand for - any letter, at a cost of seven, in frequency order;
+`substitution_map` holds 181 letter groups that are written for one
+another, which is the phonetic heart of the thing: `a` may stand for
+`ai`, `ay`, `eigh`, `ough` and two dozen more, each at its own cost.
+Both live in the initialised RAM area as tables of pointers, so
+`tools/newton-rom/analysis/spellmaps.py` follows them and writes
+`SpellMaps.cpp`.
+
+`DoWord` brackets the word with `$` and `@` (so a map entry can say what
+may stand at the beginning and the end) and then walks a stack of
+`word_state`s, one per piece of the word matched so far.  Each state
+finds the map entries whose pattern the word goes on with
+(`FindList`/`GetNextList` 0x001f5a1c, 0x001f5994 - the map is sorted, so
+a pattern that sorts past the word ends the search), and for each of them
+every spelling it allows (`GetCurrentElement` 0x001f5b14).  A spelling
+whose first character the trie cannot take is passed over, which is what
+keeps the walk from trying everything everywhere: the set of characters
+available at a node comes from `AEnum_NextSet`
+(`GetNextCharacters` 0x001f5570).  A state that reaches the end of the
+word on a node that is a word reports what it built; six edits is as far
+as it will stray, and 48 states as deep as it will go.
+
+The guesses are kept in order of what they cost (`InsertGuess`
+0x001f5f54 over `FindGuess`/`DeleteGuess`), and what a generated
+candidate costs is `MeasureDistance` 0x001f612c plus a charge for the
+kind of change - two for a transposition, three for a deletion, ten for
+a double transposition.  `MeasureDistance` is not an edit distance: it
+counts the characters each spelling has that the other has none of,
+takes the greater, adds the difference in length, and adds five more
+when the two are not the same word.  `ScoreGuess` 0x001f6250 is the
+other kind of cost - what the map charged at each state of a walk.
+
+`RestorePunctSymbols` 0x001f4828 puts back on each guess what was taken
+off the word: the two runs round it and the capitalisation it was
+written with.
+
+`test_Spelling` runs it against the ROM's own lexicons: "wrod" gives
+"word", "helllo" gives "hello", "notebok" gives "notebook", "recieve"
+gives "receive" and "seperate" gives "separate", and what was written
+round the word comes back round the guesses.
+
+NOT YET: `SpellSkip` 0x001f651c (the word added to the session's skip
+dictionary), and the learn/unlearn pair.
+
 ## The corrector (`recognition/CorrectInfo.h`, `views/ParagraphView.h`)
 
 A second tap on a word asks for it to be corrected.  The command travels
@@ -1256,13 +1374,15 @@ The list operations they work with are the ROM's own
 `MoveArrayElement` 0x00078fc4, which swaps two neighbours and otherwise
 takes the element out and puts it back).
 
-NOT YET: the spelling checker, which is where `DoCorrection` goes next
-(`SpellDocBegin` 0x001f6360 and the `spell_state` behind it,
-`FSpellCheck`, `FSpellCorrect`, `CorrectWordInChain`); the two arms of
-the double tap that ask for a word of *writing* to be read again rather
-than corrected, which want the re-recognition path; and
-`HitsHilitedInkWord` 0x00171344 is reconstructed but nothing takes the
-branch that uses it yet.
+The spelling checker `DoCorrection` asks for the alternatives is the
+section above; with it in place a double tap on a word of a Notepad page
+opens the corrector, which is what `src/host/demo/correct.ns`
+photographs.
+
+NOT YET: the two arms of the double tap that ask for a word of *writing*
+to be read again rather than corrected, which want the re-recognition
+path; `HitsHilitedInkWord` 0x00171344 is reconstructed but nothing takes
+the branch that uses it yet.
 
 ## The caret gesture
 

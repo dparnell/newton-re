@@ -63,6 +63,8 @@ GENERATED = [
      "packages.py", ["{build}", "--doc", "docs/packages/rex-packages.md"]),
     ("classinfos",
      "classinfo.py", ["{build}", "--all", "-o", "docs/protocols/classinfos.md"]),
+    ("spellmaps",
+     "spellmaps.py", ["{build}", "-o", "src/recognition"]),
     ("romdicts",
      "romdicts.py", ["{build}", "-o", "src/recognition"]),
     ("factorysoups",

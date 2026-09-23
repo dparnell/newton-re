@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `e7e1b6e`)
+## State at 2026-09-24 (commit `3ebcbe9`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8693 citations, 0 bad;
-  4704 of 16671 functions (28.22%).
+- `analysis/coverage.py build/MP2x00US --check`: 8744 citations, 0 bad;
+  4747 of 16671 functions (28.47%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -71,6 +71,12 @@ The last run of work closed, in order:
   `FindWordInRun` and the only claim that scores 6 - and with it the
   remote-writing bracket the corrector puts round a word, and a rich
   string keeping its writing when it is dropped into a paragraph.
+- **the spelling checker** (`recognition/Spelling.h`): the session and
+  its chains, whether a word is spelled right, and what it might have
+  been meant to be - five kinds of change against the dictionary, two of
+  them walking the trie and a table of 181 letter groups together
+  (`analysis/spellmaps.py`).  With it, a double tap on a word opens the
+  corrector.
 - **the whole of the writing path above the engine**: the machine boots
   into the Setup assistant, walks through it to the Notepad, opens
   Names, Dates, Extras and the Preferences roll, takes writing and keeps
@@ -122,18 +128,12 @@ the two large open areas below.
   `DoCorrection`: a double tap travels from the click-event recogniser
   to the edit view, down to the paragraph under the point, and out
   through `Correct` (`docs/recognition/README.md`, "The corrector").
-  What stops it is the **spelling checker**, which is where
-  `DoCorrection` goes next - `SpellDocBegin` (0x001f6360) makes a
-  `spell_state` with its own dictionary chains (`InitSpellChains`,
-  `InitNumberChains`, `MakeSpellFrame` 0x001f62ac, `GetSpeller`
-  0x001f6314, `FSpellDocEnd`, `FSpellSkip`), and `FSpellCheck`
-  (0x001f41bc), `FSpellCorrect` (0x001f44c8) and `CorrectWordInChain`
-  (0x001f49ac) are the work.  With the dictionaries in place the
-  chains it wants are there.
-  Reproduce it with `build/host/host/newton --rom build/MP2x00US/rom.bin
-  --display 320x480 --headless 48 --script <setup.ns + type a word +
-  double tap>`: the run stops at `native not reconstructed:
-  SpellDocBegin`.
+  The spelling checker it asks for the alternatives is there too, so a
+  double tap on a word of the Notepad now opens the corrector:
+  `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
+  --headless 50 --script src/host/demo/correct.ns` photographs it.
+  What is left of the checker is `SpellSkip` (0x001f651c) and the
+  learn/unlearn pair.
 - **The two ink arms of the double tap**, which ask for a word of
   writing to be read again rather than corrected: one for a tap on an
   ink word inside the selection (`HitsHilitedInkWord` is reconstructed
