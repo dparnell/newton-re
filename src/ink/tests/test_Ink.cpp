@@ -1461,7 +1461,7 @@ TestInkDraw()
 	EXPECT(NOTNIL(ink));
 
 	EXPECT(DrawnPixels() == 0);
-	InkDraw(ink, 1, 20, 30);
+	InkDraw(ink, 1, 20, 30, false);
 	long lit = DrawnPixels();
 	EXPECT(lit > 20 && lit < 80);		// a line about forty pixels long
 
@@ -1477,7 +1477,7 @@ TestInkDraw()
 
 	// and drawn again ten to the right it moves with it
 	memset(gDrawBits, 0, sizeof(gDrawBits));
-	InkDraw(ink, 1, 30, 30);
+	InkDraw(ink, 1, 30, 30, false);
 	long first = -1;
 	for (long x = 0; x < kDrawWidth; x++)
 		if (GetPixel(&gDrawMap, x, 32) != 0)
@@ -1489,7 +1489,7 @@ TestInkDraw()
 
 	// half the size is half as wide
 	memset(gDrawBits, 0, sizeof(gDrawBits));
-	InkDrawScaled(ink, 1, ToFixed(0), ToFixed(4), 0x8000, 0x8000);
+	InkDrawScaled(ink, 1, ToFixed(0), ToFixed(4), 0x8000, 0x8000, false);
 	long widest = 0;
 	for (long y = 0; y < kDrawHeight; y++)
 	{

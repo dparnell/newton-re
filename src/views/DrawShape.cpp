@@ -736,7 +736,7 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 		PenState pen;
 		GetPenState(&pen);
 		InkDrawInRect(RefVar(GetProtoVariable(shape, RSSYMdata, nil)), (ULong) pen.pnSize.h,
-					  &from, &to);
+					  &from, &to, false);
 		return;
 	}
 	if (EQRef(cls, RSSYMpolygon) || EQRef(cls, RSSYMregion))

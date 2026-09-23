@@ -149,14 +149,19 @@ Ref			TStrokesToInkWord(TStroke** strokes, Rect* outRect);	// ROM 0x001404f0 TSt
 
 // Ink drawn into the current port, its top-left at (x, y).  The scale
 // is applied to the ink's own coordinates before the offset - a whole
-// one draws it the size it was written.
-void		InkDraw(RefArg ink, ULong group, long x, long y);		// ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
-void		InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y,
-						  Fixed scaleX, Fixed scaleY);				// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
+// one draws it the size it was written - and `pen` is the width the
+// lines are drawn with.
+//
+// `useInker` says the ink is wholly inside the clip, which lets the ROM
+// draw it with the live inker's own line drawer instead of QuickDraw's
+// (NOT YET: it is drawn the slow way either way).
+void		InkDraw(RefArg ink, ULong pen, long x, long y, Boolean useInker);	// ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
+void		InkDrawScaled(RefArg ink, ULong pen, Fixed x, Fixed y,
+						  Fixed scaleX, Fixed scaleY, Boolean useInker);	// ROM 0x00153884 GenericCSDraw__FP14CSStrokeHeaderUllN33Uc
 
 // Ink drawn stretched from the box it was made in into another one,
 // which is how a sketch that has been resized is drawn.
-void		InkDrawInRect(RefArg ink, ULong group, const Rect* from, const Rect* to);	// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
+void		InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean useInker);	// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
 
 
 // A shape frame that draws a list of strokes as ink: the strokes packed

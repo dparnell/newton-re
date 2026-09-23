@@ -513,10 +513,12 @@ InkPixel(long value, Fixed scale, Fixed offset, Fixed tabScale)
 // The points the decoder hands out drawn as they come: the first of a
 // stroke moves the pen and the rest are lines from it.
 //
-// (The ROM keeps twenty points back at a time and draws them in one go,
-// which saves calls and nothing else, and has a second way of drawing
-// them - InkerLine with a pen of its own - which is the live inker's and
-// is NOT YET.)
+// (The ROM keeps twenty points back at a time and draws them in one go -
+// DrawBufferedPoints 0x0015407c, which also sets the pen - and that is
+// where its second way of drawing them lives: when the caller says the
+// ink is wholly inside the clip it draws with InkerLine, the live
+// inker's own line drawer, which takes its pen with it.  NOT YET, so
+// everything is drawn the slow way and the pen is set once instead.)
 static short
 PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 {
@@ -545,10 +547,18 @@ PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 }
 
 
-// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
+// ROM 0x00153884 GenericCSDraw__FP14CSStrokeHeaderUllN33Uc
 // Ink drawn into the current port at a place and a scale.
+//
+// The pen is the width the lines are drawn with, and is *not* the
+// decoder's group: drawing always asks the decoder for every point
+// (group 0, which Decode turns into thinning mode 3), and the pen
+// travels beside the place and the scale in the block the point proc
+// reads.  The ROM sets it in DrawBufferedPoints, once per batch of
+// twenty; here it is set once, which comes to the same thing.
 void
-InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY)
+InkDrawScaled(RefArg ink, ULong pen, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY,
+			  Boolean useInker)
 {
 	if (ISNIL(ink) || !IsBinary(ink))
 		return;
@@ -559,13 +569,16 @@ InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed sca
 	long size = Length(ink);
 	if (IsInkWord(ink))
 		size -= (long) sizeof(PackedInkWordInfo);
+	// (the ROM leaves the pen alone when it is going to use InkerLine,
+	// which carries its own; this draws with QuickDraw either way)
+	PenSize((long) pen, (long) pen);
 	InkDrawing to;
 	to.fX = x;
 	to.fY = y;
 	to.fScaleX = scaleX;
 	to.fScaleY = scaleY;
 	to.fStarting = true;
-	codec->Decode(data, size, group, PGCDrawPointProc, &to);
+	codec->Decode(data, size, 0, PGCDrawPointProc, &to);
 }
 
 
@@ -574,7 +587,7 @@ InkDrawScaled(RefArg ink, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed sca
 // the scale is what one box is of the other, in both directions, and the
 // ink goes to the destination's top-left corner.
 void
-InkDrawInRect(RefArg ink, ULong group, const Rect* from, const Rect* to)
+InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean useInker)
 {
 	FRect dst;
 	FixRect(&dst, to);
@@ -582,18 +595,21 @@ InkDrawInRect(RefArg ink, ULong group, const Rect* from, const Rect* to)
 	Fixed height = (Fixed) ((ULong) (from->bottom - from->top) << 16);
 	if (width == 0 || height == 0)
 		return;
-	InkDrawScaled(ink, group, dst.left, dst.top,
+	InkDrawScaled(ink, pen, dst.left, dst.top,
 				  FixedDivide(dst.right - dst.left, width),
-				  FixedDivide(dst.bottom - dst.top, height));
+				  FixedDivide(dst.bottom - dst.top, height), useInker);
 }
 
+
 // ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
-// The same, at the size it was written.
+// The same, at the size it was written.  (The ROM goes through CSDraw
+// and a GenericCSDraw of its own, which builds the same block with the
+// two scales set to one.)
 void
-InkDraw(RefArg ink, ULong group, long x, long y)
+InkDraw(RefArg ink, ULong pen, long x, long y, Boolean useInker)
 {
-	InkDrawScaled(ink, group, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16),
-				  0x10000, 0x10000);
+	InkDrawScaled(ink, pen, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16),
+				  0x10000, 0x10000, useInker);
 }
 
 
