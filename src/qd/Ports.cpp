@@ -408,6 +408,75 @@ FGetBlue(RefArg /*rcvr*/, RefArg colour)
 }
 
 
+// ROM 0x002bf044 RGBtoGray__FUlN21lT4
+// A colour as a gray of `depthOut` bits: the luminance of the three
+// components weighted 19589, 38443 and 7497 (the usual 0.299, 0.587,
+// 0.114 in sixteenths of a thousandth), *inverted* - the Newton's grays
+// run from 0 white to all-ones black, the other way from a colour - and
+// rounded by half a step of the incoming depth before it is shifted
+// down.
+//
+// The subtraction of the half-step is guarded by an unsigned compare
+// against what it came from, so a value too small to take it keeps the
+// value it had rather than wrapping; that is the ROM's own arithmetic.
+//
+// DEVIATION: the whole of it is thirty-two bit arithmetic on the ARM -
+// the products wrap and the shifts are by a register, where a count of
+// thirty-two or more gives nought - so it is done in ULong32 through the
+// two helpers rather than in whatever width the host's ULong is.
+static ULong32
+ArmLsl(ULong32 value, ULong count)	{ return count >= 32 ? 0 : (ULong32) (value << count); }
+static ULong32
+ArmLsr(ULong32 value, ULong count)	{ return count >= 32 ? 0 : (ULong32) (value >> count); }
+
+ULong
+RGBtoGray(ULong red, ULong green, ULong blue, long depthIn, long depthOut)
+{
+	ULong32 gray = (ULong32) ((ULong32) red * 0xffffb37bUL
+							+ (ULong32) green * 0xffff69d5UL
+							+ (ULong32) blue * 0xffffe2b7UL) - 1;
+	ULong32 rounded = gray - ArmLsl(1, (ULong) (0x1f - depthIn) & 0xff);
+	if (rounded < gray)
+		gray = rounded;
+	return ArmLsr(gray, (ULong) (0x20 - depthOut) & 0xff);
+}
+
+
+// ROM 0x000e3a04 FGetTone
+// GetTone(colour): the gray the current port would draw that colour as,
+// at the port's own depth.
+static Ref
+FGetTone(RefArg /*rcvr*/, RefArg colour)
+{
+	GrafPort* port;
+	GetPort(&port);
+	long depth = (long) (port->portBits.pixMapFlags & kPixMapDepth);
+	ULong r, g, b;
+	UnpackRGBvalues((ULong) RINT(colour), &r, &g, &b);
+	return MAKEINT(RGBtoGray(r, g, b, depth, depth));
+}
+
+
+// ROM 0x000e3c38 FIsEqualTone
+// IsEqualTone(a, b): whether two colours come out as the same gray in
+// the current port - which is how a script asks whether a colour is
+// worth using on this screen.
+static Ref
+FIsEqualTone(RefArg /*rcvr*/, RefArg a, RefArg b)
+{
+	GrafPort* port;
+	GetPort(&port);
+	long depth = (long) (port->portBits.pixMapFlags & kPixMapDepth);
+	ULong r, g, bl;
+	UnpackRGBvalues((ULong) RINT(a), &r, &g, &bl);
+	ULong first = RGBtoGray(r, g, bl, depth, depth);
+	UnpackRGBvalues((ULong) RINT(b), &r, &g, &bl);
+	ULong second = RGBtoGray(r, g, bl, depth, depth);
+	return MAKEBOOLEAN(first == second);
+}
+
+
+
 void
 RegisterPortNatives(void)
 {
@@ -415,6 +484,8 @@ RegisterPortNatives(void)
 	RegisterNativeFunction("FGetRed", (void*) FGetRed, 1);
 	RegisterNativeFunction("FGetGreen", (void*) FGetGreen, 1);
 	RegisterNativeFunction("FGetBlue", (void*) FGetBlue, 1);
+	RegisterNativeFunction("FGetTone", (void*) FGetTone, 1);
+	RegisterNativeFunction("FIsEqualTone", (void*) FIsEqualTone, 2);
 }
 
 // ROM 0x0033f488 Random__Fv

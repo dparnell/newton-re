@@ -308,12 +308,61 @@ FClicker(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x001e6f34 FSetInputGain
+// SetInputGain(gain): how loud the microphone is recorded, 0 to 255.
+// Anything that is not an integer means the middle (0x80); an integer
+// out of range is held to the end it went past.  ==> the gain used.
+static Ref
+FSetInputGain(RefArg /*rcvr*/, RefArg gain)
+{
+	long value = 0x80;
+	if (ISINT(gain))
+	{
+		value = RVALUE(gain);
+		if (value < 0)
+			value = 0;
+		else if (value > 0xff)
+			value = 0xff;
+	}
+	GlobalSoundChannel()->SetInputGain(value);
+	return MAKEINT(value);
+}
+
+
+// ROM 0x001e706c FSetOutputDevice
+// SetOutputDevice(device): where sound comes out - the speaker, the
+// line, whatever the machine has.  Anything that is not an integer means
+// 0.  ==> the device used.
+static Ref
+FSetOutputDevice(RefArg /*rcvr*/, RefArg device)
+{
+	long value = 0;
+	if (ISINT(device))
+		value = RVALUE(device);
+	GlobalSoundChannel()->SetOutputDevice(value);
+	return MAKEINT(value);
+}
+
+
+// ROM 0x001e6f2c FSoundCheck
+// SoundCheck(): nil.  The ROM's function is one instruction: it answers
+// nil and does nothing at all.
+static Ref
+FSoundCheck(RefArg /*rcvr*/)
+{
+	return NILREF;
+}
+
+
 void
 RegisterSoundNatives(void)
 {
 	RegisterNativeFunction("FSoundPlayEnabled", (void*) FSoundPlayEnabled, 1);
 	RegisterNativeFunction("FPlaySoundIrregardless", (void*) FPlaySoundIrregardless, 1);
 	RegisterNativeFunction("FClicker", (void*) FClicker, 0);
+	RegisterNativeFunction("FSetInputGain", (void*) FSetInputGain, 1);
+	RegisterNativeFunction("FSetOutputDevice", (void*) FSetOutputDevice, 1);
+	RegisterNativeFunction("FSoundCheck", (void*) FSoundCheck, 0);
 	RegisterNativeFunction("FPlaySoundSync", (void*) FPlaySoundSync, 1);
 	RegisterNativeFunction("FPlaySound__FRC6RefVarT1", (void*) FPlaySound, 1);
 	RegisterNativeFunction("FPlaySoundEffect", (void*) FPlaySoundEffect, 3);

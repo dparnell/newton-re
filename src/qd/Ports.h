@@ -74,7 +74,8 @@ void		SetRandSeed(long seed);				// ROM 0x0033f538 SetRandSeed__Fl
 // with 0x10 above them.  The components are sixteen-bit going in and
 // coming out (QuickDraw's RGBColor), so the low byte of each is thrown
 // away and the high byte put back in both halves.
-void		RegisterPortNatives(void);			// PackRGB, GetRed, GetGreen, GetBlue
+void		RegisterPortNatives(void);			// PackRGB, GetRed, GetGreen, GetBlue, GetTone, IsEqualTone
+ULong		RGBtoGray(ULong red, ULong green, ULong blue, long depthIn, long depthOut);	// ROM 0x002bf044 RGBtoGray__FUlN21lT4
 ULong		PackRGBvalues(ULong red, ULong green, ULong blue);	// ROM 0x002befdc PackRGBvalues__FUlN21
 void		UnpackRGBvalues(ULong colour, ULong* red, ULong* green, ULong* blue);	// ROM 0x002beffc UnpackRGBvalues__FUlPUlN22
 

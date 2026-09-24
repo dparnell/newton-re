@@ -2316,3 +2316,120 @@ IsLargeBinary(RefArg /*ref*/)
 {
 	return false;
 }
+
+
+/*------------------------------------------------------------------------------
+	L a r g e   b i n a r i e s ,   f r o m   a   s c r i p t
+
+	A "VBO" (a virtual binary object) is a binary kept on a store and
+	paged in through a compander; a script can ask an object whether it
+	is one, which store it is on, what compresses it and how much room it
+	takes there, and can throw away the paged-in copy or the changes made
+	to it.
+
+	NOT YET RECONSTRUCTED: large binaries themselves (`LBData`, the
+	store's large objects).  `IsLargeBinary` is never true on a host, so
+	every one of these takes the ordinary-binary arm, which is what the
+	ROM answers for anything that is not a VBO: nil, or nothing done.
+	The arms below are written as the ROM has them so that the shape of
+	each is on record.
+------------------------------------------------------------------------------*/
+
+// ROM 0x001011fc FIsLargeBinary
+// IsVBO(obj): whether the object is kept on a store.
+static Ref
+FIsLargeBinary(RefArg /*rcvr*/, RefArg obj)
+{
+	return MAKEBOOLEAN(IsLargeBinary(obj));
+}
+
+
+// ROM 0x00100c04 FGetBinaryStore
+// GetVBOStore(obj): the store frame it lives on - the one of `gStores`
+// whose wrapper holds the same TStore - or nil.
+static Ref
+FGetBinaryStore(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!IsLargeBinary(obj))
+		return NILREF;
+	return NILREF;				// NOT YET: LBData::GetStore and the walk of gStores
+}
+
+
+// ROM 0x00100c50 FGetBinaryCompander
+// GetVBOCompander(obj): the name of the compander that packs it.
+static Ref
+FGetBinaryCompander(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!IsLargeBinary(obj))
+		return NILREF;
+	return NILREF;				// NOT YET: LOCompanderName off the store
+}
+
+
+// ROM 0x00100d00 FGetBinaryCompanderData
+// GetVBOCompanderData(obj): the data that compander was made with.
+static Ref
+FGetBinaryCompanderData(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!IsLargeBinary(obj))
+		return NILREF;
+	return NILREF;				// NOT YET: LOCompanderData off the store
+}
+
+
+// ROM 0x00100e38 FGetBinaryStoredSize
+// GetVBOStoredSize(obj): how much room it takes on the store, which is
+// not the same as its size in memory because it is compressed there.
+//
+// BUG (the ROM's): this one does not ask whether the object is a large
+// binary at all.  It hands the *binary's own data* to
+// StorageSizeOfLargeObject, which reads it as an LBData; for an ordinary
+// binary that is whatever the binary happens to contain.
+static Ref
+FGetBinaryStoredSize(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!IsLargeBinary(obj))
+		return MAKEINT(0);		// NOT YET: StorageSizeOfLargeObject over the binary's data
+	return MAKEINT(0);
+}
+
+
+// ROM 0x0010039c FLBClearCache
+// ClearVBOCache(obj): the paged-in copy written back and let go.
+static Ref
+FLBClearCache(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!IsLargeBinary(obj))
+		return NILREF;
+	return NILREF;				// NOT YET: FlushLargeObject
+}
+
+
+// ROM 0x001002a4 FLBRollback
+// VBOUndoChanges(obj): the changes made since it was paged in thrown
+// away, and every Ref into it declawed.
+//
+// BUG (the ROM's): like GetVBOStoredSize this does not check that the
+// object is a large binary first - it reads the LBData out of any object
+// it is given.
+static Ref
+FLBRollback(RefArg /*rcvr*/, RefArg obj)
+{
+	if (!IsLargeBinary(obj))
+		return NILREF;
+	return NILREF;				// NOT YET: AbortObject and the declawing
+}
+
+
+void
+RegisterLargeBinaryNatives(void)
+{
+	RegisterNativeFunction("FIsLargeBinary", (void*) FIsLargeBinary, 1);
+	RegisterNativeFunction("FGetBinaryStore", (void*) FGetBinaryStore, 1);
+	RegisterNativeFunction("FGetBinaryCompander", (void*) FGetBinaryCompander, 1);
+	RegisterNativeFunction("FGetBinaryCompanderData", (void*) FGetBinaryCompanderData, 1);
+	RegisterNativeFunction("FGetBinaryStoredSize", (void*) FGetBinaryStoredSize, 1);
+	RegisterNativeFunction("FLBClearCache", (void*) FLBClearCache, 1);
+	RegisterNativeFunction("FLBRollback", (void*) FLBRollback, 1);
+}

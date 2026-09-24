@@ -3580,6 +3580,20 @@ TestSelection()
 	// (views/FontNatives.cpp over qd/Fonts.h).  A family that has a
 	// number packs the three into one integer.
 	EXPECT(RINT(Eval("GetFontFamilyNum(MakeCompactFont('geneva, 10, 2))")) == 2);
+	// the colours a script packs and takes apart, and the gray the port
+	// would draw them as (qd/Ports.cpp)
+	EXPECT(RINT(Eval("GetRed(PackRGB(0xFFFF, 0x8000, 0))")) == 0xFFFF);
+	EXPECT(RINT(Eval("GetGreen(PackRGB(0xFFFF, 0x8000, 0))")) == 0x8080);
+	EXPECT(RINT(Eval("GetBlue(PackRGB(0xFFFF, 0x8000, 0))")) == 0);
+	EXPECT(NOTNIL(Eval("IsEqualTone(PackRGB(0, 0, 0), PackRGB(0, 0, 0))")));
+	EXPECT(ISNIL(Eval("IsEqualTone(PackRGB(0, 0, 0), PackRGB(0xFFFF, 0xFFFF, 0xFFFF))")));
+	// the gray itself, at a depth of its own: white is 0 and black all
+	// ones, the other way from a colour (qd/Ports.h)
+	EXPECT(RGBtoGray(0xffff, 0xffff, 0xffff, 8, 8) == 0);
+	EXPECT(RGBtoGray(0, 0, 0, 8, 8) == 0xff);
+	EXPECT(RGBtoGray(0x8080, 0x8080, 0x8080, 8, 8) > 0x70 && RGBtoGray(0x8080, 0x8080, 0x8080, 8, 8) < 0x90);
+	// the large-binary questions: an ordinary binary is not one
+	EXPECT(ISNIL(Eval("IsVBO(\"hello\")")) && ISNIL(Eval("GetVBOStore(\"hello\")")));
 	EXPECT(RINT(Eval("GetFontFace(MakeCompactFont('geneva, 10, 2))")) == 2);
 	EXPECT(ISNIL(Eval("GetFontFamilyNum({family: 'nosuchfont, size: 9, face: 0})")));
 	// a font frame that does not say what face it is answers nil, not 0
@@ -5513,6 +5527,8 @@ main()
 	InitFonts();
 	RegisterTextNatives();
 	RegisterViewNatives();
+	RegisterPortNatives();
+	RegisterLargeBinaryNatives();
 	RegisterShapeNatives();
 	RegisterBitmapNatives();
 	RegisterStrokeBundleNatives();

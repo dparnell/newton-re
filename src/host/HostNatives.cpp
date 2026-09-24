@@ -43,6 +43,7 @@ RegisterAllNatives(void)
 {
 	// the frames core: arithmetic, strings, arrays, the compiler, the printer
 	RegisterBuiltinNatives();
+	RegisterLargeBinaryNatives();
 	RegisterSortTableNatives();
 
 	// text and the view system
