@@ -1006,3 +1006,43 @@ announces itself at the moment it is recognised, before the writer has
 moved at all.
 
 *`src/views/View.cpp`.*
+
+
+## A document's chunk table is six bytes long
+
+The text engine keeps a document's characters in chunks of at most 512,
+and a `TXRanges` array says where each chunk ends. Writing that array
+out to a stream is `TXChunkedChars::WriteChunksRanges` (ROM 0x002325f8),
+and it does not write the array:
+
+```cpp
+long count = fChunks->GetCount();
+TXWriteHalf(stream, count);
+for (long i = 0; i < count; i++)
+{
+    long len = fChunks->GetRangeLen(i);
+    if (len == fChunkSize)
+        continue;                       // a full chunk is not named
+    TXWriteHalf(stream, len);
+    TXWriteHalf(stream, i);
+}
+TXWriteHalf(stream, 0);
+```
+
+Only the chunks whose length is *not* the default are named, each by a
+`(length, index)` pair, and a nought ends the list. Reading it back
+(0x00232704) walks the pairs and gives every chunk up to the next named
+one the default length.
+
+The effect is that a document which has just been typed — every chunk
+filled to 512 characters except the last — has a chunk table of exactly
+six bytes: the count, the last chunk's length and index, and the
+terminator. It stays that small no matter how long the document is. A
+document that has been edited for a while pays two bytes per ragged
+chunk, and `Remove` runs neighbouring chunks back together whenever two
+of them will fit in one, which keeps the ragged ones from accumulating.
+
+Two hundred pages of text, and the index that finds any character in
+them costs six bytes on the store.
+
+*`src/text/TXChars.cpp`.*

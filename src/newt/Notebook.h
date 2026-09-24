@@ -74,7 +74,6 @@ void	SetActionDescription(long errorCode);				// ROM 0x00146528 SetActionDescrip
 Ref		Notify(RefArg args);								// ROM 0x00146584 Notify__FRC6RefVar - the root view's notify method
 // (ErrorNotify 0x001480fc: views/Application.h)
 void	ActionErrorNotify(long errorCode, long kind);		// ROM 0x00146648 ActionErrorNotify__FlT1 - actionNotify([kind, errorCode, nil])
-long	GetExceptionErr(Exception* exception);				// ROM 0x001466ec GetExceptionErr__FP9Exception - the error code an exception carries
 void	ExceptionNotify(Exception* exception);				// ROM 0x001468d4 ExceptionNotify__FP9Exception - vars.lastEx/lastExMessage/lastExError/lastExData set and the error shown
 
 #endif	/* __NOTEBOOK_H */

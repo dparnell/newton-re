@@ -3,14 +3,16 @@
 # over its own storage rather than over the object heap.  What is here
 # so far is its foundation: the growable arrays everything else is built
 # on, the ranges that record which run of characters each style, line
-# and paragraph covers, and the attributes a run carries
-# (TXAttributes.h).
+# and paragraph covers, the attributes a run carries (TXAttributes.h),
+# the chunked character storage (TXChars.h) and the byte streams text
+# and chunk tables travel through (TXStream.h).
 add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
     TXChars.cpp
+    TXStream.cpp
 )
-target_link_libraries(text PUBLIC newton_config utility frames)
+target_link_libraries(text PUBLIC newton_config utility toolbox frames)
 target_include_directories(text PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

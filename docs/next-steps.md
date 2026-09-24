@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `5982b10`)
+## State at 2026-09-24 (commit `ff12079`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 78/78.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 79/79.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9123 citations, 0 bad;
-  4981 of 16671 functions (29.88%).
+- `analysis/coverage.py build/MP2x00US --check`: 9146 citations, 0 bad;
+  5003 of 16671 functions (30.01%).
 - `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -202,8 +202,21 @@ The last run of work closed, in order:
   storage itself (`text/TXChars.h`): the text in chunks of at most 512
   characters, the three ways `Replace` tries to get text in, and the
   running-together of chunks that keeps an edited document from ending
-  up made of crumbs.  NOT YET: `TXStream`, and everything above the
-  storage - the runs, the formatter, the lines and `TXView`.
+  up made of crumbs.  Then the byte streams under all of it
+  (`text/TXStream.h`): `TXStream` and its `ReadBytes`/`WriteBytes`, the
+  handle stream, the binary stream with its slack, the temporary stream
+  factory, and the chunk table written out and read back
+  (`WriteChunksRanges`/`ReadChunksRanges`) - which is what a text
+  descriptor needs to name a stream at either end.
+
+  NOT YET in the streams: the factory's large-binary arm (it wants
+  `FLBAllocCompressed` and large binaries, which are not reconstructed;
+  it answers `kError_No_Memory` as the ROM's own does when nothing came
+  of it).  Above the storage, nothing yet: the rulers and their tab
+  arrays, `Textension` and the runs, the formatter and the lines, and
+  `TXView` with its forty-one `FTX...` natives.  The order to take them
+  in is the one `docs/text/README.md` states - rulers, then the runs,
+  then the formatter, then the view.
 
 ## Next: what is left of the natives, and why
 

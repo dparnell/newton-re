@@ -2433,3 +2433,33 @@ RegisterLargeBinaryNatives(void)
 	RegisterNativeFunction("FLBClearCache", (void*) FLBClearCache, 1);
 	RegisterNativeFunction("FLBRollback", (void*) FLBRollback, 1);
 }
+
+
+// ROM 0x001466ec GetExceptionErr__FP9Exception
+// The error code an exception carries: out of memory's data (kError_No_Memory
+// when none), a frames exception's errorCode slot, a message exception's
+// data; else kError_No_Memory... no: -8007 (an unknown exception).
+long
+GetExceptionErr(Exception* exception)
+{
+	long err = -8007;
+	if (Subexception(exception->name, exOutOfMemory))
+	{
+		err = (long) (Long) exception->data;
+		if (err == 0)
+			err = kError_No_Memory;
+	}
+	else if (Subexception(exception->name, "type.ref"))
+	{
+		RefVar data(**(Ref**) exception->data);
+		if (IsFrame(data))
+		{
+			RefVar code(GetFrameSlotRef(data, RSSYMerrorcode));
+			if (ISINT(code))
+				err = RINT(code);
+		}
+	}
+	else if (Subexception(exception->name, "evt.ex.msg"))
+		err = (long) (Long) exception->data;
+	return err;
+}

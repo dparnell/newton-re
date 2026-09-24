@@ -148,6 +148,12 @@ public:
 	Boolean			ConcatChunks(long a, long b);					// ROM 0x00231e30 ConcatChunks__14TXChunkedCharsFlT1
 	void			Remove(long at, long count);					// ROM 0x00231c4c Remove__14TXChunkedCharsFlT1
 
+	// The chunk lengths written out and read back: how a document is kept
+	// on a store.  What is written is the default length repeated, with
+	// only the chunks that differ from it named - see the .cpp.
+	NewtonErr		WriteChunksRanges(TXStream* stream);			// ROM 0x002325f8 WriteChunksRanges__14TXChunkedCharsFP8TXStream
+	NewtonErr		ReadChunksRanges(TXStream* stream);			// ROM 0x00232704 ReadChunksRanges__14TXChunkedCharsFP8TXStream
+
 	// The three ways text is put in, tried in turn; each answers
 	// whether it managed it.
 	Boolean			InsertInChunk(long chunk, long at, TXTextDescriptor* source);	// ROM 0x00232c60 InsertInChunk__14TXChunkedCharsFlT1P16TXTextDescriptor

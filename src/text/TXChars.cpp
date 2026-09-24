@@ -7,29 +7,58 @@
 */
 
 #include "TXChars.h"
+#include "TXStream.h"
+#include "ByteOrder.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 #include "NewtErrors.h"
+
+#include <string.h>
 
 
 // ROM 0x0c104d70 gTXLineCharsBuffer
 UniChar	gTXLineCharsBuffer[kTXLineCharsMax];
 
 
-// NOT YET RECONSTRUCTED: TXStream (0x0023dxxx and up), the engine's own
-// byte stream - a text descriptor may be one at either end, which is
-// how a document is written to and read from a store.  Until it is
-// here, a descriptor that names a stream copies nothing.
+// The characters in a stream are plain halfwords, most significant byte
+// first, because that is the order the Newton itself keeps them in and
+// the ROM's descriptor simply moves the bytes across (TXStream.h).
+// DEVIATION: on a little-endian host they must be turned round on the
+// way in and out, or what is written here would not read on a Newton -
+// and, more to the point, what a Newton wrote would not read here.  The
+// swapping is done a bufferful at a time on the way out so that the
+// caller's text is not disturbed.
+const long	kTXStreamSwapChars	= 0x40;
+
 static NewtonErr
-TXStreamReadBytes(TXStream* /*stream*/, void* /*into*/, long /*bytes*/)
+TXStreamReadBytes(TXStream* stream, UniChar* into, long count)
 {
-	return kError_Call_Not_Implemented;
+	// (a read that ran off the end answers kTXErrEndOfStream having read
+	// what there was; turning the whole buffer round is harmless)
+	NewtonErr err = stream->ReadBytes(into, count * sizeof(UniChar));
+	SwapUniChars(into, count);
+	return err;
 }
 
 static NewtonErr
-TXStreamWriteBytes(TXStream* /*stream*/, const void* /*from*/, long /*bytes*/)
+TXStreamWriteBytes(TXStream* stream, const UniChar* from, long count)
 {
-	return kError_Call_Not_Implemented;
+	if (HostIsBigEndian())
+		return stream->WriteBytes(from, count * sizeof(UniChar));
+
+	UniChar buffer[kTXStreamSwapChars];
+	while (count > 0)
+	{
+		long run = count < kTXStreamSwapChars ? count : kTXStreamSwapChars;
+		memcpy(buffer, from, run * sizeof(UniChar));
+		SwapUniChars(buffer, run);
+		NewtonErr err = stream->WriteBytes(buffer, run * sizeof(UniChar));
+		if (err != noErr)
+			return err;
+		from += run;
+		count -= run;
+	}
+	return noErr;
 }
 
 
@@ -188,7 +217,7 @@ TXTextDescriptor::CopyTo(TXTextDescriptor* to, long count)
 		}
 		if (to->fText != nil)
 		{
-			err = TXStreamReadBytes(fStream, to->fText + to->fPosition, bytes);
+			err = TXStreamReadBytes(fStream, to->fText + to->fPosition, count);
 			to->fPosition += count;
 			return err;
 		}
@@ -205,7 +234,7 @@ TXTextDescriptor::CopyTo(TXTextDescriptor* to, long count)
 		}
 		if (to->fStream != nil)
 		{
-			err = TXStreamWriteBytes(to->fStream, fText + fPosition, bytes);
+			err = TXStreamWriteBytes(to->fStream, fText + fPosition, count);
 			fPosition += count;
 			return err;
 		}
@@ -849,4 +878,112 @@ TXChunkedChars::Replace(long at, long count, TXTextDescriptor* source)
 			return noErr;
 	}
 	return InsertUsingExtraChunks(chunk, at, source);
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   c h u n k s ,   w r i t t e n   o u t
+------------------------------------------------------------------------------*/
+
+// The chunk lengths, as halfwords most significant byte first: how many
+// chunks there are, then a (length, index) pair for every chunk that is
+// not the default length, then a nought to end them.  A document that has
+// not been edited much is nearly all full chunks, so this is usually six
+// bytes however long it is.
+static NewtonErr
+TXWriteHalf(TXStream* stream, long value)
+{
+	unsigned char half[2];
+	PutBigEndianHalf(half, (unsigned short) value);
+	return stream->WriteBytes(half, sizeof(half));
+}
+
+static NewtonErr
+TXReadHalf(TXStream* stream, long* value)
+{
+	unsigned char half[2] = { 0, 0 };
+	NewtonErr err = stream->ReadBytes(half, sizeof(half));
+	if (err == noErr)
+		*value = GetBigEndianHalf(half);
+	return err;
+}
+
+
+// ROM 0x002325f8 WriteChunksRanges__14TXChunkedCharsFP8TXStream
+NewtonErr
+TXChunkedChars::WriteChunksRanges(TXStream* stream)
+{
+	long count = fChunks->GetCount();
+	NewtonErr err = TXWriteHalf(stream, count);
+	if (err != noErr)
+		return err;
+
+	for (long i = 0; i < count; i++)
+	{
+		long len = fChunks->GetRangeLen(i);
+		if (len == fChunkSize)
+			continue;							// a full chunk is not named
+		err = TXWriteHalf(stream, len);
+		if (err != noErr)
+			return err;
+		err = TXWriteHalf(stream, i);
+		if (err != noErr)
+			return err;
+	}
+	return TXWriteHalf(stream, 0);
+}
+
+
+// ROM 0x00232704 ReadChunksRanges__14TXChunkedCharsFP8TXStream
+// The ranges are laid out again from what WriteChunksRanges said: every
+// chunk up to the next one that was named gets the default length, the
+// named one gets its own, and the nought at the end fills the rest.  The
+// chunks themselves are not made here - the caller has already done that
+// - only where each of them ends.
+NewtonErr
+TXChunkedChars::ReadChunksRanges(TXStream* stream)
+{
+	long count;
+	NewtonErr err = TXReadHalf(stream, &count);
+	if (err != noErr)
+		return err;
+	err = fChunks->SetCount(count);
+	if (err != noErr)
+		return err;
+
+	long end = 0;
+	long i = 0;
+	if (count >= 0)
+	{
+		do
+		{
+			long len;
+			err = TXReadHalf(stream, &len);
+			if (err != noErr)
+				return err;
+			long index;
+			if (len == 0)
+				index = count;					// the last pair: fill to the end
+			else
+			{
+				err = TXReadHalf(stream, &index);
+				if (err != noErr)
+					return err;
+			}
+			for (; i < index; i++)
+			{
+				end += fChunkSize;
+				fChunks->SetRangeEnd(i, end);
+			}
+			if (len != 0)
+			{
+				end += len;
+				fChunks->SetRangeEnd(index, end);
+			}
+			i++;
+		}
+		while (i <= count);
+	}
+	fCount = end;
+	return noErr;
 }

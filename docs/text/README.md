@@ -193,10 +193,75 @@ The plain ones have a wrinkle worth knowing: asking for a *form feed*
 (0x0c) finds a carriage return (0x0d) **or** a line feed (0x0a), which
 is how text that came in with either line ending is read the same way.
 
+## The streams (`text/TXStream.h`)
+
+`TXStream` (0x00245ec8) is eight bytes: a vtable and a position. A
+subclass supplies three things — how big the stream is, and how to read
+and write at the position — and the base turns those into `WriteBytes`
+and `ReadBytes`, which move the position along afterwards. A read that
+would run off the end reads what there is, moves the position to the end
+and answers **-8702**, which is how a reader that does not know how long
+a thing is finds out. (The ROM has no symbol for that number; it is
+`kTXErrEndOfStream` here.)
+
+Two subclasses exist.
+
+`TXHandleStream` (0x002460fc) keeps its bytes in a `TXArray` of one-byte
+elements, thirty at a time, and is the ordinary scratch stream. Its
+`Write` is one `TXArray::Replace`: as many bytes as are left from the
+position are replaced by *all* of the new ones, so one call both
+overwrites and extends.
+
+`TXBinaryStream` (0x0023e174) writes into a NewtonScript binary, which
+is how a document becomes something a soup entry can hold. It keeps the
+size it has written separately from the binary's length: a write at the
+end grows the binary by the size wanted *plus a slack* (0x400 bytes for
+the ROM's own), so the next few writes need not grow it again, and the
+destructor cuts it back to what was written if it was asked to. A write
+inside what is already there simply overwrites and the size does not
+move. Its constructor's second argument is the difference between
+opening one to read (start full) and making one to write (start empty)
+over the same binary.
+
+Which of the two a piece of the engine gets is the **temporary stream
+factory**'s business (`TXSetTempStreamFactory` /
+`TXGetTempStreamFactory` over `gTXTempStreamFactory`, 0x0c104e8c). The
+ROM's own, `TXNewtStreamFactory::Create` (0x0023efc8), answers a handle
+stream for anything under four kilobytes; for anything larger it tells
+the busy box it is working, takes the first of `GetStores()`, rounds the
+size up to a whole kilobyte and adds two more, and asks
+`FLBAllocCompressed` for a `'binary` of that length on the store with a
+`"TLZStoreCompander"` over it — which is what lets a document larger
+than the heap be worked on at all. That arm is **not yet**: large
+binaries are not reconstructed, so `Create` answers `kError_No_Memory`,
+which is exactly what the ROM's own does when nothing came of it.
+
+### Text through a stream
+
+`TXTextDescriptor` may name a stream at either end, so a stream is also
+how text gets into and out of the character storage. The ROM's copy is a
+straight `BlockMove` of the bytes, which on a big-endian machine puts
+the `UniChar`s in the stream most significant byte first. **DEVIATION:**
+on a little-endian host they are turned round on the way in and out
+(`toolbox/ByteOrder.h`), so the bytes in a stream are the same bytes a
+Newton would have written.
+
+### The chunks, written out
+
+`TXChunkedChars::WriteChunksRanges` (0x002325f8) and `ReadChunksRanges`
+(0x00232704) are the storage's own use of a stream: the chunk lengths,
+as halfwords most significant byte first. What is written is the number
+of chunks, then a `(length, index)` pair for **every chunk that is not
+the default length**, then a nought to end them; reading lays the ranges
+out again, giving the default length to every chunk up to the next one
+that was named. A document that has not been edited much is nearly all
+full chunks, so its whole chunk table is six bytes however long the
+document is.
+
 ## Not yet reconstructed
 
-`TXStream`, the engine's own byte stream â€” a text descriptor may be one
-at either end, so a descriptor that names a stream copies nothing for
-now. The rulers and their tab arrays, `Textension` and the runs, the
+The rulers and their tab arrays, `Textension` and the runs, the
 formatter and the lines, `TXView` itself and the forty-one `FTX...`
-natives that are its script face.
+natives that are its script face. `TXAttrObject::ReadPublicData` /
+`WritePublicData` are the base's empty pair; the subclasses that
+actually put a style on a stream come with the runs.
