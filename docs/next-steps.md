@@ -311,13 +311,15 @@ that may follow it), written out in `docs/recognition/grammar.md` - so
 `RosettaInitialize` now makes a word recogniser that knows the eight
 grammars and the 166 characters it may answer.  What is missing is
 *reading*, and it is a subsystem of its own rather than a piece of
-work: `docs/recognition/bpnet.md` inventories it.  The bottom of it -
-the classifier net's structure, its trained tables and its life - is
+work: `docs/recognition/bpnet.md` inventories it.  The bottom of it - the
+classifier net, its trained tables, its life and `BPNetEvaluate` - is
 reconstructed (`recognition/BPNet.h`, `analysis/bpnet.py`), and that
-page writes up everything read out of `BPNetEvaluate`'s assembly
-including the one thing that does not add up: it adds 0x03500000 to
-the weight pointer before it starts, which lands outside the ROM.
-Settling that is what `BPNetEvaluate` waits on.
+page has the assembly it came out of and the three numbers the net
+records about itself that the reconstruction is checked against.  The
+0x03500000 the routine adds to its weight pointer turned out to be the
+whole ROM mapped a second time *uncached*
+(`g8MegContinuousTableStart`, ROM 0x100), so that streaming 91KB of
+weights does not flush the StrongARM's data cache.
 
 Above the net, all NOT YET: the seven patternizers that fill its 384
 inputs (7.4 KB), the segment layer (20 KB), the boxed-character

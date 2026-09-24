@@ -146,6 +146,68 @@ main()
 				EXPECT(false);
 				break;
 			}
+
+		// ---- and the net run ----
+		// The connection program walked here, the same way
+		// `BPNetEvaluate` walks it but counting rather than adding, so
+		// that the three numbers the ROM itself writes down can be
+		// checked: how many units it works out, how many connections
+		// they come to, and that the weights run out exactly at the end
+		// of the table.
+		{
+			const ULong* c = newtConnects;
+			long units = 0, connections = 0, cursor = -4, lastWeight = -1;
+			long at = net->fInputCount;
+			ULong word = *c++;
+			for (;;)
+			{
+				long count;
+				for (;;)
+				{
+					word = *c++;
+					count = (long) (((int) word) >> kBPNetCountShift);
+					if (count >= 0)
+						break;
+					if ((word & (kBPNetNextWeights | kBPNetNextRegister)) != 0)
+						cursor += 4;
+					long first = (at - (long) (word & 0xffff)) & 3;
+					long total = 4 - count;
+					connections += total;
+					if (cursor + first + total - 1 > lastWeight)
+						lastWeight = cursor + first + total - 1;
+					cursor += 4 * ((first + total - 1) / 4);
+				}
+				units++;
+				at++;
+				if ((word & kBPNetNextRegister) != 0)
+					break;
+			}
+			EXPECT(units == net->fComputedCount);				// 618
+			EXPECT(connections == (long) net->fConnectionCount);	// 90540
+			EXPECT(lastWeight == (long) net->fWeightSize - 1);	// the last byte
+		}
+
+		// every input at 128, which is the engine's nought, and the net
+		// run over them
+		for (long i = 0; i < net->fInputCount; i++)
+			net->fUnits[i] = 128;
+		BPNetEvaluate(net);
+		// something came out, and it is not all one value
+		Boolean varies = false;
+		for (long i = 1; i < net->fOutputCount; i++)
+			if (net->fOutputs[i] != net->fOutputs[0])
+				varies = true;
+		EXPECT(varies);
+		// ... and it is the same every time
+		UByte first = net->fOutputs[0];
+		long sum = 0;
+		for (long i = 0; i < net->fOutputCount; i++)
+			sum += net->fOutputs[i];
+		BPNetEvaluate(net);
+		long again = 0;
+		for (long i = 0; i < net->fOutputCount; i++)
+			again += net->fOutputs[i];
+		EXPECT(net->fOutputs[0] == first && again == sum);
 	}
 
 	// ---- the engine's own character set ----

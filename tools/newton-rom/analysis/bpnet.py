@@ -73,7 +73,7 @@ FIELDS = [
     ("fCounts44", "halves", 1),		# +0x44  inputs, outputs
     ("fCounts48", "halves", 1),		# +0x48  units, computed
     ("fCounts4c", "halves", 1),		# +0x4c  hidden, -
-    ("fField50", "word", 1),		# +0x50
+    ("fConnectionCount", "word", 1),	# +0x50  90540
     ("fWeightSize", "word", 1),		# +0x54
     ("fField58", "word", 5),		# +0x58 .. +0x68
     ("fParamCount", "word", 1),		# +0x6c

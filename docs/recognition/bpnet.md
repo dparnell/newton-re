@@ -7,11 +7,11 @@ maps its 134 outputs through the common info's tables into scores for
 the 256 character codes; `CharBoxNetEvaluate` does the same for a letter
 written in a box.
 
-`recognition/BPNet.h` has the net and its life, and
+`recognition/BPNet.h` has the net, its life and `BPNetEvaluate`, and
 `analysis/bpnet.py` generates `BPNetTables.cpp` - the template and the
-eight trained tables it points at. **`BPNetEvaluate` itself is NOT
-YET**; this page is what has been read out of its assembly, so that
-whoever writes it does not start again.
+eight trained tables it points at. This page is the assembly the
+evaluator came out of, and how the reconstruction was checked against
+it.
 
 Read the assembly with
 
@@ -111,29 +111,57 @@ it is how the routine gets the block's own base into `lr`, which
 `mov r10,lr` then records. Each begins `addne pc,pc,r12,lsl #0x4`,
 skipping `r12` quads when the count has been overshot.
 
-## What does not add up
+## The weights are read uncached
 
 ```
-0001a26c  ldr r1,[r0,#0x38]       ; r1 = net->fWeights
+0001a26c  ldr r1,[r0,#0x38]       ; r1 = net->fWeights  (bpWeight, 0x003948f0)
 0001a27c  add r1,r1,#0x3500000
 ```
 
-`fWeights` is `bpWeight`, at 0x003948f0, and every use of r1 afterwards
-is `ldmia r1!,{r5,r6,r7,r8}` - it only ever moves forward. So the net
-reads its first weights from 0x038948f0, which is outside the eight
-megabytes of ROM and outside anything in `layout.json`. Nothing else
-writes `fWeights`: `BPNetCreateNumOut` copies the template verbatim and
-`BPNetLoad` only makes room for the units.
+That constant is a **second mapping of the ROM**. The MMU table the
+machine starts from, `g8MegContinuousTableStart` at ROM 0x100, is a
+list of `{virtual, physical, size, flags}` ending in 0xffffffff:
 
-Everything *else* about the weights says they start at `bpWeight`: the
-table is exactly the size the connection counts call for, and the net
-has no other weights. So either there is a mapping of the ROM at
-0x03500000 that has not been found, or the field is not read the way it
-looks.
+| virtual | physical | size | flags | |
+|---|---|---|---|---|
+| 0x00000000 | 0x00000400 | 1 MB | 0x0011 | page table |
+| 0x00100000 | 0x00100000 | 15 MB | 0x081e | section, cached and buffered |
+| **0x03500000** | **0x00000000** | **8 MB** | **0x0802** | **section, uncached** |
+| 0x04000000 | 0x00000000 | 1 MB | 0x081e | section, cached and buffered |
+| 0x05000000 | 0x02000000 | 2 MB | 0x0c02 | section, uncached |
+| 0x0c000000 | 0x00001400 | 1 MB | 0x0011 | page table |
+| 0x0f000000 | 0x0f000000 | 528 MB | 0x0c02 | section, uncached |
 
-Until that is settled the reconstruction would have to take the weights
-from `fWeights` and note the difference, which is why `BPNetEvaluate`
-is left NOT YET rather than written on a guess.
+The whole eight megabytes of ROM is mapped a second time at
+0x03500000 with C and B clear, so `bpWeight + 0x03500000` is the same
+bytes read **uncached**, and the routine streams ninety-one kilobytes
+of weights through it without flushing the StrongARM's sixteen-kilobyte
+data cache  which is exactly where the unit array and the connection
+program want to stay. It is a non-temporal load a decade before the
+instruction existed.
+
+The reconstruction has one mapping and reads the weights where they
+are; `BPNetEvaluate` says so as a DEVIATION.
+
+## Checking the reconstruction
+
+`recognition/BPNet.cpp` writes out what the assembly *does* rather
+than how it does it, so it needs checking against something. The net
+writes three numbers down about itself, and walking the connection
+program answers all three:
+
+| | the net says | walking the program |
+|---|---|---|
+| units worked out | `fComputedCount` = 618 | 618 |
+| connections | `fConnectionCount` = 90,540 | 90,540 |
+| weight bytes | `fWeightSize` = 91,124 | the last byte touched is 91,123 |
+
+The middle one is the good one: the number of connections is not
+written anywhere in the program, it falls out of the rule that a group
+does `4 - count` of them, and it comes to the net's own figure exactly.
+The third says the weight cursor  which advances four bytes a block,
+not one a connection  lands on the last byte of the table and not one
+further. `test_Rosetta` asserts all three, then runs the net.
 
 ## What is left below reading
 

@@ -38,11 +38,10 @@
 				the terminator - and the weights they call for come to
 				the 91,124 bytes of `bpWeight`.
 
-	NOT YET: `BPNetEvaluate` itself.  What has been established about
-	it is written up in `docs/recognition/bpnet.md`, including the one
-	thing that does not add up; the layers above it - the patternizers,
-	the segment layer and the feature extraction - are NOT YET as well,
-	so nothing has inputs to give it.
+	The layers above it - the patternizers, the segment layer and the
+	feature extraction - are NOT YET, so nothing has inputs to give it
+	yet; the evaluator itself is here, and `docs/recognition/bpnet.md`
+	writes up the assembly it came out of.
 
 	Reconstructed from the MP2x00 US ROM (0x0001a260, 0x0003b14c-
 	0x0003b298); each function cites its origin.
@@ -90,7 +89,7 @@ struct BPNet
 	short			fComputedCount;		// +0x4a  618 = hidden + outputs
 	short			fHiddenCount;		// +0x4c  484
 	short			fField4e;			// +0x4e
-	ULong			fField50;			// +0x50
+	ULong			fConnectionCount;	// +0x50  90540
 	ULong			fWeightSize;		// +0x54  91124, the size of bpWeight
 	ULong			fField58[5];		// +0x58 .. +0x68
 	ULong			fParamCount;		// +0x6c  57, the size of bpParam in words
@@ -139,7 +138,8 @@ void	BPNetDestroy(BPNet* net);					// ROM 0x0003b240 BPNetDestroy
 // it off and never turns it on.
 void	BPNetLearnEnable(BPNet* net, long enable);	// ROM 0x0003b278 BPNetLearnEnable
 
-// The net run over its inputs.  NOT YET - see `docs/recognition/bpnet.md`.
+// The net run: every unit after the inputs worked out in order, and
+// the outputs left in `fOutputs`.
 void	BPNetEvaluate(BPNet* net);					// ROM 0x0001a260 BPNetEvaluate
 
 #endif	/* __BPNET_H */

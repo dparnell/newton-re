@@ -8203,7 +8203,7 @@ const BPNet	bpNet = {
 	384, 134,	// fCounts44
 	1002, 618,	// fCounts48
 	484, 0,	// fCounts4c
-	0x000161ac,	// fField50
+	0x000161ac,	// fConnectionCount
 	0x000163f4,	// fWeightSize
 	{ 0x0086026a, 0x00000000, 0x000161ac, 0x00000000, 0x00000000 },	// fField58
 	0x00000039,	// fParamCount

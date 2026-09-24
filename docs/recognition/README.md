@@ -2175,13 +2175,24 @@ the three checks that made the format readable (`test_Rosetta` asserts
 it).
 
 `analysis/bpnet.py` generates the net's template and its eight trained
-tables. **`BPNetEvaluate` is NOT YET**: it is 950 bytes of hand-written
-assembly, unrolled sixteen ways and entered through a computed jump,
-and one thing in it does not add up — it adds 0x03500000 to the weight
-pointer before it starts, which lands outside the ROM.
-`docs/recognition/bpnet.md` is the whole write-up, so that whoever
-finishes it does not start again, and it also inventories what is left
-below reading.
+tables, and `BPNetEvaluate` is reconstructed: the ROM's is 950 bytes of
+hand-written assembly, unrolled sixteen ways and entered through a
+computed jump, but what it *does* is a page of C. It is checked
+against three numbers the net writes down about itself — 618 units,
+90,540 connections and a weight table whose last byte is the last one
+touched — all three of which fall out of walking the connection
+program and none of which are in it. `test_Rosetta` asserts them and
+then runs the net.
+
+The one thing that looked wrong turned out to be the best part of it:
+the routine adds 0x03500000 to the weight pointer, and that is the
+whole ROM mapped a **second** time, uncached
+(`g8MegContinuousTableStart`, ROM 0x100). Ninety-one kilobytes of
+weights streamed once would flush the StrongARM's entire data cache, so
+the engine reads the one thing it cannot reuse through a mapping that
+does not disturb it — a non-temporal load a decade before the
+instruction existed. `docs/recognition/bpnet.md` has the MMU table and
+the rest, and `docs/curiosities.md` tells it as a story.
 
 ### The bigram grammar (`recognition/ROMGrammar.cpp`)
 
