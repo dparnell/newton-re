@@ -65,9 +65,17 @@
 // the offsets in the comments are the ROM's.
 struct BPNet
 {
-	ULong			fField00[3];		// +0x00
+	ULong			fField00;			// +0x00
+	short			fField04;			// +0x04
+	// how many input groups the net is fed from.  The ROM reads it with
+	// an unaligned `ldr r0,[r0,#0x6]`, which rotates the word at +0x04
+	// and takes its top half - so it is the *low* half of that word.
+	short			fGroupCount;		// +0x06
+	ULong			fField08;			// +0x08
 	const ULong*	fNGS;				// +0x0c  bpNGS
-	const ULong*	fInputType;			// +0x10  inputType: the four input groups
+	// the name of each input group, which says which patternizer fills
+	// it (`recognition/NetPattern.h`)
+	const char* const*	fInputType;		// +0x10  inputType
 	ULong			fField14;			// +0x14
 	const ULong*	fCSS;				// +0x18  bpCSS
 	const ULong*	fConnectRanges;		// +0x1c  numConnectRanges

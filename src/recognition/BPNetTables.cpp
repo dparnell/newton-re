@@ -54,9 +54,12 @@ const ULong	bpCSS[192] = {
 };
 
 // ROM 0x0036e608 inputType
-extern const ULong	inputType[4];
-const ULong	inputType[4] = {
-	0x00056b44, 0x00056b58, 0x00056b64, 0x00056b70
+extern const char* const	inputType[4];
+const char* const	inputType[4] = {
+	"ImageSplatLimited",
+	"StrokePUD",
+	"AspectNorm",
+	"StrokeCount"
 };
 
 // ROM 0x0036dbec numConnectRanges
@@ -8187,7 +8190,9 @@ const UByte	QSigLu[360] = {
 // ROM 0x0036e618 bpNet
 // The template `BPNetCreateNumOut` copies into a block of its own.
 const BPNet	bpNet = {
-	{ 0x00010003, 0x00100004, 0x00010000 },	// fField00
+	0x00010003,	// fField00
+	16, 4,	// fCounts04
+	0x00010000,	// fField08
 	bpNGS,	// fNGS
 	inputType,	// fInputType
 	0x00010018,	// fField14

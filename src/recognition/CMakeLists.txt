@@ -39,6 +39,7 @@ add_library(recognition STATIC
     ROMGrammar.cpp
     BPNet.cpp
     BPNetTables.cpp
+    NetPattern.cpp
     RosCITables.cpp
     Rosetta.cpp
     TabletBuffer.cpp

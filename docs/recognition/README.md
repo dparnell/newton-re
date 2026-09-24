@@ -2194,6 +2194,35 @@ does not disturb it — a non-temporal load a decade before the
 instruction existed. `docs/recognition/bpnet.md` has the MMU table and
 the rest, and `docs/curiosities.md` tells it as a story.
 
+### The patternizers (`recognition/NetPattern.h`)
+
+What turns a piece of writing into the classifier's 384 inputs. A
+**patternizer** knows how to measure one thing about a stroke list and
+where in the net's input array to put the answer; a **pattern** is one
+measurement it has taken. They are a little class system written in C
+— every object begins with a pointer to its type, and the type is a
+name, the size of an instance and eight entry points — and there are
+seven kinds, named by the strings in the net's `inputType`.
+
+The ROM's own net has four input groups, and they come to exactly its
+384 inputs: a **fourteen-by-fourteen picture** of the writing (196), a
+twenty-by-nine grid of where the pen went (180), how wide it is
+against how tall (1), and how many strokes it took (7). That is
+everything the classifier is shown.
+
+A scalar patternizer is the simple case and shows how a measurement
+reaches the net: the value is nought to one in 16.16, written either
+as one byte of brightness when the group is a single input or as a
+**one-hot** over the group's cells when it is more than one. The five
+scalars are `AspectNorm` (width over height, as a fraction of one and
+a half), `StrokeCount`, `CapHeight`, `Height` and `Base` (where the
+writing sits against the line, moved up by a half and scaled by seven
+tenths so that sitting on the line reads about a third).
+
+The two that do the real work — `ImageSplatLimited`, which draws the
+strokes into a grid through the anti-aliased renderer `RenderAA*`, and
+`StrokePUD` — are NOT YET.
+
 ### The bigram grammar (`recognition/ROMGrammar.cpp`)
 
 `ROMGrammar` is what `BiGrammarsLoad` answers: the eight grammars a

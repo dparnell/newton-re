@@ -167,6 +167,24 @@ The third says the weight cursor  which advances four bytes a block,
 not one a connection  lands on the last byte of the table and not one
 further. `test_Rosetta` asserts all three, then runs the net.
 
+## What the classifier is shown
+
+The net's 384 inputs are four groups, and the `inputType` table names
+the patternizer that fills each (`recognition/NetPattern.h`):
+
+| | kind | inputs | at |
+|---|---|---|---|
+| 0 | `ImageSplatLimited` | 14 x 14 = 196 | 0 |
+| 1 | `StrokePUD` | 20 x 9 = 180 | 196 |
+| 2 | `AspectNorm` | 1 | 376 |
+| 3 | `StrokeCount` | 7 | 377 |
+
+196 + 180 + 1 + 7 = 384. So what the Newton's handwriting recogniser
+actually looks at, for a piece of writing it is trying to read as one
+character, is a **fourteen-by-fourteen picture of it**, a
+twenty-by-nine grid of where the pen went, how wide it is against how
+tall, and how many strokes it took. Nothing else.
+
 ## What is left below reading
 
 The net is the bottom. Above it, and all NOT YET:

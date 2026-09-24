@@ -75,6 +75,10 @@
 #include "RosEngine.h"
 #endif
 
+#ifndef __NETPATTERN_H
+#include "NetPattern.h"
+#endif
+
 
 // How many readings the engine is asked for, how many strokes and
 // segments one word may be made of, and how long the run is.  The
@@ -135,8 +139,8 @@ struct WordRecog
 	UByte			fSuspended;			// +0x050  the arrays have been given back
 	UByte			fPad51[3];
 	BPNet*			fNet;				// +0x054  the classifier (RosettaAwaken's)
-	RosNetPatternizer*	fPatternizer;	// +0x058
-	RosNetPattern*	fPattern;			// +0x05c
+	NetPatternizer*	fPatternizer;		// +0x058
+	NetPattern*		fPattern;			// +0x05c
 	Fixed			fField60;			// +0x060  fRun[0] as the word started
 	Fixed			fField64;			// +0x064
 	Fixed			fField68;			// +0x068

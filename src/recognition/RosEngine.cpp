@@ -99,11 +99,6 @@ SegmentMinStrokeSize(void)
 }
 
 
-// ROM 0x00133a08 NetPatternDestroy
-void	NetPatternDestroy(RosNetPattern* /*pattern*/)			{ }
-// ROM 0x00133a58 NetPatternizerDestroy
-void	NetPatternizerDestroy(RosNetPatternizer* /*patternizer*/)	{ }
-
 // ROM 0x00056684 CharBoxDestroy
 void	CharBoxDestroy(void* /*charBox*/)					{ }
 // ROM 0x000ffd60 LEquiesant

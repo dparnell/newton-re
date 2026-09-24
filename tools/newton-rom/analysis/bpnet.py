@@ -44,7 +44,9 @@ import romid			# the ROM names itself in what this writes
 # A count of None is worked out from the next symbol after it.
 TABLES = [
     ("bpNGS", "ULong", None), ("bpCSS", "ULong", None),
-    ("inputType", "ULong", None), ("numConnectRanges", "ULong", None),
+    # the four input-group names are pointers, so they are emitted as the
+    # strings themselves - the elements have to be the host's pointers
+    ("inputType", "cstr", None), ("numConnectRanges", "ULong", None),
     ("bpParam", "ULong", None), ("arBPParam", "ULong", None),
     ("bpWeight", "UByte", None), ("newtConnects", "ULong", None),
 ]
@@ -57,7 +59,9 @@ EXTRA = [("QSigLu", "UByte", None)]
 # holds a pointer to one of the tables above, and how many words the field
 # covers.  This is `BPNet`'s declaration in recognition/BPNet.h.
 FIELDS = [
-    ("fField00", "word", 3),		# +0x00
+    ("fField00", "word", 1),		# +0x00
+    ("fCounts04", "halves", 1),		# +0x04  -, the number of input groups
+    ("fField08", "word", 1),		# +0x08
     ("fNGS", "ptr", 1),				# +0x0c  bpNGS
     ("fInputType", "ptr", 1),		# +0x10  inputType
     ("fField14", "word", 1),		# +0x14
@@ -84,7 +88,8 @@ FIELDS = [
     ("fLearning", "bytes", 1),		# +0x80
 ]
 
-ELEM = {"ULong": (4, ">I", "0x%08x", 6), "UByte": (1, "B", "0x%02x", 12)}
+ELEM = {"ULong": (4, ">I", "0x%08x", 6), "UByte": (1, "B", "0x%02x", 12),
+        "cstr": (4, ">I", None, 1)}
 
 
 def main(argv=None) -> int:
@@ -130,6 +135,15 @@ def main(argv=None) -> int:
             count = (next_after(addr) - addr) // size
         values = [struct.unpack(fmt, rom[addr + i * size: addr + (i + 1) * size])[0] for i in range(count)]
         out.append(f"// ROM 0x{addr:08x} {name}")
+        if kind == "cstr":
+            out.append(f"extern const char* const\t{name}[{count}];")
+            out.append(f"const char* const\t{name}[{count}] = {{")
+            for i, v in enumerate(values):
+                text = rom[v:rom.index(b"\0", v)].decode("mac-roman")
+                out.append('\t"%s"%s' % (text, "," if i + 1 < count else ""))
+            out.append("};")
+            out.append("")
+            continue
         out.append(f"extern const {kind}\t{name}[{count}];")
         out.append(f"const {kind}\t{name}[{count}] = {{")
         for i in range(0, count, per):

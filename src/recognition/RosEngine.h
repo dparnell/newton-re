@@ -211,9 +211,6 @@ struct RosStroke;
 // A piece of writing the engine has decided is a character, or part of
 // one.  What is in it is NOT YET.
 struct RosSegment;
-// The classifier's pattern, and what fills it in.
-struct RosNetPattern;
-struct RosNetPatternizer;
 
 // The strokes of a word cut into characters; answers how many segments
 // were made.
@@ -231,9 +228,6 @@ void	SegmentIntegrated(long how);						// ROM 0x001d4cbc SegmentIntegrated
 // than another - and, because it is the same number, the smallest cap
 // height the word recogniser will believe.
 Fixed	SegmentMinStrokeSize(void);							// ROM 0x001d1890 SegmentMinStrokeSize
-
-void	NetPatternDestroy(RosNetPattern* pattern);			// ROM 0x00133a08 NetPatternDestroy
-void	NetPatternizerDestroy(RosNetPatternizer* patternizer);	// ROM 0x00133a58 NetPatternizerDestroy
 
 // The boxed-character recogniser, given back.
 void	CharBoxDestroy(void* charBox);						// ROM 0x00056684 CharBoxDestroy
