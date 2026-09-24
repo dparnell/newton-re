@@ -523,12 +523,12 @@ WordRecogDotIsHigh(WordRecog* wr, const short* range, Fixed y, Fixed height)
 
 // ROM 0x002746f0 WordRecogEndWord
 void
-WordRecogEndWord(WordRecog* wr, char** words, UniChar* scores, ULong unused,
+WordRecogEndWord(WordRecog* wr, char** words, UniChar* scores, long* flags,
 				long strokes, long count)
 {
 	if (count > 0)
 		WordRecogComputeCapHeight(wr);
-	WordRecogReturnWords(wr, words, scores, unused, strokes, count);
+	WordRecogReturnWords(wr, words, scores, flags, strokes, count);
 }
 
 
@@ -542,7 +542,7 @@ WordRecogEndWord(WordRecog* wr, char** words, UniChar* scores, ULong unused,
 // the engine cut for itself do not count, because the layers above
 // know nothing of them, and at least one is always claimed.
 void
-WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, ULong unused,
+WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, long* flags,
 					long strokes, long count)
 {
 	if (count < 1)
@@ -565,7 +565,7 @@ WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, ULong unused,
 		strokes = 1;
 	if (wr->fCheckWords == nil)
 		return;
-	wr->fCheckWords(words, scores, unused, (ULong) strokes, (ULong) count);
+	wr->fCheckWords(words, scores, flags, (ULong) strokes, (ULong) count);
 }
 
 
@@ -725,4 +725,330 @@ WordRecogStrokeNeedsFragmenting(WordRecog* wr, RosStroke* stroke)
 	if (type == kWordRecogStrokeHorizontal)
 		return WordRecogStrokeIntersectsTwoVerticalStrokes(wr, stroke);
 	return true;
+}
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	Strokes in, and the run of measurements.
+
+	`fRun` is the engine's model of the hand it is reading, and it is
+	nine Gaussians and four lengths.  Each Gaussian is a pair: the mean
+	of what has been measured, and the mean of its square - which, for
+	a distribution whose spread grows with its mean, is all the
+	classifier needs to score a measurement against it.  The four
+	things measured are the gap in front of a stroke and that gap as a
+	fraction of the writing's size, each in both directions; and each
+	of those has *two* distributions, one for a gap inside a letter and
+	one for a gap between letters, which is what `separation` chooses
+	between.  Pair 0 is the size of a stroke itself.
+
+	ParaGraph trained the nine, and their starting values say so: every
+	second number is its own mean squared plus a standard deviation
+	that is a fixed fraction of the mean.  `WordRecogReset` writes them
+	out and the code below learns away from them, an eighth at a time,
+	never letting a mean stray more than a quarter from what was
+	trained (or, for the stroke size, more than double or less than
+	half).
+--------------------------------------------------------------------*/
+
+// ROM 0x0c104f84 FragmentLigatures
+ULong	FragmentLigatures = 1;
+
+// ROM 0x0c104fa0 (unnamed)
+Fixed	gLastStrokeRight = 0;
+// ROM 0x0c104fa4 (unnamed)
+Fixed	gLastStrokeAdvance = 0;
+// ROM 0x0c104fa8 (unnamed)
+UByte	gLastStrokeWasCut = 0;
+
+
+// One of the nine learnt from: the mean nudged an eighth of the way
+// towards what was just measured, held within `low` and `high` of what
+// ParaGraph trained, and the second moment worked out from it again.
+static void
+LearnRunPair(Fixed* pair, Fixed value, Fixed nominal, Fixed deviation, Fixed low, Fixed high)
+{
+	pair[0] = FixedMultiply(0x0000e000, pair[0]) + FixedMultiply(0x00002000, value);
+	if (pair[0] < FixedMultiply(low, nominal))
+		pair[0] = FixedMultiply(low, nominal);
+	else if (FixedMultiply(high, nominal) < pair[0])
+		pair[0] = FixedMultiply(high, nominal);
+	Fixed deviate = FixedMultiply(deviation, FixedDivide(pair[0], nominal));
+	pair[1] = FixedMultiply(pair[0], pair[0]) + FixedMultiply(deviate, deviate);
+}
+
+
+// ... and the same again with the mean left alone.
+//
+// ROM BUG: this works the second moment out from a mean it does not
+// change, so after the first stroke it writes back the number that was
+// already there.  The first time it does have an effect - it replaces
+// ParaGraph's trained second moment with what the code's own rounding
+// makes of the same formula - but nothing is learnt.  The four
+// distributions it is used on (the between-letter ones) therefore
+// never move at all, while their four within-letter counterparts do.
+// The shape of the call says what was meant: it is the other half of
+// `LearnRunPair` with the first two lines dropped.
+static void
+RelearnRunSpread(Fixed* pair, Fixed value, Fixed nominal, Fixed deviation)
+{
+	if (FixedDivide(pair[0], 0x00020000) < value && value < FixedMultiply(pair[0], 0x00020000))
+	{
+		Fixed deviate = FixedMultiply(deviation, FixedDivide(pair[0], nominal));
+		pair[1] = FixedMultiply(pair[0], pair[0]) + FixedMultiply(deviate, deviate);
+	}
+}
+
+
+// A stroke given back if it is the recogniser's to give back: the
+// engine's own pieces and, when it owns them all, everything.
+static void
+DestroyStrokeIfOurs(WordRecog* wr, RosStroke* stroke)
+{
+	if (wr->fOwnsStrokes != 0
+		|| (stroke != nil && (stroke->fFragment != 0 || stroke->fJoinsNext != 0)))
+		StrokeDestroy(stroke);
+}
+
+
+// ROM 0x002766c0 WordRecogAnalyzeWord
+// NOT YET: the word cut into characters and read - the classifier, the
+// grammar and everything the readings come out of.
+void
+WordRecogAnalyzeWord(WordRecog* /*wr*/)
+{
+}
+
+
+// ROM 0x00274cf0 WordRecogAddStroke2
+void
+WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*field04*/,
+					long endWord, short how, Fixed separation)
+{
+	if (endWord != 0)
+	{
+		newton_try
+		{
+			/*----------------------------------------------------------
+				The baseline of what has been written.
+			----------------------------------------------------------*/
+			// the mean height and the mean foot of the strokes, and the
+			// box round the lot.  (Nothing guards `fStrokeCount` being
+			// nought here, and the divides below would trap: the ROM is
+			// never called that way.)
+			RosStroke** strokes = wr->fStrokes;
+			Fixed sumHeight = (strokes[0]->fBounds.bottom - strokes[0]->fBounds.top) + 0x00010000;
+			Fixed sumBottom = strokes[0]->fBounds.bottom;
+			Fixed top = strokes[0]->fBounds.top;
+			Fixed left = strokes[0]->fBounds.left;
+			Fixed right = strokes[0]->fBounds.right;
+			short count = wr->fStrokeCount;
+			for (short i = 1; i < count; i++)
+			{
+				RosStroke* s = strokes[i];
+				sumHeight += (s->fBounds.bottom - s->fBounds.top) + 0x00010000;
+				sumBottom += s->fBounds.bottom;
+				if (s->fBounds.top <= top)
+					top = s->fBounds.top;
+				if (s->fBounds.left <= left)
+					left = s->fBounds.left;
+				if (right < s->fBounds.right)
+					right = s->fBounds.right;
+			}
+			Fixed meanHeight = sumHeight / count;
+			Fixed meanBottom = sumBottom / count;
+
+			// the box is answered relative to its own top-left corner,
+			// with the foot of the writing as its bottom and one mean
+			// height above that as its top - which is what
+			// `RosettaGetBaseLine` hands out as two Points.
+			SetFixedRect(&wr->fBaseline, 0, meanBottom - meanHeight - top,
+						right - left, meanBottom - top);
+
+			// ... in seventy-seconds of an inch, if the tablet's
+			// resolution is known and is not already that
+			if (wr->fResX > 0 && wr->fResY > 0
+				&& !(wr->fResX == 0x48 && wr->fResY == 0x48))
+				XYFixedScaleFixedRect(&wr->fBaseline,
+					FixedDivide((Fixed) (int) ((unsigned int) wr->fResX << 16), 0x00480000),
+					FixedDivide((Fixed) (int) ((unsigned int) wr->fResY << 16), 0x00480000));
+			else if (wr->fField2c != 0x00010000)
+				// ROM BUG: it asks whether the horizontal scale is one
+				// and then scales *both* axes by the vertical one.
+				// `fField2c` is never read anywhere else, so nothing
+				// notices.
+				XYFixedScaleFixedRect(&wr->fBaseline, wr->fField30, wr->fField30);
+
+			/*----------------------------------------------------------
+				... and the word read.
+			----------------------------------------------------------*/
+			if (wr->fClassifyMode != 0)
+			{
+				// the engine has been told to group but not to read, so
+				// it answers a word of its own saying just that
+				wr->fWords[0] = (char*) "gROSsegOnly";	// ROM 0x00274f44 (unnamed)
+				wr->fScores[0] = 0x7ffe;
+				wr->fWordFlags[0] = 0;
+				WordRecogReturnWords(wr, wr->fWords, wr->fScores, wr->fWordFlags,
+									wr->fStrokeCount, 1);
+			}
+			else
+			{
+				if (how == 0)
+				{
+					if (FragmentLigatures != 0)
+						StrokeSortFrags(wr->fStrokes, wr->fStrokeCount);
+					else
+						StrokeSort(wr->fStrokes, wr->fStrokeCount);
+				}
+				wr->fSegmentCount = SegmentChars(wr->fStrokeCount, wr->fStrokes, wr->fField60,
+												wr->fSegments, wr->fField44, wr->fNet);
+				WordRecogAnalyzeWord(wr);
+			}
+			WordRecogClearStrokes(wr);
+		}
+		cleanup
+		{
+			DestroyStrokeIfOurs(wr, stroke);
+		}
+		end_try;
+	}
+
+	if (stroke == nil)
+		return;
+
+	// there is room for kWordRecogMaxStrokes of them and no more
+	if (wr->fStrokeCount > kWordRecogMaxStrokes - 1)
+	{
+		DestroyStrokeIfOurs(wr, stroke);
+		return;
+	}
+
+	newton_try
+	{
+		SegmentStrokeData(stroke, (UByte) how, wr->fStrokeCount, separation);
+		wr->fStrokes[wr->fStrokeCount] = stroke;
+
+		FRect bounds;
+		StrokeFindBounds(stroke, &bounds);
+		if (wr->fStrokeCount == 0 && wr->fField1a4 != 1)
+		{
+			// the first stroke of a word has nothing in front of it, so
+			// the gap is measured from its own left edge and comes out
+			// nought
+			gLastStrokeRight = bounds.left;
+			gLastStrokeAdvance = advance;
+			wr->fField1a4 = 0;
+			gLastStrokeWasCut = 0;
+		}
+
+		/*--------------------------------------------------------------
+			How big the writing is.
+		--------------------------------------------------------------*/
+		// a dot, and a piece the engine cut for itself, say nothing
+		// about the size of the hand
+		if (stroke->fIsDot == 0 && stroke->fFragment == 0 && stroke->fJoinsNext == 0)
+		{
+			wr->fField22 = (short) (wr->fField22 + 1);
+
+			FPoint size;
+			FixedRectSize(&size, &bounds);
+			Fixed larger = ((size.y <= size.x) ? size.x : size.y) + 0x00010000;
+			Fixed height = size.y + 0x00010000;
+			long seen = wr->fField22;
+
+			// the running mean of the larger side, over the strokes
+			// narrow enough to be a letter: three letters' width at the
+			// scale the writing has turned out to be
+			Fixed scale = (wr->fRun[18] < height)
+						? FixedDivide(height, wr->fRun[18])
+						: 0x00010000;
+			Fixed wide = FixedMultiply(0x00030000, FixedMultiply(scale, wr->fRun[21]));
+			if (size.x + 0x00010000 < wide)
+				wr->fField60 = (wr->fField60 * (seen - 1) + larger) / seen;
+
+			// ... and of the height, over the strokes tall enough to be
+			// worth counting
+			if (FixedMultiply(0x00004000, wr->fRun[18]) < height)
+				wr->fField68 = (wr->fField68 * (seen - 1) + height) / seen;
+
+			// and the first of the nine: how big a stroke is.  Anything
+			// more than twice what is expected is left out of it.
+			if (larger < FixedMultiply(0x00020000, wr->fRun[0]))
+				LearnRunPair(&wr->fRun[0], larger, kNominalHeight, 0x00081c28,
+							0x00008000, 0x00020000);
+		}
+
+		/*--------------------------------------------------------------
+			... and how it is spaced.
+		--------------------------------------------------------------*/
+		// the gap in front of this stroke, in both directions, and the
+		// same as a fraction of how big a stroke is
+		Fixed gap = bounds.left - gLastStrokeRight;
+		if (gap < 1)
+			gap = 0;
+		Fixed gapAlong = advance - gLastStrokeAdvance;
+		if (gapAlong < 1)
+			gapAlong = 0;
+		Fixed gapRatio = FixedDivide(gap, wr->fRun[0]);
+		Fixed gapAlongRatio = FixedDivide(gapAlong, wr->fRun[0]);
+
+		// a gap either side of a piece the engine cut is not a gap the
+		// writer made
+		if (stroke->fFragment == 0 && stroke->fJoinsNext == 0 && gLastStrokeWasCut == 0)
+		{
+			Boolean betweenLetters = (wr->fField1a4 == 1);
+			Boolean neither = false;
+			if (!betweenLetters)
+			{
+				if (separation > 0x00009999)
+					betweenLetters = true;
+				else if (separation >= 0x00006666)
+					neither = true;		// neither one thing nor the other
+			}
+
+			if (neither)
+				;
+			else if (betweenLetters)
+			{
+				// the four between-letter distributions (which, for the
+				// reason in `RelearnRunSpread`, never actually move)
+				RelearnRunSpread(&wr->fRun[4], gap, 0x00171999, 0x000a7851);
+				RelearnRunSpread(&wr->fRun[12], gapRatio, 0x00015212, 0x0000a09d);
+				RelearnRunSpread(&wr->fRun[8], gapAlong, 0x0022d1eb, 0x000b8000);
+				RelearnRunSpread(&wr->fRun[16], gapAlongRatio, 0x0001f5e3, 0x0000a24d);
+			}
+			else
+			{
+				// ... and the four within-letter ones, which do
+				if (gap > 0 && gap < FixedMultiply(wr->fRun[2], 0x00020000))
+					LearnRunPair(&wr->fRun[2], gap, 0x00063851, 0x0003f333,
+								0x0000c000, 0x00014000);
+				if (gapRatio > 0 && gapRatio < FixedMultiply(wr->fRun[10], 0x00020000))
+					LearnRunPair(&wr->fRun[10], gapRatio, 0x000057ce, 0x00003738,
+								0x0000c000, 0x00014000);
+				if (gapAlong > 0 && gapAlong < FixedMultiply(wr->fRun[6], 0x00020000))
+					LearnRunPair(&wr->fRun[6], gapAlong, 0x000eb0a3, 0x000835c2,
+								0x0000c000, 0x00014000);
+				if (gapAlongRatio > 0 && gapAlongRatio < FixedMultiply(wr->fRun[14], 0x00020000))
+					LearnRunPair(&wr->fRun[14], gapAlongRatio, 0x0000c9db, 0x0000663f,
+								0x0000c000, 0x00014000);
+			}
+		}
+
+		// where this stroke reached, for the next one to measure from
+		if (gLastStrokeRight < bounds.right)
+			gLastStrokeRight = bounds.right;
+		if (gLastStrokeAdvance < advance)
+			gLastStrokeAdvance = advance;
+		gLastStrokeWasCut = (UByte) (stroke->fFragment | stroke->fJoinsNext);
+	}
+	cleanup
+	{
+		DestroyStrokeIfOurs(wr, stroke);
+	}
+	end_try;
+
+	wr->fStrokeCount = (short) (wr->fStrokeCount + 1);
 }

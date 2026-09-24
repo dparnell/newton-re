@@ -115,12 +115,21 @@ void			BiGrammarDestroy(RosGrammarContext* context);	// ROM 0x0003df4c BiGrammar
 	The segments, and the classifier.
 --------------------------------------------------------------------*/
 
+struct RosStroke;
+
 // A piece of writing the engine has decided is a character, or part of
 // one.  What is in it is NOT YET.
 struct RosSegment;
 // The classifier's pattern, and what fills it in.
 struct RosNetPattern;
 struct RosNetPatternizer;
+
+// The strokes of a word cut into characters; answers how many segments
+// were made.
+short	SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
+					RosSegment** segments, UByte how, void* net);	// ROM 0x001d48a4 SegmentChars
+// What the segment layer wants remembered about a stroke as it comes in.
+void	SegmentStrokeData(RosStroke* stroke, UByte how, short index, Fixed separation);	// ROM 0x001d2224 SegmentStrokeData
 
 void	SegmentDestroy(RosSegment* segment);				// ROM 0x001d1cac SegmentDestroy
 // Everything the segment layer is holding on to, given back.

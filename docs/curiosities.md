@@ -1202,3 +1202,51 @@ guess better.
 
 *`src/recognition/WordRecog.h`; `docs/recognition/README.md` has the
 layers.*
+
+
+## Nine Gaussians are what the Newton knows about your handwriting
+
+The word recogniser keeps twenty-two numbers it calls the *run*
+(`fRun`, `recognition/WordRecog.h`), and until you see what the pairs
+are it looks like an arbitrary block of trained constants. It is not.
+The first eighteen are **nine Gaussians**, each stored as two numbers:
+the mean of what has been measured, and the mean of its square. For a
+distribution whose spread grows with its mean, that pair is everything
+the classifier needs to score a new measurement.
+
+You can read it straight out of the starting values `WordRecogReset`
+writes. The first pair is 18.85 and 421.98; 18.85 squared is 355.3, so
+the rest is 66.7, and the square root of that is 8.17 — which is
+almost exactly the constant `WordRecogAddStroke2` multiplies by when it
+works that second number out again. The same holds for all nine: 6.22
+and 54.28 (spread 3.95), 23.10 and 643.0 (spread 10.47), 14.69 and
+283.1 (spread 8.21), and so on. Every one is *mean squared plus spread
+squared*, and the spread is a fixed fraction of the mean.
+
+What the nine are is neater still. One of them is how big a single
+stroke is. The other eight are **four measurements times two
+situations**: the gap in front of a stroke, that gap as a fraction of
+how big the writing is, and both of those again in the direction the
+writing runs — each with one distribution for a gap *inside* a letter
+and another for a gap *between* letters. The caller says which by
+handing in a number between nought and one; under 0.4 the gap counts as
+within, over 0.6 as between, and in the band in the middle it is not
+counted at all, because the engine would rather learn nothing than
+learn the wrong thing.
+
+Each is learnt an eighth at a time — seven parts of what was there and
+one of what was just measured — and then held inside a quarter either
+side of what ParaGraph trained (double and half, for the stroke size).
+So the engine bends towards your hand without ever being able to be
+argued a long way from the hand it was taught on.
+
+**And half of it does not work.** The four between-letter distributions
+go through a routine that works the second moment out from a mean it
+never changes, so it writes back the number that was already there.
+The four within-letter ones move; their four counterparts are frozen at
+the trained values for ever. The shape of the code says what was meant:
+it is the other half of the learning routine with the two lines that
+update the mean left out.
+
+*`src/recognition/WordRecog.cpp`, `WordRecogAddStroke2`;
+`docs/recognition/README.md` has the layers.*

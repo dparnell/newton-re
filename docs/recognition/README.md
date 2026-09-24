@@ -2077,7 +2077,25 @@ them all *or* the stroke is a fragment the engine cut for itself; the
 rest belong to whoever handed them over.
 
 **The run.** `fRun` is twenty-two numbers describing the writing as it
-is being read, and `fSavedRun` is the copy to go back to.
+is being read: **nine Gaussians and four lengths**. Each Gaussian is a
+pair — the mean of what has been measured and the mean of its square,
+which is all a classifier needs for a distribution whose spread grows
+with its mean. One of the nine is how big a single stroke is; the other
+eight are four measurements (the gap in front of a stroke, that gap as
+a fraction of the writing's size, and both again in the direction the
+writing runs) times two situations, a gap *inside* a letter and a gap
+*between* letters. `WordRecogAddStroke2` learns each an eighth at a
+time and holds it within a quarter of what ParaGraph trained. The four
+lengths are the height of a word, the cap height and two letter widths,
+and they are what `WordRecogDetermineMaxHeight`, `ComputeCapHeight` and
+`IsStrokeTooWide` measure against.
+
+The four between-letter distributions never actually move: the routine
+that updates them works the second moment out from a mean it does not
+change (see `docs/curiosities.md`, "Nine Gaussians are what the Newton
+knows about your handwriting"). That is reproduced here, bug and all.
+
+`fSavedRun` is the copy to go back to.
 `WordRecogInvalRun` puts the run back as it was, `WordRecogSaveRun`
 keeps what has been learnt, and `WordRecogReset` fills the saved copy
 with ParaGraph's own starting values — every one of them the nominal
@@ -2148,8 +2166,22 @@ first, then a stroke with no shape of its own is cut, a vertical one
 never is (one letter may be as tall as it likes), and a horizontal one
 only if it runs through two letters.
 
-Still to do at level 3: `WordRecogAddStroke` and `AddStroke2`, which
-take the strokes in; `WordRecogAnalyzeWord`, `WordRecogNetEvaluate` and
+**Taking a stroke in.** `WordRecogAddStroke2` (0x00274cf0) is both
+halves of the job. Told to close the word, it works the **baseline**
+out first — the mean height and the mean foot of every stroke in hand,
+answered as a box relative to its own top-left corner and scaled into
+seventy-seconds of an inch if the tablet's resolution is known — and
+then sorts the strokes, has the segment layer cut them into characters
+and hands them to `WordRecogAnalyzeWord`. (Or, when the engine has
+been told to group but not to read, answers the word `gROSsegOnly` and
+says so.) Then it takes the new stroke: the segment layer is told about
+it, it goes into `fStrokes`, and everything in the run is learnt from
+it. A dot, and a piece the engine cut for itself, teach it nothing
+about size; a gap either side of such a piece is not a gap the writer
+made.
+
+Still to do at level 3: `WordRecogAddStroke`, the eight-kilobyte
+function above it; `WordRecogAnalyzeWord`, `WordRecogNetEvaluate` and
 `WordRecogNetSetInputs`, which read them (the last two are mostly
 plumbing into the patternizers, so they want reading with level 6);
 and the segment side (`WRSeg*`).

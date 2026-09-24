@@ -95,11 +95,11 @@ const long	kWordRecogStateSize		= 0x208;
 extern const char* const	FailureString;
 
 
-// What the engine hands a word back through.  `strokes` is how many of
-// the strokes offered the readings cover and `count` how many readings
-// there are; the third argument is one the ROM's own callback
-// (`RosettaCheckWords`) never looks at.
-typedef void (*WordRecogCheckWordsProc)(char** words, UniChar* scores, ULong unused, ULong strokes, ULong count);
+// What the engine hands a word back through: the readings, a score
+// each, a word of flags each, how many of the strokes offered the
+// readings cover, and how many readings there are.  (The ROM's own
+// callback, `RosettaCheckWords`, never looks at the flags.)
+typedef void (*WordRecogCheckWordsProc)(char** words, UniChar* scores, long* flags, ULong strokes, ULong count);
 
 
 // The word recogniser's state.  The ROM's is 0x208 flat bytes; the
@@ -153,7 +153,7 @@ struct WordRecog
 	long			fField1ac;			// +0x1ac
 	long			fField1b0[6];		// +0x1b0  cleared when the engine wakes
 	void*			fCallBack;			// +0x1c8  the Newton's own (gRosCallBack)
-	Fixed			fBaseline[4];		// +0x1cc  x, y and x, y of the two ends
+	FRect			fBaseline;			// +0x1cc  the word's box, its bottom the baseline
 	long			fField1dc;			// +0x1dc
 	long			fField1e0;			// +0x1e0  -1 when the engine wakes
 	long			fField1e4;			// +0x1e4
@@ -243,10 +243,41 @@ Boolean		WordRecogDotIsHigh(WordRecog* wr, const short* range, Fixed y, Fixed he
 
 // The word finished: the cap height learnt from it, and the readings
 // handed to whoever asked for them.
-void		WordRecogEndWord(WordRecog* wr, char** words, UniChar* scores, ULong unused,
+void		WordRecogEndWord(WordRecog* wr, char** words, UniChar* scores, long* flags,
 							long strokes, long count);		// ROM 0x002746f0 WordRecogEndWord
-void		WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, ULong unused,
+void		WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, long* flags,
 							long strokes, long count);		// ROM 0x00274744 WordRecogReturnWords
+
+
+/*--------------------------------------------------------------------
+	Strokes in.
+--------------------------------------------------------------------*/
+
+// A stroke taken in, and the word closed.  `separation` says how sure
+// the caller is that this stroke begins something new: under 0.4 the
+// gap in front of it is a gap inside a letter, over 0.6 it is a gap
+// between letters, and between the two it is not counted at all.
+// `endWord` non-nought first closes what has been written - the
+// baseline worked out, the strokes sorted, cut into characters and
+// read - and the stroke may then be nil.
+void	WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed field04,
+						long endWord, short how, Fixed separation);	// ROM 0x00274cf0 WordRecogAddStroke2
+
+// The word cut into characters and read.  NOT YET.
+void	WordRecogAnalyzeWord(WordRecog* wr);					// ROM 0x002766c0 WordRecogAnalyzeWord
+
+// Whether the strokes of a word are sorted as groups (the pieces of a
+// cut stroke kept together) rather than singly.  The ROM's initialised
+// data has it set; `SetUpRosetta` turns it off when the writer has
+// asked for no fragmentation.
+extern ULong	FragmentLigatures;					// ROM 0x0c104f84 FragmentLigatures
+
+// Where the last stroke taken in reached, so that the gap in front of
+// the next one can be measured.  (They have no symbols of their own;
+// they sit in the ROM's data just past `SegOnly`.)
+extern Fixed	gLastStrokeRight;					// ROM 0x0c104fa0 (unnamed)
+extern Fixed	gLastStrokeAdvance;					// ROM 0x0c104fa4 (unnamed)
+extern UByte	gLastStrokeWasCut;					// ROM 0x0c104fa8 (unnamed)
 
 
 /*--------------------------------------------------------------------

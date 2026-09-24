@@ -14,6 +14,7 @@
 */
 
 #include "RosEngine.h"
+#include "RosStrokes.h"
 
 
 // ROM 0x0c100b08 RosCI
@@ -42,6 +43,12 @@ BiGrammarsLoad(RosGrammars* source)
 
 // ROM 0x0003df4c BiGrammarDestroy
 void	BiGrammarDestroy(RosGrammarContext* /*context*/)			{ }
+
+// ROM 0x001d48a4 SegmentChars
+short	SegmentChars(short /*count*/, RosStroke** /*strokes*/, Fixed /*meanSize*/,
+					RosSegment** /*segments*/, UByte /*how*/, void* /*net*/)	{ return 0; }
+// ROM 0x001d2224 SegmentStrokeData
+void	SegmentStrokeData(RosStroke* /*stroke*/, UByte /*how*/, short /*index*/, Fixed /*separation*/)	{ }
 
 // ROM 0x001d1cac SegmentDestroy
 void	SegmentDestroy(RosSegment* /*segment*/)					{ }

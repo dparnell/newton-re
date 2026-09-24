@@ -36,7 +36,7 @@ static ULong	gGotStrokes;
 static ULong	gGotCount;
 
 static void
-TestCheckWords(char** words, UniChar* /*scores*/, ULong /*unused*/, ULong strokes, ULong count)
+TestCheckWords(char** words, UniChar* /*scores*/, long* /*flags*/, ULong strokes, ULong count)
 {
 	gCallCount++;
 	gGotWords = words;
@@ -363,6 +363,102 @@ main()
 		StrokeDestroy(second);
 		StrokeDestroy(flat);
 		StrokeDestroy(tall);
+	}
+
+	// ---- strokes in, and the run of measurements ----
+	{
+		// three strokes of a word, each ten across and twenty down
+		FPoint p[2];
+		RosStroke* s[3];
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(10);	p[1].y = F(20);
+		s[0] = StrokeCreate(2, p);
+		p[0].x = F(15);	p[0].y = F(5);	p[1].x = F(25);	p[1].y = F(25);
+		s[1] = StrokeCreate(2, p);
+		p[0].x = F(30);	p[0].y = F(0);	p[1].x = F(40);	p[1].y = F(20);
+		s[2] = StrokeCreate(2, p);
+
+		WordRecogReset(wr);
+		wr->fField68 = 0;
+		EXPECT(wr->fStrokeCount == 0 && wr->fField22 == 0);
+		Fixed strokeSize = wr->fRun[0];
+		Fixed withinGap = wr->fRun[2];
+
+		// the first one: nothing in front of it, so no gap is measured,
+		// but its size is
+		WordRecogAddStroke2(wr, s[0], F(10), 0, 0, 0, 0);
+		EXPECT(wr->fStrokeCount == 1 && wr->fField22 == 1);
+		// twenty-one, measured inclusively, an eighth of the way in
+		EXPECT(wr->fRun[0] == FixedMultiply(0x0000e000, strokeSize)
+							+ FixedMultiply(0x00002000, F(21)));
+		EXPECT(wr->fField60 == F(21) && wr->fField68 == F(21));
+		EXPECT(wr->fRun[2] == withinGap);		// no gap in front of the first
+		EXPECT(gLastStrokeRight == F(10));
+
+		// the second: five across from where the first one ended, and
+		// the caller is sure it is part of the same letter
+		WordRecogAddStroke2(wr, s[1], F(25), 0, 0, 0, 0);
+		EXPECT(wr->fStrokeCount == 2);
+		EXPECT(wr->fRun[2] == FixedMultiply(0x0000e000, withinGap)
+							+ FixedMultiply(0x00002000, F(5)));
+		EXPECT(gLastStrokeRight == F(25));
+
+		// ... and the third, with the caller unsure: between 0.4 and
+		// 0.6 nothing at all is learnt from the gap
+		Fixed before = wr->fRun[2];
+		WordRecogAddStroke2(wr, s[2], F(40), 0, 0, 0, 0x8000);
+		EXPECT(wr->fStrokeCount == 3);
+		EXPECT(wr->fRun[2] == before);
+
+		// the word closed: the baseline of what was written, as the
+		// two Points RosettaGetBaseLine hands out
+		WordRecogAddStroke2(wr, nil, 0, 0, 1, 0, 0);
+		Fixed meanBottom = (F(20) + F(25) + F(20)) / 3;
+		Fixed meanHeight = (F(21) + F(21) + F(21)) / 3;
+		EXPECT(wr->fBaseline.left == 0);
+		EXPECT(wr->fBaseline.right == F(40));
+		EXPECT(wr->fBaseline.bottom == meanBottom);
+		EXPECT(wr->fBaseline.top == meanBottom - meanHeight);
+		// ... and the strokes given back, because the recogniser owns them
+		EXPECT(wr->fStrokeCount == 0 && wr->fStrokes[0] == nil);
+	}
+
+	// ---- the gap between letters is measured but never learnt ----
+	{
+		WordRecogReset(wr);
+		wr->fField68 = 0;
+		FPoint p[2];
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(10);	p[1].y = F(20);
+		RosStroke* first = StrokeCreate(2, p);
+		p[0].x = F(35);	p[0].y = F(0);	p[1].x = F(45);	p[1].y = F(20);
+		RosStroke* second = StrokeCreate(2, p);
+
+		WordRecogAddStroke2(wr, first, F(10), 0, 0, 0, 0);
+		Fixed betweenMean = wr->fRun[4];
+		// the gap is twenty-five, which is inside the half-to-double
+		// band round the trained mean of 23.1, so the ROM does its
+		// work - and writes the mean straight back unchanged
+		WordRecogAddStroke2(wr, second, F(45), 0, 0, 0, F(1));
+		EXPECT(wr->fRun[4] == betweenMean);
+		// the second moment is what it always was, to the code's own
+		// rounding
+		Fixed deviate = FixedMultiply(0x000a7851, FixedDivide(wr->fRun[4], 0x00171999));
+		EXPECT(wr->fRun[5] == FixedMultiply(wr->fRun[4], wr->fRun[4])
+							+ FixedMultiply(deviate, deviate));
+
+		WordRecogClearStrokes(wr);
+	}
+
+	// ---- and there is room for a hundred and fifty strokes ----
+	{
+		WordRecogReset(wr);
+		FPoint p[2];
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(4);	p[1].y = F(8);
+		RosStroke* extra = StrokeCreate(2, p);
+		wr->fStrokeCount = (short) kWordRecogMaxStrokes;
+		WordRecogAddStroke2(wr, extra, 0, 0, 0, 0, 0);
+		// it is given back rather than stored, and the count stands
+		EXPECT(wr->fStrokeCount == kWordRecogMaxStrokes);
+		wr->fStrokeCount = 0;
 	}
 
 	// ---- asleep and awake ----
