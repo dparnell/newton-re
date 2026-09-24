@@ -349,9 +349,24 @@ FViewAllowsInkWords(RefArg /*rcvr*/, RefArg view)
 }
 
 
+// ROM 0x001ef5f0 FViewWorksWithCombCorrector
+// ViewWorksWithCombCorrector(view): whether the comb corrector - the one
+// that shows a word a letter at a time in boxes - can be used on that
+// view.  A paragraph or an edit view can; nothing else can.
+static Ref
+FViewWorksWithCombCorrector(RefArg /*rcvr*/, RefArg view)
+{
+	TView* theView = GetView(view);
+	if (theView == nil)
+		return NILREF;
+	return MAKEBOOLEAN(theView->DerivedFrom(clParagraphView) || theView->DerivedFrom(clEditView));
+}
+
+
 void
 RegisterRecConfigNatives(void)
 {
 	RegisterNativeFunction("FViewAllowsInk", (void*) FViewAllowsInk, 1);
 	RegisterNativeFunction("FViewAllowsInkWords", (void*) FViewAllowsInkWords, 1);
+	RegisterNativeFunction("FViewWorksWithCombCorrector", (void*) FViewWorksWithCombCorrector, 1);
 }

@@ -910,6 +910,88 @@ FReboot(RefArg /*rcvr*/)
 }
 
 
+// The class info a script holds, as a pointer out of its frame.
+static const TClassInfo*
+HeldClassInfo(RefArg wrapper)
+{
+	return (const TClassInfo*) RefToAddress(GetVariable(wrapper, RSSYM_classinfo, nil, 0));
+}
+
+
+// ROM 0x00195290 FProtocolInterfaceName
+// info:InterfaceName() - the protocol this implements.
+static Ref
+FProtocolInterfaceName(RefArg rcvr)
+{
+	return MakeString(HeldClassInfo(rcvr)->InterfaceName());
+}
+
+
+// ROM 0x001952d0 FProtocolImplementationName
+// info:ImplementationName() - what implements it.
+static Ref
+FProtocolImplementationName(RefArg rcvr)
+{
+	return MakeString(HeldClassInfo(rcvr)->ImplementationName());
+}
+
+
+// ROM 0x00195310 FProtocolSignature
+// info:signature() - its capability list, as one string.
+static Ref
+FProtocolSignature(RefArg rcvr)
+{
+	return MakeString(HeldClassInfo(rcvr)->Signature());
+}
+
+
+// ROM 0x00194c00 FProtocolVersion
+// info:version() - the implementation's version.
+static Ref
+FProtocolVersion(RefArg rcvr)
+{
+	return MAKEINT((long) HeldClassInfo(rcvr)->Version());
+}
+
+
+// ROM 0x00194d24 FGetCapability
+// info:GetCapability(name) - what that capability of the implementation
+// is set to, or nil when it has not got it.
+static Ref
+FGetCapability(RefArg rcvr, RefArg name)
+{
+	RefVar ascii(ASCIIString(name));
+	LockRef(ascii);
+	const char* value = HeldClassInfo(rcvr)->GetCapability(BinaryData(ascii));
+	UnlockRef(ascii);
+	return value != nil ? MakeString(value) : NILREF;
+}
+
+
+// ROM 0x00194dc4 FHasCapability
+// info:HasCapability(name) - whether it has it at all.
+static Ref
+FHasCapability(RefArg rcvr, RefArg name)
+{
+	RefVar ascii(ASCIIString(name));
+	LockRef(ascii);
+	const char* value = HeldClassInfo(rcvr)->GetCapability(BinaryData(ascii));
+	UnlockRef(ascii);
+	return MAKEBOOLEAN(value != nil);
+}
+
+
+// ROM 0x00194c40 FNewProtocol
+// info:New() - an instance of that implementation, as the frame a
+// script holds it in; nil when it cannot be made.
+static Ref
+FNewProtocol(RefArg rcvr)
+{
+	TProtocol* instance = HeldClassInfo(rcvr)->New();
+	return WrapProtocolInstance(instance);
+}
+
+
 void
 RegisterSystemNatives(void)
 {
@@ -933,4 +1015,11 @@ RegisterSystemNatives(void)
 	RegisterNativeFunction("FNextClassInfo", (void*) FNextClassInfo, 2);
 	RegisterNativeFunction("FNewByName", (void*) FNewByName, 3);
 	RegisterNativeFunction("FDestroyProtocol", (void*) FDestroyProtocol, 0);
+	RegisterNativeFunction("FProtocolInterfaceName", (void*) FProtocolInterfaceName, 0);
+	RegisterNativeFunction("FProtocolImplementationName", (void*) FProtocolImplementationName, 0);
+	RegisterNativeFunction("FProtocolSignature", (void*) FProtocolSignature, 0);
+	RegisterNativeFunction("FProtocolVersion", (void*) FProtocolVersion, 0);
+	RegisterNativeFunction("FGetCapability", (void*) FGetCapability, 1);
+	RegisterNativeFunction("FHasCapability", (void*) FHasCapability, 1);
+	RegisterNativeFunction("FNewProtocol", (void*) FNewProtocol, 0);
 }

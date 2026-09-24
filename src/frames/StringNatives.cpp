@@ -1429,9 +1429,21 @@ FStrHexDump(RefArg /*rcvr*/, RefArg binary, RefArg groupSize)
 }
 
 
+// ROM 0x001fe5b8 FStringFormat
+// StringFormat(string): which of the three forms a string object is in -
+// plain text, or a rich string with ink in it (frames/RichString.h's
+// trailer word).
+static Ref
+FStringFormat(RefArg /*rcvr*/, RefArg str)
+{
+	return MAKEINT(GetStringFormat(str));
+}
+
+
 void
 RegisterStringNatives(void)
 {
+	RegisterNativeFunction("FStringFormat", (void*) FStringFormat, 1);
 	RegisterNativeFunction("FStrHexDump__FRC6RefVarN21", (void*) FStrHexDump, 2);
 	RegisterNativeFunction("FStrLen__FRC6RefVarT1", (void*) FStrLen, 1);
 	RegisterNativeFunction("FStrFilled", (void*) FStrFilled, 1);

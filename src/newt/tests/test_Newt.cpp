@@ -98,6 +98,13 @@ static const char* kSetupSource =
 	"    if n < 2 then return 0; "
 	"    local inst := NewByName(\"TCompressor\", \"TLZCompressor\", nil); "
 	"    if not inst then return 0; "
+	"    if StrEqual(ci:InterfaceName(), \"TCompressor\") = nil then return 0; "
+	"    if StrEqual(ci:ImplementationName(), \"TLZCompressor\") = nil then return 0; "
+	"    if not IsInteger(ci:version()) then return 0; "
+	"    if not IsString(ci:signature()) then return 0; "
+	"    if ci:HasCapability(\"nosuch\") then return 0; "
+	"    local made := ci:New(); if not made then return 0; "
+	"    made:Destroy(); "
 	"    inst:Destroy(); "
 	"    1 end, "
 	// the colours a script packs and takes apart (qd/Ports.cpp)
