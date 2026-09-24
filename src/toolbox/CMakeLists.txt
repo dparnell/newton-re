@@ -2,6 +2,7 @@ add_library(toolbox STATIC
     Angles.cpp
     AngleTables.cpp
     CompMath.cpp
+    FixedGeometry.cpp
     FixedMath.cpp
 )
 target_link_libraries(toolbox PUBLIC newton_config)

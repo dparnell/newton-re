@@ -9,3 +9,7 @@ add_test(NAME toolbox.FixedMath COMMAND test_FixedMath)
 add_executable(test_Angles test_Angles.cpp)
 target_link_libraries(test_Angles PRIVATE toolbox)
 add_test(NAME toolbox.Angles COMMAND test_Angles)
+
+add_executable(test_FixedGeometry test_FixedGeometry.cpp)
+target_link_libraries(test_FixedGeometry PRIVATE toolbox)
+add_test(NAME toolbox.FixedGeometry COMMAND test_FixedGeometry)

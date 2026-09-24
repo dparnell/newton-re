@@ -1943,6 +1943,21 @@ In order:
    trained tables come out of the ROM's data through
    `analysis/romtable.py` as everything else does.
 
+The bottom of it has been started: `toolbox/FixedGeometry.h` is the
+ten routines the engine measures with — points and rectangles in 16.16
+fixed point, because a stroke is sampled in eighths of a pixel and
+everything is scaled by the tablet's resolution. `OrFixedRect` is the
+one worth knowing: a destination that is not a rectangle yet — upside
+down, or four noughts — simply *becomes* the source, which is how a
+bounding box is started from its first stroke without anyone having to
+say so, and an empty source is passed over, so an empty stroke does not
+drag a box down to the origin.
+
+Above them, `SL*` (level 5) is nine functions over a stroke list — a
+count, an array of strokes and a bounding rectangle — and is the next
+piece that stands on its own, once the engine's own stroke type is
+known (its bounds are at offset 0x0c of whatever it is).
+
 Until then the eleven natives that ask for handwriting — `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,
 `RecognizeTextInStyles`, `DoCursiveTraining`,
