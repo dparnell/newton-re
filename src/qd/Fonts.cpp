@@ -714,6 +714,7 @@ SearchFont(long macFontID, const UniChar* name)
 // (Fonts.h says why).
 FontInkOpenProc	gInkOpenFont = nil;
 FontInkParmsProc	gInkFontParms = nil;
+FontInkSetParmsProc	gInkSetFontParms = nil;
 
 
 // ROM 0x002e229c OpenFont__FP8PixelMapP11StyleRecordlT3P14FontEngineInfo
@@ -923,6 +924,126 @@ GetFontFamilySym(RefArg fontSpec)
 	if (!IsFrame(fontSpec))
 		return NILREF;
 	return GetFrameSlotRef(fontSpec, RSSYMfamily);
+}
+
+
+// ROM 0x00179d90 FamilySymToNum__FRC6RefVar
+// The four built-in families' numbers; nil for a family that has none,
+// which is what makes a font spec stay a frame rather than being packed
+// into an integer.
+Ref
+FamilySymToNum(RefArg family)
+{
+	if (EQRef(family, RSSYMespy))			return MAKEINT(0);
+	if (EQRef(family, RSSYMnewyork))		return MAKEINT(1);
+	if (EQRef(family, RSSYMgeneva))			return MAKEINT(2);
+	if (EQRef(family, RSSYMhandwriting))	return MAKEINT(3);
+	return NILREF;
+}
+
+
+// ROM 0x0017c7f0 GetFontFamilyNum__FRC6RefVar
+// The family number of a font spec: a packed spec's low ten bits, a font
+// frame's family symbol looked up; nil for anything else (an ink word
+// included - it has no family).
+Ref
+GetFontFamilyNum(RefArg fontSpec)
+{
+	if (ISINT(fontSpec))
+		return MAKEINT(PackedFontFamily(RVALUE(fontSpec)));
+	if (!IsFrame(fontSpec))
+		return NILREF;
+	return FamilySymToNum(RefVar(GetFrameSlotRef(fontSpec, RSSYMfamily)));
+}
+
+
+// ROM 0x0017a364 MakeCompactFont__FRC6RefVarlT2
+// A font spec out of a family, a size and a face.  A family that has a
+// number packs into one integer - family in the low ten bits, size in the
+// next ten, face above that - and one that has not becomes a
+// canonicalFontSpec frame with the three slots instead.
+//
+// The ROM masks none of the three when it packs them, so a size or face
+// beyond ten bits runs into the field above it; that is the machine's
+// own arithmetic and it is kept here.
+Ref
+MakeCompactFont(RefArg family, long size, long face)
+{
+	RefVar number(family);
+	if (!ISINT(number))
+		number = FamilySymToNum(family);
+	if (ISINT(number))
+		return MAKEINT(RVALUE(number) | (size << 10) | (face << 20));
+
+	RefVar spec(Clone(RefVar(Rcanonicalfontspec)));
+	SetFrameSlot(spec, RSSYMsize, RefVar(MAKEINT(size)));
+	SetFrameSlot(spec, RSSYMface, RefVar(MAKEINT(face)));
+	RefVar symbol(family);
+	if (ISINT(symbol))
+		// (unreachable: an integer family was packed above.  The ROM
+		//  passes the Ref rather than its value here, so even if it were
+		//  reached it would answer nil for every family.)
+		symbol = FamilyNumToSym((long) (Ref) symbol);
+	SetFrameSlot(spec, RSSYMfamily, symbol);
+	return spec;
+}
+
+
+// ROM 0x00179358 IntFontToFontParms__FRC6RefVar
+// A packed font spec opened out into a canonicalFontSpec frame, which is
+// the form the style slip and ChangeStylesOfRange work in.  A part that
+// reads as nothing is left out: a size of 0, a face of 0x20000000, and a
+// family of 0.
+//
+// GetFontFace cannot answer 0x20000000 - it masks the packed face to ten
+// bits and answers 0 for anything that is not a spec at all - so that
+// test never fires; it is a sentinel from some earlier arrangement.
+//
+// (Leaving out family 0 means Espy - the system font, and family number
+// 0 - never reaches the frame, so a spec of that family comes back
+// without one.  The ROM does this, and the slot then falls back to the
+// view's own font.)
+Ref
+IntFontToFontParms(RefArg font)
+{
+	RefVar parms(Clone(RefVar(Rcanonicalfontspec)));
+	long size = GetFontSize(font);
+	if (size != 0)
+		SetFrameSlot(parms, RSSYMsize, RefVar(MAKEINT(size)));
+	long face = GetFontFace(font);
+	if (face != 0x20000000)
+		SetFrameSlot(parms, RSSYMface, RefVar(MAKEINT(face)));
+	RefVar family(GetFontFamilyNum(font));
+	if (ISINT(family) && RVALUE(family) != 0)
+		SetFrameSlot(parms, RSSYMfamily, family);
+	return parms;
+}
+
+
+// ROM 0x0017d164 SetFontParms__FRC6RefVarT1
+// A font spec with the parts of `parms` (a frame with any of family,
+// size and face) put into it; what it does not name is taken from the
+// spec as it stands.  ==> the new spec.
+//
+// An ink word is restyled rather than replaced - it carries its own
+// measurements - which is the ink area's business, so it goes out
+// through the hook InitializeInkFont installs (gInkSetFontParms; the
+// same arrangement as gInkFontParms above).
+Ref
+SetFontParms(RefArg fontSpec, RefArg parms)
+{
+	Ref inkResult = NILREF;
+	if (gInkSetFontParms != nil && gInkSetFontParms(fontSpec, parms, &inkResult))
+		return inkResult;
+
+	RefVar family(GetFrameSlotRef(parms, RSSYMfamily));
+	if (ISNIL(family))
+		family = GetFontFamilySym(fontSpec);
+	RefVar size(GetFrameSlotRef(parms, RSSYMsize));
+	long theSize = ISNIL(size) ? GetFontSize(fontSpec) : RINT(size);
+	RefVar face(GetFrameSlotRef(parms, RSSYMface));
+	long theFace = ISNIL(face) ? GetFontFace(fontSpec) : RINT(face);
+	return MakeCompactFont(family, theSize, theFace);
 }
 
 

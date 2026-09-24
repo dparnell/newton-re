@@ -300,6 +300,34 @@ four fifths of the size and shift the baseline by three eighths of the
 ascent.  `GetStyleFontInfo` 0x002bc17c answers ascent, descent, leading
 and the widest glyph (espy 12: 12, 4, 0, 15).
 
+### Making and changing a font spec
+
+The other direction - putting a spec together, and changing one part of
+it - is what the Styles slip is written in, and it is the same four
+functions everywhere: `FamilySymToNum` 0x00179d90 and `FamilyNumToSym`
+0x00179e68 between the family symbols and their numbers,
+`MakeCompactFont` 0x0017a364 out of a family, a size and a face, and
+`SetFontParms` 0x0017d164 which takes any of the three out of a frame
+and leaves the rest alone.  `IntFontToFontParms` 0x00179358 goes the
+other way, opening a packed integer out into a `canonicalFontSpec`
+frame.
+
+A family that has a number packs into an integer; one that has not (a
+font from a package, say) stays a frame with the three slots.  The
+ROM masks none of the three when it packs them, so a size or a face
+beyond ten bits runs into the field above it.
+
+`SetFontParms` on an ink word restyles the *word* rather than replacing
+it with a spec - a word of writing carries its own measurements - which
+is the ink area's business, so it goes out through a hook
+(`gInkSetFontParms`, beside `gInkOpenFont` and `gInkFontParms`;
+`ink/InkFont.cpp` installs all three).
+
+The script-facing side is `views/FontNatives.cpp`: `GetFontFamilyNum`,
+`GetFontFace`, `MakeCompactFont`, `SetFontFamily`, `SetFontSize`,
+`SetFontFace`, `SetFontParms`, `GetDefaultFont`, `GetInsertionStyle`,
+`GetTextFlags`, `GetRangeText` and `view:ChangeStylesOfRange`.
+
 ## Text (`src/qd/Text.h`)
 
 The ROM draws text through *text objects* (`NewText` 0x00330e68: 0x50

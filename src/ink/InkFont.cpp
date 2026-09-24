@@ -472,6 +472,23 @@ InkWordFontParms(RefArg fontSpec, long* outSize, long* outFace)
 }
 
 
+// (host) An ink word restyled from a font-parameter frame, which is what
+// SetFontParms does with a spec that turns out to be one: the word keeps
+// its own measurements and is told the new size, face, scale and pen
+// (Ink.h's SetInkWordFontParms), rather than being replaced by a packed
+// spec.  ==> whether the spec was an ink word at all.
+static Boolean
+InkWordSetFontParms(RefArg fontSpec, RefArg parms, Ref* outSpec)
+{
+	if (!IsInkWord(fontSpec))
+		return false;
+	Ref result = SetInkWordFontParms(fontSpec, parms);
+	if (outSpec != nil)
+		*outSpec = result;
+	return true;
+}
+
+
 // (host) What the font engine is handed - Fonts.h says why these are
 // registered rather than called.
 void
@@ -479,4 +496,5 @@ InitializeInkFont(void)
 {
 	gInkOpenFont = InkOpenFont;
 	gInkFontParms = InkWordFontParms;
+	gInkSetFontParms = InkWordSetFontParms;
 }

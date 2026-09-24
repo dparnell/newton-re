@@ -161,6 +161,12 @@ extern FontInkOpenProc	gInkOpenFont;
 typedef Boolean	(*FontInkParmsProc)(RefArg fontSpec, long* outSize, long* outFace);
 extern FontInkParmsProc	gInkFontParms;
 
+// ... and an ink word restyled from a font-parameter frame, which keeps
+// the word rather than replacing it with a packed spec.  ==> whether the
+// spec was one.
+typedef Boolean	(*FontInkSetParmsProc)(RefArg fontSpec, RefArg parms, Ref* outSpec);
+extern FontInkSetParmsProc	gInkSetFontParms;
+
 // the font engine
 long		FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face);	// ==> the strike's size, 16.16 (0: no font); face left with what must be synthesised
 Ref			ChooseStrike(long face, RefArg fontFamily, long* faceUsed);				// the 'sfnt' for the face
@@ -185,6 +191,11 @@ long		GetFontSize(RefArg fontSpec);						// ROM 0x0017aca8 GetFontSize__FRC6RefV
 long		GetFontFace(RefArg fontSpec);						// ROM 0x0017bbc4 GetFontFace__FRC6RefVar
 Ref			GetFontFamilySym(RefArg fontSpec);					// nil when there is none
 Ref			FamilyNumToSym(long family);						// 'espy, 'newYork, 'geneva, 'handwriting; nil beyond
+Ref			FamilySymToNum(RefArg family);						// ROM 0x00179d90 FamilySymToNum__FRC6RefVar - the other way; nil for a family that has no number
+Ref			GetFontFamilyNum(RefArg fontSpec);					// ROM 0x0017c7f0 GetFontFamilyNum__FRC6RefVar
+Ref			MakeCompactFont(RefArg family, long size, long face);	// ROM 0x0017a364 MakeCompactFont__FRC6RefVarlT2
+Ref			IntFontToFontParms(RefArg font);					// ROM 0x00179358 IntFontToFontParms__FRC6RefVar - a packed spec as a frame
+Ref			SetFontParms(RefArg fontSpec, RefArg parms);		// ROM 0x0017d164 SetFontParms__FRC6RefVarT1
 
 // the ROM's font list and the system font
 Ref			GetROMFontList(void);

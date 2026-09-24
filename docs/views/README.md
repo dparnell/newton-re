@@ -1151,13 +1151,39 @@ uses a plain `protoPicker` (the scrolling popup and the modal
 opens a three-item menu and a pick runs the callback.)
 
 
-`ChangeStyleOfSelection` 0x0017ba98 restyles the selected text: the first
-hilite's range is given a style spec through `ChangeStylesOfRange`
-0x0017b494 (`SetStyleOfRange` over the writeable styles array, the runs
-compacted, the range laid out again).  DEVIATION: the ROM merges the spec
-into each run (a font kept, a face toggled) and posts an undoable command;
-the reconstruction sets the spec over the range directly.  (Tested by
-`TestSelection`: bolding "World" splits the styles into a bold run.)
+### Restyling a range (`ChangeStylesOfRange` 0x00179464)
+
+`ChangeStyleOfSelection` 0x00179a68 restyles the selected text: the first
+hilite's range goes to `ChangeStylesOfRange`, which is also
+`view:ChangeStylesOfRange(start, length, style, redraw)` - the verb the
+Styles slip sends.
+
+It is done as a **replacement of the range by itself**.  The styles of
+the range are taken (cloned), each run's spec is merged with the one
+asked for, and the text and the new styles go through the ordinary
+`aeReplaceText` command - so the change lands in the undo stack with
+every other edit, and the caret, the hilites and the correction
+information follow it.  A paragraph that changed size has its parent
+dirtied when it is inside a view that lays its children out
+(`vCalculateBounds`).
+
+`style` may be nil (the `userFont` preference), a packed font integer
+(opened out with `IntFontToFontParms`), a frame with a `fontParms` slot,
+or any other frame taken as a set of font parameters.  The `fontParms`
+form is how the slip asks for a *change* rather than a setting: its
+`command` slot is 1 to add the face bits, 2 to take them away and 3 to
+toggle - and a toggle makes its mind up on the **first run** of the
+range, so a selection that is only partly bold comes out bold all
+through.
+
+`GetRangeText` 0x00180248 is the other side of it: the characters of a
+range (`ExtractTextRange` 0x001726a4) alone when the paragraph has no
+style runs, and text and styles put together into a rich string when it
+has - which is how a range that holds writing keeps it.
+
+(Tested by `TestSelection`: bolding "World" splits the styles into a
+bold run, the toggle goes back and forth, and an undo puts the old
+styles back.)
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 
 The ROM's protoPicker's `viewKeyDownScript` is the native

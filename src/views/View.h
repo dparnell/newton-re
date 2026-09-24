@@ -394,6 +394,9 @@ void		InitViewSystem(void);			// host: the slot cache table, the prototypes, the
 void		InitViewSystem(RefArg rootTemplate);	// ... built from this template instead of the host's (the ROM's Rviewroot: TNotebook::Constructor)
 Ref			MakeRootTemplate(void);			// the ROM's Rviewroot with the view methods under it, or the host's stand-in when there are no ROM objects
 void		RegisterViewNatives(void);		// the NewtonScript view functions (ViewNatives.cpp)
+Ref			FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg style, RefArg redraw);	// ROM 0x001eeba8 FChangeStylesOfRange - a view method, so MakeViewMethods has it too
+Ref			FExtractTextRange(RefArg rcvr, RefArg start, RefArg length);	// ROM 0x001ef414 FExtractTextRange - likewise
+void		RegisterFontNatives(void);		// ... and the font and style ones (FontNatives.cpp; RegisterViewNatives calls it)
 Ref			MakeViewMethods(void);			// the methods a view inherits from the root template (Rviewroot's), as a frame
 
 #endif	/* __VIEW_H */

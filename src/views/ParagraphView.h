@@ -207,6 +207,7 @@ public:
 	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x0017edc0 Constructor__14TParagraphViewFRC6RefVarP5TView
 	virtual void	SetupDone(void);									// ROM 0x0017f5d8 SetupDone__14TParagraphViewFv
 	virtual long	Idle(long reason);									// ROM 0x0017e964 Idle__14TParagraphViewFl - reason 2 runs a deferred tap
+	virtual Ref		GetRangeText(long offset, long length);				// ROM 0x00180248 GetRangeText__14TParagraphViewFlT1 (vtable +0x40)
 	virtual void	HandleTap(Point& pt);								// ROM 0x001752c4 HandleTap__14TParagraphViewFR6TPoint (vtable +0x11c) - the caret placed at the tap
 	virtual Boolean	PointInHilite(Point& pt);							// host: the point tested against the selection region (the ROM TView::PointInHilite 0x0026051c asks each hilite Encloses)
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016911c RealDraw__14TParagraphViewFR5TRect
@@ -335,6 +336,7 @@ public:
 	// the view draws it in; nil when the character there is ordinary text.
 	Ref			GetInkRefAndBounds(long offset, Rect* bounds);			// ROM 0x00178210 GetInkRefAndBounds__14TParagraphViewFlP5TRect
 	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x001791f8 GetStylesOfRange__14TParagraphViewFlT1Uc
+	Ref			ExtractTextRange(ULong offset, ULong length);			// ROM 0x001726a4 ExtractTextRange__14TParagraphViewFUlT1 - the characters as a plain string
 	Ref			GetWriteableTextStylesArray(void);						// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
 	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar
 	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc

@@ -18,6 +18,7 @@ add_library(views STATIC
     BuildView.cpp
     RootView.cpp
     ViewNatives.cpp
+    FontNatives.cpp
     TextView.cpp
     PictureView.cpp
     DataView.cpp

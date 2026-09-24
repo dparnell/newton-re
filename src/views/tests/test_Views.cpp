@@ -3329,6 +3329,16 @@ HiliteRange(TParagraphView* view, Boolean wantStart)
 }
 
 
+// The face of the style a paragraph would draw the character at `offset`
+// in (views/StyleRuns.h's runs array, [length, spec, length, spec, ...]).
+static long
+FaceAt(TParagraphView* view, long offset)
+{
+	RefVar runs(view->GetStylesOfRange(offset, 1, false));
+	return GetFontFace(RefVar(GetArraySlotRef(runs, 1)));
+}
+
+
 static void
 TestSelection()
 {
@@ -3383,9 +3393,67 @@ TestSelection()
 	p->ChangeStyleOfSelection(RefVar(Eval("{family: 'espy, face: 1, size: 12}")));
 	EXPECT(RINT(Eval("Length(ctxS.styles)")) >= 2);				// now there are style runs
 	EXPECT(RINT(Eval("ctxS.styles[0]")) == 6 && RINT(Eval("ctxS.styles[2]")) == 5);	// the first run "Hello ", then the 5-char "World"
-	EXPECT(RINT(Eval("ctxS.styles[3].face")) == 1);				// the selection's run is bold
+	// the run's spec: 'espy has a family number, so the three parts pack
+	// into one integer rather than staying a frame (qd/Fonts.h)
+	EXPECT(GetFontFace(RefVar(Eval("ctxS.styles[3]"))) == 1);	// the selection's run is bold
+	EXPECT(GetFontSize(RefVar(Eval("ctxS.styles[3]"))) == 12);
 	p->RemoveAllHilites();
 	Eval("ctxS.text := \"Hello World\"; ctxS.styles := nil; ctxS:SyncView()");	// back to plain for the checks below
+
+	// The parts of a font spec, as the Styles slip reads and writes them
+	// (views/FontNatives.cpp over qd/Fonts.h).  A family that has a
+	// number packs the three into one integer.
+	EXPECT(RINT(Eval("GetFontFamilyNum(MakeCompactFont('geneva, 10, 2))")) == 2);
+	EXPECT(RINT(Eval("GetFontFace(MakeCompactFont('geneva, 10, 2))")) == 2);
+	EXPECT(ISNIL(Eval("GetFontFamilyNum({family: 'nosuchfont, size: 9, face: 0})")));
+	// a font frame that does not say what face it is answers nil, not 0
+	EXPECT(ISNIL(Eval("GetFontFace({family: 'espy, size: 9})")));
+	EXPECT(RINT(Eval("GetFontFace({family: 'espy, size: 9, face: 3})")) == 3);
+	// one part changed at a time, the others kept
+	EXPECT(RINT(Eval("GetFontFace(SetFontFace(MakeCompactFont('espy, 12, 0), 1))")) == 1);
+	EXPECT(RINT(Eval("GetFontFamilyNum(SetFontFace(MakeCompactFont('geneva, 12, 0), 1))")) == 2);
+	EXPECT(GetFontSize(RefVar(Eval("SetFontSize(MakeCompactFont('espy, 12, 1), 18)"))) == 18);
+	EXPECT(GetFontFace(RefVar(Eval("SetFontSize(MakeCompactFont('espy, 12, 1), 18)"))) == 1);
+	EXPECT(RINT(Eval("GetFontFamilyNum(SetFontFamily(MakeCompactFont('espy, 12, 1), 'newYork))")) == 1);
+	// SetFontParms takes any of the three out of one frame
+	EXPECT(RINT(Eval("GetFontFace(SetFontParms(MakeCompactFont('espy, 12, 0), {face: 2}))")) == 2);
+	EXPECT(RINT(Eval("GetFontFamilyNum(SetFontParms(MakeCompactFont('espy, 12, 0), {face: 2}))")) == 0);
+	// a family with no number keeps the spec a frame
+	EXPECT(NOTNIL(Eval("IsFrame(MakeCompactFont('nosuchfont, 12, 1))")));
+	EXPECT(RINT(Eval("MakeCompactFont('nosuchfont, 12, 1).size")) == 12);
+
+	// ChangeStylesOfRange: the Styles slip's verb, and the face commands
+	// it sends - 1 adds the bits, 2 takes them away, 3 toggles, and the
+	// toggle makes its mind up on the first run of the range, so a
+	// selection that is part bold ends up bold all through
+	Eval("ctxS.text := \"Hello World\"; ctxS.styles := nil; ctxS:SyncView()");
+	Eval("ClearUndoStacks()");
+	Eval("ctxS:ChangeStylesOfRange(6, 5, {fontParms: {face: 1}, command: 3}, true)");
+	EXPECT(FaceAt(p, 6) == 1 && FaceAt(p, 0) == 0);		// "World" bold, "Hello " not
+	Eval("ctxS:ChangeStylesOfRange(6, 5, {fontParms: {face: 1}, command: 3}, true)");
+	EXPECT(FaceAt(p, 6) == 0);							// toggled off again
+	Eval("ctxS:ChangeStylesOfRange(0, 11, {fontParms: {face: 2}, command: 1}, true)");
+	EXPECT(FaceAt(p, 0) == 2 && FaceAt(p, 6) == 2);		// the lot italic
+	Eval("ctxS:ChangeStylesOfRange(0, 11, {fontParms: {face: 2}, command: 2}, true)");
+	EXPECT(FaceAt(p, 0) == 0);
+	// a plain spec sets the style outright
+	Eval("ctxS:ChangeStylesOfRange(6, 5, MakeCompactFont('espy, 14, 2), true)");
+	EXPECT(FaceAt(p, 6) == 2 && FaceAt(p, 0) == 0);
+	// and it went through the ordinary replace-text command, so it undoes
+	gApplication->Idle();
+	Eval("Undo()");
+	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"Hello World\")")) && FaceAt(p, 6) == 0);
+	Eval("ClearUndoStacks()");
+	Eval("ctxS.text := \"Hello World\"; ctxS.styles := nil; ctxS:SyncView()");
+
+	// the rest of the style natives a slip asks for
+	EXPECT(NOTNIL(Eval("GetDefaultFont(ctxS)")));
+	Eval("ctxS.textFlags := 5");
+	EXPECT(RINT(Eval("GetTextFlags(ctxS)")) == 5);
+	Eval("RemoveSlot(ctxS, 'textFlags)");
+	EXPECT(NOTNIL(Eval("StrEqual(ctxS:ExtractTextRange(0, 5), \"Hello\")")));
+	EXPECT(NOTNIL(Eval("GetInsertionStyle()")));
+	EXPECT(NOTNIL(Eval("StrEqual(GetRangeText(ctxS, 6, 11), \"World\")")));
 	// typing over a selection replaces it in one edit
 	gKeyboardConnected = true;
 	Eval("ClearUndoStacks()");

@@ -1090,6 +1090,52 @@ TParagraphView::GetInkRefAndBounds(long offset, Rect* bounds)
 }
 
 
+// ROM 0x001726a4 ExtractTextRange__14TParagraphViewFUlT1
+// The characters from `offset` for `length` as a plain string; the range
+// is kept inside the text, so asking beyond the end gives what there is.
+Ref
+TParagraphView::ExtractTextRange(ULong offset, ULong length)
+{
+	RefVar text(Text());
+	const UniChar* chars = GetCString(text);
+	ULong have = (ULong) Ustrlen(chars);
+	if (have < offset)
+		offset = have;
+	if (have < offset + length)
+		length = have - offset;
+	RefVar result(AllocateBinary(RSSYMstring, (long) length * (long) sizeof(UniChar) + 2));
+	UniChar* out = (UniChar*) BinaryData(result);
+	BlockMove(chars + offset, out, (long) length * (long) sizeof(UniChar));
+	out[length] = 0;
+	return result;
+}
+
+
+// ROM 0x00180248 GetRangeText__14TParagraphViewFlT1
+// What a script gets when it asks a paragraph for a range of its text.
+// A paragraph with no style runs has nothing to carry but the
+// characters; one that has them may have writing among them, so the text
+// and the styles of the range are put together into a rich string
+// (frames/RichString.h), which carries the ink with the characters.
+Ref
+TParagraphView::GetRangeText(long offset, long length)
+{
+	RefVar text(ExtractTextRange((ULong) offset, (ULong) length));
+	if (!IsArray(RefVar(Styles())))
+		return text;
+	// (the range is pinned again here, because the styles have to be
+	//  taken over the same characters the text was)
+	RefVar all(Text());
+	long have = Ustrlen(GetCString(all));
+	if (have < offset)
+		offset = have;
+	if (have < offset + length)
+		length = have - offset;
+	RefVar styles(GetStylesOfRange(offset, length, false));
+	return FMakeRichString(RefVar(NILREF), text, styles);
+}
+
+
 // ROM 0x001791f8 GetStylesOfRange__14TParagraphViewFlT1Uc
 Ref
 TParagraphView::GetStylesOfRange(long offset, long length, Boolean clone)
@@ -1404,28 +1450,105 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 
 
 // ROM 0x00179464 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
-// The characters from start for length given a style: the writeable
-// styles array gets the spec over the range (SetStyleOfRange, the equal
-// neighbours merged), and the range is laid out again.  DEVIATION: the
-// ROM merges the spec into each run (a font, a face toggled, a size) and
-// posts it as an undoable command; the reconstruction sets the spec over
-// the range directly (no per-run merge, no undo).
+// The characters from `start` for `length` given a style.  This is what
+// the Styles slip does to a selection, and it is done as a replacement
+// of the range by itself: the styles of the range are taken, each run's
+// spec is merged with the one asked for, and the text and the new styles
+// go through the ordinary aeReplaceText command - so the change lands in
+// the undo stack with everything else, and the caret and the correction
+// information follow it.
+//
+// `style` may be:
+//  - nil, which means the user's font preference;
+//  - a packed font integer, opened out into a font-parameter frame;
+//  - a frame with a `fontParms` slot, which is how the style slip sends
+//    a face to be *changed* rather than set: its `command` slot is 1 to
+//    add the face bits, 2 to take them away, and 3 to toggle - and a
+//    toggle makes up its mind on the first run of the range, so the
+//    whole selection ends up the same way round;
+//  - any other frame, which is a set of font parameters as it stands.
 void
 TParagraphView::ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw)
 {
-	if (length <= 0)
-		return;
 	RefVar spec(style);
 	if (ISNIL(spec))
 		spec = GetPreference(RSSYMuserfont);
-	RefVar styles(GetWriteableTextStylesArray());
-	SetStyleOfRange(styles, spec, start, start + length);
-	CompactStyleRuns(styles);
-	if (redraw)
+	RefVar fontParms;
+	long command = 0;
+	if (ISINT(spec))
+		spec = IntFontToFontParms(spec);
+	else if (FrameHasSlot(spec, RSSYMfontparms))
 	{
-		ClearAllCaches();
-		RangeChanged(start, length, length, RSSYMstyles);
+		RefVar which(GetFrameSlotRef(spec, RSSYMcommand));
+		if (ISINT(which))
+			command = RVALUE(which);
+		fontParms = GetFrameSlotRef(spec, RSSYMfontparms);
+		spec = Clone(fontParms);
 	}
+
+	// the runs over the range, [length, style, length, style, ...],
+	// each style put through the change
+	RefVar styles(GetStylesOfRange(start, length, true));
+	long runs = Length(styles) / 2;
+	for (long i = 0; i < runs; i++)
+	{
+		long at = i * 2 + 1;
+		RefVar one(GetArraySlotRef(styles, at));
+		if (command != 0)
+		{
+			RefVar wanted(GetFrameSlotRef(fontParms, RSSYMface));
+			if (NOTNIL(wanted))
+			{
+				long bits = RINT(wanted);
+				long have = GetFontFace(one);
+				if (i == 0 && command == 3)
+					command = (have & bits) == bits ? 2 : 1;
+				if (command == 1)
+					bits = have | bits;
+				else if (command == 2)
+					bits = have & ~bits;
+				SetFrameSlot(spec, RSSYMface, RefVar(MAKEINT(bits)));
+			}
+		}
+		SetArraySlot(styles, at, RefVar(SetFontParms(one, spec)));
+	}
+
+	// the range replaced by itself
+	RefVar text(AllocateBinary(RSSYMtext, length * (long) sizeof(UniChar)));
+	RefVar oldText(Text());
+	BlockMove(GetCString(oldText) + start, BinaryData(text),
+			  length * (long) sizeof(UniChar));
+	RemoveAllHilites();
+
+	RefVar cmd(MakeCommand(aeReplaceText, this, fId));
+	CommandSetText(cmd, text);
+	RefVar params(AllocateArray(RSSYMarray, 7));
+	SetArraySlot(params, 0, RefVar(MAKEINT(start)));
+	SetArraySlot(params, 1, RefVar(MAKEINT(length)));
+	SetArraySlot(params, 2, RefVar(MAKEINT(length)));
+	SetArraySlot(params, 3, RefVar(MAKEINT(0)));
+	SetArraySlot(params, 4, RefVar(MAKEINT(redraw)));
+	SetArraySlot(params, 5, RefVar(MAKEINT(0)));
+	SetArraySlot(params, 6, RefVar(MAKEINT(0)));
+	SetFrameSlot(cmd, RSSYMparams, params);
+
+	RefVar correctInfo(ExtractRange(RefVar(CorrectInfo()), this, start, length));
+	RefVar frame(styles);
+	if (NOTNIL(correctInfo))
+	{
+		frame = Clone(RefVar(Rcanonicalcorrectinfo));
+		SetFrameSlot(frame, RSSYMstyles, styles);
+		SetFrameSlot(frame, RSSYMcorrectinfo, correctInfo);
+	}
+	CommandSetFrameParameter(cmd, frame);
+
+	Rect was = viewBounds;
+	HiliteText(start, length, true);
+	HandleReplaceText(cmd);
+	// a paragraph that changed size inside a view which lays its children
+	// out has to have the parent redrawn as well
+	if (!EqualRect(&was, &viewBounds) && (fFlags & vCalculateBounds) != 0)
+		fParent->Dirty(nil);
 }
 
 
