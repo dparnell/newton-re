@@ -872,6 +872,17 @@ FGetFontFamilySym(RefArg /*rcvr*/, RefArg spec)
 }
 
 
+// ROM 0x001eb20c FStrWidth__FRC6RefVarT1
+// view:StrWidth(string) - the string's width in the receiver's own font,
+// which is the viewFont variable as the view sees it.
+static Ref
+FStrWidth(RefArg rcvr, RefArg str)
+{
+	RefVar font(GetVariable(rcvr, RSSYMviewfont, nil, 0));
+	return FStrFontWidth(rcvr, str, font);
+}
+
+
 void
 RegisterTextNatives(void)
 {
@@ -886,4 +897,5 @@ RegisterTextNatives(void)
 	RegisterNativeFunction("FStyledStrTruncate__FRC6RefVarN31", (void*) FStyledStrTruncate, 3);
 	RegisterNativeFunction("FGetFontSize", (void*) FGetFontSize, 1);
 	RegisterNativeFunction("FGetFontFamilySym", (void*) FGetFontFamilySym, 1);
+	RegisterNativeFunction("FStrWidth__FRC6RefVarT1", (void*) FStrWidth, 1);
 }

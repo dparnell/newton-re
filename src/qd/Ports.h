@@ -70,6 +70,14 @@ extern QDGlobals		qdGlobals;
 // the random numbers (the Macintosh's generator over the seed in qdGlobals)
 long		GetRandSeed(void);					// ROM 0x0033f528 GetRandSeed__Fv
 void		SetRandSeed(long seed);				// ROM 0x0033f538 SetRandSeed__Fl
+// a colour as a script holds it: eight bits each of red, green and blue
+// with 0x10 above them.  The components are sixteen-bit going in and
+// coming out (QuickDraw's RGBColor), so the low byte of each is thrown
+// away and the high byte put back in both halves.
+void		RegisterPortNatives(void);			// PackRGB, GetRed, GetGreen, GetBlue
+ULong		PackRGBvalues(ULong red, ULong green, ULong blue);	// ROM 0x002befdc PackRGBvalues__FUlN21
+void		UnpackRGBvalues(ULong colour, ULong* red, ULong* green, ULong* blue);	// ROM 0x002beffc UnpackRGBvalues__FUlPUlN22
+
 long		Random(void);						// ROM 0x0033f488 Random__Fv - -32767..32767
 long		Rand(long n);						// ROM 0x0025c5b4 Rand__Fl - 0..n-1
 extern PatternHandle	stdPatterns[5];		// white, light gray, gray, dark gray, black

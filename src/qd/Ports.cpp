@@ -12,6 +12,9 @@
 
 #include "Ports.h"
 #include "OSErrors.h"
+#include "Frames.h"
+#include "NativeFunctions.h"
+#include "NewtonExceptions.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -318,6 +321,101 @@ SetRandSeed(long seed)
 	qdGlobals.fRandSeed = seed;
 }
 
+
+static const char kGrafException[] = "evt.ex.graf";
+const long kGrafErrBadParameters = -8809;		// the ROM's, for a component that will not fit
+
+
+/*------------------------------------------------------------------------------
+	C o l o u r s
+
+	A colour a script hands the drawing verbs is one packed integer: eight
+	bits each of red, green and blue with 0x10 above them, which says it
+	is an RGB rather than one of the small numbered colours.  The
+	components a script gives and gets are sixteen-bit, as QuickDraw's
+	RGBColor holds them, so packing throws the low byte of each away and
+	unpacking puts the high byte back in both halves (0xNN -> 0xNNNN),
+	which is what keeps white white.
+------------------------------------------------------------------------------*/
+
+// ROM 0x002befdc PackRGBvalues__FUlN21
+ULong
+PackRGBvalues(ULong red, ULong green, ULong blue)
+{
+	return ((red & 0xff00) << 8) + (green & 0xff00) + ((blue >> 8) & 0xff) + 0x10000000;
+}
+
+
+// ROM 0x002beffc UnpackRGBvalues__FUlPUlN22
+void
+UnpackRGBvalues(ULong colour, ULong* red, ULong* green, ULong* blue)
+{
+	*red = ((colour >> 16) & 0xff) * 0x101;
+	*green = ((colour >> 8) & 0xff) * 0x101;
+	*blue = (colour & 0xff) * 0x101;
+}
+
+
+// ROM 0x000e387c FPackRGB
+// PackRGB(red, green, blue): the three into one colour.  A component
+// that does not fit in sixteen bits is an error - and the ROM tests the
+// three together, taking whichever of them is out of range first, so
+// only one test is made.
+static Ref
+FPackRGB(RefArg /*rcvr*/, RefArg red, RefArg green, RefArg blue)
+{
+	ULong r = (ULong) RINT(red);
+	ULong g = (ULong) RINT(green);
+	ULong b = (ULong) RINT(blue);
+	ULong outOfRange = r;
+	if (outOfRange < 0x10000)
+		outOfRange = g;
+	if (outOfRange < 0x10000)
+		outOfRange = b;
+	if (outOfRange > 0xffff)
+		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadParameters, nil);
+	return MAKEINT(PackRGBvalues(r, g, b));
+}
+
+
+// ROM 0x000e3938 FGetRed
+static Ref
+FGetRed(RefArg /*rcvr*/, RefArg colour)
+{
+	ULong r, g, b;
+	UnpackRGBvalues((ULong) RINT(colour), &r, &g, &b);
+	return MAKEINT(r);
+}
+
+
+// ROM 0x000e397c FGetGreen
+static Ref
+FGetGreen(RefArg /*rcvr*/, RefArg colour)
+{
+	ULong r, g, b;
+	UnpackRGBvalues((ULong) RINT(colour), &r, &g, &b);
+	return MAKEINT(g);
+}
+
+
+// ROM 0x000e39c0 FGetBlue
+static Ref
+FGetBlue(RefArg /*rcvr*/, RefArg colour)
+{
+	ULong r, g, b;
+	UnpackRGBvalues((ULong) RINT(colour), &r, &g, &b);
+	return MAKEINT(b);
+}
+
+
+void
+RegisterPortNatives(void)
+{
+	RegisterNativeFunction("FPackRGB", (void*) FPackRGB, 3);
+	RegisterNativeFunction("FGetRed", (void*) FGetRed, 1);
+	RegisterNativeFunction("FGetGreen", (void*) FGetGreen, 1);
+	RegisterNativeFunction("FGetBlue", (void*) FGetBlue, 1);
+}
 
 // ROM 0x0033f488 Random__Fv
 // The Macintosh's generator: the seed multiplied by 16807 modulo 2^31 - 1

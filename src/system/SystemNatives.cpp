@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "ROMConstants.h"
 #include "Frames.h"
+#include "Interpreter.h"
 #include "ObjectHeap.h"
 #include "SkiaHeap.h"
 #include "NewtonMemory.h"
@@ -24,6 +25,8 @@
 #include "Screen.h"
 #include "Keyboard.h"
 #include "RootView.h"
+#include "Protocols.h"
+#include "ClassInfoRegistry.h"
 #include "Locale.h"
 
 
@@ -679,6 +682,161 @@ FGetHeapStats(RefArg /*rcvr*/, RefArg options)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   p r o t o c o l   r e g i s t r y ,   f r o m   a   s c r i p t
+
+	Protocols are the ROM's interface/implementation mechanism
+	(`protocols/Protocols.h`); every implementation registers its class
+	info, and these are how a script looks through that registry, makes
+	an instance by name and destroys one again.  A class info and an
+	instance both come back as a frame holding the pointer, cloned from
+	`classInfoPrototype` and `protocolInstancePrototype`.
+
+	DEVIATION: the ROM keeps the pointer as `(ULong) p & ~3`, which on a
+	Newton is an integer Ref of the address divided by four and is read
+	back by multiplying it again.  A host pointer does not fit in a
+	thirty-bit integer, so AddressToRef/RefToAddress are used instead -
+	the same pair every other C object a script holds goes through.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00194aec WrapClassInfo__FPC10TClassInfo
+// A class info as the frame a script holds it in; nil for none.
+static Ref
+WrapClassInfo(const TClassInfo* info)
+{
+	if (info == nil)
+		return NILREF;
+	RefVar wrapper(Clone(RefVar(Rclassinfoprototype)));
+	SetFrameSlot(wrapper, RSSYM_classinfo, RefVar(AddressToRef((void*) info)));
+	return wrapper;
+}
+
+
+// ROM 0x00194b5c WrapProtocolInstance__FP9TProtocol
+// ... and an instance, whose `_parent` is its class info's frame, so
+// that a script reading the instance can see what it is.
+static Ref
+WrapProtocolInstance(TProtocol* instance)
+{
+	if (instance == nil)
+		return NILREF;
+	RefVar wrapper(Clone(RefVar(Rprotocolinstanceprototype)));
+	RefVar info(WrapClassInfo(instance->ClassInfo()));
+	SetFrameSlot(wrapper, RSSYM_instance, RefVar(AddressToRef(instance)));
+	SetFrameSlot(wrapper, RSSYM_parent, info);
+	return wrapper;
+}
+
+
+// A name a script gives as the C string the registry wants: the object
+// is locked while the pointer is held, because the frames heap moves.
+class ProtocolName
+{
+public:
+	ProtocolName(RefArg name)
+	{
+		if (NOTNIL(name))
+		{
+			fString = ASCIIString(name);
+			LockRef(fString);
+		}
+	}
+	~ProtocolName()
+	{
+		if (NOTNIL(fString))
+			UnlockRef(fString);
+	}
+	const char* Get() const	{ return ISNIL(fString) ? nil : (const char*) BinaryData(fString); }
+
+private:
+	RefVar	fString;
+};
+
+
+// ROM 0x00194e54 FClassInfoByName
+// ClassInfoByName(interface, implementation, capability): the class info
+// the registry would satisfy that request with, as a frame; nil when
+// nothing does.  Any of the three may be nil, which means "any".
+static Ref
+FClassInfoByName(RefArg /*rcvr*/, RefArg interface, RefArg implementation, RefArg capability)
+{
+	ProtocolName intf(interface);
+	ProtocolName impl(implementation);
+	ProtocolName cap(capability);
+	return WrapClassInfo(gProtocolRegistry->Satisfy(intf.Get(), impl.Get(), cap.Get()));
+}
+
+
+// ROM 0x00195144 FClassInfoRegistrySeed
+// ClassInfoRegistrySeed(): the registry's seed, which changes whenever
+// something is registered or taken away - a walk that started before
+// that is no longer good.  A seed too large to be an integer Ref reads
+// as 0, which is the ROM's way of saying so.
+static Ref
+FClassInfoRegistrySeed(RefArg /*rcvr*/)
+{
+	long seed = gProtocolRegistry->Seed();
+	if (seed != (Ref) MAKEINT(seed) >> 2)
+		seed = 0;
+	return MAKEINT(seed);
+}
+
+
+// ROM 0x00195174 FNextClassInfo
+// ClassInfoRegistryNext(info, seed): the class info after that one, or
+// the first when it is nil; nil at the end.  The seed is what
+// ClassInfoRegistrySeed answered when the walk began.
+static Ref
+FNextClassInfo(RefArg /*rcvr*/, RefArg info, RefArg seed)
+{
+	const TClassInfo* next;
+	if (ISNIL(info))
+		next = gProtocolRegistry->First(0, nil);
+	else
+	{
+		const TClassInfo* from =
+			(const TClassInfo*) RefToAddress(GetVariable(info, RSSYM_classinfo, nil, 0));
+		long since = ISNIL(seed) ? 0 : RINT(seed);
+		next = gProtocolRegistry->Next(since, from, nil);
+	}
+	return WrapClassInfo(next);
+}
+
+
+// ROM 0x00194fd4 FNewByName
+// NewByName(interface, implementation, capability): an instance of that
+// protocol, as a frame; nil when the registry has nothing to make one
+// from.
+static Ref
+FNewByName(RefArg /*rcvr*/, RefArg interface, RefArg implementation, RefArg capability)
+{
+	ProtocolName intf(interface);
+	ProtocolName impl(implementation);
+	ProtocolName cap(capability);
+	return WrapProtocolInstance(NewByName(intf.Get(), impl.Get(), cap.Get()));
+}
+
+
+// ROM 0x00194c80 FDestroyProtocol
+// instance:Destroy() - the instance destroyed through its own class
+// info, and the frame's `_instance` slot emptied so that it cannot be
+// used again.
+static Ref
+FDestroyProtocol(RefArg rcvr)
+{
+	RefVar held(GetVariable(rcvr, RSSYM_instance, nil, 0));
+	if (NOTNIL(held))
+	{
+		TProtocol* instance = (TProtocol*) RefToAddress(held);
+		if (instance != nil)
+		{
+			instance->ClassInfo()->Destroy(instance);
+			SetFrameSlot(rcvr, RSSYM_instance, RefVar(NILREF));
+		}
+	}
+	return NILREF;
+}
+
 void
 RegisterSystemNatives(void)
 {
@@ -693,4 +851,9 @@ RegisterSystemNatives(void)
 	RegisterNativeFunction("FBackLightStatus", (void*) FBackLightStatus, 0);
 	RegisterNativeFunction("FBackLight", (void*) FBackLight, 1);
 	RegisterNativeFunction("FGetHeapStats", (void*) FGetHeapStats, 1);
+	RegisterNativeFunction("FClassInfoByName", (void*) FClassInfoByName, 3);
+	RegisterNativeFunction("FClassInfoRegistrySeed", (void*) FClassInfoRegistrySeed, 0);
+	RegisterNativeFunction("FNextClassInfo", (void*) FNextClassInfo, 2);
+	RegisterNativeFunction("FNewByName", (void*) FNewByName, 3);
+	RegisterNativeFunction("FDestroyProtocol", (void*) FDestroyProtocol, 0);
 }

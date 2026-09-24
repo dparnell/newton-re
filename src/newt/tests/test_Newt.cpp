@@ -87,6 +87,25 @@ static const char* kSetupSource =
 	"    local tickled := GetRoot():EventPause(true); "			// the tickle: nothing has happened since
 	"    local since := GetRoot():EventPause(nil); "
 	"    if tickled = 0 and IsInteger(since) and since >= 0 then 1 else 0 end, "
+	// the protocol registry as a script sees it (system/SystemNatives.cpp)
+	"  protocols: func(data) begin "
+	"    local seed := ClassInfoRegistrySeed(); "
+	"    if not IsInteger(seed) then return 0; "
+	"    local ci := ClassInfoByName(\"TCompressor\", \"TLZCompressor\", nil); "
+	"    if not ci then return 0; "
+	"    local n := 0; local it := ClassInfoRegistryNext(nil, seed); "
+	"    while it and n < 1000 do begin n := n + 1; it := ClassInfoRegistryNext(it, seed) end; "
+	"    if n < 2 then return 0; "
+	"    local inst := NewByName(\"TCompressor\", \"TLZCompressor\", nil); "
+	"    if not inst then return 0; "
+	"    inst:Destroy(); "
+	"    1 end, "
+	// the colours a script packs and takes apart (qd/Ports.cpp)
+	"  colours: func(data) begin "
+	"    local c := PackRGB(0xFFFF, 0x8000, 0); "
+	"    if GetRed(c) <> 0xFFFF or GetBlue(c) <> 0 then return 0; "
+	"    if GetGreen(c) <> 0x8080 then return 0; "        // the low byte is thrown away and the high one doubled
+	"    1 end, "
 	"  worldData: func(data) "
 	"    if GetPackageStore(\"WorldData\") then 1 else 0, "		// the store part of the WorldData package, mounted
 	"  battery: func(data) begin "
@@ -168,6 +187,8 @@ static long gTextLength = 0;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
 static Boolean gBacklightOk = false;
+static Boolean gProtocolsOk = false;
+static Boolean gColoursOk = false;
 static Boolean gExtrasOk = false;
 static Boolean gMapCursorOk = false;
 static Boolean gMinimumBatteryOk = false;
@@ -264,6 +285,12 @@ Scenario(void)
 		TRunScriptEvent mapCursor("testApp", "mapcursor");
 		newtPort.SendRPC(&replySize, &mapCursor, sizeof(mapCursor), &mapCursor, sizeof(mapCursor));
 		gMapCursorOk = mapCursor.fError == 0 && mapCursor.fResult == 1;
+		TRunScriptEvent protocols("testApp", "protocols");
+		newtPort.SendRPC(&replySize, &protocols, sizeof(protocols), &protocols, sizeof(protocols));
+		gProtocolsOk = protocols.fError == 0 && protocols.fResult == 1;
+		TRunScriptEvent colours("testApp", "colours");
+		newtPort.SendRPC(&replySize, &colours, sizeof(colours), &colours, sizeof(colours));
+		gColoursOk = colours.fError == 0 && colours.fResult == 1;
 		TRunScriptEvent world("testApp", "worldData");
 		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
 		gWorldDataOk = world.fError == 0 && world.fResult == 1;
@@ -329,6 +356,8 @@ int main()
 	EXPECT(gPauseOk);
 	EXPECT(gBatteryOk);
 	EXPECT(gBacklightOk);
+	EXPECT(gProtocolsOk);
+	EXPECT(gColoursOk);
 	EXPECT(gMapCursorOk);	// MapCursor maps a cursor's entries without moving it
 	EXPECT(gExtrasOk);		// one Extras entry for each application, and marked so it stays that way
 	EXPECT(gMinimumBatteryOk);

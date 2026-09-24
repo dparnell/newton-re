@@ -47,6 +47,7 @@ RegisterAllNatives(void)
 
 	// text and the view system
 	RegisterTextNatives();
+	RegisterPortNatives();
 	RegisterScreenNatives();
 	RegisterPictureNatives();
 	RegisterRectNatives();

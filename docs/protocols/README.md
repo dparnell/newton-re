@@ -128,6 +128,35 @@ through the registry: lookup by names, version and capability, `NewByName`
 and calls through the interface, instance counting, enumeration with the
 seed, deregistration, and the registry monitor about itself.
 
+## From a script (`system/SystemNatives.cpp`)
+
+A NewtonScript program reaches the same registry through five functions.
+`ClassInfoByName(interface, implementation, capability)` answers the
+class info a request would be satisfied with, as a frame cloned from
+`classInfoPrototype` holding the pointer; any of the three may be nil,
+meaning "any".  `ClassInfoRegistrySeed()` and
+`ClassInfoRegistryNext(info, seed)` walk the whole registry - the seed
+changes whenever something is registered or taken away, so a walk that
+started before that is no longer good.  `NewByName(interface,
+implementation, capability)` makes an instance, as a
+`protocolInstancePrototype` frame whose `_parent` is its class info's
+frame, and `instance:Destroy()` destroys it and empties the slot so it
+cannot be used again.
+
+DEVIATION: the ROM keeps the pointer in those frames as `(ULong) p & ~3`
+- an integer Ref of the address divided by four, multiplied back on the
+way out.  A host pointer does not fit in a thirty-bit integer, so
+`AddressToRef`/`RefToAddress` are used instead, the same pair every
+other C object a script holds goes through.
+
+NOT YET: `instance:Dispatch(...)` 0x00195228, which calls a method of an
+instance by index - it wants `PrimCallProtocolFromFrames`, the
+marshalling of NewtonScript values into a C call.
+
+`test_Newt` boots the machine and drives the five from a script: the
+seed, a lookup by interface and implementation, a walk of the whole
+registry, an instance made and destroyed.
+
 ## Not yet
 
 `InitStdIO`, `RegisterROMDomainManager` and `InitializePackageManager`,
