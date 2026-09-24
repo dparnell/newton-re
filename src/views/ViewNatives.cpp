@@ -2376,6 +2376,156 @@ FGetClipboardIcon(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x000e309c GetGlobalRect__FP5TRectRC6RefVarN42
+// The four numbers a script gives, as a rectangle in the screen's
+// coordinates rather than the view's.
+static void
+GetGlobalRect(Rect* r, RefArg view, RefArg left, RefArg top, RefArg right, RefArg bottom)
+{
+	r->top = (short) RINT(top);
+	r->left = (short) RINT(left);
+	r->right = (short) RINT(right);
+	r->bottom = (short) RINT(bottom);
+	ToGlobalCoordinates(view, &r->left, &r->top, &r->right, &r->bottom);
+}
+
+
+// ROM 0x000e316c FInvertRect
+// view:InvertRect(left, top, right, bottom) - that rectangle of the
+// view turned over on the screen, which is how a script flashes
+// something without drawing it again.
+static Ref
+FInvertRect(RefArg rcvr, RefArg left, RefArg top, RefArg right, RefArg bottom)
+{
+	Rect r;
+	GetGlobalRect(&r, rcvr, left, top, right, bottom);
+	InvertRect(&r);
+	return NILREF;
+}
+
+
+// ROM 0x000e3314 FUnionPoint
+// UnionPoint(bounds, x, y): the bounds frame let out to take the point
+// in.  A nil bounds makes one of the point alone - a rectangle of no
+// width or height at it.
+static Ref
+FUnionPoint(RefArg /*rcvr*/, RefArg bounds, RefArg x, RefArg y)
+{
+	Rect r;
+	if (ISNIL(bounds))
+	{
+		short h = (short) RINT(x);
+		short v = (short) RINT(y);
+		SetRect(&r, h, v, h, v);
+	}
+	else
+	{
+		if (!FromObject(bounds, r))
+			return NILREF;
+		Point pt;
+		pt.h = (short) RINT(x);
+		pt.v = (short) RINT(y);
+		UnionPt(&r, pt);
+	}
+	return ToObject(r);
+}
+
+
+// ROM 0x001ef954 FBubbleArraySlot
+// BubbleArraySlot(array, from, to): the slot at `from` moved to `to`,
+// everything between shuffling along one to make room.  A nil `from` or
+// `to` means the last slot.
+static Ref
+FBubbleArraySlot(RefArg /*rcvr*/, RefArg array, RefArg from, RefArg to)
+{
+	long at = ISNIL(from) ? Length(array) - 1 : RINT(from);
+	long want = ISNIL(to) ? Length(array) - 1 : RINT(to);
+	RefVar held(GetArraySlotRef(array, at));
+	while (at != want)
+	{
+		long next = at < want ? at + 1 : at - 1;
+		SetArraySlot(array, at, RefVar(GetArraySlotRef(array, next)));
+		at = next;
+	}
+	SetArraySlot(array, at, held);
+	return array;
+}
+
+
+// ROM 0x001eccf4 FPointToCharOffset
+// view:PointToCharOffset(x, y) - the character of a paragraph nearest
+// that point of the screen; nil for a view that is not one.
+static Ref
+FPointToCharOffset(RefArg rcvr, RefArg x, RefArg y)
+{
+	TView* view = FailGetView(rcvr);
+	if (!view->DerivedFrom(clParagraphView))
+		return NILREF;
+	Point pt;
+	pt.h = (short) RINT(x);
+	pt.v = (short) RINT(y);
+	return MAKEINT(((TParagraphView*) view)->PointToOffset(pt));
+}
+
+
+// ROM 0x001ecdc4 FPointToWord
+// view:PointToWord(x, y) - the word under that point, as a frame of its
+// first and last character (`startChar` and `endChar`); nil when there
+// is no word there.
+static Ref
+FPointToWord(RefArg rcvr, RefArg x, RefArg y)
+{
+	RefVar result;
+	TView* view = FailGetView(rcvr);
+	if (!view->DerivedFrom(clParagraphView))
+		return result;
+	Point pt;
+	pt.h = (short) RINT(x);
+	pt.v = (short) RINT(y);
+	long start = 0;
+	long end = 0;
+	long line = 0;
+	if (((TParagraphView*) view)->PointToWord(pt, &start, &end, &line))
+	{
+		result = AllocateFrame();
+		SetFrameSlot(result, RSSYMstartchar, RefVar(MAKEINT(start)));
+		SetFrameSlot(result, RSSYMendchar, RefVar(MAKEINT(end)));
+	}
+	return result;
+}
+
+
+// ROM 0x001eea68 FGetStylesOfRange
+// view:GetStylesOfRange(offset, length, clone) - the style runs over
+// that range of a paragraph's text, as the [length, spec, ...] array
+// they are kept in.
+//
+// NOT YET RECONSTRUCTED: the TXView arm (class 108, the text engine's
+// own view), which asks its frames for the range's `styles`.
+static Ref
+FGetStylesOfRange(RefArg rcvr, RefArg offset, RefArg length, RefArg clone)
+{
+	TView* view = FailGetView(rcvr);
+	if (!view->DerivedFrom(clParagraphView))
+		return NILREF;
+	long count = RINT(length);
+	long at = RINT(offset);
+	return ((TParagraphView*) view)->GetStylesOfRange(at, count, NOTNIL(clone));
+}
+
+
+// ROM 0x001ee904 FMatchedChar
+// MatchedChar(char, code): whether a character is the one a key code
+// stands for - the low sixteen bits of each compared.
+static Ref
+FMatchedChar(RefArg /*rcvr*/, RefArg c, RefArg code)
+{
+	ULong wanted = (ULong) RCHAR(c) & 0xffff;
+	ULong given = (ULong) RINT(code) & 0xffff;
+	return MAKEBOOLEAN(wanted == given);
+}
+
+
 // ROM 0x001ef570 FHiliteOwner__FRC6RefVar
 // HiliteOwner(): the context of the view the current selection belongs
 // to, or nil when nothing is selected.
@@ -2542,6 +2692,13 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FSetCaretInfo", (void*) FSetCaretInfo, 2);
 	RegisterNativeFunction("FHiliteOwner__FRC6RefVar", (void*) FHiliteOwner, 0);
 	RegisterNativeFunction("FGetClipboardIcon", (void*) FGetClipboardIcon, 0);
+	RegisterNativeFunction("FUnionPoint", (void*) FUnionPoint, 3);
+	RegisterNativeFunction("FBubbleArraySlot", (void*) FBubbleArraySlot, 3);
+	RegisterNativeFunction("FGetStylesOfRange", (void*) FGetStylesOfRange, 3);
+	RegisterNativeFunction("FMatchedChar", (void*) FMatchedChar, 2);
+	RegisterNativeFunction("FInvertRect", (void*) FInvertRect, 4);
+	RegisterNativeFunction("FPointToCharOffset", (void*) FPointToCharOffset, 2);
+	RegisterNativeFunction("FPointToWord", (void*) FPointToWord, 2);
 	RegisterNativeFunction("FInsertStyledText", (void*) FInsertStyledText, 5);
 	RegisterNativeFunction("FInsertItemsAtCaret", (void*) FInsertItemsAtCaret, 1);
 	RegisterNativeFunction("FTieViews__FRC6RefVarN31", (void*) FTieViews, 3);
@@ -2579,6 +2736,10 @@ MakeViewMethods(void)
 		{ "AddKeyCommands", (void*) FAddKeyCommands, 1 },
 		{ "OffsetView", (void*) FOffsetView, 2 },
 		{ "ViewIntoBitmap", (void*) FViewIntoBitmap, 3 },
+		{ "InvertRect", (void*) FInvertRect, 4 },
+		{ "PointToCharOffset", (void*) FPointToCharOffset, 2 },
+		{ "PointToWord", (void*) FPointToWord, 2 },
+		{ "GetStylesOfRange", (void*) FGetStylesOfRange, 3 },
 		{ "BlockKeyCommand", (void*) FBlockKeyCommand, 1 },
 		{ "ExtractTextRange", (void*) FExtractTextRange, 2 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },

@@ -3602,6 +3602,15 @@ TestSelection()
 	EXPECT(RINT(Eval("PointsToArray(pts)[2]")) == 10 && RINT(Eval("PointsToArray(pts)[3]")) == 20);
 	EXPECT(RINT(Eval("PointsToArray(pts)[5]")) == 40);
 	Eval("pts := nil");
+	// the small view and array verbs
+	EXPECT(RINT(Eval("UnionPoint(nil, 5, 7).left")) == 5 && RINT(Eval("UnionPoint(nil, 5, 7).bottom")) == 7);
+	EXPECT(RINT(Eval("UnionPoint({left: 0, top: 0, right: 2, bottom: 2}, 5, 7).right")) == 5);
+	EXPECT(RINT(Eval("UnionPoint({left: 0, top: 0, right: 2, bottom: 2}, 5, 7).bottom")) == 7);
+	EXPECT(NOTNIL(Eval("BubbleArraySlot(['a, 'b, 'c, 'd], 0, 2)")));
+	EXPECT(EQRef(Eval("BubbleArraySlot(['a, 'b, 'c, 'd], 0, 2)[2]"), Intern((char*) "a")));
+	EXPECT(EQRef(Eval("BubbleArraySlot(['a, 'b, 'c, 'd], 0, 2)[0]"), Intern((char*) "b")));
+	EXPECT(EQRef(Eval("BubbleArraySlot(['a, 'b, 'c, 'd], 3, 1)[1]"), Intern((char*) "d")));
+	EXPECT(NOTNIL(Eval("MatchedChar($A, 65)")) && ISNIL(Eval("MatchedChar($A, 66)")));
 	EXPECT(RINT(Eval("GetFontFace(MakeCompactFont('geneva, 10, 2))")) == 2);
 	EXPECT(ISNIL(Eval("GetFontFamilyNum({family: 'nosuchfont, size: 9, face: 0})")));
 	// a font frame that does not say what face it is answers nil, not 0
