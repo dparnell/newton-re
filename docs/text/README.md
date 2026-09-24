@@ -79,10 +79,47 @@ The two questions asked of it are:
   the stretch *spans*, before either of the two corrections that turn
   that into the count covered whole.
 
+## The attributes (`text/TXAttributes.h`)
+
+An *attribute* is a four-character tag and a value of up to twenty
+bytes. The three the text runs carry are `'font'` (a family, as a
+NewtonScript Ref), `'size'` and `'face'`; the rulers carry more.
+
+`TXAttrValues` (0x00231340) is a list of them — a `TXArray` of 0x20-byte
+elements, each a tag, a flag, a length and the value. It is how a set of
+attributes is passed about: a style slip hands one down to be applied,
+and a selection hands one back up saying what its runs have in common.
+The flag says the value is an *object the list owns*, and `Remove`
+(0x0023145c) — the array's `Remove` overridden — deletes those before
+closing the array up.
+
+`TXAttrObject` (0x002310e4) is the base of everything a run can point
+at: a text style, a ruler, a graphics run. Its object is eight bytes,
+and everything about it is virtual and does nothing — the subclasses
+answer. What the base does supply is the reference counting
+(`Reference` 0x002315bc, `Free` 0x002312fc: one reference to begin with,
+and the object goes when the last one does, `FreeData` first) and two
+walks over an attribute list:
+
+- `Update` (0x00231148) applies every value of a list, last first, and
+  answers the `GetAttributeFlags` of the ones that were applied or-ed
+  together — which is what tells the caller how much of the layout has
+  to be done again.
+- `GetCommonAttrValues` (0x002311e4) narrows a list down to the
+  attributes this object agrees about: an entry it does not share is
+  taken out, one it does is written back with its own value. Run over
+  every object of a selection in turn, what is left is what they all
+  have in common — which is exactly what a style slip shows, and why it
+  shows a blank where the selection disagrees.
+
+`IsEqual` (0x00231298) on the base can only tell that two objects are of
+the same *kind*: the same object, or the same class id. A subclass with
+values to compare overrides it — `TXAdvancedRuler::IsEqual` compares its
+tabs.
+
 ## Not yet reconstructed
 
-Everything else: the attribute objects a run carries (`TXAttrObject`,
-`TXAttrValues`), the chunked character storage (`TXChars`,
-`TXChunkedChars`), `Textension` and the runs, the formatter and the
+The chunked character storage (`TXChars`, `TXChunkedChars`), the rulers
+and their tab arrays, `Textension` and the runs, the formatter and the
 lines, `TXView` itself and the forty-one `FTX...` natives that are its
 script face.

@@ -2,6 +2,7 @@
 // is built on, the one sorted by a leading long, and the ranges that
 // record which run of characters each style, line and paragraph covers.
 #include "TXArray.h"
+#include "TXAttributes.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -210,6 +211,157 @@ TestRanges()
 }
 
 
+
+// A run's attributes: the list of tag-and-value pairs the engine passes
+// about, and the reference-counted object a run points at.
+// (text/TXAttributes.h)
+
+// A style of the sort a run would point at: three attributes and
+// nothing else.  The ROM's own are TXNewtTextRun and the rulers.
+class TestStyle : public TXAttrObject
+{
+public:
+					TestStyle(long size, long face) : fSize(size), fFace(face) { }
+	virtual TXAttrObject* CreateNew(void) const	{ return new TestStyle(fSize, fFace); }
+	virtual long	GetClassId(void) const		{ return 'test'; }
+	virtual void	Assign(const TXAttrObject* other)
+						{ fSize = ((const TestStyle*) other)->fSize;
+						  fFace = ((const TestStyle*) other)->fFace; }
+	virtual Ref		GetNSObject(void) const		{ return NILREF; }
+	virtual void	SetNSObject(RefArg)			{ }
+
+	virtual Boolean	GetAttributeValue(TXAttrTag tag, void* value) const
+					{
+						if (tag == kTXAttrSize)	{ *(long*) value = fSize; return true; }
+						if (tag == kTXAttrFace)	{ *(long*) value = fFace; return true; }
+						return false;
+					}
+	virtual void	SetAttributeValue(TXAttrTag tag, const void* value)
+					{
+						if (tag == kTXAttrSize)	fSize = *(const long*) value;
+						else if (tag == kTXAttrFace) fFace = *(const long*) value;
+					}
+	virtual Boolean	GetCommonAttrValue(TXAttrTag tag, void* value) const
+					{
+						long mine;
+						if (!GetAttributeValue(tag, &mine))
+							return false;
+						return mine == *(long*) value;
+					}
+	virtual unsigned long GetAttributeFlags(TXAttrTag tag) const
+					{ return tag == kTXAttrSize ? 1 : 2; }
+	virtual void	GetAttributesValues(TXAttrValues* values)
+					{
+						values->Add(kTXAttrSize, &fSize, sizeof(fSize), false);
+						values->Add(kTXAttrFace, &fFace, sizeof(fFace), false);
+					}
+
+	long			fSize;
+	long			fFace;
+};
+
+
+// Something a value can own, so that Remove is seen to free it.
+static long gOwnedAlive = 0;
+
+class OwnedThing : public TXVirtualObject
+{
+public:
+					OwnedThing()	{ gOwnedAlive++; }
+	virtual			~OwnedThing()	{ gOwnedAlive--; }
+};
+
+
+static void
+TestAttrValues()
+{
+	TXAttrValues values;
+	EXPECT(values.GetCount() == 0 && values.GetElementSize() == 0x20);
+
+	long size = 12;
+	long face = 1;
+	values.Add(kTXAttrSize, &size, sizeof(size), false);
+	values.Add(kTXAttrFace, &face, sizeof(face), false);
+	EXPECT(values.GetCount() == 2);
+
+	long got = 0;
+	EXPECT(values.GetValue(kTXAttrSize, &got) && got == 12);
+	EXPECT(values.GetValue(kTXAttrFace, &got) && got == 1);
+	EXPECT(!values.GetValue(kTXAttrFont, &got));
+
+	// read out and written back by index
+	TXAttrTag tag = 0;
+	int length = 0;
+	values.GetIndAttrData(0, &tag, &got, &length);
+	EXPECT(tag == kTXAttrSize && got == 12 && length == (int) sizeof(long));
+	long eighteen = 18;
+	values.SetIndAttrData(0, kTXAttrSize, &eighteen, sizeof(eighteen));
+	EXPECT(values.GetValue(kTXAttrSize, &got) && got == 18);
+
+	// a value the list owns is freed when the entry goes
+	OwnedThing* owned = new OwnedThing;
+	EXPECT(gOwnedAlive == 1);
+	values.Add(kTXAttrFont, &owned, sizeof(owned), true);
+	EXPECT(values.GetCount() == 3 && gOwnedAlive == 1);
+	EXPECT(values.Remove(2, 1) == 2 && gOwnedAlive == 0);
+	// and one it does not own is left alone
+	long plain = 7;
+	values.Add(kTXAttrFont, &plain, sizeof(plain), false);
+	EXPECT(values.Remove(2, 1) == 2);
+}
+
+
+static void
+TestAttrObject()
+{
+	TestStyle* style = new TestStyle(12, 0);
+	EXPECT(style->GetCountReferences() == 1);
+	style->Reference();
+	EXPECT(style->GetCountReferences() == 2);
+	style->Free();
+	EXPECT(style->GetCountReferences() == 1);
+
+	// what it has to say about itself
+	TXAttrValues mine;
+	style->GetAttributesValues(&mine);
+	EXPECT(mine.GetCount() == 2);
+	long got = 0;
+	EXPECT(mine.GetValue(kTXAttrSize, &got) && got == 12);
+
+	// a set of values applied; the flags say what has to be laid out
+	// again, or-ed over the ones that were applied
+	TXAttrValues change;
+	long eighteen = 18;
+	long bold = 1;
+	change.Add(kTXAttrSize, &eighteen, sizeof(eighteen), false);
+	change.Add(kTXAttrFace, &bold, sizeof(bold), false);
+	EXPECT(style->Update(&change, 0) == 3);				// 1 | 2
+	EXPECT(style->fSize == 18 && style->fFace == 1);
+
+	// the list narrowed to what a second style agrees about: they share
+	// the face but not the size, so the size is dropped
+	TestStyle* other = new TestStyle(24, 1);
+	TXAttrValues common;
+	style->GetAttributesValues(&common);
+	EXPECT(common.GetCount() == 2);
+	other->GetCommonAttrValues(&common);
+	EXPECT(common.GetCount() == 1);
+	EXPECT(common.GetValue(kTXAttrFace, &got) && got == 1);
+	EXPECT(!common.GetValue(kTXAttrSize, &got));
+
+	// two objects of the same class are equal as far as the base can
+	// tell - a subclass with values to compare says more
+	EXPECT(style->IsEqual(style));
+	EXPECT(style->IsEqual(other));
+	EXPECT(style->GetClassId() == 'test');
+
+	// and the last reference takes it away
+	style->Free();
+	other->Free();
+	EXPECT(gOwnedAlive == 0);
+}
+
+
 int
 main()
 {
@@ -217,6 +369,8 @@ main()
 	TestArray();
 	TestLongTagArray();
 	TestRanges();
+	TestAttrValues();
+	TestAttrObject();
 	printf("test_TXArray: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;
 }
