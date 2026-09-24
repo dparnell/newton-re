@@ -23,9 +23,6 @@ static RosGrammarContext	gNumbers	= { "Numbers" };
 static RosGrammarContext*	gContexts[2] = { &gNumbers, &gGeneral };
 static RosGrammars			gGrammars	= { 2, gContexts };
 
-static Fixed		gWidths[256];
-static RosCharInfo	gCharInfo;
-static RosCommonInfo	gCommonInfo;
 
 
 // ---- what the readings are handed to ----
@@ -50,16 +47,15 @@ main()
 {
 	InitHostStandaloneHeap();
 
-	// every character a pixel wide but 'W', which is four
-	for (long i = 0; i < 256; i++)
-		gWidths[i] = F(1);
-	gWidths[(UByte) 'W'] = F(4);
-	gCharInfo.fField00 = 0;
-	gCharInfo.fWidths = gWidths;
-	memset(&gCommonInfo, 0, sizeof(gCommonInfo));
-	gCommonInfo.fCharInfo = &gCharInfo;
-	gCommonInfo.fMinStrokeSize = F(2);
-	RosCI = &gCommonInfo;
+	// the engine's own trained numbers, out of the ROM
+	EXPECT(CharInitialize(0) == 0x86);		// the classifier's output nodes
+	EXPECT(RosCI != nil && RosCI != &rosCI);
+	EXPECT(RosCI->fLegalUse == rosCharLegalUse);
+	EXPECT(RosCI->fMinStrokeSize == F(4) + F(1) / 2);
+	// a capital is nearly a whole cap height, a lower-case o about
+	// half of one, and a full stop almost nothing
+	EXPECT(RosCI->fCharParams[1][(UByte) 'A'] > RosCI->fCharParams[1][(UByte) 'o']);
+	EXPECT(RosCI->fCharParams[1][(UByte) 'o'] > RosCI->fCharParams[1][(UByte) '.']);
 
 	// ---- the empty block ----
 	{
@@ -243,15 +239,18 @@ main()
 
 	// ---- the cap height learnt from a word ----
 	{
-		// "WWW" is twelve nominal units wide, so a word measured 24
-		// pixels across implies a cap height of two
-		wr->fWords[0] = (char*) "WWW";
-		wr->fWordWidth = F(24);
-		wr->fRun[20] = F(4);
+		// "AAA" is three capitals, each 0.96 of a cap height, so
+		// characters measuring twenty pixels imply a cap height of
+		// about twenty-one
+		wr->fWords[0] = (char*) "AAA";
+		wr->fMeanCharHeight = F(20);
+		Fixed was = wr->fRun[20];
+		Fixed estimate = FixedDivide(F(20), RosCI->fCharParams[1][(UByte) 'A']);
+		EXPECT(estimate > F(20) && estimate < F(22));
 		WordRecogComputeCapHeight(wr);
-		// an eighth of the new answer and seven eighths of the old:
-		// 0.875 * 4 + 0.125 * 6 = 4.25  (24 / (12/3) = 6)
-		EXPECT(wr->fRun[20] == F(4) + F(2) / 8);
+		// an eighth of the new answer, seven eighths of the old
+		EXPECT(wr->fRun[20] == FixedMultiply(0x0000e000, was)
+							+ FixedMultiply(0x00002000, estimate));
 
 		// a word it could not read teaches nothing
 		wr->fWords[0] = (char*) "????";
@@ -261,15 +260,16 @@ main()
 
 		// ... nor does one implying more than two and a half times what
 		// is there
-		wr->fWords[0] = (char*) "WWW";
-		wr->fWordWidth = F(400);
+		wr->fWords[0] = (char*) "AAA";
+		wr->fMeanCharHeight = F(400);
 		WordRecogComputeCapHeight(wr);
 		EXPECT(wr->fRun[20] == before);
 
 		// ... nor one under the smallest the engine will credit
-		wr->fWordWidth = F(4);			// 4/4 = 1, under the two we set
+		wr->fMeanCharHeight = F(4);
 		WordRecogComputeCapHeight(wr);
 		EXPECT(wr->fRun[20] == before);
+		wr->fRun[20] = was;
 	}
 
 	// ---- what it makes of one stroke ----
@@ -537,7 +537,8 @@ main()
 		WordRecogDestroy(quiet);
 	}
 
-	RosCI = nil;
+	RSfRcl();
+	EXPECT(RosCI == nil);
 	if (failures == 0)
 		printf("test_WordRecog: all passed\n");
 	else

@@ -12,7 +12,7 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 85/85.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9388 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9409 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
   the function total, which comes from the demangled symbols.)
@@ -300,10 +300,14 @@ nine Gaussians turned up.  What is left of level 3 is
 `WordRecogAddStroke` itself (eight kilobytes) and the segment side.  That also unblocks **level 2**, which is
 fifteen thin calls over these fields.
 
-The neighbouring layers are declared in `recognition/RosEngine.h` and
-are NOT YET: the common info `RosCI`, the grammars (`ROMGrammar`, eight
-finite-state contexts in the ROM's data), the segments, and the
-classifier net with its patternizers.  The rest of level 3 is
+**The engine's own numbers are real.**  `analysis/rosci.py` generates
+`src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template
+`CharInitialize` copies, and the seventeen character tables it points
+at - so `RosCI` holds the ROM's trained numbers rather than a
+stand-in.  The rest of the neighbouring layers are declared in
+`recognition/RosEngine.h` and are still NOT YET: the grammars
+(`ROMGrammar`, eight finite-state contexts in the ROM's data), the
+segments, and the classifier net with its patternizers.  The rest of level 3 is
 `WordRecogAddStroke`/`AddStroke2` (the strokes in),
 `WordRecogAnalyzeWord` and the net calls (reading them) and the segment
 side, `WRSeg*`.

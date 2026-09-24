@@ -2122,10 +2122,43 @@ answer. The stroke count it passes up is not the one it was given:
 strokes the engine cut for itself do not count, because the layers
 above never saw them, and at least one is always claimed.
 
-The neighbouring layers the block leans on — the common info `RosCI`,
-the grammars, the segments, the classifier net and its patternizers —
-are declared in `recognition/RosEngine.h` and are NOT YET; the seam is
-drawn there so that one layer of the engine can be written at a time.
+### The engine's own numbers (`recognition/RosEngine.h`)
+
+`RosCI` is the block of trained numbers the whole engine measures
+against, and it is **real**: `CharInitialize` (0x00057074) copies the
+0x10c-byte template `rosCI` out of the ROM into a block of its own, and
+`analysis/rosci.py` writes that template and the seventeen tables it
+points at into `recognition/RosCITables.cpp`. The copy is not
+ceremony: an area may replace the character set in the block, which is
+what `RSfRcl` checks before it gives the block back.
+
+What is in it:
+
+* `fCharParams`, eight numbers for every one of the 256 character
+  codes. Table 1 is **how tall the character is as a fraction of the
+  cap height**, and it reads like one — 0.96 for `A`, 0.92 for `l`,
+  0.45 for `o`, 0.08 for a full stop — which is what
+  `WordRecogComputeCapHeight` divides the measured height by.
+* `fLegalNet` and `fLegalUse`, 256 bits each: which character codes
+  exist, and which the engine may answer at the moment.
+  `RosettaVerifyWordSymbols` is nothing but a walk over the second.
+* `fCharToNetNode` and `fCharOfNetNode`, the map between a character
+  code and one of the classifier's 134 output nodes (`CharInitialize`
+  answers that count, and `RosettaAwaken` makes the net that size).
+* `fCompoundPart1`/`fCompoundPart2`: a character that is really two
+  characters names them here, and `WordRecogNetEvaluate` scores it as
+  the **product** of its two parts' net outputs.
+* `fCapCaseFlags`, `fCapAltCase1`, `fCapAltCase2` — the capitals hack:
+  whether a character has a case at all, and the one or two characters
+  it may be read as instead.
+* `fMinStrokeSize`, 4.5 pixels: under that a stroke has no shape worth
+  talking about, and it is also the smallest cap height the engine will
+  believe.
+
+The other layers the word recogniser leans on — the grammars, the
+segments, the classifier net and its patternizers — are declared in
+`recognition/RosEngine.h` and are NOT YET; the seam is drawn there so
+that one layer of the engine can be written at a time.
 `BiGrammarsLoad` is the one that is not simply empty: the ROM's answers
 `ROMGrammar` whatever it is asked for, and ours answers what it is
 handed, so the word recogniser can be driven before that table is

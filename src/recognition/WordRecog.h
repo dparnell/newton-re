@@ -140,7 +140,7 @@ struct WordRecog
 	Fixed			fField60;			// +0x060  fRun[0] as the word started
 	Fixed			fField64;			// +0x064
 	Fixed			fField68;			// +0x068
-	Fixed			fWordWidth;			// +0x06c  what the cap height is worked out from
+	Fixed			fMeanCharHeight;	// +0x06c  CharGetAvgBoxBHW's, per character
 	Fixed			fRun[22];			// +0x070  the hand, as it is being measured
 	Fixed			fSavedRun[22];		// +0x0c8  the copy to go back to
 	Fixed			fField120[16];		// +0x120  eight pairs; Create2 sets the second of each

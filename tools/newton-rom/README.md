@@ -63,6 +63,8 @@ tools/newton-rom/
                           -> src/recognition/SpellMaps.cpp
     romdicts.py           the table of lexicons built into the ROM, recovered from the code
                           that writes it -> src/recognition/ROMDictionaryTable.cpp
+    rosci.py              the handwriting engine's common info and its seventeen character
+                          tables -> src/recognition/RosCITables.cpp
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
     soupdefs.py           the soups the ROM's applications keep -> src/host/FactorySoups.cpp
@@ -325,6 +327,18 @@ be recovered from the code that writes it.  The script decodes those two
 instruction forms out of the ROM's own bytes, keeping a value per
 register, and refuses anything else, so a ROM whose function is shaped
 differently is noticed rather than half-read.
+
+`analysis/rosci.py build/MP2x00US -o src/recognition/RosCITables.cpp`
+emits the handwriting engine's common info, which is a template rather
+than a table: `CharInitialize` copies the 0x10c bytes at `rosCI` into a
+block of its own so that an area may replace the character set in it.
+The template holds ten ROM addresses, so the script writes it out as a
+`RosCommonInfo` initialiser with those fields named after the tables it
+emits beside them (`rosCharParam0`..`7`, the eight numbers every
+character code carries; `rosCharLegalNet`/`rosCharLegalUse`, 256 bits
+each; and the six byte-per-character tables the classifier and the
+capitals hack use). The struct's field order is in the script as
+`FIELDS` and in `recognition/RosEngine.h`, and the two must agree.
 
 `analysis/romconstants.py build/MP2x00US -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real

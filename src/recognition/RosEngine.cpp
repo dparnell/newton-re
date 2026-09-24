@@ -15,10 +15,41 @@
 
 #include "RosEngine.h"
 #include "RosStrokes.h"
+#include "NewtonMemory.h"
 
 
 // ROM 0x0c100b08 RosCI
 RosCommonInfo*	RosCI = nil;
+
+
+// ROM 0x00057074 CharInitialize
+// The common info made: the ROM's template copied into a block of its
+// own, because an area may put a character set of its own in it.  What
+// comes back is how many output nodes the classifier has, which is the
+// one thing the caller wants and which the ROM simply writes down.
+long
+CharInitialize(long /*unused*/)
+{
+	RosCI = (RosCommonInfo*) RosAllocate((long) sizeof(RosCommonInfo));
+	*RosCI = rosCI;
+	return 0x86;
+}
+
+
+// ROM 0x001b8334 RSfRcl
+// ... and given back.  A character set the engine made for an area goes
+// first, which is what the test against the ROM's own is for.
+void
+RSfRcl(void)
+{
+	if (RosCI->fLegalUse != rosCharLegalUse)
+	{
+		DisposPtr((Ptr) RosCI->fLegalUse);
+		RosCI->fLegalUse = rosCharLegalUse;
+	}
+	DisposPtr((Ptr) RosCI);
+	RosCI = nil;
+}
 
 
 Boolean

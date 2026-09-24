@@ -67,6 +67,8 @@ GENERATED = [
      "spellmaps.py", ["{build}", "-o", "src/recognition"]),
     ("romdicts",
      "romdicts.py", ["{build}", "-o", "src/recognition"]),
+    ("rosci",
+     "rosci.py", ["{build}", "-o", "src/recognition/RosCITables.cpp"]),
     ("factorysoups",
      "soupdefs.py", ["{build}", "-o", "src/host/FactorySoups.cpp"]),
 ]

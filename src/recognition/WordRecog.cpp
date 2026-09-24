@@ -456,13 +456,17 @@ WordRecogDetermineMaxHeight(WordRecog* wr)
 
 
 // ROM 0x00274818 WordRecogComputeCapHeight
-// The word just read says how tall a capital is: the characters it is
-// made of have nominal widths of their own, so the width the writing
-// actually took, divided by the average of them, is what the hand's
-// cap height must be.  It is not believed outright - it is an eighth
-// of the answer and the cap height that was there is the other seven -
-// and it is thrown away entirely if it is smaller than the engine will
-// credit or more than two and a half times what it had.
+// The word just read says how tall a capital is.  Every character code
+// has a nominal height in the common info - a fraction of the cap
+// height, and the table reads like one: 0.96 for `A`, 0.92 for `l`,
+// 0.45 for `o`, 0.08 for a full stop - so the height the characters
+// actually took, divided by the average of the fractions the engine
+// decided it was reading, is what the hand's cap height must be.
+//
+// It is not believed outright: an eighth of the answer, and the cap
+// height that was there is the other seven.  And it is thrown away
+// entirely if it is smaller than the engine will credit anything or
+// more than two and a half times what it had.
 void
 WordRecogComputeCapHeight(WordRecog* wr)
 {
@@ -479,13 +483,15 @@ WordRecogComputeCapHeight(WordRecog* wr)
 	//  its length)
 	while (i < strlen(word))
 	{
-		sum += RosCI->fCharInfo->fWidths[(UByte) word[i]];
+		// table 1 is how tall a character is, as a fraction of the
+		// cap height
+		sum += RosCI->fCharParams[1][(UByte) word[i]];
 		i++;
 	}
 
-	// (the average is an ordinary integer divide: the widths are 16.16
-	//  and the count is a count, so what comes out is 16.16 again)
-	Fixed estimate = FixedDivide(wr->fWordWidth, sum / (Fixed) i);
+	// (the average is an ordinary integer divide: the fractions are
+	//  16.16 and the count is a count, so what comes out is 16.16)
+	Fixed estimate = FixedDivide(wr->fMeanCharHeight, sum / (Fixed) i);
 	if (RosCI->fMinStrokeSize >= estimate)
 		return;
 	if (FixedMultiply(0x00028000, wr->fRun[20]) <= estimate)
