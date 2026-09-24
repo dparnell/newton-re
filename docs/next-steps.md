@@ -8,14 +8,14 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `26ba5d0`)
+## State at 2026-09-24 (commit `39d5dcc`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8887 citations, 0 bad;
-  4805 of 16671 functions (28.82%).
-- `analysis/natives.py`: 775 of the ROM's 1326 natives answered
-  (built-ins 600 of 869, prototype methods 175 of 457).
+- `analysis/coverage.py build/MP2x00US --check`: 8947 citations, 0 bad;
+  4816 of 16671 functions (28.89%).
+- `analysis/natives.py`: 832 of the ROM's 1326 natives answered
+  (built-ins 650 of 869, prototype methods 182 of 457).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -127,14 +127,60 @@ The last run of work closed, in order:
   try string; the popups and what a view allows to be written on it; the
   key commands; text put in, views tied and the key commands sorted;
   the colours, `StrWidth` and the protocol registry; a bitmap made and
-  drawn into - taking it from 728 to 775.  Two reconstruction bugs
+  drawn into, and a view drawn into one; the tones, the sound settings
+  and the large-binary questions; the power statistics; two sweeps of
+  the thin wrappers picked out with `natives.py --sizes`; the polygon
+  shapes; a class info as a script reads it - taking it from 728 to 832.  Two reconstruction bugs
   came out of the tests for them: `FMakeRichString` wrote its halfwords
   the ROM's way round, so no rich string it made ever read back as
   having ink in it; and `TRootView::SetPopup` was missing the arm that
   closes the popup that is up, without which `DismissPopup` loops for
   ever.
 
-## Next
+## Next: what is left of the natives, and why
+
+The thin wrappers are done.  What `natives.py --unbound` still lists is
+494 natives, and they are not a long tail of small jobs: nine out of ten
+of them are the script-facing face of a subsystem that has no
+reconstruction behind it at all.  Binding one of those means writing the
+subsystem, not the wrapper.
+
+| how many | what is under it |
+|---|---|
+| 145 | communications: endpoints, CCL, AppleTalk, IR, NTK, the desktop connection |
+|  57 | the Intelligent Assistant: its lexicon, phrases and task templates |
+|  46 | the books and newspaper system |
+|  38 | the text engine (TXView/TXFrames: styled documents with rulers) |
+|  38 | the CIC handwriting engine: letters, training and reading |
+|  36 | the test agent and the debug hooks |
+|  35 | the package manager and the card |
+|  17 | the Airus dictionary cursor (`TAirusIterator`) |
+|  12 | sound channels (the sound server) |
+|  11 | the clipboard and the view hilites |
+|   4 | large binaries on a store, and store passwords |
+|  55 | everything else, a handful each |
+
+Regenerate that table at any time with `natives.py --unbound --csv`, and
+find the cheapest work inside a group with `--sizes build/MP2x00US`.
+
+The smallest of those that would close a group of its own:
+
+- **the clipboard** (11): `TClipboard`, the root view's clipboard stack
+  and `TRootView::GetClipboard`, which is still NOT YET.  That also
+  unblocks the hilite natives, which want `TView::AddHiliter`.
+- **the Airus dictionary cursor** (17): `TAirusIterator` and
+  `AttributeLength` - the object a script walks a dictionary with.  The
+  dictionaries themselves are reconstructed, so this is a contained
+  piece.
+- **sound channels** (12): `TSoundServer`/`TSoundChannel` above the
+  codecs, which are done.
+
+And a handful that are blocked on one function each, named in the list
+that `natives.py --unbound` prints: `Dispatch`, `RegisterGestalt` and
+`ReplaceGestalt` want `PrimCallProtocolFromFrames` (the marshalling of
+NewtonScript values into a C call); `GetBitmapInfo` wants the
+large-binary questions to mean something; `ComputeParagraphHeight` wants
+its geometry read out of the assembly rather than the decompiler.
 
 Keep going through `natives.py --unbound`.  The areas whose machinery
 exists are `views` (36 left), `recognition` (73), `qd` (13), `sound`
