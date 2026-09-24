@@ -14,6 +14,7 @@
 #include "RootView.h"
 #include "Locale.h"
 #include "FixedMath.h"
+#include "FixedMathExtra.h"	// WrapAdd/WrapSub: the ARM's wrapping add and subtract
 #include <string.h>
 
 // the pen tip and inking defaults the strokes are made with
@@ -183,27 +184,40 @@ UnfixRect(const FRect* src, Rect* dst)
 // ROM 0x001a4224 GetMapper
 // The dst rect narrowed (or shortened) about its centre to the src
 // rect's proportions, so that a mapping between them keeps shapes.
+//
+// BUG (the ROM's): a stroke that is perfectly flat blows the dst rect up
+// to about sixteen thousand pixels each way.  `UpdateBBox` makes a box a
+// single Fixed unit - 1/65536 of a pixel - past its points, so a stroke
+// drawn along one exact y has a height of 1 and `srcRatio` divides that
+// by its width and comes out 0.  `FixedDivide(dstHeight, 0)` then
+// saturates to the largest Fixed there is, and the inset that is worked
+// out from it is about -2^30, which is added to the left edge and taken
+// off the right.  Every point of the stroke is then mapped into that,
+// which on the machine wraps and puts the ink somewhere meaningless.
+// The reconstruction does the same (MapPoint below wraps as the ARM
+// does), because a Newton with a flat stroke in a word large enough to
+// need scaling really does make nonsense of it.
 void
 GetMapper(const FRect* src, const FRect* dst)
 {
 	FRect* d = (FRect*) dst;
-	Fixed srcRatio = FixedDivide(src->bottom - src->top, src->right - src->left);
-	Fixed dstHeight = d->bottom - d->top;
-	Fixed dstWidth = d->right - d->left;
+	Fixed srcRatio = FixedDivide(WrapSub(src->bottom, src->top), WrapSub(src->right, src->left));
+	Fixed dstHeight = WrapSub(d->bottom, d->top);
+	Fixed dstWidth = WrapSub(d->right, d->left);
 	Fixed dstRatio = FixedDivide(dstHeight, dstWidth);
 	if (srcRatio < dstRatio)
 	{
 		Fixed height = FixedMultiply(dstWidth, srcRatio);
-		Fixed inset = (dstHeight - height) >> 1;
-		d->top += inset;
-		d->bottom -= inset;
+		Fixed inset = WrapSub(dstHeight, height) >> 1;
+		d->top = WrapAdd(d->top, inset);
+		d->bottom = WrapSub(d->bottom, inset);
 	}
 	else
 	{
 		Fixed width = FixedDivide(dstHeight, srcRatio);
-		Fixed inset = (dstWidth - width) >> 1;
-		d->left += inset;
-		d->right -= inset;
+		Fixed inset = WrapSub(dstWidth, width) >> 1;
+		d->left = WrapAdd(d->left, inset);
+		d->right = WrapSub(d->right, inset);
 	}
 }
 
@@ -276,21 +290,26 @@ SectRectangle(FRect* result, const FRect* a, const FRect* b)
 
 // ROM 0x001a42e4 MapPoint
 // The point moved from where it lies in src to the same place in dst.
+//
+// DEVIATION: the widths and heights are taken through ULong so that they
+// wrap as the ARM's own `sub` does.  A rect GetMapper has blown up (see
+// the bug there) is wider than a Fixed can hold, and the machine simply
+// wraps where the host would trap.
 void
 MapPoint(FPoint* pt, const FRect* src, const FRect* dst)
 {
-	Fixed srcHeight = src->bottom - src->top;
-	Fixed dstHeight = dst->bottom - dst->top;
-	Fixed dy = pt->y - src->top;
+	Fixed srcHeight = WrapSub(src->bottom, src->top);
+	Fixed dstHeight = WrapSub(dst->bottom, dst->top);
+	Fixed dy = WrapSub(pt->y, src->top);
 	if (srcHeight != dstHeight)
 		dy = FixedMultiply(dstHeight, FixedDivide(dy, srcHeight));
-	pt->y = dst->top + dy;
-	Fixed srcWidth = src->right - src->left;
-	Fixed dstWidth = dst->right - dst->left;
-	Fixed dx = pt->x - src->left;
+	pt->y = WrapAdd(dst->top, dy);
+	Fixed srcWidth = WrapSub(src->right, src->left);
+	Fixed dstWidth = WrapSub(dst->right, dst->left);
+	Fixed dx = WrapSub(pt->x, src->left);
 	if (srcWidth != dstWidth)
 		dx = FixedMultiply(dstWidth, FixedDivide(dx, srcWidth));
-	pt->x = dst->left + dx;
+	pt->x = WrapAdd(dst->left, dx);
 }
 
 

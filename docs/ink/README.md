@@ -303,6 +303,39 @@ an ink word made here is the right size and in the right place, but the
 line its short letters stand on is the bottom of it rather than where a
 reader would put it.
 
+### BUG: a flat stroke in a word that has to be scaled
+
+`ScaleStrokesForInkWord` maps each stroke from its own box into that box
+scaled, and `TStroke::Map` (0x00222c6c) puts the destination through
+`GetMapper` (0x001a4224) first, which narrows or shortens it about its
+centre so that the mapping keeps the stroke's proportions.
+
+`GetMapper` divides.  A stroke's box is made a Fixed unit - 1/65536 of a
+pixel - past its points when the first point goes in and again when it
+is finished, so a stroke drawn along one exact *y* is two of those high;
+dividing that by the stroke's width gives **0**.  The destination's
+ratio rounds to 0 as well, so the `srcRatio < dstRatio` test fails and
+the other arm runs `FixedDivide(dstHeight, 0)`, which saturates to the
+largest Fixed there is.  The inset worked out from that is about -2^30,
+and it is added to the left edge and taken off the right: the
+destination becomes some sixteen thousand pixels wide either side of
+where the stroke was.  Every point of the stroke is then mapped into
+that.
+
+The machine wraps where a host would trap, so this is kept: `MapPoint`
+and `GetMapper` do their arithmetic through `ULong`
+(`toolbox/FixedMathExtra.h`'s `WrapAdd`/`WrapSub`), and the doublings in
+the encoder's `Repar` wrap with them.  What comes out is a stroke whose
+points are scattered, which the CIC encoder then refuses - so the word
+is lost, and the unit handler reports `evt.ex.outofmem`.
+
+It takes a stroke that is flat to the last eighth of a pixel over its
+whole length, in a word tall or wide enough to be scaled down (sixty
+pixels, or two hundred and forty).  A tablet's samples always jitter, so
+this is rare on the machine; a host mouse reports exact integers, so
+dragging a horizontal line is enough to hit it.  `test_Ink` pins the
+blown-up box.
+
 ## Ink as a shape
 
 Everything above ink passes writing about as a *shape frame*, which is

@@ -34,4 +34,12 @@ Fract	FractCos(Fixed radians);	// ROM 0x00038088 xFracCos__Fl (FractCos 0x0011b8
 
 extern const Fixed	kFixedRadiansToDegrees;		// 57.29578 in 16.16
 
+// The ARM's own `add` and `sub`: they wrap, where a signed 32-bit add or
+// subtract written out in C++ is undefined and traps under the host's
+// sanitiser.  Reconstructed arithmetic that the ROM lets run past the
+// end of a Fixed goes through these, so the host computes the same
+// (wrong) number the machine did.
+inline Fixed	WrapAdd(Fixed a, Fixed b)	{ return (Fixed) ((ULong) a + (ULong) b); }
+inline Fixed	WrapSub(Fixed a, Fixed b)	{ return (Fixed) ((ULong) a - (ULong) b); }
+
 #endif	/* __FIXEDMATHEXTRA_H */

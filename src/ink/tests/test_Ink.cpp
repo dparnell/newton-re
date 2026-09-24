@@ -1325,6 +1325,9 @@ TestStrokeRoundTrip()
 }
 
 
+// A stroke of `n` points from (x0, y0) to (x1, y1), finished.
+static TStroke*	MakeLine(long x0, long y0, long x1, long y1, long n);
+
 // A stroke made into a sketch and into a word.
 static void
 TestStrokesToInk()
@@ -1400,6 +1403,37 @@ TestStrokesToInk()
 	EXPECT(box.right - box.left == 240);
 	EXPECT(box.bottom - box.top >= 14 && box.bottom - box.top <= 17);	// half of thirty-odd
 	wide->IDispose();
+
+	// BUG (the ROM's): a perfectly flat stroke in a word that has to be
+	// scaled has its box blown up to about sixteen thousand pixels each
+	// way, and its points are mapped into that - which is nonsense.
+	//
+	// A stroke's box is made a Fixed unit - 1/65536 of a pixel - past its
+	// points as the first point goes in and again when it is finished, so
+	// a stroke drawn along one exact y is two of those high.  GetMapper
+	// divides that by the width and gets 0, and then divides the
+	// destination's height by that 0; FixedDivide saturates, and the
+	// inset worked out from it is about -2^30.  Every add and subtract
+	// after that wraps, as the ARM's own do.
+	//
+	// The reconstruction keeps it: a Newton really does make nonsense of
+	// such a word.  It is easy to hit on a host because the mouse gives
+	// exactly equal y values, where a tablet's samples always jitter.
+	{
+		TStroke* word[3];
+		word[0] = MakeLine(10, 20, 40, 120, 20);	// tall enough to need scaling
+		word[1] = MakeLine(50, 100, 160, 100, 20);	// ... and perfectly flat
+		word[2] = nil;
+		Rect box;
+		UnionBounds(word, &box);
+		EXPECT(box.bottom - box.top > 60);			// so ScaleStrokesForInkWord does something
+		EXPECT(word[1]->fBBox.bottom - word[1]->fBBox.top == 2);	// two Fixed units high, 1/32768 of a pixel
+		ScaleStrokesForInkWord(word, &box);
+		ULong blownUp = (ULong) word[1]->fBBox.right - (ULong) word[1]->fBBox.left;
+		EXPECT(blownUp > 0x7f000000);				// about 2^31: sixteen thousand pixels
+		word[0]->IDispose();
+		word[1]->IDispose();
+	}
 }
 
 
@@ -1541,7 +1575,6 @@ TestInkDraw()
 	ClosePort(&gDrawPort);
 }
 
-// A stroke of `n` points from (x0, y0) to (x1, y1), finished.
 static TStroke*
 MakeLine(long x0, long y0, long x1, long y1, long n)
 {

@@ -638,14 +638,17 @@ Repar(const CICTracePoint* last, const CICTracePoint* first,
 		sideY >>= 11;
 		do
 		{
-			into *= 2;
+			// (the doublings wrap, as the ARM's own shift does - a stroke
+			//  whose box GetMapper blew up gets here with lengths no
+			//  32-bit number can hold, recognition/Stroke.cpp)
+			into = (long) ((ULong) into * 2);
 			if (length <= into)
 			{
 				into -= length;
 				partX += sideX;
 				partY += sideY;
 			}
-			into *= 2;
+			into = (long) ((ULong) into * 2);
 			if (length <= into)
 			{
 				into -= length;
