@@ -8,14 +8,14 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `be62843`)
+## State at 2026-09-24 (commit `fbb114a`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8861 citations, 0 bad;
-  4794 of 16671 functions (28.76%).
-- `analysis/natives.py`: 757 of the ROM's 1326 natives answered
-  (built-ins 584 of 869, prototype methods 173 of 457).
+- `analysis/coverage.py build/MP2x00US --check`: 8884 citations, 0 bad;
+  4804 of 16671 functions (28.82%).
+- `analysis/natives.py`: 773 of the ROM's 1326 natives answered
+  (built-ins 598 of 869, prototype methods 175 of 457).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -125,7 +125,9 @@ The last run of work closed, in order:
   and with `--unbound --ready` picks out the ones whose ROM function is
   already reconstructed.  Three batches went in - the strokes, ink and
   try string; the popups and what a view allows to be written on it; the
-  key commands - taking it from 728 to 757.  Two reconstruction bugs
+  key commands; text put in, views tied and the key commands sorted;
+  the colours, `StrWidth` and the protocol registry - taking it from
+  728 to 773.  Two reconstruction bugs
   came out of the tests for them: `FMakeRichString` wrote its halfwords
   the ROM's way round, so no rich string it made ever read back as
   having ink in it; and `TRootView::SetPopup` was missing the arm that
@@ -144,15 +146,19 @@ The named pieces whose machinery *is* there:
 - the clipboard (`GetClipboard`, `SetClipboard`, `ClipboardCommand`,
   `GetClipboardIcon`), which wants `TClipboard` and the root view's
   clipboard stack - `TRootView::GetClipboard` is still NOT YET;
-- `InsertStyledText` and `InsertItemsAtCaret`, over the
-  `HandleInsertItems` path that is already there;
-- `CategorizeKeyCommands` 0x0030fe38, the sort into the categories a
-  keyboard help slip shows;
-- `ComputeParagraphHeight`, `TieViews`, `OffsetView` and the hilite
-  natives (`hiliter`, `HiliteViewChildren`), which want
-  `TView::AddHiliter` - the root view's `fHiliter` is NOT YET;
+- the hilite natives (`hiliter`, `HiliteViewChildren`,
+  `GetHiliteIndex`/`SetHiliteIndex`), which want `TView::AddHiliter` -
+  the root view's `fHiliter` is NOT YET;
 - the bitmap and shape verbs (`MakeBitmap`, `DrawIntoBitmap`,
-  `ViewIntoBitmap`, `MakePict`, `PictToShape`, `MungeShape`).
+  `ViewIntoBitmap`, `MakePict`, `PictToShape`, `MungeShape`,
+  `GetBitmapInfo`, `MungeBitmap`);
+- `instance:Dispatch` 0x00195228, which wants
+  `PrimCallProtocolFromFrames` - the marshalling of NewtonScript values
+  into a C call - and with it the `Gestalt` registration natives
+  (`RegisterGestalt`, `ReplaceGestalt`);
+- `ComputeParagraphHeight` 0x001ecfd0: its geometry is built on the
+  stack through an unaligned `ldr` and is worth reading from the
+  assembly rather than the decompiler.
 
 ## Also still open
 
