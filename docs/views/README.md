@@ -1184,6 +1184,40 @@ has - which is how a range that holds writing keeps it.
 (Tested by `TestSelection`: bolding "World" splits the styles into a
 bold run, the toggle goes back and forth, and an undo puts the old
 styles back.)
+### The key commands a script sees (`views/Keyboard.cpp`)
+
+A view's `_keyCommands` is an array of command frames - a `char`, its
+`modifiers` and the `keyMessage` to send - and four functions let a
+script work with them.  All four walk the key-view chain the way
+`FindKeyCommand` does: `_nextKeyView` when the view names one, the
+parent otherwise, stopping at the root or at `'none`.
+
+`GatherKeyCommands(view)` 0x0030fbac collects every command in force at
+the view, from it outwards, skipping a key that is already spoken for
+nearer the caret (`AlreadyInCommandArray` 0x0030fa70 compares the
+character and the modifiers) - so what comes back is what would actually
+happen rather than everything that exists.
+
+`MatchKeyMessage(view, message, what)` 0x0030f7e0 goes the other way,
+finding the commands that send a given message: `what` is 0 for the
+first there is, 1 for the first that could be *shown* in a menu, and 2
+for all of them.  What "could be shown" means is `GetDisplayCmdChar`
+0x0030f700 - the command's `showChar`, else its `char` - passed through
+`UserVisibleChar` 0x0030f6c8, which refuses the special key characters
+0xf721 to 0xf72f (the arrows and the function keys), anything below a
+space, and delete.
+
+`view:AddKeyCommands(commands)` 0x0030b2a4 adds to the view's own array;
+a view that has none takes the array given, and one that has takes a
+copy first, because the ROM's own templates are read-only.
+`view:BlockKeyCommand(message)` 0x0030b3ec stops a message the chain
+above would have answered, by giving the view a command of its own for
+the same key with *no* message - which the search finds first, and which
+therefore does nothing.
+
+NOT YET: `CategorizeKeyCommands` 0x0030fe38, which sorts a gathered
+array into the categories a keyboard help slip shows.
+
 ### The caret from a script (`views/ViewNatives.cpp`)
 
 `SetCaretInfo(view, info)` 0x001eef6c puts the caret where a view says,

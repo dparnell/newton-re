@@ -917,6 +917,271 @@ FAddKeyCommand(RefArg rcvr, RefArg command)
 	return NILREF;
 }
 
+/*------------------------------------------------------------------------------
+	T h e   k e y   c o m m a n d s   a   s c r i p t   s e e s
+
+	A view's `_keyCommands` is an array of command frames, each with a
+	`char`, its `modifiers` and a `keyMessage` to send.  The functions
+	below are what a script uses to add to that array, to gather what is
+	in force at the caret, and to ask which command a key or a message
+	would reach; they all walk the key-view chain the same way
+	FindKeyCommand does - `_nextKeyView` when the view names one, the
+	parent otherwise, stopping at the root or at `'none`.
+------------------------------------------------------------------------------*/
+
+// Munger.cpp
+void	ArrayInsert(RefArg array, RefArg element, long index);
+
+
+// ROM 0x0030f6c8 UserVisibleChar__FUs
+// Whether a character is one a menu could show.  The special key
+// characters 0xf721 to 0xf72f (the arrows, the function keys and their
+// like) are not, nor is anything below a space, nor delete.  The
+// characters just below that range, 0xf700 to 0xf720, are.
+Boolean
+UserVisibleChar(UniChar c)
+{
+	if (c >= 0xf721 && c <= 0xf72f)
+		return false;
+	if (c < 0x20)
+		return false;
+	return c != 0x7f;
+}
+
+
+// ROM 0x0030f700 GetDisplayCmdChar__FRC6RefVar
+// The character a key command shows itself by: its `showChar` when it
+// has one, else its `char`; 0 when that is not a character anyone could
+// read.
+UniChar
+GetDisplayCmdChar(RefArg command)
+{
+	RefVar shown(GetFrameSlotRef(command, RSSYMshowchar));
+	if (ISNIL(shown))
+		shown = GetFrameSlotRef(command, RSSYMchar);
+	UniChar c = RCHAR(shown);
+	return UserVisibleChar(c) ? c : 0;
+}
+
+
+// ROM 0x0030fa70 AlreadyInCommandArray__FRC6RefVarT1
+// Whether the array already holds a command for the same key - the same
+// character with the same modifiers.  The one nearest the caret wins, so
+// the walk outwards keeps the first it saw.
+Boolean
+AlreadyInCommandArray(RefArg commands, RefArg command)
+{
+	long count = Length(commands);
+	UniChar wanted = RCHAR(RefVar(GetFrameSlotRef(command, RSSYMchar)));
+	ULong modifiers = KeyCommandModifiers(command);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar one(GetArraySlotRef(commands, i));
+		ULong theirs = KeyCommandModifiers(one);
+		UniChar c = RCHAR(RefVar(GetFrameSlotRef(one, RSSYMchar)));
+		if (modifiers == theirs && wanted == c)
+			return true;
+	}
+	return false;
+}
+
+
+// the next view up the key-view chain; nil at the end of it
+static TView*
+NextKeyCommandView(TView* view)
+{
+	if (view == gRootView)
+		return nil;
+	RefVar next(view->GetProto(RSSYM_nextkeyview));
+	if (ISNIL(next))
+		return view->fParent;
+	if (EQRef(next, RSSYMnone))
+		return nil;
+	return GetView(next);
+}
+
+
+// ROM 0x0030fbac GatherKeyCommands__FP5TView
+// Every key command in force at the view, from it outwards: the array
+// its `_keyCommands` holds, then its next key view's, and so on to the
+// root.  A key that is already spoken for nearer the caret is not added
+// again, so what comes back is what would actually happen.
+Ref
+GatherKeyCommands(TView* view)
+{
+	RefVar gathered(AllocateArray(RSSYMarray, 0));
+	while (view != nil)
+	{
+		RefVar commands(view->GetProto(RSSYM_keycommands));
+		if (IsArray(commands))
+		{
+			long count = Length(commands);
+			for (long i = 0; i < count; i++)
+			{
+				RefVar one(GetArraySlotRef(commands, i));
+				if (!AlreadyInCommandArray(gathered, one))
+					AddArraySlot(gathered, one);
+			}
+		}
+		view = NextKeyCommandView(view);
+	}
+	return gathered;
+}
+
+
+// ROM 0x0030f7e0 MatchKeyMessage__FP5TViewRC6RefVarUl
+// The key commands along the chain whose `keyMessage` is the one given.
+// `what` says which: 0 the first there is, 1 the first that could be
+// shown in a menu (GetDisplayCmdChar answers something), 2 all of them
+// as an array.
+Ref
+MatchKeyMessage(TView* view, RefArg message, ULong what)
+{
+	RefVar found;
+	if (what == 2)
+		found = AllocateArray(RSSYMarray, 0);
+	Boolean done = false;
+	while (view != nil && !done)
+	{
+		RefVar commands(view->GetProto(RSSYM_keycommands));
+		if (IsArray(commands))
+		{
+			long count = Length(commands);
+			for (long i = 0; i < count; i++)
+			{
+				RefVar one(GetArraySlotRef(commands, i));
+				if (!EQRef(GetFrameSlotRef(one, RSSYMkeymessage), message))
+					continue;
+				UniChar shown = GetDisplayCmdChar(one);
+				if (what == 0 || (what == 1 && shown != 0))
+				{
+					found = one;
+					done = true;
+					break;
+				}
+				if (what == 2)
+					AddArraySlot(found, one);
+			}
+		}
+		if (!done)
+			view = NextKeyCommandView(view);
+	}
+	return found;
+}
+
+
+// ROM 0x0030b2a4 AddKeyCommands__FRC6RefVarT1
+// Commands added to a view's own `_keyCommands`.  A view that has none
+// simply takes the array given; one that has takes a copy - of its
+// `viewChildren`'s array when it has one and its own is read-only (the
+// ROM's own templates live in the read-only ROM) - and the new commands
+// are munged onto the front of it.
+void
+AddKeyCommands(RefArg context, RefArg commands)
+{
+	RefVar mine(GetProtoVariable(context, RSSYM_keycommands, nil));
+	if (ISNIL(mine))
+	{
+		SetFrameSlot(context, RSSYM_keycommands, commands);
+		return;
+	}
+	RefVar children(GetFrameSlotRef(context, RSSYMviewchildren));
+	RefVar source(mine);
+	if (NOTNIL(children) && (ObjectFlags(mine) & kObjReadOnly) != 0)
+		source = children;
+	RefVar copy(Clone(source));
+	ArrayMunger(copy, 0, 0, commands, 0, Length(commands));
+	SetFrameSlot(context, RSSYM_keycommands, copy);
+}
+
+
+// ROM 0x0030b3ec BlockKeyCommand__FP5TViewRC6RefVar
+// A key message stopped here: every command along the chain that sends
+// it is answered with a key command of its own on this view - the same
+// character and modifiers, and no message - which the search finds
+// first and so does nothing.
+void
+BlockKeyCommand(TView* view, RefArg message)
+{
+	RefVar matched(MatchKeyMessage(view, message, 2));
+	long count = Length(matched);
+	if (count == 0)
+		return;
+	RefVar mine(view->GetProto(RSSYM_keycommands));
+	if (ISNIL(mine))
+		mine = AllocateArray(RSSYMarray, 0);
+	else if ((ObjectFlags(mine) & kObjReadOnly) != 0)
+		mine = Clone(mine);
+	SetFrameSlot(RefVar(view->fContext), RSSYM_keycommands, mine);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar one(GetArraySlotRef(matched, i));
+		RefVar c(GetFrameSlotRef(one, RSSYMchar));
+		RefVar modifiers(GetFrameSlotRef(one, RSSYMmodifiers));
+		RefVar blocker(Clone(RefVar(Rcanonicalkeycommand)));
+		SetFrameSlot(blocker, RSSYMchar, c);
+		SetFrameSlot(blocker, RSSYMmodifiers, modifiers);
+		ArrayInsert(mine, blocker, 0);
+	}
+}
+
+// ROM 0x0030f4bc FFindKeyCommand
+// FindKeyCommand(view, char, modifiers): the command that key would
+// reach from that view, or nil.
+static Ref
+FFindKeyCommand(RefArg /*rcvr*/, RefArg view, RefArg c, RefArg modifiers)
+{
+	TView* theView = GetView(view);
+	if (theView == nil)
+		return NILREF;
+	ULong bits = (ULong) RINT(modifiers);
+	UniChar key = RCHAR(c);
+	return FindKeyCommand(theView, key, bits);
+}
+
+
+// ROM 0x0030fd48 FGatherKeyCommands
+static Ref
+FGatherKeyCommands(RefArg /*rcvr*/, RefArg view)
+{
+	return GatherKeyCommands(GetView(view));
+}
+
+
+// ROM 0x0030fa3c FMatchKeyMessage
+// MatchKeyMessage(view, message, what): see MatchKeyMessage above.
+static Ref
+FMatchKeyMessage(RefArg /*rcvr*/, RefArg view, RefArg message)
+{
+	TView* theView = GetView(view);
+	if (theView == nil)
+		return NILREF;
+	return MatchKeyMessage(theView, message, 1);
+}
+
+
+// ROM 0x0030b3d4 FAddKeyCommands
+// view:AddKeyCommands(commands)
+Ref
+FAddKeyCommands(RefArg rcvr, RefArg commands)
+{
+	AddKeyCommands(rcvr, commands);
+	return NILREF;
+}
+
+
+// ROM 0x0030b58c FBlockKeyCommand
+// view:BlockKeyCommand(message)
+Ref
+FBlockKeyCommand(RefArg rcvr, RefArg message)
+{
+	TView* view = GetView(rcvr);
+	if (view != nil)
+		BlockKeyCommand(view, message);
+	return NILREF;
+}
+
+
 // ROM 0x00269c1c FInRepeatedKeyCommand
 // InRepeatedKeyCommand(): whether the key command being run now is one
 // the key repeat sent, rather than a key the writer has just pressed -
@@ -932,6 +1197,11 @@ void
 RegisterKeyboardNatives(void)
 {
 	RegisterNativeFunction("FInRepeatedKeyCommand", (void*) FInRepeatedKeyCommand, 0);
+	RegisterNativeFunction("FFindKeyCommand", (void*) FFindKeyCommand, 3);
+	RegisterNativeFunction("FGatherKeyCommands", (void*) FGatherKeyCommands, 1);
+	RegisterNativeFunction("FMatchKeyMessage", (void*) FMatchKeyMessage, 2);
+	RegisterNativeFunction("FAddKeyCommands", (void*) FAddKeyCommands, 1);
+	RegisterNativeFunction("FBlockKeyCommand", (void*) FBlockKeyCommand, 1);
 	RegisterNativeFunction("FKeyIn", (void*) FKeyIn, 2);
 	RegisterNativeFunction("FAddKeyCommand", (void*) FAddKeyCommand, 1);
 	RegisterNativeFunction("FTranslateKey", (void*) FTranslateKey, 3);

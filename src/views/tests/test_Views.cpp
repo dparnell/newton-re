@@ -1729,6 +1729,31 @@ TestKeyboard()
 	RefVar found(FindKeyCommand(v, 's', (kCommandModifier | kShiftModifier) << 25));
 	EXPECT(NOTNIL(found) && EQRef(GetFrameSlotRef(found, RSSYMkeymessage), Intern((char*) "DoSave")));
 	EXPECT(ISNIL(FindKeyCommand(v, 's', 0)));
+	// ... and the same from a script, with the commands gathered,
+	// matched by their message, added to and blocked (views/Keyboard.cpp)
+	EXPECT(NOTNIL(Eval("FindKeyCommand(ctxK, $s, 1 << 25).keyMessage")));
+	EXPECT(EQRef(Eval("FindKeyCommand(ctxK, $s, 1 << 25).keyMessage"), Intern((char*) "DoSave")));
+	EXPECT(ISNIL(Eval("FindKeyCommand(ctxK, $z, 1 << 25)")));
+	// GatherKeyCommands walks outwards from the view, and a key already
+	// spoken for nearer the caret is not gathered twice
+	Eval("GetRoot()._keyCommands := [{char: $s, modifiers: 1 << 25, keyMessage: 'RootSave}, {char: $q, modifiers: 1 << 25, keyMessage: 'DoQuit}]");
+	EXPECT(RINT(Eval("Length(GatherKeyCommands(ctxK))")) == 3);		// the view's two, and the root's $q
+	EXPECT(EQRef(Eval("GatherKeyCommands(ctxK)[0].keyMessage"), Intern((char*) "DoSave")));
+	EXPECT(EQRef(Eval("GatherKeyCommands(ctxK)[2].keyMessage"), Intern((char*) "DoQuit")));
+	// MatchKeyMessage finds the command a message would come from
+	EXPECT(EQRef(Eval("MatchKeyMessage(ctxK, 'DoQuit).char"), MAKECHAR('q')));
+	EXPECT(ISNIL(Eval("MatchKeyMessage(ctxK, 'NoSuchMessage)")));
+	// AddKeyCommands puts more on the view itself
+	Eval("ctxK:AddKeyCommands([{char: $n, modifiers: 1 << 25, keyMessage: 'DoNew}])");
+	EXPECT(RINT(Eval("Length(ctxK._keyCommands)")) == 3);
+	EXPECT(EQRef(Eval("MatchKeyMessage(ctxK, 'DoNew).char"), MAKECHAR('n')));
+	// BlockKeyCommand stops one the root would have answered: a command
+	// of its own with no message, which the search finds first
+	EXPECT(NOTNIL(Eval("FindKeyCommand(ctxK, $q, 1 << 25).keyMessage")));
+	Eval("ctxK:BlockKeyCommand('DoQuit)");
+	EXPECT(ISNIL(Eval("FindKeyCommand(ctxK, $q, 1 << 25).keyMessage")));
+	Eval("RemoveSlot(GetRoot(), '_keyCommands)");
+	Eval("ctxK._keyCommands := [{char: $s, modifiers: 1 << 25, keyMessage: 'DoSave}, {char: $r, modifiers: (1 << 25) + 4, keyMessage: 'DoRepeat}]");
 	// PostKeyString: printable text as one aeKeyString; other characters as key down/up
 	Eval("ctxK.keys := []");
 	PostKeyString(v, RefVar(MakeString("hi")));

@@ -2483,6 +2483,8 @@ MakeViewMethods(void)
 		{ "Drag", (void*) FDragX, 2 }, { "DragAndDrop", (void*) FDragAndDrop, 5 }, { "DragAndDropLtd", (void*) FDragAndDropLtd, 5 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
 		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
 		{ "ChangeStylesOfRange", (void*) FChangeStylesOfRange, 4 },
+		{ "AddKeyCommands", (void*) FAddKeyCommands, 1 },
+		{ "BlockKeyCommand", (void*) FBlockKeyCommand, 1 },
 		{ "ExtractTextRange", (void*) FExtractTextRange, 2 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },

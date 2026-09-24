@@ -129,6 +129,18 @@ Boolean		KeyCanBeHandled(UniChar ch);							// ROM 0x003103f8 KeyCanBeHandled__F
 long		FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matched, Boolean* exact);	// ROM 0x0030f158 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc - the index of the best match, -1 for none
 Ref			FindKeyCommand(TView* view, UniChar ch, ULong modifiers);	// ROM 0x0030f2b0 FindKeyCommand__FP5TViewUsUl (modifiers: the parameter's bits)
 Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x0030f54c SendKeyMessage__FP5TViewRC6RefVar
+Boolean		UserVisibleChar(UniChar c);								// ROM 0x0030f6c8 UserVisibleChar__FUs - one a menu could show
+UniChar		GetDisplayCmdChar(RefArg command);						// ROM 0x0030f700 GetDisplayCmdChar__FRC6RefVar - showChar, else char; 0 for one nobody could read
+Boolean		AlreadyInCommandArray(RefArg commands, RefArg command);	// ROM 0x0030fa70 AlreadyInCommandArray__FRC6RefVarT1
+Ref			GatherKeyCommands(TView* view);							// ROM 0x0030fbac GatherKeyCommands__FP5TView - every command in force at the view
+Ref			MatchKeyMessage(TView* view, RefArg message, ULong what);	// ROM 0x0030f7e0 MatchKeyMessage__FP5TViewRC6RefVarUl (0 the first, 1 the first that shows, 2 all)
+void		AddKeyCommands(RefArg context, RefArg commands);			// ROM 0x0030b2a4 AddKeyCommands__FRC6RefVarT1
+void		BlockKeyCommand(TView* view, RefArg message);			// ROM 0x0030b3ec BlockKeyCommand__FP5TViewRC6RefVar
+
+// the two of those a view answers as methods, so MakeViewMethods has
+// them for a host that does not use the ROM's root template
+Ref			FAddKeyCommands(RefArg rcvr, RefArg commands);			// ROM 0x0030b3d4 FAddKeyCommands
+Ref			FBlockKeyCommand(RefArg rcvr, RefArg message);			// ROM 0x0030b58c FBlockKeyCommand
 
 TView*		GetPostingView(Boolean commandKey);						// ROM 0x00310428 GetPostingView__FUc
 void		DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode);	// ROM 0x0030ac50 DoKeyEvent__FP10TResponderUlT2
