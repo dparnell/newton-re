@@ -1166,3 +1166,39 @@ thick.
 
 *`src/recognition/Rosetta.h` draws that boundary explicitly;
 `docs/recognition/README.md` has the layers.*
+
+
+## The engine learns how tall you write, an eighth at a time
+
+The word recogniser has to know how tall a capital letter is in the
+hand it is reading, because nearly everything else it measures is a
+fraction of that: how far apart the letters are, how far a descender
+goes below the line, how big a dot has to be before it is a dot. It
+starts with a number ParaGraph trained — 18.85 pixels — and then
+learns yours, from every word it manages to read.
+
+`WordRecogComputeCapHeight` (0x00274818) is the whole of it, and it is
+four lines of arithmetic. Take the word just read. Look up a nominal
+width for each of its characters in the engine's own table and average
+them. Divide the width the writing actually took by that average, and
+what comes out is how tall a capital must be for those characters at
+that size. Then — and this is the nice part — believe an eighth of it:
+
+```
+	fRun[20] = 0.875 * fRun[20] + 0.125 * estimate;
+```
+
+So one word nudges the estimate and ten words move it properly, which
+means a single misreading cannot send the engine off. It will not
+believe an estimate smaller than the floor in its common info at all,
+nor one more than two and a half times what it already had, and a word
+it could not read — `FailureString`, four question marks — teaches it
+nothing.
+
+The measurement runs backwards through the recogniser, which is what
+makes it work: the engine guesses the characters, and the characters
+tell it how big your handwriting is, and knowing that makes the next
+guess better.
+
+*`src/recognition/WordRecog.h`; `docs/recognition/README.md` has the
+layers.*

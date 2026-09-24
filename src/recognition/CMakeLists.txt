@@ -34,6 +34,8 @@ add_library(recognition STATIC
     Recognizer.cpp
     RosRecognizer.cpp
     RosStrokes.cpp
+    RosEngine.cpp
+    WordRecog.cpp
     Rosetta.cpp
     TabletBuffer.cpp
     StrokeQueue.cpp

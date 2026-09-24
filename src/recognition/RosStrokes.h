@@ -51,7 +51,11 @@ struct RosStroke
 	FRect		fBounds;		// +0x0c
 	long		fField1c;		// +0x1c  (-1 when new)
 	long		fField20;		// +0x20  (-1 when new)
-	UByte		fField24[0x10];	// +0x24  ... to 0x34
+	UByte		fField24;		// +0x24
+	UByte		fIsDot;			// +0x25  the dot over an i or a j
+	UByte		fFragment;		// +0x26  the engine cut this stroke itself
+	UByte		fField27;		// +0x27  ... and asked about in the same breath
+	UByte		fField28[0x0c];	// +0x28  ... to 0x34
 };
 
 // A handful of them, with the rectangle round the lot.  The ROM's
@@ -66,6 +70,13 @@ struct RosStrokeList
 
 
 // An empty stroke; throws `evt.ex.abt.stack` when there is no room.
+// The four characters every block of the engine's memory is tagged
+// with, and the engine's own allocation: tagged, and a throw rather
+// than nil when there is none.  Everything the engine owns comes
+// through here.
+extern const ULong	kRosettaMemoryTag;
+void*		RosAllocate(long size);
+
 RosStroke*	StrokeNew(void);									// ROM 0x002007f8 StrokeNew
 // ... and one with the points copied in and its bounds worked out.
 RosStroke*	StrokeCreate(short count, const FPoint* points);		// ROM 0x002008a8 StrokeCreate

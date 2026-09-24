@@ -1867,9 +1867,11 @@ ParaGraph's, and the names are theirs — `neibour_susp_extr`,
 which is why `recognition/Rosetta.h` draws it explicitly: it is where a
 modern recogniser would be put in instead.
 
-**Reconstructed so far: all of level 1, and level 2 as a set of
-declarations with no bodies.** `TRosRecognizer` is real; every call it makes into the
-engine answers "could not", so the recogniser throws `evt.ex.abt`, which
+**Reconstructed so far: all of level 1, all of level 5, the block of
+state level 3 works in and its life, and level 2 as a set of
+declarations with no bodies.** `TRosRecognizer` is real; every call it
+makes into the engine answers "could not", so the recogniser throws
+`evt.ex.abt`, which
 is exactly what the ROM's own does when its engine fails. Nothing
 installs it — the engine the host installs is still
 `TInkOnlyRecognizer`, so the pen still leaves ink.
@@ -2020,6 +2022,80 @@ always a copy — the caller's stroke is never the one handed back.
 middle of the box: a stroke that lingers at one end has its centroid
 pulled that way, and each point is divided by the count before it is
 added so that a long stroke cannot overflow.
+
+### The word recogniser's state (`recognition/WordRecog.h`)
+
+Level 3 is where a piece of writing lives while it is being read, and
+all of it — the strokes coming in, the segments they are cut into, the
+readings coming out, and the running measurements of the hand that
+wrote them — is one flat block of **0x208 bytes**. There is exactly
+one, made when the engine wakes (`RosettaAwaken`) and destroyed when it
+sleeps, and every layer of the engine reaches into it at fixed byte
+offsets. `WordRecog` gives those offsets names as far as the evidence
+goes; a field still called `fFieldNNN` is one nothing reconstructed so
+far reads.
+
+It is made in two halves, and the split is the interesting part.
+`WordRecogNew` allocates the block and nils **exactly** the ten
+pointers `WordRecogDeallocate` gives back — nothing else, so the rest
+of the block is whatever was in the heap until `WordRecogCreate2`
+writes it. That is what makes a throw part way through making one safe:
+the handler deallocates, and deallocating touches only the ten fields
+that were nilled. The same pair is what `WordRecogSuspend` and
+`WordRecogResume` are: while the engine is quiet the arrays are handed
+back but the block itself does not move, so everything pointing at the
+recogniser goes on pointing at it. `Resume` asks five of the arrays
+rather than the flag alone, so a recogniser that still has its memory
+is left alone even if it thinks it is suspended.
+
+`RosettaAwaken` makes it with
+`WordRecogCreate2(nil, nil, RosettaCheckWords, 10, ROMGrammar, theNet, 1)`:
+**ten readings**, the engine's own grammar, and the strokes are the
+engine's to free. That last argument is the one to watch —
+`WordRecogClearStrokes` gives a stroke back only if the recogniser owns
+them all *or* the stroke is a fragment the engine cut for itself; the
+rest belong to whoever handed them over.
+
+**The run.** `fRun` is twenty-two numbers describing the writing as it
+is being read, and `fSavedRun` is the copy to go back to.
+`WordRecogInvalRun` puts the run back as it was, `WordRecogSaveRun`
+keeps what has been learnt, and `WordRecogReset` fills the saved copy
+with ParaGraph's own starting values — every one of them the nominal
+cap height (18.85 pixels) times a ratio, and the last five say so out
+loud, being the nominal ratio divided by a number of their own. What
+the engine learns into that run is in `docs/curiosities.md` under "The
+engine learns how tall you write, an eighth at a time".
+
+**The grammars.** `fGrammars` is a list of finite-state machines a word
+is read against, and `WordRecogSetContext` picks one **by name** —
+which is how a field asking to be read as a date or a telephone number
+gets one. The ROM has eight built in (`ROMGrammar`, 0x00366e0c):
+General, Date, Numbers&Money, Numbers, Phone, Time, Money and
+PostalCode. A reset asks for "General".
+
+**The readings.** `fWords` is `fWordCount` strings with a score each,
+and `fCheckWords` is who they go to — `RosettaCheckWords` at level 2,
+which turns the raw scores into confidences out of a thousand and
+passes them up to `RosRecCheckWords`. When the engine has nothing at
+all, `WordRecogReturnWords` puts `FailureString` — four question
+marks — in the first slot with the worst score there is and says the
+whole of the writing is covered by it, so the caller always gets an
+answer. The stroke count it passes up is not the one it was given:
+strokes the engine cut for itself do not count, because the layers
+above never saw them, and at least one is always claimed.
+
+The neighbouring layers the block leans on — the common info `RosCI`,
+the grammars, the segments, the classifier net and its patternizers —
+are declared in `recognition/RosEngine.h` and are NOT YET; the seam is
+drawn there so that one layer of the engine can be written at a time.
+`BiGrammarsLoad` is the one that is not simply empty: the ROM's answers
+`ROMGrammar` whatever it is asked for, and ours answers what it is
+handed, so the word recogniser can be driven before that table is
+extracted.
+
+Still to do at level 3: `WordRecogAddStroke` and `AddStroke2`, which
+take the strokes in; `WordRecogAnalyzeWord` and the net calls, which
+read them; and the segment side (`WRSeg*`).
 
 Until then the eleven natives that ask for handwriting — `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,

@@ -8,12 +8,14 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-25 (commit `909ac19`)
+## State at 2026-09-25 (commit `14f9d21`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 84/84.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 85/85.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9339 citations, 0 bad;
-  5129 of 16671 functions (30.77%).
+- `analysis/coverage.py build/MP2x00US --check`: 9372 citations, 0 bad;
+  5129 of 16671 functions (30.77%).  (The engine's functions are plain
+  C names with no mangling, so they count as citations but not towards
+  the function total, which comes from the demangled symbols.)
 - `analysis/natives.py`: 863 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -276,12 +278,29 @@ makes into the engine are declared as an explicit seam
 (`recognition/Rosetta.h`) with no bodies yet.  The engine below is
 ParaGraph's Calligrapher: about two hundred kilobytes in six layers,
 mapped out in `docs/recognition/README.md` under "The Rosetta engine",
-which also says what to do next and in what order.  The first piece is
-the back-propagation net at the bottom.  Level 1 is finished, and so
-are the geometry the engine measures in (`toolbox/FixedGeometry.h`) and
-its strokes and stroke lists (`recognition/RosStrokes.h`, level 5).
-Level 2 is fifteen thin calls over a state block whose fields are only
-named as level 3 is read, so it is not worth doing before it.
+which also says what to do next and in what order.  Level 1 is
+finished, and so are the geometry the engine measures in
+(`toolbox/FixedGeometry.h`) and its strokes and stroke lists
+(`recognition/RosStrokes.h`, level 5).
+
+**Level 3 has been opened at its state block.**  The word recogniser
+keeps everything about a piece of writing in one flat 0x208-byte block
+that every layer reaches into at fixed offsets, so the block had to be
+named before anything above or below it could be written, and
+`recognition/WordRecog.h` now names it as far as the evidence goes,
+with its whole life: made, allocated, suspended, resumed, reset,
+cleared and destroyed, the run of measurements saved and put back, the
+grammar context picked by name, the cap height learnt from a word, and
+the readings handed back.  That also unblocks **level 2**, which is
+fifteen thin calls over these fields.
+
+The neighbouring layers are declared in `recognition/RosEngine.h` and
+are NOT YET: the common info `RosCI`, the grammars (`ROMGrammar`, eight
+finite-state contexts in the ROM's data), the segments, and the
+classifier net with its patternizers.  The rest of level 3 is
+`WordRecogAddStroke`/`AddStroke2` (the strokes in),
+`WordRecogAnalyzeWord` and the net calls (reading them) and the segment
+side, `WRSeg*`.
 
 The smallest of those that would close a group of its own:
 

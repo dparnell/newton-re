@@ -34,7 +34,7 @@ static void*	gRosTemp = nil;
 // The engine's allocation: tagged, and a throw rather than nil when
 // there is none.  (The ROM writes this out at every call site; it is
 // one place here.)
-static void*
+void*
 RosAllocate(long size)
 {
 	gRosTemp = NewNamedPtr(size, kRosettaMemoryTag);
@@ -63,8 +63,8 @@ StrokeNew(void)
 	SetFixedRect(&stroke->fBounds, 0, 0, 0, 0);
 	stroke->fMidX = 0;
 	stroke->fIndex = -1;
-	stroke->fField24[2] = 0;
-	stroke->fField24[3] = 0;
+	stroke->fFragment = 0;
+	stroke->fField27 = 0;
 	return stroke;
 }
 
