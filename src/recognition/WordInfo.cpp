@@ -12,6 +12,7 @@
 #include "StrokeBundle.h"
 #include "Frames.h"
 #include "RSSymbols.h"
+#include "NativeFunctions.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
 #include "WRecDomain.h"		// kWRecInk
@@ -111,4 +112,24 @@ MakeWordInfo(TUnitPublic* unit)
 		SetLength(words, 0);
 	}
 	return info;
+}
+
+
+// ROM 0x000af8bc FMakeWordInfo
+// WordUnitToWordInfo(unit): the protoWordInfo frame for a unit, made
+// the first time it is asked for and kept on the unit after that.
+static Ref
+FMakeWordInfo(RefArg /*rcvr*/, RefArg unit)
+{
+	TUnitPublic* it = UnitFromRef(unit);
+	if (ISNIL(it->fWordInfo->ref))
+		it->fWordInfo->ref = MakeWordInfo(it);
+	return it->fWordInfo->ref;
+}
+
+
+void
+RegisterWordInfoNatives(void)
+{
+	RegisterNativeFunction("FMakeWordInfo", (void*) FMakeWordInfo, 1);
 }

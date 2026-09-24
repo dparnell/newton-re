@@ -1399,9 +1399,40 @@ SplitString(RefArg /*rcvr*/, RefArg str)
 	return result;
 }
 
+// ROM 0x00129484 FStrHexDump__FRC6RefVarN21
+// StrHexDump(binary, groupSize): the bytes of a binary as hexadecimal
+// digits, with a space after every `groupSize` of them (0 for no
+// spaces).  Two digits a byte, capital letters.
+static Ref
+FStrHexDump(RefArg /*rcvr*/, RefArg binary, RefArg groupSize)
+{
+	long group = ISNIL(groupSize) ? 0 : RINT(groupSize);
+	long count = Length(binary);
+	long size = count * 4 + 2;
+	if (group != 0)
+		size += (count / group) * 2;
+	RefVar result(AllocateBinary(RSSYMstring, size));
+	const UByte* bytes = (const UByte*) BinaryData(binary);
+	UniChar* out = (UniChar*) BinaryData(result);
+	for (long i = 0; i < count; i++)
+	{
+		UByte byte = bytes[i];
+		UByte high = (UByte) (byte >> 4);
+		*out++ = (UniChar) (high < 10 ? high + '0' : high + 'A' - 10);
+		UByte low = (UByte) (byte & 0xf);
+		*out++ = (UniChar) (low < 10 ? low + '0' : low + 'A' - 10);
+		if (group != 0 && (i + 1) % group == 0)
+			*out++ = ' ';
+	}
+	*out = 0;
+	return result;
+}
+
+
 void
 RegisterStringNatives(void)
 {
+	RegisterNativeFunction("FStrHexDump__FRC6RefVarN21", (void*) FStrHexDump, 2);
 	RegisterNativeFunction("FStrLen__FRC6RefVarT1", (void*) FStrLen, 1);
 	RegisterNativeFunction("FStrFilled", (void*) FStrFilled, 1);
 	RegisterNativeFunction("FStrEqual__FRC6RefVarN21", (void*) FStrEqual, 2);

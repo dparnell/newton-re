@@ -1418,6 +1418,48 @@ FFindWordInfo(RefArg rcvr, RefArg context, RefArg offsetRef)
 }
 
 
+// ROM 0x000793c8 CorrectSelect
+// ROM 0x000793cc CorrectWord
+// The corrector's two hooks for a script: both are a single `mov pc, lr`
+// in the ROM - they do nothing and answer nothing.  They are here
+// because the built-in functions frame names them, so a script that
+// calls one must not fall over.
+static Ref
+FCorrectSelect(RefArg /*rcvr*/, RefArg /*a*/, RefArg /*b*/)
+{
+	return NILREF;
+}
+
+static Ref
+FCorrectWord(RefArg /*rcvr*/, RefArg /*a*/, RefArg /*b*/)
+{
+	return NILREF;
+}
+
+
+// ROM 0x00079a40 FAddWordInfo
+// info:AddWord(word) - another reading added to a correction entry's
+// `words`, but only when the entry's first reading is a single word:
+// scanning from its start must reach its end.  ==> the word that was
+// offered, whether it was kept or not.
+static Ref
+FAddWordInfo(RefArg info, RefArg word)
+{
+	RefVar first(GetNthWord(info, 0));
+	if (NOTNIL(first))
+	{
+		const UniChar* text = GetCString(first);
+		long length = Ustrlen(text);
+		if (Ustrlen(text) == ScanWordEnd(text, 0, length))
+		{
+			RefVar words(GetFrameSlotRef(info, RSSYMwords));
+			AddArraySlot(words, word);
+		}
+	}
+	return word;
+}
+
+
 // The correction natives a script reaches.
 void
 RegisterCorrectInfoNatives(void)
@@ -1442,4 +1484,7 @@ RegisterCorrectInfoNatives(void)
 	RegisterNativeFunction("FMergeWordInfo", (void*) FMergeWordInfo, 2);
 	RegisterNativeFunction("FSetWordList", (void*) FSetWordList, 1);
 	RegisterNativeFunction("FFindWordInfo", (void*) FFindWordInfo, 2);
+	RegisterNativeFunction("CorrectSelect", (void*) FCorrectSelect, 2);
+	RegisterNativeFunction("CorrectWord", (void*) FCorrectWord, 2);
+	RegisterNativeFunction("FAddWordInfo", (void*) FAddWordInfo, 1);
 }

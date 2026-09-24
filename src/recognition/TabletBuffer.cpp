@@ -139,6 +139,16 @@ TBCTabletBufferEmpty(void)
 }
 
 
+// ROM 0x002507b0 TabletBufferEmpty__Fv
+// The tablet driver's own form of the same question, which is what the
+// script function asks: both readers are caught up with the writer.
+Boolean
+TabletBufferEmpty(void)
+{
+	return TBCTabletBufferEmpty();
+}
+
+
 // ROM 0x00250630 TBCFlushTabletBuffer__Fv
 // Both readers caught up with the writer.
 void

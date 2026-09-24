@@ -27,6 +27,14 @@
 #include "NativeFunctions.h"
 #include "ROMConstants.h"
 #include "Words.h"
+#include "Controller.h"
+#include "Learning.h"
+#include "TabletBuffer.h"
+#include "RecConfig.h"
+#include "Interpreter.h"
+#include "ROMConstants.h"
+#include "WordInfo.h"
+#include "CompMath.h"
 #include "RootView.h"
 #include "View.h"
 #include "StrokeCentral.h"
@@ -430,6 +438,163 @@ FGetEditArray(RefArg /*rcvr*/, RefArg unit)
 }
 
 
+// ROM 0x0019d5d8 FModalRecognitionOn
+// ModalRecognitionOn(bounds): writing taken only inside that rectangle,
+// which is what a modal dialog does while it is up.
+static Ref
+FModalRecognitionOn(RefArg /*rcvr*/, RefArg bounds)
+{
+	Rect box;
+	if (!FromObject(bounds, box))
+		ThrowMsg("bad modal rect");
+	gRecognition.EnableModalRecognition(box);
+	return NILREF;
+}
+
+
+// ROM 0x0019d624 FModalRecognitionOff
+// ModalRecognitionOff(): and the whole screen again.
+static Ref
+FModalRecognitionOff(RefArg /*rcvr*/)
+{
+	gRecognition.DisableModalRecognition();
+	return NILREF;
+}
+
+
+// ROM 0x00168340 FTriggerWordRecognition
+// TriggerWordRecognition(): the writing that is waiting read now rather
+// than when the pen has been still long enough - the stroke units are
+// timed out at once.
+static Ref
+FTriggerWordRecognition(RefArg /*rcvr*/)
+{
+	gController->TimeOut('STXR');		// the type the word domain's pieces carry
+	return NILREF;
+}
+
+
+// ROM 0x0019e0a0 FFinishRecognizing__FRC6RefVar
+// FinishRecognizing(): the recogniser idled until it has nothing left -
+// no pieces to group, no units to classify, and nothing due.  A script
+// calls it when it wants what has been written to have been read before
+// it goes on.
+static Ref
+FFinishRecognizing(RefArg /*rcvr*/)
+{
+	gRecognition.Idle();
+	for (;;)
+	{
+		if (gController->fUnits->Count() == 0 && gController->fPieces->Count() == 0)
+		{
+			static const Int64 zero = { 0, 0 };
+			TTime next = gRecognition.NextIdle();
+			if (CompCompare(&next.time, &zero) == 0)
+				return NILREF;
+		}
+		gRecognition.Idle();
+	}
+}
+
+
+// ROM 0x001a0bc4 FGetTrainingData__FRC6RefVarT1
+// GetTrainingData(unit): the same frame WordUnitToWordInfo answers.
+// The ROM's two functions are the same code; the training data a
+// handwriting engine would keep is in that frame or nowhere.
+static Ref
+FGetTrainingData(RefArg /*rcvr*/, RefArg unit)
+{
+	TUnitPublic* it = UnitFromRef(unit);
+	if (ISNIL(it->fWordInfo->ref))
+		it->fWordInfo->ref = MakeWordInfo(it);
+	return it->fWordInfo->ref;
+}
+
+
+// ROM 0x001a0cbc FDisposeTrainingData__FRC6RefVarT1
+// DisposeTrainingData(data): nil.  The ROM's function answers nil and
+// does nothing - the training data belongs to the unit and goes with it.
+static Ref
+FDisposeTrainingData(RefArg /*rcvr*/, RefArg /*data*/)
+{
+	return NILREF;
+}
+
+// ROM 0x001aa7c8 FAddAutoAdd
+// AddAutoAdd(word): a word added to the writer's dictionaries on their
+// behalf.  ==> whether it was added.
+//
+// BUG (the ROM's, kept in Learning.cpp): AddAutoAdd answers true for a
+// word it has just taken back out again.
+static Ref
+FAddAutoAdd(RefArg /*rcvr*/, RefArg word)
+{
+	return MAKEBOOLEAN(AddAutoAdd(GetCString(word)));
+}
+
+
+// ROM 0x001aa7f0 FRemoveAutoAdd
+// RemoveAutoAdd(word): and taken back out.
+static Ref
+FRemoveAutoAdd(RefArg /*rcvr*/, RefArg word)
+{
+	RemoveAutoAdd(GetCString(word));
+	return NILREF;
+}
+
+
+// ROM 0x00202d44 FTabletBufferEmpty
+// TabletBufferEmpty(): whether the tablet has anything waiting to be
+// read - both the inker and the stroker are caught up with the writer.
+static Ref
+FTabletBufferEmpty(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(TabletBufferEmpty());
+}
+
+
+// ROM 0x0003540c FBuildRecConfig
+// BuildRecConfig(view): the recognition configuration a view would be
+// read under, built as the recogniser builds it.
+static Ref
+FBuildRecConfig(RefArg /*rcvr*/, RefArg view)
+{
+	TView* theView = FailGetView(view);
+	return BuildRecConfig(theView, theView->fFlags & 0x01ffff00);
+}
+
+
+// ROM 0x000353ec PrepRecConfig
+// view:PrepRecConfig(config) - a configuration frame readied for use.
+// One that already has a `_parent` is taken as it is; anything else is
+// wrapped in a clone of protoRecConfig with the frame as its `_proto`,
+// and given a `_parent`: the writer's own `_recogSettings` expanded over
+// `vars.userConfiguration` when the view has them, else that frame
+// alone.
+static Ref
+FPrepRecConfig(RefArg rcvr, RefArg config)
+{
+	TView* view = FailGetView(rcvr);
+	if (FrameHasSlot(config, RSSYM_parent))
+		return config;
+	RefVar prepared(Clone(RefVar(Rprotorecconfig)));
+	SetFrameSlot(prepared, RSSYM_proto, config);
+	RefVar settings(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration));
+	RefVar mine;
+	if (view != nil)
+		mine = view->GetVar(RSSYM_recogsettings);
+	if (ISNIL(mine))
+		SetFrameSlot(prepared, RSSYM_parent, settings);
+	else
+	{
+		mine = NSCallGlobalFn(RefVar(RSSYMexpandsettings), mine);
+		SetFrameSlot(mine, RSSYM_proto, settings);
+		SetFrameSlot(prepared, RSSYM_parent, mine);
+	}
+	return prepared;
+}
+
+
 void
 RegisterUnitNatives(void)
 {
@@ -440,6 +605,17 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FIsTabletCalibrationNeeded", (void*) FIsTabletCalibrationNeeded, 0);
 	RegisterNativeFunction("FCalibrateTablet__FRC6RefVar", (void*) FCalibrateTablet, 0);
 	RegisterNativeFunction("FGetEditArray__FRC6RefVarT1", (void*) FGetEditArray, 1);
+	RegisterNativeFunction("FAddAutoAdd", (void*) FAddAutoAdd, 1);
+	RegisterNativeFunction("FRemoveAutoAdd", (void*) FRemoveAutoAdd, 1);
+	RegisterNativeFunction("FTabletBufferEmpty", (void*) FTabletBufferEmpty, 0);
+	RegisterNativeFunction("FBuildRecConfig", (void*) FBuildRecConfig, 1);
+	RegisterNativeFunction("PrepRecConfig", (void*) FPrepRecConfig, 1);
+	RegisterNativeFunction("FModalRecognitionOn", (void*) FModalRecognitionOn, 1);
+	RegisterNativeFunction("FModalRecognitionOff", (void*) FModalRecognitionOff, 0);
+	RegisterNativeFunction("FTriggerWordRecognition", (void*) FTriggerWordRecognition, 0);
+	RegisterNativeFunction("FFinishRecognizing__FRC6RefVar", (void*) FFinishRecognizing, 0);
+	RegisterNativeFunction("FGetTrainingData__FRC6RefVarT1", (void*) FGetTrainingData, 1);
+	RegisterNativeFunction("FDisposeTrainingData__FRC6RefVarT1", (void*) FDisposeTrainingData, 1);
 	RegisterNativeFunction("FGetPoint__FRC6RefVarN21", (void*) FGetPoint, 2);
 	RegisterNativeFunction("FGetPointsArray__FRC6RefVarT1", (void*) FGetPointsArray, 1);
 	RegisterNativeFunction("FGetPointsArrayXY__FRC6RefVarT1", (void*) FGetPointsArrayXY, 1);

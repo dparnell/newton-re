@@ -52,6 +52,7 @@ extern ULong	gTabletBuffer[kTabletBufferSize];	// (0x0c104464)
 
 void	TBCTabletBufferInit(TUPort* inkerPort);		// ROM 0x002500b0 TBCTabletBufferInit__FP6TUPort - emptied, polling off (NOT YET: the inker's port and wake-up message)
 Boolean	TBCTabletBufferEmpty(void);						// ROM 0x00250148 TBCTabletBufferEmpty__Fv - both readers caught up
+Boolean	TabletBufferEmpty(void);						// ROM 0x002507b0 TabletBufferEmpty__Fv - the driver's own form of it
 
 // the writer's side
 long	TBCInsertTabletSample(ULong sample, ULong time);	// ROM 0x00250430 TBCInsertTabletSample__FUlT1 - ==> 0, or -56006 (kTabletBufferFull) when the ring is full; time 0: now

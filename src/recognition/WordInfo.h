@@ -56,4 +56,6 @@ void	SetWordInfoFlags(RefArg info, long flags);	// ROM 0x00077dc0 SetWordInfoFla
 Ref		EncodeUnitID(TUnitPublic* unit);			// ROM 0x00077bb0 EncodeUnitID__FP11TUnitPublic - the type as a two-character string
 Ref		MakeWordList(TUnitPublic* unit);			// ROM 0x000786b4 MakeWordList__FP11TUnitPublic - the readings as protoWordInterp frames
 
+void	RegisterWordInfoNatives(void);			// WordUnitToWordInfo (WordInfo.cpp)
+
 #endif	/* __WORDINFO_H */

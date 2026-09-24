@@ -35,6 +35,7 @@
 #include "InkShapes.h"
 #include "StrokeBundle.h"
 #include "WordList.h"
+#include "WordInfo.h"
 #include "RecConfig.h"
 
 
@@ -65,6 +66,7 @@ RegisterAllNatives(void)
 	RegisterSpellingNatives();
 	RegisterStrokeBundleNatives();
 	RegisterWordListNatives();
+	RegisterWordInfoNatives();
 	RegisterRecConfigNatives();
 	RegisterInkNatives();
 

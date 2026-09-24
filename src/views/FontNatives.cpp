@@ -91,7 +91,7 @@ FSetFontFamily(RefArg /*rcvr*/, RefArg fontSpec, RefArg family)
 // ROM 0x001ed994 FSetFontSize
 // SetFontSize(spec, size): likewise for the size - and an ink word is
 // re-measured at it rather than replaced.
-static Ref
+Ref
 FSetFontSize(RefArg /*rcvr*/, RefArg fontSpec, RefArg size)
 {
 	ULong theSize = (ULong) RINT(size);
@@ -238,6 +238,31 @@ FGetTextFlags(RefArg /*rcvr*/, RefArg view)
 }
 
 
+// ROM 0x001127e8 FMungeStyles
+// styles:MungeStyles(fontSpec) - every run of a styles array given the
+// size of that spec, the rest of each run's style left as it was.  A
+// run whose style is an ink word is skipped: a word of writing has its
+// own size, and changing it is the ink area's business.  A styles
+// argument that is not an array comes back as it is.
+static Ref
+FMungeStyles(RefArg /*rcvr*/, RefArg styles, RefArg fontSpec)
+{
+	if (!IsArray(styles))
+		return styles;
+	RefVar munged(Clone(styles));
+	long count = Length(munged);
+	long size = GetFontSize(fontSpec);
+	for (long i = 1; i < count; i += 2)
+	{
+		RefVar one(GetArraySlotRef(munged, i));
+		if (IsInkWord(one))
+			continue;
+		SetArraySlot(munged, i, RefVar(FSetFontSize(RefVar(NILREF), one, RefVar(MAKEINT(size)))));
+	}
+	return munged;
+}
+
+
 void
 RegisterFontNatives(void)
 {
@@ -253,5 +278,6 @@ RegisterFontNatives(void)
 	RegisterNativeFunction("FGetInsertionStyle", (void*) FGetInsertionStyle, 0);
 	RegisterNativeFunction("FGetRangeText", (void*) FGetRangeText, 3);
 	RegisterNativeFunction("FGetTextFlags", (void*) FGetTextFlags, 1);
+	RegisterNativeFunction("FMungeStyles", (void*) FMungeStyles, 2);
 	RegisterNativeFunction("FExtractTextRange", (void*) FExtractTextRange, 2);
 }
