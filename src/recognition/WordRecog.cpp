@@ -333,7 +333,7 @@ WordRecogClear(WordRecog* wr, Boolean invalRun)
 
 	RosStroke* pending = wr->fPendingStroke;
 	if (pending != nil
-		&& (wr->fOwnsStrokes != 0 || pending->fFragment != 0 || pending->fField27 != 0))
+		&& (wr->fOwnsStrokes != 0 || pending->fFragment != 0 || pending->fJoinsNext != 0))
 		StrokeDestroy(pending);
 	wr->fPendingStroke = nil;
 
@@ -364,7 +364,7 @@ WordRecogClearStrokes(WordRecog* wr)
 		{
 			RosStroke* stroke = wr->fStrokes[i];
 			if (wr->fOwnsStrokes == 0
-				&& (stroke == nil || (stroke->fFragment == 0 && stroke->fField27 == 0)))
+				&& (stroke == nil || (stroke->fFragment == 0 && stroke->fJoinsNext == 0)))
 				continue;
 			StrokeDestroy(stroke);
 			// and the gap cache forgets it, because the next stroke to
@@ -632,7 +632,7 @@ WordRecogIsStrokeTooWide(WordRecog* wr, RosStroke* stroke, Fixed multiple)
 	FixedRectSize(&size, &bounds);
 
 	if (size.x + 0x00010000 >= limit
-		&& stroke->fFragment == 0 && stroke->fField27 == 0)
+		&& stroke->fFragment == 0 && stroke->fJoinsNext == 0)
 		return true;
 	return false;
 }

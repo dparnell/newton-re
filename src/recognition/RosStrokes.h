@@ -53,8 +53,8 @@ struct RosStroke
 	long		fField20;		// +0x20  (-1 when new)
 	UByte		fField24;		// +0x24
 	UByte		fIsDot;			// +0x25  the dot over an i or a j
-	UByte		fFragment;		// +0x26  the engine cut this stroke itself
-	UByte		fField27;		// +0x27  ... and asked about in the same breath
+	UByte		fFragment;		// +0x26  a piece cut off a larger stroke
+	UByte		fJoinsNext;		// +0x27  the stroke after it is the rest of this one
 	UByte		fField28[0x0c];	// +0x28  ... to 0x34
 };
 
@@ -99,6 +99,12 @@ void		StrokeScale(RosStroke* stroke, Fixed xScale, Fixed yScale);	// ROM 0x00201
 // Strokes put in the order they sit on the line, by the middle of each
 // one's horizontal range.
 void		StrokeSort(RosStroke** strokes, short count);		// ROM 0x00200d84 StrokeSort
+// ... and the same, except that strokes cut from one stroke stay
+// together: the pieces are gathered into groups (a group ends at a
+// stroke whose `fJoinsNext` is nought) and the *groups* are put in the
+// order they sit on the line.  Nothing is done unless the array starts
+// and ends at a group boundary.
+void		StrokeSortFrags(RosStroke** strokes, short count);	// ROM 0x00200e40 StrokeSortFrags
 
 // The average of the points, which is not the middle of the box.
 void		StrokeCentroid(const RosStroke* stroke, FPoint* centroid);	// ROM 0x0020000c StrokeCentroid

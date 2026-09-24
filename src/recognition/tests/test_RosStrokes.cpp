@@ -148,6 +148,57 @@ main()
 		SLDestroy(list, 1);
 	}
 
+	// ---- and with the pieces of a cut stroke kept together ----
+	{
+		// four strokes, of which the middle two are the two halves of
+		// one stroke the engine cut in half.  Their own middles are far
+		// apart, so a plain sort would put another stroke between them.
+		FPoint p[2];
+		RosStroke* strokes[4];
+		p[0].x = F(30);	p[0].y = F(0);	p[1].x = F(34);	p[1].y = F(10);
+		strokes[3] = StrokeCreate(2, p);			// middle 32
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(6);	p[1].y = F(10);
+		strokes[0] = StrokeCreate(2, p);			// middle 3
+		p[0].x = F(20);	p[0].y = F(0);	p[1].x = F(26);	p[1].y = F(10);
+		strokes[1] = StrokeCreate(2, p);			// middle 23
+		p[0].x = F(15);	p[0].y = F(0);	p[1].x = F(19);	p[1].y = F(10);
+		strokes[2] = StrokeCreate(2, p);			// middle 17
+		strokes[0]->fJoinsNext = 1;					// ... and 1 is the rest of 0
+
+		RosStroke* want[4];
+		for (long i = 0; i < 4; i++)
+			want[i] = strokes[i];
+
+		// the array must begin and end at a group boundary, or nothing
+		// is done at all
+		strokes[3]->fJoinsNext = 1;
+		StrokeSortFrags(strokes, 4);
+		EXPECT(strokes[0] == want[0] && strokes[1] == want[1]
+			&& strokes[2] == want[2] && strokes[3] == want[3]);
+		strokes[3]->fJoinsNext = 0;
+		strokes[0]->fFragment = 1;
+		StrokeSortFrags(strokes, 4);
+		EXPECT(strokes[1] == want[1] && strokes[2] == want[2]);
+		strokes[0]->fFragment = 0;
+
+		// the group of two measures 0..26, so its middle is 13 and it
+		// comes first; the two halves stay side by side
+		StrokeSortFrags(strokes, 4);
+		EXPECT(strokes[0] == want[0]);		// the first half
+		EXPECT(strokes[1] == want[1]);		// ... and the second, still next to it
+		EXPECT(strokes[2] == want[2]);		// middle 17
+		EXPECT(strokes[3] == want[3]);		// middle 32
+
+		// where a plain sort would have put the one at 17 between them
+		for (long i = 0; i < 4; i++)
+			strokes[i] = want[i];
+		StrokeSort(strokes, 4);
+		EXPECT(strokes[1] == want[2] && strokes[2] == want[1]);
+
+		for (long i = 0; i < 4; i++)
+			StrokeDestroy(want[i]);
+	}
+
 	// an empty list has an empty box
 	{
 		RosStrokeList* none = SLCreate(0, nil);

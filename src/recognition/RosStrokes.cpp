@@ -64,7 +64,7 @@ StrokeNew(void)
 	stroke->fMidX = 0;
 	stroke->fIndex = -1;
 	stroke->fFragment = 0;
-	stroke->fField27 = 0;
+	stroke->fJoinsNext = 0;
 	return stroke;
 }
 
@@ -294,6 +294,157 @@ StrokeSort(RosStroke** strokes, short count)
 	}
 }
 
+
+// One run of strokes that came out of a single stroke the engine cut
+// up.  The ROM's is 12 bytes and is made and thrown away inside
+// `StrokeSortFrags`; nothing else ever sees one.
+struct RosStrokeGroup
+{
+	short			fCount;			// +0x00
+	short			fPad02;
+	RosStroke**		fMembers;		// +0x04
+	Fixed			fMiddle;		// +0x08  the middle of the whole group
+};
+
+
+// The groups given back, as far as they were made.
+static void
+DisposeStrokeGroups(RosStrokeGroup** groups, short count)
+{
+	if (groups == nil)
+		return;
+	for (short i = 0; i < count && groups[i] != nil; i++)
+	{
+		if (groups[i]->fMembers != nil)
+			DisposPtr((Ptr) groups[i]->fMembers);
+		DisposPtr((Ptr) groups[i]);
+	}
+	DisposPtr((Ptr) groups);
+}
+
+
+// ROM 0x00200e40 StrokeSortFrags
+// The strokes put in the order they sit on the line, as `StrokeSort`
+// does, except that the pieces of one stroke stay together.
+//
+// When the engine has cut a stroke in two the pieces must not be
+// separated by the sort, however their middles happen to fall - they
+// are one piece of writing.  So the array is first gathered into
+// groups: a stroke whose `fJoinsNext` is set carries the one after it
+// into the same group, and a group ends at the first stroke that does
+// not.  Each group is measured as a whole - the leftmost left and the
+// rightmost right of everything in it - and it is the *groups* that
+// are sorted and then written back out flat.
+//
+// Nothing at all is done unless the array begins and ends at a group
+// boundary, which is the ROM's way of saying "these strokes are a
+// whole word": the first must not be a piece cut off something before
+// it, and the last must not be waiting for the rest of itself.
+//
+// (The caller in the word recogniser passes three more arguments - the
+// mean stroke size, the baseline and the mean height - which this
+// function never looks at; `StrokeSort` beside it takes only these
+// two.)
+void
+StrokeSortFrags(RosStroke** strokes, short count)
+{
+	if (count < 2)
+		return;
+	if (strokes[0]->fFragment != 0 || strokes[count - 1]->fJoinsNext != 0)
+		return;
+
+	// (`volatile` because the handler below reads it after a longjmp)
+	RosStrokeGroup** volatile groups = nil;
+	newton_try
+	{
+		// one group per stroke, because in the worst case none of them
+		// join.  The array itself is cleared, so the cleanup below can
+		// tell how far the making got.
+		gRosTemp = NewPtrClear(count * (long) sizeof(RosStrokeGroup*));
+		if (gRosTemp == nil)
+			Throw(exOutOfStack, (void*) "", nil);
+		SetPtrName((Ptr) gRosTemp, kRosettaMemoryTag);
+		groups = (RosStrokeGroup**) gRosTemp;
+
+		for (short i = 0; i < count; i++)
+		{
+			groups[i] = (RosStrokeGroup*) RosAllocate((long) sizeof(RosStrokeGroup));
+			groups[i]->fMembers = nil;
+			groups[i]->fMembers = (RosStroke**) RosAllocate(count * (long) sizeof(RosStroke*));
+			groups[i]->fCount = 0;
+		}
+
+		// the strokes dealt out, a group at a time
+		short used = 0;
+		for (short i = 0; i < count; i++)
+		{
+			RosStrokeGroup* group = groups[used];
+			group->fMembers[group->fCount] = strokes[i];
+			group->fCount = (short) (group->fCount + 1);
+			if (strokes[i]->fJoinsNext == 0)
+				used = (short) (used + 1);
+		}
+
+		// ... and each one measured as a whole
+		for (short g = 0; g < used; g++)
+		{
+			RosStrokeGroup* group = groups[g];
+			Fixed left = group->fMembers[0]->fBounds.left;
+			Fixed right = group->fMembers[0]->fBounds.right;
+			for (short i = 1; i < group->fCount; i++)
+			{
+				if (group->fMembers[i]->fBounds.left < left)
+					left = group->fMembers[i]->fBounds.left;
+				if (right < group->fMembers[i]->fBounds.right)
+					right = group->fMembers[i]->fBounds.right;
+			}
+			group->fMiddle = (left + right) >> 1;
+		}
+
+		// the same insertion sort as StrokeSort, over the groups
+		Fixed last = groups[0]->fMiddle;
+		for (short i = 1; i < used; i++)
+		{
+			Fixed middle = groups[i]->fMiddle;
+			if (middle < last)
+			{
+				RosStrokeGroup* group = groups[i];
+				short at = i;
+				do
+				{
+					at = (short) (at - 1);
+					if (at < 0)
+						break;
+				}
+				while (middle < groups[at]->fMiddle);
+				for (short j = i; at + 1 < j; j = (short) (j - 1))
+					groups[j] = groups[j - 1];
+				groups[at + 1] = group;
+				middle = groups[i]->fMiddle;
+			}
+			last = middle;
+		}
+
+		// ... and written back out flat
+		short at = 0;
+		for (short g = 0; g < used; g++)
+			for (short i = 0; i < groups[g]->fCount; i++)
+			{
+				if (at < count)
+					strokes[at] = groups[g]->fMembers[i];
+				at = (short) (at + 1);
+			}
+	}
+	cleanup
+	{
+		DisposeStrokeGroups(groups, count);
+	}
+	end_try;
+
+	// the groups given back, as far as they were made: the array was
+	// cleared, so the first nil is the end of them
+	DisposeStrokeGroups(groups, count);
+}
 
 #pragma mark -
 /*--------------------------------------------------------------------

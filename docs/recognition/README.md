@@ -2018,6 +2018,26 @@ written. `StrokePreprocess` is what a stroke goes through before the
 engine looks at it: dequantised when asked, smoothed when asked, and
 always a copy — the caller's stroke is never the one handed back.
 
+**Keeping the pieces of a cut stroke together.** `StrokeSortFrags` is
+the sort the word recogniser uses once the engine has started cutting
+strokes up. When a stroke has been cut in two the pieces must not be
+separated, however their own middles fall — they are one piece of
+writing — so the array is first gathered into groups (a stroke whose
+`fJoinsNext` is set carries the one after it into the same group),
+each group is measured as a whole, and it is the *groups* that are
+sorted and written back out flat. Nothing at all is done unless the
+array begins and ends at a group boundary, which is the ROM's way of
+saying "these strokes are a whole word".
+
+That is also what the two flags on a stroke mean. `fFragment` (+0x26)
+says the stroke is a piece cut off something before it, and
+`fJoinsNext` (+0x27) that the stroke after it is the rest of this one;
+so the first piece of a cut stroke carries `fJoinsNext` and the later
+ones `fFragment`, and "either flag" is exactly "the engine made this
+stroke itself", which is what `WordRecogClearStrokes` asks before it
+gives one back and what `WordRecogIsStrokeTooWide` asks before it cuts
+one again.
+
 `StrokeCentroid` is the average of the points, which is *not* the
 middle of the box: a stroke that lingers at one end has its centroid
 pulled that way, and each point is divided by the count before it is
