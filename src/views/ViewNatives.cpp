@@ -2564,6 +2564,7 @@ MakeViewMethods(void)
 		{ "ChangeStylesOfRange", (void*) FChangeStylesOfRange, 4 },
 		{ "AddKeyCommands", (void*) FAddKeyCommands, 1 },
 		{ "OffsetView", (void*) FOffsetView, 2 },
+		{ "ViewIntoBitmap", (void*) FViewIntoBitmap, 3 },
 		{ "BlockKeyCommand", (void*) FBlockKeyCommand, 1 },
 		{ "ExtractTextRange", (void*) FExtractTextRange, 2 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },

@@ -3316,6 +3316,42 @@ TestEffects()
 	EXPECT((e->fFlags & vVisible) != 0);
 	Refresh();
 	EXPECT(InkIn(20, 20, 80, 60) == 60 * 40 && InkIn(0, 0, 160, 20) == 0 && InkIn(80, 20, 160, 100) == 0);
+	// ViewIntoBitmap draws a whole view into a bitmap rather than onto the
+	// screen (views/DrawShape.cpp).  The screen bits are set just above,
+	// which is where a fresh port's visible region comes from and what the
+	// view's own coordinates are in.
+	Eval("vb := MakeBitmap(60, 40, nil)");
+	Eval("ctxE:ViewIntoBitmap(nil, nil, vb)");
+	{
+		RefVar data(Eval("vb.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long lit = 0;
+		for (long y = 0; y < 40; y++)
+			for (long x = 0; x < 60; x++)
+				if (GetPixel(pm, x, y) != 0)
+					lit++;
+		EXPECT(lit == 60 * 40);			// the view is filled black and fills the bitmap
+		UnlockRef(data);
+	}
+	// a part of it into a corner of a larger bitmap
+	Eval("vb := MakeBitmap(60, 40, nil)");
+	Eval("ctxE:ViewIntoBitmap({left: 0, top: 0, right: 20, bottom: 10}, {left: 5, top: 5, right: 25, bottom: 15}, vb)");
+	{
+		RefVar data(Eval("vb.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long lit = 0;
+		for (long y = 0; y < 40; y++)
+			for (long x = 0; x < 60; x++)
+				if (GetPixel(pm, x, y) != 0)
+					lit++;
+		EXPECT(lit == 20 * 10);
+		EXPECT(GetPixel(pm, 5, 5) != 0 && GetPixel(pm, 24, 14) != 0);
+		EXPECT(GetPixel(pm, 4, 5) == 0 && GetPixel(pm, 25, 15) == 0);
+		UnlockRef(data);
+	}
+	Eval("vb := nil");
 	Eval("ctxE:Hide()");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "effect view hidden again"));

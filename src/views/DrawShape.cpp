@@ -1578,11 +1578,90 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 	return NILREF;
 }
 
+// ROM 0x0003f074 FViewIntoBitmap
+// view:ViewIntoBitmap(src, dst, bitmap) - the view drawn into a bitmap
+// rather than onto the screen.  `src` is the part of the view to take,
+// in the view's own coordinates, and defaults to the whole of its outer
+// bounds; a src that is given is relative to the view's top left, so it
+// is offset by that.  `dst` is where it goes in the bitmap, and defaults
+// to the same size at the bitmap's origin.
+//
+// The bitmap's bounds are moved into the view's coordinate space
+// (by src.topLeft - dst.topLeft), so that drawing the view where it
+// thinks it is lands in the right part of the bitmap; the two rectangles
+// are then intersected down to what both can hold, and that is the clip.
+//
+// Unlike DrawIntoBitmap the ROM sets the *clip* region rather than the
+// visible one, and leaves the visible region as a fresh port has it -
+// the screen's bounds - which is what a view's own coordinates are in.
+// The pen is put back to normal for the drawing and restored after.
+Ref
+FViewIntoBitmap(RefArg rcvr, RefArg srcRect, RefArg dstRect, RefArg bitmap)
+{
+	GrafPort* saved;
+	GetPort(&saved);
+	TView* view = FailGetView(rcvr);
+
+	Rect src;
+	if (ISNIL(srcRect))
+		view->OuterBounds(&src);
+	else
+	{
+		if (!FromObject(srcRect, src))
+			Throw((ExceptionName) kGrafException, (void*) kGrafErrBadBounds, nil);
+		OffsetRect(&src, view->viewBounds.left, view->viewBounds.top);
+	}
+
+	Rect dst;
+	if (ISNIL(dstRect))
+		SetRect(&dst, 0, 0, (short) (src.right - src.left), (short) (src.bottom - src.top));
+	else if (!FromObject(dstRect, dst))
+		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadBounds, nil);
+
+	GrafPort port;
+	OpenPort(&port);
+	RefVar data(GetFrameSlotRef(bitmap, RSSYMdata));
+	LockRef(data);
+	PixelMap* pm = (PixelMap*) BinaryData(data);
+	SetPortBits(pm);
+	port.portBits.baseAddr = GetPixelMapBits(pm);
+	port.portBits.pixMapFlags = (port.portBits.pixMapFlags & ~kPixMapStorage) | kPixMapPtr;
+	OffsetRect(&port.portBits.bounds, src.left - dst.left, src.top - dst.top);
+	Rect held = port.portBits.bounds;
+	SectRect(&held, &src, &src);
+	OffsetRect(&dst, src.left - dst.left, src.top - dst.top);
+	SectRect(&dst, &src, &src);
+	RectRgn(port.clipRgn, &src);
+
+	PenState pen;
+	GetPenState(&pen);
+	PenNormal();
+	newton_try
+	{
+		view->Draw(src, false);
+	}
+	newton_catch_all
+	{
+		SetPenState(&pen);
+		SetPort(saved);
+		ClosePort(&port);
+		UnlockRef(data);
+		rethrow;
+	}
+	end_try;
+	SetPenState(&pen);
+	SetPort(saved);
+	ClosePort(&port);
+	UnlockRef(data);
+	return NILREF;
+}
+
 void
 RegisterShapeNatives(void)
 {
 	RegisterNativeFunction("FDrawShape", (void*) FDrawShape, 2);
 	RegisterNativeFunction("FDrawIntoBitmap", (void*) FDrawIntoBitmap, 3);
+	RegisterNativeFunction("FViewIntoBitmap", (void*) FViewIntoBitmap, 3);
 	RegisterNativeFunction("FHitShape", (void*) FHitShape, 3);
 	RegisterNativeFunction("FMakeTextLines", (void*) FMakeTextLines, 4);
 	RegisterNativeFunction("FMakeRect", (void*) FMakeRect, 4);

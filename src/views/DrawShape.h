@@ -117,6 +117,7 @@ void	RegisterShapeNatives(void);
 Boolean	HitShape(RefArg shape, const Point& pt, RefArg path);		// ROM 0x000e17bc HitShape__FRC6RefVarRC6TPointT1
 
 Ref		FDrawShape(RefArg rcvr, RefArg shape, RefArg style);						// ROM 0x000dc844 FDrawShape - a view's DrawShape method
+Ref		FViewIntoBitmap(RefArg rcvr, RefArg src, RefArg dst, RefArg bitmap);	// ROM 0x0003f074 FViewIntoBitmap - likewise a view's method
 
 // ROM 0x00191600 MakePolygonForm__FP6TPointlT2RC5TRectT2
 // A shape frame for a polygon, or - for verb 14 - for ink, which carries
