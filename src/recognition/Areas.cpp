@@ -695,3 +695,14 @@ ClicksOnlyArea(TUnit* unit)
 	TTypeAssoc* types = area->fTypes;
 	return types->Count() == 1 && types->GetAssoc(0)->fType == kClickUnit;
 }
+
+
+// ROM 0x00035524 GetNonNilInt__FRC6RefVarT1
+long
+GetNonNilInt(RefArg frame, RefArg slot)
+{
+	RefVar value(GetFrameSlotRef(frame, slot));
+	if (ISNIL(value))
+		return 0;
+	return RINT(value);
+}

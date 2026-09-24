@@ -16,6 +16,12 @@
 #include "NewtonGestalt.h"
 #include "NewtonMemory.h"
 #include "Unicode.h"
+#include "Dictionaries.h"
+#include "Airus.h"
+#include "Areas.h"			// GetNonNilInt
+#include "Locale.h"		// GetCurrentLocale
+#include "Frames.h"
+#include "Interpreter.h"	// GetVariable
 
 #include <string.h>
 
@@ -237,7 +243,7 @@ TRosRecognizer::GroupInkStroke(TStrokeUnit* stroke, ULong index, ULong count, Bo
 		RosettaAreaInfo area;
 		char* block = (char*) &area;
 		AreaInfoFillDefaults(&block);
-		area.fStrokesExpected = (UByte) (9 - index);
+		area.fLetterSpace = (UByte) (9 - index);
 		RosettaSetArea(&area);
 
 		if (stroke != nil)
@@ -538,41 +544,217 @@ TRosRecognizer::AreaInfoFillDefaults(Handle info)
 	area->fLabel = 0;
 	area->fField01 = 0;
 	area->fField00 = 0;
-	area->fField04 = 0;
-	area->fField61 = 0;
-	for (long i = 0; i < 6; i++)
-		area->fField2c[i] = 0;
-	area->fField62 = 0;
-	area->fField63 = 0;
-	area->fField38 = 0;
-	area->fField3c = 0;
-	area->fField40 = 0;
-	area->fField44 = 0;
-	area->fField48 = 0;
-	for (long i = 0; i < 8; i++)
-		area->fLexicons[i] = -1;
-	area->fStrokesExpected = 5;
+	area->fMainDict = nil;
+	area->fDictCount = 0;
+	area->fBase = 0;
+	area->fBoxLeft = 0;
+	area->fBoxRight = 0;
+	area->fSmallHeight = 0;
+	area->fXSpace = 0;
+	area->fBoxTop = 0;
+	area->fBoxBottom = 0;
+	area->fYSpace = 0;
 	for (long i = 0; i < 5; i++)
-	{
-		area->fShapes[i][1] = 0xff;
-		area->fShapes[i][0] = 0xff;
-	}
+		area->fDicts[i] = nil;
+	for (long i = 0; i < 8; i++)
+		area->fSymbolSet[i] = 0xffffffff;		// every character
+	area->fLetterSpace = 5;
+	for (long i = 0; i < 5; i++)
+		area->fMap[i][0] = -1;					// nothing read as anything else
 }
 
 
 // ROM 0x001b62a8 AreaInfoConfigure__14TRosRecognizerFPPcRC6RefVar
-// NOT YET RECONSTRUCTED.  This is where a recognition configuration -
-// the input mask of the field being written in and the dictionaries it
-// names by hand - becomes the engine's own lexicon flags: a long switch
-// over the dictionary ids (`recognition/Dictionaries.h`) setting a bit
-// each in the area block, the locale's `rosIgnoreDicts` list of the ones
-// to leave out, the letter set, the line height and the rest of it.
-// Until it is here every area is the default one, which is every word
-// list at once.
+// A recognition configuration read into the engine's area block: what
+// kinds of word the field expects, which dictionaries it names by hand,
+// the grid it is written on and the characters it allows.
+//
+// The dictionaries are the interesting part.  Most of the ROM's
+// lexicons stand for a *kind* of thing the engine knows how to read by
+// itself - names, dates, numbers - so naming one of those only sets a
+// flag; the rest are handed over as dictionaries, at most five of them,
+// and only if the locale's `rosIgnoreDicts` does not list them.  A
+// sixteen-bit dictionary is never handed over: this engine reads bytes.
 void
-TRosRecognizer::AreaInfoConfigure(Handle info, RefArg /*config*/)
+TRosRecognizer::AreaInfoConfigure(Handle info, RefArg config)
 {
-	AreaInfoFillDefaults(info);
+	ULong mask = (ULong) RINT(RefVar(GetVariable(config, RSSYMinputmask, nil, false)));
+	long customs = CountCustomDictionaries(config);
+
+	HLock(info);
+	RosettaAreaInfo* area = (RosettaAreaInfo*) *info;
+
+	// the dictionaries this locale would rather the engine read by
+	// itself than be handed
+	TObjectIterator* ignore = nil;
+	RefVar list(GetProtoVariable(RefVar(GetCurrentLocale()), RSSYMrosignoredicts, nil));
+	if (IsArray(list))
+		ignore = NewIterator(list);
+
+	for (long i = 0; i < customs; i++)
+	{
+		ULong id = GetCustomDictionary(config, i);
+		dictListEntry* entry = FindDictionaryEntry(id);
+		if (i == 0)
+			// the first one names what words read here are labelled with
+			area->fLabel = (UByte) id;
+
+		Boolean handOver = false;
+		switch (id)
+		{
+		// the kinds the engine reads by itself
+		case 0x01:	area->fFlags |= kRosAreaTime;			break;
+		case 0x08: case 0x0b: case 0x0c: case 0x0d: case 0x0e:
+		case 0x13: case 0x16: case 0x17: case 0x18: case 0x1a:
+		case 0x29: case 0x2b: case 0x2c:
+					area->fFlags |= kRosAreaNames;			break;
+		case 0x22: case 0x65: case 0x6e:
+					area->fFlags |= kRosAreaPhone;			break;
+		case 0x64: case 0x6f:
+					area->fFlags |= kRosAreaDate;			break;
+		case 0x66: case 0x70: case 0x72: case 0x73:
+					area->fFlags |= kRosAreaPunctuation;	break;
+		case 0x67: case 0x71:
+					area->fFlags |= kRosAreaNumbers;		break;
+		case 0x74:	area->fFlags |= kRosAreaCustom1;		break;
+		case 0x75:	area->fFlags |= kRosAreaCustom2;		break;
+		case 0x76:	area->fFlags |= kRosAreaAddress;		break;
+		case 0x00: case 0x03: case 0x06: case 0x07: case 0x09:
+		case 0x0a: case 0x14: case 0x19: case 0x1b: case 0x1c:
+		case 0x1d: case 0x2a: case 0x2d: case 0x30: case 0x31:
+					area->fFlags |= kRosAreaLetters;		break;
+		default:
+					handOver = true;						break;
+		}
+		if (!handOver)
+			continue;
+
+		// one the engine does not know: hand it over, unless the locale
+		// says to leave it out
+		if (ignore != nil)
+		{
+			ignore->Reset();
+			do
+			{
+				RefVar value(ignore->Value());
+				if (ISINT(value) && (ULong) RINT(value) == id)
+					break;
+			}
+			while (ignore->Next());
+			if (!ignore->Done())
+				continue;					// it is in the list
+		}
+		if (entry != nil && area->fDictCount < 5)
+		{
+			AirusAParmBlock* parms = (AirusAParmBlock*) *entry->fDictionary;
+			long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+			if (kind != kAirusKindEnum16 && kind != kAirusKindAL16)
+				area->fDicts[area->fDictCount++] = parms->fDataHandle;
+		}
+	}
+	if (ignore != nil)
+		delete ignore;
+
+	// the characters this locale reads as other characters
+	RefVar map(GetProtoVariable(RefVar(GetCurrentLocale()), RSSYMrosmapdicts, nil));
+	if (IsArray(map))
+	{
+		TObjectIterator* iter = NewIterator(map);
+		iter->Reset();
+		long i = 0;
+		do
+		{
+			area->fMap[i][0] = (short) RINT(RefVar(iter->Value()));
+			iter->Next();
+			area->fMap[i][1] = (short) RINT(RefVar(iter->Value()));
+			i++;
+		}
+		while (iter->Next());
+		delete iter;
+	}
+
+	// cursive writing, and how far apart its letters are
+	RefVar spacing(GetVariable(config, RSSYMletterspacecursiveoption, nil, false));
+	if (ISNIL(spacing) || (mask & 0x100) != 0)
+		area->fFlags |= kRosAreaCursive;
+	if (NOTNIL(spacing))
+		area->fLetterSpace = (UByte) RINT(spacing);
+
+	RefVar single(GetVariable(config, RSSYMrcsingleletters, nil, false));
+	if (ISNIL(single))
+	{
+		// ordinary writing: the input mask says what the field expects
+		if ((mask & 0x00002000) != 0)	area->fFlags |= kRosAreaNumbers;
+		if ((mask & 0x00040000) != 0)	area->fFlags |= kRosAreaPunctuation;
+		if ((mask & 0x00080000) != 0)	area->fFlags |= kRosAreaPhone;
+		if ((mask & 0x00100000) != 0)	area->fFlags |= kRosAreaDate;
+		if ((mask & 0x00800000) != 0)	area->fFlags |= kRosAreaCapitals;
+		if ((mask & 0x00001000) != 0)	area->fFlags |= kRosAreaTime;
+		if ((mask & 0x00004000) != 0)	area->fFlags |= kRosAreaMoney;
+		if ((mask & 0x00008000) != 0)	area->fFlags |= 0x200;
+		if ((mask & 0x00020000) != 0)	area->fFlags |= kRosAreaUpperCase;
+		if ((mask & 0x00400000) != 0)	area->fFlags |= kRosAreaLetters;
+		if ((mask & 0x00200000) != 0)	area->fFlags |= kRosAreaNames;
+		dictListEntry* entry = FindDictionaryEntry(0x1f);
+		area->fMainDict = ((AirusAParmBlock*) *entry->fDictionary)->fDataHandle;
+	}
+	else
+	{
+		// one letter at a time, in boxes
+		if (area->fLabel == 0)
+			area->fLabel = 0x28;
+		area->fFlags |= kRosAreaSingleLetters;
+	}
+
+	// where the line it is written on is
+	RefVar base(GetProtoVariable(config, RSSYMrcbaseinfo, nil));
+	if (NOTNIL(base))
+	{
+		area->fFlags |= kRosAreaHasBaseInfo;
+		area->fBase = (short) GetNonNilInt(base, RSSYMbase);
+		area->fSmallHeight = (UByte) GetNonNilInt(base, RSSYMsmallheight);
+	}
+
+	// ... and the grid, when it is written in boxes
+	RefVar grid(GetProtoVariable(config, RSSYMrcgridinfo, nil));
+	if (NOTNIL(grid))
+	{
+		area->fFlags |= kRosAreaHasBaseInfo;
+		area->fBoxLeft = (short) GetNonNilInt(grid, RSSYMboxleft);
+		area->fBoxRight = (short) GetNonNilInt(grid, RSSYMboxright);
+		area->fXSpace = (UByte) GetNonNilInt(grid, RSSYMxspace);
+		area->fBoxTop = (short) GetNonNilInt(grid, RSSYMboxtop);
+		area->fBoxBottom = (short) GetNonNilInt(grid, RSSYMboxbottom);
+		area->fYSpace = (UByte) GetNonNilInt(grid, RSSYMyspace);
+	}
+
+	// the characters it allows, as a set of 256 bits
+	RefVar symbols(GetProtoVariable(config, RSSYMsymbolset, nil));
+	if (NOTNIL(symbols))
+	{
+		area->fFlags |= kRosAreaHasSymbolSet;
+		UByte text[0x100];
+		ConvertFromUnicode(GetCString(symbols), text, kMacRomanEncoding, 0x100);
+		for (long i = 0; i < 8; i++)
+			area->fSymbolSet[i] = 0;
+		long length = (long) strlen((const char*) text);
+		for (long i = 0; i < length; i++)
+			area->fSymbolSet[text[i] >> 5] |= 1u << (text[i] & 0x1f);
+	}
+
+	// ... and the ones it does not, taken back out of that set
+	RefVar remove(GetProtoVariable(config, RSSYMremovesymbol, nil));
+	if (NOTNIL(remove))
+	{
+		area->fFlags |= kRosAreaHasSymbolSet;
+		UByte text[0x100];
+		ConvertFromUnicode(GetCString(remove), text, kMacRomanEncoding, 0x100);
+		long length = (long) strlen((const char*) text);
+		for (long i = 0; i < length; i++)
+			area->fSymbolSet[text[i] >> 5] &= ~(1u << (text[i] & 0x1f));
+	}
+
+	HUnlock(info);
 }
 
 

@@ -1867,8 +1867,8 @@ ParaGraph's, and the names are theirs — `neibour_susp_extr`,
 which is why `recognition/Rosetta.h` draws it explicitly: it is where a
 modern recogniser would be put in instead.
 
-**Reconstructed so far: level 1, and level 2 as a set of declarations
-with no bodies.** `TRosRecognizer` is real; every call it makes into the
+**Reconstructed so far: all of level 1, and level 2 as a set of
+declarations with no bodies.** `TRosRecognizer` is real; every call it makes into the
 engine answers "could not", so the recogniser throws `evt.ex.abt`, which
 is exactly what the ROM's own does when its engine fails. Nothing
 installs it — the engine the host installs is still
@@ -1903,26 +1903,43 @@ been gathered — the group is closed and handed back whole through
 strokes go down, nothing is read, and the two Points the engine answers
 are opened out into the four the caller wants.
 
-The **area block** (`RosettaAreaInfo`, 0x68 bytes) is what tells the
-engine what sort of field is being written in: eight words of lexicon
-flags, five stroke shapes, a label for the words read there and a count
-of strokes still expected. `AreaInfoFillDefaults` fills it with every
-lexicon and every shape.
+### The area block
+
+`RosettaAreaInfo` (0x68 bytes on the Newton) is what tells the engine
+what sort of field is being written in: a word of flags, a 256-bit set
+of the characters it allows, the line and the grid it is written on, up
+to five dictionaries handed over by hand, five characters read as other
+characters, and how far apart the letters are.
+`AreaInfoFillDefaults` fills it with *everything* — every character
+allowed, nothing mapped.
+
+`AreaInfoConfigure` (0x001b62a8) reads a recognition configuration into
+it, and the dictionaries are the interesting part. Most of the ROM's
+lexicons stand for a **kind** of thing the engine knows how to read by
+itself — names, dates, times, numbers, punctuation, telephone numbers,
+addresses — so naming one of those only sets a flag and hands nothing
+over; the rest go into `fDicts`, at most five of them, and only if the
+locale's `rosIgnoreDicts` does not list them. A sixteen-bit dictionary
+is never handed over, because this engine reads bytes. The first
+dictionary a configuration names becomes the **label** every word read
+in that area carries, which is how a reading is later traced back to
+what it was read as.
+
+A field that says `rcSingleLetters` is written one letter to a box, and
+the engine is told so rather than being given a lexicon; anything else
+takes its kinds from the field's `inputMask` instead, and is given the
+main lexicon (dictionary 0x1f). `symbolSet` and `removeSymbol` set and
+clear bits of the 256-bit character set.
 
 ### What is left
 
 In order:
 
-1. **`TRosRecognizer::AreaInfoConfigure`** (0x001b62a8), the one part of
-   level 1 still missing. It is a long switch over the dictionary ids a
-   recognition configuration names (`recognition/Dictionaries.h`),
-   setting a lexicon bit each, plus the locale's `rosIgnoreDicts` list
-   and the rest of the block. It needs nothing below it, so it can be
-   done next.
-2. **Level 2**, the fifteen `Rosetta*` calls: the setup/analyze/cleanup
-   passes a classify is made of, the area, the baseline, sleeping and
-   waking.
-3. **Levels 3 to 6**, bottom-up, which is the engine proper. The
+1. **Level 2**, the fifteen `Rosetta*` calls: the
+   setup/analyze/cleanup passes a classify is made of, the area, the
+   baseline, sleeping and waking. `RosettaClassifyAnalyze` (0x001b7cc4)
+   is the top of the real work, and it calls straight into level 3.
+2. **Levels 3 to 6**, bottom-up, which is the engine proper. The
    trained tables come out of the ROM's data through
    `analysis/romtable.py` as everything else does.
 

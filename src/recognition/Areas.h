@@ -154,4 +154,7 @@ ULong		TryGetAreasHit(TUnit* unit, TArray* areas);	// ROM 0x00036aa4 TryGetAreas
 Boolean	DomainOn(TRecArea* area, ULong type);			// ROM 0x001438cc DomainOn__FP8TRecAreaUl - whether the area runs a domain of the type
 void	PurgeAreaCache(void);							// ROM 0x0003485c PurgeAreaCache__Fv - every area in it let go, the array emptied and shrunk
 
+// An integer slot of a frame, or nought when it has none.
+long	GetNonNilInt(RefArg frame, RefArg slot);			// ROM 0x00035524 GetNonNilInt__FRC6RefVarT1
+
 #endif	/* __AREAS_H */

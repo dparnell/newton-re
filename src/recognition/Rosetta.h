@@ -64,27 +64,52 @@ struct RosettaAreaInfo
 	UByte			fField00;			// +0x00
 	UByte			fField01;			// +0x01
 	UByte			fPad02[2];
-	unsigned int	fField04;			// +0x04
-	unsigned int	fFlags;				// +0x08  0x2000: measure the baseline and read nothing
-	int				fLexicons[8];		// +0x0c  which word lists to read against (-1: every one)
-	UByte			fField2c[6];		// +0x2c
-	UByte			fPad32[6];
-	unsigned int	fField38;			// +0x38
-	unsigned int	fField3c;			// +0x3c
-	unsigned int	fField40;			// +0x40
-	unsigned int	fField44;			// +0x44
-	unsigned int	fField48;			// +0x48
-	UByte			fShapes[5][4];		// +0x4c  the stroke shapes it may expect (0xff: any)
+	Handle			fMainDict;			// +0x04  the lexicon the engine reads against
+	unsigned int	fFlags;				// +0x08  what the field expects (below)
+	// which characters may be written here: 256 bits, one per code
+	unsigned int	fSymbolSet[8];		// +0x0c  (all ones: any of them)
+	short			fBase;				// +0x2c  the baseline, when the field says where it is
+	short			fBoxLeft;			// +0x2e  and the grid it is written on
+	short			fBoxRight;			// +0x30
+	short			fBoxTop;			// +0x32
+	short			fBoxBottom;			// +0x34
+	UByte			fPad36[2];
+	Handle			fDicts[5];			// +0x38  the dictionaries named by hand (at most five)
+	short			fMap[5][2];			// +0x4c  characters read as other characters (-1: none)
 	UByte			fLabel;				// +0x60  what words read here are labelled with
-	UByte			fField61;			// +0x61
-	UByte			fField62;			// +0x62
-	UByte			fField63;			// +0x63
-	UByte			fField64;			// +0x64
-	UByte			fStrokesExpected;	// +0x65  how many strokes are still to come
+	UByte			fDictCount;			// +0x61  how many of fDicts are in use
+	UByte			fSmallHeight;		// +0x62
+	UByte			fXSpace;			// +0x63
+	UByte			fYSpace;			// +0x64
+	UByte			fLetterSpace;		// +0x65  how far apart the letters are written
 	UByte			fPad66[2];
 };
 
-const long	kRosettaAreaInfoSize	= 0x68;
+// What `fFlags` says the field expects.  The low bits are the kinds of
+// word the engine may answer; the high ones are how it is written.
+const unsigned int	kRosAreaSingleLetters	= 0x00000001;
+const unsigned int	kRosAreaNumbers			= 0x00000002;
+const unsigned int	kRosAreaPunctuation		= 0x00000004;
+const unsigned int	kRosAreaPhone			= 0x00000008;
+const unsigned int	kRosAreaDate			= 0x00000010;
+const unsigned int	kRosAreaTime			= 0x00000020;
+const unsigned int	kRosAreaMoney			= 0x00000040;
+const unsigned int	kRosAreaLetters			= 0x00000080;
+const unsigned int	kRosAreaUpperCase		= 0x00000100;
+const unsigned int	kRosAreaNames			= 0x00000400;
+const unsigned int	kRosAreaHasBaseInfo		= 0x00000800;	// fBase and the grid are set
+const unsigned int	kRosAreaHasSymbolSet	= 0x00001000;	// fSymbolSet is not simply everything
+const unsigned int	kRosAreaCursive			= 0x00002000;
+const unsigned int	kRosAreaCapitals		= 0x00004000;
+const unsigned int	kRosAreaAddress			= 0x00008000;
+const unsigned int	kRosAreaCustom1			= 0x00010000;
+const unsigned int	kRosAreaCustom2			= 0x00020000;
+
+// DEVIATION: the ROM's block is 0x68 bytes; ours is bigger, because the
+// three Handles in it are twice as wide on a 64-bit host.  Nothing
+// outside the engine reads it, so only the two sides agreeing matters -
+// and they both say `sizeof`.
+const long	kRosettaAreaInfoSize	= (long) sizeof(RosettaAreaInfo);	// the ROM's is 0x68
 
 // `RosettaDontClassify`'s argument: what the engine is to stop doing.
 const ULong	kRosettaClassifyNormally	= 0;
