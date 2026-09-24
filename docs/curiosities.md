@@ -1083,3 +1083,55 @@ kind, 0)` — always nought. So *every* decimal tab a script makes has a
 dotted leader, and nothing a script can say will change it.
 
 *`src/text/TXRuler.cpp`.*
+
+
+## The clone that is thrown away
+
+`protoDictionaryCursor`'s `PrivateClone` is meant to hand back a second
+cursor standing where the first one stands. `FAirusIteratorClone`
+(ROM 0x0008f680) does this:
+
+```cpp
+Ref
+FAirusIteratorClone(RefArg rcvr)
+{
+    RefVar copy(Clone(rcvr));
+    new TAirusIterator(*GetScriptCursorRef(rcvr));      // made, and dropped
+    SetFrameSlot(copy, RSSYMcursor, RefVar(GetFrameSlotRef(rcvr, RSSYMcursor)));
+    RefVar cursors(GetFrameSlotRef(RefVar(GetFrameSlotRef(rcvr, RSSYMdict)), RSSYMcursors));
+    AddArraySlot(cursors, rcvr);                        // the original, not the copy
+    return copy;
+}
+```
+
+The frame is cloned, a copy of the iterator is made — and then the
+copy's `cursor` slot is filled in from the *original's* slot. The
+iterator that was just built is never stored anywhere, so it leaks; the
+two frames share one cursor, and stepping either of them steps both.
+The `cursors` array, which is how a dictionary finds everything walking
+it, is then given the original again rather than the copy.
+
+The odd part is that this is what *saves* it. The copy constructor
+(`TAirusIterator::TAirusIterator(const TAirusIterator&)`, 0x0002e2a8)
+walks the source's state stack making a copy of each state, and then:
+
+```cpp
+    if (previous != nil)
+        previous->fNext = copy;
+    previous = source;              // the source, not the copy
+    source = source->fNext;
+```
+
+It links each new copy onto the *source* state rather than onto the copy
+before it, so the original cursor's stack ends up spliced onto the
+copies from its second state on; and it never sets the new iterator's
+own `fStates` at all, so the copy has no stack to walk. A copy that was
+actually used would walk into whatever the allocator left behind, and
+the original would be walking a chain of half-copies.
+
+Because `PrivateClone` throws the copy away without ever destroying it
+or reading from it, none of that ever happens. Two bugs, and the first
+one hides the second.
+
+*`src/recognition/AirusIterator.cpp` and `src/recognition/Words.cpp`;
+`test_Dictionaries` pins the shared cursor.*

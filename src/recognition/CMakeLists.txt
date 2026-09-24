@@ -38,6 +38,7 @@ add_library(recognition STATIC
     HandleUnit.cpp
     UnitNatives.cpp
     Airus.cpp
+    AirusIterator.cpp
     Dictionaries.cpp
     ROMDictionaryData.cpp
     ROMDictionaryTable.cpp

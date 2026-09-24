@@ -123,6 +123,14 @@ Ref		FAirusChangeAttribute(RefArg rcvr, RefArg word, RefArg attribute);	// ROM 0
 Ref		FAirusDictionaryType(RefArg rcvr);						// ROM 0x0008fae0 FAirusDictionaryType
 Ref		FAirusAttributeSize(RefArg rcvr);						// ROM 0x0008fb0c FAirusAttributeSize
 Ref		FAirusDispose(RefArg rcvr);								// ROM 0x0008f84c FAirusDispose
+// The cursor a script walks a dictionary with (recognition/AirusIterator.h).
+Ref		FAirusIteratorMake(RefArg rcvr);						// ROM 0x0008f4e8 FAirusIteratorMake
+Ref		FAirusIteratorClone(RefArg rcvr);						// ROM 0x0008f680 FAirusIteratorClone
+Ref		FAirusIteratorReset(RefArg rcvr, RefArg word, RefArg exact, RefArg which);	// ROM 0x0008f788 FAirusIteratorReset
+Ref		FAirusIteratorThisWord(RefArg rcvr, RefArg result);		// ROM 0x0008f888 FAirusIteratorThisWord
+Ref		FAirusIteratorNextWord(RefArg rcvr);					// ROM 0x0008f998 FAirusIteratorNextWord
+Ref		FAirusIteratorPreviousWord(RefArg rcvr);				// ROM 0x0008f9bc FAirusIteratorPreviousWord
+Ref		FAirusIteratorDispose(RefArg rcvr);						// ROM 0x0008f9e0 FAirusIteratorDispose
 Ref		FStripRecognitionWord(RefArg rcvr, RefArg word);			// ROM 0x0008eff4 FStripRecognitionWord
 Ref		FStripRecognitionWordDiacritsOK(RefArg rcvr, RefArg word);	// ROM 0x0008f030 FStripRecognitionWordDiacritsOK
 

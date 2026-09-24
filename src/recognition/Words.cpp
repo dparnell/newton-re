@@ -15,6 +15,7 @@
 */
 
 #include "Words.h"
+#include "AirusIterator.h"
 #include "Stroke.h"
 #include "Unit.h"			// AddRect
 #include "Ports.h"			// RoundFixed
@@ -345,6 +346,145 @@ FAirusDeletePrefix(RefArg rcvr, RefArg word)
 }
 
 
+// ROM 0x0008f62c (unnamed)
+// The cursor behind a protoDictionaryCursor frame: its `cursor` slot,
+// which holds the TAirusIterator by address.
+static TAirusIterator*
+GetScriptCursorRef(RefArg frame)
+{
+	RefVar cursor(GetFrameSlotRef(frame, RSSYMcursor));
+	if (ISNIL(cursor))
+		ThrowMsg("cursor ref missing");
+	return (TAirusIterator*) RefToAddress(cursor);
+}
+
+
+// ROM 0x0008f4e8 FAirusIteratorMake
+// AllocateCursor() on a dictionary frame: a protoDictionaryCursor frame
+// with a cursor of its own, remembered in the dictionary's `cursors`
+// array so that everything using the dictionary can be found again.
+Ref
+FAirusIteratorMake(RefArg rcvr)
+{
+	RefVar cursor(AllocateFrame());
+	SetFrameSlot(cursor, RSSYM_proto,
+				 RefVar(GetProtoVariable(rcvr, RSSYMprotodictionarycursor, nil)));
+	SetFrameSlot(cursor, RSSYMdict, rcvr);
+
+	RefVar cursors(GetFrameSlotRef(rcvr, RSSYMcursors));
+	if (ISNIL(cursors))
+	{
+		cursors = AllocateArray(RSSYMarray, 0);
+		SetFrameSlot(rcvr, RSSYMcursors, cursors);
+	}
+	AddArraySlot(cursors, cursor);
+
+	TAirusIterator* iterator = new TAirusIterator(GetScriptDictRef(rcvr));
+	SetFrameSlot(cursor, RSSYMcursor, RefVar(AddressToRef(iterator)));
+	return cursor;
+}
+
+
+// ROM 0x0008f680 FAirusIteratorClone
+// PrivateClone() on a cursor frame.
+//
+// BUG (the ROM's), kept: it makes a copy of the iterator and then never
+// uses it - the new frame's `cursor` slot is set from the *original's*
+// slot, so the two frames share one iterator and the copy is leaked -
+// and it adds the original rather than the copy to the dictionary's
+// `cursors` array.  (Which is also why the copy constructor's own
+// muddle, which would leave the copy with no state stack, never shows.)
+Ref
+FAirusIteratorClone(RefArg rcvr)
+{
+	RefVar copy(Clone(rcvr));
+	new TAirusIterator(*GetScriptCursorRef(rcvr));
+	SetFrameSlot(copy, RSSYMcursor, RefVar(GetFrameSlotRef(rcvr, RSSYMcursor)));
+	RefVar cursors(GetFrameSlotRef(RefVar(GetFrameSlotRef(rcvr, RSSYMdict)), RSSYMcursors));
+	AddArraySlot(cursors, rcvr);
+	return copy;
+}
+
+
+// ROM 0x0008f788 FAirusIteratorReset
+// PrivateReset(word, exact, which) on a cursor frame: the cursor put at
+// a word.  `exact` non-nil starts it *at* that word rather than walking
+// up to where it would be, and `which` is 'first or 'last - which way
+// the first step goes.  ==> whether it is standing on a word.
+Ref
+FAirusIteratorReset(RefArg rcvr, RefArg word, RefArg exact, RefArg which)
+{
+	TAirusIterator* iterator = GetScriptCursorRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
+	Boolean atPrefix = NOTNIL(exact);
+	Boolean backwards = false;
+	if (!EQRef(which, RSSYMfirst) && EQRef(which, RSSYMlast))
+		backwards = true;
+	return iterator->Reset(text, atPrefix, backwards) ? TRUEREF : NILREF;
+}
+
+
+// ROM 0x0008f888 FAirusIteratorThisWord
+// PrivateEntry(frame) on a cursor frame: the frame handed in given the
+// `word` the cursor stands on and, when it is asked to, the `attribute`
+// stored with it and the `terminalClass` that could follow it.  ==> the
+// word, or nil when the cursor stands on nothing.
+Ref
+FAirusIteratorThisWord(RefArg rcvr, RefArg result)
+{
+	TAirusIterator* iterator = GetScriptCursorRef(rcvr);
+	UByte text[64];
+	ULong attribute = 0;
+	UByte terminal = 0;
+	if (!iterator->ThisWord(text, attribute, terminal))
+		return NILREF;
+
+	UniChar unicode[64];
+	ConvertToUnicode(text, unicode, kMacRomanEncoding, 0x7fffffff);
+	RefVar word(MakeString(unicode));
+	if (NOTNIL(result))
+	{
+		SetFrameSlot(result, RSSYMword, word);
+		SetFrameSlot(result, RSSYMattribute, RefVar(MAKEINT((long) attribute)));
+		SetFrameSlot(result, RSSYMterminalclass, RefVar(MAKEINT(terminal)));
+	}
+	return word;
+}
+
+
+// ROM 0x0008f998 FAirusIteratorNextWord
+Ref
+FAirusIteratorNextWord(RefArg rcvr)
+{
+	return GetScriptCursorRef(rcvr)->NextWord() ? TRUEREF : NILREF;
+}
+
+
+// ROM 0x0008f9bc FAirusIteratorPreviousWord
+Ref
+FAirusIteratorPreviousWord(RefArg rcvr)
+{
+	return GetScriptCursorRef(rcvr)->PreviousWord() ? TRUEREF : NILREF;
+}
+
+
+// ROM 0x0008f9e0 FAirusIteratorDispose
+// PrivateDispose() on a cursor frame: the iterator given back and the
+// slot emptied.  ==> nil, always.  (The frame stays in the dictionary's
+// `cursors` array.)
+Ref
+FAirusIteratorDispose(RefArg rcvr)
+{
+	TAirusIterator* iterator = GetScriptCursorRef(rcvr);
+	if (iterator == nil)
+		return NILREF;
+	SetFrameSlot(rcvr, RSSYMcursor, RefVar(NILREF));
+	delete iterator;
+	return NILREF;
+}
+
+
 // ROM 0x0008eb18 FAirusChangeAttribute
 // ChangeAttribute(word, attribute) on a dictionary frame: the attribute
 // of a word already there written over where it lies.  ==> airusResult:
@@ -548,6 +688,13 @@ RegisterWordNatives(void)
 	RegisterNativeFunction("FAirusDictionaryType", (void*) FAirusDictionaryType, 0);
 	RegisterNativeFunction("FAirusAttributeSize", (void*) FAirusAttributeSize, 0);
 	RegisterNativeFunction("FAirusDispose", (void*) FAirusDispose, 0);
+	RegisterNativeFunction("FAirusIteratorMake", (void*) FAirusIteratorMake, 0);
+	RegisterNativeFunction("FAirusIteratorClone", (void*) FAirusIteratorClone, 0);
+	RegisterNativeFunction("FAirusIteratorReset", (void*) FAirusIteratorReset, 3);
+	RegisterNativeFunction("FAirusIteratorThisWord", (void*) FAirusIteratorThisWord, 1);
+	RegisterNativeFunction("FAirusIteratorNextWord", (void*) FAirusIteratorNextWord, 0);
+	RegisterNativeFunction("FAirusIteratorPreviousWord", (void*) FAirusIteratorPreviousWord, 0);
+	RegisterNativeFunction("FAirusIteratorDispose", (void*) FAirusIteratorDispose, 0);
 	RegisterNativeFunction("FWRecIsBeingUsed", (void*) FWRecIsBeingUsed, 0);
 	RegisterNativeFunction("FUseWRec", (void*) FUseWRec, 1);
 	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);

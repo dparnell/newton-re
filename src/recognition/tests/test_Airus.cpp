@@ -4,6 +4,7 @@
 // walkers themselves are NOT YET, so the selector call is only checked
 // for the two that clear the error.
 #include "Airus.h"
+#include "AirusIterator.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -623,6 +624,84 @@ main()
 		strcpy((char*) word, "a");
 		ChangeAttribute(words, word, 5);
 		EXPECT(airusResult == 0);			// "a" is a word here
+	}
+
+	// ---- the cursor a script walks a dictionary with ----
+	{
+		Handle words = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
+		UByte word[64];
+		static const char* const kAll[] = { "at", "an", "and", "be", "a", "ant", nil };
+		for (long i = 0; kAll[i] != nil; i++)
+		{
+			strcpy((char*) word, kAll[i]);
+			AddWord(words, 0, word, (ULong) (i + 1));
+		}
+
+		// the characters sort the way the dictionary is ordered
+		EXPECT(SortOrder('a', 'b') < 0 && SortOrder('b', 'a') > 0);
+		EXPECT(SortOrder('a', 'A') == 0);
+
+		TAirusIterator cursor(words);
+		ULong attribute = 0;
+		UByte terminal = 0;
+		// nothing until it is reset
+		EXPECT(!cursor.ThisWord(word, attribute, terminal));
+
+		// from the beginning, forwards: every word in order
+		static const char* const kSorted[] = { "a", "an", "and", "ant", "at", "be", nil };
+		EXPECT(cursor.Reset(nil, false, false));
+		long n = 0;
+		for (;;)
+		{
+			if (!cursor.ThisWord(word, attribute, terminal))
+				break;
+			EXPECT(kSorted[n] != nil && strcmp((char*) word, kSorted[n]) == 0);
+			n++;
+			if (!cursor.NextWord())
+				break;
+		}
+		EXPECT(n == 6);
+
+		// and from the end, backwards
+		EXPECT(cursor.Reset(nil, false, true));
+		n = 6;
+		for (;;)
+		{
+			if (!cursor.ThisWord(word, attribute, terminal))
+				break;
+			n--;
+			EXPECT(n >= 0 && strcmp((char*) word, kSorted[n]) == 0);
+			if (!cursor.PreviousWord())
+				break;
+		}
+		EXPECT(n == 0);
+
+		// the attribute and the one character that could follow come
+		// with the word: "an" is a word, and "d" and "t" both go on from
+		// it, so there is no single one
+		strcpy((char*) word, "an");
+		EXPECT(cursor.Reset(word, true, false));
+		EXPECT(cursor.ThisWord(word, attribute, terminal));
+		EXPECT(strcmp((char*) word, "an") == 0 && attribute == 2 && terminal == 0);
+		// "and" has nothing after it
+		EXPECT(cursor.NextWord());
+		EXPECT(cursor.ThisWord(word, attribute, terminal));
+		EXPECT(strcmp((char*) word, "and") == 0 && attribute == 3);
+
+		// walking *up to* a prefix leaves the cursor at the first word
+		// from there on, whether or not the prefix is a word itself
+		strcpy((char*) word, "ao");
+		EXPECT(cursor.Reset(word, false, false));
+		EXPECT(cursor.ThisWord(word, attribute, terminal));
+		EXPECT(strcmp((char*) word, "at") == 0);
+
+		// past the last word there is nothing
+		strcpy((char*) word, "be");
+		EXPECT(cursor.Reset(word, true, false));
+		EXPECT(!cursor.NextWord());
+		EXPECT(!cursor.ThisWord(word, attribute, terminal));
+
+		DisposDictionary(&words);
 	}
 
 	// a dictionary that carries no attributes says so

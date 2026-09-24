@@ -819,9 +819,63 @@ throws the recognition areas' cache away, because an area remembers the
 chain of dictionaries it was built with. `Dispose()` gives the
 dictionary back and takes the frame's `dict` slot away.
 
-NOT YET: the sixteen-bit walkers (AE16, `AE16_NextSet9`), the
-enumerators `AEnum_FirstLast` and `AEnum_NextPrevious`, and
-`TAirusIterator`.
+### The cursor (`recognition/AirusIterator.h`)
+
+`WalkDictionary` runs through a dictionary from end to end and calls
+back for each word. A **cursor** does the opposite: it *stands* on one
+word and is asked for the next or the previous, so a script can stop,
+look and carry on. That is harder than it sounds, because a dictionary
+is a trie — there is no "next word" to step to, only a shape to walk,
+and the walk has to be kept somewhere between calls.
+
+`TAirusIterator` (0x0002e260) keeps it in a stack of `charState`s, one
+per character of the word it stands on. Each state holds
+
+* the trie nodes reached at that character — up to **four** of them,
+  because a lookup may be running down a chain of dictionaries at once,
+  and because two characters that sort the same (a letter and its
+  capital) are followed as one; and
+* once it is asked for, the sorted set of characters that may come next
+  (`GetNextChars` 0x0002def0, one `AEnum_NextSet` per position,
+  `InsertNewNextChar` merging them in `SortOrder`).
+
+`SortOrder` (0x0002de9c) is the Unicode collation with case ignored, so
+the set is in the order the words come out in.
+
+Stepping forward (`VerifyNextChar` 0x0002e594) takes the next of those
+characters, pushes a state for it, writes the character into the running
+word and asks the engine to verify it; every character that sorts the
+same goes into that one state as another position. Stepping back
+(`VerifyPrevChar`) is the mirror. Running off either end pops the state
+(`PopState`) and carries on in the one below; running off the bottom is
+the end of the dictionary, and the word is cleared to say so.
+
+A word is found when one of the positions answers **1** (a prefix that
+carries an attribute) or **2** (a leaf). `ConstructResult` (0x0002dbe4)
+then copies the running word out and walks the stack back down writing
+the characters of the path that actually answered over it — because the
+running word holds whichever branch was taken last, and the answer may
+lie along another of the parallel ones — and verifies the whole word
+once more to read its attribute and the character that could follow.
+
+`Reset` (0x0002e38c) starts the walk: `BuildStateAtPrefix` puts one
+state at the end of a prefix already verified, and `BuildStateUpToPrefix`
+walks from the root to where the prefix would be, stopping at the first
+character that is not actually there — which leaves the cursor just
+before it, so the next step answers the first word from there on.
+
+A script reaches all of this through a `protoDictionaryCursor` frame:
+`AllocateCursor()` (`FAirusIteratorMake` 0x0008f4e8) makes one and
+remembers it in the dictionary's `cursors` array, `PrivateReset(word,
+exact, which)` puts it somewhere, `PrivateEntry(frame)` fills in the
+`word`, `attribute` and `terminalClass`, `Next()`/`prev()` step it and
+`PrivateDispose()` gives it back. `PrivateClone` is a muddle — see
+`docs/curiosities.md`.
+
+NOT YET: the sixteen-bit walkers (AE16, `AE16_NextSet9`) and the
+enumerators `AEnum_FirstLast` and `AEnum_NextPrevious`, which are a
+second, simpler way of stepping through a dictionary that nothing in the
+ROM appears to use.
 
 ## The controller (`recognition/Controller.h`)
 

@@ -41,6 +41,17 @@ static PixelMap	gTestMap;
 static GrafPort	gTestPort;
 static unsigned char	gTestBits[(kTestWidth / 8) * kTestHeight];
 
+// a NewtonScript string compared with a C one
+static Boolean
+WordIs(Ref word, const char* text)
+{
+	if (!IsString(RefVar(word)))
+		return false;
+	UByte bytes[64];
+	ConvertFromUnicode(GetCString(RefVar(word)), bytes, kMacRomanEncoding, 0x3f);
+	return strcmp((const char*) bytes, text) == 0;
+}
+
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
@@ -592,6 +603,44 @@ main()
 		// being written on, and this frame names none)
 		EXPECT(EQRef(GetArraySlotRef(RefVar(Dictionaries()),
 									 Length(RefVar(Dictionaries())) - 1), frame));
+
+		// a cursor of its own, walked from the script side
+		{
+			EXPECT(RINT(RefVar(FAirusAddWord(frame, RefVar(MakeString("badge")),
+											 RefVar(MAKEINT(1))))) == 0);
+			RefVar cursor(FAirusIteratorMake(frame));
+			EXPECT(IsFrame(cursor));
+			EXPECT(EQRef(GetFrameSlotRef(cursor, RSSYMdict), frame));
+			EXPECT(Length(RefVar(GetFrameSlotRef(frame, RSSYMcursors))) == 1);
+
+			// from the beginning: "badge" comes before "badger"
+			EXPECT(NOTNIL(RefVar(FAirusIteratorReset(cursor, RefVar(MakeString("")),
+													 RefVar(NILREF), RSSYMfirst))));
+			RefVar entry(AllocateFrame());
+			EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(cursor, entry))));
+			EXPECT(WordIs(GetFrameSlotRef(entry, RSSYMword), "badge"));
+			EXPECT(NOTNIL(RefVar(FAirusIteratorNextWord(cursor))));
+			EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(cursor, entry))));
+			EXPECT(WordIs(GetFrameSlotRef(entry, RSSYMword), "badger"));
+			EXPECT(RINT(RefVar(GetFrameSlotRef(entry, RSSYMattribute))) == 9);
+			// and no further
+			EXPECT(ISNIL(RefVar(FAirusIteratorNextWord(cursor))));
+			// back again
+			EXPECT(NOTNIL(RefVar(FAirusIteratorReset(cursor, RefVar(MakeString("")),
+													 RefVar(NILREF), RSSYMlast))));
+			EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(cursor, entry))));
+			EXPECT(WordIs(GetFrameSlotRef(entry, RSSYMword), "badger"));
+
+			// the clone shares the original's cursor, which is the ROM's
+			// own muddle rather than ours
+			RefVar copy(FAirusIteratorClone(cursor));
+			EXPECT(IsFrame(copy));
+			EXPECT(EQRef(GetFrameSlotRef(copy, RSSYMcursor),
+						 GetFrameSlotRef(cursor, RSSYMcursor)));
+
+			EXPECT(ISNIL(RefVar(FAirusIteratorDispose(cursor))));
+			EXPECT(ISNIL(RefVar(GetFrameSlotRef(cursor, RSSYMcursor))));
+		}
 
 		// and taken out again
 		FAirusUnregisterDictionary(frame);

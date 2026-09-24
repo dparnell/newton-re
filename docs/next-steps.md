@@ -8,13 +8,13 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `bafad2f`)
+## State at 2026-09-24 (commit `eebc881`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 81/81.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9225 citations, 0 bad;
-  5081 of 16671 functions (30.48%).
-- `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
+- `analysis/coverage.py build/MP2x00US --check`: 9264 citations, 0 bad;
+  5103 of 16671 functions (30.61%).
+- `analysis/natives.py`: 860 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -95,7 +95,13 @@ The last run of work closed, in order:
   words the locale brings with it, the Airus delete path, and the
   writer's own dictionaries - the expansions and the words the machine
   adds on their behalf (`recognition/Learning.h`).  `LookupWord` now
-  answers out of the ROM's own word lists.
+  answers out of the ROM's own word lists.  All thirteen of the
+  dictionary and cursor natives a script uses are answered, the last of
+  them being `TAirusIterator` (`recognition/AirusIterator.h`), the
+  cursor a script walks a dictionary with.  NOT YET in the engine: the
+  sixteen-bit walkers and the `AEnum_FirstLast`/`AEnum_NextPrevious`
+  enumerators, which are a second way of stepping through a dictionary
+  that nothing in the ROM appears to use.
 
 - **the machine's own power natives** (`docs/system/README.md`): the
   battery frame and its raw twin, `BatteryLevel`, `BatteryCount`,
@@ -185,7 +191,8 @@ The last run of work closed, in order:
   things the machine knows how to do to a person.
 
   NOT YET: the lexicon's own trie (`TrieAdd`, `DynaTrieDelete` over
-  `gDynaTrie`), which is part of the Airus lexical engine, so a
+  `gDynaTrie`), which sits on top of the Airus engine (that engine
+  itself is reconstructed, `docs/recognition/README.md`), so a
   registered template's words are not indexed and nothing finds it by
   writing one of them.
 
@@ -234,7 +241,7 @@ The last run of work closed, in order:
 ## Next: what is left of the natives, and why
 
 The thin wrappers are done.  What `natives.py --unbound` still lists is
-478 natives, and they are not a long tail of small jobs: nine out of ten
+466 natives, and they are not a long tail of small jobs: nine out of ten
 of them are the script-facing face of a subsystem that has no
 reconstruction behind it at all.  Binding one of those means writing the
 subsystem, not the wrapper.
@@ -248,7 +255,6 @@ subsystem, not the wrapper.
 |  38 | the CIC handwriting engine: letters, training and reading |
 |  36 | the test agent and the debug hooks |
 |  35 | the package manager and the card |
-|  17 | the Airus dictionary cursor (`TAirusIterator`) |
 |  12 | sound channels (the sound server) |
 |   6 | the text engine's ranges and the book reader's HiliteBlock |
 |   4 | large binaries on a store, and store passwords |
@@ -259,10 +265,6 @@ find the cheapest work inside a group with `--sizes build/MP2x00US`.
 
 The smallest of those that would close a group of its own:
 
-- **the Airus dictionary cursor** (17): `TAirusIterator` and
-  `AttributeLength` - the object a script walks a dictionary with.  The
-  dictionaries themselves are reconstructed, so this is a contained
-  piece.
 - **sound channels** (12): `TSoundServer`/`TSoundChannel` above the
   codecs, which are done.
 
