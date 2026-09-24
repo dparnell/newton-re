@@ -73,8 +73,10 @@ struct RosCommonInfo
 {
 	UByte			fField00[0x0c];		// +0x00
 	RosCharInfo*	fCharInfo;			// +0x0c
-	UByte			fField10[0x3c];		// +0x10
-	Fixed			fMinCapHeight;		// +0x4c  smaller than this is not believed
+	UByte			fField10[0x08];		// +0x10
+	ULong			fSymbolSet[8];		// +0x18  which of the 256 classes the net may answer
+	UByte			fField38[0x14];		// +0x38
+	Fixed			fMinStrokeSize;		// +0x4c  under this a stroke has no shape at all
 };
 
 // ROM 0x0c100b08 RosCI
@@ -124,6 +126,11 @@ void	SegmentDestroy(RosSegment* segment);				// ROM 0x001d1cac SegmentDestroy
 // Everything the segment layer is holding on to, given back.
 void	SegmentQuiesce(void);								// ROM 0x001d0f3c SegmentQuiesce
 void	SegmentIntegrated(long how);						// ROM 0x001d4cbc SegmentIntegrated
+
+// The smallest a stroke may be and still be said to go one way rather
+// than another - and, because it is the same number, the smallest cap
+// height the word recogniser will believe.
+Fixed	SegmentMinStrokeSize(void);							// ROM 0x001d1890 SegmentMinStrokeSize
 
 void	NetPatternDestroy(RosNetPattern* pattern);			// ROM 0x00133a08 NetPatternDestroy
 void	NetPatternizerDestroy(RosNetPatternizer* patternizer);	// ROM 0x00133a58 NetPatternizerDestroy

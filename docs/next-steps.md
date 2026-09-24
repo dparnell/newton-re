@@ -12,7 +12,7 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 85/85.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9372 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9378 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
   the function total, which comes from the demangled symbols.)
@@ -290,8 +290,11 @@ named before anything above or below it could be written, and
 `recognition/WordRecog.h` now names it as far as the evidence goes,
 with its whole life: made, allocated, suspended, resumed, reset,
 cleared and destroyed, the run of measurements saved and put back, the
-grammar context picked by name, the cap height learnt from a word, and
-the readings handed back.  That also unblocks **level 2**, which is
+grammar context picked by name, the cap height learnt from a word, the
+readings handed back, and the four tests that decide whether a stroke
+has to be cut in two before it is read (`WordRecogStrokeType`,
+`IsStrokeTooWide`, `StrokeIntersectsTwoVerticalStrokes`,
+`StrokeNeedsFragmenting`).  That also unblocks **level 2**, which is
 fifteen thin calls over these fields.
 
 The neighbouring layers are declared in `recognition/RosEngine.h` and

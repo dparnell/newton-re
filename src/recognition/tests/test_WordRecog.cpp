@@ -58,7 +58,7 @@ main()
 	gCharInfo.fWidths = gWidths;
 	memset(&gCommonInfo, 0, sizeof(gCommonInfo));
 	gCommonInfo.fCharInfo = &gCharInfo;
-	gCommonInfo.fMinCapHeight = F(2);
+	gCommonInfo.fMinStrokeSize = F(2);
 	RosCI = &gCommonInfo;
 
 	// ---- the empty block ----
@@ -270,6 +270,99 @@ main()
 		wr->fWordWidth = F(4);			// 4/4 = 1, under the two we set
 		WordRecogComputeCapHeight(wr);
 		EXPECT(wr->fRun[20] == before);
+	}
+
+	// ---- what it makes of one stroke ----
+	{
+		// a stroke is only said to go one way or the other if its
+		// longer side is at least the smallest the engine credits
+		FPoint p[6];
+		p[0].x = F(5);	p[0].y = F(0);	p[1].x = F(6);	p[1].y = F(20);
+		RosStroke* tall = StrokeCreate(2, p);
+		EXPECT(WordRecogStrokeType(wr, tall) == kWordRecogStrokeVertical);
+
+		p[0].x = F(0);	p[0].y = F(10);	p[1].x = F(40);	p[1].y = F(10);
+		RosStroke* flat = StrokeCreate(2, p);
+		EXPECT(WordRecogStrokeType(wr, flat) == kWordRecogStrokeHorizontal);
+
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(5);	p[1].y = F(5);
+		RosStroke* blob = StrokeCreate(2, p);
+		EXPECT(WordRecogStrokeType(wr, blob) == kWordRecogStrokeNeither);
+
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(1);	p[1].y = F(1);
+		RosStroke* speck = StrokeCreate(2, p);
+		EXPECT(WordRecogStrokeType(wr, speck) == kWordRecogStrokeNeither);
+		StrokeDestroy(speck);
+		StrokeDestroy(blob);
+
+		// too wide for a letter of this hand.  With nothing written yet
+		// the limit is 0.45 of what the run says a letter measures.
+		wr->fStrokeCount = 0;
+		wr->fField68 = 0;
+		Fixed letter = wr->fRun[21];
+		EXPECT(WordRecogIsStrokeTooWide(wr, flat, MinFragmentWidthMultiple) == true);
+		EXPECT(WordRecogIsStrokeTooWide(wr, tall, MinFragmentWidthMultiple) == false);
+		// ... and asking for a multiple nothing can reach says no
+		EXPECT(WordRecogIsStrokeTooWide(wr, flat, F(100)) == false);
+
+		// the writing having turned out bigger than the run expected
+		// scales the limit up with it, so the same stroke is no longer
+		// too wide
+		wr->fField68 = F(200);
+		EXPECT(WordRecogIsStrokeTooWide(wr, flat, MinFragmentWidthMultiple) == false);
+		wr->fField68 = 0;
+
+		// a piece the engine cut for itself is never too wide
+		flat->fFragment = 1;
+		EXPECT(WordRecogIsStrokeTooWide(wr, flat, MinFragmentWidthMultiple) == false);
+		flat->fFragment = 0;
+		EXPECT(letter == wr->fRun[21]);		// nothing above moved the run
+
+		// ---- does it run through two letters? ----
+		// two uprights, at x = 10 and x = 30, under the flat stroke's
+		// middle height
+		FPoint up[6];
+		for (long i = 0; i < 6; i++)
+		{
+			up[i].x = F(10);
+			up[i].y = F(4 * i);
+		}
+		RosStroke* first = StrokeCreate(6, up);
+		for (long i = 0; i < 6; i++)
+			up[i].x = F(30);
+		RosStroke* second = StrokeCreate(6, up);
+
+		wr->fStrokes[0] = first;
+		wr->fField1ac = 1;
+		EXPECT(WordRecogStrokeIntersectsTwoVerticalStrokes(wr, flat) == false);
+		wr->fStrokes[1] = second;
+		wr->fField1ac = 2;
+		EXPECT(WordRecogStrokeIntersectsTwoVerticalStrokes(wr, flat) == true);
+
+		// one of them moved out from under it counts for nothing
+		StrokeScale(second, F(4), F(1));		// now at x = 120
+		EXPECT(WordRecogStrokeIntersectsTwoVerticalStrokes(wr, flat) == false);
+		StrokeScale(second, 0x4000, F(1));		// and back
+
+		// so the flat stroke is one to cut in two, and an upright is
+		// not - a letter may be as tall as it likes
+		EXPECT(WordRecogStrokeNeedsFragmenting(wr, flat) == true);
+		EXPECT(WordRecogStrokeNeedsFragmenting(wr, tall) == false);
+		// ... and a wide stroke with no shape of its own is cut without
+		// anything else being asked
+		p[0].x = F(0);	p[0].y = F(0);	p[1].x = F(40);	p[1].y = F(20);
+		RosStroke* sprawl = StrokeCreate(2, p);
+		EXPECT(WordRecogStrokeType(wr, sprawl) == kWordRecogStrokeNeither);
+		EXPECT(WordRecogStrokeNeedsFragmenting(wr, sprawl) == true);
+		StrokeDestroy(sprawl);
+
+		wr->fField1ac = 0;
+		wr->fStrokes[0] = nil;
+		wr->fStrokes[1] = nil;
+		StrokeDestroy(first);
+		StrokeDestroy(second);
+		StrokeDestroy(flat);
+		StrokeDestroy(tall);
 	}
 
 	// ---- asleep and awake ----

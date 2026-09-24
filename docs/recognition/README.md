@@ -2093,9 +2093,46 @@ drawn there so that one layer of the engine can be written at a time.
 handed, so the word recogniser can be driven before that table is
 extracted.
 
+**When a stroke has to be cut in two.** The four tests a single stroke
+is put are reconstructed with the block, and they are a nice piece of
+reasoning about handwriting.
+
+`WordRecogStrokeType` says which way a stroke goes, if it goes any way
+at all: vertical if it is more than four times as tall as it is wide,
+horizontal if it is more than four times as wide as it is tall *and*
+short in its own right — no taller than a quarter of the engine's
+small height. That second clause is the interesting one. A long
+shallow arc drawn large passes the ratio test but is not a horizontal
+stroke, because at that size a quarter of its height is still a
+letter's worth of ink. A stroke whose longer side is under
+`SegmentMinStrokeSize` has no shape worth talking about and is neither.
+
+`WordRecogIsStrokeTooWide` measures it against what a letter of the
+hand being read should be (`fRun[21]`), scaled up when the writing has
+turned out bigger than the run expected — three parts of what the
+word has measured so far and one of its tallest stroke, against the
+small height the run holds. A piece the engine cut for itself is never
+too wide, whatever it measures, because pieces are not cut again.
+
+`WordRecogStrokeIntersectsTwoVerticalStrokes` is the question a long
+horizontal stroke is put: *does it run through two letters?* One that
+does is the cross of a double-struck t, or a line drawn under a word,
+and has to be cut; one that runs through only one is part of that
+letter. Every stroke in hand is asked twice, once by its first two
+thirds and once by its last two thirds, because what matters is
+whether an **end** of it is vertical — the middle of a letter can go
+anywhere. The stroke not yet taken in is asked as well.
+
+`WordRecogStrokeNeedsFragmenting` puts the three together: too wide
+first, then a stroke with no shape of its own is cut, a vertical one
+never is (one letter may be as tall as it likes), and a horizontal one
+only if it runs through two letters.
+
 Still to do at level 3: `WordRecogAddStroke` and `AddStroke2`, which
-take the strokes in; `WordRecogAnalyzeWord` and the net calls, which
-read them; and the segment side (`WRSeg*`).
+take the strokes in; `WordRecogAnalyzeWord`, `WordRecogNetEvaluate` and
+`WordRecogNetSetInputs`, which read them (the last two are mostly
+plumbing into the patternizers, so they want reading with level 6);
+and the segment side (`WRSeg*`).
 
 Until then the eleven natives that ask for handwriting — `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,

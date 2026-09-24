@@ -250,6 +250,38 @@ void		WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, ULong u
 
 
 /*--------------------------------------------------------------------
+	What the recogniser makes of one stroke.
+--------------------------------------------------------------------*/
+
+// What `WordRecogStrokeType` answers.  A stroke is only said to go one
+// way or the other if it is at least `SegmentMinStrokeSize` across its
+// longer side: under that it has no shape worth talking about.
+const long	kWordRecogStrokeNeither		= 0;
+const long	kWordRecogStrokeHorizontal	= 1;
+const long	kWordRecogStrokeVertical	= 2;
+
+// Vertical if it is more than four times as tall as it is wide;
+// horizontal if it is more than four times as wide as it is tall *and*
+// no taller than a quarter of the engine's own small height.
+long	WordRecogStrokeType(WordRecog* wr, const RosStroke* stroke);	// ROM 0x002765ac WordRecogStrokeType
+// Wider than `multiple` of what a letter of this hand should be, at
+// the scale the writing has turned out to be - and not a piece the
+// engine cut for itself, because those are not cut again.
+Boolean	WordRecogIsStrokeTooWide(WordRecog* wr, RosStroke* stroke, Fixed multiple);	// ROM 0x00276618 WordRecogIsStrokeTooWide
+// True if two of the strokes already in hand have a vertical end that
+// runs through this one: the test that tells a long horizontal stroke
+// crossing two letters from a letter of its own.
+Boolean	WordRecogStrokeIntersectsTwoVerticalStrokes(WordRecog* wr, const RosStroke* stroke);	// ROM 0x00276374 WordRecogStrokeIntersectsTwoVerticalStrokes
+// Whether the stroke is to be cut in two before it is read.
+Boolean	WordRecogStrokeNeedsFragmenting(WordRecog* wr, RosStroke* stroke);	// ROM 0x002762f4 WordRecogStrokeNeedsFragmenting
+
+// How wide a stroke has to be, as a fraction of a letter of the hand
+// being read, before it is looked at for cutting.  (0.45; the ROM's
+// initialised data has it, and nothing writes it.)
+extern Fixed	MinFragmentWidthMultiple;			// ROM 0x0c104f88 MinFragmentWidthMultiple
+
+
+/*--------------------------------------------------------------------
 	The gap cache.
 --------------------------------------------------------------------*/
 

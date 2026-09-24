@@ -50,6 +50,15 @@ void	SegmentQuiesce(void)									{ }
 // ROM 0x001d4cbc SegmentIntegrated
 void	SegmentIntegrated(long /*how*/)							{ }
 
+// ROM 0x001d1890 SegmentMinStrokeSize
+// One field of the common info, under another name.
+Fixed
+SegmentMinStrokeSize(void)
+{
+	return RosCI->fMinStrokeSize;
+}
+
+
 // ROM 0x00133a08 NetPatternDestroy
 void	NetPatternDestroy(RosNetPattern* /*pattern*/)			{ }
 // ROM 0x00133a58 NetPatternizerDestroy

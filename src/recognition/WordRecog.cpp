@@ -486,7 +486,7 @@ WordRecogComputeCapHeight(WordRecog* wr)
 	// (the average is an ordinary integer divide: the widths are 16.16
 	//  and the count is a count, so what comes out is 16.16 again)
 	Fixed estimate = FixedDivide(wr->fWordWidth, sum / (Fixed) i);
-	if (RosCI->fMinCapHeight >= estimate)
+	if (RosCI->fMinStrokeSize >= estimate)
 		return;
 	if (FixedMultiply(0x00028000, wr->fRun[20]) <= estimate)
 		return;
@@ -566,4 +566,163 @@ WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, ULong unused,
 	if (wr->fCheckWords == nil)
 		return;
 	wr->fCheckWords(words, scores, unused, (ULong) strokes, (ULong) count);
+}
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	What the recogniser makes of one stroke.
+--------------------------------------------------------------------*/
+
+// ROM 0x0c104f88 MinFragmentWidthMultiple
+// 0.45 of what a letter of the hand being read should measure.  It is
+// in the ROM's initialised data and nothing ever writes it.
+Fixed	MinFragmentWidthMultiple = 0x00007333;
+
+
+// ROM 0x002765ac WordRecogStrokeType
+// Which way a stroke goes, if it goes any way at all.  A stroke whose
+// longer side is under the smallest the engine credits has no shape
+// worth talking about and is neither.
+//
+// The horizontal test has two parts, and the second is the interesting
+// one: a stroke is only horizontal if it is both much wider than it is
+// tall *and* short in its own right - no taller than a quarter of the
+// engine's small height.  A long shallow arc drawn large is therefore
+// not a horizontal stroke, because at that size a quarter of it is
+// still a letter's worth of ink.
+long
+WordRecogStrokeType(WordRecog* wr, const RosStroke* stroke)
+{
+	Fixed width = stroke->fBounds.right - stroke->fBounds.left;
+	Fixed height = stroke->fBounds.bottom - stroke->fBounds.top;
+	Fixed longer = (width < height) ? height : width;
+
+	if (SegmentMinStrokeSize() > longer)
+		return kWordRecogStrokeNeither;
+	if (width < (height >> 2))
+		return kWordRecogStrokeVertical;
+	if (height < (width >> 2) && height < (wr->fField120[0] >> 2))
+		return kWordRecogStrokeHorizontal;
+	return kWordRecogStrokeNeither;
+}
+
+
+// ROM 0x00276618 WordRecogIsStrokeTooWide
+// Too wide for one letter of the hand being read.  What a letter
+// should measure is `fRun[21]`, and it is scaled up when the writing
+// has turned out bigger than the run expected: three parts of what the
+// word has measured so far and one of the tallest stroke in it,
+// against the small height the run holds.
+//
+// A stroke the engine cut for itself is never too wide, whatever it
+// measures - the pieces are not cut again.
+Boolean
+WordRecogIsStrokeTooWide(WordRecog* wr, RosStroke* stroke, Fixed multiple)
+{
+	Fixed measured = (wr->fField68 * 3 + WordRecogDetermineMaxHeight(wr)) >> 2;
+	Fixed scale = (wr->fRun[18] < measured)
+				? FixedDivide(measured, wr->fRun[18])
+				: 0x00010000;
+	Fixed limit = FixedMultiply(multiple, FixedMultiply(scale, wr->fRun[21]));
+
+	FRect bounds;
+	StrokeFindBounds(stroke, &bounds);
+	FPoint size;
+	FixedRectSize(&size, &bounds);
+
+	if (size.x + 0x00010000 >= limit
+		&& stroke->fFragment == 0 && stroke->fField27 == 0)
+		return true;
+	return false;
+}
+
+
+// Does an end of `other` run down through `stroke`?  Two thirds of
+// its points from one end, then two thirds from the other: what
+// matters is whether an *end* of it is vertical, because the middle of
+// a letter can go anywhere.  A piece counts if it is vertical, if
+// `middle` falls inside it top to bottom, and if the piece's own
+// middle width falls inside `left`..`right`.
+//
+// (The ROM has this written out twice, once for each loop below.)
+static Boolean
+StrokeEndRunsThrough(WordRecog* wr, const RosStroke* other,
+					Fixed left, Fixed right, Fixed middle)
+{
+	// two thirds of its points, rounded up.  (The ROM divides with
+	// `__rt_sdiv`, which takes the divisor first.)
+	short n = (short) ((other->fCount * 2 + 1) / 3);
+	Boolean through = false;
+	RosStroke* piece = nil;
+	for (short end = 0; end < 2; end++)
+	{
+		if (end != 0)
+			StrokeDestroy(piece);
+		const FPoint* points = (end == 0)
+							? other->fPoints
+							: other->fPoints + other->fCount - n;
+		piece = StrokeCreate(n, points);
+		if (piece != nil && WordRecogStrokeType(wr, piece) == kWordRecogStrokeVertical)
+		{
+			Fixed across = (piece->fBounds.left + piece->fBounds.right) >> 1;
+			if (middle > piece->fBounds.top && middle < piece->fBounds.bottom
+				&& across > left && across < right)
+			{
+				through = true;
+				break;
+			}
+		}
+	}
+	StrokeDestroy(piece);
+	return through;
+}
+
+
+// ROM 0x00276374 WordRecogStrokeIntersectsTwoVerticalStrokes
+// The question a long horizontal stroke is put: does it run through
+// two letters?  A stroke that does is the cross of a double-struck t,
+// or a line drawn under a word, and has to be cut; one that runs
+// through only one is part of that letter.
+Boolean
+WordRecogStrokeIntersectsTwoVerticalStrokes(WordRecog* wr, const RosStroke* stroke)
+{
+	long found = 0;
+	Fixed left = stroke->fBounds.left;
+	Fixed right = stroke->fBounds.right;
+	Fixed middle = (stroke->fBounds.top + stroke->fBounds.bottom) >> 1;
+
+	for (long i = 0; i < wr->fField1ac; i++)
+		if (StrokeEndRunsThrough(wr, wr->fStrokes[i], left, right, middle))
+			found++;
+
+	// ... and the stroke that has not been taken in yet is asked in
+	// exactly the same way
+	if (wr->fPendingStroke != nil
+		&& StrokeEndRunsThrough(wr, wr->fPendingStroke, left, right, middle))
+		found++;
+
+	return found > 1;
+}
+
+
+// ROM 0x002762f4 WordRecogStrokeNeedsFragmenting
+// Whether a stroke is to be cut in two before the engine reads it.  It
+// has to be too wide first; then a stroke with no shape of its own is
+// cut, a vertical one never is - one letter can be as tall as it likes
+// - and a horizontal one is only cut if it runs through two letters.
+Boolean
+WordRecogStrokeNeedsFragmenting(WordRecog* wr, RosStroke* stroke)
+{
+	if (!WordRecogIsStrokeTooWide(wr, stroke, MinFragmentWidthMultiple))
+		return false;
+
+	long type = WordRecogStrokeType(wr, stroke);
+	if (type == kWordRecogStrokeNeither)
+		return true;
+	if (type == kWordRecogStrokeVertical)
+		return false;
+	if (type == kWordRecogStrokeHorizontal)
+		return WordRecogStrokeIntersectsTwoVerticalStrokes(wr, stroke);
+	return true;
 }
