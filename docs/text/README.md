@@ -258,10 +258,90 @@ that was named. A document that has not been edited much is nearly all
 full chunks, so its whole chunk table is six bytes however long the
 document is.
 
+## The rulers (`text/TXRuler.h`)
+
+A ruler is what a paragraph is laid out against, and it is a
+`TXAttrObject` like a style is — so a run of the document points at one,
+and the same machinery that narrows a style list down to what a
+selection agrees about narrows a ruler list too.
+
+There are two of them. **`TXBasicRuler`** (0x0024587c, class id
+`'brlr`) is twelve bytes: a justification (1 left, 2 right, 4 centre, 8
+full) and nothing else. Its margins are nought and its tab stops are the
+default ones — every `gTXDefaultTabVal` pixels, for ever.
+**`TXAdvancedRuler`** (0x0022f2b8, `'rulr`) is thirty-two: it adds the
+first line's indent (`'ndnt`), the two margins (`'lMrg`, `'rMrg`), the
+line spacing (`'lspc`, held between 1 and 20 — 1 single, 2 one and a
+half, 3 double) and a `TXTabsArray` of real tab stops (`'tabs`).
+
+`gTXDefaultTabVal` (0x0c104d7c) is nought until
+`Textension::TextensionStart` makes it **30**. A ruler asked for a tab
+before then divides by nought.
+
+### The tabs
+
+A `TXTab` is eight bytes of which six are used: a position in pixels, a
+kind (left 0, centre 1, decimal point 2, right 0xff) and the character
+the run up to it is filled with. `TXTabsArray` is a `TXArray` of them
+kept sorted by position; `SearchTab` walks until it finds the position
+or passes it, so a miss leaves the index at where a new tab would go.
+
+`WidthToTab` is what the formatter asks: the first tab past a width (a
+Fixed, rounded to whole pixels), or — past the last real tab — the next
+default stop. Two things about it are worth knowing. It only ever copies
+six bytes of a tab, and on the default-stop path it never sets the fill
+character, so the ROM hands back whatever the stack held; and
+`InsertTab` does not look at what `SearchTab` answered, so putting a tab
+in at a position that already has one gives two entries there.
+
+### Laying a line out
+
+`GetLineLeftBlanks(firstLine)` answers the indent for the first line of
+a paragraph and the left margin for the rest, as Fixed;
+`GetLineRightBlanks` the right margin. `GetTabWidth` says which tab the
+line has run into and how far away it is, and marks it **pending** when
+it is not a plain left tab — because how wide a centre, right or decimal
+tab is cannot be known until the text after it has been measured. That
+is what `CalcPendingTabWidth` then does: a centre tab gives up half the
+text's width, any other kind all of it, and what is left is held down to
+what the line still has room for and up to nothing.
+
+`AdjustLineHeight` is the line spacing: single leaves the line alone,
+and each step past it adds half a line.
+
+### Sharing, and not sharing
+
+`TXAttrObject::Reference` answers *the object to use* — normally itself,
+with one more reference. `TXAdvancedRuler::Reference` (0x00230234) is
+the one place that answers something else: a ruler that has tab stops
+cannot be shared, because its `TXTabsArray` is a plain owned pointer, so
+it makes a fresh copy instead. A ruler with no tabs is shared like
+anything else.
+
+### A ruler as a script sees it
+
+`GetNSObject` clones `Rtxcanonicalruler` and fills in `justification`,
+`indent`, `leftMargin`, `rightMargin`, `lineSpacing` and an array of
+`Rtxcanonicaltab` clones (`{value:, kind:}`); `SetNSObject` reads them
+back, taking **only the slots the frame has**, which is what lets a slip
+change one thing. `TXGetRulerAttrValues` (0x0022fa14) does the same
+reading straight into a `TXAttrValues` without making a ruler at all, so
+what comes back says what to change about a range's rulers and nothing
+else.
+
+`UpdateAttribute` is the one attribute that is not simply set. A ruler
+slip asks for one tab to be added, moved or taken away, so the value of
+a `'tabs` attribute in an update list is not an array but a
+`TXTabUpdate` — the tab as it was, the tab as it is to be, and the ruler
+the other tabs come from. Twenty bytes, which is exactly what a
+`TXAttrValues` entry holds.
+
 ## Not yet reconstructed
 
-The rulers and their tab arrays, `Textension` and the runs, the
-formatter and the lines, `TXView` itself and the forty-one `FTX...`
-natives that are its script face. `TXAttrObject::ReadPublicData` /
+`TXRulerRange` (the rulers a document's paragraphs actually point at)
+and the ruler's user interface — `TXRulerUI` and the icon, tab and
+bitmap-cluster bars a script shows with `ShowRuler`. Above them,
+`Textension` and the runs, the formatter and the lines, `TXView` itself
+and the forty-one `FTX...` natives that are its script face. `TXAttrObject::ReadPublicData` /
 `WritePublicData` are the base's empty pair; the subclasses that
 actually put a style on a stream come with the runs.

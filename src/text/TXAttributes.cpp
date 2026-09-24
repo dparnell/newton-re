@@ -22,7 +22,7 @@
 // TXArray takes as one: a list of attributes is short and grows one at
 // a time.
 TXAttrValues::TXAttrValues()
-	: TXArray(0x20, 0)
+	: TXArray(sizeof(TXAttrValue), 0)		// the ROM's element is 0x20
 { }
 
 
@@ -142,10 +142,13 @@ TXAttrObject::Free(void)
 
 
 // ROM 0x002315bc Reference__12TXAttrObjectFv
-void
+TXAttrObject*
 TXAttrObject::Reference(void)
 {
 	fCountReferences++;
+	// (the ROM never touches r0, so the object it was called on is the
+	// answer; a subclass that cannot be shared answers a copy instead)
+	return this;
 }
 
 

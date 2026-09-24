@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `ff12079`)
+## State at 2026-09-24 (commit `cc5672c`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 79/79.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 80/80.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9146 citations, 0 bad;
-  5003 of 16671 functions (30.01%).
+- `analysis/coverage.py build/MP2x00US --check`: 9199 citations, 0 bad;
+  5055 of 16671 functions (30.32%).
 - `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -209,14 +209,20 @@ The last run of work closed, in order:
   (`WriteChunksRanges`/`ReadChunksRanges`) - which is what a text
   descriptor needs to name a stream at either end.
 
+  Then the rulers (`text/TXRuler.h`): `TXTab` and the sorted
+  `TXTabsArray`, `TXBasicRuler` and `TXAdvancedRuler` over the attribute
+  object, the blanks and tab widths a line is laid out with, the line
+  spacing, and the ruler frame a script sees.
+
   NOT YET in the streams: the factory's large-binary arm (it wants
   `FLBAllocCompressed` and large binaries, which are not reconstructed;
   it answers `kError_No_Memory` as the ROM's own does when nothing came
-  of it).  Above the storage, nothing yet: the rulers and their tab
-  arrays, `Textension` and the runs, the formatter and the lines, and
-  `TXView` with its forty-one `FTX...` natives.  The order to take them
-  in is the one `docs/text/README.md` states - rulers, then the runs,
-  then the formatter, then the view.
+  of it).  NOT YET in the rulers: `TXRulerRange` (the rulers a
+  document's paragraphs actually point at, which wants the runs) and the
+  ruler's user interface (`TXRulerUI` and its three bars).  Above them,
+  nothing yet: `Textension` and the runs, the formatter and the lines,
+  and `TXView` with its forty-one `FTX...` natives.  The next piece is
+  `Textension` and the runs - `docs/text/README.md` states the order.
 
 ## Next: what is left of the natives, and why
 

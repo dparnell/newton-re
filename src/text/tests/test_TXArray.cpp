@@ -278,7 +278,7 @@ static void
 TestAttrValues()
 {
 	TXAttrValues values;
-	EXPECT(values.GetCount() == 0 && values.GetElementSize() == 0x20);
+	EXPECT(values.GetCount() == 0 && values.GetElementSize() == sizeof(TXAttrValue));
 
 	long size = 12;
 	long face = 1;

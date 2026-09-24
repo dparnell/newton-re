@@ -1046,3 +1046,40 @@ Two hundred pages of text, and the index that finds any character in
 them costs six bytes on the store.
 
 *`src/text/TXChars.cpp`.*
+
+
+## A decimal tab brings its own dotted leader
+
+`TXTab::Set` (ROM 0x00245984) is four instructions of storing and one
+test:
+
+```cpp
+void
+TXTab::Set(int position, char kind, unsigned char fill)
+{
+    if ((unsigned char) kind == kTXTabDecimalPoint && fill == 0)
+        fill = '.';
+    fPosition = position;
+    fKind = (unsigned char) kind;
+    fFillChar = fill;
+}
+```
+
+A tab stop carries the character that the run of space up to it is
+filled with, and it is normally nought — a blank. The one exception is
+a **decimal-point** tab that nobody gave a fill character to: it gets a
+full stop.
+
+A decimal tab is what a column of numbers is lined up on, and a column
+of numbers with a label on its left is a table of contents or a price
+list. So on the Newton you get the dotted leader by setting the tab you
+were going to set anyway, and you never find out that there was a
+choice. It is one line of code standing in for a whole preference.
+
+The script side never offers the fill character at all:
+`TabKindSymbolToNum` reads `'left`, `'center`, `'decimalPoint` and
+`'right` out of a tab frame, and `FromObject` then calls `Set(position,
+kind, 0)` — always nought. So *every* decimal tab a script makes has a
+dotted leader, and nothing a script can say will change it.
+
+*`src/text/TXRuler.cpp`.*

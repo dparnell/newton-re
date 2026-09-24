@@ -47,12 +47,24 @@ enum
 {
 	kTXAttrFont			= 0x666f6e74,	// 'font' - the family, as a NewtonScript Ref
 	kTXAttrSize			= 0x73697a65,	// 'size'
-	kTXAttrFace			= 0x66616365	// 'face'
+	kTXAttrFace			= 0x66616365,	// 'face'
+
+	// the ruler's (text/TXRuler.h)
+	kTXAttrJustification	= 0x6a757374,	// 'just'
+	kTXAttrTabs				= 0x74616273,	// 'tabs'
+	kTXAttrIndent			= 0x6e646e74,	// 'ndnt' - the first line's left edge
+	kTXAttrLeftMargin		= 0x6c4d7267,	// 'lMrg'
+	kTXAttrRightMargin		= 0x724d7267,	// 'rMrg'
+	kTXAttrLineSpacing		= 0x6c737063	// 'lspc'
 };
 
-// One entry of a TXAttrValues list: the ROM's element is 0x20 bytes, so
-// a value may be up to twenty of them.
-const long	kTXAttrValueSize	= 0x20 - 12;
+// One entry of a TXAttrValues list.  The ROM's element is 0x20 bytes,
+// twelve of them the tag, the owns flag and the length, so a value may
+// be up to twenty.  DEVIATION: the host's pointers are twice as wide,
+// and the biggest value the engine puts in one of these is a 'tabs
+// update (text/TXRuler.h) - two tabs and a ruler pointer - so the area
+// is made large enough for that here.
+const long	kTXAttrValueSize	= 32;		// the ROM's is 0x20 - 12 = 20
 
 struct TXAttrValue
 {
@@ -96,7 +108,9 @@ public:
 	virtual void	Free(void);										// ROM 0x002312fc Free__12TXAttrObjectFv - one reference given back
 	virtual void	FreeData(void);									// ROM 0x002315b0 FreeData__12TXAttrObjectFv
 	virtual TXAttrObject* CreateNew(void) const = 0;				// (pure: vtable +0x0c)
-	virtual void	Reference(void);								// ROM 0x002315bc Reference__12TXAttrObjectFv
+	// ==> the object to use: this one, with one more reference - or,
+	// for a subclass that cannot be shared, a copy of it.
+	virtual TXAttrObject* Reference(void);							// ROM 0x002315bc Reference__12TXAttrObjectFv
 	virtual long	GetCountReferences(void);						// ROM 0x002315b4 GetCountReferences__12TXAttrObjectFv
 	virtual long	GetClassId(void) const = 0;						// (pure: vtable +0x18)
 	virtual unsigned long GetObjFlags(void) const;					// ROM 0x002315cc GetObjFlags__12TXAttrObjectCFv
