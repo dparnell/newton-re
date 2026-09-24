@@ -12,8 +12,8 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 78/78.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9063 citations, 0 bad;
-  4922 of 16671 functions (29.52%).
+- `analysis/coverage.py build/MP2x00US --check`: 9123 citations, 0 bad;
+  4981 of 16671 functions (29.88%).
 - `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -197,7 +197,13 @@ The last run of work closed, in order:
   which records a division of the text by storing only the end of each
   range and answers `OffsetToRangeIndex` and `SectRanges` over it.  That
   one representation is how every division - style runs, lines,
-  paragraphs - is kept, so it is what the rest stands on.
+  paragraphs - is kept, so it is what the rest stands on.  Then the
+  attributes a run points at (`text/TXAttributes.h`) and the character
+  storage itself (`text/TXChars.h`): the text in chunks of at most 512
+  characters, the three ways `Replace` tries to get text in, and the
+  running-together of chunks that keeps an edited document from ending
+  up made of crumbs.  NOT YET: `TXStream`, and everything above the
+  storage - the runs, the formatter, the lines and `TXView`.
 
 ## Next: what is left of the natives, and why
 

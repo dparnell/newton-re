@@ -3,6 +3,8 @@
 // record which run of characters each style, line and paragraph covers.
 #include "TXArray.h"
 #include "TXAttributes.h"
+#include "TXChars.h"
+#include "OSErrors.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -362,6 +364,203 @@ TestAttrObject()
 }
 
 
+
+// The character storage (text/TXChars.h).  TXChunkedChars leaves the
+// chunks themselves to a subclass; this is the simplest one there could
+// be - each chunk a block of its own, big enough to be filled.
+class TestChars : public TXChunkedChars
+{
+public:
+					TestChars(int chunkSize) : TXChunkedChars(chunkSize), fCount2(0)
+					{
+						for (long i = 0; i < kMaxChunks; i++)
+							fBlocks[i] = nil;
+					}
+	virtual			~TestChars()
+					{
+						for (long i = 0; i < fCount2; i++)
+							delete[] fBlocks[i];
+					}
+
+	virtual UniChar* GetChunkPtr(long chunk, Boolean, Boolean)	{ return fBlocks[chunk]; }
+	virtual NewtonErr AllocateChunks(long at, long count)
+					{
+						if (fCount2 + count > kMaxChunks)
+							return kError_No_Memory;
+						for (long i = fCount2 - 1; i >= at; i--)
+							fBlocks[i + count] = fBlocks[i];
+						for (long i = 0; i < count; i++)
+							fBlocks[at + i] = new UniChar[fChunkSize];
+						fCount2 += count;
+						return noErr;
+					}
+	virtual void	RemoveChunks(long at, long count)
+					{
+						for (long i = 0; i < count; i++)
+							delete[] fBlocks[at + i];
+						for (long i = at + count; i < fCount2; i++)
+							fBlocks[i - count] = fBlocks[i];
+						for (long i = fCount2 - count; i < fCount2; i++)
+							fBlocks[i] = nil;
+						fCount2 -= count;
+					}
+
+	enum { kMaxChunks = 64 };
+	UniChar*		fBlocks[kMaxChunks];
+	long			fCount2;			// the chunks that exist
+};
+
+
+// What the storage holds, as a C string, for comparing
+static Boolean
+CharsAre(TXChars& chars, const char* want)
+{
+	long count = chars.Count();
+	if (count != (long) strlen(want))
+		return false;
+	for (long i = 0; i < count; i++)
+		if (chars.GetChar(i) != (UniChar) (unsigned char) want[i])
+			return false;
+	return true;
+}
+
+
+// Text put into a descriptor, for handing to Replace
+static void
+SetText(TXTextDescriptor& desc, UniChar* buffer, const char* text)
+{
+	long i = 0;
+	for (; text[i] != 0; i++)
+		buffer[i] = (UniChar) (unsigned char) text[i];
+	desc.Set(buffer, i);
+}
+
+
+static void
+TestSearchHelpers()
+{
+	UniChar text[8];
+	for (long i = 0; i < 7; i++)
+		text[i] = (UniChar) "ab\rcdef"[i];
+	EXPECT(SearchChar('c', text, 7) == 3);
+	EXPECT(SearchChar('z', text, 7) == -1);
+	EXPECT(SearchChar('\r', text, 7) == 2);
+	// a form feed is looked for as a return, and a line feed counts too
+	text[2] = 0x0a;
+	EXPECT(SearchChar(0x0c, text, 7) == 2);
+	text[2] = 0x0d;
+	EXPECT(SearchChar(0x0c, text, 7) == 2);
+	// backwards, counting from the end: the last character is 1 back
+	EXPECT(SearchCharBack('f', text + 7, 7) == 1);
+	EXPECT(SearchCharBack('a', text + 7, 7) == 7);
+	EXPECT(SearchCharBack('z', text + 7, 7) == -1);
+	// the first control character, and which it was
+	UniChar found = 0;
+	EXPECT(GetCtrlCharOffset(text, 7, &found) == 2 && found == 0x0d);
+	text[2] = 'x';
+	EXPECT(GetCtrlCharOffset(text, 7, &found) == -1);
+}
+
+
+static void
+TestChunkedChars()
+{
+	// chunks of eight characters, so that everything has to cross them
+	TestChars chars(8);
+	EXPECT(chars.Count() == 0);
+
+	UniChar buffer[64];
+	TXTextDescriptor source;
+
+	// the first text ever put in: there are no chunks at all, so it
+	// goes through InsertUsingExtraChunks
+	SetText(source, buffer, "Hello");
+	EXPECT(chars.Replace(0, 0, &source) == noErr);
+	EXPECT(chars.Count() == 5 && CharsAre(chars, "Hello"));
+	EXPECT(chars.fChunks->GetCount() == 1);
+
+	// more, which fits in the chunk that is there
+	SetText(source, buffer, ", world");
+	EXPECT(chars.Replace(5, 0, &source) == noErr);
+	EXPECT(CharsAre(chars, "Hello, world"));
+	EXPECT(chars.fChunks->GetCount() == 2);		// eight and four
+
+	// a long stretch, which takes several new chunks
+	SetText(source, buffer, " and everything in it, twice over");
+	EXPECT(chars.Replace(chars.Count(), 0, &source) == noErr);
+	EXPECT(CharsAre(chars, "Hello, world and everything in it, twice over"));
+	EXPECT(chars.Count() == 45);
+
+	// in the middle
+	SetText(source, buffer, "small ");
+	EXPECT(chars.Replace(7, 0, &source) == noErr);
+	EXPECT(CharsAre(chars, "Hello, small world and everything in it, twice over"));
+
+	// a character at a time
+	EXPECT(chars.GetChar(0) == 'H' && chars.GetChar(7) == 's');
+	EXPECT(chars.GetChar(chars.Count() - 1) == 'r');
+
+	// searching across the chunks
+	EXPECT(chars.SearchChar('w', 0, chars.Count()) == 13);
+	EXPECT(chars.SearchChar('z', 0, chars.Count()) == -1);
+	EXPECT(chars.SearchChar(',', 14, chars.Count() - 14) == 25);
+	EXPECT(chars.SearchCharBack('H', chars.Count(), chars.Count()) == chars.Count());
+	UniChar found = 0;
+	EXPECT(chars.GetCtrlCharOffset(0, chars.Count(), &found) == -1);
+
+	// copied out to a plain buffer
+	UniChar out[64];
+	TXTextDescriptor into;
+	into.Set(out, 5);
+	EXPECT(chars.CopyTo(&into, 7, 5) == noErr);
+	EXPECT(out[0] == 's' && out[4] == 'l');		// "small"
+
+	// a run to look at, which stops at the chunk it is in
+	long chunk = -1;
+	long have = 0;
+	UniChar* run = chars.AcquireCharChunk(0, &chunk, &have);
+	EXPECT(run != nil && chunk == 0 && have == 8 && run[0] == 'H');
+	chars.ReleaseCharChunk(chunk);
+	// and a line's worth, gathered when it crosses one
+	run = chars.GetLineChars(6, 20, &chunk);
+	EXPECT(run != nil && chunk == -1 && run[1] == 's');
+
+	// taking text out: the middle of the document
+	chars.Remove(7, 6);
+	EXPECT(CharsAre(chars, "Hello, world and everything in it, twice over"));
+	// across a chunk boundary
+	chars.Remove(12, 14);
+	EXPECT(CharsAre(chars, "Hello, worldg in it, twice over"));
+	// and all of it, which leaves no chunks behind
+	chars.Remove(0, chars.Count());
+	EXPECT(chars.Count() == 0);
+
+	// and the whole thing again, to show the storage came back clean
+	SetText(source, buffer, "one two three four five six seven");
+	EXPECT(chars.Replace(0, 0, &source) == noErr);
+	EXPECT(CharsAre(chars, "one two three four five six seven"));
+	// replacing a range by a longer one
+	SetText(source, buffer, "TWENTY-TWO");
+	EXPECT(chars.Replace(4, 3, &source) == noErr);
+	EXPECT(CharsAre(chars, "one TWENTY-TWO three four five six seven"));
+	// and by a shorter one
+	SetText(source, buffer, "2");
+	EXPECT(chars.Replace(4, 10, &source) == noErr);
+	EXPECT(CharsAre(chars, "one 2 three four five six seven"));
+
+	// every chunk that exists holds something, and they add up
+	long total = 0;
+	for (long i = 0; i < chars.fChunks->GetCount(); i++)
+	{
+		long len = chars.fChunks->GetRangeLen(i);
+		EXPECT(len > 0 && len <= 8);
+		total += len;
+	}
+	EXPECT(total == chars.Count());
+	EXPECT(chars.fChunks->GetLastRangeEnd() == chars.Count());
+}
+
+
 int
 main()
 {
@@ -371,6 +570,8 @@ main()
 	TestRanges();
 	TestAttrValues();
 	TestAttrObject();
+	TestSearchHelpers();
+	TestChunkedChars();
 	printf("test_TXArray: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;
 }

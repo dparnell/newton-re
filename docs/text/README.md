@@ -117,9 +117,86 @@ the same *kind*: the same object, or the same class id. A subclass with
 values to compare overrides it — `TXAdvancedRuler::IsEqual` compares its
 tabs.
 
+## The storage (`text/TXChars.h`)
+
+`TXChars` is the face: count the characters, replace a range, copy a
+range out, get one character, find one, ask for a run of them to look
+at. Everything above it — the formatter, the lines, the view — only ever
+talks to this.
+
+`TXChunkedChars` (0x0023288c) is the implementation that makes a long
+document possible. The text is kept in **chunks** of at most 512
+characters and a `TXRanges` holds where each chunk ends, so an edit
+touches one chunk or two rather than moving a whole document about. The
+chunks themselves are handed out by three virtuals — `GetChunkPtr`,
+`AllocateChunks`, `RemoveChunks` — which is how the same code works over
+a binary in the heap and over a large binary paged in from a store.
+
+`TXTextDescriptor` (0x00232820) is how text moves between them. It
+describes a source or a sink, which may be a plain `UniChar` buffer, a
+stream, or another `TXChars` at an offset, and one `CopyTo`
+(0x00232914) moves characters between any two of those — including a
+`TXChars` to itself, which is how the chunked storage ends up talking to
+its own chunks. Both ends keep a position, so a descriptor can be handed
+to one call after another and carry on where it left off.
+
+### Putting text in
+
+`Replace` (0x00232ad0) is the only way in, and it tries three things in
+turn, each of which answers whether it managed it:
+
+1. **`InsertInChunk`** (0x00232c60) — everything fits in the chunk it is
+   going into. One `MungeChunk` and the chunk's end moves.
+2. **`InsertUsingNearChunk`** (0x00231634) — the chunk and one of its
+   neighbours have room between them. Characters are first shuffled
+   across the boundary to make as much room in the chunk as the
+   neighbour can take, and the new text is then split between the two.
+   The neighbour before is tried first, then the one after.
+3. **`InsertUsingExtraChunks`** (0x00231970) — as many new chunks as it
+   takes are made after the one being written to. What was after the
+   insertion point is moved to the end of the last new chunk *first*, so
+   that it ends up where the new text will leave it, and the text is
+   then poured through the chunks a chunkful at a time.
+
+`MungeChunk` (0x00231eac) is what all three are made of: so many
+characters at an offset of one chunk replaced by so many from a
+descriptor. What follows them inside the chunk is moved by the
+difference first — and moved *back* if the source fails part way, which
+is what lets every insertion above it give up without having spoiled
+anything.
+
+A growth of more than ten characters asks `Preflight` first, so a
+subclass that must find the memory somewhere else (a store) can say no
+before anything has been touched.
+
+### Taking it out
+
+`Remove` (0x00231c4c) uses `TXRanges::SectRanges` to find what the
+stretch covers: the chunks covered end to end are unmade, and the two at
+its edges have their covered parts munged away. Then the chunks around
+the hole are run together again while any two of them will fit in one
+(`ConcatChunks` 0x00231e30), so that a document that has been edited for
+a while does not end up made of crumbs.
+
+### Looking at it
+
+`GetLineChars` (0x00232280) is what the formatter lays a line out from:
+at most 128 characters, answered *in place* when they all lie in one
+chunk — with the chunk's index, so the caller can release it — and
+gathered into `gTXLineCharsBuffer` when they cross one, with an index of
+-1 to say there is nothing to release. `AcquireCharChunk` is the same
+idea without the limit: as much as lies in one chunk.
+
+`SearchChar`, `SearchCharBack` and `GetCtrlCharOffset` walk the chunks
+one at a time over the plain-buffer versions (0x00234278 and following).
+The plain ones have a wrinkle worth knowing: asking for a *form feed*
+(0x0c) finds a carriage return (0x0d) **or** a line feed (0x0a), which
+is how text that came in with either line ending is read the same way.
+
 ## Not yet reconstructed
 
-The chunked character storage (`TXChars`, `TXChunkedChars`), the rulers
-and their tab arrays, `Textension` and the runs, the formatter and the
-lines, `TXView` itself and the forty-one `FTX...` natives that are its
-script face.
+`TXStream`, the engine's own byte stream — a text descriptor may be one
+at either end, so a descriptor that names a stream copies nothing for
+now. The rulers and their tab arrays, `Textension` and the runs, the
+formatter and the lines, `TXView` itself and the forty-one `FTX...`
+natives that are its script face.

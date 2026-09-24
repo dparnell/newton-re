@@ -8,6 +8,7 @@
 add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
+    TXChars.cpp
 )
 target_link_libraries(text PUBLIC newton_config utility frames)
 target_include_directories(text PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
