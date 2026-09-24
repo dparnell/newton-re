@@ -1656,12 +1656,65 @@ FViewIntoBitmap(RefArg rcvr, RefArg srcRect, RefArg dstRect, RefArg bitmap)
 	return NILREF;
 }
 
+// ROM 0x001a0d6c FPointsToArray__FRC6RefVarT1
+// PointsToArray(shape): a 'polygonShape binary opened out into the array
+// a script reads - the verb, the number of points, and then the points
+// themselves, each as its h and then its v.
+static Ref
+FPointsToArray(RefArg /*rcvr*/, RefArg shape)
+{
+	if (!EQRef(ClassOf(shape), RSSYMpolygonshape))
+		ThrowMsg("not a polygonShape");
+	LockRef(shape);
+	const short* header = (const short*) BinaryData(shape);
+	long count = header[1];
+	RefVar result(MakeArray(count * 2 + 2));
+	SetArraySlotRef(result, 0, MAKEINT(header[0]));
+	SetArraySlotRef(result, 1, MAKEINT(count));
+	const Point* points = (const Point*) (BinaryData(shape) + 4);
+	for (long i = 0; i < count; i++)
+	{
+		SetArraySlotRef(result, 2 + i * 2, MAKEINT(points[i].h));
+		SetArraySlotRef(result, 3 + i * 2, MAKEINT(points[i].v));
+	}
+	UnlockRef(shape);
+	return result;
+}
+
+
+// ROM 0x001a0f28 FArrayToPoints__FRC6RefVarT1
+// ArrayToPoints(array): and back again.  The array's second slot says
+// how many points there are, which is what the binary is sized from -
+// so an array that says more than it holds makes a longer shape.
+static Ref
+FArrayToPoints(RefArg /*rcvr*/, RefArg array)
+{
+	long length = Length(array);
+	long count = RINT(RefVar(GetArraySlotRef(array, 1)));
+	RefVar shape(AllocateBinary(RSSYMpolygonshape, count * 4 + 4));
+	LockRef(shape);
+	short* header = (short*) BinaryData(shape);
+	header[0] = (short) RINT(RefVar(GetArraySlotRef(array, 0)));
+	header[1] = (short) count;
+	Point* points = (Point*) (BinaryData(shape) + 4);
+	for (long i = 2; i + 1 < length; i += 2)
+	{
+		points[(i - 2) / 2].h = (short) RINT(RefVar(GetArraySlotRef(array, i)));
+		points[(i - 2) / 2].v = (short) RINT(RefVar(GetArraySlotRef(array, i + 1)));
+	}
+	UnlockRef(shape);
+	return shape;
+}
+
+
 void
 RegisterShapeNatives(void)
 {
 	RegisterNativeFunction("FDrawShape", (void*) FDrawShape, 2);
 	RegisterNativeFunction("FDrawIntoBitmap", (void*) FDrawIntoBitmap, 3);
 	RegisterNativeFunction("FViewIntoBitmap", (void*) FViewIntoBitmap, 3);
+	RegisterNativeFunction("FPointsToArray__FRC6RefVarT1", (void*) FPointsToArray, 1);
+	RegisterNativeFunction("FArrayToPoints__FRC6RefVarT1", (void*) FArrayToPoints, 1);
 	RegisterNativeFunction("FHitShape", (void*) FHitShape, 3);
 	RegisterNativeFunction("FMakeTextLines", (void*) FMakeTextLines, 4);
 	RegisterNativeFunction("FMakeRect", (void*) FMakeRect, 4);
@@ -1702,10 +1755,13 @@ MakePolygonForm(const Point* points, long count, long verb, const Rect& box, lon
 		RefVar shape(AllocateBinary(RSSYMpolygonshape, count * (long) sizeof(Point) + 4));
 		UByte* data = (UByte*) BinaryData(shape);
 		BlockMove(points, data + 4, count * (long) sizeof(Point));
-		data[0] = (UByte) (verb >> 8);
-		data[1] = (UByte) verb;
-		data[2] = (UByte) (count >> 8);
-		data[3] = (UByte) count;
+		// (host: the verb and the count are written as the shorts they
+		//  are read back as - DrawOneShape and PointsToArray both read
+		//  them that way, and the points after them are a host Point
+		//  array.  The ROM writes them a byte at a time, which comes to
+		//  the same thing on a big-endian machine and not on this one.)
+		((short*) data)[0] = (short) verb;
+		((short*) data)[1] = (short) count;
 		SetFrameSlot(form, RSSYMpoints, shape);
 	}
 	SetFrameSlot(form, RSSYMviewbounds, RefVar(ToObject(box)));

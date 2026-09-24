@@ -8,6 +8,7 @@
 */
 
 #include "Dictionaries.h"
+#include "NativeFunctions.h"
 #include "Airus.h"
 #include "ROMDictionaryData.h"
 #include "Locale.h"			// IntlResources
@@ -733,4 +734,41 @@ LookupWordOrVariant(const UniChar* word, ULong* attribute, UniChar* variant)
 	}
 	DoneChains(chains);
 	return found;
+}
+
+
+/*------------------------------------------------------------------------------
+	W h a t   a   s c r i p t   a s k s   o f   t h e   d i c t i o n a r i e s
+------------------------------------------------------------------------------*/
+
+// ROM 0x0008eb04 FAirusResult
+// dict:result() - what the last call into the dictionary engine left
+// behind (Airus.h's airusResult): 0 for done, -15 for a dictionary as
+// full as its limit, and so on.
+static Ref
+FAirusResult(RefArg /*rcvr*/)
+{
+	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0007d484 DumpDict__FRC6RefVar
+// DumpDict(): the Assistant's dynamic dictionary frame, whatever it
+// holds.  The ROM's function ignores its argument and answers that one
+// global.
+//
+// NOT YET RECONSTRUCTED: gDynaDictionaryFrame, which the Assistant's
+// lexical side fills in; nil until there is one.
+static Ref
+FDumpDict(RefArg /*rcvr*/)
+{
+	return NILREF;
+}
+
+
+void
+RegisterDictionaryNatives(void)
+{
+	RegisterNativeFunction("FAirusResult", (void*) FAirusResult, 0);
+	RegisterNativeFunction("DumpDict__FRC6RefVar", (void*) FDumpDict, 0);
 }

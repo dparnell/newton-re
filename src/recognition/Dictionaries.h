@@ -137,4 +137,6 @@ long	LookupWordOrVariant(const UniChar* word, ULong* attribute, UniChar* variant
 // The index'th capitalisation of a word.  ==> whether there was one.
 Boolean	BuildCaseVariant(const UniChar* word, ULong flags, ULong index, UniChar* out);	// ROM 0x0013f2fc BuildCaseVariant__FPUsUlT2T1
 
+void	RegisterDictionaryNatives(void);			// result, DumpDict (Dictionaries.cpp)
+
 #endif	/* __DICTIONARIES_H */

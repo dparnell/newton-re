@@ -7,6 +7,7 @@
 */
 
 #include "ScriptBoot.h"
+#include "NativeFunctions.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "ROMConstants.h"
@@ -130,4 +131,22 @@ RunInitScripts(void)
 		ReportSwallowed("RunInitScripts", CurrentException());
 	}
 	end_try;
+}
+
+
+// ROM 0x001f1b5c FRunInitScripts__FRC6RefVar
+// RunInitScripts(): the InstallScript of every part that is installed
+// run, which is what makes the ROM's soups.
+static Ref
+FRunInitScripts(RefArg /*rcvr*/)
+{
+	RunInitScripts();
+	return NILREF;
+}
+
+
+void
+RegisterScriptBootNatives(void)
+{
+	RegisterNativeFunction("FRunInitScripts__FRC6RefVar", (void*) FRunInitScripts, 0);
 }

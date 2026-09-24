@@ -36,6 +36,8 @@
 #include "StrokeBundle.h"
 #include "WordList.h"
 #include "WordInfo.h"
+#include "Dictionaries.h"
+#include "ScriptBoot.h"
 #include "RecConfig.h"
 
 
@@ -45,6 +47,7 @@ RegisterAllNatives(void)
 	// the frames core: arithmetic, strings, arrays, the compiler, the printer
 	RegisterBuiltinNatives();
 	RegisterLargeBinaryNatives();
+	RegisterScriptBootNatives();
 	RegisterSortTableNatives();
 
 	// text and the view system
@@ -67,6 +70,7 @@ RegisterAllNatives(void)
 	RegisterStrokeBundleNatives();
 	RegisterWordListNatives();
 	RegisterWordInfoNatives();
+	RegisterDictionaryNatives();
 	RegisterRecConfigNatives();
 	RegisterInkNatives();
 

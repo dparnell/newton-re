@@ -35,4 +35,6 @@ void	InitScriptGlobals(void);				// ROM 0x001f1828 InitScriptGlobals__Fv
 void	RunInitScripts(void);					// ROM 0x001f1ad4 RunInitScripts__Fv
 void	InitFormFunctions(RefArg functions);	// ROM 0x001eccf0 InitFormFunctions__FRC6RefVar (nothing, in this ROM)
 
+void	RegisterScriptBootNatives(void);		// RunInitScripts (ScriptBoot.cpp)
+
 #endif	/* __SCRIPTBOOT_H */

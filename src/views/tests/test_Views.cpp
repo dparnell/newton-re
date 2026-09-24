@@ -3594,6 +3594,14 @@ TestSelection()
 	EXPECT(RGBtoGray(0x8080, 0x8080, 0x8080, 8, 8) > 0x70 && RGBtoGray(0x8080, 0x8080, 0x8080, 8, 8) < 0x90);
 	// the large-binary questions: an ordinary binary is not one
 	EXPECT(ISNIL(Eval("IsVBO(\"hello\")")) && ISNIL(Eval("GetVBOStore(\"hello\")")));
+	// a polygon shape opened out into an array and put back
+	Eval("pts := ArrayToPoints([3, 2, 10, 20, 30, 40])");
+	EXPECT(EQRef(ClassOf(Eval("pts")), Intern((char*) "polygonShape")));
+	EXPECT(RINT(Eval("Length(PointsToArray(pts))")) == 6);
+	EXPECT(RINT(Eval("PointsToArray(pts)[0]")) == 3 && RINT(Eval("PointsToArray(pts)[1]")) == 2);
+	EXPECT(RINT(Eval("PointsToArray(pts)[2]")) == 10 && RINT(Eval("PointsToArray(pts)[3]")) == 20);
+	EXPECT(RINT(Eval("PointsToArray(pts)[5]")) == 40);
+	Eval("pts := nil");
 	EXPECT(RINT(Eval("GetFontFace(MakeCompactFont('geneva, 10, 2))")) == 2);
 	EXPECT(ISNIL(Eval("GetFontFamilyNum({family: 'nosuchfont, size: 9, face: 0})")));
 	// a font frame that does not say what face it is answers nil, not 0

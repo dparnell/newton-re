@@ -520,6 +520,18 @@ FDisposeTrainingData(RefArg /*rcvr*/, RefArg /*data*/)
 	return NILREF;
 }
 
+// ROM 0x0019d1e0 ReadDomainOptions
+// ReadDomainOptions(): the writer's recognition preferences read again
+// and handed to the domains - the same thing ReadCursiveOptions does,
+// under the name the built-in functions frame holds.
+static Ref
+FReadDomainOptions(RefArg rcvr)
+{
+	FReadCursiveOptions(rcvr);
+	return NILREF;
+}
+
+
 // ROM 0x001aa7c8 FAddAutoAdd
 // AddAutoAdd(word): a word added to the writer's dictionaries on their
 // behalf.  ==> whether it was added.
@@ -605,6 +617,7 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FIsTabletCalibrationNeeded", (void*) FIsTabletCalibrationNeeded, 0);
 	RegisterNativeFunction("FCalibrateTablet__FRC6RefVar", (void*) FCalibrateTablet, 0);
 	RegisterNativeFunction("FGetEditArray__FRC6RefVarT1", (void*) FGetEditArray, 1);
+	RegisterNativeFunction("ReadDomainOptions", (void*) FReadDomainOptions, 0);
 	RegisterNativeFunction("FAddAutoAdd", (void*) FAddAutoAdd, 1);
 	RegisterNativeFunction("FRemoveAutoAdd", (void*) FRemoveAutoAdd, 1);
 	RegisterNativeFunction("FTabletBufferEmpty", (void*) FTabletBufferEmpty, 0);
