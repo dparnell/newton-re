@@ -625,3 +625,16 @@ TUnitPublic::Strokes(void)
 	RefVar info(WordInfo());
 	return GetFrameSlot(info, RSSYMstrokes);
 }
+
+
+// ROM 0x0022d198 RoughShape__11TUnitPublicFv
+// The unit's first stroke as a polygon, made once and kept.  It is the
+// outline a hilite stroke is walked along (TParagraphView::HiliteRange)
+// and what the shape recogniser would fit a shape to.
+Handle
+TUnitPublic::RoughShape(void)
+{
+	if (fRoughShape == nil)
+		fRoughShape = AsPolygon(fUnit->GetStroke(0));
+	return fRoughShape;
+}

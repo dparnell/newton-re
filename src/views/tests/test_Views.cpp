@@ -5692,6 +5692,116 @@ TestClipboard()
 }
 
 
+// The hilite stroke: the pen held still on a page and then drawn across
+// it, which is how the Newton is told what to select.
+static void
+TestHiliteStroke()
+{
+	// a page with a paragraph on it
+	TView* page = ViewOf("ctxHP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 60}})");
+	TParagraphView* para = (TParagraphView*) ViewOf(
+		"ctxHT := AddView(ctxHP, {viewClass: 81, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 4, top: 4, right: 156, bottom: 40}, viewFont: espy12, "
+		"text: \"the quick brown fox\"})");
+	EXPECT(page != nil && para != nil && para->DerivedFrom(clParagraphView));
+	Refresh();
+	if (para == nil)
+		return;
+	EXPECT(!para->Hilited());
+
+	// where the words are: draw from the "q" of quick to the "f" of fox
+	Rect from;
+	Rect to;
+	para->OffsetToBounds(4, &from);				// the q
+	para->OffsetToBounds(16, &to);				// the f
+	EXPECT(to.left > from.left);
+	long y = (long) ((para->viewBounds.top + para->viewBounds.bottom) / 2);
+
+	// the pen held still for more than 45 samples is a hilite click; the
+	// stationary samples are fed first, so that the click is delivered
+	// while the rest of the stroke is still to come - the root view's
+	// Hiliter draws the line by reading the stroke as the pen moves
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(from.left, y, 0);
+	for (long i = 0; i < 60; i++)
+		HostTabletQueuePenMove(from.left, y);
+	for (long x = from.left; x <= to.left; x += 3)
+		HostTabletQueuePenMove(x, y);
+	HostTabletQueuePenUp(0);
+	for (long i = 0; i < 61; i++)
+		HostTabletPump();
+	gRecognition.Idle();
+
+	// the words the line went through are selected, and the page knows
+	// which of its children owns the selection
+	EXPECT(para->Hilited());
+	EXPECT(RINT(Eval("Length(ctxHT.hilites)")) == 1);
+	TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(RefVar(para->FirstHilite()));
+	EXPECT(hilite != nil);
+	if (hilite != nil)
+	{
+		// "quick brown " - from the start of the word the line began on
+		// to the boundary before the word it ended on, because
+		// PointToWordBoundary is asked with a bias towards the left
+		EXPECT(hilite->fStart == 4);
+		EXPECT(hilite->fEnd == 15);
+	}
+
+	para->RemoveAllHilites();
+	EXPECT(!para->Hilited());
+
+	Eval("RemoveView(GetRoot(), ctxHP)");
+	gRootView->Dirty(nil);				// (the line was drawn on the screen, not into a view)
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "the hilited page closed"));
+
+	// a lasso - a stroke that goes round something and comes back to
+	// where it started - selects the whole of what it went round.  Here
+	// the view answers the gesture itself and asks for the hilite with
+	// HiliteViewChildren, which is what a script does when it wants the
+	// selection without the view system deciding.
+	TView* box = ViewOf("ctxHB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 60}, asked: nil, "
+		"viewGestureScript: func(unit, kind) begin asked := kind; :HiliteViewChildren(unit) end})");
+	TParagraphView* other = (TParagraphView*) ViewOf(
+		"ctxHT2 := AddView(ctxHB, {viewClass: 81, viewFlags: 1 + 0x200, "
+		"viewBounds: {left: 20, top: 15, right: 140, bottom: 35}, viewFont: espy12, "
+		"text: \"lasso me\"})");
+	EXPECT(box != nil && other != nil);
+	Refresh();
+	if (other == nil)
+		return;
+
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(6, 6, 0);
+	for (long i = 0; i < 60; i++)
+		HostTabletQueuePenMove(6, 6);
+	for (long x = 6; x <= 150; x += 6)			// right along the top
+		HostTabletQueuePenMove(x, 6);
+	for (long y = 6; y <= 50; y += 6)			// down the right
+		HostTabletQueuePenMove(150, y);
+	for (long x = 150; x >= 6; x -= 6)			// back along the bottom
+		HostTabletQueuePenMove(x, 50);
+	for (long y = 50; y >= 8; y -= 6)			// and up to where it began
+		HostTabletQueuePenMove(6, y);
+	HostTabletQueuePenUp(0);
+	for (long i = 0; i < 61; i++)
+		HostTabletPump();
+	gRecognition.Idle();
+
+	EXPECT(RINT(Eval("ctxHB.asked")) == aeGesture2f);
+	EXPECT(other->Hilited());
+	TParagraphHilite* all = (TParagraphHilite*) RefToAddress(RefVar(other->FirstHilite()));
+	EXPECT(all != nil && all->fStart == 0 && all->fEnd == other->TextLength());
+
+	Eval("RemoveView(GetRoot(), ctxHB)");
+	gRootView->Dirty(nil);
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "the lassoed page closed"));
+}
+
+
 int
 main()
 {
@@ -5831,6 +5941,7 @@ main()
 		TestWordInfo();
 		TestInsertItems();
 		TestClipboard();
+		TestHiliteStroke();
 	}
 	newton_catch_all
 	{

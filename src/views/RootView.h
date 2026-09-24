@@ -90,6 +90,10 @@ public:
 	void		ForgetAboutView(TView* view);							// ROM 0x001b1e0c ForgetAboutView__9TRootViewFP5TView
 	void		CaretViewGone(void);									// ROM 0x001b1d34 CaretViewGone__9TRootViewFv
 	Boolean		ViewContainsCaretView(TView* view);						// ROM 0x00265508 ViewContainsCaretView__FP5TView
+	// the hilite stroke: the line the pen draws across a view to select
+	// what it goes through
+	void		Hiliter(TUnitPublic* unit, TView* view);				// ROM 0x001b2e64 Hiliter__9TRootViewFP11TUnitPublicP5TView
+	void		SetHilitedView(TView* view);							// ROM 0x001b39e0 SetHilitedView__9TRootViewFP5TView - the view that owns the selection
 	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b56d8 SetPopup__9TRootViewFP5TViewUc
 	// the clipboards and their icons: two parallel arrays of contexts,
 	// front first (the icon at index i belongs to the clipboard at i)
@@ -147,7 +151,7 @@ public:
 	long		ScreenWidth(void) const;								// host: the port's width (the ROM's screenWidth global)
 	long		ScreenHeight(void) const;
 
-	TView*			fHiliter;			// +0x30  the view owning the hilites (NOT YET)
+	TView*			fHiliter;			// +0x30  the view owning the hilites
 	TUpdateRegion*	fUpdateRegions;		// +0x34  three of them
 	Rect			fDirtyScreen;		// +0x38  what the screen must show again (SmartScreenDirty; NOT YET: the screen)
 	CDynamicArray*	fIdlers;			// +0x40  the IdlerRecords

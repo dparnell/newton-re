@@ -962,3 +962,47 @@ otherwise purely geometric functions — and it is the only place in the
 view system that has to know about it.
 
 *`src/views/ClipboardView.cpp`.*
+
+## The hilite line is drawn at both ends only
+
+The pen held still on something and then drawn across it is how the
+Newton is told what to select, and the line the pen leaves behind is the
+only feedback there is. `DrawHiliteLine` (0x000a37ec) draws one segment
+of it, stepping a pixel at a time along whichever axis the segment moves
+further in — and then does almost none of the drawing:
+
+```c
+if (i <= 3)                 // the first four steps
+{
+    FillOval(&oval, pattern);
+    corner = oval.topLeft;
+}
+else if (steps - 4 > i)     // everything in the middle
+    pending = true;
+else                        // the last four
+{
+    if (pending)
+    {
+        MoveTo(corner.h, corner.v);
+        LineTo(oval.left, oval.top);
+        pending = false;
+    }
+    FillOval(&oval, pattern);
+}
+```
+
+Only the first four and the last four steps are filled ovals. Everything
+between them is one straight `LineTo` from the fourth oval to the
+fifth-from-last. A segment two hundred pixels long costs eight ovals and
+one line rather than two hundred ovals, and looks identical, because an
+eight-pixel round pen swept along a straight path is a rectangle with a
+round cap at each end — and the caps are the only places the roundness
+shows.
+
+The same function draws the *first* segment of a stroke with a pen four
+pixels fatter and then shrinks it back on the next step, which is what
+puts a blob at the point where the pen was held still: the gesture
+announces itself at the moment it is recognised, before the writer has
+moved at all.
+
+*`src/views/View.cpp`.*

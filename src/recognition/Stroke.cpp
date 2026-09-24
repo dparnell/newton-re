@@ -8,6 +8,8 @@
 */
 
 #include "Stroke.h"
+#include "Polygons.h"
+#include "Ports.h"
 #include "Draw.h"
 #include "Rects.h"
 #include "Screen.h"
@@ -876,4 +878,31 @@ TStrokePublic::Invalidate(void)
 	Rect inked;
 	GetInkedRect(&inked);
 	gRootView->SmartInvalidate(inked);
+}
+
+
+// ROM 0x00145e38 AsPolygon__FP7TStroke
+// The stroke as a QuickDraw polygon in a handle of its own: its points
+// rounded to pixels and moved to the top left of its box, which is what
+// the polygon's own bounds hold.  ==> nil when there is no memory.
+Handle
+AsPolygon(TStroke* stroke)
+{
+	long count = stroke->Count();
+	long size = count * 4 + 12;
+	Handle h = NewHandle(size);
+	if (h == nil)
+		return nil;
+	SetHandleName(h, 'AsPl');
+	Polygon* poly = (Polygon*) *h;
+	poly->polySize = (short) size;
+	GetStrokeRect(stroke, &poly->polyBBox);
+	SamplePt* sample = stroke->GetPoint(0);
+	for (long i = 0; i < count; i++)
+	{
+		poly->polyPoints[i].h = (short) (RoundFixed(SampleX(sample)) - poly->polyBBox.left);
+		poly->polyPoints[i].v = (short) (RoundFixed(SampleY(sample)) - poly->polyBBox.top);
+		sample++;
+	}
+	return h;
 }

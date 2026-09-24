@@ -131,6 +131,8 @@ long	CountTStrokes(TStroke** strokes);					// ROM 0x001a3420 CountTStrokes__FPP7
 void	DisposeTStrokes(TStroke** strokes);					// ROM 0x001a3448 DisposeTStrokes__FPP7TStroke
 
 void	GetStrokeRect(TStroke* stroke, Rect* rect);			// ROM 0x001a3658 GetStrokeRect__FP7TStrokeP5TRect - the box in pixels, at least a pixel each way
+// The stroke as a QuickDraw polygon in a handle of its own.
+Handle	AsPolygon(TStroke* stroke);							// ROM 0x00145e38 AsPolygon__FP7TStroke
 void	AdjustForInk(Rect* rect);							// ROM 0x0022de2c AdjustForInk__FP5TRect - let out for the pen size
 
 class TStrokePublic

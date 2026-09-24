@@ -17,7 +17,7 @@
 				NOT YET RECONSTRUCTED: the word side (MakeWordList,
 				ExtractWords, Word, Words, WordScore, WordInfo, SetWordBase,
 				Strokes, TrainingData: TWordList, the dictionaries), the
-				shape side (RoughShape, CleanShape, ShapeType: AsPolygon,
+				shape side (CleanShape, ShapeType:
 				TGeneralShapeUnit), the arbiter's whole-screen mode that FindView looks
 				at (gArbiter), and EndTime's controller stroke (the unit's
 				own end time is used).
@@ -70,8 +70,9 @@ public:
 	Ref					Strokes(void);							// ROM 0x0022d870 Strokes__11TUnitPublicFv - the word info frame's stroke bundle
 	Ref					TrainingData(void);						// ROM 0x0022d8b4 TrainingData__11TUnitPublicFv - what the recogniser would learn from
 
+	Handle				RoughShape(void);						// ROM 0x0022d198 RoughShape__11TUnitPublicFv - the first stroke as a polygon, made once
+
 	// NOT YET RECONSTRUCTED
-	Handle				RoughShape(void);						// ROM 0x0022d198 RoughShape__11TUnitPublicFv
 	Handle				CleanShape(void);						// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv
 	ULong				ShapeType(void);						// ROM 0x0022d234 ShapeType__11TUnitPublicFv
 

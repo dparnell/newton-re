@@ -75,6 +75,7 @@ public:
 	long			CountHilites(void);						// ROM 0x000a7abc CountHilites__9TEditViewFv
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
+	Boolean			AddHiliter(TUnitPublic* unit);			// ROM 0x000a6fb0 AddHiliter__9TEditViewFP11TUnitPublic - a hilite stroke offered to the children
 	TView*			TextContainingPoint(Point& pt, Rect* box, long* score);	// ROM 0x000a8844 TextContainingPoint__9TEditViewFR6TPointP5TRectPl
 	// Ink handed to the page: a unit's stroke, a bundle of strokes from
 	// the recogniser, or the strokes themselves.  All three end in the
@@ -128,7 +129,7 @@ public:
 	Point			fTapPoint;			// +0x44  where that tap was
 	// +0x46..0x47 not yet known
 	long			fTextFlags;			// +0x48  GetInputViewTextFlags of the view's own
-	Boolean			fUnknown4C;			// +0x4c  0 from the constructor
+	Boolean			fHilitingChildren;	// +0x4c  AddHiliter is carrying a hilite out on the children (the ROM sets it and nothing in its TEditView reads it)
 };
 
 

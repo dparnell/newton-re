@@ -324,6 +324,15 @@ public:
 	void		AdjustHilites(long offset, long delta);					// ROM 0x0016a824 AdjustHilites__14TParagraphViewFlT1
 	void		ChangeStyleOfSelection(RefArg style);					// ROM 0x00179a68 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar - the selected text restyled
 	void		ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw);	// ROM 0x00179464 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
+	// What a hilite stroke over the paragraph selects, in the order the
+	// four kinds are tried.
+	virtual void	HiliteAll(void);									// ROM 0x00169d8c HiliteAll__14TParagraphViewFv - the whole of the text
+	virtual long	HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt);	// ROM 0x00169b0c HandleHilite__14TParagraphViewFP11TUnitPubliclUc
+	Boolean		HiliteWords(TUnitPublic* unit, Boolean reallyDoIt);		// ROM 0x0016a400 HiliteWords__14TParagraphViewFP11TUnitPublicUc - answers nothing, as the ROM does
+	Boolean		HiliteParagraph(TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x00169c0c HiliteParagraph__14TParagraphViewFP11TUnitPublicUc
+	Boolean		HiliteLines(TUnitPublic* unit, Boolean reallyDoIt);		// ROM 0x00169da0 HiliteLines__14TParagraphViewFP11TUnitPublicUc
+	Boolean		HiliteRange(TUnitPublic* unit, Boolean reallyDoIt);		// ROM 0x00169ec4 HiliteRange__14TParagraphViewFP11TUnitPublicUc
+	long		FindFirstWordHitByHilite(const Point* points, long count, Point offset, Boolean fromEnd);	// ROM 0x00169fbc FindFirstWordHitByHilite__14TParagraphViewFP6TPointl6TPointUc
 	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016a49c MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
 	void		DrawHilites(Boolean scaled);							// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
 	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once

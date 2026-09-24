@@ -7,6 +7,7 @@
 */
 
 #include "ParagraphView.h"
+#include "Polygons.h"
 #include "Ink.h"
 #include "InkShapes.h"
 #include "Words.h"			// IsPunctSymbol
@@ -1397,6 +1398,222 @@ TParagraphView::SetupArea(TParagraphHilite* hilite)
 	TRegionVar rgn;
 	SelectionRegion(hilite->fStart, hilite->fEnd, rgn);
 	hilite->SetArea(rgn);
+}
+
+
+// ROM 0x00169b0c HandleHilite__14TParagraphViewFP11TUnitPubliclUc
+// What a hilite stroke over a paragraph selects, in the order the four
+// kinds are tried: the words it runs through (6), the whole paragraph
+// (1), whole lines (2), or a range of characters (3).  A kind other than
+// -1 asks only about that one.  ==> the kind taken, or 0.
+long
+TParagraphView::HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt)
+{
+	if (fLines == nil)
+		CreateAllCaches();
+	Rect box;
+	unit->Bounds(&box);
+	if (Overlaps(&viewBounds, &box))
+	{
+		if ((kind == 6 || kind == -1) && HiliteWords(unit, reallyDoIt))
+			return 6;
+		if ((kind == 1 || kind == -1) && HiliteParagraph(unit, reallyDoIt))
+			return 1;
+		if ((kind == 2 || kind == -1) && HiliteLines(unit, reallyDoIt))
+			return 2;
+		if ((kind == 3 || kind == -1) && HiliteRange(unit, reallyDoIt))
+			return 3;
+	}
+	return 0;
+}
+
+
+// ROM 0x0016a400 HiliteWords__14TParagraphViewFP11TUnitPublicUc
+// Kind 6, the words the stroke runs through - which the ROM does not do:
+// the function is `mov r0,#0; mov pc,lr`, so nothing ever takes a 6 and
+// the next kind is always tried.  (Kept as the ROM has it.)
+Boolean
+TParagraphView::HiliteWords(TUnitPublic* /*unit*/, Boolean /*reallyDoIt*/)
+{
+	return false;
+}
+
+
+// ROM 0x00169c0c HiliteParagraph__14TParagraphViewFP11TUnitPublicUc
+// Kind 1, the whole paragraph: the stroke has to cover more than 60 per
+// cent of the text's box.  A stroke at least twice as tall as it is
+// wide, drawn between the view's left and right edges, is judged by its
+// vertical extent alone - which is how a line drawn down the margin
+// takes the paragraph.  An empty paragraph takes nothing.
+Boolean
+TParagraphView::HiliteParagraph(TUnitPublic* unit, Boolean reallyDoIt)
+{
+	if ((Length(RefVar(Text())) - 2) / 2 == 0)
+		return false;
+	Rect box;
+	unit->Bounds(&box);
+	Rect text = fCachedBounds;
+	Rect mine = viewBounds;
+	Boolean covered = CoveredBy(&text, &box) > 60;
+	if (!covered)
+	{
+		if (box.bottom - box.top < 2 * (box.right - box.left)
+			|| box.left < mine.left || box.right > mine.right)
+			return false;
+		Rect flat = box;
+		flat.left = 0;
+		flat.right = 1;
+		Rect flatText = text;
+		flatText.left = 0;
+		flatText.right = 1;
+		covered = CoveredBy(&flatText, &flat) > 60;
+	}
+	if (covered && reallyDoIt)
+		HiliteAll();
+	return covered;
+}
+
+
+// ROM 0x00169da0 HiliteLines__14TParagraphViewFP11TUnitPublicUc
+// Kind 2, whole lines: a stroke at least twice as tall as it is wide
+// that covers half of each of a run of lines takes them all.  It is
+// judged by its vertical extent alone, so it does not matter where
+// across the paragraph it was drawn; the run ends at the first line the
+// stroke does not cover.
+Boolean
+TParagraphView::HiliteLines(TUnitPublic* unit, Boolean reallyDoIt)
+{
+	Rect box;
+	unit->Bounds(&box);
+	if (box.bottom - box.top < 2 * (box.right - box.left))
+		return false;
+	long start = -1;
+	long end = -1;
+	box.left = 0;
+	box.right = 1;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		Rect line = Line(i).fBounds;
+		line.left = 0;
+		line.right = 1;
+		if (CoveredBy(&line, &box) >= 50)
+		{
+			if (start == -1)
+				start = Line(i).fStart;
+			end = Line(i).fEnd;
+		}
+		else if (start != -1)
+			break;
+	}
+	if (start == -1)
+		return false;
+	if (reallyDoIt)
+		MakeHilite(start, end, true);
+	return true;
+}
+
+
+// ROM 0x00169fbc FindFirstWordHitByHilite__14TParagraphViewFP6TPointl6TPointUc
+// The first word boundary the hilite stroke's outline runs through,
+// walking the polygon's points from one end - or, for `fromEnd`, from
+// the other - and stepping a pixel at a time along any segment that
+// moves more than one pixel across.  Each point is offset by the
+// polygon's top left, which is what puts it in the view's coordinates.
+// ==> the character offset, or -1.
+long
+TParagraphView::FindFirstWordHitByHilite(const Point* points, long count, Point offset, Boolean fromEnd)
+{
+	const Point* p = fromEnd ? points + count - 1 : points;
+	Point cur;
+	cur.h = (short) (p->h + offset.h);
+	cur.v = (short) (p->v + offset.v);
+	long found = -1;
+	for (long i = 0; i < count; i++)
+	{
+		Point next;
+		next.h = (short) (p->h + offset.h);
+		next.v = (short) (p->v + offset.v);
+		long dh = next.h - cur.h;
+		if (dh > 1 || dh < -1)
+		{
+			long steps = dh < 0 ? -dh : dh;
+			short hStep = (short) (dh > 0 ? 1 : -1);
+			short vStep = (short) ((next.v - cur.v) / steps);
+			Point walk;
+			walk.h = (short) (cur.h + hStep);
+			walk.v = (short) (cur.v + vStep);
+			for (long j = 0; j < steps; j++)
+			{
+				found = PointToWordBoundary(walk, -50, nil);
+				if (found >= 0)
+					break;
+				walk.v = (short) (walk.v + vStep);
+				walk.h = (short) (walk.h + hStep);
+			}
+			if (found >= 0)
+				return found;
+		}
+		found = PointToWordBoundary(next, -50, nil);
+		if (found >= 0)
+			return found;
+		p = fromEnd ? p - 1 : p + 1;
+		cur = next;
+	}
+	return found;
+}
+
+
+// ROM 0x00169ec4 HiliteRange__14TParagraphViewFP11TUnitPublicUc
+// Kind 3, a range of characters: the stroke's rough outline is walked
+// from each end for the first word boundary it runs through, and
+// everything between the two is selected.  The two ends finding the same
+// boundary - or either finding none - means the stroke crossed no text.
+Boolean
+TParagraphView::HiliteRange(TUnitPublic* unit, Boolean reallyDoIt)
+{
+	Rect box;
+	unit->Bounds(&box);
+	if (!Overlaps(&viewBounds, &box))
+		return false;
+	Handle shape = unit->RoughShape();
+	if (shape == nil)
+		return false;
+	Polygon* poly = (Polygon*) *shape;
+	Point* points = poly->polyPoints;
+	long count = PolyPointCount(poly);
+	Point offset;
+	offset.v = poly->polyBBox.top;
+	offset.h = poly->polyBBox.left;
+	long first = FindFirstWordHitByHilite(points, count, offset, false);
+	if (first < 0)
+		return false;
+	long last = FindFirstWordHitByHilite(points, count, offset, true);
+	if (last < 0)
+		first = last;
+	if (first == last)
+		return false;
+	if (reallyDoIt)
+	{
+		long from = first;
+		long to = last;
+		if (from > to)
+		{
+			from = last;
+			to = first;
+		}
+		MakeHilite(from, to, true);
+	}
+	return true;
+}
+
+
+// ROM 0x00169d8c HiliteAll__14TParagraphViewFv
+// The whole of the text selected.  The ROM asks for characters 0 to
+// 60000 and lets MakeHilite cut the end back to the text's length.
+void
+TParagraphView::HiliteAll(void)
+{
+	MakeHilite(0, 0xea60, true);
 }
 
 

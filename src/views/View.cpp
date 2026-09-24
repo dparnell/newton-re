@@ -331,10 +331,24 @@ TView::~TView()
 
 
 // ROM 0x00268bcc DoCommand__5TViewFRC6RefVar
+// The view answers the command itself, and a command it does not take
+// goes on to its parent - which is how a command posted to the view
+// under the pen reaches the root view (the hilite stroke) or the
+// application (the editing commands).  The root is its own parent, which
+// is where the walk stops.
+//
+// A RealDoCommand that answers 2 stops the walk and yet answers `not
+// taken` to the caller, which is how a view swallows a command without
+// letting anything else have it.
 Boolean
 TView::DoCommand(RefArg cmd)
 {
-	return RealDoCommand(cmd);
+	long result = RealDoCommand(cmd);
+	if (result == 0 && fParent != this)
+		result = fParent->DoCommand(cmd);
+	if (result == 2)
+		result = 0;
+	return result != 0;
 }
 
 
@@ -616,7 +630,7 @@ TView::RealDoCommand(RefArg cmd)
 			if (EQRef(result, RSSYMskip))
 			{
 				CommandSetResult(cmd, 0);
-				handled = true;		// (the ROM's 2: taken, but passed on)
+				handled = 2;		// taken, and the caller told nobody took it
 			}
 			else
 				handled = ScriptHandled(cmd, result);
@@ -681,11 +695,13 @@ TView::RealDoCommand(RefArg cmd)
 			TView* child = (TView*) CommandParameter(cmd);
 			child->Hide();
 			RemoveChildView(child);
+			handled = true;
 		}
 		break;
 
 	case aeHide:
 		Hide();
+		handled = true;
 		break;
 
 	case aeShow:
@@ -1323,9 +1339,10 @@ TView::DrawHilitedData(void)
 // that is long and thin counts by its long axis alone - a line drawn across
 // a one-line view covers little of it, so the short axis is taken out of
 // both rectangles and the test made on the other one.  Only the hilite and
-// un-hilite gestures (1 and -1) are looked at, and a false `doIt` asks
-// whether the stroke would count without acting on it.
-Boolean
+// un-hilite kinds (1 and -1) are looked at, and a false `doIt` asks
+// whether the stroke would count without acting on it.  ==> the kind
+// taken, or 0.
+long
 TView::HandleHilite(TUnitPublic* unit, long gesture, Boolean doIt)
 {
 	if (gesture != 1 && gesture != -1)
@@ -1836,6 +1853,151 @@ void	TView::DrawDragBackground(const Rect&, Boolean)				{ }
 void	TView::DrawDragData(const Rect&)							{ }
 void	TView::DragFeedback(const TDragInfo&, const Point&, Boolean)	{ }
 TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a0df4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
+
+
+/*------------------------------------------------------------------------------
+	T h e   h i l i t e   s t r o k e
+
+	A hilite click is the pen held still on a view for three quarters of
+	a second and then drawn across it (`recognition/StrokeQueue.cpp`).
+	The root view draws the line following the pen (TRootView::Hiliter)
+	and then hands the unit to the view under it as an aeGesture2f
+	command; TEditView answers that by asking its children what the
+	stroke selects.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00262708 AddHiliter__5TViewFP11TUnitPublic +0x14
+// Whether a hilite stroke goes *round* something rather than through it.
+// Its box has to be more than 24 by 16, and, from the fifth point on, it
+// has to have gone more than twenty pixels from where it started and
+// then come back to within twenty of it.  The stroke's length is asked
+// again on every turn of the loop because the pen may still be moving.
+//
+// (The ROM has this inline in both AddHiliters, word for word.)
+Boolean
+IsLassoStroke(TUnitPublic* unit)
+{
+	Rect box;
+	unit->Bounds(&box);
+	if (box.right - box.left <= 24 || box.bottom - box.top <= 16)
+		return false;
+	TStrokePublic* stroke = unit->Stroke();
+	long closest = 0x270f;
+	Boolean wentAway = false;
+	ULong i = 4;
+	if (i >= (ULong) stroke->Size())
+		return false;
+	do
+	{
+		Point pt = stroke->GetPoint(i);
+		Point first = stroke->FirstPoint();
+		long distance = CheapDistance(first, pt);
+		if (distance > 20)
+			wentAway = true;
+		if (wentAway && distance < closest)
+			closest = distance;
+		i++;
+	}
+	while (i < (ULong) stroke->Size());
+	return closest < 20;
+}
+
+
+// ROM 0x00262708 AddHiliter__5TViewFP11TUnitPublic
+// A hilite stroke offered to the view's children.  A lasso asks for a
+// whole-object hilite (kind 1); anything else asks the children what
+// they would take (-1).  They are asked twice: once to find the
+// strongest claim, and once to carry that claim out, so that every child
+// that can take the same kind of hilite takes it.
+Boolean
+TView::AddHiliter(TUnitPublic* unit)
+{
+	Boolean lasso = IsLassoStroke(unit);
+	long kind = 0;
+	TViewLoop loop(fChildren);
+	TView* child;
+	while ((child = loop.Next()) != nil)
+	{
+		long claim = child->HandleHilite(unit, lasso ? 1 : -1, false);
+		if (claim > kind)
+			kind = claim;
+	}
+	if (kind != 0)
+	{
+		TViewLoop again(fChildren);
+		while ((child = again.Next()) != nil)
+			child->HandleHilite(unit, kind, true);
+	}
+	return true;
+}
+
+
+// ROM 0x000a37ec DrawHiliteLine__FRC6TPointT1PP8PixelMapUc
+// A segment of the hilite line, drawn a pixel at a time along whichever
+// axis it moves further in.  Only the first four and the last four steps
+// are filled ovals; everything between them is one straight line from
+// the fourth oval to the fifth-from-last, which is what makes a long
+// stroke cheap to draw on a twenty megahertz machine.  The first segment
+// of a stroke is drawn with a pen four pixels fatter, so that the stroke
+// starts with a blob where the pen was held still.
+void
+DrawHiliteLine(const Point& from, const Point& to, PatternHandle pattern, Boolean first)
+{
+	long dh = to.h - from.h;
+	long dv = to.v - from.v;
+	long steps = dh < 0 ? -dh : dh;
+	long vSpan = dv < 0 ? -dv : dv;
+	if (vSpan > steps)
+		steps = vSpan;
+	if (steps == 0)
+		return;
+	long size = first ? 12 : 8;
+	PenNormal();
+	PenSize(size, size);
+	SetFgPattern(pattern);
+	Fixed hStep = ToFixed(dh) / steps;
+	Fixed vStep = ToFixed(dv) / steps;
+	Fixed h = 0;
+	Fixed v = 0;
+	Boolean pending = false;
+	Point corner;
+	corner.v = 0;
+	corner.h = 0;
+	for (long i = 0; i < steps; i++)
+	{
+		Rect oval;
+		oval.left = (short) (from.h + (h >> 16) - size / 2);
+		oval.top = (short) (from.v + (v >> 16) - size / 2);
+		oval.right = (short) (oval.left + size);
+		oval.bottom = (short) (oval.top + size);
+		if (i <= 3)
+		{
+			FillOval(&oval, pattern);
+			corner.v = oval.top;
+			corner.h = oval.left;
+		}
+		else if (steps - 4 > i)
+			pending = true;
+		else
+		{
+			if (pending)
+			{
+				MoveTo(corner.h, corner.v);
+				LineTo(oval.left, oval.top);
+				pending = false;
+			}
+			FillOval(&oval, pattern);
+		}
+		h += hStep;
+		v += vStep;
+		if (first)
+		{
+			size = 8;
+			PenSize(8, 8);
+			first = false;
+		}
+	}
+}
 
 
 // ROM 0x0009e528 GetClipboardDataBits__5TViewFP5TRect

@@ -216,6 +216,63 @@ TContainerView::MakeHilite(long child, TView* view)
 }
 
 
+// ROM 0x00074770 HandleHilite__14TContainerViewFP11TUnitPubliclUc
+// A hilite stroke over a container.  The container first asks whether it
+// is itself covered (TView's test); if not, it asks its children, and a
+// child that would take a whole-object hilite (1) makes the *container*
+// answer 5 - so a lasso round something inside a container selects the
+// container rather than the one child it went round.
+//
+// Carrying it out drops the container's own hilites first, then offers
+// the kind to each child in turn and stops at the first that takes it
+// (a 5 offered to a child becomes a 1, which is what a child understands);
+// the child that took it becomes the container's hilite.
+long
+TContainerView::HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt)
+{
+	long mine = TView::HandleHilite(unit, kind, reallyDoIt);
+	if (mine != 0)
+		return mine;
+	if (!reallyDoIt)
+	{
+		long best = 0;
+		Boolean any = false;
+		TViewLoop loop(fChildren);
+		TView* child;
+		while ((child = loop.Next()) != nil)
+		{
+			any = true;
+			long claim = child->HandleHilite(unit, kind, false);
+			if (claim > best)
+				best = claim;
+		}
+		if (any && best == 1)
+			best = 5;
+		return best;
+	}
+	RemoveAllHilites();
+	if (kind != 0)
+	{
+		Boolean whole = kind == 5;
+		long offered = whole ? 1 : kind;
+		TView* winner = nil;
+		TViewLoop loop(fChildren);
+		TView* child;
+		while ((child = loop.Next()) != nil)
+		{
+			if (child->HandleHilite(unit, offered, true) == offered)
+			{
+				winner = child;
+				break;
+			}
+		}
+		if (winner != nil)
+			MakeHilite(1, winner);
+	}
+	return kind;
+}
+
+
 // ROM 0x00073220 HiliteAll__14TContainerViewFv
 void
 TContainerView::HiliteAll(void)

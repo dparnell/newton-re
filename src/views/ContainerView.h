@@ -62,6 +62,7 @@ public:
 	virtual void	DrawHilitedData(void);					// ROM 0x000738c0 DrawHilitedData__14TContainerViewFv
 	virtual void	DrawHilites(Boolean scaled);			// ROM 0x000737c8 DrawHilites__14TContainerViewFUc
 	virtual Boolean	IsCompletelyHilited(RefArg hilite);		// ROM 0x00073c58 IsCompletelyHilited__14TContainerViewFRC6RefVar
+	virtual long	HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt);	// ROM 0x00074770 HandleHilite__14TContainerViewFP11TUnitPubliclUc
 	virtual void	HiliteAll(void);						// ROM 0x00073220 HiliteAll__14TContainerViewFv
 	virtual void	RemoveHilite(RefArg hilite);			// ROM 0x00073bc4 RemoveHilite__14TContainerViewFRC6RefVar
 	virtual void	RemoveAllHilites(void);					// ROM 0x00073254 RemoveAllHilites__14TContainerViewFv - TView's, word for word

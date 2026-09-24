@@ -31,6 +31,7 @@
 #include "Recognizer.h"	// gInhibitPopup
 #include "NewtonTime.h"
 #include "ClipboardView.h"
+#include "Animate.h"
 #include "SoundSettings.h"
 
 // frames/Munger.cpp and frames/ArrayNatives.cpp
@@ -122,9 +123,10 @@ TRootView::~TRootView()
 // aeKeyboardConnected: the parameter says whether a keyboard is
 // connected - the hard key map cleared when it is, the caret's view
 // asked to give it up when not; the popup synced, the root dirtied.
-// aeAddData and aeRemoveData are how a clipping's two views go on and
-// off the root (AddClipboard, RemoveClipboard) - they are what keeps the
-// two arrays.  NOT YET RECONSTRUCTED: the hiliter (aeHiliteClick).
+// aeHiliteClick is the hilite stroke, which the root draws itself
+// (Hiliter).  aeAddData and aeRemoveData are how a clipping's two views
+// go on and off the root (AddClipboard, RemoveClipboard) - they are what
+// keeps the two arrays.
 Boolean
 TRootView::RealDoCommand(RefArg cmd)
 {
@@ -139,6 +141,14 @@ TRootView::RealDoCommand(RefArg cmd)
 		if (fPopup != nil)
 			fPopup->Sync();
 		Dirty(nil);
+		return true;
+	}
+	if (id == aeHiliteClick)
+	{
+		// the pen held still on a view and then drawn across it: the root
+		// draws the line and hands the stroke back to the view
+		Hiliter((TUnitPublic*) CommandParameter(cmd), (TView*) CommandReceiver(cmd));
+		CommandSetResult(cmd, 1);
 		return true;
 	}
 	if (id == aeAddData)
@@ -777,7 +787,7 @@ TRootView::SetKeyViewSelection(TView* view, RefArg selection, Boolean pushOld)
 // The key view, offset and length stored.  When the view changes: unless
 // hilites are being preserved, a usable old view is told
 // ActivateSelection(false) - except when old and new are paragraphs of
-// the same hilite (edit) view, or one is the other's hilite view; the
+// the same enclosing edit view, or one is the other's; the
 // new view is told ActivateSelection(true).  The hiliter becomes the
 // view (a paragraph's hilite view when it has one) for a selection, nil
 // for none.  Without a keyboard connected and without a selection, the
@@ -804,14 +814,17 @@ TRootView::CommonSetKeyView(TView* view, long offset, long length)
 				Boolean oldIsPara = old->DerivedFrom(clParagraphView);
 				if (viewIsPara && oldIsPara)
 				{
-					TView* h1 = ((TDataView*) old)->GetHiliteView();
-					TView* h2 = ((TDataView*) view)->GetHiliteView();
-					if (h1 != nil && h2 != nil && h1 == h2)
+					// two paragraphs of the same page keep each other's
+					// selections - which is what lets a stroke that goes
+					// through several of them select them all
+					TView* e1 = ((TDataView*) old)->GetEnclosingEditView();
+					TView* e2 = ((TDataView*) view)->GetEnclosingEditView();
+					if (e1 != nil && e2 != nil && e1 == e2)
 						deactivate = false;
 				}
-				if (deactivate && viewIsPara && ((TDataView*) view)->GetHiliteView() == old)
+				if (deactivate && viewIsPara && ((TDataView*) view)->GetEnclosingEditView() == old)
 					deactivate = false;
-				if (deactivate && oldIsPara && ((TDataView*) old)->GetHiliteView() == view)
+				if (deactivate && oldIsPara && ((TDataView*) old)->GetEnclosingEditView() == view)
 					deactivate = false;
 			}
 			if (deactivate)
@@ -1543,6 +1556,119 @@ TRootView::SetPopup(TView* view, Boolean set)
 	}
 	if (view != nil)
 		fPopup = view;
+}
+
+
+// ROM 0x001b39e0 SetHilitedView__9TRootViewFP5TView
+// Which view owns the selection.  Handing it to another one first tells
+// the old owner to drop what it had, so that only one view on the screen
+// is ever selected.
+void
+TRootView::SetHilitedView(TView* view)
+{
+	if (fHiliter == view)
+		return;
+	if (fHiliter != nil)
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveAllHilites, fHiliter, kNoParameter)));
+	fHiliter = view;
+}
+
+
+// ROM 0x001b2e64 Hiliter__9TRootViewFP11TUnitPublicP5TView
+// The hilite stroke drawn while the pen is still down.  The pen is held
+// still on a view for three quarters of a second (which is what the
+// stroke queue calls a hilite click) and then drawn across it; the ink
+// it was leaving is taken off, whatever was selected before is dropped,
+// and the line is drawn after the pen until it comes up.
+//
+// The line is drawn into an off-screen TBits and blitted over a saved
+// copy of the screen, so that it can be rubbed out again without the
+// views underneath being redrawn; when there is not enough memory for
+// either, it is drawn straight on to the screen instead and simply left
+// there until the invalidation at the end repaints it.
+//
+// The stroke is then handed to the view under it as an aeGesture2f
+// command, which is what turns it into a selection (TEditView::
+// AddHiliter).
+//
+// DEVIATION: the ROM brackets this with BusyBoxSend(0x35)/(0x36) to hold
+// the busy box off while the pen is down.  The busy box lives above the
+// view system (newt/NewtWorld.h), which this library does not link, and
+// the same bracket is missing from TView::DragAndDrop for that reason.
+void
+TRootView::Hiliter(TUnitPublic* unit, TView* view)
+{
+	TStrokePublic* stroke = unit->Stroke();
+	stroke->InkOff(true, false);
+	if (fDirtyFlag)
+	{
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveAllHilites, view, kNoParameter)));
+		SetFrameSlot(RefVar(FGetGlobals(RefVar())), RSSYMlasttextchanged, RefVar());
+	}
+	fDirtyFlag = false;
+	FPlaySound(RefVar(), RefVar(Rhilitesound));
+
+	Rect dirty;
+	SetEmptyRect(&dirty);
+	GrafPort* port;
+	GetPort(&port);
+	Rect* screen = &port->portRect;
+	TBits bits;
+	TSaveScreenBits saved;
+	Boolean offscreen = false;
+	if (bits.Constructor(*screen))
+	{
+		offscreen = saved.AllocateBuffers(screen);
+		if (!offscreen)
+			bits.Cleanup();
+		else
+		{
+			Point origin;
+			origin.v = 0;
+			origin.h = 0;
+			bits.BeginDrawing(origin);
+			bits.RestorePort();
+			saved.SaveScreenBits();
+		}
+	}
+
+	Point last = stroke->FirstPoint();
+	last.h++;							// so that the first point is never "where we already are"
+	Boolean first = true;
+	while (!stroke->Done())
+	{
+		Point now = stroke->FinalPoint();
+		if (now.v == last.v && now.h == last.h)
+		{
+			Wait(1);
+			continue;
+		}
+		if (offscreen)
+		{
+			bits.SetPort();
+			DrawHiliteLine(last, now, GetStdPattern(blackPat), first);
+			bits.RestorePort();
+		}
+		Rect segment;
+		Pt2Rect(now, last, &segment);
+		InsetRect(&segment, -8, -8);
+		SectRect(screen, &segment, &segment);
+		StartDrawing(nil, nil);
+		if (!offscreen)
+			DrawHiliteLine(last, now, GetStdPattern(blackPat), first);
+		else
+		{
+			saved.RestoreScreenBits(&segment, nil);
+			bits.Draw(segment, segment, srcXor, nil);
+		}
+		StopDrawing(nil, nil);
+		UnionRect(&dirty, &segment, &dirty);
+		last = now;
+		first = false;
+	}
+
+	gApplication->DispatchCommand(RefVar(MakeCommand(aeGesture2f, view, (Long) unit)));
+	SmartInvalidate(dirty);
 }
 
 

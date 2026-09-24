@@ -8,13 +8,13 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `a25bdfa`)
+## State at 2026-09-24 (commit `ef3d423`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8980 citations, 0 bad;
-  4845 of 16671 functions (29.06%).
-- `analysis/natives.py`: 835 of the ROM's 1326 natives answered.
+- `analysis/coverage.py build/MP2x00US --check`: 8996 citations, 0 bad;
+  4859 of 16671 functions (29.15%).
+- `analysis/natives.py`: 837 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -151,10 +151,31 @@ The last run of work closed, in order:
   `DragAndDrop` takes a drop with no target as "let go on the
   background", and `MoveIcon` has no caller.
 
+- **the hilite stroke** (`docs/views/README.md`, "The hilite stroke"):
+  the pen held still on something and then drawn through it or round it,
+  which is how the Newton is told what to select.  `TRootView::Hiliter`
+  follows the pen and draws the line over a saved copy of the screen;
+  `TView::AddHiliter` and `TEditView::AddHiliter` decide whether it was a
+  lasso and offer it to the children, who answer with the kind of hilite
+  they would take (`TContainerView::HandleHilite` promoting a child's
+  whole-object claim to the container); `TParagraphView` answers all
+  four of its kinds, the interesting one being `HiliteRange`, which
+  walks the stroke's outline (`TUnitPublic::RoughShape`/`AsPolygon`)
+  from each end for the word boundaries it runs through.  `hiliter` and
+  `HiliteViewChildren` are answered.
+
+  Two holes in the reconstruction came out of it: `TView::DoCommand` did
+  not pass an unanswered command on to the parent, so nothing posted to
+  a view could ever reach the root or the application (and `aeHide` and
+  `aeDropChild` were not marking themselves taken); and
+  `TRootView::CommonSetKeyView` asked `GetHiliteView` where the ROM asks
+  `GetEnclosingEditView`, so selecting a second paragraph dropped the
+  first one's selection.
+
 ## Next: what is left of the natives, and why
 
 The thin wrappers are done.  What `natives.py --unbound` still lists is
-490 natives, and they are not a long tail of small jobs: nine out of ten
+488 natives, and they are not a long tail of small jobs: nine out of ten
 of them are the script-facing face of a subsystem that has no
 reconstruction behind it at all.  Binding one of those means writing the
 subsystem, not the wrapper.
@@ -170,7 +191,7 @@ subsystem, not the wrapper.
 |  35 | the package manager and the card |
 |  17 | the Airus dictionary cursor (`TAirusIterator`) |
 |  12 | sound channels (the sound server) |
-|   8 | the view hilites and the text engine's ranges |
+|   6 | the text engine's ranges and the book reader's HiliteBlock |
 |   4 | large binaries on a store, and store passwords |
 |  55 | everything else, a handful each |
 
@@ -179,12 +200,6 @@ find the cheapest work inside a group with `--sizes build/MP2x00US`.
 
 The smallest of those that would close a group of its own:
 
-- **the hiliter** (5): `TRootView::Hiliter` 0x001b2e64 - the line the
-  pen draws across text to select it, drawn over `TSaveScreenBits` and
-  `DrawHiliteLine` - and `TView::AddHiliter` 0x00262708 /
-  `TEditView::AddHiliter` 0x000a6fb0, which decide whether the stroke
-  selected a word or a block.  The root view's `fHiliter` and the
-  aeHiliteClick arm of its `RealDoCommand` are the rest of it.
 - **the Airus dictionary cursor** (17): `TAirusIterator` and
   `AttributeLength` - the object a script walks a dictionary with.  The
   dictionaries themselves are reconstructed, so this is a contained
@@ -200,14 +215,14 @@ large-binary questions to mean something; `ComputeParagraphHeight` wants
 its geometry read out of the assembly rather than the decompiler.
 
 Keep going through `natives.py --unbound`.  The areas whose machinery
-exists are `views` (20 left), `recognition` (46), `qd` (13), `sound`
+exists are `views` (18 left), `recognition` (46), `qd` (13), `sound`
 (13), `system` (16) and `stores` (11); `comms`, `books`, `assist`,
 `testing` and `packages` are mostly areas that are not reconstructed at
 all, and a native there is a project of its own rather than a wrapper.
 The named pieces whose machinery *is* there:
 
-- the hilite natives (`hiliter`, `HiliteViewChildren`, `HiliteBlock`),
-  which want `TView::AddHiliter` and `TRootView::Hiliter`;
+- `HiliteBlock` 0x00164d64, which looks like a view native but is the
+  book reader's: it wants `TLibrarian` and the page frames;
 - the rest of the bitmap and shape verbs (`MakePict`, `PictToShape`,
   `MungeShape`, `MungeBitmap`, `GetShapeInfo`, `FindShape`);
   `GetBitmapInfo` also wants `GetBinaryStore`/`GetBinaryCompander`,

@@ -183,6 +183,12 @@ public:
 	T V i e w
 ------------------------------------------------------------------------------*/
 
+// Whether a hilite stroke goes round something rather than through it -
+// the test both AddHiliters make (View.cpp).
+Boolean	IsLassoStroke(class TUnitPublic* unit);						// ROM 0x00262708 AddHiliter__5TViewFP11TUnitPublic +0x14
+// A segment of the line the pen draws while it hilites.
+void	DrawHiliteLine(const Point& from, const Point& to, PatternHandle pattern, Boolean first);	// ROM 0x000a37ec DrawHiliteLine__FRC6TPointT1PP8PixelMapUc
+
 class TView : public TResponder
 {
 public:
@@ -221,7 +227,7 @@ public:
 	virtual long	Idle(long arg);										// ROM 0x00268b3c Idle__5TViewFl
 	virtual void	DrawHiliting(void);									// ROM 0x00267188 DrawHiliting__5TViewFv
 	virtual void	DrawHilitedData(void);								// ROM 0x0026715c DrawHilitedData__5TViewFv
-	virtual Boolean	HandleHilite(TUnitPublic* unit, long arg, Boolean on);	// ROM 0x00262150 HandleHilite__5TViewFP11TUnitPubliclUc
+	virtual long	HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt);	// ROM 0x00262150 HandleHilite__5TViewFP11TUnitPubliclUc - the kind of hilite the view takes (0 none), or, with a kind rather than -1, whether it takes that one
 	virtual long	HandleScrub(const Rect& bounds, long arg, TUnitPublic* unit, Boolean on);	// ROM 0x00262528 HandleScrub__5TViewFRC5TRectlP11TUnitPublicUc
 	virtual Boolean	Hilited(void);										// ROM 0x00261de4 Hilited__5TViewFv
 	virtual void	DrawHilites(Boolean on);							// ROM 0x00261e94 DrawHilites__5TViewFUc
@@ -319,6 +325,7 @@ public:
 	void		JustifyBounds(Rect* bounds);							// ROM 0x0026415c JustifyBounds__5TViewFP5TRect
 	void		DejustifyBounds(Rect* bounds);							// ROM 0x00264a54 DejustifyBounds__5TViewFP5TRect
 	void		RecalcBounds(void);										// ROM 0x002652a4 RecalcBounds__5TViewFv
+	Boolean		AddHiliter(TUnitPublic* unit);							// ROM 0x00262708 AddHiliter__5TViewFP11TUnitPublic - a hilite stroke offered to the children, the best claim carried out
 	void		DoMoveCommand(Point by);									// ROM 0x002673e8 DoMoveCommand__5TViewF6TPoint - the view moved through an undoable aeMoveData
 	void		WriteBounds(const Rect& bounds);						// ROM 0x00263f28 WriteBounds__5TViewFRC5TRect
 	void		Move(const Point& delta);								// ROM 0x00263e1c Move__5TViewFRC6TPoint

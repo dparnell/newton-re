@@ -1867,6 +1867,134 @@ NOT YET: the busy box the ROM holds off while the pen is on the keyboard,
 and the `keySound` it plays, both of which live outside the view system
 (as they do for `TGaugeView`'s tracking).
 
+## The hilite stroke (`views/View.h`, `views/RootView.h`)
+
+Selecting something on a Newton has no modifier key and no menu. The pen
+is held still on it for three quarters of a second — which is what
+`recognition/StrokeQueue.cpp` calls a *hilite click*, more than 45
+samples within `gHiliteDistance` of where the pen went down — and then
+drawn through what is to be selected, or round it. The line the pen
+draws is the only feedback, and what is under it when the pen comes up is
+what ends up selected.
+
+The click reaches the view under the pen as an `aeHiliteClick` command.
+No view answers it, so it walks up the parent chain (`TView::DoCommand`)
+to the root, whose `RealDoCommand` calls `TRootView::Hiliter`
+(0x001b2e64). That is where the pen is followed:
+
+- the ink the stroke was leaving is taken off (`InkOff`), whatever was
+  selected before is dropped (`aeRemoveAllHilites` to the view), and
+  `hiliteSound` is played;
+- the screen is copied into a `TSaveScreenBits` and an off-screen
+  `TBits` the size of the port is made. Each new segment of the stroke is
+  drawn into the `TBits`, the saved screen is put back over the segment's
+  rectangle and the `TBits` is exclusive-ored on top — so the line grows
+  without anything underneath being redrawn. A machine too short of
+  memory for either buffer draws straight on to the screen instead and
+  leaves the line there until the invalidation at the end repaints it;
+- the union of every segment's rectangle is what
+  `TRootView::SmartInvalidate` is given at the end.
+
+`DrawHiliteLine` (0x000a37ec) draws one segment, stepping a pixel at a
+time along whichever axis it moves further in. Only the first four and
+the last four steps are filled ovals; everything between them is a
+*single straight line* from the fourth oval to the fifth-from-last. A
+long stroke therefore costs two ovals' worth of filling and one `LineTo`
+rather than hundreds of `FillOval`s, and looks the same, because the ends
+are the only places the roundness shows. The first segment of a stroke
+is drawn with a pen four pixels fatter, which is what puts the blob where
+the pen was held still.
+
+When the pen comes up the unit is dispatched to the view under it again,
+this time as `aeGesture2f`, and *that* is what turns the stroke into a
+selection.
+
+### What the stroke selects
+
+`TEditView`'s `aeGesture2f` arm calls `TEditView::AddHiliter`
+(0x000a6fb0); `TView::AddHiliter` (0x00262708) is the same thing for a
+plain view, and is what the `HiliteViewChildren` method calls. Both
+begin by asking what *kind* of stroke it was:
+
+> a stroke whose box is more than 24 by 16, and which - from its fifth
+> point on - goes more than twenty pixels from where it started and then
+> comes back to within twenty of it, is a **lasso**: it went round
+> something rather than through it.
+
+A lasso asks the children for a whole-object hilite (kind 1); anything
+else asks them what they would take (-1). The children are then asked
+twice: once to find the strongest claim, and once to carry that claim
+out, so that *every* child that can take the same kind of hilite takes
+it. That is what selects several paragraphs with one stroke.
+
+The kinds, and what answers them:
+
+| kind | what it means | who takes it |
+|---|---|---|
+| 1 | the whole object | `TView::HandleHilite`, `TParagraphView::HiliteParagraph` |
+| 2 | whole lines | `TParagraphView::HiliteLines` |
+| 3 | a range of characters | `TParagraphView::HiliteRange` |
+| 5 | a whole container | `TContainerView::HandleHilite` |
+| 6 | the words run through | `TParagraphView::HiliteWords` — which the ROM's is `mov r0,#0; mov pc,lr`, so nothing ever takes a 6 |
+
+`TView::HandleHilite` (0x00262150) is the whole-view test: the stroke's
+box, grown by eight pixels, has to cover more than 60 per cent of the
+view — and a stroke that is long and thin counts by its long axis alone,
+because a line drawn across a one-line view covers very little of it.
+
+`TContainerView::HandleHilite` (0x00074770) asks its children after
+itself, and *promotes* their answer: a child that would take a 1 makes
+the container answer **5**. So a lasso round something inside a
+container selects the container, not the one child it went round. When
+the 5 is carried out the container drops its own hilites, offers a 1 to
+each child in turn and stops at the first that takes it, and that child
+becomes the container's hilite.
+
+`TParagraphView::HandleHilite` (0x00169b0c) tries its four in order 6, 1,
+2, 3:
+
+- **HiliteParagraph** (0x00169c0c) wants the stroke to cover 60 per cent
+  of the laid-out text. A stroke at least twice as tall as it is wide,
+  drawn between the view's left and right edges, is judged by its
+  vertical extent alone — which is how a line down the margin takes the
+  whole paragraph.
+- **HiliteLines** (0x00169da0) also wants a stroke twice as tall as it is
+  wide, and takes the run of lines it covers half of, ending at the first
+  line it does not.
+- **HiliteRange** (0x00169ec4) is the ordinary case: a line drawn through
+  some words. The stroke's rough outline — `TUnitPublic::RoughShape`
+  (0x0022d198), which is `AsPolygon` (0x00145e38) of its first stroke,
+  the points rounded to pixels and moved to the top left of their box —
+  is walked from each end by `FindFirstWordHitByHilite` (0x00169fbc),
+  stepping a pixel at a time along any segment that moves more than one
+  pixel across and asking `PointToWordBoundary` (with a bias of -50,
+  towards the left) at every step. The two boundaries found are the ends
+  of the selection; both ends finding the same one means the stroke
+  crossed no text.
+
+`TEditView::AddHiliter` then works out the *click options* the selection
+offers: a lasso, or a selection that has come to cover more than one
+child, may be resized (unless the children's own bounds say otherwise);
+anything else may not. A lasso drawn on the Calendar is not a selection
+at all — that application answers it by redrawing itself.
+
+### Two things this needed fixing along the way
+
+`TView::DoCommand` (0x00268bcc) did not pass a command it had not taken
+on to the parent, so nothing posted to a view could ever reach the root
+or the application. It does now — and a `RealDoCommand` that answers
+**2** stops the walk while still telling the caller that nobody took the
+command, which is how a `viewClickScript` returning `'skip` lets the
+click through without it being handled twice. Two commands were also not
+marking themselves taken (`aeHide`, `aeDropChild`), which only showed up
+once the walk existed.
+
+`TRootView::CommonSetKeyView` asked `GetHiliteView` where the ROM asks
+`GetEnclosingEditView` (vtable +0x140). The two agree for a container
+but not for a paragraph, which is its own hilite view: with the wrong
+one, selecting a second paragraph dropped the first's selection, and a
+stroke through several paragraphs left only the last one selected.
+
 ## The clipboard (`views/ClipboardView.h`)
 
 A *clipping* is what the Newton makes when something is dragged out of a

@@ -111,7 +111,7 @@ void
 TEditView::Constructor(RefArg context, TView* parent)
 {
 	fTextFlags = 0;
-	fUnknown4C = false;
+	fHilitingChildren = false;
 	TView::Constructor(context, parent);
 }
 
@@ -216,6 +216,91 @@ TEditView::RemoveAllHilites(void)
 		fClickOptions = ~2;					// nothing to resize any more
 		gRootView->fHiliter = nil;
 	}
+}
+
+
+// ROM 0x000a6fb0 AddHiliter__9TEditViewFP11TUnitPublic +0xf0
+// How many children carry a selection.  (The ROM has this inline twice
+// in AddHiliter, and it is not TEditView::CountHilites: it looks the
+// `hilites` slot up in the child's own frame rather than asking the
+// child, and does not care whether the array is empty.)
+static long
+CountHilitedChildren(TViewList* children)
+{
+	long count = 0;
+	TViewLoop loop(children);
+	TView* child;
+	while ((child = loop.Next()) != nil)
+		if (NOTNIL(GetFrameSlotRef(child->fContext, RSSYMhilites)))
+			count++;
+	return count;
+}
+
+
+// ROM 0x000a6fb0 AddHiliter__9TEditViewFP11TUnitPublic
+// A hilite stroke over a page.  The stroke is judged first - a lasso
+// goes round something rather than through it - and a lasso drawn on the
+// Calendar is not a selection at all: that application answers it by
+// redrawing itself.
+//
+// Otherwise the children are asked what the stroke would select and the
+// strongest claim is carried out, exactly as TView::AddHiliter does it;
+// the page then works out where its caret belongs again.  What is left
+// is the *click options* the selection offers: a lasso, or a selection
+// that has come to cover more than one child, may be resized (all the
+// options, -1) unless the children's own bounds say otherwise; anything
+// else may not (~2).  The selection's frame is then dirtied so that it
+// is drawn - with nothing to draw and nothing to rub out, a page whose
+// children were not selected before and are not selected now stops here.
+Boolean
+TEditView::AddHiliter(TUnitPublic* unit)
+{
+	Boolean lasso = IsLassoStroke(unit);
+	if (lasso && EQ(RefVar(GetVariable(fContext, RSSYMappsymbol, nil, 0)), RSSYMcalendar))
+	{
+		Dirty(nil);
+		return true;
+	}
+	long before = CountHilitedChildren(fChildren);
+	long kind = 0;
+	{
+		TViewLoop loop(fChildren);
+		TView* child;
+		while ((child = loop.Next()) != nil)
+		{
+			long claim = child->HandleHilite(unit, lasso ? 1 : -1, false);
+			if (claim > kind)
+				kind = claim;
+		}
+	}
+	fHilitingChildren = true;
+	if (kind != 0)
+	{
+		TViewLoop loop(fChildren);
+		TView* child;
+		while ((child = loop.Next()) != nil)
+			child->HandleHilite(unit, kind, true);
+	}
+	fHilitingChildren = false;
+	DetermineKeyView();
+	long after = CountHilitedChildren(fChildren);
+	Rect box;
+	if (lasso || after > 1)
+	{
+		fClickOptions = -1;
+		if ((GlobalHiliteBounds(&box) & 2) == 0)
+			fClickOptions = ~2;
+	}
+	else
+	{
+		fClickOptions = ~2;
+		if (before == 0)
+			return true;
+	}
+	GlobalHiliteResizeBounds(&box);
+	ToOutsideGrayBorder(&box, &viewBounds);
+	Dirty(&box);
+	return true;
 }
 
 
@@ -1180,6 +1265,20 @@ TEditView::RealDoCommand(RefArg cmd)
 		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
 			return true;
 		if (HandleLineGesture((TUnitPublic*) CommandParameter(cmd)))
+		{
+			CommandSetResult(cmd, 1);
+			return true;
+		}
+		return TView::RealDoCommand(cmd);
+	}
+
+	if (id == aeGesture2f)
+	{
+		// the hilite stroke, after the root view has finished drawing it:
+		// the page asks its children what it selects (AddHiliter)
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if (AddHiliter((TUnitPublic*) CommandParameter(cmd)))
 		{
 			CommandSetResult(cmd, 1);
 			return true;

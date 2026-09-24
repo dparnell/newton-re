@@ -1934,6 +1934,33 @@ FExtractData(RefArg /*rcvr*/, RefArg data, RefArg separator, RefArg maxLength)
 }
 
 
+// ROM 0x001ecf6c FHiliter
+// view:hiliter(unit) - the hilite stroke handed to the root view as an
+// aeHiliteClick command with the view as its receiver, which is how a
+// script makes the machine take a selection it did not draw itself.
+// ==> nil (the root answers, not this).
+static Ref
+FHiliter(RefArg rcvr, RefArg unit)
+{
+	TView* view = FailGetView(rcvr);
+	RefVar cmd(MakeCommand(aeHiliteClick, view, (Long) RefToAddress(unit)));
+	gApplication->DispatchCommand(cmd);
+	return NILREF;
+}
+
+
+// ROM 0x001ecf2c FHiliteViewChildren
+// view:HiliteViewChildren(unit) - the stroke offered to the view's
+// children without the root view drawing anything (TView::AddHiliter).
+// ==> true.
+static Ref
+FHiliteViewChildren(RefArg rcvr, RefArg unit)
+{
+	TView* view = FailGetView(rcvr);
+	return MAKEBOOLEAN(view->AddHiliter((TUnitPublic*) RefToAddress(unit)));
+}
+
+
 // ROM 0x001f0f10 FGetHiliteOffsets__FRC6RefVar
 // GetHiliteOffsets(): where the current selection is - the `offset` of
 // the `hilites` of whichever view owns them - or nil when nothing is
@@ -2594,6 +2621,8 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FPositionToTime__FRC6RefVarN21", (void*) FPositionToTime, 2);
 	RegisterNativeFunction("FTimeToPosition__FRC6RefVarN21", (void*) FTimeToPosition, 2);
 	RegisterNativeFunction("FGetHiliteOffsets__FRC6RefVar", (void*) FGetHiliteOffsets, 0);
+	RegisterNativeFunction("FHiliter", (void*) FHiliter, 1);
+	RegisterNativeFunction("FHiliteViewChildren", (void*) FHiliteViewChildren, 1);
 	RegisterNativeFunction("FMapCursor__FRC6RefVarN21", (void*) FMapCursor, 2);
 	RegisterNativeFunction("FExtractData__FRC6RefVarN31", (void*) FExtractData, 3);
 	RegisterNativeFunction("FCopyBits", (void*) FCopyBits, 4);
@@ -2731,6 +2760,7 @@ MakeViewMethods(void)
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },
 		{ "TrackHilite", (void*) FTrackHiliteX, 1 }, { "TrackButton", (void*) FTrackButtonX, 1 },
 		{ "hilite", (void*) FHiliteX, 1 }, { "HiliteUnique", (void*) FHiliteUniqueX, 1 },
+		{ "hiliter", (void*) FHiliter, 1 }, { "HiliteViewChildren", (void*) FHiliteViewChildren, 1 },
 		{ "LayoutColumn", (void*) FLayoutVerticallyX, 2 }, { "LayoutTable", (void*) FLayoutTableX, 3 },
 		{ "CopyBits", (void*) FCopyBits, 4 }, { "DoDrawing", (void*) FDoDrawing, 2 },
 		{ "DrawXBitmap", (void*) FDrawXBitmap, 4 },
