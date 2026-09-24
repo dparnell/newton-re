@@ -69,6 +69,8 @@ tools/newton-rom/
                           -> src/recognition/ROMGrammar.cpp, docs/recognition/grammar.md
     bpnet.py              the handwriting engine's classifier net and its trained tables
                           -> src/recognition/BPNetTables.cpp
+    mmumap.py             the boot MMU map, and what a virtual address maps to
+                          (--where 0x...) -> docs/memory/mmu-map.md
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
     soupdefs.py           the soups the ROM's applications keep -> src/host/FactorySoups.cpp
@@ -365,6 +367,15 @@ copies, and the eight trained tables it points at, of which `bpWeight`
 `BPNetEvaluate`'s body directly, so the auto-analysis leaves it as raw
 bytes; `--force` clears the range and has Ghidra disassemble it as ARM
 before printing. It changes the project, so give it an exact range.
+
+`analysis/mmumap.py build/MP2x00US --where 0x...` is the one to reach
+for when an address in ROM code does not make sense. The ROM is mapped
+more than once - cached at 0x00100000 and uncached at 0x03500000 - so a
+constant that lands far outside the eight megabytes of ROM is usually a
+second mapping rather than a mistake, and the flags on the entry
+usually say why that mapping was chosen. It decodes
+`g8MegContinuousTableStart` (ROM 0x100), the map the machine starts
+from, and `--doc` writes it out as `docs/memory/mmu-map.md`.
 
 `analysis/romconstants.py build/MP2x00US -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real

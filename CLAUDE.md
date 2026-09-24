@@ -60,6 +60,8 @@ Build/test: `cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=$PWD/src
 
 ## Reverse-engineering notes
 
+**An address in ROM code that looks out of range is usually a second MMU mapping, not a mistake.** The ROM is mapped twice - cached at 0x00100000 and *uncached* at 0x03500000 - and ROM code picks the mapping it wants (the handwriting engine's `BPNetEvaluate` streams its 91KB of weights through the uncached alias so as not to flush the StrongARM's 16KB data cache). `analysis/mmumap.py build/MP2x00US --where 0x...` says which entry covers an address and what it maps to; it decodes `g8MegContinuousTableStart` (ROM 0x100), the map the machine starts from, and the flags on an entry usually say why that alias was chosen (`docs/memory/mmu-map.md`). Chase an unexplained constant there before recording it as unknown.
+
 `docs/next-steps.md` says where the last piece of work left off and what is next; read it when picking the work up again, and keep it current as pieces are finished. RE findings go under `docs/<subsystem>/` (kernel: `docs/os600/`). Tables derived from the ROM must be produced by a script in `tools/newton-rom/analysis/` (e.g. `swi_table.py` → `docs/os600/swi-table.md`) and say so in their header, so they can be regenerated after a re-import; hand-written pages state how each fact was established. Kernel-side classes (`TTask`, `TPort`, `TObjectTable`, …) have no DDK headers; only the user-side `TU*` API does.
 
 ## Working with the repository files

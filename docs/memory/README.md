@@ -8,6 +8,30 @@ for wired memory. Reconstructed in `src/memory/` with the host test
 reading the ROM (decompiler plus disassembly where the decompiler stopped)
 at the addresses given; the code cites each function.
 
+## The map the machine starts from
+
+`docs/memory/mmu-map.md` is the boot MMU map, decoded from
+`g8MegContinuousTableStart` (ROM 0x100) by
+`tools/newton-rom/analysis/mmumap.py`.  It is worth knowing about for a
+reason that has nothing to do with the memory manager: **the ROM is
+mapped more than once**, cached at 0x00100000 and *uncached* at
+0x03500000, and ROM code picks the mapping it wants.
+
+So when an address in ROM code looks out of range, it is usually a
+second mapping rather than a mistake:
+
+```
+analysis/mmumap.py build/MP2x00US --where 0x038948f0
+  0x038948f0 is in g8MegContinuousTableStart: virtual 0x03500000 + 0x3948f0
+      -> physical 0x003948f0   (section, UNCACHED, domain 0, AP 2)
+```
+
+That one is the handwriting engine's classifier reading its ninety-one
+kilobytes of trained weights through the uncached alias, so that
+streaming them once does not flush the StrongARM's sixteen-kilobyte
+data cache (`docs/recognition/bpnet.md`).  The *flags* on the entry are
+usually what says why the alias was chosen.
+
 ## Where it is in the ROM
 
 | Part | ROM range | Reconstruction |

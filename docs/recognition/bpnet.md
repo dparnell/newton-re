@@ -143,6 +143,10 @@ instruction existed.
 The reconstruction has one mapping and reads the weights where they
 are; `BPNetEvaluate` says so as a DEVIATION.
 
+The map itself is `docs/memory/mmu-map.md`, and
+`analysis/mmumap.py build/MP2x00US --where 0x038948f0` is how to ask
+the same question about the next strange address.
+
 ## Checking the reconstruction
 
 `recognition/BPNet.cpp` writes out what the assembly *does* rather
