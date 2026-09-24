@@ -41,6 +41,11 @@ ULong			gRebootProtectCount = 0;
 Boolean			gWantReboot = false;
 SGlobalsThatLiveAcrossReboot gGlobalsThatLiveAcrossReboot;
 
+// ROM 0x0c101158 gCollectCPUStats - whether the four power counters in
+// those globals are kept up to date (EnablePowerStats sets it).
+// DEVIATION: nothing on the host counts them.
+ULong gCollectCPUStats = 0;
+
 TObjectId		gCurrentTaskId = 0;
 void*			gCurrentGlobals = nil;
 TTask*			gCurrentMemCountTask = nil;

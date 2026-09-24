@@ -26,6 +26,8 @@
 #include "Keyboard.h"
 #include "RootView.h"
 #include "Protocols.h"
+#include "VirtualMemory.h"
+#include "UserTasks.h"
 #include "ClassInfoRegistry.h"
 #include "Locale.h"
 
@@ -837,6 +839,77 @@ FDestroyProtocol(RefArg rcvr)
 	return NILREF;
 }
 
+/*------------------------------------------------------------------------------
+	W h a t   t h e   m a c h i n e   h a s   b e e n   d o i n g
+
+	Four counters live across a reboot (`SGlobalsThatLiveAcrossReboot`):
+	how long the processor, the screen, the serial port and the sound
+	have been on since the last cold boot.  The kernel only keeps them
+	when `gCollectCPUStats` is set, which is what EnablePowerStats turns
+	on.
+
+	DEVIATION: nothing on the host counts them, so they stay at nought;
+	the flag and the reset are kept because a script can set and read
+	them, and because a port that does count them has somewhere to put
+	the numbers.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00202d8c FEnablePowerStats
+// EnablePowerStats(on): whether the counters are kept.  ==> what it was
+// set to.
+static Ref
+FEnablePowerStats(RefArg /*rcvr*/, RefArg on)
+{
+	gCollectCPUStats = NOTNIL(on) ? 1 : 0;
+	return MAKEBOOLEAN(gCollectCPUStats != 0);
+}
+
+
+// ROM 0x00202db8 FGetPowerStats
+// GetPowerStats(): the four counters and the time of the last cold
+// boot, as a canonicalPowerStats frame.  The cold-boot time is the
+// real-time clock's reading moved to the epoch a script counts in; the
+// constant is the ROM's own.
+static Ref
+FGetPowerStats(RefArg /*rcvr*/)
+{
+	SGlobalsThatLiveAcrossReboot& g = gGlobalsThatLiveAcrossReboot;
+	RefVar stats(Clone(RefVar(Rcanonicalpowerstats)));
+	SetFrameSlot(stats, RSSYMtimeatcoldboot, RefVar(MAKEINT((long) (g.fTimeAtColdBoot + 0x58939444UL))));
+	SetFrameSlot(stats, RSSYMprocessorofftime, RefVar(MAKEINT((long) g.fProcessorOnTime)));
+	SetFrameSlot(stats, RSSYMscreenontime, RefVar(MAKEINT((long) g.fScreenOnTime)));
+	SetFrameSlot(stats, RSSYMserialontime, RefVar(MAKEINT((long) g.fSerialOnTime)));
+	SetFrameSlot(stats, RSSYMsoundontime, RefVar(MAKEINT((long) g.fSoundOnTime)));
+	return stats;
+}
+
+
+// ROM 0x00202ee4 FResetPowerStats
+// ResetPowerStats(): the four counters back to nought.  The cold-boot
+// time is left as it was - it is not a counter.
+static Ref
+FResetPowerStats(RefArg /*rcvr*/)
+{
+	SGlobalsThatLiveAcrossReboot& g = gGlobalsThatLiveAcrossReboot;
+	g.fProcessorOnTime = 0;
+	g.fScreenOnTime = 0;
+	g.fSerialOnTime = 0;
+	g.fSoundOnTime = 0;
+	return NILREF;
+}
+
+
+// ROM 0x00146af8 FReboot
+// ReBoot(): the machine restarted, with no error and no reboot type,
+// and not waiting for anything to finish.
+static Ref
+FReboot(RefArg /*rcvr*/)
+{
+	Reboot(noErr, 0, false);
+	return NILREF;
+}
+
+
 void
 RegisterSystemNatives(void)
 {
@@ -851,6 +924,10 @@ RegisterSystemNatives(void)
 	RegisterNativeFunction("FBackLightStatus", (void*) FBackLightStatus, 0);
 	RegisterNativeFunction("FBackLight", (void*) FBackLight, 1);
 	RegisterNativeFunction("FGetHeapStats", (void*) FGetHeapStats, 1);
+	RegisterNativeFunction("FEnablePowerStats", (void*) FEnablePowerStats, 1);
+	RegisterNativeFunction("FGetPowerStats", (void*) FGetPowerStats, 0);
+	RegisterNativeFunction("FResetPowerStats", (void*) FResetPowerStats, 0);
+	RegisterNativeFunction("FReboot", (void*) FReboot, 0);
 	RegisterNativeFunction("FClassInfoByName", (void*) FClassInfoByName, 3);
 	RegisterNativeFunction("FClassInfoRegistrySeed", (void*) FClassInfoRegistrySeed, 0);
 	RegisterNativeFunction("FNextClassInfo", (void*) FNextClassInfo, 2);

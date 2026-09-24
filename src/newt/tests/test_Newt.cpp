@@ -106,6 +106,16 @@ static const char* kSetupSource =
 	"    if GetRed(c) <> 0xFFFF or GetBlue(c) <> 0 then return 0; "
 	"    if GetGreen(c) <> 0x8080 then return 0; "        // the low byte is thrown away and the high one doubled
 	"    1 end, "
+	// what the machine has been doing (system/SystemNatives.cpp): the
+	// counters are nought on a host, but the flag and the reset work
+	"  powerStats: func(data) begin "
+	"    if EnablePowerStats(true) <> true then return 0; "
+	"    local s := GetPowerStats(); "
+	"    if not IsFrame(s) or not IsInteger(s.screenOnTime) then return 0; "
+	"    ResetPowerStats(); "
+	"    if GetPowerStats().screenOnTime <> 0 then return 0; "
+	"    EnablePowerStats(nil); "
+	"    1 end, "
 	"  worldData: func(data) "
 	"    if GetPackageStore(\"WorldData\") then 1 else 0, "		// the store part of the WorldData package, mounted
 	"  battery: func(data) begin "
@@ -189,6 +199,7 @@ static Boolean gBatteryOk = false;
 static Boolean gBacklightOk = false;
 static Boolean gProtocolsOk = false;
 static Boolean gColoursOk = false;
+static Boolean gPowerStatsOk = false;
 static Boolean gExtrasOk = false;
 static Boolean gMapCursorOk = false;
 static Boolean gMinimumBatteryOk = false;
@@ -291,6 +302,9 @@ Scenario(void)
 		TRunScriptEvent colours("testApp", "colours");
 		newtPort.SendRPC(&replySize, &colours, sizeof(colours), &colours, sizeof(colours));
 		gColoursOk = colours.fError == 0 && colours.fResult == 1;
+		TRunScriptEvent stats("testApp", "powerStats");
+		newtPort.SendRPC(&replySize, &stats, sizeof(stats), &stats, sizeof(stats));
+		gPowerStatsOk = stats.fError == 0 && stats.fResult == 1;
 		TRunScriptEvent world("testApp", "worldData");
 		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
 		gWorldDataOk = world.fError == 0 && world.fResult == 1;
@@ -358,6 +372,7 @@ int main()
 	EXPECT(gBacklightOk);
 	EXPECT(gProtocolsOk);
 	EXPECT(gColoursOk);
+	EXPECT(gPowerStatsOk);
 	EXPECT(gMapCursorOk);	// MapCursor maps a cursor's entries without moving it
 	EXPECT(gExtrasOk);		// one Extras entry for each application, and marked so it stays that way
 	EXPECT(gMinimumBatteryOk);
