@@ -16,6 +16,8 @@
 #include "NewtonExceptions.h"
 #include "FixedMath.h"
 
+#include <stdio.h>
+
 
 
 // The four characters every block of the engine's memory is tagged with.
@@ -290,6 +292,235 @@ StrokeSort(RosStroke** strokes, short count)
 		last = strokes[i]->fMidX;
 		i = (short) (i + 1);
 	}
+}
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	Measuring and tidying.
+--------------------------------------------------------------------*/
+
+// ROM 0x0020000c StrokeCentroid
+// The average of the points - which is not the middle of the box: a
+// stroke that lingers at one end has its centroid pulled that way, and
+// that is what the engine wants of it.  Each point is divided by the
+// count before it is added, so a long stroke cannot overflow.
+void
+StrokeCentroid(const RosStroke* stroke, FPoint* centroid)
+{
+	Fixed x = 0;
+	Fixed y = 0;
+	if (stroke == nil || stroke->fCount < 1)
+		printf("StrokeCentroid called for NULL or 0-pt stroke\r");
+	else
+	{
+		Fixed share = FixedDivide(0x10000, (Fixed) (int) ((unsigned int) stroke->fCount << 16));
+		const FPoint* first = stroke->fPoints;
+		const FPoint* p = first + stroke->fCount;
+		while (--p >= first)
+		{
+			x += FixedMultiply(p->x, share);
+			y += FixedMultiply(p->y, share);
+		}
+	}
+	centroid->x = x;
+	centroid->y = y;
+}
+
+
+// ROM 0x00200570 StrokeSmooth
+// A new stroke, each point moved by `weight`/4 of its second difference
+// - the point before it, minus twice itself, plus the point after.  A
+// negative weight therefore smooths and a positive one sharpens, and
+// the two ends are left exactly where they were.
+RosStroke*
+StrokeSmooth(const RosStroke* stroke, Fixed weight)
+{
+	RosStroke* out = StrokeNew();
+	if (out == nil)
+		return nil;
+
+	FPoint* points = nil;
+	long count = stroke->fCount;
+	newton_try
+	{
+		if (count > 0)
+		{
+			const FPoint* in = stroke->fPoints;
+			points = (FPoint*) RosAllocate(count * (long) sizeof(FPoint));
+
+			// (the ROM reads in[1] here whatever the count is, and only
+			//  uses it when there are three points or more; a stroke of
+			//  one would have it read past its own points.  We read it
+			//  only when it is there, which is the same answer)
+			Fixed prevX = 0, prevY = 0, thisX = 0, thisY = 0, rawX = 0, rawY = 0;
+			if (count > 1)
+			{
+				prevX = FixedMultiply(in[0].x, weight) >> 2;
+				prevY = FixedMultiply(in[0].y, weight) >> 2;
+				rawX = in[1].x;
+				rawY = in[1].y;
+				thisX = FixedMultiply(rawX, weight) >> 2;
+				thisY = FixedMultiply(rawY, weight) >> 2;
+			}
+			// the ends stay where they are
+			points[0] = in[0];
+			points[count - 1] = in[count - 1];
+
+			for (long i = 2; i < count; i++)
+			{
+				Fixed nextX = in[i].x;
+				Fixed nextY = in[i].y;
+				Fixed scaledX = FixedMultiply(nextX, weight) >> 2;
+				Fixed scaledY = FixedMultiply(nextY, weight) >> 2;
+				points[i - 1].x = prevX + rawX - 2 * thisX + scaledX;
+				points[i - 1].y = prevY + rawY - 2 * thisY + scaledY;
+				prevX = thisX;
+				prevY = thisY;
+				thisX = scaledX;
+				thisY = scaledY;
+				rawX = nextX;
+				rawY = nextY;
+			}
+		}
+	}
+	newton_catch_all
+	{
+		StrokeDestroy(out);
+		rethrow;
+	}
+	end_try;
+
+	StrokeSet(out, (short) count, points, nil);
+	return out;
+}
+
+
+// ROM 0x00200224 StrokeConstrain
+// Every point of `stroke` pulled back to within half of `tolerance` of
+// the point it came from in `original` - the other half of what
+// dequantising is made of: smoothing moves the points, this says how
+// far they may go.
+RosStroke*
+StrokeConstrain(const RosStroke* stroke, const RosStroke* original, Fixed tolerance)
+{
+	RosStroke* out = StrokeNew();
+	if (out == nil)
+		return nil;
+
+	FPoint* points = nil;
+	long count = original->fCount;
+	newton_try
+	{
+		if (count > 0)
+		{
+			const FPoint* orig = original->fPoints;
+			const FPoint* in = stroke->fPoints;
+			Fixed half = tolerance / 2;
+			points = (FPoint*) RosAllocate(count * (long) sizeof(FPoint));
+			for (long i = 0; i < count; i++)
+			{
+				Fixed x = in[i].x;
+				Fixed y = in[i].y;
+				Fixed low = orig[i].x - half;
+				Fixed high = orig[i].x + half;
+				points[i].x = (x < low) ? low : ((x > high) ? high : x);
+				low = orig[i].y - half;
+				high = orig[i].y + half;
+				points[i].y = (y < low) ? low : ((y > high) ? high : y);
+			}
+		}
+	}
+	newton_catch_all
+	{
+		StrokeDestroy(out);
+		rethrow;
+	}
+	end_try;
+
+	StrokeSet(out, (short) count, points, nil);
+	return out;
+}
+
+
+// ROM 0x00200404 StrokeDeQuantize
+// The tablet reports the pen on a grid, so a slow stroke comes in as a
+// staircase.  This takes it off: smooth the stroke, pull every point
+// back to within `tolerance` of where it really was, and do it again.
+// Each pass rounds the steps a little more without letting the stroke
+// wander away from what was written.
+RosStroke*
+StrokeDeQuantize(const RosStroke* stroke, Fixed weight, Fixed tolerance, short passes)
+{
+	RosStroke* current = StrokeDuplicate(stroke);
+	newton_try
+	{
+		for (short pass = 0; pass < passes; pass++)
+		{
+			RosStroke* smoothed = nil;
+			newton_try
+			{
+				smoothed = StrokeSmooth(current, weight);
+			}
+			cleanup
+			{
+				StrokeDestroy(current);
+			}
+			end_try;
+			StrokeDestroy(current);
+
+			newton_try
+			{
+				current = StrokeConstrain(smoothed, stroke, tolerance);
+			}
+			cleanup
+			{
+				StrokeDestroy(smoothed);
+			}
+			end_try;
+			StrokeDestroy(smoothed);
+		}
+	}
+	newton_catch_all
+	{
+		rethrow;
+	}
+	end_try;
+	return current;
+}
+
+
+// ROM 0x002000f4 StrokePreprocess
+// What a stroke goes through before the engine looks at it, as a list
+// of one: dequantised when asked, then smoothed when asked, and always
+// a copy - the caller's stroke is never the one handed back.
+RosStrokeList*
+StrokePreprocess(RosStroke* stroke, Fixed smoothWeight, Fixed tolerance, short passes)
+{
+	RosStroke* current = stroke;
+	newton_try
+	{
+		if (tolerance != 0)
+			current = StrokeDeQuantize(stroke, smoothWeight, tolerance, passes);
+		if (smoothWeight != 0)
+		{
+			RosStroke* smoothed = StrokeSmooth(current, smoothWeight);
+			if (current != stroke)
+				StrokeDestroy(current);
+			current = smoothed;
+		}
+		if (current == stroke)
+			current = StrokeDuplicate(stroke);
+	}
+	newton_catch_all
+	{
+		rethrow;
+	}
+	end_try;
+
+	RosStroke* one[1];
+	one[0] = current;
+	return SLCreate(1, one);
 }
 
 

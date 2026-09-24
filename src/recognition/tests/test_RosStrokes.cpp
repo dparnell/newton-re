@@ -157,6 +157,80 @@ main()
 		SLDestroy(none, 1);
 	}
 
+	// ---- measuring and tidying ----
+	{
+		// the centroid is the average of the points, not the middle of
+		// the box: this stroke sits at x=0 three times and x=30 once
+		FPoint lop[4];
+		lop[0].x = F(0);	lop[0].y = F(0);
+		lop[1].x = F(0);	lop[1].y = F(0);
+		lop[2].x = F(0);	lop[2].y = F(0);
+		lop[3].x = F(40);	lop[3].y = F(0);
+		RosStroke* lopsided = StrokeCreate(4, lop);
+		FPoint middle;
+		StrokeCentroid(lopsided, &middle);
+		EXPECT(middle.x == F(10) && middle.y == 0);		// the average
+		EXPECT(lopsided->fMidX == F(20));				// the middle of the box
+		StrokeDestroy(lopsided);
+
+		// smoothing leaves the ends alone and pulls a spike in.  A
+		// weight of -4/4 = -1 takes the whole second difference off, so
+		// a single spike is flattened onto the line through its
+		// neighbours.
+		FPoint spike[3];
+		spike[0].x = F(0);	spike[0].y = F(0);
+		spike[1].x = F(1);	spike[1].y = F(10);		// the spike
+		spike[2].x = F(2);	spike[2].y = F(0);
+		RosStroke* rough = StrokeCreate(3, spike);
+		RosStroke* smooth = StrokeSmooth(rough, F(-4));
+		EXPECT(smooth != nil && smooth->fCount == 3);
+		EXPECT(smooth->fPoints[0].x == F(0) && smooth->fPoints[0].y == F(0));
+		EXPECT(smooth->fPoints[2].x == F(2) && smooth->fPoints[2].y == F(0));
+		// the middle point moved by -(0 - 2*10 + 0) = +20 ... away from
+		// the line, because the second difference is negative
+		EXPECT(smooth->fPoints[1].y == F(10) + (F(0) - 2 * F(10) + F(0)) * -1);
+		// a weight of nought changes nothing at all
+		RosStroke* same = StrokeSmooth(rough, 0);
+		EXPECT(same->fPoints[1].x == F(1) && same->fPoints[1].y == F(10));
+		StrokeDestroy(same);
+
+		// constraining pulls every point back to within half the
+		// tolerance of where it was
+		RosStroke* held = StrokeConstrain(smooth, rough, F(4));
+		EXPECT(held != nil && held->fCount == 3);
+		EXPECT(held->fPoints[1].y == F(12));			// 10 + 4/2
+		StrokeDestroy(held);
+		// a tolerance of nought pins it exactly
+		held = StrokeConstrain(smooth, rough, 0);
+		EXPECT(held->fPoints[1].y == F(10));
+		StrokeDestroy(held);
+		StrokeDestroy(smooth);
+
+		// dequantising is the two of them, over and over, and always
+		// answers a stroke of its own
+		RosStroke* clean = StrokeDeQuantize(rough, F(-4), F(1), 3);
+		EXPECT(clean != nil && clean != rough && clean->fCount == 3);
+		EXPECT(clean->fPoints[0].y == F(0) && clean->fPoints[2].y == F(0));
+		// never further than half the tolerance from where it was
+		EXPECT(clean->fPoints[1].y >= F(10) - 0x8000 && clean->fPoints[1].y <= F(10) + 0x8000);
+		StrokeDestroy(clean);
+
+		// and the whole of it, as a list of one.  The stroke handed in
+		// is never the one handed back.
+		RosStrokeList* ready = StrokePreprocess(rough, F(-4), F(1), 2);
+		EXPECT(ready != nil && ready->fCount == 1);
+		EXPECT(ready->fStrokes[0] != rough);
+		EXPECT(ready->fStrokes[0]->fCount == 3);
+		SLDestroy(ready, 1);
+		// with nothing asked for it is still a copy
+		ready = StrokePreprocess(rough, 0, 0, 0);
+		EXPECT(ready->fStrokes[0] != rough && ready->fStrokes[0]->fCount == 3);
+		EXPECT(ready->fStrokes[0]->fPoints[1].y == F(10));
+		SLDestroy(ready, 1);
+
+		StrokeDestroy(rough);
+	}
+
 	StrokeDestroy(stroke);
 
 	if (failures == 0)

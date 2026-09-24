@@ -89,6 +89,21 @@ void		StrokeScale(RosStroke* stroke, Fixed xScale, Fixed yScale);	// ROM 0x00201
 // one's horizontal range.
 void		StrokeSort(RosStroke** strokes, short count);		// ROM 0x00200d84 StrokeSort
 
+// The average of the points, which is not the middle of the box.
+void		StrokeCentroid(const RosStroke* stroke, FPoint* centroid);	// ROM 0x0020000c StrokeCentroid
+// A copy with every point moved by `weight`/4 of its second
+// difference: a negative weight smooths, a positive one sharpens, and
+// the two ends stay where they were.
+RosStroke*	StrokeSmooth(const RosStroke* stroke, Fixed weight);	// ROM 0x00200570 StrokeSmooth
+// A copy with every point pulled back to within half of `tolerance` of
+// where it is in `original`.
+RosStroke*	StrokeConstrain(const RosStroke* stroke, const RosStroke* original, Fixed tolerance);	// ROM 0x00200224 StrokeConstrain
+// The tablet's staircase taken off: smooth, pull back, and again.
+RosStroke*	StrokeDeQuantize(const RosStroke* stroke, Fixed weight, Fixed tolerance, short passes);	// ROM 0x00200404 StrokeDeQuantize
+// What a stroke goes through before the engine looks at it, as a list
+// of one.  What comes back is always a copy.
+RosStrokeList*	StrokePreprocess(RosStroke* stroke, Fixed smoothWeight, Fixed tolerance, short passes);	// ROM 0x002000f4 StrokePreprocess
+
 RosStrokeList*	SLNew(void);									// ROM 0x00200a24 SLNew
 RosStrokeList*	SLCreate(short count, RosStroke* const* strokes);	// ROM 0x00200ab4 SLCreate
 // The array handed over rather than copied; a nil `bounds` asks for

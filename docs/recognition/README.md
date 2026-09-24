@@ -1982,6 +1982,25 @@ The engine's memory is all `NewNamedPtr` tagged `'RoCK'`, and its
 `free` is a branch to `DisposPtr` — the Newton's pointer heap, not the
 C library's.
 
+**Tidying a stroke.** The tablet reports the pen on a grid, so a slow
+stroke arrives as a staircase, and `StrokeDeQuantize` takes it off in
+passes of two steps. `StrokeSmooth` moves every point by `weight`/4 of
+its *second difference* — the point before, minus twice itself, plus
+the point after — leaving the two ends where they were; a negative
+weight therefore smooths and a positive one sharpens.
+`StrokeConstrain` then pulls every point back to within half a
+tolerance of where it really was. Smoothing moves the points, the
+constraint says how far they may go, and each pass rounds the steps a
+little more without letting the stroke wander away from what was
+written. `StrokePreprocess` is what a stroke goes through before the
+engine looks at it: dequantised when asked, smoothed when asked, and
+always a copy — the caller's stroke is never the one handed back.
+
+`StrokeCentroid` is the average of the points, which is *not* the
+middle of the box: a stroke that lingers at one end has its centroid
+pulled that way, and each point is divided by the count before it is
+added so that a long stroke cannot overflow.
+
 Until then the eleven natives that ask for handwriting — `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,
 `RecognizeTextInStyles`, `DoCursiveTraining`,
