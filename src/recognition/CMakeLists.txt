@@ -33,6 +33,7 @@ add_library(recognition STATIC
     Arbiter.cpp
     Recognizer.cpp
     RosRecognizer.cpp
+    RosStrokes.cpp
     Rosetta.cpp
     TabletBuffer.cpp
     StrokeQueue.cpp

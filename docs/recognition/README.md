@@ -1953,10 +1953,34 @@ bounding box is started from its first stroke without anyone having to
 say so, and an empty source is passed over, so an empty stroke does not
 drag a box down to the origin.
 
-Above them, `SL*` (level 5) is nine functions over a stroke list — a
-count, an array of strokes and a bounding rectangle — and is the next
-piece that stands on its own, once the engine's own stroke type is
-known (its bounds are at offset 0x0c of whatever it is).
+Level 5 is done too. The Newton has a `TStroke` already — tablet
+samples packed into a handle, in eighths of a pixel, with the pen's
+timing — and the engine will not have it. It wants a stroke it can
+scale, smooth, sort and measure without asking anyone, so
+`TRosRecognizer` copies every stroke into a `RosStroke` on the way down
+and the engine works on its own copy from then on
+(`recognition/RosStrokes.h`).
+
+A `RosStroke` is a plain array of `FPoint` with its bounding rectangle
+beside it and **the middle of its horizontal range** worked out. That
+middle is what the strokes of a word are sorted by (`StrokeSort`),
+because the engine wants them in the order they sit on the line rather
+than the order they were written in; `fIndex` remembers the order they
+*were* written in, and `SLSort` puts them back into it before the word
+goes back to the recogniser, so that the strokes of a unit still match
+the strokes that came down. A `RosStrokeList` is a count, an array of
+those and the rectangle round the lot.
+
+Both `FindBounds` calls work the bounds out again only when what is
+there is **not a rectangle** — which is how a stroke whose points have
+been moved about says so. Whoever moves them leaves the rectangle
+invalid, and the next question re-measures. That is what
+`ValidFixedRect` is for, and it is why an empty rectangle has to count
+as valid.
+
+The engine's memory is all `NewNamedPtr` tagged `'RoCK'`, and its
+`free` is a branch to `DisposPtr` — the Newton's pointer heap, not the
+C library's.
 
 Until then the eleven natives that ask for handwriting — `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,

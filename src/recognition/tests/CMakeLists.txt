@@ -54,3 +54,7 @@ add_test(NAME recognition.Spelling COMMAND test_Spelling)
 add_executable(test_RosRecognizer test_RosRecognizer.cpp)
 target_link_libraries(test_RosRecognizer PRIVATE recognition)
 add_test(NAME recognition.RosRecognizer COMMAND test_RosRecognizer)
+
+add_executable(test_RosStrokes test_RosStrokes.cpp)
+target_link_libraries(test_RosStrokes PRIVATE recognition memory)
+add_test(NAME recognition.RosStrokes COMMAND test_RosStrokes)
