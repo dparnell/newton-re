@@ -1526,10 +1526,63 @@ FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
 }
 
 
+// ROM 0x0003eee0 FDrawIntoBitmap
+// DrawIntoBitmap(shape, styles, bitmap): the shape drawn into a bitmap
+// made by MakeBitmap rather than onto the screen.  A port is opened over
+// the bitmap's pixel map, the shape is drawn into it at the origin, and
+// the port that was current is put back - whether the drawing threw or
+// not.
+//
+// The bits are pointed to rather than offset from the map while the port
+// holds them (kPixMapPtr), because the port's copy of the map is not the
+// map inside the binary; the port rect and the *visible* region become
+// the bitmap's bounds, which is what confines the drawing to it (a fresh
+// port's visible region is the screen's).
+//
+// NOT YET RECONSTRUCTED: a bitmap whose resolution is not 72 dpi, which
+// the ROM draws through DrawShapeScaled; and TQDScaler::ForceScaling,
+// which it turns off around the unscaled case.
+static Ref
+FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
+{
+	GrafPort* saved;
+	GetPort(&saved);
+	RefVar data(GetFrameSlotRef(bitmap, RSSYMdata));
+	LockRef(data);
+	PixelMap* pm = (PixelMap*) BinaryData(data);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(pm);
+	port.portBits.baseAddr = GetPixelMapBits(pm);
+	port.portBits.pixMapFlags = (port.portBits.pixMapFlags & ~kPixMapStorage) | kPixMapPtr;
+	port.portRect = port.portBits.bounds;
+	RectRgn(port.visRgn, &port.portBits.bounds);
+	Point origin;
+	origin.h = 0;
+	origin.v = 0;
+	newton_try
+	{
+		DrawShape(shape, styles, origin);
+	}
+	newton_catch_all
+	{
+		SetPort(saved);
+		ClosePort(&port);
+		UnlockRef(data);
+		rethrow;
+	}
+	end_try;
+	SetPort(saved);
+	ClosePort(&port);
+	UnlockRef(data);
+	return NILREF;
+}
+
 void
 RegisterShapeNatives(void)
 {
 	RegisterNativeFunction("FDrawShape", (void*) FDrawShape, 2);
+	RegisterNativeFunction("FDrawIntoBitmap", (void*) FDrawIntoBitmap, 3);
 	RegisterNativeFunction("FHitShape", (void*) FHitShape, 3);
 	RegisterNativeFunction("FMakeTextLines", (void*) FMakeTextLines, 4);
 	RegisterNativeFunction("FMakeRect", (void*) FMakeRect, 4);

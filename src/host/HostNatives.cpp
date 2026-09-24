@@ -50,6 +50,7 @@ RegisterAllNatives(void)
 	RegisterPortNatives();
 	RegisterScreenNatives();
 	RegisterPictureNatives();
+	RegisterBitmapNatives();
 	RegisterRectNatives();
 	RegisterViewNatives();
 	RegisterShapeNatives();

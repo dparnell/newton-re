@@ -78,4 +78,12 @@ Ref		FGetBitmapPixel(RefArg rcvr, RefArg x, RefArg y, RefArg picture);	// ROM 0x
 
 void	RegisterPictureNatives(void);
 
+// A 'pixels binary of that size: a PixelMap header with the rows after
+// it, the map's baseAddr being the offset to them.
+Ref		MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
+						 long hRes, long vRes, RefArg store, RefArg compander,
+						 RefArg companderData);				// ROM 0x000415a4 MakePixelsObject__FR5TRectlN32RC6RefVarN26
+
+void	RegisterBitmapNatives(void);					// MakeBitmap (Pictures.cpp)
+
 #endif	/* __PICTURES_H */

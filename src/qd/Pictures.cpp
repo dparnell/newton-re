@@ -17,11 +17,17 @@
 #include "OSErrors.h"
 #include "NativeFunctions.h"
 #include "ByteOrder.h"
+#include "ROMConstants.h"
 #include <string.h>
 
 // the graphics exception (evt.ex.graf) for a picture that is not a bitmap
 static const char kGrafException[] = "evt.ex.graf";
 const long kGrafErrNotABitmap = -8803;			// the ROM's 0xffffdd9d
+const long kGrafErrBadRowBytes = -8808;			// MakeBitmap: rowBytes not a multiple of four, or too small
+const long kGrafErrBadDepth = -8807;			// ... a depth that is not a power of two
+const long kGrafErrBadWidth = -8806;
+const long kGrafErrBadHeight = -8805;
+const long kGrafErrBadParameters = -8809;
 
 
 /*------------------------------------------------------------------------------
@@ -390,4 +396,163 @@ DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 		bitmap = GetFrameSlotRef(picture, RSSYMmask);
 	}
 	DrawBitmap(bitmap, &bounds, mode);
+}
+
+
+/*------------------------------------------------------------------------------
+	M a k i n g   a   b i t m a p
+
+	A script can make an offscreen bitmap and draw into it: the shape it
+	gets back is a `canonicalBitmapShape` whose `data` is a `'pixels`
+	binary - a PixelMap header with the rows after it, the map's baseAddr
+	being the offset from the header to them (kPixMapOffset).
+------------------------------------------------------------------------------*/
+
+// ROM 0x000415a4 MakePixelsObject__FR5TRectlN32RC6RefVarN26
+// The binary itself: the header written over the front of it and the
+// rows left as they were allocated (nought).  With a store it is a large
+// binary instead, compressed by the named compander.
+//
+// DEVIATION: the ROM's header is 0x1c bytes because a Newton pointer is
+// four; the host's PixelMap is larger, so the header is written as a
+// PixelMap and the offset is its own size.  A `'pixels` binary is cast
+// straight to a PixelMap wherever it is drawn (qd/Pictures.cpp), so it
+// must be in the host's layout, not the Newton's.
+//
+// NOT YET RECONSTRUCTED: the store arm (FLBAllocCompressed), which wants
+// the large binaries - there are never any on the host.
+Ref
+MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
+				 long hRes, long vRes, RefArg store, RefArg compander, RefArg companderData)
+{
+	if (NOTNIL(store))
+		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadParameters, nil);
+	long header = (long) sizeof(PixelMap);
+	long size = header + rowBytes * (bounds.bottom - bounds.top);
+	RefVar object(AllocateBinary(RSSYMpixels, size));
+	PixelMap* map = (PixelMap*) BinaryData(object);
+	map->baseAddr = (Ptr) (intptr_t) header;
+	map->rowBytes = (short) rowBytes;
+	map->bounds = bounds;
+	map->pixMapFlags = kPixMapOffset | kPixMapVersion2 | (ULong) depth;
+	map->deviceRes.h = (short) hRes;
+	map->deviceRes.v = (short) vRes;
+	map->grayTable = nil;
+	return object;
+}
+
+
+// ROM 0x0004173c FMakeBitmap
+// MakeBitmap(width, height, options): a bitmap shape of that size.  The
+// options frame may say the `depth` (a power of two; the row bytes are
+// multiplied by it), the `rowBytes` outright (a multiple of four, and no
+// less than the width needs), the `resolution` (one number for both, or
+// an array of the horizontal and the vertical) and, for a bitmap kept on
+// a store, its `store`, `companderName` and `companderData`.  Every other
+// slot of the options frame is copied into the shape.
+//
+// The ROM works out what the width and height would be at 72 dpi when
+// the resolution is something else - and throws both answers away.  Kept
+// as it is, since it makes no difference to what comes out.
+static Ref
+FMakeBitmap(RefArg /*rcvr*/, RefArg width, RefArg height, RefArg options)
+{
+	long theHeight = RINT(height);
+	if (theHeight < 1)
+		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadHeight, nil);
+	long theWidth = RINT(width);
+	if (theWidth < 1)
+		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadWidth, nil);
+	long rowBytes = ((theWidth + 31) & ~31) >> 3;
+	long hRes = kDefaultDPI;
+	long vRes = kDefaultDPI;
+	long depth = 1;
+	RefVar rest;
+	RefVar store;
+	RefVar compander;
+	RefVar companderData;
+
+	if (NOTNIL(options))
+	{
+		rest = Clone(options);
+		if (FrameHasSlot(options, RSSYMdepth))
+		{
+			long asked = RINT(RefVar(GetFrameSlotRef(options, RSSYMdepth)));
+			long power = asked;
+			while (power > 1 && (power & 1) == 0)
+				power >>= 1;
+			if (power != 1)
+				Throw((ExceptionName) kGrafException, (void*) kGrafErrBadDepth, nil);
+			depth = asked;
+			if (asked != 1)
+				rowBytes = asked * rowBytes;
+			RemoveSlot(rest, RSSYMdepth);
+		}
+		if (FrameHasSlot(options, RSSYMrowbytes))
+		{
+			long asked = RINT(RefVar(GetFrameSlotRef(options, RSSYMrowbytes)));
+			if ((asked & 3) != 0 || asked < rowBytes)
+				Throw((ExceptionName) kGrafException, (void*) kGrafErrBadRowBytes, nil);
+			rowBytes = asked;
+			RemoveSlot(rest, RSSYMrowbytes);
+		}
+		if (FrameHasSlot(options, RSSYMresolution))
+		{
+			RefVar asked(GetFrameSlotRef(options, RSSYMresolution));
+			if (!IsArray(asked))
+			{
+				hRes = RINT(asked);
+				vRes = hRes;
+			}
+			else
+			{
+				hRes = RINT(RefVar(GetArraySlotRef(asked, 0)));
+				vRes = RINT(RefVar(GetArraySlotRef(asked, 1)));
+			}
+			RemoveSlot(rest, RSSYMresolution);
+		}
+		if (FrameHasSlot(options, RSSYMstore))
+		{
+			store = GetFrameSlotRef(options, RSSYMstore);
+			RemoveSlot(rest, RSSYMstore);
+			// (the ROM reads companderName only when there is a store, and
+			//  companderData only when there is a companderName)
+		}
+		if (FrameHasSlot(options, RSSYMcompandername))
+		{
+			compander = GetFrameSlotRef(options, RSSYMcompandername);
+			RemoveSlot(rest, RSSYMcompandername);
+			if (FrameHasSlot(options, RSSYMcompanderdata))
+			{
+				companderData = GetFrameSlotRef(options, RSSYMcompanderdata);
+				RemoveSlot(rest, RSSYMcompanderdata);
+			}
+		}
+	}
+
+	Rect bounds;
+	SetRect(&bounds, 0, 0, (short) theWidth, (short) theHeight);
+	RefVar pixels(MakePixelsObject(bounds, depth, rowBytes, hRes, vRes,
+								   store, compander, companderData));
+
+	RefVar boundsBinary(AllocateBinary(RSSYMboundsrect, sizeof(Rect)));
+	BlockMove(&bounds, BinaryData(boundsBinary), sizeof(Rect));
+	RefVar shape(Clone(RefVar(Rcanonicalbitmapshape)));
+	SetFrameSlot(shape, RSSYMbounds, boundsBinary);
+	SetFrameSlot(shape, RSSYMdata, pixels);
+	if (NOTNIL(rest))
+	{
+		TObjectIterator* iter = NewTObjectIterator(rest);
+		for (; !iter->Done(); iter->Next())
+			SetFrameSlot(shape, RefVar(iter->Tag()), RefVar(iter->Value()));
+		DeleteTObjectIterator(iter);
+	}
+	return shape;
+}
+
+
+void
+RegisterBitmapNatives(void)
+{
+	RegisterNativeFunction("FMakeBitmap", (void*) FMakeBitmap, 3);
 }

@@ -400,6 +400,39 @@ the frame locked.  NOT YET: `'picture` binaries (QuickDraw pictures,
 `DrawPicture` 0x0030e270), shapes (`DrawShape` 0x000e0a68, `ShapeBounds`
 0x000e21cc), the colour tables as gray tables.
 
+### Making a bitmap and drawing into it
+
+`MakeBitmap(width, height, options)` 0x0004173c makes an offscreen
+bitmap: a `canonicalBitmapShape` whose `data` is a `'pixels` binary -
+a PixelMap header with the rows after it, the map's `baseAddr` being the
+offset from the header to them (`kPixMapOffset`), which is what
+`MakePixelsObject` 0x000415a4 builds.  The row bytes are the width
+rounded up to a whole word, multiplied by the depth; the options frame
+may override them, give a `depth` (which must be a power of two) or a
+`resolution`, and every slot that is not one of those is copied into the
+shape.  A `store` asks for the bitmap to be kept on a store as a large
+binary instead, which is NOT YET.
+
+DEVIATION: the ROM's header is 0x1c bytes because a Newton pointer is
+four; a host pointer is eight, so the header is written as a host
+`PixelMap` and the offset is its own size.  Nothing outside reads the
+header as bytes - a `'pixels` binary is cast straight to a `PixelMap*`
+wherever it is drawn (`TPixelObj::Init`) - so the format only has to
+agree with itself.
+
+`DrawIntoBitmap(shape, styles, bitmap)` 0x0003eee0 draws into one: a
+port is opened over the bitmap's pixel map, the shape is drawn at the
+origin, and the port that was current is put back.  Two details matter
+and are easy to miss: the port's copy of the map has its bits *pointed
+to* rather than offset from it (`kPixMapPtr`), since the copy is not the
+map inside the binary; and the port rect and the **visible** region are
+set to the bitmap's bounds, because a freshly opened port's visible
+region is the screen's, and without that nothing is drawn at all.
+
+NOT YET: a bitmap whose resolution is not 72 dpi (`DrawShapeScaled`),
+`TQDScaler::ForceScaling` around the unscaled case, and
+`ViewIntoBitmap`, which draws a whole view into one.
+
 ## Polygons and recording (`src/qd/Polygons.h`)
 
 `OpenRgn` 0x003150f4 makes a point buffer (the globals' `fRgnHandle`,

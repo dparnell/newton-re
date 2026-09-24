@@ -957,6 +957,76 @@ TestShapes()
 	EXPECT(RINT(Eval("ShapeBounds(OffsetShape(MakePolygon([0, 0, 10, 0, 5, 8]), 4, 4)).left")) == 4);
 	EXPECT(EQRef(ClassOf(Eval("MakeRegion(MakeRect(2, 2, 6, 6))")), RSSYMregion) && RINT(Eval("ShapeBounds(MakeRegion(MakeRect(2, 2, 6, 6))).right")) == 6);
 
+	// MakeBitmap makes an offscreen bitmap and DrawIntoBitmap draws into
+	// it (qd/Pictures.cpp, views/DrawShape.cpp)
+	Eval("bm := MakeBitmap(40, 20, nil)");
+	// the `bounds` slot is a 'boundsRect binary, as the ROM makes it -
+	// the pixel map inside the shape carries the same rectangle
+	EXPECT(EQRef(ClassOf(Eval("bm.bounds")), Intern((char*) "boundsRect")));
+	{
+		RefVar data(Eval("bm.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		EXPECT(pm->bounds.right == 40 && pm->bounds.bottom == 20);
+		EXPECT(pm->rowBytes == 8);				// forty bits rounded up to a whole word
+		EXPECT(PixelMapDepth(pm) == 1);
+		UnlockRef(data);
+	}
+	EXPECT(EQRef(ClassOf(Eval("bm.data")), Intern((char*) "pixels")));
+	// the options frame: the row bytes are rounded up to a whole word,
+	// and every slot that is not one of the known ones is copied on
+	Eval("bm2 := MakeBitmap(33, 4, {rowBytes: 8, mine: 'kept})");
+	EXPECT(EQRef(Eval("bm2.mine"), Intern((char*) "kept")));
+	EXPECT(ISNIL(Eval("bm2.rowBytes")));		// the options the bitmap used are not copied
+	// a depth that is not a power of two, and a width of nought, are refused
+	EXPECT(NOTNIL(Eval("call func() begin try MakeBitmap(8, 8, {depth: 3}) onexception |evt.ex.graf| do 'threw end with ()")));
+	EXPECT(NOTNIL(Eval("call func() begin try MakeBitmap(0, 8, nil) onexception |evt.ex.graf| do 'threw end with ()")));
+	// nothing is drawn in it yet, and a filled rectangle turns pixels on
+	{
+		RefVar data(Eval("bm.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long lit = 0;
+		for (long y = 0; y < 20; y++)
+			for (long x = 0; x < 40; x++)
+				if (GetPixel(pm, x, y) != 0)
+					lit++;
+		EXPECT(lit == 0);
+		UnlockRef(data);
+	}
+	// a rectangle framed, then the same one filled black
+	Eval("DrawIntoBitmap(MakeRect(2, 3, 12, 9), nil, bm)");
+	{
+		RefVar data(Eval("bm.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long lit = 0;
+		for (long y = 0; y < 20; y++)
+			for (long x = 0; x < 40; x++)
+				if (GetPixel(pm, x, y) != 0)
+					lit++;
+		EXPECT(lit == 28);					// the outline of a ten-by-six rectangle
+		EXPECT(GetPixel(pm, 2, 3) != 0 && GetPixel(pm, 11, 8) != 0);
+		EXPECT(GetPixel(pm, 5, 5) == 0);	// not filled
+		EXPECT(GetPixel(pm, 1, 3) == 0 && GetPixel(pm, 12, 8) == 0);
+		UnlockRef(data);
+	}
+	Eval("DrawIntoBitmap(MakeRect(2, 3, 12, 9), {fillPattern: 5}, bm)");
+	{
+		RefVar data(Eval("bm.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long lit = 0;
+		for (long y = 0; y < 20; y++)
+			for (long x = 0; x < 40; x++)
+				if (GetPixel(pm, x, y) != 0)
+					lit++;
+		EXPECT(lit == 60);					// ten across by six down, filled
+		EXPECT(GetPixel(pm, 5, 5) != 0);
+		UnlockRef(data);
+	}
+	Eval("bm := nil; bm2 := nil");
+
 	// CopyBits puts a bitmap at a point of the view and DoDrawing lets a
 	// script draw outside a viewDrawScript, both in the view's coordinates
 	{
@@ -5407,6 +5477,8 @@ main()
 	InitFonts();
 	RegisterTextNatives();
 	RegisterViewNatives();
+	RegisterShapeNatives();
+	RegisterBitmapNatives();
 	RegisterStrokeBundleNatives();
 	RegisterInkNatives();
 	RegisterPickNatives();
