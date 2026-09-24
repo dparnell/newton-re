@@ -8,14 +8,14 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `fbb114a`)
+## State at 2026-09-24 (commit `26ba5d0`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8884 citations, 0 bad;
-  4804 of 16671 functions (28.82%).
-- `analysis/natives.py`: 773 of the ROM's 1326 natives answered
-  (built-ins 598 of 869, prototype methods 175 of 457).
+- `analysis/coverage.py build/MP2x00US --check`: 8887 citations, 0 bad;
+  4805 of 16671 functions (28.82%).
+- `analysis/natives.py`: 775 of the ROM's 1326 natives answered
+  (built-ins 600 of 869, prototype methods 175 of 457).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -126,8 +126,8 @@ The last run of work closed, in order:
   already reconstructed.  Three batches went in - the strokes, ink and
   try string; the popups and what a view allows to be written on it; the
   key commands; text put in, views tied and the key commands sorted;
-  the colours, `StrWidth` and the protocol registry - taking it from
-  728 to 773.  Two reconstruction bugs
+  the colours, `StrWidth` and the protocol registry; a bitmap made and
+  drawn into - taking it from 728 to 775.  Two reconstruction bugs
   came out of the tests for them: `FMakeRichString` wrote its halfwords
   the ROM's way round, so no rich string it made ever read back as
   having ink in it; and `TRootView::SetPopup` was missing the arm that
@@ -149,9 +149,14 @@ The named pieces whose machinery *is* there:
 - the hilite natives (`hiliter`, `HiliteViewChildren`,
   `GetHiliteIndex`/`SetHiliteIndex`), which want `TView::AddHiliter` -
   the root view's `fHiliter` is NOT YET;
-- the bitmap and shape verbs (`MakeBitmap`, `DrawIntoBitmap`,
-  `ViewIntoBitmap`, `MakePict`, `PictToShape`, `MungeShape`,
-  `GetBitmapInfo`, `MungeBitmap`);
+- `ViewIntoBitmap` 0x0003f074, which draws a whole view into a bitmap:
+  the same port trick as `DrawIntoBitmap` (`views/DrawShape.cpp`) with a
+  source and a destination rectangle to line up, plus the pen saved
+  round the draw;
+- the rest of the bitmap and shape verbs (`MakePict`, `PictToShape`,
+  `MungeShape`, `MungeBitmap`, `GetShapeInfo`, `FindShape`);
+  `GetBitmapInfo` also wants `GetBinaryStore`/`GetBinaryCompander`,
+  which answer nil on a host because there are never large binaries;
 - `instance:Dispatch` 0x00195228, which wants
   `PrimCallProtocolFromFrames` - the marshalling of NewtonScript values
   into a C call - and with it the `Gestalt` registration natives
