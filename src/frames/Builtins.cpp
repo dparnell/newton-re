@@ -1739,6 +1739,19 @@ FGetRandomState(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x002017a4 FSetRandomSeed
+// SetRandomSeed(seed): the generator started again from that seed.  It
+// sits among the machine's own natives in the ROM (system/SystemNatives.h)
+// because UserBoot seeds the same generator from the clock; it is here
+// because this is where the generator is.
+static Ref
+FSetRandomSeed(RefArg /*rcvr*/, RefArg seed)
+{
+	SeedRandom((ULong) RINT(seed));
+	return NILREF;
+}
+
+
 // ROM 0x002b95e4 FSetRandomState
 Ref
 FSetRandomState(RefArg /*rcvr*/, RefArg state)
@@ -1888,6 +1901,7 @@ RegisterBuiltinNatives(void)
 	NATIVE("FRandom", FRandom, 2);
 	NATIVE("FGetRandomState", FGetRandomState, 0);
 	NATIVE("FSetRandomState", FSetRandomState, 1);
+	NATIVE("FSetRandomSeed", FSetRandomSeed, 1);
 	NATIVE("FGetFunctionArgCount", FGetFunctionArgCount, 1);
 	NATIVE("FGetSiblingSlot", FGetSiblingSlot, 2);
 	NATIVE("FHasSiblingSlot", FHasSiblingSlot, 2);

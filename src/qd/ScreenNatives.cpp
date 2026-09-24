@@ -75,25 +75,12 @@ FLockScreen(RefArg /*rcvr*/, RefArg lock)
 }
 
 
-// ROM 0x00201a0c FBackLightStatus
-// BackLightStatus(): true when the backlight is on.  (Switching it on
-// and off is FBackLight 0x00201a3c, NOT YET RECONSTRUCTED - it goes to
-// the power manager.)
-static Ref
-FBackLightStatus(RefArg /*rcvr*/)
-{
-	long on = 0;
-	GetGrafInfo(kGrafInfoBacklight, &on);
-	return MAKEBOOLEAN(on == 1);
-}
-
 void
 RegisterScreenNatives(void)
 {
 	RegisterNativeFunction("FLockScreen", (void*) FLockScreen, 1);
 	RegisterNativeFunction("FGetLCDContrast__FRC6RefVar", (void*) FGetLCDContrast, 0);
 	RegisterNativeFunction("FSetLCDContrast__FRC6RefVarT1", (void*) FSetLCDContrast, 1);
-	RegisterNativeFunction("FBackLightStatus", (void*) FBackLightStatus, 0);
 	RegisterNativeFunction("FGetOrientation", (void*) FGetOrientation, 0);
 	RegisterNativeFunction("FSetOrientation", (void*) FSetOrientation, 1);
 }

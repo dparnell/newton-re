@@ -283,8 +283,10 @@ GetGrafInfo(long selector, void* info)
 // ROM 0x001cc9dc SetGrafInfo__FlT1
 // The contrast (3: the driver's feature 0; NOT YET: the temperature
 // sampling), the orientation (4: the driver's feature 4, the screen
-// pixel map made again for it and its bits cleared), or feature 5 -
-// through the driver.
+// pixel map made again for it and its bits cleared), or the backlight
+// (5: the driver's feature 2) - through the driver.  Those are the only
+// three it sets; the depth, resolution and the rest are the screen's to
+// say and GetGrafInfo's to report.
 void
 SetGrafInfo(long selector, long value)
 {
@@ -302,8 +304,8 @@ SetGrafInfo(long selector, long value)
 		if (bits != nil)
 			memset(bits, 0, size);
 	}
-	if (selector == 6)
-		gTheScreen->SetFeature(5, value);
+	if (selector == kGrafInfoBacklight)
+		gTheScreen->SetFeature(kScreenFeatureBacklight, value);
 }
 
 

@@ -16,12 +16,17 @@
 
 static const long kFixedOne = 0x00010000;
 
+// What the machine has been told it holds (SetPowerPlantBatteryType); a
+// MessagePad keeps this in the power manager, and the battery picker in
+// the Prefs slip is what sets it.
+static long gHostBatteryType = kBatteryAlkaline;
+
 extern "C" NewtonErr
 GetPowerPlantStatus(long /*which*/, PowerPlantStatus* status)
 {
 	if (status == nil)
 		return kError_Bad_Parameters;
-	status->fBatteryType = kBatteryAlkaline;
+	status->fBatteryType = gHostBatteryType;
 	status->fBatteryVoltage = 6 * kFixedOne;		// four cells, fresh
 	status->fBatteryCapacity = 100;
 	status->fBatteryLow = 0;
@@ -43,6 +48,18 @@ extern "C" long
 GetPowerPlantCount(void)
 {
 	return 1;
+}
+
+
+// The cells the machine is told it holds.  A real power manager takes
+// this to pick the charge curve it measures the battery against; the
+// host has nothing to measure, so it only remembers what it was told and
+// answers that again.
+extern "C" NewtonErr
+SetPowerPlantBatteryType(long /*which*/, long type)
+{
+	gHostBatteryType = type;
+	return noErr;
 }
 
 // ROM 0x00192764 CyclePower__Fv

@@ -23,6 +23,7 @@
 #include "OSErrors.h"
 #include "Screen.h"
 #include "Keyboard.h"
+#include "RootView.h"
 #include "Locale.h"
 
 
@@ -271,6 +272,18 @@ GetBatteryStatus(long which, PowerPlantStatus* status, Boolean /*raw*/)
 }
 
 
+// ROM 0x002035d4 SetBatteryType__FlT1
+// The power manager told what cells a battery holds: command 7 of the
+// same RPC, whose reply is the error the manager made of it.
+//
+// DEVIATION: as above - hal/Power.h is asked instead.
+static long
+SetBatteryType(long which, long type)
+{
+	return SetPowerPlantBatteryType(which, type);
+}
+
+
 // a Fixed reading as a real
 static Ref
 FixedReal(Fixed value)
@@ -279,17 +292,19 @@ FixedReal(Fixed value)
 }
 
 
-// ROM 0x00203db8 FBatteryStatus
-// BatteryStatus(which): a frame describing that battery and the power
-// coming in, or an empty frame when the power manager will not say.  A
-// reading of -1 means the machine cannot tell, and its slot is left as
-// the canonical frame has it - nil.
-Ref
-FBatteryStatus(RefArg /*rcvr*/, RefArg which)
+// ROM 0x002038a0 BatteryStatusHelper__FlUc
+// A frame describing that battery and the power coming in, or an empty
+// frame when the power manager will not say.  A reading of -1 means the
+// machine cannot tell, and its slot is left as the canonical frame has
+// it - nil.  `raw` is what the two natives below differ by: it asks the
+// power manager to take the reading again rather than answer the one it
+// last took.
+static Ref
+BatteryStatusHelper(long which, Boolean raw)
 {
 	RefVar result(AllocateFrame());
 	PowerPlantStatus status;
-	if (GetBatteryStatus(RINT(which), &status, false) != noErr)
+	if (GetBatteryStatus(which, &status, raw) != noErr)
 		return result;
 	result = Clone(RefVar(Rcanonicalbatterystatus));
 	switch (status.fBatteryType)
@@ -340,6 +355,91 @@ FBatteryStatus(RefArg /*rcvr*/, RefArg which)
 	return result;
 }
 
+
+// ROM 0x00203db8 FBatteryStatus
+// BatteryStatus(which): the reading the power manager already has.
+Ref
+FBatteryStatus(RefArg /*rcvr*/, RefArg which)
+{
+	return BatteryStatusHelper(RINT(which), false);
+}
+
+
+// ROM 0x002017d4 FBatteryRawStatus
+// BatteryRawStatus(which): the same frame, from a reading taken now.
+static Ref
+FBatteryRawStatus(RefArg /*rcvr*/, RefArg which)
+{
+	return BatteryStatusHelper(RINT(which), true);
+}
+
+
+// ROM 0x0c104c48 gLastBatteryLevel
+// The capacity the main battery last read, so that a reading which
+// cannot be taken answers the one before it rather than nothing.
+static long	gLastBatteryLevel = 0;
+
+
+// ROM 0x00201804 FBatteryLevel__FRC6RefVarT1
+// BatteryLevel(what): one number out of the battery status, which is
+// what a battery gauge watches rather than building a whole frame every
+// time.  `what` picks it:
+//
+//	0	the main battery's capacity (and the level it last read is the
+//		answer when the reading fails)
+//	1	the second battery's capacity
+//	2	the temperature
+//	3	the main battery's capacity, without that fallback
+//
+// On the mains the main battery reads 100 whatever the cells say, which
+// is what keeps the gauge full while the machine is plugged in.
+//
+// The temperature is answered as the Fixed the power manager sends, made
+// an integer without being scaled - so it is degrees times 65536, not
+// degrees.  (The ROM does this; its own scripts never ask for it.)
+static Ref
+FBatteryLevel(RefArg /*rcvr*/, RefArg what)
+{
+	RefVar result;
+	Boolean wantCapacity = true;
+	long which = RINT(what);
+	if (which == 0)
+		result = MAKEINT(gLastBatteryLevel);
+	else if (which == 2)
+	{
+		wantCapacity = false;
+		which = 0;
+	}
+	else if (which == 3)
+		which = 0;
+
+	PowerPlantStatus status;
+	if (GetBatteryStatus(which, &status, false) != noErr)
+		return result;
+	if (which == 0)
+		gLastBatteryLevel = status.fBatteryCapacity;
+
+	long value;
+	if (wantCapacity)
+	{
+		if (status.fACPower == 1 && which == 0)
+			return MAKEINT(100);
+		value = status.fBatteryCapacity;
+	}
+	else
+	{
+		value = status.fAmbientTemp;
+		if (value == -1)
+		{
+			value = status.fBatteryTemp;
+			if (value == -1)
+				return result;
+		}
+	}
+	return MAKEINT(value);
+}
+
+
 // ROM 0x00203510 FBatteryCount
 // BatteryCount(): how many batteries the machine has, 0 when the power
 // manager will not say (a 'newt/'pg&e RPC of its own).
@@ -352,19 +452,83 @@ FBatteryCount(RefArg /*rcvr*/)
 	return MAKEINT(GetPowerPlantCount());
 }
 
+
+// ROM 0x00203684 FSetBatteryType
+// SetBatteryType(which, type): what cells the machine is holding, as one
+// of the symbols the status frame answers or as the number behind it;
+// nil says it is not known.  ==> true when the power manager took it.
+// A type which is neither a known symbol nor an integer is refused with
+// nil rather than an error.
+static Ref
+FSetBatteryType(RefArg /*rcvr*/, RefArg which, RefArg type)
+{
+	long kind;
+	if (IsSymbol(type))
+	{
+		if (EQRef(type, RSSYMalkaline))			kind = kBatteryAlkaline;
+		else if (EQRef(type, RSSYMnicd))		kind = kBatteryNiCd;
+		else if (EQRef(type, RSSYMnimh))		kind = kBatteryNiMH;
+		else if (EQRef(type, RSSYMlithium))		kind = kBatteryLithium;
+		else									return NILREF;
+	}
+	else if (ISNIL(type))
+		kind = -1;
+	else if (ISINT(type))
+		kind = RINT(type);
+	else
+		return NILREF;
+	return MAKEBOOLEAN(SetBatteryType(RINT(which), kind) == noErr);
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   b a c k l i g h t
+------------------------------------------------------------------------------*/
+
+// ROM 0x00201a0c FBackLightStatus
+// BackLightStatus(): true when the backlight is on.
+static Ref
+FBackLightStatus(RefArg /*rcvr*/)
+{
+	long on = 0;
+	GetGrafInfo(kGrafInfoBacklight, &on);
+	return MAKEBOOLEAN(on == 1);
+}
+
+
+// ROM 0x00201a3c FBackLight
+// BackLight(on): the backlight switched, answering what it was before.
+// Switching it on tickles the root view first (EventPause), so that the
+// machine does not count as having been left alone the moment the light
+// comes on and turn itself off again.
+Ref
+FBackLight(RefArg /*rcvr*/, RefArg on)
+{
+	long was = 0;
+	GetGrafInfo(kGrafInfoBacklight, &was);
+	if (ISNIL(on))
+		SetGrafInfo(kGrafInfoBacklight, 0);
+	else
+	{
+		NSSendRootMessage(RefVar(Intern((char*) "eventPause")), RefVar(TRUEREF));
+		SetGrafInfo(kGrafInfoBacklight, 1);
+	}
+	return MAKEBOOLEAN(was == 1);
+}
+
+
 // ROM 0x002018f8 SleepUntilNextWakeup__Fv
 // The machine put to sleep until something wakes it: the backlight off,
 // the power cycled (the hard keymap cleared if it came back), the
 // contrast set from the preference again and the power event handed on.
 // ==> what woke it, as one of the kWoke... reasons.
 //
-// NOT YET RECONSTRUCTED: FBackLight 0x00201a3c, which turns the
-// backlight off first.  The sleep itself is hal/Power.h's CyclePower,
-// and on a host it does not sleep at all.
+// The sleep itself is hal/Power.h's CyclePower, and on a host it does
+// not sleep at all.
 long
 SleepUntilNextWakeup(void)
 {
-	// NOT YET RECONSTRUCTED: FBackLight(nil, nil)
+	FBackLight(RefVar(NILREF), RefVar(NILREF));
 	ULong event = CyclePower();
 	if (event != 0)
 		ClearHardKeymap();		// a key held down through the sleep is not a keypress
@@ -521,7 +685,12 @@ RegisterSystemNatives(void)
 	RegisterNativeFunction("FGetSerialNumber", (void*) FGetSerialNumber, 0);
 	RegisterNativeFunction("FGestalt", (void*) FGestalt, 1);
 	RegisterNativeFunction("FBatteryStatus", (void*) FBatteryStatus, 1);
+	RegisterNativeFunction("FBatteryRawStatus", (void*) FBatteryRawStatus, 1);
+	RegisterNativeFunction("FBatteryLevel__FRC6RefVarT1", (void*) FBatteryLevel, 1);
 	RegisterNativeFunction("FMinimumBatteryCheck", (void*) FMinimumBatteryCheck, 0);
 	RegisterNativeFunction("FBatteryCount", (void*) FBatteryCount, 0);
+	RegisterNativeFunction("FSetBatteryType", (void*) FSetBatteryType, 2);
+	RegisterNativeFunction("FBackLightStatus", (void*) FBackLightStatus, 0);
+	RegisterNativeFunction("FBackLight", (void*) FBackLight, 1);
 	RegisterNativeFunction("FGetHeapStats", (void*) FGetHeapStats, 1);
 }

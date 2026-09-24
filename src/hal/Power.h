@@ -86,6 +86,9 @@ extern "C" {
 NewtonErr	GetPowerPlantStatus(long which, PowerPlantStatus* status);
 // how many batteries the machine has (0 when it cannot say)
 long		GetPowerPlantCount(void);
+// which battery told what kind of cells it holds (kBattery...); a
+// machine that cannot be told answers an error
+NewtonErr	SetPowerPlantBatteryType(long which, long type);
 // the machine powered down until something brings it back; ==> the
 // power event word saying what did (0 for nothing in particular)
 ULong		CyclePower(void);

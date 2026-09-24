@@ -1689,3 +1689,37 @@ TRootView::IdleViews(void)
 	}
 	return next;
 }
+
+
+/*------------------------------------------------------------------------------
+	M e s s a g e s   t o   t h e   r o o t
+
+	The system's own code reaches the scripts at the top of the view
+	hierarchy by sending to the root view's context - the frame every
+	other view's context has as its ultimate _parent.  GetRoot() answers
+	the same frame to a script.
+------------------------------------------------------------------------------*/
+
+// ROM 0x001b1fe4 NSSendRootMessage__FRC6RefVar
+Ref
+NSSendRootMessage(RefArg message)
+{
+	RefVar context(gRootView->fContext);
+	if (!IsSymbol(message))
+		ThrowBadTypeWithFrameData(kNSErrNotASymbol, message);
+	RefVar implementor(FindImplementor(context, message));
+	return DoSend(context, implementor, message, 0);
+}
+
+
+// ROM 0x001b2a94 NSSendRootMessage__FRC6RefVarT1
+Ref
+NSSendRootMessage(RefArg message, RefArg a1)
+{
+	RefVar context(gRootView->fContext);
+	if (!IsSymbol(message))
+		ThrowBadTypeWithFrameData(kNSErrNotASymbol, message);
+	RefVar implementor(FindImplementor(context, message));
+	gInterpreter->PushValue(a1);
+	return DoSend(context, implementor, message, 1);
+}

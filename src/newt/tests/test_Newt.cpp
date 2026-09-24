@@ -91,8 +91,34 @@ static const char* kSetupSource =
 	"    if GetPackageStore(\"WorldData\") then 1 else 0, "		// the store part of the WorldData package, mounted
 	"  battery: func(data) begin "
 	"    local b := BatteryStatus(0); "
-	"    if b.batteryType = 'alkaline and b.batteryCapacity = 100 and b.acPower = 'no "
-	"       and b.chargeState = 'discharging and b.batteryVoltage > 5.0 then 1 else 0 end, "
+	"    if not (b.batteryType = 'alkaline and b.batteryCapacity = 100 and b.acPower = 'no "
+	"       and b.chargeState = 'discharging and b.batteryVoltage > 5.0) then return 0; "
+	// the reading taken afresh says the same as the one already held
+	"    local r := BatteryRawStatus(0); "
+	"    if r.batteryCapacity <> b.batteryCapacity then return 0; "
+	// BatteryLevel: the capacity alone, and the temperature as the Fixed
+	// the power manager sends (degrees times 65536, which is the ROM's
+	// own arithmetic)
+	"    if BatteryLevel(0) <> 100 or BatteryLevel(3) <> 100 then return 0; "
+	"    if BatteryLevel(2) <> 20 * 65536 then return 0; "
+	"    if BatteryCount() <> 1 then return 0; "
+	// the cells the machine is told it holds, and told back again
+	"    if not SetBatteryType(0, 'nimh) then return 0; "
+	"    if BatteryStatus(0).batteryType <> 'nimh then return 0; "
+	"    if not SetBatteryType(0, 'alkaline) then return 0; "
+	"    1 end, "
+	// the backlight: switched through the screen driver, and answering
+	// what it was before it was switched
+	"  backlight: func(data) begin "
+	"    if BackLightStatus() then return 0; "
+	"    if BackLight(true) then return 0; "
+	"    if not BackLightStatus() then return 0; "
+	"    if not BackLight(nil) then return 0; "
+	"    if BackLightStatus() then return 0; "
+	// the seeded generator repeats itself
+	"    SetRandomSeed(12345); local a := Random(0, 1000000); "
+	"    SetRandomSeed(12345); if Random(0, 1000000) <> a then return 0; "
+	"    1 end, "
 	// PowerOff: the ROM's own wrapper round the native - the machine
 	// asleep and awake again
 	"  powerOff: func(data) "
@@ -141,6 +167,7 @@ static long gScriptErr = -1;
 static long gTextLength = 0;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
+static Boolean gBacklightOk = false;
 static Boolean gExtrasOk = false;
 static Boolean gMapCursorOk = false;
 static Boolean gMinimumBatteryOk = false;
@@ -227,6 +254,10 @@ Scenario(void)
 		TRunScriptEvent battery("testApp", "battery");
 		newtPort.SendRPC(&replySize, &battery, sizeof(battery), &battery, sizeof(battery));
 		gBatteryOk = battery.fError == 0 && battery.fResult == 1;
+		// the backlight, and the random generator's seed
+		TRunScriptEvent backlight("testApp", "backlight");
+		newtPort.SendRPC(&replySize, &backlight, sizeof(backlight), &backlight, sizeof(backlight));
+		gBacklightOk = backlight.fError == 0 && backlight.fResult == 1;
 		TRunScriptEvent extras("testApp", "extras");
 		newtPort.SendRPC(&replySize, &extras, sizeof(extras), &extras, sizeof(extras));
 		gExtrasOk = extras.fError == 0 && extras.fResult == 1;
@@ -297,6 +328,7 @@ int main()
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);
 	EXPECT(gBatteryOk);
+	EXPECT(gBacklightOk);
 	EXPECT(gMapCursorOk);	// MapCursor maps a cursor's entries without moving it
 	EXPECT(gExtrasOk);		// one Extras entry for each application, and marked so it stays that way
 	EXPECT(gMinimumBatteryOk);

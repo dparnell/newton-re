@@ -166,6 +166,12 @@ public:
 	TView*			fModalView;			// host: SetModalView's view (the ROM keeps it in the modal dialog code)
 };
 
+// A message sent to the root view's context, which is how the system's
+// own code reaches a script that lives at the top of the view hierarchy
+// (the power, backlight and alarm code all send this way).
+Ref		NSSendRootMessage(RefArg message);					// ROM 0x001b1fe4 NSSendRootMessage__FRC6RefVar
+Ref		NSSendRootMessage(RefArg message, RefArg a1);		// ROM 0x001b2a94 NSSendRootMessage__FRC6RefVarT1
+
 extern Boolean	gNewtIsAliveAndWell;		// 0x0c102604  the boot is over: the root view draws no splash
 
 #endif	/* __ROOTVIEW_H */

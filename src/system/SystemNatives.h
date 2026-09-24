@@ -22,10 +22,14 @@
 	above this library.  SleepUntilNextWakeup, which it shares with the
 	battery check, is here.
 
-	NOT YET RECONSTRUCTED: the rest of the battery (FBatteryRawStatus
-	0x002017d4, FBatteryLevel 0x00201804), the backlight
-	(FBackLightStatus 0x00201a0c, FBackLight 0x00201a3c) and
-	FSetRandomSeed 0x002017a4.
+	The backlight is here too (FBackLightStatus 0x00201a0c, FBackLight
+	0x00201a3c): it is switched through QuickDraw's screen driver
+	(qd/Screen.h's SetGrafInfo), but the ROM keeps its natives with the
+	machine's rather than the screen's, and FBackLight sends the root
+	view a message, which the screen library is below.
+
+	FSetRandomSeed 0x002017a4, which the ROM also keeps here, is in
+	frames/Builtins.cpp with the generator it seeds.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -37,6 +41,7 @@
 
 Ref		FGetSerialNumber(RefArg rcvr);
 Ref		FBatteryStatus(RefArg rcvr, RefArg which);	// ROM 0x00203db8 FBatteryStatus
+Ref		FBackLight(RefArg rcvr, RefArg on);			// ROM 0x00201a3c FBackLight
 Ref		FMinimumBatteryCheck(RefArg rcvr);			// ROM 0x002019a0 FMinimumBatteryCheck - the ROM holds no name for it, so only the ROM's own scripts reach it
 long	SleepUntilNextWakeup(void);					// ROM 0x002018f8 SleepUntilNextWakeup__Fv - ==> a kWoke... reason (hal/Power.h)
 

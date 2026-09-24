@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `f4a40b9`)
+## State at 2026-09-24 (commit `d9562d5`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8781 citations, 0 bad;
-  4762 of 16671 functions (28.56%).
+- `analysis/coverage.py build/MP2x00US --check`: 8791 citations, 0 bad;
+  4767 of 16671 functions (28.59%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -95,6 +95,14 @@ The last run of work closed, in order:
   writer's own dictionaries - the expansions and the words the machine
   adds on their behalf (`recognition/Learning.h`).  `LookupWord` now
   answers out of the ROM's own word lists.
+
+- **the machine's own power natives** (`docs/system/README.md`): the
+  battery frame and its raw twin, `BatteryLevel`, `BatteryCount`,
+  `SetBatteryType`, the backlight pair and `SetRandomSeed` - all of them
+  over `hal/Power.h`, which a port supplies.  Finding them turned up a
+  hole in the reconstruction: `SetGrafInfo` had no case for the
+  backlight (selector 5 is the driver's feature 2) and a case for a
+  selector 6 the ROM has not got, so nothing could switch the light.
 
 ## Next
 
