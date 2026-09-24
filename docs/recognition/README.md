@@ -1943,6 +1943,26 @@ In order:
    trained tables come out of the ROM's data through
    `analysis/romtable.py` as everything else does.
 
+Two things found while reading ahead, so that the next piece starts
+from them:
+
+* The recogniser at the bottom is a **back-propagation net**.
+  `CharBoxNetEvaluate` (0x00056a44) sets the net's inputs from the
+  strokes, runs `BPNetEvaluate`, and then maps its 256 outputs through
+  the area's character set and two mapping tables, multiplying the two
+  scores together where one character stands for a pair. The
+  *patternizers* above it (`NetPatternImage`, `NetPatternMulti`,
+  `NetPatternHeight`, `NetPatternBase`, `NetPatternCapHeight`,
+  `NetPatternCount`, `NetPatternStrokePUD` — 0x00131f5c-0x00133c7c)
+  are what turn strokes into those inputs: one per kind of thing the
+  net is told about a piece of writing.
+* **`BPNetEvaluate` (0x0001a260) is hand-written assembly.** Its inner
+  loop is unrolled four ways and entered through a computed jump
+  (`(*(code*)(table + (n & 3) * 0x10))(...)`), which Ghidra's
+  decompiler cannot follow — it gives up at 0x0001a610 with "Could not
+  recover jumptable". Read it with `analysis/disasm.py`, not the
+  decompiler.
+
 The bottom of it has been started: `toolbox/FixedGeometry.h` is the
 ten routines the engine measures with — points and rectangles in 16.16
 fixed point, because a stroke is sampled in eighths of a pixel and

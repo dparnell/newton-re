@@ -8,11 +8,11 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `81a65cb`)
+## State at 2026-09-25 (commit `909ac19`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 83/83.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 84/84.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9317 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9339 citations, 0 bad;
   5129 of 16671 functions (30.77%).
 - `analysis/natives.py`: 863 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
@@ -277,9 +277,11 @@ makes into the engine are declared as an explicit seam
 ParaGraph's Calligrapher: about two hundred kilobytes in six layers,
 mapped out in `docs/recognition/README.md` under "The Rosetta engine",
 which also says what to do next and in what order.  The first piece is
-level 2, the fifteen `Rosetta*` calls; level 1 is finished, and so is
-the bottom of the geometry the engine measures in
-(`toolbox/FixedGeometry.h`).
+the back-propagation net at the bottom.  Level 1 is finished, and so
+are the geometry the engine measures in (`toolbox/FixedGeometry.h`) and
+its strokes and stroke lists (`recognition/RosStrokes.h`, level 5).
+Level 2 is fifteen thin calls over a state block whose fields are only
+named as level 3 is read, so it is not worth doing before it.
 
 The smallest of those that would close a group of its own:
 
