@@ -72,7 +72,7 @@ PROTOCOL_CLASSINFO(TRosRecognizer, "TWRecognizer", "", 0, 0, nil)
 // ROM 0x001b6cfc RosRecCheckWords
 // What the engine calls back with; declared here because Initialize
 // hands its address to the engine before it is defined.
-void	RosRecCheckWords(char** words, ULong strokes, ULong count, UniChar* scores);
+void	RosRecCheckWords(char** words, UniChar* scores, ULong strokes, ULong count);
 
 
 // ROM 0x0c10194c gRosRecognizer
@@ -125,7 +125,7 @@ TRosRecognizer::Initialize(void)
 	// the host's would trap)
 	long y = (long) (int) ((unsigned int) (((int) ((unsigned int) info.fScreenResolution.v << 16)) / 0x55) << 6);
 	long x = (long) (int) ((unsigned int) (((int) ((unsigned int) info.fScreenResolution.h << 16)) / 0x55) << 6);
-	if (RosettaInitialize(x, y, (RosettaCheckWordsProc) RosRecCheckWords) != noErr)
+	if (RosettaInitialize(x, y, RosRecCheckWords) != noErr)
 		Throw(exAbort, nil, nil);
 }
 
@@ -388,7 +388,7 @@ TRosRecognizer::AddRosettaWordsToInterpretation(TWRecUnit* unit, ULong count, ch
 // of them, the words go on that, another is made of the rest, and the
 // group that was there is thrown away.
 void
-RosRecCheckWords(char** words, ULong strokes, ULong count, UniChar* scores)
+RosRecCheckWords(char** words, UniChar* scores, ULong strokes, ULong count)
 {
 	TRosRecognizer* self = gRosRecognizer;
 	if (self->fInkGrouping)

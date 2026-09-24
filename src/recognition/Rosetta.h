@@ -51,7 +51,7 @@
 // the engine calls back with what it read.  `strokes` is how many
 // strokes of the group the words cover, `count` how many readings there
 // are, `words` the readings themselves and `scores` their confidences.
-typedef void (*RosettaCheckWordsProc)(char** words, ULong strokes, ULong count, UniChar* scores);
+typedef void (*RosettaCheckWordsProc)(char** words, UniChar* scores, ULong strokes, ULong count);
 
 // The area the engine is writing in: 0x68 bytes the recogniser fills in
 // from a recognition configuration and hands over with RosettaSetArea.
