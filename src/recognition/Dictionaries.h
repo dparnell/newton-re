@@ -94,10 +94,19 @@ extern Handle	gPhoneLexDictionary;	// ROM 0x0c100f94 gPhoneLexDictionary
 extern Handle	gNumberLexDictionary;	// ROM 0x0c100f98 gNumberLexDictionary
 
 extern TDArray*	gDictList;			// ROM 0x0c10162c gDictList - one dictListEntry per frame
+extern long	gNextCustomDictionaryID;	// ROM 0x0c101650 gNextCustomDictionaryID - the id the next Register() hands out
 
 // The list built: every dictionary of the ROM opened and put in
 // vars.dictionaries, with gDictList beside it.
 void	InitDictionaries(void);								// ROM 0x0013de2c InitDictionaries__Fv
+// The list has changed: the Assistant's line looks for the custom
+// dictionaries again and the areas' cache is thrown away.
+void	DictionariesChanged(void);							// ROM 0x0013f084 DictionariesChanged__Fv
+// Register() and Unregister() on a dictionary frame: the frame put into
+// vars.dictionaries with an id of its own and an entry in gDictList, and
+// taken out again.
+Ref		FAirusRegisterDictionary(RefArg rcvr);				// ROM 0x0013eddc FAirusRegisterDictionary
+Ref		FAirusUnregisterDictionary(RefArg rcvr);			// ROM 0x0013ef2c FAirusUnregisterDictionary
 
 // The frames: vars.dictionaries, and the one with a given id.
 // The list entry for an id.  Some ids stand for others, and an id that

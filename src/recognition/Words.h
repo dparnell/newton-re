@@ -119,6 +119,10 @@ Ref		FAirusAddWord(RefArg rcvr, RefArg word, RefArg attribute);	// ROM 0x0008fc3
 Ref		FAirusDeleteWord(RefArg rcvr, RefArg word);				// ROM 0x0008fcb4 FAirusDeleteWord
 Ref		FAirusDeletePrefix(RefArg rcvr, RefArg word);			// ROM 0x0008fd08 FAirusDeletePrefix
 Ref		FAirusWalkDictionary(RefArg rcvr, RefArg prefix, RefArg fn);	// ROM 0x0008f44c FAirusWalkDictionary
+Ref		FAirusChangeAttribute(RefArg rcvr, RefArg word, RefArg attribute);	// ROM 0x0008eb18 FAirusChangeAttribute
+Ref		FAirusDictionaryType(RefArg rcvr);						// ROM 0x0008fae0 FAirusDictionaryType
+Ref		FAirusAttributeSize(RefArg rcvr);						// ROM 0x0008fb0c FAirusAttributeSize
+Ref		FAirusDispose(RefArg rcvr);								// ROM 0x0008f84c FAirusDispose
 Ref		FStripRecognitionWord(RefArg rcvr, RefArg word);			// ROM 0x0008eff4 FStripRecognitionWord
 Ref		FStripRecognitionWordDiacritsOK(RefArg rcvr, RefArg word);	// ROM 0x0008f030 FStripRecognitionWordDiacritsOK
 

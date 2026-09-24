@@ -199,6 +199,12 @@ void	AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute);	/
 // ... and one taken out; airusResult 0 it went, 4 it was not there, 5
 // the word was empty, -2 the Handle could not be resized.
 void	DeleteWord(Handle dictionary, UByte* word);			// ROM 0x0002c56c DeleteWord
+// How many bytes of attribute each word carries (the oldest writable
+// kind carries one without declaring it).
+long	AttributeLength(Handle dictionary);					// ROM 0x0002d37c AttributeLength
+// ... and that attribute changed; airusResult 0 it was, -7 the
+// dictionary carries none, -6 the word is not in it.
+void	ChangeAttribute(Handle dictionary, UByte* word, ULong attribute);	// ROM 0x0002d3b8 ChangeAttribute
 
 // the data, big-endian as it lies
 ULong	GetDictBytes(long offset, long count);				// ROM 0x0002a178 GetDictBytes__FUli
@@ -231,6 +237,8 @@ void	AE8_NextSetCB(void* context, ULong character, ULong node, ULong attribute);
 // The characters that may follow the block's node, written into its word
 // buffer and terminated.
 void	AEnum_NextSet(AirusAParmBlock* parms);				// ROM 0x0002afd0 AEnum_NextSet__FP15AirusAParmBlock
+// The attribute of a word already there written over where it lies.
+void	AEnum_ChangeAttribute(AirusAParmBlock* parms);		// ROM 0x0002a7cc AEnum_ChangeAttribute__FP15AirusAParmBlock
 
 // Walking a whole dictionary.  The callback is given the word, the
 // attribute stored with it, the one character that could follow it (0

@@ -797,9 +797,31 @@ one, `FAirusLookupWord` 0x0008fb28 looks a word up and fills in the
 assistant's Continue button runs down when a name has been typed in, and
 with it the assistant goes on to its next page.
 
-NOT YET: the sixteen-bit walkers (AE16, `AE16_NextSet9`) and the
-iterators `AEnum_FirstLast`, `AEnum_NextPrevious`,
-`AEnum_ChangeAttribute` and `TAirusIterator`.
+`ChangeAttribute(word, attribute)` writes a word's attribute over where
+it lies (`AEnum_ChangeAttribute` 0x0002a7cc): the word is walked from the
+root a character at a time — across a row's siblings to find the
+character, then down to that node's children for the next — and the new
+bytes replace the old ones in place, so nothing moves and the dictionary
+does not grow. It writes the bytes out by hand and has arms for the
+sizes 1, 2 and 4 only, so a dictionary with a *three*-byte attribute is
+left exactly as it was and the call still says it worked.
+`AttributeSize()` is `AttributeLength` (0x0002d37c): the size the
+dictionary declares, or — for the oldest writable kind, which had no
+place to declare one — 1.
+
+`Register()` and `Unregister()` (0x0013eddc, 0x0013ef2c) put a frame's
+dictionary into `vars.dictionaries` and `gDictList` beside it with an id
+of its own (they are handed out from 200 up, well clear of the ROM's
+own), and take it out again — every entry after it having its index
+moved down one. Both end in `DictionariesChanged` (0x0013f084), which
+tells the Assistant's line to look for the custom dictionaries again and
+throws the recognition areas' cache away, because an area remembers the
+chain of dictionaries it was built with. `Dispose()` gives the
+dictionary back and takes the frame's `dict` slot away.
+
+NOT YET: the sixteen-bit walkers (AE16, `AE16_NextSet9`), the
+enumerators `AEnum_FirstLast` and `AEnum_NextPrevious`, and
+`TAirusIterator`.
 
 ## The controller (`recognition/Controller.h`)
 

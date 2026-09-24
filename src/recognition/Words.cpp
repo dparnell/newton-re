@@ -345,6 +345,58 @@ FAirusDeletePrefix(RefArg rcvr, RefArg word)
 }
 
 
+// ROM 0x0008eb18 FAirusChangeAttribute
+// ChangeAttribute(word, attribute) on a dictionary frame: the attribute
+// of a word already there written over where it lies.  ==> airusResult:
+// 0 it was changed, -7 the dictionary carries no attributes, -6 the word
+// is not in it.
+Ref
+FAirusChangeAttribute(RefArg rcvr, RefArg word, RefArg attribute)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	UByte text[64];
+	ConvertFromUnicode(GetCString(word), text, kMacRomanEncoding, 0x3f);
+	ChangeAttribute(dictionary, text, (ULong) RINT(attribute));
+	return MAKEINT(airusResult);
+}
+
+
+// ROM 0x0008fae0 FAirusDictionaryType
+// type() on a dictionary frame: the second byte of the dictionary, the
+// kind and the "lock the Handle" bit together (the attribute size, which
+// is the rest of that byte, is AttributeSize's business).
+Ref
+FAirusDictionaryType(RefArg rcvr)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	return MAKEINT((UByte) (*parms->fDataHandle)[1] & 0x0f);
+}
+
+
+// ROM 0x0008fb0c FAirusAttributeSize
+// AttributeSize() on a dictionary frame.
+Ref
+FAirusAttributeSize(RefArg rcvr)
+{
+	return MAKEINT(AttributeLength(GetScriptDictRef(rcvr)));
+}
+
+
+// ROM 0x0008f84c FAirusDispose
+// Dispose() on a dictionary frame: the dictionary given back and the
+// frame's `dict` slot taken away, so the frame no longer has one.  ==>
+// true, always.
+Ref
+FAirusDispose(RefArg rcvr)
+{
+	Handle dictionary = GetScriptDictRef(rcvr);
+	DisposDictionary(&dictionary);
+	RemoveSlot(rcvr, RSSYMdict);
+	return TRUEREF;
+}
+
+
 // ROM 0x0008f2e4 (unnamed) - ScriptWalkProc
 // What a script's walk function is called through: the four things the
 // walk knows are written into one array, which is passed to the function
@@ -492,6 +544,10 @@ RegisterWordNatives(void)
 	RegisterNativeFunction("FAirusDeleteWord", (void*) FAirusDeleteWord, 1);
 	RegisterNativeFunction("FAirusDeletePrefix", (void*) FAirusDeletePrefix, 1);
 	RegisterNativeFunction("FAirusWalkDictionary", (void*) FAirusWalkDictionary, 2);
+	RegisterNativeFunction("FAirusChangeAttribute", (void*) FAirusChangeAttribute, 2);
+	RegisterNativeFunction("FAirusDictionaryType", (void*) FAirusDictionaryType, 0);
+	RegisterNativeFunction("FAirusAttributeSize", (void*) FAirusAttributeSize, 0);
+	RegisterNativeFunction("FAirusDispose", (void*) FAirusDispose, 0);
 	RegisterNativeFunction("FWRecIsBeingUsed", (void*) FWRecIsBeingUsed, 0);
 	RegisterNativeFunction("FUseWRec", (void*) FUseWRec, 1);
 	RegisterNativeFunction("FStripRecognitionWord", (void*) FStripRecognitionWord, 1);

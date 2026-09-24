@@ -600,6 +600,49 @@ main()
 		// the chain: there is only one dictionary here
 		EXPECT(PositionToHandle(words, 0) == words && airusResult == 0);
 		EXPECT(PositionToHandle(words, 1) == nil && airusResult == kAirusNoSuchDictionary);
+
+		// an attribute changed where it lies: nothing moves, and the
+		// word is still there with its new one
+		EXPECT(AttributeLength(words) == 1);
+		long size = ((AirusAParmBlock*) *words)->fDataEnd - ((AirusAParmBlock*) *words)->fData;
+		strcpy((char*) word, "at");
+		ChangeAttribute(words, word, 77);
+		EXPECT(airusResult == 0);
+		d = (AirusAParmBlock*) *words;
+		CheckDictPtrs(d);
+		EXPECT(d->fDataEnd - d->fData == size);
+		EXPECT(Lookup(d, "at") == kAirusLeaf && d->fAttribute == 77);
+		EXPECT(Lookup(d, "a") == kAirusPrefixWithAttr && d->fAttribute == 11);
+
+		// a word that is not there
+		strcpy((char*) word, "zebra");
+		ChangeAttribute(words, word, 1);
+		EXPECT(airusResult == kAirusNotAWord);
+		// ... and one that is only a prefix of others carries no
+		// attribute of its own to change
+		strcpy((char*) word, "a");
+		ChangeAttribute(words, word, 5);
+		EXPECT(airusResult == 0);			// "a" is a word here
+	}
+
+	// a dictionary that carries no attributes says so
+	{
+		Handle plain = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 0);
+		UByte word[32];
+		strcpy((char*) word, "one");
+		AddWord(plain, 0, word, 0);
+		EXPECT(airusResult == 0);
+		EXPECT(AttributeLength(plain) == 0);
+		ChangeAttribute(plain, word, 3);
+		EXPECT(airusResult == -7);
+		DisposDictionary(&plain);
+	}
+
+	// ... but the oldest writable kind carries one without declaring it
+	{
+		Handle old = NewDictionary(kAirusKindEnum, 0);
+		EXPECT(AttributeLength(old) == 1);
+		DisposDictionary(&old);
 	}
 
 	printf("test_Airus: %d failures\n", failures);

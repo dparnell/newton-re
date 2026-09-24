@@ -13,6 +13,8 @@
 #include "ROMDictionaryData.h"
 #include "Locale.h"			// IntlResources
 #include "RecConfig.h"
+#include "Areas.h"			// PurgeAreaCache
+#include "Words.h"			// Dictionaries, GetScriptDictRef
 #include "View.h"
 #include "RootView.h"
 #include "Frames.h"
@@ -27,6 +29,11 @@
 
 // ROM 0x0c10162c gDictList
 TDArray*	gDictList = nil;
+
+// ROM 0x0c101650 gNextCustomDictionaryID
+// The ids the ROM's own dictionaries use are small, so a registered one
+// starts well clear of them (the initialised data says 200).
+long	gNextCustomDictionaryID = 200;
 
 // ROM 0x0c100f8c-0x0c100f98 - the lexicons the locale carries
 Handle		gTimeLexDictionary = nil;
@@ -752,6 +759,90 @@ FAirusResult(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x0013f084 DictionariesChanged__Fv
+// The list has changed under whatever is using it.  The Assistant's
+// line is told to look for the custom dictionaries again, and the
+// recognition areas' cache is thrown away, because an area remembers
+// the chain of dictionaries it was built with.
+void
+DictionariesChanged(void)
+{
+	RefVar assistant(GetFrameSlotRef(gRootView->fContext, RSSYMassistant));
+	// (nothing to tell before the Assistant's view has been made)
+	if (NOTNIL(RefVar(GetFrameSlotRef(assistant, RSSYMviewcobject))))
+	{
+		assistant = GetFrameSlotRef(assistant, RSSYMassistline);
+		DoMessage(assistant, RSSYMfindcustomdicts, RefVar(NILREF));
+	}
+	PurgeAreaCache();
+}
+
+
+// ROM 0x0013eddc FAirusRegisterDictionary
+// Register() on a dictionary frame: the frame given protoDictionary as
+// its proto, added to vars.dictionaries and to gDictList beside it, and
+// given an id of its own - which is what the lookups then find it by.
+// ==> the id.
+Ref
+FAirusRegisterDictionary(RefArg rcvr)
+{
+	dictListEntry entry;
+	entry.fDictionary = nil;
+	entry.fIndex = 0;
+	entry.fStatus = 0;
+	entry.fDisabled = 0;
+
+	long id = gNextCustomDictionaryID++;
+	SetFrameSlot(rcvr, RSSYM_proto, RefVar(Rprotodictionary));
+	RefVar list(Dictionaries());
+	AddArraySlot(list, rcvr);
+	SetFrameSlot(rcvr, RSSYMdictid, RefVar(MAKEINT(id)));
+
+	entry.fDictionary = GetScriptDictRef(rcvr);
+	entry.fIndex = (UByte) gDictList->Count();		// where this entry is going
+	entry.fStatus = (UByte) RINT(RefVar(GetProtoVariable(rcvr, RSSYMstatus, nil)));
+	entry.fDisabled = EQRef(RefVar(GetProtoVariable(rcvr, RSSYMcustom, nil)), RSSYMcustom);
+
+	((AirusAParmBlock*) *entry.fDictionary)->fDictID = id;
+	memcpy(gDictList->AddEntry(), &entry, sizeof(entry));
+	DictionariesChanged();
+	return MAKEINT(id);
+}
+
+
+// ROM 0x0013ef2c FAirusUnregisterDictionary
+// Unregister(): the frame's entry taken out of gDictList - and every
+// entry after it told that its frame has moved down one - and the frame
+// taken out of vars.dictionaries.  ==> the frame.
+Ref
+FAirusUnregisterDictionary(RefArg rcvr)
+{
+	long id = RINT(RefVar(GetProtoVariable(rcvr, RSSYMdictid, nil)));
+
+	Boolean removed = false;
+	ULong count = gDictList->Count();
+	for (ULong i = 0; i < count; i++)
+	{
+		dictListEntry* entry = (dictListEntry*) gDictList->GetEntry(i);
+		if (removed)
+			entry->fIndex--;
+		else if (entry->fDictionary != nil && *entry->fDictionary != nil
+			  && ((AirusAParmBlock*) *entry->fDictionary)->fDictID == id)
+		{
+			gDictList->Delete(i);
+			i--;
+			count--;
+			removed = true;
+		}
+	}
+
+	RefVar list(Dictionaries());
+	FSetRemove(RefVar(NILREF), list, rcvr);
+	RemoveSlot(rcvr, RSSYMdictid);
+	return rcvr;
+}
+
+
 // ROM 0x0007d484 DumpDict__FRC6RefVar
 // DumpDict(): the Assistant's dynamic dictionary frame, whatever it
 // holds.  The ROM's function ignores its argument and answers that one
@@ -771,4 +862,6 @@ RegisterDictionaryNatives(void)
 {
 	RegisterNativeFunction("FAirusResult", (void*) FAirusResult, 0);
 	RegisterNativeFunction("DumpDict__FRC6RefVar", (void*) FDumpDict, 0);
+	RegisterNativeFunction("FAirusRegisterDictionary", (void*) FAirusRegisterDictionary, 0);
+	RegisterNativeFunction("FAirusUnregisterDictionary", (void*) FAirusUnregisterDictionary, 0);
 }

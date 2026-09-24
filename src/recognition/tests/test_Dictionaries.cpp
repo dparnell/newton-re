@@ -24,10 +24,22 @@
 #include "Unicode.h"
 #include "Locale.h"
 #include "Learning.h"
+#include "View.h"
+#include "RootView.h"
+#include "Ports.h"
+#include "NativeFunctions.h"
+#include "ROMConstants.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
 #include <string.h>
+
+// the smallest screen the view system will start over
+const long	kTestWidth	= 64;
+const long	kTestHeight	= 32;
+static PixelMap	gTestMap;
+static GrafPort	gTestPort;
+static unsigned char	gTestBits[(kTestWidth / 8) * kTestHeight];
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -519,6 +531,76 @@ main()
 		EXPECT(LookUp("zorblat", &where) == -1);
 		EXPECT(RINT(RefVar(GetProtoVariable(RefVar(FindDictionaryFrame(kAutoAddDictionary)),
 											  RSSYMcount, nil))) == 0);
+	}
+
+	// ---- what a script does with a dictionary of its own ----
+	// (the natives want a root view, because registering one tells the
+	// Assistant's line to look again)
+	InitGraf();
+	gTestMap.baseAddr = (Ptr) gTestBits;
+	gTestMap.rowBytes = kTestWidth / 8;
+	SetRect(&gTestMap.bounds, 0, 0, kTestWidth, kTestHeight);
+	gTestMap.pixMapFlags = kPixMapPtr | 1;
+	gTestMap.deviceRes.v = kDefaultDPI;
+	gTestMap.deviceRes.h = kDefaultDPI;
+	OpenPort(&gTestPort);
+	SetPortBits(&gTestMap);
+	gTestPort.portRect = gTestMap.bounds;
+	RectRgn(gTestPort.visRgn, &gTestMap.bounds);
+	InitViewSystem();
+	EXPECT(gRootView != nil);
+	// the slot DictionariesChanged looks for; on a real machine the
+	// Assistant's view has put itself there
+	SetFrameSlot(RefVar(gRootView->fContext), RSSYMassistant, RefVar(AllocateFrame()));
+
+	{
+		// a frame with a dictionary of its own, as protoDictionary's
+		// New() makes one
+		RefVar frame(AllocateFrame());
+		EXPECT(RINT(RefVar(FAirusNew(frame, RefVar(MAKEINT(kAirusKindEnumRAM | kAirusLockedBit)),
+									 RefVar(MAKEINT(1))))) == 0);
+		// its second byte, and the size of the attribute each word carries
+		EXPECT(RINT(RefVar(FAirusDictionaryType(frame))) == (kAirusKindEnumRAM | kAirusLockedBit));
+		EXPECT(RINT(RefVar(FAirusAttributeSize(frame))) == 1);
+
+		RefVar word(MakeString("badger"));
+		EXPECT(RINT(RefVar(FAirusAddWord(frame, word, RefVar(MAKEINT(3))))) == 0);
+		RefVar found(AllocateFrame());
+		EXPECT(RINT(RefVar(FAirusLookupWord(frame, word, found))) == kAirusIsWord);
+		EXPECT(RINT(RefVar(GetFrameSlotRef(found, RSSYMattribute))) == 3);
+
+		// the attribute changed where it lies
+		EXPECT(RINT(RefVar(FAirusChangeAttribute(frame, word, RefVar(MAKEINT(9))))) == 0);
+		EXPECT(RINT(RefVar(FAirusLookupWord(frame, word, found))) == kAirusIsWord);
+		EXPECT(RINT(RefVar(GetFrameSlotRef(found, RSSYMattribute))) == 9);
+		// a word it does not have
+		EXPECT(RINT(RefVar(FAirusChangeAttribute(frame, RefVar(MakeString("stoat")),
+												 RefVar(MAKEINT(1))))) == kAirusNotAWord);
+
+		// registered: it joins vars.dictionaries and gDictList, and gets
+		// an id of its own
+		long before = gDictList->Count();
+		long wasNext = gNextCustomDictionaryID;
+		RefVar id(FAirusRegisterDictionary(frame));
+		EXPECT(RINT(id) == wasNext && gNextCustomDictionaryID == wasNext + 1);
+		EXPECT(gDictList->Count() == before + 1);
+		EXPECT(RINT(RefVar(GetFrameSlotRef(frame, RSSYMdictid))) == RINT(id));
+		EXPECT(EQRef(GetFrameSlotRef(frame, RSSYM_proto), Rprotodictionary));
+		EXPECT(FindDictionaryEntry((ULong) RINT(id))->fDictionary == GetScriptDictRef(frame));
+		// (it is in the list, but not in any chain: a chain is built
+		// from the dictionaries whose `domainType` overlaps what is
+		// being written on, and this frame names none)
+		EXPECT(EQRef(GetArraySlotRef(RefVar(Dictionaries()),
+									 Length(RefVar(Dictionaries())) - 1), frame));
+
+		// and taken out again
+		FAirusUnregisterDictionary(frame);
+		EXPECT(gDictList->Count() == before);
+		EXPECT(ISNIL(RefVar(GetFrameSlotRef(frame, RSSYMdictid))));
+
+		// the dictionary given back: the frame no longer has one
+		EXPECT(NOTNIL(RefVar(FAirusDispose(frame))));
+		EXPECT(ISNIL(RefVar(GetFrameSlotRef(frame, RSSYMdict))));
 	}
 
 	if (failures == 0)

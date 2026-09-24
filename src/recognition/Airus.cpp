@@ -1119,6 +1119,135 @@ AEnum_DeleteWord(AirusAParmBlock* parms)
 }
 
 
+// ROM 0x0002a7cc AEnum_ChangeAttribute__FP15AirusAParmBlock
+// The attribute of a word already in the dictionary written over where
+// it lies.  The word is walked from the root a character at a time -
+// across the siblings of a row to find the character, then down to that
+// node's children for the next - and the new attribute replaces the old
+// one in place, so nothing moves and the dictionary does not grow.
+//
+// The block's result: 0 it was changed, 1 the dictionary carries no
+// attributes at all, 2 the word is not in it (or carries none).
+void
+AEnum_ChangeAttribute(AirusAParmBlock* parms)
+{
+	CheckDictPtrs(parms);
+	if (AE_Parms->fAttributeSize == 0)
+	{
+		AE_Parms->fResult = 1;
+		return;
+	}
+	// a dictionary of two bytes is the header and nothing else
+	if (AE_Parms->fDataEnd - AE_Parms->fData != 2)
+	{
+		const UByte* word = AE_Parms->fWord;
+		long node;
+		if (*word == 0)
+			// the empty word: whatever node the caller left in the block
+			node = AE_Parms->fNode;
+		else
+		{
+			node = 2;							// the first node, past the header
+			for (;;)
+			{
+				while (GetSymbol(node) != *word)
+				{
+					// the row is over, so no word begins this way
+					if (((UByte) AE_Parms->fData[node + AirusCharSize()] & kAirusSizeMask) == 0)
+					{
+						AE_Parms->fResult = 2;
+						return;
+					}
+					node = FollowRight(node);
+				}
+				word++;
+				if (*word == 0)
+					break;
+				// the character matched and there is more of the word
+				if (((UByte) AE_Parms->fData[node + AirusCharSize()] & kAirusNoChildren) != 0)
+				{
+					AE_Parms->fResult = 2;
+					return;
+				}
+				node = FollowLeft(node);
+			}
+		}
+
+		if (((UByte) AE_Parms->fData[node + AirusCharSize()] & kAirusHasAttribute) != 0)
+		{
+			long offset = SkipNode(node);
+			ULong attribute = AE_Parms->fAttribute;
+			// BUG (the ROM's): it writes the bytes out by hand for the
+			// sizes 1, 2 and 4 and has no arm for 3, so a dictionary
+			// with a three-byte attribute is left as it was - and the
+			// call still says it worked.  (PutDictBytes, which every
+			// other writer goes through, handles all four.)
+			if (AE_Parms->fAttributeSize == 1)
+				AE_Parms->fData[offset] = (char) attribute;
+			else if (AE_Parms->fAttributeSize == 2)
+			{
+				AE_Parms->fData[offset] = (char) (attribute >> 8);
+				AE_Parms->fData[offset + 1] = (char) attribute;
+			}
+			else if (AE_Parms->fAttributeSize == 4)
+			{
+				AE_Parms->fData[offset] = (char) (attribute >> 24);
+				AE_Parms->fData[offset + 1] = (char) (attribute >> 16);
+				AE_Parms->fData[offset + 2] = (char) (attribute >> 8);
+				AE_Parms->fData[offset + 3] = (char) attribute;
+			}
+			AE_Parms->fResult = 0;
+			return;
+		}
+	}
+	AE_Parms->fResult = 2;
+}
+
+
+// ROM 0x0002d37c AttributeLength
+// How many bytes of attribute each word of a dictionary carries.  A
+// dictionary that declares none but is of the oldest writable kind
+// carries one all the same, which is what the kind meant before the
+// size was written down.
+long
+AttributeLength(Handle dictionary)
+{
+	airusResult = 0;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	long size = parms->fAttributeSize;
+	if (size != 0)
+		return size;
+	if (((UByte) (*parms->fDataHandle)[1] & 7) == kAirusKindEnum)
+		return 1;
+	return 0;
+}
+
+
+// ROM 0x0002d3b8 ChangeAttribute
+// The way in: the word and the new attribute put in the block and the
+// walker run.  airusResult afterwards is 0 it was changed, -7 the
+// dictionary carries no attributes, -6 the word is not in it; anything
+// else the walker may answer leaves airusResult as it was.
+void
+ChangeAttribute(Handle dictionary, UByte* word, ULong attribute)
+{
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	parms->fWord = word;
+	parms = (AirusAParmBlock*) *dictionary;
+	parms->fAttribute = attribute;
+	CallAirusA(dictionary, kAirusChangeAttribute);
+
+	parms = (AirusAParmBlock*) *dictionary;
+	long result = parms->fResult;
+	if (result == 0)
+		airusResult = 0;
+	else if (result == 1)
+		airusResult = -7;
+	else if (result == 2)
+		airusResult = kAirusNotAWord;
+}
+
+
 // ROM 0x0002c56c DeleteWord
 // A word taken out of a dictionary.  airusResult afterwards: 0 it went,
 // 4 it was not there, 5 the word was empty, -2 the Handle could not be
@@ -2171,10 +2300,13 @@ CallAirusANoLock(Handle dictionary, long selector)
 			// (AEnum_StartA 0x0002a148, AEnum_ExitA 0x0002a160)
 			parms->fResult = 0;
 			break;
+		case kAirusChangeAttribute:
+			AEnum_ChangeAttribute(parms);
+			break;
 		default:
 			// NOT YET RECONSTRUCTED: the rest of the AEnum walkers -
 			// FirstLast 0x0002a1f4, NextPrevious 0x0002a244,
-			// ChangeAttribute 0x0002a7cc, NextSet9 0x0002af18
+			// NextSet9 0x0002af18
 			break;
 		}
 		break;
