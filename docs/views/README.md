@@ -1215,8 +1215,15 @@ above would have answered, by giving the view a command of its own for
 the same key with *no* message - which the search finds first, and which
 therefore does nothing.
 
-NOT YET: `CategorizeKeyCommands` 0x0030fe38, which sorts a gathered
-array into the categories a keyboard help slip shows.
+`CategorizeKeyCommands` 0x0030fe38 sorts a gathered array into the
+groups a keyboard help slip shows.  A command with no `category` is
+given the "other" one, the array is sorted by category so the ones alike
+fall together, and each run becomes a `canonicalKeyCommandCategory`
+frame with its `keyCommands`; only commands with a `name` and a
+character anyone could read are shown at all.  The groups are then
+sorted by name and the "other" one moved to the end - once, which is
+what the `moved` flag is for, since moving it to the end would otherwise
+find it there again.
 
 ### The caret from a script (`views/ViewNatives.cpp`)
 

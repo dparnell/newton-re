@@ -136,6 +136,8 @@ Ref			GatherKeyCommands(TView* view);							// ROM 0x0030fbac GatherKeyCommands_
 Ref			MatchKeyMessage(TView* view, RefArg message, ULong what);	// ROM 0x0030f7e0 MatchKeyMessage__FP5TViewRC6RefVarUl (0 the first, 1 the first that shows, 2 all)
 void		AddKeyCommands(RefArg context, RefArg commands);			// ROM 0x0030b2a4 AddKeyCommands__FRC6RefVarT1
 void		BlockKeyCommand(TView* view, RefArg message);			// ROM 0x0030b3ec BlockKeyCommand__FP5TViewRC6RefVar
+Boolean		StringsSame(RefArg a, RefArg b);						// ROM 0x0030fda0 StringsSame__FRC6RefVarT1
+Ref			CategorizeKeyCommands(RefArg commands);					// ROM 0x0030fe38 CategorizeKeyCommands__FRC6RefVar - the groups a keyboard help slip shows
 
 // the two of those a view answers as methods, so MakeViewMethods has
 // them for a host that does not use the ROM's root template

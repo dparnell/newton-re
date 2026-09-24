@@ -1754,6 +1754,21 @@ TestKeyboard()
 	EXPECT(ISNIL(Eval("FindKeyCommand(ctxK, $q, 1 << 25).keyMessage")));
 	Eval("RemoveSlot(GetRoot(), '_keyCommands)");
 	Eval("ctxK._keyCommands := [{char: $s, modifiers: 1 << 25, keyMessage: 'DoSave}, {char: $r, modifiers: (1 << 25) + 4, keyMessage: 'DoRepeat}]");
+	// CategorizeKeyCommands sorts a gathered array into the groups a
+	// keyboard help slip shows: one frame per category, its commands
+	// sorted by name, and the ones nobody named last
+	Eval("ctxK._keyCommands := [{char: $s, modifiers: 1 << 25, keyMessage: 'DoSave, name: \"Save\", category: \"File\"}, "
+		 "{char: $b, modifiers: 1 << 25, keyMessage: 'DoBold, name: \"Bold\", category: \"Style\"}, "
+		 "{char: $a, modifiers: 1 << 25, keyMessage: 'DoAll, name: \"All\", category: \"File\"}, "
+		 "{char: $z, modifiers: 1 << 25, keyMessage: 'DoOdd, name: \"Odd\"}]");
+	Eval("cats := CategorizeKeyCommands(GatherKeyCommands(ctxK))");
+	EXPECT(RINT(Eval("Length(cats)")) == 3);
+	EXPECT(NOTNIL(Eval("StrEqual(cats[0].category, \"File\")")) && RINT(Eval("Length(cats[0].keyCommands)")) == 2);
+	EXPECT(NOTNIL(Eval("StrEqual(cats[0].keyCommands[0].name, \"All\")")));		// sorted by name within the group
+	EXPECT(NOTNIL(Eval("StrEqual(cats[1].category, \"Style\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(cats[2].keyCommands[0].name, \"Odd\")")));		// the unnamed category, moved to the end
+	Eval("cats := nil");
+	Eval("ctxK._keyCommands := [{char: $s, modifiers: 1 << 25, keyMessage: 'DoSave}, {char: $r, modifiers: (1 << 25) + 4, keyMessage: 'DoRepeat}]");
 	// PostKeyString: printable text as one aeKeyString; other characters as key down/up
 	Eval("ctxK.keys := []");
 	PostKeyString(v, RefVar(MakeString("hi")));
@@ -3509,6 +3524,26 @@ TestSelection()
 	EXPECT(NOTNIL(Eval("StrEqual(ctxS:ExtractTextRange(0, 5), \"Hello\")")));
 	EXPECT(NOTNIL(Eval("GetInsertionStyle()")));
 	EXPECT(NOTNIL(Eval("StrEqual(GetRangeText(ctxS, 6, 11), \"World\")")));
+	// InsertStyledText puts text into the paragraph at an offset, taking
+	// out what it is given first (views/ViewNatives.cpp over
+	// TParagraphView::InsertStyledText)
+	Eval("InsertStyledText(ctxS, 5, 0, \", cruel\", nil)");
+	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"Hello, cruel World\")")));
+	Eval("InsertStyledText(ctxS, 5, 7, \"\", nil)");
+	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"Hello World\")")));
+	// TieViews and OffsetView
+	Eval("TieViews(ctxS, 'a, 'b)");
+	EXPECT(RINT(Eval("Length(ctxS.viewTie)")) == 2);
+	Eval("TieViews(ctxS, 'c, 'd)");
+	EXPECT(RINT(Eval("Length(ctxS.viewTie)")) == 4);
+	Eval("RemoveSlot(ctxS, 'viewTie)");
+	{
+		Rect was = p->viewBounds;
+		Eval("ctxS:OffsetView(3, 4)");
+		EXPECT(p->viewBounds.left == was.left + 3 && p->viewBounds.top == was.top + 4);
+		Eval("ctxS:OffsetView(-3, -4)");
+		EXPECT(p->viewBounds.left == was.left && p->viewBounds.top == was.top);
+	}
 
 	// the word scanners, as a script walks a piece of text
 	// ("the cat  sat": 0..2 the, 4..6 cat, 9..11 sat)

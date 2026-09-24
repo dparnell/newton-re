@@ -15,6 +15,7 @@
 #include "ViewFlags.h"
 #include "Locale.h"
 #include "Frames.h"
+#include "RichString.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -1125,6 +1126,112 @@ BlockKeyCommand(TView* view, RefArg message)
 	}
 }
 
+// ROM 0x0030fda0 StringsSame__FRC6RefVarT1
+// Whether two strings read the same.  The same object is the same string
+// without looking; otherwise they are compared right through, cases and
+// diacriticals and all (frames/RichString.h).
+Boolean
+StringsSame(RefArg a, RefArg b)
+{
+	if (EQRef(a, b))
+		return true;
+	TRichString first(a);
+	TRichString second(b);
+	return first.CompareSubStringCommon(second, 0, -1, false) == 0;
+}
+
+
+// ROM 0x0030fe38 CategorizeKeyCommands__FRC6RefVar
+// A gathered array of key commands sorted into the groups a keyboard
+// help slip shows: an array of `canonicalKeyCommandCategory` frames,
+// each with the category's name and the `keyCommands` in it.
+//
+// A command with no `category` is given the "other" one first, and the
+// array is sorted by category so that the ones alike fall together; each
+// run of them becomes a group.  Only commands with a `name` and a
+// character anyone could read are shown at all.  The groups are sorted
+// by name in their turn, and the "other" group is moved to the end - it
+// is the one nobody named.
+//
+// The input array is changed where a command had no category: that
+// command is replaced, in place, by a copy carrying one.
+Ref
+CategorizeKeyCommands(RefArg commands)
+{
+	long count = Length(commands);
+	for (long i = 0; i < count; i++)
+	{
+		RefVar one(GetArraySlotRef(commands, i));
+		if (ISNIL(GetFrameSlotRef(one, RSSYMcategory)))
+		{
+			one = Clone(one);
+			SetFrameSlot(one, RSSYMcategory, RefVar(Rothercategoryname));
+			SetArraySlotRef(commands, i, one);
+		}
+	}
+	SortArray(commands, RefVar(RSSYMstr_3C), RefVar(RSSYMcategory));
+
+	RefVar groups(AllocateArray(RSSYMarray, 0));
+	RefVar lastName;
+	RefVar group;
+	RefVar members;
+	for (long i = 0; i < count; i++)
+	{
+		RefVar one(GetArraySlotRef(commands, i));
+		UniChar shown = GetDisplayCmdChar(one);
+		if (ISNIL(GetFrameSlotRef(one, RSSYMname)) || !UserVisibleChar(shown))
+			continue;
+		RefVar name(GetFrameSlotRef(one, RSSYMcategory));
+		if (ISNIL(name))
+			name = Rothercategoryname;
+		if (ISNIL(lastName) || !StringsSame(name, lastName))
+		{
+			group = Clone(RefVar(Rcanonicalkeycommandcategory));
+			lastName = name;
+			SetFrameSlot(group, RSSYMcategory, lastName);
+			members = AllocateArray(RSSYMarray, 1);
+			SetArraySlotRef(members, 0, one);
+			SetFrameSlot(group, RSSYMkeycommands, members);
+			AddArraySlot(groups, group);
+		}
+		else
+			AddArraySlot(members, one);
+	}
+
+	SortArray(groups, RefVar(RSSYMstr_3C), RefVar(RSSYMcategory));
+	// the groups' own commands sorted by name, and "other" moved to the
+	// end (once - `moved` is what stops it being moved for ever)
+	long groupCount = Length(groups);
+	Boolean moved = false;
+	for (long i = 0; i < groupCount; )
+	{
+		RefVar one(GetArraySlotRef(groups, i));
+		RefVar its(GetFrameSlotRef(one, RSSYMkeycommands));
+		RefVar name(GetFrameSlotRef(one, RSSYMcategory));
+		if (moved || i == groupCount - 1 || !StringsSame(name, RefVar(Rothercategoryname)))
+		{
+			SortArray(its, RefVar(RSSYMstr_3C), RefVar(RSSYMname));
+			i++;
+		}
+		else
+		{
+			RefVar kept(one);
+			ArrayRemoveCount(groups, i, 1);
+			AddArraySlot(groups, kept);
+			moved = true;
+		}
+	}
+	return groups;
+}
+
+
+// ROM 0x00310218 FCategorizeKeyCommands
+static Ref
+FCategorizeKeyCommands(RefArg /*rcvr*/, RefArg commands)
+{
+	return CategorizeKeyCommands(commands);
+}
+
 // ROM 0x0030f4bc FFindKeyCommand
 // FindKeyCommand(view, char, modifiers): the command that key would
 // reach from that view, or nil.
@@ -1198,6 +1305,7 @@ RegisterKeyboardNatives(void)
 {
 	RegisterNativeFunction("FInRepeatedKeyCommand", (void*) FInRepeatedKeyCommand, 0);
 	RegisterNativeFunction("FFindKeyCommand", (void*) FFindKeyCommand, 3);
+	RegisterNativeFunction("FCategorizeKeyCommands", (void*) FCategorizeKeyCommands, 1);
 	RegisterNativeFunction("FGatherKeyCommands", (void*) FGatherKeyCommands, 1);
 	RegisterNativeFunction("FMatchKeyMessage", (void*) FMatchKeyMessage, 2);
 	RegisterNativeFunction("FAddKeyCommands", (void*) FAddKeyCommands, 1);

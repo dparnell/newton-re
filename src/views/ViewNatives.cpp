@@ -33,6 +33,7 @@
 #include "Application.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "CorrectInfo.h"
 #include "Cursors.h"
 #include "PickView.h"
 #include "ROMConstants.h"
@@ -2288,6 +2289,80 @@ FSetCaretInfo(RefArg /*rcvr*/, RefArg view, RefArg info)
 }
 
 
+// ROM 0x001a01ec FInsertStyledText
+// InsertStyledText(view, offset, remove, text, styles): text put into a
+// paragraph at an offset, taking out `remove` characters first, with the
+// styles to give it.  The correction information is moved along with
+// what went in, so the words already on the page keep their alternatives.
+static Ref
+FInsertStyledText(RefArg /*rcvr*/, RefArg view, RefArg offset, RefArg remove,
+				  RefArg text, RefArg styles)
+{
+	TParagraphView* para = (TParagraphView*) FailGetView(view);
+	const UniChar* chars = GetCString(text);
+	ULong length = (ULong) Ustrlen(chars);
+	ULong removeLength = (ULong) RINT(remove);
+	ULong at = (ULong) RINT(offset);
+	para->InsertStyledText(at, chars, length, styles, RefVar(NILREF), 0, removeLength, false);
+	OffsetCorrectionInfo(para, (long) at, (long) removeLength, (long) length);
+	return NILREF;
+}
+
+
+// ROM 0x0017126c FInsertItemsAtCaret
+// InsertItemsAtCaret(spec): the items of an insert spec put in wherever
+// the caret is, as a dropped clipping or a recognised word would be
+// (views/ParagraphView.h's HandleInsertItems).  ==> whether a view took
+// them.
+static Ref
+FInsertItemsAtCaret(RefArg /*rcvr*/, RefArg spec)
+{
+	return MAKEBOOLEAN(InsertItemsAtCaret(spec));
+}
+
+
+// ROM 0x001eace8 FOffsetView
+// view:OffsetView(dx, dy) - the view and its children moved, without
+// being laid out again.
+static Ref
+FOffsetView(RefArg rcvr, RefArg dx, RefArg dy)
+{
+	TView* view = FailGetView(rcvr);
+	Point delta;
+	delta.h = (short) RINT(dx);
+	delta.v = (short) RINT(dy);
+	view->Offset(delta);
+	return TRUEREF;
+}
+
+
+// ROM 0x001ef67c FTieViews__FRC6RefVarN31
+// TieViews(view, a, b): the pair added to the view's `viewTie` array,
+// which is what makes one view follow another's size.  The first pair
+// makes the array; the rest are appended.  (`view` is a name as
+// GetView reads one, so a view context does as well as a symbol.)
+static Ref
+FTieViews(RefArg rcvr, RefArg name, RefArg a, RefArg b)
+{
+	TView* view = FailGetView(rcvr, name);
+	RefVar context(view->fContext);
+	if (!FrameHasSlot(context, RSSYMviewtie))
+	{
+		RefVar tie(MakeArray(2));
+		SetArraySlotRef(tie, 0, a);
+		SetArraySlotRef(tie, 1, b);
+		SetFrameSlot(context, RSSYMviewtie, tie);
+	}
+	else
+	{
+		RefVar tie(GetFrameSlotRef(context, RSSYMviewtie));
+		AddArraySlot(tie, a);
+		AddArraySlot(tie, b);
+	}
+	return TRUEREF;
+}
+
+
 // ROM 0x001ef570 FHiliteOwner__FRC6RefVar
 // HiliteOwner(): the context of the view the current selection belongs
 // to, or nil when nothing is selected.
@@ -2453,6 +2528,10 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FHideCaret", (void*) FHideCaret, 0);
 	RegisterNativeFunction("FSetCaretInfo", (void*) FSetCaretInfo, 2);
 	RegisterNativeFunction("FHiliteOwner__FRC6RefVar", (void*) FHiliteOwner, 0);
+	RegisterNativeFunction("FInsertStyledText", (void*) FInsertStyledText, 5);
+	RegisterNativeFunction("FInsertItemsAtCaret", (void*) FInsertItemsAtCaret, 1);
+	RegisterNativeFunction("FTieViews__FRC6RefVarN31", (void*) FTieViews, 3);
+	RegisterNativeFunction("FOffsetView", (void*) FOffsetView, 2);
 	RegisterNativeFunction("FStyleArrayContainsInk__FRC6RefVarT1", (void*) FStyleArrayContainsInk, 1);
 	RegisterNativeFunction("FScanWordStart", (void*) FScanWordStart, 3);
 	RegisterNativeFunction("FScanWordEnd", (void*) FScanWordEnd, 3);
@@ -2484,6 +2563,7 @@ MakeViewMethods(void)
 		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
 		{ "ChangeStylesOfRange", (void*) FChangeStylesOfRange, 4 },
 		{ "AddKeyCommands", (void*) FAddKeyCommands, 1 },
+		{ "OffsetView", (void*) FOffsetView, 2 },
 		{ "BlockKeyCommand", (void*) FBlockKeyCommand, 1 },
 		{ "ExtractTextRange", (void*) FExtractTextRange, 2 },
 		{ "DrawShape", (void*) FDrawShape, 2 }, { "AddUndoAction", (void*) FAddUndoAction, 2 }, { "SetupIdle", (void*) FSetupIdleX, 1 }, { "SetPopup", (void*) FSetPopupX, 0 }, { "DoPopup", (void*) FDoPopup, 4 },

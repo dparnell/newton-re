@@ -119,4 +119,8 @@ public:
 	Handle				fWords;							// +0x44  all of them, packed
 };													// 0x48 bytes
 
+// a word list as the array of strings a script reads (the words are
+// disposed of as they are copied)
+Ref		MakeStringArray(TWordList* list);				// ROM 0x001a0958 MakeStringArray__FP9TWordList
+
 #endif	/* __WORDLIST_H */

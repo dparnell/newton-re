@@ -8,6 +8,7 @@
 #include "Unicode.h"
 #include "NewtonMemory.h"
 #include "NativeFunctions.h"
+#include "Frames.h"
 #include "Objects.h"
 
 #include <stdlib.h>
@@ -494,6 +495,25 @@ TWordList::BubbleGuess(UniChar c, WordCharTestProc test, long towardsFront)
 			return;
 		SwapSingleCharacterGuesses(at - step, at);
 	}
+}
+
+
+// ROM 0x001a0958 MakeStringArray__FP9TWordList
+// A word list as an array of strings, which is the form a script reads
+// the alternatives in.  Each word comes out of the list as a handle of
+// its own, so it is disposed of once it has been copied.
+Ref
+MakeStringArray(TWordList* list)
+{
+	long count = list->Count();
+	RefVar result(MakeArray(count));
+	for (long i = 0; i < count; i++)
+	{
+		Handle word = list->Word(i);
+		SetArraySlot(result, i, RefVar(MakeString(*(UniChar**) word)));
+		DisposHandle(word);
+	}
+	return result;
 }
 
 

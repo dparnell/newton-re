@@ -21,6 +21,7 @@
 */
 
 #include "UnitPublic.h"
+#include "WordList.h"
 #include "Rects.h"
 #include "Frames.h"
 #include "NativeFunctions.h"
@@ -411,6 +412,24 @@ FOtherViewInUse(RefArg /*rcvr*/, RefArg view)
 }
 
 
+// ROM 0x001a0ac4 FGetEditArray__FRC6RefVarT1
+// GetEditArray(unit): the readings of a unit as an array of strings -
+// what the corrector puts in its list.  nil when the unit has no word
+// list of its own (it was never read as words).
+static Ref
+FGetEditArray(RefArg /*rcvr*/, RefArg unit)
+{
+	RefVar words;
+	TWordList* list = UnitFromRef(unit)->MakeWordList(true, false);
+	if (list != nil)
+	{
+		words = MakeStringArray(list);
+		delete list;
+	}
+	return words;
+}
+
+
 void
 RegisterUnitNatives(void)
 {
@@ -420,6 +439,7 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FSetCalibration__FRC6RefVarT1", (void*) FSetCalibration, 1);
 	RegisterNativeFunction("FIsTabletCalibrationNeeded", (void*) FIsTabletCalibrationNeeded, 0);
 	RegisterNativeFunction("FCalibrateTablet__FRC6RefVar", (void*) FCalibrateTablet, 0);
+	RegisterNativeFunction("FGetEditArray__FRC6RefVarT1", (void*) FGetEditArray, 1);
 	RegisterNativeFunction("FGetPoint__FRC6RefVarN21", (void*) FGetPoint, 2);
 	RegisterNativeFunction("FGetPointsArray__FRC6RefVarT1", (void*) FGetPointsArray, 1);
 	RegisterNativeFunction("FGetPointsArrayXY__FRC6RefVarT1", (void*) FGetPointsArrayXY, 1);
