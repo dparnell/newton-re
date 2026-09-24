@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `d9562d5`)
+## State at 2026-09-24 (commit `dc24ac0`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8791 citations, 0 bad;
-  4767 of 16671 functions (28.59%).
+- `analysis/coverage.py build/MP2x00US --check`: 8811 citations, 0 bad;
+  4775 of 16671 functions (28.64%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -103,6 +103,16 @@ The last run of work closed, in order:
   hole in the reconstruction: `SetGrafInfo` had no case for the
   backlight (selector 5 is the driver's feature 2) and a case for a
   selector 6 the ROM has not got, so nothing could switch the light.
+
+- **a selection restyled** (`docs/views/README.md`,
+  "Restyling a range"): `ChangeStylesOfRange` is now the ROM's own -
+  the range replaced by itself through `aeReplaceText`, so a restyle
+  undoes - with the `fontParms`/`command` form the Styles slip sends
+  (add, remove or toggle face bits, the toggle deciding on the first
+  run).  The font arithmetic under it is `qd/Fonts.h`
+  (`MakeCompactFont`, `SetFontParms`, `IntFontToFontParms`,
+  `FamilySymToNum`, `GetFontFamilyNum`) and the script side is the new
+  `views/FontNatives.cpp`, with `GetRangeText`/`ExtractTextRange`.
 
 ## Next
 
