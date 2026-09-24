@@ -8,12 +8,14 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `30af663`)
+## State at 2026-09-24 (commit `be62843`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8820 citations, 0 bad;
-  4777 of 16671 functions (28.65%).
+- `analysis/coverage.py build/MP2x00US --check`: 8861 citations, 0 bad;
+  4794 of 16671 functions (28.76%).
+- `analysis/natives.py`: 757 of the ROM's 1326 natives answered
+  (built-ins 584 of 869, prototype methods 173 of 457).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -117,72 +119,40 @@ The last run of work closed, in order:
   (`docs/views/README.md`, "The caret from a script"): `SetCaretInfo`,
   `ShowCaret`/`HideCaret`, `ScanNextWord`/`ScanPrevWordEnd`.
 
+- **plugging in the native functions**, which is a measured job now:
+  `tools/newton-rom/analysis/natives.py` says which of the ROM's 1326
+  natives the reconstruction answers, groups what is missing by area,
+  and with `--unbound --ready` picks out the ones whose ROM function is
+  already reconstructed.  Three batches went in - the strokes, ink and
+  try string; the popups and what a view allows to be written on it; the
+  key commands - taking it from 728 to 757.  Two reconstruction bugs
+  came out of the tests for them: `FMakeRichString` wrote its halfwords
+  the ROM's way round, so no rich string it made ever read back as
+  having ink in it; and `TRootView::SetPopup` was missing the arm that
+  closes the popup that is up, without which `DismissPopup` loops for
+  ever.
+
 ## Next
 
-A good way to find the next piece now that the boot is clean: the ROM's
-native table has 1326 entries and 600-odd of them are still unbound
-(`src/frames/ROMNatives.cpp` against the `RegisterNativeFunction` calls
-in `src/`).  Most belong to areas that are not reconstructed at all
-(communications, AppleTalk, books, the test agent, NTK), but the ones
-whose machinery *is* there name real features that the machine cannot
-do yet - the clipboard (`GetClipboard`, `SetClipboard`,
-`ClipboardCommand`, which want `TClipboard` and the root view's
-clipboard stack), the key commands (`FindKeyCommand`,
-`GatherKeyCommands`, `AddKeyCommands`), `InsertStyledText` and
-`InsertItemsAtCaret`, and the bitmap and shape verbs (`MakeBitmap`,
-`DrawIntoBitmap`, `MakePict`, `PictToShape`).
+Keep going through `natives.py --unbound`.  The areas whose machinery
+exists are `views` (36 left), `recognition` (73), `qd` (13), `sound`
+(13), `system` (16) and `stores` (11); `comms`, `books`, `assist`,
+`testing` and `packages` are mostly areas that are not reconstructed at
+all, and a native there is a project of its own rather than a wrapper.
+The named pieces whose machinery *is* there:
 
-The writing path is closed end to end now: a stroke is inked as it is
-drawn, read (or not), placed in or beside the text it was written on,
-registered with the corrector, and a letter written over a letter
-corrects the word.  What is left on it are two named holes, and then
-the two large open areas below.
-
-- **The engine.** Everything above the socket is there; nothing reads
-  anything.  `TInkOnlyRecognizer` (`recognition/InkRecognizer.h`) is
-  where the ROM's CIC handwriting library - or a modern recogniser -
-  plugs in, and nothing above it would change.  Two things in the tree
-  are waiting only on this: the `!UsesLetters` branch of
-  `DoReplaceSym` (`ReclassifyCharacter` 0x000348e4 over
-  `MakeCharArea` 0x00035a50 and `TController::ClassifyInArea`
-  0x00209f78, with `GetInterpretationsCopy` and its two companions
-  around it), and `TWRecognizer::EndInkStrokeGroup`.
-- **The dictionaries** are done, and the machine now reads against the
-  ROM's own words.  `recognition/Dictionaries.h` has the list, the three
-  chains and the lookups; `recognition/ROMDictionaryData.h` opens the
-  129 lexicons built into the ROM where they lie (their table is
-  recovered from the code that writes it by
-  `tools/newton-rom/analysis/romdicts.py`); `recognition/Learning.h`
-  has the writer's own dictionaries, the expansions and the words the
-  machine adds on their behalf.  What is left of that area:
-  The iterators are there too now (`AEnum_NextSet`, `WalkDictionary`,
-  `DeletePrefix`, and the `Walk`/`PrivateDeleteWord`/`DeletePrefix` a
-  script sees), so a dictionary can be read out word by word.  What is
-  left of that area:
-    - `AEnum_FirstLast`, `AEnum_NextPrevious`, `AEnum_ChangeAttribute`
-      and the sixteen-bit walkers (AE16, `AE16_NextSet9`).
-    - `gTrie`, which would be dictionary 32 if its descriptor had no
-      `romDictID` - it has one, so this ROM never takes that path.
-- **The corrector** is now wired from the pen down to the ROM's own
-  `DoCorrection`: a double tap travels from the click-event recogniser
-  to the edit view, down to the paragraph under the point, and out
-  through `Correct` (`docs/recognition/README.md`, "The corrector").
-  The spelling checker it asks for the alternatives is there too, so a
-  double tap on a word of the Notepad now opens the corrector:
-  `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
-  --headless 50 --script src/host/demo/correct.ns` photographs it.
-  Picking one of its alternatives puts that word on the page.  What is
-  left of the checker is the learn/unlearn pair, which are the ROM's own
-  scripts rather than natives.
-- **The two ink arms of the double tap**, which ask for a word of
-  writing to be read again rather than corrected: one for a tap on an
-  ink word inside the selection (`HitsHilitedInkWord` is reconstructed
-  and waiting), one for a tap on an ink word the corrector knows
-  nothing about.  Both post a command to the application that the
-  re-recognition path (`RecognizeInArea`) answers, and that is NOT YET.
-- `CorrectorUp` (0x001767b8) still answers false out of hand: it asks
-  the root view for a `correct` view, which only exists once the
-  corrector has actually opened.
+- the clipboard (`GetClipboard`, `SetClipboard`, `ClipboardCommand`,
+  `GetClipboardIcon`), which wants `TClipboard` and the root view's
+  clipboard stack - `TRootView::GetClipboard` is still NOT YET;
+- `InsertStyledText` and `InsertItemsAtCaret`, over the
+  `HandleInsertItems` path that is already there;
+- `CategorizeKeyCommands` 0x0030fe38, the sort into the categories a
+  keyboard help slip shows;
+- `ComputeParagraphHeight`, `TieViews`, `OffsetView` and the hilite
+  natives (`hiliter`, `HiliteViewChildren`), which want
+  `TView::AddHiliter` - the root view's `fHiliter` is NOT YET;
+- the bitmap and shape verbs (`MakeBitmap`, `DrawIntoBitmap`,
+  `ViewIntoBitmap`, `MakePict`, `PictToShape`, `MungeShape`).
 
 ## Also still open
 
