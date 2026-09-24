@@ -8,13 +8,13 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `ef3d423`)
+## State at 2026-09-24 (commit `22fe586`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8996 citations, 0 bad;
-  4859 of 16671 functions (29.15%).
-- `analysis/natives.py`: 837 of the ROM's 1326 natives answered.
+- `analysis/coverage.py build/MP2x00US --check`: 9028 citations, 0 bad;
+  4887 of 16671 functions (29.31%).
+- `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -172,10 +172,27 @@ The last run of work closed, in order:
   `GetEnclosingEditView`, so selecting a second paragraph dropped the
   first one's selection.
 
+- **the Intelligent Assistant's C++ side** (`docs/assist/README.md`):
+  the whole of the ROM file at 0x00084064-0x000871d0 - the class
+  hierarchy a sentence is matched against (`ISATest` and the six
+  functions over it, `GetClasses` picking one class per word out of what
+  it might mean), the task templates (`RegTaskTemplate`,
+  `GetRelevantTemplates`, `FillPreconditions`, `AddEntry`) and the
+  string tidying a sentence goes through (`GenerateSubstrings`, which
+  makes every run of consecutive words so that a phrase of several is
+  found in the lexicon at all).  `GetRelevantTemplates(@8.person)` now
+  answers `["schedule", "find", "mail", "fax", "call"]` - the five
+  things the machine knows how to do to a person.
+
+  NOT YET: the lexicon's own trie (`TrieAdd`, `DynaTrieDelete` over
+  `gDynaTrie`), which is part of the Airus lexical engine, so a
+  registered template's words are not indexed and nothing finds it by
+  writing one of them.
+
 ## Next: what is left of the natives, and why
 
 The thin wrappers are done.  What `natives.py --unbound` still lists is
-488 natives, and they are not a long tail of small jobs: nine out of ten
+478 natives, and they are not a long tail of small jobs: nine out of ten
 of them are the script-facing face of a subsystem that has no
 reconstruction behind it at all.  Binding one of those means writing the
 subsystem, not the wrapper.
@@ -183,7 +200,7 @@ subsystem, not the wrapper.
 | how many | what is under it |
 |---|---|
 | 145 | communications: endpoints, CCL, AppleTalk, IR, NTK, the desktop connection |
-|  57 | the Intelligent Assistant: its lexicon, phrases and task templates |
+|  47 | the Intelligent Assistant: its lexicon and the sentence-level functions |
 |  46 | the books and newspaper system |
 |  38 | the text engine (TXView/TXFrames: styled documents with rulers) |
 |  38 | the CIC handwriting engine: letters, training and reading |

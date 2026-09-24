@@ -1268,7 +1268,7 @@ FStringFilter(RefArg /*rcvr*/, RefArg str, RefArg chars, RefArg mode)
 // ROM 0x0007d78c NewASCIIString__FRC6RefVar
 // The string's text as single bytes (Mac Roman), in a pointer the caller
 // disposes of; nil when there was no room for it.
-static char*
+char*
 NewASCIIString(RefArg str)
 {
 	long size = Length(str);
