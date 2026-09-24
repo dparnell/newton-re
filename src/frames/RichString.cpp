@@ -810,6 +810,11 @@ IsInkWord(RefArg obj)
 //
 // The paragraph's ink character (0xf701) becomes the rich string's own
 // (0xf700) on the way.  A text with no ink in its styles is just cloned.
+//
+// (host: as in MungeRange above, the blobs' length halfwords and the
+// trailer are written as the UniChars they are read back as, rather than
+// as the ROM's two and four bytes, so that a string object's halfwords
+// stay in the host's order.)
 Ref
 FMakeRichString(RefArg /*rcvr*/, RefArg text, RefArg styles)
 {
@@ -848,16 +853,13 @@ FMakeRichString(RefArg /*rcvr*/, RefArg text, RefArg styles)
 		if (!IsInkWord(style))
 			continue;
 		long size = Length(style);
-		out[0] = (UByte) (size >> 8);
-		out[1] = (UByte) size;
+		*(UniChar*) out = (UniChar) size;
 		BlockMove(BinaryData(style), out + 2, size);
 		out += (size + 5) & ~3;
 	}
 	ULong trailer = (((ULong) characters & 0x0fffffff) << 4) | kRichStringFormatInk;
-	out[0] = (UByte) (trailer >> 24);
-	out[1] = (UByte) (trailer >> 16);
-	out[2] = (UByte) (trailer >> 8);
-	out[3] = (UByte) trailer;
+	((UniChar*) out)[0] = (UniChar) (trailer >> 16);
+	((UniChar*) out)[1] = (UniChar) trailer;
 	return rich;
 }
 

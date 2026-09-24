@@ -7,6 +7,8 @@
 #include "WordList.h"
 #include "Unicode.h"
 #include "NewtonMemory.h"
+#include "NativeFunctions.h"
+#include "Objects.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -492,4 +494,57 @@ TWordList::BubbleGuess(UniChar c, WordCharTestProc test, long towardsFront)
 			return;
 		SwapSingleCharacterGuesses(at - step, at);
 	}
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   t r y   s t r i n g ,   f r o m   a   s c r i p t
+------------------------------------------------------------------------------*/
+
+// ROM 0x001a14e8 FClearTryString
+// ClearTryString(): the last few characters the writer picked by hand,
+// forgotten.
+static Ref
+FClearTryString(RefArg /*rcvr*/)
+{
+	ClearTryString();
+	return NILREF;
+}
+
+
+// ROM 0x001a1518 FAddTryString
+// AddTryString(char): one remembered.
+static Ref
+FAddTryString(RefArg /*rcvr*/, RefArg c)
+{
+	AddTryString(RCHAR(c));
+	return NILREF;
+}
+
+
+// ROM 0x001a156c FInTryString
+// InTryString(char): whether it is one of them.
+static Ref
+FInTryString(RefArg /*rcvr*/, RefArg c)
+{
+	return MAKEBOOLEAN(InTryString(RCHAR(c)));
+}
+
+
+// ROM 0x001a1500 FTryStringLength
+// TryStringLength(): how many are remembered.
+static Ref
+FTryStringLength(RefArg /*rcvr*/)
+{
+	return MAKEINT(TryStringLength());
+}
+
+
+void
+RegisterWordListNatives(void)
+{
+	RegisterNativeFunction("FClearTryString", (void*) FClearTryString, 0);
+	RegisterNativeFunction("FAddTryString", (void*) FAddTryString, 1);
+	RegisterNativeFunction("FInTryString", (void*) FInTryString, 1);
+	RegisterNativeFunction("FTryStringLength", (void*) FTryStringLength, 0);
 }

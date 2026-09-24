@@ -88,6 +88,8 @@ void	AddTryString(UniChar c);						// ROM 0x0022ee38 AddTryString__FUs
 UChar	InTryString(UniChar c);							// ROM 0x0022eed8 InTryString__FUs
 long	TryStringLength(void);							// ROM 0x0022ee08 TryStringLength__Fv
 
+void	RegisterWordListNatives(void);					// the four a script uses (WordList.cpp)
+
 
 class TWordList
 {

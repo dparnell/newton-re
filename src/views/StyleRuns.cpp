@@ -420,3 +420,19 @@ ExtractCorrectInfo(RefArg frame)
 		return NILREF;
 	return GetFrameSlotRef(frame, RSSYMcorrectinfo);
 }
+
+
+// ROM 0x0017a1c0 StyleArrayContainsInk__FRC6RefVar
+// Whether a runs array has any ink word among its style specs - which is
+// how a piece of text says it has writing in it without being opened up.
+Boolean
+StyleArrayContainsInk(RefArg styles)
+{
+	if (!IsArray(styles))
+		return false;
+	long runs = Length(styles) / 2;
+	for (long i = 0; i < runs; i++)
+		if (IsInkWord(RefVar(GetArraySlotRef(styles, i * 2 + 1))))
+			return true;
+	return false;
+}

@@ -2288,6 +2288,16 @@ FSetCaretInfo(RefArg /*rcvr*/, RefArg view, RefArg info)
 }
 
 
+// ROM 0x001fe5d4 FStyleArrayContainsInk__FRC6RefVarT1
+// StyleArrayContainsInk(styles): whether a runs array has any writing
+// among its style specs.
+static Ref
+FStyleArrayContainsInk(RefArg /*rcvr*/, RefArg styles)
+{
+	return MAKEBOOLEAN(StyleArrayContainsInk(styles));
+}
+
+
 // ROM 0x001a11b0 FScanWordStart
 // ScanWordStart(text, offset, limit): the start of the word around the
 // offset, no further back than the limit.
@@ -2431,6 +2441,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FShowCaret", (void*) FShowCaret, 0);
 	RegisterNativeFunction("FHideCaret", (void*) FHideCaret, 0);
 	RegisterNativeFunction("FSetCaretInfo", (void*) FSetCaretInfo, 2);
+	RegisterNativeFunction("FStyleArrayContainsInk__FRC6RefVarT1", (void*) FStyleArrayContainsInk, 1);
 	RegisterNativeFunction("FScanWordStart", (void*) FScanWordStart, 3);
 	RegisterNativeFunction("FScanWordEnd", (void*) FScanWordEnd, 3);
 	RegisterNativeFunction("FScanNextWord", (void*) FScanNextWord, 3);

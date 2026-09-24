@@ -35,5 +35,6 @@ void	CompactStyleRuns(RefArg styles);							// ROM 0x0017ab64 CompactStyleRuns__
 Ref		ExtractStylesArray(RefArg frame);							// ROM 0x0017aa58 ExtractStylesArray__FRC6RefVar - an array as it is, a frame's styles
 Ref		ExtractTabStopsArray(RefArg frame);							// ROM 0x0017aab4 ExtractTabStopsArray__FRC6RefVar - a frame's tabs (nil for an array)
 Ref		ExtractCorrectInfo(RefArg frame);							// ROM 0x0017ab0c ExtractCorrectInfo__FRC6RefVar - a frame's correctInfo
+Boolean	StyleArrayContainsInk(RefArg styles);					// ROM 0x0017a1c0 StyleArrayContainsInk__FRC6RefVar - any ink word among the runs
 
 #endif	/* __STYLERUNS_H */

@@ -20,6 +20,7 @@
 #include "Ink.h"
 #include "StrokeBundle.h"
 #include "InkFont.h"
+#include "InkShapes.h"
 #include "RichString.h"
 #include "CICCodec.h"
 #include "GaugeView.h"
@@ -3597,6 +3598,97 @@ TestParagraphTap()
 // the page does with it is the application's business - the frame the
 // ROM makes is a piece of stationery, not a view template, and it is the
 // page's viewAddChildScript that turns it into a view - so the test
+// The stroke, ink and try-string functions a script reaches - thin
+// natives over the machinery the areas above already have
+// (recognition/StrokeBundle.cpp, ink/InkShapes.cpp,
+// recognition/WordList.cpp).
+static void
+TestStrokeAndInkNatives()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+
+	// a bundle of one stroke, made and taken apart from a script
+	Eval("bndl := MakeStrokeBundle([[20, 10, 30, 20, 40, 30]], 1)");
+	EXPECT(RINT(Eval("CountStrokes(bndl)")) == 1);
+	Eval("strk := GetStroke(bndl, 0)");
+	EXPECT(RINT(Eval("CountPoints(strk)")) == 3);
+	EXPECT(RINT(Eval("GetStrokeBounds(strk).left")) == 10);
+	EXPECT(RINT(Eval("GetStrokeBounds(strk).top")) == 20);
+	// GetStrokePoint fills in the frame it is given and answers it
+	EXPECT(RINT(Eval("GetStrokePoint(strk, 0, {x: 0, y: 0}, 1).x")) == 10);
+	EXPECT(RINT(Eval("GetStrokePoint(strk, 2, {x: 0, y: 0}, 1).y")) == 40);
+	// a stroke is not a bundle and says so
+	EXPECT(ISNIL(Eval("call func() begin try CountPoints(bndl) onexception |evt.ex| do nil end with ()")));
+
+	// the writing as a shape, and the two `contains ink' questions
+	Eval("shape := CompressStrokes(bndl)");
+	EXPECT(NOTNIL(Eval("PolyContainsInk(shape)")));
+	EXPECT(ISNIL(Eval("PolyContainsInk({})")));
+	// CalcInkBounds works the box out again from the strokes themselves
+	EXPECT(RINT(Eval("CalcInkBounds(shape).right")) - RINT(Eval("CalcInkBounds(shape).left")) > 0);
+	EXPECT(NOTNIL(Eval("shape.viewBounds")));
+
+	// an ink word, and what it says it measures - it takes its scale and
+	// its pen from the writer's preferences as it is made
+	Eval("userConfiguration.inkWordScaling := 100; userConfiguration.userPenSize := 3");
+	Eval("word := StrokeBundleToInkWord(bndl)");
+	Eval("info := GetInkWordInfo(word)");
+	EXPECT(RINT(Eval("info.origWidth")) > 0);
+	EXPECT(RINT(Eval("info.origAscent")) > 0);
+	EXPECT(RINT(Eval("info.scale")) == 100);		// the preference this test sets
+	EXPECT(RINT(Eval("info.origPenSize")) == 3);
+	EXPECT(RINT(Eval("info.curWidth")) > 0);
+
+	// a styles array with an ink word in it has writing; one without has not
+	EXPECT(NOTNIL(Eval("StyleArrayContainsInk([1, word])")));
+	EXPECT(ISNIL(Eval("StyleArrayContainsInk([1, 0x3000])")));
+	EXPECT(ISNIL(Eval("StyleArrayContainsInk(nil)")));
+
+	// A word of writing stands in a paragraph's text as one character,
+	// kInkWordChar, whose style run holds the word itself; a rich string
+	// uses kInkChar for the same thing.  So the two questions below are
+	// about the *text*, not the styles, and the text has to have that
+	// character in it.
+	{
+		UniChar written[3];
+		written[0] = kInkWordChar;
+		written[1] = U_CONST_CHAR('b');
+		written[2] = 0;
+		RefVar para(AllocateFrame());
+		SetFrameSlot(para, RSSYMtext, RefVar(MakeString(written, 2)));
+		RefVar styles(AllocateArray(RSSYMarray, 4));
+		SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+		SetArraySlot(styles, 1, RefVar(Eval("word")));
+		SetArraySlot(styles, 2, RefVar(MAKEINT(1)));
+		SetArraySlot(styles, 3, RefVar(MAKEINT(0x3000)));
+		SetFrameSlot(para, RSSYMstyles, styles);
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "para")), para);
+
+		// a rich string counts the ink words in it
+		Eval("rich := MakeRichString(para.text, para.styles)");
+		EXPECT(RINT(Eval("NumInkWordsInRange(rich, 0, nil)")) == 1);
+		EXPECT(RINT(Eval("NumInkWordsInRange(rich, 1, 1)")) == 0);
+
+		// and a paragraph's data frame says whether there is writing in it
+		EXPECT(NOTNIL(Eval("ParaContainsInk(para)")));
+		EXPECT(ISNIL(Eval("ParaContainsInk({text: \"ab\", styles: [2, 0x3000]})")));
+	}
+
+	// the try string: the few characters the writer has lately picked by
+	// hand, which the word list reorders its guesses by
+	Eval("ClearTryString()");
+	EXPECT(RINT(Eval("TryStringLength()")) == 0);
+	Eval("AddTryString($O); AddTryString($1)");
+	EXPECT(RINT(Eval("TryStringLength()")) == 2);
+	EXPECT(NOTNIL(Eval("InTryString($O)")) && ISNIL(Eval("InTryString($z)")));
+	Eval("ClearTryString()");
+	EXPECT(RINT(Eval("TryStringLength()")) == 0);
+
+	Eval("bndl := nil; strk := nil; shape := nil; word := nil; info := nil; rich := nil; para := nil");
+}
+
+
 // stands in for that script and looks at what it is handed.
 static void
 TestInkOnThePage()
@@ -5226,6 +5318,9 @@ main()
 	InitFonts();
 	RegisterTextNatives();
 	RegisterViewNatives();
+	RegisterStrokeBundleNatives();
+	RegisterInkNatives();
+	RegisterWordListNatives();
 	InstallHostNatives();
 	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfunctions, RefVar(gFunctionFrame));
@@ -5317,6 +5412,7 @@ main()
 		TestLineGesture();
 		TestEffects();
 		TestInkOnThePage();
+		TestStrokeAndInkNatives();
 		TestInkWordOnThePage();
 		TestInkWordAtTheCaret();
 		TestRecognisedWord();

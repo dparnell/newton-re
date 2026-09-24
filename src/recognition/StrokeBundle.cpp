@@ -24,6 +24,8 @@
 #include "Interpreter.h"	// ThrowMsg
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "Recognizer.h"	// gRecognition
+#include "Controller.h"
 
 
 // (a box that holds nothing yet: the recogniser's mark is a top of
@@ -539,6 +541,105 @@ FMakeStrokeBundle(RefArg rcvr, RefArg strokes, RefArg format)
 }
 
 
+// (a stroke, checked)
+static void
+CheckStroke(RefArg stroke)
+{
+	if (!EQRef(ClassOf(stroke), RSSYMstroke))
+		ThrowMsg("not a stroke");
+}
+
+
+// ROM 0x001a3d1c FCountPoints
+// CountPoints(stroke): how many samples it holds.
+static Ref
+FCountPoints(RefArg /*rcvr*/, RefArg stroke)
+{
+	CheckStroke(stroke);
+	return MAKEINT(CountPoints(stroke));
+}
+
+
+// ROM 0x001a3d94 FGetStrokeBounds
+// GetStrokeBounds(stroke): the box it covers, as a bounds frame.
+static Ref
+FGetStrokeBounds(RefArg /*rcvr*/, RefArg stroke)
+{
+	CheckStroke(stroke);
+	Rect bounds;
+	GetStrokeBounds(stroke, &bounds);
+	return ToObject(bounds);
+}
+
+
+// ROM 0x001a3e18 FGetStrokePoint
+// GetStrokePoint(stroke, index, point, format): the index-th sample put
+// into the `point` frame's x and y slots, which is answered.  The format
+// says what units the answer is in, as GetStrokePointsArray's does.
+static Ref
+FGetStrokePoint(RefArg /*rcvr*/, RefArg stroke, RefArg index, RefArg point, RefArg format)
+{
+	CheckStroke(stroke);
+	long theFormat = RINT(format);
+	long at = RINT(index);
+	Point pt;
+	GetStrokePoint(stroke, at, &pt, theFormat);
+	SetFrameSlot(point, RSSYMx, RefVar(MAKEINT(pt.h)));
+	SetFrameSlot(point, RSSYMy, RefVar(MAKEINT(pt.v)));
+	return point;
+}
+
+
+// ROM 0x0019ff40 FExpandUnit
+// ExpandUnit(unit): the writing under a unit as a stroke bundle.
+static Ref
+FExpandUnit(RefArg /*rcvr*/, RefArg unit)
+{
+	return ExpandUnit(UnitFromRef(unit));
+}
+
+
+// ROM 0x001a0450 FCountGesturePoints__FRC6RefVarT1
+// CountGesturePoints(unit): how many corners the gesture's polyline has.
+static Ref
+FCountGesturePoints(RefArg /*rcvr*/, RefArg unit)
+{
+	return MAKEINT(CountGesturePoints(UnitFromRef(unit)));
+}
+
+
+// ROM 0x001a0350 FGesturePoint__FRC6RefVarN21
+// GesturePoint(index, unit): that corner of the gesture, as a
+// canonicalGesturePoint - x, y, and `line`, which is the gesture's angle.
+static Ref
+FGesturePoint(RefArg /*rcvr*/, RefArg index, RefArg unit)
+{
+	TUnitPublic* it = UnitFromRef(unit);
+	Point at = it->GesturePoint(RINT(index));
+	RefVar point(Clone(RefVar(Rcanonicalgesturepoint)));
+	SetFrameSlot(point, RSSYMx, RefVar(MAKEINT(at.h)));
+	SetFrameSlot(point, RSSYMy, RefVar(MAKEINT(at.v)));
+	SetFrameSlot(point, RSSYMline, RefVar(MAKEINT(it->GestureAngle())));
+	return point;
+}
+
+
+// ROM 0x001a08fc FStrokesAfterUnit
+// StrokesAfterUnit(unit, ...): whether the writer has drawn anything
+// since - the controller is asked whether the unit's last stroke is
+// still the last complete one there is.  The ROM's function object is
+// made for two arguments and the code reads only the first, so the
+// second is taken and dropped here as well.
+static Ref
+FStrokesAfterUnit(RefArg /*rcvr*/, RefArg unit, RefArg /*ignored*/)
+{
+	TUnitPublic* it = UnitFromRef(unit);
+	TController* controller = gRecognition.fController;
+	TUnit* stroke = controller->GetIndexedStroke(it->fUnit->fMaxStroke);
+	return MAKEBOOLEAN(!controller->IsLastCompleteStroke(stroke));
+}
+
+
 void
 RegisterStrokeBundleNatives(void)
 {
@@ -549,6 +650,13 @@ RegisterStrokeBundleNatives(void)
 	RegisterNativeFunction("FGetStrokePointsArray", (void*) FGetStrokePointsArray, 2);
 	RegisterNativeFunction("FPointsArrayToStroke", (void*) FPointsArrayToStroke, 2);
 	RegisterNativeFunction("FMakeStrokeBundle", (void*) FMakeStrokeBundle, 2);
+	RegisterNativeFunction("FCountPoints", (void*) FCountPoints, 1);
+	RegisterNativeFunction("FGetStrokeBounds", (void*) FGetStrokeBounds, 1);
+	RegisterNativeFunction("FGetStrokePoint", (void*) FGetStrokePoint, 4);
+	RegisterNativeFunction("FExpandUnit", (void*) FExpandUnit, 1);
+	RegisterNativeFunction("FCountGesturePoints__FRC6RefVarT1", (void*) FCountGesturePoints, 1);
+	RegisterNativeFunction("FGesturePoint__FRC6RefVarN21", (void*) FGesturePoint, 2);
+	RegisterNativeFunction("FStrokesAfterUnit", (void*) FStrokesAfterUnit, 2);
 }
 // ROM 0x001a2554 ExpandUnit__FP11TUnitPublic
 // The writing under one unit as a stroke bundle: every stroke of every

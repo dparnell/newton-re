@@ -33,6 +33,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "StrokeBundle.h"
+#include "FixedMath.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
 
@@ -447,6 +448,107 @@ FGetInkAt(RefArg rcvr, RefArg view, RefArg offset)
 }
 
 
+// ROM 0x001a15c8 PolyContainsInk__FRC6RefVar
+// Whether a shape frame has writing in it - which for the polygon form
+// an ink word takes is simply whether it carries an `ink` slot.
+Boolean
+PolyContainsInk(RefArg form)
+{
+	return NOTNIL(GetProtoVariable(form, RSSYMink, nil));
+}
+
+
+// ROM 0x001a15f4 ParaContainsInk__FRC6RefVar
+// ... and whether a paragraph's data frame has any ink word among its
+// style runs.
+Boolean
+ParaContainsInk(RefArg para)
+{
+	return NextInkIndex(para, -1) != -1;
+}
+
+
+// ROM 0x001a3798 FPolyContainsInk
+static Ref
+FPolyContainsInk(RefArg /*rcvr*/, RefArg form)
+{
+	return MAKEBOOLEAN(PolyContainsInk(form));
+}
+
+
+// ROM 0x001a37bc FParaContainsInk
+static Ref
+FParaContainsInk(RefArg /*rcvr*/, RefArg para)
+{
+	return MAKEBOOLEAN(ParaContainsInk(para));
+}
+
+
+// ROM 0x001a3aa4 FCalcInkBounds
+// CalcInkBounds(shape): the box the writing of an ink shape covers,
+// worked out from the strokes themselves and written back into the
+// shape's `viewBounds`.  nil for a shape that is not ink.
+static Ref
+FCalcInkBounds(RefArg /*rcvr*/, RefArg form)
+{
+	RefVar bounds;
+	RefVar bundle(ExpandInk(form, 0));
+	if (NOTNIL(bundle))
+	{
+		Rect box;
+		GetBundleBounds(bundle, &box);
+		bounds = ToObject(box);
+		SetFrameSlot(form, RSSYMviewbounds, bounds);
+	}
+	return bounds;
+}
+
+
+// ROM 0x0019f918 FGetInkWordInfo__FRC6RefVarT1
+// GetInkWordInfo(word): what an ink word measures, as a frame - the
+// measurements it was written at (`orig...`) and the ones it is drawn at
+// now (`cur...`), with the face and the scale between them.  The scale
+// is a percentage here, where the word itself holds a 16.16 fraction.
+static Ref
+FGetInkWordInfo(RefArg /*rcvr*/, RefArg word)
+{
+	InkWordInfo info;
+	GetInkWordInfo(word, &info);
+	RefVar result(Clone(RefVar(Rcanonicalinkwordinfo)));
+	SetFrameSlot(result, RSSYMorigwidth, RefVar(MAKEINT(info.fWidth)));
+	SetFrameSlot(result, RSSYMorigascent, RefVar(MAKEINT(info.fAscent)));
+	SetFrameSlot(result, RSSYMorigdescent, RefVar(MAKEINT(info.fDescent)));
+	SetFrameSlot(result, RSSYMorigxheight, RefVar(MAKEINT(info.fXHeight)));
+	SetFrameSlot(result, RSSYMfontface, RefVar(MAKEINT(info.fFace)));
+	SetFrameSlot(result, RSSYMscale, RefVar(MAKEINT(RoundFixed(FixedMultiply(ToFixed(100), info.fScale)))));
+	SetFrameSlot(result, RSSYMorigpensize, RefVar(MAKEINT(info.fPenSize)));
+	SetFrameSlot(result, RSSYMorigfontsize, RefVar(MAKEINT(info.fFontSize)));
+	SetFrameSlot(result, RSSYMcurfontsize, RefVar(MAKEINT(info.fScaledFontSize)));
+	SetFrameSlot(result, RSSYMcurwidth, RefVar(MAKEINT(info.fScaledWidth)));
+	SetFrameSlot(result, RSSYMcurheight, RefVar(MAKEINT(info.fScaledHeight)));
+	SetFrameSlot(result, RSSYMcurascent, RefVar(MAKEINT(info.fScaledAscent)));
+	SetFrameSlot(result, RSSYMcurxheight, RefVar(MAKEINT(info.fScaledXHeight)));
+	SetFrameSlot(result, RSSYMcurdescent, RefVar(MAKEINT(info.fScaledDescent)));
+	return result;
+}
+
+
+// ROM 0x001feaa8 FNumInkWordsInRange
+// NumInkWordsInRange(string, start, count): how many ink words a rich
+// string has in that range of its characters; a nil count asks about the
+// whole of it.
+static Ref
+FNumInkWordsInRange(RefArg /*rcvr*/, RefArg string, RefArg start, RefArg count)
+{
+	TRichString rich(string);
+	if (ISNIL(count))
+		return MAKEINT(rich.NumInkWords());
+	ULong n = (ULong) RINT(count);
+	ULong from = (ULong) RINT(start);
+	return MAKEINT(rich.NumInkWordsInRange(from, n));
+}
+
+
 void
 RegisterInkNatives(void)
 {
@@ -459,4 +561,9 @@ RegisterInkNatives(void)
 	RegisterNativeFunction("FCompressStrokes", (void*) FCompressStrokes, 1);
 	RegisterNativeFunction("FCompressStrokesToInk", (void*) FCompressStrokesToInk, 1);
 	RegisterNativeFunction("FExpandInk", (void*) FExpandInk, 2);
+	RegisterNativeFunction("FPolyContainsInk", (void*) FPolyContainsInk, 1);
+	RegisterNativeFunction("FParaContainsInk", (void*) FParaContainsInk, 1);
+	RegisterNativeFunction("FCalcInkBounds", (void*) FCalcInkBounds, 1);
+	RegisterNativeFunction("FGetInkWordInfo__FRC6RefVarT1", (void*) FGetInkWordInfo, 1);
+	RegisterNativeFunction("FNumInkWordsInRange", (void*) FNumInkWordsInRange, 3);
 }

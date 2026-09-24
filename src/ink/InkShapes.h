@@ -66,6 +66,9 @@ Ref			CompressStrokesToInk(RefArg bundle);			// ROM 0x001a2100 CompressStrokesTo
 // ... and the other way: an ink shape back into a bundle of strokes.
 Ref			ExpandInk(RefArg form, long format);			// ROM 0x001a2344 ExpandInk__FRC6RefVarl
 
+Boolean		PolyContainsInk(RefArg form);					// ROM 0x001a15c8 PolyContainsInk__FRC6RefVar - a shape frame with writing in it
+Boolean		ParaContainsInk(RefArg para);					// ROM 0x001a15f4 ParaContainsInk__FRC6RefVar - a paragraph with an ink word in its styles
+
 void		RegisterInkNatives(void);
 
 #endif	/* __INKSHAPES_H */

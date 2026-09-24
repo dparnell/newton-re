@@ -34,6 +34,7 @@
 #include "ConfigServer.h"
 #include "InkShapes.h"
 #include "StrokeBundle.h"
+#include "WordList.h"
 
 
 void
@@ -59,6 +60,7 @@ RegisterAllNatives(void)
 	RegisterCorrectInfoNatives();
 	RegisterSpellingNatives();
 	RegisterStrokeBundleNatives();
+	RegisterWordListNatives();
 	RegisterInkNatives();
 
 	// the stores and soups
