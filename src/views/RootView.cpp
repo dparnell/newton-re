@@ -28,6 +28,7 @@
 #include "DynamicArray.h"
 #include "NewtonExceptions.h"
 #include "UnitPublic.h"
+#include "Recognizer.h"	// gInhibitPopup
 #include "NewtonTime.h"
 
 Boolean	gNewtIsAliveAndWell = false;		// ROM 0x0c105510 gNewtIsAliveAndWell (set by TNewtWorld::PreMain once the boot is over; a program without the newt world sets it itself)
@@ -1425,10 +1426,17 @@ TRootView::ViewContainsCaretView(TView* view)
 
 
 // ROM 0x001b56d8 SetPopup__9TRootViewFP5TViewUc
-// The popup view set (the previous one noted in the new one's popup slot),
-// or, for set false, the view let go: the popup its context's popup slot
-// names takes its place.  NOT YET RECONSTRUCTED: the previous popup
-// closed (aeDropChild) when the new one is nil.
+// The popup view set (the previous one noted in the new one's popup
+// slot), or, for `set` false, the view let go: the popup its context's
+// popup slot names takes its place.
+//
+// Setting *nil* is not the same as letting go: it asks for the popup
+// that is up to be closed, which is done by sending its parent an
+// aeDropChild with the popup as the parameter - the parent hides and
+// removes it, and the removal is what calls back with set false and
+// takes it off the root.  gInhibitPopup is set so that nothing puts
+// another one up while that is happening.  DismissPopup goes round this
+// until there are none left.
 void
 TRootView::SetPopup(TView* view, Boolean set)
 {
@@ -1444,8 +1452,17 @@ TRootView::SetPopup(TView* view, Boolean set)
 			fPopup = (TView*) RefToAddress(GetFrameSlotRef(older, RSSYMviewcobject));
 		return;
 	}
-	if (previous != nil && previous != view && view != nil)
+	if (previous != nil && previous != view)
+	{
+		if (view == nil)
+		{
+			RefVar cmd(MakeCommand(aeDropChild, previous->fParent, (Long) previous));
+			gApplication->DispatchCommand(cmd);
+			gInhibitPopup = true;
+			return;
+		}
 		SetFrameSlot(view->fContext, RSSYMpopup, previous->fContext);
+	}
 	if (view != nil)
 		fPopup = view;
 }

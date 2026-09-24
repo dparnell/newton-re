@@ -28,6 +28,7 @@
 #include "DrawShape.h"
 #include "Commands.h"
 #include "Keyboard.h"
+#include "RecConfig.h"
 #include "REPTranslators.h"
 #include "Bits.h"
 #include "Application.h"
@@ -3155,6 +3156,34 @@ TestPickView()
 	EXPECT(RINT(Eval("popped")) == 1 && gRootView->fChildren->Count() == 0);		// the callback ran, the autoclose popup gone
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "popup closed"));
+
+	// the three a script uses to find the popup that is up and take it
+	// down (views/PickView.cpp)
+	EXPECT(ISNIL(Eval("GetPopup()")));
+	RefVar again(Eval("GetRoot():DoPopup([\"Cut\", \"Copy\"], {left: 30, top: 30, right: 30, bottom: 30}, 0, cb)"));
+	EXPECT(NOTNIL(Eval("GetPopup()")) && EQRef(Eval("GetPopup()"), again));
+	// DismissPopup closes every popup that is up
+	Eval("DismissPopup()");
+	EXPECT(ISNIL(Eval("GetPopup()")) && gRootView->fChildren->Count() == 0);
+	// ClearPopup only forgets it - the view is still there, and whoever
+	// opened it has to take it away
+	RefVar third(Eval("GetRoot():DoPopup([\"Cut\"], {left: 30, top: 30, right: 30, bottom: 30}, 0, cb)"));
+	Eval("ClearPopup()");
+	EXPECT(ISNIL(Eval("GetPopup()")) && gRootView->fChildren->Count() == 1);
+	Eval("RemoveView(GetRoot(), GetRoot():ChildViewFrames()[0])");
+	EXPECT(gRootView->fChildren->Count() == 0);
+	// nothing is selected, and no key is repeating
+	EXPECT(ISNIL(Eval("HiliteOwner()")));
+	EXPECT(ISNIL(Eval("InRepeatedKeyCommand()")));
+	// what a view allows to be written on it: a plain view with every
+	// recognition flag set takes both raw ink and unread words
+	{
+		RefVar all(Eval("ctxAI := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x1fffe00, viewBounds: {left: 0, top: 0, right: 20, bottom: 20}})"));
+		EXPECT(NOTNIL(Eval("ViewAllowsInk(ctxAI)")));
+		EXPECT(NOTNIL(Eval("ViewAllowsInkWords(ctxAI)")));
+		Eval("RemoveView(GetRoot(), ctxAI)");
+	}
+	Refresh();
 }
 
 
@@ -5320,6 +5349,9 @@ main()
 	RegisterViewNatives();
 	RegisterStrokeBundleNatives();
 	RegisterInkNatives();
+	RegisterPickNatives();
+	RegisterKeyboardNatives();
+	RegisterRecConfigNatives();
 	RegisterWordListNatives();
 	InstallHostNatives();
 	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));

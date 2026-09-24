@@ -47,6 +47,13 @@ TView*	GetRecognitionView(TView* view);					// ROM 0x001a28a8 GetRecognitionView
 // The configuration frame for a view with those recognition flags.
 Ref		BuildRecConfig(TView* view, ULong flags);			// ROM 0x00034b70 BuildRecConfig__FP5TViewUl
 
+// Whether the view keeps raw ink, and whether it keeps a word of writing
+// that was not read; both out of its recognition configuration.
+Boolean	ViewAllowsInk(TView* view);							// ROM 0x001a293c ViewAllowsInk__FP5TView
+Boolean	ViewAllowsInkWords(TView* view);					// ROM 0x001a29ec ViewAllowsInkWords__FP5TView
+
+void	RegisterRecConfigNatives(void);						// the two a script asks
+
 // A configuration made ready to be read through: protoRecConfig cloned,
 // with `config` as its _proto and the user's configuration - or the
 // view's own expanded `_recogSettings` - as its _parent.  A configuration

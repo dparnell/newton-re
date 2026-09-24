@@ -14,6 +14,7 @@
 #include "Interpreter.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"
+#include "NativeFunctions.h"
 
 
 // The text-ish field kinds: the recognition bits that say a view takes
@@ -285,4 +286,72 @@ UsesLetters(TView* view)
 	if (ISNIL(config))
 		return false;
 	return NOTNIL(RefVar(GetVariable(config, RSSYMrcsingleletters, nil, 0)));
+}
+
+/*------------------------------------------------------------------------------
+	W h a t   a   v i e w   a l l o w s
+
+	Two questions a script asks before it hands a view some writing: may
+	it keep raw ink, and may it keep a word of writing that was not read.
+	Both are answered out of the view's recognition configuration, and a
+	view whose recognition flags are every bit of the writing mask is
+	taken to allow both without the configuration being built at all.
+------------------------------------------------------------------------------*/
+
+// the recognition flags of viewFlags: every kind of writing allowed
+const ULong kAllRecognitionFlags = 0x01fffe00;
+
+
+// ROM 0x001a293c ViewAllowsInk__FP5TView
+// Whether the view keeps raw ink - its configuration's `_proto` says so
+// by *not* having a `doRawInkRecognition` slot, or by having one that is
+// not nil.  (A slot that is there and nil is the only way to say no.)
+Boolean
+ViewAllowsInk(TView* view)
+{
+	TView* recognition = GetRecognitionView(view);
+	if ((recognition->fFlags & kAllRecognitionFlags) == kAllRecognitionFlags)
+		return true;
+	RefVar config(BuildRecConfig(recognition, recognition->fFlags & (kAllRecognitionFlags | 0x100)));
+	RefVar proto(GetFrameSlotRef(config, RSSYM_proto));
+	return !FrameHasSlot(proto, RSSYMdorawinkrecognition)
+		   || NOTNIL(GetFrameSlotRef(proto, RSSYMdorawinkrecognition));
+}
+
+
+// ROM 0x001a29ec ViewAllowsInkWords__FP5TView
+// ... and whether it keeps a word of writing that was not read, which
+// the configuration says plainly (through the protos this time).
+Boolean
+ViewAllowsInkWords(TView* view)
+{
+	TView* recognition = GetRecognitionView(view);
+	if ((recognition->fFlags & kAllRecognitionFlags) == kAllRecognitionFlags)
+		return true;
+	RefVar config(BuildRecConfig(recognition, recognition->fFlags & (kAllRecognitionFlags | 0x100)));
+	return NOTNIL(GetProtoVariable(config, RSSYMdoinkwordrecognition, nil));
+}
+
+
+// ROM 0x001a0028 FViewAllowsInk
+static Ref
+FViewAllowsInk(RefArg /*rcvr*/, RefArg view)
+{
+	return MAKEBOOLEAN(ViewAllowsInk(FailGetView(view)));
+}
+
+
+// ROM 0x001a0124 FViewAllowsInkWords
+static Ref
+FViewAllowsInkWords(RefArg /*rcvr*/, RefArg view)
+{
+	return MAKEBOOLEAN(ViewAllowsInkWords(FailGetView(view)));
+}
+
+
+void
+RegisterRecConfigNatives(void)
+{
+	RegisterNativeFunction("FViewAllowsInk", (void*) FViewAllowsInk, 1);
+	RegisterNativeFunction("FViewAllowsInkWords", (void*) FViewAllowsInkWords, 1);
 }

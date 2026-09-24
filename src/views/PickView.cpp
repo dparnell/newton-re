@@ -8,6 +8,7 @@
 
 #include "PickView.h"
 #include "RootView.h"
+#include "Recognizer.h"	// gInhibitPopup
 #include "Commands.h"
 #include "UnitPublic.h"
 #include "NewtonTime.h"
@@ -1223,10 +1224,47 @@ FPickViewKeyDown(RefArg rcvr, RefArg ch, RefArg key)
 }
 
 
+// ROM 0x001f09f4 FGetPopup
+// GetPopup(): the context of the popup that is up, or nil.
+static Ref
+FGetPopup(RefArg /*rcvr*/)
+{
+	TView* popup = gRootView->fPopup;
+	return popup != nil ? (Ref) popup->fContext : NILREF;
+}
+
+
+// ROM 0x001f0a18 FClearPopup
+// ClearPopup(): the popup taken down, without closing it.
+static Ref
+FClearPopup(RefArg /*rcvr*/)
+{
+	if (gRootView->fPopup != nil)
+		gRootView->SetPopup(gRootView->fPopup, false);
+	return NILREF;
+}
+
+
+// ROM 0x001f0a48 FDismissPopup
+// DismissPopup(): every popup closed, one after another, and the
+// machine allowed to put one up again.
+static Ref
+FDismissPopup(RefArg /*rcvr*/)
+{
+	while (gRootView->fPopup != nil)
+		gRootView->SetPopup(nil, true);
+	gInhibitPopup = false;
+	return NILREF;
+}
+
+
 void
 RegisterPickNatives(void)
 {
 	RegisterNativeFunction("FPickViewKeyDown", (void*) FPickViewKeyDown, 2);
+	RegisterNativeFunction("FGetPopup", (void*) FGetPopup, 0);
+	RegisterNativeFunction("FClearPopup", (void*) FClearPopup, 0);
+	RegisterNativeFunction("FDismissPopup", (void*) FDismissPopup, 0);
 }
 
 

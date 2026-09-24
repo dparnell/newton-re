@@ -2288,6 +2288,17 @@ FSetCaretInfo(RefArg /*rcvr*/, RefArg view, RefArg info)
 }
 
 
+// ROM 0x001ef570 FHiliteOwner__FRC6RefVar
+// HiliteOwner(): the context of the view the current selection belongs
+// to, or nil when nothing is selected.
+static Ref
+FHiliteOwner(RefArg /*rcvr*/)
+{
+	TView* owner = gRootView->fHiliter;
+	return owner != nil ? (Ref) owner->fContext : NILREF;
+}
+
+
 // ROM 0x001fe5d4 FStyleArrayContainsInk__FRC6RefVarT1
 // StyleArrayContainsInk(styles): whether a runs array has any writing
 // among its style specs.
@@ -2441,6 +2452,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FShowCaret", (void*) FShowCaret, 0);
 	RegisterNativeFunction("FHideCaret", (void*) FHideCaret, 0);
 	RegisterNativeFunction("FSetCaretInfo", (void*) FSetCaretInfo, 2);
+	RegisterNativeFunction("FHiliteOwner__FRC6RefVar", (void*) FHiliteOwner, 0);
 	RegisterNativeFunction("FStyleArrayContainsInk__FRC6RefVarT1", (void*) FStyleArrayContainsInk, 1);
 	RegisterNativeFunction("FScanWordStart", (void*) FScanWordStart, 3);
 	RegisterNativeFunction("FScanWordEnd", (void*) FScanWordEnd, 3);

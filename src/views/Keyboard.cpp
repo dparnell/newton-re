@@ -917,9 +917,21 @@ FAddKeyCommand(RefArg rcvr, RefArg command)
 	return NILREF;
 }
 
+// ROM 0x00269c1c FInRepeatedKeyCommand
+// InRepeatedKeyCommand(): whether the key command being run now is one
+// the key repeat sent, rather than a key the writer has just pressed -
+// which is how a command that should not repeat says so.
+static Ref
+FInRepeatedKeyCommand(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(gInRepeatedKeyCommand);
+}
+
+
 void
 RegisterKeyboardNatives(void)
 {
+	RegisterNativeFunction("FInRepeatedKeyCommand", (void*) FInRepeatedKeyCommand, 0);
 	RegisterNativeFunction("FKeyIn", (void*) FKeyIn, 2);
 	RegisterNativeFunction("FAddKeyCommand", (void*) FAddKeyCommand, 1);
 	RegisterNativeFunction("FTranslateKey", (void*) FTranslateKey, 3);
