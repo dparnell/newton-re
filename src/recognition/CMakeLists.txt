@@ -37,6 +37,8 @@ add_library(recognition STATIC
     RosEngine.cpp
     WordRecog.cpp
     ROMGrammar.cpp
+    BPNet.cpp
+    BPNetTables.cpp
     RosCITables.cpp
     Rosetta.cpp
     TabletBuffer.cpp

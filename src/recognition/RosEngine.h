@@ -51,6 +51,10 @@
 #include "FixedGeometry.h"
 #endif
 
+#ifndef __BPNET_H
+#include "BPNet.h"			// the classifier the engine reads with
+#endif
+
 
 /*--------------------------------------------------------------------
 	The engine's common info.
@@ -230,13 +234,6 @@ Fixed	SegmentMinStrokeSize(void);							// ROM 0x001d1890 SegmentMinStrokeSize
 
 void	NetPatternDestroy(RosNetPattern* pattern);			// ROM 0x00133a08 NetPatternDestroy
 void	NetPatternizerDestroy(RosNetPatternizer* patternizer);	// ROM 0x00133a58 NetPatternizerDestroy
-
-// The back-propagation classifier: made with a number of output nodes,
-// told whether it may learn, loaded, and given back.
-void*	BPNetCreateNumOut(long outputs);						// ROM 0x0003b1cc BPNetCreateNumOut
-void	BPNetLearnEnable(void* net, long enable);			// ROM 0x0003b278 BPNetLearnEnable
-void	BPNetLoad(void* net, void* from);					// ROM 0x0003b280 BPNetLoad
-void	BPNetDestroy(void* net);							// ROM 0x0003b240 BPNetDestroy
 
 // The boxed-character recogniser, given back.
 void	CharBoxDestroy(void* charBox);						// ROM 0x00056684 CharBoxDestroy

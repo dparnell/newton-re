@@ -12,7 +12,7 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 86/86.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9548 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9561 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
   the function total, which comes from the demangled symbols.)
@@ -310,9 +310,21 @@ asks for by name, each a list of *kinds of word* (a lexicon out of
 that may follow it), written out in `docs/recognition/grammar.md` - so
 `RosettaInitialize` now makes a word recogniser that knows the eight
 grammars and the 166 characters it may answer.  What is missing is
-*reading*: the classifier (`BPNet*`, and `BPNetEvaluate` is hand-written
-assembly), the patternizers that fill it, the segment layer, and
-`RosettaClassify` with its setup/analyze/cleanup.
+*reading*, and it is a subsystem of its own rather than a piece of
+work: `docs/recognition/bpnet.md` inventories it.  The bottom of it -
+the classifier net's structure, its trained tables and its life - is
+reconstructed (`recognition/BPNet.h`, `analysis/bpnet.py`), and that
+page writes up everything read out of `BPNetEvaluate`'s assembly
+including the one thing that does not add up: it adds 0x03500000 to
+the weight pointer before it starts, which lands outside the ROM.
+Settling that is what `BPNetEvaluate` waits on.
+
+Above the net, all NOT YET: the seven patternizers that fill its 384
+inputs (7.4 KB), the segment layer (20 KB), the boxed-character
+recogniser (2.2 KB), `WordRecogAddStroke`/`AnalyzeWord` (10 KB),
+`RosettaSetArea` and the classify passes (3 KB), and the feature
+extraction `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384
+symbols on its own.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

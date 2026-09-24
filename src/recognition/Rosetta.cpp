@@ -108,7 +108,7 @@ RosettaAwaken(void)
 		return noErr;
 
 	long outputs = CharInitialize(0);
-	void* net = nil;
+	BPNet* net = nil;
 	newton_try
 	{
 		net = BPNetCreateNumOut(outputs);

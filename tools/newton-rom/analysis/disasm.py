@@ -9,6 +9,12 @@ function of its own: SWI dispatch cases, glue in the middle of SWIBoot,
 the reset and exception vectors.  Labels and jump-table targets are
 resolved to symbol names, and the operand's referenced symbol (if any)
 is appended after `;`.
+
+Some of that assembly is not disassembled at all: the auto-analysis leaves
+a routine nothing calls directly as raw bytes, and the unrolled inner loop
+of `BPNetEvaluate` (which is entered through a computed jump) is the worst
+case.  `--force` clears the range and has Ghidra disassemble it as ARM
+before printing, which changes the project and is remembered.
 """
 
 from __future__ import annotations
@@ -26,6 +32,8 @@ def main(argv=None) -> int:
     ap.add_argument("--start", required=True, help="first address")
     ap.add_argument("--end", help="stop before this address")
     ap.add_argument("--count", type=int, default=64, help="instructions to print when --end is not given")
+    ap.add_argument("--force", action="store_true",
+                    help="clear the range and disassemble it as ARM first (changes the project)")
     args = ap.parse_args(argv)
     if not args.ghidra:
         ap.error("Ghidra install dir not given (--ghidra or GHIDRA_INSTALL_DIR)")
@@ -42,6 +50,18 @@ def main(argv=None) -> int:
             space = program.getAddressFactory().getDefaultAddressSpace()
             addr = space.getAddress(int(args.start, 0))
             end = space.getAddress(int(args.end, 0)) if args.end else None
+
+            if args.force:
+                if end is None:
+                    ap.error("--force needs --end")
+                from ghidra.app.cmd.disassemble import ArmDisassembleCommand
+                from ghidra.program.model.address import AddressSet
+                tx = program.startTransaction("disassemble")
+                try:
+                    listing.clearCodeUnits(addr, end.subtract(1), False)
+                    ArmDisassembleCommand(AddressSet(addr, end.subtract(1)), None, False).applyTo(program)
+                finally:
+                    program.endTransaction(tx, True)
             printed = 0
             while addr is not None and (end is None and printed < args.count or end is not None and addr < end):
                 label = st.getPrimarySymbol(addr)

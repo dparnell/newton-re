@@ -72,6 +72,8 @@ GENERATED = [
     ("bigrammar",
      "bigrammar.py", ["{build}", "-o", "src/recognition/ROMGrammar.cpp",
                       "--doc", "docs/recognition/grammar.md"]),
+    ("bpnet",
+     "bpnet.py", ["{build}", "-o", "src/recognition/BPNetTables.cpp"]),
     ("factorysoups",
      "soupdefs.py", ["{build}", "-o", "src/host/FactorySoups.cpp"]),
 ]

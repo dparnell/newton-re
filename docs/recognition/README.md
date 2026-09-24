@@ -2155,6 +2155,34 @@ It reads one word at a time and a space is never a character of one.
 166 of the 256 codes are legal: printable ASCII and the accented
 Latin-1 letters.
 
+### The classifier (`recognition/BPNet.h`, `docs/recognition/bpnet.md`)
+
+At the bottom of reading a word is a back-propagation net, and it is
+fixed point and tiny — which is what let it run on a 162 MHz
+StrongARM with no floating point at all. A unit's activation is one
+byte with 128 standing for nought; a weight is one byte biased by 128,
+so a unit accumulates `activation * (weight - 128)`; and the sigmoid is
+a 360-byte lookup table, `QSigLu`. There are 1002 units — 384 inputs,
+484 hidden and 134 outputs — in one byte array, worked out in order so
+that a unit may read any unit before it.
+
+The connections are a *program* rather than a matrix: `newtConnects` is
+2392 words, each saying how many connections follow, how far back in
+the unit array they start, and whether to take more weight bytes; a
+word whose count is nought ends a unit and carries the next one's bias.
+There are 619 of those — 618 units and a terminator — which is one of
+the three checks that made the format readable (`test_Rosetta` asserts
+it).
+
+`analysis/bpnet.py` generates the net's template and its eight trained
+tables. **`BPNetEvaluate` is NOT YET**: it is 950 bytes of hand-written
+assembly, unrolled sixteen ways and entered through a computed jump,
+and one thing in it does not add up — it adds 0x03500000 to the weight
+pointer before it starts, which lands outside the ROM.
+`docs/recognition/bpnet.md` is the whole write-up, so that whoever
+finishes it does not start again, and it also inventories what is left
+below reading.
+
 ### The bigram grammar (`recognition/ROMGrammar.cpp`)
 
 `ROMGrammar` is what `BiGrammarsLoad` answers: the eight grammars a

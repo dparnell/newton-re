@@ -7,6 +7,7 @@
 #include "RosEngine.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"
+#include "BPNet.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -98,6 +99,53 @@ main()
 		EXPECT(gWordRecog->fContextIndex == 4);
 		EXPECT(WordRecogSetContext(gWordRecog, "Esperanto") == 1);
 		EXPECT(gWordRecog->fContextIndex == 4);
+	}
+
+	// ---- the classifier the engine reads with ----
+	{
+		// it is made by the recogniser's own Initialize, over the ROM's
+		// template
+		BPNet* net = gWordRecog->fNet;
+		EXPECT(net != nil);
+		EXPECT(net->fInputCount == 384);
+		EXPECT(net->fHiddenCount == 484);
+		EXPECT(net->fOutputCount == 134);		// one per character class
+		EXPECT(net->fUnitCount == 1002);
+		EXPECT(net->fComputedCount == 618);
+		EXPECT(net->fUnitCount == net->fInputCount + net->fComputedCount);
+		EXPECT(net->fComputedCount == net->fHiddenCount + net->fOutputCount);
+		// the trained tables, straight out of the ROM
+		EXPECT(net->fWeights == bpWeight);
+		EXPECT(net->fConnects == newtConnects);
+		EXPECT(net->fWeightSize == 91124);
+		EXPECT(net->fLearning == 0);			// RosettaAwaken turns it off
+		// the unit array, with the outputs at the end of it
+		EXPECT(net->fUnits != nil && net->fUnits == net->fBlock);
+		EXPECT(net->fOutputs == net->fUnits + 868);
+
+		// the connection program: 618 units, each ended by a word whose
+		// count is nought, and one more to say that was the last
+		long boundaries = 0, last = -1;
+		for (long i = 0; i < 2392; i++)
+			if ((newtConnects[i] >> kBPNetCountShift) == 0)
+			{
+				boundaries++;
+				if (newtConnects[i] & kBPNetNextRegister)
+					last = i;
+			}
+		EXPECT(boundaries == net->fComputedCount + 1);
+		EXPECT(last == 2391);					// and it is the very last word
+
+		// the sigmoid: 128 for a sum of nought, never falling, and 255
+		// by the time the sum is clamped
+		EXPECT(QSigLu[0] == 128);
+		EXPECT(QSigLu[kBPNetSigmoidLimit >> kBPNetSigmoidShift] == 255);
+		for (long i = 1; i < 360; i++)
+			if (QSigLu[i] < QSigLu[i - 1])
+			{
+				EXPECT(false);
+				break;
+			}
 	}
 
 	// ---- the engine's own character set ----

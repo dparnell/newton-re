@@ -134,7 +134,7 @@ struct WordRecog
 	void*			fBuffer4c;			// +0x04c  kWordRecogBufferSize bytes
 	UByte			fSuspended;			// +0x050  the arrays have been given back
 	UByte			fPad51[3];
-	void*			fNet;				// +0x054  the classifier (RosettaAwaken's)
+	BPNet*			fNet;				// +0x054  the classifier (RosettaAwaken's)
 	RosNetPatternizer*	fPatternizer;	// +0x058
 	RosNetPattern*	fPattern;			// +0x05c
 	Fixed			fField60;			// +0x060  fRun[0] as the word started
@@ -202,7 +202,7 @@ void		WordRecogDeallocate(WordRecog* wr);				// ROM 0x00274c08 WordRecogDealloca
 // grammar to read against.
 WordRecog*	WordRecogCreate2(void* field00, void* field04,
 							WordRecogCheckWordsProc checkWords, long wordCount,
-							const BiGrammars* grammars, void* net, short ownsStrokes);	// ROM 0x00275940 WordRecogCreate2
+							const BiGrammars* grammars, BPNet* net, short ownsStrokes);	// ROM 0x00275940 WordRecogCreate2
 
 // The arrays given back while the engine is quiet, and made again when
 // it wakes.  The block itself does not move.

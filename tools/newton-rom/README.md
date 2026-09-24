@@ -67,6 +67,8 @@ tools/newton-rom/
                           tables -> src/recognition/RosCITables.cpp
     bigrammar.py          the handwriting engine's eight bigram grammars
                           -> src/recognition/ROMGrammar.cpp, docs/recognition/grammar.md
+    bpnet.py              the handwriting engine's classifier net and its trained tables
+                          -> src/recognition/BPNetTables.cpp
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
     soupdefs.py           the soups the ROM's applications keep -> src/host/FactorySoups.cpp
@@ -352,6 +354,17 @@ because the ROM has a debug symbol on every object in it - the slices
 `BiGS*`, their successor lists `BiSL*` and their weights `BiSP*` - the
 generated file carries the ROM's own names throughout. The same walk
 writes the grammar out as a document.
+
+`analysis/bpnet.py build/MP2x00US -o src/recognition/BPNetTables.cpp`
+emits the classifier net the engine reads characters with, in the same
+shape as `rosci.py`: a 0x84-byte template that `BPNetCreateNumOut`
+copies, and the eight trained tables it points at, of which `bpWeight`
+(91 KB, one byte per connection) is much the largest.
+
+`analysis/disasm.py` grew `--force` for this subsystem. Nothing calls
+`BPNetEvaluate`'s body directly, so the auto-analysis leaves it as raw
+bytes; `--force` clears the range and has Ghidra disassemble it as ARM
+before printing. It changes the project, so give it an exact range.
 
 `analysis/romconstants.py build/MP2x00US -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real
