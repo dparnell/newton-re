@@ -188,6 +188,8 @@ Point*	GetLastAddedWordBase(void);							// ROM 0x00170094 GetLastAddedWordBase_
 Boolean	HitsHilitedInkWord(TView* view, Point pt);			// ROM 0x00171344 HitsHilitedInkWord__FP5TView6TPoint
 long	ScanWordStart(const UniChar* text, long offset, long limit);	// ROM 0x001a1250 ScanWordStart__FPUslT2
 long	ScanWordEnd(const UniChar* text, long offset, long limit);	// ROM 0x001a1134 ScanWordEnd__FPUslT2
+long	ScanNextWord(const UniChar* text, long offset, long limit);	// ROM 0x001a1398 ScanNextWord__FPUslT2 - the start of the next word
+long	ScanPrevWordEnd(const UniChar* text, long offset, long limit);	// ROM 0x001a1484 ScanPrevWordEnd__FPUslT2 - the end of the one before (-1: none)
 
 // The room a paragraph allows around itself when it is asked whether a
 // word written on the page belongs to it.

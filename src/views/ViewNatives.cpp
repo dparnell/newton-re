@@ -2195,6 +2195,148 @@ FGetHilitedTextItems(RefArg /*rcvr*/)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   c a r e t ,   a n d   t h e   w o r d s   a r o u n d   i t
+
+	Where the next character typed would go, and how a script walks the
+	words of a piece of text (the four scanners are the same ones the
+	paragraph's own editing uses, views/ParagraphView.h).
+------------------------------------------------------------------------------*/
+
+// ROM 0x001ef368 FShowCaret
+// ShowCaret(): the caret drawn again, one HideCaret undone.
+static Ref
+FShowCaret(RefArg /*rcvr*/)
+{
+	gRootView->ShowCaret();
+	return NILREF;
+}
+
+
+// ROM 0x001ef38c FHideCaret
+// HideCaret(): the caret taken off the screen until a ShowCaret.
+static Ref
+FHideCaret(RefArg /*rcvr*/)
+{
+	gRootView->HideCaret();
+	return NILREF;
+}
+
+
+// ROM 0x001eef6c FSetCaretInfo
+// SetCaretInfo(view, info): the caret put where that view says.  What
+// `info` holds depends on the view:
+//
+//  - a paragraph takes an `offset` and a `length`: no length puts the
+//    caret there, a length selects that many characters (and an edit
+//    view around it has its other hilites cleared first);
+//  - an edit view takes an `x` and a `y` in its own contents, which it
+//    turns into a caret of its own (PositionCaret);
+//  - anything else is simply made the key view, and the frame is kept in
+//    the root's context as `_caretInfo` for whoever wants it.
+//
+// A nil view takes the caret away altogether.
+static Ref
+FSetCaretInfo(RefArg /*rcvr*/, RefArg view, RefArg info)
+{
+	if (ISNIL(view))
+	{
+		gRootView->SetKeyView(nil, 0, 0, false);
+		return NILREF;
+	}
+	TView* theView = FailGetView(view);
+	if (theView->DerivedFrom(clParagraphView))
+	{
+		RefVar offset(GetProtoVariable(info, RSSYMoffset, nil));
+		if (!ISINT(offset))
+			return NILREF;
+		RefVar length(GetProtoVariable(info, RSSYMlength, nil));
+		long count = ISNIL(length) ? 0 : RINT(length);
+		if (count == 0)
+			gRootView->SetKeyView(theView, RVALUE(offset), 0, false);
+		else
+		{
+			if ((theView->fFlags & vCalculateBounds) != 0)
+			{
+				TView* editView = ((TDataView*) theView)->GetEnclosingEditView();
+				editView->RemoveAllHilites();
+			}
+			((TParagraphView*) theView)->HiliteText(RVALUE(offset), count, true);
+		}
+	}
+	else if (theView->DerivedFrom(clEditView))
+	{
+		RefVar x(GetProtoVariable(info, RSSYMx, nil));
+		RefVar y(GetProtoVariable(info, RSSYMy, nil));
+		if (ISINT(x) && ISINT(y))
+		{
+			Point pt;
+			pt.h = (short) RVALUE(x);
+			pt.v = (short) RVALUE(y);
+			Point origin = theView->ContentsOrigin();
+			pt.h = (short) (pt.h + origin.h);
+			pt.v = (short) (pt.v + origin.v);
+			((TEditView*) theView)->PositionCaret(pt, false);
+		}
+	}
+	else
+	{
+		SetFrameSlot(RefVar(gRootView->fContext), RSSYM_caretinfo, info);
+		gRootView->SetKeyView(theView, 0, 0, false);
+	}
+	return NILREF;
+}
+
+
+// ROM 0x001a11b0 FScanWordStart
+// ScanWordStart(text, offset, limit): the start of the word around the
+// offset, no further back than the limit.
+static Ref
+FScanWordStart(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
+{
+	long to = RINT(limit);
+	long from = RINT(offset);
+	return MAKEINT(ScanWordStart(GetCString(text), from, to));
+}
+
+
+// ROM 0x001a1094 FScanWordEnd
+// ScanWordEnd(text, offset, limit): the character after the end of it.
+static Ref
+FScanWordEnd(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
+{
+	long to = RINT(limit);
+	long from = RINT(offset);
+	return MAKEINT(ScanWordEnd(GetCString(text), from, to));
+}
+
+
+// ROM 0x001a12ec FScanNextWord
+// ScanNextWord(text, offset, limit): the start of the next word, or nil
+// when the limit was reached without finding one.
+static Ref
+FScanNextWord(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
+{
+	long to = RINT(limit);
+	long from = RINT(offset);
+	long at = ScanNextWord(GetCString(text), from, to);
+	return at == to ? NILREF : MAKEINT(at);
+}
+
+
+// ROM 0x001a13dc FScanPrevWordEnd
+// ScanPrevWordEnd(text, offset, limit): the end of the word before the
+// offset, or nil when there is nothing but white space back to the limit.
+static Ref
+FScanPrevWordEnd(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
+{
+	long to = RINT(limit);
+	long from = RINT(offset);
+	long at = ScanPrevWordEnd(GetCString(text), from, to);
+	return at < 0 ? NILREF : MAKEINT(at);
+}
+
+
 void
 RegisterViewNatives(void)
 {
@@ -2286,6 +2428,13 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FSlideEffectX", (void*) FSlideEffectX, 5);
 	RegisterNativeFunction("FRevealEffectX", (void*) FRevealEffectX, 5);
 	RegisterNativeFunction("FDoScrubEffect__FRC6RefVarT1", (void*) FDoScrubEffect, 1);
+	RegisterNativeFunction("FShowCaret", (void*) FShowCaret, 0);
+	RegisterNativeFunction("FHideCaret", (void*) FHideCaret, 0);
+	RegisterNativeFunction("FSetCaretInfo", (void*) FSetCaretInfo, 2);
+	RegisterNativeFunction("FScanWordStart", (void*) FScanWordStart, 3);
+	RegisterNativeFunction("FScanWordEnd", (void*) FScanWordEnd, 3);
+	RegisterNativeFunction("FScanNextWord", (void*) FScanNextWord, 3);
+	RegisterNativeFunction("FScanPrevWordEnd", (void*) FScanPrevWordEnd, 3);
 	InstallScriptFunctions(gViewScriptFunctions);
 	RegisterFontNatives();
 }

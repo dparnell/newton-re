@@ -1184,6 +1184,31 @@ has - which is how a range that holds writing keeps it.
 (Tested by `TestSelection`: bolding "World" splits the styles into a
 bold run, the toggle goes back and forth, and an undo puts the old
 styles back.)
+### The caret from a script (`views/ViewNatives.cpp`)
+
+`SetCaretInfo(view, info)` 0x001eef6c puts the caret where a view says,
+and what `info` holds depends on the view: a paragraph takes an
+`offset` and a `length` (no length puts the caret there, a length
+selects that many characters - and an edit view around it has its other
+hilites cleared first), an edit view takes an `x` and a `y` in its own
+contents which it turns into a caret of its own (`PositionCaret`), and
+anything else is simply made the key view, with the frame kept in the
+root's context as `_caretInfo` for whoever wants it.  A nil view takes
+the caret away altogether.  `GetCaretInfo()` 0x001eee94 is the other
+way: `{view, info}` for the key view, its `info` being whatever that
+kind of view says its selection is.
+
+`ShowCaret()` 0x001ef368 and `HideCaret()` 0x001ef38c are the counted
+pair the root view keeps (`fCaretHidden`).
+
+The four word scanners a script walks text with are the same ones the
+paragraph's own editing uses: `ScanWordStart` 0x001a1250 and
+`ScanWordEnd` 0x001a1134 for the word around an offset (ink and
+characters counting as different kinds), `ScanNextWord` 0x001a1398 for
+the start of the next one and `ScanPrevWordEnd` 0x001a1484 for the end
+of the one before.  The natives answer nil rather than the limit when
+there is no word that way.
+
 ### The picker's keys (`TPickView::HandleKeyDown` 0x0018a4b0)
 
 The ROM's protoPicker's `viewKeyDownScript` is the native

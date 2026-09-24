@@ -1605,6 +1605,33 @@ ScanWordEnd(const UniChar* text, long offset, long limit)
 }
 
 
+// ROM 0x001a1398 ScanNextWord__FPUslT2
+// The start of the next word: forward over white space, no further than
+// limit (which it answers when there is no word left).
+long
+ScanNextWord(const UniChar* text, long offset, long limit)
+{
+	while (offset < limit && IsWhiteSpace(text[offset]))
+		offset++;
+	return offset;
+}
+
+
+// ROM 0x001a1484 ScanPrevWordEnd__FPUslT2
+// The end of the word before offset (the character after it): back over
+// white space, no further than limit.  -1 when there is nothing but
+// white space back to the limit.
+long
+ScanPrevWordEnd(const UniChar* text, long offset, long limit)
+{
+	while (IsWhiteSpace(text[offset]) && limit < offset)
+		offset--;
+	if (offset == limit && IsWhiteSpace(text[offset]))
+		return -1;
+	return offset + 1;
+}
+
+
 // The word around a point selected (a double tap): the character under
 // the point found (PointToOffset), the word scanned around it, and, when
 // it is not empty, hilited.  ==> whether a word was selected.

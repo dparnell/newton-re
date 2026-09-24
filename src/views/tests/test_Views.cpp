@@ -3454,6 +3454,33 @@ TestSelection()
 	EXPECT(NOTNIL(Eval("StrEqual(ctxS:ExtractTextRange(0, 5), \"Hello\")")));
 	EXPECT(NOTNIL(Eval("GetInsertionStyle()")));
 	EXPECT(NOTNIL(Eval("StrEqual(GetRangeText(ctxS, 6, 11), \"World\")")));
+
+	// the word scanners, as a script walks a piece of text
+	// ("the cat  sat": 0..2 the, 4..6 cat, 9..11 sat)
+	Eval("s := \"the cat  sat\"");
+	EXPECT(RINT(Eval("ScanWordStart(s, 5, 0)")) == 4);
+	EXPECT(RINT(Eval("ScanWordEnd(s, 5, 12)")) == 7);
+	EXPECT(RINT(Eval("ScanNextWord(s, 7, 12)")) == 9);
+	EXPECT(ISNIL(Eval("ScanNextWord(s, 7, 8)")));			// nothing but space up to the limit
+	EXPECT(RINT(Eval("ScanPrevWordEnd(s, 8, 0)")) == 7);
+	EXPECT(ISNIL(Eval("ScanPrevWordEnd(s, 3, 3)")));		// the limit is itself white space
+	Eval("RemoveSlot(vars, 's)");
+
+	// the caret: put in the paragraph at an offset, and with a length it
+	// selects instead
+	Eval("SetCaretInfo(ctxS, {offset: 3})");
+	EXPECT(gRootView->fCaretView == p && gRootView->fCaretOffset == 3);
+	EXPECT(NOTNIL(Eval("GetCaretInfo().view")) && EQRef(Eval("GetCaretInfo().view"), Eval("ctxS")));
+	Eval("SetCaretInfo(ctxS, {offset: 6, length: 5})");
+	EXPECT(HiliteRange(p, true) == 6 && HiliteRange(p, false) == 11);
+	p->RemoveAllHilites();
+	// HideCaret/ShowCaret take it off the screen and put it back
+	Eval("HideCaret()");
+	EXPECT(gRootView->fCaretHidden == 1);
+	Eval("ShowCaret()");
+	EXPECT(gRootView->fCaretHidden == 0);
+	Eval("SetCaretInfo(nil, nil)");
+	EXPECT(gRootView->fCaretView == nil);
 	// typing over a selection replaces it in one edit
 	gKeyboardConnected = true;
 	Eval("ClearUndoStacks()");
