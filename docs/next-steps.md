@@ -12,9 +12,9 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 81/81.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9264 citations, 0 bad;
-  5103 of 16671 functions (30.61%).
-- `analysis/natives.py`: 860 of the ROM's 1326 natives answered.
+- `analysis/coverage.py build/MP2x00US --check`: 9267 citations, 0 bad;
+  5106 of 16671 functions (30.63%).
+- `analysis/natives.py`: 863 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -98,10 +98,16 @@ The last run of work closed, in order:
   answers out of the ROM's own word lists.  All thirteen of the
   dictionary and cursor natives a script uses are answered, the last of
   them being `TAirusIterator` (`recognition/AirusIterator.h`), the
-  cursor a script walks a dictionary with.  NOT YET in the engine: the
-  sixteen-bit walkers and the `AEnum_FirstLast`/`AEnum_NextPrevious`
-  enumerators, which are a second way of stepping through a dictionary
-  that nothing in the ROM appears to use.
+  cursor a script walks a dictionary with, and the list's own
+  (`AddDictionary`, `GetDictionaryData`, `SetDictionaryData`).  Two
+  dictionary natives are left, each blocked on a piece of the engine
+  nothing else wants: `ConvertDictionaryData` on the completions walk
+  (`AEnum_FirstLast`/`AEnum_NextPrevious` under `FirstCompletion`/
+  `NextCompletion`) and `GetRandomDictionaryWord` on the random word
+  generator (`RandomCommonWord` over `GetDistributedWord` and the
+  `charWeights` table).  The sixteen-bit walkers are the third gap, and
+  no dictionary in this ROM is sixteen-bit - see
+  `docs/recognition/README.md`'s "What is left of the engine".
 
 - **the machine's own power natives** (`docs/system/README.md`): the
   battery frame and its raw twin, `BatteryLevel`, `BatteryCount`,
@@ -241,7 +247,7 @@ The last run of work closed, in order:
 ## Next: what is left of the natives, and why
 
 The thin wrappers are done.  What `natives.py --unbound` still lists is
-466 natives, and they are not a long tail of small jobs: nine out of ten
+463 natives, and they are not a long tail of small jobs: nine out of ten
 of them are the script-facing face of a subsystem that has no
 reconstruction behind it at all.  Binding one of those means writing the
 subsystem, not the wrapper.

@@ -107,6 +107,12 @@ void	DictionariesChanged(void);							// ROM 0x0013f084 DictionariesChanged__Fv
 // taken out again.
 Ref		FAirusRegisterDictionary(RefArg rcvr);				// ROM 0x0013eddc FAirusRegisterDictionary
 Ref		FAirusUnregisterDictionary(RefArg rcvr);			// ROM 0x0013ef2c FAirusUnregisterDictionary
+// AddDictionary(frame, custom): the same for a frame that is not the
+// receiver.  GetDictionaryData(id)/SetDictionaryData(id, binary): the
+// bytes of a dictionary in RAM, out and back again.
+Ref		FAddDictionary(RefArg rcvr, RefArg frame, RefArg custom);	// ROM 0x0013f058 FAddDictionary__FRC6RefVarN21
+Ref		FGetDictionaryData(RefArg rcvr, RefArg id);			// ROM 0x0013dd28 FGetDictionaryData__FRC6RefVarT1
+Ref		FSetDictionaryData(RefArg rcvr, RefArg id, RefArg binary);	// ROM 0x0013dbec FSetDictionaryData__FRC6RefVarN21
 
 // The frames: vars.dictionaries, and the one with a given id.
 // The list entry for an id.  Some ids stand for others, and an id that

@@ -783,8 +783,10 @@ DictionariesChanged(void)
 // its proto, added to vars.dictionaries and to gDictList beside it, and
 // given an id of its own - which is what the lookups then find it by.
 // ==> the id.
-Ref
-FAirusRegisterDictionary(RefArg rcvr)
+// What both FAirusRegisterDictionary and FAddDictionary do; the ROM
+// writes the same twenty lines out twice.
+static Ref
+RegisterDictionaryFrame(RefArg frame)
 {
 	dictListEntry entry;
 	entry.fDictionary = nil;
@@ -793,20 +795,93 @@ FAirusRegisterDictionary(RefArg rcvr)
 	entry.fDisabled = 0;
 
 	long id = gNextCustomDictionaryID++;
-	SetFrameSlot(rcvr, RSSYM_proto, RefVar(Rprotodictionary));
+	SetFrameSlot(frame, RSSYM_proto, RefVar(Rprotodictionary));
 	RefVar list(Dictionaries());
-	AddArraySlot(list, rcvr);
-	SetFrameSlot(rcvr, RSSYMdictid, RefVar(MAKEINT(id)));
+	AddArraySlot(list, frame);
+	SetFrameSlot(frame, RSSYMdictid, RefVar(MAKEINT(id)));
 
-	entry.fDictionary = GetScriptDictRef(rcvr);
+	entry.fDictionary = GetScriptDictRef(frame);
 	entry.fIndex = (UByte) gDictList->Count();		// where this entry is going
-	entry.fStatus = (UByte) RINT(RefVar(GetProtoVariable(rcvr, RSSYMstatus, nil)));
-	entry.fDisabled = EQRef(RefVar(GetProtoVariable(rcvr, RSSYMcustom, nil)), RSSYMcustom);
+	entry.fStatus = (UByte) RINT(RefVar(GetProtoVariable(frame, RSSYMstatus, nil)));
+	entry.fDisabled = EQRef(RefVar(GetProtoVariable(frame, RSSYMcustom, nil)), RSSYMcustom);
 
 	((AirusAParmBlock*) *entry.fDictionary)->fDictID = id;
 	memcpy(gDictList->AddEntry(), &entry, sizeof(entry));
 	DictionariesChanged();
 	return MAKEINT(id);
+}
+
+
+Ref
+FAirusRegisterDictionary(RefArg rcvr)
+{
+	return RegisterDictionaryFrame(rcvr);
+}
+
+
+// ROM 0x0013f058 FAddDictionary__FRC6RefVarN21
+// AddDictionary(frame, custom): the same, for a frame that is not the
+// receiver - with the `custom` slot set first, so that the entry made
+// for it says whether it is one of the writer's own.
+Ref
+FAddDictionary(RefArg /*rcvr*/, RefArg frame, RefArg custom)
+{
+	SetFrameSlot(frame, RSSYMcustom, custom);
+	return RegisterDictionaryFrame(frame);
+}
+
+
+// ROM 0x0013dd28 FGetDictionaryData__FRC6RefVarT1
+// GetDictionaryData(id): the bytes of that dictionary as a 'dictdata
+// binary, which is how one is written to a soup or sent to the desktop.
+// Only a dictionary in RAM may be asked - a ROM one is read where it
+// lies and its Handle holds no bytes of its own.
+Ref
+FGetDictionaryData(RefArg /*rcvr*/, RefArg id)
+{
+	RefVar data;
+	dictListEntry* entry = FindDictionaryEntry((ULong) RINT(id));
+	if (entry != nil)
+	{
+		AirusAParmBlock* parms = (AirusAParmBlock*) *entry->fDictionary;
+		if (((UByte) (*parms->fDataHandle)[1] & kAirusLockedBit) == 0)
+			ThrowMsg("not allowed for dictionaries in ROM");
+		long length = parms->fDataEnd - parms->fData;
+		data = AllocateBinary(RSSYMdictdata, length);
+		BlockMove(*parms->fDataHandle, BinaryData(data), length);
+	}
+	return data;
+}
+
+
+// ROM 0x0013dbec FSetDictionaryData__FRC6RefVarN21
+// SetDictionaryData(id, binary): and back the other way - the
+// dictionary's bytes thrown away and the binary's put in their place.
+// ==> nil.
+Ref
+FSetDictionaryData(RefArg /*rcvr*/, RefArg id, RefArg binary)
+{
+	ULong which = (ULong) RINT(id);
+	dictListEntry* entry = FindDictionaryEntry(which);
+	if (entry != nil)
+	{
+		AirusAParmBlock* parms = (AirusAParmBlock*) *entry->fDictionary;
+		if (((UByte) (*parms->fDataHandle)[1] & kAirusLockedBit) == 0)
+			ThrowMsg("not allowed for dictionaries in ROM");
+		long size = Length(binary);
+		Handle bytes = NewHandle(size);
+		if (bytes != nil)
+		{
+			BlockMove(BinaryData(binary), *bytes, size);
+			DisposHandle(parms->fDataHandle);
+			parms->fDataHandle = bytes;
+			parms->fSize = GetHandleSize(bytes);
+			parms->fData = *bytes;
+			parms->fDataEnd = parms->fData + parms->fSize;
+			parms->fDictID = which;
+		}
+	}
+	return NILREF;
 }
 
 
@@ -864,4 +939,7 @@ RegisterDictionaryNatives(void)
 	RegisterNativeFunction("DumpDict__FRC6RefVar", (void*) FDumpDict, 0);
 	RegisterNativeFunction("FAirusRegisterDictionary", (void*) FAirusRegisterDictionary, 0);
 	RegisterNativeFunction("FAirusUnregisterDictionary", (void*) FAirusUnregisterDictionary, 0);
+	RegisterNativeFunction("FAddDictionary__FRC6RefVarN21", (void*) FAddDictionary, 2);
+	RegisterNativeFunction("FGetDictionaryData__FRC6RefVarT1", (void*) FGetDictionaryData, 1);
+	RegisterNativeFunction("FSetDictionaryData__FRC6RefVarN21", (void*) FSetDictionaryData, 2);
 }

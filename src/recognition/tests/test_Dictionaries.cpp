@@ -642,6 +642,32 @@ main()
 			EXPECT(ISNIL(RefVar(GetFrameSlotRef(cursor, RSSYMcursor))));
 		}
 
+		// its bytes out and back again
+		{
+			RefVar bytes(FGetDictionaryData(frame, RefVar(GetFrameSlotRef(frame, RSSYMdictid))));
+			EXPECT(IsBinary(bytes) && EQRef(ClassOf(bytes), RSSYMdictdata));
+			long size = Length(bytes);
+			EXPECT(size > 2 && ((const UByte*) BinaryData(bytes))[0] == 'a');
+			// put back, the words are still there
+			EXPECT(ISNIL(RefVar(FSetDictionaryData(frame,
+									RefVar(GetFrameSlotRef(frame, RSSYMdictid)), bytes))));
+			RefVar found(AllocateFrame());
+			EXPECT(RINT(RefVar(FAirusLookupWord(frame, RefVar(MakeString("badger")), found)))
+				   == kAirusIsWord);
+			// a dictionary that lives in the ROM cannot be asked
+			Boolean threw = false;
+			newton_try
+			{
+				FGetDictionaryData(frame, RefVar(MAKEINT(6)));
+			}
+			newton_catch_all
+			{
+				threw = true;
+			}
+			end_try;
+			EXPECT(threw);
+		}
+
 		// and taken out again
 		FAirusUnregisterDictionary(frame);
 		EXPECT(gDictList->Count() == before);

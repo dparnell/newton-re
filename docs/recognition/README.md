@@ -872,10 +872,42 @@ exact, which)` puts it somewhere, `PrivateEntry(frame)` fills in the
 `PrivateDispose()` gives it back. `PrivateClone` is a muddle — see
 `docs/curiosities.md`.
 
-NOT YET: the sixteen-bit walkers (AE16, `AE16_NextSet9`) and the
-enumerators `AEnum_FirstLast` and `AEnum_NextPrevious`, which are a
-second, simpler way of stepping through a dictionary that nothing in the
-ROM appears to use.
+`AddDictionary(frame, custom)` is `Register()` for a frame that is not
+the receiver, and `GetDictionaryData(id)` / `SetDictionaryData(id,
+binary)` take a dictionary's bytes out as a `'dictdata` binary and put
+them back — which is how one travels to a soup or to the desktop. Only
+a dictionary in RAM may be asked: a ROM one is read where it lies and
+its Handle holds no bytes of its own, which is what the kind byte's
+"lock the Handle" bit distinguishes.
+
+## What is left of the engine
+
+Three things, and each of them is wanted by something that is itself not
+reconstructed:
+
+* **the sixteen-bit walkers** — `AE16_Verify` (0x0002b2cc),
+  `AE16_NextSet9`, `AE16_NextSetCB`, the two-byte-character mirrors of
+  the AE8 ones. Reading the kind byte of all 129 lexicons built into
+  this ROM gives kinds 1 and 7 only, so **no dictionary in the MP2x00 US
+  ROM is sixteen-bit**; they are there for a localisation that needs
+  them. `AEnum_Verify` answers "no match" for a sixteen-bit dictionary
+  until they are written.
+* **the completions walk** — `AEnum_FirstLast` (0x0002a1f4) and
+  `AEnum_NextPrevious` (0x0002a244), selectors 5 and 6, which step
+  through a dictionary a word at a time *without* a cursor object; the
+  block's `fResult` carries the mode in rather than the answer out.
+  Their only callers are `FirstCompletion` (0x0002cf0c) and
+  `NextCompletion` (0x0002d224), and those in turn are used only by
+  `DynaCompress` (the Assistant's dynamic dictionary) and by
+  `ConvertDictionaryData`.
+* **the random word generator** — `RandomCommonWord` (0x0013e640) over
+  `GetDistributedWord`, `InitLetterPairs` and the `charWeights` table,
+  which walks the trie choosing a weighted character at each step until
+  it lands on a word. `GetRandomDictionaryWord` is its only native.
+
+So the two dictionary natives still unanswered are
+`ConvertDictionaryData` (wants the completions walk) and
+`GetRandomDictionaryWord` (wants the generator).
 
 ## The controller (`recognition/Controller.h`)
 
