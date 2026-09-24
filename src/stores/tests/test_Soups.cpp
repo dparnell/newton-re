@@ -705,6 +705,71 @@ TestCursors()
 	registry.
 ------------------------------------------------------------------------------*/
 
+// how many entries a query answers
+static long
+CountQuery(const char* spec)
+{
+	char source[256];
+	sprintf(source, "begin local c := theSoup:Query(%s); local n := 0;"
+					" local e := c:Entry(); while e do begin n := n + 1;"
+					" e := c:Next() end; n end", spec);
+	return RINT(RefVar(Eval(source)));
+}
+
+
+// Searching the text of entries: a `text` query looks for the string
+// anywhere, a `words` query for each word at the start of a word of the
+// text, and `entireWords` makes it a whole word.
+//
+// None of this reads the entries: the text of every string an entry
+// holds is kept together in one compressed object beside it, and that is
+// what the search walks (stores/StoreObject.h).
+static void
+TestTextSearch()
+{
+	TStore* store = NewStore();
+	RefVar storeObject(RegisterTStore(store));
+	RefVar specs(AllocateArray(RSSYMarray, 1));
+	SetArraySlotRef(specs, 0, IndexSpec("name", "string"));
+	RefVar soup(StoreCreateSoup(storeObject, RefVar(MakeString("Notes")), specs));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("theSoup")), soup);
+
+	Eval("theSoup:Add({name: \"one\", body: \"zebra crossing\"})");
+	Eval("theSoup:Add({name: \"two\", body: \"the rain in Spain\"})");
+	Eval("theSoup:Add({name: \"three\", body: \"nothing here\"})");
+
+	// a text query: anywhere in the text, cases apart
+	EXPECT(CountQuery("{text: \"zebra\"}") == 1);
+	EXPECT(CountQuery("{text: \"ebra\"}") == 1);
+	EXPECT(CountQuery("{text: \"ZEBRA\"}") == 1);
+	// "rain", "in", "Spain", "crossing" and "nothing" all have it
+	EXPECT(CountQuery("{text: \"in\"}") == 3);
+	EXPECT(CountQuery("{text: \"qqq\"}") == 0);
+
+	// a words query: each word at the start of a word of the text
+	EXPECT(CountQuery("{words: [\"zebra\"]}") == 1);
+	EXPECT(CountQuery("{words: [\"cross\"]}") == 1);
+	// ... and not in the middle of one
+	EXPECT(CountQuery("{words: [\"ebra\"]}") == 0);
+	// every word has to be there
+	EXPECT(CountQuery("{words: [\"zebra\", \"cross\"]}") == 1);
+	EXPECT(CountQuery("{words: [\"zebra\", \"rain\"]}") == 0);
+
+	// entireWords: the whole word, not the start of one
+	EXPECT(CountQuery("{words: [\"cross\"], entireWords: true}") == 0);
+	EXPECT(CountQuery("{words: [\"crossing\"], entireWords: true}") == 1);
+	EXPECT(CountQuery("{words: [\"rain\"], entireWords: true}") == 1);
+
+	// the name is in the text too, so a query over it finds the entry
+	EXPECT(CountQuery("{words: [\"three\"]}") == 1);
+
+	Eval("theSoup := nil");
+	SoupRemoveFromStore(soup);
+	RemoveTStore(store);
+	store->Delete();
+}
+
+
 static void
 TestUnionSoups()
 {
@@ -1173,6 +1238,7 @@ main()
 		TestStoreFrame();
 		TestSoups();
 		TestCursors();
+		TestTextSearch();
 		TestUnionSoups();
 		TestTags();
 		TestIndexKeysSurviveTheStore();

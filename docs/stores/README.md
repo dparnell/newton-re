@@ -468,6 +468,57 @@ exclusive and a start-key query, a collated string query, the tests
 through NewtonScript, the cursor following a key change and removals,
 an index removed, and a collect cursor.
 
+## Searching the text (`src/stores/StoreObject.h`, `Cursors.h`)
+
+A query may ask for entries whose *text* has something in it - which is
+what Find does - and that is answered without reading a single entry
+back into frames.  Every string an entry holds is kept together in one
+object beside it, compressed (`TStoreObjectWriter` collects them as it
+writes), so the search walks those objects instead.
+
+`WithPermObjectTextDo` 0x002e0008 is the walk: it reads the entry's
+header, and when there is a text object it decompresses it and hands the
+whole of it to a callback.  The callback answers true to stop, which is
+how a search says it has found what it was looking for.
+
+`TObjTextDecompressor` 0x002dfbe0 is worth a look for its shape.  The
+two buffers are the object itself - a thousand bytes of compressed text
+at the front, two thousand of decompressed after it - so a text small
+enough for both is read into the object and decompressed inside it with
+no allocation at all.  Anything larger goes through a `TStoreReadPipe`
+into a buffer of its own, and the caller tells the two apart by whether
+what comes back is the object's own output.
+
+DEVIATION: the MessagePad keeps the text as it lies, UniChars high byte
+first, so on a little-endian host the characters are turned round before
+anything reads them - the same thing `TStoreObjectReader` does for a
+string it loads.
+
+`TCursor::WordsValidTest` 0x002cea1c and `TextValidTest` 0x002ceb10 are
+the two tests a query runs through it.  A *text* query looks for the
+string anywhere, cases apart (`FindString` 0x00257a0c); a *words* query
+wants every word of it, each at the start of a word of the text
+(`FindWord` 0x00257a74), and with `entireWords` at the whole of one -
+so "cross" finds "crossing" unless entire words were asked for.  The
+words are taken from the end backwards and the walk stops at the first
+that is not there.
+
+Before the text is read at all, `TestObjHints` 0x002dc934 tests the
+*hint chunks* an entry carries against the query's words: a chunk is two
+words of bits and a word passes when every bit of its own hint is in one
+of them, which refuses most entries without reading anything.  Nothing
+writes hints yet (`TWordHintsHandler` is NOT YET, so `gHintsHandlers` is
+empty and every entry's header says it has none), and an entry with no
+handler is read anyway - so the hints are a filter that is always open
+and the text does all the work.
+
+NOT YET: the hints themselves, and the large binaries of an entry, which
+the ROM also searches when the entry's flags say one of them is a string
+(`LoadLargeBinary`, `TStoreObjectReader::EachLargeObjectDo`).
+
+`test_Soups`'s `TestTextSearch` puts three entries in a soup and asks
+both kinds of query over them.
+
 ## Union soups (`src/stores/UnionSoups.cpp`)
 
 A union soup is the soup of a name across the registered stores: a clone

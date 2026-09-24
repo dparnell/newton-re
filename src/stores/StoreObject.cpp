@@ -35,6 +35,11 @@ Boolean					gPrecedentsForWritingUsed = false;	// 0x0c102a34
 TPrecedentsForReading*	gPrecedentsForReading = nil;		// 0x0c102a28
 Boolean					gPrecedentsForReadingUsed = false;	// 0x0c102a2d
 int						gDefaultHintsHandlerId = 0;			// 0x0c1024e8
+// ROM 0x0c107998 gHintsHandlers - the handlers that write and test the
+// hint chunks an entry carries.  Nothing registers one yet
+// (TWordHintsHandler is NOT YET), so the hints are never written and
+// TestObjHints answers true for every entry - the text is read instead.
+THintsHandler*			gHintsHandlers[kNumHintsHandlers] = { nil, nil };
 
 
 static void
@@ -1352,4 +1357,204 @@ DeletePermObject(TStoreWrapper* wrapper, PSSId id)
 	OSErrIf(wrapper->Store()->DeleteObject(id));
 	if (header.fTextBlockId != 0)
 		OSErrIf(wrapper->Store()->DeleteObject(header.fTextBlockId));
+}
+
+/* -------------------------------------------------------------------------------
+	T h e   t e x t   o f   a   s t o r e   o b j e c t
+
+	Every string an entry holds is kept together in one object beside it,
+	compressed, so that a search can read all of an entry's text without
+	reading the entry.  That is what Find walks.
+------------------------------------------------------------------------------- */
+
+// ROM 0x002dfbe0 __ct__20TObjTextDecompressorFv
+// The two buffers are the object itself: the compressed bytes are read
+// into the front of it and the text comes out of the middle, so a text
+// small enough for both needs no allocation at all.
+TObjTextDecompressor::TObjTextDecompressor()
+{
+	fDecompressor = NewDecompressor(kUnicodeCompression, TextDecompCallback, this);
+	fOutput = fText;
+}
+
+
+// ROM 0x002dfc30 __dt__20TObjTextDecompressorFv
+TObjTextDecompressor::~TObjTextDecompressor()
+{
+	if (fDecompressor != nil)
+		fDecompressor->Delete();
+}
+
+
+// ROM 0x002dfd78 TextDecompCallback__20TObjTextDecompressorFPvPlPUc
+// What the decompressor asks for its next chunk of input: the bytes come
+// out of the read buffer at the front of this object.
+NewtonErr
+TObjTextDecompressor::TextDecompCallback(void* refCon, void* into, long* size, Boolean* underflow)
+{
+	TObjTextDecompressor* self = (TObjTextDecompressor*) refCon;
+	if (*size < self->fRemaining)
+		*underflow = false;
+	else
+	{
+		*size = self->fRemaining;
+		*underflow = true;
+	}
+	memcpy(into, (char*) self + self->fPosition, (size_t) *size);
+	self->fRemaining -= *size;
+	self->fPosition += *size;
+	return noErr;
+}
+
+
+// ROM 0x002dfdec SlowDecompress__20TObjTextDecompressorFP13TStoreWrapperUlPl
+// A text too big for the buffers read through a pipe into one of its own,
+// which the caller disposes of.
+char*
+TObjTextDecompressor::SlowDecompress(TStoreWrapper* wrapper, PSSId id, long* size)
+{
+	TStoreReadPipe pipe(wrapper, kUnicodeCompression);
+	pipe.SetPSSID(id);
+	char* text = new char[*size];
+	if (text == nil)
+		OutOfMemory();
+	*size = pipe.ReadFromStore(text, *size);
+	return text;
+}
+
+
+// ROM 0x002dfe70 Decompress__20TObjTextDecompressorFP13TStoreWrapperUlPl
+// The text object decompressed.  A text of no more than 2000 bytes whose
+// compressed form is no more than 1000 is read straight into this object
+// and decompressed into it; anything larger goes through the pipe and
+// comes back in a buffer of its own - which is how the caller tells the
+// two apart, by whether what comes back is `fOutput`.
+char*
+TObjTextDecompressor::Decompress(TStoreWrapper* wrapper, PSSId id, long* size)
+{
+	OSErrIf(wrapper->Store()->GetObjectSize(id, &fRemaining));
+	if (*size > kObjTextBufferSize || fRemaining > kObjTextReadSize)
+		return SlowDecompress(wrapper, id, size);
+
+	OSErrIf(wrapper->Store()->Read(id, 0, (char*) this, fRemaining));
+	fPosition = 0;
+	fDecompressor->Reset();
+	Boolean underflow;
+	OSErrIf(fDecompressor->ReadChunk(fOutput, size, &underflow));
+	return fOutput;
+}
+
+
+// ROM 0x002e0b88 TestHintBits__FPlT1
+// Whether every bit the query wants is among the ones the entry has.
+Boolean
+TestHintBits(const long* wanted, const long* has)
+{
+	return (wanted[0] & has[0]) == wanted[0] && (wanted[1] & has[1]) == wanted[1];
+}
+
+
+// ROM 0x002dc934 TestObjHints__FPclP13TStoreWrapperUl
+// The hint chunks an entry carries tested against the query's words
+// before its text is read at all: a chunk is two words of bits, and a
+// word of the query passes when every bit of its own hint is in one of
+// them.  Every word has to pass for the entry to be worth reading.
+//
+// An entry whose flags say it holds a large string, or whose hints
+// handler is not registered, is read anyway - which is what happens here
+// always, because nothing writes hints yet (TWordHintsHandler is NOT
+// YET, so `fNumHints` is 0 and `gHintsHandlers` is empty).
+Boolean
+TestObjHints(const char* hints, long count, TStoreWrapper* wrapper, PSSId id)
+{
+	if (count == 0)
+		return true;
+	TCachedReadStore store(wrapper->Store(), id, 0x60);
+	StoreObjectHeader* header;
+	OSErrIf(store.GetDataPtr(0, 4, (void**) &header));
+	int handler = header->GetHintsHandlerId();
+	if ((header->fFlags & kSOFlagsLargeBinaryIsString) != 0 || gHintsHandlers[handler] == nil)
+		return true;
+
+	char found[64];
+	for (long i = 0; i < count; i++)
+		found[i] = 0;
+	long passed = 0;
+	long at = kStoreObjectHeaderSize;
+	for (long chunk = header->fNumHints; chunk != 0; chunk--)
+	{
+		long* bits;
+		OSErrIf(store.GetDataPtr(at, kStoreObjectHintChunkSize, (void**) &bits));
+		passed = 0;
+		for (long i = 0; i < count; i++)
+		{
+			if (found[i] == 0
+				&& TestHintBits((const long*) (hints + (i + handler * count) * 8), bits))
+				found[i] = 1;
+			passed += found[i];
+		}
+		if (passed == count)
+			break;
+		at += kStoreObjectHintChunkSize;
+	}
+	return passed == count;
+}
+
+
+// ROM 0x002dff30 CallLargeObjectTextProc__FP13TStoreWrapperUllPv
+// A large binary of an entry offered to the text callback, but only when
+// it is a string.
+//
+// NOT YET RECONSTRUCTED: large binaries themselves (tag 12,
+// LoadLargeBinary) and TStoreObjectReader::EachLargeObjectDo, so nothing
+// reaches this; an entry with a long string in it is searched only over
+// the text object beside it.
+
+// ROM 0x002e0008 WithPermObjectTextDo__FP13TStoreWrapperUlPFPUslPv_UcPvPPv
+// All of an entry's text handed to a callback: first the text object
+// beside it, then any large binary of it that is a string.  The callback
+// answers true to stop, which is how a search says it has found what it
+// was looking for.
+//
+// The decompressor is the caller's, kept between entries so that a walk
+// down a whole soup makes one.
+Boolean
+WithPermObjectTextDo(TStoreWrapper* wrapper, PSSId id, ObjTextProcPtr proc, void* refCon,
+					 TObjTextDecompressor** decompressor)
+{
+	char bytes[kStoreObjectHeaderSize];
+	OSErrIf(wrapper->Store()->Read(id, 0, bytes, kStoreObjectHeaderSize));
+	StoreObjectHeader header;
+	header.ReadFrom(bytes);
+
+	if (header.fTextBlockId != 0)
+	{
+		long characters = header.TextSize() >> 1;
+		TObjTextDecompressor* d = *decompressor;
+		if (d == nil)
+		{
+			d = new TObjTextDecompressor;
+			if (d == nil)
+				OutOfMemory();
+			*decompressor = d;
+		}
+		long size = header.TextSize();
+		char* text = d->Decompress(wrapper, header.fTextBlockId, &size);
+		// DEVIATION: the MessagePad keeps the text as it lies, UniChars
+		// high byte first; on a little-endian host they have to be turned
+		// round before anything reads them as characters, which is what
+		// TStoreObjectReader does for a string it loads.
+		if (!HostIsBigEndian())
+			SwapUniChars(text, characters);
+		Boolean ours = text != d->Output();
+		Boolean stop = proc((UniChar*) text, characters, refCon);
+		if (ours)
+			delete[] text;
+		if (stop)
+			return true;
+	}
+
+	// NOT YET RECONSTRUCTED: the entry's large binaries, which the ROM
+	// walks here when its flags say one of them is a string.
+	return false;
 }

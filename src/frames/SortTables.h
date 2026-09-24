@@ -187,6 +187,12 @@ int		CalcSecondOrderResult(const TStringToSort& a, const TStringToSort& b);
 int		CompareStringNoCase(const UniChar* a, const UniChar* b);
 int		CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength);
 
+// Searching a run of characters that is not NUL-terminated: the first
+// place the needle occurs, cases apart, or nil.  FindWord looks only
+// where a word begins, unless the needle begins with a delimiter.
+const UniChar*	FindString(const UniChar* text, long length, const UniChar* needle);	// ROM 0x00257a0c FindString__FPUslT1
+const UniChar*	FindWord(const UniChar* text, long length, const UniChar* needle, Boolean atWordStart);	// ROM 0x00257a74 FindWord__FPUslT1Uc
+
 // GetSortID/SetSortID
 Ref		FGetSortID(RefArg rcvr, RefArg store);
 Ref		FSetSortID(RefArg rcvr, RefArg value);

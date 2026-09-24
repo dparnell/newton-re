@@ -185,10 +185,18 @@ TUnicodeDecompressor::Init(void* /*refCon*/)
 
 
 // ROM 0x00256c9c Reset__20TUnicodeDecompressorFv
+// Everything the last run left: the run being handed out and how far
+// through it, the high byte, and the flag saying the source was used
+// up - without that last one a decompressor that has finished once
+// answers nothing ever after, which is what a search reading one entry
+// after another through the same decompressor would get.
 NewtonErr
 TUnicodeDecompressor::Reset()
 {
+	fHigh = 0;
+	fRunCount = 0;
 	fRunIndex = 0;
+	fSourceDone = false;
 	return noErr;
 }
 

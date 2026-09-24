@@ -11,6 +11,8 @@
 
 #include "Cursors.h"
 #include "Tags.h"
+#include "StoreObject.h"	// the entry's text and its hints
+#include "SortTables.h"	// FindString, FindWord
 #include "Frames.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -1022,22 +1024,105 @@ TCursor::KeyBoundsValidTest(const SKey& key, Boolean atEnd)
 }
 
 
-// ROM 0x002cea1c WordsValidTest__7TCursorFUl
-// NOT YET RECONSTRUCTED: TestObjHints, WithPermObjectTextDo.
-Boolean
-TCursor::WordsValidTest(PSSId /*id*/)
+// ROM 0x0c105358 (unnamed) - gObjTextDecompressor
+// The decompressor a search reads entries' text through, made when the
+// first entry is read and kept for the rest of the walk.
+static TObjTextDecompressor*	gObjTextDecompressor = nil;
+
+
+// What a words query hands its text callback: the array of words to look
+// for, and whether a word may be matched at the start of a longer one.
+struct WordsTestArgs
 {
-	Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);
-	return false;
+	RefStruct*	fWords;
+	ULong		fEntireWords;
+};
+
+
+// ROM 0x002ce918 WordsValidTestTextProc__FPUslPv
+// A words query answered over one run of an entry's text: every word of
+// the query has to be somewhere in it.  The words are taken from the end
+// backwards, and the walk stops at the first that is not there.
+//
+// A word of the query matches the start of a word of the text.  With
+// kQueryEntireWords it has to match the whole of one, so the search
+// carries on past each partial match to the next word start and gives up
+// when there are no more.
+static Boolean
+WordsValidTestTextProc(UniChar* text, long length, void* refCon)
+{
+	WordsTestArgs* args = (WordsTestArgs*) refCon;
+	RefVar words(*args->fWords);
+	long at = Length(words) - 1;
+	while (at >= 0)
+	{
+		RefVar one(GetArraySlotRef(words, at));
+		const UniChar* needle = CString(one);
+		const UniChar* found = FindWord(text, length, needle, true);
+		if (found == nil)
+			break;
+		if (args->fEntireWords != 0)
+		{
+			const UniChar* after;
+			for (;;)
+			{
+				// (the ROM reads the character after the match, which at
+				//  the very end of the text is one past it)
+				after = found + Ustrlen(needle);
+				if (IsDelimiter(*after))
+					break;					// the match is a whole word
+				found = FindWord(after, length - (after - text), needle, false);
+				if (found == nil)
+					return false;
+			}
+			// (the ROM tests `after` for nil here, which it never is)
+		}
+		at--;
+	}
+	return at < 0;
+}
+
+
+// ROM 0x002ceaf0 TextValidTestTextProc__FPUslPv
+// A text query: the string anywhere in the text at all.
+static Boolean
+TextValidTestTextProc(UniChar* text, long length, void* refCon)
+{
+	return FindString(text, length, (const UniChar*) refCon) != nil;
+}
+
+
+// ROM 0x002cea1c WordsValidTest__7TCursorFUl
+// Whether the entry's text has all of the query's words in it.  The hint
+// chunks it carries are tested first, so that most entries are refused
+// without their text being read at all.
+Boolean
+TCursor::WordsValidTest(PSSId id)
+{
+	TStoreWrapper* wrapper = (TStoreWrapper*)
+		GetFrameSlotRef(RefVar(fSoupInfo[fIndex->fCurrentSoup].fSoup), RSSYMtstore);
+	long count = Length(RefVar(fWords));
+	if (fWordsHints != nil && !TestObjHints((const char*) fWordsHints, count, wrapper, id))
+		return false;
+
+	RefStruct words(fWords);
+	WordsTestArgs args;
+	args.fWords = &words;
+	args.fEntireWords = fFlags & kQueryEntireWords;
+	return WithPermObjectTextDo(wrapper, id, WordsValidTestTextProc, &args, &gObjTextDecompressor);
 }
 
 
 // ROM 0x002ceb10 TextValidTest__7TCursorFUl
+// Whether the entry's text has the query's string in it.
 Boolean
-TCursor::TextValidTest(PSSId /*id*/)
+TCursor::TextValidTest(PSSId id)
 {
-	Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);
-	return false;
+	TStoreWrapper* wrapper = (TStoreWrapper*)
+		GetFrameSlotRef(RefVar(fSoupInfo[fIndex->fCurrentSoup].fSoup), RSSYMtstore);
+	RefVar text(fText);
+	return WithPermObjectTextDo(wrapper, id, TextValidTestTextProc,
+								(void*) CString(text), &gObjTextDecompressor);
 }
 
 

@@ -562,3 +562,52 @@ RegisterSortTableNatives(void)
 	RegisterNativeFunction("FGetSortID__FRC6RefVarT1", (void*) FGetSortID, 1);
 	RegisterNativeFunction("FSetSortID__FRC6RefVarT1", (void*) FSetSortID, 1);
 }
+
+// ROM 0x00257a0c FindString__FPUslT1
+// The first place the needle occurs in the text, cases apart; nil for
+// nowhere.  The text is not NUL-terminated - it is a run of characters
+// out of a store object - so its length is given.
+const UniChar*
+FindString(const UniChar* text, long length, const UniChar* needle)
+{
+	long needleLength = Ustrlen(needle);
+	const UniChar* last = text + (length - needleLength);
+	for (; text <= last; text++)
+		if (CompareTextNoCase(text, needleLength, needle, needleLength) == 0)
+			return text;
+	return nil;
+}
+
+
+// ROM 0x00257a74 FindWord__FPUslT1Uc
+// The same, but only where a word begins.  `atWordStart` says whether
+// the first character counts as one - which is how a search that has
+// already matched part of the way along carries on.
+//
+// A needle that begins with a delimiter is looked for anywhere, because
+// nothing would ever be a word start for it.
+const UniChar*
+FindWord(const UniChar* text, long length, const UniChar* needle, Boolean atWordStart)
+{
+	long needleLength = Ustrlen(needle);
+	const UniChar* last = text + (length - needleLength);
+	if (IsDelimiter(needle[0]))
+	{
+		for (; text <= last; text++)
+			if (CompareTextNoCase(text, needleLength, needle, needleLength) == 0)
+				return text;
+		return nil;
+	}
+	for (; text <= last; text++)
+	{
+		if (IsDelimiter(text[0]))
+			atWordStart = true;
+		else if (atWordStart)
+		{
+			atWordStart = false;
+			if (CompareTextNoCase(text, needleLength, needle, needleLength) == 0)
+				return text;
+		}
+	}
+	return nil;
+}

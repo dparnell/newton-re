@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `0091ef5`)
+## State at 2026-09-24 (commit `f4a40b9`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 76/76.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8763 citations, 0 bad;
-  4747 of 16671 functions (28.47%).
+- `analysis/coverage.py build/MP2x00US --check`: 8781 citations, 0 bad;
+  4762 of 16671 functions (28.56%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -71,6 +71,11 @@ The last run of work closed, in order:
   `FindWordInRun` and the only claim that scores 6 - and with it the
   remote-writing bracket the corrector puts round a word, and a rich
   string keeping its writing when it is dropped into a paragraph.
+- **searching the text of entries** (`docs/stores/README.md`): a `text`
+  or `words` query walks the compressed text object beside each entry
+  rather than reading the entry, so Find now finds a note.  What is left
+  of it is the word hints (`TWordHintsHandler`, so the filter in front
+  of the walk is always open) and the large binaries of an entry.
 - **the spelling checker** (`recognition/Spelling.h`): the session and
   its chains, whether a word is spelled right, and what it might have
   been meant to be - five kinds of change against the dictionary, two of

@@ -84,6 +84,14 @@ struct StoreObjectHeader
 };
 const long kStoreObjectHeaderSize = 0x10;
 const long kStoreObjectHintChunkSize = 8;
+const long kNumHintsHandlers = 2;
+
+// What writes and tests the hint chunks of an entry.  NOT YET
+// RECONSTRUCTED: TWordHintsHandler, the only one the ROM registers; the
+// class is named here so that TestObjHints can ask whether there is
+// one, which is what decides whether the hints are trusted.
+class THintsHandler;
+extern THintsHandler*	gHintsHandlers[kNumHintsHandlers];	// ROM 0x0c107998 gHintsHandlers
 const UByte kSOFlagsHasLargeBinaries = 0x01;
 const UByte kSOFlagsLargeBinaryIsString = 0x04;
 
@@ -317,5 +325,57 @@ void	StorePermObject(RefArg obj, TStoreWrapper* wrapper, PSSId& id, CDynamicArra
 void	DeletePermObject(TStoreWrapper* wrapper, PSSId id);
 PSSId	CopyPermObject(PSSId id, TStoreWrapper* from, TStoreWrapper* to);		// as it lies, the references translated
 void	CopyObjectReferences(TStoreReadPipe& pipe, TStoreWrapper* from, TStoreWrapper* to);
+
+/* -------------------------------------------------------------------------------
+	T h e   t e x t   o f   a   s t o r e   o b j e c t
+
+	Every string an entry holds is kept together in one object beside it,
+	compressed, so that a search can read all of an entry's text without
+	reading the entry back into frames.  That is what Find walks.
+------------------------------------------------------------------------------- */
+
+const long	kObjTextReadSize = 1000;		// the compressed bytes the object holds
+const long	kObjTextBufferSize = 2000;		// ... and the text they come out as
+
+// The two buffers are the object itself: a text that fits in them needs
+// no allocation at all, and one that does not comes back in a buffer of
+// its own - which is how the caller tells them apart.  (The ROM's is
+// 0xbc8 bytes; this is the same shape.)
+class TObjTextDecompressor
+{
+public:
+				TObjTextDecompressor();					// ROM 0x002dfbe0 __ct__20TObjTextDecompressorFv
+				~TObjTextDecompressor();				// ROM 0x002dfc30 __dt__20TObjTextDecompressorFv
+
+	char*		Decompress(TStoreWrapper* wrapper, PSSId id, long* size);	// ROM 0x002dfe70 Decompress__20TObjTextDecompressorFP13TStoreWrapperUlPl
+	char*		SlowDecompress(TStoreWrapper* wrapper, PSSId id, long* size);	// ROM 0x002dfdec SlowDecompress__20TObjTextDecompressorFP13TStoreWrapperUlPl
+	const char*	Output(void) const				{ return fOutput; }
+
+	static NewtonErr	TextDecompCallback(void* refCon, void* into, long* size, Boolean* underflow);	// ROM 0x002dfd78 TextDecompCallback__20TObjTextDecompressorFPvPlPUc
+
+	char		fRead[kObjTextReadSize];		// +0x000  the compressed bytes, read whole
+	char		fText[kObjTextBufferSize];	// +0x3e8  ... and the text they come out as
+	TCallbackDecompressor*	fDecompressor;	// +0xbb8
+	char*		fOutput;					// +0xbbc  fText
+	long		fRemaining;					// +0xbc0  compressed bytes left to hand over
+	long		fPosition;					// +0xbc4  where in fRead they are
+};
+
+// What a search does with an entry's text; ==> true to stop the walk.
+typedef Boolean (*ObjTextProcPtr)(UniChar* text, long length, void* refCon);
+
+struct ObjTextProcArgs
+{
+	ObjTextProcPtr	fProc;
+	void*			fRefCon;
+};
+
+// Whether every bit the query wants is among the ones the entry has.
+Boolean	TestHintBits(const long* wanted, const long* has);	// ROM 0x002e0b88 TestHintBits__FPlT1
+// The hint chunks an entry carries tested against a query's words
+// before its text is read at all.
+Boolean	TestObjHints(const char* hints, long count, TStoreWrapper* wrapper, PSSId id);	// ROM 0x002dc934 TestObjHints__FPclP13TStoreWrapperUl
+// All of an entry's text handed to a callback.
+Boolean	WithPermObjectTextDo(TStoreWrapper* wrapper, PSSId id, ObjTextProcPtr proc, void* refCon, TObjTextDecompressor** decompressor);	// ROM 0x002e0008 WithPermObjectTextDo__FP13TStoreWrapperUlPFPUslPv_UcPvPPv
 
 #endif	/* __STOREOBJECT_H */
