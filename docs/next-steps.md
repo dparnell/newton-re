@@ -364,3 +364,31 @@ The named pieces whose machinery *is* there:
 - `coverage.py --check` matches one citation per line and checks the
   mangled name against the ROM's symbol at that address - a plain name
   where the ROM has a mangled one (or the other way round) is reported.
+
+- **The text engine's `TXOffset` is a two-word struct, not a long.** Its
+  mangled name appears as a class (`...F8TXOffset`), and the ROM passes
+  it in two registers: the offset, and a flag saying whether an offset
+  that falls exactly on a boundary belongs to the range it ends or the
+  one it starts.  `src/text/` renders it as a `long` plus an explicit
+  `atStart` argument, which is right for every function reconstructed so
+  far; but `TXRulerRange::CharRangeToParagRange(TXOffset*, TXOffset*)`
+  takes two of them *by pointer* and writes the flag back, so that one
+  needs the real struct.  Introduce it (offset + atStart) before
+  reconstructing the ruler range, and let the existing two-argument
+  calls keep working.
+
+- The text engine's next piece is `TXRun` (0x00245e64: an abstract
+  attribute object with twelve virtuals, of which only `Assign`,
+  `FullJustifPortion`, `VisibleLen`, `Click`, `SetHilite` and
+  `DrawHilite` have bodies - the rest are pure and answered by
+  `TXTextRun` and `TXGraphicsRun`) and `TXRunRange` (0x00245cc4: a
+  TXObjectRange whose `CharToTextRun` searches backwards and then
+  forwards for a range whose run `IsTextRun`).  Then `TXRulerRange`
+  (0x00242c68), which is a TXObjectRange plus a `TXChars*`, a *pending
+  ruler* and a flag: when the caret sits at the very end of the text
+  after a line break, the ruler a slip sets belongs to the paragraph not
+  yet typed, so it is held in `fDefaultRuler` until a character arrives
+  (`GetPendingRuler` 0x00242eac, `InvalidatePendingRuler`,
+  `NukePendingRuler`, and the `OffsetToObject`/`UpdateRangeObjects` that
+  answer out of it).  It wants `TXGetParagStartOffset`/
+  `TXGetParagEndOffset` as well.
