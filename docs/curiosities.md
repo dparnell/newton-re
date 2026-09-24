@@ -885,3 +885,80 @@ pointers and writes the strings out, keeping that overload explicit.
 
 *`src/recognition/Spelling.cpp`, `SpellMaps.cpp` (generated);
 `src/host/demo/correct.ns` runs it on the machine.*
+
+## Tapping a clipping twice copies it
+
+When something is dragged out of a view and let go on the background the
+Newton makes a *clipping*: a little icon of its label at the edge of the
+screen that the pen can pick up again and drop somewhere else. Dragging
+it off moves it — the clipping goes away, because it has gone into
+whatever took it.
+
+Except that `TClipboard::DragFromClipboard` (0x000a0380) begins like
+this:
+
+```c
+ULong now = Ticks();
+ULong since = now - gLastClipboardDragTicks;
+gLastClipboardDragTicks = now;
+return DragAndDrop(stroke, box, &box, nil, since < 80, dragInfo, nil);
+```
+
+The fifth argument is `copy`. So a drag that starts within eighty ticks
+— a second and a third — of the *previous* one copies rather than moves:
+the clipping stays where it is and a duplicate goes to the target. There
+is no modifier key on a Newton and no menu in sight; the gesture is
+simply "do it again quickly", and the machine keeps one global word of
+state to notice it.
+
+What makes it pleasant is that the rule is about the interval between
+two drags rather than about a double *tap*. Dragging a clipping into a
+note, then straight back to another note, leaves the clipping on the
+screen — which is exactly what someone filing the same address into
+three places wants, and they never have to be told the rule. Waiting a
+second and a half before the next drag puts it back to moving.
+
+*`src/views/ClipboardView.cpp`.*
+
+
+## The clipboard hides from the button bar, but only on one side
+
+A clipping's icon remembers which edges of the application area it came
+to rest against in a `pin` slot — bit 1 left, 2 top, 4 right, 8 bottom —
+so that turning the screen round can put it back against the same ones.
+`FReOrientLabelForm` (0x0009f978) is the C function the icon's template
+carries as its `ReOrientToScreen`, and each of its four arms has the
+same shape:
+
+```c
+if (pin & 1)
+{
+    if (EQ(where, RSSYMleft))       // the button bar is on the left
+    {
+        bounds.right = appArea.right - appArea.left;
+        bounds.left  = bounds.right - width;
+    }
+    else
+    {
+        bounds.left  = 0;
+        bounds.right = bounds.left + width;
+    }
+}
+```
+
+An icon pinned to the left edge goes back to the left edge — unless the
+button bar is *on* the left, in which case it is sent to the right
+instead. The same exception is in `PointOnClipboard` (0x0009e2b0), the
+question "was this drag let go on the background?", which counts a point
+past the application area's edge as the background *unless* that edge is
+the button bar's.
+
+The reason is that the button bar is drawn on top of the application
+area rather than beside it. Everything else in the view system can treat
+the application area as the whole world; the clipboard cannot, because
+it is the one thing that deliberately lives at the very edge of it, and
+the edge is where the bar is. So the bar's position is threaded into two
+otherwise purely geometric functions — and it is the only place in the
+view system that has to know about it.
+
+*`src/views/ClipboardView.cpp`.*
