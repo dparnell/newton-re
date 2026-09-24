@@ -28,6 +28,13 @@ reconstructed is usually a thin wrapper and a native from an area that is
 NOT YET is a project of its own.  The grouping is a guess from the name
 and is documentation, not a fact about the ROM.
 
+`--sizes <build dir>` adds the size of each native's ROM function, taken
+from symbols.json as the distance to the next code symbol, and sorts the
+listing by it.  A native of a few dozen bytes is almost always a thin
+wrapper over machinery that may already be there; a native of several
+kilobytes is a piece of work in its own right.  That is the quickest way
+to pick the next ones worth doing.
+
 `--ready` narrows the unanswered ones to those whose ROM function is
 *already reconstructed* - its address carries a `// ROM 0x...` citation
 somewhere in src/ - so all that is missing is the registration.  Those are
@@ -83,6 +90,22 @@ def read_rom_natives(path):
             natives.append(Native(name, int(func_ptr, 16), int(target, 16),
                                   int(num_args), symbol, table))
     return natives
+
+
+def read_sizes(build):
+    """Each code symbol's size: the distance to the next one."""
+    import json
+    path = os.path.join(build, 'symbols.json')
+    with open(path, encoding='utf-8') as f:
+        symbols = json.load(f)
+    entries = symbols['symbols'] if isinstance(symbols, dict) else symbols
+    code = sorted(int(e['address']) for e in entries
+                  if e.get('class') == 'code' and int(e['address']) < 0x01000000)
+    sizes = {}
+    for i, address in enumerate(code):
+        nxt = code[i + 1] if i + 1 < len(code) else address
+        sizes[address] = max(nxt - address, 0)
+    return sizes
 
 
 def read_citations(src):
@@ -170,6 +193,9 @@ def main(argv=None):
     ap.add_argument('--unbound', action='store_true', help='list what is not answered')
     ap.add_argument('--bound', action='store_true', help='list what is')
     ap.add_argument('--area', help='only that area (see the summary for the names)')
+    ap.add_argument('--sizes', metavar='BUILD',
+                    help="add each native's ROM function size (from BUILD/symbols.json) "
+                         'and sort by it')
     ap.add_argument('--ready', action='store_true',
                     help='with --unbound: only those whose ROM function is already '
                          'reconstructed, so only the registration is missing')
@@ -186,6 +212,7 @@ def main(argv=None):
     unknown = sorted(s for s in registered if s not in known)
 
     cited = read_citations(args.src) if args.ready else set()
+    sizes = read_sizes(args.sizes) if args.sizes else None
 
     rows = []
     for n in natives:
@@ -206,13 +233,18 @@ def main(argv=None):
                               '0x%08x' % n.func_ptr, '0x%08x' % n.target,
                               area, '1' if bound else '0'])
 
+    if sizes is not None:
+        rows.sort(key=lambda r: sizes.get(r[0].target, 1 << 30))
+
     if args.unbound or args.bound:
         want = args.bound
         for n, bound, area in rows:
-            if bound == want:
-                print('%-10s %-8s %-34s %d  %-34s %s'
-                      % (area, n.table, n.name or '(no name)', n.num_args,
-                         n.symbol, '0x%08x' % n.target))
+            if bound != want:
+                continue
+            size = '' if sizes is None else '%6d' % sizes.get(n.target, -1)
+            print('%-10s %-8s %-34s %d  %-34s %s %s'
+                  % (area, n.table, n.name or '(no name)', n.num_args,
+                     n.symbol, '0x%08x' % n.target, size))
         print()
 
     # the summary, by area
