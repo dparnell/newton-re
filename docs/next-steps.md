@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `dc24ac0`)
+## State at 2026-09-24 (commit `30af663`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 8811 citations, 0 bad;
-  4775 of 16671 functions (28.64%).
+- `analysis/coverage.py build/MP2x00US --check`: 8820 citations, 0 bad;
+  4777 of 16671 functions (28.65%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll (down to the Handwriting Recognition slip and its
@@ -113,8 +113,24 @@ The last run of work closed, in order:
   (`MakeCompactFont`, `SetFontParms`, `IntFontToFontParms`,
   `FamilySymToNum`, `GetFontFamilyNum`) and the script side is the new
   `views/FontNatives.cpp`, with `GetRangeText`/`ExtractTextRange`.
+- **the caret from a script** and the four word scanners
+  (`docs/views/README.md`, "The caret from a script"): `SetCaretInfo`,
+  `ShowCaret`/`HideCaret`, `ScanNextWord`/`ScanPrevWordEnd`.
 
 ## Next
+
+A good way to find the next piece now that the boot is clean: the ROM's
+native table has 1326 entries and 600-odd of them are still unbound
+(`src/frames/ROMNatives.cpp` against the `RegisterNativeFunction` calls
+in `src/`).  Most belong to areas that are not reconstructed at all
+(communications, AppleTalk, books, the test agent, NTK), but the ones
+whose machinery *is* there name real features that the machine cannot
+do yet - the clipboard (`GetClipboard`, `SetClipboard`,
+`ClipboardCommand`, which want `TClipboard` and the root view's
+clipboard stack), the key commands (`FindKeyCommand`,
+`GatherKeyCommands`, `AddKeyCommands`), `InsertStyledText` and
+`InsertItemsAtCaret`, and the bitmap and shape verbs (`MakeBitmap`,
+`DrawIntoBitmap`, `MakePict`, `PictToShape`).
 
 The writing path is closed end to end now: a stroke is inked as it is
 drawn, read (or not), placed in or beside the text it was written on,
