@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `22fe586`)
+## State at 2026-09-24 (commit `5982b10`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 77/77.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 78/78.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9028 citations, 0 bad;
-  4887 of 16671 functions (29.31%).
+- `analysis/coverage.py build/MP2x00US --check`: 9063 citations, 0 bad;
+  4922 of 16671 functions (29.52%).
 - `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -188,6 +188,16 @@ The last run of work closed, in order:
   `gDynaTrie`), which is part of the Airus lexical engine, so a
   registered template's words are not indexed and nothing finds it by
   writing one of them.
+
+- **the text engine, from the bottom** (`docs/text/README.md`): the
+  Newton's other text system - the document engine behind protoTXView,
+  1800 symbols of its own - started at its foundation, `text/TXArray.h`:
+  the growable array in a relocatable handle whose `chunk` is the whole
+  memory policy, the array sorted by a leading long, and `TXRanges`,
+  which records a division of the text by storing only the end of each
+  range and answers `OffsetToRangeIndex` and `SectRanges` over it.  That
+  one representation is how every division - style runs, lines,
+  paragraphs - is kept, so it is what the rest stands on.
 
 ## Next: what is left of the natives, and why
 
