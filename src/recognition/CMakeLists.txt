@@ -36,6 +36,7 @@ add_library(recognition STATIC
     RosStrokes.cpp
     RosEngine.cpp
     WordRecog.cpp
+    ROMGrammar.cpp
     RosCITables.cpp
     Rosetta.cpp
     TabletBuffer.cpp

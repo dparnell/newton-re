@@ -1868,11 +1868,13 @@ which is why `recognition/Rosetta.h` draws it explicitly: it is where a
 modern recogniser would be put in instead.
 
 **Reconstructed so far: all of level 1, all of level 5, the block of
-state level 3 works in and its life, the engine's own trained numbers,
-and level 2's life.** What is missing is now *named*: the engine
-cannot start because `BiGrammarsLoad` has no `ROMGrammar` to answer
-with, so `WordRecogCreate2` throws `evt.ex.Rosetta` and the throw comes
-out of `RosettaAwaken`. `TRosRecognizer` turns that into
+state level 3 works in and its life, level 2's life, and both of the
+ROM's own tables — the trained numbers and the bigram grammar.** The
+engine **wakes**: `RosettaInitialize` makes a word recogniser that
+knows the eight grammars a field may ask for and the 166 characters it
+may answer. What it cannot do yet is *read*: the classifier is NOT YET
+and so are the three passes a classify is made of, and a call that
+fails answers `kRosettaFailed`. `TRosRecognizer` turns that into
 `evt.ex.abt`, which is exactly what the ROM's own does when its engine
 fails. Nothing installs it — the engine the host installs is still
 `TInkOnlyRecognizer`, so the pen still leaves ink.
@@ -2152,6 +2154,36 @@ says something about the engine: a **space is not a legal character**.
 It reads one word at a time and a space is never a character of one.
 166 of the 256 codes are legal: printable ASCII and the accented
 Latin-1 letters.
+
+### The bigram grammar (`recognition/ROMGrammar.cpp`)
+
+`ROMGrammar` is what `BiGrammarsLoad` answers: the eight grammars a
+word is read against, and a field asks for one by name
+(`WordRecogSetContext`). They are General, Date, Numbers&Money,
+Numbers, Phone, Time, Money and PostalCode.
+
+A grammar (`BiGrammar`) is a list of **kinds of word** (`BiGSlice`),
+and a kind of word is a *lexicon* out of `gROMDictionaryData` with a
+score for being what the writer is writing and another score for every
+kind that may follow it. So the bigrams are over dictionaries, not
+over characters, which is what the name says. A lower score is better
+and 0x7ffe means never; they are the arithmetic coder's, the same ones
+`ArProbDecodeLu` turns into probabilities for a reading.
+
+`analysis/bigrammar.py` writes all eight out, both as
+`recognition/ROMGrammar.cpp` and as `docs/recognition/grammar.md`.
+The Phone grammar is the whole idea in five lines, and
+`docs/curiosities.md` has it under "The grammar the Newton reads your
+writing against is a grammar of *kinds of word*".
+
+Two details matter for the layers above. The General grammar has six
+kinds called `~user` and `~null1`..`~null5` whose dictionary is nought:
+those are the slots an area's own word lists go into, and
+`RosettaClassifySetup` writes the locked dictionary data straight into
+their `fDictionary` field when a classify starts. And the structs are
+the ROM's own, from `BiGrammarNew` (0x0003de8c) and `BiGSliceNew`
+(0x0003dfb4); the ROM has a debug symbol on every slice, transition
+list and weight list, so the generated file carries its names.
 
 ### The engine's own numbers (`recognition/RosEngine.h`)
 

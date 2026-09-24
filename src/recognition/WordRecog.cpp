@@ -164,7 +164,7 @@ WordRecogAllocate(WordRecog* wr)
 WordRecog*
 WordRecogCreate2(void* field00, void* field04,
 				WordRecogCheckWordsProc checkWords, long wordCount,
-				RosGrammars* grammars, void* net, short ownsStrokes)
+				const BiGrammars* grammars, void* net, short ownsStrokes)
 {
 	if (grammars == nil)
 		Throw(exRosetta, (void*) -1, nil);

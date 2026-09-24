@@ -12,7 +12,7 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 86/86.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9422 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9548 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
   the function total, which comes from the demangled symbols.)
@@ -303,11 +303,16 @@ nine Gaussians turned up.  What is left of level 3 is
 what the engine is told to stop doing.  What is left of level 2 is
 `RosettaSetArea` and the three passes a classify is made of.
 
-The engine still cannot start, and now says so in one place:
-`BiGrammarsLoad` has no `ROMGrammar` to answer with, so
-`WordRecogCreate2` throws `evt.ex.Rosetta` out of `RosettaAwaken`.
-Extracting `ROMGrammar` (0x00366e0c, eight finite-state contexts) is
-what would change that.
+**The engine wakes.**  `analysis/bigrammar.py` generates
+`src/recognition/ROMGrammar.cpp` - the eight bigram grammars a field
+asks for by name, each a list of *kinds of word* (a lexicon out of
+`gROMDictionaryData`, a score of its own, and a score for every kind
+that may follow it), written out in `docs/recognition/grammar.md` - so
+`RosettaInitialize` now makes a word recogniser that knows the eight
+grammars and the 166 characters it may answer.  What is missing is
+*reading*: the classifier (`BPNet*`, and `BPNetEvaluate` is hand-written
+assembly), the patternizers that fill it, the segment layer, and
+`RosettaClassify` with its setup/analyze/cleanup.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

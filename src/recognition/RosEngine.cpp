@@ -3,11 +3,11 @@
 
 	Contains:	The engine's other layers - see RosEngine.h.
 
-	NOT YET RECONSTRUCTED.  The destroyers do nothing, which is safe
-	because nothing makes the objects they would give back; `RosCI` is
-	nil until the engine's trained numbers are extracted, and
-	`BiGrammarsLoad` answers the grammar it is handed so that the word
-	recogniser can be driven before `ROMGrammar` is.
+	Two of them are real: `CharInitialize`/`RSfRcl`, which make and
+	give back the common info out of the ROM's own template, and
+	`BiGrammarsLoad`, which answers the ROM's own bigram grammar.  The
+	rest are NOT YET; the destroyers do nothing, which is safe because
+	nothing makes the objects they would give back.
 
 	The work below this file, in the order it wants doing, is in
 	`docs/recognition/README.md` under "The Rosetta engine".
@@ -60,22 +60,22 @@ RosEngineLayersAreReconstructed(void)
 
 
 // ROM 0x0003e0b4 BiGrammarsLoad
-// NOT YET: the ROM's is one instruction - it answers `ROMGrammar`, the
-// list of eight contexts built into the ROM, and never looks at what
-// it is asked for.  Until that table is extracted this one answers
-// what it is handed, which is the smallest change that lets a caller
-// bring a grammar of its own.
-RosGrammars*
-BiGrammarsLoad(RosGrammars* source)
+// The ROM's is one instruction: it answers `ROMGrammar` and never
+// looks at what it is asked for.  Ours does the same when it is asked
+// for the ROM's (`kROMGrammars`, the constant the engine passes) and
+// otherwise answers what it is handed, so a caller may bring a grammar
+// of its own.
+const BiGrammars*
+BiGrammarsLoad(const BiGrammars* source)
 {
 	if (source == kROMGrammars)
-		return nil;
+		return &ROMGrammar;
 	return source;
 }
 
 
 // ROM 0x0003df4c BiGrammarDestroy
-void	BiGrammarDestroy(RosGrammarContext* /*context*/)			{ }
+void	BiGrammarDestroy(const BiGrammar* /*grammar*/)			{ }
 
 // ROM 0x001d48a4 SegmentChars
 short	SegmentChars(short /*count*/, RosStroke** /*strokes*/, Fixed /*meanSize*/,

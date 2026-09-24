@@ -18,10 +18,10 @@ static Fixed	F(long n)		{ return (Fixed) (int) ((unsigned int) n << 16); }
 
 // ---- what the engine would bring, and does not yet ----
 
-static RosGrammarContext	gGeneral	= { "General" };
-static RosGrammarContext	gNumbers	= { "Numbers" };
-static RosGrammarContext*	gContexts[2] = { &gNumbers, &gGeneral };
-static RosGrammars			gGrammars	= { 2, gContexts };
+static const BiGrammar	gGeneral	= { "General" };
+static const BiGrammar	gNumbers	= { "Numbers" };
+static const BiGrammar* const	gContexts[2] = { &gNumbers, &gGeneral };
+static const BiGrammars		gGrammars	= { 2, gContexts };
 
 
 
@@ -509,7 +509,7 @@ main()
 
 		// an empty one is refused just as firmly, and the block it had
 		// already made is given back
-		RosGrammars empty;
+		BiGrammars empty;
 		empty.fCount = 0;
 		empty.fContexts = nil;
 		threw = false;

@@ -10,17 +10,20 @@
 	arrays back without moving the block and `RosettaAwaken` is what
 	makes it again.
 
-	The engine still cannot start, and says so where it fails rather
-	than everywhere: `BiGrammarsLoad` has no `ROMGrammar` to answer
-	with, so `WordRecogCreate2` throws `evt.ex.Rosetta` and the throw
-	comes out of `RosettaAwaken`.  `TRosRecognizer` turns that into
-	`evt.ex.abt`, which is exactly what the ROM's own does when its
-	engine fails, and the recognition system puts it to sleep
-	(`TWRecDomain::SignalMemoryError`).  Nothing installs it; the engine
-	the host installs is `TInkOnlyRecognizer`.
+	The engine wakes: the common info and the bigram grammar are the
+	ROM's own, so `RosettaAwaken` makes a word recogniser that knows
+	the eight grammars a field may ask for and the 166 characters it
+	may answer.  What it cannot do yet is *read*: the classifier is
+	NOT YET (`BPNetCreateNumOut` answers nil), and so are the three
+	passes a classify is made of.
 
 	NOT YET: `RosettaSetArea`, which reads an area block into the
-	engine, and the three passes a classify is made of.
+	engine, and `RosettaClassify` with its setup/analyze/cleanup.  A
+	call that fails answers `kRosettaFailed`, `TRosRecognizer` turns
+	that into `evt.ex.abt` - which is what the ROM's own does when its
+	engine fails - and the recognition system puts it to sleep
+	(`TWRecDomain::SignalMemoryError`).  Nothing installs it; the
+	engine the host installs is `TInkOnlyRecognizer`.
 
 	The work below this file, in the order it wants doing, is in
 	`docs/recognition/README.md` under "The Rosetta engine".

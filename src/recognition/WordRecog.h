@@ -145,9 +145,9 @@ struct WordRecog
 	Fixed			fSavedRun[22];		// +0x0c8  the copy to go back to
 	Fixed			fField120[16];		// +0x120  eight pairs; Create2 sets the second of each
 	UByte			fPad160[0x38];		// +0x160
-	RosGrammars*	fGrammars;			// +0x198
+	const BiGrammars*	fGrammars;		// +0x198
 	long			fContextIndex;		// +0x19c  < 0: fContext is ours to destroy
-	RosGrammarContext*	fContext;		// +0x1a0
+	const BiGrammar*	fContext;		// +0x1a0
 	long			fField1a4;			// +0x1a4
 	RosStroke*		fPendingStroke;		// +0x1a8  the stroke not yet taken in
 	long			fField1ac;			// +0x1ac
@@ -202,7 +202,7 @@ void		WordRecogDeallocate(WordRecog* wr);				// ROM 0x00274c08 WordRecogDealloca
 // grammar to read against.
 WordRecog*	WordRecogCreate2(void* field00, void* field04,
 							WordRecogCheckWordsProc checkWords, long wordCount,
-							RosGrammars* grammars, void* net, short ownsStrokes);	// ROM 0x00275940 WordRecogCreate2
+							const BiGrammars* grammars, void* net, short ownsStrokes);	// ROM 0x00275940 WordRecogCreate2
 
 // The arrays given back while the engine is quiet, and made again when
 // it wakes.  The block itself does not move.

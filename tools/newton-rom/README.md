@@ -65,6 +65,8 @@ tools/newton-rom/
                           that writes it -> src/recognition/ROMDictionaryTable.cpp
     rosci.py              the handwriting engine's common info and its seventeen character
                           tables -> src/recognition/RosCITables.cpp
+    bigrammar.py          the handwriting engine's eight bigram grammars
+                          -> src/recognition/ROMGrammar.cpp, docs/recognition/grammar.md
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another
                           (--from build/A --to build/B [--check])
     soupdefs.py           the soups the ROM's applications keep -> src/host/FactorySoups.cpp
@@ -339,6 +341,17 @@ character code carries; `rosCharLegalNet`/`rosCharLegalUse`, 256 bits
 each; and the six byte-per-character tables the classifier and the
 capitals hack use). The struct's field order is in the script as
 `FIELDS` and in `recognition/RosEngine.h`, and the two must agree.
+
+`analysis/bigrammar.py build/MP2x00US -o src/recognition/ROMGrammar.cpp
+--doc docs/recognition/grammar.md` emits the handwriting engine's
+bigram grammar, which is a graph rather than a table: eight
+`BiGrammar`s, each a list of `BiGSlice`s (a kind of word), each of
+those naming the kinds that may follow it. The script walks it from
+`ROMGrammar` and refuses a transition that leaves its own grammar, and
+because the ROM has a debug symbol on every object in it - the slices
+`BiGS*`, their successor lists `BiSL*` and their weights `BiSP*` - the
+generated file carries the ROM's own names throughout. The same walk
+writes the grammar out as a document.
 
 `analysis/romconstants.py build/MP2x00US -o src/frames` emits the ROM's
 frames constants: the 1765 `RSSYM` symbols (reading each symbol's real

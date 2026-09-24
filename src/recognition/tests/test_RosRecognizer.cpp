@@ -2,18 +2,17 @@
 // TRosRecognizer, the TWRecognizer implementation that sits over
 // Rosetta (recognition/RosRecognizer.h, Rosetta.h).
 //
-// The engine itself is not reconstructed, so what can be checked here
-// is the shell: that the recogniser registers and can be made by name
-// the way the recognition manager makes one, the area block it hands
-// the engine, the questions it answers without asking the engine at
-// all - and that the ones which do ask throw `evt.ex.abt`, which is
-// what the ROM's own does when its engine fails and is what keeps this
-// recogniser out of a running system until the engine is there.
+// The engine cannot read yet, so what is checked here is the shell:
+// that the recogniser registers and can be made by name the way the
+// recognition manager makes one, the area block it hands the engine,
+// the questions it answers without asking the engine at all, and that
+// it wakes the engine and puts it to sleep again.
 //
 // It runs as the kernel services task because the protocol registry is
 // a monitor.
 #include "RosRecognizer.h"
 #include "Rosetta.h"
+#include "RosEngine.h"
 #include "WRecDomain.h"
 #include "Dictionaries.h"
 #include "RecObject.h"
@@ -176,13 +175,19 @@ RosScenario(void)
 	big[0x48] = 0;
 	EXPECT(!recognizer->VerifyWordSymbols(big));
 
-	// and the calls that need the engine say so the way the ROM's own
-	// does when its engine has failed
-	EXPECT_ABORTS(recognizer->Initialize());
-	EXPECT_ABORTS(recognizer->Sleep());
+	// the engine starts, now that its trained numbers and its bigram
+	// grammar are the ROM's own: the recogniser wakes it, and puts it
+	// to sleep again
+	recognizer->Initialize();
+	EXPECT(gWordRecog != nil);
+	EXPECT(RosCI != nil);
+	recognizer->Sleep();
+	EXPECT(gWordRecog == nil);
 
-	// WakeUp does not look at what the engine answered, so it is quiet
+	// WakeUp does not look at what the engine answered
 	recognizer->WakeUp();
+	EXPECT(gWordRecog != nil);
+	recognizer->Sleep();
 
 	recognizer->Delete();
 	EXPECT(gRosRecognizer == nil);

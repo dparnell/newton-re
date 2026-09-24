@@ -1,7 +1,8 @@
 // The handwriting engine's life (recognition/Rosetta.h): waking,
 // quietening and sleeping, and the small calls that go with them.
 // This is level 2, the join between the Newton's recogniser and
-// ParaGraph's engine.
+// ParaGraph's engine, over the bigram grammar and the common info the
+// ROM brings with it.
 #include "Rosetta.h"
 #include "RosEngine.h"
 #include "RosStrokes.h"
@@ -17,12 +18,6 @@ static int failures = 0;
 
 static Fixed	F(long n)		{ return (Fixed) (int) ((unsigned int) n << 16); }
 
-
-// A grammar of our own, because the ROM's `ROMGrammar` is NOT YET.
-static RosGrammarContext	gGeneral	= { "General" };
-static RosGrammarContext*	gContexts[1] = { &gGeneral };
-static RosGrammars			gGrammars	= { 1, gContexts };
-
 static long		gWordsHandedBack;
 
 static void
@@ -37,33 +32,76 @@ main()
 {
 	InitHostStandaloneHeap();
 
-	// ---- the engine cannot start, and says so where it fails ----
+	// ---- the grammar the ROM brings ----
 	{
-		Boolean threw = false;
-		newton_try
-		{
-			RosettaInitialize(F(72), F(72), TestCheckWords);
-		}
-		newton_catch_all
-		{
-			threw = true;
-		}
-		end_try;
-		// `BiGrammarsLoad` has no `ROMGrammar` to answer with, so the
-		// word recogniser cannot be made
-		EXPECT(threw);
-		EXPECT(gWordRecog == nil);
-		EXPECT(!RosettaEngineIsReconstructed());
-		// ... but what it was told on the way in stands
+		EXPECT(ROMGrammar.fCount == 8);
+		static const char* const kNames[8] = {
+			"General", "Date", "Numbers&Money", "Numbers",
+			"Phone", "Time", "Money", "PostalCode"
+		};
+		for (long i = 0; i < 8; i++)
+			EXPECT(strcmp(ROMGrammar.fContexts[i]->fName, kNames[i]) == 0);
+
+		// a grammar is a list of *kinds of word*, each a lexicon out of
+		// gROMDictionaryData with a score of its own
+		const BiGrammar* phone = ROMGrammar.fContexts[4];
+		EXPECT(phone->fCount == 5 && phone->fCapacity == 5);
+		EXPECT(strcmp(phone->fSlices[0]->fName, "PhoneR_US_C") == 0);
+		EXPECT(phone->fSlices[0]->fDictionary == 15);	// gLex8phone
+		EXPECT(strcmp(phone->fSlices[1]->fName, "hyphen") == 0);
+		EXPECT(phone->fSlices[1]->fDictionary == 113);	// gLex8hyphen
+		// ... and a score for each kind that may follow it: a telephone
+		// number may be followed by a hyphen and by nothing else
+		EXPECT(phone->fSlices[0]->fCount == 1);
+		EXPECT(phone->fSlices[0]->fNext[0] == phone->fSlices[1]);
+		EXPECT(phone->fSlices[0]->fWeights[0] == 458);
+		// and after the hyphen, three things, of which going back to
+		// the number costs nothing at all
+		EXPECT(phone->fSlices[1]->fCount == 3);
+		EXPECT(phone->fSlices[1]->fNext[0] == phone->fSlices[0]);
+		EXPECT(phone->fSlices[1]->fWeights[0] == 0);
+
+		// a kind of word that can never start one has the worst score
+		// there is
+		const BiGrammar* general = ROMGrammar.fContexts[0];
+		EXPECT(general->fCount == 25);
+		EXPECT(strcmp(general->fSlices[1]->fName, "endpunct") == 0);
+		EXPECT(general->fSlices[1]->fScore == 0x7ffe);
+		// the six an area fills in with dictionaries of its own
+		EXPECT(strcmp(general->fSlices[7]->fName, "~user") == 0);
+		EXPECT(strcmp(general->fSlices[12]->fName, "~null5") == 0);
+	}
+
+	// ---- the engine wakes ----
+	{
+		EXPECT(RosettaInitialize(F(72), F(72), TestCheckWords) == noErr);
+		EXPECT(gWordRecog != nil);
 		EXPECT(gRosResX == F(72) && gRosResY == F(72));
 		EXPECT(gRosCallBack == TestCheckWords);
-		// and sleeping with nothing awake is nothing
-		EXPECT(RosettaSleep() == noErr);
+		// the common info out of the ROM
+		EXPECT(RosCI != nil && RosCI->fMinStrokeSize == F(4) + F(1) / 2);
+		// ten readings, the ROM's grammar, and its first context found
+		// by the name "General"
+		EXPECT(gWordRecog->fWordCount == 10);
+		EXPECT(gWordRecog->fGrammars == &ROMGrammar);
+		EXPECT(gWordRecog->fContextIndex == 0);
+		EXPECT(strcmp(gWordRecog->fContext->fName, "General") == 0);
+		// the tablet's resolution, in whole dots to the inch
+		EXPECT(gWordRecog->fResX == 72 && gWordRecog->fResY == 72);
+		EXPECT(gWordRecog->fClassifyMode == kRosettaClassifyNormally);
+		EXPECT(gWordRecog->fOwnsStrokes == 1);
+		// waking again is nothing
+		EXPECT(RosettaAwaken() == noErr);
+
+		// a field asks for a grammar by name
+		EXPECT(WordRecogSetContext(gWordRecog, "Phone") == kWordRecogOk);
+		EXPECT(gWordRecog->fContextIndex == 4);
+		EXPECT(WordRecogSetContext(gWordRecog, "Esperanto") == 1);
+		EXPECT(gWordRecog->fContextIndex == 4);
 	}
 
 	// ---- the engine's own character set ----
 	{
-		EXPECT(CharInitialize(0) == 0x86);
 		EXPECT(RosettaVerifyWordSymbols((char*) "hello") == true);
 		EXPECT(RosettaVerifyWordSymbols((char*) "Hello,") == true);
 		EXPECT(RosettaVerifyWordSymbols((char*) "$1,000.") == true);
@@ -77,30 +115,25 @@ main()
 		EXPECT(RosettaVerifyWordSymbols((char*) "two words") == false);
 	}
 
-	// ---- everything above the grammar, over a recogniser of our own ----
+	// ---- what it is told to stop doing ----
 	{
-		gWordRecog = WordRecogCreate2(nil, nil, nil, 10, &gGrammars, nil, 1);
-		EXPECT(gWordRecog != nil);
-		gWordRecog->fResX = -1;
-		gWordRecog->fResY = -1;
-
-		// what the engine is to stop doing.  The three bits taken out
-		// of the flags are what a classify would have set.
 		gWordRecog->fFlags1f4 = 0xffffffff;
 		RosettaDontClassify(kRosettaBaselineOnly);
 		EXPECT(gWordRecog->fClassifyMode == kRosettaBaselineOnly);
 		EXPECT(gWordRecog->fFlags1f4 == 0xffdfd7fe);
+	}
 
-		// the baseline, as the two Points the recogniser wants: the
-		// box's top-left corner and its bottom-right one
+	// ---- the baseline, as the two Points the recogniser wants ----
+	{
 		SetFixedRect(&gWordRecog->fBaseline, F(3), F(5), F(40), F(26));
 		Point ends[2];
 		EXPECT(RosettaGetBaseLine(ends) == noErr);
 		EXPECT(ends[0].h == 3 && ends[0].v == 5);
 		EXPECT(ends[1].h == 40 && ends[1].v == 26);
+	}
 
-		// the working values put back: reading again, and the boxed
-		// character recogniser given back
+	// ---- the working values put back ----
+	{
 		gWordRecog->fCharBox = (void*) NewPtr(4);
 		gWordRecog->fField202 = 1;
 		gWordRecog->fField203 = 1;
@@ -122,7 +155,10 @@ main()
 		gWordRecog->fRun[0] = F(99);
 		RosettaInitializeValues();
 		EXPECT(gWordRecog->fRun[0] == F(99));
+	}
 
+	// ---- quiet, and asleep ----
+	{
 		// quietened: the arrays given back, the block left standing
 		EXPECT(RosettaQuiesce() == noErr);
 		EXPECT(gWordRecog != nil && gWordRecog->fSuspended == 1);
@@ -131,11 +167,12 @@ main()
 		EXPECT(WordRecogResume(gWordRecog) == kWordRecogOk);
 		EXPECT(gWordRecog->fStrokes != nil);
 
-		// and taken down
+		// and taken down, the common info with it
 		EXPECT(RosettaSleep() == noErr);
 		EXPECT(gWordRecog == nil);
-		// sleeping gives the common info back as well
 		EXPECT(RosCI == nil);
+		// sleeping again is nothing
+		EXPECT(RosettaSleep() == noErr);
 	}
 
 	EXPECT(gWordsHandedBack == 0);		// nothing was ever read

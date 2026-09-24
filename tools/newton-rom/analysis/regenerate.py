@@ -69,6 +69,9 @@ GENERATED = [
      "romdicts.py", ["{build}", "-o", "src/recognition"]),
     ("rosci",
      "rosci.py", ["{build}", "-o", "src/recognition/RosCITables.cpp"]),
+    ("bigrammar",
+     "bigrammar.py", ["{build}", "-o", "src/recognition/ROMGrammar.cpp",
+                      "--doc", "docs/recognition/grammar.md"]),
     ("factorysoups",
      "soupdefs.py", ["{build}", "-o", "src/host/FactorySoups.cpp"]),
 ]
