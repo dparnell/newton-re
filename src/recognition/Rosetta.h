@@ -141,8 +141,23 @@ NewtonErr	RosettaSleep(void);										// ROM 0x001b8388 RosettaSleep
 NewtonErr	RosettaClassifySetup(void);								// ROM 0x001b78d0 RosettaClassifySetup
 NewtonErr	RosettaClassifyAnalyze(void);							// ROM 0x001b7cc4 RosettaClassifyAnalyze
 NewtonErr	RosettaClassifyCleanup(void);							// ROM 0x001b7b10 RosettaClassifyCleanup
-// the words the engine read handed to the callback
-void		RosettaCheckWords(void);								// ROM 0x001b7120 RosettaCheckWords
+// the words the engine read handed to the callback.  This is what the
+// word recogniser is given as *its* callback (five arguments, the
+// flags array among them); it turns the raw scores into confidences
+// out of a thousand and passes four of them up to `gRosCallBack`.
+void		RosettaCheckWords(char** words, UniChar* scores, long* flags,
+							ULong strokes, ULong count);		// ROM 0x001b7120 RosettaCheckWords
+
+// The one word recogniser (`recognition/WordRecog.h`), made when the
+// engine wakes and destroyed when it sleeps; nil while it is asleep.
+struct WordRecog;
+extern WordRecog*	gWordRecog;						// ROM 0x0c101960 (unnamed)
+// How sure the engine was of the last word it read, out of a thousand.
+extern short		gRosLastConfidence;				// ROM 0x0c101964 (unnamed)
+// The tablet's resolution, and the Newton's own callback.
+extern long			gRosResX;						// ROM 0x0c101954 gRosResX
+extern long			gRosResY;						// ROM 0x0c101958 gRosResY
+extern RosettaCheckWordsProc	gRosCallBack;		// ROM 0x0c10195c gRosCallBack
 
 // Whether the engine below this file is there.  Nothing but the tests
 // and the documentation should need to ask: the recogniser throws

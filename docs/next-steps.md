@@ -10,9 +10,9 @@ put the next one in.
 
 ## State at 2026-09-25 (commit `14f9d21`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 85/85.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 86/86.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9409 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9422 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
   the function total, which comes from the demangled symbols.)
@@ -297,8 +297,17 @@ has to be cut in two before it is read (`WordRecogStrokeType`,
 `StrokeNeedsFragmenting`), and `WordRecogAddStroke2` - the baseline of
 a closed word and the run learnt from every stroke, which is where the
 nine Gaussians turned up.  What is left of level 3 is
-`WordRecogAddStroke` itself (eight kilobytes) and the segment side.  That also unblocks **level 2**, which is
-fifteen thin calls over these fields.
+`WordRecogAddStroke` itself (eight kilobytes) and the segment side.  **Level 2's life is reconstructed** with it
+(`recognition/Rosetta.h`): waking, quietening and sleeping over the one
+`gWordRecog`, the working values, the baseline, the character set and
+what the engine is told to stop doing.  What is left of level 2 is
+`RosettaSetArea` and the three passes a classify is made of.
+
+The engine still cannot start, and now says so in one place:
+`BiGrammarsLoad` has no `ROMGrammar` to answer with, so
+`WordRecogCreate2` throws `evt.ex.Rosetta` out of `RosettaAwaken`.
+Extracting `ROMGrammar` (0x00366e0c, eight finite-state contexts) is
+what would change that.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

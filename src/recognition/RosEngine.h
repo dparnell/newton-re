@@ -133,10 +133,16 @@ struct RosGrammars
 	RosGrammarContext**	fContexts;		// +0x04
 };
 
+// What `RosettaAwaken` asks for.  The ROM's `BiGrammarsLoad` ignores
+// its argument and answers `ROMGrammar` whatever it is handed, so the
+// ROM passes the constant 1; nothing ever dereferences it.
+#define kROMGrammars	((RosGrammars*) 1)
+
 // NOT YET: the ROM's answers `ROMGrammar` (0x00366e0c), its eight
-// built-in contexts, whatever it is asked for.  Ours answers what it
-// is handed, so that the word recogniser can be driven before that
-// table is extracted.
+// built-in contexts.  Ours answers nil for `kROMGrammars`, because
+// that table has not been extracted, and otherwise answers what it is
+// handed - so a caller can bring a grammar of its own and the word
+// recogniser can be driven before the ROM's is there.
 RosGrammars*	BiGrammarsLoad(RosGrammars* source);		// ROM 0x0003e0b4 BiGrammarsLoad
 // A context the engine built for itself, given back.
 void			BiGrammarDestroy(RosGrammarContext* context);	// ROM 0x0003df4c BiGrammarDestroy
@@ -174,6 +180,21 @@ Fixed	SegmentMinStrokeSize(void);							// ROM 0x001d1890 SegmentMinStrokeSize
 
 void	NetPatternDestroy(RosNetPattern* pattern);			// ROM 0x00133a08 NetPatternDestroy
 void	NetPatternizerDestroy(RosNetPatternizer* patternizer);	// ROM 0x00133a58 NetPatternizerDestroy
+
+// The back-propagation classifier: made with a number of output nodes,
+// told whether it may learn, loaded, and given back.
+void*	BPNetCreateNumOut(long outputs);						// ROM 0x0003b1cc BPNetCreateNumOut
+void	BPNetLearnEnable(void* net, long enable);			// ROM 0x0003b278 BPNetLearnEnable
+void	BPNetLoad(void* net, void* from);					// ROM 0x0003b280 BPNetLoad
+void	BPNetDestroy(void* net);							// ROM 0x0003b240 BPNetDestroy
+
+// The boxed-character recogniser, given back.
+void	CharBoxDestroy(void* charBox);						// ROM 0x00056684 CharBoxDestroy
+// The lexical search and the geometry, quietened; the sentence read so
+// far, forgotten.
+void	LEquiesant(void);									// ROM 0x000ffd60 LEquiesant
+void	GeoCQuiesence(void);								// ROM 0x000d9ce4 GeoCQuiesence
+void	SearchDeallocateGlobals(void);						// ROM 0x001d02ec SearchDeallocateGlobals
 
 // The engine's own free list, emptied.
 void	ListZap(void);										// ROM 0x0011343c ListZap

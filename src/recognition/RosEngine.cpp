@@ -68,6 +68,8 @@ RosEngineLayersAreReconstructed(void)
 RosGrammars*
 BiGrammarsLoad(RosGrammars* source)
 {
+	if (source == kROMGrammars)
+		return nil;
 	return source;
 }
 
@@ -101,6 +103,24 @@ SegmentMinStrokeSize(void)
 void	NetPatternDestroy(RosNetPattern* /*pattern*/)			{ }
 // ROM 0x00133a58 NetPatternizerDestroy
 void	NetPatternizerDestroy(RosNetPatternizer* /*patternizer*/)	{ }
+
+// ROM 0x0003b1cc BPNetCreateNumOut
+void*	BPNetCreateNumOut(long /*outputs*/)					{ return nil; }
+// ROM 0x0003b278 BPNetLearnEnable
+void	BPNetLearnEnable(void* /*net*/, long /*enable*/)		{ }
+// ROM 0x0003b280 BPNetLoad
+void	BPNetLoad(void* /*net*/, void* /*from*/)			{ }
+// ROM 0x0003b240 BPNetDestroy
+void	BPNetDestroy(void* /*net*/)							{ }
+
+// ROM 0x00056684 CharBoxDestroy
+void	CharBoxDestroy(void* /*charBox*/)					{ }
+// ROM 0x000ffd60 LEquiesant
+void	LEquiesant(void)									{ }
+// ROM 0x000d9ce4 GeoCQuiesence
+void	GeoCQuiesence(void)									{ }
+// ROM 0x001d02ec SearchDeallocateGlobals
+void	SearchDeallocateGlobals(void)						{ }
 
 // ROM 0x0011343c ListZap
 void	ListZap(void)											{ }

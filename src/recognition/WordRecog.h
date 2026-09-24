@@ -151,7 +151,9 @@ struct WordRecog
 	long			fField1a4;			// +0x1a4
 	RosStroke*		fPendingStroke;		// +0x1a8  the stroke not yet taken in
 	long			fField1ac;			// +0x1ac
-	long			fField1b0[6];		// +0x1b0  cleared when the engine wakes
+	// up to six dictionaries handed over by an area, which
+	// `RosettaClassifySetup` locks into the grammar context
+	Handle			fDicts[6];			// +0x1b0
 	void*			fCallBack;			// +0x1c8  the Newton's own (gRosCallBack)
 	FRect			fBaseline;			// +0x1cc  the word's box, its bottom the baseline
 	long			fField1dc;			// +0x1dc

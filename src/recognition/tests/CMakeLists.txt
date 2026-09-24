@@ -62,3 +62,7 @@ add_test(NAME recognition.RosStrokes COMMAND test_RosStrokes)
 add_executable(test_WordRecog test_WordRecog.cpp)
 target_link_libraries(test_WordRecog PRIVATE recognition memory)
 add_test(NAME recognition.WordRecog COMMAND test_WordRecog)
+
+add_executable(test_Rosetta test_Rosetta.cpp)
+target_link_libraries(test_Rosetta PRIVATE recognition memory)
+add_test(NAME recognition.Rosetta COMMAND test_Rosetta)

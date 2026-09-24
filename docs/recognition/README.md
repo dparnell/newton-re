@@ -1868,12 +1868,13 @@ which is why `recognition/Rosetta.h` draws it explicitly: it is where a
 modern recogniser would be put in instead.
 
 **Reconstructed so far: all of level 1, all of level 5, the block of
-state level 3 works in and its life, and level 2 as a set of
-declarations with no bodies.** `TRosRecognizer` is real; every call it
-makes into the engine answers "could not", so the recogniser throws
-`evt.ex.abt`, which
-is exactly what the ROM's own does when its engine fails. Nothing
-installs it — the engine the host installs is still
+state level 3 works in and its life, the engine's own trained numbers,
+and level 2's life.** What is missing is now *named*: the engine
+cannot start because `BiGrammarsLoad` has no `ROMGrammar` to answer
+with, so `WordRecogCreate2` throws `evt.ex.Rosetta` and the throw comes
+out of `RosettaAwaken`. `TRosRecognizer` turns that into
+`evt.ex.abt`, which is exactly what the ROM's own does when its engine
+fails. Nothing installs it — the engine the host installs is still
 `TInkOnlyRecognizer`, so the pen still leaves ink.
 
 ### What TRosRecognizer does
@@ -2121,6 +2122,36 @@ whole of the writing is covered by it, so the caller always gets an
 answer. The stroke count it passes up is not the one it was given:
 strokes the engine cut for itself do not count, because the layers
 above never saw them, and at least one is always claimed.
+
+### The engine's life (`recognition/Rosetta.h`)
+
+There is one word recogniser, `gWordRecog`, and level 2 is mostly
+about its life. `RosettaInitialize` writes down the tablet's
+resolution and the Newton's callback and wakes the engine;
+`RosettaAwaken` makes the common info, a classifier with as many
+outputs as there are character classes (134, which `CharInitialize`
+answers) and the word recogniser over both — ten readings, the ROM's
+own grammar, and the strokes are the engine's to free.
+
+`RosettaQuiesce` gives everything in hand back but leaves the engine
+standing: the word recogniser keeps its block, so everything pointing
+at it stays good, and `WordRecogResume` makes its arrays again when the
+next stroke comes down. `RosettaSleep` is what takes it down, and it
+gives the grammar context back only when the index is negative — which
+is how a context the engine built for itself is told from one of the
+ROM's eight.
+
+`RosettaInitializeValues` is what a word starts from: reading again,
+the sentence forgotten, the writing in hand cleared and the boxed
+character recogniser given back. Whether the run is put back as it was
+saved turns on how well the *last* word was read — over 899 out of a
+thousand, the confidence `RosettaCheckWords` writes down each time.
+
+`RosettaVerifyWordSymbols` is a walk over `RosCI->fLegalUse`, and it
+says something about the engine: a **space is not a legal character**.
+It reads one word at a time and a space is never a character of one.
+166 of the 256 codes are legal: printable ASCII and the accented
+Latin-1 letters.
 
 ### The engine's own numbers (`recognition/RosEngine.h`)
 
