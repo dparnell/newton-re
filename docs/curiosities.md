@@ -1135,3 +1135,34 @@ one hides the second.
 
 *`src/recognition/AirusIterator.cpp` and `src/recognition/Words.cpp`;
 `test_Dictionaries` pins the shared cursor.*
+
+
+## The handwriting engine was written in Moscow
+
+The MessagePad reads writing with an engine Apple licensed and shipped
+as **Rosetta**. Nothing in the symbol table says whose it is, but the
+names give it away:
+
+```
+neibour_susp_extr       glitch_to_super_min     is_umlyut
+spec_neibour_extr       sub_max_to_line         lead_punct
+Errorprov               conv_top_elem_to_ST     RestoreApostroph
+```
+
+`neibour` for *neighbour*, `umlyut` for *umlaut*, `Errorprov` for an
+error provider: this is English written by Russian speakers, and the
+engine is ParaGraph International's Calligrapher — the company Stepan
+Pachikov founded in Moscow, whose recogniser replaced Apple's own in
+NewtonOS 2.0 and is the reason the second-generation MessagePads could
+read printing at all.
+
+The join between the two is visible in the code as well as in the
+names. Everything above `Rosetta*` is written in Apple's house style —
+`TRosRecognizer::AllocateAndConvertStrokeForRosetta`, capitals and
+`f`-prefixed fields — and everything below it is plain C with
+underscores and abbreviations that run out of vowels
+(`extract_num_extr`, `str_com`, `xt_st_zz`). The boundary is one file
+thick.
+
+*`src/recognition/Rosetta.h` draws that boundary explicitly;
+`docs/recognition/README.md` has the layers.*

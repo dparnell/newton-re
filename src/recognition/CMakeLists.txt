@@ -32,6 +32,8 @@ add_library(recognition STATIC
     Controller.cpp
     Arbiter.cpp
     Recognizer.cpp
+    RosRecognizer.cpp
+    Rosetta.cpp
     TabletBuffer.cpp
     StrokeQueue.cpp
     StrokeCentral.cpp

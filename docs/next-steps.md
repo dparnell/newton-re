@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `eebc881`)
+## State at 2026-09-24 (commit `1bb589a`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 81/81.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 82/82.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9267 citations, 0 bad;
-  5106 of 16671 functions (30.63%).
+- `analysis/coverage.py build/MP2x00US --check`: 9306 citations, 0 bad;
+  5128 of 16671 functions (30.76%).
 - `analysis/natives.py`: 863 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -258,7 +258,7 @@ subsystem, not the wrapper.
 |  47 | the Intelligent Assistant: its lexicon and the sentence-level functions |
 |  46 | the books and newspaper system |
 |  38 | the text engine (TXView/TXFrames: styled documents with rulers) |
-|  38 | the CIC handwriting engine: letters, training and reading |
+|  38 | the Rosetta handwriting engine: letters, training and reading |
 |  36 | the test agent and the debug hooks |
 |  35 | the package manager and the card |
 |  12 | sound channels (the sound server) |
@@ -268,6 +268,17 @@ subsystem, not the wrapper.
 
 Regenerate that table at any time with `natives.py --unbound --csv`, and
 find the cheapest work inside a group with `--sizes build/MP2x00US`.
+
+**The handwriting engine has been started.**  `TRosRecognizer`, the
+`TWRecognizer` implementation the ROM plugs its engine in through, is
+reconstructed (`recognition/RosRecognizer.h`), and the fifteen calls it
+makes into the engine are declared as an explicit seam
+(`recognition/Rosetta.h`) with no bodies yet.  The engine below is
+ParaGraph's Calligrapher: about two hundred kilobytes in six layers,
+mapped out in `docs/recognition/README.md` under "The Rosetta engine",
+which also says what to do next and in what order.  The first piece is
+`TRosRecognizer::AreaInfoConfigure` (0x001b62a8), which needs nothing
+below it.
 
 The smallest of those that would close a group of its own:
 

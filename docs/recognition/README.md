@@ -1844,6 +1844,96 @@ side of `TWRecDomain`.  `ReadDomainOptions` (0x0019cfd8) is what reads
 the writer's recognition preferences at boot and calls
 `SetWordRecognizer`.
 
+## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
+
+The engine the MP2x00 actually reads writing with is ParaGraph's
+Calligrapher, which Apple licensed and shipped as **Rosetta**. It is a
+subsystem in its own right, and a large one: about two hundred kilobytes
+of code in some three hundred and fifty functions, with trained tables
+beside it. Its layers, from the top:
+
+| | what | where |
+|---|---|---|
+| 1 | `TRosRecognizer` — the `TWRecognizer` implementation | 0x001b5bac–0x001b7120 |
+| 2 | `Rosetta*` — the fifteen calls the recogniser makes into the engine | 0x001b7120–0x001b8500 |
+| 3 | `WordRecog*` — the word recogniser | 0x00272728–0x002766c0 |
+| 4 | `CharBox*` — the boxed-character recogniser | 0x000561c8–0x00056a44 |
+| 5 | `SL*` — the stroke lists they work on | 0x001fff98–0x00201320 |
+| 6 | `low_type`/`EXTR`/`SPEC_TYPE` — the feature extraction and the classifier nets | 0x002a8090–0x0032fd24, and more |
+
+Everything at level 1 is the Newton's; everything from level 3 down is
+ParaGraph's, and the names are theirs — `neibour_susp_extr`,
+`is_umlyut`, `glitch_to_super_min`, `Errorprov`. Level 2 is the join,
+which is why `recognition/Rosetta.h` draws it explicitly: it is where a
+modern recogniser would be put in instead.
+
+**Reconstructed so far: level 1, and level 2 as a set of declarations
+with no bodies.** `TRosRecognizer` is real; every call it makes into the
+engine answers "could not", so the recogniser throws `evt.ex.abt`, which
+is exactly what the ROM's own does when its engine fails. Nothing
+installs it — the engine the host installs is still
+`TInkOnlyRecognizer`, so the pen still leaves ink.
+
+### What TRosRecognizer does
+
+It is thin. Strokes come down from the word domain, are copied out of
+the tablet's packed samples into arrays of `FPoint`
+(`AllocateAndConvertStrokeForRosetta`) and handed to the engine; the
+engine calls back through `RosRecCheckWords` with the words it read, and
+those go on the unit as interpretations. The grouping is the *engine's*:
+`Group` passes every stroke straight down, because the engine decides
+for itself where one word ends and the next begins.
+
+Two things it does that are its own.
+
+**Regrouping.** `RosRecCheckWords` is told how many of the group's
+strokes the words cover. If that is fewer than the group holds, the
+engine has decided the writing is two words rather than one: a group is
+made of the first of them and given the words, another is made of the
+rest, and the group that was there is invalidated.
+
+**Ink.** Strokes the writer is *drawing* rather than writing go through
+`GroupInkStroke`, which tells the engine to group but to read nothing
+(`kRosettaDontClassify` = 1) and gathers them into the recogniser's own
+array of up to eighty. When the drawing ends — or eighty strokes have
+been gathered — the group is closed and handed back whole through
+`EndInkStrokeGroup`.
+
+`FindBaseline` is the same trick with `kRosettaBaselineOnly`: the
+strokes go down, nothing is read, and the two Points the engine answers
+are opened out into the four the caller wants.
+
+The **area block** (`RosettaAreaInfo`, 0x68 bytes) is what tells the
+engine what sort of field is being written in: eight words of lexicon
+flags, five stroke shapes, a label for the words read there and a count
+of strokes still expected. `AreaInfoFillDefaults` fills it with every
+lexicon and every shape.
+
+### What is left
+
+In order:
+
+1. **`TRosRecognizer::AreaInfoConfigure`** (0x001b62a8), the one part of
+   level 1 still missing. It is a long switch over the dictionary ids a
+   recognition configuration names (`recognition/Dictionaries.h`),
+   setting a lexicon bit each, plus the locale's `rosIgnoreDicts` list
+   and the rest of the block. It needs nothing below it, so it can be
+   done next.
+2. **Level 2**, the fifteen `Rosetta*` calls: the setup/analyze/cleanup
+   passes a classify is made of, the area, the baseline, sleeping and
+   waking.
+3. **Levels 3 to 6**, bottom-up, which is the engine proper. The
+   trained tables come out of the ROM's data through
+   `analysis/romtable.py` as everything else does.
+
+Until then the eleven natives that ask for handwriting — `Recognize`,
+`RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,
+`RecognizeTextInStyles`, `DoCursiveTraining`,
+`UseTrainingDataForRecognition`, `GetLetterWeights`/`SetLetterWeights`
+and the letter-shape group — have nothing to answer with.
+`RosettaExtension` (0x001b6c3c) is the exception: it answers nil and
+always did.
+
 ## The writer's recognition preferences
 
 `ReadCursiveOptions` (`FReadCursiveOptions`, 0x0019cfd8, reached at boot

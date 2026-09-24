@@ -50,3 +50,7 @@ add_executable(test_Spelling test_Spelling.cpp)
 target_link_libraries(test_Spelling PRIVATE recognition)
 target_compile_definitions(test_Spelling PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME recognition.Spelling COMMAND test_Spelling)
+
+add_executable(test_RosRecognizer test_RosRecognizer.cpp)
+target_link_libraries(test_RosRecognizer PRIVATE recognition)
+add_test(NAME recognition.RosRecognizer COMMAND test_RosRecognizer)
