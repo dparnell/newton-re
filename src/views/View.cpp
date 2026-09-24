@@ -12,6 +12,8 @@
 */
 
 #include "View.h"
+#include "ClipboardView.h"
+#include "Bits.h"
 #include "Hilites.h"
 #include "UnitPublic.h"
 #include "RootView.h"
@@ -1792,8 +1794,12 @@ TView::EndDrag(const TDragInfo& info, TView* target, const Point& startPt, const
 // ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 (NOT YET RECONSTRUCTED: the pen-tracked drag
 // with the clipboard icon following the pen; the host's simplified drag
 // tracks the pen and drops on the target under the release point)
+//
+// A drop with no target is a drag let go on the background, which is
+// what makes a clipping (the ROM's Drag answers a flag of its own for
+// that, and tells the difference by PointOnClipboard).
 Boolean
-TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* /*limit*/, const Rect* /*slop*/, Boolean copy, const TDragInfo& info, const Rect* /*dragBounds*/)
+TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* /*slop*/, Boolean copy, const TDragInfo& info, const Rect* /*dragBounds*/)
 {
 	stroke->InkOff(true);
 	TDragInfo& dragInfo = (TDragInfo&) info;
@@ -1806,21 +1812,78 @@ TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* /*limi
 		Wait(1);
 	Point drop = stroke->FinalPoint();
 	TView* target = TargetDrop(dragInfo, drop);
-	if (target == nil)
-		return false;
 	if (!DropApprove(target))
 		return false;
+	if (target == nil)
+	{
+		// the background: the items are put on the clipboard, and,
+		// unless the drag was a copy, the view gives them up.  A
+		// clipping dropped on the background is left where it fell.
+		if ((fFlags & vClipboard) != 0)
+			return false;
+		TClipboard::NewClipboard(dragInfo, this, limit != nil ? *limit : bounds, &drop);
+		if (!copy && (fFlags & (vReadOnly | vWriteProtected)) == 0)
+			for (long i = dragInfo.Count() - 1; i >= 0; i--)
+				DropRemove(RefVar(dragInfo.GetItemDragRef(i)));
+		return true;
+	}
 	EndDrag(dragInfo, target, start, drop, drop, copy);
 	return true;
 }
 
-
 // the default drop hooks a view without its own behaviour uses
 void	TView::DrawDragBackground(const Rect&, Boolean)				{ }
 void	TView::DrawDragData(const Rect&)							{ }
-Boolean	TView::GetClipboardDataBits(Rect*)							{ return false; }
 void	TView::DragFeedback(const TDragInfo&, const Point&, Boolean)	{ }
 TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a0df4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
+
+
+// ROM 0x0009e528 GetClipboardDataBits__5TViewFP5TRect
+// The picture a clipping keeps of what was dragged out of the view: a
+// 'bits binary the size of the rectangle, with the view drawn into it.
+// A heap too full for the binary answers nil, and the clipping does
+// without a picture.
+Ref
+TView::GetClipboardDataBits(Rect* bounds)
+{
+	PixelMap map;
+	RefVar bits(TClipboard::AllocateClipboardBits(*bounds, &map));
+	if (NOTNIL(bits))
+	{
+		LockRefArg(bits);
+		map.baseAddr = (Ptr) BinaryData(bits);
+		TBits into;
+		newton_try
+		{
+			into.Constructor(map);
+			into.BeginDrawing(*(Point*) bounds);
+			DrawDragData(*bounds);
+		}
+		newton_catch_all
+		{
+			into.RestorePort();
+			UnlockRefArg(bits);
+			rethrow;
+		}
+		end_try;
+		into.RestorePort();
+		UnlockRefArg(bits);
+	}
+	return bits;
+}
+
+
+// ROM 0x002673e8 DoMoveCommand__5TViewF6TPoint
+// The view moved by the point, through the application so that the move
+// can be undone (aeMoveData's two index parameters are the offsets).
+void
+TView::DoMoveCommand(Point by)
+{
+	RefVar cmd(MakeCommand(aeMoveData, this, kNoParameter));
+	CommandSetIndexParameter(cmd, 0, by.h);
+	CommandSetIndexParameter(cmd, 1, by.v);
+	gApplication->DispatchCommand(cmd);
+}
 
 
 // ROM 0x0026a1c8 BuildKeyChildList__5TViewFP9TViewListlT2

@@ -30,6 +30,12 @@
 #include "UnitPublic.h"
 #include "Recognizer.h"	// gInhibitPopup
 #include "NewtonTime.h"
+#include "ClipboardView.h"
+#include "SoundSettings.h"
+
+// frames/Munger.cpp and frames/ArrayNatives.cpp
+void	ArrayInsert(RefArg array, RefArg element, long index);
+long	LSearch(RefArg array, RefArg item, RefArg start, RefArg test, RefArg key);
 
 Boolean	gNewtIsAliveAndWell = false;		// ROM 0x0c105510 gNewtIsAliveAndWell (set by TNewtWorld::PreMain once the boot is over; a program without the newt world sets it itself)
 
@@ -116,12 +122,14 @@ TRootView::~TRootView()
 // aeKeyboardConnected: the parameter says whether a keyboard is
 // connected - the hard key map cleared when it is, the caret's view
 // asked to give it up when not; the popup synced, the root dirtied.
-// NOT YET RECONSTRUCTED: the root view's other commands (the hiliter,
-// the clipboard, ...).
+// aeAddData and aeRemoveData are how a clipping's two views go on and
+// off the root (AddClipboard, RemoveClipboard) - they are what keeps the
+// two arrays.  NOT YET RECONSTRUCTED: the hiliter (aeHiliteClick).
 Boolean
 TRootView::RealDoCommand(RefArg cmd)
 {
-	if (CommandID(cmd) == aeKeyboardConnected)
+	long id = CommandID(cmd);
+	if (id == aeKeyboardConnected)
 	{
 		gKeyboardConnected = CommandParameter(cmd) != 0;
 		if (!gKeyboardConnected)
@@ -131,6 +139,76 @@ TRootView::RealDoCommand(RefArg cmd)
 		if (fPopup != nil)
 			fPopup->Sync();
 		Dirty(nil);
+		return true;
+	}
+	if (id == aeAddData)
+	{
+		// the view built from the frame parameter, then put at the front
+		// of the icons or of the clipboards by which class it is
+		TView* view = AddView(RefVar(CommandFrameParameter(cmd)));
+		long depth = 1;
+		RefVar wanted(GetPreference(RSSYMclipboarddepth));
+		if (ISINT(wanted) && RINT(wanted) > 0)
+			depth = RINT(wanted);
+		Boolean isClipboard = view->DerivedFrom(clClipboard);
+		RefStruct& list = isClipboard ? fClipboards : fClipboardIcons;
+		if (ISNIL(list))
+			list = AllocateArray(RSSYMarray, 0);
+		ArrayInsert(list, view->fContext, 0);
+		long count = Length(list);
+		if (depth < count)
+		{
+			// one clipping too many: the last goes (its other half goes
+			// with it, because removing either removes the pair)
+			count--;
+			TView* last = GetView(RefVar(GetArraySlotRef(list, count)));
+			gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, last->fId)));
+		}
+		if (count > 1)
+		{
+			// the one behind it is dimmed: an icon by its fill pattern,
+			// a clipboard by giving up the picture it drew
+			if (isClipboard)
+			{
+				TView* behind = GetView(RefVar(GetArraySlotRef(list, 1)));
+				SetFrameSlot(behind->fContext, RSSYMbits, RefVar());
+			}
+			else
+			{
+				TView* behind = GetView(RefVar(GetArraySlotRef(list, 1)));
+				behind->SetValue(RefVar(RSSYMviewfillpattern), RefVar(MAKEINT(0x10999999)));
+			}
+		}
+		if (isClipboard)
+			FPlaySound(RefVar(), RefVar(Raddsound));
+		else
+			view->Dirty(nil);
+		gApplication->PostUndoCommand(aeRemoveData, this, view->fId);
+		return true;
+	}
+	if (id == aeRemoveData)
+	{
+		TView* view = FindID(CommandParameter(cmd));
+		Boolean isClipboard = view->DerivedFrom(clClipboard);
+		if (!isClipboard && (view->fFlags & vClipboard) == 0)
+			return true;						// not part of a clipping
+		long id2 = view->fId;
+		RefVar data(view->DataFrame());
+		SetFrameSlot(data, RSSYMbits, RefVar());
+		RefStruct& list = isClipboard ? fClipboards : fClipboardIcons;
+		ArrayRemove(list, view->fContext);
+		if (Length(list) == 0)
+			list = NILREF;
+		else if (!isClipboard)
+		{
+			// the icon that has come to the front is undimmed again
+			TView* front = GetView(RefVar(GetArraySlotRef(list, 0)));
+			front->SetValue(RefVar(RSSYMviewfillpattern), RefVar(MAKEINT(0x10000000)));
+		}
+		RemoveChildView(view);
+		RefVar undo(MakeCommand(aeAddData, this, id2));
+		CommandSetFrameParameter(undo, data);
+		gApplication->PostUndoCommand(undo);
 		return true;
 	}
 	return TView::RealDoCommand(cmd);
@@ -1468,12 +1546,111 @@ TRootView::SetPopup(TView* view, Boolean set)
 }
 
 
-// ROM 0x001b5994 GetClipboard__9TRootViewFP5TView
-// The clipboard the view is (NOT YET RECONSTRUCTED: no clipboards).
-TView*
-TRootView::GetClipboard(TView* /*view*/)
+/*------------------------------------------------------------------------------
+	T h e   c l i p b o a r d s
+
+	A clipping is two views on the root - the clipboard that holds the
+	dragged items and the icon the pen picks it up by - kept as two
+	parallel arrays of their contexts, front first.  They are put on and
+	taken off by the ordinary aeAddData/aeRemoveData commands, so that
+	both go on the undo stack; RealDoCommand is what maintains the
+	arrays.  `clipboardDepth` (a preference, one by default) says how
+	many clippings are kept: adding one past the depth removes the last.
+------------------------------------------------------------------------------*/
+
+// ROM 0x001b37fc AddClipboard__9TRootViewFRC6RefVarT1
+// The clipping put on the root: one aeAddData command dispatched twice,
+// with the clipboard's template as its frame parameter and then the
+// icon's.  Each addition posts its own undo.
+void
+TRootView::AddClipboard(RefArg clipboard, RefArg icon)
 {
+	RefVar cmd(MakeCommand(aeAddData, this, kNoParameter));
+	CommandSetFrameParameter(cmd, clipboard);
+	gApplication->DispatchCommand(cmd);
+	CommandSetFrameParameter(cmd, icon);
+	gApplication->DispatchCommand(cmd);
+}
+
+
+// ROM 0x001b3870 RemoveClipboard__9TRootViewFv
+// The front clipping thrown away: the clipboard first, then its icon.
+void
+TRootView::RemoveClipboard(void)
+{
+	if (NOTNIL(fClipboards) && Length(fClipboards) > 0)
+	{
+		TView* view = GetView(RefVar(GetArraySlotRef(fClipboards, 0)));
+		if (view != nil)
+			gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, view->fId)));
+	}
+	if (NOTNIL(fClipboardIcons) && Length(fClipboardIcons) > 0)
+	{
+		TView* view = GetView(RefVar(GetArraySlotRef(fClipboardIcons, 0)));
+		if (view != nil)
+			gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, view->fId)));
+	}
+}
+
+
+// ROM 0x001b58bc GetClipboard__9TRootViewFv
+TView*
+TRootView::GetClipboard(void)
+{
+	if (NOTNIL(fClipboards) && Length(fClipboards) > 0)
+		return GetView(RefVar(GetArraySlotRef(fClipboards, 0)));
 	return nil;
+}
+
+
+// ROM 0x001b5928 GetClipboardIcon__9TRootViewFv
+TView*
+TRootView::GetClipboardIcon(void)
+{
+	if (NOTNIL(fClipboardIcons) && Length(fClipboardIcons) > 0)
+		return GetView(RefVar(GetArraySlotRef(fClipboardIcons, 0)));
+	return nil;
+}
+
+
+// ROM 0x001b5994 GetClipboard__9TRootViewFP5TView
+// The clipboard whose icon this view is: the icons are searched for its
+// context and the clipboard at the same index answered.
+TView*
+TRootView::GetClipboard(TView* icon)
+{
+	if (NOTNIL(fClipboardIcons) && Length(fClipboardIcons) > 0)
+	{
+		RefVar start(MAKEINT(0));
+		long index = LSearch(fClipboardIcons, icon->fContext, start, RefVar(RSSYM_3D), RefVar());
+		if (index >= 0)
+			return GetView(RefVar(GetArraySlotRef(fClipboards, index)));
+	}
+	return nil;
+}
+
+
+// ROM 0x001b5a64 GetClipboardIcon__9TRootViewFP10TClipboard
+// And the other way round: the icon of this clipboard.
+TView*
+TRootView::GetClipboardIcon(TClipboard* clipboard)
+{
+	if (NOTNIL(fClipboards) && Length(fClipboards) > 0)
+	{
+		RefVar start(MAKEINT(0));
+		long index = LSearch(fClipboards, clipboard->fContext, start, RefVar(RSSYM_3D), RefVar());
+		if (index >= 0)
+			return GetView(RefVar(GetArraySlotRef(fClipboardIcons, index)));
+	}
+	return nil;
+}
+
+
+// ROM 0x001b5b54 GetClipboardIcons__9TRootViewFv
+Ref
+TRootView::GetClipboardIcons(void)
+{
+	return gRootView->fClipboardIcons;
 }
 
 

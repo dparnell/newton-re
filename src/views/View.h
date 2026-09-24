@@ -241,7 +241,7 @@ public:
 	virtual Boolean	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* slop, Boolean copy, const TDragInfo& dragInfo, const Rect* dragBounds);	// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3
 	virtual void	DrawDragBackground(const Rect& bounds, Boolean copy);
 	virtual void	DrawDragData(const Rect& bounds);
-	virtual Boolean	GetClipboardDataBits(Rect* bounds);
+	virtual Ref		GetClipboardDataBits(Rect* bounds);				// ROM 0x0009e528 GetClipboardDataBits__5TViewFP5TRect - the picture a clipping keeps of the view
 	virtual Boolean	AcceptDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a12c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
 	virtual Boolean	Drop(RefArg dropTypes, RefArg dropData, Point* dropPt);	// ROM 0x0009cbc4 Drop__5TViewFRC6RefVarT1P6TPoint (viewDropScript)
 	virtual Boolean	DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy);	// ROM 0x000a13e4 DropMove__5TViewFRC6RefVarRC6TPointT2Uc (viewDropMoveScript)
@@ -319,6 +319,7 @@ public:
 	void		JustifyBounds(Rect* bounds);							// ROM 0x0026415c JustifyBounds__5TViewFP5TRect
 	void		DejustifyBounds(Rect* bounds);							// ROM 0x00264a54 DejustifyBounds__5TViewFP5TRect
 	void		RecalcBounds(void);										// ROM 0x002652a4 RecalcBounds__5TViewFv
+	void		DoMoveCommand(Point by);									// ROM 0x002673e8 DoMoveCommand__5TViewF6TPoint - the view moved through an undoable aeMoveData
 	void		WriteBounds(const Rect& bounds);						// ROM 0x00263f28 WriteBounds__5TViewFRC5TRect
 	void		Move(const Point& delta);								// ROM 0x00263e1c Move__5TViewFRC6TPoint
 	void		Offset(Point delta);									// ROM 0x0025fec4 Offset__5TViewF6TPoint

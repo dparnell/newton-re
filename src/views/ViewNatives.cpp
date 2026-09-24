@@ -2363,19 +2363,6 @@ FTieViews(RefArg rcvr, RefArg name, RefArg a, RefArg b)
 }
 
 
-// ROM 0x001b583c FGetClipboardIcon
-// GetClipboardIcon(): the context of the view that draws the clipboard's
-// icon on the screen, or nil.
-//
-// NOT YET RECONSTRUCTED: the clipboards (TRootView's fClipboardIcon is
-// never set), so this is always nil.
-static Ref
-FGetClipboardIcon(RefArg /*rcvr*/)
-{
-	return gRootView->fClipboardIcon;
-}
-
-
 // ROM 0x000e309c GetGlobalRect__FP5TRectRC6RefVarN42
 // The four numbers a script gives, as a rectangle in the screen's
 // coordinates rather than the view's.
@@ -2691,7 +2678,6 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FHideCaret", (void*) FHideCaret, 0);
 	RegisterNativeFunction("FSetCaretInfo", (void*) FSetCaretInfo, 2);
 	RegisterNativeFunction("FHiliteOwner__FRC6RefVar", (void*) FHiliteOwner, 0);
-	RegisterNativeFunction("FGetClipboardIcon", (void*) FGetClipboardIcon, 0);
 	RegisterNativeFunction("FUnionPoint", (void*) FUnionPoint, 3);
 	RegisterNativeFunction("FBubbleArraySlot", (void*) FBubbleArraySlot, 3);
 	RegisterNativeFunction("FGetStylesOfRange", (void*) FGetStylesOfRange, 3);

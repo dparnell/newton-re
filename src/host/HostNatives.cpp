@@ -18,6 +18,7 @@
 #include "Locale.h"
 #include "Meetings.h"
 #include "PickView.h"
+#include "ClipboardView.h"
 #include "DrawShape.h"
 #include "Soups.h"
 #include "Text.h"
@@ -60,6 +61,7 @@ RegisterAllNatives(void)
 	RegisterViewNatives();
 	RegisterShapeNatives();
 	RegisterPickNatives();
+	RegisterClipboardNatives();
 	RegisterKeyboardNatives();
 	RegisterApplicationNatives();
 

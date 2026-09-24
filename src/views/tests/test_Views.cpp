@@ -25,6 +25,8 @@
 #include "CICCodec.h"
 #include "GaugeView.h"
 #include "PickView.h"
+#include "ClipboardView.h"
+#include "DragDrop.h"
 #include "DrawShape.h"
 #include "Commands.h"
 #include "Keyboard.h"
@@ -5529,6 +5531,167 @@ TestReplaceCharacter()
 }
 
 
+// The clipboard: a clipping made by hand from a script, the two views
+// it comes to on the root, the icon's geometry, what a drag off it is
+// offered, and the clipping thrown away again.
+static void
+TestClipboard()
+{
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	Eval("userConfiguration.userFont := espy12");
+	Eval("userConfiguration.clipboardDepth := 1");
+
+	// where CalcIconBounds puts an icon: the point at the middle of its
+	// top edge, clamped to the application area
+	Rect box;
+	Point where;
+	where.h = 80;
+	where.v = 40;
+	TClipboard::CalcIconBounds(40, 12, where, &box);
+	EXPECT(box.left == 60 && box.right == 100 && box.top == 40 && box.bottom == 52);
+	where.h = 10;						// too near the left edge: against it
+	TClipboard::CalcIconBounds(40, 12, where, &box);
+	EXPECT(box.left == 0 && box.right == 40);
+	where.h = 155;						// and too near the right
+	TClipboard::CalcIconBounds(40, 12, where, &box);
+	EXPECT(box.left == 120 && box.right == 160);
+	where.h = 80;
+	where.v = 95;						// too far down: against the bottom
+	TClipboard::CalcIconBounds(40, 12, where, &box);
+	EXPECT(box.top == 88 && box.bottom == 100);
+
+	// the question that says a drag was let go on the background
+	Rect area;
+	SetRect(&area, 0, 0, 100, 160);		// top, left, bottom, right
+	Point inside;
+	inside.h = 80;
+	inside.v = 50;
+	EXPECT(!PointOnClipboard(inside, area, RefVar()));
+	Point past;
+	past.h = 200;
+	past.v = 50;
+	EXPECT(PointOnClipboard(past, area, RefVar()));
+	// ... but not over the button bar's own edge, which is drawn on top
+	EXPECT(!PointOnClipboard(past, area, RefVar(RSSYMright)));
+
+	// nothing on the clipboard to begin with
+	EXPECT(gRootView->GetClipboard() == nil && gRootView->GetClipboardIcon() == nil);
+	EXPECT(ISNIL(Eval("GetClipboard()")) && ISNIL(Eval("GetClipboardIcon()")));
+
+	// a clipping put there by hand, as a script does
+	Eval("SetClipboard({label: \"a note\", types: [['text]], "
+		 "data: [[{text: \"hello\", bounds: {left: 0, top: 0, right: 50, bottom: 20}}]], "
+		 "bounds: {left: 10, top: 10, right: 60, bottom: 30}, xy: {x: 80, y: 40}})");
+	Refresh();
+	TView* clipboard = gRootView->GetClipboard();
+	TView* icon = gRootView->GetClipboardIcon();
+	EXPECT(clipboard != nil && icon != nil);
+	if (clipboard == nil || icon == nil)
+		return;
+	EXPECT(clipboard->DerivedFrom(clClipboard) && clipboard->ClassID() == clClipboard);
+	EXPECT(!icon->DerivedFrom(clClipboard) && (icon->fFlags & vClipboard) != 0);
+	// the two arrays line up, so each finds the other
+	EXPECT(gRootView->GetClipboard(icon) == clipboard);
+	EXPECT(gRootView->GetClipboardIcon((TClipboard*) clipboard) == icon);
+	EXPECT(RINT(Eval("Length(GetClipboardIcon())")) == 1);
+	// the clipping kept the rectangle its items came from
+	EXPECT(((TClipboard*) clipboard)->fBounds.right - ((TClipboard*) clipboard)->fBounds.left == 50);
+	// and the icon is a paragraph of the label inside the application area
+	EXPECT(icon->viewBounds.left >= 0 && icon->viewBounds.right <= 160);
+	EXPECT(icon->viewBounds.right > icon->viewBounds.left && icon->viewBounds.bottom > icon->viewBounds.top);
+	EXPECT(Ustrcmp(GetCString(RefVar(GetProtoVariable(icon->fContext, RSSYMtext, nil))), Uni("a note")) == 0);
+	// and it is on the screen: the label is drawn somewhere in it
+	{
+		long ink = 0;
+		for (long y = icon->viewBounds.top; y < icon->viewBounds.bottom; y++)
+			for (long x = icon->viewBounds.left; x < icon->viewBounds.right; x++)
+				if (Pixel(x, y) != 0)
+					ink++;
+		EXPECT(ink > 0);
+	}
+
+	// what a script reads back
+	RefVar back(Eval("GetClipboard()"));
+	EXPECT(IsFrame(back));
+	EXPECT(Ustrcmp(GetCString(RefVar(GetFrameSlotRef(back, RSSYMlabel))), Uni("a note")) == 0);
+	EXPECT(RINT(Eval("Length(GetClipboard().types)")) == 1);
+	EXPECT(NOTNIL(Eval("GetClipboard().types[0][0] = 'text")));
+	EXPECT(RINT(Eval("GetClipboard().bounds.right")) == 60);
+
+	// what a drag off it would be given: the items by index, each with
+	// the types it was made with, and the data of the type that is asked
+	{
+		TDragInfo info(0);
+		((TClipboard*) clipboard)->GetClipboardDataInfo(&info);
+		EXPECT(info.Count() == 1);
+		EXPECT(RINT(RefVar(info.GetItemDragRef(0))) == 0);
+		EXPECT(EQRef(info.GetItemIndType(0, 0), RSSYMtext));
+		RefVar data(clipboard->GetDropData(RefVar(RSSYMtext), RefVar(MAKEINT(0))));
+		EXPECT(IsFrame(data) && Ustrcmp(GetCString(RefVar(GetFrameSlotRef(data, RSSYMtext))), Uni("hello")) == 0);
+		// a type the clipping does not carry has no data
+		EXPECT(ISNIL(clipboard->GetDropData(RefVar(RSSYMstyles), RefVar(MAKEINT(0)))));
+	}
+
+	// a second clipping pushes the first off, because the depth is one
+	Eval("SetClipboard({label: \"another\", types: [['text]], data: [[{text: \"bye\"}]], "
+		 "bounds: {left: 0, top: 0, right: 20, bottom: 20}, xy: {x: 20, y: 60}})");
+	Refresh();
+	EXPECT(RINT(Eval("Length(GetClipboardIcon())")) == 1);
+	EXPECT(Ustrcmp(GetCString(RefVar(GetFrameSlotRef(RefVar(Eval("GetClipboard()")), RSSYMlabel))), Uni("another")) == 0);
+	EXPECT(gRootView->GetClipboard() != clipboard);
+
+	// the icon put back against the edges of a screen turned round
+	{
+		TView* second = gRootView->GetClipboardIcon();
+		SetFrameSlot(second->fContext, RSSYMpin, RefVar(MAKEINT(4)));		// against the right
+		Eval("vars.displayParams.buttonBarPosition := nil");
+		EXPECT(NOTNIL(FReOrientLabelForm(second->fContext)));
+		EXPECT(second->viewBounds.right == 160);
+	}
+
+	// and thrown away
+	Eval("SetClipboard(nil)");
+	Refresh();
+	EXPECT(gRootView->GetClipboard() == nil && gRootView->GetClipboardIcon() == nil);
+	EXPECT(ISNIL(Eval("GetClipboard()")) && ISNIL(Eval("GetClipboardIcon()")));
+
+	// a drag let go on the background becomes a clipping: the source's
+	// drop data is what the clipping keeps, and - the drag not being a
+	// copy - the source is asked to give the item up
+	Eval("carriedOff := nil");
+	ViewOf("ctxCB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, "
+		   "viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
+		   "viewClickScript: func(unit) begin :DragAndDrop(unit, :GlobalBox(), nil, nil, "
+		   "[{types: ['text], dragRef: \"carried off\", label: \"a clipping\"}]); true end, "
+		   "viewGetDropDataScript: func(dropType, dragRef) {text: dragRef}, "
+		   "viewDropRemoveScript: func(dragRef) begin carriedOff := dragRef; true end})");
+	Refresh();
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(40, 55, 0);
+	HostTabletQueuePenMove(80, 60);
+	HostTabletQueuePenMove(120, 88);			// the background
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	gRecognition.Idle();
+	TView* dropped = gRootView->GetClipboard();
+	EXPECT(dropped != nil && gRootView->GetClipboardIcon() != nil);
+	EXPECT(NOTNIL(Eval("StrEqual(carriedOff, \"carried off\")")));
+	if (dropped != nil)
+	{
+		// the item's data went in, and the picture of the view with it
+		RefVar data(dropped->GetDropData(RefVar(RSSYMtext), RefVar(MAKEINT(0))));
+		EXPECT(IsFrame(data) && Ustrcmp(GetCString(RefVar(GetFrameSlotRef(data, RSSYMtext))), Uni("carried off")) == 0);
+		EXPECT(NOTNIL(GetProtoVariable(dropped->fContext, RSSYMbits, nil)));
+		// the drag's own label named the icon
+		EXPECT(Ustrcmp(GetCString(RefVar(GetProtoVariable(gRootView->GetClipboardIcon()->fContext, RSSYMtext, nil))), Uni("a clipping")) == 0);
+	}
+	Eval("SetClipboard(nil); RemoveView(GetRoot(), ctxCB)");
+	Refresh();
+	EXPECT(gRootView->GetClipboard() == nil && gRootView->GetClipboardIcon() == nil);
+	Eval("userConfiguration.clipboardDepth := nil");
+}
+
+
 int
 main()
 {
@@ -5551,6 +5714,7 @@ main()
 	RegisterStrokeBundleNatives();
 	RegisterInkNatives();
 	RegisterPickNatives();
+	RegisterClipboardNatives();
 	RegisterKeyboardNatives();
 	RegisterRecConfigNatives();
 	RegisterWordListNatives();
@@ -5568,6 +5732,9 @@ main()
 		SetFrameSlot(fonts, RefVar(FamilyNumToSym(i)), family);
 	}
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfonts, fonts);
+	// ... and vars.stdForms, the stationery a template without a
+	// viewClass names (the clipping's icon is a 'para)
+	SetFrameSlot(RefVar(gVarFrame), RSSYMstdforms, RefVar(Rstdforms));
 	// an ink word asks the user's preferences for its scale and its pen;
 	// on a Newton the boot has set them long before anything makes one
 	{
@@ -5663,6 +5830,7 @@ main()
 		TestInkInRichString();
 		TestWordInfo();
 		TestInsertItems();
+		TestClipboard();
 	}
 	newton_catch_all
 	{

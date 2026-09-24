@@ -20,6 +20,7 @@
 #include "GaugeView.h"
 #include "KeyboardView.h"
 #include "MonthView.h"
+#include "ClipboardView.h"
 #include "PickView.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -138,10 +139,11 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // RECONSTRUCTED: the subclasses - every class gets a TView (the ROM makes
 // TEditView, TPolygonView, TMathExpView,
 // TMathOpView, TMathLineView, TRemoteView, TPrintView, TMeetingView,
-// TSliderView, TListView, TClipboard, TOutline, THelpOutline, TXView for
+// TSliderView, TListView, TOutline, THelpOutline, TXView for
 // classes 75-108, and -8501 for any other); TTextView (97, 98),
 // TPictureView (75, 76), TParagraphView (81), TDataView (83), TPickView
-// (89-91), TGaugeView (92), TKeyboardView (79) and TMonthView (80) are
+// (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80) and
+// TClipboard (101) are
 // here.
 TView*
 BuildView(TView* parent, RefArg context)
@@ -160,7 +162,6 @@ BuildView(TView* parent, RefArg context)
 	case clMeetingView:
 	case clSliderView:
 	case clListView:
-	case clClipboard - 1: case clClipboard:
 	case clOutline - 3: case clOutline - 2: case clOutline - 1: case clOutline:
 	case clHelpOutline - 1: case clHelpOutline:
 	case clTXView:
@@ -171,6 +172,9 @@ BuildView(TView* parent, RefArg context)
 		break;
 	case clMonthView:
 		view = new TMonthView;
+		break;
+	case clClipboard - 1: case clClipboard:
+		view = new TClipboard;
 		break;
 	case clTextView - 1: case clTextView:
 		view = new TTextView;

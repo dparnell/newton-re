@@ -1867,13 +1867,94 @@ NOT YET: the busy box the ROM holds off while the pen is on the keyboard,
 and the `keySound` it plays, both of which live outside the view system
 (as they do for `TGaugeView`'s tracking).
 
+## The clipboard (`views/ClipboardView.h`)
+
+A *clipping* is what the Newton makes when something is dragged out of a
+view and let go on the background.  It is two views put on the root
+together: the **clipboard** (`TClipboard`, class 101, 0x0009edfc-
+0x000a0b78) which holds the dragged items and draws the picture taken of
+them, and its **icon**, a small paragraph of the clipping's label that
+sits at the edge of the application area and is what the pen picks the
+clipping up by.  The root view keeps them as two parallel arrays of
+contexts, front first, so the icon at index *i* belongs to the clipboard
+at index *i* (`TRootView` +0x54 and +0x58).
+
+`TClipboard::NewClipboard` (0x0009f188) makes one.  Every item of the
+drag is asked of the source view for its data of each of its types
+(`GetDropData`), and, when the source answers nothing, of the item's own
+view; the data is made internal (it may be pointing into a store), given
+an empty `viewBounds` when it is `'text` without one (`CheckViewBounds`
+0x0009cb00), and moved out of the source view's coordinates
+(`OffsetBoundsRef` 0x0009ca58).  The types go into a `types` array and
+the data into a parallel `data` array of arrays, which is what the
+clipping's context carries alongside the `bounds` the items came from
+and a `bits` picture of them - `TView::GetClipboardDataBits`
+(0x0009e528) draws the view into a `'bits` binary through a `TBits`.
+A heap too full for the binary is not an error: the clipping is made
+without a picture, and `DrawDragData` (0x000a0454) frames its outline in
+gray instead of drawing it.
+
+`CreateLabelForm` (0x0009fcf0) makes the icon.  The label is the first
+item of the drag that has one, or the `text` of the first `'text` item's
+data, or the ROM's own string `"data"` (magic pointer 63); tabs and
+returns in it become spaces so that it stays on one line, and it is cut
+at 50 pixels with an ellipsis (`TruncateLabel` 0x0009f84c, which measures
+the characters one at a time until the fiftieth pixel).
+`CalcIconDimensions` (0x000a08a4) then asks how big the paragraph has to
+be - the label's advance rounded to a pixel, and the tallest ascent plus
+the deepest descent of the style and of every ink word in it - and
+`CalcIconBounds` (0x000a0a50) places it, with the point at the middle of
+its top edge, clamped to the application area.
+
+The icon's `pin` slot records which edges of the application area it has
+come to rest against (1 left, 2 top, 4 right, 8 bottom).  That is what
+`FReOrientLabelForm` (0x0009f978) - a C function the form carries as its
+`ReOrientToScreen` - uses to put it back against the same edges when the
+screen is turned round.  The button bar's own edge is the exception: an
+icon pinned to the edge the bar is on is moved to the far side instead,
+so that it does not end up underneath it.  The same asymmetry is in
+`PointOnClipboard` (0x0009e2b0), which is the question "was this drag let
+go on the background?" - a point past the application area's edge counts,
+unless that edge is the button bar's, because the bar is drawn on top of
+the application area rather than beside it.
+
+Both views go on and come off the root through the ordinary
+`aeAddData`/`aeRemoveData` commands (`TRootView::AddClipboard` 0x001b37fc
+dispatches one command twice, with each template in turn as its frame
+parameter), so each half is separately undoable.  `TRootView::
+RealDoCommand` is what maintains the arrays: the new context is inserted
+at the front of the icons or of the clipboards by which class the view
+turned out to be, the `clipboardDepth` preference (one by default) says
+how many clippings are kept and the last is removed when there is one too
+many, and the clipping that has just been covered is dimmed - an icon by
+its `viewFillPattern`, a clipboard by giving up the picture it drew.
+Adding a clipboard plays `addSound`; removing either half removes its
+partner, because `TClipboard::EndDrag` dispatches an `aeRemoveData` for
+both.
+
+Picking a clipping up again is `DragFromClipboard` (0x000a0380): the
+clipping's own items are made into a `TDragInfo` whose dragRefs are their
+indices (`GetClipboardDataInfo` 0x000a02d8; `GetDropData` looks the index
+up again and deep-clones the answer, so the clipping keeps its own copy
+whatever the taker does with it) and dragged from where the picture is
+drawn (`CalcDataBitsBounds` 0x0009f6dc, which lays the items' rectangle at
+the icon's top left and pushes it back inside the application area when
+it hangs off the right or the bottom).  A second stroke within 80 ticks
+of the last is a *copy* rather than a move, which is how a clipping is
+left behind by tapping it twice.
+
+NOT YET: the pen-tracked drag itself (`TView::Drag`, the icon following
+the pen) - the host's simplified `DragAndDrop` tracks the pen and takes a
+drop with no target as "let go on the background", which is what makes
+the clipping; `MoveIcon` (0x0009f568) has no caller for the same reason.
+
 ## Not yet
 
 The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the drag icon
-and the clipboard (`TClipboard`), the sounds, `SyncScroll`, the popup and
+the pen follows, the sounds, `SyncScroll`, the popup and
 modal dialog machinery, the other subclasses (`TListView`, `TEditView`,
 ...), the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).

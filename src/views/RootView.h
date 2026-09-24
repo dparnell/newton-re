@@ -64,6 +64,8 @@ struct IdlingView
 	TView*		fView;
 };
 
+class TClipboard;
+
 class TRootView : public TView
 {
 public:
@@ -89,7 +91,15 @@ public:
 	void		CaretViewGone(void);									// ROM 0x001b1d34 CaretViewGone__9TRootViewFv
 	Boolean		ViewContainsCaretView(TView* view);						// ROM 0x00265508 ViewContainsCaretView__FP5TView
 	void		SetPopup(TView* view, Boolean set);						// ROM 0x001b56d8 SetPopup__9TRootViewFP5TViewUc
-	TView*		GetClipboard(TView* view);								// ROM 0x001b5994 GetClipboard__9TRootViewFP5TView
+	// the clipboards and their icons: two parallel arrays of contexts,
+	// front first (the icon at index i belongs to the clipboard at i)
+	void		AddClipboard(RefArg clipboard, RefArg icon);				// ROM 0x001b37fc AddClipboard__9TRootViewFRC6RefVarT1 - the two views added as children (undoable)
+	void		RemoveClipboard(void);									// ROM 0x001b3870 RemoveClipboard__9TRootViewFv - the front clipping and its icon taken off
+	TView*		GetClipboard(void);										// ROM 0x001b58bc GetClipboard__9TRootViewFv - the front clipboard
+	TView*		GetClipboardIcon(void);									// ROM 0x001b5928 GetClipboardIcon__9TRootViewFv - the front icon
+	TView*		GetClipboard(TView* icon);								// ROM 0x001b5994 GetClipboard__9TRootViewFP5TView - the clipboard the icon belongs to
+	TView*		GetClipboardIcon(TClipboard* clipboard);				// ROM 0x001b5a64 GetClipboardIcon__9TRootViewFP10TClipboard - the icon the clipboard belongs to
+	Ref			GetClipboardIcons(void);								// ROM 0x001b5b54 GetClipboardIcons__9TRootViewFv - the icons' contexts, front first
 	// the key view and the caret
 	void		SetKeyView(TView* view, long offset, long length, Boolean noSelection);	// ROM 0x001b3bb4 SetKeyView__9TRootViewFP5TViewlT2Uc
 	void		SetKeyViewSelection(TView* view, RefArg selection, Boolean check);	// ROM 0x001b3ae4 SetKeyViewSelection__9TRootViewFP5TViewRC6RefVarUc
@@ -145,7 +155,8 @@ public:
 	long			fIdlersHighWater;	// +0x48
 	IdlingView*		fIdlingViews;		// +0x4c  the views whose Idle is running
 	TView*			fPopup;				// +0x50  the popup view
-	RefStruct		fClipboardIcon;		// +0x54  (NOT YET)
+	RefStruct		fClipboardIcons;	// +0x54  the clipping icons' contexts, front first (nil when there are none)
+	RefStruct		fClipboards;		// +0x58  their clipboards' contexts, one for one
 	Boolean			fDirtyFlag;			// +0x5c  a gesture or a command to the children changed something (the ROM's event loop looks)
 	RefStruct		fKeyboards;			// +0x60  the registered on-screen keyboards: [context, flags] pairs (flags: 1 shows the modifiers, 2 hears viewCaretChangedScript, 4 active) - the registry NOT YET
 	Boolean			fPassthruKeyboard;	// +0x64  a keyboard connected through a soft keyboard (ConnectPassthruKeyboard)
