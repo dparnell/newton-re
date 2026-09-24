@@ -5,12 +5,14 @@
 # on, the ranges that record which run of characters each style, line
 # and paragraph covers, the attributes a run carries (TXAttributes.h),
 # the chunked character storage (TXChars.h) and the byte streams text
-# and chunk tables travel through (TXStream.h), and the rulers a
-# paragraph is laid out against (TXRuler.h).
+# and chunk tables travel through (TXStream.h), the rulers a paragraph
+# is laid out against (TXRuler.h) and the object ranges that say which
+# run of the text points at which of them (TXObjectRange.h).
 add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
     TXChars.cpp
+    TXObjectRange.cpp
     TXRuler.cpp
     TXStream.cpp
 )

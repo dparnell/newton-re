@@ -13,3 +13,8 @@ target_link_libraries(test_TXRuler PRIVATE text memory)
 target_compile_definitions(test_TXRuler PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME text.TXRuler COMMAND test_TXRuler)
 set_tests_properties(text.TXRuler PROPERTIES TIMEOUT 120)
+
+add_executable(test_TXObjectRange test_TXObjectRange.cpp)
+target_link_libraries(test_TXObjectRange PRIVATE text memory)
+add_test(NAME text.TXObjectRange COMMAND test_TXObjectRange)
+set_tests_properties(text.TXObjectRange PROPERTIES TIMEOUT 120)

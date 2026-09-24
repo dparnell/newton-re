@@ -139,7 +139,7 @@ class TXRanges : public TXLongTagArray
 public:
 					TXRanges(unsigned char elementSize, int chunk);	// ROM 0x00230b8c __ct__8TXRangesFUci
 
-	NewtonErr		FreeData(Boolean compact);						// ROM 0x00230bdc FreeData__8TXRangesFUc - every range dropped
+	virtual NewtonErr FreeData(Boolean compact);					// ROM 0x00230bdc FreeData__8TXRangesFUc - every range dropped (the vtable's third slot)
 
 	TXOffset		GetRangeEnd(long index) const;					// ROM 0x00230c0c GetRangeEnd__8TXRangesCFl
 	TXOffset		GetRangeStart(long index) const;				// ROM 0x00230c30 GetRangeStart__8TXRangesCFl

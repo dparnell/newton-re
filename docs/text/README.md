@@ -336,6 +336,75 @@ a `'tabs` attribute in an update list is not an array but a
 the other tabs come from. Twenty bytes, which is exactly what a
 `TXAttrValues` entry holds.
 
+## The object ranges (`text/TXObjectRange.h`)
+
+This is where the rulers and the styles meet the text. A
+`TXObjectRange` (0x0024055c) is a `TXRanges` whose element is a range
+end **and** a `TXAttrObject*`: range *i* covers the characters from
+element *i*-1's end to element *i*'s, and points at the object that says
+how they are shown. A document's styles are one of these and its rulers
+are another, and the same thirty-odd functions serve both.
+
+Everything in it turns on two ideas.
+
+**Equal objects are shared and neighbours are run together.**
+`SearchObject` walks the ranges for an object `IsEqual` to the one being
+put in, and `MapObject` (0x002412f0) is what every write goes through:
+it answers the object already here that matches, or the object itself,
+or a copy of it, and it remembers the last one it answered
+(`fLastObject`) because a run of text is usually all of one style.
+`UpdateRangesBounds` (0x00240714) then compares the stretch's object
+with the ranges either side and, when one of them already holds it,
+simply lets that range grow over the stretch instead of making a new
+one. A document that has been edited back and forth therefore does not
+end up with a hundred ranges all saying the same thing.
+
+**An object may stand for itself.** `GetObjFlags() & 4` says the object
+is a thing in the text rather than a way of showing the characters — an
+embedded picture. Such an object is never merged with a neighbour,
+never shared with another range, and is changed *where it lies* rather
+than copied first.
+
+### Putting an object on a stretch
+
+`ReplaceRangeObj` (0x00240924) is the one way in.
+`UpdateRangesBounds` pulls the ranges either side back off the stretch —
+cutting a range short at its start, or, when the stretch is wholly
+inside one range, making the part before it a range of its own — and
+says through `firstIndex`/`lastIndex` which ranges the stretch now takes
+up. If it answers *true* a neighbour has already absorbed the stretch
+and there is nothing to do but take the covered ranges out; otherwise
+one range is written over or a new one inserted, and the covered ones
+are removed.
+
+`ReplaceRange` (0x00240b20) is the same with the text changing length:
+`oldLen` characters at `at` become `newLen`, and everything after them
+moves by the difference (`AddToElements`). A nil object means the new
+text takes whatever was already there. `ClearRange` (0x002409f4) is a
+removal: whichever neighbour can be stretched over the hole is, and if
+none can — the one before stands for itself, or there is none — the
+ranges the removal covered are taken out.
+
+The other `ReplaceRange` (0x00240cf0) takes a whole run of ranges from
+another `TXObjectRange`, which is how a paste keeps the styles of what
+was copied. Its fast arm copies the elements straight across and then
+moves their ends to where they now stand; it takes it that the stretch
+covers whole ranges, and does not check.
+
+`UpdateRangeObjects` (0x00240e58) changes every object a stretch points
+at by a `TXAttrValues` list: each one is copied first — because it may
+be shared with text outside the stretch — changed, and then mapped back,
+which is how two runs that end up saying the same thing become one.
+
+### The walk and the pool
+
+`TXObjectIterator` (0x00240f60) walks the ranges from an offset, keeping
+the object, where its range starts and how much of it is left.
+`TXRegisteredObjects` (0x002359e4) is the small pool of objects a
+document shares — `Textension::RegisterRuler` and `RegisterRun` put them
+there. It is a fixed array of **six** and `Add` does not look at whether
+there is room.
+
 ## Not yet reconstructed
 
 `TXRulerRange` (the rulers a document's paragraphs actually point at)

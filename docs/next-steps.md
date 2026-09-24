@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-24 (commit `cc5672c`)
+## State at 2026-09-24 (commit `bafad2f`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 80/80.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 81/81.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9199 citations, 0 bad;
-  5055 of 16671 functions (30.32%).
+- `analysis/coverage.py build/MP2x00US --check`: 9225 citations, 0 bad;
+  5081 of 16671 functions (30.48%).
 - `analysis/natives.py`: 847 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -212,7 +212,11 @@ The last run of work closed, in order:
   Then the rulers (`text/TXRuler.h`): `TXTab` and the sorted
   `TXTabsArray`, `TXBasicRuler` and `TXAdvancedRuler` over the attribute
   object, the blanks and tab widths a line is laid out with, the line
-  spacing, and the ruler frame a script sees.
+  spacing, and the ruler frame a script sees.  Then the object ranges
+  (`text/TXObjectRange.h`), where the rulers and the styles meet the
+  text: which run of characters points at which attribute object, the
+  sharing of equal objects and the running-together of neighbours that
+  hold one, `TXObjectIterator` and the six-slot pool of shared objects.
 
   NOT YET in the streams: the factory's large-binary arm (it wants
   `FLBAllocCompressed` and large binaries, which are not reconstructed;
@@ -220,9 +224,12 @@ The last run of work closed, in order:
   of it).  NOT YET in the rulers: `TXRulerRange` (the rulers a
   document's paragraphs actually point at, which wants the runs) and the
   ruler's user interface (`TXRulerUI` and its three bars).  Above them,
-  nothing yet: `Textension` and the runs, the formatter and the lines,
-  and `TXView` with its forty-one `FTX...` natives.  The next piece is
-  `Textension` and the runs - `docs/text/README.md` states the order.
+  nothing yet.  The next piece is the runs themselves - `TXRun` (the
+  attribute object a piece of text points at, with `TXTextRun` and
+  `TXGraphicsRun` under it), `TXRunRange` and `TXRulerRange` over the
+  object ranges, and `TXStyledText`, which holds the characters and the
+  two ranges together.  Then `Textension`, the formatter and the lines,
+  and `TXView` with its forty-one `FTX...` natives.
 
 ## Next: what is left of the natives, and why
 
