@@ -74,6 +74,8 @@ GENERATED = [
                       "--doc", "docs/recognition/grammar.md"]),
     ("bpnet",
      "bpnet.py", ["{build}", "-o", "src/recognition/BPNetTables.cpp"]),
+    ("render",
+     "render.py", ["{build}", "-o", "src/recognition/RenderTables.cpp"]),
     ("mmumap",
      "mmumap.py", ["{build}", "--doc", "docs/memory/mmu-map.md"]),
     ("factorysoups",

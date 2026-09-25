@@ -15,6 +15,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "FixedMath.h"
+#include "Render.h"
 
 #include <stdio.h>
 
@@ -828,4 +829,53 @@ SLSort(RosStrokeList* list)
 		last = strokes[i]->fIndex;
 		i = (short) (i + 1);
 	}
+}
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	Drawn, for the classifier to look at.
+--------------------------------------------------------------------*/
+
+// ROM 0x001ffe70 StrokeDrawAAAt
+// The stroke drawn into the renderer: every point scaled, offset, and
+// then multiplied up by the renderer's scale, because the bitmap
+// behind the grey grid is that many times bigger.  Rounding is by a
+// half before the shift down.  A stroke of one point is a dot.
+void
+StrokeDrawAAAt(const RosStroke* stroke, RenderAA* aa, Fixed x, Fixed y,
+			Fixed xScale, Fixed yScale)
+{
+	long shift = aa->fShift;
+	Fixed px = FixedMultiply(stroke->fPoints[0].x, xScale) + x;
+	Fixed py = FixedMultiply(stroke->fPoints[0].y, yScale) + y;
+	if (stroke->fCount == 1)
+	{
+		long dx = (long) (((unsigned int) px << shift) + 0x8000) >> 16;
+		long dy = (long) (((unsigned int) py << shift) + 0x8000) >> 16;
+		RenderLine(aa->fRec, dx, dy, dx, dy);
+		return;
+	}
+	for (short i = 1; i < stroke->fCount; i++)
+	{
+		Fixed nx = FixedMultiply(stroke->fPoints[i].x, xScale) + x;
+		Fixed ny = FixedMultiply(stroke->fPoints[i].y, yScale) + y;
+		RenderLine(aa->fRec,
+				(long) (((unsigned int) px << shift) + 0x8000) >> 16,
+				(long) (((unsigned int) py << shift) + 0x8000) >> 16,
+				(long) (((unsigned int) nx << shift) + 0x8000) >> 16,
+				(long) (((unsigned int) ny << shift) + 0x8000) >> 16);
+		px = nx;
+		py = ny;
+	}
+}
+
+
+// ROM 0x001fff98 SLDrawAAAt
+void
+SLDrawAAAt(const RosStrokeList* list, RenderAA* aa, Fixed x, Fixed y,
+		Fixed xScale, Fixed yScale)
+{
+	for (short i = 0; i < list->fCount; i++)
+		StrokeDrawAAAt(list->fStrokes[i], aa, x, y, xScale, yScale);
 }

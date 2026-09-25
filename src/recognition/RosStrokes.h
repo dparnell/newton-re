@@ -121,6 +121,16 @@ RosStroke*	StrokeDeQuantize(const RosStroke* stroke, Fixed weight, Fixed toleran
 // of one.  What comes back is always a copy.
 RosStrokeList*	StrokePreprocess(RosStroke* stroke, Fixed smoothWeight, Fixed tolerance, short passes);	// ROM 0x002000f4 StrokePreprocess
 
+// Drawn into the engine's own renderer (`recognition/Render.h`),
+// scaled by `xScale`/`yScale` and offset by `x`/`y`, which is how a
+// piece of writing becomes the picture the classifier is shown.  A
+// stroke of one point is a dot.
+struct RenderAA;
+void		StrokeDrawAAAt(const RosStroke* stroke, RenderAA* aa, Fixed x, Fixed y,
+						Fixed xScale, Fixed yScale);	// ROM 0x001ffe70 StrokeDrawAAAt
+void		SLDrawAAAt(const RosStrokeList* list, RenderAA* aa, Fixed x, Fixed y,
+						Fixed xScale, Fixed yScale);	// ROM 0x001fff98 SLDrawAAAt
+
 RosStrokeList*	SLNew(void);									// ROM 0x00200a24 SLNew
 RosStrokeList*	SLCreate(short count, RosStroke* const* strokes);	// ROM 0x00200ab4 SLCreate
 // The array handed over rather than copied; a nil `bounds` asks for

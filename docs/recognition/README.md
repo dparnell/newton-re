@@ -2219,9 +2219,29 @@ a half), `StrokeCount`, `CapHeight`, `Height` and `Base` (where the
 writing sits against the line, moved up by a half and scaled by seven
 tenths so that sitting on the line reads about a third).
 
-The two that do the real work — `ImageSplatLimited`, which draws the
-strokes into a grid through the anti-aliased renderer `RenderAA*`, and
-`StrokePUD` — are NOT YET.
+**The picture.** `ImageSplatLimited` is the biggest group and it
+really does draw the writing: `recognition/Render.h` is the engine's
+own renderer, and it anti-aliases by **drawing big and counting**. A
+`RenderRec` is a one-bit bitmap with a pen made of eight pre-shifted
+stencils, one per position within a byte, so putting the pen down is
+an OR and never a shift; a `RenderAA` is one of those at four times
+the size with a byte-per-pixel grid beside it, and `RenderAAFlush`
+counts the set sub-pixels of each cell through a table (`rat0`..`rat3`
+answer, for each of the 256 byte values, what each output cell gains -
+a set sub-pixel is worth 15, so a four-by-four block comes to 240).
+So the 14 x 14 picture is drawn as a 56 x 56 bitmap with a pen four
+sub-pixels across, which is one cell of the grid.
+
+The scale is where the thought is. Each axis wants to fill the grid,
+but it is held to at most two and a half times life size and at most
+1.6 of what the line's own height would give — and then the two axes
+are held to within three times each other, which is what *Splat
+**Limited*** means: a lower-case `l` is not blown up into a
+letter-shaped smear, and an `m` is not squashed flat. With the scales
+settled the writing is centred in the grid and drawn.
+
+`StrokePUD`, the twenty-by-nine grid of where the pen went, is NOT
+YET.
 
 ### The bigram grammar (`recognition/ROMGrammar.cpp`)
 

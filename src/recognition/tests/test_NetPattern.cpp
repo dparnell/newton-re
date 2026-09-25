@@ -2,6 +2,7 @@
 // writing into the classifier's 384 inputs.
 #include "NetPattern.h"
 #include "RosEngine.h"
+#include "Render.h"
 #include "FixedMath.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
@@ -191,16 +192,80 @@ main()
 			EXPECT(cells[i] == 0x33);
 	}
 
+	// ---- the picture the classifier is shown ----
+	{
+		NetImagePatternizer* image = (NetImagePatternizer*) multi->fChildren[0];
+		EXPECT(image->fType == &NetPatternImageT);
+		EXPECT(image->fWidth == 14 && image->fHeight == 14);
+		EXPECT(image->fLimited == 1);
+		EXPECT(image->fInputs == net->fUnits);			// the first 196 inputs
+		// drawn at four times the size, with a pen four sub-pixels
+		// across, so the pen is one cell of the grid
+		EXPECT(image->fAA->fScale == 4);
+		EXPECT(image->fAA->fRec->fWidth == 56 && image->fAA->fRec->fHeight == 56);
+		EXPECT(image->fAA->fRec->fDotSize == 4);
+		EXPECT(image->fAA->fRec->fRowBytes == 7);
+
+		NetPattern* p = NetPatternCreate((NetPatternizer*) image);
+		// a stroke down the left of a tall thin box: the writing is
+		// scaled to fill the grid and centred in it
+		FPoint line[2];
+		line[0].x = F(10);	line[0].y = F(0);
+		line[1].x = F(10);	line[1].y = F(30);
+		RosStroke* stroke = StrokeCreate(2, line);
+		RosStroke* one[1];
+		one[0] = stroke;
+		RosStrokeList* writing = SLCreate(1, one);
+
+		image->fType->fSLToPat(net, writing, p, 0, F(30), F(30), 0, F(30), F(30), 0, 0, 0);
+		const UByte* grid = ((NetImagePattern*) p)->fPixels;
+		long ink = 0, most = 0, lit = 0;
+		for (long i = 0; i < 14 * 14; i++)
+		{
+			ink += grid[i];
+			if (grid[i] > most)
+				most = grid[i];
+			if (grid[i] != 0)
+				lit++;
+		}
+		// something was drawn, and a full cell is sixteen sub-pixels
+		// at fifteen apiece
+		EXPECT(ink > 0);
+		EXPECT(most <= 16 * kRenderSubPixelWeight);
+		EXPECT(most > 0);
+		// a vertical line fills about one column of the fourteen
+		EXPECT(lit >= 14 && lit <= 14 * 3);
+		// ... and it is drawn down the middle, because the writing is
+		// centred
+		long leftInk = 0, rightInk = 0;
+		for (long r = 0; r < 14; r++)
+			for (long c = 0; c < 14; c++)
+				(c < 7 ? leftInk : rightInk) += grid[r * 14 + c];
+		EXPECT(leftInk > 0 && rightInk > 0);
+
+		// ... and it reaches the net's first 196 inputs
+		for (long i = 0; i < 196; i++)
+			net->fUnits[i] = 0x5a;
+		NetPatternSetInput(p);
+		Boolean same = true;
+		for (long i = 0; i < 196; i++)
+			if (net->fUnits[i] != grid[i])
+				same = false;
+		EXPECT(same);		// a lit cell is 255 and an unlit one nought, so it copies
+
+		SLDestroy(writing, 1);
+		NetPatternDestroy(p);
+	}
+
 	// ---- and the whole set measures at once ----
 	{
-		// the two that do the real work answer nil patterns for now, so
-		// the Multi pattern is made but two of its children are missing
 		NetPattern* p = NetPatternCreate(all);
 		EXPECT(p != nil);
 		NetMultiPattern* mp = (NetMultiPattern*) p;
 		EXPECT(mp->fCount == 4);
+		EXPECT(mp->fChildren[0] != nil);				// the image
 		EXPECT(mp->fChildren[2] != nil && mp->fChildren[3] != nil);
-		EXPECT(mp->fChildren[0] == nil && mp->fChildren[1] == nil);	// NOT YET
+		EXPECT(mp->fChildren[1] == nil);				// StrokePUD is NOT YET
 		NetPatternDestroy(p);
 	}
 

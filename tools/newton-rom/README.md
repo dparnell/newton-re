@@ -69,6 +69,8 @@ tools/newton-rom/
                           -> src/recognition/ROMGrammar.cpp, docs/recognition/grammar.md
     bpnet.py              the handwriting engine's classifier net and its trained tables
                           -> src/recognition/BPNetTables.cpp
+    render.py             the handwriting engine's dot stencils and anti-aliasing tables
+                          -> src/recognition/RenderTables.cpp
     mmumap.py             the boot MMU map, and what a virtual address maps to
                           (--where 0x...) -> docs/memory/mmu-map.md
     recite.py             move src/'s `// ROM 0x...` citations from one ROM image to another

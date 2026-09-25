@@ -12,7 +12,7 @@ put the next one in.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 87/87.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9619 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9641 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
   the function total, which comes from the demangled symbols.)
@@ -326,10 +326,11 @@ little class system they are written in, the composite that holds one
 per input group, and the five scalars.  That established what the
 classifier is actually shown - the net's 384 inputs are a 14x14
 picture of the writing (196), a 20x9 grid of where the pen went (180),
-the aspect ratio (1) and the stroke count (7).  The two that do the
-real work are NOT YET: `ImageSplatLimited`, which draws the strokes
-into the grid through the anti-aliased renderer (`RenderAA*`, ROM
-0x001a69b0, about 0x750 bytes), and `StrokePUD` (0x820 bytes).
+the aspect ratio (1) and the stroke count (7).  `ImageSplatLimited` is done too, over the
+engine's own renderer (`recognition/Render.h`, `analysis/render.py`),
+which anti-aliases by drawing at four times the size into a one-bit
+bitmap and counting the set sub-pixels through a table.  `StrokePUD`
+(0x820 bytes, plus `ApproxFixATan2Cycles`) is the one left.
 
 Above them, all NOT YET: the segment layer (20 KB), the
 boxed-character recogniser (2.2 KB),

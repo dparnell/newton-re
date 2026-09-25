@@ -12,6 +12,7 @@
 */
 
 #include "NetPattern.h"
+#include "Render.h"
 #include "RosEngine.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
@@ -509,24 +510,208 @@ static void	NetPatternizerCountInitFromBP(NetPatternizer* self, BPNet* net, long
 
 #pragma mark -
 /*--------------------------------------------------------------------
-	NOT YET: the two that do the real work.
+	The image: the writing drawn into the grid.
 --------------------------------------------------------------------*/
 
+static void	NetPatternImageDestroy(NetPattern* self);
+
+// ROM 0x00132010 NetPatternizerImageInit
+static NetPatternizer*
+NetPatternizerImageInit(NetPatternizer* self, long limited, Fixed field14, UByte on, UByte off,
+						long width, long height, UByte* inputs)
+{
+	NetImagePatternizer* image = (NetImagePatternizer*) self;
+	image->fLimited = limited;
+	image->fField14 = field14;
+	image->fOn = on;
+	image->fOff = off;
+	image->fInputs = inputs;
+	image->fAA = nil;
+	image->fWidth = width;
+	image->fHeight = height;
+	image->fAA = RenderAACreate(width, height, kNetPatternImageShift);
+	image->fPixels = image->fAA->fPixels;
+	return self;
+}
+
+
 // ROM 0x00132078 NetPatternizerImageInitFromBP
-static void	NetPatternizerImageInitFromBP(NetPatternizer*, BPNet*, long, long)	{ }
-// ROM 0x00132108 NetPatternImageCreate
-static NetPattern*	NetPatternImageCreate(NetPatternizer*)			{ return nil; }
-// ROM 0x00132200 NetPatternImageSLToPat
-static void	NetPatternImageSLToPat(BPNet*, RosStrokeList*, NetPattern*, Fixed, Fixed, Fixed,
-								Fixed, Fixed, Fixed, Fixed, Fixed, Fixed)	{ }
-// ROM 0x0013243c NetPatternImageSetInput
-static void	NetPatternImageSetInput(NetPattern*)					{ }
-// ROM 0x001324e8 NetPatternImageDestroy
-static void	NetPatternImageDestroy(NetPattern*)						{ }
-// ROM 0x00132104 NetPatternizerImageGraph
-static void	NetPatternizerImageGraph(NetPatternizer*)				{ }
+// The grid is the group's own size - fourteen by fourteen for the
+// ROM's net - and it is drawn at four times that.
+static void
+NetPatternizerImageInitFromBP(NetPatternizer* self, BPNet* net, long group, long flag)
+{
+	const ULong* ngs = net->fNGS + group * 2;
+	NetPatternizerImageInit(self, flag, (Fixed) net->fArParams[31],
+						(UByte) (net->fArParams[6] & 0xff),
+						(UByte) (net->fArParams[5] & 0xff),
+						(long) (short) (ngs[0] >> 16),
+						// (the ROM takes the second measure with an
+						//  unaligned `ldr`, so it is the low half)
+						(long) (short) (ngs[0] & 0xffff),
+						net->fUnits + (((int) ngs[1]) >> 16));
+}
+
+
 // ROM 0x001320e4 NetPatternizerImageDestroy
-static void	NetPatternizerImageDestroy(NetPatternizer*)				{ }
+static void
+NetPatternizerImageDestroy(NetPatternizer* self)
+{
+	NetImagePatternizer* image = (NetImagePatternizer*) self;
+	if (image == nil || image->fAA == nil)
+		return;
+	// the patterns borrow the renderer's grid, so its own is put back
+	// before it is given away
+	image->fAA->fPixels = image->fPixels;
+	RenderAADestroy(image->fAA);
+	image->fAA = nil;
+}
+
+
+// ROM 0x00132104 NetPatternizerImageGraph
+static void	NetPatternizerImageGraph(NetPatternizer* /*self*/)		{ }
+
+
+// ROM 0x00132108 NetPatternImageCreate
+// A pattern of its own, with a grid of its own for the renderer to
+// fill in.
+static NetPattern*
+NetPatternImageCreate(NetPatternizer* self)
+{
+	NetImagePatternizer* image = (NetImagePatternizer*) self;
+	NetImagePattern* pattern = (NetImagePattern*) RosAllocate((long) sizeof(NetImagePattern));
+	pattern->fPixels = nil;
+	newton_try
+	{
+		NetPatternInit_((NetPattern*) pattern, self);
+		pattern->fPixels = (UByte*) RosAllocate(image->fHeight * image->fWidth);
+	}
+	cleanup
+	{
+		NetPatternImageDestroy((NetPattern*) pattern);
+	}
+	end_try;
+	return (NetPattern*) pattern;
+}
+
+
+// ROM 0x001324e8 NetPatternImageDestroy
+static void
+NetPatternImageDestroy(NetPattern* self)
+{
+	NetImagePattern* pattern = (NetImagePattern*) self;
+	if (pattern == nil)
+		return;
+	if (pattern->fPixels != nil)
+		DisposPtr((Ptr) pattern->fPixels);
+	DisposPtr((Ptr) pattern);
+}
+
+
+// ROM 0x00132200 NetPatternImageSLToPat
+// The writing drawn into the grid.
+//
+// The scale is where the work is.  Each axis wants to fill the grid,
+// but it is held to at most two and a half times life size and at
+// most 1.6 of what the line's own height would give - and then the two
+// axes are held to within three times each other, which is what
+// *SplatLimited* means: a lower-case `l` is not blown up into a
+// letter-shaped smear, and an `m` is not squashed flat.  With the
+// scales settled the writing is centred in the grid and drawn.
+static void
+NetPatternImageSLToPat(BPNet* net, RosStrokeList* strokes, NetPattern* self,
+					Fixed /*a4*/, Fixed down, Fixed across, Fixed /*a7*/,
+					Fixed altDown, Fixed altAcross, Fixed, Fixed, Fixed)
+{
+	if (self == nil)
+		return;
+	NetImagePattern* pattern = (NetImagePattern*) self;
+	NetImagePatternizer* image = (NetImagePatternizer*) self->fPatternizer;
+
+	// the renderer draws into this pattern's own grid
+	image->fAA->fPixels = pattern->fPixels;
+	RenderClear(image->fAA->fRec);
+
+	if ((net->fArParams[16] & 0xff) != 0)
+	{
+		across = altAcross;
+		down = altDown;
+	}
+
+	FRect bounds;
+	SLFindBounds(strokes, &bounds);
+	FPoint size;
+	FixedRectSize(&size, &bounds);
+
+	Fixed gridWidth = (Fixed) (int) ((unsigned int) image->fWidth << 16);
+	Fixed gridHeight = (Fixed) (int) ((unsigned int) image->fHeight << 16);
+	Fixed fitWidth = gridWidth - 0x00010000;
+	Fixed fitHeight = gridHeight - 0x00010000;
+
+	Fixed xScale = 0;
+	Fixed yScale = 0;
+	if (image->fLimited == 1)
+	{
+		Fixed most = (Fixed) net->fArParams[21];		// two and a half
+		Fixed factor = (Fixed) net->fArParams[22];		// one and six tenths
+
+		xScale = (fitWidth < FixedMultiply(most, size.x))
+				? FixedDivide(fitWidth, size.x) : most;
+		Fixed byLine = FixedMultiply(factor, FixedDivide(fitWidth, across));
+		if (byLine < xScale)
+			xScale = byLine;
+
+		yScale = (fitHeight < FixedMultiply(most, size.y))
+				? FixedDivide(fitHeight, size.y) : most;
+		byLine = FixedMultiply(factor, FixedDivide(fitHeight, down));
+		if (byLine < yScale)
+			yScale = byLine;
+
+		// neither axis more than three times the other
+		if (xScale * 3 < yScale)
+			yScale = xScale * 3;
+		if (yScale * 3 < xScale)
+			xScale = yScale * 3;
+	}
+
+	// centred in the grid
+	Fixed x = FixedMultiply(gridWidth - FixedMultiply(size.x, xScale), 0x8000)
+			- FixedMultiply(bounds.left, xScale);
+	Fixed y = FixedMultiply(gridHeight - FixedMultiply(size.y, yScale), 0x8000)
+			- FixedMultiply(bounds.top, yScale);
+	SLDrawAAAt(strokes, image->fAA, x, y, xScale, yScale);
+	RenderAAFlush(image->fAA);
+}
+
+
+// ROM 0x0013243c NetPatternImageSetInput
+// The grid copied into the net's inputs, straight when a lit cell is
+// 255 and an unlit one nought, and remapped into the two otherwise.
+static void
+NetPatternImageSetInput(NetPattern* self)
+{
+	NetImagePattern* pattern = (NetImagePattern*) self;
+	NetImagePatternizer* image = (NetImagePatternizer*) self->fPatternizer;
+	const UByte* src = pattern->fPixels;
+	const UByte* end = src + image->fHeight * image->fWidth;
+	UByte* dst = image->fInputs;
+
+	if (image->fOff != 0 || image->fOn != 0xff)
+		for (; src < end; src++)
+		{
+			Fixed scaled = FixedMultiply((Fixed) (*src * 0x101),
+										(Fixed) ((image->fOn - image->fOff) * 0x100));
+			*dst++ = (UByte) (image->fOff + (scaled >> 8));
+		}
+	else
+		for (; src < end; src++)
+			*dst++ = *src;
+}
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	NOT YET: the pen-up/down grid.
+--------------------------------------------------------------------*/
 
 // ROM 0x001330d4 NetPatternizerStrokeInitFromBP
 static void	NetPatternizerStrokeInitFromBP(NetPatternizer*, BPNet*, long, long)	{ }
@@ -552,7 +737,8 @@ static void	NetPatternizerStrokeDestroy(NetPatternizer*)			{ }
 
 // ROM 0x00374004 NetPatternImageT
 const NetPatternizerType	NetPatternImageT = {
-	"BasicImage", 0x28,
+	// (the ROM's instance is 0x28 bytes; a host pointer is twice as wide)
+	"BasicImage", (long) sizeof(NetImagePatternizer),
 	NetPatternizerImageInitFromBP, NetPatternImageCreate, NetPatternImageSLToPat,
 	NetPatternImageSetInput, NetPatternImageDestroy,
 	NetPatternizerImageGraph, NetPatternizerImageDestroy
@@ -609,7 +795,8 @@ const NetPatternizerType	NetPatternCountT = {
 
 // ROM 0x00374100 NetPatternStrokePUDT
 const NetPatternizerType	NetPatternStrokePUDT = {
-	"PenUpStroke", 0x18,
+	// (the ROM's is 0x18)
+	"PenUpStroke", (long) sizeof(NetStrokePatternizer),
 	NetPatternizerStrokeInitFromBP, NetPatternStrokeCreate, NetPatternStrokePUDSLToPat,
 	NetPatternStrokeSetInput, NetPatternStrokeDestroy,
 	NetPatternizerStrokeGraph, NetPatternizerStrokeDestroy

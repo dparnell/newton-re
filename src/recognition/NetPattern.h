@@ -43,12 +43,11 @@
 				*one-hot* over the group's cells (when it is more than
 				one), which is what `NetPatternSetNth` does.
 
-	NOT YET: the two that do the real work - `ImageSplatLimited`, which
-	draws the strokes into a grid through the anti-aliased renderer
-	(`RenderAA*`, ROM 0x001a69b0), and `StrokePUD`.  Neither the segment
-	layer nor the feature extraction is there either, so nothing drives
-	these from a real piece of writing yet; a stroke list drives them
-	directly, which is what the test does.
+	NOT YET: `StrokePUD`, the twenty-by-nine grid of where the pen
+	went.  Neither the segment layer nor the feature extraction is
+	there either, so nothing drives these from a real piece of writing
+	yet; a stroke list drives them directly, which is what the test
+	does.
 
 	Reconstructed from the MP2x00 US ROM (0x00131f5c-0x00133c7c); each
 	function cites its origin.
@@ -132,6 +131,45 @@ struct NetScalarPattern
 	UByte			fField04;
 	UByte			fPad05[3];
 	Fixed			fValue;			// +0x08  0 to 1
+};
+
+// The picture of the writing: a grey grid, drawn into a one-bit
+// bitmap four times the size and counted down.  The ROM's patternizer
+// is 0x28 bytes and its pattern 0x0c.
+const long	kNetPatternImageShift	= 2;		// four sub-pixels to a cell
+
+struct RenderAA;
+struct NetImagePatternizer
+{
+	const NetPatternizerType*	fType;
+	long			fRefCount;
+	RenderAA*		fAA;			// +0x08
+	UByte*			fPixels;		// +0x0c  the renderer's own grid
+	long			fLimited;		// +0x10  the two axes held within three times
+	Fixed			fField14;		// +0x14
+	long			fWidth;			// +0x18  fourteen, for the ROM's net
+	long			fHeight;		// +0x1c
+	UByte			fOn;			// +0x20  what a full cell reaches
+	UByte			fOff;			// +0x21  ... and an empty one
+	UByte			fPad22[2];
+	UByte*			fInputs;		// +0x24  where they go in the net
+};
+
+struct NetImagePattern
+{
+	NetPatternizer*	fPatternizer;
+	UByte			fField04;
+	UByte			fPad05[3];
+	UByte*			fPixels;		// +0x08  this pattern's own grid
+};
+
+// The pen-up/down grid: NOT YET, so only what every patternizer has.
+// The ROM's is 0x18 bytes and its pattern 0x14.
+struct NetStrokePatternizer
+{
+	const NetPatternizerType*	fType;
+	long			fRefCount;
+	long			fField08[4];	// +0x08 .. +0x14
 };
 
 // The composite: one child per input group of the net.  The ROM's
