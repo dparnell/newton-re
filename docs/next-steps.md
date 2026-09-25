@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-25 (commit after `a39d0c6`)
+## State at 2026-09-26 (commit after `0de3f1d`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 95/95.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 96/96.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9837 citations, 0 bad;
-  5131 of 16671 functions (30.78%).
+- `analysis/coverage.py build/MP2x00US --check`: 10054 citations, 0 bad;
+  5302 of 16671 functions (31.80%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll all open and draw.
@@ -25,6 +25,14 @@ put the next one in.
   `--headless`) anything written with the mouse is read the same way.
   `NEWTON_TRACE_ROSETTA=1` prints what went to the engine and the ten
   readings that came back.
+- **Shapes are recognised.**  With the Notepad set to shapes,
+  `src/host/demo/shapes.ns` draws a wobbly line, box, triangle and
+  circle and they come out level, square, clean and round
+  (`build/shapes.pgm`); `src/host/demo/snapping.ns` draws two circles
+  that come out in line and one size, and a line that starts on a box's
+  corner.  The whole shape domain is reconstructed
+  (`docs/recognition/README.md`, "The shape domain");
+  `NEWTON_TRACE_SHAPES=1` prints each classification.
 
 Writing travels the whole way from the tablet to a paragraph; the route
 across the five areas is `docs/ink/README.md`'s "From the pen to ink on
@@ -33,6 +41,13 @@ and again after the recogniser has finished.
 
 The last run of work closed, in order:
 
+- **the shape domain**, whole: the units and the grouping of strokes,
+  the key points and curves, circles and ellipses, the angle and length
+  clustering (`TTrend`), the equations a shape of straight sides is
+  written as and the fixed-point conjugate-gradient minimiser that
+  solves them, and the snapping onto shapes already on the page - with
+  `TPolygonView` and `TEditView::HandleShape` putting the result on the
+  page, and `SlopeFromAngle` in `toolbox/Angles.h`;
 - the word domain and the engine's side of it, the readings
   (`TWordList`), the try string, the word info frame, the word
   recogniser front, an ink-only engine and the `aeInkWord` command -

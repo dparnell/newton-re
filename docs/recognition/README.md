@@ -1031,9 +1031,8 @@ also what builds the dictionaries (`InitDictionaries`).  The Setup
 assistant asks for one as soon as a name has been typed: its Continue
 button runs `AddWordsToDict` -> `AddWord` -> `SetUpDictionary` ->
 `GetDictionary(31)`, which takes the `Length` of `vars.dictionaries` and
-throws if the list was never built.  The shape, word and WRec recognisers
-of level 2 are still NOT YET, so nothing else about the level is true
-yet.
+throws if the list was never built.  The shape recogniser of level 2 is
+installed before the word one, as the ROM does.
 
 ## The arbiter (`recognition/Arbiter.h`)
 
@@ -1620,8 +1619,7 @@ aeReplaceText command any other edit uses, with the styles
 (`HiliteText` 0x0016a490, three instructions that fall into `MakeHilite`
 and throw away the flag they were given).
 
-NOT YET: the shape and word domains above this one, nor
-`ArbitrateGraphicsWords`, the inker and ink
+NOT YET: `ArbitrateGraphicsWords`, the inker and ink
 (`StrokeUpdate`, the expired strokes' grouping and compression, the
 stroke bundles), the word list and dictionaries, the tablet driver, the
 journal, the caret popup.
@@ -1683,6 +1681,99 @@ unit's bounds is used for both ends instead.
 dictionaries' (`recognition/Dictionaries.h`, `recognition/Learning.h`):
 a reading the dictionaries know is put ahead of one they do not, and a
 reading that is an abbreviation has its expansion put in ahead of it.
+
+## The shape domain (`recognition/ShapeDomain.h`, `ShapeGeometry.h`)
+
+The shape domain ('GSHP', `TGeneralShapeDomain`) is what turns strokes
+drawn on a page set to shapes into clean lines, boxes, triangles,
+circles and ellipses.  Its units are `TGeneralShapeUnit`s, whose one
+interpretation's label is the shape's *type*:
+
+| type | shape | | type | shape |
+|---|---|---|---|---|
+| 0 | circle (params: centre, radius) | | 8 | line (angle: its direction) |
+| 1 | ellipse (centre, two radii, angle) | | 9 | triangle |
+| 2 | curve | | 10 | square (or rhombus) |
+| 3 | nothing to make a shape of | | 11 | rectangle (or parallelogram) |
+| 4 | closed polygon | | 12 | four sides, nothing to solve |
+| 5 | open polyline | | 13 | arc |
+| 6 | closed, with curves in it | | 15 | the classifier gave up |
+| 7 | open, with curves in it (and a unit still being grouped) | | | |
+
+A direction here is measured **from the vertical**: an angle near 0 or
+180 is upright, near 90 level.
+
+**Grouping** (`PreGroup`, `Group`, 0x00215fd4) joins strokes end to end
+into one shape, and measures where its two loose ends touch the shapes
+already on the page - the *context units*, which the domain asks the
+view under the writing for with command 0x14 (`aeGetContextUnits`,
+answered by `TEditView`) through `SetContextUnitRoutine`.  A
+`ShapeEnd` records what each end met: a side, a corner, an open end, a
+vertex of a closed shape, or a circle, and how far away it was.
+
+**Classify** (0x002113f0) is three stages:
+
+1. `FindKeyPoints` (`ShapeKeyPoints.cpp`): the outline cut into the
+   corners and the curved pieces between them - a recursive line
+   splitter (`RLineOut`), runs of close samples collapsed
+   (`RSmallDists`, `Collapser`), cubic Hermite pieces fitted where the
+   outline bends smoothly (`FindCubic1` and the `TV*` tangents), turned
+   into conic control points (`DoConic`), and the pieces joined
+   (`Connect`, `MeetEnds`).  The result is the shape's outline as
+   `GeneralPt`s, control points marked.
+2. A shape of straight sides has its **equations** found
+   (`ShapeEquations.cpp`): every side's length and direction clustered
+   (`TTrend`, `ShapeTrends.cpp`), the directions made into at most
+   eight `AngCluster`s whose members are the lengths, the axes put in,
+   perpendicular pairs made exact and pairs mirrored in a third made
+   symmetrical (`RelateAngs`); then equations over the edge vectors -
+   parallel sides at their lengths, lengths in a ratio of 1 or 2 made
+   exact, mirrored sides at equal angles, the shape closing
+   (`FamilyRotEqs`, `FamilyReflEqs`, `AlignRotEqs`, `DirSumEqs`).
+   They are **minimised**, not solved (`ShapeSolver.cpp`): each squared
+   into one quadratic form and the edge vectors moved by conjugate
+   gradients - Numerical Recipes' `frprmn`, `linmin`, `mnbrak` and
+   `dbrent` in 16.16 fixed point - then scaled to the box the shape
+   covered (`MapSolutionToBounds`) and put back (`PlugNewVals`).  A
+   shape with nothing to solve, or an open one, is squared up
+   directly, each side laid along its cluster.
+3. A closed curvy shape is tried as a **circle** and then an
+   **ellipse** (`FindEllipses`, `ShapeEllipses.cpp`): a least-squares
+   conic through the points, solved by `Decomp`/`Solve`.
+
+Then a shape that touched others is **snapped** onto them
+(`ShapeSnapping.cpp`): `SnapPtToLC` moves its ends onto the corners,
+sides and circles they met (`SnapPtToLine`, `SnapPtToCircle`, and
+`CircleTan`, which makes a line a tangent - to two circles at once when
+they are one size), and an upright square or circle that touched nothing
+is lined up with the squares and circles on the page and given their
+size (`GlobalTrends`).
+
+`TShapeRecognizer::HandleUnit` sends the view the `aeShape` command and
+`TEditView::HandleShape` puts the shape on the page as a polygon view
+(`views/PolygonView.h`).  The Notepad does shapes when its paper roll's
+`_recogSettings` has 128 in it (the default 864 is text, words and
+numbers); `src/host/demo/shapes.ns` draws a line, a box, a triangle and
+a circle and `src/host/demo/snapping.ns` two circles and a line off a
+box's corner.  `NEWTON_TRACE_SHAPES=1` prints each classification.
+
+ROM bugs kept (each commented where it is):
+
+* `NewCoeffs` allows 42 equations in a system with room for 41.
+* `FindEquations` keeps a shape's lengths and angles as two arrays of
+  15 one after the other, so a shape of more sides has its lengths run
+  into its angles; its side map has room for 15 sides where up to 17
+  get through (DEVIATION: the host block has room for 18).
+* `TTrend::Merge` never sets the merged cluster's value, so a value
+  looked up in it is answered with stack rubbish (DEVIATION: the host
+  answers the merged mean).
+* `GlobalTrends` skips a turned square without moving on, so every
+  shape after it is that square again.
+* The solver adds the quadratic's gradient only while the function is
+  above 2 in 16.16, and `Minimize1D` leaves `xmin` unset when it runs
+  out of steps (DEVIATION: nought on the host).
+* `RSmallDists` always marks its runs untrustworthy, and `TVSplSpl` sets
+  an end tangent to a point.
 
 ## The word domain (`recognition/WRecDomain.h`)
 
@@ -1960,8 +2051,8 @@ is upright and unmirrored and a "c" a little narrower than an "o" reads
 as "C" or "c" - the net is particular about its c's rather than broken.
 There is nothing to train: the recogniser protocol has no training
 calls, and the machine learns a writer's words only through the
-dictionaries (`recognition/Learning.h`).  Above the engine, the shape
-domain is NOT YET.
+dictionaries (`recognition/Learning.h`).  Beside the engine is the shape
+domain (below, "The shape domain").
 
 The rest of this section is the engine as it was read, bottom up.
 

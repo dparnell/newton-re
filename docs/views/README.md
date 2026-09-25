@@ -1555,7 +1555,11 @@ itself just below a paragraph (`TextContainingPoint` answering 2); and
 otherwise a paragraph where it was written.  So a second word written
 beside the first joins it: `src/host/demo/write.ns` leaves "ton to".
 
-NOT YET: `HandleShape`, `PlaybackInk`, `SetSelection`/`GetSelection`,
+`HandleShape` puts a recognised shape on the page as a `TPolygonView`
+(class 82, `views/PolygonView.h`: the shape's points as a `PolygonShape`,
+drawn as a polyline, an oval or arc in its box, or ink).
+
+NOT YET: `PlaybackInk`, `SetSelection`/`GetSelection`,
 drag and drop, `TrackScale`/`TrackDistort`, `GetValue`/`SetValue` and the
 drawing of the resize border itself (`DrawResizeBorder`, `TRect::Scale`
 over `gEditViewTransform`).
