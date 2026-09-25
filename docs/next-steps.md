@@ -483,20 +483,28 @@ and the slot.  `WordTailBlockAllocate`, `AddRef`/`DeleteRef`, the two
 `docs/curiosities.md` has the idea.  A ROM bug kept: `AddRef` does not
 answer early for the empty tail where `DeleteRef` does.
 
-Still NOT YET: **the search itself**, which is a Viterbi over the
-lattice - `SearchAllocateGlobals` (728 B, 37 columns of up to
-`MaxBestNodes` = 27 nodes each), `SearchBeginWord`,
-`SearchProcessSegment` (584 B), `SearchDoViterbStep` (1324 B),
-`SearchDoVStepFromNode` (2120 B), `SearchSegwordRememberNBest`,
-`SearchFindBest` (1108 B), `SearchBestWords`, `SearchSendWords`,
-`SearchEndWord`, `SearchCheckHashHit`, `GCBestNodes` - about 8 KB in
-all; and `CharModifyProbs` (1632 B), which leans on the classifier's
-probabilities with where and how big a piece of writing is.  The state
-block is already mapped: 37 columns of 0x94 bytes, each holding up to
-30 node pointers, a count at +0x78 and a word list at +0x90, with nodes
-of 16 bytes carrying a word-tail reference at +0x0a.  That is the next
-piece: the engine now measures, classifies and scores a word but still
-answers nothing.
+**The search's state and its life are done** (`recognition/Search.h`):
+`SearchAllocateGlobals`/`DeallocateGlobals`, `SearchAllocateReturnCache`,
+`SearchBeginWord`, `SearchEndWord`, `GCBestNodes` and
+`SearchCheckHashHit`.  Thirty-seven columns, one per stroke of the
+longest word plus one to start from, each holding up to `MaxBestNodes`
+(27) partial readings; `SearchBeginWord` puts one node in the first
+column holding the empty reading that every path grows from.
+`SearchCheckHashHit` turned out to be an **easter egg** - write one of
+eight words three times in a row and the recogniser answers the
+recognition team's names and addresses instead; `docs/curiosities.md`
+has it, and `analysis/romtable.py` grew a `strN` type for its two
+tables.
+
+Still NOT YET: **the Viterbi itself** - `SearchProcessSegment` (584 B),
+`SearchDoViterbStep` (1324 B), `SearchDoVStepFromNode` (2120 B),
+`SearchFindBest` (1108 B), `SearchBestWords` (328 B), `SearchSendWords`
+(616 B) and `SearchSegwordRememberNBest` (392 B), about 6 KB - and
+`CharModifyProbs` (1632 B), which leans on the classifier's
+probabilities with where and how big a piece of writing is.
+`SearchDoVStepFromNode` is the heart of it and the place to start: it
+is what grows one partial reading by one letter, against the grammar
+and the dictionaries.
 
 Also still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;

@@ -1640,3 +1640,43 @@ them to know it.
 
 *`src/recognition/WordTails.cpp`; `docs/recognition/README.md` has "How
 the search remembers what it has read".*
+
+## Write "Rosetta!" three times and the Newton answers back
+
+Buried in the Newton's lexical search - the part that decides which of
+the many possible readings of your handwriting is the one to return -
+there is a function called `SearchCheckHashHit` that has nothing to do
+with reading handwriting at all.
+
+Every reading, on its way out, is compared against eight words. Write
+one of them **three times in a row** and the recogniser hands back
+something else instead:
+
+| write it three times | and you get |
+|---|---|
+| `larryy` | The Doctor is on. |
+| `Larry` | larryy@apple.com |
+| `Mondello` | Fine food 408/257-2383 |
+| `Brandyn` | brandyn@brainstorm.com |
+| `Rosetta!` | Hey, that's me! |
+| `stafford` | bill |
+| `Les` | lesv@angeltech.com |
+| `lyon` | Richard |
+
+Those are the people who built the thing. Larry Yaeger wrote the
+Newton's *other* recogniser, the printing one; Brandyn Webb did the
+neural network; Bill Stafford, Les Vogel and Richard Lyon are the rest
+of the recognition group. "Mondello" is Larry Mondello from *Leave It
+to Beaver*, with what appears to be a restaurant's phone number. And
+`Rosetta!` - the code name of the cursive engine this is all part of -
+answers "Hey, that's me!".
+
+The counts are kept per word and every counter but the one just matched
+is cleared on each reading, so the three have to be consecutive: write
+`Rosetta!`, then anything else, then `Rosetta!` twice more and you get
+nothing. It also means the egg fires on the *reading*, not on the ink,
+so it works however you write it as long as the engine reads it right
+three times running.
+
+*`src/recognition/Search.cpp`; the two tables are generated into
+`SearchEasterEgg.cpp`.*

@@ -36,6 +36,7 @@
 #include "RosEngine.h"
 #include "Segment.h"
 #include "CharBox.h"
+#include "Search.h"
 #include "ROMDictionaryData.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"

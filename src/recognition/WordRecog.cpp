@@ -11,6 +11,7 @@
 #include "WordRecog.h"
 #include "NetPattern.h"
 #include "RosEngine.h"
+#include "Search.h"
 #include "Segment.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"

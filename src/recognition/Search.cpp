@@ -1,0 +1,363 @@
+/*
+	File:		recognition/Search.cpp
+
+	Contains:	The lexical search's state and its life - see Search.h.
+
+	Reconstructed from the MP2x00 US ROM; each function cites its
+	origin.
+*/
+
+#include "Search.h"
+#include "RosEngine.h"
+#include "RosStrokes.h"			// kRosettaMemoryTag
+#include "NewtonMemory.h"
+#include "NewtonExceptions.h"
+
+#include <string.h>
+
+
+// ROM 0x0c101a8c MaxBestNodes
+// How many readings a column keeps.  There is room for thirty.
+long	MaxBestNodes = 27;
+
+// ROM 0x0c101a90 (unnamed)
+Ptr		gSearchScratch = nil;
+// ROM 0x0c101a94 (unnamed)
+UByte	gSearchAllocated = 0;
+// ROM 0x0c101a98 (unnamed)
+// `MaxBestNodes` pointers into the block below, eight bytes apart.
+Ptr*	gSearchBest = nil;
+// ROM 0x0c101a9c (unnamed)
+SearchColumn**	gSearchColumns = nil;
+// ROM 0x0c101aa0 (unnamed)
+const BiGrammar*	gSearchGrammar = nil;
+// ROM 0x0c101aa4 (unnamed)
+// Room for the readings on the way back out: pointers into one block of
+// 0x24-byte entries.  It is grown when a caller wants more and never
+// shrunk.
+Ptr*	gSearchReturnCache = nil;
+// ROM 0x0c101aa8 (unnamed)
+long	gSearchReturnCacheSize = 0;
+// ROM 0x0c101aac (unnamed)
+Ptr		gSearchBestBlock = nil;
+// ROM 0x0c101ab0 (unnamed)
+SearchColumn*	gSearchColumnBlock = nil;
+// ROM 0x0c101ab4 (unnamed)
+// One block of nodes per column.
+Ptr*	gSearchNodeBlocks = nil;
+// ROM 0x0c101ab8 (unnamed)
+Ptr		gSearchScratchA = nil;
+// ROM 0x0c101abc (unnamed)
+Ptr		gSearchScratchB = nil;
+
+// ROM 0x0c101ac0 (unnamed)
+// How many times each of the eight has been written in a row.
+UByte	gSearchEasterCounts[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+// ROM 0x0c101ac8 (unnamed)
+long	gSearchEasterMatch = -1;
+
+extern const ExceptionName exOutOfStack;
+
+
+// ROM 0x001d0014 SearchAllocateGlobals
+// The whole of the search's memory, made once and kept for the life of
+// the engine: thirty-seven columns, a block of nodes for each of them,
+// and the scratch the Viterbi step works in.
+//
+// Everything is carved out of a handful of big blocks with arrays of
+// pointers into them, which is how the ROM avoids thirty-seven separate
+// allocations in the middle of reading a word.
+//
+// DEVIATION: the ROM's pointers are four bytes and the host's are
+// eight, so the arrays and the column block are sized from `sizeof`
+// rather than from the ROM's 0x94 and 0x1564.
+void
+SearchAllocateGlobals(void)
+{
+	if (gSearchAllocated != 0)
+		return;
+
+	newton_try
+	{
+		gSearchAllocated = 1;
+
+		gSearchNodeBlocks = (Ptr*) NewPtrClear(kSearchColumns * (long) sizeof(Ptr));
+		if (gSearchNodeBlocks == nil)
+			Throw(exOutOfStack, (void*) "", nil);
+		SetPtrName((Ptr) gSearchNodeBlocks, kRosettaMemoryTag);
+
+		gSearchBestBlock = (Ptr) RosAllocate(MaxBestNodes * 8);
+		gSearchBest = (Ptr*) RosAllocate(MaxBestNodes * (long) sizeof(Ptr));
+		for (long i = 0; i < MaxBestNodes; i++)
+			gSearchBest[i] = gSearchBestBlock + i * 8;
+
+		gSearchColumnBlock = (SearchColumn*) RosAllocate(
+							kSearchColumns * (long) sizeof(SearchColumn));
+		gSearchColumns = (SearchColumn**) RosAllocate(
+							kSearchColumns * (long) sizeof(SearchColumn*));
+		for (long i = 0; i < kSearchColumns; i++)
+		{
+			gSearchColumns[i] = &gSearchColumnBlock[i];
+			SearchNode* nodes = (SearchNode*) RosAllocate(
+								MaxBestNodes * (long) sizeof(SearchNode));
+			gSearchNodeBlocks[i] = (Ptr) nodes;
+			for (long j = 0; j < MaxBestNodes; j++)
+				gSearchColumns[i]->fNodes[j] = &nodes[j];
+		}
+
+		gSearchScratchA = (Ptr) RosAllocate(0x200);
+		gSearchScratchB = (Ptr) RosAllocate(0x200);
+		gSearchScratch = (Ptr) RosAllocate(0x100);
+	}
+	cleanup
+	{
+		SearchDeallocateGlobals();
+	}
+	end_try;
+}
+
+
+// ROM 0x001d02ec SearchDeallocateGlobals
+void
+SearchDeallocateGlobals(void)
+{
+	if (gSearchAllocated == 0)
+		return;
+	gSearchAllocated = 0;
+
+	if (gSearchNodeBlocks != nil)
+	{
+		for (long i = 0; i < kSearchColumns; i++)
+			if (gSearchNodeBlocks[i] != nil)
+			{
+				DisposPtr(gSearchNodeBlocks[i]);
+				gSearchNodeBlocks[i] = nil;
+			}
+		DisposPtr((Ptr) gSearchNodeBlocks);
+		gSearchNodeBlocks = nil;
+	}
+
+	if (gSearchColumns != nil)
+		DisposPtr((Ptr) gSearchColumns);
+	if (gSearchColumnBlock != nil)
+		DisposPtr((Ptr) gSearchColumnBlock);
+	if (gSearchBest != nil)
+		DisposPtr((Ptr) gSearchBest);
+	if (gSearchBestBlock != nil)
+		DisposPtr(gSearchBestBlock);
+	gSearchColumns = nil;
+	gSearchColumnBlock = nil;
+	gSearchBest = nil;
+	gSearchBestBlock = nil;
+
+	if (gSearchScratchA != nil)
+		DisposPtr(gSearchScratchA);
+	if (gSearchScratchB != nil)
+		DisposPtr(gSearchScratchB);
+	gSearchScratchA = nil;
+	gSearchScratchB = nil;
+	if (gSearchScratch != nil)
+		DisposPtr(gSearchScratch);
+	gSearchScratch = nil;
+
+	if (gSearchReturnCache != nil)
+	{
+		DisposPtr(gSearchReturnCache[0]);
+		DisposPtr((Ptr) gSearchReturnCache);
+		gSearchReturnCache = nil;
+	}
+	gSearchReturnCacheSize = 0;
+
+	// (the ROM has `WordTailDeallocateGlobals` inlined here)
+	WordTailDeallocateGlobals();
+}
+
+
+// ROM 0x001cea78 SearchAllocateReturnCache
+// Room for `count` readings on the way back out.  It only ever grows:
+// a word that wanted thirty leaves the room there for the next one.
+void
+SearchAllocateReturnCache(long count)
+{
+	if (count <= gSearchReturnCacheSize)
+		return;
+	if (gSearchReturnCache != nil)
+	{
+		DisposPtr(gSearchReturnCache[0]);
+		DisposPtr((Ptr) gSearchReturnCache);
+	}
+
+	gSearchReturnCache = (Ptr*) NewNamedPtr(count * (long) sizeof(Ptr),
+									kRosettaMemoryTag);
+	if (gSearchReturnCache == nil)
+		Throw(exOutOfStack, (void*) "", nil);
+
+	Ptr block = nil;
+	newton_try
+	{
+		block = (Ptr) RosAllocate(count * 0x24);
+	}
+	cleanup
+	{
+		DisposPtr((Ptr) gSearchReturnCache);
+		gSearchReturnCache = nil;
+	}
+	end_try;
+
+	for (long i = 0; i < count; i++)
+		gSearchReturnCache[i] = block + i * 0x24;
+	gSearchReturnCacheSize = count;
+}
+
+
+// ROM 0x001ce008 SearchBeginWord
+// A word about to be read.  Every column is emptied, and the first of
+// them is given one node with nothing read yet - the empty reading
+// that every path through the lattice grows from.
+void
+SearchBeginWord(const BiGrammar* grammar)
+{
+	gSearchGrammar = grammar;
+	if (gSearchAllocated == 0)
+		SearchAllocateGlobals();
+	WordListFreeAll();
+
+	for (long i = 1; i < kSearchColumns; i++)
+	{
+		gSearchColumns[i]->fCount = 0;
+		gSearchColumns[i]->fWords = nil;
+	}
+
+	SearchColumn* first = gSearchColumns[0];
+	first->fCount = 0;
+	first->fField79 = 0;
+	first->fField7a = 0;
+	first->fField88 = 0;
+	first->fField8c = 0;
+	first->fWords = nil;
+	for (long i = 0; i < 10; i++)
+		first->fField7b[i] = 0;
+
+	SearchNode* node = first->fNodes[first->fCount];
+	first->fCount = (UByte) (first->fCount + 1);
+	node->fField00 = 0;
+	node->fField04 = 0;
+	node->fField09 = 0;
+	node->fField08 = 0;
+	node->fTail = kWordTailNone;
+	node->fField0c = 0;
+}
+
+
+// ROM 0x001d0738 GCBestNodes
+// One column's readings given back: the word list it ended up with,
+// and the tail each of its nodes was holding.
+void
+GCBestNodes(SearchColumn* column)
+{
+	if (column->fWords != nil)
+	{
+		WordListDeleteRef(column->fWords);
+		column->fWords = nil;
+	}
+	if (column->fCount == 0)
+		return;
+	for (long i = 0; i < column->fCount; i++)
+		WordTailDeleteRef(column->fNodes[i]->fTail);
+}
+
+
+// ROM 0x001d0660 SearchEndWord
+// A word finished: the best readings that reach the end are gathered
+// into the first column's word list and handed to `proc`, and then
+// everything the search was holding goes back.
+void
+SearchEndWord(const BiGrammar* /*grammar*/, long strokes, SearchEndWordProc proc,
+			WordRecog* wr, char** words, UniChar* scores, long* flags,
+			long count)
+{
+	SearchSegwordRememberNBest(gSearchColumns[0], strokes, 0x00010000);
+	SearchSendWords(gSearchColumns[0]->fWords, strokes, proc, wr, words, scores,
+				flags, count);
+	for (long i = 0; i < kSearchColumns; i++)
+		GCBestNodes(gSearchColumns[i]);
+	GeoContextClearCache();
+	// (the ROM has `WordTailDeallocateGlobals` inlined here too)
+	WordTailDeallocateGlobals();
+}
+
+
+// ROM 0x001d0d90 SearchCheckHashHit
+// **An easter egg**, and the only thing in the engine that is not
+// about reading handwriting.
+//
+// Every reading on its way out is compared against eight words.  Write
+// one of them three times in a row and the engine answers something
+// else instead - the addresses and names of the people who built the
+// Newton's handwriting recognition, and one restaurant.  `Rosetta!`
+// answers "Hey, that's me!".
+//
+// The counts are kept per word and every one but the matching word is
+// cleared on each reading, so the three have to be consecutive.  Note
+// that the whole `kSearchEasterWords` table is walked even after a
+// match, and the counter is bumped for *every* entry that compares
+// equal - which is harmless, because the eight are distinct.
+void
+SearchCheckHashHit(char** word)
+{
+	if (word == nil)
+		return;
+	if (*word == nil)
+		return;
+
+	gSearchEasterMatch = -1;
+	for (long i = 0; i < 8; i++)
+		if (strcmp(kSearchEasterWords[i], *word) == 0)
+		{
+			gSearchEasterCounts[i] = (UByte) (gSearchEasterCounts[i] + 1);
+			gSearchEasterMatch = i;
+		}
+
+	if (gSearchEasterMatch != -1 && gSearchEasterCounts[gSearchEasterMatch] > 2)
+	{
+		*word = (char*) kSearchEasterReplies[gSearchEasterMatch];
+		gSearchEasterMatch = -1;
+	}
+
+	// everything but the word just seen starts again
+	long keep = gSearchEasterMatch;
+	for (long i = 0; i < 8; i++)
+		if (i != keep)
+			gSearchEasterCounts[i] = 0;
+}
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	The search itself.  NOT YET: the Viterbi step that walks the
+	lattice, the gathering of the best paths at the end, and the
+	scoring that ties the classifier, the grammar and the dictionaries
+	together - about 6 KB in seven functions.
+--------------------------------------------------------------------*/
+
+// ROM 0x001ce830 SearchProcessSegment
+void
+SearchProcessSegment(const BiGrammar* /*grammar*/, Fixed* /*probs*/, Fixed* /*scratch*/,
+				long /*index*/, RosSegment* /*segment*/, Fixed /*confidence*/,
+				Boolean /*endsWord*/, char* /*tryString*/)
+{
+}
+
+// ROM 0x001cf920 SearchSegwordRememberNBest
+void
+SearchSegwordRememberNBest(SearchColumn* /*column*/, long /*strokes*/, Fixed /*weight*/)
+{
+}
+
+// ROM 0x001d03f8 SearchSendWords
+void
+SearchSendWords(WordList* /*list*/, long /*strokes*/, SearchEndWordProc /*proc*/,
+			WordRecog* /*wr*/, char** /*words*/, UniChar* /*scores*/, long* /*flags*/,
+			long /*count*/)
+{
+}

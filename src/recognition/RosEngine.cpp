@@ -180,10 +180,12 @@ BiGSliceNew(short capacity)
 
 // ROM 0x000ffd60 LEquiesant
 void	LEquiesant(void)									{ }
+// ROM 0x000d9cc8 GeoContextClearCache
+// Three numbers the geometry context caches about the piece it was
+// last asked about; the rest of `GeoContext*` is NOT YET.
+void	GeoContextClearCache(void)							{ }
 // ROM 0x000d9ce4 GeoCQuiesence
 void	GeoCQuiesence(void)									{ }
-// ROM 0x001d02ec SearchDeallocateGlobals
-void	SearchDeallocateGlobals(void)						{ }
 
 // ROM 0x0011343c ListZap
 void	ListZap(void)											{ }
@@ -598,16 +600,3 @@ CharModifyProbs(const FRect* /*bounds*/, long /*strokes*/, UByte /*hasDot*/,
 }
 
 
-// The lexical search.  NOT YET: this is where the readings actually
-// come from - the segments' probabilities walked against the grammar
-// and the dictionaries to find the likeliest paths through the lattice.
-// ROM 0x001ce008 SearchBeginWord
-void	SearchBeginWord(const BiGrammar* /*grammar*/)			{ }
-// ROM 0x001ce830 SearchProcessSegment
-void	SearchProcessSegment(const BiGrammar* /*grammar*/, Fixed* /*probs*/,
-				Fixed* /*scratch*/, long /*index*/, RosSegment* /*segment*/,
-				Fixed /*confidence*/, Boolean /*endsWord*/, char* /*tryString*/)	{ }
-// ROM 0x001d0660 SearchEndWord
-void	SearchEndWord(const BiGrammar* /*grammar*/, long /*strokes*/,
-				SearchEndWordProc /*proc*/, WordRecog* /*wr*/, char** /*words*/,
-				UniChar* /*scores*/, long* /*flags*/, long /*count*/)	{ }

@@ -2916,6 +2916,63 @@ Nothing in the engine ever adds a reference to nothing - the first
 character of a reading has no tail to hold on to - so it has never
 mattered, and `test_WordTails` notes where the engine sidesteps it.
 
+### The lexical search (`recognition/Search.h`)
+
+The segment layer hands up a lattice of candidate letters and the
+classifier says what each of them might be. Neither decides anything.
+The lexical search is what does: a **Viterbi** that walks the lattice
+from left to right keeping the best few partial readings at each point,
+scored by the classifier, the grammar and the dictionaries together.
+
+Its state is thirty-seven **columns** - one per stroke of the longest
+word the engine will read, and one to start from - and each column
+holds up to `MaxBestNodes` (27, with room for 30) nodes. A node is a
+partial reading that reaches this point: what it cost, and a word tail
+for the text so far. Those tails are reference counted and shared,
+which is what makes holding twenty-seven of them at each of
+thirty-six positions affordable.
+
+`SearchAllocateGlobals` makes the lot once and keeps it for the life of
+the engine, carved out of a handful of big blocks with arrays of
+pointers into them - the ROM will not allocate in the middle of reading
+a word. `SearchBeginWord` empties every column and puts one node in the
+first, holding the empty reading that every path grows from.
+`SearchEndWord` gathers the best paths, hands them to the word
+recogniser and gives everything back. (DEVIATION: the arrays and the
+column block are sized from `sizeof` on the host, a host pointer being
+twice the ROM's.)
+
+Still NOT YET: the search itself - `SearchProcessSegment`,
+`SearchDoViterbStep`, `SearchDoVStepFromNode`, `SearchFindBest`,
+`SearchBestWords`, `SearchSendWords` and
+`SearchSegwordRememberNBest`, about 6 KB.
+
+#### Write it three times
+
+`SearchCheckHashHit` looks at every reading on its way out and compares
+it against eight words. Write one of them **three times in a row** and
+the engine answers something else instead:
+
+| write | and it answers |
+|---|---|
+| `larryy` | The Doctor is on. |
+| `Larry` | larryy@apple.com |
+| `Mondello` | Fine food 408/257-2383 |
+| `Brandyn` | brandyn@brainstorm.com |
+| `Rosetta!` | Hey, that's me! |
+| `stafford` | bill |
+| `Les` | lesv@angeltech.com |
+| `lyon` | Richard |
+
+Those are the people who built the Newton's handwriting recognition,
+one restaurant, and the engine answering to its own name. The counts
+are kept per word and every one but the word just seen is cleared on
+each reading, so the three really do have to be consecutive.
+
+`analysis/romtable.py` grew a `strN` type for the two tables, which are
+arrays of fixed-width strings laid out in the ROM rather than arrays of
+pointers.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

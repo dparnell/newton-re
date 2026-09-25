@@ -12,7 +12,9 @@ most data as code, so no class check is made).  A table the debug symbols do
 not name is given its address instead, as NAME@ADDR - the name is then ours
 and the citation says `(unnamed)`, which is how coverage.py expects an
 unnamed thing to be cited.  TYPE is u8, u16, u32, i8,
-i16 or i32 (default u32; the ROM is big-endian), or cstr: a table of
+i16 or i32 (default u32; the ROM is big-endian), strN: a table of
+fixed-width N-byte strings laid out one after another in the ROM and
+padded with noughts (a COUNT is required), or cstr: a table of
 pointers to C strings in the ROM, emitted as `const char*` literals (a 0
 pointer becomes nil).  COUNT defaults to the number of elements between
 the symbol and the next symbol after it, which is right when tables follow
@@ -120,6 +122,31 @@ def main(argv=None) -> int:
             name, _, where = name.partition("@")
             given_address = int(where, 0)
         typ = parts[1] if len(parts) > 1 and parts[1] else "u32"
+        if typ.startswith("str") and typ[3:].isdigit():
+            stride = int(typ[3:])
+            if given_address is not None:
+                addr = given_address
+            elif name in by_name:
+                addr = by_name[name]
+            else:
+                print("error: no symbol %s (give its address as %s@0x...)" % (name, name), file=sys.stderr)
+                return 1
+            if len(parts) <= 2:
+                print("error: %s: a strN table needs a count" % name, file=sys.stderr)
+                return 1
+            count = int(parts[2], 0)
+            decls.append("extern const char\t%s[%d][%d];" % (name, count, stride))
+            lines = []
+            for i in range(count):
+                raw = read(addr + i * stride, stride)
+                text = raw.split(b"\0")[0].decode("latin-1")
+                escaped = text
+                for a, b in (("\\", "\\\\"), ('"', '\\"'), ("\r", "\\r"), ("\n", "\\n"), ("\t", "\\t")):
+                    escaped = escaped.replace(a, b)
+                lines.append('\t"' + escaped + '",')
+            defs.append("%s\nconst char\t%s[%d][%d] = {\n%s\n};\n"
+                        % (citation(addr, name, given_address), name, count, stride, "\n".join(lines)))
+            continue
         if typ not in TYPES:
             print(f"error: unknown type {typ}", file=sys.stderr)
             return 1

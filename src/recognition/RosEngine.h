@@ -320,8 +320,8 @@ struct RosSegment;
 // The lexical search and the geometry, quietened; the sentence read so
 // far, forgotten.
 void	LEquiesant(void);									// ROM 0x000ffd60 LEquiesant
+void	GeoContextClearCache(void);						// ROM 0x000d9cc8 GeoContextClearCache
 void	GeoCQuiesence(void);								// ROM 0x000d9ce4 GeoCQuiesence
-void	SearchDeallocateGlobals(void);						// ROM 0x001d02ec SearchDeallocateGlobals
 
 // The engine's own free list, emptied.
 void	ListZap(void);										// ROM 0x0011343c ListZap
@@ -353,17 +353,6 @@ void	CharModifyProbs(const FRect* bounds, long strokes, UByte hasDot,
 				Fixed startSize, Fixed wordSize, Fixed* scratch,
 				Fixed altBase, Fixed altHeight, Fixed arg9, Fixed* probs);	// ROM 0x00057108 CharModifyProbs
 
-// The lexical search: the segments' probabilities walked against the
-// grammar and the dictionaries to find the likeliest readings.  All
-// NOT YET, so nothing is read yet.
-typedef void (*SearchEndWordProc)(WordRecog* wr, char** words, UniChar* scores,
-				long* flags, long strokes, long count);
-void	SearchBeginWord(const BiGrammar* grammar);				// ROM 0x001ce008 SearchBeginWord
-void	SearchProcessSegment(const BiGrammar* grammar, Fixed* probs, Fixed* scratch,
-				long index, RosSegment* segment, Fixed confidence,
-				Boolean endsWord, char* tryString);				// ROM 0x001ce830 SearchProcessSegment
-void	SearchEndWord(const BiGrammar* grammar, long strokes, SearchEndWordProc proc,
-				WordRecog* wr, char** words, UniChar* scores, long* flags,
-				long count);									// ROM 0x001d0660 SearchEndWord
+// The lexical search is `recognition/Search.h`.
 
 #endif	/* __ROSENGINE_H */

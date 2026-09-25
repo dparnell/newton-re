@@ -35,6 +35,8 @@ add_library(recognition STATIC
     RosRecognizer.cpp
     RosStrokes.cpp
     WordTails.cpp
+    Search.cpp
+    SearchEasterEgg.cpp
     RosEngine.cpp
     Segment.cpp
     WordRecog.cpp

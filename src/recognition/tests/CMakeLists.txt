@@ -67,6 +67,10 @@ add_executable(test_Rosetta test_Rosetta.cpp)
 target_link_libraries(test_Rosetta PRIVATE recognition memory)
 add_test(NAME recognition.Rosetta COMMAND test_Rosetta)
 
+add_executable(test_Search test_Search.cpp)
+target_link_libraries(test_Search PRIVATE recognition memory)
+add_test(NAME recognition.Search COMMAND test_Search)
+
 add_executable(test_WordTails test_WordTails.cpp)
 target_link_libraries(test_WordTails PRIVATE recognition memory)
 add_test(NAME recognition.WordTails COMMAND test_WordTails)
