@@ -439,16 +439,387 @@ SegmentNonTailLinked(const SegmentDistance* d)
 
 #pragma mark -
 /*--------------------------------------------------------------------
-	The cutting itself.  NOT YET: `SegmentChars` runs `SegmentStroke`
-	over every stroke to measure it against its neighbours and then
-	`SegmentMakeSegments` to decide where the cuts go, which together
-	are eight kilobytes and the heart of the layer.
+	One stroke against its neighbours.
 --------------------------------------------------------------------*/
 
+// The nearest-approach block for a stroke that has no neighbour to be
+// measured against: further away than anything the caller will accept.
+static void
+SegmentDistanceNothing(SegmentDistance* d, Fixed size)
+{
+	d->fDistance = size;
+	d->fDX = size;
+	d->fDY = size;
+	d->fStrokeB = nil;
+	d->fStrokeA = nil;
+	d->fIndexB = 0;
+	d->fIndexA = 0;
+	d->fEitherIsDot = 0;
+}
+
+
+// ROM 0x001d18a4 SegmentMultiStrokeMinDistance
+// How near this stroke comes to any of the **three** strokes before it.
+//
+// Three, and not one, because a letter is often written in pieces that
+// are not consecutive - the bar of a t and the dot of an i are usually
+// put in after the rest of the word - so the stroke that belongs with
+// this one may be two or three back.  `prev` keeps the plain
+// immediately-before answer as well, because the caller wants both.
+//
+// There is one case that looks the other way.  If the *next* stroke
+// starts further left than this one does, the writer has gone back to
+// add something, and the pair worth measuring is the one before this
+// against that next one rather than against this.
+void
+SegmentMultiStrokeMinDistance(short index, RosStroke* const* strokes, Fixed size,
+						short count, SegmentDistance* out, SegmentDistance* prev)
+{
+	short next = (short) (index + 1);
+	short back1 = (short) (index - 1);
+	short back2 = (short) (back1 - 1);
+	short back3 = (short) (back2 - 1);
+
+	if (back1 < 0 || count <= index)
+	{
+		Fixed nothing = size + 0x00010000;
+		SegmentDistanceNothing(out, nothing);
+		SegmentDistanceNothing(prev, nothing);
+		return;
+	}
+
+	SegmentStrokeMinDistance(strokes[back1], strokes[index], out);
+	*prev = *out;
+
+	if (next < count)
+	{
+		FRect nextBounds, myBounds;
+		StrokeFindBounds(strokes[next], &nextBounds);
+		StrokeFindBounds(strokes[index], &myBounds);
+		// the writer went back to add something
+		if (nextBounds.left < myBounds.left && back1 >= 0)
+		{
+			SegmentDistance d;
+			SegmentStrokeMinDistance(strokes[back1], strokes[next], &d);
+			if (d.fDistance < out->fDistance)
+				*out = d;
+		}
+	}
+	if (back2 >= 0)
+	{
+		SegmentDistance d;
+		SegmentStrokeMinDistance(strokes[back2], strokes[index], &d);
+		if (d.fDistance < out->fDistance)
+			*out = d;
+	}
+	if (back3 >= 0)
+	{
+		SegmentDistance d;
+		SegmentStrokeMinDistance(strokes[back3], strokes[index], &d);
+		if (d.fDistance < out->fDistance)
+			*out = d;
+	}
+}
+
+
+// ROM 0x001d1aa0 SegmentMultiStrokeMinDistBoundX
+// The same question asked of the boxes rather than the points: how
+// little space there is between this stroke's left edge and the right
+// edge of any of the three before it.  A negative answer means they
+// overlap along the line.
+Fixed
+SegmentMultiStrokeMinDistBoundX(short index, RosStroke* const* strokes, Fixed size,
+						short count)
+{
+	short next = (short) (index + 1);
+	short back1 = (short) (index - 1);
+	short back2 = (short) (back1 - 1);
+	short back3 = (short) (back2 - 1);
+
+	FRect myBounds;
+	StrokeFindBounds(strokes[index], &myBounds);
+
+	Fixed gap;
+	if (back1 < 0 || count <= index)
+		gap = size + 0x00010000;
+	else
+	{
+		FRect prevBounds;
+		StrokeFindBounds(strokes[back1], &prevBounds);
+		gap = myBounds.left - prevBounds.right;
+	}
+
+	if (next < count)
+	{
+		FRect nextBounds;
+		StrokeFindBounds(strokes[next], &nextBounds);
+		if (nextBounds.left < myBounds.left && back1 >= 0)
+		{
+			// (the ROM measures against the previous stroke's right
+			//  edge, which it still has in hand from just above)
+			FRect prevBounds;
+			StrokeFindBounds(strokes[back1], &prevBounds);
+			if (nextBounds.left - prevBounds.right < gap)
+				gap = nextBounds.left - prevBounds.right;
+		}
+	}
+	if (back2 >= 0)
+	{
+		FRect bounds;
+		StrokeFindBounds(strokes[back2], &bounds);
+		if (myBounds.left - bounds.right < gap)
+			gap = myBounds.left - bounds.right;
+	}
+	if (back3 >= 0)
+	{
+		FRect bounds;
+		StrokeFindBounds(strokes[back3], &bounds);
+		if (myBounds.left - bounds.right < gap)
+			gap = myBounds.left - bounds.right;
+	}
+	return gap;
+}
+
+
+// ROM 0x001d1e98 SegmentStroke
+// One stroke measured against its neighbours.  This is the first half
+// of the cutting: it decides, for every stroke in turn, how much of
+// the line it shares with the stroke before it, whether the two are
+// part of one letter, and whether a cut may go in front of it.
+//
+// **Are they one letter?**  Three thresholds, and the overlap has to
+// beat one of them: seven tenths on its own (`fLinkOverlap`), or
+// sixty-five hundredths if the two strokes actually *cross*
+// (`fCrossOverlap`), or 0.675 if they are joined somewhere other than
+// end to end (`fJoinOverlap`).  So the more the strokes are entangled
+// the less they need to overlap - which is how a t is one letter while
+// two letters that merely lean on each other are two.  Neither stroke
+// may be a dot, and they must come within `reach` of each other.
+//
+// A link is recorded on **both** strokes: 3 on this one, and on the
+// one before it 1 if it is the start of a run of linked strokes or 2
+// if it is already in the middle of one.
+//
+// **May a cut go here?**  Only in front of a stroke that is not itself
+// linked backwards, and then either because there is a plain gap - the
+// horizontal space to the three strokes before is more than a letter's
+// width, twice that if a dot is involved - or because the strokes are
+// far enough apart *and* lie side by side rather than one above the
+// other (both nearest approaches wider than they are tall) *and* the
+// overlap is no more than a half.
+void
+SegmentStroke(short index, short count, RosStroke* const* strokes,
+			Fixed size, Fixed reach, UByte how,
+			short* breaks, short* breakCount)
+{
+	if (index < 0)
+		return;
+	RosStroke* cur = strokes[index];
+
+	if (how != 0)
+	{
+		// the simple way: the overlap and nothing else
+		Fixed overlap = 0;
+		cur->fLink = 0;
+		cur->fField2a = 0;
+		if (index > 0)
+		{
+			RosStroke* prev = strokes[index - 1];
+			if (cur->fIsDot == 0 && prev->fIsDot == 0)
+			{
+				FRect prevBounds, myBounds;
+				StrokeFindBounds(prev, &prevBounds);
+				StrokeFindBounds(cur, &myBounds);
+				overlap = SegmentOverlap(&prevBounds, &myBounds);
+			}
+		}
+		cur->fOverlap = overlap;
+		return;
+	}
+
+	SegmentDistance dist;
+	dist.fDistance = -0x00010000;
+	Fixed overlap = 0;
+	Boolean linked = false;
+
+	if (index > 0)
+	{
+		RosStroke* prev = strokes[index - 1];
+		FRect prevBounds, myBounds;
+		StrokeFindBounds(prev, &prevBounds);
+		StrokeFindBounds(cur, &myBounds);
+		overlap = SegmentOverlap(&prevBounds, &myBounds);
+
+		if (cur->fIsDot == 0 && prev->fIsDot == 0)
+		{
+			// the least of the three thresholds: below it none of them
+			// can be beaten, so there is nothing to ask
+			Fixed least = RosCI->fLinkOverlap;
+			Fixed pair = (RosCI->fCrossOverlap < RosCI->fJoinOverlap)
+						? RosCI->fCrossOverlap : RosCI->fJoinOverlap;
+			if (pair <= least)
+				least = pair;
+
+			if (least < overlap)
+			{
+				SegmentStrokeMinDistance(prev, cur, &dist);
+				if (dist.fDistance <= reach
+					&& (RosCI->fLinkOverlap < overlap
+						|| (RosCI->fCrossOverlap < overlap && SegmentCrossed(&dist))
+						|| (RosCI->fJoinOverlap < overlap && SegmentNonTailLinked(&dist))))
+					linked = true;
+			}
+		}
+	}
+	cur->fOverlap = overlap;
+
+	if (!linked)
+	{
+		cur->fLink = 0;
+		cur->fField2a = 0;
+	}
+	else
+	{
+		cur->fLink = 3;
+		cur->fField2a = 0;
+		RosStroke* prev = strokes[index - 1];
+		// the link word is the two bytes together, so a stroke that is
+		// already 1 or 2 is left as it is
+		short was = (short) (((short) prev->fField2a << 8) | prev->fLink);
+		if (was == 0)
+			prev->fLink = 1;
+		else if (was == 3)
+			prev->fLink = 2;
+		else
+			return;
+		prev->fField2a = 0;
+	}
+
+	// a stroke that is linked backwards has no cut in front of it
+	if ((((short) cur->fField2a << 8) | cur->fLink) != 0 || index < 1)
+		return;
+
+	RosStroke* prev = strokes[index - 1];
+	Boolean eitherIsDot = !(cur->fIsDot == 0 && prev->fIsDot == 0);
+	Fixed gap = SegmentMultiStrokeMinDistBoundX(index, strokes, size, count);
+	Fixed room = eitherIsDot ? FixedMultiply(size, 0x00020000) : size;
+
+	if (gap <= room)
+	{
+		// no plain gap, so ask the harder question
+		SegmentDistance other;
+		if (dist.fDistance < 0 || size < dist.fDistance)
+			SegmentMultiStrokeMinDistance(index, strokes, size, count, &dist, &other);
+		// (`other` is read below only on this path.  When the call is
+		//  skipped, `dist.fDistance` is between nought and `size` and
+		//  the next test always returns, so it is never read unset.)
+		Fixed allow = (dist.fEitherIsDot != 0)
+					? FixedMultiply(size, 0x00020000) : size;
+		if (allow >= dist.fDistance)
+			return;
+		// side by side rather than one above the other, both ways of
+		// measuring it
+		if (!(dist.fDX > dist.fDY && other.fDX > other.fDY))
+			return;
+		if (RosCI->fBreakOverlap < overlap)
+			return;
+	}
+
+	breaks[*breakCount] = index;
+	*breakCount = (short) (*breakCount + 1);
+}
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	The cutting itself.  NOT YET: `SegmentChars` runs `SegmentStroke`
+	over every stroke (done, above) and then `SegmentMakeSegments`
+	over the break candidates it left, which is where the cuts are
+	actually made.
+--------------------------------------------------------------------*/
+
+// The nominal height the engine measures everything against when it
+// has nothing better - the same 18.85 pixels the word recogniser
+// starts its run of Gaussians at (`WordRecog.cpp`'s `kNominalHeight`).
+static const Fixed	kSegNominalHeight	= 0x0012d999;
+// ... and the most the width worked out from it may be stretched.
+static const Fixed	kSegWidthLimit		= 0x00028000;		// two and a half
+
+
+// A fraction of the writing's height, rounded to the nearest pixel,
+// but never more than the same fraction of the nominal height stretched
+// by two and a half.  Writing much larger than the engine expects
+// therefore stops getting proportionally looser.
+static Fixed
+SegSizeFromHeight(Fixed fraction, Fixed height)
+{
+	Fixed fromWriting = FixedMultiply(fraction, height) + 0x7fff;
+	Fixed limit = FixedMultiply(FixedMultiply(fraction, kSegNominalHeight) + 0x7fff,
+							kSegWidthLimit);
+	return (limit < fromWriting) ? limit : fromWriting;
+}
+
+
 // ROM 0x001d48a4 SegmentChars
+// The strokes of a word cut into characters.
+//
+// Two widths come out of the writing's height first: how wide a letter
+// is taken to be (half the height, never under four pixels) and how
+// near two strokes must come to count as touching (a tenth of it,
+// never under two).  Then every stroke is measured against its
+// neighbours in turn, which leaves a list of the places a cut may go,
+// and `SegmentMakeSegments` walks that list and makes the segments.
+//
+// The height itself is not believed if it is too small: less than half
+// of the least stroke size plus the nominal height, and the nominal is
+// used instead.
 short
-SegmentChars(short /*count*/, RosStroke** /*strokes*/, Fixed /*meanSize*/,
-			RosSegment** /*segments*/, UByte /*how*/, void* /*net*/)
+SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
+			RosSegment** segments, UByte how, void* net)
+{
+	short* breaks = (short*) RosAllocate(count * (long) sizeof(short));
+	short made = 0;
+	short breakCount = 0;
+	newton_try
+	{
+		Fixed least = (RosCI->fMinStrokeSize + kSegNominalHeight) >> 1;
+		if (meanSize < least)
+			meanSize = least;
+
+		// how wide a letter is
+		Fixed size = SegSizeFromHeight(RosCI->fCharWidthFraction, meanSize);
+		if (size < RosCI->fMinCharWidth)
+			size = RosCI->fMinCharWidth;
+		// ... and how near two strokes must come to be touching
+		Fixed reach = SegSizeFromHeight(RosCI->fReachFraction, meanSize);
+		if (reach <= 0x00020000)
+			reach = 0x00020000;
+
+		for (short i = 0; i < count; i++)
+			SegmentStroke(i, count, strokes, size, reach, how, breaks, &breakCount);
+		for (short i = 0; i < count; i++)
+			SegmentMakeSegments(i, count, strokes, breaks, breakCount, segments,
+							0, how, net);
+		made = SegmentMakeSegments((short) (count - 1), count, strokes, breaks,
+							breakCount, segments, 1, how, net);
+	}
+	cleanup
+	{
+		DisposPtr((Ptr) breaks);
+	}
+	end_try;
+	DisposPtr((Ptr) breaks);
+	return made;
+}
+
+
+// ROM 0x001d0f68 SegmentMakeSegments
+// NOT YET: the 2200 bytes that walk the break candidates and actually
+// make the segments.
+short
+SegmentMakeSegments(short /*index*/, short /*count*/, RosStroke* const* /*strokes*/,
+				const short* /*breaks*/, short /*breakCount*/, RosSegment** /*segments*/,
+				long /*last*/, UByte /*how*/, void* /*net*/)
 {
 	return 0;
 }

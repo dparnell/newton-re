@@ -2484,6 +2484,73 @@ so the long stroke's margin swallows B's point at 8 and the answer
 comes back "no". Ported as it stands, with the failing case in
 `test_Segment`.
 
+#### The first pass: one stroke against its neighbours
+
+`SegmentChars` is the way in, and the first thing it does is work out
+two widths from the height of the writing: how wide a letter is taken
+to be (`fCharWidthFraction`, half the height, never under the four
+pixels of `fMinCharWidth`) and how near two strokes must come to count
+as touching (`fReachFraction`, a tenth of it, never under two). Each
+is capped at the same fraction of the nominal 18.85 pixels stretched by
+two and a half, so writing much larger than the engine expects stops
+getting proportionally looser. A height smaller than half of
+`fMinStrokeSize` plus the nominal is not believed at all.
+
+Then `SegmentStroke` runs over every stroke in turn and answers two
+questions about it.
+
+**Are this stroke and the one before it part of one letter?** The
+measure is `SegmentOverlap` - how much of the *line* the two boxes
+share - and there are three thresholds it may beat:
+
+| | threshold | and also |
+|---|---|---|
+| on its own | `fLinkOverlap` 0.700 | - |
+| if they cross | `fCrossOverlap` 0.650 | `SegmentCrossed` |
+| if joined elsewhere | `fJoinOverlap` 0.675 | `SegmentNonTailLinked` |
+
+So the more the strokes are entangled the less they need to overlap.
+Neither may be a dot, and they must come within the reach of each
+other. A link is written on **both** strokes: 3 on this one, and on
+the earlier one 1 if it starts a run of linked strokes or 2 if it is
+already in the middle of one.
+
+It is worth seeing what that measure does and does not catch. The two
+halves of an `x` fill exactly the same span of the line, score 1.0 and
+are linked at once. The upright and bar of a `t` *cross* - and are
+still not linked, because an upright is one pixel wide: the bar covers
+it completely, the upright covers a twenty-first of the bar, and the
+mean of the two fractions is a little over a half. A `t` is two
+segments at this stage and something above has to put it back together.
+`test_Segment` pins both cases.
+
+**May a cut go in front of this stroke?** Never in front of one that is
+linked backwards. Otherwise either because there is a plain gap - the
+horizontal space to the three strokes before it is more than a letter's
+width, twice that if a dot is involved - or, failing that, because all
+three of these hold: the strokes are more than a letter's width apart,
+they lie side by side rather than one above the other (`fDX > fDY` for
+*both* the nearest-of-three approach and the immediately-previous one),
+and they share no more than `fBreakOverlap`, half the line.
+
+The indices that pass are collected into a list, which is what
+`SegmentMakeSegments` - still NOT YET - walks to make the segments.
+
+#### Three strokes back, and one forward
+
+Both of the neighbour measures - `SegmentMultiStrokeMinDistance` for
+the points and `SegmentMultiStrokeMinDistBoundX` for the boxes - look
+at the **three** strokes before this one, not one. A letter is often
+written in pieces that are not consecutive: the bar of a t and the dot
+of an i usually go in after the rest of the word, so the stroke that
+belongs with this one may be two or three back.
+
+And there is one case that looks the other way. If the *next* stroke
+starts further left than this one does, the writer has gone back to add
+something, and the pair worth measuring is the one before this against
+that next one. That single test is how the engine copes with a word
+being dotted and crossed after it has been written.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

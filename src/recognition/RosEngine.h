@@ -100,7 +100,25 @@ struct RosCommonInfo
 	// under this a stroke has no shape at all - and, because it is the
 	// same number, the smallest cap height that will be believed
 	Fixed				fMinStrokeSize;		// +0x4c
-	ULong				fField50[16];		// +0x50
+	ULong				fField50;			// +0x50
+	// The narrowest a letter may be taken to be, four pixels, and the
+	// fractions of the writing's height that a letter is wide (a half)
+	// and that two strokes must come within to count as touching (a
+	// tenth).  `SegmentChars` works the two widths out from them.
+	Fixed				fMinCharWidth;		// +0x54
+	ULong				fField58[2];		// +0x58
+	Fixed				fCharWidthFraction;	// +0x60
+	Fixed				fReachFraction;		// +0x64
+	ULong				fField68[6];		// +0x68
+	// How much of the line two neighbouring strokes must share before
+	// they are said to be part of one letter.  Seven tenths on its
+	// own; else sixty-five hundredths if they *cross*, or 0.675 if
+	// they are joined somewhere other than end to end.  And no cut
+	// may go between two strokes that share more than a half.
+	Fixed				fLinkOverlap;		// +0x80
+	Fixed				fCrossOverlap;		// +0x84
+	Fixed				fJoinOverlap;		// +0x88
+	Fixed				fBreakOverlap;		// +0x8c
 	// how near an end of a stroke counts as *at* the end: three
 	// tenths of its points at either end.  Two strokes whose nearest
 	// points are both well inside them cross; two whose nearest

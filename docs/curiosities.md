@@ -1456,3 +1456,36 @@ cut one stroke into two, since the cut point is copied into both halves
 
 *`src/recognition/Segment.cpp`; `docs/recognition/README.md` has
 "Where one letter ends".*
+
+## The Newton looks three strokes back, and one forward
+
+When the handwriting engine asks how near a stroke is to its
+neighbours, it does not look at the stroke before it. It looks at the
+**three** strokes before it.
+
+The reason is in how people write. A letter is often made of pieces
+that are not consecutive: you write the word, and *then* you go back
+and cross the t and dot the i. By the time the crossing stroke
+arrives, the stroke it belongs with may be two or three back in the
+order they were drawn.
+
+And `SegmentMultiStrokeMinDistance` has one test that looks the other
+way as well. If the **next** stroke starts further left than this one
+does, the writer has gone back to add something - so the pair worth
+measuring is the one before this against that next one, rather than
+against this. Three lines of code, and they are what let you cross
+your t's when you feel like it.
+
+There is a related surprise in the same pass. `SegmentOverlap`, which
+decides whether two strokes are part of one letter, measures how much
+of the **line** the two share - their horizontal spans, and nothing
+about their heights. The two halves of an `x` fill exactly the same
+span and are linked at once. The upright and the bar of a `t` cross
+each other, and are *not*: an upright is one pixel wide, so the bar
+covers it completely while the upright covers a twenty-first of the
+bar, and the mean of the two fractions comes to a little over a half -
+under all three of the thresholds. A `t` is two segments at this stage,
+and something further up has to put it back together.
+
+*`src/recognition/Segment.cpp`; `docs/recognition/README.md` has "The
+first pass: one stroke against its neighbours".*

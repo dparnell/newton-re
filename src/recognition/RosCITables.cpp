@@ -532,11 +532,16 @@ const RosCommonInfo	rosCI = {
 	rosCapHackAltCase2,	// fCapAltCase2
 	{ 0x00000000, 0x00003333, 0x0000428f, 0x00000000, 0x00140000 },	// fField38
 	0x00048000,	// fMinStrokeSize
-	{				// fField50
-		0x00130000, 0x00040000, 0x00060000, 0x000f0000, 0x00008000, 0x00001999,
-		0x00015999, 0x0000e666, 0x0002b333, 0x00320000, 0x00018000, 0x0001c000,
-		0x0000b333, 0x0000a666, 0x0000accc, 0x00008000
-	},
+	0x00130000,	// fField50
+	0x00040000,	// fMinCharWidth
+	{ 0x00060000, 0x000f0000 },	// fField58
+	0x00008000,	// fCharWidthFraction
+	0x00001999,	// fReachFraction
+	{ 0x00015999, 0x0000e666, 0x0002b333, 0x00320000, 0x00018000, 0x0001c000 },	// fField68
+	0x0000b333,	// fLinkOverlap
+	0x0000a666,	// fCrossOverlap
+	0x0000accc,	// fJoinOverlap
+	0x00008000,	// fBreakOverlap
 	0x00004ccc,	// fEndFraction
 	0x00030000,	// fLinkDistance
 	{				// fField98

@@ -55,9 +55,17 @@ struct RosStroke
 	UByte		fIsDot;			// +0x25  the dot over an i or a j
 	UByte		fFragment;		// +0x26  a piece cut off a larger stroke
 	UByte		fJoinsNext;		// +0x27  the stroke after it is the rest of this one
-	UByte		fField28[8];		// +0x28
-	// how far this stroke is from the one before it, which the
-	// segment layer works out and the layer below reads
+	UByte		fField28[2];		// +0x28
+	UByte		fField2a;		// +0x2a  the high byte of the link word
+	// Whether this stroke and the one before it are part of one letter
+	// (`SegmentStroke`): 0 not at all, 3 linked to the one before,
+	// and on the *earlier* stroke 1 to start a run of linked strokes
+	// or 2 to continue one.
+	UByte		fLink;			// +0x2b
+	// How much of the line this stroke and the one before it share.
+	Fixed		fOverlap;		// +0x2c
+	// How far this stroke is from the one before it, which the
+	// segment layer works out and the layer below reads.
 	Fixed		fSeparation;	// +0x30
 };
 

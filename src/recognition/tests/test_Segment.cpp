@@ -254,6 +254,158 @@ main()
 		StrokeDestroy(dot);
 	}
 
+	// ---- one stroke measured against its neighbours ----
+	{
+		// Three strokes side by side, well apart: |  |  |
+		RosStroke* three[3];
+		three[0] = Steps(F(0), F(0), 0, F(2), 11);
+		three[1] = Steps(F(20), F(0), 0, F(2), 11);
+		three[2] = Steps(F(40), F(0), 0, F(2), 11);
+		for (short i = 0; i < 3; i++)
+			SegmentStrokeData(three[i], 0, i, 0);
+
+		short breaks[8];
+		short breakCount = 0;
+		for (short i = 0; i < 3; i++)
+			SegmentStroke(i, 3, three, F(10), F(2), 0, breaks, &breakCount);
+
+		// nothing overlaps anything, so nothing is linked
+		for (short i = 0; i < 3; i++)
+		{
+			EXPECT(three[i]->fLink == 0);
+			EXPECT(three[i]->fOverlap == 0);
+		}
+		// ... and a cut may go in front of the second and the third,
+		// but never in front of the first
+		EXPECT(breakCount == 2);
+		EXPECT(breaks[0] == 1 && breaks[1] == 2);
+
+		for (short i = 0; i < 3; i++)
+			StrokeDestroy(three[i]);
+	}
+
+	// ---- two strokes that are one letter ----
+	{
+		// The two halves of an x: they fill the same span of the line,
+		// so they are linked outright and no cut goes between them.
+		RosStroke* pair[2];
+		pair[0] = Steps(F(0), F(0), F(2), F(2), 11);		// down to the right
+		pair[1] = Steps(F(20), F(0), -F(2), F(2), 11);	// down to the left
+		for (short i = 0; i < 2; i++)
+			SegmentStrokeData(pair[i], 0, i, 0);
+
+		short breaks[8];
+		short breakCount = 0;
+		for (short i = 0; i < 2; i++)
+			SegmentStroke(i, 2, pair, F(10), F(4), 0, breaks, &breakCount);
+
+		EXPECT(pair[1]->fOverlap == F(1));		// the same span exactly
+		EXPECT(pair[1]->fOverlap > RosCI->fLinkOverlap);
+		// the second is linked backwards, the first is marked as the
+		// start of the run
+		EXPECT(pair[1]->fLink == 3);
+		EXPECT(pair[0]->fLink == 1);
+		// and no cut goes between them
+		EXPECT(breakCount == 0);
+
+		StrokeDestroy(pair[0]);
+		StrokeDestroy(pair[1]);
+	}
+
+	// ---- and two that are one letter but do not look it ----
+	{
+		// The upright and the bar of a t.  They cross, which
+		// `SegmentCrossed` sees - but `SegmentOverlap` measures how
+		// much of the *line* two strokes share, and an upright is one
+		// pixel wide, so the bar covers it completely while the upright
+		// covers a twenty-first of the bar.  The mean is a little over
+		// a half, under every one of the three thresholds, and the two
+		// are not linked.  A t is two segments at this stage.
+		RosStroke* pair[2];
+		pair[0] = Steps(F(20), F(0), 0, F(2), 21);		// upright, x = 20
+		pair[1] = Steps(F(10), F(20), F(2), 0, 11);		// bar, y = 20
+		for (short i = 0; i < 2; i++)
+			SegmentStrokeData(pair[i], 0, i, 0);
+
+		short breaks[8];
+		short breakCount = 0;
+		for (short i = 0; i < 2; i++)
+			SegmentStroke(i, 2, pair, F(10), F(4), 0, breaks, &breakCount);
+
+		EXPECT(pair[1]->fOverlap > F(1) / 2);
+		EXPECT(pair[1]->fOverlap < RosCI->fCrossOverlap);
+		EXPECT(pair[0]->fLink == 0 && pair[1]->fLink == 0);
+		// ... but they share more than half the line, so no cut goes
+		// between them either: they are left for the layer above
+		EXPECT(pair[1]->fOverlap > RosCI->fBreakOverlap);
+		EXPECT(breakCount == 0);
+
+		StrokeDestroy(pair[0]);
+		StrokeDestroy(pair[1]);
+	}
+
+	// ---- how near the last three strokes come ----
+	{
+		// Four strokes; the fourth sits right on top of the second, so
+		// looking only at the stroke before it would say it is far away
+		RosStroke* four[4];
+		four[0] = Steps(F(0), F(0), 0, F(2), 11);
+		four[1] = Steps(F(20), F(0), 0, F(2), 11);
+		four[2] = Steps(F(60), F(0), 0, F(2), 11);
+		four[3] = Steps(F(21), F(0), 0, F(2), 11);
+		for (short i = 0; i < 4; i++)
+			SegmentStrokeData(four[i], 0, i, 0);
+
+		SegmentDistance nearest, previous;
+		SegmentMultiStrokeMinDistance(3, four, F(10), 4, &nearest, &previous);
+		// the stroke immediately before is forty pixels away ...
+		EXPECT(previous.fDistance == F(39));
+		EXPECT(previous.fStrokeA == four[2] && previous.fStrokeB == four[3]);
+		// ... but two back is one pixel away, and that is the answer
+		EXPECT(nearest.fDistance == F(1));
+		EXPECT(nearest.fStrokeA == four[1] && nearest.fStrokeB == four[3]);
+
+		// the same question asked of the boxes
+		Fixed gap = SegmentMultiStrokeMinDistBoundX(3, four, F(10), 4);
+		// the fourth stroke starts to the *left* of the third, so the
+		// least gap is a negative one
+		EXPECT(gap == -F(39));
+
+		// a stroke with nothing before it is further off than anything
+		SegmentMultiStrokeMinDistance(0, four, F(10), 4, &nearest, &previous);
+		EXPECT(nearest.fDistance == F(11) && previous.fDistance == F(11));
+		EXPECT(nearest.fStrokeA == nil);
+		EXPECT(SegmentMultiStrokeMinDistBoundX(0, four, F(10), 4) == F(11));
+
+		for (short i = 0; i < 4; i++)
+			StrokeDestroy(four[i]);
+	}
+
+	// ---- the whole first pass ----
+	{
+		// two letters of two strokes each, an x and an x, well apart
+		RosStroke* six[4];
+		six[0] = Steps(F(0), F(0), F(2), F(2), 11);		// \ .
+		six[1] = Steps(F(20), F(0), -F(2), F(2), 11);	// /
+		six[2] = Steps(F(60), F(0), F(2), F(2), 11);
+		six[3] = Steps(F(80), F(0), -F(2), F(2), 11);
+		for (short i = 0; i < 4; i++)
+			SegmentStrokeData(six[i], 0, i, 0);
+
+		RosSegment* segments[8];
+		// the cutting itself is NOT YET, so no segments come back ...
+		EXPECT(SegmentChars(4, six, F(20), segments, 0, nil) == 0);
+		// ... but the first pass really ran: every stroke now knows how
+		// much of the line it shares with the one before it
+		EXPECT(six[0]->fOverlap == 0);		// nothing before it
+		EXPECT(six[1]->fOverlap > 0);		// the two halves of the x
+		EXPECT(six[2]->fOverlap == 0);		// a clear gap
+		EXPECT(six[3]->fOverlap > 0);
+
+		for (short i = 0; i < 4; i++)
+			StrokeDestroy(six[i]);
+	}
+
 	// ---- the rest of the layer's life ----
 	{
 		SegmentIntegrated(0);

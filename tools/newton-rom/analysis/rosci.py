@@ -74,7 +74,16 @@ FIELDS = [
     ("fCapAltCase2", "ptr", 1),			# +0x34
     ("fField38", "word", 5),			# +0x38 .. +0x48
     ("fMinStrokeSize", "word", 1),		# +0x4c
-    ("fField50", "word", 16),			# +0x50 .. +0x8c
+    ("fField50", "word", 1),			# +0x50
+    ("fMinCharWidth", "word", 1),		# +0x54
+    ("fField58", "word", 2),			# +0x58 .. +0x5c
+    ("fCharWidthFraction", "word", 1),	# +0x60
+    ("fReachFraction", "word", 1),		# +0x64
+    ("fField68", "word", 6),			# +0x68 .. +0x7c
+    ("fLinkOverlap", "word", 1),		# +0x80
+    ("fCrossOverlap", "word", 1),		# +0x84
+    ("fJoinOverlap", "word", 1),		# +0x88
+    ("fBreakOverlap", "word", 1),		# +0x8c
     ("fEndFraction", "word", 1),		# +0x90
     ("fLinkDistance", "word", 1),		# +0x94
     ("fField98", "word", 29),			# +0x98 .. +0x108

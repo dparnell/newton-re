@@ -366,16 +366,32 @@ touching the middle of a short one is missed.  Kept and demonstrated in
 `StrokesAdjoin`, `StrokeJoin` and `SLJoinFragments` are in
 `recognition/RosStrokes.h` now.
 
-Still NOT YET above them: the cutting itself - `SegmentChars` over
-`SegmentStroke` (908 B) and `SegmentMakeSegments` (2200 B), plus the
-word-spacing and gap functions `SegmentWordXGap` (5952 B) and
-`SegmentWordVert` (1892 B), about 12 KB in all -
+**And the first pass of the cutting is done too**: `SegmentChars`
+works the two widths out of the writing's height (a letter is half of
+it, two strokes touch within a tenth of it, each capped at two and a
+half times what the nominal 18.85 pixels would give) and
+`SegmentStroke` runs over every stroke, deciding whether it and the one
+before it are part of one letter - three thresholds on how much of the
+line they share, the lower two needing `SegmentCrossed` or
+`SegmentNonTailLinked` as well - and whether a cut may go in front of
+it.  `SegmentMultiStrokeMinDistance` and
+`SegmentMultiStrokeMinDistBoundX` look **three** strokes back, because
+a letter is often written in pieces that are not consecutive, and one
+forward for the case where the writer went back to dot an i.
+`rosCI`'s `fMinCharWidth`, `fCharWidthFraction`, `fReachFraction` and
+the four overlap thresholds are named for all this.
+
+Still NOT YET above them: `SegmentMakeSegments` (2200 B), which walks
+the break candidates the first pass leaves and actually makes the
+segments, plus the word-spacing and gap functions `SegmentWordXGap`
+(5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
 classify passes (3 KB), and the feature extraction
 `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384 symbols on its
-own.  **The cutting is the next piece**: `SegmentStroke` and
-`SegmentMakeSegments` are what `CharBoxEvaluate`, `WordRecogAddStroke`
-and `WordRecogAnalyzeWord` all wait on.
+own.  **`SegmentMakeSegments` is the next piece**: it is the last
+thing between the break candidates and a real list of segments, and
+`CharBoxEvaluate`, `WordRecogAddStroke` and `WordRecogAnalyzeWord` all
+wait on it.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

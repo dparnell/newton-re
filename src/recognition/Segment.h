@@ -129,9 +129,36 @@ Boolean	SegmentCrossed(const SegmentDistance* d);		// ROM 0x001d47a4 SegmentCros
 // ... or are joined somewhere other than end to end.
 Boolean	SegmentNonTailLinked(const SegmentDistance* d);	// ROM 0x001d1bcc SegmentNonTailLinked
 
+
+// How near a stroke comes to any of the **three** strokes before it,
+// and - in `prev` - to the one immediately before it on its own.  A
+// stroke with nothing before it answers a distance of `size` plus a
+// pixel in both, which is "further than anything the caller cares
+// about".
+void	SegmentMultiStrokeMinDistance(short index, RosStroke* const* strokes, Fixed size,
+					short count, SegmentDistance* out, SegmentDistance* prev);	// ROM 0x001d18a4 SegmentMultiStrokeMinDistance
+// The same question about the *horizontal gap*: how little space there
+// is between this stroke's left edge and the right edge of any of the
+// three before it.
+Fixed	SegmentMultiStrokeMinDistBoundX(short index, RosStroke* const* strokes, Fixed size,
+					short count);						// ROM 0x001d1aa0 SegmentMultiStrokeMinDistBoundX
+
+// One stroke measured against its neighbours: how much of the line it
+// shares with the one before it, whether the two are part of one
+// letter, and whether a cut may go in front of it - in which case its
+// index is added to `breaks`.
+void	SegmentStroke(short index, short count, RosStroke* const* strokes,
+					Fixed size, Fixed reach, UByte how,
+					short* breaks, short* breakCount);	// ROM 0x001d1e98 SegmentStroke
 // The strokes of a word cut into characters; answers how many segments
-// were made.  NOT YET.
+// were made.  The two widths the cutting works to come out of the
+// writing's height here.
 short	SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
 					RosSegment** segments, UByte how, void* net);	// ROM 0x001d48a4 SegmentChars
+// The break candidates walked and the segments made.  NOT YET, so
+// `SegmentChars` answers no segments however many breaks it found.
+short	SegmentMakeSegments(short index, short count, RosStroke* const* strokes,
+					const short* breaks, short breakCount, RosSegment** segments,
+					long last, UByte how, void* net);	// ROM 0x001d0f68 SegmentMakeSegments
 
 #endif	/* __SEGMENT_H */
