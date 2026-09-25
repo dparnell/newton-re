@@ -65,6 +65,8 @@
 #include "Text.h"
 #include "Pictures.h"
 #include "ByteOrder.h"
+#include "PolygonView.h"
+#include "DrawShape.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -679,6 +681,71 @@ TestPictureView()
 	Eval("GetRoot():Dirty()");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "pictures gone"));
+}
+
+
+// A polygon view: a triangle joined up with lines and an oval drawn in
+// its box, both out of 'polygonShape binaries as MakePolygonForm makes
+// them (the points relative to the view's top left).
+static void
+TestPolygonView()
+{
+	Point tri[4];
+	tri[0] = MakePoint(0, 0);
+	tri[1] = MakePoint(30, 0);
+	tri[2] = MakePoint(0, 20);
+	tri[3] = MakePoint(0, 0);
+	Rect box;
+	SetRect(&box, 10, 60, 41, 81);
+	RefVar form(MakePolygonForm(tri, 4, 5, box, 1));
+	SetFrameSlot(form, RSSYMviewclass, RefVar(MAKEINT(clPolygonView)));
+	SetFrameSlot(form, RSSYMviewflags, RefVar(MAKEINT(1)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "polyForm")), form);
+	TView* p = ViewOf("ctxG := AddView(GetRoot(), polyForm)");
+	EXPECT(p != nil && p->ClassID() == clPolygonView && p->DerivedFrom(clDataView));
+	EXPECT(((TPolygonView*) p)->GetPenSize() == 1);
+	Eval("ctxG:Dirty()");
+	Refresh();
+	// the top edge, the left edge and the diagonal, nothing inside
+	EXPECT(Pixel(10, 60) == 1 && Pixel(25, 60) == 1 && Pixel(40, 60) == 1);
+	EXPECT(Pixel(10, 70) == 1 && Pixel(10, 80) == 1);
+	EXPECT(Pixel(25, 70) == 1 || Pixel(24, 70) == 1 || Pixel(26, 70) == 1);
+	EXPECT(Pixel(15, 65) == 0 && Pixel(41, 60) == 0);
+	Eval("ctxG:Close()");
+
+	// an oval: verb 0 fills its box with a frame, the points unused
+	SetRect(&box, 100, 60, 141, 81);
+	form = MakePolygonForm(tri, 2, kPolyOval, box, 1);
+	SetFrameSlot(form, RSSYMviewclass, RefVar(MAKEINT(clPolygonView)));
+	SetFrameSlot(form, RSSYMviewflags, RefVar(MAKEINT(1)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "polyForm")), form);
+	p = ViewOf("ctxG := AddView(GetRoot(), polyForm)");
+	Eval("ctxG:Dirty()");
+	Refresh();
+	EXPECT(Pixel(100, 70) == 1 && Pixel(140, 70) == 1 && Pixel(120, 60) == 1 && Pixel(120, 80) == 1);
+	EXPECT(Pixel(120, 70) == 0 && Pixel(100, 60) == 0);
+	Eval("ctxG:Close()");
+	Eval("GetRoot():Dirty()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "polygons gone"));
+
+	// the arithmetic under the arc: the angle of a point about a box's
+	// middle, clockwise from twelve o'clock with the aspect taken out
+	SetRect(&box, 0, 0, 40, 20);
+	long angle = -1;
+	PtToAngle(&box, MakePoint(20, 0), &angle);
+	EXPECT(angle == 0);
+	PtToAngle(&box, MakePoint(40, 10), &angle);
+	EXPECT(angle == 90);
+	PtToAngle(&box, MakePoint(20, 20), &angle);
+	EXPECT(angle == 180);
+	PtToAngle(&box, MakePoint(0, 10), &angle);
+	EXPECT(angle == 270);
+	PtToAngle(&box, MakePoint(40, 0), &angle);		// the corner: 45 degrees, not 63
+	EXPECT(angle == 45);
+	long start = 0, arc = 0;
+	CalcArcAngles(box, MakePoint(20, 0), MakePoint(40, 10), &start, &arc);
+	EXPECT(start == 0 && arc == -270);			// the long way round, anticlockwise
 }
 
 
@@ -5892,6 +5959,7 @@ main()
 		TestScripts();
 		TestTextView();
 		TestPictureView();
+		TestPolygonView();
 		TestParagraphView();
 		TestNegativeWidthParagraph();
 		TestGaugeView();

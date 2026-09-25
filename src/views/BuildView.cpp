@@ -18,6 +18,7 @@
 #include "EditView.h"
 #include "Application.h"
 #include "GaugeView.h"
+#include "PolygonView.h"
 #include "KeyboardView.h"
 #include "MonthView.h"
 #include "ClipboardView.h"
@@ -141,7 +142,7 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // TMathOpView, TMathLineView, TRemoteView, TPrintView, TMeetingView,
 // TSliderView, TListView, TOutline, THelpOutline, TXView for
 // classes 75-108, and -8501 for any other); TTextView (97, 98),
-// TPictureView (75, 76), TParagraphView (81), TDataView (83), TPickView
+// TPictureView (75, 76), TParagraphView (81), TPolygonView (82), TDataView (83), TPickView
 // (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80) and
 // TClipboard (101) are
 // here.
@@ -153,7 +154,6 @@ BuildView(TView* parent, RefArg context)
 	switch (viewClass)
 	{
 	case clView:
-	case clPolygonView:
 	case clMathExpView:
 	case clMathOpView:
 	case clMathLineView:
@@ -187,6 +187,9 @@ BuildView(TView* parent, RefArg context)
 		break;
 	case clDataView:
 		view = new TDataView;
+		break;
+	case clPolygonView:
+		view = new TPolygonView;
 		break;
 	case clContainerView:
 		view = new TContainerView;

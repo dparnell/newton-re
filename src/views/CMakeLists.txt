@@ -28,6 +28,7 @@ add_library(views STATIC
     StyleRuns.cpp
     ParagraphView.cpp
     GaugeView.cpp
+    PolygonView.cpp
     DrawShape.cpp
     Commands.cpp
     Keyboard.cpp
