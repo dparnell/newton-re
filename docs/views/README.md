@@ -1535,89 +1535,30 @@ which the host cannot, so the reconstruction sets all four.
 
 `GlobalHiliteBounds` answers the same click options as `TView`'s.
 
-NOT YET: everything the recogniser drives (`HandleWord`, `HandleInkWord`,
-`HandleCaret`, `HandleLineGesture`, `HandleScrub`, `HandleHilite`,
-`HandleTap`, `PointOverText`), the editing that goes with `TEditView`
-(`AddHilited`, `DeleteHilited`, `CopyForm`, `RealDoCommand`, `GetValue`,
-`ChildBoundsChanged`, `PointToCaret`).  A container's `DrawHilites` is
-called by `TEditView::DrawHiliting`, which is reconstructed (above).
-There is no generic draw path
-for hilites: `TView::DrawHiliting` is empty, and each subclass that has
-them draws its own from `PostDraw` or `DrawHiliting`, as
-`TParagraphView` does.
+**A written word.**  The recogniser's `aeWord` reaches the editor's
+`RealDoCommand` 0x000a4360 (the case at 0x000a5614): a page whose script
+takes words (text flag 0x2000) is offered it first, the hilites are
+cleared for it (`ResetHilitesForNewWord`, or `RemoveAllHilites` with the
+corrector up), `RemoveInk` 0x0019dfa4 removes any ink view left on the
+page for its strokes (an undoable `aeRemoveData` for each stroke whose
+context id names a child), and `HandleWordUnit` 0x000ab9f8 hands the
+unit's best reading to `HandleWord` 0x000abaa4 in the box it was written
+in.  `HandleWord` asks every data child how well it would take the word
+and then, with **remote writing** off, gives it to the best of them or
+makes it a paragraph of its own (`AddNewParagraph`).  Remote writing is
+the default, and it sends the word to the caret instead (0x000abe58):
+into the caret's paragraph when the caret is in one of the page's own
+(`InsertItemsAtCaret`, a space in front unless `IsMidWordLetterInsertion`
+says it is a letter written into the middle of a word); onto the end of
+the text under it, on a line of its own, when the caret is on the page
+itself just below a paragraph (`TextContainingPoint` answering 2); and
+otherwise a paragraph where it was written.  So a second word written
+beside the first joins it: `src/host/demo/write.ns` leaves "ton to".
 
-## The editor (`views/EditView.h`)
-
-`TEditView` 0x000a2c68 (class 77) is the editor a page of a notebook
-application is written on - what turns strokes into paragraphs and shapes,
-and what holds them while they are moved, scaled and scrubbed.  It is
-derived straight from `TView`, not from `TContainerView`, although the two
-answer the same questions about a selection: `DerivedFrom(clContainerView)`
-is false for an edit view.
-
-It keeps no hilite of its own.  Every question about the selection is put
-to the children that are hilited themselves: `CountHilites`,
-`HasHilitedChildren`, `PointInHilite`, `HiliteAll`, `RemoveAllHilites`,
-`DrawHilitedData`, and the four bounds calls.  `GlobalSelectedBounds`
-0x000a8a8c is the odd one out: not the selections but the hilited children
-themselves, unioned.
-
-`GlobalHiliteBounds` 0x000a89cc gathers the children's bounds and answers
-the click options they have in common - every bit AND-ed except bit 2,
-which is OR-ed - through `fClickOptions`, a mask that starts at `~2` and so
-holds bit 1 (resizable) off until something turns it on.  Bit 1 is what
-puts a resize border round the selection.
-
-`SetupDone` 0x000a768c reads `viewLineSpacing` into `fLineSpacing`, works
-the text flags a child paragraph inherits out of the view's own
-(`GetInputViewTextFlags`), and marks the caret rectangle empty.
-
-`DrawHiliting` 0x000a729c has each hilited child draw its hilites twice,
-scaled false and then true; `PostDraw` 0x000a70b8 draws that into an
-offscreen `TBits` and blits it over the view in XOR, so that inverting the
-selection does not leave the children drawn twice.  `InvalAllHilites` and
-`DirtyBoxHilites` dirty what a resizable selection covers, which is more
-than the children: `ToOutsideGrayBorder` 0x000a4698 grows a rectangle by
-the twelve pixels the border takes, within the view.
-
-`DetermineKeyView` 0x000a8588 is where the caret goes when the selection
-changes: into the one selected paragraph when that is all there is, else
-onto the editor itself with the number of selected children as the length.
-
-The caret rectangle is the editor's, kept in its own coordinates:
-`SetCaretRectLocal`/`SetCaretRectGlobal` 0x000aba94, 0x000abaa4 and
-`GetCaretLocalTopLeft`/`GetCaretGlobalTopLeft` 0x000abb2c, 0x000abb38
-move between those and the coordinates the view is scrolled to
-(`ContentsOrigin`).  `ActivateSelection` 0x000aba60 loses the selection
-with the caret, and `BuildKeyChildList` 0x000acbb4 puts the editor itself
-in the tab order beside its children, unless it is read-only.
-
-`GetHilitedViewsSorted` 0x000ac090 answers the selected children in reading
-order - down the page, and within twelve pixels of the same top, left to
-right - and `MoveBetweenParagraphs` 0x000ac80c the paragraph nearest above
-or below a line, which is how the up and down arrows leave one paragraph
-for the next.  `OffsetToCaret` 0x000a40e4 answers the caret rectangle where
-the view is scrolled to, or the -32768 marker when there is no caret; the
-offset it is given is the paragraph's way of asking and means nothing to an
-editor, which has one caret rectangle wherever it was last put.
-
-`AlignToLineSpacing` 0x000a3dc4 puts a new paragraph on the ruled lines:
-its baseline (top plus ascent) onto the nearest, chosen by rounding two
-thirds of the way down - so a baseline a little below a line still belongs
-to it - and the text then sits three pixels above the line, four when the
-spacing is over twenty.  The left goes onto the square grid when the view
-has one (`TView::IsGridded` 0x00260ae8: the view's `viewGrid` is the kind
-asked about, and `viewLineSpacing` is how far apart it is both ways -
-except that a `linegrid` has no horizontal step).  A clipboard is left
-where it is.
-
-NOT YET: everything the recogniser drives (`HandleWord`, `HandleInk`,
-`HandleShape`, `HandleCaret`, `HandleLineGesture`, `Scrub`, `JamText`,
-`AddNewParagraph`, `PlaybackInk`), the caret and selection
-(`PositionCaret`, `SetSelection`, `GetSelection`, `ValidateCaret`), drag
-and drop, `TrackScale`/`TrackDistort`, the commands (`RealDoCommand`,
-`GetValue`, `SetValue`) and the drawing of the resize border itself
-(`DrawResizeBorder`, `TRect::Scale` over `gEditViewTransform`).
+NOT YET: `HandleShape`, `PlaybackInk`, `SetSelection`/`GetSelection`,
+drag and drop, `TrackScale`/`TrackDistort`, `GetValue`/`SetValue` and the
+drawing of the resize border itself (`DrawResizeBorder`, `TRect::Scale`
+over `gEditViewTransform`).
 
 ## How the machine's own views get on screen
 

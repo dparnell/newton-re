@@ -1835,9 +1835,10 @@ day.  Both are switched on by `gRecInkNotifyFlags`, which starts at zero
 and which nothing in the ROM ever writes - it is there for a patch or a
 diagnostic build.
 
-NOT YET: `RegisterWRec` (0x001b5bb4), which is the ROM's own handwriting
-engine registering itself, so nothing answers to `TWRecognizer` and
-nothing is installed until a host supplies an engine.
+The ROM's own engine registers itself through `RegisterRosettaWRec`
+(0x001b6b7c), which the host now calls (`TNotebook::InitToolbox`,
+`HostBootNewtWorld`) in place of the ink-only engine it used to
+install, so writing is read (see "The Rosetta engine" below).
 `TWRecRecognizer::ConfigureArea` (0x00144178), which hands the engine
 the parameters an area is to be read with, needs the area-information
 side of `TWRecDomain`.  `ReadDomainOptions` (0x0019cfd8) is what reads
@@ -1867,17 +1868,30 @@ ParaGraph's, and the names are theirs — `neibour_susp_extr`,
 which is why `recognition/Rosetta.h` draws it explicitly: it is where a
 modern recogniser would be put in instead.
 
-**Reconstructed so far: all of level 1, all of level 5, the block of
-state level 3 works in and its life, level 2's life, and both of the
-ROM's own tables — the trained numbers and the bigram grammar.** The
-engine **wakes**: `RosettaInitialize` makes a word recogniser that
-knows the eight grammars a field may ask for and the 166 characters it
-may answer. What it cannot do yet is *read*: the classifier is NOT YET
-and so are the three passes a classify is made of, and a call that
-fails answers `kRosettaFailed`. `TRosRecognizer` turns that into
-`evt.ex.abt`, which is exactly what the ROM's own does when its engine
-fails. Nothing installs it — the engine the host installs is still
-`TInkOnlyRecognizer`, so the pen still leaves ink.
+**All of it is reconstructed, and it reads.**  The host installs
+`TRosRecognizer`, and a word written on the Notepad comes back as typed
+text: `src/host/demo/write.ns` writes "ton" and "to" and the page shows
+"ton to".  `test_Reading` draws letters with a synthetic pen and checks
+eight words ("to", "tin" and "ton" come back first, the rest within the
+first two readings).  `NEWTON_TRACE_ROSETTA=1` prints each stroke that
+goes down and the ten readings that come back.
+
+Level 6 in the table above turned out not to be Rosetta's: nothing
+reachable from `RosettaClassify` calls into it
+(`analysis/callgraph.py build/MP2x00US RosettaClassify --through-done`
+lists everything that is).  What the classifier is shown is the four
+patternizer groups, and those are level 4's.
+
+Running it for real found four bugs in the reconstruction, each worth
+knowing about when writing more of it: two arrays of pointers or `ULong`
+sized at four bytes a piece (`WordRecogAllocate`, the `LELTranCache`)
+where the host's are eight; `RenderLine` missing the second
+coordinate's step back when a line reverses (the decompiler had dropped
+the instruction at 0x001a6fb8, and the render wrote one byte into the
+header of the heap block after its bitmap); and `StrokeDestroy` not
+answering early for nil.  `test_Reading.cpp` keeps the tools that found
+them: a crash handler printing a symbolised stack, and a heap walker
+(`ROSETTA_HEAPCHECK=1`).
 
 ### What TRosRecognizer does
 
@@ -1938,15 +1952,16 @@ clear bits of the 256-bit character set.
 
 ### What is left
 
-In order:
+Nothing of the engine.  What is left is how well it reads, which has no
+reference to be checked against: a round synthetic "c" comes back with
+every code under 0.6% (so all the readings of a word with one in it tie),
+though everything between the classifier and the readings matches the
+ROM instruction for instruction.  An emulator trace of `BPNetEvaluate`'s
+inputs and outputs for one stroke would settle whether the fault is in
+the features or in the drawing.  Above the engine: the training calls
+(`TRosRecognizer`'s learning is stubbed) and the shape domain.
 
-1. **Level 2**, the fifteen `Rosetta*` calls: the
-   setup/analyze/cleanup passes a classify is made of, the area, the
-   baseline, sleeping and waking. `RosettaClassifyAnalyze` (0x001b7cc4)
-   is the top of the real work, and it calls straight into level 3.
-2. **Levels 3 to 6**, bottom-up, which is the engine proper. The
-   trained tables come out of the ROM's data through
-   `analysis/romtable.py` as everything else does.
+The rest of this section is the engine as it was read, bottom up.
 
 Two things found while reading ahead, so that the next piece starts
 from them:
