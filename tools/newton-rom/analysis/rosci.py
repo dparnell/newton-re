@@ -60,7 +60,8 @@ PARAMS_TABLE = "rosCharParams"
 # holds a pointer to one of the tables above, and how many slots the field
 # covers.  This is `RosCommonInfo`'s declaration in RosEngine.h.
 FIELDS = [
-    ("fField00", "word", 3),			# +0x00
+    ("fCharStrokeProbs", "word", 1),	# +0x00
+    ("fField04", "word", 2),			# +0x04
     ("fCharParams", "ptr", 1),			# +0x0c
     ("fField10", "word", 1),			# +0x10
     ("fLegalNet", "ptr", 1),			# +0x14
@@ -72,7 +73,11 @@ FIELDS = [
     ("fCapCaseFlags", "ptr", 1),		# +0x2c
     ("fCapAltCase1", "ptr", 1),			# +0x30
     ("fCapAltCase2", "ptr", 1),			# +0x34
-    ("fField38", "word", 5),			# +0x38 .. +0x48
+    ("fStrokeCountWeight", "word", 1),	# +0x38
+    ("fCapCaseWeight", "word", 1),		# +0x3c
+    ("fHeightSpread", "word", 1),		# +0x40
+    ("fShapeWeight", "word", 1),		# +0x44
+    ("fField48", "word", 1),			# +0x48
     ("fMinStrokeSize", "word", 1),		# +0x4c
     ("fField50", "word", 1),			# +0x50
     ("fMinCharWidth", "word", 1),		# +0x54
@@ -90,7 +95,8 @@ FIELDS = [
     ("fLinkDistance", "word", 1),		# +0x94
     ("fField98", "word", 6),			# +0x98 .. +0xac
     ("fNetScoreWeight", "word", 1),	# +0xb0
-    ("fFieldb4", "word", 22),		# +0xb4 .. +0x108			# +0x98 .. +0x108
+    ("fFieldb4", "word", 21),		# +0xb4 .. +0x104
+    ("fFragmentWeight", "word", 1),	# +0x108		# +0xb4 .. +0x108			# +0x98 .. +0x108
 ]
 
 # A `Fixed` is signed and is written in decimal, as the other generated

@@ -586,17 +586,233 @@ CharGetAvgBoxBHW(RosSegment* const* segments, short count, Fixed leastStroke,
 
 
 // ROM 0x00057108 CharModifyProbs
-// NOT YET: the classifier's opinion of a piece of writing leaned on by
-// where and how big it is - a letter that sits below the line is more
-// likely to be a `g` than a `q`, and so on.  Without it the net's
-// probabilities go to the search unmodified.
+// The classifier's answer leaned on by **where and how big** the piece
+// of writing is.  The net only ever sees a picture; this is what knows
+// that a letter sitting below the line is more likely to be a `g` than
+// a `q`, and that a tall narrow mark in a word of small round ones is
+// probably an `l`.
+//
+// There are four adjustments, each with a weight in the common info,
+// and **two of them are nought in the shipped ROM**: the stroke-count
+// penalty (`fStrokeCountWeight`, whose table is nil as well) and the
+// shape fit (`fShapeWeight`).  They are compiled in and switched off.
+// What is left is the capitals hack and the height model.
+//
+// The height model is the interesting one.  Every character has a mean
+// height and a spread (`CharHeight`), measured as a fraction of the
+// word's size; this works out how far off this piece is in spreads and
+// asks how likely that is - **a Gaussian**, `exp(-z^2/2)`, worked out
+// with no exponential at all.  Because a score in this engine is
+// already `-ln(p) x 500`, `z^2/2 x 500` *is* the score, and
+// `ArProbDecode` turns it straight back into a probability.  The
+// spread is widened by half for a character whose case the height
+// cannot settle, which is what `fCapCaseFlags` says.
+//
+// Finally only the **ten best** codes survive: everything else is set
+// to nothing, and of the ten, all but the first two must still be
+// worth more than 0xc3.
 void
-CharModifyProbs(const FRect* /*bounds*/, long /*strokes*/, UByte /*hasDot*/,
-			UByte /*fragment*/, UByte /*joinsNext*/, Fixed /*size*/,
+CharModifyProbs(const FRect* bounds, short strokes, UByte /*hasDot*/,
+			UByte fragment, UByte joinsNext, Fixed size,
 			Fixed /*run18*/, Fixed /*run19*/, Fixed /*run20*/, Fixed /*run21*/,
-			Fixed /*startSize*/, Fixed /*wordSize*/, Fixed* /*scratch*/,
-			Fixed /*altBase*/, Fixed /*altHeight*/, Fixed /*arg9*/, Fixed* /*probs*/)
+			Fixed startSize, Fixed wordSize, Fixed* scratch,
+			Fixed altBase, Fixed altHeight, Fixed maxWidth, Fixed* probs)
 {
+	ULong isFragment = (ULong) fragment & 0xff;
+	ULong runsOn = (ULong) joinsNext & 0xff;
+	long strokeCount = strokes;
+
+	// how tall this piece is against what the word is written at, with
+	// the ratio taken as a square root for writing at or above the
+	// size the word started at and linearly below it - and blended
+	// between the two in the quarter in between
+	Fixed expected = 0;
+	if (RosCI->fHeightSpread != 0 && size >= 1)
+	{
+		Fixed boxHeight = (bounds->bottom - bounds->top) + 0x00010000;
+		Fixed scaled;
+		if (FixedMultiply(0x14000, size) >= startSize)
+		{
+			Fixed ratio = FixedDivide(size, startSize);
+			Fixed root = (FractSquareRoot(ratio) + 0x40) >> 7;
+			scaled = FixedMultiply(boxHeight, root);
+		}
+		else if (FixedMultiply(0x18000, size) >= startSize)
+		{
+			Fixed ratio = FixedDivide(size, startSize);
+			Fixed root = (FractSquareRoot(ratio) + 0x40) >> 7;
+			Fixed blend = FixedMultiply(FixedDivide(0x00010000, ratio) - 0x14000, 0x40000);
+			scaled = FixedMultiply(boxHeight,
+						FixedMultiply(blend, ratio - root) + root);
+		}
+		else if (boxHeight != startSize)
+		{
+			Fixed ratio = FixedDivide(size, startSize);
+			scaled = FixedMultiply(boxHeight, ratio);
+		}
+		else
+			scaled = size;
+		expected = FixedDivide(scaled, wordSize);
+	}
+
+	// **the capitals hack**: a letter whose capital the classifier
+	// liked better is pulled a fifth of the way up towards it, because
+	// the two are the same shape and only the height tells them apart
+	if (RosCI->fCapCaseWeight != 0)
+		for (long code = 0; code < 256; code++)
+			if ((RosCI->fCapCaseFlags[code] & 2) != 0)
+			{
+				Fixed mine = probs[code];
+				Fixed other = probs[RosCI->fCapAltCase1[code]];
+				if (mine < other)
+					probs[code] = FixedMultiply(RosCI->fCapCaseWeight, other - mine) + mine;
+			}
+
+	// where this piece sits and how big it is, as fractions
+	Fixed relBase = 0;
+	Fixed relHeight = 0;
+	Fixed relWidth = 0;
+	if (RosCI->fShapeWeight != 0)
+	{
+		relBase = FixedDivide(altBase - bounds->bottom, altHeight);
+		relHeight = FixedDivide((bounds->bottom - bounds->top) + 0x00010000, altHeight);
+		relWidth = FixedDivide((bounds->right - bounds->left) + 0x00010000, maxWidth);
+	}
+
+	// the ten best, kept in order as they are found
+	Fixed best[10];
+	long bestCode[10];
+	long kept = 0;
+	Fixed highest = 0;
+
+	for (long code = 0; code < 256; code++)
+	{
+		Fixed p = probs[code];
+		if ((RosCI->fLegalUse[code >> 5] & (1UL << (code & 31))) != 0 && p > 0xc3)
+		{
+			// how likely this character is to be written in this many
+			// strokes (off in the US ROM: the weight and the table are
+			// both nought)
+			if (RosCI->fStrokeCountWeight != 0)
+			{
+				Fixed likely = RosCI->fCharStrokeProbs[code * 4 + strokeCount - 1];
+				Fixed penalty = FixedMultiply(RosCI->fStrokeCountWeight,
+									0x00010000 - likely);
+				p = FixedMultiply(p, 0x00010000 - penalty);
+			}
+
+			// how near this piece's shape is to the character's own
+			// (off in the US ROM)
+			if (RosCI->fShapeWeight != 0)
+			{
+				const Fixed* const* params = RosCI->fCharParams;
+				Fixed db = relBase - params[0][code];
+				Fixed dh = relHeight - params[1][code];
+				Fixed dw = relWidth - params[2][code];
+				Fixed a = FixedMultiply(db, db);
+				a = (0x00010000 - a < 1) ? 0 : 0x00010000 - a;
+				Fixed b = FixedMultiply(dh, dh);
+				b = (0x00010000 - b < 1) ? 0 : 0x00010000 - b;
+				Fixed c = FixedMultiply(dw, dw);
+				c = (0x00010000 - c < 1) ? 0 : 0x00010000 - c;
+				Fixed fit = FixedMultiply(a, FixedMultiply(b, c));
+				Fixed penalty = FixedMultiply(RosCI->fShapeWeight, 0x00010000 - fit);
+				p = FixedMultiply(p, 0x00010000 - penalty);
+			}
+
+			// what this character is worth in a piece the engine cut
+			// for itself, or one that runs into the next
+			if (isFragment != 0)
+				p = FixedMultiply(p, RosCI->fCharParams[14][code]);
+			if (runsOn != 0)
+				p = FixedMultiply(p, RosCI->fCharParams[15][code]);
+			if (isFragment != 0 || runsOn != 0)
+				p = FixedMultiply(p, RosCI->fFragmentWeight);
+
+			// **the height model**
+			if (RosCI->fHeightSpread == 0 || size < 1
+				|| CharHeight[code * 2 + kCharHeightSpread] == 0)
+			{
+				if (scratch != nil)
+					scratch[code] = 0x00010000;
+			}
+			else
+			{
+				Fixed off = expected - CharHeight[code * 2 + kCharHeightMean];
+				Fixed spread = FixedDivide(CharHeight[code * 2 + kCharHeightSpread],
+									RosCI->fHeightSpread);
+				// a character the height cannot settle gets a spread
+				// half again as wide, on the side that is in doubt
+				UByte flags = RosCI->fCapCaseFlags[code];
+				if ((((flags & 1) != 0) && off > 0)
+					|| (((flags & 2) != 0) && off < 0)
+					|| (((flags & 4) != 0) && off > 0))
+					spread = FixedMultiply(spread, 0x18000);
+				spread = FixedMultiply(spread, spread);
+
+				// z^2/2, which in this engine's units is already the
+				// score, so the Gaussian is a table lookup
+				Fixed z = FixedDivide(FixedMultiply(off, off), spread);
+				Fixed half = FixedMultiply(-0x8000, z);
+				long cost = (half * -500) >> 16;
+				Fixed fit;
+				if (cost < kArProbMaxScore)
+					fit = (cost < 1) ? 0x00010000
+								: (Fixed) ArProbDecodeLu[(half * -500) >> 19];
+				else
+					fit = 0;
+				if (scratch != nil)
+					scratch[code] = fit;
+				p = FixedMultiply(p, fit);
+			}
+
+			if (p < 0xc4)
+				p = 0;
+			if (highest < p)
+				highest = p;
+
+			// kept in order, ten at most
+			if (p > 0)
+			{
+				Boolean worth = (kept < 10) ? true : (best[kept - 1] < p);
+				if (worth)
+				{
+					long at = kept;
+					long below = at;
+					do
+					{
+						below = at;
+						at = below - 1;
+						if (at < 0)
+							break;
+					}
+					while (best[at] <= p);
+
+					long n = kept;
+					if (kept < 10)
+					{
+						n = kept + 1;
+						kept = n;
+					}
+					while (n - 1 > below)
+					{
+						best[n - 1] = best[n - 2];
+						bestCode[n - 1] = bestCode[n - 2];
+						n--;
+					}
+					best[below] = p;
+					bestCode[below] = code;
+				}
+			}
+		}
+		// everything starts again from nothing
+		probs[code] = 0;
+	}
+
+	// ... and only the ten that survived are written back.  All but
+	// the first two have to be worth having on their own.
+	for (long i = 0; i < kept; i++)
+		probs[bestCode[i]] = (i < 2 || best[i] > 0xc3) ? best[i] : 0;
 }
 
 

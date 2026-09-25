@@ -2916,6 +2916,44 @@ Nothing in the engine ever adds a reference to nothing - the first
 character of a reading has no tail to hold on to - so it has never
 mattered, and `test_WordTails` notes where the engine sidesteps it.
 
+### What the classifier does not know (`CharModifyProbs`)
+
+The classifier only ever sees a picture of a piece of writing, scaled
+to fill a 14x14 grid.  It cannot tell an `o` from an `O`, or a comma
+from an apostrophe, because at that scale they are the same shape.
+`CharModifyProbs` is what leans its answer with **where and how big**
+the piece actually was.
+
+There are four adjustments, each with a weight in the common info, and
+**two of them are nought in the shipped ROM** - the stroke-count
+penalty (whose table is nil as well) and the shape fit.  They are
+compiled in and switched off.  What is left is:
+
+**The capitals hack.**  A lower-case letter whose capital the
+classifier liked better is pulled a fifth of the way up towards it
+(`fCapCaseWeight`).  The two are the same shape; only the height tells
+them apart, and the height is the next adjustment's job.
+
+**The height model.**  Every character code has a mean height and a
+spread in `CharHeight`, measured as a fraction of the word's own size,
+and they are real trained numbers: an `l` is 1.01 of the word, an `o`
+0.52, a full stop 0.14, and a `g` 1.16 because of its descender.  This
+works out how far off the piece in hand is, in spreads, and asks how
+likely that is - **a Gaussian**, `exp(-z^2/2)`.
+
+And it computes that Gaussian with no exponential at all.  A score in
+this engine is already `-ln(p) x 500`, so `z^2/2 x 500` **is** the
+score, and `ArProbDecode` turns it straight back into a probability.
+The whole model is two multiplies, a divide and a table lookup.  A
+character whose case the height cannot settle gets a spread half again
+as wide, on whichever side is in doubt (`fCapCaseFlags`).
+
+Only the **ten best** codes survive; everything else is set to nothing,
+and of the ten, all but the first two have to be worth more than 0xc3
+on their own.  `test_Rosetta` drives it: the same classifier answer for
+`l` and `o` comes out favouring `l` for a full-height piece and `o` for
+one half as tall.
+
 ### The lexical search (`recognition/Search.h`)
 
 The segment layer hands up a lattice of candidate letters and the

@@ -6,6 +6,8 @@
 #include "Rosetta.h"
 #include "CharBox.h"
 #include "RosEngine.h"
+#include "FixedGeometry.h"
+#include "FixedMath.h"
 #include "ROMDictionaryData.h"
 #include "Segment.h"
 #include "RosStrokes.h"
@@ -470,6 +472,97 @@ main()
 		area.fSmallHeight = 30;
 		EXPECT(RosettaSetArea(&area) == noErr);
 		EXPECT(gWordRecog->fSmallHeight == 30);		// (30 + 11) / 2 is less
+	}
+
+	// ---- the classifier's answer leaned on by geometry ----
+	{
+		// `CharModifyProbs` is what knows that a letter sitting below
+		// the line is more likely to be a `g` than a `q`, and that a
+		// full-height mark in a word of small round ones is an `l`.
+		// Two of its four adjustments are switched off in the shipped
+		// ROM: the weights are nought.
+		EXPECT(RosCI->fStrokeCountWeight == 0);		// and its table is nil
+		EXPECT(RosCI->fCharStrokeProbs == nil);
+		EXPECT(RosCI->fShapeWeight == 0);
+		// what is left
+		EXPECT(RosCI->fCapCaseWeight == 0x3333);	// a fifth
+		EXPECT(RosCI->fHeightSpread == 0x428f);		// 0.26
+		EXPECT(RosCI->fFragmentWeight == F(1));		// so, nothing
+
+		// the height model is real trained data: an `l` is written as
+		// tall as the word, an `o` about half, a full stop a seventh,
+		// and a `g` taller than the word because of its descender
+		EXPECT(CharHeight['l' * 2] > F(1) && CharHeight['l' * 2] < F(1) + 0x4000);
+		EXPECT(CharHeight['o' * 2] > 0x8000 && CharHeight['o' * 2] < 0x9000);
+		EXPECT(CharHeight['g' * 2] > CharHeight['l' * 2]);
+		EXPECT(CharHeight['.' * 2] < 0x3000);
+		// and each has a spread, without which it is not used at all
+		EXPECT(CharHeight['l' * 2 + 1] > 0);
+
+		FRect box;
+		Fixed probs[256];
+		Fixed scratch[256];
+
+		// a piece of writing as tall as the word: `l` should come out
+		// ahead of `o`, although the classifier liked them the same
+		SetFixedRect(&box, F(0), F(0), F(8), F(20));	// 21 tall
+		for (long i = 0; i < 256; i++)
+			probs[i] = 0;
+		probs['l'] = 0x8000;
+		probs['o'] = 0x8000;
+		CharModifyProbs(&box, 1, 0, 0, 0, F(20),
+					0, 0, 0, 0, F(20), F(20), scratch,
+					F(20), F(21), F(9), probs);
+		EXPECT(probs['l'] > probs['o']);
+		EXPECT(probs['l'] > 0);
+		// the scratch array says how well each one fits on its own
+		EXPECT(scratch['l'] > scratch['o']);
+
+		// and half as tall: the other way about
+		SetFixedRect(&box, F(0), F(0), F(8), F(10));	// 11 tall
+		for (long i = 0; i < 256; i++)
+			probs[i] = 0;
+		probs['l'] = 0x8000;
+		probs['o'] = 0x8000;
+		CharModifyProbs(&box, 1, 0, 0, 0, F(20),
+					0, 0, 0, 0, F(20), F(20), scratch,
+					F(20), F(21), F(9), probs);
+		EXPECT(probs['o'] > probs['l']);
+
+		// it really is a Gaussian: a piece exactly at a character's
+		// mean height fits perfectly, and one a spread away fits by
+		// exp(-1/2)
+		SetFixedRect(&box, F(0), F(0), F(8),
+					FixedMultiply(CharHeight['o' * 2], F(20)) - F(1));
+		for (long i = 0; i < 256; i++)
+			probs[i] = 0;
+		probs['o'] = 0x8000;
+		CharModifyProbs(&box, 1, 0, 0, 0, F(20),
+					0, 0, 0, 0, F(20), F(20), scratch,
+					F(20), F(21), F(9), probs);
+		EXPECT(scratch['o'] > 0xfe00);			// as near one as makes no odds
+
+		// only the ten best survive: everything else is set to nothing
+		for (long i = 0; i < 256; i++)
+			probs[i] = 0;
+		long offered = 0;
+		for (long c = 'a'; c <= 'z'; c++)
+			if ((RosCI->fLegalUse[c >> 5] & (1UL << (c & 31))) != 0)
+			{
+				probs[c] = (Fixed) (0x4000 + c * 4);
+				offered++;
+			}
+		EXPECT(offered > 10);
+		SetFixedRect(&box, F(0), F(0), F(8), F(10));
+		CharModifyProbs(&box, 1, 0, 0, 0, F(20),
+					0, 0, 0, 0, F(20), F(20), scratch,
+					F(20), F(21), F(9), probs);
+		long survivors = 0;
+		for (long i = 0; i < 256; i++)
+			if (probs[i] != 0)
+				survivors++;
+		EXPECT(survivors <= 10);
+		EXPECT(survivors > 0);
 	}
 
 	// ---- quiet, and asleep ----

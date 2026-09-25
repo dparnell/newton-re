@@ -507,12 +507,19 @@ is named.
 Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
 (1324 B), `SearchDoVStepFromNode` (2120 B), `SearchFindBest` (1108 B),
 `SearchBestWords` (328 B), `SearchSendWords` (616 B) and
-`SearchSegwordRememberNBest` (392 B), about 5.5 KB - and
-`CharModifyProbs` (1632 B), which leans on the classifier's
-probabilities with where and how big a piece of writing is.
+`SearchSegwordRememberNBest` (392 B), about 5.5 KB.
 `SearchDoVStepFromNode` is the heart of it and the place to start: it
 is what grows one partial reading by one letter, against the grammar
 and the dictionaries.
+
+**`CharModifyProbs` is done** - what leans the classifier's answer with
+where and how big the piece of writing was.  Two of its four
+adjustments are nought in the shipped ROM; what is left is the capitals
+hack and a Gaussian height model over `CharHeight`'s trained means and
+spreads, worked out with no exponential because a score in this engine
+is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
+`fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
+are named for it.
 
 Also still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;

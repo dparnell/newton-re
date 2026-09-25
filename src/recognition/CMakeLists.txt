@@ -42,6 +42,7 @@ add_library(recognition STATIC
     WordRecog.cpp
     ROMGrammar.cpp
     ArProbTables.cpp
+    CharHeightTable.cpp
     BPNet.cpp
     BPNetTables.cpp
     NetPattern.cpp

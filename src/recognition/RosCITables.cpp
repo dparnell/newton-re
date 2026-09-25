@@ -518,7 +518,8 @@ const Fixed* const	rosCharParams[8] = {
 // ROM 0x0036b6c0 rosCI
 // The template `CharInitialize` copies into a block of its own.
 const RosCommonInfo	rosCI = {
-	{ 0x00000000, 0x00000000, 0x00000000 },	// fField00
+	0x00000000,	// fCharStrokeProbs
+	{ 0x00000000, 0x00000000 },	// fField04
 	rosCharParams,	// fCharParams
 	0x00000010,	// fField10
 	rosCharLegalNet,	// fLegalNet
@@ -530,7 +531,11 @@ const RosCommonInfo	rosCI = {
 	rosCapHackCaseFlags,	// fCapCaseFlags
 	rosCapHackAltCase1,	// fCapAltCase1
 	rosCapHackAltCase2,	// fCapAltCase2
-	{ 0x00000000, 0x00003333, 0x0000428f, 0x00000000, 0x00140000 },	// fField38
+	0x00000000,	// fStrokeCountWeight
+	0x00003333,	// fCapCaseWeight
+	0x0000428f,	// fHeightSpread
+	0x00000000,	// fShapeWeight
+	0x00140000,	// fField48
 	0x00048000,	// fMinStrokeSize
 	0x00130000,	// fField50
 	0x00040000,	// fMinCharWidth
@@ -552,6 +557,7 @@ const RosCommonInfo	rosCI = {
 		0x0000047f, 0x00000051, 0x00b200b2, 0x000000ff, 0x00000051, 0x00b200b2,
 		0x00000000, 0x047f0000, 0x00b200b2, 0x00000000, 0x01ca0000, 0x00b200b2,
 		0x000000b2, 0x00b200b2, 0x00000000, 0x000000b2, 0x00b200b2, 0x00000000,
-		0x00000142, 0x00008000, 0x00020000, 0x00010000
-	}
+		0x00000142, 0x00008000, 0x00020000
+	},
+	0x00010000	// fFragmentWeight
 };
