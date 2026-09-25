@@ -151,7 +151,17 @@ struct RosCommonInfo
 	// What the classifier's score for a letter is worth against
 	// everything else the search weighs: four fifths.
 	Fixed				fNetScoreWeight;	// +0xb0
-	ULong				fFieldb4[21];		// +0xb4 .. +0x104
+	ULong				fFieldb4[18];		// +0xb4
+	// What a stroke costs the search when the letter it is part of
+	// was written loosely.  Two shorts: nothing when the segment's
+	// strokes lie on each other well (above `fStrokeCostGate`, a
+	// half), and up to 322 when they do not, interpolated by the
+	// confidence scaled by `fStrokeCostScale`.
+	// (one word, because that is how the generated table writes it:
+	//  the minimum is the high half and the maximum the low)
+	ULong				fStrokeCost;		// +0xfc
+	Fixed				fStrokeCostGate;	// +0x100
+	Fixed				fStrokeCostScale;	// +0x104
 	// What a piece of writing the engine cut for itself, or one that
 	// runs into the next, is worth: one, so nothing.
 	Fixed				fFragmentWeight;	// +0x108

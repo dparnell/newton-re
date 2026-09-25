@@ -997,8 +997,8 @@ RegisterNewPath(SearchStep* step, ULong score, long flags)
 	node->fSlice = step->fSlice;
 	node->fScore = (short) cost;
 	node->fSegment = step->fSegment;
-	best->fField00 = step->fField00;
-	best->fField04 = (UByte) step->fField0c;
+	best->fFrom = step->fFrom;
+	best->fChar = (UByte) step->fChar;
 
 	// back into score order, cheapest first
 	long k = at - 1;
@@ -1020,4 +1020,69 @@ RegisterNewPath(SearchStep* step, ULong score, long flags)
 	if ((ULong) (UShort) node->fScore < (ULong) (UShort) step->fBest)
 		step->fBest = (short) (UShort) node->fScore;
 	return node;
+}
+
+
+// ROM 0x001cfaa8 StoreFinalPaths
+// The readings in a column finished off, once the step that filled it
+// has run.
+//
+// Until now a reading in the new column is only a **backtrace**: the
+// node it grew from and the letter that was added, in the matching
+// `gSearchBest` entry.  This is what turns each of those into a real
+// word tail - a cell holding the letter, pointing at the tail the
+// reading grew from, with a reference taken on it so the older text
+// stays alive.
+//
+// Keeping it until the end of the step is what makes the whole thing
+// affordable: a reading that is dropped during the step never costs a
+// cell at all.
+void
+StoreFinalPaths(SearchColumn* column, ULong base)
+{
+	if (column->fCount == 0)
+		return;
+	for (long i = 0; i < (long) column->fCount; i++)
+	{
+		SearchNode* node = column->fNodes[i];
+		SearchBestEntry* grew = gSearchBest[i];
+
+		// scores in the new column are measured from its own cheapest
+		node->fScore = (short) ((ULong) (UShort) node->fScore - (base & 0xffff));
+
+		WordTailRef was = grew->fFrom->fTail;
+		// a cell for the letter that was added
+		WordTailRef ref;
+		if (wordTailFrees == kWordTailNone)
+			ref = WordTailBlockAllocate();
+		else
+		{
+			ref = wordTailFrees;
+			wordTailFrees = WordTailAt(ref)->fNext;
+		}
+		WordTailCell* cell = WordTailAt(ref);
+		cell->fRefCount = 1;
+		cell->fChar = grew->fChar;
+		cell->fNext = was;
+
+		// ... and the text it grew from is held on to.  (The ROM has
+		//  `WordTailAddRef` inlined here, and unlike that function it
+		//  does answer straight away for the empty tail.)
+		if (was != kWordTailNone)
+		{
+			if (was < kWordTailListBase)
+			{
+				WordTailCell* older = WordTailAt(was);
+				if (older->fRefCount != 0xff)
+					older->fRefCount = (UByte) (older->fRefCount + 1);
+			}
+			else
+			{
+				WordList* list = WordListAt(was);
+				if (list->fRefCount < 0xff)
+					list->fRefCount = (UShort) (list->fRefCount + 1);
+			}
+		}
+		node->fTail = ref;
+	}
 }

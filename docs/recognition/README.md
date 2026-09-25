@@ -3142,6 +3142,26 @@ turn.
 (The two paths are not symmetrical about the counts: the second counts
 the recycled reading's class down and the first does not.)
 
+#### The backtrace, and when it becomes text
+
+During a step, a reading in the column being filled is only a
+**backtrace**: the node it grew from and the letter that was added,
+held in the matching `gSearchBest` entry.  It has no text of its own at
+all.
+
+`StoreFinalPaths` is what turns those into real word tails, once the
+step is over and it is known which readings survived.  Each one gets a
+cell holding its letter, pointing at the tail it grew from, with a
+reference taken so the older text stays alive - and it rebases the
+scores so that the new column's cheapest reading is at nothing.
+
+Keeping it until the end is what makes the whole thing affordable.  A
+step may offer a column dozens of readings and keep twenty-seven; the
+ones that are dropped never cost a cell.  And the ones that are kept
+share everything before the letter that was just added, which is why
+`test_Search` can grow `cat` and `car` out of one `ca` and see the
+reference count go up by two rather than the text being copied.
+
 #### What is left: the step itself
 
 Everything around the Viterbi step is now reconstructed - the lattice
@@ -3150,15 +3170,17 @@ candidate, the columns and readings it works in, and the gathering that
 hands the answers back.  What is missing is the step: what actually
 grows a reading by one letter.
 
-It is five functions, about 5.7 KB:
+It is four functions, about 5 KB:
 
 | | |
 |---|---|
 | `SearchDoViterbStep` (1324 B) | the driver, once per candidate letter |
 | `SearchDoVStepFromNode` (2120 B) | one existing reading grown by one letter |
-| `RegisterNewPath` (680 B) | the grown reading put back into a column |
 | `GeoContextPenalty` (1204 B) | what the geometry between two letters costs |
 | `LELangNodeNumOut` (452 B) | which letters the language model allows next |
+
+`RegisterNewPath` and `StoreFinalPaths`, the two halves of what happens
+to a reading once it has been grown, are done.
 
 The working block they share is mapped (`SearchStep` in `Search.h`):
 `SearchDoViterbStep` builds it out of its own locals and hands its

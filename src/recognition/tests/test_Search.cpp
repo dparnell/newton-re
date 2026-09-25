@@ -36,6 +36,14 @@ Push(WordTailRef tail, UByte c)
 }
 
 
+static const char*
+Text(WordTailRef ref, UByte* buffer)
+{
+	WordTailSprint(ref, buffer, 64);
+	return (const char*) buffer;
+}
+
+
 int
 main()
 {
@@ -499,6 +507,50 @@ main()
 		col->fCount = 0;
 		for (long i = 0; i < 10; i++)
 			col->fClassCounts[i] = 0;
+	}
+
+	// ---- the readings finished off ----
+	{
+		// During a step a reading in the new column is only a
+		// backtrace: the node it grew from and the letter that was
+		// added.  `StoreFinalPaths` turns those into real word tails
+		// at the end - so a reading dropped part way through never
+		// costs a cell at all.
+		SearchBeginWord(ROMGrammar.fContexts[0]);
+		SearchColumn* from = gSearchColumns[1];
+		SearchColumn* col = gSearchColumns[0];
+
+		// something already read: "ca"
+		from->fCount = 1;
+		SearchNode* older = from->fNodes[0];
+		older->fTail = Push(Push(kWordTailNone, 'c'), 'a');
+		UByte text[64];
+		EXPECT(strcmp(Text(older->fTail, text), "ca") == 0);
+		UByte was = WordTailAt(older->fTail)->fRefCount;
+
+		// two readings grown from it, by `t` and by `r`
+		col->fCount = 2;
+		col->fNodes[0]->fScore = 700;
+		col->fNodes[1]->fScore = 900;
+		gSearchBest[0]->fFrom = older;
+		gSearchBest[0]->fChar = 't';
+		gSearchBest[1]->fFrom = older;
+		gSearchBest[1]->fChar = 'r';
+
+		StoreFinalPaths(col, 700);
+		// the scores are measured from the column's own cheapest
+		EXPECT(col->fNodes[0]->fScore == 0);
+		EXPECT(col->fNodes[1]->fScore == 200);
+		// ... and each backtrace has become a real reading
+		EXPECT(strcmp(Text(col->fNodes[0]->fTail, text), "cat") == 0);
+		EXPECT(strcmp(Text(col->fNodes[1]->fTail, text), "car") == 0);
+		// both of which share the "ca" rather than copying it
+		EXPECT(WordTailAt(col->fNodes[0]->fTail)->fNext == older->fTail);
+		EXPECT(WordTailAt(col->fNodes[1]->fTail)->fNext == older->fTail);
+		EXPECT(WordTailAt(older->fTail)->fRefCount == was + 2);
+
+		col->fCount = 0;
+		from->fCount = 0;
 	}
 
 	// ---- everything given back ----

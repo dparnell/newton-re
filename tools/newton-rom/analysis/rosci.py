@@ -95,7 +95,10 @@ FIELDS = [
     ("fLinkDistance", "word", 1),		# +0x94
     ("fField98", "word", 6),			# +0x98 .. +0xac
     ("fNetScoreWeight", "word", 1),	# +0xb0
-    ("fFieldb4", "word", 21),		# +0xb4 .. +0x104
+    ("fFieldb4", "word", 18),		# +0xb4 .. +0xf8
+    ("fStrokeCost", "word", 1),		# +0xfc  two shorts
+    ("fStrokeCostGate", "word", 1),	# +0x100
+    ("fStrokeCostScale", "word", 1),	# +0x104		# +0xb4 .. +0x104
     ("fFragmentWeight", "word", 1),	# +0x108		# +0xb4 .. +0x108			# +0x98 .. +0x108
 ]
 

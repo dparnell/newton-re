@@ -93,10 +93,12 @@ struct SearchColumn
 // two read are known so far.  NOT YET, but mapped.
 struct SearchStep
 {
-	long			fField00;		// +0x00  goes into the `gSearchBest` entry
+	// The reading being grown and the letter being added to it, which
+	// go into the column's backtrace.
+	SearchNode*		fFrom;			// +0x00
 	RosSegment*		fSegment;		// +0x04
 	const BiGSlice*	fSlice;			// +0x08  the kind of word being tried
-	long			fField0c;		// +0x0c  ... and its byte into `gSearchBest`
+	long			fChar;			// +0x0c
 	SearchColumn*	fColumn;		// +0x10  the column being filled
 	short			fBest;			// +0x14  the cheapest reading in it so far
 	UByte			fEndsWord;		// +0x16
@@ -170,14 +172,23 @@ void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 long	SearchBestWords(char** words, UniChar* scores, long* flags,
 				long count, UByte how);					// ROM 0x001d0c48 SearchBestWords
 
-// What `gSearchBest` holds one of per reading in the column, beside the
-// node itself.  Eight bytes.
+// The **backtrace** for one reading in the column being filled: the
+// node it grew from and the letter that was added.  `StoreFinalPaths`
+// turns these into word tails when the step is over, so a reading that
+// is dropped part way through never costs a cell.
+// DEVIATION: `fFrom` is pointer-sized on the host, so the entry is
+// bigger than the ROM's eight bytes.
 struct SearchBestEntry
 {
-	long			fField00;		// +0x00
-	UByte			fField04;		// +0x04
+	SearchNode*		fFrom;			// +0x00
+	UByte			fChar;			// +0x04
 	UByte			fPad05[3];
 };
+
+// The readings in a column finished off once the step has filled it:
+// each backtrace turned into a real word tail, and the scores measured
+// from the column's own cheapest.
+void	StoreFinalPaths(SearchColumn* column, ULong base);	// ROM 0x001cfaa8 StoreFinalPaths
 
 // A reading grown by one letter, put back into the column it reaches.
 // The column holds its readings in score order and, when it is full,
