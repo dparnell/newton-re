@@ -517,14 +517,22 @@ step charges through - `RosCommonInfo::fCapCostUpper`/`fCapCostLower`/
 that has opinions of its own.  `test_Search` now drives the whole
 search over the ROM's own lexicons and gets a letter back.
 
-Still NOT YET under it: **`GeoContextPenalty`** (1204 B), with
-`GeoContextAux1`, `GeoContextAux2` and `GeoCacheAllocate` - what the
+**`GeoContextPenalty` is done too**, with `GeoContextAux1`,
+`GeoContextAux2` and the cache (`recognition/GeoContext.h`): what the
 geometry between two adjacent letters costs, which is the part that
-tells `rn` from `m`.  It answers nought, so the search weighs the
-classifier, the grammar, the lexicons and the capitals model and
-nothing of how the two shapes sit against each other.  The step charges
-it at **a quarter weight** when the letter before is in another word or
-there is no letter before at all, and in full within a word.
+tells `rn` from `m`.  The engine's nominal drawing of a character is
+sixteen numbers in `rosCharParams` (now all generated and named: its
+bottom, height and width, the room it wants either side, its smallest
+stroke written in one stroke and in more, and what each of those is
+worth), and the two observed boxes are brought to a common size and
+place, fitted by least squares and reduced to nine residuals which go
+through a symmetric nine-by-nine matrix as a quadratic form - a
+Mahalanobis distance.  The step charges it at **a quarter weight** when
+the letter before is in another word or there is no letter before at
+all, and in full within a word.  `docs/curiosities.md` has the whole
+story.
+
+**The lexical search is now complete**: nothing in it is NOT YET.
 
 `SearchDoViterbStep`, `RegisterNewPath`, `StoreFinalPaths`,
 `CapHackDetermineContext`, `SearchFindBest`,

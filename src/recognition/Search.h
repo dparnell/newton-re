@@ -187,10 +187,6 @@ void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 void	SearchDoVStepFromNode(SearchStep* step, SearchNode* node, short* fromProbs,
 				short* fromScratch, Fixed confidence,
 				ULong bias);							// ROM 0x001cf0d8 SearchDoVStepFromNode
-// What the geometry between two letters costs - how the two shapes sit
-// against each other.  NOT YET: answers nought.
-long	GeoContextPenalty(UByte before, RosSegment* beforeSeg, UByte now,
-				RosSegment* nowSeg, long acrossWords);	// ROM 0x000d9ce8 GeoContextPenalty
 // The best readings written out as text, with a score and the
 // dictionary each came from.  The strings are the engine's own, out
 // of the return cache.

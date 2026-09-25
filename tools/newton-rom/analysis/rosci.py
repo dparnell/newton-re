@@ -37,8 +37,8 @@ import romid			# the ROM names itself in what this writes
 
 
 # The tables `rosCI` points at, in the order they are emitted: name, the
-# element type, and how many.  The eight `rosCharParam` tables are one
-# number per character code on eight scales of the engine's own; the two
+# element type, and how many.  The sixteen `rosCharParam` tables are one
+# number per character code on sixteen scales of the engine's own; the two
 # `legal` tables are 256 bits each, saying which character codes may be
 # used at all; the rest are one byte per character code.
 TABLES = [
@@ -46,6 +46,10 @@ TABLES = [
     ("rosCharParam2", "Fixed", 256), ("rosCharParam3", "Fixed", 256),
     ("rosCharParam4", "Fixed", 256), ("rosCharParam5", "Fixed", 256),
     ("rosCharParam6", "Fixed", 256), ("rosCharParam7", "Fixed", 256),
+    ("rosCharParam8", "Fixed", 256), ("rosCharParam9", "Fixed", 256),
+    ("rosCharParam10", "Fixed", 256), ("rosCharParam11", "Fixed", 256),
+    ("rosCharParam12", "Fixed", 256), ("rosCharParam13", "Fixed", 256),
+    ("rosCharParam14", "Fixed", 256), ("rosCharParam15", "Fixed", 256),
     ("rosCharLegalNet", "ULong", 8), ("rosCharLegalUse", "ULong", 8),
     ("rosCharOfNetNode", "UByte", 256), ("rosCharToNetNode", "UByte", 256),
     ("rosCharCompoundPart1", "UByte", 256), ("rosCharCompoundPart2", "UByte", 256),
@@ -53,7 +57,7 @@ TABLES = [
     ("rosCapHackAltCase2", "UByte", 256),
 ]
 
-# `rosCharParams` is an array of pointers to the eight parameter tables.
+# `rosCharParams` is an array of pointers to the sixteen parameter tables.
 PARAMS_TABLE = "rosCharParams"
 
 # The 0x10c-byte template, slot by slot: the C field name, whether the slot
@@ -80,7 +84,7 @@ FIELDS = [
     ("fCapCaseWeight", "word", 1),		# +0x3c
     ("fHeightSpread", "word", 1),		# +0x40
     ("fShapeWeight", "word", 1),		# +0x44
-    ("fField48", "word", 1),			# +0x48
+    ("fGeoWeight", "word", 1),			# +0x48
     ("fMinStrokeSize", "word", 1),		# +0x4c
     ("fField50", "word", 1),			# +0x50
     ("fMinCharWidth", "word", 1),		# +0x54
@@ -158,15 +162,15 @@ def main(argv=None) -> int:
         out.append("};")
         out.append("")
 
-    # the eight parameter tables, by name
+    # the sixteen parameter tables, by name
     addr = by_name[PARAMS_TABLE]
     names = []
-    for i in range(8):
+    for i in range(16):
         target = struct.unpack(">I", rom[addr + i * 4: addr + i * 4 + 4])[0]
         names.append(by_addr.get(target, f"/* 0x{target:08x} */ nil"))
     out.append(f"// ROM 0x{addr:08x} {PARAMS_TABLE}")
-    out.append(f"extern const Fixed* const\t{PARAMS_TABLE}[8];")
-    out.append(f"const Fixed* const\t{PARAMS_TABLE}[8] = {{")
+    out.append(f"extern const Fixed* const\t{PARAMS_TABLE}[16];")
+    out.append(f"const Fixed* const\t{PARAMS_TABLE}[16] = {{")
     for n in names:
         out.append(f"\t{n},")
     out[-1] = out[-1][:-1]

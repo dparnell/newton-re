@@ -9,6 +9,7 @@
 
 #include "Search.h"
 #include "LELang.h"
+#include "GeoContext.h"
 #include "RosEngine.h"
 #include "RosStrokes.h"			// kRosettaMemoryTag
 #include "NewtonMemory.h"
@@ -1272,19 +1273,6 @@ SearchNextLangNode(const UByte* langBytes, ULong entry, const UByte* at)
 	if ((flags & 0x10) != 0)
 		next |= 0x80000000;
 	return next;
-}
-
-
-// ROM 0x000d9ce8 GeoContextPenalty
-// NOT YET: what the geometry between two letters costs - how the two
-// shapes sit against each other, which is what tells `rn` from `m`.
-// Answers nought, so the search weighs everything else and nothing of
-// the shape.
-long
-GeoContextPenalty(UByte /*before*/, RosSegment* /*beforeSeg*/, UByte /*now*/,
-				RosSegment* /*nowSeg*/, long /*acrossWords*/)
-{
-	return 0;
 }
 
 

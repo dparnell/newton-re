@@ -177,12 +177,6 @@ BiGSliceNew(short capacity)
 
 // ROM 0x000ffd60 LEquiesant
 void	LEquiesant(void)									{ }
-// ROM 0x000d9cc8 GeoContextClearCache
-// Three numbers the geometry context caches about the piece it was
-// last asked about; the rest of `GeoContext*` is NOT YET.
-void	GeoContextClearCache(void)							{ }
-// ROM 0x000d9ce4 GeoCQuiesence
-void	GeoCQuiesence(void)									{ }
 
 // ROM 0x0011343c ListZap
 void	ListZap(void)											{ }

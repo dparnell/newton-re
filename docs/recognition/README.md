@@ -3265,14 +3265,67 @@ of its flags.  So a short hop costs one byte and a long one costs four,
 and a lexicon of fifty thousand words is not paying four bytes a
 letter.
 
-#### What is left: the geometry
+#### How two letters sit against each other
 
-`GeoContextPenalty` (1204 B) is NOT YET, with `GeoContextAux1`,
-`GeoContextAux2` and `GeoCacheAllocate` under it.  It answers nought,
-so the search weighs the classifier, the grammar, the lexicons and the
-capitals model, and nothing of how the two shapes sit against each
-other - which is the part that tells `rn` from `m`.  Everything else in
-the search is reconstructed.
+`GeoContextPenalty` (`recognition/GeoContext.h`) is the last thing the
+step charges for, and the part that tells `rn` from `m`.  The
+classifier sees much the same ink either way; only the sizes and places
+of the two boxes say which reading the writer meant.
+
+The engine carries a **nominal drawing** of every character it can
+read - sixteen numbers apiece in `rosCharParams`, all as fractions of
+the cap height:
+
+| table | |
+|---|---|
+| 0 | where its bottom sits above the baseline |
+| 1 | how tall it is |
+| 2 | how wide |
+| 3, 4 | how much room it wants before it and after it |
+| 5, 6 | how big its smallest stroke is, written in one stroke and in more |
+| 7..13 | what each of those measurements is worth about this character |
+
+The numbers are what you would expect: an `i` is 0.221 wide and an `m`
+0.753; a full stop's bottom is 0.058 above the baseline and an
+apostrophe's is 0.720; an `i` drawn in one stroke has a smallest stroke
+of 0.482, which is its stem, and drawn in two it has 0.084, which is
+its dot.
+
+`GeoContextAux1` takes the two observed boxes, turns the y values over
+so up is positive as it is in the nominal drawing, divides everything
+by sixty-four so the squares below cannot overflow, moves the four y
+edges and the four x edges so each set averages nought, and scales so
+the eight edges come to sixteen between them.  What is left is the
+shape and the relative placing, and nothing of the size.
+
+`GeoContextAux2` lays the two nominal boxes out the same way - the
+first with its right edge at nought, the second `dx` further along,
+where `dx` is what the two characters say the gap should be (the room
+one wants after it and the other before it; laid on top of each other
+at a word boundary; wider still across two words) - centres them
+likewise, fits the one remaining scale by least squares, and takes nine
+residuals: each box's bottom, top, width and smallest stroke, and the
+gap between them.  Each is weighted by what the two characters say that
+measurement is worth about them, and the gap is dropped altogether when
+the two expectations disagree about which way it is wrong.
+
+The nine then go through a symmetric nine-by-nine matrix (`kGeoWeights`,
+81 signed 16.16 numbers with no symbol on them) as a **quadratic
+form** - a Mahalanobis distance, positive definite, so the residuals
+are weighed against each other rather than added up.  The off-diagonal
+entries among the four height residuals are large and positive, so two
+residuals of the same sign cost far more than two of opposite sign:
+what the fit could not absorb is damning, and two letters sitting a
+little differently is not.  That is the whole `rn`/`m` decision - two
+boxes seven wide and fourteen tall with a one-pixel gap score 478 read
+as `rn` and 2487 read as `mm` (`test_GeoContext`).
+
+The answer is multiplied by `RosCommonInfo::fGeoWeight` (twenty) and
+truncated to a short.  A hundred answers are cached against the pair of
+segments they were asked about, thrown away whenever the pair changes;
+`SearchDoViterbStep` also empties it by hand.
+
+With this the lexical search is complete.
 
 #### Write it three times
 

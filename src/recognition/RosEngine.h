@@ -75,9 +75,12 @@ struct RosCommonInfo
 	// and `fStrokeCountWeight` is nought to match, so nothing uses it.
 	const Fixed*		fCharStrokeProbs;	// +0x00
 	ULong				fField04[2];		// +0x04
-	// eight numbers per character code, on eight scales of the
+	// Sixteen numbers per character code, on sixteen scales of the
 	// engine's own.  Table 1 is the nominal width a character takes,
-	// which is what the cap height is worked out from.
+	// which is what the cap height is worked out from; tables 0 to 13
+	// are the nominal drawing of a character and what each part of it
+	// is worth, which is what `recognition/GeoContext.h` measures the
+	// writing against.
 	const Fixed* const*	fCharParams;		// +0x0c  rosCharParams
 	ULong				fField10;			// +0x10
 	// 256 bits each: which character codes there are, and which of
@@ -109,7 +112,10 @@ struct RosCommonInfo
 	Fixed				fCapCaseWeight;		// +0x3c  a fifth
 	Fixed				fHeightSpread;		// +0x40  0.26 - and the gate for it
 	Fixed				fShapeWeight;		// +0x44  (0: off)
-	ULong				fField48;			// +0x48
+	// What the geometry between two letters is worth against
+	// everything else the search weighs; nought switches
+	// `GeoContextPenalty` off altogether.
+	Fixed				fGeoWeight;			// +0x48
 	// under this a stroke has no shape at all - and, because it is the
 	// same number, the smallest cap height that will be believed
 	Fixed				fMinStrokeSize;		// +0x4c
@@ -375,11 +381,9 @@ struct RosStroke;
 // cutting is made of - is `recognition/Segment.h`.
 struct RosSegment;
 
-// The lexical search and the geometry, quietened; the sentence read so
-// far, forgotten.
+// The lexical search quietened; the sentence read so far, forgotten.
+// (The geometry's own `GeoCQuiesence` is `recognition/GeoContext.h`.)
 void	LEquiesant(void);									// ROM 0x000ffd60 LEquiesant
-void	GeoContextClearCache(void);						// ROM 0x000d9cc8 GeoContextClearCache
-void	GeoCQuiesence(void);								// ROM 0x000d9ce4 GeoCQuiesence
 
 // The engine's own free list, emptied.
 void	ListZap(void);										// ROM 0x0011343c ListZap

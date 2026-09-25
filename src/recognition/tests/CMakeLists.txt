@@ -72,6 +72,10 @@ target_link_libraries(test_Search PRIVATE recognition memory)
 target_compile_definitions(test_Search PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME recognition.Search COMMAND test_Search)
 
+add_executable(test_GeoContext test_GeoContext.cpp)
+target_link_libraries(test_GeoContext PRIVATE recognition memory)
+add_test(NAME recognition.GeoContext COMMAND test_GeoContext)
+
 add_executable(test_WordTails test_WordTails.cpp)
 target_link_libraries(test_WordTails PRIVATE recognition memory)
 add_test(NAME recognition.WordTails COMMAND test_WordTails)

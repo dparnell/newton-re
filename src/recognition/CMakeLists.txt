@@ -36,6 +36,8 @@ add_library(recognition STATIC
     RosStrokes.cpp
     WordTails.cpp
     Search.cpp
+    GeoContext.cpp
+    GeoTables.cpp
     LELang.cpp
     LELangTables.cpp
     SearchEasterEgg.cpp

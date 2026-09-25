@@ -37,6 +37,7 @@
 #include "Segment.h"
 #include "CharBox.h"
 #include "Search.h"
+#include "GeoContext.h"
 #include "ROMDictionaryData.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"

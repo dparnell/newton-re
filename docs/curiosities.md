@@ -1680,3 +1680,74 @@ three times running.
 
 *`src/recognition/Search.cpp`; the two tables are generated into
 `SearchEasterEgg.cpp`.*
+
+
+## How the Newton tells `rn` from `m`
+
+Write `rn` and write `m`.  The ink is nearly the same - downstrokes with
+arches between them, give or take - and a neural net looking at the
+picture cannot reliably tell them apart.  The Newton's does not try to.
+What decides it is a piece of arithmetic in `GeoContextPenalty` that
+nobody would guess was in a 1997 handheld.
+
+The engine carries a **nominal drawing** of every character it can read:
+sixteen numbers apiece, all as fractions of the cap height.  Where the
+character's bottom sits above the baseline, how tall it is, how wide,
+how much room it wants before it and after it, and how big its smallest
+stroke ought to be - once for when it is written in a single stroke and
+once for when it is written in more.  The numbers are exactly what you
+would expect if you looked: an `i` is 0.221 wide and an `m` is 0.753; a
+full stop's bottom is 0.058 above the baseline and an apostrophe's is
+0.720; an `i` drawn in one stroke has a smallest stroke of 0.482, which
+is its stem, and drawn in two it has 0.084, which is its dot.
+
+Given two character codes and the two pieces of ink they would be read
+from, the engine lays out the two nominal boxes side by side, with the
+gap between them that the two characters say they want.  It lays the two
+observed boxes beside each other likewise.  Then it brings both pairs to
+the same size and the same place - subtract the mean, scale so the eight
+edges come to sixteen between them - and works out the one remaining
+scale factor that brings the observed nearest the nominal, which is an
+ordinary least-squares fit.  What is left over is nine numbers: how
+wrong each box's bottom is, its top, its width, its smallest stroke, and
+how wrong the gap between them is.
+
+And then, instead of adding the nine up, it puts them through a
+symmetric nine-by-nine matrix as a quadratic form - `sum over i of v[i]
+times the sum over j of M[i][j] v[j]`.  That is a **Mahalanobis
+distance**: the residuals are weighed *against each other* rather than
+one at a time.  The matrix is positive definite (a Cholesky
+factorisation goes through), symmetric to the last bit in all thirty-six
+off-diagonal pairs, and sits in the ROM as 81 signed 16.16 numbers with
+no symbol on it at all.
+
+The off-diagonal entries are what make it work, and they are all large
+and *positive* among the four height residuals: `M[bottom1][bottom2]` is
+6.53 against a diagonal of 8.27.  Two residuals of the same sign
+therefore cost far more than two of opposite sign - both boxes being
+too tall by one unit costs 29.7, one too tall and the other too short
+costs 3.55.  That looks backwards until you remember what the fit has
+already taken out: a common shift and a common scale are gone, so an
+error the two letters *share* is one the fit could not absorb and is
+genuinely damning, while opposite errors are just two letters sitting a
+little differently, which handwriting does all day long.
+
+That is the whole `rn`/`m` decision.  Two boxes seven wide and fourteen
+tall with a one-pixel gap score 478 read as `rn` and 2487 read as `mm` -
+five times as much - and almost all of the difference is in those four
+height numbers, because two `m`s would be far wider relative to their
+height than this ink is, and both letters are wrong about it in the same
+direction.  Reading the same ink as `oo` costs 315.
+
+The answer is then multiplied by twenty and truncated to a short,
+because every score in this engine is a negative logarithm times five
+hundred and the search only ever adds.  Because the search asks the same
+question over and over while it works through one pair of segments, the
+last hundred answers are kept in a little cache keyed on the two
+character codes and thrown away whenever the pair of segments changes;
+the normalised boxes themselves are worked out once per pair, on the
+first question asked about it.
+
+*`src/recognition/GeoContext.cpp`; the matrix is generated into
+`GeoTables.cpp` and the sixteen tables into `RosCITables.cpp`.  The
+scores above are `test_GeoContext`'s own.*
