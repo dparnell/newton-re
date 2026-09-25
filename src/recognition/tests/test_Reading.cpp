@@ -143,7 +143,7 @@ static double
 LetterC(double x, double base)
 {
 	PenStart();
-	Arc(x + h * 0.45, base - h / 2, h * 0.45, h / 2, 50, 310, true);
+	Arc(x + h * 0.35, base - h / 2, h * 0.32, h / 2, 50, 310, true);
 	PenUp();
 	return x + h * 0.85;
 }
