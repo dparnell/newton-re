@@ -257,15 +257,132 @@ main()
 		NetPatternDestroy(p);
 	}
 
+	// ---- the arctangent, in cycles ----
+	{
+		// a whole turn is 0x10000; the arguments are (y, x)
+		EXPECT(ApproxFixATan2Cycles(0, F(1)) == 0);			// due "east"
+		EXPECT(ApproxFixATan2Cycles(0, F(-1)) == -0x8000);	// ... and back
+		Fixed quarter = ApproxFixATan2Cycles(F(1), 0);
+		EXPECT(quarter > 0x3f00 && quarter < 0x4100);		// a quarter turn
+		Fixed eighth = ApproxFixATan2Cycles(F(1), F(1));
+		EXPECT(eighth > 0x1f00 && eighth < 0x2100);			// an eighth
+		EXPECT(ApproxFixATan2Cycles(F(-1), F(1)) == -eighth);
+		// and it stays inside a turn whatever it is given
+		for (long i = 0; i < 16; i++)
+		{
+			Fixed a = ApproxFixATan2Cycles(F(i - 8), F(i * 3 - 20));
+			EXPECT(a >= -0x8000 && a <= 0x8000);
+		}
+	}
+
+	// ---- where the pen went ----
+	{
+		NetStrokePatternizer* pud = (NetStrokePatternizer*) multi->fChildren[1];
+		EXPECT(pud->fType == &NetPatternStrokePUDT);
+		EXPECT(pud->fWidth == 20 && pud->fHeight == 9);
+		EXPECT(pud->fInputs == net->fUnits + 196);
+
+		NetPattern* p = NetPatternCreate((NetPatternizer*) pud);
+		// two strokes: one straight down, then one straight across,
+		// with a jump between them
+		FPoint down[2], across[2];
+		down[0].x = F(0);	down[0].y = F(0);
+		down[1].x = F(0);	down[1].y = F(40);
+		across[0].x = F(20);	across[0].y = F(0);
+		across[1].x = F(60);	across[1].y = F(0);
+		RosStroke* two[2];
+		two[0] = StrokeCreate(2, down);
+		two[1] = StrokeCreate(2, across);
+		RosStrokeList* writing = SLCreate(2, two);
+
+		pud->fType->fSLToPat(net, writing, p, 0, F(40), F(60), 0, F(40), F(60), 0, 0, 0);
+		const UByte* grid = ((NetStrokePattern*) p)->fCells;
+
+		// every column says which way it was going, spread over two of
+		// the eight buckets, and how much of the step the pen was up
+		for (long c = 0; c < 20; c++)
+		{
+			long lit = 0, sum = 0;
+			for (long r = 1; r < 9; r++)
+				if (grid[r * 20 + c] != 0)
+				{
+					lit++;
+					sum += grid[r * 20 + c];
+				}
+			EXPECT(lit >= 1 && lit <= 2);
+			EXPECT(sum == 0xff);				// the two share 255 between them
+		}
+
+		// the jump between the strokes is a run of steps with the pen
+		// up, in the middle: the downstroke is forty long, the jump
+		// about forty-five and the stroke across forty, so a fifth of
+		// the way each
+		long first = -1, last = -1, up = 0;
+		for (long c = 0; c < 20; c++)
+			if (grid[c] > 0x80)
+			{
+				if (first < 0)
+					first = c;
+				last = c;
+				up++;
+			}
+		EXPECT(up >= 4 && up <= 9);
+		EXPECT(last - first + 1 == up);		// one run, not scattered
+		EXPECT(first > 3 && last < 17);		// ... and in the middle
+
+		// ... and the first and last steps are drawn on the paper
+		EXPECT(grid[0] < 0x80);
+		EXPECT(grid[19] < 0x80);
+
+		// it reaches the net's inputs 196 onwards
+		for (long i = 0; i < 180; i++)
+			net->fUnits[196 + i] = 0x5a;
+		NetPatternSetInput(p);
+		Boolean same = true;
+		for (long i = 0; i < 180; i++)
+			if (net->fUnits[196 + i] != grid[i])
+				same = false;
+		EXPECT(same);
+
+		SLDestroy(writing, 1);
+		NetPatternDestroy(p);
+	}
+
 	// ---- and the whole set measures at once ----
 	{
 		NetPattern* p = NetPatternCreate(all);
 		EXPECT(p != nil);
 		NetMultiPattern* mp = (NetMultiPattern*) p;
 		EXPECT(mp->fCount == 4);
-		EXPECT(mp->fChildren[0] != nil);				// the image
-		EXPECT(mp->fChildren[2] != nil && mp->fChildren[3] != nil);
-		EXPECT(mp->fChildren[1] == nil);				// StrokePUD is NOT YET
+		for (ULong i = 0; i < mp->fCount; i++)
+			EXPECT(mp->fChildren[i] != nil);
+
+		// every one of the net's 384 inputs written, from one piece of
+		// writing, in one call
+		FPoint p2[2];
+		p2[0].x = F(0);	p2[0].y = F(0);	p2[1].x = F(20);	p2[1].y = F(30);
+		RosStroke* one[1];
+		one[0] = StrokeCreate(2, p2);
+		RosStrokeList* writing = SLCreate(1, one);
+		for (long i = 0; i < net->fInputCount; i++)
+			net->fUnits[i] = 0x5a;
+		all->fType->fSLToPat(net, writing, p, 0, F(30), F(30), 0, F(30), F(30), 0, 0, F(20));
+		NetPatternSetInput(p);
+		long touched = 0;
+		for (long i = 0; i < net->fInputCount; i++)
+			if (net->fUnits[i] != 0x5a)
+				touched++;
+		EXPECT(touched > 300);			// nearly all of them
+
+		// ... and the classifier answers
+		BPNetEvaluate(net);
+		long best = 0;
+		for (long i = 1; i < net->fOutputCount; i++)
+			if (net->fOutputs[i] > net->fOutputs[best])
+				best = i;
+		EXPECT(net->fOutputs[best] > 0);
+
+		SLDestroy(writing, 1);
 		NetPatternDestroy(p);
 	}
 

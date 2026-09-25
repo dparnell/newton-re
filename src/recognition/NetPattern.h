@@ -43,11 +43,10 @@
 				*one-hot* over the group's cells (when it is more than
 				one), which is what `NetPatternSetNth` does.
 
-	NOT YET: `StrokePUD`, the twenty-by-nine grid of where the pen
-	went.  Neither the segment layer nor the feature extraction is
-	there either, so nothing drives these from a real piece of writing
-	yet; a stroke list drives them directly, which is what the test
-	does.
+	All seven kinds are here.  Neither the segment layer nor the
+	feature extraction is reconstructed yet, so nothing drives them
+	from a real piece of writing; a stroke list drives them directly,
+	which is what the test does.
 
 	Reconstructed from the MP2x00 US ROM (0x00131f5c-0x00133c7c); each
 	function cites its origin.
@@ -163,14 +162,32 @@ struct NetImagePattern
 	UByte*			fPixels;		// +0x08  this pattern's own grid
 };
 
-// The pen-up/down grid: NOT YET, so only what every patternizer has.
-// The ROM's is 0x18 bytes and its pattern 0x14.
+// The pen-up/down grid: twenty steps along the writing, and for each
+// one which way the pen was going and whether it was on the paper.
+// The ROM's patternizer is 0x18 bytes and its pattern 0x0c.
 struct NetStrokePatternizer
 {
 	const NetPatternizerType*	fType;
 	long			fRefCount;
-	long			fField08[4];	// +0x08 .. +0x14
+	UByte			fOn;			// +0x08
+	UByte			fOff;			// +0x09
+	UByte			fPad0a[2];
+	long			fWidth;			// +0x0c  twenty steps
+	long			fHeight;		// +0x10  nine: one for the pen, eight for the way
+	UByte*			fInputs;		// +0x14
 };
+
+struct NetStrokePattern
+{
+	NetPatternizer*	fPatternizer;
+	UByte			fField04;
+	UByte			fPad05[3];
+	UByte*			fCells;			// +0x08  fWidth * fHeight of them
+};
+
+// The arctangent in cycles: a whole turn is 0x10000, so the answer
+// runs from -0x8000 to 0x8000.  A cubic, with no table.
+Fixed	ApproxFixATan2Cycles(Fixed y, Fixed x);				// ROM 0x001337d8 ApproxFixATan2Cycles
 
 // The composite: one child per input group of the net.  The ROM's
 // patternizer is 0x10 bytes and so is its pattern.

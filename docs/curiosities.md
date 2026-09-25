@@ -1339,3 +1339,52 @@ page tables and a constant added to a pointer.
 
 *`src/recognition/BPNet.cpp`; `docs/recognition/bpnet.md` has the table
 and the rest of the evaluator.*
+
+
+## What the Newton actually looks at when it reads your handwriting
+
+The classifier at the bottom of the handwriting engine has 384 inputs,
+and the engine's own tables say exactly what goes into them. There are
+four groups (`recognition/NetPattern.h`):
+
+| | what | inputs |
+|---|---|---|
+| `ImageSplatLimited` | a fourteen-by-fourteen picture of the writing | 196 |
+| `StrokePUD` | twenty steps along it, and which way the pen was going | 180 |
+| `AspectNorm` | how wide it is against how tall | 1 |
+| `StrokeCount` | how many strokes it took | 7 |
+
+196 + 180 + 1 + 7 = 384. That is the whole of it. Two of those groups
+are worth a second look.
+
+**The picture is drawn, not sampled.** The engine has a renderer of its
+own that anti-aliases by *drawing big and counting*: a one-bit bitmap
+four times the size, a pen made of eight pre-shifted stencils so that
+putting it down is an OR and never a shift, and then a table that says,
+for each of the 256 byte values, how much each output cell of that byte
+gains. A set sub-pixel is worth 15, so a four-by-four block comes to
+240 and a byte still holds it.
+
+And the scale is *limited*, which is the bit with judgement in it.
+Each axis wants to fill the grid, but it is held to at most two and a
+half times life size, and then the two axes are held to within three
+times each other. Without that a lower-case `l` would be blown up into
+a letter-shaped smear and an `m` squashed flat, and the net would be
+shown two things that look alike and mean nothing.
+
+**The second group knows that writing is a movement.** `StrokePUD`
+divides the whole length of the writing — every stroke, and the jumps
+between them — into twenty equal steps, and walks it at a steady
+speed. At each step it writes down which of eight directions the pen
+is going (spread between two neighbouring buckets, which *wrap*,
+because a direction does) and one more number: how much of that step
+the pen was **up**.
+
+So the Newton is not reading a picture of your writing. It is reading a
+picture of your writing *and a recording of the gesture that made it*,
+including the bits where you lifted the pen — which is why it can tell
+a hand-drawn `5` from an `S`, and why writing the same shape in a
+different order reads differently.
+
+*`src/recognition/NetPattern.cpp` and `Render.cpp`;
+`docs/recognition/README.md` has the layers.*

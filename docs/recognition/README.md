@@ -2210,8 +2210,8 @@ twenty-by-nine grid of where the pen went (180), how wide it is
 against how tall (1), and how many strokes it took (7). That is
 everything the classifier is shown.
 
-A scalar patternizer is the simple case and shows how a measurement
-reaches the net: the value is nought to one in 16.16, written either
+All seven kinds are reconstructed. A scalar patternizer is the simple
+case and shows how a measurement reaches the net: the value is nought to one in 16.16, written either
 as one byte of brightness when the group is a single input or as a
 **one-hot** over the group's cells when it is more than one. The five
 scalars are `AspectNorm` (width over height, as a fraction of one and
@@ -2240,8 +2240,31 @@ are held to within three times each other, which is what *Splat
 letter-shaped smear, and an `m` is not squashed flat. With the scales
 settled the writing is centred in the grid and drawn.
 
-`StrokePUD`, the twenty-by-nine grid of where the pen went, is NOT
-YET.
+**Where the pen went.** `StrokePUD` is the other 180 inputs, and it is
+the one that knows the writing is a *movement* rather than a shape.
+Every point of every stroke goes into four parallel arrays — where it
+was, how far it is from the one before, and whether the pen was *down*
+getting there, because the first point of a stroke is a jump and not a
+stroke of the pen. The whole length is then divided into twenty equal
+steps and the engine walks it at a steady speed, writing down at each
+step where it has got to and which way it is going.
+
+A column of the grid is nine cells. Eight are the direction of
+travel, spread between two neighbouring buckets by how far between
+them it falls — and the buckets **wrap**, because a direction does.
+The ninth, the first, is how much of that step the pen was *up*: 255
+for a jump between strokes and nought for a stroke drawn on the paper.
+That is what the name says.
+
+The angle comes from `ApproxFixATan2Cycles`, which answers in
+*cycles* — a whole turn is 0x10000 — as a cubic in the smaller of the
+two coordinates over the larger, with the octant added afterwards and
+no table at all.
+
+`test_NetPattern` draws a stroke down and a stroke across with a jump
+between them, and the pen row comes out as six steps down, seven up
+and six across — which is the two strokes and the jump, in the right
+proportion.
 
 ### The bigram grammar (`recognition/ROMGrammar.cpp`)
 

@@ -710,24 +710,288 @@ NetPatternImageSetInput(NetPattern* self)
 
 #pragma mark -
 /*--------------------------------------------------------------------
-	NOT YET: the pen-up/down grid.
+	The pen-up/down grid.
 --------------------------------------------------------------------*/
 
+// ROM 0x001330ac NetPatternizerStrokeInit
+static NetPatternizer*
+NetPatternizerStrokeInit(NetPatternizer* self, UByte on, UByte off,
+						long width, long height, UByte* inputs)
+{
+	NetStrokePatternizer* pud = (NetStrokePatternizer*) self;
+	pud->fOn = on;
+	pud->fOff = off;
+	pud->fWidth = width;
+	pud->fHeight = height;
+	pud->fInputs = inputs;
+	return self;
+}
+
+
 // ROM 0x001330d4 NetPatternizerStrokeInitFromBP
-static void	NetPatternizerStrokeInitFromBP(NetPatternizer*, BPNet*, long, long)	{ }
-// ROM 0x00133130 NetPatternStrokeCreate
-static NetPattern*	NetPatternStrokeCreate(NetPatternizer*)			{ return nil; }
-// ROM 0x0013322c NetPatternStrokePUDSLToPat
-static void	NetPatternStrokePUDSLToPat(BPNet*, RosStrokeList*, NetPattern*, Fixed, Fixed, Fixed,
-									Fixed, Fixed, Fixed, Fixed, Fixed, Fixed)	{ }
-// ROM 0x001338c0 NetPatternStrokeSetInput
-static void	NetPatternStrokeSetInput(NetPattern*)					{ }
-// ROM 0x00133950 NetPatternStrokeDestroy
-static void	NetPatternStrokeDestroy(NetPattern*)					{ }
-// ROM 0x0013312c NetPatternizerStrokeGraph
-static void	NetPatternizerStrokeGraph(NetPatternizer*)				{ }
+static void
+NetPatternizerStrokeInitFromBP(NetPatternizer* self, BPNet* net, long group, long /*flag*/)
+{
+	const ULong* ngs = net->fNGS + group * 2;
+	NetPatternizerStrokeInit(self,
+						(UByte) (net->fArParams[6] & 0xff),
+						(UByte) (net->fArParams[5] & 0xff),
+						(long) (short) (ngs[0] >> 16),
+						// (the ROM takes this one with an unaligned `ldr`)
+						(long) (short) (ngs[0] & 0xffff),
+						net->fUnits + (((int) ngs[1]) >> 16));
+}
+
+
 // ROM 0x00133128 NetPatternizerStrokeDestroy
-static void	NetPatternizerStrokeDestroy(NetPatternizer*)			{ }
+static void	NetPatternizerStrokeDestroy(NetPatternizer* /*self*/)	{ }
+// ROM 0x0013312c NetPatternizerStrokeGraph
+static void	NetPatternizerStrokeGraph(NetPatternizer* /*self*/)		{ }
+
+
+// ROM 0x00133950 NetPatternStrokeDestroy
+static void
+NetPatternStrokeDestroy(NetPattern* self)
+{
+	NetStrokePattern* pattern = (NetStrokePattern*) self;
+	if (pattern == nil)
+		return;
+	if (pattern->fCells != nil)
+		DisposPtr((Ptr) pattern->fCells);
+	DisposPtr((Ptr) pattern);
+}
+
+
+// ROM 0x00133130 NetPatternStrokeCreate
+static NetPattern*
+NetPatternStrokeCreate(NetPatternizer* self)
+{
+	NetStrokePatternizer* pud = (NetStrokePatternizer*) self;
+	NetStrokePattern* pattern = nil;
+	newton_try
+	{
+		pattern = (NetStrokePattern*) RosAllocate((long) sizeof(NetStrokePattern));
+		NetPatternInit_((NetPattern*) pattern, self);
+		pattern->fCells = nil;
+		pattern->fCells = (UByte*) RosAllocate(pud->fHeight * pud->fWidth);
+	}
+	cleanup
+	{
+		NetPatternStrokeDestroy((NetPattern*) pattern);
+	}
+	end_try;
+	return (NetPattern*) pattern;
+}
+
+
+// ROM 0x001337d8 ApproxFixATan2Cycles
+// The arctangent in *cycles*: a whole turn is 0x10000, so the answer
+// runs from -0x8000 to 0x8000.  It is a cubic in the smaller of the
+// two over the larger - `0x28be` is a sixth of a turn per radian, near
+// enough - with the octant added on afterwards, and no table.
+Fixed
+ApproxFixATan2Cycles(Fixed y, Fixed x)
+{
+	if (y == 0)
+		return (x < 0) ? -0x8000 : 0;
+
+	Fixed absY = (y < 0) ? -y : y;
+	Fixed absX = (x < 0) ? -x : x;
+	if (absX < absY)
+	{
+		// steeper than a diagonal: the angle is measured off the
+		// vertical and a quarter turn added
+		Fixed t = -FixedDivide(x, y);
+		Fixed cube = FixedMultiply(FixedMultiply(t, t), t);
+		Fixed angle = FixedMultiply(0x28be, t - cube) + (cube >> 3);
+		return angle + ((x < 0) ? -0x4000 : 0x4000);
+	}
+
+	Fixed t = FixedDivide(y, x);
+	Fixed cube = FixedMultiply(FixedMultiply(t, t), t);
+	Fixed angle = FixedMultiply(0x28be, t - cube) + (cube >> 3);
+	if (x >= 0)
+		return angle;
+	// the other half turn, brought back into range
+	return angle + ((angle < 0) ? 0x8000 : -0x8000);
+}
+
+
+// ROM 0x0013322c NetPatternStrokePUDSLToPat
+// The writing walked at a steady speed, and what the pen was doing
+// written down twenty times along the way.
+//
+// Every point of every stroke goes into four parallel arrays - where
+// it was, how far it is from the one before, and whether the pen was
+// *down* getting there (the first point of a stroke is a jump, not a
+// stroke of the pen).  The whole length is then divided into twenty
+// equal steps, and for each step the engine works out where it has
+// got to and which way it is going.
+//
+// A column of the grid is nine cells.  Eight of them are the direction
+// of travel, spread between two neighbouring buckets by how far
+// between them it falls - and the buckets wrap round, because a
+// direction does.  The ninth, the first, is how much of that step the
+// pen was *up*: 255 for a jump between strokes and nought for a stroke
+// drawn on the paper.  That is what the name says: pen up, pen down.
+static void
+NetPatternStrokePUDSLToPat(BPNet* /*net*/, RosStrokeList* strokes, NetPattern* self,
+						Fixed, Fixed, Fixed, Fixed, Fixed, Fixed, Fixed, Fixed, Fixed)
+{
+	if (self == nil)
+		return;
+	NetStrokePattern* pattern = (NetStrokePattern*) self;
+	NetStrokePatternizer* pud = (NetStrokePatternizer*) self->fPatternizer;
+
+	// how many points there are in all
+	long total = 0;
+	for (short s = 0; s < strokes->fCount; s++)
+		total += strokes->fStrokes[s]->fCount;
+
+	// one block carved into four arrays: x, y, the length of the step
+	// that reached the point, and whether the pen was down for it
+	Fixed* volatile block = nil;
+	newton_try
+	{
+		block = (Fixed*) RosAllocate(total * 13);
+		Fixed* xs = block;
+		Fixed* ys = block + total;
+		Fixed* lens = block + total * 2;
+		UByte* down = (UByte*) (block + total * 3);
+
+		long at = 0;
+		Fixed length = 0;
+		Fixed lastX = 0;
+		Fixed lastY = 0;
+		for (short s = 0; s < strokes->fCount; s++)
+		{
+			RosStroke* stroke = strokes->fStrokes[s];
+			for (short i = 0; i < stroke->fCount; i++)
+			{
+				if (at >= total)
+					return;
+				// the first point of a stroke was reached with the pen
+				// off the paper
+				down[at] = (UByte) (i != 0);
+				xs[at] = stroke->fPoints[i].x;
+				ys[at] = stroke->fPoints[i].y;
+				if (at != 0)
+				{
+					Fixed dx = xs[at] - lastX;
+					Fixed dy = ys[at] - lastY;
+					Fract square = FixedMultiply(dx, dx) + FixedMultiply(dy, dy);
+					Fixed step = (FractSquareRoot(square) + 0x40) >> 7;
+					length += step;
+					lens[at] = step;
+				}
+				lastX = xs[at];
+				lastY = ys[at];
+				at++;
+			}
+		}
+
+		// twenty equal steps along the whole of it
+		Fixed each = FixedDivide(length, (Fixed) (int) ((unsigned int) pud->fWidth << 16));
+		Fixed prevX = xs[0];
+		Fixed prevY = ys[0];
+		long point = 0;
+		Fixed carried = 0;
+		Fixed target = each;
+		for (long cell = 0; cell < pud->fWidth; cell++)
+		{
+			Fixed penDown = 0;
+			// walk on until the next point is further than the step
+			while (point < at - 1 && lens[point + 1] <= target)
+			{
+				point++;
+				target -= lens[point];
+				if (down[point] != 0)
+					penDown += lens[point] - carried;
+				carried = 0;
+			}
+
+			Fixed x, y;
+			if (point < at - 1)
+			{
+				// part way along the segment
+				Fixed t = (lens[point + 1] == 0)
+						? 0x00010000
+						: FixedDivide(target, lens[point + 1]);
+				x = xs[point] + FixedMultiply(t, xs[point + 1] - xs[point]);
+				y = ys[point] + FixedMultiply(t, ys[point + 1] - ys[point]);
+				if (down[point + 1] != 0)
+				{
+					Fixed sofar = FixedMultiply(t, lens[point + 1]);
+					penDown += sofar - carried;
+					carried = sofar;
+				}
+			}
+			else
+			{
+				// ... or at the end of the writing
+				x = xs[at - 1];
+				y = ys[at - 1];
+				if (down[at - 1] != 0)
+				{
+					penDown += lens[at - 1] - carried;
+					carried = lens[at - 1];
+				}
+			}
+
+			// which way it is going, over eight buckets that wrap
+			Fixed angle = ApproxFixATan2Cycles(x - prevX, y - prevY) + 0x8000;
+			long buckets = pud->fHeight - 1;
+			long spread = buckets * angle;
+			long between = (spread >> 8) & 0xff;
+			long first = ((spread >> 16) % buckets) + 1;
+			long second = (first % buckets) + 1;
+
+			for (long r = 0; r < pud->fHeight; r++)
+				pattern->fCells[r * pud->fWidth + cell] = 0;
+			pattern->fCells[first * pud->fWidth + cell] = (UByte) (0xff - between);
+			pattern->fCells[second * pud->fWidth + cell] = (UByte) between;
+
+			// ... and how much of the step the pen was up for
+			Fixed part = FixedDivide(penDown, each);
+			pattern->fCells[cell] = (part < 0x00010000)
+								? (UByte) (0xff - (part >> 8))
+								: 0;
+
+			prevX = x;
+			prevY = y;
+			target += each;
+		}
+	}
+	cleanup
+	{
+		if (block != nil)
+			DisposPtr((Ptr) block);
+	}
+	end_try;
+	if (block != nil)
+		DisposPtr((Ptr) block);
+}
+
+
+// ROM 0x001338c0 NetPatternStrokeSetInput
+// The grid copied into the net's inputs, the same way the picture is.
+static void
+NetPatternStrokeSetInput(NetPattern* self)
+{
+	NetStrokePattern* pattern = (NetStrokePattern*) self;
+	NetStrokePatternizer* pud = (NetStrokePatternizer*) self->fPatternizer;
+	const UByte* src = pattern->fCells;
+	const UByte* end = src + pud->fHeight * pud->fWidth;
+	UByte* dst = pud->fInputs;
+
+	if (pud->fOff != 0 || pud->fOn != 0xff)
+		for (; src < end; src++)
+			*dst++ = (UByte) (pud->fOff
+						+ ((*src * 0x101 * (pud->fOn - pud->fOff)) >> 8));
+	else
+		for (; src < end; src++)
+			*dst++ = *src;
+}
 
 
 #pragma mark -
