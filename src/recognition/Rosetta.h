@@ -28,13 +28,12 @@
 				drawing here explicitly - it is where a modern
 				recogniser would be put in instead.
 
-	NOT YET RECONSTRUCTED: the engine below this line.  Every call here
-	answers the ROM's own "could not" value, so a TRosRecognizer built
-	on it makes no words; `TInkOnlyRecognizer` remains the engine the
-	host installs.  See `docs/recognition/README.md`.
+	The engine below this line is reconstructed as well, and the host
+	installs TRosRecognizer over it: writing is read.  See
+	`docs/recognition/README.md`.
 
 	Reconstructed from the MP2x00 US ROM (0x001b7120-0x001b8500); the
-	entry points cite their origin, the bodies are not there yet.
+	entry points cite their origin, and so do the bodies.
 */
 
 #ifndef __ROSETTA_H

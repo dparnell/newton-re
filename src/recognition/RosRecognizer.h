@@ -26,10 +26,9 @@
 				to eighty strokes, which is handed back whole through
 				`EndInkStrokeGroup` when the drawing ends.
 
-	NOT YET: `AreaInfoConfigure`, which reads a recognition
-	configuration into the engine's area block, and the engine itself.
-	Nothing installs this recogniser while the engine is missing - the
-	host installs `TInkOnlyRecognizer`.
+	`AreaInfoConfigure` reads a recognition configuration into the
+	engine's area block.  The host installs this recogniser
+	(`RegisterRosettaWRec`), so writing is read by the ROM's own engine.
 
 	Reconstructed from the MP2x00 US ROM (0x001b5bac-0x001b7120); each
 	function cites its origin.

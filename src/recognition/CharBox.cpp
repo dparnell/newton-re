@@ -12,6 +12,7 @@
 #include "Segment.h"
 #include "RosStrokes.h"
 #include "BPNet.h"
+#include "GeoContext.h"
 #include "FixedGeometry.h"
 #include "FixedMath.h"
 #include "NewtonMemory.h"
@@ -247,19 +248,95 @@ CharBoxNetEvaluate(CharBox* self, RosStrokeList* strokes,
 }
 
 
-// ROM 0x00056878 CharBoxEvaluate
-// NOT YET.  What the ROM does here is turn those probabilities into its
-// own scores and then lean on them with the geometry of the box: the
-// strokes go to the segment layer (`SegmentSetStrokes`, `SegmentDot`),
-// `CharModifyProbs` adjusts the probabilities, and `GeoContextPenalty`
-// charges each code for how badly it sits in the box.  None of those is
-// reconstructed, so the scores are left as `CharBoxIntialize` set them -
-// which means every code says never and `CharBoxGetChars` answers
-// nothing.
-void
-CharBoxEvaluate(CharBox* /*self*/)
+// ROM 0x000565a4 (unnamed) - the box as a segment
+// The spare segment is given the box itself for its bounds, so that the
+// geometry below can measure the writing against the box as though the
+// box were the letter after it.
+static void
+CharBoxSetBoxSegment(CharBox* self, RosSegment* box)
 {
+	CopyFixedRect(&box->fBounds, &self->fBox);
 }
+
+// ROM 0x000565b4 (unnamed) - the box's strokes as a segment
+static void
+CharBoxSetStrokeSegment(CharBox* self, RosSegment* seg)
+{
+	seg->fCount = (short) self->fStrokeCount;
+	SegmentSetStrokes(seg, (short) self->fStrokeCount, self->fStrokes);
+	SegmentBoundsDotsEtc(seg);
+}
+
+// ROM 0x000565f8 (unnamed) - the geometry the classifier is told
+// A box has no word around it to measure the writing by, so the seven
+// numbers the word recogniser works out of a whole word
+// (`CharGetAvgBoxBHW`) come from the box instead: its bottom is the
+// base line, three quarters of its height is the height a letter is
+// expected to be and four fifths of its width its width, and the box's
+// own height and width stand for the tallest and widest.  The two
+// fractions are the only floating point outside the word spacing - the
+// FPA's FLT, MUF and FIX (rounding toward nought), which is what a C
+// cast from double does.
+static void
+CharBoxGeometry(Fixed out[7], const FRect* box)
+{
+	FPoint size;
+	FixedRectSize(&size, box);
+	out[0] = box->bottom;
+	out[1] = (Fixed) ((double) size.y * 0.75);
+	out[2] = (Fixed) ((double) size.x * 0.8);
+	out[3] = box->bottom;
+	out[4] = size.y;
+	out[5] = size.x;
+	out[6] = size.y;
+}
+
+// ROM 0x00056878 CharBoxEvaluate
+// What the box's writing scores as each of the 256 character codes.
+//
+// The strokes are made a segment and the box another, the classifier is
+// run with the box's geometry (`CharBoxGeometry`), and `CharModifyProbs`
+// leans on its answer with the height model - with nought for
+// everything a word would have told it, so only the segment's own box,
+// its stroke count and whether it has a dot count.  The probabilities
+// become scores the search's way, and then each legal code the
+// classifier did not rule out is charged, at the net's weight, for how
+// badly the writing sits in the box: `GeoContextPenalty` asked about
+// the code followed by character 0x1f written as the box itself - the
+// same question the search asks about two letters side by side, with
+// the box standing in for the letter after.
+void
+CharBoxEvaluate(CharBox* self)
+{
+	Fixed probs[kCharBoxCodeCount];
+	RosSegment* seg = self->fSegment;
+	CharBoxSetBoxSegment(self, self->fSpare);
+	CharBoxSetStrokeSegment(self, self->fSegment);
+	Fixed geometry[7];
+	CharBoxGeometry(geometry, &self->fBox);
+	CharBoxNetEvaluate(self, seg->fStrokes, geometry[0], geometry[1], geometry[2],
+					geometry[3], geometry[4], geometry[5], geometry[6], probs);
+	CharModifyProbs(&seg->fBounds, seg->fStrokes->fCount, seg->fHasDot, 0, 0,
+					0, 0, 0, 0, 0, 0, 0, nil,
+					geometry[3], geometry[4], geometry[5], probs);
+
+	for (long code = 0; code < kCharBoxCodeCount; code++)
+		self->fScores[code] = (short) ArProbEncode(probs[code]);
+
+	GeoContextClearCache();
+	for (long code = 0; code < kCharBoxCodeCount; code++)
+	{
+		if ((RosCI->fLegalUse[code >> 5] & (1UL << (code & 31))) == 0)
+			continue;
+		ULong score = (ULong) (UShort) self->fScores[code];
+		if (score >= (ULong) kCharBoxNever)
+			continue;
+		ULong weighted = (ULong) (((long) (RosCI->fNetScoreWeight * (long) score)) >> 16) & 0xffff;
+		long penalty = GeoContextPenalty((UByte) code, self->fSegment, 0x1f, self->fSpare, 0);
+		self->fScores[code] = (short) (penalty + (long) weighted);
+	}
+}
+
 
 
 // ROM 0x00056590 (unnamed)

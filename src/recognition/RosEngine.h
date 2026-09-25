@@ -33,8 +33,9 @@
 	The common info and the grammar are **real**: `CharInitialize`
 	copies the ROM's template and `BiGrammarsLoad` answers the ROM's
 	own eight grammars (`RosCITables.cpp` and `ROMGrammar.cpp`, both
-	generated).  The segments, the classifier and its patternizers are
-	NOT YET, and each does as little as it can without lying.
+	generated).  So are the segments
+	(`Segment.h`), the classifier (`BPNet.h`) and its patternizers
+	(`NetPattern.h`).
 
 	Reconstructed from the MP2x00 US ROM; each declaration cites its
 	origin.
@@ -307,8 +308,6 @@ extern const BiGrammars	ROMGrammar;						// ROM 0x00366e0c ROMGrammar
 // answers what it is handed, so a caller may bring a grammar of its
 // own.
 const BiGrammars*	BiGrammarsLoad(const BiGrammars* source);	// ROM 0x0003e0b4 BiGrammarsLoad
-// A grammar the engine built for itself, given back.  NOT YET; the
-// eight in the ROM are never destroyed.
 // A grammar and one kind of word in it, made and given back.  Both keep
 // their arrays *behind the struct in the same block*, so each is one
 // allocation and one `DisposPtr`.

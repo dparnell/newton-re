@@ -11,11 +11,10 @@
 				a dot, how big the smallest of them is, and whether it
 				runs on into the piece after it.
 
-				The cutting itself (`SegmentChars` over `SegmentStroke`
-				and `SegmentMakeSegments`) is NOT YET.  What is here is
+				The cutting itself is `SegmentChars` over
+				`SegmentStroke` and `SegmentMakeSegments`.  Under it are
 				what a segment *is* and the measurements the cutting is
-				made of, which are worth having on their own because
-				every one of them is a small, sharp question about two
+				made of, each of them a small, sharp question about two
 				pieces of ink:
 
 				* `SegmentDot` - is this small enough in **both**

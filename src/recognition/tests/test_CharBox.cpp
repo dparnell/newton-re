@@ -195,10 +195,18 @@ main()
 
 	// ---- the characters it answers ----
 	{
-		// NOT YET: `CharBoxEvaluate` is what turns those probabilities
-		// into scores, so every code still says never and nothing is
-		// answered - but the array the caller offered is cleared all the
-		// same, which is what this pins.
+		// a cross written in a box of its own: the classifier's answer
+		// made scores, leaned on by the height model and charged for how
+		// it sits in the box, and the best of them handed back sorted
+		CharBox* cross = nil;
+		CharBoxIntialize(&cross, 0, &box, 0, net);
+		RosStroke* down = Line(F(25), F(22), F(25), F(58));
+		RosStroke* across = Line(F(12), F(40), F(38), F(40));
+		CharBoxAddStroke(cross, down);
+		CharBoxAddStroke(cross, across);
+		StrokeDestroy(down);
+		StrokeDestroy(across);
+
 		CharBoxChoice out[8];
 		for (long i = 0; i < 8; i++)
 		{
@@ -206,10 +214,24 @@ main()
 			out[i].fCode = 0x55;
 		}
 		short count = 8;
-		CharBoxGetChars(cb, out, &count);
-		EXPECT(count == 0);
-		for (long i = 0; i < 8; i++)
+		CharBoxGetChars(cross, out, &count);
+		for (long i = 0; i < count; i++)
+			printf("  '%c' %d\n", out[i].fCode, out[i].fScore);
+		// the three the classifier believed in and nothing else - but
+		// in a new order.  The net liked the plus sign best; in a box
+		// the geometry decides, and a stroke that runs the whole height
+		// of the box is a t's or a T's, not a plus sign's, which sits
+		// on the middle of the line.  (Scores: lower is better.)
+		EXPECT(count == 3);
+		EXPECT(out[0].fCode == 't' && out[1].fCode == 'T' && out[2].fCode == '+');
+		for (long i = 1; i < count; i++)
+			EXPECT(out[i - 1].fScore <= out[i].fScore);
+		// what it did not answer is cleared
+		for (long i = count; i < 8; i++)
 			EXPECT(out[i].fScore == 0 && out[i].fCode == 0);
+		// every code the area will not have still says never
+		EXPECT(cross->fScores[0] == kCharBoxNever);
+		CharBoxDestroy(cross);
 
 		// a box with nothing in it answers nothing and touches nothing
 		CharBox* empty = nil;

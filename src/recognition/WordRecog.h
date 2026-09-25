@@ -317,7 +317,7 @@ void		WordRecogReturnWords(WordRecog* wr, char** words, UniChar* scores, long* f
 void	WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed field04,
 						long endWord, short how, Fixed separation);	// ROM 0x00274cf0 WordRecogAddStroke2
 
-// The word cut into characters and read.  NOT YET.
+// The word cut into characters and read.
 void	WordRecogAnalyzeWord(WordRecog* wr);					// ROM 0x002766c0 WordRecogAnalyzeWord
 
 // Whether the strokes of a word are sorted as groups (the pieces of a

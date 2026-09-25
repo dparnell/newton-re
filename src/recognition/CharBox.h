@@ -22,12 +22,11 @@
 				net which never learnt the pair still has an opinion
 				about it.
 
-	NOT YET: `CharBoxEvaluate`, which is what turns those probabilities
-	into the engine's own scores and then leans on them with the
-	geometry of the box.  It wants the segment layer, `CharModifyProbs`
-	and the `GeoContext*` penalties, none of which are reconstructed;
-	so `CharBoxGetChars` has nothing to sort yet and the way in for now
-	is `CharBoxNetEvaluate` itself, which is what the test drives.
+				`CharBoxEvaluate` turns those probabilities into the
+				engine's own scores and leans on them with the geometry
+				of the box - the height model (`CharModifyProbs`) and
+				`GeoContextPenalty`, with the box standing in for the
+				letter after - and `CharBoxGetChars` sorts them.
 
 	Reconstructed from the MP2x00 US ROM (0x000561c8-0x00056b7c); each
 	function cites its origin.
@@ -98,7 +97,7 @@ void	CharBoxNetSetInputs(NetPattern* pattern, BPNet* net, RosStrokeList* strokes
 					Fixed a10);								// ROM 0x000563c4 CharBoxNetSetInputs
 
 // The scores turned into the engine's own and leaned on by the box's
-// geometry.  NOT YET.
+// geometry.
 void	CharBoxEvaluate(CharBox* self);						// ROM 0x00056878 CharBoxEvaluate
 // The best codes, sorted, stopping at the first that scores `never`.
 void	CharBoxGetChars(CharBox* self, CharBoxChoice* out, short* count);	// ROM 0x0005682c CharBoxGetChars

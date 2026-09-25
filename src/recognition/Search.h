@@ -21,11 +21,10 @@
 				makes holding twenty-seven of them at every one of
 				thirty-six positions affordable.
 
-	NOT YET: the search itself - `SearchProcessSegment`,
-	`SearchDoViterbStep`, `SearchDoVStepFromNode`, `SearchFindBest`,
-	`SearchBestWords`, `SearchSendWords` and
-	`SearchSegwordRememberNBest`, about 6 KB.  What is here is the
-	state, its life, and what happens to a word on the way out.
+				The search itself is here too - `SearchProcessSegment`,
+				`SearchDoViterbStep`, `SearchDoVStepFromNode`,
+				`SearchFindBest`, `SearchBestWords`, `SearchSendWords`
+				and `SearchSegwordRememberNBest`, about 6 KB.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its
 	origin.
@@ -96,7 +95,7 @@ struct SearchColumn
 // growing readings with.  The ROM builds it as a block of locals in
 // `SearchDoViterbStep` and hands its address down to
 // `SearchDoVStepFromNode` and `RegisterNewPath`; only the fields those
-// two read are known so far.  NOT YET, but mapped.
+// two read are named.
 struct SearchStep
 {
 	// The reading being grown and the letter being added to it, which
@@ -223,7 +222,7 @@ SearchNode*	RegisterNewPath(SearchStep* step, ULong score, long flags);	// ROM 0
 // apostrophe inside a word is not the end of one.
 long	CapHackDetermineContext(const SearchNode* node);	// ROM 0x001cff18 CapHackDetermineContext
 
-// NOT YET: the search itself.
+// One candidate letter offered to the search.
 void	SearchProcessSegment(const BiGrammar* grammar, Fixed* probs, Fixed* scratch,
 				long index, RosSegment* segment, Fixed confidence,
 				Boolean endsWord, char* tryString);		// ROM 0x001ce830 SearchProcessSegment

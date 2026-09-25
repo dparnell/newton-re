@@ -8,23 +8,23 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-25 (commit `6c611e1`)
+## State at 2026-09-25 (commit after `a39d0c6`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 92/92.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 95/95.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9781 citations, 0 bad;
-  5129 of 16671 functions (30.77%).  (The engine's functions are plain
-  C names with no mangling, so they count as citations but not towards
-  the function total, which comes from the demangled symbols, which is
-  why that figure does not move while the engine is being written.)
-- `analysis/natives.py`: 863 of the ROM's 1326 natives answered.
+- `analysis/coverage.py build/MP2x00US --check`: 9837 citations, 0 bad;
+  5131 of 16671 functions (30.78%).
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
-  Preferences roll (down to the Handwriting Recognition slip and its
-  Options popup) all open and draw.
-- `build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480
-  --headless 45 --script src/host/demo/ink.ns` boots, and writing on the
-  Notepad stays on the page (`build/ink-kept.pgm`).
+  Preferences roll all open and draw.
+- **Handwriting is read.**  `build/host/host/newton --rom
+  build/MP2x00US/rom.bin --display 320x480 --headless 50 --script
+  src/host/demo/write.ns` writes "ton" and then "to" with the pen, the
+  ROM's own engine (Rosetta) reads them, and the Notepad shows them as
+  the typed text "ton to" (`build/write.pgm`).  With a window (no
+  `--headless`) anything written with the mouse is read the same way.
+  `NEWTON_TRACE_ROSETTA=1` prints what went to the engine and the ten
+  readings that came back.
 
 Writing travels the whole way from the tablet to a paragraph; the route
 across the five areas is `docs/ink/README.md`'s "From the pen to ink on
@@ -554,128 +554,59 @@ is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
 `fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
 are named for it.
 
-### Next: the strokes in
+### Done: the engine reads, and writing becomes text
 
-**The word spacing is done** (`recognition/Segment.h`): all five of
-`SegmentWord`, `SegmentWordBkVt`, `SegmentWordBack`, `SegmentWordVert`
-and `SegmentWordXGap`, with the `SegWordInk` and `SegWordRef` argument
-bundles, `WordRecog`'s word-spacing state named
-(`fWordLeft`..`fWordHeight` for the word so far,
-`fLastLeft`..`fLastHeight` for the stroke just taken in), the eight gap
-Gaussians of `fRun[2..17]` and their nominals, and `ArSigmoid` with its
-two tables.
+`WordRecogAddStroke` (the driver: a stroke into the word, the word
+spacing asked three ways, ligatures cut and each piece taken in by a
+recursive call, the word closed when it is full) and the classify
+passes (`RosettaClassifySetup`/`Analyze`/`Cleanup`/`RosettaClassify`,
+`RosettaCheckWords`, the boxed-letter path `RosICBX`) are real, so
+**nothing in the Rosetta engine is NOT YET** any more.  The feature
+extraction once thought to be under it (`low_type`/`EXTR`, 556 KB) is
+not Rosetta's: the call graph (`analysis/callgraph.py ...
+RosettaClassify --through-done`) shows Rosetta reaches none of it - its
+features are the four patternizer groups, which were done already.
 
-**`WordRecogAddStroke`** (0x00272728, 6940 B) is what takes a stroke
-into the word and calls all of this.  The groundwork for it:
+`test_Reading` draws letters with a synthetic pen and checks the engine
+reads eight words ("to", "tin" and "ton" come back first, the others
+within the first two).  Four bugs in the reconstruction came out of
+running it for real - two host-size mistakes (arrays of pointers and of
+`ULong` sized at four bytes: `WordRecogAllocate`, the `LELTranCache`),
+`RenderLine` missing the second coordinate's step back (the decompiler
+had dropped it; it wrote one byte into the next heap block's header),
+and `StrokeDestroy` not answering early for nil as the ROM does.  The
+debugging aids that found them stay in `test_Reading.cpp`: a crash
+handler that prints a symbolised stack (dbghelp) and a heap walker
+(`ROSETTA_HEAPCHECK=1`).
 
-- It fills the two blocks from the stroke: `[r5+0xc..0x18]` is the
-  stroke's box, `StrokeCentroid` gives the middle of its ink, the
-  height is `bottom - top + 1.0` and the size is the greater of that
-  and the width, plus one.  Those eight numbers go to
-  `fLastLeft`..`fLastHeight` and are folded into
-  `fWordLeft`..`fWordHeight` - minima for the left and the top, maxima
-  for the right, the bottom and both centroids.
-- `fWordBodyTop`/`fWordBodyBottom` are the narrower band the *body* of
-  the writing lies in, without its ascenders and descenders; a quarter
-  of the distance between them against 1.5 x `SegmentMinStrokeSize()`
-  is what decides whether a new stroke extends the band.
-- It calls `SegmentWord` three times (0x00272e1c, 0x00273008,
-  0x002735f4) comparing the new stroke against the *last stroke*, and
-  `SegmentWordBkVt` once (0x00273a6c) comparing it against the *whole
-  word* - which is what the reference's `fStrokes` distinguishes.
-- `fField18c`, `fField190` and `fField194` are the rest of its state.
+The host OS registers `TRosRecognizer` now (`TNotebook::InitToolbox`,
+`HostBootNewtWorld`), and `TEditView` answers `aeWord`: the command's
+case in `RealDoCommand`, `HandleWordUnit`, `RemoveInk`, and
+`HandleWord`'s remote-writing branch - on by default, which sends a
+written word to the caret: into the caret's paragraph (through
+`InsertItemsAtCaret`, a space in front unless it is a letter written
+into the middle of a word), onto the end of the text under a caret on
+the page itself, or a paragraph of its own.
 
-**`FragmentStroke` and the whole ligature fragmenter under it are
-done** (`recognition/Fragment.h`, seventeen functions), together with
-the engine's own linked list (`recognition/RosList.h`), and so is
-**`WRSegWordXGap`** - the gap measured against the strokes that come
-before a stroke *along the line*, which is not the same as the ones
-written before it when the writer goes back to dot an i.  (ROM bug
-kept: its reference top and bottom compare an x with a y.)  Every
-function under `WordRecogAddStroke` is now real; the driver itself is
-what is left.
+### Next
 
-What reading it has established so far.  Work from the
-**disassembly** (`analysis/disasm.py ... --start 0x00272728 --end
-0x00274244`) rather than the decompile, which drops the results of
-several divides that in fact become stack arguments of the next
-`SegmentWord` call:
-
-- The signature is `WordRecogAddStroke(WordRecog* wr, RosStroke*
-  stroke, short endWord, short how)`.  `how` is passed straight on as
-  `WordRecogAddStroke2`'s own `how` (the frame keeps the two shorts at
-  sp+0x58/+0x5c after the prologue).  A 2 in either means "and more
-  than that": the recursive flush passes 2 for a flag that was set, and
-  the fragment loop turns a 2 into a 1 after the first piece.
-- `fField1ac` is how many strokes the current word holds and
-  `fPendingStroke` (+0x1a8) a stroke taken in but not yet handed to
-  `AddStroke2`; `fField1a4` is `SegmentWord`'s last answer (-1 while a
-  word is being closed); `fField194` is the leftmost mid-x of the word
-  (`WordRecogStrokeMidX`), which a stroke to the left of it is judged
-  against; `fField18c` a strength kept across strokes.
-- With `fField1ac == 0` the stroke starts the word: `WordRecogSaveRun`,
-  `AddStroke2(wr, stroke, cx, cy, 0, how, 0)`, both blocks set from the
-  stroke, `fField194` its mid-x.
-- With no stroke, or `endWord > 1`, the pending stroke is flushed and
-  the word closed (`fField1a4 = -1`, `AddStroke2` with the new stroke or
-  nil), and a new word started from the stroke if there is one.
-- Otherwise one of three paths, by whether a stroke is pending and
-  whether `endWord` is set: `SegmentWordBkVt` against the whole word;
-  `SegmentWord` against the pending stroke, the word block then being
-  restarted from the stroke block; or the word block's body band and
-  middle folded together with this stroke by the same weighted means
-  `WRSegWordXGap` uses and handed to `SegmentWord` as a temporary
-  reference.  A stroke to the left of the word's mid-x walks back over
-  the strokes (clearing each one's `fSeparation`) to find where it
-  belongs, and asks `WRSegWordXGap` when it does not land at the end.
-  Each path ends in `AddStroke2`, the pending stroke becoming the
-  current one.
-
-Its shape, from the decompile at 0x00272728 (the `setjmp` noise is the
-ROM's exception handlers; every one of them destroys the stroke and
-goes on):
-
-1. `WordRecogResume` if the block's arrays were given back, then
-   `SegOnly = wr->fClassifyMode`.
-2. With a stroke: if `fField1ac` has reached 0x96 (less one when a
-   stroke is already pending) the word is closed first, by **calling
-   itself** with a nil stroke.
-3. The stroke is scaled to seventy-two dots to the inch if `fResX` and
-   `fResY` say it is not already (`StrokeScale`), and then
-   `StrokeCentroid` and its box give the eight numbers the word spacing
-   wants.
-4. If `FragmentLigatures` is set and
-   `WordRecogStrokeNeedsFragmenting` says so, `FragmentStroke` cuts the
-   stroke in two and the function **calls itself once per piece**,
-   turning a 2 in either of its two flags into a 1 as it goes;
-   `DAT_0c104f8c`/`0x90`/`0x94`/`0x98` remember the pieces.
-5. Otherwise the three `SegmentWord` call sites decide whether the
-   stroke begins a new word, `WordRecogAddStroke2` takes it in, and the
-   two blocks of state are updated or started afresh.
-
-`WordRecogAddStroke2`, `WordRecogStrokeNeedsFragmenting`,
-`WordRecogResume` and `StrokeScale`/`StrokeCentroid` are all
-reconstructed already; `FragmentStroke` (0x000cc638) is not, and it
-answers two values at once - a stroke list and a count - so its
-signature wants reading from the assembly.  What is left besides that
-is this function's own bookkeeping.
-
-Also still NOT YET: `WordRecogAnalyzeWord`'s net calls,
-`RosettaSetArea` and the classify passes (3 KB), and the feature
-extraction `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384
-symbols on its own.  `CharBoxEvaluate` waits on the segments.
-
-**The engine's own numbers are real.**  `analysis/rosci.py` generates
-`src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template
-`CharInitialize` copies, and the seventeen character tables it points
-at - so `RosCI` holds the ROM's trained numbers rather than a
-stand-in.  The rest of the neighbouring layers are declared in
-`recognition/RosEngine.h` and are still NOT YET: the grammars
-(`ROMGrammar`, eight finite-state contexts in the ROM's data), the
-segments, and the classifier net with its patternizers.  The rest of level 3 is
-`WordRecogAddStroke`/`AddStroke2` (the strokes in),
-`WordRecogAnalyzeWord` and the net calls (reading them) and the segment
-side, `WRSeg*`.
+- **How well it reads.**  A round synthetic "c" is read badly (every
+  code under 0.6%, so the readings of a word with one in it all tie).
+  `SearchProcessSegment`'s total and the rest of that path match the
+  ROM instruction for instruction, and the direction features look
+  consistent (an open arc reads "(", "6"), so the likeliest explanation
+  is the net's view of a perfect arc rather than a port bug - but the
+  classifier has no reference output to check against.  A way to get
+  one would settle it: an emulator trace of `BPNetEvaluate`'s inputs
+  and outputs for one stroke.
+- **The corrector** (double tap a word: the alternatives the engine
+  sent are in the word's info frame already) and **learning**
+  (`TRosRecognizer`'s training calls, which are stubs).
+- **The shape domain**, so a drawn circle or line is cleaned up rather
+  than read as a letter.
+- The ink demo (`ink.ns`) now gets its writing *read*: to keep ink, a
+  page has to ask for ink (`doInkWordRecognition`) or the writing has
+  to be unreadable.
 
 The smallest of those that would close a group of its own:
 

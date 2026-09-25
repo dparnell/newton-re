@@ -398,10 +398,10 @@ CapHackDetermineContext(const SearchNode* node)
 
 #pragma mark -
 /*--------------------------------------------------------------------
-	The search itself.  NOT YET: the Viterbi step that walks the
-	lattice, the gathering of the best paths at the end, and the
-	scoring that ties the classifier, the grammar and the dictionaries
-	together - about 6 KB in seven functions.
+	The search itself: the Viterbi step that walks the lattice, the
+	gathering of the best paths at the end, and the scoring that ties
+	the classifier, the grammar and the dictionaries together - about
+	6 KB in seven functions.
 --------------------------------------------------------------------*/
 
 

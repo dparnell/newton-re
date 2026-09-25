@@ -884,10 +884,9 @@ SegmentStroke(short index, short count, RosStroke* const* strokes,
 
 #pragma mark -
 /*--------------------------------------------------------------------
-	The cutting itself.  NOT YET: `SegmentChars` runs `SegmentStroke`
-	over every stroke (done, above) and then `SegmentMakeSegments`
-	over the break candidates it left, which is where the cuts are
-	actually made.
+	The cutting itself: `SegmentChars` runs `SegmentStroke` over every
+	stroke and then `SegmentMakeSegments` over the break candidates it
+	left, which is where the cuts are actually made.
 --------------------------------------------------------------------*/
 
 // The nominal height the engine measures everything against when it
