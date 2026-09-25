@@ -323,7 +323,8 @@ CheckHiliteState(TStroke* stroke, StrokeHiliteState* last, StrokeHiliteState* st
 // ROM 0x001fefa8 SetupDistances__Fv
 // The distances scaled to the screen: 4, 6 and 6 points at the screen's
 // resolution (NOT YET RECONSTRUCTED: the gestalt's screen resolution -
-// 100 dpi, the MP2100's), and the ticks a sample takes.
+// 100 dpi, the MP2100's), and the ticks a sample takes (60 over 80
+// samples a second: three quarters of a tick).
 void
 SetupDistances(void)
 {
@@ -332,7 +333,7 @@ SetupDistances(void)
 	gHiliteDistance = (UShort) ((FixedMultiply(pixelsPerPoint, 4 << 16) + 0x8000) >> 16);
 	gMaxTapSize = (UShort) ((FixedMultiply(pixelsPerPoint, 6 << 16) + 0x8000) >> 16);
 	gDoubleTapDistance = (UShort) ((FixedMultiply(pixelsPerPoint, 6 << 16) + 0x8000) >> 16);
-	ULong samplesPerSecond = GetSampleRate() / 0x384000;
+	ULong samplesPerSecond = 0x384000 / GetSampleRate();	// (__rt_udiv takes the divisor first)
 	gSamplesToTicks = FixedDivide(60 << 16, samplesPerSecond << 16);
 }
 

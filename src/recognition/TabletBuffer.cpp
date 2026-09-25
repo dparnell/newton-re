@@ -333,12 +333,17 @@ IncStrokerIndex(ULong count)
 
 
 // ROM 0x002507fc GetSampleRate__Fv
-// The tablet driver's sampling rate (NOT YET RECONSTRUCTED: gTabletDriver;
-// the MP2100 samples 60 times a second: 60.0).
+// The tablet driver's sampling *interval*, despite the name: how many
+// ticks of the 3.6864 MHz tablet timer (0x384000 a second) go between
+// two samples, which is why everything that uses it divides 0x384000 by
+// it.  TResistiveTablet keeps it at +0x64 (GetSampleRate 0x0005b714) and
+// sets it to 0xb400 whenever the pen goes up (PenUp 0x0005ae04,
+// HandleSample 0x0005afa0): 80 samples a second.  (NOT YET
+// RECONSTRUCTED: gTabletDriver, so the host answers that constant.)
 ULong
 GetSampleRate(void)
 {
-	return 60 << 16;
+	return 0xb400;
 }
 
 
