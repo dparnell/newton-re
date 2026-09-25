@@ -90,6 +90,34 @@ GetTabScale(FPoint* scale)
 }
 
 
+// ROM 0x001f95f0 DistPoint__FP6FPointT1
+// The distance between two points: a square root (the fraction square
+// root of the Fixed sum of squares, brought back to 16.16) when both
+// sides are under 127 pixels, and CheapDistPoint's approximation above.
+long
+DistPoint(const FPoint* a, const FPoint* b)
+{
+	long dx = a->x - b->x;
+	long dy = a->y - b->y;
+	if (dx < 0)
+		dx = -dx;
+	if (dy < 0)
+		dy = -dy;
+	long big = (dx < 0x7f0001) ? dy : dx;
+	if (big < 0x7f0001)
+		return (FractSquareRoot(FixedMultiply(dx, dx) + FixedMultiply(dy, dy)) + 0x40) >> 7;
+	if (dx < dy)
+	{
+		if ((dy >> 1) <= dx)
+			return dy - (dy >> 3) - (dy >> 5) - (dy >> 6) + (dx >> 1) + (dx >> 4) + (dx >> 5);
+		return dy + (dx >> 2) - (dx >> 7) - (dx >> 8) - (dx >> 9);
+	}
+	if ((dx >> 1) <= dy)
+		return dx - (dx >> 3) - (dx >> 5) - (dx >> 6) + (dy >> 1) + (dy >> 4) + (dy >> 5);
+	return dx + (dy >> 2) - (dy >> 7) - (dy >> 8) - (dy >> 9);
+}
+
+
 // ROM 0x001f9660 CheapDistPoint__FP6FPointT1
 // The distance between two points, roughly: the longer leg plus a
 // fraction of the shorter (the ROM's shifts).

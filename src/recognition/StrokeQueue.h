@@ -49,6 +49,7 @@ ULong	GetDownTime(void);									// ROM 0x0011b8f4 GetDownTime__Fv
 ULong	GetUpTime(void);									// ROM 0x0011b8f8 GetUpTime__Fv
 void	GetTabScale(FPoint* scale);							// ROM 0x0011b8fc GetTabScale__FP6FPoint
 
+long	DistPoint(const FPoint* a, const FPoint* b);		// ROM 0x001f95f0 DistPoint__FP6FPointT1 - the distance, exactly when both sides are under 127 pixels
 long	CheapDistPoint(const FPoint* a, const FPoint* b);	// ROM 0x001f9660 CheapDistPoint__FP6FPointT1 - an approximation of the distance
 void	GetMidPoint(const FPoint* a, const FPoint* b, FPoint* mid);	// ROM 0x001a4388 GetMidPoint
 

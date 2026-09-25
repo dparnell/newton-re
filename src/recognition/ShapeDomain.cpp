@@ -40,7 +40,8 @@ FRect	gGSScreenRect;
 long	gPixScreenRectInset;
 long	gPixMaxContextGravity;
 Boolean	gGSOffScreen;
-long	gGS0cb4;
+long	gGSInkLength;
+long	gGSClosed;
 long	gPixMaxCollapseSize;
 long	gPixMaxSmallDist;
 long	gPixMaxClosedDist;
@@ -1423,7 +1424,7 @@ TGeneralShapeDomain::Classify(TUnit* unit)
 		if (type != kShapeNothing)
 		{
 			if (type == kShapeCurve)
-				ellipses = gGS0cb4 != 0;
+				ellipses = gGSClosed != 0;
 			else
 			{
 				Boolean solvable = false;
@@ -1432,7 +1433,7 @@ TGeneralShapeDomain::Classify(TUnit* unit)
 				if (type == kShapeClosedCurve)
 					ellipses = true;
 				else if (type == kShapeCurve)
-					ellipses = gGS0cb4 != 0;
+					ellipses = gGSClosed != 0;
 				else if (type != kShapeNothing && type != kShapeGrouping
 					  && solvable && SolveEquations(&system, values))
 					PlugNewVals(shape, values, &system);

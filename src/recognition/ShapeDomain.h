@@ -218,7 +218,8 @@ extern FRect	gGSScreenRect;									// ROM 0x0c104c94 gGSScreenRect - the screen
 extern long		gPixScreenRectInset;							// ROM 0x0c104ca4 gPixScreenRectInset
 extern long		gPixMaxContextGravity;							// ROM 0x0c104ca8 gPixMaxContextGravity
 extern Boolean	gGSOffScreen;									// ROM 0x0c104cb0 (unnamed) - SetGeneralPt was given a point off the screen
-extern long		gGS0cb4;										// ROM 0x0c104cb4 (unnamed) - Classify looks for ellipses in a curve only when it is set
+extern long		gGSInkLength;									// ROM 0x0c104cac (unnamed) - how long the last stroke measured was (RSmallDists)
+extern long		gGSClosed;										// ROM 0x0c104cb4 (unnamed) - the shape was drawn closed (FindKeyPoints); a curve is looked at as an ellipse only then
 extern long		gPixMaxCollapseSize;							// ROM 0x0c104cb8 gPixMaxCollapseSize
 extern long		gPixMaxSmallDist;								// ROM 0x0c104cbc gPixMaxSmallDist
 extern long		gPixMaxClosedDist;								// ROM 0x0c104cc0 gPixMaxClosedDist

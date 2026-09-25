@@ -11,6 +11,7 @@
 #include "Stroke.h"
 #include "StrokeQueue.h"
 #include "memory/host/KernelHeap.h"
+#include "FixedMath.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -30,6 +31,164 @@ SetDistances(void)
 	gPixLargeInitialValue = F(50);
 	gSmpMinClosedShapePts = 7;
 	gSmpMinSmallDistRun = 3;
+}
+
+// What CheckScreenGlobals works out for a 100 dpi screen sampled 80 times
+// a second (it asks the name server, which this test does not start).
+static void
+SetScreenDistances(void)
+{
+	Fixed scale = FixedDivide(F(100), F(72));
+	gPixMaxCollapseSize = FixedMultiply(scale, 0x6ffff);
+	gPixMaxSmallDist = FixedMultiply(scale, 0xffff);
+	gPixMaxClosedDist = FixedMultiply(scale, 0xa0000);
+	gPixMaxConnectDist = FixedMultiply(scale, 0x140000);
+	gPixMinConnectDist = FixedMultiply(scale, 0x50000);
+	gPixMinKinkDist = FixedMultiply(scale, 0xf0000);
+	gPixMinRLineOutTolerance = FixedMultiply(scale, 0x30000);
+	gPixMaxRLineOutTolerance = FixedMultiply(scale, 0x180000);
+	gPixMaxAvgLenForSmallDists = FixedMultiply(scale, 0x36000);
+	gPixMinAvgLenForSmallDists = FixedMultiply(scale, 0xa000);
+	gPixSomeMagicThreshold = FixedMultiply(scale, 0x280000);
+	gPixLargeInitialValue = FixedMultiply(scale, 0x320000);
+	gPixLowBlobThreshold = FixedMultiply(scale, 0xf0000);
+	gPixHighBlobThreshold = FixedMultiply(scale, 0x190000);
+	gPixMaxSizeTrendSlop = (short) ((scale * 9 + 0x8000) >> 16);
+	gPixPtOnLineSlop = (short) ((scale * 2 + 0x8000) >> 16);
+	gPixScreenRectInset = FixedMultiply(scale, 0xa0000);
+	gPixMaxContextGravity = (short) ((FixedMultiply(scale, 0xa0000) + 0x8000) >> 16);
+	gSmpMinClosedShapePts = 7;
+	gSmpMinSmallDistRun = 3;
+	gGSScreenRect.left = -gPixScreenRectInset;
+	gGSScreenRect.top = -gPixScreenRectInset;
+	gGSScreenRect.right = F(320) + gPixScreenRectInset;
+	gGSScreenRect.bottom = F(480) + gPixScreenRectInset;
+}
+
+// A stroke of points spaced about 2 pixels apart along a polyline.
+static TStroke*
+PolylineStroke(const long* corners, long count)
+{
+	TStroke* stroke = TStroke::Make(0);
+	TabPt pt;
+	pt.z = 3;
+	pt.p = 0;
+	for (long c = 0; c + 1 < count; c++)
+	{
+		long x0 = corners[2 * c], y0 = corners[2 * c + 1];
+		long x1 = corners[2 * c + 2], y1 = corners[2 * c + 3];
+		long dx = x1 - x0, dy = y1 - y0;
+		long len = (dx < 0 ? -dx : dx) > (dy < 0 ? -dy : dy) ? (dx < 0 ? -dx : dx) : (dy < 0 ? -dy : dy);
+		long steps = len / 2;
+		for (long k = 0; k < steps; k++)
+		{
+			pt.x = F(x0) + (Fixed) (((long long) F(dx) * k) / steps);
+			pt.y = F(y0) + (Fixed) (((long long) F(dy) * k) / steps);
+			stroke->AddPoint(&pt);
+		}
+	}
+	pt.x = F(corners[2 * count - 2]);
+	pt.y = F(corners[2 * count - 1]);
+	stroke->AddPoint(&pt);
+	stroke->fDownTime = 1000;
+	stroke->fUpTime = 1010;
+	stroke->EndStroke();
+	stroke->UpdateBBox();
+	return stroke;
+}
+
+// A shape unit of one stroke through the corners, fitted.
+static TGeneralShapeUnit*
+Fitted(TDomain* domain, const long* corners, long count, long* type, ULong* score)
+{
+	TGeneralShapeUnit* unit = TGeneralShapeUnit::Make(domain, 3, nil);
+	TStrokeUnit* stroke = TStrokeUnit::Make(domain, 2, PolylineStroke(corners, count), nil);
+	unit->AddSub(stroke);
+	unit->fGroupInfo->fOrder[0] = 0;
+	FindKeyPoints(unit, type, score);
+	return unit;
+}
+
+static void
+DumpShape(TGeneralShapeUnit* unit)
+{
+	TDArray* shape = unit->GetGeneralShape();
+	if (shape == nil)
+		return;
+	for (long i = 0; i < shape->Count(); i++)
+	{
+		GeneralPt* p = (GeneralPt*) shape->GetEntry(i);
+		printf("    %2ld: %7.2f %7.2f%s %d %d\n", i, p->fPt.x / 65536.0, p->fPt.y / 65536.0,
+			   p->fControl ? " (control)" : "", p->f09, p->f0a);
+	}
+}
+
+// The key points of a line, an L and a closed triangle.
+static void
+TestKeyPoints(TDomain* domain)
+{
+	SetScreenDistances();
+	static const long line[] = { 50, 50, 150, 60 };
+	long type = kShapeGrouping;
+	ULong score = 0;
+	TGeneralShapeUnit* unit = Fitted(domain, line, 2, &type, &score);
+	printf("  line: type %ld score %lu\n", type, (unsigned long) score);
+	DumpShape(unit);
+	TDArray* shape = unit->GetGeneralShape();
+	EXPECT(type == kShapeGrouping && score == 1000);
+	EXPECT(shape != nil && shape->Count() == 2);
+	if (shape != nil && shape->Count() == 2)
+	{
+		GeneralPt* a = (GeneralPt*) shape->GetEntry(0);
+		GeneralPt* b = (GeneralPt*) shape->GetEntry(1);
+		EXPECT(a->fPt.x == F(50) && a->fPt.y == F(50) && b->fPt.x == F(150) && b->fPt.y == F(60));
+	}
+	unit->Dispose();
+
+	static const long ell[] = { 50, 50, 50, 150, 130, 150 };
+	type = kShapeGrouping;
+	unit = Fitted(domain, ell, 3, &type, &score);
+	printf("  L: type %ld score %lu\n", type, (unsigned long) score);
+	DumpShape(unit);
+	shape = unit->GetGeneralShape();
+	EXPECT(shape != nil && shape->Count() == 3);
+	if (shape != nil && shape->Count() == 3)
+	{
+		GeneralPt* corner = (GeneralPt*) shape->GetEntry(1);
+		EXPECT(corner->fPt.x == F(50) && corner->fPt.y == F(150) && corner->fControl == 0);
+	}
+	unit->Dispose();
+
+	static const long triangle[] = { 100, 50, 160, 150, 40, 150, 100, 52 };
+	type = kShapeClosedCurve;			// Group marks a stroke that closes on itself so
+	unit = Fitted(domain, triangle, 4, &type, &score);
+	printf("  triangle: type %ld score %lu\n", type, (unsigned long) score);
+	DumpShape(unit);
+	shape = unit->GetGeneralShape();
+	EXPECT(type != kShapeNothing);
+	EXPECT(shape != nil && shape->Count() == 4);		// three corners and back to the first
+	unit->Dispose();
+
+	// half a circle: a curve, so its points include control points
+	long arc[2 * 13];
+	static const short c[] = { 100, 97, 87, 71, 50, 26, 0, -26, -50, -71, -87, -97, -100 };
+	static const short sn[] = { 0, 26, 50, 71, 87, 97, 100, 97, 87, 71, 50, 26, 0 };
+	for (long k = 0; k < 13; k++)
+	{
+		arc[2 * k] = 150 + (60 * c[k]) / 100;
+		arc[2 * k + 1] = 200 - (60 * sn[k]) / 100;
+	}
+	type = kShapeGrouping;
+	unit = Fitted(domain, arc, 13, &type, &score);
+	printf("  arc: type %ld score %lu\n", type, (unsigned long) score);
+	DumpShape(unit);
+	shape = unit->GetGeneralShape();
+	long controls = 0;
+	for (long i = 0; shape != nil && i < shape->Count(); i++)
+		if (((GeneralPt*) shape->GetEntry(i))->fControl)
+			controls++;
+	EXPECT(type != kShapeNothing && controls > 0);
+	unit->Dispose();
 }
 
 static TStroke*
@@ -223,6 +382,7 @@ main()
 	TestClosed(domain);
 	TestUnit(domain);
 	TestConnect(domain);
+	TestKeyPoints(domain);
 	if (failures != 0)
 	{
 		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);

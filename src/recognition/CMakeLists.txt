@@ -31,6 +31,7 @@ add_library(recognition STATIC
     EdgeList.cpp
     ShapeDomain.cpp
     ShapeGeometry.cpp
+    ShapeKeyPoints.cpp
     ShapeTables.cpp
     Controller.cpp
     Arbiter.cpp

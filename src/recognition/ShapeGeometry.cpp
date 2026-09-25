@@ -4,14 +4,13 @@
 	Contains:	The fitting and tidying the shape domain's Classify is
 				made of.  See ShapeGeometry.h.
 
-				NOT YET RECONSTRUCTED: FindKeyPoints and the spline fitting
-				under it, FindEllipses, FindEquations and the angle
-				clustering (TTrend), SolveEquations and the minimiser,
-				PlugNewVals, GlobalTrends and SnapPtToLC.  Until they are,
-				FindKeyPoints answers kShapeNone - "nothing a shape can be
-				made of" - which Classify takes as it stands and the shape
-				recogniser answers with nothing, so no shape is ever made;
-				the rest are not reached.
+				FindKeyPoints and the fitting under it are ShapeKeyPoints.cpp.
+
+				NOT YET RECONSTRUCTED: FindEllipses, FindEquations and the
+				angle clustering (TTrend), SolveEquations and the minimiser,
+				PlugNewVals, GlobalTrends and SnapPtToLC.  They answer
+				"nothing found" and do nothing, so a shape comes out as its
+				key points and curves, untidied.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -34,15 +33,6 @@ ReleaseEqs(EqSystem* system)
 		}
 	}
 	system->fCount = 0;
-}
-
-
-// ROM 0x0021227c FindKeyPoints__FP17TGeneralShapeUnitP6GSTypePUl
-// NOT YET RECONSTRUCTED (see above): nothing is a shape.
-void
-FindKeyPoints(TGeneralShapeUnit* /*unit*/, long* type, ULong* /*score*/)
-{
-	*type = kShapeNone;
 }
 
 
