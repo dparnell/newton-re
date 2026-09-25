@@ -38,6 +38,7 @@ add_library(recognition STATIC
     Segment.cpp
     WordRecog.cpp
     ROMGrammar.cpp
+    ArProbTables.cpp
     BPNet.cpp
     BPNetTables.cpp
     NetPattern.cpp

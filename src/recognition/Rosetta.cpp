@@ -36,6 +36,7 @@
 #include "RosEngine.h"
 #include "Segment.h"
 #include "CharBox.h"
+#include "ROMDictionaryData.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"
 #include "OSErrors.h"
@@ -263,8 +264,6 @@ RosettaVerifyWordSymbols(char* word)
 
 // ROM 0x001b7ff4 RosettaClassify
 NewtonErr	RosettaClassify(ULong /*count*/, FPoint* /*points*/, ULong /*startTime*/, ULong /*endTime*/)	{ return kRosettaFailed; }
-// ROM 0x001b7254 RosettaSetArea
-NewtonErr	RosettaSetArea(RosettaAreaInfo* /*areaInfo*/)			{ return kRosettaFailed; }
 // ROM 0x001b78d0 RosettaClassifySetup
 NewtonErr	RosettaClassifySetup(void)								{ return kRosettaFailed; }
 // ROM 0x001b7cc4 RosettaClassifyAnalyze
@@ -274,3 +273,173 @@ NewtonErr	RosettaClassifyCleanup(void)							{ return kRosettaFailed; }
 // ROM 0x001b7120 RosettaCheckWords
 void		RosettaCheckWords(char** /*words*/, UniChar* /*scores*/, long* /*flags*/,
 							ULong /*strokes*/, ULong /*count*/)		{ }
+
+
+// ROM 0x001b7254 RosettaSetArea
+// What a field's configuration becomes.  This is the engine being told
+// where it is writing: which grammar to read against, which characters
+// are allowed, which dictionaries to look in, and - when the field says
+// so - where its baseline and its box are.
+//
+// The grammar comes first.  Eight of the `fFlags` bits pick one of the
+// ROM's seven special grammars outright; anything else, and any field
+// that names dictionaries of its own, gets the **General** grammar
+// narrowed to the kinds of word the field expects.  The narrowing is a
+// bitmask of slice indices built from the same flags, handed to
+// `BiGrammarModifyContext` with nine tenths of the probability going to
+// the kinds that are wanted.  Either way what the engine ends up
+// holding is a copy it owns, which is what `fContextIndex < 0` records.
+//
+// Then every slice's `fDictionary` stops being an index into
+// `gROMDictionaryData` and becomes the data itself - after any
+// substitutions the field asked for through `fMap`.
+NewtonErr
+RosettaSetArea(RosettaAreaInfo* area)
+{
+	ULong mask = 0x1800000;
+	const BiGrammar* previous = gWordRecog->fContext;
+	ULong flags = area->fFlags & 0x000387bf;
+
+	SegmentSetWordSpacing(9 - area->fLetterSpace);
+	gWordRecog->fFlags1f4 = area->fFlags;
+
+	// the grammar it was holding, if it was its own
+	if (gWordRecog->fContextIndex < 0)
+		BiGrammarDestroy(previous);
+
+	// a field with dictionaries of its own always takes the General
+	// grammar, however it is labelled
+	if (area->fDictCount != 0)
+		flags = 0;
+
+	long index;
+	if (flags == kRosAreaDate)					index = 5;
+	else if (flags < kRosAreaDate + 1)
+	{
+		if (flags == kRosAreaNumbers)			index = 2;
+		else if (flags == kRosAreaPunctuation)	index = 4;
+		else if (flags == kRosAreaPhone)		index = 1;
+		else									index = 0;
+	}
+	else if (flags == kRosAreaAddress)			index = 6;
+	else if (flags == kRosAreaCustom1)			index = 7;
+	else if (flags == kRosAreaCustom2)			index = 3;
+	else										index = 0;
+	gWordRecog->fContextIndex = index;
+
+	const BiGrammar* context = gWordRecog->fGrammars->fContexts[index];
+	gWordRecog->fContext = context;
+
+	if (index == 0)
+	{
+		// the General grammar, narrowed to what this field expects.
+		// The numbers are sets of slice indices, and they overlap: a
+		// field that wants times gets a quite different set from one
+		// that wants only letters.
+		ULong f = gWordRecog->fFlags1f4;
+		if ((f & kRosAreaNumbers) != 0)			mask = 0x190a000;
+		if ((f & kRosAreaPunctuation) != 0)		mask |= 0x40000;
+		if ((f & kRosAreaPhone) != 0)			mask |= 0x20021;
+		if ((f & kRosAreaDate) != 0)			mask |= 0x10000;
+		if ((f & kRosAreaTime) != 0)			mask = 0x1ffe0ff;
+		if ((f & kRosAreaMoney) != 0)			mask |= 0x1800000;
+		if ((f & (kRosAreaLetters | kRosAreaNames)) != 0)	mask |= 0x4040f1;
+		if ((f & kRosAreaUpperCase) != 0)		mask |= 0x180a000;
+		if ((f & 0x00000200) != 0)				mask |= 0x20000e;
+		if ((f & kRosAreaNames) != 0)			mask |= 0x1802000;
+
+		// and one slice per dictionary the field named, which are the
+		// `~user` and `~null1`..`~null5` slots
+		UByte named = area->fDictCount;
+		if (named >= 1)	mask |= 0x100;
+		if (named >= 2)	mask |= 0x200;
+		if (named >= 3)	mask |= 0x400;
+		if (named >= 4)	mask |= 0x800;
+		if (named >= 5)	mask |= 0x1000;
+
+		// the mask spread out into the list of indices
+		// `BiGrammarModifyContext` walks, with -1 after the last so
+		// that its cursor never runs off the end
+		long wanted[32];
+		long count = 0;
+		for (long bit = 0; bit < 32; bit++)
+			if ((mask & (1UL << bit)) != 0)
+				wanted[count++] = bit;
+		wanted[count] = -1;
+
+		context = BiGrammarModifyContext(context, count, wanted, 0xe666);
+		gWordRecog->fContext = context;
+		gWordRecog->fContextIndex = -1;
+		gWordRecog->fDicts[0] = area->fMainDict;
+		for (long i = 0; i < 5; i++)
+			gWordRecog->fDicts[i + 1] = area->fDicts[i];
+	}
+	else
+	{
+		// one of the seven, copied so the substitutions below do not
+		// write into ROM
+		context = BiGrammarClone(context);
+		gWordRecog->fContextIndex = -(gWordRecog->fContextIndex + 1);
+		gWordRecog->fContext = context;
+		for (long i = 0; i < 6; i++)
+			gWordRecog->fDicts[i] = nil;
+	}
+
+	// the dictionaries: any the field asked to have read as another,
+	// and then the index turned into the data itself
+	for (long i = 0; i < context->fCount; i++)
+	{
+		BiGSlice* slice = (BiGSlice*) context->fSlices[i];
+		for (long k = 0; k < 5; k++)
+			if (slice->fDictionary == (ULong) area->fMap[k][0])
+			{
+				slice->fDictionary = (ULong) area->fMap[k][1];
+				break;
+			}
+		slice->fDictionary = (ULong) gROMDictionaryData[slice->fDictionary];
+	}
+
+	// where the writing goes, when the field knows
+	if ((gWordRecog->fFlags1f4 & kRosAreaHasBaseInfo) != 0)
+	{
+		gWordRecog->fBase = area->fBase;
+		// the smaller of the two heights, but never less than halfway
+		// between it and eleven
+		UByte small = area->fSmallHeight;
+		UByte half = (UByte) ((small + 0x0b) / 2);
+		gWordRecog->fSmallHeight = (half <= small) ? small : half;
+		gWordRecog->fBoxLeft = area->fBoxLeft;
+		gWordRecog->fBoxRight = area->fBoxRight;
+		gWordRecog->fXSpace = area->fXSpace;
+		gWordRecog->fBoxTop = area->fBoxTop;
+		gWordRecog->fBoxBottom = area->fBoxBottom;
+		gWordRecog->fYSpace = area->fYSpace;
+	}
+
+	gWordRecog->fField1e0 = -1;
+	if (gWordRecog->fCharBox != nil)
+	{
+		CharBoxDestroy(gWordRecog->fCharBox);
+		gWordRecog->fCharBox = nil;
+	}
+
+	// which characters the engine may answer here: the ROM's own set
+	// narrowed by the field's, or the ROM's own when the field has
+	// nothing to say
+	if (RosCI->fLegalUse != rosCharLegalUse)
+	{
+		DisposPtr((Ptr) RosCI->fLegalUse);
+		RosCI->fLegalUse = rosCharLegalUse;
+	}
+	if ((gWordRecog->fFlags1f4 & kRosAreaHasSymbolSet) != 0)
+	{
+		ULong* set = (ULong*) NewPtrClear(8 * (long) sizeof(ULong));
+		if (set == nil)
+			Throw(exOutOfStack, (void*) "", nil);
+		SetPtrName((Ptr) set, kRosettaMemoryTag);
+		RosCI->fLegalUse = set;
+		for (long i = 0; i < 8; i++)
+			set[i] = rosCharLegalUse[i] & area->fSymbolSet[i];
+	}
+	return noErr;
+}

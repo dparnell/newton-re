@@ -6,6 +6,8 @@
 #include "Rosetta.h"
 #include "CharBox.h"
 #include "RosEngine.h"
+#include "ROMDictionaryData.h"
+#include "Segment.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"
 #include "BPNet.h"
@@ -266,6 +268,208 @@ main()
 		gWordRecog->fRun[0] = F(99);
 		RosettaInitializeValues();
 		EXPECT(gWordRecog->fRun[0] == F(99));
+	}
+
+	// ---- a grammar built for one field ----
+	{
+		// `RosettaSetArea` is what a field's configuration becomes.  The
+		// engine is awake here, holding the ROM's own General grammar.
+		const BiGrammar* general = gWordRecog->fGrammars->fContexts[0];
+
+		RosettaAreaInfo area;
+		memset(&area, 0, sizeof(area));
+		for (long i = 0; i < 8; i++)
+			area.fSymbolSet[i] = 0xffffffff;
+		for (long i = 0; i < 5; i++)
+		{
+			area.fMap[i][0] = -1;
+			area.fMap[i][1] = -1;
+		}
+		// the area carries `9 - n` for the slider setting n, so four is
+		// the writer of ordinary habits
+		area.fLetterSpace = 4;
+		area.fFlags = kRosAreaLetters;
+
+		EXPECT(RosettaSetArea(&area) == noErr);
+		// a field of ordinary letters takes the General grammar, and
+		// what the engine holds is its own copy of it, narrowed
+		EXPECT(gWordRecog->fContextIndex == -1);
+		EXPECT(gWordRecog->fContext != general);
+		// the clone is nameless, because `BiGrammarCreate` drops the
+		// name it is handed
+		EXPECT(gWordRecog->fContext->fName == nil);
+		// ... and it has every kind of word the General grammar has,
+		// because the narrowing reprices them rather than removing them
+		EXPECT(gWordRecog->fContext->fCount == general->fCount);
+		// the spacing was set from the field
+		EXPECT(gSegWordSpacing == F(1));
+
+		// every kind's dictionary is now the data itself rather than an
+		// index into gROMDictionaryData
+		long changed = 0;
+		for (long i = 0; i < gWordRecog->fContext->fCount; i++)
+		{
+			const BiGSlice* slice = gWordRecog->fContext->fSlices[i];
+			const BiGSlice* from = general->fSlices[i];
+			EXPECT(strcmp(slice->fName, from->fName) == 0);
+			if (from->fDictionary < kROMDictionaryCount)
+			{
+				EXPECT(slice->fDictionary
+					== (ULong) gROMDictionaryData[from->fDictionary]);
+				changed++;
+			}
+		}
+		EXPECT(changed == general->fCount);
+
+		// the scores were repriced: the likeliest kind of word in the
+		// field now costs nothing, and none costs more than never
+		long best = 0x7ffe, worst = 0, never = 0;
+		for (long i = 0; i < gWordRecog->fContext->fCount; i++)
+		{
+			long score = gWordRecog->fContext->fSlices[i]->fScore;
+			EXPECT(score >= 0 && score <= 0x7ffe);
+			if (score == 0x7ffe)
+				never++;
+			else
+			{
+				if (score < best)	best = score;
+				if (score > worst)	worst = score;
+			}
+		}
+		// the whole arithmetic pinned: decode each score to a
+		// probability, share nine tenths of it among the kinds the
+		// field wants, encode again, and bring the best down to nought
+		EXPECT(gWordRecog->fContext->fCount == 25);
+		EXPECT(best == 0);				// the likeliest kind is free
+		EXPECT(worst == 2847);			// and the dearest costs 5.7 nats
+		EXPECT(never == 3);				// three the field will not have
+
+		// the dictionaries the field named, in the six slots
+		EXPECT(gWordRecog->fDicts[0] == area.fMainDict);
+		for (long i = 0; i < 5; i++)
+			EXPECT(gWordRecog->fDicts[i + 1] == area.fDicts[i]);
+	}
+
+	// ---- a field with a grammar of its own ----
+	{
+		RosettaAreaInfo area;
+		memset(&area, 0, sizeof(area));
+		for (long i = 0; i < 8; i++)
+			area.fSymbolSet[i] = 0xffffffff;
+		for (long i = 0; i < 5; i++)
+		{
+			area.fMap[i][0] = -1;
+			area.fMap[i][1] = -1;
+		}
+		area.fLetterSpace = 5;
+		area.fFlags = kRosAreaPhone;
+
+		EXPECT(RosettaSetArea(&area) == noErr);
+		// the Phone grammar, index 1, cloned - so the index is recorded
+		// as -(1+1) and the engine owns what it holds
+		EXPECT(gWordRecog->fContextIndex == -2);
+		const BiGrammar* phone = gWordRecog->fGrammars->fContexts[1];
+		EXPECT(gWordRecog->fContext != phone);
+		EXPECT(gWordRecog->fContext->fCount == phone->fCount);
+		// a clone is scored exactly as its original: only the General
+		// grammar is repriced
+		for (long i = 0; i < phone->fCount; i++)
+		{
+			EXPECT(gWordRecog->fContext->fSlices[i]->fScore
+				== phone->fSlices[i]->fScore);
+			EXPECT(gWordRecog->fContext->fSlices[i]->fNextCount
+				== phone->fSlices[i]->fNextCount);
+		}
+		// ... and its transitions point at its own kinds, not the
+		// ROM's
+		for (long i = 0; i < phone->fCount; i++)
+		{
+			const BiGSlice* copy = gWordRecog->fContext->fSlices[i];
+			for (long j = 0; j < copy->fNextCount; j++)
+			{
+				EXPECT(copy->fNext[j] != phone->fSlices[i]->fNext[j]);
+				EXPECT(copy->fWeights[j] == phone->fSlices[i]->fWeights[j]);
+				// the target really is one of the clone's own
+				Boolean found = false;
+				for (long k = 0; k < copy->fNextCount + phone->fCount; k++)
+					if (k < gWordRecog->fContext->fCount
+						&& gWordRecog->fContext->fSlices[k] == copy->fNext[j])
+						found = true;
+				EXPECT(found);
+			}
+		}
+		// a named grammar leaves the six dictionary slots empty
+		for (long i = 0; i < 6; i++)
+			EXPECT(gWordRecog->fDicts[i] == nil);
+	}
+
+	// ---- the characters a field will have ----
+	{
+		RosettaAreaInfo area;
+		memset(&area, 0, sizeof(area));
+		for (long i = 0; i < 5; i++)
+		{
+			area.fMap[i][0] = -1;
+			area.fMap[i][1] = -1;
+		}
+		area.fLetterSpace = 5;
+		// only the codes in the bottom word, and only say so
+		area.fFlags = kRosAreaLetters | kRosAreaHasSymbolSet;
+		area.fSymbolSet[0] = 0x0000ffff;
+
+		const ULong* before = RosCI->fLegalUse;
+		EXPECT(before == rosCharLegalUse);		// the ROM's own, to start
+		EXPECT(RosettaSetArea(&area) == noErr);
+		// a set of its own now, the ROM's narrowed by the field's
+		EXPECT(RosCI->fLegalUse != rosCharLegalUse);
+		for (long i = 0; i < 8; i++)
+			EXPECT(RosCI->fLegalUse[i] == (rosCharLegalUse[i] & area.fSymbolSet[i]));
+		EXPECT(RosCI->fLegalUse[1] == 0);		// nothing above code 31
+
+		// and a field that says nothing about it gets the ROM's own
+		// back, the one it made given away
+		area.fFlags = kRosAreaLetters;
+		EXPECT(RosettaSetArea(&area) == noErr);
+		EXPECT(RosCI->fLegalUse == rosCharLegalUse);
+	}
+
+	// ---- where the field says the writing goes ----
+	{
+		RosettaAreaInfo area;
+		memset(&area, 0, sizeof(area));
+		for (long i = 0; i < 8; i++)
+			area.fSymbolSet[i] = 0xffffffff;
+		for (long i = 0; i < 5; i++)
+		{
+			area.fMap[i][0] = -1;
+			area.fMap[i][1] = -1;
+		}
+		area.fLetterSpace = 5;
+		area.fFlags = kRosAreaLetters;
+		area.fBase = 200;
+		area.fBoxLeft = 10;	area.fBoxRight = 300;
+		area.fBoxTop = 150;	area.fBoxBottom = 210;
+		area.fSmallHeight = 9;
+		area.fXSpace = 4;	area.fYSpace = 6;
+
+		// without the flag none of it is looked at
+		gWordRecog->fBase = 0;
+		EXPECT(RosettaSetArea(&area) == noErr);
+		EXPECT(gWordRecog->fBase == 0);
+
+		area.fFlags |= kRosAreaHasBaseInfo;
+		EXPECT(RosettaSetArea(&area) == noErr);
+		EXPECT(gWordRecog->fBase == 200);
+		EXPECT(gWordRecog->fBoxLeft == 10 && gWordRecog->fBoxRight == 300);
+		EXPECT(gWordRecog->fBoxTop == 150 && gWordRecog->fBoxBottom == 210);
+		EXPECT(gWordRecog->fXSpace == 4 && gWordRecog->fYSpace == 6);
+		// the small height is never less than halfway between itself
+		// and eleven, so a writer of small letters is still allowed
+		// something to work with
+		EXPECT(gWordRecog->fSmallHeight == 10);		// (9 + 11) / 2
+		area.fSmallHeight = 30;
+		EXPECT(RosettaSetArea(&area) == noErr);
+		EXPECT(gWordRecog->fSmallHeight == 30);		// (30 + 11) / 2 is less
 	}
 
 	// ---- quiet, and asleep ----

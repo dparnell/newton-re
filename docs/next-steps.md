@@ -438,13 +438,27 @@ full), and `+0x2c` is what a slice is *made* with, 0xff, so the nine
 mean something.  `BiGrammarCreate` takes a name and never stores it, so
 a grammar the engine builds for a field is nameless.
 
-**`RosettaSetArea` is the next piece and is fully read** - it turns a
-`RosettaAreaInfo` into the grammar, the symbol set and the baseline the
-engine works to - but it wants `BiGrammarClone` and
-`BiGrammarModifyContext`, and those want `BiGSliceCreate`, which takes
-half a dozen **doubles** among its arguments (ParaGraph's training
-interface showing through; the ROM only ever passes zeroes).  That
-argument list has to be read off the caller's stack first.
+**And `RosettaSetArea` is done**, with the grammar machinery under it:
+`BiGSliceCreate`, `BiGrammarAddSlice` (unnamed in the ROM, inside
+`BiGrammarModifyContext`), `BiGrammarClone` and
+`BiGrammarModifyContext`.  Reading them turned up what a grammar's
+scores actually are - **negative natural logarithms of probabilities
+scaled by five hundred** - which is why the engine adds everywhere and
+why `ArProbDecodeLu`/`ArProbEncodeLu1`/`ArProbEncodeLu2` (now generated
+into `ArProbTables.cpp`) exist at all.  `docs/curiosities.md` has it.
+
+So a field's configuration now becomes a grammar: eight flag bits pick
+one of the ROM's seven special grammars, anything else gets the General
+grammar narrowed by `BiGrammarModifyContext` (nine tenths of the
+probability to the kinds the field wants, the rest to everything else,
+and the likeliest brought down to nought), every slice's dictionary
+index becomes the data itself, and the field's own symbol set narrows
+`RosCI->fLegalUse`.  `test_Rosetta` drives all four paths.
+
+A ROM bug kept: `BiGrammarClone` copies the shorts at +0x08, +0x0a and
++0x0c but not the one at +0x0e, and `BiGSliceNew` does not clear it, so
+a cloned slice's `fField0e` is whatever was in the heap.  It is nought
+in all 46 of the ROM's own slices.
 
 Still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;

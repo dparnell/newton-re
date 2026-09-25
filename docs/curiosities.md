@@ -1556,3 +1556,46 @@ accident rather than a decision.
 (This is also the only floating point in the entire 200 KB engine.)
 
 *`src/recognition/Segment.cpp`; `test_Segment` pins the whole curve.*
+
+## Every score in the handwriting engine is a logarithm
+
+The Newton's grammar of handwriting is full of numbers: each kind of
+word costs something to be, and something more to follow whatever came
+before it. `wordlike` costs 1105 in the General grammar; a hyphen after
+a digit costs 4; never costs 0x7ffe.
+
+Those numbers looked arbitrary until the two tables the engine converts
+them with were read. They are **negative natural logarithms of
+probabilities, scaled by five hundred**:
+
+    score = -ln(p) x 500
+
+`ArProbEncodeLu2[1]` is 5545, and `-ln(1/65536) x 500` is 5545.2.
+`ArProbEncodeLu1[1]` is 3119, and `-ln(1/512) x 500` is 3118.9. An even
+chance costs 347. And `0x7ffe`, the "never" that turns up all over the
+engine's tables, is simply the largest score a short will hold - a
+probability of about one in 10^28.
+
+That one fact explains a great deal of the engine's shape. Costs are
+**added**, everywhere, because adding logarithms multiplies
+probabilities - so the classifier's opinion of a letter, the grammar's
+opinion of the word it is in, and the segment layer's opinion of the
+gap before it all combine with a `+`. The word-spacing setting is kept
+as its logarithm for the same reason. There is no floating point in
+any of it, and only one logarithm is ever actually computed (in
+`SegmentSetWordSpacing`); everything else goes through
+`ArProbDecodeLu`, `ArProbEncodeLu1` and `ArProbEncodeLu2`, which are
+the two directions of that formula in 7 KB of ROM.
+
+It also explains `BiGrammarModifyContext`, which builds the grammar for
+a particular field. To say "this field wants times and numbers, not
+words", it cannot just cross out the kinds it does not want: it turns
+every score back into a probability, gives nine tenths of the
+probability to the kinds the field wants and a tenth to everything
+else, and turns them back into scores. Nothing is forbidden; it just
+becomes expensive. That is why the Newton will still read a word in a
+date field if you insist on writing one.
+
+*`src/recognition/RosEngine.cpp`, `src/recognition/Rosetta.cpp`;
+`docs/recognition/README.md` has "What a grammar's scores actually
+are".*

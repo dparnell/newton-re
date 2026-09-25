@@ -2335,6 +2335,76 @@ arguments - the ParaGraph engine's training interface, showing through
 - and the ROM only ever passes zeroes for them, so the argument list
 has to be read off the caller's stack before it can be written down.
 
+#### What a grammar's scores actually are
+
+Everything in a grammar is scored, and the scores looked arbitrary
+until the two lookup tables `BiGrammarModifyContext` uses were read.
+They are **negative natural logarithms of probabilities, scaled by five
+hundred**:
+
+    score = -ln(p) x 500
+
+`ArProbEncodeLu2[1]` is 5545, and `-ln(1/65536) x 500` is 5545.2.
+`ArProbEncodeLu1[1]` is 3119, and `-ln(1/512) x 500` is 3118.9. An even
+chance costs 347. `0x7ffe` means never, which is why it is the largest
+score there is rather than a flag.
+
+That is why the whole engine adds rather than multiplies, and why
+`ArProbDecodeLu` exists at all: the tables are how it goes between
+probability and cost without a logarithm. `ArProbDecodeLu` is indexed
+by the score over eight and so reaches to 0x2000, a chance of about one
+in 34 million; `ArProbEncodeLu2` is indexed by the probability itself
+and covers the first 1/64 of the range finely, `ArProbEncodeLu1` by the
+probability over 128 for the rest. `analysis/romtable.py` generates all
+three into `ArProbTables.cpp`.
+
+#### Building the grammar for a field (`RosettaSetArea`)
+
+`RosettaSetArea` is what a field's configuration becomes: which grammar
+to read against, which characters are allowed, which dictionaries to
+look in, and - when the field says so - where its baseline and its box
+are.
+
+The grammar comes first. Eight of the `fFlags` bits pick one of the
+ROM's seven special grammars outright (Phone, Numbers, Custom2,
+Punctuation, Date, Address, Custom1); anything else, **and any field
+that names dictionaries of its own**, gets the General grammar. Either
+way the engine ends up holding a copy it owns, which is what a negative
+`fContextIndex` records - the index is stored as `-(n+1)` so that
+`RosettaSleep` knows to give it back.
+
+A named grammar is simply cloned. The General grammar is cloned *and
+reweighed*: a bitmask of slice indices is built from the same flags -
+each flag ORs in a set of kinds of word, and they overlap, so a field
+that wants times gets a quite different set from one that wants only
+letters - plus one slice per dictionary the field named, which are the
+`~user` and `~null1`..`~null5` slots. That list goes to
+`BiGrammarModifyContext` with nine tenths of the probability for the
+kinds that are wanted:
+
+* every kind's score becomes a probability again (`ArProbDecodeLu`);
+* the wanted ones are totalled, and so are the rest;
+* each group is scaled so that it comes to its share;
+* the scaled probabilities become scores again;
+* and the smallest is subtracted from all of them, so the likeliest
+  kind of word in the field costs nothing and the rest are priced
+  relative to it.
+
+For a plain letters field that leaves the General grammar's 25 kinds
+scored from 0 to 2847 with three of them at never, which is what
+`test_Rosetta` pins.
+
+Then every slice's `fDictionary` stops being an index into
+`gROMDictionaryData` and becomes the data itself - after any
+substitutions the field asked for through `fMap`, which is how a field
+can have one lexicon read as another. (DEVIATION: the field is
+pointer-sized on the host, because that is what it ends up holding.)
+
+Last come the characters. `RosCI->fLegalUse` is the ROM's own
+`rosCharLegalUse` unless the field says otherwise, in which case a set
+of its own is made - the ROM's narrowed by the field's `fSymbolSet` -
+and given back the next time a field says nothing.
+
 ### The engine's own numbers (`recognition/RosEngine.h`)
 
 `RosCI` is the block of trained numbers the whole engine measures

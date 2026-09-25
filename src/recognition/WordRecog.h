@@ -167,13 +167,19 @@ struct WordRecog
 	struct CharBox*	fCharBox;			// +0x1ec  the boxed-character recogniser
 	ULong			fClassifyMode;		// +0x1f0  kRosettaClassifyNormally and friends
 	ULong			fFlags1f4;			// +0x1f4
-	long			fField1f8;			// +0x1f8
-	long			fField1fc;			// +0x1fc
-	UByte			fField200;
-	UByte			fField201;
+	// Where the field says the writing goes, copied out of the
+	// `RosettaAreaInfo` when its flags say it knows.
+	short			fBase;				// +0x1f8
+	short			fBoxLeft;			// +0x1fa
+	short			fBoxRight;			// +0x1fc
+	short			fBoxTop;			// +0x1fe
+	short			fBoxBottom;			// +0x200
 	UByte			fField202;			// +0x202
 	UByte			fField203;			// +0x203
-	long			fField204;			// +0x204
+	UByte			fSmallHeight;		// +0x204
+	UByte			fXSpace;			// +0x205
+	UByte			fYSpace;			// +0x206
+	UByte			fPad207;
 };
 
 
