@@ -274,4 +274,9 @@ Boolean	FamilyReflEqs(AngCluster* clusters, long c, UByte closed, long n, TDArra
 Boolean	AlignRotEqs(AngCluster* clusters, long n, TDArray* shape, SideMap* map, EqSystem* system);	// ROM 0x00226584 AlignRotEqs__FP10AngClusterlP7TDArrayP7SideMapP8EqSystem
 Boolean	DirSumEqs(long n, SideMap* map, AngCluster* clusters, UByte* nonlinear, UByte* closing, EqSystem* system);	// ROM 0x00223f58 DirSumEqs__FlP7SideMapP10AngClusterPUcT4P8EqSystem
 
+// ShapeSnapping.cpp: a shape fitted to the shapes already on the page
+void	SnapPtToLine(TGeneralShapeUnit* unit, long which, GeneralPt* end, GeneralPt* next, TStroke* outline);	// ROM 0x00211f1c SnapPtToLine__FP17TGeneralShapeUnitlP9GeneralPtT3P7TStroke
+Boolean	SnapPtToCircle(TGeneralShapeUnit* unit, long which, FPoint* end, FPoint* next, TGeneralShapeUnit* circle);	// ROM 0x002121c0 SnapPtToCircle__FP17TGeneralShapeUnitlP6FPointT3T1
+Boolean	CircleTan(TGeneralShapeUnit* circle, TGeneralShapeUnit* other, FPoint* end, FPoint* next, long dist, long otherDist);	// ROM 0x00215c64 CircleTan__FP17TGeneralShapeUnitT1P6FPointT3lT5
+
 #endif	/* __SHAPEGEOMETRY_H */

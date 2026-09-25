@@ -7,11 +7,9 @@
 				FindKeyPoints and the fitting under it are ShapeKeyPoints.cpp.
 
 				FindEllipses is ShapeEllipses.cpp, SolveEquations ShapeSolver.cpp,
-				FindEquations and PlugNewVals ShapeEquations.cpp.
-
-				NOT YET RECONSTRUCTED: GlobalTrends and SnapPtToLC, which
-				do nothing, so a shape is not yet snapped onto the shapes
-				already on the page.
+				FindEquations and PlugNewVals ShapeEquations.cpp, the
+				clustering ShapeTrends.cpp, and SnapPtToLC and GlobalTrends
+				ShapeSnapping.cpp; this file keeps ReleaseEqs.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -35,17 +33,3 @@ ReleaseEqs(EqSystem* system)
 	}
 	system->fCount = 0;
 }
-
-
-// ROM 0x00211684 GlobalTrends__FP17TGeneralShapeUnitPl
-// NOT YET RECONSTRUCTED.
-void
-GlobalTrends(TGeneralShapeUnit* /*unit*/, long* /*snapped*/)
-{ }
-
-
-// ROM 0x00211d00 SnapPtToLC__FP17TGeneralShapeUnit
-// NOT YET RECONSTRUCTED.
-void
-SnapPtToLC(TGeneralShapeUnit* /*unit*/)
-{ }
