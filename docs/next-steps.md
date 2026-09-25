@@ -505,9 +505,11 @@ fifths, what the classifier's opinion is worth against everything else)
 is named.
 
 Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
-(1324 B), `SearchDoVStepFromNode` (2120 B), `SearchFindBest` (1108 B),
-`SearchBestWords` (328 B), `SearchSendWords` (616 B) and
-`SearchSegwordRememberNBest` (392 B), about 5.5 KB.
+(1324 B), `SearchDoVStepFromNode` (2120 B), `SearchBestWords` (328 B)
+and `SearchSendWords` (616 B), about 4 KB.  `SearchFindBest` and
+`SearchSegwordRememberNBest` are done - the best readings gathered out
+of the columns, with the same text found twice counting once, and put
+on a word list the column then holds.
 `SearchDoVStepFromNode` is the heart of it and the place to start: it
 is what grows one partial reading by one letter, against the grammar
 and the dictionaries, and it wants `RegisterNewPath` (680 B),
