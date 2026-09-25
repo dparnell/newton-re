@@ -174,6 +174,10 @@ void	RegisterWRec(void);									// ROM 0x001b5bb4 RegisterWRec__Fv (NOT YET: th
 // What a word unit that has won its arbitration comes to: a tap, a
 // word, or one of the two ink commands.  The Airus word recogniser
 // answers through the same function.
+// The command the recogniser of a unit type answers with (0 for no
+// recogniser).
+ULong	GetCommand(ULong type);
+TUnitList*	HandleGetContextUnits(TUnit* unit, long whole);	// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl									// ROM 0x0019d338 GetCommand__FUl
 ULong	WordRecognizerHandleUnit(TRecognizer* recognizer, TUnitPublic* unit);	// ROM 0x00143f00 WordRecognizerHandleUnit__FP11TRecognizerP11TUnitPublic
 ULong	GetInkCommand(RefArg wordInfo);						// ROM 0x00143dec GetInkCommand__FRC6RefVar - aeRawInk or aeInkWord, by what the view wants
 
@@ -227,7 +231,7 @@ extern TRecognitionManager	gRecognition;					// ROM 0x0c106e88 gRecognition
 long	HandleUnit(TArray* units);						// ROM 0x0019d6a8 HandleUnit__FP6TArray - HandleUnitList under an exception handler (an exception is reported, not thrown)
 long	HandleUnitList(TArray* units);					// ROM 0x0019d72c HandleUnitList__FP6TArray - ==> whether any unit was handled
 long	PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask);	// ROM 0x0019dccc PostAndDoCommand__FUlP11TUnitPublicT1 - the command dispatched to the view under the unit; ==> the command's result (1 when a popup closed on the click)
-long	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl - command 0x14 to the view under the unit
+TUnitList*	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl - aeGetContextUnits to the view under the unit: the shapes on the page as units
 void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit - a stroke no recogniser took (NOT YET: to the stroke world's expired strokes; the ink taken off while the arbiter is modal)
 void	UpdateStroke(TUnit* unit);						// ROM 0x0019db84 UpdateStroke__FP5TUnit - the unit's stroke's ink taken off and the root view updated
 void	SafeExceptionNotify(Exception* exception);	// ROM 0x00036a3c SafeExceptionNotify__FP9Exception - an exception out of a handler reported, not thrown

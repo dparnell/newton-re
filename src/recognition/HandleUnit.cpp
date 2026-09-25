@@ -258,13 +258,15 @@ PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask)
 
 
 // ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl
-// Command 0x14 (the context units) to the view under the unit, with the
-// argument as its first index parameter.  ==> the command's result, 0
-// for no view.
-long
+// aeGetContextUnits (0x14) to the view under the unit, with the argument
+// as its first index parameter: the routine the shape domain asks for the
+// shapes on the page (SetContextUnitRoutine).  ==> the unit list the view
+// answers, nil for no view.  An evt.ex exception is swallowed and answers
+// nil; anything else goes on up.
+TUnitList*
 HandleGetContextUnits(TUnit* unit, long arg)
 {
-	long result = 0;
+	TUnitList* result = nil;
 	newton_try
 	{
 		TUnitPublic pub(unit, 0);
@@ -273,10 +275,10 @@ HandleGetContextUnits(TUnit* unit, long arg)
 		{
 			RefVar cmd(MakeCommand(0x14, view, (Long) &pub));
 			CommandSetIndexParameter(cmd, 0, arg);
-			result = gApplication->DispatchCommand(cmd);
+			result = (TUnitList*) gApplication->DispatchCommand(cmd);
 		}
 	}
-	newton_catch_all
+	newton_catch(exRootException)
 	{ }
 	end_try;
 	return result;

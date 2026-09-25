@@ -105,3 +105,7 @@ add_test(NAME recognition.CharBox COMMAND test_CharBox)
 add_executable(test_NetPattern test_NetPattern.cpp)
 target_link_libraries(test_NetPattern PRIVATE recognition memory)
 add_test(NAME recognition.NetPattern COMMAND test_NetPattern)
+
+add_executable(test_ShapeDomain test_ShapeDomain.cpp)
+target_link_libraries(test_ShapeDomain PRIVATE recognition memory)
+add_test(NAME recognition.ShapeDomain COMMAND test_ShapeDomain)

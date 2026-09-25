@@ -29,6 +29,9 @@ add_library(recognition STATIC
     RecConfig.cpp
     Domain.cpp
     EdgeList.cpp
+    ShapeDomain.cpp
+    ShapeGeometry.cpp
+    ShapeTables.cpp
     Controller.cpp
     Arbiter.cpp
     Recognizer.cpp

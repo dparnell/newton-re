@@ -1,0 +1,233 @@
+// ShapeDomain test: the shape domain's units and grouping, over the
+// standalone heap.  No OS is booted, so CheckScreenGlobals would find no
+// screen; the distances are set here as a 72 dpi screen gives them (every
+// scale one) and the sample counts as 80 samples a second gives them.
+
+#include "ShapeDomain.h"
+#include "ShapeGeometry.h"
+#include "Controller.h"
+#include "Domain.h"
+#include "Unit.h"
+#include "Stroke.h"
+#include "StrokeQueue.h"
+#include "memory/host/KernelHeap.h"
+
+#include <stdio.h>
+#include <string.h>
+
+static int failures = 0;
+#define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+
+static Fixed	F(long n)		{ return (Fixed) (int) ((unsigned int) n << 16); }
+
+
+static void
+SetDistances(void)
+{
+	gPixMaxClosedDist = F(10);
+	gPixMaxConnectDist = F(20);
+	gPixMinConnectDist = F(5);
+	gPixLargeInitialValue = F(50);
+	gSmpMinClosedShapePts = 7;
+	gSmpMinSmallDistRun = 3;
+}
+
+static TStroke*
+StrokeOf(const long* xy, long count)
+{
+	TStroke* stroke = TStroke::Make(0);
+	TabPt pt;
+	pt.z = 3;
+	pt.p = 0;
+	for (long i = 0; i < count; i++)
+	{
+		pt.x = F(xy[2 * i]);
+		pt.y = F(xy[2 * i + 1]);
+		stroke->AddPoint(&pt);
+	}
+	stroke->fDownTime = 1000;
+	stroke->fUpTime = 1010;
+	stroke->EndStroke();
+	stroke->UpdateBBox();
+	return stroke;
+}
+
+
+// PtOnLine2: near the start, near the end, on the line between, or not.
+static void
+TestPtOnLine(void)
+{
+	FPoint a = { F(10), F(10) };
+	FPoint b = { F(50), F(10) };
+	long dist = -1;
+	FPoint p = { F(11), F(12) };
+	EXPECT(PtOnLine2(&a, &b, &p, 4, &dist) == 1 && dist == F(2));
+	p.x = F(49);
+	p.y = F(9);
+	EXPECT(PtOnLine2(&a, &b, &p, 4, &dist) == 2 && dist == F(1));
+	p.x = F(30);
+	p.y = F(13);
+	EXPECT(PtOnLine2(&a, &b, &p, 4, &dist) == 3 && dist == F(3));
+	p.y = F(20);
+	EXPECT(PtOnLine2(&a, &b, &p, 4, &dist) == 0);			// too far off the line
+	p.x = F(60);
+	p.y = F(10);
+	EXPECT(PtOnLine2(&a, &b, &p, 4, &dist) == 0);			// past the end
+	p.x = F(8);
+	EXPECT(PtOnLine2(&a, &b, &p, 4, &dist) == 1 && dist == F(2));	// a little before the start
+}
+
+
+// A stroke closes when its ends are within a fifth of its size (held
+// between the connect distances) and it has enough points.
+static void
+TestClosed(TDomain* domain)
+{
+	static const long box[] = { 10, 10, 40, 10, 40, 40, 10, 40, 10, 12, 11, 11, 11, 10 };
+	TStrokeUnit* closed = TStrokeUnit::Make(domain, 2, StrokeOf(box, 7), nil);
+	EXPECT(CloseDelta(closed) == F(6));				// a fifth of 30
+	EXPECT(CheckClosed(closed));
+	static const long line[] = { 10, 10, 20, 12, 30, 14, 40, 16, 50, 18, 60, 20, 70, 22 };
+	TStrokeUnit* open = TStrokeUnit::Make(domain, 2, StrokeOf(line, 7), nil);
+	EXPECT(CloseDelta(open) == F(12));
+	EXPECT(!CheckClosed(open));
+	static const long few[] = { 10, 10, 40, 10, 10, 11 };
+	TStrokeUnit* tooFew = TStrokeUnit::Make(domain, 2, StrokeOf(few, 3), nil);
+	EXPECT(!CheckClosed(tooFew));					// three points are not a shape
+	closed->Dispose();
+	open->Dispose();
+	tooFew->Dispose();
+}
+
+
+// The unit's one interpretation, and a shape drawn out as a stroke: two
+// corners, then a curve through a control point to a third.
+static void
+TestUnit(TDomain* domain)
+{
+	TGeneralShapeUnit* unit = TGeneralShapeUnit::Make(domain, 3, nil);
+	EXPECT(unit != nil && unit->fType == kShapeUnit);
+	EXPECT(unit->InterpretationCount() == 1 && unit->GetInterpretation(1) == nil);
+	EXPECT(unit->fGroupInfo != nil && unit->fGroupInfo->fConnections == 0);
+	EXPECT(unit->fGroupInfo->fEnds[0].fKind == -1 && unit->fGroupInfo->fEnds[1].fUnit == nil);
+
+	TDArray* shape = TDArray::Make(sizeof(GeneralPt), 0);
+	GeneralPt pt;
+	memset(&pt, 0, sizeof(pt));
+	pt.fPt.x = F(10); pt.fPt.y = F(10);
+	*(GeneralPt*) shape->AddEntry() = pt;
+	pt.fPt.x = F(40);
+	*(GeneralPt*) shape->AddEntry() = pt;
+	pt.fPt.y = F(40); pt.fControl = 1;			// the control point
+	*(GeneralPt*) shape->AddEntry() = pt;
+	pt.fPt.x = F(10); pt.fControl = 0;
+	*(GeneralPt*) shape->AddEntry() = pt;
+	unit->SetGeneralShape(shape);
+	EXPECT(unit->GetGeneralShape() == shape);
+	unit->SetLabel(0, kShapeOpen);
+	EXPECT(unit->GetLabel(0) == kShapeOpen);
+	TStroke* stroke = unit->GetGSAsStroke();
+	EXPECT(stroke != nil);
+	if (stroke != nil)
+	{
+		// 2 corners, then the curve (from 40,10 through 40,40 to 10,40:
+		// 30 apart in each direction, so 8 points)
+		EXPECT(stroke->Count() == 2 + 8);
+		FPoint p;
+		stroke->GetFPoint(0, &p);
+		EXPECT(p.x == F(10) && p.y == F(10));
+		stroke->GetFPoint(9, &p);
+		EXPECT(p.x == F(10) && p.y == F(40));		// the curve ends at its end
+		stroke->GetFPoint(5, &p);
+		EXPECT(p.x > F(31) && p.x < F(33) && p.y > F(31) && p.y < F(33));	// its middle, a quarter of the way in
+		stroke->Dispose();
+	}
+	long average = GetAvgLength(unit);
+	EXPECT(average == 30);				// three sides of 30 (the control point counts as a corner here)
+	if (average != 30)
+		fprintf(stderr, "average length %ld\n", average);
+
+	// a circle: 25 points round its centre
+	unit->SetLabel(0, kShapeCircle);
+	unit->Interpretation()->fParams[0] = F(100);
+	unit->Interpretation()->fParams[1] = F(100);
+	unit->Interpretation()->fParams[2] = F(20);
+	stroke = unit->GetGSAsStroke();
+	EXPECT(stroke != nil && stroke->Count() == 25);
+	if (stroke != nil)
+	{
+		FPoint p;
+		stroke->GetFPoint(0, &p);
+		EXPECT(p.x >= F(119) && p.x <= F(121) && p.y >= F(99) && p.y <= F(101));	// at 0 degrees: to the right
+		stroke->GetFPoint(6, &p);
+		EXPECT(p.x >= F(99) && p.x <= F(101) && p.y >= F(79) && p.y <= F(81));		// at 90: up
+		stroke->Dispose();
+	}
+	unit->Dispose();
+}
+
+
+// Two strokes: the second's start meets the first's end, so it joins
+// following on; one whose end meets the first's start joins in front.
+static void
+TestConnect(TDomain* domain)
+{
+	static const long first[] = { 10, 10, 20, 10, 30, 10, 40, 10 };
+	static const long follows[] = { 41, 11, 41, 20, 41, 30, 41, 40 };
+	TGeneralShapeUnit* shape = TGeneralShapeUnit::Make(domain, 3, nil);
+	TStrokeUnit* one = TStrokeUnit::Make(domain, 2, StrokeOf(first, 4), nil);
+	shape->AddSub(one);
+	shape->fGroupInfo->fOrder[0] = 0;
+	TStrokeUnit* two = TStrokeUnit::Make(domain, 2, StrokeOf(follows, 4), nil);
+	FPoint* ends[2];
+	ExtractEnds(two, nil, ends);
+	EXPECT(ends[0]->x == F(41) && ends[1]->y == F(40));
+	EXPECT(CheckConnect(0, ends, nil, shape) == 1);	// only asked: nothing recorded
+	EXPECT(CheckConnect(1, ends, nil, shape) == 1);
+	EXPECT(shape->fGroupInfo->fOrder[1] == 1 && shape->fGroupInfo->fReversed[1] == 0);
+
+	// one that ends at the first stroke's start goes in front of it
+	static const long leads[] = { 10, 40, 10, 30, 10, 20, 10, 11 };
+	TGeneralShapeUnit* other = TGeneralShapeUnit::Make(domain, 3, nil);
+	other->AddSub(TStrokeUnit::Make(domain, 2, StrokeOf(first, 4), nil));
+	TStrokeUnit* three = TStrokeUnit::Make(domain, 2, StrokeOf(leads, 4), nil);
+	ExtractEnds(three, nil, ends);
+	EXPECT(CheckConnect(1, ends, nil, other) == 1);
+	EXPECT(other->fGroupInfo->fOrder[0] == 1 && other->fGroupInfo->fOrder[1] == 0);
+
+	// far away: nothing
+	static const long away[] = { 100, 100, 120, 100 };
+	TStrokeUnit* four = TStrokeUnit::Make(domain, 2, StrokeOf(away, 2), nil);
+	ExtractEnds(four, nil, ends);
+	EXPECT(CheckConnect(0, ends, nil, shape) == 0);
+
+	shape->Dispose();
+	other->Dispose();
+	two->Dispose();
+	three->Dispose();
+	four->Dispose();
+}
+
+
+int
+main()
+{
+	InitHostStandaloneHeap();
+	SetDistances();
+	gController = TController::Make();
+	// (not through Make, which asks the name server about the screen)
+	TGeneralShapeDomain* domain = new TGeneralShapeDomain;
+	domain->IDomain(gController, kShapeUnit, (char*) "GeneralShape Domain");
+	domain->AddPieceType(kStrokeUnit);
+	TestPtOnLine();
+	TestClosed(domain);
+	TestUnit(domain);
+	TestConnect(domain);
+	if (failures != 0)
+	{
+		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);
+		return 1;
+	}
+	printf("test_ShapeDomain: all tests passed\n");
+	return 0;
+}

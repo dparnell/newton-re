@@ -38,7 +38,9 @@ enum
 	aeScrub					= 0x0d,		// viewGestureScript(unit, kind) for these
 	aeCaret					= 0x0f,
 	aeLine					= 0x10,
+	aeShape					= 0x11,		// a shape the recogniser made (TEditView::HandleShape)
 	aeWord					= 0x12,		// viewWordScript(unit)
+	aeGetContextUnits		= 0x14,		// the shapes on a page as shape units, for a new one to snap to (HandleGetContextUnits); the index parameter 0: only near the unit
 	aeRawInk				= 0x15,		// viewRawInkScript(strokes)
 	aeInkWord				= 0x18,		// viewInkWordScript(strokes)
 	aeKeyUp					= 0x1f,		// the key events (TView::HandleKeyEvent; Keyboard.h): the parameter (modifiers << 25) | (key code << 16) | character
@@ -82,8 +84,8 @@ Ref		MakeCommand(ULong id, TResponder* receiver, Long parameter);			// ROM 0x000
 TResponder*	CommandReceiver(RefArg cmd);										// ROM 0x000704e8 CommandReceiver__FRC6RefVar
 long	CommandID(RefArg cmd);													// ROM 0x000707dc CommandID__FRC6RefVar
 void	CommandSetID(RefArg cmd, ULong id);										// ROM 0x00070818 CommandSetID__FRC6RefVarUl
-long	CommandResult(RefArg cmd);												// ROM 0x00070858 CommandResult__FRC6RefVar
-void	CommandSetResult(RefArg cmd, long result);								// ROM 0x00070894 CommandSetResult__FRC6RefVarl
+Long	CommandResult(RefArg cmd);												// ROM 0x00070858 CommandResult__FRC6RefVar (Long: a pointer fits, as for the parameter)
+void	CommandSetResult(RefArg cmd, Long result);								// ROM 0x00070894 CommandSetResult__FRC6RefVarl
 Long	CommandParameter(RefArg cmd);											// ROM 0x000708d4 CommandParameter__FRC6RefVar
 void	CommandSetParameter(RefArg cmd, Long parameter);						// ROM 0x00070910 CommandSetParameter__FRC6RefVarl
 Ref		CommandFrameParameter(RefArg cmd);										// ROM 0x00070950 CommandFrameParameter__FRC6RefVar

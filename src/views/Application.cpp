@@ -105,7 +105,7 @@ TApplication::Idle(void)
 // ROM 0x00034078 DispatchCommand__12TApplicationFRC6RefVar
 // The command sent to its receiver's DoCommand; ==> the result the
 // receiver left (0 when there is no receiver: ErrorNotify -8003).
-long
+Long
 TApplication::DispatchCommand(RefArg cmd)
 {
 	TResponder* receiver = CommandReceiver(cmd);

@@ -7,6 +7,7 @@
 */
 
 #include "UnitPublic.h"
+#include "ShapeDomain.h"
 #include "EdgeList.h"
 #include "Recognizer.h"
 #include "RootView.h"
@@ -624,6 +625,37 @@ TUnitPublic::Strokes(void)
 {
 	RefVar info(WordInfo());
 	return GetFrameSlot(info, RSSYMstrokes);
+}
+
+
+// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv
+// A shape unit's fitted shape as a polygon, made once and kept (nil for
+// any other unit, or a shape with nothing to draw).
+Handle
+TUnitPublic::CleanShape(void)
+{
+	if (fCleanShape == nil && fUnit->fType == kShapeUnit)
+	{
+		TStroke* stroke = ((TGeneralShapeUnit*) fUnit)->GetGSAsStroke();
+		if (stroke != nil)
+		{
+			fCleanShape = AsPolygon(stroke);
+			stroke->Dispose();
+		}
+	}
+	return fCleanShape;
+}
+
+
+// ROM 0x0022d234 ShapeType__11TUnitPublicFv
+// A shape unit's type (its label: ShapeDomain.h's kShape...), nought for
+// any other unit.
+ULong
+TUnitPublic::ShapeType(void)
+{
+	if (fUnit->fType != kShapeUnit)
+		return 0;
+	return (ULong) ((TSIUnit*) fUnit)->GetLabel(0);
 }
 
 

@@ -34,6 +34,7 @@
 #include "Arbiter.h"
 #include "Domain.h"
 #include "EdgeList.h"
+#include "ShapeDomain.h"		// SetContextUnitRoutine
 #include "StrokeQueue.h"
 #include "UserTasks.h"
 
@@ -836,6 +837,17 @@ ReadDomainOptions(void)
 }
 
 
+// ROM 0x0019d338 GetCommand__FUl
+ULong
+GetCommand(ULong type)
+{
+	TRecognizer* recognizer = gRecognition.fRecognizers->FindRecognizer(type);
+	if (recognizer == nil)
+		return 0;
+	return recognizer->Command();
+}
+
+
 // ROM 0x0019e124 Init__19TRecognitionManagerFUc
 // The recognition system started at a level: 0 none, 1 clicks and
 // strokes, 2 shapes and words as well.  The stroke world, the area
@@ -845,8 +857,6 @@ ReadDomainOptions(void)
 //
 // (InitializeParagraphCompression, which the ROM calls here, is started
 // from outside instead - see TNotebook::InitToolbox.)
-//
-// NOT YET RECONSTRUCTED: SetContextUnitRoutine(HandleGetContextUnits).
 long
 TRecognitionManager::Init(UChar level)
 {
@@ -871,6 +881,7 @@ TRecognitionManager::Init(UChar level)
 		fArbiter = gArbiter;
 		fController->SetHitTestRoutine(GetAreasHit);
 		fController->SetExpireStrokeRoutine(HandleExpiredStroke);
+		SetContextUnitRoutine(HandleGetContextUnits);
 	}
 	if (fLevel > 1)
 		InitDictionaries();

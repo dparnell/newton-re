@@ -50,7 +50,7 @@ public:
 	virtual void	Quit(void);													// ROM 0x00034508 Quit__12TApplicationFv (+0x20)
 	virtual void	InitToolbox(void);											// ROM 0x00034500 InitToolbox__12TApplicationFv (+0x24)
 
-	long		DispatchCommand(RefArg cmd);									// ROM 0x00034078 DispatchCommand__12TApplicationFRC6RefVar
+	Long		DispatchCommand(RefArg cmd);									// ROM 0x00034078 DispatchCommand__12TApplicationFRC6RefVar
 	void		PostUndoCommand(RefArg cmd);									// ROM 0x000343a0 PostUndoCommand__12TApplicationFRC6RefVar
 	void		PostUndoCommand(ULong id, TResponder* receiver, Long parameter);	// ROM 0x00034434 PostUndoCommand__12TApplicationFUlP10TResponderl
 	void		Undo(void);														// ROM 0x000340c8 Undo__12TApplicationFv

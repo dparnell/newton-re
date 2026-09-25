@@ -96,6 +96,11 @@ public:
 	// A word the recogniser read: its best reading, in the box it was
 	// written in, through HandleWord.  ==> whether it went anywhere.
 	Boolean			HandleWordUnit(class TUnitPublic* unit);	// ROM 0x000ab9f8 HandleWordUnit__9TEditViewFP11TUnitPublic
+	// A shape the recogniser made, put on the page as a polygon view: its
+	// box moved to where the page is scrolled to, onto the grid when the
+	// page has one (the box for an oval, every point for a polygon), and
+	// the polygon form offered to the page's editAddShapeScript first.
+	Boolean			HandleShape(Handle polygon, long type);		// ROM 0x000a654c HandleShape__9TEditViewFPP7Polygonl
 	// A word that no child would take, made into a paragraph of its own.
 	TView*			AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 									class TUnitPublic* unit, RefArg info, long* outOffset,
@@ -165,6 +170,7 @@ long	TextOrInkWordsEnabled(TView* view);					// ROM 0x001a2aa4 TextOrInkWordsEna
 
 // Whether the corrector - the list of alternative readings a written
 // word can be put right from - is on the screen.
+extern TView*	gSkipView;						// ROM 0x0c100cec gSkipView - a child aeGetContextUnits leaves out
 Boolean	CorrectorUp(void);									// ROM 0x001767b8 CorrectorUp__Fv
 // Remote writing turned off while the corrector is up, and put back
 // afterwards.  ==> 1 the corrector was up, 2 remote writing was on.

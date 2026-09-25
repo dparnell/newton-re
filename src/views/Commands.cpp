@@ -105,21 +105,24 @@ CommandSetID(RefArg cmd, ULong id)
 
 
 // ROM 0x00070858 CommandResult__FRC6RefVar
-long
+// (Host: a result may be a pointer - the unit list a page answers
+// aeGetContextUnits with - so it is kept as the parameter keeps one: an
+// integer Ref when it fits, the address when it does not.)
+Long
 CommandResult(RefArg cmd)
 {
 	RefVar result(GetFrameSlotRef(cmd, RSSYMresult));
 	if (!ISINT(result))
 		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, result);
-	return RVALUE(result);
+	return ParameterValue(result);
 }
 
 
 // ROM 0x00070894 CommandSetResult__FRC6RefVarl
 void
-CommandSetResult(RefArg cmd, long result)
+CommandSetResult(RefArg cmd, Long result)
 {
-	SetFrameSlot(cmd, RSSYMresult, RefVar(MAKEINT(result)));
+	SetFrameSlot(cmd, RSSYMresult, RefVar(ParameterRef(result)));
 }
 
 

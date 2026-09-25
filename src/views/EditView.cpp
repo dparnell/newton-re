@@ -51,6 +51,10 @@
 #include "RSSymbols.h"
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
+#include "PolygonView.h"
+#include "Polygons.h"
+#include "ShapeDomain.h"
+#include "Stroke.h"
 
 
 // what a gathering rectangle starts as, and how the callers know nothing
@@ -1319,6 +1323,83 @@ TEditView::RealDoCommand(RefArg cmd)
 		return done;
 	}
 
+	if (id == aeShape)
+	{
+		// (0x000a56d0) a shape: any ink left for its strokes removed, the
+		// selection taken away, the shapes on the page it was joined to
+		// removed (its context id holds two view ids, one in each half),
+		// and the clean shape put down
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		RemoveInk(this, unit->fUnit);
+		RemoveAllHilites();
+		ULong joined = unit->ContextID();
+		if (joined != 0)
+		{
+			gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, (long) joined)));
+			gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, (long) joined >> 16)));
+		}
+		Handle polygon = unit->CleanShape();
+		if (polygon == nil)
+			Throw(exOutOfMemory, (void*) -10007, nil);
+		Boolean done = HandleShape(polygon, (long) unit->ShapeType());
+		CommandSetResult(cmd, done);
+		return done;
+	}
+
+	if (id == aeGetContextUnits)
+	{
+		// (0x000a58e4) the page's polygons as shape units, for a shape
+		// being drawn to snap to - only for a unit the shape recogniser
+		// (0x11) or the stroke recogniser (0xc) answers, and only the
+		// polygons near it unless the whole page is asked for (the
+		// unit's box let out by the gravity distance, within the screen
+		// and the page).  A unit the word recogniser answers (0x16) is
+		// answered with no list.
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		ULong command = GetCommand(unit->GetType());
+		if (command == 0x11 || command == 0x0c || command == 0x16)
+		{
+			TUnitList* list = nil;
+			Rect near;
+			unit->Bounds(&near);
+			long whole = CommandIndexParameter(cmd, 0);
+			if (whole == 0)
+			{
+				Rect screen;
+				UnfixRect(&gGSScreenRect, &screen);
+				InsetRect(&near, -gPixMaxContextGravity, -gPixMaxContextGravity);
+				SectRect(&screen, &near, &near);
+				SectRect(&viewBounds, &near, &near);
+			}
+			TListLoop loop(fChildren);
+			TView* child;
+			while ((child = (TView*) loop.Next()) != nil)
+			{
+				if (child == gSkipView)
+					continue;
+				if (whole == 0 && !Overlaps(&near, &child->viewBounds))
+					continue;
+				RefVar points(child->GetProto(RSSYMpoints));
+				if (ISNIL(points))
+					continue;
+				if (command != 0x11 && command != 0x0c)
+					continue;
+				if (list == nil)
+					list = TUnitList::Make();
+				if (list == nil)
+					break;
+				TGeneralShapeUnit* shape = MakeGeneralShape(unit, (PolygonShape*) BinaryData(points),
+															 child->viewBounds, child->fId);
+				if (shape == nil)
+					break;
+				list->AddUnit(shape);
+			}
+			CommandSetResult(cmd, (Long) list);
+			return true;
+		}
+		return TView::RealDoCommand(cmd);
+	}
+
 	if (id == aeRawInk)
 	{
 		// ink nobody is to read, written over the page.  The view's own
@@ -2115,6 +2196,46 @@ TEditView::HandleWordUnit(TUnitPublic* unit)
 	DisposHandle(word);
 	return view != nil;
 }
+
+// A view the shape domain is not to snap to (NOT YET: who sets it).
+TView* gSkipView = nil;
+
+
+// ROM 0x000a654c HandleShape__9TEditViewFPP7Polygonl
+Boolean
+TEditView::HandleShape(Handle polygon, long type)
+{
+	long pen = RINT(GetPreference(RSSYMuserpensize));
+	HLock(polygon);
+	Polygon* poly = (Polygon*) *polygon;
+	Rect box = poly->polyBBox;
+	Point origin = ContentsOrigin();
+	OffsetRect(&box, -origin.h, -origin.v);
+	Point spacing;
+	if (IsGridded(RefVar(RSSYMsquaregrid), &spacing))
+	{
+		if ((ULong) type < 3 || type == 10 || type == 11)
+			AlignRectToGrid(&box, spacing);
+		if (type == 4 || type == 5 || type == 8 || type == 9)
+		{
+			long count = PolyPointCount(poly);
+			for (long i = 0; i < count; i++)
+				AlignPtToGrid(&poly->polyPoints[i], spacing);
+			AlignRectToGrid(&box, spacing);
+		}
+	}
+	RefVar form(MakePolygonForm(poly->polyPoints, PolyPointCount(poly), type, box, pen));
+	if (NOTNIL(GetProtoVariable(fContext, RSSYMeditaddshapescript, nil)))
+	{
+		RefVar args(MakeArray(1));
+		SetArraySlot(args, 0, form);
+		form = RunScript(RSSYMeditaddshapescript, args, true, nil);
+	}
+	AddForm(form);
+	HUnlock(polygon);
+	return true;
+}
+
 
 // ROM 0x0019dfa4 RemoveInk__FP9TEditViewP5TUnit
 void
