@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -368,6 +369,76 @@ TestConnect(TDomain* domain)
 }
 
 
+// A stroke round an ellipse (rx, ry about the centre, turned through
+// `turn` degrees), drawn from the right going anticlockwise on the screen
+// and back to just short of where it started.
+static TStroke*
+EllipseStroke(double cx, double cy, double rx, double ry, double turn)
+{
+	TStroke* stroke = TStroke::Make(0);
+	TabPt pt;
+	pt.z = 3;
+	pt.p = 0;
+	double t = turn * 3.14159265358979 / 180.0;
+	for (long k = 0; k <= 72; k++)
+	{
+		double a = k * 2 * 3.14159265358979 / 72 * 0.99;
+		double x = rx * cos(a), y = -ry * sin(a);
+		pt.x = (Fixed) ((cx + x * cos(t) - y * sin(t)) * 65536.0);
+		pt.y = (Fixed) ((cy + x * sin(t) + y * cos(t)) * 65536.0);
+		stroke->AddPoint(&pt);
+	}
+	stroke->fDownTime = 1000;
+	stroke->fUpTime = 1010;
+	stroke->EndStroke();
+	stroke->UpdateBBox();
+	return stroke;
+}
+
+static TGeneralShapeUnit*
+Round(TDomain* domain, TStroke* stroke, long* type, ULong* score, long* angle, Boolean* found)
+{
+	TGeneralShapeUnit* unit = TGeneralShapeUnit::Make(domain, 3, nil);
+	TStrokeUnit* sub = TStrokeUnit::Make(domain, 2, stroke, nil);
+	unit->AddSub(sub);
+	unit->fGroupInfo->fOrder[0] = 0;
+	*type = kShapeClosedCurve;
+	FindKeyPoints(unit, type, score);
+	*found = FindEllipses(unit, type, score, angle);
+	return unit;
+}
+
+// A drawn circle is found to be a circle, and a drawn ellipse an ellipse.
+static void
+TestEllipses(TDomain* domain)
+{
+	SetScreenDistances();
+	long type, angle;
+	ULong score;
+	Boolean found;
+	TGeneralShapeUnit* unit = Round(domain, EllipseStroke(160, 200, 50, 50, 0), &type, &score, &angle, &found);
+	ShapeInterpretation* interp = unit->Interpretation();
+	printf("  circle: found %d type %ld score %lu centre %.1f %.1f radius %.1f\n", found, type,
+		   (unsigned long) score, interp->fParams[0] / 65536.0, interp->fParams[1] / 65536.0, interp->fParams[2] / 65536.0);
+	EXPECT(found && type == kShapeCircle);
+	EXPECT(interp->fParams[2] > F(45) && interp->fParams[2] < F(55));
+	EXPECT(unit->GetGeneralShape() == nil);		// drawn from its numbers now
+	TStroke* drawn = unit->GetGSAsStroke();
+	EXPECT(drawn != nil && drawn->Count() == 25);
+	if (drawn != nil)
+		drawn->Dispose();
+	unit->Dispose();
+
+	unit = Round(domain, EllipseStroke(160, 200, 80, 35, 0), &type, &score, &angle, &found);
+	interp = unit->Interpretation();
+	printf("  ellipse: found %d type %ld score %lu centre %.1f %.1f radii %.1f %.1f angle %.1f\n", found, type,
+		   (unsigned long) score, interp->fParams[0] / 65536.0, interp->fParams[1] / 65536.0,
+		   interp->fParams[2] / 65536.0, interp->fParams[3] / 65536.0, interp->fParams[4] / 65536.0);
+	EXPECT(found && type == kShapeEllipse);
+	unit->Dispose();
+}
+
+
 int
 main()
 {
@@ -383,6 +454,7 @@ main()
 	TestUnit(domain);
 	TestConnect(domain);
 	TestKeyPoints(domain);
+	TestEllipses(domain);
 	if (failures != 0)
 	{
 		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);

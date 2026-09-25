@@ -6,7 +6,9 @@
 
 				FindKeyPoints and the fitting under it are ShapeKeyPoints.cpp.
 
-				NOT YET RECONSTRUCTED: FindEllipses, FindEquations and the
+				FindEllipses is ShapeEllipses.cpp.
+
+				NOT YET RECONSTRUCTED: FindEquations and the
 				angle clustering (TTrend), SolveEquations and the minimiser,
 				PlugNewVals, GlobalTrends and SnapPtToLC.  They answer
 				"nothing found" and do nothing, so a shape comes out as its
@@ -33,15 +35,6 @@ ReleaseEqs(EqSystem* system)
 		}
 	}
 	system->fCount = 0;
-}
-
-
-// ROM 0x00215904 FindEllipses__FP17TGeneralShapeUnitP6GSTypePUlPl
-// NOT YET RECONSTRUCTED.
-Boolean
-FindEllipses(TGeneralShapeUnit* /*unit*/, long* /*type*/, ULong* /*score*/, long* /*angle*/)
-{
-	return false;
 }
 
 

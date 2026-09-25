@@ -266,6 +266,11 @@ public:
 	virtual ULong		ContextID(void);						// ROM 0x00220f40 ContextID__11TStrokeUnitFv
 	virtual void		SetContextID(ULong id);					// ROM 0x00220f48 SetContextID__11TStrokeUnitFUl
 
+	// the shape domain's tests of the stroke (ShapeEllipses.cpp)
+	TArray*				GetPts(void);							// ROM 0x002220a4 GetPts__11TStrokeUnitFv - the points as FPoints
+	Boolean				IsCircle(FPoint* centre, long* radius, ULong* score);	// ROM 0x00220f98 IsCircle__11TStrokeUnitFP6FPointPlPUl
+	Boolean				IsEllipse(FPoint* centre, long* radius1, long* radius2, long* angle, ULong* score);	// ROM 0x002212e4 IsEllipse__11TStrokeUnitFP6FPointPlN22PUl
+
 	ULong				fContextID;		// +0x3c
 	TStroke*			fStroke;		// +0x40
 };

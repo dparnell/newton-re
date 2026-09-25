@@ -69,6 +69,10 @@ FPoint	DoConicInfl(UByte first, SplineSeg* seg, SplineSeg* split);	// ROM 0x0021
 long	FindInflection(UByte cut, SplineSeg* segs, ULong i, char* flags, char* kinds, SplineSeg* split);	// ROM 0x00214344 FindInflection__FUcP9SplineSegUlPcT4T2
 Boolean	MeetEnds(ULong n, ULong last, SplineSeg* segs, TDArray* shape);	// ROM 0x0021534c MeetEnds__FUlT1P9SplineSegP7TDArray
 
+// ShapeEllipses.cpp: the linear algebra the ellipse fit is solved with
+void	Decomp(ULong n, long ndim, Fixed* a, long* pivots, Fixed* det);	// ROM 0x00125180 Decomp
+void	Solve(ULong n, long ndim, Fixed* a, long* pivots, Fixed* b);	// ROM 0x0012542c Solve
+
 // One equation of the system (12 bytes): its coefficients in a handle.
 struct Equation
 {
