@@ -12,6 +12,8 @@
 #include "StrokeQueue.h"
 #include "memory/host/KernelHeap.h"
 #include "FixedMath.h"
+#include "RecObject.h"
+#include "NewtonMemory.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -440,6 +442,70 @@ TestEllipses(TDomain* domain)
 }
 
 
+// One equation: coefficient c on variable v, nought everywhere else.
+static void
+AddEquation(EqSystem* system, long v, Fixed c)
+{
+	Equation* eq = &system->fEqs[system->fCount++];
+	eq->fN = system->fN;
+	eq->fKind = 0;
+	eq->fCoeffs = MakeHandle(0x94);
+	memset(*eq->fCoeffs, 0, 0x94);
+	((Fixed*) *eq->fCoeffs)[v] = c;
+}
+
+// The solver: two edges drawn nearly level and nearly upright, asked to be
+// exactly that, come out level and upright and still covering the box
+// they covered.
+static void
+TestSolver(void)
+{
+	EqSystem system;
+	system.fN = 4;
+	system.fCount = 0;
+	AddEquation(&system, 2, F(1));		// the first edge's dy is nought
+	AddEquation(&system, 3, F(1));		// the second edge's dx is nought
+	long values[75];
+	values[0] = 0;
+	values[1] = F(100); values[2] = F(8);
+	values[3] = F(6); values[4] = F(80);
+	Boolean solved = SolveEquations(&system, values);
+	printf("  solver: %d  (%.2f %.2f) (%.2f %.2f)\n", solved, values[1] / 65536.0, values[2] / 65536.0,
+		   values[3] / 65536.0, values[4] / 65536.0);
+	EXPECT(solved);
+	EXPECT(values[2] > -F(1) && values[2] < F(1));
+	EXPECT(values[3] > -F(1) && values[3] < F(1));
+	EXPECT(values[1] > F(104) && values[1] < F(108));	// the box was 106 across
+	EXPECT(values[4] > F(86) && values[4] < F(90));		// and 88 down
+	ReleaseEqs(&system);
+
+	// Minimize alone: (x1 - 3)^2 + (x2 + 2)^2 as a quadratic over [1, x1, x2]
+	MixFunc saved = currFunction;
+	Bilinear scratch;
+	EXPECT(!InitFunction(2, &currFunction, &scratch));
+	Fixed* r0 = (Fixed*) *currFunction.fQuad.fRows[0];
+	Fixed* r1 = (Fixed*) *currFunction.fQuad.fRows[1];
+	Fixed* r2 = (Fixed*) *currFunction.fQuad.fRows[2];
+	r0[0] = F(13); r0[1] = -F(6); r0[2] = F(4);
+	r1[1] = F(1); r2[2] = F(1);
+	currGradient = (MixGradEl*) NewPtr(sizeof(MixGradEl) * 37);
+	InitGradient(currGradient);
+	EXPECT(!FindGradient(&currFunction, currGradient));
+	long x[3] = { 0, 0, 0 };
+	long iterations, least;
+	EXPECT(Minimize(x, 2, 0x200, &iterations, &least, TheFunction, TheGradient));
+	printf("  minimize: %ld iterations, least %.4f at %.3f %.3f\n", iterations, least / 65536.0, x[1] / 65536.0, x[2] / 65536.0);
+	EXPECT(x[1] > F(3) - 0x2000 && x[1] < F(3) + 0x2000);
+	EXPECT(x[2] > -F(2) - 0x2000 && x[2] < -F(2) + 0x2000);
+	ReleaseGradient(currGradient);
+	DisposPtr((Ptr) currGradient);
+	currGradient = nil;
+	ReleaseBilin(&scratch);
+	ReleaseBilin(&currFunction.fQuad);
+	currFunction = saved;
+}
+
+
 int
 main()
 {
@@ -456,6 +522,7 @@ main()
 	TestConnect(domain);
 	TestKeyPoints(domain);
 	TestEllipses(domain);
+	TestSolver();
 	if (failures != 0)
 	{
 		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);

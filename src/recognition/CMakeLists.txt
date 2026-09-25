@@ -33,6 +33,7 @@ add_library(recognition STATIC
     ShapeGeometry.cpp
     ShapeKeyPoints.cpp
     ShapeEllipses.cpp
+    ShapeSolver.cpp
     ShapeTables.cpp
     Controller.cpp
     Arbiter.cpp

@@ -6,10 +6,10 @@
 
 				FindKeyPoints and the fitting under it are ShapeKeyPoints.cpp.
 
-				FindEllipses is ShapeEllipses.cpp.
+				FindEllipses is ShapeEllipses.cpp, SolveEquations ShapeSolver.cpp.
 
 				NOT YET RECONSTRUCTED: FindEquations and the
-				angle clustering (TTrend), SolveEquations and the minimiser,
+				angle clustering (TTrend),
 				PlugNewVals, GlobalTrends and SnapPtToLC.  They answer
 				"nothing found" and do nothing, so a shape comes out as its
 				key points and curves, untidied.
@@ -43,15 +43,6 @@ ReleaseEqs(EqSystem* system)
 Boolean
 FindEquations(TGeneralShapeUnit* /*unit*/, long* /*values*/, EqSystem* /*system*/,
 			  long* /*type*/, ULong* /*score*/, long* /*angle*/)
-{
-	return false;
-}
-
-
-// ROM 0x0020fae8 SolveEquations__FP8EqSystemPl
-// NOT YET RECONSTRUCTED.
-Boolean
-SolveEquations(EqSystem* /*system*/, long* /*values*/)
 {
 	return false;
 }

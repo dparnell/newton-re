@@ -77,21 +77,92 @@ Boolean	MeetEnds(ULong n, ULong last, SplineSeg* segs, TDArray* shape);	// ROM 0
 void	Decomp(ULong n, long ndim, Fixed* a, long* pivots, Fixed* det);	// ROM 0x00125180 Decomp
 void	Solve(ULong n, long ndim, Fixed* a, long* pivots, Fixed* b);	// ROM 0x0012542c Solve
 
-// One equation of the system (12 bytes): its coefficients in a handle.
+// One equation of the system (the ROM's Linear, 12 bytes): a linear
+// form sum c[i] x[i] over the variables with x[0] = 1, which the solver
+// wants to be nought.  fCoeffs holds 37 Fixed coefficients.
 struct Equation
 {
-	long		f00;			// +0x00
-	long		f04;			// +0x04
-	Handle		fCoeffs;		// +0x08
+	long		fN;				// +0x00  the highest variable it mentions
+	UByte		fKind;			// +0x04  0: a linear equation, squared into the function
+	Handle		fCoeffs;		// +0x08  'cof0'
 };
+typedef Equation Linear;
 
 // The equations a shape's symmetries are written as (the ROM's EqSystem,
 // 0x1f4 bytes on Classify's stack).
 struct EqSystem
 {
-	long		f00;			// +0x00
+	long		fN;				// +0x00  how many variables there are
 	long		fCount;			// +0x04  how many equations there are
-	Equation	fEqs[41];		// +0x08
+	Equation	fEqs[42];		// +0x08  ROM BUG: 41 fit, but NewCoeffs makes a 42nd (see there)
 };
+
+// A quadratic form over [1, x1 .. xn] as an upper triangle: row i is a
+// handle of n+1 Fixed coefficients, of which [i..n] are used.
+struct Bilinear
+{
+	long		fN;				// +0x00
+	Handle		fRows[37];		// +0x04
+};
+
+// One product term of a MixFunc: x[v1]*x[v2] + x[v3]*x[v4] when fKind is
+// 1, minus otherwise.  Nothing in the ROM ever makes one (fMixCount is only
+// ever set to nought), so the minimiser only ever sees the quadratic.
+struct MixTerm
+{
+	long		fKind;			// +0x00
+	long		fV[4];			// +0x04
+};
+
+// What the minimiser minimises (the ROM's MixFunc, the global
+// currFunction): the quadratic plus the sum of the absolute values of the
+// mix terms.
+struct MixFunc
+{
+	Bilinear	fQuad;			// +0x00
+	long		fMixCount;		// +0x98
+	MixTerm		fMix[5];		// +0x9c
+};
+
+// Row i of the gradient (the ROM's MixGradEl, 0x20 bytes): the linear
+// form the quadratic's derivative by x[i] is, and for each mix term the
+// variable its derivative is (negative: minus that variable; 0: none).
+struct MixGradEl
+{
+	long		fN;				// +0x00
+	UByte		fFlag;			// +0x04
+	Handle		fCoeffs;		// +0x08  'cof1'
+	long		fMix[5];		// +0x0c
+};
+
+// ShapeSolver.cpp: the system solved by minimising the sum of the squares
+extern MixFunc		currFunction;						// ROM 0x0c106f10 currFunction
+extern MixGradEl*	currGradient;						// ROM 0x0c104c90 currGradient
+
+Boolean	SolveEquations(EqSystem* system, long* values);			// ROM 0x0020fae8 SolveEquations__FP8EqSystemPl
+void	CalcSolutionBounds(const long* x, long n, FRect* bounds);	// ROM 0x0020fcfc CalcSolutionBounds__FPCllP5FRect
+Boolean	InitFunction(long n, MixFunc* function, Bilinear* scratch);	// ROM 0x0020fd94 InitFunction__FlP7MixFuncP8Bilinear
+long	TheFunction(long n, long* x, long* terms);				// ROM 0x0020fee4 TheFunction__FlPlT2
+void	TheGradient(long n, long* x, long* terms, long* gradient);	// ROM 0x00210028 TheGradient__FlPlN22
+void	MapSolutionToBounds(long* x, long n, const FRect& bounds);	// ROM 0x00210150 MapSolutionToBounds__FPllRC5FRect
+void	SquareLinear(Linear* linear, Bilinear* square);			// ROM 0x002101e8 SquareLinear__FP6LinearP8Bilinear
+void	AddBilinears(Bilinear* a, Bilinear* b, Bilinear* sum);	// ROM 0x002102cc AddBilinears__FP8BilinearN21
+void	InitGradient(MixGradEl* gradient);						// ROM 0x0021034c InitGradient__FP9MixGradEl
+Boolean	FindGradient(MixFunc* function, MixGradEl* gradient);	// ROM 0x00210370 FindGradient__FP7MixFuncP9MixGradEl
+void	ReleaseGradient(MixGradEl* gradient);					// ROM 0x0021052c ReleaseGradient__FP9MixGradEl
+void	ReleaseBilin(Bilinear* bilinear);						// ROM 0x0021056c ReleaseBilin__FP8Bilinear
+
+// the minimiser: Numerical Recipes' conjugate gradients in 16.16
+typedef long	(*NFunction)(long n, long* x, long* terms);
+typedef void	(*NGradient)(long n, long* x, long* terms, long* gradient);
+typedef long	(*Function1D)(long t, long n, long* p, long* dir, NFunction f, long* terms);
+typedef long	(*Gradient1D)(long t, long n, long* p, long* dir, NGradient df, long* terms);
+
+Boolean	Minimize(long* p, long n, long ftol, long* iterations, long* fret, NFunction f, NGradient df);	// ROM 0x00219128 Minimize__FPllT2N21PFlPlT2_lPFlPlN22_v
+void	LineMinimize(long n, long* p, long* dir, long* fret, long* terms, NFunction f, NGradient df);	// ROM 0x002193a0 LineMinimize__FlPlN32PFlPlT2_lPFlPlN22_v
+long	Func1D(long t, long n, long* p, long* dir, NFunction f, long* terms);	// ROM 0x002194a0 Func1D__FlT1PlT3PFlPlT2_lT3
+long	DFunc1D(long t, long n, long* p, long* dir, NGradient df, long* terms);	// ROM 0x00219510 DFunc1D__FlT1PlT3PFlPlN22_vT3
+void	BracketMin(long* a, long* b, long* c, long* fa, long* fb, long* fc, Function1D f, long n, long* p, long* dir, NFunction nf);	// ROM 0x002195fc BracketMin__FPlN51PFlT1PlT3PFlPlT2_lT3_llN21PFlPlT2_l
+long	Minimize1D(long ax, long bx, long cx, Function1D f, Gradient1D df, long n, long* p, long* dir, NFunction nf, NGradient ndf, long tol, long* xmin, long* terms);	// ROM 0x002199d8 Minimize1D__FlN21PFlT1PlT3PFlPlT2_lT3_lPFlT1PlT3PFlPlN22_vT3_lT1PlT7PFlPlT2_lPFlPlN22_vT1N27
 
 #endif	/* __SHAPEGEOMETRY_H */
