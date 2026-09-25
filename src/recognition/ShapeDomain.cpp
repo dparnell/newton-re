@@ -24,6 +24,8 @@
 #include "Rects.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 extern const int	displayAngle[25];		// ShapeTables.cpp: 0 to 360 degrees in fifteens, Fixed
 
@@ -61,6 +63,19 @@ long	gPixPtOnLineSlop;
 long	gSmpMinClosedShapePts;
 long	gSmpMinSmallDistRun;
 ContextUnitProc	gContextUnitProc;
+
+// HOST ONLY: with NEWTON_TRACE_SHAPES set in the environment, what the
+// domain groups and what Classify makes of it are written on the standard
+// error.
+static Boolean
+ShapeTracing(void)
+{
+	static int tracing = -1;
+	if (tracing < 0)
+		tracing = getenv("NEWTON_TRACE_SHAPES") != nil ? 1 : 0;
+	return tracing != 0;
+}
+
 
 // ROM 0x0c104d0c (unnamed) - the screen resolution the distances were last
 // worked out for (horizontal, vertical), and the sampling interval the
@@ -921,7 +936,7 @@ CheckConnect(long mode, FPoint** ends, TGeneralShapeUnit* shape, TGeneralShapeUn
 long
 PtOnLine2(FPoint* a, FPoint* b, FPoint* pt, long slop, long* dist)
 {
-	Fixed tolerance = (Fixed) (slop << 16);
+	Fixed tolerance = ShiftLeft(slop, 16);
 	long result = 1;
 	Fixed nx = a->y - b->y;				// the segment's normal
 	Fixed ny = b->x - a->x;
@@ -1238,6 +1253,8 @@ TGeneralShapeDomain::Group(TUnit* unit, dInfoRec* /*info*/)
 	long closed = CheckClosed(stroke);
 	TUnitList* delayed = fController->GetDelayList(this, kShapeUnit);
 	TGeneralShapeUnit* shape = nil;			// r4
+	if (ShapeTracing())
+		fprintf(stderr, "shapes: a stroke grouped%s\n", closed ? " (closed)" : "");
 	if (delayed == nil)
 		failed = 1;
 	else
@@ -1468,6 +1485,12 @@ TGeneralShapeDomain::Classify(TUnit* unit)
 	shape->SetLabel(0, (ULong) type);
 	shape->SetScore(0, score);
 	shape->SetAngle(0, angle);
+	if (ShapeTracing())
+	{
+		TDArray* outline = shape->GetGeneralShape();
+		fprintf(stderr, "shapes: %ld strokes classified as type %ld, score %lu, %ld points\n",
+				shape->SubCount(), type, (unsigned long) score, outline != nil ? outline->Count() : 0L);
+	}
 	long snapped = 0;
 	if (type != kShapeNothing && type != kShapeNone && type != kShapeCurve)
 	{
@@ -1497,6 +1520,8 @@ TShapeRecognizer::HandleUnit(TUnitPublic* unit)
 {
 	ULong command = Command();
 	ULong type = unit->ShapeType();
+	if (ShapeTracing())
+		fprintf(stderr, "shapes: a shape of type %lu handled\n", (unsigned long) type);
 	if (type == kShapeNone || type == kShapeNothing)
 		command = 0;
 	return command;

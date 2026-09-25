@@ -1062,7 +1062,7 @@ DoConic(SplineSeg* seg)
 	{
 		long fromStart = CheapDistPoint(&meet, &seg->fP0);
 		long fromEnd = CheapDistPoint(&meet, &seg->fP1);
-		long limit = (length << 1) >> 1;
+		long limit = ShiftLeft(length, 1) >> 1;
 		if (!(fromStart > limit && fromEnd > limit))
 			return meet;
 	}
@@ -1109,7 +1109,7 @@ DoConicInfl(UByte first, SplineSeg* seg, SplineSeg* split)
 	{
 		long fromStart = CheapDistPoint(&meet, &from);
 		long fromEnd = CheapDistPoint(&meet, &to);
-		long limit = (length << 1) >> 1;
+		long limit = ShiftLeft(length, 1) >> 1;
 		if (!(fromStart > limit && fromEnd > limit))
 			return meet;
 	}

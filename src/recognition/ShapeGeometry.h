@@ -19,6 +19,10 @@
 
 #include <stdint.h>
 
+// A left shift as the ARM does it: a 32-bit word that wraps, where the
+// host's shift of a negative or too-large long is undefined.
+inline long	ShiftLeft(long v, int n)	{ return (long) (int32_t) ((uint32_t) v << n); }
+
 // A run of samples closer together than the small distance (RSmallDists):
 // the index it starts and ends at; -1 -1 ends the list, a start of -2 says
 // the runs are not to be trusted.

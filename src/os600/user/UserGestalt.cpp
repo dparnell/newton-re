@@ -17,6 +17,9 @@
 #include "NewtonMemory.h"
 #include "UserGlobals.h"
 #include "OSErrors.h"
+#include "UserMonitor.h"
+
+extern TUMonitor*	gUObjectMgrMonitor;		// UserObjects.cpp
 
 #include <stdio.h>
 
@@ -54,6 +57,11 @@ TUGestalt::Gestalt(GestaltSelector selector, void* paramBlock, ULong paramSize)
 NewtonErr
 TUGestalt::Gestalt(GestaltSelector selector, void* paramBlock, ULong* paramSize)
 {
+	// DEVIATION: a host program that runs the view system with no OS
+	// under it (host/newtonscript) has no name server to ask; the ROM is
+	// never without one.
+	if (gUObjectMgrMonitor == nil)
+		return kError_Call_Not_Implemented;
 	TUNameServer nameServer;
 	char name[12];
 	ULong block = 0, blockSize = 0;

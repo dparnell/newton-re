@@ -1,0 +1,126 @@
+// Shapes: a line, a box, a triangle and a circle drawn with the pen on the
+// Notepad, and cleaned up by the shape recogniser.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/shapes.ns --headless 70
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/shapes.pgm build/shapes.png
+//
+// The setup assistant is walked through as src/host/demo/write.ns does,
+// the Notepad is switched to shapes (as its recognition menu does), then
+// each shape is drawn as one stroke - roughly, the way a hand would
+// - two and a half seconds apart.  build/shapes-ink.pgm is taken just
+// after the last stroke, build/shapes.pgm once the recogniser has done.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// One stroke: the pen put down on the first point, moved through the
+// rest, and lifted.
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+
+// A stroke through the corners, a point every few pixels, each point
+// nudged by a little wobble so the line is not ruler-straight.
+path := func(corners)
+  begin
+    local pts := [];
+    local wobble := [0, 1, 1, 0, -1, -1];
+    local w := 0;
+    for c := 0 to Length(corners) - 4 by 2 do
+      begin
+        local x0 := corners[c], y0 := corners[c + 1];
+        local x1 := corners[c + 2], y1 := corners[c + 3];
+        local steps := Max(Abs(x1 - x0), Abs(y1 - y0)) div 4;
+        for k := 0 to steps - 1 do
+          begin
+            AddArraySlot(pts, x0 + ((x1 - x0) * k) div steps + wobble[w mod 6]);
+            AddArraySlot(pts, y0 + ((y1 - y0) * k) div steps + wobble[(w + 2) mod 6]);
+            w := w + 1;
+          end;
+      end;
+    AddArraySlot(pts, corners[Length(corners) - 2]);
+    AddArraySlot(pts, corners[Length(corners) - 1]);
+    pts;
+  end;
+
+// A circle of 36 points from the right going anticlockwise, almost closed.
+round := func(cx, cy, r)
+  begin
+    local c := [100, 98, 94, 87, 77, 64, 50, 34, 17, 0, -17, -34, -50, -64, -77, -87, -94, -98,
+                -100, -98, -94, -87, -77, -64, -50, -34, -17, 0, 17, 34, 50, 64, 77, 87, 94, 98, 100];
+    local s := [0, 17, 34, 50, 64, 77, 87, 94, 98, 100, 98, 94, 87, 77, 64, 50, 34, 17,
+                0, -17, -34, -50, -64, -77, -87, -94, -98, -100, -98, -94, -87, -77, -64, -50, -34, -17, 0];
+    local pts := [];
+    for k := 0 to 35 do
+      begin
+        AddArraySlot(pts, cx + (r * c[k]) div 100);
+        AddArraySlot(pts, cy - (r * s[k]) div 100);
+      end;
+    pts;
+  end;
+
+shapes := [
+    call path with ([30, 120, 140, 132]),							// a line
+    call path with ([180, 110, 290, 112, 288, 190, 182, 188, 181, 114]),	// a box
+    call path with ([80, 220, 140, 320, 25, 318, 78, 224]),			// a triangle
+    call round with (220, 270, 50)									// a circle
+  ];
+n := 0;
+next := func()
+  begin
+    if n < Length(shapes) then
+      begin
+        call stroke with (shapes[n]);
+        n := n + 1;
+        AddDelayedCall(next, nil, 2500);
+      end
+    else
+      begin
+        ScreenSnapshot("build/shapes-ink.pgm");
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/shapes.pgm");
+            Print("shapes: written build/shapes.pgm");
+          end, nil, 5000);
+      end;
+  end;
+// shapes rather than text, as choosing Shapes in the recognition menu does
+// The Notepad keeps its own recognition settings, a set of bits in its
+// paper roll's _recogSettings that the ROM's ExpandSettings turns into a
+// configuration (32 text, 64 ink words, 128 shapes, 256 words, 512
+// numbers; the Notepad starts at 864).  Shapes alone is 128.  A page's
+// recognition area is cached, so the cache is purged after the change,
+// as the Notepad's own recognition menu does.
+AddDelayedCall(func() begin
+    GetRoot().paperroll._recogSettings := 128;
+    PurgeAreaCache();
+    call next with ();
+  end, nil, 27000);

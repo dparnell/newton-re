@@ -352,7 +352,7 @@ SetupEllipseSystem(TArray* pts, Fixed scale, Fixed left, Fixed top, Fixed offset
 	matrix[14] = sx;
 	matrix[18] = sy;
 	matrix[24] = sy;
-	matrix[19] = ((short) ((samples + 0x8000) >> 16) + 1) << 16;
+	matrix[19] = ShiftLeft((short) ((samples + 0x8000) >> 16) + 1, 16);
 	rhs[0] = -sxxxy;
 	rhs[1] = -sxxyy;
 	rhs[2] = -sxxx;
@@ -378,7 +378,7 @@ MakeEllipseTemplate(FRect* box, Fixed* c, FPoint* centre, FPoint* focus1, FPoint
 	Fixed tiny = FixedDivide(0x10000, 10000 << 16);
 	if (((det < 0) ? -det : det) < tiny)
 		return false;
-	Fixed k = (FixedMultiply(FixedMultiply(c[0] << 1, c[2]) - c[3], c[3]) + FixedMultiply(det, c[4]))
+	Fixed k = (FixedMultiply(FixedMultiply(ShiftLeft(c[0], 1), c[2]) - c[3], c[3]) + FixedMultiply(det, c[4]))
 			- FixedMultiply(FixedMultiply(c[2], c[2]), c[1]);
 	if (((k < 0) ? -k : k) < FixedDivide(0x10000, 10000 << 16))
 		return false;
@@ -405,10 +405,10 @@ MakeEllipseTemplate(FRect* box, Fixed* c, FPoint* centre, FPoint* focus1, FPoint
 		Fixed across = 0x10000 - c[1];
 		if (across < 0)
 			across = -across;
-		turn = FixedDivide(b << 1, across);
+		turn = FixedDivide(ShiftLeft(b, 1), across);
 		*angle = turn;
 		if (((turn < 0) ? -turn : turn) >= FixedDivide(0xb00000, 1000 << 16))
-			turn = FixedAtan2(across, b << 1) >> 1;
+			turn = FixedAtan2(across, ShiftLeft(b, 1)) >> 1;
 		else
 			turn = 0;
 	}
@@ -417,7 +417,7 @@ MakeEllipseTemplate(FRect* box, Fixed* c, FPoint* centre, FPoint* focus1, FPoint
 	Fixed hx = FixedMultiply(half, (FractCos(*angle) + 0x2000) >> 14);
 	Fixed hy = FixedMultiply(half, (FractSin(*angle) + 0x2000) >> 14);
 	*angle = FixedMultiplyDivide(*angle, 180 << 16, 0x3243f);
-	*diameter = *radius1 << 1;
+	*diameter = ShiftLeft(*radius1, 1);
 	if (c[1] <= 0x10000)
 	{
 		focus1->x = centre->x - hy;
@@ -558,8 +558,8 @@ FindEllipses(TGeneralShapeUnit* unit, long* type, ULong* score, long* angle)
 			long longest = a >> 16;
 			if (longest <= (b >> 16))
 				longest = b >> 16;
-			long diagonal = height * height + width * width;
-			long off = longest * 2 * longest * 2 - diagonal;
+			long diagonal = (long) (int32_t) ((uint32_t) height * (uint32_t) height + (uint32_t) width * (uint32_t) width);
+			long off = (long) (int32_t) ((uint32_t) longest * 2 * (uint32_t) longest * 2 - (uint32_t) diagonal);
 			if (off < 0)
 				off = -off;
 			if (diagonal > 0x7530)
@@ -567,7 +567,7 @@ FindEllipses(TGeneralShapeUnit* unit, long* type, ULong* score, long* angle)
 				diagonal >>= 2;
 				off >>= 2;
 			}
-			Fixed ratio = FixedDivide(off << 16, diagonal << 16);
+			Fixed ratio = FixedDivide(ShiftLeft(off, 16), ShiftLeft(diagonal, 16));
 			if (ratio >= 0 && ratio <= 0x5000)
 			{
 				*type = kShapeEllipse;

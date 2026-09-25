@@ -8,6 +8,8 @@
 */
 
 #include "Recognizer.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "WRecDomain.h"
 #include "WordInfo.h"
 #include "Words.h"			// gWordID
@@ -898,8 +900,7 @@ TRecognitionManager::Init(UChar level)
 // The recognisers installed and the root domain made.  The ROM installs
 // the gesture, click-event, stroke and click recognisers at any level,
 // and the shape, word and WRec ones above level 1.
-// NOT YET RECONSTRUCTED: the gesture recogniser and its edge-list domain,
-// the three of level 2, ReadDomainOptions.
+// NOT YET RECONSTRUCTED: the Airus word recogniser (InstallWordRecognizer).
 long
 TRecognitionManager::InitRecognizers(void)
 {
@@ -913,8 +914,8 @@ TRecognitionManager::InitRecognizers(void)
 	}
 	if (fLevel >= 2)
 	{
-		// NOT YET: InstallShapeRecognizer (0x0014456c) and
-		// InstallWordRecognizer (0x00166efc, the Airus one)
+		InstallShapeRecognizer(this);
+		// NOT YET: InstallWordRecognizer (0x00166efc, the Airus one)
 		InstallWRecRecognizer(this);
 	}
 	// the writer's recognition preferences put into force
