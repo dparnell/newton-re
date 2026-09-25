@@ -585,6 +585,35 @@ into the word and calls all of this.  The groundwork for it:
   word* - which is what the reference's `fStrokes` distinguishes.
 - `fField18c`, `fField190` and `fField194` are the rest of its state.
 
+Its shape, from the decompile at 0x00272728 (the `setjmp` noise is the
+ROM's exception handlers; every one of them destroys the stroke and
+goes on):
+
+1. `WordRecogResume` if the block's arrays were given back, then
+   `SegOnly = wr->fClassifyMode`.
+2. With a stroke: if `fField1ac` has reached 0x96 (less one when a
+   stroke is already pending) the word is closed first, by **calling
+   itself** with a nil stroke.
+3. The stroke is scaled to seventy-two dots to the inch if `fResX` and
+   `fResY` say it is not already (`StrokeScale`), and then
+   `StrokeCentroid` and its box give the eight numbers the word spacing
+   wants.
+4. If `FragmentLigatures` is set and
+   `WordRecogStrokeNeedsFragmenting` says so, `FragmentStroke` cuts the
+   stroke in two and the function **calls itself once per piece**,
+   turning a 2 in either of its two flags into a 1 as it goes;
+   `DAT_0c104f8c`/`0x90`/`0x94`/`0x98` remember the pieces.
+5. Otherwise the three `SegmentWord` call sites decide whether the
+   stroke begins a new word, `WordRecogAddStroke2` takes it in, and the
+   two blocks of state are updated or started afresh.
+
+`WordRecogAddStroke2`, `WordRecogStrokeNeedsFragmenting`,
+`WordRecogResume` and `StrokeScale`/`StrokeCentroid` are all
+reconstructed already; `FragmentStroke` (0x000cc638) is not, and it
+answers two values at once - a stroke list and a count - so its
+signature wants reading from the assembly.  What is left besides that
+is this function's own bookkeeping.
+
 Also still NOT YET: `WordRecogAnalyzeWord`'s net calls,
 `RosettaSetArea` and the classify passes (3 KB), and the feature
 extraction `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384
