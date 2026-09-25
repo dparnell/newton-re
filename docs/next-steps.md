@@ -8,14 +8,15 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-25 (commit `14f9d21`)
+## State at 2026-09-25 (commit `6c611e1`)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 87/87.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 92/92.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 9643 citations, 0 bad;
+- `analysis/coverage.py build/MP2x00US --check`: 9781 citations, 0 bad;
   5129 of 16671 functions (30.77%).  (The engine's functions are plain
   C names with no mangling, so they count as citations but not towards
-  the function total, which comes from the demangled symbols.)
+  the function total, which comes from the demangled symbols, which is
+  why that figure does not move while the engine is being written.)
 - `analysis/natives.py`: 863 of the ROM's 1326 natives answered.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
@@ -553,13 +554,62 @@ is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
 `fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
 are named for it.
 
-Also still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
-(5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
-`WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
-classify passes (3 KB), and the feature extraction
-`low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384 symbols on its
-own.  `CharBoxEvaluate`, `WordRecogAddStroke` and
-`WordRecogAnalyzeWord` all wait on the segments.
+### Next: the strokes in, and where one word ends
+
+The obvious next piece, and the groundwork for it is below so that it
+need not be derived again.
+
+`WordRecogAddStroke` (0x00272728, 6940 B) is what takes a stroke into
+the word, and under it are the five **word-spacing** functions, which
+decide whether a stroke begins a new word:
+
+| | | |
+|---|---|---|
+| `SegmentWord` | 0x001d259c | 332 B |
+| `SegmentWordBkVt` | 0x001d26e8 | 236 B |
+| `SegmentWordBack` | 0x001d27d4 | 248 B |
+| `SegmentWordVert` | 0x001d2900 | 1892 B |
+| `SegmentWordXGap` | 0x001d3064 | 5952 B |
+
+`SegmentWord` is just the three tests in order, and its answer says
+*why*: **2** the writer went back (`SegmentWordBack`), **3** the writer
+went down a line (`SegmentWordVert`), **1** the gap was too wide
+(`SegmentWordXGap`), **0** the same word.  `SegmentWordBkVt` is the
+first two without the third.
+
+All five take the **same twenty-three words** - four in r0-r3 and
+nineteen on the stack, which is why a decompile of `SegmentWord` shows
+twenty-three `undefined4`s.  `WordRecogAddStroke` pushes them at
+0x00272dac-0x00272e1c (and again at 0x00272ff8 and 0x002735e4); reading
+that call site gives, with `wr` the `WordRecog` and `S` the caller's
+frame:
+
+| arg | what it is |
+|---|---|
+| 1, 2 | two locals of the caller (an x of the stroke) |
+| 3, 4 | r8, r7 |
+| 5, 6 | r10, r9 |
+| 7..14 | `wr` at +0x16c, +0x170, +0x174, +0x178, +0x17c, +0x180, +0x174, +0x178 |
+| 15 | the constant 1 |
+| 16..19 | a local, `wr`+0x188, a local, `wr`+0x184 |
+| 20 | `wr->fField60` - `fRun[0]` as the word started |
+| 21 | `wr->fWordSize` |
+| 22 | `wr->fRun` (the twenty-two running measurements) |
+| 23 | where the answer's strength goes (nought, or 1.0) |
+
+So `WordRecog`'s `fPad160[0x38]` (+0x160..+0x197) is the word-spacing
+state, eight words of which (+0x16c..+0x188) are handed to every one of
+these; naming them is the first job.  `SegmentWordBack` and
+`SegmentWordVert` both start by taking the greater of args 18 and 19,
+averaging it with arg 20 and dividing by `fRun[0]` - the writing's size
+against the running mean, which is left in the global at 0x0c101adc -
+and scale every threshold by it, so all of this is measured in units of
+the writer's own hand rather than in pixels.
+
+Also still NOT YET: `WordRecogAnalyzeWord`'s net calls,
+`RosettaSetArea` and the classify passes (3 KB), and the feature
+extraction `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384
+symbols on its own.  `CharBoxEvaluate` waits on the segments.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template
