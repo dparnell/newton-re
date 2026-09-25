@@ -134,6 +134,9 @@ struct WordRecog
 	RosSegment**	fSegments;			// +0x040  kWordRecogMaxSegments of them
 	UByte			fField44;			// +0x044
 	UByte			fPad45[3];
+	// Two arrays of 256 Fixeds - one probability per character code.
+	// The classifier fills the first; `CharModifyProbs` works in the
+	// second and leans on the first with it.
 	void*			fBuffer48;			// +0x048  kWordRecogBufferSize bytes
 	void*			fBuffer4c;			// +0x04c  kWordRecogBufferSize bytes
 	UByte			fSuspended;			// +0x050  the arrays have been given back
@@ -147,7 +150,10 @@ struct WordRecog
 	Fixed			fMeanCharHeight;	// +0x06c  CharGetAvgBoxBHW's, per character
 	Fixed			fRun[22];			// +0x070  the hand, as it is being measured
 	Fixed			fSavedRun[22];		// +0x0c8  the copy to go back to
-	Fixed			fField120[16];		// +0x120  eight pairs; Create2 sets the second of each
+	// How big the word just measured is: the five lengths brought
+	// back to one scale and averaged (`WordRecogAnalyzeWord`).
+	Fixed			fWordSize;			// +0x120
+	Fixed			fField124[15];		// +0x124  Create2 sets every other one
 	UByte			fPad160[0x38];		// +0x160
 	const BiGrammars*	fGrammars;		// +0x198
 	long			fContextIndex;		// +0x19c  < 0: fContext is ours to destroy
@@ -352,5 +358,6 @@ void	WordRecogNetEvaluate(WordRecog* wr, BPNet* net, RosStrokeList* strokes,
 void	WordRecogNetSetInputs(NetPattern* pattern, BPNet* net, RosStrokeList* strokes,
 					Fixed base, Fixed height, Fixed arg6, Fixed altBase, Fixed altHeight,
 					Fixed arg9, Fixed arg10, Fixed arg11, Fixed capHeight);	// ROM 0x0027627c WordRecogNetSetInputs
+
 
 #endif	/* __WORDRECOG_H */

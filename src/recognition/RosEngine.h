@@ -329,4 +329,41 @@ void	ListZap(void);										// ROM 0x0011343c ListZap
 // True once the layers above are real.
 Boolean	RosEngineLayersAreReconstructed(void);
 
+
+/*--------------------------------------------------------------------
+	Measuring a word, and reading it.
+--------------------------------------------------------------------*/
+
+struct RosSegment;
+struct WordRecog;
+
+// The base, the height and the width of a word: three means over its
+// segments and three extremes, which is everything the classifier is
+// told about how big the writing is.
+void	CharGetAvgBoxBHW(RosSegment* const* segments, short count, Fixed leastStroke,
+				Fixed meanSize, Fixed widthScale, Fixed heightScale, short how,
+				Fixed* base, Fixed* height, Fixed* width,
+				Fixed* altBase, Fixed* maxHeight, Fixed* maxWidth);	// ROM 0x00056b7c CharGetAvgBoxBHW
+
+// The classifier's opinion of a piece of writing leaned on by where and
+// how big it is.  NOT YET.
+void	CharModifyProbs(const FRect* bounds, long strokes, UByte hasDot,
+				UByte fragment, UByte joinsNext, Fixed size,
+				Fixed run18, Fixed run19, Fixed run20, Fixed run21,
+				Fixed startSize, Fixed wordSize, Fixed* scratch,
+				Fixed altBase, Fixed altHeight, Fixed arg9, Fixed* probs);	// ROM 0x00057108 CharModifyProbs
+
+// The lexical search: the segments' probabilities walked against the
+// grammar and the dictionaries to find the likeliest readings.  All
+// NOT YET, so nothing is read yet.
+typedef void (*SearchEndWordProc)(WordRecog* wr, char** words, UniChar* scores,
+				long* flags, long strokes, long count);
+void	SearchBeginWord(const BiGrammar* grammar);				// ROM 0x001ce008 SearchBeginWord
+void	SearchProcessSegment(const BiGrammar* grammar, Fixed* probs, Fixed* scratch,
+				long index, RosSegment* segment, Fixed confidence,
+				Boolean endsWord, char* tryString);				// ROM 0x001ce830 SearchProcessSegment
+void	SearchEndWord(const BiGrammar* grammar, long strokes, SearchEndWordProc proc,
+				WordRecog* wr, char** words, UniChar* scores, long* flags,
+				long count);									// ROM 0x001d0660 SearchEndWord
+
 #endif	/* __ROSENGINE_H */

@@ -460,7 +460,28 @@ A ROM bug kept: `BiGrammarClone` copies the shorts at +0x08, +0x0a and
 a cloned slice's `fField0e` is whatever was in the heap.  It is nought
 in all 46 of the ROM's own slices.
 
-Still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
+**`WordRecogAnalyzeWord` and `CharGetAvgBoxBHW` are done**, which is
+the top of the reading path.  A word is measured - the mean base over
+the segments that are more than a dot, the mean height and width over
+the ones big enough to count, and the tallest and widest raised to what
+the word's overall shape suggests - and three of the four lengths the
+engine keeps about the writer's hand are moved an eighth of the way
+towards it, but only when the word is within half to twice what it
+already believed, and then held to between half and twice their
+nominal.  Then every candidate letter in the lattice goes through
+`WordRecogNetEvaluate` and on to the search with a confidence worked
+out from how much of the line its strokes share.  `WordRecogEndWord`
+closes the word.
+
+Still NOT YET: **the lexical search** (`SearchBeginWord`,
+`SearchProcessSegment` 584 B, `SearchEndWord`), which is where the
+readings actually come from - the lattice walked against the grammar
+and the dictionaries - and `CharModifyProbs` (1632 B), which leans on
+the classifier's probabilities with where and how big a piece of
+writing is.  Those are the next pieces: the engine now measures,
+classifies and scores a word but still answers nothing.
+
+Also still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
 classify passes (3 KB), and the feature extraction

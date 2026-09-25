@@ -2793,6 +2793,76 @@ through this path that `test_CharBox` puts through the other, and gets
 the same three answers: `+` at 0xf100, `t` at 0xe500, `T` at 0x0100,
 and nothing else out of 256.
 
+#### How big is this word? (`CharGetAvgBoxBHW`)
+
+**B, H and W**: base, height and width. This is what the engine
+measures a word with, and everything the patternizers are told about
+the writing's size comes out of it - six numbers, three means and three
+extremes.
+
+The mean base is the mean of the segments' **bottoms**, and only of the
+segments that are more than a dot. That test - `fHasDot < fCount` - is
+the whole reason the segment layer bothers to record `fHasDot`: the dot
+over an i sits nowhere near the line, and counting it would drag the
+baseline up by a third of a letter.
+
+The mean height and width take only the segments that are at least two
+fifths of the size the word started at, so punctuation does not drag
+them down. When there is nothing that big, the height falls back to
+twice the mean width, and failing that to three times the least a
+stroke may be.
+
+The two extremes are the tallest and the widest segment, and then the
+tallest is **raised to at least what the word's overall shape
+suggests**: 1.8 times the widest letter, or a quarter of the word's
+height above the baseline plus the widest letter, whichever is more. A
+word written entirely in short flat letters is therefore still measured
+as though something in it were tall, which is what stops a row of o's
+being read as a row of full stops. `test_WordRecog` pins that case: two
+letters three pixels tall come back measured at thirty.
+
+(A latent bug: `segments[0]` is read for its top and its bottom before
+anything checks that there is a segment at all. Every caller has at
+least one.)
+
+#### Reading a word (`WordRecogAnalyzeWord`)
+
+By the time this runs, the strokes have been cut into a **lattice** of
+candidate letters. It measures the word, learns from it, and then asks
+the classifier about every candidate in turn.
+
+The learning is the same eighth-at-a-time as everywhere else in the
+engine, with two guards. Three of the four lengths the engine keeps
+about the writer's hand move an eighth of the way towards what this
+word says - but **only if the word is between half and twice what the
+engine already believed**, so one badly written word cannot drag the
+measure away. Then each is held to between half and twice its nominal
+whatever it has learnt. The fourth length is not touched here. The five
+lengths are then combined, each scaled by the nominal ratio it was
+measured against, into one number for how big this word is, which is
+what the classifier gets as its cap height.
+
+Then, for every segment in the lattice:
+
+* `seg->fField04` is set to how far ahead the search may jump from here
+  - the last grouping the stroke this one ends on belongs to, counted
+  from this one;
+* `WordRecogNetEvaluate` runs the classifier into `fBuffer48`, one
+  probability per character code;
+* `CharModifyProbs` (NOT YET) leans on those with where and how big the
+  piece is;
+* and `SearchProcessSegment` (NOT YET) is given them along with a
+  **confidence** - the mean of how much of the line each of the
+  segment's strokes shares with the one before it, capped at a half
+  apiece. A letter written in strokes that lie on each other is trusted
+  more than one written in strokes that merely follow.
+
+`SearchBeginWord`, `SearchProcessSegment` and `SearchEndWord` are the
+lexical search, and they are where the readings actually come from -
+the lattice walked against the grammar and the dictionaries. All three
+are NOT YET, so the engine now measures, classifies and scores a word
+but still answers nothing.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

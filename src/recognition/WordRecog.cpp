@@ -208,14 +208,14 @@ WordRecogCreate2(void* field00, void* field04,
 	// eight pairs, of which only the second word of each is set here;
 	// what the first word of the first pair is, `WordRecogReset` works
 	// out
-	wr->fField120[1] = 0x00010000;
-	wr->fField120[3] = (Fixed) 0xffff0000;
-	wr->fField120[5] = 0x00010000;
-	wr->fField120[7] = (Fixed) 0xffff0000;
-	wr->fField120[9] = (Fixed) 0xffff0000;
-	wr->fField120[11] = (Fixed) 0xffff0000;
-	wr->fField120[13] = 0;
-	wr->fField120[15] = 0;
+	wr->fField124[0] = 0x00010000;
+	wr->fField124[2] = (Fixed) 0xffff0000;
+	wr->fField124[4] = 0x00010000;
+	wr->fField124[6] = (Fixed) 0xffff0000;
+	wr->fField124[8] = (Fixed) 0xffff0000;
+	wr->fField124[10] = (Fixed) 0xffff0000;
+	wr->fField124[12] = 0;
+	wr->fField124[14] = 0;
 	WordRecogReset(wr);
 	return wr;
 }
@@ -312,7 +312,7 @@ WordRecogReset(WordRecog* wr)
 	wr->fSavedRun[21] = FixedMultiply(kNominalHeight, FixedDivide(kNominalRatio, 0x00011c08));
 	// ... and one more in the same style, which the run itself does not
 	// hold: it is the first of the eight pairs `WordRecogCreate2` sets
-	wr->fField120[0] = FixedMultiply(kNominalHeight, FixedDivide(kNominalRatio, 0x0000fcb9));
+	wr->fWordSize = FixedMultiply(kNominalHeight, FixedDivide(kNominalRatio, 0x0000fcb9));
 
 	wr->fField44 = 0;
 	wr->fContextIndex = 0;
@@ -611,7 +611,7 @@ WordRecogStrokeType(WordRecog* wr, const RosStroke* stroke)
 		return kWordRecogStrokeNeither;
 	if (width < (height >> 2))
 		return kWordRecogStrokeVertical;
-	if (height < (width >> 2) && height < (wr->fField120[0] >> 2))
+	if (height < (width >> 2) && height < (wr->fWordSize >> 2))
 		return kWordRecogStrokeHorizontal;
 	return kWordRecogStrokeNeither;
 }
@@ -821,13 +821,6 @@ DestroyStrokeIfOurs(WordRecog* wr, RosStroke* stroke)
 }
 
 
-// ROM 0x002766c0 WordRecogAnalyzeWord
-// NOT YET: the word cut into characters and read - the classifier, the
-// grammar and everything the readings come out of.
-void
-WordRecogAnalyzeWord(WordRecog* /*wr*/)
-{
-}
 
 
 // ROM 0x00274cf0 WordRecogAddStroke2
@@ -1135,4 +1128,136 @@ WordRecogNetEvaluate(WordRecog* wr, BPNet* net, RosStrokeList* strokes,
 		}
 		out[code] = (Fixed) ((ULong) outputs[node] << 8);
 	}
+}
+
+
+
+// One of the four lengths the engine keeps about the hand, moved an
+// eighth of the way towards what the word just read says - but only
+// when the word is within half to twice what it already believed, so
+// that one badly written word cannot drag the whole measure away.
+static void
+LearnLength(Fixed* run, Fixed value)
+{
+	if (value < FixedMultiply(0x20000, *run)
+		&& FixedMultiply(0x8000, *run) < value)
+		*run = FixedMultiply(0xe000, *run) + FixedMultiply(0x2000, value);
+}
+
+// ... and then held to between half and twice its nominal, whatever it
+// has learnt.
+static Fixed
+ClampLength(Fixed run, Fixed nominal)
+{
+	Fixed least = FixedMultiply(0x8000, nominal);
+	Fixed most = FixedMultiply(0x20000, nominal);
+	if (most < run)
+		return most;
+	return (least < run) ? run : least;
+}
+
+
+// ROM 0x002766c0 WordRecogAnalyzeWord
+// A word read: the strokes are already cut into a lattice of candidate
+// letters, and this is where the classifier is asked about each one and
+// the search is told what it said.
+//
+// First the word is measured (`CharGetAvgBoxBHW`), and three of the
+// four lengths the engine keeps about the writer's hand are moved an
+// eighth of the way towards it and then held to between half and twice
+// their nominal.  The fourth is not touched here.  Then the five
+// lengths are combined - each scaled by the nominal ratio it was
+// measured against - into one number for how big this word is, which
+// goes to the classifier as its cap height.
+//
+// Then every segment in the lattice in turn: the classifier is run over
+// it (`WordRecogNetEvaluate` into `fBuffer48`), `CharModifyProbs` leans
+// on what it said with where the piece sits, and the result goes to the
+// search with a **confidence** - the mean of how much of the line each
+// of the segment's strokes shares with the one before it, capped at a
+// half, so a letter written in strokes that lie on each other is
+// trusted more than one written in strokes that merely follow.
+void
+WordRecogAnalyzeWord(WordRecog* wr)
+{
+	Fixed* probs = (Fixed*) wr->fBuffer48;
+	Fixed* scratch = (Fixed*) wr->fBuffer4c;
+	if (wr->fStrokeCount == 0)
+		return;
+
+	const ULong* params = wr->fNet->fArParams;
+	Fixed base, height, width, altBase, maxHeight, maxWidth;
+	CharGetAvgBoxBHW(wr->fSegments, wr->fSegmentCount, SegmentMinStrokeSize(),
+					wr->fField60, (Fixed) params[0x48 / 4], (Fixed) params[0x4c / 4],
+					(short) params[0x50 / 4],
+					&base, &height, &width, &altBase, &maxHeight, &maxWidth);
+	wr->fMeanCharHeight = height;
+
+	LearnLength(&wr->fRun[18], height);
+	LearnLength(&wr->fRun[19], maxHeight);
+	LearnLength(&wr->fRun[21], width);
+
+	wr->fRun[18] = ClampLength(wr->fRun[18],
+					FixedMultiply(kNominalHeight, FixedDivide(kNominalRatio, 0x000117d5)));
+	wr->fRun[19] = ClampLength(wr->fRun[19],
+					FixedMultiply(kNominalHeight, FixedDivide(kNominalRatio, 0x00006edf)));
+	wr->fRun[21] = ClampLength(wr->fRun[21],
+					FixedMultiply(kNominalHeight, FixedDivide(kNominalRatio, 0x00011c08)));
+
+	// the five lengths brought back to one scale and averaged: 0xfcb9
+	// times a fifth is what each of them is worth
+	Fixed total = FixedMultiply(wr->fRun[20], 0xd36e)
+				+ FixedMultiply(wr->fRun[0], kNominalRatio)
+				+ FixedMultiply(wr->fRun[18], 0x000117d5)
+				+ FixedMultiply(wr->fRun[19], 0x00006edf)
+				+ FixedMultiply(wr->fRun[21], 0x00011c08);
+	wr->fWordSize = FixedMultiply(FixedMultiply(0xfcb9, 0x3333), total);
+
+	SearchBeginWord(wr->fContext);
+	wr->fField64 = base;
+
+	for (long i = 0; i < wr->fSegmentCount; i++)
+	{
+		RosSegment* seg = wr->fSegments[i];
+		// how far the search may jump from here: the last grouping the
+		// stroke this one ends on belongs to, counted from this one
+		RosStroke* last = wr->fStrokes[seg->fFirstStroke + seg->fCount - 1];
+		seg->fField04 = (short) (last->fSegment - i);
+
+		WordRecogNetEvaluate(wr, wr->fNet, seg->fStrokes, base, height, width,
+						altBase, maxHeight, maxWidth,
+						wr->fRun[18], wr->fRun[19], wr->fWordSize, probs);
+		CharModifyProbs(&seg->fBounds, seg->fStrokes->fCount, seg->fHasDot,
+						seg->fFragment, seg->fJoinsNext,
+						wr->fRun[0], wr->fRun[18], wr->fRun[19], wr->fRun[20],
+						wr->fRun[21], wr->fField60, wr->fWordSize, scratch,
+						altBase, maxHeight, maxWidth, probs);
+
+		// how much of the line the segment's strokes share with each
+		// other, capped at a half apiece
+		long strokes = seg->fStrokes->fCount;
+		Fixed confidence;
+		if (strokes < 2)
+			confidence = 0x00010000;
+		else
+		{
+			Fixed shared = 0;
+			for (long k = 1; k < strokes; k++)
+			{
+				Fixed overlap = seg->fStrokes->fStrokes[k]->fOverlap;
+				if (overlap > 0x8000)
+					overlap = 0x8000;
+				shared += overlap;
+			}
+			confidence = FixedDivide(shared,
+						(Fixed) (int) ((unsigned int) (strokes - 1) << 16));
+		}
+
+		SearchProcessSegment(wr->fContext, probs, scratch, i, seg, confidence,
+						(Boolean) (seg->fFirstStroke + seg->fCount == wr->fStrokeCount),
+						wr->fField1c);
+	}
+
+	SearchEndWord(wr->fContext, wr->fStrokeCount, WordRecogEndWord, wr,
+				wr->fWords, wr->fScores, wr->fWordFlags, wr->fWordCount);
 }

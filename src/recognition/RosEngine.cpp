@@ -17,6 +17,8 @@
 #include "RosStrokes.h"
 #include "NewtonMemory.h"
 #include "FixedMath.h"
+#include "Segment.h"
+#include "WordRecog.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -443,3 +445,169 @@ BiGrammarModifyContext(const BiGrammar* grammar, long count, const long* slices,
 	DisposPtr((Ptr) probs);
 	return copy;
 }
+
+
+// ROM 0x00056b7c CharGetAvgBoxBHW
+// **B, H and W**: the base, the height and the width of a word, which
+// is how the engine works out how big the writing in front of it is.
+// It answers six numbers, three means and three extremes, and they are
+// what every patternizer is then told about the writing.
+//
+// The mean base is the mean of the segments' bottoms - only of the
+// segments that are more than a dot, because the dot over an i sits
+// nowhere near the line.  The mean height and the mean width take only
+// the segments that are at least two fifths of the size the word
+// started at, so that punctuation does not drag them down; when there
+// is nothing that big it falls back, first to twice the mean width and
+// then to three times the least a stroke may be.
+//
+// The two extremes are the tallest and the widest segment, and the
+// tallest is then **raised to at least what the word's overall shape
+// suggests**: 1.8 times the widest letter, or a quarter of the word's
+// height above the baseline plus the widest letter, whichever is more.
+// A word written in short wide letters is therefore still measured as
+// though it had a full-height letter in it somewhere, which is what
+// stops a word of nothing but o's being read as a word of full stops.
+//
+// (A latent bug: `segments[0]` is read for its top and its bottom
+//  before anything checks that there is a segment at all.  Every
+//  caller has at least one.)
+void
+CharGetAvgBoxBHW(RosSegment* const* segments, short count, Fixed leastStroke,
+				Fixed meanSize, Fixed widthScale, Fixed heightScale, short how,
+				Fixed* base, Fixed* height, Fixed* width,
+				Fixed* altBase, Fixed* maxHeight, Fixed* maxWidth)
+{
+	short nBase = 0;
+	short nHeight = 0;
+	short nWidth = 0;
+	*base = 0;
+	*height = 0;
+	*width = 0;
+	Fixed twice = leastStroke << 1;
+	*maxHeight = twice;
+	*maxWidth = leastStroke;
+
+	Fixed top = segments[0]->fBounds.top;
+	// two fifths of the size the word started at
+	Fixed enough = FixedMultiply(meanSize, 0x6666);
+
+	Fixed meanBase;
+	if (count < 1)
+		meanBase = segments[0]->fBounds.bottom;
+	else
+	{
+		for (short i = 0; i < count; i++)
+		{
+			FPoint size;
+			FixedRectSize(&size, &segments[i]->fBounds);
+			// measured inclusively, so a single point is one by one
+			size.x += 0x00010000;
+			size.y += 0x00010000;
+
+			RosSegment* seg = segments[i];
+			// more than just the dot over an i
+			if ((long) seg->fHasDot < (long) seg->fCount)
+			{
+				nBase++;
+				*base += seg->fBounds.bottom;
+				if (enough < size.y)
+				{
+					nHeight++;
+					*height += size.y;
+				}
+				if (enough < size.x)
+				{
+					nWidth++;
+					*width += size.x;
+				}
+			}
+			if (*maxHeight < size.y)
+				*maxHeight = size.y;
+			if (*maxWidth < size.x)
+				*maxWidth = size.x;
+			if (seg->fBounds.top <= top)
+				top = seg->fBounds.top;
+		}
+		meanBase = (nBase < 1)
+				? segments[0]->fBounds.bottom
+				: FixedDivide(*base, (Fixed) (int) ((unsigned int) nBase << 16));
+	}
+	*base = meanBase;
+	*altBase = *base;
+
+	if (nHeight < 1)
+	{
+		if (nWidth < 1)
+			*height = leastStroke * 3;
+		else
+		{
+			// nothing tall enough to measure: twice the mean width,
+			// but never under twice the least a stroke may be
+			Fixed twiceWidth = FixedDivide(*width,
+								(Fixed) (int) ((unsigned int) nWidth << 16)) << 1;
+			*height = (twice < twiceWidth) ? twiceWidth : twice;
+		}
+	}
+	else
+		*height = FixedDivide(*height, (Fixed) (int) ((unsigned int) nHeight << 16));
+
+	*width = (nWidth < 1)
+			? FixedMultiply(*height, 0x8000)
+			: FixedDivide(*width, (Fixed) (int) ((unsigned int) nWidth << 16));
+
+	if (widthScale != 0)
+		*maxWidth = FixedMultiply(*maxWidth, widthScale);
+
+	// the tallest letter, raised to what the word's shape suggests
+	if (how <= 1)
+	{
+		Fixed fromWidth = FixedMultiply(0x1cccc, *maxWidth);			// 1.8 x
+		Fixed fromShape = FixedMultiply((*altBase - top) + *maxHeight, 0x4000)
+						+ *maxWidth;
+		Fixed want = (fromWidth >= fromShape) ? fromWidth : fromShape;
+		if (want > *maxHeight)
+			*maxHeight = want;
+	}
+	else if (how == 2)
+	{
+		Fixed fromWidth = FixedMultiply(0x18000, *maxWidth);			// 1.5 x
+		Fixed fromShape = FixedMultiply(FixedMultiply(0x20000, *maxWidth)
+							+ (*altBase - top) + *maxHeight, 0x553f);
+		Fixed want = (fromWidth >= fromShape) ? fromWidth : fromShape;
+		if (want > *maxHeight)
+			*maxHeight = want;
+	}
+	if (heightScale != 0)
+		*maxHeight = FixedMultiply(*maxHeight, heightScale);
+}
+
+
+// ROM 0x00057108 CharModifyProbs
+// NOT YET: the classifier's opinion of a piece of writing leaned on by
+// where and how big it is - a letter that sits below the line is more
+// likely to be a `g` than a `q`, and so on.  Without it the net's
+// probabilities go to the search unmodified.
+void
+CharModifyProbs(const FRect* /*bounds*/, long /*strokes*/, UByte /*hasDot*/,
+			UByte /*fragment*/, UByte /*joinsNext*/, Fixed /*size*/,
+			Fixed /*run18*/, Fixed /*run19*/, Fixed /*run20*/, Fixed /*run21*/,
+			Fixed /*startSize*/, Fixed /*wordSize*/, Fixed* /*scratch*/,
+			Fixed /*altBase*/, Fixed /*altHeight*/, Fixed /*arg9*/, Fixed* /*probs*/)
+{
+}
+
+
+// The lexical search.  NOT YET: this is where the readings actually
+// come from - the segments' probabilities walked against the grammar
+// and the dictionaries to find the likeliest paths through the lattice.
+// ROM 0x001ce008 SearchBeginWord
+void	SearchBeginWord(const BiGrammar* /*grammar*/)			{ }
+// ROM 0x001ce830 SearchProcessSegment
+void	SearchProcessSegment(const BiGrammar* /*grammar*/, Fixed* /*probs*/,
+				Fixed* /*scratch*/, long /*index*/, RosSegment* /*segment*/,
+				Fixed /*confidence*/, Boolean /*endsWord*/, char* /*tryString*/)	{ }
+// ROM 0x001d0660 SearchEndWord
+void	SearchEndWord(const BiGrammar* /*grammar*/, long /*strokes*/,
+				SearchEndWordProc /*proc*/, WordRecog* /*wr*/, char** /*words*/,
+				UniChar* /*scores*/, long* /*flags*/, long /*count*/)	{ }

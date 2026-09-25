@@ -3,6 +3,9 @@
 // and the engine's common info are handed in by this test, because the
 // ROM's own (`ROMGrammar`, `RosCI`) are NOT YET.
 #include "WordRecog.h"
+#include "FixedGeometry.h"
+#include "RosEngine.h"
+#include "Segment.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
 
@@ -77,7 +80,10 @@ main()
 	// ---- a whole one ----
 	// as `RosettaAwaken` makes it: ten readings and the strokes are the
 	// engine's to free
-	WordRecog* wr = WordRecogCreate2(nil, nil, TestCheckWords, 10, &gGrammars, nil, 1);
+	// (with a real classifier, because closing a word now reads it)
+	BPNet* gNet = BPNetCreateNumOut(134);
+	BPNetLoad(gNet, nil);
+	WordRecog* wr = WordRecogCreate2(nil, nil, TestCheckWords, 10, &gGrammars, gNet, 1);
 	EXPECT(wr != nil);
 	EXPECT(wr->fWordCount == 10);
 	EXPECT(wr->fCheckWords == TestCheckWords);
@@ -111,9 +117,9 @@ main()
 		EXPECT(wr->fRun[i] == wr->fSavedRun[i]);
 	// the last five are worked out rather than written down
 	EXPECT(wr->fSavedRun[18] == FixedMultiply(0x0012d999, FixedDivide(0x000151c4, 0x000117d5)));
-	EXPECT(wr->fField120[0] == FixedMultiply(0x0012d999, FixedDivide(0x000151c4, 0x0000fcb9)));
+	EXPECT(wr->fWordSize == FixedMultiply(0x0012d999, FixedDivide(0x000151c4, 0x0000fcb9)));
 	// ... and the second of each pair is Create2's
-	EXPECT(wr->fField120[1] == F(1) && wr->fField120[3] == F(-1));
+	EXPECT(wr->fField124[0] == F(1) && wr->fField124[2] == F(-1));
 
 	// the run is learnt from and put back
 	Fixed capHeight = wr->fRun[20];
@@ -596,6 +602,155 @@ main()
 
 		SLDestroy(writing, 1);
 		WordRecogDestroy(wr);
+	}
+
+	// ---- how big is this word? ----
+	{
+		// `CharGetAvgBoxBHW` is what the engine measures a word with,
+		// and everything the classifier is told about the writing's
+		// size comes out of it.
+		CharInitialize(0);
+
+		RosSegment* segs[3];
+		for (long i = 0; i < 3; i++)
+			segs[i] = SegmentCreate();
+		// two letters side by side, twenty-one tall and eleven wide
+		SetFixedRect(&segs[0]->fBounds, F(0), F(0), F(10), F(20));
+		SetFixedRect(&segs[1]->fBounds, F(20), F(0), F(30), F(20));
+		segs[0]->fCount = 1;	segs[1]->fCount = 1;
+		// ... and the dot over an i, well above them
+		SetFixedRect(&segs[2]->fBounds, F(5), -F(10), F(6), -F(9));
+		segs[2]->fCount = 1;
+		segs[2]->fHasDot = 1;
+
+		Fixed least = SegmentMinStrokeSize();
+		Fixed base, height, width, altBase, maxHeight, maxWidth;
+		CharGetAvgBoxBHW(segs, 3, least, F(20), 0xcccc, F(1), 0,
+					&base, &height, &width, &altBase, &maxHeight, &maxWidth);
+
+		// the base is the mean of the *letters'* bottoms.  The dot is
+		// left out of it entirely, which is the whole reason the
+		// segment layer records `fHasDot`: a dot sits nowhere near the
+		// line and would drag the baseline up by a third.
+		EXPECT(base == F(20));
+		EXPECT(altBase == base);
+		// the mean height and width, measured inclusively
+		EXPECT(height == F(21));
+		EXPECT(width == F(11));
+		// the widest letter, scaled by the net's own 0.8
+		EXPECT(maxWidth == FixedMultiply(F(11), 0xcccc));
+		// and the tallest, raised to what the word's shape suggests:
+		// a quarter of its height above the baseline (the dot counts
+		// here) plus the widest letter comes to more than the 21 any
+		// letter actually measures
+		Fixed fromShape = FixedMultiply((base + F(10)) + F(21), 0x4000) + maxWidth;
+		EXPECT(maxHeight == fromShape);
+		EXPECT(maxHeight > F(21));
+
+		// a word of nothing but wide flat letters is still measured as
+		// though something in it were tall - which is what stops a row
+		// of o's being read as a row of full stops
+		RosSegment* flat[2];
+		for (long i = 0; i < 2; i++)
+		{
+			flat[i] = SegmentCreate();
+			flat[i]->fCount = 1;
+		}
+		SetFixedRect(&flat[0]->fBounds, F(0), F(18), F(14), F(20));
+		SetFixedRect(&flat[1]->fBounds, F(20), F(18), F(34), F(20));
+		CharGetAvgBoxBHW(flat, 2, least, F(20), 0xcccc, F(1), 0,
+					&base, &height, &width, &altBase, &maxHeight, &maxWidth);
+		// three pixels tall is under the two fifths of the word's size
+		// that counts as measurable, so nothing is measured at all and
+		// the height falls back to twice the mean width
+		EXPECT(height == F(30));
+		// ... and the tallest is raised to 1.8 times the widest letter
+		EXPECT(maxHeight == FixedMultiply(0x1cccc, FixedMultiply(F(15), 0xcccc)));
+
+		// nothing big enough to measure at all: the fallbacks
+		RosSegment* tiny[1];
+		tiny[0] = SegmentCreate();
+		tiny[0]->fCount = 1;
+		SetFixedRect(&tiny[0]->fBounds, F(0), F(0), F(1), F(1));
+		CharGetAvgBoxBHW(tiny, 1, least, F(20), 0, 0, 0,
+					&base, &height, &width, &altBase, &maxHeight, &maxWidth);
+		EXPECT(height == least * 3);			// three times the least stroke
+		EXPECT(width == FixedMultiply(height, 0x8000));		// and half of that
+
+		for (long i = 0; i < 3; i++)
+			SegmentDestroy(segs[i]);
+		SegmentDestroy(flat[0]);
+		SegmentDestroy(flat[1]);
+		SegmentDestroy(tiny[0]);
+	}
+
+	// ---- the hand measured from a word, and held in range ----
+	{
+		// `WordRecogAnalyzeWord` moves three of the four lengths an
+		// eighth of the way towards what the word just read says - but
+		// only when the word is within half to twice what it already
+		// believed, so one badly written word cannot drag the measure
+		// away, and then holds each to between half and twice its
+		// nominal.
+		BPNet* net = BPNetCreateNumOut(134);
+		BPNetLoad(net, nil);
+		WordRecog* word = WordRecogNew();
+		WordRecogAllocate(word);
+		word->fNet = net;
+		word->fContext = ROMGrammar.fContexts[0];
+		word->fField60 = F(20);
+		word->fStrokeCount = 1;
+		word->fSegmentCount = 1;
+
+		FPoint pts[2];
+		pts[0].x = F(0);	pts[0].y = F(0);
+		pts[1].x = F(10);	pts[1].y = F(20);
+		RosStroke* one = StrokeCreate(2, pts);
+		SegmentStrokeData(one, 0, 0, 0);
+		one->fSegment = 0;
+		word->fStrokes[0] = one;
+		word->fStrokeCount = 1;
+
+		RosSegment* seg = SegmentCreate();
+		SegmentSetStrokes(seg, 1, word->fStrokes);
+		seg->fFirstStroke = 0;
+		seg->fCount = 1;
+		SegmentBoundsDotsEtc(seg);
+		word->fSegments[0] = seg;
+
+		Fixed nominal18 = FixedMultiply(0x0012d999,
+						FixedDivide(0x000151c4, 0x000117d5));
+		word->fRun[18] = nominal18;
+		Fixed was20 = word->fRun[20];
+		WordRecogAnalyzeWord(word);
+
+		// the fourth length is not touched here
+		EXPECT(word->fRun[20] == was20);
+		// the one segment is 21 tall, which is within half to twice
+		// the nominal 22.9, so an eighth of the difference is learnt
+		EXPECT(word->fRun[18] == FixedMultiply(0xe000, nominal18)
+							+ FixedMultiply(0x2000, F(21)));
+		EXPECT(word->fRun[18] >= FixedMultiply(0x8000, nominal18));
+		EXPECT(word->fRun[18] <= FixedMultiply(0x20000, nominal18));
+		// the word's size was worked out and kept
+		EXPECT(word->fWordSize > 0);
+		EXPECT(word->fMeanCharHeight > 0);
+		// the mean height of one segment is that segment's height
+		EXPECT(word->fMeanCharHeight == F(21));
+
+		// a word wildly bigger than the hand teaches it nothing
+		Fixed steady = word->fRun[18];
+		SetFixedRect(&seg->fBounds, F(0), F(0), F(10), F(400));
+		word->fField60 = F(20);
+		WordRecogAnalyzeWord(word);
+		EXPECT(word->fRun[18] == steady);
+
+		SegmentDestroy(seg);
+		StrokeDestroy(one);
+		word->fSegments[0] = nil;
+		word->fStrokes[0] = nil;
+		word->fStrokeCount = 0;
+		WordRecogDestroy(word);
 	}
 
 	if (failures == 0)
