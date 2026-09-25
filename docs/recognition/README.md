@@ -3111,6 +3111,36 @@ in the decode table.  The reconstruction wraps too, because a saturating
 version would answer differently.  It turned up when `test_WordRecog`
 measured a segment four hundred pixels tall.
 
+#### What is left: the step itself
+
+Everything around the Viterbi step is now reconstructed - the lattice
+that feeds it, the classifier and the geometry that score each
+candidate, the columns and readings it works in, and the gathering that
+hands the answers back.  What is missing is the step: what actually
+grows a reading by one letter.
+
+It is five functions, about 5.7 KB:
+
+| | |
+|---|---|
+| `SearchDoViterbStep` (1324 B) | the driver, once per candidate letter |
+| `SearchDoVStepFromNode` (2120 B) | one existing reading grown by one letter |
+| `RegisterNewPath` (680 B) | the grown reading put back into a column |
+| `GeoContextPenalty` (1204 B) | what the geometry between two letters costs |
+| `LELangNodeNumOut` (452 B) | which letters the language model allows next |
+
+The working block they share is mapped (`SearchStep` in `Search.h`):
+`SearchDoViterbStep` builds it out of its own locals and hands its
+address down.  `RegisterNewPath` is the piece to read next after the
+step, because it is where the class limits are enforced - and it is
+already clear that it does not simply evict the worst reading, but
+prefers to evict one whose kind of word is over its quota.
+
+`GeoContextPenalty` needs `GeoContextAux1`, `GeoContextAux2` and
+`GeoCacheAllocate` under it, and `LELangNodeNumOut` opens the `LE`
+language-model node format (`AckNodeSizeTab` and the rest), which is a
+subsystem of its own.
+
 #### Write it three times
 
 `SearchCheckHashHit` looks at every reading on its way out and compares

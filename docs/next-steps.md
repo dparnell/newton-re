@@ -507,7 +507,13 @@ is named.
 Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
 (1324 B) and `SearchDoVStepFromNode` (2120 B), about 3.5 KB, with
 `RegisterNewPath` (680 B), `GeoContextPenalty` (1204 B) and
-`LELangNodeNumOut` (452 B) under them.  **The whole of the output side
+`LELangNodeNumOut` (452 B) under them - about 5.7 KB in all.  The
+working block they share is mapped (`SearchStep` in `Search.h`):
+`SearchDoViterbStep` builds it out of its own locals at sp+0x00..0x1f
+and hands its address down.  `GeoContextPenalty` wants
+`GeoContextAux1`/`Aux2`/`GeoCacheAllocate` under it, and
+`LELangNodeNumOut` opens the `LE` language-model node format
+(`AckNodeSizeTab` and the rest), which is a subsystem of its own.  **The whole of the output side
 is done**: `SearchFindBest`, `SearchSegwordRememberNBest`,
 `SearchBestWords` and `SearchSendWords`, so once the step fills the
 columns the readings come back by themselves.  `SearchFindBest` and

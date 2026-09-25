@@ -84,6 +84,25 @@ struct SearchColumn
 	WordList*		fWords;			// +0x90  what was read to get here
 };
 
+// What the Viterbi step carries about the candidate letter it is
+// growing readings with.  The ROM builds it as a block of locals in
+// `SearchDoViterbStep` and hands its address down to
+// `SearchDoVStepFromNode` and `RegisterNewPath`; only the fields those
+// two read are known so far.  NOT YET, but mapped.
+struct SearchStep
+{
+	long			fField00;		// +0x00  goes into the `gSearchBest` entry
+	RosSegment*		fSegment;		// +0x04
+	const BiGSlice*	fSlice;			// +0x08  the kind of word being tried
+	long			fField0c;		// +0x0c  ... and its byte into `gSearchBest`
+	SearchColumn*	fColumn;		// +0x10  the column being filled
+	short			fBest;			// +0x14  the cheapest reading in it so far
+	UByte			fEndsWord;		// +0x16
+	UByte			fPad17;
+	long			fLimit;			// +0x18  the index being grown, plus two
+	long*			fMaxBestNodes;	// +0x1c  &MaxBestNodes, used as a base
+};
+
 // How many readings a column keeps.  A variable, not a constant: the
 // ROM leaves room for thirty and uses twenty-seven.
 extern long		MaxBestNodes;						// ROM 0x0c101a8c MaxBestNodes
