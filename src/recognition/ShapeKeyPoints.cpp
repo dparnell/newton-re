@@ -313,7 +313,11 @@ RLineOut2(FPoint* pts, char* marks, uint32_t* breaks, long depth, ULong first, U
 			FPoint a = pts[first];
 			FPoint b = pts[last];
 			long chord = CheapDistPoint(&a, &b);
-			long pathLimit = (chord * 138) / 100;
+			// ROM BUG: chord is 16.16, so chord * 138 overflows a 32-bit
+			// word once the chord passes about 237 pixels (a tall shape's
+			// diagonal, on a 320x480 screen) and the limit wraps to rubbish,
+			// often negative.  The ARM wraps silently; so does this.
+			long pathLimit = (long) (int32_t) ((uint32_t) chord * 138u) / 100;
 			long tolerance = chord / 9;
 			if (tolerance < gPixMinRLineOutTolerance)
 				tolerance = gPixMinRLineOutTolerance;

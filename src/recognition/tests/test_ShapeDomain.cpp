@@ -599,6 +599,15 @@ TestEquations(TDomain* domain)
 	Tidied(domain, "triangle", triangle, 4, kShapeClosedCurve, &type, &angle, values, &unit);
 	EXPECT(type == kShapeTriangle);
 	unit->Dispose();
+
+	// A tall skinny rectangle drawn anticlockwise from its top left corner,
+	// overlapping a little at the end.  Its diagonal is over 237 pixels,
+	// which overflows RLineOut2's chord * 138 (a ROM bug, wrapped as the
+	// ARM does rather than trapped).
+	static const long tall[] = { 100, 60, 101, 380, 140, 379, 139, 61, 101, 62, 100, 95 };
+	Tidied(domain, "tall", tall, 6, kShapeClosedCurve, &type, &angle, values, &unit);
+	EXPECT(type != kShapeNothing);
+	unit->Dispose();
 }
 
 

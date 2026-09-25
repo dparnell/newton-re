@@ -467,7 +467,7 @@ PtsonEllipse(TArray* pts, FPoint* focus1, FPoint* focus2, long diameter, ULong* 
 	ULong fraction = ((ULong) on << 16) / (ULong) samples;
 	if (fraction <= 0x91eb)
 		return false;
-	long counted = on * 0x18000;
+	long counted = (long) (int32_t) ((uint32_t) on * 0x18000u);
 	if (counted > (long) ((ULong) samples << 16))
 		counted = (long) ((ULong) samples << 16);
 	ULong part = (ULong) counted / (ULong) samples;
