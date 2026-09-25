@@ -595,6 +595,42 @@ kept: its reference top and bottom compare an x with a y.)  Every
 function under `WordRecogAddStroke` is now real; the driver itself is
 what is left.
 
+What reading it has established so far.  Work from the
+**disassembly** (`analysis/disasm.py ... --start 0x00272728 --end
+0x00274244`) rather than the decompile, which drops the results of
+several divides that in fact become stack arguments of the next
+`SegmentWord` call:
+
+- The signature is `WordRecogAddStroke(WordRecog* wr, RosStroke*
+  stroke, short endWord, short how)`.  `how` is passed straight on as
+  `WordRecogAddStroke2`'s own `how` (the frame keeps the two shorts at
+  sp+0x58/+0x5c after the prologue).  A 2 in either means "and more
+  than that": the recursive flush passes 2 for a flag that was set, and
+  the fragment loop turns a 2 into a 1 after the first piece.
+- `fField1ac` is how many strokes the current word holds and
+  `fPendingStroke` (+0x1a8) a stroke taken in but not yet handed to
+  `AddStroke2`; `fField1a4` is `SegmentWord`'s last answer (-1 while a
+  word is being closed); `fField194` is the leftmost mid-x of the word
+  (`WordRecogStrokeMidX`), which a stroke to the left of it is judged
+  against; `fField18c` a strength kept across strokes.
+- With `fField1ac == 0` the stroke starts the word: `WordRecogSaveRun`,
+  `AddStroke2(wr, stroke, cx, cy, 0, how, 0)`, both blocks set from the
+  stroke, `fField194` its mid-x.
+- With no stroke, or `endWord > 1`, the pending stroke is flushed and
+  the word closed (`fField1a4 = -1`, `AddStroke2` with the new stroke or
+  nil), and a new word started from the stroke if there is one.
+- Otherwise one of three paths, by whether a stroke is pending and
+  whether `endWord` is set: `SegmentWordBkVt` against the whole word;
+  `SegmentWord` against the pending stroke, the word block then being
+  restarted from the stroke block; or the word block's body band and
+  middle folded together with this stroke by the same weighted means
+  `WRSegWordXGap` uses and handed to `SegmentWord` as a temporary
+  reference.  A stroke to the left of the word's mid-x walks back over
+  the strokes (clearing each one's `fSeparation`) to find where it
+  belongs, and asks `WRSegWordXGap` when it does not land at the end.
+  Each path ends in `AddStroke2`, the pending stroke becoming the
+  current one.
+
 Its shape, from the decompile at 0x00272728 (the `setjmp` noise is the
 ROM's exception handlers; every one of them destroys the stroke and
 goes on):
