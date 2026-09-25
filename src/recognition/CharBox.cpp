@@ -9,6 +9,7 @@
 
 #include "CharBox.h"
 #include "RosEngine.h"
+#include "Segment.h"
 #include "RosStrokes.h"
 #include "BPNet.h"
 #include "FixedGeometry.h"

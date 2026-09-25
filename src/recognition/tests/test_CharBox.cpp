@@ -5,6 +5,7 @@
 // numbers.
 #include "CharBox.h"
 #include "RosEngine.h"
+#include "Segment.h"
 #include "BPNet.h"
 #include "FixedMath.h"
 #include "NewtErrors.h"
@@ -62,8 +63,10 @@ main()
 		if (cb->fScores[i] == kCharBoxNever)
 			never++;
 	EXPECT(never == kCharBoxCodeCount);
-	// the segment layer is NOT YET, so it makes nothing
-	EXPECT(cb->fSegment == nil && cb->fSpare == nil);
+	// two segments, made before anything else
+	EXPECT(cb->fSegment != nil && cb->fSpare != nil);
+	EXPECT(cb->fSegment != cb->fSpare);
+	EXPECT(cb->fSegment->fStrokes == nil && cb->fSegment->fCount == 0);
 
 	// ---- what falls inside it ----
 	{

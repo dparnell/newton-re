@@ -100,7 +100,16 @@ struct RosCommonInfo
 	// under this a stroke has no shape at all - and, because it is the
 	// same number, the smallest cap height that will be believed
 	Fixed				fMinStrokeSize;		// +0x4c
-	ULong				fField50[47];		// +0x50 .. +0x108
+	ULong				fField50[16];		// +0x50
+	// how near an end of a stroke counts as *at* the end: three
+	// tenths of its points at either end.  Two strokes whose nearest
+	// points are both well inside them cross; two whose nearest
+	// points are both at an end merely meet.
+	Fixed				fEndFraction;		// +0x90
+	// ... and how near two strokes must come to be said to touch at
+	// all: three pixels.
+	Fixed				fLinkDistance;		// +0x94
+	ULong				fField98[29];		// +0x98 .. +0x108
 };
 
 // The eight tables and the ten the common info points at, as the ROM
@@ -208,28 +217,9 @@ void				BiGrammarDestroy(const BiGrammar* grammar);	// ROM 0x0003df4c BiGrammarD
 
 struct RosStroke;
 
-// A piece of writing the engine has decided is a character, or part of
-// one.  What is in it is NOT YET.
+// The segment layer - what a segment is and the measurements the
+// cutting is made of - is `recognition/Segment.h`.
 struct RosSegment;
-
-// The strokes of a word cut into characters; answers how many segments
-// were made.
-short	SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
-					RosSegment** segments, UByte how, void* net);	// ROM 0x001d48a4 SegmentChars
-// What the segment layer wants remembered about a stroke as it comes in.
-void	SegmentStrokeData(RosStroke* stroke, UByte how, short index, Fixed separation);	// ROM 0x001d2224 SegmentStrokeData
-
-// A segment, made and given back.  What is in one is NOT YET.
-RosSegment*	SegmentCreate(void);							// ROM 0x001d0e68 SegmentCreate
-void	SegmentDestroy(RosSegment* segment);				// ROM 0x001d1cac SegmentDestroy
-// Everything the segment layer is holding on to, given back.
-void	SegmentQuiesce(void);								// ROM 0x001d0f3c SegmentQuiesce
-void	SegmentIntegrated(long how);						// ROM 0x001d4cbc SegmentIntegrated
-
-// The smallest a stroke may be and still be said to go one way rather
-// than another - and, because it is the same number, the smallest cap
-// height the word recogniser will believe.
-Fixed	SegmentMinStrokeSize(void);							// ROM 0x001d1890 SegmentMinStrokeSize
 
 // The lexical search and the geometry, quietened; the sentence read so
 // far, forgotten.

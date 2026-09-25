@@ -2401,6 +2401,89 @@ and the letter-shape group — have nothing to answer with.
 `RosettaExtension` (0x001b6c3c) is the exception: it answers nil and
 always did.
 
+### Where one letter ends (`recognition/Segment.h`)
+
+The segment layer is what decides that a run of strokes is *this* many
+characters and *these* strokes belong to each. It is 16 KB in 29
+functions, and its heart - `SegmentChars` over `SegmentStroke` (which
+measures every stroke against its neighbours) and `SegmentMakeSegments`
+(which decides where the cuts go) - is NOT YET. What is reconstructed
+is what a segment *is* and the measurements the cutting is made of.
+
+A `RosSegment` is 0x2c bytes: a stroke list, the box they fill, and a
+few things worth knowing without looking again - whether any stroke in
+it is a dot, whether any is a piece of a larger stroke or runs on into
+the next, and how big the *smallest* of them is.
+
+`SegmentSetStrokes` is worth a sentence of its own. The strokes are
+sorted into writing order and then every run of adjoining pieces is
+joined back into one stroke (`SLJoinFragments`, over `StrokesAdjoin`
+and `StrokeJoin` in `recognition/RosStrokes.h`), so a segment always
+holds *whole* strokes even though the layer that cut them works on
+fragments. What it holds is its own copy, which is why
+`SegmentDestroy` takes the strokes with it.
+
+`SegmentBoundsDotsEtc` fills the rest in, and its odd measure is
+deliberate: each stroke is taken at its *larger* dimension and the
+answer is the *least* of those. So a segment made of a tall letter and
+a dot is as small as the dot, which is how the layer above notices that
+something in the piece is too small to be a letter on its own.
+
+#### The five questions
+
+Every one of the measurements is a small, sharp question about ink, and
+each is worth knowing on its own:
+
+* **`SegmentDot`** - is this small enough in *both* directions to be
+  the dot over an i? Under `rosCI->fMinStrokeSize`, four and a half
+  pixels. Asking twice is the whole point: a stroke four pixels wide
+  and forty tall is a stem, not a dot.
+* **`SegmentAspect`** - how wide against how tall, each measured
+  inclusively so that a single point is one by one rather than nought
+  by nought.
+* **`SegmentOverlap`** - how much of the line two boxes share, as the
+  *mean of the two fractions*. Two boxes lying on each other score
+  one; a narrow box wholly inside a wide one scores about a half - all
+  of itself and a little of the other. That asymmetry is what lets the
+  layer tell "the same letter" from "a small mark sitting inside a big
+  one".
+* **`SegmentStrokeMinDistance`** - which two points of two strokes come
+  nearest, and how near. The search compares **|dx| + |dy|**, not the
+  real distance: a square root per pair of points would cost more than
+  the answer is worth, and the taxicab distance picks the same pair
+  nearly always. The real distance is worked out once, for the pair
+  that won, and a pair that coincides exactly ends the search there and
+  then.
+* **`SegmentCrossed`** and **`SegmentNonTailLinked`** - and given that,
+  does the nearest approach happen in the *middle* of both strokes, so
+  they cross as the upright and bar of a t do, or at their ends, so
+  they merely meet as the two halves of a V do? "The middle" is three
+  tenths of the points in from either end (`rosCI->fEndFraction`), and
+  "near" is three pixels (`rosCI->fLinkDistance`). Both names were
+  nought before this; the two fields are now named in the generated
+  `RosCITables.cpp`.
+
+#### A bug in the second of them
+
+`SegmentCrossed` is exactly right: both nearest points must be at least
+a margin in from both ends of their own strokes. `SegmentNonTailLinked`
+asks the opposite question and gets it wrong twice over. Written out,
+"not tail-linked" is
+
+    (idxB in the middle of B) or (idxA in the middle of A)
+
+which is four clauses when it is multiplied out. The ROM tests two of
+them - and one of those two uses the margin of the **wrong stroke**:
+`idxB >= marginA` where the symmetry plainly wants `idxB >= marginB`.
+
+The effect shows up when one stroke is much longer than the other,
+since that is when the two margins differ most. The end of a
+forty-one-point stroke touching the eighth point of a twenty-point one
+is joined, and plainly not end to end - but three tenths of 41 is 12,
+so the long stroke's margin swallows B's point at 8 and the answer
+comes back "no". Ported as it stands, with the failing case in
+`test_Segment`.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

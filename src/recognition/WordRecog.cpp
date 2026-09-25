@@ -9,6 +9,7 @@
 */
 
 #include "WordRecog.h"
+#include "Segment.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "FixedMath.h"

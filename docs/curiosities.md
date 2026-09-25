@@ -1428,3 +1428,31 @@ is 0xff00 and not 0x10000. Nothing is quite certain.
 
 *`src/recognition/CharBox.cpp`, `src/recognition/tests/test_CharBox.cpp`;
 `docs/recognition/README.md` has "One letter in a box".*
+
+## Which two points are nearest? Ask the taxi driver
+
+The handwriting engine constantly needs to know how close two strokes
+come to each other - it is how it tells the crossed strokes of a `t`
+from the merely touching strokes of a `V`, and so how it decides where
+one letter ends and the next begins.
+
+`SegmentStrokeMinDistance` answers it by comparing every point of one
+stroke with every point of the other. A stroke can easily be forty
+points, so that is sixteen hundred comparisons, and a StrongARM has no
+square root. So it does not use one. The thing it compares is
+
+    |dx| + |dy|
+
+the taxicab distance, two subtractions and two absolute values. It
+picks the same pair of points as the true distance would nearly always,
+and when it does not the two candidates are so close together that the
+answer above does not change. Only when the winner is known is the
+real distance worked out, once, with `FractSquareRoot`.
+
+There is a second economy in the same function. If any pair of points
+comes out at **exactly** nought - which happens whenever the engine has
+cut one stroke into two, since the cut point is copied into both halves
+- the search stops there and then. Nothing can beat zero.
+
+*`src/recognition/Segment.cpp`; `docs/recognition/README.md` has
+"Where one letter ends".*

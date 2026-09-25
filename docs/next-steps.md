@@ -349,13 +349,33 @@ first time; `docs/curiosities.md` has it.  `CharBoxEvaluate` - the
 scores and the geometry penalties - is NOT YET, because it wants the
 segment layer.
 
-Above them, still NOT YET: the segment layer (20 KB),
+**The segment layer is begun** (`recognition/Segment.h`): what a
+`RosSegment` is - a stroke list, its box, whether any stroke in it is a
+dot, and how big the smallest of them is - and the five measurements
+the cutting is made of: `SegmentDot` (small in *both* directions),
+`SegmentAspect`, `SegmentOverlap` (the mean of the two fractions of the
+line two boxes share), `SegmentStrokeMinDistance` (which two points of
+two strokes come nearest, searched by |dx|+|dy| and only then measured
+properly) and the pair `SegmentCrossed`/`SegmentNonTailLinked`, which
+say whether that nearest approach is in the middle of both strokes or
+at their ends - a t against a V.  The second of those two carries a ROM
+bug: it tests two of the four clauses its question comes to and uses
+the wrong stroke's margin in one of them, so the end of a long stroke
+touching the middle of a short one is missed.  Kept and demonstrated in
+`test_Segment`.  `SegmentSetStrokes` needed the stroke joiners, so
+`StrokesAdjoin`, `StrokeJoin` and `SLJoinFragments` are in
+`recognition/RosStrokes.h` now.
+
+Still NOT YET above them: the cutting itself - `SegmentChars` over
+`SegmentStroke` (908 B) and `SegmentMakeSegments` (2200 B), plus the
+word-spacing and gap functions `SegmentWordXGap` (5952 B) and
+`SegmentWordVert` (1892 B), about 12 KB in all -
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
 classify passes (3 KB), and the feature extraction
 `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384 symbols on its
-own.  **The segment layer is the next piece**: it is what
-`CharBoxEvaluate`, `WordRecogAddStroke` and `WordRecogAnalyzeWord` all
-wait on, so it unblocks the most.
+own.  **The cutting is the next piece**: `SegmentStroke` and
+`SegmentMakeSegments` are what `CharBoxEvaluate`, `WordRecogAddStroke`
+and `WordRecogAnalyzeWord` all wait on.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

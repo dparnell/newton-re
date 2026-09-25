@@ -55,7 +55,10 @@ struct RosStroke
 	UByte		fIsDot;			// +0x25  the dot over an i or a j
 	UByte		fFragment;		// +0x26  a piece cut off a larger stroke
 	UByte		fJoinsNext;		// +0x27  the stroke after it is the rest of this one
-	UByte		fField28[0x0c];	// +0x28  ... to 0x34
+	UByte		fField28[8];		// +0x28
+	// how far this stroke is from the one before it, which the
+	// segment layer works out and the layer below reads
+	Fixed		fSeparation;	// +0x30
 };
 
 // A handful of them, with the rectangle round the lot.  The ROM's
@@ -88,6 +91,14 @@ void		StrokeSet(RosStroke* stroke, short count, FPoint* points, const FRect* bou
 void		StrokeDestroy(RosStroke* stroke);					// ROM 0x002016ec StrokeDestroy
 // A copy of everything, points and all.
 RosStroke*	StrokeDuplicate(const RosStroke* stroke);			// ROM 0x00201484 StrokeDuplicate
+// Whether the last point of one stroke is the first point of the next -
+// which is what says the two are pieces of one stroke the engine cut
+// for itself rather than two the writer made.
+Boolean		StrokesAdjoin(const RosStroke* a, const RosStroke* b);	// ROM 0x000cd490 StrokesAdjoin
+// A run of adjoining strokes made into one, the point they share at
+// each junction counted once.  The new stroke is a piece of an earlier
+// one if the first of them was, and joins the next if the last did.
+RosStroke*	StrokeJoin(RosStroke* const* strokes, short count);	// ROM 0x000cd138 StrokeJoin
 
 // The bounding rectangle and the middle worked out afresh from the
 // points; `FindBounds` only does it when what is there is not a
@@ -144,5 +155,10 @@ void		SLCalcBounds(RosStrokeList* list);					// ROM 0x00200cb4 SLCalcBounds
 void		SLFindBounds(RosStrokeList* list, FRect* out);		// ROM 0x00200c70 SLFindBounds
 // ... and back into the order they were written in.
 void		SLSort(RosStrokeList* list);						// ROM 0x00201320 SLSort
+// A new list in which every run of adjoining strokes has become one.
+// Nothing is shared with the list that went in: a stroke that stood
+// alone is duplicated and a run is joined, so the answer may be
+// destroyed with its strokes.
+RosStrokeList*	SLJoinFragments(RosStrokeList* list);			// ROM 0x000cd2b4 SLJoinFragments
 
 #endif	/* __ROSSTROKES_H */

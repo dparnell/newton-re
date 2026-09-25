@@ -893,3 +893,119 @@ SLDrawAAAt(const RosStrokeList* list, RenderAA* aa, Fixed x, Fixed y,
 	for (short i = 0; i < list->fCount; i++)
 		StrokeDrawAAAt(list->fStrokes[i], aa, x, y, xScale, yScale);
 }
+
+
+// ROM 0x000cd490 StrokesAdjoin
+// Whether the last point of one stroke is the first point of the next.
+// Both coordinates must match exactly, which they do when the engine
+// cut one stroke into two: the cut point is copied into both halves.
+Boolean
+StrokesAdjoin(const RosStroke* a, const RosStroke* b)
+{
+	const FPoint* last = &a->fPoints[a->fCount - 1];
+	const FPoint* first = &b->fPoints[0];
+	return last->x == first->x && last->y == first->y;
+}
+
+
+// ROM 0x000cd138 StrokeJoin
+// A run of adjoining strokes made into one.  Each junction has the same
+// point at both ends of it, so the count is the sum less one per
+// junction and the copy steps back over the duplicate.
+//
+// The two flags come from the two ends: the joined stroke is a piece of
+// an earlier one if the first of them was, and the stroke after it is
+// the rest of it if the last of them said so.
+RosStroke*
+StrokeJoin(RosStroke* const* strokes, short count)
+{
+	long last = count - 1;
+	RosStroke* joined = StrokeNew();
+	joined->fFragment = strokes[0]->fFragment;
+	joined->fJoinsNext = strokes[last]->fJoinsNext;
+
+	long total = 0;
+	for (long i = 0; i <= last; i++)
+		total += strokes[i]->fCount - 1;
+	total += 1;
+
+	FPoint* points = nil;
+	newton_try
+	{
+		points = (FPoint*) RosAllocate(total * (long) sizeof(FPoint));
+	}
+	cleanup
+	{
+		StrokeDestroy(joined);
+	}
+	end_try;
+
+	long at = 0;
+	for (long i = 0; i <= last; i++)
+	{
+		const RosStroke* stroke = strokes[i];
+		for (short p = 0; p < stroke->fCount; p++)
+			CopyFixedPoint(&points[at++], &stroke->fPoints[p]);
+		// the next stroke starts on the point this one ended on
+		at--;
+	}
+	StrokeSet(joined, (short) total, points, nil);
+	return joined;
+}
+
+
+// ROM 0x000cd2b4 SLJoinFragments
+// A new list in which every run of adjoining strokes has become one.
+// This is how the pieces the engine cut a stroke into are put back
+// together before it is shown to anyone: the segment layer works on
+// fragments, but a classifier is shown whole strokes.
+//
+// Nothing is shared with the list that went in - a stroke that stood
+// alone is duplicated and a run is joined - so the answer owns its
+// strokes.  The bounds are taken from the original list, which is the
+// same rectangle by construction.
+RosStrokeList*
+SLJoinFragments(RosStrokeList* list)
+{
+	// (`volatile` because the handler reads them after a longjmp)
+	RosStrokeList* volatile made = nil;
+	RosStroke** volatile strokes = nil;
+	newton_try
+	{
+		made = SLNew();
+		strokes = (RosStroke**) NewPtrClear(list->fCount * (long) sizeof(RosStroke*));
+		if (strokes == nil)
+			Throw(exOutOfStack, (void*) "", nil);
+		SetPtrName((Ptr) strokes, kRosettaMemoryTag);
+
+		long out = 0;
+		for (long i = 0; i < list->fCount; )
+		{
+			// how far the run of adjoining strokes goes
+			long end = i;
+			while (end < list->fCount - 1
+					&& StrokesAdjoin(list->fStrokes[end], list->fStrokes[end + 1]))
+				end++;
+			strokes[out++] = (end == i)
+						? StrokeDuplicate(list->fStrokes[i])
+						: StrokeJoin(&list->fStrokes[i], (short) (end - i + 1));
+			i = end + 1;
+		}
+
+		FRect bounds;
+		SLFindBounds(list, &bounds);
+		SLSet((RosStrokeList*) made, (short) out, (RosStroke**) strokes, &bounds);
+	}
+	cleanup
+	{
+		SLDestroy((RosStrokeList*) made, 0);
+		if (strokes != nil)
+		{
+			for (long i = 0; i < list->fCount; i++)
+				StrokeDestroy(strokes[i]);
+			DisposPtr((Ptr) strokes);
+		}
+	}
+	end_try;
+	return (RosStrokeList*) made;
+}

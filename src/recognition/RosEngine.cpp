@@ -77,29 +77,6 @@ BiGrammarsLoad(const BiGrammars* source)
 // ROM 0x0003df4c BiGrammarDestroy
 void	BiGrammarDestroy(const BiGrammar* /*grammar*/)			{ }
 
-// ROM 0x001d48a4 SegmentChars
-short	SegmentChars(short /*count*/, RosStroke** /*strokes*/, Fixed /*meanSize*/,
-					RosSegment** /*segments*/, UByte /*how*/, void* /*net*/)	{ return 0; }
-// ROM 0x001d2224 SegmentStrokeData
-void	SegmentStrokeData(RosStroke* /*stroke*/, UByte /*how*/, short /*index*/, Fixed /*separation*/)	{ }
-
-// ROM 0x001d0e68 SegmentCreate
-RosSegment*	SegmentCreate(void)								{ return nil; }
-// ROM 0x001d1cac SegmentDestroy
-void	SegmentDestroy(RosSegment* /*segment*/)					{ }
-// ROM 0x001d0f3c SegmentQuiesce
-void	SegmentQuiesce(void)									{ }
-// ROM 0x001d4cbc SegmentIntegrated
-void	SegmentIntegrated(long /*how*/)							{ }
-
-// ROM 0x001d1890 SegmentMinStrokeSize
-// One field of the common info, under another name.
-Fixed
-SegmentMinStrokeSize(void)
-{
-	return RosCI->fMinStrokeSize;
-}
-
 
 // ROM 0x000ffd60 LEquiesant
 void	LEquiesant(void)									{ }

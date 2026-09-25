@@ -74,7 +74,10 @@ FIELDS = [
     ("fCapAltCase2", "ptr", 1),			# +0x34
     ("fField38", "word", 5),			# +0x38 .. +0x48
     ("fMinStrokeSize", "word", 1),		# +0x4c
-    ("fField50", "word", 47),			# +0x50 .. +0x108
+    ("fField50", "word", 16),			# +0x50 .. +0x8c
+    ("fEndFraction", "word", 1),		# +0x90
+    ("fLinkDistance", "word", 1),		# +0x94
+    ("fField98", "word", 29),			# +0x98 .. +0x108
 ]
 
 # A `Fixed` is signed and is written in decimal, as the other generated
