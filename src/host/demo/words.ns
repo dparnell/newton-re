@@ -1,0 +1,98 @@
+// Words: a dozen words written with the pen on the Notepad, and read.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/words.ns --headless 75
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/words.pgm build/words.png
+//
+// The setup assistant is walked through as src/host/demo/write.ns does,
+// and then twelve words made of t, o, n and i are written three to a line,
+// two and a half seconds apart, and last of all a scribble.  The ROM's
+// own handwriting engine reads each of them, and with remote writing on
+// (the Newton's default) each word goes to the caret, so they end up as
+// one paragraph of text wrapped over two lines.  Set NEWTON_TRACE_ROSETTA
+// to see what the engine answered for each.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// One stroke: the pen put down on the first point, moved through the
+// rest, and lifted.
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+// An oval of `n` points, from the top going anticlockwise, as an o is
+// written.  (Twelfths of a turn, worked out once: cos and sin of 30n.)
+oval := func(cx, cy, rx, ry)
+  begin
+    local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+    local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+    local pts := [];
+    for k := 0 to 12 do
+      begin
+        AddArraySlot(pts, cx + (rx * c[k]) div 100);
+        AddArraySlot(pts, cy - (ry * s[k]) div 100);
+      end;
+    pts;
+  end;
+
+t := func(x, base) begin
+    call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
+    call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
+    x + 14 end;
+o := func(x, base) begin call stroke with (call oval with (x + 6, base - 7, 6, 7)); x + 15 end;
+n := func(x, base) begin
+    call stroke with ([x, base - 14, x, base - 7, x, base, x, base - 7, x + 1, base - 11, x + 3, base - 13,
+                       x + 6, base - 14, x + 9, base - 13, x + 10, base - 10, x + 10, base - 5, x + 10, base]);
+    x + 14 end;
+i := func(x, base) begin
+    call stroke with ([x + 2, base - 14, x + 2, base - 7, x + 2, base]);
+    call stroke with ([x + 2, base - 21, x + 3, base - 21]);
+    x + 8 end;
+word := func(w, x, base) begin
+    foreach c in w do x := if c = $t then call t with (x, base) else if c = $o then call o with (x, base) else if c = $n then call n with (x, base) else call i with (x, base);
+    x end;
+words := ["ton", "to", "tin", "on", "no", "not", "into", "onion", "tint", "ion", "it", "tot"];
+k := 0;
+next := func() begin
+    if k < Length(words) then begin
+        local line := k div 3;
+        local x := 30 + (k mod 3) * 90;
+        call word with (call explode with (words[k]), x, 150 + line * 40);
+        k := k + 1;
+        AddDelayedCall(next, nil, 2500);
+    end else begin
+        // a scribble
+        call stroke with ([40, 330, 80, 300, 50, 340, 90, 310, 60, 345, 100, 320]);
+        AddDelayedCall(func() begin ScreenSnapshot("build/words.pgm"); Print("words: written build/words.pgm"); end, nil, 4000);
+    end;
+  end;
+explode := func(s) begin local r := []; for j := 0 to StrLen(s) - 1 do AddArraySlot(r, s[j]); r end;
+AddDelayedCall(next, nil, 27000);

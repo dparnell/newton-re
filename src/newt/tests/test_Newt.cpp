@@ -82,7 +82,14 @@ static const char* kSetupSource =
 	"      viewClickScript: func(unit) begin testApp.clicks := testApp.clicks + 1; nil end, "
 	"      viewGestureScript: func(unit, kind) begin testApp.taps := testApp.taps + 1; true end}); "
 	"    self.para := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 100, right: 300, bottom: 130}, viewFormat: 0x111, viewFont: 0x3000, text: \"Type here\"}); "
-	"    view:Dirty(); para:Dirty(); KeyboardConnect(true); SetKeyView(para, 4); 1 end, "
+	"    self.page := AddView(GetRoot(), {viewClass: 77, viewFlags: 1 + 0x200 + 0x400 + 0x800 + 0x1000 + 0x4000 + 0x8000, viewBounds: {left: 0, top: 150, right: 320, bottom: 300}, viewLineSpacing: 30}); "
+	"    view:Dirty(); para:Dirty(); page:Dirty(); KeyboardConnect(true); SetKeyView(para, 4); 1 end, "
+	// what writing on the page left there: 0 nothing yet, 1 the word
+	// "to" as text, 2 something else
+	"  written: func(data) begin "
+	"    local kids := page:ChildViewFrames(); "
+	"    if Length(kids) = 0 then return 0; "
+	"    if StrEqual(kids[0].text, \"to\") then 1 else 2 end, "
 	"  pause: func(data) begin "
 	"    local tickled := GetRoot():EventPause(true); "			// the tickle: nothing has happened since
 	"    local since := GetRoot():EventPause(nil); "
@@ -201,6 +208,7 @@ static long gTapsSeen = 0;
 static long gRedraws = 0;
 static long gScriptErr = -1;
 static long gTextLength = 0;
+static long gWritten = -1;
 static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
 static Boolean gBacklightOk = false;
@@ -340,6 +348,49 @@ Scenario(void)
 		newtPort.SendRPC(&replySize, &length, sizeof(length), &length, sizeof(length));
 		gTextLength = length.fResult;
 	}
+	// "to" written on the page with the pen: the stem and the bar of
+	// the t, and an o - the ROM's handwriting engine reads it and the
+	// page puts it down as a paragraph of text
+	{
+		const long base = 220;
+		HostTabletPenDown(66, base - 24, 0);
+		for (long y = base - 20; y <= base; y += 4)
+		{
+			Sleep(10 * kMilliseconds);
+			HostTabletPenMove(66, y);
+		}
+		HostTabletPenUp(0);
+		Sleep(60 * kMilliseconds);
+		HostTabletPenDown(60, base - 14, 0);
+		for (long x = 62; x <= 72; x += 2)
+		{
+			Sleep(10 * kMilliseconds);
+			HostTabletPenMove(x, base - 14);
+		}
+		HostTabletPenUp(0);
+		Sleep(60 * kMilliseconds);
+		// an oval from the top going anticlockwise, as an o is written
+		static const short c[] = { 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0 };
+		static const short sn[] = { 100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100 };
+		HostTabletPenDown(82, base - 14, 0);
+		for (long k = 1; k <= 12; k++)
+		{
+			Sleep(10 * kMilliseconds);
+			HostTabletPenMove(82 + (6 * c[k]) / 100, base - 7 - (7 * sn[k]) / 100);
+		}
+		HostTabletPenUp(0);
+		// the word is read once the pen has been away long enough
+		ULong replySize = 0;
+		for (long tries = 0; tries < 40; tries++)
+		{
+			Sleep(250 * kMilliseconds);
+			TRunScriptEvent written("testApp", "written");
+			newtPort.SendRPC(&replySize, &written, sizeof(written), &written, sizeof(written));
+			gWritten = written.fError == 0 ? written.fResult : -1;
+			if (gWritten != 0)
+				break;
+		}
+	}
 	// a redraw event
 	{
 		Rect r = { 0, 0, 100, 100 };
@@ -386,6 +437,7 @@ int main()
 	EXPECT(gPowerOffOk);
 	EXPECT(gWorldDataOk);
 	EXPECT(gTextLength == 10);					// "Typed here"
+	EXPECT(gWritten == 1);						// "to", written with the pen and read
 	EXPECT(gRedraws == 1);
 	if (failures == 0)
 		printf("test_Newt: all passed\n");
