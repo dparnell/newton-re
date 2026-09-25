@@ -3111,6 +3111,37 @@ in the decode table.  The reconstruction wraps too, because a saturating
 version would answer differently.  It turned up when `test_WordRecog`
 measured a segment four hundred pixels tall.
 
+#### Putting a grown reading back
+
+`RegisterNewPath` takes a reading that has just been grown by one
+letter and puts it into the column it now reaches.  While there is a
+free slot that is just an insertion, cheapest first.  When the column
+is full is where it stops being a plain beam search.
+
+Every kind of word carries a **class** (`BiGSlice::fField2c`), each
+column counts how many of its readings are of each
+(`SearchColumn::fClassCounts`), and the grammar says how many it will
+allow (`BiGrammar::fClassLimits` - the General grammar allows two of
+class 0 and two of class 1).  So when the column is full:
+
+* if the newcomer's own kind is **under** its limit, the search walks
+  back from the worst end for a reading that is unlimited or already
+  over quota, and recycles that one **without looking at the score at
+  all**.  A column with room for another date takes one however dear it
+  is, rather than keeping a twenty-eighth word;
+* otherwise it walks back for one that is unlimited, of the newcomer's
+  own class, or over quota - and takes it only if the newcomer is
+  actually cheaper.
+
+That is what keeps the twenty-seven readings a column holds varied.
+`test_Search` fills a column, has a dear reading of an unlimited kind
+refused, then has an equally dear one of a kind that still has room
+accepted - and then, once that kind is at its quota, refused in its
+turn.
+
+(The two paths are not symmetrical about the counts: the second counts
+the recycled reading's class down and the first does not.)
+
 #### What is left: the step itself
 
 Everything around the Viterbi step is now reconstructed - the lattice

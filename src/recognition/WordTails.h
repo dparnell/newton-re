@@ -79,7 +79,9 @@ struct WordList
 	// measured from.
 	Fixed		fCost;			// +0x04
 	Fixed		fScoreBase;		// +0x08
-	long		fField0c;		// +0x0c
+	// The candidate letter the best reading was grown with.
+	// DEVIATION: pointer-sized on the host, so what follows it moves.
+	struct RosSegment*	fSegment;	// +0x0c
 	WordTailRef	fTails[kWordListMax];	// +0x10
 	short		fScores[kWordListMax];	// +0x24
 	long		fFlags[kWordListMax];	// +0x38

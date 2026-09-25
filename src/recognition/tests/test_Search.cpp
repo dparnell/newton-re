@@ -95,7 +95,7 @@ main()
 		EXPECT(first->fWords == nil);
 		EXPECT(first->fNodes[0]->fTail == kWordTailNone);
 		EXPECT(first->fNodes[0]->fSlice == nil);
-		EXPECT(first->fNodes[0]->fField0c == 0);
+		EXPECT(first->fNodes[0]->fSegment == nil);
 		// the word-list pool was made for it
 		EXPECT(wordLists != nil);
 
@@ -317,7 +317,7 @@ main()
 			node->fScore = kCosts[i];
 			node->fSlice = slice;
 			node->fField04 = (long) 0x80000000;	// so nothing is added for the kind
-			node->fField0c = 0;
+			node->fSegment = nil;
 		}
 
 		long best[30];
@@ -352,7 +352,7 @@ main()
 		again->fScore = 100;					// cheaper than the first `cat`
 		again->fSlice = slice;
 		again->fField04 = (long) 0x80000000;
-		again->fField0c = 0;
+		again->fSegment = nil;
 		EXPECT(again->fTail != col->fNodes[1]->fTail);	// spelled out separately
 
 		found = SearchFindBest(best, &a, &b, 10, 0, 0);
@@ -415,6 +415,90 @@ main()
 
 		col->fWords = nil;
 		col->fCount = 0;
+	}
+
+	// ---- a reading put back into a column ----
+	{
+		// `RegisterNewPath` is where the beam is kept varied.  Two
+		// kinds of word are set up here: one the grammar limits to two
+		// readings a column, and one it does not limit at all.
+		SearchBeginWord(ROMGrammar.fContexts[0]);
+		SearchColumn* col = gSearchColumns[0];
+		col->fCount = 0;
+		for (long i = 0; i < 10; i++)
+			col->fClassCounts[i] = 0;
+
+		// (the grammar is the ROM's own, so its limits are read rather
+		//  than invented: class 0 is what `LexicalSymbols` carries)
+		BiGSlice limited;
+		BiGSlice open;
+		memset(&limited, 0, sizeof(limited));
+		memset(&open, 0, sizeof(open));
+		limited.fField10 = 0x10;			// counted against a class
+		limited.fField2c = 0;
+		open.fField10 = 0;					// not counted at all
+		open.fField2c = 0;
+		long limit = (long) gSearchGrammar->fClassLimits[0];
+
+		SearchStep step;
+		memset(&step, 0, sizeof(step));
+		step.fColumn = col;
+		step.fBest = 0x7ffe;
+		step.fSlice = &open;
+
+		// while there is room it is a plain insertion, cheapest first
+		EXPECT(RegisterNewPath(&step, 500, 0) != nil);
+		EXPECT(RegisterNewPath(&step, 100, 0) != nil);
+		EXPECT(RegisterNewPath(&step, 300, 0) != nil);
+		EXPECT(col->fCount == 3);
+		EXPECT(col->fNodes[0]->fScore == 100);
+		EXPECT(col->fNodes[1]->fScore == 300);
+		EXPECT(col->fNodes[2]->fScore == 500);
+		// ... and the column remembers its cheapest
+		EXPECT(step.fBest == 100);
+		// an unlimited kind is not counted against any class
+		EXPECT(col->fClassCounts[0] == 0);
+
+		// a limited kind is counted
+		step.fSlice = &limited;
+		EXPECT(RegisterNewPath(&step, 400, 0) != nil);
+		EXPECT(col->fClassCounts[0] == 1);
+		EXPECT(col->fNodes[1]->fScore == 300 && col->fNodes[2]->fScore == 400);
+
+		// fill the column right up with the unlimited kind
+		step.fSlice = &open;
+		while ((long) col->fCount < MaxBestNodes)
+			EXPECT(RegisterNewPath(&step, 1000, 0) != nil);
+		EXPECT((long) col->fCount == MaxBestNodes);
+
+		// now it is full.  A reading of the unlimited kind that is
+		// dearer than everything in the column is refused...
+		EXPECT(RegisterNewPath(&step, 0x7ffd, 0) == nil);
+
+		// ... but one of the *limited* kind, which still has room
+		// under its quota, is taken however dear it is.  That is the
+		// whole point: a column that has room for another date takes
+		// one rather than keeping a twenty-eighth word.
+		EXPECT((long) col->fClassCounts[0] < limit);
+		step.fSlice = &limited;
+		SearchNode* got = RegisterNewPath(&step, 0x7ffd, 0);
+		EXPECT(got != nil);
+		EXPECT(got->fScore == 0x7ffd);
+		EXPECT(col->fClassCounts[0] == 2);
+		EXPECT((long) col->fCount == MaxBestNodes);		// still full
+
+		// and once that kind is at its quota it has to compete on
+		// price like everything else
+		while ((long) col->fClassCounts[0] < limit)
+			RegisterNewPath(&step, 1200, 0);
+		EXPECT((long) col->fClassCounts[0] >= limit);
+		EXPECT(RegisterNewPath(&step, 0x7ffd, 0) == nil);
+		EXPECT(RegisterNewPath(&step, 50, 0) != nil);
+		EXPECT(col->fNodes[0]->fScore == 50);			// straight to the front
+
+		col->fCount = 0;
+		for (long i = 0; i < 10; i++)
+			col->fClassCounts[i] = 0;
 	}
 
 	// ---- everything given back ----

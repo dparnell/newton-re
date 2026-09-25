@@ -243,10 +243,10 @@ struct BiGrammar
 	UByte			fField14;		// +0x14
 	// How many readings of each kind of word the search may keep in
 	// one column, indexed by the lexicon class a slice carries in
-	// `fField2c`.  Ten of them, running to +0x1e.
-	UByte			fClassLimits[3];	// +0x15 .. +0x17
-	long			fField18;		// +0x18  (the rest of fClassLimits)
-	long			fField1c;		// +0x1c
+	// `fField2c`.  The General grammar allows two of class 0 and two
+	// of class 1, and nothing of the rest.
+	UByte			fClassLimits[10];	// +0x15 .. +0x1e
+	UByte			fPad1f;
 };
 
 // The list of them, as `BiGrammarsLoad` answers it.

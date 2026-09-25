@@ -29,7 +29,7 @@ Ptr		gSearchScratch = nil;
 UByte	gSearchAllocated = 0;
 // ROM 0x0c101a98 (unnamed)
 // `MaxBestNodes` pointers into the block below, eight bytes apart.
-Ptr*	gSearchBest = nil;
+SearchBestEntry**	gSearchBest = nil;
 // ROM 0x0c101a9c (unnamed)
 SearchColumn**	gSearchColumns = nil;
 // ROM 0x0c101aa0 (unnamed)
@@ -89,10 +89,12 @@ SearchAllocateGlobals(void)
 			Throw(exOutOfStack, (void*) "", nil);
 		SetPtrName((Ptr) gSearchNodeBlocks, kRosettaMemoryTag);
 
-		gSearchBestBlock = (Ptr) RosAllocate(MaxBestNodes * 8);
-		gSearchBest = (Ptr*) RosAllocate(MaxBestNodes * (long) sizeof(Ptr));
+		gSearchBestBlock = (Ptr) RosAllocate(
+							MaxBestNodes * (long) sizeof(SearchBestEntry));
+		gSearchBest = (SearchBestEntry**) RosAllocate(
+							MaxBestNodes * (long) sizeof(SearchBestEntry*));
 		for (long i = 0; i < MaxBestNodes; i++)
-			gSearchBest[i] = gSearchBestBlock + i * 8;
+			gSearchBest[i] = &((SearchBestEntry*) gSearchBestBlock)[i];
 
 		gSearchColumnBlock = (SearchColumn*) RosAllocate(
 							kSearchColumns * (long) sizeof(SearchColumn));
@@ -247,7 +249,7 @@ SearchBeginWord(const BiGrammar* grammar)
 	node->fField04 = 0;
 	node->fScore = 0;
 	node->fTail = kWordTailNone;
-	node->fField0c = 0;
+	node->fSegment = nil;
 }
 
 
@@ -720,7 +722,7 @@ SearchSegwordRememberNBest(SearchColumn* column, long strokes, Fixed weight)
 	list->fCost = cost;
 	list->fScoreBase = other;
 	list->fCount = (UByte) found;
-	list->fField0c = gSearchColumns[best[0]]->fNodes[best[1]]->fField0c;
+	list->fSegment = gSearchColumns[best[0]]->fNodes[best[1]]->fSegment;
 
 	for (long i = 0; i < found; i++)
 	{
@@ -858,4 +860,164 @@ SearchSendWords(WordList* list, long strokes, SearchEndWordProc proc,
 	if (out != 0)
 		SearchCheckHashHit(words);
 	proc(wr, words, scores, flags, (long) reached, out);
+}
+
+
+// The limit on how many readings of one kind of word a column may
+// hold, out of the grammar.
+static long
+SearchClassLimit(long cls)
+{
+	return (long) gSearchGrammar->fClassLimits[cls];
+}
+
+// Whether a kind of word is one of the limited ones, and which class
+// it counts against.
+static Boolean
+SearchIsLimited(const BiGSlice* slice)
+{
+	return (slice->fField10 & 0x10) != 0;
+}
+
+static long
+SearchClassOf(const BiGSlice* slice)
+{
+	return (long) (signed char) slice->fField2c;
+}
+
+
+// ROM 0x001cfc70 RegisterNewPath
+// A reading grown by one letter, put back into the column it now
+// reaches.  Answers the node it went into, or nil if there was no room
+// worth giving it.
+//
+// A column holds `MaxBestNodes` readings in score order, cheapest
+// first, and while there is a free slot this is just an insertion.
+// When the column is full is where it gets interesting, because the
+// search does **not** simply drop the worst reading.
+//
+// Every kind of word carries a class (`BiGSlice::fField2c`), the column
+// counts how many of its readings are of each (`fClassCounts`), and the
+// grammar says how many it will allow (`fClassLimits`).  So:
+//
+// * if the new reading's own kind is **under** its limit, the search
+//   walks back from the worst end for a reading that is unlimited or
+//   already over quota, and recycles that one - **without looking at
+//   the score at all**.  A column that has room for another date will
+//   take one however dear it is, rather than keeping a twenty-eighth
+//   word;
+// * otherwise it walks back for one that is unlimited, of the same
+//   class as the newcomer, or over quota, and takes it only if the
+//   newcomer is actually cheaper.
+//
+// That is what keeps the twenty-seven readings a column holds varied,
+// so one kind of word cannot crowd the others out however well the
+// classifier happens to like it.
+//
+// (The two paths are not symmetrical about the counts: the second
+//  counts the recycled reading's class down and the first does not.)
+SearchNode*
+RegisterNewPath(SearchStep* step, ULong score, long flags)
+{
+	ULong cost = score & 0xffff;
+	SearchColumn* col = step->fColumn;
+	long at;
+	SearchNode* node;
+
+	if ((long) col->fCount < MaxBestNodes)
+	{
+		// a free slot
+		at = (long) col->fCount;
+		col->fCount = (UByte) (at + 1);
+		node = col->fNodes[at];
+	}
+	else
+	{
+		long worst = MaxBestNodes - 1;
+		at = worst;
+		node = col->fNodes[at];
+		const BiGSlice* mine = step->fSlice;
+
+		Boolean roomForMine = false;
+		if (SearchIsLimited(mine))
+		{
+			long cls = SearchClassOf(mine);
+			roomForMine = ((long) col->fClassCounts[cls] < SearchClassLimit(cls));
+		}
+
+		if (roomForMine)
+		{
+			// take any reading that is not holding a place of its own
+			while (SearchIsLimited(node->fSlice)
+				&& (long) col->fClassCounts[SearchClassOf(node->fSlice)]
+					<= SearchClassLimit(SearchClassOf(node->fSlice))
+				&& at > 0)
+			{
+				at--;
+				node = col->fNodes[at];
+			}
+			// ... and move it to the worst end, closing the gap
+			SearchBestEntry* best = gSearchBest[at];
+			if (worst > at)
+			{
+				for (; at < MaxBestNodes - 1; at++)
+				{
+					col->fNodes[at] = col->fNodes[at + 1];
+					gSearchBest[at] = gSearchBest[at + 1];
+				}
+			}
+			col->fNodes[at] = node;
+			gSearchBest[at] = best;
+		}
+		else
+		{
+			// the newcomer has no place of its own to claim, so it has
+			// to be worth more than what it displaces
+			while (SearchIsLimited(node->fSlice)
+				&& SearchClassOf(node->fSlice) != SearchClassOf(mine)
+				&& (long) col->fClassCounts[SearchClassOf(node->fSlice)]
+					<= SearchClassLimit(SearchClassOf(node->fSlice))
+				&& at > 0)
+			{
+				at--;
+				node = col->fNodes[at];
+			}
+			if (cost >= (ULong) (UShort) node->fScore)
+				return nil;
+			if (SearchIsLimited(node->fSlice))
+				col->fClassCounts[SearchClassOf(node->fSlice)]--;
+		}
+	}
+
+	if (SearchIsLimited(step->fSlice))
+		step->fColumn->fClassCounts[SearchClassOf(step->fSlice)]++;
+
+	SearchBestEntry* best = gSearchBest[at];
+	node->fField04 = flags;
+	node->fSlice = step->fSlice;
+	node->fScore = (short) cost;
+	node->fSegment = step->fSegment;
+	best->fField00 = step->fField00;
+	best->fField04 = (UByte) step->fField0c;
+
+	// back into score order, cheapest first
+	long k = at - 1;
+	while (k >= 0 && cost < (ULong) (UShort) col->fNodes[k]->fScore)
+		k--;
+	k++;
+	if (k < at)
+	{
+		for (long m = at; m > k; m--)
+		{
+			col->fNodes[m] = col->fNodes[m - 1];
+			gSearchBest[m] = gSearchBest[m - 1];
+		}
+		col->fNodes[k] = node;
+		gSearchBest[k] = best;
+	}
+
+	// ... and the column remembers its cheapest
+	if ((ULong) (UShort) node->fScore < (ULong) (UShort) step->fBest)
+		step->fBest = (short) (UShort) node->fScore;
+	return node;
 }

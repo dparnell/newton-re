@@ -56,7 +56,9 @@ struct SearchNode
 	long			fField04;		// +0x04
 	short			fScore;			// +0x08  what it has cost to get here
 	WordTailRef		fTail;			// +0x0a  ... and what has been read
-	long			fField0c;		// +0x0c
+	// The candidate letter it was grown with.
+	// DEVIATION: pointer-sized on the host.
+	RosSegment*		fSegment;		// +0x0c
 };
 
 // How many columns there are - one per stroke of the longest word the
@@ -109,6 +111,8 @@ extern long		MaxBestNodes;						// ROM 0x0c101a8c MaxBestNodes
 
 // The state.  None of these has a symbol in the ROM.
 extern UByte	gSearchAllocated;					// ROM 0x0c101a94 (unnamed)
+struct SearchBestEntry;
+extern SearchBestEntry**	gSearchBest;		// ROM 0x0c101a98 (unnamed)
 extern SearchColumn**	gSearchColumns;				// ROM 0x0c101a9c (unnamed)
 extern const BiGrammar*	gSearchGrammar;				// ROM 0x0c101aa0 (unnamed)
 // The two arrays of 256 scores `SearchProcessSegment` leaves for the
@@ -165,6 +169,21 @@ void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 // of the return cache.
 long	SearchBestWords(char** words, UniChar* scores, long* flags,
 				long count, UByte how);					// ROM 0x001d0c48 SearchBestWords
+
+// What `gSearchBest` holds one of per reading in the column, beside the
+// node itself.  Eight bytes.
+struct SearchBestEntry
+{
+	long			fField00;		// +0x00
+	UByte			fField04;		// +0x04
+	UByte			fPad05[3];
+};
+
+// A reading grown by one letter, put back into the column it reaches.
+// The column holds its readings in score order and, when it is full,
+// prefers to recycle one whose *kind of word* is over quota rather than
+// simply the worst.
+SearchNode*	RegisterNewPath(SearchStep* step, ULong score, long flags);	// ROM 0x001cfc70 RegisterNewPath
 
 // What a partial reading looks like from the outside, in twelve
 // classes, so that the grammar can charge differently for what may

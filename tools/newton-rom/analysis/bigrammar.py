@@ -186,8 +186,8 @@ def main(argv=None) -> int:
         out.append(cite(ctx))
         out.append(f"extern const BiGrammar	{symbol} = {{")
         out.append('	"%s", %d, %d, %d, %s,' % (ctx_name, word(ctx + 4), n, word(ctx + 0x0c), listname))
-        out.append("	%d, %d, %d, %d, %d, %d" % (byte(ctx + 0x14), byte(ctx + 0x15), byte(ctx + 0x16),
-                                                byte(ctx + 0x17), word(ctx + 0x18), word(ctx + 0x1c)))
+        limits = ", ".join(str(byte(ctx + 0x15 + i)) for i in range(10))
+        out.append("	%d, { %s }" % (byte(ctx + 0x14), limits))
         out.append("};")
         out.append("")
         names.append(symbol)

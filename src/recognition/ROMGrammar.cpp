@@ -358,7 +358,7 @@ extern const BiGSlice* const	BiGSLGeneral1[25] = {
 // ROM 0x0036686c BiGGeneral
 extern const BiGrammar	BiGGeneral = {
 	"General", 3, 25, 25, BiGSLGeneral1,
-	2, 2, 2, 0, 0, 0
+	2, { 2, 2, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -405,7 +405,7 @@ extern const BiGSlice* const	BiGSLDate2[4] = {
 // ROM 0x0036696c BiGDate
 extern const BiGrammar	BiGDate = {
 	"Date", 2, 4, 4, BiGSLDate2,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -433,7 +433,7 @@ extern const BiGSlice* const	BiGSLNumbersAndMoney3[3] = {
 // ROM 0x00366a28 BiGNumbersAndMoney
 extern const BiGrammar	BiGNumbersAndMoney = {
 	"Numbers&Money", 2, 3, 3, BiGSLNumbersAndMoney3,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -457,7 +457,7 @@ extern const BiGSlice* const	BiGSLNumbers4[2] = {
 // ROM 0x00366ab0 BiGNumbers
 extern const BiGrammar	BiGNumbers = {
 	"Numbers", 2, 2, 2, BiGSLNumbers4,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -522,7 +522,7 @@ extern const BiGSlice* const	BiGSLPhone5[5] = {
 // ROM 0x00366c00 BiGPhone
 extern const BiGrammar	BiGPhone = {
 	"Phone", 2, 5, 5, BiGSLPhone5,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -546,7 +546,7 @@ extern const BiGSlice* const	BiGSLTime6[2] = {
 // ROM 0x00366c88 BiGTime
 extern const BiGrammar	BiGTime = {
 	"Time", 2, 2, 2, BiGSLTime6,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -570,7 +570,7 @@ extern const BiGSlice* const	BiGSLMoney7[2] = {
 // ROM 0x00366d10 BiGMoney
 extern const BiGrammar	BiGMoney = {
 	"Money", 2, 2, 2, BiGSLMoney7,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /*--------------------------------------------------------------------
@@ -598,7 +598,7 @@ extern const BiGSlice* const	BiGSLPostalCode8[3] = {
 // ROM 0x00366dcc BiGPostalCode
 extern const BiGrammar	BiGPostalCode = {
 	"PostalCode", 2, 3, 3, BiGSLPostalCode8,
-	1, 2, 0, 0, 0, 0
+	1, { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 // ROM 0x00366dec ROMGList

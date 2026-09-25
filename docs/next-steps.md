@@ -506,8 +506,8 @@ is named.
 
 Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
 (1324 B) and `SearchDoVStepFromNode` (2120 B), about 3.5 KB, with
-`RegisterNewPath` (680 B), `GeoContextPenalty` (1204 B) and
-`LELangNodeNumOut` (452 B) under them - about 5.7 KB in all.  The
+`GeoContextPenalty` (1204 B) and `LELangNodeNumOut` (452 B) under them -
+about 5 KB in all.  `RegisterNewPath` is done.  The
 working block they share is mapped (`SearchStep` in `Search.h`):
 `SearchDoViterbStep` builds it out of its own locals at sp+0x00..0x1f
 and hands its address down.  `GeoContextPenalty` wants
