@@ -342,16 +342,33 @@ void				BiGrammarDestroy(const BiGrammar* grammar);	// ROM 0x0003df4c BiGrammarD
 extern const short	ArProbEncodeLu1[512];				// ROM 0x0036340c ArProbEncodeLu1
 extern const short	ArProbEncodeLu2[1024];				// ROM 0x0036380c ArProbEncodeLu2
 extern const int	ArProbDecodeLu[1024];				// ROM 0x0036400c ArProbDecodeLu
+// ... and the logistic curve the engine turns a log-likelihood ratio
+// into a probability with: 1/(1+e^-x), sampled every thirty-second and
+// running to about eleven either way, with the difference between one
+// entry and the next beside it.
+extern const int	ArSigLu[355];						// ROM 0x00365174 ArSigLu
+extern const int	ArSigSlopeLu[355];					// ROM 0x00365700 ArSigSlopeLu
 
 // The most a score may be and still mean anything, and the score that
 // means never.
 const long	kArProbNever		= 0x7ffe;
+// ... and how far out the logistic curve is tabulated: beyond this it
+// is nought or one.
+const Fixed	kArSigLimit			= 0x000b1720;
 const long	kArProbMaxScore		= 0x2000;
 
 // The two halves of the arithmetic coder's table lookup: the
 // probability a score stands for, and the score a probability costs.
 Fixed	ArProbDecode(long score);
 short	ArProbEncode(Fixed probability);
+
+// The logistic curve, 1/(1+e^-x), which is how a difference of two
+// squared z-scores becomes a probability.  Nought below about -11 and
+// one above about +11.  The ROM writes this out at every call site
+// rather than calling it - four times over in `SegmentWordXGap`
+// alone, the last of them at 0x001d46c8 - so it carries no citation of
+// its own.
+Fixed	ArSigmoid(Fixed x);
 
 // One kind of word, with room for `capacity` kinds after it and every
 // other thing about it left to the caller.  The seven doubles are the

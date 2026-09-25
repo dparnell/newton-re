@@ -38,6 +38,40 @@ main()
 {
 	InitHostStandaloneHeap();
 
+	// ---- the logistic curve ----
+	{
+		// `ArSigmoid` is how the engine turns a log-likelihood ratio -
+		// the difference of two squared z-scores - into a probability.
+		// It is the plain logistic 1/(1+e^-x), tabulated every
+		// thirty-second of a unit.
+		EXPECT(ArSigLu[0] == 0x8000);				// a half at nought
+		EXPECT(ArSigmoid(0) == 0x8000);
+		// 1/(1+e^-1) = 0.7311
+		EXPECT(ArSigmoid(F(1)) == ArSigLu[32]);
+		EXPECT(ArSigLu[32] == 47910);
+		// the negative side is the same curve upside down, out of
+		// 0xffff rather than one - so the two do not quite add up
+		EXPECT(ArSigmoid(-F(1)) == 0x0000ffff - ArSigLu[32]);
+		EXPECT(ArSigmoid(F(1)) + ArSigmoid(-F(1)) == 0x0000ffff);
+		// and outside the table it is nought and one
+		EXPECT(ArSigmoid(F(12)) == 0x00010000);
+		EXPECT(ArSigmoid(-F(12)) == 0);
+		EXPECT(ArSigmoid(kArSigLimit) == ArSigLu[354]);
+		EXPECT(ArSigmoid(kArSigLimit + 1) == 0x00010000);
+
+		// The interpolation between entries does nothing: the ROM
+		// hands `x & 0xff` to `FixedMultiply` as though it were
+		// already a fraction of one, so the term is never more than
+		// a unit or two - a whole step of the argument climbs in a
+		// single jump of about five hundred.
+		ArSigmoid(0);
+		Fixed low = ArSigmoid(0);
+		Fixed high = ArSigmoid(0x000007ff);			// just short of the next entry
+		EXPECT(high - low <= 2);
+		EXPECT(ArSigmoid(0x00000800) - low == ArSigSlopeLu[0]);
+		EXPECT(ArSigSlopeLu[0] == ArSigLu[1] - ArSigLu[0]);
+	}
+
 	// ---- the grammar the ROM brings ----
 	{
 		EXPECT(ROMGrammar.fCount == 8);

@@ -339,6 +339,58 @@ ArProbEncode(Fixed probability)
 }
 
 
+// ROM 0x0c101ad0 (unnamed)
+// Where `ArSigmoid` last looked in its tables, what it was last asked,
+// and the same negated.  They are meant to be an interpolation cache;
+// see the bug below.
+static long		gArSigIndex = 0;
+// ROM 0x0c101ad4 (unnamed)
+static Fixed	gArSigArg = 0;
+// ROM 0x0c101ad8 (unnamed)
+static Fixed	gArSigNegArg = 0;
+
+
+// The logistic curve, out of `ArSigLu` with `ArSigSlopeLu` between the
+// entries.  The engine reaches it with the difference of two squared
+// z-scores - the log-likelihood ratio of two Gaussians - and gets back
+// the probability that the first of them is the right one.
+//
+// ROM BUG, twice over.  The step between one entry and the next is
+// 0x800 of the argument, so the fraction within a step is `x & 0x7ff`
+// scaled to 16.16; the ROM takes `x & 0xff` and hands *that* to
+// `FixedMultiply` as though it were already a fraction of one, which
+// makes the interpolation term at most one or two - the curve is a
+// bare table lookup climbing in steps of about 511.  And it reads
+// `ArSigSlopeLu` at **the index the previous call worked out**, before
+// working out this call's (and on the negative side it uses the
+// previous call's fraction as well), so even that much depends on what
+// was asked last.  Ported as it stands; nothing downstream notices,
+// because half a thousandth either way does not move a word break.
+Fixed
+ArSigmoid(Fixed x)
+{
+	// (the ROM multiplies by one here, and skips even that for nought)
+	if (x != 0)
+		x = FixedMultiply(x, 0x00010000);
+	gArSigArg = x;
+	if (x < -kArSigLimit)
+		return 0;
+	if (x > kArSigLimit)
+		return 0x00010000;
+	if (x < 0)
+	{
+		Fixed between = FixedMultiply(gArSigNegArg & 0xff, ArSigSlopeLu[gArSigIndex]);
+		gArSigNegArg = -gArSigArg;
+		gArSigIndex = gArSigNegArg >> 11;
+		// ... and 0xffff rather than one, so the curve is a hair low
+		return (0x0000ffff - ArSigLu[gArSigIndex]) - between;
+	}
+	Fixed between = FixedMultiply(x & 0xff, ArSigSlopeLu[gArSigIndex]);
+	gArSigIndex = gArSigArg >> 11;
+	return ArSigLu[gArSigIndex] + between;
+}
+
+
 // ROM 0x0003e0c0 BiGrammarModifyContext
 // A grammar cloned and then reweighed, which is how the General grammar
 // becomes the grammar for one field.
