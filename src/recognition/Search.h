@@ -39,6 +39,7 @@
 #endif
 
 struct BiGrammar;
+struct BiGSlice;
 struct RosSegment;
 struct WordRecog;
 
@@ -47,11 +48,14 @@ struct WordRecog;
 // word tail - what has been read to get here.
 struct SearchNode
 {
-	long			fField00;		// +0x00  the kind of word it is in
-	long			fField04;		// +0x04  2 puts it in the upper six contexts
-	UByte			fField08;		// +0x08
-	UByte			fField09;		// +0x09
-	WordTailRef		fTail;			// +0x0a
+	// The kind of word this reading is in - a slice of the grammar.
+	// DEVIATION: pointer-sized on the host.
+	const BiGSlice*	fSlice;			// +0x00
+	// 2 puts the reading in the upper six capitals contexts, and the
+	// sign bit is read as well.
+	long			fField04;		// +0x04
+	short			fScore;			// +0x08  what it has cost to get here
+	WordTailRef		fTail;			// +0x0a  ... and what has been read
 	long			fField0c;		// +0x0c
 };
 
@@ -146,6 +150,12 @@ long	CapHackDetermineContext(const SearchNode* node);	// ROM 0x001cff18 CapHackD
 void	SearchProcessSegment(const BiGrammar* grammar, Fixed* probs, Fixed* scratch,
 				long index, RosSegment* segment, Fixed confidence,
 				Boolean endsWord, char* tryString);		// ROM 0x001ce830 SearchProcessSegment
+// The best readings the search is holding, gathered out of the columns
+// best first: a triple per reading in `out` - which column, which node,
+// what it cost - with the best brought down to nothing.  The same text
+// found twice is one reading.
+long	SearchFindBest(long* out, Fixed* outA, Fixed* outB, long count,
+				UByte flag, Fixed weight);				// ROM 0x001d07f4 SearchFindBest
 void	SearchSegwordRememberNBest(SearchColumn* column, long strokes, Fixed weight);	// ROM 0x001cf920 SearchSegwordRememberNBest
 void	SearchSendWords(WordList* list, long strokes, SearchEndWordProc proc,
 				WordRecog* wr, char** words, UniChar* scores, long* flags,

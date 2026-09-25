@@ -3048,6 +3048,41 @@ one kind of word - all dates, say, or all numbers - cannot crowd the
 others out, however well the classifier happens to like it.  That is
 diverse beam search, in 1996.
 
+#### Gathering the best readings
+
+`SearchFindBest` walks all thirty-seven columns and gathers the best
+readings the search is holding, best first, leaving a triple per
+reading - which column, which node in it, what it cost - with the best
+brought down to nothing and the rest priced against it.
+
+Readings from different columns are not directly comparable, because a
+column that starts further into the word has had fewer chances to
+spend.  Each column carries what it cost to reach at all in `fField88`,
+and the least of those is added back as a bias before anything is
+compared.
+
+The part worth knowing is that **the same text found twice is one
+reading**.  Two paths through the lattice can spell the same word - a
+`cl` and a `d` written identically - and before inserting, the list is
+searched for a reading whose word tail compares equal.  If one is
+there, the cheaper spelling wins and moves up the list rather than the
+word appearing twice.  And because readings share their tails, that
+comparison is usually a single pointer test.  `test_Search` fills a
+column by hand with `cot`, `cat`, `car` and a second, cheaper `cat`
+spelled out separately, and gets three readings back with the cheaper
+spelling kept.
+
+`SearchSegwordRememberNBest` then takes those readings off the columns
+and puts them on a **word list** that the column holds - ten at most,
+each with its score, its flags and a reference to its word tail so the
+text survives the columns moving on.  That is how a point in the
+lattice comes to stand for "one of these ten things", and how the
+engine can hand back a set of alternatives rather than one answer.
+
+(`SearchFindBest` takes a sixth argument that both its callers pass
+deliberately - `1.0` or nought - and never reads.  Another vestige of
+the training build, like `BiGSliceCreate`'s doubles.)
+
 #### Write it three times
 
 `SearchCheckHashHit` looks at every reading on its way out and compares

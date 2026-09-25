@@ -12,6 +12,8 @@
 #include "RosStrokes.h"			// kRosettaMemoryTag
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+
+extern const ExceptionName exRosetta;	// ROM 0x003774f8 exRosetta
 #include "Segment.h"
 
 #include <string.h>
@@ -241,10 +243,9 @@ SearchBeginWord(const BiGrammar* grammar)
 
 	SearchNode* node = first->fNodes[first->fCount];
 	first->fCount = (UByte) (first->fCount + 1);
-	node->fField00 = 0;
+	node->fSlice = nil;
 	node->fField04 = 0;
-	node->fField09 = 0;
-	node->fField08 = 0;
+	node->fScore = 0;
 	node->fTail = kWordTailNone;
 	node->fField0c = 0;
 }
@@ -408,11 +409,6 @@ SearchBestWords(char** /*out*/, long /*a*/, long /*b*/, long /*count*/, UByte /*
 	return 0;
 }
 
-// ROM 0x001cf920 SearchSegwordRememberNBest
-void
-SearchSegwordRememberNBest(SearchColumn* /*column*/, long /*strokes*/, Fixed /*weight*/)
-{
-}
 
 // ROM 0x001d03f8 SearchSendWords
 void
@@ -540,4 +536,216 @@ SearchProcessSegment(const BiGrammar* /*grammar*/, Fixed* probs, Fixed* scratch,
 
 	if (tryString != nil)
 		GetBestPath(tryString, 0);
+}
+
+
+// ROM 0x001d07f4 SearchFindBest
+// The best readings the search is holding, gathered out of the
+// columns, best first.  Answers how many it found and leaves a triple
+// per reading in `out`: which column, which node in it, and what it
+// cost - with the cost of the best subtracted from all of them, so the
+// best comes out at nothing.
+//
+// Readings from different columns are not directly comparable, because
+// a column that starts further into the word has had fewer chances to
+// spend; each column's `fField88` is what it has cost to reach at all,
+// and the least of those is added back as a bias.
+//
+// The interesting part is that **the same text found twice is one
+// reading**.  Two paths through the lattice can spell the same word -
+// `cl` and `d` written identically, say - and before inserting, the
+// list is searched for a reading whose word tail compares equal.  If
+// one is there, the cheaper of the two wins and moves up the list
+// rather than appearing twice.  That comparison is free whenever the
+// two paths happen to share their tail, which is most of the time.
+//
+// (The sixth argument is passed by both callers - `1.0` or nought -
+//  and never read.  A vestige of the training build.)
+long
+SearchFindBest(long* out, Fixed* outA, Fixed* outB, long count, UByte flag,
+			Fixed /*weight*/)
+{
+	long found = 0;
+	long room = (MaxBestNodes < count) ? MaxBestNodes : count;
+	ULong best = 0x7ffe;
+	ULong leastCost = 0x7ffe;
+	ULong leastOther = 0x7ffe;
+
+	// what the cheapest column has cost to reach
+	for (long i = 0; i < kSearchColumns; i++)
+	{
+		SearchColumn* col = gSearchColumns[i];
+		if (i <= (long) col->fField79 && col->fCount != 0
+			&& (flag == 0 || (long) col->fField79 <= i))
+		{
+			if ((ULong) col->fField88 < leastCost)
+				leastCost = (ULong) col->fField88;
+			if ((ULong) col->fField8c < leastOther)
+				leastOther = (ULong) col->fField8c;
+		}
+	}
+
+	for (long i = 0; i < kSearchColumns; i++)
+	{
+		SearchColumn* col = gSearchColumns[i];
+		if (col->fCount == 0)
+			continue;
+		ULong bias = (ULong) col->fField88 - leastCost;
+		if (!(i <= (long) col->fField79
+			&& (flag == 0 || (long) col->fField79 <= i)
+			&& bias < 0x7ffe))
+			continue;
+
+		for (long j = 0; j < (long) col->fCount; j++)
+		{
+			SearchNode* node = col->fNodes[j];
+			if ((ULong) (UShort) node->fScore >= 0x7ffe - bias)
+				continue;
+			ULong cost = (ULong) (UShort) node->fScore + bias;
+
+			if (flag != 0)
+			{
+				// what the kind of word itself costs to end on
+				ULong extra = (ULong) (UShort) node->fSlice->fField0a;
+				if ((node->fField04 & 0x80000000UL) == 0)
+					extra += 0x5d9;
+				if (0x7ffe - cost < extra)
+					extra = 0x7ffe - cost;
+				cost += extra;
+			}
+
+			// the list is full and this is dearer than the worst of it
+			if (found == room && (ULong) out[(found - 1) * 3 + 2] <= cost)
+				break;
+			if (cost < best)
+				best = cost;
+
+			if (found < 1)
+			{
+				out[0] = i;
+				out[1] = j;
+				out[2] = (long) cost;
+				found = 1;
+				continue;
+			}
+
+			// is this same text already in the list?
+			WordTailRef tail = node->fTail;
+			long same = -1;
+			for (long k = 0; k < found; k++)
+			{
+				SearchColumn* other = gSearchColumns[out[k * 3]];
+				if (WordTailCompare(tail, other->fNodes[out[k * 3 + 1]]->fTail) == 0)
+				{
+					same = k;
+					break;
+				}
+			}
+
+			long at;
+			if (same < 0)
+			{
+				// somewhere new
+				long k = found;
+				do
+				{
+					at = k;
+					k = at - 1;
+					if (k < 0)
+						break;
+				}
+				while (cost <= (ULong) out[k * 3 + 2]);
+				if (found < room)
+					found++;
+				for (long m = found - 2; m >= at; m--)
+				{
+					out[(m + 1) * 3] = out[m * 3];
+					out[(m + 1) * 3 + 1] = out[m * 3 + 1];
+					out[(m + 1) * 3 + 2] = out[m * 3 + 2];
+				}
+			}
+			else
+			{
+				// the same reading is already there, and stays unless
+				// this way of spelling it is cheaper
+				if ((ULong) out[same * 3 + 2] <= cost)
+					continue;
+				long e = same - 1;
+				at = e;
+				while (at >= 0 && cost <= (ULong) out[at * 3 + 2])
+					at--;
+				at++;
+				for (; at <= e; e--)
+				{
+					out[(e + 1) * 3] = out[e * 3];
+					out[(e + 1) * 3 + 1] = out[e * 3 + 1];
+					out[(e + 1) * 3 + 2] = out[e * 3 + 2];
+				}
+			}
+			out[at * 3] = i;
+			out[at * 3 + 1] = j;
+			out[at * 3 + 2] = (long) cost;
+		}
+	}
+
+	if (room < found)
+		found = room;
+	// the best reading comes out at nothing and the rest are priced
+	// against it
+	for (long i = 0; i < found; i++)
+		out[i * 3 + 2] = (long) ((ULong) out[i * 3 + 2] - best);
+	if (outA != nil)
+		*outA = (Fixed) leastOther;
+	if (outB != nil)
+		*outB = (found < 1) ? 0x7ffe : (Fixed) (leastCost + best);
+	return found;
+}
+
+
+// ROM 0x001cf920 SearchSegwordRememberNBest
+// The best readings so far taken off the columns and put on a word
+// list, which the column then holds.  That is how a point in the
+// lattice comes to stand for "one of these ten things", and how the
+// engine can hand back a set of alternatives rather than one answer.
+//
+// Each reading keeps a reference to its word tail, so the text is
+// still there after the columns have moved on.
+void
+SearchSegwordRememberNBest(SearchColumn* column, long strokes, Fixed weight)
+{
+	long best[kWordListMax * 3];
+	Fixed other = 0;
+	Fixed cost = 0;
+	long found = SearchFindBest(best, &other, &cost, kWordListMax, 1, weight);
+	if (found < 1)
+	{
+		column->fWords = nil;
+		return;
+	}
+
+	if (freeWordLists == nil)
+		Throw(exRosetta, (void*) 1, nil);
+	WordList* list = freeWordLists;
+	freeWordLists = *(WordList**) freeWordLists;
+
+	list->fStrokes = (UByte) strokes;
+	list->fRefCount = 1;
+	list->fField04 = cost;
+	list->fField08 = other;
+	list->fCount = (UByte) found;
+	list->fField0c = gSearchColumns[best[0]]->fNodes[best[1]]->fField0c;
+
+	for (long i = 0; i < found; i++)
+	{
+		SearchNode* node = gSearchColumns[best[i * 3]]->fNodes[best[i * 3 + 1]];
+		list->fFlags[i] = node->fField04;
+		ULong score = (ULong) best[i * 3 + 2];
+		if (score >= 0x7ffe)
+			score = 0x7ffe;
+		list->fScores[i] = (short) score;
+		list->fTails[i] = node->fTail;
+		if (list->fTails[i] != kWordTailNone)
+			WordTailAddRef(list->fTails[i]);
+	}
+	column->fWords = list;
 }

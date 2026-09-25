@@ -64,15 +64,23 @@ struct WordTailCell
 	UShort		fNext;			// +0x02  the reference of the rest
 };
 
-// A set of alternatives at one point, out of a pool of fifty.
+// A set of alternatives at one point, out of a pool of fifty: up to ten
+// readings with a score and a flag word each.  This is what the search
+// leaves on a column when it has finished with it, and what the
+// readings are handed back out of.
 const long	kWordListCount	= 0x32;
+const long	kWordListMax	= 10;
 struct WordList
 {
 	UShort		fRefCount;		// +0x00  (the free-list link while free)
 	UByte		fCount;			// +0x02  how many alternatives
-	UByte		fPad03;
-	UByte		fField04[12];	// +0x04
-	WordTailRef	fTails[40];		// +0x10
+	UByte		fStrokes;		// +0x03  how far into the word they reach
+	Fixed		fField04;		// +0x04
+	Fixed		fField08;		// +0x08
+	long		fField0c;		// +0x0c
+	WordTailRef	fTails[kWordListMax];	// +0x10
+	short		fScores[kWordListMax];	// +0x24
+	long		fFlags[kWordListMax];	// +0x38
 };
 
 // The tables, and the pool.

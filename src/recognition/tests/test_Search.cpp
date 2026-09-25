@@ -94,7 +94,7 @@ main()
 		EXPECT(first->fCount == 1);
 		EXPECT(first->fWords == nil);
 		EXPECT(first->fNodes[0]->fTail == kWordTailNone);
-		EXPECT(first->fNodes[0]->fField00 == 0);
+		EXPECT(first->fNodes[0]->fSlice == nil);
 		EXPECT(first->fNodes[0]->fField0c == 0);
 		// the word-list pool was made for it
 		EXPECT(wordLists != nil);
@@ -289,6 +289,106 @@ main()
 		node->fField04 = 2;
 		EXPECT(CapHackDetermineContext(node) == 7);
 		node->fField04 = 0;
+	}
+
+	// ---- the best readings gathered out of the columns ----
+	{
+		// The Viterbi is NOT YET, so the columns are filled by hand
+		// here - a reading is a word tail and what it cost.
+		SearchBeginWord(ROMGrammar.fContexts[0]);
+		const BiGSlice* slice = ROMGrammar.fContexts[0]->fSlices[0];
+
+		// three readings in one column: `cat` cheapest, then `cot`,
+		// then `car`
+		SearchColumn* col = gSearchColumns[0];
+		col->fCount = 0;
+		col->fField79 = 0;
+		col->fField88 = 0;
+		col->fField8c = 0;
+		static const char* const kWords[3] = { "cot", "cat", "car" };
+		static const short kCosts[3] = { 900, 400, 1500 };
+		for (long i = 0; i < 3; i++)
+		{
+			SearchNode* node = col->fNodes[col->fCount++];
+			WordTailRef tail = kWordTailNone;
+			for (const char* p = kWords[i]; *p != 0; p++)
+				tail = Push(tail, (UByte) *p);
+			node->fTail = tail;
+			node->fScore = kCosts[i];
+			node->fSlice = slice;
+			node->fField04 = (long) 0x80000000;	// so nothing is added for the kind
+			node->fField0c = 0;
+		}
+
+		long best[30];
+		Fixed a = 0, b = 0;
+		long found = SearchFindBest(best, &a, &b, 10, 0, 0);
+		EXPECT(found == 3);
+		// best first, and the best comes out at nothing with the rest
+		// priced against it
+		EXPECT(best[2] == 0);
+		EXPECT(best[5] == 900 - 400);
+		EXPECT(best[8] == 1500 - 400);
+		// ... and they are the readings we put in, in order
+		UByte text[64];
+		WordTailSprint(col->fNodes[best[1]]->fTail, text, 64);
+		EXPECT(strcmp((const char*) text, "cat") == 0);
+		WordTailSprint(col->fNodes[best[4]]->fTail, text, 64);
+		EXPECT(strcmp((const char*) text, "cot") == 0);
+		WordTailSprint(col->fNodes[best[7]]->fTail, text, 64);
+		EXPECT(strcmp((const char*) text, "car") == 0);
+		// what the cheapest reading cost altogether
+		EXPECT(b == 400);
+
+		// **the same text found twice is one reading.**  Two paths
+		// through the lattice can spell the same word - `cl` and `d`
+		// written the same way - and the cheaper spelling wins rather
+		// than the word appearing twice in the list.
+		SearchNode* again = col->fNodes[col->fCount++];
+		WordTailRef same = kWordTailNone;
+		for (const char* p = "cat"; *p != 0; p++)
+			same = Push(same, (UByte) *p);
+		again->fTail = same;
+		again->fScore = 100;					// cheaper than the first `cat`
+		again->fSlice = slice;
+		again->fField04 = (long) 0x80000000;
+		again->fField0c = 0;
+		EXPECT(again->fTail != col->fNodes[1]->fTail);	// spelled out separately
+
+		found = SearchFindBest(best, &a, &b, 10, 0, 0);
+		EXPECT(found == 3);						// still three, not four
+		// and it is the cheaper of the two that is kept
+		EXPECT(best[1] == 3);
+		WordTailSprint(col->fNodes[best[1]]->fTail, text, 64);
+		EXPECT(strcmp((const char*) text, "cat") == 0);
+		EXPECT(b == 100);
+
+		// only as many as were asked for
+		found = SearchFindBest(best, &a, &b, 2, 0, 0);
+		EXPECT(found == 2);
+
+		// ---- and put on the column as a set of alternatives ----
+		WordListFreeAll();
+		SearchSegwordRememberNBest(col, 3, 0x10000);
+		WordList* list = col->fWords;
+		EXPECT(list != nil);
+		EXPECT(list->fCount == 3);
+		EXPECT(list->fRefCount == 1);
+		EXPECT(list->fStrokes == 3);
+		// each alternative keeps its text and what it cost
+		EXPECT(list->fScores[0] == 0);
+		EXPECT(list->fScores[1] > 0);
+		WordTailSprint(list->fTails[0], text, 64);
+		EXPECT(strcmp((const char*) text, "cat") == 0);
+		// ... and holds a reference to it, so the text survives the
+		// columns moving on
+		EXPECT(WordTailAt(list->fTails[0])->fRefCount >= 2);
+		// which is what makes the whole list print as a bullet
+		EXPECT(WordListSprint(list, text, 64) == 4);
+		EXPECT(text[3] == kWordListMark);
+
+		col->fWords = nil;
+		col->fCount = 0;
 	}
 
 	// ---- everything given back ----
