@@ -4,6 +4,7 @@
 // ParaGraph's engine, over the bigram grammar and the common info the
 // ROM brings with it.
 #include "Rosetta.h"
+#include "CharBox.h"
 #include "RosEngine.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"
@@ -244,7 +245,7 @@ main()
 
 	// ---- the working values put back ----
 	{
-		gWordRecog->fCharBox = (void*) NewPtr(4);
+		gWordRecog->fCharBox = CharBoxStateNew();
 		gWordRecog->fField202 = 1;
 		gWordRecog->fField203 = 1;
 		gWordRecog->fField1e0 = 0;

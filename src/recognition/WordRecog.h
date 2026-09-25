@@ -164,7 +164,7 @@ struct WordRecog
 	long			fField1e0;			// +0x1e0  -1 when the engine wakes
 	long			fField1e4;			// +0x1e4
 	long			fField1e8;			// +0x1e8
-	void*			fCharBox;			// +0x1ec  the boxed-character recogniser
+	struct CharBox*	fCharBox;			// +0x1ec  the boxed-character recogniser
 	ULong			fClassifyMode;		// +0x1f0  kRosettaClassifyNormally and friends
 	ULong			fFlags1f4;			// +0x1f4
 	long			fField1f8;			// +0x1f8

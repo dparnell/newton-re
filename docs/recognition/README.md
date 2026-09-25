@@ -2401,6 +2401,90 @@ and the letter-shape group — have nothing to answer with.
 `RosettaExtension` (0x001b6c3c) is the exception: it answers nil and
 always did.
 
+### One letter in a box (`recognition/CharBox.h`)
+
+`CharBox` is the shortest way through the engine, and the first end of
+it that answers a question about a piece of writing in *characters*
+rather than in numbers. A recogniser is made over a rectangle
+(`CharBoxIntialize`), strokes are put into it (`CharBoxAddStroke`, at
+most six), and `CharBoxGetChars` answers the character codes it thinks
+were written, best first. It is what the Newton's boxed-entry fields
+are read with, and it is also the simplest thing the classifier can be
+asked, because there is no word, no grammar and no dictionary in it.
+
+The state is 0x234 bytes: the box, a patternizer and a pattern, two
+segments, up to six strokes, the net, and 256 shorts - one score per
+character code, all of them starting at 0x7ffe, which is the engine's
+"never".
+
+A stroke is tidied on the way in. `CharBoxAddStroke` runs it through
+`StrokePreprocess` with four of the net's own parameters
+(`arBPParam[0xc4]`, `[0xcc]`, `[0xd0]` and the short at `[0xd4]`) and
+appends what comes back - which may be more than one stroke, so the
+count is checked against the whole list. **A ROM bug, kept:** the
+function is plainly meant to answer nought when the stroke was taken
+and one when the box was full, but it ends in a tail call to
+`SLDestroy` and so gives back whatever *that* answers instead. The
+flag does reach `SLDestroy`, which is what makes a refused list take
+its strokes down with it; it is only the caller who never learns.
+`CharBoxIntialize` has a smaller one: it asks both questions about the
+box (`ValidFixedRect`, `EmptyFixedRect`) and throws the answer away -
+a statement with no effect, all that is left of what was presumably an
+assertion in the original source.
+
+#### From 134 outputs to 256 characters
+
+`CharBoxNetEvaluate` is the bridge, and it is where the common info's
+character tables (`RosCITables.cpp`) earn their keep. The classifier
+has 134 output nodes and the engine deals in 256 character codes, so
+the mapping is not one to one:
+
+* a code the area will not have - `RosCI->fLegalUse` says which - scores
+  nothing at all;
+* a code that stands for **one** shape takes the output of the node
+  `fCharToNetNode` sends it to, widened from a byte to 16.16 by a shift
+  of eight. So the most confident a node can be, 0xff, comes to 0xff00
+  and not 0x10000: nothing is ever quite sure;
+* a code that is really **two** characters - `fCompoundPart1` and
+  `fCompoundPart2` say which two - takes the **product** of its two
+  parts' outputs. That is how a net which was never shown the pair
+  still has an opinion about it. When the two parts happen to map to
+  the same node the product is dropped and the single output used, so a
+  doubled letter is not charged twice for being written twice.
+
+In the US ROM's tables 166 of the 256 codes are legal and 54 of those
+are compound.
+
+`CharBoxGetChars` sorts the scores, copies them into the caller's array
+until it meets the first that says never, and clears whatever room was
+left over. The sort is a `qsort` of 256 packed words - score in the
+top half, code in the third byte - so the comparison is one unsigned
+subtraction and the "never" codes fall out at the end by themselves.
+
+#### What it reads
+
+`test_CharBox` draws an upright stroke crossed by a level one inside a
+box and runs it through: the patternizers turn it into the net's 384
+inputs, `BPNetEvaluate` runs the net, and the engine answers
+
+    +   0xf100
+    t   0xe500
+    T   0x0100
+
+and nothing else at all. That is the reconstruction reading
+handwriting for the first time. A capital T comes a distant third
+because the cross-stroke is halfway down rather than at the top.
+
+What is missing is `CharBoxEvaluate` (0x00056878), which turns those
+probabilities into the engine's own scores and then leans on them with
+the geometry of the box: the strokes go to the segment layer
+(`SegmentSetStrokes`, `SegmentDot`), `CharModifyProbs` adjusts them and
+`GeoContextPenalty` charges each code for how badly it sits in the box,
+through the `ArProbEncodeLu1`/`ArProbEncodeLu2` tables. Until the
+segment layer is reconstructed the scores stay at "never" and
+`CharBoxGetChars` answers nothing - so the way in for now is
+`CharBoxNetEvaluate` itself.
+
 ## The writer's recognition preferences
 
 `ReadCursiveOptions` (`FReadCursiveOptions`, 0x0019cfd8, reached at boot

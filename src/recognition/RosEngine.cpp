@@ -83,6 +83,8 @@ short	SegmentChars(short /*count*/, RosStroke** /*strokes*/, Fixed /*meanSize*/,
 // ROM 0x001d2224 SegmentStrokeData
 void	SegmentStrokeData(RosStroke* /*stroke*/, UByte /*how*/, short /*index*/, Fixed /*separation*/)	{ }
 
+// ROM 0x001d0e68 SegmentCreate
+RosSegment*	SegmentCreate(void)								{ return nil; }
 // ROM 0x001d1cac SegmentDestroy
 void	SegmentDestroy(RosSegment* /*segment*/)					{ }
 // ROM 0x001d0f3c SegmentQuiesce
@@ -99,8 +101,6 @@ SegmentMinStrokeSize(void)
 }
 
 
-// ROM 0x00056684 CharBoxDestroy
-void	CharBoxDestroy(void* /*charBox*/)					{ }
 // ROM 0x000ffd60 LEquiesant
 void	LEquiesant(void)									{ }
 // ROM 0x000d9ce4 GeoCQuiesence

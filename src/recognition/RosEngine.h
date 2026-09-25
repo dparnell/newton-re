@@ -219,6 +219,8 @@ short	SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
 // What the segment layer wants remembered about a stroke as it comes in.
 void	SegmentStrokeData(RosStroke* stroke, UByte how, short index, Fixed separation);	// ROM 0x001d2224 SegmentStrokeData
 
+// A segment, made and given back.  What is in one is NOT YET.
+RosSegment*	SegmentCreate(void);							// ROM 0x001d0e68 SegmentCreate
 void	SegmentDestroy(RosSegment* segment);				// ROM 0x001d1cac SegmentDestroy
 // Everything the segment layer is holding on to, given back.
 void	SegmentQuiesce(void);								// ROM 0x001d0f3c SegmentQuiesce
@@ -229,8 +231,6 @@ void	SegmentIntegrated(long how);						// ROM 0x001d4cbc SegmentIntegrated
 // height the word recogniser will believe.
 Fixed	SegmentMinStrokeSize(void);							// ROM 0x001d1890 SegmentMinStrokeSize
 
-// The boxed-character recogniser, given back.
-void	CharBoxDestroy(void* charBox);						// ROM 0x00056684 CharBoxDestroy
 // The lexical search and the geometry, quietened; the sentence read so
 // far, forgotten.
 void	LEquiesant(void);									// ROM 0x000ffd60 LEquiesant

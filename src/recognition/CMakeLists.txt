@@ -40,6 +40,7 @@ add_library(recognition STATIC
     BPNet.cpp
     BPNetTables.cpp
     NetPattern.cpp
+    CharBox.cpp
     Render.cpp
     RenderTables.cpp
     RosCITables.cpp

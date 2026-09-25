@@ -1388,3 +1388,43 @@ different order reads differently.
 
 *`src/recognition/NetPattern.cpp` and `Render.cpp`;
 `docs/recognition/README.md` has the layers.*
+
+## The first letter the reconstruction read was a plus sign
+
+The handwriting engine has been coming together from the bottom for a
+while - the strokes, the renderer, the seven patternizers, the trained
+classifier and its 91 kilobytes of weights - and none of it said
+anything you could read. `CharBox`, the boxed-character recogniser, is
+the first piece that joins the two ends together, and it is only about
+two kilobytes of code: make a recogniser over a rectangle, put strokes
+into it, ask what was written.
+
+So the test draws an upright stroke and crosses it with a level one,
+and asks. The answer:
+
+    +   0xf100
+    t   0xe500
+    T   0x0100
+
+and nothing else at all, out of 256 character codes. A plus sign,
+near enough certain; a lower-case `t`, nearly as likely; and a capital
+`T` a distant third, because the cross-stroke is halfway down rather
+than at the top. Which is exactly right, and is what a person would
+say too.
+
+Nobody at ParaGraph or Apple wrote that ranking down anywhere. It is
+what falls out of 91,124 trained bytes, a picture of the writing, a
+recording of the gesture that made it, and thirty years in a ROM.
+
+There is a second nicety in how the answer is put together. The
+classifier has 134 output nodes and the engine deals in 256 character
+codes, so a good many codes have no node of their own: they are
+*compound*, two characters the net was never shown as a pair. Those
+score the **product** of their two parts' outputs, which means the
+engine has a considered opinion about a shape it has never seen, worked
+out from the shapes it has. And because an output byte is widened to
+16.16 by a shift of eight, the best any single character can ever score
+is 0xff00 and not 0x10000. Nothing is quite certain.
+
+*`src/recognition/CharBox.cpp`, `src/recognition/tests/test_CharBox.cpp`;
+`docs/recognition/README.md` has "One letter in a box".*

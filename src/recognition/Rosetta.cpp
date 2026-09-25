@@ -34,6 +34,7 @@
 
 #include "Rosetta.h"
 #include "RosEngine.h"
+#include "CharBox.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"
 #include "OSErrors.h"

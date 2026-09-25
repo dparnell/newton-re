@@ -334,12 +334,28 @@ well, so **all seven patternizers are reconstructed** and a stroke
 list now reaches all 384 of the classifier's inputs in one call
 (`test_NetPattern` does exactly that and then runs the net).
 
-Above them, all NOT YET: the segment layer (20 KB), the
-boxed-character recogniser (2.2 KB),
+**And the engine reads.**  `CharBox` (`recognition/CharBox.h`), the
+boxed-character recogniser, is the piece that joins the classifier to
+the character codes: a recogniser over a rectangle, up to six strokes
+put into it, and `CharBoxNetEvaluate` turning the net's 134 outputs
+into a probability for each of the 256 codes - nothing for a code the
+area will not have, the node's own output for a code that stands for
+one shape, and the *product* of two nodes for a code that is really two
+characters (166 of the US ROM's codes are legal and 54 of those are
+compound).  `test_CharBox` draws an upright stroke crossed by a level
+one and gets back `+` (0xf100), `t` (0xe500) and `T` (0x0100) and
+nothing else, which is the reconstruction reading handwriting for the
+first time; `docs/curiosities.md` has it.  `CharBoxEvaluate` - the
+scores and the geometry penalties - is NOT YET, because it wants the
+segment layer.
+
+Above them, still NOT YET: the segment layer (20 KB),
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
 classify passes (3 KB), and the feature extraction
 `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384 symbols on its
-own.
+own.  **The segment layer is the next piece**: it is what
+`CharBoxEvaluate`, `WordRecogAddStroke` and `WordRecogAnalyzeWord` all
+wait on, so it unblocks the most.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

@@ -67,6 +67,10 @@ add_executable(test_Rosetta test_Rosetta.cpp)
 target_link_libraries(test_Rosetta PRIVATE recognition memory)
 add_test(NAME recognition.Rosetta COMMAND test_Rosetta)
 
+add_executable(test_CharBox test_CharBox.cpp)
+target_link_libraries(test_CharBox PRIVATE recognition memory)
+add_test(NAME recognition.CharBox COMMAND test_CharBox)
+
 add_executable(test_NetPattern test_NetPattern.cpp)
 target_link_libraries(test_NetPattern PRIVATE recognition memory)
 add_test(NAME recognition.NetPattern COMMAND test_NetPattern)
