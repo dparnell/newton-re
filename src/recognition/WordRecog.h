@@ -55,10 +55,9 @@
 				`FailureString`, "????", which is the same four
 				characters a word arrives at the view as.
 
-	NOT YET: `WordRecogAddStroke`, the eight-kilobyte function that
-	takes the strokes in and works out where the words are, and
-	`WordRecogAnalyzeWord`, which reads them.  `WordRecogAddStroke2`,
-	the net calls and the block's own life are done.
+	`WordRecogAddStroke` takes the strokes in and works out where
+	the words are; `WordRecogAddStroke2` puts each one down and
+	`WordRecogAnalyzeWord` reads a closed word.
 
 	Reconstructed from the MP2x00 US ROM (0x00272728-0x002766c0); each
 	function cites its origin.
@@ -181,24 +180,33 @@ struct WordRecog
 	Fixed			fLastCentroidY;		// +0x180
 	Fixed			fLastSizeMax;		// +0x184
 	Fixed			fLastHeight;		// +0x188
-	Fixed			fField18c;			// +0x18c
-	Fixed			fField190;			// +0x190
-	Fixed			fField194;			// +0x194
+	// A stroke held back while it is not yet clear whether it began a
+	// new word (`fPendingStroke`), with the separation and the `how`
+	// it will be taken in with when that is settled.
+	Fixed			fPendingSeparation;	// +0x18c
+	short			fPendingHow;		// +0x190
+	short			fPad192;			// +0x192
+	// the middle of the horizontal range of the last stroke taken in,
+	// as it was before any cutting (`WordRecogStrokeMidX`): a stroke
+	// to the left of it is the pen going back
+	Fixed			fLastMidX;		// +0x194
 	const BiGrammars*	fGrammars;		// +0x198
 	long			fContextIndex;		// +0x19c  < 0: fContext is ours to destroy
 	const BiGrammar*	fContext;		// +0x1a0
-	long			fField1a4;			// +0x1a4
+	// what `SegmentWord` last said about the stroke taken in (-1
+	// while a word is being closed)
+	long			fWordBreak;		// +0x1a4
 	RosStroke*		fPendingStroke;		// +0x1a8  the stroke not yet taken in
-	long			fField1ac;			// +0x1ac
+	// how many strokes the word being gathered holds
+	long			fWordStrokes;		// +0x1ac
 	// up to six dictionaries handed over by an area, which
 	// `RosettaClassifySetup` locks into the grammar context
 	Handle			fDicts[6];			// +0x1b0
 	void*			fCallBack;			// +0x1c8  the Newton's own (gRosCallBack)
 	FRect			fBaseline;			// +0x1cc  the word's box, its bottom the baseline
-	long			fField1dc;			// +0x1dc
-	long			fField1e0;			// +0x1e0  -1 when the engine wakes
-	long			fField1e4;			// +0x1e4
-	long			fField1e8;			// +0x1e8
+	// The box a boxed character is being written in (`RosICBX`); its
+	// top is -1 while there is none.
+	FRect			fCharBoxRect;		// +0x1dc
 	struct CharBox*	fCharBox;			// +0x1ec  the boxed-character recogniser
 	ULong			fClassifyMode;		// +0x1f0  kRosettaClassifyNormally and friends
 	ULong			fFlags1f4;			// +0x1f4
@@ -209,8 +217,7 @@ struct WordRecog
 	short			fBoxRight;			// +0x1fc
 	short			fBoxTop;			// +0x1fe
 	short			fBoxBottom;			// +0x200
-	UByte			fField202;			// +0x202
-	UByte			fField203;			// +0x203
+	short			fCharBoxStrokes;	// +0x202  strokes in the box so far
 	UByte			fSmallHeight;		// +0x204
 	UByte			fXSpace;			// +0x205
 	UByte			fYSpace;			// +0x206
@@ -388,6 +395,12 @@ Fixed	WordRecogStrokeMidX(const RosStroke* stroke);
 // (the box, the middle, and a body band pulled a little further
 // towards each stroke in turn) and handed to `SegmentWordXGap`.  No
 // stroke before it at all is a new word.
+// A stroke taken into the word being gathered, or the word closed when
+// there is no stroke or `endWord` is more than one.  `how` goes down
+// to `WordRecogAddStroke2` with it.
+void	WordRecogAddStroke(WordRecog* wr, RosStroke* stroke, short endWord,
+				short how);								// ROM 0x00272728 WordRecogAddStroke
+
 Boolean	WRSegWordXGap(RosStroke* stroke, const struct SegWordInk* ink,
 				WordRecog* wr, Fixed* strength);			// ROM 0x00274244 WRSegWordXGap
 

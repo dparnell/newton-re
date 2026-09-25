@@ -10,20 +10,16 @@
 	arrays back without moving the block and `RosettaAwaken` is what
 	makes it again.
 
-	The engine wakes: the common info and the bigram grammar are the
-	ROM's own, so `RosettaAwaken` makes a word recogniser that knows
-	the eight grammars a field may ask for and the 166 characters it
-	may answer.  What it cannot do yet is *read*: the classifier is
-	NOT YET (`BPNetCreateNumOut` answers nil), and so are the three
-	passes a classify is made of.
-
-	NOT YET: `RosettaSetArea`, which reads an area block into the
-	engine, and `RosettaClassify` with its setup/analyze/cleanup.  A
-	call that fails answers `kRosettaFailed`, `TRosRecognizer` turns
-	that into `evt.ex.abt` - which is what the ROM's own does when its
-	engine fails - and the recognition system puts it to sleep
-	(`TWRecDomain::SignalMemoryError`).  Nothing installs it; the
-	engine the host installs is `TInkOnlyRecognizer`.
+	The engine **reads**.  `RosettaClassify` takes a stroke's points,
+	cleans the stroke up and hands the pieces to the word recogniser
+	(`WordRecogAddStroke`), which decides where the words are, cuts
+	joined-up writing into letters, and - when a word is closed - cuts
+	it into candidate letters, classifies each, and searches the
+	lattice against the grammar and the ROM's own lexicons.  The
+	readings come back through `RosettaCheckWords`, which turns their
+	scores into how sure the engine is out of a thousand and hands them
+	to the Newton.  `recognition/tests/test_Reading.cpp` writes words
+	with a pen and reads them.
 
 	The work below this file, in the order it wants doing, is in
 	`docs/recognition/README.md` under "The Rosetta engine".
@@ -41,21 +37,20 @@
 #include "ROMDictionaryData.h"
 #include "RosStrokes.h"
 #include "WordRecog.h"
+#include "FixedMath.h"
+#include "NewtonExceptions.h"
+#include "NewtonMemory.h"
+#include "Fragment.h"
 #include "OSErrors.h"
 
 #include <string.h>
-
-
-// The engine's own error: the ROM's calls answer 0 for done and
-// anything else for not.  (It has no symbol for this; the callers only
-// ever test against nought.)
-const NewtonErr	kRosettaFailed	= kError_Call_Not_Implemented;
+#include <stdio.h>
 
 
 Boolean
 RosettaEngineIsReconstructed(void)
 {
-	return false;
+	return true;
 }
 
 
@@ -134,7 +129,7 @@ RosettaAwaken(void)
 	gWordRecog->fResY = (short) (gRosResY >> 16);
 	gWordRecog->fClassifyMode = kRosettaClassifyNormally;
 	gWordRecog->fCharBox = nil;
-	gWordRecog->fField1e0 = -1;
+	gWordRecog->fCharBoxRect.top = -1;
 	for (long i = 0; i < 6; i++)
 		gWordRecog->fDicts[i] = nil;
 	gWordRecog->fContextIndex = 0;
@@ -197,9 +192,8 @@ RosettaInitializeValues(void)
 	//  confidently - over 899 out of a thousand - and left as it has
 	//  drifted when it was not)
 	WordRecogClear(gWordRecog, gRosLastConfidence > 899);
-	gWordRecog->fField1e0 = -1;
-	gWordRecog->fField202 = 0;
-	gWordRecog->fField203 = 0;
+	gWordRecog->fCharBoxRect.top = -1;
+	gWordRecog->fCharBoxStrokes = 0;
 	if (gWordRecog->fCharBox != nil)
 	{
 		CharBoxDestroy(gWordRecog->fCharBox);
@@ -261,20 +255,361 @@ RosettaVerifyWordSymbols(char* word)
 
 #pragma mark -
 /*--------------------------------------------------------------------
-	NOT YET.
+	Reading.
 --------------------------------------------------------------------*/
 
-// ROM 0x001b7ff4 RosettaClassify
-NewtonErr	RosettaClassify(ULong /*count*/, FPoint* /*points*/, ULong /*startTime*/, ULong /*endTime*/)	{ return kRosettaFailed; }
-// ROM 0x001b78d0 RosettaClassifySetup
-NewtonErr	RosettaClassifySetup(void)								{ return kRosettaFailed; }
-// ROM 0x001b7cc4 RosettaClassifyAnalyze
-NewtonErr	RosettaClassifyAnalyze(void)							{ return kRosettaFailed; }
-// ROM 0x001b7b10 RosettaClassifyCleanup
-NewtonErr	RosettaClassifyCleanup(void)							{ return kRosettaFailed; }
 // ROM 0x001b7120 RosettaCheckWords
-void		RosettaCheckWords(char** /*words*/, UniChar* /*scores*/, long* /*flags*/,
-							ULong /*strokes*/, ULong /*count*/)		{ }
+// What the word recogniser hands its readings to, and what hands them
+// on to the Newton.  The scores are turned from the engine's own - the
+// negative logarithm of a probability, times five hundred, summed over
+// the word - into how sure the engine is out of a thousand: each is
+// averaged over twice the length of the longest reading (plus three),
+// turned back into a probability and taken from one.  The first of them
+// is remembered for the view system (`gRosLastConfidence`), and 950
+// when there are none.  Nothing is handed on when the engine was only
+// asked for the baseline.
+void
+RosettaCheckWords(char** words, UniChar* scores, long* /*flags*/, ULong strokes, ULong count)
+{
+	if (gWordRecog->fClassifyMode == kRosettaBaselineOnly)
+		return;
+
+	long longest = 0;
+	for (long i = 0; i < (long) count; i++)
+	{
+		long length = (long) strlen(words[i]) + 3;
+		if (longest < length)
+			longest = length;
+	}
+	for (long i = 0; i < (long) count; i++)
+	{
+		xpsvx = (Fixed) ((long) scores[i] / (longest * 2));
+		Fixed p;
+		if (xpsvx >= kArProbMaxScore)
+			p = 0;
+		else if (xpsvx < 1)
+			p = 0x00010000;
+		else
+			p = ArProbDecodeLu[xpsvx >> 3];
+		scores[i] = (UniChar) (((unsigned int) ((0x00010000 - p) * 1000)) >> 16);
+	}
+	gRosLastConfidence = (count == 0) ? 0x3b6 : (short) scores[0];
+	RosettaCheckWordsProc proc = (RosettaCheckWordsProc) gWordRecog->fCallBack;
+	proc(words, scores, strokes, count);
+}
+
+
+// ROM 0x001b7fc8 (unnamed)
+// A stroke made of the points the recogniser copied out of the tablet,
+// with the time it began and ended.
+static RosStroke*
+RosettaStrokeFromPoints(short count, const FPoint* points, ULong startTime, ULong endTime)
+{
+	RosStroke* stroke = StrokeCreate(count, points);
+	stroke->fField20 = (long) endTime;
+	stroke->fField1c = (long) startTime;
+	return stroke;
+}
+
+
+// ROM 0x001b7724 RosICBX
+// The box a boxed character is taken to be written in, worked out from
+// where the field says the writing goes: the field's own box when it
+// gave one, and otherwise a box around the baseline - two and a half
+// small heights above it and one and a half below, and as wide as the
+// field's box, or 1.1 small heights either side of its middle when the
+// field does not space its boxes.  A field that does space them steps
+// the box along, a spacing at a time, until the stroke's middle is in it.
+void
+RosICBX(RosStroke* stroke, FRect* box)
+{
+	WordRecog* wr = gWordRecog;
+	FPoint centre;
+	StrokeCentroid(stroke, &centre);
+
+	Fixed left, top, right, bottom;
+	if (wr->fXSpace != 0 || wr->fYSpace != 0)
+	{
+		ULong boxTop = (UShort) wr->fBoxTop;
+		ULong boxBottom = 0;
+		if (boxTop != 0)
+			boxBottom = (UShort) wr->fBoxBottom;
+		if (boxTop == 0 || boxBottom == 0)
+		{
+			ULong base = (UShort) wr->fBase;
+			ULong small = wr->fSmallHeight;
+			ULong half = (small + 1) >> 1;
+			bottom = (Fixed) ((base + small + half) << 16);
+			top = (Fixed) ((base - (small * 2 + half)) << 16);
+		}
+		else
+		{
+			bottom = (Fixed) (boxBottom << 16);
+			top = (Fixed) (boxTop << 16);
+		}
+		right = (Fixed) ((ULong) (UShort) wr->fBoxRight << 16);
+		left = (Fixed) ((ULong) (UShort) wr->fBoxLeft << 16);
+	}
+	else
+	{
+		Fixed middle = (Fixed) (int) (((unsigned int) (UShort) wr->fBoxLeft
+								+ (unsigned int) (UShort) wr->fBoxRight) << 16) >> 1;
+		Fixed reach = FixedMultiply(0x00011999, (Fixed) ((ULong) wr->fSmallHeight << 16));
+		Fixed base = (Fixed) ((ULong) (UShort) wr->fBase << 16);
+		bottom = base + (Fixed) (wr->fSmallHeight * 0x18000);
+		top = base - (Fixed) (wr->fSmallHeight * 0x28000);
+		right = middle + reach;
+		left = middle - reach;
+	}
+	SetFixedRect(box, left, top, right, bottom);
+
+	while (wr->fXSpace != 0 && box->right < centre.x)
+	{
+		box->right += (Fixed) ((ULong) wr->fXSpace << 16);
+		box->left += (Fixed) ((ULong) wr->fXSpace << 16);
+	}
+	while (wr->fYSpace != 0 && box->bottom < centre.y)
+	{
+		box->top += (Fixed) ((ULong) wr->fYSpace << 16);
+		box->bottom += (Fixed) ((ULong) wr->fYSpace << 16);
+	}
+}
+
+
+// ROM 0x001b7b80 (unnamed)
+// The boxed character read and handed on: up to five readings, each a
+// single character, with how sure the engine is of it out of a hundred
+// and twenty-five - the probability its score stands for, taken from
+// one - and the box given back.
+static void
+RosettaCharBoxFinish(void)
+{
+	WordRecog* wr = gWordRecog;
+	CharBoxChoice choices[5];
+	short count = 5;
+	CharBoxGetChars(wr->fCharBox, choices, &count);
+
+	char letters[5][2];
+	char* words[5];
+	UniChar scores[5];
+	for (long i = 0; i < count; i++)
+	{
+		words[i] = letters[i];
+		letters[i][0] = (char) choices[i].fCode;
+		letters[i][1] = 0;
+		xpsvx = (UShort) choices[i].fScore;
+		Fixed p;
+		if (xpsvx >= kArProbMaxScore)
+			p = 0;
+		else if (xpsvx > 0)
+			p = ArProbDecodeLu[(ULong) xpsvx >> 3];
+		else
+			p = 0x00010000;
+		short thousandths = (short) (((0x00010000 - p) * 1000) >> 16);
+		scores[i] = (UniChar) (short) (thousandths / 8);
+	}
+
+	RosettaCheckWordsProc proc = (RosettaCheckWordsProc) wr->fCallBack;
+	proc(words, scores, (ULong) wr->fCharBoxStrokes, (ULong) count);
+	CharBoxDestroy(wr->fCharBox);
+	wr->fCharBox = nil;
+	wr->fCharBoxStrokes = 0;
+}
+
+
+// ROM 0x001b78d0 RosettaClassifySetup
+// The engine made ready to read: the word recogniser's arrays taken
+// back, and - when the grammar in use is the one made for this field -
+// the field's own dictionaries locked down and put into the six kinds
+// of word kept for them (`~user` and `~null1`..`~null5`).  Each points
+// four bytes before its data, where a lexicon's size word would be.
+void
+RosettaClassifySetup(void)
+{
+	WordRecog* wr = gWordRecog;
+	const BiGrammar* context = wr->fContext;
+	WordRecogResume(wr);
+	if (wr->fContextIndex != -1)
+		return;
+	for (long k = 0; k < 6; k++)
+	{
+		Handle h = wr->fDicts[k];
+		Ptr data;
+		if (h == nil || GetHandleSize(h) < 3)
+			data = nil;
+		else
+		{
+			data = IsFakeHandle(h) ? *h : (Ptr) HLock(h);
+			data -= 4;
+		}
+		((BiGSlice*) context->fSlices[7 + k])->fDictionary = (ULong) data;
+	}
+}
+
+
+// ROM 0x001b7b10 RosettaClassifyCleanup
+// ... and the dictionaries let go again.
+void
+RosettaClassifyCleanup(void)
+{
+	WordRecog* wr = gWordRecog;
+	for (long k = 0; k < 6; k++)
+	{
+		Handle h = wr->fDicts[k];
+		if (h != nil && !IsFakeHandle(h) && GetHandleSize(h) > 2)
+			HUnlock(h);
+	}
+}
+
+
+// ROM 0x001b7cc4 RosettaClassifyAnalyze
+// One stroke given to the engine, or - with none - the writing so far
+// closed.
+//
+// Ordinarily the stroke is cleaned up first (`StrokePreprocess`, with
+// the numbers the classifier's own table carries for it) and each piece
+// it comes out as is taken into the word (`WordRecogAddStroke`) - in a
+// field of joined-up writing (`kRosAreaCursive`) as a word of its own.
+// A field that says where its writing goes (`kRosAreaHasBaseInfo`)
+// keeps a box to write in, starting a new word whenever a stroke's
+// middle falls outside it; and a field of single letters reads each box
+// as one character instead (`CharBox*`), handing the characters on as
+// soon as a stroke falls outside the box they are in.
+void
+RosettaClassifyAnalyze(RosStroke* stroke)
+{
+	WordRecog* wr = gWordRecog;
+	if (stroke == nil)
+	{
+		if ((wr->fFlags1f4 & kRosAreaHasBaseInfo) != 0 && wr->fCharBox != nil)
+			RosettaCharBoxFinish();
+		else
+			WordRecogAddStroke(wr, nil,
+						(short) ((wr->fFlags1f4 & kRosAreaCursive) != 0 ? 2 : 0), 0);
+		return;
+	}
+
+	if ((wr->fFlags1f4 & kRosAreaHasBaseInfo) != 0)
+	{
+		ULong single = wr->fFlags1f4 & kRosAreaSingleLetters;
+		if ((single != 0 && wr->fCharBox == nil)
+			|| (single == 0 && wr->fCharBoxRect.top == -1))
+		{
+			RosICBX(stroke, &wr->fCharBoxRect);
+			if ((wr->fFlags1f4 & kRosAreaSingleLetters) != 0)
+				CharBoxIntialize(&wr->fCharBox, (long) ((ULong) wr->fSmallHeight << 16),
+							&wr->fCharBoxRect, (long) ((ULong) (UShort) wr->fBase << 16),
+							wr->fNet);
+		}
+	}
+
+	if ((wr->fFlags1f4 & kRosAreaSingleLetters) == 0)
+	{
+		BPNet* net = wr->fNet;
+		if ((wr->fFlags1f4 & kRosAreaHasBaseInfo) != 0)
+		{
+			// a stroke outside the box begins a new word, in a box of
+			// its own
+			FPoint centre;
+			StrokeCentroid(stroke, &centre);
+			Boolean outside =
+				(wr->fXSpace != 0 && (centre.x < wr->fCharBoxRect.left
+									|| wr->fCharBoxRect.right < centre.x))
+				|| (wr->fYSpace != 0 && (centre.y < wr->fCharBoxRect.top
+									|| wr->fCharBoxRect.bottom < centre.y));
+			if (outside)
+			{
+				WordRecogAddStroke(wr, nil, 0, 0);
+				RosICBX(stroke, &wr->fCharBoxRect);
+			}
+		}
+
+		RosStrokeList* volatile pieces = nil;
+		newton_try
+		{
+			const ULong* params = net->fArParams;
+			pieces = StrokePreprocess(stroke, (Fixed) params[49], (Fixed) params[51],
+							(Fixed) params[52], (short) params[53]);
+			for (long i = 0; i < pieces->fCount; i++)
+			{
+				RosStroke* piece = pieces->fStrokes[i];
+				pieces->fStrokes[i] = nil;
+				WordRecogAddStroke(wr, piece,
+							(short) ((wr->fFlags1f4 & kRosAreaCursive) != 0 ? 1 : 0), 0);
+			}
+		}
+		newton_catch_all
+		{
+			SLDestroy(pieces, 1);
+			rethrow;
+		}
+		end_try;
+		SLDestroy(pieces, 1);
+		return;
+	}
+
+	// single characters, one to a box
+	if (wr->fCharBoxStrokes != 0 && !CharBoxStrokeInBox(wr->fCharBox, stroke))
+	{
+		RosettaCharBoxFinish();
+		RosICBX(stroke, &wr->fCharBoxRect);
+		CharBoxIntialize(&wr->fCharBox, (long) ((ULong) wr->fSmallHeight << 16),
+					&wr->fCharBoxRect, (long) ((ULong) (UShort) wr->fBase << 16), wr->fNet);
+	}
+	CharBoxAddStroke(wr->fCharBox, stroke);
+	wr->fCharBoxStrokes++;
+}
+
+
+// ROM 0x001b7ff4 RosettaClassify
+// The recogniser's one way in: a stroke's points (which the engine takes
+// over and gives back), or - with none - the word closed.  The engine
+// is made ready, given the stroke and let go again every time; closing
+// a word quiesces it as well, handing its arrays back until the next
+// stroke.  A throw anywhere quiesces it and goes on.  It always answers
+// that it succeeded.
+NewtonErr
+RosettaClassify(ULong count, FPoint* points, ULong startTime, ULong endTime)
+{
+	RosStroke* volatile stroke = nil;
+	FPoint* volatile held = points;
+	newton_try
+	{
+		newton_try
+		{
+			RosettaClassifySetup();
+			if (count != 0)
+			{
+				stroke = RosettaStrokeFromPoints((short) count, points, startTime, endTime);
+				DisposPtr((Ptr) points);
+				held = nil;
+			}
+			RosettaClassifyAnalyze(stroke);
+		}
+		newton_catch_all
+		{
+			if (held != nil)
+				DisposPtr((Ptr) held);
+			StrokeDestroy(stroke);
+			RosettaClassifyCleanup();
+			rethrow;
+		}
+		end_try;
+		if (held != nil)
+			DisposPtr((Ptr) held);
+		StrokeDestroy(stroke);
+		RosettaClassifyCleanup();
+	}
+	newton_catch_all
+	{
+		RosettaQuiesce();
+		rethrow;
+	}
+	end_try;
+	if (count == 0)
+		RosettaQuiesce();
+	return noErr;
+}
 
 
 // ROM 0x001b7254 RosettaSetArea
@@ -418,7 +753,7 @@ RosettaSetArea(RosettaAreaInfo* area)
 		gWordRecog->fYSpace = area->fYSpace;
 	}
 
-	gWordRecog->fField1e0 = -1;
+	gWordRecog->fCharBoxRect.top = -1;
 	if (gWordRecog->fCharBox != nil)
 	{
 		CharBoxDestroy(gWordRecog->fCharBox);

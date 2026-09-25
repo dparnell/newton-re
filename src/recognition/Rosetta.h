@@ -138,9 +138,11 @@ NewtonErr	RosettaAwaken(void);									// ROM 0x001b819c RosettaAwaken
 NewtonErr	RosettaQuiesce(void);									// ROM 0x001b8304 RosettaQuiesce
 NewtonErr	RosettaSleep(void);										// ROM 0x001b8388 RosettaSleep
 // the three the engine's own classify pass is made of
-NewtonErr	RosettaClassifySetup(void);								// ROM 0x001b78d0 RosettaClassifySetup
-NewtonErr	RosettaClassifyAnalyze(void);							// ROM 0x001b7cc4 RosettaClassifyAnalyze
-NewtonErr	RosettaClassifyCleanup(void);							// ROM 0x001b7b10 RosettaClassifyCleanup
+void		RosettaClassifySetup(void);								// ROM 0x001b78d0 RosettaClassifySetup
+void		RosettaClassifyAnalyze(struct RosStroke* stroke);		// ROM 0x001b7cc4 RosettaClassifyAnalyze
+// The box a boxed character is taken to be written in.
+void		RosICBX(struct RosStroke* stroke, FRect* box);			// ROM 0x001b7724 RosICBX
+void		RosettaClassifyCleanup(void);							// ROM 0x001b7b10 RosettaClassifyCleanup
 // the words the engine read handed to the callback.  This is what the
 // word recogniser is given as *its* callback (five arguments, the
 // flags array among them); it turns the raw scores into confidences
@@ -159,11 +161,9 @@ extern long			gRosResX;						// ROM 0x0c101954 gRosResX
 extern long			gRosResY;						// ROM 0x0c101958 gRosResY
 extern RosettaCheckWordsProc	gRosCallBack;		// ROM 0x0c10195c gRosCallBack
 
-// Whether the engine below this file is there.  Nothing but the tests
-// and the documentation should need to ask: the recogniser throws
-// `evt.ex.abt` when an engine call fails, which is what the ROM does
-// when its own engine fails, and the recognition system puts a
-// recogniser that throws to sleep.
+// Whether the engine below this file is there - it is.  Kept for the
+// tests and for a host that wants to know whether it can install
+// `TRosRecognizer` rather than an ink-only one.
 Boolean		RosettaEngineIsReconstructed(void);
 
 #endif	/* __ROSETTA_H */

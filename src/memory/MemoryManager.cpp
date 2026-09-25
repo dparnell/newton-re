@@ -363,6 +363,10 @@ NewPtrClear(Size byteCount)
 }
 
 
+// HOST ONLY (see SkiaHeap.h)
+void	(*gHostDisposeCheck)(void* p) = nil;
+
+
 // ROM 0x0014320c DisposPtr  (0x002f3c24 operator delete is the same code)
 // Back to its heap; a heap with much free space gives pages back.
 extern "C" void
@@ -381,6 +385,8 @@ DisposPtr(Ptr p)
 		ReleaseHeapSemaphore(semaphore);
 		return;
 	}
+	if (gHostDisposeCheck != nil)
+		gHostDisposeCheck(p);
 	Heap saved;
 	if (!SwitchToHeap(PtrToHeap(p), &saved))
 		return;

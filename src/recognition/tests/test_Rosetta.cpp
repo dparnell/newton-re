@@ -284,14 +284,13 @@ main()
 	// ---- the working values put back ----
 	{
 		gWordRecog->fCharBox = CharBoxStateNew();
-		gWordRecog->fField202 = 1;
-		gWordRecog->fField203 = 1;
-		gWordRecog->fField1e0 = 0;
+		gWordRecog->fCharBoxStrokes = 1;
+		gWordRecog->fCharBoxRect.top = 0;
 		EXPECT(RosettaInitializeValues() == noErr);
 		EXPECT(gWordRecog->fClassifyMode == kRosettaClassifyNormally);
 		EXPECT(gWordRecog->fCharBox == nil);
-		EXPECT(gWordRecog->fField202 == 0 && gWordRecog->fField203 == 0);
-		EXPECT(gWordRecog->fField1e0 == -1);
+		EXPECT(gWordRecog->fCharBoxStrokes == 0);
+		EXPECT(gWordRecog->fCharBoxRect.top == -1);
 
 		// ... and a word read well enough puts the run back as it was
 		// saved, where one read badly leaves it as it has drifted

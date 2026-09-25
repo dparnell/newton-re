@@ -14,11 +14,13 @@
 #include "Search.h"
 #include "Segment.h"
 #include "RosList.h"
+#include "Fragment.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "FixedMath.h"
 
 #include <string.h>
+#include <stdio.h>
 
 
 // The engine's own exception, which it throws when it cannot be made
@@ -143,11 +145,13 @@ WordRecogAllocate(WordRecog* wr)
 
 	newton_try
 	{
-		wr->fStrokes = (RosStroke**) RosAllocate(kWordRecogMaxStrokes * 4);
-		wr->fSegments = (RosSegment**) RosAllocate(kWordRecogMaxSegments * 4);
-		wr->fWords = (char**) RosAllocate(wr->fWordCount * 4);
+		// DEVIATION: the three arrays of pointers are sized by `sizeof`
+		// on the host, where the ROM has four bytes apiece
+		wr->fStrokes = (RosStroke**) RosAllocate(kWordRecogMaxStrokes * (long) sizeof(RosStroke*));
+		wr->fSegments = (RosSegment**) RosAllocate(kWordRecogMaxSegments * (long) sizeof(RosSegment*));
+		wr->fWords = (char**) RosAllocate(wr->fWordCount * (long) sizeof(char*));
 		wr->fScores = (UniChar*) RosAllocate(wr->fWordCount * 2);
-		wr->fWordFlags = (long*) RosAllocate(wr->fWordCount * 4);
+		wr->fWordFlags = (long*) RosAllocate(wr->fWordCount * (long) sizeof(long));
 		wr->fBuffer48 = RosAllocate(kWordRecogBufferSize);
 		wr->fBuffer4c = RosAllocate(kWordRecogBufferSize);
 	}
@@ -336,7 +340,7 @@ WordRecogClear(WordRecog* wr, Boolean invalRun)
 		WordRecogInvalRun(wr);
 
 	wr->fField60 = wr->fRun[0];
-	wr->fField1a4 = 0;
+	wr->fWordBreak = 0;
 
 	RosStroke* pending = wr->fPendingStroke;
 	if (pending != nil
@@ -390,7 +394,7 @@ WordRecogClearStrokes(WordRecog* wr)
 		}
 	wr->fStrokeCount = 0;
 	wr->fField22 = 0;
-	wr->fField1ac = 0;
+	wr->fWordStrokes = 0;
 	wr->fReturnedStrokes = 0;
 	if (wr->fField1c != nil)
 		wr->fField1c[0] = 0;
@@ -705,7 +709,7 @@ WordRecogStrokeIntersectsTwoVerticalStrokes(WordRecog* wr, const RosStroke* stro
 	Fixed right = stroke->fBounds.right;
 	Fixed middle = (stroke->fBounds.top + stroke->fBounds.bottom) >> 1;
 
-	for (long i = 0; i < wr->fField1ac; i++)
+	for (long i = 0; i < wr->fWordStrokes; i++)
 		if (StrokeEndRunsThrough(wr, wr->fStrokes[i], left, right, middle))
 			found++;
 
@@ -938,14 +942,14 @@ WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*fie
 
 		FRect bounds;
 		StrokeFindBounds(stroke, &bounds);
-		if (wr->fStrokeCount == 0 && wr->fField1a4 != 1)
+		if (wr->fStrokeCount == 0 && wr->fWordBreak != 1)
 		{
 			// the first stroke of a word has nothing in front of it, so
 			// the gap is measured from its own left edge and comes out
 			// nought
 			gLastStrokeRight = bounds.left;
 			gLastStrokeAdvance = advance;
-			wr->fField1a4 = 0;
+			wr->fWordBreak = 0;
 			gLastStrokeWasCut = 0;
 		}
 
@@ -1004,7 +1008,7 @@ WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*fie
 		// writer made
 		if (stroke->fFragment == 0 && stroke->fJoinsNext == 0 && gLastStrokeWasCut == 0)
 		{
-			Boolean betweenLetters = (wr->fField1a4 == 1);
+			Boolean betweenLetters = (wr->fWordBreak == 1);
 			Boolean neither = false;
 			if (!betweenLetters)
 			{
@@ -1342,7 +1346,7 @@ WRSegWordXGap(RosStroke* stroke, const SegWordInk* ink, WordRecog* wr, Fixed* st
 	Fixed bottom = bodyBottom;
 	Fixed middleY = centre.y;
 
-	for (long i = 0; i < wr->fField1ac; i++)
+	for (long i = 0; i < wr->fWordStrokes; i++)
 	{
 		RosStroke* s = wr->fStrokes[i];
 		if (!(WordRecogStrokeMidX(s) < mid))
@@ -1431,6 +1435,726 @@ WRSegWordXGap(RosStroke* stroke, const SegWordInk* ink, WordRecog* wr, Fixed* st
 	ref.fInk.fSizeMax = size + 0x00010000;
 	ref.fBodyTop = bodyTop;
 	ref.fBodyBottom = bodyBottom;
-	ref.fStrokes = wr->fField1ac;
+	ref.fStrokes = wr->fWordStrokes;
 	return SegmentWordXGap(ink, &ref, wr->fField60, wr->fWordSize, wr->fRun, strength);
+}
+
+
+/*--------------------------------------------------------------------
+	The strokes in.
+--------------------------------------------------------------------*/
+
+// The eight numbers the word spacing judges a stroke by.
+static void
+WRInkOf(SegWordInk* ink, const RosStroke* stroke, const FPoint* centre)
+{
+	ink->fLeft = stroke->fBounds.left;
+	ink->fRight = stroke->fBounds.right;
+	ink->fTop = stroke->fBounds.top;
+	ink->fBottom = stroke->fBounds.bottom;
+	ink->fCentroidX = centre->x;
+	ink->fCentroidY = centre->y;
+	Fixed width = ink->fRight - ink->fLeft;
+	Fixed height = ink->fBottom - ink->fTop;
+	ink->fSizeMax = ((width < height) ? height : width) + 0x00010000;
+	ink->fHeight = height + 0x00010000;
+}
+
+
+// The word so far as a reference - its box, its middle and its body
+// band - and the word as it was before its last stroke (the second of
+// each pair, which is kept for exactly this).
+static void
+WRWordRef(SegWordRef* ref, const WordRecog* wr, Boolean saved)
+{
+	long k = saved ? 1 : 0;
+	ref->fInk.fLeft = wr->fWordLeft[k];
+	ref->fInk.fRight = wr->fWordRight[k];
+	ref->fInk.fTop = wr->fWordTop[k];
+	ref->fInk.fBottom = wr->fWordBottom[k];
+	ref->fInk.fCentroidX = wr->fWordCentroidX[k];
+	ref->fInk.fCentroidY = wr->fWordCentroidY[k];
+	ref->fInk.fHeight = wr->fWordHeight;
+	ref->fInk.fSizeMax = wr->fWordSizeMax;
+	ref->fBodyTop = wr->fWordBodyTop[k];
+	ref->fBodyBottom = wr->fWordBodyBottom[k];
+	ref->fStrokes = saved ? wr->fWordStrokes - 1 : wr->fWordStrokes;
+}
+
+
+// ... and the stroke taken in last, whose body band is its own top and
+// bottom.
+static void
+WRLastRef(SegWordRef* ref, const WordRecog* wr)
+{
+	ref->fInk.fLeft = wr->fLastLeft;
+	ref->fInk.fRight = wr->fLastRight;
+	ref->fInk.fTop = wr->fLastTop;
+	ref->fInk.fBottom = wr->fLastBottom;
+	ref->fInk.fCentroidX = wr->fLastCentroidX;
+	ref->fInk.fCentroidY = wr->fLastCentroidY;
+	ref->fInk.fHeight = wr->fLastHeight;
+	ref->fInk.fSizeMax = wr->fLastSizeMax;
+	ref->fBodyTop = wr->fLastTop;
+	ref->fBodyBottom = wr->fLastBottom;
+	ref->fStrokes = 1;
+}
+
+
+// The word started afresh from the last stroke, or from the stroke in
+// hand; the sizes go with the first but not always with the second, as
+// the ROM has it.
+static void
+WRWordFromLast(WordRecog* wr)
+{
+	wr->fWordLeft[0] = wr->fLastLeft;
+	wr->fWordRight[0] = wr->fLastRight;
+	wr->fWordTop[0] = wr->fLastTop;
+	wr->fWordBottom[0] = wr->fLastBottom;
+	wr->fWordBodyBottom[0] = wr->fLastBottom;
+	wr->fWordBodyTop[0] = wr->fLastTop;
+	wr->fWordCentroidX[0] = wr->fLastCentroidX;
+	wr->fWordCentroidY[0] = wr->fLastCentroidY;
+	wr->fWordSizeMax = wr->fLastSizeMax;
+	wr->fWordHeight = wr->fLastHeight;
+}
+
+static void
+WRWordFromInk(WordRecog* wr, const SegWordInk* ink, Boolean sizesToo)
+{
+	wr->fWordLeft[0] = ink->fLeft;
+	wr->fWordRight[0] = ink->fRight;
+	wr->fWordBottom[0] = ink->fBottom;
+	wr->fWordTop[0] = ink->fTop;
+	wr->fWordCentroidX[0] = ink->fCentroidX;
+	wr->fWordBodyBottom[0] = ink->fBottom;
+	wr->fWordBodyTop[0] = ink->fTop;
+	wr->fWordCentroidY[0] = ink->fCentroidY;
+	if (sizesToo)
+	{
+		wr->fWordSizeMax = ink->fSizeMax;
+		wr->fWordHeight = ink->fHeight;
+	}
+}
+
+
+// The word as it stands kept as it was, for the next stroke to be
+// judged against if that one goes back.
+static void
+WRSaveWord(WordRecog* wr)
+{
+	wr->fWordLeft[1] = wr->fWordLeft[0];
+	wr->fWordRight[1] = wr->fWordRight[0];
+	wr->fWordTop[1] = wr->fWordTop[0];
+	wr->fWordBottom[1] = wr->fWordBottom[0];
+	wr->fWordCentroidX[1] = wr->fWordCentroidX[0];
+	wr->fWordBodyTop[1] = wr->fWordBodyTop[0];
+	wr->fWordBodyBottom[1] = wr->fWordBodyBottom[0];
+	wr->fWordCentroidY[1] = wr->fWordCentroidY[0];
+}
+
+
+// A stroke folded into the word's body band and middle height - the same
+// weighted means `WRSegWordXGap` uses, each pulled a little further
+// towards the stroke the more strokes the word already has, and each
+// left alone when the stroke is short and lies outside the band.  The
+// band's height is taken once, before anything moves.
+static void
+WRFoldBand(const WordRecog* wr, Fixed top, Fixed bottom, Fixed middleOfStroke,
+				Fixed height, Fixed* bodyTop, Fixed* bodyBottom, Fixed* middle)
+{
+	Fixed band = *bodyBottom - *bodyTop;
+	Fixed quarter = band >> 2;
+	long n = wr->fWordStrokes;
+	long w = WRSegWeight(n);
+
+	Fixed least = FixedMultiply(0x00018000, SegmentMinStrokeSize());
+	Fixed gate = (least < quarter) ? quarter : least;
+	Fixed newTop;
+	if (gate > height && *middle - quarter < top)
+		newTop = *bodyTop;
+	else
+		newTop = WRSegMean((*middle >= *bodyTop) ? *bodyTop : *middle, n, top, w);
+
+	least = FixedMultiply(0x00018000, SegmentMinStrokeSize());
+	gate = (least < quarter) ? quarter : least;
+	Fixed newBottom;
+	if (gate > height && *middle + quarter > bottom)
+		newBottom = *bodyBottom;
+	else
+		newBottom = WRSegMean((*middle > *bodyBottom) ? *middle : *bodyBottom, n, bottom, w);
+
+	least = FixedMultiply(0x00018000, SegmentMinStrokeSize());
+	gate = (least < quarter) ? quarter : least;
+	Fixed newMiddle;
+	Boolean keep = false;
+	if (gate > height)
+	{
+		Fixed away = middleOfStroke - *middle;
+		abs_temp = away;
+		if (away < 0)
+			away = -away;
+		keep = (away > quarter);
+	}
+	newMiddle = keep ? *middle : WRSegMean(*middle, n, middleOfStroke, w);
+
+	*bodyTop = newTop;
+	*bodyBottom = newBottom;
+	*middle = newMiddle;
+}
+
+
+// ... and the box grown round it.
+static void
+WRGrowWord(WordRecog* wr, Fixed left, Fixed right, Fixed top, Fixed bottom, Fixed cx)
+{
+	if (left <= wr->fWordLeft[0])
+		wr->fWordLeft[0] = left;
+	if (wr->fWordRight[0] < right)
+		wr->fWordRight[0] = right;
+	if (top <= wr->fWordTop[0])
+		wr->fWordTop[0] = top;
+	if (wr->fWordBottom[0] < bottom)
+		wr->fWordBottom[0] = bottom;
+	if (wr->fWordCentroidX[0] < cx)
+		wr->fWordCentroidX[0] = cx;
+}
+
+
+// The strokes before this one that lie further right than it does, or
+// that run on into the next, walked back over: each has its separation
+// cleared, because the gap before it no longer means what it did.
+// Answers the last one it passed over - or, when `track` is given, the
+// one whose middle lies furthest left of those, starting from `track`
+// itself - and `stop` when it passed over none.
+static long
+WRWalkBack(WordRecog* wr, RosStroke* stroke, long start, Fixed* track, long stop)
+{
+	Fixed mid = WordRecogStrokeMidX(stroke);
+	for (long i = start; i >= 0; i--)
+	{
+		RosStroke* s = wr->fStrokes[i];
+		if (WordRecogStrokeMidX(s) <= mid && s->fJoinsNext == 0)
+			break;
+		if (track == nil)
+			stop = i;
+		else if (WordRecogStrokeMidX(s) < *track)
+		{
+			*track = WordRecogStrokeMidX(s);
+			stop = i;
+		}
+		s->fSeparation = 0;
+	}
+	return stop;
+}
+
+
+// ROM 0x00272728 WordRecogAddStroke
+// A stroke taken into the word being gathered - or the word closed,
+// when there is no stroke or `endWord` is more than one.
+//
+// This is where the engine decides, stroke by stroke, where one word
+// ends and the next begins, and it is careful about it.  A stroke that
+// the spacing says *may* begin a new word (`SegmentWord` answering 1,
+// the gap was wide) is not acted on at once: it is held back as
+// `fPendingStroke`, with the separation and the `how` it will be taken
+// in with, and the *next* stroke decides - if it belongs with the one
+// held back, the two join the word together; if it does not, the word
+// is closed before the held stroke.  A stroke that went back or down a
+// line (2 or 3) closes the word straight away.
+//
+// A stroke that lies to the left of the last one - a dot, a crossing,
+// a letter corrected - walks back over the strokes it now comes before,
+// clearing their separations, and is measured against the word as it
+// stood before them (`WRSegWordXGap`).
+//
+// Joined-up writing is cut into letters first (`FragmentStroke`, when
+// `FragmentLigatures` is set and the stroke is wide enough), and each
+// piece is taken in by calling this again; a stroke is scaled to
+// seventy-two dots to the inch before anything is measured, unless it
+// is a piece the engine made itself.  The recogniser is closed and a new
+// word begun when a hundred and fifty strokes have gathered.
+//
+// `endWord` and `how` are passed down to `WordRecogAddStroke2`; a 2 in
+// either is turned into a 1 once it has done its work.
+void
+WordRecogAddStroke(WordRecog* wr, RosStroke* stroke, short endWord, short how)
+{
+	// DEVIATION: the ROM reads `fOwnsStrokes` before it checks for a
+	// nil recogniser - harmless on the Newton, where address 0x38 is
+	// readable, and a fault on a host.
+	if (wr == nil)
+		return;
+
+	// the stroke to give back if anything below throws
+	RosStroke* volatile owned = nil;
+	if (wr->fOwnsStrokes != 0
+		|| (stroke != nil && (stroke->fFragment != 0 || stroke->fJoinsNext != 0)))
+		owned = stroke;
+
+	if (wr->fSuspended != 0)
+	{
+		newton_try
+		{
+			WordRecogResume(wr);
+		}
+		newton_catch_all
+		{
+			StrokeDestroy(owned);
+			rethrow;
+		}
+		end_try;
+	}
+
+	SegOnly = wr->fClassifyMode;
+	const Fixed* run = wr->fRun;
+
+	SegWordInk ink;
+	memset(&ink, 0, sizeof(ink));
+	if (stroke != nil)
+	{
+		// too many strokes: close the word first
+		long room = 0x96 - ((wr->fPendingStroke != nil) ? 1 : 0);
+		if (wr->fWordStrokes >= room)
+		{
+			newton_try
+			{
+				WordRecogAddStroke(wr, nil, (short) (endWord != 0 ? 2 : 0),
+								(short) (how != 0 ? 2 : 0));
+			}
+			newton_catch_all
+			{
+				StrokeDestroy(owned);
+				rethrow;
+			}
+			end_try;
+		}
+
+		// seventy-two dots to the inch, unless the engine made the
+		// stroke itself
+		if (stroke->fFragment == 0 && stroke->fJoinsNext == 0)
+		{
+			Fixed xScale, yScale;
+			Boolean scale = true;
+			if (wr->fResX > 0 && wr->fResY > 0 && !(wr->fResX == 0x48 && wr->fResY == 0x48))
+			{
+				xScale = FixedDivide(0x00480000, (Fixed) (int) ((unsigned int) wr->fResX << 16));
+				yScale = FixedDivide(0x00480000, (Fixed) (int) ((unsigned int) wr->fResY << 16));
+			}
+			else
+			{
+				xScale = yScale = wr->fField2c;
+				scale = (wr->fField2c != 0x00010000);
+			}
+			if (scale)
+				StrokeScale(stroke, xScale, yScale);
+		}
+
+		FPoint centre;
+		StrokeCentroid(stroke, &centre);
+		WRInkOf(&ink, stroke, &centre);
+
+		// joined-up writing cut into letters, each taken in in turn
+		if (stroke->fFragment == 0 && stroke->fJoinsNext == 0)
+		{
+			volatile Boolean handled = false;
+			newton_try
+			{
+				if (FragmentLigatures != 0 && WordRecogStrokeNeedsFragmenting(wr, stroke))
+				{
+					RosStrokeList* pieces = FragmentStroke(stroke, run);
+					newton_try
+					{
+						if (pieces->fCount > 1)
+						{
+							if (gXGapStroke != nil)
+								gPrevXGapMidX = gXGapMidX;
+							else
+								gPrevXGapMidX = 0;
+							gPrevXGapStroke = gXGapStroke;
+							gXGapMidX = stroke->fMidX;
+							StrokeDestroy(owned);
+							owned = nil;
+							for (long i = 0; i < pieces->fCount; i++)
+							{
+								gXGapStroke = pieces->fStrokes[i];
+								pieces->fStrokes[i] = nil;
+								WordRecogAddStroke(wr, gXGapStroke, endWord, how);
+								if (endWord == 2)
+									endWord = 1;
+								if (how == 2)
+									how = 1;
+							}
+							handled = true;
+						}
+					}
+					newton_catch_all
+					{
+						SLDestroy(pieces, 1);
+						rethrow;
+					}
+					end_try;
+					SLDestroy(pieces, 1);
+				}
+			}
+			newton_catch_all
+			{
+				StrokeDestroy(owned);
+				rethrow;
+			}
+			end_try;
+			if (handled)
+				return;
+		}
+	}
+
+	/*----------------------------------------------------------------
+		The first stroke of a word.
+	----------------------------------------------------------------*/
+	if (wr->fWordStrokes == 0)
+	{
+		WordRecogSaveRun(wr);
+		wr->fWordBreak = 0;
+		if (stroke != nil)
+		{
+			WordRecogAddStroke2(wr, stroke, ink.fCentroidX, ink.fCentroidY, 0, how, 0);
+			WRWordFromInk(wr, &ink, true);
+			wr->fLastMidX = WordRecogStrokeMidX(stroke);
+			wr->fPendingStroke = nil;
+			wr->fWordStrokes = 1;
+		}
+		return;
+	}
+
+	/*----------------------------------------------------------------
+		The word closed.
+	----------------------------------------------------------------*/
+	if (stroke == nil || endWord > 1)
+	{
+		if (wr->fPendingStroke != nil)
+		{
+			newton_try
+			{
+				RosStroke* held = wr->fPendingStroke;
+				wr->fPendingStroke = nil;
+				WordRecogAddStroke2(wr, held, wr->fLastCentroidX, wr->fLastCentroidY,
+								1, wr->fPendingHow, wr->fPendingSeparation);
+			}
+			newton_catch_all
+			{
+				StrokeDestroy(owned);
+				rethrow;
+			}
+			end_try;
+		}
+		wr->fWordBreak = -1;
+		WordRecogAddStroke2(wr, stroke, ink.fCentroidX, ink.fCentroidY, 2, how, 0x00010000);
+		if (stroke == nil)
+			wr->fWordStrokes = 0;
+		else
+		{
+			WRWordFromInk(wr, &ink, true);
+			wr->fLastMidX = WordRecogStrokeMidX(stroke);
+			wr->fWordStrokes = 1;
+			wr->fWordBreak = 0;
+		}
+		wr->fPendingStroke = nil;
+		return;
+	}
+
+	/*----------------------------------------------------------------
+		A stroke added to the word, or beginning another.
+	----------------------------------------------------------------*/
+	newton_try
+	{
+		Boolean defer = false;		// hold this stroke back
+		Boolean walked = false;		// the saved word is not to be refreshed
+		Fixed strength = 0;			// what the spacing said (S1)
+		Fixed strength2 = 0;		// ... and the other test (S2)
+		Boolean takeIn = false;		// taken in as part of the word
+		SegWordRef ref;
+
+		if (wr->fPendingStroke != nil)
+		{
+			// A stroke is held back; this one decides.
+			long answer = 0;
+			Boolean againstWord = true;
+			if (stroke->fFragment == 0)
+			{
+				WRLastRef(&ref, wr);
+				answer = SegmentWord(&ink, &ref, wr->fField60, wr->fWordSize, run, &strength);
+				againstWord = (answer == 0);
+			}
+			else
+				strength = 0;
+
+			if (!againstWord)
+			{
+				// the held stroke did begin a word of its own
+				RosStroke* held = wr->fPendingStroke;
+				wr->fPendingStroke = nil;
+				WordRecogAddStroke2(wr, held, wr->fLastCentroidX, wr->fLastCentroidY,
+								1, wr->fPendingHow, wr->fPendingSeparation);
+				wr->fWordBreak = answer;
+				wr->fWordStrokes = 1;
+				if (answer == kSegWordWentBack || answer == kSegWordWentDown)
+				{
+					// ... and so does this one
+					owned = nil;
+					WordRecogAddStroke2(wr, stroke, ink.fCentroidX, ink.fCentroidY,
+									1, how, 0x00010000);
+					WRWordFromInk(wr, &ink, true);
+					wr->fWordStrokes = 0;
+				}
+				else
+				{
+					defer = true;
+					WRWordFromLast(wr);
+				}
+				WRSaveWord(wr);
+			}
+			else
+			{
+				// measured against the whole word instead
+				WRWordRef(&ref, wr, false);
+				answer = SegmentWord(&ink, &ref, wr->fField60, wr->fWordSize, run, &strength2);
+				if (answer != 0)
+				{
+					// the held stroke began a word, and this one is in it
+					if (WordRecogStrokeMidX(stroke) < WordRecogStrokeMidX(wr->fPendingStroke))
+					{
+						strength = strength2;
+						wr->fPendingSeparation = 0;
+					}
+					RosStroke* held = wr->fPendingStroke;
+					wr->fPendingStroke = nil;
+					Fixed sep = wr->fPendingSeparation;
+					if (sep > strength2)
+						sep = strength2;
+					WordRecogAddStroke2(wr, held, wr->fLastCentroidX, wr->fLastCentroidY,
+									1, wr->fPendingHow, sep);
+					WRWordFromLast(wr);
+					wr->fWordStrokes = 1;
+					wr->fWordBreak = 0;
+					takeIn = true;
+				}
+				else
+				{
+					wr->fWordBreak = 0;
+					if (WordRecogStrokeMidX(stroke) < WordRecogStrokeMidX(wr->fPendingStroke))
+					{
+						// this one went back over the word
+						Fixed track = WordRecogStrokeMidX(wr->fPendingStroke);
+						walked = true;
+						wr->fPendingSeparation = 0;
+						long stop = WRWalkBack(wr, stroke, wr->fWordStrokes - 1, &track,
+										wr->fWordStrokes);
+						if (wr->fWordStrokes == stop)
+							strength = strength2;
+						else
+							WRSegWordXGap(stroke, &ink, wr, &strength);
+					}
+					else
+					{
+						// the held stroke and this one measured
+						// together against the word
+						wr->fPendingSeparation = strength2;
+						SegWordRef both;
+						both.fInk.fLeft = (wr->fWordLeft[0] >= wr->fLastLeft)
+									? wr->fLastLeft : wr->fWordLeft[0];
+						both.fInk.fRight = (wr->fWordRight[0] < wr->fLastRight)
+									? wr->fLastRight : wr->fWordRight[0];
+						both.fInk.fTop = (wr->fWordTop[0] >= wr->fLastTop)
+									? wr->fLastTop : wr->fWordTop[0];
+						both.fInk.fBottom = (wr->fWordBottom[0] < wr->fLastBottom)
+									? wr->fLastBottom : wr->fWordBottom[0];
+						both.fInk.fCentroidX = (wr->fWordCentroidX[0] >= wr->fLastCentroidX)
+									? wr->fWordCentroidX[0] : wr->fLastCentroidX;
+						both.fBodyTop = wr->fWordBodyTop[0];
+						both.fBodyBottom = wr->fWordBodyBottom[0];
+						both.fInk.fCentroidY = wr->fWordCentroidY[0];
+						WRFoldBand(wr, wr->fLastTop, wr->fLastBottom, wr->fLastCentroidY,
+									wr->fLastBottom - wr->fLastTop,
+									&both.fBodyTop, &both.fBodyBottom, &both.fInk.fCentroidY);
+						both.fInk.fHeight = wr->fWordHeight;
+						both.fInk.fSizeMax = wr->fWordSizeMax;
+						both.fStrokes = wr->fWordStrokes + 1;
+						if (stroke->fFragment == 0)
+							SegmentWord(&ink, &both, wr->fField60, wr->fWordSize, run, &strength);
+						else
+							strength = 0;
+					}
+
+					// the held stroke joins the word
+					RosStroke* held = wr->fPendingStroke;
+					wr->fPendingStroke = nil;
+					WordRecogAddStroke2(wr, held, wr->fLastCentroidX, wr->fLastCentroidY,
+									0, wr->fPendingHow, wr->fPendingSeparation);
+					WRGrowWord(wr, wr->fLastLeft, wr->fLastRight, wr->fLastTop,
+								wr->fLastBottom, wr->fLastCentroidX);
+					WRFoldBand(wr, wr->fLastTop, wr->fLastBottom, wr->fLastCentroidY,
+								wr->fLastBottom - wr->fLastTop,
+								&wr->fWordBodyTop[0], &wr->fWordBodyBottom[0],
+								&wr->fWordCentroidY[0]);
+					wr->fWordStrokes++;
+					takeIn = true;
+				}
+			}
+			if (takeIn)
+			{
+				owned = nil;
+				WordRecogAddStroke2(wr, stroke, ink.fCentroidX, ink.fCentroidY, 0, how, strength);
+			}
+		}
+		else
+		{
+			// Nothing held back.
+			Boolean decided = false;	// fWordBreak is to be acted on
+			if (endWord != 0)
+			{
+				wr->fWordBreak = 0;
+				if (WordRecogStrokeMidX(stroke) >= wr->fLastMidX)
+				{
+					strength = 0;
+					decided = true;
+				}
+				else
+				{
+					walked = true;
+					if (wr->fWordStrokes <= 0)
+						decided = false;
+					else
+					{
+						long last = WRWalkBack(wr, stroke, wr->fWordStrokes - 1, nil,
+										wr->fWordStrokes - 1);
+						strength = (last == 0) ? 0x00010000 : 0;
+						decided = true;
+					}
+				}
+			}
+			else
+			{
+				if (stroke->fFragment == 0)
+				{
+					WRWordRef(&ref, wr, false);
+					wr->fWordBreak = SegmentWordBkVt(&ink, &ref, wr->fField60,
+									wr->fWordSize, run, &strength);
+				}
+				else
+				{
+					wr->fWordBreak = 0;
+					strength = 0;
+				}
+
+				if (wr->fWordBreak != 0)
+					decided = true;
+				else if (WordRecogStrokeMidX(stroke) < wr->fLastMidX)
+				{
+					// this one went back over the word
+					long n = wr->fWordStrokes;
+					Fixed track = WordRecogStrokeMidX(wr->fStrokes[n - 1]) + 0x00010000;
+					walked = true;
+					long stop = WRWalkBack(wr, stroke, n - 1, &track, n - 1);
+					if (n == 1)
+						strength = 0;
+					else
+					{
+						WRWordRef(&ref, wr, true);
+						SegmentWordXGap(&ink, &ref, wr->fField60, wr->fWordSize, run, &strength);
+						if (n - 1 != stop)
+							WRSegWordXGap(stroke, &ink, wr, &strength);
+					}
+					wr->fWordBreak = 0;
+					decided = false;
+				}
+				else
+				{
+					long n = wr->fWordStrokes;
+					if (n > 1 && WordRecogStrokeMidX(wr->fStrokes[n - 1])
+									> WordRecogStrokeMidX(wr->fStrokes[n - 2]))
+					{
+						// the last stroke measured again against the
+						// word before it, and its separation lowered to
+						// match if that says less
+						WRWordRef(&ref, wr, true);
+						SegmentWordXGap(&ink, &ref, wr->fField60, wr->fWordSize, run, &strength);
+						if (wr->fStrokes[n - 1]->fSeparation > strength)
+							wr->fStrokes[n - 1]->fSeparation = strength;
+					}
+					if (stroke->fFragment != 0)
+					{
+						wr->fWordBreak = 0;
+						strength = 0;
+					}
+					else
+					{
+						WRWordRef(&ref, wr, false);
+						wr->fWordBreak = SegmentWordXGap(&ink, &ref, wr->fField60,
+										wr->fWordSize, run, &strength) ? kSegWordWideGap : kSegWordSame;
+					}
+					decided = true;
+				}
+			}
+
+			if (decided && wr->fWordBreak != 0)
+			{
+				if (wr->fWordBreak == kSegWordWideGap)
+					defer = true;
+				else
+				{
+					// went back or down: the word ends before this one
+					owned = nil;
+					WordRecogAddStroke2(wr, stroke, ink.fCentroidX, ink.fCentroidY,
+									1, how, strength);
+					wr->fPendingStroke = nil;
+					wr->fWordStrokes = 0;
+					WRWordFromInk(wr, &ink, false);
+				}
+			}
+			else
+			{
+				owned = nil;
+				WordRecogAddStroke2(wr, stroke, ink.fCentroidX, ink.fCentroidY, 0, how, strength);
+			}
+		}
+
+		/*------------------------------------------------------------
+			The stroke becomes the last one.
+		------------------------------------------------------------*/
+		wr->fLastLeft = ink.fLeft;
+		wr->fLastRight = ink.fRight;
+		wr->fLastTop = ink.fTop;
+		wr->fLastBottom = ink.fBottom;
+		wr->fLastCentroidX = ink.fCentroidX;
+		wr->fLastCentroidY = ink.fCentroidY;
+		wr->fLastSizeMax = ink.fSizeMax;
+		wr->fLastHeight = ink.fHeight;
+		wr->fLastMidX = WordRecogStrokeMidX(stroke);
+
+		if (defer)
+		{
+			// held back for the next stroke to decide about
+			wr->fPendingHow = how;
+			wr->fPendingSeparation = strength;
+			wr->fPendingStroke = stroke;
+		}
+		else
+		{
+			if (!walked)
+				WRSaveWord(wr);
+			WRGrowWord(wr, ink.fLeft, ink.fRight, ink.fTop, ink.fBottom, ink.fCentroidX);
+			WRFoldBand(wr, ink.fTop, ink.fBottom, ink.fCentroidY, ink.fBottom - ink.fTop,
+						&wr->fWordBodyTop[0], &wr->fWordBodyBottom[0], &wr->fWordCentroidY[0]);
+			wr->fWordSizeMax = ink.fSizeMax;
+			wr->fWordHeight = ink.fHeight;
+			wr->fPendingStroke = nil;
+			wr->fWordStrokes++;
+		}
+	}
+	newton_catch_all
+	{
+		StrokeDestroy(owned);
+		rethrow;
+	}
+	end_try;
 }

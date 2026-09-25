@@ -51,8 +51,8 @@ RosScenario(void)
 	gObjectHeapSize = 0x80000;
 	InitObjects();
 
-	// the engine below the seam is not reconstructed yet
-	EXPECT(!RosettaEngineIsReconstructed());
+	// the engine below the seam is there
+	EXPECT(RosettaEngineIsReconstructed());
 
 	// registered, and made by name the way the word domain makes one
 	RegisterRosettaWRec();

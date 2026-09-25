@@ -340,10 +340,10 @@ main()
 		RosStroke* second = StrokeCreate(6, up);
 
 		wr->fStrokes[0] = first;
-		wr->fField1ac = 1;
+		wr->fWordStrokes = 1;
 		EXPECT(WordRecogStrokeIntersectsTwoVerticalStrokes(wr, flat) == false);
 		wr->fStrokes[1] = second;
-		wr->fField1ac = 2;
+		wr->fWordStrokes = 2;
 		EXPECT(WordRecogStrokeIntersectsTwoVerticalStrokes(wr, flat) == true);
 
 		// one of them moved out from under it counts for nothing
@@ -363,7 +363,7 @@ main()
 		EXPECT(WordRecogStrokeNeedsFragmenting(wr, sprawl) == true);
 		StrokeDestroy(sprawl);
 
-		wr->fField1ac = 0;
+		wr->fWordStrokes = 0;
 		wr->fStrokes[0] = nil;
 		wr->fStrokes[1] = nil;
 		StrokeDestroy(first);
@@ -814,7 +814,7 @@ main()
 			strokes[i] = StrokeCreate(2, pts);
 		}
 		wr.fStrokes = strokes;
-		wr.fField1ac = 3;
+		wr.fWordStrokes = 3;
 		wr.fField60 = F(12);
 		wr.fWordSize = F(12);
 		memcpy(wr.fRun, run, sizeof(run));

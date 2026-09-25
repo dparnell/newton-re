@@ -139,6 +139,9 @@ StrokeSet(RosStroke* stroke, short count, FPoint* points, const FRect* bounds)
 void
 StrokeDestroy(RosStroke* stroke)
 {
+	// nothing to give back (the ROM's first two instructions)
+	if (stroke == nil)
+		return;
 	// (the engine's `free` is a branch to DisposPtr: its memory is the
 	//  Newton's pointer heap, not the C library's)
 	if (stroke->fPoints != nil)

@@ -80,6 +80,12 @@ add_executable(test_Fragment test_Fragment.cpp)
 target_link_libraries(test_Fragment PRIVATE recognition memory)
 add_test(NAME recognition.Fragment COMMAND test_Fragment)
 
+add_executable(test_Reading test_Reading.cpp)
+target_link_libraries(test_Reading PRIVATE recognition memory)
+target_compile_definitions(test_Reading PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+
+add_test(NAME recognition.Reading COMMAND test_Reading)
+
 add_executable(test_GeoContext test_GeoContext.cpp)
 target_link_libraries(test_GeoContext PRIVATE recognition memory)
 add_test(NAME recognition.GeoContext COMMAND test_GeoContext)

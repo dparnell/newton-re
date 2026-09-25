@@ -49,7 +49,10 @@ LELangNodeNumOut(const void* lang, ULong node)
 {
 	if (LELTranCache == nil)
 	{
-		LELTranCache = (ULong*) NewNamedPtr(kLELTranCacheSize, kRosettaMemoryTag);
+		// DEVIATION: the ROM's cache is 0x414 bytes of four-byte words;
+		// a host ULong is wider, so it is sized by the entry
+		LELTranCache = (ULong*) NewNamedPtr((kLELTranCacheSize / 4) * (long) sizeof(ULong),
+								kRosettaMemoryTag);
 		if (LELTranCache == nil)
 			Throw(exOutOfStack, (void*) "", nil);
 	}

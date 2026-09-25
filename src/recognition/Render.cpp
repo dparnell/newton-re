@@ -139,8 +139,13 @@ RenderLine(RenderRec* rec, long x0, long y0, long x1, long y1)
 	long step = 1;
 	if (major < 0)
 	{
-		// backwards: start at the other end and go forwards
+		// backwards: start at the other end and go forwards - both
+		// coordinates moved to it.  (A decompile shows only the first
+		// move; the second is there at 0x001a6fb8, and without it a
+		// line drawn backwards comes out shifted by its own width and
+		// can run off the bitmap.)
 		at[0] += major;
+		at[1] += minor;
 		major = -major;
 		minor = -minor;
 	}

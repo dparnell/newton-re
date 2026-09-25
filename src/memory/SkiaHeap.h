@@ -167,6 +167,13 @@ struct SkiaHeap
 
 const ULong kSkiaHeapMagic = 'skia';
 
+// HOST ONLY: when set, `DisposPtr` calls this with every pointer it is
+// about to give back to a Skia heap, before it looks at the block - a
+// place for a test to catch a pointer freed twice (whose block then
+// holds free-list links where its heap should be).  Not the ROM's;
+// nil unless a test sets it.
+extern void	(*gHostDisposeCheck)(void* p);
+
 // SkiaHeap::fAllocFlags
 enum
 {
