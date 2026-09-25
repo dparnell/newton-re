@@ -2626,6 +2626,42 @@ chooses between the lattice above and emitting one grouping for the
 whole piece, and it is `WordRecogAddStroke` - still NOT YET - that
 decides what it is.
 
+#### The writer's word spacing, and an extra zero
+
+`SegmentSetWordSpacing` is what the recognition area's spacing setting
+becomes. `RosettaSetArea` passes `9 - n` for the setting the area
+carries, so the argument runs 1 to 9 with 5 in the middle, and 5 is the
+writer of ordinary habits: a factor of exactly one and the middle of
+the three thresholds.
+
+It leaves three numbers behind - `gSegWordSpacing`, its natural
+logarithm `gSegLogWordSpacing`, and `gSegOnlyThreshold` interpolated
+between `MinSegOnlyThreshold` (0.4), `MidSegOnlyThreshold` (0.5) and
+`MaxSegOnlyThreshold` (0.7). The logarithm is taken once, here, in
+double precision, because what the layers above want is to **add** it
+to a score rather than multiply by it. It is the only floating point
+in the whole engine.
+
+Below the middle setting the factor ramps gently: `0.15 + 0.85 x (n/5)`,
+so the tightest setting still weighs a gap at about a third. Above it,
+the ROM computes `1 + 23 x (n-5)/4`, and that 23 is almost certainly an
+extra zero: the constant in the instruction is `0x170000` where the
+shape of the rest of the routine wants `0x17000`, one and seven
+sixteenths. The curve it actually produces is
+
+| setting | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| factor | 0.32 | 0.49 | 0.66 | 0.83 | **1.00** | 6.75 | 12.50 | 18.25 | 24.00 |
+
+- a jump of nearly seven times between the middle setting and the one
+next to it, where every step below the middle is a fifth or so, and
+twenty-four times normal at the loosest. With the extra zero gone it
+would run 1.00, 1.36, 1.72, 2.08, 2.44 and join the lower half
+smoothly. The logarithm keeps it from being catastrophic - the score
+term only runs from -1.14 to +3.18 - but the top half of the writer's
+spacing slider does not behave like the bottom half. Ported as it
+stands, and `test_Segment` pins the whole curve.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

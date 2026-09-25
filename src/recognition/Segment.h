@@ -175,4 +175,25 @@ short	SegmentMakeSegments(short index, short count, RosStroke* const* strokes,
 					const short* breaks, short breakCount, RosSegment** segments,
 					long last, UByte how, void* net);	// ROM 0x001d0f68 SegmentMakeSegments
 
+
+/*--------------------------------------------------------------------
+	The writer's word spacing.
+--------------------------------------------------------------------*/
+
+// How wide a space is taken to be, as a multiple of what it would be
+// for a writer of ordinary habits, and its natural logarithm in 16.16 -
+// which is the form the layers above want, because they add it.  The
+// threshold that goes with it is interpolated between the three named
+// values below.
+extern Fixed	gSegWordSpacing;						// ROM 0x0c101ae0 (unnamed)
+extern Fixed	gSegLogWordSpacing;						// ROM 0x0c101ae4 (unnamed)
+extern Fixed	gSegOnlyThreshold;						// ROM 0x0c101aec (unnamed)
+extern Fixed	MinSegOnlyThreshold;					// ROM 0x0c101af0 MinSegOnlyThreshold
+extern Fixed	MidSegOnlyThreshold;					// ROM 0x0c101af4 MidSegOnlyThreshold
+extern Fixed	MaxSegOnlyThreshold;					// ROM 0x0c101af8 MaxSegOnlyThreshold
+
+// The writer's setting, 1 to 9 with 5 in the middle, turned into those
+// numbers.  `RosettaSetArea` is what calls it.
+void	SegmentSetWordSpacing(long spacing);				// ROM 0x001d2490 SegmentSetWordSpacing
+
 #endif	/* __SEGMENT_H */

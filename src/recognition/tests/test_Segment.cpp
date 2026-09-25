@@ -9,6 +9,7 @@
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
+#include <math.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -506,6 +507,51 @@ main()
 		StrokeDestroy(a[0]);
 		StrokeDestroy(a[1]);
 		StrokeDestroy(b[0]);
+	}
+
+	// ---- the writer's word spacing ----
+	{
+		// five is the writer of ordinary habits: a factor of exactly
+		// one, the middle threshold, and a logarithm of nought
+		SegmentSetWordSpacing(5);
+		EXPECT(gSegWordSpacing == F(1));
+		EXPECT(gSegOnlyThreshold == MidSegOnlyThreshold);
+		EXPECT(gSegLogWordSpacing == 0);
+
+		SegmentSetWordSpacing(1);
+		EXPECT(gSegWordSpacing == 0x51eb);		// about a third
+		EXPECT(gSegOnlyThreshold > MinSegOnlyThreshold);
+		EXPECT(gSegOnlyThreshold < MidSegOnlyThreshold);
+		EXPECT(gSegLogWordSpacing < 0);			// the log of a fraction
+
+		SegmentSetWordSpacing(9);
+		EXPECT(gSegOnlyThreshold == MaxSegOnlyThreshold);
+		EXPECT(gSegLogWordSpacing > 0);
+
+		// ROM BUG, kept: the constant above the middle setting is
+		// 0x170000 where 0x17000 was surely meant, so the top half of
+		// the slider runs away from the bottom half.  The whole curve:
+		static const Fixed kCurve[9] = {
+			0x000051eb, 0x00007d70, 0x0000a8f5, 0x0000d47a, 0x00010000,
+			0x0006c000, 0x000c8000, 0x00124000, 0x00180000
+		};
+		for (long n = 1; n <= 9; n++)
+		{
+			SegmentSetWordSpacing(n);
+			EXPECT(gSegWordSpacing == kCurve[n - 1]);
+		}
+		// the step from 5 to 6 is nearly seven times, where every other
+		// step is a fifth or a third
+		EXPECT(kCurve[5] > FixedMultiply(kCurve[4], F(6)));
+		EXPECT(kCurve[3] < kCurve[4] && kCurve[4] < kCurve[5]);
+		// and the loosest asks for twenty-four times normal
+		EXPECT(kCurve[8] == F(24));
+
+		// the log really is the log, rounded toward zero as the ROM's
+		// FIX instruction rounds it
+		SegmentSetWordSpacing(7);
+		double expected = log((double) gSegWordSpacing / 65536.0) * 65536.0;
+		EXPECT(gSegLogWordSpacing == (Fixed) (long) expected);
 	}
 
 	// ---- the rest of the layer's life ----

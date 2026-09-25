@@ -1519,3 +1519,40 @@ all, because there was never any doubt.
 
 *`src/recognition/Segment.cpp`; `docs/recognition/README.md` has "What
 it hands up is a lattice, not a partition".*
+
+## An extra zero in the handwriting engine's spacing slider
+
+The Newton lets you tell it how tightly you write - a slider of nine
+settings with "normal" in the middle - and `SegmentSetWordSpacing` is
+where that becomes a number the segment layer works to.
+
+Below the middle it does a careful job. The factor ramps as
+`0.15 + 0.85 x (n/5)`, so even the tightest setting still weighs a gap
+at about a third of normal rather than closing it entirely. Somebody
+sat down with real handwriting to pick those two constants.
+
+Above the middle, the ROM computes `1 + 23 x (n-5)/4`. Twenty-three.
+The constant in the instruction is `0x170000` where the pattern of
+everything around it wants `0x17000`, one and seven sixteenths. So the
+slider reads:
+
+| setting | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| factor | 0.32 | 0.49 | 0.66 | 0.83 | **1.00** | 6.75 | 12.50 | 18.25 | 24.00 |
+
+One step to the right of normal multiplies the expected gap by nearly
+seven; the loosest setting asks for a space twenty-four times normal.
+With the extra zero gone it would have run 1.00, 1.36, 1.72, 2.08,
+2.44 and joined the bottom half smoothly.
+
+It is not quite as bad as it looks, and that is probably why it
+shipped. The number is only ever used through its natural logarithm -
+taken once, here, in double precision, because the layers above *add*
+it to a score - and the log of that range runs from -1.14 to +3.18. So
+the top half of the slider is compressed rather than broken. But it
+does not do what the bottom half does, and the asymmetry is an
+accident rather than a decision.
+
+(This is also the only floating point in the entire 200 KB engine.)
+
+*`src/recognition/Segment.cpp`; `test_Segment` pins the whole curve.*

@@ -409,6 +409,16 @@ transcribed rather than understood - the per-stroke `fField24`, which
 chooses between the lattice and one grouping for the whole piece - and
 it is `WordRecogAddStroke` that decides what it is.
 
+`SegmentSetWordSpacing` is done too - the writer's spacing slider (1 to
+9, five in the middle) turned into the factor the layer weighs gaps by,
+its natural logarithm (taken in double precision, the only floating
+point in the engine, because the layers above add it) and the threshold
+interpolated between `Min`/`Mid`/`MaxSegOnlyThreshold`.  It carries a
+ROM bug worth reading: the constant above the middle setting is
+`0x170000` where `0x17000` was surely meant, so the top half of the
+slider runs 6.75, 12.5, 18.25, 24 where the bottom half runs 0.32 to
+1.00.  `docs/curiosities.md` has it.
+
 Still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the

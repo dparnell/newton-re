@@ -15,12 +15,108 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 
+#include <math.h>
+
 
 // ROM 0x0c101ae8 (unnamed)
 // How much two pieces must agree before the engine runs them together:
 // nine tenths when it has been told the writing is joined up, a half
 // when it has not.
 static Fixed	gSegIntegrated = 0;
+
+// ROM 0x0c101ae0 (unnamed)
+// How wide a space is taken to be, as a multiple of what it would be
+// for a writer of ordinary habits: `SegmentSetWordSpacing` works it out
+// from the setting the writer chose.
+Fixed	gSegWordSpacing = 0;
+// ROM 0x0c101ae4 (unnamed)
+// ... and its natural logarithm, in 16.16, kept because the layers
+// above add it rather than multiply by it.
+Fixed	gSegLogWordSpacing = 0;
+// ROM 0x0c101aec (unnamed)
+// The threshold that goes with it, interpolated between the three
+// below.
+Fixed	gSegOnlyThreshold = 0;
+
+// The three it is interpolated between: four tenths at the tightest
+// spacing, a half in the middle, seven tenths at the loosest.  They
+// live in the initialised RAM area, so the engine may change them.
+// ROM 0x0c101af0 MinSegOnlyThreshold
+Fixed	MinSegOnlyThreshold = 26214;
+// ROM 0x0c101af4 MidSegOnlyThreshold
+Fixed	MidSegOnlyThreshold = 32768;
+// ROM 0x0c101af8 MaxSegOnlyThreshold
+Fixed	MaxSegOnlyThreshold = 45875;
+
+
+// ROM 0x001d2490 SegmentSetWordSpacing
+// The writer's word-spacing setting turned into the two numbers the
+// segment layer works to.  `RosettaSetArea` passes `9 - n` for the
+// setting `n` the recognition area carries, so it runs 1 to 9 with 5 in
+// the middle, and 5 is the writer of ordinary habits: a factor of
+// exactly one, and the middle threshold.
+//
+// Below five it ramps gently: 0.15 + 0.85 x (n/5), so the tightest
+// setting still weighs a gap at about a third.  The threshold is
+// interpolated the same way, between `MinSegOnlyThreshold` (0.4) and
+// `MidSegOnlyThreshold` (0.5).
+//
+// The logarithm is taken once, here, in double precision, because what
+// the layers above want is to *add* it to a score.  This is the only
+// floating point in the whole engine.
+//
+// **A ROM bug, kept.**  Above five the factor is
+// `1 + 1.4375 x (n-5)`, but the constant in the ROM is `0x170000` -
+// twenty-three - where the pattern of the rest of the routine wants
+// `0x17000`, one and seven sixteenths.  The curve it actually
+// computes is
+//
+//     1   2     3     4     5     6     7      8      9
+//     .32 .49   .66   .83   1.00  6.75  12.50  18.25  24.00
+//
+// which jumps by a factor of nearly seven between the middle setting
+// and the one next to it, and asks for a gap twenty-four times normal
+// at the loosest.  With the extra zero gone it would run 1.00, 1.36,
+// 1.72, 2.08, 2.44 and join the lower half smoothly.  The logarithm
+// keeps it from being catastrophic - the score term only runs from
+// -1.14 to 3.18 - but the top half of the writer's spacing slider does
+// not do what the bottom half does.  Ported as it stands.
+void
+SegmentSetWordSpacing(long spacing)
+{
+	if (spacing == 5)
+	{
+		gSegWordSpacing = 0x00010000;
+		gSegOnlyThreshold = MidSegOnlyThreshold;
+	}
+	else if (spacing < 5)
+	{
+		// n/5, as a fraction - a plain signed divide, as the ROM's
+		// `__rt_sdiv` does it, not a FixedDivide
+		Fixed part = (Fixed) (((long) (int) ((unsigned int) spacing << 16)) / 5);
+		gSegWordSpacing = 0x2666 + FixedMultiply(part, 0xd99a);
+		gSegOnlyThreshold = MinSegOnlyThreshold
+					+ FixedMultiply(part, MidSegOnlyThreshold - MinSegOnlyThreshold);
+	}
+	else
+	{
+		// (n-5)/4, written as the compiler wrote a signed divide by
+		// four - the bias is dead here, since the value cannot be
+		// negative, but it is what the ROM does.  0x170000 is the bug
+		// above: twenty-three, where 0x17000 was surely meant.
+		long over = (long) (int) ((unsigned int) (spacing - 5) << 16);
+		long biased = (over < 0) ? over + 3 : over;
+		gSegWordSpacing = FixedMultiply(biased >> 2, 0x170000) + 0x00010000;
+		gSegOnlyThreshold = MidSegOnlyThreshold
+					+ FixedMultiply(biased >> 2, MaxSegOnlyThreshold - MidSegOnlyThreshold);
+	}
+
+	// the natural log of it, back in 16.16.  The ROM converts to double
+	// with FLT, multiplies by 1/65536, calls `log`, multiplies by 65536
+	// and comes back with FIX rounding toward zero, which is what a C
+	// cast does.
+	gSegLogWordSpacing = (Fixed) (long) (log((double) gSegWordSpacing / 65536.0) * 65536.0);
+}
 // What the layer is holding on to between words: `SegmentMakeSegments`
 // is called once per stroke and keeps its working-out here.  The ROM's
 // block is 0x44 bytes and is made on the first call; `SegmentQuiesce`
