@@ -423,6 +423,7 @@ TestEllipses(TDomain* domain)
 	EXPECT(found && type == kShapeCircle);
 	EXPECT(interp->fParams[2] > F(45) && interp->fParams[2] < F(55));
 	EXPECT(unit->GetGeneralShape() == nil);		// drawn from its numbers now
+	unit->SetLabel(0, (ULong) type);		// (as Classify does)
 	TStroke* drawn = unit->GetGSAsStroke();
 	EXPECT(drawn != nil && drawn->Count() == 25);
 	if (drawn != nil)
