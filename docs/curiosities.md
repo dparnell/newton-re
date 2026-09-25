@@ -1599,3 +1599,44 @@ date field if you insist on writing one.
 *`src/recognition/RosEngine.cpp`, `src/recognition/Rosetta.cpp`;
 `docs/recognition/README.md` has "What a grammar's scores actually
 are".*
+
+## The Newton stores what it is reading backwards, and shares the ends
+
+While the Newton is reading a word it is holding a few dozen guesses at
+once - not finished guesses, but partial ones, one per path through the
+lattice of candidate letters it is still considering. Halfway through
+"handwriting" it may be holding "handw", "hanciw" and "haridw" and
+thirty more.
+
+Keeping those as strings would be wasteful in a way that matters on a
+machine with four megabytes: they share nearly all of their text.
+Every one of those three ends in the same `w`, which came from the same
+piece of ink, and two of them share "han" as well.
+
+So a reading is stored **backwards** - a linked list of single
+characters, each pointing at the rest of the word *before* it - and
+reference counted. The shared ends are stored once. Two four-character
+readings that agree on three cost two cells rather than eight, and
+dropping one costs only the character no other reading is still using.
+
+The nice part is how a reading is named. Not by a pointer, but by a
+16-bit number, and the number is cut up:
+
+| | |
+|---|---|
+| `0xffff` | the empty reading |
+| `0xf000` and up | a whole *set* of alternatives |
+| anything else | table `(ref >> 5) & 0x7f`, slot `ref & 0x1f` |
+
+The cells live in tables of 32 that are made only as the readings get
+longer - 128 of them at most, which is 4096 characters of guesses in
+16 KB. Because the table number is part of the name, a cell never has
+to move once it has been made, and a reading costs two bytes to refer
+to instead of four.
+
+And it buys a free comparison: two readings with the same number are
+the same reading, and the search does not have to look at either of
+them to know it.
+
+*`src/recognition/WordTails.cpp`; `docs/recognition/README.md` has "How
+the search remembers what it has read".*

@@ -34,6 +34,7 @@ add_library(recognition STATIC
     Recognizer.cpp
     RosRecognizer.cpp
     RosStrokes.cpp
+    WordTails.cpp
     RosEngine.cpp
     Segment.cpp
     WordRecog.cpp

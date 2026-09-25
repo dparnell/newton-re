@@ -2863,6 +2863,59 @@ the lattice walked against the grammar and the dictionaries. All three
 are NOT YET, so the engine now measures, classifies and scores a word
 but still answers nothing.
 
+### How the search remembers what it has read (`recognition/WordTails.h`)
+
+The lexical search walks the lattice of candidate letters looking for
+the likeliest paths through it, and at every step it is holding a few
+dozen partial readings at once. Those readings share nearly all of
+their text: halfway through "handwriting" it may be holding "handw",
+"hanciw" and "haridw", and all three end in the same `w` that came from
+the same piece of ink.
+
+So a reading is not a string. It is a **word tail**: a backwards linked
+list of single characters, reference counted, so the shared ends are
+stored once. Two readings of four characters that share three cost two
+cells, not eight, and dropping one costs only the character no other
+reading is still using.
+
+A tail is named by a 16-bit **reference** rather than a pointer, and
+the cells live in tables of 32 made as they are needed - 128 tables at
+most, which is 4096 characters of readings in 16 KB. The reference is
+read straight out of the number:
+
+| | |
+|---|---|
+| `0xffff` | the empty tail |
+| `0xf000` and up | a **word list** - a whole set of alternatives, out of a pool of fifty |
+| anything else | a cell: table `(ref >> 5) & 0x7f`, slot `ref & 0x1f` |
+
+Cutting the table number out of the reference is why a cell never has
+to move once it has been made, and why the pool can grow without any of
+the outstanding readings caring.
+
+`WordTailCompare` gets two things out of that arrangement. Two tails
+with the same reference are the same reading without looking at
+anything at all; and the same text spelled out twice still compares
+equal, character by character, oldest first.
+
+`WordTailSprint` turns a reading back into text. It recurses to the far
+end and writes on the way back, because a tail runs backwards, and it
+prints a word list as its first alternative followed by a **bullet** -
+a set of alternatives has no one spelling. `WordTailSprint2` refuses a
+word list altogether, for callers that will print the alternatives
+themselves.
+
+`WordTailBlockAllocate` makes a whole table of 32 and answers one of
+them; the search pops the other 31 off the free list itself and only
+calls it again when the list is empty.
+
+**A ROM bug, kept.** `WordTailDeleteRef` begins by answering straight
+away for the empty tail. `WordTailAddRef` does not, so the empty tail
+takes the cell path and looks in table 127, which is almost never made.
+Nothing in the engine ever adds a reference to nothing - the first
+character of a reading has no tail to hold on to - so it has never
+mattered, and `test_WordTails` notes where the engine sidesteps it.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

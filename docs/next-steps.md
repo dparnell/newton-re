@@ -473,13 +473,30 @@ nominal.  Then every candidate letter in the lattice goes through
 out from how much of the line its strokes share.  `WordRecogEndWord`
 closes the word.
 
-Still NOT YET: **the lexical search** (`SearchBeginWord`,
-`SearchProcessSegment` 584 B, `SearchEndWord`), which is where the
-readings actually come from - the lattice walked against the grammar
-and the dictionaries - and `CharModifyProbs` (1632 B), which leans on
-the classifier's probabilities with where and how big a piece of
-writing is.  Those are the next pieces: the engine now measures,
-classifies and scores a word but still answers nothing.
+**The search's readings are done** (`recognition/WordTails.h`): a
+reading is a backwards linked list of single characters, reference
+counted so the dozens of partial readings the search holds at once
+share their ends, named by a 16-bit reference whose bits are the table
+and the slot.  `WordTailBlockAllocate`, `AddRef`/`DeleteRef`, the two
+`Sprint`s, `WordTailCompare` and the word-list pool
+(`WordListFreeAll`/`DeleteRef`/`Sprint`) are all real, and
+`docs/curiosities.md` has the idea.  A ROM bug kept: `AddRef` does not
+answer early for the empty tail where `DeleteRef` does.
+
+Still NOT YET: **the search itself**, which is a Viterbi over the
+lattice - `SearchAllocateGlobals` (728 B, 37 columns of up to
+`MaxBestNodes` = 27 nodes each), `SearchBeginWord`,
+`SearchProcessSegment` (584 B), `SearchDoViterbStep` (1324 B),
+`SearchDoVStepFromNode` (2120 B), `SearchSegwordRememberNBest`,
+`SearchFindBest` (1108 B), `SearchBestWords`, `SearchSendWords`,
+`SearchEndWord`, `SearchCheckHashHit`, `GCBestNodes` - about 8 KB in
+all; and `CharModifyProbs` (1632 B), which leans on the classifier's
+probabilities with where and how big a piece of writing is.  The state
+block is already mapped: 37 columns of 0x94 bytes, each holding up to
+30 node pointers, a count at +0x78 and a word list at +0x90, with nodes
+of 16 bytes carrying a word-tail reference at +0x0a.  That is the next
+piece: the engine now measures, classifies and scores a word but still
+answers nothing.
 
 Also still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
