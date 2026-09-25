@@ -4,6 +4,9 @@
 #include "Search.h"
 #include "RosEngine.h"
 #include "Segment.h"
+#include "ROMDictionaryData.h"
+#include "ROMImport.h"
+#include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -11,12 +14,33 @@
 
 static Fixed	F(long n)		{ return (Fixed) (int) ((unsigned int) n << 16); }
 
+
+// The ROM's General grammar with its lexicons found, which is the state
+// `RosettaSetArea` leaves a grammar in and the only one the search may
+// be run in: until then a kind of word names its lexicon by its place in
+// `gROMDictionaryData` rather than pointing at it.
+static const BiGrammar*
+Resolved(void)
+{
+	static BiGrammar* cached = nil;
+	if (cached == nil)
+	{
+		cached = BiGrammarClone(ROMGrammar.fContexts[0]);
+		for (long i = 0; i < cached->fCount; i++)
+		{
+			BiGSlice* slice = (BiGSlice*) cached->fSlices[i];
+			slice->fDictionary = (ULong) gROMDictionaryData[slice->fDictionary];
+		}
+	}
+	return cached;
+}
+
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 
-// A character put on the front of a reading (the search's own
-// `SearchDoVStepFromNode` does this; it is NOT YET).
+// A character put on the front of a reading, the way
+// `SearchDoVStepFromNode` does it through `RegisterNewPath`.
 static WordTailRef
 Push(WordTailRef tail, UByte c)
 {
@@ -50,6 +74,13 @@ int
 main()
 {
 	InitHostStandaloneHeap();
+	// the lexicons are in the ROM's own bytes
+	if (ImportROMObjectsFromFile(NEWTON_ROM_BIN) != noErr)
+	{
+		printf("test_Search: cannot import %s\n", NEWTON_ROM_BIN);
+		return 1;
+	}
+	InitROMDictionaryData();
 
 	// ---- the state ----
 	{
@@ -204,7 +235,7 @@ main()
 	// ---- one candidate letter offered to the search ----
 	{
 		CharInitialize(0);
-		SearchBeginWord(ROMGrammar.fContexts[0]);
+		SearchBeginWord(Resolved());
 
 		// the classifier's probabilities, and what CharModifyProbs
 		// would have made of them
@@ -234,7 +265,7 @@ main()
 		seg->fRealCount = 1;
 		SegmentBoundsDotsEtc(seg);
 
-		SearchProcessSegment(ROMGrammar.fContexts[0], probs, scratch, 0, seg,
+		SearchProcessSegment(Resolved(), probs, scratch, 0, seg,
 						0x8000, false, nil);
 
 		// the two score arrays the Viterbi step reads.  A code the
@@ -260,6 +291,25 @@ main()
 		EXPECT(ArProbEncode(0x10000) == 0);
 		EXPECT(ArProbEncode(0x8000) == 346);
 		EXPECT(ArProbEncode(0x0080) == 3119);		// one in 512
+
+		// ... and the step really read something: the column at the
+		// front now holds readings, each one a single letter the
+		// lexicons allow a word to begin with and the classifier can
+		// see in the stroke
+		SearchColumn* filled = gSearchColumns[0];
+		EXPECT(filled->fCount > 0);
+		EXPECT(filled->fCost < 0x7ffe);
+		// ... but none of them is a whole word yet, because no lexicon
+		// has a word of one letter that the stroke could be, so
+		// `StoreFinalPaths` had nothing to hand out
+		EXPECT(filled->fWords == nil);
+		// `GetBestPath` is the try string the Newton shows while you
+		// are still writing: one letter, and one of the two the
+		// classifier gave anything to
+		char tried[64];
+		GetBestPath(tried, 0);
+		EXPECT(strlen(tried) == 1);
+		EXPECT(tried[0] == 't' || tried[0] == 'T' || tried[0] == '+');
 
 		SegmentDestroy(seg);
 		StrokeDestroy(ink);
@@ -313,10 +363,11 @@ main()
 
 	// ---- the best readings gathered out of the columns ----
 	{
-		// The Viterbi is NOT YET, so the columns are filled by hand
-		// here - a reading is a word tail and what it cost.
-		SearchBeginWord(ROMGrammar.fContexts[0]);
-		const BiGSlice* slice = ROMGrammar.fContexts[0]->fSlices[0];
+		// the columns are filled by hand here, so that what
+		// `SearchBestWords` makes of them can be said exactly - a
+		// reading is a word tail and what it cost
+		SearchBeginWord(Resolved());
+		const BiGSlice* slice = Resolved()->fSlices[0];
 
 		// three readings in one column: `cat` cheapest, then `cot`,
 		// then `car`
@@ -442,7 +493,7 @@ main()
 		// `RegisterNewPath` is where the beam is kept varied.  Two
 		// kinds of word are set up here: one the grammar limits to two
 		// readings a column, and one it does not limit at all.
-		SearchBeginWord(ROMGrammar.fContexts[0]);
+		SearchBeginWord(Resolved());
 		SearchColumn* col = gSearchColumns[0];
 		col->fCount = 0;
 		for (long i = 0; i < 10; i++)
@@ -528,7 +579,7 @@ main()
 		// added.  `StoreFinalPaths` turns those into real word tails
 		// at the end - so a reading dropped part way through never
 		// costs a cell at all.
-		SearchBeginWord(ROMGrammar.fContexts[0]);
+		SearchBeginWord(Resolved());
 		SearchColumn* from = gSearchColumns[1];
 		SearchColumn* col = gSearchColumns[0];
 

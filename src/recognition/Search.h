@@ -181,11 +181,16 @@ void	GetBestPath(char* out, UByte how);				// ROM 0x001d0798 GetBestPath
 void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 				RosSegment* segment, Fixed confidence, Boolean endsWord,
 				short total);							// ROM 0x001cebac SearchDoViterbStep
-// ... and one reading tried against every character code.  NOT YET, so
-// no reading is ever grown.
+// ... and one reading grown by one letter, every way it can be: every
+// kind of word the grammar allows after it, every character the lexicon
+// allows next, and every case of each.
 void	SearchDoVStepFromNode(SearchStep* step, SearchNode* node, short* fromProbs,
-				short* fromScratch, Fixed confidence, ULong bias,
-				long which);							// ROM 0x001cf0d8 SearchDoVStepFromNode
+				short* fromScratch, Fixed confidence,
+				ULong bias);							// ROM 0x001cf0d8 SearchDoVStepFromNode
+// What the geometry between two letters costs - how the two shapes sit
+// against each other.  NOT YET: answers nought.
+long	GeoContextPenalty(UByte before, RosSegment* beforeSeg, UByte now,
+				RosSegment* nowSeg, long acrossWords);	// ROM 0x000d9ce8 GeoContextPenalty
 // The best readings written out as text, with a score and the
 // dictionary each came from.  The strings are the engine's own, out
 // of the return cache.

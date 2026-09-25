@@ -59,6 +59,9 @@ PARAMS_TABLE = "rosCharParams"
 # The 0x10c-byte template, slot by slot: the C field name, whether the slot
 # holds a pointer to one of the tables above, and how many slots the field
 # covers.  This is `RosCommonInfo`'s declaration in RosEngine.h.
+# A field's "kind" is "word", "ptr" or "half"; the count is always in
+# words, and a "half" field is written out as twice as many 16-bit
+# values, high half first.
 FIELDS = [
     ("fCharStrokeProbs", "word", 1),	# +0x00
     ("fField04", "word", 2),			# +0x04
@@ -95,7 +98,9 @@ FIELDS = [
     ("fLinkDistance", "word", 1),		# +0x94
     ("fField98", "word", 6),			# +0x98 .. +0xac
     ("fNetScoreWeight", "word", 1),	# +0xb0
-    ("fFieldb4", "word", 18),		# +0xb4 .. +0xf8
+    ("fCapCostUpper", "half", 6),	# +0xb4  twelve shorts
+    ("fCapCostLower", "half", 6),	# +0xcc
+    ("fCapCostOther", "half", 6),	# +0xe4 .. +0xf8
     ("fStrokeCost", "word", 1),		# +0xfc  two shorts
     ("fStrokeCostGate", "word", 1),	# +0x100
     ("fStrokeCostScale", "word", 1),	# +0x104		# +0xb4 .. +0x104
@@ -188,6 +193,18 @@ def main(argv=None) -> int:
             out.append(f"\t{pointers[target]},\t// {name}")
         elif count == 1:
             out.append(f"\t0x{values[0]:08x},\t// {name}")
+        elif kind == "half":
+            # a table of halfwords: the count is still in words, and
+            # each one is written out as its two halves, high first
+            halves = []
+            for v in values:
+                halves.append(v >> 16)
+                halves.append(v & 0xffff)
+            out.append(f"	{{				// {name}")
+            for i in range(0, len(halves), 6):
+                out.append("		" + ", ".join("0x%04x" % h for h in halves[i:i + 6]) + ",")
+            out[-1] = out[-1][:-1]
+            out.append("	},")
         elif count <= 6:
             row = ", ".join("0x%08x" % v for v in values)
             out.append(f"\t{{ {row} }},\t// {name}")

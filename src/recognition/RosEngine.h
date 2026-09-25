@@ -151,7 +151,13 @@ struct RosCommonInfo
 	// What the classifier's score for a letter is worth against
 	// everything else the search weighs: four fifths.
 	Fixed				fNetScoreWeight;	// +0xb0
-	ULong				fFieldb4[18];		// +0xb4
+	// What a character of each case costs in each of the twelve
+	// contexts `CapHackDetermineContext` answers.  This is the
+	// capitals model: what having just written a capital, or two,
+	// or a lower-case letter, says about what may follow.
+	UShort				fCapCostUpper[12];	// +0xb4
+	UShort				fCapCostLower[12];	// +0xcc
+	UShort				fCapCostOther[12];	// +0xe4
 	// What a stroke costs the search when the letter it is part of
 	// was written loosely.  Two shorts: nothing when the segment's
 	// strokes lie on each other well (above `fStrokeCostGate`, a
@@ -218,13 +224,19 @@ struct BiGSlice
 	ULong			fDictionary;	// +0x04
 	short			fScore;			// +0x08  what a word of this kind costs
 	short			fField0a;		// +0x0a
-	short			fField0c;		// +0x0c
+	short			fCharCost;		// +0x0c  ... and each character of one
 	short			fField0e;		// +0x0e
 	long			fField10;		// +0x10  (bits: 0x2f, 0x15, 0x10, 0x0f, 5, 4)
-	short			fField14;		// +0x14
-	short			fField16;		// +0x16
-	short			fField18;		// +0x18
-	short			fField1a;		// +0x1a
+	// What a capital and a lower-case letter cost in this kind of word.
+	// `SearchDoVStepFromNode` charges the first pair on top of
+	// everything else when the reading is in one of the upper six
+	// capitals contexts, and the second pair *instead of* the common
+	// info's twelve-entry tables when this kind of word says it will
+	// have the case being tried.
+	short			fCapExtraUpper;	// +0x14
+	short			fCapExtraLower;	// +0x16
+	short			fCapCostUpper;	// +0x18
+	short			fCapCostLower;	// +0x1a
 	// How many kinds may follow this one, and how many there is room
 	// for.  `BiGSliceNew` sets the second and leaves the first at
 	// nought; in the ROM's own tables they are equal, because those

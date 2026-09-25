@@ -8,6 +8,7 @@
 */
 
 #include "Search.h"
+#include "LELang.h"
 #include "RosEngine.h"
 #include "RosStrokes.h"			// kRosettaMemoryTag
 #include "NewtonMemory.h"
@@ -402,17 +403,6 @@ CapHackDetermineContext(const SearchNode* node)
 	together - about 6 KB in seven functions.
 --------------------------------------------------------------------*/
 
-// ROM 0x001cf0d8 SearchDoVStepFromNode
-// NOT YET: one reading tried against every character code the
-// classifier will have, against the grammar, the dictionaries and the
-// geometry.  Without it no reading is ever grown, so the columns stay
-// as `SearchBeginWord` left them.
-void
-SearchDoVStepFromNode(SearchStep* /*step*/, SearchNode* /*node*/, short* /*fromProbs*/,
-				short* /*fromScratch*/, Fixed /*confidence*/, ULong /*bias*/,
-				long /*which*/)
-{
-}
 
 
 
@@ -1228,7 +1218,7 @@ SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 					(kWordTailListBase + (startCol->fWords - wordLists));
 
 		SearchDoVStepFromNode(&step, &gSearchWordListNode, fromProbs, fromScratch,
-						confidence, wordCost - minCost, 0);
+						confidence, wordCost - minCost);
 		GeoContextClearCache();
 	}
 
@@ -1241,7 +1231,7 @@ SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 			&& bias < 0x7ffe && col->fCount != 0)
 			for (long j = 0; j < (long) col->fCount; j++)
 				SearchDoVStepFromNode(&step, col->fNodes[j], fromProbs, fromScratch,
-								confidence, bias, j);
+								confidence, bias);
 	}
 
 	here->fJump = (UByte) segment->fField04;
@@ -1251,4 +1241,326 @@ SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 	else
 		here->fCost = (long) (minCost + (ULong) (UShort) step.fBest + strokeCost);
 	StoreFinalPaths(here, (ULong) (UShort) step.fBest);
+}
+
+
+// Where a way out of the lexicon leads: the node the search stands at
+// once this character has been taken.  `LELangNodeNumOut` walks a
+// node's *siblings* - the letters that may follow - and this goes the
+// other way, down into the word.  The sign bit says the word may end
+// here, which is how the search knows a reading is a whole word.
+static ULong
+SearchNextLangNode(const UByte* langBytes, ULong entry, const UByte* at)
+{
+	UByte header = langBytes[kLELangFormat];
+	if ((header & 7) == kLELangRun)
+	{
+		// a run's node carries the next one two bytes on, big-endian
+		UByte flags = at[6];
+		ULong next = ((flags & 2) != 0) ? 0x80000000
+					: (((ULong) at[7] << 8) | (ULong) at[8]);
+		if ((flags & 1) != 0)
+			next |= 0x80000000;
+		return next;
+	}
+
+	UByte flags = langBytes[kLELangNodes + entry + 1];
+	if ((flags & 0x20) != 0)
+		return 0x80000000;
+	ULong next = ((flags & 0x10) != 0) ? (ULong) (header >> 4) : 0;
+	next += (ULong) AckNodeSizeTab[flags >> 6] + entry + 2;
+	if ((flags & 0x10) != 0)
+		next |= 0x80000000;
+	return next;
+}
+
+
+// ROM 0x000d9ce8 GeoContextPenalty
+// NOT YET: what the geometry between two letters costs - how the two
+// shapes sit against each other, which is what tells `rn` from `m`.
+// Answers nought, so the search weighs everything else and nothing of
+// the shape.
+long
+GeoContextPenalty(UByte /*before*/, RosSegment* /*beforeSeg*/, UByte /*now*/,
+				RosSegment* /*nowSeg*/, long /*acrossWords*/)
+{
+	return 0;
+}
+
+
+// ROM 0x001cf0d8 SearchDoVStepFromNode
+// One reading grown by one letter, every way it can be.
+//
+// This is the innermost thing the engine does, and the rest of the
+// search exists to feed it.  Given one reading and one candidate piece
+// of ink, it tries every character the lexicon will allow next, adds up
+// what each would cost, and offers the result to `RegisterNewPath`.
+//
+// There are three loops, one inside the other.
+//
+// **The kind of word.**  A reading may stay in the kind of word it is
+// in, or move to one the grammar allows after it - and the pseudo-node
+// that stands for a word already finished may start any kind at all.
+// The transition's own weight is added to the reading's score.  The ROM
+// writes the candidate kind into the node itself and puts the old one
+// back at the top of each round, which is what `wasSlice`, `wasScore`
+// and `wasFlags` are for.
+//
+// **The letter.**  `LELangNodeNumOut` says which characters the lexicon
+// allows from here.  Each one is charged four things: what the
+// classifier thought of it, plus more of the same the more loosely the
+// strokes were written; what a character of this kind of word costs;
+// what its *case* costs in the context the reading is in
+// (`CapHackDetermineContext` and the common info's three twelve-entry
+// tables, which is where `Mc` and `MC` part company); and what the
+// geometry between it and the letter before it costs - at a quarter
+// weight when the letter before is in another word, because across a
+// word boundary two shapes have much less to say about each other.
+//
+// **The case.**  Having tried the character the lexicon named, it tries
+// the other case of it, and then a third form - but only the cases the
+// kind of word allows, which `gSearchScratch` and the slice's own flags
+// say between them.  That is why writing a word in the wrong case still
+// reads.
+void
+SearchDoVStepFromNode(SearchStep* step, SearchNode* node, short* fromProbs,
+				short* fromScratch, Fixed confidence, ULong bias)
+{
+	short wasScore = node->fScore;
+	const BiGSlice* wasSlice = node->fSlice;
+	long wasFlags = node->fField04;
+
+	// how many other kinds of word this reading may move to
+	long transitions = 0;
+	if (wasSlice == nil)
+	{
+		if (gSearchGrammar != nil)
+			transitions = gSearchGrammar->fCount;
+	}
+	else if ((wasFlags & 0x80000000) != 0)
+		transitions = wasSlice->fNextCount;
+	if (transitions < 0)
+		return;
+
+	step->fFrom = node;
+	// how loosely this was written, which is what makes a doubtful
+	// letter cost more the more strokes it took
+	Fixed loose = 0x00010000 - confidence * 2;
+
+	for (long t = 0; t <= transitions; t++)
+	{
+		node->fScore = wasScore;
+		if (t < transitions)
+		{
+			if (wasSlice == nil)
+			{
+				const BiGSlice* next = gSearchGrammar->fSlices[t];
+				ULong own = (ULong) (UShort) next->fScore;
+				if (own >= 0x7ffe || next->fDictionary == 0)
+					continue;
+				node->fScore = (short) (own + (ULong) (UShort) wasScore);
+				node->fSlice = next;
+			}
+			else
+			{
+				if (wasSlice->fNext[t]->fDictionary == 0)
+					continue;
+				node->fScore = (short) ((ULong) (UShort) wasScore
+							+ (ULong) (UShort) wasSlice->fWeights[t]);
+				node->fSlice = wasSlice->fNext[t];
+			}
+			node->fField04 = 2;
+		}
+		else
+		{
+			// ... or stay where it is
+			node->fSlice = wasSlice;
+			node->fField04 = wasFlags;
+			if (wasSlice == nil)
+				continue;
+		}
+
+		if ((ULong) (UShort) node->fScore >= 0x7ffe - bias)
+			continue;
+		ULong base = (ULong) (UShort) node->fScore + bias;
+
+		long context = CapHackDetermineContext(node);
+		// the upper six of the twelve capitals contexts
+		ULong upperHalf = (context == 0 || context > 5) ? 1 : 0;
+
+		ULong at04 = (ULong) node->fField04;
+		step->fSlice = node->fSlice;
+		const void* lang = (const void*) step->fSlice->fDictionary;
+		long ways = LELangNodeNumOut(lang, at04);
+		const UByte* langBytes = (const UByte*) lang;
+
+		for (long w = 0; w < ways; w++)
+		{
+			ULong entry = LELTranCache[w];
+			ULong asked;
+			if ((langBytes[kLELangFormat] & 7) == kLELangRun)
+				asked = entry >> 24;
+			else
+				asked = (ULong) langBytes[kLELangNodes + entry];
+
+			step->fChar = (long) asked;
+			ULong kindFlags = (ULong) step->fSlice->fField10;
+			long which = 0;
+			ULong allowsCase = kindFlags & 8;
+			ULong allowsBoth = kindFlags & 0x20;
+			const UByte* at = langBytes + (entry & 0xffffff);
+			ULong newFlags = 0;
+
+			for (;;)
+			{
+				ULong cost = base;
+				Boolean readable = true;
+				if (fromProbs != nil)
+				{
+					// what the classifier thought of this character
+					ULong said = (ULong) (UShort) fromProbs[step->fChar];
+					if (said >= 0x7ffe)
+						readable = false;
+					else
+					{
+						cost += said;
+						// ... and again, the more strokes it took and
+						// the less they lay on each other
+						Fixed f = loose;
+						if (f < 1)
+							f = 0;
+						else if (f > 0x00010000)
+							f = 0x00010000;
+						f = FixedMultiply(f, 0x00010000);
+						cost += (ULong) (((long) said
+									* (step->fSegment->fStrokes->fCount - 1) * f) >> 16);
+					}
+				}
+
+				if (readable)
+				{
+					const BiGSlice* slice = step->fSlice;
+					// what a character of this kind of word costs
+					cost += (ULong) (UShort) slice->fCharCost;
+
+					// what this letter's *case* costs in this context
+					if ((kindFlags & 4) != 0)
+					{
+						UByte cf = RosCI->fCapCaseFlags[step->fChar];
+						ULong add = 0;
+						Boolean charge = true;
+						if ((cf & 2) != 0)			// a lower-case letter
+						{
+							if (which != 0 && allowsCase != 0)
+							{
+								if (upperHalf != 0 && allowsBoth == 0)
+									charge = false;
+								else
+									add = (ULong) (UShort) slice->fCapCostLower;
+							}
+							else
+								add = (ULong) RosCI->fCapCostLower[context];
+						}
+						else if ((cf & 1) != 0)		// a capital
+						{
+							if (which == 0 && allowsCase != 0)
+							{
+								if (upperHalf != 0 && allowsBoth == 0)
+									charge = false;
+								else
+									add = (ULong) (UShort) slice->fCapCostUpper;
+							}
+							else
+								add = (ULong) RosCI->fCapCostUpper[context];
+						}
+						else if ((cf & 4) != 0)		// neither
+							add = (ULong) RosCI->fCapCostOther[context];
+						else
+							charge = false;
+						if (charge)
+							cost += add;
+					}
+
+					// ... and what it costs on top in the upper six
+					if (upperHalf != 0)
+					{
+						ULong gate = (allowsCase != 0) ? allowsBoth : upperHalf;
+						if (allowsCase == 0 || gate == 0 || which != 0)
+						{
+							UByte cf = RosCI->fCapCaseFlags[step->fChar];
+							if ((cf & 2) != 0)
+								cost += (ULong) (UShort) slice->fCapExtraLower;
+							else if ((cf & 1) != 0)
+								cost += (ULong) (UShort) slice->fCapExtraUpper;
+						}
+					}
+
+					// how it sits against the letter before it
+					WordTailRef tail = node->fTail;
+					long geo;
+					if (tail == kWordTailNone)
+						// nothing before it: a quarter of the charge
+						geo = GeoContextPenalty(0, nil, (UByte) step->fChar,
+									step->fSegment, 0) >> 2;
+					else if (tail >= kWordTailListBase)
+					{
+						// a whole word before it: also a quarter, and
+						// the letter is that word's best reading's last
+						WordList* list = WordListAt(tail);
+						UByte before = WordTailAt(list->fTails[0])->fChar;
+						geo = GeoContextPenalty(before, node->fSegment,
+									(UByte) step->fChar, step->fSegment, 1) >> 2;
+					}
+					else
+						// within a word: the whole charge
+						geo = GeoContextPenalty(WordTailAt(tail)->fChar, node->fSegment,
+									(UByte) step->fChar, step->fSegment, 0);
+					cost += (ULong) geo;
+
+					// a reading picking up after a whole word pays the
+					// second score array as well
+					if (node->fTail >= kWordTailListBase)
+						cost += (ULong) (UShort) fromScratch[step->fChar];
+
+					if (cost < 0x7ffe)
+					{
+						if (newFlags == 0)
+							newFlags = SearchNextLangNode(langBytes, entry, at);
+						RegisterNewPath(step, (short) (cost & 0xffff), (long) newFlags);
+					}
+				}
+
+				// the same letter in another case, if this kind of word
+				// will have it
+				Boolean again = false;
+				for (;;)
+				{
+					which++;
+					if (which > 2)
+						break;
+					step->fChar = (long) asked;
+					if ((((UByte*) gSearchScratch)[asked] & kindFlags) == 0)
+						break;
+					if (which != 1)
+					{
+						if ((step->fSlice->fField10 & 0x10) != 0)
+							break;
+						step->fChar = (long) RosCI->fCapAltCase2[step->fChar];
+						if (step->fChar == 0)
+							break;
+						again = true;
+						break;
+					}
+					step->fChar = (long) RosCI->fCapAltCase1[asked];
+					if (step->fChar != 0)
+					{
+						again = true;
+						break;
+					}
+				}
+				if (!again)
+					break;
+			}
+		}
+	}
 }

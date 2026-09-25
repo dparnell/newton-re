@@ -283,13 +283,13 @@ BiGrammarClone(const BiGrammar* src)
 									from->fName, (short) from->fNextCount);
 			to->fScore = from->fScore;
 			to->fField0a = from->fField0a;
-			to->fField0c = from->fField0c;
+			to->fCharCost = from->fCharCost;
 			// (+0x0e is not copied - see above)
 			to->fField10 = from->fField10;
-			to->fField14 = from->fField14;
-			to->fField16 = from->fField16;
-			to->fField18 = from->fField18;
-			to->fField1a = from->fField1a;
+			to->fCapExtraUpper = from->fCapExtraUpper;
+			to->fCapExtraLower = from->fCapExtraLower;
+			to->fCapCostUpper = from->fCapCostUpper;
+			to->fCapCostLower = from->fCapCostLower;
 			to->fField2c = from->fField2c;
 		}
 

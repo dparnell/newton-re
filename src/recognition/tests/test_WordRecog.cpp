@@ -6,6 +6,7 @@
 #include "FixedGeometry.h"
 #include "RosEngine.h"
 #include "Segment.h"
+#include "ROMDictionaryData.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
 
@@ -698,7 +699,21 @@ main()
 		// hands readings back through `fWords` and the rest
 		WordRecog* word = WordRecogCreate2(nil, nil, TestCheckWords, 10,
 								&gGrammars, net, 1);
-		word->fContext = ROMGrammar.fContexts[0];
+		// the ROM's General grammar with its lexicons found, which is
+		// the state `RosettaSetArea` leaves a grammar in and the only
+		// one the search may be run in - until then a kind of word
+		// names its lexicon by its place in `gROMDictionaryData`
+		// rather than pointing at it.  No ROM image is imported here,
+		// so every one of them comes back empty, which is a machine
+		// whose lexicons could not be built: the search reads nothing
+		// and this is left to measure the hand.
+		BiGrammar* context = BiGrammarClone(ROMGrammar.fContexts[0]);
+		for (long i = 0; i < context->fCount; i++)
+		{
+			BiGSlice* slice = (BiGSlice*) context->fSlices[i];
+			slice->fDictionary = (ULong) gROMDictionaryData[slice->fDictionary];
+		}
+		word->fContext = context;
 		word->fField60 = F(20);
 		word->fStrokeCount = 1;
 		word->fSegmentCount = 1;

@@ -504,32 +504,37 @@ and the try string copied out.  `rosCI`'s `fNetScoreWeight` (four
 fifths, what the classifier's opinion is worth against everything else)
 is named.
 
-Still NOT YET: **one function** - `SearchDoVStepFromNode` (2120 B), with
-`GeoContextPenalty` (1204 B) and `LELangNodeNumOut` (452 B) under them -
-about 3.8 KB in all.  `SearchDoViterbStep`, `RegisterNewPath` and
-`StoreFinalPaths` are done,
-so a reading that has been grown knows where to go and when it turns
-into text; what is missing is the growing.  The
-working block they share is mapped (`SearchStep` in `Search.h`):
-`SearchDoViterbStep` builds it out of its own locals at sp+0x00..0x1f
-and hands its address down.  `GeoContextPenalty` wants
-`GeoContextAux1`/`Aux2`/`GeoCacheAllocate` under it, and
-`LELangNodeNumOut` opens the `LE` language-model node format
-(`AckNodeSizeTab` and the rest), which is a subsystem of its own.  **The whole of the output side
-is done**: `SearchFindBest`, `SearchSegwordRememberNBest`,
-`SearchBestWords` and `SearchSendWords`, so once the step fills the
-columns the readings come back by themselves.  `SearchFindBest` and
-`SearchSegwordRememberNBest` are done - the best readings gathered out
-of the columns, with the same text found twice counting once, and put
-on a word list the column then holds.
-`SearchDoVStepFromNode` is the heart of it and the place to start: it
-is what grows one partial reading by one letter, against the grammar
-and the dictionaries, and it wants `RegisterNewPath` (680 B),
-`GeoContextPenalty` (1204 B) and `LELangNodeNumOut` (452 B) under it.
-`CapHackDetermineContext` is done, and reading `RegisterNewPath` far
-enough named `SearchColumn::fClassCounts` and `BiGrammar::fClassLimits`:
-the beam is kept deliberately varied, with a limit on how many readings
-of each kind of word a column may hold.
+**The search is done.**  `SearchDoVStepFromNode`, the innermost thing
+the engine does, is reconstructed: one reading grown by one letter,
+every way it can be - every kind of word the grammar allows after it,
+every character the lexicon allows next, and every case of each.  With
+it `LELangNodeNumOut` and the `LE` node formats
+(`recognition/LELang.h`: a run lexicon and a chained one, the
+variable-width offsets of `AckNodeSizeTab`), and the capitals model the
+step charges through - `RosCommonInfo::fCapCostUpper`/`fCapCostLower`/
+`fCapCostOther`, twelve contexts each, and `BiGSlice::fCapExtraUpper`/
+`fCapExtraLower`/`fCapCostUpper`/`fCapCostLower` for a kind of word
+that has opinions of its own.  `test_Search` now drives the whole
+search over the ROM's own lexicons and gets a letter back.
+
+Still NOT YET under it: **`GeoContextPenalty`** (1204 B), with
+`GeoContextAux1`, `GeoContextAux2` and `GeoCacheAllocate` - what the
+geometry between two adjacent letters costs, which is the part that
+tells `rn` from `m`.  It answers nought, so the search weighs the
+classifier, the grammar, the lexicons and the capitals model and
+nothing of how the two shapes sit against each other.  The step charges
+it at **a quarter weight** when the letter before is in another word or
+there is no letter before at all, and in full within a word.
+
+`SearchDoViterbStep`, `RegisterNewPath`, `StoreFinalPaths`,
+`CapHackDetermineContext`, `SearchFindBest`,
+`SearchSegwordRememberNBest`, `SearchBestWords` and `SearchSendWords`
+are all done, so a reading that has been grown knows where to go, when
+it turns into text, and how it comes back out.  The beam is kept
+deliberately varied: `SearchColumn::fClassCounts` and
+`BiGrammar::fClassLimits` limit how many readings of each kind of word
+a column may hold, and `RegisterNewPath` prefers to evict one that is
+over its quota rather than simply the worst.
 
 **`CharModifyProbs` is done** - what leans the classifier's answer with
 where and how big the piece of writing was.  Two of its four

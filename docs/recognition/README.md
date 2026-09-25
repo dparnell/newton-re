@@ -2980,10 +2980,11 @@ recogniser and gives everything back. (DEVIATION: the arrays and the
 column block are sized from `sizeof` on the host, a host pointer being
 twice the ROM's.)
 
-Still NOT YET: the search itself - `SearchProcessSegment`,
-`SearchDoViterbStep`, `SearchDoVStepFromNode`, `SearchFindBest`,
-`SearchBestWords`, `SearchSendWords` and
-`SearchSegwordRememberNBest`, about 6 KB.
+The search itself - `SearchProcessSegment`, `SearchDoViterbStep`,
+`SearchDoVStepFromNode`, `SearchFindBest`, `SearchBestWords`,
+`SearchSendWords` and `SearchSegwordRememberNBest` - is reconstructed;
+only `GeoContextPenalty`, what the geometry between two letters costs,
+is NOT YET.
 
 #### One candidate letter offered to the search
 
@@ -3198,44 +3199,80 @@ separation is the probability that a new word starts here, so
 its complement is what *not* starting one costs - which is what every
 reading continuing within a word is charged.
 
-One function is left under it.  `SearchDoVStepFromNode` (2120 B) is
-what actually tries each character code against one reading, with
-`GeoContextPenalty` (1204 B) for what the geometry between the two
-letters costs and `LELangNodeNumOut` (452 B) for which letters the
-language model allows next; `CapHackDetermineContext` and
-`RegisterNewPath`, which it also calls, are done.  Until it is written
-no reading is ever grown, so the columns stay as `SearchBeginWord` left
-them.
+#### One reading grown by one letter
 
-#### What is left: the step itself
+`SearchDoVStepFromNode` (`recognition/Search.cpp`) is the innermost
+thing the engine does, and the rest of the search exists to feed it.
+Given one reading and one candidate piece of ink, it tries every
+character the lexicon will allow next, adds up what each would cost,
+and offers the result to `RegisterNewPath`.  There are three loops, one
+inside the other.
 
-Everything around the Viterbi step is now reconstructed - the lattice
-that feeds it, the classifier and the geometry that score each
-candidate, the columns and readings it works in, and the gathering that
-hands the answers back.  What is missing is the step: what actually
-grows a reading by one letter.
+**The kind of word.**  A reading may stay in the kind of word it is in,
+or move to one the grammar allows after it - and the pseudo-node that
+stands for a word already finished may start any kind at all.  The
+transition's own weight is added to the reading's score.  The ROM
+writes the candidate kind into the node itself and puts the old one
+back at the top of each round, which is why the function keeps the
+node's original slice, score and flags in locals.
 
-It is three functions, about 3.8 KB:
+**The letter.**  `LELangNodeNumOut` says which characters the lexicon
+allows from here.  Each one is charged four things:
 
-| | |
-|---|---|
-| `SearchDoVStepFromNode` (2120 B) | one existing reading grown by one letter |
-| `GeoContextPenalty` (1204 B) | what the geometry between two letters costs |
-| `LELangNodeNumOut` (452 B) | which letters the language model allows next |
+* what the classifier thought of it, plus more of the same the more
+  loosely the strokes were written (the extra is the score again,
+  multiplied by how many strokes the candidate took less one and by how
+  far short of certainty the segment's confidence falls);
+* what a character of this kind of word costs (`BiGSlice::fCharCost`);
+* what its **case** costs in the context the reading is in -
+  `CapHackDetermineContext` answers one of twelve, and the common
+  info's three twelve-entry tables (`fCapCostUpper`, `fCapCostLower`,
+  `fCapCostOther`) say what a capital, a lower-case letter or neither
+  costs there.  A kind of word that says it will have the case being
+  tried is charged its own `fCapCostUpper`/`fCapCostLower` instead, and
+  in the upper six contexts `fCapExtraUpper`/`fCapExtraLower` are added
+  on top.  This is where `Mc` and `MC` part company;
+* and what the geometry between it and the letter before it costs -
+  `GeoContextPenalty`, at a **quarter weight** when the letter before
+  is in another word or there is no letter before it at all, because
+  across a word boundary two shapes have much less to say about each
+  other.
 
-Everything else in the search is done.
+A reading picking up after a whole word pays the second score array as
+well, which is the one `CharModifyProbs` left quartered.
 
-The working block they share is mapped (`SearchStep` in `Search.h`):
-`SearchDoViterbStep` builds it out of its own locals and hands its
-address down.  `RegisterNewPath` is the piece to read next after the
-step, because it is where the class limits are enforced - and it is
-already clear that it does not simply evict the worst reading, but
-prefers to evict one whose kind of word is over its quota.
+**The case.**  Having tried the character the lexicon named, it tries
+the other case of it (`rosCapHackAltCase1`) and then a third form
+(`rosCapHackAltCase2`) - but only the cases the kind of word allows,
+which `gSearchScratch` and the slice's own flags say between them.
+That is why writing a word in the wrong case still reads.
 
-`GeoContextPenalty` needs `GeoContextAux1`, `GeoContextAux2` and
-`GeoCacheAllocate` under it, and `LELangNodeNumOut` opens the `LE`
-language-model node format (`AckNodeSizeTab` and the rest), which is a
-subsystem of its own.
+Whatever survives the cost cap of `0x7ffe` is handed to
+`RegisterNewPath` with the lexicon node the character leads to.  That
+node is worked out once per character and reused across the three
+cases: a run lexicon carries the next node two bytes past its flags,
+and a chained one has to be built from the node's own flags, the
+header's width nibble and `AckNodeSizeTab`.  Its sign bit says the word
+may end here, which is how the search knows a reading is a whole word.
+
+`LELangNodeNumOut` (`recognition/LELang.h`) is the other half: it walks
+a node's *siblings* - the letters that may follow - into `LELTranCache`
+and says how many there are.  A **run** lexicon keeps them together as
+a string somewhere else in the data, all leading to the same next node;
+a **chained** one has one node per character, each with a
+variable-width offset to the next, one to four bytes wide by two bits
+of its flags.  So a short hop costs one byte and a long one costs four,
+and a lexicon of fifty thousand words is not paying four bytes a
+letter.
+
+#### What is left: the geometry
+
+`GeoContextPenalty` (1204 B) is NOT YET, with `GeoContextAux1`,
+`GeoContextAux2` and `GeoCacheAllocate` under it.  It answers nought,
+so the search weighs the classifier, the grammar, the lexicons and the
+capitals model, and nothing of how the two shapes sit against each
+other - which is the part that tells `rn` from `m`.  Everything else in
+the search is reconstructed.
 
 #### Write it three times
 
