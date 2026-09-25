@@ -644,16 +644,29 @@ StrokeDeQuantize(const RosStroke* stroke, Fixed weight, Fixed tolerance, short p
 
 // ROM 0x002000f4 StrokePreprocess
 // What a stroke goes through before the engine looks at it, as a list
-// of one: dequantised when asked, then smoothed when asked, and always
-// a copy - the caller's stroke is never the one handed back.
+// of one: the tablet's staircase taken off when asked, then smoothed
+// when asked, and always a copy - the caller's stroke is never the one
+// handed back.
+//
+// The two steps have separate weights, which is why there are five
+// arguments: `deQuantWeight` is what `StrokeDeQuantize` smooths by
+// inside each of its passes and `deQuantTolerance` how far it then
+// lets a point move, while `smoothWeight` is the single pass over the
+// result.  Either step is skipped when its weight is nought.
 RosStrokeList*
-StrokePreprocess(RosStroke* stroke, Fixed smoothWeight, Fixed tolerance, short passes)
+StrokePreprocess(RosStroke* stroke, Fixed smoothWeight,
+				Fixed deQuantWeight, Fixed deQuantTolerance, short passes)
 {
 	RosStroke* current = stroke;
 	newton_try
 	{
-		if (tolerance != 0)
-			current = StrokeDeQuantize(stroke, smoothWeight, tolerance, passes);
+		if (deQuantWeight != 0)
+		{
+			RosStroke* clean = StrokeDeQuantize(current, deQuantWeight, deQuantTolerance, passes);
+			if (current != stroke)
+				StrokeDestroy(current);
+			current = clean;
+		}
 		if (smoothWeight != 0)
 		{
 			RosStroke* smoothed = StrokeSmooth(current, smoothWeight);
@@ -674,6 +687,7 @@ StrokePreprocess(RosStroke* stroke, Fixed smoothWeight, Fixed tolerance, short p
 	one[0] = current;
 	return SLCreate(1, one);
 }
+
 
 
 #pragma mark -

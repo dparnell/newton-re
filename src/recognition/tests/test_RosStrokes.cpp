@@ -268,13 +268,26 @@ main()
 
 		// and the whole of it, as a list of one.  The stroke handed in
 		// is never the one handed back.
-		RosStrokeList* ready = StrokePreprocess(rough, F(-4), F(1), 2);
+		RosStrokeList* ready = StrokePreprocess(rough, F(-4), F(-4), F(1), 2);
 		EXPECT(ready != nil && ready->fCount == 1);
 		EXPECT(ready->fStrokes[0] != rough);
 		EXPECT(ready->fStrokes[0]->fCount == 3);
 		SLDestroy(ready, 1);
+		// the two steps have weights of their own: with only the
+		// dequantising asked for, the spike is pulled in but not
+		// smoothed again
+		ready = StrokePreprocess(rough, 0, F(-4), F(1), 3);
+		EXPECT(ready->fStrokes[0] != rough);
+		EXPECT(ready->fStrokes[0]->fPoints[1].y >= F(10) - 0x8000
+			&& ready->fStrokes[0]->fPoints[1].y <= F(10) + 0x8000);
+		SLDestroy(ready, 1);
+		// ... and with only the smoothing, the spike moves by the whole
+		// second difference
+		ready = StrokePreprocess(rough, F(-4), 0, 0, 0);
+		EXPECT(ready->fStrokes[0]->fPoints[1].y == F(30));
+		SLDestroy(ready, 1);
 		// with nothing asked for it is still a copy
-		ready = StrokePreprocess(rough, 0, 0, 0);
+		ready = StrokePreprocess(rough, 0, 0, 0, 0);
 		EXPECT(ready->fStrokes[0] != rough && ready->fStrokes[0]->fCount == 3);
 		EXPECT(ready->fStrokes[0]->fPoints[1].y == F(10));
 		SLDestroy(ready, 1);

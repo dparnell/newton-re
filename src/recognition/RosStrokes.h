@@ -118,8 +118,10 @@ RosStroke*	StrokeConstrain(const RosStroke* stroke, const RosStroke* original, F
 // The tablet's staircase taken off: smooth, pull back, and again.
 RosStroke*	StrokeDeQuantize(const RosStroke* stroke, Fixed weight, Fixed tolerance, short passes);	// ROM 0x00200404 StrokeDeQuantize
 // What a stroke goes through before the engine looks at it, as a list
-// of one.  What comes back is always a copy.
-RosStrokeList*	StrokePreprocess(RosStroke* stroke, Fixed smoothWeight, Fixed tolerance, short passes);	// ROM 0x002000f4 StrokePreprocess
+// of one.  The two steps have weights of their own and either is
+// skipped when its weight is nought; what comes back is always a copy.
+RosStrokeList*	StrokePreprocess(RosStroke* stroke, Fixed smoothWeight,
+						Fixed deQuantWeight, Fixed deQuantTolerance, short passes);	// ROM 0x002000f4 StrokePreprocess
 
 // Drawn into the engine's own renderer (`recognition/Render.h`),
 // scaled by `xScale`/`yScale` and offset by `x`/`y`, which is how a
