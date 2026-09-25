@@ -1,40 +1,18 @@
-// The corrector: a word typed onto the Notepad and tapped twice.
+// Correcting: a word written, read, and put right from the corrector.
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --scale 2 --script src/host/demo/correct.ns
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/correct.ns --headless 60
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/corrector.pgm build/corrector.png
 //
-// or, without a window:
-//
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --script src/host/demo/correct.ns --headless 58
-//   build/venv/Scripts/python tools/imaging/pgm2png.py build/correct.pgm build/correct.png
-//   build/venv/Scripts/python tools/imaging/pgm2png.py build/picked.pgm build/picked.png
-//
-// A double tap on a word is the Newton's way of asking "what else might
-// this be".  The command travels further than it looks: the click-event
-// recogniser makes it only when both taps were on the same view, it is
-// posted to the *edit* view (the page) rather than to the paragraph, the
-// edit view hands it down to the child under the point, and the paragraph
-// then finds the word, works out the box it occupies and calls Correct -
-// which is the seam where the ROM's own NewtonScript takes over and
-// builds the corrector out of what the spelling checker suggests.
-//
-// The Setup assistant is walked through first (src/host/demo/setup.ns, the
-// same taps), because the host's store is in memory and every boot starts
-// there.
-//
-// Two pictures are taken: build/correct.pgm with the corrector open over
-// the word, and build/picked.pgm after one of its alternatives has been
-// tapped and put on the page in place of what was written.
-//
-// It also prints what the spelling checker makes of a handful of
-// misspellings, which is the same machinery without the view.
+// As src/host/demo/write.ns: "ton" and "to" written and read.  Then a
+// double tap on "ton" opens the corrector - the other readings the
+// engine sent with the word and what the spelling checker makes of it -
+// (build/corrector.pgm), and a tap on "tone" puts that in its place
+// (build/corrected.pgm).
 
 tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
 typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-hello := [4, 14, 37, 37, 31];				// "hello"
 
 page := 0;
 nextPage := func()
@@ -58,45 +36,62 @@ AddDelayedCall(func() begin
       end, nil, 2000);
   end, nil, 3000);
 
-// what the spelling checker makes of a few misspellings, with no view in
-// the way: SpellDocBegin builds the chains out of the machine's own
-// dictionaries, SpellCorrect walks them
-AddDelayedCall(func() begin
-    local f := SpellDocBegin();
-    foreach w in ["teh", "recieve", "seperate", "helllo", "wrod", "notebok"] do
-      begin
-        local guesses := SpellCorrect(f, w);
-        local line := w & " ->";
-        if guesses then foreach g in guesses do line := line & " " & g;
-        Print(line);
-      end;
-    SpellDocEnd(f);
-  end, nil, 29000);
+// One stroke: the pen put down on the first point, moved through the
+// rest, and lifted.
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
 
-// the Notepad is up by now: a word typed on it, then tapped twice
+// An oval of `n` points, from the top going anticlockwise, as an o is
+// written.  (Twelfths of a turn, worked out once: cos and sin of 30n.)
+oval := func(cx, cy, rx, ry)
+  begin
+    local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+    local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+    local pts := [];
+    for k := 0 to 12 do
+      begin
+        AddArraySlot(pts, cx + (rx * c[k]) div 100);
+        AddArraySlot(pts, cy - (ry * s[k]) div 100);
+      end;
+    pts;
+  end;
+
+// "ton", on a baseline at y = 200, from x = 60
 AddDelayedCall(func() begin
-    call tapAt with (80, 120);				// the caret onto the page
+    local base := 200;
+    // t: the stem, then the bar
+    call stroke with ([66, base - 24, 66, base - 18, 66, base - 12, 66, base - 6, 66, base]);
+    call stroke with ([60, base - 14, 64, base - 14, 68, base - 14, 72, base - 14]);
+    // o
+    call stroke with (call oval with (82, base - 7, 6, 7));
+    // n: down, back up, over the arch and down again
+    call stroke with ([94, base - 14, 94, base - 7, 94, base, 94, base - 7,
+                       95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
+                       104, base - 10, 104, base - 5, 104, base]);
+    // "to", a word's gap further along the line, a little later - the
+    // recogniser has put "ton" down by then
     AddDelayedCall(func() begin
-        foreach c in hello do call typeKey with (c);
+        local x := 130;
+        call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
+        call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
+        call stroke with (call oval with (x + 22, base - 7, 6, 7));
+      end, nil, 3000);
+    AddDelayedCall(func() begin
+        ScreenSnapshot("build/write-ink.pgm");
+        Print("write: written build/write-ink.pgm");
+        IdleStrokes();
         AddDelayedCall(func() begin
-            // two taps in a row, close enough together to be a double tap
-            PenDown(90, 112); PenUp();
-            PenDown(90, 112); PenUp();
-            IdleStrokes();
-            AddDelayedCall(func() begin
-                ScreenSnapshot("build/correct.pgm");
-                Print("correct: written build/correct.pgm");
-                // ... and one of the alternatives picked: the word on
-                // the page is replaced with it
-                AddDelayedCall(func() begin
-                    call tapAt with (105, 152);
-                    AddDelayedCall(func() begin
-                        ScreenSnapshot("build/picked.pgm");
-                        Print("correct: written build/picked.pgm");
-                      end, nil, 2500);
-                  end, nil, 1500);
-              end, nil, 3000);
-          end, nil, 2000);
-      end, nil, 2000);
-  end, nil, 32000);
-Print("correct: the script is loaded");
+            ScreenSnapshot("build/write.pgm");
+            Print("write: written build/write.pgm");
+            PenDown(70, 194); PenUp(); IdleStrokes();
+            PenDown(70, 194); PenUp(); IdleStrokes();
+            AddDelayedCall(func() begin ScreenSnapshot("build/corrector.pgm"); PenDown(78, 246); PenUp(); IdleStrokes(); AddDelayedCall(func() begin ScreenSnapshot("build/corrected.pgm"); Print("corrected"); end, nil, 2000); end, nil, 3000);
+          end, nil, 6000);
+      end, nil, 4500);
+  end, nil, 27000);
+Print("write: the script is loaded");

@@ -599,11 +599,11 @@ the page itself, or a paragraph of its own.
   "c" - so the net is simply particular about its c's.  A trace of
   `BPNetEvaluate` from an emulator would be the reference to check the
   classifier's own numbers against, if ever one is wanted.
-- **The corrector over read words**: a double tap on a word should
-  offer the engine's other readings, which `HandleWord` records with
-  the word (`AddWordInfo`).  Not yet tried with Rosetta's words.  (There
-  is no training to do: the MP2x00's engine learns only through the
-  dictionaries, `recognition/Learning.h`, which is done.)
+- A double tap on a read word opens the corrector with the engine's
+  other readings and the spelling checker's, and picking one replaces
+  the word (`src/host/demo/correct.ns`).  There is no training to do:
+  the MP2x00's engine learns only through the dictionaries
+  (`recognition/Learning.h`), which is done.
 - **The shape domain**, so a drawn circle or line is cleaned up rather
   than read as a letter.
 - The ink demo (`ink.ns`) now gets its writing *read*: to keep ink, a
