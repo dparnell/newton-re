@@ -249,6 +249,8 @@ struct SegWordRef
 extern ULong	SegOnly;								// ROM 0x0c104f9c SegOnly
 // A number the gap test writes down for the debugger.
 extern Fixed	xpsvx;									// ROM 0x0c100890 xpsvx
+// ... and another the word recogniser's writes.
+extern Fixed	abs_temp;								// ROM 0x0c10089c abs_temp
 extern Fixed	gSegSizeRatio;							// ROM 0x0c101adc (unnamed)
 
 // The nominal mean and standard deviation of each of the eight gap

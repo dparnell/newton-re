@@ -587,11 +587,13 @@ into the word and calls all of this.  The groundwork for it:
 
 **`FragmentStroke` and the whole ligature fragmenter under it are
 done** (`recognition/Fragment.h`, seventeen functions), together with
-the engine's own linked list (`recognition/RosList.h`).  What is still
-missing under `WordRecogAddStroke` is **`WRSegWordXGap`** (0x00274244,
-1196 B) - the gap between two strokes measured against the cache of
-"the middle of the horizontal range each of them had" that
-`WordRecog.h` already names (`gXGapStroke` and friends).
+the engine's own linked list (`recognition/RosList.h`), and so is
+**`WRSegWordXGap`** - the gap measured against the strokes that come
+before a stroke *along the line*, which is not the same as the ones
+written before it when the writer goes back to dot an i.  (ROM bug
+kept: its reference top and bottom compare an x with a y.)  Every
+function under `WordRecogAddStroke` is now real; the driver itself is
+what is left.
 
 Its shape, from the decompile at 0x00272728 (the `setjmp` noise is the
 ROM's exception handlers; every one of them destroys the stroke and

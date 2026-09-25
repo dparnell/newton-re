@@ -773,6 +773,106 @@ main()
 		WordRecogDestroy(word);
 	}
 
+	// ---- the gap measured against the strokes before it on the line ----
+	{
+		CharInitialize(0);
+		SegmentSetWordSpacing(5);
+		SegmentIntegrated(0);
+
+		// A hand of twelve-pixel strokes that leaves two pixels between
+		// the letters of a word and fourteen between words - the same
+		// hand test_Segment gives the gap test.
+		static Fixed run[22];
+		for (long i = 0; i < 22; i++)
+			run[i] = 0;
+		run[0] = F(12);
+		run[20] = F(12);
+		run[21] = F(4);
+		static const long kGap[4][2] = { { 2, 1 }, { 14, 4 }, { 8, 2 }, { 20, 5 } };
+		for (long i = 0; i < 4; i++)
+		{
+			Fixed m = F(kGap[i][0]);
+			Fixed s = F(kGap[i][1]);
+			run[2 + i * 2] = m;
+			run[3 + i * 2] = FixedMultiply(m, m) + FixedMultiply(s, s);
+			Fixed ms = FixedDivide(m, run[0]);
+			Fixed ss = FixedDivide(s, run[0]);
+			run[10 + i * 2] = ms;
+			run[11 + i * 2] = FixedMultiply(ms, ms) + FixedMultiply(ss, ss);
+		}
+
+		// three letters written left to right, each an upright ten
+		// wide and twelve tall, two pixels apart
+		static WordRecog wr;
+		memset(&wr, 0, sizeof(wr));
+		RosStroke* strokes[4];
+		for (long i = 0; i < 3; i++)
+		{
+			FPoint pts[2];
+			pts[0].x = F(i * 12);		pts[0].y = F(50);
+			pts[1].x = F(i * 12 + 10);	pts[1].y = F(62);
+			strokes[i] = StrokeCreate(2, pts);
+		}
+		wr.fStrokes = strokes;
+		wr.fField1ac = 3;
+		wr.fField60 = F(12);
+		wr.fWordSize = F(12);
+		memcpy(wr.fRun, run, sizeof(run));
+
+		// the pieces of a cut stroke sort where the stroke did
+		EXPECT(WordRecogStrokeMidX(strokes[1]) == F(17));
+		gXGapStroke = strokes[1];
+		gXGapMidX = F(99);
+		EXPECT(WordRecogStrokeMidX(strokes[1]) == F(99));
+		gXGapStroke = nil;
+		gXGapMidX = 0;
+
+		// the next letter along, two pixels on, is the same word
+		SegWordInk next;
+		next.fLeft = F(36);			next.fRight = F(46);
+		next.fTop = F(50);			next.fBottom = F(62);
+		next.fCentroidX = F(41);	next.fCentroidY = F(56);
+		next.fHeight = F(13);		next.fSizeMax = F(13);
+		FPoint np[2];
+		np[0].x = F(36);	np[0].y = F(50);
+		np[1].x = F(46);	np[1].y = F(62);
+		RosStroke* nextStroke = StrokeCreate(2, np);
+		Fixed strength = F(1);
+		EXPECT(WRSegWordXGap(nextStroke, &next, &wr, &strength) == false);
+		EXPECT(strength < gSegIntegrated);
+
+		// ... and ninety pixels on is a new one
+		SegWordInk far = next;
+		far.fLeft = F(126);			far.fRight = F(136);
+		far.fCentroidX = F(131);
+		FPoint fp[2];
+		fp[0].x = F(126);	fp[0].y = F(50);
+		fp[1].x = F(136);	fp[1].y = F(62);
+		RosStroke* farStroke = StrokeCreate(2, fp);
+		EXPECT(WRSegWordXGap(farStroke, &far, &wr, &strength));
+		EXPECT(strength > gSegIntegrated);
+
+		// a stroke with nothing before it on the line - the writer went
+		// back to the start - is a new word at full strength, whatever
+		// was written before it
+		SegWordInk first = next;
+		first.fLeft = F(-20);		first.fRight = F(-12);
+		first.fCentroidX = F(-16);
+		FPoint bp[2];
+		bp[0].x = F(-20);	bp[0].y = F(50);
+		bp[1].x = F(-12);	bp[1].y = F(62);
+		RosStroke* backStroke = StrokeCreate(2, bp);
+		strength = 0;
+		EXPECT(WRSegWordXGap(backStroke, &first, &wr, &strength));
+		EXPECT(strength == F(1));
+
+		StrokeDestroy(nextStroke);
+		StrokeDestroy(farStroke);
+		StrokeDestroy(backStroke);
+		for (long i = 0; i < 3; i++)
+			StrokeDestroy(strokes[i]);
+	}
+
 	if (failures == 0)
 		printf("test_WordRecog: all passed\n");
 	else

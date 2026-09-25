@@ -374,6 +374,23 @@ extern Fixed		gXGapMidX;			// ROM 0x0c104f8c (unnamed)
 extern RosStroke*	gPrevXGapStroke;	// ROM 0x0c104f98 (unnamed)
 extern Fixed		gPrevXGapMidX;		// ROM 0x0c104f90 (unnamed)
 
+// Where a stroke's horizontal range had its middle *before* the engine
+// cut it up - the cache above for the pieces of the last two strokes
+// the fragmenter cut, the stroke's own `fMidX` for anything else - so
+// that all the pieces of one stroke sort where the stroke did.  (The
+// ROM writes this out at every use.)
+Fixed	WordRecogStrokeMidX(const RosStroke* stroke);
+
+// The gap before a stroke measured against the strokes of the word
+// that come *before* it along the line - which, when the writer has
+// gone back to dot an i or cross a t, is not the same as the strokes
+// that were written before it.  The reference is built out of them
+// (the box, the middle, and a body band pulled a little further
+// towards each stroke in turn) and handed to `SegmentWordXGap`.  No
+// stroke before it at all is a new word.
+Boolean	WRSegWordXGap(RosStroke* stroke, const struct SegWordInk* ink,
+				WordRecog* wr, Fixed* strength);			// ROM 0x00274244 WRSegWordXGap
+
 
 // The classifier run over a piece of a word, and a probability out of
 // 0x10000 left in `out` for each of the 256 character codes - the same

@@ -1334,6 +1334,12 @@ emit:
 // from is dropped on the floor with it.
 Fixed	xpsvx = 0;
 
+// ROM 0x0c10089c abs_temp
+// Where `WRSegWordXGap` writes how far a short stroke's middle was from
+// the running middle before it takes the absolute value, for the
+// debugger.  Nothing reads it.
+Fixed	abs_temp = 0;
+
 // ROM 0x0c104f9c SegOnly
 // The engine has been told to group the writing but not to read it,
 // which makes the word break its whole answer and so worth a

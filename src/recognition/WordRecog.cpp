@@ -1265,3 +1265,172 @@ WordRecogAnalyzeWord(WordRecog* wr)
 	SearchEndWord(wr->fContext, wr->fStrokeCount, WordRecogEndWord, wr,
 				wr->fWords, wr->fScores, wr->fWordFlags, wr->fWordCount);
 }
+
+
+// Where a stroke's horizontal range had its middle before the engine
+// cut it up.
+Fixed
+WordRecogStrokeMidX(const RosStroke* stroke)
+{
+	if (stroke == gXGapStroke)
+		return gXGapMidX;
+	if (stroke == gPrevXGapStroke)
+		return gPrevXGapMidX;
+	return stroke->fMidX;
+}
+
+
+// The weight a stroke's own number is given against what has been
+// gathered so far: its place in the word, but never less than one or
+// more than four - so the first few strokes pull hard and the rest a
+// quarter at a time.
+static long
+WRSegWeight(long i)
+{
+	if (i < 4)
+		return (i < 1) ? 1 : i;
+	return 4;
+}
+
+
+// (i x base + w x value) / (w + i), with the sum wrapping as the ARM's
+// thirty-two bits do before the signed divide.
+static Fixed
+WRSegMean(Fixed base, long i, Fixed value, long w)
+{
+	unsigned int sum = (unsigned int) i * (unsigned int) base
+					+ (unsigned int) w * (unsigned int) value;
+	return (Fixed) ((int) sum / (int) (w + i));
+}
+
+
+// ROM 0x00274244 WRSegWordXGap
+// The gap before a stroke, measured against the strokes of the word
+// that come before it along the line.
+//
+// The reference is built stroke by stroke out of every stroke whose
+// middle lies to the left of this one's: the box round them, the
+// rightmost middle, a running middle height and a **body band** - the
+// top and the bottom of the writing without its ascenders and
+// descenders - each pulled a little further towards each stroke in
+// turn (`WRSegWeight`).  A stroke too short to say anything and too
+// far from the running middle is left out of the middle altogether,
+// which is how a dot or a crossing is kept from moving it.
+//
+// ROM BUG: the reference's top and bottom are not gathered at all.
+// Each stroke sets them afresh, as the smaller of its own top and the
+// *leftmost x so far* and the greater of its own bottom and the
+// *rightmost x so far* - an x compared with a y, both being pixels on
+// the one tablet - so what reaches `SegmentWordXGap` is the last
+// stroke's, bent by where the word begins and ends.  Ported as it
+// stands.
+Boolean
+WRSegWordXGap(RosStroke* stroke, const SegWordInk* ink, WordRecog* wr, Fixed* strength)
+{
+	Fixed mid = WordRecogStrokeMidX(stroke);
+	long nearest = -1;
+
+	FPoint centre;
+	StrokeCentroid(wr->fStrokes[0], &centre);
+	const FRect* first = &wr->fStrokes[0]->fBounds;
+	Fixed bodyTop = first->top;
+	Fixed right = first->right;
+	Fixed left = first->left;
+	Fixed bodyBottom = first->bottom;
+	Fixed rightmostX = centre.x;
+	Fixed top = bodyTop;
+	Fixed bottom = bodyBottom;
+	Fixed middleY = centre.y;
+
+	for (long i = 0; i < wr->fField1ac; i++)
+	{
+		RosStroke* s = wr->fStrokes[i];
+		if (!(WordRecogStrokeMidX(s) < mid))
+			continue;
+
+		// the nearest stroke before this one along the line
+		if (nearest < 0
+			|| WordRecogStrokeMidX(wr->fStrokes[nearest]) < WordRecogStrokeMidX(s))
+			nearest = i;
+
+		StrokeCentroid(s, &centre);
+		const FRect* b = &wr->fStrokes[i]->fBounds;
+		if (b->left <= left)
+			left = b->left;
+		if (right < b->right)
+			right = b->right;
+		top = (left < b->top) ? left : b->top;
+		bottom = (right < b->bottom) ? b->bottom : right;
+		if (rightmostX < centre.x)
+			rightmostX = centre.x;
+
+		Fixed height = b->bottom - b->top;
+		Fixed quarter = (bodyBottom - bodyTop) >> 2;
+		Fixed gate = quarter;
+		if (quarter <= FixedMultiply(0x00018000, SegmentMinStrokeSize()))
+			gate = FixedMultiply(0x00018000, SegmentMinStrokeSize());
+
+		// the body band's top, pulled towards this stroke's
+		if (gate <= height || wr->fStrokes[i]->fBounds.top <= middleY - quarter)
+		{
+			Fixed base = (middleY < bodyTop) ? middleY : bodyTop;
+			long w = WRSegWeight(i);
+			bodyTop = WRSegMean(base, i, wr->fStrokes[i]->fBounds.top, w);
+		}
+
+		gate = quarter;
+		if (quarter <= FixedMultiply(0x00018000, SegmentMinStrokeSize()))
+			gate = FixedMultiply(0x00018000, SegmentMinStrokeSize());
+		// ... and its bottom
+		if (gate <= height || middleY + quarter <= wr->fStrokes[i]->fBounds.bottom)
+		{
+			Fixed base = (bodyBottom < middleY) ? middleY : bodyBottom;
+			long w = WRSegWeight(i);
+			bodyBottom = WRSegMean(base, i, wr->fStrokes[i]->fBounds.bottom, w);
+		}
+
+		gate = quarter;
+		if (quarter <= FixedMultiply(0x00018000, SegmentMinStrokeSize()))
+			gate = FixedMultiply(0x00018000, SegmentMinStrokeSize());
+		// a short stroke far from the middle - a dot, a crossing - is
+		// left out of the middle
+		if (height < gate)
+		{
+			Fixed away = centre.y - middleY;
+			abs_temp = away;
+			if (away < 0)
+				away = -away;
+			if (quarter < away)
+				continue;
+		}
+		long w = WRSegWeight(i);
+		middleY = WRSegMean(middleY, i, centre.y, w);
+	}
+
+	if (nearest < 0)
+	{
+		// nothing before it on the line: a new word
+		*strength = 0x00010000;
+		return true;
+	}
+
+	// the reference, whose size is the nearest stroke's
+	const FRect* n = &wr->fStrokes[nearest]->fBounds;
+	Fixed width = n->right - n->left;
+	Fixed height = n->bottom - n->top;
+	Fixed size = (width < height) ? height : width;
+
+	SegWordRef ref;
+	ref.fInk.fLeft = left;
+	ref.fInk.fRight = right;
+	ref.fInk.fTop = top;
+	ref.fInk.fBottom = bottom;
+	ref.fInk.fCentroidX = rightmostX;
+	ref.fInk.fCentroidY = middleY;
+	ref.fInk.fHeight = height + 0x00010000;
+	ref.fInk.fSizeMax = size + 0x00010000;
+	ref.fBodyTop = bodyTop;
+	ref.fBodyBottom = bodyBottom;
+	ref.fStrokes = wr->fField1ac;
+	return SegmentWordXGap(ink, &ref, wr->fField60, wr->fWordSize, wr->fRun, strength);
+}
