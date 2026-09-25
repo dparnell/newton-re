@@ -82,6 +82,7 @@ ULong	GetStrokerData(ULong offset);					// ROM 0x002507dc GetStrokerData__FUl
 void	IncStrokerIndex(ULong count);					// ROM 0x002507ec IncStrokerIndex__FUl
 
 // the tablet driver (NOT YET: a constant)
+void	GetTabletResolution(long* x, long* y);				// ROM 0x00250700 GetTabletResolution__FPlT1 - Fixed samples an inch (800)
 ULong	GetSampleRate(void);							// ROM 0x002507fc GetSampleRate__Fv - the ticks of the 3.6864 MHz tablet timer between two samples (0xb400: 80 a second)
 
 // the "collect" state (the ROM's at 0x0c1008a8): whether the tablet is

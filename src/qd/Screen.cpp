@@ -7,6 +7,7 @@
 */
 
 #include "Screen.h"
+#include "GestaltSources.h"
 #include "Rects.h"
 #include "Regions.h"
 #include "NewtonMemory.h"
@@ -58,6 +59,7 @@ SetupScreenPixelMap(void)
 	screen->pixMapFlags = kPixMapPtr + info.fDepth;
 	screen->deviceRes.h = info.fResolutionH;
 	screen->deviceRes.v = info.fResolutionV;
+	gGestaltGrafInfo = GetGrafInfo;			// (host: the name server's way to the screen - GestaltSources.h)
 	// NOT YET RECONSTRUCTED: SetScreenInfo (the alert code's TAlertScreenInfo)
 }
 

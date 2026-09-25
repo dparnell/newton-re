@@ -7,6 +7,7 @@
 */
 
 #include "TabletBuffer.h"
+#include "GestaltSources.h"
 #include "NewtonTime.h"
 
 ULong	gTabData = 0;						// ROM 0x0c107390 gTabData
@@ -330,6 +331,25 @@ IncStrokerIndex(ULong count)
 {
 	TBCIncStrokerIndex(count);
 }
+
+
+// ROM 0x00250700 GetTabletResolution__FPlT1
+// How finely the tablet reads, Fixed samples an inch each way: the
+// driver's (TResistiveTablet::GetTabletResolution 0x0005ac9c answers 800
+// both ways; NOT YET RECONSTRUCTED: gTabletDriver, so the host answers
+// that constant).
+void
+GetTabletResolution(long* x, long* y)
+{
+	*y = 800 << 16;
+	*x = 800 << 16;
+}
+
+// host: the name server's way to the tablet (GestaltSources.h)
+static struct TabletGestaltSource
+{
+	TabletGestaltSource()	{ gGestaltTabletResolution = GetTabletResolution; }
+} sTabletGestaltSource;
 
 
 // ROM 0x002507fc GetSampleRate__Fv

@@ -22,6 +22,8 @@
 #include "NameServerImpl.h"
 #include "SystemEvents.h"
 #include "NewtonGestalt.h"
+#include "GestaltSources.h"
+#include "NewtQD.h"
 #include "UserGlobals.h"
 #include "KernelGlobals.h"
 #include "VirtualMemory.h"
@@ -570,6 +572,11 @@ TNameServer::ResArbHandleReply(TResArbitrationInfo* /*info*/)
 }
 
 
+// host: see GestaltSources.h
+long	(*gGestaltGrafInfo)(long selector, void* info) = nil;
+void	(*gGestaltTabletResolution)(long* x, long* y) = nil;
+
+
 // ROM 0x00131b54 Gestalt__11TNameServerFUlP10TUMsgToken
 // The machine's answers to the gestalt selectors (NewtonGestalt.h).
 void
@@ -582,6 +589,7 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 		TGestaltNewtonScriptVersion	nsVersion;
 		TGestaltPatchInfo			patchInfo;
 		TGestaltPCMCIAInfo			pcmciaInfo;
+		struct { TGestaltSystemInfo info; ULong fManufDate; } systemInfo;	// the ROM answers 0x3c bytes: the date of manufacture after the class's fields
 	} info;
 	ULong size;
 	long result = noErr;
@@ -593,14 +601,38 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 		break;
 
 	case kGestalt_SystemInfo:
-		// NOT YET RECONSTRUCTED: manufacturer kGestalt_Manufacturer_Apple,
-		// machine type 0x10003000, ROM version 0x20003, stage 0x38000, the RAM
-		// size (InternalRAMInfo), the screen (GetGrafInfo), the tablet
-		// resolution (GetTabletResolution), the patch version (GetPatchInfo),
-		// gMainCPUType, gMainCPUClockSpeed - all still to come
-		result = kError_Call_Not_Implemented;
-		size = 0;
+	{
+		// the machine (an MP2x00, ROM 2.2 stage 0x8000), the screen's size
+		// out of its pixel map's bounds, its resolution, its depth, and the
+		// tablet's resolution.  NOT YET RECONSTRUCTED: the RAM size
+		// (InternalRAMInfo), the patch version (GetPatchInfo), gMainCPUType,
+		// gMainCPUClockSpeed and gManufDate, which answer nought.
+		memset(&info.systemInfo, 0, sizeof(info.systemInfo));
+		info.systemInfo.info.fManufacturer = kGestalt_Manufacturer_Apple;
+		info.systemInfo.info.fMachineType = 0x10003000;
+		info.systemInfo.info.fROMVersion = 0x20002;
+		info.systemInfo.info.fROMStage = 0x8000;
+		if (gGestaltGrafInfo != nil)
+		{
+			PixelMap screen;
+			gGestaltGrafInfo(0, &screen);
+			info.systemInfo.info.fScreenHeight = (ULong) (long) screen.bounds.bottom;
+			info.systemInfo.info.fScreenWidth = (ULong) (long) screen.bounds.right;
+			Point resolution;
+			gGestaltGrafInfo(1, &resolution);
+			info.systemInfo.info.fScreenResolution = resolution;
+			info.systemInfo.info.fScreenDepth = screen.pixMapFlags & 0xff;
+		}
+		if (gGestaltTabletResolution != nil)
+		{
+			long x, y;
+			gGestaltTabletResolution(&x, &y);
+			info.systemInfo.info.fTabletResX = x;
+			info.systemInfo.info.fTabletResY = y;
+		}
+		size = sizeof(info.systemInfo);
 		break;
+	}
 
 	case kGestalt_RebootInfo:
 		info.rebootInfo.fRebootReason = gGlobalsThatLiveAcrossReboot.fRebootReason;

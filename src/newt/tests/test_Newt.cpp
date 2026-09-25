@@ -130,6 +130,12 @@ static const char* kSetupSource =
 	"    if GetPowerStats().screenOnTime <> 0 then return 0; "
 	"    EnablePowerStats(nil); "
 	"    1 end, "
+	// the machine as a script asks it (os600/user/NameServer.cpp: the screen
+	// out of QuickDraw, the tablet out of the recognition system)
+	"  systemInfo: func(data) begin "
+	"    local g := Gestalt(0x1000003); "
+	"    if g.screenWidth = 320 and g.screenHeight = 480 and g.screenResolutionX = 100 "
+	"       and g.screenResolutionY = 100 and g.tabletResolutionX = 800 then 1 else 0 end, "
 	"  worldData: func(data) "
 	"    if GetPackageStore(\"WorldData\") then 1 else 0, "		// the store part of the WorldData package, mounted
 	"  battery: func(data) begin "
@@ -220,6 +226,7 @@ static Boolean gMapCursorOk = false;
 static Boolean gMinimumBatteryOk = false;
 static Boolean gPowerOffOk = false;
 static Boolean gWorldDataOk = false;
+static Boolean gSystemInfoOk = false;
 static long gMainDone = 0;
 static Boolean gAliveAfterBoot = false;
 
@@ -320,6 +327,9 @@ Scenario(void)
 		TRunScriptEvent stats("testApp", "powerStats");
 		newtPort.SendRPC(&replySize, &stats, sizeof(stats), &stats, sizeof(stats));
 		gPowerStatsOk = stats.fError == 0 && stats.fResult == 1;
+		TRunScriptEvent sysInfo("testApp", "systemInfo");
+		newtPort.SendRPC(&replySize, &sysInfo, sizeof(sysInfo), &sysInfo, sizeof(sysInfo));
+		gSystemInfoOk = sysInfo.fError == 0 && sysInfo.fResult == 1;
 		TRunScriptEvent world("testApp", "worldData");
 		newtPort.SendRPC(&replySize, &world, sizeof(world), &world, sizeof(world));
 		gWorldDataOk = world.fError == 0 && world.fResult == 1;
@@ -436,6 +446,7 @@ int main()
 	EXPECT(gMinimumBatteryOk);
 	EXPECT(gPowerOffOk);
 	EXPECT(gWorldDataOk);
+	EXPECT(gSystemInfoOk);		// the screen and the tablet, through the name server
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gWritten == 1);						// "to", written with the pen and read
 	EXPECT(gRedraws == 1);
