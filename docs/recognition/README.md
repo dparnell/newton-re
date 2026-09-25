@@ -2947,6 +2947,38 @@ Still NOT YET: the search itself - `SearchProcessSegment`,
 `SearchBestWords`, `SearchSendWords` and
 `SearchSegwordRememberNBest`, about 6 KB.
 
+#### One candidate letter offered to the search
+
+`SearchProcessSegment` is what `WordRecogAnalyzeWord` calls for every
+grouping in the lattice.  The classifier has left a probability for
+each of the 256 character codes, and `CharModifyProbs` has left what it
+made of them in a second array; both are turned into **scores** here -
+negative logarithms, which is the currency everything above works in -
+into two arrays the Viterbi step then reads:
+
+* from the classifier's, the score scaled by `rosCI`'s
+  `fNetScoreWeight` (four fifths), with nought meaning never;
+* from the second, the same score quartered, which is what the search
+  charges for the letter itself.
+
+While it is about it, the probabilities of the first are added up by
+turning each stored score back into a probability again.  That total is
+how much the classifier believes in this piece of writing at all, and
+it goes to the step as one more score.
+
+Then the columns move along and the step runs.
+
+`ShiftNetValues` is how they move, and it is worth a look: the columns
+are a **ring**.  Nothing is copied - the thirty-seven pointers are
+rotated so the last column becomes the first, and that one is then
+emptied.  Column 0 is always "here", column 1 is one stroke back, and
+so on, which is how the search looks back over a whole word without
+ever moving a node.
+
+`GetBestPath` copies out the best reading so far.  That is the **try
+string** - what the Newton shows you while you are still writing,
+before the word is finished.
+
 #### Write it three times
 
 `SearchCheckHashHit` looks at every reading on its way out and compares

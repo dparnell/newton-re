@@ -496,10 +496,18 @@ recognition team's names and addresses instead; `docs/curiosities.md`
 has it, and `analysis/romtable.py` grew a `strN` type for its two
 tables.
 
-Still NOT YET: **the Viterbi itself** - `SearchProcessSegment` (584 B),
-`SearchDoViterbStep` (1324 B), `SearchDoVStepFromNode` (2120 B),
-`SearchFindBest` (1108 B), `SearchBestWords` (328 B), `SearchSendWords`
-(616 B) and `SearchSegwordRememberNBest` (392 B), about 6 KB - and
+`SearchProcessSegment` is done too, with `ShiftNetValues` and
+`GetBestPath`: the classifier's probabilities and `CharModifyProbs`'s
+turned into the two score arrays the step reads, the columns moved
+along (they are a **ring** - the pointers rotate, nothing is copied),
+and the try string copied out.  `rosCI`'s `fNetScoreWeight` (four
+fifths, what the classifier's opinion is worth against everything else)
+is named.
+
+Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
+(1324 B), `SearchDoVStepFromNode` (2120 B), `SearchFindBest` (1108 B),
+`SearchBestWords` (328 B), `SearchSendWords` (616 B) and
+`SearchSegwordRememberNBest` (392 B), about 5.5 KB - and
 `CharModifyProbs` (1632 B), which leans on the classifier's
 probabilities with where and how big a piece of writing is.
 `SearchDoVStepFromNode` is the heart of it and the place to start: it

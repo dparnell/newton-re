@@ -327,8 +327,8 @@ BiGrammarClone(const BiGrammar* src)
 
 // The probability a score stands for, and the score a probability
 // costs - the two halves of the arithmetic coder's table lookup, as
-// `BiGrammarModifyContext` uses them.
-static Fixed
+// `BiGrammarModifyContext` and the lexical search use them.
+Fixed
 ArProbDecode(long score)
 {
 	if (score >= kArProbMaxScore)
@@ -338,7 +338,7 @@ ArProbDecode(long score)
 	return (Fixed) ArProbDecodeLu[score >> 3];
 }
 
-static short
+short
 ArProbEncode(Fixed probability)
 {
 	if (probability < 1)

@@ -12,6 +12,7 @@
 #include "RosStrokes.h"			// kRosettaMemoryTag
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "Segment.h"
 
 #include <string.h>
 
@@ -340,12 +341,19 @@ SearchCheckHashHit(char** word)
 	together - about 6 KB in seven functions.
 --------------------------------------------------------------------*/
 
-// ROM 0x001ce830 SearchProcessSegment
+// ROM 0x001cebac SearchDoViterbStep
 void
-SearchProcessSegment(const BiGrammar* /*grammar*/, Fixed* /*probs*/, Fixed* /*scratch*/,
-				long /*index*/, RosSegment* /*segment*/, Fixed /*confidence*/,
-				Boolean /*endsWord*/, char* /*tryString*/)
+SearchDoViterbStep(short* /*fromProbs*/, short* /*fromScratch*/, long /*index*/,
+				RosSegment* /*segment*/, Fixed /*confidence*/, Boolean /*endsWord*/,
+				short /*total*/)
 {
+}
+
+// ROM 0x001d0c48 SearchBestWords
+long
+SearchBestWords(char** /*out*/, long /*a*/, long /*b*/, long /*count*/, UByte /*how*/)
+{
+	return 0;
 }
 
 // ROM 0x001cf920 SearchSegwordRememberNBest
@@ -360,4 +368,124 @@ SearchSendWords(WordList* /*list*/, long /*strokes*/, SearchEndWordProc /*proc*/
 			WordRecog* /*wr*/, char** /*words*/, UniChar* /*scores*/, long* /*flags*/,
 			long /*count*/)
 {
+}
+
+
+// ROM 0x001d06fc ShiftNetValues
+// The columns moved along by one.  They are a **ring**: nothing is
+// copied, the pointers are rotated so that the last column becomes the
+// first, and the first is then emptied.  Column 0 is always "here",
+// column 1 is one stroke back, and so on to thirty-six - which is why
+// the search can look back over a whole word without ever moving a
+// node.
+void
+ShiftNetValues(void)
+{
+	SearchColumn* last = gSearchColumns[kSearchColumns - 1];
+	for (long i = kSearchColumns - 1; i > 0; i--)
+		gSearchColumns[i] = gSearchColumns[i - 1];
+	gSearchColumns[0] = last;
+
+	// (the ROM has `GCBestNodes` inlined here)
+	if (last->fWords != nil)
+	{
+		WordListDeleteRef(last->fWords);
+		last->fWords = nil;
+	}
+	if (last->fCount == 0)
+		return;
+	for (long i = 0; i < last->fCount; i++)
+		WordTailDeleteRef(last->fNodes[i]->fTail);
+}
+
+
+// ROM 0x001d0798 GetBestPath
+// The best reading so far, copied into the caller's buffer.  This is
+// the **try string** - what the Newton shows you while you are still
+// writing, before the word is finished.
+void
+GetBestPath(char* out, UByte how)
+{
+	if (out == nil)
+		return;
+	char* best = nil;
+	if (SearchBestWords(&best, 0, 0, 1, how) < 1)
+		out[0] = 0;
+	else
+		strcpy(out, best);
+}
+
+
+// ROM 0x001ce830 SearchProcessSegment
+// One candidate letter offered to the search.
+//
+// The classifier left a probability for each of the 256 character
+// codes in `probs`, and `CharModifyProbs` left what it made of them in
+// `scratch`.  Both are turned into **scores** here - negative
+// logarithms, which is the currency everything above this works in -
+// into two arrays the Viterbi step then reads:
+//
+// * from `scratch`, the score quartered, which is what the search
+//   charges for the letter itself;
+// * from `probs`, the score scaled by `rosCI`'s 0.8, with nought
+//   meaning never.
+//
+// While it is about it, the probabilities of the second are added up,
+// by turning each stored score back into a probability again.  That
+// total is how much the classifier believes in this piece of writing
+// at all, and it goes to the Viterbi step as one more score.
+//
+// Then the columns move along (`ShiftNetValues`), the step runs, and -
+// if the caller wants one - the best reading so far is copied out as
+// the try string.
+void
+SearchProcessSegment(const BiGrammar* /*grammar*/, Fixed* probs, Fixed* scratch,
+				long index, RosSegment* segment, Fixed confidence,
+				Boolean endsWord, char* tryString)
+{
+	short* fromProbs = (short*) gSearchScratchA;
+	short* fromScratch = (short*) gSearchScratchB;
+	ULong ends = (ULong) endsWord & 0xff;
+
+	Fixed total = 0;
+	for (long code = 0; code < 256; code++)
+	{
+		// what the search charges for the letter itself
+		fromScratch[code] = (short) ((ArProbEncode(scratch[code]) << 14) >> 16);
+
+		Fixed p = probs[code];
+		if (p == 0)
+		{
+			fromProbs[code] = (short) kArProbNever;
+			continue;
+		}
+		fromProbs[code] = (short) ((RosCI->fNetScoreWeight * (long) ArProbEncode(p)) >> 16);
+
+		// ... read back and turned into a probability again, so that
+		// the total says how much the classifier believes in this
+		// piece of writing at all
+		ULong stored = (ULong) (UShort) fromProbs[code];
+		ULong at = stored * 4;
+		Fixed back;
+		if (at < (ULong) kArProbMaxScore)
+			back = (stored == 0) ? 0x00010000 : (Fixed) ArProbDecodeLu[at >> 3];
+		else
+			back = 0;
+		total += back;
+	}
+	if (total > 0x00010000)
+		total = 0x00010000;
+
+	// a piece that starts partway through the word and stands for
+	// exactly one letter is a place a reading may end
+	if (segment->fFirstStroke > 0 && segment->fRealCount == 1)
+		SearchSegwordRememberNBest(gSearchColumns[0], segment->fFirstStroke,
+							segment->fSeparation);
+
+	ShiftNetValues();
+	SearchDoViterbStep(fromProbs, fromScratch, index, segment, confidence,
+					(Boolean) ends, ArProbEncode(total));
+
+	if (tryString != nil)
+		GetBestPath(tryString, 0);
 }

@@ -134,7 +134,11 @@ struct RosCommonInfo
 	// ... and how near two strokes must come to be said to touch at
 	// all: three pixels.
 	Fixed				fLinkDistance;		// +0x94
-	ULong				fField98[29];		// +0x98 .. +0x108
+	ULong				fField98[6];		// +0x98
+	// What the classifier's score for a letter is worth against
+	// everything else the search weighs: four fifths.
+	Fixed				fNetScoreWeight;	// +0xb0
+	ULong				fFieldb4[22];		// +0xb4 .. +0x108
 };
 
 // The eight tables and the ten the common info points at, as the ROM
@@ -281,6 +285,11 @@ extern const int	ArProbDecodeLu[1024];				// ROM 0x0036400c ArProbDecodeLu
 // means never.
 const long	kArProbNever		= 0x7ffe;
 const long	kArProbMaxScore		= 0x2000;
+
+// The two halves of the arithmetic coder's table lookup: the
+// probability a score stands for, and the score a probability costs.
+Fixed	ArProbDecode(long score);
+short	ArProbEncode(Fixed probability);
 
 // One kind of word, with room for `capacity` kinds after it and every
 // other thing about it left to the caller.  The seven doubles are the

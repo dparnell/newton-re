@@ -88,7 +88,9 @@ FIELDS = [
     ("fBreakOverlap", "word", 1),		# +0x8c
     ("fEndFraction", "word", 1),		# +0x90
     ("fLinkDistance", "word", 1),		# +0x94
-    ("fField98", "word", 29),			# +0x98 .. +0x108
+    ("fField98", "word", 6),			# +0x98 .. +0xac
+    ("fNetScoreWeight", "word", 1),	# +0xb0
+    ("fFieldb4", "word", 22),		# +0xb4 .. +0x108			# +0x98 .. +0x108
 ]
 
 # A `Fixed` is signed and is written in decimal, as the other generated

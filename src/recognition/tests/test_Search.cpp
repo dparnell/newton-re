@@ -3,6 +3,7 @@
 // keeps, and what happens to a word on the way out.
 #include "Search.h"
 #include "RosEngine.h"
+#include "Segment.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -138,6 +139,87 @@ main()
 		word = nil;
 		SearchCheckHashHit(&word);
 		EXPECT(word == nil);
+	}
+
+	// ---- the columns are a ring ----
+	{
+		SearchAllocateGlobals();
+		// nothing is ever copied: the pointers rotate, so a column
+		// keeps its nodes wherever it ends up in the word
+		SearchColumn* was[kSearchColumns];
+		for (long i = 0; i < kSearchColumns; i++)
+		{
+			was[i] = gSearchColumns[i];
+			gSearchColumns[i]->fCount = 0;
+			gSearchColumns[i]->fWords = nil;
+		}
+		ShiftNetValues();
+		// the last becomes the first and everything else moves back
+		EXPECT(gSearchColumns[0] == was[kSearchColumns - 1]);
+		for (long i = 1; i < kSearchColumns; i++)
+			EXPECT(gSearchColumns[i] == was[i - 1]);
+		// ... and the new first column is emptied on the way
+		EXPECT(gSearchColumns[0]->fWords == nil);
+
+		// all the way round brings it back
+		for (long i = 1; i < kSearchColumns; i++)
+			ShiftNetValues();
+		for (long i = 0; i < kSearchColumns; i++)
+			EXPECT(gSearchColumns[i] == was[i]);
+	}
+
+	// ---- one candidate letter offered to the search ----
+	{
+		CharInitialize(0);
+		SearchBeginWord(ROMGrammar.fContexts[0]);
+
+		// the classifier's probabilities, and what CharModifyProbs
+		// would have made of them
+		static Fixed probs[256];
+		static Fixed scratch[256];
+		for (long i = 0; i < 256; i++)
+		{
+			probs[i] = 0;
+			scratch[i] = 0;
+		}
+		probs['t'] = 0xe500;			// as the classifier really answers
+		probs['+'] = 0xf100;
+		scratch['t'] = 0xe500;
+		scratch['+'] = 0xf100;
+
+		RosSegment* seg = SegmentCreate();
+		seg->fFirstStroke = 0;
+		seg->fCount = 1;
+		seg->fRealCount = 1;
+
+		SearchProcessSegment(ROMGrammar.fContexts[0], probs, scratch, 0, seg,
+						0x8000, false, nil);
+
+		// the two score arrays the Viterbi step reads.  A code the
+		// classifier gave nothing costs never...
+		const short* fromProbs = (const short*) gSearchScratchA;
+		const short* fromScratch = (const short*) gSearchScratchB;
+		EXPECT(fromProbs['x'] == (short) kArProbNever);
+		// ... and one it believed in costs the score scaled by the
+		// four fifths `rosCI` says the classifier is worth
+		EXPECT(RosCI->fNetScoreWeight == 0xcccc);
+		EXPECT(fromProbs['t']
+			== (short) ((RosCI->fNetScoreWeight * (long) ArProbEncode(0xe500)) >> 16));
+		// the more likely letter costs less
+		EXPECT(fromProbs['+'] < fromProbs['t']);
+		EXPECT(fromProbs['+'] > 0);
+		// the other array is the same score quartered
+		EXPECT(fromScratch['t'] == (short) (ArProbEncode(0xe500) >> 2));
+		EXPECT(fromScratch['x'] == (short) (kArProbNever >> 2));
+
+		// and a score really is a logarithm, scaled by five hundred: a
+		// letter the classifier gave half the probability of another
+		// costs -ln(0.5) x 500 = 346 more
+		EXPECT(ArProbEncode(0x10000) == 0);
+		EXPECT(ArProbEncode(0x8000) == 346);
+		EXPECT(ArProbEncode(0x0080) == 3119);		// one in 512
+
+		SegmentDestroy(seg);
 	}
 
 	// ---- everything given back ----
