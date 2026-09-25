@@ -2551,15 +2551,11 @@ something, and the pair worth measuring is the one before this against
 that next one. That single test is how the engine copes with a word
 being dotted and crossed after it has been written.
 
-#### The second pass, read but not yet written
+#### The second pass: the segments
 
-`SegmentMakeSegments` (0x001d0f68, 2200 bytes) is what turns the break
-candidates into segments, and it is the last thing between the first
-pass and a real list of characters. It has been read; what follows is
-the map, so that writing it does not start from the decompiler again.
-
-It is **incremental**: `SegmentChars` calls it once per stroke and then
-a last time with `last` set, and it keeps its working-out in a 0x44-byte
+`SegmentMakeSegments` turns the break candidates into segments, and it
+is **incremental**: `SegmentChars` calls it once per stroke and then
+once more with `last` set, and it keeps its working-out in a 0x44-byte
 block of its own - the one `SegmentQuiesce` gives back, and the reason
 that function exists. The block is `SegState` in `Segment.cpp`:
 
@@ -2574,7 +2570,7 @@ that function exists. The block is `SegState` in `Segment.cpp`:
 | `fAspect` / `fPrevAspect` | how wide against how tall, now and before this stroke |
 
 Each call folds the new stroke into `fBounds` and `fHasDot`, works out
-the new aspect ratio, and then asks whether the piece should end here.
+the new aspect ratio, and asks whether the piece should end here.
 There are three reasons it might:
 
 1. **The first pass said so** - this stroke's index is the next entry
@@ -2585,28 +2581,50 @@ There are three reasons it might:
    without being a letter of its own. It must also be growing
    (`fAspect > fPrevAspect`), the stroke must share less than half the
    line with the one before it, and it must not be a fragment.
-3. **The piece has too many strokes** - more than six, or five when
+3. **The piece has too many strokes** - more than five, or six when
    `FragmentLigatures` is set.
 
-In cases 2 and 3 the cut cannot fall in the middle of a run of linked
-strokes, so it walks back to the last stroke whose link is 0 or 3.
-Case 3 has a fallback the others do not: if there is no such stroke at
-all it cuts at `index - 1` anyway and **rewrites the links** to make
-that legal, which is the engine admitting that a run of seven strokes
-it thought was one letter cannot be.
+A cut may not fall in the middle of a run of linked strokes, so cases 2
+and 3 walk back to the last stroke whose link is 0 or 3. Case 3 has a
+fallback the other does not: if there is no such stroke at all it cuts
+at `index - 1` anyway and **rewrites the links** to make that legal,
+which is the engine admitting that a run of six strokes it thought was
+one letter cannot be. Case 2 has no fallback and simply falls through
+into case 3.
 
-Then it emits the segments for `fStart .. fCut`: `SegmentCreate`,
-`fFirstStroke` and `fCount` filled in, the separation carried over from
-the first stroke, `SegmentSetStrokes` (which sorts and rejoins them),
-`SegmentBoundsDotsEtc`, and `SegmentSetStrokeOverlaps` against the
-segment before - and every stroke gets `fSegment` set to the segment it
-landed in. There is a hard limit of 900 segments.
+#### What it hands up is a lattice, not a partition
 
-Two things in it are not understood yet and want reading with
-`WordRecogAddStroke`, which is where they come from: the per-stroke
-`fField24` (`SegmentStrokeData`'s `how`, which takes values 0, 1 and 2
-and chooses between two quite different ways of emitting the segments)
-and the pair of flags the emit loop carries.
+This is the part worth knowing. For a piece running from `fStart` to
+`fCut`, `SegmentMakeSegments` does not choose where the letters are.
+It emits a segment of the first stroke, then of the first two, then of
+the first three, and so on - and then starts again at the second
+stroke, and at the third. Three strokes it cannot tell apart come back
+as **six** segments:
+
+    (0,1) (0,2) (0,3) (1,1) (1,2) (2,1)
+
+Every grouping the links allow, for the layer above to score against
+the classifier and the grammar. A grouping that would end in the middle
+of a run of linked strokes is skipped, and `fRealCount` records how
+many were - so `fRealCount` counts the letters a grouping stands for
+while `fCount` counts its strokes. `test_Segment` pins both: two x's
+written as four crossing strokes come back as exactly two segments of
+two strokes each, `fRealCount` 1; three upright strokes five pixels
+apart come back as all six groupings.
+
+Each segment is made with `SegmentCreate`, given its first stroke,
+stroke count and the separation carried over from that stroke, then
+`SegmentSetStrokes` (which sorts them and rejoins the pieces the engine
+cut), `SegmentBoundsDotsEtc` and `SegmentSetStrokeOverlaps` against the
+segment before it. Every stroke gets `fSegment` set to the last segment
+it landed in. There is a hard limit of 900, the same as the array
+`WordRecog` keeps.
+
+One thing in it is transcribed rather than understood: the per-stroke
+`fField24` (`SegmentStrokeData`'s `how`, which takes values 0, 1 and 2)
+chooses between the lattice above and emitting one grouping for the
+whole piece, and it is `WordRecogAddStroke` - still NOT YET - that
+decides what it is.
 
 ### One letter in a box (`recognition/CharBox.h`)
 

@@ -1489,3 +1489,33 @@ and something further up has to put it back together.
 
 *`src/recognition/Segment.cpp`; `docs/recognition/README.md` has "The
 first pass: one stroke against its neighbours".*
+
+## The Newton does not decide where your letters are
+
+The obvious way to read handwriting is to cut the strokes into letters
+and then read each letter. The Newton does not do that, and the reason
+is that cutting is the hard part: `cl` and `d` are the same ink, and so
+are `rn` and `m`.
+
+So `SegmentMakeSegments`, the second pass of the segment layer, refuses
+to choose. For a run of strokes it cannot tell apart it emits **every
+grouping the strokes allow** - the first stroke on its own, the first
+two, the first three, then the same starting from the second stroke,
+then from the third. Three ambiguous strokes come back as six
+candidate letters:
+
+    (0,1) (0,2) (0,3) (1,1) (1,2) (2,1)
+
+The classifier is then shown all six, and the bigram grammar and the
+dictionaries decide which path through the lattice is a word. The
+cutting and the reading are the same decision, made once, at the top.
+
+It does prune. A grouping that would end in the middle of a run of
+strokes the first pass decided were one letter - the two halves of an
+`x`, say - is never offered, and each segment records in `fRealCount`
+how many groupings were skipped on its account. Two x's written as four
+crossing strokes come back as exactly two segments, with no lattice at
+all, because there was never any doubt.
+
+*`src/recognition/Segment.cpp`; `docs/recognition/README.md` has "What
+it hands up is a lattice, not a partition".*

@@ -50,7 +50,9 @@ struct RosSegment
 	short			fFirstStroke;	// +0x00
 	short			fCount;			// +0x02
 	short			fField04;		// +0x04  (-1 when new)
-	short			fField06;		// +0x06  (-1 when new)
+	// How many of its strokes are not continuations of a linked
+	// run - so, how many letters the grouping stands for.
+	short			fRealCount;		// +0x06  (-1 when new)
 	RosStrokeList*	fStrokes;		// +0x08
 	FRect			fBounds;		// +0x0c  the box all of them fill
 	UByte			fHasDot;		// +0x1c  any of them is a dot
@@ -164,8 +166,11 @@ void	SegmentStroke(short index, short count, RosStroke* const* strokes,
 // writing's height here.
 short	SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
 					RosSegment** segments, UByte how, void* net);	// ROM 0x001d48a4 SegmentChars
-// The break candidates walked and the segments made.  NOT YET, so
-// `SegmentChars` answers no segments however many breaks it found.
+// The break candidates walked and the segments made.  Called once per
+// stroke and then once more with `last` set; it keeps its working-out
+// between calls, which is what `SegmentQuiesce` gives back.  What it
+// leaves in `segments` is **not a partition** but every grouping of
+// strokes the links allow, for the layer above to score.
 short	SegmentMakeSegments(short index, short count, RosStroke* const* strokes,
 					const short* breaks, short breakCount, RosSegment** segments,
 					long last, UByte how, void* net);	// ROM 0x001d0f68 SegmentMakeSegments

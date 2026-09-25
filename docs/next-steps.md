@@ -386,18 +386,30 @@ how much of the line each shares with the one before it *now that the
 segment has them in its own order*, the first measured against the last
 stroke of the segment before it.
 
-**`SegmentMakeSegments` (2200 B) has been read but not written**, and
-`docs/recognition/README.md`'s "The second pass, read but not yet
-written" has the map: the 0x44-byte incremental state block (`SegState`
-in `Segment.cpp`, the one `SegmentQuiesce` gives back), the three
-reasons a piece ends (the first pass said so; the aspect ratio passed
-1.5, or 1.75 when a dot has widened the box; or more than six strokes),
-the walk back to a stroke the cut may legally fall on, and the emit
-loop.  Two things in it want reading with `WordRecogAddStroke` first,
-because that is where they come from: the per-stroke `fField24` and the
-pair of flags the emit loop carries.  That is the next piece.
+**And the second pass is done: the segment layer cuts writing into
+letters.**  `SegmentMakeSegments` is incremental - called once per
+stroke and once more at the end, keeping its working-out in the
+0x44-byte `SegState` that `SegmentQuiesce` gives back - and ends a
+piece for one of three reasons: the first pass marked the stroke, the
+aspect ratio passed 1.5 (or 1.75 when a dot has already widened the
+box), or the piece has more than five strokes (six with
+`FragmentLigatures`).  A cut may not land in the middle of a run of
+linked strokes, so it walks back to one it may land on; failing that it
+cuts anyway and rewrites the links, which is the engine admitting that
+a run it thought was one letter cannot be.
 
-Still NOT YET: `SegmentMakeSegments` itself, plus the word-spacing and gap functions `SegmentWordXGap`
+**What it hands up is a lattice, not a partition**: for a piece it
+emits every grouping the links allow - the first stroke, the first two,
+the first three, then the same from the second stroke - so three
+strokes it cannot tell apart come back as six segments, for the layer
+above to score.  `test_Segment` drives the whole thing: two x's written
+as four crossing strokes come back as exactly two segments, and three
+upright strokes five pixels apart as all six groupings.  One thing is
+transcribed rather than understood - the per-stroke `fField24`, which
+chooses between the lattice and one grouping for the whole piece - and
+it is `WordRecogAddStroke` that decides what it is.
+
+Still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
 classify passes (3 KB), and the feature extraction

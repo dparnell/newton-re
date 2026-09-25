@@ -205,7 +205,7 @@ main()
 	{
 		RosSegment* seg = SegmentCreate();
 		EXPECT(seg != nil);
-		EXPECT(seg->fFirstStroke == -1 && seg->fField04 == -1 && seg->fField06 == -1);
+		EXPECT(seg->fFirstStroke == -1 && seg->fField04 == -1 && seg->fRealCount == -1);
 		EXPECT(seg->fCount == 0);
 		EXPECT(seg->fStrokes == nil);
 		EXPECT(seg->fHasDot == 0 && seg->fSmallestStroke == 0);
@@ -381,29 +381,88 @@ main()
 			StrokeDestroy(four[i]);
 	}
 
-	// ---- the whole first pass ----
+	// ---- the whole cutting, end to end ----
 	{
 		// two letters of two strokes each, an x and an x, well apart
-		RosStroke* six[4];
-		six[0] = Steps(F(0), F(0), F(2), F(2), 11);		// \ .
-		six[1] = Steps(F(20), F(0), -F(2), F(2), 11);	// /
-		six[2] = Steps(F(60), F(0), F(2), F(2), 11);
-		six[3] = Steps(F(80), F(0), -F(2), F(2), 11);
+		RosStroke* four[4];
+		four[0] = Steps(F(0), F(0), F(2), F(2), 11);	// \ of the first x
+		four[1] = Steps(F(20), F(0), -F(2), F(2), 11);	// / of it
+		four[2] = Steps(F(60), F(0), F(2), F(2), 11);
+		four[3] = Steps(F(80), F(0), -F(2), F(2), 11);
 		for (short i = 0; i < 4; i++)
-			SegmentStrokeData(six[i], 0, i, 0);
+			SegmentStrokeData(four[i], 0, i, 0);
 
-		RosSegment* segments[8];
-		// the cutting itself is NOT YET, so no segments come back ...
-		EXPECT(SegmentChars(4, six, F(20), segments, 0, nil) == 0);
-		// ... but the first pass really ran: every stroke now knows how
-		// much of the line it shares with the one before it
-		EXPECT(six[0]->fOverlap == 0);		// nothing before it
-		EXPECT(six[1]->fOverlap > 0);		// the two halves of the x
-		EXPECT(six[2]->fOverlap == 0);		// a clear gap
-		EXPECT(six[3]->fOverlap > 0);
+		RosSegment* segments[64];
+		short made = SegmentChars(4, four, F(20), segments, 0, nil);
 
+		// the first pass ran: every stroke knows how much of the line it
+		// shares with the one before it, and the two halves of each x
+		// are linked
+		EXPECT(four[0]->fOverlap == 0);		// nothing before it
+		EXPECT(four[1]->fOverlap == F(1));	// the same span exactly
+		EXPECT(four[2]->fOverlap == 0);		// a clear gap
+		EXPECT(four[3]->fOverlap == F(1));
+		EXPECT(four[0]->fLink == 1 && four[1]->fLink == 3);
+		EXPECT(four[2]->fLink == 1 && four[3]->fLink == 3);
+
+		// ... and the second pass made one segment per letter
+		EXPECT(made == 2);
+		EXPECT(segments[0]->fFirstStroke == 0 && segments[0]->fCount == 2);
+		EXPECT(segments[1]->fFirstStroke == 2 && segments[1]->fCount == 2);
+		// a grouping of one stroke would have ended in the middle of a
+		// linked pair, so it was not made - and `fRealCount` counts the
+		// letters rather than the strokes
+		EXPECT(segments[0]->fRealCount == 1 && segments[1]->fRealCount == 1);
+		// the segment holds the strokes itself, joined and sorted
+		EXPECT(segments[0]->fStrokes->fCount == 2);
+		// every stroke knows which segment it landed in
+		EXPECT(four[0]->fSegment == 0 && four[1]->fSegment == 0);
+		EXPECT(four[2]->fSegment == 1 && four[3]->fSegment == 1);
+
+		for (short i = 0; i < made; i++)
+			SegmentDestroy(segments[i]);
+		SegmentQuiesce();
 		for (short i = 0; i < 4; i++)
-			StrokeDestroy(six[i]);
+			StrokeDestroy(four[i]);
+	}
+
+	// ---- and what it makes when it cannot tell ----
+	{
+		// Three upright strokes five pixels apart: too close for a gap,
+		// too narrow to overlap, so nothing is linked and nothing is
+		// cut.  What comes back is **every grouping the strokes allow**
+		// - one stroke, two, three, then the same from the second
+		// stroke, then the third - because the segment layer does not
+		// decide where the letters are.  It hands the layer above a
+		// lattice to score.
+		RosStroke* three[3];
+		for (short i = 0; i < 3; i++)
+		{
+			three[i] = Steps(F(i * 5), F(0), 0, F(2), 11);
+			SegmentStrokeData(three[i], 0, i, 0);
+		}
+
+		RosSegment* segments[64];
+		short made = SegmentChars(3, three, F(20), segments, 0, nil);
+		for (short i = 0; i < 3; i++)
+			EXPECT(three[i]->fLink == 0);
+
+		EXPECT(made == 6);
+		static const short kFirst[6] = { 0, 0, 0, 1, 1, 2 };
+		static const short kCount[6] = { 1, 2, 3, 1, 2, 1 };
+		for (short i = 0; i < made && i < 6; i++)
+		{
+			EXPECT(segments[i]->fFirstStroke == kFirst[i]);
+			EXPECT(segments[i]->fCount == kCount[i]);
+			// nothing was linked, so no grouping was skipped
+			EXPECT(segments[i]->fRealCount == kCount[i]);
+		}
+
+		for (short i = 0; i < made; i++)
+			SegmentDestroy(segments[i]);
+		SegmentQuiesce();
+		for (short i = 0; i < 3; i++)
+			StrokeDestroy(three[i]);
 	}
 
 	// ---- the overlaps worked out again inside a segment ----

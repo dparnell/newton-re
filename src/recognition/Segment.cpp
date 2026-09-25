@@ -9,6 +9,7 @@
 
 #include "Segment.h"
 #include "RosEngine.h"
+#include "WordRecog.h"		// FragmentLigatures
 #include "FixedGeometry.h"
 #include "FixedMath.h"
 #include "NewtonMemory.h"
@@ -87,7 +88,7 @@ SegmentInit(RosSegment* self)
 	self->fFirstStroke = -1;
 	self->fCount = 0;
 	self->fField04 = -1;
-	self->fField06 = -1;
+	self->fRealCount = -1;
 	self->fStrokes = nil;
 	self->fHasDot = 0;
 	self->fSmallestStroke = 0;
@@ -868,13 +869,359 @@ SegmentChars(short count, RosStroke** strokes, Fixed meanSize,
 }
 
 
-// ROM 0x001d0f68 SegmentMakeSegments
-// NOT YET: the 2200 bytes that walk the break candidates and actually
-// make the segments.
-short
-SegmentMakeSegments(short /*index*/, short /*count*/, RosStroke* const* /*strokes*/,
-				const short* /*breaks*/, short /*breakCount*/, RosSegment** /*segments*/,
-				long /*last*/, UByte /*how*/, void* /*net*/)
+// How many segments there is room for.  The same number as
+// `kWordRecogMaxSegments`, which is the array this writes into.
+const long	kSegMaxSegments		= 900;
+// How many strokes a piece of writing may have before it is cut
+// whatever else the strokes say.  One fewer when the engine has not
+// been told to fragment ligatures.
+const long	kSegMaxStrokes		= 6;
+
+
+// The link word is the byte at +0x2b with the byte at +0x2a above it.
+// Everything writes nought into the upper one, so the word is the link
+// - but the ROM reads it as a halfword, and so does this.
+static short
+StrokeLink(const RosStroke* stroke)
 {
-	return 0;
+	return (short) (((short) stroke->fField2a << 8) | stroke->fLink);
+}
+
+
+// The state block, made on the first call and given back by
+// `SegmentQuiesce`.
+static void
+SegStateReset(SegState* st)
+{
+	st->fStart = 0;
+	st->fBoundsTo = -1;
+	st->fCut = -1;
+	st->fLastCut = -1;
+	st->fBreakAt = 0;
+	st->fMade = 0;
+}
+
+
+// One grouping of `n` strokes starting at `first` made into a segment.
+static void
+SegEmit(SegState* st, RosStroke* const* strokes, long first, long n, long skipped,
+		RosSegment** segments, void* net)
+{
+	if (st->fMade >= kSegMaxSegments)
+		return;
+	newton_try
+	{
+		RosSegment* seg = SegmentCreate();
+		segments[st->fMade] = seg;
+		seg->fFirstStroke = (short) first;
+		seg->fCount = (short) n;
+		seg->fRealCount = (short) (n - skipped);
+		seg->fSeparation = strokes[first]->fSeparation;
+		// (the ROM hands `net` on as a fourth argument, which
+		//  `SegmentSetStrokes` does not take; kept out here)
+		(void) net;
+		SegmentSetStrokes(seg, (short) n, &strokes[first]);
+		SegmentBoundsDotsEtc(seg);
+		SegmentSetStrokeOverlaps(seg, (st->fMade < 1) ? nil : segments[st->fMade - 1]);
+		st->fMade++;
+	}
+	cleanup
+	{
+		for (long i = 0; i < st->fMade; i++)
+			SegmentDestroy(segments[i]);
+	}
+	end_try;
+}
+
+
+// ROM 0x001d0f68 SegmentMakeSegments
+// The second pass: the break candidates turned into segments.
+//
+// It is **incremental**.  `SegmentChars` calls it once per stroke and
+// then once more with `last` set, and it keeps its working-out in
+// `gSegState` - which is why `SegmentQuiesce` exists at all.  Each call
+// folds the new stroke into the box of the piece being built, works out
+// the new aspect ratio, and asks whether the piece should end here.
+//
+// **Three reasons it might.**  The first pass said so, and this
+// stroke's index is the next entry in the break candidates.  Or the
+// piece has got too wide: the aspect ratio has passed `fCutAspect`
+// (one and a half), or `fCutAspectWithDot` (one and three quarters)
+// when there is a dot somewhere in it, because a dot has already
+// widened the box without being a letter of its own - and it must be
+// still growing, the stroke must share less than half the line with
+// the one before it, and it must not be a fragment.  Or the piece has
+// too many strokes.
+//
+// A cut may not fall in the middle of a run of linked strokes, so both
+// of the last two walk back to the nearest stroke whose link is 0 or 3.
+// The too-many-strokes case has a fallback the aspect case does not: if
+// there is no such stroke at all it cuts at the stroke before this one
+// anyway and **rewrites the links** to make that legal - the engine
+// admitting that a run it thought was one letter cannot be.
+//
+// **What it emits is not a partition.**  For a piece running from
+// `fStart` to `fCut` it makes a segment of the first stroke, then of
+// the first two, then of the first three, and so on - every grouping
+// that the links allow, each starting where the last one did.  The
+// layer above is given a lattice of candidate letters and scores them;
+// it is not told where the letters are.
+short
+SegmentMakeSegments(short index, short count, RosStroke* const* strokes,
+				const short* breaks, short breakCount, RosSegment** segments,
+				long last, UByte how, void* net)
+{
+	if (index < 0)
+		return 0;
+	// one fewer stroke to a piece when ligatures are not fragmented
+	long maxStrokes = kSegMaxStrokes - ((FragmentLigatures == 0) ? 1 : 0);
+
+	if (gSegState == nil)
+	{
+		gSegState = (SegState*) RosAllocate((long) sizeof(SegState));
+		SegStateReset(gSegState);
+	}
+	SegState* st = gSegState;
+
+	// 0: nothing decided yet.  1: the piece was cut short.  2: the
+	// piece ends at `fCut`.
+	long mode;
+	if (last == 0)
+	{
+		if (index == 0)
+			SegStateReset(st);
+
+		if (st->fBoundsTo < st->fStart)
+		{
+			// start the box afresh from the first stroke of the piece
+			StrokeFindBounds(strokes[st->fStart], &st->fBounds);
+			st->fHasDot = strokes[st->fStart]->fIsDot;
+			for (long i = st->fStart + 1; i < index; i++)
+			{
+				StrokeFindBounds(strokes[i], &st->fScratch);
+				OrFixedRect(&st->fBounds, &st->fScratch);
+				st->fHasDot |= strokes[i]->fIsDot;
+			}
+			st->fBoundsTo = st->fStart;
+			st->fPrevAspect = 0;
+			st->fAspect = SegmentAspect(&st->fBounds);
+		}
+		if (st->fStart < index)
+		{
+			// ... and take this stroke into it
+			StrokeFindBounds(strokes[index], &st->fScratch);
+			OrFixedRect(&st->fBounds, &st->fScratch);
+			st->fHasDot |= strokes[index]->fIsDot;
+			st->fPrevAspect = st->fAspect;
+			st->fAspect = SegmentAspect(&st->fBounds);
+		}
+		mode = 0;
+		st->fCut = st->fLastCut;
+	}
+	else
+	{
+		st->fCut = index;
+		mode = 2;
+	}
+
+	RosStroke* cur = strokes[index];
+	ULong how24 = cur->fField24;
+	long end;
+
+	// `goto` here because the ROM's three ways of deciding where the
+	// piece ends fall through into each other, and writing it any other
+	// way would move the order they are tried in.
+	if (mode != 0)
+		goto haveCut;
+
+	if (how24 < 2)
+	{
+		if (how24 != 0 || how != 0)
+			goto tooMany;
+
+		long at = st->fBreakAt;
+		if (at >= breakCount || breaks[at] != index)
+		{
+			// the first pass did not mark this one, so the only thing
+			// that can end the piece here is its shape
+			if (how24 != 0 || how != 0
+				|| index <= st->fLastCut + 1
+				|| (st->fAspect <= RosCI->fCutAspectWithDot
+					&& (st->fAspect <= RosCI->fCutAspect || st->fHasDot != 0))
+				|| st->fAspect <= st->fPrevAspect
+				|| cur->fOverlap > 0x7fff
+				|| cur->fFragment != 0)
+				goto tooMany;
+
+			if (StrokeLink(cur) < 2)
+				st->fCut = index - 1;
+			else
+			{
+				// back to a stroke the cut may legally fall on
+				for (long i = index - 2; i >= st->fStart; i--)
+				{
+					short link = StrokeLink(strokes[i]);
+					if (link == 0 || link == 3)
+					{
+						st->fCut = i;
+						break;
+					}
+				}
+				// nothing back there, or it is behind the last cut:
+				// fall through to the forced cut instead
+				if (st->fCut <= st->fLastCut)
+					goto tooMany;
+			}
+			mode = 1;
+			end = st->fStart;
+			goto emit;
+		}
+		st->fBreakAt = at + 1;
+	}
+	// the first pass marked this stroke, or the writing is boxed
+	st->fCut = index - 1;
+	mode = 2;
+	goto haveCut;
+
+tooMany:
+	if ((index - st->fStart) + 1 <= maxStrokes)
+		return (short) st->fMade;			// nothing to do yet
+
+	if (StrokeLink(cur) < 2)
+		st->fCut = index - 1;
+	else
+	{
+		st->fCut = -1;
+		for (long i = index - 2; i >= st->fStart; i--)
+		{
+			short link = StrokeLink(strokes[i]);
+			if (link == 0 || link == 3)
+			{
+				st->fCut = i;
+				break;
+			}
+		}
+		if (st->fCut == -1)
+		{
+			// Every stroke of the run is linked and there is nowhere
+			// legal to cut - but the piece is too long to keep.  So the
+			// engine cuts anyway and rewrites the links to suit: the
+			// stroke before this one becomes the end of a run, and this
+			// one becomes the start of the next (or, if it was already
+			// linked backwards, the start of nothing).
+			st->fCut = index - 1;
+			RosStroke* prev = strokes[index - 1];
+			prev->fLink = 3;
+			prev->fField2a = 0;
+			cur->fLink = (UByte) ((StrokeLink(cur) == 3) ? 0 : 1);
+			cur->fField2a = 0;
+		}
+	}
+	mode = 1;
+	end = st->fStart;
+	goto emit;
+
+haveCut:
+	end = st->fCut;
+
+emit:
+	{
+		// (the ROM carries two flags through the loop.  `started` says a
+		//  run of linked strokes has already been given a grouping of
+		//  its own, and `seen` is what the *next* stroke of the run
+		//  reads; a stroke that is linked backwards, link 3, clears it
+		//  again.  What they come to is that only the first stroke of a
+		//  linked run may start groupings.)
+		ULong started = 0;
+		ULong seen = 0;
+		for (long i = st->fStart; i <= end; i++)
+		{
+			short link = StrokeLink(strokes[i]);
+			Boolean make = (link == 0);
+			if (!make)
+			{
+				if (link == 1)
+					started = seen;
+				if (link == 1 && started == 0)
+				{
+					if (how24 == 0)
+					{
+						started = 1;
+						seen = 1;
+					}
+					make = true;
+				}
+				else if (how24 != 0)
+				{
+					// boxed writing gives every stroke a grouping,
+					// linked or not; the flags are left alone because
+					// the ROM only sets them when `how24` is nought
+					started = how24;
+					make = true;
+				}
+			}
+
+			if (make)
+			{
+				// every grouping the links allow, each starting here:
+				// one stroke, then two, then three ...
+				long span = (st->fCut - i) + 1;
+				long skipped = 0;
+				for (long n = 1; n <= span; n++)
+				{
+					Boolean take;
+					if (how24 == 0)
+					{
+						short at = StrokeLink(strokes[i + n - 1]);
+						// a grouping may not end in the middle of a run
+						take = !(at > 0 && at < 3);
+					}
+					else
+					{
+						// boxed writing: one grouping, the whole piece
+						long lim = (i == st->fStart) ? span : st->fStart;
+						take = (i == st->fStart && n == lim);
+					}
+					if (take)
+						SegEmit(st, strokes, i, n, skipped, segments, net);
+					else
+						skipped++;
+				}
+			}
+
+			if (StrokeLink(strokes[i]) == 3)
+				seen = 0;
+			strokes[i]->fSegment = (short) (st->fMade - 1);
+		}
+	}
+
+	// on to the next piece
+	st->fStart = ((mode == 2) ? st->fCut : st->fStart) + 1;
+	if (last == 0 && StrokeLink(strokes[st->fStart]) > 1)
+	{
+		// the next piece may not start in the middle of a linked run
+		for (long i = st->fStart; i < index; i++)
+		{
+			RosStroke* stroke = strokes[i];
+			if (StrokeLink(stroke) < 2)
+			{
+				st->fStart = i;
+				break;
+			}
+			if (i < st->fCut + 1)
+				stroke->fSegment = (short) (st->fMade - 1);
+		}
+		if (StrokeLink(strokes[st->fStart]) > 1)
+		{
+			// still in one: start after the cut and make that stroke
+			// the head of a run, or of nothing
+			st->fStart = st->fCut + 1;
+			RosStroke* head = strokes[st->fStart];
+			head->fLink = (UByte) ((st->fCut + 2 < count
+								&& StrokeLink(strokes[st->fCut + 2]) > 1) ? 1 : 0);
+			head->fField2a = 0;
+		}
+	}
+	st->fLastCut = st->fCut;
+	return (short) st->fMade;
 }
