@@ -174,6 +174,28 @@ TestLengthAndRounding()
 }
 
 
+// SlopeFromAngle is the tangent by table, a screen slope (negative for
+// angles up to 90), and the inverse of AngleFromSlope.
+static void
+TestSlopeFromAngle()
+{
+	EXPECT(SlopeFromAngle(0) == 0);
+	EXPECT(SlopeFromAngle(45) == -kFix1);
+	EXPECT(SlopeFromAngle(135) == kFix1);
+	EXPECT(SlopeFromAngle(-45) == kFix1);						// the same line as 135
+	EXPECT(SlopeFromAngle(90) < -0x7f000000);					// 0x7fff and a fraction
+	for (long a = 0; a < 180; a++)
+	{
+		if (a == 90)
+			continue;
+		double want = -tan(a * M_PI / 180.0);
+		double got = SlopeFromAngle(a) / (double) kFix;
+		EXPECT(fabs(got - want) < 0.001 * (1 + fabs(want)));
+		EXPECT(Near((long) AngleFromSlope(SlopeFromAngle(a)), a == 0 ? 180 : a, 1));
+	}
+}
+
+
 int
 main(void)
 {
@@ -181,6 +203,7 @@ main(void)
 	TestAngleArithmetic();
 	TestNorm();
 	TestAngleFromSlope();
+	TestSlopeFromAngle();
 	TestPtsToAngle();
 	TestPtsToAngleR();
 	TestLengthAndRounding();

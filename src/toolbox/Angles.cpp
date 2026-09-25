@@ -13,7 +13,9 @@
 
 #include <stdint.h>
 
-extern const unsigned char	kDegreesOfFraction[64];		// AngleTables.cpp
+extern const unsigned char	kSlopeWhole[27];			// AngleTables.cpp
+extern const unsigned short	kSlopeFraction[91];
+extern const unsigned char	kDegreesOfFraction[64];
 extern const unsigned int	kTangentBelowOne[46];
 extern const unsigned char	kDegreesOfWhole[64];
 extern const unsigned int	kTangentAboveOne[46];
@@ -62,6 +64,44 @@ long
 MidAngle(long a, long b)
 {
 	return AddAngle(DeltaAngle(a, b) >> 1, a);
+}
+
+
+// ROM 0x002aa478 SlopeFromAngle__Fl
+// The tangent of a whole number of degrees as a 16.16 slope, from two
+// tables: the fraction of every degree's tangent from 0 to 90, and the
+// whole part of the tangents from 64 degrees on (below that it is 0 up to
+// 45 and 1 after).  90 degrees is 0x7fff and a fraction.  Like
+// AngleFromSlope it is a screen slope: an angle up to 90 degrees gives a
+// negative one.
+Fixed
+SlopeFromAngle(long degrees)
+{
+	long a = degrees % 180;
+	if (a < 0)
+		a += 180;
+	uint32_t whole;
+	if (a <= 90)
+		whole = 0x8000;				// the sign
+	else
+	{
+		whole = 0;
+		a = 180 - a;
+	}
+	if (a >= 45)
+	{
+		whole = (whole + 1) & 0xffff;
+		if (a >= 64)
+		{
+			whole = ((whole & 0xff00) + kSlopeWhole[a - 64]) & 0xffff;
+			if (a == 90)
+				whole |= 0x7f00;
+		}
+	}
+	uint32_t fraction = kSlopeFraction[a];
+	if (!(whole & 0x8000))
+		return (Fixed) (int32_t) ((whole << 16) | fraction);
+	return (Fixed) (int32_t) (0u - (((whole & 0x7fff) << 16) | fraction));
 }
 
 

@@ -44,6 +44,7 @@ long	DeltaAngle(long from, long to);				// ROM 0x00030c8c DeltaAngle - to - from
 long	AddAngle(long a, long b);					// ROM 0x00030c94 AddAngle
 long	MidAngle(long a, long b);					// ROM 0x00030c9c MidAngle - half way from a to b the short way round
 
+Fixed	SlopeFromAngle(long degrees);				// ROM 0x002aa478 SlopeFromAngle__Fl - a screen slope, 16.16
 ULong	AngleFromSlope(Fixed slope);				// ROM 0x002aa530 AngleFromSlope__Fl - whole degrees, 0..180
 long	PtsToAngle(const FPoint* a, const FPoint* b, Fixed unit);	// ROM 0x00030cc0 PtsToAngle - rounded to a multiple of unit
 long	GetSlope(const FPoint* a, const FPoint* b);	// ROM 0x00030d50 GetSlope - PtsToAngle to the whole degree
