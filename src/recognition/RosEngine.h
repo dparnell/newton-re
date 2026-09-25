@@ -409,8 +409,6 @@ struct RosSegment;
 // (The geometry's own `GeoCQuiesence` is `recognition/GeoContext.h`.)
 void	LEquiesant(void);									// ROM 0x000ffd60 LEquiesant
 
-// The engine's own free list, emptied.
-void	ListZap(void);										// ROM 0x0011343c ListZap
 
 // True once the layers above are real.
 Boolean	RosEngineLayersAreReconstructed(void);

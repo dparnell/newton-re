@@ -13,6 +13,7 @@
 #include "RosEngine.h"
 #include "Search.h"
 #include "Segment.h"
+#include "RosList.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "FixedMath.h"

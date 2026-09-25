@@ -178,8 +178,6 @@ BiGSliceNew(short capacity)
 // ROM 0x000ffd60 LEquiesant
 void	LEquiesant(void)									{ }
 
-// ROM 0x0011343c ListZap
-void	ListZap(void)											{ }
 
 
 #pragma mark -

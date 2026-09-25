@@ -39,6 +39,7 @@ add_library(recognition STATIC
     GeoContext.cpp
     GeoTables.cpp
     LELang.cpp
+    RosList.cpp
     LELangTables.cpp
     SearchEasterEgg.cpp
     RosEngine.cpp
