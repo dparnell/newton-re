@@ -2841,8 +2841,47 @@ word, the dot of an `i` is the same word, a stroke a long way left is
 the pen going back, a stroke on the next line down is the pen going
 down, and an ascender is neither.
 
-**`SegmentWordXGap`** (5952 B) is NOT YET and answers false, so a space
-written without going back or down a line is not yet found.
+**`SegmentWordXGap`** is the third test and a small piece of
+statistics.  `WordRecog::fRun` carries eight running Gaussians - kept
+as a mean and a mean of the square, so a standard deviation is one
+square root away - which are **four measurements in two situations**:
+how far apart two pieces of ink are within a word and between words,
+taken both between the boxes and between the middles of the ink, and
+each of those both in pixels and in stroke sizes.
+
+Each of the eight is **pooled** before it is used: with a nominal for a
+writer of ordinary habits, scaled by how big this writing is; with the
+same measurement in the other situation, rescaled by the constant ratio
+of their two nominals; and with the other two measurements of its
+group, rescaled the same way.  They are all measuring much the same
+thing, so four noisy estimates of it are better than one.  The result
+is held to between a quarter and four times its nominal, so a few
+strange strokes cannot run the model away.
+
+The gap is then put to all four pairs.  A gap smaller than the
+within-word mean is certainly a join and one wider than the
+between-words mean is certainly a space; in between, the difference of
+the two squared z-scores is the log-likelihood ratio of the two
+Gaussians, and `ArSigmoid` turns it into a probability.  The writer's
+spacing setting enters here as `gSegLogWordSpacing`, **added** to that
+ratio - which is why the segment layer keeps the setting as a logarithm
+at all.  The four probabilities are averaged, and a new word begins if
+the average passes `gSegIntegrated` (a half, or nine tenths when the
+writing has been called joined up) or `gSegOnlyThreshold` when the
+engine has been told only to group the writing.
+
+Two oddities are kept.  The stroke-size half of the model works its
+nominal term out and then leaves it out of the sum, dividing by four
+rather than five, so those four estimates are pooled with no prior at
+all.  And two of the four questions go on to turn the same ratio into a
+score and a probability, write the score into the global `xpsvx` and
+drop the rest on the floor.
+
+`test_Segment` gives the layer a hand that leaves two pixels between
+the letters of a word and fourteen between words, and checks that the
+next letter along is a join, that ninety pixels further on is a space,
+and that a gap the size of this writer's own spaces reads as one with a
+strength somewhere in between.
 
 #### The word recogniser's own way into the classifier
 

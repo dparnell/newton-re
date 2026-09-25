@@ -558,17 +558,37 @@ main()
 	{
 		CharInitialize(0);
 		SegmentSetWordSpacing(5);			// the writer of ordinary habits
+		SegmentIntegrated(0);				// ... whose writing is not joined up
 
-		// the hand: a mean stroke size of twelve pixels, and the two
-		// spans the vertical test reaches by
+		// The hand: a mean stroke size of twelve pixels, the two spans
+		// the vertical test reaches by, and the eight running
+		// Gaussians the gap test works to - two pixels between the
+		// boxes of two letters of one word and fourteen between two
+		// words, eight between their middles and twenty, and the same
+		// four again in stroke sizes.  Each is kept as a mean and a
+		// mean of the square, so the second of each pair is the mean
+		// squared plus the variance.
 		static Fixed run[22];
 		for (long i = 0; i < 22; i++)
 			run[i] = 0;
 		run[0] = F(12);
-		run[2] = F(2);
-		run[6] = F(3);
 		run[20] = F(12);
 		run[21] = F(4);
+		static const long kGap[8][2] = {
+			{ 2, 1 }, { 14, 4 }, { 8, 2 }, { 20, 5 },
+		};
+		for (long i = 0; i < 4; i++)
+		{
+			Fixed m = F(kGap[i][0]);
+			Fixed s = F(kGap[i][1]);
+			run[2 + i * 2] = m;
+			run[3 + i * 2] = FixedMultiply(m, m) + FixedMultiply(s, s);
+			// ... and the same, in stroke sizes
+			Fixed ms = FixedDivide(m, run[0]);
+			Fixed ss = FixedDivide(s, run[0]);
+			run[10 + i * 2] = ms;
+			run[11 + i * 2] = FixedMultiply(ms, ms) + FixedMultiply(ss, ss);
+		}
 
 		// a letter twelve tall in a word of the same size, and the
 		// next letter written straight after it
@@ -590,7 +610,9 @@ main()
 		Fixed strength = F(1);
 		EXPECT(SegmentWord(&next, &ref, F(12), F(12), run, &strength)
 			== kSegWordSame);
-		EXPECT(strength == 0);
+		// ... and the strength the gap test left is how likely a space
+		// was, which here is under the threshold rather than nought
+		EXPECT(strength < gSegIntegrated);
 		// the ratio of this writing to the running mean was left behind
 		EXPECT(gSegSizeRatio > 0);
 
@@ -639,14 +661,33 @@ main()
 		tall.fHeight = F(23);		tall.fSizeMax = F(23);
 		EXPECT(SegmentWordVert(&tall, &ref, F(12), F(12), run, &strength) == false);
 
-		// the third test is NOT YET, so a space written without going
-		// back or down a line is not found
+		// the next letter along, again: the gap in front of it is the
+		// gap this writer leaves between letters, so it is not a space
+		EXPECT(SegmentWordXGap(&next, &ref, F(12), F(12), run, &strength) == false);
+
+		// ... but a stroke ninety pixels further on is, and the four
+		// questions agree about it
 		SegWordInk far = next;
 		far.fLeft = F(120);			far.fRight = F(130);
 		far.fCentroidX = F(125);
-		EXPECT(SegmentWordXGap(&far, &ref, F(12), F(12), run, &strength) == false);
+		EXPECT(SegmentWordXGap(&far, &ref, F(12), F(12), run, &strength));
+		EXPECT(strength == F(1));
 		EXPECT(SegmentWord(&far, &ref, F(12), F(12), run, &strength)
-			== kSegWordSame);
+			== kSegWordWideGap);
+
+		// a gap the writer leaves between words reads as one, and the
+		// answer is somewhere in between rather than nought or one
+		SegWordInk spaced = next;
+		spaced.fLeft = F(44);		spaced.fRight = F(54);
+		spaced.fCentroidX = F(49);
+		EXPECT(SegmentWordXGap(&spaced, &ref, F(12), F(12), run, &strength));
+		EXPECT(strength > 0 && strength <= F(1));
+
+		// the nominals are what a writer of ordinary habits does, and
+		// they are what a hand nothing has been learnt about falls
+		// back to
+		EXPECT(kSegGapNominal[0][0] < kSegGapNominal[1][0]);	// within < between
+		EXPECT(kSegGapNominal[2][0] < kSegGapNominal[3][0]);
 	}
 
 	// ---- the rest of the layer's life ----

@@ -22,7 +22,7 @@
 // How much two pieces must agree before the engine runs them together:
 // nine tenths when it has been told the writing is joined up, a half
 // when it has not.
-static Fixed	gSegIntegrated = 0;
+Fixed	gSegIntegrated = 0;
 
 // ROM 0x0c101ae0 (unnamed)
 // How wide a space is taken to be, as a multiple of what it would be
@@ -1328,6 +1328,19 @@ emit:
 	Where one word ends and the next begins.
 --------------------------------------------------------------------*/
 
+// ROM 0x0c100890 xpsvx
+// A number `SegmentWordXGap` works out about the gap and writes here
+// for the debugger.  Nothing reads it; the probability it is made
+// from is dropped on the floor with it.
+Fixed	xpsvx = 0;
+
+// ROM 0x0c104f9c SegOnly
+// The engine has been told to group the writing but not to read it,
+// which makes the word break its whole answer and so worth a
+// threshold of its own.  `WordRecogAddStroke` copies it out of the
+// word recogniser's `fClassifyMode`.
+ULong	SegOnly = 0;
+
 // ROM 0x0c101adc (unnamed)
 Fixed	gSegSizeRatio = 0;
 
@@ -1603,17 +1616,6 @@ SegmentWordVert(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
 }
 
 
-// ROM 0x001d3064 SegmentWordXGap
-// NOT YET: the gap before the stroke measured against what this
-// writer's spaces look like.  Answers false, so a space written
-// without going back or down a line is not yet found.
-Boolean
-SegmentWordXGap(const SegWordInk* /*ink*/, const SegWordRef* /*ref*/, Fixed /*startSize*/,
-				Fixed /*wordSize*/, const Fixed* /*run*/, Fixed* strength)
-{
-	*strength = 0;
-	return false;
-}
 
 
 // ROM 0x001d26e8 SegmentWordBkVt
@@ -1646,4 +1648,233 @@ SegmentWord(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
 		return kSegWordWentDown;
 	return SegmentWordXGap(ink, ref, startSize, wordSize, run, strength)
 			? kSegWordWideGap : kSegWordSame;
+}
+
+
+// The nominal pair for each of the eight gap Gaussians `fRun` keeps -
+// what a writer of ordinary habits does - which each measurement is
+// pooled towards and then held within a quarter and four times of.
+// The first four are in pixels and the second four in stroke sizes;
+// within each, the pairs are (within a word, between words) for the
+// gap between the boxes and for the gap between the middles of the
+// ink.
+// ROM 0x001d3064 SegmentWordXGap (the constants are written into it)
+const Fixed	kSegGapNominal[8][2] = {
+	{ 0x00063851, 0x0003f333 },		// fRun[2]:  the box gap within a word
+	{ 0x00171999, 0x000a7851 },		// fRun[4]:  ... and between words
+	{ 0x000eb0a3, 0x000835c2 },		// fRun[6]:  the middle gap within a word
+	{ 0x0022d1eb, 0x000b8000 },		// fRun[8]:  ... and between words
+	{ 0x000057ce, 0x00003738 },		// fRun[10]: the box gap, in stroke sizes
+	{ 0x00015212, 0x0000a09d },		// fRun[12]
+	{ 0x0000c9db, 0x0000663f },		// fRun[14]: the middle gap, in stroke sizes
+	{ 0x0001f5e3, 0x0000a24d },		// fRun[16]
+};
+
+// The ratio between the two halves of each pair, which the ROM has as
+// a constant where it has the other two as a division worked out on
+// the spot.
+static const Fixed	kSegGapRatio[4][2] = {
+	{ 0x0003b851, 0x0002a666 },		// fRun[4] over fRun[2]
+	{ 0x00025eb8, 0x00016666 },		// fRun[8] over fRun[6]
+	{ 0x0003d9ad, 0x0002e89a },		// fRun[12] over fRun[10]
+	{ 0x00027c7e, 0x0001965f },		// fRun[16] over fRun[14]
+};
+
+
+// One pooled estimate: what this writer's hand says, what a writer of
+// ordinary habits does at this size, and what the other three
+// measurements of the group say once they are rescaled to this one's
+// nominal - averaged, and then held to between a quarter and four
+// times the nominal.  `share` is a fifth for the first group, which
+// takes all five terms, and a quarter for the second, where the ROM
+// works the nominal term out and then leaves it out of the sum.
+static Fixed
+SegGapPool(Fixed own, Fixed nominal, Fixed sizeFactor, Fixed partner,
+				Fixed cross1, Fixed cross2, Fixed share, Boolean useNominal)
+{
+	Fixed sum = own + partner + cross1 + cross2;
+	if (useNominal)
+		sum += FixedMultiply(nominal, sizeFactor);
+	Fixed pooled = FixedMultiply(share, sum);
+	Fixed low = FixedMultiply(0x00004000, nominal);
+	if (pooled < low)
+		return low;
+	Fixed high = FixedMultiply(0x00040000, nominal);
+	if (high < pooled)
+		return high;
+	return pooled;
+}
+
+
+// How likely it is that a gap this wide is a space rather than a join,
+// given the two Gaussians it could have come from.  A gap smaller than
+// the within-word mean is certainly a join and one wider than the
+// between-words mean is certainly a space; in between, the difference
+// of the two squared z-scores is the log-likelihood ratio, and the
+// logistic curve turns that into a probability.  The writer's spacing
+// setting comes in as `gSegLogWordSpacing`, which is why it is a
+// logarithm at all - it is added here rather than multiplied in.
+static Fixed
+SegGapLikelihood(Fixed measured, Fixed withinMean, Fixed withinSigma,
+				Fixed betweenMean, Fixed betweenSigma, Fixed bias,
+				Fixed* squaredWithin, Fixed* squaredBetween)
+{
+	*squaredWithin = 0;
+	*squaredBetween = 0;
+	if (measured <= withinMean)
+		return 0;
+	if (measured >= betweenMean)
+		return 0x00010000;
+	Fixed z = FixedDivide(measured - withinMean, withinSigma);
+	*squaredWithin = FixedMultiply(z, z);
+	z = FixedDivide(measured - betweenMean, betweenSigma);
+	*squaredBetween = FixedMultiply(z, z);
+	return ArSigmoid(((*squaredWithin - *squaredBetween) >> 1)
+					- gSegLogWordSpacing - bias);
+}
+
+
+// ROM 0x001d3064 SegmentWordXGap
+// The gap before this stroke, measured against what this writer's own
+// spaces look like.
+//
+// This is the third and largest of the three word-break tests, and it
+// is a small piece of statistics.  `WordRecog::fRun` carries eight
+// running Gaussians - kept as a mean and a mean of the square, so a
+// standard deviation is one square root away - which are **four
+// measurements in two situations**: how far apart two pieces of ink
+// are within a word and between words, taken both between the boxes
+// and between the middles of the ink, and each of those both in pixels
+// and in stroke sizes.
+//
+// Each of the eight is pooled before it is used: with a nominal for a
+// writer of ordinary habits, scaled by how big this writing is, and
+// with the other three measurements of its group rescaled to its own
+// nominal - because they are all measuring much the same thing and
+// four noisy estimates of it are better than one.  The result is then
+// held to between a quarter and four times its nominal, so that a few
+// strange strokes cannot run the model away.
+//
+// The gap is then put to all four pairs.  Each answers the probability
+// that this is a space, through the logistic of the difference of the
+// two squared z-scores; the four are averaged, and if the average
+// passes the threshold - `gSegIntegrated` normally, or
+// `gSegOnlyThreshold` when the engine has been told only to group the
+// writing - a new word begins.
+Boolean
+SegmentWordXGap(const SegWordInk* ink, const SegWordRef* ref, Fixed /*startSize*/,
+				Fixed /*wordSize*/, const Fixed* run, Fixed* strength)
+{
+	// the standard deviations.  (The ROM works the first one out - the
+	// stroke size's, `fRun[0]` and `fRun[1]` - and never uses it.)
+	Fixed mean[8];
+	Fixed sigma[8];
+	FixedSqrt(run[1] - FixedMultiply(run[0], run[0]));
+	for (long i = 0; i < 8; i++)
+	{
+		mean[i] = run[2 + i * 2];
+		sigma[i] = FixedSqrt(run[3 + i * 2] - FixedMultiply(mean[i], mean[i]));
+	}
+
+	// the writer's spacing, as a logarithm, worked out the first time
+	// it is wanted
+	if (gSegLogWordSpacing == gSegWordSpacing)
+		gSegLogWordSpacing = (Fixed) (long)
+					(log((double) gSegWordSpacing / 65536.0) * 65536.0);
+
+	// the two gaps, in pixels and in stroke sizes
+	Fixed boxGap = ink->fLeft - ref->fInk.fRight;
+	Fixed middleGap = ink->fCentroidX - ref->fInk.fCentroidX;
+	Fixed boxGapScaled = FixedDivide(boxGap, run[0]);
+	Fixed middleGapScaled = FixedDivide(middleGap, run[0]);
+
+	// how big this writing is: halfway between one and the square root
+	// of the stroke size against a nominal 1.178
+	Fixed sizeFactor = (FixedSqrt(FixedDivide(run[0], 0x0012d999)) + 0x00010000) >> 1;
+
+	// the eight pooled pairs.  The order the ROM works them out in is
+	// the order of the decisions below, and each names its partner -
+	// the same measurement in the other situation - by a constant
+	// ratio, and the other two by a division worked out on the spot.
+	Fixed pooledMean[8];
+	Fixed pooledSigma[8];
+	static const long kOther[8][2] = {
+		{ 2, 3 }, { 3, 2 }, { 0, 1 }, { 1, 0 },		// the pixel group
+		{ 6, 7 }, { 7, 6 }, { 4, 5 }, { 5, 4 },		// and the stroke-size group
+	};
+	for (long i = 0; i < 8; i++)
+	{
+		long partner = i ^ 1;
+		Boolean first = (partner < i);		// this one is the wider of the pair
+		const Fixed* ratio = kSegGapRatio[i >> 1];
+		Fixed partnerMean, partnerSigma;
+		if (first)
+		{
+			partnerMean = FixedMultiply(ratio[0], mean[partner]);
+			partnerSigma = FixedMultiply(ratio[1], sigma[partner]);
+		}
+		else
+		{
+			partnerMean = FixedDivide(mean[partner], ratio[0]);
+			partnerSigma = FixedDivide(sigma[partner], ratio[1]);
+		}
+		Fixed crossMean[2];
+		Fixed crossSigma[2];
+		for (long k = 0; k < 2; k++)
+		{
+			long other = kOther[i][k];
+			crossMean[k] = FixedMultiply(mean[other],
+						FixedDivide(kSegGapNominal[i][0], kSegGapNominal[other][0]));
+			crossSigma[k] = FixedMultiply(sigma[other],
+						FixedDivide(kSegGapNominal[i][1], kSegGapNominal[other][1]));
+		}
+		// ROM BUG: the stroke-size half works the nominal term out
+		// and then leaves it out of the sum, dividing by four rather
+		// than five - so those four estimates are pooled with no prior
+		// at all.  The two multiplications are made and dropped.
+		Boolean useNominal = (i < 4);
+		Fixed share = useNominal ? 0x00003333 : 0x00004000;
+		pooledMean[i] = SegGapPool(mean[i], kSegGapNominal[i][0], sizeFactor,
+						partnerMean, crossMean[0], crossMean[1], share, useNominal);
+		pooledSigma[i] = SegGapPool(sigma[i], kSegGapNominal[i][1], sizeFactor,
+						partnerSigma, crossSigma[0], crossSigma[1], share, useNominal);
+	}
+
+	// the four questions
+	Fixed within, between;
+	Fixed pBox = SegGapLikelihood(boxGap, pooledMean[0], pooledSigma[0],
+					pooledMean[1], pooledSigma[1], 0x00010000, &within, &between);
+	// (the ROM turns the same ratio into a score and a probability
+	//  here, writes the score into `xpsvx` and drops the rest)
+	if (boxGap > pooledMean[0] && boxGap < pooledMean[1])
+	{
+		Fixed half = FixedMultiply(0x00008000, between - within);
+		xpsvx = (half * -500) >> 16;
+		Fixed dead = (xpsvx >= kArProbMaxScore) ? 0
+					: (xpsvx < 1 ? 0x00010000 : ArProbDecodeLu[(half * -500) >> 19]);
+		dead = FixedMultiply(FixedMultiply(gSegWordSpacing, 0x00046dab), dead);
+		FixedDivide(0x00010000, dead + 0x00010000);
+	}
+
+	Fixed pMiddle = SegGapLikelihood(middleGap, pooledMean[2], pooledSigma[2],
+					pooledMean[3], pooledSigma[3], 0x00013333, &within, &between);
+	if (middleGap > pooledMean[2] && middleGap < pooledMean[3])
+	{
+		Fixed half = FixedMultiply(0x00008000, between - within);
+		xpsvx = (half * -500) >> 16;
+		Fixed dead = (xpsvx >= kArProbMaxScore) ? 0
+					: (xpsvx < 1 ? 0x00010000 : ArProbDecodeLu[(half * -500) >> 19]);
+		dead = FixedMultiply(FixedMultiply(gSegWordSpacing, 0x0005f326), dead);
+		FixedDivide(0x00010000, dead + 0x00010000);
+	}
+
+	Fixed pBoxScaled = SegGapLikelihood(boxGapScaled, pooledMean[4], pooledSigma[4],
+					pooledMean[5], pooledSigma[5], 0x00010000, &within, &between);
+	Fixed pMiddleScaled = SegGapLikelihood(middleGapScaled, pooledMean[6], pooledSigma[6],
+					pooledMean[7], pooledSigma[7], 0x00013333, &within, &between);
+
+	Fixed threshold = SegOnly != 0 ? gSegOnlyThreshold : gSegIntegrated;
+	Fixed average = (pBox + pMiddle + pBoxScaled + pMiddleScaled) >> 2;
+	*strength = average;
+	return threshold < average;
 }

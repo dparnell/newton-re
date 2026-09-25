@@ -554,24 +554,19 @@ is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
 `fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
 are named for it.
 
-### Next: `SegmentWordXGap`, and then the strokes in
+### Next: the strokes in
 
-Four of the five **word-spacing** functions are done
-(`recognition/Segment.h`): `SegmentWord`, `SegmentWordBkVt`,
-`SegmentWordBack` and `SegmentWordVert`, with the `SegWordInk` and
-`SegWordRef` argument bundles and `WordRecog`'s word-spacing state
-named (`fWordLeft`..`fWordHeight` for the word so far,
-`fLastLeft`..`fLastHeight` for the stroke just taken in).
+**The word spacing is done** (`recognition/Segment.h`): all five of
+`SegmentWord`, `SegmentWordBkVt`, `SegmentWordBack`, `SegmentWordVert`
+and `SegmentWordXGap`, with the `SegWordInk` and `SegWordRef` argument
+bundles, `WordRecog`'s word-spacing state named
+(`fWordLeft`..`fWordHeight` for the word so far,
+`fLastLeft`..`fLastHeight` for the stroke just taken in), the eight gap
+Gaussians of `fRun[2..17]` and their nominals, and `ArSigmoid` with its
+two tables.
 
-**`SegmentWordXGap` (0x001d3064, 5952 B) is what is left** - the gap
-before a stroke measured against what this writer's spaces look like.
-It answers false, so a space written without going back or down a line
-is not yet found.  It takes the same arguments as the other two tests
-and will want `gSegWordSpacing` and `gSegLogWordSpacing`, which
-`SegmentSetWordSpacing` already works out.
-
-Above it, **`WordRecogAddStroke`** (0x00272728, 6940 B) is what takes a
-stroke into the word and calls all of this.  The groundwork for it:
+**`WordRecogAddStroke`** (0x00272728, 6940 B) is what takes a stroke
+into the word and calls all of this.  The groundwork for it:
 
 - It fills the two blocks from the stroke: `[r5+0xc..0x18]` is the
   stroke's box, `StrokeCentroid` gives the middle of its ink, the

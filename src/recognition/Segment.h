@@ -187,6 +187,11 @@ short	SegmentMakeSegments(short index, short count, RosStroke* const* strokes,
 // values below.
 extern Fixed	gSegWordSpacing;						// ROM 0x0c101ae0 (unnamed)
 extern Fixed	gSegLogWordSpacing;						// ROM 0x0c101ae4 (unnamed)
+// How much two pieces must agree before the engine runs them together,
+// and the threshold the gap test works to when the engine is reading:
+// nine tenths when the writing has been called joined up, a half when
+// it has not.
+extern Fixed	gSegIntegrated;							// ROM 0x0c101ae8 (unnamed)
 extern Fixed	gSegOnlyThreshold;						// ROM 0x0c101aec (unnamed)
 extern Fixed	MinSegOnlyThreshold;					// ROM 0x0c101af0 MinSegOnlyThreshold
 extern Fixed	MidSegOnlyThreshold;					// ROM 0x0c101af4 MidSegOnlyThreshold
@@ -240,7 +245,15 @@ struct SegWordRef
 // How big the writing has turned out against the running mean, left
 // behind by whichever test last worked it out.  Nothing reads it; the
 // ROM keeps it for the debugger.
+// The engine has been told to group the writing but not to read it.
+extern ULong	SegOnly;								// ROM 0x0c104f9c SegOnly
+// A number the gap test writes down for the debugger.
+extern Fixed	xpsvx;									// ROM 0x0c100890 xpsvx
 extern Fixed	gSegSizeRatio;							// ROM 0x0c101adc (unnamed)
+
+// The nominal mean and standard deviation of each of the eight gap
+// Gaussians, for a writer of ordinary habits.
+extern const Fixed	kSegGapNominal[8][2];
 
 // Whether a stroke begins a new word, and why:
 //
@@ -276,8 +289,8 @@ Boolean	SegmentWordBack(const SegWordInk* ink, const SegWordRef* ref, Fixed star
 // all moved out of the band the reference allows.
 Boolean	SegmentWordVert(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
 				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d2900 SegmentWordVert
-// The gap before it was too wide.  NOT YET: answers false, so a space
-// written on one line is not yet found.
+// The gap before it was too wide: the gap measured against the eight
+// running Gaussians `WordRecog::fRun` keeps about the writer's hand.
 Boolean	SegmentWordXGap(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
 				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d3064 SegmentWordXGap
 
