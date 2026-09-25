@@ -590,15 +590,15 @@ the page itself, or a paragraph of its own.
 
 ### Next
 
-- **How well it reads.**  A round synthetic "c" is read badly (every
-  code under 0.6%, so the readings of a word with one in it all tie).
-  `SearchProcessSegment`'s total and the rest of that path match the
-  ROM instruction for instruction, and the direction features look
-  consistent (an open arc reads "(", "6"), so the likeliest explanation
-  is the net's view of a perfect arc rather than a port bug - but the
-  classifier has no reference output to check against.  A way to get
-  one would settle it: an emulator trace of `BPNetEvaluate`'s inputs
-  and outputs for one stroke.
+- **How well it reads.**  A perfectly round synthetic "c", as wide as
+  an "o", comes back with every code under 0.6%, so the readings of a
+  word with one in it all tie.  The picture the classifier is shown is
+  upright and unmirrored (dumped from `NetPatternImageSetInput`), the
+  path from there to the readings matches the ROM instruction for
+  instruction, and a "c" a little narrower than an "o" reads as "C" or
+  "c" - so the net is simply particular about its c's.  A trace of
+  `BPNetEvaluate` from an emulator would be the reference to check the
+  classifier's own numbers against, if ever one is wanted.
 - **The corrector** (double tap a word: the alternatives the engine
   sent are in the word's info frame already) and **learning**
   (`TRosRecognizer`'s training calls, which are stubs).

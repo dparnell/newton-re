@@ -1952,14 +1952,14 @@ clear bits of the 256-bit character set.
 
 ### What is left
 
-Nothing of the engine.  What is left is how well it reads, which has no
-reference to be checked against: a round synthetic "c" comes back with
-every code under 0.6% (so all the readings of a word with one in it tie),
-though everything between the classifier and the readings matches the
-ROM instruction for instruction.  An emulator trace of `BPNetEvaluate`'s
-inputs and outputs for one stroke would settle whether the fault is in
-the features or in the drawing.  Above the engine: the training calls
-(`TRosRecognizer`'s learning is stubbed) and the shape domain.
+Nothing of the engine.  How well it reads has no reference to be
+checked against, but one case was looked into: a perfectly round
+synthetic "c" comes back with every code under 0.6% (so all the readings
+of a word with one in it tie), while the picture the classifier is shown
+is upright and unmirrored and a "c" a little narrower than an "o" reads
+as "C" or "c" - the net is particular about its c's rather than broken.
+Above the engine: the training calls (`TRosRecognizer`'s learning is
+stubbed) and the shape domain.
 
 The rest of this section is the engine as it was read, bottom up.
 
