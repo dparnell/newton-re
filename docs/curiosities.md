@@ -1751,3 +1751,52 @@ first question asked about it.
 *`src/recognition/GeoContext.cpp`; the matrix is generated into
 `GeoTables.cpp` and the sixteen tables into `RosCITables.cpp`.  The
 scores above are `test_GeoContext`'s own.*
+
+
+## The Newton learns what your spaces look like
+
+Ask a handwriting recogniser where one word ends and the next begins
+and you expect a threshold: a gap wider than so many pixels is a space.
+The Newton does something else. It keeps **eight running Gaussians**
+about your hand and asks four of them, every time, whether the gap it
+is looking at is a space or a join.
+
+They are four measurements in two situations. How far apart two pieces
+of ink are *within* a word and *between* words, taken both between
+their boxes and between the middles of their ink - and each of those
+four both in pixels and in multiples of how big your strokes are. Every
+stroke you write updates them, an eighth of the way towards what it
+says, as a mean and a mean of the square, so that a standard deviation
+is one square root away and no second pass over the data is needed.
+
+None of the eight is used raw. Each is **pooled** first, with three
+other estimates of the same thing: a nominal for a writer of ordinary
+habits, scaled by how big this writing has turned out; the same
+measurement in the other situation, rescaled by the constant ratio of
+their two nominals; and the other two measurements of its group,
+rescaled the same way. They are all measuring much the same thing, and
+four noisy estimates of it beat one. The result is then held to between
+a quarter and four times the nominal, so a few strange strokes cannot
+run the model away - which is what makes it safe to learn from every
+stroke without ever asking whether the stroke was any good.
+
+The question itself is then the textbook one. Below the within-word
+mean it is certainly a join; above the between-words mean it is
+certainly a space; in between, the difference of the two squared
+z-scores is the log-likelihood ratio of the two Gaussians, and a
+logistic curve turns that into a probability. The four probabilities
+are averaged and compared against a threshold - a half, or nine tenths
+if you have told the machine your writing is joined up.
+
+And the slider in the Handwriting Recognition preferences, the one that
+says how far apart you leave your words? Its setting is kept as a
+**logarithm**, and it is *added* to that log-likelihood ratio. Moving
+the slider does not change a threshold; it changes your prior.
+
+For a machine with 4MB of RAM and no floating point, written in 1996,
+that is a startling amount of statistics to spend on the question of
+whether you meant a space.
+
+*`src/recognition/Segment.cpp`'s `SegmentWordXGap`; the eight Gaussians
+live in `WordRecog::fRun[2..17]`, the nominals in `kSegGapNominal`, and
+`test_Segment` drives the whole thing.*
