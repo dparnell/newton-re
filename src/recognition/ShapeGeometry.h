@@ -165,4 +165,47 @@ long	DFunc1D(long t, long n, long* p, long* dir, NGradient df, long* terms);	// 
 void	BracketMin(long* a, long* b, long* c, long* fa, long* fb, long* fc, Function1D f, long n, long* p, long* dir, NFunction nf);	// ROM 0x002195fc BracketMin__FPlN51PFlT1PlT3PFlPlT2_lT3_llN21PFlPlT2_l
 long	Minimize1D(long ax, long bx, long cx, Function1D f, Gradient1D df, long n, long* p, long* dir, NFunction nf, NGradient ndf, long tol, long* xmin, long* terms);	// ROM 0x002199d8 Minimize1D__FlN21PFlT1PlT3PFlPlT2_lT3_lPFlT1PlT3PFlPlN22_vT3_lT1PlT7PFlPlT2_lPFlPlN22_vT1N27
 
+// ShapeTrends.cpp: the clustering of lengths and angles.
+// One cluster of a trend (0x1c bytes).
+struct Cluster
+{
+	long		fMean;			// +0x00
+	Fixed		fVar;			// +0x04  the spread about the mean
+	long		fSum;			// +0x08
+	long		fMin;			// +0x0c
+	long		fMax;			// +0x10
+	long		fCount;			// +0x14
+	long		fValue;			// +0x18  the value it started with: what a value joining it is taken as
+};
+
+class TTrend : public TDArray
+{
+public:
+	static TTrend*	Make(long tolerance);					// ROM 0x0022bbb8 Make__6TTrendSFl
+	long			ITrend(long tolerance);					// ROM 0x0022bc28 ITrend__6TTrendFl
+	virtual void	Dispose(void);							// ROM 0x0022be04 Dispose__6TTrendFv
+
+	long			FindCluster(long value);				// ROM 0x0022bc78 FindCluster__6TTrendFl
+	Boolean			NewCluster(long index, long value);		// ROM 0x0022bce8 NewCluster__6TTrendFlT1
+	long			AddToCluster(long index, long value);	// ROM 0x0022be08 AddToCluster__6TTrendFlT1
+	Boolean			AddToTrend(long value, long* found, UByte add);	// ROM 0x0022bfcc AddToTrend__6TTrendFlPlUc
+	long			Attach(long index, long value);			// ROM 0x0022c248 Attach__6TTrendFlT1
+	Boolean			Merge(long index, Cluster* a, Cluster* b);	// ROM 0x0022c3a4 Merge__6TTrendFlP7ClusterT2
+	Boolean			MergeCheck(long index, long bias);		// ROM 0x0022c610 MergeCheck__6TTrendFl4Bias
+
+	Cluster*		At(long index)		{ return (Cluster*) GetEntry(index); }
+
+	long			fFirst;			// +0x20  the first cluster's mean
+	long			fLast;			// +0x24  the last cluster's mean
+	long			fValues;		// +0x28  how many values have been put in
+	long			fSpreadWeight;	// +0x2c
+	Fixed			fSlope;			// +0x30  (last - first) / (clusters - 1)
+	Fixed			fSpread;		// +0x34  the clusters' average spread
+	long			fTolerance;		// +0x38  the least distance that joins a cluster
+};
+
+Boolean	BeforeCluster(Cluster* cluster, long value);			// ROM 0x0022bdb0 BeforeCluster__FP7Clusterl
+Boolean	InCluster(Cluster* cluster, long value);				// ROM 0x0022bdc8 InCluster__FP7Clusterl
+Fixed	VarStretch(long count);									// ROM 0x0022bde0 VarStretch__Fl
+
 #endif	/* __SHAPEGEOMETRY_H */

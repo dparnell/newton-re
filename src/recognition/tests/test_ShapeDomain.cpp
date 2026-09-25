@@ -506,6 +506,33 @@ TestSolver(void)
 }
 
 
+// A trend of angles: the values near 0 and the values near 90 each come
+// together into a cluster, and a value between is in neither.
+static void
+TestTrend(void)
+{
+	TTrend* trend = TTrend::Make(7);
+	EXPECT(trend != nil);
+	long angles[] = { 0, 90, 3, 88, 92, 1, 45 };
+	for (unsigned k = 0; k < sizeof(angles) / sizeof(angles[0]); k++)
+		EXPECT(!trend->AddToTrend(angles[k], nil, 1));
+	printf("  trend: %ld clusters:", trend->Count());
+	for (long i = 0; i < trend->Count(); i++)
+		printf(" [%ld..%ld mean %ld n %ld]", trend->At(i)->fMin, trend->At(i)->fMax, trend->At(i)->fMean, trend->At(i)->fCount);
+	printf(" spread %.3f\n", trend->fSpread / 65536.0);
+	EXPECT(trend->Count() == 3);
+	EXPECT(trend->FindCluster(2) == 0);
+	EXPECT(trend->FindCluster(45) == 1);
+	EXPECT(trend->FindCluster(91) == 2);
+	EXPECT(trend->FindCluster(60) == -1);
+	long found;
+	trend->AddToTrend(89, &found, 0);		// looked up only
+	EXPECT(found == 90);					// the value the cluster started with
+	EXPECT(trend->At(2)->fCount == 3);
+	trend->Dispose();
+}
+
+
 int
 main()
 {
@@ -523,6 +550,7 @@ main()
 	TestKeyPoints(domain);
 	TestEllipses(domain);
 	TestSolver();
+	TestTrend();
 	if (failures != 0)
 	{
 		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);
