@@ -84,6 +84,14 @@ AddDelayedCall(func() begin
     call stroke with ([94, base - 14, 94, base - 7, 94, base, 94, base - 7,
                        95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
                        104, base - 10, 104, base - 5, 104, base]);
+    // "to", a word's gap further along the line, a little later - the
+    // recogniser has put "ton" down by then
+    AddDelayedCall(func() begin
+        local x := 130;
+        call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
+        call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
+        call stroke with (call oval with (x + 22, base - 7, 6, 7));
+      end, nil, 3000);
     AddDelayedCall(func() begin
         ScreenSnapshot("build/write-ink.pgm");
         Print("write: written build/write-ink.pgm");
@@ -92,6 +100,6 @@ AddDelayedCall(func() begin
             ScreenSnapshot("build/write.pgm");
             Print("write: written build/write.pgm");
           end, nil, 6000);
-      end, nil, 1500);
+      end, nil, 4500);
   end, nil, 27000);
 Print("write: the script is loaded");
