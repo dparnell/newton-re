@@ -241,10 +241,11 @@ struct BiGrammar
 	long			fCapacity;		// +0x0c
 	const BiGSlice* const*	fSlices;	// +0x10
 	UByte			fField14;		// +0x14
-	UByte			fField15;		// +0x15
-	UByte			fField16;		// +0x16
-	UByte			fField17;		// +0x17
-	long			fField18;		// +0x18
+	// How many readings of each kind of word the search may keep in
+	// one column, indexed by the lexicon class a slice carries in
+	// `fField2c`.  Ten of them, running to +0x1e.
+	UByte			fClassLimits[3];	// +0x15 .. +0x17
+	long			fField18;		// +0x18  (the rest of fClassLimits)
 	long			fField1c;		// +0x1c
 };
 

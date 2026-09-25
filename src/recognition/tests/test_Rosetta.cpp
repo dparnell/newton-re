@@ -597,7 +597,7 @@ main()
 		//  `sizeof` rather than the ROM's 0x20, a host pointer being
 		//  twice as wide)
 		EXPECT((const void*) g->fSlices == (const void*) (g + 1));
-		EXPECT(g->fField14 == 0 && g->fField15 == 0);
+		EXPECT(g->fField14 == 0 && g->fClassLimits[0] == 0);
 
 		// the name argument is accepted and never stored
 		BiGrammar* named = BiGrammarCreate("Postcodes", 2);

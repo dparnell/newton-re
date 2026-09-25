@@ -3017,6 +3017,37 @@ ever moving a node.
 string** - what the Newton shows you while you are still writing,
 before the word is finished.
 
+#### What a reading looks like from outside
+
+`CapHackDetermineContext` is the other half of the capitals hack.
+`CharModifyProbs` leans a letter towards its capital by height; this
+says what having written one **means** for whatever comes next, in
+twelve classes the grammar then charges against.
+
+One capital is a different context from two in a row - `Mc` is a name
+and `MC` is an abbreviation, and what may follow them differs.  An
+apostrophe with a lower-case letter in front of it is read as *inside*
+a word rather than after one, which is how `don't` stays one word.  A
+reading that has come to a word list rather than a tail has no context
+at all.  The twelve are six classes twice over, with a node's
+`fField04` choosing which half.
+
+#### Keeping the beam varied
+
+`RegisterNewPath` - still NOT YET, but read far enough to name two
+fields - is what puts a grown reading back into a column, and it does
+something a plain beam search would not.  Each `BiGSlice` carries a
+**lexicon class** in `fField2c`, each column counts how many of its
+readings are of each class (`fClassCounts`), and the grammar carries a
+limit per class (`fClassLimits`).  When the column is full it throws
+away a reading of a class that is over its limit in preference to the
+worst one outright.
+
+So the twenty-seven readings a column keeps are deliberately varied:
+one kind of word - all dates, say, or all numbers - cannot crowd the
+others out, however well the classifier happens to like it.  That is
+diverse beam search, in 1996.
+
 #### Write it three times
 
 `SearchCheckHashHit` looks at every reading on its way out and compares

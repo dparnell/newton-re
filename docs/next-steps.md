@@ -510,7 +510,12 @@ Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
 `SearchSegwordRememberNBest` (392 B), about 5.5 KB.
 `SearchDoVStepFromNode` is the heart of it and the place to start: it
 is what grows one partial reading by one letter, against the grammar
-and the dictionaries.
+and the dictionaries, and it wants `RegisterNewPath` (680 B),
+`GeoContextPenalty` (1204 B) and `LELangNodeNumOut` (452 B) under it.
+`CapHackDetermineContext` is done, and reading `RegisterNewPath` far
+enough named `SearchColumn::fClassCounts` and `BiGrammar::fClassLimits`:
+the beam is kept deliberately varied, with a limit on how many readings
+of each kind of word a column may hold.
 
 **`CharModifyProbs` is done** - what leans the classifier's answer with
 where and how big the piece of writing was.  Two of its four

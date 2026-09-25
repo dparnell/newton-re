@@ -13,6 +13,29 @@ static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 
+// A character put on the front of a reading (the search's own
+// `SearchDoVStepFromNode` does this; it is NOT YET).
+static WordTailRef
+Push(WordTailRef tail, UByte c)
+{
+	WordTailRef ref;
+	if (wordTailFrees == kWordTailNone)
+		ref = WordTailBlockAllocate();
+	else
+	{
+		ref = wordTailFrees;
+		wordTailFrees = WordTailAt(ref)->fNext;
+	}
+	WordTailCell* cell = WordTailAt(ref);
+	cell->fChar = c;
+	cell->fRefCount = 1;
+	cell->fNext = tail;
+	if (tail != kWordTailNone)
+		WordTailAddRef(tail);
+	return ref;
+}
+
+
 int
 main()
 {
@@ -220,6 +243,52 @@ main()
 		EXPECT(ArProbEncode(0x0080) == 3119);		// one in 512
 
 		SegmentDestroy(seg);
+	}
+
+	// ---- what a reading looks like from outside ----
+	{
+		// `CapHackDetermineContext` is the other half of the capitals
+		// hack: `CharModifyProbs` leans a letter towards its capital
+		// by height, and this says what having written one *means* for
+		// whatever comes next.
+		SearchColumn* first = gSearchColumns[0];
+		SearchNode* node = first->fNodes[0];
+		node->fField04 = 0;
+
+		// a reading that has come to a set of alternatives has no
+		// context at all
+		node->fTail = (WordTailRef) (kWordTailListBase + 1);
+		EXPECT(CapHackDetermineContext(node) == 0);
+
+		// lower case
+		node->fTail = Push(kWordTailNone, 'a');
+		EXPECT(CapHackDetermineContext(node) == 1);
+		// one capital, and two in a row - `Mc` is a name and `MC` is
+		// an abbreviation, and the grammar charges differently for
+		// what may follow them
+		WordTailRef cap = Push(kWordTailNone, 'M');
+		node->fTail = cap;
+		EXPECT(CapHackDetermineContext(node) == 3);
+		node->fTail = Push(cap, 'C');
+		EXPECT(CapHackDetermineContext(node) == 2);
+		node->fTail = Push(cap, 'c');
+		EXPECT(CapHackDetermineContext(node) == 1);
+
+		// an apostrophe after a lower-case letter is inside a word,
+		// not after one, so `don't` reads as one word
+		WordTailRef inWord = Push(Push(kWordTailNone, 'n'), '\'');
+		node->fTail = inWord;
+		EXPECT(CapHackDetermineContext(node) == 1);
+		// ... but one after anything else is not
+		WordTailRef after = Push(Push(kWordTailNone, '5'), '\'');
+		node->fTail = after;
+		EXPECT(CapHackDetermineContext(node) != 1);
+
+		// and the twelve are the same six twice over
+		node->fTail = Push(kWordTailNone, 'a');
+		node->fField04 = 2;
+		EXPECT(CapHackDetermineContext(node) == 7);
+		node->fField04 = 0;
 	}
 
 	// ---- everything given back ----

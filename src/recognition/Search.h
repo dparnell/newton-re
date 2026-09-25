@@ -47,8 +47,8 @@ struct WordRecog;
 // word tail - what has been read to get here.
 struct SearchNode
 {
-	long			fField00;		// +0x00
-	long			fField04;		// +0x04
+	long			fField00;		// +0x00  the kind of word it is in
+	long			fField04;		// +0x04  2 puts it in the upper six contexts
 	UByte			fField08;		// +0x08
 	UByte			fField09;		// +0x09
 	WordTailRef		fTail;			// +0x0a
@@ -68,7 +68,12 @@ struct SearchColumn
 	UByte			fCount;			// +0x78  how many of them are in use
 	UByte			fField79;		// +0x79
 	UByte			fField7a;		// +0x7a
-	UByte			fField7b[10];	// +0x7b .. +0x84
+	// How many of the readings in this column are of each kind of
+	// word, one count per lexicon class (`BiGSlice::fField2c`).  The
+	// grammar carries a limit for each of them in `fField15`, so that
+	// one kind of word cannot crowd the others out of the column -
+	// a beam that is kept deliberately varied.
+	UByte			fClassCounts[10];	// +0x7b .. +0x84
 	UByte			fPad85[3];
 	long			fField88;		// +0x88
 	long			fField8c;		// +0x8c
@@ -130,6 +135,12 @@ void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 				RosSegment* segment, Fixed confidence, Boolean endsWord,
 				short total);							// ROM 0x001cebac SearchDoViterbStep
 long	SearchBestWords(char** out, long a, long b, long count, UByte how);	// ROM 0x001d0c48 SearchBestWords
+
+// What a partial reading looks like from the outside, in twelve
+// classes, so that the grammar can charge differently for what may
+// follow it.  `Mc` and `MC` are not the same context, and an
+// apostrophe inside a word is not the end of one.
+long	CapHackDetermineContext(const SearchNode* node);	// ROM 0x001cff18 CapHackDetermineContext
 
 // NOT YET: the search itself.
 void	SearchProcessSegment(const BiGrammar* grammar, Fixed* probs, Fixed* scratch,

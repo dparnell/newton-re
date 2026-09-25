@@ -237,7 +237,7 @@ SearchBeginWord(const BiGrammar* grammar)
 	first->fField8c = 0;
 	first->fWords = nil;
 	for (long i = 0; i < 10; i++)
-		first->fField7b[i] = 0;
+		first->fClassCounts[i] = 0;
 
 	SearchNode* node = first->fNodes[first->fCount];
 	first->fCount = (UByte) (first->fCount + 1);
@@ -332,6 +332,58 @@ SearchCheckHashHit(char** word)
 			gSearchEasterCounts[i] = 0;
 }
 
+
+// ROM 0x001cff18 CapHackDetermineContext
+// What a partial reading looks like from the outside, in twelve
+// classes, so that the grammar can charge differently for what may
+// follow it.
+//
+// It is the **capitals hack** again, and this is the other half of it:
+// `CharModifyProbs` leans a letter towards its capital by height, and
+// this says what having written a capital *means* for the next one.
+// One capital is a different context from two in a row - `Mc` is a
+// name and `MC` is an abbreviation, and what may follow them differs -
+// and an apostrophe after a lower-case letter is read as part of the
+// word rather than the end of it, so that `don't` is one word.
+//
+// The twelve are six classes twice over: a node whose `fField04` is 2
+// takes the upper six.  A reading that has come to a word list rather
+// than a tail has no context at all.
+long
+CapHackDetermineContext(const SearchNode* node)
+{
+	WordTailRef tail = node->fTail;
+	if (tail >= kWordTailListBase)
+		return 0;
+
+	long base = (node->fField04 == 2) ? 6 : 0;
+	UByte last = WordTailAt(tail)->fChar;
+	const UByte* flags = RosCI->fCapCaseFlags;
+
+	if ((flags[last] & 1) != 0)
+	{
+		// a capital - and two in a row is a different thing again
+		WordTailRef before = WordTailAt(tail)->fNext;
+		if (before < kWordTailListBase
+			&& (flags[WordTailAt(before)->fChar] & 1) != 0)
+			return base + 2;
+		return base + 3;
+	}
+
+	if ((flags[last] & 2) == 0)
+	{
+		if ((flags[last] & 4) != 0)
+			return base + 5;
+		// an apostrophe with a lower-case letter in front of it is
+		// inside a word, not after one
+		WordTailRef before = WordTailAt(tail)->fNext;
+		if (last != '\''
+			|| before >= kWordTailListBase
+			|| (flags[WordTailAt(before)->fChar] & 2) == 0)
+			return base + 4;
+	}
+	return base + 1;
+}
 
 #pragma mark -
 /*--------------------------------------------------------------------

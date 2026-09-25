@@ -102,9 +102,8 @@ BiGrammarNew(short capacity)
 	// the ROM clears the eleven bytes from 0x14 to 0x1e one at a time;
 	// here they are the fields they belong to
 	grammar->fField14 = 0;
-	grammar->fField15 = 0;
-	grammar->fField16 = 0;
-	grammar->fField17 = 0;
+	for (long i = 0; i < 3; i++)
+		grammar->fClassLimits[i] = 0;
 	grammar->fField18 = 0;
 	grammar->fField1c = 0;
 	return grammar;
@@ -275,9 +274,8 @@ BiGrammarClone(const BiGrammar* src)
 		copy = BiGrammarCreate(src->fName, (short) src->fCount);
 		copy->fField04 = src->fField04;
 		copy->fField14 = src->fField14;
-		copy->fField15 = src->fField15;
-		copy->fField16 = src->fField16;
-		copy->fField17 = src->fField17;
+		for (long i = 0; i < 3; i++)
+			copy->fClassLimits[i] = src->fClassLimits[i];
 		copy->fField18 = src->fField18;
 		copy->fField1c = src->fField1c;
 
