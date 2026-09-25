@@ -120,7 +120,7 @@ main()
 	EXPECT(wr->fSavedRun[18] == FixedMultiply(0x0012d999, FixedDivide(0x000151c4, 0x000117d5)));
 	EXPECT(wr->fWordSize == FixedMultiply(0x0012d999, FixedDivide(0x000151c4, 0x0000fcb9)));
 	// ... and the second of each pair is Create2's
-	EXPECT(wr->fField124[0] == F(1) && wr->fField124[2] == F(-1));
+	EXPECT(wr->fWordLeft[0] == F(1) && wr->fWordRight[0] == F(-1));
 
 	// the run is learnt from and put back
 	Fixed capHeight = wr->fRun[20];

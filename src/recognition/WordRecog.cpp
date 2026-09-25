@@ -209,14 +209,16 @@ WordRecogCreate2(void* field00, void* field04,
 	// eight pairs, of which only the second word of each is set here;
 	// what the first word of the first pair is, `WordRecogReset` works
 	// out
-	wr->fField124[0] = 0x00010000;
-	wr->fField124[2] = (Fixed) 0xffff0000;
-	wr->fField124[4] = 0x00010000;
-	wr->fField124[6] = (Fixed) 0xffff0000;
-	wr->fField124[8] = (Fixed) 0xffff0000;
-	wr->fField124[10] = (Fixed) 0xffff0000;
-	wr->fField124[12] = 0;
-	wr->fField124[14] = 0;
+	// the word's box and middle, empty: the minima start at one and
+	// the maxima at minus one, so the first stroke sets them all
+	wr->fWordLeft[0] = 0x00010000;
+	wr->fWordRight[0] = (Fixed) 0xffff0000;
+	wr->fWordTop[0] = 0x00010000;
+	wr->fWordBottom[0] = (Fixed) 0xffff0000;
+	wr->fWordCentroidX[0] = (Fixed) 0xffff0000;
+	wr->fWordCentroidY[0] = (Fixed) 0xffff0000;
+	wr->fWordBodyTop[0] = 0;
+	wr->fWordBodyBottom[0] = 0;
 	WordRecogReset(wr);
 	return wr;
 }

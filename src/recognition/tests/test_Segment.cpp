@@ -554,6 +554,101 @@ main()
 		EXPECT(gSegLogWordSpacing == (Fixed) (long) expected);
 	}
 
+	// ---- where one word ends and the next begins ----
+	{
+		CharInitialize(0);
+		SegmentSetWordSpacing(5);			// the writer of ordinary habits
+
+		// the hand: a mean stroke size of twelve pixels, and the two
+		// spans the vertical test reaches by
+		static Fixed run[22];
+		for (long i = 0; i < 22; i++)
+			run[i] = 0;
+		run[0] = F(12);
+		run[2] = F(2);
+		run[6] = F(3);
+		run[20] = F(12);
+		run[21] = F(4);
+
+		// a letter twelve tall in a word of the same size, and the
+		// next letter written straight after it
+		SegWordRef ref;
+		ref.fInk.fLeft = F(20);		ref.fInk.fRight = F(30);
+		ref.fInk.fTop = F(50);		ref.fInk.fBottom = F(62);
+		ref.fInk.fCentroidX = F(25);	ref.fInk.fCentroidY = F(56);
+		ref.fInk.fHeight = F(13);	ref.fInk.fSizeMax = F(13);
+		ref.fBodyTop = ref.fInk.fTop;
+		ref.fBodyBottom = ref.fInk.fBottom;
+		ref.fStrokes = 1;
+
+		SegWordInk next;
+		next.fLeft = F(32);			next.fRight = F(42);
+		next.fTop = F(50);			next.fBottom = F(62);
+		next.fCentroidX = F(37);	next.fCentroidY = F(56);
+		next.fHeight = F(13);		next.fSizeMax = F(13);
+
+		Fixed strength = F(1);
+		EXPECT(SegmentWord(&next, &ref, F(12), F(12), run, &strength)
+			== kSegWordSame);
+		EXPECT(strength == 0);
+		// the ratio of this writing to the running mean was left behind
+		EXPECT(gSegSizeRatio > 0);
+
+		// the dot of an `i`, written after the letter and well behind
+		// it, is still the same word
+		SegWordInk dot;
+		dot.fLeft = F(23);			dot.fRight = F(25);
+		dot.fTop = F(46);			dot.fBottom = F(48);
+		dot.fCentroidX = F(24);		dot.fCentroidY = F(47);
+		dot.fHeight = F(3);			dot.fSizeMax = F(3);
+		EXPECT(SegmentWordBack(&dot, &ref, F(12), F(12), run, &strength) == false);
+
+		// ... but a stroke a long way to the left of where the word
+		// starts is the pen going back to begin something else
+		SegWordInk back = next;
+		back.fLeft = F(-40);		back.fRight = F(-30);
+		back.fCentroidX = F(-35);
+		EXPECT(SegmentWordBack(&back, &ref, F(12), F(12), run, &strength));
+		EXPECT(strength == F(1));
+		EXPECT(SegmentWord(&back, &ref, F(12), F(12), run, &strength)
+			== kSegWordWentBack);
+		EXPECT(SegmentWordBkVt(&back, &ref, F(12), F(12), run, &strength)
+			== kSegWordWentBack);
+
+		// a stroke on the next line down - below the word and left of
+		// it, which is what the start of a line looks like
+		SegWordInk below;
+		below.fLeft = F(18);		below.fRight = F(28);
+		below.fTop = F(90);			below.fBottom = F(102);
+		below.fCentroidX = F(23);	below.fCentroidY = F(96);
+		below.fHeight = F(13);		below.fSizeMax = F(13);
+		EXPECT(SegmentWordVert(&below, &ref, F(12), F(12), run, &strength));
+		EXPECT(strength == F(1));
+		EXPECT(SegmentWord(&below, &ref, F(12), F(12), run, &strength)
+			== kSegWordWentDown);
+		// and the next letter along is not
+		EXPECT(SegmentWordVert(&next, &ref, F(12), F(12), run, &strength) == false);
+		EXPECT(strength == 0);
+
+		// an ascender is not a new line: the top moves but the bottom
+		// and the middle do not, and all three must move together
+		SegWordInk tall;
+		tall.fLeft = F(32);			tall.fRight = F(40);
+		tall.fTop = F(40);			tall.fBottom = F(62);
+		tall.fCentroidX = F(36);	tall.fCentroidY = F(52);
+		tall.fHeight = F(23);		tall.fSizeMax = F(23);
+		EXPECT(SegmentWordVert(&tall, &ref, F(12), F(12), run, &strength) == false);
+
+		// the third test is NOT YET, so a space written without going
+		// back or down a line is not found
+		SegWordInk far = next;
+		far.fLeft = F(120);			far.fRight = F(130);
+		far.fCentroidX = F(125);
+		EXPECT(SegmentWordXGap(&far, &ref, F(12), F(12), run, &strength) == false);
+		EXPECT(SegmentWord(&far, &ref, F(12), F(12), run, &strength)
+			== kSegWordSame);
+	}
+
 	// ---- the rest of the layer's life ----
 	{
 		SegmentIntegrated(0);

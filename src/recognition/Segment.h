@@ -196,4 +196,89 @@ extern Fixed	MaxSegOnlyThreshold;					// ROM 0x0c101af8 MaxSegOnlyThreshold
 // numbers.  `RosettaSetArea` is what calls it.
 void	SegmentSetWordSpacing(long spacing);				// ROM 0x001d2490 SegmentSetWordSpacing
 
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	Where one word ends and the next begins.
+--------------------------------------------------------------------*/
+
+// The eight numbers a piece of writing is judged by: the box round it,
+// the middle of its ink, and two sizes.  The ROM passes these one
+// argument at a time - `SegmentWord` and its three tests take
+// twenty-three words between them, four in registers and nineteen on
+// the stack - and they are gathered here because they always travel
+// together.
+struct SegWordInk
+{
+	Fixed		fLeft;
+	Fixed		fRight;
+	Fixed		fTop;
+	Fixed		fBottom;
+	// the middle of the ink, not of the box (`StrokeCentroid`)
+	Fixed		fCentroidX;
+	Fixed		fCentroidY;
+	// how tall it is, and the greater of that and how wide - each with
+	// a pixel added, so that a perfectly flat stroke still has a size
+	Fixed		fHeight;
+	Fixed		fSizeMax;
+};
+
+// ... and what a new stroke is compared against, which is either the
+// stroke before it or the whole word so far.  The body band is the
+// narrower top and bottom that the writing's *body* lies in, without
+// its ascenders and descenders; `fStrokes` is how many strokes the
+// reference covers, and one of them means a single stroke, which the
+// vertical test treats more loosely.
+struct SegWordRef
+{
+	SegWordInk	fInk;
+	Fixed		fBodyTop;
+	Fixed		fBodyBottom;
+	long		fStrokes;
+};
+
+// How big the writing has turned out against the running mean, left
+// behind by whichever test last worked it out.  Nothing reads it; the
+// ROM keeps it for the debugger.
+extern Fixed	gSegSizeRatio;							// ROM 0x0c101adc (unnamed)
+
+// Whether a stroke begins a new word, and why:
+//
+// | | |
+// |---|---|
+// | 0 | the same word |
+// | 1 | the gap before it was too wide (`SegmentWordXGap`) |
+// | 2 | the writer went back (`SegmentWordBack`) |
+// | 3 | the writer went down a line (`SegmentWordVert`) |
+//
+const long	kSegWordSame		= 0;
+const long	kSegWordWideGap		= 1;
+const long	kSegWordWentBack	= 2;
+const long	kSegWordWentDown	= 3;
+
+// `strength` is set to nought or to one by whichever test answered.
+// `startSize` is `fRun[0]` as the word began, `wordSize` is
+// `WordRecog::fWordSize`, and `run` is the twenty-two running
+// measurements of the hand - every threshold below is scaled by how
+// big this writing has turned out against them, so the whole of this
+// is measured in the writer's own units rather than in pixels.
+long	SegmentWord(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d259c SegmentWord
+// ... the first two tests without the third.
+long	SegmentWordBkVt(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d26e8 SegmentWordBkVt
+
+// The writer went back: the new stroke lies to the left of where the
+// reference starts by more than the writing's own size allows.
+Boolean	SegmentWordBack(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d27d4 SegmentWordBack
+// The writer went down a line: the top, the bottom and the middle have
+// all moved out of the band the reference allows.
+Boolean	SegmentWordVert(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d2900 SegmentWordVert
+// The gap before it was too wide.  NOT YET: answers false, so a space
+// written on one line is not yet found.
+Boolean	SegmentWordXGap(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength);	// ROM 0x001d3064 SegmentWordXGap
+
 #endif	/* __SEGMENT_H */

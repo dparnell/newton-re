@@ -88,10 +88,13 @@ FIELDS = [
     ("fMinStrokeSize", "word", 1),		# +0x4c
     ("fField50", "word", 1),			# +0x50
     ("fMinCharWidth", "word", 1),		# +0x54
-    ("fField58", "word", 2),			# +0x58 .. +0x5c
+    ("fField58", "word", 1),			# +0x58
+    ("fMinBackGap", "word", 1),		# +0x5c
     ("fCharWidthFraction", "word", 1),	# +0x60
     ("fReachFraction", "word", 1),		# +0x64
-    ("fField68", "word", 4),			# +0x68 .. +0x74
+    ("fField68", "word", 2),			# +0x68 .. +0x6c
+    ("fBackGapStrokes", "word", 1),	# +0x70
+    ("fField74", "word", 1),			# +0x74
     ("fCutAspect", "word", 1),			# +0x78
     ("fCutAspectWithDot", "word", 1),	# +0x7c
     ("fLinkOverlap", "word", 1),		# +0x80

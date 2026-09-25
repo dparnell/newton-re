@@ -554,57 +554,41 @@ is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
 `fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
 are named for it.
 
-### Next: the strokes in, and where one word ends
+### Next: `SegmentWordXGap`, and then the strokes in
 
-The obvious next piece, and the groundwork for it is below so that it
-need not be derived again.
+Four of the five **word-spacing** functions are done
+(`recognition/Segment.h`): `SegmentWord`, `SegmentWordBkVt`,
+`SegmentWordBack` and `SegmentWordVert`, with the `SegWordInk` and
+`SegWordRef` argument bundles and `WordRecog`'s word-spacing state
+named (`fWordLeft`..`fWordHeight` for the word so far,
+`fLastLeft`..`fLastHeight` for the stroke just taken in).
 
-`WordRecogAddStroke` (0x00272728, 6940 B) is what takes a stroke into
-the word, and under it are the five **word-spacing** functions, which
-decide whether a stroke begins a new word:
+**`SegmentWordXGap` (0x001d3064, 5952 B) is what is left** - the gap
+before a stroke measured against what this writer's spaces look like.
+It answers false, so a space written without going back or down a line
+is not yet found.  It takes the same arguments as the other two tests
+and will want `gSegWordSpacing` and `gSegLogWordSpacing`, which
+`SegmentSetWordSpacing` already works out.
 
-| | | |
-|---|---|---|
-| `SegmentWord` | 0x001d259c | 332 B |
-| `SegmentWordBkVt` | 0x001d26e8 | 236 B |
-| `SegmentWordBack` | 0x001d27d4 | 248 B |
-| `SegmentWordVert` | 0x001d2900 | 1892 B |
-| `SegmentWordXGap` | 0x001d3064 | 5952 B |
+Above it, **`WordRecogAddStroke`** (0x00272728, 6940 B) is what takes a
+stroke into the word and calls all of this.  The groundwork for it:
 
-`SegmentWord` is just the three tests in order, and its answer says
-*why*: **2** the writer went back (`SegmentWordBack`), **3** the writer
-went down a line (`SegmentWordVert`), **1** the gap was too wide
-(`SegmentWordXGap`), **0** the same word.  `SegmentWordBkVt` is the
-first two without the third.
-
-All five take the **same twenty-three words** - four in r0-r3 and
-nineteen on the stack, which is why a decompile of `SegmentWord` shows
-twenty-three `undefined4`s.  `WordRecogAddStroke` pushes them at
-0x00272dac-0x00272e1c (and again at 0x00272ff8 and 0x002735e4); reading
-that call site gives, with `wr` the `WordRecog` and `S` the caller's
-frame:
-
-| arg | what it is |
-|---|---|
-| 1, 2 | two locals of the caller (an x of the stroke) |
-| 3, 4 | r8, r7 |
-| 5, 6 | r10, r9 |
-| 7..14 | `wr` at +0x16c, +0x170, +0x174, +0x178, +0x17c, +0x180, +0x174, +0x178 |
-| 15 | the constant 1 |
-| 16..19 | a local, `wr`+0x188, a local, `wr`+0x184 |
-| 20 | `wr->fField60` - `fRun[0]` as the word started |
-| 21 | `wr->fWordSize` |
-| 22 | `wr->fRun` (the twenty-two running measurements) |
-| 23 | where the answer's strength goes (nought, or 1.0) |
-
-So `WordRecog`'s `fPad160[0x38]` (+0x160..+0x197) is the word-spacing
-state, eight words of which (+0x16c..+0x188) are handed to every one of
-these; naming them is the first job.  `SegmentWordBack` and
-`SegmentWordVert` both start by taking the greater of args 18 and 19,
-averaging it with arg 20 and dividing by `fRun[0]` - the writing's size
-against the running mean, which is left in the global at 0x0c101adc -
-and scale every threshold by it, so all of this is measured in units of
-the writer's own hand rather than in pixels.
+- It fills the two blocks from the stroke: `[r5+0xc..0x18]` is the
+  stroke's box, `StrokeCentroid` gives the middle of its ink, the
+  height is `bottom - top + 1.0` and the size is the greater of that
+  and the width, plus one.  Those eight numbers go to
+  `fLastLeft`..`fLastHeight` and are folded into
+  `fWordLeft`..`fWordHeight` - minima for the left and the top, maxima
+  for the right, the bottom and both centroids.
+- `fWordBodyTop`/`fWordBodyBottom` are the narrower band the *body* of
+  the writing lies in, without its ascenders and descenders; a quarter
+  of the distance between them against 1.5 x `SegmentMinStrokeSize()`
+  is what decides whether a new stroke extends the band.
+- It calls `SegmentWord` three times (0x00272e1c, 0x00273008,
+  0x002735f4) comparing the new stroke against the *last stroke*, and
+  `SegmentWordBkVt` once (0x00273a6c) comparing it against the *whole
+  word* - which is what the reference's `fStrokes` distinguishes.
+- `fField18c`, `fField190` and `fField194` are the rest of its state.
 
 Also still NOT YET: `WordRecogAnalyzeWord`'s net calls,
 `RosettaSetArea` and the classify passes (3 KB), and the feature

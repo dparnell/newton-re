@@ -125,10 +125,17 @@ struct RosCommonInfo
 	// and that two strokes must come within to count as touching (a
 	// tenth).  `SegmentChars` works the two widths out from them.
 	Fixed				fMinCharWidth;		// +0x54
-	ULong				fField58[2];		// +0x58
+	ULong				fField58;			// +0x58
+	// How far behind the writing a stroke may start and still belong
+	// to the same word: fifteen pixels, or 2.7 stroke sizes if that
+	// is more.  This is what lets the dot of an `i` and the bar of a
+	// `t` be written after the letter and well behind it.
+	Fixed				fMinBackGap;		// +0x5c
 	Fixed				fCharWidthFraction;	// +0x60
 	Fixed				fReachFraction;		// +0x64
-	ULong				fField68[4];		// +0x68
+	ULong				fField68[2];		// +0x68 .. +0x6c
+	Fixed				fBackGapStrokes;	// +0x70  ... in stroke sizes
+	ULong				fField74;			// +0x74
 	// How wide a piece of writing may get before it is cut in two
 	// whatever else the strokes say: one and a half times as wide as
 	// it is tall, or one and three quarters when there is a dot

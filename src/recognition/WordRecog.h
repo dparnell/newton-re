@@ -153,8 +153,37 @@ struct WordRecog
 	// How big the word just measured is: the five lengths brought
 	// back to one scale and averaged (`WordRecogAnalyzeWord`).
 	Fixed			fWordSize;			// +0x120
-	Fixed			fField124[15];		// +0x124  Create2 sets every other one
-	UByte			fPad160[0x38];		// +0x160
+	// The word so far, as the word spacing judges it: the box round
+	// everything written, the rightmost middle of any stroke, and the
+	// narrower band the body of the writing lies in.  Each is a pair
+	// of which only the first is used here; `WordRecogCreate2` starts
+	// the four that are kept as minima at one and the four kept as
+	// maxima at minus one, so the first stroke sets them all.
+	Fixed			fWordLeft[2];		// +0x124
+	Fixed			fWordRight[2];		// +0x12c
+	Fixed			fWordTop[2];		// +0x134
+	Fixed			fWordBottom[2];		// +0x13c
+	Fixed			fWordCentroidX[2];	// +0x144
+	Fixed			fWordCentroidY[2];	// +0x14c
+	Fixed			fWordBodyTop[2];	// +0x154
+	Fixed			fWordBodyBottom[2];	// +0x15c
+	// how big the word is - the greater of its width and its height,
+	// and a pixel over - and how tall
+	Fixed			fWordSizeMax;		// +0x164
+	Fixed			fWordHeight;		// +0x168
+	// ... and the same eight numbers for the stroke just taken in,
+	// which is the other thing a new stroke is compared against
+	Fixed			fLastLeft;			// +0x16c
+	Fixed			fLastRight;			// +0x170
+	Fixed			fLastTop;			// +0x174
+	Fixed			fLastBottom;		// +0x178
+	Fixed			fLastCentroidX;		// +0x17c
+	Fixed			fLastCentroidY;		// +0x180
+	Fixed			fLastSizeMax;		// +0x184
+	Fixed			fLastHeight;		// +0x188
+	Fixed			fField18c;			// +0x18c
+	Fixed			fField190;			// +0x190
+	Fixed			fField194;			// +0x194
 	const BiGrammars*	fGrammars;		// +0x198
 	long			fContextIndex;		// +0x19c  < 0: fContext is ours to destroy
 	const BiGrammar*	fContext;		// +0x1a0

@@ -1321,3 +1321,329 @@ emit:
 	st->fLastCut = st->fCut;
 	return (short) st->fMade;
 }
+
+
+#pragma mark -
+/*--------------------------------------------------------------------
+	Where one word ends and the next begins.
+--------------------------------------------------------------------*/
+
+// ROM 0x0c101adc (unnamed)
+Fixed	gSegSizeRatio = 0;
+
+
+// How big the writing has turned out, against the running mean of the
+// writer's stroke sizes.  Every threshold in the three tests below is
+// scaled by a function of this, so all of it is measured in the
+// writer's own units rather than in pixels.  The ROM leaves the ratio
+// in a global of its own, which nothing reads.
+static Fixed
+SegWordSizeRatio(Fixed inkSize, Fixed refSize, Fixed startSize, const Fixed* run)
+{
+	Fixed size = (inkSize < refSize) ? refSize : inkSize;
+	if (size <= startSize)
+		size = startSize;
+	gSegSizeRatio = FixedDivide((size + startSize) >> 1, run[0]);
+	return gSegSizeRatio;
+}
+
+
+// ROM 0x001d27d4 SegmentWordBack
+// The writer went back.
+//
+// The new stroke may start to the left of where the reference starts -
+// the dot of an `i` and the bar of a `t` are written after the letter
+// and well behind it - but only by so much: 2.7 stroke sizes or
+// fifteen pixels, whichever is more, scaled by how big this writing
+// has turned out.  Further back than that and the pen has gone back to
+// begin something else.
+Boolean
+SegmentWordBack(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed /*wordSize*/, const Fixed* run, Fixed* strength)
+{
+	Fixed allow = FixedMultiply(RosCI->fBackGapStrokes, run[0]);
+	if (RosCI->fMinBackGap >= allow)
+		allow = RosCI->fMinBackGap;
+
+	// ... scaled by a gentle function of the writing's size: twice the
+	// ratio while the writing is small, one while it is between a half
+	// and twice the mean, and the ratio less one above that - averaged
+	// with the ratio's square root, which softens all three
+	Fixed ratio = SegWordSizeRatio(ink->fSizeMax, ref->fInk.fSizeMax, startSize, run);
+	Fixed lean;
+	if (ratio < 0x00008000)
+		lean = FixedDivide(ratio, 0x00008000);
+	else if (ratio < 0x00020001)
+		lean = 0x00010000;
+	else
+		lean = ratio - 0x00010000;
+	allow = FixedMultiply((lean + FixedSqrt(ratio)) >> 1, allow);
+
+	Boolean same = (ref->fInk.fLeft - ink->fRight) <= allow;
+	*strength = same ? 0 : 0x00010000;
+	return !same;
+}
+
+
+// ROM 0x001d2900 SegmentWordVert
+// The writer went down a line.
+//
+// Three things are measured against the reference - the middle of the
+// ink, the top and the bottom - and all three must have moved out of
+// the band allowed for them before the pen is said to have gone
+// somewhere else.  The bands come out of the word's own size, with a
+// floor of four or five pixels, and are then worked over four times:
+//
+// * small writing loosens the downward bands, by up to two and a half
+//   times, because a small stroke's box says less about where it sits;
+//   and when the reference is a *single* stroke the upward bands are
+//   loosened with them;
+// * a pen that has moved left of the reference tightens them, twice
+//   over and further the further it went, because moving left and
+//   moving down together is what starting a line looks like;
+// * a pen still inside the reference's own span loosens everything by
+//   a quarter again;
+// * and a pen just short of that span is judged by whether it is also
+//   clear of the reference vertically.
+Boolean
+SegmentWordVert(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength)
+{
+	Fixed bigger = ink->fSizeMax;
+	Fixed smaller = ref->fInk.fSizeMax;
+	if (ink->fSizeMax < ref->fInk.fSizeMax)
+	{
+		bigger = ref->fInk.fSizeMax;
+		smaller = ink->fSizeMax;
+	}
+
+	// the six bands, out of the word's size and never smaller than
+	// four or five pixels
+	Fixed upMiddle = FixedMultiply(0x00008000, wordSize);
+	if (upMiddle < 0x00040001)
+		upMiddle = 0x00040000;
+	Fixed upTop = FixedMultiply(0x00008666, wordSize);
+	if (upTop < 0x00040001)
+		upTop = 0x00040000;
+	Fixed upBottom = FixedMultiply(0x00008000, wordSize);
+	if (upBottom < 0x00040001)
+		upBottom = 0x00040000;
+	Fixed downMiddle = FixedMultiply(0x0000b333, wordSize);
+	if (downMiddle < 0x00050001)
+		downMiddle = 0x00050000;
+	Fixed downTop = FixedMultiply(0x0000c000, wordSize);
+	if (downTop < 0x00050001)
+		downTop = 0x00050000;
+	Fixed downBottom = FixedMultiply(0x0000b333, wordSize);
+	if (downBottom < 0x00050001)
+		downBottom = 0x00050000;
+
+	// scaled by the writing's size - by its square root while it is
+	// smaller than the mean, and by the ratio itself above it
+	Fixed ratio = SegWordSizeRatio(bigger, startSize, startSize, run);
+	Fixed lean = ratio;
+	if (ratio < 0x00010001)
+		lean = FixedSqrt(ratio);
+	upMiddle = FixedMultiply(lean, upMiddle);
+	upTop = FixedMultiply(lean, upTop);
+	upBottom = FixedMultiply(lean, upBottom);
+	downMiddle = FixedMultiply(lean, downMiddle);
+	downTop = FixedMultiply(lean, downTop);
+	downBottom = FixedMultiply(lean, downBottom);
+
+	// how big a stroke of this writing ought to be.  (The ROM works
+	// the ratio out a second time here and does not record it, which
+	// is the same number either way.)
+	Fixed again = (bigger < startSize) ? startSize : bigger;
+	Fixed nominal = FixedMultiply(
+					FixedSqrt(FixedDivide((again + startSize) >> 1, run[0])), run[0]);
+	Fixed half = FixedMultiply(0x00008000, nominal);
+	Fixed floor = FixedMultiply(0x00018000, RosCI->fMinStrokeSize);
+	if (half < floor)
+		half = floor;
+
+	// small writing: the downward bands are loosened, up to two and a
+	// half times
+	Fixed loosen;
+	if (smaller < half)
+	{
+		if (RosCI->fMinStrokeSize < smaller)
+			loosen = FixedMultiply(FixedDivide(half - smaller,
+							half - RosCI->fMinStrokeSize), 0x00018000) + 0x00010000;
+		else
+			loosen = 0x00028000;
+	}
+	else
+		loosen = 0x00010000;
+	downMiddle = FixedMultiply(loosen, downMiddle);
+	downTop = FixedMultiply(loosen, downTop);
+	downBottom = FixedMultiply(loosen, downBottom);
+	if (ref->fStrokes == 1)
+	{
+		// the reference is one stroke, which says very little about
+		// where the writing sits: loosen the upward bands too
+		upMiddle = FixedMultiply(loosen, upMiddle);
+		upTop = FixedMultiply(loosen, upTop);
+		upBottom = FixedMultiply(loosen, upBottom);
+	}
+
+	// the pen has moved left of the reference: the upward bands
+	// tighten, and further the further it went
+	Fixed back = FixedMultiply((Fixed) 0xffff0000, nominal);
+	Boolean tall = (ref->fBodyBottom < ink->fBottom)
+				|| ((RosCI->fMinStrokeSize + half) >> 1 < ink->fSizeMax);
+	if (ink->fCentroidX < ref->fInk.fRight + back && tall)
+	{
+		Fixed far = FixedMultiply(0x00018000, nominal);
+		Fixed tighten, tightenMiddle;
+		if (ref->fInk.fRight - far < ink->fCentroidX)
+		{
+			Fixed how = (ref->fInk.fRight + back) - ink->fCentroidX;
+			tighten = FixedMultiply(FixedDivide(how, back + far),
+							(Fixed) 0xffff4000) + 0x00010000;
+			tightenMiddle = FixedMultiply(FixedDivide(how, back + far),
+							(Fixed) 0xffff8ccc) + 0x00010000;
+		}
+		else
+		{
+			tighten = 0x00004000;
+			tightenMiddle = 0x00008ccc;
+		}
+		upBottom = FixedMultiply(tighten, upBottom);
+		upTop = FixedMultiply(tighten, upTop);
+		upMiddle = FixedMultiply(tightenMiddle, upMiddle);
+	}
+
+	// ... and further left still, the downward bands with it
+	back = FixedMultiply((Fixed) 0xfffe7334, nominal);
+	if (ink->fCentroidX < ref->fInk.fRight + back && tall)
+	{
+		Fixed far = FixedMultiply(0x00028000, nominal);
+		Fixed tighten, tightenMiddle;
+		if (ref->fInk.fRight - far < ink->fCentroidX)
+		{
+			Fixed how = (ref->fInk.fRight + back) - ink->fCentroidX;
+			tighten = FixedMultiply(FixedDivide(how, back + far),
+							(Fixed) 0xffff8000) + 0x00010000;
+			tightenMiddle = FixedMultiply(FixedDivide(how, back + far),
+							(Fixed) 0xffffd999) + 0x00010000;
+		}
+		else
+		{
+			tighten = 0x00008000;
+			tightenMiddle = 0x0000d999;
+		}
+		downBottom = FixedMultiply(tighten, downBottom);
+		downTop = FixedMultiply(tighten, downTop);
+		downMiddle = FixedMultiply(tightenMiddle, downMiddle);
+	}
+
+	// the pen is still inside the reference's own span, which two of
+	// the running measurements say how far reaches: everything loosens
+	// by a quarter again
+	Fixed reach = run[21];
+	Fixed span = run[2] + ref->fInk.fRight + reach * 2;
+	Fixed spanMiddle = run[6] + ref->fInk.fCentroidX + reach * 2;
+	if (spanMiddle <= span)
+		spanMiddle = span;
+	if (ref->fInk.fRight - (reach >> 3) <= ink->fCentroidX && ink->fCentroidX <= spanMiddle)
+	{
+		upBottom = FixedMultiply(0x00014666, upBottom);
+		downBottom = FixedMultiply(0x00014666, downBottom);
+		upTop = FixedMultiply(0x00014666, upTop);
+		downTop = FixedMultiply(0x00014666, downTop);
+		upMiddle = FixedMultiply(0x00014666, upMiddle);
+		downMiddle = FixedMultiply(0x00014666, downMiddle);
+	}
+
+	// ... and if it is just short of it, whether it is clear of the
+	// reference vertically as well
+	Fixed clear = FixedMultiply(0x0000547a, run[20]);
+	if (ink->fCentroidX >= ref->fInk.fRight - reach
+		&& ink->fCentroidX <= ref->fInk.fRight - (reach >> 3))
+	{
+		Fixed spread = 0x00018000;
+		Boolean above = ink->fCentroidY < ref->fInk.fCentroidY;
+		if (above || clear <= ink->fTop - ref->fInk.fBottom)
+		{
+			Fixed test = above ? ((ink->fBottom - ref->fInk.fTop) - clear)
+						: (ink->fCentroidY - ref->fInk.fCentroidY);
+			if (test < 0)
+				spread = FixedMultiply(0x00018000, 0x00018000);
+		}
+		else
+			spread = FixedMultiply(0x00018000, 0x00018000);
+		upBottom = FixedMultiply(spread, upBottom);
+		downBottom = FixedMultiply(spread, downBottom);
+		upTop = FixedMultiply(spread, upTop);
+		downTop = FixedMultiply(spread, downTop);
+		upMiddle = FixedMultiply(spread, upMiddle);
+		downMiddle = FixedMultiply(spread, downMiddle);
+	}
+
+	// The three measurements.  The top and the bottom are taken
+	// against three parts of the body band to one of the whole box,
+	// which is the same number when the reference is one stroke - the
+	// caller passes its top and bottom twice - and the body's when it
+	// is a word.
+	Fixed top = ink->fTop - ((ref->fBodyTop * 3 + ref->fInk.fTop) >> 2);
+	Fixed middle = ink->fCentroidY - ref->fInk.fCentroidY;
+	Fixed bottom = ink->fBottom - ((ref->fBodyBottom * 3 + ref->fInk.fBottom) >> 2);
+
+	// all three outside their bands, or it is the same word
+	if ((middle < -downMiddle || middle > upMiddle)
+		&& (top < -downTop || top > upTop)
+		&& (bottom < -downBottom || bottom > upBottom))
+	{
+		*strength = 0x00010000;
+		return true;
+	}
+	*strength = 0;
+	return false;
+}
+
+
+// ROM 0x001d3064 SegmentWordXGap
+// NOT YET: the gap before the stroke measured against what this
+// writer's spaces look like.  Answers false, so a space written
+// without going back or down a line is not yet found.
+Boolean
+SegmentWordXGap(const SegWordInk* /*ink*/, const SegWordRef* /*ref*/, Fixed /*startSize*/,
+				Fixed /*wordSize*/, const Fixed* /*run*/, Fixed* strength)
+{
+	*strength = 0;
+	return false;
+}
+
+
+// ROM 0x001d26e8 SegmentWordBkVt
+// The first two tests without the third, which is what the engine asks
+// when the stroke has already been taken in and only the question of
+// whether the *word* ended is left.
+long
+SegmentWordBkVt(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength)
+{
+	if (SegmentWordBack(ink, ref, startSize, wordSize, run, strength))
+		return kSegWordWentBack;
+	if (SegmentWordVert(ink, ref, startSize, wordSize, run, strength))
+		return kSegWordWentDown;
+	return kSegWordSame;
+}
+
+
+// ROM 0x001d259c SegmentWord
+// Whether this stroke begins a new word, and why.  The three tests are
+// asked in order and the first that answers wins, so a pen that went
+// back is reported as having gone back even if it also went down.
+long
+SegmentWord(const SegWordInk* ink, const SegWordRef* ref, Fixed startSize,
+				Fixed wordSize, const Fixed* run, Fixed* strength)
+{
+	if (SegmentWordBack(ink, ref, startSize, wordSize, run, strength))
+		return kSegWordWentBack;
+	if (SegmentWordVert(ink, ref, startSize, wordSize, run, strength))
+		return kSegWordWentDown;
+	return SegmentWordXGap(ink, ref, startSize, wordSize, run, strength)
+			? kSegWordWideGap : kSegWordSame;
+}

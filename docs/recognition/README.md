@@ -2771,6 +2771,79 @@ term only runs from -1.14 to +3.18 - but the top half of the writer's
 spacing slider does not behave like the bottom half. Ported as it
 stands, and `test_Segment` pins the whole curve.
 
+#### Where one word ends and the next begins
+
+`SegmentWord` (`recognition/Segment.h`) is what
+`WordRecogAddStroke` asks about every stroke, and its answer says not
+only whether a new word has begun but *why*:
+
+| | |
+|---|---|
+| 0 | the same word |
+| 1 | the gap before it was too wide (`SegmentWordXGap`) |
+| 2 | the writer went back (`SegmentWordBack`) |
+| 3 | the writer went down a line (`SegmentWordVert`) |
+
+The three tests are asked in that order and the first that answers
+wins, so a pen that went back is reported as having gone back even if
+it also went down.  `SegmentWordBkVt` is the first two without the
+third.
+
+All of them take the same twenty-three words - the ROM passes four in
+registers and nineteen on the stack, which is why a decompile shows
+twenty-three `undefined4`s.  They are three things: the **new stroke**
+and the **reference** it is judged against, each as a box, the middle
+of its ink and two sizes (`SegWordInk`), and the writer's hand - the
+stroke size the word started at, the word's own size, and the
+twenty-two running measurements.  The reference is either the stroke
+just taken in or the whole word so far, and it carries the narrower
+band the body of the writing lies in and how many strokes it covers
+(`SegWordRef`).  Every threshold below is scaled by how big this
+writing has turned out against the running mean, so the whole of it is
+measured in the writer's own units rather than in pixels.
+
+**`SegmentWordBack`** is a single test.  A stroke may start to the left
+of where the reference starts - the dot of an `i` and the bar of a `t`
+are written after the letter and well behind it - but only by so much:
+2.7 stroke sizes or fifteen pixels, whichever is more
+(`RosCommonInfo::fBackGapStrokes` and `fMinBackGap`), scaled by a
+gentle function of the size ratio: twice the ratio while the writing is
+small, one while it is between a half and twice the mean, and the ratio
+less one above that, averaged with its own square root.
+
+**`SegmentWordVert`** measures three things - the middle of the ink,
+the top and the bottom - against bands allowed for them, and **all
+three** must have moved out before the pen is said to have gone to a
+new line.  That is what stops an ascender or a descender from breaking
+a word: one of the three moves and the other two do not.  The bands
+come out of the word's size with a floor of four or five pixels, and
+are then worked over four times:
+
+- small writing loosens the downward bands, by up to two and a half
+  times, because a small stroke's box says less about where it sits;
+  and when the reference is a single stroke the upward bands are
+  loosened with them;
+- a pen that has moved left of the reference tightens them, twice over
+  and further the further it went, because moving left and moving down
+  together is what the start of a line looks like;
+- a pen still inside the reference's own span loosens everything by a
+  quarter again;
+- and a pen just short of that span is judged by whether it is clear of
+  the reference vertically as well.
+
+The top and the bottom are taken against three parts of the body band
+to one of the whole box - the same number when the reference is a
+single stroke, because the caller passes its top and bottom twice, and
+the body's when it is a word.
+
+`test_Segment` drives all of it: the next letter along is the same
+word, the dot of an `i` is the same word, a stroke a long way left is
+the pen going back, a stroke on the next line down is the pen going
+down, and an ascender is neither.
+
+**`SegmentWordXGap`** (5952 B) is NOT YET and answers false, so a space
+written without going back or down a line is not yet found.
+
 #### The word recogniser's own way into the classifier
 
 `WordRecogNetEvaluate` and `WordRecogNetSetInputs` are the twins of the
