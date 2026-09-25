@@ -419,6 +419,13 @@ ROM bug worth reading: the constant above the middle setting is
 slider runs 6.75, 12.5, 18.25, 24 where the bottom half runs 0.32 to
 1.00.  `docs/curiosities.md` has it.
 
+The word recogniser's own way into the classifier is done as well -
+`WordRecogNetEvaluate`/`WordRecogNetSetInputs`, the twins of the
+`CharBox` pair, keeping the patternizer on the recogniser because a
+word is read one candidate letter at a time.  `test_WordRecog` puts the
+same writing through them that `test_CharBox` puts through the other
+path and gets the same three answers.
+
 Still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the

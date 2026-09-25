@@ -539,6 +539,65 @@ main()
 
 	RSfRcl();
 	EXPECT(RosCI == nil);
+	// ---- the classifier run over a piece of a word ----
+	{
+		CharInitialize(0);			// the common info again: RSfRcl gave it back
+		// The word recogniser's own way into the net, which is the twin
+		// of `CharBoxNetEvaluate` - the ROM has the 256-code mapping
+		// written out twice.  Given the same writing it must answer the
+		// same thing.
+		BPNet* net = BPNetCreateNumOut(134);
+		BPNetLoad(net, nil);
+		WordRecog* wr = WordRecogNew();
+		WordRecogAllocate(wr);
+		wr->fNet = net;
+
+		// an upright stroke crossed by a level one, as the CharBox test
+		// writes it
+		RosStroke* made[2];
+		FPoint a[2], b[2];
+		a[0].x = F(25);	a[0].y = F(22);
+		a[1].x = F(25);	a[1].y = F(58);
+		b[0].x = F(12);	b[0].y = F(40);
+		b[1].x = F(38);	b[1].y = F(40);
+		made[0] = StrokeCreate(2, a);
+		made[1] = StrokeCreate(2, b);
+		RosStrokeList* writing = SLCreate(2, made);
+
+		Fixed probs[256];
+		EXPECT(wr->fPatternizer == nil && wr->fPattern == nil);
+		WordRecogNetEvaluate(wr, net, writing, F(58), F(36), F(36), F(58), F(36), 0,
+						F(36), F(36), F(36), probs);
+		// the patternizer and its pattern were made on the way through
+		// and kept, because a word is read one candidate letter at a
+		// time and there may be dozens
+		EXPECT(wr->fPatternizer != nil && wr->fPattern != nil);
+		NetPatternizer* first = wr->fPatternizer;
+
+		// + , t and T, and nothing else out of 256 - the same answer
+		// `test_CharBox` gets
+		EXPECT(probs['+'] == 0xf100);
+		EXPECT(probs['t'] == 0xe500);
+		EXPECT(probs['T'] == 0x0100);
+		long sure = 0;
+		for (long code = 0; code < 256; code++)
+		{
+			EXPECT(probs[code] >= 0 && probs[code] <= 0xff00);
+			if (probs[code] > 0)
+				sure++;
+		}
+		EXPECT(sure == 3);
+
+		// a second reading does not make them again
+		WordRecogNetEvaluate(wr, net, writing, F(58), F(36), F(36), F(58), F(36), 0,
+						F(36), F(36), F(36), probs);
+		EXPECT(wr->fPatternizer == first);
+		EXPECT(probs['+'] == 0xf100);
+
+		SLDestroy(writing, 1);
+		WordRecogDestroy(wr);
+	}
+
 	if (failures == 0)
 		printf("test_WordRecog: all passed\n");
 	else

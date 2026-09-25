@@ -2662,6 +2662,28 @@ term only runs from -1.14 to +3.18 - but the top half of the writer's
 spacing slider does not behave like the bottom half. Ported as it
 stands, and `test_Segment` pins the whole curve.
 
+#### The word recogniser's own way into the classifier
+
+`WordRecogNetEvaluate` and `WordRecogNetSetInputs` are the twins of the
+`CharBox` pair, and the ROM has the 256-code mapping written out twice.
+Two things differ.
+
+The patternizer and its pattern are made the first time they are wanted
+and then **kept on the word recogniser** (`fPatternizer`, `fPattern`),
+because a word is read one candidate letter at a time and the lattice
+the segment layer hands up may hold dozens of them; a `CharBox` makes
+its own once and keeps it for as long as the box lasts.
+
+And all twelve geometry numbers go straight through to the
+patternizer's `SLToPat`, where `CharBoxNetSetInputs` passes two of its
+own twice - a box has no separate second baseline to offer, so the
+tenth and eleventh arguments repeat the fifth and the eighth.
+
+`test_WordRecog` puts the same upright-crossed-by-a-level-stroke
+through this path that `test_CharBox` puts through the other, and gets
+the same three answers: `+` at 0xf100, `t` at 0xe500, `T` at 0x0100,
+and nothing else out of 256.
+
 ### One letter in a box (`recognition/CharBox.h`)
 
 `CharBox` is the shortest way through the engine, and the first end of

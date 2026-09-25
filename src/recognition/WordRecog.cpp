@@ -9,6 +9,8 @@
 */
 
 #include "WordRecog.h"
+#include "NetPattern.h"
+#include "RosEngine.h"
 #include "Segment.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
@@ -1058,4 +1060,79 @@ WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*fie
 	end_try;
 
 	wr->fStrokeCount = (short) (wr->fStrokeCount + 1);
+}
+
+
+// ROM 0x0027627c WordRecogNetSetInputs
+// The writing measured into the pattern, and the pattern written into
+// the net's inputs.  All twelve geometry numbers go straight through -
+// unlike `CharBoxNetSetInputs`, which passes two of its own twice
+// because a box has no separate second baseline to offer.
+void
+WordRecogNetSetInputs(NetPattern* pattern, BPNet* net, RosStrokeList* strokes,
+				Fixed base, Fixed height, Fixed arg6, Fixed altBase, Fixed altHeight,
+				Fixed arg9, Fixed arg10, Fixed arg11, Fixed capHeight)
+{
+	const NetPatternizerType* type = pattern->fPatternizer->fType;
+	type->fSLToPat(net, strokes, pattern, base, height, arg6, altBase,
+				altHeight, arg9, arg10, arg11, capHeight);
+	type->fSetInput(pattern);
+}
+
+
+// ROM 0x00276134 WordRecogNetEvaluate
+// The classifier run over a piece of a word, and what it thinks of each
+// of the 256 character codes left in `out`.
+//
+// The patternizer and its pattern are made the first time they are
+// wanted and kept on the word recogniser afterwards, because a word is
+// read one candidate letter at a time and there may be dozens of them.
+//
+// The mapping from the net's 134 outputs to the 256 codes is the same
+// as `CharBoxNetEvaluate`'s, and the ROM has it written out twice: a
+// code the area will not have scores nothing, a code standing for one
+// shape takes its node's output widened by a shift of eight, and a code
+// that is really two characters takes the product of its two parts'
+// outputs - or, when both parts map to the same node, that node's
+// output on its own.
+void
+WordRecogNetEvaluate(WordRecog* wr, BPNet* net, RosStrokeList* strokes,
+				Fixed base, Fixed height, Fixed arg6, Fixed altBase, Fixed altHeight,
+				Fixed arg9, Fixed arg10, Fixed arg11, Fixed capHeight,
+				Fixed* out)
+{
+	if (wr->fPatternizer == nil)
+		wr->fPatternizer = NetPatternizerCreateFromBP(net);
+	if (wr->fPattern == nil)
+		wr->fPattern = NetPatternCreate(wr->fPatternizer);
+
+	WordRecogNetSetInputs(wr->fPattern, net, strokes, base, height, arg6,
+					altBase, altHeight, arg9, arg10, arg11, capHeight);
+	BPNetEvaluate(net);
+
+	const UByte* outputs = net->fOutputs;
+	for (long code = 0; code < 256; code++)
+	{
+		if ((RosCI->fLegalUse[code >> 5] & (1UL << (code & 31))) == 0)
+		{
+			out[code] = 0;
+			continue;
+		}
+		UByte part1 = RosCI->fCompoundPart1[code];
+		UByte node;
+		if (part1 == 0)
+			node = RosCI->fCharToNetNode[code];
+		else
+		{
+			node = RosCI->fCharToNetNode[part1];
+			UByte node2 = RosCI->fCharToNetNode[RosCI->fCompoundPart2[code]];
+			if (node != node2)
+			{
+				out[code] = FixedMultiply((Fixed) ((ULong) outputs[node] << 8),
+								(Fixed) ((ULong) outputs[node2] << 8));
+				continue;
+			}
+		}
+		out[code] = (Fixed) ((ULong) outputs[node] << 8);
+	}
 }

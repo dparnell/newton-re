@@ -55,10 +55,10 @@
 				`FailureString`, "????", which is the same four
 				characters a word arrives at the view as.
 
-	NOT YET: `WordRecogAddStroke` and `WordRecogAddStroke2`, which take
-	the strokes in; `WordRecogAnalyzeWord` and the net calls, which read
-	them; and the segment side.  What is here is the block, its life and
-	the handing back.
+	NOT YET: `WordRecogAddStroke`, the eight-kilobyte function that
+	takes the strokes in and works out where the words are, and
+	`WordRecogAnalyzeWord`, which reads them.  `WordRecogAddStroke2`,
+	the net calls and the block's own life are done.
 
 	Reconstructed from the MP2x00 US ROM (0x00272728-0x002766c0); each
 	function cites its origin.
@@ -332,5 +332,19 @@ extern RosStroke*	gXGapStroke;		// ROM 0x0c104f94 (unnamed)
 extern Fixed		gXGapMidX;			// ROM 0x0c104f8c (unnamed)
 extern RosStroke*	gPrevXGapStroke;	// ROM 0x0c104f98 (unnamed)
 extern Fixed		gPrevXGapMidX;		// ROM 0x0c104f90 (unnamed)
+
+
+// The classifier run over a piece of a word, and a probability out of
+// 0x10000 left in `out` for each of the 256 character codes - the same
+// mapping `CharBoxNetEvaluate` makes, which the ROM writes out twice.
+// The patternizer and its pattern are made the first time they are
+// wanted and kept on the recogniser afterwards.
+void	WordRecogNetEvaluate(WordRecog* wr, BPNet* net, RosStrokeList* strokes,
+					Fixed base, Fixed height, Fixed arg6, Fixed altBase, Fixed altHeight,
+					Fixed arg9, Fixed arg10, Fixed arg11, Fixed capHeight,
+					Fixed* out);						// ROM 0x00276134 WordRecogNetEvaluate
+void	WordRecogNetSetInputs(NetPattern* pattern, BPNet* net, RosStrokeList* strokes,
+					Fixed base, Fixed height, Fixed arg6, Fixed altBase, Fixed altHeight,
+					Fixed arg9, Fixed arg10, Fixed arg11, Fixed capHeight);	// ROM 0x0027627c WordRecogNetSetInputs
 
 #endif	/* __WORDRECOG_H */
