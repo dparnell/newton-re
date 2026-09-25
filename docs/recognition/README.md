@@ -1958,8 +1958,10 @@ synthetic "c" comes back with every code under 0.6% (so all the readings
 of a word with one in it tie), while the picture the classifier is shown
 is upright and unmirrored and a "c" a little narrower than an "o" reads
 as "C" or "c" - the net is particular about its c's rather than broken.
-Above the engine: the training calls (`TRosRecognizer`'s learning is
-stubbed) and the shape domain.
+There is nothing to train: the recogniser protocol has no training
+calls, and the machine learns a writer's words only through the
+dictionaries (`recognition/Learning.h`).  Above the engine, the shape
+domain is NOT YET.
 
 The rest of this section is the engine as it was read, bottom up.
 
