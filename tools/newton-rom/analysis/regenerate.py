@@ -63,7 +63,7 @@ GENERATED = [
      "romtable.py", ["{build}", "kGeoWeights@0x003714d0:i32:81",
                      "-o", "src/recognition/GeoTables.cpp"]),
     ("angles",
-     "romtable.py", ["{build}", "kSlopeWhole@0x00380cbd:u8:27", "kSlopeFraction@0x00380cd8:u16:91",
+     "romtable.py", ["{build}", "kSlopeWhole@0x00380cbc:u8:28", "kSlopeFraction@0x00380cd8:u16:91",
                      "kDegreesOfFraction@0x00380d8e:u8:64", "kTangentBelowOne@0x00380dd0:u32:46",
                      "kDegreesOfWhole@0x00380e80:u8:64", "kTangentAboveOne@0x00380ec0:u32:46",
                      "-o", "src/toolbox/AngleTables.cpp"]),

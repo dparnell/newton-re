@@ -35,6 +35,7 @@ add_library(recognition STATIC
     ShapeEllipses.cpp
     ShapeSolver.cpp
     ShapeTrends.cpp
+    ShapeEquations.cpp
     ShapeTables.cpp
     Controller.cpp
     Arbiter.cpp

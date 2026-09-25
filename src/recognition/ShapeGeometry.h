@@ -208,4 +208,70 @@ Boolean	BeforeCluster(Cluster* cluster, long value);			// ROM 0x0022bdb0 BeforeC
 Boolean	InCluster(Cluster* cluster, long value);				// ROM 0x0022bdc8 InCluster__FP7Clusterl
 Fixed	VarStretch(long count);									// ROM 0x0022bde0 VarStretch__Fl
 
+// ShapeEquations.cpp: the equations of a shape of straight sides.
+// A side's place among the clusters (the ROM's SideMap, 20 bytes).
+struct SideMap
+{
+	long		fCluster;		// +0x00  its direction's AngCluster
+	long		fMember;		// +0x04  its length's member there
+	long		fLength;		// +0x08  its length (the length cluster's mean)
+	long		fSignX;			// +0x0c  the signs of its components as drawn
+	long		fSignY;			// +0x10
+};
+
+// The sides of one length in one direction (36 bytes).
+struct SideList
+{
+	long		fCount;			// +0x00
+	long		fSides[8];		// +0x04
+};
+
+// One length of an AngCluster (16 bytes).
+struct AngMember
+{
+	long		fLength;		// +0x00
+	long		fList;			// +0x04  which SideList holds its sides
+	long		fBase;			// +0x08  the member it is a whole multiple of (-1: none)
+	long		fMultiple;		// +0x0c  how many times
+};
+
+// One direction the sides take (0x140 bytes; FindEquations keeps eight).
+struct AngCluster
+{
+	long		fAngle;			// +0x00  whole degrees from the vertical
+	long		fPerpendicular;	// +0x04  the cluster at right angles to it (-1: none)
+	long		fMirror;		// +0x08  the cluster it is mirrored in (-1: none)
+	long		fAxis;			// +0x0c  1 upright, 2 level, 0 neither
+	Fixed		fSlope;			// +0x10
+	long		fMembers;		// +0x14  how many lengths
+	SideList	fLists[5];		// +0x18
+	AngMember	fMember[5];		// +0xcc  in order of length
+	long		fPairs;			// +0x11c  pairs of clusters mirrored in this one
+	long		fPair[8];		// +0x120  the pairs' cluster numbers
+};
+
+extern long	gFourSided;											// ROM 0x0c104d44 (unnamed)
+
+void	AccessPoint(long index, TDArray* shape, GeneralPt* pt);	// ROM 0x00216e54 AccessPoint__FlP7TDArrayP9GeneralPt
+Handle	NewCoeffs(EqSystem* system);							// ROM 0x00225330 NewCoeffs__FP8EqSystem
+void	GenTopLevEqs(long i, long dx, long dy, long* values);	// ROM 0x0022531c GenTopLevEqs__FlN21Pl
+void	GenAuxEqs(long i, GeneralPt* a, GeneralPt* b, long* values);	// ROM 0x002252f0 GenAuxEqs__FlP9GeneralPtT2Pl
+void	FindCoords(long i, UByte closed, long n, TDArray* shape, long* dx, long* dy);	// ROM 0x00225268 FindCoords__FlUcT1P7TDArrayPlT5
+Boolean	GenSameAngEqs(long i, long j, UByte swap, long a, long b, long c, long d, EqSystem* system);	// ROM 0x002253b4 GenSameAngEqs__FlT1UcN41P8EqSystem
+Boolean	GenSlopeEqs(long i, long j, UByte swap, Fixed k, EqSystem* system);	// ROM 0x0022546c GenSlopeEqs__FlT1UcT1P8EqSystem
+Boolean	GenAlignEqs(long i, long axis, EqSystem* system);		// ROM 0x00225514 GenAlignEqs__FlT1P8EqSystem
+Boolean	GenEqEqs(long i, long j, long k, UByte swap, long a, long b, long c, EqSystem* system);	// ROM 0x002256bc GenEqEqs__FlN21UcN31P8EqSystem
+Boolean	GenSumEqs(long last, long* weights, long component, EqSystem* system);	// ROM 0x00225740 GenSumEqs__FlPlT1P8EqSystem
+void	Inserter(long side, long length, long angle, long* index, UByte* allAxes, long* nClusters, AngCluster* clusters, TTrend* trend, long sides, SideMap* map);	// ROM 0x00225810 Inserter__FlN21PlPUcT4P10AngClusterP6TTrendT1P7SideMap
+void	PlaceAngle(long* angle, long* low, long* high, long* innerLow, long* innerHigh);	// ROM 0x00225bb8 PlaceAngle__FPlN41
+Boolean	AxisAngle(long axis, long* angle);						// ROM 0x00225c8c AxisAngle__FlPl
+void	StuffAxes(long* nClusters, AngCluster* clusters, long sides, SideMap* map);	// ROM 0x00225d04 StuffAxes__FPlP10AngClusterlP7SideMap
+Boolean	RelateAngs(long* nClusters, AngCluster* clusters, long sides, SideMap* map);	// ROM 0x00225f50 RelateAngs__FPlP10AngClusterlP7SideMap
+Boolean	BisectTest(AngCluster* clusters, long i, long j, long k);	// ROM 0x0022632c BisectTest__FP10AngClusterlN22
+void	MergeClusters(long index, long* nClusters, AngCluster* clusters, long sides, SideMap* map);	// ROM 0x00226388 MergeClusters__FlPlP10AngClusterT1P7SideMap
+Boolean	FamilyRotEqs(AngCluster* clusters, long c, UByte closed, long n, TDArray* shape, SideMap* map, UByte* nonlinear, EqSystem* system, long* families);	// ROM 0x0022483c FamilyRotEqs__FP10AngClusterlUcT2P7TDArrayP7SideMapPUcP8EqSystemPl
+Boolean	FamilyReflEqs(AngCluster* clusters, long c, UByte closed, long n, TDArray* shape, UByte* nonlinear, EqSystem* system);	// ROM 0x00224f74 FamilyReflEqs__FP10AngClusterlUcT2P7TDArrayPUcP8EqSystem
+Boolean	AlignRotEqs(AngCluster* clusters, long n, TDArray* shape, SideMap* map, EqSystem* system);	// ROM 0x00226584 AlignRotEqs__FP10AngClusterlP7TDArrayP7SideMapP8EqSystem
+Boolean	DirSumEqs(long n, SideMap* map, AngCluster* clusters, UByte* nonlinear, UByte* closing, EqSystem* system);	// ROM 0x00223f58 DirSumEqs__FlP7SideMapP10AngClusterPUcT4P8EqSystem
+
 #endif	/* __SHAPEGEOMETRY_H */

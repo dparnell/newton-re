@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-extern const unsigned char	kSlopeWhole[27];			// AngleTables.cpp
+extern const unsigned char	kSlopeWhole[28];			// AngleTables.cpp
 extern const unsigned short	kSlopeFraction[91];
 extern const unsigned char	kDegreesOfFraction[64];
 extern const unsigned int	kTangentBelowOne[46];
@@ -71,7 +71,8 @@ MidAngle(long a, long b)
 // The tangent of a whole number of degrees as a 16.16 slope, from two
 // tables: the fraction of every degree's tangent from 0 to 90, and the
 // whole part of the tangents from 64 degrees on (below that it is 0 up to
-// 45 and 1 after).  90 degrees is 0x7fff and a fraction.  Like
+// 45 and 1 after; the whole-part table is cited from 63, the byte before,
+// which is never read, so that it starts on a halfword).  90 degrees is 0x7fff and a fraction.  Like
 // AngleFromSlope it is a screen slope: an angle up to 90 degrees gives a
 // negative one.
 Fixed
@@ -93,7 +94,7 @@ SlopeFromAngle(long degrees)
 		whole = (whole + 1) & 0xffff;
 		if (a >= 64)
 		{
-			whole = ((whole & 0xff00) + kSlopeWhole[a - 64]) & 0xffff;
+			whole = ((whole & 0xff00) + kSlopeWhole[a - 63]) & 0xffff;
 			if (a == 90)
 				whole |= 0x7f00;
 		}

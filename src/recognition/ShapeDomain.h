@@ -74,6 +74,13 @@ enum
 	kShapeOpen			= 5,		// an open polyline
 	kShapeClosedCurve	= 6,		// closed, and not yet drawn as more than one stroke
 	kShapeGrouping		= 7,		// what a unit is while strokes are still joining it
+	kShapeOpenCurve		= 7,		// (and what FindEquations calls an open shape with curves in it)
+	kShapeLine			= 8,		// straightened; the angle is its direction from the vertical
+	kShapeTriangle		= 9,
+	kShapeSquare		= 10,		// (or a rhombus: four sides of one length)
+	kShapeRectangle		= 11,		// (or a parallelogram)
+	kShapeQuadrilateral	= 12,		// four sides with nothing to solve
+	kShapeArc			= 13,
 	kShapeNothing		= 15		// the classifier gave up
 };
 

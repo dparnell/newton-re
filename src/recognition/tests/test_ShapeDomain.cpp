@@ -533,6 +533,75 @@ TestTrend(void)
 }
 
 
+// The tidying Classify does after FindKeyPoints: the equations found,
+// solved and put back.  values[0] is what PlugNewVals says of a
+// four-sided shape.
+static void
+Tidied(TDomain* domain, const char* name, const long* corners, long count, long startType,
+	   long* type, long* angle, long* values, TGeneralShapeUnit** result)
+{
+	ULong score = 0;
+	*type = startType;
+	TGeneralShapeUnit* unit = Fitted(domain, corners, count, type, &score);
+	values[0] = 0;
+	*angle = 0;
+	EqSystem system;
+	system.fCount = 0;
+	Boolean solvable = FindEquations(unit, values, &system, type, &score, angle);
+	Boolean solved = false;
+	if (solvable)
+	{
+		solved = SolveEquations(&system, values);
+		if (solved)
+			PlugNewVals(unit, values, &system);
+	}
+	ReleaseEqs(&system);
+	printf("  %s: type %ld score %lu angle %.1f solvable %d solved %d values[0] %lx\n", name, *type,
+		   (unsigned long) score, *angle / 65536.0, solvable, solved, (unsigned long) values[0]);
+	DumpShape(unit);
+	*result = unit;
+}
+
+static void
+TestEquations(TDomain* domain)
+{
+	SetScreenDistances();
+	long type, angle;
+	long values[75];
+	TGeneralShapeUnit* unit;
+
+	static const long box[] = { 50, 50, 152, 53, 149, 131, 48, 128, 51, 52 };
+	Tidied(domain, "box", box, 5, kShapeClosedCurve, &type, &angle, values, &unit);
+	TDArray* shape = unit->GetGeneralShape();
+	EXPECT(shape != nil && shape->Count() == 5);
+	if (shape != nil && shape->Count() == 5)
+	{
+		// level and upright sides
+		for (long k = 0; k < 4; k++)
+		{
+			GeneralPt* a = (GeneralPt*) shape->GetEntry(k);
+			GeneralPt* b = (GeneralPt*) shape->GetEntry(k + 1);
+			long dx = (b->fPt.x - a->fPt.x) >> 16, dy = (b->fPt.y - a->fPt.y) >> 16;
+			EXPECT(dx == 0 || dy == 0);
+		}
+	}
+	unit->Dispose();
+
+	static const long line[] = { 50, 50, 150, 54 };
+	Tidied(domain, "line", line, 2, kShapeGrouping, &type, &angle, values, &unit);
+	EXPECT(type == kShapeLine);
+	shape = unit->GetGeneralShape();
+	if (shape != nil && shape->Count() == 2)
+		EXPECT(((GeneralPt*) shape->GetEntry(1))->fPt.y == ((GeneralPt*) shape->GetEntry(0))->fPt.y);
+	unit->Dispose();
+
+	static const long triangle[] = { 100, 50, 160, 150, 40, 150, 100, 52 };
+	Tidied(domain, "triangle", triangle, 4, kShapeClosedCurve, &type, &angle, values, &unit);
+	EXPECT(type == kShapeTriangle);
+	unit->Dispose();
+}
+
+
 int
 main()
 {
@@ -551,6 +620,7 @@ main()
 	TestEllipses(domain);
 	TestSolver();
 	TestTrend();
+	TestEquations(domain);
 	if (failures != 0)
 	{
 		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);
