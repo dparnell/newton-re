@@ -74,8 +74,102 @@ BiGrammarsLoad(const BiGrammars* source)
 }
 
 
+// ROM 0x0003de8c BiGrammarNew
+// A grammar with room for `capacity` kinds of word.  The array of slice
+// pointers lives **behind the struct in the same block**, which is why
+// `fSlices` points at the byte after it and why the whole thing is one
+// `DisposPtr`.  Nothing else in the engine allocates that way.
+BiGrammar*
+BiGrammarNew(short capacity)
+{
+	// DEVIATION: the ROM asks for `4 * capacity + 0x20` - its header is
+	// 0x20 bytes and its pointers four - and points `fSlices` at the
+	// byte after the header.  A host pointer is eight, so the size and
+	// the place are worked out from the struct instead.
+	BiGrammar* grammar = (BiGrammar*) RosAllocate(
+					(long) (sizeof(BiGrammar) + capacity * sizeof(BiGSlice*)));
+	grammar->fName = nil;
+	grammar->fField04 = 0;
+	grammar->fCount = 0;
+	grammar->fCapacity = capacity;
+	grammar->fSlices = (const BiGSlice* const*) (grammar + 1);
+	// the ROM clears the eleven bytes from 0x14 to 0x1e one at a time;
+	// here they are the fields they belong to
+	grammar->fField14 = 0;
+	grammar->fField15 = 0;
+	grammar->fField16 = 0;
+	grammar->fField17 = 0;
+	grammar->fField18 = 0;
+	grammar->fField1c = 0;
+	return grammar;
+}
+
+
+// ROM 0x0003df2c BiGrammarCreate
+// The same, taking a name - which it accepts and never stores: the
+// register holding it is overwritten with the capacity before the call
+// and `fName` is set to nil afterwards.  So a grammar the engine builds
+// for a field has no name, and `BiGrammarClone` does not copy one
+// either.  Nothing reads it, so nothing notices.
+BiGrammar*
+BiGrammarCreate(const char* /*name*/, short capacity)
+{
+	BiGrammar* grammar = BiGrammarNew(capacity);
+	grammar->fName = nil;
+	return grammar;
+}
+
+
+// ROM 0x0003dfa8 BiGSliceDestroy
+void
+BiGSliceDestroy(const BiGSlice* slice)
+{
+	DisposPtr((Ptr) slice);
+}
+
+
 // ROM 0x0003df4c BiGrammarDestroy
-void	BiGrammarDestroy(const BiGrammar* /*grammar*/)			{ }
+// Its slices and then itself.  Only ever called on a grammar the engine
+// cloned for a field: `RosettaSleep` checks `fContextIndex < 0` first,
+// and the ROM's own eight are in ROM.
+void
+BiGrammarDestroy(const BiGrammar* grammar)
+{
+	if (grammar == nil)
+		return;
+	if (grammar->fSlices != nil)
+		for (long i = 0; i < grammar->fCount; i++)
+			BiGSliceDestroy(grammar->fSlices[i]);
+	DisposPtr((Ptr) grammar);
+}
+
+
+// ROM 0x0003dfb4 BiGSliceNew
+// One kind of word, with room for `capacity` kinds that may follow it.
+// Both of those arrays live behind the struct in the same block - first
+// the pointers to the kinds, then a score for each - so a slice is one
+// allocation of `6 * capacity + 0x30` bytes.  A slice with nowhere to
+// go has nil for both rather than a pointer past its own end.
+BiGSlice*
+BiGSliceNew(short capacity)
+{
+	long n = capacity;
+	// DEVIATION: the ROM asks for `6 * capacity + 0x30`, a 0x30-byte
+	// header followed by `capacity` four-byte pointers and then as many
+	// two-byte scores.  A host pointer is eight, so the size and the
+	// two places are worked out from the struct.
+	BiGSlice* slice = (BiGSlice*) RosAllocate(
+					(long) (sizeof(BiGSlice) + n * (sizeof(BiGSlice*) + sizeof(short))));
+	slice->fName = nil;
+	slice->fNextCount = 0;
+	slice->fNextCapacity = n;
+
+	const BiGSlice** behind = (n != 0) ? (const BiGSlice**) (slice + 1) : nil;
+	slice->fNext = behind;
+	slice->fWeights = (n != 0) ? (const short*) (behind + n) : nil;
+	slice->fField2c = 0xff;
+	return slice;
+}
 
 
 // ROM 0x000ffd60 LEquiesant

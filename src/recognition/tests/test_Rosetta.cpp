@@ -54,12 +54,12 @@ main()
 		EXPECT(phone->fSlices[1]->fDictionary == 113);	// gLex8hyphen
 		// ... and a score for each kind that may follow it: a telephone
 		// number may be followed by a hyphen and by nothing else
-		EXPECT(phone->fSlices[0]->fCount == 1);
+		EXPECT(phone->fSlices[0]->fNextCount == 1);
 		EXPECT(phone->fSlices[0]->fNext[0] == phone->fSlices[1]);
 		EXPECT(phone->fSlices[0]->fWeights[0] == 458);
 		// and after the hyphen, three things, of which going back to
 		// the number costs nothing at all
-		EXPECT(phone->fSlices[1]->fCount == 3);
+		EXPECT(phone->fSlices[1]->fNextCount == 3);
 		EXPECT(phone->fSlices[1]->fNext[0] == phone->fSlices[0]);
 		EXPECT(phone->fSlices[1]->fWeights[0] == 0);
 
@@ -287,6 +287,85 @@ main()
 	}
 
 	EXPECT(gWordsHandedBack == 0);		// nothing was ever read
+	// ---- a grammar and its slices, made by hand ----
+	{
+		// Both keep their arrays behind the struct in the same block,
+		// which is why each is one allocation and one DisposPtr.
+		BiGrammar* g = BiGrammarNew(4);
+		EXPECT(g != nil);
+		EXPECT(g->fName == nil);
+		EXPECT(g->fCount == 0 && g->fCapacity == 4);
+		// the slice pointers start at the byte after the header
+		// (the arrays sit behind the struct; on the host that is
+		//  `sizeof` rather than the ROM's 0x20, a host pointer being
+		//  twice as wide)
+		EXPECT((const void*) g->fSlices == (const void*) (g + 1));
+		EXPECT(g->fField14 == 0 && g->fField15 == 0);
+
+		// the name argument is accepted and never stored
+		BiGrammar* named = BiGrammarCreate("Postcodes", 2);
+		EXPECT(named->fName == nil);
+		EXPECT(named->fCapacity == 2);
+
+		// a slice with room for three kinds of word after it: the three
+		// pointers, then the three scores, then nothing
+		BiGSlice* s = BiGSliceNew(3);
+		EXPECT(s->fName == nil);
+		EXPECT(s->fNextCount == 0);			// nothing follows it yet
+		EXPECT(s->fNextCapacity == 3);		// ... but there is room
+		EXPECT((const void*) s->fNext == (const void*) (s + 1));
+		EXPECT((const void*) s->fWeights == (const void*) (s->fNext + 3));
+		EXPECT(s->fField2c == 0xff);
+
+		// a slice nothing may follow has nil for both rather than a
+		// pointer past its own end
+		BiGSlice* leaf = BiGSliceNew(0);
+		EXPECT(leaf->fNext == nil && leaf->fWeights == nil);
+		EXPECT(leaf->fNextCapacity == 0);
+
+		// the grammar takes them and gives them back with itself
+		const BiGSlice** slices = (const BiGSlice**) g->fSlices;
+		slices[0] = s;
+		slices[1] = leaf;
+		g->fCount = 2;
+		BiGrammarDestroy(g);
+		BiGrammarDestroy(named);
+		BiGrammarDestroy(nil);				// no trouble
+
+		// the ROM's own are laid out the same way, and full: every one
+		// of their slices has as many kinds following it as it has room
+		// for, which is what tells the two counts apart
+		long sliceCount = 0, def = 0, lexical = 0, wordlike = 0;
+		for (long i = 0; i < ROMGrammar.fCount; i++)
+		{
+			const BiGrammar* rom = ROMGrammar.fContexts[i];
+			EXPECT(rom->fCount == rom->fCapacity);
+			for (long k = 0; k < rom->fCount; k++)
+			{
+				const BiGSlice* slice = rom->fSlices[k];
+				EXPECT(slice->fNextCount == slice->fNextCapacity);
+				sliceCount++;
+				// `BiGSliceNew` sets 0xff, so the other two values mean
+				// something: every kind named `LexicalSymbols` carries
+				// nought, and `wordlike` carries one
+				if (slice->fField2c == 0xff)
+					def++;
+				else if (slice->fField2c == 0)
+				{
+					lexical++;
+					EXPECT(strncmp(slice->fName, "LexicalSymbols", 14) == 0);
+				}
+				else
+				{
+					wordlike++;
+					EXPECT(slice->fField2c == 1);
+					EXPECT(strcmp(slice->fName, "wordlike") == 0);
+				}
+			}
+		}
+		EXPECT(sliceCount == 46 && def == 36 && lexical == 9 && wordlike == 1);
+	}
+
 	if (failures == 0)
 		printf("test_Rosetta: all passed\n");
 	else

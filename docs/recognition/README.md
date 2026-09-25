@@ -2296,6 +2296,45 @@ the ROM's own, from `BiGrammarNew` (0x0003de8c) and `BiGSliceNew`
 (0x0003dfb4); the ROM has a debug symbol on every slice, transition
 list and weight list, so the generated file carries its names.
 
+#### How a grammar is built
+
+The eight grammars in ROM are read-only, but the engine builds its own
+for a field - `RosettaSetArea` narrows the General grammar to the kinds
+of word the field expects, or clones one of the other seven - and the
+four routines that do the allocating are reconstructed.
+
+Both a grammar and a slice keep their arrays **behind the struct in the
+same block**. `BiGrammarNew(capacity)` asks for `4 x capacity + 0x20`
+and points `fSlices` at the byte after the header;
+`BiGSliceNew(capacity)` asks for `6 x capacity + 0x30`, which is the
+header, then `capacity` pointers to the kinds that may follow, then as
+many two-byte scores. So each is one allocation and one `DisposPtr`,
+and `BiGrammarDestroy` frees the slices and then the grammar. (Nothing
+else in the engine allocates that way - it is ParaGraph's habit, not
+Apple's. DEVIATION: a host pointer is eight bytes, so the reconstruction
+works the sizes and the two places out from the struct.)
+
+Reading them settled two fields the generated tables had left
+ambiguous. A slice's `+0x1c` and `+0x20` are the number of kinds that
+may follow it and the number there is **room** for: `BiGSliceNew` sets
+the second and leaves the first at nought, and they are equal in every
+one of the ROM's own slices only because those are full. And `+0x2c`,
+which the tables show as 0xff in 36 of the 46 slices, is what a slice
+is *made* with - so the other two values mean something: the nine kinds
+named `LexicalSymbols` carry nought and `wordlike` carries one.
+
+`BiGrammarCreate` takes a name and never stores it. The register
+holding it is overwritten with the capacity before the call to
+`BiGrammarNew`, and `fName` is set to nil afterwards; `BiGrammarClone`
+does not copy one either. A grammar the engine builds for a field is
+therefore nameless, which nothing reads and nothing notices.
+
+`BiGrammarClone` and `BiGrammarModifyContext` are still NOT YET. They
+want `BiGSliceCreate`, which takes half a dozen **doubles** among its
+arguments - the ParaGraph engine's training interface, showing through
+- and the ROM only ever passes zeroes for them, so the argument list
+has to be read off the caller's stack before it can be written down.
+
 ### The engine's own numbers (`recognition/RosEngine.h`)
 
 `RosCI` is the block of trained numbers the whole engine measures

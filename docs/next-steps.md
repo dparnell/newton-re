@@ -426,6 +426,26 @@ word is read one candidate letter at a time.  `test_WordRecog` puts the
 same writing through them that `test_CharBox` puts through the other
 path and gets the same three answers.
 
+The grammar's own allocation is done as well - `BiGrammarNew`,
+`BiGrammarCreate`, `BiGSliceNew`, `BiGSliceDestroy` and a real
+`BiGrammarDestroy`.  Both a grammar and a slice keep their arrays
+behind the struct in the same block, which is what makes each of them
+one allocation and one `DisposPtr`.  Reading them settled two fields:
+a slice's `+0x1c`/`+0x20` are its live count of following kinds and the
+room it has for them (equal in the ROM's tables only because those are
+full), and `+0x2c` is what a slice is *made* with, 0xff, so the nine
+`LexicalSymbols` kinds carrying nought and `wordlike` carrying one
+mean something.  `BiGrammarCreate` takes a name and never stores it, so
+a grammar the engine builds for a field is nameless.
+
+**`RosettaSetArea` is the next piece and is fully read** - it turns a
+`RosettaAreaInfo` into the grammar, the symbol set and the baseline the
+engine works to - but it wants `BiGrammarClone` and
+`BiGrammarModifyContext`, and those want `BiGSliceCreate`, which takes
+half a dozen **doubles** among its arguments (ParaGraph's training
+interface showing through; the ROM only ever passes zeroes).  That
+argument list has to be read off the caller's stack first.
+
 Still NOT YET: the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the

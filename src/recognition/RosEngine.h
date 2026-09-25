@@ -182,11 +182,18 @@ struct BiGSlice
 	short			fField16;		// +0x16
 	short			fField18;		// +0x18
 	short			fField1a;		// +0x1a
-	long			fField1c;		// +0x1c  (the ROM's tables repeat fCount here)
-	long			fCount;			// +0x20  how many kinds may follow
+	// How many kinds may follow this one, and how many there is room
+	// for.  `BiGSliceNew` sets the second and leaves the first at
+	// nought; in the ROM's own tables they are equal, because those
+	// slices are full.
+	long			fNextCount;		// +0x1c
+	long			fNextCapacity;	// +0x20
 	const BiGSlice* const*	fNext;	// +0x24
 	const short*	fWeights;		// +0x28  what each of them costs
-	UByte			fField2c;		// +0x2c  0xff in every one of the ROM's
+	// What kind of lexicon this is.  `BiGSliceNew` sets 0xff and the
+	// ROM's tables keep it in 36 of their 46 slices; the nine named
+	// `LexicalSymbols` carry 0, and `wordlike` carries 1.
+	UByte			fField2c;		// +0x2c
 };
 
 // One grammar: the name a field asks for it by, and its kinds of word.
@@ -233,6 +240,13 @@ extern const BiGrammars	ROMGrammar;						// ROM 0x00366e0c ROMGrammar
 const BiGrammars*	BiGrammarsLoad(const BiGrammars* source);	// ROM 0x0003e0b4 BiGrammarsLoad
 // A grammar the engine built for itself, given back.  NOT YET; the
 // eight in the ROM are never destroyed.
+// A grammar and one kind of word in it, made and given back.  Both keep
+// their arrays *behind the struct in the same block*, so each is one
+// allocation and one `DisposPtr`.
+BiGrammar*	BiGrammarNew(short capacity);					// ROM 0x0003de8c BiGrammarNew
+BiGrammar*	BiGrammarCreate(const char* name, short capacity);	// ROM 0x0003df2c BiGrammarCreate
+BiGSlice*	BiGSliceNew(short capacity);					// ROM 0x0003dfb4 BiGSliceNew
+void	BiGSliceDestroy(const BiGSlice* slice);				// ROM 0x0003dfa8 BiGSliceDestroy
 void				BiGrammarDestroy(const BiGrammar* grammar);	// ROM 0x0003df4c BiGrammarDestroy
 
 
