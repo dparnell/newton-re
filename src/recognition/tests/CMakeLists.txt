@@ -76,6 +76,10 @@ add_executable(test_RosList test_RosList.cpp)
 target_link_libraries(test_RosList PRIVATE recognition memory)
 add_test(NAME recognition.RosList COMMAND test_RosList)
 
+add_executable(test_Fragment test_Fragment.cpp)
+target_link_libraries(test_Fragment PRIVATE recognition memory)
+add_test(NAME recognition.Fragment COMMAND test_Fragment)
+
 add_executable(test_GeoContext test_GeoContext.cpp)
 target_link_libraries(test_GeoContext PRIVATE recognition memory)
 add_test(NAME recognition.GeoContext COMMAND test_GeoContext)

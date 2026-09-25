@@ -40,6 +40,8 @@ add_library(recognition STATIC
     GeoTables.cpp
     LELang.cpp
     RosList.cpp
+    Fragment.cpp
+    FragmentTables.cpp
     LELangTables.cpp
     SearchEasterEgg.cpp
     RosEngine.cpp
