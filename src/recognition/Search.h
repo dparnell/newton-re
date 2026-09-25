@@ -176,10 +176,16 @@ void	ShiftNetValues(void);							// ROM 0x001d06fc ShiftNetValues
 // are still writing.
 void	GetBestPath(char* out, UByte how);				// ROM 0x001d0798 GetBestPath
 
-// NOT YET: the step itself, and the gathering at the end.
+// One candidate letter offered to every reading the search is holding:
+// the step.
 void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 				RosSegment* segment, Fixed confidence, Boolean endsWord,
 				short total);							// ROM 0x001cebac SearchDoViterbStep
+// ... and one reading tried against every character code.  NOT YET, so
+// no reading is ever grown.
+void	SearchDoVStepFromNode(SearchStep* step, SearchNode* node, short* fromProbs,
+				short* fromScratch, Fixed confidence, ULong bias,
+				long which);							// ROM 0x001cf0d8 SearchDoVStepFromNode
 // The best readings written out as text, with a score and the
 // dictionary each came from.  The strings are the engine's own, out
 // of the return cache.

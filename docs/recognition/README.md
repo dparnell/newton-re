@@ -3162,10 +3162,10 @@ share everything before the letter that was just added, which is why
 `test_Search` can grow `cat` and `car` out of one `ca` and see the
 reference count go up by two rather than the text being copied.
 
-#### The driver, read but not yet written
+#### The driver
 
-`SearchDoViterbStep` is the last piece with nothing written for it, and
-it has been read.  What it does, in order:
+`SearchDoViterbStep` is the step: one candidate letter offered to
+every reading the search is holding.  What it does, in order:
 
 1. empties the column that is about to be filled (`gSearchColumns[0]`,
    "here") and its class counts, and sets up the `SearchStep` block;
@@ -3192,12 +3192,20 @@ it has been read.  What it does, in order:
    works out what the column cost to reach, and calls
    `StoreFinalPaths`.
 
-The one function under it, `SearchDoVStepFromNode` (2120 B), is what
-actually tries each character code against a reading: `GeoContextPenalty`
-for what the geometry between the two letters costs, `LELangNodeNumOut`
-for which letters the language model allows next,
-`CapHackDetermineContext` for what the reading looks like from outside,
-and `RegisterNewPath` for the result.
+The gap before the candidate is read **both ways round**: its
+separation is the probability that a new word starts here, so
+`ArProbEncode` of it is what starting one costs and `ArProbEncode` of
+its complement is what *not* starting one costs - which is what every
+reading continuing within a word is charged.
+
+One function is left under it.  `SearchDoVStepFromNode` (2120 B) is
+what actually tries each character code against one reading, with
+`GeoContextPenalty` (1204 B) for what the geometry between the two
+letters costs and `LELangNodeNumOut` (452 B) for which letters the
+language model allows next; `CapHackDetermineContext` and
+`RegisterNewPath`, which it also calls, are done.  Until it is written
+no reading is ever grown, so the columns stay as `SearchBeginWord` left
+them.
 
 #### What is left: the step itself
 
@@ -3207,17 +3215,15 @@ candidate, the columns and readings it works in, and the gathering that
 hands the answers back.  What is missing is the step: what actually
 grows a reading by one letter.
 
-It is four functions, about 5 KB:
+It is three functions, about 3.8 KB:
 
 | | |
 |---|---|
-| `SearchDoViterbStep` (1324 B) | the driver, once per candidate letter |
 | `SearchDoVStepFromNode` (2120 B) | one existing reading grown by one letter |
 | `GeoContextPenalty` (1204 B) | what the geometry between two letters costs |
 | `LELangNodeNumOut` (452 B) | which letters the language model allows next |
 
-`RegisterNewPath` and `StoreFinalPaths`, the two halves of what happens
-to a reading once it has been grown, are done.
+Everything else in the search is done.
 
 The working block they share is mapped (`SearchStep` in `Search.h`):
 `SearchDoViterbStep` builds it out of its own locals and hands its

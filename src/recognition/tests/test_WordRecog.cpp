@@ -716,6 +716,7 @@ main()
 		SegmentSetStrokes(seg, 1, word->fStrokes);
 		seg->fFirstStroke = 0;
 		seg->fCount = 1;
+		seg->fRealCount = 1;		// as `SegmentMakeSegments` would leave it
 		SegmentBoundsDotsEtc(seg);
 		word->fSegments[0] = seg;
 

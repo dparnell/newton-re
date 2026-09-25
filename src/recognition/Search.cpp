@@ -15,6 +15,7 @@
 
 extern const ExceptionName exRosetta;	// ROM 0x003774f8 exRosetta
 #include "Segment.h"
+#include "FixedMath.h"
 
 #include <string.h>
 
@@ -401,11 +402,15 @@ CapHackDetermineContext(const SearchNode* node)
 	together - about 6 KB in seven functions.
 --------------------------------------------------------------------*/
 
-// ROM 0x001cebac SearchDoViterbStep
+// ROM 0x001cf0d8 SearchDoVStepFromNode
+// NOT YET: one reading tried against every character code the
+// classifier will have, against the grammar, the dictionaries and the
+// geometry.  Without it no reading is ever grown, so the columns stay
+// as `SearchBeginWord` left them.
 void
-SearchDoViterbStep(short* /*fromProbs*/, short* /*fromScratch*/, long /*index*/,
-				RosSegment* /*segment*/, Fixed /*confidence*/, Boolean /*endsWord*/,
-				short /*total*/)
+SearchDoVStepFromNode(SearchStep* /*step*/, SearchNode* /*node*/, short* /*fromProbs*/,
+				short* /*fromScratch*/, Fixed /*confidence*/, ULong /*bias*/,
+				long /*which*/)
 {
 }
 
@@ -1090,4 +1095,160 @@ StoreFinalPaths(SearchColumn* column, ULong base)
 		}
 		node->fTail = ref;
 	}
+}
+
+
+// ROM 0x001cebac SearchDoViterbStep
+// One candidate letter offered to every reading the search is holding.
+//
+// This is the step.  The column at the front is emptied, and then every
+// reading in every column that this candidate could follow is grown by
+// it - `SearchDoVStepFromNode` tries each of the 256 character codes
+// against one reading - and whatever survives `RegisterNewPath` is left
+// in the new column.  `StoreFinalPaths` turns the survivors' backtraces
+// into text at the end.
+//
+// Readings out of different columns are not comparable as they stand,
+// because a column further into the word has had fewer chances to
+// spend, so each one is offered with its own **bias**: what it cost to
+// reach, less the cheapest, plus what continuing a word costs here.
+//
+// The gap before this candidate is read both ways round.  Its
+// separation is the probability that a new word starts here, so
+// `ArProbEncode` of it is what starting one costs and `ArProbEncode` of
+// its complement is what *not* starting one costs.  And if the column
+// this candidate begins at already holds a finished word, the search
+// grows readings straight on from that word through
+// `gSearchWordListNode` - a node whose tail *is* the word list.
+void
+SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
+				RosSegment* segment, Fixed confidence, Boolean endsWord,
+				short total)
+{
+	SearchColumn* here = gSearchColumns[0];
+	here->fCount = 0;
+	for (long i = 0; i < 10; i++)
+		here->fClassCounts[i] = 0;
+
+	SearchStep step;
+	step.fBest = 0x7ffe;
+	step.fEndsWord = endsWord;
+	step.fLimit = index + 2;
+	step.fSegment = segment;
+	step.fColumn = here;
+
+	// what the cheapest column this candidate could follow has cost
+	ULong minCost = 0;
+	ULong minAlt = 0;
+	long from = segment->fRealCount;
+	if (index != 0)
+	{
+		minCost = 0x7ffe;
+		minAlt = 0x7ffe;
+		for (long i = from; i < step.fLimit && i < kSearchColumns; i++)
+		{
+			SearchColumn* col = gSearchColumns[i];
+			if ((ULong) col->fJump + (ULong) from == (ULong) i)
+			{
+				if ((ULong) col->fCost < minCost)
+					minCost = (ULong) col->fCost;
+				if ((ULong) col->fAltCost < minAlt)
+					minAlt = (ULong) col->fAltCost;
+			}
+		}
+	}
+	here->fAltCost = (long) (minAlt + (ULong) (UShort) total);
+
+	// is anything readable here at all?
+	long code;
+	for (code = 0; code < 256; code++)
+		if ((ULong) (UShort) fromProbs[code] < 0x7ffe)
+			break;
+	if (code >= 256)
+	{
+		here->fJump = (UByte) segment->fField04;
+		here->fRealCount = (UByte) segment->fRealCount;
+		here->fCost = 0x7ffe;
+		StoreFinalPaths(here, (ULong) (UShort) step.fBest);
+		return;
+	}
+
+	// what one stroke of this candidate costs: nothing when its
+	// strokes lie on each other well, up to 322 when they do not
+	ULong perStroke;
+	if (confidence > RosCI->fStrokeCostGate)
+		perStroke = RosCI->fStrokeCost >> 16;
+	else
+	{
+		Fixed f = FixedMultiply(confidence, RosCI->fStrokeCostScale);
+		ULong most = RosCI->fStrokeCost & 0xffff;
+		perStroke = most - (ULong) (((long) (most - (RosCI->fStrokeCost >> 16)) * f) >> 16);
+	}
+	ULong strokeCost = ((ULong) (segment->fStrokes->fCount - 1) * perStroke) & 0xffff;
+
+	// which case of each character code is reachable here
+	UByte* caseOf = (UByte*) gSearchScratch;
+	for (long c = 0; c < 256; c++)
+	{
+		caseOf[c] = 0;
+		UByte flags = RosCI->fCapCaseFlags[c];
+		ULong one = (ULong) (UShort) fromProbs[RosCI->fCapAltCase1[c]];
+		if (one > 0x7ffd
+			&& (ULong) (UShort) fromProbs[RosCI->fCapAltCase2[c]] >= 0x7ffe)
+			continue;				// neither case can be read
+		if ((flags & 2) != 0)
+			caseOf[c] = 1;
+		if ((flags & 1) != 0)
+			caseOf[c] = 2;
+	}
+
+	// a word already finished on the column this candidate begins at
+	ULong keepGoing = 0;
+	SearchColumn* startCol = gSearchColumns[from];
+	if (startCol->fWords != nil && segment->fSeparation >= 1)
+	{
+		ULong wordCost = (ULong) startCol->fWords->fCost;
+		if (wordCost < minCost)
+			minCost = wordCost;
+
+		ULong newWord = (ULong) (UShort) ArProbEncode(segment->fSeparation);
+		keepGoing = (ULong) (UShort) ArProbEncode(0x00010000 - segment->fSeparation);
+		if (newWord > 0x7ffe)
+			newWord = 0x7ffe;
+		if (keepGoing > 0x7ffe)
+			keepGoing = 0x7ffe;
+
+		// a node whose tail is that whole word, so a reading can grow
+		// straight on from it
+		gSearchWordListNode.fScore = (short) newWord;
+		gSearchWordListNode.fSlice = nil;
+		gSearchWordListNode.fField04 = 0;
+		gSearchWordListNode.fSegment = startCol->fWords->fSegment;
+		gSearchWordListNode.fTail = (WordTailRef)
+					(kWordTailListBase + (startCol->fWords - wordLists));
+
+		SearchDoVStepFromNode(&step, &gSearchWordListNode, fromProbs, fromScratch,
+						confidence, wordCost - minCost, 0);
+		GeoContextClearCache();
+	}
+
+	// ... and every reading in every column this candidate can follow
+	for (long i = from; i < step.fLimit && i < kSearchColumns; i++)
+	{
+		SearchColumn* col = gSearchColumns[i];
+		ULong bias = ((ULong) col->fCost - minCost) + keepGoing;
+		if ((ULong) col->fJump + (ULong) from == (ULong) i
+			&& bias < 0x7ffe && col->fCount != 0)
+			for (long j = 0; j < (long) col->fCount; j++)
+				SearchDoVStepFromNode(&step, col->fNodes[j], fromProbs, fromScratch,
+								confidence, bias, j);
+	}
+
+	here->fJump = (UByte) segment->fField04;
+	here->fRealCount = (UByte) segment->fRealCount;
+	if (here->fCount == 0)
+		here->fCost = 0x7ffe;
+	else
+		here->fCost = (long) (minCost + (ULong) (UShort) step.fBest + strokeCost);
+	StoreFinalPaths(here, (ULong) (UShort) step.fBest);
 }

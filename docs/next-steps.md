@@ -504,10 +504,10 @@ and the try string copied out.  `rosCI`'s `fNetScoreWeight` (four
 fifths, what the classifier's opinion is worth against everything else)
 is named.
 
-Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
-(1324 B) and `SearchDoVStepFromNode` (2120 B), about 3.5 KB, with
+Still NOT YET: **one function** - `SearchDoVStepFromNode` (2120 B), with
 `GeoContextPenalty` (1204 B) and `LELangNodeNumOut` (452 B) under them -
-about 5 KB in all.  `RegisterNewPath` and `StoreFinalPaths` are done,
+about 3.8 KB in all.  `SearchDoViterbStep`, `RegisterNewPath` and
+`StoreFinalPaths` are done,
 so a reading that has been grown knows where to go and when it turns
 into text; what is missing is the growing.  The
 working block they share is mapped (`SearchStep` in `Search.h`):

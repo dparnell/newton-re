@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 
+static Fixed	F(long n)		{ return (Fixed) (int) ((unsigned int) n << 16); }
+
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
@@ -219,9 +221,18 @@ main()
 		scratch['+'] = 0xf100;
 
 		RosSegment* seg = SegmentCreate();
+		FPoint pts[2];
+		pts[0].x = F(0);	pts[0].y = F(0);
+		pts[1].x = F(4);	pts[1].y = F(20);
+		RosStroke* ink = StrokeCreate(2, pts);
+		SegmentStrokeData(ink, 0, 0, 0);
+		RosStroke* one[1];
+		one[0] = ink;
+		SegmentSetStrokes(seg, 1, one);
 		seg->fFirstStroke = 0;
 		seg->fCount = 1;
 		seg->fRealCount = 1;
+		SegmentBoundsDotsEtc(seg);
 
 		SearchProcessSegment(ROMGrammar.fContexts[0], probs, scratch, 0, seg,
 						0x8000, false, nil);
@@ -251,6 +262,7 @@ main()
 		EXPECT(ArProbEncode(0x0080) == 3119);		// one in 512
 
 		SegmentDestroy(seg);
+		StrokeDestroy(ink);
 	}
 
 	// ---- what a reading looks like from outside ----
