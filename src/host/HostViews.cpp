@@ -25,6 +25,7 @@
 #include "Unicode.h"
 #include "Recognizer.h"
 #include "InkRecognizer.h"
+#include "RosRecognizer.h"
 #include "StrokeCentral.h"
 #include "UnitPublic.h"
 #include "CardInfo.h"
@@ -245,14 +246,14 @@ HostStartViews(long width, long height, long depth)
 	// words above them.  The shape and word recognisers themselves are
 	// NOT YET, so level 2 here means only that the dictionaries are built
 	// and the word half of the system is meant to be on.
-	// (DEVIATION: the ink-only engine in place of the ROM's, as the
-	//  Notebook's toolbox does - recognition/InkRecognizer.h)
-	RegisterInkOnlyRecognizer();
+	// the ROM's own handwriting engine, as the Notebook's toolbox
+	// registers it (recognition/RosRecognizer.h)
+	RegisterRosettaWRec();
 	gRecognition.Init(2);
 	// (NOT YET: on the Newton a script chooses which of the two word
 	//  recognisers is in use, with UseWRec; with one engine here the
-	//  host puts it in use itself, so that writing is read - or, as it
-	//  is, left as ink - rather than dropped.)
+	//  host puts it in use itself, so that writing is read rather
+	//  than dropped.)
 	SetWordRecognizer(kWRecDomainType);
 	gStrokeWorld.Init();
 	HostTabletInit();

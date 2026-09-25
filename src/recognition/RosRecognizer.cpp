@@ -24,6 +24,8 @@
 #include "Interpreter.h"	// GetVariable
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 PROTOCOL TRosRecognizer : public TWRecognizer
@@ -79,6 +81,20 @@ void	RosRecCheckWords(char** words, UniChar* scores, ULong strokes, ULong count)
 // There is only ever one, and the engine's callback has no argument to
 // find it by.
 TRosRecognizer*	gRosRecognizer = nil;
+
+
+// HOST ONLY: with NEWTON_TRACE_ROSETTA set in the environment, what
+// goes down to the engine and what comes back is written on the
+// standard error - which is how to see why a piece of writing was
+// read as it was, or was not read at all.
+static Boolean
+RosTracing(void)
+{
+	static int tracing = -1;
+	if (tracing < 0)
+		tracing = getenv("NEWTON_TRACE_ROSETTA") != nil ? 1 : 0;
+	return tracing != 0;
+}
 
 
 #pragma mark -
@@ -208,6 +224,9 @@ TRosRecognizer::Group(TStrokeUnit* stroke)
 	ULong count = AllocateAndConvertStrokeForRosetta(stroke, &points);
 	ULong end = GetEndTime(stroke);
 	ULong start = GetStartTime(stroke);
+	if (RosTracing())
+		fprintf(stderr, "rosetta: stroke of %lu points%s" "\n", (unsigned long) count,
+				found == 0 ? ", a new word" : "");
 	if (RosettaClassify(count, points, start, end) != noErr)
 		Throw(exAbort, nil, nil);
 }
@@ -354,8 +373,6 @@ TRosRecognizer::Reclassify(TWRecUnit* unit)
 // ROM 0x001b6c60 AddRosettaWordsToInterpretation__14TRosRecognizerFP9TWRecUnitUlPPcPUs
 // The readings the engine came back with put on the unit: the word
 // itself, the score it was given and the label the area asked for.
-// `scores` is read a word at a time and shifted down, because the score
-// is the top half of each of them.
 void
 TRosRecognizer::AddRosettaWordsToInterpretation(TWRecUnit* unit, ULong count, char** words, UniChar* scores)
 {
@@ -364,7 +381,9 @@ TRosRecognizer::AddRosettaWordsToInterpretation(TWRecUnit* unit, ULong count, ch
 		long index = AddWordInterpretation(unit);
 		if (index == -1)
 			return;						// no room for another
-		ULong score = ((const unsigned int*) scores)[i] >> 16;
+		// (the ROM loads a word at `scores + i * 2` and shifts it down -
+		//  on the ARM an unaligned load, which answers the halfword)
+		ULong score = scores[i];
 		SetCharWordString(unit, index, words[i]);
 		SetScore(unit, index, score);
 		SetLabel(unit, index, fLabel);
@@ -420,6 +439,13 @@ RosRecCheckWords(char** words, UniChar* scores, ULong strokes, ULong count)
 	if (found == 0)
 		// no group is being built, so this is a unit being read again
 		group = self->fUnit;
+	if (RosTracing())
+	{
+		fprintf(stderr, "rosetta: read %lu strokes as", (unsigned long) strokes);
+		for (ULong i = 0; i < count; i++)
+			fprintf(stderr, " \"%s\"/%d", words[i], (int) scores[i]);
+		fprintf(stderr, "\n");
+	}
 
 	ULong subs = self->SubCount(group);
 	if (strokes > subs)

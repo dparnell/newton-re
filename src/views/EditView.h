@@ -93,6 +93,9 @@ public:
 	// the word went into.
 	TView*			HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 							   class TUnitPublic* unit, RefArg info, long* outOffset);	// ROM 0x000abaa4 HandleWord__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPl
+	// A word the recogniser read: its best reading, in the box it was
+	// written in, through HandleWord.  ==> whether it went anywhere.
+	Boolean			HandleWordUnit(class TUnitPublic* unit);	// ROM 0x000ab9f8 HandleWordUnit__9TEditViewFP11TUnitPublic
 	// A word that no child would take, made into a paragraph of its own.
 	TView*			AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 									class TUnitPublic* unit, RefArg info, long* outOffset,
@@ -167,6 +170,11 @@ Boolean	CorrectorUp(void);									// ROM 0x001767b8 CorrectorUp__Fv
 // afterwards.  ==> 1 the corrector was up, 2 remote writing was on.
 ULong	SetRemoteForCorrector(void);						// ROM 0x00177470 SetRemoteForCorrector__Fv
 void	RestoreRemoteForCorrector(ULong state);				// ROM 0x001774e0 RestoreRemoteForCorrector__Fl
+
+// The ink views left on the page for the strokes of a unit taken away:
+// every stroke under it that belongs to a view of the page (its context
+// id) has that view removed, undoably, with an aeRemoveData.
+void	RemoveInk(TEditView* view, class TUnit* unit);		// ROM 0x0019dfa4 RemoveInk__FP9TEditViewP5TUnit
 
 // The view whose text was last changed remembered in the globals, which
 // is what `lastTextChanged` answers a script.

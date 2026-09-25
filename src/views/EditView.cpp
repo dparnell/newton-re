@@ -34,6 +34,7 @@
 #include "Keyboard.h"
 #include "Commands.h"
 #include "UnitPublic.h"
+#include "Unit.h"
 #include "StrokeQueue.h"
 #include "RecConfig.h"
 #include "Bits.h"
@@ -1286,6 +1287,38 @@ TEditView::RealDoCommand(RefArg cmd)
 		return TView::RealDoCommand(cmd);
 	}
 
+	if (id == aeWord)
+	{
+		// a word the recogniser read.  A page that takes words through
+		// its script (text flag 0x2000) offers it there first; then the
+		// hilites are cleared for it as they are for a word of ink (or,
+		// with the corrector up, taken away altogether), any ink left
+		// on the page for its strokes removed, and the word handed to
+		// HandleWord, to go into the paragraph under it or become one.
+		Boolean triedScript = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			triedScript = true;
+			if (TView::RealDoCommand(cmd))
+				return true;
+		}
+		ULong remote = SetRemoteForCorrector();
+		if (CorrectorUp())
+			RemoveAllHilites();
+		else
+			ResetHilitesForNewWord();
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		RemoveInk(this, unit->fUnit);
+		Boolean done = HandleWordUnit(unit);
+		RestoreRemoteForCorrector(remote);
+		CommandSetResult(cmd, done);
+		// the ROM's shared exit: the scripts, unless they have had
+		// their turn already
+		if (!done && !triedScript)
+			return TView::RealDoCommand(cmd);
+		return done;
+	}
+
 	if (id == aeRawInk)
 	{
 		// ink nobody is to read, written over the page.  The view's own
@@ -1962,8 +1995,72 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 		}
 		if (unit != nil && (NOTNIL(GetPreference(RSSYMremotewriting)) || corrector))
 		{
-			// NOT YET RECONSTRUCTED: the word inserted at the caret
-			// (0x000abe58); nothing typed comes here.
+			// ROM 0x000abe58: remote writing - a written word goes to the
+			// caret, wherever on the page it was written.  (A child that
+			// answered 6 has taken it already.)
+			if (bestScore != 6)
+			{
+				TView* under = nil;
+				long where = 0;
+				if (key != nil && key->DerivedFrom(clParagraphView)
+					&& ((TDataView*) key)->GetEnclosingEditView() == this)
+				{
+					// the caret is in one of this page's paragraphs: the
+					// word's info inserted there, with a space before it
+					// unless it is a letter written into the middle of
+					// a word
+					RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+					RefVar wordInfo(unit->WordInfo());
+					Boolean addSpace = !IsMidWordLetterInsertion((TParagraphView*) key, unit);
+					SetFrameSlot(spec, RSSYMinsertitems, wordInfo);
+					SetFrameSlot(spec, RSSYMaddspace, RefVar(addSpace ? TRUEREF : NILREF));
+					InsertItemsAtCaret(spec);
+				}
+				else
+				{
+					Boolean placed = false;
+					if (key == this)
+					{
+						// the caret is on the page itself: the word goes
+						// to the end of the text under it when that text
+						// would only just take it (score 2 - the caret
+						// sits where its next line would start), on a
+						// line of its own; otherwise it becomes a
+						// paragraph at the caret
+						Point caret = GetCaretGlobalTopLeft();
+						under = TextContainingPoint(caret, nil, &where);
+						if (under == nil || where != 2)
+						{
+							RefVar noInkFont;
+							best = AddNewParagraph(text, length, box, room, unit, info,
+												   outOffset, noInkFont);
+							placed = true;
+						}
+					}
+					if (placed)
+						;
+					else if (under != nil && where == 2)
+					{
+						RefVar items(MakeArray(2));
+						SetArraySlot(items, 0, RefVar(MakeString("\r")));
+						SetArraySlot(items, 1, RefVar(unit->WordInfo()));
+						RefVar textRef(((TParagraphView*) under)->Text());
+						long end = (long) ((ULong) (Length(textRef) - sizeof(UniChar)) / sizeof(UniChar));
+						RefVar noFont;
+						DoInsertItems(under, items, false, true, end, 0, true, noFont);
+					}
+					else if (bestScore != 0)
+						((TDataView*) best)->HandleWord(text, length, box, pt,
+														startTime, endTime, info,
+														true, outOffset, unit);
+					else
+					{
+						RefVar noInkFont;
+						best = AddNewParagraph(text, length, box, room, unit, info,
+											   outOffset, noInkFont);
+					}
+				}
+			}
 			handled = true;
 		}
 		else if (bestScore != 0)
@@ -1996,6 +2093,51 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 	return best;
 }
 
+
+// ROM 0x000ab9f8 HandleWordUnit__9TEditViewFP11TUnitPublic
+// A word the recogniser read, put on the page: its best reading (a
+// handle the unit's face makes and the caller throws away) handed to
+// HandleWord in the box it was written in, which is also the room it
+// is given.
+Boolean
+TEditView::HandleWordUnit(TUnitPublic* unit)
+{
+	Rect box;
+	unit->Bounds(&box);
+	Handle word = unit->Word();
+	HLock(word);
+	UniChar* text = (UniChar*) *word;
+	ULong length = Ustrlen(text);
+	long offset;
+	RefVar info;
+	TView* view = HandleWord(text, length, box, box, unit, info, &offset);
+	HUnlock(word);
+	DisposHandle(word);
+	return view != nil;
+}
+
+// ROM 0x0019dfa4 RemoveInk__FP9TEditViewP5TUnit
+void
+RemoveInk(TEditView* view, TUnit* unit)
+{
+	long count = unit->SubCount();
+	for (long i = 0; i < count; i++)
+	{
+		// (a unit with subs is a TSIUnit; GetSub is its vtable +0x58)
+		TUnit* sub = ((TSIUnit*) unit)->GetSub(i);
+		if (sub->fType == 'STRK')
+		{
+			if (sub->ContextID() != 0)
+			{
+				TView* ink = view->FindID((long) sub->ContextID());
+				if (ink != nil)
+					gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, view, ink->fId)));
+			}
+		}
+		else
+			RemoveInk(view, sub);
+	}
+}
 
 // ROM 0x000ab70c JamText__9TEditViewFPUsUl
 // Typed text put on the page.  The Newton has no text cursor of its own
