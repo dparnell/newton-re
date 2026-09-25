@@ -310,9 +310,9 @@ main()
 		// then `car`
 		SearchColumn* col = gSearchColumns[0];
 		col->fCount = 0;
-		col->fField79 = 0;
-		col->fField88 = 0;
-		col->fField8c = 0;
+		col->fJump = 0;
+		col->fCost = 0;
+		col->fAltCost = 0;
 		static const char* const kWords[3] = { "cot", "cat", "car" };
 		static const short kCosts[3] = { 900, 400, 1500 };
 		for (long i = 0; i < 3; i++)

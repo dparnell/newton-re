@@ -22,7 +22,8 @@ A few static functions have no debug symbol at all (the ROM's symbol table
 only names externally visible functions and the static ones the linker
 happened to keep), and so do some of the tables in the initialised
 read-write data.  These are cited as `// ROM 0x002ebce8 (unnamed)`; the
-address must lie in the ROM or in the initialised data (layout.json's
+address must lie in the ROM, in the initialised data, or in the
+zero-initialised data (layout.json's
 ram_init region, which is where romtable.py finds such a table) and must
 *not* carry a symbol (otherwise cite the symbol).  They are counted as
 citations but not as reconstructed functions, since the function total
@@ -67,6 +68,8 @@ def main(argv=None) -> int:
     # ROM's copy of it are cited by their RAM address
     ram_init = next(((r["address"], r["address"] + r["size"])
                      for r in layout["regions"] if r["kind"] == "ram_init"), (0, 0))
+    ram_zero = next(((r["address"], r["address"] + r["size"])
+                     for r in layout["regions"] if r["kind"] == "ram_zero"), (0, 0))
     by_addr = collections.defaultdict(set)
     by_name = {s["name"]: s["address"] for s in data["symbols"] if "jt_index" not in s}
     with open(os.path.join(args.build_dir, "rom.bin"), "rb") as f:
@@ -103,8 +106,10 @@ def main(argv=None) -> int:
                             errors.append(f"{where}: {addr:#x} has a symbol ({', '.join(sorted(by_addr[addr]))}); cite it")
                         # a table of bytes need only be halfword aligned (the angle
                         # tables' kDegreesOfFraction starts at an odd halfword)
-                        elif addr % 2 or not (addr < rom_size or ram_init[0] <= addr < ram_init[1]):
-                            errors.append(f"{where}: {addr:#x} is neither a ROM address nor one in the initialised data")
+                        elif addr % 2 or not (addr < rom_size
+                                              or ram_init[0] <= addr < ram_init[1]
+                                              or ram_zero[0] <= addr < ram_zero[1]):
+                            errors.append(f"{where}: {addr:#x} is not a ROM address nor one in the read-write data")
                         else:
                             cited.setdefault(addr, where)
                     elif name == "(object)":

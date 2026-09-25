@@ -3162,6 +3162,43 @@ share everything before the letter that was just added, which is why
 `test_Search` can grow `cat` and `car` out of one `ca` and see the
 reference count go up by two rather than the text being copied.
 
+#### The driver, read but not yet written
+
+`SearchDoViterbStep` is the last piece with nothing written for it, and
+it has been read.  What it does, in order:
+
+1. empties the column that is about to be filled (`gSearchColumns[0]`,
+   "here") and its class counts, and sets up the `SearchStep` block;
+2. finds the cheapest `fCost` and `fAltCost` over the columns this
+   candidate could start from, which is the bias readings out of
+   different columns are compared against, and records `fAltCost` plus
+   the classifier's total on the new column;
+3. gives up straight away if no character code is readable at all;
+4. works out what one stroke of this candidate costs - nothing when the
+   strokes lie on each other well, up to 322 when they do not
+   (`rosCI`'s `fStrokeCost*`) - and multiplies by one less than the
+   stroke count;
+5. fills `gSearchScratch` with which **case** of each character code is
+   reachable here, from the classifier's scores for the code's two
+   alternative cases and `fCapCaseFlags`;
+6. if the column this candidate starts from has a finished word on it,
+   fills `gSearchWordListNode` - a pseudo-node whose tail *is* that word
+   list and whose score is what the gap before this candidate cost - and
+   grows readings from it, so a new word can start straight on from an
+   old one;
+7. grows readings from every node of every eligible column
+   (`SearchDoVStepFromNode`);
+8. copies the candidate's jump and letter count onto the new column,
+   works out what the column cost to reach, and calls
+   `StoreFinalPaths`.
+
+The one function under it, `SearchDoVStepFromNode` (2120 B), is what
+actually tries each character code against a reading: `GeoContextPenalty`
+for what the geometry between the two letters costs, `LELangNodeNumOut`
+for which letters the language model allows next,
+`CapHackDetermineContext` for what the reading looks like from outside,
+and `RegisterNewPath` for the result.
+
 #### What is left: the step itself
 
 Everything around the Viterbi step is now reconstructed - the lattice

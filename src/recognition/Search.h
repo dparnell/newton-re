@@ -72,8 +72,11 @@ struct SearchColumn
 {
 	SearchNode*		fNodes[kSearchNodeSlots];	// +0x00 .. +0x77
 	UByte			fCount;			// +0x78  how many of them are in use
-	UByte			fField79;		// +0x79
-	UByte			fField7a;		// +0x7a
+	// How far ahead the search may jump from here, and how many
+	// letters the candidate that filled this column stood for -
+	// copied off the segment by `SearchDoViterbStep`.
+	UByte			fJump;			// +0x79
+	UByte			fRealCount;		// +0x7a
 	// How many of the readings in this column are of each kind of
 	// word, one count per lexicon class (`BiGSlice::fField2c`).  The
 	// grammar carries a limit for each of them in `fField15`, so that
@@ -81,8 +84,11 @@ struct SearchColumn
 	// a beam that is kept deliberately varied.
 	UByte			fClassCounts[10];	// +0x7b .. +0x84
 	UByte			fPad85[3];
-	long			fField88;		// +0x88
-	long			fField8c;		// +0x8c
+	// What it cost to reach this column at all, which is the bias
+	// added back before readings from different columns are compared,
+	// and the same thing measured the other way.
+	long			fCost;			// +0x88
+	long			fAltCost;		// +0x8c
 	WordList*		fWords;			// +0x90  what was read to get here
 };
 
@@ -123,6 +129,14 @@ extern const BiGrammar*	gSearchGrammar;				// ROM 0x0c101aa0 (unnamed)
 // Room for the readings on the way back out: the strings a caller is
 // handed are these, so they have to stay valid until it asks again.
 extern Ptr*		gSearchReturnCache;					// ROM 0x0c101aa4 (unnamed)
+// A `SearchNode` standing for a whole finished word, so that the
+// search can grow a reading straight on from one: its tail is the
+// word list on the column the candidate starts from, and its score
+// is what the gap before it cost.
+extern SearchNode	gSearchWordListNode;			// ROM 0x0c106ec8 (unnamed)
+// Which of the two cases of each character code is reachable here:
+// 0 neither, 1 the lower, 2 the upper.  256 bytes.
+extern Ptr		gSearchScratch;						// ROM 0x0c101a90 (unnamed)
 extern Ptr		gSearchScratchA;					// ROM 0x0c101ab8 (unnamed)
 extern Ptr		gSearchScratchB;					// ROM 0x0c101abc (unnamed)
 

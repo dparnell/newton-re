@@ -24,7 +24,12 @@ extern const ExceptionName exRosetta;	// ROM 0x003774f8 exRosetta
 long	MaxBestNodes = 27;
 
 // ROM 0x0c101a90 (unnamed)
+// Which of the two cases of each character code is reachable here.
 Ptr		gSearchScratch = nil;
+
+// ROM 0x0c106ec8 (unnamed)
+// The pseudo-node a finished word is grown on from.
+SearchNode	gSearchWordListNode = { nil, 0, 0, kWordTailNone, nil };
 // ROM 0x0c101a94 (unnamed)
 UByte	gSearchAllocated = 0;
 // ROM 0x0c101a98 (unnamed)
@@ -235,10 +240,10 @@ SearchBeginWord(const BiGrammar* grammar)
 
 	SearchColumn* first = gSearchColumns[0];
 	first->fCount = 0;
-	first->fField79 = 0;
-	first->fField7a = 0;
-	first->fField88 = 0;
-	first->fField8c = 0;
+	first->fJump = 0;
+	first->fRealCount = 0;
+	first->fCost = 0;
+	first->fAltCost = 0;
 	first->fWords = nil;
 	for (long i = 0; i < 10; i++)
 		first->fClassCounts[i] = 0;
@@ -564,13 +569,13 @@ SearchFindBest(long* out, Fixed* outA, Fixed* outB, long count, UByte flag,
 	for (long i = 0; i < kSearchColumns; i++)
 	{
 		SearchColumn* col = gSearchColumns[i];
-		if (i <= (long) col->fField79 && col->fCount != 0
-			&& (flag == 0 || (long) col->fField79 <= i))
+		if (i <= (long) col->fJump && col->fCount != 0
+			&& (flag == 0 || (long) col->fJump <= i))
 		{
-			if ((ULong) col->fField88 < leastCost)
-				leastCost = (ULong) col->fField88;
-			if ((ULong) col->fField8c < leastOther)
-				leastOther = (ULong) col->fField8c;
+			if ((ULong) col->fCost < leastCost)
+				leastCost = (ULong) col->fCost;
+			if ((ULong) col->fAltCost < leastOther)
+				leastOther = (ULong) col->fAltCost;
 		}
 	}
 
@@ -579,9 +584,9 @@ SearchFindBest(long* out, Fixed* outA, Fixed* outB, long count, UByte flag,
 		SearchColumn* col = gSearchColumns[i];
 		if (col->fCount == 0)
 			continue;
-		ULong bias = (ULong) col->fField88 - leastCost;
-		if (!(i <= (long) col->fField79
-			&& (flag == 0 || (long) col->fField79 <= i)
+		ULong bias = (ULong) col->fCost - leastCost;
+		if (!(i <= (long) col->fJump
+			&& (flag == 0 || (long) col->fJump <= i)
 			&& bias < 0x7ffe))
 			continue;
 
