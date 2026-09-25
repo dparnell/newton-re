@@ -205,7 +205,7 @@ main()
 	{
 		RosSegment* seg = SegmentCreate();
 		EXPECT(seg != nil);
-		EXPECT(seg->fField00 == -1 && seg->fField04 == -1 && seg->fField06 == -1);
+		EXPECT(seg->fFirstStroke == -1 && seg->fField04 == -1 && seg->fField06 == -1);
 		EXPECT(seg->fCount == 0);
 		EXPECT(seg->fStrokes == nil);
 		EXPECT(seg->fHasDot == 0 && seg->fSmallestStroke == 0);
@@ -404,6 +404,49 @@ main()
 
 		for (short i = 0; i < 4; i++)
 			StrokeDestroy(six[i]);
+	}
+
+	// ---- the overlaps worked out again inside a segment ----
+	{
+		// two segments, one of two strokes and one of one
+		RosSegment* first = SegmentCreate();
+		RosSegment* second = SegmentCreate();
+		RosStroke* a[2];
+		a[0] = Steps(F(0), F(0), 0, F(2), 11);		// x = 0
+		a[1] = Steps(F(0), F(0), F(2), 0, 11);		// x = 0..20
+		RosStroke* b[1];
+		b[0] = Steps(F(10), F(0), F(1), F(2), 11);	// x = 10..20
+		for (short i = 0; i < 2; i++)
+			SegmentStrokeData(a[i], 0, i, 0);
+		SegmentStrokeData(b[0], 0, 2, 0);
+		SegmentSetStrokes(first, 2, a);
+		SegmentSetStrokes(second, 1, b);
+		first->fCount = 2;
+		second->fCount = 1;
+		SegmentBoundsDotsEtc(first);
+		SegmentBoundsDotsEtc(second);
+
+		// the first segment of a word has nothing in front of it
+		SegmentSetStrokeOverlaps(first, nil);
+		EXPECT(first->fStrokes->fStrokes[0]->fOverlap == 0);
+		// ... and its second stroke is measured against its first
+		EXPECT(first->fStrokes->fStrokes[1]->fOverlap > 0);
+
+		// the next segment's first stroke is measured against the *last
+		// stroke of the segment before it*, not against whatever was
+		// next to it before the strokes were sorted and joined
+		SegmentSetStrokeOverlaps(second, first);
+		Fixed across = SegmentOverlap(&first->fStrokes->fStrokes[1]->fBounds,
+								&second->fStrokes->fStrokes[0]->fBounds);
+		EXPECT(second->fStrokes->fStrokes[0]->fOverlap == across);
+		EXPECT(across > 0);
+
+		SegmentSetStrokeOverlaps(nil, nil);		// no trouble
+		SegmentDestroy(first);
+		SegmentDestroy(second);
+		StrokeDestroy(a[0]);
+		StrokeDestroy(a[1]);
+		StrokeDestroy(b[0]);
 	}
 
 	// ---- the rest of the layer's life ----

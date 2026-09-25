@@ -381,17 +381,29 @@ forward for the case where the writer went back to dot an i.
 `rosCI`'s `fMinCharWidth`, `fCharWidthFraction`, `fReachFraction` and
 the four overlap thresholds are named for all this.
 
-Still NOT YET above them: `SegmentMakeSegments` (2200 B), which walks
-the break candidates the first pass leaves and actually makes the
-segments, plus the word-spacing and gap functions `SegmentWordXGap`
+`SegmentSetStrokeOverlaps` is done as well - a segment's strokes told
+how much of the line each shares with the one before it *now that the
+segment has them in its own order*, the first measured against the last
+stroke of the segment before it.
+
+**`SegmentMakeSegments` (2200 B) has been read but not written**, and
+`docs/recognition/README.md`'s "The second pass, read but not yet
+written" has the map: the 0x44-byte incremental state block (`SegState`
+in `Segment.cpp`, the one `SegmentQuiesce` gives back), the three
+reasons a piece ends (the first pass said so; the aspect ratio passed
+1.5, or 1.75 when a dot has widened the box; or more than six strokes),
+the walk back to a stroke the cut may legally fall on, and the emit
+loop.  Two things in it want reading with `WordRecogAddStroke` first,
+because that is where they come from: the per-stroke `fField24` and the
+pair of flags the emit loop carries.  That is the next piece.
+
+Still NOT YET: `SegmentMakeSegments` itself, plus the word-spacing and gap functions `SegmentWordXGap`
 (5952 B) and `SegmentWordVert` (1892 B), about 10 KB in all;
 `WordRecogAddStroke`/`AnalyzeWord` (10 KB), `RosettaSetArea` and the
 classify passes (3 KB), and the feature extraction
 `low_type`/`EXTR`/`SPEC_TYPE`, which is 556 KB and 2384 symbols on its
-own.  **`SegmentMakeSegments` is the next piece**: it is the last
-thing between the break candidates and a real list of segments, and
-`CharBoxEvaluate`, `WordRecogAddStroke` and `WordRecogAnalyzeWord` all
-wait on it.
+own.  `CharBoxEvaluate`, `WordRecogAddStroke` and
+`WordRecogAnalyzeWord` all wait on the segments.
 
 **The engine's own numbers are real.**  `analysis/rosci.py` generates
 `src/recognition/RosCITables.cpp` - the 0x10c-byte `rosCI` template

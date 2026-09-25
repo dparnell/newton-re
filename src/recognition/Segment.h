@@ -45,8 +45,10 @@
 // one.  The ROM's object is 0x2c bytes.
 struct RosSegment
 {
-	short			fField00;		// +0x00  (-1 when new)
-	short			fCount;			// +0x02  how many characters are in it
+	// Which stroke of the word it starts at, and how many strokes it
+	// covers (-1 and 0 when new).
+	short			fFirstStroke;	// +0x00
+	short			fCount;			// +0x02
 	short			fField04;		// +0x04  (-1 when new)
 	short			fField06;		// +0x06  (-1 when new)
 	RosStrokeList*	fStrokes;		// +0x08
@@ -56,7 +58,9 @@ struct RosSegment
 	Fixed			fSmallestStroke;	// +0x20  see `SegmentBoundsDotsEtc`
 	UByte			fFragment;		// +0x24  any of them is a piece of an earlier stroke
 	UByte			fJoinsNext;		// +0x25  any of them runs on into the next
-	UByte			fPad26[6];		// +0x26 .. +0x2b
+	UByte			fPad26[2];		// +0x26
+	// How far the first of its strokes was from the stroke before it.
+	Fixed			fSeparation;	// +0x28
 };
 
 // Where two strokes come nearest each other, and how near.  This is
@@ -118,6 +122,11 @@ Fixed	SegmentOverlapAr(Fixed aLeft, Fixed aRight, Fixed bLeft, Fixed bRight);	//
 // in: its bounds, whether it is a dot, where it came in the writing and
 // how far it is from the one before.
 void	SegmentStrokeData(RosStroke* stroke, UByte how, short index, Fixed separation);	// ROM 0x001d2224 SegmentStrokeData
+
+// A segment's strokes told how much of the line each shares with the
+// one before it, now that the segment has them in its own order.  The
+// first is measured against the last stroke of the segment before it.
+void	SegmentSetStrokeOverlaps(RosSegment* self, const RosSegment* previous);	// ROM 0x001d1db4 SegmentSetStrokeOverlaps
 
 // Which two points of two strokes come nearest, by the sum of the two
 // distances rather than by the real one - that is worked out only for

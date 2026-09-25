@@ -109,7 +109,14 @@ struct RosCommonInfo
 	ULong				fField58[2];		// +0x58
 	Fixed				fCharWidthFraction;	// +0x60
 	Fixed				fReachFraction;		// +0x64
-	ULong				fField68[6];		// +0x68
+	ULong				fField68[4];		// +0x68
+	// How wide a piece of writing may get before it is cut in two
+	// whatever else the strokes say: one and a half times as wide as
+	// it is tall, or one and three quarters when there is a dot
+	// somewhere in it - because the dot has already widened the box
+	// without being a letter of its own.
+	Fixed				fCutAspect;			// +0x78
+	Fixed				fCutAspectWithDot;	// +0x7c
 	// How much of the line two neighbouring strokes must share before
 	// they are said to be part of one letter.  Seven tenths on its
 	// own; else sixty-five hundredths if they *cross*, or 0.675 if

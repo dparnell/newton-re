@@ -79,7 +79,9 @@ FIELDS = [
     ("fField58", "word", 2),			# +0x58 .. +0x5c
     ("fCharWidthFraction", "word", 1),	# +0x60
     ("fReachFraction", "word", 1),		# +0x64
-    ("fField68", "word", 6),			# +0x68 .. +0x7c
+    ("fField68", "word", 4),			# +0x68 .. +0x74
+    ("fCutAspect", "word", 1),			# +0x78
+    ("fCutAspectWithDot", "word", 1),	# +0x7c
     ("fLinkOverlap", "word", 1),		# +0x80
     ("fCrossOverlap", "word", 1),		# +0x84
     ("fJoinOverlap", "word", 1),		# +0x88

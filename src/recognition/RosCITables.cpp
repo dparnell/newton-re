@@ -537,7 +537,9 @@ const RosCommonInfo	rosCI = {
 	{ 0x00060000, 0x000f0000 },	// fField58
 	0x00008000,	// fCharWidthFraction
 	0x00001999,	// fReachFraction
-	{ 0x00015999, 0x0000e666, 0x0002b333, 0x00320000, 0x00018000, 0x0001c000 },	// fField68
+	{ 0x00015999, 0x0000e666, 0x0002b333, 0x00320000 },	// fField68
+	0x00018000,	// fCutAspect
+	0x0001c000,	// fCutAspectWithDot
 	0x0000b333,	// fLinkOverlap
 	0x0000a666,	// fCrossOverlap
 	0x0000accc,	// fJoinOverlap

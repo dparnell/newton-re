@@ -20,10 +20,27 @@
 // nine tenths when it has been told the writing is joined up, a half
 // when it has not.
 static Fixed	gSegIntegrated = 0;
+// What the layer is holding on to between words: `SegmentMakeSegments`
+// is called once per stroke and keeps its working-out here.  The ROM's
+// block is 0x44 bytes and is made on the first call; `SegmentQuiesce`
+// is what gives it back.
+struct SegState
+{
+	long		fStart;			// +0x00  the first stroke of the piece being built
+	long		fBoundsTo;		// +0x04  how far `fBounds` has been accumulated
+	long		fCut;			// +0x08  the last stroke of the piece
+	long		fLastCut;		// +0x0c  where the piece before it ended
+	long		fBreakAt;		// +0x10  how far down the break candidates
+	long		fMade;			// +0x14  how many segments have been made
+	long		fHasDot;		// +0x18  any stroke in the piece is a dot
+	FRect		fBounds;		// +0x1c  the box the piece fills
+	FRect		fScratch;		// +0x2c
+	Fixed		fAspect;		// +0x3c  how wide against how tall it is now
+	Fixed		fPrevAspect;	// +0x40  ... and before the last stroke went in
+};
+
 // ROM 0x0c101afc (unnamed)
-// What the layer is holding on to between words.  Nothing here makes
-// one yet; `SegmentQuiesce` is what gives it back.
-static void*	gSegWorkspace = nil;
+static SegState*	gSegState = nil;
 
 
 // ROM 0x001d4cbc SegmentIntegrated
@@ -38,9 +55,9 @@ SegmentIntegrated(long integrated)
 void
 SegmentQuiesce(void)
 {
-	if (gSegWorkspace != nil)
-		DisposPtr((Ptr) gSegWorkspace);
-	gSegWorkspace = nil;
+	if (gSegState != nil)
+		DisposPtr((Ptr) gSegState);
+	gSegState = nil;
 }
 
 
@@ -67,7 +84,7 @@ SegmentInit(RosSegment* self)
 {
 	if (self == nil)
 		return;
-	self->fField00 = -1;
+	self->fFirstStroke = -1;
 	self->fCount = 0;
 	self->fField04 = -1;
 	self->fField06 = -1;
@@ -281,6 +298,44 @@ SegmentOverlap(const FRect* a, const FRect* b)
 	return SegmentOverlapAr(a->left, a->right, b->left, b->right);
 }
 
+
+// ROM 0x001d1db4 SegmentSetStrokeOverlaps
+// A segment's strokes told how much of the line each shares with the
+// one before it, *now that the segment has them*.
+//
+// `SegmentStroke` worked this out once already, over the word's strokes
+// in the order they were written.  But `SegmentSetStrokes` sorted them
+// and joined the pieces the engine had cut, so a stroke's neighbour
+// inside the segment is not the stroke that was its neighbour before.
+// The first stroke of a segment is measured against the **last stroke
+// of the segment before it**, or against nothing at all when it is the
+// first segment of the word.
+void
+SegmentSetStrokeOverlaps(RosSegment* self, const RosSegment* previous)
+{
+	if (self == nil)
+		return;
+	RosStrokeList* list = self->fStrokes;
+	if (list == nil || list->fCount < 1)
+		return;
+
+	FRect* bounds = &list->fStrokes[0]->fBounds;
+	if (previous == nil)
+		list->fStrokes[0]->fOverlap = 0;
+	else
+	{
+		RosStrokeList* before = previous->fStrokes;
+		RosStroke* last = before->fStrokes[before->fCount - 1];
+		list->fStrokes[0]->fOverlap = SegmentOverlap(&last->fBounds, bounds);
+	}
+
+	for (short i = 1; i < list->fCount; i++)
+	{
+		RosStroke* stroke = list->fStrokes[i];
+		list->fStrokes[i]->fOverlap = SegmentOverlap(bounds, &stroke->fBounds);
+		bounds = &stroke->fBounds;
+	}
+}
 
 // ROM 0x001d2224 SegmentStrokeData
 // What the segment layer wants remembered about a stroke as it comes
