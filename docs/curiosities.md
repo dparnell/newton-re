@@ -1800,3 +1800,49 @@ whether you meant a space.
 *`src/recognition/Segment.cpp`'s `SegmentWordXGap`; the eight Gaussians
 live in `WordRecog::fRun[2..17]`, the nominals in `kSegGapNominal`, and
 `test_Segment` drives the whole thing.*
+
+## The Newton squares your boxes with a constraint solver
+
+Draw a wobbly box on a Newton and a moment later it is a crisp rectangle.
+It would be natural to guess that the recogniser simply rounds each side
+to the nearest level or upright line. It does something far more
+ambitious: it treats the shape as a **system of geometric constraints**
+and solves it.
+
+Every side is measured - length in whole pixels, direction in whole
+degrees - and the lengths and directions are each clustered (`TTrend`, a
+little one-dimensional clustering with running Gaussian-ish spreads that
+merges clusters when the gap between them is small beside their spread).
+The direction clusters are then related to one another: two about 90
+degrees apart are made exactly perpendicular, and a cluster half way
+between two others becomes the axis they are mirrored in. Out of all
+that come **linear equations over the shape's edge vectors**: these two
+sides parallel and in a ratio of exactly 2, those two at equal angles to
+the axis, and every side adding up to nothing so the shape still
+closes.
+
+There are usually more equations than the shape has freedoms, so they
+are not solved; they are *minimised*. Each is squared into one quadratic
+form, its gradient worked out once as a linear form per variable, and
+the edge vectors started from the shape as you drew it and moved
+downhill by **Polak-Ribiere conjugate gradients** - Numerical Recipes'
+`frprmn`, with `linmin`, `mnbrak` and Brent's method with derivatives
+(`dbrent`) under it, all transcribed into 16.16 fixed point on a CPU
+with no floating point. The answer is then stretched back over the box
+the shape originally covered, so the tidied shape sits where you drew
+it.
+
+Two touches give away that it was written by someone who had used the
+book in anger. The line search starts from a step of an eighth, not
+one. And when the Polak-Ribiere factor comes out larger than 10, the
+code computes the new direction as `h + g/gamma` instead of
+`g + gamma*h` - the same direction, scaled down, so the fixed-point
+arithmetic does not overflow.
+
+(One more oddity: the directions are measured from the *vertical*, so to
+this code a level line is at 90 degrees.)
+
+*`src/recognition/ShapeEquations.cpp` writes the equations,
+`src/recognition/ShapeSolver.cpp` minimises them, and
+`src/host/demo/shapes.ns` shows the result; `test_ShapeDomain`'s
+`TestSolver` and `TestEquations` drive them directly.*
