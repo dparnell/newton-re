@@ -694,9 +694,10 @@ main()
 		// nominal.
 		BPNet* net = BPNetCreateNumOut(134);
 		BPNetLoad(net, nil);
-		WordRecog* word = WordRecogNew();
-		WordRecogAllocate(word);
-		word->fNet = net;
+		// as `RosettaAwaken` makes it, because closing a word now
+		// hands readings back through `fWords` and the rest
+		WordRecog* word = WordRecogCreate2(nil, nil, TestCheckWords, 10,
+								&gGrammars, net, 1);
 		word->fContext = ROMGrammar.fContexts[0];
 		word->fField60 = F(20);
 		word->fStrokeCount = 1;
@@ -738,10 +739,13 @@ main()
 		// the mean height of one segment is that segment's height
 		EXPECT(word->fMeanCharHeight == F(21));
 
-		// a word wildly bigger than the hand teaches it nothing
+		// a word wildly bigger than the hand teaches it nothing.
+		// (`fReturnedStrokes` is put back by hand: the engine closes a
+		//  word between one analysis and the next, and this does not.)
 		Fixed steady = word->fRun[18];
 		SetFixedRect(&seg->fBounds, F(0), F(0), F(10), F(400));
 		word->fField60 = F(20);
+		word->fReturnedStrokes = 0;
 		WordRecogAnalyzeWord(word);
 		EXPECT(word->fRun[18] == steady);
 

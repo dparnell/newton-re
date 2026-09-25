@@ -75,8 +75,10 @@ struct WordList
 	UShort		fRefCount;		// +0x00  (the free-list link while free)
 	UByte		fCount;			// +0x02  how many alternatives
 	UByte		fStrokes;		// +0x03  how far into the word they reach
-	Fixed		fField04;		// +0x04
-	Fixed		fField08;		// +0x08
+	// What the readings cost altogether, and what the scores below are
+	// measured from.
+	Fixed		fCost;			// +0x04
+	Fixed		fScoreBase;		// +0x08
 	long		fField0c;		// +0x0c
 	WordTailRef	fTails[kWordListMax];	// +0x10
 	short		fScores[kWordListMax];	// +0x24

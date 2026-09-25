@@ -387,6 +387,32 @@ main()
 		EXPECT(WordListSprint(list, text, 64) == 4);
 		EXPECT(text[3] == kWordListMark);
 
+		// ---- and written out as text ----
+		char* gotWords[10];
+		UniChar gotScores[10];
+		long gotFlags[10];
+		for (long i = 0; i < 10; i++)
+			gotWords[i] = nil;
+		long said = SearchBestWords(gotWords, gotScores, gotFlags, 10, 0);
+		EXPECT(said == 3);
+		EXPECT(gotWords[0] != nil);
+		EXPECT(strcmp(gotWords[0], "cat") == 0);
+		EXPECT(strcmp(gotWords[1], "cot") == 0);
+		EXPECT(strcmp(gotWords[2], "car") == 0);
+		// best first, and each reading says which lexicon it came from
+		EXPECT(gotScores[0] <= gotScores[1]);
+		EXPECT(gotScores[1] <= gotScores[2]);
+		EXPECT(gotFlags[0] == (long) slice->fDictionary);
+		// the strings are the engine's own, out of the return cache
+		EXPECT(gotWords[0] == (char*) gSearchReturnCache[0]);
+		// asking for fewer gets fewer
+		EXPECT(SearchBestWords(gotWords, gotScores, gotFlags, 2, 0) == 2);
+		// and `GetBestPath` is the same thing into a buffer - the try
+		// string the Newton shows while you are still writing
+		char tryString[64];
+		GetBestPath(tryString, 0);
+		EXPECT(strcmp(tryString, "cat") == 0);
+
 		col->fWords = nil;
 		col->fCount = 0;
 	}

@@ -95,6 +95,9 @@ extern const BiGrammar*	gSearchGrammar;				// ROM 0x0c101aa0 (unnamed)
 // The two arrays of 256 scores `SearchProcessSegment` leaves for the
 // Viterbi step: what the classifier said, and what the search charges
 // for the letter itself.
+// Room for the readings on the way back out: the strings a caller is
+// handed are these, so they have to stay valid until it asks again.
+extern Ptr*		gSearchReturnCache;					// ROM 0x0c101aa4 (unnamed)
 extern Ptr		gSearchScratchA;					// ROM 0x0c101ab8 (unnamed)
 extern Ptr		gSearchScratchB;					// ROM 0x0c101abc (unnamed)
 
@@ -138,7 +141,11 @@ void	GetBestPath(char* out, UByte how);				// ROM 0x001d0798 GetBestPath
 void	SearchDoViterbStep(short* fromProbs, short* fromScratch, long index,
 				RosSegment* segment, Fixed confidence, Boolean endsWord,
 				short total);							// ROM 0x001cebac SearchDoViterbStep
-long	SearchBestWords(char** out, long a, long b, long count, UByte how);	// ROM 0x001d0c48 SearchBestWords
+// The best readings written out as text, with a score and the
+// dictionary each came from.  The strings are the engine's own, out
+// of the return cache.
+long	SearchBestWords(char** words, UniChar* scores, long* flags,
+				long count, UByte how);					// ROM 0x001d0c48 SearchBestWords
 
 // What a partial reading looks like from the outside, in twelve
 // classes, so that the grammar can charge differently for what may

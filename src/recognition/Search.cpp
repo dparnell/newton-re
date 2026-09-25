@@ -402,21 +402,8 @@ SearchDoViterbStep(short* /*fromProbs*/, short* /*fromScratch*/, long /*index*/,
 {
 }
 
-// ROM 0x001d0c48 SearchBestWords
-long
-SearchBestWords(char** /*out*/, long /*a*/, long /*b*/, long /*count*/, UByte /*how*/)
-{
-	return 0;
-}
 
 
-// ROM 0x001d03f8 SearchSendWords
-void
-SearchSendWords(WordList* /*list*/, long /*strokes*/, SearchEndWordProc /*proc*/,
-			WordRecog* /*wr*/, char** /*words*/, UniChar* /*scores*/, long* /*flags*/,
-			long /*count*/)
-{
-}
 
 
 // ROM 0x001d06fc ShiftNetValues
@@ -730,8 +717,8 @@ SearchSegwordRememberNBest(SearchColumn* column, long strokes, Fixed weight)
 
 	list->fStrokes = (UByte) strokes;
 	list->fRefCount = 1;
-	list->fField04 = cost;
-	list->fField08 = other;
+	list->fCost = cost;
+	list->fScoreBase = other;
 	list->fCount = (UByte) found;
 	list->fField0c = gSearchColumns[best[0]]->fNodes[best[1]]->fField0c;
 
@@ -748,4 +735,127 @@ SearchSegwordRememberNBest(SearchColumn* column, long strokes, Fixed weight)
 			WordTailAddRef(list->fTails[i]);
 	}
 	column->fWords = list;
+}
+
+
+// ROM 0x001d0c48 SearchBestWords
+// The best readings written out as text, with a score and the
+// dictionary each came from.  This is what `GetBestPath` asks for
+// while the writing is still going on, and it is the shape the
+// readings are finally handed back in.
+//
+// Each word goes into the return cache, which is why that only ever
+// grows: the strings the caller is given are the engine's own, and
+// they have to stay valid until it asks again.
+long
+SearchBestWords(char** words, UniChar* scores, long* flags, long count, UByte how)
+{
+	long room = (MaxBestNodes < count) ? MaxBestNodes : count;
+	SearchAllocateReturnCache(room);
+
+	long triples[kWordListMax * 3 * 3];
+	Fixed base = 0;
+	long found = SearchFindBest(triples, &base, nil, room, how,
+						(how != 0) ? 0x00010000 : 0);
+
+	for (long i = 0; i < found; i++)
+	{
+		SearchNode* node = gSearchColumns[triples[i * 3]]->fNodes[triples[i * 3 + 1]];
+		if (words != nil)
+		{
+			WordTailSprint(node->fTail, (UByte*) gSearchReturnCache[i], 0x24);
+			words[i] = (char*) gSearchReturnCache[i];
+		}
+		if (scores != nil)
+		{
+			ULong score = (ULong) (triples[i * 3 + 2] + base);
+			if (score >= 0x7ffe)
+				score = 0x7ffe;
+			scores[i] = (UniChar) score;
+		}
+		if (flags != nil)
+			flags[i] = (long) node->fSlice->fDictionary;
+	}
+
+	if (found != 0 && how != 0)
+		SearchCheckHashHit(words);
+	return found;
+}
+
+
+// ROM 0x001d03f8 SearchSendWords
+// The readings handed back, one **word** at a time.
+//
+// A word list's readings may run into another word list - that is what
+// a reference of 0xf000 or more at the far end of a tail means - and
+// when they do, the earlier list is sent first.  So a piece of writing
+// read as several words comes back as several calls to `proc`, each
+// with its own alternatives, its own scores and its own count of
+// strokes.  The stroke count and the score base are taken off as the
+// recursion goes in, so each call is told only about its own part.
+//
+// Only the alternatives that end where the first one does are sent:
+// the rest belong to a different word.
+void
+SearchSendWords(WordList* list, long strokes, SearchEndWordProc proc,
+			WordRecog* wr, char** words, UniChar* scores, long* flags,
+			long count)
+{
+	if (list == nil || list->fCount == 0)
+	{
+		ULong reached = (list != nil) ? (ULong) list->fStrokes : (ULong) strokes;
+		proc(wr, words, scores, flags, (long) reached, 0);
+		return;
+	}
+
+	// where the first alternative's reading really ends
+	WordTailRef end = list->fTails[0];
+	while (end < kWordTailListBase)
+		end = WordTailAt(end)->fNext;
+
+	ULong reached = (ULong) list->fStrokes;
+	long base = list->fScoreBase;
+	if (end != kWordTailNone && end >= kWordTailListBase)
+	{
+		// it runs into an earlier word: send that one first
+		WordList* earlier = WordListAt(end);
+		reached -= (ULong) earlier->fStrokes;
+		base -= earlier->fScoreBase;
+		SearchSendWords(earlier, strokes, proc, wr, words, scores, flags, count);
+	}
+
+	if (MaxBestNodes < count)
+		count = MaxBestNodes;
+	SearchAllocateReturnCache(count);
+
+	long out = 0;
+	for (long i = 0; i < (long) list->fCount && out < count; i++)
+	{
+		WordTailRef tail = list->fTails[i];
+		WordTailRef far = tail;
+		while (far < kWordTailListBase)
+			far = WordTailAt(far)->fNext;
+		if (far != end)
+			continue;			// this one belongs to a different word
+
+		if (words != nil)
+		{
+			words[out] = (char*) gSearchReturnCache[out];
+			WordTailSprint2(tail, (UByte*) gSearchReturnCache[out], 0x24);
+		}
+		if (scores != nil)
+		{
+			ULong score = (ULong) (base + list->fScores[i]);
+			if (score >= 0x7ffe)
+				score = 0x7ffe;
+			scores[out] = (UniChar) score;
+		}
+		if (flags != nil)
+			flags[out] = list->fFlags[i];
+		out++;
+	}
+
+	if (out != 0)
+		SearchCheckHashHit(words);
+	proc(wr, words, scores, flags, (long) reached, out);
 }

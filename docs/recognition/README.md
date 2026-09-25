@@ -3083,6 +3083,34 @@ engine can hand back a set of alternatives rather than one answer.
 deliberately - `1.0` or nought - and never reads.  Another vestige of
 the training build, like `BiGSliceCreate`'s doubles.)
 
+#### Handing the readings back
+
+`SearchBestWords` writes the best readings out as text, each with a
+score and the dictionary it came from, and `GetBestPath` is the same
+thing into a caller's buffer.  The strings a caller is handed are the
+engine's own, out of the return cache, which is why that only ever
+grows: they have to stay valid until it asks again.
+
+`SearchSendWords` is what `SearchEndWord` uses, and it hands the
+readings back **one word at a time**.  A word list's readings may run
+into *another* word list - that is what a reference of `0xf000` or more
+at the far end of a tail means - and when they do, the earlier list is
+sent first.  So a piece of writing read as several words comes back as
+several calls to the callback, each with its own alternatives, its own
+scores and its own count of strokes; the stroke count and the score
+base are taken off as the recursion goes in, so each call is told only
+about its own part.  Only the alternatives that end where the first one
+does are sent with it: the rest belong to a different word.
+
+**An overflow to keep.**  `CharModifyProbs` multiplies its Gaussian by
+five hundred to get the score's units, and that is a plain 32-bit
+multiply.  A piece of writing wildly the wrong height for a character
+makes it overflow; on the ARM it simply wraps, and the nonsense that
+comes out either reads as a score too dear to matter or lands harmlessly
+in the decode table.  The reconstruction wraps too, because a saturating
+version would answer differently.  It turned up when `test_WordRecog`
+measured a segment four hundred pixels tall.
+
 #### Write it three times
 
 `SearchCheckHashHit` looks at every reading on its way out and compares

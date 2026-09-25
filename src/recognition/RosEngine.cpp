@@ -752,11 +752,19 @@ CharModifyProbs(const FRect* bounds, short strokes, UByte /*hasDot*/,
 				// score, so the Gaussian is a table lookup
 				Fixed z = FixedDivide(FixedMultiply(off, off), spread);
 				Fixed half = FixedMultiply(-0x8000, z);
-				long cost = (half * -500) >> 16;
+				// The multiply by five hundred is where the score's
+				// units come from - but it is a plain 32-bit multiply
+				// and a piece of writing wildly the wrong height makes
+				// it **overflow**.  On the ARM it simply wraps, and the
+				// nonsense that comes out either reads as a score too
+				// dear to matter or lands somewhere harmless in the
+				// table.  Kept, wrapping, rather than saturated.
+				int scaled = (int) ((unsigned int) half * (unsigned int) -500);
+				long cost = scaled >> 16;
 				Fixed fit;
 				if (cost < kArProbMaxScore)
 					fit = (cost < 1) ? 0x00010000
-								: (Fixed) ArProbDecodeLu[(half * -500) >> 19];
+								: (Fixed) ArProbDecodeLu[scaled >> 19];
 				else
 					fit = 0;
 				if (scratch != nil)

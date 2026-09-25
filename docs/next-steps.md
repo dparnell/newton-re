@@ -505,8 +505,12 @@ fifths, what the classifier's opinion is worth against everything else)
 is named.
 
 Still NOT YET: **the Viterbi step itself** - `SearchDoViterbStep`
-(1324 B), `SearchDoVStepFromNode` (2120 B), `SearchBestWords` (328 B)
-and `SearchSendWords` (616 B), about 4 KB.  `SearchFindBest` and
+(1324 B) and `SearchDoVStepFromNode` (2120 B), about 3.5 KB, with
+`RegisterNewPath` (680 B), `GeoContextPenalty` (1204 B) and
+`LELangNodeNumOut` (452 B) under them.  **The whole of the output side
+is done**: `SearchFindBest`, `SearchSegwordRememberNBest`,
+`SearchBestWords` and `SearchSendWords`, so once the step fills the
+columns the readings come back by themselves.  `SearchFindBest` and
 `SearchSegwordRememberNBest` are done - the best readings gathered out
 of the columns, with the same text found twice counting once, and put
 on a word list the column then holds.
