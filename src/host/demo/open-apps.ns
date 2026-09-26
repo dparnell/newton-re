@@ -1,0 +1,80 @@
+// A smoke test of the built-in applications: the Setup assistant is
+// walked through to the Notepad (as setup.ns does), and then each
+// application the user can reach is opened, left up for a couple of
+// seconds (so it draws) and closed again, one after the other.  What
+// fails is printed; with NEWTON_TRACE_MISSING set, a native the ROM's
+// scripts ask for that is not reconstructed names itself, with the
+// script stack that asked, and NEWTON_TRACE_EXCEPTIONS shows where a
+// throw came from.  A crash stops the run at the application that
+// caused it.
+//
+//   NEWTON_TRACE_MISSING=1 build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --display 320x480 --script src/host/demo/open-apps.ns --headless 90
+//
+// This is how the missing GetRichString (the Call application's label
+// line) and the dictionary cursor writing into a freed block (the
+// Dictionary review) were found.  The applications that fail to open
+// here for want of a subsystem are recorded in docs/next-steps.md.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// the applications a user reaches from the Extras drawer and the buttons
+apps := ['calendar, 'cardfile, 'ExtrasDrawer, 'calculator, 'worldClock, 'inbox, 'iobox,
+         'Formulas, 'assistant, 'stylePalette, 'findDrawer, 'preferenceRoll, 'Connection,
+         'callapp, 'SoundRecorder, 'alarm, 'handwritingpractice, 'reviewDict];
+failures := [];
+index := 0;
+next := func()
+  begin
+    if index > 0 then
+      begin
+        local previous := apps[index - 1];
+        try
+          GetRoot().(previous):Close()
+        onexception |evt.ex| do
+          AddArraySlot(failures, "close " & previous & ": " & CurrentException().name);
+      end;
+    if index < Length(apps) then
+      begin
+        local app := apps[index];
+        Print("open-apps: " & app);
+        try
+          GetRoot().(app):Open()
+        onexception |evt.ex| do
+          AddArraySlot(failures, "open " & app & ": " & CurrentException().name);
+        index := index + 1;
+        AddDelayedCall(next, nil, 2500);
+      end
+    else
+      begin
+        foreach failure in failures do Print("open-apps: FAILED " & failure);
+        Print("open-apps: done, " & NumberStr(Length(failures)) & " failed");
+      end;
+  end;
+AddDelayedCall(next, nil, 30000);
+Print("open-apps: the script is loaded");
