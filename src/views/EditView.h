@@ -72,7 +72,7 @@ public:
 	virtual Ref		GetSupportedDropTypes(const Point& pt);	// ROM 0x000a8a94 GetSupportedDropTypes__9TEditViewFRC6TPoint
 	virtual TView*	FindDropView(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a8d7c FindDropView__9TEditViewFRC9TDragInfoRC6TPoint
 	// the editor's own virtuals, which start after TView's at +0x11c
-	// (NOT YET RECONSTRUCTED: DrawScaledViews, the one at +0x11c)
+	virtual void	DrawScaledViews(const Rect& src, const Rect& dst);	// ROM 0x000a6384 DrawScaledViews__9TEditViewFRC5TRectT1 (vtable +0x11c)
 	virtual void	PositionCaret(Point& pt, Boolean click);	// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc (vtable +0x120)
 	virtual void	HandleTap(Point& pt);					// ROM 0x000aaba4 HandleTap__9TEditViewFR6TPoint (vtable +0x124)
 	virtual long	Scrub(class TUnitPublic* unit);				// ROM 0x000a6d38 Scrub__9TEditViewFP11TUnitPublic (vtable +0x128)
@@ -82,7 +82,11 @@ public:
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
 	long			CountHilites(void);						// ROM 0x000a7abc CountHilites__9TEditViewFv
-	void			GetDragInfo(TDragInfo* dragInfo, Boolean copy);	// ROM 0x000a8c78 GetDragInfo__9TEditViewFP9TDragInfoUc - the selected children's drag items
+	void			GetDragInfo(TDragInfo* dragInfo, Boolean copy);
+	Boolean			HiliteClick(TStrokePublic* stroke);		// ROM 0x000aabb0 HiliteClick__9TEditViewFP13TStrokePublic
+	Boolean			TrackScale(Point pt, TStrokePublic* stroke, const Rect& selected);	// ROM 0x000a7b18 TrackScale__9TEditViewF6TPointP13TStrokePublicRC5TRect
+	void			CleanupData(void);						// ROM 0x000aafcc CleanupData__9TEditViewFv
+	void			DiceHilited(void);						// ROM 0x000a9560 DiceHilited__9TEditViewFv	// ROM 0x000a8c78 GetDragInfo__9TEditViewFP9TDragInfoUc - the selected children's drag items
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
 	Boolean			AddHiliter(TUnitPublic* unit);			// ROM 0x000a6fb0 AddHiliter__9TEditViewFP11TUnitPublic - a hilite stroke offered to the children
@@ -204,6 +208,10 @@ void	RemoveInk(TEditView* view, class TUnit* unit);		// ROM 0x0019dfa4 RemoveInk
 void	TimeStampTextChange(TView* view);					// ROM 0x000a39f4 TimeStampTextChange__FP5TView
 
 extern Boolean	gAboutToOpenSoftKeyboard;					// ROM 0x0c100cf0 gAboutToOpenSoftKeyboard
+extern Boolean	gHiliteClickMakeCopy;						// ROM 0x0c100ce4 gHiliteClickMakeCopy
+extern Boolean	gScalingFeeedback;							// ROM 0x0c100cf4 gScalingFeeedback
+void	ClipBoxToBox(Rect* box, const Rect* limit);			// ROM 0x000a370c ClipBoxToBox__FP5TRectPC5TRect
+void	DrawResizeBorder(const Rect& bounds, const Rect* limit);	// ROM 0x000a3780 DrawResizeBorder__FRC5TRectPC5TRect
 extern Boolean	gLassoedDrag;								// ROM 0x0c100ce0 gLassoedDrag
 // Whether a word put on a page is offered to the dictionary as one it
 // might learn.  HandleWord sets it on the way in; the recogniser clears

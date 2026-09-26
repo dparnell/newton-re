@@ -43,6 +43,7 @@
 #include "Animate.h"
 #include "DragDrop.h"
 #include "ClipboardView.h"	// OffsetBoundsRef
+#include "Screen.h"			// StartDrawing
 #include "ROMConstants.h"
 #include "Regions.h"
 #include "RegionVars.h"
@@ -482,8 +483,9 @@ TEditView::DrawHilitedData(void)
 // ROM 0x000a609c DrawHiliting__9TEditViewFv
 // Each hilited child draws its hilites twice, scaled false and then true:
 // the ROM's two passes, the second being what a view that draws its
-// selection differently when scaled uses.  NOT YET: the resize border round
-// a resizable selection (DrawResizeBorder over gEditViewTransform).
+// selection differently when scaled uses; then the resize border round
+// a resizable selection, where a resize in progress (gEditViewTransform)
+// puts it.
 void
 TEditView::DrawHiliting(void)
 {
@@ -509,8 +511,13 @@ TEditView::DrawHiliting(void)
 		}
 		if ((options & 2) != 0)
 		{
-			// NOT YET: GlobalHiliteResizeBounds, scaled through
-			// gEditViewTransform, drawn by DrawResizeBorder
+			// the gray border a resizable selection is resized by, where
+			// a resize in progress puts it
+			Rect border;
+			border.top = border.bottom = kNoBounds;
+			GlobalHiliteResizeBounds(&border);
+			::Scale(&border, gEditViewTransform);
+			DrawResizeBorder(border, &viewBounds);
 		}
 		if ((fFlags & vClipping) != 0)
 		{
@@ -749,6 +756,10 @@ Boolean	gAboutToOpenSoftKeyboard = false;
 
 // ROM 0x0c100ce0 gLassoedDrag
 Boolean	gLassoedDrag = false;
+// ROM 0x0c100ce4 gHiliteClickMakeCopy - a drag of the selection is a copy
+Boolean	gHiliteClickMakeCopy = false;
+// ROM 0x0c100cf4 gScalingFeeedback - the selection is being drawn scaled
+Boolean	gScalingFeeedback = false;
 
 
 // ROM 0x002628c8 AlignToGrid__FlT1
@@ -1294,6 +1305,44 @@ TEditView::RealDoCommand(RefArg cmd)
 		}
 		// (the script only when it has not been asked already)
 		return asked ? false : TView::RealDoCommand(cmd);
+	}
+
+	if (id == aeClick)
+	{
+		// the pen pressed on the page: on a selection it may drag it,
+		// resize it or reshape it; a click that is the second half of a
+		// tap-drag is left for that
+		Boolean asked = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			asked = true;
+			if (TView::RealDoCommand(cmd))
+				return true;
+		}
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		if (!PartOfTapDrag(unit))
+		{
+			gHiliteClickMakeCopy = false;
+			if (HiliteClick(unit->Stroke()))
+			{
+				CommandSetResult(cmd, 1);
+				return true;
+			}
+		}
+		return asked ? false : TView::RealDoCommand(cmd);
+	}
+	if (id == aeTapDrag)
+	{
+		// a tap and then a press-and-drag on a selection: dragged as a
+		// copy, the pending tap forgotten
+		fTapPending = false;
+		gHiliteClickMakeCopy = true;
+		if (HiliteClick(((TUnitPublic*) CommandParameter(cmd))->Stroke()))
+		{
+			CommandSetResult(cmd, 1);
+			return true;
+		}
+		return TView::RealDoCommand(cmd);
 	}
 
 	if (id == aeGesture2f)
@@ -3191,4 +3240,360 @@ TEditView::DropDone(void)
 	TView::DropDone();
 	DetermineKeyView();
 	return true;
+}
+
+
+/*------------------------------------------------------------------------------
+	C l i c k s   o n   t h e   s e l e c t i o n
+
+	The pen pressed on a page's selection (HiliteClick).  On the gray
+	border of a selection that can be resized it resizes the selected
+	children (TrackScale, and CleanupData when the pen did not move); on a
+	corner of a selected polygon it would reshape it (TrackDistort, NOT
+	YET: no view answers ClickOptions bit 2 until the polygon hilites are
+	reconstructed); anywhere else on the selection it drags it.
+------------------------------------------------------------------------------*/
+
+// ROM 0x000a370c ClipBoxToBox__FP5TRectPC5TRect
+// A rectangle cut back to within another.
+void
+ClipBoxToBox(Rect* box, const Rect* limit)
+{
+	if (box->left < limit->left)
+		box->left = limit->left;
+	if (limit->right < box->right)
+		box->right = limit->right;
+	if (box->top < limit->top)
+		box->top = limit->top;
+	if (limit->bottom < box->bottom)
+		box->bottom = limit->bottom;
+}
+
+
+// ROM 0x000a3780 DrawResizeBorder__FRC5TRectPC5TRect
+// The gray border a resizable selection is resized by: four pixels of
+// gray, exclusive-ored, eight outside the selection, kept within the
+// limit when there is one.
+void
+DrawResizeBorder(const Rect& bounds, const Rect* limit)
+{
+	Rect r = bounds;
+	InsetRect(&r, -8, -8);
+	if (limit != nil)
+		ClipBoxToBox(&r, limit);
+	SetFgPattern(GetStdPattern(grayPat));
+	PenMode(patXor);
+	PenSize(4, 4);
+	FrameRect(&r);
+	PenNormal();
+}
+
+
+// ROM 0x000aabb0 HiliteClick__9TEditViewFP13TStrokePublic
+// The pen pressed on the page's selection.  ==> whether it did anything
+// with it.
+Boolean
+TEditView::HiliteClick(TStrokePublic* stroke)
+{
+	Point pt = stroke->FirstPoint();
+	Rect bounds;
+	StartGathering(&bounds);
+	long options = GlobalHiliteBounds(&bounds);
+	if (GatheredNothing(&bounds))
+		return false;
+	Boolean resizable = (options & 2) != 0;
+	Rect grab;
+	if (!resizable)
+		grab = bounds;
+	else
+	{
+		StartGathering(&grab);
+		GlobalHiliteResizeBounds(&grab);
+		ToOutsideGrayBorder(&grab, &viewBounds);
+	}
+	if (!PtInRect(pt, &grab))
+		return false;
+	if (resizable && (fFlags & vWriteProtected) == 0)
+	{
+		// on the gray border: a resize
+		Rect inside = grab;
+		InsetRect(&inside, 8, 8);
+		if (!PtInRect(pt, &inside))
+		{
+			Rect selected;
+			GlobalSelectedBounds(&selected);
+			if ((TextFlags() & 0x40) == 0 && !TrackScale(pt, stroke, selected))
+				CleanupData();
+			return true;
+		}
+	}
+	if ((options & 4) != 0 && (fFlags & vWriteProtected) == 0)
+	{
+		// NOT YET RECONSTRUCTED: TrackDistort (ROM 0x000a9634), a corner
+		// of a selected polygon dragged - only a polygon's hilite answers
+		// this bit, and they are NOT YET
+	}
+	if ((options & 1) == 0)
+		return false;
+	if (!resizable && !PointInHilite(pt))
+		return false;
+	Rect pinned;
+	StartGathering(&pinned);
+	GlobalHilitePinnedBounds(&pinned);
+	gLassoedDrag = (fClickOptions & 2) != 0;
+	TDragInfo dragInfo(0L);
+	GetDragInfo(&dragInfo, gHiliteClickMakeCopy);
+	Boolean dragged = false;
+	if (Length(RefVar(dragInfo.GetItems())) != 0 && !stroke->Done() && !fTapPending)
+	{
+		DragAndDrop(stroke, grab, &pinned, &pinned, gHiliteClickMakeCopy, dragInfo, nil);
+		dragged = true;
+	}
+	gLassoedDrag = false;
+	return dragged;
+}
+
+
+// ROM 0x000a6384 DrawScaledViews__9TEditViewFRC5TRectT1
+// The selected children drawn as a resize from `src` to `dst` would leave
+// them, and the gray border round them all.
+void
+TEditView::DrawScaledViews(const Rect& src, const Rect& dst)
+{
+	PenNormal();
+	Rect bounds;
+	StartGathering(&bounds);
+	GlobalHiliteBounds(&bounds);
+	if (GatheredNothing(&bounds))
+		return;
+	Rect all;
+	StartGathering(&all);
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if (child->Hilited())
+		{
+			Rect drawn;
+			child->DrawScaledData(src, dst, &drawn);
+			Union(&all, &drawn);
+		}
+	}
+	DrawResizeBorder(all, &viewBounds);
+	PenNormal();
+}
+
+
+// ROM 0x000a9560 DiceHilited__9TEditViewFv
+// Every child only part of which is selected cut in two, so that what is
+// selected is a whole view of its own: the next such child each time
+// round, until there is none.
+void
+TEditView::DiceHilited(void)
+{
+	RefVar hilite;
+	for ( ; ; )
+	{
+		TDataView* partial = nil;
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			hilite = child->FirstHilite();
+			if (NOTNIL(hilite) && !child->IsCompletelyHilited(hilite))
+			{
+				partial = (TDataView*) child;
+				break;
+			}
+		}
+		if (partial == nil)
+			break;
+		Point none;
+		none.h = none.v = 0;
+		partial->DiceHilited(hilite, this, none, false);
+	}
+}
+
+
+// ROM 0x000a7b18 TrackScale__9TEditViewF6TPointP13TStrokePublicRC5TRect
+// The selection resized by its gray border.  The side of the selected
+// children's bounds the pen went down nearer to follows the pen, the
+// other stays put (vertically and horizontally each), no closer than 16
+// pixels to it and not beyond the page; on a square grid the corner is
+// snapped to it.  As the pen moves, the page's picture is drawn with the
+// selected children scaled into the new rectangle (DrawScaledViews,
+// through gEditViewTransform) over the screen as it was without them.
+// When the pen is lifted, children only part of which is selected are cut
+// in two first, and each selected child is sent an undoable aeScaleData
+// from the old bounds to the new ones (a polygon's arcerBounds with it).
+// ==> whether the pen moved at all (more than four pixels).
+//
+// (the ROM first tells the busy box a resize is being tracked -
+//  BusyBoxSend 0x37 - which the views layer cannot reach from here)
+Boolean
+TEditView::TrackScale(Point pt, TStrokePublic* stroke, const Rect& selected)
+{
+	Point size;
+	size.v = (short) (selected.bottom - selected.top);
+	size.h = (short) (selected.right - selected.left);
+	stroke->InkOff(true);
+	Rect page = viewBounds;
+	Point anchor;
+	Rect limit;
+	if (selected.top + (short) (selected.bottom - selected.top) / 2 < pt.v)
+	{
+		// the lower half: the bottom follows the pen
+		anchor.v = selected.top;
+		limit.top = (short) (selected.top + 16);
+		limit.bottom = page.bottom;
+	}
+	else
+	{
+		anchor.v = selected.bottom;
+		size.v = (short) -size.v;
+		limit.bottom = (short) (selected.bottom - 16);
+		limit.top = page.top;
+	}
+	if (selected.left + (short) (selected.right - selected.left) / 2 < pt.h)
+	{
+		anchor.h = selected.left;
+		limit.left = (short) (selected.left + 16);
+		limit.right = page.right;
+	}
+	else
+	{
+		anchor.h = selected.right;
+		size.h = (short) -size.h;
+		limit.right = (short) (selected.right - 16);
+		limit.left = page.left;
+	}
+	Point lastPt;
+	lastPt.v = -32768;
+	lastPt.h = 0;
+	Rect newBounds = selected;
+	Boolean moved = false;
+	DragBits bits(this, nil, false);
+	Point spacing;
+	Boolean gridded = IsGridded(RefVar(RSSYMsquaregrid), &spacing);
+	TRegion visRgn(SetupVisRgn());
+	TRegionVar vis(visRgn);
+	unwind_protect
+	{
+		while (!stroke->Done())
+		{
+			Point pen = stroke->FinalPoint();
+			if (!moved)
+				moved = CheapDistance(pen, pt) > 4;
+			if (moved && (pen.h != lastPt.h || pen.v != lastPt.v))
+			{
+				Point corner;
+				corner.h = (short) (anchor.h + size.h);
+				corner.v = (short) (anchor.v + size.v);
+				corner.h = (short) (corner.h + pen.h - pt.h);
+				corner.v = (short) (corner.v + pen.v - pt.v);
+				if (gridded)
+					AlignPtToGrid(&corner, spacing);
+				PinTo(&corner, &limit);
+				newBounds.top = anchor.v;
+				newBounds.left = anchor.h;
+				newBounds.bottom = corner.v;
+				newBounds.right = corner.h;
+				Flip(&newBounds);
+				gEditViewTransform.Setup(&selected, &newBounds, false);
+				Rect r = viewBounds;
+				bits.fDataBits.SetPort();
+				EraseRect(&r);
+				gScalingFeeedback = true;
+				DrawScaledViews(selected, newBounds);
+				gScalingFeeedback = false;
+				bits.fDataBits.RestorePort();
+				StartDrawing(nil, nil);
+				bits.fBackground.Draw(r, r, srcCopy, nil);
+				bits.fDataBits.Draw(r, r, srcXor, nil);
+				StopDrawing(nil, nil);
+				lastPt = pen;
+			}
+			else
+				Wait(1);
+		}
+	}
+	on_unwind
+	{
+		// the port's visible region put back, a Throw or not
+		GrafPort* port;
+		GetPort(&port);
+		CopyRgn(vis, port->visRgn);
+	}
+	end_unwind;
+	gEditViewTransform.Setup(nil, nil, false);
+	PenNormal();
+	Dirty(nil);
+	if (moved)
+	{
+		DiceHilited();
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			if (!child->Hilited())
+				continue;
+			RefVar cmd(MakeCommand(aeScaleData, child, kNoParameter));
+			CommandSetIndexRect(cmd, 0, selected);
+			CommandSetIndexRect(cmd, 2, newBounds);
+			RefVar arc(GetFrameSlotRef(RefVar(child->DataFrame()), RSSYMarcerbounds));
+			if (NOTNIL(arc))
+				CommandSetIndexFrame(cmd, 4, arc);
+			gApplication->DispatchCommand(cmd);
+		}
+	}
+	return moved;
+}
+
+
+// ROM 0x000aafcc CleanupData__9TEditViewFv
+// A click on the resize border that did not move: the selected
+// paragraphs joined into the first of them - each one's text put in
+// under it as a word written there would be (HandleWord, with the
+// paragraph's own data), and the paragraph itself removed with an
+// undoable aeRemoveData - and the first then tidied (its CleanupData),
+// the selection taken away and the caret put at its end.
+void
+TEditView::CleanupData(void)
+{
+	TView** sorted = GetHilitedViewsSorted();
+	if (sorted == nil)
+		return;
+	long count = CountHilites();
+	TView* first = nil;
+	for (long i = 0; i < count; i++)
+	{
+		TView* child = sorted[i];
+		if (!child->DerivedFrom(clParagraphView))
+			continue;
+		if (first == nil)
+		{
+			first = child;
+			continue;
+		}
+		RefVar text(child->GetProto(RSSYMtext));
+		UniChar* chars = (UniChar*) GetCString(text);
+		ULong length = Ustrlen(chars);
+		if ((long) length > 0)
+		{
+			// a line's height under the first paragraph's bottom
+			Rect box = first->viewBounds;
+			box.top = box.bottom;
+			box.bottom = (short) (box.top + 1);
+			HandleWord(chars, length, box, box, nil, RefVar(child->DataFrame()), nil);
+		}
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, child->fId)));
+	}
+	if (first != nil)
+	{
+		((TDataView*) first)->CleanupData();
+		RemoveAllHilites();
+		RefVar text(((TParagraphView*) first)->Text());
+		gRootView->SetKeyView(first, Length(text) / 2 - 1, 0, false);
+	}
+	delete[] sorted;
 }

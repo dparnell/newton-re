@@ -55,6 +55,9 @@ void	MapPt(Point* pt, const Rect* src, const Rect* dst);
 void	MapRect(Rect* r, const Rect* src, const Rect* dst);
 void	ScalePt(Point* pt, const Rect* src, const Rect* dst);
 
+void	Union(Rect* r, const Rect* other);							// ROM 0x001975c0 Union__5TRectFRC5TRect - a top of -0x8000 holding nothing yet (it becomes the other), an empty one ignored
+void	PinTo(Point* pt, const Rect* r);							// ROM 0x001978f0 PinTo__6TPointFRC5TRect - the point brought inside the rectangle (its right and bottom edges included)
+void	Flip(Rect* r);												// ROM 0x00197820 Flip__5TRectFv - the sides swapped where right is left of left or bottom above top
 long	CheapDistance(const Point& a, const Point& b);					// ROM 0x001991c4 CheapDistance__FRC6TPointT1 - the longer axis plus half the shorter
 
 inline Point	MakePoint(long h, long v)		{ Point p; p.v = (short) v; p.h = (short) h; return p; }

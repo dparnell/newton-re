@@ -244,6 +244,14 @@ public:
 	virtual Boolean	DropDone(void);										// ROM 0x001800e4 DropDone__14TParagraphViewFv
 	virtual Boolean	DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean show);	// ROM 0x001801d0 DragFeedback__14TParagraphViewFRC9TDragInfoRC6TPointUc
 	virtual Ref		GetSupportedDropTypes(const Point& pt);				// ROM 0x0017f378 GetSupportedDropTypes__14TParagraphViewFRC6TPoint
+	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x0016afe4 DrawScaledData__14TParagraphViewFRC5TRectT1P5TRect
+	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);	// ROM 0x0017ebb4 AddHilited__14TParagraphViewFRC6RefVarP9TEditView
+	virtual void	CleanupData(void);									// ROM 0x0017e83c CleanupData__14TParagraphViewFv
+	Ref				GetProperties(RefArg hilite);						// ROM 0x00181418 GetProperties__14TParagraphViewFRC6RefVar (vtable +0x154)
+	Boolean			HiliteClick(TStrokePublic* stroke);					// ROM 0x0017ede4 HiliteClick__14TParagraphViewFP13TStrokePublic
+	Boolean			IconClick(TStrokePublic* stroke);					// ROM 0x0017efa8 IconClick__14TParagraphViewFP13TStrokePublic
+	Boolean			ClickCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x187c (aeClick)
+	Boolean			ScaleCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x2464 (aeScaleData)
 	long			PointOverHilitedText(Point& pt);					// ROM 0x0016b1b8 PointOverHilitedText__14TParagraphViewFR6TPoint (vtable +0x134) - 0 no, 1 over the selection, 2 over one that runs to the end, 3 just below such a one
 	Boolean			PointOverText(Point& pt, Point* onLine);			// ROM 0x00177c5c PointOverText__14TParagraphViewFR6TPointP6TPoint (vtable +0x138)
 	long			FindLineContainingPoint(Point* pt, long margin);	// ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize (host: the line's index, -1 for none)
@@ -410,7 +418,13 @@ private:
 	RefStruct		fRunSpecs;		// the specs of the runs (an array; a single spec's run covers the text)
 };
 
-void	GrowLineInfoCache(LineInfo** cache, long* capacity);			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
+void	GrowLineInfoCache(LineInfo** cache, long* capacity);
+
+// Text with its tabs and returns made single spaces (a run of them one
+// space, one at the end none); nil when there are none.
+long		LengthSansTabsAndCRs(const UniChar* text, Boolean* found);	// ROM 0x0017aefc LengthSansTabsAndCRs__FPUsPUc
+UniChar*	RemoveTabsAndCRs(const UniChar* text, RefArg styles);		// ROM 0x0017ad6c RemoveTabsAndCRs__FPUsRC6RefVar
+extern ULong	gLastParagraphClick;								// ROM 0x0c101760 (unnamed)			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
 
 // The view as a paragraph, or a throw saying that it is not one.
 TParagraphView*	FailGetParagraphView(RefArg context);				// ROM 0x001ee218 FailGetParagraphView__FRC6RefVar

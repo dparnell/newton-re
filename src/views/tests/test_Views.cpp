@@ -6064,6 +6064,85 @@ TestParagraphDrop()
 }
 
 
+// The pen pressed on a selection.  A paragraph selected whole is dragged
+// along the page with the pen (a quick press and drag, not a hilite
+// stroke); a resize (aeScaleData from the old bounds to new ones) scales
+// the paragraph and stops it fitting itself to its text.
+static void
+TestSelectionClicks()
+{
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	screenWidth = kWidth;
+	screenHeight = kHeight;
+	TView* page = ViewOf("ctxSP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
+	TParagraphView* para = (TParagraphView*) ViewOf(
+		"ctxST := AddView(ctxSP, {viewClass: 81, viewFlags: 1 + 0x200 + 0x800 + 8, "
+		"viewBounds: {left: 4, top: 4, right: 80, bottom: 24}, viewFont: espy12, "
+		"text: \"moved\"})");
+	EXPECT(page != nil && para != nil);
+	if (page == nil || para == nil)
+		return;
+	Refresh();
+	para->MakeHilite(0, 5, true);
+	gRootView->fHiliter = page;
+	EXPECT(para->Hilited() && para->IsCompletelyHilited(RefVar(para->FirstHilite())));
+	Rect was = para->viewBounds;
+
+	// pressed on the text and dragged 30 pixels down: the text arrives
+	// 30 pixels further down the page
+	Rect w0;
+	para->OffsetToBounds(1, &w0);
+	long x = w0.left + 2;
+	long y = (w0.top + w0.bottom) / 2;
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(x, y, 0);
+	for (long step = 3; step <= 30; step += 3)
+		HostTabletQueuePenMove(x, y + step);
+	HostTabletQueuePenMove(x + 1, y + 30);
+	HostTabletQueuePenMove(x, y + 30);
+	HostTabletQueuePenMove(x + 1, y + 31);
+	HostTabletQueuePenMove(x, y + 30);
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	gRecognition.Idle();
+	TView* moved = nil;
+	TListLoop loop(page->fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+		if (child->DerivedFrom(clParagraphView)
+			&& Ustrcmp(GetCString(RefVar(((TParagraphView*) child)->Text())), (const UniChar*) u"moved") == 0)
+			moved = child;
+	EXPECT(moved != nil && page->fChildren->Count() == 1);
+	if (moved != nil)
+		EXPECT(moved->viewBounds.top >= was.top + 25 && moved->viewBounds.top <= was.top + 35);
+	Eval("RemoveView(GetRoot(), ctxSP)");
+	Refresh();
+
+	// a resize: twice as wide, as TrackScale would send it
+	TView* page2 = ViewOf("ctxSP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
+	TParagraphView* p2 = (TParagraphView*) ViewOf(
+		"ctxST := AddView(ctxSP, {viewClass: 81, viewFlags: 1 + 8, textFlags: 5, "
+		"viewBounds: {left: 10, top: 10, right: 50, bottom: 30}, viewFont: espy12, text: \"wide\"})");
+	EXPECT(page2 != nil && p2 != nil);
+	if (p2 == nil)
+		return;
+	Rect src = p2->viewBounds;
+	Rect dst = src;
+	dst.right = (short) (src.left + 2 * (src.right - src.left));
+	RefVar cmd(MakeCommand(aeScaleData, p2, kNoParameter));
+	CommandSetIndexRect(cmd, 0, src);
+	CommandSetIndexRect(cmd, 2, dst);
+	gApplication->DispatchCommand(cmd);
+	EXPECT(p2->viewBounds.left == src.left && p2->viewBounds.right == dst.right);
+	EXPECT((p2->TextFlags() & 5) == 0);
+	EXPECT(RINT(Eval("ctxST.textFlags")) == 0);
+	Eval("RemoveView(GetRoot(), ctxSP)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6205,6 +6284,7 @@ main()
 		TestWordIntoField();
 		TestEditViewDrop();
 		TestParagraphDrop();
+		TestSelectionClicks();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();

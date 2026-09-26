@@ -241,7 +241,7 @@ public:
 	virtual void	GlobalHilitePinnedBounds(Rect* bounds);				// ROM 0x0026244c GlobalHilitePinnedBounds__5TViewFP5TRect
 	virtual Boolean	PointInHilite(Point& pt);							// ROM 0x00262454 PointInHilite__5TViewFR6TPoint
 	virtual long	ClickOptions(void);									// ROM 0x00262568 ClickOptions__5TViewFv
-	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect
+	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect (vtable +0xc4)
 	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0009e648 AddDragInfo__5TViewFP9TDragInfo (viewAddDragInfoScript)
 	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x000a15c0 GetDropData__5TViewFRC6RefVarT1 (viewGetDropDataScript, else nil)
 	virtual long	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* pinBounds, const Rect* clipBounds, Boolean copy, const TDragInfo& dragInfo, const Rect* limitBounds);	// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 - ==> 0 no drag, 1 dragged, 2 dropped

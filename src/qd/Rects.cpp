@@ -414,3 +414,64 @@ Aligned(Point pt, const Point& a, const Point& b)
 	if (pt.v < b.v && b.v < a.v)	return 2;
 	return 3;
 }
+
+
+// ROM 0x001978f0 PinTo__6TPointFRC5TRect
+void
+PinTo(Point* pt, const Rect* r)
+{
+	if (r->left > pt->h)
+		pt->h = r->left;
+	if (r->right < pt->h)
+		pt->h = r->right;
+	if (r->top > pt->v)
+		pt->v = r->top;
+	if (r->bottom < pt->v)
+		pt->v = r->bottom;
+}
+
+
+// ROM 0x00197820 Flip__5TRectFv
+void
+Flip(Rect* r)
+{
+	if (r->right < r->left)
+	{
+		short left = r->left;
+		r->left = r->right;
+		r->right = left;
+	}
+	if (r->bottom < r->top)
+	{
+		short top = r->top;
+		r->top = r->bottom;
+		r->bottom = top;
+	}
+}
+
+
+// ROM 0x001975c0 Union__5TRectFRC5TRect
+void
+Union(Rect* r, const Rect* other)
+{
+	if (r->top == -32768)
+	{
+		*r = *other;
+		return;
+	}
+	if (EmptyRect(other))
+		return;
+	if (EmptyRect(r))
+	{
+		*r = *other;
+		return;
+	}
+	if (other->top < r->top)
+		r->top = other->top;
+	if (other->left < r->left)
+		r->left = other->left;
+	if (other->bottom > r->bottom)
+		r->bottom = other->bottom;
+	if (other->right > r->right)
+		r->right = other->right;
+}

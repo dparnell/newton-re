@@ -21,6 +21,8 @@
 #include "InkFont.h"
 #include "Hilites.h"
 #include "DragDrop.h"
+#include "ClipboardView.h"
+#include "Transform.h"
 #include "OSErrors.h"
 #include "StyleRuns.h"
 #include "Unicode.h"
@@ -6088,6 +6090,10 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		}
 		return true;
 	}
+	if (id == aeClick)
+		return ClickCommand(cmd);
+	if (id == aeScaleData)
+		return ScaleCommand(cmd);
 	if (id == aeToChildren)
 	{
 		// a page's children told to restyle: the selected text takes
@@ -6927,4 +6933,311 @@ TParagraphView::DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean
 		return false;
 	InvertRect(&caret);
 	return true;
+}
+
+
+/*------------------------------------------------------------------------------
+	C l i c k s   o n   t h e   s e l e c t i o n ,   a n d   r e s i z i n g
+
+	The pen pressed on the selected text drags it (HiliteClick); pressed
+	on a clipping's label, it drags the clipping (IconClick).  A paragraph
+	that is wholly selected can be resized by the page's gray border
+	(TEditView::TrackScale), which draws it scaled as the pen moves
+	(DrawScaledData) and then sends it aeScaleData; a paragraph resized so
+	stops fitting its width or height to its text.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x187c (aeClick)
+// A clipping's label is picked up; anything else is a press on the
+// selection, which may be the start of dragging it.  Neither taken, the
+// click goes to the scripts (a second time, when the paragraph takes
+// gestures itself and its script declined it the first time).
+Boolean
+TParagraphView::ClickCommand(RefArg cmd)
+{
+	if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+		return true;
+	TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+	if (((fFlags & vClipboard) != 0 && IconClick(unit->Stroke()))
+		|| HiliteClick(unit->Stroke()))
+	{
+		CommandSetResult(cmd, 1);
+		return true;
+	}
+	return TView::RealDoCommand(cmd);
+}
+
+
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x2464 (aeScaleData)
+// The paragraph scaled as the rectangle in params 0-1 maps onto the one
+// in 2-3 (TEditView::TrackScale sends the selection's bounds and the new
+// ones).  A paragraph the size of the first rectangle is taken to be it:
+// its bounds are moved onto it before scaling and back again after.  One
+// resized so no longer fits itself to its text (text flags 1 and 4 go,
+// in its data frame too); its new bounds are written in its parent's
+// coordinates, the parent is told, and an undo that scales it back is
+// posted.
+Boolean
+TParagraphView::ScaleCommand(RefArg cmd)
+{
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+		return TView::RealDoCommand(cmd);
+	Rect src, dst;
+	CommandIndexRect(cmd, 0, &src);
+	CommandIndexRect(cmd, 2, &dst);
+	Rect r = viewBounds;
+	Rect old = viewBounds;
+	Boolean sameSize = false;
+	Point by;
+	if ((short) (old.right - old.left) == (short) (src.right - src.left)
+		&& (short) (old.bottom - old.top) == (short) (src.bottom - src.top))
+	{
+		sameSize = true;
+		by.h = (short) (src.left - old.left);
+		by.v = (short) (src.top - old.top);
+		OffsetRect(&r, by.h, by.v);
+	}
+	TTransform transform;
+	transform.Setup(&src, &dst, false);
+	::Scale(&r, transform);
+	if (sameSize)
+		OffsetRect(&r, -by.h, -by.v);
+	if ((TextFlags() & 1) != 0 || (TextFlags() & 4) != 0)
+	{
+		fTextFlags &= ~5;
+		SetFrameSlot(RefVar(DataFrame()), RSSYMtextflags, RefVar(MAKEINT(TextFlags() & ~5)));
+	}
+	Point origin = fParent->ContentsOrigin();
+	OffsetRect(&r, -origin.h, -origin.v);
+	fCachesValid = false;
+	WriteBounds(r);
+	fCachesValid = true;
+	FixupBBox();
+	Rect now = viewBounds;
+	fParent->ChildBoundsChanged(this, old);
+	RefVar undo(MakeCommand(aeScaleData, this, kNoParameter));
+	CommandSetIndexRect(undo, 0, now);
+	CommandSetIndexRect(undo, 2, old);
+	gApplication->PostUndoCommand(undo);
+	fParent->Dirty(nil);
+	return true;
+}
+
+
+// ROM 0x0016afe4 DrawScaledData__14TParagraphViewFRC5TRectT1P5TRect
+// The paragraph drawn as a resize from `src` to `dst` would leave it,
+// while the pen is still resizing: its bounds scaled and written for the
+// moment (not fitting itself to its text meanwhile), the text laid out
+// and drawn in them, and everything put back.  `bounds` comes back as
+// where it was drawn.
+void
+TParagraphView::DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds)
+{
+	Rect r = viewBounds;
+	Rect saved = viewBounds;
+	TTransform transform;
+	transform.Setup(&src, &dst, false);
+	::Scale(&r, transform);
+	Boolean fitWidth = (TextFlags() & 1) != 0;
+	Boolean fitHeight = (TextFlags() & 4) != 0;
+	if (fitWidth)
+		fTextFlags &= ~1;
+	if (fitHeight)
+		fTextFlags &= ~4;
+	Point origin = fParent->ContentsOrigin();
+	OffsetRect(&r, -origin.h, -origin.v);
+	fCachesValid = false;
+	WriteBounds(r);
+	fCachesValid = true;
+	FixupBBox();
+	Rect drawn = viewBounds;
+	*bounds = drawn;
+	RealDraw(drawn);
+	fCachesValid = false;
+	OffsetRect(&saved, -origin.h, -origin.v);
+	WriteBounds(saved);
+	fCachesValid = true;
+	if (fitWidth)
+		fTextFlags |= 1;
+	if (fitHeight)
+		fTextFlags |= 4;
+}
+
+
+// ROM 0x00181418 GetProperties__14TParagraphViewFRC6RefVar
+// The properties of a selection's text as a paragraph of its own would
+// need them - GetRangeProperties over the hilite's range, which the ROM
+// writes out a second time word for word.
+Ref
+TParagraphView::GetProperties(RefArg hilite)
+{
+	TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+	return GetRangeProperties(h->fStart, h->fEnd);
+}
+
+
+// ROM 0x0017ebb4 AddHilited__14TParagraphViewFRC6RefVarP9TEditView
+// The selected text made a paragraph of its own on the page, selected
+// whole: where the selection is drawn (in the page's coordinates), or,
+// for the whole paragraph, where the paragraph is.
+//
+// (host: the hilite's +0x14, the ROM's pointer to the selected text, is
+//  NOT YET, so the text is found from its offsets)
+TView*
+TParagraphView::AddHilited(RefArg hilite, TEditView* editor)
+{
+	TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+	Rect r;
+	if (!IsCompletelyHilited(hilite))
+	{
+		r = h->fBounds;
+		Point origin = LocalOrigin();
+		OffsetRect(&r, origin.h, origin.v);
+	}
+	else
+	{
+		r = viewBounds;
+		Point origin = ContentsOrigin();
+		OffsetRect(&r, -origin.h, -origin.v);
+	}
+	RefVar props(GetProperties(hilite));
+	RefVar text(Text());
+	RefVar form(MakeParagraphForm((UniChar*) GetCString(text) + h->fStart, h->fEnd - h->fStart, r, props, false));
+	TParagraphView* view = (TParagraphView*) editor->AddForm(form);
+	if (h != nil)
+		view->MakeHilite(0, h->fEnd - h->fStart, true);
+	return view;
+}
+
+
+// ROM 0x0c101760 (unnamed) - when a paragraph's selection was last pressed
+ULong	gLastParagraphClick = 0;
+
+
+// ROM 0x0017aefc LengthSansTabsAndCRs__FPUsPUc
+// How long the text would be with each run of tabs and returns made one
+// space - a run at the very end counting nothing - and whether it has
+// any.
+long
+LengthSansTabsAndCRs(const UniChar* text, Boolean* found)
+{
+	long length = 0;
+	Boolean inRun = false;
+	*found = false;
+	for ( ; *text != 0; text++)
+	{
+		if (*text == 0x09 || *text == 0x0D)
+		{
+			inRun = true;
+			*found = true;
+		}
+		else
+		{
+			if (inRun)
+			{
+				length++;
+				inRun = false;
+			}
+			length++;
+		}
+	}
+	return length;
+}
+
+
+// ROM 0x0017ad6c RemoveTabsAndCRs__FPUsRC6RefVar
+// The text with each run of tabs and returns made one space - a run at
+// the end dropped - and the style runs shortened to match; nil when it
+// has none (or there is no memory for the copy).  The copy is the
+// caller's to delete[].
+UniChar*
+RemoveTabsAndCRs(const UniChar* text, RefArg styles)
+{
+	Boolean found = false;
+	long length = LengthSansTabsAndCRs(text, &found);
+	if (!found)
+		return nil;
+	UniChar* result = new UniChar[length + 1];
+	if (result == nil)
+		return nil;
+	UniChar* out = result;
+	long run = 0;
+	for ( ; *text != 0; text++)
+	{
+		if (*text == 0x09 || *text == 0x0D)
+			run++;
+		else
+		{
+			if (run > 0)
+			{
+				*out++ = ' ';
+				if (NOTNIL(styles))
+					RunsDelete(styles, out - result, run - 1);
+				run = 0;
+			}
+			*out++ = *text;
+		}
+	}
+	if (run > 0 && NOTNIL(styles))
+		RunsDelete(styles, out - result, run);
+	*out = 0;
+	return result;
+}
+
+
+// ROM 0x0017e83c CleanupData__14TParagraphViewFv
+// After a resize has joined paragraphs into this one: its tabs and
+// returns made single spaces, since the text now flows in one paragraph.
+void
+TParagraphView::CleanupData(void)
+{
+	RefVar styles(Styles());
+	RefVar newStyles;
+	if (NOTNIL(styles))
+		newStyles = Clone(styles);
+	RefVar text(Text());
+	UniChar* plain = RemoveTabsAndCRs(GetCString(text), newStyles);
+	if (plain != nil)
+	{
+		RefVar current(Text());
+		ULong had = (Length(current) - 2) >> 1;
+		InsertStyledText(0, plain, Ustrlen(plain), newStyles, RefVar(), 0, had, false);
+		delete[] plain;
+	}
+}
+
+
+// ROM 0x0017ede4 HiliteClick__14TParagraphViewFP13TStrokePublic
+// The pen pressed on the selected text: the text dragged as a 'text item
+// (whose drag ref is this paragraph).  It is a copy when the paragraph
+// had just been tapped, or when two presses come within 80 ticks of one
+// another.  ==> whether it was dragged.
+Boolean
+TParagraphView::HiliteClick(TStrokePublic* stroke)
+{
+	Point pt = stroke->FirstPoint();
+	if (!Hilited() || (ClickOptions() & 1) == 0 || !PointInHilite(pt))
+		return false;
+	Rect bounds;
+	bounds.top = bounds.bottom = -32768;
+	GlobalHiliteBounds(&bounds);
+	Rect pinned;
+	pinned.top = pinned.bottom = -32768;
+	GlobalHilitePinnedBounds(&pinned);
+	ULong now = Ticks();
+	ULong since = now - gLastParagraphClick;
+	gLastParagraphClick = now;
+	Boolean copy = fTapped || (since > 0 && since < 80);
+	fTapped = false;
+	TDragInfo dragInfo(RefVar(RSSYMtext), RefVar(AddressToRef(this)), RefVar());
+	return DragAndDrop(stroke, bounds, &pinned, &pinned, copy, dragInfo, nil) != 0;
+}
+
+
+// ROM 0x0017efa8 IconClick__14TParagraphViewFP13TStrokePublic
+// The label of a clipping picked up: the clipping it belongs to dragged.
+Boolean
+TParagraphView::IconClick(TStrokePublic* stroke)
+{
+	return ((TClipboard*) gRootView->GetClipboard(this))->DragFromClipboard(stroke);
 }

@@ -134,3 +134,42 @@ TDataView::GetEnclosingEditView(void)
 void
 TDataView::HiliteText(long /*offset*/, long /*length*/, Boolean /*on*/)
 { }
+
+
+// ROM 0x000a31b8 AddHilited__9TDataViewFRC6RefVarP9TEditView
+TView*
+TDataView::AddHilited(RefArg /*hilite*/, TEditView* /*editor*/)
+{
+	return this;
+}
+
+
+// ROM 0x000a3494 CleanupData__9TDataViewFv
+void
+TDataView::CleanupData(void)
+{ }
+
+
+// ROM 0x000a3084 DiceHilited__9TDataViewFRC6RefVarP9TEditViewR6TPointUc
+TView*
+TDataView::DiceHilited(RefArg hilite, TEditView* editor, Point& offset, Boolean keep)
+{
+	Point origin = fParent->ContentsOrigin();
+	Point at;
+	at.h = (short) (offset.h + origin.h);
+	at.v = (short) (offset.v + origin.v);
+	Point editorOrigin = ((TView*) editor)->ContentsOrigin();
+	Point by;
+	by.h = (short) (at.h - editorOrigin.h);
+	by.v = (short) (at.v - editorOrigin.v);
+	TView* view = AddHilited(hilite, editor);
+	if (view != nil)
+	{
+		view->DoMoveCommand(by);
+		if (!keep)
+			DeleteHilited(hilite);
+		else
+			RemoveHilite(hilite);
+	}
+	return view;
+}

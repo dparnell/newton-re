@@ -96,7 +96,24 @@ void	CommandSetText(RefArg cmd, RefArg text);								// ROM 0x0017a25c CommandSe
 void	CommandSetFrameParameter(RefArg cmd, RefArg parameter);					// ROM 0x0007096c CommandSetFrameParameter__FRC6RefVarT1
 Long	CommandIndexParameter(RefArg cmd, long index);							// ROM 0x00070624 CommandIndexParameter__FRC6RefVarl
 void	CommandSetIndexParameter(RefArg cmd, long index, Long parameter);		// ROM 0x00070568 CommandSetIndexParameter__FRC6RefVarlT2
-void	CommandSetIndexFrame(RefArg cmd, long index, RefArg parameter);			// ROM 0x000706b8 CommandSetIndexFrame__FRC6RefVarlT1
+void	CommandSetIndexFrame(RefArg cmd, long index, RefArg parameter);
+// A rectangle carried in two index parameters, as aeScaleData has it:
+// each parameter is one of the rectangle's two words - the top (or the
+// bottom) in the high half, the left (or the right) in the low.
+inline void	CommandSetIndexRect(RefArg cmd, long index, const Rect& r)
+{
+	CommandSetIndexParameter(cmd, index, (Long) (((ULong) (unsigned short) r.top << 16) | (unsigned short) r.left));
+	CommandSetIndexParameter(cmd, index + 1, (Long) (((ULong) (unsigned short) r.bottom << 16) | (unsigned short) r.right));
+}
+inline void	CommandIndexRect(RefArg cmd, long index, Rect* r)
+{
+	ULong topLeft = (ULong) CommandIndexParameter(cmd, index);
+	ULong bottomRight = (ULong) CommandIndexParameter(cmd, index + 1);
+	r->top = (short) (topLeft >> 16);
+	r->left = (short) topLeft;
+	r->bottom = (short) (bottomRight >> 16);
+	r->right = (short) bottomRight;
+}			// ROM 0x000706b8 CommandSetIndexFrame__FRC6RefVarlT1
 void	MarkUndoCommand(RefArg cmd);											// ROM 0x00070764 MarkUndoCommand__FRC6RefVar
 Boolean	IsUndoCommand(RefArg cmd);												// ROM 0x000707a4 IsUndoCommand__FRC6RefVar
 Ref		MakeRunScriptCommand(RefArg context, RefArg script, RefArg args);		// ROM 0x0003450c MakeRunScriptCommand__FRC6RefVarN21

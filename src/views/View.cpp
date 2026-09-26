@@ -804,22 +804,18 @@ TView::RealDoCommand(RefArg cmd)
 		break;
 
 	case aeScaleData:
+		// the view scaled as the rectangle in params 0-1 maps onto the one
+		// in 2-3; the undo maps them back
 		handled = true;			// (read-only or not: taken)
 		if ((fFlags & (vReadOnly | vWriteProtected)) == 0)
 		{
 			Rect src, dst;
-			src.left = (short) CommandIndexParameter(cmd, 0);
-			src.top = (short) CommandIndexParameter(cmd, 1);
-			dst.left = (short) CommandIndexParameter(cmd, 2);
-			dst.top = (short) CommandIndexParameter(cmd, 3);
-			src.right = dst.right = 0;
-			src.bottom = dst.bottom = 0;
+			CommandIndexRect(cmd, 0, &src);
+			CommandIndexRect(cmd, 2, &dst);
 			Scale(src, dst);
 			RefVar undo(MakeCommand(aeScaleData, this, kNoParameter));
-			CommandSetIndexParameter(undo, 0, dst.left);
-			CommandSetIndexParameter(undo, 1, dst.top);
-			CommandSetIndexParameter(undo, 2, src.left);
-			CommandSetIndexParameter(undo, 3, src.top);
+			CommandSetIndexRect(undo, 0, dst);
+			CommandSetIndexRect(undo, 2, src);
 			gApplication->PostUndoCommand(undo);
 			fParent->Dirty(nil);
 		}
@@ -1633,9 +1629,7 @@ TView::PointInHilite(Point& pt)
 	}
 	return false;
 }
-long	TView::ClickOptions(void)									{ return 0; }		// ROM 0x00262568 ClickOptions__5TViewFv
-void	TView::DrawScaledData(const Rect&, const Rect&, Rect*)		{ }		// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect
-void	TView::Scale(const Rect&, const Rect&)						{ }		// ROM 0x002625f4 Scale__5TViewFRC5TRectT1
+long	TView::ClickOptions(void)									{ return 1; }		// ROM 0x00262568 ClickOptions__5TViewFv (a selection may be dragged)
 
 /*------------------------------------------------------------------------------
 	D r a g   a n d   d r o p
@@ -1771,6 +1765,49 @@ TView::DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean show)
 	SetArraySlot(args, 1, RefVar(PointToFrame(pt)));
 	SetArraySlot(args, 2, RefVar(show ? TRUEREF : NILREF));
 	return NOTNIL(RunScript(RSSYMviewdragfeedbackscript, args, true));
+}
+
+
+// ROM 0x002625f4 Scale__5TViewFRC5TRectT1
+// The view's bounds mapped from one rectangle onto another, its
+// selection made the size of the view, and the bounds written back in
+// its parent's coordinates.
+void
+TView::Scale(const Rect& src, const Rect& dst)
+{
+	TTransform transform;
+	transform.Setup(&src, &dst, false);
+	Rect r = viewBounds;
+	::Scale(&r, transform);
+	RefVar hilite(FirstHilite());
+	if (NOTNIL(hilite))
+	{
+		THilite* h = (THilite*) RefToAddress(hilite);
+		h->fBounds.bottom = (short) (r.bottom - r.top);
+		h->fBounds.right = (short) (r.right - r.left);
+	}
+	Point origin = fParent->ContentsOrigin();
+	OffsetRect(&r, -origin.h, -origin.v);
+	WriteBounds(r);
+}
+
+
+// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect
+// A selected view's bounds as a resize from `src` to `dst` would leave
+// them - all a plain view shows of itself while the selection is being
+// resized; nothing (a top of -32768) for one that is not selected.
+void
+TView::DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds)
+{
+	if (Hilited())
+	{
+		TTransform transform;
+		transform.Setup(&src, &dst, false);
+		*bounds = viewBounds;
+		::Scale(bounds, transform);
+		return;
+	}
+	bounds->top = bounds->bottom = -32768;
 }
 
 
