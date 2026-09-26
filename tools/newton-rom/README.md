@@ -286,7 +286,15 @@ decompiler show a `return` right after every virtual call - the loop in
 `TTimerQueue::Check`, the dispatch in `TAppWorld::AEDispatch`;
 `ghidra_scripts/fix_virtual_calls.py --project build/ghidra --name MP2x00US
 --ghidra <dir>` re-marks an existing project's sites in ten seconds, no
-re-analysis needed.) (One Ghidra process at a time: the project is locked while a script runs, so
+re-analysis needed.)  A site already marked a call is not necessarily
+followed by code: when the override went in before the code after it
+had been disassembled, Ghidra never went on, and the rest of the
+function stayed bytes - 60 sites in the MP2x00 US project, three whole
+`RealDoCommand`s among them.  `fix_virtual_calls` therefore also
+disassembles the fall-through of every marked site whose next address
+has neither an instruction nor data, and logs each one ("code opened
+after the virtual call at X in F"), which is the list of functions to
+read again. (One Ghidra process at a time: the project is locked while a script runs, so
 run the analysis tools sequentially; `decompile.py --range START END` does a
 whole subsystem in one start.)  `analysis/vtable.py build/MP2x00US 0x20730` lists a
 vtable's slots by method name (the address is the literal a constructor
