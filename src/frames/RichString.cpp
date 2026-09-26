@@ -798,8 +798,9 @@ IsInkWord(RefArg obj)
 	return EQRef(ClassOf(obj), RSSYMinkword);
 }
 
-// ROM 0x001fe4e4 FMakeRichString__FRC6RefVarN21
-// MakeRichString(text, styles): a string with the writing in it.
+// ROM 0x001ac75c MakeRichString__FRC6RefVarT1Uc
+// A string with the writing in it, out of a paragraph's text and styles.
+// (Both the ROM's callers pass false as the third argument.)
 //
 // A paragraph keeps its ink as an `'inkWord` binary in the style run of
 // the character that stands for it, which is why the two halves have to
@@ -816,7 +817,7 @@ IsInkWord(RefArg obj)
 // as the ROM's two and four bytes, so that a string object's halfwords
 // stay in the host's order.)
 Ref
-FMakeRichString(RefArg /*rcvr*/, RefArg text, RefArg styles)
+MakeRichString(RefArg text, RefArg styles, Boolean /*flag*/)
 {
 	if (ISNIL(styles) || ISINT(styles))
 		return Clone(text);
@@ -861,6 +862,27 @@ FMakeRichString(RefArg /*rcvr*/, RefArg text, RefArg styles)
 	((UniChar*) out)[0] = (UniChar) (trailer >> 16);
 	((UniChar*) out)[1] = (UniChar) trailer;
 	return rich;
+}
+
+
+// ROM 0x001fe4e4 FMakeRichString__FRC6RefVarN21
+// MakeRichString(text, styles): a string with the writing in it.
+Ref
+FMakeRichString(RefArg /*rcvr*/, RefArg text, RefArg styles)
+{
+	return MakeRichString(text, styles, false);
+}
+
+
+// ROM 0x001fe5f8 FGetRichString__FRC6RefVar
+// view:GetRichString(): the view's text and styles as one rich string -
+// which is how a field hands on writing as well as text.
+Ref
+FGetRichString(RefArg rcvr)
+{
+	RefVar text(GetProtoVariable(rcvr, RSSYMtext, nil));
+	RefVar styles(GetProtoVariable(rcvr, RSSYMstyles, nil));
+	return MakeRichString(text, styles, false);
 }
 
 

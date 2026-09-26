@@ -129,7 +129,9 @@ long	CompareInkProc(long offset, long otherOffset, void* refCon);	// ROM 0x001ab
 // styles and taken apart again, and the ink characters stripped out of
 // one.  (Registered by frames/StringNatives.cpp.)
 extern const UniChar kParagraphInkChar;	// 0xf701, the character a paragraph uses
+Ref		MakeRichString(RefArg text, RefArg styles, Boolean flag);	// ROM 0x001ac75c MakeRichString__FRC6RefVarT1Uc
 Ref		FMakeRichString(RefArg rcvr, RefArg text, RefArg styles);	// ROM 0x001fe4e4 FMakeRichString__FRC6RefVarN21
+Ref		FGetRichString(RefArg rcvr);								// ROM 0x001fe5f8 FGetRichString__FRC6RefVar
 Ref		FDecodeRichString(RefArg rcvr, RefArg string, RefArg style);	// ROM 0x001fe4f4 FDecodeRichString__FRC6RefVarN21
 Ref		FStripInk(RefArg rcvr, RefArg string, RefArg replacement);	// ROM 0x001fe990 FStripInk
 

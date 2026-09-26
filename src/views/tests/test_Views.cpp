@@ -3979,6 +3979,11 @@ TestStrokeAndInkNatives()
 		Eval("rich := MakeRichString(para.text, para.styles)");
 		EXPECT(RINT(Eval("NumInkWordsInRange(rich, 0, nil)")) == 1);
 		EXPECT(RINT(Eval("NumInkWordsInRange(rich, 1, 1)")) == 0);
+		// and a field hands its own text and styles on as one (GetRichString,
+		// a method of the view: its text and styles slots)
+		RefVar fromField(FGetRichString(para));
+		EXPECT(Length(fromField) == Length(RefVar(Eval("rich"))));
+		EXPECT(memcmp(BinaryData(fromField), BinaryData(RefVar(Eval("rich"))), Length(fromField)) == 0);
 
 		// and a paragraph's data frame says whether there is writing in it
 		EXPECT(NOTNIL(Eval("ParaContainsInk(para)")));

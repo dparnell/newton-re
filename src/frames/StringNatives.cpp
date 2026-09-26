@@ -1449,6 +1449,7 @@ RegisterStringNatives(void)
 	RegisterNativeFunction("FStrFilled", (void*) FStrFilled, 1);
 	RegisterNativeFunction("FStrEqual__FRC6RefVarN21", (void*) FStrEqual, 2);
 	RegisterNativeFunction("FMakeRichString__FRC6RefVarN21", (void*) FMakeRichString, 2);
+	RegisterNativeFunction("FGetRichString__FRC6RefVar", (void*) FGetRichString, 0);
 	RegisterNativeFunction("FDecodeRichString__FRC6RefVarN21", (void*) FDecodeRichString, 2);
 	RegisterNativeFunction("FStripInk", (void*) FStripInk, 2);
 	RegisterNativeFunction("FStrExactCompare__FRC6RefVarN21", (void*) FStrExactCompare, 2);
