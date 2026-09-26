@@ -20,6 +20,7 @@
 #include "TextView.h"		// vjOneLineOnly
 #include "InkFont.h"
 #include "Hilites.h"
+#include "DragDrop.h"
 #include "OSErrors.h"
 #include "StyleRuns.h"
 #include "Unicode.h"
@@ -6437,4 +6438,493 @@ FailGetParagraphView(RefArg context)
 	if (!view->DerivedFrom(clParagraphView))
 		ThrowMsg((char*) "not a paragraph view");
 	return (TParagraphView*) view;
+}
+
+
+/*------------------------------------------------------------------------------
+	S e l e c t i o n s   a n d   d r a g   a n d   d r o p
+
+	A paragraph's selection is a range of its characters.  Dragged, the
+	selected text goes as a 'text item whose data is a paragraph's frame
+	of its own - the characters, their styles, the tabs, the correction
+	information, and viewBounds in the paragraph's own coordinates - and
+	text dropped on a paragraph is put in where it was let go, as a word
+	written there would be (HandleWord, and failing that below the last
+	line).  A paragraph does not take a drop on its own selection.
+------------------------------------------------------------------------------*/
+
+// ROM 0x0017ed50 IsCompletelyHilited__14TParagraphViewFRC6RefVar
+// Whether a hilite takes in all the text.
+Boolean
+TParagraphView::IsCompletelyHilited(RefArg hilite)
+{
+	TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+	RefVar text(Text());
+	ULong length = (Length(text) - 2) >> 1;
+	return h->fStart == 0 && h->fEnd >= (long) length;
+}
+
+
+// ROM 0x0017ea80 ClickOptions__14TParagraphViewFv
+// What a click on the selection may do: always drag it (bit 0), and
+// resize it too (bit 1) when the paragraph sizes itself and the whole of
+// it is selected - resizing a selection resizes the paragraph.
+long
+TParagraphView::ClickOptions(void)
+{
+	RefVar hilite(FirstHilite());
+	if (ISNIL(hilite) || (fFlags & vCalculateBounds) == 0 || !IsCompletelyHilited(hilite))
+		return 1;
+	return 3;
+}
+
+
+// ROM 0x0017edcc RemoveHilite__14TParagraphViewFRC6RefVar
+// The selection gone, and the style palette brought up to date with it.
+void
+TParagraphView::RemoveHilite(RefArg hilite)
+{
+	TView::RemoveHilite(hilite);
+	UpdateStylePalette();
+}
+
+
+// ROM 0x00174aac ROMDeleteHilited__14TParagraphViewFRC6RefVar
+// The selected text deleted.  A hilite that is not a range of the text
+// is left alone; one in text that may not be changed is only taken away.
+// A paragraph that sizes itself and loses all its text - or everything
+// but white space - goes altogether, with an undoable aeRemoveData to
+// the page, unless the page keeps empty paragraphs (text flag 0x80).
+void
+TParagraphView::ROMDeleteHilited(RefArg hilite)
+{
+	TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+	RefVar textRef(Text());
+	long length = (long) ((Length(textRef) - 2) >> 1);
+	long start = h->fStart;
+	if (start < 0 || start > length)
+		return;
+	long end = h->fEnd;
+	if (end < 0 || end > length || start >= end)
+		return;
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+	{
+		RemoveHilite(hilite);
+		return;
+	}
+	if ((fFlags & vCalculateBounds) != 0)
+	{
+		const UniChar* text = GetCString(textRef);
+		if (IsCompletelyHilited(hilite)
+			|| (ContainsOnlyWhiteSpace(text, h->fStart) && ContainsOnlyWhiteSpace(text + h->fEnd, (ULong) -1)))
+		{
+			TView* editor = GetEnclosingEditView();
+			if (editor != nil && (editor->TextFlags() & 0x80) != 0)
+				DeleteHilitedTextOnly(hilite);
+			else
+				gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, fParent, fId)));
+			return;
+		}
+	}
+	DeleteHilitedTextOnly(hilite);
+}
+
+
+// ROM 0x0017eaf8 DeleteHilited__14TParagraphViewFRC6RefVar
+// The selected text deleted (ROMDeleteHilited); a hilite the view's
+// hilites do not hold is taken away afterwards as well.
+void
+TParagraphView::DeleteHilited(RefArg hilite)
+{
+	if (!Hilited())
+		return;
+	Boolean remove = true;
+	RefVar hilites(Hilites());
+	if (NOTNIL(hilites) && NOTNIL(FSetContains(RefVar(), hilites, hilite)))
+		remove = false;
+	ROMDeleteHilited(hilite);
+	if (remove)
+		RemoveHilite(hilite);
+}
+
+
+// ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize
+// The line a point is on: of the lines whose box (widened by a thousand
+// pixels each way for margins 1 and 2; raised by half its height and
+// widened by ten for margin 3) holds the point, the one whose baseline is
+// nearest, with the point's h brought inside its box.  Margin 2 is for a
+// drop: a point above or below the paragraph is taken to the first
+// line's top left or the last line's bottom right and answers that line,
+// and a point between lines that none holds is brought to the nearer end.
+// ==> the line's index, -1 for none.
+//
+// The ROM measures the distance to the line's bottom less the second of
+// the two heights it keeps, which is its baseline; this cache keeps the
+// baseline as the top and the ascent.
+long
+TParagraphView::FindLineContainingPoint(Point* pt, long margin)
+{
+	if (fLines == nil || fLineCount == 0)
+		return -1;
+	if (margin == 2)
+	{
+		if (pt->v < viewBounds.top)
+		{
+			pt->v = fLines[0].fBounds.top;
+			pt->h = fLines[0].fBounds.left;
+			return 0;
+		}
+		if (pt->v >= viewBounds.bottom)
+		{
+			pt->v = fLines[fLineCount - 1].fBounds.bottom;
+			pt->h = fLines[fLineCount - 1].fBounds.right;
+			return fLineCount - 1;
+		}
+	}
+	long best = -1;
+	long bestDistance = 10000;
+	Rect bestBox;
+	for (long i = 0; i < fLineCount; i++)
+	{
+		Rect box = fLines[i].fBounds;
+		Rect work = box;
+		if (margin == 1 || margin == 2)
+			InsetRect(&work, -1000, 0);
+		else if (margin == 3)
+		{
+			work.top = (short) (work.top - (short) (box.bottom - box.top) / 2);
+			InsetRect(&work, -10, 0);
+		}
+		if (PtInRect(*pt, &work))
+		{
+			long distance = pt->v - (fLines[i].fBounds.top + fLines[i].fAscent);
+			if (distance < 0)
+				distance = -distance;
+			if (distance < bestDistance)
+			{
+				bestDistance = distance;
+				best = i;
+				bestBox = box;
+			}
+		}
+	}
+	if (best >= 0)
+	{
+		if (pt->h < bestBox.left)
+			pt->h = bestBox.left;
+		if (pt->h > bestBox.right - 1)
+			pt->h = (short) (bestBox.right - 1);
+		return best;
+	}
+	if (margin == 2)
+	{
+		short top = fLines[0].fBounds.top;
+		if (top > pt->v)
+			pt->v = top;
+		else
+		{
+			short bottom = fLines[fLineCount - 1].fBounds.bottom;
+			if (bottom < pt->v)
+				pt->v = bottom;
+		}
+	}
+	return -1;
+}
+
+
+// ROM 0x00177c5c PointOverText__14TParagraphViewFR6TPointP6TPoint
+// Whether a point is on a line of the text as it stands (margin 1: any
+// distance to the side of it), and where on the line it would go.
+Boolean
+TParagraphView::PointOverText(Point& pt, Point* onLine)
+{
+	Point at = pt;
+	long line = FindLineContainingPoint(&at, 1);
+	if (onLine != nil)
+		*onLine = at;
+	return line >= 0 && pt.h == at.h && pt.v == at.v;
+}
+
+
+// ROM 0x0016b1b8 PointOverHilitedText__14TParagraphViewFR6TPoint
+// Where a point is in relation to the selection: 0 not over it, 1 over
+// it, 2 over it where the selection runs to the end of the text, 3 below
+// the last line of such a selection (on the line below the paragraph, or
+// below the line it ends on) - which is where a drop would add to the
+// selected text rather than land in it.
+//
+// (host: PointToOffset is this reconstruction's nearest character, which
+//  is never -1, where the ROM's answers -1 for a point on no line)
+long
+TParagraphView::PointOverHilitedText(Point& pt)
+{
+	if (!Hilited())
+		return 0;
+	Rect bounds = viewBounds;
+	AddMarginsToBounds(&bounds);
+	RefVar hilite(FirstHilite());
+	TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+	RefVar text(Text());
+	Boolean atEnd = h->fEnd == (long) ((Length(text) - 2) >> 1);
+	long result = 0;
+	if (PtInRect(pt, &bounds))
+	{
+		long offset = PointToOffset(pt);
+		if (offset < 0)
+			return 0;
+		if (h->fStart <= offset && offset <= h->fEnd)
+		{
+			result = 1;
+			long first = FindLineContainingCharOffset(h->fStart);
+			long last = FindLineContainingCharOffset(h->fEnd);
+			if (first == last && first >= 0 && pt.h > fLines[first].fBounds.right)
+				result = 0;
+			else if (atEnd && first >= 0)
+				result = fLines[first].fBounds.bottom < pt.v ? 3 : 2;
+		}
+	}
+	else
+	{
+		Rect box;
+		box.top = pt.v;
+		box.left = pt.h;
+		box.bottom = (short) (pt.v + 1);
+		box.right = (short) (pt.h + 1);
+		if (atEnd)
+		{
+			Point base;
+			base.v = box.bottom;
+			base.h = box.left;
+			if (WordOnLineBelowParagraph(box, base))
+				result = 3;
+		}
+	}
+	return result;
+}
+
+
+// ROM 0x001811b0 GetRangeProperties__14TParagraphViewFlT1
+// A frame describing a stretch of the text as a paragraph of its own
+// would need it: the justification, font, styles of the stretch, tabs
+// (a copy), text flags, how far the first line's text sits below its
+// top ('offset), and the correction information of the stretch, moved
+// to start at nought.  The text itself is the caller's to add.
+//
+// NOT YET: 'offset - the ROM's line cache keeps two heights this one
+// does not, and the offset is the line's height less the two.
+Ref
+TParagraphView::GetRangeProperties(long start, long end)
+{
+	RefVar props(AllocateFrame());
+	RefVar value(GetCacheProto(9));
+	if (NOTNIL(value))
+		SetFrameSlot(props, RSSYMviewjustify, value);
+	value = GetProto(RSSYMviewfont);
+	if (NOTNIL(value))
+		SetFrameSlot(props, RSSYMviewfont, value);
+	value = Styles();
+	if (NOTNIL(value) && Length(value) > 0)
+	{
+		value = GetStylesOfRange(start, end - start, false);
+		SetFrameSlot(props, RSSYMstyles, value);
+	}
+	value = GetProto(RSSYMtabs);
+	if (NOTNIL(value))
+		SetFrameSlot(props, RSSYMtabs, RefVar(Clone(value)));
+	value = GetProto(RSSYMtextflags);
+	if (NOTNIL(value))
+		SetFrameSlot(props, RSSYMtextflags, value);
+	value = ExtractRange(RefVar(CorrectInfo()), this, start, end);
+	if (NOTNIL(value))
+	{
+		OffsetCorrectionInfo(value, this, 0, start, 0);
+		SetFrameSlot(props, RSSYMcorrectinfo, value);
+	}
+	return props;
+}
+
+
+// ROM 0x0017f320 AddDragInfo__14TParagraphViewFP9TDragInfo
+// The script's items, or else one 'text item whose drag ref is the
+// paragraph's context.
+Boolean
+TParagraphView::AddDragInfo(TDragInfo* dragInfo)
+{
+	if (TView::AddDragInfo(dragInfo))
+		return true;
+	dragInfo->AddDragItem(RefVar(RSSYMtext), RefVar(fContext), RefVar());
+	return true;
+}
+
+
+// ROM 0x0017f378 GetSupportedDropTypes__14TParagraphViewFRC6TPoint
+Ref
+TParagraphView::GetSupportedDropTypes(const Point& pt)
+{
+	RefVar types(TView::GetSupportedDropTypes(pt));
+	if (ISNIL(types))
+	{
+		types = MakeArray(2);
+		SetArraySlot(types, 0, RefVar(RSSYMtext));
+		SetArraySlot(types, 1, RefVar(RSSYMink));
+	}
+	return types;
+}
+
+
+// ROM 0x0017f3f4 GetDropData__14TParagraphViewFRC6RefVarT1
+// The script's data, or else the selected text as a paragraph frame
+// (GetRangeProperties, less the justification) whose viewBounds are
+// the selection's in the paragraph's own coordinates - all the text and
+// the bounds it was laid out in when nothing is selected.
+Ref
+TParagraphView::GetDropData(RefArg dragType, RefArg dragRef)
+{
+	RefVar data(TView::GetDropData(dragType, dragRef));
+	if (NOTNIL(data))
+		return data;
+	RefVar hilite(FirstHilite());
+	long start, end;
+	Rect box;
+	if (NOTNIL(hilite))
+	{
+		TParagraphHilite* h = (TParagraphHilite*) RefToAddress(hilite);
+		start = h->fStart;
+		end = h->fEnd;
+		box.top = box.bottom = -32768;
+		GlobalHiliteBounds(&box);
+	}
+	else
+	{
+		start = 0;
+		RefVar text(Text());
+		end = (long) ((Length(text) - 2) >> 1);
+		box = fCachedBounds;
+	}
+	OffsetRect(&box, -viewBounds.left, -viewBounds.top);
+	data = GetRangeProperties(start, end);
+	RemoveSlot(data, RSSYMviewjustify);
+	SetFrameSlot(data, RSSYMtext, RefVar(ExtractTextRange(start, end - start)));
+	SetFrameSlot(data, RSSYMviewbounds, RefVar(ToObject(box)));
+	return data;
+}
+
+
+// ROM 0x0017fc20 Drop__14TParagraphViewFRC6RefVarT1P6TPoint
+// Text dropped on the paragraph, when its script does not take it: put
+// in where it was let go as a word written there would be (HandleWord,
+// with the dropped frame as its properties - a rich string's ink kept as
+// its styles), failing that below the last line (AddWord).  The drop
+// point comes back as where the text now ends.  A drop on the selection
+// itself is refused.
+//
+// NOT YET RECONSTRUCTED: ink dropped on a paragraph, which the ROM puts in
+// as an ink word - InkConvert turning the ink into one is the CIC
+// library's ConverterRun (0x00280980 ConvertData), not reconstructed.
+Boolean
+TParagraphView::Drop(RefArg dropType, RefArg dropData, Point* dropPt)
+{
+	if (TView::Drop(dropType, dropData, dropPt))
+		return true;
+	long over = PointOverHilitedText(*dropPt);
+	if (over == 1 || over == 2)
+		return false;
+	if (!EQRef(dropType, RSSYMtext))
+		return false;
+	RefVar text(GetFrameSlotRef(dropData, RSSYMtext));
+	if (IsRichString(text))
+	{
+		TRichString rich(text);
+		text = rich.MakeParagraphTextSlot();
+		if (!FrameHasSlot(dropData, RSSYMstyles))
+			SetFrameSlot(dropData, RSSYMstyles, RefVar(rich.MakeParagraphStylesSlot(RefVar(GetDefaultViewStyle()))));
+	}
+	const UniChar* chars = GetCString(text);
+	ULong length = Ustrlen(chars);
+	RefVar props(dropData);
+	fSetupDone = false;
+	Rect box;
+	box.top = dropPt->v;
+	box.left = dropPt->h;
+	box.bottom = (short) (dropPt->v + 1);
+	box.right = (short) (dropPt->h + length);
+	long offset = 0;
+	if (!HandleWord(chars, length, box, *dropPt, 0, 0, props, true, &offset, nil))
+	{
+		Finder finder;
+		SetFinderBelowParagraph(&finder);
+		finder.fNewLine = false;
+		AddWord(&finder, GetCString(text), length, props, &offset);
+	}
+	OffsetToBounds(offset + length, &box);
+	dropPt->h = box.left;
+	dropPt->v = (short) (box.bottom - 1);
+	return true;
+}
+
+
+// ROM 0x0017fff8 DropMove__14TParagraphViewFRC6RefVarRC6TPointT2Uc
+// Selected text dragged within its own paragraph: dropped where it was
+// let go (brought onto a line), and then, unless it was a copy, taken
+// out from where it was.
+Boolean
+TParagraphView::DropMove(RefArg dragRef, const Point& delta, const Point& dropPt, Boolean copy)
+{
+	if (TView::DropMove(dragRef, delta, dropPt, copy))
+		return true;
+	RefVar data(GetDropData(RefVar(RSSYMtext), dragRef));
+	Point pt = dropPt;
+	FindLineContainingPoint(&pt, 2);
+	if (!Drop(RefVar(RSSYMtext), data, &pt))
+		return false;
+	if (!copy)
+		DropRemove(dragRef);
+	return true;
+}
+
+
+// ROM 0x00180164 DropRemove__14TParagraphViewFRC6RefVar
+// The dragged text taken out: the selection deleted.
+Boolean
+TParagraphView::DropRemove(RefArg dragRef)
+{
+	if (TView::DropRemove(dragRef))
+		return true;
+	if (NOTNIL(FirstHilite()))
+		DeleteHilited(RefVar(FirstHilite()));
+	return true;
+}
+
+
+// ROM 0x001800e4 DropDone__14TParagraphViewFv
+// The drop over: the styles processed again over the whole text (Drop
+// holds them off while it works) and the selection taken away.
+Boolean
+TParagraphView::DropDone(void)
+{
+	fSetupDone = true;
+	RefVar text(Text());
+	long length = (long) ((Length(text) - 2) >> 1);
+	RangeChanged(0, length, length, RefVar(RSSYMtext));
+	RemoveAllHilites();
+	TView::DropDone();
+	return true;
+}
+
+
+// ROM 0x001801d0 DragFeedback__14TParagraphViewFRC9TDragInfoRC6TPointUc
+// Where the text would go shown as a caret inverted at the point, unless
+// the script shows it.  Inverting twice takes it away again.
+Boolean
+TParagraphView::DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean show)
+{
+	if (TView::DragFeedback(dragInfo, pt, show))
+		return true;
+	Point at = pt;
+	Rect caret;
+	PointToCaret(at, &caret, nil);
+	if (caret.top == -32768)
+		return false;
+	InvertRect(&caret);
+	return true;
 }

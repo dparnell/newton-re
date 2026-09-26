@@ -262,7 +262,7 @@ public:
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x002685f4 RealDraw__5TViewFR5TRect
 	virtual void	Scale(const Rect& src, const Rect& dst);			// ROM 0x002625f4 Scale__5TViewFRC5TRectT1
 	virtual void	EndDrag(const TDragInfo& dragInfo, TView* target, const Point& startPt, const Point& dropPt, const Point& dragPt, Boolean copy);	// ROM 0x0009cdb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
-	virtual void	DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean copy);
+	virtual Boolean	DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean show);	// ROM 0x0009e6f4 DragFeedback__5TViewFRC9TDragInfoRC6TPointUc (viewDragFeedbackScript)
 	virtual Ref		GetSupportedDropTypes(const Point& pt);
 	virtual TView*	FindDropView(const TDragInfo& dragInfo, const Point& pt);
 

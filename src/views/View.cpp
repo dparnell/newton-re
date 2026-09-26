@@ -1754,6 +1754,22 @@ TView::DropApprove(TView* target)
 }
 
 
+// ROM 0x0009e6f4 DragFeedback__5TViewFRC9TDragInfoRC6TPointUc
+// The target showing where a drag would go, or taking the showing away:
+// viewDragFeedbackScript(items, pt, show).  ==> whether the script
+// answered something, which is what tells a view with feedback of its own
+// that the script has done it instead.
+Boolean
+TView::DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean show)
+{
+	RefVar args(MakeArray(3));
+	SetArraySlot(args, 0, RefVar(dragInfo.GetItems()));
+	SetArraySlot(args, 1, RefVar(PointToFrame(pt)));
+	SetArraySlot(args, 2, RefVar(show ? TRUEREF : NILREF));
+	return NOTNIL(RunScript(RSSYMviewdragfeedbackscript, args, true));
+}
+
+
 // ROM 0x0009d134 DropDone__5TViewFv
 Boolean
 TView::DropDone(void)
@@ -1911,7 +1927,6 @@ TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit,
 // the default drop hooks a view without its own behaviour uses
 void	TView::DrawDragBackground(const Rect&, Boolean)				{ }
 void	TView::DrawDragData(const Rect&)							{ }
-void	TView::DragFeedback(const TDragInfo&, const Point&, Boolean)	{ }
 TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a0df4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
 
 

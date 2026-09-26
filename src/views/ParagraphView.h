@@ -231,6 +231,24 @@ public:
 							   Boolean reallyDoIt, long* outOffset, TUnitPublic* unit);	// ROM 0x00172760 HandleWord__14TParagraphViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic (vtable +0x148)
 	virtual void	SaveAddedUnitBounds(const Rect& box, const Point& base, ULong inkEndTime);	// ROM 0x00172e68 SaveAddedUnitBounds__14TParagraphViewFRC5TRectRC6TPointUl (vtable +0x150)
 	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
+	// the selection, and the paragraph as a drag's source and target
+	virtual Boolean	IsCompletelyHilited(RefArg hilite);					// ROM 0x0017ed50 IsCompletelyHilited__14TParagraphViewFRC6RefVar
+	virtual void	DeleteHilited(RefArg hilite);						// ROM 0x0017eaf8 DeleteHilited__14TParagraphViewFRC6RefVar
+	virtual void	RemoveHilite(RefArg hilite);						// ROM 0x0017edcc RemoveHilite__14TParagraphViewFRC6RefVar
+	virtual long	ClickOptions(void);									// ROM 0x0017ea80 ClickOptions__14TParagraphViewFv
+	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0017f320 AddDragInfo__14TParagraphViewFP9TDragInfo
+	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x0017f3f4 GetDropData__14TParagraphViewFRC6RefVarT1
+	virtual Boolean	Drop(RefArg dropType, RefArg dropData, Point* dropPt);	// ROM 0x0017fc20 Drop__14TParagraphViewFRC6RefVarT1P6TPoint
+	virtual Boolean	DropMove(RefArg dragRef, const Point& delta, const Point& dropPt, Boolean copy);	// ROM 0x0017fff8 DropMove__14TParagraphViewFRC6RefVarRC6TPointT2Uc
+	virtual Boolean	DropRemove(RefArg dragRef);							// ROM 0x00180164 DropRemove__14TParagraphViewFRC6RefVar
+	virtual Boolean	DropDone(void);										// ROM 0x001800e4 DropDone__14TParagraphViewFv
+	virtual Boolean	DragFeedback(const TDragInfo& dragInfo, const Point& pt, Boolean show);	// ROM 0x001801d0 DragFeedback__14TParagraphViewFRC9TDragInfoRC6TPointUc
+	virtual Ref		GetSupportedDropTypes(const Point& pt);				// ROM 0x0017f378 GetSupportedDropTypes__14TParagraphViewFRC6TPoint
+	long			PointOverHilitedText(Point& pt);					// ROM 0x0016b1b8 PointOverHilitedText__14TParagraphViewFR6TPoint (vtable +0x134) - 0 no, 1 over the selection, 2 over one that runs to the end, 3 just below such a one
+	Boolean			PointOverText(Point& pt, Point* onLine);			// ROM 0x00177c5c PointOverText__14TParagraphViewFR6TPointP6TPoint (vtable +0x138)
+	long			FindLineContainingPoint(Point* pt, long margin);	// ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize (host: the line's index, -1 for none)
+	Ref				GetRangeProperties(long start, long end);			// ROM 0x001811b0 GetRangeProperties__14TParagraphViewFlT1
+	void			ROMDeleteHilited(RefArg hilite);					// ROM 0x00174aac ROMDeleteHilited__14TParagraphViewFRC6RefVar
 
 	Ref			Text(void);												// ROM 0x00181004 Text__14TParagraphViewFv
 	Ref			Styles(void);											// ROM 0x00181448 Styles__14TParagraphViewFv

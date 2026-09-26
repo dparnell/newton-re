@@ -5989,6 +5989,66 @@ TestEditViewDrop()
 }
 
 
+// A paragraph as a drag's source and target: what a click on its
+// selection may do, the selected text as a paragraph frame of its own, a
+// drop refused on the selection itself and taken elsewhere, and the
+// dragged text taken out afterwards.
+static void
+TestParagraphDrop()
+{
+	TParagraphView* p = (TParagraphView*) ViewOf("ctxPD := AddView(GetRoot(), {viewClass: 81, viewFlags: 1 + 8, "
+		"viewBounds: {left: 20, top: 10, right: 160, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hello World\"})");
+	EXPECT(p != nil);
+	if (p == nil)
+		return;
+	Eval("ctxPD:Dirty()");
+	Refresh();
+	// "World" selected: draggable only, not the whole paragraph
+	p->MakeHilite(6, 11, true);
+	RefVar hilite(p->FirstHilite());
+	EXPECT(NOTNIL(hilite) && !p->IsCompletelyHilited(hilite));
+	EXPECT(p->ClickOptions() == 1);
+
+	// the drag item and its data: the selected characters, in a frame
+	// whose viewBounds are the selection's, in the paragraph's coordinates
+	TDragInfo info(0L);
+	EXPECT(p->AddDragInfo(&info));
+	EXPECT(info.Count() == 1 && EQ(RefVar(info.GetItemIndType(0, 0)), RSSYMtext));
+	RefVar data(p->GetDropData(RefVar(RSSYMtext), RefVar(p->fContext)));
+	EXPECT(IsFrame(data));
+	EXPECT(Ustrcmp(GetCString(RefVar(GetFrameSlot(data, RSSYMtext))), (const UniChar*) u"World") == 0);
+	EXPECT(ISNIL(GetFrameSlot(data, RSSYMviewjustify)));
+	Rect r;
+	EXPECT(FromObject(RefVar(GetFrameSlot(data, RSSYMviewbounds)), r));
+	Rect w6;
+	p->OffsetToBounds(6, &w6);
+	EXPECT(r.left == w6.left - p->viewBounds.left && r.top >= 0 && r.top < 20);
+
+	// a drop on the selection itself is refused (the selection runs to the
+	// end of the text: 2)
+	Point over;
+	over.h = (short) (w6.left + 3);
+	over.v = (short) ((w6.top + w6.bottom) / 2);
+	EXPECT(p->PointOverHilitedText(over) == 2);
+	RefVar dropped(Eval("{text: \"big\"}"));
+	Point at = over;
+	EXPECT(!p->Drop(RefVar(RSSYMtext), dropped, &at));
+
+	// the selected text taken out once dragged away
+	EXPECT(p->DropRemove(RefVar(p->fContext)));
+	// (with the space before it, as deleting a word takes it)
+	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), (const UniChar*) u"Hello") == 0);
+
+	// and all of it selected, in a paragraph that sizes itself: resizable
+	p->MakeHilite(0, 5, true);
+	EXPECT(p->IsCompletelyHilited(RefVar(p->FirstHilite())));
+	EXPECT(p->ClickOptions() == 3);
+	p->RemoveAllHilites();
+	Eval("RemoveView(GetRoot(), ctxPD)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6129,6 +6189,7 @@ main()
 		TestWordInfo();
 		TestWordIntoField();
 		TestEditViewDrop();
+		TestParagraphDrop();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();
