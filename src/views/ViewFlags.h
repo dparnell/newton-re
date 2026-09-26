@@ -98,6 +98,7 @@ enum
 	vjSiblingMask				= 0x00007e00,
 	vjChildrenLasso				= 0x00008000,	// the Constructor sizes the view to enclose its children (the name as recalled from the NTK)
 	vjReflow					= 0x00010000,	// AddViews stops at the first child hanging below the view (the name as recalled from the NTK)
+	vjOneWordOnly				= 0x01000000,	// the field holds one word, which a new word replaces (TParagraphView's aeWord; TextView.h calls the same bit vjNoLineLimits)
 	vjLeftRatio					= 0x04000000,	// the bounds are percentages of the parent's (or sibling's) size
 	vjRightRatio				= 0x08000000,
 	vjTopRatio					= 0x10000000,

@@ -5870,6 +5870,67 @@ TestHiliteStroke()
 }
 
 
+// A word sent to a field on its own - a paragraph with no page around it,
+// which is where the recogniser sends a word written on it: a field that
+// holds one word (viewJustify oneWordOnly) has its text replaced and keeps
+// the readings as alternateWords.
+static void
+TestWordIntoField()
+{
+	gWordID = kWRecDomainType;
+	TDomain* domain = TDomain::Make(gController, kWRecDomainType, (char*) "word");
+	if (gRecognition.fRecognizers->FindRecognizer(kWRecDomainType) == nil)
+	{
+		TRecognizer* recognizer = new TRecognizer;
+		recognizer->Init(domain, kWRecDomainType, aeWord, 0, 1);
+		recognizer->InitServices(0, 0);
+		gRecognition.fRecognizers->AddRecognizer(recognizer);
+	}
+	TStroke* stroke = TStroke::Make(0);
+	TabPt pt;
+	pt.z = 3;
+	pt.p = 0;
+	pt.x = ToFixed(30);
+	pt.y = ToFixed(15);
+	stroke->AddPoint(&pt);
+	pt.x = ToFixed(60);
+	pt.y = ToFixed(25);
+	stroke->AddPoint(&pt);
+	stroke->fDownTime = 100;
+	stroke->fUpTime = 110;
+	stroke->EndStroke();
+	TStrokeUnit* strokeUnit = TStrokeUnit::Make(gRootDomain, 1, stroke, nil);
+	TWRecUnit* word = TWRecUnit::Make(domain, 1, nil);
+	EXPECT(strokeUnit != nil && word != nil);
+	if (strokeUnit == nil || word == nil)
+		return;
+	word->AddSub(strokeUnit);
+	word->EndSubs();
+	UniChar hello[6] = { 'h', 'e', 'l', 'l', 'o', 0 };
+	EXPECT(word->AddWordInterpretation() == 0);
+	EXPECT(word->SetWordString(0, hello) != nil);
+	word->SetLabel(0, kWordLabelWord);
+	word->SetScore(0, 55);
+
+	TParagraphView* field = (TParagraphView*) ViewOf("ctxWF := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"viewBounds: {left: 20, top: 10, right: 200, bottom: 30}, viewJustify: 0x1000000, viewFont: espy12, "
+		"text: \"old\"})");
+	EXPECT(field != nil);
+	if (field == nil)
+		return;
+	TUnitPublic pub(word, 0);
+	RefVar cmd(MakeCommand(aeWord, field, (Long) &pub));
+	EXPECT(gApplication->DispatchCommand(cmd) == 1);
+	RefVar text(field->Text());
+	EXPECT(Ustrcmp(GetCString(text), hello) == 0);
+	RefVar alternates(Eval("ctxWF.alternateWords"));
+	EXPECT(IsArray(alternates) && Length(alternates) == 1
+		   && Ustrcmp((const UniChar*) BinaryData(RefVar(GetArraySlot(alternates, 0))), hello) == 0);
+	Eval("RemoveView(GetRoot(), ctxWF)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6008,6 +6069,7 @@ main()
 		TestReplaceCharacter();
 		TestInkInRichString();
 		TestWordInfo();
+		TestWordIntoField();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();

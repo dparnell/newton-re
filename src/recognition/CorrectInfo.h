@@ -101,6 +101,8 @@ void	OffsetCorrectionInfo(TView* view, long at, long removed, long inserted);	//
 void	ClearCorrectionRange(RefArg list, TView* view, long at, long length);	// ROM 0x000765bc ClearCorrectionRange__FRC6RefVarP5TViewlT3
 void	DeletedCorrectionInfo(RefArg list, TView* view);	// ROM 0x00076758 DeletedCorrectionInfo__FRC6RefVarP5TView
 void	RemoveCorrectionInfo(RefArg list, TView* view);	// ROM 0x00076830 RemoveCorrectionInfo__FRC6RefVarP5TView
+Ref		GetWordArray(RefArg wordInfo);					// ROM 0x00077aa0 GetWordArray__FRC6RefVar - the readings of a word info, as an array of strings
+Ref		GetWordArray(TUnitPublic* unit);				// ROM 0x00077b78 GetWordArray__FP11TUnitPublic
 void	RemoveCorrectionInfo(TView* view);				// ROM 0x00077d88 RemoveCorrectionInfo__FP5TView
 void	ClearEmptyEntries(RefArg list);					// ROM 0x00078d04 ClearEmptyEntries__FRC6RefVar
 // The entry for a range of a view's text, made when there is none.

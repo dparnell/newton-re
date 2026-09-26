@@ -311,6 +311,7 @@ public:
 	// Things put into the paragraph from outside - a recognised word,
 	// a dropped clipping, an ink word split off another - which the
 	// view is sent as command 0x4d.
+	Boolean		WordCommand(RefArg cmd);				// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xbc (aeWord)
 	Boolean		HandleInsertItems(RefArg spec);			// ROM 0x001700a0 HandleInsertItems__14TParagraphViewFRC6RefVar
 
 	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc

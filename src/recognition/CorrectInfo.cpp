@@ -1488,3 +1488,34 @@ RegisterCorrectInfoNatives(void)
 	RegisterNativeFunction("CorrectWord", (void*) FCorrectWord, 2);
 	RegisterNativeFunction("FAddWordInfo", (void*) FAddWordInfo, 1);
 }
+
+
+// ROM 0x00077aa0 GetWordArray__FRC6RefVar
+// The readings a word info carries (its `words` array of frames), as an
+// array of their `word` strings; nil when it has none.
+Ref
+GetWordArray(RefArg wordInfo)
+{
+	RefVar result;
+	RefVar words(GetFrameSlotRef(wordInfo, RSSYMwords));
+	if (NOTNIL(words))
+	{
+		long count = Length(words);
+		result = MakeArray(count);
+		for (long i = 0; i < count; i++)
+		{
+			RefVar entry(GetArraySlotRef(words, i));
+			entry = GetFrameSlotRef(entry, RSSYMword);
+			SetArraySlotRef(result, i, entry);
+		}
+	}
+	return result;
+}
+
+
+// ROM 0x00077b78 GetWordArray__FP11TUnitPublic
+Ref
+GetWordArray(TUnitPublic* unit)
+{
+	return GetWordArray(RefVar(unit->WordInfo()));
+}

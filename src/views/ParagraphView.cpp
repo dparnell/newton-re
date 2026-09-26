@@ -5541,6 +5541,92 @@ TParagraphView::AddKeyToCurrUndo(UniChar ch, long offset)
 }
 
 
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xbc (aeWord)
+// A word the recogniser read, sent to the paragraph itself (a field on
+// its own, with no page around it).  A field that holds one word only
+// (viewJustify oneWordOnly) has its text replaced by the word and keeps
+// the other readings in its alternateWords slot.  Otherwise the word
+// goes in at the caret when the paragraph has a selection and the
+// writing may be remote, and failing that where it was written
+// (HandleWord), at the middle of the base line the recogniser found for
+// it.  A word that went in is registered for the corrector.
+Boolean
+TParagraphView::WordCommand(RefArg cmd)
+{
+	if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+		return true;
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+		return TView::RealDoCommand(cmd);
+	ULong remote = SetRemoteForCorrector();
+	TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+	Rect box;
+	unit->Bounds(&box);
+	// the middle of the word's base line box, as it stands (its top is
+	// -32768 when the base line is not known)
+	Point pt;
+	pt.h = (short) (unit->fWordBase.left + unit->fWordBase.right) >> 1;
+	pt.v = (short) (unit->fWordBase.top + unit->fWordBase.bottom) >> 1;
+	// ROM QUIRK: a point outside the word's box is taken to its left edge
+	// or its bottom, whichever side it strayed from
+	if (pt.h < box.left || pt.h > box.right)
+		pt.h = box.left;
+	if (pt.v < box.top || box.bottom < pt.v)
+		pt.v = box.bottom;
+	Handle word = unit->Word();
+	HLock(word);
+	UniChar* text = (UniChar*) *word;
+	Boolean handled = false;
+	if (text[0] != 0)
+	{
+		if ((fViewJustify & vjOneWordOnly) != 0)
+		{
+			SetFrameSlot(fContext, RSSYMalternatewords, RefVar(GetWordArray(unit)));
+			ULong length = Ustrlen(text);
+			RefVar current(Text());
+			ULong had = (Length(current) - 2) >> 1;
+			InsertStyledText(0, text, length, RefVar(NILREF), RefVar(NILREF), 0, had, false);
+			RemoveCorrectionInfo(this);
+			AddWordInfo(this, 0, length, unit);
+			CommandSetResult(cmd, 1);
+			RestoreRemoteForCorrector(remote);
+			// ROM BUG: the word's handle is neither unlocked nor disposed
+			// of on this path
+			return true;
+		}
+		RefVar hilite(FirstHilite());
+		if (NOTNIL(hilite) && (remote & 1) == 0)
+		{
+			RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+			SetFrameSlot(spec, RSSYMinsertitems, RefVar(unit->WordInfo()));
+			if (InsertItemsAtCaret(spec))
+			{
+				CommandSetResult(cmd, 1);
+				RestoreRemoteForCorrector(remote);
+				// ROM BUG: the word's handle is kept here too
+				return true;
+			}
+		}
+		gAddWordInfo = true;
+		ULong length = Ustrlen(text);
+		long offset = 0;
+		if (HandleWord(text, length, box, pt, unit->StartTime(), unit->EndTime(), RefVar(NILREF),
+					   true, &offset, unit))
+		{
+			if (gAddWordInfo)
+				AddWordInfo(this, offset, offset + length, unit);
+			CommandSetResult(cmd, 1);
+			handled = true;
+		}
+	}
+	HUnlock(word);
+	DisposHandle(word);
+	RestoreRemoteForCorrector(remote);
+	if (!handled)
+		return TView::RealDoCommand(cmd);
+	return true;
+}
+
+
 // ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar
 // The paragraph's commands.  A key down or repeat runs the key scripts
 // and key commands (HandleKeyEvent); a key nobody took, for a paragraph
@@ -5739,14 +5825,69 @@ TParagraphView::RealDoCommand(RefArg cmd)
 	if (id == aeTap)
 	{
 		// defer placing the caret until the double-tap interval passes, so
-		// a second tap can be a double tap (word select) instead
+		// a second tap can be a double tap (word select) instead; the tap
+		// then goes on to the view's gesture script
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
 		fTapped = true;
 		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 		fTapPoint = unit->Stroke()->FirstPoint();
 		gRootView->AddIdler(this, gDoubleTapInterval * 16 + 80, 2);
-		CommandSetResult(cmd, 1);
-		return true;
+		return TView::RealDoCommand(cmd);
 	}
+	if (id == aeCaret)
+	{
+		// the caret gesture: the selection goes, and a caret the text
+		// can take (ValidTextEditCaret) is handed to HandleCaret with its
+		// kind, angle and points
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+			return TView::RealDoCommand(cmd);
+		RemoveAllHilites();
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		if (ValidTextEditCaret(unit))
+		{
+			ULong kind = unit->CaretType();
+			long angle = unit->GestureAngle();
+			Point point = unit->GesturePoint(0);
+			Point armA = unit->GesturePoint(1);
+			Point armB = unit->GesturePoint(2);
+			Point tail;
+			if (kind == 3 || kind == 5)
+				tail = unit->GesturePoint(3);
+			else
+				tail.v = -32768;
+			if (HandleCaret(kind, angle, point, armA, armB, tail))
+			{
+				CommandSetResult(cmd, 1);
+				return true;
+			}
+		}
+		return TView::RealDoCommand(cmd);
+	}
+	if (id == aeLine)
+	{
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+			return TView::RealDoCommand(cmd);
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		if (ValidLineGesture(unit))
+		{
+			long angle = unit->GestureAngle();
+			Point from = unit->GesturePoint(0);
+			Point to = unit->GesturePoint(1);
+			if (HandleLineGesture(angle, from, to))
+			{
+				CommandSetResult(cmd, 1);
+				return true;
+			}
+		}
+		return TView::RealDoCommand(cmd);
+	}
+	if (id == aeWord)
+		return WordCommand(cmd);
 	if (id == aeDoubleTap)
 	{
 		// The second tap on a word: the corrector goes up over it.  The
