@@ -4,6 +4,7 @@
 	Contains:	RegisterAllNatives (HostNatives.h).
 */
 
+#include "RandomWords.h"
 #include "ROMPackages.h"
 #include "HostNatives.h"
 
@@ -73,6 +74,7 @@ RegisterAllNatives(void)
 	RegisterWordListNatives();
 	RegisterWordInfoNatives();
 	RegisterDictionaryNatives();
+	RegisterRandomWordNatives();
 	RegisterRecConfigNatives();
 	RegisterInkNatives();
 

@@ -75,6 +75,8 @@ add_library(recognition STATIC
     Airus.cpp
     AirusIterator.cpp
     Dictionaries.cpp
+    RandomWords.cpp
+    RandomWordTables.cpp
     ROMDictionaryData.cpp
     ROMDictionaryTable.cpp
     Learning.cpp

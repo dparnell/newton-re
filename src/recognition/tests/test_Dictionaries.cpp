@@ -24,6 +24,7 @@
 #include "Unicode.h"
 #include "Locale.h"
 #include "Learning.h"
+#include "RandomWords.h"
 #include "View.h"
 #include "RootView.h"
 #include "Ports.h"
@@ -394,6 +395,26 @@ main()
 		EXPECT(LookUp("notebook", &attribute) != -1);
 		EXPECT(LookUp("the", &attribute) != -1);
 		EXPECT(LookUp("qqxyzzy", &attribute) == -1);
+
+		// random words to practise writing (GetRandomDictionaryWord): of
+		// the lengths asked for, and words of the general lexicon - the
+		// random generator seeded so the run is always the same
+		for (long i = 0; i < 6; i++)
+		{
+			RefVar practice(FGetRandomDictionaryWord(RefVar(), RefVar(MAKEINT(3)), RefVar(MAKEINT(7))));
+			EXPECT(IsString(practice));
+			if (!IsString(practice))
+				continue;
+			const UniChar* w = GetCString(practice);
+			long length = Ustrlen(w);
+			EXPECT(length >= 3 && length <= 7);
+			UniChar lower[16];
+			for (long k = 0; k <= length && k < 15; k++)
+				lower[k] = (w[k] >= 'A' && w[k] <= 'Z') ? (UniChar) (w[k] + 32) : w[k];
+			attribute = 0x40;
+			UniChar variant[16];
+			EXPECT(LookupWordOrVariant(lower, &attribute, variant) != -1);
+		}
 
 		// a word written in capitals is not in the lexicon as it stands,
 		// but one of its capitalisations is
