@@ -102,6 +102,10 @@ public:
 	// the polygon form offered to the page's editAddShapeScript first.
 	Boolean			HandleShape(Handle polygon, long type);		// ROM 0x000a654c HandleShape__9TEditViewFPP7Polygonl
 	// A word that no child would take, made into a paragraph of its own.
+	Boolean			AddDataCommand(RefArg cmd);				// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar +0x5ae8 (aeAddData)
+	Boolean			RemoveDataCommand(RefArg cmd);			// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar +0x26c (aeRemoveData)
+	Boolean			HandleInsertItems(RefArg spec);			// ROM 0x000a6a04 HandleInsertItems__9TEditViewFRC6RefVar
+	void			PlaybackInk(RefArg kind);				// ROM 0x000a6b30 PlaybackInk__9TEditViewFRC6RefVar
 	TView*			AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 									class TUnitPublic* unit, RefArg info, long* outOffset,
 									RefArg inkFont);	// ROM 0x000a1b2c AddNewParagraph__9TEditViewFPUsUlR5TRectT3P11TUnitPublicRC6RefVarPlT6
@@ -180,6 +184,9 @@ void	RestoreRemoteForCorrector(ULong state);				// ROM 0x001774e0 RestoreRemoteF
 // The ink views left on the page for the strokes of a unit taken away:
 // every stroke under it that belongs to a view of the page (its context
 // id) has that view removed, undoably, with an aeRemoveData.
+Boolean	PartOfTapDrag(class TUnitPublic* unit);			// ROM 0x000a74d8 PartOfTapDrag__FP11TUnitPublic
+Boolean	ViewAllowsText(TView* view);						// ROM 0x001a2a74 ViewAllowsText__FP5TView
+extern ULong	gLastTapDragClick;							// ROM 0x0c100ce8 gLastTapDragClick
 void	RemoveInk(TEditView* view, class TUnit* unit);		// ROM 0x0019dfa4 RemoveInk__FP9TEditViewP5TUnit
 
 // The view whose text was last changed remembered in the globals, which

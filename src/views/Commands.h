@@ -41,6 +41,7 @@ enum
 	aeShape					= 0x11,		// a shape the recogniser made (TEditView::HandleShape)
 	aeWord					= 0x12,		// viewWordScript(unit)
 	aeGetContextUnits		= 0x14,		// the shapes on a page as shape units, for a new one to snap to (HandleGetContextUnits); the index parameter 0: only near the unit
+	aeWord17				= 0x17,		// a word the page puts down with no script and no hilites cleared (TEditView; which recogniser sends it, and what the ROM calls it, is not known)
 	aeRawInk				= 0x15,		// viewRawInkScript(strokes)
 	aeInkWord				= 0x18,		// viewInkWordScript(strokes)
 	aeKeyUp					= 0x1f,		// the key events (TView::HandleKeyEvent; Keyboard.h): the parameter (modifiers << 25) | (key code << 16) | character
@@ -70,6 +71,7 @@ enum
 	aeAddHilite				= 0x47,		// the frameParameter (a hilite, or a frame with one) appended to hilites
 	aeRemoveHilite			= 0x48,
 	aeToChildren			= 0x49,		// the command sent to every child
+	aePlaybackInk			= 0x4a,		// the page's ink recognised again (TEditView::PlaybackInk; the parameter 0 text, 1 shapes, 2 both)
 	aeToHilitedChildren		= 0x4b,		// ... to the hilited children
 	aeMoveChild				= 0x4c,		// aeMoveData to the child of the parameter's id
 	aeAppIdle				= 0x70,		// the application's

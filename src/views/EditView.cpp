@@ -52,6 +52,7 @@
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
 #include "PolygonView.h"
+#include "StrokeCentral.h"
 #include "Polygons.h"
 #include "ShapeDomain.h"
 #include "Stroke.h"
@@ -1224,22 +1225,25 @@ TEditView::Scrub(TUnitPublic* unit)
 
 
 // ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar
-// The editor's commands.  The ROM's is the largest function in the view
-// system - the whole of scrubbing, the caret, the line and shape
-// gestures, the ink, the drag and the undo - and what is here is the
-// beginning of it: the guard a read-only page puts on the commands it
-// will take at all, and the tap.
+// The editor's commands - the largest function in the view system: the
+// guard a read-only page puts on the commands it will take at all, the
+// pen's gestures (scrub, caret, line, the hilite stroke, the tap and the
+// double tap), the words, shapes and ink the recognisers send, the keys,
+// and the page's own side of adding and removing data.
+//
+// The ROM's shape for nearly every case: when the page takes gestures
+// itself (text flag 0x2000) the view's scripts are asked first; then the
+// editor's own handling; and a command it did not handle goes to
+// TView::RealDoCommand - the scripts - unless they were asked already.
 //
 // A tap is not acted on where it arrives.  The editor notes where it was
 // and asks the root view to idle it after the double-tap interval
 // (Idle, reason 2); a second tap in that time turns it into something
-// else, and if none comes the caret goes where the tap was.  The view's
-// own viewGestureScript gets first refusal when the view takes gestures
-// (the vGesturesAllowed bit of its text flags).
+// else, and if none comes the caret goes where the tap was.
 //
-// NOT YET RECONSTRUCTED: every other command the editor answers.  They
-// go to TView::RealDoCommand, which runs the view's scripts for them, as
-// they did before this function existed.
+// NOT YET RECONSTRUCTED: the click and the tap-drag (HiliteClick, which
+// drags or resizes a selection), and the double tap on a selection of
+// text, which sends its ink to be recognised again.
 Boolean
 TEditView::RealDoCommand(RefArg cmd)
 {
@@ -1250,45 +1254,63 @@ TEditView::RealDoCommand(RefArg cmd)
 		&& id != aeHiliteClick && id != aeGesture2f)
 	{
 		// a page that may not be written on answers everything but these,
-		// and answers them all as done (aeWord alone as not)
-		CommandSetResult(cmd, id != aeWord ? 1 : 0);
+		// and answers them all as done (aeGetContextUnits alone as not:
+		// no shapes to snap to)
+		CommandSetResult(cmd, id != aeGetContextUnits ? 1 : 0);
 		return 1;
 	}
 	if (id == aeCaret)
 	{
-		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
-			return true;
+		Boolean asked = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			asked = true;
+			if (TView::RealDoCommand(cmd))
+				return true;
+		}
 		if (HandleCaret((TUnitPublic*) CommandParameter(cmd)))
 		{
 			CommandSetResult(cmd, 1);
 			return true;
 		}
-		return TView::RealDoCommand(cmd);
+		// (the script only when it has not been asked already)
+		return asked ? false : TView::RealDoCommand(cmd);
 	}
 	if (id == aeLine)
 	{
-		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
-			return true;
+		Boolean asked = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			asked = true;
+			if (TView::RealDoCommand(cmd))
+				return true;
+		}
 		if (HandleLineGesture((TUnitPublic*) CommandParameter(cmd)))
 		{
 			CommandSetResult(cmd, 1);
 			return true;
 		}
-		return TView::RealDoCommand(cmd);
+		// (the script only when it has not been asked already)
+		return asked ? false : TView::RealDoCommand(cmd);
 	}
 
 	if (id == aeGesture2f)
 	{
 		// the hilite stroke, after the root view has finished drawing it:
 		// the page asks its children what it selects (AddHiliter)
-		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
-			return true;
+		Boolean asked = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			asked = true;
+			if (TView::RealDoCommand(cmd))
+				return true;
+		}
 		if (AddHiliter((TUnitPublic*) CommandParameter(cmd)))
 		{
 			CommandSetResult(cmd, 1);
 			return true;
 		}
-		return TView::RealDoCommand(cmd);
+		return asked ? false : TView::RealDoCommand(cmd);
 	}
 
 	if (id == aeWord)
@@ -1343,6 +1365,9 @@ TEditView::RealDoCommand(RefArg cmd)
 			Throw(exOutOfMemory, (void*) -10007, nil);
 		Boolean done = HandleShape(polygon, (long) unit->ShapeType());
 		CommandSetResult(cmd, done);
+		// (the ROM's shared exit: one not placed goes to the scripts)
+		if (!done)
+			return TView::RealDoCommand(cmd);
 		return done;
 	}
 
@@ -1640,29 +1665,260 @@ TEditView::RealDoCommand(RefArg cmd)
 		// text and was tapped on ink - the writing is gathered up and
 		// offered to the recogniser again rather than corrected, which
 		// wants the re-recognition path (`RecognizeInArea`).
-		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
-			return 1;
+		Boolean asked = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			asked = true;
+			if (TView::RealDoCommand(cmd))
+				return 1;
+		}
 		fTapPending = false;
 		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 		Point pt = unit->Stroke()->FirstPoint();
+		Boolean onSelection = PointInHilite(pt);
+		Boolean takesText = ViewAllowsText(this);
+		// DEVIATION: when the double tap is on the selection of a page
+		// that takes text, the ROM gathers up the ink in the selection
+		// and sends it to be recognised again (NOT YET - it wants
+		// SortTextInk, MakeKidForSort and the paragraphs' answers to
+		// commands 0x19 and 0x1a); the host offers it to the children
+		// as it does any other double tap.
+		(void) onSelection;
+		long handled = 0;
 		TBackwardViewListLoop loop(fChildren);
 		for (TView* child = loop.Next(); child != nil; child = loop.Next())
-			if (PtInRect(pt, &child->viewBounds) && child->DoCommand(cmd))
+			if (PtInRect(pt, &child->viewBounds) && (handled = child->RealDoCommand(cmd)) != 0)
 				break;
-		return 1;
+		if (handled == 0)
+		{
+			// nothing took it: on a page that takes text, the caret goes
+			// where it was and the keyboard comes up for it
+			if (!takesText)
+				return asked ? false : TView::RealDoCommand(cmd);
+			gAboutToOpenSoftKeyboard = true;
+			HandleTap(pt);
+			gAboutToOpenSoftKeyboard = false;
+			OpenKeypadFor(this);
+			handled = 1;
+		}
+		CommandSetResult(cmd, 1);
+		return handled;
+	}
+	if (id == aeRemoveAllHilites)
+	{
+		// the page's own, and then the base's (which asks it again)
+		RemoveAllHilites();
+		return TView::RealDoCommand(cmd);
+	}
+	if (id == aeReplaceText)
+	{
+		// a paragraph's text replaced, sent to the page with the
+		// paragraph's id as the parameter: passed on to that child
+		long child = CommandParameter(cmd);
+		if (child != kNoParameter)
+		{
+			TView* view = FindID(child);
+			if (view != nil && view->RealDoCommand(cmd))
+				return true;
+		}
+		return TView::RealDoCommand(cmd);
+	}
+	if (id == aeWord17)
+	{
+		// a word the page is to put down as it is: no script and no
+		// selection taken away first
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		RemoveInk(this, unit->fUnit);
+		Boolean done = HandleWordUnit(unit);
+		CommandSetResult(cmd, done);
+		if (!done)
+			return TView::RealDoCommand(cmd);
+		return done;
+	}
+	if (id == aeAddData)
+		return AddDataCommand(cmd);
+	if (id == aeRemoveData)
+		return RemoveDataCommand(cmd);
+	if (id == aePlaybackInk)
+	{
+		PlaybackInk(RefVar(MAKEINT(CommandParameter(cmd))));
+		return true;
+	}
+	if (id == kInsertItemsCommand && (fFlags & (vReadOnly | vWriteProtected)) == 0)
+	{
+		// items put in at the caret when the caret is on the page itself
+		if (HandleInsertItems(RefVar(CommandFrameParameter(cmd))))
+			return true;
+		return TView::RealDoCommand(cmd);
 	}
 	if (id != aeTap)
-		return TView::RealDoCommand(cmd);	// NOT YET: the rest of the editor's own
+		return TView::RealDoCommand(cmd);
 	// 0x2000 of the textFlags slot - not the viewFlags, and what it is
 	// called is not yet known; the ROM tests it before letting the view's
 	// own scripts see the tap
-	if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd) != 0)
-		return 1;							// the view's gesture script took it
+	Boolean asked = false;
+	if ((TextFlags() & 0x2000) != 0)
+	{
+		asked = true;
+		if (TView::RealDoCommand(cmd) != 0)
+			return 1;						// the view's gesture script took it
+	}
 	fTapPending = true;
 	TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 	fTapPoint = unit->Stroke()->FirstPoint();
 	gRootView->AddIdler(this, 0x50 + (gDoubleTapInterval << 4), 2);
-	return 1;
+	// the tap is still offered to the view's scripts, unless they have
+	// been asked already
+	return asked ? false : TView::RealDoCommand(cmd);
+}
+
+
+// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar +0x5ae8 (aeAddData)
+// Data added to the page's soup (the base does it), and the paragraph it
+// made - an undo putting back a paragraph that was removed - given back
+// what was saved when it went: its words' correction information, and
+// the caret, if the caret was in it.  An undo of the removal takes the
+// selection away first.
+Boolean
+TEditView::AddDataCommand(RefArg cmd)
+{
+	if (IsUndoCommand(cmd))
+		RemoveAllHilites();
+	Boolean handled = TView::RealDoCommand(cmd);
+	TView* child = (TView*) CommandParameter(cmd);
+	if (child == nil)
+		return handled;
+	TimeStampTextChange(child);
+	RefVar data(child->DataFrame());
+	RefVar saved(GetFrameSlotRef(data, RSSYMcorrectinfo));
+	if (NOTNIL(saved))
+	{
+		InsertRange(RefVar(CorrectInfo()), saved, child);
+		RemoveSlot(data, RSSYMcorrectinfo);
+	}
+	RefVar caret(GetFrameSlotRef(data, RSSYMinsertoffset));
+	if (NOTNIL(caret))
+	{
+		gRootView->SetKeyView(child, RINT(caret), 0, false);
+		RemoveSlot(data, RSSYMinsertoffset);
+	}
+	RemoveSlot(data, RSSYMoffset);
+	return handled;
+}
+
+
+// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar +0x26c (aeRemoveData)
+// A child taken out of the page's soup, the base doing it, and what an
+// undo will want to put back with it saved in its data: its words'
+// correction information (taken out of the list), and the caret offset
+// when the caret was in it - the caret moves to the page meanwhile.
+Boolean
+TEditView::RemoveDataCommand(RefArg cmd)
+{
+	if (IsUndoCommand(cmd))
+		RemoveAllHilites();
+	TView* child = FindID(CommandParameter(cmd));
+	if (child == nil)
+		return true;
+	child->RemoveAllHilites();
+	RefVar data(child->DataFrame());
+	RefVar saved(ExtractRange(RefVar(CorrectInfo()), child, 0, -1));
+	DeletedCorrectionInfo(RefVar(CorrectInfo()), child);
+	if (NOTNIL(saved))
+		SetFrameSlot(data, RSSYMcorrectinfo, saved);
+	Boolean hadCaret = false;
+	if (gRootView->CaretEnabled() && gRootView->fCaretView == child)
+	{
+		SetFrameSlot(data, RSSYMinsertoffset, RefVar(MAKEINT(gRootView->fCaretOffset)));
+		hadCaret = true;
+		Rect caret;
+		child->OffsetToCaret(0, &caret);
+		SetCaretRectGlobal(caret);
+	}
+	Boolean handled = TView::RealDoCommand(cmd);
+	if (hadCaret)
+		gRootView->SetKeyView(this, 0, 0, false);
+	return handled;
+}
+
+
+// ROM 0x000a6a04 HandleInsertItems__9TEditViewFRC6RefVar
+// Items put in at the caret when the caret is on the page itself rather
+// than in a paragraph: an empty paragraph made where the caret is, the
+// caret moved into it, and the items given to that.  ==> whether they
+// were taken; nothing when the caret is not this page's.
+Boolean
+TEditView::HandleInsertItems(RefArg spec)
+{
+	ValidateCaret(true);
+	if (gRootView->fCaretView != this)
+		return false;
+	Rect box = fCaretRect;
+	Point origin = ContentsOrigin();
+	OffsetRect(&box, origin.h, origin.v);
+	UniChar none = 0;
+	long offset = 0;
+	TView* paragraph = AddNewParagraph(&none, 0, box, box, nil, RefVar(NILREF), &offset, RefVar(NILREF));
+	fCaretRect.top = -32768;
+	fCaretRect.bottom = -32768;
+	gRootView->SetKeyView(paragraph, 0, 0, false);
+	return ((TParagraphView*) paragraph)->HandleInsertItems(spec);
+}
+
+
+// ROM 0x000a6b30 PlaybackInk__9TEditViewFRC6RefVar
+// The page's ink recognised again: the recognition preferences set for
+// the kind asked for (0 text, 1 shapes, 2 both; the formulas off), each
+// child that has ink handed back to the stroke world as deferred strokes
+// at its place on the page, and the preferences put back.
+void
+TEditView::PlaybackInk(RefArg kind)
+{
+	RefVar text(GetPreference(RSSYMdotextrecognition));
+	RefVar shapes(GetPreference(RSSYMdoshaperecognition));
+	RefVar formulas(GetPreference(RSSYMdoformularecognition));
+	long which = RINT(kind);
+	SetPreference(RSSYMdotextrecognition, (which == 0 || which == 2) ? RefVar(TRUEREF) : RefVar(NILREF));
+	SetPreference(RSSYMdoshaperecognition, (which == 1 || which == 2) ? RefVar(TRUEREF) : RefVar(NILREF));
+	SetPreference(RSSYMdoformularecognition, RefVar(NILREF));
+	ReadDomainOptions();
+	RefVar ink;
+	TListLoop loop(fChildren);
+	for (TView* child = (TView*) loop.Next(); child != nil; child = (TView*) loop.Next())
+	{
+		ink = child->GetProto(RSSYMink);
+		if (NOTNIL(ink))
+			gStrokeWorld.AddDeferredStroke(ink, child->viewBounds.left, child->viewBounds.top);
+	}
+	SetPreference(RSSYMdotextrecognition, text);
+	SetPreference(RSSYMdoshaperecognition, shapes);
+	SetPreference(RSSYMdoformularecognition, formulas);
+	ReadDomainOptions();
+}
+
+
+// ROM 0x000a74d8 PartOfTapDrag__FP11TUnitPublic
+// Whether a click came within 60 ticks of the last one asked about - the
+// second half of a tap-drag, which the tap-drag command handles.  The
+// click is remembered as the last either way.
+ULong	gLastTapDragClick = 0;			// ROM 0x0c100ce8 gLastTapDragClick
+
+Boolean
+PartOfTapDrag(TUnitPublic* unit)
+{
+	ULong last = gLastTapDragClick;
+	gLastTapDragClick = unit->StartTime();
+	return (uint32_t) (unit->StartTime() - last) < 0x3c;
+}
+
+
+// ROM 0x001a2a74 ViewAllowsText__FP5TView
+// Whether the view writing lands on takes any kind of text (its
+// recognition flags: words, letters, numbers, punctuation and the rest).
+Boolean
+ViewAllowsText(TView* view)
+{
+	return (GetRecognitionView(view)->fFlags & 0x17ef000) != 0;
 }
 
 // ROM 0x000a4204 ResetHilitesForNewWord__9TEditViewFv
