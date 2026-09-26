@@ -6113,15 +6113,17 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		// application that the re-recognition path answers, and that
 		// path (`RecognizeInArea`) is NOT YET; here they fall through to
 		// the corrector, which is what a word of text gets.
-		fTapped = false;
 		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
 			return true;
 		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
 			return TView::RealDoCommand(cmd);
+		fTapped = false;
 
 		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 		Point pt = unit->Stroke()->FirstPoint();
-		if (PtInRect(pt, &viewBounds))
+		// a double tap off the paragraph is the scripts' business
+		if (!PtInRect(pt, &viewBounds))
+			return TView::RealDoCommand(cmd);
 		{
 			long offset = 0;
 			Point where;
@@ -6139,12 +6141,12 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			{
 				// nothing to correct: the caret goes where the tap was and
 				// the keypad is offered - unless the view works out its own
-				// bounds, which is a paragraph of a page rather than a field
-				if ((fFlags & vCalculateBounds) == 0)
-				{
-					HandleTap(pt);
-					OpenKeypadFor(this);
-				}
+				// bounds, which is a paragraph of a page rather than a field,
+				// and then the double tap goes to the scripts
+				if ((fFlags & vCalculateBounds) != 0)
+					return TView::RealDoCommand(cmd);
+				HandleTap(pt);
+				OpenKeypadFor(this);
 			}
 			else
 			{
