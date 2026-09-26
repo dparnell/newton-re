@@ -58,7 +58,10 @@ The last run of work closed, in order:
   afterwards came from.  Those are done, and with them what they led
   to: the page and the paragraph as a drag's source and target
   (`GetDragInfo`, `GetDropData`, `Drop`, `DropMove`, `DropRemove`,
-  `DropDone`, `FindDropView`), `TView::EndDrag`/`DragAndDrop`/`Drag` as
+  `DropDone`, `FindDropView`), the editing commands
+  (`TView::DoEditCommand`: cut, copy, paste, clear), `aeShow`'s wait
+  while a modal dialog is up (`ModalSafeShow`), `TView::EndDrag`/
+  `DragAndDrop`/`Drag` as
   the ROM has them with `DragBits`, the clicks on a selection
   (`HiliteClick` of both, `IconClick`, the `aeClick`/`aeTapDrag` cases),
   resizing a selection by its gray border (`TrackScale`,
@@ -696,9 +699,11 @@ The named pieces whose machinery *is* there:
   the rest, so no view answers `ClickOptions` bit 2 yet); the double tap
   on a selection of text that sends its ink to be read again
   (`TEditView::RealDoCommand`'s re-recognition branch, and the
-  paragraph's commands 0x19 and 0x1a); `ModalSafeShow` (0x001b1a8c) in
-  `TView`'s `aeShow`; `TView::DoEditCommand` (the Edit menu's cut,
-  copy, paste and clear); ink dropped on a paragraph (`InkConvert`,
+  paragraph's commands 0x19 and 0x1a - the ROM's deferred recognition,
+  `MakeRerecognizeArea`/`RerecognizeWord`/`BuildRecConfigForDeferred`,
+  a piece of the recognition system of its own); the modal dialogs
+  (`RealExitModalDialog`, which would call `ModalSafeShowRelease` - the
+  wait in `aeShow` is done); ink dropped on a paragraph (`InkConvert`,
   which needs the CIC library's transcoder `ConverterRun` under
   `ConvertData` 0x00280980); and `GetRangeProperties`' `offset` slot
   (two line heights the host's line cache does not keep).
