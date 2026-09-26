@@ -854,4 +854,11 @@ RegisterAssistantNatives(void)
 	RegisterNativeFunction("RegTaskTemplate__FRC6RefVarT1", (void*) RegTaskTemplate, 1);
 	RegisterNativeFunction("UnRegTaskTemplate__FRC6RefVarT1", (void*) UnRegTaskTemplate, 1);
 	RegisterNativeFunction("GetRelevantTemplates__FRC6RefVarT1", (void*) GetRelevantTemplates, 1);
+	RegisterNativeFunction("ISATest__FRC6RefVarN21", (void*) ISATest, 2);
+	RegisterNativeFunction("PathToRoot__FRC6RefVarT1", (void*) PathToRoot, 1);
+	RegisterNativeFunction("CheezyIntersect__FRC6RefVarN21", (void*) CheezyIntersect, 2);
+	RegisterNativeFunction("CheezySubsumption__FRC6RefVarN21", (void*) CheezySubsumption, 2);
+	RegisterNativeFunction("MakePhrasalLexEntry__FRC6RefVarT1", (void*) MakePhrasalLexEntry, 1);
+	RegisterNativeFunction("GlueStrings__FRC6RefVarT1", (void*) GlueStrings, 1);
+	RegisterNativeFunction("MakeLowerCase__FRC6RefVarT1", (void*) MakeLowerCase, 1);
 }
