@@ -1413,33 +1413,116 @@ host tablet (the waits are the tablet's hook: no real time passes).  The
 `newton` program's demo slip has a checkerboard effect (the Slip button
 hides and shows it) and is dragged by a press on it.
 
-### Drag and drop (`DragDrop.h`, `TView::DragAndDrop`)
+### Drag and drop (`DragDrop.h`, `TView::DragAndDrop` 0x0009d194)
 
-A view drags its data onto another.  `TDragInfo` 0x000a1d78 (`DragDrop.h`)
-is the payload: an array of item frames (the ROM's canonicalDragItem),
-each with the drag `types` it offers, the `dragRef` (the data or a key to
-it), a `label` and the source `view` - with accessors and `CheckTypes`
-(do the items overlap a set of accepted types).  `TView::DragAndDrop`
-0x0009e394 tracks the pen (`:DragAndDrop(unit, bounds, limit, copy,
-items)`, `FDragAndDrop` 0x001f2f74): the source fills the drag info
-(`AddDragInfo` 0x0009f848, its `viewAddDragInfoScript`), the pen is
-followed, and on release `TargetDrop` 0x0009e7c8 finds the view under it
-that accepts the drag - the deepest with the drop flags
-(`FindView(0x1fffe00)`), walked up while it does not accept
-(`FindDropViewDeep` 0x0009e744 asks `AcceptDrop` 0x000a24c0, which checks
-the target's `GetSupportedDropTypes`/`viewGetDropTypesScript` against the
-items) - then `EndDrag` 0x0009dfb4 delivers each item: the type matched,
-the data fetched from the source (`GetDropData`/`viewGetDropDataScript`)
-and the target told to `Drop` it (`viewDropScript([type, data, pt])`); a
-non-copy drop then `DropRemove`s it from the source
-(`viewDropRemoveScript`), and the target's `DropDone` ends it.  Each step
-runs the matching view script (`Drop`, `DropMove`, `DropApprove`,
-`DropDone`...).  DEVIATION: the ROM's drag draws the dragged data as a
-clipboard icon that follows the pen (`TClipboard`, `NewClipboard`); the
-host's simplified drag just tracks the pen and drops on the release point
-- the visual icon, the clipboard corner, and `DragAndDropLtd` are NOT
-YET.  (Tested by `test_Views`: a press-drag carries a `'text` item from a
-source to a target whose `viewDropScript` receives the data.)
+A view drags its data onto another.  `TDragInfo` (`DragDrop.h`, from
+0x000a0b78) is the payload: an array of item frames (the ROM's
+canonicalDragItem), each with the drag `types` it offers, the `dragRef`
+(the data or a key to it), a `label` and the source `view` - with
+accessors and `CheckTypes` (do the items overlap a set of accepted
+types).
+
+`TView::DragAndDrop(stroke, bounds, pinBounds, clipBounds, copy, info,
+limitBounds)` is the whole drag; a script reaches it through
+`:DragAndDrop` and `:DragAndDropLtd` (`FDragAndDrop` 0x001f0b5c,
+`FDragAndDropLtd` 0x001f0c28), whose `pinBounds`, `limitBounds` and
+`clipBounds` are the three rectangles.  Data whose `copyProtection` has
+bit 0 is not dragged at all.  `TView::Drag` 0x0009d6f4 follows the pen:
+
+- the pen is kept to where `pinBounds` (the point it went down at, when
+  there is none) stays inside `limitBounds` (the application area) -
+  that is `dragPt`; the pen itself is `dropPt`;
+- nothing moves until the pen has gone further than the items' smallest
+  `minDragDistance` (four at most);
+- the image is `DragBits` (`Bits.h`, 0x0004266c): the data drawn by the
+  source's `DrawDragData` (`viewDrawDragDataScript`, else its selected
+  data), and the screen under it as it would be without the data when
+  the drag is a move (`DrawDragBackground`/`viewDrawDragBackgroundScript`,
+  else the root drawn without the selection and the data exclusive-ored
+  out).  Each move puts the saved screen back, takes the screen where
+  the image goes, cuts a hole the image's shape through a one-bit mask
+  (`InitBitMap` 0x000414e0) and draws the image into it - at most every
+  three ticks.  With no memory for the bits a gray outline is dragged;
+- each time the image moves over a target (`TargetDrop`: the deepest
+  view with the drop flags that accepts the drag, walked up by
+  `FindDropViewDeep`, then its `FindDropView` and
+  `viewFindTargetScript`), the target is asked to show where the data
+  would go (`DragFeedback`/`viewDragFeedbackScript`; a paragraph inverts
+  a caret) and the offset is snapped to its grid (`AlignDragPtToGrid`);
+- a pen let go within the minimum distance of where it started is no
+  drag; one let go within five pixels of the application area's edge
+  (`PointOnClipboard`, the button bar's edge not counting) is on the
+  clipboard, its drop point taken to just outside that edge.
+
+`DragAndDrop` then, if the source approves (`DropApprove`/
+`viewDropApproveScript`): delivers the data to the target (`EndDrag`
+0x0009cdb4 - each item moved on its own view by `DropMove`, told the
+distance; otherwise its type matched to what the target takes, the data
+fetched from the source (`GetDropData`), its `viewBounds` moved by the
+distance and into the target's coordinates, the target told to `Drop`
+it and, unless it was a copy, the source to `DropRemove` it; the
+target's `DropDone` last); or makes a clipping of it on the clipboard's
+edge (`TClipboard::NewClipboard`, the items taken from the source unless
+a copy); or, for a clipping, moves it (`MoveIcon`).  It answers 0 for no
+drag, 1 for a drag that went nowhere, 2 for a drop.
+
+The page (`TEditView`) and the paragraph take part as well:
+
+- **the page** offers the drag items of each selected child in reading
+  order (`AddDragInfo`, `GetDragInfo` 0x000a8c78), gives a child's data
+  moved into the page's coordinates (`GetDropData`), takes text,
+  polygons, ink and pictures (`GetSupportedDropTypes`), adding each as a
+  child through an undoable `aeAddData` with the stationery that shows
+  it (`Drop` 0x000a8f34 - the new child selected and made the page's
+  hiliter), moves a wholly selected child dragged about on its own page
+  (`DropMove` 0x000a91ec, an undoable `aeMoveData`) and removes one
+  dragged off (`DropRemove`); a paragraph under the pen that is not
+  wholly selected takes the drop itself (`FindDropView` 0x000a8d7c);
+- **the paragraph** offers its selected text as one `'text` item whose
+  data is a paragraph frame of its own - the characters, styles, tabs,
+  correction information, and `viewBounds` in the paragraph's own
+  coordinates (`GetDropData` 0x0017f3f4 over `GetRangeProperties`) -
+  takes text dropped on it where it was let go as a word written there
+  would be (`Drop` 0x0017fc20, `HandleWord` and failing that below the
+  last line; never on its own selection, `PointOverHilitedText`), and
+  gives up the dragged text by deleting the selection (`DropRemove`,
+  `DeleteHilited`, `ROMDeleteHilited` - a self-sizing paragraph left
+  with nothing but white space removed from the page).
+
+### Clicks on a selection (`TEditView::HiliteClick` 0x000aabb0)
+
+The pen pressed on a page's selection (`aeClick`, or `aeTapDrag` for a
+copy) goes to `TEditView::HiliteClick`: on the gray border of a
+selection that may be resized (`GlobalHiliteBounds` bit 1) it resizes
+it, anywhere else on the selection it drags the selected children with
+`DragAndDrop`.  A paragraph pressed on its own selection drags the
+selected text (`TParagraphView::HiliteClick` 0x0017ede4: a copy after a
+tap, or when two presses come within 80 ticks), and a clipping's label
+pressed on picks the clipping up (`IconClick` 0x0017efa8).
+
+Resizing is `TEditView::TrackScale` 0x000a7b18: the side of the
+selected children's bounds the pen went down nearer to follows the pen
+(each way), no closer than 16 pixels to the other and not past the page,
+snapped to a square grid; as the pen moves the page is drawn with the
+selected children scaled into the new rectangle over the screen as it was
+without them (`DrawScaledViews` 0x000a6384, each child's
+`DrawScaledData` through `gEditViewTransform`, and the gray border
+`DrawResizeBorder` 0x000a3780).  When the pen lifts, children only part
+of which is selected are cut in two (`DiceHilited`: the selection made a
+paragraph of its own by `AddHilited`), and each selected child is sent
+an undoable `aeScaleData` from the old bounds to the new ones - two
+words each, a rectangle in two parameters.  A paragraph resized so stops
+fitting its width or height to its text (text flags 1 and 4).  A click
+on the border that does not move joins the selected paragraphs into the
+first (`CleanupData` 0x000aafcc, the paragraph's own 0x0017e83c making
+its tabs and returns single spaces).
+
+NOT YET: `TrackDistort` 0x000a9634, a selected polygon reshaped by a
+corner - only a polygon's hilite answers `ClickOptions` bit 2, and the
+polygon hilites are not reconstructed.  (Tested by `test_Views`:
+`TestEditViewDrop`, `TestParagraphDrop`, `TestSelectionClicks`; and
+`src/host/demo/drag.ns` drags a word written on the Notepad, with
+`PacePen(true)` feeding the pen a sample a tick.)
 
 ## The data hilites (`views/Hilites.h`)
 
@@ -1943,7 +2026,8 @@ stroke through several paragraphs left only the last one selected.
 ## The clipboard (`views/ClipboardView.h`)
 
 A *clipping* is what the Newton makes when something is dragged out of a
-view and let go on the background.  It is two views put on the root
+view and let go at the edge of the screen (within five pixels of the
+application area's edge, `PointOnClipboard`).  It is two views put on the root
 together: the **clipboard** (`TClipboard`, class 101, 0x0009edfc-
 0x000a0b78) which holds the dragged items and draws the picture taken of
 them, and its **icon**, a small paragraph of the clipping's label that
@@ -2016,18 +2100,15 @@ it hangs off the right or the bottom).  A second stroke within 80 ticks
 of the last is a *copy* rather than a move, which is how a clipping is
 left behind by tapping it twice.
 
-NOT YET: the pen-tracked drag itself (`TView::Drag`, the icon following
-the pen) - the host's simplified `DragAndDrop` tracks the pen and takes a
-drop with no target as "let go on the background", which is what makes
-the clipping; `MoveIcon` (0x0009f568) has no caller for the same reason.
+The drag that makes one is `TView::DragAndDrop` (above), which also
+moves a clipping dragged by its label (`MoveIcon` 0x0009f568).
 
 ## Not yet
 
 The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
-key help, the keyboard tool and the on-screen keyboards, the drag icon
-the pen follows, the sounds, `SyncScroll`, the popup and
+key help, the keyboard tool and the on-screen keyboards, the sounds, `SyncScroll`, the popup and
 modal dialog machinery, the other subclasses (`TListView`, `TEditView`,
 ...), the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).

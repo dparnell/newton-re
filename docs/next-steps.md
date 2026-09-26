@@ -8,12 +8,17 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-26 (commit after `0de3f1d`)
+## State at 2026-09-26 (commit after `4d27681`)
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 96/96.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 10054 citations, 0 bad;
-  5302 of 16671 functions (31.80%).
+- `analysis/coverage.py build/MP2x00US --check`: 10125 citations, 0 bad;
+  5369 of 16671 functions (32.21%).
+- **A selection can be dragged and resized.**
+  `src/host/demo/drag.ns` writes "ton" on the Notepad, selects it with
+  the hilite stroke and drags it 80 pixels down the page with the pen
+  (`build/drag.pgm`); the ROM's own `TView::DragAndDrop`/`Drag` track
+  the pen with the image of the data following it.
 - The machine boots into the Setup assistant, `src/host/demo/setup.ns`
   taps its way through to the Notepad, and Names, Dates, Extras and the
   Preferences roll all open and draw.
@@ -40,6 +45,32 @@ the page", and `src/host/demo/ink.ns` photographs it with the pen down
 and again after the recogniser has finished.
 
 The last run of work closed, in order:
+
+- **the audit of the code after virtual calls.**  Ghidra had stopped
+  disassembling after a `mov lr,pc; add pc,rN,#slot` that was already
+  marked a fall-through call, so the code after 60 such calls had never
+  been read (`ghidra_import.fix_virtual_calls` now opens it too).  Of
+  the functions it cut short, three were fine, `TFaxTool::C2StateUpdate`,
+  `TP3Tool::HandlePacket`, `TSharpIRTool::NextState` and
+  `GetGraphicBiasedScore` are not reconstructed at all, and the three
+  `RealDoCommand`s of `TView`, `TEditView` and `TParagraphView` had
+  whole cases missing - which is where the scrub being read as writing
+  afterwards came from.  Those are done, and with them what they led
+  to: the page and the paragraph as a drag's source and target
+  (`GetDragInfo`, `GetDropData`, `Drop`, `DropMove`, `DropRemove`,
+  `DropDone`, `FindDropView`), `TView::EndDrag`/`DragAndDrop`/`Drag` as
+  the ROM has them with `DragBits`, the clicks on a selection
+  (`HiliteClick` of both, `IconClick`, the `aeClick`/`aeTapDrag` cases),
+  resizing a selection by its gray border (`TrackScale`,
+  `DrawScaledViews`, `DrawScaledData`, `DiceHilited`/`AddHilited`, the
+  paragraph's `aeScaleData`), and `CleanupData`.  Host bugs found on the
+  way: `OffsetBoundsRef` moved `bounds` where the ROM moves `viewBounds`;
+  `TView::ClickOptions` answered 0 where the ROM answers 1;
+  `aeScaleData`'s four parameters are a rectangle's two words each
+  (`CommandIndexRect`), not four shorts; a drop on plain background made
+  a clipping, where the ROM makes one only at the screen's edge
+  (`PointOnClipboard`); and the paragraph inherited `TView`'s
+  `IsCompletelyHilited` (always yes) and `DeleteHilited`.
 
 - **the shape domain**, whole: the units and the grouping of strokes,
   the key points and curves, circles and ellipses, the angle and length
@@ -176,10 +207,9 @@ The last run of work closed, in order:
   `GetClipboard`, `SetClipboard`, `ClipboardCommand` and
   `GetClipboardIcon` are answered; `TView::GetClipboardDataBits`,
   `TView::DoMoveCommand`, `PointOnClipboard`, `CheckViewBounds` and
-  `OffsetBoundsRef` came with it.  NOT YET: the pen-tracked drag itself
-  (`TView::Drag`, the icon following the pen), so the host's simplified
-  `DragAndDrop` takes a drop with no target as "let go on the
-  background", and `MoveIcon` has no caller.
+  `OffsetBoundsRef` came with it.  The pen-tracked drag itself
+  (`TView::Drag`) came later, with the audit of the code after virtual
+  calls.
 
 - **the hilite stroke** (`docs/views/README.md`, "The hilite stroke"):
   the pen held still on something and then drawn through it or round it,
@@ -659,6 +689,19 @@ The named pieces whose machinery *is* there:
   assembly rather than the decompiler.
 
 ## Also still open
+
+- From the audit of the code after virtual calls, still NOT YET:
+  `TEditView::TrackDistort` (a corner of a selected polygon dragged -
+  it waits on the polygon hilites, `TPolygonView`'s `MakeHilite` and
+  the rest, so no view answers `ClickOptions` bit 2 yet); the double tap
+  on a selection of text that sends its ink to be read again
+  (`TEditView::RealDoCommand`'s re-recognition branch, and the
+  paragraph's commands 0x19 and 0x1a); `ModalSafeShow` (0x001b1a8c) in
+  `TView`'s `aeShow`; `TView::DoEditCommand` (the Edit menu's cut,
+  copy, paste and clear); ink dropped on a paragraph (`InkConvert`,
+  which needs the CIC library's transcoder `ConverterRun` under
+  `ConvertData` 0x00280980); and `GetRangeProperties`' `offset` slot
+  (two line heights the host's line cache does not keep).
 
 - `SetUpRosetta` and `SetUpParaGraph`, which `ReadCursiveOptions` would
   call: both belong to the engines.
