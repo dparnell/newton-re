@@ -1789,41 +1789,79 @@ TView::TargetDrop(const TDragInfo& dragInfo, const Point& pt)
 }
 
 
+// ROM 0x0026718c CopyProtection__5TViewCFv
+// The view's copyProtection variable: bit 0 set, its data may not be
+// copied (nor dragged at all); 0 when it has none.
+long
+TView::CopyProtection(void) const
+{
+	RefVar protection(GetVar(RSSYMcopyprotection));
+	return NOTNIL(protection) ? RINT(protection) : 0;
+}
+
+
 // ROM 0x0009cdb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
-// The drag delivered: for each item, when it is dropped on this same view
-// it is moved (DropMove); else the target's supported types pick the
-// item's type, the data is fetched from the source (GetDropData) and the
-// target told to Drop it - a successful non-copy drop then removes the
-// item from the source (DropRemove).  The target's DropDone ends it.
+// The drag delivered.  `startPt` is where the pen went down, `dragPt`
+// where the dragged image ended up (the pen, pinned to the limits and
+// snapped to the target's grid) and `dropPt` the pen itself; the
+// difference between the first two is how far the data moved.
+//
+// Dropped on the view it came from, each item is moved (DropMove, told
+// the distance).  Anywhere else the target's supported types pick the
+// item's type, the source view (failing that, the item's own view) gives
+// the data, whose viewBounds are then moved by the distance and into the
+// target's coordinates (its ContentsOrigin), and the target is told to
+// Drop it.  A drop that was taken removes the item from the source
+// unless it was a copy or the source may not be changed, and a target
+// whose selection can be resized is redrawn, the border having moved.
+// The target's DropDone ends it.
 void
 TView::EndDrag(const TDragInfo& info, TView* target, const Point& startPt, const Point& dropPt, const Point& dragPt, Boolean copy)
 {
 	TDragInfo& dragInfo = (TDragInfo&) info;
-	long count = dragInfo.Count();
+	Point delta;
+	delta.h = (short) (dragPt.h - startPt.h);
+	delta.v = (short) (dragPt.v - startPt.v);
+	long count = Length(RefVar(dragInfo.GetItems()));
+	Point pt = dropPt;
 	for (long i = 0; i < count; i++)
 	{
 		RefVar dragRef(dragInfo.GetItemDragRef(i));
 		if (this == target)
 		{
-			DropMove(dragRef, startPt, dragPt, copy);
+			DropMove(dragRef, delta, dropPt, copy);
 			continue;
 		}
 		RefVar types(target->GetSupportedDropTypes(dropPt));
 		RefVar type(dragInfo.FindType(i, types));
+		TView* source = this;
 		RefVar data(GetDropData(type, dragRef));
 		if (ISNIL(data))
 		{
-			TView* itemView = dragInfo.GetItemView(i);
-			if (itemView != nil)
-				data = itemView->GetDropData(type, dragRef);
+			source = dragInfo.GetItemView(i);
+			if (source == nil)
+				continue;
+			data = source->GetDropData(type, dragRef);
+			if (ISNIL(data))
+				continue;
 		}
-		if (ISNIL(data))
-			continue;
-		Point pt = dropPt;
+		CheckViewBounds(type, data);
+		Point moved;
+		moved.h = (short) (source->viewBounds.left + delta.h);
+		moved.v = (short) (source->viewBounds.top + delta.v);
+		Point origin = target->ContentsOrigin();
+		Point by;
+		by.h = (short) (moved.h - origin.h);
+		by.v = (short) (moved.v - origin.v);
+		OffsetBoundsRef(data, by);
 		if (target->Drop(type, data, &pt))
 		{
 			if (!copy && (fFlags & (vReadOnly | vWriteProtected)) == 0)
 				DropRemove(dragRef);
+			Rect bounds;
+			bounds.top = bounds.bottom = -32768;
+			if ((target->GlobalHiliteBounds(&bounds) & 2) != 0)
+				target->Dirty(nil);
 		}
 	}
 	target->DropDone();

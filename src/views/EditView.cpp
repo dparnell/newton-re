@@ -41,6 +41,8 @@
 #include "ViewFlags.h"
 #include "Rects.h"
 #include "Animate.h"
+#include "DragDrop.h"
+#include "ClipboardView.h"	// OffsetBoundsRef
 #include "ROMConstants.h"
 #include "Regions.h"
 #include "RegionVars.h"
@@ -2919,4 +2921,274 @@ TEditView::AlignBounds(Rect& want, Rect& measured, Rect* result)
 	if (viewBounds.bottom < result->bottom)
 		result->bottom = viewBounds.bottom;
 	return 0;
+}
+
+
+/*------------------------------------------------------------------------------
+	D r a g   a n d   d r o p
+
+	What a page does as the source and as the target of a drag.  As the
+	source it offers the drag items of each selected child in reading
+	order; the data of an item is the child's own (its GetDropData, else
+	a copy of its data frame) moved into the page's coordinates.  As the
+	target it takes text, polygons, ink and pictures, each added as a
+	child through an undoable aeAddData with the stationery that shows it,
+	and a drag let go on the page it came from moves the child rather than
+	copying it.  A paragraph the pen is over that is not wholly selected
+	takes a drop of its own (FindDropView), which is how text is dragged
+	into the middle of other text.
+------------------------------------------------------------------------------*/
+
+// ROM 0x000a8c78 GetDragInfo__9TEditViewFP9TDragInfoUc
+// The drag items of the selected children, in reading order; a copy
+// leaves out a child whose data may not be copied.
+void
+TEditView::GetDragInfo(TDragInfo* dragInfo, Boolean copy)
+{
+	TView** sorted = GetHilitedViewsSorted();
+	if (sorted == nil)
+		return;
+	TView** each = sorted;
+	for (long count = CountHilites(); --count >= 0; )
+	{
+		TView* child = *each++;
+		if (!copy || (child->CopyProtection() & 1) == 0)
+			child->AddDragInfo(dragInfo);
+	}
+	delete[] sorted;
+}
+
+
+// ROM 0x000a8cf4 AddDragInfo__9TEditViewFP9TDragInfo
+// The page's script first; failing that the items of every selected
+// child whose data may be copied.  ==> whether there was a selection.
+Boolean
+TEditView::AddDragInfo(TDragInfo* dragInfo)
+{
+	if (TView::AddDragInfo(dragInfo))
+		return true;
+	TView** sorted = GetHilitedViewsSorted();
+	if (sorted == nil)
+		return false;
+	TView** each = sorted;
+	for (long count = CountHilites(); --count >= 0; )
+	{
+		TView* child = *each++;
+		if ((child->CopyProtection() & 1) == 0)
+			child->AddDragInfo(dragInfo);
+	}
+	delete[] sorted;
+	return true;
+}
+
+
+// ROM 0x000a8a94 GetSupportedDropTypes__9TEditViewFRC6TPoint
+// The page's script first; failing that what a page can show.
+Ref
+TEditView::GetSupportedDropTypes(const Point& pt)
+{
+	RefVar types(TView::GetSupportedDropTypes(pt));
+	if (ISNIL(types))
+	{
+		types = MakeArray(4);
+		SetArraySlot(types, 0, RefVar(RSSYMtext));
+		SetArraySlot(types, 1, RefVar(RSSYMpolygon));
+		SetArraySlot(types, 2, RefVar(RSSYMink));
+		SetArraySlot(types, 3, RefVar(RSSYMpicture));
+	}
+	return types;
+}
+
+
+// ROM 0x000a8b48 GetDropData__9TEditViewFRC6RefVarT1
+// The data of a dragged child (the drag ref is its context): the child's
+// own answer with its viewBounds moved by where the child is on the
+// page, or, when it has none, a copy of its data frame as it stands.
+// Any other drag ref is the page's script's business.
+Ref
+TEditView::GetDropData(RefArg dragType, RefArg dragRef)
+{
+	TView* child;
+	if (!IsFrame(dragRef) || (child = GetView(dragRef)) == nil)
+		return TView::GetDropData(dragType, dragRef);
+	RefVar data(child->GetDropData(dragType, dragRef));
+	if (ISNIL(data))
+		data = DeepClone(RefVar(child->DataFrame()));
+	else
+	{
+		Point by;
+		by.h = (short) (child->viewBounds.left - viewBounds.left);
+		by.v = (short) (child->viewBounds.top - viewBounds.top);
+		OffsetBoundsRef(data, by);
+	}
+	return data;
+}
+
+
+// ROM 0x000a8d7c FindDropView__9TEditViewFRC9TDragInfoRC6TPoint
+// Where on the page a drag at the point goes: to a paragraph whose text
+// the point is in - one the drag suits and which is not wholly selected
+// (dropping a selection on itself is a move of the whole) - and otherwise
+// to the page.
+TView*
+TEditView::FindDropView(const TDragInfo& dragInfo, const Point& pt)
+{
+	TView* target = TView::FindDropView(dragInfo, pt);
+	if (target == this)
+	{
+		Point at = pt;
+		TView* child = TextContainingPoint(at, nil, nil);
+		if (child != nil)
+		{
+			Rect caret;
+			child->PointToCaret(at, &caret, nil);
+			if (caret.top == -32768)
+				child = nil;
+		}
+		if (child != nil && child->AcceptDrop(dragInfo, pt))
+		{
+			RefVar hilite(child->FirstHilite());
+			if (ISNIL(hilite) || !child->IsCompletelyHilited(hilite))
+				target = child;
+		}
+	}
+	return target;
+}
+
+
+// ROM 0x000a8f34 Drop__9TEditViewFRC6RefVarT1P6TPoint
+// Data dropped on the page, when its script does not take it: added as
+// a child with an undoable aeAddData.  Text becomes a paragraph (its
+// textFlags dropped, and a paragraph with no width given the page's
+// right edge as its own), a picture a picture view and a polygon or ink
+// a polygon view - unless the data names a stationery of its own.  The
+// new child is selected and made the page's hiliter, and one that would
+// start above the page is moved down onto it.  The drop point is not
+// looked at: the data's viewBounds say where it goes.
+Boolean
+TEditView::Drop(RefArg dropType, RefArg dropData, Point* dropPt)
+{
+	if (TView::Drop(dropType, dropData, dropPt))
+		return true;
+	RefVar cmd(MakeCommand(aeAddData, this, 0x08000000));
+	RefVar stationery;
+	if (EQRef(dropType, RSSYMtext))
+	{
+		stationery = RSSYMpara;
+		RefVar bounds(GetFrameSlotRef(dropData, RSSYMviewbounds));
+		RemoveSlot(dropData, RSSYMtextflags);
+		if (NOTNIL(bounds))
+		{
+			Rect r;
+			FromObject(bounds, r);
+			if (r.left == r.right)
+			{
+				r.right = viewBounds.right;
+				SetBoundsRect(bounds, r);
+			}
+		}
+	}
+	else if (EQRef(dropType, RSSYMpicture))
+		stationery = RSSYMpict;
+	else if (EQRef(dropType, RSSYMpolygon) || EQRef(dropType, RSSYMink))
+		stationery = RSSYMpoly;
+	if (NOTNIL(stationery) && ISNIL(GetProtoVariable(dropData, RSSYMviewstationery, nil)))
+		SetFrameSlot(dropData, RSSYMviewstationery, stationery);
+	CommandSetFrameParameter(cmd, dropData);
+	gApplication->DispatchCommand(cmd);
+	TView* child = (TView*) CommandParameter(cmd);
+	if (child != nil)
+	{
+		child->HiliteAll();
+		gRootView->fHiliter = this;
+		if (child->viewBounds.top < viewBounds.top)
+		{
+			Point by;
+			by.v = (short) (viewBounds.top - child->viewBounds.top);
+			by.h = 0;
+			child->DoMoveCommand(by);
+		}
+	}
+	return true;
+}
+
+
+// ROM 0x000a91ec DropMove__9TEditViewFRC6RefVarRC6TPointT2Uc
+// A child dragged about on its own page, when the page's script does not
+// take it.  A child that is wholly selected, and is simply being moved,
+// is moved by the distance (no higher than the page's top) with an
+// undoable aeMoveData.  Otherwise - a copy, or part of a paragraph - the
+// data is fetched as for a drop elsewhere, moved into the page's
+// coordinates (and down onto the page if it would start above it) and
+// dropped, the original then losing its selection (a copy) or the part
+// that was dragged (a move).
+Boolean
+TEditView::DropMove(RefArg dragRef, const Point& delta, const Point& dropPt, Boolean copy)
+{
+	if (TView::DropMove(dragRef, delta, dropPt, copy))
+		return true;
+	TView* child = FailGetView(dragRef);
+	RefVar hilite(child->FirstHilite());
+	Boolean whole = child->IsCompletelyHilited(hilite);
+	if (whole && !copy && child->fParent == this)
+	{
+		Point by = delta;
+		if (child->viewBounds.top + delta.v < viewBounds.top)
+			by.v = (short) (viewBounds.top - child->viewBounds.top);
+		child->DoMoveCommand(by);
+		return true;
+	}
+	TDragInfo dragInfo(0L);
+	child->AddDragInfo(&dragInfo);
+	RefVar type(dragInfo.GetItemIndType(0, 0));
+	RefVar data(GetDropData(type, dragRef));
+	Point origin;
+	GetChildOrigin(&origin);
+	Point by;
+	by.h = (short) (delta.h + origin.h);
+	by.v = (short) (delta.v + origin.v);
+	OffsetBoundsRef(data, by);
+	Rect bounds;
+	FromObject(RefVar(GetFrameSlotRef(data, RSSYMviewbounds)), bounds);
+	if (bounds.top < 0)
+	{
+		by.v = (short) -bounds.top;
+		by.h = 0;
+		OffsetBoundsRef(data, by);
+	}
+	Point pt = dropPt;
+	Drop(type, data, &pt);
+	if (copy)
+		child->RemoveAllHilites();
+	else
+		child->DropRemove(dragRef);
+	return true;
+}
+
+
+// ROM 0x000a94b4 DropRemove__9TEditViewFRC6RefVar
+// A child's dragged data taken off the page after a move: the child's
+// own DropRemove (part of a paragraph), and failing that the whole child
+// removed with an undoable aeRemoveData.
+Boolean
+TEditView::DropRemove(RefArg dragRef)
+{
+	if (TView::DropRemove(dragRef))
+		return true;
+	TView* child = FailGetView(dragRef);
+	if (!child->DropRemove(dragRef))
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, child->fId)));
+	return true;
+}
+
+
+// ROM 0x000a9540 DropDone__9TEditViewFv
+// The drop over: the page's script, then the key view worked out again
+// from what is selected now.
+Boolean
+TEditView::DropDone(void)
+{
+	TView::DropDone();
+	DetermineKeyView();
+	return true;
 }

@@ -62,6 +62,15 @@ public:
 	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
 	virtual Boolean	RealDoCommand(RefArg cmd);				// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar (partial: see the definition)
 	virtual long	Idle(long reason);						// ROM 0x000a9f64 Idle__9TEditViewFl
+	// the page as the source and the target of a drag
+	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);		// ROM 0x000a8cf4 AddDragInfo__9TEditViewFP9TDragInfo
+	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);	// ROM 0x000a8b48 GetDropData__9TEditViewFRC6RefVarT1
+	virtual Boolean	Drop(RefArg dropType, RefArg dropData, Point* dropPt);	// ROM 0x000a8f34 Drop__9TEditViewFRC6RefVarT1P6TPoint
+	virtual Boolean	DropMove(RefArg dragRef, const Point& delta, const Point& dropPt, Boolean copy);	// ROM 0x000a91ec DropMove__9TEditViewFRC6RefVarRC6TPointT2Uc
+	virtual Boolean	DropRemove(RefArg dragRef);				// ROM 0x000a94b4 DropRemove__9TEditViewFRC6RefVar
+	virtual Boolean	DropDone(void);							// ROM 0x000a9540 DropDone__9TEditViewFv
+	virtual Ref		GetSupportedDropTypes(const Point& pt);	// ROM 0x000a8a94 GetSupportedDropTypes__9TEditViewFRC6TPoint
+	virtual TView*	FindDropView(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a8d7c FindDropView__9TEditViewFRC9TDragInfoRC6TPoint
 	// the editor's own virtuals, which start after TView's at +0x11c
 	// (NOT YET RECONSTRUCTED: DrawScaledViews, the one at +0x11c)
 	virtual void	PositionCaret(Point& pt, Boolean click);	// ROM 0x000a9fb0 PositionCaret__9TEditViewFR6TPointUc (vtable +0x120)
@@ -73,6 +82,7 @@ public:
 	// the editor's own
 	void			GlobalSelectedBounds(Rect* bounds);		// ROM 0x000a788c GlobalSelectedBounds__9TEditViewFP5TRect - the hilited children's own bounds
 	long			CountHilites(void);						// ROM 0x000a7abc CountHilites__9TEditViewFv
+	void			GetDragInfo(TDragInfo* dragInfo, Boolean copy);	// ROM 0x000a8c78 GetDragInfo__9TEditViewFP9TDragInfoUc - the selected children's drag items
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView
 	void			DetermineKeyView(void);					// ROM 0x000a7388 DetermineKeyView__9TEditViewFv
 	Boolean			AddHiliter(TUnitPublic* unit);			// ROM 0x000a6fb0 AddHiliter__9TEditViewFP11TUnitPublic - a hilite stroke offered to the children

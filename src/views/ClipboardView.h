@@ -67,7 +67,7 @@ Boolean	PointOnClipboard(const Point& pt, const Rect& appArea, RefArg buttonBarP
 Boolean	PointOnClipboard(const Point& pt);									// ROM 0x0009ef64 PointOnClipboard__FRC6TPoint - over the application area inset by five pixels
 
 // the two helpers the clipping's items go through
-void	OffsetBoundsRef(RefArg frame, const Point& by);						// ROM 0x0009ca58 OffsetBoundsRef__FRC6RefVarRC6TPoint - the frame's `bounds` moved
+void	OffsetBoundsRef(RefArg frame, const Point& by);						// ROM 0x0009ca58 OffsetBoundsRef__FRC6RefVarRC6TPoint - the frame's `viewBounds` moved
 void	CheckViewBounds(RefArg dragType, RefArg form);						// ROM 0x0009cb00 CheckViewBounds__FRC6RefVarT1 - a 'text item without viewBounds gets an empty one
 
 Ref		FReOrientLabelForm(RefArg form);									// ROM 0x0009f978 FReOrientLabelForm__FRC6RefVar - the icon moved to the same edges of a turned screen

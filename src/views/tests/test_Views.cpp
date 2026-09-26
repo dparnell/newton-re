@@ -3126,7 +3126,7 @@ TestClicks()
 	// to a target with a viewDropScript that accepts 'text
 	Eval("dropped := nil");
 	TView* src = ViewOf("ctxDS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
-		"viewClickScript: func(unit) begin :DragAndDrop(unit, :GlobalBox(), nil, nil, [{types: ['text], dragRef: \"hi there\"}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
+		"viewClickScript: func(unit) begin :DragAndDrop(unit, :GlobalBox(), nil, nil, [{types: ['text], dragRef: {text: \"hi there\"}}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
 	Eval("ctxDT := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 100, top: 40, right: 150, bottom: 70}, viewFormat: 1, "
 		"viewGetDropTypesScript: func(pt) ['text], "
 		"viewDropScript: func(dropType, dropData, pt) begin dropped := dropData; true end})");
@@ -3142,7 +3142,7 @@ TestClicks()
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
-	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"hi there\")")));		// the target's drop script got the data
+	EXPECT(NOTNIL(Eval("StrEqual(dropped.text, \"hi there\")")));		// the target's drop script got the data
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "drag and drop closed"));
@@ -3154,7 +3154,7 @@ TestClicks()
 	ViewOf("ctxDS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
 		"viewClickScript: func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), "
 		"{pinBounds: 'none, limitBounds: {left: 0, top: 0, right: 160, bottom: 120}}, nil, "
-		"[{types: ['text], dragRef: \"and again\"}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
+		"[{types: ['text], dragRef: {text: \"and again\"}}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
 	Eval("ctxDT := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 100, top: 40, right: 150, bottom: 70}, viewFormat: 1, "
 		"viewGetDropTypesScript: func(pt) ['text], "
 		"viewDropScript: func(dropType, dropData, pt) begin dropped := dropData; true end})");
@@ -3168,11 +3168,11 @@ TestClicks()
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
-	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"and again\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(dropped.text, \"and again\")")));
 	// and the limits in their other shapes: a plain rectangle, 'none, nil
 	Eval("dropped := nil");
 	Eval("ctxDS.viewClickScript := func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), "
-		 "{left: 0, top: 0, right: 160, bottom: 120}, nil, [{types: ['text], dragRef: \"a rectangle\"}]); true end");
+		 "{left: 0, top: 0, right: 160, bottom: 120}, nil, [{types: ['text], dragRef: {text: \"a rectangle\"}}]); true end");
 	HostAdvanceClock(kSeconds);
 	HostTabletQueuePenDown(40, 55, 0);
 	HostTabletQueuePenMove(100, 55);
@@ -3180,10 +3180,10 @@ TestClicks()
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
-	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"a rectangle\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(dropped.text, \"a rectangle\")")));
 	Eval("dropped := nil");
 	Eval("ctxDS.viewClickScript := func(unit) begin :DragAndDropLtd(unit, :GlobalBox(), 'none, nil, "
-		 "[{types: ['text], dragRef: \"anywhere\"}]); true end");
+		 "[{types: ['text], dragRef: {text: \"anywhere\"}}]); true end");
 	HostAdvanceClock(kSeconds);
 	HostTabletQueuePenDown(40, 55, 0);
 	HostTabletQueuePenMove(100, 55);
@@ -3191,7 +3191,7 @@ TestClicks()
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
-	EXPECT(NOTNIL(Eval("StrEqual(dropped, \"anywhere\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(dropped.text, \"anywhere\")")));
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "the limited drag and drop closed"));
@@ -5931,6 +5931,64 @@ TestWordIntoField()
 }
 
 
+// A page as the target of a drag: the kinds of data it takes, text
+// dropped on it made a paragraph (its textFlags dropped, a paragraph with
+// no width given the page's right edge, one above the page moved down
+// onto it, and the new paragraph selected), a selected child dragged
+// about on its own page simply moved, and a child dragged off it taken
+// away.
+static void
+TestEditViewDrop()
+{
+	TEditView* page = (TEditView*) ViewOf(
+		"ctxED := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 20, right: 200, bottom: 150}, viewChildren: []})");
+	EXPECT(page != nil);
+	if (page == nil)
+		return;
+	Point pt;
+	pt.h = 30;
+	pt.v = 40;
+	RefVar types(page->GetSupportedDropTypes(pt));
+	EXPECT(IsArray(types) && Length(types) == 4
+		   && EQ(RefVar(GetArraySlot(types, 0)), RSSYMtext) && EQ(RefVar(GetArraySlot(types, 3)), RSSYMpicture));
+
+	long before = page->fChildren->Count();
+	RefVar data(Eval("{viewBounds: {left: 20, top: -5, right: 20, bottom: 15}, text: \"dropped\", textFlags: 3, "
+					 "viewFont: espy12}"));
+	EXPECT(page->Drop(RefVar(RSSYMtext), data, &pt));
+	EXPECT(page->fChildren->Count() == before + 1);
+	TView* para = page->fChildren->Last();
+	EXPECT(para != nil && para->ClassID() == clParagraphView);
+	if (para == nil)
+		return;
+	EXPECT(ISNIL(GetFrameSlot(data, RSSYMtextflags)));
+	EXPECT(EQ(RefVar(GetFrameSlot(data, RSSYMviewstationery)), RSSYMpara));
+	EXPECT(para->viewBounds.right == 200);			// the page's right edge
+	EXPECT(para->viewBounds.top == 20);				// moved down onto the page
+	EXPECT(para->Hilited() && gRootView->fHiliter == page);
+
+	// dragged about on its own page, wholly selected: moved
+	Point delta;
+	delta.h = 5;
+	delta.v = 10;
+	Rect was = para->viewBounds;
+	EXPECT(page->DropMove(RefVar(para->fContext), delta, pt, false));
+	EXPECT(para->viewBounds.top == was.top + 10 && para->viewBounds.left == was.left + 5);
+	// but never above the page
+	delta.h = 0;
+	delta.v = -100;
+	EXPECT(page->DropMove(RefVar(para->fContext), delta, pt, false));
+	EXPECT(para->viewBounds.top == 20);
+
+	// and dragged off it: the whole child taken away
+	EXPECT(page->DropRemove(RefVar(para->fContext)));
+	EXPECT(page->fChildren->Count() == before);
+	Eval("RemoveView(GetRoot(), ctxED)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6070,6 +6128,7 @@ main()
 		TestInkInRichString();
 		TestWordInfo();
 		TestWordIntoField();
+		TestEditViewDrop();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();

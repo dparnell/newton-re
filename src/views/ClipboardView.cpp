@@ -80,7 +80,7 @@ PointOnClipboard(const Point& pt)
 
 
 // ROM 0x0009ca58 OffsetBoundsRef__FRC6RefVarRC6TPoint
-// The `bounds` slot of a dragged item's data frame moved by the point -
+// The `viewBounds` slot of a dragged item's data frame moved by the point -
 // which is how the data comes out of the source view's coordinates and
 // into the clipping's.
 void
@@ -88,7 +88,7 @@ OffsetBoundsRef(RefArg frame, const Point& by)
 {
 	if (!IsFrame(frame))
 		return;
-	RefVar bounds(GetFrameSlotRef(frame, RSSYMbounds));
+	RefVar bounds(GetFrameSlotRef(frame, RSSYMviewbounds));
 	if (NOTNIL(bounds))
 	{
 		Rect r;

@@ -333,6 +333,7 @@ public:
 	Boolean		Drag(TStrokePublic* stroke, const Rect& limit);			// ROM 0x00266bf4 Drag__5TViewFP13TStrokePublicRC5TRect (the view dragged with the pen within the limit; ==> whether it moved)
 	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x00260028 ChildViewMoved__5TViewFP5TView6TPoint
 	void		GetChildOrigin(Point* origin);							// ROM 0x00267458 GetChildOrigin__5TViewFP6TPoint
+	long		CopyProtection(void) const;								// ROM 0x0026718c CopyProtection__5TViewCFv - copyProtection (bit 0: not to be copied)
 	Point		ContentsOrigin(void);									// ROM 0x00267504 ContentsOrigin__5TViewFv
 	Boolean		IsGridded(RefArg gridKind, Point* spacing);	// ROM 0x00262a20 IsGridded__5TViewFRC6RefVarP6TPoint - the viewGrid is this kind, and how far apart
 	Point		LocalOrigin(void) const;								// ROM 0x00263da4 LocalOrigin__5TViewCFv
