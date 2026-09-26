@@ -122,6 +122,18 @@ FPenUp(RefArg /*rcvr*/)
 }
 
 
+// PacePen(on): with the OS running, the pen's records fed one per tick
+// by the inker, as a real pen's arrive, rather than straight into the
+// tablet at once - so that a view tracking the pen (a drag) sees the pen
+// still down while it moves.
+static Ref
+FPacePen(RefArg /*rcvr*/, RefArg on)
+{
+	HostTabletSetPaced(NOTNIL(on));
+	return NILREF;
+}
+
+
 static Ref
 FIdleStrokes(RefArg /*rcvr*/)
 {
@@ -151,6 +163,7 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenMove")), RefVar(MakeCFunction((void*) FPenMove, 2, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenUp")), RefVar(MakeCFunction((void*) FPenUp, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "IdleStrokes")), RefVar(MakeCFunction((void*) FIdleStrokes, 0, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "PacePen")), RefVar(MakeCFunction((void*) FPacePen, 1, nil)));
 }
 
 

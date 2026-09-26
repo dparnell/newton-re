@@ -124,12 +124,25 @@ HostTabletPenUp(ULong time)
 // pen would never reach the ROM's own tracking loops: they read the
 // stroke over and over without waiting, and would spin for ever.
 static Boolean				gInkerRunning = false;
+// A script that wants its pen to arrive a sample a tick, as a real pen's
+// does - to be held down while a view tracks it - asks for the records
+// to be paced: they stay queued and the inker feeds one per tick.  (A
+// ROM loop that spins without waiting would then spin for ever, so it is
+// for the pen a view tracks with Wait, such as a drag.)
+static Boolean				gPaced = false;
 
 
 static Boolean
 FeedDirectly(void)
 {
-	return gInkerRunning;
+	return gInkerRunning && !gPaced;
+}
+
+
+void
+HostTabletSetPaced(Boolean paced)
+{
+	gPaced = paced;
 }
 
 
