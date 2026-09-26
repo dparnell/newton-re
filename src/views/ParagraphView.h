@@ -311,6 +311,8 @@ public:
 	// Things put into the paragraph from outside - a recognised word,
 	// a dropped clipping, an ink word split off another - which the
 	// view is sent as command 0x4d.
+	Boolean		InkWordCommand(RefArg cmd);				// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x134c (aeInkWord)
+	virtual long	HandleInkWord(RefArg cmd, Boolean reallyDoIt);	// ROM 0x001722a4 HandleInkWord__14TParagraphViewFRC6RefVarUc
 	Boolean		WordCommand(RefArg cmd);				// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xbc (aeWord)
 	Boolean		HandleInsertItems(RefArg spec);			// ROM 0x001700a0 HandleInsertItems__14TParagraphViewFRC6RefVar
 
@@ -411,6 +413,8 @@ Ref		MakeParagraphForm(UniChar* text, long length, const Rect& bounds,
 // The command a view is sent to have things put into it, and the two
 // ways of sending it.
 enum { kInsertItemsCommand = 0x4d };
+void	TimeStampHiliteChange(TView* view);				// ROM 0x0016a408 TimeStampHiliteChange__FP5TView
+void	UpdateStylePalette(void);						// ROM 0x0017b108 UpdateStylePalette__Fv
 
 Ref		DoInsertItems(TView* view, RefArg items, Boolean addSpace, Boolean undoable,
 					  long insertOffset, long replaceChars, Boolean moveCaret,

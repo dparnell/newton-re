@@ -46,6 +46,7 @@
 #include "ROMConstants.h"
 #include "Locale.h"
 #include "NewtonExceptions.h"
+#include "Interpreter.h"
 #include "NewtonMemory.h"
 #include <string.h>
 
@@ -1618,15 +1619,19 @@ TParagraphView::HiliteAll(void)
 
 
 // ROM 0x0016a49c MakeHilite__14TParagraphViewFlT1Uc
-// The characters between the offsets selected: clamped to the text, and
-// unioned with the existing selection (which is removed first) so a drag
-// extends it; an empty range with caretOnEmpty just moves the caret.
-// Else a hilite is added (aeAddHilite, a `{start, end}` frame - DEVIATION:
-// the ROM makes a C++ TParagraphHilite that carries the selected text and
-// its area region) and the key view set to the range, so the caret is off
-// (a selection) and DrawHilites paints it.
+// The characters between the offsets selected: clamped to the text (a
+// start after the end is brought back to it), and unioned with the
+// existing selection (which is removed first) so a drag extends it; an
+// empty range with `interactive` just moves the caret.  Else a hilite is
+// added through aeAddHilite, carried bare when `interactive` - and then
+// the command's handler makes the range the key view, so the caret goes
+// off and DrawHilites paints it - and wrapped in a frame's `hilite` slot
+// when not (SetSelection putting back a saved selection, which leaves
+// the key view alone).  Either way the change is time-stamped and the
+// style palette brought up to date.  (DEVIATION: the ROM's
+// TParagraphHilite also carries a copy of the selected text.)
 void
-TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
+TParagraphView::MakeHilite(long start, long end, Boolean interactive)
 {
 	if (fLines == nil || !fCachesValid)
 		CreateAllCaches();
@@ -1635,34 +1640,68 @@ TParagraphView::MakeHilite(long start, long end, Boolean caretOnEmpty)
 		end = length;
 	if (start < 0)
 		start = 0;
-	if (start > length)
-		start = length;
-	if (end < start)
-		end = start;
-	TParagraphHilite* first = HiliteOf(RefVar(FirstHilite()));
+	if (end <= start)
+		start = end;
+	RefVar firstRef(FirstHilite());
+	TParagraphHilite* first = HiliteOf(firstRef);
 	if (first != nil)
 	{
-		long s0 = first->fStart;
-		long e0 = first->fEnd;
-		if (s0 < start)
-			start = s0;
-		if (e0 > end)
-			end = e0;
-		RemoveAllHilites();
+		if (first->fStart < start)
+			start = first->fStart;
+		if (first->fEnd > end)
+			end = first->fEnd;
+		RemoveHilite(firstRef);
 	}
-	if (end == start && caretOnEmpty)
+	if (end - start == 0 && interactive)
 	{
-		gRootView->SetKeyView(this, start, 0, false);
-		return;
+		long at = start < 0 ? 0 : start;
+		if (at > length)
+			at = length;
+		gRootView->SetKeyView(this, at, 0, false);
 	}
-	TParagraphHilite* hilite = new TParagraphHilite(start, end);
-	if (hilite == nil)
-		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
-	SetupArea(hilite);
-	RefVar cmd(MakeCommand(aeAddHilite, this, 0x8000000));
-	CommandSetFrameParameter(cmd, RefVar(AddressToRef(hilite)));
-	gApplication->DispatchCommand(cmd);
-	gRootView->SetKeyView(this, start, end - start, false);
+	else
+	{
+		TParagraphHilite* hilite = new TParagraphHilite(start, end);
+		if (hilite == nil)
+			Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+		RefVar cmd(MakeCommand(aeAddHilite, this, 0x8000000));
+		if (!interactive)
+		{
+			RefVar wrapped(AllocateFrame());
+			SetFrameSlot(wrapped, RSSYMhilite, RefVar(AddressToRef(hilite)));
+			CommandSetFrameParameter(cmd, wrapped);
+		}
+		else
+			CommandSetFrameParameter(cmd, RefVar(AddressToRef(hilite)));
+		SetupArea(hilite);
+		gApplication->DispatchCommand(cmd);
+	}
+	TimeStampHiliteChange(this);
+	UpdateStylePalette();
+}
+
+
+// ROM 0x0016a408 TimeStampHiliteChange__FP5TView
+// The selection has changed in the view: lastTextHiliteChanged is it,
+// and lastTextChanged is cleared.
+void
+TimeStampHiliteChange(TView* view)
+{
+	SetFrameSlot(RefVar(gVarFrame), RSSYMlasttexthilitechanged, view->fContext);
+	SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+}
+
+
+// ROM 0x0017b108 UpdateStylePalette__Fv
+// The style palette, if it is open, told to show the new selection's
+// styles (its SyncButtons).
+void
+UpdateStylePalette(void)
+{
+	RefVar palette(gRootView->GetVar(RSSYMstylepalette));
+	TView* view = GetView(palette);
+	if (view != nil && (view->fFlags & vVisible) != 0)
+		DoMessage(palette, RSSYMsyncbuttons, RefVar(NILREF));
 }
 
 
@@ -5541,6 +5580,109 @@ TParagraphView::AddKeyToCurrUndo(UniChar ch, long offset)
 }
 
 
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x134c (aeInkWord)
+// A word of writing nobody read, sent to the paragraph itself.  The
+// view's own script gets it first; the command's unit becomes its word
+// info in the command's correctInfo slot (and its strokes the frame
+// parameter, when there is none); then the word goes in at the caret when
+// the paragraph has a selection and the writing may be remote, and
+// failing that where it was written (HandleInkWord).
+Boolean
+TParagraphView::InkWordCommand(RefArg cmd)
+{
+	if (TView::RealDoCommand(cmd))
+		return true;
+	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+		return TView::RealDoCommand(cmd);
+	ULong remote = SetRemoteForCorrector();
+	RefVar param(GetFrameSlotRef(cmd, RSSYMparameter));
+	if (NOTNIL(param))
+	{
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		if (unit != nil)
+		{
+			SetFrameSlot(cmd, RSSYMcorrectinfo, RefVar(unit->WordInfo()));
+			if (ISNIL(RefVar(CommandFrameParameter(cmd))))
+				CommandSetFrameParameter(cmd, RefVar(unit->Strokes()));
+		}
+	}
+	RefVar hilite(FirstHilite());
+	if (NOTNIL(hilite) && (remote & 1) == 0)
+	{
+		RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+		RefVar ink(StrokeBundleToInkWord(RefVar(CommandFrameParameter(cmd))));
+		AdjustInkWordXHeight(ink, ViewExpectsNumbers(this));
+		SetFrameSlot(spec, RSSYMinsertitems, ink);
+		if (InsertItemsAtCaret(spec))
+		{
+			CommandSetResult(cmd, 1);
+			RestoreRemoteForCorrector(remote);
+			return true;
+		}
+	}
+	Boolean handled = false;
+	if (HandleInkWord(cmd, true))
+	{
+		handled = true;
+		CommandSetResult(cmd, 1);
+	}
+	RestoreRemoteForCorrector(remote);
+	if (!handled)
+		return TView::RealDoCommand(cmd);
+	return true;
+}
+
+
+// ROM 0x001722a4 HandleInkWord__14TParagraphViewFRC6RefVarUc
+// How well the paragraph would take a word of writing (the command's
+// stroke bundle), or with `reallyDoIt` the word taken: offered to
+// HandleWord as the one ink-word character, at the middle of where it was
+// written across and its ascent down from the top, with the bundle's
+// times.  Taken for real it is brought to the x-height the paragraph
+// writes in and goes in with a style of its own (the ink word itself as
+// the run's font); but when the caret is in this paragraph and the
+// writing may not be remote it goes in at the caret instead (answering 5).
+long
+TParagraphView::HandleInkWord(RefArg cmd, Boolean reallyDoIt)
+{
+	UniChar ch = kInkWordChar;
+	RefVar bundle(CommandFrameParameter(cmd));
+	RefVar ink(StrokeBundleToInkWord(bundle));
+	Rect box;
+	FromObject(RefVar(GetFrameSlotRef(bundle, RSSYMbounds)), box);
+	InkWordInfo info;
+	GetInkWordInfo(ink, &info);
+	Point pt;
+	pt.h = (short) ((box.left + box.right) / 2);
+	pt.v = (short) (box.top + info.fAscent);
+	long start = 0, stop = 0;
+	RefVar startTime(GetFrameSlotRef(bundle, RSSYMstarttime));
+	if (NOTNIL(startTime))
+	{
+		start = RINT(startTime);
+		stop = RINT(RefVar(GetFrameSlotRef(bundle, RSSYMendtime)));
+	}
+	RefVar props;
+	if (reallyDoIt)
+	{
+		AdjustInkWordXHeight(ink, ViewExpectsNumbers(this));
+		if (NOTNIL(GetPreference(RSSYMremotewriting)) && gRootView->fCaretView == this)
+		{
+			RefVar spec(Clone(RefVar(Rstarterinsertspec)));
+			SetFrameSlot(spec, RSSYMinsertitems, ink);
+			InsertItemsAtCaret(spec);
+			return 5;
+		}
+		props = DeepClone(RefVar(Rstarterproperties));
+		RefVar styles(GetFrameSlotRef(props, RSSYMstyles));
+		SetArraySlotRef(styles, 0, MAKEINT(1));
+		SetArraySlotRef(styles, 1, ink);
+	}
+	long offset = 0;
+	return HandleWord(&ch, 1, box, pt, start, stop, props, reallyDoIt, &offset, nil);
+}
+
+
 // ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xbc (aeWord)
 // A word the recogniser read, sent to the paragraph itself (a field on
 // its own, with no page around it).  A field that holds one word only
@@ -5888,6 +6030,76 @@ TParagraphView::RealDoCommand(RefArg cmd)
 	}
 	if (id == aeWord)
 		return WordCommand(cmd);
+	if (id == aeInkWord)
+		return InkWordCommand(cmd);
+	if (id == aeGesture2f)
+	{
+		// the hilite stroke over the paragraph: the kind of selection it
+		// makes asked for, and made
+		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+			return true;
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		long kind = HandleHilite(unit, -1, false);
+		if (kind != 0)
+		{
+			HandleHilite(unit, kind, true);
+			gRootView->SetHilitedView(this);
+		}
+		Dirty(nil);
+		CommandSetResult(cmd, 1);
+		return true;
+	}
+	if (id == aeAddHilite)
+	{
+		// the base adds the hilite; a hilite added bare (made by the pen,
+		// not put back from a saved selection) makes its range the key
+		// view - or the page, when this is one of several children the
+		// page has selected - unless the page is carrying a hilite out
+		// over its children
+		TView::RealDoCommand(cmd);
+		RefVar param(CommandFrameParameter(cmd));
+		Boolean framed = IsFrame(param);
+		if (framed)
+			param = GetFrameSlotRef(param, RSSYMhilite);
+		TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(param);
+		Boolean hiliting = false;
+		TView* editor = GetEnclosingEditView();
+		if (editor != nil)
+			hiliting = ((TEditView*) editor)->fHilitingChildren;
+		if (!framed && !hiliting)
+		{
+			TView* keyView = this;
+			long offset, length;
+			TView* parent = fParent;
+			if (parent != nil && parent->DerivedFrom(clEditView)
+				&& ((TEditView*) parent)->HasHilitedChildren(2, nil))
+			{
+				length = 999;
+				offset = 0;
+				keyView = parent;
+			}
+			else
+			{
+				offset = hilite->fStart;
+				length = hilite->fEnd - offset;
+			}
+			gRootView->SetKeyView(keyView, offset, length, false);
+		}
+		return true;
+	}
+	if (id == aeToChildren)
+	{
+		// a page's children told to restyle: the selected text takes
+		// the style (the frame parameter, or else the parameter as an
+		// integer)
+		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
+			return true;
+		RefVar style(CommandFrameParameter(cmd));
+		if (ISNIL(style))
+			style = MAKEINT(CommandParameter(cmd));
+		ChangeStyleOfSelection(style);
+		return true;
+	}
 	if (id == aeDoubleTap)
 	{
 		// The second tap on a word: the corrector goes up over it.  The

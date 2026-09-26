@@ -3605,7 +3605,7 @@ TestSelection()
 	p->OffsetToBounds(0, &box0);
 	p->OffsetToBounds(5, &box5);
 	long before = InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom);
-	p->MakeHilite(0, 5, false);
+	p->MakeHilite(0, 5, true);
 	Refresh();
 	EXPECT(RINT(Eval("Length(ctxS.hilites)")) == 1 && HiliteRange(p, true) == 0 && HiliteRange(p, false) == 5);
 	long after = InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom);
@@ -3783,16 +3783,16 @@ TestSelection()
 	Eval("ClearUndoStacks()");
 	gApplication->Idle();
 	p->RemoveAllHilites();
-	p->MakeHilite(0, 5, false);		// select "Hello"
+	p->MakeHilite(0, 5, true);		// select "Hello"
 	EXPECT(NOTNIL(p->FirstHilite()));
 	TypeKey(16);	// y: replaces the selection
 	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"y World\")")) && ISNIL(p->FirstHilite()) && p->fCaretOffset == 1);
 	// backspace over a selection deletes it
-	p->MakeHilite(0, 2, false);		// select "y "
+	p->MakeHilite(0, 2, true);		// select "y "
 	TypeKey(0x33);	// backspace
 	EXPECT(NOTNIL(Eval("StrEqual(ctxS.text, \"World\")")) && ISNIL(p->FirstHilite()));
 	// an arrow collapses a selection to its edge
-	p->MakeHilite(1, 4, false);
+	p->MakeHilite(1, 4, true);
 	TypeKey(0x7b);	// left arrow: caret to the selection start
 	EXPECT(ISNIL(p->FirstHilite()) && p->fCaretOffset == 1);
 	gKeyboardConnected = false;
