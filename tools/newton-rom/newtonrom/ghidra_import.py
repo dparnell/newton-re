@@ -497,13 +497,23 @@ def fix_virtual_calls(program, monitor, log: Log, stats: Stats, fresh=None) -> N
                 raise RuntimeError("cancelled")
             text = str(ins)
             if (text.startswith("add pc,") and prev is not None and str(prev) == "mov lr,pc"
-                    and prev.getAddress().add(4) == ins.getAddress()
-                    and ins.getFlowOverride() != FlowOverride.CALL):
-                ins.setFlowOverride(FlowOverride.CALL)
-                stats.bump("virtual call sites marked call")
+                    and prev.getAddress().add(4) == ins.getAddress()):
+                if ins.getFlowOverride() != FlowOverride.CALL:
+                    ins.setFlowOverride(FlowOverride.CALL)
+                    stats.bump("virtual call sites marked call")
+                # A site already marked can still have nothing disassembled
+                # after it (an earlier run's disassembly stopped short of
+                # it), and the decompiler then drops everything the
+                # function does after the call - so every site is checked.
                 nxt = ins.getAddress().add(4)
-                if listing.getInstructionAt(nxt) is None:
+                if listing.getInstructionAt(nxt) is None and listing.getDefinedDataAt(nxt) is None:
                     starts.add(nxt)
+                    stats.bump("virtual call fall-throughs disassembled")
+                    # which function had been cut short: its decompile (and
+                    # anything reconstructed from it) lost what follows
+                    fn = program.getFunctionManager().getFunctionContaining(ins.getAddress())
+                    log(f"  code opened after the virtual call at {ins.getAddress()}"
+                        f" in {fn.getName() if fn is not None else '(no function)'}")
             prev = ins
         rounds += 1
         if starts.isEmpty() or rounds > 50:
@@ -511,7 +521,8 @@ def fix_virtual_calls(program, monitor, log: Log, stats: Stats, fresh=None) -> N
         cmd = DisassembleCommand(starts, None, True)
         cmd.applyTo(program, monitor)
         fresh = cmd.getDisassembledAddressSet()
-    log(f"virtual calls: {stats.get('virtual call sites marked call', 0)} sites, {rounds} rounds")
+    log(f"virtual calls: {stats.get('virtual call sites marked call', 0)} sites, "
+        f"{stats.get('virtual call fall-throughs disassembled', 0)} fall-throughs disassembled, {rounds} rounds")
 
 
 def ghidra_name(d: Optional[dict], raw: str) -> str:
