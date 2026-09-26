@@ -701,6 +701,21 @@ main()
 		EXPECT(!cursor.NextWord());
 		EXPECT(!cursor.ThisWord(word, attribute, terminal));
 
+		// the cursor works in its own dictionary's block, never through
+		// AE_Parms - which is only the block the engine was last called
+		// on, and may be a dictionary long since disposed of (the
+		// Dictionary review, resetting a cursor on the empty user
+		// dictionary, once wrote a nought and a minus one through it
+		// into a view that had taken the freed block's place)
+		AirusAParmBlock decoy;
+		memset(&decoy, 0x55, sizeof(decoy));
+		AE_Parms = &decoy;
+		EXPECT(cursor.Reset(nil, false, false));
+		EXPECT(cursor.ThisWord(word, attribute, terminal) && strcmp((char*) word, "a") == 0);
+		AirusAParmBlock untouched;
+		memset(&untouched, 0x55, sizeof(untouched));
+		EXPECT(memcmp(&decoy, &untouched, sizeof(decoy)) == 0);
+
 		DisposDictionary(&words);
 	}
 

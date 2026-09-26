@@ -126,6 +126,12 @@ public:
 	Boolean			PopState(void);									// ROM 0x0002e1f0 PopState__14TAirusIteratorFv
 	// ... and the other way: a position put back into the engine's block.
 	void			RefreshState(TAirusPosition* position);			// ROM 0x0002e228 RefreshState__14TAirusIteratorFP9charState
+	// The engine's block of this cursor's dictionary, read afresh each
+	// time as the ROM does (the Handle may have moved).  The cursor
+	// never goes through AE_Parms: that is only the block of whichever
+	// dictionary the engine was last called on, which may since have
+	// been disposed of.
+	AirusAParmBlock*	Block(void) const		{ return (AirusAParmBlock*) *fDictionary; }
 
 	Handle			fDictionary;	// +0x00
 	UByte			fWorking[0x40];	// +0x04  the word the walk is building

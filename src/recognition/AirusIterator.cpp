@@ -66,8 +66,8 @@ TAirusIterator::AddParallelState(ULong which)
 		return 1;
 	}
 	TAirusPosition* position = &st->fPositions[st->fCount - 1];
-	position->fNode = AE_Parms->fNode;
-	position->fResult = AE_Parms->fResult;
+	position->fNode = Block()->fNode;
+	position->fResult = Block()->fResult;
 	position->fWhich = (long) which;
 	return 0;
 }
@@ -111,9 +111,9 @@ TAirusIterator::UnwindStateStack(void)
 void
 TAirusIterator::RefreshState(TAirusPosition* position)
 {
-	AE_Parms->fNode = position->fNode;
-	AE_Parms->fIndex = fStates->fIndex;
-	AE_Parms->fResult = position->fResult;
+	Block()->fNode = position->fNode;
+	Block()->fIndex = fStates->fIndex;
+	Block()->fResult = position->fResult;
 }
 
 
@@ -161,9 +161,9 @@ TAirusIterator::GetNextChars(void)
 		if (position->fResult != 0 && position->fResult != 1)
 			continue;
 		RefreshState(position);
-		AE_Parms->fWord = buffer;
+		Block()->fWord = buffer;
 		CallAirusA(fDictionary, kAirusNextSet);
-		if (AE_Parms->fResult != 0 || buffer[0] == 0)
+		if (Block()->fResult != 0 || buffer[0] == 0)
 			continue;
 		for (UByte* p = buffer; *p != 0; p++)
 			InsertNewNextChar(*p, (int) i);
@@ -216,7 +216,7 @@ TAirusIterator::VerifyNextChar(void)
 		fWorking[fStates->fIndex] = entry[0];
 		fWorking[fStates->fIndex + 1] = 0;
 		RefreshState(position);
-		AE_Parms->fWord = fWorking;
+		Block()->fWord = fWorking;
 		CallAirusA(fDictionary, kAirusVerify);
 		if (AddParallelState(i) != 0)
 			break;						// no room for another position
@@ -272,7 +272,7 @@ TAirusIterator::VerifyPrevChar(void)
 		fWorking[fStates->fIndex] = entry[0];
 		fWorking[fStates->fIndex + 1] = 0;
 		RefreshState(position);
-		AE_Parms->fWord = fWorking;
+		Block()->fWord = fWorking;
 		CallAirusA(fDictionary, kAirusVerify);
 		if (AddParallelState(i) != 0)
 			break;
@@ -314,11 +314,11 @@ TAirusIterator::ConstructResult(TAirusPosition* position)
 	}
 
 	RefreshState(position);
-	AE_Parms->fNode = 0;
-	AE_Parms->fWord = fWord;
+	Block()->fNode = 0;
+	Block()->fWord = fWord;
 	CallAirusA(fDictionary, kAirusVerify);
-	fAttribute = AE_Parms->fAttribute;
-	fTerminal = AE_Parms->fField48 != 0 ? *(const UByte*) (uintptr_t) AE_Parms->fField48 : 0;
+	fAttribute = Block()->fAttribute;
+	fTerminal = Block()->fField48 != 0 ? *(const UByte*) (uintptr_t) Block()->fField48 : 0;
 }
 
 
@@ -329,22 +329,25 @@ TAirusIterator::ConstructResult(TAirusPosition* position)
 
 // ROM 0x0002dcdc BuildStateAtPrefix__14TAirusIteratorFUl
 // The stack started with one state standing at the end of a prefix the
-// working buffer already holds.
+// working buffer already holds.  (Every field here is the cursor's own
+// dictionary's - written before the engine is called on it, which is
+// what once sent them into a disposed dictionary's block through
+// AE_Parms, and from there into whatever the heap had put there since.)
 long
 TAirusIterator::BuildStateAtPrefix(ULong length)
 {
 	fStates = nil;
-	AE_Parms->fNode = 0;
-	AE_Parms->fIndex = length - 1;
-	AE_Parms->fResult = 0;
-	AE_Parms->fWord = fWorking;
+	Block()->fNode = 0;
+	Block()->fIndex = length - 1;
+	Block()->fResult = 0;
+	Block()->fWord = fWorking;
 	PushState(length - 1);
 	if (length > 0)
 		CallAirusA(fDictionary, kAirusVerify);
 	else
 	{
-		AE_Parms->fIndex = 0;
-		AE_Parms->fSymbol = (ULong) -1;
+		Block()->fIndex = 0;
+		Block()->fSymbol = (ULong) -1;
 	}
 	return AddParallelState((ULong) -1);
 }
@@ -360,10 +363,10 @@ void
 TAirusIterator::BuildStateUpToPrefix(UByte* prefix, ULong length)
 {
 	fStates = nil;
-	AE_Parms->fNode = 0;
-	AE_Parms->fResult = 0;
-	AE_Parms->fWord = fWorking;
-	AE_Parms->fSymbol = (ULong) -1;
+	Block()->fNode = 0;
+	Block()->fResult = 0;
+	Block()->fWord = fWorking;
+	Block()->fSymbol = (ULong) -1;
 	PushState((ULong) -1);
 	AddParallelState((ULong) -1);
 
