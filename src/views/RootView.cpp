@@ -26,6 +26,7 @@
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
 #include "DynamicArray.h"
+#include "ArrayIterator.h"
 #include "NewtonExceptions.h"
 #include "UnitPublic.h"
 #include "Recognizer.h"	// gInhibitPopup
@@ -2042,4 +2043,53 @@ NSSendRootMessage(RefArg message, RefArg a1)
 	RefVar implementor(FindImplementor(context, message));
 	gInterpreter->PushValue(a1);
 	return DoSend(context, implementor, message, 1);
+}
+
+
+/*------------------------------------------------------------------------------
+	S h o w i n g   a   v i e w   w h i l e   a   m o d a l   d i a l o g
+	i s   u p
+------------------------------------------------------------------------------*/
+
+// ROM 0x0c101944 gDelayedShowList - the views waiting to be shown
+static CDynamicArray*	gDelayedShowList = nil;
+
+// ROM 0x001b1a8c ModalSafeShow__FP5TView
+// A view to be shown once the modal dialog has gone: put at the front of
+// the list; a view holding the caret gives it up meanwhile, the caret's
+// place kept to be given back (HoldPendingKeyView).
+void
+ModalSafeShow(TView* view)
+{
+	if (gDelayedShowList == nil)
+		gDelayedShowList = new CDynamicArray(sizeof(TView*), 4);		// DEVIATION: the ROM's default elements are four bytes, a host pointer is wider
+	gDelayedShowList->InsertElementsBefore(0, &view, 1);
+	if (!gRootView->ViewContainsCaretView(view))
+		return;
+	TView* caret = gRootView->fCaretView;
+	RefVar selection(caret->GetSelection());
+	gRootView->HoldPendingKeyView(RefVar(caret->fContext), selection);
+	gRootView->SetKeyView(nil, 0, 0, false);
+}
+
+
+// ROM 0x001b1b34 ModalSafeShowRelease__Fv
+// The modal dialog gone: each waiting view shown (with an aeShow that
+// does not ask again) and the caret given back.  (Its caller, the ROM's
+// RealExitModalDialog 0x0030e14c, is NOT YET: no modal dialog is ever
+// up, so nothing waits.)
+void
+ModalSafeShowRelease(void)
+{
+	if (gDelayedShowList == nil)
+		return;
+	CArrayIterator iter(gDelayedShowList);
+	for (ArrayIndex index = iter.FirstIndex(); iter.More(); index = iter.NextIndex())
+	{
+		TView* view = *(TView**) gDelayedShowList->SafeElementPtrAt(index);
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeShow, view, kNoParameter)));
+	}
+	delete gDelayedShowList;
+	gDelayedShowList = nil;
+	gRootView->ActivatePendingKeyView();
 }

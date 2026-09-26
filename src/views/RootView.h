@@ -189,4 +189,8 @@ Ref		NSSendRootMessage(RefArg message, RefArg a1);		// ROM 0x001b2a94 NSSendRoot
 
 extern Boolean	gNewtIsAliveAndWell;		// 0x0c102604  the boot is over: the root view draws no splash
 
+// A view shown while a modal dialog is up waits until the dialog goes.
+void	ModalSafeShow(TView* view);								// ROM 0x001b1a8c ModalSafeShow__FP5TView
+void	ModalSafeShowRelease(void);								// ROM 0x001b1b34 ModalSafeShowRelease__Fv
+
 #endif	/* __ROOTVIEW_H */

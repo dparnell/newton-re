@@ -6143,6 +6143,34 @@ TestSelectionClicks()
 }
 
 
+// A view put on the root while a modal dialog is up waits to be shown
+// until the dialog goes (ModalSafeShow), unless it is marked safe to show
+// over one; a view inside another is shown at once.
+static void
+TestModalSafeShow()
+{
+	TView* waits = ViewOf("ctxMS := AddView(GetRoot(), {viewClass: 74, viewFlags: 0, "
+		"viewBounds: {left: 10, top: 10, right: 50, bottom: 30}, viewFormat: 1})");
+	TView* safe = ViewOf("ctxMF := AddView(GetRoot(), {viewClass: 74, viewFlags: 0, "
+		"viewBounds: {left: 60, top: 10, right: 90, bottom: 30}, viewFormat: 1})");
+	EXPECT(waits != nil && safe != nil);
+	if (waits == nil || safe == nil)
+		return;
+	safe->fViewJustify |= 0x40000000;			// (a private bit: above a script's thirty)
+	EXPECT((waits->fFlags & vVisible) == 0 && (safe->fFlags & vVisible) == 0);
+	gModalCount = 1;
+	gApplication->DispatchCommand(RefVar(MakeCommand(aeShow, waits, 0)));
+	gApplication->DispatchCommand(RefVar(MakeCommand(aeShow, safe, 0)));
+	EXPECT((waits->fFlags & vVisible) == 0);		// waiting
+	EXPECT((safe->fFlags & vVisible) != 0);			// safe over a modal dialog
+	gModalCount = 0;
+	ModalSafeShowRelease();
+	EXPECT((waits->fFlags & vVisible) != 0);		// shown once the dialog went
+	Eval("RemoveView(GetRoot(), ctxMS); RemoveView(GetRoot(), ctxMF)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6285,6 +6313,7 @@ main()
 		TestEditViewDrop();
 		TestParagraphDrop();
 		TestSelectionClicks();
+		TestModalSafeShow();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();

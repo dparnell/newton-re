@@ -612,7 +612,7 @@ ScriptHandled(RefArg cmd, Ref result)
 // parameter's view and shows it (aeShow with the parameter, dispatched),
 // aeDropChild hides and removes the parameter's view, aeHide hides,
 // aeShow shows (under a modal dialog a view outside it is shown
-// ModalSafeShow - NOT YET: shown), aeAddData puts the frame parameter in
+// ModalSafeShow), aeAddData puts the frame parameter in
 // the soup as a child (posting aeRemoveData as its undo), aeRemoveData
 // takes the child of the parameter's id out (posting aeAddData with its
 // data), aeMoveData moves by params[0], [1] (posting the reverse as
@@ -725,6 +725,31 @@ TView::RealDoCommand(RefArg cmd)
 		break;
 
 	case aeShow:
+		// while a modal dialog is up, a view put straight on the root is
+		// not shown until it goes (ModalSafeShow) - unless it is marked as
+		// safe to show over one (viewJustify 0x40000000), or the command
+		// says not to ask (kNoModalCheck)
+		if (gModalCount != 0 && CommandParameter(cmd) != kNoModalCheck)
+		{
+			Boolean safe = false;
+			if (fParent != gRootView)
+				safe = true;
+			else
+			{
+				for (TView* view = this; view != gRootView; view = view->fParent)
+					if ((view->fViewJustify & 0x40000000) != 0)
+					{
+						safe = true;
+						break;
+					}
+			}
+			if (!safe)
+			{
+				ModalSafeShow(this);
+				handled = true;
+				break;
+			}
+		}
 		Show();
 		handled = true;
 		break;
