@@ -12,6 +12,11 @@
 #include "Screen.h"
 #include "NewtonMemory.h"
 #include "objects.h"
+#include "View.h"
+#include "RootView.h"
+#include "ViewFlags.h"
+#include "OSErrors.h"
+#include "Regions.h"
 #include <string.h>
 
 
@@ -248,4 +253,137 @@ void
 TBits::RestorePort(void)
 {
 	::SetPort(fPort->fSavedPort);
+}
+
+
+// ROM 0x000414e0 InitBitMap__FP8PixelMapRC5TRectlN23
+// The map's bits a new handle, the rows rounded up to 32 bits; the
+// resolution as given.  ==> whether the handle could be had.
+Boolean
+InitBitMap(PixelMap* map, const Rect& bounds, long depth, long hRes, long vRes)
+{
+	long rowBits = (depth * (short) (bounds.right - bounds.left) + 31) & ~31;
+	if (rowBits < 0)
+		rowBits += 7;
+	long rowBytes = rowBits >> 3;
+	Handle bits = NewHandle(rowBytes * (short) (bounds.bottom - bounds.top));
+	map->baseAddr = (Ptr) bits;
+	map->rowBytes = (short) rowBytes;
+	map->bounds = bounds;
+	map->pixMapFlags = depth;			// kPixMapHandle is 0
+	map->deviceRes.h = (short) hRes;
+	map->deviceRes.v = (short) vRes;
+	map->grayTable = nil;
+	return bits != nil;
+}
+
+
+/*------------------------------------------------------------------------------
+	D r a g B i t s
+------------------------------------------------------------------------------*/
+
+// ROM 0x000425ac DisposeDragBits__FPv
+// The cleanup a Throw runs: the clip put back and the bits given up.
+void
+DisposeDragBits(void* object)
+{
+	DragBits* bits = (DragBits*) object;
+	if (bits->fConstructed)
+	{
+		RemoveExceptionHandler((CatchHeader*) &bits->fCleanup);
+		SetClip(bits->fSavedClip);
+		bits->fConstructed = false;
+	}
+	bits->fBackground.Cleanup();
+	bits->fDataBits.Cleanup();
+}
+
+
+// ROM 0x000429a0 __ct__8DragBitsFv
+DragBits::DragBits()
+{
+	fConstructed = false;
+}
+
+
+// ROM 0x000428d4 __ct__8DragBitsFP5TViewPC5TRectUc
+DragBits::DragBits(TView* view, const Rect* bounds, Boolean copy)
+{
+	fConstructed = false;
+	Constructor(view, bounds, copy);
+}
+
+
+// ROM 0x00042938 __dt__8DragBitsFv
+DragBits::~DragBits()
+{
+	if (fConstructed)
+	{
+		RemoveExceptionHandler((CatchHeader*) &fCleanup);
+		SetClip(fSavedClip);
+	}
+}
+
+
+// ROM 0x0004266c Constructor__8DragBitsFP5TViewPC5TRectUc
+// The bits of a drag of the view's data from the rectangle (the port's
+// whole rectangle when there is none).  The data is drawn by the view's
+// DrawDragData; the background is taken from the screen and, unless the
+// view is a clipping, drawn again - by the view's DrawDragBackground,
+// and failing that by the root view without the selection showing, the
+// data then taken back out of it (exclusive-or) when the drag is a move.
+// A heap too full for either throws exOutOfMemory.
+void
+DragBits::Constructor(TView* view, const Rect* inBounds, Boolean copy)
+{
+	GrafPort* port;
+	GetPort(&port);
+	GetClip(fSavedClip);
+	ClipRect(&port->portRect);
+	fCleanup.header.catchType = kExceptionCleanup;
+	fCleanup.function = DisposeDragBits;
+	fCleanup.object = this;
+	AddExceptionHandler((CatchHeader*) &fCleanup);
+	fConstructed = true;
+	const Rect* bounds = inBounds != nil ? inBounds : &port->portRect;
+	Rect r = *bounds;
+	if (!fDataBits.Constructor(r))
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	Point topLeft;
+	topLeft.v = r.top;
+	topLeft.h = r.left;
+	fDataBits.BeginDrawing(topLeft);
+	view->DrawDragData(r);
+	fDataBits.RestorePort();
+	if (!fBackground.Constructor(*bounds))
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	topLeft.v = bounds->top;
+	topLeft.h = bounds->left;
+	fBackground.BeginDrawing(topLeft);
+	fBackground.RestorePort();
+	fBackground.CopyFromScreen(*bounds, *bounds, srcCopy, nil);
+	if ((view->fFlags & vClipboard) == 0)
+	{
+		fBackground.SetPort();
+		TRegionVar clip;
+		GetClip(clip);
+		ClipRect(&r);
+		if (!view->DrawDragBackground(r, copy))
+		{
+			gDontDrawHilites = true;
+			gRootView->Draw(r, false);
+			gDontDrawHilites = false;
+			if (!copy)
+			{
+				TRegion visRgn(view->SetupVisRgn());
+				TRegionVar vis(visRgn);
+				fDataBits.Draw(r, r, srcXor, nil);
+				GrafPort* bitsPort;
+				GetPort(&bitsPort);
+				CopyRgn(vis, bitsPort->visRgn);
+			}
+		}
+		SetClip(clip);
+		fBackground.RestorePort();
+	}
 }

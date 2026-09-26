@@ -244,9 +244,9 @@ public:
 	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x00262570 DrawScaledData__5TViewFRC5TRectT1P5TRect
 	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0009e648 AddDragInfo__5TViewFP9TDragInfo (viewAddDragInfoScript)
 	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x000a15c0 GetDropData__5TViewFRC6RefVarT1 (viewGetDropDataScript, else nil)
-	virtual Boolean	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* slop, Boolean copy, const TDragInfo& dragInfo, const Rect* dragBounds);	// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3
-	virtual void	DrawDragBackground(const Rect& bounds, Boolean copy);
-	virtual void	DrawDragData(const Rect& bounds);
+	virtual long	DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* pinBounds, const Rect* clipBounds, Boolean copy, const TDragInfo& dragInfo, const Rect* limitBounds);	// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 - ==> 0 no drag, 1 dragged, 2 dropped
+	virtual Boolean	DrawDragBackground(const Rect& bounds, Boolean copy);	// ROM 0x0009e3bc DrawDragBackground__5TViewFRC5TRectUc (viewDrawDragBackgroundScript)
+	virtual void	DrawDragData(const Rect& bounds);					// ROM 0x0009e48c DrawDragData__5TViewFRC5TRect (viewDrawDragDataScript, else DrawHilitedData)
 	virtual Ref		GetClipboardDataBits(Rect* bounds);				// ROM 0x0009e528 GetClipboardDataBits__5TViewFP5TRect - the picture a clipping keeps of the view
 	virtual Boolean	AcceptDrop(const TDragInfo& dragInfo, const Point& pt);	// ROM 0x000a12c0 AcceptDrop__5TViewFRC9TDragInfoRC6TPoint
 	virtual Boolean	Drop(RefArg dropTypes, RefArg dropData, Point* dropPt);	// ROM 0x0009cbc4 Drop__5TViewFRC6RefVarT1P6TPoint (viewDropScript)
@@ -330,6 +330,9 @@ public:
 	void		WriteBounds(const Rect& bounds);						// ROM 0x00263f28 WriteBounds__5TViewFRC5TRect
 	void		Move(const Point& delta);								// ROM 0x00263e1c Move__5TViewFRC6TPoint
 	void		Offset(Point delta);									// ROM 0x0025fec4 Offset__5TViewF6TPoint
+	TView*		Drag(const TDragInfo& dragInfo, TStrokePublic* stroke, const Rect& bounds, const Rect* pinBounds, const Rect* limitBounds, Boolean copy,
+					 Point* dropPt, Point* dragPt, Boolean* moved, Boolean* onClipboard);	// ROM 0x0009d6f4 Drag__5TViewFRC9TDragInfoP13TStrokePublicRC5TRectPC5TRectT4UcP6TPointT7PUcT9 - ==> the target let go over
+	void		AlignDragPtToGrid(const TDragInfo& dragInfo, Point* pt);	// ROM 0x0009d498 AlignDragPtToGrid__5TViewFRC9TDragInfoP6TPoint
 	Boolean		Drag(TStrokePublic* stroke, const Rect& limit);			// ROM 0x00266bf4 Drag__5TViewFP13TStrokePublicRC5TRect (the view dragged with the pen within the limit; ==> whether it moved)
 	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x00260028 ChildViewMoved__5TViewFP5TView6TPoint
 	void		GetChildOrigin(Point* origin);							// ROM 0x00267458 GetChildOrigin__5TViewFP6TPoint
@@ -375,7 +378,7 @@ extern long			gModalCount;		// ROM 0x0c105524 gModalCount - how many modal dialo
 extern RefStruct*	gSlotCacheTable;		// 0x0c10204c slotCacheRefs: the ROM keeps a pointer to the 34 slot symbols of Rslotcachetable; the host the array (SlotCacheRef)
 Ref			SlotCacheRef(long index);		// the slot symbol of a cache index
 extern Boolean		gSkipVisRegions;		// 0x0c102054  Draw does not clip to the visible regions
-extern Boolean		gDontDrawHilites;		// 0x0c100cb8  the selection hilites are not drawn (an effect in progress)
+extern Boolean		gDontDrawHilites;		// 0x0c100cbc  the selection hilites are not drawn (an effect in progress)
 extern Boolean		gOutlineViews;			// 0x0c101a28  Draw frames every view in light gray
 extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET: unused)
 

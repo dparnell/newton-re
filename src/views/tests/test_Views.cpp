@@ -3125,6 +3125,10 @@ TestClicks()
 	// drag and drop: a press-drag from a source view carries a 'text item
 	// to a target with a viewDropScript that accepts 'text
 	Eval("dropped := nil");
+	// (the drag keeps the pen inside the application area, or the screen)
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	screenWidth = kWidth;
+	screenHeight = kHeight;
 	TView* src = ViewOf("ctxDS := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
 		"viewClickScript: func(unit) begin :DragAndDrop(unit, :GlobalBox(), nil, nil, [{types: ['text], dragRef: {text: \"hi there\"}}]); true end, viewGetDropDataScript: func(dropType, dragRef) dragRef})");
 	Eval("ctxDT := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, viewBounds: {left: 100, top: 40, right: 150, bottom: 70}, viewFormat: 1, "
@@ -3139,6 +3143,10 @@ TestClicks()
 	HostTabletQueuePenMove(70, 55);
 	HostTabletQueuePenMove(100, 55);
 	HostTabletQueuePenMove(125, 55);		// over the target
+	// (held there a moment: the drag looks for its target only every
+	//  three ticks while the pen moves)
+	HostTabletQueuePenMove(126, 56);
+	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
@@ -3165,6 +3173,8 @@ TestClicks()
 	HostTabletQueuePenMove(70, 55);
 	HostTabletQueuePenMove(100, 55);
 	HostTabletQueuePenMove(125, 55);
+	HostTabletQueuePenMove(126, 56);
+	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
@@ -3177,6 +3187,8 @@ TestClicks()
 	HostTabletQueuePenDown(40, 55, 0);
 	HostTabletQueuePenMove(100, 55);
 	HostTabletQueuePenMove(125, 55);
+	HostTabletQueuePenMove(126, 56);
+	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();
@@ -3187,6 +3199,8 @@ TestClicks()
 	HostAdvanceClock(kSeconds);
 	HostTabletQueuePenDown(40, 55, 0);
 	HostTabletQueuePenMove(100, 55);
+	HostTabletQueuePenMove(125, 55);
+	HostTabletQueuePenMove(126, 56);
 	HostTabletQueuePenMove(125, 55);
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
@@ -5723,9 +5737,9 @@ TestClipboard()
 	EXPECT(gRootView->GetClipboard() == nil && gRootView->GetClipboardIcon() == nil);
 	EXPECT(ISNIL(Eval("GetClipboard()")) && ISNIL(Eval("GetClipboardIcon()")));
 
-	// a drag let go on the background becomes a clipping: the source's
-	// drop data is what the clipping keeps, and - the drag not being a
-	// copy - the source is asked to give the item up
+	// a drag let go on the edge of the screen becomes a clipping: the
+	// source's drop data is what the clipping keeps, and - the drag not
+	// being a copy - the source is asked to give the item up
 	Eval("carriedOff := nil");
 	ViewOf("ctxCB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200, "
 		   "viewBounds: {left: 20, top: 40, right: 60, bottom: 70}, viewFormat: 1, "
@@ -5737,7 +5751,8 @@ TestClipboard()
 	HostAdvanceClock(kSeconds);
 	HostTabletQueuePenDown(40, 55, 0);
 	HostTabletQueuePenMove(80, 60);
-	HostTabletQueuePenMove(120, 88);			// the background
+	HostTabletQueuePenMove(120, 70);
+	HostTabletQueuePenMove(158, 70);			// within five pixels of the right edge
 	HostTabletQueuePenUp(0);
 	HostTabletPump();
 	gRecognition.Idle();

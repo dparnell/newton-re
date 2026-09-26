@@ -36,6 +36,10 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "NewtonMemory.h"
+#include "Screen.h"		// StartDrawing
+#include "PickView.h"		// GetAppAreaBounds
+#include "PolygonView.h"	// AlignPtToGrid
+#include "Bits.h"
 #include <string.h>
 
 TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101930 gEmptyViewList__5TView
@@ -1884,49 +1888,375 @@ TView::EndDrag(const TDragInfo& info, TView* target, const Point& startPt, const
 }
 
 
-// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3 (NOT YET RECONSTRUCTED: the pen-tracked drag
-// with the clipboard icon following the pen; the host's simplified drag
-// tracks the pen and drops on the target under the release point)
+// ROM 0x0009d194 DragAndDrop__5TViewFP13TStrokePublicRC5TRectPC5TRectT3UcRC9TDragInfoT3
+// The view's data dragged with the pen.  `bounds` is what is dragged,
+// `pinBounds` the part of it that must stay inside `limitBounds` (the
+// application area when there is none), `clipBounds` what a clipping
+// made of it covers.  Data whose copyProtection forbids it is not
+// dragged at all.
 //
-// A drop with no target is a drag let go on the background, which is
-// what makes a clipping (the ROM's Drag answers a flag of its own for
-// that, and tells the difference by PointOnClipboard).
-Boolean
-TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* limit, const Rect* /*slop*/, Boolean copy, const TDragInfo& info, const Rect* /*dragBounds*/)
+// Drag follows the pen; the screen under where the image was is then
+// redrawn.  A drag that went somewhere and that the source approves ends
+// one of three ways: on a target, which EndDrag delivers the data to;
+// let go on the edge of the screen where clippings are kept, which makes
+// a clipping of it (the data taken from the view unless it was a copy);
+// or, for a clipping itself, the clipping moved.  The view's selection is
+// taken away afterwards when the drag made a clipping or involved text
+// or ran from one page to another.
+//
+// ==> 0 the pen did not go far enough to be a drag, 1 it was a drag
+// that went nowhere, 2 the data was dropped.
+//
+// (the ROM first tells the busy box a drag is being tracked - BusyBoxSend
+//  0x37 - which the views layer cannot reach from here)
+long
+TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* pinBounds, const Rect* clipBounds, Boolean copy, const TDragInfo& dragInfo, const Rect* limitBounds)
 {
 	stroke->InkOff(true);
-	TDragInfo& dragInfo = (TDragInfo&) info;
-	if (dragInfo.Count() == 0)
-		AddDragInfo(&dragInfo);
-	Point start = stroke->FirstPoint();
-	// follow the pen (a full drag draws the item as it moves - NOT YET);
-	// the release point picks the drop target
-	while (!stroke->Done())
-		Wait(1);
-	Point drop = stroke->FinalPoint();
-	TView* target = TargetDrop(dragInfo, drop);
-	if (!DropApprove(target))
-		return false;
-	if (target == nil)
+	if ((CopyProtection() & 1) != 0)
+		return 0;
+	Point dropPt, dragPt;
+	Boolean moved, onClipboard;
+	TView* target = Drag(dragInfo, stroke, bounds, pinBounds, limitBounds, copy, &dropPt, &dragPt, &moved, &onClipboard);
+	gRootView->Invalidate(TRectangularRegion(bounds), fParent);
+	long result = moved;
+	if ((target != nil || onClipboard) && DropApprove(target))
 	{
-		// the background: the items are put on the clipboard, and,
-		// unless the drag was a copy, the view gives them up.  A
-		// clipping dropped on the background is left where it fell.
-		if ((fFlags & vClipboard) != 0)
-			return false;
-		TClipboard::NewClipboard(dragInfo, this, limit != nil ? *limit : bounds, &drop);
-		if (!copy && (fFlags & (vReadOnly | vWriteProtected)) == 0)
-			for (long i = dragInfo.Count() - 1; i >= 0; i--)
-				DropRemove(RefVar(dragInfo.GetItemDragRef(i)));
-		return true;
+		RefVar context(fContext);
+		Boolean preserve = gRootView->SetPreserveHilites(true);
+		result = 2;
+		gRootView->fDirtyFlag = true;
+		if (!onClipboard)
+		{
+			Point start = stroke->FirstPoint();
+			EndDrag(dragInfo, target, start, dropPt, dragPt, copy);
+		}
+		else if ((fFlags & vClipboard) == 0)
+		{
+			TClipboard::NewClipboard(dragInfo, this, clipBounds != nil ? *clipBounds : bounds, &dropPt);
+			if (!copy && (fFlags & (vReadOnly | vWriteProtected)) == 0)
+				for (long i = Length(RefVar(dragInfo.GetItems())) - 1; i >= 0; i--)
+					DropRemove(RefVar(dragInfo.GetItemDragRef(i)));
+		}
+		else
+			((TClipboard*) this)->MoveIcon(dropPt);
+		gRootView->SetPreserveHilites(preserve);
+		if (GetView(context) == this
+			&& (onClipboard
+				|| DerivedFrom(clParagraphView)
+				|| (this != target && target->DerivedFrom(clParagraphView))
+				|| (this != target && target->DerivedFrom(clEditView) && DerivedFrom(clEditView))))
+			RemoveAllHilites();
 	}
-	EndDrag(dragInfo, target, start, drop, drop, copy);
-	return true;
+	return result;
+}
+
+
+// ROM 0x0009d6f4 Drag__5TViewFRC9TDragInfoP13TStrokePublicRC5TRectPC5TRectT4UcP6TPointT7PUcT9
+// The pen followed until it lifts, the dragged image going with it.
+//
+// The pen is kept to where `pinBounds` (the point it went down at when
+// there is none) stays inside `limitBounds` (the application area); what
+// comes back in `dragPt` is the pen so kept, and in `dropPt` the pen
+// itself.  Nothing moves until the pen has gone further than the items'
+// smallest minDragDistance (four pixels at most): `moved` says whether it
+// did.  The image is the data drawn by DragBits, put down through a
+// one-bit mask of itself over the screen it was taken from, and moved at
+// most every three ticks; with no memory for it, a gray outline of the
+// rectangle is dragged instead.  Each time it moves over a target (the
+// pen over the limits and not over the clipboard's edge), the target is
+// asked to show where the data would go (DragFeedback), snapping the
+// image to its grid.  `onClipboard` says whether the pen was let go over
+// the edge of the application area where clippings are kept.
+//
+// ==> the target it was let go over.  A drag that ends back within the
+// minimum distance of where it started has no target and did not move;
+// one on the clipboard's edge has no target either, and its drop point
+// is taken to just outside the edge.
+TView*
+TView::Drag(const TDragInfo& dragInfo, TStrokePublic* stroke, const Rect& bounds, const Rect* pinBounds, const Rect* limitBounds, Boolean copy,
+			Point* dropPt, Point* dragPt, Boolean* moved, Boolean* onClipboard)
+{
+	// the application area inset by five: the pen outside it is on the
+	// clipboard's edge
+	RefVar displayParams(GetFrameSlotRef(RefVar(gVarFrame), RSSYMdisplayparams));
+	Point appOrigin;
+	appOrigin.h = (short) RINT(GetProtoVariable(displayParams, RSSYMappareagloballeft, nil));
+	appOrigin.v = (short) RINT(GetProtoVariable(displayParams, RSSYMappareaglobaltop, nil));
+	Rect clipboardArea;
+	clipboardArea.top = (short) (appOrigin.v + 5);
+	clipboardArea.left = (short) (appOrigin.h + 5);
+	clipboardArea.right = (short) (RINT(GetProtoVariable(displayParams, RSSYMappareawidth, nil)) - 10 + clipboardArea.left);
+	clipboardArea.bottom = (short) (RINT(GetProtoVariable(displayParams, RSSYMappareaheight, nil)) - 10 + clipboardArea.top);
+	RefVar buttonBarPosition(GetProtoVariable(displayParams, RSSYMbuttonbarposition, nil));
+	*moved = false;
+	*onClipboard = false;
+
+	long minDistance = 4;
+	RefVar item;
+	long count = Length(RefVar(dragInfo.GetItems()));
+	for (long i = 0; i < count; i++)
+	{
+		item = GetArraySlotRef(RefVar(dragInfo.GetItems()), i);
+		RefVar distance(GetProtoVariable(item, RSSYMmindragdistance, nil));
+		if (ISINT(distance))
+		{
+			long d = RVALUE(distance);
+			if (d < minDistance)
+				minDistance = d;
+		}
+	}
+
+	Point start = stroke->FirstPoint();
+	Rect lastBounds = bounds;
+	Rect limit;
+	if (limitBounds != nil)
+		limit = *limitBounds;
+	else
+		GetAppAreaBounds(&limit);
+	Rect pin;
+	if (pinBounds != nil)
+		pin = *pinBounds;
+	else
+	{
+		pin.top = pin.bottom = start.v;
+		pin.left = pin.right = start.h;
+	}
+	long minH = (short) (limit.left - pin.left + start.h);
+	long maxH = (short) (limit.right - pin.right + start.h);
+	long minV = (short) (limit.top - pin.top + start.v);
+	long maxV = (short) (limit.bottom - pin.bottom + start.v);
+	Point lastPt;
+	lastPt.v = -32768;
+	lastPt.h = 0;
+	Boolean haveMask = false;
+	Boolean haveBits = false;
+	Boolean noBits = false;
+
+	PixelMap mask;
+	DragBits bits;
+	newton_try
+	{
+		haveMask = InitBitMap(&mask, bounds, 1, kDefaultDPI, kDefaultDPI);
+		if ((fFlags & vClipboard) != 0)
+		{
+			bits.Constructor(this, &bounds, copy);
+			haveBits = true;
+			bits.fDataBits.Draw(bounds, bounds, srcXor, nil);
+			bits.fDataBits.CopyIntoBitmap(&mask, srcCopy, nil);
+		}
+	}
+	newton_catch(exOutOfMemory)
+	{
+		noBits = true;			// (the ROM makes the bits afresh)
+	}
+	end_try;
+
+	TView* target = nil;
+	ULong lastTicks = 0;
+	Boolean feedbackShown = false;
+	Point feedbackPt;
+	Boolean firstOutline = true;
+	Point pt = start;			// (the ROM's is not set until the loop runs)
+	while (!stroke->Done())
+	{
+		pt = stroke->FinalPoint();
+		*onClipboard = PointOnClipboard(pt, clipboardArea, buttonBarPosition);
+		*dragPt = pt;
+		*dropPt = pt;
+		if (dragPt->h < minH)
+			dragPt->h = (short) minH;
+		else if (dragPt->h > maxH)
+			dragPt->h = (short) maxH;
+		if (dragPt->v < minV)
+			dragPt->v = (short) minV;
+		else if (dragPt->v > maxV)
+			dragPt->v = (short) maxV;
+		if (!*moved)
+			*moved = CheapDistance(*dropPt, start) > minDistance;
+		if (*moved && (dropPt->h != lastPt.h || dropPt->v != lastPt.v))
+		{
+			if (!haveBits && !noBits)
+			{
+				newton_try
+				{
+					bits.Constructor(this, &bounds, copy);
+					bits.fDataBits.CopyIntoBitmap(&mask, srcCopy, nil);
+					haveBits = true;
+				}
+				newton_catch(exOutOfMemory)
+				{
+					noBits = true;
+				}
+				end_try;
+			}
+			Point delta;
+			delta.h = (short) (dragPt->h - start.h);
+			delta.v = (short) (dragPt->v - start.v);
+			if (target != nil)
+				target->AlignDragPtToGrid(dragInfo, &delta);
+			Rect newBounds = bounds;
+			OffsetRect(&newBounds, delta.h, delta.v);
+			if (Ticks() - lastTicks > 2)
+			{
+				StartDrawing(nil, nil);
+				if (feedbackShown)
+				{
+					target->DragFeedback(dragInfo, feedbackPt, false);
+					feedbackShown = false;
+				}
+				if (!noBits)
+				{
+					// the screen put back where the image was, the screen
+					// where it goes taken, a hole the image's shape cut
+					// there and the image drawn into it
+					bits.fBackground.Draw(bounds, lastBounds, srcCopy, nil);
+					bits.fBackground.CopyFromScreen(newBounds, bounds, srcCopy, nil);
+					GrafPort* port;
+					GetPort(&port);
+					CopyBits(&mask, &port->portBits, &mask.bounds, &newBounds, srcBic, nil);
+					bits.fDataBits.Draw(bounds, newBounds, srcOr, nil);
+				}
+				else
+				{
+					PenState state;
+					GetPenState(&state);
+					PenNormal();
+					SetFgPattern(GetStdPattern(grayPat));
+					PenSize(2, 2);
+					PenMode(patXor);
+					if (!firstOutline)
+						FrameRect(&lastBounds);
+					else
+						firstOutline = false;
+					FrameRect(&newBounds);
+					SetPenState(&state);
+				}
+				if (!*onClipboard
+					&& limit.left <= dropPt->h && dropPt->h <= limit.right
+					&& limit.top <= dropPt->v && dropPt->v <= limit.bottom)
+				{
+					target = TargetDrop(dragInfo, *dropPt);
+					if (target != nil)
+					{
+						feedbackShown = target->DragFeedback(dragInfo, *dropPt, true);
+						feedbackPt = *dropPt;
+					}
+				}
+				StopDrawing(nil, nil);
+				lastBounds = newBounds;
+				lastTicks = Ticks();
+			}
+		}
+		else
+			Wait(1);
+		lastPt = *dropPt;
+	}
+	if (haveMask)
+		DisposHandle((Handle) mask.baseAddr);
+	if (feedbackShown)
+		target->DragFeedback(dragInfo, feedbackPt, false);
+	if (*moved)
+		gRootView->SmartInvalidate(lastBounds);
+	PenNormal();
+
+	long dh = start.h - dragPt->h;
+	if (dh < 0)
+		dh = -dh;
+	long dv = start.v - dragPt->v;
+	if (dv < 0)
+		dv = -dv;
+	if (dh <= (short) minDistance && dv <= (short) minDistance)
+	{
+		// back where it started: no drag at all
+		target = nil;
+		*moved = false;
+	}
+	else if (!*onClipboard)
+	{
+		if (target != nil)
+		{
+			Point delta;
+			delta.h = (short) (dragPt->h - start.h);
+			delta.v = (short) (dragPt->v - start.v);
+			target->AlignDragPtToGrid(dragInfo, &delta);
+			dragPt->h = (short) (start.h + delta.h);
+			dragPt->v = (short) (start.v + delta.v);
+		}
+	}
+	else
+	{
+		// on the clipboard's edge: the drop point taken to just outside
+		// the edge it is over
+		target = nil;
+		if (pt.v <= clipboardArea.top)
+			dropPt->v = (short) (clipboardArea.top - 5);
+		else if (pt.h <= clipboardArea.left)
+			dropPt->h = (short) (clipboardArea.left - 5);
+		else if (clipboardArea.bottom > pt.v)
+			dropPt->h = (short) (clipboardArea.right + 5);
+		else
+			dropPt->v = (short) (clipboardArea.bottom + 5);
+		*dragPt = *dropPt;
+	}
+	return target;
+}
+
+
+// ROM 0x0009d498 AlignDragPtToGrid__5TViewFRC9TDragInfoP6TPoint
+// A drag's offset snapped to the view's grid: a square grid snaps
+// anything, a line grid only text.
+void
+TView::AlignDragPtToGrid(const TDragInfo& dragInfo, Point* pt)
+{
+	Point spacing;
+	if (!IsGridded(RefVar(RSSYMsquaregrid), &spacing))
+	{
+		if (!IsGridded(RefVar(RSSYMlinegrid), &spacing))
+			return;
+		Boolean text = false;
+		for (long i = Length(RefVar(dragInfo.GetItems())); --i >= 0; )
+			if (NOTNIL(dragInfo.FindType(i, RefVar(RSSYMtext))))
+			{
+				text = true;
+				break;
+			}
+		if (!text)
+			return;
+	}
+	AlignPtToGrid(pt, spacing);
+}
+
+
+// ROM 0x0009e3bc DrawDragBackground__5TViewFRC5TRectUc
+// The screen under a dragged image, as the view's script would have it
+// drawn: the rectangle erased and viewDrawDragBackgroundScript(bounds,
+// copy) run.  ==> whether the script answered something - failing that
+// DragBits draws the background itself.
+Boolean
+TView::DrawDragBackground(const Rect& bounds, Boolean copy)
+{
+	EraseRect(&bounds);
+	RefVar args(MakeArray(2));
+	SetArraySlot(args, 0, RefVar(ToObject(bounds)));
+	SetArraySlot(args, 1, RefVar(copy ? TRUEREF : NILREF));
+	return NOTNIL(RunScript(RSSYMviewdrawdragbackgroundscript, args, true));
+}
+
+
+// ROM 0x0009e48c DrawDragData__5TViewFRC5TRect
+// The dragged data drawn for its image: viewDrawDragDataScript(bounds),
+// and failing that the view's selected data (DrawHilitedData).
+void
+TView::DrawDragData(const Rect& bounds)
+{
+	RefVar args(MakeArray(1));
+	SetArraySlot(args, 0, RefVar(ToObject(bounds)));
+	if (ISNIL(RunScript(RSSYMviewdrawdragdatascript, args, true)))
+		DrawHilitedData();
 }
 
 // the default drop hooks a view without its own behaviour uses
-void	TView::DrawDragBackground(const Rect&, Boolean)				{ }
-void	TView::DrawDragData(const Rect&)							{ }
 TView*	TView::FindDropView(const TDragInfo&, const Point&)			{ return this; }		// ROM 0x000a0df4 FindDropView__5TViewFRC9TDragInfoRC6TPoint (a view is its own drop target)
 
 

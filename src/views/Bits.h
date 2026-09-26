@@ -28,8 +28,10 @@
 #include "Newton.h"
 #endif
 #include "Ports.h"
+#include "RegionVars.h"
 
 class TBits;
+class TView;
 
 // a port over a TBits' map for the time a view is drawn into it; the
 // ROM's object is 0xc bytes
@@ -68,5 +70,34 @@ public:
 	Boolean		fDrawn;			// +0x20  drawn from or to the screen
 	Boolean		fOwnsBits;		// +0x21  the bits are a handle of ours
 };
+
+// A 1-bit (or any depth's) pixel map over the rectangle whose bits are a
+// new handle; ==> whether there was the memory.
+Boolean	InitBitMap(PixelMap* map, const Rect& bounds, long depth, long hRes, long vRes);	// ROM 0x000414e0 InitBitMap__FP8PixelMapRC5TRectlN23
+
+
+// What a drag moves about the screen: the data being dragged drawn into
+// bits of its own (the source view's DrawDragData) and, beside it, the
+// screen as it is under the rectangle - as it would be without the data,
+// when the drag is a move, the view being drawn without its selection and
+// the data taken out of the picture.  The clip of the port it was made in
+// is kept and put back when the bits go, a Throw included.  The ROM's
+// object is 0x80 bytes.
+class DragBits
+{
+public:
+				DragBits();										// ROM 0x000429a0 __ct__8DragBitsFv
+				DragBits(TView* view, const Rect* bounds, Boolean copy);	// ROM 0x000428d4 __ct__8DragBitsFP5TViewPC5TRectUc
+				~DragBits();									// ROM 0x00042938 __dt__8DragBitsFv
+	void		Constructor(TView* view, const Rect* bounds, Boolean copy);	// ROM 0x0004266c Constructor__8DragBitsFP5TViewPC5TRectUc
+
+	TRegionStruct	fSavedClip;		// +0x00  the port's clip when the bits were made
+	TBits			fDataBits;		// +0x04  the dragged data
+	TBits			fBackground;	// +0x38  the screen under it
+	ExceptionCleanup	fCleanup;	// +0x6c  DisposeDragBits when a Throw unwinds
+	Boolean			fConstructed;	// +0x7c  Constructor has run (the clip to put back)
+};
+
+void	DisposeDragBits(void* bits);							// ROM 0x000425ac DisposeDragBits__FPv
 
 #endif	/* __BITS_H */

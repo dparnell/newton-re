@@ -12,6 +12,7 @@
 #include "UserPorts.h"
 #include "KernelGlobals.h"
 #include "hal/Timer.h"
+#include "Host.h"			// HostAdvanceClock
 #include "NewtonTime.h"
 #include <atomic>
 
@@ -203,12 +204,17 @@ HostTabletPump(void)
 }
 
 
-// The wait hook: a record per tick, then the strokes read.
+// The wait hook: a record per tick, then the strokes read.  Each tick
+// waited moves the clock on by a tick, as a Wait would take that long
+// (a sixtieth of a second: 0xf000 of the 3.6864 MHz clock).
 void
 HostTabletWait(ULong ticks)
 {
 	for (ULong i = 0; i < ticks; i++)
+	{
 		HostTabletPump();
+		HostAdvanceClock(0xf000);
+	}
 	StrokeTime();
 }
 
