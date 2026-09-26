@@ -21,6 +21,7 @@
 #include "Loader.h"
 #include "Protocols.h"
 #include "OSErrors.h"
+#include "Random.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,8 +56,10 @@ UserBoot()
 	// NOT YET RECONSTRUCTED: MemObjManager::FindHeapRef('user', &SkiaHeapBase);
 	// InitROMDomainManager()
 	gOSIsRunning = true;
-	// NOT YET RECONSTRUCTED: srand(TURealTimeAlarm::Time().ConvertTo(kSeconds))
-	srand(1);
+	// NOT YET RECONSTRUCTED: the seed is the real-time clock's seconds,
+	// srand(TURealTimeAlarm::Time().ConvertTo(kSeconds)); the host seeds
+	// the ROM's generator with 1
+	NewtonSrand(1);
 	TUTask ksrv;
 	TObjectId ksrvEnvId = 0;
 	if (MemObjManager::FindEnvironmentId('ksrv', &ksrvEnvId) == noErr && ksrv.Init((TaskProcPtr) InitialKSRVTask, 0x6800, 0, nil, kUserTaskPriority, 'ksrv', ksrvEnvId) == noErr)

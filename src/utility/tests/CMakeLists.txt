@@ -18,3 +18,7 @@ add_executable(test_ShadowRingBuffer test_ShadowRingBuffer.cpp)
 target_link_libraries(test_ShadowRingBuffer PRIVATE utility os600_kernel os600_user)
 add_test(NAME utility.ShadowRingBuffer COMMAND test_ShadowRingBuffer)
 set_tests_properties(utility.ShadowRingBuffer PROPERTIES TIMEOUT 30)
+
+add_executable(test_Random test_Random.cpp)
+target_link_libraries(test_Random PRIVATE utility)
+add_test(NAME utility.Random COMMAND test_Random)

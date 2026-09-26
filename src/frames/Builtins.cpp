@@ -17,6 +17,7 @@
 	entry functions.
 */
 
+#include "Random.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "REPTranslators.h"
@@ -1692,27 +1693,8 @@ Ffeupdateenv(RefArg /*rcvr*/, RefArg env)
 /* -------------------------------------------------------------------------------
 	Random numbers.  The ROM's Random uses its C library's rand() (srand at
 	UserBoot with the time), whose state GetRandomState/SetRandomState
-	save and restore as a 'randomState binary; NOT YET RECONSTRUCTED: that
-	library's generator - the host keeps the ANSI C example generator
-	(state one 32-bit word) so that states round-trip.
+	save and restore as a 'randomState binary - utility/Random.h.
 ------------------------------------------------------------------------------- */
-
-static ULong gRandomSeed = 1;		// the C library's rand() state
-
-static int
-NewtonRand(void)
-{
-	gRandomSeed = gRandomSeed * 1103515245 + 12345;
-	return (int) ((gRandomSeed >> 16) & 0x7fff);
-}
-
-
-// the seed from the time, as UserBoot's srand
-void
-SeedRandom(ULong seed)
-{
-	gRandomSeed = seed;
-}
 
 
 // ROM 0x002b94b8 FRandom
@@ -1725,7 +1707,7 @@ FRandom(RefArg /*rcvr*/, RefArg low, RefArg high)
 	if (hi < lo)
 		Throw(exFrames, (void*) kNSErrBadArgs, nil);
 	long r = NewtonRand();
-	return MAKEINT(lo + r % (hi - lo + 1));
+	return MAKEINT(lo + r % (hi - lo + 1));		// (__rt_sdiv's remainder)
 }
 
 
@@ -1733,8 +1715,8 @@ FRandom(RefArg /*rcvr*/, RefArg low, RefArg high)
 Ref
 FGetRandomState(RefArg /*rcvr*/)
 {
-	RefVar state(AllocateBinary(RSSYMrandomstate, sizeof(gRandomSeed)));
-	memcpy(BinaryData(state), &gRandomSeed, sizeof(gRandomSeed));
+	RefVar state(AllocateBinary(RSSYMrandomstate, SizeofRandState()));
+	GetRandState(BinaryData(state));
 	return state;
 }
 
@@ -1747,7 +1729,7 @@ FGetRandomState(RefArg /*rcvr*/)
 static Ref
 FSetRandomSeed(RefArg /*rcvr*/, RefArg seed)
 {
-	SeedRandom((ULong) RINT(seed));
+	NewtonSrand((ULong) RINT(seed));
 	return NILREF;
 }
 
@@ -1756,9 +1738,9 @@ FSetRandomSeed(RefArg /*rcvr*/, RefArg seed)
 Ref
 FSetRandomState(RefArg /*rcvr*/, RefArg state)
 {
-	if (!IsBinary(state) || Length(state) < (long) sizeof(gRandomSeed))
+	if (!IsBinary(state) || Length(state) < SizeofRandState())
 		ThrowBadTypeWithFrameData(kNSErrNotABinaryObject, state);
-	memcpy(&gRandomSeed, BinaryData(state), sizeof(gRandomSeed));
+	SetRandState(BinaryData(state));
 	return NILREF;
 }
 
