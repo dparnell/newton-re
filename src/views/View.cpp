@@ -1297,10 +1297,141 @@ TView::ActivateSelection(Boolean on)
 
 
 // ROM 0x0009e7ec DoEditCommand__5TViewFl
+// The editing commands, all of them made of the drag and drop's parts:
+//
+//   0 cut    - a copy and then a clear;
+//   1 copy   - the view's drag items made a clipping (TClipboard::
+//              NewClipboard), laid out in the first item's `bounds`, or
+//              where the selection is;
+//   2 paste  - the front clipping delivered to the view under the caret
+//              (or, with no caret, under the middle of the view; on a
+//              page, at its top left one line down) as a drop would be
+//              - the selection cleared first unless the view's
+//              dragOptions say not to (clearOnPaste nil) - and the
+//              clipping thrown away;
+//   3 paste, keeping the clipping;
+//   4 clear  - the view's drag items taken out of it (DropRemove).
+//
+// The screen is brought up to date afterwards.  ==> true.
 Boolean
-TView::DoEditCommand(long /*command*/)
+TView::DoEditCommand(long command)
 {
-	return false;
+	TDragInfo dragInfo(0L);
+	switch (command)
+	{
+	case 0:
+		DoEditCommand(1);
+		DoEditCommand(4);
+		break;
+
+	case 1:
+		{
+			Rect bounds;
+			bounds.top = bounds.bottom = -32768;
+			AddDragInfo(&dragInfo);
+			RefVar items(dragInfo.GetItems());
+			if (Length(items) > 0)
+			{
+				RefVar item(GetArraySlotRef(items, 0));
+				RefVar itemBounds(GetProtoVariable(item, RSSYMbounds, nil));
+				if (NOTNIL(itemBounds))
+					FromObject(itemBounds, bounds);
+				if (bounds.top == -32768)
+					GlobalHilitePinnedBounds(&bounds);
+				Dirty(nil);
+				TClipboard::NewClipboard(dragInfo, this, bounds, nil);
+			}
+		}
+		break;
+
+	case 2:
+	case 3:
+		{
+			TClipboard* clipboard = (TClipboard*) gRootView->GetClipboard();
+			TView* icon = gRootView->GetClipboardIcon();
+			if (clipboard == nil || icon == nil)
+				break;
+			Boolean clearOnPaste = true;
+			RefVar options(GetProto(RSSYMdragoptions));
+			if (NOTNIL(options))
+				clearOnPaste = NOTNIL(GetProtoVariable(options, RSSYMclearonpaste, nil));
+			Point pt;
+			pt.v = -32768;
+			pt.h = 0;
+			if (gRootView->CaretEnabled())
+				gRootView->GetCaretPoint(&pt);
+			Boolean atCaret = true;
+			if (pt.v == -32768)
+			{
+				pt = MidPoint(viewBounds);
+				atCaret = false;
+			}
+			TDragInfo pasted(0L);
+			clipboard->GetClipboardDataInfo(&pasted);
+			TView* target = TargetDrop(pasted, pt);
+			if (!atCaret && target != nil && target->DerivedFrom(clEditView))
+			{
+				// on a page: its top left, a line down
+				RefVar spacing(GetVariable(RefVar(target->fContext), RSSYMviewlinespacing, nil, 0));
+				short lineSpacing = NOTNIL(spacing) ? (short) RINT(spacing) : 0;
+				pt.v = viewBounds.top;
+				pt.h = (short) (viewBounds.left + 5);
+				pt.v = (short) (pt.v + lineSpacing);
+			}
+			if (target != nil && DropApprove(target))
+			{
+				if (clearOnPaste)
+				{
+					DoEditCommand(4);
+					if (!atCaret)
+					{
+						Point caret;
+						caret.v = -32768;
+						caret.h = 0;
+						if (gRootView->CaretEnabled())
+							gRootView->GetCaretPoint(&caret);
+						if (caret.v != -32768)
+							pt = caret;
+					}
+				}
+				// the clipping's data lands with its top left at the point
+				Point iconOrigin;
+				iconOrigin.v = icon->viewBounds.top;
+				iconOrigin.h = icon->viewBounds.left;
+				Rect data;
+				data.top = data.bottom = iconOrigin.v;
+				data.left = data.right = iconOrigin.h;
+				clipboard->CalcDataBitsBounds(&data);
+				Point dragPt;
+				dragPt.h = (short) (pt.h + (short) (iconOrigin.h - data.left));
+				dragPt.v = (short) (pt.v + (short) (iconOrigin.v - data.top));
+				clipboard->EndDrag(pasted, target, iconOrigin, pt, dragPt, true);
+				if (command == 2)
+					gRootView->RemoveClipboard();
+			}
+		}
+		break;
+
+	case 4:
+		{
+			TView* view = nil;
+			if (DerivedFrom(clParagraphView))
+				view = ((TDataView*) this)->GetEnclosingEditView();
+			if (view == nil)
+				view = this;
+			view->Dirty(nil);
+			if ((fFlags & (vReadOnly | vWriteProtected)) == 0)
+			{
+				AddDragInfo(&dragInfo);
+				for (long i = Length(RefVar(dragInfo.GetItems())); --i >= 0; )
+					DropRemove(RefVar(dragInfo.GetItemDragRef(i)));
+			}
+		}
+		break;
+	}
+	gRootView->fDirtyFlag = true;
+	gRootView->Update(nil);
+	return true;
 }
 
 

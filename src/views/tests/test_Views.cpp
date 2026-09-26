@@ -6171,6 +6171,49 @@ TestModalSafeShow()
 }
 
 
+// The editing commands on a page's selection: copy makes a clipping of
+// it, clear takes it off the page, and paste puts the clipping back on
+// the page (keeping the clipping when asked to).
+static void
+TestEditCommands()
+{
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	screenWidth = kWidth;
+	screenHeight = kHeight;
+	TView* page = ViewOf("ctxEC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 100}, viewLineSpacing: 20})");
+	TParagraphView* para = (TParagraphView*) ViewOf(
+		"ctxET := AddView(ctxEC, {viewClass: 81, viewFlags: 1 + 0x200 + 0x800 + 8, "
+		"viewBounds: {left: 10, top: 10, right: 80, bottom: 30}, viewFont: espy12, text: \"clip\"})");
+	EXPECT(page != nil && para != nil);
+	if (page == nil || para == nil)
+		return;
+	Refresh();
+	para->MakeHilite(0, 4, true);
+	gRootView->fHiliter = page;
+	EXPECT(gRootView->GetClipboard() == nil);
+
+	// copy: a clipping, the page left as it was
+	EXPECT(page->DoEditCommand(1));
+	EXPECT(gRootView->GetClipboard() != nil && gRootView->GetClipboardIcon() != nil);
+	EXPECT(page->fChildren->Count() == 1);
+
+	// clear: the selected paragraph taken off the page
+	EXPECT(page->DoEditCommand(4));
+	EXPECT(page->fChildren->Count() == 0);
+
+	// paste, keeping the clipping: the text back on the page
+	EXPECT(page->DoEditCommand(3));
+	EXPECT(page->fChildren->Count() == 1);
+	TView* back = page->fChildren->Count() > 0 ? (TView*) page->fChildren->At(0) : nil;
+	EXPECT(back != nil && back->DerivedFrom(clParagraphView)
+		   && Ustrcmp(GetCString(RefVar(((TParagraphView*) back)->Text())), (const UniChar*) u"clip") == 0);
+	EXPECT(gRootView->GetClipboard() != nil);
+	Eval("SetClipboard(nil); RemoveView(GetRoot(), ctxEC)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6314,6 +6357,7 @@ main()
 		TestParagraphDrop();
 		TestSelectionClicks();
 		TestModalSafeShow();
+		TestEditCommands();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();
