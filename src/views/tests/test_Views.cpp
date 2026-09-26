@@ -19,6 +19,7 @@
 #include "EditView.h"
 #include "Ink.h"
 #include "StrokeBundle.h"
+#include "Polygons.h"
 #include "InkFont.h"
 #include "InkShapes.h"
 #include "RichString.h"
@@ -6219,6 +6220,46 @@ TestEditCommands()
 }
 
 
+// A stroke as a polygon (AsPolygon: its points moved to its box's top
+// left), and :DrawPolygons drawing polygons of GetPolygons' kind - points
+// relative to the view - back as lines with the view's pen.
+static void
+TestPolygons()
+{
+	RefVar bundle(Eval("MakeStrokeBundle([[20, 10, 30, 20, 40, 30]], 1)"));
+	RefVar stroke(GetStroke(bundle, 0));
+	Handle h = AsPolygon(stroke);
+	EXPECT(h != nil);
+	if (h == nil)
+		return;
+	Polygon* poly = (Polygon*) *h;
+	EXPECT(PolyPointCount(poly) == 3 && poly->polySize == 24);
+	EXPECT(poly->polyBBox.left == 10 && poly->polyBBox.top == 20 && poly->polyBBox.right == 30 && poly->polyBBox.bottom == 40);
+	EXPECT(poly->polyPoints[0].h == 0 && poly->polyPoints[0].v == 0);
+	EXPECT(poly->polyPoints[2].h == 20 && poly->polyPoints[2].v == 20);
+	RefVar binary(AllocateBinary(RSSYMpolygon, GetHandleSize(h)));
+	memcpy(BinaryData(binary), *h, GetHandleSize(h));
+	KillPoly((PolyHandle) h);
+
+	TView* view = ViewOf("ctxPG := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		"viewBounds: {left: 40, top: 30, right: 100, bottom: 90}, drawPenSizeX: 2})");
+	EXPECT(view != nil);
+	if (view == nil)
+		return;
+	Refresh();
+	EXPECT(Pixel(50, 40) == 0);
+	RefVar polygons(MakeArray(1));
+	SetArraySlot(polygons, 0, binary);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(MakeSymbol("polysPG")), polygons);
+	Eval("ctxPG:DrawPolygons(polysPG)");
+	// the diagonal from the view's top left, two pixels wide
+	EXPECT(Pixel(40, 30) != 0 && Pixel(50, 40) != 0 && Pixel(51, 40) != 0 && Pixel(60, 50) != 0);
+	EXPECT(Pixel(50, 45) == 0 && Pixel(61, 51) == 0);
+	Eval("RemoveView(GetRoot(), ctxPG)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6363,6 +6404,7 @@ main()
 		TestSelectionClicks();
 		TestModalSafeShow();
 		TestEditCommands();
+		TestPolygons();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();

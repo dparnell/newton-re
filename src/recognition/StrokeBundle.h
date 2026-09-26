@@ -46,6 +46,7 @@ Ref		GetStroke(RefArg bundle, long index);				// ROM 0x001a1838 GetStroke__FRC6R
 long	CountPoints(RefArg stroke);							// ROM 0x001a19d0 CountPoints__FRC6RefVar
 
 // The box a stroke, or a whole bundle, covers, in pixels.
+Handle	AsPolygon(RefArg stroke);							// ROM 0x001a04bc AsPolygon__FRC6RefVar - a stroke binary as a polygon moved to the top left of its box
 void	GetStrokeBounds(RefArg stroke, Rect* bounds);		// ROM 0x001a19f0 GetStrokeBounds__FRC6RefVarP5TRect
 void	GetBundleBounds(RefArg bundle, Rect* bounds);		// ROM 0x001a188c GetBundleBounds__FRC6RefVarP5TRect
 void	CalcBundleBounds(RefArg bundle);					// ROM 0x001a1924 CalcBundleBounds__FRC6RefVar - and written back to the frame

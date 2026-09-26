@@ -26,6 +26,8 @@
 #include "NewtonExceptions.h"
 #include "Recognizer.h"	// gRecognition
 #include "Controller.h"
+#include "Polygons.h"
+#include "View.h"		// FailGetView
 
 
 // (a box that holds nothing yet: the recogniser's mark is a top of
@@ -599,6 +601,78 @@ FExpandUnit(RefArg /*rcvr*/, RefArg unit)
 }
 
 
+// ROM 0x001a04bc AsPolygon__FRC6RefVar
+// A stroke binary as a QuickDraw polygon in a handle of its own, its
+// bounds the stroke's box and its points rounded to pixels and moved to
+// the box's top left (a point that would come out negative is put at
+// nought).  ==> nil when there is no memory.
+Handle
+AsPolygon(RefArg stroke)
+{
+	ULong count = (ULong) CountPoints(stroke);
+	Rect bounds;
+	GetStrokeBounds(stroke, &bounds);
+	long size = 12 + (long) (count << 2);
+	Handle h = NewHandle(size);
+	SetHandleName(h, 'AsPl');
+	if (h == nil)
+		return nil;
+	Polygon* poly = (Polygon*) *h;
+	poly->polySize = (short) size;
+	poly->polyBBox = bounds;
+	const UByte* p = (const UByte*) BinaryData(stroke);
+	for (ULong i = 0; i < count; i++, p += 4)
+	{
+		poly->polyPoints[i].h = (short) (((PointHalf(p + 2) + 4) >> 3) - poly->polyBBox.left);
+		if (poly->polyPoints[i].h < 0)
+			poly->polyPoints[i].h = 0;
+		poly->polyPoints[i].v = (short) (((PointHalf(p) + 4) >> 3) - poly->polyBBox.top);
+		if (poly->polyPoints[i].v < 0)
+			poly->polyPoints[i].v = 0;
+	}
+	return h;
+}
+
+
+// ROM 0x001a0600 FGetPolygons
+// view:GetPolygons(unit): the unit's strokes as an array of 'polygon
+// binaries, their points relative to the view's top left - what
+// DrawPolygons draws back.
+static Ref
+FGetPolygons(RefArg rcvr, RefArg unit)
+{
+	TView* view = FailGetView(rcvr);
+	TUnitPublic* pub = UnitFromRef(unit);
+	RefVar polygons(MakeArray(0));
+	RefVar bundle(pub->Strokes());
+	RefVar strokes(GetFrameSlot(bundle, RSSYMstrokes));
+	long n = Length(strokes);
+	for (long i = 0; i < n; i++)
+	{
+		RefVar stroke(GetArraySlot(strokes, i));
+		Handle h = AsPolygon(stroke);
+		if (h == nil)
+			continue;
+		Polygon* poly = (Polygon*) *h;
+		Point delta;
+		delta.h = (short) (poly->polyBBox.left - view->viewBounds.left);
+		delta.v = (short) (poly->polyBBox.top - view->viewBounds.top);
+		long count = PolyPointCount(poly);
+		for (long j = 0; j < count; j++)
+		{
+			poly->polyPoints[j].h = (short) (poly->polyPoints[j].h + delta.h);
+			poly->polyPoints[j].v = (short) (poly->polyPoints[j].v + delta.v);
+		}
+		Size size = GetHandleSize(h);
+		RefVar binary(AllocateBinary(RSSYMpolygon, size));
+		BlockMove(*h, BinaryData(binary), size);
+		AddArraySlot(polygons, binary);
+		KillPoly((PolyHandle) h);
+	}
+	return polygons;
+}
+
+
 // ROM 0x001a0450 FCountGesturePoints__FRC6RefVarT1
 // CountGesturePoints(unit): how many corners the gesture's polyline has.
 static Ref
@@ -655,6 +729,7 @@ RegisterStrokeBundleNatives(void)
 	RegisterNativeFunction("FGetStrokePoint", (void*) FGetStrokePoint, 4);
 	RegisterNativeFunction("FExpandUnit", (void*) FExpandUnit, 1);
 	RegisterNativeFunction("FCountGesturePoints__FRC6RefVarT1", (void*) FCountGesturePoints, 1);
+	RegisterNativeFunction("FGetPolygons", (void*) FGetPolygons, 1);
 	RegisterNativeFunction("FGesturePoint__FRC6RefVarN21", (void*) FGesturePoint, 2);
 	RegisterNativeFunction("FStrokesAfterUnit", (void*) FStrokesAfterUnit, 2);
 }

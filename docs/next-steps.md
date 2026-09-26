@@ -695,11 +695,14 @@ The named pieces whose machinery *is* there:
 
 - `src/host/demo/open-apps.ns` opens each built-in application a user
   reaches in turn and reports what fails (with `NEWTON_TRACE_MISSING`
-  naming any native the ROM's scripts ask for that is not there).  Two
-  fail today: the Sound Recorder (`FSoundOpen` - the sound server,
-  `TSoundServer`/`TSoundChannel`) and Handwriting Practice
-  (`GetRandomDictionaryWord` - the random word generator).  Run it after
-  a piece of work that touches the view system or the recogniser.
+  naming any native the ROM's scripts ask for that is not there).  One
+  fails today: the Sound Recorder (`FSoundOpen` - the sound server,
+  `TSoundServer`/`TSoundChannel`).  Handwriting Practice now opens: it
+  wanted the random word generator (`recognition/RandomWords.h`) and
+  `:GetPolygons`/`:DrawPolygons` (the writer's strokes kept as 'polygon
+  binaries relative to the view and drawn back as lines with the view's
+  `drawPenMode`/`drawPenSizeX/Y` - `DrawSetPen`).  Run it after a piece
+  of work that touches the view system or the recogniser.
 
 - From the audit of the code after virtual calls, still NOT YET:
   `TEditView::TrackDistort` (a corner of a selected polygon dragged -

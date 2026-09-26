@@ -385,6 +385,7 @@ extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET:
 // views from contexts
 TView*		GetView(RefArg context);								// ROM 0x002613fc GetView__FRC6RefVar
 TView*		GetView(RefArg context, RefArg name);					// ROM 0x002614e0 GetView__FRC6RefVarT1
+void		DrawSetPen(RefArg context);								// ROM 0x001ec290 DrawSetPen__FRC6RefVar - drawPenMode/drawPenSizeX/Y into the port's pen
 TView*		FailGetView(RefArg context);							// ROM 0x001eda04 FailGetView__FRC6RefVar
 TView*		FailGetView(RefArg context, RefArg name);				// ROM 0x001ede40 FailGetView__FRC6RefVarT1
 TView*		BuildView(TView* parent, RefArg context);				// ROM 0x0025e950 BuildView__FP5TViewRC6RefVar

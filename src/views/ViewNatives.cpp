@@ -44,6 +44,7 @@
 #include "Draw.h"
 #include "DrawShape.h"
 #include "Regions.h"
+#include "Polygons.h"
 #include "RegionVars.h"
 #include "Ports.h"
 #include "ObjectHeap.h"
@@ -1076,6 +1077,55 @@ FGetDrawBoxX(RefArg /*rcvr*/)
 	GrafPort* port;
 	GetPort(&port);
 	return ToObject((*port->visRgn)->rgnBBox);
+}
+
+
+// ROM 0x001ec290 DrawSetPen__FRC6RefVar
+// The port's pen set from the context's drawPenMode (plus 8, the pattern
+// modes) and drawPenSizeX/Y, a nil slot taking mode 0 and a 1 x 1 pen.
+void
+DrawSetPen(RefArg context)
+{
+	long mode = 0;
+	long width = 1;
+	long height = 1;
+	RefVar value(GetProtoVariable(context, RSSYMdrawpenmode, nil));
+	if (NOTNIL(value))
+		mode = RINT(value);
+	value = GetProtoVariable(context, RSSYMdrawpensizex, nil);
+	if (NOTNIL(value))
+		width = RINT(value);
+	value = GetProtoVariable(context, RSSYMdrawpensizey, nil);
+	if (NOTNIL(value))
+		height = RINT(value);
+	PenMode(mode + 8);
+	PenSize(width, height);
+}
+
+
+// ROM 0x001ec36c FDrawPolygons
+// view:DrawPolygons(polygons): each 'polygon binary (GetPolygons' kind,
+// its points relative to the view) drawn as lines with the view's pen.
+// ROM's Count(Polygon*) (0x00197d18) is PolyPointCount.
+static Ref
+FDrawPolygons(RefArg rcvr, RefArg polygons)
+{
+	DrawSetPen(rcvr);
+	TView* view = FailGetView(rcvr);
+	long n = Length(polygons);
+	for (long i = 0; i < n; i++)
+	{
+		const Polygon* poly = (const Polygon*) BinaryData(RefVar(GetArraySlot(polygons, i)));
+		const Point* pt = poly->polyPoints;
+		MoveTo((short) (pt->h + view->viewBounds.left), (short) (pt->v + view->viewBounds.top));
+		long count = PolyPointCount(poly);
+		for (long j = 1; j < count; j++)
+		{
+			pt++;
+			LineTo((short) (pt->h + view->viewBounds.left), (short) (pt->v + view->viewBounds.top));
+		}
+	}
+	return NILREF;
 }
 
 
@@ -2696,6 +2746,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FVisibleBox", (void*) FVisibleBox, 0);
 	RegisterNativeFunction("FGetDrawBoxX", (void*) FGetDrawBoxX, 0);
 	RegisterNativeFunction("FSetOriginX", (void*) FSetOriginX, 2);
+	RegisterNativeFunction("FDrawPolygons", (void*) FDrawPolygons, 1);
 	RegisterNativeFunction("FDragX", (void*) FDragX, 2);
 	RegisterNativeFunction("FDragAndDrop", (void*) FDragAndDrop, 5);
 	RegisterNativeFunction("FDeleteX", (void*) FDeleteX, 2);
@@ -2744,7 +2795,7 @@ MakeViewMethods(void)
 		{ "MoveBehind", (void*) FMoveBehindX, 1 }, { "GlobalBox", (void*) FGlobalBoxX, 0 },
 		{ "LocalBox", (void*) FLocalBoxX, 0 }, { "GlobalOuterBox", (void*) FGlobalOuterBoxX, 0 },
 		{ "VisibleBox", (void*) FVisibleBox, 0 }, { "GetDrawBox", (void*) FGetDrawBoxX, 0 },
-		{ "SetOrigin", (void*) FSetOriginX, 2 },
+		{ "SetOrigin", (void*) FSetOriginX, 2 }, { "DrawPolygons", (void*) FDrawPolygons, 1 },
 		{ "Drag", (void*) FDragX, 2 }, { "DragAndDrop", (void*) FDragAndDrop, 5 }, { "DragAndDropLtd", (void*) FDragAndDropLtd, 5 }, { "delete", (void*) FDeleteX, 2 }, { "Effect", (void*) FEffectX, 5 },
 		{ "SlideEffect", (void*) FSlideEffectX, 5 }, { "RevealEffect", (void*) FRevealEffectX, 5 },
 		{ "ChangeStylesOfRange", (void*) FChangeStylesOfRange, 4 },
