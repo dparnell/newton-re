@@ -598,8 +598,10 @@ ScriptHandled(RefArg cmd, Ref result)
 // aeClick runs viewClickScript(unit) on a clickable view ('skip: the
 // result 0, the click passed on), aeStroke viewStrokeScript(unit),
 // aeScrub/aeCaret/aeLine and the other gestures viewGestureScript(unit,
-// kind), aeWord viewWordScript(unit), aeRawInk viewRawInkScript(strokes),
-// aeInkWord viewInkWordScript(strokes), aeScrollUp/Down and aeOverview
+// kind) (under a handler: a script that throws has handled the gesture),
+// aeWord viewWordScript(unit), aeRawInk viewRawInkScript(strokes),
+// aeInkWord viewInkWordScript(strokes) (these three the view's own
+// scripts, not its parents'), aeScrollUp/Down and aeOverview
 // their scripts (vars.lastTextChanged cleared after) - each handled
 // unless the script answered nil; the key events (HandleKeyEvent: NOT
 // YET RECONSTRUCTED); the structure - aeAddChild adds the frame
@@ -649,18 +651,31 @@ TView::RealDoCommand(RefArg cmd)
 	case aeTap:
 	case aeDoubleTap:
 		{
-			RefVar args(MakeArray(2));
-			Long unit = CommandParameter(cmd);
-			SetArraySlotRef(args, 0, unit != 0 ? AddressToRef((void*) unit) : NILREF);
-			SetArraySlotRef(args, 1, MAKEINT(id));
-			handled = ScriptHandled(cmd, RunScript(RSSYMviewgesturescript, args, true));
-			if (handled)
-				gRootView->fDirtyFlag = true;
+			// The script runs under a handler: a script that throws is
+			// taken to have handled the gesture (the result 1), so that
+			// the gesture is not passed on to be written with.
+			newton_try
+			{
+				RefVar args(MakeArray(2));
+				Long unit = CommandParameter(cmd);
+				SetArraySlotRef(args, 0, unit != 0 ? AddressToRef((void*) unit) : NILREF);
+				SetArraySlotRef(args, 1, MAKEINT(id));
+				handled = ScriptHandled(cmd, RunScript(RSSYMviewgesturescript, args, true));
+				if (handled)
+					gRootView->fDirtyFlag = true;
+			}
+			newton_catch_all
+			{
+				CommandSetResult(cmd, 1);
+				handled = true;
+			}
+			end_try;
 		}
 		break;
 
 	case aeWord:
-		handled = ScriptHandled(cmd, RunScript(RSSYMviewwordscript, RefVar(UnitArgs(cmd)), true));
+		// (the view's own viewWordScript only: not its parents')
+		handled = ScriptHandled(cmd, RunScript(RSSYMviewwordscript, RefVar(UnitArgs(cmd)), false));
 		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
 		break;
 
@@ -669,7 +684,8 @@ TView::RealDoCommand(RefArg cmd)
 		{
 			RefVar args(MakeArray(1));
 			SetArraySlotRef(args, 0, GetStrokeBundleFromCommand(cmd));
-			handled = ScriptHandled(cmd, RunCacheScript(id == aeRawInk ? kIndexViewRawInkScript : kIndexViewInkWordScript, args, true));
+			// (the view's own script only: not its parents')
+			handled = ScriptHandled(cmd, RunCacheScript(id == aeRawInk ? kIndexViewRawInkScript : kIndexViewInkWordScript, args, false));
 		}
 		break;
 
@@ -784,6 +800,7 @@ TView::RealDoCommand(RefArg cmd)
 		break;
 
 	case aeScaleData:
+		handled = true;			// (read-only or not: taken)
 		if ((fFlags & (vReadOnly | vWriteProtected)) == 0)
 		{
 			Rect src, dst;
@@ -807,6 +824,9 @@ TView::RealDoCommand(RefArg cmd)
 	case aeAddHilite:
 		{
 			RefVar hilite(CommandFrameParameter(cmd));
+			// a frame carries the hilite in its 'hilite slot
+			if (IsFrame(hilite))
+				hilite = GetFrameSlotRef(hilite, RSSYMhilite);
 			RefVar hilites(GetFrameSlotRef(fContext, RSSYMhilites));
 			if (ISNIL(hilites))
 			{
@@ -849,6 +869,7 @@ TView::RealDoCommand(RefArg cmd)
 				delete hilited;
 			}
 			gRootView->fDirtyFlag = true;
+			handled = true;
 		}
 		break;
 
@@ -861,6 +882,7 @@ TView::RealDoCommand(RefArg cmd)
 				child->RealDoCommand(cmd);
 			}
 			SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+			handled = true;
 		}
 		break;
 

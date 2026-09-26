@@ -1284,11 +1284,12 @@ TestCommands()
 	Eval("GetRoot().notified := nil; GetRoot().Notify := func(kind, err, x) notified := [kind, err]");
 	cmd = MakeCommand(0x66, v, 0);
 	EXPECT(gApplication->DispatchCommand(cmd) == 0 && ISNIL(Eval("GetRoot().notified")));
-	// PostCommandParam with a frame parameter: aeAddHilite appends it to the
-	// view's hilites as it stands (a real hilite is a THilite pointer Ref, so
-	// the slot is emptied again rather than left holding a frame)
+	// PostCommandParam with a frame parameter: aeAddHilite takes the hilite
+	// out of the frame's 'hilite slot and appends that, as the ROM does (a
+	// real hilite is a THilite pointer Ref, so the slot is emptied again
+	// rather than left holding a symbol)
 	Eval("PostCommandParam(ctxC, 0x47, {hilite: 'h1})");
-	EXPECT(RINT(Eval("Length(ctxC.hilites)")) == 1 && EQRef(Eval("ctxC.hilites[0].hilite"), Intern((char*) "h1")));
+	EXPECT(RINT(Eval("Length(ctxC.hilites)")) == 1 && EQRef(Eval("ctxC.hilites[0]"), Intern((char*) "h1")));
 	Eval("ctxC.hilites := nil");
 	// aeMoveData moves the view and posts its undo; Undo moves it back
 	Eval("ClearUndoStacks()");
