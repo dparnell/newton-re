@@ -5179,11 +5179,6 @@ TParagraphView::ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean really
 // words.  `kind` asks for one of those in particular - 5 the whole
 // paragraph, 3 lines, 2 words - and -1 for whichever answers first, which
 // is what a gesture asks.  ==> the kind that answered, 0 for none.
-//
-// NOT YET RECONSTRUCTED: ScrubWords (0x001740c4) and the ScrubCharacter
-// (0x00174808) under it, which need the word boundaries
-// (PointToWordBoundary, PointToWord) and the ROM's text objects; a scrub
-// over part of a line therefore does nothing yet.
 long
 TParagraphView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt)
 {
@@ -5715,10 +5710,24 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 		Rect bounds;
 		unit->Bounds(&bounds);
-		if (!ScrubHilite(bounds))
-			return HandleScrub(bounds, -1, unit, true) != 0;
-		// the selection went: the scrub's own ink comes off and the hole
-		// it left puffs away
+		Boolean done = ScrubHilite(bounds);
+		if (!done)
+		{
+			// what the scrub would take out asked for first, and then
+			// done for real
+			long kind = HandleScrub(bounds, -1, unit, false);
+			if (kind != 0)
+			{
+				HandleScrub(bounds, kind, unit, true);
+				done = true;
+			}
+		}
+		// nothing taken: the gesture script has it
+		if (!done)
+			return TView::RealDoCommand(cmd);
+		// the selection or the text went: the scrub's own ink comes off,
+		// the hole it left puffs away, and the command's result says the
+		// scrub was taken (so its stroke is claimed, not read as writing)
 		unit->Stroke()->InkOff(false);
 		TAnimate effect;
 		effect.SetupPoofEffect(this, bounds);

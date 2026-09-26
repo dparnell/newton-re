@@ -1570,9 +1570,26 @@ TEditView::RealDoCommand(RefArg cmd)
 	if (id == aeScrub)
 	{
 		// (textFlags bit 0x2000: the page answers the pen itself first)
-		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
+		Boolean asked = false;
+		if ((TextFlags() & 0x2000) != 0)
+		{
+			asked = true;
+			if (TView::RealDoCommand(cmd))
+				return true;
+		}
+		// A scrub that took something out says so in the command's
+		// result, which is what tells HandleUnitList the scrub was taken -
+		// it claims the scrub's stroke, so the word recogniser is not left
+		// to read it as writing.  One that took nothing goes to the
+		// gesture script, unless that has been asked already.
+		if (Scrub((TUnitPublic*) CommandParameter(cmd)) != 0)
+		{
+			CommandSetResult(cmd, 1);
 			return true;
-		return Scrub((TUnitPublic*) CommandParameter(cmd)) != 0;
+		}
+		if (asked)
+			return false;
+		return TView::RealDoCommand(cmd);
 	}
 
 	if (id == aeKeyDown || id == aeKeyRepeat)
