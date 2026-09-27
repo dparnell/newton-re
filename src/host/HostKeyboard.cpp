@@ -13,6 +13,7 @@
 #include "NameServer.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "HostTablet.h"
+#include "HostPackages.h"
 #include <atomic>
 
 // the key queue: a ring, one writer (the window), one reader (the task)
@@ -102,6 +103,7 @@ HostKeyboardToolTask(void)
 				KeyboardEvent event(key.down ? aeKeyDown : aeKeyUp, key.code);
 				newtPort.SendRPC(&replySize, &event, sizeof(event), &reply, sizeof(reply));
 			}
+			HostSendQueuedPackages();		// (a package dropped onto the window)
 			Sleep(10 * kMilliseconds);
 		}
 	}

@@ -230,6 +230,9 @@ extern void	(*gNewtHostBoot)(void);
 // host: the boot test script's path (the ROM's PreMain runs the file
 // "bootTestScript" when there is one); nil for none
 extern const char*	gNewtBootTestScript;
+// host: what PreMain runs once the boot is done, before the boot test
+// script - the program's own globals (host/HostPackages.h); nil for none
+extern void	(*gNewtHostPreMain)(void);
 void	NewtUserMain(void);									// ROM 0x0030bba8 UserMain__Fv - the 'main' task: a TNewtWorld made and run (installed as the loader's gHostUserMain by NewtInstallUserMain)
 void	NewtInstallUserMain(void);							// host: the loader's 'main' task runs NewtUserMain
 

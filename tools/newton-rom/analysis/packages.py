@@ -2,7 +2,7 @@
 """List and extract the packages built into the ROM extension.
 
 Usage:
-    python packages.py <build_dir> [--parts] [--extract DIR] [--doc FILE]
+    python packages.py <build_dir> [--parts] [--extract DIR [--relocatable] [--rename OLD=NEW]...] [--doc FILE]
     python packages.py build/MP2100D --parts
     python packages.py build/MP2100D --extract build/packages
     python packages.py build/MP2100D --doc docs/packages/rex-packages.md
@@ -15,6 +15,19 @@ from a memory source.  This reads the package directories and lists them
 flags, size and info), --extract writes each package to DIR as a .pkg
 file (a test source for the package loader), and --doc writes the listing
 as a markdown table with a header naming this script.
+
+A package built into the ROM is not a package as one arrives from outside:
+its frames parts' pointer refs are the objects' addresses in the ROM image,
+where a package that is loaded into memory holds offsets from its own
+start (FramePartHandler.cpp's ImportPart: a part in the ROM is imported at
+its address, any other at its offset in the package).  --relocatable
+rebases every pointer ref that points into the package so the extracted
+file loads from anywhere (`newton --package`), and --rename OLD=NEW gives
+the package named OLD a new name (appended to the directory data, the
+parts moved along and their refs with them) so a copy of a built-in
+package can be installed beside the one the ROM already has - the package
+manager refuses a second package of the same name
+(kError_Package_Already_Exists).
 
 The directory format (Newton Formats, and TPrivatePackageIterator
 0x001964fc): the 8-byte signature "package0" or "package1" (the newer
@@ -91,6 +104,63 @@ def parse_package(data: bytes, base: int) -> dict:
     }
 
 
+KOBJ_SLOTTED = 1			# objects.h: the flags in a header word's low byte
+KOBJ_HEADER = 8				# the size-and-flags word and the GC word; then the class (or slot 0)
+
+
+def rebase_frames_part(part: bytearray, lo: int, hi: int, delta: int, align: int) -> int:
+    """Every pointer ref in the part's objects that points into [lo, hi)
+    moved by delta.  ==> how many were moved."""
+    moved = 0
+    a = 0
+    while a < len(part):
+        header = struct.unpack_from(">I", part, a)[0]
+        size = header >> 8
+        if size < KOBJ_HEADER + 4 or a + size > len(part):
+            raise ValueError("not a run of objects at part offset %#x" % a)
+        refs = (size - KOBJ_HEADER) // 4 if header & KOBJ_SLOTTED else 1	# the slots, or a binary's class
+        for j in range(refs):
+            o = a + KOBJ_HEADER + 4 * j
+            ref = struct.unpack_from(">I", part, o)[0]
+            if ref & 3 == 1 and lo <= ref - 1 < hi:
+                struct.pack_into(">I", part, o, (ref + delta) & 0xFFFFFFFF)
+                moved += 1
+        a += (size + align - 1) & ~(align - 1)
+    return moved
+
+
+def loadable_package(rom: bytes, pkg: dict, new_name: str | None = None) -> bytes:
+    """The package as a file that loads from anywhere: its frames parts'
+    refs made offsets from the package's start (and, given new_name, the
+    package renamed)."""
+    base, size = pkg["base"], pkg["size"]
+    data = bytearray(rom[base:base + size])
+    dir_size = pkg["directory_size"]
+    align = 8 if pkg["signature"] == "package0" else 4
+    directory = bytearray(data[:dir_size])
+    grow = 0
+    if new_name is not None:
+        name = (new_name + "\0").encode("utf-16-be")
+        data_start = 52 + len(pkg["parts"]) * 32
+        struct.pack_into(">HH", directory, 24, dir_size - data_start, len(name))
+        directory += name
+        grow = (len(name) + 7) & ~7			# the parts kept on an eight-byte boundary
+        directory += b"\0" * (grow - len(name))
+        struct.pack_into(">I", directory, 44, dir_size + grow)			# the directory size
+    body = bytearray(data[dir_size:])
+    for p in pkg["parts"]:
+        if p["flags"] & 3 != 1 or p["flags"] & 0x40:		# frames parts only, and not compressed ones
+            continue
+        start = p["offset"]
+        part = bytearray(body[start:start + p["size"]])
+        # a ref at the image address base + x becomes the offset x (+ grow when x is past the directory)
+        rebase_frames_part(part, base + dir_size, base + size, -base + grow, align)
+        body[start:start + p["size"]] = part
+    out = directory + body
+    struct.pack_into(">I", out, 28, len(out))		# the package size
+    return bytes(out)
+
+
 def rex_packages(build_dir: str):
     with open(os.path.join(build_dir, "layout.json"), encoding="utf-8") as f:
         layout = json.load(f)
@@ -116,6 +186,10 @@ def main(argv=None) -> int:
     ap.add_argument("build_dir")
     ap.add_argument("--parts", action="store_true", help="list each package's parts")
     ap.add_argument("--extract", metavar="DIR", help="write each package to DIR as <name>.pkg")
+    ap.add_argument("--relocatable", action="store_true",
+                    help="with --extract: the frames parts' refs made offsets from the package, so it loads from memory")
+    ap.add_argument("--rename", metavar="OLD=NEW", action="append", default=[],
+                    help="with --extract: the package named OLD written under the name NEW (implies --relocatable)")
     ap.add_argument("--doc", metavar="FILE", help="write the listing as markdown")
     args = ap.parse_args(argv)
 
@@ -133,11 +207,18 @@ def main(argv=None) -> int:
     print("\n".join(lines))
     if args.extract:
         os.makedirs(args.extract, exist_ok=True)
+        renames = dict(r.split("=", 1) for r in args.rename)
         for pkg in packages:
-            name = "".join(c if c.isalnum() else "_" for c in pkg["name"]) or "package_%x" % pkg["base"]
+            new_name = renames.get(pkg["name"])
+            pkg_name = new_name if new_name is not None else pkg["name"]
+            name = "".join(c if c.isalnum() else "_" for c in pkg_name) or "package_%x" % pkg["base"]
             path = os.path.join(args.extract, name + ".pkg")
+            if args.relocatable or new_name is not None:
+                data = loadable_package(rom, pkg, new_name)
+            else:
+                data = rom[pkg["base"]:pkg["base"] + pkg["size"]]
             with open(path, "wb") as f:
-                f.write(rom[pkg["base"]:pkg["base"] + pkg["size"]])
+                f.write(data)
             print("wrote", path)
     if args.doc:
         out = [

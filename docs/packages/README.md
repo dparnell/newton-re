@@ -82,7 +82,37 @@ Setup, and the help book), ListView, two protocol code packages
 (ScreenBuffer, ScreenDrivers: raw ARM code, not portable) and the
 WorldData soup package (a raw part read by `TPackageStore`,
 `src/stores/PackageStore.h`).  `packages.py --extract DIR` writes them out
-as `.pkg` files.
+as `.pkg` files - as they are in the ROM, where a frames part's pointer
+refs are the objects' addresses in the image.  A package loaded into
+memory holds offsets from its own start instead (`ImportPart` imports a
+part in the ROM at its address, any other at its offset in the package),
+so `--relocatable` rebases the refs that point into the package, and
+`--rename OLD=NEW` (which implies it) gives one a new name - appended to
+the directory data, the parts and their refs moved along - so that a copy
+of a built-in package can be installed beside the ROM's own: the manager
+refuses a second package of a name it has (`kError_Package_Already_Exists`,
+-10402).
+
+## Loading a package from the host (`src/host/HostPackages.h`)
+
+`newton --package file.pkg` (repeatable, installed in order once the
+machine is up) and a .pkg dropped onto the window (`WM_DROPFILES`) put
+the file's name on a queue.  The kernel services task - the keyboard
+tool's loop with a window, the headless timer without - takes each one,
+reads the file and sends the newt world a `'scpt` event
+(`TRunScriptEvent`) naming the root view's variable `hostPackages` and
+its method `Install`, the file's bytes as the argument: the way the ROM's
+own tools run a script inside the world, so the install happens on the
+world's task as the ROM's callers' do.  `Install` copies the bytes into a
+block of their own (a package in memory executes in place, so the block
+is kept while it is installed) and calls `LoadPackage` with a
+`kFixedMemory` source; the host prints `[host] file: installed as package
+<id>` or the error.  `hostPackages` is put in the root view's frame by
+`HostInstallPackageGlobal`, which `TNewtWorld::PreMain` runs through the
+host hook `gNewtHostPreMain` once the boot is done.  `ctest`'s
+`host.NewtonPackage` installs `Formulas2.pkg`, made by
+`host.NewtonPackage.extract` with `packages.py --rename
+Formulas=Formulas2`.
 
 ## The package manager (`src/packages/PackageManager.h`)
 

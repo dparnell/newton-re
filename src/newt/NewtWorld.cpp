@@ -52,6 +52,7 @@ TTime			gLastPenupTime;				// ROM 0x0c100d14 gLastPenupTime
 Boolean			gGoingToSleep = false;		// ROM 0x0c105520 gGoingToSleep
 void			(*gNewtHostBoot)(void) = nil;
 const char*		gNewtBootTestScript = nil;
+void			(*gNewtHostPreMain)(void) = nil;
 static const Int64	kZero = { 0, 0 };
 
 // the keyboard tool's reply to a 'keyb event: the repeat rates (over the
@@ -286,6 +287,8 @@ TNewtWorld::PreMain()
 	RefVar soup(StoreGetSoup(store, RefVar(Rextrassoupname)));
 	SoupSetInfo(soup, RSSYMextrasstate, RSSYMinitialized);
 	gApplication->Run();
+	if (gNewtHostPreMain != nil)		// host: the program's globals (HostInstallPackageGlobal)
+		gNewtHostPreMain();
 	if (gNewtBootTestScript != nil)		// (the ROM: a "bootTestScript" file, with the REP's output to files)
 	{
 		newton_try

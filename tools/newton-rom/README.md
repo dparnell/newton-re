@@ -55,8 +55,8 @@ tools/newton-rom/
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
                           --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots),
                           --binary-classes (the object area's binaries counted by class)
-    packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files),
-                          --doc docs/packages/rex-packages.md
+    packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files;
+                          --relocatable, --rename OLD=NEW for loadable copies), --doc docs/packages/rex-packages.md
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words
                           -> src/frames/ParserTables.h/.cpp, docs/frames/grammar.md
     spellmaps.py          the spelling checker's character maps (what a letter may be read
@@ -436,7 +436,10 @@ writes the grammar rule by rule as markdown.  `analysis/packages.py
 build/MP2x00US --parts` lists the ten packages built into the ROM extension
 (the REx's `pkgl` entry: their directories, parts, flags and infos, the
 format described in the script), `--extract DIR` writes each as a `.pkg`
-file and `--doc docs/packages/rex-packages.md` the listing as markdown.
+file (as in the ROM, its refs image addresses; `--relocatable` rebases them
+to offsets in the package as a loaded package has them, and `--rename
+OLD=NEW` also renames one so it installs beside the built-in one:
+`newton --package`) and `--doc docs/packages/rex-packages.md` the listing as markdown.
 
 `analysis/recite.py --from build/MP2100D --to build/MP2x00US [--check]`
 moves the reconstruction's citations from one ROM image to another, which

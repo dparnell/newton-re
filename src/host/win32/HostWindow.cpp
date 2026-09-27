@@ -9,6 +9,7 @@
 #include <atomic>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shellapi.h>
 #endif
 #include "HostWindow.h"
 #include <string.h>
@@ -23,6 +24,7 @@ void	HostWindowPenUp(void);
 void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
+void	HostWindowFileDropped(const char* path);	// host/HostPackages.cpp: a package to install
 }
 
 #define nil 0
@@ -91,6 +93,19 @@ WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_ERASEBKGND:
 		return 1;
+	case WM_DROPFILES:
+	{
+		HDROP drop = (HDROP) wParam;
+		UINT count = DragQueryFileA(drop, 0xFFFFFFFF, nil, 0);
+		for (UINT i = 0; i < count; i++)
+		{
+			char path[MAX_PATH];
+			if (DragQueryFileA(drop, i, path, sizeof(path)) > 0)
+				HostWindowFileDropped(path);
+		}
+		DragFinish(drop);
+		return 0;
+	}
 	case WM_LBUTTONDOWN:
 		SetCapture(hwnd);
 		gPenDown.store(true);
@@ -148,6 +163,7 @@ WindowThread(void)
 	gWindow = CreateWindowA("NewtonHostWindow", gTitle, style, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, nil, nil, wc.hInstance, nil);
 	if (gWindow == nil)
 		return;
+	DragAcceptFiles(gWindow, TRUE);		// a package dropped onto the window is installed
 	ShowWindow(gWindow, SW_SHOW);
 	SetTimer(gWindow, kRefreshTimer, 33, nil);
 	MSG msg;

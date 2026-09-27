@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-27: packages loaded from the host
+
+- `newton --package file.pkg` (repeatable) and a .pkg dropped onto the
+  window install a package through the package manager
+  (`host/HostPackages.h`, `docs/packages/README.md`'s "Loading a package
+  from the host"): a queue, a `'scpt` event to the newt world naming the
+  root view's `hostPackages:Install`, `LoadPackage` from a block of the
+  package's own.  `TNewtWorld::PreMain` gained the host hook
+  `gNewtHostPreMain`.  The window accepts dropped files (`shell32`).
+- `packages.py --extract` gained `--relocatable` and `--rename OLD=NEW`:
+  a ROM package's refs are image addresses, which crashed the importer
+  when an extracted one was loaded from memory; rebased, a renamed copy
+  of Formulas installs beside the ROM's (`GetPackages()` lists it).
+  ctest `host.NewtonPackage` checks it.
+- Host note: `<mutex>`/`<string>` cannot be included in a file built
+  with the Newton include paths (libc++'s locale support finds
+  `intl/Locale.h` for `<locale.h>`); `<atomic>` is fine.
+
 ## 2026-09-27: the package manager
 
 - **The package manager** (`packages/PackageManager.h`, 0x0015bf00-
@@ -383,360 +401,709 @@ The last run of work closed, in order:
 
 ## The natives as they stood when the thin wrappers were finished
 
-### What was left of the natives, and why (then)
-
-The thin wrappers are done.  What `natives.py --unbound` still lists is
-463 natives, and they are not a long tail of small jobs: nine out of ten
-of them are the script-facing face of a subsystem that has no
-reconstruction behind it at all.  Binding one of those means writing the
-subsystem, not the wrapper.
-
-| how many | what is under it |
-|---|---|
-| 145 | communications: endpoints, CCL, AppleTalk, IR, NTK, the desktop connection |
-|  47 | the Intelligent Assistant: its lexicon and the sentence-level functions |
-|  46 | the books and newspaper system |
-|  38 | the text engine (TXView/TXFrames: styled documents with rulers) |
-|  38 | the Rosetta handwriting engine: letters, training and reading |
-|  36 | the test agent and the debug hooks |
-|  35 | the package manager and the card |
-|  12 | sound channels (the sound server) |
-|   6 | the text engine's ranges and the book reader's HiliteBlock |
-|   4 | large binaries on a store, and store passwords |
-|  55 | everything else, a handful each |
-
-Regenerate that table at any time with `natives.py --unbound --csv`, and
-find the cheapest work inside a group with `--sizes build/MP2x00US`.
+### What was left of the natives, and why (then)
+
+
+
+The thin wrappers are done.  What `natives.py --unbound` still lists is
+
+463 natives, and they are not a long tail of small jobs: nine out of ten
+
+of them are the script-facing face of a subsystem that has no
+
+reconstruction behind it at all.  Binding one of those means writing the
+
+subsystem, not the wrapper.
+
+
+
+| how many | what is under it |
+
+|---|---|
+
+| 145 | communications: endpoints, CCL, AppleTalk, IR, NTK, the desktop connection |
+
+|  47 | the Intelligent Assistant: its lexicon and the sentence-level functions |
+
+|  46 | the books and newspaper system |
+
+|  38 | the text engine (TXView/TXFrames: styled documents with rulers) |
+
+|  38 | the Rosetta handwriting engine: letters, training and reading |
+
+|  36 | the test agent and the debug hooks |
+
+|  35 | the package manager and the card |
+
+|  12 | sound channels (the sound server) |
+
+|   6 | the text engine's ranges and the book reader's HiliteBlock |
+
+|   4 | large binaries on a store, and store passwords |
+
+|  55 | everything else, a handful each |
+
+
+
+Regenerate that table at any time with `natives.py --unbound --csv`, and
+
+find the cheapest work inside a group with `--sizes build/MP2x00US`.
+
 
 
 ## The Rosetta engine, as it was reconstructed
 
-**The handwriting engine has been started.**  `TRosRecognizer`, the
-`TWRecognizer` implementation the ROM plugs its engine in through, is
-reconstructed (`recognition/RosRecognizer.h`), and the fifteen calls it
-makes into the engine are declared as an explicit seam
-(`recognition/Rosetta.h`) with no bodies yet.  The engine below is
-ParaGraph's Calligrapher: about two hundred kilobytes in six layers,
-mapped out in `docs/recognition/README.md` under "The Rosetta engine",
-which also says what to do next and in what order.  Level 1 is
-finished, and so are the geometry the engine measures in
-(`toolbox/FixedGeometry.h`) and its strokes and stroke lists
-(`recognition/RosStrokes.h`, level 5).
-
-**Level 3 has been opened at its state block.**  The word recogniser
-keeps everything about a piece of writing in one flat 0x208-byte block
-that every layer reaches into at fixed offsets, so the block had to be
-named before anything above or below it could be written, and
-`recognition/WordRecog.h` now names it as far as the evidence goes,
-with its whole life: made, allocated, suspended, resumed, reset,
-cleared and destroyed, the run of measurements saved and put back, the
-grammar context picked by name, the cap height learnt from a word, the
-readings handed back, and the four tests that decide whether a stroke
-has to be cut in two before it is read (`WordRecogStrokeType`,
-`IsStrokeTooWide`, `StrokeIntersectsTwoVerticalStrokes`,
-`StrokeNeedsFragmenting`), and `WordRecogAddStroke2` - the baseline of
-a closed word and the run learnt from every stroke, which is where the
-nine Gaussians turned up.  What is left of level 3 is
-`WordRecogAddStroke` itself (eight kilobytes) and the segment side.  **Level 2's life is reconstructed** with it
-(`recognition/Rosetta.h`): waking, quietening and sleeping over the one
-`gWordRecog`, the working values, the baseline, the character set and
-what the engine is told to stop doing.  What is left of level 2 is
-`RosettaSetArea` and the three passes a classify is made of.
-
-**The engine wakes.**  `analysis/bigrammar.py` generates
-`src/recognition/ROMGrammar.cpp` - the eight bigram grammars a field
-asks for by name, each a list of *kinds of word* (a lexicon out of
-`gROMDictionaryData`, a score of its own, and a score for every kind
-that may follow it), written out in `docs/recognition/grammar.md` - so
-`RosettaInitialize` now makes a word recogniser that knows the eight
-grammars and the 166 characters it may answer.  What is missing is
-*reading*, and it is a subsystem of its own rather than a piece of
-work: `docs/recognition/bpnet.md` inventories it.  The bottom of it - the
-classifier net, its trained tables, its life and `BPNetEvaluate` - is
-reconstructed (`recognition/BPNet.h`, `analysis/bpnet.py`), and that
-page has the assembly it came out of and the three numbers the net
-records about itself that the reconstruction is checked against.  The
-0x03500000 the routine adds to its weight pointer turned out to be the
-whole ROM mapped a second time *uncached*
-(`g8MegContinuousTableStart`, ROM 0x100), so that streaming 91KB of
-weights does not flush the StrongARM's data cache.
-
-**The patternizers are done** (`recognition/NetPattern.h`): the
-little class system they are written in, the composite that holds one
-per input group, and the five scalars.  That established what the
-classifier is actually shown - the net's 384 inputs are a 14x14
-picture of the writing (196), a 20x9 grid of where the pen went (180),
-the aspect ratio (1) and the stroke count (7).  `ImageSplatLimited` is done too, over the
-engine's own renderer (`recognition/Render.h`, `analysis/render.py`),
-which anti-aliases by drawing at four times the size into a one-bit
-bitmap and counting the set sub-pixels through a table.  `StrokePUD` is done as
-well, so **all seven patternizers are reconstructed** and a stroke
-list now reaches all 384 of the classifier's inputs in one call
-(`test_NetPattern` does exactly that and then runs the net).
-
-**And the engine reads.**  `CharBox` (`recognition/CharBox.h`), the
-boxed-character recogniser, is the piece that joins the classifier to
-the character codes: a recogniser over a rectangle, up to six strokes
-put into it, and `CharBoxNetEvaluate` turning the net's 134 outputs
-into a probability for each of the 256 codes - nothing for a code the
-area will not have, the node's own output for a code that stands for
-one shape, and the *product* of two nodes for a code that is really two
-characters (166 of the US ROM's codes are legal and 54 of those are
-compound).  `test_CharBox` draws an upright stroke crossed by a level
-one and gets back `+` (0xf100), `t` (0xe500) and `T` (0x0100) and
-nothing else, which is the reconstruction reading handwriting for the
-first time; `docs/curiosities.md` has it.  `CharBoxEvaluate` - the
-scores and the geometry penalties - is NOT YET, because it wants the
-segment layer.
-
-**The segment layer is begun** (`recognition/Segment.h`): what a
-`RosSegment` is - a stroke list, its box, whether any stroke in it is a
-dot, and how big the smallest of them is - and the five measurements
-the cutting is made of: `SegmentDot` (small in *both* directions),
-`SegmentAspect`, `SegmentOverlap` (the mean of the two fractions of the
-line two boxes share), `SegmentStrokeMinDistance` (which two points of
-two strokes come nearest, searched by |dx|+|dy| and only then measured
-properly) and the pair `SegmentCrossed`/`SegmentNonTailLinked`, which
-say whether that nearest approach is in the middle of both strokes or
-at their ends - a t against a V.  The second of those two carries a ROM
-bug: it tests two of the four clauses its question comes to and uses
-the wrong stroke's margin in one of them, so the end of a long stroke
-touching the middle of a short one is missed.  Kept and demonstrated in
-`test_Segment`.  `SegmentSetStrokes` needed the stroke joiners, so
-`StrokesAdjoin`, `StrokeJoin` and `SLJoinFragments` are in
-`recognition/RosStrokes.h` now.
-
-**And the first pass of the cutting is done too**: `SegmentChars`
-works the two widths out of the writing's height (a letter is half of
-it, two strokes touch within a tenth of it, each capped at two and a
-half times what the nominal 18.85 pixels would give) and
-`SegmentStroke` runs over every stroke, deciding whether it and the one
-before it are part of one letter - three thresholds on how much of the
-line they share, the lower two needing `SegmentCrossed` or
-`SegmentNonTailLinked` as well - and whether a cut may go in front of
-it.  `SegmentMultiStrokeMinDistance` and
-`SegmentMultiStrokeMinDistBoundX` look **three** strokes back, because
-a letter is often written in pieces that are not consecutive, and one
-forward for the case where the writer went back to dot an i.
-`rosCI`'s `fMinCharWidth`, `fCharWidthFraction`, `fReachFraction` and
-the four overlap thresholds are named for all this.
-
-`SegmentSetStrokeOverlaps` is done as well - a segment's strokes told
-how much of the line each shares with the one before it *now that the
-segment has them in its own order*, the first measured against the last
-stroke of the segment before it.
-
-**And the second pass is done: the segment layer cuts writing into
-letters.**  `SegmentMakeSegments` is incremental - called once per
-stroke and once more at the end, keeping its working-out in the
-0x44-byte `SegState` that `SegmentQuiesce` gives back - and ends a
-piece for one of three reasons: the first pass marked the stroke, the
-aspect ratio passed 1.5 (or 1.75 when a dot has already widened the
-box), or the piece has more than five strokes (six with
-`FragmentLigatures`).  A cut may not land in the middle of a run of
-linked strokes, so it walks back to one it may land on; failing that it
-cuts anyway and rewrites the links, which is the engine admitting that
-a run it thought was one letter cannot be.
-
-**What it hands up is a lattice, not a partition**: for a piece it
-emits every grouping the links allow - the first stroke, the first two,
-the first three, then the same from the second stroke - so three
-strokes it cannot tell apart come back as six segments, for the layer
-above to score.  `test_Segment` drives the whole thing: two x's written
-as four crossing strokes come back as exactly two segments, and three
-upright strokes five pixels apart as all six groupings.  One thing is
-transcribed rather than understood - the per-stroke `fField24`, which
-chooses between the lattice and one grouping for the whole piece - and
-it is `WordRecogAddStroke` that decides what it is.
-
-`SegmentSetWordSpacing` is done too - the writer's spacing slider (1 to
-9, five in the middle) turned into the factor the layer weighs gaps by,
-its natural logarithm (taken in double precision, the only floating
-point in the engine, because the layers above add it) and the threshold
-interpolated between `Min`/`Mid`/`MaxSegOnlyThreshold`.  It carries a
-ROM bug worth reading: the constant above the middle setting is
-`0x170000` where `0x17000` was surely meant, so the top half of the
-slider runs 6.75, 12.5, 18.25, 24 where the bottom half runs 0.32 to
-1.00.  `docs/curiosities.md` has it.
-
-The word recogniser's own way into the classifier is done as well -
-`WordRecogNetEvaluate`/`WordRecogNetSetInputs`, the twins of the
-`CharBox` pair, keeping the patternizer on the recogniser because a
-word is read one candidate letter at a time.  `test_WordRecog` puts the
-same writing through them that `test_CharBox` puts through the other
-path and gets the same three answers.
-
-The grammar's own allocation is done as well - `BiGrammarNew`,
-`BiGrammarCreate`, `BiGSliceNew`, `BiGSliceDestroy` and a real
-`BiGrammarDestroy`.  Both a grammar and a slice keep their arrays
-behind the struct in the same block, which is what makes each of them
-one allocation and one `DisposPtr`.  Reading them settled two fields:
-a slice's `+0x1c`/`+0x20` are its live count of following kinds and the
-room it has for them (equal in the ROM's tables only because those are
-full), and `+0x2c` is what a slice is *made* with, 0xff, so the nine
-`LexicalSymbols` kinds carrying nought and `wordlike` carrying one
-mean something.  `BiGrammarCreate` takes a name and never stores it, so
-a grammar the engine builds for a field is nameless.
-
-**And `RosettaSetArea` is done**, with the grammar machinery under it:
-`BiGSliceCreate`, `BiGrammarAddSlice` (unnamed in the ROM, inside
-`BiGrammarModifyContext`), `BiGrammarClone` and
-`BiGrammarModifyContext`.  Reading them turned up what a grammar's
-scores actually are - **negative natural logarithms of probabilities
-scaled by five hundred** - which is why the engine adds everywhere and
-why `ArProbDecodeLu`/`ArProbEncodeLu1`/`ArProbEncodeLu2` (now generated
-into `ArProbTables.cpp`) exist at all.  `docs/curiosities.md` has it.
-
-So a field's configuration now becomes a grammar: eight flag bits pick
-one of the ROM's seven special grammars, anything else gets the General
-grammar narrowed by `BiGrammarModifyContext` (nine tenths of the
-probability to the kinds the field wants, the rest to everything else,
-and the likeliest brought down to nought), every slice's dictionary
-index becomes the data itself, and the field's own symbol set narrows
-`RosCI->fLegalUse`.  `test_Rosetta` drives all four paths.
-
-A ROM bug kept: `BiGrammarClone` copies the shorts at +0x08, +0x0a and
-+0x0c but not the one at +0x0e, and `BiGSliceNew` does not clear it, so
-a cloned slice's `fField0e` is whatever was in the heap.  It is nought
-in all 46 of the ROM's own slices.
-
-**`WordRecogAnalyzeWord` and `CharGetAvgBoxBHW` are done**, which is
-the top of the reading path.  A word is measured - the mean base over
-the segments that are more than a dot, the mean height and width over
-the ones big enough to count, and the tallest and widest raised to what
-the word's overall shape suggests - and three of the four lengths the
-engine keeps about the writer's hand are moved an eighth of the way
-towards it, but only when the word is within half to twice what it
-already believed, and then held to between half and twice their
-nominal.  Then every candidate letter in the lattice goes through
-`WordRecogNetEvaluate` and on to the search with a confidence worked
-out from how much of the line its strokes share.  `WordRecogEndWord`
-closes the word.
-
-**The search's readings are done** (`recognition/WordTails.h`): a
-reading is a backwards linked list of single characters, reference
-counted so the dozens of partial readings the search holds at once
-share their ends, named by a 16-bit reference whose bits are the table
-and the slot.  `WordTailBlockAllocate`, `AddRef`/`DeleteRef`, the two
-`Sprint`s, `WordTailCompare` and the word-list pool
-(`WordListFreeAll`/`DeleteRef`/`Sprint`) are all real, and
-`docs/curiosities.md` has the idea.  A ROM bug kept: `AddRef` does not
-answer early for the empty tail where `DeleteRef` does.
-
-**The search's state and its life are done** (`recognition/Search.h`):
-`SearchAllocateGlobals`/`DeallocateGlobals`, `SearchAllocateReturnCache`,
-`SearchBeginWord`, `SearchEndWord`, `GCBestNodes` and
-`SearchCheckHashHit`.  Thirty-seven columns, one per stroke of the
-longest word plus one to start from, each holding up to `MaxBestNodes`
-(27) partial readings; `SearchBeginWord` puts one node in the first
-column holding the empty reading that every path grows from.
-`SearchCheckHashHit` turned out to be an **easter egg** - write one of
-eight words three times in a row and the recogniser answers the
-recognition team's names and addresses instead; `docs/curiosities.md`
-has it, and `analysis/romtable.py` grew a `strN` type for its two
-tables.
-
-`SearchProcessSegment` is done too, with `ShiftNetValues` and
-`GetBestPath`: the classifier's probabilities and `CharModifyProbs`'s
-turned into the two score arrays the step reads, the columns moved
-along (they are a **ring** - the pointers rotate, nothing is copied),
-and the try string copied out.  `rosCI`'s `fNetScoreWeight` (four
-fifths, what the classifier's opinion is worth against everything else)
-is named.
-
-**The search is done.**  `SearchDoVStepFromNode`, the innermost thing
-the engine does, is reconstructed: one reading grown by one letter,
-every way it can be - every kind of word the grammar allows after it,
-every character the lexicon allows next, and every case of each.  With
-it `LELangNodeNumOut` and the `LE` node formats
-(`recognition/LELang.h`: a run lexicon and a chained one, the
-variable-width offsets of `AckNodeSizeTab`), and the capitals model the
-step charges through - `RosCommonInfo::fCapCostUpper`/`fCapCostLower`/
-`fCapCostOther`, twelve contexts each, and `BiGSlice::fCapExtraUpper`/
-`fCapExtraLower`/`fCapCostUpper`/`fCapCostLower` for a kind of word
-that has opinions of its own.  `test_Search` now drives the whole
-search over the ROM's own lexicons and gets a letter back.
-
-**`GeoContextPenalty` is done too**, with `GeoContextAux1`,
-`GeoContextAux2` and the cache (`recognition/GeoContext.h`): what the
-geometry between two adjacent letters costs, which is the part that
-tells `rn` from `m`.  The engine's nominal drawing of a character is
-sixteen numbers in `rosCharParams` (now all generated and named: its
-bottom, height and width, the room it wants either side, its smallest
-stroke written in one stroke and in more, and what each of those is
-worth), and the two observed boxes are brought to a common size and
-place, fitted by least squares and reduced to nine residuals which go
-through a symmetric nine-by-nine matrix as a quadratic form - a
-Mahalanobis distance.  The step charges it at **a quarter weight** when
-the letter before is in another word or there is no letter before at
-all, and in full within a word.  `docs/curiosities.md` has the whole
-story.
-
-**The lexical search is now complete**: nothing in it is NOT YET.
-
-`SearchDoViterbStep`, `RegisterNewPath`, `StoreFinalPaths`,
-`CapHackDetermineContext`, `SearchFindBest`,
-`SearchSegwordRememberNBest`, `SearchBestWords` and `SearchSendWords`
-are all done, so a reading that has been grown knows where to go, when
-it turns into text, and how it comes back out.  The beam is kept
-deliberately varied: `SearchColumn::fClassCounts` and
-`BiGrammar::fClassLimits` limit how many readings of each kind of word
-a column may hold, and `RegisterNewPath` prefers to evict one that is
-over its quota rather than simply the worst.
-
-**`CharModifyProbs` is done** - what leans the classifier's answer with
-where and how big the piece of writing was.  Two of its four
-adjustments are nought in the shipped ROM; what is left is the capitals
-hack and a Gaussian height model over `CharHeight`'s trained means and
-spreads, worked out with no exponential because a score in this engine
-is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
-`fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
-are named for it.
-
-### Done: the engine reads, and writing becomes text
-
-`WordRecogAddStroke` (the driver: a stroke into the word, the word
-spacing asked three ways, ligatures cut and each piece taken in by a
-recursive call, the word closed when it is full) and the classify
-passes (`RosettaClassifySetup`/`Analyze`/`Cleanup`/`RosettaClassify`,
-`RosettaCheckWords`, the boxed-letter path `RosICBX`) are real, so
-**nothing in the Rosetta engine is NOT YET** any more.  The feature
-extraction once thought to be under it (`low_type`/`EXTR`, 556 KB) is
-not Rosetta's: the call graph (`analysis/callgraph.py ...
-RosettaClassify --through-done`) shows Rosetta reaches none of it - its
-features are the four patternizer groups, which were done already.
-
-`test_Reading` draws letters with a synthetic pen and checks the engine
-reads eight words ("to", "tin" and "ton" come back first, the others
-within the first two).  Four bugs in the reconstruction came out of
-running it for real - two host-size mistakes (arrays of pointers and of
-`ULong` sized at four bytes: `WordRecogAllocate`, the `LELTranCache`),
-`RenderLine` missing the second coordinate's step back (the decompiler
-had dropped it; it wrote one byte into the next heap block's header),
-and `StrokeDestroy` not answering early for nil as the ROM does.  The
-debugging aids that found them stay in `test_Reading.cpp`: a crash
-handler that prints a symbolised stack (dbghelp) and a heap walker
-(`ROSETTA_HEAPCHECK=1`).
-
-The host OS registers `TRosRecognizer` now (`TNotebook::InitToolbox`,
-`HostBootNewtWorld`), and `TEditView` answers `aeWord`: the command's
-case in `RealDoCommand`, `HandleWordUnit`, `RemoveInk`, and
-`HandleWord`'s remote-writing branch - on by default, which sends a
-written word to the caret: into the caret's paragraph (through
-`InsertItemsAtCaret`, a space in front unless it is a letter written
-into the middle of a word), onto the end of the text under a caret on
+**The handwriting engine has been started.**  `TRosRecognizer`, the
+
+`TWRecognizer` implementation the ROM plugs its engine in through, is
+
+reconstructed (`recognition/RosRecognizer.h`), and the fifteen calls it
+
+makes into the engine are declared as an explicit seam
+
+(`recognition/Rosetta.h`) with no bodies yet.  The engine below is
+
+ParaGraph's Calligrapher: about two hundred kilobytes in six layers,
+
+mapped out in `docs/recognition/README.md` under "The Rosetta engine",
+
+which also says what to do next and in what order.  Level 1 is
+
+finished, and so are the geometry the engine measures in
+
+(`toolbox/FixedGeometry.h`) and its strokes and stroke lists
+
+(`recognition/RosStrokes.h`, level 5).
+
+
+
+**Level 3 has been opened at its state block.**  The word recogniser
+
+keeps everything about a piece of writing in one flat 0x208-byte block
+
+that every layer reaches into at fixed offsets, so the block had to be
+
+named before anything above or below it could be written, and
+
+`recognition/WordRecog.h` now names it as far as the evidence goes,
+
+with its whole life: made, allocated, suspended, resumed, reset,
+
+cleared and destroyed, the run of measurements saved and put back, the
+
+grammar context picked by name, the cap height learnt from a word, the
+
+readings handed back, and the four tests that decide whether a stroke
+
+has to be cut in two before it is read (`WordRecogStrokeType`,
+
+`IsStrokeTooWide`, `StrokeIntersectsTwoVerticalStrokes`,
+
+`StrokeNeedsFragmenting`), and `WordRecogAddStroke2` - the baseline of
+
+a closed word and the run learnt from every stroke, which is where the
+
+nine Gaussians turned up.  What is left of level 3 is
+
+`WordRecogAddStroke` itself (eight kilobytes) and the segment side.  **Level 2's life is reconstructed** with it
+
+(`recognition/Rosetta.h`): waking, quietening and sleeping over the one
+
+`gWordRecog`, the working values, the baseline, the character set and
+
+what the engine is told to stop doing.  What is left of level 2 is
+
+`RosettaSetArea` and the three passes a classify is made of.
+
+
+
+**The engine wakes.**  `analysis/bigrammar.py` generates
+
+`src/recognition/ROMGrammar.cpp` - the eight bigram grammars a field
+
+asks for by name, each a list of *kinds of word* (a lexicon out of
+
+`gROMDictionaryData`, a score of its own, and a score for every kind
+
+that may follow it), written out in `docs/recognition/grammar.md` - so
+
+`RosettaInitialize` now makes a word recogniser that knows the eight
+
+grammars and the 166 characters it may answer.  What is missing is
+
+*reading*, and it is a subsystem of its own rather than a piece of
+
+work: `docs/recognition/bpnet.md` inventories it.  The bottom of it - the
+
+classifier net, its trained tables, its life and `BPNetEvaluate` - is
+
+reconstructed (`recognition/BPNet.h`, `analysis/bpnet.py`), and that
+
+page has the assembly it came out of and the three numbers the net
+
+records about itself that the reconstruction is checked against.  The
+
+0x03500000 the routine adds to its weight pointer turned out to be the
+
+whole ROM mapped a second time *uncached*
+
+(`g8MegContinuousTableStart`, ROM 0x100), so that streaming 91KB of
+
+weights does not flush the StrongARM's data cache.
+
+
+
+**The patternizers are done** (`recognition/NetPattern.h`): the
+
+little class system they are written in, the composite that holds one
+
+per input group, and the five scalars.  That established what the
+
+classifier is actually shown - the net's 384 inputs are a 14x14
+
+picture of the writing (196), a 20x9 grid of where the pen went (180),
+
+the aspect ratio (1) and the stroke count (7).  `ImageSplatLimited` is done too, over the
+
+engine's own renderer (`recognition/Render.h`, `analysis/render.py`),
+
+which anti-aliases by drawing at four times the size into a one-bit
+
+bitmap and counting the set sub-pixels through a table.  `StrokePUD` is done as
+
+well, so **all seven patternizers are reconstructed** and a stroke
+
+list now reaches all 384 of the classifier's inputs in one call
+
+(`test_NetPattern` does exactly that and then runs the net).
+
+
+
+**And the engine reads.**  `CharBox` (`recognition/CharBox.h`), the
+
+boxed-character recogniser, is the piece that joins the classifier to
+
+the character codes: a recogniser over a rectangle, up to six strokes
+
+put into it, and `CharBoxNetEvaluate` turning the net's 134 outputs
+
+into a probability for each of the 256 codes - nothing for a code the
+
+area will not have, the node's own output for a code that stands for
+
+one shape, and the *product* of two nodes for a code that is really two
+
+characters (166 of the US ROM's codes are legal and 54 of those are
+
+compound).  `test_CharBox` draws an upright stroke crossed by a level
+
+one and gets back `+` (0xf100), `t` (0xe500) and `T` (0x0100) and
+
+nothing else, which is the reconstruction reading handwriting for the
+
+first time; `docs/curiosities.md` has it.  `CharBoxEvaluate` - the
+
+scores and the geometry penalties - is NOT YET, because it wants the
+
+segment layer.
+
+
+
+**The segment layer is begun** (`recognition/Segment.h`): what a
+
+`RosSegment` is - a stroke list, its box, whether any stroke in it is a
+
+dot, and how big the smallest of them is - and the five measurements
+
+the cutting is made of: `SegmentDot` (small in *both* directions),
+
+`SegmentAspect`, `SegmentOverlap` (the mean of the two fractions of the
+
+line two boxes share), `SegmentStrokeMinDistance` (which two points of
+
+two strokes come nearest, searched by |dx|+|dy| and only then measured
+
+properly) and the pair `SegmentCrossed`/`SegmentNonTailLinked`, which
+
+say whether that nearest approach is in the middle of both strokes or
+
+at their ends - a t against a V.  The second of those two carries a ROM
+
+bug: it tests two of the four clauses its question comes to and uses
+
+the wrong stroke's margin in one of them, so the end of a long stroke
+
+touching the middle of a short one is missed.  Kept and demonstrated in
+
+`test_Segment`.  `SegmentSetStrokes` needed the stroke joiners, so
+
+`StrokesAdjoin`, `StrokeJoin` and `SLJoinFragments` are in
+
+`recognition/RosStrokes.h` now.
+
+
+
+**And the first pass of the cutting is done too**: `SegmentChars`
+
+works the two widths out of the writing's height (a letter is half of
+
+it, two strokes touch within a tenth of it, each capped at two and a
+
+half times what the nominal 18.85 pixels would give) and
+
+`SegmentStroke` runs over every stroke, deciding whether it and the one
+
+before it are part of one letter - three thresholds on how much of the
+
+line they share, the lower two needing `SegmentCrossed` or
+
+`SegmentNonTailLinked` as well - and whether a cut may go in front of
+
+it.  `SegmentMultiStrokeMinDistance` and
+
+`SegmentMultiStrokeMinDistBoundX` look **three** strokes back, because
+
+a letter is often written in pieces that are not consecutive, and one
+
+forward for the case where the writer went back to dot an i.
+
+`rosCI`'s `fMinCharWidth`, `fCharWidthFraction`, `fReachFraction` and
+
+the four overlap thresholds are named for all this.
+
+
+
+`SegmentSetStrokeOverlaps` is done as well - a segment's strokes told
+
+how much of the line each shares with the one before it *now that the
+
+segment has them in its own order*, the first measured against the last
+
+stroke of the segment before it.
+
+
+
+**And the second pass is done: the segment layer cuts writing into
+
+letters.**  `SegmentMakeSegments` is incremental - called once per
+
+stroke and once more at the end, keeping its working-out in the
+
+0x44-byte `SegState` that `SegmentQuiesce` gives back - and ends a
+
+piece for one of three reasons: the first pass marked the stroke, the
+
+aspect ratio passed 1.5 (or 1.75 when a dot has already widened the
+
+box), or the piece has more than five strokes (six with
+
+`FragmentLigatures`).  A cut may not land in the middle of a run of
+
+linked strokes, so it walks back to one it may land on; failing that it
+
+cuts anyway and rewrites the links, which is the engine admitting that
+
+a run it thought was one letter cannot be.
+
+
+
+**What it hands up is a lattice, not a partition**: for a piece it
+
+emits every grouping the links allow - the first stroke, the first two,
+
+the first three, then the same from the second stroke - so three
+
+strokes it cannot tell apart come back as six segments, for the layer
+
+above to score.  `test_Segment` drives the whole thing: two x's written
+
+as four crossing strokes come back as exactly two segments, and three
+
+upright strokes five pixels apart as all six groupings.  One thing is
+
+transcribed rather than understood - the per-stroke `fField24`, which
+
+chooses between the lattice and one grouping for the whole piece - and
+
+it is `WordRecogAddStroke` that decides what it is.
+
+
+
+`SegmentSetWordSpacing` is done too - the writer's spacing slider (1 to
+
+9, five in the middle) turned into the factor the layer weighs gaps by,
+
+its natural logarithm (taken in double precision, the only floating
+
+point in the engine, because the layers above add it) and the threshold
+
+interpolated between `Min`/`Mid`/`MaxSegOnlyThreshold`.  It carries a
+
+ROM bug worth reading: the constant above the middle setting is
+
+`0x170000` where `0x17000` was surely meant, so the top half of the
+
+slider runs 6.75, 12.5, 18.25, 24 where the bottom half runs 0.32 to
+
+1.00.  `docs/curiosities.md` has it.
+
+
+
+The word recogniser's own way into the classifier is done as well -
+
+`WordRecogNetEvaluate`/`WordRecogNetSetInputs`, the twins of the
+
+`CharBox` pair, keeping the patternizer on the recogniser because a
+
+word is read one candidate letter at a time.  `test_WordRecog` puts the
+
+same writing through them that `test_CharBox` puts through the other
+
+path and gets the same three answers.
+
+
+
+The grammar's own allocation is done as well - `BiGrammarNew`,
+
+`BiGrammarCreate`, `BiGSliceNew`, `BiGSliceDestroy` and a real
+
+`BiGrammarDestroy`.  Both a grammar and a slice keep their arrays
+
+behind the struct in the same block, which is what makes each of them
+
+one allocation and one `DisposPtr`.  Reading them settled two fields:
+
+a slice's `+0x1c`/`+0x20` are its live count of following kinds and the
+
+room it has for them (equal in the ROM's tables only because those are
+
+full), and `+0x2c` is what a slice is *made* with, 0xff, so the nine
+
+`LexicalSymbols` kinds carrying nought and `wordlike` carrying one
+
+mean something.  `BiGrammarCreate` takes a name and never stores it, so
+
+a grammar the engine builds for a field is nameless.
+
+
+
+**And `RosettaSetArea` is done**, with the grammar machinery under it:
+
+`BiGSliceCreate`, `BiGrammarAddSlice` (unnamed in the ROM, inside
+
+`BiGrammarModifyContext`), `BiGrammarClone` and
+
+`BiGrammarModifyContext`.  Reading them turned up what a grammar's
+
+scores actually are - **negative natural logarithms of probabilities
+
+scaled by five hundred** - which is why the engine adds everywhere and
+
+why `ArProbDecodeLu`/`ArProbEncodeLu1`/`ArProbEncodeLu2` (now generated
+
+into `ArProbTables.cpp`) exist at all.  `docs/curiosities.md` has it.
+
+
+
+So a field's configuration now becomes a grammar: eight flag bits pick
+
+one of the ROM's seven special grammars, anything else gets the General
+
+grammar narrowed by `BiGrammarModifyContext` (nine tenths of the
+
+probability to the kinds the field wants, the rest to everything else,
+
+and the likeliest brought down to nought), every slice's dictionary
+
+index becomes the data itself, and the field's own symbol set narrows
+
+`RosCI->fLegalUse`.  `test_Rosetta` drives all four paths.
+
+
+
+A ROM bug kept: `BiGrammarClone` copies the shorts at +0x08, +0x0a and
+
++0x0c but not the one at +0x0e, and `BiGSliceNew` does not clear it, so
+
+a cloned slice's `fField0e` is whatever was in the heap.  It is nought
+
+in all 46 of the ROM's own slices.
+
+
+
+**`WordRecogAnalyzeWord` and `CharGetAvgBoxBHW` are done**, which is
+
+the top of the reading path.  A word is measured - the mean base over
+
+the segments that are more than a dot, the mean height and width over
+
+the ones big enough to count, and the tallest and widest raised to what
+
+the word's overall shape suggests - and three of the four lengths the
+
+engine keeps about the writer's hand are moved an eighth of the way
+
+towards it, but only when the word is within half to twice what it
+
+already believed, and then held to between half and twice their
+
+nominal.  Then every candidate letter in the lattice goes through
+
+`WordRecogNetEvaluate` and on to the search with a confidence worked
+
+out from how much of the line its strokes share.  `WordRecogEndWord`
+
+closes the word.
+
+
+
+**The search's readings are done** (`recognition/WordTails.h`): a
+
+reading is a backwards linked list of single characters, reference
+
+counted so the dozens of partial readings the search holds at once
+
+share their ends, named by a 16-bit reference whose bits are the table
+
+and the slot.  `WordTailBlockAllocate`, `AddRef`/`DeleteRef`, the two
+
+`Sprint`s, `WordTailCompare` and the word-list pool
+
+(`WordListFreeAll`/`DeleteRef`/`Sprint`) are all real, and
+
+`docs/curiosities.md` has the idea.  A ROM bug kept: `AddRef` does not
+
+answer early for the empty tail where `DeleteRef` does.
+
+
+
+**The search's state and its life are done** (`recognition/Search.h`):
+
+`SearchAllocateGlobals`/`DeallocateGlobals`, `SearchAllocateReturnCache`,
+
+`SearchBeginWord`, `SearchEndWord`, `GCBestNodes` and
+
+`SearchCheckHashHit`.  Thirty-seven columns, one per stroke of the
+
+longest word plus one to start from, each holding up to `MaxBestNodes`
+
+(27) partial readings; `SearchBeginWord` puts one node in the first
+
+column holding the empty reading that every path grows from.
+
+`SearchCheckHashHit` turned out to be an **easter egg** - write one of
+
+eight words three times in a row and the recogniser answers the
+
+recognition team's names and addresses instead; `docs/curiosities.md`
+
+has it, and `analysis/romtable.py` grew a `strN` type for its two
+
+tables.
+
+
+
+`SearchProcessSegment` is done too, with `ShiftNetValues` and
+
+`GetBestPath`: the classifier's probabilities and `CharModifyProbs`'s
+
+turned into the two score arrays the step reads, the columns moved
+
+along (they are a **ring** - the pointers rotate, nothing is copied),
+
+and the try string copied out.  `rosCI`'s `fNetScoreWeight` (four
+
+fifths, what the classifier's opinion is worth against everything else)
+
+is named.
+
+
+
+**The search is done.**  `SearchDoVStepFromNode`, the innermost thing
+
+the engine does, is reconstructed: one reading grown by one letter,
+
+every way it can be - every kind of word the grammar allows after it,
+
+every character the lexicon allows next, and every case of each.  With
+
+it `LELangNodeNumOut` and the `LE` node formats
+
+(`recognition/LELang.h`: a run lexicon and a chained one, the
+
+variable-width offsets of `AckNodeSizeTab`), and the capitals model the
+
+step charges through - `RosCommonInfo::fCapCostUpper`/`fCapCostLower`/
+
+`fCapCostOther`, twelve contexts each, and `BiGSlice::fCapExtraUpper`/
+
+`fCapExtraLower`/`fCapCostUpper`/`fCapCostLower` for a kind of word
+
+that has opinions of its own.  `test_Search` now drives the whole
+
+search over the ROM's own lexicons and gets a letter back.
+
+
+
+**`GeoContextPenalty` is done too**, with `GeoContextAux1`,
+
+`GeoContextAux2` and the cache (`recognition/GeoContext.h`): what the
+
+geometry between two adjacent letters costs, which is the part that
+
+tells `rn` from `m`.  The engine's nominal drawing of a character is
+
+sixteen numbers in `rosCharParams` (now all generated and named: its
+
+bottom, height and width, the room it wants either side, its smallest
+
+stroke written in one stroke and in more, and what each of those is
+
+worth), and the two observed boxes are brought to a common size and
+
+place, fitted by least squares and reduced to nine residuals which go
+
+through a symmetric nine-by-nine matrix as a quadratic form - a
+
+Mahalanobis distance.  The step charges it at **a quarter weight** when
+
+the letter before is in another word or there is no letter before at
+
+all, and in full within a word.  `docs/curiosities.md` has the whole
+
+story.
+
+
+
+**The lexical search is now complete**: nothing in it is NOT YET.
+
+
+
+`SearchDoViterbStep`, `RegisterNewPath`, `StoreFinalPaths`,
+
+`CapHackDetermineContext`, `SearchFindBest`,
+
+`SearchSegwordRememberNBest`, `SearchBestWords` and `SearchSendWords`
+
+are all done, so a reading that has been grown knows where to go, when
+
+it turns into text, and how it comes back out.  The beam is kept
+
+deliberately varied: `SearchColumn::fClassCounts` and
+
+`BiGrammar::fClassLimits` limit how many readings of each kind of word
+
+a column may hold, and `RegisterNewPath` prefers to evict one that is
+
+over its quota rather than simply the worst.
+
+
+
+**`CharModifyProbs` is done** - what leans the classifier's answer with
+
+where and how big the piece of writing was.  Two of its four
+
+adjustments are nought in the shipped ROM; what is left is the capitals
+
+hack and a Gaussian height model over `CharHeight`'s trained means and
+
+spreads, worked out with no exponential because a score in this engine
+
+is already a logarithm.  `rosCI`'s `fStrokeCountWeight`,
+
+`fCapCaseWeight`, `fHeightSpread`, `fShapeWeight` and `fFragmentWeight`
+
+are named for it.
+
+
+
+### Done: the engine reads, and writing becomes text
+
+
+
+`WordRecogAddStroke` (the driver: a stroke into the word, the word
+
+spacing asked three ways, ligatures cut and each piece taken in by a
+
+recursive call, the word closed when it is full) and the classify
+
+passes (`RosettaClassifySetup`/`Analyze`/`Cleanup`/`RosettaClassify`,
+
+`RosettaCheckWords`, the boxed-letter path `RosICBX`) are real, so
+
+**nothing in the Rosetta engine is NOT YET** any more.  The feature
+
+extraction once thought to be under it (`low_type`/`EXTR`, 556 KB) is
+
+not Rosetta's: the call graph (`analysis/callgraph.py ...
+
+RosettaClassify --through-done`) shows Rosetta reaches none of it - its
+
+features are the four patternizer groups, which were done already.
+
+
+
+`test_Reading` draws letters with a synthetic pen and checks the engine
+
+reads eight words ("to", "tin" and "ton" come back first, the others
+
+within the first two).  Four bugs in the reconstruction came out of
+
+running it for real - two host-size mistakes (arrays of pointers and of
+
+`ULong` sized at four bytes: `WordRecogAllocate`, the `LELTranCache`),
+
+`RenderLine` missing the second coordinate's step back (the decompiler
+
+had dropped it; it wrote one byte into the next heap block's header),
+
+and `StrokeDestroy` not answering early for nil as the ROM does.  The
+
+debugging aids that found them stay in `test_Reading.cpp`: a crash
+
+handler that prints a symbolised stack (dbghelp) and a heap walker
+
+(`ROSETTA_HEAPCHECK=1`).
+
+
+
+The host OS registers `TRosRecognizer` now (`TNotebook::InitToolbox`,
+
+`HostBootNewtWorld`), and `TEditView` answers `aeWord`: the command's
+
+case in `RealDoCommand`, `HandleWordUnit`, `RemoveInk`, and
+
+`HandleWord`'s remote-writing branch - on by default, which sends a
+
+written word to the caret: into the caret's paragraph (through
+
+`InsertItemsAtCaret`, a space in front unless it is a letter written
+
+into the middle of a word), onto the end of the text under a caret on
+
 the page itself, or a paragraph of its own.
 
 ### Listed as next at the time, done since
 
-- A double tap on a read word opens the corrector with the engine's
-  other readings and the spelling checker's, and picking one replaces
-  the word (`src/host/demo/correct.ns`).  There is no training to do:
-  the MP2x00's engine learns only through the dictionaries
-  (`recognition/Learning.h`), which is done.
-- **The shape domain**, so a drawn circle or line is cleaned up rather
-  than read as a letter.
-- The ink demo (`ink.ns`) now gets its writing *read*: to keep ink, a
-  page has to ask for ink (`doInkWordRecognition`) or the writing has
-  to be unreadable.
-
+- A double tap on a read word opens the corrector with the engine's
+
+  other readings and the spelling checker's, and picking one replaces
+
+  the word (`src/host/demo/correct.ns`).  There is no training to do:
+
+  the MP2x00's engine learns only through the dictionaries
+
+  (`recognition/Learning.h`), which is done.
+
+- **The shape domain**, so a drawn circle or line is cleaned up rather
+
+  than read as a letter.
+
+- The ink demo (`ink.ns`) now gets its writing *read*: to keep ink, a
+
+  page has to ask for ink (`doInkWordRecognition`) or the writing has
+
+  to be unreadable.
+
+
+

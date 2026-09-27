@@ -14,6 +14,7 @@
 
 	newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
+	       [--package file.pkg]...
 
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot).
@@ -23,6 +24,11 @@
 	every boot after that comes up on the Notepad.  --erase throws that
 	file away first and starts again at the Setup assistant, which is what
 	holding the power switch down through a reset does on the machine.
+
+	--package installs a package once the machine is up, through the
+	package manager as one arriving in memory is installed (as many as
+	wanted, in order); a .pkg file dropped onto the window is installed
+	the same way (host/HostPackages.h).
 */
 
 #include "NewtWorld.h"
@@ -36,6 +42,7 @@
 #include "os600/kernel/host/TaskRuntime.h"
 #include "hal/host/Host.h"
 #include "HostStores.h"
+#include "HostPackages.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
@@ -78,7 +85,8 @@ static int
 Usage(void)
 {
 	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
-					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n");
+					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
+					"              [--package file.pkg]...\n");
 	return 2;
 }
 
@@ -101,13 +109,13 @@ NewtonBoot(void)
 static void
 HeadlessTimer(void)
 {
-	// (a TTimeout is 32 bits of 3.6864 MHz ticks, which is under ten
-	// minutes: a long run is slept a minute at a time)
-	for (ULong left = gHeadlessSeconds; left > 0; )
+	// (a tenth of a second at a time, the queued packages sent to the
+	// world between; a TTimeout is 32 bits of 3.6864 MHz ticks, which is
+	// under ten minutes, so a long run could not be slept in one anyway)
+	for (ULong left = gHeadlessSeconds * 10; left > 0; left--)
 	{
-		ULong now = left > 60 ? 60 : left;
-		Sleep(now * kSeconds);
-		left -= now;
+		HostSendQueuedPackages();
+		Sleep(100 * kMilliseconds);
 	}
 	HostStopTasks();
 }
@@ -224,6 +232,8 @@ main(int argc, char** argv)
 			storeFile = argv[++i];
 		else if (strcmp(argv[i], "--erase") == 0)
 			erase = true;
+		else if (strcmp(argv[i], "--package") == 0 && i + 1 < argc)
+			HostQueuePackageFile(argv[++i]);
 		else
 			return Usage();
 	}
@@ -238,6 +248,7 @@ main(int argc, char** argv)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gNewtHostBoot = NewtonBoot;
+	gNewtHostPreMain = HostInstallPackageGlobal;
 	NewtInstallUserMain();
 	gHostKernelServicesTask = KernelServices;
 	OsBoot();

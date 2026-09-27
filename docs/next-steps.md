@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-27
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 98/98
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 101/101
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10421 citations, 0 bad;
-  5609 of 16671 functions (33.65%).
+- `analysis/coverage.py build/MP2x00US --check`: 10535 citations, 0 bad;
+  5719 of 16671 functions (34.31%).
 - `analysis/natives.py --unbound`: about 390 of the ROM's 1326 natives
   are unanswered (table below).
 
@@ -46,23 +46,52 @@ bugs found along the way - is `docs/work-log.md`.
 - **Modal dialogs**, over real forked tasks (`src/host/demo/modal.ns`).
 - QuickDraw pictures play back (the world map), the outline list, the
   meeting and its duration bar.
+- **Packages are installed by the package manager**, the ROM's own at
+  boot and one from a file with `newton --package file.pkg` (as many as
+  wanted) or by dropping a .pkg onto the window (`host/HostPackages.h`).
+  `packages.py build/MP2x00US --extract DIR --rename Formulas=Formulas2`
+  makes a loadable copy of a built-in package to try it with (a ROM
+  package's refs are ROM addresses; `--relocatable` rebases them).
 
-## Now: the package manager
+## Now: finishing the recognition system
+
+The owner asked (2026-09-27) for the recognition system to be put to bed,
+then for the testing system.  What is left of recognition is its natives
+(`natives.py --unbound`, the recognition area, 28), in the order
+planned:
+
+1. **Deferred recognition**: `Recognize`, `RecognizePara`,
+   `RecognizePoly`, `RecognizeInkWord`, `RecognizeTextInStyles` - ink
+   already on a page read later, over the word domain and Rosetta that
+   are done.
+2. **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
+   `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
+3. **Shape verbs**: `MakeInk`, `FindShape`, `GetShapeInfo`, `MungeShape`,
+   `PictToShape`, `StrokeInPicture`, `AnimateSimpleStroke`.
+4. `InkConvert`, `TrackDistort`, `ConvertDictionaryData` (below),
+   `MoveCorrectionInfo`/`AddUnit`/`HandleInkWord`, and the boot's
+   `UseWRec` choice.
+
+## Then: the testing system
+
+The 38 `testing` natives, starting with **the journal** - recording the
+pen's strokes and playing them back (`JournalStartRecord`,
+`JournalStopRecord`, `JournalReplay*`), which would make every demo
+script a recording rather than hand-placed pen positions.  Then the test
+agent (`TestM*`, `Test*`), the tablet bypass (`StartBypassTablet`,
+`StopBypassTablet`, `InsertTabletSample`), the debug hooks
+(`DebugMemoryStats`, `DebugRunUntilIdle`, `Stdio*`), Uriah and the IR
+sniffing.
+
+## The package manager: what is left
 
 Done (2026-09-27, `docs/packages/README.md`): the manager task and its
 events, the package list and registry, `TPMIterator`, the part handlers
-('form, 'auto, 'soup), `CPackagePipe`, and `LoadHighROMFramesPackages`
-sending the ROM's packages to the manager - the host's shortcut and its
-DEVIATION are gone.  The boot and the applications behave as before
-(`open-apps.ns`: only the Sound Recorder fails; `assist-tasks.ns`: 0
-failed); `test_PackageManager` loads packages from bytes through it.
+('form, 'auto, 'soup), `CPackagePipe`, `LoadHighROMFramesPackages`
+sending the ROM's packages to the manager, and the host's way in
+(`--package`, drag and drop).  Left, in the order they are likely to
+matter:
 
-Left, in the order they are likely to matter:
-
-- **A way for the host to hand the running machine a package** (a
-  `--package` option, drag and drop): the owner's to design.  The
-  internal call is `LoadPackage(buffer, {kFixedMemory, ...}, &id)` from
-  the newt world, which forks as the ROM's callers do.
 - **Units**: five ROM parts carry `_ExportTable`s (two `_ImportTable`s),
   installed without them (a stderr line at boot).  A third-party package
   importing a ROM unit needs `InstallExportTables`/`InstallImportTable`
@@ -89,6 +118,36 @@ Left, in the order they are likely to matter:
   the picture turned into shapes (`docs/qd/README.md`).
 - The date the Assistant's "tomorrow" comes to: "schedule lunch with
   Daniel tomorrow" puts the meeting on today.
+
+## A long-term track: booting with no ROM image
+
+The owner's goal (2026-09-27): the system boots without a ROM image.  How
+they picture it: all the ROM's NewtonScript decompiled to NewtonScript
+source that the reconstruction's own compiler turns back into the
+*identical* bytecode (the byte-for-byte round trip being the proof), and
+tools that put the ROM's resources - bitmaps, sounds, fonts, strings and
+the locale data - into editable files in the repository, with a build
+step packing them and the recompiled NewtonScript back into the objects
+the OS loads, so a change to a source file or a resource is rebuilt and
+used on the next run.  The pieces, roughly in order:
+
+1. A NewtonScript **decompiler** (over `nsfunctions.py --disasm`'s
+   decoding) whose output compiles back to the same bytes, checked
+   function by function over all of the ROM's code objects - the
+   compiler (`frames/Compiler.h`, the ROM's own yacc tables) being
+   faithful enough to reproduce the ROM's code generation is the part to
+   watch.
+2. **Resource extraction**: bitmaps to images, sounds to sound files,
+   fonts, strings, locale bundles, the object graph that ties them
+   together, as files a person can edit.
+3. A **builder** that makes the object area (and the packages) from the
+   sources and resources, in the form `frames/ROMImport.cpp` reads today.
+4. Booting from that output with no `--rom`, the generated tables that
+   already live in `src/` (romtable.py, romconstants.py, nsgrammar.py,
+   ...) supplying the rest.
+
+Until then the ROM image stays how the reconstruction is checked against
+the original; new run-time dependencies on it are to be avoided or noted.
 
 ## The natives still unanswered
 

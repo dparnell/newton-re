@@ -27,9 +27,9 @@ set_tests_properties(host.ViewsDemo PROPERTIES TIMEOUT 120)
 # with the DDK's)
 add_library(host_window STATIC win32/HostWindow.cpp)
 if(WIN32)
-    target_link_libraries(host_window PUBLIC user32 gdi32)
+    target_link_libraries(host_window PUBLIC user32 gdi32 shell32)
 endif()
-add_executable(newton newton.cpp HostKeyboard.cpp)
+add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_BIN}\"")
 
@@ -37,3 +37,22 @@ target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_R
 # boot script (needs the ROM image)
 add_test(NAME host.Newton COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 2 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
+
+# a package loaded from a file (newton --package): the ROM's Formulas
+# extracted as a loadable package under another name, so the package
+# manager does not refuse it as the one it already has, and installed
+# once the machine is up (needs the ROM image and Python)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    set(HOST_PACKAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages)
+    add_test(NAME host.NewtonPackage.extract
+             COMMAND ${Python3_EXECUTABLE} tools/newton-rom/analysis/packages.py build/${NEWTON_ROM_BUILD}
+                     --extract ${HOST_PACKAGE_DIR} --rename Formulas=Formulas2
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonPackage.extract PROPERTIES FIXTURES_SETUP host_package)
+    add_test(NAME host.NewtonPackage
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+endif()
