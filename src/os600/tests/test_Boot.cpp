@@ -50,6 +50,8 @@ static TObjectId echoTaskId = 0, echoConstructedIn = 0;
 static Int64 beforeSleep, afterSleep;
 static long semErr = -1;
 static Boolean semHeld = false;
+static long semWakeErr = -1;
+static long semNoWaitErr = -1;
 static ULong objectsBefore = 0, objectsAfter = 0;
 static long caughtData = 0, caughtMsg = 0, cleanupRan = 0, monitorCaught = 0, monitorProcRan = 0;
 static Boolean afterThrowReached = false;
@@ -347,6 +349,16 @@ static void KernelServicesScenario()
 		sem.Acquire();
 		semHeld = true;
 		sem.Release();
+		// a release that finds another task's id in the word wakes it by
+		// raising the kernel semaphore - without waiting, so one that finds
+		// the semaphore already raised answers at once instead of blocking
+		// the releaser for good
+		ULong* word = nil;
+		sem.GetRefCon((void**) &word);
+		*word = gCurrentTaskId + 1;
+		semWakeErr = sem.Release();
+		*word = gCurrentTaskId + 1;
+		semNoWaitErr = sem.Release();
 	}
 
 	// --- exceptions: try/catch, a message, an unwind_protect, and one thrown inside a monitor
@@ -559,6 +571,7 @@ int main()
 	EXPECT(replySize == 13 && strcmp(reply, "HELLO NEWTON") == 0);
 	EXPECT(afterSleep.lo - beforeSleep.lo >= 10 * kMilliseconds);
 	EXPECT(semErr == noErr && semHeld);
+	EXPECT(semWakeErr == noErr && semNoWaitErr == kError_Semaphore_Would_Cause_Block);
 	EXPECT(caughtData == 42 && !afterThrowReached);
 	EXPECT(caughtMsg == 1 && cleanupRan == 5);
 	EXPECT(monitorProcRan == 1 && monitorCaught == 7);

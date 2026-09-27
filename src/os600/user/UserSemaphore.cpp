@@ -193,12 +193,16 @@ TULockingSemaphore::Acquire(SemFlags flags)
 
 // ROM 0x0025a31c Release__18TULockingSemaphoreFv
 // Let go of the word; if another task took it meanwhile (it is waiting in
-// Acquire) wake it through the kernel semaphore.
+// Acquire) wake it through the kernel semaphore - without waiting: the
+// ROM passes kNoWaitOnBlock (1), so a semaphore already raised answers
+// kError_Semaphore_Would_Cause_Block (which TForkWorld::ReleaseMutex takes
+// as success) where waiting for it to come down would block the releaser
+// for good.
 long
 TULockingSemaphore::Release()
 {
 	if (Swap(fSem, 0) != gCurrentTaskId)
-		return SemOp(&faquireOP, kWaitOnBlock);
+		return SemOp(&faquireOP, kNoWaitOnBlock);
 	return noErr;
 }
 
