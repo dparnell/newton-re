@@ -251,6 +251,33 @@ TestBaselinePieces(void)
 	delete_line_extr(e, &n, 0x0d);
 	EXPECT(n == 3 && e[0].x == 30 && e[1].x == 40 && e[2].x == 50);
 
+	// the least x, the middle of its flat run
+	short px[] = { 9, 5, 3, 3, 3, 8, 3 };
+	short py[] = { 0, 0, 0, 0, 0, 0, -1 };
+	EXPECT(ixMin(0, 5, px, py) == 3);
+	EXPECT(ixMax(0, 5, px, py) == 0);
+	EXPECT(iMidPointPlato(2, 3, px, py) == 3);
+	short none[] = { -1, -1 };
+	EXPECT(ixMin(0, 1, px, none) == -1);
+
+	// a line's ends extended with another array's extrema beyond them
+	EXTR line[8], more[4];
+	memset(line, 0, sizeof(line));
+	memset(more, 0, sizeof(more));
+	line[0].x = 50;
+	line[1].x = 60;
+	for (long i = 0; i < 4; i++)
+	{
+		more[i].x = 30 + 15 * i;		// 30, 45, 60, 75
+		more[i].y = 10;
+	}
+	long len = 2;
+	correct_narrow_ends(line, &len, more, 4, 5, 0x10);
+	EXPECT(len == 4 && line[0].x == 30 && line[1].x == 45 && line[2].x == 50);
+	EXPECT(line[0].y == 15 && line[0].susp == 0x6e);
+	correct_narrow_ends(line, &len, more, 4, 5, 0x20);
+	EXPECT(len == 5 && line[4].x == 75);
+
 	// a code put back on the line carries to the neighbours that had it
 	EXTR r[4];
 	memset(r, 0, sizeof(r));

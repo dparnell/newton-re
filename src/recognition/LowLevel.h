@@ -188,6 +188,9 @@ long	GetBoxFromTrace(PS_point_type* trace, long iBeg, long iEnd, _RECT* box);	//
 void	GetTraceBox(short* x, short* y, long iBeg, long iEnd, _RECT* box);	// ROM 0x003075b4 GetTraceBox__FPsT1iT3P5_RECT
 long	xMinMax(long iBeg, long iEnd, short* x, short* y, short* xMin, short* xMax);	// ROM 0x00307358 xMinMax__FiT1PsN33 - over the points not pen-ups; ==> 1
 long	yMinMax(long iBeg, long iEnd, short* y, short* yMin, short* yMax);	// ROM 0x003073cc yMinMax__FiT1PsN23 - ==> 1
+long	iMidPointPlato(long i, long iEnd, short* a, short* y);	// ROM 0x00306f24 iMidPointPlato__FiT1PsT3 - the middle of the run of equal values from i
+long	ixMin(long iBeg, long iEnd, short* x, short* y);			// ROM 0x00306f9c ixMin__FiT1PsT3 - ==> -1 for none
+long	ixMax(long iBeg, long iEnd, short* x, short* y);			// ROM 0x0030700c ixMax__FiT1PsT3
 long	iMostFarFromChord(short* x, short* y, long i, long j);		// ROM 0x00306448 iMostFarFromChord__FPsT1iT3 - the point from i to j furthest from their chord (the middle of a run of equals)
 short	NewIndex(short* index, short* y, short i, short n, short mode);	// ROM 0x00307cd0 NewIndex__FPsT1sN23 - where an old point index went after filtering: 0 the first new point from it, 2 the last, 1 between the two; -2 none
 
@@ -218,6 +221,9 @@ void	smooth_d_bord(EXTR* extr, long n, low_type* low, long w, short* line);	// R
 void	smooth_u_bord(EXTR* extr, long n, low_type* low, long w, short* line, short* base);	// ROM 0x001c1308 smooth_u_bord__FP4EXTRiP8low_typeT2PsT5
 long	neibour_susp_extr(EXTR* extr, long n, UByte kind, short* base, long lim);	// ROM 0x001bf8ac neibour_susp_extr__FP4EXTRiUcPsT2 - ==> 0, 1 for fewer than two unsuspected
 long	fill_i_point(short* order, low_type* low);					// ROM 0x001c17fc fill_i_point__FPsP8low_type - the points in order of x; ==> how many
+long	correct_narrow_ends(EXTR* extr, long* n, EXTR* src, long m, long dy, UByte which);	// ROM 0x001c3b94 correct_narrow_ends__FP4EXTRPiT1iT4Uc - ==> 1
+long	non_super(EXTR* extr, long k, short* x, short* y, short* upper);	// ROM 0x001bf578 non_super__FP4EXTRiPsN23
+long	non_sub(SPEC_TYPE* elem, short* x, short* y, long eps);		// ROM 0x001beb90 non_sub__FP9SPEC_TYPEPsT2i
 long	extract_num_extr(low_type* low, UByte kind, EXTR* extr, long* count);	// ROM 0x001bdff0 extract_num_extr__FP8low_typeUcP4EXTRPi - ==> 0, 1 for more than 50
 
 // The filters.

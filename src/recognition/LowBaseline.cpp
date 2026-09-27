@@ -832,3 +832,121 @@ fill_i_point(short* order, low_type* low)
 	}
 	return cnt;
 }
+
+
+// ROM 0x001c3b94 correct_narrow_ends__FP4EXTRPiT1iT4Uc
+// The extrema of src beyond the ends of extr (before its first, for
+// 0x10; after its last, for 0x20) copied in, moved down by dy and marked
+// 0x6e, so that a line found over the middle of the word reaches its
+// ends.  ==> 1.
+long
+correct_narrow_ends(EXTR* extr, long* n, EXTR* src, long m, long dy, UByte which)
+{
+	long i = 0;
+	if (which == 0x10)
+	{
+		while (i < m && src[i].x < extr[0].x)
+			i++;
+		for (long k = i - 1; k >= 0; k--)
+		{
+			for (long j = *n; j > 0; j--)
+				extr[j] = extr[j - 1];
+			extr[0].x = src[k].x;
+			extr[0].y = (UShort) src[k].y + dy;
+			extr[0].i = src[k].i;
+			extr[0].susp = 0x6e;
+			extr[0].elem = nil;
+			*n = *n + 1;
+		}
+	}
+	if (which == 0x20)
+	{
+		long len = *n;
+		while (i < m && extr[len - 1].x < src[(m - 1) - i].x)
+			i++;
+		for (long k = m - i; k < m; k++)
+		{
+			EXTR* e = &extr[len];
+			e->x = src[k].x;
+			e->y = (UShort) src[k].y + dy;
+			e->i = src[k].i;
+			e->susp = 0x6e;
+			len++;
+			e->elem = nil;
+		}
+		*n = len;
+	}
+	return 1;
+}
+
+
+// ROM 0x001bf578 non_super__FP4EXTRiPsN23
+// Whether the top at extr[k] is not a real ascender: one already put back
+// (0x6e), or - past the word's first few - a shallow arch between two
+// bottoms that both lie below a line a third of the way from the top to
+// the upper line.
+long
+non_super(EXTR* extr, long k, short* x, short* y, short* upper)
+{
+	SPEC_TYPE* elem = extr[k].elem;
+	SPEC_TYPE* prev = elem->prev;
+	SPEC_TYPE* next = elem->next;
+	if (elem->code == 0x6e)
+		return 1;
+	if (3 < k && prev->mark == 3 && next->mark == 3)
+	{
+		long a = y[elem->iBeg];
+		long b = y[elem->iEnd];
+		long hi = (b < a) ? a : b;
+		if (hi - y[elem->ipoint0] * 3 + hi * 2 < x[elem->iEnd] - x[elem->iBeg])
+		{
+			long line = (extr[k].y + 1) / 3 + (upper[extr[k].i] * 2 + 1) / 3;
+			if (line < y[next->ipoint0] && line < y[prev->ipoint0])
+				return 1;
+		}
+	}
+	return 0;
+}
+
+
+// ROM 0x001beb90 non_sub__FP9SPEC_TYPEPsT2i
+// Whether the bottom elem is not a real descender: a shallow dip (no
+// deeper than two fifths of its width) between two tops, where the
+// writing goes on to the right within eps of the dip's end.
+long
+non_sub(SPEC_TYPE* elem, short* x, short* y, long eps)
+{
+	long e = elem->iEnd;
+	long low = y[e];
+	if (y[elem->iBeg] < y[e])
+		low = y[elem->iBeg];
+	if ((y[elem->ipoint0] - low) * 5 <= (x[e] - x[elem->iBeg]) * 2)
+	{
+		SPEC_TYPE* next = elem->next;
+		if (elem->prev->mark == 1 && next->mark == 1
+		 && (x[next->ipoint0] >= x[next->iBeg] || y[elem->prev->ipoint0] >= y[next->ipoint0]))
+		{
+			long m = ixMin(e, next->iEnd, x, y);
+			e = elem->iEnd;
+			long lo = y[e] - eps;
+			long hi = x[e] + eps;
+			long v = y[m];
+			if (v >= lo || x[m] >= hi)
+			{
+				if (lo <= v)
+				{
+					for (long p = e; p < next->iEnd; p++)
+					{
+						if (y[p] < lo || hi < x[p])
+						{
+							long m2 = ixMin((short) p, next->iEnd, x, y);
+							return (hi <= x[m2]) ? 1 : 0;
+						}
+					}
+				}
+				return 1;
+			}
+		}
+	}
+	return 0;
+}

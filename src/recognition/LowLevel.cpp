@@ -444,6 +444,66 @@ iMostFarFromChord(short* x, short* y, long i, long j)
 }
 
 
+// ROM 0x00306f24 iMidPointPlato__FiT1PsT3
+// The middle of the run of points from i on with the same value in a
+// (not past a pen-up), no further than iEnd.
+long
+iMidPointPlato(long i, long iEnd, short* a, short* y)
+{
+	long v = a[i];
+	long k = i;
+	while (a[k] == v && y[k] != -1)
+		k++;
+	long r = (i + k - 1) >> 1;
+	if (r > iEnd)
+		r = iEnd;
+	return r;
+}
+
+
+// ROM 0x00306f9c ixMin__FiT1PsT3
+// The point from iBeg to iEnd (not a pen-up) with the least x - the
+// middle of its run of equals.  ==> -1 for none.
+long
+ixMin(long iBeg, long iEnd, short* x, short* y)
+{
+	long best = -1;
+	Boolean found = false;
+	for (long i = iBeg; i <= iEnd; i++)
+	{
+		if (y[i] != -1 && (!found || x[i] < x[best]))
+		{
+			best = i;
+			found = true;
+		}
+	}
+	if (found)
+		return iMidPointPlato(best, iEnd, x, y);
+	return -1;
+}
+
+
+// ROM 0x0030700c ixMax__FiT1PsT3
+// The same with the greatest x.
+long
+ixMax(long iBeg, long iEnd, short* x, short* y)
+{
+	long best = -1;
+	Boolean found = false;
+	for (long i = iBeg; i <= iEnd; i++)
+	{
+		if (y[i] != -1 && (!found || x[i] > x[best]))
+		{
+			best = i;
+			found = true;
+		}
+	}
+	if (found)
+		return iMidPointPlato(best, iEnd, x, y);
+	return -1;
+}
+
+
 // ROM 0x00307cd0 NewIndex__FPsT1sN23
 // Where an old point went after a filter: index[j] is the old point the
 // new point j came from.  mode 0: the first new point from it or after it
