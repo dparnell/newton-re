@@ -41,8 +41,14 @@ static const unsigned char kStdPatternData[5][8] = {
 	{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }		// black
 };
 
-const long	kPatternHandleSize = 0x24;		// a PixelMap and its eight rows
-const long	kPixelMapSize = 0x1c;
+const long	kPixelMapSize = 0x1c;			// the ROM's PixelMap (GetPixelMapSize)
+// DEVIATION: a pattern's handle holds a PixelMap and its eight rows right
+// after it - 0x1c + 8 on the Newton, but a host PixelMap is bigger (its
+// baseAddr and grayTable are pointers), so the handle and the offset to
+// the rows are sized from the host's struct.  (Sized the ROM's way, every
+// pattern made from a binary wrote past its handle and broke the heap.)
+const long	kPatternPixelsOffset = (long) sizeof(PixelMap);
+const long	kPatternHandleSize = kPatternPixelsOffset + 8;
 
 
 /*------------------------------------------------------------------------------
@@ -167,14 +173,14 @@ MakeSimplePattern(const char* rows)
 	if (pattern != nil)
 	{
 		PixelMap* pm = *pattern;
-		pm->baseAddr = (Ptr) kPixelMapSize;
+		pm->baseAddr = (Ptr) kPatternPixelsOffset;
 		pm->rowBytes = 1;
 		SetRect(&pm->bounds, 0, 0, 8, 8);
 		pm->pixMapFlags = kPixMapOffset | 1;
 		pm->deviceRes.v = kDefaultDPI;
 		pm->deviceRes.h = kDefaultDPI;
 		pm->grayTable = nil;
-		memcpy((char*) pm + kPixelMapSize, rows, 8);
+		memcpy((char*) pm + kPatternPixelsOffset, rows, 8);
 	}
 	return pattern;
 }
@@ -187,15 +193,15 @@ CopyPattern(PatternHandle pattern)
 {
 	PixelMap* src = *pattern;
 	long size = (src->bounds.bottom - src->bounds.top) * src->rowBytes;
-	PatternHandle copy = (PatternHandle) NewHandle(size + kPixelMapSize);
+	PatternHandle copy = (PatternHandle) NewHandle(size + kPatternPixelsOffset);
 	if (copy != nil)
 	{
 		src = *pattern;
 		PixelMap* pm = *copy;
 		*pm = *src;
-		pm->baseAddr = (Ptr) kPixelMapSize;
+		pm->baseAddr = (Ptr) kPatternPixelsOffset;
 		pm->pixMapFlags = (pm->pixMapFlags & ~kPixMapStorage) | kPixMapOffset;
-		BlockMove(GetPixelMapBits(src), (char*) pm + kPixelMapSize, size);
+		BlockMove(GetPixelMapBits(src), (char*) pm + kPatternPixelsOffset, size);
 	}
 	return copy;
 }

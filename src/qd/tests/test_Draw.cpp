@@ -498,6 +498,9 @@ main()
 	EXPECT(GetStdPattern(9) == stdPatterns[blackPat]);
 	PatternHandle mine = MakeSimplePattern(1, 2, 3, 4, 5, 6, 7, 8);
 	EXPECT(((unsigned char*) GetPixelMapBits(*mine))[7] == 8 && GetPixelMapSize(*mine) == 0x18);		// (no version bits: the size before the gray table)
+	// the rows lie inside the handle, after the host's (bigger) PixelMap
+	EXPECT(GetHandleSize((Handle) mine) >= (long) sizeof(PixelMap) + 8
+		   && (char*) GetPixelMapBits(*mine) + 8 <= (char*) *mine + GetHandleSize((Handle) mine));
 	DisposePattern(mine);
 	DisposePattern(stdPatterns[whitePat]);
 	EXPECT(stdPatterns[whitePat] != nil && (*stdPatterns[whitePat])->rowBytes == 1);
