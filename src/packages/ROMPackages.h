@@ -1,15 +1,20 @@
 /*
 	File:		packages/ROMPackages.h
 
-	Contains:	The packages built into the ROM, and getting them installed.
+	Contains:	The packages built into the ROM, getting them installed, and
+				the package natives a script uses.
 
 				A MessagePad's ROM extension carries the applications the
 				machine boots with - on this ROM: Cardfile (the Names
 				application), Connection, FaxViewer, Formulas, the help
-				book, ListView, Setup and WorldData - as packages listed in
-				its `pkgl` configuration entry.  The boot loads them:
-				LoadHighROMFramesPackages for the frames parts (the
-				applications), LoadHighROMDriverPackages for the drivers.
+				book, ListView, the screen drivers, Setup and WorldData - as
+				packages listed in its `pkgl` configuration entry.  The
+				boot loads them (LoadHighROMFramesPackages, from
+				TNewtWorld::PreMain): each is sent to the package manager
+				as a package in memory, where it lies, and the part
+				handlers install its parts - the applications through the
+				frames part handlers (FramePartHandler.h) and the global
+				InstallPart, WorldData's cities as a package store.
 
 				Their install scripts are what make the globals and the
 				registrations the rest of the boot expects.  They do not,
@@ -32,28 +37,18 @@
 #include "objects.h"
 #endif
 
-// A ROM extension's configuration entry: where it is in the ROM and how
-// big, or nil when that extension has no such entry.  The tags are four
-// characters - 'pkgl is the package list.
+// A ROM extension's configuration entry: where it is and how big, or 0
+// when that extension has no such entry.  The tags are four characters -
+// 'pkgl is the package list, 'fexp the frames export table.
+// DEVIATION: the address is where the host keeps the entry, in the ROM
+// image it read in (ROMPackages.cpp).
 VAddr	GetRExConfigEntry(ULong rexId, ULong tag, ULong* size);		// ROM 0x0011ef10 GetRExConfigEntry
 VAddr	GetPackageList(ULong rexId);								// ROM 0x0011eeec GetPackageList
 
-// One part installed: the install information frame the ROM builds
-// (canonicalFramePartInstallInfo) handed to the NewtonScript InstallPart,
-// whose answer is the cookie that removes it again.
-Ref		InstallPart(RefArg partType, RefArg partFrame, RefArg packageName,
-					ULong packageId, ULong partIndex, ULong size, ULong packageType);
-
-// Every frames part of every package in the ROM extensions installed.
+// Every package of every ROM extension's package list loaded.
 void	LoadHighROMFramesPackages(void);							// ROM 0x000e7040 LoadHighROMFramesPackages__Fv
 
-// The packages a script can ask about.  On the machine that is the
-// package manager's business and the answer comes off a TPMIterator;
-// DEVIATION: the package manager is NOT YET RECONSTRUCTED, so the host
-// keeps its own note of what it installed above and reads the same
-// facts out of the package's own directory.
-long	InstalledPackageCount(void);								// how many were installed
-void*	InstalledPackageAt(long index, ULong* packageId);		// its bytes, and the id it was installed under
+// GetPackages(): a frame for every package installed.
 Ref		FGetPackages(RefArg rcvr);								// ROM 0x001fbaf8 FGetPackages__FRC6RefVar
 void	RegisterPackageNatives(void);
 

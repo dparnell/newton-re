@@ -86,4 +86,33 @@ public:
 	long		fLockCount;			// +0x18
 };
 
+
+/*------------------------------------------------------------------------------
+	T P a c k a g e S t o r e P a r t H a n d l e r
+
+	The 'soup part handler: a package's soup part mounted as a
+	TPackageStore over the part where it lies, its store frame added to
+	gPackageStores (which GetPackageStores answers and the soups look
+	through); the store is the part's remove object, and removing the part
+	takes the frame out of the list and kills it.  Only a part in memory
+	can be mounted.  InitPackageSoups (the tail of InitQueries) makes the
+	list and registers the handler in the world that runs it.
+	(0x40 bytes: a TPartHandler.)
+------------------------------------------------------------------------------*/
+
+#ifndef __PARTHANDLER_H
+#include "PartHandler.h"
+#endif
+
+class TPackageStorePartHandler : public TPartHandler
+{
+public:
+					TPackageStorePartHandler();
+
+	virtual	NewtonErr	Install(const PartId& partId, SourceType sourceType, PartInfo* partInfo);
+	virtual	NewtonErr	Remove(const PartId& partId, PartType partType, RemoveObjPtr removePtr);
+};
+
+NewtonErr	InitPackageSoups(void);
+
 #endif	/* __PACKAGESTORE_H */

@@ -105,7 +105,11 @@ protected:
 class TAppWorldState		// 0x134 bytes
 {
 public:
-	enum { kEventBufferSize = kMAXEVENTSIZE };
+	// DEVIATION: twice the ROM's kMAXEVENTSIZE.  A host event's words that
+	// hold an id, a size or an address are pointer-sized, so an event can be
+	// nearly twice the ROM's (the package manager's part install event is
+	// 0xf4 bytes on the MessagePad and over 0x130 on a 64-bit host).
+	enum { kEventBufferSize = 2 * kMAXEVENTSIZE };
 
 						TAppWorldState();
 						~TAppWorldState();

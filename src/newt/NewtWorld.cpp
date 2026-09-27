@@ -27,6 +27,10 @@
 #include "RegionVars.h"
 #include "Loader.h"
 #include "ROMPackages.h"
+#include "FramePartHandler.h"
+#include "Soups.h"
+#include "ROMConstants.h"
+#include "RSSymbols.h"
 #include "Compression.h"
 #include "NativeFunctions.h"
 #include "Dates.h"
@@ -118,11 +122,17 @@ long
 TNewtWorld::ForkConstructor(TForkWorld* parent)
 {
 	NewtGlobals* saved = gNewtGlobals;
+	// DEVIATION: the host's current port is one global, not the running
+	// fork's (ForkSwitch): opening the fork's port makes it current, which
+	// on the MessagePad changes only the fork's own globals.  The world
+	// that forked is still running, so its port is put back.
+	GrafPort* port = GetCurrentPort();
 	gNewtGlobals = &fGlobals;
 	long err = TAppWorld::ForkConstructor(parent);
 	if (err == noErr && (err = InitForkGlobalsForFrames(saved)) == noErr)
 		err = InitForkGlobalsForQD(saved);
 	gNewtGlobals = saved;
+	SetPort(port);
 	return err;
 }
 
@@ -178,7 +188,8 @@ TNewtWorld::ForkSwitch(Boolean in)
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
 // name, InitTranslators, NTKInit, REPInit/ResetREPIdler, InitExternal,
-// the part handlers ('form, 'book, 'dict, 'auto, 'comm), HandleCardEvents,
+// the 'book, 'dict and 'comm part handlers (TBookPartHandler over the
+// book reader's TLibrarian, TDictPartHandler, TCommPartHandler), HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
 // AllocateEarlyStuff (the sort tables).
 long
@@ -229,6 +240,11 @@ TNewtWorld::MainConstructor()
 	fHandler->InitIdler((TTimeout) 0, 0, false);
 	gApplication = new TARMNotebook;
 	gApplication->Constructor();
+	// the frames part handlers, whose parts come to this world
+	TPartHandler* handler = new TFormPartHandler;
+	handler->Init('form');
+	handler = new TAutoScriptPartHandler;
+	handler->Init('auto');
 	StartDrawing(nil, nil);
 	return noErr;
 }
@@ -250,7 +266,10 @@ TNewtWorld::TheMain()
 // packages activated, the card events accepted, the boot test script run
 // when there is one, the 'aliv system event sent; then the system is
 // alive and well, the strokes unblocked and the handler woken in a tick.
-// NOT YET RECONSTRUCTED: the extras soup, the
+// Loading the packages forks the world (LoadHighROMFramesPackages): from
+// then on the fork runs the event loop, and this task ends when PreMain
+// does.
+// NOT YET RECONSTRUCTED: the
 // reboot reason (the gestalt), activateStorePackages, the card events,
 // the boot test script, the 'aliv event.
 long
@@ -260,6 +279,12 @@ TNewtWorld::PreMain()
 	gStrokeWorld.BlockStrokes();
 	gLastWakeupTime = GetGlobalTime();
 	LoadHighROMFramesPackages();
+	// the Extras drawer's entries for the ROM's packages are made: the
+	// drawer's HandleNewHighROMPart makes one for each form part it is told
+	// of while the soup's extrasState is unset
+	RefVar store(GetArraySlotRef(RefVar(GetStores()), 0));
+	RefVar soup(StoreGetSoup(store, RefVar(Rextrassoupname)));
+	SoupSetInfo(soup, RSSYMextrasstate, RSSYMinitialized);
 	gApplication->Run();
 	if (gNewtBootTestScript != nil)		// (the ROM: a "bootTestScript" file, with the REP's output to files)
 	{

@@ -19,6 +19,7 @@
 #include "MemObjManager.h"
 #include "NameServerImpl.h"
 #include "Loader.h"
+#include "PackageManager.h"
 #include "Protocols.h"
 #include "OSErrors.h"
 #include "Random.h"
@@ -83,7 +84,7 @@ InitialKSRVTask()
 	TObjectId envId;
 	if (MemObjManager::FindEnvironmentId('prot', &envId) == noErr)
 	{
-		// NOT YET RECONSTRUCTED: InitializePackageManager(envId)
+		InitializePackageManager(envId);
 	}
 	if (MemObjManager::FindEnvironmentId('user', &envId) == noErr)
 	{

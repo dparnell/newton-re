@@ -1,0 +1,452 @@
+/*
+	File:		packages/FramePartHandler.cpp
+
+	Contains:	The frames part handlers (FramePartHandler.h).
+
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
+*/
+
+#include "FramePartHandler.h"
+#include "ROMPackages.h"
+#include "PackageIterator.h"
+#include "FramesPart.h"
+#include "ROMImport.h"
+#include "ROMExtension.h"
+#include "ObjectStreamer.h"
+#include "Pipes.h"
+#include "BufferSegment.h"
+#include "Frames.h"
+#include "ObjectHeap.h"
+#include "Interpreter.h"
+#include "ROMConstants.h"
+#include "RSSymbols.h"
+#include "NewtonExceptions.h"
+#include "OSErrors.h"
+
+#include <stdio.h>
+#include <string.h>
+
+extern const ExceptionName exPipeException;
+
+
+/*------------------------------------------------------------------------------
+	T h e   h o s t ' s   i m p o r t
+
+	DEVIATION (FramePartHandler.h): a part's objects are imported into a
+	host object area before its frame can be looked at.
+------------------------------------------------------------------------------*/
+
+// The package a part in memory belongs to: its directory, looked for
+// backwards from the part a word at a time (a directory, its entries and
+// its data come straight before the first part, and are never more than
+// a few kilobytes).  ==> the package, and the part's offset in it; nil
+// when no package there says it has a part at that address.
+static const UByte*
+PackageContaining(const UByte* part, ULong* partOffset)
+{
+	for (ULong back = kPackageDirectorySize; back <= 0x20000; back += kARMWord)
+	{
+		const UByte* package = part - back;
+		if (!IsPackageHeader(package, back))
+			continue;
+		TPrivatePackageIterator iter;
+		if (iter.Init((void*) package) != noErr)
+			continue;
+		for (ULong i = 0; i < iter.NumberOfParts(); i++)
+		{
+			if (iter.GetPartDataOffset(i) == back)
+			{
+				*partOffset = back;
+				return package;
+			}
+		}
+	}
+	return nil;
+}
+
+
+// The table a ROM extension's exports live in: 2 for the first extension,
+// 4 for the second, and so on (ResolveMagicPtr).  It is made, empty, the
+// first time a part of the extension is imported, and the entries that
+// point into each part are filled in as the part is.  An entry whose part
+// has not been imported (a streamed one) stays nil and answers
+// kNSErrBadMagicPointer if anything asks for it, as a missing entry does
+// on the Newton.
+static void
+TranslateROMExports(ULong32 partAddress, ULong partSize, const TImportedObjectArea* area)
+{
+	for (ULong rexId = 0; rexId < kMaxROMExtensions; rexId++)
+	{
+		ULong size = 0;
+		VAddr table = GetRExConfigEntry(rexId, 'fexp', &size);
+		long which = 2 + 2 * (long) rexId;
+		if (table == 0 || size < kARMWord || which >= kMagicPointerTables)
+			continue;
+		long count = (long) (size / kARMWord);
+		if (gMagicPointerTables[which] == nil || gMagicPointerTableCounts[which] != count)
+		{
+			Ref* entries = new Ref[count];
+			if (entries == nil)
+				continue;
+			for (long i = 0; i < count; i++)
+				entries[i] = NILREF;
+			delete[] gMagicPointerTables[which];
+			gMagicPointerTables[which] = entries;
+			gMagicPointerTableCounts[which] = count;
+		}
+		for (long i = 0; i < count; i++)
+		{
+			ULong32 ref = GetBigEndianWord((const UByte*) table + i * kARMWord);
+			if (ref >= partAddress && ref < partAddress + partSize)
+				gMagicPointerTables[which][i] = area->TranslateRef(ref);
+		}
+	}
+}
+
+
+// A frames part in memory imported.  ==> the area, nil when its bytes are
+// not a run of objects (reported: the part is not installed, and nothing
+// else would say so).
+static TImportedObjectArea*
+ImportPart(Ptr data, PartInfo* info)
+{
+	ULong partOffset = 0;
+	const UByte* package = PackageContaining((const UByte*) data, &partOffset);
+	// a version 0 package packs its objects to eight bytes rather than
+	// four, with a fill pattern in the gaps
+	long align = 4;
+	if (package != nil && ((const PackageDirectory*) package)->fSignature[7] == '0')
+		align = 8;
+	ULong imageSize = 0;
+	const char* rom = (const char*) ROMImageBase(&imageSize);
+	Boolean inROM = rom != nil && data >= rom && data < rom + imageSize;
+	ULong32 refBase = inROM ? (ULong32) (data - rom) : (ULong32) partOffset;
+	TImportedObjectArea* area = ImportFramesPart(data, info->size, refBase, align);
+	if (area == nil)
+	{
+		fprintf(stderr, "[packages] a frames part ('%c%c%c%c) is not a run of objects\n",
+				(char) (info->type >> 24), (char) (info->type >> 16), (char) (info->type >> 8), (char) info->type);
+		fflush(stderr);
+		return nil;
+	}
+	if (inROM)
+		TranslateROMExports(refBase, info->size, area);
+	return area;
+}
+
+
+/*------------------------------------------------------------------------------
+	T F r a m e P a r t H a n d l e r
+------------------------------------------------------------------------------*/
+
+// ROM 0x000d118c Install__17TFramePartHandlerFRC6PartId10SourceTypeP8PartInfo
+// The part's top-level frame found and handed to InstallFrame, with a
+// remove object made for it; kError_Bad_Package when there is no frame.
+// A part in memory is used where it lies (its unit tables installed)
+// unless it is NSOF ("streamed"), which is read out of it.
+// NOT YET RECONSTRUCTED: a streamed source (Copy answers
+// kError_Call_Not_Implemented), and the unit tables: a part with an
+// _ExportTable or an _ImportTable is installed without them, and says so.
+NewtonErr
+TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo* partInfo)
+{
+	RefVar frame;
+	NewtonErr err = noErr;
+	Ptr data = nil;
+	TImportedObjectArea* area = nil;
+	if (!IsMemory(sourceType))
+	{
+		Ref ref = NILREF;
+		err = Copy(&ref);
+		frame = ref;
+	}
+	else
+	{
+		data = GetSourcePtr();
+		if (partInfo->compressed && strcmp(partInfo->compressor, "streamed") == 0)
+		{
+			CBufferSegment segment;
+			segment.Init(GetSourcePtr(), partInfo->size, false, 0, -1);
+			MemoryPipe pipe;
+			pipe.Init(&segment, nil, false);
+			Ref ref = NILREF;
+			err = Expand(&ref, &pipe, partInfo);
+			frame = ref;
+		}
+		else
+		{
+			area = ImportPart(data, partInfo);
+			if (area == nil)
+				return kError_Bad_Package;
+			frame = FramePartToplevelFrame(area->fArea);
+			if (ISNIL(frame))
+			{
+				RemoveFramesPart(area);
+				return kError_Bad_Package;
+			}
+			RefVar exports(GetFrameSlotRef(frame, RSSYM_exporttable));
+			RefVar imports(GetFrameSlotRef(frame, RSSYM_importtable));
+			if (NOTNIL(exports) || NOTNIL(imports))
+			{
+				fprintf(stderr, "[packages] NOT YET: a '%c%c%c%c part's units (%s%s) are not installed\n",
+						(char) (partInfo->type >> 24), (char) (partInfo->type >> 16), (char) (partInfo->type >> 8), (char) partInfo->type,
+						NOTNIL(exports) ? "exports" : "", NOTNIL(imports) ? " imports" : "");
+				fflush(stderr);
+			}
+		}
+	}
+	if (ISNIL(frame) || !IsFrame(frame))
+	{
+		if (area != nil)
+			RemoveFramesPart(area);
+		return kError_Bad_Package;
+	}
+	if (err != noErr)
+	{
+		if (area != nil)
+			RemoveFramesPart(area);
+		return err;
+	}
+	fRemoveObject = new FramePartRemoveObject;
+	if (fRemoveObject == nil)
+	{
+		if (area != nil)
+			RemoveFramesPart(area);
+		return MemError();
+	}
+	fRemoveObject->fObject = new RefStruct(NILREF);
+	fRemoveObject->fData = data;
+	fRemoveObject->fArea = area;
+	err = InstallFrame(frame, partId, sourceType, partInfo);
+	if (err == noErr)
+		SetRemoveObjPtr((RemoveObjPtr) fRemoveObject);
+	else
+	{
+		delete fRemoveObject->fObject;
+		delete fRemoveObject;
+		fRemoveObject = nil;
+		if (area != nil)
+			RemoveFramesPart(area);
+	}
+	return err;
+}
+
+
+// ROM 0x000d14c8 Remove__17TFramePartHandlerFRC6PartIdUll
+// The part taken out: its unit tables removed, its remove object handed
+// to RemoveFrame, the objects no longer referred to collected; any units
+// whose importers have now lost them reported (ReportDeadUnitImports).
+// NOT YET RECONSTRUCTED: RemoveExportTables and RemoveImportTable, so
+// there are never dead imports to report.
+NewtonErr
+TFramePartHandler::Remove(const PartId& partId, PartType partType, RemoveObjPtr removePtr)
+{
+	FramePartRemoveObject* removeObject = (FramePartRemoveObject*) removePtr;
+	RefVar removed;
+	RefVar deadImports;
+	removed = *removeObject->fObject;
+	TImportedObjectArea* area = removeObject->fArea;
+	if (removeObject != nil)
+	{
+		delete removeObject->fObject;
+		delete removeObject;
+	}
+	NewtonErr err = RemoveFrame(removed, partId, partType);
+	GC();
+	ICacheClear();
+	// DEVIATION: the imported objects go with the part; refs to them left in
+	// the heap are declawed, as the ROM declaws a removed package's range
+	if (area != nil)
+	{
+		removed = NILREF;
+		RemoveFramesPart(area);
+	}
+	if (NOTNIL(deadImports) && Length(deadImports) > 0)
+	{
+		newton_try
+		{
+			if (FrameHasSlot(RefVar(gFunctionFrame), RSSYMreportdeadunitimports))
+				NSCallGlobalFn(RSSYMreportdeadunitimports, deadImports);
+		}
+		newton_catch_all
+		{ }
+		end_try;
+	}
+	return err;
+}
+
+
+// ROM 0x000d15f8 SetFrameRemoveObject__17TFramePartHandlerFRC6RefVar
+NewtonErr
+TFramePartHandler::SetFrameRemoveObject(RefArg removeObject)
+{
+	*fRemoveObject->fObject = removeObject;
+	return noErr;
+}
+
+
+// ROM 0x000d1628 Expand__17TFramePartHandlerFPvP5CPipeP8PartInfo
+// A streamed part's object read (NSOF) into *data.  ==> a pipe
+// exception's error; any other exception is passed on.
+NewtonErr
+TFramePartHandler::Expand(void* data, CPipe* pipe, PartInfo* /*info*/)
+{
+	NewtonErr err = noErr;
+	TObjectReader reader(*pipe);
+	newton_try
+	{
+		*(Ref*) data = reader.Read();
+	}
+	newton_catch(exPipeException)
+	{
+		err = (NewtonErr) (Long) CurrentException()->data;
+	}
+	end_try;
+	return err;
+}
+
+
+/*------------------------------------------------------------------------------
+	I n s t a l l P a r t   a n d   R e m o v e P a r t
+------------------------------------------------------------------------------*/
+
+// ROM 0x000cb68c InstallPart__FRC6RefVarT1RC6PartId10SourceTypeP8PartInfoT1
+// The part described (canonicalFramePartInstallInfo) and handed to the
+// global InstallPart; its frame, its packageStyle and InstallPart's
+// answer (the remove cookie) kept in the remove object.
+NewtonErr
+InstallPart(RefArg partType, RefArg partFrame, const PartId& partId, SourceType type, PartInfo* info, RefArg removeObject)
+{
+	NewtonErr err = noErr;
+	newton_try
+	{
+		RefVar style;
+		if (type.format == kFixedMemory)
+		{
+			if (type.deviceKind == kNoDevice)
+				style = RSSYMhighrom;
+		}
+		else if (type.format == kRemovableMemory)
+		{
+			if (type.deviceKind == kStoreDevice)
+				style = RSSYM1_2Ex;
+			else if (type.deviceKind == kStoreDeviceV2)
+				style = RSSYMvbo;
+		}
+		RefVar installInfo(Clone(RefVar(Rcanonicalframepartinstallinfo)));
+		SetFrameSlot(installInfo, RSSYMparttype, partType);
+		SetFrameSlot(installInfo, RSSYMpartframe, partFrame);
+		SetFrameSlot(installInfo, RSSYMpackageid, RefVar(MAKEINT(partId.packageId)));
+		SetFrameSlot(installInfo, RSSYMpackagename, RefVar(MakeString(((ExtendedPartInfo*) info)->packageName)));
+		SetFrameSlot(installInfo, RSSYMpartindex, RefVar(MAKEINT(partId.partIndex)));
+		SetFrameSlot(installInfo, RSSYMsize, RefVar(MAKEINT(info->sizeInMemory)));
+		SetFrameSlot(installInfo, RSSYMpackagetype, RefVar(MAKEINT(type.format)));
+		SetFrameSlot(installInfo, RSSYMdevicekind, RefVar(MAKEINT(type.deviceKind)));
+		SetFrameSlot(installInfo, RSSYMdevicenumber, RefVar(MAKEINT(type.deviceNumber)));
+		SetFrameSlot(installInfo, RSSYMpackagestyle, style);
+		RefVar args(MakeArray(1));
+		SetArraySlotRef(args, 0, installInfo);
+		RefVar fn(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMinstallpart));
+		RefVar cookie(DoBlock(fn, args));
+		SetFrameSlot(removeObject, RSSYMpartframe, partFrame);
+		SetFrameSlot(removeObject, RSSYMpackagestyle, style);
+		SetFrameSlot(removeObject, RSSYMremovecookie, cookie);
+	}
+	newton_catch(exFrames)
+	{
+		err = FramesException(CurrentException());
+	}
+	end_try;
+	return err;
+}
+
+
+// ROM 0x000cba20 RemovePart__FRC6RefVarRC6PartIdT1
+// The part described (canonicalFramePartRemoveInfo, out of the remove
+// object) and handed to the global RemovePart with its cookie; an
+// evt.ex.fr is swallowed.
+NewtonErr
+RemovePart(RefArg partType, const PartId& partId, RefArg removeObject)
+{
+	newton_try
+	{
+		RefVar removeInfo(Clone(RefVar(Rcanonicalframepartremoveinfo)));
+		SetFrameSlot(removeInfo, RSSYMparttype, partType);
+		SetFrameSlot(removeInfo, RSSYMpartframe, RefVar(GetFrameSlotRef(removeObject, RSSYMpartframe)));
+		SetFrameSlot(removeInfo, RSSYMpackageid, RefVar(MAKEINT(partId.packageId)));
+		SetFrameSlot(removeInfo, RSSYMpartindex, RefVar(MAKEINT(partId.partIndex)));
+		SetFrameSlot(removeInfo, RSSYMpackagestyle, RefVar(GetFrameSlotRef(removeObject, RSSYMpackagestyle)));
+		RefVar args(MakeArray(2));
+		SetArraySlotRef(args, 0, removeInfo);
+		SetArraySlotRef(args, 1, GetFrameSlotRef(removeObject, RSSYMremovecookie));
+		RefVar fn(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMremovepart));
+		DoBlock(fn, args);
+	}
+	newton_catch(exFrames)
+	{
+		FramesException(CurrentException());
+	}
+	end_try;
+	return noErr;
+}
+
+
+/*------------------------------------------------------------------------------
+	T F o r m P a r t H a n d l e r   a n d
+	T A u t o S c r i p t P a r t H a n d l e r
+------------------------------------------------------------------------------*/
+
+// ROM 0x000cbc74 InstallFrame__16TFormPartHandlerFRC6RefVarRC6PartId10SourceTypeP8PartInfo
+NewtonErr
+TFormPartHandler::InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo)
+{
+	RefVar removeObject(Clone(RefVar(Rcanonicalframepartsavedobject)));
+	SetFrameRemoveObject(removeObject);
+	return InstallPart(RSSYMform, frame, partId, sourceType, partInfo, removeObject);
+}
+
+
+// ROM 0x000cbd00 RemoveFrame__16TFormPartHandlerFRC6RefVarRC6PartIdUl
+// (RemovePart, written out again in the ROM)
+NewtonErr
+TFormPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartType /*partType*/)
+{
+	return RemovePart(RSSYMform, partId, removeObject);
+}
+
+
+// ROM 0x000cbd18 GetBackupInfo__16TFormPartHandlerFRC6PartIdUllP8PartInfoT2PUc
+// ROM BUG: says nothing about whether the part needs a backup - the
+// caller's flag is left as it was.
+NewtonErr
+TFormPartHandler::GetBackupInfo(const PartId& /*partId*/, PartType /*partType*/, RemoveObjPtr /*removePtr*/, PartInfo* /*partInfo*/,
+								ULong /*lastBackupDate*/, Boolean* /*needsBackup*/)
+{
+	return noErr;
+}
+
+
+// ROM 0x000cbd20 Backup__16TFormPartHandlerFRC6PartIdlP5CPipe
+NewtonErr
+TFormPartHandler::Backup(const PartId& /*partId*/, RemoveObjPtr /*removePtr*/, CPipe* /*pipe*/)
+{
+	return noErr;
+}
+
+
+// ROM 0x000cbd28 InstallFrame__22TAutoScriptPartHandlerFRC6RefVarRC6PartId10SourceTypeP8PartInfo
+NewtonErr
+TAutoScriptPartHandler::InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo)
+{
+	RefVar removeObject(Clone(RefVar(Rcanonicalframepartsavedobject)));
+	SetFrameRemoveObject(removeObject);
+	return InstallPart(RSSYMauto, frame, partId, sourceType, partInfo, removeObject);
+}
+
+
+// ROM 0x000cbdb4 RemoveFrame__22TAutoScriptPartHandlerFRC6RefVarRC6PartIdUl
+NewtonErr
+TAutoScriptPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartType /*partType*/)
+{
+	return RemovePart(RSSYMauto, partId, removeObject);
+}

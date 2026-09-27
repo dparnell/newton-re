@@ -39,6 +39,7 @@ extern long	gObjectHeapSize;			// host: the size InitObjects gives the object he
 Ref		AllocateMapWithTags(RefArg superMap, RefArg tags);
 Ref		MakeArray(long length);				// an array of class 'Array
 long	GetExceptionErr(Exception* exception);	// ROM 0x001466ec GetExceptionErr__FP9Exception - the error code an exception carries
+long	FramesException(Exception* exception);	// ROM 0x00129490 FramesException__FP9Exception - a ref exception's errorCode (-1: none), any other's data
 Ref		AddressToRef(void* p);				// a pointer as an integer Ref (the ROM's "magic" C objects: views, clippers)
 void*	RefToAddress(Ref r);
 Ref		MakeString(const UniChar* str, long length);		// a string of the first length characters (ROM 0x0012ac84)

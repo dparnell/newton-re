@@ -27,5 +27,6 @@ add_library(os600_user STATIC
     host/SWI.cpp
     host/GenericSWIStub.cpp
 )
-target_link_libraries(os600_user PUBLIC newton_config os600_kernel utility protocols)
+# package_manager: InitialKSRVTask starts the package manager
+target_link_libraries(os600_user PUBLIC newton_config os600_kernel utility protocols package_manager)
 target_include_directories(os600_user PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

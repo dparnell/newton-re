@@ -22,8 +22,10 @@ add_library(stores STATIC
 	CopyEntries.cpp
 	ObjectStreamer.cpp
 	StoreCompander.cpp
+	PackageStorePartHandler.cpp
 )
-target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression hal_host)
+# package_manager: the package store's part handler (a TPartHandler)
+target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression hal_host package_manager)
 target_include_directories(stores PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

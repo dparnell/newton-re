@@ -2463,3 +2463,19 @@ GetExceptionErr(Exception* exception)
 		err = (long) (Long) exception->data;
 	return err;
 }
+
+
+// ROM 0x00129490 FramesException__FP9Exception
+// The error a frames exception stands for: a ref exception's errorCode
+// slot (-1 when its data is not a frame or has none), any other's data.
+long
+FramesException(Exception* exception)
+{
+	long err = -1;
+	if (!Subexception(exception->name, "type.ref"))
+		return (long) (Long) exception->data;
+	RefVar data(**(Ref**) exception->data);
+	if (IsFrame(data) && FrameHasSlot(data, RSSYMerrorcode))
+		err = RINT(GetFrameSlotRef(data, RSSYMerrorcode));
+	return err;
+}

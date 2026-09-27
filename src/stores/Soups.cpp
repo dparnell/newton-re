@@ -44,9 +44,9 @@ const long kMaxSoupNameLength = 39;					// UniChars (0x27)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0033fc6c InitQueries__Fv
-// The store, union soup and package store lists; the package store's
-// class registered (its part handler, which makes a store of a package's
-// soup part: NOT YET RECONSTRUCTED).
+// The store and union soup lists, then (InitPackageSoups) the package
+// store list, the package store's class and its part handler, which makes
+// a store of a package's soup part.
 void
 InitQueries(void)
 {
@@ -54,7 +54,7 @@ InitQueries(void)
 	// and registered the three as GC roots
 	gStores = AllocateArray(RSSYMarray, 0);
 	gUnionSoups = MakeEntryCache();
-	gPackageStores = AllocateArray(RSSYMarray, 0);
+	InitPackageSoups();
 	InitEntries();
 	RegisterSoupNatives();
 	RegisterCursorNatives();
