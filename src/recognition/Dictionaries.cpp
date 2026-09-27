@@ -932,10 +932,126 @@ FDumpDict(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x0008ecdc DecodeRecognitionWord__FPUsUl
+// A word's capitals put back from its attribute: 0x40 says the whole word
+// is in capitals, 0x80 its first letter only (an old dictionary kept the
+// words in lower case and the case in the attribute).
+static void
+DecodeRecognitionWord(UniChar* word, ULong attribute)
+{
+	long n;
+	if ((attribute & 0x40) != 0)
+		n = 0x7fffffff;
+	else if ((attribute & 0x80) != 0)
+		n = 1;
+	else
+		return;
+	UppercaseText(word, n);
+}
+
+
+// ROM 0x0008ecf8 DecodeRecognitionWord__FPcUl
+// The same for a word of the dictionary's own eight-bit characters: turned
+// into Unicode (Mac Roman), the capitals put back, and turned back.
+static void
+DecodeRecognitionWord(char* word, ULong attribute)
+{
+	if ((attribute & 0xc0) == 0)
+		return;
+	UniChar buffer[64];
+	ConvertToUnicode(word, buffer, kMacRomanEncoding, 0x7fffffff);
+	DecodeRecognitionWord(buffer, attribute);
+	ConvertFromUnicode(buffer, word, kMacRomanEncoding, 0x3f);
+}
+
+
+// ROM 0x0008f06c FConvertDictionaryData
+// ConvertDictionaryData(data) - a dictionary's data brought up to date in
+// place: every word whose attribute carries the old capitals flags (0x40,
+// 0x80) is put in with its capitals and the flags taken off.  The words are
+// walked in a copy of the data, and the changes made to a second copy,
+// which then replaces the binary's bytes (its length set to what the
+// dictionary now uses).  Nothing is changed when anything fails.
+Ref
+FConvertDictionaryData(RefArg /*rcvr*/, RefArg data)
+{
+	if (ISNIL(data))
+		return NILREF;
+	long size = Length(data);
+	if (size <= 0)
+		return NILREF;
+	Handle changed = NewHandle(size);
+	Boolean haveChanged = changed != nil;
+	Handle original;
+	{
+		TBinaryDataPtr bytes(data);
+		original = NewFakeHandle((char*) bytes, size);
+	}
+	Boolean haveOriginal = original != nil;
+	if (haveOriginal && haveChanged)
+		BlockMove(*original, *changed, size);
+	Handle target = BuildDictionaryFromHandle(changed);
+	Boolean targetOK = airusResult == 0;
+	Handle source = BuildDictionaryFromHandle(original);
+	Boolean ok = airusResult == 0 && targetOK && haveOriginal && haveChanged;
+	char wordA[64], wordB[64], decoded[64];
+	char* word = wordA;
+	char* last = wordB;
+	ULong* attribute = nil;
+	ULong flags = 0;
+	if (ok)
+		FirstCompletion(source, "", word, &attribute, nil);
+	while (airusResult >= 0)
+	{
+		if (!ok)
+			goto done;
+		if (attribute != nil && ((flags = *attribute) & 0xc0) != 0)
+		{
+			strcpy(decoded, word);
+			DecodeRecognitionWord(decoded, flags);
+			if (strcmp(word, decoded) != 0)
+			{
+				DeleteWord(target, (UByte*) word);
+				if (airusResult < 0)
+					goto done;
+				AddWord(target, 0, (UByte*) decoded, flags & ~0xc0);
+				if (airusResult < 0)
+					goto done;
+			}
+		}
+		{
+			char* swap = last;
+			last = word;
+			word = swap;
+		}
+		NextCompletion(source, "", word, last, &attribute, nil);
+	}
+	if (ok)
+	{
+		AirusAParmBlock* block = *(AirusAParmBlock**) target;
+		long used = (long) (block->fDataEnd - block->fData);
+		SetLength(data, used);
+		TBinaryDataPtr bytes(data);
+		BlockMove(*changed, (char*) bytes, used);
+	}
+done:
+	if (target != nil)
+		DisposHandle(target);
+	if (source != nil)
+		DisposHandle(source);
+	if (changed != nil)
+		DisposHandle(changed);
+	if (original != nil)
+		DisposHandle(original);
+	return NILREF;
+}
+
+
 void
 RegisterDictionaryNatives(void)
 {
 	RegisterNativeFunction("FAirusResult", (void*) FAirusResult, 0);
+	RegisterNativeFunction("FConvertDictionaryData", (void*) FConvertDictionaryData, 1);
 	RegisterNativeFunction("DumpDict__FRC6RefVar", (void*) FDumpDict, 0);
 	RegisterNativeFunction("FAirusRegisterDictionary", (void*) FAirusRegisterDictionary, 0);
 	RegisterNativeFunction("FAirusUnregisterDictionary", (void*) FAirusUnregisterDictionary, 0);

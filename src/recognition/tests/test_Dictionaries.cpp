@@ -675,6 +675,21 @@ main()
 			RefVar found(AllocateFrame());
 			EXPECT(RINT(RefVar(FAirusLookupWord(frame, RefVar(MakeString("badger")), found)))
 				   == kAirusIsWord);
+			// ConvertDictionaryData: a word kept in lower case with the old
+			// "all capitals" flag (0x40) comes back in capitals, the flag off;
+			// one with neither flag is left as it is
+			EXPECT(RINT(RefVar(FAirusAddWord(frame, RefVar(MakeString("stoat")),
+											 RefVar(MAKEINT(0x41))))) == 0);
+			RefVar old(FGetDictionaryData(frame, RefVar(GetFrameSlotRef(frame, RSSYMdictid))));
+			EXPECT(ISNIL(RefVar(FConvertDictionaryData(RefVar(NILREF), old))));
+			EXPECT(ISNIL(RefVar(FSetDictionaryData(frame,
+									RefVar(GetFrameSlotRef(frame, RSSYMdictid)), old))));
+			EXPECT(RINT(RefVar(FAirusLookupWord(frame, RefVar(MakeString("STOAT")), found)))
+				   == kAirusIsWord);
+			EXPECT(RINT(RefVar(GetFrameSlotRef(found, RSSYMattribute))) == 1);
+			EXPECT(RINT(RefVar(FAirusLookupWord(frame, RefVar(MakeString("badger")), found)))
+				   == kAirusIsWord);
+			EXPECT(RINT(RefVar(GetFrameSlotRef(found, RSSYMattribute))) == 9);
 			// a dictionary that lives in the ROM cannot be asked
 			Boolean threw = false;
 			newton_try

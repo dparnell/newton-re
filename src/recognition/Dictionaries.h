@@ -113,6 +113,7 @@ Ref		FAirusUnregisterDictionary(RefArg rcvr);			// ROM 0x0013ef2c FAirusUnregist
 Ref		FAddDictionary(RefArg rcvr, RefArg frame, RefArg custom);	// ROM 0x0013f058 FAddDictionary__FRC6RefVarN21
 Ref		FGetDictionaryData(RefArg rcvr, RefArg id);			// ROM 0x0013dd28 FGetDictionaryData__FRC6RefVarT1
 Ref		FSetDictionaryData(RefArg rcvr, RefArg id, RefArg binary);	// ROM 0x0013dbec FSetDictionaryData__FRC6RefVarN21
+Ref		FConvertDictionaryData(RefArg rcvr, RefArg data);		// ROM 0x0008f06c FConvertDictionaryData - the old capitals flags turned into capitals, in place
 
 // The frames: vars.dictionaries, and the one with a given id.
 // The list entry for an id.  Some ids stand for others, and an id that
