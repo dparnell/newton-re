@@ -83,6 +83,21 @@ struct SPEC_TYPE
 	SPEC_TYPE*		prev;			// +10
 };
 
+// An extremum as the base-line finder keeps it (ROM 0x10 bytes): its
+// suspicion code, where it is, the original point it came from, and the
+// element it was copied from.
+struct EXTR
+{
+	short			susp;			// +00  0 on the line; the codes are in LowBaseline.cpp
+	short			x;				// +02
+	short			y;				// +04
+	short			i;				// +06  the point in the original trace (buffer 2's map)
+	UByte			f8;				// +08
+	UByte			attr;			// +09  its stroke's ending attr
+	short			fa;				// +0a
+	SPEC_TYPE*		elem;			// +0c
+};
+
 // One of the four working buffers: where it is and how many shorts
 // (ROM 8 bytes).
 struct low_buffer
@@ -173,11 +188,32 @@ long	GetBoxFromTrace(PS_point_type* trace, long iBeg, long iEnd, _RECT* box);	//
 void	GetTraceBox(short* x, short* y, long iBeg, long iEnd, _RECT* box);	// ROM 0x003075b4 GetTraceBox__FPsT1iT3P5_RECT
 long	xMinMax(long iBeg, long iEnd, short* x, short* y, short* xMin, short* xMax);	// ROM 0x00307358 xMinMax__FiT1PsN33 - over the points not pen-ups; ==> 1
 long	yMinMax(long iBeg, long iEnd, short* y, short* yMin, short* yMax);	// ROM 0x003073cc yMinMax__FiT1PsN23 - ==> 1
+long	iMostFarFromChord(short* x, short* y, long i, long j);		// ROM 0x00306448 iMostFarFromChord__FPsT1iT3 - the point from i to j furthest from their chord (the middle of a run of equals)
 short	NewIndex(short* index, short* y, short i, short n, short mode);	// ROM 0x00307cd0 NewIndex__FPsT1sN23 - where an old point index went after filtering: 0 the first new point from it, 2 the last, 1 between the two; -2 none
 
 // The special elements found.
 long	Extr(low_type* low, short step, short eps1, short eps2, short eps3, short depth, short flags);	// ROM 0x002ba52c Extr__FP8low_typesN52 - every stroke's extrema in the directions flags asks for; ==> 0, 1 for no room
 long	MarkSpecl(low_type* low, SPEC_TYPE* elem);					// ROM 0x002bc36c MarkSpecl__FP8low_typeP9SPEC_TYPE - a copy added to the list; ==> 0, 1 for no room
+
+// The base-line finder's pieces (LowBaseline.cpp).
+void	sort_extr(EXTR* extr, long n);								// ROM 0x001bd73c sort_extr__FP4EXTRi - into order of x
+long	calc_average(short* a, long n);								// ROM 0x001c0ea4 calc_average__FPsi - ==> 1 for none
+long	calc_mediana(short* a, long n);								// ROM 0x001c5068 calc_mediana__FPsi - ==> 1 for none
+long	extract_ampl(low_type* low, short* ampl, long* count);		// ROM 0x001c4f74 extract_ampl__FP8low_typePsPi - the letters' heights; ==> 0, 1 for more than 100
+long	sign(long a, long b);										// ROM 0x001c17e4 sign__FiT1
+Boolean	pnt(_RECT box, long k);										// ROM 0x001bcc2c pnt__F5_RECTi - under a third of k+1 both ways
+long	straight_stroke(long i, long j, short* x, short* y, long k);	// ROM 0x001bd198 straight_stroke__FiT1PsT3T1
+long	str_com(long i, long j, short* x, short* y, long k);		// ROM 0x001bcb90 str_com__FiT1PsT3T1
+void	ret_to_line(EXTR* extr, long n, long i, long j);			// ROM 0x001c0c34 ret_to_line__FP4EXTRiN22
+void	spec_neibour_extr(EXTR* extr, long n, UByte kind, long dir);	// ROM 0x001bf7ec spec_neibour_extr__FP4EXTRiUcT2
+void	super_min_to_line(EXTR* extr, long n, short* base, long a, long b, long* count);	// ROM 0x001bf75c super_min_to_line__FP4EXTRiPsN22Pi
+long	delete_line_extr(EXTR* extr, long* n, long code);			// ROM 0x001c0d14 delete_line_extr__FP4EXTRPii - ==> 1
+long	insert_line_extr(low_type* low, SPEC_TYPE* elem, EXTR* extr, long* n);	// ROM 0x001c0d88 insert_line_extr__FP8low_typeP9SPEC_TYPEP4EXTRPi - ==> 1
+long	sub_max_to_line(low_type* low, EXTR* extr, long* n, short* base, long lim);	// ROM 0x001bf6a4 sub_max_to_line__FP8low_typeP4EXTRPiPsi
+long	calc_ampl(EXTR e, short* y, UByte kind);					// ROM 0x001c0ab0 calc_ampl__F4EXTRPsUc
+long	is_defis(low_type* low, long nStrokes);						// ROM 0x001c4c4c is_defis__FP8low_typei
+long	del_tail_min(EXTR* extr, long* n, short* y, short* base, UByte flag);	// ROM 0x001c239c del_tail_min__FP4EXTRPiPsT3Uc - ==> 1
+long	extract_num_extr(low_type* low, UByte kind, EXTR* extr, long* count);	// ROM 0x001bdff0 extract_num_extr__FP8low_typeUcP4EXTRPi - ==> 0, 1 for more than 50
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

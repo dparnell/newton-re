@@ -212,6 +212,55 @@ TestExtrema(void)
 }
 
 
+static void
+TestBaselinePieces(void)
+{
+	// the means and medians the finder measures letters with
+	short a[] = { 1, 2, 3, 4, 100 };
+	EXPECT(calc_average(a, 5) == 22);
+	EXPECT(calc_mediana(a, 5) == 3);
+	short b[] = { 7, 7, 7 };
+	EXPECT(calc_mediana(b, 3) == 7);
+	short c[] = { 10, 20, 30, 40 };
+	EXPECT(calc_mediana(c, 4) == 25);
+	EXPECT(calc_average(a, 0) == 1 && calc_mediana(a, 0) == 1);
+	EXPECT(sign(3, 1) == 1 && sign(1, 3) == -1 && sign(2, 2) == 0);
+
+	// the point furthest from a chord, and whether a stretch is straight
+	short x[] = { 0, 0, 5, 10, 15, 20 };
+	short y[] = { -1, 0, 5, 0, 0, 0 };
+	EXPECT(iMostFarFromChord(x, y, 1, 3) == 2);
+	EXPECT(straight_stroke(3, 5, x, y, 4) == 1);
+	EXPECT(straight_stroke(1, 3, x, y, 4) == 0);
+	_RECT dot = { 10, 10, 11, 11 };
+	_RECT bar = { 10, 10, 30, 11 };
+	EXPECT(pnt(dot, 8) && !pnt(bar, 8));
+
+	// the extremum arrays: sorted by x, and codes struck out
+	EXTR e[6];
+	memset(e, 0, sizeof(e));
+	short xs[] = { 50, 10, 40, 20, 30 };
+	for (long i = 0; i < 5; i++)
+	{
+		e[i].x = xs[i];
+		e[i].susp = (i & 1) ? 0x0d : 0;
+	}
+	sort_extr(e, 5);
+	EXPECT(e[0].x == 10 && e[1].x == 20 && e[2].x == 30 && e[3].x == 40 && e[4].x == 50);
+	long n = 5;
+	delete_line_extr(e, &n, 0x0d);
+	EXPECT(n == 3 && e[0].x == 30 && e[1].x == 40 && e[2].x == 50);
+
+	// a code put back on the line carries to the neighbours that had it
+	EXTR r[4];
+	memset(r, 0, sizeof(r));
+	r[1].susp = 0x65;
+	r[2].susp = 0x65;
+	ret_to_line(r, 4, 1, 1);
+	EXPECT(r[1].susp == -0x65 && r[2].susp == -0x65 && r[3].susp == 0);
+}
+
+
 int
 main()
 {
@@ -221,6 +270,7 @@ main()
 	TestErrorprov();
 	TestFilters();
 	TestExtrema();
+	TestBaselinePieces();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

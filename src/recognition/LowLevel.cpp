@@ -397,6 +397,53 @@ yMinMax(long iBeg, long iEnd, short* y, short* yMin, short* yMax)
 }
 
 
+// ROM 0x00306448 iMostFarFromChord__FPsT1iT3
+// The point between i and j (not a pen-up) furthest from the chord i-j,
+// by the cross product; along a run of points equally far the answer
+// moves on by one for every two of them, so it ends near the run's
+// middle.  ==> i when none is off the chord.
+long
+iMostFarFromChord(short* x, short* y, long i, long j)
+{
+	long dx = x[j] - x[i];
+	long dy = y[j] - y[i];
+	Boolean inRun = true;
+	Boolean half = false;
+	long best = 0;
+	long found = i;
+	for (long k = i + 1; k <= j; k++)
+	{
+		if (y[k] != -1)
+		{
+			long d = (dx * y[k] - dy * x[k]) + (dy * x[i] - dx * y[i]);
+			if (d < 0)
+				d = -d;
+			if (best < d)
+			{
+				half = false;
+				inRun = true;
+				best = d;
+				found = k;
+				continue;
+			}
+			if (inRun && d == best)
+			{
+				if (half)
+				{
+					found++;
+					half = false;
+				}
+				else
+					half = true;
+				continue;
+			}
+		}
+		inRun = false;
+	}
+	return found;
+}
+
+
 // ROM 0x00307cd0 NewIndex__FPsT1sN23
 // Where an old point went after a filter: index[j] is the old point the
 // new point j came from.  mode 0: the first new point from it or after it
