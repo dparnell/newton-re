@@ -22,6 +22,7 @@
 #include "KeyboardView.h"
 #include "MonthView.h"
 #include "ListView.h"
+#include "MeetingView.h"
 #include "ClipboardView.h"
 #include "PickView.h"
 #include "Rects.h"
@@ -160,7 +161,6 @@ BuildView(TView* parent, RefArg context)
 	case clMathLineView:
 	case clRemoteView - 1: case clRemoteView:
 	case clPrintView - 1: case clPrintView:
-	case clMeetingView:
 	case clSliderView:
 	case clOutline - 3: case clOutline - 2: case clOutline - 1: case clOutline:
 	case clHelpOutline - 1: case clHelpOutline:
@@ -172,6 +172,9 @@ BuildView(TView* parent, RefArg context)
 		break;
 	case clListView:
 		view = new TListView;
+		break;
+	case clMeetingView:
+		view = new TMeetingView;
 		break;
 	case clMonthView:
 		view = new TMonthView;

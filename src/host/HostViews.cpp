@@ -32,9 +32,23 @@
 #include "HostTablet.h"
 #include "hal/host/Host.h"
 #include "ROMImport.h"
+#include "REPTranslators.h"
 #include <string.h>
 
 static THostScreenDriver*	gHostDisplay = nil;
+
+
+// Disasm(fn): a NewtonScript function's bytecode printed through the REP
+// (frames/REPTranslators.h's Disassemble, the ROM's own 0x002c1e68) - for
+// reading a function of the machine's own that is not where
+// analysis/nsfunctions.py can find it (one out of a package part, or one
+// reached only at run time, e.g. GetRoot().calendar.CalculateScrollRects)
+static Ref
+FDisasm(RefArg /*rcvr*/, RefArg fn)
+{
+	Disassemble(fn);
+	return NILREF;
+}
 
 
 // ScreenSnapshot(path): the display written to the file - a PBM for a
@@ -157,6 +171,7 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "KeyEvent")), RefVar(MakeCFunction((void*) FKeyEvent, 2, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "KeyboardConnect")), RefVar(MakeCFunction((void*) FKeyboardConnect, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenSnapshot")), RefVar(MakeCFunction((void*) FScreenSnapshot, 1, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "Disasm")), RefVar(MakeCFunction((void*) FDisasm, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenWidth")), RefVar(MakeCFunction((void*) FScreenWidth, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenHeight")), RefVar(MakeCFunction((void*) FScreenHeight, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenDown")), RefVar(MakeCFunction((void*) FPenDown, 2, nil)));

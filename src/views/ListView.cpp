@@ -42,7 +42,7 @@ const ULong	kTopicAddFlag = 0x8000000;
 // ROM 0x00128cec ArrayAppend__FRC6RefVarN21
 // The value added to the end of the frame's array slot - the slot made an
 // array of the one value when it is nil.
-static void
+void
 ArrayAppend(RefArg frame, RefArg slot, RefArg value)
 {
 	RefVar array(GetFrameSlotRef(frame, slot));

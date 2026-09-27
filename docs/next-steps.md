@@ -46,6 +46,19 @@ and again after the recogniser has finished.
 
 The last run of work closed, in order:
 
+- **a meeting in the day view** (`views/MeetingView.h`, `docs/views/README.md`,
+  "A meeting in the day view"): `TMeetingView`, `LayoutMeeting`,
+  `GetMeetingTypeInfo`/`GetMeetingIcon`, so the Assistant's "schedule lunch
+  with Daniel" slip now opens Dates on the day with the meeting in it.  With
+  it two host bugs: every pattern made from rows wrote past its handle (the
+  heap broke far away, in a `DrawShape`), and the ROM's shape rectangles were
+  read in the host's byte order (`ObjectAreaImport` now turns them round).
+  `Disasm(fn)` is a host function for reading a script the static tools
+  cannot reach.  Next: `TSliderView` (ROM 0x001c97b8, the duration bar -
+  drawing, the scrub that deletes the meeting, and dragging its end to change
+  the length) and the date the Assistant's "tomorrow" comes to (the meeting
+  lands today).
+
 - **the outline list** (`views/ListView.h`, `docs/views/README.md`,
   "The outline list"): `TListView` and its thirteen natives, so the
   To Do list opens - tapping "Do" on the Assistant's "remind me to

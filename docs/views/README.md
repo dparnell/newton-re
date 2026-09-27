@@ -2233,11 +2233,50 @@ the `hideCount` quirk.  "remind me to call Daniel" in
 `src/host/demo/assist-tasks.ns` now opens the To Do list with the task
 in it, check box and priority drawn.
 
+## A meeting in the day view (`views/MeetingView.h`)
+
+`TMeetingView` (class 95, over `TContainerView`; ROM 0x001ca1a8-
+0x001cbd54) is one meeting in the Dates day view: a container of a
+slider (child 0, class 96: the bar down its left that says how long the
+meeting is - `TSliderView`, NOT YET, so it is a plain view and draws
+nothing) and the meeting's text (child 1, a paragraph).  Its icon - the
+context's `iconShape`, drawn by the day view's `viewDrawScript` to the
+right of the slider - is what the pen picks it up by (`HandleClick`: a
+tap runs the viewClickScript, a drag carries it away as a 'meeting or
+its text as 'text, with a whole-container hilite on the context for the
+drag's length).  Everything else - a word written on it, a scrub, a
+hilite, a drop - it hands to the text, answering the arbitration's
+questions itself: a scrub covering half the icon takes the whole meeting
+(5), a word mostly on the meeting is taken (5), one with 120 pixels to
+spare to the right or written within a second of the last is added (3).
+
+`LayoutMeeting` (the native) is where a meeting goes down the day: its
+start and end, the minutes into the day, as a top and bottom
+(`TimeToPosition`), and across either the whole width, the right half
+(a viewBounds of TRUE) or its own box.  `GetMeetingSlot` reads a
+repeating meeting's slots through its `repeatTemplate`, and
+`GetMeetingTypeInfo`/`GetMeetingIcon` answer the kind of meeting out of
+the Dates application's `meetingTypeRegistry` - by its meetingType, its
+mtgIconType, else its stationery.
+
+Getting the day view to draw a meeting turned up two host bugs outside
+the views.  A pattern made from rows (`MakeSimplePattern`, and so every
+standard pattern at `InitGraf`) was allocated at the ROM's size, a
+0x1c-byte PixelMap and eight rows, where the host's PixelMap is bigger:
+every one wrote past its handle, and the heap broke later somewhere
+else (DEVIATION: sized from the host's struct).  And the ROM's own
+shapes keep their rectangles as big-endian `'boundsRect` binaries, which
+the host read in its own order - so the meeting's 13 by 17 icon came
+out 4352 by 3328 and was stretched over the side of the day.  The
+object area import now turns the shapes' halfwords round as it already
+did strings and reals (`frames/ObjectAreaImport.cpp`, `analysis/
+nsfunctions.py --binary-classes` saying which classes there are).
+
 ## Not yet
 
 The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the sounds, `SyncScroll`, the popup and
-modal dialog machinery, the other subclasses (`TMeetingView`, ...), the strokes and words of the recogniser (its controller and
+modal dialog machinery, the other subclasses (`TSliderView`, ...), the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).

@@ -30,6 +30,7 @@
 #include "DragDrop.h"
 #include "DrawShape.h"
 #include "ListView.h"
+#include "MeetingView.h"
 #include <string>
 #include "Commands.h"
 #include "Keyboard.h"
@@ -6421,6 +6422,66 @@ TestListView()
 }
 
 
+// A meeting in the day view (TMeetingView): where LayoutMeeting puts a
+// meeting, its two children, and what it says to a scrub and a word.
+static void
+TestMeetingView()
+{
+	// 9:00 to 10:00 on some day, down a 240-pixel day 200 wide
+	Eval("mtgA := {mtgStartDate: 1440 * 5 + 9 * 60, mtgDuration: 60, viewBounds: nil}");
+	Rect box;
+	FromObject(RefVar(LayoutMeeting(RefVar(), RefVar(Eval("mtgA")), RefVar(MAKEINT(240)), RefVar(MAKEINT(200)), RefVar())), box);
+	EXPECT(box.top == 90 && box.bottom == 100 && box.left == 0 && box.right == 200);
+	Eval("mtgA.viewBounds := true");
+	FromObject(RefVar(LayoutMeeting(RefVar(), RefVar(Eval("mtgA")), RefVar(MAKEINT(240)), RefVar(MAKEINT(200)), RefVar())), box);
+	EXPECT(box.left == 100 && box.right == 200);
+	// a box of its own: kept, unless the day is narrower than its right
+	Eval("mtgA.viewBounds := {left: 20, top: 0, right: 150, bottom: 5}");
+	FromObject(RefVar(LayoutMeeting(RefVar(), RefVar(Eval("mtgA")), RefVar(MAKEINT(240)), RefVar(MAKEINT(200)), RefVar())), box);
+	EXPECT(box.left == 20 && box.right == 200 && box.top == 90);
+	Eval("mtgA.viewBounds := {left: 20, top: 0, right: 300, bottom: 5}");
+	FromObject(RefVar(LayoutMeeting(RefVar(), RefVar(Eval("mtgA")), RefVar(MAKEINT(240)), RefVar(MAKEINT(200)), RefVar())), box);
+	EXPECT(box.left == 100 && box.right == 300);
+	// a repeating meeting's instance takes what it lacks from its template
+	RefVar instance(Eval("{repeatTemplate: {mtgDuration: 30, mtgText: \"standup\"}, mtgStartDate: 0}"));
+	EXPECT(RINT(GetMeetingSlot(instance, RSSYMmtgduration)) == 30);
+	EXPECT(RINT(GetMeetingSlot(instance, RSSYMmtgstartdate)) == 0);
+	EXPECT(ISNIL(GetMeetingSlot(instance, RSSYMviewbounds)));
+	EXPECT(IsString(GetMeetingText(instance)));
+
+	TView* view = ViewOf("ctxMV := AddView(GetRoot(), {viewClass: 95, viewFlags: 1, "
+		"viewBounds: {left: 20, top: 40, right: 220, bottom: 72}, "
+		"viewChildren: [{viewClass: 96, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 12, bottom: 32}}, "
+		"{viewClass: 81, viewFlags: 1, viewFont: 0x3000, text: \"lunch\", viewBounds: {left: 38, top: 0, right: 200, bottom: 32}}]})");
+	EXPECT(view != nil);
+	if (view == nil)
+		return;
+	TMeetingView* meeting = (TMeetingView*) view;
+	EXPECT(meeting->ClassID() == clMeetingView && meeting->DerivedFrom(clContainerView));
+	EXPECT(meeting->GetSliderView() != nil && meeting->GetSliderView()->ClassID() != clParagraphView);
+	EXPECT(meeting->GetTextView() != nil && meeting->GetTextView()->ClassID() == clParagraphView);
+	// a scrub that covers the icon (24 by 16 past the slider) takes the
+	// whole meeting; one that misses the meeting is nothing to it
+	Rect scrub;
+	SetRect(&scrub, 30, 38, 60, 60);
+	EXPECT(meeting->HandleScrub(scrub, 0, nil, false) == 5);
+	SetRect(&scrub, 0, 300, 10, 310);
+	EXPECT(meeting->HandleScrub(scrub, 0, nil, false) == 0);
+	// a word written mostly on the meeting is taken; one far off is not
+	Point pt;
+	pt.h = 100;
+	pt.v = 50;
+	UniChar word[] = { 'x', 0 };
+	Rect writing;
+	SetRect(&writing, 60, 42, 200, 70);
+	EXPECT(meeting->HandleWord(word, 1, writing, pt, 0, 0, RefVar(), false, nil, nil) == 5);
+	SetRect(&writing, 60, 200, 100, 220);
+	EXPECT(meeting->HandleWord(word, 1, writing, pt, 0, 0, RefVar(), false, nil, nil) == 0);
+	Eval("RemoveView(GetRoot(), ctxMV)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6571,6 +6632,7 @@ main()
 		TestClipboard();
 		TestHiliteStroke();
 		TestListView();
+		TestMeetingView();
 	}
 	newton_catch_all
 	{

@@ -22,6 +22,7 @@
 #include "PickView.h"
 #include "ClipboardView.h"
 #include "ListView.h"
+#include "MeetingView.h"
 #include "DrawShape.h"
 #include "Soups.h"
 #include "Text.h"
@@ -66,6 +67,7 @@ RegisterAllNatives(void)
 	RegisterPickNatives();
 	RegisterClipboardNatives();
 	RegisterListViewNatives();
+	RegisterMeetingViewNatives();
 	RegisterKeyboardNatives();
 	RegisterApplicationNatives();
 
