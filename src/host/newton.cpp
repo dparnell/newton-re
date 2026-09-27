@@ -101,7 +101,12 @@ NewtonBoot(void)
 static void
 HeadlessTimer(void)
 {
-	Sleep(gHeadlessSeconds * kSeconds);
+	// (a TTimeout is 32 bits of 3.6864 MHz ticks, which is under ten
+	// minutes: the end is worked out as a 64-bit time and slept till)
+	TTime end = GetGlobalTime();
+	TTime span(gHeadlessSeconds, kSeconds);
+	CompAdd(&span.time, &end.time);
+	SleepTill(&end);
 	HostStopTasks();
 }
 
