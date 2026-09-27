@@ -395,6 +395,12 @@ long	FantomSt(short* count, short* x, short* y, low_buffer* bufX, low_buffer* bu
 long	Recount(low_type* low);										// ROM 0x0032be74 Recount__FP8low_type
 long	Pict(low_type* low);										// ROM 0x003298d8 Pict__FP8low_type - ==> 0, 1 for no room
 
+// The corners (LowAngles.cpp).
+long	cos_vect(long a, long b, long c, long d, short* x, short* y);	// ROM 0x00307ba8 cos_vect__FiN31PsT5
+long	angle_direction(short dx, short dy, short slope);			// ROM 0x002aa418 angle_direction__FsN21 - 0x10, 0x20, 0x40 or 0x80
+long	store_angle(low_type* low, short i, short k, short start, short end, short best);	// ROM 0x002aa2f0 store_angle__FP8low_typesN42 - ==> 0, 1 for no room
+long	angl(low_type* low);										// ROM 0x002a9f7c angl__FP8low_type - ==> 0, 1 for no room
+
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
 long	Filt(low_type* low, short dist2, short mode);				// ROM 0x002e1064 Filt__FP8low_typesT2 - the trace resampled a step of about the root of dist2 apart; ==> 0

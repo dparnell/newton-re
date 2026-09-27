@@ -808,6 +808,41 @@ TestPict(void)
 }
 
 
+// angl (LowAngles.cpp): a hairpin - up 20 points and straight back down
+// beside itself - is one corner, marked at its apex, opening downwards.
+static void
+TestAngles(void)
+{
+	EXPECT(angle_direction(2, 20, 0) == 0x10 && angle_direction(20, 0, 0) == 0x40);
+	EXPECT(angle_direction(-10, 5, 0) == 0x80 && angle_direction(2, -20, 0) == 0x20);
+	TraceStart();
+	for (long s = 0; s < 10; s++)					// a lead-in
+		Pt(40 + 5 * s, 200);
+	for (long s = 0; s <= 20; s++)
+		Pt(100, 200 - 5 * s);
+	for (long s = 1; s <= 20; s++)
+		Pt(100 + s, 100 + 5 * s);
+	for (long s = 1; s <= 10; s++)					// and a lead-out
+		Pt(120 + 5 * s, 200);
+	PenUp();
+	long apex = 1 + 10 + 20;
+	LowFixture f;
+	low_type* low = &f.low;
+	InitSpecl(low, 400);
+	EXPECT(angl(low) == 0);
+	long corners = 0;
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+		if (p->mark == 0x0b)
+		{
+			corners++;
+			fprintf(stderr, "angle: %d..%d at %d attr %d opening %#x\n", p->iBeg, p->iEnd, p->ipoint0, p->attr, p->other);
+			EXPECT(p->ipoint0 >= apex - 1 && p->ipoint0 <= apex + 1);
+			EXPECT(p->other == 0x10 && p->attr == 0);
+		}
+	EXPECT(corners == 1);
+}
+
+
 int
 main()
 {
@@ -826,6 +861,7 @@ main()
 	TestAnalyzePieces();
 	TestPictPieces();
 	TestPict();
+	TestAngles();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
