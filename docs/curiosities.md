@@ -1972,3 +1972,23 @@ A large enough rubbish value overflows those products; the ARM wraps and
 the engine carries on with some other number.  The host keeps the bug with the ARM's
 arithmetic; what gave it away was the sanitizer trapping the overflow on
 the few runs where the heap happened to leave a big number there.
+
+
+## Handwriting measured in units of its own height
+
+ParaGraph's cursive reader does not keep a word's points in pixels for
+long.  The first thing its low level does (`transfrmN`, ROM 0x001baaf8,
+under `BaselineAndScale`) is find two lines under the writing - the feet
+of the small letters and their tops, a y for every point of the trace -
+and then rewrite every point's y against them: the upper line becomes
+0x2796, the lower 0x27e6, 80 units apart whatever size the word was
+written, with ascenders and descenders carrying on at the same scale
+above and below; x is rescaled to the same 80-units-to-the-height from
+the box's left edge, plus 0x50.  Everything after that - the circle
+finder, the arcs, the crossings, the letter matching - compares against
+fixed numbers like 0x2746 and 0x2836 (`DefLineThresholds`, ROM
+0x002f8b0c), so a small word and a large one are the same word to it.
+The finder also reports how sure it is of the two lines (45 to 90, by
+how many extrema it found and how little it had to correct), and a
+synthetic run of eight arches 40 pixels high on y = 200 comes back from
+the reconstruction as exactly that: height 40, base 200, sure 90/90.

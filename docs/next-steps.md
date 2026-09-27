@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 108/108
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11194 citations, 0 bad;
-  6257 of 16671 functions (37.53%).
+- `analysis/coverage.py build/MP2x00US --check`: 11238 citations, 0 bad;
+  6295 of 16671 functions (37.76%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -178,6 +178,24 @@ remainder in r1; a direction kept as two shorts shows as bytes), so each
 function's arithmetic is checked in the assembly (`analysis/disasm.py`),
 and a struct holding pointers (`SPEC_TYPE`, `EXTR`, `low_type`) is
 `sizeof`-allocated on the host.
+
+**Stage 2, round 2 (2026-09-28, commits b66b2ca, 3089d57, 65ba664):** the
+base-line finder is whole - `transfrmN` and the 32 functions below it
+(`LowPunct.cpp`, `LowGeometry.cpp`, `LowLine.cpp`, `LowClassify.cpp`,
+`LowBorders.cpp`) and `BaselineAndScale`, 38 functions and about 41 KB -
+and the first end-to-end check passes: synthetic arches 40 high on y = 200
+come back as a height of 40 on a lower border of 200, the trace rescaled
+to 0x2796..0x27e6 (`test_LowLevel`'s `TestBaseline`).  AnalyzeLowData's
+first seven passes are done too (`LowAnalyze.cpp`).  Left below
+`low_level`: 267 functions, 148 KB - the rest of `AnalyzeLowData` (`Pict`,
+the circle finder `Circle` with `work_with_circle`/`Orient00` and the back
+and forward circles, `angl`, `FindSideExtr`/`PostFindSideExtr`, `Cross`,
+the `lk_*` passes over sticks, circles and arcs, `Adjust_I_U`, `xt_st_zz`
+with its dozen helpers, `RestoreColons`) and `exchange` (the xrs written:
+`FillXrFeatures`, `AssignInputPenaltyAndStrict`, `check_xrdata`,
+`MarkXrAsLastInLetter`, `GetLinkBetweenThisAndNextXr`).  Revised estimate:
+at this round's pace (about 45 KB a round) three to four more rounds for
+`low_level`, and the whole reader perhaps twelve.
 
 ## Then: the testing system
 

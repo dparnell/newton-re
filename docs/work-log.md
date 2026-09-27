@@ -9,6 +9,31 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive reader's base line
+
+- `transfrmN`, the base-line finder, and everything under it:
+  `LowPunct.cpp` (the stroke tests - commas and brackets, leading and
+  trailing punctuation, an i's dot, an umlaut, a bar, a t's stem - and
+  `extract_all_extr`), `LowGeometry.cpp` (`QDistFromChord`, `is_cross`,
+  `FindCrossPoint`, `cos_pointvect`), `LowLine.cpp` (the gaps and glitches
+  in a line of extrema and what they are made: `find_gaps_in_line`,
+  `find_glitches_in_line`, the three `glitch_to_*`, `all_susp_extr`,
+  `bord_correction`, `num_bord_correction`; tables `TG1`/`TG2`/`H1`/`H2`/
+  `CS` generated), `LowClassify.cpp` (`classify_strokes`,
+  `classify_num_strokes`, `numbers_in_text`), `LowBorders.cpp`
+  (`SpecBord`, `calc_med_heights`, `FillRCNB`, `line_pos_mist`,
+  `transfrmN`) and `BaselineAndScale` (`const1` generated).  Then
+  AnalyzeLowData's first passes (`LowAnalyze.cpp`).  45 functions, about
+  44 KB.  `test_LowLevel`'s `TestBaseline`: synthetic arches come back
+  with the right height and lower border and the trace rescaled to them;
+  an ascender and a descender are found and left out of the lines.
+- Every one of these was read from the disassembly; the decompiler lost
+  most of their conditions (its `SBORROW4` chains, and a pointer loaded
+  from a literal pool it inlined as constants - `BaselineAndScale`'s
+  `const1`).  `EXTR`'s +8 turned out to be one short, the stroke's
+  shift, not two bytes; low_type's +0x7c..+0x9b are the thresholds
+  `DefLineThresholds` sets.
+
 ## 2026-09-28: the cursive reader's low level begun
 
 - `recognition/LowLevel.h` (`LowLevel.cpp`, `LowFilter.cpp`,

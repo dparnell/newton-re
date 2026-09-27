@@ -2204,7 +2204,7 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
-### The low level (`recognition/LowLevel.h`, begun)
+### The low level (`recognition/LowLevel.h`, base line done)
 
 `low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
 in a `low_type` - a 0x9c-byte block on its stack holding the trace as
@@ -2261,9 +2261,70 @@ for a kind other than 1 or 3.  `test_LowLevel` checks the roots against
 the true roots, the strokes of a hand-made trace, the filters on a line,
 a zigzag's extrema, and the pieces one by one.  `low_level` itself is not
 yet called: `GCTryToRecognize` still answers -8 until the whole layer is
-there.  NOT YET: `transfrmN` itself and 32 functions below it,
-`AnalyzeLowData`'s passes (circles, angles, crossings, arcs, the
-punctuation), `exchange` - 305 functions, 189 KB, by `analysis/callgraph.py
+there.
+
+**The base line is whole** (2026-09-28): `BaselineAndScale` (`LowLevel.cpp`)
+filters the trace to a step of a sixteenth of its box's height, finds each
+stroke's extrema up and down, and hands over to `transfrmN`
+(`LowBorders.cpp`), which is the finder proper:
+
+- the strokes are classified first (`classify_strokes`, `LowClassify.cpp`:
+  every extremum and stroke end given an attr - an i's dot, a t's stem
+  crossed by a bar, a horizontal bar, an umlaut, punctuation leading and
+  trailing, the ends of entry and exit strokes, loops - over the tests in
+  `LowPunct.cpp` and the geometry in `LowGeometry.cpp`); a word of figures
+  (rc +0x94 = 0x20) has `classify_num_strokes` instead, which knows an
+  upright, a level stroke, a plus, a four's two strokes and a bracket;
+- the bottoms and the tops are copied into two lines of `EXTR`s
+  (`extract_all_extr`, each stroke's x closed up by the gaps before it) and
+  each line cleaned by `bord_correction` (`LowLine.cpp`): the *gaps* (an
+  extremum the line steps up or down to, steeper and higher than the
+  ROM's tables `TG1`/`H1` allow) and *glitches* (a run of one to three
+  that the line steps into and out of, `TG2`/`H2`) are found and made
+  descenders (0x65), ascenders (0x66) or things inside the letters
+  (0x67), which are taken out of the line and their elements coded so;
+- the lower border is smoothed under the bottoms and the upper over the
+  tops (a y for every point of the trace), their medians and the letters'
+  height taken (`calc_med_heights`), and `line_pos_mist` scores how badly
+  they fit - every extremum looked at again against them, and the counts
+  of extrema above and below against the caller's own line - which
+  decides whether to go round again: a second pass on a second pair of
+  arrays with the first pass's findings, the better of the two kept;
+- a word that proves to be figures (`numbers_in_text`) goes round again
+  as figures; one that will not do (no extrema, a penalty of a hundred,
+  the borders crossing, a height under twelve or unlike the caller's)
+  gets level borders from `SpecBord`;
+- then the borders are brought together for a short word, pushed apart
+  when under twelve apart, and **the trace itself is rescaled**: y runs
+  0x2796 at the upper border to 0x27e6 at the lower (80 units the small
+  letters' height; above and below them continuing at the same scale),
+  and x is 80 units to that height from the box's left, +0x50.  The
+  engine's parameters are told the height (rc +0xea), the lower border's
+  median (+0xec), how sure the finder is of each (+0xee, +0xf0: 45 to 90
+  by how many extrema it had and how little it had to put right) and the
+  borders at ten places across the word (+0x98, `FillRCNB`).
+
+`test_LowLevel`'s `TestBaseline` writes eight synthetic arches 40 high on
+y = 200 and gets back a height of 40 and a lower border of 200, sure
+90/90, with the letters' feet at 0x27e6 and their tops at 0x2796; with an
+ascender and a descender among them those two are coded 0x66/0x65 and the
+lines do not move.  All of it was read from the disassembly: the
+decompiler lost the conditions of nearly every one of these functions.
+ROM behaviour kept: `extract_all_extr`'s walk back does not skip the
+extrema it did not copy, so a stroke with one writes its shift one EXTR
+too early; `numbers_in_text`'s test of the stroke before a figure measures
+the figure itself, so it never passes; `FindCrossPoint` rounds a negative
+step the wrong way ((5, 5) comes out (5, 6)); `curve_com_or_brkt`,
+`all_susp_extr`, `glitch_to_inside` and `bord_correction` leave values
+unset for kinds other than 1 and 3, which they are never given.
+
+AnalyzeLowData's passes have begun (`LowAnalyze.cpp`): `DefLineThresholds`
+(the heights the passes compare with, `low->fThresh`), `OperateSpeclArray`,
+`Sort_specl`, `Clear_specl`, `Surgeon`, `measure_slope` (the slant) and
+`look_like_circle`.  NOT YET: the rest of `AnalyzeLowData` (`Pict`,
+`Circle`, `angl`, `FindSideExtr`, `Cross`, `lk_begin`, `lk_cross`,
+`lk_duga`, `Adjust_I_U`, `xt_st_zz`, `RestoreColons`, `PostFindSideExtr`)
+and `exchange` - 267 functions, 148 KB, by `analysis/callgraph.py
 build/MP2x00US 0x0034ea74`.
 
 **NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
