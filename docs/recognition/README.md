@@ -2204,7 +2204,7 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
-### The low level (`recognition/LowLevel.h`, base line to Adjust_I_U done)
+### The low level (`recognition/LowLevel.h`, all but lk_duga and xt_st_zz done)
 
 `low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
 in a `low_type` - a 0x9c-byte block on its stack holding the trace as
@@ -2473,18 +2473,66 @@ comes out a start and end at tops, three tops, four bottoms and the o's
 crossings) and `TestIU` (a V's bottom becomes 7, a U's stays 8).  Nearly
 all of it was read from the disassembly, as before.
 
-NOT YET: the rest of `AnalyzeLowData` (`lk_cross`, `lk_duga`, `xt_st_zz`,
-`RestoreColons`, `PostFindSideExtr`) and `exchange` - 157 functions,
-90 KB, by `analysis/callgraph.py build/MP2x00US 0x0034ea74`.  `exchange`
-switches on each element's `code` (set by lk_begin and the passes after
-it) to write the xr, 0x18 bytes: +0 the xr code, +1 flags (1 last in its
-letter, `MarkXrAsLastInLetter`; 2 a stroke start that carries a gap; 0x80
-next to a break), +2 the input penalty (`AssignInputPenaltyAndStrict`,
-over the ROM tables `penlDefX` and `penlDefH`), +3 the height, +8 the
-point, +0xa/+0xc the first and last points, +0xe..+0x15 the box - then
-`check_xrdata` puts in the xrs a missing crossing stands for
-(`PutZintoXrd`) and `FillXrFeatures` adds the slopes, orientations and
-the shape records (`FillSHR`, `FillOrients`).
+**lk_cross** (`LowLkCross.cpp`, 0x002ca074) decides what each crossing
+is.  `analize_sticks` takes the ones where the pen comes back along
+itself (mark 9): the extrema it passes between going and coming back are
+counted - uppers and lowers, and among them the stroke's own turns (3,
+7) - and the stick coded 3 (up and down), 7, a hook (0x15, 0x18, 0x19,
+0x1c: `EndIUIDNearStick`, `cos_normalslope` against the slant), flat
+(0x1f, 0x20) or taken out when the pen barely moved; a d's bowl
+(`IsDUR`/`IsShapeDUR`) or loop (`is_DDL`) is recognised on the way.
+`analize_circles` takes each loop still uncoded (mark 6): the extrema
+inside and outside it counted, and it coded 4 (a loop at the top: an e,
+an l), 6 (at the bottom: a g's), 5 (closed: an o - `Decision_GU_or_O_`,
+over the loop's box and length in `CrossInfoType`), 0x1d/0x1e (small),
+0x1f/0x20 (flat, `CheckSmallGamma`) or 3/7/0x15 when thin enough to be a
+stick (`Isgammathin`, over `GetMaxDxInGamma`, the loop's widest).
+`del_inside_circles` then takes out the uncoded pairs and, for a coded
+one, the elements its loop swallowed (`CheckInsideCrossing`), moving the
+ones really outside it after it (`IsOutsideOfCrossing`) and restoring an
+inner angle (`IsInnerAngle` over `IsRightGulfLikeIn3`, `Restore_AN` - an
+angle lk_begin left in the array but out of the list is linked back);
+each pair becomes one element spanning both passes.  The point-in-polygon
+test `IsPointInsideArea`/`IsPointOnBorder` counts crossings along a ray
+from x = 1 to the point.  Two places read an element's array neighbour
+as its crossing partner (the ROM's +0x14/+0x16 loads).
+
+**RestoreColons** (`LowRestore.cpp`) finds a colon written as two dots:
+of up to eight dots and dashes that stand clear of their neighbours, two
+next to each other in the trace, close across and 20 to 160 apart down,
+not an i's dot (`LooksLikeIAndPoint`), are moved by `PutColonAtItsPlace`
+to the break nearest their middle across, a break made where needed and
+neighbouring breaks joined.  **PostFindSideExtr** asks the trace between
+an upper and a lower extremum for a side bend (`SideExtr`, strictly) and
+makes an arc element of one that is closed off and has nothing in
+between (0x28 going down, 0x29 up), or an angle (0xe) where the pen
+doubles back sharply.
+
+**exchange** (`LowExchange.cpp`, 0x002c7a00) switches on each element's
+`code` to write the xr (`xrd_el_type`, 0x18 bytes): +0 the xr type, +1
+flags (1 last in its letter, `MarkXrAsLastInLetter`; 2 a stroke start
+that carries a gap; 0x80 next to a break), +2 the input penalty
+(`AssignInputPenaltyAndStrict`, over `penlDefX` and `penlDefH`), +3 the
+height band, +5 the direction, +6 the link to the next
+(`GetLinkBetweenThisAndNextXr`: a stick, an arc of a certain bend either
+way, an S or a Z), +8 the point, +0xa/+0xc the first and last points,
++0xe..+0x15 the box (left, top, right, bottom); a break (type 1) at each
+end.  The points are mapped back to the original trace (buffer 2), a
+one-point xr widened by one either way by its type, and `check_xrdata`
+puts in the crossing (type 5, `PutZintoXrd`) a gap in a letter stands
+for.  **FillXrFeatures** (`LowXrFeatures.cpp`) then measures the
+writing's slant (`GetCurSlope`) and gives each xr a height class (+3,
+written over the band) and a shift (+4) against the four xrs that
+bracket it (`FillSHR`, over `xr_type_merits`' upper/lower/end bits) and
+its direction, one of 32 (`FillOrients`, `GetVect`, `GetAngle` over
+`ratio_to_angle`).  `test_LowLevel`: `TestExchange` (the uou's xr
+stream), `TestRestore` (a colon moved between two u's), `TestLkCross`.
+
+NOT YET: `lk_duga` (about 16 KB: `arcs_processing`,
+`conv_sticks_to_arcs`, the circle neighbours) and `xt_st_zz` (about 40
+KB: the t-bars, umlauts, quotes and punctuation,
+`make_different_breaks`, `FindDArcs`), and `low_level` wired into
+`GCTryToRecognize`.
 
 **NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
 `xrw_algs`, the `Chunk*` digit reader - docs/next-steps.md has their

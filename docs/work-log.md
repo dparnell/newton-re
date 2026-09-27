@@ -9,6 +9,44 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive reader's first xr stream; colons; lk_cross
+
+- **exchange** (`recognition/LowExchange.cpp`): the special elements
+  written as xrs - each code to an xr type by its height band, the
+  penalty (`AssignInputPenaltyAndStrict`), the link to the next
+  (`GetLinkBetweenThisAndNextXr` over `CalculateLinkWithoutSDS`,
+  `CalculateStickOrArc`, `CalculateLinkLikeSZ`), last-in-letter
+  (`MarkXrAsLastInLetter`), the points mapped back to the original
+  trace and each xr's box, and `check_xrdata`/`PutZintoXrd` putting in
+  the crossing a gap stands for.  The ROM copies GetBoxFromTrace's box
+  into the xr with unaligned loads whose low half is the halfword before
+  the address (a load at the top's address yields the left): the order
+  that comes out is left, top, right, bottom.  The ROM's memcpy copies
+  from the top down when the source is below the destination, so
+  PutZintoXrd's overlapping move is a memmove.
+- **FillXrFeatures** (`LowXrFeatures.cpp`): the writing's slant
+  (`GetCurSlope`), each xr's height class and shift over the four xrs
+  that bracket it (`FillSHR`; two limit tables that were function-local
+  arrays copied onto the stack, generated as `kSHRRatioLimits`/
+  `kSHRShiftLimits`), and its direction (`FillOrients` over `GetBlp`,
+  `GetVect`, `GetAngle`).  ROM quirk kept: a stroke end first in the list
+  would read the merits' byte before the first, which is the last shift
+  class's (the two arrays are laid out one after the other).
+- **RestoreColons, PostFindSideExtr** (`LowRestore.cpp`): two dots one
+  over the other found to be a colon and moved to the break nearest
+  their middle across; the side bends found after the codes were given.
+- **lk_cross** (`LowLkCross.cpp`, 32 functions): `analize_sticks`,
+  `analize_circles` (with `CrossInfoType`/`FillCrossInfo`,
+  `GetMaxDxInGamma`, `Isgammathin`, `CheckSmallGamma`,
+  `Decision_GU_or_O_`, `IsDUR`/`IsShapeDUR`, `is_DDL`), and
+  `del_inside_circles` (`IsOutsideOfCrossing`, `CheckInsideCrossing`,
+  `IsInnerAngle` over `IsRightGulfLikeIn3`, `Restore_AN`), with the
+  point-in-polygon test `IsPointInsideArea`/`IsPointOnBorder` (its ray
+  runs from x = 1 to the point).  Two places read an element's array
+  neighbour as its crossing partner (`SPEC_TYPE` + 1, as the ROM's +0x14
+  and +0x16 loads do).
+- `test_LowLevel`: `TestExchange`, `TestRestore`, `TestLkCross`.
+
 ## 2026-09-28: the cursive reader's low level, round 4
 
 - `Circle` (`recognition/LowCircle.cpp`): the loop finder - a foot
