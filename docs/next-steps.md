@@ -49,55 +49,30 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## Now: the package manager
 
-The owner's choice of next task (2026-09-27).  Today the host installs
-the ROM extension's frames parts itself (`packages/ROMPackages.h`'s
-`LoadHighROMFramesPackages`, a declared DEVIATION): the ROM sends the
-package manager a `TPkBeginLoadEvent` per package and the part handlers
-install the parts.  Reconstructing that is what makes real `.pkg` files
-loadable - third-party software and every part kind the ROM knows - and
-replaces the DEVIATION with the ROM's own path.
+Done (2026-09-27, `docs/packages/README.md`): the manager task and its
+events, the package list and registry, `TPMIterator`, the part handlers
+('form, 'auto, 'soup), `CPackagePipe`, and `LoadHighROMFramesPackages`
+sending the ROM's packages to the manager - the host's shortcut and its
+DEVIATION are gone.  The boot and the applications behave as before
+(`open-apps.ns`: only the Sound Recorder fails; `assist-tasks.ns`: 0
+failed); `test_PackageManager` loads packages from bytes through it.
 
-What is there already: `packages/PackageIterator.h` (the whole of
-`TPackageIterator`: the directory, the parts, the relocation data,
-`VerifyPackage`), `stores/PackageStore` (`TPackageStore` and
-`TPackageStorePartHandler::Install`), `frames/FramesPart.h` (a frames
-part's objects imported) and `analysis/packages.py` (`--parts`,
-`--extract DIR` writes the ROM's ten built-in packages as `.pkg` files
-to load).
+Left, in the order they are likely to matter:
 
-What the ROM has (about 18 KB, 0x0015c13c-0x00182a14 plus the frame part
-handler at 0x000d118c and the natives at 0x00321384-0x00322658):
-
-- the events: `TPkBaseEvent` and its kinds (`TPkBeginLoadEvent`,
-  `TPkPartInstallEvent`/`Reply`, `TPkRemoveEvent`, `TPkPartRemoveEvent`,
-  `TPkRegisterEvent`/`TPkUnregisterEvent`, `TPkSafeToDeactivate`,
-  `TPkBackupEvent`) at 0x0015c13c;
-- the loader: `TPackageLoader` (from a file name, a pipe or an endpoint
-  pipe) with `Load`/`Done`, `LoadPackage`/`cPackageLoad`,
-  `DeinstallPackage` at 0x0015d3b0;
-- the manager: `TPackageManager` (an app world: `MainConstructor`) and
-  `TPackageEventHandler` at 0x0015def0 - `BeginLoadPackage` (1220 B),
-  `LoadNextPart` (1256 B), `InstallPart`, `ValidatePackage`,
-  `CheckAndInstallPatch`, `LoadProtocolCode`, the package list and part
-  registry (`SearchPackageList`, `SearchRegistry`, `Register`,
-  `Unregister`), `RemovePackage`/`RemovePart`, `SafeToDeactivatePackage`,
-  `GetBackupInfo`; `InitializePackageManager` 0x0015fdb8;
-- the part handlers: `TPartHandler` (`Init`, `Register`, `Install`,
-  `Remove`, `Copy`, `Expand`, `ReplyImmed`, ...) and
-  `TPartEventHandler` at 0x00181d4c, `TFramePartHandler` (the 'form
-  part: `Install`/`Remove`/`Expand`, 0x000d118c), and the package
-  store's;
-- `InstallPackage` 0x00161b68, `SafeToDeactivatePackage` 0x00161ef0 and
-  the script's natives (`FInstallPackage`, `FDeinstallPackage`,
-  `FGetPackages`, `FObjectPkgRef`, `FGetPkgRefInfo`, ...).
-
-The way in is the boot: `TNewtWorld`/`TNotebook` start the package
-manager task and load the ROM extension's packages through it
-(`GetRExConfigEntry`/`GetPackageList` already find them), so the smoke
-test is the machine booting as it does now with the DEVIATION gone.  Then
-a `.pkg` from `packages.py --extract` loaded from the host (a store's
-package, or a file) - and a host way to hand the running machine a
-package (the owner's own files) is worth designing with the owner.
+- **A way for the host to hand the running machine a package** (a
+  `--package` option, drag and drop): the owner's to design.  The
+  internal call is `LoadPackage(buffer, {kFixedMemory, ...}, &id)` from
+  the newt world, which forks as the ROM's callers do.
+- **Units**: five ROM parts carry `_ExportTable`s (two `_ImportTable`s),
+  installed without them (a stderr line at boot).  A third-party package
+  importing a ROM unit needs `InstallExportTables`/`InstallImportTable`
+  0x000cfcd4-0x000d0758 and the unit natives.
+- The `'book` part handler (the help book is refused for want of it) over
+  the book reader, then `'dict` and `'comm`.
+- Streamed sources (`TPackageLoader`, `CPartPipe`, `TPipeApp`) and
+  packages on a store (the ROM domain manager, large binaries), which the
+  remaining package natives (`ActivatePackage`, `ObjectPkgRef`, ...)
+  stand on.
 
 ## Next, after the package manager
 
@@ -126,7 +101,7 @@ inside an area).  At 2026-09-27:
 | comms | 121 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
 | testing | 38 | the test agent and the debug hooks |
-| packages | 29 | the package manager and the card - the current task |
+| packages | 25 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
 | recognition | 28 | the rest of the recognition system |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |
 | views | 17 | |

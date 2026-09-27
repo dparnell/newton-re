@@ -9,6 +9,35 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-27: the package manager
+
+- **The package manager** (`packages/PackageManager.h`, 0x0015bf00-
+  0x0015fe48, 0x00161b68-0x00161f90): the 'pckm task started by
+  `InitialKSRVTask`, `TPackageEventHandler` (begin-load, next part,
+  install part, remove, registry, safe-to-deactivate, backup walk), the
+  events (`PackageEvents.h`), `TPMIterator`, `InstallPackage`,
+  `LoadPackage`, `DeinstallPackage`.  The part handlers
+  (`PartHandlers.h`, `FramePartHandler.h`: 'form, 'auto;
+  `stores/PackageStore.h`: 'soup via `InitPackageSoups`, the tail of
+  `InitQueries`), `CPackagePipe`, `FramesException`.
+  `LoadHighROMFramesPackages` now sends the ROM's packages to the manager
+  as the ROM does; `GetPackages`, `PidToPackage`, `GetPackageStores`,
+  `IsPackage` go over it.  Boot, `open-apps.ns` and `assist-tasks.ns`
+  unchanged (compared against the previous commit's build).
+- **The "extrasState" DEVIATION was the ROM's own code**: `TNewtWorld::
+  PreMain` sets the extras soup's `extrasState` to `'initialized` after
+  loading the packages.  Now done there, as the ROM does.
+- Host bugs found: the package names went to NewtonScript byte-swapped
+  (the directory's UniChars are big-endian; `GetPackages` showed empty
+  titles) - the manager now turns them round once; a part's remove
+  object went through a 32-bit `long` and was truncated on removal; the
+  newt world's fork opened its port while the forking world was still
+  running, and the host's single current-port global left the parent
+  holding (and later closing) the fork's port (`TNewtWorld::
+  ForkConstructor` puts it back); the app world's event buffer is doubled
+  for the host's wider events.
+- ROM bugs kept: `docs/packages/README.md`, "ROM bugs kept".
+
 ## 2026-09-27: the lock-ups, the clock, and the day view
 
 - **`FrameDirty`** (`stores/SoupNatives.cpp`): `EntryDirty` as a script

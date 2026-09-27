@@ -65,7 +65,7 @@ packages.  The MP2x00 US extension exports 166 of them.
 
 Nothing resolves until that table is in place, and a great deal points
 through it: an application's InstallScript, its views, its soup
-definitions.  `ROMPackages.cpp` copies the table into
+definitions.  `FramePartHandler.cpp` copies the table into
 `gMagicPointerTables[2]` as the parts are imported - DEVIATION: on the
 Newton the entries are addresses of objects that are simply there, while
 the host imports each part into an object area of its own, so every entry
@@ -84,13 +84,92 @@ WorldData soup package (a raw part read by `TPackageStore`,
 `src/stores/PackageStore.h`).  `packages.py --extract DIR` writes them out
 as `.pkg` files.
 
-## Frames parts
+## The package manager (`src/packages/PackageManager.h`)
 
-A part of kind `kFrames` is an object area (`docs/frames/README.md`,
-"Frames parts"): its first object an array holding the top-level frame
-(`FramePartToplevelFrame`), its refs the addresses the objects have when
-the package is loaded.  `src/frames/FramesPart.h` imports one into a
-host object area; the frames part handler that installs it is not yet.
+Packages are installed and removed by a task of their own, the package
+manager: an application world named `'pckm` (`TPackageManager`,
+`PackageManagerPortId` finds its port) that `InitialKSRVTask` starts in
+the `'prot` environment before the loader world, as the ROM does
+(`InitializePackageManager` 0x0015fdb8).  Its one event handler,
+`TPackageEventHandler`, keeps two lists:
+
+- the **package list**, a `TPackageBlock` per installed package (id,
+  version, size, source, flags, date, name, copyright), each with a
+  `TInstalledPart` per part that went in (type, kind, the object its
+  handler wants back to remove it, a protocol part's class info, flags);
+- the **part registry**, a `TRegistryInfo` per part type a handler has
+  registered: which port its parts go to.
+
+Everything is an event (`PackageEvents.h`): a 'newt-class, 'pckm-id
+`TAEvent` whose third word says which.
+
+| event | code | from | what the manager does |
+|---|---|---|---|
+| `TPkBeginLoadEvent` | 'pkbl | `InstallPackage`, `LoadHighROMFramesPackages` | `BeginLoadPackage`: the package loaded (below) |
+| `TPkRemoveEvent` | 'pkrm | `DeinstallPackage` | `RemovePackage`: each part taken out, last first, its handler told |
+| `TPkRegisterEvent` / `TPkUnregisterEvent` | 'rgtr / 'urgr | `TPartHandler::Init` / its destructor | the registry; a type registered twice is refused |
+| `TPkPartInstallEvent` | 'prti | the manager, to a part handler | the part's `PartInfo` (package name after it), source, info and compressor copied in; answered by a `TPkPartInstallEventReply` |
+| `TPkPartRemoveEvent` | 'prtr | the manager, to a part handler | the part's remove object back to its handler |
+| `TPkSafeToDeactivate` | 'pksc | `SafeToDeactivatePackage` | whether a protocol part's implementation still has instances |
+| `TPkBackupEvent` | 'pkbu | `TPMIterator` (`GetPackages`) | the next package of the list |
+
+### How a package is installed
+
+1. The caller forks its world (`TForkWorld::Fork`) - the manager will
+   send parts back to it, and the fork runs the event loop that takes
+   them while the caller waits - then sends a `TPkBeginLoadEvent` under
+   `gPackageSemaphore` with its world's mutex let go
+   (`InstallPackage` 0x00161b68; `LoadPackage` for a buffer).
+2. `BeginLoadPackage` reads the directory with a `TPackageIterator`.  A
+   package whose **name** is already installed is refused -
+   `kError_Older_Package_Already_Exists`, `..._Newer_...` or
+   `kError_Package_Already_Exists`, with the installed one's id - unless
+   either version is 0.  The package gets a random 24-bit id
+   (`GetUniquePackageId`) and a block in the list.
+3. `LoadNextPart`, once per part: a part for another processor is passed
+   over; an **autoLoad** part is the manager's own (a protocol part's code
+   registered with the protocol registry, a `'ptch` system patch applied);
+   a **notify** part goes to the handler registered for its type
+   (`InstallPart`) - `kError_PartType_Not_Registered` when there is none.
+4. After the last part the package is valid; a failure takes out what
+   went in (`RemovePackage`, the handlers told) and is the answer.  A
+   package for dispatch only is removed again at once.
+
+`LoadHighROMFramesPackages` (0x000e7040, from `TNewtWorld::PreMain`)
+sends every package of each ROM extension's `pkgl` list this way, where
+it lies, and walks on while the answer is "loaded", "already there" or
+"no handler for its part type" - the bytes after the last package, not
+being one, end the walk.  The help book is the one refused: nobody
+registers `'book` yet.
+
+### The part handlers (`PartHandlers.h`, `FramePartHandler.h`)
+
+`TPartHandler` (the DDK's `PartHandler.h`) installs the parts of one
+type: `Init` registers the type (asynchronously) and puts a
+`TPartEventHandler` in the current world, which takes the part events
+for the type and calls `Install`/`Remove`.  `TNewtWorld::MainConstructor`
+registers `'form` (`TFormPartHandler`) and `'auto`
+(`TAutoScriptPartHandler`); `InitQueries` ends with `InitPackageSoups`,
+which registers the package store's `'soup` handler.  So the parts are
+installed in the newt world - by its fork, while the boot waits.
+
+`TFramePartHandler` finds a frames part's top-level frame
+(`FramePartToplevelFrame`; a `"streamed"` part is NSOF, read with a
+`TObjectReader`) and hands it to `InstallFrame`: the form and auto
+handlers go through `InstallPart` 0x000cb68c, which clones
+`canonicalFramePartInstallInfo`, fills in type, frame, id, name, index,
+size, source and `packageStyle` (`'HighROM` for a ROM package, `'1.X`/`'VBO`
+on a store) and calls the global `InstallPart` - which runs the part's
+InstallScript and gives an application its Extras entry.  Its answer is
+the remove cookie `RemovePart` hands back.
+
+DEVIATION: the host imports a part's objects into an object area of its
+own (`frames/FramesPart.h`) before looking at them, with the address the
+refs assume taken from where the part lies: its ROM address for a package
+in the ROM image, its offset in the package for one as NTK writes it
+(the package is found by looking back from the part for its directory,
+which also says the format - version 0 objects are packed to eight
+bytes).  The area goes when the part is removed, refs to it declawed.
 
 ## Store parts
 
@@ -99,7 +178,7 @@ carries: a read-only `TPackageStore` (`src/stores/PackageStore.h`) over
 the part's bytes where they lie.  `TPackageStorePartHandler::Install`
 0x001601dc makes one by name, hands it to `MakeStoreObject` and adds the
 store frame to `gPackageStores`, which is the array `GetPackageStore`
-looks through.
+looks through; the store is the part's remove object.
 
 There is one such part in this ROM, and it matters more than its size
 suggests: the **WorldData** package's 225,736-byte store of the world's
@@ -107,25 +186,60 @@ countries and cities.  The Setup assistant's "where are you" page gets
 at it with `GetLocationSoup`, which is `GetPackageStore("WorldData")`
 followed by `:GetSoup`, and then queries the soup it finds - so with the
 store unmounted that page sends `Query` to nil and the assistant stops
-there.
+there.  The store's objects are compressed, so the compressors must be
+in the protocol registry first (`InitializeCompression`, which the newt
+world runs before anything).
 
-DEVIATION: the part handlers are NOT YET RECONSTRUCTED, so
-`InstallPackage` mounts the store part itself rather than the package
-manager handing it to the handler - the same DEVIATION as for the frames
-parts.  `TPackageStore` has to be in the protocol registry first, which
-the ROM does in `InitPackageSoups` 0x00162a1c and the host does in
-`HostMountStores`.
+## Protocol parts
+
+ScreenBuffer and ScreenDrivers are protocol parts (autoLoad, no notify):
+the manager registers their class infos itself.  DEVIATION: their code
+is ARM, which the host cannot run, so the part goes in with no class
+info registered (`InstallPart`); the host has its own screen driver.
 
 ## Not yet
 
-The package loader (`TPackageLoader`, `TPackageBlock`), the package
-manager task and its events (`TPackageManager`, `TPackageEventHandler`:
-loading, removing, registering part handlers, backup), the part handlers
-(`TPartHandler`, `TFramePartHandler` - a frames part relocated into the
-object heap, `TFormPartHandler`, `TBookPartHandler`,
-`TPackageStorePartHandler`), `LoadPackage`/`RemovePackage`, patches, the
-NewtonScript package functions.
+- **Units** (`InstallExportTables`, `InstallImportTable`,
+  `RemoveExportTables`, `RemoveImportTable` 0x000cfcd4-0x000d0758, and
+  the natives `CurrentExports`, `FulfillImportTable`, ...): five of the
+  ROM's frames parts carry an `_ExportTable` (two an `_ImportTable` too)
+  and are installed without them - a line on stderr says so at boot.
+  The ROM installs imports only for a package outside the ROM, so the
+  ROM's own parts lose nothing yet; a third-party package that imports a
+  ROM unit would.
+- The `'book`, `'dict` and `'comm` part handlers (`TBookPartHandler` over
+  the book reader's `TLibrarian`, `TDictPartHandler`, `TCommPartHandler`).
+- Streamed sources: `TPackageLoader` (a package read through a pipe or an
+  endpoint), `CPartPipe`/`CShadowRingBuffer` on the manager's side,
+  `TPipeApp`.  The manager answers `kError_Call_Not_Implemented` for one.
+- Packages on a store: the ROM domain manager (`IdToStore`, `IdToVAddr`,
+  `StoreToId`, `PackageAvailable`, large binaries), and so the natives
+  over them - `ActivatePackage` (`FInstallPackage`), `DeActivatePackage`,
+  `ObjectPkgRef`, `PidToPkgRef`, `GetPkgRefInfo`, `PssidToPid`,
+  `SuckPackageFromBinary` and the rest.
+- The validation driver (`ValidatePackage`), system patches
+  (`CheckAndInstallPatch`), backups, `SetCardReinsertReason`.
 
+## ROM bugs kept
+
+- `TPkPartInstallEvent`'s constructor copies a part's info for as long
+  as `infoSize` says, into 64 bytes.
+- `TPkBeginLoadEvent` leaves the answer's two flags unset; a refused
+  package's answer carries stack garbage, and `InstallPackage` may then
+  answer id 0.
+- `TPackageManager::MainConstructor` ignores its app world's
+  construction's answer.
+- `GetBackupInfo` answers a package only when the backup date asked about
+  is -1: any other date walks past every package.
+- `SafeToDeactivatePackage` asks the protocol registry about a protocol
+  part's class info without checking it has one.
+- `CPackagePipe::ReadChunk` answers only what the pipe gave, not the
+  bytes served from its copy of the directory; `Init` copies only the
+  relocation chunk's header.
+- `TPackageBlock::Init` leaves its name and copyright pointing at freed
+  blocks when it fails.
+- `TFormPartHandler::GetBackupInfo` leaves the caller's "needs backup" as
+  it was.
 
 ## Two package formats, and where the difference shows
 
@@ -145,30 +259,18 @@ for the help book, 2967 for ListView.
 `TPackageIterator::PackageFormatVersion` answers which it is, and
 `ImportFramesPart` takes the alignment to walk with.
 
-## Installed once, not at every boot
+## The Extras drawer's entries
 
-The machine installs the packages built into its ROM **once** - at a hard
-reset - and the package manager keeps them installed from then on,
-re-activating their parts at each boot rather than installing them again.
-The host has no package manager (`packages/ROMPackages.h`), so it walks
-the extension's package lists and installs the parts itself every time it
-starts.
-
-That difference shows in the Extras drawer. The ROM's `InstallPart`
-finishes a HighROM package by sending the drawer
+The ROM's `InstallPart` finishes a HighROM package by sending the drawer
 `ExtrasDrawer:HandleNewHighROMPart`, which makes the drawer's entry for a
 form part - a `ROMFormEntry` row in the `Packages` soup - whenever that
-soup has no `extrasState` in its info. Nothing in the ROM ever writes
-one, because on the machine the question never comes up twice. On the
-host it came up at every boot, and the Dock, Formulas and Setup icons
-multiplied: one more of each, every time the machine started.
+soup has no `extrasState` in its info.  `TNewtWorld::PreMain` writes
+`'initialized` there as soon as `LoadHighROMFramesPackages` is done, so
+the entries are made the first time a store sees these packages and left
+alone afterwards.  (The host once did this as a DEVIATION of its own,
+thinking nothing in the ROM wrote it; it is the ROM's PreMain.)
 
-`DEVIATION`: `LoadHighROMFramesPackages` writes `extrasState` into the
-soup's info once the parts of a boot are in, which is the ROM's own
-guard. The entries are made the first time a store sees these packages
-and left alone afterwards - what the machine's registry would have done.
-
-A store written before that fix has the extra icons in it;
+A store written before the host did either has extra icons in it;
 `src/host/demo/repair-extras.ns` takes the soup back to one entry for
 each application:
 
