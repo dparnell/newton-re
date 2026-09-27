@@ -117,7 +117,7 @@ IsTriangledPath(short* x, short* y, long i, long j, long k)
 }
 
 
-// ROM 0x00306660 (unnamed, after IsTriangledPath)
+// ROM 0x00306660 (unnamed) - after IsTriangledPath
 // Whether the path from i to j round k is *not* one smooth curve: either
 // half is straight, or either half bends the other way from the whole.
 static long
@@ -136,7 +136,7 @@ HalvesDisagree(short* x, short* y, long i, long j, long k)
 }
 
 
-// ROM 0x0030660c (unnamed, after IsTriangledPath)
+// ROM 0x0030660c (unnamed) - after IsTriangledPath
 // How much a bend is to be believed from the other half's bend c1 against
 // the whole's c0, when the side's width a is small against its depth d:
 // 0 when a is at least half d, 10 when it is a quarter or less, 5 when the
