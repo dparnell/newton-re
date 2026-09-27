@@ -191,7 +191,7 @@ TestXHeight()
 static void
 TestCodecs()
 {
-	// the low nibble is 8 in every form the codec writes
+	// the low nibble is 8 in every form the codec's newer header marks
 	unsigned char data[4];
 	data[0] = 0x00; EXPECT(GetInkFormat(data) == kInkFormatOld);
 	data[0] = 0x17; EXPECT(GetInkFormat(data) == kInkFormatOld);
@@ -208,7 +208,7 @@ TestCodecs()
 	data[0] = 0x08;
 	EXPECT(InkCodecFor(data) == &gCICInkCodec);
 	data[0] = 0x00;
-	EXPECT(InkCodecFor(data) == nil);		// nobody reads the old ink yet
+	EXPECT(InkCodecFor(data) == &gCICInkCodec);		// the older format, code book 2, is the codec's too
 	EXPECT(InkCodecForWriting() == &gCICInkCodec);	// and it is what writes it too
 }
 
@@ -1305,6 +1305,36 @@ TestStrokeRoundTrip()
 	}
 	TStroke** wordBack = InkExpand(word, 1, 0, 0);
 	EXPECT(wordBack != nil && wordBack[0] != nil);
+
+	// InkConvert: the ink re-encoded in the other code book and back,
+	// never becoming points on the way, draws the same strokes
+	{
+		RefVar asInk(InkConvert(ink, RSSYMink));
+		EXPECT(NOTNIL(asInk) && EQRef(ClassOf(asInk), RSSYMink));
+		EXPECT(NOTNIL(asInk) && GetInkFormat(BinaryData(asInk)) == 2 && GetInkFormat(BinaryData(ink)) != 2);
+		RefVar again(InkConvert(asInk, RSSYMink2));
+		EXPECT(NOTNIL(again) && EQRef(ClassOf(again), RSSYMink2) && GetInkFormat(BinaryData(again)) == 3);
+		TStroke** converted = NOTNIL(asInk) ? InkExpand(asInk, 1, 0, 0) : nil;
+		TStroke** round = NOTNIL(again) ? InkExpand(again, 1, 0, 0) : nil;
+		EXPECT(converted != nil && converted[0] != nil && converted[1] == nil);
+		EXPECT(round != nil && round[0] != nil && round[1] == nil);
+		if (converted != nil && converted[0] != nil && round != nil && round[0] != nil)
+		{
+			Rect a, b, c;
+			InkBounds(back, &a);
+			InkBounds(converted, &b);
+			InkBounds(round, &c);
+			EXPECT(abs(a.left - b.left) <= 2 && abs(a.right - b.right) <= 2 && abs(a.top - b.top) <= 2 && abs(a.bottom - b.bottom) <= 2);
+			EXPECT(abs(a.left - c.left) <= 2 && abs(a.right - c.right) <= 2 && abs(a.bottom - c.bottom) <= 2);
+		}
+		// ink already of the class is cloned; anything not ink is nil
+		RefVar same(InkConvert(ink, ClassOf(ink)));
+		EXPECT(NOTNIL(same) && same != ink && Length(same) == Length(ink));
+		EXPECT(ISNIL(InkConvert(RefVar(MAKEINT(3)), RSSYMink)));
+		// an ink word stays one, its measurements worked out again
+		RefVar wordAgain(InkConvert(ink, RSSYMinkword));
+		EXPECT(NOTNIL(wordAgain) && IsInkWord(wordAgain));
+	}
 
 	// the ink put down somewhere else moves with it
 	TStroke** moved = InkExpand(ink, 1, 100, 0);

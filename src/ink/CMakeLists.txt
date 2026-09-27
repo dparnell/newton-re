@@ -10,6 +10,7 @@ add_library(ink STATIC
     InkCodec.cpp
     CICDecoder.cpp
     CICEncoder.cpp
+    CICConvert.cpp
     CICCodeBook.cpp
     CICTables.cpp
 )

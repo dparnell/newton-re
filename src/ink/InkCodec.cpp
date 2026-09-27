@@ -15,9 +15,9 @@ TInkCodec::~TInkCodec()
 
 // ROM 0x00280950 GetInkFormat__FPv
 // Which form a block of ink is in, from its first byte.  The low nibble
-// is 8 in every form the codec writes; anything else is the old
-// uncompressed ink.  Of the three it writes, bit 7 marks one and bit 6
-// another.
+// is 8 in every form the codec's newer header marks; anything else is its
+// older format (code book 2, no header).  Of the three the header marks,
+// bit 7 marks one and bit 6 another.
 long
 GetInkFormat(const void* data)
 {

@@ -771,12 +771,15 @@ TCICInkCodec::Name(void) const
 }
 
 
-// The three formats the ROM's encoder writes.  The old uncompressed ink
-// is somebody else's.
+// Every format GetInkFormat tells apart: the three the newer header
+// marks, and the older format (2) - book 2 with no header, which
+// ReadNewStroke reads when the first stroke word is not the end of a group
+// (and which InkConvert writes for 'ink).
 Boolean
 TCICInkCodec::CanDecode(long format) const
 {
-	return format == kInkFormatCompressed || format == kInkFormatHigh || format == kInkFormatWide;
+	return format == kInkFormatCompressed || format == kInkFormatHigh || format == kInkFormatWide
+		|| format == kInkFormatOld;
 }
 
 

@@ -5383,6 +5383,15 @@ TestCorrectInfo()
 	EXPECT(EQRef(RefVar(FindWordInfo(list, p, 5)), info));
 	EXPECT(EQRef(RefVar(FindWordInfo(p, 5)), info));	// the machine's own list
 	EXPECT(ISNIL(RefVar(FindWordInfo(p, 0))));
+	// MoveCorrectionInfo(from, offset, to): the offset goes to FindWordInfo
+	// as its Ref, four times over (a ROM bug kept), so offset 1 finds the
+	// word at 4; the new offset is never passed (the native table's count
+	// is one short) and the host's stand-in, nil, puts it at the Ref of nil
+	Eval("ctxCI.moveIt := func() MoveCorrectionInfo(ctxCI, 1, ctxCI)");
+	Eval("ctxCI:moveIt()");
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstart))) == NILREF);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstop))) == NILREF + MAKEINT(3));
+	SetOffsetInfo(info, p, 4, 7, kWordInfoKnown);
 
 	// a reading that is not a single word is not kept: the corrector has
 	// nothing to offer for it
@@ -6619,6 +6628,7 @@ main()
 	RegisterPortNatives();
 	RegisterLargeBinaryNatives();
 	RegisterShapeNatives();
+	RegisterCorrectInfoNatives();
 	RegisterBitmapNatives();
 	RegisterStrokeBundleNatives();
 	RegisterInkNatives();

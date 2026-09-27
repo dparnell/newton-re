@@ -2176,6 +2176,17 @@ FHandleInsertItems(RefArg rcvr, RefArg items)
 }
 
 
+// ROM 0x00171118 FHandleInkWord
+// view:HandleInkWord(inkWordCommand's parameter) - an ink word handed to
+// the view as the aeInkWord command the word recogniser would have sent
+// it.  ==> whether the view took it.
+static Ref
+FHandleInkWord(RefArg rcvr, RefArg parameter)
+{
+	return MAKEBOOLEAN(SendViewCommand(rcvr, aeInkWord, parameter) != 0);
+}
+
+
 // ROM 0x001ee980 FGetStyleAtOffset
 // GetStyleAtOffset(offset) on a paragraph: the style of the character
 // at that offset, as a single spec.  The corrector asks it so that a
@@ -2701,6 +2712,7 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FTrackButtonX", (void*) FTrackButtonX, 1);
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
 	RegisterNativeFunction("FHandleInsertItems", (void*) FHandleInsertItems, 1);
+	RegisterNativeFunction("FHandleInkWord", (void*) FHandleInkWord, 1);
 	RegisterNativeFunction("FGetStyleAtOffset", (void*) FGetStyleAtOffset, 1);
 	RegisterNativeFunction("FCaretRelativeToVisibleRect", (void*) FCaretRelativeToVisibleRect, 1);
 	RegisterNativeFunction("FDropHilites", (void*) FDropHilites, 0);

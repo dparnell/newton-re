@@ -36,6 +36,8 @@
 #include "FixedMath.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
+#include "CICCodec.h"		// ConvertData
+#include "ParaGraph.h"		// HWRMemoryFree
 
 
 /*------------------------------------------------------------------------------
@@ -549,6 +551,92 @@ FNumInkWordsInRange(RefArg /*rcvr*/, RefArg string, RefArg start, RefArg count)
 }
 
 
+// ROM 0x00140dec InkConvert__FRC6RefVarT1
+// Ink re-encoded as another class: 'ink (the older code book, 2), 'ink2 or
+// 'inkWord (the newer, 3) - anything else meaning whichever of the two it
+// is not (old raw ink becomes 'ink2, the rest 'ink).  Ink already of the
+// class is cloned.  The data goes through the codec's converter; an ink
+// word's eight bytes of measurements are left off going in and, for an
+// 'inkWord, the strokes are expanded, scaled to an ink word's size and
+// packed again, which writes them anew.  nil when it is not ink, or the
+// converter fails.
+//
+// ROM BUG: the copy the converter is handed is never given back.
+Ref
+InkConvert(RefArg ink, RefArg cls)
+{
+	RefVar result;
+	if (!IsInk(ink))
+		return result;
+	RefVar target(cls);
+	long kind;
+	UShort format;
+	if (EQRef(cls, RSSYMink))
+	{
+		kind = 0;
+		format = 2;
+	}
+	else if (EQRef(cls, RSSYMink2))
+	{
+		kind = 1;
+		format = 3;
+	}
+	else if (EQRef(cls, RSSYMinkword))
+	{
+		kind = 2;
+		format = 3;
+	}
+	else if (IsOldRawInk(ink))
+	{
+		target = RSSYMink2;
+		kind = 1;
+		format = 3;
+	}
+	else
+	{
+		target = RSSYMink;
+		kind = 0;
+		format = 2;
+	}
+	if (EQRef(ClassOf(ink), target))
+		return Clone(ink);
+	ULong size = Length(ink);
+	if (IsInkWord(ink))
+		size -= sizeof(PackedInkWordInfo);
+	Ptr copy = NewPtr(size);
+	BlockMove(BinaryData(ink), copy, size);
+	void* data = copy;
+	if (ConvertData(&data, &size, format))
+	{
+		result = AllocateBinary(target, kind == 2 ? size + sizeof(PackedInkWordInfo) : size);
+		BlockMove(data, BinaryData(result), size);
+		if (data != copy)
+			HWRMemoryFree((Ptr) data);
+		if (kind == 2)
+		{
+			TStroke** strokes = InkExpand(result, 0, 0, 0);
+			if (strokes == nil)
+				return NILREF;
+			Rect bounds;
+			UnionBounds(strokes, &bounds);
+			ScaleStrokesForInkWord(strokes, &bounds);
+			result = InkCompress(strokes, true);
+			DisposeTStrokes(strokes);
+		}
+	}
+	return result;
+}
+
+
+// ROM 0x0014108c FInkConvert
+// InkConvert(ink, class)
+static Ref
+FInkConvert(RefArg /*rcvr*/, RefArg ink, RefArg cls)
+{
+	return InkConvert(ink, cls);
+}
+
+
 void
 RegisterInkNatives(void)
 {
@@ -566,4 +654,5 @@ RegisterInkNatives(void)
 	RegisterNativeFunction("FCalcInkBounds", (void*) FCalcInkBounds, 1);
 	RegisterNativeFunction("FGetInkWordInfo__FRC6RefVarT1", (void*) FGetInkWordInfo, 1);
 	RegisterNativeFunction("FNumInkWordsInRange", (void*) FNumInkWordsInRange, 3);
+	RegisterNativeFunction("FInkConvert", (void*) FInkConvert, 2);
 }

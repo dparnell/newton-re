@@ -109,9 +109,21 @@ What cannot be swapped is the *reading* of ink already written: a note
 written on a real Newton is in the CIC format for ever, so that decoder
 has to stay whatever else is added.  `GetInkFormat` (0x00280950) reads a
 format out of the first byte - the low nibble is 8 in every form the
-codec writes, and then bit 7 marks one and bit 6 another, anything else
-being the old uncompressed ink - so choosing a codec per object rather
+codec's newer header marks, and then bit 7 marks one and bit 6 another,
+anything else being the codec's *older* format, code book 2 with no
+header, which is what 'ink holds (this page once called it "the old
+uncompressed ink", which it is not: `ReadNewStroke` reads it, and
+`InkConvert` writes it) - so choosing a codec per object rather
 than once for the machine is what the format was built for.
+
+`InkConvert` (`InkShapes.cpp`, over `ConvertData` in `CICConvert.cpp`)
+re-encodes ink in the other book without it ever becoming points: a
+decoder reads the old ink stroke by stroke and segment by segment and an
+encoder writes each piece straight back out - a long stroke's segments
+keep their ends and control numbers, a short stroke its points - so
+'ink (book 2) and 'ink2/'inkWord (book 3) turn into one another; a
+conversion to 'inkWord then expands, rescales and repacks the strokes to
+work out the word's measurements.
 `InkCodecFor` does that: the first registered codec that says it can
 read the format gets it.
 

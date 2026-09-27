@@ -1461,6 +1461,55 @@ FAddWordInfo(RefArg info, RefArg word)
 
 
 // The correction natives a script reaches.
+
+// ROM 0x000799b4 FAddUnitInfo
+// correctInfo:AddUnit(view, start, stop, unit) - a word info made from
+// the unit and put on the list for the characters start to stop of the
+// view.  (The ROM answers whatever AddWordInfo leaves in r0 - the frame.)
+static Ref
+FAddUnitInfo(RefArg rcvr, RefArg view, RefArg start, RefArg stop, RefArg unit)
+{
+	TUnitPublic* theUnit = (TUnitPublic*) RefToAddress(unit);
+	long stopAt = RINT(stop);
+	long startAt = RINT(start);
+	return AddWordInfo(rcvr, GetView(view), startAt, stopAt, theUnit);
+}
+
+
+// ROM 0x00079c98 FMoveCorrectionInfo__FRC6RefVarN41
+// MoveCorrectionInfo(fromName, offset, toName, newOffset), sent to a view -
+// the word info at the offset of one of its views moved to the other one at
+// the new offset, the word's length kept.
+//
+// ROM BUG: both offsets reach FindWordInfo and SetOffsetInfo as the Refs
+// they are, not the integers in them - four times the offset - so the word
+// is looked for (and put) at four times where it was asked for, and only
+// an offset of nought works.
+//
+// ROM BUG: the native table gives it three arguments, so the new offset -
+// the function's fifth parameter, read from the stack - is never passed:
+// the ROM takes whatever the interpreter left on its stack there.
+// DEVIATION: the host cannot know what that was, and takes nil.
+static Ref
+FMoveCorrectionInfo(RefArg rcvr, RefArg fromName, RefArg offset, RefArg toName)
+{
+	RefVar newOffset(NILREF);
+	TView* from = FailGetView(rcvr, fromName);
+	TView* to = FailGetView(rcvr, toName);
+	if (from != nil && to != nil)
+	{
+		RefVar info(FindWordInfo(from, (long) (Ref) offset));
+		if (NOTNIL(info))
+		{
+			Ref start = GetFrameSlotRef(info, RSSYMstart);
+			Ref stop = GetFrameSlotRef(info, RSSYMstop);
+			long at = (long) (Ref) newOffset;
+			SetOffsetInfo(info, to, at, (long) (at + stop - start), 0);
+		}
+	}
+	return NILREF;
+}
+
 void
 RegisterCorrectInfoNatives(void)
 {
@@ -1472,6 +1521,8 @@ RegisterCorrectInfoNatives(void)
 	RegisterNativeFunction("FAutoAdd", (void*) FAutoAdd, 0);
 	RegisterNativeFunction("FDoEntryLearning", (void*) FDoEntryLearning, 1);
 	RegisterNativeFunction("FTestWordInfoFlags", (void*) FTestWordInfoFlags, 1);
+	RegisterNativeFunction("FAddUnitInfo", (void*) FAddUnitInfo, 4);
+	RegisterNativeFunction("FMoveCorrectionInfo__FRC6RefVarN41", (void*) FMoveCorrectionInfo, 3);
 	RegisterNativeFunction("FSetWordInfoFlags", (void*) FSetWordInfoFlags, 1);
 	RegisterNativeFunction("FClearWordInfoFlags", (void*) FClearWordInfoFlags, 1);
 	RegisterNativeFunction("FMoveWordFirst", (void*) FMoveWordFirst, 1);

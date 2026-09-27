@@ -91,8 +91,9 @@ typedef short (*InkPointSource)(short what, InkPoint* pt, void* refCon);
 
 
 // The ink formats GetInkFormat tells apart, by the first byte of the
-// data.  0, 1 and 3 are the compressed forms the CIC codec writes; 2 is
-// anything else, which is the old uncompressed ink.
+// data.  0, 1 and 3 are the forms the CIC codec's newer header marks (the
+// low nibble 8); 2 is anything else, which is the codec's older format -
+// code book 2 with no header, what 'ink holds (InkConvert).
 const long kInkFormatOld		= 2;
 const long kInkFormatCompressed	= 1;
 const long kInkFormatHigh		= 0;

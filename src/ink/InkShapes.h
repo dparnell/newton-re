@@ -69,6 +69,7 @@ Ref			ExpandInk(RefArg form, long format);			// ROM 0x001a2344 ExpandInk__FRC6Re
 Boolean		PolyContainsInk(RefArg form);					// ROM 0x001a15c8 PolyContainsInk__FRC6RefVar - a shape frame with writing in it
 Boolean		ParaContainsInk(RefArg para);					// ROM 0x001a15f4 ParaContainsInk__FRC6RefVar - a paragraph with an ink word in its styles
 
+Ref			InkConvert(RefArg ink, RefArg cls);		// ROM 0x00140dec InkConvert__FRC6RefVarT1 - ink re-encoded as 'ink, 'ink2 or 'inkWord
 void		RegisterInkNatives(void);
 
 #endif	/* __INKSHAPES_H */

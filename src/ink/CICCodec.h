@@ -382,6 +382,11 @@ Boolean	WriteNewStroke(CICEncoder* encoder, short kind);
 // And its points, as they were drawn.
 Boolean	WriteShortStroke(CICEncoder* encoder);
 
+// ROM 0x00280980 ConvertData__FPPvPUiUs
+// Ink re-encoded in another code book without becoming points
+// (CICConvert.cpp): *data and *size replaced by a new block and its length.
+Boolean	ConvertData(void** data, ULong* size, UShort format);
+
 
 // ROM 0x00282aa0 PutBits__FP4_CDCUlUs
 // n bits of a value written where the writer has got to, least
