@@ -148,10 +148,14 @@ hooks (`debug`, `DebugRunUntilIdle`, `DebugMemoryStats`, `StdioOn`/
   `'tstp` part, run as a task of its own.
 - The tests kept on a store (`MakeTestStore`, `TTestCommandQueue`,
   `TTestStoreFileList`, `DoRunTestsFromStore`, `StartACardTestCase`).
-- The serial debugging (`InitSerialDebugging`,
-  `PreInitSerialDebugging`), Uriah (`Uriah`, `UriahBinaryObjects`) and
-  the IR sniffing (`StartIRSniffing`/`StopIRSniffing`), the six testing
-  natives still unanswered.
+- The six testing natives still unanswered: the serial debugging
+  (`InitSerialDebugging`, `PreInitSerialDebugging`); Uriah (`Uriah`,
+  `UriahBinaryObjects` - `TObjectHeap::Uriah` 0x0031b154 and
+  `UriahBinaryObjects` 0x0031bae0, a census of the frames heap printed to
+  the REP, about 2.4 KB walking the heap's own block layout, with
+  `gUriahROM`/`gUriahPrintArrays`/`gUriahSaveOutput` choosing what it
+  prints); and the IR sniffing (`StartIRSniffing`/`StopIRSniffing`, 42
+  functions and 4 KB of the IR stack not yet done - `callgraph.py`).
 - `HobbleTablet` reaches nothing on the host (no inker port).
 - Seen once, not reproduced: the open-apps smoke run stalled at boot in
   `GetLetterWeights` (from `saveLetterWeights`) while other checks were
