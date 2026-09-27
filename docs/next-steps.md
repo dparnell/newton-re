@@ -101,7 +101,7 @@ inside an area).  At 2026-09-27:
 | comms | 121 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
 | testing | 38 | the test agent and the debug hooks |
-| packages | 25 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
+| packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
 | recognition | 28 | the rest of the recognition system |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |
 | views | 17 | |
