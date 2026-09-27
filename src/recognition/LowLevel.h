@@ -182,7 +182,8 @@ struct low_type
 	POINTS_GROUP*	fBars;			// +68  the upright sticks (VertSticksSelector) Pict judges bars against, room for 80
 	UByte			f6c[2];			// +6c
 	short			fSlope;			// +6e  the writing's slant (from rc +0xac, back to it at the end)
-	UByte			f70[4];			// +70
+	short			fStep;			// +70  how wide the writing steps across (lk_begin: DefineWritingStep)
+	short			fStepKind;		// +72  how it was measured (DefineWritingStep's answer)
 	_RECT			fBox;			// +74  the trace's box
 	short			fThresh[16];	// +7c..+9b  the heights the later passes compare with (DefLineThresholds, which lists them)
 };
@@ -416,6 +417,19 @@ long	FindSideExtr(low_type* low);								// ROM 0x00303584 FindSideExtr__FP8low_
 
 // The crossings (LowCross.cpp).
 long	Cross(low_type* low);										// ROM 0x002c8fb4 Cross__FP8low_type - the trace's crossings marked as pairs (6, 9 coming back along itself, 0xa with a dash); ==> 0, 1 for no room
+
+// The codes (LowBegin.cpp).
+long	nobrk_left(short* y, long i, long j);						// ROM 0x00306024 nobrk_left__FPsiT2
+long	nobrk_right(short* y, long i, long j);						// ROM 0x0030604c nobrk_right__FPsiT2
+long	MidPointHeight(SPEC_TYPE* elem, low_type* low);				// ROM 0x00306f00 MidPointHeight__FP9SPEC_TYPEP8low_type
+short	extremum(UByte kind, short i, short j, short* y);			// ROM 0x002f9dd8 extremum__FUcsT2Ps
+long	delta_interval(short* x, short* y, long i0, long i1, long k, long slope, long* sx, long* sy, long* count, ULong trim);	// ROM 0x00308de4 delta_interval__FPsT1iN33PlN27Ui
+long	DefineWritingStep(low_type* low, short* step, ULong adjust);	// ROM 0x0030845c DefineWritingStep__FP8low_typePsUi
+long	init_proc_XT_ST_CROSS(low_type* low);						// ROM 0x002f8df8 init_proc_XT_ST_CROSS__FP8low_type
+long	process_ZZ(low_type* low);									// ROM 0x002f9100 process_ZZ__FP8low_type
+long	process_AN(low_type* low);									// ROM 0x002f9690 process_AN__FP8low_type
+long	process_curves(low_type* low);								// ROM 0x002f9bc8 process_curves__FP8low_type
+long	lk_begin(low_type* low);									// ROM 0x002f8d68 lk_begin__FP8low_type - the elements given their codes; ==> 0, 1 for a failure
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

@@ -845,7 +845,7 @@ TestAngles(void)
 
 
 // AnalyzeLowData's steps (LowLevel.cpp) run by hand as far as `upTo`:
-// 1 Circle, 2 angl, 3 FindSideExtr, 4 Cross.  ==> false when a step
+// 1 Circle, 2 angl, 3 FindSideExtr, 4 Cross, 5 Clear_specl, 6 lk_begin.  ==> false when a step
 // failed.
 static bool
 AnalyzeSteps(low_type* low, long upTo)
@@ -874,6 +874,10 @@ AnalyzeSteps(low_type* low, long upTo)
 	if (upTo >= 3 && FindSideExtr(low) == 0)
 		return false;
 	if (upTo >= 4 && Cross(low) != 0)
+		return false;
+	if (upTo >= 5 && Clear_specl(low->fSpecl, low->fLenSpecl) != 0)
+		return false;
+	if (upTo >= 6 && lk_begin(low) != 0)
 		return false;
 	return true;
 }
@@ -1112,6 +1116,64 @@ TestCross(void)
 }
 
 
+// lk_begin (LowBegin.cpp): the cursive "uou" given its codes - one stroke,
+// its start and end folded into codes (a top: 3), the u's feet and the
+// o's foot bottoms (7 or 8), the tops between tops (2 or 3), every one
+// with a height band.  The o's loop is a crossing pair (Cross's: the
+// Circle pair inside it is dropped by init_proc_XT_ST_CROSS) and where the
+// pen goes back over the o's top it is two 9s.
+static void
+TestCodes(void)
+{
+	EXPECT(nobrk_right(nil, 3, 2) == 3);
+	short yy[8] = { -1, -1, 5, 6, 7, -1, -1, 3 };
+	EXPECT(nobrk_right(yy, 0, 7) == 2 && nobrk_left(yy, 6, 0) == 4);
+	short ex[8] = { 5, 3, 3, 3, 4, 2, 2, 6 };
+	EXPECT(extremum(1, 0, 4, ex) == 2);		// the run 1..3 of threes
+	EXPECT(extremum(3, 0, 7, ex) == 7);
+	Uou();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 6));
+	long tops = 0, bottoms = 0, crossings = 0, ends = 0;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+	{
+		fprintf(stderr, "codes: mark %#x code %#x attr %#x other %#x points %d..%d at y %d\n",
+				p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, low->fY[p->iBeg]);
+		if (p->mark == 0x10 || p->mark == 0x20)
+		{
+			ends++;
+			EXPECT(p->code == 3);
+		}
+		else if (p->mark == 1)
+		{
+			tops++;
+			EXPECT(p->code == 2 || p->code == 3);
+		}
+		else if (p->mark == 3)
+		{
+			bottoms++;
+			EXPECT(p->code == 7 || p->code == 8);
+		}
+		else if (p->mark == 6)
+			crossings++;
+		if (p->mark != 6 && p->mark != 9 && p->mark != 0xa)
+			EXPECT((p->attr & 0xf) >= 1 && (p->attr & 0xf) <= 13);
+	}
+	fprintf(stderr, "codes: %ld ends, %ld tops, %ld bottoms, %ld crossing elements; step %d (%d)\n",
+			ends, tops, bottoms, crossings, low->fStep, low->fStepKind);
+	EXPECT(ends == 2 && bottoms == 4 && crossings == 2);
+	EXPECT(low->fStep > 0);
+	DestroySDS(low);
+}
+
+
 int
 main()
 {
@@ -1134,6 +1196,7 @@ main()
 	TestCircle();
 	TestSides();
 	TestCross();
+	TestCodes();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

@@ -68,6 +68,7 @@ add_library(recognition STATIC
     LowCircle.cpp
     LowSide.cpp
     LowCross.cpp
+    LowBegin.cpp
     LowTables.cpp
     CursiveReader.cpp
     StrXrDomain.cpp
