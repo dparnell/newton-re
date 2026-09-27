@@ -1297,6 +1297,98 @@ TestExchange(void)
 }
 
 
+// RestoreColons and PostFindSideExtr (LowRestore.cpp): a "u" followed by a
+// colon written as two dots.  The dots, each coded as a dot by lk_begin,
+// are found to be a colon - close across, 20 to 160 apart down, their
+// heights apart - and put together between two breaks after the u.  And
+// the pieces: an arc overlapping the points between two elements is no
+// obstacle, anything else is; a dot or an arc is passed over.
+static void
+DumpSpecl(low_type* low, const char* what)
+{
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+		fprintf(stderr, "%s: mark %#x code %#x attr %#x other %#x points %d..%d (%d, %d)\n",
+				what, p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, p->ipoint0, p->ipoint1);
+}
+
+static void
+TestRestore(void)
+{
+	TraceStart();
+	for (long u = 0; u < 2; u++)
+	{
+		long x = 100 + 100 * u;
+		for (long a = 0; a < 2; a++)
+		{
+			for (long s = 0; s < 10; s++, x += 2)
+				Pt(x, 160 + (40 * s) / 10);
+			for (long s = 0; s < 10; s++, x += 2)
+				Pt(x, 200 - (40 * s) / 10);
+		}
+		Pt(x, 160);
+		PenUp();
+	}
+	// the colon, written last, between the two
+	Pt(170, 172); Pt(171, 172); Pt(171, 173);
+	PenUp();
+	Pt(170, 197); Pt(171, 197); Pt(171, 198);
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 6));
+	Adjust_I_U(low);
+	DumpSpecl(low, "before colons");
+	long dots = 0;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+		if (p->code == 0x10)
+			dots++;
+	EXPECT(dots == 2);
+	EXPECT(RestoreColons(low) == 0);
+	DumpSpecl(low, "after colons");
+	SPEC_TYPE* first = nil;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+		if (p->code == 0x10)
+		{
+			first = p;
+			break;
+		}
+	// the pair now between the u's: a break before and after it, and the
+	// second u after that
+	EXPECT(first != nil && first->next != nil && first->next->code == 0x10);
+	if (first != nil && first->next != nil && first->next->next != nil)
+	{
+		UByte before = first->prev->code, after = first->next->next->code;
+		EXPECT(before == 0x12 || before == 1 || before == 0x13 || before == 0x14);
+		EXPECT(after == 0x12 || after == 1 || after == 0x13 || after == 0x14);
+		EXPECT((first->attr & 0xf) <= (first->next->attr & 0xf));
+		EXPECT(first->next->next->next != nil && first->next->next->next->mark == 0x10);
+	}
+	EXPECT(PostFindSideExtr(low) == 1);
+	DestroySDS(low);
+
+	SPEC_TYPE list[5];
+	memset(list, 0, sizeof(list));
+	for (long i = 0; i < 5; i++)
+	{
+		list[i].prev = i > 0 ? &list[i - 1] : nil;
+		list[i].next = i < 4 ? &list[i + 1] : nil;
+	}
+	list[0].code = 1; list[1].code = 0xe; list[2].code = 0x10; list[3].code = 3; list[4].code = 0x14;
+	list[1].iBeg = 10; list[1].iEnd = 20;
+	EXPECT(SkipRealAnglesAndPointsAfter(&list[0]) == &list[3]);
+	EXPECT(SkipRealAnglesAndPointsBefore(&list[3]) == &list[0]);
+	EXPECT(!IsSmthRelevant_InBetween(&list[0], &list[3], 12, 18));
+	EXPECT(IsSmthRelevant_InBetween(&list[0], &list[3], 21, 30));
+	EXPECT(IsSmthRelevant_InBetween(&list[0], &list[4], 12, 18));
+}
+
+
 int
 main()
 {
@@ -1322,6 +1414,7 @@ main()
 	TestCodes();
 	TestIU();
 	TestExchange();
+	TestRestore();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

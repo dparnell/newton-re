@@ -72,6 +72,7 @@ add_library(recognition STATIC
     LowAdjust.cpp
     LowExchange.cpp
     LowXrFeatures.cpp
+    LowRestore.cpp
     LowTables.cpp
     CursiveReader.cpp
     StrXrDomain.cpp

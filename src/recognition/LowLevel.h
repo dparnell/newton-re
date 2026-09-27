@@ -434,6 +434,16 @@ long	lk_begin(low_type* low);									// ROM 0x002f8d68 lk_begin__FP8low_type - 
 // The i/u bottoms (LowAdjust.cpp).
 void	Adjust_I_U(low_type* low);									// ROM 0x00303038 Adjust_I_U__FP8low_type - a narrow bottom between two tops recoded round (8) or sharp (7)
 
+// The colons and the side bends found late (LowRestore.cpp).
+void	AdjustBegEndWithoutPoint(SPEC_TYPE* e);						// ROM 0x00305044 AdjustBegEndWithoutPoint__FP9SPEC_TYPE
+Boolean	LooksLikeIAndPoint(SPEC_TYPE* dot, long p, short dx, short* x, short* y);	// ROM 0x00304964 LooksLikeIAndPoint__FP9SPEC_TYPEisPsT4
+long	PutColonAtItsPlace(low_type* low, SPEC_TYPE* a, SPEC_TYPE* b);	// ROM 0x00304a34 PutColonAtItsPlace__FP8low_typeP9SPEC_TYPET2 - ==> 1, 0 for a failure
+long	RestoreColons(low_type* low);								// ROM 0x003044d8 RestoreColons__FP8low_type - ==> 0
+SPEC_TYPE*	SkipRealAnglesAndPointsAfter(SPEC_TYPE* e);				// ROM 0x003042a4 SkipRealAnglesAndPointsAfter__FP9SPEC_TYPE
+SPEC_TYPE*	SkipRealAnglesAndPointsBefore(SPEC_TYPE* e);			// ROM 0x003042e0 SkipRealAnglesAndPointsBefore__FP9SPEC_TYPE
+Boolean	IsSmthRelevant_InBetween(SPEC_TYPE* a, SPEC_TYPE* b, long lo, long hi);	// ROM 0x0030446c IsSmthRelevant_InBetween__FP9SPEC_TYPET1iT3
+long	PostFindSideExtr(low_type* low);							// ROM 0x00303718 PostFindSideExtr__FP8low_type - ==> 1
+
 // An xr (ROM 0x18 bytes, no pointers, so the same on the host): one
 // element of what the low level hands the reader.  The halfwords are
 // kept as the ROM keeps them, big-endian, and read and written through
