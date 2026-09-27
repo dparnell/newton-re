@@ -871,6 +871,8 @@ AnalyzeSteps(low_type* low, long upTo)
 		return false;
 	if (upTo >= 2 && angl(low) != 0)
 		return false;
+	if (upTo >= 3 && FindSideExtr(low) == 0)
+		return false;
 	return true;
 }
 
@@ -960,6 +962,61 @@ TestCircle(void)
 }
 
 
+// The side extrema (LowSide.cpp): a triangle's and a closed path's
+// areas, and a side that bows out to the left like a "(" found bending
+// left near its middle, where a straight one does not bend.
+static void
+TestSides(void)
+{
+	short tx[4] = { 0, 10, 20, 0 };
+	short ty[4] = { 0, 10, 0, 0 };
+	EXPECT(TriangleSquare(tx, ty, 0, 1, 2) == 100 || TriangleSquare(tx, ty, 0, 1, 2) == -100);
+	EXPECT(TriangleSquare(tx, ty, 1, 0, 2) == 0);
+	short flag;
+	long closed = ClosedSquare(tx, ty, 0, 2, &flag);
+	EXPECT(flag == 0 && (closed == 100 || closed == -100));
+	EXPECT(ClosedSquare(tx, ty, 2, 0, &flag) == 0x7fff && flag == 1);
+	// a hook: from (200, 100) curving out to the left to (160, 115), then
+	// straight down to the line at 200 - with `strict` a side's bend must be
+	// near one end, a top that starts its stroke hooked
+	short sx[64], sy[64], map[64];
+	long n = 0;
+	for (long s = 0; s <= 10; s++, n++)
+	{
+		double t = 1.5707963 * s / 10;
+		sx[n] = (short) (160 + lround(40 * cos(t)));
+		sy[n] = (short) (115 - lround(15 * cos(t)));
+		map[n] = (short) n;
+	}
+	for (long s = 1; s <= 30; s++, n++)
+	{
+		sx[n] = 160;
+		sy[n] = (short) (115 + (85 * s) / 30);
+		map[n] = (short) n;
+	}
+	long k = -1;
+	long r = SideExtr(sx, sy, 0, n - 1, 0, sx, sy, map, &k, 1);
+	fprintf(stderr, "side: a hook to the left: %ld at %ld\n", r, k);
+	EXPECT(r == 1 || r == 3);
+	EXPECT(k >= 6 && k <= 16);
+	// a symmetric bow is not a hook when strict
+	for (long s = 0; s < n; s++)
+	{
+		double t = (double) s / (n - 1);
+		sx[s] = (short) (200 - lround(40 * sin(3.14159265358979 * t)));
+		sy[s] = (short) (100 + lround(100 * t));
+	}
+	EXPECT(SideExtr(sx, sy, 0, n - 1, 0, sx, sy, map, &k, 1) == 0);
+	for (long s = 0; s < n; s++)
+		sx[s] = 200;
+	r = SideExtr(sx, sy, 0, n - 1, 0, sx, sy, map, &k, 1);
+	EXPECT(r == 0);
+	EXPECT(brk_right(sy, 3, 10) == 11);
+	sy[7] = -1;
+	EXPECT(brk_right(sy, 3, 10) == 7);
+}
+
+
 int
 main()
 {
@@ -980,6 +1037,7 @@ main()
 	TestPict();
 	TestAngles();
 	TestCircle();
+	TestSides();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

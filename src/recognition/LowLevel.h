@@ -405,6 +405,15 @@ long	angl(low_type* low);										// ROM 0x002a9f7c angl__FP8low_type - ==> 0, 
 short	SlopeShiftDx(short dy, long slope);							// ROM 0x00307e58 SlopeShiftDx__Fsi - how far the slant (hundredths) moves a point dy across, rounded
 long	Circle(low_type* low);										// ROM 0x002bc5b8 Circle__FP8low_type - the loops closed, marked as crossing pairs (6, 'c' and 'd'); ==> 0, 1 for no room
 
+// The side extrema (LowSide.cpp).
+long	brk_right(short* y, long i, long j);						// ROM 0x00305fd4 brk_right__FPsiT2 - the first pen-up from i to j, j + 1 for none
+long	TriangleSquare(short* x, short* y, long a, long b, long c);	// ROM 0x00307820 TriangleSquare__FPsT1iN23 - the signed area of triangle a, b, c
+long	ClosedSquare(short* x, short* y, long i, long j, short* flag);	// ROM 0x00307744 ClosedSquare__FPsT1iT3T1 - the area the trace from i to j closes with its chord
+long	IsTriangledPath(short* x, short* y, long i, long j, long k);	// ROM 0x00306524 IsTriangledPath__FPsT1iN23
+long	iMostCurvedPoint(short* x, short* y, long i, long j, long sgn);	// ROM 0x00306c44 iMostCurvedPoint__FPsT1iN23
+long	SideExtr(short* x, short* y, long i, long j, long slope, short* x0, short* y0, short* map, long* k, ULong strict);	// ROM 0x00306734 SideExtr__FPsT1iN23N31PiUi - 1/3 a bend to the left, 2/4 to the right, 0 none
+long	FindSideExtr(low_type* low);								// ROM 0x00303584 FindSideExtr__FP8low_type - ==> 1
+
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
 long	Filt(low_type* low, short dist2, short mode);				// ROM 0x002e1064 Filt__FP8low_typesT2 - the trace resampled a step of about the root of dist2 apart; ==> 0
