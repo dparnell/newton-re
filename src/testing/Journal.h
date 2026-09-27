@@ -29,9 +29,10 @@
 				those that are due into the tablet buffer with a pen-down
 				before the first (the tablet bypassed for the first stroke,
 				so the real pen stays out of it) and a pen-up after the
-				last.  The ROM's test agent (TTestAgent, 'tagt) runs that
-				from its idle proc; the host's stand-in is
-				JournalAgentIdle (below).
+				last.  The test agent (TTestAgent, 'tagt - TestAgent.h)
+				runs that from its idle proc, so a replay plays only while
+				the agent runs (ActivateTestAgent); the unit tests, which
+				have no agent, call JournalAgentIdle (below) instead.
 
 				gJournallingState says which: 0 idle, 1 recording, 2
 				playing back.
@@ -118,7 +119,7 @@ void	JournalRecordAStroke(TStroke* stroke);		// ROM 0x000f9da4 JournalRecordAStr
 // 0x00228374, the agent itself NOT YET): the samples due played and, when
 // the replay has run out, the state back to idle.  The host's inker calls
 // it every tick.
-void	JournalAgentIdle(void);
+void	JournalAgentIdle(void);					// host: for the unit tests, which have no agent task
 
 void	RegisterJournalNatives(void);				// JournalStartRecord, ..., and the tablet's natives
 

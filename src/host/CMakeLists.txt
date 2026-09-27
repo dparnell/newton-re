@@ -48,9 +48,16 @@ set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
 # the journal (testing/Journal.h): "ton" written while recording, the four
 # strokes played back into the tablet buffer and read again (needs the
 # ROM image)
-add_test(NAME host.NewtonJournal COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/journal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonJournal COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 70 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/journal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonJournal PROPERTIES TIMEOUT 200
                      PASS_REGULAR_EXPRESSION "journal: recording started.*journal: 4 strokes recorded.*before the replay the page reads \"ton\".*after the replay the page reads \"ton tor\"")
+
+# the test agent with the script as its test manager: reports queued and
+# read back, the parameters split, debug() (testing/TestAgent.h; needs the
+# ROM image)
+add_test(NAME host.NewtonTestAgent COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 12 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/testagent.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonTestAgent PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "queue before activating is empty.*queued \"Test Case MSG: hello from the test\".*queued \"Test Case ERR: \tsomething went wrong\".*test a frame started in newt.*TotalSystemFree.*parameters 4:.*\"a frame\".*\"one\".*\"two three\".*\"four\".*debug\\(0\\) is a view.*is nil.*printed, not queued.*testagent: done")
 
 # the cursive recogniser's letter styles asked from NewtonScript
 # (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)

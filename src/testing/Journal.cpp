@@ -348,15 +348,14 @@ IsJournalReplayBusy(void)
 }
 
 
-// The test agent's idle proc (TTestAgent::IdleProc 0x00228374) plays the
-// journal first of all: the samples due, and when the replay has run out
-// the journal is idle again.
+// The test agent's idle proc (TTestAgent::IdleProc 0x00228374,
+// testing/TestAgent.h) plays the journal first of all: the samples due,
+// and when the replay has run out the journal is idle again.  So on the
+// machine - and on the host - a replay plays only while the agent runs.
 //
-// DEVIATION: the test agent - its world, its connection to a test server,
-// its reports - is NOT YET RECONSTRUCTED, so the host's inker task runs
-// this every tick where the agent's idler would every 50 milliseconds
-// (under a test manager; every three seconds otherwise).  The samples are
-// due by the clock either way.
+// host: that half of the idle proc on its own, for the unit tests, which
+// run the view system without the OS and so without the agent's task
+// (hal/host/HostTablet.cpp's HostTabletWait calls it every tick).
 //
 // ROM QUIRK, kept: nothing ends the tablet's bypass when a replay runs out
 // (only JournalStopReplay does, which the test agent calls when it is

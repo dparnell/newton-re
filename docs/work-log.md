@@ -10,6 +10,30 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the test agent and the debug hooks
+
+- `testing/TestAgent.h` (0x00226a40-0x0022bbb8, `docs/testing/README.md`):
+  `TTestAgent`, the `'tagt` application world (`InitTestAgent`), its
+  `'tste` event handler and idle proc, `TTestReporter`/`TAgentReporter`,
+  `TMessageQueue`, the `'tstp`/`'tsps` part handlers; `TestNatives.cpp`:
+  `ActivateTestAgent`/`DeactivateTestAgent`, the newt world's
+  `TNewtTestScriptEventHandler`, the `Test*`/`TestM*` natives, `debug`
+  (`FindForm`, `DebugHashValue`), `DebugRunUntilIdle`, `DebugMemoryStats`,
+  `StdioOn`/`StdioOff`, `HobbleTablet`.  `RemovePackage` added to the
+  package manager (packages on a store NOT YET, so it deinstalls).
+- The journal is now played by the agent's idle proc, as on the machine:
+  the host inker's `JournalAgentIdle` DEVIATION is gone (the unit tests,
+  which have no agent, still call it).  `journal.ns` activates the agent
+  as its test manager and plays the strokes as one stroke file - one at a
+  time they came three seconds apart (the agent idles that long after a
+  replay ends) and were read as four words.
+- ROM bugs kept: `TestReportErrorValues`/`AgentReportDirect` formats
+  short of arguments, a data file asked of the manager also queued with
+  an unset kind.  DEVIATIONs: natives answer nil rather than report
+  through a nil reporter; the queue pointer cleared when the agent goes.
+- ctest `host.NewtonTestAgent` (`src/host/demo/testagent.ns`).  Testing
+  natives: 32 of 38 answered.
+
 ## 2026-09-28: a read word no longer also left as ink
 
 - The journal demo's replayed "tor" was followed by an ink word of the

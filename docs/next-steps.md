@@ -10,11 +10,11 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 104/104
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 105/105
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10952 citations, 0 bad;
-  6042 of 16671 functions (36.24%).
-- `analysis/natives.py --unbound`: 340 of the ROM's 1326 natives
+- `analysis/coverage.py build/MP2x00US --check`: 11027 citations, 0 bad;
+  6093 of 16671 functions (36.55%).
+- `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
 
@@ -127,26 +127,35 @@ letter set on the host reads nothing (its writing stays ink).
 
 ## Then: the testing system
 
-The 38 `testing` natives (`docs/testing/README.md`).  DONE (2026-09-28):
-**the journal** - `JournalStartRecord`/`JournalStopRecord`, the three
-`JournalReplay*` and `JournalReplayBusy` (`testing/Journal.h`; ctest
+The 38 `testing` natives (`docs/testing/README.md`); 32 are answered.
+DONE (2026-09-28): **the journal** (`testing/Journal.h`; ctest
 `host.NewtonJournal` records "ton" written on the Notepad and plays it
-back) - and the tablet's bypass natives (`StartBypassTablet`,
-`StopBypassTablet`, `InsertTabletSample`).  Left, in order:
+back), the tablet's bypass natives, **the test agent**
+(`testing/TestAgent.h`: the `'tagt` world, its event handler and idler,
+`TTestReporter`/`TAgentReporter`, the message queue, the `'tstp`/`'tsps`
+part handlers, the newt world's `'tsse` handler, `ActivateTestAgent`/
+`DeactivateTestAgent` and every `Test*`/`TestM*` native - a test manager
+on the machine works end to end, ctest `host.NewtonTestAgent`; the
+agent's idle proc now plays the journal, as the ROM's does) and the debug
+hooks (`debug`, `DebugRunUntilIdle`, `DebugMemoryStats`, `StdioOn`/
+`StdioOff`, `HobbleTablet`).  Left:
 
-- **The test agent** (`TTestAgent`, 0x00226a40-0x0022a9c4: the `'tagt`
-  app world `TLoader::TheMain` starts through `InitTestAgent`, its event
-  handler and idler, `TAgentReporter`/`TTestReporter` and the message
-  queue, `ActivateTestAgent`/`DeactivateTestAgent`, `TestExit`,
-  `TestReportMessage`/`TestReportError`, the `TestM*` natives and the
-  test-server connection over `TCommServer`).  Until it is there the
-  host's inker task plays the journal (`JournalAgentIdle`, a DEVIATION),
-  and nothing ends the tablet's bypass after a replay but
-  `JournalStopReplay` from C.
-- `HobbleTablet` (a message to the inker), the debug hooks
-  (`DebugMemoryStats`, `DebugRunUntilIdle`, `StdioOn`/`StdioOff`,
-  `debug`), `TestWillCallExit`, the serial debugging, Uriah and the IR
-  sniffing.
+- The test server (`TCommServer`, 0x00209654-0x00209d5c; `Setup`,
+  `ProcessTestServerCommand`, `DoDropConnection`'s sending): an AppleTalk
+  endpoint, so it waits on the comms area.
+- The C test cases (`TTestCaseTask` 0x0022afe0-0x0022b3b8,
+  `StartCTestCase`, `DoNewtCTestCase`): a test case is a protocol in a
+  `'tstp` part, run as a task of its own.
+- The tests kept on a store (`MakeTestStore`, `TTestCommandQueue`,
+  `TTestStoreFileList`, `DoRunTestsFromStore`, `StartACardTestCase`).
+- The serial debugging (`InitSerialDebugging`,
+  `PreInitSerialDebugging`), Uriah (`Uriah`, `UriahBinaryObjects`) and
+  the IR sniffing (`StartIRSniffing`/`StopIRSniffing`), the six testing
+  natives still unanswered.
+- `HobbleTablet` reaches nothing on the host (no inker port).
+- Seen once, not reproduced: the open-apps smoke run stalled at boot in
+  `GetLetterWeights` (from `saveLetterWeights`) while other checks were
+  running at the same time; alone it passes.
 
 ## The package manager: what is left
 
@@ -218,13 +227,13 @@ the original; new run-time dependencies on it are to be avoided or noted.
 
 `python tools/newton-rom/analysis/natives.py --unbound` lists them by
 area (`--csv` for a table, `--sizes build/MP2x00US` for the cheapest work
-inside an area).  At 2026-09-27:
+inside an area).  At 2026-09-27 (testing at 2026-09-28):
 
 | area | how many | what is under them |
 |---|---|---|
 | comms | 121 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
-| testing | 28 | the test agent and the debug hooks (the journal is done) |
+| testing | 6 | the serial debugging, Uriah, the IR sniffing (the agent, the journal and the debug hooks are done) |
 | packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
 | recognition | 0 | all answered (the cursive engine's reading is NOT YET behind them) |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |

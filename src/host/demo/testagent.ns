@@ -1,0 +1,73 @@
+// The test agent (testing/TestAgent.h) with this script as its test
+// manager.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/testagent.ns --headless 20
+//
+// ActivateTestAgent("*") starts the agent's world ('tagt) and makes the
+// frame it is sent to the test manager.  What a test reports - a message,
+// an error, the start of a test frame - goes to the agent as an event and
+// waits in its message queue, which the manager reads with
+// TestMGetReportMsg, oldest first.  The test's name and parameters go
+// through the agent too (TestMSetParameterString) and come back split
+// with TestGetParameterArray.  debug() finds a view from the root by
+// index, name or path.  DeactivateTestAgent stops it all.
+//
+// It prints lines starting "testagent:"; ctest's host.NewtonTestAgent
+// checks them.
+
+testMgr := {
+    testMgrCaseDoneScript: func() nil,
+    testMgrFrameDoneScript: func() nil,
+    Start: func() ActivateTestAgent("*", nil)};	// (self, this frame, becomes the manager)
+
+// every message the agent has queued, one line each (the \r they end
+// with left off)
+drain := func()
+  begin
+    local msg;
+    while msg := TestMGetReportMsg() do
+      begin
+        local lines := [];
+        local start := 0;
+        local at;
+        while at := StrPos(msg, "\n", start) do
+          begin
+            if at > start then AddArraySlot(lines, SubStr(msg, start, at - start));
+            start := at + 1;
+          end;
+        if start < StrLen(msg) then AddArraySlot(lines, SubStr(msg, start, StrLen(msg) - start));
+        foreach line in lines do
+          if StrPos(line, "TotalSystemFree", 0) then
+            Print("testagent: queued \"TestAgent MSG TotalSystemFree=...\"")
+          else if StrPos(line, " at ", 0) then
+            Print("testagent: queued \"" & SubStr(line, 0, StrPos(line, " at ", 0)) & " at ...\"")
+          else
+            Print("testagent: queued \"" & line & "\"");
+      end;
+  end;
+
+AddDelayedCall(func() begin
+    Print("testagent: the manager's queue before activating is " & (if TestMGetReportMsg() then "not empty" else "empty"));
+    testMgr:Start();
+    TestReportMessage("hello from the test");
+    TestReportError("something went wrong");
+    TestMSetParameterString(2, "a frame", "one 'two three' four");
+    TestMStartTestFrame("a frame", nil);
+    AddDelayedCall(func() begin
+        call drain with ();
+        local params := TestGetParameterArray();
+        Print("testagent: parameters " & Length(params) & ":");
+        foreach p in params do Print("testagent:   \"" & p & "\"");
+        Print("testagent: debug(0) is " & (if debug(0) then "a view" else "nil"));
+        Print("testagent: debug(\"no such view\") is " & (if debug("no such view") then "a view" else "nil"));
+        DebugRunUntilIdle();
+        StdioOff();
+        StdioOn();
+        DeactivateTestAgent();
+        Print("testagent: deactivated; reporting now prints instead:");
+        TestReportMessage("testagent: printed, not queued");
+        Print("testagent: done");
+      end, nil, 1500);
+  end, nil, 3000);
+Print("testagent: the script is loaded");

@@ -268,7 +268,7 @@ HostTabletWait(ULong ticks)
 {
 	for (ULong i = 0; i < ticks; i++)
 	{
-		JournalAgentIdle();
+		JournalAgentIdle();			// (the tests run without the OS, so without the test agent that plays the journal)
 		HostTabletPump();
 		HostAdvanceClock(0xf000);
 	}
@@ -298,7 +298,6 @@ HostInkerMain(void)
 	while (!gInkerStop.load())
 	{
 		Wait(1);
-		JournalAgentIdle();						// (the test agent's stand-in: testing/Journal.h)
 		HostTabletPump();
 		if (StrokeTime() != 0 && gInkerNewtPort != nil)
 			gInkerNewtPort->Send(&message, event, sizeof(event), 0);

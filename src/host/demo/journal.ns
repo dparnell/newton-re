@@ -8,7 +8,8 @@
 // (testing/Journal.h): JournalStartRecord sends each finished stroke to
 // the recorder frame below as a JournalStroke binary - the stroke's times
 // and its tablet sample words.  Recording stopped, the four strokes are
-// played back one after another with JournalReplayAStroke, 80 pixels
+// made into a stroke file (a 0x18-byte header and each stroke's own
+// bytes end to end) and played back with JournalReplayStrokes, 80 pixels
 // lower down: the journal puts their samples into the tablet buffer at
 // the pace they were written (the tablet bypassed meanwhile), the
 // recogniser reads them as it read the pen, and the words go where the
@@ -19,6 +20,14 @@
 // asked for it; TEditView::HandleWord answers a leftover register there,
 // as the ROM does, and that is what stops the recogniser turning the
 // word's strokes into ink as well.)
+//
+// The journal is played by the test agent's idle proc (testing/
+// TestAgent.h), so the agent is started first - with this script as its
+// test manager ("*"), which makes it idle every fifty milliseconds - and
+// stopped at the end, which also ends the tablet's bypass.  (Played one
+// stroke at a time with JournalReplayAStroke, the strokes come three
+// seconds apart - the agent idles that long after each replay ends - and
+// are read as four words; a file keeps them together at their own pace.)
 //
 // It prints lines starting "journal:"; ctest's host.NewtonJournal checks
 // them.  build/journal.pgm is the page at the end.
@@ -98,29 +107,47 @@ findText := func(v, prefix)
     found;
   end;
 
-// the recorded strokes played back one at a time, 80 pixels lower
-replayNext := func(i)
+// the test manager the agent is started with
+testMgr := {
+    testMgrCaseDoneScript: func() nil,
+    testMgrFrameDoneScript: func() nil,
+    Start: func() ActivateTestAgent("*", nil)};	// (self, this frame, becomes the manager)
+
+// the recorded strokes as a stroke file: the header (format 1 at +2, the
+// count at +4, the sample rate at +6) and each stroke's own bytes - its
+// size is its first word (a recorded binary is eight bytes longer)
+strokeFile := func(strokes)
   begin
-    if i >= Length(recorder.strokes) then
-      begin
+    local file := SetLength(MakeBinary(0, 'journal), 0x18);
+    for i := 0 to 0x17 do StuffByte(file, i, 0);
+    StuffWord(file, 2, 1);
+    StuffWord(file, 4, Length(strokes));
+    StuffWord(file, 6, 100);
+    foreach s in strokes do
+      file := BinaryMunger(file, Length(file), 0, s, 0, ExtractLong(s, 0));
+    file;
+  end;
+
+// the file played back, 80 pixels lower, and the page read afterwards
+replay := func()
+  begin
+    local err := JournalReplayStrokes(call strokeFile with (recorder.strokes), 0, 80, 0);
+    if err <> 0 then
+      Print("journal: the strokes not played (" & err & ")");
+    local waitForIt;
+    waitForIt := func()
+      if JournalReplayBusy() then
+        AddDelayedCall(waitForIt, nil, 100)
+      else
         AddDelayedCall(func() begin
             IdleStrokes();
             AddDelayedCall(func() begin
                 Print("journal: after the replay the page reads \"" & call findText with (GetRoot(), "ton") & "\"");
                 ScreenSnapshot("build/journal.pgm");
+                DeactivateTestAgent();
                 Print("journal: done");
               end, nil, 5000);
           end, nil, 1000);
-        return;
-      end;
-    local err := JournalReplayAStroke(recorder.strokes[i], 0, 80, 1, 100, 20);
-    if err <> 0 then
-      Print("journal: stroke " & i & " not played (" & err & ")");
-    waitForIt := func()
-      if JournalReplayBusy() then
-        AddDelayedCall(waitForIt, nil, 100)
-      else
-        call replayNext with (i + 1);
     AddDelayedCall(waitForIt, nil, 100);
   end;
 
@@ -134,7 +161,8 @@ AddDelayedCall(func() begin
         AddDelayedCall(func() begin
             Print("journal: before the replay the page reads \"" & call findText with (GetRoot(), "ton") & "\"");
             ScreenSnapshot("build/journal-before.pgm");
-            call replayNext with (0);
+            testMgr:Start();
+            call replay with ();
           end, nil, 3000);
       end, nil, 1500);
   end, nil, 27000);

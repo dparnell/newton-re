@@ -9,9 +9,99 @@ tablet buffer so that a test can write on the machine as a person would.
 38 NewtonScript natives reach it (`natives.py --unbound`, the `testing`
 area).
 
-Reconstructed so far: the journal and the tablet's bypass.  The test
-agent, its reporters and test cases, the debugging hooks (`StdioOn`,
-`DebugRunUntilIdle`, ...), Uriah and the IR sniffing are NOT YET.
+Reconstructed so far: the journal, the tablet's bypass, the test agent
+with its reporters, message queue and NewtonScript natives (a test
+manager on the machine itself works end to end), and the debugging hooks
+(`debug`, `DebugRunUntilIdle`, `DebugMemoryStats`, `StdioOn`/`StdioOff`,
+`HobbleTablet`).  NOT YET: the test server's connection (`TCommServer`),
+the C test cases (`TTestCaseTask`), the tests kept on a store, the serial
+debugging (`InitSerialDebugging`), Uriah and the IR sniffing.
+
+## The test agent (`testing/TestAgent.h`, ROM 0x00226a40-0x0022bbb8)
+
+`TTestAgent` is an application world (`'tagt`, 0x178 bytes) started by
+`InitTestAgent` (0x000ea470) - from `TLoader::TheMain` when
+`gNewtTests & 0x800`, and from `ActivateTestAgent` - unless the name
+server already has one.  Its `MainConstructor` makes a `'tstp` part
+handler (a C test case's code), a `'newt/'tste` event handler idling
+every three seconds, the newt world's reporter (`gTestReporterForNewt`,
+a `TAgentReporter` numbered 9 that logs at most twenty errors) and the
+message queue (`gTestAgentMessageQueue`).
+
+**Reporting.**  A `TTestReporter` (0x1a0 bytes: the test's name, its
+parameters, the agent's port, its number, an error count) turns every
+report into a `'newt/'tste` event to the agent (`SendToTestAgent`): kind
+1-4 a line of text (`"Test Case MSG: ..."`, `"Test Case ERR: ..."`,
+`"TestAgent ERR ..."`), 5 a status whose sub-kind says what happened
+(`AgentReportStatus`: 1 the agent activated, 2 a test started - with the
+date and time and the free memory - 4 finished, with the errors reported
+and logged, 7 a C test case wanted, 10 the name and parameters, 11 quit,
+12 the server dropped), 9 a data file wanted (an RPC), 10 flush.  The
+agent's `AEHandlerProc` queues the text ones as `'amsg`, `'aerr`, `'tmsg`
+and `'terr`, times a test from its start to its end, and keeps the state.
+
+**Who listens.**  `ActivateTestAgent(name, server)` with a name of `"*"`
+makes the frame it is sent to the **test manager** (`gTestMgrAppContext`)
+on the machine itself: it reads the queue with `TestMGetReportMsg` (the
+oldest message first), is sent `testMgrFrameDoneScript` and
+`testMgrCaseDoneScript` as tests finish (the agent sends the newt world a
+`'newt/'tsse` event, which `TNewtTestScriptEventHandler` turns into the
+message), and answers `testMgrReadDataFile(name, offset, size)` for a
+test's data files.  Any other name is a test server on a desktop, reached
+over AppleTalk (`TCommServer`, `Setup`, `ProcessTestServerCommand`): NOT
+YET, so the queue simply fills.  With a manager the agent idles every 50
+milliseconds, without one every three seconds (and three seconds after a
+journal replay ends, whatever).
+
+**A NewtonScript test** is a `'tsps` package part whose frame has a
+`testScript` method (`TtspsPart`): `TestMStartTestFrame(name, nil)`
+reports it started and sends it `testScript`; a NewtonScript error is
+reported as `"Test script failed!!"` with the error code and symbol, and
+the test reported finished unless the script said it would do that
+itself (`TestWillCallExit`, then `TestExit`).  `TestMSetParameterString`
+and `TestGetParameterString`/`TestGetParameterArray` carry the test's
+name and parameters through the agent (spaces become `\x01` on the way;
+the array splits them at spaces, a quoted one kept whole, ten at most).
+`TestReadTextFile`/`TestReadDataFile` read a data file - from the host's
+own file system with an offset of -1 (stdio switched on for it), from the
+test manager, or from the server.
+
+**The journal** is played by the agent's idle proc - nothing else calls
+`JournalInsertTabletSamople` - so on the machine, and now on the host, a
+replay plays only while the agent runs.
+
+ROM bugs kept: `TestReportErrorValues` and `AgentReportDirect` pass their
+formats too few arguments; the agent frees its message queue without
+clearing `gTestAgentMessageQueue` (the host clears it: DEVIATION); a data
+file asked of the test manager is also queued with a kind nothing set.
+DEVIATION: the natives that report through `gTestReporterForNewt` or look
+in `gtspsPartHandler` without asking whether the agent runs answer nil on
+the host rather than read low memory; a `TTestAgentEvent`'s text block is
+sixteen bytes longer, to hold the activation block's host-sized id and
+pointer.
+
+## The debugging hooks
+
+`debug(form)` (0x001ea0a8) finds a view from the root through
+`FindForm`: an integer is that child of the `viewChildren` (the open view
+if there is one), a string is a view whose `debug` slot is that string or
+its `DebugHashValue` (each character lower-cased and XORed into the hash
+shifted left), or whose text is (a text starting with 0xfc01 compared from
+its second character), an array is a path; failing that every child is
+searched.  `DebugRunUntilIdle` updates the screen, runs the application
+and every due delayed action; `DebugMemoryStats` does nothing in this
+ROM.  `StdioOn`/`StdioOff` count down and up the gate the C library's
+i/o passes to the serial debugger through (DEVIATION: the host's stdio
+is its console regardless).  `HobbleTablet` sends the inker its command
+0x1d (NOT YET: the host has no inker port).
+
+### Tests
+
+ctest `host.NewtonTestAgent` (`src/host/demo/testagent.ns`) activates
+the agent with the script as its test manager, reports a message, an
+error and a test frame's start, reads them back from the queue, sets and
+splits the parameters and finds views with `debug`.
+
 
 ## The journal (`testing/Journal.h`, ROM 0x000f8e08-0x000f9fd4)
 
@@ -84,12 +174,13 @@ Nothing ends the bypass when a replay runs out: only `JournalStopReplay`
 does, which the test agent calls when it is deactivated or a test exits
 (kept - after a replay, the real pen stays out of it).
 
-On the machine the test agent's idle proc (`TTestAgent::IdleProc`
-0x00228374) runs `JournalInsertTabletSamople` and puts the journal back
-to idle when the replay is no longer busy - every 50 milliseconds under a
-test manager, every three seconds otherwise.  DEVIATION: with the test
-agent NOT YET, the host's inker task (and the tests' wait hook) runs that
-half of the idle proc, `JournalAgentIdle`, every tick.
+The test agent's idle proc (`TTestAgent::IdleProc` 0x00228374) runs
+`JournalInsertTabletSamople` and puts the journal back to idle when the
+replay is no longer busy - every 50 milliseconds under a test manager,
+every three seconds otherwise - so a replay needs the agent running
+(`ActivateTestAgent`).  The unit tests, which run the view system without
+the OS, call that half of the idle proc, `JournalAgentIdle`, from their
+wait hook instead.
 
 DEVIATION: the words of a JournalStroke in a binary (what recording makes
 and a file holds) are kept big-endian, as the ROM wrote them, so a
@@ -120,8 +211,11 @@ NOT YET.
 it comes as, plays it back moved and checks it reaches a view as a click
 there with the tablet bypassed meanwhile, and does the same with a line
 from `JournalReplayALine`.  `src/host/demo/journal.ns` (ctest
-`host.NewtonJournal`) writes "ton" on the Notepad while recording and
-plays the four strokes back: the page reads "ton tor" afterwards, and
+`host.NewtonJournal`) writes "ton" on the Notepad while recording,
+starts the agent as its test manager and plays the four strokes back as
+one stroke file (`JournalReplayStrokes`; played one at a time they come
+three seconds apart, the agent's idle after each replay, and are read as
+four words): the page reads "ton tor" afterwards, and
 nothing else.  (It once also left an ink word behind: the replayed word,
 written below any text, goes in at the caret without a child of the page
 choosing it, and the host's `TEditView::HandleWord` answered nil there,

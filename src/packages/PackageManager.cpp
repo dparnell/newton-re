@@ -1133,6 +1133,18 @@ DeinstallPackage(ULong packageId)
 }
 
 
+// ROM 0x0015d748 RemovePackage__FUl
+// A package taken away: one on a store is deallocated there, anything
+// else deinstalled.  NOT YET RECONSTRUCTED: packages on a store
+// (IdToStore, DeallocatePackage) - every package is in memory, so every
+// one is deinstalled.
+void
+RemovePackage(TObjectId packageId)
+{
+	DeinstallPackage(packageId);
+}
+
+
 // ROM 0x00161ef0 SafeToDeactivatePackage__FUlPUc
 NewtonErr
 SafeToDeactivatePackage(ULong packageId, UChar* safe)
