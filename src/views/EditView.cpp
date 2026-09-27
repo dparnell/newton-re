@@ -2315,13 +2315,14 @@ TimeStampTextChange(TView* view)
 // `box` is where the word was written; an empty one means nowhere in
 // particular, and goes straight to a new paragraph.
 //
-// ==> the view the word ended up in.
+// With remote writing on (or the corrector's selection in a child), a
+// written word goes to the caret wherever it was written
+// (0x000abe58-0x000ac0ac): into the caret's paragraph through
+// InsertItemsAtCaret, onto the end of the text under a caret on the page
+// itself, or into a new paragraph.
 //
-// NOT YET RECONSTRUCTED: the remote-writing and corrector path
-// (0x000abe58-0x000ac0ac), which is where a recognised word goes when
-// the assistant is taking dictation into another view or the corrector
-// is up - it inserts the word at the caret through DoInsertItems rather
-// than handing it to a child.  Nothing typed goes that way.
+// ==> the view the word ended up in - on the two caret paths, the
+// caller's own leftover (the ROM bug below).
 TView*
 TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 					  TUnitPublic* unit, RefArg info, long* outOffset)
@@ -2373,7 +2374,19 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 							|| (key->fParent != nil && key->fParent->fParent == this))
 						&& key->Hilited() && !CorrectorUp();
 
-	TView* best = nil;
+	// ROM bug: the best child is kept in r8, which is set only when a
+	// child answers better than the one before - never cleared first.
+	// Two paths below put the word in without choosing a child (at the
+	// caret, and at the end of the text under the caret), so the view
+	// answered there is whatever r8 held in the caller.  Only
+	// HandleWordUnit can reach them (CleanupData and JamText pass no
+	// unit), and it has the word's text pointer in r8 at the call - so
+	// the ROM answers the text as the view, which HandleWordUnit only
+	// tests for nil: the word counts as taken, and the recogniser claims
+	// its strokes.  Kept by starting from the text pointer; answering nil
+	// instead makes the command's result 0, and the arbiter then turns
+	// the strokes of the word just inserted into ink as well.
+	TView* best = (TView*) text;
 	long bestScore = 0;
 	if (!emptyBox)
 	{

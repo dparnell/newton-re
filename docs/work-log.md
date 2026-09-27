@@ -10,6 +10,23 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: a read word no longer also left as ink
+
+- The journal demo's replayed "tor" was followed by an ink word of the
+  same strokes.  Not the journal: any word written away from the text
+  with remote writing on (the caret path of `TEditView::HandleWord`) did
+  it.  The ROM keeps the best child in r8 and never clears it, so on the
+  two caret paths it answers its caller's r8 - in `HandleWordUnit` the
+  word's text pointer.  The host started from nil, so `HandleWordUnit`
+  answered false, the aeWord's result was 0, the unit handler did not
+  claim the unit, `TArbiter::DoArbitration` marked the at-once winner
+  claimed and invalid, and `CleanUp` expired its strokes into ink.  Now
+  ported as the ROM does it (the bug commented); `journal.ns` and ctest
+  `host.NewtonJournal` check the page reads "ton tor" and nothing more.
+- Checked on the way: the ROM bug `DoArbitration`'s last loop carries
+  (marking the unit in hand, not the gathered entry) is real - r5 is never
+  reloaded (0x002089ec).
+
 ## 2026-09-28: the journal - strokes recorded and played back
 
 - `testing/Journal.h` (a new area, `src/testing/`, `docs/testing/

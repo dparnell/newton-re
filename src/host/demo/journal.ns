@@ -14,8 +14,11 @@
 // recogniser reads them as it read the pen, and the words go where the
 // caret is, after the first "ton".  A replayed stroke loses its last point
 // to the pen-up, as on the machine, so the n comes back without the end
-// of its last leg - and is read as "tor" (the strokes, arriving one at a
-// time, are also kept as an ink word).
+// of its last leg - and is read as "tor".  (The word, written 80 pixels
+// below any text, goes in at the caret with no child of the page having
+// asked for it; TEditView::HandleWord answers a leftover register there,
+// as the ROM does, and that is what stops the recogniser turning the
+// word's strokes into ink as well.)
 //
 // It prints lines starting "journal:"; ctest's host.NewtonJournal checks
 // them.  build/journal.pgm is the page at the end.

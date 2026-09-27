@@ -121,4 +121,14 @@ it comes as, plays it back moved and checks it reaches a view as a click
 there with the tablet bypassed meanwhile, and does the same with a line
 from `JournalReplayALine`.  `src/host/demo/journal.ns` (ctest
 `host.NewtonJournal`) writes "ton" on the Notepad while recording and
-plays the four strokes back: the page reads "ton tor" afterwards.
+plays the four strokes back: the page reads "ton tor" afterwards, and
+nothing else.  (It once also left an ink word behind: the replayed word,
+written below any text, goes in at the caret without a child of the page
+choosing it, and the host's `TEditView::HandleWord` answered nil there,
+so the command's result was 0, the handler did not claim the word unit,
+the arbiter marked it claimed *and invalid* as an at-once winner, and
+the clean-up expired its strokes as ink.  The ROM answers a register it
+never set - in `HandleWordUnit`'s case the word's text pointer - which
+is not nil; the host now does the same.  Nothing to do with the
+journal: a word written well away from the text with remote writing on
+did the same.)

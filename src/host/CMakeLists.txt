@@ -50,7 +50,7 @@ set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
 # ROM image)
 add_test(NAME host.NewtonJournal COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/journal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonJournal PROPERTIES TIMEOUT 200
-                     PASS_REGULAR_EXPRESSION "journal: recording started.*journal: 4 strokes recorded.*before the replay the page reads \"ton\".*after the replay the page reads \"ton to")
+                     PASS_REGULAR_EXPRESSION "journal: recording started.*journal: 4 strokes recorded.*before the replay the page reads \"ton\".*after the replay the page reads \"ton tor\"")
 
 # the cursive recogniser's letter styles asked from NewtonScript
 # (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)
