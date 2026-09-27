@@ -2204,6 +2204,68 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
+### The low level (`recognition/LowLevel.h`, begun)
+
+`low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
+in a `low_type` - a 0x9c-byte block on its stack holding the trace as
+parallel x and y arrays (a y of -1 a pen-up, one at each end and one
+between strokes), four working buffers of 0xce7 shorts that the filters
+write into (0 and 1 x and y, 2 and 3 a map from each point back to the
+point of the original trace it came from), a group per stroke
+(`POINTS_GROUP`: its extent and box), and the list of *special elements*
+(`SPEC_TYPE`, 0x14 bytes: a kind, a code, an attr, the points it covers
+and two more, linked both ways) that the later passes turn into xrs.  All
+but the element list and the stroke descriptions are one allocation
+(`LowAlloc`).  The order of work is `PrepareLowData`, the trace copied in,
+then `BaselineAndScale` - `Errorprov` (a doubled pen-up taken out),
+`Filt` (the trace resampled: a point too near the last one kept dropped,
+a gap too wide filled at a step of the root of the distance asked for),
+`InitGroupsBorder`, `Extr` (each stroke's extrema) and `transfrmN` (the
+base line) - then `AnalyzeLowData` and `exchange` (the xrs written).
+
+The extrema (`Extr`, `BigExtr`, `DirectExtr`) are found along a
+direction (a, b): a point's value is its x and y weighed by the
+direction over |a|+|b|; a run of points within `eps` of a point's value,
+bounded by lower values on both sides (or the stroke's end on one),
+makes a maximum, and likewise a minimum, the element covering the run
+with ipoint0 the middle of its flat top.  The two kinds alternate - one
+is not recorded straight after one of its own kind - and the stroke is
+bracketed by a 0x10 and a 0x20.  The directions: up and down (kinds 3 and
+1 - y grows downwards, so 3 is a letter's bottom), left and right (0x13,
+0x11), the two diagonals (0x23/0x21 and 0x33/0x31, the second found one
+point at a time by `DirectExtr`, with x weighed twice when once finds
+nothing).  A quirk: `BigExtr` adds each coordinate with the sign of its
+weight rather than multiplied by it, where `DirectExtr` multiplies - the
+same for the 0/1 weights `BigExtr` is given.
+
+The base-line finder `transfrmN` (0x001baaf8, 6.4 KB, and 38 KB below it)
+works over two arrays of `EXTR`s - copies of the bottoms and the tops
+with a *suspicion code* each (0 on the line, 0x65/0x66 sticking out below
+or above it, 0x67 near it, 0x6e put back, 0x0d a tail struck off, the
+tens the kinds of gap and glitch) - and smooths a lower and an upper line
+under every point (`smooth_d_bord`/`smooth_u_bord` over
+`point_of_smooth_bord`: the area under the extrema's polyline over a
+window, divided by its width).  Its pieces so far are `LowBaseline.cpp`.
+
+Done (2026-09-28): the state and its memory, the strokes, the trace
+utilities, the engine's integer roots (`HWRMathISqrt`/`HWRMathILSqrt`
+over `SQRTa`/`SQRTb`/`sqrtab`, generated into `LowTables.cpp`), the
+filters with `PSProc`/`NewIndex` (the elements moved to the filtered
+trace), the extremum finders, the element list operations, and about
+thirty of the base-line finder's pieces.  ROM bugs kept:
+`InitGroupsBorder` writes the next stroke's start one group past the
+array when it is full (onto the index that follows it in the block);
+`GetGroupNumber` answers its own argument's address for a point in no
+stroke; `spec_neibour_extr`/`neibour_susp_extr` read an unset register
+for a kind other than 1 or 3.  `test_LowLevel` checks the roots against
+the true roots, the strokes of a hand-made trace, the filters on a line,
+a zigzag's extrema, and the pieces one by one.  `low_level` itself is not
+yet called: `GCTryToRecognize` still answers -8 until the whole layer is
+there.  NOT YET: `transfrmN` itself and 32 functions below it,
+`AnalyzeLowData`'s passes (circles, angles, crossings, arcs, the
+punctuation), `exchange` - 305 functions, 189 KB, by `analysis/callgraph.py
+build/MP2x00US 0x0034ea74`.
+
 **NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
 `xrw_algs`, the `Chunk*` digit reader - docs/next-steps.md has their
 sizes and the plan), `SetStrXrRC` (a recognition configuration's
