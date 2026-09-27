@@ -57,6 +57,9 @@ add_library(recognition STATIC
     LowFilter.cpp
     LowExtr.cpp
     LowBaseline.cpp
+    LowGeometry.cpp
+    LowPunct.cpp
+    LowLine.cpp
     LowTables.cpp
     CursiveReader.cpp
     StrXrDomain.cpp

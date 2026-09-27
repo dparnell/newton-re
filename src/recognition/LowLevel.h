@@ -92,8 +92,7 @@ struct EXTR
 	short			x;				// +02
 	short			y;				// +04
 	short			i;				// +06  the point in the original trace (buffer 2's map)
-	UByte			f8;				// +08
-	UByte			attr;			// +09  its stroke's ending attr
+	short			shift;			// +08  its stroke's shift to the left: the gaps before it closed up (extract_all_extr; the stroke end's attr is its low byte)
 	short			fa;				// +0a
 	SPEC_TYPE*		elem;			// +0c
 };
@@ -155,7 +154,10 @@ struct low_type
 	UByte			f7c[0x20];		// +7c..+9b
 };
 
-// The engine's arithmetic.
+// The engine's arithmetic.  A product or sum that can overflow a word is
+// made with these, which wrap as the ARM does rather than trap.
+inline long	LMul(long a, long b)	{ return (int32_t) ((uint32_t) a * (uint32_t) b); }
+inline long	LAdd(long a, long b)	{ return (int32_t) ((uint32_t) a + (uint32_t) b); }
 long	HWRLAbs(long x);											// ROM 0x000e6508 HWRLAbs__Fl
 long	HWRMathISqrt(short x);										// ROM 0x002e61c0 HWRMathISqrt__Fs - the root rounded to the nearest, over SQRTa/SQRTb; 0 for a negative x
 long	HWRMathILSqrt(long x);										// ROM 0x002e615c HWRMathILSqrt__Fl - brought under 0x8000 by quarters and the root doubled back; 0x7fff when it overflows a short
@@ -240,6 +242,37 @@ long	correct_narrow_ends(EXTR* extr, long* n, EXTR* src, long m, long dy, UByte 
 long	non_super(EXTR* extr, long k, short* x, short* y, short* upper);	// ROM 0x001bf578 non_super__FP4EXTRiPsN23
 long	non_sub(SPEC_TYPE* elem, short* x, short* y, long eps);		// ROM 0x001beb90 non_sub__FP9SPEC_TYPEPsT2i
 long	extract_num_extr(low_type* low, UByte kind, EXTR* extr, long* count);	// ROM 0x001bdff0 extract_num_extr__FP8low_typeUcP4EXTRPi - ==> 0, 1 for more than 50
+
+// The plane geometry (LowGeometry.cpp).
+long	QDistFromChord(long ax, long ay, long bx, long by, long px, long py);	// ROM 0x00305cec QDistFromChord__FiN51 - the square of P's distance from line AB
+long	is_cross(short xa, short ya, short xb, short yb, short xc, short yc, short xd, short yd);	// ROM 0x003060c8 is_cross__FsN71 - whether segments AB and CD cross
+long	FindCrossPoint(short xa, short ya, short xb, short yb, short xc, short yc, short xd, short yd, short* px, short* py);	// ROM 0x003061dc FindCrossPoint__FsN71PsT9 - where lines AB and CD meet; ==> whether on both segments
+long	cos_pointvect(long xa, long ya, long xb, long yb, long xc, long yc, long xd, long yd);	// ROM 0x00307ad8 cos_pointvect__FiN71 - the cosine between AB and CD in hundredths
+
+// The stroke classifier's tests (LowPunct.cpp).
+long	extract_all_extr(low_type* low, UByte kind, EXTR* extr, long* all, long* count, short* shift);	// ROM 0x001bc434 extract_all_extr__FP8low_typeUcP4EXTRPiT4Ps - ==> 0, 1 for more than 50
+long	com(low_type* low, SPEC_TYPE* elem, long i, long j, long k);	// ROM 0x001c559c com__FP8low_typeP9SPEC_TYPEiN23 - a comma: a straight one or a curved one
+long	curve_com_or_brkt(low_type* low, SPEC_TYPE* elem, long i, long j, long k, UShort kind);	// ROM 0x001bc6c8 curve_com_or_brkt__FP8low_typeP9SPEC_TYPEiN23Us - a curved comma (0x10) or bracket (0x20): its bulge's sign, x10 for a sure one; 0 none
+long	lead_punct(low_type* low);									// ROM 0x001bcc78 lead_punct__FP8low_type - leading punctuation: 0 none, 1 a comma-like first stroke, 2 two of them
+long	end_punct(low_type* low, SPEC_TYPE* end, long k);			// ROM 0x001c519c end_punct__FP8low_typeP9SPEC_TYPEi - a stroke as trailing punctuation: 0 no, 1 a mark of its own, 2 part of a colon or the like
+long	hor_stroke(SPEC_TYPE* end, short* x, short* y, long nStrokes);	// ROM 0x001bcdec hor_stroke__FP9SPEC_TYPEPsT2i - whether a stroke is (or has) a horizontal bar
+long	is_i_point(low_type* low, SPEC_TYPE* end, _RECT box, long k);	// ROM 0x001bd24c is_i_point__FP8low_typeP9SPEC_TYPE5_RECTi - a dot over an earlier top, which is marked attr 5
+long	is_umlyut(SPEC_TYPE* end, _RECT box, long i, long j, short* x, short* y, long k);	// ROM 0x001bd42c is_umlyut__FP9SPEC_TYPE5_RECTiT3PsT5T3 - an umlaut's dots over an earlier letter
+long	is_t_min(SPEC_TYPE* elem, short* x, short* y, _RECT box, long k, long i, long j, UByte flag, long* height);	// ROM 0x001c15ac is_t_min__FP9SPEC_TYPEPsT25_RECTiN25UcPi - a t's stem crossed by the bar from i to j
+long	extrs_open(low_type* low, SPEC_TYPE* elem, UByte kind, long n);	// ROM 0x001c347c extrs_open__FP8low_typeP9SPEC_TYPEUci - whether nothing of the stroke closes over the extremum
+
+// The line's gaps and glitches (LowLine.cpp).
+extern const int	TG1[12];			// the gaps' slopes, [start/middle/end][tops/bottoms][up/down]
+extern const int	TG2[12];			// the glitches' slopes
+extern const int	H1[12];				// the gaps' heights, in percent
+extern const int	H2[12];				// the glitches' heights
+extern const int	CS[1];				// the cosine (hundredths) a bend is not a gap past
+void	find_gaps_in_line(EXTR* extr, long n, long mode, long lim, UByte kind, long xStart, long xEnd, short* line, short* y, ULong fast, ULong wide);	// ROM 0x001bd7d0 find_gaps_in_line__FP4EXTRiN22UcN22PsT8UiUi
+void	find_glitches_in_line(EXTR* extr, long n, long lim, UByte kind, long xStart, long xEnd, short* line, short* x, short* y, long maxWidth, ULong fast, ULong wide);	// ROM 0x001be17c find_glitches_in_line__FP4EXTRiT2UcN22PsN27T2UiUi
+void	glitch_to_sub_max(low_type* low, EXTR* extr, long n, long lim, ULong sure);	// ROM 0x001be7e0 glitch_to_sub_max__FP8low_typeP4EXTRiT3Ui
+void	glitch_to_inside(EXTR* extr, long n, UByte kind, short* y, long k, long xStart, long xEnd);	// ROM 0x001bed40 glitch_to_inside__FP4EXTRiUcPsN32
+void	glitch_to_super_min(EXTR* extr, long n, short* line, long lim, short* x, short* y, ULong sure);	// ROM 0x001bf1c8 glitch_to_super_min__FP4EXTRiPsT2N23Ui
+void	all_susp_extr(EXTR* extr, long n, long unused, UByte kind, short* y, long mid, long unused2, long small, short* line, long big);	// ROM 0x001c0844 all_susp_extr__FP4EXTRiT2UcPsN32T5T2
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

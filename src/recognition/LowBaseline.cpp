@@ -344,8 +344,7 @@ insert_line_extr(low_type* low, SPEC_TYPE* elem, EXTR* extr, long* n)
 	e->y = y[p];
 	e->i = map[p];
 	e->susp = 0x6e;
-	e->attr = endAttr;
-	e->f8 = 0;
+	e->shift = endAttr;
 	e->elem = elem;
 	*n = *n + 1;
 	return 1;

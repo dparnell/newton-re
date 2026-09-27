@@ -378,6 +378,71 @@ TestListOps(void)
 }
 
 
+static void
+TestGeometry(void)
+{
+	// the square of a distance from a line, and from a point
+	EXPECT(QDistFromChord(0, 0, 10, 0, 0, 5) == 25);
+	EXPECT(QDistFromChord(0, 0, 10, 0, 7, -3) == 9);
+	EXPECT(QDistFromChord(4, 4, 4, 4, 7, 8) == 25);
+	// two segments crossing, missing, parallel
+	EXPECT(is_cross(0, 0, 10, 10, 0, 10, 10, 0) == 1);
+	EXPECT(is_cross(0, 0, 4, 4, 0, 10, 10, 0) == 0);
+	EXPECT(is_cross(0, 0, 10, 0, 0, 5, 10, 5) == 0);
+	short px = 0, py = 0;
+	EXPECT(FindCrossPoint(0, 0, 10, 10, 0, 10, 10, 0, &px, &py) == 1);
+	EXPECT(px == 5 && py == 6);			// (ROM QUIRK: a negative step is rounded the wrong way)
+	EXPECT(FindCrossPoint(0, 0, 2, 2, 0, 10, 10, 0, &px, &py) == 0);	// the lines meet, the segments do not
+	EXPECT(px == 5 && py == 6);
+	EXPECT(FindCrossPoint(0, 0, 10, 0, 0, 5, 10, 5, &px, &py) == 0);
+	EXPECT(px == 0x7fff && py == 0x7fff);
+	// cosines in hundredths
+	EXPECT(cos_pointvect(0, 0, 10, 0, 0, 0, 20, 0) == 100);
+	EXPECT(cos_pointvect(0, 0, 10, 0, 0, 0, 0, 10) == 0);
+	EXPECT(cos_pointvect(0, 0, 10, 0, 0, 0, -30, 0) == -100);
+	EXPECT(cos_pointvect(0, 0, 0, 0, 0, 0, 10, 0) == 0);
+}
+
+
+static void
+TestLineGlitches(void)
+{
+	// a line of tops level but for two that stand up out of it: they are
+	// a two-extremum glitch above the line (0x28); the first two and the
+	// last two, with nothing beyond them - taken as a step of twice lim -
+	// step down off it (0x32)
+	EXTR e[6];
+	memset(e, 0, sizeof(e));
+	short line[6];
+	short ys[] = { 60, 60, 20, 20, 60, 60 };
+	for (long i = 0; i < 6; i++)
+	{
+		e[i].x = 10 * i;
+		e[i].y = ys[i];
+		e[i].i = i;
+		line[i] = 100;
+	}
+	find_glitches_in_line(e, 6, 100, 1, -1, 0x7fff, line, nil, nil, 2, 0, 0);
+	EXPECT(e[0].susp == 0x32 && e[1].susp == 0x32);
+	EXPECT(e[2].susp == 0x28 && e[3].susp == 0x28);
+	EXPECT(e[4].susp == 0x32 && e[5].susp == 0x32);
+
+	// a single top standing up out of the line is a gap each way
+	EXTR g[5];
+	memset(g, 0, sizeof(g));
+	short gy[] = { 60, 60, 20, 60, 60 };
+	for (long i = 0; i < 5; i++)
+	{
+		g[i].x = 10 * i;
+		g[i].y = gy[i];
+		g[i].i = i;
+	}
+	find_gaps_in_line(g, 5, 0, 100, 1, -1, 0x7fff, line, nil, 0, 0);
+	EXPECT(g[1].susp == 0 && g[3].susp == 0);
+	EXPECT(g[2].susp == 0x14);
+}
+
+
 int
 main()
 {
@@ -390,6 +455,8 @@ main()
 	TestBaselinePieces();
 	TestSmoothLines();
 	TestListOps();
+	TestGeometry();
+	TestLineGlitches();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
