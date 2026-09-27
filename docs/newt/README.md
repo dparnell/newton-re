@@ -186,6 +186,50 @@ window ends the run.  `--headless seconds` runs without the window
 (`host.Newton` test: `demo/newton.ns`, which writes the display half a
 second in through a delayed action).
 
+## Forks (`utility/ForkWorld.cpp`, `newt/ForkGlobals.cpp`)
+
+A TForkWorld can *fork*: `Fork` (0x000cb320) makes another world of its
+own kind (`MakeFork`), initialises it from itself (`ForkInit`: the same
+mutex, port, handlers and timers) and starts it as a task of its own,
+which copies the object and runs `TheMain` - the event loop - under the
+family's mutex, so only one of them ever runs NewtonScript at a time.
+The world that forked stops running the main code (`fRunsMain` false):
+it finishes whatever it was in the middle of, and when it gets back to
+its event loop the loop ends and so does its task, bequeathing its
+objects to the fork (`SetBequeathId`).  The fork is from then on *the*
+newt world.
+
+That is how the machine waits without stopping.  `ModalDialog` blocks
+its script on a `TPseudoSyncState`, whose `Block` forks the world and
+then waits on a port of its own with the mutex let go; the fork goes on
+taking the pen and the keys, and the dialog's exit sends the unblock
+event.  (`ForkScript`, an unnamed native the ROM's own scripts use, does
+the same around a function call.)
+
+Each fork has globals of its own (`NewtGlobals`): an interpreter with an
+id nobody else has, its ref-stack positions counted from `id << 16`
+(`InitForkGlobalsForFrames`), and a QuickDraw port and a 1K temporary
+buffer (`InitForkGlobalsForQD`); `ForkSwitch` makes the running fork's
+the current ones each time it takes the mutex, and `ForkDestructor`
+gives them back - including the original world's, since a world that
+forked ends as a fork (its buffer is marked -0x400, "none", by
+`InvalidateQDTempBuf`, so there is nothing to free).  DEVIATION: the
+host's QuickDraw keeps the current port in a global of its own rather
+than in the globals, so `ForkSwitch` moves it in and out.  NOT YET: the
+task's stack limits (`GetTaskStackInfo`), which the main interpreter
+leaves out as well.
+
+Two host bugs stood in the way and are fixed: `MakeFork` answered the
+new world as a `long` (the ROM's type), which a host pointer does not
+fit, and `TULockingSemaphore::Release` waited on the kernel semaphore
+where the ROM passes `kNoWaitOnBlock` - harmless while one task had the
+mutex to itself, a hang the first time a release had to wake another.
+
+`test_Newt` forks the world half way through its scenario (a test event
+calls `FForkScript`), so the typing, the handwriting and the redraw after
+it are all the fork's.
+
+
 ## The NewtonScript boot (`frames/ScriptBoot.h`)
 
 `InitScriptGlobals` 0x001f3c40 makes the global frames what the ROM's own

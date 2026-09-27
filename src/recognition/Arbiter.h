@@ -127,4 +127,18 @@ extern long	gLastType;									// ROM 0x0c104c64 gLastType - what was recognised
 
 extern TArbiter*	gArbiter;							// ROM 0x0c101880 gArbiter
 
+// The arbiter's state put aside while something else recognises (a modal
+// dialog's fork: TRecognitionManager::SaveRecognitionState) and put back
+// afterwards; the arbiter meanwhile starts with lists of its own.
+struct ArbiterState			// 0x24 bytes in the ROM
+{
+	TArray*		fLists[kArbiterListCount];
+	Boolean		fArbitrateNow;
+	Boolean		fWaiting;
+	ULong		fCase;
+};
+long			InitArbiterState(TArbiter* arbiter);		// ROM 0x00206c28 InitArbiterState__FP8TArbiter - new, empty lists
+ArbiterState*	SaveArbiterState(TArbiter* arbiter, UChar* failed);	// ROM 0x00208428 SaveArbiterState__FP8TArbiterPUc
+long			RestoreArbiterState(TArbiter* arbiter, ArbiterState* state);	// ROM 0x00208500 RestoreArbiterState__FP8TArbiterUl
+
 #endif	/* __ARBITER_H */

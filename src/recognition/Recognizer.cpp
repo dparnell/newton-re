@@ -1034,3 +1034,74 @@ TRecognitionManager::NextIdle(void)
 		next = fStrokeWorld->fNextCompressTime;
 	return next;
 }
+
+
+#pragma mark - saving the state
+
+// what TRecognitionManager::SaveRecognitionState puts aside (0x14 bytes
+// in the ROM)
+struct RecognitionState
+{
+	ULong				fUnused3c;
+	ULong				fIgnoreClicksUntil;
+	Boolean				fAfterWriting;
+	Boolean				fClickSwallowed;
+	StrokeCentralState*	fStrokeWorld;
+	ControllerState*	fController;
+};
+
+
+// ROM 0x0019e21c SaveRecognitionState__19TRecognitionManagerFPUc
+// The manager's own fields, the stroke world's and the controller's put
+// aside and started again, so that what a modal dialog's fork recognises
+// has nothing to do with what was going on when it opened; the area cache
+// is purged either way.
+RecognitionState*
+TRecognitionManager::SaveRecognitionState(UChar* failed)
+{
+	*failed = false;
+	RecognitionState* state = new RecognitionState;
+	if (state == nil)
+		*failed = true;
+	else
+	{
+		state->fUnused3c = fUnused3c;
+		state->fIgnoreClicksUntil = fIgnoreClicksUntil;
+		state->fAfterWriting = fAfterWriting;
+		state->fClickSwallowed = fClickSwallowed;
+		UChar strokesFailed, controllerFailed;
+		state->fStrokeWorld = gStrokeWorld.SaveRecognitionState(&strokesFailed);
+		state->fController = ::SaveRecognitionState(gController, &controllerFailed);
+		if (strokesFailed || controllerFailed)
+			*failed = true;
+		fIgnoreClicksUntil = 0;
+		fAfterWriting = false;
+		fClickSwallowed = false;
+		fPrevClickView = nil;
+		fClickView = nil;
+	}
+	PurgeAreaCache();
+	return state;
+}
+
+
+// ROM 0x0019e2e0 RestoreRecognitionState__19TRecognitionManagerFUl
+// ... put back (the click views forgotten), and the area cache purged
+// again (the ROM has PurgeAreaCache 0x0003485c inline).
+void
+TRecognitionManager::RestoreRecognitionState(RecognitionState* state)
+{
+	if (state != nil)
+	{
+		fUnused3c = state->fUnused3c;
+		fIgnoreClicksUntil = state->fIgnoreClicksUntil;
+		fAfterWriting = state->fAfterWriting;
+		fClickSwallowed = state->fClickSwallowed;
+		gStrokeWorld.RestoreRecognitionState(state->fStrokeWorld);
+		::RestoreRecognitionState(gController, state->fController);
+		fPrevClickView = nil;
+		fClickView = nil;
+		delete state;
+	}
+	PurgeAreaCache();
+}

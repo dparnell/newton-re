@@ -98,7 +98,6 @@ TRootView::Constructor(RefArg templ)
 	fCaretHidden = 0;
 	fDefaultButton = nil;
 	fCaretSlip = nil;
-	fModalView = nil;
 	if (TView::gEmptyViewList == nil)
 		TView::gEmptyViewList = TViewList::Make();
 	fSelectionStack = AllocateArray(RSSYMarray, 0);
@@ -659,17 +658,16 @@ TRootView::Update(Rect* rect)
 
 // ROM 0x001b1e0c ForgetAboutView__9TRootViewFP5TView
 // A view is going: the pointers to it are dropped (the hiliter, the caret
-// view, the popup, the caret slip or default button, the modal view), its
-// idlers removed (when it has the hint), a filler that was it becomes its
-// parent.  NOT YET RECONSTRUCTED: its keyboard unregistered, the modal
-// dialog exited.
+// view, the popup, the caret slip or default button), its keyboard
+// unregistered and its idlers removed (when it has the hint), a filler
+// that was it becomes its parent; a modal view's dialog is exited, any
+// other view is no longer waiting to be shown after one; the recogniser
+// forgets it was clicked.
 void
 TRootView::ForgetAboutView(TView* view)
 {
 	if (fHiliter == view)
 		fHiliter = nil;
-	if (view->fFlags & vHasIdlerHint)
-		RemoveAllIdlers(view);
 	if (fCaretView == view)
 		CaretViewGone();
 	if (fPopup == view)
@@ -678,11 +676,20 @@ TRootView::ForgetAboutView(TView* view)
 		fCaretSlip = nil;
 	else if (fDefaultButton == view)
 		fDefaultButton = nil;
+	UnregisterKeyboard(RefVar(view->fContext));
+	if (view->fFlags & vHasIdlerHint)
+		RemoveAllIdlers(view);
 	for (long i = 0; i < kUpdateRegionCount; i++)
 		if (fUpdateRegions[i].fFiller == view)
 			fUpdateRegions[i].fFiller = view->fParent;
-	if (fModalView == view)
-		fModalView = nil;
+	if (view->fViewJustify & vjIsModal)
+		RealExitModalDialog(view);
+	else if (gModalCount != 0)
+		RemoveModalSafeView(view);
+	if (gRecognition.fPrevClickView == view)
+		gRecognition.fPrevClickView = nil;
+	if (gRecognition.fClickView == view)
+		gRecognition.fClickView = nil;
 }
 
 
@@ -1781,16 +1788,17 @@ TRootView::GetClipboardIcons(void)
 }
 
 
-// ROM 0x0030de2c SetModalView__FP5TView
-// The view marked modal (its viewJustify's private bit); NOT YET: the
-// recognition disabled for it.
-void
-TRootView::SetModalView(TView* view)
+// ROM 0x001b584c GetFrontmostModalView__9TRootViewFv
+// The frontmost of the root's visible children that has a modalState -
+// the dialog that is modal now.
+TView*
+TRootView::GetFrontmostModalView(void)
 {
-	view->fViewJustify |= vjIsModal;
-	fModalView = view;
-	Rect bounds;
-	view->OuterBounds(&bounds);
+	TBackwardViewListLoop loop(fChildren);
+	for (TView* view = loop.Next(); view != nil; view = loop.Next())
+		if ((view->fFlags & vVisible) != 0 && NOTNIL(view->GetProto(RSSYMmodalstate)))
+			return view;
+	return nil;
 }
 
 
@@ -2074,10 +2082,8 @@ ModalSafeShow(TView* view)
 
 
 // ROM 0x001b1b34 ModalSafeShowRelease__Fv
-// The modal dialog gone: each waiting view shown (with an aeShow that
-// does not ask again) and the caret given back.  (Its caller, the ROM's
-// RealExitModalDialog 0x0030e14c, is NOT YET: no modal dialog is ever
-// up, so nothing waits.)
+// The modal dialog gone (RealExitModalDialog): each waiting view shown
+// (with an aeShow that does not ask again) and the caret given back.
 void
 ModalSafeShowRelease(void)
 {
@@ -2092,4 +2098,22 @@ ModalSafeShowRelease(void)
 	delete gDelayedShowList;
 	gDelayedShowList = nil;
 	gRootView->ActivatePendingKeyView();
+}
+
+
+// ROM 0x001b1c1c RemoveModalSafeView__FP5TView
+void
+RemoveModalSafeView(TView* view)
+{
+	if (gDelayedShowList == nil)
+		return;
+	CArrayIterator iter(gDelayedShowList);
+	for (ArrayIndex index = iter.FirstIndex(); iter.More(); index = iter.NextIndex())
+	{
+		if (*(TView**) gDelayedShowList->SafeElementPtrAt(index) == view)
+		{
+			gDelayedShowList->RemoveElementsAt(index, 1);
+			return;
+		}
+	}
 }

@@ -114,6 +114,8 @@ void		OpenPort(GrafPort* port);				// regions made, the port initialised and mad
 void		InitPort(GrafPort* port);				// re-initialised (its regions kept) and made current
 void		InitPortRgns(GrafPort* port);			// visRgn the screen, clipRgn wide open
 void		ClosePort(GrafPort* port);
+void*		AllocNewTempBuf(void);						// ROM 0x0033f684 AllocNewTempBuf__Fv - a fork's 1K drawing buffer
+void		DeleteNewTempBuf(char* buffer);				// ROM 0x0033f68c DeleteNewTempBuf__FPc - (not the -0x400 that marks none)
 void		SetPortBits(const PixelMap* bits);
 void		SetOrigin(long h, long v);
 void		SetClip(RgnHandle rgn);

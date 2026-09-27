@@ -1,0 +1,82 @@
+// A modal dialog: ModalConfirm asks a question and waits for the answer.
+// The script that asks is stopped where it is - the newt world forks, a
+// new task takes the event loop over and draws the dialog - and a
+// delayed call, which the fork runs, taps OK.  The asking script then
+// carries on with the answer.  The printed lines should come in the order
+// asking, tapping, answered TRUE, and the machine should go on working
+// afterwards (the last line comes from the fork, now the only task
+// running the loop).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/modal.ns --headless 60
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/modal.pgm build/modal.png
+//
+// Everything before the question is the Setup walk of setup.ns.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// The view of a button whose text is the given string, looked for all the
+// way down the root's frontmost child (the dialog; its buttons are in a
+// bar of their own).
+findIn := func(view, label)
+  begin
+    local found := nil;
+    foreach kid in view:ChildViewFrames() do
+      if not found then
+        if IsString(kid.text) and StrEqual(kid.text, label) then found := kid
+        else found := call findIn with (kid, label);
+    found;
+  end;
+findButton := func(label)
+  begin
+    local kids := GetRoot():ChildViewFrames();
+    call findIn with (kids[Length(kids) - 1], label);
+  end;
+
+tapOK := func()
+  begin
+    local ok := call findButton with ("OK");
+    if ok then
+      begin
+        local box := ok:GlobalBox();
+        ScreenSnapshot("build/modal.pgm");
+        Print("modal: tapping OK");
+        call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+      end
+    else
+      Print("modal: no OK button");
+  end;
+
+AddDelayedCall(func() begin
+    AddDelayedCall(tapOK, nil, 3000);
+    Print("modal: asking");
+    local answer := ModalConfirm("Is the dialog modal?", 'okCancel);
+    Print("modal: answered " & (if answer then "TRUE" else "NIL"));
+    AddDelayedCall(func() Print("modal: still running"), nil, 2000);
+  end, nil, 30000);
+Print("modal: the script is loaded");

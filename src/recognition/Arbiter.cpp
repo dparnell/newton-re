@@ -765,3 +765,75 @@ TArbiter::CleanUp(void)
 	for (long i = 0; i < kArbiterListCount; i++)
 		fLists[i]->Compact();
 }
+
+
+#pragma mark - saving the state
+
+// ROM 0x00206c28 InitArbiterState__FP8TArbiter
+// (IArbiter's lists, made again)
+long
+InitArbiterState(TArbiter* arbiter)
+{
+	arbiter->fLists[kArbiterPending] = TDArray::Make(sizeof(BestMatch), 0);
+	arbiter->fLists[kArbiterActive] = TDArray::Make(sizeof(BestMatch), 0);
+	arbiter->fLists[kArbiterGathered] = TArray::Make(sizeof(BestMatch), 0);
+	arbiter->fLists[kArbiterWinners] = TArray::Make(sizeof(BestMatch), 0);
+	arbiter->fLists[kArbiterUnitsA] = TDArray::Make(sizeof(ULong), 0);
+	arbiter->fLists[kArbiterUnitsB] = TDArray::Make(sizeof(ULong), 0);
+	arbiter->fLists[kArbiterUnitsC] = TDArray::Make(sizeof(ULong), 0);
+	arbiter->fArbitrateNow = false;
+	arbiter->fWaiting = false;
+	arbiter->fCase = 0;
+	return 0;
+}
+
+
+// ROM 0x00208428 SaveArbiterState__FP8TArbiterPUc
+// The lists and flags put aside and new ones made; failed says whether
+// there was no room for either.
+ArbiterState*
+SaveArbiterState(TArbiter* arbiter, UChar* failed)
+{
+	*failed = false;
+	ArbiterState* state = new ArbiterState;
+	if (state != nil)
+	{
+		for (long i = 0; i < kArbiterListCount; i++)
+			state->fLists[i] = arbiter->fLists[i];
+		state->fArbitrateNow = arbiter->fArbitrateNow;
+		state->fWaiting = arbiter->fWaiting;
+		state->fCase = arbiter->fCase;
+		InitArbiterState(arbiter);
+		Boolean all = true;
+		for (long i = 0; i < kArbiterListCount && all; i++)
+			all = arbiter->fLists[i] != nil;
+		if (all)
+		{
+			*failed = false;
+			return state;
+		}
+	}
+	*failed = true;
+	return state;
+}
+
+
+// ROM 0x00208500 RestoreArbiterState__FP8TArbiterUl
+// The lists made meanwhile disposed of and the saved ones put back.
+long
+RestoreArbiterState(TArbiter* arbiter, ArbiterState* state)
+{
+	if (state != nil)
+	{
+		for (long i = 0; i < kArbiterListCount; i++)
+			if (arbiter->fLists[i] != nil)
+				arbiter->fLists[i]->Dispose();
+		for (long i = 0; i < kArbiterListCount; i++)
+			arbiter->fLists[i] = state->fLists[i];
+		arbiter->fArbitrateNow = state->fArbitrateNow;
+		arbiter->fWaiting = state->fWaiting;
+		arbiter->fCase = state->fCase;
+		delete state;
+	}
+	return 0;
+}

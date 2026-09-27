@@ -77,7 +77,7 @@ public:
 	virtual void		PostMain();
 
 	virtual void		ForkSwitch(Boolean acquired);		// told each time the mutex changes hands
-	virtual long		MakeFork();							// a subclass makes and starts a fork of itself
+	virtual TForkWorld*	MakeFork();							// a subclass makes a fork of itself (DEVIATION: the ROM declares it long and answers the object in it, which a host pointer does not fit)
 
 	long				Fork(TForkWorld* fork = nil);
 	void				Yield();

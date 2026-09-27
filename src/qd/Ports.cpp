@@ -780,3 +780,22 @@ Move(long dh, long dv)
 	port->pnLoc.h = (short) (port->pnLoc.h + dh);
 	port->pnLoc.v = (short) (port->pnLoc.v + dv);
 }
+
+
+// ROM 0x0033f684 AllocNewTempBuf__Fv
+void*
+AllocNewTempBuf(void)
+{
+	return NewPtr(0x400);
+}
+
+
+// ROM 0x0033f68c DeleteNewTempBuf__FPc
+// (InvalidateQDTempBuf 0x0033f658 marks a task's buffer as none with
+// -0x400, which is not given back)
+void
+DeleteNewTempBuf(char* buffer)
+{
+	if (buffer != (char*) -0x400)
+		DisposPtr(buffer);
+}

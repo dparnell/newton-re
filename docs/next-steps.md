@@ -693,6 +693,18 @@ The named pieces whose machinery *is* there:
 
 ## Also still open
 
+- The modal dialogs are done (`docs/views/README.md`, "Modal dialogs",
+  and `docs/newt/README.md`, "Forks"): `FilterDialog`, `ModalDialog`
+  (the newt world forks - `TForkWorld::Fork` now really starts a task -
+  and the asking script waits on a `TPseudoSyncState`),
+  `ExitModalDialog`, and the unnamed `ForkScript`/`YieldToFork`.
+  `src/host/demo/modal.ns` asks `ModalConfirm` and taps OK.  Finding it
+  needed a fix below everything: `TULockingSemaphore::Release` waited
+  where the ROM does not (`kNoWaitOnBlock`), so the first release that
+  had to wake another task hung for good.  Still NOT YET on this path:
+  `DoPopup`'s modal `canonicalPopup`, and the task stack limits a fork's
+  globals would record (`GetTaskStackInfo`).
+
 - `src/host/demo/open-apps.ns` opens each built-in application a user
   reaches in turn and reports what fails (with `NEWTON_TRACE_MISSING`
   naming any native the ROM's scripts ask for that is not there).  One
@@ -712,9 +724,7 @@ The named pieces whose machinery *is* there:
   (`TEditView::RealDoCommand`'s re-recognition branch, and the
   paragraph's commands 0x19 and 0x1a - the ROM's deferred recognition,
   `MakeRerecognizeArea`/`RerecognizeWord`/`BuildRecConfigForDeferred`,
-  a piece of the recognition system of its own); the modal dialogs
-  (`RealExitModalDialog`, which would call `ModalSafeShowRelease` - the
-  wait in `aeShow` is done); ink dropped on a paragraph (`InkConvert`,
+  a piece of the recognition system of its own); ink dropped on a paragraph (`InkConvert`,
   which needs the CIC library's transcoder `ConverterRun` under
   `ConvertData` 0x00280980); and `GetRangeProperties`' `offset` slot
   (two line heights the host's line cache does not keep).

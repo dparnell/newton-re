@@ -141,7 +141,7 @@ public:
 	void		ConnectPassthruKeyboard(Boolean connected);				// ROM 0x001b491c ConnectPassthruKeyboard__9TRootViewFUc
 	void		HandleKeyIn(ULong keyCode, Boolean isDown, TView* keyboard);	// ROM 0x001b492c HandleKeyIn__9TRootViewFUlUcP5TView
 	void		CheckForCaretRemoval(void);								// ROM 0x001b45f8 CheckForCaretRemoval__9TRootViewFv
-	void		SetModalView(TView* view);								// ROM 0x0030de2c SetModalView__FP5TView
+	TView*		GetFrontmostModalView(void);							// ROM 0x001b584c GetFrontmostModalView__9TRootViewFv - the frontmost visible child with a modalState
 	TTime		IdleViews(void);										// ROM 0x001b271c IdleViews__9TRootViewFv - the due idlers run; ==> the next idle time (zero: none)
 	ULong		AddIdler(TView* view, ULong delay, long arg);			// ROM 0x001b2ab4 AddIdler__9TRootViewFP5TViewUll - delay 0 removes; ==> the time left
 	ULong		RemoveIdler(TView* view, long arg);						// ROM 0x001b2c4c RemoveIdler__9TRootViewFP5TViewl
@@ -178,7 +178,6 @@ public:
 	long			fCaretHidden;		// +0x94  HideCarets outstanding
 	RefStruct		fPendingKeyView;	// +0x98  a key view to activate later (HoldPendingKeyView)
 	RefStruct		fPendingKeyInfo;	// +0x9c  ... and its caret info
-	TView*			fModalView;			// host: SetModalView's view (the ROM keeps it in the modal dialog code)
 };
 
 // A message sent to the root view's context, which is how the system's
@@ -192,5 +191,14 @@ extern Boolean	gNewtIsAliveAndWell;		// 0x0c102604  the boot is over: the root v
 // A view shown while a modal dialog is up waits until the dialog goes.
 void	ModalSafeShow(TView* view);								// ROM 0x001b1a8c ModalSafeShow__FP5TView
 void	ModalSafeShowRelease(void);								// ROM 0x001b1b34 ModalSafeShowRelease__Fv
+void	RemoveModalSafeView(TView* view);						// ROM 0x001b1c1c RemoveModalSafeView__FP5TView - a view that goes before the dialog does waits no longer
+
+// The modal dialogs (ModalDialogs.cpp; their natives, which need the newt
+// world, are newt/ModalDialogNatives.cpp).  A modal view is marked with
+// vjIsModal and recognition is confined to its bounds; a dialog's
+// context's modalState is TRUE for a FilterDialog and the address of the
+// TPseudoSyncState its opener waits on for a ModalDialog.
+void	SetModalView(TView* view);								// ROM 0x0030de2c SetModalView__FP5TView
+void	RealExitModalDialog(TView* view);						// ROM 0x0030e14c RealExitModalDialog__FP5TView
 
 #endif	/* __ROOTVIEW_H */

@@ -48,6 +48,8 @@ public:
 	void				Init(void);								// ROM 0x00144ad8 Init__13StrokeCentralFv - the fields, the stroke queue, the tablet
 	void				InitFields(void);						// ROM 0x00144d40 InitFields__13StrokeCentralFv
 	void				DoneFields(void);						// ROM 0x00145644 DoneFields__13StrokeCentralFv
+	struct StrokeCentralState*	SaveRecognitionState(UChar* failed);	// ROM 0x001457fc SaveRecognitionState__13StrokeCentralFPUc - the fields put aside and started again
+	void				RestoreRecognitionState(struct StrokeCentralState* state);	// ROM 0x00145b6c RestoreRecognitionState__13StrokeCentralFUl
 
 	void				IdleStrokes(void);						// ROM 0x001448b8 IdleStrokes__13StrokeCentralFv
 	void				StartNewStroke(TStroke* stroke);		// ROM 0x00145e10 StartNewStroke__13StrokeCentralFP7TStroke - the stroke made current, the last stroke's times noted in it
@@ -79,6 +81,26 @@ public:
 	Boolean				fFlag38;			// +0x38
 	ULong				fUnused3c;			// +0x3c
 	RefStruct*			fCompressBundle;	// +0x40  (NOT YET)
+};
+
+// what SaveRecognitionState puts aside: every field but the blocking
+// count, the idles while blocked and the last flush time (0x38 bytes in
+// the ROM)
+struct StrokeCentralState
+{
+	Boolean			fHasCurrent;
+	TStroke*		fCurrentStroke;
+	TClickUnit*		fCurrentUnit;
+	ULong			fLastDownTime;
+	ULong			fLastUpTime;
+	RefStruct*		fDeferredStrokes;
+	ULong			fUnused24;
+	TUnitList*		fExpiredStrokes;
+	TTime			fNextCompressTime;
+	Handle			fCompressGroup;
+	Boolean			fFlag38;
+	ULong			fUnused3c;
+	RefStruct*		fCompressBundle;
 };
 
 extern StrokeCentral	gStrokeWorld;						// ROM 0x0c1018cc gStrokeWorld

@@ -162,19 +162,34 @@ struct NewtGlobals
 extern NewtGlobals*	gNewtGlobals;						// ROM 0x0c1054b0 gNewtGlobals
 NewtGlobals*	GetNewtGlobals(void);					// ROM 0x0030cb58 GetNewtGlobals__Fv
 
+// a fork's own globals (ForkGlobals.cpp)
+long	InitForkGlobalsForFrames(NewtGlobals* parent);	// ROM 0x002f6bb4 InitForkGlobalsForFrames__FP11NewtGlobals - an interpreter with an id of its own
+void	DestroyForkGlobalsForFrames(NewtGlobals* globals);	// ROM 0x002f6cc0 DestroyForkGlobalsForFrames__FP11NewtGlobals
+long	InitForkGlobalsForQD(NewtGlobals* parent);		// ROM 0x002e46ec InitForkGlobalsForQD__FP11NewtGlobals - a port and a temporary buffer
+void	DestroyForkGlobalsForQD(NewtGlobals* globals);	// ROM 0x002e474c DestroyForkGlobalsForQD__FP11NewtGlobals
+void	InvalidateQDTempBuf(void);						// ROM 0x0033f658 InvalidateQDTempBuf__Fv - the task has no temporary buffer (-0x400)
+
+// the modal dialogs and script forks (ModalDialogNatives.cpp)
+Ref		FModalDialog(RefArg rcvr);						// ROM 0x0030de88 FModalDialog
+Ref		FFilterDialog(RefArg rcvr);						// ROM 0x0030e054 FFilterDialog
+Ref		FExitModalDialog(RefArg rcvr);					// ROM 0x0030e284 FExitModalDialog
+Ref		FForkScript(RefArg rcvr, RefArg fn, RefArg args);	// ROM 0x0030e2a0 FForkScript
+Ref		FYieldToFork(RefArg rcvr);						// ROM 0x0030e390 FYieldToFork
+void	RegisterModalDialogNatives(void);
+
 class TNewtWorld : public TAppWorld			// 0x94 bytes
 {
 public:
 	virtual ULong		GetSizeOf();							// ROM 0x0030ca00 GetSizeOf__10TNewtWorldFv
 	virtual long		ForkInit(TForkWorld* parent);			// ROM 0x0030cadc ForkInit__10TNewtWorldFP10TForkWorld - the message, handler and port shared with the parent
-	virtual long		ForkConstructor(TForkWorld* parent);	// ROM 0x0030cb9c ForkConstructor__10TNewtWorldFP10TForkWorld - the fork's own frames and QD globals (NOT YET)
+	virtual long		ForkConstructor(TForkWorld* parent);	// ROM 0x0030cb9c ForkConstructor__10TNewtWorldFP10TForkWorld - the fork's own frames and QD globals
 	virtual void		ForkDestructor();						// ROM 0x0030cbe4 ForkDestructor__10TNewtWorldFv
 	virtual void		ForkSwitch(Boolean in);					// ROM 0x0030cc20 ForkSwitch__10TNewtWorldFUc - the globals of the fork switched in or saved
 	virtual long		MainConstructor();						// ROM 0x0030d20c MainConstructor__10TNewtWorldFv
 	virtual void		TheMain();								// ROM 0x0030cb68 TheMain__10TNewtWorldFv - the event loop with the stack locked (NOT YET: LockStack)
 	virtual long		AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x0030cc3c AEDispatch__10TNewtWorldFUlP10TUMsgTokenPUlP7TAEvent
 	virtual long		PreMain();								// ROM 0x0030cd28 PreMain__10TNewtWorldFv - ==> 0, or the boot test script's error
-	virtual long		MakeFork();								// ROM 0x0030caa4 MakeFork__10TNewtWorldFv - a new TNewtWorld (answered as the ROM does: the object itself)
+	virtual TForkWorld*	MakeFork();								// ROM 0x0030caa4 MakeFork__10TNewtWorldFv - a new TNewtWorld
 
 	TUSharedMemMsg*		fMessage;		// +0x70  the message the alarms are sent with
 	ULong				fUnused74;		// +0x74

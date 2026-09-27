@@ -73,6 +73,28 @@ public:
 	}
 };
 static TEvalHandler* gEvalHandler = nil;
+
+// 'host/'fork: ForkScript - which the ROM's own scripts reach through a
+// function object with no name, so no test script can - run on a
+// function adding one to its argument; the answer, 42 when all is well,
+// is the reply, sent from the task that forked
+class TForkHandler : public TAEventHandler
+{
+public:
+	virtual void	AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
+	{
+		TEvalEvent* eval = (TEvalEvent*) event;
+		RefVar fn(InterpretBlock(RefVar(ParseString(RefVar(MakeString("func(a) a + 1")))), RefVar(gVarFrame)));
+		RefVar args(MakeArray(1));
+		SetArraySlot(args, 0, RefVar(MAKEINT(41)));
+		RefVar result(FForkScript(RefVar(NILREF), fn, args));
+		eval->fResult = ISINT(result) ? RINT(result) : 0;
+		SetReply(*size, event);
+		if (token != nil && token->GetReplyId() != 0)
+			ReplyImmed();
+	}
+};
+static TForkHandler* gForkHandler = nil;
 static const char* kSetupSource =
 	"begin "
 	"GetRoot().testApp := {"
@@ -229,6 +251,7 @@ static Boolean gWorldDataOk = false;
 static Boolean gSystemInfoOk = false;
 static long gMainDone = 0;
 static Boolean gAliveAfterBoot = false;
+static Boolean gForkOk = false;
 
 
 // the host boot: the display and the toolbox, the test's quit handler; the
@@ -248,6 +271,8 @@ TestBoot(void)
 	gQuitHandler->Init('quit', 'host');
 	gEvalHandler = new TEvalHandler;
 	gEvalHandler->Init('eval', 'host');
+	gForkHandler = new TForkHandler;
+	gForkHandler->Init('fork', 'host');
 }
 
 
@@ -342,6 +367,16 @@ Scenario(void)
 		newtPort.SendRPC(&replySize, &off, sizeof(off), &off, sizeof(off));
 		gPowerOffOk = off.fError == 0 && off.fResult == 1
 					  && CompCompare(&gLastWakeupTime.time, &wokeBefore.time) > 0;
+		// ForkScript: the function's answer comes back, and from here on
+		// the world is the fork - the task that ran the script ends once
+		// it is back in its event loop - so everything below (the typing,
+		// the writing, the redraw and the quit) is the fork's doing
+		TEvalEvent fork;
+		fork.fAEventClass = 'host';
+		fork.fAEventID = 'fork';
+		fork.fResult = 0;
+		long err = newtPort.SendRPC(&replySize, &fork, sizeof(fork), &fork, sizeof(fork));
+		gForkOk = err == noErr && fork.fResult == 42;
 	}
 	// a key typed into the paragraph: the keyboard tool's 'keyb event, the
 	// repeat rates replied
@@ -447,6 +482,7 @@ int main()
 	EXPECT(gPowerOffOk);
 	EXPECT(gWorldDataOk);
 	EXPECT(gSystemInfoOk);		// the screen and the tablet, through the name server
+	EXPECT(gForkOk);			// ForkScript's function ran and answered
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gWritten == 1);						// "to", written with the pen and read
 	EXPECT(gRedraws == 1);

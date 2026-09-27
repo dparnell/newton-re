@@ -356,3 +356,62 @@ StrokeCentral::ExpireAll(void)
 	if (fExpiredStrokes->Count() == 0)
 		fNextCompressTime = TTime(0);
 }
+
+
+#pragma mark - saving the state
+
+// ROM 0x001457fc SaveRecognitionState__13StrokeCentralFPUc
+StrokeCentralState*
+StrokeCentral::SaveRecognitionState(UChar* failed)
+{
+	*failed = false;
+	StrokeCentralState* state = new StrokeCentralState;
+	if (state == nil)
+	{
+		*failed = true;
+		return state;
+	}
+	state->fHasCurrent = fHasCurrent;
+	state->fCurrentStroke = fCurrentStroke;
+	state->fCurrentUnit = fCurrentUnit;
+	state->fLastDownTime = fLastDownTime;
+	state->fLastUpTime = fLastUpTime;
+	state->fDeferredStrokes = fDeferredStrokes;
+	state->fUnused24 = fUnused24;
+	state->fExpiredStrokes = fExpiredStrokes;
+	state->fNextCompressTime = fNextCompressTime;
+	state->fCompressGroup = fCompressGroup;
+	state->fFlag38 = fFlag38;
+	state->fUnused3c = fUnused3c;
+	state->fCompressBundle = fCompressBundle;
+	InitFields();
+	return state;
+}
+
+
+// ROM 0x00145b6c RestoreRecognitionState__13StrokeCentralFUl
+// The click unit being made meanwhile let go (its 0x4000000 flag taken
+// off), the fields done with and the saved ones put back.
+void
+StrokeCentral::RestoreRecognitionState(StrokeCentralState* state)
+{
+	if (state == nil)
+		return;
+	if (fCurrentUnit != nil)
+		fCurrentUnit->UnsetFlags(0x4000000);
+	DoneFields();
+	fHasCurrent = state->fHasCurrent;
+	fCurrentStroke = state->fCurrentStroke;
+	fCurrentUnit = state->fCurrentUnit;
+	fLastDownTime = state->fLastDownTime;
+	fLastUpTime = state->fLastUpTime;
+	fDeferredStrokes = state->fDeferredStrokes;
+	fUnused24 = state->fUnused24;
+	fExpiredStrokes = state->fExpiredStrokes;
+	fNextCompressTime = state->fNextCompressTime;
+	fCompressGroup = state->fCompressGroup;
+	fFlag38 = state->fFlag38;
+	fUnused3c = state->fUnused3c;
+	fCompressBundle = state->fCompressBundle;
+	delete state;
+}

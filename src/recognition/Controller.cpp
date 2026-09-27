@@ -1315,3 +1315,67 @@ AreStrokesAfterUnit(TUnit* unit)
 	}
 	return false;
 }
+
+
+#pragma mark - saving the state
+
+// ROM 0x0020b894 SaveRecognitionState__FP11TControllerPUc
+// The flags, lists and times put aside with the arbiter's, and the
+// controller started again; failed (kept in the state as well) says
+// whether any of it found no room.
+ControllerState*
+SaveRecognitionState(TController* controller, UChar* failed)
+{
+	*failed = false;
+	ControllerState* state = new ControllerState;
+	if (state == nil)
+	{
+		*failed = true;
+		return state;
+	}
+	state->fFlags = controller->fFlags;
+	state->fPieces = controller->fPieces;
+	state->fUnits = controller->fUnits;
+	state->fGroupQ = controller->fGroupQ;
+	state->fClassifyTime = controller->fClassifyTime;
+	state->fGroupTime = controller->fGroupTime;
+	state->fArbitrateTime = controller->fArbitrateTime;
+	state->fCleanUpTime = controller->fCleanUpTime;
+	state->fArbiter = SaveArbiterState(controller->fArbiter, failed);
+	*failed |= InitControllerState(controller);
+	state->fFailed = *failed;
+	return state;
+}
+
+
+// ROM 0x0020c294 RestoreRecognitionState__FP11TControllerUl
+// What was recognised meanwhile thrown away - a state saved whole has the
+// controller signal a memory error and idle first, which is what empties
+// the passes - its lists disposed of and the saved ones put back.
+void
+RestoreRecognitionState(TController* controller, ControllerState* state)
+{
+	if (state == nil)
+		return;
+	if (!state->fFailed)
+	{
+		controller->SignalMemoryError();
+		controller->Idle();
+	}
+	if (controller->fPieces != nil)
+		controller->fPieces->Dispose();
+	if (controller->fUnits != nil)
+		controller->fUnits->Dispose();
+	if (controller->fGroupQ != nil)
+		controller->fGroupQ->Dispose();
+	controller->fFlags = state->fFlags;
+	controller->fPieces = state->fPieces;
+	controller->fUnits = state->fUnits;
+	controller->fGroupQ = state->fGroupQ;
+	controller->fClassifyTime = state->fClassifyTime;
+	controller->fGroupTime = state->fGroupTime;
+	controller->fArbitrateTime = state->fArbitrateTime;
+	controller->fCleanUpTime = state->fCleanUpTime;
+	RestoreArbiterState(controller->fArbiter, state->fArbiter);
+	delete state;
+}

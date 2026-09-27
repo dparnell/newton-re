@@ -18,6 +18,7 @@ add_library(views STATIC
     ViewDraw.cpp
     BuildView.cpp
     RootView.cpp
+    ModalDialogs.cpp
     ViewNatives.cpp
     FontNatives.cpp
     TextView.cpp

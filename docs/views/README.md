@@ -1146,8 +1146,8 @@ receiver view): a picker is built from the template, parented to the root,
 placed and shown; picking an item runs the `callbackContext`'s
 `pickActionScript` and closes the autoclose popup.  DEVIATION: the ROM
 clones `canonicalPopup` (a scrolling-popup wrapper); the reconstruction
-uses a plain `protoPicker` (the scrolling popup and the modal
-`FFilterDialog` path are NOT YET).  (Tested by `test_Views`: `DoPopup`
+uses a plain `protoPicker` (the scrolling popup, which the ROM opens
+with `FilterDialog`, is NOT YET).  (Tested by `test_Views`: `DoPopup`
 opens a three-item menu and a pick runs the callback.)
 
 
@@ -2022,6 +2022,47 @@ once the walk existed.
 but not for a paragraph, which is its own hilite view: with the wrong
 one, selecting a second paragraph dropped the first's selection, and a
 stroke through several paragraphs left only the last one selected.
+
+## Modal dialogs (`views/ModalDialogs.cpp`, `newt/ModalDialogNatives.cpp`)
+
+A view opened with `:FilterDialog()` or `:ModalDialog()` is *modal*: it
+is marked with the private viewJustify bit `vjIsModal` (0x40000000, above
+the thirty bits a script can set) and `SetModalView` (0x0030de2c)
+confines recognition to its outer bounds
+(`TRecognitionManager::EnableModalRecognition`), so a tap anywhere else
+does nothing.  `gModalCount` says how many are up; while any is, a view
+asked to show waits (`ModalSafeShow`) and a command not marked
+`kNoModalCheck` is refused.  The dialog's context's `modalState` is what
+tells the two kinds apart:
+
+- `FilterDialog` (0x0030e054) sets it to TRUE and returns at once - the
+  caller goes on, and the dialog's own scripts decide what happens
+  (`AsyncConfirm` is made of it);
+- `ModalDialog` (0x0030de88) sets it to the address of a
+  `TPseudoSyncState` (`utility/PseudoSyncState.h`) and *waits* on it: the
+  newt world forks, a new task takes over the event loop and runs the
+  dialog, and the asking script carries on only once the dialog is
+  exited (`ModalConfirm` is made of it).  A view inside a dialog makes
+  the root's child that holds it the dialog.  What was being recognised
+  when it opened is put aside for the fork
+  (`TRecognitionManager::SaveRecognitionState`, with the stroke world's,
+  the controller's and the arbiter's) and put back afterwards.
+
+`RealExitModalDialog` (0x0030e14c) undoes it - from `:ExitModalDialog()`,
+or from `TRootView::ForgetAboutView` when a modal view goes: the mark and
+the recognition bounds come off, the count goes down, the waiting views
+are shown when none is left (or recognition moves to the frontmost
+dialog left, `GetFrontmostModalView`), a `ModalDialog`'s opener is
+unblocked, and the dialog is sent `UnstuffModalCommandKeys`.  ROM
+behaviour kept: a dialog exited while still open is itself the frontmost
+dialog with a `modalState` (nothing takes a FilterDialog's away), so
+recognition stays confined to it until something moves it.
+`ForgetAboutView` is now the ROM's whole list - it also unregisters the
+view's keyboard and makes the recogniser forget it was clicked.
+
+(Tested by `test_Views`: `TestModalDialogViews`; the fork by `test_Newt`
+and `src/host/demo/modal.ns`.)
+
 
 ## The clipboard (`views/ClipboardView.h`)
 

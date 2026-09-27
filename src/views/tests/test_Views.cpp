@@ -6177,6 +6177,56 @@ TestModalSafeShow()
 }
 
 
+// The view side of a modal dialog: SetModalView marks the view and
+// confines recognition to its bounds; RealExitModalDialog - here for a
+// FilterDialog, whose modalState is TRUE - takes the mark and the bounds
+// off, counts the dialog down, tells the dialog to unstuff its command
+// keys and lets the next dialog (the frontmost left) have recognition;
+// a modal view that simply goes (RemoveView) is exited the same way.
+static void
+TestModalDialogViews()
+{
+	TView* back = ViewOf("ctxMB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		"viewBounds: {left: 10, top: 10, right: 100, bottom: 60}, modalState: true, "
+		"UnstuffModalCommandKeys: func() unstuffedMB := true})");
+	TView* front = ViewOf("ctxMD := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		"viewBounds: {left: 20, top: 30, right: 80, bottom: 90}, modalState: true, "
+		"UnstuffModalCommandKeys: func() unstuffedMD := true})");
+	EXPECT(back != nil && front != nil);
+	if (back == nil || front == nil)
+		return;
+	Eval("unstuffedMB := nil; unstuffedMD := nil");
+	gModalCount = 1;
+	SetModalView(back);
+	gModalCount = 2;
+	gRecognition.DisableModalRecognition();
+	SetModalView(front);
+	EXPECT((back->fViewJustify & vjIsModal) != 0 && (front->fViewJustify & vjIsModal) != 0);
+	EXPECT(gRecognition.fModalBounds != nil && gRecognition.fModalBounds->top == 30 && gRecognition.fModalBounds->left == 20);
+	EXPECT(gRootView->GetFrontmostModalView() == front);
+
+	// the front one exited while still open: recognition goes to the
+	// frontmost visible view with a modalState - which is still the one
+	// being exited (ROM behaviour: nothing takes a FilterDialog's
+	// modalState away, so it stays confined there until something else
+	// moves it)
+	RealExitModalDialog(front);
+	EXPECT(gModalCount == 1 && (front->fViewJustify & vjIsModal) == 0);
+	EXPECT(NOTNIL(Eval("unstuffedMD")) && ISNIL(Eval("unstuffedMB")));
+	EXPECT(gRecognition.fModalBounds != nil && gRecognition.fModalBounds->top == 30 && gRecognition.fModalBounds->left == 20);
+	// ... and exiting it again does nothing
+	RealExitModalDialog(front);
+	EXPECT(gModalCount == 1);
+
+	// the back one closed: no dialog is left and recognition is free
+	Eval("RemoveView(GetRoot(), ctxMB)");
+	EXPECT(gModalCount == 0 && gRecognition.fModalBounds == nil);
+	EXPECT(NOTNIL(Eval("unstuffedMB")));
+	Eval("RemoveView(GetRoot(), ctxMD)");
+	Refresh();
+}
+
+
 // The editing commands on a page's selection: copy makes a clipping of
 // it, clear takes it off the page, and paste puts the clipping back on
 // the page (keeping the clipping when asked to).
@@ -6405,6 +6455,7 @@ main()
 		TestModalSafeShow();
 		TestEditCommands();
 		TestPolygons();
+		TestModalDialogViews();
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();

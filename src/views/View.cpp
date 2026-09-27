@@ -46,8 +46,8 @@ TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101930 gEmptyViewList__5TVie
 long		TView::gViewIdCounter = 0;			// ROM 0x0c102050
 TRootView*	gRootView = nil;					// ROM 0x0c101934 gRootView
 // ROM 0x0c105524 gModalCount
-// How many modal dialogs are up.  NOT YET RECONSTRUCTED: the modal
-// dialog code that raises and lowers it, so nothing is ever modal.
+// How many modal dialogs are up (FModalDialog and FFilterDialog raise it,
+// RealExitModalDialog lowers it).
 long		gModalCount = 0;
 RefStruct*	gSlotCacheTable = nil;				// ROM 0x0c104f58 slotCacheRefs (the array, not a pointer into it: the host's heap compacts)
 Boolean		gSkipVisRegions = false;			// ROM 0x0c104f60 gSkipVisRegions
@@ -3618,7 +3618,7 @@ TView::Sync(void)
 			fParent->Dirty(&outer);
 			SetBounds(r);
 			if (fViewJustify & vjIsModal)
-				gRootView->SetModalView(this);
+				SetModalView(this);
 			Dirty(nil);
 		}
 		TViewLoop loop(fChildren);
@@ -4247,7 +4247,7 @@ TView::Offset(Point delta)
 	else
 		fParent->ChildViewMoved(this, delta);
 	if (fViewJustify & vjIsModal)
-		gRootView->SetModalView(this);
+		SetModalView(this);
 }
 
 

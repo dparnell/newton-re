@@ -202,17 +202,23 @@ TForkWorld::ForkSwitch(Boolean /*acquired*/)
 
 
 // ROM 0x000cb548 MakeFork__10TForkWorldFv
-long
+// (none: the ROM answers noErr, which Fork takes as no object)
+TForkWorld*
 TForkWorld::MakeFork()
 {
-	return noErr;
+	return nil;
 }
 
 
 // ROM 0x000cb320 Fork__10TForkWorldFP10TForkWorld
 // Spawns a fork, once the world is running with forking enabled: the given
-// world is initialised from this one, or (with none) MakeFork makes one -
-// if this world runs a main.
+// world - or, with none, one MakeFork makes, if this world runs a main -
+// is initialised from this one and started as a task of its own, which
+// copies it (so the object here is deleted either way).  The fork takes
+// the main code over: this world stops running it (its event loop ends
+// when it gets back to it) and its objects go to the fork when its task
+// ends.  Forking disabled, or not running yet, is not an error: nothing
+// happens.
 long
 TForkWorld::Fork(TForkWorld* fork)
 {
@@ -222,9 +228,19 @@ TForkWorld::Fork(TForkWorld* fork)
 	{
 		if (!fRunsMain)
 			return noErr;
-		return MakeFork();
+		fork = MakeFork();
 	}
-	return fork->ForkInit(this);
+	if (fork == nil)
+		return kError_Could_Not_Create_Object;
+	long err = fork->ForkInit(this);
+	if (err == noErr
+	 && (err = fork->StartTask(true, false, kNoTimeout, fork->fStackSize, fork->fPriority, fork->fName)) == noErr)
+	{
+		SetBequeathId(fork->GetChildTaskId());
+		fRunsMain = false;
+	}
+	delete fork;
+	return err;
 }
 
 

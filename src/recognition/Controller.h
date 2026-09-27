@@ -36,8 +36,7 @@
 				soon as it is made, which is how a click reaches the view
 				while the pen is still down.
 
-				NOT YET RECONSTRUCTED: the debugging state
-				(SaveRecognitionState, RestoreRecognitionState), the
+				NOT YET RECONSTRUCTED: the
 				per-area recognition of `RecognizeInArea` (re-recognising
 				the strokes of an existing area) and `BuildGTypes`.
 
@@ -176,6 +175,26 @@ void	HandleAreaSwitched(TDomain* domain, Handle params);	// ROM 0x0020ac84 Handl
 void	SetDomainDelays(TController* controller, ULong delay);	// ROM 0x0020c4f4 SetDomainDelays__FP11TControllerUl - every domain that waits made to wait this long
 
 extern TController*	gController;							// ROM 0x0c10187c gController
+
+// The controller's state put aside (TRecognitionManager::
+// SaveRecognitionState): its flags, lists and pass times, and the
+// arbiter's; the controller meanwhile starts with empty lists.
+struct ArbiterState;
+struct ControllerState		// 0x28 bytes in the ROM
+{
+	ULong			fFlags;
+	TUnitList*		fPieces;
+	TUnitList*		fUnits;
+	TArray*			fGroupQ;
+	ULong			fClassifyTime;
+	ULong			fGroupTime;
+	ULong			fArbitrateTime;
+	ULong			fCleanUpTime;
+	ArbiterState*	fArbiter;
+	UChar			fFailed;
+};
+ControllerState*	SaveRecognitionState(TController* controller, UChar* failed);	// ROM 0x0020b894 SaveRecognitionState__FP11TControllerPUc
+void				RestoreRecognitionState(TController* controller, ControllerState* state);	// ROM 0x0020c294 RestoreRecognitionState__FP11TControllerUl
 
 // Whether anything has been written since a unit's last stroke.
 Boolean	AreStrokesAfterUnit(TUnit* unit);						// ROM 0x0020c018 AreStrokesAfterUnit__FP5TUnit

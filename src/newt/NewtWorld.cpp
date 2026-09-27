@@ -86,12 +86,11 @@ TNewtWorld::GetSizeOf()
 
 
 // ROM 0x0030caa4 MakeFork__10TNewtWorldFv
-// A new world of the same kind (the ROM answers the object where the base
-// answers an error code; NOT YET: the forks).
-long
+// A new world of the same kind, for Fork to start.
+TForkWorld*
 TNewtWorld::MakeFork()
 {
-	return (long) (Long) new TNewtWorld;
+	return new TNewtWorld;
 }
 
 
@@ -114,23 +113,30 @@ TNewtWorld::ForkInit(TForkWorld* parent)
 
 // ROM 0x0030cb9c ForkConstructor__10TNewtWorldFP10TForkWorld
 // The fork's own globals: an interpreter of its own and QuickDraw's port
-// and buffers (NOT YET RECONSTRUCTED: InitForkGlobalsForFrames,
-// InitForkGlobalsForQD - the host runs no forks).
+// and buffers, made while its globals are the current ones.
 long
 TNewtWorld::ForkConstructor(TForkWorld* parent)
 {
 	NewtGlobals* saved = gNewtGlobals;
 	gNewtGlobals = &fGlobals;
 	long err = TAppWorld::ForkConstructor(parent);
+	if (err == noErr && (err = InitForkGlobalsForFrames(saved)) == noErr)
+		err = InitForkGlobalsForQD(saved);
 	gNewtGlobals = saved;
 	return err;
 }
 
 
 // ROM 0x0030cbe4 ForkDestructor__10TNewtWorldFv
+// (a world that forked becomes a fork itself, so this is also how the
+// main world's task ends once a fork has taken its loop over)
 void
 TNewtWorld::ForkDestructor()
 {
+	AcquireMutex();
+	DestroyForkGlobalsForFrames(&fGlobals);
+	DestroyForkGlobalsForQD(&fGlobals);
+	ReleaseMutex();
 	TAppWorld::ForkDestructor();
 }
 
@@ -138,17 +144,23 @@ TNewtWorld::ForkDestructor()
 // ROM 0x0030cc20 ForkSwitch__10TNewtWorldFUc
 // Switching in: the fork's globals become the world's, its stack position
 // and interpreter the current ones; out: the stack position saved.
+// DEVIATION: the ROM's current port is the globals' fPort, so it follows
+// gNewtGlobals by itself; the host's QuickDraw (below this library) keeps
+// it in a global of its own, which is moved in and out with the rest.
 void
 TNewtWorld::ForkSwitch(Boolean in)
 {
 	if (!in)
 	{
 		gNewtGlobals->fStackPos = gCurrentStackPos;
+		gNewtGlobals->fPort = GetCurrentPort();
 		return;
 	}
 	gNewtGlobals = &fGlobals;
 	gCurrentStackPos = fGlobals.fStackPos;
 	gInterpreter = fGlobals.fInterpreter;
+	if (fGlobals.fPort != nil)
+		SetPort(fGlobals.fPort);
 }
 
 
@@ -187,6 +199,7 @@ TNewtWorld::MainConstructor()
 	RegisterAlarmNatives();
 	RegisterPowerNatives();
 	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
+	RegisterModalDialogNatives();
 	InitializeCompression();
 	// DEVIATION: the ROM starts the sound manager from the loader
 	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the
@@ -207,6 +220,9 @@ TNewtWorld::MainConstructor()
 	fGlobals.fInterpreter = gInterpreter;
 	fGlobals.fStackPos = gCurrentStackPos;
 	fGlobals.fPort = GetCurrentPort();
+	// (the ROM's InitGraf does this, into the globals of the task that
+	// runs it; the host's InitGraf is below the newt world)
+	InvalidateQDTempBuf();
 	gNewtPort = GetMyPort();
 	fHandler = new TNewtEventHandler;
 	fHandler->Init(kNewtIdleEvent, kNewtEventClass);

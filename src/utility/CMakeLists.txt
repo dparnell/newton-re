@@ -15,6 +15,7 @@ add_library(utility STATIC
     TimerQueue.cpp
     AEventHandler.cpp
     ForkWorld.cpp
+    PseudoSyncState.cpp
     AppWorld.cpp
     Unicode.cpp
     BufferSegment.cpp
