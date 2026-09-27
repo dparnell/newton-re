@@ -105,12 +105,42 @@ struct low_buffer
 	short			size;			// +04
 };
 
+// A stroke description (ROM 0x2c bytes, no pointers, so the same on
+// the host): a piece of the trace between two points as
+// iMostFarDoubleSide describes it (LowPict.cpp).  A stroke's head (attr
+// 0x10) uses slope, crook, length, lengthRatio and share for other
+// things (StrElements).
+struct _SDS_TYPE
+{
+	UByte			mark;			// +00
+	UByte			attr;			// +01  0x80 the chord crosses the piece, 0x81 not; 0x10 a head, 0x20 a tail
+	short			iBeg;			// +02
+	short			iEnd;			// +04
+	short			xMax;			// +06
+	short			xMin;			// +08
+	short			yMax;			// +0a
+	short			yMin;			// +0c
+	short			f0e;			// +0e
+	short			chord;			// +10  the chord's length
+	short			slope;			// +12  hundredths of dy/dx (0x7fff upright; a head: its own index)
+	short			distA;			// +14  the furthest point on one side of the chord, how far
+	short			iA;				// +16  and which
+	short			distB;			// +18  on the other side
+	short			iB;				// +1a
+	short			maxDist;		// +1c  the further of the two
+	short			iMax;			// +1e
+	int32_t			length;			// +20  along the trace
+	short			crook;			// +24  maxDist in hundredths of the chord (a head: the longest piece's index + 1)
+	short			lengthRatio;	// +26  length in hundredths of the chord (a head: the stroke's code)
+	short			share;			// +28  the piece's share of the stroke's length, in hundredths (a head: the stroke's attr)
+	short			f2a;			// +2a
+};
+
 // The stroke descriptions' array and how full it is (ROM 12 bytes).
-struct _SDS_TYPE;
 struct _SDS_CONTROL_TYPE
 {
 	short			sizeSDS;		// +00  room for how many
-	short			f02;
+	short			f02;			// +02  where the stroke being described starts
 	short			lenSDS;			// +04  how many (-2 once destroyed)
 	_SDS_TYPE*		pSDS;			// +08
 };
@@ -147,7 +177,10 @@ struct low_type
 	short			fMaxGroups;		// +5a
 	short			f5c;			// +5c  0x7fff
 	_SDS_CONTROL_TYPE*	fSDS;		// +60
-	UByte			f64[0x0a];		// +64
+	short			fLenBars;		// +64  how many of fBars are used
+	short			f66;
+	POINTS_GROUP*	fBars;			// +68  the upright sticks (VertSticksSelector) Pict judges bars against, room for 80
+	UByte			f6c[2];			// +6c
 	short			fSlope;			// +6e  the writing's slant (from rc +0xac, back to it at the end)
 	UByte			f70[4];			// +70
 	_RECT			fBox;			// +74  the trace's box
@@ -217,6 +250,8 @@ short	NewIndex(short* index, short* y, short i, short n, short mode);	// ROM 0x0
 // The special elements found.
 long	Extr(low_type* low, short step, short eps1, short eps2, short eps3, short depth, short flags);	// ROM 0x002ba52c Extr__FP8low_typesN52 - every stroke's extrema in the directions flags asks for; ==> 0, 1 for no room
 long	MarkSpecl(low_type* low, SPEC_TYPE* elem);					// ROM 0x002bc36c MarkSpecl__FP8low_typeP9SPEC_TYPE - a copy added to the list; ==> 0, 1 for no room
+long	Mark(low_type* low, UByte mark, UByte code, UByte attr, UByte other, short iBeg, short iEnd, short ipoint0, short ipoint1);	// (LowExtr.cpp) - ==> 0, 1 for no room
+long	NoteSpecl(low_type* low, SPEC_TYPE* src, SPEC_TYPE* specl, short* len, short max);	// (LowExtr.cpp) - ==> 1, 0 when full
 
 // The base-line finder's pieces (LowBaseline.cpp).
 void	sort_extr(EXTR* extr, long n);								// ROM 0x001bd73c sort_extr__FP4EXTRi - into order of x
@@ -298,6 +333,48 @@ long	Clear_specl(SPEC_TYPE* head, short n);						// ROM 0x002fa20c Clear_specl__
 long	Surgeon(low_type* low);										// ROM 0x0032f6dc Surgeon__FP8low_type - ==> 0
 long	measure_slope(low_type* low);								// ROM 0x00320bd0 measure_slope__FP8low_type - the slant in hundredths
 long	look_like_circle(SPEC_TYPE* elem, SPEC_TYPE* prev, SPEC_TYPE* next, short* y);	// ROM 0x002bc6a0 look_like_circle__FP9SPEC_TYPEN21Ps
+
+// Pict and the stroke descriptions (LowPict.cpp).
+extern const short	maxA_H_end[100];		// the trained limits for a stroke from band [row] down to band [col]
+extern const short	maxCR_H_end[100];
+extern const short	minL_H_end[100];
+extern const short	maxX_H_end[100];
+extern const short	maxY_H_end[100];
+long	DistanceSquare(long i, long j, short* x, short* y);			// ROM 0x00309818 DistanceSquare__FiT1PsT3
+long	Distance8(long x1, long y1, long x2, long y2);				// ROM 0x00305f90 Distance8__FiN31
+long	CurvMeasure(short* x, short* y, long i, long j, long k);	// ROM 0x00305df4 CurvMeasure__FPsT1iN23 - the bend in hundredths of the chord, signed
+long	HeightInLine(short y, low_type* low);						// ROM 0x00306e2c HeightInLine__FsP8low_type - the band 1..13 between the thresholds
+long	iyMin(long iBeg, long iEnd, short* y);						// ROM 0x0030707c iyMin__FiT1Ps
+long	iyMax(long iBeg, long iEnd, short* y);						// ROM 0x003070e8 iyMax__FiT1Ps
+long	iYup_range(short* y, long iBeg, long iEnd);					// ROM 0x00307438 iYup_range__FPsiT2
+long	iYdown_range(short* y, long iBeg, long iEnd);				// ROM 0x003074a8 iYdown_range__FPsiT2
+long	iClosestToXY(long iBeg, long iEnd, short* x, short* y, short px, short py);	// ROM 0x00307614 iClosestToXY__FiT1PsT3sT5
+long	R_ClosestToLine(short* x, short* y, PS_point_type* p, POINTS_GROUP* group, short* at);	// ROM 0x00307db0 R_ClosestToLine__FPsT1P13PS_point_typeP12POINTS_GROUPT1
+void	InitElementSDS(_SDS_TYPE* sds);								// ROM 0x0032f5e4 InitElementSDS__FP9_SDS_TYPE
+Boolean	Init_SDS_Element(_SDS_TYPE* sds);							// ROM 0x0032eb24 Init_SDS_Element__FP9_SDS_TYPE
+long	NoteSDS(_SDS_CONTROL_TYPE* control, _SDS_TYPE* sds);		// ROM 0x0032f84c NoteSDS__FP17_SDS_CONTROL_TYPEP9_SDS_TYPE - ==> 1, 0 when full
+long	HordIntersectDetect(_SDS_TYPE* sds, short* x, short* y);	// ROM 0x0032f19c HordIntersectDetect__FP9_SDS_TYPEPsT2
+long	iMostFarDoubleSide(short* x, short* y, _SDS_TYPE* sds, short* px, short* py, ULong withLength);	// ROM 0x0032eb80 iMostFarDoubleSide__FPsT1P9_SDS_TYPEN21Ui
+long	CrookCalc(low_type* low, short* maxDist, long i, long j);	// ROM 0x00026338 CrookCalc__FP8low_typePsiT3
+long	BildHigh(short top, short bottom, short* h);				// ROM 0x0032e65c BildHigh__FsT1Ps - the eleven heights
+long	RelHigh(short* y, long i, long j, short* h, short* bottomBand, short* topBand);	// ROM 0x0032e39c RelHigh__FPsiT2N31
+long	RareAngle(low_type* low, SPEC_TYPE* elem, SPEC_TYPE* list, short* count);	// ROM 0x0032f26c RareAngle__FP8low_typeP9SPEC_TYPET2Ps
+long	StrElements(low_type* low, SPEC_TYPE* elem, short* heights);	// ROM 0x0032d510 StrElements__FP8low_typeP9SPEC_TYPEPs - ==> 0, 1 for no room
+Boolean	DownStepOK(low_type* low, SPEC_TYPE* a, SPEC_TYPE* b);		// ROM 0x000263d0 DownStepOK__FP8low_typeP9SPEC_TYPET2
+Boolean	ArcTurnsOK(low_type* low, long kind, long i, long j);		// ROM 0x0002620c ArcTurnsOK__FP8low_type9_ARC_TYPEiT3
+long	SlashArcs(low_type* low, long iBeg, long iEnd);				// ROM 0x00025ef0 SlashArcs__FP8low_typeiT2 - ==> 0, 1 for no room
+long	FieldSt(_SDS_TYPE* sds, short bottom, short top, short k, short* maxA, short* maxCR, short* minL);	// ROM 0x0032dd54 FieldSt__FP9_SDS_TYPEsN22PsN25
+long	Dot(low_type* low, SPEC_TYPE* elem, _SDS_TYPE* head);		// ROM 0x0032dfd4 Dot__FP8low_typeP9SPEC_TYPEP9_SDS_TYPE - ==> 8 a dot, 0 not
+long	Close_To(low_type* low, POINTS_GROUP* a, POINTS_GROUP* b);	// ROM 0x0032cdb4 Close_To__FP8low_typeP12POINTS_GROUPT2 - a narrowed to where it meets b
+long	Box_Cover(low_type* low, POINTS_GROUP* a, POINTS_GROUP* b);	// ROM 0x0032cc9c Box_Cover__FP8low_typeP12POINTS_GROUPT2
+long	Find_Cross(low_type* low, PS_point_type* p, POINTS_GROUP* a, POINTS_GROUP* b);	// ROM 0x0032cad4 Find_Cross__FP8low_typeP13PS_point_typeP12POINTS_GROUPT3
+long	IsAnythingShift(low_type* low, POINTS_GROUP* a, POINTS_GROUP* b, short aSide, short bSide);	// ROM 0x0032d08c IsAnythingShift__FP8low_typeP12POINTS_GROUPT2sT4
+Boolean	BoxSmallOK(short i, short j, short* x, short* y);			// ROM 0x0032dcdc BoxSmallOK__FsT1PsT3
+long	VertStickBorders(low_type* low, SPEC_TYPE* elem, POINTS_GROUP* group);	// ROM 0x0032d1c0 VertStickBorders__FP8low_typeP9SPEC_TYPEP12POINTS_GROUP
+void	VertSticksSelector(low_type* low);							// ROM 0x0032da64 VertSticksSelector__FP8low_type
+long	YFilter(low_type* low, _SDS_TYPE* piece, SPEC_TYPE* elem);	// ROM 0x0032bacc YFilter__FP8low_typeP9_SDS_TYPEP9SPEC_TYPE
+long	SPDClass(low_type* low, short kind, SPEC_TYPE* elem, _SDS_TYPE* head);	// ROM 0x0032f960 SPDClass__FP8low_typesP9SPEC_TYPEP9_SDS_TYPE - ==> 7 a stick, 0 not
+long	InStr(low_type* low, _SDS_TYPE* head, SPEC_TYPE* elem, short* heights);	// ROM 0x0032fd24 InStr__FP8low_typeP9_SDS_TYPEP9SPEC_TYPEPs - ==> 0, 1 for no room
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

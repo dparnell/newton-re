@@ -630,6 +630,109 @@ TestAnalyzePieces(void)
 }
 
 
+// Pict's measurements (LowPict.cpp): the heights a stroke is placed
+// against, a piece of trace described, and pieces crossing.
+static void
+TestPictPieces(void)
+{
+	short h[11];
+	EXPECT(BildHigh(0x2700, 0x2900, h) == 1);
+	EXPECT(h[0] == 0x2700 && h[1] == 0x274b && h[2] == 0x2777 && h[3] == 0x2796 && h[7] == 0x27e6);
+	EXPECT(h[8] == 0x281e && h[9] == 0x2873 && h[10] == 0x2900);
+	BildHigh(0x2000, 0x2000, h);
+	EXPECT(h[0] == 0x2000 && h[10] == 0x2836);		// the ends clamped to the normal line
+	BildHigh(0x2700, 0x2900, h);
+	short ry[] = { 0x27a0, 0x27e6 };
+	short bottom, top;
+	EXPECT(RelHigh(ry, 1, 0, h, &bottom, &top) == 1);
+	EXPECT(top == 6 && bottom == 3);
+	ry[0] = 0x2600;
+	EXPECT(RelHigh(ry, 0, 1, h, &bottom, &top) == 0);	// above the heights
+	EXPECT(top == 9);
+
+	EXPECT(Distance8(0, 0, 3, 4) == 5);
+	EXPECT(Distance8(0, 0, 0, 7) == 7);
+
+	// an arch: the chord level, the top 5 above its middle
+	short ax[] = { 0, 5, 10 };
+	short ay[] = { 0, 5, 0 };
+	_SDS_TYPE sds;
+	Init_SDS_Element(&sds);
+	EXPECT(sds.iBeg == -2 && sds.iEnd == -2);
+	sds.iBeg = 0;
+	sds.iEnd = 2;
+	short px, py;
+	EXPECT(iMostFarDoubleSide(ax, ay, &sds, &px, &py, 1) == 0);
+	EXPECT(sds.chord == 10 && sds.slope == 0 && sds.iMax == 1 && sds.maxDist == 5 && sds.crook == 50);
+	EXPECT(sds.distA == 0 && sds.attr == 0x81 && px == 5 && py == 0);
+	EXPECT(sds.xMin == 0 && sds.xMax == 10 && sds.yMin == 0 && sds.yMax == 5);
+	EXPECT(sds.length == 14 && sds.lengthRatio == 140);
+	EXPECT(CurvMeasure(ax, ay, 0, 2, 1) == -25);
+	EXPECT(CurvMeasure(ax, ay, 0, 0, 1) == 1000);
+	low_type low;
+	memset(&low, 0, sizeof(low));
+	low.fX = ax;
+	low.fY = ay;
+	short maxDist;
+	EXPECT(CrookCalc(&low, &maxDist, 0, 2) == -50 && maxDist == 5);
+	// one point: nothing much
+	sds.iBeg = sds.iEnd = 1;
+	iMostFarDoubleSide(ax, ay, &sds, &px, &py, 1);
+	EXPECT(sds.slope == -2 && sds.chord == 0 && sds.maxDist == -2 && px == 0);
+
+	// two strokes crossing at (5, 5) - found at (5, 6), FindCrossPoint's rounding
+	short cx[] = { 0, 10, 0, 10 };
+	short cy[] = { 0, 10, 10, 0 };
+	low.fX = cx;
+	low.fY = cy;
+	POINTS_GROUP a = { 0, 1, { 0, 0, 0, 0 } };
+	POINTS_GROUP b = { 2, 3, { 0, 0, 0, 0 } };
+	PS_point_type cross;
+	EXPECT(Find_Cross(&low, &cross, &a, &b) == 1);
+	EXPECT(cross.x == 5 && cross.y == 6 && a.iBeg == 0 && a.iEnd == 1 && b.iBeg == 2 && b.iEnd == 3);
+	EXPECT(Box_Cover(&low, &a, &b) == 1);
+	EXPECT(IsAnythingShift(&low, &a, &b, 0, 0) == 1);
+	short fx[] = { 0, 10, 20, 30 };
+	low.fX = fx;
+	a.iBeg = 0; a.iEnd = 1;
+	b.iBeg = 2; b.iEnd = 3;
+	EXPECT(Close_To(&low, &a, &b) == 0 && a.iBeg == -2 && a.iEnd == -2);
+	a.iBeg = 0; a.iEnd = 1;
+	EXPECT(IsAnythingShift(&low, &a, &b, 1, 0) == 0);		// a's right edge left of b's left
+	EXPECT(BoxSmallOK(0, 1, fx, cy) == 1 && BoxSmallOK(0, 3, fx, cy) == 0);
+
+	// a single point is a dot, marked at itself
+	SPEC_TYPE dot;
+	memset(&dot, 0, sizeof(dot));
+	dot.iBeg = dot.iEnd = 7;
+	EXPECT(Dot(&low, &dot, &sds) == 8 && dot.mark == 8 && dot.ipoint0 == 7 && dot.ipoint1 == 7);
+
+	// a V described: a head, the two arms either side of its corner, a tail
+	short vx[] = { 0, 5, 10, 15, 20 };
+	short vy[] = { 0, 10, 20, 10, 0 };
+	_SDS_TYPE all[20];
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	control.sizeSDS = 20;
+	control.pSDS = all;
+	SPEC_TYPE v;
+	memset(&v, 0, sizeof(v));
+	v.iBeg = 0;
+	v.iEnd = 4;
+	v.code = 3;
+	v.attr = 2;
+	low.fX = vx;
+	low.fY = vy;
+	low.fSDS = &control;
+	EXPECT(StrElements(&low, &v, h) == 0);
+	EXPECT(control.lenSDS == 4 && v.ipoint1 == 0);
+	EXPECT(all[0].attr == 0x10 && all[0].crook == 1 && all[0].length == 44 && all[0].lengthRatio == 3 && all[0].share == 2);
+	EXPECT(all[1].iBeg == 0 && all[1].iEnd == 2 && all[1].slope == 200 && all[1].share == 50);
+	EXPECT(all[2].iBeg == 2 && all[2].iEnd == 4 && all[2].slope == -200 && all[2].share == 50);
+	EXPECT(all[3].attr == 0x20 && all[3].iBeg == 4);
+}
+
+
 int
 main()
 {
@@ -646,6 +749,7 @@ main()
 	TestLineGlitches();
 	TestBaseline();
 	TestAnalyzePieces();
+	TestPictPieces();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

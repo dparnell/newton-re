@@ -41,8 +41,8 @@ struct _ENVIRONS
 
 static long	BigExtr(low_type* low, short iBeg, short iEnd, short kind, short eps);
 static long	DirectExtr(low_type* low, _ENVIRONS* env, SPEC_TYPE* elem, short i);
-static long	Mark(low_type* low, UByte mark, UByte code, UByte attr, UByte other, short iBeg, short iEnd, short ipoint0, short ipoint1);
-static long	NoteSpecl(low_type* low, SPEC_TYPE* src, SPEC_TYPE* specl, short* len, short max);
+long	Mark(low_type* low, UByte mark, UByte code, UByte attr, UByte other, short iBeg, short iEnd, short ipoint0, short ipoint1);
+long	NoteSpecl(low_type* low, SPEC_TYPE* src, SPEC_TYPE* specl, short* len, short max);
 static SPEC_TYPE*	LastElemAnyKindFor(SPEC_TYPE* elem, UByte mark);
 static SPEC_TYPE*	FirstElemAnyKindFor(SPEC_TYPE* elem, UByte mark);
 
@@ -470,7 +470,7 @@ DirectExtr(low_type* low, _ENVIRONS* env, SPEC_TYPE* elem, short i)
 // ROM 0x002bc1e8 Mark__FP8low_typeUcN32sN36
 // An element made of the fields given and added to the list (and, for
 // kinds 5, 7 and 8, to the index).  ==> 0, 1 for no room.
-static long
+long
 Mark(low_type* low, UByte mark, UByte code, UByte attr, UByte other, short iBeg, short iEnd, short ipoint0, short ipoint1)
 {
 	SPEC_TYPE local;
@@ -519,7 +519,7 @@ MarkSpecl(low_type* low, SPEC_TYPE* elem)
 // src's fields copied into specl[*len] (the links left alone), and *len
 // counted; kinds 5, 7 and 8 have their points taken through the map in
 // buffer 2.  ==> 1, 0 when the list is full.
-static long
+long
 NoteSpecl(low_type* low, SPEC_TYPE* src, SPEC_TYPE* specl, short* len, short max)
 {
 	short* map = low->fBuffers[2].ptr;
