@@ -72,7 +72,10 @@ struct GCGroupParmStruct
 	short		fNumStrokes;		// +10  strokes given to the segmenter
 	short		fNext;				// +12
 	UByte		fStrokes[32];		// +14  the strokes to segment
-	UByte		fReserved[8];
+	short		fJoinX;				// +34  a word being read again after a dash: where the line it continues ended (the cursive recogniser's)
+	short		fJoinY;				// +36
+	UByte		fMerged;			// +38
+	UByte		fPad[3];
 };
 
 // The segmenter's state and results in one block: its capacity in words,

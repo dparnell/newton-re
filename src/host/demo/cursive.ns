@@ -1,0 +1,105 @@
+// Cursive: the writer's letter set made a cursive one, so ParaGraph's
+// cursive recogniser (the 'STXR' and 'XRWR' domains) reads the page in
+// place of Rosetta, and "ton" and "to" written on the Notepad.
+//
+//   NEWTON_TRACE_CURSIVE=1 build/host/host/newton --rom build/MP2x00US/rom.bin //       --display 320x480 --script src/host/demo/cursive.ns --headless 50
+//
+// The words are grouped by ParaGraph's word segmenter into two word
+// descriptors and each is given to the reader (GCTryToRecognize).  The
+// reader's three layers are NOT YET, so each word ends as ink:
+// "cursive: ..." lines say how far it got, and build/cursive.pgm is the
+// page.  Otherwise as src/host/demo/write.ns.
+//
+// KNOWN PROBLEM: now and then (one run in three) the machine locks up
+// after the first word, in the host heap's compaction.  It goes away
+// when the 'STXR' parameter block does not load its own letter table
+// (DomainParameter selector 1: ReadDteResource and AllocLearnInfo, a
+// second copy beside the word domain's) - docs/next-steps.md.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// One stroke: the pen put down on the first point, moved through the
+// rest, and lifted.
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+// An oval of `n` points, from the top going anticlockwise, as an o is
+// written.  (Twelfths of a turn, worked out once: cos and sin of 30n.)
+oval := func(cx, cy, rx, ry)
+  begin
+    local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+    local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+    local pts := [];
+    for k := 0 to 12 do
+      begin
+        AddArraySlot(pts, cx + (rx * c[k]) div 100);
+        AddArraySlot(pts, cy - (ry * s[k]) div 100);
+      end;
+    pts;
+  end;
+
+// "ton", on a baseline at y = 200, from x = 60 - the letter set made
+// cursive first
+AddDelayedCall(func() begin
+    local base := 200;
+    SetUserConfig('letterSetSelection, 0);
+    ReadCursiveOptions();
+    Print("cursive: the letter set is" && GetUserConfig('letterSetSelection));
+    // t: the stem, then the bar
+    call stroke with ([66, base - 24, 66, base - 18, 66, base - 12, 66, base - 6, 66, base]);
+    call stroke with ([60, base - 14, 64, base - 14, 68, base - 14, 72, base - 14]);
+    // o
+    call stroke with (call oval with (82, base - 7, 6, 7));
+    // n: down, back up, over the arch and down again
+    call stroke with ([94, base - 14, 94, base - 7, 94, base, 94, base - 7,
+                       95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
+                       104, base - 10, 104, base - 5, 104, base]);
+    // "to", a word's gap further along the line, a little later - the
+    // recogniser has put "ton" down by then
+    AddDelayedCall(func() begin
+        local x := 130;
+        call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
+        call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
+        call stroke with (call oval with (x + 22, base - 7, 6, 7));
+      end, nil, 3000);
+    AddDelayedCall(func() begin
+        ScreenSnapshot("build/cursive-ink.pgm");
+        Print("cursive: written build/cursive-ink.pgm");
+        IdleStrokes();
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/cursive.pgm");
+            Print("cursive: written build/cursive.pgm");
+          end, nil, 6000);
+      end, nil, 4500);
+  end, nil, 27000);
+Print("cursive: the script is loaded");

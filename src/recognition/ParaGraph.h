@@ -100,6 +100,7 @@ long	HWRAbs(long x);										// ROM 0x000e64fc HWRAbs__Fi
 Ptr		HWRMemoryAlloc(ULong size);							// ROM 0x000e6464 HWRMemoryAlloc__FUl
 long	HWRMemoryFree(Ptr block);							// ROM 0x000e64e0 HWRMemoryFree__FPv
 
+long	HWRStrCmp(const char* a, const char* b);			// ROM 0x000e661c HWRStrCmp__FPcT1 - the difference of the first bytes that differ (unsigned)
 long	HWRStrLen(const char* s);							// ROM 0x000e6514 HWRStrLen__FPc
 char*	HWRStrCpy(char* dest, const char* src);				// ROM 0x000e6560 HWRStrCpy__FPcT1
 void	HWRStrCat(char* dest, const char* src);				// ROM 0x000e657c HWRStrCat__FPcT1

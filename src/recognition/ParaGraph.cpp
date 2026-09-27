@@ -133,6 +133,21 @@ HWRAbs(long x)
 }
 
 
+// ROM 0x000e661c HWRStrCmp__FPcT1
+long
+HWRStrCmp(const char* a, const char* b)
+{
+	const UByte* p = (const UByte*) a;
+	const UByte* q = (const UByte*) b;
+	while (*p == *q && *p != 0 && *q != 0)
+	{
+		p++;
+		q++;
+	}
+	return (long) *p - (long) *q;
+}
+
+
 // ROM 0x000e6514 HWRStrLen__FPc
 long
 HWRStrLen(const char* s)

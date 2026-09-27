@@ -629,9 +629,9 @@ TStrXrDomain::IStrXrDomain(TController* controller)
 	fDelay = gRecognitionTimeout;
 	AddPieceType('STRK');
 	controller->RegisterDomain(this);
-	memset(fB24 + (0x38 - 0x24), 0, 0x1c);
-	memset(fB24 + (0x78 - 0x24), 0, 8);
-	memset(fB24 + (0x54 - 0x24), 0, 0x0c);
+	memset(fGeom, 0, sizeof(fGeom));
+	memset(fPrevBase, 0, sizeof(fPrevBase));
+	fGrid[0] = fGrid[1] = fGrid[2] = 0;			// (the ROM clears 0x0c bytes: not the fourth)
 }
 
 

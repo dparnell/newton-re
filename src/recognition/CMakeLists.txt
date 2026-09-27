@@ -54,6 +54,7 @@ add_library(recognition STATIC
     InkGroups.cpp
     WordDescriptors.cpp
     CursiveReader.cpp
+    StrXrDomain.cpp
     Fragment.cpp
     FragmentTables.cpp
     LELangTables.cpp

@@ -75,6 +75,19 @@
 #ifndef __PARAGRAPH_H
 #include "ParaGraph.h"
 #endif
+#ifndef __UNIT_H
+#include "Unit.h"
+#endif
+#ifndef __WORDSEGMENT_H
+#include "WordSegment.h"
+#endif
+
+class TStrXrUnit;
+class TXrWordDomain;
+struct dInfoRec;
+struct GCWordDescrType;
+struct GCRecResults;
+struct GCGroupParmStruct;
 
 // The third dictionary chain and what goes with it (selectors
 // 0x20011/0x20012).  DEVIATION: a host pointer - the ROM's is 12 bytes.
@@ -227,19 +240,115 @@ enum
 	kXrWordDomainType = 'XRWR'
 };
 
-// Strokes to xrs.  NOT YET RECONSTRUCTED beyond its making: the cutting
-// of strokes into xrs (Classify, Group, PreGroup, Reclassify and the
-// boxed and on-line segmentation) and its parameters (DomainParameter,
-// SetParameters, SetStrXrFieldType, SetStrXrRC) belong to the reading
-// engine.
+// The strokes-to-xrs domain's parameter block (0x58 bytes in the ROM).
+struct STRXRPARAM
+{
+	UShort		fFlags;				// +0x00  what the field's writing is made of: 1 letters, 2 no letters, 0x10/0x20 words/digits, 0x400 cursive letter style (or 0x40 in the field type), 0x0800 kept, 0x8000 punctuation
+	UShort		fFlags2;			// +0x02  1 not phone numbers only, 2 phone numbers
+	Handle		fDTI;				// +0x04  the letter table (selector 1)
+	ULong		fFieldType;			// +0x08  the recogniser's field flags (as XRWR's)
+	ULong		fControl;			// +0x0c  low 16 bits the writer's letter spacing, 0x10000 read only at the end (no pre-grouping), from bit 17 how many words to wait for (lineAtATime)
+	long		fGeom[7];			// +0x10  the base line geometry (0x2000b/c): +0x18 the base line, +0x20 its height ...
+	long		fGrid[4];			// +0x2c  the boxes to write in (0x2000d/e): two sizes, two gaps
+	ULong		fBoxHit;			// +0x3c  the box the last stroke hit (x in the low half, y in the high)
+	UShort		fLetterStyle;		// +0x40  (from the letter set)
+	UShort		fLanguage;			// +0x42  1 English, 8 international
+	UShort		fField44;			// +0x44
+	UShort		fField46;
+	ULong		fField48;			// +0x48  (numbers and phone fields, when fField4C)
+	ULong		fField4C;			// +0x4c
+	short		fPrevBase[4];		// +0x50  the base line of the word before (0x20042): top, base, and two more
+};
+
+// Strokes to xrs: the writing grouped into words by ParaGraph's word
+// segmenter (on line) or by the boxes it is written in, and each word
+// read (CallGroupAndClassify, over the GC layer: InkGroups.h,
+// WordDescriptors.h, CursiveReader.h) - the words it reads handed on as
+// new units of its own type, which the xrs-to-words domain turns into
+// word units.
 class TStrXrDomain : public TDomain
 {
 public:
 	static TStrXrDomain*	Make(TController* controller);		// ROM 0x0021fc7c Make__12TStrXrDomainSFP11TController
 	void				IStrXrDomain(TController* controller);	// ROM 0x0021fcc4 IStrXrDomain__12TStrXrDomainFP11TController
 
-	UByte				fB24[0x5c];		// ROM +0x24..0x7f  the parameters an area last gave it
+	virtual void		Dispose(void);							// ROM 0x00220210 Dispose__12TStrXrDomainFv (nothing)
+	virtual void		Classify(TUnit* unit);					// ROM 0x00220214 Classify__12TStrXrDomainFP5TUnit - a unit not yet read (0x8000000) read
+	virtual void		Reclassify(TUnit* unit);				// ROM 0x0022024c Reclassify__12TStrXrDomainFP5TUnit - everything it read thrown away and read again
+	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x002202e0 Group__12TStrXrDomainFP5TUnitP8dInfoRec
+	virtual long		PreGroup(TUnit* unit);					// ROM 0x00220344 PreGroup__12TStrXrDomainFP5TUnit
+	virtual long		DomainParameter(ULong selector, ULong result, ULong info);	// ROM 0x0022037c DomainParameter__12TStrXrDomainFUlN21
+	virtual Boolean		SetParameters(Handle params);			// ROM 0x00220a4c SetParameters__12TStrXrDomainFPPc
+
+	void				ReclassifyStrXr(TStrXrUnit* unit);		// ROM 0x0021fd74 ReclassifyStrXr__12TStrXrDomainFP10TStrXrUnit
+	void				ClassifyStrXr(TStrXrUnit* unit);		// ROM 0x00220ba0 ClassifyStrXr__12TStrXrDomainFP10TStrXrUnit
+	void				StartWord(TStrokeUnit* stroke);			// ROM 0x0021fd94 StartWord__12TStrXrDomainFP11TStrokeUnit - a new word of one stroke
+	long				GroupOnLineSegmentation(TUnit* stroke);	// ROM 0x0021fe10 GroupOnLineSegmentation__12TStrXrDomainFP5TUnit
+	Boolean				GroupBoxedSegmentation(TUnit* stroke);	// ROM 0x0021fe18 GroupBoxedSegmentation__12TStrXrDomainFP5TUnit
+	Boolean				AddStrokeToBoxedWord(TStrokeUnit* stroke);	// ROM 0x0021fe60 AddStrokeToBoxedWord__12TStrXrDomainFP11TStrokeUnit - whether the stroke is in the box the last was
+	ULong				BoxHit(TStrokeUnit* stroke);			// ROM 0x0021ff30 BoxHit__12TStrXrDomainFP11TStrokeUnit - the box the stroke's middle is in (x in the low half, y in the high; 0xffff for no boxes that way)
+
+	// the parameters the area last gave it (SetParameters: a copy of the
+	// STRXRPARAM, at the ROM's offsets)
+	short				fFlags;			// +0x24
+	short				fFlags2;		// +0x26
+	Handle				fDTI;			// +0x28
+	ULong				fField2C;		// +0x2c
+	ULong				fFieldType;		// +0x30
+	ULong				fControl;		// +0x34
+	long				fGeom[7];		// +0x38
+	long				fGrid[4];		// +0x54  the box origin and size (x, y, width, height)
+	ULong				fBoxHit;		// +0x64
+	short				fLetterStyle;	// +0x68
+	short				fLanguage;		// +0x6a
+	short				fField6C;		// +0x6c
+	ULong				fField70;		// +0x70  (rc +0xb6: read numbers first)
+	ULong				fField74;		// +0x74
+	short				fPrevBase[4];	// +0x78
 };
+
+// A strokes-to-xrs unit: the strokes of a piece of writing (its subs),
+// the words found in them (the word descriptors and the segmenter's
+// state), and - once one word has been read - that word's readings and
+// where it lies (0xb0 bytes in the ROM).
+class TStrXrUnit : public TSIUnit
+{
+public:
+	static TStrXrUnit*	Make(TDomain* domain, ULong kind, TArray* areas);	// ROM 0x00220bcc Make__10TStrXrUnitSFP7TDomainUlP6TArray
+	long				IStrXrUnit(TDomain* domain, ULong kind, TArray* areas);	// ROM 0x00220c44 IStrXrUnit__10TStrXrUnitFP7TDomainUlP6TArray
+
+	virtual void		Dump(TMsg* msg);						// ROM 0x00220dc0 Dump__10TStrXrUnitFP4TMsg
+	virtual long		SizeInBytes(void);						// ROM 0x00220e08 SizeInBytes__10TStrXrUnitFv
+	virtual void		IDispose(void);							// ROM 0x00220d2c IDispose__10TStrXrUnitFv
+
+	long				fLeft;			// +0x40  the word's ink, in tablet units (eighths of a pixel)
+	long				fRight;			// +0x44
+	long				fBase;			// +0x48  the base line the engine found
+	long				fBase2;			// +0x4c
+	long				fHeight;		// +0x50
+	long				fHeight2;		// +0x54
+	long				fField58;		// +0x58
+	long				fField5C;		// +0x5c
+	long				fField60;		// +0x60
+	short				fLineHeight;	// +0x64  what the segmenter said of its line
+	short				fBaseLine;		// +0x66
+	short				fNewLine;		// +0x68
+	short				fPrevBase[4];	// +0x6a
+	short				fWordCount;		// +0x72  the readings
+	rec_w_type*			fWords;			// +0x74
+	Handle				fLearning;		// +0x78
+	Handle				fDescriptors;	// +0x7c  the word descriptors (GCNewRecSegment)
+	Handle				fGRes;			// +0x80  the segmenter's state
+	short				fNumStrokes;	// +0x84  strokes given to the segmenter
+	short				fNext;			// +0x86
+	UByte				fStrokes[32];	// +0x88  the strokes to segment (a bit each)
+	short				fJoinX;			// +0xa8  a word after a dash: where the line it continues ended
+	short				fJoinY;			// +0xaa
+	UByte				fMerged;		// +0xac
+	UByte				fActive;		// +0xad  still collecting strokes (1), or one word read (0)
+	UByte				fRereading;		// +0xae
+};
+
 
 // Xrs to words.  NOT YET RECONSTRUCTED: the reading itself (Classify,
 // ClassifyXrWord, Reclassify, Group).
@@ -268,5 +377,22 @@ public:
 	UByte				f15C;			// +0x15c
 	UByte				f15D;			// +0x15d
 };
+
+// The GC layer between the domain and the engine.
+long	GCPregroupAndGroup(TStrXrDomain* domain, TStrokeUnit* stroke, ULong pregroup);	// ROM 0x000d39c8 GCPregroupAndGroup__FP12TStrXrDomainP11TStrokeUnitUi
+ULong	CallGroupAndClassify(TStrXrDomain* domain, TStrXrUnit* unit, TStrokeUnit* stroke, ULong classify, ULong pregroup, ULong lineAtATime);	// ROM 0x000d3b0c CallGroupAndClassify__FP12TStrXrDomainP10TStrXrUnitP11TStrokeUnitUiN24
+long	GCReleaseRecResults(TStrXrDomain* domain, TStrXrUnit* unit, TStrokeUnit* stroke, UByte* strokes, short base, ULong classify, ULong* released);	// ROM 0x000d4400 GCReleaseRecResults__FP12TStrXrDomainP10TStrXrUnitP11TStrokeUnitPUcsUiPUi
+long	WriteRecResults(TStrXrDomain* domain, TStrXrUnit* unit, TStrokeUnit* stroke, TStrXrUnit** last, GCWordDescrType* word, short base, ULong classify, ULong* released);	// ROM 0x000d4540 WriteRecResults__FP12TStrXrDomainP10TStrXrUnitP11TStrokeUnitPP10TStrXrUnitP15GCWordDescrTypesUiPUi
+long	GCWriteRW(TStrXrUnit* unit, GCRecResults* results, long part);	// ROM 0x000d4b6c GCWriteRW__FP10TStrXrUnitP12GCRecResultsi
+long	GCFillRecParmStruct(TStrXrDomain* domain, TUnit* unit, rc_type* rc);	// ROM 0x000d4f00 GCFillRecParmStruct__FP12TStrXrDomainP5TUnitP7rc_type
+long	GCClearChains(TStrXrDomain* domain, TUnit* unit);			// ROM 0x000d4ff0 GCClearChains__FP12TStrXrDomainP5TUnit
+void	GCAllocRecTrace(TStrXrUnit* unit, TStrokeUnit* stroke, UByte* strokes, short base, PS_point_type** trace, short* nPoints);	// ROM 0x000d502c GCAllocRecTrace__FP10TStrXrUnitP11TStrokeUnitPUcsPP13PS_point_typePs
+long	GCGetUnitRealStrokeIndex(TStrXrUnit* unit, short index);	// ROM 0x000d51d4 GCGetUnitRealStrokeIndex__FP10TStrXrUnits
+long	GroupAndClassifyStrokes(PS_point_type* trace, short nPoints, rc_type* rc, GCGroupParmStruct* parm, Handle* descriptors, ULong pregroup, ULong lineAtATime, ULong final, ULong* classified);	// ROM 0x000d5240 GroupAndClassifyStrokes__FP13PS_point_typesP7rc_typeP17GCGroupParmStructPUlUiN26PUi
+long	GCClassifyStrokes(GCWordDescrType* words, PS_point_type* trace, rc_type* rc, GCGroupParmStruct* parm, ULong* classified);	// ROM 0x000d546c GCClassifyStrokes__FP15GCWordDescrTypeP13PS_point_typeP7rc_typeP17GCGroupParmStructPUi
+void	WritePrevBaseLineToStrXrDomain(TStrXrDomain* domain, TStrXrUnit* unit);	// ROM 0x00065d48 WritePrevBaseLineToStrXrDomain__FP12TStrXrDomainP10TStrXrUnit
+long	SetStrXrFieldType(ULong type, STRXRPARAM* param);			// ROM 0x00220080 SetStrXrFieldType__FUlP10STRXRPARAM - ==> 0, -1 for no kind of field at all
+void	SetUpChains(TXrWordDomain* domain, TUnit* unit);			// ROM 0x0024e650 SetUpChains__FP13TXrWordDomainP5TUnit - the area's dictionary chains given to the word domain
+void	AdjustRecParmStruct(TXrWordDomain* domain, rc_type* rc);	// ROM 0x0024e77c AdjustRecParmStruct__FP13TXrWordDomainP7rc_type
 
 #endif	/* __XRDOMAINS_H */

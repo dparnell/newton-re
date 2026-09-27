@@ -14,6 +14,20 @@
 #include "ParaGraph.h"
 #include "Dictionaries.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+// HOST ONLY: with NEWTON_TRACE_CURSIVE set in the environment, each word
+// the cursive reader is given (its strokes and points) and what came of
+// it is printed on stderr.
+static Boolean
+TracingCursive(void)
+{
+	static int tracing = -1;
+	if (tracing < 0)
+		tracing = getenv("NEWTON_TRACE_CURSIVE") != nil ? 1 : 0;
+	return tracing != 0;
+}
 
 static inline short	GetBE(const UByte* p)			{ return (short) ((p[0] << 8) | p[1]); }
 static inline void	SetBE(UByte* p, long v)			{ p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
@@ -103,6 +117,14 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 	}
 	err = -6;
 done:
+	if (TracingCursive() && word != nil)
+	{
+		int extras = 0;
+		while (extras < 8 && word->fExtra[extras] != 0)
+			extras++;
+		fprintf(stderr, "[cursive] word of strokes %d-%d (+%d more), %d points: %ld\n",
+				word->fFirst, word->fLast, extras, nPoints, err);
+	}
 	rc->fWordInfo = nil;
 	GCWDWriteRecResults(word, rc, readings, learning, err, split, 0);
 	if (split != nil)
