@@ -182,6 +182,168 @@ InitSpeclElement(SPEC_TYPE* elem)
 }
 
 
+// ROM 0x0030a668 NewSPECLElem__FP8low_type
+// The next element of the array, cleared and counted.  ==> nil when full.
+SPEC_TYPE*
+NewSPECLElem(low_type* low)
+{
+	if (low->fLenSpecl < low->fNMaxSpecl)
+	{
+		SPEC_TYPE* elem = &low->fSpecl[low->fLenSpecl];
+		memset(elem, 0, sizeof(SPEC_TYPE));				// DEVIATION: sizeof
+		low->fLenSpecl = low->fLenSpecl + 1;
+		return elem;
+	}
+	return nil;
+}
+
+
+// ROM 0x0030a6d0 DelFromSPECLList__FP9SPEC_TYPE
+// Unlinked (its own links left as they were).
+void
+DelFromSPECLList(SPEC_TYPE* elem)
+{
+	elem->prev->next = elem->next;
+	if (elem->next == nil)
+		return;
+	elem->next->prev = elem->prev;
+}
+
+
+// ROM 0x0030a6f4 FindMarkRight__FP9SPEC_TYPEUc
+// From elem forwards to the first of the kind.  ==> nil for none.
+SPEC_TYPE*
+FindMarkRight(SPEC_TYPE* elem, UByte mark)
+{
+	while (elem != nil && elem->mark != mark)
+		elem = elem->next;
+	return elem;
+}
+
+
+// ROM 0x0030a714 FindMarkLeft__FP9SPEC_TYPEUc
+SPEC_TYPE*
+FindMarkLeft(SPEC_TYPE* elem, UByte mark)
+{
+	while (elem != nil && elem->mark != mark)
+		elem = elem->prev;
+	return elem;
+}
+
+
+// ROM 0x0030a734 DelThisAndNextFromSPECLList__FP9SPEC_TYPE
+// elem and the one after it unlinked, still linked to each other.
+void
+DelThisAndNextFromSPECLList(SPEC_TYPE* elem)
+{
+	SPEC_TYPE* next = elem->next;
+	DelFromSPECLList(next);
+	DelFromSPECLList(elem);
+	elem->next = next;
+}
+
+
+// ROM 0x0030a760 DelCrossingFromSPECLList__FP9SPEC_TYPE
+// (a crossing is two elements; the ROM's entry is a branch to the above)
+void
+DelCrossingFromSPECLList(SPEC_TYPE* elem)
+{
+	DelThisAndNextFromSPECLList(elem);
+}
+
+
+// ROM 0x0030a764 SwapThisAndNext__FP9SPEC_TYPE
+void
+SwapThisAndNext(SPEC_TYPE* elem)
+{
+	SPEC_TYPE* next = elem->next;
+	if (next == nil)
+		return;
+	DelFromSPECLList(elem);
+	SPEC_TYPE* after = next->next;
+	next->next = elem;
+	if (elem != nil)
+		elem->prev = next;
+	elem->next = after;
+	if (after != nil)
+		after->prev = elem;
+}
+
+
+// ROM 0x0030a798 Insert2ndAfter1st__FP9SPEC_TYPET1
+void
+Insert2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second)
+{
+	SPEC_TYPE* after = first->next;
+	first->next = second;
+	if (second != nil)
+		second->prev = first;
+	second->next = after;			// (written whether or not second is nil)
+	if (after != nil)
+		after->prev = second;
+}
+
+
+// ROM 0x0030a7b8 InsertCrossing2ndAfter1st__FP9SPEC_TYPET1
+// A crossing (second and the element after it) put after first.
+void
+InsertCrossing2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second)
+{
+	Insert2ndAfter1st(first, second->next);
+	Insert2ndAfter1st(first, second);
+}
+
+
+// ROM 0x0030a7e4 Move2ndAfter1st__FP9SPEC_TYPET1
+void
+Move2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second)
+{
+	DelFromSPECLList(second);
+	Insert2ndAfter1st(first, second);
+}
+
+
+// ROM 0x0030a810 MoveCrossing2ndAfter1st__FP9SPEC_TYPET1
+void
+MoveCrossing2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second)
+{
+	DelCrossingFromSPECLList(second);
+	Insert2ndAfter1st(first, second->next);
+	Insert2ndAfter1st(first, second);
+}
+
+
+// ROM 0x0030a83c RefreshElem__FP9SPEC_TYPEUcN22
+void
+RefreshElem(SPEC_TYPE* elem, UByte mark, UByte code, UByte attr)
+{
+	elem->mark = mark;
+	elem->code = code;
+	elem->attr = attr;
+}
+
+
+// ROM 0x00305b84 IsUpperElem__FP9SPEC_TYPE
+// Whether an element's code is one of the upper kinds.
+Boolean
+IsUpperElem(SPEC_TYPE* elem)
+{
+	UByte c = elem->code;
+	return c == 3 || c == 2 || c == 9 || c == 0xa || c == 4 || c == 0x1d || c == 0x21
+		|| c == 0x17 || c == 0x16 || c == 0x18 || c == 0x15;
+}
+
+
+// ROM 0x00305bc0 IsLowerElem__FP9SPEC_TYPE
+Boolean
+IsLowerElem(SPEC_TYPE* elem)
+{
+	UByte c = elem->code;
+	return c == 7 || c == 8 || c == 0xb || c == 0xc || c == 6 || c == 0x1e || c == 0x22
+		|| c == 0x1b || c == 0x1a || c == 0x1c || c == 0x19;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   s t r o k e s
 ------------------------------------------------------------------------------*/

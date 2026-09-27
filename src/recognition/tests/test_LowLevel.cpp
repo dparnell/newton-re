@@ -337,6 +337,47 @@ TestSmoothLines(void)
 }
 
 
+// The list's order, as marks.
+static bool
+ListIs(SPEC_TYPE* head, const char* marks)
+{
+	SPEC_TYPE* e = head;
+	for ( ; *marks != 0; marks++, e = e->next)
+	{
+		if (e == nil || e->mark != (UByte) *marks)
+			return false;
+		if (e->next != nil && e->next->prev != e)
+			return false;
+	}
+	return e == nil;
+}
+
+
+static void
+TestListOps(void)
+{
+	SPEC_TYPE s[6];
+	memset(s, 0, sizeof(s));
+	for (long i = 0; i < 5; i++)
+	{
+		s[i].mark = 'a' + i;
+		s[i].next = (i < 4) ? &s[i + 1] : nil;
+		s[i].prev = (i > 0) ? &s[i - 1] : nil;
+	}
+	EXPECT(ListIs(&s[0], "abcde"));
+	SwapThisAndNext(&s[1]);
+	EXPECT(ListIs(&s[0], "acbde"));
+	Move2ndAfter1st(&s[0], &s[3]);
+	EXPECT(ListIs(&s[0], "adcbe"));
+	DelFromSPECLList(&s[2]);
+	EXPECT(ListIs(&s[0], "adbe"));
+	EXPECT(FindMarkRight(&s[0], 'b') == &s[1] && FindMarkRight(&s[0], 'z') == nil);
+	EXPECT(FindMarkLeft(&s[4], 'd') == &s[3]);
+	RefreshElem(&s[4], 'e', 3, 0);
+	EXPECT(IsUpperElem(&s[4]) && !IsLowerElem(&s[4]));
+}
+
+
 int
 main()
 {
@@ -348,6 +389,7 @@ main()
 	TestExtrema();
 	TestBaselinePieces();
 	TestSmoothLines();
+	TestListOps();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

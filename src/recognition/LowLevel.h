@@ -176,6 +176,21 @@ Boolean	InitSpeclElement(SPEC_TYPE* elem);							// ROM 0x002ba4cc InitSpeclElem
 Boolean	CreateSDS(low_type* low, short n);							// ROM 0x0032f8bc CreateSDS__FP8low_types
 void	DestroySDS(low_type* low);									// ROM 0x0032f91c DestroySDS__FP8low_type
 
+SPEC_TYPE*	NewSPECLElem(low_type* low);							// ROM 0x0030a668 NewSPECLElem__FP8low_type - ==> nil when full
+void	DelFromSPECLList(SPEC_TYPE* elem);							// ROM 0x0030a6d0 DelFromSPECLList__FP9SPEC_TYPE
+SPEC_TYPE*	FindMarkRight(SPEC_TYPE* elem, UByte mark);				// ROM 0x0030a6f4 FindMarkRight__FP9SPEC_TYPEUc
+SPEC_TYPE*	FindMarkLeft(SPEC_TYPE* elem, UByte mark);				// ROM 0x0030a714 FindMarkLeft__FP9SPEC_TYPEUc
+void	DelThisAndNextFromSPECLList(SPEC_TYPE* elem);				// ROM 0x0030a734 DelThisAndNextFromSPECLList__FP9SPEC_TYPE
+void	DelCrossingFromSPECLList(SPEC_TYPE* elem);					// ROM 0x0030a760 DelCrossingFromSPECLList__FP9SPEC_TYPE
+void	SwapThisAndNext(SPEC_TYPE* elem);							// ROM 0x0030a764 SwapThisAndNext__FP9SPEC_TYPE
+void	Insert2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second);		// ROM 0x0030a798 Insert2ndAfter1st__FP9SPEC_TYPET1
+void	InsertCrossing2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second);	// ROM 0x0030a7b8 InsertCrossing2ndAfter1st__FP9SPEC_TYPET1
+void	Move2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second);		// ROM 0x0030a7e4 Move2ndAfter1st__FP9SPEC_TYPET1
+void	MoveCrossing2ndAfter1st(SPEC_TYPE* first, SPEC_TYPE* second);	// ROM 0x0030a810 MoveCrossing2ndAfter1st__FP9SPEC_TYPET1
+void	RefreshElem(SPEC_TYPE* elem, UByte mark, UByte code, UByte attr);	// ROM 0x0030a83c RefreshElem__FP9SPEC_TYPEUcN22
+Boolean	IsUpperElem(SPEC_TYPE* elem);								// ROM 0x00305b84 IsUpperElem__FP9SPEC_TYPE
+Boolean	IsLowerElem(SPEC_TYPE* elem);								// ROM 0x00305bc0 IsLowerElem__FP9SPEC_TYPE
+
 // The strokes.
 long	InitGroupsBorder(low_type* low, short withBoxes);			// ROM 0x003087e0 InitGroupsBorder__FP8low_types - ==> 0, 1 for a trace that does not start and end with a pen-up or has too many strokes
 Boolean	ClearGroupsBorder(low_type* low);							// ROM 0x0030897c ClearGroupsBorder__FP8low_type
