@@ -114,21 +114,31 @@ HostKeyboardToolTask(void)
 // the window's shims (host/win32/HostWindow.cpp calls these with C linkage)
 extern "C" {
 
+// (the pen is the tablet's own: while the journal plays, the tablet is
+//  bypassed and it is ignored)
 void
 HostWindowPenDown(long x, long y)
 {
+	if (HostTabletBypassed())
+		return;
+	HostTabletPenState(true);
 	HostTabletPenDown(x, y, 0);
 }
 
 void
 HostWindowPenMove(long x, long y)
 {
+	if (HostTabletBypassed())
+		return;
 	HostTabletPenMove(x, y, 3);
 }
 
 void
 HostWindowPenUp(void)
 {
+	if (HostTabletBypassed())
+		return;
+	HostTabletPenState(false);
 	HostTabletPenUp(0);
 }
 

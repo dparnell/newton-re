@@ -10,11 +10,11 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 103/103
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 104/104
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10926 citations, 0 bad;
-  6027 of 16671 functions (36.15%).
-- `analysis/natives.py --unbound`: 349 of the ROM's 1326 natives
+- `analysis/coverage.py build/MP2x00US --check`: 10952 citations, 0 bad;
+  6042 of 16671 functions (36.24%).
+- `analysis/natives.py --unbound`: 340 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
 
@@ -127,14 +127,26 @@ letter set on the host reads nothing (its writing stays ink).
 
 ## Then: the testing system
 
-The 38 `testing` natives, starting with **the journal** - recording the
-pen's strokes and playing them back (`JournalStartRecord`,
-`JournalStopRecord`, `JournalReplay*`), which would make every demo
-script a recording rather than hand-placed pen positions.  Then the test
-agent (`TestM*`, `Test*`), the tablet bypass (`StartBypassTablet`,
-`StopBypassTablet`, `InsertTabletSample`), the debug hooks
-(`DebugMemoryStats`, `DebugRunUntilIdle`, `Stdio*`), Uriah and the IR
-sniffing.
+The 38 `testing` natives (`docs/testing/README.md`).  DONE (2026-09-28):
+**the journal** - `JournalStartRecord`/`JournalStopRecord`, the three
+`JournalReplay*` and `JournalReplayBusy` (`testing/Journal.h`; ctest
+`host.NewtonJournal` records "ton" written on the Notepad and plays it
+back) - and the tablet's bypass natives (`StartBypassTablet`,
+`StopBypassTablet`, `InsertTabletSample`).  Left, in order:
+
+- **The test agent** (`TTestAgent`, 0x00226a40-0x0022a9c4: the `'tagt`
+  app world `TLoader::TheMain` starts through `InitTestAgent`, its event
+  handler and idler, `TAgentReporter`/`TTestReporter` and the message
+  queue, `ActivateTestAgent`/`DeactivateTestAgent`, `TestExit`,
+  `TestReportMessage`/`TestReportError`, the `TestM*` natives and the
+  test-server connection over `TCommServer`).  Until it is there the
+  host's inker task plays the journal (`JournalAgentIdle`, a DEVIATION),
+  and nothing ends the tablet's bypass after a replay but
+  `JournalStopReplay` from C.
+- `HobbleTablet` (a message to the inker), the debug hooks
+  (`DebugMemoryStats`, `DebugRunUntilIdle`, `StdioOn`/`StdioOff`,
+  `debug`), `TestWillCallExit`, the serial debugging, Uriah and the IR
+  sniffing.
 
 ## The package manager: what is left
 
@@ -212,7 +224,7 @@ inside an area).  At 2026-09-27:
 |---|---|---|
 | comms | 121 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
-| testing | 38 | the test agent and the debug hooks |
+| testing | 28 | the test agent and the debug hooks (the journal is done) |
 | packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
 | recognition | 0 | all answered (the cursive engine's reading is NOT YET behind them) |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |

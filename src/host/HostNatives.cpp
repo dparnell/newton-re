@@ -48,6 +48,7 @@
 #include "ParaGraph.h"
 #include "WordRecognizer.h"
 #include "LetterShapes.h"
+#include "Journal.h"
 
 
 void
@@ -55,6 +56,7 @@ RegisterAllNatives(void)
 {
 	// the frames core: arithmetic, strings, arrays, the compiler, the printer
 	RegisterBuiltinNatives();
+	RegisterJournalNatives();
 	RegisterLargeBinaryNatives();
 	RegisterScriptBootNatives();
 	RegisterSortTableNatives();

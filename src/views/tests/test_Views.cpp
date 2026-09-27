@@ -33,6 +33,8 @@
 #include "MeetingView.h"
 #include "SliderView.h"
 #include "PicPlay.h"
+#include "Journal.h"
+#include "TabletBuffer.h"
 #include <string>
 #include "Commands.h"
 #include "Keyboard.h"
@@ -6642,6 +6644,65 @@ TestPicture()
 }
 
 
+// The journal: a stroke written while recording comes to the recorder as
+// a big-endian JournalStroke of sample words; played back moved 110 pixels
+// right, it reaches a view there as a click (its first point moved), the
+// tablet bypassed meanwhile so the window's pen is ignored; a line made up
+// by JournalReplayALine reaches a view under it too.
+static void
+TestJournal()
+{
+	TView* v = ViewOf("ctxJ := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200 + 0x800, viewFormat: 1, viewBounds: {left: 125, top: 10, right: 160, bottom: 95}, clicks: [], viewGestureScript: func(unit, kind) true, "
+		"viewClickScript: func(unit) begin AddArraySlot(clicks, [GetPoint(0, unit), GetPoint(1, unit)]); nil end})");
+	EXPECT(v != nil);
+	Refresh();
+	HostTabletWait(2);								// (whatever an earlier test left in the tablet buffer read first)
+	gRecognition.Idle();
+	EXPECT(RINT(Eval("recorder := {strokes: [], Record: func(s, size) AddArraySlot(strokes, [s, size]), Start: func() JournalStartRecord('Record, 1)}; recorder:Start()")) == 0);
+	EXPECT(gJournallingState == 1);
+	HostTabletPenDown(20, 30, 0);
+	HostTabletPenMove(24, 32);
+	HostTabletPenMove(28, 34);
+	HostTabletPenMove(30, 35);
+	HostTabletPenUp(0);
+	gRecognition.Idle();
+	EXPECT(RINT(Eval("Length(recorder.strokes)")) == 1);
+	if (RINT(Eval("Length(recorder.strokes)")) != 1)
+		return;
+	RefVar recorded(Eval("recorder.strokes[0][0]"));
+	const unsigned char* data = (const unsigned char*) BinaryData(recorded);
+	ULong count = GetBigEndianWord(data + 4);
+	EXPECT(count >= 4);
+	EXPECT(GetBigEndianWord(data) == 4 * (count - 1) + 0x1c && (ULong) Length(recorded) == GetBigEndianWord(data)
+		&& RINT(Eval("recorder.strokes[0][1]")) == (long) GetBigEndianWord(data));
+	EXPECT(GetBigEndianWord(data + 8) == 0 && (long) GetBigEndianWord(data + 12) >= 0);
+	EXPECT(GetBigEndianWord(data + 0x10) == HostTabletSample(20, 30, 3));
+	EXPECT(RINT(Eval("JournalStopRecord()")) == 0 && gJournallingState == 0);
+
+	// played back 100 pixels to the right: into the view
+	SetFrameSlot(RefVar(gVarFrame), RefVar(MakeSymbol("journalStroke")), recorded);
+	EXPECT(RINT(Eval("JournalReplayAStroke(journalStroke, 110, 0, 1, 100, 20)")) == 0 && gJournallingState == 2);
+	EXPECT(NOTNIL(Eval("JournalReplayBusy()")));
+	HostTabletWait(40);
+	gRecognition.Idle();
+	EXPECT(HostTabletBypassed());				// (the bypass outlives the replay, as on the machine)
+	EXPECT(gJournallingState == 0 && ISNIL(Eval("JournalReplayBusy()")));
+	EXPECT(RINT(Eval("Length(ctxJ.clicks)")) == 1 && RINT(Eval("ctxJ.clicks[0][0]")) == 130 && RINT(Eval("ctxJ.clicks[0][1]")) == 30);
+	JournalStopReplay();
+	EXPECT(!HostTabletBypassed());
+
+	// a line made up on the spot
+	EXPECT(RINT(Eval("JournalReplayALine(130, 80, 150, 80, nil, 60)")) == 0);
+	HostTabletWait(60);
+	gRecognition.Idle();
+	EXPECT(gJournallingState == 0);
+	EXPECT(RINT(Eval("Length(ctxJ.clicks)")) == 2 && RINT(Eval("ctxJ.clicks[1][0]")) == 130 && RINT(Eval("ctxJ.clicks[1][1]")) == 80);
+	JournalStopReplay();
+	Eval("RemoveView(GetRoot(), ctxJ)");
+	Refresh();
+}
+
+
 // A picture turned into shapes (PictToShape over DrawPicture's toShapes):
 // a hand-made version 1 picture - a rectangle painted and then framed, an
 // oval painted, two lines end to end and a framed triangle - comes back
@@ -6803,6 +6864,7 @@ main()
 	RegisterPortNatives();
 	RegisterLargeBinaryNatives();
 	RegisterShapeNatives();
+	RegisterJournalNatives();
 	RegisterCorrectInfoNatives();
 	RegisterBitmapNatives();
 	RegisterStrokeBundleNatives();
@@ -6940,6 +7002,7 @@ main()
 		TestMeetingView();
 		TestPicture();
 		TestPictToShape();
+		TestJournal();						// (last: its replays move the clock on)
 	}
 	newton_catch_all
 	{

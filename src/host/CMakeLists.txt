@@ -45,6 +45,13 @@ add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --disp
 set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "Recognize read ton.*unread strokes came back as nothing.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7.*ink came back as a piece of 4 strokes.*ink came back as a piece of 4 strokes")
 
+# the journal (testing/Journal.h): "ton" written while recording, the four
+# strokes played back into the tablet buffer and read again (needs the
+# ROM image)
+add_test(NAME host.NewtonJournal COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/journal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonJournal PROPERTIES TIMEOUT 200
+                     PASS_REGULAR_EXPRESSION "journal: recording started.*journal: 4 strokes recorded.*before the replay the page reads \"ton\".*after the replay the page reads \"ton to")
+
 # the cursive recogniser's letter styles asked from NewtonScript
 # (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)
 add_test(NAME host.NewtonLetterStyles COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/letterstyles.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

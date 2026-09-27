@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+
+## 2026-09-28: the journal - strokes recorded and played back
+
+- `testing/Journal.h` (a new area, `src/testing/`, `docs/testing/
+  README.md`): `JournalRecordAStroke` (called by `StrokeCentral::
+  IdleStrokes` while recording), `JournalReplayHandler` (timing,
+  `GetNextTabletSample`, the stroke file), `JournalInsertTabletSamople`,
+  `JournalStopReplay`, and the natives `JournalStartRecord`,
+  `JournalStopRecord`, `JournalReplayAStroke`, `JournalReplayALine`,
+  `JournalReplayStrokes`, `JournalReplayBusy`; the tablet's bypass
+  (`StartBypassTablet`/`StopBypassTablet` over the host tablet's driver
+  state, the window's pen ignored while bypassed) and `InsertTabletSample`.
+- The test agent that plays the journal on the machine is NOT YET: the
+  host's inker task runs its idle proc's journal half every tick
+  (`JournalAgentIdle`, DEVIATION).  Journal binaries keep their words
+  big-endian (DEVIATION, so a journal is portable).
+- ROM quirks kept: a replayed stroke's last point is replaced by the
+  pen-up (the demo's "ton" comes back as "tor"), the bypass outlives the
+  replay, a format 1 JournalStroke's binary has eight bytes too many, a
+  format 2 stroke is moved in the wrong words.
+- ctest `host.NewtonJournal` (`src/host/demo/journal.ns`), `test_Views`'s
+  `TestJournal`.
+
 ## 2026-09-28: PictToShape - a picture turned into shapes
 
 - `PictToShape` (0x000dd6dc) over `DrawPicture`'s toShapes path: the

@@ -117,6 +117,25 @@ InsertTabletSample(ULong sample, ULong time)
 }
 
 
+long	(*gTabletDriverBypass)(Boolean start) = nil;
+
+
+// ROM 0x0025075c StartBypassTablet__Fv
+long
+StartBypassTablet(void)
+{
+	return gTabletDriverBypass != nil ? gTabletDriverBypass(true) : -1;
+}
+
+
+// ROM 0x0025076c StopBypassTablet__Fv
+long
+StopBypassTablet(void)
+{
+	return gTabletDriverBypass != nil ? gTabletDriverBypass(false) : -1;
+}
+
+
 // ROM 0x002500b0 TBCTabletBufferInit__FP6TUPort
 // The buffer emptied and the modes reset.  NOT YET RECONSTRUCTED: the
 // inker's port and the 'newt/'inkr event that wakes it.

@@ -4,6 +4,7 @@
 	Contains:	The host's tablet, over the tablet buffer.
 */
 
+#include "Journal.h"
 #include "HostTablet.h"
 #include "TabletBuffer.h"
 #include "StrokeQueue.h"
@@ -49,12 +50,15 @@ Dequeue(HostTabletRecord* record)
 }
 
 
+static long	HostTabletBypass(Boolean start);
+
 void
 HostTabletInit(void)
 {
 	TBCTabletBufferInit(nil);
 	gHostTabletHead = gHostTabletTail = 0;
 	gHostWaitHook = HostTabletWait;
+	gTabletDriverBypass = HostTabletBypass;
 }
 
 
@@ -66,6 +70,45 @@ HostTabletSample(long x, long y, ULong pressure)
 	ULong x8 = (ULong) (x * 8) & 0x3fff;
 	ULong y8 = (ULong) (y * 8) & 0x3fff;
 	return (x8 << 18) | (y8 << 4) | (pressure & 7);
+}
+
+
+// The host's tablet driver's state, as TResistiveTablet keeps its own:
+// 0 idle, 1 the pen down, 8 bypassed.  StartBypassTablet
+// (TResistiveTablet::StartBypassTablet 0x0005ad04) is refused while the
+// pen is down; StopBypassTablet (0x0005ad50) ends it (the driver's PenUp,
+// which the host has no record to make for).
+static long	gHostTabletState = 0;
+
+static long
+HostTabletBypass(Boolean start)
+{
+	if (start)
+	{
+		if (gHostTabletState != 0 && gHostTabletState != 8)
+			return -1;
+		gHostTabletState = 8;
+		return 0;
+	}
+	if (gHostTabletState != 8)
+		return -1;
+	gHostTabletState = 0;
+	return 0;
+}
+
+
+Boolean
+HostTabletBypassed(void)
+{
+	return gHostTabletState == 8;
+}
+
+
+void
+HostTabletPenState(Boolean down)
+{
+	if (gHostTabletState != 8)
+		gHostTabletState = down ? 1 : 0;
 }
 
 
@@ -225,6 +268,7 @@ HostTabletWait(ULong ticks)
 {
 	for (ULong i = 0; i < ticks; i++)
 	{
+		JournalAgentIdle();
 		HostTabletPump();
 		HostAdvanceClock(0xf000);
 	}
@@ -254,6 +298,7 @@ HostInkerMain(void)
 	while (!gInkerStop.load())
 	{
 		Wait(1);
+		JournalAgentIdle();						// (the test agent's stand-in: testing/Journal.h)
 		HostTabletPump();
 		if (StrokeTime() != 0 && gInkerNewtPort != nil)
 			gInkerNewtPort->Send(&message, event, sizeof(event), 0);

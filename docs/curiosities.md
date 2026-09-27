@@ -1937,3 +1937,21 @@ be ink, the ROM groups them faithfully - and then drops them, because the
 word info they are wrapped in has no word and `AddWordInfo` keeps only
 those that do.  (`recognition/WordSegment.h`, `InkGroups.h`,
 `views/Rerecognize.cpp`.)
+
+
+## The journal plays every stroke but its last point
+
+The journal (`testing/Journal.h`) is how Apple's test tools wrote on the
+Newton: strokes recorded as tablet sample words and played back into the
+tablet buffer at the pace they were written.  `JournalReplayHandler::
+GetNextTabletSample` hands out a stroke's samples as they fall due, and
+when the last has gone it answers a pen-up instead - in the same word, so
+the pen-up *replaces* the stroke's final sample rather than following
+it.  Every replayed stroke is one point short.  For most strokes nobody
+would notice, but it is enough to change what the recogniser reads: the
+host's demo writes "ton", plays the four strokes back, and the page gets
+"tor" - the `n` has lost the end of its last leg.  The function that puts
+the samples in is also spelt `JournalInsertTabletSamople` in the ROM's
+own symbols, and a replay leaves the tablet bypassed - the real pen shut
+out - until the test agent is told to stop.
+

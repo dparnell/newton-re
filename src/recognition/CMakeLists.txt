@@ -96,5 +96,5 @@ add_library(recognition STATIC
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # (the strokes tell the root view what to redraw; the views track strokes:
 # the two static libraries depend on each other)
-target_link_libraries(recognition PUBLIC frames qd views)
+target_link_libraries(recognition PUBLIC frames qd views testing)
 add_subdirectory(tests)

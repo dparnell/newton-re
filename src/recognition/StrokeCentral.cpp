@@ -6,6 +6,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "Journal.h"
 #include <stdio.h>
 #include "StrokeCentral.h"
 #include "StrokeQueue.h"
@@ -199,7 +200,8 @@ StrokeCentral::IdleStrokes(void)
 		}
 		if (!fCurrentStroke->Done())
 			return;
-		// (the ROM: JournalRecordAStroke when journalling - NOT YET)
+		if (gJournallingState == 1)
+			JournalRecordAStroke(fCurrentStroke);
 		DoneCurrentStroke();
 		gController->TriggerRecognition();
 	}

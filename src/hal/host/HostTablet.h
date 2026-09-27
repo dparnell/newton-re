@@ -31,6 +31,8 @@ void	HostTabletPenDown(long x, long y, ULong time);		// a pen-down record (time 
 void	HostTabletPenMove(long x, long y, ULong pressure = 3);	// a sample (pixels; the pressure 0-7)
 void	HostTabletPenUp(ULong time);						// a pen-up record (time 0: now)
 ULong	HostTabletSample(long x, long y, ULong pressure = 3);	// the sample word for a point
+Boolean	HostTabletBypassed(void);							// the tablet bypassed (the journal playing): the window's pen is ignored
+void	HostTabletPenState(Boolean down);					// the window's pen went down or up (the driver refuses a bypass while it is down)
 
 // queued records, fed one per tick of a Wait (or by HostTabletPump)
 void	HostTabletQueuePenDown(long x, long y, ULong time);
