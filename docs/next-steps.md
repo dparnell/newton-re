@@ -72,7 +72,7 @@ verbs rather than recognition proper), in the order planned:
    `Recognize` still answers nothing for them, as the ROM's own does.
 2. DONE (2026-09-28, `docs/recognition/README.md`'s "The cursive
    recogniser and the letter styles"; the cursive engine's reading is
-   NOT YET) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
+   NOT YET - measured below) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
    `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
 3. DONE bar two (2026-09-28, `views/ShapeVerbs.cpp`,
    `docs/views/README.md`'s "Questions asked of shapes") **Shape verbs**:
@@ -82,15 +82,58 @@ verbs rather than recognition proper), in the order planned:
      `qd/MungeBitmap.cpp`, `toolbox/Matrix.h`; `MungeBitmap` too) bar
      `RotTiledBitmap` (a screen-sized bitmap turned in tiles out of a large
      binary on a store, over `TTile`).
-   - `PictToShape` (0x000dd6dc): `DrawPicture`'s toShapes path - the
-     `OpcodeProcs` table, `storeShape`, `flushShape`, `MungeStyleFrame`
-     (`docs/qd/README.md`).
+   - `PictToShape` (0x000dd6dc, 264 B, a wrapper): all the work is
+     `DrawPicture(pic, rect, toShapes)`'s shapes path, measured
+     2026-09-28 - `ParsePicCodes` hands each opcode to the proc the
+     `OpcodeProcs` table (0x00380a9c, 17 jump-table slots) names instead
+     of drawing: `EarlyPicCodes` 0x0033196c, `LinePicCodes` 0x00330108,
+     `RectPicCodes` 0x003303b4, `ArcPicCodes` 0x00330658, `PolyPicCodes`
+     0x00330798, `RegionPicCodes` 0x003309cc, `BitsPicCodes` 0x00330aa4,
+     `CommentPicCodes` 0x00330654, `HuhPicCodes` 0x00330f50,
+     `EOPPicCodes` 0x00330cc0, `XtndPicCodes` 0x00330cf0; under them
+     `storeShape` 0x00331804 / `flushShape` 0x00331754 (the shapes
+     gathered with a style frame each), `MungeStyleFrame` 0x0033113c,
+     `StylesEqual` 0x003314c8, `StyleToNSFont`/`GetNSFont`/
+     `GetNSPattern` 0x00330f54-0x0033113c - about 6 KB, 18 functions; the
+     `else NOT YET: the picture turned into shapes` sites in
+     `qd/PicPlay.cpp` are where they plug in, and `DrawPicture` must
+     answer the shapes (`docs/qd/README.md`).
 4. DONE (2026-09-28) `InkConvert` (over the codec's converter
    `ConvertData`, `ink/CICConvert.cpp`), `ConvertDictionaryData`,
    `MoveCorrectionInfo`/`AddUnit`/`HandleInkWord`; the boot's `UseWRec`
    choice was already made by `ReadCursiveOptions` (item 2).  NOT YET:
    `TEditView::TrackDistort` 0x000a9634 (dragging a selected shape's
    corner to distort it, which `MungeShape`'s neighbours would draw).
+
+### The cursive reader (ParaGraph's xr engine), measured
+
+Measured 2026-09-28 with `analysis/callgraph.py build/MP2x00US
+GCTryToRecognize__FP13PS_point_typeP15GCWordDescrTypeP7rc_typeP17GCGroupParmStruct
+CallGroupAndClassify__FP12TStrXrDomainP10TStrXrUnitP11TStrokeUnitUiN24`:
+**715 functions reached, 663 not done, about 431 KB** - twice the whole
+of Rosetta - and a lower bound, since the domains' own `Classify` calls
+reach it through function pointers (`TStrXrDomain::Classify` is 56 bytes).
+The biggest pieces: a digit and number reader over "chunks" of writing
+(`Digits` 24 KB, `SearchDigit_S`/`_K`/`_L`/`New_SearchDigit_V` 17-24 KB
+each, `SearchNumber`, `FindPound`, `RecognizeZCCW` - about 110 KB
+together), the low-level feature extraction over `low_type`
+(`BaselineAndScale`, `transfrmN` 6.4 KB, `Extr`/`BigExtr`,
+`line_pos_mist`, `StrElements`), punctuation and apostrophes
+(`punctuation`, `RestoreApostroph`), and the lexical correction
+(`ChunkCorrectByLexDB`).  The word descriptors the GC layer keeps for it
+(`GCWordDescr*`, `GCWriteNewGroupResults`, the rest of
+`GCTryToRemoveLastWords`, `InkGroups.h`) come first.  A plan, in the
+order the reading reaches things: (1) the word descriptors and
+`GCTryToRecognize`'s own frame (`GCLockRecognitionData`,
+`GCFillBaseLineParameters`, `GCMergeLinesAndRemoveDash`); (2) the
+low-level layer (`low_type`: the trace cut into elements and
+extrema - the part once mistaken for Rosetta's feature extraction);
+(3) the xr matching against the DTE/PPD tables already loaded
+(`ParaGraph.h`); (4) the word search and the lexical DB; (5) the digit
+and number reader last, since it is a reader of its own inside the
+engine.  Like Rosetta it should sit behind the `TWRecognizer`-style seam
+so a modern cursive recogniser can replace it.  Until then a cursive
+letter set on the host reads nothing (its writing stays ink).
 
 ## Then: the testing system
 
