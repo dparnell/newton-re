@@ -9,7 +9,8 @@
 # (DrawShape.h), the command frames (Commands.h) and the application
 # that dispatches them and keeps the undo stacks and delayed actions
 # (Application.h), the picker of popup menus (PickView.h) and the
-# clipboard (ClipboardView.h); the other subclasses (lists, ...) to come.
+# clipboard (ClipboardView.h), the outline list (ListView.h); the other
+# subclasses to come.
 add_library(views STATIC
     View.cpp
     Hilites.cpp
@@ -26,6 +27,7 @@ add_library(views STATIC
     DataView.cpp
     ContainerView.cpp
     EditView.cpp
+    ListView.cpp
     StyleRuns.cpp
     ParagraphView.cpp
     GaugeView.cpp

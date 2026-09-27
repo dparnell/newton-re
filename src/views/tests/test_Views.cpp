@@ -29,6 +29,8 @@
 #include "ClipboardView.h"
 #include "DragDrop.h"
 #include "DrawShape.h"
+#include "ListView.h"
+#include <string>
 #include "Commands.h"
 #include "Keyboard.h"
 #include "RecConfig.h"
@@ -5985,7 +5987,10 @@ TestEditViewDrop()
 		return;
 	EXPECT(ISNIL(GetFrameSlot(data, RSSYMtextflags)));
 	EXPECT(EQ(RefVar(GetFrameSlot(data, RSSYMviewstationery)), RSSYMpara));
-	EXPECT(para->viewBounds.right == 200);			// the page's right edge
+	// laid out to the page's right edge, and then - a paragraph's input
+	// flags having vWidthGrowsWithText (4) - brought in to the text's
+	// width when SetBounds lays it out again (FixupBBox)
+	EXPECT(para->viewBounds.right < 200 && para->viewBounds.right > para->viewBounds.left + 5);
 	EXPECT(para->viewBounds.top == 20);				// moved down onto the page
 	EXPECT(para->Hilited() && gRootView->fHiliter == page);
 
@@ -6310,6 +6315,112 @@ TestPolygons()
 }
 
 
+// The outline list (TListView): its paragraphs laid out one below the
+// other at their topics' levels, collapsing and expanding, and the
+// arithmetic the pen is placed by.
+static void
+TestListView()
+{
+	TView* view = ViewOf("ctxLV := AddView(GetRoot(), {viewClass: 99, viewFlags: 1, "
+		"viewBounds: {left: 0, top: 0, right: 200, bottom: 200}, "
+		"listViewFlags: 1, leftMarkGap: 0, rightMarkGap: 10, topMargin: 4, rightIndent: 0, "
+		"firstTopic: 0, lastTopic: nil, maxLevel: 4, "
+		"canonicalParaTopic: {viewClass: 81, viewFlags: 1, viewJustify: 0}, "
+		"topics: ["
+		"{text: \"one\", styles: [3, 12291], level: 1, hideCount: 0, viewBounds: {left: 0, top: 0, right: 200, bottom: 20}}, "
+		"{text: \"two\", styles: [3, 12291], level: 2, hideCount: 0, viewBounds: {left: 0, top: 0, right: 200, bottom: 20}}, "
+		"{text: \"three\", styles: [5, 12291], level: 1, hideCount: 0, viewBounds: {left: 0, top: 0, right: 200, bottom: 20}}, "
+		"{text: \"four\", styles: [4, 12291], level: 2, viewBounds: {left: 0, top: 0, right: 200, bottom: 20}}]})");
+	EXPECT(view != nil);
+	if (view == nil)
+		return;
+	TListView* list = (TListView*) view;
+	EXPECT(list->ClassID() == clListView && list->DerivedFrom(clEditView) && !list->DerivedFrom(clParagraphView));
+	EXPECT(list->fDragTopic == -2);
+	// the list's own topics (CollapseTopic and ExpandTopic read the slot
+	// without inheritance, as a list's setup script leaves it)
+	Eval("ctxLV.topics := ctxLV.topics");
+	RefVar ctx(Eval("ctxLV"));
+	EXPECT(list->NTopics() == 4 && list->GadgetWidth() == 10);
+
+	// a paragraph for each visible topic, the children made to measure them
+	// taken away again
+	RefVar kids(FSetupVisibleChildren(ctx, MAKEINT(0), NILREF, NILREF));
+	EXPECT(Length(kids) == 4);
+	EXPECT(list->fChildren == nil || list->fChildren->Count() == 0);
+	Rect box[4];
+	for (long i = 0; i < 4 && i < Length(kids); i++)
+	{
+		RefVar kid(GetArraySlotRef(kids, i));
+		EXPECT(RINT(GetFrameSlotRef(kid, RSSYMindex)) == i);
+		EXPECT(RINT(GetFrameSlotRef(kid, RSSYMviewclass)) == 81);
+		// the topic's box is where its paragraph came out (the template
+		// keeps the box it was made with)
+		FromObject(RefVar(Eval((std::string("ctxLV.topics[") + char('0' + i) + "].viewBounds").c_str())), box[i]);
+	}
+	// indented a level at a time (20 pixels) past the gutter's 10
+	EXPECT(box[0].left == 10 && box[1].left == 30 && box[2].left == 10 && box[3].left == 30);
+	// each below the one before, sixteen pixels at the least
+	EXPECT(box[1].top - box[0].top >= 16 && box[2].top - box[1].top >= 16 && box[3].top - box[2].top >= 16);
+	EXPECT(RINT(FVisibleTopicIndex(ctx, MAKEINT(3))) == 3);
+
+	// the list's arithmetic
+	EXPECT(RINT(FTopicBottom(ctx, RefVar(list->Topic(0)))) == (box[0].bottom > box[0].top + 16 ? box[0].bottom : box[0].top + 16));
+	EXPECT(RINT(FFamilyBottom(ctx, MAKEINT(0))) == RINT(FTopicBottom(ctx, RefVar(list->Topic(1)))));
+	EXPECT(RINT(FListBottom(ctx)) == RINT(FTopicBottom(ctx, RefVar(list->Topic(3)))));
+	EXPECT(list->FamilySize(0) == 2 && list->FamilySize(1) == 1 && list->FamilySize(2) == 2);
+	EXPECT(list->LevelFromX(5, -2) == 1);
+	EXPECT(list->LevelFromX(45, -2) == 2);			// (45 - 10) / 20 + 1
+	EXPECT(list->LevelFromX(200, -2) == 4);			// no deeper than maxLevel
+	EXPECT(list->LevelFromX(200, 0) == 2);			// nor a level below the topic before
+	Rect marker;
+	list->MarkerBounds(1, &marker);
+	EXPECT(marker.top == box[1].top && marker.bottom == box[1].top + 16);
+	EXPECT(marker.right == box[1].left - 10 && marker.left == marker.right - 20);
+	RefVar markerRef(FMarkerBounds(ctx, RefVar(list->Topic(1))));
+	Rect marker2;
+	FromObject(markerRef, marker2);
+	EXPECT(EqualRect(&marker, &marker2));
+	// the y of the middle of a topic's line falls above it: after the one before
+	EXPECT(list->IndexFromY((box[2].top + box[2].top + 16) / 2 - 1) == 1);
+	EXPECT(list->IndexFromY(10000) == 3);
+
+	// a topic dragged: it and those under it, moved to the top
+	RefVar dragRef(FMakeDragRef(ctx, MAKEINT(0)));
+	RefVar indexes(GetFrameSlotRef(dragRef, RSSYMindex));
+	EXPECT(Length(indexes) == 2 && RINT(GetArraySlotRef(indexes, 1)) == 1);
+	EXPECT(RINT(GetFrameSlotRef(dragRef, RSSYMlevel)) == 1);
+	RefVar dragged(GetFrameSlotRef(dragRef, RSSYMtopics));
+	EXPECT(TopicTop(RefVar(GetArraySlotRef(dragged, 0))) == 0);
+	EXPECT(TopicTop(RefVar(GetArraySlotRef(dragged, 1))) == TopicHeight(RefVar(list->Topic(0))));
+	EXPECT(RINT(GetFrameSlotRef(dragRef, RSSYMheight)) == TopicHeight(RefVar(list->Topic(0))) + TopicHeight(RefVar(list->Topic(1))));
+
+	// collapsed: the topic under it hidden, and made one fewer child
+	EXPECT(ISNIL(FIsCollapsed(ctx, MAKEINT(0))));
+	EXPECT(NOTNIL(FCollapseTopic(ctx, MAKEINT(0), NILREF)));
+	EXPECT(RINT(Eval("ctxLV.topics[1].hideCount")) == 1);
+	EXPECT(NOTNIL(FIsCollapsed(ctx, MAKEINT(0))));
+	EXPECT(RINT(FVisibleTopicIndex(ctx, MAKEINT(2))) == 1);
+	EXPECT(RINT(FFamilyBottom(ctx, MAKEINT(0))) == RINT(FTopicBottom(ctx, RefVar(list->Topic(0)))));
+	kids = FSetupVisibleChildren(ctx, MAKEINT(0), NILREF, NILREF);
+	EXPECT(Length(kids) == 3);
+	// a hidden topic cannot itself be collapsed
+	EXPECT(ISNIL(FCollapseTopic(ctx, MAKEINT(1), NILREF)));
+	EXPECT(NOTNIL(FExpandTopic(ctx, MAKEINT(0), NILREF)));
+	EXPECT(RINT(Eval("ctxLV.topics[1].hideCount")) == 0 && ISNIL(FIsCollapsed(ctx, MAKEINT(0))));
+	// ROM QUIRK: a topic with no hideCount counts as one hidden already, so
+	// collapsing and expanding its parent leaves it hidden
+	FCollapseTopic(ctx, MAKEINT(2), NILREF);
+	EXPECT(RINT(Eval("ctxLV.topics[3].hideCount")) == 2);
+	FExpandTopic(ctx, MAKEINT(2), NILREF);
+	EXPECT(RINT(Eval("ctxLV.topics[3].hideCount")) == 1);
+	EXPECT(!TopicVisible(RefVar(list->Topic(3))));
+
+	Eval("RemoveView(GetRoot(), ctxLV)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6459,6 +6570,7 @@ main()
 		TestInsertItems();
 		TestClipboard();
 		TestHiliteStroke();
+		TestListView();
 	}
 	newton_catch_all
 	{

@@ -30,6 +30,9 @@ public:
 	// at +0x134 and +0x138 (PointOverHilitedText, PointOverText) are only
 	// a paragraph's in this reconstruction, so nothing stands between
 	// AddHilited here and GetHiliteView.
+	// A tap on the view (a paragraph places the caret; a plain data view
+	// does nothing).
+	virtual void	HandleTap(Point& pt);								// ROM 0x000a3034 HandleTap__9TDataViewFR6TPoint (vtable +0x11c: nothing)
 	// A caret gesture over the view: its kind (TUnitPublic::CaretType), the
 	// angle it points at, and the polyline's corners - the first arm, the
 	// caret's own point, the second arm, and a fourth for the kinds that

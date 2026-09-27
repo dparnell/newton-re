@@ -943,7 +943,7 @@ FSyncChildrenX(RefArg rcvr)
 // A Throw out of any of the three leaves the view part-built, so the
 // deletion marks RemoveAllViews set are cleared before the exception
 // goes on its way.
-static Ref
+Ref
 FRedoChildrenX(RefArg rcvr)
 {
 	TView* view = FailGetView(rcvr);
@@ -2113,7 +2113,7 @@ FDoDrawing(RefArg rcvr, RefArg message, RefArg args)
 // view's own, so they are moved to the screen first, and the piece of
 // the picture to take is the bounds moved to that cell of the strip.
 // Nothing is drawn for a negative index or a context with no view.
-static Ref
+Ref
 FDrawXBitmap(RefArg rcvr, RefArg bounds, RefArg picture, RefArg index, RefArg mode)
 {
 	TView* view = GetView(rcvr);

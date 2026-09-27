@@ -41,6 +41,7 @@ Ref		FSetSystemVolume(RefArg rcvr, RefArg decibels);
 Ref		FConvertToSoundFrame(RefArg rcvr, RefArg obj);
 Ref		FSoundPlayEnabled(RefArg rcvr, RefArg sound);
 Ref		FPlaySoundIrregardless(RefArg rcvr, RefArg sound);
+Ref		FClicker(RefArg rcvr);						// ROM 0x001e6578 FClicker - the pen's click, the next note of vars._clickSong
 Ref		FPlaySoundSync(RefArg rcvr, RefArg sound);
 Ref		FPlaySound(RefArg rcvr, RefArg sound);
 Ref		FPlaySoundEffect(RefArg rcvr, RefArg sound, RefArg volume, RefArg kind);

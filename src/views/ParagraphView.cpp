@@ -176,27 +176,60 @@ TParagraphView::SetupDone(void)
 
 
 // ROM 0x0017e3e8 SetBounds__14TParagraphViewFRC5TRect
-// The bounds set (TView); the text flags made known when they are not
-// yet; the lines laid out again when the size changed, moved along when
-// the view only moved.
+// The bounds (in the parent's contents coordinates) kept inside the
+// parent's width - the right edge brought in to the parent's when it goes
+// past it (or always, for a paragraph whose input flags have bit 0), the
+// left out to the parent's, each only when that leaves more than ten
+// pixels - unless the view's text flags have 0x800; then written to the
+// data frame's viewBounds (the context's own slot removed when the data
+// frame is another frame), set (TView) and the lines laid out again
+// (FixupBBox).
+//
+// The text flags the 0x800 is looked for in are the paragraph's own
+// fTextFlags, read through the unnamed accessor at vtable +0x20 - still
+// -1, every bit set, before SetupDone, so a paragraph being built is not
+// clamped.  The input flags are worked out for the test and not kept.
 void
-TParagraphView::SetBounds(const Rect& bounds)
+TParagraphView::SetBounds(const Rect& inBounds)
 {
+	Rect bounds = inBounds;
+	Point origin = fParent->ContentsOrigin();
+	short parentRight = (short) ((unsigned short) fParent->viewBounds.right - origin.h);
+	ULong inputFlags = (ULong) fTextFlags;
 	if (fTextFlags == -1)
-		fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
-	TView::SetBounds(bounds);
-	if (fLines == nil)
-		return;
-	if (viewBounds.right - viewBounds.left != fCachedBounds.right - fCachedBounds.left
-	 || viewBounds.bottom - viewBounds.top != fCachedBounds.bottom - fCachedBounds.top)
-		fCachesValid = false;
-	else
+		inputFlags = GetInputViewTextFlags((ULong) TextFlags(), fFlags);
+	if (((ULong) fTextFlags & 0x800) == 0)
 	{
-		Point delta;
-		delta.h = (short) (viewBounds.left - fCachedBounds.left);
-		delta.v = (short) (viewBounds.top - fCachedBounds.top);
-		OffsetCachedBounds(delta);
+		if (((inputFlags & 1) != 0 || parentRight < bounds.right) && bounds.left + 10 < parentRight)
+			bounds.right = parentRight;
+		short parentLeft = (short) ((unsigned short) fParent->viewBounds.left - origin.h);
+		if (parentLeft > bounds.left && parentLeft + 10 < bounds.right)
+			bounds.left = parentLeft;
 	}
+	RefVar boundsRef(ToObject(bounds));
+	RefVar data(DataFrame());
+	SetFrameSlot(data, RSSYMviewbounds, boundsRef);
+	data = DataFrame();
+	if (!EQRef(data, fContext))
+		RemoveSlot(fContext, RSSYMviewbounds);
+	TView::SetBounds(bounds);
+	// host: the line cache holds the lines where they are drawn, so it is
+	// moved with the view (or marked for laying out again when the size
+	// changed) before FixupBBox looks at it
+	if (fLines != nil)
+	{
+		if (viewBounds.right - viewBounds.left != fCachedBounds.right - fCachedBounds.left
+		 || viewBounds.bottom - viewBounds.top != fCachedBounds.bottom - fCachedBounds.top)
+			fCachesValid = false;
+		else
+		{
+			Point delta;
+			delta.h = (short) (viewBounds.left - fCachedBounds.left);
+			delta.v = (short) (viewBounds.top - fCachedBounds.top);
+			OffsetCachedBounds(delta);
+		}
+	}
+	FixupBBox();
 }
 
 
@@ -7240,4 +7273,212 @@ Boolean
 TParagraphView::IconClick(TStrokePublic* stroke)
 {
 	return ((TClipboard*) gRootView->GetClipboard(this))->DragFromClipboard(stroke);
+}
+
+/*------------------------------------------------------------------------------
+	T h e   b a s e l i n e s
+
+	The ROM keeps four halfwords at +0xa0 as the lines are laid out: the
+	first line's baseline and ascent, the last line's baseline and
+	descent.  DEVIATION: the host's line cache has no such block (+0xa0 is
+	the lines' union here), so they are read off the first and last
+	LineInfo - the baseline its top plus its ascent, the descent what the
+	line's height leaves below it.
+------------------------------------------------------------------------------*/
+
+// the metrics the ROM keeps at +0xa0..+0xa6 (see above)
+static long
+FirstLineBaseline(const TParagraphView* view)
+{
+	const LineInfo& line = view->Line(0);
+	return (short) (line.fBounds.top + line.fAscent);
+}
+
+static long
+FirstLineAscent(const TParagraphView* view)
+{
+	return (short) view->Line(0).fAscent;
+}
+
+static long
+LastLineBaseline(const TParagraphView* view)
+{
+	const LineInfo& line = view->Line(view->LineCount() - 1);
+	return (short) (line.fBounds.top + line.fAscent);
+}
+
+static long
+LastLineDescent(const TParagraphView* view)
+{
+	const LineInfo& line = view->Line(view->LineCount() - 1);
+	return (short) (line.fHeight - line.fAscent);
+}
+
+
+// ROM 0x0017a0fc GetParagraphStyleRecordMetrics__FP11StyleRecordPlN32
+void
+GetParagraphStyleRecordMetrics(StyleRecord* style, long* ascent, long* descent, long* lineAscent, long* lineDescent)
+{
+	FontInfo fontInfo;
+	GetStyleFontInfo(style, &fontInfo);
+	*ascent = fontInfo.ascent;
+	*descent = fontInfo.descent;
+	if (lineAscent == nil)
+		return;
+	if (!IsInkWord(style->fFontFamily))
+	{
+		*lineAscent = fontInfo.ascent;
+		*lineDescent = fontInfo.descent;
+		return;
+	}
+	ULong size = (ULong) (long) (short) ((ULong) (style->fFontSize + 0x8000) >> 16);
+	if (size < 13)
+	{
+		*lineAscent = 14;
+		*lineDescent = 5;
+	}
+	else if (size <= 39)
+	{
+		*lineAscent = 17;
+		*lineDescent = 5;
+	}
+	else
+	{
+		ULong steps = (size - 22) / 18;
+		*lineAscent = steps * 17 + 17;
+		*lineDescent = steps * 5 + 5;
+	}
+}
+
+
+// ROM 0x001693fc GetRequestedLineSpacing__14TParagraphViewFv
+long
+TParagraphView::GetRequestedLineSpacing(void)
+{
+	if (fLineSpacing != 0)
+		return fLineSpacing;
+	RefVar spacing(GetVar(RSSYMviewlinespacing));
+	return ISNIL(spacing) ? 0 : RINT(spacing);
+}
+
+
+// the font of the style an insertion at the offset would take (the empty
+// paragraph's baselines are worked out of it)
+static void
+InsertionFontInfo(TParagraphView* view, long offset, FontInfo* fontInfo)
+{
+	RefVar style(view->GetStyleForInsertion(offset, false, false));
+	StyleRecord record;
+	CreateParagraphStyleRecord(style, &record, (ULong) view->fTextFlags, RefVar(view->GetDefaultViewStyle()));
+	GetStyleFontInfo(&record, fontInfo);
+	DisposeStyleRecord(&record);
+}
+
+
+// ROM 0x0016b77c GetFirstBaseline__14TParagraphViewFv
+// The first line's baseline; an empty paragraph's is the insertion
+// style's ascent below its top.
+long
+TParagraphView::GetFirstBaseline(void)
+{
+	if (fLines == nil)
+		CreateAllCaches();
+	Rect bounds = viewBounds;
+	if (TextLength() == 0 || fLineCount == 0)
+	{
+		FontInfo fontInfo;
+		InsertionFontInfo(this, 0, &fontInfo);
+		return bounds.top + (short) fontInfo.ascent;
+	}
+	return FirstLineBaseline(this);
+}
+
+
+// ROM 0x0016b8a8 GetLastBaseline__14TParagraphViewFv
+// The last line's baseline - a line further down when the text ends in a
+// return, the empty line after it being where the caret would go.
+long
+TParagraphView::GetLastBaseline(void)
+{
+	if (fLines == nil)
+		CreateAllCaches();
+	Rect bounds = viewBounds;
+	long length = TextLength();
+	if (length == 0 || fLineCount == 0)
+	{
+		FontInfo fontInfo;
+		InsertionFontInfo(this, 0, &fontInfo);
+		return bounds.top + (short) fontInfo.ascent;
+	}
+	long baseline = LastLineBaseline(this);
+	RefVar text(Text());
+	const UniChar* chars = (const UniChar*) BinaryData(text);
+	if (chars[length - 1] == kCR)
+		baseline += (short) fLineHeight;
+	return baseline;
+}
+
+
+// ROM 0x0016b454 GetNextBaseline__14TParagraphViewFP14TParagraphView
+// Where the first baseline of the paragraph after this one goes.  With
+// line spacing on both, the spacing below the last baseline.  Without,
+// the last line's descent and the next paragraph's first ascent below it
+// - unless this one asks for a spacing the next one's font fits (at
+// least eight more than its ascent, and eight tenths of it no more than
+// five more), when that is the gap; an empty next paragraph is measured
+// by the style it would type in.  With no next paragraph, or when this
+// one is empty, the insertion style's ascent below this one's *bottom*
+// and a line's spacing below that.
+long
+TParagraphView::GetNextBaseline(TParagraphView* next)
+{
+	Rect bounds = viewBounds;
+	long spacing = (short) GetInterLineSpacing();
+	long nextSpacing = next != nil ? (short) next->GetInterLineSpacing() : 0;
+	if (fLines == nil)
+		CreateAllCaches();
+	long length = TextLength();
+	long baseline;
+	if (next == nil || length == 0 || fLineCount == 0)
+	{
+		FontInfo fontInfo;
+		InsertionFontInfo(this, length, &fontInfo);
+		baseline = (short) (bounds.bottom + fontInfo.ascent);
+		if (spacing < 1)
+			spacing = (short) (fontInfo.descent + fontInfo.ascent + fontInfo.leading);
+	}
+	else
+	{
+		baseline = (short) GetLastBaseline();
+		if (spacing <= 0 || nextSpacing <= 0)
+		{
+			if (next->fLines == nil)
+				next->CreateAllCaches();
+			if (next->TextLength() == 0 || next->fLineCount == 0)
+			{
+				RefVar style(next->GetStyleForInsertion(0, false, false));
+				StyleRecord record;
+				CreateParagraphStyleRecord(style, &record, (ULong) next->fTextFlags, RefVar(next->GetDefaultViewStyle()));
+				long ascent, descent, lineAscent, lineDescent;
+				GetParagraphStyleRecordMetrics(&record, &ascent, &descent, &lineAscent, &lineDescent);
+				DisposeStyleRecord(&record);
+				return (short) (LastLineDescent(this) + baseline + lineAscent);
+			}
+			long nextAscent = FirstLineAscent(next);
+			spacing = (short) GetRequestedLineSpacing();
+			if (spacing < 1 || spacing < nextAscent + 8 || nextAscent + 5 < (spacing * 8) / 10)
+				return baseline + LastLineDescent(this) + nextAscent;
+		}
+	}
+	return baseline + spacing;
+}
+
+
+// ROM 0x0016b750 AdjustBoundsForFirstBaseline__14TParagraphViewFl
+void
+TParagraphView::AdjustBoundsForFirstBaseline(long baseline)
+{
+	long delta = (short) (baseline - GetFirstBaseline());
+	viewBounds.top = (short) (viewBounds.top + delta);
+	viewBounds.bottom = (short) (viewBounds.bottom + delta);
 }

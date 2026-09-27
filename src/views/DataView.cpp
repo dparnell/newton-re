@@ -108,6 +108,12 @@ TDataView::SaveAddedUnitBounds(const Rect& /*box*/, const Point& /*base*/,
 }
 
 
+// ROM 0x000a3034 HandleTap__9TDataViewFR6TPoint
+void
+TDataView::HandleTap(Point& /*pt*/)
+{ }
+
+
 // ROM 0x000a3038 GetEnclosingEditView__9TDataViewFv
 // The editor this view is written on: its parent when that is one, and
 // the parent's parent when the parent is a container gathering it with

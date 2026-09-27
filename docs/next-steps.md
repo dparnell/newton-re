@@ -8,12 +8,12 @@ already done that they can be started without re-deriving it.
 Keep it current: when a piece listed here is finished, take it out and
 put the next one in.
 
-## State at 2026-09-26 (commit after `4d27681`)
+## State at 2026-09-27 (the outline list)
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 96/96.
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 97/97.
   (`intl.Dates` fails about one run in ten: it reads the real clock.)
-- `analysis/coverage.py build/MP2x00US --check`: 10125 citations, 0 bad;
-  5369 of 16671 functions (32.21%).
+- `analysis/coverage.py build/MP2x00US --check`: 10356 citations, 0 bad;
+  5548 of 16671 functions (33.28%).
 - **A selection can be dragged and resized.**
   `src/host/demo/drag.ns` writes "ton" on the Notepad, selects it with
   the hilite stroke and drags it 80 pixels down the page with the pen
@@ -45,6 +45,19 @@ the page", and `src/host/demo/ink.ns` photographs it with the pen down
 and again after the recogniser has finished.
 
 The last run of work closed, in order:
+
+- **the outline list** (`views/ListView.h`, `docs/views/README.md`,
+  "The outline list"): `TListView` and its thirteen natives, so the
+  To Do list opens - tapping "Do" on the Assistant's "remind me to
+  call Daniel" slip now shows the task in the list with its check box
+  and priority.  With it the paragraph's baselines and the ROM's own
+  `TParagraphView::SetBounds` (which clamps to the parent, writes the
+  box to the data frame and lays the lines out again - the host's had
+  been only `TView`'s), `TDataView::HandleTap`, and `FClicker`,
+  `FDrawXBitmap` and `FRedoChildrenX` made callable from C++.  Next on
+  that smoke run: tapping "Schedule" on a meeting slip opens the Dates
+  day view, whose `LayoutMeeting` native (0x001ca1a8) and
+  `TMeetingView` are NOT YET.
 
 - **the audit of the code after virtual calls.**  Ghidra had stopped
   disassembling after a `mov lr,pc; add pc,rN,#slot` that was already

@@ -284,7 +284,7 @@ FPlaySoundEffect(RefArg rcvr, RefArg sound, RefArg volume, RefArg kind)
 // An entry is either a sound frame to play or an integer indexing the
 // ROM's `clicks` array.  Nothing happens at all when the pen sound
 // effects preference is off.  ==> nil.
-static Ref
+Ref
 FClicker(RefArg /*rcvr*/)
 {
 	if (ISNIL(GetPreference(RefVar(RSSYMpensoundeffects))))

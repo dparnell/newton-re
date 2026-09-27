@@ -2144,12 +2144,100 @@ left behind by tapping it twice.
 The drag that makes one is `TView::DragAndDrop` (above), which also
 moves a clipping dragged by its label (`MoveIcon` 0x0009f568).
 
+## The outline list (`views/ListView.h`)
+
+`TListView` (class 99, over `TEditView`; ROM 0x0010eec4-0x00112f74) is
+what the To Do list and the Notepad's checklist and outline stationery
+are built on.  Its context holds `topics`, an array of topic frames -
+each its `text` and `styles`, its `viewBounds` in the list, its `level`
+(1 at the left) and a `hideCount` (not nil and not nought: it is inside
+a collapsed topic) - and the list's own C++ side is mostly arithmetic
+over them, reached from NewtonScript through thirteen natives
+(`SetupVisibleChildren`, `CollapseTopic`, `ExpandTopic`, `IsCollapsed`,
+`ListBottom`, `FamilyBottom`, `TopicBottom`, `MarkerBounds`,
+`MakeDragRef`, `ChildTemplateFromTopic`, `AdjustParagraph`,
+`TopicIndexToView`, `VisibleTopicIndex`).
+
+**Laying the topics out.**  `SetupVisibleChildren` is a list's
+`viewSetupChildrenScript`'s work: for each visible topic from
+`firstTopic` on it clones the context's `canonicalParaTopic` with the
+topic's box, text and styles (`ChildTemplateFromTopic`), *adds it as a
+real paragraph child* so that it can be measured, and places it with
+`AdjustParagraph` - its first baseline the next one after the last
+paragraph's (`TParagraphView::GetNextBaseline`), at least sixteen
+pixels lower, at the list's top margin for the first - indented 20
+pixels a level past the marker gutter (`leftMarkGap` +
+`rightMarkGap`).  The topic's `viewBounds` is set to where the
+paragraph came out, and when the loop is done the measuring children
+are all thrown away again (`RemoveAllViews`, the call at vtable +0x7c):
+what the function answers is the array of templates, which becomes
+the list's `viewChildren`.  With `minimalChildren` set it stops at the
+first topic below the part of the list that shows and sets `lastTopic`.
+
+ROM QUIRK, kept: `AdjustParagraph` adds the right edge it is given to
+the list's *top*, not its left - it loads the wrong half of the
+origin's word (an unaligned `ldr [sp,#0x12]` rotates the top into the
+low half).  The right edge `SetupVisibleChildren` passes is already
+global (the list's right plus `rightIndent`), so the paragraph comes
+out the list's top too far right - and then the paragraph's own
+`SetBounds` brings an edge past the parent's back to it, so it does
+not show.
+
+**The baselines** (`TParagraphView::GetFirstBaseline`,
+`GetLastBaseline`, `GetNextBaseline`, `AdjustBoundsForFirstBaseline`)
+are new with the list.  The ROM keeps four halfwords at +0xa0 as it
+lays the lines out (the first line's baseline and ascent, the last's
+baseline and descent); the host's line cache has no such block, so
+they are read off the first and last `LineInfo` (a DEVIATION).  An
+empty paragraph measures by the style an insertion would take.
+
+**`TParagraphView::SetBounds`** turned out to be much more than the
+`TView` one it had been standing in for: it keeps the box within the
+parent's width (the right edge brought in to the parent's when it goes
+past it, or always for a paragraph whose input flags have
+`vWidthIsParentWidth`; the left out to the parent's), *writes the box
+to the data frame's `viewBounds`* - which is how `SetupVisibleChildren`
+reads it back - and lays the lines out again (`FixupBBox`, which is
+where `vWidthGrowsWithText` brings a paragraph in to its text's
+width).  All of it is skipped while the paragraph's `fTextFlags` is
+still -1, before `SetupDone`: the check is made through an unnamed
+accessor at vtable +0x20 that answers the field itself.
+
+**Collapsing** (`CollapseTopic`/`ExpandTopic`) adds or takes one off
+the `hideCount` of every topic under the one given and rebuilds the
+children when asked.  Both read `topics` from the context itself,
+without inheritance, so a list's setup must put it there.  ROM QUIRK,
+kept: a topic with no `hideCount` counts as one hidden already, so
+collapsing and expanding its parent leaves it at 1, still hidden; the
+ROM's own stationery gives every topic a `hideCount` of 0.
+
+**The gutter.**  `RealDraw` draws each visible topic's marker from the
+context's `topicMarkers` strip (0 expanded, 1 collapsed, 2 hilited), or
+its priority out of `priorityItems` when `listViewFlags` has 4 or 8,
+and its check box out of `checkBitmaps` when it has 2 - all through
+`DrawXBitmap`.  `listViewFlags` 1 moves them right past a gutter.  The
+pen (`HandlePenDown`, the list's own virtual at +0x12c): a tap in a
+marker toggles the topic (`toggleTopic`, `curTopic`), a drag from it
+carries the topic and everything under it as a 'topic drag
+(`MakeDragRef`: the indexes, the level, copies of the topics moved to
+the top and the total height) whose drop caret `PointToCaret` puts
+between two topics at the level the pen's x says (`IndexFromY`,
+`LevelFromX`) - or nowhere, inside the dragged family or where it would
+strand the next topic - and a tap in the check box checks it
+(`TrackCheck`, `handleCheck`).  A scrub asks the context's
+`handleScrub` first.
+
+`test_Views`'s `TestListView` lays out four topics, collapses and
+expands them, checks the markers' boxes and the drag frame, and pins
+the `hideCount` quirk.  "remind me to call Daniel" in
+`src/host/demo/assist-tasks.ns` now opens the To Do list with the task
+in it, check box and priority drawn.
+
 ## Not yet
 
 The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the sounds, `SyncScroll`, the popup and
-modal dialog machinery, the other subclasses (`TListView`, `TEditView`,
-...), the strokes and words of the recogniser (its controller and
+modal dialog machinery, the other subclasses (`TMeetingView`, ...), the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).

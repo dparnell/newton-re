@@ -1,0 +1,113 @@
+// A smoke test of the Assistant's tasks: after the Setup walk, each
+// sentence is handed to ParseUtter, the task slip that opens is looked at
+// (its buttons are printed) and its action button - the one that is not
+// "Assist" or the close box - is tapped, which carries the task out in
+// the application behind it (Find, the To Do list, Dates, the World
+// Clock, ...).  What fails is printed; run it with NEWTON_TRACE_MISSING
+// set to have an unbound native name itself.
+//
+//   NEWTON_TRACE_MISSING=1 build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --display 320x480 --script src/host/demo/assist-tasks.ns --headless 120
+//
+// A picture of each slip is written to build/assist-N.pgm, and of what
+// tapping its button opened to build/assist-N-done.pgm.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// the buttons (views with a buttonClickScript and a text) all the way
+// down a view
+buttonsIn := func(view, into)
+  begin
+    foreach kid in view:ChildViewFrames() do
+      begin
+        if IsString(kid.text) and kid.buttonClickScript then AddArraySlot(into, kid);
+        call buttonsIn with (kid, into);
+      end;
+    into;
+  end;
+
+sentences := ["find Daniel", "remind me to call Daniel", "schedule lunch with Daniel tomorrow",
+              "time in Paris", "call Daniel", "fax Daniel"];
+failures := [];
+index := 0;
+next := func()
+  begin
+    if index >= Length(sentences) then
+      begin
+        foreach failure in failures do Print("assist-tasks: FAILED " & failure);
+        Print("assist-tasks: done, " & NumberStr(Length(failures)) & " failed");
+        return;
+      end;
+    local sentence := sentences[index];
+    index := index + 1;
+    Print("assist-tasks: " & sentence);
+    local task;
+    try
+      task := ParseUtter(sentence)
+    onexception |evt.ex| do
+      AddArraySlot(failures, "parse " & sentence & ": " & CurrentException().name);
+    if not task then
+      begin
+        AddArraySlot(failures, "no task for " & sentence);
+        AddDelayedCall(next, nil, 1500);
+        return;
+      end;
+    AddDelayedCall(func() begin
+        ScreenSnapshot("build/assist-" & NumberStr(index) & ".pgm");
+        local kids := GetRoot():ChildViewFrames();
+        local slip := kids[Length(kids) - 1];
+        local buttons := call buttonsIn with (slip, []);
+        local names := "";
+        foreach b in buttons do names := names & "[" & b.text & "]";
+        Print("assist-tasks:   buttons " & names);
+        local action := nil;
+        foreach b in buttons do
+          if not action and not StrEqual(b.text, "Assist") then action := b;
+        if action then
+          begin
+            local box := action:GlobalBox();
+            Print("assist-tasks:   tapping " & action.text);
+            try
+              call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2)
+            onexception |evt.ex| do
+              AddArraySlot(failures, "tap " & action.text & ": " & CurrentException().name);
+          end;
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/assist-" & NumberStr(index) & "-done.pgm");
+            // whatever the task opened is closed again before the next
+            local k := GetRoot():ChildViewFrames();
+            local front := k[Length(k) - 1];
+            try
+              front:Close()
+            onexception |evt.ex| do nil;
+            AddDelayedCall(next, nil, 1500);
+          end, nil, 2500);
+      end, nil, 2500);
+  end;
+AddDelayedCall(next, nil, 30000);
+Print("assist-tasks: the script is loaded");

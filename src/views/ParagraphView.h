@@ -159,6 +159,13 @@ Boolean	IsFontFrame(RefArg fontSpec);						// ROM 0x00179f08 IsFontFrame__FRC6Re
 void	CreateParagraphStyleRecord(RefArg fontSpec, StyleRecord* style, ULong textFlags,
 								   RefArg defaultFont);		// ROM 0x00179f58 CreateParagraphStyleRecord__FRC6RefVarP11StyleRecordUlT1
 
+// A style record's ascent and descent, and (when asked) the ascent and
+// descent a line holding it wants - an ink word's by its size: 14 over 5
+// up to 12 points, 17 over 5 up to 39, and above that 17 and 5 for each
+// 18 points past 22.
+void	GetParagraphStyleRecordMetrics(StyleRecord* style, long* ascent, long* descent,
+									   long* lineAscent, long* lineDescent);	// ROM 0x0017a0fc GetParagraphStyleRecordMetrics__FP11StyleRecordPlN32
+
 // Whether every character of the run is white space (a count of -1: to
 // the end of the string).
 Boolean	ContainsOnlyWhiteSpace(const UniChar* text, ULong count);	// ROM 0x0017a310 ContainsOnlyWhiteSpace__FPUsUl
@@ -264,6 +271,14 @@ public:
 	Ref			Tabs(void);												// ROM 0x001814b4 Tabs__14TParagraphViewFv
 	Ref			GetDefaultViewStyle(void);								// ROM 0x001789bc GetDefaultViewStyle__14TParagraphViewFv
 	long		GetInterLineSpacing(void);								// ROM 0x00169460 GetInterLineSpacing__14TParagraphViewFv
+	long		GetRequestedLineSpacing(void);							// ROM 0x001693fc GetRequestedLineSpacing__14TParagraphViewFv - viewLineSpacing, 0 when none
+	// The baselines a list lays its paragraphs out by (views/ListView.h):
+	// the first line's, the last line's (a line lower when the text ends in
+	// a return) and where the next paragraph's first would go.
+	long		GetFirstBaseline(void);									// ROM 0x0016b77c GetFirstBaseline__14TParagraphViewFv
+	long		GetLastBaseline(void);									// ROM 0x0016b8a8 GetLastBaseline__14TParagraphViewFv
+	long		GetNextBaseline(TParagraphView* next);					// ROM 0x0016b454 GetNextBaseline__14TParagraphViewFP14TParagraphView
+	void		AdjustBoundsForFirstBaseline(long baseline);			// ROM 0x0016b750 AdjustBoundsForFirstBaseline__14TParagraphViewFl - the box moved to put the first baseline there
 	void		CreateAllCaches(void);									// ROM 0x0016baa8 CreateAllCaches__14TParagraphViewFv
 	void		ClearAllCaches(void);									// ROM 0x0016bbd0 ClearAllCaches__14TParagraphViewFv
 	void		RefillAllCaches(void);									// ROM 0x0016c25c RefillAllCaches__14TParagraphViewFv
