@@ -1846,3 +1846,31 @@ this code a level line is at 90 degrees.)
 `src/recognition/ShapeSolver.cpp` minimises them, and
 `src/host/demo/shapes.ns` shows the result; `test_ShapeDomain`'s
 `TestSolver` and `TestEquations` drive them directly.*
+
+## The reconstruction has the Newton's 2010 bug, and sets the clock back to 1992
+
+Walk the reconstructed machine through its Setup assistant on a 2026
+host and everything is right up to the time page: the date page shows
+September 2026 with today picked out, the time page shows the time.
+Tap Continue and the machine thinks it is Thursday 17 September 1992.
+The status bar, Dates and every note stamped afterwards agree.
+
+That is not a host bug. It is the Newton's own "2010 problem",
+reproduced bit for bit. NewtonScript integers are 30 bits (a Ref's low
+two bits are its tag), and `TimeInSeconds` (ROM 0x00089b64,
+`intl/Dates.cpp`) answers the seconds since 1 January 1993 as one. That
+count passed 2^29 - the largest positive 30-bit integer - on 5 January
+2010. The Setup time page reads the clock through `TimeInSeconds`,
+adjusts it to the hour and minute on the digital clock, and writes it
+back through `SetTimeHardware` (`FSetTimeInSeconds`, ROM 0x0008a20c).
+At 08:18 on 27 September 2026 the count is 1,064,650,680 seconds, which
+wraps to -9,091,144 - and 9,091,144 seconds before 1993 is 17 September
+1992. (2^30 seconds is 34 years and ten days.)
+
+Real Newtons did exactly this from 2010 on, which is why the Newton
+community's "Fix 2010" patch exists. The reconstruction keeps it: the
+ROM's arithmetic is what is being preserved, and `MAKEINT` on the host
+wraps at 30 bits just as the ARM's `mov r0,r0,lsl #2` does.
+
+Where: `FTimeInSeconds`/`FSetTimeInSeconds` in `src/intl/Dates.cpp`;
+seen by walking Setup with `src/host/demo/assist-tasks.ns`.
