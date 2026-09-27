@@ -74,6 +74,8 @@ public:
 	ULong				HandleToPosition(Handle dictionary);	// ROM 0x0020cc18 HandleToPosition__10TDictChainFPP15AirusAParmBlock
 	void				AddDictToChain(Handle dictionary);		// ROM 0x0020cbc8 AddDictToChain__10TDictChainFPP15AirusAParmBlock
 	long				RemoveDictFromChain(Handle dictionary);	// ROM 0x0020cb7c RemoveDictFromChain__10TDictChainFPP15AirusAParmBlock
+	void				LockChain(void);						// ROM 0x0020cc7c LockChain__10TDictChainFv - every dictionary moved high and locked, for the cursive reader
+	void				UnlockChain(void);						// ROM 0x0020ccd4 UnlockChain__10TDictChainFv
 
 	long				fPosition;		// +0x20  where the walk is (-1: nowhere)
 };

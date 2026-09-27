@@ -40,8 +40,10 @@ RCByte(rc_type* rc, ULong offset)
 		return rc->fB00 + offset;
 	if (offset >= 0x90 && offset < 0xbc)
 		return rc->fB90 + (offset - 0x90);
-	if (offset >= 0xc0 && offset < 0x10c)
+	if (offset >= 0xc0 && offset < 0xf8)
 		return rc->fBC0 + (offset - 0xc0);
+	if (offset >= 0xfc && offset < 0x108)
+		return rc->fBFC + (offset - 0xfc);
 	return nil;
 }
 

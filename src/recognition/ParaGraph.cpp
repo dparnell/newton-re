@@ -125,6 +125,14 @@ HWRMemoryFree(Ptr block)
 }
 
 
+// ROM 0x000e64fc HWRAbs__Fi
+long
+HWRAbs(long x)
+{
+	return x < 0 ? -x : x;
+}
+
+
 // ROM 0x000e6514 HWRStrLen__FPc
 long
 HWRStrLen(const char* s)

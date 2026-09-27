@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "InkGroups.h"
 #include "ParaGraph.h"
+#include "WordDescriptors.h"
 #include "Stroke.h"
 #include "StrokeQueue.h"		// gTabScale
 #include "Unit.h"
@@ -136,7 +137,13 @@ NewGetTraceFromStrokes(TStroke** strokes, PS_point_type** trace, short* nStrokes
 // The strokes the parameters list (those after the ones already given)
 // given to the word segmenter one at a time, out of the trace; with
 // `final` and none to give, the segmenter told the writing is over.
-// ==> 0, -1 for nothing to do, -7 for no memory.
+// With word descriptors (the cursive recogniser's) the segmenter's words
+// are then written into them (GCWriteNewGroupResults), put in stroke
+// order, the ones to read now marked (GCRecSegmentSetGroupFlags) and the
+// segmenter told which of its words those hold - and a call that ran
+// out of room for descriptors (-4) is resumed from the segmenter's
+// results next time without giving it any more strokes.  ==> 0, -1 for
+// nothing to do, -4 no room for a descriptor, -7 for no memory.
 long
 GCGroupStrokes(GCWordDescrType* words, PS_point_type* trace, short nPoints, ULong final, ULong param5, GCGroupParmStruct* parm)
 {
@@ -146,14 +153,22 @@ GCGroupStrokes(GCWordDescrType* words, PS_point_type* trace, short nPoints, ULon
 	long first, last;
 	long err;
 	if (trace == nil || nPoints < 3 || parm == nil)
-		return -1;
+	{
+		err = -1;
+		goto finish;
+	}
 	if (words != nil)
 	{
-		// NOT YET RECONSTRUCTED: the cursive recogniser's word
-		// descriptors (GCWriteNewGroupResults and the rest)
-		return -1;
+		if (parm->fInProgress != 0 && parm->fGRes != nil)
+		{
+			err = GCResizeAndLockGResHandle(&parm->fGRes, &control, &results, 0);
+			if (err == 0)
+				goto write;
+			goto finish;
+		}
 	}
-	parm->fInProgress = 0;
+	else
+		parm->fInProgress = 0;
 	{
 		ULong from = (ULong) parm->fNumStrokes;
 		ULong end = from;
@@ -162,7 +177,10 @@ GCGroupStrokes(GCWordDescrType* words, PS_point_type* trace, short nPoints, ULon
 		if (from == end)
 		{
 			if (final == 0)
-				return -1;
+			{
+				err = -1;
+				goto finish;
+			}
 			first = -1;
 			last = -2;
 		}
@@ -171,64 +189,82 @@ GCGroupStrokes(GCWordDescrType* words, PS_point_type* trace, short nPoints, ULon
 			first = GCGetRealStrokeIndex(parm->fStrokes, (short) parm->fNumStrokes);
 			last = GCGetRealStrokeIndex(parm->fStrokes, (short) (end - 1));
 			if (first < 0 || last < 0)
-				return -1;
+			{
+				err = -1;
+				goto finish;
+			}
 			if (0xf9 < (long) end)
 				all = true;
 		}
 		err = GCResizeAndLockGResHandle(&parm->fGRes, &control, &results, end + 1);
 	}
-	if (err == 0)
+	if (err != 0)
+		goto finish;
+	control->fNumPoints = 0;
+	control->fFlags = 0;
+	control->fWordDistLevel = parm->fSpacing + 1;
+	control->fLineDist = 0;
+	control->fDefLineHeight = 0x50;
+	control->fMode = 3;
+	control->fSureLevel = parm->fSureLevel;
+	if (final == 0 || -1 < first)
 	{
-		control->fNumPoints = 0;
-		control->fFlags = 0;
-		control->fWordDistLevel = parm->fSpacing + 1;
-		control->fLineDist = 0;
-		control->fDefLineHeight = 0x50;
-		control->fMode = 3;
-		control->fSureLevel = parm->fSureLevel;
-		if (final == 0 || -1 < first)
+		for ( ; first <= last; first++)
 		{
-			for ( ; first <= last; first++)
+			PS_point_type* stroke;
+			short count;
+			GCGetStrokeFromTrace(trace, nPoints, (short) first, &stroke, &count);
+			control->fNumPoints = count - 2;
+			if (first == last)
 			{
-				PS_point_type* stroke;
-				short count;
-				GCGetStrokeFromTrace(trace, nPoints, (short) first, &stroke, &count);
-				control->fNumPoints = count - 2;
-				if (first == last)
-				{
-					if (final != 0 || all)
-						control->fFlags |= 1;
-					if (param5 != 0)
-						control->fFlags |= 2;
-				}
-				parm->fNumStrokes++;
-				if (WordStrokes(stroke + 1, control, results) != 0)
-				{
-					err = -7;
-					goto done;
-				}
+				if (final != 0 || all)
+					control->fFlags |= 1;
+				if (param5 != 0)
+					control->fFlags |= 2;
 			}
-			if (final == 0 && parm->fNumStrokes == 0xfa)
-				GCTryToRemoveLastWords(results, parm->fStrokes, words, 0xf9, &parm->fNext);
-		}
-		else
-		{
-			// the end of the writing
-			control->fNumPoints = 0;
-			control->fFlags |= 3;
-			PS_point_type none = { 0, 0 };
-			if (WordStrokes(&none, control, results) != 0)
+			parm->fNumStrokes++;
+			if (WordStrokes(stroke + 1, control, results) != 0)
 			{
 				err = -7;
-				goto done;
+				goto finish;
 			}
 		}
-		err = 0;
+		if (final == 0 && parm->fNumStrokes == 0xfa)
+			GCTryToRemoveLastWords(results, parm->fStrokes, words, 0xf9, &parm->fNext);
 	}
-done:
+	else
+	{
+		// the end of the writing
+		control->fNumPoints = 0;
+		control->fFlags |= 3;
+		PS_point_type none = { 0, 0 };
+		if (WordStrokes(&none, control, results) != 0)
+		{
+			err = -7;
+			goto finish;
+		}
+	}
+write:
+	if (words == nil
+	 || (err = GCWriteNewGroupResults(words, results, parm, final != 0 || all)) == 0)
+		err = 0;
+finish:
+	if (parm == nil)
+		return err;
 	parm->fInProgress = (err == -4);
+	if (words != nil)
+	{
+		GCSortWordDescByStrokesOrder(words);
+		GCRecSegmentSetGroupFlags(words, parm->fLineAtATime, final != 0 || all);
+		if (control == nil)
+			goto dispose;
+		GCGroupResultsCopyFlags(results, words, parm->fNumStrokes);
+	}
 	if (control != nil)
 		GCUnlockGResHandle(parm->fGRes);
+dispose:
+	if ((final != 0 || all) && parm->fInProgress == 0 && words != nil)
+		GCDisposeGResHandle(&parm->fGRes);
 	return err;
 }
 
@@ -331,7 +367,12 @@ GCDisposeGResHandle(Handle* gres)
 
 // ROM 0x000d5cc0 GCTryToRemoveLastWords__FP15ws_results_typePUcP15GCWordDescrTypesPs
 // With 250 strokes segmented, the last words taken back so that their
-// strokes are segmented again with what follows.  ==> 0, or -1 for
+// strokes are segmented again with what follows: the last line's words,
+// two at most (one, of a single line, when every stroke is listed), and
+// fewer for each that holds a stroke no longer listed.  When the words
+// hold every stroke from their lowest to `last`, their descriptors are
+// thrown away, the segmenter's words cleared and `*next` set to that
+// lowest stroke; otherwise `*next` is last + 1.  ==> 0, or -1 for
 // nothing to do - which is always so without word descriptors, the way
 // the ink grouping calls it.
 long
@@ -339,9 +380,105 @@ GCTryToRemoveLastWords(ws_results_type* results, UByte* strokes, GCWordDescrType
 {
 	if (results == nil || words == nil || next == nil || strokes == nil)
 		return -1;
-	// NOT YET RECONSTRUCTED: the rest, which needs the cursive
-	// recogniser's word descriptors
-	return -1;
+	ws_word_type* segWords = results->fWords;
+	ULong count = 0;
+	ULong lineWords = 0;
+	UByte line = 0;
+	long w = 0;
+	if (-1 < last)
+	{
+		do
+		{
+			ws_word_type* segWord = segWords + w;
+			if (segWord->fWord == 0)
+			{
+				if (count != 0)
+					break;
+			}
+			else
+			{
+				if (count == 0)
+					line = segWord->fLine;
+				else if (segWord->fLine != line)
+				{
+					lineWords = 0;
+					line = segWord->fLine;
+				}
+				lineWords++;
+				count++;
+			}
+			w++;
+		} while (w <= last);
+	}
+	if (GCGetNumOfStrokesInList(strokes) < last + 1 || lineWords != count)
+	{
+		if (2 < (long) lineWords)
+			lineWords = 2;
+	}
+	else
+		lineWords = (1 < (long) count);
+	long lowest = last;
+	for (long i = w - lineWords; i < w; i++)
+	{
+		ws_word_type* segWord = segWords + i;
+		for (long j = 0; j < (long) segWord->fCount; j++)
+		{
+			UByte s = results->fStrokes[segWord->fFirst + j];
+			if (!BitIsSet(strokes, s))
+			{
+				lineWords--;
+				lowest = last;
+				break;
+			}
+			if ((long) s < lowest)
+				lowest = s;
+		}
+	}
+	Boolean found = false;
+	if (lowest <= last)
+	{
+		long s = lowest;
+		do
+		{
+			found = false;
+			for (long i = w - lineWords; i < w && !found; i++)
+			{
+				ws_word_type* segWord = segWords + i;
+				for (long j = 0; j < (long) segWord->fCount && !found; j++)
+					if ((long) results->fStrokes[segWord->fFirst + j] == s)
+						found = true;
+			}
+		} while (found && ++s <= last);
+	}
+	if (lineWords != 0 && found)
+	{
+		for (long i = w - lineWords; i < w; i++)
+		{
+			ws_word_type* segWord = segWords + i;
+			if (words != nil)
+			{
+				for (long j = 0; j < (long) segWord->fCount; j++)
+				{
+					GCWordDescrType* word = GCGetFirstWordDescriptor(words);
+					while (word != nil)
+					{
+						if (GCIsWordDescContainsStroke(word, results->fStrokes[segWord->fFirst + j]))
+						{
+							GCWordDescriptorDispose(words, word);
+							word = GCGetFirstWordDescriptor(words);
+						}
+						else
+							word = GCGetNextWordDescriptor(words, word);
+					}
+				}
+			}
+			memset(segWord, 0, sizeof(ws_word_type));
+		}
+		*next = (short) lowest;
+	}
+	else
+		*next = (short) (last + 1);
+	return 0;
 }
 
 

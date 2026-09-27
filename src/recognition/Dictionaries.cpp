@@ -386,6 +386,32 @@ TDictChain::HandleToPosition(Handle dictionary)
 }
 
 
+// ROM 0x0020cc7c LockChain__10TDictChainFv
+void
+TDictChain::LockChain(void)
+{
+	Lock();
+	for (ULong i = 0; i < (ULong) fCount; i++)
+	{
+		Handle dictionary = *(Handle*) GetEntry(i);
+		MoveHHi(dictionary);
+		HLock(dictionary);
+	}
+	Unlock();
+}
+
+
+// ROM 0x0020ccd4 UnlockChain__10TDictChainFv
+void
+TDictChain::UnlockChain(void)
+{
+	Lock();
+	for (ULong i = 0; i < (ULong) fCount; i++)
+		HUnlock(*(Handle*) GetEntry(i));
+	Unlock();
+}
+
+
 // ROM 0x0020cbc8 AddDictToChain__10TDictChainFPP15AirusAParmBlock
 void
 TDictChain::AddDictToChain(Handle dictionary)

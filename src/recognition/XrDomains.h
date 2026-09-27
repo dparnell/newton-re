@@ -101,7 +101,10 @@ struct rc_type
 	const char*	fOtherCharset;		// +0x8c
 	UByte		fB90[0x2c];			// ROM +0x90..0xbb  halfwords and bytes (+0xb8: bit 3 orthographic learning)
 	void*		fOrtho;				// +0xbc  the orthographic database's handle (a pointer while locked)
-	UByte		fBC0[0x4c];			// ROM +0xc0..0x10b
+	UByte		fBC0[0x38];			// ROM +0xc0..0xf7  (+0xd8 the stroka_data SetRCB writes: the ink box and four base-line halfwords, +0xea..0xf0 the base line read, +0xf4/+0xf6 a fixed base line)
+	void*		fTrace;				// +0xf8  the trace being read (GCTryToRecognize)
+	UByte		fBFC[0x0c];			// ROM +0xfc..0x107
+	void*		fWordInfo;			// +0x108  the word descriptor's ws_word_info_type while it is read
 };
 
 // The word domain's parameter block.
@@ -127,11 +130,13 @@ inline void		RCSetH(rc_type* rc, ULong offset, UShort v)	{ RCByte(rc, offset)[0]
 inline ULong	XRWGetW(XRWORDPARAM* p, ULong offset)			{ UByte* b = XRWByte(p, offset); return ((ULong) b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]; }
 inline void		XRWSetW(XRWORDPARAM* p, ULong offset, ULong v)	{ UByte* b = XRWByte(p, offset); b[0] = v >> 24; b[1] = v >> 16; b[2] = v >> 8; b[3] = v; }
 
-// What GCLockDTEAndLearningData keeps of the block to put back.  (The
-// ROM's is 0x48 bytes, of which these two words are the ones used here.)
+// What GCLockRecognitionData keeps of the block to put back: the
+// handles its locked pointers replace (0x48 bytes in the ROM).
 struct RcHandlesType
 {
 	void*		fDTI;				// +0x00
+	Handle		fTrigrams;			// +0x04
+	Handle		fVocs[15];			// +0x08
 	void*		fOrtho;				// +0x44
 };
 
@@ -182,7 +187,9 @@ struct rec_w_type
 	UByte		fVariants[0x18];	// +0x18
 	UByte		fX30[0x18];			// +0x30
 	short		fWeight;			// +0x48
+	UByte		fX4A[6];			// +0x4a
 };
+static_assert(sizeof(rec_w_type) == 0x50, "a rec_w_type is 0x50 bytes, as in the ROM");
 
 // What TWordRecognizer::DoLearning hands selector 0x20010: the unit's
 // training data (a handle of LH entries), the pen's trace, how many

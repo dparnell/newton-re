@@ -96,6 +96,7 @@ long	HWRMemoryUnlockHandle(Handle h);					// ROM 0x000e6434 HWRMemoryUnlockHandl
 long	HWRMemoryFreeHandle(Handle h);						// ROM 0x000e644c HWRMemoryFreeHandle__FUl
 // A locked block of `size` bytes: the handle allocated and locked for
 // good.  ==> the block after the header, or nil.
+long	HWRAbs(long x);										// ROM 0x000e64fc HWRAbs__Fi
 Ptr		HWRMemoryAlloc(ULong size);							// ROM 0x000e6464 HWRMemoryAlloc__FUl
 long	HWRMemoryFree(Ptr block);							// ROM 0x000e64e0 HWRMemoryFree__FPv
 
