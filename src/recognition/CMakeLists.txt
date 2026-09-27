@@ -53,6 +53,10 @@ add_library(recognition STATIC
     WordSegmentTables.cpp
     InkGroups.cpp
     WordDescriptors.cpp
+    LowLevel.cpp
+    LowFilter.cpp
+    LowExtr.cpp
+    LowTables.cpp
     CursiveReader.cpp
     StrXrDomain.cpp
     Fragment.cpp
