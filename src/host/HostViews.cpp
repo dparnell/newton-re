@@ -322,6 +322,22 @@ HostConfigureNewtWorld(const char* romImage, long heapSize, long width, long hei
 // The newt world's host boot (newt/NewtWorld.h gNewtHostBoot: what the
 // world's MainConstructor runs in place of the ROM's InitObjects, InitGraf
 // and InitFonts): the ROM image read in and the object system started,
+// The host's local time, in seconds from 1970 as time() counts UTC: the
+// offset of the time zone (and of summer time, when it is in force) added.
+static time_t
+HostLocalTime(void)
+{
+	time_t now = time(nil);
+	struct tm utc = *gmtime(&now);
+	utc.tm_isdst = 0;
+	time_t offset = now - mktime(&utc);
+	struct tm local = *localtime(&now);
+	if (local.tm_isdst > 0)
+		offset += 60 * 60;
+	return now + offset;
+}
+
+
 // the display and the toolbox, a minute on the clock.
 void
 HostBootNewtWorld(void)
@@ -340,6 +356,7 @@ HostBootNewtWorld(void)
 	// 1 January 1904 until something set it, so every note was stamped
 	// with that and the status bar said so.  The host's clock is the
 	// nearest thing to a battery-backed one, in seconds from 1904 as the
-	// Newton counts them.
-	SetRealClockSeconds((ULong) ((unsigned long long) time(nil) + kSecondsFrom1904To1970));
+	// Newton counts them - local time, as the Newton's clock keeps it (the
+	// time zone is only a label the Newton puts on it).
+	SetRealClockSeconds((ULong) ((unsigned long long) HostLocalTime() + kSecondsFrom1904To1970));
 }
