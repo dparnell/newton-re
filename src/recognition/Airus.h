@@ -80,6 +80,8 @@ const long	kAirusIsPrefixAndWord	= 2;	// ... and one as well
 const long	kAirusIsWord			= 3;	// a word, with nothing going on from it
 const long	kAirusNotAWord			= -6;
 const long	kAirusBadDictionary		= -3;	// the bytes are not a dictionary
+const long	kAirusEmptyDictionary	= -9;	// FirstCompletion: there are no words at all
+const long	kAirusNoMoreWords		= -10;	// NextCompletion: that was the last
 const long	kAirusDictionaryFull	= -15;	// the dictionary frame's `limit` was reached (AddWordWithCount)
 
 // airusResult, and what ExpandDict leaves in the block
@@ -220,6 +222,12 @@ Boolean	HasActualOrImpliedAtr(Handle dictionary);			// ROM 0x0002c770 HasActualO
 void	NewVerifyReset(Handle dictionary, ULong position, long node, const UByte* word);	// ROM 0x0002c6a8 NewVerifyReset
 void	VerifyStart(Handle dictionary);						// ROM 0x0002c760 VerifyStart__FPP15AirusAParmBlock
 void	VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attribute, ULong* extra);	// ROM 0x0002cd20 VerifyString
+// The words of a dictionary in alphabetical order: the first beginning
+// with a prefix, and the one after a word.
+void	FirstCompletion(Handle dictionary, const void* prefix, void* word, ULong** attribute, ULong* extra);	// ROM 0x0002cf0c FirstCompletion
+void	NextCompletion(Handle dictionary, const void* prefix, void* word, const void* last, ULong** attribute, ULong* extra);	// ROM 0x0002d224 NextCompletion
+long	AEnum_FirstLast(AirusAParmBlock* parms);			// ROM 0x0002a1f4 AEnum_FirstLast__FP15AirusAParmBlock
+long	AEnum_NextPrevious(AirusAParmBlock* parms);			// ROM 0x0002a244 AEnum_NextPrevious__FP15AirusAParmBlock
 
 // the dispatcher
 // The ROM's own lexicons: read-only tries whose nodes stand for a set

@@ -739,6 +739,54 @@ main()
 		DisposDictionary(&old);
 	}
 
+	// the words in alphabetical order (FirstCompletion, NextCompletion over
+	// AEnum_FirstLast and AEnum_NextPrevious): a word that is the
+	// beginning of others comes before them, and the walk goes back up
+	// the trie to the next sibling when a branch runs out
+	{
+		Handle words = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 4);
+		static const char* const kAdded[] = { "dog", "call", "a", "do", "cat", "calls", "zebra" };
+		static const char* const kSorted[] = { "a", "call", "calls", "cat", "do", "dog", "zebra" };
+		static const ULong kAttributes[] = { 3, 2, 6, 5, 4, 1, 7 };	// what each sorted word was given
+		for (long i = 0; i < 7; i++)
+		{
+			UByte word[16];
+			strcpy((char*) word, kAdded[i]);
+			AddWord(words, 0, word, (ULong) (i + 1));
+		}
+		UByte prefix[16] = { 0 };
+		UByte found[64] = { 0 };
+		UByte last[64] = { 0 };
+		ULong* attribute = nil;
+		FirstCompletion(words, prefix, found, &attribute, nil);
+		EXPECT(airusResult == 0 && strcmp((const char*) found, "a") == 0 && attribute != nil && *attribute == kAttributes[0]);
+		long n = 1;
+		for (;;)
+		{
+			strcpy((char*) last, (const char*) found);
+			NextCompletion(words, prefix, found, last, &attribute, nil);
+			if (airusResult != 0)
+				break;
+			EXPECT(n < 7 && strcmp((const char*) found, kSorted[n]) == 0 && attribute != nil && *attribute == kAttributes[n]);
+			n++;
+		}
+		EXPECT(n == 7 && airusResult == kAirusNoMoreWords);
+		// with a prefix: the first word beginning with it
+		strcpy((char*) prefix, "ca");
+		FirstCompletion(words, prefix, found, &attribute, nil);
+		EXPECT(airusResult == 0 && strcmp((const char*) found, "call") == 0);
+		strcpy((char*) prefix, "q");
+		FirstCompletion(words, prefix, found, &attribute, nil);
+		EXPECT(airusResult == kAirusNotAWord && attribute == nil);
+		// an empty dictionary has no first word
+		Handle empty = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 4);
+		prefix[0] = 0;
+		FirstCompletion(empty, prefix, found, &attribute, nil);
+		EXPECT(airusResult == kAirusEmptyDictionary);
+		DisposDictionary(&empty);
+		DisposDictionary(&words);
+	}
+
 	printf("test_Airus: %d failures\n", failures);
 	return failures != 0;
 }

@@ -1119,6 +1119,246 @@ AEnum_DeleteWord(AirusAParmBlock* parms)
 }
 
 
+// The flags byte of the node at that offset (after its character).
+static inline UByte
+NodeFlags(long node)
+{
+	return (UByte) AE_Parms->fData[node + AirusCharSize()];
+}
+
+
+// ROM 0x0002a1f4 AEnum_FirstLast__FP15AirusAParmBlock
+// The first (fResult 0) or last (1) word at or below the block's node;
+// an empty dictionary has none (1).  The answer is left in fResult.
+long
+AEnum_FirstLast(AirusAParmBlock* parms)
+{
+	long result;
+	if (parms->fNode == 0 && parms->fDataEnd - parms->fData == 2)
+		result = 1;
+	else
+	{
+		parms->fResult += 2;
+		result = AEnum_NextPrevious(parms);
+	}
+	AE_Parms->fResult = result;
+	return result;
+}
+
+
+// ROM 0x0002a244 AEnum_NextPrevious__FP15AirusAParmBlock
+// A walk of the trie in alphabetical order from the word in the block's
+// buffer (the part after fIndex, the prefix before it staying as it is):
+// fResult 0 the next word, 1 the previous one, 2 the first word under the
+// node, 3 the last.  The word found is written over the buffer from
+// fIndex on and its attribute put in fAttribute.  ==> 0, or 1 when there
+// is no such word (also left in fResult).
+//
+// Forwards: down the word, noting the last node that had a sibling to
+// its right; the next word is the first one below the word's own node
+// when it has children, else the first one below that sibling.
+// Backwards: down the word, noting the last word-ending node above it
+// and the last left sibling along the way; the previous word is the last
+// one below that sibling when it lies later in the data than that
+// ancestor, else the ancestor's own word.  The ROM writes this with goto
+// - the four cases share their tails and jump into each other's loops -
+// and so does this, with its registers' names (uN a node, pN a position
+// in the word).
+long
+AEnum_NextPrevious(AirusAParmBlock* parms)
+{
+	CheckDictPtrs(parms);
+	ULong u10 = 0;
+	ULong u11 = 0;
+	UByte* p8 = AE_Parms->fWord + AE_Parms->fIndex;
+	UByte* p9;
+	UByte* r10 = nil;
+	ULong u2 = (ULong) AE_Parms->fNode;
+	ULong u3 = u2 == 0 ? 2 : u2;
+	long result;
+	long direction = AE_Parms->fResult;
+
+	if (direction == 0)
+	{
+		// next
+		p9 = p8;
+		if (u2 == 0)
+			goto next_find;
+		u11 = u3;
+		while (*p9 != 0)
+		{
+			u3 = FollowLeft(u11);
+next_find:
+			while (GetSymbol(u3) != *p9)
+				u3 = FollowRight(u3);
+			if ((NodeFlags(u3) >> 6) != 0)
+			{
+				p8 = p9;
+				u10 = u3;
+			}
+			p9++;
+			u11 = u3;
+		}
+		if ((NodeFlags(u11) & kAirusNoChildren) == 0)
+		{
+			do
+			{
+				u11 = FollowLeft(u11);
+				*p9 = (UByte) GetSymbol(u11);
+				p8 = p9 + 1;
+				p9 = p8;
+			}
+			while ((NodeFlags(u11) & kAirusHasAttribute) == 0);
+		}
+		else
+		{
+			if (u10 == 0)
+			{
+				result = 1;
+				goto done;
+			}
+			u11 = FollowRight(u10);
+			p9 = p8;
+			for (;;)
+			{
+				*p9 = (UByte) GetSymbol(u11);
+				p8 = p9 + 1;
+				if ((NodeFlags(u11) & kAirusHasAttribute) != 0)
+					break;
+				u11 = SkipNode(u11);
+				p9 = p8;
+			}
+		}
+		goto terminate;
+	}
+
+	if (direction == 1)
+	{
+		// previous
+		p9 = p8;
+		if (u2 == 0)
+			goto previous_find;
+		u2 = u3;
+		if (*p8 != 0)
+		{
+			do
+			{
+				if ((NodeFlags(u2) & kAirusHasAttribute) != 0)
+				{
+					r10 = p8;
+					u11 = u2;
+				}
+				u3 = FollowLeft(u2);
+previous_find:
+				{
+					ULong symbol = GetSymbol(u3);
+					u2 = u3;
+					u3 = u10;
+					if (symbol != *p8)
+					{
+						do
+						{
+							u3 = u2;
+							u2 = FollowRight(u3);
+							p9 = p8;
+						}
+						while (GetSymbol(u2) != *p8);
+					}
+				}
+				p8++;
+				u10 = u3;
+			}
+			while (*p8 != 0);
+			if (u3 != 0 || u11 != 0)
+			{
+				if (u11 <= u3)
+				{
+					*p9 = (UByte) GetSymbol(u3);
+					p8 = p9 + 1;
+					goto last_below;
+				}
+				goto end_at_ancestor;
+			}
+		}
+		result = 1;
+		goto done;
+	}
+
+	if (direction == 2)
+	{
+		// first
+		p9 = p8;
+		if (u2 == 0)
+		{
+			*p8 = (UByte) GetSymbol(u3);
+			p9 = p8 + 1;
+		}
+		u11 = u3;
+		p8 = p9;
+		while ((NodeFlags(u11) & kAirusHasAttribute) == 0)
+		{
+			u11 = SkipNode(u11);
+			*p8++ = (UByte) GetSymbol(u11);
+		}
+		goto terminate;
+	}
+
+	if (direction == 3)
+	{
+		// last
+		if (u2 == 0)
+			goto last_siblings;
+last_below:
+		u11 = u3;
+		while ((NodeFlags(u11) & kAirusNoChildren) == 0)
+		{
+			u3 = FollowLeft(u11);
+last_siblings:
+			while ((NodeFlags(u3) >> 6) != 0)
+				u3 = FollowRight(u3);
+			*p8++ = (UByte) GetSymbol(u3);
+			u11 = u3;
+		}
+		goto terminate;
+	}
+
+end_at_ancestor:
+	*r10 = 0;
+	goto attribute;
+
+terminate:
+	*p8 = 0;
+
+attribute:
+	if (AE_Parms->fAttributeSize != 0)
+		u11 = SkipNode(u11);
+	switch (AE_Parms->fAttributeSize)
+	{
+	case 0:
+		if (((UByte) AE_Parms->fData[1] & 7) == kAirusKindEnum)
+			AE_Parms->fAttribute = 0x80;
+		break;
+	case 1:
+		AE_Parms->fAttribute = (UByte) AE_Parms->fData[u11];
+		break;
+	case 2:
+		AE_Parms->fAttribute = ((ULong) (UByte) AE_Parms->fData[u11] << 8) | (UByte) AE_Parms->fData[u11 + 1];
+		break;
+	case 4:
+		AE_Parms->fAttribute = ((ULong) (UByte) AE_Parms->fData[u11] << 24)
+							 | ((ULong) (UByte) AE_Parms->fData[u11 + 1] << 16)
+							 | ((ULong) (UByte) AE_Parms->fData[u11 + 2] << 8)
+							 | (UByte) AE_Parms->fData[u11 + 3];
+		break;
+	}
+	result = 0;
+
+done:
+	AE_Parms->fResult = result;
+	return result;
+}
+
+
 // ROM 0x0002a7cc AEnum_ChangeAttribute__FP15AirusAParmBlock
 // The attribute of a word already in the dictionary written over where
 // it lies.  The word is walked from the root a character at a time -
@@ -1774,6 +2014,130 @@ VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attri
 		*extra = found;
 }
 
+
+// ROM 0x0002cf0c FirstCompletion
+// The first word of the dictionary that begins with the prefix, written
+// into `word`.  airusResult afterwards: 0 there was one, -6 nothing
+// begins with the prefix, -9 the dictionary is empty.  `attribute` is
+// given the word's attribute (nil when there is none) and `extra` what
+// VerifyString would hand back beside it.
+void
+FirstCompletion(Handle dictionary, const void* prefix, void* word, ULong** attribute, ULong* extra)
+{
+	ULong* foundAttribute = &gAirusVerifyAttribute;
+	ULong found = gAirusVerifyExtra;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean wide = kind == kAirusKindEnum16 || kind == kAirusKindAL16;
+	Boolean empty = wide ? *(const UniChar*) prefix == 0 : *(const UByte*) prefix == 0;
+	if (!empty)
+	{
+		VerifyString(dictionary, prefix, nil, nil, nil);
+		if (airusResult < 0)
+		{
+			airusResult = kAirusNotAWord;
+			foundAttribute = nil;
+			goto out;
+		}
+	}
+	else
+		((AirusAParmBlock*) *dictionary)->fNode = 0;
+	parms = (AirusAParmBlock*) *dictionary;
+	if (parms->fDataEnd - parms->fData == 2)
+	{
+		airusResult = kAirusEmptyDictionary;
+		foundAttribute = nil;
+		goto out;
+	}
+	{
+		long length;
+		if (wide)
+		{
+			Ashortstrcpy((UniChar*) word, (const UniChar*) prefix);
+			length = Ashortstrlen((const UniChar*) word) / 2;
+		}
+		else
+		{
+			Astrcpy((char*) word, (const char*) prefix);
+			length = Astrlen((const char*) word);
+		}
+		parms = (AirusAParmBlock*) *dictionary;
+		parms->fIndex = length;
+		parms->fResult = 0;
+		parms->fWord = (UByte*) word;
+		CallAirusA(dictionary, kAirusFirstLast);
+		if (!HasActualOrImpliedAtr(dictionary))
+			foundAttribute = nil;
+		else
+			gAirusVerifyAttribute = ((AirusAParmBlock*) *dictionary)->fAttribute;
+		found = HasActualOrImpliedAtr(dictionary) ? ((AirusAParmBlock*) *dictionary)->fField48 : 0;
+		airusResult = 0;
+	}
+out:
+	if (attribute != nil)
+		*attribute = foundAttribute;
+	if (extra != nil)
+		*extra = found;
+}
+
+
+// ROM 0x0002d224 NextCompletion
+// The word after `last` among those beginning with the prefix, written
+// into `word`.  airusResult afterwards: 0 there was one, -10 there are no
+// more, -6 `last` was empty.
+void
+NextCompletion(Handle dictionary, const void* prefix, void* word, const void* last, ULong** attribute, ULong* extra)
+{
+	ULong* foundAttribute = &gAirusVerifyAttribute;
+	ULong found;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *dictionary;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean wide = kind == kAirusKindEnum16 || kind == kAirusKindAL16;
+	Boolean empty = wide ? *(const UniChar*) last == 0 : *(const UByte*) last == 0;
+	if (empty)
+	{
+		foundAttribute = nil;
+		airusResult = kAirusNotAWord;
+		found = gAirusVerifyExtra;
+	}
+	else
+	{
+		long length;
+		if (wide)
+		{
+			Ashortstrcpy((UniChar*) word, (const UniChar*) last);
+			length = Ashortstrlen((const UniChar*) prefix) / 2;
+		}
+		else
+		{
+			Astrcpy((char*) word, (const char*) last);
+			length = Astrlen((const char*) prefix);
+		}
+		parms = (AirusAParmBlock*) *dictionary;
+		parms->fIndex = length;
+		parms->fResult = 0;
+		parms->fWord = (UByte*) word;
+		CallAirusA(dictionary, kAirusNextPrevious);
+		if (!HasActualOrImpliedAtr(dictionary))
+			foundAttribute = nil;
+		else
+			gAirusVerifyAttribute = ((AirusAParmBlock*) *dictionary)->fAttribute;
+		found = HasActualOrImpliedAtr(dictionary) ? ((AirusAParmBlock*) *dictionary)->fField48 : 0;
+		long result = ((AirusAParmBlock*) *dictionary)->fResult;
+		if (result == 0)
+			airusResult = 0;
+		else if (result == 1)
+		{
+			foundAttribute = nil;
+			airusResult = kAirusNoMoreWords;
+		}
+	}
+	if (attribute != nil)
+		*attribute = foundAttribute;
+	if (extra != nil)
+		*extra = found;
+}
+
 /*------------------------------------------------------------------------------
 	T h e   d i s p a t c h e r
 
@@ -2303,10 +2667,14 @@ CallAirusANoLock(Handle dictionary, long selector)
 		case kAirusChangeAttribute:
 			AEnum_ChangeAttribute(parms);
 			break;
+		case kAirusFirstLast:
+			AEnum_FirstLast(parms);
+			break;
+		case kAirusNextPrevious:
+			AEnum_NextPrevious(parms);
+			break;
 		default:
-			// NOT YET RECONSTRUCTED: the rest of the AEnum walkers -
-			// FirstLast 0x0002a1f4, NextPrevious 0x0002a244,
-			// NextSet9 0x0002af18
+			// NOT YET RECONSTRUCTED: NextSet9 0x0002af18
 			break;
 		}
 		break;
