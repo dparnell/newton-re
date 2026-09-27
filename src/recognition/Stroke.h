@@ -102,8 +102,8 @@ public:
 	SamplePt*		GetPoint(long index);					// ROM 0x002227c0 GetPoint__7TStrokeFl
 	void			GetTabPt(long index, TabPt* pt);		// ROM 0x002227c8 GetTabPt__7TStrokeFlP5TabPt
 	void			GetFPoint(long index, FPoint* pt);		// ROM 0x00222858 GetFPoint__7TStrokeFlP6FPoint
-	void			Rotate(long angle);						// ROM 0x002228a0 Rotate__7TStrokeFl (NOT YET)
-	void			Scale(long sx, long sy);				// ROM 0x002229b4 Scale__7TStrokeFlT1 (NOT YET)
+	void			Rotate(long angle);						// ROM 0x002228a0 Rotate__7TStrokeFl - turned by the degrees (16.16) about the box's centre
+	void			Scale(long sx, long sy);				// ROM 0x002229b4 Scale__7TStrokeFlT1 - scaled (16.16), a negative scale flipping within the box
 	void			Draw(void);								// ROM 0x00222af8 Draw__7TStrokeFv - the stroke inked straight into the screen (InkerLine)
 	void			Map(FRect* dst);						// ROM 0x00222c6c Map__7TStrokeFP5FRect - the points moved from the box to the rect
 	void			Offset(long dx, long dy);				// ROM 0x00222d98 Offset__7TStrokeFlT1

@@ -1423,7 +1423,7 @@ FScaleShape(RefArg rcvr, RefArg shape, RefArg src, RefArg dst)
 // The shape moved in place: a list's members each (styles left alone); a
 // region's or polygon's data offset; a bitmap's, picture's, text's or
 // ink's bounds; else the binary's rectangle.  ==> the shape.
-static Ref
+Ref
 FOffsetShape(RefArg rcvr, RefArg shape, RefArg dx, RefArg dy)
 {
 	long dh = (short) RINT(dx);
@@ -1591,7 +1591,7 @@ FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
 // NOT YET RECONSTRUCTED: a bitmap whose resolution is not 72 dpi, which
 // the ROM draws through DrawShapeScaled; and TQDScaler::ForceScaling,
 // which it turns off around the unscaled case.
-static Ref
+Ref
 FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 {
 	GrafPort* saved;

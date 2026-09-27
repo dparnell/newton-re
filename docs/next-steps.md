@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 103/103
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10869 citations, 0 bad;
-  5986 of 16671 functions (35.91%).
+- `analysis/coverage.py build/MP2x00US --check`: 10898 citations, 0 bad;
+  6001 of 16671 functions (36.00%).
 - `analysis/natives.py --unbound`: 352 of the ROM's 1326 natives
   are unanswered (table below).
 
@@ -78,17 +78,10 @@ verbs rather than recognition proper), in the order planned:
    `docs/views/README.md`'s "Questions asked of shapes") **Shape verbs**:
    `MakeInk`, `FindShape`, `GetShapeInfo`, `StrokeInPicture`,
    `AnimateSimpleStroke` (and `WedgeBox`, a stub until now).  NOT YET:
-   - `MungeShape` (0x000df718): `DoMungeShape` 0x000dea9c (3196 B - the
-     point and rectangle turners 0x000de6d8-0x000dea9c are small and read,
-     in `docs/views/README.md`), under it `TStroke::Rotate`/`Scale`
-     0x002228a0/0x002229b4 with the matrix helpers (`SetIdentityMatrix`,
-     `RotateMatrix`, `TransformPoints`, `MxScale`, `MxMove`, `Concatenate`,
-     `MxInit`, `MxCopy`, `MxRotate`, `MxTransform`, 0x00125114-0x001257f8)
-     for ink, and for a bitmap, text, picture or region `FMungeBitmap`
-     0x0003f764 over `RotBitmap180`/`FlipBitmapH`/`FlipBitmapV`/
-     `RotBitmapL`/`RotBitmapR`/`RotTiledBitmap`/`Tilable`
-     (0x0003f93c-0x00040f28, about 5.5 KB) - which is also the `MungeBitmap`
-     native.
+   - ~~`MungeShape`~~ DONE (2026-09-28, `views/ShapeVerbs.cpp`,
+     `qd/MungeBitmap.cpp`, `toolbox/Matrix.h`; `MungeBitmap` too) bar
+     `RotTiledBitmap` (a screen-sized bitmap turned in tiles out of a large
+     binary on a store, over `TTile`).
    - `PictToShape` (0x000dd6dc): `DrawPicture`'s toShapes path - the
      `OpcodeProcs` table, `storeShape`, `flushShape`, `MungeStyleFrame`
      (`docs/qd/README.md`).

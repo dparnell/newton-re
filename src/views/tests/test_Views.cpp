@@ -1082,6 +1082,62 @@ TestShapes()
 		EXPECT(r->left == 5 && r->top == 6 && r->right == 25 && r->bottom == 16);
 	}
 
+	// MungeShape: a rectangle turned a quarter right about its middle,
+	// a line flipped left to right (views/ShapeVerbs.cpp)
+	Eval("mungeRect := MakeRect(10, 10, 30, 20)");
+	Eval("MungeShape(mungeRect, 'rotateRight, nil)");
+	EXPECT(RINT(Eval("GetShapeInfo(mungeRect).bounds.left")) == 15 && RINT(Eval("GetShapeInfo(mungeRect).bounds.top")) == 5);
+	EXPECT(RINT(Eval("GetShapeInfo(mungeRect).bounds.right")) == 25 && RINT(Eval("GetShapeInfo(mungeRect).bounds.bottom")) == 25);
+	Eval("mungeLine := MakeLine(1, 2, 3, 4)");
+	Eval("MungeShape(mungeLine, 'flipHorizontal, nil)");
+	EXPECT(RINT(Eval("GetShapeInfo(mungeLine).start.x")) == 3 && RINT(Eval("GetShapeInfo(mungeLine).stop.x")) == 1);
+	EXPECT(RINT(Eval("GetShapeInfo(mungeLine).start.y")) == 2);
+	// MungeBitmap: a 10 x 3 bitmap with its top left pixel set, turned
+	// and flipped (qd/MungeBitmap.cpp); a half turn moves the row's
+	// padding to its start, which puts the pixel outside the 10 columns
+	// (a ROM quirk kept)
+	{
+		// (a bitmap under sixteen bytes is not turned half round at all -
+		// another quirk - so the half turn is also tried on eight rows)
+		struct { const char* op; long rows; long x, y; long width, height; } cases[] = {
+			{ "rotateRight", 3, 2, 0, 3, 10 },
+			{ "rotateLeft", 3, 0, 9, 3, 10 },
+			{ "flipHorizontal", 3, 9, 0, 10, 3 },
+			{ "flipVertical", 3, 0, 2, 10, 3 },
+			{ "rotate180", 3, 0, 0, 10, 3 },
+			{ "rotate180", 8, 31, 7, 10, 8 } };
+		for (unsigned c = 0; c < sizeof(cases) / sizeof(cases[0]); c++)
+		{
+			char make[40];
+			snprintf(make, sizeof(make), "MakeBitmap(10, %ld, nil)", cases[c].rows);
+			RefVar bitmap(Eval(make));
+			{
+				TPixelObj obj;
+				obj.Init(bitmap);
+				((UByte*) GetPixelMapBits(obj.Pixels()))[0] = 0x80;
+			}
+			SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "mungeBitmap")), bitmap);
+			char source[80];
+			snprintf(source, sizeof(source), "MungeBitmap(mungeBitmap, '%s, nil)", cases[c].op);
+			Eval(source);
+			TPixelObj obj;
+			obj.Init(bitmap);
+			PixelMap* pm = obj.Pixels();
+			EXPECT(pm->bounds.right - pm->bounds.left == cases[c].width && pm->bounds.bottom - pm->bounds.top == cases[c].height);
+			long set = 0;
+			for (long y = 0; y < cases[c].height; y++)
+				for (long x = 0; x < pm->rowBytes * 8; x++)
+					if (((UByte*) GetPixelMapBits(pm))[y * pm->rowBytes + x / 8] & (0x80 >> (x & 7)))
+					{
+						set++;
+						if (x != cases[c].x || y != cases[c].y)
+							printf("munge %s: pixel at %ld, %ld\n", cases[c].op, x, y);
+						EXPECT(x == cases[c].x && y == cases[c].y);
+					}
+			EXPECT(set == 1);
+		}
+	}
+
 	// MakeBitmap makes an offscreen bitmap and DrawIntoBitmap draws into
 	// it (qd/Pictures.cpp, views/DrawShape.cpp)
 	Eval("bm := MakeBitmap(40, 20, nil)");

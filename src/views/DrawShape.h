@@ -114,6 +114,19 @@ void	RegisterShapeNatives(void);
 // the questions asked of shapes (views/ShapeVerbs.cpp): FindShape,
 // GetShapeInfo, MakeInk, StrokeInPicture - registered by RegisterShapeNatives
 void	RegisterShapeVerbNatives(void);
+Ref		FOffsetShape(RefArg rcvr, RefArg shape, RefArg dx, RefArg dy);				// ROM 0x000dda60 FOffsetShape
+Ref		FDrawIntoBitmap(RefArg rcvr, RefArg shape, RefArg styles, RefArg bitmap);	// ROM 0x0003eee0 FDrawIntoBitmap
+// turning and flipping a shape about (cx, cy) (views/ShapeVerbs.cpp)
+void	RotatePointR(Point* pt, short cx, short cy);		// ROM 0x000de6d8 RotatePointR__FP5PointsT2
+void	RotatePointL(Point* pt, short cx, short cy);		// ROM 0x000de72c RotatePointL__FP5PointsT2
+void	FlipHPoint(Point* pt, short cx, short cy);			// ROM 0x000de780 FlipHPoint__FP5PointsT2
+void	FlipVPoint(Point* pt, short cx, short cy);			// ROM 0x000de7a4 FlipVPoint__FP5PointsT2
+void	RotateRectR(Rect* r, short cx, short cy);			// ROM 0x000de7c8 RotateRectR__FP4RectsT2
+void	RotateRectL(Rect* r, short cx, short cy);			// ROM 0x000de98c RotateRectL__FP4RectsT2
+void	FlipRectV(Rect* r, short cx, short cy);				// ROM 0x000dea24 FlipRectV__FP4RectsT2
+void	FlipRectH(Rect* r, short cx, short cy);				// ROM 0x000dea60 FlipRectH__FP4RectsT2
+Ref		DoMungeShape(RefArg shape, RefArg operation, RefArg style, short cx, short cy);	// ROM 0x000dea9c DoMungeShape__FRC6RefVarN21sT4
+Ref		FMungeShape(RefArg rcvr, RefArg shape, RefArg operation, RefArg style);			// ROM 0x000df718 FMungeShape
 Boolean	PointInShape(RefArg shape, const Point& pt, TStyleSave* style);				// ROM 0x000e15b8 PointInShape__FRC6RefVarRC6TPointP10TStyleSave
 Boolean	DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style);	// ROM 0x000e1be0 DoFindShape__FRC6RefVarRC6TPointR6RefVarP10TStyleSave
 // Whether the point is in the shape, and - for a list of shapes - which

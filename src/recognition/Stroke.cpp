@@ -8,6 +8,8 @@
 */
 
 #include "Stroke.h"
+#include "Matrix.h"
+#include "FixedMathExtra.h"
 #include "Polygons.h"
 #include "Ports.h"
 #include "Draw.h"
@@ -508,20 +510,52 @@ TStroke::GetFPoint(long index, FPoint* pt)
 
 
 // ROM 0x002228a0 Rotate__7TStrokeFl
-// NOT YET RECONSTRUCTED: the points turned about the box's centre (the
-// matrix utilities SetIdentityMatrix/RotateMatrix/TransformPoints).
+// The points turned by the degrees (16.16) about the box's centre, each
+// kept at nought or more.
 void
-TStroke::Rotate(long /*angle*/)
+TStroke::Rotate(long angle)
 {
+	FPoint centre;
+	Fixed m[9];
+	RectangleCenter(&fBBox, &centre);
+	SetIdentityMatrix(m);
+	RotateMatrix(m, -angle, centre.x, centre.y);
+	for (ULong i = 0; i < (ULong) Count(); i++)
+	{
+		SamplePt* pt = GetPoint(i);
+		Fixed xy[2] = { SampleX(pt), SampleY(pt) };
+		TransformPoints(m, 1, xy);
+		SetSampleX(pt, xy[0]);
+		SetSampleY(pt, xy[1]);
+	}
 	UpdateBBox();
 }
 
 
 // ROM 0x002229b4 Scale__7TStrokeFlT1
-// NOT YET RECONSTRUCTED: the points scaled (MxScale/MxMove).
+// The points scaled (16.16); a negative scale flips them within the box
+// (moved back by its left and right, or top and bottom, together).
 void
-TStroke::Scale(long /*sx*/, long /*sy*/)
+TStroke::Scale(long sx, long sy)
 {
+	Fixed m[9];
+	SetIdentityMatrix(m);
+	MxScale(m, sx, sy);
+	Fixed dx = 0, dy = 0;
+	if (sx < 0)
+		dx = WrapAdd(fBBox.right, fBBox.left);
+	if (sy < 0)
+		dy = WrapAdd(fBBox.bottom, fBBox.top);
+	if (dx != 0 || dy != 0)
+		MxMove(m, dx, dy);
+	for (ULong i = 0; i < (ULong) Count(); i++)
+	{
+		SamplePt* pt = GetPoint(i);
+		Fixed xy[2] = { SampleX(pt), SampleY(pt) };
+		TransformPoints(m, 1, xy);
+		SetSampleX(pt, xy[0]);
+		SetSampleY(pt, xy[1]);
+	}
 	UpdateBBox();
 }
 

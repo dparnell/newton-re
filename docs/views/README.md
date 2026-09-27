@@ -2182,17 +2182,33 @@ stylus picture (`gtPens[2]`) is drawn at each point a tick at a time over
 a `TBits` copy of what was under it.  No ROM script calls it, so its bytes
 are read big-endian as the ROM reads them.
 
-NOT YET: `MungeShape` (rotate or flip a shape about its middle).  Its
-point and rectangle turners are read (0x000de6d8-0x000dea9c; the centre
-is the shape's box's middle, (cx, cy)): `RotatePointR` makes (h, v) into
-(cx + cy - v, cy + h - cx), `RotatePointL` into (cx + v - cy, cy + cx - h),
-the flips mirror about cx or cy, and the rectangle turners do the same to
-the corners (`RotateRectR`: top = left - cx + cy, left = cx + cy - bottom,
-bottom = right - cx + cy, right = cx + cy - top).  `DoMungeShape` applies
-them to a geometric shape's data, rotates or scales ink strokes
-(`TStroke::Rotate`/`Scale`, over the matrix helpers) and draws a bitmap,
-text, picture or region into a bitmap to turn with `FMungeBitmap` - the
-rest of that chain is listed in `docs/next-steps.md`.
+`MungeShape(shape, operation, style)` turns ('rotateLeft, 'rotateRight)
+or flips ('flipHorizontal, 'flipVertical) a shape about the middle of its
+box (`views/ShapeVerbs.cpp`).  The point and rectangle turners
+(0x000de6d8-0x000dea9c, the centre (cx, cy)): `RotatePointR` makes (h, v)
+into (cx + cy - v, cy + h - cx), `RotatePointL` into (cx + v - cy,
+cy + cx - h), the flips mirror about cx or cy, and the rectangle turners
+do the same to the corners (`RotateRectR`: top = left - cx + cy, left =
+cx + cy - bottom, bottom = right - cx + cy, right = cx + cy - top).
+`DoMungeShape` applies them to a geometric shape's data (a list member by
+member, a style frame in it applying to what follows), turns or scales an
+ink shape's strokes one by one (`TStroke::Rotate`/`Scale` over
+`toolbox/Matrix.h`, the 3x3 16.16 matrices) and packs them again, and
+turns a bitmap with `MungeBitmap` (`qd/MungeBitmap.cpp`) - a region,
+picture or text first drawn into a bitmap of its own, which is what
+comes back (ROM quirk: the shape drawn is left moved to the origin).
+`MungeBitmap` turns the bits themselves: a quarter turn takes 32 columns
+by 8 rows at a time and makes each column of eight a byte of a new
+'pixels object (the bounds and resolution turned too), a flip reverses
+bytes through the ROM's `bitFlip` table (left to right, after moving the
+row right by its padding) or swaps rows, and a half turn reverses the
+whole buffer in eight pieces, telling an options `callback` the percent
+done - with three quirks kept: the rows' padding ends up at their start,
+a few bytes in the middle are left when the size is not a multiple of
+sixteen, and a bitmap under sixteen bytes is not turned at all.
+`test_Views` turns and flips a 10 x 3 bitmap pixel by pixel.  NOT YET: a
+screen-sized bitmap (`Tilable`) is turned a tile at a time out of a
+large binary on a store (`RotTiledBitmap`, `TTile`).
 
 ## The outline list (`views/ListView.h`)
 

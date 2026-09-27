@@ -24,6 +24,7 @@
 #include "UnitPublic.h"
 #include "FixedGeometry.h"
 #include "Frames.h"
+#include "RSSymbols.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "ROMConstants.h"
@@ -591,10 +592,284 @@ FAnimateSimpleStroke(RefArg /*rcvr*/, RefArg strokes, RefArg dest, RefArg withPe
 }
 
 
+
+#pragma mark - turning and flipping
+
+// ROM 0x000de6d8 RotatePointR__FP5PointsT2
+// A quarter turn to the right about (cx, cy).
+void
+RotatePointR(Point* pt, short cx, short cy)
+{
+	short h = pt->h;
+	short v = pt->v;
+	pt->v = (short) ((h - cx) + cy);
+	pt->h = (short) ((cy - v) + cx);
+}
+
+
+// ROM 0x000de72c RotatePointL__FP5PointsT2
+void
+RotatePointL(Point* pt, short cx, short cy)
+{
+	short h = pt->h;
+	short v = pt->v;
+	pt->v = (short) ((cx - h) + cy);
+	pt->h = (short) ((v - cy) + cx);
+}
+
+
+// ROM 0x000de780 FlipHPoint__FP5PointsT2
+void
+FlipHPoint(Point* pt, short cx, short /*cy*/)
+{
+	pt->h = (short) (cx * 2 - pt->h);
+}
+
+
+// ROM 0x000de7a4 FlipVPoint__FP5PointsT2
+void
+FlipVPoint(Point* pt, short /*cx*/, short cy)
+{
+	pt->v = (short) (cy * 2 - pt->v);
+}
+
+
+// ROM 0x000de7c8 RotateRectR__FP4RectsT2
+void
+RotateRectR(Rect* r, short cx, short cy)
+{
+	short top = r->top, left = r->left, bottom = r->bottom, right = r->right;
+	r->top = (short) ((left - cx) + cy);
+	r->bottom = (short) ((right - cx) + cy);
+	r->left = (short) ((cy - bottom) + cx);
+	r->right = (short) ((cy - top) + cx);
+}
+
+
+// ROM 0x000de98c RotateRectL__FP4RectsT2
+void
+RotateRectL(Rect* r, short cx, short cy)
+{
+	short top = r->top, left = r->left, bottom = r->bottom, right = r->right;
+	r->top = (short) ((cx - right) + cy);
+	r->bottom = (short) ((cx - left) + cy);
+	r->left = (short) ((top - cy) + cx);
+	r->right = (short) ((bottom - cy) + cx);
+}
+
+
+// ROM 0x000dea24 FlipRectV__FP4RectsT2
+void
+FlipRectV(Rect* r, short /*cx*/, short cy)
+{
+	short top = r->top;
+	r->top = (short) (cy * 2 - r->bottom);
+	r->bottom = (short) (cy * 2 - top);
+}
+
+
+// ROM 0x000dea60 FlipRectH__FP4RectsT2
+void
+FlipRectH(Rect* r, short cx, short /*cy*/)
+{
+	short left = r->left;
+	r->left = (short) (cx * 2 - r->right);
+	r->right = (short) (cx * 2 - left);
+}
+
+
+// ROM 0x000dea9c DoMungeShape__FRC6RefVarN21sT4
+// A shape turned ('rotateLeft, 'rotateRight) or flipped ('flipHorizontal,
+// 'flipVertical) about (cx, cy), in place where it can be: a list member
+// by member (a style frame in it applying to the shapes after it); a
+// line's points, a rectangle's (oval's, ...) box, a polygon's points and
+// box moved; an ink shape's strokes each turned or scaled and packed
+// again, its boxes turned (and kept from going negative); and a bitmap
+// turned with MungeBitmap - a region, picture or text first drawn into
+// a bitmap of its own, which is what comes back.  ROM QUIRKS: the shape
+// drawn into that bitmap is left moved to the origin; the ink's stroke
+// list is not given back.  ==> the shape (or the bitmap made).
+Ref
+DoMungeShape(RefArg shape, RefArg operation, RefArg style, short cx, short cy)
+{
+	typedef void (*PointProc)(Point*, short, short);
+	typedef void (*RectProc)(Rect*, short, short);
+	RefVar cls(ClassOf(shape));
+	RefVar result;
+	PointProc pointProc = nil;
+	RectProc rectProc = nil;
+	if (EQ(operation, RSSYMrotateright))
+	{
+		pointProc = RotatePointR;
+		rectProc = RotateRectR;
+	}
+	else if (EQ(operation, RSSYMrotateleft))
+	{
+		pointProc = RotatePointL;
+		rectProc = RotateRectL;
+	}
+	else if (EQ(operation, RSSYMfliphorizontal))
+	{
+		pointProc = FlipHPoint;
+		rectProc = FlipRectH;
+	}
+	else if (EQ(operation, RSSYMflipvertical))
+	{
+		pointProc = FlipVPoint;
+		rectProc = FlipRectV;
+	}
+	else
+		Throw((ExceptionName) "evt.ex.graf", (void*) -8802, nil);
+
+	if (IsArray(shape))
+	{
+		long i = 0;
+		RefVar currentStyle(style);
+		for (TObjectIterator iter(shape); !iter.Done(); iter.Next(), i++)
+		{
+			RefVar item(iter.Value());
+			if (ISNIL(item))
+				continue;
+			if (!EQ(RefVar(ClassOf(item)), RSSYMframe))
+			{
+				RefVar munged(DoMungeShape(item, operation, currentStyle, cx, cy));
+				SetArraySlot(shape, i, munged);
+			}
+			else
+			{
+				currentStyle = item;
+				SetArraySlot(shape, i, item);
+			}
+		}
+		return shape;
+	}
+
+	Boolean isRegion = EQ(cls, RSSYMregion);
+	Boolean isBitmap = false;
+	if (!isRegion)
+	{
+		isBitmap = EQ(cls, RSSYMbitmap);
+		if (!isBitmap && !EQ(cls, RSSYMpicture) && !EQ(cls, RSSYMtext))
+		{
+			if (EQ(cls, RSSYMink))
+			{
+				// ink: the strokes turned or scaled, and packed again
+				RefVar boundsRef(GetProtoVariable(shape, RSSYMbounds, nil));
+				RefVar originalRef(GetProtoVariable(shape, RSSYMoriginalbounds, nil));
+				Rect* boundsData = (Rect*) BinaryData(boundsRef);
+				Rect* originalData = (Rect*) BinaryData(originalRef);
+				Rect bounds = *boundsData;
+				Rect original = *originalData;
+				rectProc(&bounds, cx, cy);
+				rectProc(&original, cx, cy);
+				long dx = bounds.left < 0 ? -bounds.left : 0;
+				long dy = bounds.top < 0 ? -bounds.top : 0;
+				if (dx != 0 || dy != 0)
+					OffsetRect(&bounds, dx, dy);
+				dx = original.left < 0 ? -original.left : 0;
+				dy = original.top < 0 ? -original.top : 0;
+				if (dx != 0 || dy != 0)
+					OffsetRect(&original, dx, dy);
+				RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
+				TStroke** strokes = InkExpand(data, 0, boundsData->left - 2, boundsData->top - 2);
+				Rect box;
+				for (long k = 0; strokes[k] != nil; k++)
+				{
+					TStroke* stroke = strokes[k];
+					stroke->UpdateBBox();
+					UnfixRect(&stroke->fBBox, &box);
+					rectProc(&box, cx, cy);
+					dx = box.left < 0 ? -box.left : 0;
+					dy = box.top < 0 ? -box.top : 0;
+					if (dx != 0 || dy != 0)
+					{
+						stroke->Offset(dx << 16, dy << 16);
+						stroke->UpdateBBox();
+					}
+					if (EQ(operation, RSSYMrotateleft))
+						stroke->Rotate(0x5a0000);
+					else if (EQ(operation, RSSYMrotateright))
+						stroke->Rotate((long) (int32_t) 0xffa60000);
+					else if (EQ(operation, RSSYMflipvertical))
+						stroke->Scale(0x10000, (long) (int32_t) 0xffff0000);
+					else
+						stroke->Scale(-0x10000, 0x10000);
+					stroke->UpdateBBox();
+				}
+				RefVar ink(TStrokesToInk(strokes, &box));
+				SetFrameSlot(shape, RSSYMdata, ink);
+				*(Rect*) BinaryData(boundsRef) = bounds;
+				*(Rect*) BinaryData(originalRef) = original;
+			}
+			else if (EQ(cls, RSSYMpolygon))
+			{
+				RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
+				Polygon* poly = (Polygon*) BinaryData(data);
+				long n = ((ULong) (poly->polySize - 0xc)) >> 2;
+				for (long k = 0; k < n; k++)
+					pointProc(&poly->polyPoints[k], cx, cy);
+				rectProc(&poly->polyBBox, cx, cy);
+			}
+			else if (EQ(cls, RSSYMline))
+			{
+				Point* ends = (Point*) BinaryData(shape);
+				pointProc(&ends[0], cx, cy);
+				pointProc(&ends[1], cx, cy);
+			}
+			else
+				rectProc((Rect*) BinaryData(shape), cx, cy);
+			return shape;
+		}
+	}
+
+	// a region, bitmap, picture or text: turned as a bitmap
+	Rect* where;
+	RefVar boundsRef;
+	if (!isRegion)
+	{
+		boundsRef = GetProtoVariable(shape, RSSYMbounds, nil);
+		where = (Rect*) BinaryData(boundsRef);
+	}
+	else
+		where = &((Region*) BinaryData(shape))->rgnBBox;
+	Rect box = *where;
+	rectProc(&box, cx, cy);
+	long top = where->top, left = where->left, bottom = where->bottom, right = where->right;
+	if (!isBitmap)
+	{
+		result = FMakeBitmap(RefVar(NILREF), RefVar(MAKEINT((short) (right - left))), RefVar(MAKEINT((short) (bottom - top))), RefVar(NILREF));
+		FOffsetShape(RefVar(NILREF), shape, RefVar(MAKEINT(-left)), RefVar(MAKEINT(-top)));
+		FDrawIntoBitmap(RefVar(NILREF), shape, style, result);
+		FOffsetShape(RefVar(NILREF), result, RefVar(MAKEINT(left)), RefVar(MAKEINT(top)));
+	}
+	else
+		result = shape;
+	FMungeBitmap(RefVar(NILREF), result, operation, RefVar(NILREF));
+	Rect turned = *(Rect*) BinaryData(RefVar(GetFrameSlot(result, RSSYMbounds)));
+	FOffsetShape(RefVar(NILREF), result, RefVar(MAKEINT(box.left - turned.left)), RefVar(MAKEINT(box.top - turned.top)));
+	return result;
+}
+
+
+// ROM 0x000df718 FMungeShape
+// MungeShape(shape, operation, style): the shape turned or flipped about
+// the middle of its box.
+Ref
+FMungeShape(RefArg /*rcvr*/, RefArg shape, RefArg operation, RefArg style)
+{
+	Rect bounds;
+	ShapeBounds(shape, &bounds);
+	short cx = (short) (bounds.left + (bounds.right - bounds.left) / 2);
+	short cy = (short) (bounds.top + (bounds.bottom - bounds.top) / 2);
+	return DoMungeShape(shape, operation, style, cx, cy);
+}
+
+
 void
 RegisterShapeVerbNatives(void)
 {
 	RegisterNativeFunction("FFindShape", (void*) FFindShape, 4);
+	RegisterNativeFunction("FMungeShape", (void*) FMungeShape, 3);
 	RegisterNativeFunction("FGetShapeInfo", (void*) FGetShapeInfo, 1);
 	RegisterNativeFunction("FMakeInk", (void*) FMakeInk, 5);
 	RegisterNativeFunction("FStrokeInPicture__FRC6RefVarN21", (void*) FStrokeInPicture, 2);

@@ -477,7 +477,7 @@ MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 // The ROM works out what the width and height would be at 72 dpi when
 // the resolution is something else - and throws both answers away.  Kept
 // as it is, since it makes no difference to what comes out.
-static Ref
+Ref
 FMakeBitmap(RefArg /*rcvr*/, RefArg width, RefArg height, RefArg options)
 {
 	long theHeight = RINT(height);
@@ -578,4 +578,5 @@ void
 RegisterBitmapNatives(void)
 {
 	RegisterNativeFunction("FMakeBitmap", (void*) FMakeBitmap, 3);
+	RegisterMungeBitmapNatives();
 }

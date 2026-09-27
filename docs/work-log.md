@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: MungeShape and MungeBitmap
+
+- `views/ShapeVerbs.cpp`: `MungeShape`/`DoMungeShape` and the eight point
+  and rectangle turners; `toolbox/Matrix.h`: the 3x3 16.16 matrices
+  (`MxInit` ... `MxMove`, `RotateMatrix`, `TransformPoints`, `idMatrix`),
+  which make `TStroke::Rotate`/`Scale` real (they only updated the box).
+- `qd/MungeBitmap.cpp`: `MungeBitmap` and its five routines (`RotBitmapL`/
+  `RotBitmapR` transposing 32 x 8 blocks into a new 'pixels object,
+  `FlipBitmapH`/`V`, `RotBitmap180`), `Tilable`; the bit-reversal table
+  `bitFlip` generated (`qd/BitFlipTable.cpp`).  The bits are read as the
+  ARM's big-endian words.  ROM quirks kept: a half turn moves the rows'
+  padding to their start, skips a few middle bytes for sizes not a
+  multiple of sixteen and does nothing under sixteen bytes; FlipBitmapH
+  does not give its row buffer back; DoMungeShape leaves a drawn shape at
+  the origin.  NOT YET: `RotTiledBitmap` (screen-sized bitmaps, tiles in
+  a large binary on a store).
+- `FMungeShape`'s centre: the decompiler reads the y wrong (an unaligned
+  load's rotation); the disassembly gives the box's middle.
+
 ## 2026-09-28: strokes nobody read grouped into ink
 
 - `recognition/WordSegment.h`: ParaGraph's word segmenter (`WordStrokes`

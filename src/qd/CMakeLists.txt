@@ -19,6 +19,8 @@ add_library(qd STATIC
     Fonts.cpp
     Text.cpp
     Pictures.cpp
+    MungeBitmap.cpp
+    BitFlipTable.cpp
     PicPlay.cpp
     Transform.cpp
     Screen.cpp

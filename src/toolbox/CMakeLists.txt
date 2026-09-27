@@ -1,5 +1,6 @@
 add_library(toolbox STATIC
     Angles.cpp
+    Matrix.cpp
     AngleTables.cpp
     CompMath.cpp
     FixedGeometry.cpp
