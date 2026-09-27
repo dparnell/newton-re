@@ -443,6 +443,102 @@ TestLineGlitches(void)
 }
 
 
+// A cursive word of n arches - a run of u's - on the line y = base, its
+// small letters `height` tall, drawn as one stroke a point every two
+// pixels across.
+static void
+Arches(long n, long base, long height, long x0)
+{
+	TraceStart();
+	long x = x0;
+	for (long a = 0; a < n; a++)
+	{
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, base - height + (height * s) / 10);
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, base - (height * s) / 10);
+	}
+	Pt(x, base - height);
+	PenUp();
+}
+
+
+static void
+TestBaseline(void)
+{
+	// eight arches 40 high on the line y = 200: the finder's borders are
+	// the line and 40 above it, and the trace is rescaled to them - the
+	// feet of the letters at 0x27e6 and their tops at 0x2796, 80 apart
+	Arches(8, 200, 40, 100);
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);			// text, the engine to find its own line
+	long n = gCount;
+	EXPECT(BaselineAndScale(low) == 0);
+	EXPECT(RCGetH(low->rc, 0x94) == 0x10);
+	long height = (short) RCGetH(low->rc, 0xea);
+	long lower = (short) RCGetH(low->rc, 0xec);
+	fprintf(stderr, "baseline: height %ld lower %ld sure %d %d penalty-free\n", height, lower,
+			(short) RCGetH(low->rc, 0xee), (short) RCGetH(low->rc, 0xf0));
+	EXPECT(height >= 36 && height <= 44);
+	EXPECT(lower >= 196 && lower <= 204);
+	EXPECT((short) RCGetH(low->rc, 0xee) >= 0x4b && (short) RCGetH(low->rc, 0xf0) >= 0x4b);
+	// the feet and the tops of the trace, rescaled
+	long feet = 0, heads = 0;
+	for (long i = 0; i < n; i++)
+	{
+		if (low->fY[i] == -1)
+			continue;
+		if (gTrace[i].y == 200)
+		{
+			EXPECT(low->fY[i] >= 0x27e6 - 8 && low->fY[i] <= 0x27e6 + 8);
+			feet++;
+		}
+		if (gTrace[i].y == 160)
+		{
+			EXPECT(low->fY[i] >= 0x2796 - 8 && low->fY[i] <= 0x2796 + 8);
+			heads++;
+		}
+	}
+	EXPECT(feet == 8 && heads == 9);
+
+	// the same with an ascender (a top at 100) and a descender (a foot at
+	// 260): they are taken out of the lines, which stay where they were
+	TraceStart();
+	long x = 100;
+	for (long a = 0; a < 8; a++)
+	{
+		long top = (a == 3) ? 100 : 160;
+		long foot = (a == 5) ? 260 : 200;
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, top + ((foot - top) * s) / 10);
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, foot - ((foot - 160) * s) / 10);
+	}
+	Pt(x, 160);
+	PenUp();
+	LowFixture g;
+	low = &g.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	height = (short) RCGetH(low->rc, 0xea);
+	lower = (short) RCGetH(low->rc, 0xec);
+	fprintf(stderr, "baseline with ascender and descender: height %ld lower %ld sure %d %d\n", height, lower,
+			(short) RCGetH(low->rc, 0xee), (short) RCGetH(low->rc, 0xf0));
+	EXPECT(height >= 36 && height <= 44);
+	EXPECT(lower >= 196 && lower <= 204);
+	long up = 0, down = 0;
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+	{
+		if (p->mark == 1 && p->code == 0x66)
+			up++;
+		if (p->mark == 3 && p->code == 0x65)
+			down++;
+	}
+	EXPECT(up == 1 && down == 1);
+}
+
+
 int
 main()
 {
@@ -457,6 +553,7 @@ main()
 	TestListOps();
 	TestGeometry();
 	TestLineGlitches();
+	TestBaseline();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

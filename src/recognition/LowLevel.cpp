@@ -704,3 +704,54 @@ NewIndex(short* index, short* y, short i, short n, short mode)
 		result = (first + last) >> 1;
 	return result;
 }
+
+
+// ROM 0x0034eba0 BaselineAndScale__FP8low_type
+// The trace's preprocessing and its base line: a doubled pen-up taken
+// out, the trace resampled to a step of a sixteenth of the box's height
+// (at least two), then - unless the caller gives its own line (rc +0x90
+// bit 0, which makes it sure of both: +0xe6 and +0xe8 100) - the strokes
+// found and their extrema up and down at one and a half times four
+// fifths of that step (7 for 8), and the step recorded (rc +0xe0, the
+// engine's `h`: const1's 8 when the extrema are not looked for).  The
+// trace (x, y and its count, rc +0x96) is then the one first given, and
+// transfrmN finds the borders and rescales it.  ==> 0, 1 for a failure.
+long
+BaselineAndScale(low_type* low)
+{
+	rc_type* rc = low->rc;
+	RCSetH(rc, 0x94, 0);
+	long step = (short) (((low->fBox.bottom - low->fBox.top) * 10) / 0xa0);
+	if (step < 2)
+		step = 2;
+	Errorprov(low);
+	if (Filt(low, (short) ((const1[0] * step) / 10), 0) != 0)
+		return 1;
+	RCSetH(rc, 0xe0, (UShort) const1[5]);
+	if ((RCGetH(rc, 0x90) & 1) != 0)
+	{
+		RCSetH(rc, 0xe6, 100);
+		RCSetH(rc, 0xe8, 100);
+	}
+	if ((RCGetH(rc, 0x90) & 1) == 0)
+	{
+		long h = const1[5];
+		long s = (short) ((step * h) / 10);
+		step = (short) (s + (s >> 1));
+		if (step < 2)
+			step = 2;
+		if (h == step)
+			step = (short) (h - 1);
+		if (InitGroupsBorder(low, 0) != 0)
+			return 1;
+		InitSpecl(low, kLowSpeclSize);
+		if (Extr(low, (short) step, -2, -2, -2, 0, 2) != 0)
+			return 1;
+		RCSetH(rc, 0xe0, (UShort) step);
+	}
+	SetXYToInitial(low);
+	low->fII = (short) RCGetH(rc, 0x96);
+	if (transfrmN(low) != 0)
+		return 1;
+	return 0;
+}

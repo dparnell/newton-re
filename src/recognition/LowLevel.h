@@ -169,7 +169,10 @@ void	FillLowDataTrace(low_type* low, PS_point_type* trace);		// ROM 0x0034e8f8 F
 void	GetLowDataRect(low_type* low);								// ROM 0x0034e968 GetLowDataRect__FP8low_type
 long	LowAlloc(short** block, short nBuffers, short bufferSize, low_type* low);	// ROM 0x00305a28 LowAlloc__FPPssT2P8low_type - ==> 0, 1 for no room
 void	low_dealloc(short** block);									// ROM 0x00306f74 low_dealloc__FPPs
-void	SetXYToInitial(low_type* low);								// ROM 0x00305a14 SetXYToInitial__FP8low_type
+void	SetXYToInitial(low_type* low);
+long	BaselineAndScale(low_type* low);							// ROM 0x0034eba0 BaselineAndScale__FP8low_type - the trace filtered, its extrema found and the base line found; ==> 0, 1 for a failure
+long	transfrmN(low_type* low);									// ROM 0x001baaf8 transfrmN__FP8low_type - the base-line finder: the borders found, the trace rescaled to them; ==> 0, 1 for a failure
+extern const short	const1[8];										// the engine's constants: [0] the filter's scale (10), [5] the default extremum step (8)								// ROM 0x00305a14 SetXYToInitial__FP8low_type
 short	MaxPointsGrown(short n);									// ROM 0x00307f50 MaxPointsGrown__Fs
 Boolean	AllocSpecl(SPEC_TYPE** specl, short n);						// ROM 0x00306410 AllocSpecl__FPP9SPEC_TYPEs
 void	DeallocSpecl(SPEC_TYPE** specl);							// ROM 0x00307984 DeallocSpecl__FPP9SPEC_TYPE
@@ -273,6 +276,19 @@ void	glitch_to_sub_max(low_type* low, EXTR* extr, long n, long lim, ULong sure);
 void	glitch_to_inside(EXTR* extr, long n, UByte kind, short* y, long k, long xStart, long xEnd);	// ROM 0x001bed40 glitch_to_inside__FP4EXTRiUcPsN32
 void	glitch_to_super_min(EXTR* extr, long n, short* line, long lim, short* x, short* y, ULong sure);	// ROM 0x001bf1c8 glitch_to_super_min__FP4EXTRiPsT2N23Ui
 void	all_susp_extr(EXTR* extr, long n, long unused, UByte kind, short* y, long mid, long unused2, long small, short* line, long big);	// ROM 0x001c0844 all_susp_extr__FP4EXTRiT2UcPsN32T5T2
+
+// The borders (LowBorders.cpp).
+void	SpecBord(low_type* low, short* dLine, short* uLine, long* lowerY, long* upperY, long* height, long* count, ULong wide, EXTR* extr, long n);	// ROM 0x001c4ce0 SpecBord__FP8low_typePsT2PiN34UiP4EXTRi - level borders from what the caller is sure of
+long	calc_med_heights(low_type* low, EXTR* a, EXTR* b, short* upper, short* lower, short* order, long na, long nb, long total, long* height, long* upperMed, long* lowerMed);	// ROM 0x001c3660 calc_med_heights__FP8low_typeP4EXTRT2PsN24iN27PiPiPi - ==> 0, 1 for no memory
+long	FillRCNB(short* order, long n, low_type* low, short* upper, short* lower);	// ROM 0x001c4a4c FillRCNB__FPsiP8low_typeN21 - the borders at ten places into rc +0x98; ==> 0, 1 for no points
+long	line_pos_mist(low_type* low, long upperY, long lowerY, long height, long nUp, long nDown, EXTR* bottoms, long* upShift, long* downShift, short* upper, short* lower, UByte wide);	// ROM 0x001c24bc line_pos_mist__FP8low_typeiN42P4EXTRPiT8PsPsUc - ==> how badly the borders fit
+long	num_bord_correction(EXTR* extr, long* n, long mode, UByte kind, long lim, short* line, short* y);	// ROM 0x001c1960 num_bord_correction__FP4EXTRPiiUcT3PsT6
+long	bord_correction(low_type* low, EXTR* extr, long* nPtr, long mode, UByte kind, long mid, long lim, long subLim, long small, long xStart, long xEnd, long neighbour, UByte useNeighbour, short* line, long superLim, long big, ULong superSure, ULong subSure);	// ROM 0x001c1d04 bord_correction__FP8low_typeP4EXTRPiiUcN74T5PsN24UiUi
+
+// The stroke classifiers (LowClassify.cpp).
+long	classify_strokes(low_type* low, long mid, long most, long n, long* stem, long* tall, ULong* simple);	// ROM 0x001bfb18 classify_strokes__FP8low_typeiN22PiT5PUi - ==> the number of strokes
+long	classify_num_strokes(low_type* low, long* height);			// ROM 0x001c3d40 classify_num_strokes__FP8low_typePi - ==> the number of strokes
+long	numbers_in_text(low_type* low, short* upper, short* lower);	// ROM 0x001c4368 numbers_in_text__FP8low_typePsT2 - ==> 1 the word is figures
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
