@@ -158,6 +158,16 @@ FIsSoupEntry(RefArg /*rcvr*/, RefArg object)
 }
 
 
+// ROM 0x001ef654 FFrameDirty__FRC6RefVarT1
+// FrameDirty(frame): whether the frame (or anything it holds) has been
+// written to since it was read from its store - an entry or a frame in one.
+Ref
+FFrameDirty(RefArg /*rcvr*/, RefArg frame)
+{
+	return MAKEBOOLEAN(EntryDirty(frame));
+}
+
+
 // ROM 0x002b5d18 FEntryIsResident
 static Ref
 FEntryIsResident(RefArg /*rcvr*/, RefArg entry)
@@ -432,6 +442,7 @@ RegisterSoupNatives(void)
 	RegisterNativeFunction("FGetPackageStore", (void*) FGetPackageStore, 1);
 	RegisterNativeFunction("FQuery", (void*) FQuery, 2);
 	RegisterNativeFunction("FIsSoupEntry", (void*) FIsSoupEntry, 1);
+	RegisterNativeFunction("FFrameDirty__FRC6RefVarT1", (void*) FFrameDirty, 1);
 	RegisterNativeFunction("FEntryIsResident", (void*) FEntryIsResident, 1);
 	RegisterNativeFunction("FEntryValid", (void*) FEntryValid, 1);
 	RegisterNativeFunction("FEntrySoup", (void*) FEntrySoup, 1);

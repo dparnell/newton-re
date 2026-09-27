@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <string.h>
 
+Ref FFrameDirty(RefArg rcvr, RefArg frame);		// stores/SoupNatives.cpp
+
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
@@ -318,8 +320,10 @@ TestSoups()
 	SetFrameSlot(entry, RefVar(SYMBOL("age")), RefVar(MAKEINT(31)));
 	SetFrameSlot(entry, RSSYMname, RefVar(MakeString("Robert")));
 	EXPECT(EntryDirty(entry));
+	EXPECT(EQRef(FFrameDirty(RefVar(), entry), TRUEREF));	// FrameDirty(entry), the script's question
 	long modTime = EntryModTime(entry);
 	EntryChange(entry);
+	EXPECT(ISNIL(FFrameDirty(RefVar(), entry)));
 	RefVar stored(LoadPermObject(wrapper, bobId, nil));
 	EXPECT(RINT(GetFrameSlotRef(stored, SYMBOL("age"))) == 31);
 	EXPECT(StringIs(RefVar(GetFrameSlotRef(stored, RSSYMname)), "Robert"));
