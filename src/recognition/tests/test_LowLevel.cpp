@@ -873,6 +873,8 @@ AnalyzeSteps(low_type* low, long upTo)
 		return false;
 	if (upTo >= 3 && FindSideExtr(low) == 0)
 		return false;
+	if (upTo >= 4 && Cross(low) != 0)
+		return false;
 	return true;
 }
 
@@ -1017,6 +1019,99 @@ TestSides(void)
 }
 
 
+// Line from (x0, y0) to (x1, y1), a point every two pixels or so (the
+// first point left out when `skipFirst`).
+static void
+Line(long x0, long y0, long x1, long y1, bool skipFirst)
+{
+	long dx = x1 - x0, dy = y1 - y0;
+	long n = (labs(dx) > labs(dy) ? labs(dx) : labs(dy)) / 2;
+	if (n < 1)
+		n = 1;
+	for (long s = skipFirst ? 1 : 0; s <= n; s++)
+		Pt(x0 + (dx * s) / n, y0 + (dy * s) / n);
+}
+
+
+// Cross (LowCross.cpp): a stroke that crosses itself - up a diagonal,
+// round and straight down through it - is one crossing pair (6); a t's
+// stem drawn up and straight back down is the trace coming back along
+// itself (9), and the bar laid across it in a second stroke crosses it
+// twice, going up and coming down (two dash crossings, 0xa).
+static void
+TestCross(void)
+{
+	TraceStart();
+	for (long a = 0; a < 2; a++)			// two arches to give the line
+	{
+		Line(40 + 40 * a, 160, 60 + 40 * a, 200, a != 0);
+		Line(60 + 40 * a, 200, 80 + 40 * a, 160, true);
+	}
+	Line(120, 160, 120, 200, true);
+	Line(120, 200, 180, 140, true);			// the diagonal
+	Line(180, 140, 180, 120, true);
+	Line(180, 120, 140, 120, true);
+	Line(140, 120, 140, 200, true);			// down through it
+	Line(140, 200, 150, 196, true);
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 4));
+	long crossings = 0;
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+		if ((p->mark == 6 || p->mark == 9 || p->mark == 0xa) && p->other == 0)
+		{
+			fprintf(stderr, "cross: mark %#x points %d..%d (%d, %d) at (%d, %d)\n", p->mark, p->iBeg, p->iEnd,
+					p->ipoint0, p->ipoint1, low->fX[p->iBeg], low->fY[p->iBeg]);
+			crossings++;
+		}
+	EXPECT(crossings == 2);					// one pair: the earlier stretch and the later
+	DestroySDS(low);
+
+	// a t: a stem with arches either side, and a bar across it
+	TraceStart();
+	Line(40, 160, 60, 200, false);
+	Line(60, 200, 80, 160, true);
+	Line(80, 160, 100, 200, true);
+	Line(100, 200, 110, 110, true);			// the stem
+	Line(110, 110, 110, 200, true);
+	Line(110, 200, 140, 160, true);
+	Line(140, 160, 160, 200, true);
+	Line(160, 200, 180, 160, true);
+	PenUp();
+	Line(90, 150, 130, 150, false);			// the bar
+	PenUp();
+	LowFixture g;
+	low = &g.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 4));
+	long dashCrossings = 0, backAlong = 0;
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+	{
+		if (p->mark == 6 || p->mark == 9 || p->mark == 0xa || p->mark == 7)
+			fprintf(stderr, "t: mark %#x other %d points %d..%d at (%d, %d)\n", p->mark, p->other, p->iBeg, p->iEnd,
+					low->fX[p->iBeg], low->fY[p->iBeg]);
+		if (p->mark == 0xa)
+			dashCrossings++;
+		if (p->mark == 9)
+			backAlong++;
+	}
+	EXPECT(dashCrossings == 4);
+	EXPECT(backAlong == 2);
+	DestroySDS(low);
+}
+
+
 int
 main()
 {
@@ -1038,6 +1133,7 @@ main()
 	TestAngles();
 	TestCircle();
 	TestSides();
+	TestCross();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

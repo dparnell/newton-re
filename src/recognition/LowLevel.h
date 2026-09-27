@@ -202,10 +202,10 @@ void	FillLowDataTrace(low_type* low, PS_point_type* trace);		// ROM 0x0034e8f8 F
 void	GetLowDataRect(low_type* low);								// ROM 0x0034e968 GetLowDataRect__FP8low_type
 long	LowAlloc(short** block, short nBuffers, short bufferSize, low_type* low);	// ROM 0x00305a28 LowAlloc__FPPssT2P8low_type - ==> 0, 1 for no room
 void	low_dealloc(short** block);									// ROM 0x00306f74 low_dealloc__FPPs
-void	SetXYToInitial(low_type* low);
+void	SetXYToInitial(low_type* low);								// ROM 0x00305a14 SetXYToInitial__FP8low_type
 long	BaselineAndScale(low_type* low);							// ROM 0x0034eba0 BaselineAndScale__FP8low_type - the trace filtered, its extrema found and the base line found; ==> 0, 1 for a failure
 long	transfrmN(low_type* low);									// ROM 0x001baaf8 transfrmN__FP8low_type - the base-line finder: the borders found, the trace rescaled to them; ==> 0, 1 for a failure
-extern const short	const1[8];										// the engine's constants: [0] the filter's scale (10), [5] the default extremum step (8)								// ROM 0x00305a14 SetXYToInitial__FP8low_type
+extern const short	const1[26];										// the engine's constants: [0] the filter's scale (10), [5] the default extremum step (8), [13] how far apart two points of one stroke must be to cross (8)
 short	MaxPointsGrown(short n);									// ROM 0x00307f50 MaxPointsGrown__Fs
 Boolean	AllocSpecl(SPEC_TYPE** specl, short n);						// ROM 0x00306410 AllocSpecl__FPP9SPEC_TYPEs
 void	DeallocSpecl(SPEC_TYPE** specl);							// ROM 0x00307984 DeallocSpecl__FPP9SPEC_TYPE
@@ -413,6 +413,9 @@ long	IsTriangledPath(short* x, short* y, long i, long j, long k);	// ROM 0x00306
 long	iMostCurvedPoint(short* x, short* y, long i, long j, long sgn);	// ROM 0x00306c44 iMostCurvedPoint__FPsT1iN23
 long	SideExtr(short* x, short* y, long i, long j, long slope, short* x0, short* y0, short* map, long* k, ULong strict);	// ROM 0x00306734 SideExtr__FPsT1iN23N31PiUi - 1/3 a bend to the left, 2/4 to the right, 0 none
 long	FindSideExtr(low_type* low);								// ROM 0x00303584 FindSideExtr__FP8low_type - ==> 1
+
+// The crossings (LowCross.cpp).
+long	Cross(low_type* low);										// ROM 0x002c8fb4 Cross__FP8low_type - the trace's crossings marked as pairs (6, 9 coming back along itself, 0xa with a dash); ==> 0, 1 for no room
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
