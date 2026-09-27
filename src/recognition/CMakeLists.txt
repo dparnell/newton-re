@@ -65,6 +65,7 @@ add_library(recognition STATIC
     LowAnalyze.cpp
     LowPict.cpp
     LowAngles.cpp
+    LowCircle.cpp
     LowTables.cpp
     CursiveReader.cpp
     StrXrDomain.cpp

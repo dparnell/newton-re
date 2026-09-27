@@ -401,6 +401,10 @@ long	angle_direction(short dx, short dy, short slope);			// ROM 0x002aa418 angle
 long	store_angle(low_type* low, short i, short k, short start, short end, short best);	// ROM 0x002aa2f0 store_angle__FP8low_typesN42 - ==> 0, 1 for no room
 long	angl(low_type* low);										// ROM 0x002a9f7c angl__FP8low_type - ==> 0, 1 for no room
 
+// The circles (LowCircle.cpp).
+short	SlopeShiftDx(short dy, long slope);							// ROM 0x00307e58 SlopeShiftDx__Fsi - how far the slant (hundredths) moves a point dy across, rounded
+long	Circle(low_type* low);										// ROM 0x002bc5b8 Circle__FP8low_type - the loops closed, marked as crossing pairs (6, 'c' and 'd'); ==> 0, 1 for no room
+
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
 long	Filt(low_type* low, short dist2, short mode);				// ROM 0x002e1064 Filt__FP8low_typesT2 - the trace resampled a step of about the root of dist2 apart; ==> 0

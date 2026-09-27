@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -843,6 +844,122 @@ TestAngles(void)
 }
 
 
+// AnalyzeLowData's steps (LowLevel.cpp) run by hand as far as `upTo`:
+// 1 Circle, 2 angl, 3 FindSideExtr, 4 Cross.  ==> false when a step
+// failed.
+static bool
+AnalyzeSteps(low_type* low, long upTo)
+{
+	GetLowDataRect(low);
+	Errorprov(low);
+	if (PreFilt(10, low) != 0 || InitGroupsBorder(low, 1) != 0)
+		return false;
+	DefLineThresholds(low);
+	InitSpecl(low, 400);
+	Extr(low, 8, 10, 10, 4, 0, 7);
+	OperateSpeclArray(low);
+	if (Sort_specl(low->fSpecl, low->fLenSpecl) != 0 || InitGroupsBorder(low, 1) != 0 || Pict(low) != 0)
+		return false;
+	Surgeon(low);
+	if (Filt(low, 10, 1) != 0 || InitGroupsBorder(low, 1) != 0)
+		return false;
+	trace_to_xy(low->fXInitial, low->fYInitial, (short) RCGetH(low->rc, 0x96), low->fTrace);
+	if (Extr(low, 8, -2, -2, -2, 5, 2) != 0)
+		return false;
+	low->fSlope = (short) measure_slope(low);
+	if (upTo >= 1 && Circle(low) != 0)
+		return false;
+	if (upTo >= 2 && angl(low) != 0)
+		return false;
+	return true;
+}
+
+
+// A cursive "uou": two arches, an o drawn anticlockwise from its top
+// round and back to the top (a little past it, so it closes), and an arch
+// to finish, one stroke on the line y = 200 with the small letters 40
+// tall.
+static void
+Uou(void)
+{
+	TraceStart();
+	long x = 100;
+	for (long a = 0; a < 2; a++)
+	{
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, 160 + (40 * s) / 10);
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, 200 - (40 * s) / 10);
+	}
+	// the o: centre (x + 20, 180), radius 20, from its top anticlockwise
+	long cx = x + 20;
+	for (long s = 0; s <= 44; s++)
+	{
+		double t = 2 * 3.14159265358979 * s / 40;
+		Pt(cx - (long) lround(20 * sin(t)), 180 - (long) lround(20 * cos(t)));
+	}
+	x = cx + 12;
+	for (long s = 1; s < 10; s++, x += 2)
+		Pt(x, 162 + (38 * s) / 10);
+	for (long s = 0; s < 10; s++, x += 2)
+		Pt(x, 200 - (40 * s) / 10);
+	Pt(x, 160);
+	PenUp();
+}
+
+
+// Circle (LowCircle.cpp): the o's foot, between its two tops, is found to
+// close a loop, marked as a crossing pair - 'c' on the way up and 'd' on
+// the way down - near the o's top.  The u's feet, open at the top, are
+// not.
+static void
+TestCircle(void)
+{
+	EXPECT(SlopeShiftDx(100, 30) == 30 && SlopeShiftDx(-100, 30) == -30);
+	EXPECT(SlopeShiftDx(5, 30) == 2 && SlopeShiftDx(-5, 30) == -2);
+	Uou();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 1));
+	long cs = 0, ds = 0;
+	short at[2] = { 0, 0 };
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+	{
+		fprintf(stderr, "circle: mark %#x code %d attr %d other %d points %d..%d (%d, %d) y %d\n",
+				p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, p->ipoint0, p->ipoint1,
+				(p->iBeg >= 0) ? low->fY[p->iBeg] : 0);
+		if (p->mark == 6 && p->other == 'c')
+		{
+			cs++;
+			at[0] = p->iBeg;
+		}
+		if (p->mark == 6 && p->other == 'd')
+		{
+			ds++;
+			at[1] = p->iBeg;
+		}
+	}
+	EXPECT(cs == 1 && ds == 1);
+	if (cs == 1 && ds == 1)
+	{
+		// both near the o's top, the 'd' before the 'c' and close to it
+		EXPECT(at[1] < at[0]);
+		long dx = low->fX[at[0]] - low->fX[at[1]];
+		long dy = low->fY[at[0]] - low->fY[at[1]];
+		fprintf(stderr, "circle: closes between %d and %d, %ld across and %ld down\n", at[1], at[0], dx, dy);
+		EXPECT(labs(dx) < 40 && labs(dy) < 40);
+		EXPECT(low->fY[at[0]] < 0x27b0 && low->fY[at[1]] < 0x27b0);
+	}
+	DestroySDS(low);
+}
+
+
 int
 main()
 {
@@ -862,6 +979,7 @@ main()
 	TestPictPieces();
 	TestPict();
 	TestAngles();
+	TestCircle();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
