@@ -434,6 +434,90 @@ long	lk_begin(low_type* low);									// ROM 0x002f8d68 lk_begin__FP8low_type - 
 // The i/u bottoms (LowAdjust.cpp).
 void	Adjust_I_U(low_type* low);									// ROM 0x00303038 Adjust_I_U__FP8low_type - a narrow bottom between two tops recoded round (8) or sharp (7)
 
+// An xr (ROM 0x18 bytes, no pointers, so the same on the host): one
+// element of what the low level hands the reader.  The halfwords are
+// kept as the ROM keeps them, big-endian, and read and written through
+// XrGetH/XrSetH, because the ROM writes them a byte at a time.
+struct xrd_el_type
+{
+	UByte			type;			// +00  what it is (exchange's codes: 1 a break, 2..4 a stroke's end, 6..0x1f extrema, 0x20..0x2c arcs and angles, 0x2d.. crossings and marks; 0 ends the list)
+	UByte			attrib;			// +01  1 last in its letter (MarkXrAsLastInLetter), 2 a stroke start with a gap, 0x80 next to a break
+	UByte			penalty;		// +02  (AssignInputPenaltyAndStrict)
+	UByte			height;			// +03  the height band (exchange); FillSHR writes over it with its own class of the piece's height
+	UByte			shift;			// +04  (FillSHR)
+	UByte			orient;			// +05  its direction, 0..0x1f (FillOrients)
+	UByte			link;			// +06  how it joins the next (GetLinkBetweenThisAndNextXr)
+	UByte			f07;
+	UByte			hotpoint[2];	// +08  the point it is at (in the original trace)
+	UByte			begpoint[2];	// +0a
+	UByte			endpoint[2];	// +0c
+	UByte			box[8];			// +0e  left, top, right, bottom
+	UByte			f16[2];
+};
+
+inline short	XrGetH(const UByte* h)			{ return (short) ((h[0] << 8) | h[1]); }
+inline void		XrSetH(UByte* h, long v)		{ h[0] = (UByte) (v >> 8); h[1] = (UByte) v; }
+enum { kXrLeft = 0, kXrTop = 2, kXrRight = 4, kXrBottom = 6 };	// the halfwords of box
+enum { kXrMaxElements = 0x78 };									// the room exchange assumes
+
+// A stroke description's tail as CalculateStickOrArc reads it (ROM
+// SDB_TYPE): the _SDS_TYPE from its chord on.
+struct SDB_TYPE
+{
+	short			chord;			// +00 (_SDS_TYPE +0x10)
+	short			slope;			// +02
+	short			distA;			// +04
+	short			iA;				// +06
+	short			distB;			// +08
+	short			iB;				// +0a
+	short			maxDist;		// +0c
+	short			iMax;			// +0e
+	int32_t			length;			// +10
+	short			crook;			// +14
+};
+
+// exchange: the special elements written as xrs (LowExchange.cpp).
+extern const UByte	penlDefX[64];		// the penalty for each xr type
+extern const UByte	penlDefH[16];		// and what each height band adds
+extern const short	xr_type_merits[64];	// each xr type's properties: 1 lower, 2 upper, 0x10 a stroke end, 0x20 a crossing, 0x40 a link, 0x80 ..., 0x100 an arc
+extern const int	ratio_to_angle[8];	// the slopes (hundredths) the eight angles of a quadrant begin at
+extern const int	kSHRRatioLimits[16];	// FillSHR's height-ratio classes (percent)
+extern const int	kSHRShiftLimits[16];	// and its shift classes
+long	exchange(low_type* low, xrdata_type* xr);					// ROM 0x002c7a00 exchange__FP8low_typeP11xrdata_type - ==> 0
+Boolean	X_IsBreak(xrd_el_type* xr);									// ROM 0x00305c68 X_IsBreak__FP11xrd_el_type - types 1..4
+Boolean	IsStrongElem(SPEC_TYPE* elem);								// ROM 0x00305bfc IsStrongElem__FP9SPEC_TYPE
+long	AssignInputPenaltyAndStrict(SPEC_TYPE* elem, xrd_el_type* xr);	// ROM 0x002c854c AssignInputPenaltyAndStrict__FP9SPEC_TYPEP11xrd_el_type
+long	MarkXrAsLastInLetter(xrd_el_type* xr, low_type* low, SPEC_TYPE* elem);	// ROM 0x002c8be0 MarkXrAsLastInLetter__FP11xrd_el_typeP8low_typeP9SPEC_TYPE - ==> 0
+long	check_xrdata(xrd_el_type* xr, low_type* low);				// ROM 0x002c8874 check_xrdata__FP11xrd_el_typeP8low_type - ==> 0, 1 for no room
+Boolean	PutZintoXrd(low_type* low, xrd_el_type* dst, xrd_el_type* prev, xrd_el_type* cur, UByte penalty, short i, short* count);	// ROM 0x002c8a90 PutZintoXrd__FP8low_typeP11xrd_el_typeN22UcsPs - ==> whether the room is used up
+long	GetLinkBetweenThisAndNextXr(low_type* low, SPEC_TYPE* elem, xrd_el_type* xr);	// ROM 0x000fe384 GetLinkBetweenThisAndNextXr__FP8low_typeP9SPEC_TYPEP11xrd_el_type
+long	GetMovementLink(UByte code);								// ROM 0x000fe55c GetMovementLink__FUc
+long	GetCurveLink(short crook, ULong right);						// ROM 0x000fe594 GetCurveLink__FsUi
+long	CalculateStickOrArc(SDB_TYPE* sdb);							// ROM 0x000fe60c CalculateStickOrArc__FP8SDB_TYPE
+long	CalculateLinkLikeSZ(SDB_TYPE* sdb, long dy);				// ROM 0x000fe6d8 CalculateLinkLikeSZ__FP8SDB_TYPEi
+long	CalculateLinkWithoutSDS(low_type* low, SPEC_TYPE* elem, SPEC_TYPE* next);	// ROM 0x000fe754 CalculateLinkWithoutSDS__FP8low_typeP9SPEC_TYPET2
+
+// The xrs' features (LowXrFeatures.cpp).
+struct vect_type
+{
+	long			a;				// +00  the point it starts from
+	long			b;				// +04  and the one it looks towards
+	long			blp;			// +08  a point it must not pass (GetBlp)
+	long			x1, y1;			// +0c
+	long			x2, y2;			// +14
+};
+long	GetXrHT(xrd_el_type* xr);									// ROM 0x0027e508 GetXrHT__FP11xrd_el_type - 2 lower, 1 upper, 4 a stroke end, 0
+long	GetXrMovable(xrd_el_type* xr);								// ROM 0x0027e540 GetXrMovable__FP11xrd_el_type
+long	GetAngle(long dx, long dy);									// ROM 0x0027e568 GetAngle__FiT1 - 0..0x1f
+long	GetVect(long forward, vect_type* v, PS_point_type* trace, long n, long dist);	// ROM 0x0027e638 GetVect__FiP9vect_typeP13PS_point_typeN21
+long	GetBlp(long forward, vect_type* v, long i, xrdata_type* xr);	// ROM 0x0027e7a8 GetBlp__FiP9vect_typeT1P11xrdata_type
+Boolean	IsXrLink(xrd_el_type* xr);									// ROM 0x0027e840 IsXrLink__FP11xrd_el_type
+long	GetXrMetrics(xrd_el_type* xr);								// ROM 0x0027e868 GetXrMetrics__FP11xrd_el_type
+long	FillXrFeatures(xrdata_type* xr, low_type* low);				// ROM 0x0027e880 FillXrFeatures__FP11xrdata_typeP8low_type
+long	GetCurSlope(long n, PS_point_type* trace);					// ROM 0x0027e8fc GetCurSlope__FiP13PS_point_type - the writing's slant in hundredths
+long	FillSHR(long slope, xrdata_type* xr, low_type* low);		// ROM 0x0027ea0c FillSHR__FiP11xrdata_typeP8low_type - ==> 0, 1 for fewer than three
+long	FillOrients(long slope, xrdata_type* xr, low_type* low);	// ROM 0x0027f58c FillOrients__FiP11xrdata_typeP8low_type - ==> 0
+
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
 long	Filt(low_type* low, short dist2, short mode);				// ROM 0x002e1064 Filt__FP8low_typesT2 - the trace resampled a step of about the root of dist2 apart; ==> 0

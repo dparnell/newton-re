@@ -11,6 +11,7 @@
 #include "LowLevel.h"
 #include "XrDomains.h"
 #include "ParaGraph.h"
+#include "CursiveReader.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -1220,6 +1221,82 @@ TestIU(void)
 }
 
 
+// exchange (LowExchange.cpp) and FillXrFeatures (LowXrFeatures.cpp): the
+// "uou" taken through lk_begin and Adjust_I_U comes out as a stream of
+// xrs that begins and ends with a break (type 1), has the three tops as
+// upper extrema and the four feet as lower ones between them, every point
+// inside the original trace and every box round its points, and a
+// direction and a height class for each.
+static void
+TestExchange(void)
+{
+	EXPECT(GetMovementLink(0x23) == 0xc && GetMovementLink(0x26) == 1 && GetMovementLink(0x27) == 0);
+	EXPECT(GetCurveLink(9, 0) == 5 && GetCurveLink(9, 1) == 7 && GetCurveLink(40, 0) == 1 && GetCurveLink(40, 1) == 0xb);
+	EXPECT(GetAngle(10, 0) == 0 && GetAngle(0, 10) == 8 && GetAngle(-10, 0) == 0x10 && GetAngle(0, -10) == 0x18);
+	EXPECT(GetAngle(10, 10) == 4 && GetAngle(-10, -10) == 0x14);
+	SDB_TYPE sdb;
+	memset(&sdb, 0, sizeof(sdb));
+	sdb.distA = 30; sdb.distB = 5; sdb.crook = 25;			// one side's bend too small beside the other's: an arc
+	EXPECT(CalculateStickOrArc(&sdb) == 0xa && sdb.distB == 0);
+	sdb.distA = 30; sdb.distB = 30; sdb.crook = 25;			// bending both ways: an S or a Z
+	EXPECT(CalculateStickOrArc(&sdb) == 0);
+	sdb.iA = 5; sdb.iB = 9;
+	EXPECT(CalculateLinkLikeSZ(&sdb, -1) == 0xe && CalculateLinkLikeSZ(&sdb, 1) == 0xe);
+	xrd_el_type b;
+	memset(&b, 0, sizeof(b));
+	b.type = 3;
+	EXPECT(X_IsBreak(&b));
+	b.type = 5;
+	EXPECT(!X_IsBreak(&b));
+
+	Uou();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 6));
+	Adjust_I_U(low);
+	xrdata_type xr;
+	static xrd_el_type elements[kXrMaxElements];
+	memset(elements, 0, sizeof(elements));
+	xr.fLength = 0;
+	xr.fSize = kXrMaxElements;
+	xr.fElements = elements;
+	EXPECT(exchange(low, &xr) == 0);
+	long n = xr.fLength;
+	long uppers = 0, lowers = 0;
+	for (long i = 0; i < n; i++)
+	{
+		xrd_el_type* e = &elements[i];
+		short hot = XrGetH(e->hotpoint), beg = XrGetH(e->begpoint), end = XrGetH(e->endpoint);
+		long m = GetXrMetrics(e);
+		fprintf(stderr, "xr %2ld: type %#04x attrib %#04x penalty %2d height %2d shift %2d orient %2d link %2d points %d..%d at %d box %d,%d %d,%d\n",
+				i, e->type, e->attrib, e->penalty, e->height, e->shift, e->orient, e->link, beg, end, hot,
+				XrGetH(e->box + kXrLeft), XrGetH(e->box + kXrTop), XrGetH(e->box + kXrRight), XrGetH(e->box + kXrBottom));
+		EXPECT(beg >= 0 && end < gCount && beg <= end);
+		if (!X_IsBreak(e))
+		{
+			EXPECT(XrGetH(e->box + kXrLeft) <= gTrace[beg].x && gTrace[beg].x <= XrGetH(e->box + kXrRight));
+			EXPECT(XrGetH(e->box + kXrTop) <= gTrace[end].y && gTrace[end].y <= XrGetH(e->box + kXrBottom));
+		}
+		EXPECT(e->orient <= 0x1f && e->height <= 15 && e->shift <= 15);
+		if (m & 2)
+			uppers++;
+		if (m & 1)
+			lowers++;
+	}
+	fprintf(stderr, "exchange: %ld xrs, %ld upper, %ld lower\n", n, uppers, lowers);
+	EXPECT(n >= 9);
+	EXPECT(elements[0].type == 1 && elements[n - 1].type == 1 && elements[n].type == 0);
+	EXPECT(uppers >= 3 && lowers >= 4);
+	DestroySDS(low);
+}
+
+
 int
 main()
 {
@@ -1244,6 +1321,7 @@ main()
 	TestCross();
 	TestCodes();
 	TestIU();
+	TestExchange();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
