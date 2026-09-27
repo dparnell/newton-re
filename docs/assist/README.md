@@ -12,8 +12,11 @@ magic pointer 8 (`@8.task_list`, ten tasks in the MP2x00 US ROM), and
 `RegTaskTemplate`. Most of the Assistant is NewtonScript; what is in C++
 is the list building, the class hierarchy and the matching arithmetic,
 in one ROM file at 0x00084064-0x000871d0 - all of which is reconstructed
-(`assist/Assistant.h`, `assist/AssistStrings.h`). What is not is the
-lexicon the words themselves are looked up in.
+(`assist/Assistant.h`, `assist/AssistStrings.h`) - and the lexicon, the
+phrase generator, the Names-file heuristics and the parse in the Data
+Stream file (0x0007ce20-0x000831d8) and the IA code at 0x000e7048, which
+are too (`assist/Lexicon.h`, `Phrases.h`, `Heuristics.h`,
+`ParseUtter.h`).
 
 ## The list operations (`assist/Assistant.h`)
 
@@ -180,17 +183,91 @@ the *Mac Roman* codes for « and » — the string is Unicode by then, so
 what is actually trimmed is Ç and È, and the guillemets are left on.
 Both are kept.
 
+## The lexicon (`assist/Lexicon.h`)
+
+The words live in two Airus dictionaries. `gTrie` is the ROM's own (ROM
+dictionary 2); a word's attribute indexes the array of lexicon entries at
+magic pointer 248, each entry the list of things the word can mean
+("call" is the call action, among others). `gDynaTrie` is built at run
+time (`TrieInit` is `NewDictionary(0xf, 4)`): `MakePhrasalLexEntry` puts
+every word of a class's or task template's `Lexicon` in it through
+`TrieAdd`, the attribute indexing `gDynaDictionaryFrame`, whose entries
+are `[count, frames]` - how many registrations the word has and the
+frames it stands for. `RemovePhrasalLexEntry`/`DynaTrieDelete` count a
+registration down and take the frame off the list; the last one takes the
+word out of the trie and `DynaCompress` renumbers the attributes above it
+(walking the trie in order with Airus's `FirstCompletion`/
+`NextCompletion`, reconstructed for this).
+
+`MatchString` is how a run of words is looked up: both tries (the
+run-time meanings joined to the ROM's), each meaning copied with the run
+as its `value` (`TagPhraseFrame`); else the locale's lexical dictionaries
+- a date, a time, a phone number or a number, each a copy of the
+Assistant's `lexical` frame with that class as its `isa`, in an array of
+class `lex`; else the Names file (`DSResolveString`). One ROM bug here is
+kept: a date word ("may", "june") seen for the first time is marked in
+the parse's `exception` array by writing slot 2 - the value of the nil it
+found there - rather than the word's own slot.
+
+## The phrase generator (`assist/Phrases.h`)
+
+Every run of consecutive words, longest first and left to right, from a
+16 x 16 grid of bytes (4 untried, 1 a hit, 3 overlapped by a hit):
+`IPhraseGenerator` marks every run of the first fifteen words untried,
+`NextPhrase` hands the next one out and `PhraseHitExt` - called when the
+lexicon knew it - strikes off every untried run overlapping it, so the
+words of "Daniel Parnell" are not looked up again once the pair is a
+person. `UnmatchedWords` is what is left: the words neither known nor
+covered, the task's `noiseWords`. Two quirks are kept: each row after a
+hit is scanned from the start before the hit's for as many runs as the
+whole row has (reading past its end, into the next row of the grid), and
+`PeekValidPhrase` does the same from the current start.
+
+## The Names file and the helpers (`assist/Heuristics.h`)
+
+A run no lexicon knows is tried as a person: `StringToFrameMapper` queries
+the Names soup with the Assistant's `dsQuery` (at most fifteen cards; not
+for a run of more than four words or with a one-letter word), and
+`DSTagString` looks over each card slot by slot - the name, each of the
+names of the people a card lists, the company, a custom field, the group,
+the title - for one that contains every word of the run
+(`DSPartialStrMatch`, case aside). Each hit is recorded in the parse
+(`AddEntry`, through the card's alias) under what it matched. ROM bug
+kept: a matching group falls through into the title's case, so it is
+recorded as a title too.
+
+The task scripts' helpers are here as well: `GuessAddressee` (the person
+a letter's opening line is to - "Dear Mr Smith," looks up "Smith"),
+`DSFindPossibleName`/`Location`/`Phone`, `DSConstructSubjectLine` (a
+meeting's subject from its meal or scheduling word), the phone-number
+conversions over `vars.PhoneTypes.phoneText`, and the four histories -
+who, what, when and where, three each, newest first (`RecordHistory`).
+ROM bug kept: `InitDSHeuristics` makes `gWhoObj` a GC root twice and
+`gWhatObj` never.
+
+## The parse (`assist/ParseUtter.h`)
+
+`ParseUtter(sentence)` opens the Assist slip with the sentence, checks it
+(`IAInputErrors`: not blank, under sixteen words) and has the progress box
+(`startIAProgress`) run `IaAtWork`, which feeds every run of words (its
+trailing punctuation taken off) to `MatchString` and answers the runs'
+meanings, the runs, their classes (`GetClasses`) and the people and
+places found. The task is the template that makes the first action among
+the classes its primary act; failing that the one whose signature the
+classes fit best, scored `((covered * 2 - classes) * 1000) / needed` (ROM
+quirk kept: the score the template is given is the last one worked out,
+not necessarily the winner's). A copy gets the parse, the sentence and
+the entries, `FillPreconditions` sorts the words into its slots and
+`DriveTaskSlip` opens the task's slip. `InitDarkStar`, run by
+`TNotebook::InitToolbox` after the init scripts as the ROM does, sets all
+of it up.
+
+`src/host/demo/assist.ns` asks "call Daniel" after the Setup walk and the
+Call slip opens addressed to the owner card. `test_Assistant` tests the
+lexicon (the ROM trie, run-time registration and removal), the phrase
+generator and the string helpers.
+
 ## Not yet reconstructed
 
-The lexicon itself. `MakePhrasalLexEntry` (0x0007d5b8) and
-`RemovePhrasalLexEntry` (0x0007da24) are here down to the point where
-they would touch the trie (`TrieAdd` 0x0007ce20, `DynaTrieDelete`
-0x0007e900 over `gDynaTrie`), which is part of the Airus lexical engine
-(`AirusAParmBlock`, 0x00029944 and up) and a subsystem of its own. A
-template still registers without it; its words simply are not indexed,
-so nothing finds the template by writing one of them.
-
-The rest of the Assistant's natives are the sentence-level functions in
-the Data Stream file (`DSFilterStrings`, `DSFindPossibleName`,
-`GetMatchedEntries`, `GuessAddressee`, the phone-number helpers and the
-phrase generators) and the Airus dictionary cursor.
+`DoPopup`'s scrolling `canonicalPopup` (the Assist slip's pickers use a
+plain one); the Airus dictionary cursor's `NextSet9`.

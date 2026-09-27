@@ -63,6 +63,7 @@ long	FrameSlotPosition(Ref frame, Ref tag);
 void	SetFramePathFor1XFunctions(RefArg obj, RefArg thePath, RefArg value);
 Ref		SharedFrameMap(RefArg frame);
 UniChar* CString(RefArg str);
+Ref		FStringer(RefArg rcvr, RefArg array);		// (StringNatives.cpp: ROM 0x001fd644) - the elements written one after another
 Ref		FStrEqual(RefArg rcvr, RefArg a, RefArg b);	// (StringNatives.cpp: ROM 0x001fedf4) - the same characters, cases apart
 Boolean	IsReal(RefArg ref);
 Ref		MakeSymbol(char* name);

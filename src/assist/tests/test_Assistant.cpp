@@ -4,6 +4,11 @@
 // the Assistant's frame (magic pointer 8).
 #include "Assistant.h"
 #include "AssistStrings.h"
+#include "Lexicon.h"
+#include "Heuristics.h"
+#include "Phrases.h"
+#include "ParseUtter.h"
+#include "ROMDictionaryData.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "ROMImport.h"
@@ -14,6 +19,8 @@
 
 #include <stdio.h>
 #include <string.h>
+
+Ref		SplitString(RefArg rcvr, RefArg str);	// frames/StringNatives.cpp
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -411,6 +418,98 @@ TestTemplates()
 }
 
 
+// The lexicon (Lexicon.h): the ROM's trie knows "call" as an action, a
+// phrase looked up comes back as its meanings with the phrase as their
+// value, and words registered at run time are counted, shared and taken
+// away again - the last registration taking the word out of the trie and
+// renumbering the others (DynaCompress).
+static void
+TestLexicon()
+{
+	InitROMDictionaryData();
+	InitDarkStar(RefVar(), RefVar());
+	EXPECT(gTrie != nil && gDynaTrie != nil);
+
+	RefVar meanings(FastStringLookup(RefVar(), RefVar(MakeString("Call"))));
+	EXPECT(IsArray(meanings) && Length(meanings) > 0);
+	Boolean action = false;
+	for (long i = 0; IsArray(meanings) && i < Length(meanings); i++)
+		if (NOTNIL(ISATest(RefVar(), RefVar(GetArraySlotRef(meanings, i)), RSSYMaction)))
+			action = true;
+	EXPECT(action);
+
+	RefVar info(Clone(RefVar(GetFrameSlotRef(kAssistantFrame, RSSYMentries))));
+	char phrase[16];
+	strcpy(phrase, "Call");
+	RefVar found(MatchString(gTrie, phrase, info));
+	EXPECT(IsArray(found) && Length(found) > 0 && Is(RefVar(GetFrameSlotRef(RefVar(GetArraySlotRef(found, 0)), RSSYMvalue)), "call"));
+	EXPECT(strcmp(phrase, "call") == 0);		// (lowercased in place)
+
+	// run-time registrations
+	RefVar first(AllocateFrame());
+	SetFrameSlot(first, RSSYMisa, RSSYMaction);
+	RefVar words(AllocateArray(RSSYMarray, 2));
+	SetArraySlotRef(words, 0, MakeString("Zorch"));
+	SetArraySlotRef(words, 1, MakeString("frobnicate"));
+	SetFrameSlot(first, RSSYMlexicon, words);
+	RefVar second(Clone(first));
+	RefVar one(AllocateArray(RSSYMarray, 1));
+	SetArraySlotRef(one, 0, MakeString("zorch"));
+	SetFrameSlot(second, RSSYMlexicon, one);
+	EXPECT(NOTNIL(MakePhrasalLexEntry(RefVar(), first)));
+	EXPECT(NOTNIL(MakePhrasalLexEntry(RefVar(), second)));
+	strcpy(phrase, "zorch");
+	RefVar frames(DynaTrieLookup(phrase));
+	EXPECT(IsArray(frames) && Length(frames) == 2);
+	strcpy(phrase, "frobnicate");
+	frames = DynaTrieLookup(phrase);
+	EXPECT(IsArray(frames) && Length(frames) == 1 && EQRef(GetArraySlotRef(frames, 0), first));
+	// the first taken away: "zorch" is the second's alone, "frobnicate" gone
+	// and the entries renumbered so that "zorch" still finds its own
+	EXPECT(NOTNIL(RemovePhrasalLexEntry(RefVar(), first)));
+	strcpy(phrase, "zorch");
+	frames = DynaTrieLookup(phrase);
+	EXPECT(IsArray(frames) && Length(frames) == 1 && EQRef(GetArraySlotRef(frames, 0), second));
+	strcpy(phrase, "frobnicate");
+	EXPECT(ISNIL(DynaTrieLookup(phrase)));
+	EXPECT(NOTNIL(RemovePhrasalLexEntry(RefVar(), second)));
+	strcpy(phrase, "zorch");
+	EXPECT(ISNIL(DynaTrieLookup(phrase)));
+	EXPECT(Length(gDynaDictionaryFrame) == 0);
+}
+
+
+// The phrase generator (Phrases.h): the runs of words longest first, left
+// to right; a run that was known strikes off the untried runs it overlaps,
+// and the words left over are the unmatched ones.
+static void
+TestPhrases()
+{
+	IPhraseGenerator(RefVar(MakeString("a b c")));
+	EXPECT(Is(RefVar(NextPhrase()), "a b c"));
+	EXPECT(Is(RefVar(NextPhrase()), "a b"));
+	EXPECT(Is(RefVar(NextPhrase()), "b c"));
+	PhraseHitExt();								// "b c" was known
+	EXPECT(Is(RefVar(NextPhrase()), "a"));
+	EXPECT(ISNIL(NextPhrase()));
+	RefVar unmatched(UnmatchedWords(RefVar()));
+	EXPECT(IsArray(unmatched) && Length(unmatched) == 1 && Is(RefVar(GetArraySlotRef(unmatched, 0)), "a"));
+	EXPECT(interval_intersection_p(2, 2, 1, 3) == 1 && interval_intersection_p(2, 2, 1, 1) == 0);
+
+	// the trailing punctuation (magic pointer 249: , . - : ; and space)
+	EXPECT(Is(RefVar(RemoveTrailingPunct(RefVar(), RefVar(MakeString("Bob.,")))), "Bob"));
+	EXPECT(Is(RefVar(RemoveTrailingPunct(RefVar(), RefVar(MakeString("Bob")))), "Bob"));
+	EXPECT(ISNIL(RemoveTrailingPunct(RefVar(), RefVar(MakeString(".,")))));
+	EXPECT(Is(RefVar(SuffixP(RefVar(), RefVar(MakeString("Bob,")))), "Bob"));
+	EXPECT(ISNIL(SuffixP(RefVar(), RefVar(MakeString("Bob")))));
+	EXPECT(Is(RefVar(StringShorten(RefVar(), RefVar(MakeString("Daniel (work)")))), "Daniel"));
+	EXPECT(RINT(DSPrevSubStr(RefVar(), RefVar(MakeString("call my dad")), RefVar(MAKEINT(6)))) == 5);
+	// the stop words (magic pointer 270) go; a word of five or more stays
+	RefVar filtered(PhraseFilter(RefVar(), RefVar(SplitString(RefVar(), RefVar(MakeString("lunch at noon"))))));
+	EXPECT(IsArray(filtered) && Length(filtered) == 2);
+}
+
+
 int
 main()
 {
@@ -429,6 +528,8 @@ main()
 	TestStrings();
 	TestClasses();
 	TestTemplates();
+	TestLexicon();
+	TestPhrases();
 
 	printf("test_Assistant: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;

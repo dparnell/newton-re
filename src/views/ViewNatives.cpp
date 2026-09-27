@@ -206,7 +206,7 @@ FRemoveStepView(RefArg rcvr, RefArg parent, RefArg child)
 // ROM 0x001ef51c FSetValue__FRC6RefVarN31
 // SetValue(view, slot, value): through the view when there is one (the
 // view synced, Changed sent), else the slot set in the frame.
-static Ref
+Ref
 FSetValue(RefArg rcvr, RefArg context, RefArg slot, RefArg value)
 {
 	TView* view = GetView(rcvr, context);
@@ -369,7 +369,7 @@ FSetPopupX(RefArg rcvr)
 }
 
 
-static Ref FOpenX(RefArg rcvr);		// (defined below)
+
 
 // ROM 0x001f0624 FDoPopup__FRC6RefVarN41
 // :DoPopup(pickItems, x, y, callbackContext): a popup menu (the ROM's
@@ -806,7 +806,7 @@ FIdleViews(RefArg /*rcvr*/)
 
 
 // ROM 0x001f173c FOpenX
-static Ref
+Ref
 FOpenX(RefArg rcvr)
 {
 	return RealOpenX(rcvr, false);

@@ -10,7 +10,7 @@ add_library(newt STATIC
     ForkGlobals.cpp
     ModalDialogNatives.cpp
 )
-target_link_libraries(newt PUBLIC newton_config views recognition compression packages utility system sound os600_user hal_host_tablet)
+target_link_libraries(newt PUBLIC newton_config views assist recognition compression packages utility system sound os600_user hal_host_tablet)
 target_include_directories(newt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

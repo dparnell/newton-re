@@ -80,6 +80,39 @@ FStrFilled(RefArg /*rcvr*/, RefArg str)
 }
 
 
+// ROM 0x001fd644 FStringer__FRC6RefVarT1
+// The elements of the array written one after another as a string, each
+// as StringObject writes it: measured first, then written into a string
+// of the size they came to.  (The Stringer a script calls is Printer.cpp's
+// FFramesStringer; this is the one the C code - the Assistant - uses.)
+Ref
+FStringer(RefArg /*rcvr*/, RefArg array)
+{
+	long total = 1;
+	long length;
+	long count = Length(array);
+	RefVar element;
+	for (long i = 0; i < count; i++)
+	{
+		element = GetArraySlotRef(array, i);
+		StringObject(element, nil, length, 0x7fffffff);
+		total += length;
+	}
+	RefVar str(AllocateBinary(RSSYMstring, total * sizeof(UniChar)));
+	if (Length(array) > 0)
+	{
+		UniChar* p = (UniChar*) BinaryData(str);
+		for (long i = 0; i < count; i++)
+		{
+			element = GetArraySlotRef(array, i);
+			StringObject(element, p, length, 0x7fffffff);
+			p += length;
+		}
+	}
+	return str;
+}
+
+
 // ROM 0x001fedf4 FStrEqual__FRC6RefVarN21
 // The same characters, cases apart (the same object is equal at once;
 // strings of different sizes are not).
@@ -1283,7 +1316,7 @@ NewASCIIString(RefArg str)
 // The index of the first character that is not a space.  It stops at the
 // last character of the object - the terminating nul - so a string of
 // nothing but spaces answers that index rather than running off the end.
-static ULong
+ULong
 StringLeftTrim(RefArg str)
 {
 	ULong count = (ULong) Length(str) / sizeof(UniChar);	// the characters, the nul among them
@@ -1310,7 +1343,7 @@ StringLeftTrim(RefArg str)
 // therefore always answers the string's length and trims nothing: a ROM
 // bug, kept.  SplitString, its only caller, does not notice, because the
 // trailing spaces it hands back are separators there anyway.
-static ULong
+ULong
 StringRightTrim(RefArg str)
 {
 	ULong i = (ULong) Length(str) / sizeof(UniChar);
@@ -1360,7 +1393,7 @@ SplitString(RefArg /*rcvr*/, RefArg str)
 						SetLength(piece, length + 1);
 						LockRef(piece);
 						char* word = BinaryData(piece);
-						word[length] = ' ';
+						word[length] = '\0';
 						SetLength(result, slot + 1);
 						SetArraySlotRef(result, slot, MakeString(word));
 						length = 0;
@@ -1388,7 +1421,7 @@ SplitString(RefArg /*rcvr*/, RefArg str)
 				SetLength(piece, length + 1);
 				LockRef(piece);
 				char* word = BinaryData(piece);
-				word[length] = ' ';
+				word[length] = '\0';
 				SetLength(result, slot + 1);
 				SetArraySlotRef(result, slot, MakeString(word));
 			}

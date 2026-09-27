@@ -1,0 +1,47 @@
+// The Intelligent Assistant: "call Daniel" parsed and carried out.  The
+// Setup walk leaves an owner card for Daniel in the Names file; the
+// sentence is handed to ParseUtter, which opens the Assist slip with it,
+// looks each run of words up in the lexicon (the ROM's trie knows "call"
+// as the call action; "Daniel" is found in the Names file), picks the
+// call task and opens its slip addressed to him.  The picture is taken
+// with the Call slip up.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/assist.ns --headless 45
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/assist.pgm build/assist.png
+//
+// Everything before the sentence is the Setup walk of setup.ns.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+AddDelayedCall(func() begin
+    Print("assist: asking");
+    local task := ParseUtter("call Daniel");
+    Print("assist: " & (if task then "a task" else "nothing"));
+    AddDelayedCall(func() ScreenSnapshot("build/assist.pgm"), nil, 3000);
+  end, nil, 30000);
+Print("assist: the script is loaded");

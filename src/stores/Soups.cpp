@@ -1293,6 +1293,17 @@ PathsEqual(RefArg a, RefArg b)
 }
 
 
+// ROM 0x0033fbd8 Query__FRC6RefVarT1
+// soup:Query(querySpec), sent as a message (the Assistant's way in).
+Ref
+Query(RefArg soup, RefArg querySpec)
+{
+	RefVar args(AllocateArray(RSSYMarray, 1));
+	SetArraySlotRef(args, 0, querySpec);
+	return DoMessage(soup, RSSYMquery, args);
+}
+
+
 // ROM 0x0033f7ac SoupQuery__FRC6RefVarT1
 Ref
 SoupQuery(RefArg soup, RefArg querySpec)

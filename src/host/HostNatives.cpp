@@ -12,6 +12,7 @@
 #include "SortTables.h"
 #include "Application.h"
 #include "Assistant.h"
+#include "ParseUtter.h"
 #include "Cursors.h"
 #include "Coordinates.h"
 #include "Dates.h"
@@ -99,7 +100,7 @@ RegisterAllNatives(void)
 	RegisterSoundNatives();
 
 	// the Intelligent Assistant
-	RegisterAssistantNatives();
+	RegisterAllAssistantNatives();
 
 	// the machine itself
 	RegisterSystemNatives();

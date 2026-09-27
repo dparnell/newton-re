@@ -9,6 +9,7 @@
 #include "Assistant.h"
 #include "Interpreter.h"
 #include "AssistStrings.h"
+#include "Lexicon.h"
 
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -544,14 +545,10 @@ IsAction(RefArg thing)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0007d5b8 MakePhrasalLexEntry__FRC6RefVarT1
-// The words of a class put into the Assistant's own trie, so that
-// writing one of them finds the class again.
-//
-// NOT YET RECONSTRUCTED: the trie (TrieAdd 0x0007ce20 over gDynaTrie),
-// which is part of the Airus lexical engine.  Everything up to it - the
-// symbol resolved to a frame, the frame having to have both an `isa` and
-// a `lexicon` - is here, so a template that could not be indexed is
-// still refused in the same way.
+// MakeLexEntry(thing): the words of a class (its `Lexicon`) put into the
+// Assistant's run-time trie (Lexicon.h's TrieAdd), so that writing one of
+// them finds the class again.  A symbol names its frame; a frame with no
+// `isa` is taken but nothing is added.  ==> nil when it is not a frame.
 Ref
 MakePhrasalLexEntry(RefArg /*rcvr*/, RefArg thing)
 {
@@ -570,13 +567,10 @@ MakePhrasalLexEntry(RefArg /*rcvr*/, RefArg thing)
 			{
 				RefVar word(GetArraySlotRef(lexicon, i));
 				unsigned char* ascii = (unsigned char*) NewASCIIString(word);
-				if (ascii != nil)
-				{
-					unsigned char buffer[256];
-					Bstrcpy(buffer, ascii);
-					// NOT YET: TrieAdd(buffer, gDynaTrie, frame)
-					DisposPtr((Ptr) ascii);
-				}
+				unsigned char buffer[256];
+				Bstrcpy(buffer, ascii);
+				TrieAdd((char*) buffer, gDynaTrie, frame);
+				DisposPtr((Ptr) ascii);
 			}
 		}
 	}
@@ -585,12 +579,12 @@ MakePhrasalLexEntry(RefArg /*rcvr*/, RefArg thing)
 
 
 // ROM 0x0007da24 RemovePhrasalLexEntry__FRC6RefVarT1
-// And the other way: the words taken out of the trie again.  The frame
-// being deleted (and the symbol that named it) go into two globals while
-// it happens, because the trie's walk needs to know which entry to drop
-// when a word leads to several.
-//
-// NOT YET RECONSTRUCTED: DynaTrieDelete 0x0007e900, for the same reason.
+// And the other way: the words taken out of the trie again (a word of
+// the Lexicon may itself be an array of words).  The frame being deleted
+// (and the symbol that named it) go into two globals while it happens,
+// because DynaTrieDelete needs to know which of a word's frames to drop
+// when the word stands for several.  ==> TRUE when the thing is a frame
+// with an `isa`.
 Ref
 RemovePhrasalLexEntry(RefArg /*rcvr*/, RefArg thing)
 {
@@ -616,21 +610,17 @@ RemovePhrasalLexEntry(RefArg /*rcvr*/, RefArg thing)
 			for (ULong i = 0; i < count; i++)
 			{
 				RefVar word(GetArraySlotRef(lexicon, i));
-				if (IsArray(word))
+				if (!IsArray(word))
+					DynaTrieDelete(RefVar(), word);
+				else
 				{
 					ULong parts = Length(word);
 					for (ULong j = 0; j < parts; j++)
-					{
-						// NOT YET: DynaTrieDelete(word[j])
-					}
-				}
-				else
-				{
-					// NOT YET: DynaTrieDelete(word)
+						DynaTrieDelete(RefVar(), RefVar(GetArraySlotRef(word, j)));
 				}
 			}
-			result = TRUEREF;
 		}
+		result = TRUEREF;
 	}
 	gDynaDeleteSym = NILREF;
 	gDynaDeleteFrame = NILREF;

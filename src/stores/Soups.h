@@ -165,6 +165,7 @@ Ref		UnionSoupGetSize(RefArg rcvr);
 
 // the messages a soup (plain or union) answers
 Ref		SoupQuery(RefArg soup, RefArg querySpec);
+Ref		Query(RefArg soup, RefArg querySpec);		// ROM 0x0033fbd8 Query__FRC6RefVarT1 - the soup sent Query
 Ref		SoupGetName(RefArg soup);
 Ref		SoupGetSignature(RefArg soup);
 Ref		SoupSetName(RefArg soup, RefArg name);

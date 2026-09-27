@@ -6,6 +6,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "ParseUtter.h"
 #include "Notebook.h"
 #include "CICCodec.h"
 #include "InkFont.h"
@@ -85,7 +86,7 @@ TNotebook::Constructor(void)
 // NOT YET RECONSTRUCTED: InitScriptGlobals (vars from varsMapStarter, the
 // classes, the funky functions, bootInitNSGlobals), DrawSplashScreen,
 // FPlaySoundIrregardless(bootSound), InitPrintDrivers, InitFontLoader,
-// InitInternationalUtils, RunInitScripts, InitDarkStar; the recognition
+// InitInternationalUtils; the recognition
 // system starts at level 1 (the clicks) on the host.
 void
 TNotebook::InitToolbox(void)
@@ -128,6 +129,7 @@ TNotebook::InitToolbox(void)
 	//  than dropped.)
 	SetWordRecognizer(kWRecDomainType);
 	RunInitScripts();
+	InitDarkStar(RefVar(), RefVar());
 	gStrokeWorld.Init();
 }
 

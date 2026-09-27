@@ -386,6 +386,8 @@ extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET:
 TView*		GetView(RefArg context);								// ROM 0x002613fc GetView__FRC6RefVar
 TView*		GetView(RefArg context, RefArg name);					// ROM 0x002614e0 GetView__FRC6RefVarT1
 void		DrawSetPen(RefArg context);								// ROM 0x001ec290 DrawSetPen__FRC6RefVar - drawPenMode/drawPenSizeX/Y into the port's pen
+Ref			FOpenX(RefArg rcvr);										// ROM 0x001f173c FOpenX - view:Open()
+Ref			FSetValue(RefArg rcvr, RefArg context, RefArg slot, RefArg value);	// ROM 0x001ef51c FSetValue__FRC6RefVarN31 - SetValue(view, slot, value)
 Ref			RealOpenX(RefArg context, Boolean modal);				// ROM 0x001f1638 RealOpenX__FRC6RefVarUc - aeAddChild or aeShow dispatched (kNoModalCheck when modal); ==> whether anything was done
 TView*		FailGetView(RefArg context);							// ROM 0x001eda04 FailGetView__FRC6RefVar
 TView*		FailGetView(RefArg context, RefArg name);				// ROM 0x001ede40 FailGetView__FRC6RefVarT1

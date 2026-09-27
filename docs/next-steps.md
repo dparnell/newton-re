@@ -693,6 +693,12 @@ The named pieces whose machinery *is* there:
 
 ## Also still open
 
+- The Intelligent Assistant parses and acts (`docs/assist/README.md`):
+  the lexicon over the ROM's trie and a run-time one, the phrase
+  generator, the Names-file heuristics and `ParseUtter`/`IaAtWork`;
+  `src/host/demo/assist.ns` asks "call Daniel" and the Call slip opens.
+  Every Assistant native is answered (natives.py).
+
 - The modal dialogs are done (`docs/views/README.md`, "Modal dialogs",
   and `docs/newt/README.md`, "Forks"): `FilterDialog`, `ModalDialog`
   (the newt world forks - `TForkWorld::Fork` now really starts a task -
