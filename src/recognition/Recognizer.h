@@ -156,6 +156,10 @@ enum { kWRecServices = 0x017ef000 };
 // Prefs slip changes one of them.
 long	GetDefaultedPreference(RefArg slot, long deflt);		// ROM 0x0019cc04 GetDefaultedPreference__FRC6RefVarl - the default written down when there is none
 Ref		FReadCursiveOptions(RefArg rcvr);					// ROM 0x0019cfd8 FReadCursiveOptions__FRC6RefVar
+// Which word recogniser the letter set means: set 2 (printed) Rosetta,
+// any other ParaGraph's cursive one (WordRecognizer.h).
+void	SetUpRosetta(ULong letterSet);						// ROM 0x0019ccd4 SetUpRosetta__FUl
+void	SetUpParaGraph(ULong letterSet);					// ROM 0x0019cf24 SetUpParaGraph__FUl
 Ref		ReadDomainOptions(void);							// ROM 0x0019d1e0 ReadDomainOptions
 // What the writer settled on handed to the recogniser of that unit
 // type, so that it reads the same writing better next time.

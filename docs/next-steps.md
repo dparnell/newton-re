@@ -10,11 +10,11 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-27
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 102/102
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 103/103
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10565 citations, 0 bad;
-  5742 of 16671 functions (34.44%).
-- `analysis/natives.py --unbound`: about 390 of the ROM's 1326 natives
+- `analysis/coverage.py build/MP2x00US --check`: 10791 citations, 0 bad;
+  5919 of 16671 functions (35.50%).
+- `analysis/natives.py --unbound`: 378 of the ROM's 1326 natives
   are unanswered (table below).
 
 ## What works
@@ -69,7 +69,9 @@ planned:
    `host.NewtonRecognize`).  Left of it: the grouping of unread strokes
    into ink (`IGGroupAndCompressStrokes`, the CIC library), which is
    also what `HandleExpiredStroke` waits on.
-2. **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
+2. DONE (2026-09-28, `docs/recognition/README.md`'s "The cursive
+   recogniser and the letter styles"; the cursive engine's reading is
+   NOT YET) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
    `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
 3. **Shape verbs**: `MakeInk`, `FindShape`, `GetShapeInfo`, `MungeShape`,
    `PictToShape`, `StrokeInPicture`, `AnimateSimpleStroke`.
@@ -166,7 +168,7 @@ inside an area).  At 2026-09-27:
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
 | testing | 38 | the test agent and the debug hooks |
 | packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
-| recognition | 23 | the rest of the recognition system |
+| recognition | 12 | the rest of the recognition system |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |
 | views | 17 | |
 | sound | 9 | the sound server |
@@ -240,10 +242,9 @@ The areas whose machinery exists are worth sweeping with `--ready`;
   `FramePaths`), which want the PostScript path machinery.
 - `TWRecognizer::EndInkStrokeGroup` (the CIC library's
   `WRecEndInkStrokeGroup`).
-- Nothing chooses *which* word recogniser is in use at boot: `UseWRec`
-  is a native and `SetWordRecognizer` is reconstructed, but the ROM
-  calls them from a script, and the host calls `SetWordRecognizer`
-  itself in `HostStartViews` and `TNotebook::InitToolbox`.
+- DONE (2026-09-28): the boot chooses the word recogniser the ROM's way,
+  by the letter set (`SetUpRosetta`/`SetUpParaGraph` in
+  `ReadCursiveOptions`); the host's own `SetWordRecognizer` calls are gone.
 
 ### Running the applications
 

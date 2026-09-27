@@ -7,6 +7,7 @@
 #include "HostViews.h"
 #include <time.h>
 #include "HostStores.h"
+#include "Soups.h"
 #include "HostNatives.h"
 #include "HostScreen.h"
 #include "Screen.h"
@@ -226,6 +227,10 @@ HostInitViewToolbox(void)
 	RefVar config(GetFrameSlotRef(vars, RSSYMuserconfiguration));
 	if (ISNIL(GetFrameSlotRef(config, RSSYMuserpensize)))
 		SetFrameSlot(config, RSSYMuserpensize, RefVar(MAKEINT(1)));
+	// (the letter set, which the cursive recogniser's installation reads
+	// before ReadCursiveOptions writes its default: 2, printed)
+	if (ISNIL(GetFrameSlotRef(config, RSSYMlettersetselection)))
+		SetFrameSlot(config, RSSYMlettersetselection, RefVar(MAKEINT(2)));
 	if (ISNIL(GetFrameSlotRef(vars, RSSYMinternational)) && NOTNIL(Rglobalheapvarwannabes))
 	{
 		// the ROM's globals template has the international frame the boot
@@ -252,6 +257,17 @@ HostInitViewToolbox(void)
 		SetFrameSlot(params, RefVar(Intern((char*) "buttonBarThickness")), RefVar(MAKEINT(0)));
 		SetFrameSlot(vars, RSSYMdisplayparams, params);
 	}
+	// the System soup, which the ROM's boot block gets or creates on the
+	// internal store before anything reads a preference out of it (the
+	// cursive recogniser's installation reads the saved letter weights)
+	RefVar stores(GetStores());
+	if (NOTNIL(stores) && Length(stores) > 0)
+	{
+		RefVar store(GetArraySlotRef(stores, 0));
+		RefVar name(Rsystemsoupname);
+		if (ISNIL(StoreHasSoup(store, name)) && NOTNIL(Rsystemsoupindexes))
+			StoreCreateSoup(store, name, RefVar(Rsystemsoupindexes));
+	}
 	HostRegisterViewFunctions();
 	RegisterUnitNatives();
 }
@@ -277,12 +293,7 @@ HostStartViews(long width, long height, long depth)
 	// the ROM's own handwriting engine, as the Notebook's toolbox
 	// registers it (recognition/RosRecognizer.h)
 	RegisterRosettaWRec();
-	gRecognition.Init(2);
-	// (NOT YET: on the Newton a script chooses which of the two word
-	//  recognisers is in use, with UseWRec; with one engine here the
-	//  host puts it in use itself, so that writing is read rather
-	//  than dropped.)
-	SetWordRecognizer(kWRecDomainType);
+	gRecognition.Init(2);		// (which puts the letter set's word recogniser in use: ReadCursiveOptions)
 	gStrokeWorld.Init();
 	HostTabletInit();
 	HostAdvanceClock(60 * 60 * 0xf000);		// (0xf000 clock ticks a Mac tick)

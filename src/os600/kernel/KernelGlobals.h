@@ -86,6 +86,8 @@ extern ULong			gFIQAccumulatedIntOverHead;	// 0x0c101c1c  ...and altogether
 extern ULong			gIRQAccumulatedIntOverHead;	// 0x0c101c18
 
 // boot
+extern ULong			gMainCPUType;				// 0x0c1008dc  the processor (LowLevelGetCPUType: 3 a StrongARM)
+extern Fixed			gMainCPUClockSpeed;			// 0x0c1008e0  its clock in MHz, 16.16 (Gestalt's fCpuSpeed)
 extern Boolean			gOSIsRunning;				// 0x0c10111c  set by UserBoot once the stack manager and heaps exist (TTask::Init)
 
 // object manager

@@ -337,12 +337,12 @@ TWRecDomain::SignalMemoryError(void)
 //   2   whether `result` is a selector this domain answers at all
 //   3   whatever the engine hangs off one let go, before the block is
 //
-// (The ROM works out a result for this - -1 for a selector it does not
-//  know, and -1 when the engine throws - and then has nowhere to put
-//  it: the virtual answers nothing, so no caller can read it.)
-void
+// ==> 0; -1 for a selector it does not know (and for a question about
+// one) and when the engine throws.
+long
 TWRecDomain::DomainParameter(ULong selector, ULong result, ULong info)
 {
+	volatile long err = 0;
 	if (info != 0)
 		HLock((Handle) info);
 	WREC_TRY
@@ -355,18 +355,22 @@ TWRecDomain::DomainParameter(ULong selector, ULong result, ULong info)
 			fRecognizer->AreaInfoFillDefaults((Handle) info);
 			break;
 		case 2:
-			// (the answer would be whether `result` is 0, 1, 2 or 3)
+			if (result > 3)
+				err = -1;
 			break;
 		case 3:
 			fRecognizer->AreaInfoFreeDependents((Handle) info);
 			break;
 		default:
+			err = -1;
 			break;
 		}
 	WREC_CATCH
+		err = -1;
 	WREC_END;
 	if (info != 0)
 		HUnlock((Handle) info);
+	return err;
 }
 
 

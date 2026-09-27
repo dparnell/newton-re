@@ -2004,10 +2004,95 @@ side of `TWRecDomain`.  `ReadDomainOptions` (0x0019cfd8) is what reads
 the writer's recognition preferences at boot and calls
 `SetWordRecognizer`.
 
+## The cursive recogniser and the letter styles (`recognition/ParaGraph.h`, `XrDomains.h`, `WordRecognizer.h`, `LetterShapes.h`)
+
+The MP2x00 has **two** word recognisers, and which one reads the writer's
+hand is decided by the Handwriting Style slip's letter set
+(`userConfiguration.letterSetSelection`, `gLetterSetSelection`):
+`ReadCursiveOptions` calls `SetUpRosetta` and `SetUpParaGraph`
+(`Recognizer.cpp`), and set 2 - printed - puts **Rosetta** ('WREC') in use,
+any other set **ParaGraph's cursive recogniser** ('XRWR').  The
+Handwriting Recognition preference shows it too: its panel frame keeps
+`rosForms` and `paraForms`, and the Letter Shapes slip is one of the
+`paraForms`.  (Earlier pages called Rosetta "ParaGraph's Calligrapher":
+that was wrong.  Rosetta is Apple's own printed-writing recogniser - the
+neural-net classifier and the easter egg's names are Apple's; the `xr`
+engine with its `low_type`/`EXTR` feature extraction, which nothing
+reachable from `RosettaClassify` calls, is ParaGraph's cursive engine.)
+
+**What is reconstructed** is everything of the cursive recogniser that is
+not its reading:
+
+- `InstallWordRecognizer` - in `TRecognitionManager::InitRecognizers`, at
+  level 2, between the shape and the WRec recognisers - makes the
+  strokes-to-xrs domain 'STXR' (`TStrXrDomain`) and the xrs-to-words one
+  'XRWR' (`TXrWordDomain`), a `TWordRecognizer` over the second, registers
+  Gestalt 0x02000008, and wakes it and puts it straight back to sleep:
+  `WakeUp` runs `loadLetterWeights` (the System soup's "LetterWeights2.0"
+  entry into `SetLetterWeights`) and `Sleep` `saveLetterWeights`, both
+  with the letter set set to nought for the length of the call.
+- The word domain's `DomainParameter` - every selector (XrDomains.h lists
+  them) - over the parameter block, an `XRWORDPARAM`: the engine's
+  `rc_type` (0x10c bytes) and the domain's own fields.  Its numbers are
+  big-endian halfwords written a byte at a time, which the host keeps in
+  byte arrays at the ROM's offsets (`RCByte`), so a recognition
+  configuration's `xrwCommands` (`SetXrWordRC`: an operation, a field and
+  an operand in one word, or a raw byte offset) change the same field.
+  Selector 1 is `InitializeParamStruct`: the engine's defaults, the letter
+  table loaded and the letter set's learning info.
+- The engine's data (`ParaGraph.h`): its allocator (`HWRMemory*`: a handle
+  whose first word is the handle, DEVIATION eight bytes on the host), its
+  character classes, and the letter table - the `DTEHeader`, `DTEMain`,
+  `PPDMain` and `DTETrigrams` binaries of `charsetInfoResources`, read
+  into a header (`ReadDteResource`) whose symbol descriptors say how many
+  ways each letter may be written, their default weights (*vexes*), their
+  groups and which letter sets use them.  Each letter set has a
+  *learning info* (0x924 bytes: a byte per variant - vex and use counter -
+  and the capitals) made from the defaults the first time it is used
+  (`AllocLearnInfo`), changed by picking shapes by hand
+  (`SetVariantState`, selector 0x20016) and by learning on the fly
+  (`FlyLearn`: the variants a corrected word was read as have their
+  counters set back, the others counted up and their vexes moved), and
+  kept in the System soup as a 'letterWeights binary for each set that is
+  not at its defaults (`PGGetLetterSetInfo`).  `SetRamParaData`/
+  `GetRamParaData` replace a table from RAM (`vars.|RamParaGraphData:PARA|`).
+- The natives: `GetLetterWeights`, `SetLetterWeights`,
+  `ResetLetterDefaults`, `UseTrainingDataForRecognition`,
+  `GetLearningData`/`SetLearningData` (the orthographic database, with
+  big learning on), `ConvertFromMP`/`ConvertForMP` (the MessagePad 100's
+  layout), `DoCursiveTraining`, `RosettaExtension` (nil), and the Letter
+  Shapes slip's `DrawLetterScript`, `ClickLetterScript`,
+  `CountLetters`, `getLetterIndex`, `getIndexChar`,
+  `GetHiliteIndex`/`SetHiliteIndex`, `GetLetterHilite`/`SetLetterHilite`
+  and `DrawStringShapes` over the ROM's `letterimages` (LetterShapes.h has
+  the format): a group of variants to a 35-pixel cell, a letter pair to a
+  page, the tapped group hilited and its weight changed, never leaving a
+  letter with no group in use.
+- The boot's choice: `SetUpRosetta` also sets `FragmentLigatures` from
+  the `doFragmentation` preference - 'default meaning "if the processor
+  runs faster than 90 MHz", which is why the kernel now answers the
+  MP2x00's 162 MHz StrongARM in Gestalt (`gMainCPUType`,
+  `gMainCPUClockSpeed`, `hal/System.h`) - and the host no longer calls
+  `SetWordRecognizer` itself.
+
+`src/host/demo/letterstyles.ns` (ctest `host.NewtonLetterStyles`) asks
+the natives from NewtonScript: 320 pictures, the letter weights at their
+defaults before and after `ResetLetterDefaults`, a word drawn in picked
+shapes.
+
+**NOT YET RECONSTRUCTED**: the reading itself - the strokes cut into xrs
+(`TStrXrDomain`'s classify and group, its `DomainParameter`), the xrs
+read into words (`TXrWordDomain::Classify`), `GetTraceFromStrokes` (so
+`DoLearning` has nothing to learn from), `ORTraining` (orthographic
+learning), and the base-line and grid geometry `ConfigureArea` hands the
+engine (`GetWordGeom`, `GetGridGeom`).  A cursive letter set chosen on
+the host therefore reads nothing: the writing is kept as ink.
+
 ## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
 
-The engine the MP2x00 actually reads writing with is ParaGraph's
-Calligrapher, which Apple licensed and shipped as **Rosetta**. It is a
+The engine the MP2x00 reads printed writing with is Apple's own
+**Rosetta** (the cursive recogniser is ParaGraph's - see the section
+above; this page once took Rosetta for ParaGraph's Calligrapher). It is a
 subsystem in its own right, and a large one: about two hundred kilobytes
 of code in some three hundred and fifty functions, with trained tables
 beside it. Its layers, from the top:

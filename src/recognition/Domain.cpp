@@ -131,11 +131,14 @@ TDomain::PruneConstraints(TUnit* /*unit*/)
 
 // ROM 0x0020cf38 DomainParameter__7TDomainFUlN21
 // The base has no parameters: selector 0 (the size of the block) answers 0.
-void
+// ==> 0.  (The ROM prints the three arguments first, to a debug console
+// the MessagePad does not have.)
+long
 TDomain::DomainParameter(ULong selector, ULong result, ULong /*arg*/)
 {
 	if (selector == 0)
 		*(ULong*) result = 0;
+	return 0;
 }
 
 

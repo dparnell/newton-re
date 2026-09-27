@@ -49,6 +49,20 @@ IsSuperMode(void)
 	return false;
 }
 
+// DEVIATION: the host answers what an MP2x00 measures - a StrongARM at
+// 162 MHz - rather than reading a coprocessor and timing a loop.
+extern "C" ULong
+LowLevelGetCPUType(void)
+{
+	return 3;
+}
+
+extern "C" Fixed
+GetCPUClockSpeed(void)
+{
+	return 0xa22f1b;
+}
+
 // A MessagePad 2100 has 4 MB of DRAM.
 extern "C" ULong
 GetRamSize(void)

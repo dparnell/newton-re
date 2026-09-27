@@ -45,6 +45,12 @@ add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --disp
 set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "Recognize read ton.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7")
 
+# the cursive recogniser's letter styles asked from NewtonScript
+# (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)
+add_test(NAME host.NewtonLetterStyles COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/letterstyles.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonLetterStyles PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "letterstyles: 320 pictures, 'a' from 162, first letter !, weights default, after reset default.*letterstyles: done")
+
 # a package loaded from a file (newton --package): the ROM's Formulas
 # extracted as a loadable package under another name, so the package
 # manager does not refuse it as the one it already has, and installed

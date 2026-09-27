@@ -603,10 +603,10 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 	case kGestalt_SystemInfo:
 	{
 		// the machine (an MP2x00, ROM 2.2 stage 0x8000), the screen's size
-		// out of its pixel map's bounds, its resolution, its depth, and the
-		// tablet's resolution.  NOT YET RECONSTRUCTED: the RAM size
-		// (InternalRAMInfo), the patch version (GetPatchInfo), gMainCPUType,
-		// gMainCPUClockSpeed and gManufDate, which answer nought.
+		// out of its pixel map's bounds, its resolution, its depth, the
+		// tablet's resolution, and the processor.  NOT YET RECONSTRUCTED:
+		// the RAM size (InternalRAMInfo), the patch version (GetPatchInfo)
+		// and gManufDate, which answer nought.
 		memset(&info.systemInfo, 0, sizeof(info.systemInfo));
 		info.systemInfo.info.fManufacturer = kGestalt_Manufacturer_Apple;
 		info.systemInfo.info.fMachineType = 0x10003000;
@@ -630,6 +630,8 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 			info.systemInfo.info.fTabletResX = x;
 			info.systemInfo.info.fTabletResY = y;
 		}
+		info.systemInfo.info.fCpuType = gMainCPUType;
+		info.systemInfo.info.fCpuSpeed = gMainCPUClockSpeed;
 		size = sizeof(info.systemInfo);
 		break;
 	}

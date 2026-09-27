@@ -153,7 +153,7 @@ public:
 	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x0026e478 Group__11TWRecDomainFP5TUnitP8dInfoRec (+0x18)
 	// the area information an engine keeps for each place that is
 	// written in
-	virtual void		DomainParameter(ULong selector, ULong result, ULong info);	// ROM 0x0026e57c DomainParameter__11TWRecDomainFUlN21 (+0x2c)
+	virtual long		DomainParameter(ULong selector, ULong result, ULong info);	// ROM 0x0026e57c DomainParameter__11TWRecDomainFUlN21 (+0x2c)
 	virtual Boolean		SetParameters(Handle params);			// ROM 0x0026e768 SetParameters__11TWRecDomainFPPc (+0x30)
 	virtual void		ConfigureArea(RefArg config, ULong info);	// ROM 0x0026e6ac ConfigureArea__11TWRecDomainFRC6RefVarUl (+0x40)
 

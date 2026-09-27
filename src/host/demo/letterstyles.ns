@@ -1,0 +1,20 @@
+// letterstyles.ns: the cursive recogniser's letter styles, asked from
+// NewtonScript as the Letter Shapes preference asks them.
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/letterstyles.ns --headless 10
+// The letter set is 2 (printed), so Rosetta is in use and the cursive
+// recogniser is installed asleep; its letter table and pictures are there
+// all the same.
+begin
+	local count := CountLetters();
+	local a := getLetterIndex($a);
+	local weights := GetLetterWeights();
+	ResetLetterDefaults();
+	local after := GetLetterWeights();
+	Print("letterstyles: " & count && "pictures, 'a' from" && a
+		& ", first letter" && getIndexChar(0)
+		& ", weights" && (if weights then "changed" else "default")
+		& ", after reset" && (if after then "changed" else "default"));
+	DrawStringShapes("hello", 100);
+	Print("letterstyles: done");
+end

@@ -43,7 +43,7 @@ public:
 	virtual void		DumpName(TMsg* msg);					// ROM 0x0020ceb8 DumpName__7TDomainFP4TMsg (+0x20)
 	virtual long		PruneDictionary(TUnit* unit);			// ROM 0x0020cdac PruneDictionary__7TDomainFP5TUnit (+0x24: 0)
 	virtual long		PruneConstraints(TUnit* unit);			// ROM 0x0020cdb4 PruneConstraints__7TDomainFP5TUnit (+0x28: 0)
-	virtual void		DomainParameter(ULong selector, ULong result, ULong arg);	// ROM 0x0020cf38 DomainParameter__7TDomainFUlN21 (+0x2c)
+	virtual long		DomainParameter(ULong selector, ULong result, ULong arg);	// ROM 0x0020cf38 DomainParameter__7TDomainFUlN21 (+0x2c: 0)
 	virtual Boolean		SetParameters(Handle params);			// ROM 0x0020cf14 SetParameters__7TDomainFPPc (+0x30: ==> whether they changed)
 	virtual void		InvalParameters(void);					// ROM 0x0020cf2c InvalParameters__7TDomainFv (+0x34)
 	virtual void		ConfigureSubDomain(TRecArea* area);		// ROM 0x0020cf84 ConfigureSubDomain__7TDomainFP8TRecArea (+0x38: nothing)

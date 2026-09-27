@@ -138,6 +138,22 @@ InitMemObjDatabase(ULong ramSize)
 }
 
 
+// ROM 0x000453b4 InitCGlobals +0x494 (the processor)
+// The processor's kind and clock, which Gestalt answers: an ARM610 is
+// 20 MHz and an ARM710 24.9; a StrongARM's is measured (hal/System.h).
+void
+InitCPUGlobals(void)
+{
+	gMainCPUType = LowLevelGetCPUType();
+	if (gMainCPUType == 1)
+		gMainCPUClockSpeed = 0x140000;
+	else if (gMainCPUType == 2)
+		gMainCPUClockSpeed = 0x18e219;
+	else if (gMainCPUType == 3)
+		gMainCPUClockSpeed = GetCPUClockSpeed();
+}
+
+
 // ROM 0x0011cbf8 InitMemArchCore__Fv
 // The memory architecture's own object table, its manager and the fault
 // monitor table.
@@ -197,6 +213,7 @@ OsBoot()
 	gCurrentGlobals = &bootGlobals + 1;
 
 	InitMemObjDatabase(GetRamSize());			// InitCGlobals's work, done before OsBoot on the MessagePad
+	InitCPUGlobals();							// ... and this
 	bootGlobals.fCurrentHeap = gKernelHeap;		// what the boot context allocates from (the pre-OS task stacks)
 	HInitInterrupts();
 	InitInterruptTables();

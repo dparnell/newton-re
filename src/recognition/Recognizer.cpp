@@ -37,6 +37,10 @@
 #include "Domain.h"
 #include "EdgeList.h"
 #include "ShapeDomain.h"		// SetContextUnitRoutine
+#include "WordRecognizer.h"	// InstallWordRecognizer
+#include "WordRecog.h"		// FragmentLigatures
+#include "NewtonGestalt.h"
+#include "ROMConstants.h"
 #include "StrokeQueue.h"
 #include "UserTasks.h"
 
@@ -772,14 +776,14 @@ GetDefaultedPreference(RefArg slot, long deflt)
 // for - nine less what the writer chose - because the recogniser wants
 // how *close* letters may be, and the slip offers how far apart.
 //
-// NOT YET RECONSTRUCTED: `SetUpRosetta` and `SetUpParaGraph`, which
-// hand the letter set to the two engines, and the
-// `_recognizerUserChoices` frame this puts on the root view for the
-// slip to read back.  Both belong to parts that are NOT YET.
+// The letter set says which of the two word recognisers is in use
+// (SetUpRosetta, SetUpParaGraph).
 Ref
 FReadCursiveOptions(RefArg /*rcvr*/)
 {
 	gLetterSetSelection = GetDefaultedPreference(RSSYMlettersetselection, 2);
+	SetUpRosetta(gLetterSetSelection);
+	SetUpParaGraph(gLetterSetSelection);
 
 	gRecognitionTimeout = (ULong) GetDefaultedPreference(RSSYMtimeoutcursiveoption, 0x28);
 	if (gRecognitionTimeout < 0xf)
@@ -814,6 +818,61 @@ FReadCursiveOptions(RefArg /*rcvr*/)
 	// the areas were built from the old answers
 	PurgeAreaCache();
 	return NILREF;
+}
+
+
+// ROM 0x0019ccd4 SetUpRosetta__FUl
+// Letter set 2, printed writing: Rosetta put in use, writing read a word
+// at a time, and whether its engine cuts ligatures apart - the
+// `doFragmentation` preference, and when that is 'default whether the
+// processor runs faster than 90 MHz.  The Handwriting Recognition slip
+// is told which recognisers there are to choose among
+// (`_recognizerUserChoices` on the root view, its text choices Rosetta's).
+void
+SetUpRosetta(ULong letterSet)
+{
+	if (letterSet != 2)
+		return;
+	RefVar name(MakeString("WREC"));
+	FUseWRec(RefVar(), name);
+	SetPreference(RSSYMcurrentwordrecognizer, name);
+	SetPreference(RSSYMlineatatime, RefVar());
+	RefVar fragment(GetPreference(RSSYMdofragmentation));
+	if (EQ(fragment, RSSYMdefault))
+	{
+		TUGestalt gestalt;
+		TGestaltSystemInfo info;
+		fragment = (gestalt.Gestalt(kGestalt_SystemInfo, &info, sizeof(info)) == noErr
+					&& (long) info.fCpuSpeed > 0x5a0000) ? TRUEREF : NILREF;
+	}
+	FragmentLigatures = NOTNIL(fragment);
+	if (gRootView != nil)
+	{
+		RefVar choices(Clone(RefVar(Rrecognizeruserchoices)));
+		RefVar recognizers(Clone(RefVar(GetFrameSlotRef(choices, RSSYMrecognizers))));
+		SetFrameSlot(choices, RSSYMrecognizers, recognizers);
+		RefVar text(Clone(RefVar(GetFrameSlotRef(recognizers, RSSYMtext))));
+		SetFrameSlot(recognizers, RSSYMtext, text);
+		SetFrameSlot(text, RSSYMchoices, RefVar(Rrosettachoices));
+		gRootView->SetContextSlot(RSSYM_recognizeruserchoices, choices);
+	}
+}
+
+
+// ROM 0x0019cf24 SetUpParaGraph__FUl
+// Any other letter set: the cursive recogniser put in use, writing read
+// a line at a time.
+void
+SetUpParaGraph(ULong letterSet)
+{
+	if (letterSet == 2)
+		return;
+	RefVar name(MakeString("XRWR"));
+	FUseWRec(RefVar(), name);
+	SetPreference(RSSYMcurrentwordrecognizer, name);
+	SetPreference(RSSYMlineatatime, RefVar(TRUEREF));
+	if (gRootView != nil)
+		gRootView->SetContextSlot(RSSYM_recognizeruserchoices, RefVar(Rrecognizeruserchoices));
 }
 
 
@@ -900,7 +959,6 @@ TRecognitionManager::Init(UChar level)
 // The recognisers installed and the root domain made.  The ROM installs
 // the gesture, click-event, stroke and click recognisers at any level,
 // and the shape, word and WRec ones above level 1.
-// NOT YET RECONSTRUCTED: the Airus word recogniser (InstallWordRecognizer).
 long
 TRecognitionManager::InitRecognizers(void)
 {
@@ -915,7 +973,7 @@ TRecognitionManager::InitRecognizers(void)
 	if (fLevel >= 2)
 	{
 		InstallShapeRecognizer(this);
-		// NOT YET: InstallWordRecognizer (0x00166efc, the Airus one)
+		InstallWordRecognizer(this);
 		InstallWRecRecognizer(this);
 	}
 	// the writer's recognition preferences put into force

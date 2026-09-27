@@ -1847,6 +1847,21 @@ this code a level line is at 90 degrees.)
 `src/host/demo/shapes.ns` shows the result; `test_ShapeDomain`'s
 `TestSolver` and `TestEquations` drive them directly.*
 
+## The Newton has two handwriting recognisers, and your handwriting style picks one
+
+The MP2x00 ships two complete word recognisers: Apple's own Rosetta for
+printed writing, and ParaGraph International's cursive "xr" engine, which
+reads writing as a string of arcs, hooks and loops matched against a
+table of every way each letter may be written.  Nothing in the
+recognition preferences says "recogniser": the Handwriting Style slip's
+letter set does it - set 2, printed, puts Rosetta in use and every other
+set ParaGraph's (`SetUpRosetta`/`SetUpParaGraph`, called by
+`ReadCursiveOptions`).  The Letter Shapes slip, where the writer taps the
+ways they do and do not write each letter, only exists for the cursive
+one.  And whether Rosetta cuts a ligature in two is decided by asking
+Gestalt how fast the processor is: faster than 90 MHz, it can afford to.
+(`recognition/WordRecognizer.h`, `Recognizer.cpp`.)
+
 ## The reconstruction has the Newton's 2010 bug, and sets the clock back to 1992
 
 Walk the reconstructed machine through its Setup assistant on a 2026

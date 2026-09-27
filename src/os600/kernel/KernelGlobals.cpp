@@ -66,6 +66,8 @@ ULong			gIRQInterruptOverHead = 0;
 ULong			gFIQAccumulatedIntOverHead = 0;
 ULong			gIRQAccumulatedIntOverHead = 0;
 
+ULong			gMainCPUType = 0;
+Fixed			gMainCPUClockSpeed = 0;
 Boolean			gOSIsRunning = false;
 Boolean			gTaskDestroyed = false;
 ULong			gMonitorTaskPriority = kKernelTaskPriority;	// 20 in the ROM image

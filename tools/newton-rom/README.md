@@ -52,7 +52,7 @@ tools/newton-rom/
                           src/frames/PrintLiterals.cpp); u8..i32 or cstr elements, RAM tables too
     romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
-    nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
+    nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --refs NAME (who calls it), --natives -> src/frames/ROMNatives.cpp,
                           --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots),
                           --binary-classes (the object area's binaries counted by class)
     packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files;

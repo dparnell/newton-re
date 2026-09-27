@@ -122,12 +122,7 @@ TNotebook::InitToolbox(void)
 	// library for printed writing, which a script can choose with
 	// UseWRec.)
 	RegisterRosettaWRec();
-	gRecognition.Init(2);
-	// (NOT YET: on the Newton a script chooses which of the two word
-	//  recognisers is in use, with UseWRec; with one engine here the
-	//  host puts it in use itself, so that writing is read rather
-	//  than dropped.)
-	SetWordRecognizer(kWRecDomainType);
+	gRecognition.Init(2);		// (which puts the letter set's word recogniser in use: ReadCursiveOptions)
 	RunInitScripts();
 	InitDarkStar(RefVar(), RefVar());
 	gStrokeWorld.Init();

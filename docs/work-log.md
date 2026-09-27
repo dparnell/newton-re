@@ -31,6 +31,34 @@ bugs and ROM bugs found on the way.
   (terminator included), so a script's offsets want `StrLen`; a view's
   `viewClass` carries flags above the class number.
 
+## 2026-09-28: the cursive recogniser's letter styles
+
+- `InstallWordRecognizer` and ParaGraph's cursive recogniser short of its
+  reading: `recognition/ParaGraph.h` (the engine's memory, character
+  classes, letter table and learning infos, `SetRamParaData`),
+  `XrDomains.h` (the 'STXR' and 'XRWR' domains; the word domain's whole
+  `DomainParameter` over an `XRWORDPARAM` kept at the ROM's byte offsets),
+  `WordRecognizer.h` (`TWordRecognizer`, `SetupXRD`, the letter weights
+  and learning-data natives), `LetterShapes.h` (the Letter Shapes slip's
+  natives over the ROM's `letterimages`).  22 natives answered; tables
+  from `romtable.py` (`ParaGraphTables.cpp`).
+- `ReadCursiveOptions` now calls `SetUpRosetta`/`SetUpParaGraph`, so the
+  letter set chooses the word recogniser as on the machine; the host's own
+  `SetWordRecognizer` calls are gone.  `SetUpRosetta` asks Gestalt for the
+  CPU speed, so the kernel now answers the MP2x00's StrongARM at 162 MHz
+  (`gMainCPUType`, `gMainCPUClockSpeed`, `InitCPUGlobals`,
+  `hal/System.h`'s `LowLevelGetCPUType`/`GetCPUClockSpeed`).
+- `TDomain::DomainParameter` answers a value, as the ROM's does (the
+  WRec domain's comment that it did not was wrong).
+- Correction: Rosetta is Apple's printed recogniser, not ParaGraph's
+  Calligrapher; ParaGraph's is the cursive one (README and CLAUDE.md
+  fixed).
+- `nsfunctions.py --refs NAME` lists the ROM's NewtonScript functions that
+  call a native or send a message by that name.
+- The newtonscript host's stand-in for the boot now makes the System soup
+  and a default letter set, which the recogniser's installation reads.
+- ctest `host.NewtonLetterStyles` (`src/host/demo/letterstyles.ns`).
+
 ## 2026-09-27: packages loaded from the host
 
 - `newton --package file.pkg` (repeatable) and a .pkg dropped onto the

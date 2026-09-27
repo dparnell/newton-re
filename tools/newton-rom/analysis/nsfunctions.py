@@ -22,7 +22,9 @@ frames and the like), each named by the frame slot that holds it;
 --disasm prints a NewtonScript function's bytecode (Newton Formats, the
 instruction set of the NewtonScript interpreter, as TInterpreter::SlowRun
 0x002cc66c executes it); --object prints the slots of a ROM frame or array
-with each function's kind; --binary-classes counts the object area's
+with each function's kind; --refs NAME lists every NewtonScript function
+whose literals include the symbol NAME (who calls a native, or sends a
+message, by that name), each named by the frame slot that holds it; --binary-classes counts the object area's
 binary objects by class, with their lengths (the formats an import has to
 translate for the host: frames/ObjectAreaImport.cpp).  An object is named by the ROM's Ref symbol
 (Rfoo or foo, whose word holds the ref), a built-in function's name, or
@@ -227,6 +229,41 @@ def other_natives(rom: ROM):
     return [(names.get(fn, ""), fn) for fn in natives]
 
 
+def script_refs(rom: ROM, names):
+    """(holder, function ref, symbol) for every NewtonScript function whose
+    literals include one of the symbols named (case does not matter, as it
+    does not to NewtonScript): who calls a native, or sends a message, by
+    that name.  holder is "frame.slot" for the frame slot that holds the
+    function (the frame by its ROM R name when it has one), or its address."""
+    wanted = {n.lower() for n in names}
+    rnames = {}
+    for addr, name in rom.symbols.items():
+        if name.startswith("R") and not name.startswith("RS") and addr + 4 <= len(rom.rom) and rom.word(addr) & 3 == 1:
+            rnames.setdefault(rom.word(addr), name[1:])
+    functions = []
+    holders = {}
+    for ref in objects(rom):
+        f = rom.flags(ref)
+        if f & 3 != 3 or not rom.is_ptr(rom.cls(ref)):
+            continue
+        s = rom.slots(ref)
+        if len(s) >= 5 and s[0] == 0x32:
+            # a function is a frame too: {class: 'CodeBlock, instructions, literals, argFrame, numArgs}
+            lits = s[2]
+            if not rom.is_ptr(lits) or not rom.flags(lits) & 1:
+                continue
+            for lit in rom.slots(lits):
+                name = rom.symname(lit) if rom.is_ptr(lit) else None
+                if name is not None and name.lower() in wanted:
+                    functions.append((ref, name))
+        else:
+            frame = rnames.get(ref, "%#x" % ref)
+            for tag, value in rom.frame_slots(ref):
+                if tag is not None and rom.is_ptr(value):
+                    holders.setdefault(value, "%s.%s" % (frame, tag))
+    return [(holders.get(fn, "%#x" % fn), fn, name) for fn, name in functions]
+
+
 def resolve(rom: ROM, name: str):
     """A ROM object ref from an address (0x...), the name of a ROM Ref (an
     R... symbol, whose word holds the ref) or a built-in function's name."""
@@ -322,6 +359,9 @@ def main(argv=None) -> int:
     ap.add_argument("--binary-classes", action="store_true",
                     help="count the object area's binary objects by class (with their lengths) - which "
                          "formats an import has to translate for the host")
+    ap.add_argument("--refs", action="append", default=[],
+                    help="list the NewtonScript functions whose literals include this symbol - "
+                         "which ROM scripts call a native or send a message by that name")
     ap.add_argument("-o", "--output")
     args = ap.parse_args(argv)
 
@@ -391,6 +431,9 @@ def main(argv=None) -> int:
             ls = sorted(lengths)
             shown = ", ".join(str(x) for x in ls[:6]) + (" ..." if len(ls) > 6 else "")
             out.append("%-24s %6d  lengths %s" % (cname, n, shown))
+    if args.refs:
+        for holder, fn, name in sorted(script_refs(rom, args.refs)):
+            out.append("%-24s %-60s %#x" % (name, holder, fn))
     for name in args.object:
         ref = resolve(rom, name)
         if ref is None or not rom.is_ptr(ref):

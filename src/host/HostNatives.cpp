@@ -45,6 +45,9 @@
 #include "Dictionaries.h"
 #include "ScriptBoot.h"
 #include "RecConfig.h"
+#include "ParaGraph.h"
+#include "WordRecognizer.h"
+#include "LetterShapes.h"
 
 
 void
@@ -83,6 +86,9 @@ RegisterAllNatives(void)
 	RegisterDictionaryNatives();
 	RegisterRandomWordNatives();
 	RegisterRecConfigNatives();
+	RegisterParaGraphNatives();
+	RegisterWordRecognizerNatives();
+	RegisterLetterShapesNatives();
 	RegisterInkNatives();
 
 	// the stores and soups

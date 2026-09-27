@@ -84,6 +84,11 @@ add_library(recognition STATIC
     SpellMaps.cpp
     AirusTables.cpp
     Words.cpp
+    ParaGraph.cpp
+    ParaGraphTables.cpp
+    XrDomains.cpp
+    WordRecognizer.cpp
+    LetterShapes.cpp
 )
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # (the strokes tell the root view what to redraw; the views track strokes:
