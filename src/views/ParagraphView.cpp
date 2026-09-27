@@ -44,6 +44,8 @@
 #include "RichString.h"
 #include "REPTranslators.h"
 #include "Areas.h"
+#include "Recognizer.h"		// gRecognition: modal recognition
+#include "Rerecognize.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
@@ -6068,6 +6070,10 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		return WordCommand(cmd);
 	if (id == aeInkWord)
 		return InkWordCommand(cmd);
+	if (id == aeRecognizeInk)
+		return RecognizeInkCommand(cmd);
+	if (id == aeRecognizeRange && (fFlags & (vReadOnly | vWriteProtected)) == 0)
+		return RecognizeRangeCommand(cmd);
 	if (id == aeGesture2f)
 	{
 		// the hilite stroke over the paragraph: the kind of selection it
@@ -6144,15 +6150,10 @@ TParagraphView::RealDoCommand(RefArg cmd)
 	{
 		// The second tap on a word: the corrector goes up over it.  The
 		// pending single tap is cancelled first, so the caret is not
-		// placed as well.
-		//
-		// NOT YET RECONSTRUCTED: the two branches that ask for a word of
-		// writing to be read again rather than corrected - a tap on an
-		// ink word inside the selection, and a tap on an ink word the
-		// corrector knows nothing about.  Both post a command to the
-		// application that the re-recognition path answers, and that
-		// path (`RecognizeInArea`) is NOT YET; here they fall through to
-		// the corrector, which is what a word of text gets.
+		// placed as well.  A tap on an ink word inside the selection
+		// reads the whole selection again instead (command 0x1a), and a
+		// tap on an ink word the corrector knows no readings for reads
+		// that word again (command 0x19) - Rerecognize.h.
 		if ((TextFlags() & 0x2000) != 0 && TView::RealDoCommand(cmd))
 			return true;
 		if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
@@ -6190,9 +6191,47 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			}
 			else
 			{
+				Boolean handled = false;
+				if (HitsHilitedInkWord(this, pt))
+				{
+					TParagraphHilite* hilite = HiliteOf(RefVar(FirstHilite()));
+					RefVar again(MakeCommand(aeRecognizeRange, this, fId));
+					SetFrameSlot(again, RSSYMstart, RefVar(MAKEINT(hilite->fStart)));
+					SetFrameSlot(again, RSSYMstop, RefVar(MAKEINT(hilite->fEnd)));
+					SetFrameSlot(again, RSSYMdohilite, RefVar(TRUEREF));
+					SetFrameSlot(again, RSSYMrecconfig, RefVar(NILREF));
+					gApplication->DispatchCommand(again);
+					RemoveAllHilites();
+					handled = true;
+				}
+				RefVar info(FindWordInfo(this, offset));
+				if (!handled)
+				{
+					RefVar style(GetStyleAtOffset(offset, nil, nil));
+					Boolean hasWords = false;
+					if (NOTNIL(info) && NOTNIL(GetFrameSlotRef(info, RSSYMwords)))
+						hasWords = Length(GetFrameSlotRef(info, RSSYMwords)) > 0;
+					if (IsInkWord(style) && !hasWords)
+					{
+						HiliteText(offset, length, true);
+						gRootView->Update(nil);
+						RefVar again(MakeCommand(aeRecognizeInk, this, fId));
+						SetFrameSlot(again, RSSYMstart, RefVar(MAKEINT(offset)));
+						SetFrameSlot(again, RSSYMstop, RefVar(MAKEINT(length)));
+						SetFrameSlot(again, RSSYMdohilite, RefVar(TRUEREF));
+						SetFrameSlot(again, RSSYMrecconfig, RefVar(NILREF));
+						gApplication->DispatchCommand(again);
+						RemoveAllHilites();
+						handled = true;
+					}
+				}
+				if (handled)
+				{
+					CommandSetResult(cmd, 1);
+					return true;
+				}
 				// a word the corrector already knows about is corrected
 				// as a whole, however much of it was tapped
-				RefVar info(FindWordInfo(this, offset));
 				if (NOTNIL(info))
 				{
 					long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
@@ -6226,6 +6265,163 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			return true;
 	}
 	return TView::RealDoCommand(cmd);
+}
+
+
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xc04 (command 0x19)
+// The ink word at the command's start read again (RerecognizeWord) in
+// an area of its own, with recognition made modal and the controller's
+// state put aside meanwhile; the arrow drawn over it when asked and the
+// paragraph is visible.  With no configuration in the command, the one
+// its recognition view's flags give for reading writing again
+// (BuildRecConfigForDeferred).  The view's recognition flags are put
+// back afterwards (flag 0x1000 is cleared while it reads).
+Boolean
+TParagraphView::RecognizeInkCommand(RefArg cmd)
+{
+	Rect none = { 0, 0, 0, 0 };
+	UChar failed = false;
+	gRecognition.EnableModalRecognition(none);
+	ControllerState* state = SaveRecognitionState(gController, &failed);
+	if (!failed)
+	{
+		ULong flags = fFlags & 0x01ffff00;
+		ClearFlags(0x1000);
+		if (NOTNIL(GetFrameSlotRef(cmd, RSSYMdohilite)) && (fFlags & vVisible) != 0)
+		{
+			long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
+			Rect bounds, next;
+			OffsetToBounds(start, &bounds);
+			OffsetToBounds(start + 1, &next);
+			bounds.right = next.left;
+			DrawCheckmark(bounds);
+		}
+		RefVar config(GetFrameSlotRef(cmd, RSSYMrecconfig));
+		if (ISNIL(config))
+		{
+			TView* view = GetRecognitionView(this);
+			config = BuildRecConfigForDeferred(view, view == this ? flags : (view->fFlags & 0x01ffff00));
+		}
+		TRecArea* area = MakeRerecognizeArea(gController, config);
+		RerecognizeWord(this, cmd, area);
+		if (area != nil)
+			area->Dispose();
+		SetFlags(flags);
+	}
+	RestoreRecognitionState(gController, state);
+	gRecognition.DisableModalRecognition();
+	CommandSetResult(cmd, 1);
+	return true;
+}
+
+
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x358 (command 0x1a)
+// Every ink word between the command's start and stop found first - with
+// the box it is drawn in when the line cache has it (the arrow is drawn
+// there when asked and the paragraph is visible) - and then each read
+// again with a command 0x19 of its own, later offsets moved by how much
+// longer or shorter each replacement was.  The command's stop is left
+// saying where the range ends now, and the paragraph told the range
+// changed once, at the end (its styles not processed meanwhile).
+Boolean
+TParagraphView::RecognizeRangeCommand(RefArg cmd)
+{
+	struct InkWordEntry
+	{
+		long	fStart;
+		long	fEnd;
+		Rect	fBounds;
+	};
+	RefVar style(NILREF);
+	long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
+	long stop = RINT(GetFrameSlotRef(cmd, RSSYMstop));
+	Boolean hilite = NOTNIL(GetFrameSlotRef(cmd, RSSYMdohilite)) && VisibleDeep();
+	RefVar config(GetFrameSlotRef(cmd, RSSYMrecconfig));
+	long firstStart = start;
+	long oldLength = stop - start;
+	InkWordEntry* entries = nil;
+	long count = 0;
+	{
+		RefVar textRef(Text());
+		TRichString rich(textRef);
+		const UniChar* text = rich.GrabPtr();
+		long cacheStart, cacheLength;
+		GetCachedRange(&cacheStart, &cacheLength);
+		long cacheLast = cacheStart + cacheLength - 1;
+		// (the ROM's box is one stack slot, so a word outside the cache
+		// keeps the left and right of the one before)
+		Rect bounds = { 0, 0, 0, 0 };
+		for (ULong i = start; i < (ULong) stop; i++)
+		{
+			style = GetStyleAtOffset(i, nil, nil);
+			if (text[i] == kInkWordChar && IsInkWord(style))
+			{
+				if ((long) i < cacheStart || (long) i > cacheLast)
+				{
+					bounds.top = -32768;
+					bounds.bottom = -32768;
+				}
+				else
+				{
+					Rect next;
+					OffsetToBounds(i, &bounds);
+					OffsetToBounds(i + 1, &next);
+					bounds.right = next.left;
+				}
+				InkWordEntry* more = (InkWordEntry*) realloc(entries, (count + 1) * sizeof(InkWordEntry));
+				if (more == nil)
+					break;
+				entries = more;
+				entries[count].fStart = i;
+				entries[count].fEnd = i + 1;
+				entries[count].fBounds = bounds;
+				count++;
+			}
+		}
+		rich.ReleasePtr();
+	}
+	Boolean setupDone = fSetupDone;
+	if (setupDone)
+		fSetupDone = false;
+	long moved = 0;
+	for (long k = 0; k < count; k++)
+	{
+		long wordStart = entries[k].fStart + moved;
+		long wordLength = entries[k].fEnd - entries[k].fStart;
+		if (hilite && entries[k].fBounds.top != -32768)
+			DrawCheckmark(entries[k].fBounds);
+		RefVar again(MakeCommand(aeRecognizeInk, this, fId));
+		SetFrameSlot(again, RSSYMstart, RefVar(MAKEINT(wordStart)));
+		SetFrameSlot(again, RSSYMstop, RefVar(MAKEINT(wordLength)));
+		SetFrameSlot(again, RSSYMdohilite, RefVar(NILREF));
+		SetFrameSlot(again, RSSYMrecconfig, config);
+		gApplication->DispatchCommand(again);
+		moved += RINT(GetFrameSlotRef(again, RSSYMstop)) - wordLength;
+	}
+	free(entries);
+	long newStop = stop + moved;
+	SetFrameSlot(cmd, RSSYMstop, RefVar(MAKEINT(newStop)));
+	if (setupDone)
+		fSetupDone = true;
+	RangeChanged(firstStart, oldLength, newStop - firstStart, RSSYMtext);
+	CommandSetResult(cmd, 1);
+	return true;
+}
+
+
+// ROM 0x001690b4 GetCachedRange__14TParagraphViewFPlT1
+void
+TParagraphView::GetCachedRange(long* start, long* length)
+{
+	long count = 0;
+	if (fLines == nil || fLineCount == 0)
+		*start = 0;
+	else
+	{
+		*start = fLines[0].fStart;
+		count = fLines[fLineCount - 1].fEnd - fLines[0].fStart;
+	}
+	*length = count;
 }
 
 

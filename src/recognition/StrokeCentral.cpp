@@ -47,6 +47,17 @@ StrokeCentral::~StrokeCentral()
 }
 
 
+// ROM 0x00144790 __ct__13StrokeCentralFv
+StrokeCentral*
+StrokeCentral::New(void)
+{
+	StrokeCentral* world = new StrokeCentral;
+	if (world != nil)
+		world->InitFields();
+	return world;
+}
+
+
 // ROM 0x00144ad8 Init__13StrokeCentralFv
 // The fields, the stroke queue and the tablet started; the tablet set
 // collecting.
@@ -343,6 +354,22 @@ StrokeCentral::IdleCompress(void)
 		if (CompCompare(&now.time, &fNextCompressTime.time) >= 0)
 			ExpireAll();
 	}
+}
+
+
+// ROM 0x00144df8 AddExpiredStroke__13StrokeCentralFP11TStrokeUnit
+// A stroke nobody claimed: held (one more user), grouped with the others
+// into the compress group, and the compress time set half a second on.
+// NOT YET RECONSTRUCTED: IGGroupAndCompressStrokes (0x000ea554, the CIC
+// library's word grouping), so the stroke is let go again and nothing is
+// grouped.
+void
+StrokeCentral::AddExpiredStroke(TStrokeUnit* unit)
+{
+	unit->Clone();
+	// IGGroupAndCompressStrokes(this, unit, gRecognitionLetterSpacing, false, &fCompressGroup) - NOT YET
+	unit->Dispose();
+	fNextCompressTime = TimeFromNow(500 * kMilliseconds);
 }
 
 

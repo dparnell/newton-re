@@ -1429,6 +1429,74 @@ than natives.  (`SpellSkip` 0x001f651c is done: a word the session is to
 stop complaining about goes into the session's own dictionary with the
 capitalisation it was written in, and goes when the session does.)
 
+## Deferred recognition (`views/Rerecognize.h`)
+
+Writing that is already somewhere - an ink word in a paragraph, an ink
+shape on a page, a stroke bundle or an ink word a script holds - can be
+read again, now, rather than as the pen writes it.  Everything goes
+through one controller call, `TController::RecognizeInArea` (0x0020a1d8):
+
+- the strokes are made into stroke units (`MakeStrokeUnit`) as if written
+  one after another in the last second - from just after the last lot
+  it read (`gLastWordEndTime`), or a second ago if that was longer ago -
+  and classified as the pen's are;
+- the controller's hit test is swapped for `SpecialGetAreasHit`, so every
+  piece is in the one area the caller built, and its expired-stroke
+  routine for `SpecialExpireStroke`; every type of the area that has no
+  handler is given `SpecialHandler`, which counts the winner's strokes
+  done and hands the unit to the caller's own handler with the caller's
+  argument;
+- with the controller flagged internal every pass runs whenever it is
+  idled, and it is idled until as many strokes are done (read, or
+  expired) as were given.
+
+The area is `MakeRerecognizeArea` (0x00035bc4): built from the
+configuration given, or `rcRerecognizeConfig`, with the recognition
+manager's unit handler cleared first so that its types come out with
+none - which is what lets RecognizeInArea give them `SpecialHandler`.
+A view with no configuration of its own is read with
+`BuildRecConfigForDeferred` (0x00034cec): its own `recConfig` (or the one
+its flags give it) asking for text and only text.
+
+The three callers and their handlers:
+
+| caller | handler | what a word read becomes |
+|---|---|---|
+| a paragraph's command 0x19 (`RerecognizeWord` over the paragraph) | `ParagraphViewWordHandler` | put in place of the ink word through the insert-items path (`DoInsertItems`); the command's `stop` answers the length that went in.  A word nobody could read goes back as its word info where the paragraph keeps ink words, and as nothing where it does not |
+| an ink shape's command 0x19 (`RerecognizeWord` over the polygon view) | `PolygonWordHandler` | a word on the page (aeWord17) and the shape removed (aeRemoveData) |
+| `Recognize(strokes, config, together)` (`RecognizeStrokes`) | `BulkUnitHandler` | a word info added to a fresh correct info frame, which is the answer; a stroke nobody read goes to a stroke world of its own (`gBulkStrokes`) to be grouped into ink |
+
+A paragraph's command 0x1a (`RecognizePara`) finds every ink word in the
+range first - with the box it is drawn in when the line cache covers it,
+for the arrow `DrawCheckmark` draws over what is being read - then sends
+each a command 0x19 of its own, moving the later offsets by how much
+longer each replacement was; the command's `stop` answers where the range
+ends now, and the paragraph is told the range changed once, at the end.
+A double tap on an ink word inside the selection sends 0x1a for the
+selection; a double tap on an ink word the corrector has no readings for
+sends 0x19 for that word.  `RecognizeInkWord` wraps one ink word in an
+ink shape as wide and tall as the word, expands it to a stroke bundle
+and reads it (answering the first word info's words - or, a quirk kept,
+the empty info array when nothing came back as a word);
+`RecognizeTextInStyles` replaces every ink word run of a text-and-styles
+frame by its first reading, in the font the runs before it last named.
+
+`src/host/demo/recognize.ns` writes "ton", then reads the same strokes
+through all four (ctest `host.NewtonRecognize`): `Recognize` and
+`RecognizeInkWord` read "ton", `RecognizeTextInStyles` turns "an" and the
+ink word into "an ton", and an ink word put after "ton" in the paragraph
+is read by `RecognizePara` into "ton ton".
+
+NOT YET RECONSTRUCTED: the grouping of strokes nobody read into ink
+(`StrokeCentral::AddExpiredStroke` calls the CIC library's
+`IGGroupAndCompressStrokes`, 0x000ea554), so `Recognize` answers nothing
+for strokes that are not words; the polygon view's other commands
+(`TPolygonView::RealDoCommand` answers 0x19 only); the paragraph's
+`ProcessStyles` and `FixupDropData`, the other callers of
+`RecognizePara`/`RecognizeTextInStyles`.  A ROM bug kept (latent):
+`RecognizeTextInStyles` reads the text through a pointer taken before the
+ink words are read, which allocates.
+
 ## The corrector (`recognition/CorrectInfo.h`, `views/ParagraphView.h`)
 
 A second tap on a word asks for it to be corrected.  The command travels
@@ -2610,6 +2678,9 @@ function above it; `WordRecogAnalyzeWord`, `WordRecogNetEvaluate` and
 plumbing into the patternizers, so they want reading with level 6);
 and the segment side (`WRSeg*`).
 
+(Since done: the five deferred-recognition natives - `Recognize`,
+`RecognizePara`, `RecognizePoly`, `RecognizeInkWord` and
+`RecognizeTextInStyles` - answer, below under "Deferred recognition".)
 Until then the eleven natives that ask for handwriting — `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,
 `RecognizeTextInStyles`, `DoCursiveTraining`,

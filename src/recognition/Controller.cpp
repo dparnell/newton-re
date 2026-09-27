@@ -14,6 +14,7 @@
 #include "StrokeQueue.h"
 
 TController*	gController = nil;					// ROM 0x0c10187c gController
+ULong			gLastWordEndTime = 0;				// ROM 0x0c104c88 gLastWordEndTime
 
 
 // ROM 0x0020c4b4 ClickInProgress__FP5TUnit
@@ -1070,6 +1071,106 @@ void
 TController::SetExpireStrokeRoutine(void (*routine)(TUnit*))
 {
 	fExpireStroke = routine;
+}
+
+
+// ROM 0x0020a0ac SpecialGetAreasHit__FP5TUnitP6TArray
+// Inside RecognizeInArea every piece is in the one area it was given.
+ULong
+SpecialGetAreasHit(TUnit* /*unit*/, TArray* areas)
+{
+	if (areas->fCount == 0)
+		((TAreaList*) areas)->AddArea(gController->fArea);
+	return 0;
+}
+
+
+// ROM 0x0020a0e4 SpecialHandler__FP6TArray
+// The winners of RecognizeInArea's area: each one's strokes counted done,
+// the unit handed to the caller's handler and then marked claimed.  (The
+// ROM keeps an error flag it never sets, so its SignalMemoryError call
+// is never made.)
+long
+SpecialHandler(TArray* units)
+{
+	for (ULong i = 0; i < (ULong) units->fCount; i++)
+	{
+		TUnit* unit = *(TUnit**) units->GetEntry(i);
+		gController->fAreaDone += CountTStrokes(unit);
+		gController->fAreaHandler(unit, gController->fAreaArg);
+		gController->MarkUnits(unit, kClaimedUnit);
+	}
+	return 0;
+}
+
+
+// ROM 0x0020a188 SpecialExpireStroke__FP5TUnit
+// A stroke nobody in the area wanted: counted done, handed to the
+// caller's handler all the same, and marked claimed.
+void
+SpecialExpireStroke(TUnit* unit)
+{
+	gController->fAreaDone++;
+	gController->fAreaHandler(unit, gController->fAreaArg);
+	gController->MarkUnits(unit, kClaimedUnit);
+}
+
+
+// ROM 0x0020a1d8 RecognizeInArea__11TControllerFP6TArrayP8TRecAreaPFP5TUnitUl_UlUl
+// The strokes are given times as if written one after another in the
+// last second (from just after the last lot this read, or a second ago
+// if that was longer ago or is somehow in the future), each a stroke
+// unit classified as the pen's are; with the controller flagged internal
+// every pass runs whenever it is idled, and it is idled until as many
+// strokes have been handled or expired as were given.
+void
+TController::RecognizeInArea(TArray* strokes, TRecArea* area, ULong (*handler)(TUnit*, ULong), ULong arg)
+{
+	fInArea = true;
+	fAreaCount = strokes->fCount;
+	fAreaArg = arg;
+	fAreaDone = 0;
+	fAreaHandler = handler;
+	fSavedHitTest = fHitTest;
+	fHitTest = SpecialGetAreasHit;
+	fSavedExpire = fExpireStroke;
+	fExpireStroke = SpecialExpireStroke;
+	for (ULong i = 0; i < (ULong) area->fTypes->fCount; i++)
+	{
+		Assoc* assoc = area->fTypes->GetAssoc(i);
+		if (assoc->fHandler == nil)
+			assoc->fHandler = SpecialHandler;
+	}
+	fArea = area;
+
+	ULong start = gLastWordEndTime + 2;
+	ULong now = GetTicks();
+	ULong secondAgo = now - 60;
+	if (secondAgo > start || start > now)
+		start = secondAgo;
+	ULong count = strokes->fCount;
+	// DEVIATION: the ROM divides even when there are no strokes, and its
+	// __rt_udiv traps on a divisor of nought; the host answers nought
+	ULong step = (count != 0) ? (now - start) / count : 0;
+	for (ULong i = 0; i < (ULong) strokes->fCount; i++)
+	{
+		TStroke* stroke = *(TStroke**) strokes->GetEntry(i);
+		TUnit* unit = MakeStrokeUnit(stroke, nil, 0);
+		unit->fStartTime = step * i + start;
+		unit->fDuration = (UShort) (step - 2);		// (more than 60 strokes: step 0, and a duration of 0xfffe)
+		NewClassification(unit);
+	}
+	gLastWordEndTime = now;
+
+	SetFlags(kControllerInternal);
+	do
+		Idle();
+	while (fAreaDone < fAreaCount);
+	UnsetFlags(kControllerInternal);
+	fHitTest = fSavedHitTest;
+	fExpireStroke = fSavedExpire;
+	fArea = nil;
+	fInArea = false;
 }
 
 

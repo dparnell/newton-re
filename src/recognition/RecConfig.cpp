@@ -218,6 +218,30 @@ InkTextEnabled(TView* view, ULong flags, RefArg config)
 }
 
 
+// ROM 0x00034cec BuildRecConfigForDeferred__FP5TViewUl
+Ref
+BuildRecConfigForDeferred(TView* view, ULong flags)
+{
+	RefVar config(NILREF);
+	if (flags != vAnythingAllowed)
+	{
+		if (view != nil)
+			config = GetProtoVariable(RefVar(view->fContext), RSSYMrecconfig, nil);
+		if (ISNIL(config) || InkTextEnabled(view, flags, config))
+			config = BuildRCView(view, flags);
+		else
+			config = PrepRecConfig(view, config);
+		SetFrameSlot(config, RSSYMinputmask, RefVar(MAKEINT(flags & 0xfffef1ff)));
+		SetFrameSlot(config, RSSYMallowtextrecognition, RefVar(TRUEREF));
+		SetFrameSlot(config, RSSYMdotextrecognition, RefVar(TRUEREF));
+		SetFrameSlot(config, RSSYMdoinkwordrecognition, RefVar(NILREF));
+		SetFrameSlot(config, RSSYMspeedcursiveoption, RefVar(MAKEINT(2)));
+		SetFrameSlot(config, RSSYMletterspacecursiveoption, RefVar(NILREF));
+	}
+	return config;
+}
+
+
 // ROM 0x00034eac BuildInkOrTextConfig__FRC6RefVarP5TViewUl
 // A configuration the view carries itself.  When it is an ink word or
 // plain text configuration that allows text recognition, the view's own

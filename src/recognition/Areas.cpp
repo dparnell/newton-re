@@ -11,6 +11,7 @@
 #include "Controller.h"
 #include "Recognizer.h"
 #include "RecConfig.h"
+#include "ROMConstants.h"
 #include "UnitPublic.h"
 #include "RootView.h"
 #include "OSErrors.h"
@@ -537,6 +538,24 @@ TRecArea*
 MakeArea(TController* controller, TView* view, ULong flags)
 {
 	return MakeArea(controller, view, flags, RefVar(NILREF));
+}
+
+
+// ROM 0x00035bc4 MakeRerecognizeArea__FP11TControllerRC6RefVar
+TRecArea*
+MakeRerecognizeArea(TController* controller, RefArg config)
+{
+	gRecognition.fUnitHandler = nil;
+	RefVar theConfig(ISNIL(config) ? RefVar(Rrcrerecognizeconfig) : RefVar(config));
+	TRecArea* area = TRecArea::Make(0, 0);
+	if (area != nil)
+	{
+		theConfig = BuildRCProto(nil, theConfig);
+		SetUpArea(area, theConfig);
+		controller->BuildGTypes(area);
+		ConfigureArea(area, theConfig);
+	}
+	return area;
 }
 
 

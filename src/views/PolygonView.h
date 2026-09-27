@@ -67,6 +67,7 @@ public:
 	virtual long	ClassID(void) const;								// ROM 0x0018de14 ClassID__12TPolygonViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x0018e700 DerivedFrom__12TPolygonViewCFl
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0018c684 RealDraw__12TPolygonViewFR5TRect
+	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0018ffbc RealDoCommand__12TPolygonViewFRC6RefVar (partial: see the definition)
 
 	// The shape drawn.  `from` and `to`, when given, stand in for the
 	// first and the last point - which is how a shape being dragged by

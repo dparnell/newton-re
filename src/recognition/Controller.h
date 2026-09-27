@@ -143,6 +143,14 @@ public:
 	void				BuildGTypes(TRecArea* area);			// ROM 0x0021c7cc BuildGTypes__11TControllerFP8TRecArea - the domains an area must run for the types its recognisers take
 	void				SetHitTestRoutine(ULong (*routine)(TUnit*, TArray*));	// ROM 0x0021c7c4 SetHitTestRoutine__11TControllerFPFP5TUnitP6TArray_Ul
 
+	// Strokes recognised there and then, in an area of the caller's own
+	// rather than the ones the pen is over - which is how writing already
+	// on a page is read again.  The strokes become stroke units spread
+	// over the last second, every area type with no handler of its own
+	// answers through `handler` (called with each winning unit and `arg`),
+	// and the controller is idled until every stroke is accounted for.
+	void				RecognizeInArea(TArray* strokes, TRecArea* area, ULong (*handler)(TUnit*, ULong), ULong arg);	// ROM 0x0020a1d8 RecognizeInArea__11TControllerFP6TArrayP8TRecAreaPFP5TUnitUl_UlUl
+
 	TUnitList*			fPieces;		// +0x08  what the domains group: the clicks and the units handed on
 	TUnitList*			fUnits;			// +0x0c  what the domains have made and not yet classified
 	TArray*				fDomains;		// +0x10
@@ -171,6 +179,14 @@ Boolean	ClickInProgress(TUnit* unit);					// ROM 0x0020c4b4 ClickInProgress__FP5
 Boolean	UnitsHitSameArea(TUnit* a, TUnit* b);			// ROM 0x0021c68c UnitsHitSameArea__FP5TUnitT1
 void	TimeOutSubs(TSIUnit* unit);						// ROM 0x0020b58c TimeOutSubs__FP7TSIUnit
 void	HandleAreaSwitched(TDomain* domain, Handle params);	// ROM 0x0020ac84 HandleAreaSwitched__FP7TDomainPPc
+
+// What RecognizeInArea puts in place while it runs: every unit is in its
+// area, the winners go to its handler, and a stroke nobody wanted is
+// handed to it as well (and counted done).
+ULong	SpecialGetAreasHit(TUnit* unit, TArray* areas);		// ROM 0x0020a0ac SpecialGetAreasHit__FP5TUnitP6TArray
+long	SpecialHandler(TArray* units);						// ROM 0x0020a0e4 SpecialHandler__FP6TArray
+void	SpecialExpireStroke(TUnit* unit);					// ROM 0x0020a188 SpecialExpireStroke__FP5TUnit
+extern ULong	gLastWordEndTime;							// ROM 0x0c104c88 gLastWordEndTime - when the last strokes RecognizeInArea read were taken to end
 
 void	SetDomainDelays(TController* controller, ULong delay);	// ROM 0x0020c4f4 SetDomainDelays__FP11TControllerUl - every domain that waits made to wait this long
 

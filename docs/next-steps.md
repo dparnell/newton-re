@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-27
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 101/101
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 102/102
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10535 citations, 0 bad;
-  5719 of 16671 functions (34.31%).
+- `analysis/coverage.py build/MP2x00US --check`: 10565 citations, 0 bad;
+  5742 of 16671 functions (34.44%).
 - `analysis/natives.py --unbound`: about 390 of the ROM's 1326 natives
   are unanswered (table below).
 
@@ -25,6 +25,10 @@ bugs found along the way - is `docs/work-log.md`.
   (world map, home and away cities, clock icons) open and draw;
   `src/host/demo/open-apps.ns` opens every built-in application a user
   reaches and reports what fails (only the Sound Recorder, below).
+- **Writing already there is read again**: `Recognize`,
+  `RecognizeInkWord`, `RecognizeTextInStyles`, `RecognizePara`/
+  `RecognizePoly` and the double tap on an ink word
+  (`src/host/demo/recognize.ns`).
 - **Handwriting is read** by the ROM's own engine (Rosetta):
   `build/host/host/newton --rom build/MP2x00US/rom.bin --display
   320x480 --headless 50 --script src/host/demo/write.ns` writes "ton" and
@@ -57,13 +61,14 @@ bugs found along the way - is `docs/work-log.md`.
 
 The owner asked (2026-09-27) for the recognition system to be put to bed,
 then for the testing system.  What is left of recognition is its natives
-(`natives.py --unbound`, the recognition area, 28), in the order
+(`natives.py --unbound`, the recognition area, 23 now), in the order
 planned:
 
-1. **Deferred recognition**: `Recognize`, `RecognizePara`,
-   `RecognizePoly`, `RecognizeInkWord`, `RecognizeTextInStyles` - ink
-   already on a page read later, over the word domain and Rosetta that
-   are done.
+1. ~~**Deferred recognition**~~ - DONE 2026-09-27 (`views/Rerecognize.h`,
+   `docs/recognition/README.md`'s "Deferred recognition", ctest
+   `host.NewtonRecognize`).  Left of it: the grouping of unread strokes
+   into ink (`IGGroupAndCompressStrokes`, the CIC library), which is
+   also what `HandleExpiredStroke` waits on.
 2. **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
    `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
 3. **Shape verbs**: `MakeInk`, `FindShape`, `GetShapeInfo`, `MungeShape`,
@@ -161,7 +166,7 @@ inside an area).  At 2026-09-27:
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
 | testing | 38 | the test agent and the debug hooks |
 | packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
-| recognition | 28 | the rest of the recognition system |
+| recognition | 23 | the rest of the recognition system |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |
 | views | 17 | |
 | sound | 9 | the sound server |

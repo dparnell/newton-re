@@ -78,6 +78,12 @@ Ref		BuildInkOrTextConfig(RefArg config, TView* view, ULong flags);	// ROM 0x000
 // allow everything, whose configuration asks for ink word recognition.
 Boolean	InkTextEnabled(TView* view, ULong flags, RefArg config);	// ROM 0x00034c94 InkTextEnabled__FP5TViewUlRC6RefVar
 
+// The configuration writing already on a view is read again with: the
+// view's own (or the one its flags give it), asking for text and nothing
+// but text - ink word recognition off, the cursive options at their
+// defaults.  A view that allows everything gets none (nil).
+Ref		BuildRecConfigForDeferred(TView* view, ULong flags);	// ROM 0x00034cec BuildRecConfigForDeferred__FP5TViewUl
+
 // The recognisers' input mask: the bits of the handwriting settings the
 // configuration turns on, added to `mask`.  `force` asks for the text and
 // shape settings to be read whether or not the configuration says they

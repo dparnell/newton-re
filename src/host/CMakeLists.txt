@@ -38,6 +38,13 @@ target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_R
 add_test(NAME host.Newton COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 2 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
 
+# deferred recognition (views/Rerecognize.h): "ton" written, and the
+# same strokes read again through Recognize, RecognizeInkWord,
+# RecognizeTextInStyles and RecognizePara (needs the ROM image)
+add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 44 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recognize.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "Recognize read ton.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7")
+
 # a package loaded from a file (newton --package): the ROM's Formulas
 # extracted as a loadable package under another name, so the package
 # manager does not refuse it as the one it already has, and installed

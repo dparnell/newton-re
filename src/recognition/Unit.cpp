@@ -1308,6 +1308,15 @@ GetTStroke(TUnit* unit)
 }
 
 
+// ROM 0x00145e08 CountTStrokes__FP5TUnit
+// In the ROM one instruction too: a jump through the unit's CountStrokes.
+long
+CountTStrokes(TUnit* unit)
+{
+	return unit->CountStrokes();
+}
+
+
 /*------------------------------------------------------------------------------
 	T S t r o k e U n i t
 ------------------------------------------------------------------------------*/

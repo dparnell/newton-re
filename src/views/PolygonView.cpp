@@ -8,6 +8,10 @@
 */
 
 #include "PolygonView.h"
+#include "Rerecognize.h"
+#include "Controller.h"
+#include "Areas.h"
+#include "Commands.h"
 #include "ViewFlags.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -309,4 +313,46 @@ AlignRectToGrid(Rect* rect, Point& spacing)
 	rect->top = (short) AlignToGrid(rect->top, spacing.v);
 	rect->right = (short) AlignToGrid(rect->right, spacing.h);
 	rect->bottom = (short) AlignToGrid(rect->bottom, spacing.v);
+}
+
+
+// ROM 0x0018ffbc RealDoCommand__12TPolygonViewFRC6RefVar
+// Command 0x19 (Rerecognize.h): a shape with ink reads it again - brought
+// to the front, the arrow drawn over it when asked, its recognition flag
+// 0x1000 cleared, and its strokes read in an area made of the command's
+// configuration, with the controller's state put aside meanwhile; a
+// shape with no ink leaves the command untaken.  NOT YET RECONSTRUCTED:
+// the shape's other commands (the points moved and scaled - 0x43, 0x44 -,
+// the double tap's reading of its ink - 0x32 -, the pen size of the
+// hilited shapes - 0x4b); they go to TView's as before.
+Boolean
+TPolygonView::RealDoCommand(RefArg cmd)
+{
+	long id = CommandID(cmd);
+	if (id == aeRecognizeInk)
+	{
+		if (ISNIL(GetProto(RSSYMink)))
+			return false;
+		UChar failed = false;
+		ControllerState* state = SaveRecognitionState(gController, &failed);
+		if (!failed)
+		{
+			BringToFront();
+			if (NOTNIL(GetFrameSlotRef(cmd, RSSYMdohilite)))
+			{
+				Rect bounds = viewBounds;
+				DrawCheckmark(bounds);
+			}
+			ClearFlags(0x1000);
+			RefVar config(GetFrameSlotRef(cmd, RSSYMrecconfig));
+			TRecArea* area = MakeRerecognizeArea(gController, config);
+			RerecognizeWord(this, area);
+			if (area != nil)
+				area->Dispose();
+		}
+		RestoreRecognitionState(gController, state);
+		CommandSetResult(cmd, 1);
+		return true;
+	}
+	return TView::RealDoCommand(cmd);
 }

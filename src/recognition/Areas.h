@@ -133,6 +133,12 @@ public:
 // GetAreasHit); with nothing in it there is nothing to purge either.
 extern TArray*	gAreaCache;								// ROM 0x0c1008a0 gAreaCache
 
+// An area of its own for reading again writing that is already on a view,
+// built out of the configuration (rcRerecognizeConfig when there is none)
+// with no unit handler, so that TController::RecognizeInArea can give its
+// types one.
+TRecArea*	MakeRerecognizeArea(TController* controller, RefArg config);	// ROM 0x00035bc4 MakeRerecognizeArea__FP11TControllerRC6RefVar
+
 // One line of the area cache: an area, the input mask it was built for,
 // and when it was last used (it is thrown away ten seconds after that).
 struct AreaCacheEntry

@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-27: deferred recognition
+
+- `views/Rerecognize.h`: writing already on the machine read again -
+  `Recognize` (`RecognizeStrokes`, `BulkUnitHandler`,
+  `HandleBulkStrokes`, `gBulkStrokes`), `RecognizeInkWord`,
+  `RecognizeTextInStyles`, `RecognizePara`/`RecognizePoly` and their
+  natives, the two `RerecognizeWord`s with `ParagraphViewWordHandler`/
+  `PolygonWordHandler`, `DrawCheckmark`.  Under them the controller's
+  `RecognizeInArea` with `SpecialGetAreasHit`/`SpecialHandler`/
+  `SpecialExpireStroke` and `gLastWordEndTime`, `MakeRerecognizeArea`,
+  `BuildRecConfigForDeferred`, `StrokeCentral::New` (the ROM's
+  constructor) and `AddExpiredStroke` (its CIC grouping NOT YET),
+  `CountTStrokes(TUnit*)`.  The paragraph answers commands 0x19 and 0x1a
+  (`RecognizeInkCommand`, `RecognizeRangeCommand`, `GetCachedRange`) and
+  its double tap now reads an ink word again (the two branches that
+  were NOT YET); `TPolygonView::RealDoCommand` answers 0x19.
+- `src/host/demo/recognize.ns`, ctest `host.NewtonRecognize`: "ton"
+  written, and the same strokes read by all four; "ton ton" on the page.
+- Found on the way: a NewtonScript `Length` of a string is its bytes
+  (terminator included), so a script's offsets want `StrLen`; a view's
+  `viewClass` carries flags above the class number.
+
 ## 2026-09-27: packages loaded from the host
 
 - `newton --package file.pkg` (repeatable) and a .pkg dropped onto the

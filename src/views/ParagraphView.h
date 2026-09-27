@@ -355,6 +355,14 @@ public:
 	Boolean		InkWordCommand(RefArg cmd);				// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x134c (aeInkWord)
 	virtual long	HandleInkWord(RefArg cmd, Boolean reallyDoIt);	// ROM 0x001722a4 HandleInkWord__14TParagraphViewFRC6RefVarUc
 	Boolean		WordCommand(RefArg cmd);				// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xbc (aeWord)
+	// Deferred recognition (Rerecognize.h): the ink word at the command's
+	// start read again and replaced by what it says, and every ink word
+	// of a range read again the same way.
+	Boolean		RecognizeInkCommand(RefArg cmd);		// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0xc04 (command 0x19)
+	Boolean		RecognizeRangeCommand(RefArg cmd);		// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x358 (command 0x1a)
+	// The characters the line cache covers: the first line's start and
+	// the length to the last line's end (nought and nought with no lines).
+	void		GetCachedRange(long* start, long* length);	// ROM 0x001690b4 GetCachedRange__14TParagraphViewFPlT1
 	Boolean		HandleInsertItems(RefArg spec);			// ROM 0x001700a0 HandleInsertItems__14TParagraphViewFRC6RefVar
 
 	void		InsertStyledText(ULong offset, const UniChar* text, ULong length, RefArg styles, RefArg correctInfo, ULong styleOffset, ULong removeLength, Boolean typed);	// ROM 0x00178a3c InsertStyledText__14TParagraphViewFUlPCUsT1RC6RefVarT4N21Uc
