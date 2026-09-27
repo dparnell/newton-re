@@ -58,6 +58,15 @@ int main()
 	EXPECT(CompDiv(&huge, 1, nil) == 0x7fffffff);
 	EXPECT(CompDiv(&huge, -1, &remainder) == (long) (SLong) -0x7fffffff - 1 && remainder == (long) (SLong) -0x7fffffff - 1);
 
+	// the low word is 32 bits even where a host's ULong is wider: bits above
+	// it in lo are not counted again (a clock past 2^32 ticks read double)
+	if (sizeof(ULong) > 4)
+	{
+		Int64 wide = Make(1, 0);
+		wide.lo = (ULong) 0x100000010ull;			// the high word's bit repeated in lo
+		EXPECT(CompDiv(&wide, 16, nil) == 0x10000001);
+	}
+
 	// shift: right rounds half up, left is plain
 	Int64 s = Make(0, 5);
 	CompShift(&s, 1);							// 2.5 -> 3

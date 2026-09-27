@@ -24,7 +24,7 @@ typedef uint32_t	Word;
 static inline int64_t
 Value(const Int64* x)
 {
-	return (int64_t) (((uint64_t) (uint32_t) x->hi << 32) + (uint64_t) x->lo);
+	return (int64_t) (((uint64_t) (uint32_t) x->hi << 32) + (uint64_t) (uint32_t) x->lo);	// (the words are 32 bits, whatever ULong is on the host)
 }
 
 static inline void

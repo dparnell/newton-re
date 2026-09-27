@@ -29,7 +29,10 @@ HostSteadyClock()
 {
 	auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - gHostClockStart).count();
 	unsigned long long ticks = (unsigned long long) ns * 4608 / 1250000;
-	Int64 t = { (SLong) (ticks >> 32), (ULong) ticks };
+	// (lo is the low 32 bits alone: ULong is wider than that on a 64-bit
+	// host, and a lo carrying the high part counted it twice once the
+	// clock passed 2^32 ticks - 19.4 minutes - which jumped the time)
+	Int64 t = { (SLong) (ticks >> 32), (ULong) (uint32_t) ticks };
 	return t;
 }
 

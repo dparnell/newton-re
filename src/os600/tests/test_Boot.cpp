@@ -7,6 +7,8 @@
 // by hand: every object comes from the object manager monitor.
 
 #include "Boot.h"
+#include "CompMath.h"
+#include "hal/host/Host.h"
 #include "KernelGlobals.h"
 #include "ObjectTable.h"
 #include "Task.h"
@@ -312,6 +314,8 @@ TTestWorld::MainDestructor()
 
 
 // what the 'main' task (UserMain) would be: the NewtonScript world
+static TTime wrapBefore, wrapAfter, wrapLater;
+
 static void MainTaskScenario()
 {
 	mainTaskId = gCurrentTaskId;
@@ -491,6 +495,20 @@ static void KernelServicesScenario()
 		timeConverted = (later - now).ConvertTo(kMilliseconds);
 	}
 
+	// --- the clock past 2^32 ticks (19.4 minutes of 3.6864 MHz): read from
+	// a task it carries into the high word and keeps going
+	{
+		Int64 clock;
+		GetClock(&clock);
+		Int64 nearWrap = { clock.hi, 0xFFFFF000 };
+		HostSetClock(&nearWrap);
+		wrapBefore = GetGlobalTime();
+		HostAdvanceClock(0x2000);
+		wrapAfter = GetGlobalTime();
+		HostAdvanceClock(0x2000);
+		wrapLater = GetGlobalTime();
+	}
+
 	// --- an app world: found by name, sent an RPC event, a system event, and told to stop
 	{
 		TTestWorld* world = new TTestWorld;
@@ -589,6 +607,8 @@ int main()
 	EXPECT(timedReceiveErr == noErr && timedReceiveGot);
 	EXPECT(timerEnd.lo - timerStart.lo >= 30 * kMilliseconds);
 	EXPECT(timeUnitsMs == kMilliseconds && timeConverted == 3);
+	EXPECT(wrapAfter.time.hi == wrapBefore.time.hi + 1 && wrapAfter.time.lo == 0x1000 && wrapLater.time.lo == 0x3000);
+	EXPECT(wrapAfter.ConvertTo(kMacTicks) == (0x100001000ull + kMacTicks / 2) / kMacTicks);
 	EXPECT(appWorldInit == noErr && appWorldTaskId != 0 && appWorldLookup == noErr && appWorldRegisteredPort != 0);
 	EXPECT(appWorldRPC == noErr && strcmp(appWorldSeen, "event") == 0 && strcmp(appWorldReply, "EVENT") == 0 && appWorldReplySize == sizeof(TTestEvent));
 	EXPECT(appWorldNoHandler == eNoHandler);

@@ -102,11 +102,13 @@ static void
 HeadlessTimer(void)
 {
 	// (a TTimeout is 32 bits of 3.6864 MHz ticks, which is under ten
-	// minutes: the end is worked out as a 64-bit time and slept till)
-	TTime end = GetGlobalTime();
-	TTime span(gHeadlessSeconds, kSeconds);
-	CompAdd(&span.time, &end.time);
-	SleepTill(&end);
+	// minutes: a long run is slept a minute at a time)
+	for (ULong left = gHeadlessSeconds; left > 0; )
+	{
+		ULong now = left > 60 ? 60 : left;
+		Sleep(now * kSeconds);
+		left -= now;
+	}
 	HostStopTasks();
 }
 
