@@ -846,7 +846,7 @@ TestAngles(void)
 
 
 // AnalyzeLowData's steps (LowLevel.cpp) run by hand as far as `upTo`:
-// 1 Circle, 2 angl, 3 FindSideExtr, 4 Cross, 5 Clear_specl, 6 lk_begin.  ==> false when a step
+// 1 Circle, 2 angl, 3 FindSideExtr, 4 Cross, 5 Clear_specl, 6 lk_begin, 7 lk_cross.  ==> false when a step
 // failed.
 static bool
 AnalyzeSteps(low_type* low, long upTo)
@@ -879,6 +879,8 @@ AnalyzeSteps(low_type* low, long upTo)
 	if (upTo >= 5 && Clear_specl(low->fSpecl, low->fLenSpecl) != 0)
 		return false;
 	if (upTo >= 6 && lk_begin(low) != 0)
+		return false;
+	if (upTo >= 7 && lk_cross(low) != 0)
 		return false;
 	return true;
 }
@@ -1389,6 +1391,56 @@ TestRestore(void)
 }
 
 
+// lk_cross (LowLkCross.cpp): the "uou" o's crossing pair is decided -
+// no crossing is left uncoded, and the pair is made one element spanning
+// both passes.  And the pieces: a point inside, outside and on the
+// border of a square; an arc's link by its bend.
+static void
+TestLkCross(void)
+{
+	// (the ray the crossings are counted along runs from x = 1)
+	short sx[4] = { 2, 12, 12, 2 };
+	short sy[4] = { 0, 0, 10, 10 };
+	short where = -1;
+	EXPECT(IsPointInsideArea(sx, sy, 4, 7, 5, &where) == 0 && where == 1);
+	EXPECT(IsPointInsideArea(sx, sy, 4, 15, 5, &where) == 0 && where == 2);
+	EXPECT(IsPointInsideArea(sx, sy, 4, 12, 5, &where) == 0 && where == 0);
+	EXPECT(IsPointInsideArea(sx, sy, 2, 5, 5, &where) == 1);
+
+	Uou();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 6));
+	long before = 0;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+		if (p->mark == 6)
+			before++;
+	EXPECT(lk_cross(low) == 0);
+	long crossings = 0, uncoded = 0;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+	{
+		fprintf(stderr, "lk_cross: mark %#x code %#x attr %#x other %#x points %d..%d (%d, %d)\n",
+				p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, p->ipoint0, p->ipoint1);
+		if (p->mark == 6)
+		{
+			crossings++;
+			if (p->code == 0)
+				uncoded++;
+		}
+	}
+	fprintf(stderr, "lk_cross: %ld crossing elements before, %ld after\n", before, crossings);
+	EXPECT(uncoded == 0);
+	EXPECT(crossings < before);
+	DestroySDS(low);
+}
+
+
 int
 main()
 {
@@ -1415,6 +1467,7 @@ main()
 	TestIU();
 	TestExchange();
 	TestRestore();
+	TestLkCross();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

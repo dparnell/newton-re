@@ -434,6 +434,56 @@ long	lk_begin(low_type* low);									// ROM 0x002f8d68 lk_begin__FP8low_type - 
 // The i/u bottoms (LowAdjust.cpp).
 void	Adjust_I_U(low_type* low);									// ROM 0x00303038 Adjust_I_U__FP8low_type - a narrow bottom between two tops recoded round (8) or sharp (7)
 
+// lk_cross: what each crossing is (LowLkCross.cpp).  CrossInfoType is
+// what analize_circles knows of a loop (ROM 0x3c bytes; it holds
+// pointers, so it is cleared by its host size).
+struct CrossInfoType
+{
+	SPEC_TYPE*		elem;			// +00  the crossing's first element
+	low_type*		low;			// +04
+	SPEC_TYPE*		lower;			// +08  the last lower extremum inside the loop
+	long			cosine;			// +0c  between the two passes (hundredths)
+	_RECT			box;			// +10  the loop's box (count_cross_box)
+	short			dx;				// +18
+	short			dy;				// +1a
+	long			maxDx;			// +1c  the loop's widest (GetMaxDxInGamma)
+	long			midX;			// +20  the middle of the two passes
+	long			midY;			// +24
+	long			loop;			// +28  the two passes' length against their span, percent
+	long			boxMidX;		// +2c
+	long			boxMidY;		// +30
+	long			relX;			// +34  the middle across the box, percent
+	long			relY;			// +38  and down it
+};
+void	count_cross_box(SPEC_TYPE* e, short* x, short* y, _RECT* box, short* dx, short* dy);	// ROM 0x002ca310 count_cross_box__FP9SPEC_TYPEPsT2P5_RECTN22
+void	FillCrossInfo(low_type* low, SPEC_TYPE* e, CrossInfoType* ci);	// ROM 0x002cda64 FillCrossInfo__FP8low_typeP9SPEC_TYPEP13CrossInfoType
+long	CheckSmallGamma(CrossInfoType* ci);							// ROM 0x002ca3b0 CheckSmallGamma__FP13CrossInfoType
+long	Isgammathin(CrossInfoType* ci, SPEC_TYPE* ext);				// ROM 0x002ca4d4 Isgammathin__FP13CrossInfoTypeP9SPEC_TYPE
+long	GetMaxDxInGamma(long a, long b, long c, short* x, short* y, UByte kind, long* left, long* right);	// ROM 0x002cd63c GetMaxDxInGamma__FiN21PsT4UcPiT7
+long	IsEndOfStrokeInsideCross(CrossInfoType* ci);					// ROM 0x002cd9a4 IsEndOfStrokeInsideCross__FP13CrossInfoType
+void	Decision_GU_or_O_(CrossInfoType* ci);						// ROM 0x002cd860 Decision_GU_or_O___FP13CrossInfoType
+SPEC_TYPE*	SkipAnglesAfter(SPEC_TYPE* e);							// ROM 0x00305b0c SkipAnglesAfter__FP9SPEC_TYPE
+SPEC_TYPE*	SkipAnglesBefore(SPEC_TYPE* e);							// ROM 0x00305b48 SkipAnglesBefore__FP9SPEC_TYPE
+long	iXYweighted_max_right(short* x, short* y, long i, long lim, long wx, long wy);	// ROM 0x00307154 iXYweighted_max_right__FPsT1iN33
+long	cos_normalslope(long i, long j, long slope, short* x, short* y);	// ROM 0x00307c74 cos_normalslope__FiN21PsT4
+long	IsRightGulfLikeIn3(short* x, short* y, long i, long j, long* at);	// ROM 0x00308298 IsRightGulfLikeIn3__FPsT1iT3Pi
+long	IsPointOnBorder(short* xs, short* ys, long i, long j, short px, short py, ULong* cross);	// ROM 0x003096fc IsPointOnBorder__FPsT1iT3sT5PUi
+long	IsPointInsideArea(short* xs, short* ys, long n, short px, short py, short* where);	// ROM 0x003092cc IsPointInsideArea__FPsT1isT4T1 - *where 0 on the border, 1 inside, 2 outside
+long	IsShapeDUR(SPEC_TYPE* p, SPEC_TYPE* q, SPEC_TYPE* r, SPEC_TYPE* stick, low_type* low);	// ROM 0x002cbbe0 IsShapeDUR__FP9SPEC_TYPEN31P8low_type
+long	IsDUR(SPEC_TYPE* e, SPEC_TYPE* a, SPEC_TYPE* b, low_type* low);	// ROM 0x002cb58c IsDUR__FP9SPEC_TYPEN21P8low_type
+long	is_DDL(SPEC_TYPE* e, SPEC_TYPE* upper, low_type* low);		// ROM 0x002cb25c is_DDL__FP9SPEC_TYPET1P8low_type
+void	check_IU_ID_in_crossing(SPEC_TYPE** pe, short* x, short* y);	// ROM 0x002cbcbc check_IU_ID_in_crossing__FPP9SPEC_TYPEPsT2
+void	Restore_AN(low_type* low, SPEC_TYPE* e, UByte kind, short mode);	// ROM 0x002cac98 Restore_AN__FP8low_typeP9SPEC_TYPEUcs
+long	IsOutsideOfCrossing(SPEC_TYPE* e, SPEC_TYPE* r, SPEC_TYPE* partner, low_type* low, SPEC_TYPE** prev, SPEC_TYPE** moved, ULong* flag);	// ROM 0x002cada0 IsOutsideOfCrossing__FP9SPEC_TYPEN21P8low_typePP9SPEC_TYPET5PUi
+void	CheckInsideCrossing(SPEC_TYPE* e, SPEC_TYPE* r, short* count);	// ROM 0x002caf8c CheckInsideCrossing__FP9SPEC_TYPET1Ps
+long	IsInnerAngle(short* x, short* y, SPEC_TYPE* partner, SPEC_TYPE* e, SPEC_TYPE* r);	// ROM 0x002cb138 IsInnerAngle__FPsT1P9SPEC_TYPEN23
+long	del_inside_circles(low_type* low);							// ROM 0x002ca8a0 del_inside_circles__FP8low_type - ==> 0
+SPEC_TYPE*	cross_little(SPEC_TYPE* e);								// ROM 0x002cca28 cross_little__FP9SPEC_TYPE
+long	EndIUIDNearStick(SPEC_TYPE* end, SPEC_TYPE* partner, short* x, short* y);	// ROM 0x002ca0a0 EndIUIDNearStick__FP9SPEC_TYPET1PsT3
+long	analize_sticks(low_type* low);								// ROM 0x002cbe54 analize_sticks__FP8low_type - ==> 0
+long	analize_circles(low_type* low);								// ROM 0x002cca44 analize_circles__FP8low_type - ==> 0
+long	lk_cross(low_type* low);									// ROM 0x002ca074 lk_cross__FP8low_type - ==> 0
+
 // The colons and the side bends found late (LowRestore.cpp).
 void	AdjustBegEndWithoutPoint(SPEC_TYPE* e);						// ROM 0x00305044 AdjustBegEndWithoutPoint__FP9SPEC_TYPE
 Boolean	LooksLikeIAndPoint(SPEC_TYPE* dot, long p, short dx, short* x, short* y);	// ROM 0x00304964 LooksLikeIAndPoint__FP9SPEC_TYPEisPsT4
