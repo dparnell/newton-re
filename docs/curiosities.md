@@ -1992,3 +1992,19 @@ The finder also reports how sure it is of the two lines (45 to 90, by
 how many extrema it found and how little it had to correct), and a
 synthetic run of eight arches 40 pixels high on y = 200 comes back from
 the reconstruction as exactly that: height 40, base 200, sure 90/90.
+
+## A "stick" that lies down
+
+ParaGraph's cursive reader sorts every stroke of a word before it reads
+it, and one of its kinds, mark 7, looks like it ought to be an upright
+stick - an l, the stem of a t.  It is the opposite.  `SPDClass` (0x0032f960)
+accepts a stroke only when its longest piece's slope - dy over dx, in
+hundredths - is *below* a trained limit of 25 to 90, so only a level
+stroke qualifies: a dash, a hyphen, a t's bar.  The trained table of the
+bend allowed goes further: indexed by the bands a stroke's top and bottom
+fall in, it holds -32767 ("never") for a stroke that runs from the very
+top of the word down to the line, which is exactly what an l is.  What
+the reader then does with a mark 7 confirms it: it straightens it in the
+trace (`FantomSt`) and looks for the *upright* sticks that cross it
+(`FillCross` over `VertSticksSelector`'s list) - a t's bar and its stem.
+(`src/recognition/LowPict.cpp`; `test_LowLevel`'s `TestPict`.)

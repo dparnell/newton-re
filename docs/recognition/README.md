@@ -2204,7 +2204,7 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
-### The low level (`recognition/LowLevel.h`, base line done)
+### The low level (`recognition/LowLevel.h`, base line, Pict and angl done)
 
 `low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
 in a `low_type` - a 0x9c-byte block on its stack holding the trace as
@@ -2321,11 +2321,89 @@ unset for kinds other than 1 and 3, which they are never given.
 AnalyzeLowData's passes have begun (`LowAnalyze.cpp`): `DefLineThresholds`
 (the heights the passes compare with, `low->fThresh`), `OperateSpeclArray`,
 `Sort_specl`, `Clear_specl`, `Surgeon`, `measure_slope` (the slant) and
-`look_like_circle`.  NOT YET: the rest of `AnalyzeLowData` (`Pict`,
-`Circle`, `angl`, `FindSideExtr`, `Cross`, `lk_begin`, `lk_cross`,
-`lk_duga`, `Adjust_I_U`, `xt_st_zz`, `RestoreColons`, `PostFindSideExtr`)
-and `exchange` - 267 functions, 148 KB, by `analysis/callgraph.py
-build/MP2x00US 0x0034ea74`.
+`look_like_circle`.
+
+**Pict** (`LowPict.cpp`, 0x003298d8 and 59 functions, about 34 KB; done
+2026-09-28) is AnalyzeLowData's first element finder.  It looks at the
+strokes one by one against eleven heights (`BildHigh`: the word's top and
+bottom, clamped to the normal line's, the rescaled line's five fixed
+heights 0x2796..0x27e6 and the heights between; `RelHigh` says which band,
+9 highest to 0 lowest, a stroke's top and bottom are in - its `code` and
+`attr`).  Each stroke is *described* (`StrElements`): a `_SDS_TYPE` head
+(0x10), one description per piece between the stroke's ends and its
+corners (`RareAngle` finds the corners), and a tail (0x20).  A piece's
+description (`iMostFarDoubleSide`) is its box, its chord's length and
+slope (hundredths of dy/dx, 0x7fff upright), the furthest point on each
+side of the chord, the bend in hundredths of the chord (`crook`), and the
+length along the trace; a head reuses the slope, crook, length and share
+fields for its own index, the longest piece's index + 1, the whole length
+and the stroke's code and attr.  Then the stroke is judged:
+
+- **7, ParaGraph's straight stroke** (`SPDClass`): its longest piece long
+  enough, straight enough and *level* enough for its bands, by the trained
+  tables `minL_H_end`, `maxCR_H_end` and `maxA_H_end` (10x10 shorts,
+  [top band][bottom band], -2 impossible, -32767 never; generated into
+  `LowTables.cpp`), every point near the piece's line.  It is a *level*
+  stroke - a dash, a t's bar - not an upright one: the tables allow
+  nothing steep, and a stroke from the word's top down to the line is
+  "never".  `YFilter` refuses one that is really a bar crossing an upright
+  of the stroke before or after.
+- **8, a dot** (`Dot`): one point, or a box under `maxX_H_end`/
+  `maxY_H_end` that is not a short steep stick.
+- **a hatch** (`HatchureS`, the biggest piece, with `ApprHorStroke`,
+  `SpcElemFirstOccArr`, `DrawCross`, `ShiftsAnalyse`, `HatDenAnal`,
+  `RMinCalc`, the filters `SCutFiltr`/`LeFiltr`/`LowStFiltr`/`RDFiltr`/
+  `Oracle` and `StrokeAnalyse`): a stroke whose level piece crosses one of
+  the upright sticks found first (`VertSticksSelector`: up to 80, the
+  piece between two tops or two bottoms that is upright and straight -
+  `fBars`) - a t or an f's bar written in one stroke with the letter, or a
+  cross over an earlier stroke's stick.  The bar is cut off with a pen-up
+  put into the trace (`InsertBreakAfter`) and the strokes found again, the
+  rest of the stroke judged on its own (`StrokeAnalyse` builds a head and
+  one piece on its stack so that `Dot` and `SPDClass` can be asked).
+- **a crossing within the stroke** (`InStr`): a level piece low down that
+  crosses a steep piece two before it is marked an arc (5).
+
+Every stroke's arcs are found (`SlashArcs`: a low then a high between the
+stroke's start and end, marked 5 with their size in `other`).  A dash or a
+dot is drawn straight in the trace (`FantomSt`, through the working
+buffers) and added to the list between a 0x10 and a 0x20 of its own, with
+the first points of the two steps of it that other strokes' sticks cross
+(`FillCross`).  Last, `Recount` takes the descriptions back to the trace
+as it was given (buffer 2's map).
+
+**angl** (`LowAngles.cpp`, 0x002a9f7c) marks the corners: buffer 3 holds,
+for every point not of a dash or a dot and not within six of a pen-up or
+the ends, the square of the distance between the points six either side;
+where that is at most 1000 (the trace doubles back) the cosine of the turn
+four points either side is taken, and a run with a cosine of -60 or more
+is a corner (0x0b) at its sharpest point, with the way it opens
+(`angle_direction`: 0x10, 0x20, 0x40, 0x80) as `other`.
+
+`test_LowLevel`'s `TestPictPieces` checks the measurements (an arch's
+description, a V described as a head, two arms and a tail, crossings);
+`TestPict` takes three arches, a dash and a dot through `BaselineAndScale`
+and AnalyzeLowData's first steps into `Pict`: the dash comes back 7, the
+dot 8, three heads and three tails; `TestAngles` finds a hairpin's apex.
+Nearly all of it was read from the disassembly: the decompiler lost most
+conditions and took the unaligned halfword loads (`ldr` at an address two
+past a word, whose *low* half is the halfword two before) for the wrong
+fields - `CrookCalc`'s answer, `FillCross`'s crossing points and several of
+`HatchureS`'s records are wrong in its output.  ROM behaviour kept:
+`InitElementSDS` clears 0x28 of a description's 0x2c bytes; `InStr`
+narrows its slope limit for good each time; `InsertBreakAfter` walks its
+sticks by the old count after taking one out (skipping the next, seeing
+the last twice); `angle_direction` is passed the slant and never uses it;
+`SlashArcs`'s arcs carry whatever code and attr were on the stack
+(DEVIATION: nought on the host); `LowStFiltr` reads the element two
+before the list when no top is found and `RMinCalc` leaves a point unset
+on one path (DEVIATION: the host takes -2); `FantomSt` divides by a line of
+no length (DEVIATION: guarded).
+
+NOT YET: the rest of `AnalyzeLowData` (`Circle`, `FindSideExtr`, `Cross`,
+`lk_begin`, `lk_cross`, `lk_duga`, `Adjust_I_U`, `xt_st_zz`,
+`RestoreColons`, `PostFindSideExtr`) and `exchange` - 207 functions,
+115 KB, by `analysis/callgraph.py build/MP2x00US 0x0034ea74`.
 
 **NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
 `xrw_algs`, the `Chunk*` digit reader - docs/next-steps.md has their

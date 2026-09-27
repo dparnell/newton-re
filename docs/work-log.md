@@ -9,6 +9,30 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive reader's Pict and angl
+
+- `Pict`, AnalyzeLowData's first element finder, whole (`LowPict.cpp`,
+  59 functions, about 34 KB): the stroke descriptions (`_SDS_TYPE`,
+  `iMostFarDoubleSide`, `StrElements`, `RareAngle`), the heights
+  (`BildHigh`, `RelHigh`), the level straight strokes (`SPDClass` over
+  `FieldSt` and the trained `maxA/maxCR/minL_H_end` tables, `YFilter`),
+  dots (`Dot`, `maxX/maxY_H_end`), the upright sticks (`VertStickBorders`,
+  `VertSticksSelector`), the hatch finder (`HatchureS` and its eighteen
+  helpers), `InStr`, `SlashArcs`, `FantomSt`, `FillCross`, `Recount`; and
+  `angl` with `store_angle`/`angle_direction`/`cos_vect` (`LowAngles.cpp`).
+  Commits a95c376, d02ec5a, 87c4fa2.
+- Found on the way: ParaGraph's mark 7 is a level stroke (a dash or a
+  bar), not an upright stick - the trained tables refuse anything steep;
+  the decompiler's handling of unaligned halfword loads misnames fields in
+  a dozen places (`CrookCalc`, `FillCross`, `HatchureS`), so every such
+  copy was taken from the disassembly.
+- ROM reads of unset or out-of-range memory in `SlashArcs`, `LowStFiltr`
+  and `RMinCalc` are replaced by nought or -2 (DEVIATION), `FantomSt`'s
+  division by a zero-length line guarded.
+- test_LowLevel: `TestPictPieces`, `TestPict` (a word through the base
+  line into Pict), `TestAngles`.  ctest 108/108; coverage 11301
+  citations, 0 bad, 6353 of 16671 functions (38.11%).
+
 ## 2026-09-28: the cursive reader's base line
 
 - `transfrmN`, the base-line finder, and everything under it:

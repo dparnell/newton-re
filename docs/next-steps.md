@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 108/108
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11238 citations, 0 bad;
-  6295 of 16671 functions (37.76%).
+- `analysis/coverage.py build/MP2x00US --check`: 11301 citations, 0 bad;
+  6353 of 16671 functions (38.11%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -196,6 +196,24 @@ with its dozen helpers, `RestoreColons`) and `exchange` (the xrs written:
 `MarkXrAsLastInLetter`, `GetLinkBetweenThisAndNextXr`).  Revised estimate:
 at this round's pace (about 45 KB a round) three to four more rounds for
 `low_level`, and the whole reader perhaps twelve.
+
+**Stage 2, round 3 (2026-09-28, commits a95c376, d02ec5a, 87c4fa2):**
+`Pict` whole (`LowPict.cpp`: the stroke descriptions, the dashes, dots,
+hatches and crossings, `VertSticksSelector`'s upright sticks, `FantomSt`,
+`FillCross`, `Recount`; 59 functions, about 34 KB) and `angl`
+(`LowAngles.cpp`, 4 functions), with `CreateSDS`/`DestroySDS`.
+`test_LowLevel`'s `TestPict` takes a word through the base line and
+AnalyzeLowData's first steps into Pict (a dash marked 7, a dot 8, every
+stroke described); `TestAngles` finds a hairpin's corner.  Worth knowing
+for the rest: mark 7 is a *level* straight stroke, not an upright stick;
+the decompiler reads an unaligned `ldr` at a word + 2 as the halfword there
+when a `strb` of its low byte takes the halfword *before* it - check every
+such copy in the disassembly.  Left below `low_level`: 207 functions,
+115 KB - `Circle` (26 functions, 10 KB: `work_with_circle`, `Clash_my`,
+`circle_type` and the `is_*_circle` tests), `FindSideExtr` (8 KB), `Cross`
+(8 KB), the `lk_*` passes, `Adjust_I_U`, `xt_st_zz`, `RestoreColons`,
+`PostFindSideExtr`, and `exchange` (20 KB).  At this pace (about 36 KB a
+round) three more rounds for `low_level`; the whole reader perhaps eleven.
 
 ## Then: the testing system
 
