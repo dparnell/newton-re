@@ -151,7 +151,7 @@ struct low_type
 	short			fSlope;			// +6e  the writing's slant (from rc +0xac, back to it at the end)
 	UByte			f70[4];			// +70
 	_RECT			fBox;			// +74  the trace's box
-	UByte			f7c[0x20];		// +7c..+9b
+	short			fThresh[16];	// +7c..+9b  the heights the later passes compare with (DefLineThresholds, which lists them)
 };
 
 // The engine's arithmetic.  A product or sum that can overflow a word is
@@ -289,6 +289,15 @@ long	bord_correction(low_type* low, EXTR* extr, long* nPtr, long mode, UByte kin
 long	classify_strokes(low_type* low, long mid, long most, long n, long* stem, long* tall, ULong* simple);	// ROM 0x001bfb18 classify_strokes__FP8low_typeiN22PiT5PUi - ==> the number of strokes
 long	classify_num_strokes(low_type* low, long* height);			// ROM 0x001c3d40 classify_num_strokes__FP8low_typePi - ==> the number of strokes
 long	numbers_in_text(low_type* low, short* upper, short* lower);	// ROM 0x001c4368 numbers_in_text__FP8low_typePsT2 - ==> 1 the word is figures
+
+// AnalyzeLowData's passes (LowAnalyze.cpp).
+void	DefLineThresholds(low_type* low);							// ROM 0x002f8b0c DefLineThresholds__FP8low_type
+void	OperateSpeclArray(low_type* low);							// ROM 0x0032f5f0 OperateSpeclArray__FP8low_type - the empty strokes taken out of the array
+long	Sort_specl(SPEC_TYPE* head, short n);						// ROM 0x002f9ec0 Sort_specl__FP9SPEC_TYPEs - ==> 0, 1 for a failure
+long	Clear_specl(SPEC_TYPE* head, short n);						// ROM 0x002fa20c Clear_specl__FP9SPEC_TYPEs - ==> 0, 1 for a list that is not strokes
+long	Surgeon(low_type* low);										// ROM 0x0032f6dc Surgeon__FP8low_type - ==> 0
+long	measure_slope(low_type* low);								// ROM 0x00320bd0 measure_slope__FP8low_type - the slant in hundredths
+long	look_like_circle(SPEC_TYPE* elem, SPEC_TYPE* prev, SPEC_TYPE* next, short* y);	// ROM 0x002bc6a0 look_like_circle__FP9SPEC_TYPEN21Ps
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

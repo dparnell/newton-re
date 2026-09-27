@@ -539,6 +539,97 @@ TestBaseline(void)
 }
 
 
+// A list of elements in s[0..n) (s[0] the head), linked in array order,
+// each given by a mark and the points it covers.
+static void
+MakeList(SPEC_TYPE* s, long n, const UByte* marks, const short* begs, const short* ends)
+{
+	memset(s, 0, n * sizeof(SPEC_TYPE));
+	for (long i = 0; i < n; i++)
+	{
+		s[i].mark = marks[i];
+		s[i].iBeg = begs[i];
+		s[i].iEnd = ends[i];
+		s[i].prev = (i > 0) ? &s[i - 1] : nil;
+		s[i].next = (i < n - 1) ? &s[i + 1] : nil;
+	}
+}
+
+
+static void
+TestAnalyzePieces(void)
+{
+	// the thresholds, from a box a little above and within the borders
+	low_type low;
+	rc_type rc;
+	memset(&low, 0, sizeof(low));
+	memset(&rc, 0, sizeof(rc));
+	low.rc = &rc;
+	RCSetH(&rc, 0x94, 0x10);
+	low.fBox.top = 0x2700;
+	low.fBox.bottom = 0x2800;
+	DefLineThresholds(&low);
+	EXPECT(low.fThresh[0] == 0x2723 && low.fThresh[1] == 0x2749 && low.fThresh[2] == 0x2770 && low.fThresh[3] == 0x2783);
+	EXPECT(low.fThresh[4] == 0x27a8 && low.fThresh[5] == 0x27ba && low.fThresh[6] == 0x27c3 && low.fThresh[7] == 0x27d5);
+	EXPECT(low.fThresh[8] == 0x27f3 && low.fThresh[9] == 0x2801 && low.fThresh[10] == 0x281b && low.fThresh[11] == 0x2836);
+	EXPECT(low.fThresh[12] == 0x7fff && low.fThresh[14] == 40 && low.fThresh[15] == 400);
+	RCSetH(&rc, 0x94, 0x20);
+	DefLineThresholds(&low);
+	EXPECT(low.fThresh[14] == 27 && low.fThresh[15] == 200);
+
+	// the list sorted into the trace's order: a stroke's start first
+	SPEC_TYPE s[8];
+	const UByte m1[] = { 0, 0x10, 3, 1, 0x20 };
+	const short b1[] = { 0, 1, 10, 1, 20 };
+	const short e1[] = { 0, 1, 11, 6, 20 };
+	MakeList(s, 5, m1, b1, e1);
+	EXPECT(Sort_specl(&s[0], 5) == 0);
+	EXPECT(s[0].next->mark == 0x10 && s[0].next->next->mark == 1 && s[0].next->next->next->mark == 3
+		&& s[0].next->next->next->next->mark == 0x20);
+
+	// an empty stroke taken out, and the list checked
+	const UByte m2[] = { 0, 0x10, 0x20, 0x10, 1, 0x20 };
+	const short b2[] = { 0, 1, 1, 3, 3, 9 };
+	MakeList(s, 6, m2, b2, b2);
+	EXPECT(Clear_specl(&s[0], 6) == 0);
+	EXPECT(s[0].next == &s[3]);
+	const UByte m3[] = { 0, 0x20, 0x10, 1, 0x20 };
+	MakeList(s, 5, m3, b2, b2);
+	EXPECT(Clear_specl(&s[0], 5) == 1);
+
+	// the empty strokes squeezed out of the array
+	low.fSpecl = s;
+	MakeList(s, 6, m2, b2, b2);
+	low.fLenSpecl = 6;
+	OperateSpeclArray(&low);
+	EXPECT(low.fLenSpecl == 4 && s[1].mark == 0x10 && s[2].mark == 1 && s[3].mark == 0x20 && s[3].next == nil);
+
+	// the slant: two downstrokes 40 deep drifting 4 to the right each
+	short xs[] = { 0, 10, 14, 30, 34, 0 };
+	short ys[] = { -1, 0x2796, 0x27be, 0x2796, 0x27be, -1 };
+	const UByte m4[] = { 0, 0x10, 1, 3, 1, 3, 0x20 };
+	const short b4[] = { 0, 1, 1, 2, 3, 4, 4 };
+	MakeList(s, 7, m4, b4, b4);
+	low.fX = xs;
+	low.fY = ys;
+	EXPECT(measure_slope(&low) == -10);
+
+	// an o's foot: below both tops and nearer the lower border
+	short oy[] = { 0x27a0, 0x27e0, 0x27a0 };
+	SPEC_TYPE t1, t2, b;
+	memset(&t1, 0, sizeof(t1));
+	memset(&t2, 0, sizeof(t2));
+	memset(&b, 0, sizeof(b));
+	t1.mark = t2.mark = 1;
+	t1.iBeg = 0;
+	b.iBeg = 1;
+	t2.iBeg = 2;
+	EXPECT(look_like_circle(&b, &t1, &t2, oy) == 1);
+	oy[1] = 0x27b0;
+	EXPECT(look_like_circle(&b, &t1, &t2, oy) == 0);
+}
+
+
 int
 main()
 {
@@ -554,6 +645,7 @@ main()
 	TestGeometry();
 	TestLineGlitches();
 	TestBaseline();
+	TestAnalyzePieces();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
