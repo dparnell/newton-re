@@ -10,6 +10,36 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+
+## 2026-09-28: the cursive reader, stage 1 - writing reaches it
+
+- The GC layer's word descriptors (`recognition/WordDescriptors.h`): the
+  list of eight, the segmenter's words written into them, a word after a
+  dash joined to the one before (`GCMergeWordDesc`), the trace a word is
+  read from (`GCWDGetTrace`, `GCMergeLinesAndRemoveDash`);
+  `GCGroupStrokes`/`GCTryToRemoveLastWords` take descriptors as the ROM
+  does.  `GCTryToRecognize`'s frame (`recognition/CursiveReader.h`): the
+  base line (`GCFillBaseLineParameters`, `SetRCB`, `GetInkBox`), the
+  recognition data locked (`GCLockRecognitionData`,
+  `TDictChain::LockChain`); `rc_type`'s +0xf8 and +0x108 are host
+  pointers now.  `test_WordDescriptors`.
+- The strokes-to-xrs domain and its unit (`recognition/StrXrDomain.cpp`):
+  `TStrXrDomain` (classify, group on line and in boxes, `DomainParameter`
+  bar `SetStrXrRC`, `SetParameters`, `SetStrXrFieldType`), `TStrXrUnit`,
+  `CallGroupAndClassify`, `GroupAndClassifyStrokes`, `GCClassifyStrokes`,
+  `GCReleaseRecResults`, `WriteRecResults`, `GCWriteRW`,
+  `GCFillRecParmStruct`, `GCAllocRecTrace`; the word domain's
+  `SetUpChains`/`AdjustRecParmStruct`.  `src/host/demo/cursive.ns` with
+  `NEWTON_TRACE_CURSIVE=1`: "ton" and "to" in two words, each reaching the
+  reader, which fails at the (NOT YET) low level.
+- ROM bugs kept: extra strokes walked while the index is below the stroke
+  number; the dash's removal renumbering the wrong entry; the caller's r8
+  answered by `GCMergeLinesAndRemoveDash`; an uninitialised r6 tested in
+  `GroupAndClassifyStrokes`.
+- Found: an intermittent lock-up in the host heap's compaction with a
+  cursive letter set, which goes away when the 'STXR' block does not load
+  its own letter table (next-steps has the bisect).
+
 ## 2026-09-28: the test agent and the debug hooks
 
 - `testing/TestAgent.h` (0x00226a40-0x0022bbb8, `docs/testing/README.md`):

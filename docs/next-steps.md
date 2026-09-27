@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 105/105
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 106/106
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11027 citations, 0 bad;
-  6093 of 16671 functions (36.55%).
+- `analysis/coverage.py build/MP2x00US --check`: 11108 citations, 0 bad;
+  6174 of 16671 functions (37.03%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -124,6 +124,46 @@ and number reader last, since it is a reader of its own inside the
 engine.  Like Rosetta it should sit behind the `TWRecognizer`-style seam
 so a modern cursive recogniser can replace it.  Until then a cursive
 letter set on the host reads nothing (its writing stays ink).
+
+**Stage 1 DONE (2026-09-28, commits 46030bd, 2a0b8be;
+`docs/recognition/README.md`'s "The way writing reaches the cursive
+reader"):** the word descriptors (`WordDescriptors.h`), `GCTryToRecognize`'s
+frame and the base line handed to the engine (`CursiveReader.h`:
+`GCFillBaseLineParameters`, `SetRCB`, `GCLockRecognitionData`), and the
+strokes-to-xrs domain that feeds it (`StrXrDomain.cpp`: `TStrXrDomain`,
+`TStrXrUnit`, `CallGroupAndClassify` and the rest of the GC layer,
+`WriteRecResults`/`GCWriteRW` making each word read a unit).  With a
+cursive letter set the writing is now grouped into words and each word
+reaches the reader; the reader answers -8 (the low level is NOT YET), so
+the word is kept as ink.  `test_WordDescriptors`;
+`src/host/demo/cursive.ns` with `NEWTON_TRACE_CURSIVE=1`.  Left of
+stage 1: `SetStrXrRC` (0x000651e4, a configuration's `strxrCommands`).
+
+**Open problem found on the way:** with the letter set made cursive,
+`cursive.ns` locks up now and then (one run in three at the default 4MB
+heap, also seen at 8MB and 16MB under load) after the first word: the
+busy thread is in the host heap's compaction (`CompactHeap`/`LockedBlock`,
+`tools/host/stacksample.py`), which suggests a damaged free list.
+Bisected with temporary switches: it still happens with the domain's
+grouping turned off, and does not happen (0 in 6) when the 'STXR'
+parameter block skips loading its own letter table - `DomainParameter`
+selector 1's `ReadDteResource("avp.dte", ...)` and `AllocLearnInfo`, a
+second copy beside the word domain's (which shares
+`gParaRamData.fLearnInfo[set]`).  So look there first
+(`ParaGraph.cpp`: `ReadDteResource`, `SetUpDteAddres`, `AllocLearnInfo`,
+`dti_lock`/`dti_unlock` run for a second DTI); that is also why there is
+no ctest for `cursive.ns` yet.
+
+**Stage 2 sized** (callgraph.py, not-done functions below each root):
+`low_level` 389 functions, 213 KB (the trace cut into xrs: `low_type`,
+`BaselineAndScale`, `transfrmN`, `Extr`/`BigExtr`, `line_pos_mist`,
+`StrElements`, ...); `xrw_algs` 70, 29 KB (stage 3/4: the xr matching and
+the word graph); the `Chunk*` digit reader 72, 140 KB (stage 5).  Stage 2
+is itself several rounds; a first testable piece would be the trace's
+preprocessing and `BaselineAndScale` checked against a word of known
+shape, then `Extr` (the extrema) - each layer can be tested on its own
+because `low_level` writes an `xrdata_type` (0x18-byte elements) that
+can be printed and compared with what the letter shapes imply.
 
 ## Then: the testing system
 

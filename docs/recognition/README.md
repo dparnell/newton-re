@@ -1553,10 +1553,9 @@ never hands over the strokes gathered for a word whose last stroke was
 already placed; `WordLineStrokes` replaces an emptied word with the one
 after it alone.  `recognize.ns` writes "ton" twice on a view that reads
 nothing, and its `viewRawInkScript` is given two pieces of ink of four
-strokes each (ctest `host.NewtonRecognize`).  NOT YET RECONSTRUCTED: the
-word descriptors (`GCWordDescr*`, `GCWriteNewGroupResults`, the rest of
-`GCTryToRemoveLastWords`), which only the cursive recogniser's reading
-reaches.
+strokes each (ctest `host.NewtonRecognize`).  The word descriptors the
+cursive recogniser calls the same layer with are in "The way writing
+reaches the cursive reader" below.
 
 ## The corrector (`recognition/CorrectInfo.h`, `views/ParagraphView.h`)
 
@@ -2141,13 +2140,80 @@ the natives from NewtonScript: 320 pictures, the letter weights at their
 defaults before and after `ResetLetterDefaults`, a word drawn in picked
 shapes.
 
-**NOT YET RECONSTRUCTED**: the reading itself - the strokes cut into xrs
-(`TStrXrDomain`'s classify and group, its `DomainParameter`), the xrs
-read into words (`TXrWordDomain::Classify`), `GetTraceFromStrokes` (so
-`DoLearning` has nothing to learn from), `ORTraining` (orthographic
-learning), and the base-line and grid geometry `ConfigureArea` hands the
-engine (`GetWordGeom`, `GetGridGeom`).  A cursive letter set chosen on
-the host therefore reads nothing: the writing is kept as ink.
+### The way writing reaches the cursive reader (`recognition/StrXrDomain.cpp`, `WordDescriptors.h`, `CursiveReader.h`)
+
+With a cursive letter set the strokes-to-xrs domain ('STXR',
+`TStrXrDomain`) takes every stroke.  While the pen is still writing, a
+stroke is simply *listed* on the unit collecting the writing
+(`TStrXrUnit`: a bit per stroke in `fStrokes`, the stroke added as a
+sub) - `PreGroup`/`Group` -> `GCPregroupAndGroup` ->
+`CallGroupAndClassify`.  When the unit is classified (or the stroke is
+the last complete one) the listed strokes become a trace
+(`GCAllocRecTrace`) and go, with the unit's **word descriptors**, to
+ParaGraph's word segmenter (`GroupAndClassifyStrokes` -> `GCGroupStrokes`
+-> `WordStrokes`, the same segmenter the ink grouping uses).
+
+The word descriptors (`WordDescriptors.h`) are eight 0x50-byte slots in
+one handle (`GCNewRecSegment`), a doubly linked list threaded through
+them by halfword indices (0xffff none; a slot whose two links are both
+nought is free).  Each names its word's strokes as a run (`fFirst` to
+`fLast`) and up to eight more, keeps what the segmenter said of its line
+(`GetWSBorder`) and of the gaps inside it it was least sure of
+(`SetStrokeSureValuesWS`), and flags how far it has got: 2 settled, 4 to
+be read now, 0x50/0x28 read, 0x80 ends in a dash, 0x100 not contiguous,
+0x200 the low level failed, 0x400 the xr reader failed, 0x800 no memory.
+`GCWriteNewGroupResults` turns the segmenter's words into descriptors -
+keeping one whose strokes have not changed, throwing away one whose
+strokes moved to another word, and **joining a word written after a dash
+at the end of a line to the word before it** (`GCMergeWordDesc`: the
+second part's strokes appended, where the two lines meet made relative,
+`fMerged` the first part's stroke count).  `GCRecSegmentSetGroupFlags`
+marks the words to read now: all at the end of the writing, otherwise
+the settled ones but the last `lineAtATime`.  `GCClassifyStrokes` reads
+those (and, when there are none, reads the settled ones ahead), each
+told the base line of the last word read before it.
+
+`GCTryToRecognize` (`CursiveReader.h`) reads one word: its trace
+(`GCWDGetTrace` - a copy with the extra strokes appended, and for a
+joined word the second line moved up to the end of the first and the
+dash taken out, `GCMergeLinesAndRemoveDash`), the base line handed to
+the engine (`GCFillBaseLineParameters` -> `SetRCB`: the ink box, and a
+height and middle for the letters with how sure of each - from the
+segmenter's line, the word before's, or a fixed base line the field
+gives), the recogniser's data locked (`GCLockRecognitionData`), then the
+reading itself in three layers - the digit and number reader over
+"chunks", `low_level` (the trace cut into xrs) and `xrw_algs` (the xrs
+matched into words) - and what came of it written into the descriptor
+(`GCWDWriteRecResults`).  Back in the domain, `GCReleaseRecResults` makes
+each word read (or gone wrong) a unit of its own (`WriteRecResults`: its
+strokes, the dash left out, as subs; where it lies; its readings,
+`GCWriteRW`, cut into parts when the reader split the word) handed to the
+controller as a new piece; a word that went wrong is flagged invalid
+(0x400000) and its strokes are given up as ink.  What was not read goes
+on in a new unit with the segmenter's state.
+
+ROM bugs kept: the extra strokes of a word are copied (and taken off the
+list) while their *index* is less than the stroke number rather than
+while the stroke is not nought; the dash's removal from a joined word's
+info moves an entry down but renumbers the one left behind; when no
+stroke reaches right of nought `GCMergeLinesAndRemoveDash` answers the
+caller's r8.  `NEWTON_TRACE_CURSIVE=1` prints each word the reader is
+given and the answer; `src/host/demo/cursive.ns` makes the letter set
+cursive and writes "ton" and "to": two words, each read and each failing
+at the low level (-8).  `test_WordDescriptors` covers the list, the
+joining, the traces, the base line and two words through the segmenter
+into the reader.
+
+**NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
+`xrw_algs`, the `Chunk*` digit reader - docs/next-steps.md has their
+sizes and the plan), `SetStrXrRC` (a recognition configuration's
+`strxrCommands`), `GetTraceFromStrokes`'s use in `DoLearning`,
+`ORTraining`, and the base-line and grid geometry `ConfigureArea` hands
+the engine (`GetWordGeom`, `GetGridGeom`).  So a cursive letter set chosen
+on the host still reads nothing of its own: each word ends marked 0x200
+and its writing is kept as ink.  (With the letter set changed at run
+time, as `cursive.ns` does, the Notepad's existing areas still have
+Rosetta as well, which reads the words.)
 
 ## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
 
