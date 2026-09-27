@@ -215,6 +215,30 @@ such copy in the disassembly.  Left below `low_level`: 207 functions,
 `PostFindSideExtr`, and `exchange` (20 KB).  At this pace (about 36 KB a
 round) three more rounds for `low_level`; the whole reader perhaps eleven.
 
+**Stage 2, round 4 (2026-09-28, commits cd697fb, 12949ca, 6d79cb8,
+b20942c, 4462175, c65b08d):** `Circle` (`LowCircle.cpp`, 26 functions),
+`FindSideExtr` (`LowSide.cpp`, 10, two of them unnamed), `Cross`
+(`LowCross.cpp`, 6), `lk_begin` (`LowBegin.cpp`, 11) and `Adjust_I_U`
+(`LowAdjust.cpp`) - about 55 functions and 25 KB, each with a test in
+`test_LowLevel`; the `eps0`..`eps3` and `nbcut` tables and the rest of
+`const1` from romtable.py.  AnalyzeLowData now runs, by hand in the test,
+from the start through `lk_begin` and `Adjust_I_U`, and the cursive "uou"
+comes out coded (a start and end at tops, three tops, four bottoms, the
+o's crossings).  `low_level` is still not called.  Left below it: 157
+functions, 90 KB - `lk_cross` (`del_inside_circles`, `analize_sticks`,
+`analize_circles` and their helpers, about 12 KB), `lk_duga`
+(`arcs_processing`, `conv_sticks_to_arcs`, the circle neighbours, about
+10 KB), `xt_st_zz` (the t-bars, umlauts, quotes and punctuation,
+`make_different_breaks`, `FindDArcs`: the biggest, about 30 KB),
+`RestoreColons` (3 KB), `PostFindSideExtr` (3 KB), and `exchange` with
+`FillXrFeatures` (about 12 KB: its layout and the tables it needs are in
+`docs/recognition/README.md`'s low-level section).  The quickest route to
+a first xr stream is `exchange` next - the test can call it after
+`Adjust_I_U` without the passes in between - then the passes in the
+order AnalyzeLowData calls them.  Revised estimate: about three more
+rounds for `low_level` (this round did about 25 KB, every function from
+the disassembly), and the whole reader perhaps ten.
+
 ## Then: the testing system
 
 The 38 `testing` natives (`docs/testing/README.md`); 32 are answered.

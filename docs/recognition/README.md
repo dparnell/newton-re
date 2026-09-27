@@ -2204,7 +2204,7 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
-### The low level (`recognition/LowLevel.h`, base line, Pict and angl done)
+### The low level (`recognition/LowLevel.h`, base line to Adjust_I_U done)
 
 `low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
 in a `low_type` - a 0x9c-byte block on its stack holding the trace as
@@ -2400,10 +2400,91 @@ before the list when no top is found and `RMinCalc` leaves a point unset
 on one path (DEVIATION: the host takes -2); `FantomSt` divides by a line of
 no length (DEVIATION: guarded).
 
-NOT YET: the rest of `AnalyzeLowData` (`Circle`, `FindSideExtr`, `Cross`,
-`lk_begin`, `lk_cross`, `lk_duga`, `Adjust_I_U`, `xt_st_zz`,
-`RestoreColons`, `PostFindSideExtr`) and `exchange` - 207 functions,
-115 KB, by `analysis/callgraph.py build/MP2x00US 0x0034ea74`.
+**Circle** (`LowCircle.cpp`, 0x002bc5b8) finds the closed loops: each
+foot (a bottom, 3) between two tops that looks like an o's
+(`look_like_circle`) is tried, drawn left to right as a *back* circle
+(the usual anticlockwise o) or right to left as a *forward* one standing
+alone in its stroke.  `Clash_my` pairs every point of a stretch on the way
+down into the foot with every point of a stretch on the way up out of it
+and takes the nearest pair (the slant allowed for across,
+`SlopeShiftDx`) as where the loop closes; how close is close enough comes
+from `Ruler0` and `circle_type`, which know an e's eye (`is_e_circle`), a
+g's, d's and b's bowl (`is_g_circle`, `is_d_circle`, `is_b_circle`) and a
+loop that doubles back (`vozvrat_move`: "return movement").  A loop is
+marked as a crossing pair (6), `other` 'c' at the later point and 'd' at
+the earlier (`make_circle`).  ROM quirk kept: `circle_type` gives an
+isolated loop 0x3c and writes it over with 0x23 at once.
+
+**FindSideExtr** (`LowSide.cpp`, 0x00303584) asks of each side between a
+top and a bottom whether it bends out (`SideExtr`: the bend found on the
+filtered trace, `iMostFarFromChord`/`iMostCurvedPoint`, and judged on the
+trace as first filled, where a real corner is a triangle the path fills -
+`IsTriangledPath` over `TriangleSquare` and `ClosedSquare`, and two
+unnamed helpers after it); a hook at a stroke's start or end moves that
+top or bottom halfway to the bend.  With `strict` (as FindSideExtr asks)
+the bend must be near one end - a symmetric bow is not one.  ROM quirk
+kept: only a slant to the left is quartered.
+
+**Cross** (`LowCross.cpp`, 0x002c8fb4) finds where the trace passes over
+itself: `Grab` walks each stroke against itself and against each earlier
+stroke whose box comes within `nbcut0`, points near each other by the
+`eps0`..`eps3` tables (the limit grows with how far apart the two points
+are along the trace), stepping faster where they are far apart; `Clash`
+grows a near pair into the two stretches that run together, and the
+crossing is a pair of elements: 6 an ordinary crossing, 9 where the trace
+comes back along itself (`DrawEnds`), 0xa with a dash; one overlapping the
+last is merged into it (`ChkMrgCrs`, `AnyCrosCont`).  The elements are
+appended to the list's *array*, and those two functions find the last
+crossing as the array's last two elements.  ROM quirks kept: the copy of
+a 9's end takes `ipoint0` - the low half of an unaligned `ldr` at
+`ipoint1`'s address - and `Grab` works out a row's start from
+`const1[17]` only to write it over.
+
+**lk_begin** (`LowBegin.cpp`, 0x002f8d68) gives the elements their `code`
+- the kind of xr each will be - and `attr` its height band:
+`init_proc_XT_ST_CROSS` tidies the crossings (a loop's inside another is
+dropped), dashes and dots; `process_ZZ` folds each stroke's first and
+last extremum into its start and end (3 at a top, 7 at a bottom, 0xd a
+dash, 0x10 a dot, 0xf/0x27 an arc) and puts a break element (0x44, code
+0x12 or 0x14) between strokes; `process_AN` keeps an angle only when the
+extrema either side do not cover it (0xe or 0x11); `process_curves` codes
+the tops 2 or 3 and the bottoms 8 or 7 by how sharp they turn; and
+`DefineWritingStep` measures the writing's step across
+(`delta_interval`) into low +0x70.  ROM quirks kept: `process_ZZ` writes
+its break into the *array slot before* the stroke's end - the element it
+folded into that end a moment before, now out of the list - and keeps
+that element's two points; its stroke join is unreachable (the codes
+that would reach it have gone to the break already); `process_curves`
+writes an arc's height twice.
+
+**Adjust_I_U** (`LowAdjust.cpp`, 0x00303038) looks again at a narrow
+bottom between two tops, an i's or a u's: bends going in, coming out and
+across that agree make it round (8), bends that disagree - or a strong
+turn across straight sides - sharp (7), unless it is much wider than
+deep.  ROM quirk kept: the kind it keeps is only ever 0 or 2, so its two
+tests for a kind of 1 are dead.
+
+`test_LowLevel` checks each: `TestCircle` (a cursive "uou": the o closes
+at its top, the u's do not), `TestSides` (a hook bends left at its
+corner; a straight side and, strictly, a symmetric bow do not),
+`TestCross` (a stroke crossing itself is one pair; a t's stem drawn up
+and back down is a 9 and its bar crosses it twice), `TestCodes` ("uou"
+comes out a start and end at tops, three tops, four bottoms and the o's
+crossings) and `TestIU` (a V's bottom becomes 7, a U's stays 8).  Nearly
+all of it was read from the disassembly, as before.
+
+NOT YET: the rest of `AnalyzeLowData` (`lk_cross`, `lk_duga`, `xt_st_zz`,
+`RestoreColons`, `PostFindSideExtr`) and `exchange` - 157 functions,
+90 KB, by `analysis/callgraph.py build/MP2x00US 0x0034ea74`.  `exchange`
+switches on each element's `code` (set by lk_begin and the passes after
+it) to write the xr, 0x18 bytes: +0 the xr code, +1 flags (1 last in its
+letter, `MarkXrAsLastInLetter`; 2 a stroke start that carries a gap; 0x80
+next to a break), +2 the input penalty (`AssignInputPenaltyAndStrict`,
+over the ROM tables `penlDefX` and `penlDefH`), +3 the height, +8 the
+point, +0xa/+0xc the first and last points, +0xe..+0x15 the box - then
+`check_xrdata` puts in the xrs a missing crossing stands for
+(`PutZintoXrd`) and `FillXrFeatures` adds the slopes, orientations and
+the shape records (`FillSHR`, `FillOrients`).
 
 **NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
 `xrw_algs`, the `Chunk*` digit reader - docs/next-steps.md has their

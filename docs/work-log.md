@@ -9,6 +9,34 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive reader's low level, round 4
+
+- `Circle` (`recognition/LowCircle.cpp`): the loop finder - a foot
+  between two tops tried as an o, a, d, g, b or e's loop, the nearest
+  pair of points on the way down and up (`Clash_my`) judged by the
+  yardsticks `Ruler0`/`circle_type` work out, a closed loop marked as a
+  crossing pair 'c'/'d'.
+- `FindSideExtr` (`LowSide.cpp`): a side's bend (`SideExtr`,
+  `IsTriangledPath`, `TriangleSquare`, `ClosedSquare`, two unnamed
+  helpers) moving a hooked stroke start or end.  coverage.py wants an
+  unnamed function cited exactly `(unnamed)`, the note after it.
+- `Cross` (`LowCross.cpp`): the crossing finder (`Grab`, `Clash`,
+  `DrawEnds`, `ChkMrgCrs`, `AnyCrosCont`) over the `eps0`..`eps3` tables;
+  ROM quirk: a 9's end is copied from `ipoint0` through an unaligned
+  `ldr`'s low half.
+- `lk_begin` (`LowBegin.cpp`): the elements' codes (`init_proc_XT_ST_CROSS`,
+  `process_ZZ`, `process_AN`, `process_curves`, `DefineWritingStep` over
+  `delta_interval`); ROM quirks: the break between strokes is written
+  into a freed array slot, and `process_ZZ`'s join is unreachable.
+- `Adjust_I_U` (`LowAdjust.cpp`): a narrow bottom recoded an i's (7) or
+  a u's (8).
+- `low_type`'s +0x70/+0x72 named (`fStep`, `fStepKind`); `const1` is 26
+  shorts, not 8.
+- Tests: `test_LowLevel`'s `TestCircle`, `TestSides`, `TestCross`,
+  `TestCodes`, `TestIU`.  ctest 108/108; coverage 11359 citations, 0 bad,
+  6402 of 16671 functions (38.40%); open-apps: only the Sound Recorder
+  fails; `cursive.ns` under `NEWTON_HEAPCHECK=5` clean.
+
 ## 2026-09-28: the cursive reader's Pict and angl
 
 - `Pict`, AnalyzeLowData's first element finder, whole (`LowPict.cpp`,
