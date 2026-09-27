@@ -1167,6 +1167,15 @@ thick.
 *`src/recognition/Rosetta.h` draws that boundary explicitly;
 `docs/recognition/README.md` has the layers.*
 
+Some of the names are not English at all but Russian written in Latin
+letters. The circle finder asks whether a loop is a `vozvrat_move` -
+*vozvrat*, a return: the pen coming back - and the pass that turns
+sticks into arcs is `lk_duga`, *duga* being an arc (`arcs_processing`
+sits under it, in English, for whoever came next).
+
+*`src/recognition/LowCircle.cpp` (`vozvrat_move`); `lk_duga` is still
+NOT YET.*
+
 
 ## The engine learns how tall you write, an eighth at a time
 
