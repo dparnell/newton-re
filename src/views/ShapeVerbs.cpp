@@ -6,7 +6,8 @@
 				shape of a list is nearest the pen, and which corner of it),
 				GetShapeInfo (what a shape is, as a frame), MakeInk (an ink
 				shape out of an ink binary), StrokeInPicture (whether a
-				stroke ended on a picture's ink).
+				stroke ended on a picture's ink), AnimateSimpleStroke (a drawing
+				played back as though written).
 
 	Reconstructed from the MP2x00 US ROM (0x000dd160-0x000e2aa4,
 	0x0003f544); each function cites its origin.
@@ -28,6 +29,11 @@
 #include "ROMConstants.h"
 #include "NativeFunctions.h"
 #include "NewtonMemory.h"
+#include "NewtonTime.h"
+#include "Bits.h"
+#include "Screen.h"
+#include "Shapes.h"
+#include "ByteOrder.h"
 
 
 // ROM 0x000e15b8 PointInShape__FRC6RefVarRC6TPointP10TStyleSave
@@ -497,6 +503,94 @@ FStrokeInPicture(RefArg rcvr, RefArg unit, RefArg picture)
 }
 
 
+// ROM 0x001f12ac FAnimateSimpleStroke__FRC6RefVarN31
+// AnimateSimpleStroke(strokes, dest, withPen) - a drawing played back as
+// though written: the binary is the rectangle it was drawn in (eight
+// bytes), then strokes, each a count, a starting point and that many
+// bytes of moves (the high nibble down, the low nibble across, each -8..7),
+// padded to a word; every point is mapped from the rectangle into `dest`
+// and a line drawn to it.  With a pen, each step draws the stylus picture
+// (the third of gtPens) with its tip at the point, a tick at a time, and
+// puts back what was under it.
+//
+// No ROM script calls it, so its bytes are read as the ROM reads them:
+// big-endian, whatever the host.
+//
+// ROM QUIRK: the stylus picture's bounds are offset by their own top left
+// - doubled, not taken back to the origin; a picture whose bounds start at
+// 0, 0 (as the ROM's does) is not moved.
+static Ref
+FAnimateSimpleStroke(RefArg /*rcvr*/, RefArg strokes, RefArg dest, RefArg withPen)
+{
+	TBinaryDataPtr data(strokes);
+	RefVar pen(GetArraySlotRef(RefVar(Rgtpens), 2));
+	RefVar penBounds(GetFrameSlotRef(pen, RSSYMbounds));
+	Rect penBox;
+	if (!FromObject(penBounds, penBox))
+		ThrowMsg((char*) "bad pict frame");
+	OffsetRect(&penBox, penBox.left, penBox.top);
+	const UByte* p = (const UByte*) (char*) data;
+	const UByte* end = p + Length(strokes);
+	Rect from;
+	from.top = (short) GetBigEndianHalf(p);
+	from.left = (short) GetBigEndianHalf(p + 2);
+	from.bottom = (short) GetBigEndianHalf(p + 4);
+	from.right = (short) GetBigEndianHalf(p + 6);
+	p += 8;
+	TBits under;
+	Rect screen;
+	SetRect(&screen, 0, 0, (short) screenWidth, (short) screenHeight);
+	under.Constructor(screen);
+	Rect to;
+	if (!FromObject(dest, to))
+		ThrowMsg((char*) "bad stroke dest");
+	while (p < end)
+	{
+		long count = (long) GetBigEndianWord(p);
+		p += 4;
+		long pad = (4 - count) & 3;
+		Point at;
+		at.v = (short) GetBigEndianHalf(p);
+		at.h = (short) GetBigEndianHalf(p + 2);
+		p += 4;
+		Point mapped = at;
+		MapPt(&mapped, &from, &to);
+		MoveTo(mapped.h, mapped.v);
+		while (count-- != 0)
+		{
+			long dv = *p >> 4;
+			if (dv > 7)
+				dv -= 16;
+			long dh = *p & 0x0f;
+			if (dh > 7)
+				dh -= 16;
+			p++;
+			at.v = (short) (at.v + dv);
+			at.h = (short) (at.h + dh);
+			mapped = at;
+			MapPt(&mapped, &from, &to);
+			if (ISNIL(withPen))
+				LineTo(mapped.h, mapped.v);
+			else
+			{
+				StartDrawing(nil, nil);
+				LineTo(mapped.h, mapped.v);
+				Rect box = penBox;
+				OffsetRect(&box, mapped.h, mapped.v - (short) (penBox.bottom - penBox.top));
+				ULong next = Ticks() + 1;
+				under.CopyFromScreen(box, box, 0, nil);
+				DrawPicture(pen, box, 0, 8);
+				StopDrawing(nil, nil);
+				SleepTillTicks(next);
+				under.Draw(box, box, 0, nil);
+			}
+		}
+		p += pad;
+	}
+	return NILREF;
+}
+
+
 void
 RegisterShapeVerbNatives(void)
 {
@@ -504,4 +598,5 @@ RegisterShapeVerbNatives(void)
 	RegisterNativeFunction("FGetShapeInfo", (void*) FGetShapeInfo, 1);
 	RegisterNativeFunction("FMakeInk", (void*) FMakeInk, 5);
 	RegisterNativeFunction("FStrokeInPicture__FRC6RefVarN21", (void*) FStrokeInPicture, 2);
+	RegisterNativeFunction("FAnimateSimpleStroke__FRC6RefVarN31", (void*) FAnimateSimpleStroke, 3);
 }

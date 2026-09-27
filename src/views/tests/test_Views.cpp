@@ -1056,6 +1056,24 @@ TestShapes()
 	// MakeInk: the ink shape, drawn where it was made
 	// (both rectangles 'boundsRect binaries, as MakeRectShape makes them)
 	EXPECT(EQRef(ClassOf(Eval("MakeInk(SetClass(\"x\", 'ink), 5, 6, 25, 16).bounds")), Intern((char*) "boundsRect")));
+	// AnimateSimpleStroke: a stroke of three moves one to the right from
+	// (10, 50), drawn at twice the size into (0, 0, 200, 200) - a line from
+	// (20, 100) to (26, 100) - and at its own size, from (10, 50) to (13, 50)
+	{
+		static const UByte kStroke[] = { 0, 0, 0, 0, 0, 100, 0, 100,	// drawn in 0, 0, 100, 100
+										 0, 0, 0, 3, 0, 50, 0, 10,		// three moves from v 50, h 10
+										 0x01, 0x01, 0x01, 0 };			// right, right, right, and the pad
+		RefVar stroke(AllocateBinary(RSSYMbinary, sizeof(kStroke)));
+		memmove(BinaryData(stroke), kStroke, sizeof(kStroke));
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "simpleStroke")), stroke);
+		EXPECT(ISNIL(Eval("AnimateSimpleStroke(simpleStroke, {left: 0, top: 0, right: 200, bottom: 200}, nil)")));
+		long before = Pixel(12, 50);
+		EXPECT(ISNIL(Eval("AnimateSimpleStroke(simpleStroke, {left: 0, top: 0, right: 100, bottom: 100}, nil)")));
+		EXPECT(Pixel(12, 50) != before && Pixel(12, 52) == before && Pixel(16, 50) == before);
+		Rect drawn;
+		SetRect(&drawn, 0, 40, 40, 60);
+		EraseRect(&drawn);						// (the later tests want the map as it was)
+	}
 	Eval("inkShape := MakeInk(SetClass(\"x\", 'ink), 5, 6, 25, 16)");
 	EXPECT(EQRef(ClassOf(Eval("inkShape.originalBounds")), Intern((char*) "boundsRect")) && !EQRef(Eval("inkShape.originalBounds"), Eval("inkShape.bounds")));
 	{
