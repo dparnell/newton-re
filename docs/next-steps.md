@@ -10,7 +10,7 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 106/106
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 107/107
   (`intl.Dates` fails about one run in ten: it reads the real clock).
 - `analysis/coverage.py build/MP2x00US --check`: 11108 citations, 0 bad;
   6174 of 16671 functions (37.03%).
@@ -139,20 +139,12 @@ the word is kept as ink.  `test_WordDescriptors`;
 `src/host/demo/cursive.ns` with `NEWTON_TRACE_CURSIVE=1`.  Left of
 stage 1: `SetStrXrRC` (0x000651e4, a configuration's `strxrCommands`).
 
-**Open problem found on the way:** with the letter set made cursive,
-`cursive.ns` locks up now and then (one run in three at the default 4MB
-heap, also seen at 8MB and 16MB under load) after the first word: the
-busy thread is in the host heap's compaction (`CompactHeap`/`LockedBlock`,
-`tools/host/stacksample.py`), which suggests a damaged free list.
-Bisected with temporary switches: it still happens with the domain's
-grouping turned off, and does not happen (0 in 6) when the 'STXR'
-parameter block skips loading its own letter table - `DomainParameter`
-selector 1's `ReadDteResource("avp.dte", ...)` and `AllocLearnInfo`, a
-second copy beside the word domain's (which shares
-`gParaRamData.fLearnInfo[set]`).  So look there first
-(`ParaGraph.cpp`: `ReadDteResource`, `SetUpDteAddres`, `AllocLearnInfo`,
-`dti_lock`/`dti_unlock` run for a second DTI); that is also why there is
-no ctest for `cursive.ns` yet.
+The lock-up found on the way (`cursive.ns` stopping one run in three in
+the heap's compaction) was heap damage done at boot: `CreateTrigramHeader`
+asked for the ROM's 0x98 bytes and zeroed the host's 0xa8-byte header
+over the next block's header - fixed (2026-09-28, `docs/work-log.md`).
+The 'STXR' bisect only moved the heap's layout.  `cursive.ns` is now
+ctest `host.NewtonCursive` (18 of 18 runs clean, where 3 of 6 locked up).
 
 **Stage 2 sized** (callgraph.py, not-done functions below each root):
 `low_level` 389 functions, 213 KB (the trace cut into xrs: `low_type`,
@@ -197,9 +189,6 @@ hooks (`debug`, `DebugRunUntilIdle`, `DebugMemoryStats`, `StdioOn`/
   prints); and the IR sniffing (`StartIRSniffing`/`StopIRSniffing`, 42
   functions and 4 KB of the IR stack not yet done - `callgraph.py`).
 - `HobbleTablet` reaches nothing on the host (no inker port).
-- Seen once, not reproduced: the open-apps smoke run stalled at boot in
-  `GetLetterWeights` (from `saveLetterWeights`) while other checks were
-  running at the same time; alone it passes.
 
 ## The package manager: what is left
 
@@ -398,6 +387,14 @@ The areas whose machinery exists are worth sweeping with `--ready`;
   calls keep working.
 
 ## Working notes that keep being needed
+
+- **Heap damage**: `NEWTON_HEAPCHECK=N` (every Nth allocation; 1 for
+  all) makes `newton` walk the newt task's heap after allocations and
+  before every `DisposPtr`, and stop at the first damaged block with the
+  C stack as image offsets for `tools/host/whichfunction.py`
+  (`host/HostHeapCheck.h`; `NEWTON_HEAPDUMP` lists the blocks as it
+  goes).  A ROM size handed to an allocator for a struct with pointers
+  in it is the usual culprit: grep for literal sizes.
 
 - Unaligned `ldr rN,[X+2]` rotates the aligned word right by 16 - read
   halfword loads out of the disassembly, never the decompiler. Halfword

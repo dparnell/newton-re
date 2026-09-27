@@ -408,7 +408,11 @@ CreatePDFHeader(UByte* ppd)
 long
 CreateTrigramHeader(Handle* header, ULong ramTrigram, UByte* trigrams)
 {
-	*header = HWRMemoryAllocHandle(0x98);
+	// DEVIATION: the ROM asks for 0x98 bytes, the header's size on the ARM;
+	// on the host its three trailing words are pointer-sized (0xa8), and
+	// asking for 0x98 had the memset below wipe the header of the block
+	// after it - the heap damage that locked the machine up in compaction
+	*header = HWRMemoryAllocHandle(sizeof(TrigramHeader));
 	if (*header == nil)
 		return 0;
 	TrigramHeader* p = (TrigramHeader*) HWRMemoryLockHandle(*header);

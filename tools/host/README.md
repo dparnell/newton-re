@@ -84,3 +84,20 @@ one that is stuck:
 
     NEWTON_TRACE_UPDATE=1 build/host/host/newton ... 2> updates.log
     grep "\[update\]" updates.log | cut -d' ' -f2 | sort | uniq -c | sort -rn | head
+
+## NEWTON_HEAPCHECK
+
+Heap damage shows up long after it is done - a lock-up in compaction, a
+crash in an unrelated allocation.  `NEWTON_HEAPCHECK=N` makes `newton`
+walk the newt task's heap after every Nth allocation (1: every one, which
+is slow - a boot takes minutes) and before every `DisposPtr`, and stop at
+the first damaged block, printing what is wrong and the C stack as image
+offsets:
+
+    NEWTON_HEAPCHECK=1 build/host/host/newton --rom build/MP2x00US/rom.bin --headless 20
+    python tools/host/whichfunction.py build/host/host/newton.exe 0x5b6753
+
+The damage is then between the allocation named and the one before it.
+`NEWTON_HEAPDUMP=1` as well lists the free list and every block at each
+walk.  The code is `src/host/HostHeapCheck.cpp`; it is how the cursive
+lock-up was traced to `CreateTrigramHeader` asking for a ROM size.

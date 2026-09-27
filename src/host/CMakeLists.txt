@@ -29,7 +29,7 @@ add_library(host_window STATIC win32/HostWindow.cpp)
 if(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32)
 endif()
-add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp)
+add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_BIN}\"")
 
@@ -44,6 +44,15 @@ set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
 add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recognize.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "Recognize read ton.*unread strokes came back as nothing.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7.*ink came back as a piece of 4 strokes.*ink came back as a piece of 4 strokes")
+
+# the cursive recogniser: the letter set made cursive and "ton" and "to"
+# written, the word segmenter handing each word to the reader
+# (GCTryToRecognize, whose reading layers are NOT YET, so it answers -8);
+# this also watches for the heap damage a too-small trigram header once did
+# here, which locked the machine up one run in three (needs the ROM image)
+add_test(NAME host.NewtonCursive COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
+                     PASS_REGULAR_EXPRESSION "word of strokes 0-3 [^:]*: -8.*word of strokes 0-2 [^:]*: -8")
 
 # the journal (testing/Journal.h): "ton" written while recording, the four
 # strokes played back into the tablet buffer and read again (needs the

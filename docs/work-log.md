@@ -9,7 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive lock-up was heap damage at boot
 
+- `cursive.ns` locked up one run in three in the heap's compaction.  A
+  new host heap walker (`NEWTON_HEAPCHECK`, `host/HostHeapCheck.h`: the
+  newt heap walked after allocations and before each `DisposPtr` - block
+  sizes, parents, master pointers, the free list against the free
+  blocks - stopping with the C stack) caught it at boot, 196
+  allocations in: `CreateTrigramHeader` (ROM 0x002d4cbc) asked
+  `HWRMemoryAllocHandle` for the ROM's 0x98 bytes, and the host's
+  `TrigramHeader` is 0xa8 (its three trailing words pointer-sized), so
+  the memset zeroed the next block's header.  Allocated by `sizeof` now
+  (DEVIATION).  It runs on every boot (`GetLetterWeights` ->
+  `LIBeginWeights` -> the word domain's `LoadVocAndData`), which is also
+  the one-off boot stall in `GetLetterWeights` noted before; the 'STXR'
+  bisect had only moved the layout.  18 of 18 runs clean (3 of 6 locked
+  up before); a whole boot checked at every allocation and open-apps
+  every 20th are clean.  ctest `host.NewtonCursive`.
+- ROM bug found by the same runs (`test_Newt` failing now and then under
+  the sanitizer): `WordRecog`'s +0x68, the running mean of stroke
+  heights, is never initialised - the ROM writes it only in the mean
+  itself (0x002751d4) - so it starts as heap rubbish and its products
+  overflow.  Kept, with the ARM's wrapping arithmetic
+  (`WordRecogIsStrokeTooWide`, `WordRecogAddStroke2`).
 
 ## 2026-09-28: the cursive reader, stage 1 - writing reaches it
 

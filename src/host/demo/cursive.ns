@@ -2,19 +2,20 @@
 // cursive recogniser (the 'STXR' and 'XRWR' domains) reads the page in
 // place of Rosetta, and "ton" and "to" written on the Notepad.
 //
-//   NEWTON_TRACE_CURSIVE=1 build/host/host/newton --rom build/MP2x00US/rom.bin //       --display 320x480 --script src/host/demo/cursive.ns --headless 50
+//   NEWTON_TRACE_CURSIVE=1 build/host/host/newton --rom build/MP2x00US/rom.bin
+//       --display 320x480 --script src/host/demo/cursive.ns --headless 50
 //
 // The words are grouped by ParaGraph's word segmenter into two word
 // descriptors and each is given to the reader (GCTryToRecognize).  The
 // reader's three layers are NOT YET, so each word ends as ink:
-// "cursive: ..." lines say how far it got, and build/cursive.pgm is the
+// "[cursive] word of strokes ..." lines say how far it got (ctest
+// host.NewtonCursive looks for both), and build/cursive.pgm is the
 // page.  Otherwise as src/host/demo/write.ns.
 //
-// KNOWN PROBLEM: now and then (one run in three) the machine locks up
-// after the first word, in the host heap's compaction.  It goes away
-// when the 'STXR' parameter block does not load its own letter table
-// (DomainParameter selector 1: ReadDteResource and AllocLearnInfo, a
-// second copy beside the word domain's) - docs/next-steps.md.
+// This run once locked up one time in three, in the heap's compaction:
+// CreateTrigramHeader asked for the ROM's 0x98 bytes and zeroed the
+// host's larger header over the next block (fixed; NEWTON_HEAPCHECK,
+// host/HostHeapCheck.h, is how it was found).
 
 tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
 typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;

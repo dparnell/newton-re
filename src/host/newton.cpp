@@ -43,6 +43,7 @@
 #include "hal/host/Host.h"
 #include "HostStores.h"
 #include "HostPackages.h"
+#include "HostHeapCheck.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
@@ -96,6 +97,7 @@ Usage(void)
 static void
 NewtonBoot(void)
 {
+	HostHeapCheckInstall();		// (NEWTON_HEAPCHECK: host/HostHeapCheck.h)
 	HostBootNewtWorld();
 	THostScreenDriver* display = HostDisplay();
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))

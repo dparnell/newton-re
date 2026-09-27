@@ -637,7 +637,13 @@ WordRecogStrokeType(WordRecog* wr, const RosStroke* stroke)
 Boolean
 WordRecogIsStrokeTooWide(WordRecog* wr, RosStroke* stroke, Fixed multiple)
 {
-	Fixed measured = (wr->fField68 * 3 + WordRecogDetermineMaxHeight(wr)) >> 2;
+	// ROM BUG: fField68 is never set before its running mean first reads
+	// it (+0x68 is written only in WordRecogAddStroke2), so it starts as
+	// whatever the heap held and can be large enough for this and the mean
+	// to overflow; the ARM wraps, so the sums are worked in 32-bit
+	// unsigned arithmetic here (the host traps a signed overflow) and the
+	// shift is the ARM's arithmetic one
+	Fixed measured = (Fixed) (int32_t) ((uint32_t) wr->fField68 * 3u + (uint32_t) WordRecogDetermineMaxHeight(wr)) >> 2;
 	Fixed scale = (wr->fRun[18] < measured)
 				? FixedDivide(measured, wr->fRun[18])
 				: 0x00010000;
@@ -981,7 +987,9 @@ WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*fie
 			// ... and of the height, over the strokes tall enough to be
 			// worth counting
 			if (FixedMultiply(0x00004000, wr->fRun[18]) < height)
-				wr->fField68 = (wr->fField68 * (seen - 1) + height) / seen;
+				// (ROM BUG: fField68 starts as heap rubbish - WordRecogIsStrokeTooWide;
+				//  the product wraps as the ARM's does)
+				wr->fField68 = (Fixed) ((int32_t) ((uint32_t) wr->fField68 * (uint32_t) (seen - 1) + (uint32_t) height) / (int32_t) seen);
 
 			// and the first of the nine: how big a stroke is.  Anything
 			// more than twice what is expected is left out of it.

@@ -1955,3 +1955,20 @@ the samples in is also spelt `JournalInsertTabletSamople` in the ROM's
 own symbols, and a replay leaves the tablet bypassed - the real pen shut
 out - until the test agent is told to stop.
 
+
+## A running mean that starts from whatever the heap held
+
+Rosetta keeps a running mean of how tall the writer's strokes are, in the
+word recogniser's state block at +0x68 (`WordRecogAddStroke2`, ROM
+0x002751cc: `mla` the old mean by the count less one, add the new
+height, `__rt_sdiv` by the count).  Nothing ever sets it first: the
+block is `NewPtr`'d and +0x68 is written in exactly one place, the mean
+itself.  So the first stroke's mean is (rubbish x 0 + height) / 1 - which
+is fine, the rubbish is multiplied away - *unless* the stroke counter was
+already more than one, which it is after a reset that clears the
+strokes but not the mean.  Then the rubbish is averaged in, and a large
+enough rubbish value overflows the product; the ARM wraps and the mean
+comes out as some other number, and `WordRecogIsStrokeTooWide` (which
+triples it) wraps again.  The host keeps the bug with the ARM's
+arithmetic; what gave it away was the sanitizer trapping the overflow on
+the few runs where the heap happened to leave a big number there.
