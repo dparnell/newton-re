@@ -47,3 +47,40 @@ A whole function matching to the byte is not a coincidence.
 It needs nothing but the Python standard library, and works on any of the
 host executables (`newton.exe`, `newtonscript.exe`, one of the tests). It is
 Windows/COFF only, which is what the crash handler it serves is.
+
+## stacksample.py - what a locked-up host is doing
+
+When a host program stops answering while one of its threads eats a whole
+CPU, it is looping somewhere.  With no debugger installed this looks inside
+it without stopping it:
+
+    python tools/host/stacksample.py <pid> [--thread TID] [--samples N] [--depth BYTES]
+    python tools/host/stacksample.py 73092 --samples 6
+
+It suspends the thread (the busiest one unless `--thread` names another),
+reads its registers and the top of its stack, lets it go again, and names
+what it found with `whichfunction.py`'s machinery: the instruction pointer,
+and every word on the stack that points into the executable's code just
+after a call instruction - the return addresses, outermost last.  It is a
+scan rather than an unwind, so a stale return address can turn up; the
+functions that recur from sample to sample are the real frames.
+
+**Inputs:** the process id (`Get-Process newton`); the executable must be
+the build the process is running, so do not rebuild before looking (a
+running `newton.exe` cannot be relinked anyway).  **Output:** per sample,
+image offsets with function names.  Nothing is written and the process
+carries on.  Windows only; standard library only (ctypes).
+
+It is how a "hang" in the Time Zones application was told apart from a
+stuck loop: every sample was inside `TNotebook::Idle` -> `TRootView::Update`
+repainting, and `NEWTON_TRACE_UPDATE=1` (below) then showed which view.
+
+## NEWTON_TRACE_UPDATE
+
+Set in the environment of a host program, it prints every update region
+`TRootView::Update` repaints (its bounding box and the tick), which is how
+to tell a machine that is busy repainting the same thing over and over from
+one that is stuck:
+
+    NEWTON_TRACE_UPDATE=1 build/host/host/newton ... 2> updates.log
+    grep "\[update\]" updates.log | cut -d' ' -f2 | sort | uniq -c | sort -rn | head

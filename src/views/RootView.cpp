@@ -8,6 +8,8 @@
 */
 
 #include "RootView.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "CorrectInfo.h"
 #include "Keyboard.h"
 #include "Bits.h"
@@ -645,6 +647,14 @@ TRootView::Update(Rect* rect)
 		TView* filler = slot->fFiller;
 		if (EmptyRgn(slot->fRegion))
 			slot->fFiller = nil;
+		// host: NEWTON_TRACE_UPDATE prints each region repainted - how to
+		// tell a machine that is busy repainting from one that is stuck
+		static const Boolean traceUpdate = getenv("NEWTON_TRACE_UPDATE") != nil;
+		if (traceUpdate)
+		{
+			const Rect& box = (*dirty)->rgnBBox;
+			fprintf(stderr, "[update] %d,%d,%d,%d at %lu\n", box.left, box.top, box.right, box.bottom, (unsigned long) Ticks());
+		}
 		TView::Update(dirty, filler);
 		DisposeCachedRgn(dirty);
 		pending.Take(NewCachedRgn());
@@ -1401,9 +1411,8 @@ TRootView::FindDefaultButtonAndCaretSlip(TView* view, TView** button, TView** sl
 
 // ROM 0x001b4788 UpdateDefaultButtonAndCaretSlip__9TRootViewFv
 // The default button and caret slip found for the key view; a change
-// dirties the old view (when there was one) or the new (the ROM does
-// one thing per call: the old one dirtied first, the new one taken on
-// the next).
+// dirties the old view (when there was one) and the new (when there is
+// one), so that both are drawn again with or without their emphasis.
 void
 TRootView::UpdateDefaultButtonAndCaretSlip(void)
 {
@@ -1413,24 +1422,15 @@ TRootView::UpdateDefaultButtonAndCaretSlip(void)
 	if (fDefaultButton != button)
 	{
 		if (fDefaultButton != nil)
-		{
 			fDefaultButton->Dirty(nil);
-			return;
-		}
 		fDefaultButton = button;
 		if (button != nil)
-		{
 			button->Dirty(nil);
-			return;
-		}
 	}
 	if (fCaretSlip != slip)
 	{
 		if (fCaretSlip != nil)
-		{
 			fCaretSlip->Dirty(nil);
-			return;
-		}
 		fCaretSlip = slip;
 		if (slip != nil)
 			slip->Dirty(nil);

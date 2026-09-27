@@ -6527,6 +6527,30 @@ TestPicture()
 }
 
 
+// A default button that is no longer the key view's is dirtied once and
+// forgotten, not dirtied on every update (which kept the host repainting
+// the screen for ever under a popup, and looked like a hang).
+static void
+TestDefaultButtonChange()
+{
+	TView* button = ViewOf("ctxDB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, "
+		"viewBounds: {left: 10, top: 10, right: 60, bottom: 30}})");
+	EXPECT(button != nil);
+	if (button == nil)
+		return;
+	TView* savedCaretView = gRootView->fCaretView;
+	gRootView->fCaretView = nil;					// no key view: no default button
+	gRootView->fDefaultButton = button;			// ... but one left over
+	gRootView->UpdateDefaultButtonAndCaretSlip();
+	EXPECT(gRootView->fDefaultButton == nil);		// dirtied once and forgotten
+	gRootView->UpdateDefaultButtonAndCaretSlip();
+	EXPECT(gRootView->fDefaultButton == nil);
+	gRootView->fCaretView = savedCaretView;
+	Eval("RemoveView(GetRoot(), ctxDB)");
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6672,6 +6696,7 @@ main()
 		TestModalSafeShow();
 		TestEditCommands();
 		TestPolygons();
+		TestDefaultButtonChange();
 		TestModalDialogViews();
 		TestInsertItems();
 		TestClipboard();
