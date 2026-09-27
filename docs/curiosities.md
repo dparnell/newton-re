@@ -1889,3 +1889,34 @@ wraps at 30 bits just as the ARM's `mov r0,r0,lsl #2` does.
 
 Where: `FTimeInSeconds`/`FSetTimeInSeconds` in `src/intl/Dates.cpp`;
 seen by walking Setup with `src/host/demo/assist-tasks.ns`.
+
+
+## A native that reads an argument nobody passes
+
+`MoveCorrectionInfo` moves the corrector's record of a word from one view
+to another. Its C function (ROM 0x00079c98,
+`FMoveCorrectionInfo__FRC6RefVarN41`) takes five RefVars - the receiver,
+the source view's name, the offset, the destination's name and the new
+offset - but the ROM's native function table says it has three arguments.
+The interpreter passes the receiver and three arguments in r0-r3, and the
+fifth parameter, which ARM's calling convention puts on the stack, is read
+from wherever the interpreter's own stack happens to be: the word's new
+place is whatever the interpreter left there. The same function also hands
+both offsets on as the Refs they are (four times the integer), so even with
+a real new offset the word would be looked for at four times where it was
+asked. No ROM script calls it; it was evidently never used.
+
+The reconstruction keeps the Refs and, having no ARM stack to read, takes
+nil for the missing argument (a `DEVIATION:`). `src/views/tests/
+test_Views.cpp` pins what that does.
+
+## Two ways of losing a Ref's tag
+
+`FindShape` keeps the nearest shape so far in a path array whose first slot
+is its distance as a NewtonScript integer, and a new find replaces it when
+it is no further away. `DoFindShape` (ROM 0x000e1be0) compares the new
+distance - a plain C integer - with that slot's raw Ref, which is the
+distance shifted left two bits. So a shape up to four times further away
+than the one already found still wins, and with nothing found yet the limit
+is 0x200: the Ref of 128, read as 512 pixels. Kept, and commented, in
+`src/views/ShapeVerbs.cpp`.

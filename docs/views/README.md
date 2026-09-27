@@ -2144,6 +2144,56 @@ left behind by tapping it twice.
 The drag that makes one is `TView::DragAndDrop` (above), which also
 moves a clipping dragged by its label (`MoveIcon` 0x0009f568).
 
+## Questions asked of shapes (`views/ShapeVerbs.cpp`)
+
+`FindShape(shapes, x, y, style)` is the hit test a drawing application
+selects with: which shape of a list is nearest the pen, and which corner
+of it.  `DoFindShape` (0x000e1be0) walks the list (a style frame in it put
+in force for the shapes after it, as drawing does) and tests each shape
+within the style's `selection` distance, six when there is none: a
+rectangle's or round rectangle's outline is the band between its box grown
+and shrunk by that distance (filled, anywhere inside), a line and each side
+of a polygon by `DistanceFromLine` - the cross product over the cheap
+length, so only roughly the perpendicular distance - an oval's and a
+wedge's outline as a distance from the middle between half the shorter and
+half the longer side, a region by its own bytes, ink by every expanded
+point within the distance and the pen's width, and a bitmap, text or
+picture by its box.  With a selection distance a point in one of the box's
+four corners (0 top left, clockwise) finds the shape whatever its outline
+says - that is where a selected shape's handles are.  A find nearer than
+the one held starts the path again as [distance, corner] and every list
+level adds its index on the way out; `FFindShape` turns it round into
+{vertex, path} (path true for a single shape).  Two ROM bugs are kept: the
+comparison with the find already held is against its Ref, four times the
+distance, and a filled oval or wedge asks `PointInShape` and then takes the
+shape whatever it answered.
+
+`GetShapeInfo` answers `canonicalShapeInfo` with the bounds (a bitmap's is
+`GetBitmapInfo`'s frame), plus a text's string, a line's two ends as
+{x, y} frames and a wedge's `bitsBounds` - `WedgeBox` (0x000e148c), which
+answers only the quarter of the box the start angle falls in (the arc is
+never looked at).  `MakeInk` wraps an ink binary in `canonicalInkShape`
+with `bounds` and `originalBounds` (two 'boundsRect binaries).
+`StrokeInPicture` asks `PtInPicture` whether a stroke ended on a picture.
+`AnimateSimpleStroke` plays a recorded drawing back as though written: the
+binary is the rectangle it was drawn in, then strokes of a count, a start
+point and nibble-pair moves, mapped into the destination; with a pen the
+stylus picture (`gtPens[2]`) is drawn at each point a tick at a time over
+a `TBits` copy of what was under it.  No ROM script calls it, so its bytes
+are read big-endian as the ROM reads them.
+
+NOT YET: `MungeShape` (rotate or flip a shape about its middle).  Its
+point and rectangle turners are read (0x000de6d8-0x000dea9c; the centre
+is the shape's box's middle, (cx, cy)): `RotatePointR` makes (h, v) into
+(cx + cy - v, cy + h - cx), `RotatePointL` into (cx + v - cy, cy + cx - h),
+the flips mirror about cx or cy, and the rectangle turners do the same to
+the corners (`RotateRectR`: top = left - cx + cy, left = cx + cy - bottom,
+bottom = right - cx + cy, right = cx + cy - top).  `DoMungeShape` applies
+them to a geometric shape's data, rotates or scales ink strokes
+(`TStroke::Rotate`/`Scale`, over the matrix helpers) and draws a bitmap,
+text, picture or region into a bitmap to turn with `FMungeBitmap` - the
+rest of that chain is listed in `docs/next-steps.md`.
+
 ## The outline list (`views/ListView.h`)
 
 `TListView` (class 99, over `TEditView`; ROM 0x0010eec4-0x00112f74) is

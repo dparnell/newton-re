@@ -118,9 +118,9 @@ TNotebook::InitToolbox(void)
 	InitializeInkFont();
 	// the ROM's own handwriting engine, Rosetta, reads the writing
 	// (recognition/RosRecognizer.h); what it cannot read is kept as
-	// ink.  (NOT YET: the machine's other word recogniser, the CIC
-	// library for printed writing, which a script can choose with
-	// UseWRec.)
+	// ink.  (The letter set chooses between it and the cursive
+	// recogniser, ParaGraph's, whose reading is NOT YET: ReadCursiveOptions,
+	// under gRecognition.Init.)
 	RegisterRosettaWRec();
 	gRecognition.Init(2);		// (which puts the letter set's word recogniser in use: ReadCursiveOptions)
 	RunInitScripts();

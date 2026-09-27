@@ -905,9 +905,15 @@ reconstructed:
   which walks the trie choosing a weighted character at each step until
   it lands on a word. `GetRandomDictionaryWord` is its only native.
 
-So the two dictionary natives still unanswered are
-`ConvertDictionaryData` (wants the completions walk) and
-`GetRandomDictionaryWord` (wants the generator).
+Both dictionary natives that waited on these are answered now.
+`ConvertDictionaryData` (0x0008f06c, `Dictionaries.cpp`) brings an old
+dictionary's data up to date in place: it walks the words of one copy with
+the completions walk and, for every word whose attribute still carries the
+old capitals flags (0x40 the whole word, 0x80 its first letter), deletes it
+from a second copy and adds it back in capitals with the flags off
+(`DecodeRecognitionWord`, 0x0008ecdc/0x0008ecf8: `UppercaseText` over the
+word turned into Unicode and back), then copies the second copy's bytes
+into the binary.
 
 ## The controller (`recognition/Controller.h`)
 

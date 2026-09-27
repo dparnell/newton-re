@@ -9,6 +9,31 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the shape verbs and the last recognition natives
+
+- `views/ShapeVerbs.cpp`: `FindShape` (`DoFindShape` over `PointInShape`,
+  `DistanceFromRect` and `qd/Rects.h`'s `DistanceFromLine`), `GetShapeInfo`,
+  `MakeInk`, `StrokeInPicture`, `AnimateSimpleStroke`; `WedgeBox` (a stub
+  until now) answers the quarter of the box a wedge starts in.  ROM bugs
+  kept: `DoFindShape` compares a distance with the path's first slot as a
+  Ref (four times the distance it holds), a filled oval or wedge ignores
+  what `PointInShape` answers, and the polygon's fake handle and the ink's
+  expanded strokes leak; `AnimateSimpleStroke` offsets the stylus picture's
+  bounds by their own top left (doubled, not taken back).
+- `ink/CICConvert.cpp`: the codec's converter (`ConvertData`,
+  `ConverterRun`, `ProcessNewStroke`/`LongStrokeNear`/`ShortStrokeNear`)
+  and `InkConvert` over it.  Host bug found: the codec seam took format 2
+  to be "the old uncompressed ink" and refused it; it is the codec's own
+  older, headerless code-book-2 format (`ReadNewStroke` reads it,
+  `InkConvert` writes it for 'ink), and `TCICInkCodec` now reads it.
+- `ConvertDictionaryData`, `AddUnit`, `HandleInkWord`,
+  `MoveCorrectionInfo` - the last with two ROM bugs: the offsets go on as
+  Refs, and the native table gives it three arguments where the function
+  reads four, so its new offset is whatever the ARM stack held
+  (DEVIATION: nil on the host).
+- Left: `MungeShape` and `PictToShape` (next-steps, item 3), and
+  `TEditView::TrackDistort`.
+
 ## 2026-09-27: deferred recognition
 
 - `views/Rerecognize.h`: writing already on the machine read again -

@@ -8,13 +8,13 @@ first) and in its subsystem's page, and update this file.  The history
 of how things got here - the order of the work, and the host and ROM
 bugs found along the way - is `docs/work-log.md`.
 
-## State at 2026-09-27
+## State at 2026-09-28
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 103/103
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10791 citations, 0 bad;
-  5919 of 16671 functions (35.50%).
-- `analysis/natives.py --unbound`: 378 of the ROM's 1326 natives
+- `analysis/coverage.py build/MP2x00US --check`: 10813 citations, 0 bad;
+  5934 of 16671 functions (35.59%).
+- `analysis/natives.py --unbound`: 352 of the ROM's 1326 natives
   are unanswered (table below).
 
 ## What works
@@ -61,8 +61,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 The owner asked (2026-09-27) for the recognition system to be put to bed,
 then for the testing system.  What is left of recognition is its natives
-(`natives.py --unbound`, the recognition area, 23 now), in the order
-planned:
+(`natives.py --unbound`, the recognition area: two left, both shape
+verbs rather than recognition proper), in the order planned:
 
 1. ~~**Deferred recognition**~~ - DONE 2026-09-27 (`views/Rerecognize.h`,
    `docs/recognition/README.md`'s "Deferred recognition", ctest
@@ -73,11 +73,30 @@ planned:
    recogniser and the letter styles"; the cursive engine's reading is
    NOT YET) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
    `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
-3. **Shape verbs**: `MakeInk`, `FindShape`, `GetShapeInfo`, `MungeShape`,
-   `PictToShape`, `StrokeInPicture`, `AnimateSimpleStroke`.
-4. `InkConvert`, `TrackDistort`, `ConvertDictionaryData` (below),
-   `MoveCorrectionInfo`/`AddUnit`/`HandleInkWord`, and the boot's
-   `UseWRec` choice.
+3. DONE bar two (2026-09-28, `views/ShapeVerbs.cpp`,
+   `docs/views/README.md`'s "Questions asked of shapes") **Shape verbs**:
+   `MakeInk`, `FindShape`, `GetShapeInfo`, `StrokeInPicture`,
+   `AnimateSimpleStroke` (and `WedgeBox`, a stub until now).  NOT YET:
+   - `MungeShape` (0x000df718): `DoMungeShape` 0x000dea9c (3196 B - the
+     point and rectangle turners 0x000de6d8-0x000dea9c are small and read,
+     in `docs/views/README.md`), under it `TStroke::Rotate`/`Scale`
+     0x002228a0/0x002229b4 with the matrix helpers (`SetIdentityMatrix`,
+     `RotateMatrix`, `TransformPoints`, `MxScale`, `MxMove`, `Concatenate`,
+     `MxInit`, `MxCopy`, `MxRotate`, `MxTransform`, 0x00125114-0x001257f8)
+     for ink, and for a bitmap, text, picture or region `FMungeBitmap`
+     0x0003f764 over `RotBitmap180`/`FlipBitmapH`/`FlipBitmapV`/
+     `RotBitmapL`/`RotBitmapR`/`RotTiledBitmap`/`Tilable`
+     (0x0003f93c-0x00040f28, about 5.5 KB) - which is also the `MungeBitmap`
+     native.
+   - `PictToShape` (0x000dd6dc): `DrawPicture`'s toShapes path - the
+     `OpcodeProcs` table, `storeShape`, `flushShape`, `MungeStyleFrame`
+     (`docs/qd/README.md`).
+4. DONE (2026-09-28) `InkConvert` (over the codec's converter
+   `ConvertData`, `ink/CICConvert.cpp`), `ConvertDictionaryData`,
+   `MoveCorrectionInfo`/`AddUnit`/`HandleInkWord`; the boot's `UseWRec`
+   choice was already made by `ReadCursiveOptions` (item 2).  NOT YET:
+   `TEditView::TrackDistort` 0x000a9634 (dragging a selected shape's
+   corner to distort it, which `MungeShape`'s neighbours would draw).
 
 ## Then: the testing system
 
@@ -168,7 +187,7 @@ inside an area).  At 2026-09-27:
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
 | testing | 38 | the test agent and the debug hooks |
 | packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
-| recognition | 12 | the rest of the recognition system |
+| recognition | 2 | `MungeShape`, `PictToShape` (shape verbs, above) |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |
 | views | 17 | |
 | sound | 9 | the sound server |
@@ -193,12 +212,10 @@ The areas whose machinery exists are worth sweeping with `--ready`;
   `BPNetEvaluate` from an emulator would be the reference to check the
   classifier's own numbers against, if ever one is wanted.
 
-- `ConvertDictionaryData` (0x0008f06c) is unanswered but no longer
-  blocked: the completions walk it waited on is done
-  (`AEnum_FirstLast`/`AEnum_NextPrevious`, `FirstCompletion`/
-  `NextCompletion`).  `GetRandomDictionaryWord` is answered (the random
-  word generator, `recognition/RandomWords.h`).  The sixteen-bit Airus
-  walkers are not done, and no dictionary in this ROM is sixteen-bit
+- `ConvertDictionaryData` (0x0008f06c) is answered (2026-09-28).
+  `GetRandomDictionaryWord` is answered (the random word generator,
+  `recognition/RandomWords.h`).  The sixteen-bit Airus walkers are not
+  done, and no dictionary in this ROM is sixteen-bit
   (`docs/recognition/README.md`, "What is left of the engine").
 
 ### Natives whose machinery is there, or is one function away
@@ -211,7 +228,7 @@ The areas whose machinery exists are worth sweeping with `--ready`;
   assembly rather than the decompiler.
 - The rest of the bitmap and shape verbs: `MakePict`, `PictToShape` (the
   picture turned into shapes: `DrawPicture`'s other path), `MungeShape`,
-  `MungeBitmap`, `GetShapeInfo`, `FindShape`.  `GetBitmapInfo` also wants
+  `MungeBitmap` (`GetShapeInfo` and `FindShape` are done).  `GetBitmapInfo` also wants
   `GetBinaryStore`/`GetBinaryCompander`, which answer nil on a host
   because there are never large binaries.
 - `HiliteBlock` 0x00164d64 looks like a view native but is the book
