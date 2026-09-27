@@ -31,6 +31,7 @@
 #include "DrawShape.h"
 #include "ListView.h"
 #include "MeetingView.h"
+#include "SliderView.h"
 #include <string>
 #include "Commands.h"
 #include "Keyboard.h"
@@ -6458,8 +6459,23 @@ TestMeetingView()
 		return;
 	TMeetingView* meeting = (TMeetingView*) view;
 	EXPECT(meeting->ClassID() == clMeetingView && meeting->DerivedFrom(clContainerView));
-	EXPECT(meeting->GetSliderView() != nil && meeting->GetSliderView()->ClassID() != clParagraphView);
+	EXPECT(meeting->GetSliderView() != nil && meeting->GetSliderView()->ClassID() == clSliderView);
 	EXPECT(meeting->GetTextView() != nil && meeting->GetTextView()->ClassID() == clParagraphView);
+	// the duration bar: black down the slider, two pixels in from its sides
+	Eval("ctxMV:Dirty()");
+	Refresh();
+	EXPECT(Pixel(26, 56) != 0 && Pixel(21, 56) == 0 && Pixel(31, 56) == 0);
+	// its outline slants its ends by its width
+	Rect barBox;
+	SetRect(&barBox, 0, 0, 10, 100);
+	PolyHandle bar = TRectToSliderPoly(barBox);
+	EXPECT(bar != nil);
+	if (bar != nil)
+	{
+		const Rect& b = (*bar)->polyBBox;
+		EXPECT(b.left == 0 && b.top == 0 && b.right == 10 && b.bottom == 99);
+		KillPoly(bar);
+	}
 	// a scrub that covers the icon (24 by 16 past the slider) takes the
 	// whole meeting; one that misses the meeting is nothing to it
 	Rect scrub;

@@ -54,10 +54,9 @@ The last run of work closed, in order:
   heap broke far away, in a `DrawShape`), and the ROM's shape rectangles were
   read in the host's byte order (`ObjectAreaImport` now turns them round).
   `Disasm(fn)` is a host function for reading a script the static tools
-  cannot reach.  Next: `TSliderView` (ROM 0x001c97b8, the duration bar -
-  drawing, the scrub that deletes the meeting, and dragging its end to change
-  the length) and the date the Assistant's "tomorrow" comes to (the meeting
-  lands today).
+  cannot reach.  `TSliderView`, the duration bar (drawn, dragged to change
+  the length, scrubbed to delete the meeting), came after.  Next: the date
+  the Assistant's "tomorrow" comes to (the meeting lands today).
 
 - **the outline list** (`views/ListView.h`, `docs/views/README.md`,
   "The outline list"): `TListView` and its thirteen natives, so the

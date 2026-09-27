@@ -2237,9 +2237,7 @@ in it, check box and priority drawn.
 
 `TMeetingView` (class 95, over `TContainerView`; ROM 0x001ca1a8-
 0x001cbd54) is one meeting in the Dates day view: a container of a
-slider (child 0, class 96: the bar down its left that says how long the
-meeting is - `TSliderView`, NOT YET, so it is a plain view and draws
-nothing) and the meeting's text (child 1, a paragraph).  Its icon - the
+slider (child 0) and the meeting's text (child 1, a paragraph).  Its icon - the
 context's `iconShape`, drawn by the day view's `viewDrawScript` to the
 right of the slider - is what the pen picks it up by (`HandleClick`: a
 tap runs the viewClickScript, a drag carries it away as a 'meeting or
@@ -2258,6 +2256,18 @@ repeating meeting's slots through its `repeatTemplate`, and
 `GetMeetingTypeInfo`/`GetMeetingIcon` answer the kind of meeting out of
 the Dates application's `meetingTypeRegistry` - by its meetingType, its
 mtgIconType, else its stationery.
+
+`TSliderView` (class 96, `views/SliderView.h`; ROM 0x001c97b8 and
+0x001cbd54) is the bar down a meeting's left that says how long it is:
+the view two pixels in from its sides painted black as a polygon whose
+ends slant by its width (`TRectToSliderPoly`).  The pen dragged down it
+moves the end of the meeting - the screen below it saved
+(`TSaveScreenBits`), the bar redrawn longer as the pen goes down and the
+screen put back under it as it comes up, never shorter than twelve
+pixels - and the meeting's `SetMeetingBounds(new, old)` is told the
+result; a scrub over the bar deletes the meeting (an `aeRemoveData` to
+the page, with a poof); `aeScaleData` is the drag's undo.  ROM BUG,
+kept: the polygon the press inverts is never killed.
 
 Getting the day view to draw a meeting turned up two host bugs outside
 the views.  A pattern made from rows (`MakeSimplePattern`, and so every
@@ -2278,5 +2288,5 @@ The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
 key help, the keyboard tool and the on-screen keyboards, the sounds, `SyncScroll`, the popup and
-modal dialog machinery, the other subclasses (`TSliderView`, ...), the strokes and words of the recogniser (its controller and
+modal dialog machinery, the other subclasses, the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).
