@@ -9,6 +9,38 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: strokes nobody read grouped into ink
+
+- `recognition/WordSegment.h`: ParaGraph's word segmenter (`WordStrokes`
+  and the twenty `WS_*` functions, 0x0026e8e8-0x00271da0) - the line's
+  histogram along x, the gaps, the line height, pitch, slope and word
+  distance learnt as it goes - and the net that says whether a gap is a
+  space (`NeuroNetWS`, `Rget_answer`, `EXP`; the tables generated into
+  `WordSegmentTables.cpp` by `romtable.py`).  `toolbox/FixedMath.cpp`
+  gained `FixMul32`, the library's 24.8 multiply.
+- `recognition/InkGroups.h`: the IG and GC layers
+  (`IGGroupAndCompressStrokes`, `IGCompressStrokes`, the group's upkeep,
+  `GCGroupStrokes`, `GCResizeAndLockGResHandle`, ...) and
+  `NewGetTraceFromStrokes`/`GetTraceFromStrokes` (the trace the ParaGraph
+  library reads; the letter styles' `DoLearning` waited on it too).
+  `IGGroupAndCompressStrokes` was transcribed from the disassembly: the
+  decompiler loses its 64-bit returns.
+- The stroke world's side: `AddExpiredStroke` and `ExpireAll` now group,
+  `IGCompressGroup`, `CompressGroup`, `ExpireGroup`,
+  `ExpireUsingCommand` (the aeRawInk/aeInkWord command to the view, and
+  the once-a-day memory warning) and `WRecEndInkStrokeGroup`;
+  `HandleExpiredStroke` hands its stroke over (it only took the ink off
+  before).  `StrokeCentral`'s `fUnused24`/`fUnused3c` turned out to be the
+  group's count and the expire proc.
+- A ROM quirk found and kept: `Recognize`'s `HandleBulkStrokes` gives the
+  grouped ink to `AddWordInfo`, which keeps only word infos with a word,
+  so the ROM's `Recognize` answers nothing for unread strokes.
+- `recognize.ns` checks both: unread strokes to `Recognize` come back as
+  nothing, and "ton" written twice on a view that reads nothing reaches
+  its `viewRawInkScript` as two pieces of four strokes.
+- NOT YET: the word descriptors (the cursive recogniser's side of the GC
+  layer).
+
 ## 2026-09-28: the shape verbs and the last recognition natives
 
 - `views/ShapeVerbs.cpp`: `FindShape` (`DoFindShape` over `PointInShape`,

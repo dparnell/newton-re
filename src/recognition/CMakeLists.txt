@@ -49,6 +49,9 @@ add_library(recognition STATIC
     GeoTables.cpp
     LELang.cpp
     RosList.cpp
+    WordSegment.cpp
+    WordSegmentTables.cpp
+    InkGroups.cpp
     Fragment.cpp
     FragmentTables.cpp
     LELangTables.cpp

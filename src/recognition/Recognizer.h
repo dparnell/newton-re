@@ -238,7 +238,7 @@ long	HandleUnit(TArray* units);						// ROM 0x0019d6a8 HandleUnit__FP6TArray - H
 long	HandleUnitList(TArray* units);					// ROM 0x0019d72c HandleUnitList__FP6TArray - ==> whether any unit was handled
 long	PostAndDoCommand(ULong command, TUnitPublic* unit, ULong mask);	// ROM 0x0019dccc PostAndDoCommand__FUlP11TUnitPublicT1 - the command dispatched to the view under the unit; ==> the command's result (1 when a popup closed on the click)
 TUnitList*	HandleGetContextUnits(TUnit* unit, long arg);	// ROM 0x0019dbd8 HandleGetContextUnits__FP5TUnitl - aeGetContextUnits to the view under the unit: the shapes on the page as units
-void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit - a stroke no recogniser took (NOT YET: to the stroke world's expired strokes; the ink taken off while the arbiter is modal)
+void	HandleExpiredStroke(TUnit* unit);				// ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit - a stroke no recogniser took, to the stroke world's expired strokes (the ink just taken off while the arbiter waits)
 void	UpdateStroke(TUnit* unit);						// ROM 0x0019db84 UpdateStroke__FP5TUnit - the unit's stroke's ink taken off and the root view updated
 void	SafeExceptionNotify(Exception* exception);	// ROM 0x00036a3c SafeExceptionNotify__FP9Exception - an exception out of a handler reported, not thrown
 extern Boolean	gInhibitPopup;							// ROM 0x0c101948 gInhibitPopup

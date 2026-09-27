@@ -34,11 +34,12 @@
 				the frame with them replaced by their text.  `DrawCheckmark`
 				is the arrow the machine shows over what it is reading.
 
-				NOT YET RECONSTRUCTED: the grouping of the strokes nobody
-				read into ink (StrokeCentral::AddExpiredStroke's
-				IGGroupAndCompressStrokes), so a script's strokes that are
-				not words come back as nothing; the paragraph's ProcessStyles
-				and FixupDropData callers.
+				The strokes nobody read are grouped into ink as the
+				ROM does (recognition/InkGroups.h), and handed to
+				HandleBulkStrokes - which, as in the ROM, drops them (see
+				there), so a script's strokes that are not words come back
+				as nothing.  NOT YET RECONSTRUCTED: the paragraph's
+				ProcessStyles and FixupDropData callers.
 
 	Reconstructed from the MP2x00 US ROM (0x00035bf8-0x00036960,
 	0x0017ddcc-0x0017e340, 0x001714c8, 0x0019ff5c-0x001a0028,

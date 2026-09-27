@@ -7,8 +7,7 @@
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 	FixedASin/FixedACos are declared in FixedMathExtra.h (the DDK omits
-	them).  NOT YET RECONSTRUCTED: FixMul32 (0x000b1f14, a
-	different fixed format).
+	them), as is FixMul32, the handwriting library's 24.8 multiply.
 */
 
 #include "FixedMath.h"
@@ -33,6 +32,24 @@ FixedMultiply(Fixed a, Fixed b)
 	if (product > 0x7fffffff)
 		return negative ? kFixedMin : kFixedMax;
 	return negative ? -(Fixed) product : (Fixed) product;
+}
+
+
+// ROM 0x000b1f14 FixMul32__FlT1
+// FixedMultiply's twin in 24.8: the product of the magnitudes shifted
+// down by eight with rounding (half up), the sign restored; saturated
+// when it does not fit.
+long
+FixMul32(long a, long b)
+{
+	int32_t sa = (int32_t) a, sb = (int32_t) b;
+	Boolean negative = (sa ^ sb) < 0;
+	uint64_t ma = (sa < 0) ? (uint64_t) -(int64_t) sa : (uint64_t) sa;
+	uint64_t mb = (sb < 0) ? (uint64_t) -(int64_t) sb : (uint64_t) sb;
+	uint64_t product = (ma * mb + 0x80) >> 8;
+	if (product > 0x7fffffff)
+		return negative ? (int32_t) 0x80000000 : 0x7fffffff;
+	return negative ? -(long) product : (long) product;
 }
 
 

@@ -16,11 +16,16 @@
 				the queued strokes away (each made into a click whose ink
 				is taken off), BeforeLastFlush tells whether a time falls
 				before the last flush.  The expired strokes - the ones no
-				recogniser claimed - are grouped and compressed into ink
-				for the views (NOT YET RECONSTRUCTED: AddExpiredStroke's
-				grouping - IGGroupAndCompressStrokes -, ExpireGroup,
-				CompressGroup, ExpireAll's compressing, the deferred
-				strokes).  The ROM's StrokeCentral is 0x44 bytes.
+				recogniser claimed - are grouped into words
+				(AddExpiredStroke, over InkGroups.h's
+				IGGroupAndCompressStrokes) and each word handed over as
+				one piece of ink (IGCompressGroup, CompressGroup,
+				ExpireGroup): an aeInkWord or aeRawInk command to the view
+				under it (ExpireUsingCommand), or a stroke bundle to the
+				fExpireProc a caller set (Recognize's HandleBulkStrokes);
+				ExpireAll settles whatever is waiting, half a second after
+				the last stroke (IdleCompress).  NOT YET RECONSTRUCTED: the
+				deferred strokes.  The ROM's StrokeCentral is 0x44 bytes.
 
 				NOT YET RECONSTRUCTED: TController - DEVIATION: with no
 				controller the host hands every click and click-event unit
@@ -43,6 +48,7 @@
 class TClickUnit;
 class TStrokeUnit;
 class TArray;
+class TUnitPublic;
 
 class StrokeCentral
 {
@@ -70,8 +76,11 @@ public:
 	Boolean				BeforeLastFlush(long time);				// ROM 0x00144bc8 BeforeLastFlush__13StrokeCentralFl - whether the time is before the last flush (which is forgotten after ten seconds)
 	void				AddDeferredStroke(RefArg stroke, long a, long b);	// ROM 0x00144810 AddDeferredStroke__13StrokeCentralFRC6RefVarlT2
 	void				IdleCompress(void);						// ROM 0x001454fc IdleCompress__13StrokeCentralFv - the expired strokes compressed into ink once the compress time has come (no stroke current)
-	void				ExpireAll(void);						// ROM 0x00144cd8 ExpireAll__13StrokeCentralFv - the compress group grouped and compressed (NOT YET); the compress time cleared when no expired stroke is left
-	void				AddExpiredStroke(TStrokeUnit* unit);	// ROM 0x00144df8 AddExpiredStroke__13StrokeCentralFP11TStrokeUnit - a stroke nobody claimed, to be grouped into ink half a second on (the grouping NOT YET)
+	void				ExpireAll(void);						// ROM 0x00144cd8 ExpireAll__13StrokeCentralFv - the compress group settled and compressed; the compress time cleared when no expired stroke is left
+	void				AddExpiredStroke(TStrokeUnit* unit);	// ROM 0x00144df8 AddExpiredStroke__13StrokeCentralFP11TStrokeUnit - a stroke nobody claimed, grouped with the others (the compress time half a second on)
+	void				IGCompressGroup(TStrokeUnit** units);	// ROM 0x00144c78 IGCompressGroup__13StrokeCentralFPP11TStrokeUnit - a word's strokes (nil-ended) made the expired strokes and compressed
+	void				CompressGroup(void);					// ROM 0x0014532c CompressGroup__13StrokeCentralFv - the expired strokes' ink taken off and the group expired, then let go
+	void				ExpireGroup(TUnitPublic** units);		// ROM 0x00145210 ExpireGroup__13StrokeCentralFPP11TUnitPublic - to the expire proc as a stroke bundle, or as a command to the view under them
 
 	Boolean				fHasCurrent;		// +0x00
 	TStroke*			fCurrentStroke;		// +0x04
@@ -82,12 +91,12 @@ public:
 	long				fBlockedIdles;		// +0x18  idles while blocked
 	ULong				fLastFlushTime;		// +0x1c
 	RefStruct*			fDeferredStrokes;	// +0x20  [stroke, a, b, ...]
-	ULong				fUnused24;			// +0x24
+	ULong				fGroupCount;		// +0x24  how many of the expired strokes are the group being compressed
 	TUnitList*			fExpiredStrokes;	// +0x28
 	TTime				fNextCompressTime;	// +0x2c
 	Handle				fCompressGroup;		// +0x34  (NOT YET)
 	Boolean				fFlag38;			// +0x38
-	ULong				fUnused3c;			// +0x3c  what a group of expired strokes is handed to as a stroke bundle (ExpireGroup; nought: the view under it, as ink): RecognizeStrokes' HandleBulkStrokes
+	void				(*fExpireProc)(RefArg, RefArg);	// +0x3c  what a group of expired strokes is handed to as a stroke bundle (ExpireGroup; nil: the view under it, as ink): Recognize's HandleBulkStrokes
 	RefStruct*			fCompressBundle;	// +0x40  ... with this as its first argument
 };
 
@@ -102,12 +111,12 @@ struct StrokeCentralState
 	ULong			fLastDownTime;
 	ULong			fLastUpTime;
 	RefStruct*		fDeferredStrokes;
-	ULong			fUnused24;
+	ULong			fGroupCount;
 	TUnitList*		fExpiredStrokes;
 	TTime			fNextCompressTime;
 	Handle			fCompressGroup;
 	Boolean			fFlag38;
-	ULong			fUnused3c;
+	void			(*fExpireProc)(RefArg, RefArg);
 	RefStruct*		fCompressBundle;
 };
 

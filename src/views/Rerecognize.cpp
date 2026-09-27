@@ -5,6 +5,7 @@
 				again.  See Rerecognize.h.
 */
 
+#include <stdio.h>
 #include "Rerecognize.h"
 #include "ParagraphView.h"
 #include "PolygonView.h"
@@ -224,7 +225,10 @@ RerecognizeWord(TParagraphView* view, RefArg cmd, TRecArea* area)
 
 // ROM 0x00036340 HandleBulkStrokes__FRC6RefVarT1
 // A group of strokes nobody read, as a stroke bundle: added to the
-// correct info as a word info with no words.
+// correct info as a word info with no words.  ROM QUIRK: AddWordInfo
+// keeps only word infos whose first reading is a word, so this one is
+// dropped and Recognize answers nothing for strokes it could not read,
+// though the ink grouping has run.
 void
 HandleBulkStrokes(RefArg correctInfo, RefArg bundle)
 {
@@ -237,7 +241,7 @@ HandleBulkStrokes(RefArg correctInfo, RefArg bundle)
 // ROM 0x00036398 BulkUnitHandler__FP5TUnitUl
 // A word read: its word info added to the correct info.  Anything else
 // is a stroke nobody read, handed to the bulk stroke world to be grouped
-// into ink (NOT YET: AddExpiredStroke's grouping).
+// into ink (which comes back through HandleBulkStrokes).
 ULong
 BulkUnitHandler(TUnit* unit, ULong arg)
 {
@@ -283,7 +287,7 @@ RecognizeStrokes(RefArg strokes, RefArg config, Boolean together)
 	RefVar correctInfo(NewCorrectInfo());
 	holder = correctInfo;
 	gBulkStrokes = StrokeCentral::New();
-	gBulkStrokes->fUnused3c = (ULong) HandleBulkStrokes;
+	gBulkStrokes->fExpireProc = HandleBulkStrokes;
 	*gBulkStrokes->fCompressBundle = correctInfo;
 	if (!together)
 	{

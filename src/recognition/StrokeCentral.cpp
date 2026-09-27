@@ -6,6 +6,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include <stdio.h>
 #include "StrokeCentral.h"
 #include "StrokeQueue.h"
 #include "TabletBuffer.h"
@@ -15,6 +16,18 @@
 #include "Controller.h"
 #include "Arbiter.h"
 #include "Frames.h"
+#include "InkGroups.h"
+#include "OSErrors.h"
+#include "StrokeBundle.h"
+#include "RecConfig.h"
+#include "Commands.h"
+#include "Application.h"
+#include "RootView.h"
+#include "View.h"
+#include "WRecDomain.h"
+#include "Locale.h"
+#include "Interpreter.h"
+#include "RSSymbols.h"
 
 #include <string.h>
 
@@ -83,13 +96,13 @@ StrokeCentral::InitFields(void)
 	fBlocked = 0;
 	fBlockedIdles = 0;
 	fFlag38 = false;
-	fUnused24 = 0;
+	fGroupCount = 0;
 	fExpiredStrokes = TUnitList::Make();
 	fNextCompressTime = TTime(0);
 	fCompressGroup = nil;
 	fDeferredStrokes = new RefStruct;
 	*fDeferredStrokes = MakeArray(0);
-	fUnused3c = 0;
+	fExpireProc = nil;
 	fCompressBundle = new RefStruct;
 }
 
@@ -359,29 +372,190 @@ StrokeCentral::IdleCompress(void)
 
 // ROM 0x00144df8 AddExpiredStroke__13StrokeCentralFP11TStrokeUnit
 // A stroke nobody claimed: held (one more user), grouped with the others
-// into the compress group, and the compress time set half a second on.
-// NOT YET RECONSTRUCTED: IGGroupAndCompressStrokes (0x000ea554, the CIC
-// library's word grouping), so the stroke is let go again and nothing is
-// grouped.
+// into the compress group - the words the segmenter settles compressed
+// into ink there and then - and the compress time set half a second on.
 void
 StrokeCentral::AddExpiredStroke(TStrokeUnit* unit)
 {
 	unit->Clone();
-	// IGGroupAndCompressStrokes(this, unit, gRecognitionLetterSpacing, false, &fCompressGroup) - NOT YET
-	unit->Dispose();
+	IGGroupAndCompressStrokes((ULong) this, unit, gRecognitionLetterSpacing, false, &fCompressGroup);
 	fNextCompressTime = TimeFromNow(500 * kMilliseconds);
 }
 
 
 // ROM 0x00144cd8 ExpireAll__13StrokeCentralFv
-// The compress group grouped and compressed into ink for the views
-// (NOT YET RECONSTRUCTED: IGGroupAndCompressStrokes); with no expired
-// stroke left the compress time is cleared.
+// Whatever is waiting in the compress group settled and compressed into
+// ink; with no expired stroke left the compress time is cleared.
 void
 StrokeCentral::ExpireAll(void)
 {
+	if (fCompressGroup != nil)
+		IGGroupAndCompressStrokes((ULong) this, nil, gRecognitionLetterSpacing, true, &fCompressGroup);
 	if (fExpiredStrokes->Count() == 0)
 		fNextCompressTime = TTime(0);
+}
+
+
+// ROM 0x00144c6c IGCompressGroup__FUlPP11TStrokeUnit
+// The ink grouping's way back to the stroke world.
+void
+IGCompressGroup(ULong strokeWorld, TStrokeUnit** units)
+{
+	((StrokeCentral*) strokeWorld)->IGCompressGroup(units);
+}
+
+
+// ROM 0x00144c70 IGGetCompressBufSize__FUl
+// The most strokes one piece of ink is made of (less one).
+ULong
+IGGetCompressBufSize(ULong strokeWorld)
+{
+	return 0x28;
+}
+
+
+// ROM 0x00144c78 IGCompressGroup__13StrokeCentralFPP11TStrokeUnit
+// A word's strokes put in the expired strokes as the group and
+// compressed.
+void
+StrokeCentral::IGCompressGroup(TStrokeUnit** units)
+{
+	ULong n;
+	for (n = 0; units[n] != nil; n++)
+		fExpiredStrokes->AddUnit(units[n]);
+	fGroupCount = n;
+	CompressGroup();
+}
+
+
+// ROM 0x00144cc8 WRecEndInkStrokeGroup__FPP11TStrokeUnit
+// A group of strokes the word recogniser gave up on, compressed as the
+// ink grouping's would be.
+void
+WRecEndInkStrokeGroup(TStrokeUnit** units)
+{
+	gStrokeWorld.IGCompressGroup(units);
+}
+
+
+// ROM 0x00145030 ExpireUsingCommand__FPP11TUnitPublic
+// A group of strokes as ink for the view under them: an aeInkWord
+// command when the view reads ink words, aeRawInk when it does not, the
+// strokes as a stroke bundle; the screen under them made to be redrawn.
+// When the recogniser ran out of memory since, the writer is warned (at
+// most once a day, and only as the preferences ask).
+static void
+ExpireUsingCommand(TUnitPublic** units)
+{
+	TView* view = units[0]->FindView(0x1fffe00);
+	if (view == nil)
+		return;
+	RefVar config(BuildRecConfig(view, view->fFlags & 0x1ffff00));
+	config = GetVariable(config, RSSYMdoinkwordrecognition, nil, 0);
+	RefVar cmd(MakeCommand(ISNIL(config) ? aeRawInk : aeInkWord, view, 0));
+	Rect bounds;
+	RefVar bundle(StrokeBundle(units, &bounds));
+	CommandSetFrameParameter(cmd, bundle);
+	gApplication->DispatchCommand(cmd);
+	AdjustForInk(&bounds);
+	gRootView->SmartInvalidate(bounds);
+	if (0 < gRecMemErrCount && (gRecInkNotifyFlags & 1) != 0)
+	{
+		RefVar last(GetPreference(RSSYMlastrecmemwarning));
+		ULong lastDay = ISINT(last) ? (ULong) RINT(last) : 0;
+		ULong today = (ULong) (uint32_t) RealClock() / 0x5a0;
+		if (lastDay < today)
+		{
+			RefVar quiet((gRecInkNotifyFlags & 2) == 0 ? TRUEREF : NILREF);
+			NSCallGlobalFn(RSSYMrecognitionmemorywarning, quiet);
+			SetPreference(RSSYMlastrecmemwarning, RefVar(MAKEINT(today)));
+		}
+		gRecMemErrCount = 0;
+	}
+}
+
+
+// ROM 0x00145210 ExpireGroup__13StrokeCentralFPP11TUnitPublic
+// A group of expired strokes handed on - to the expire proc as a stroke
+// bundle, or as ink to the view under them - unless the arbiter is
+// waiting (a Throw of an 'evt.ex' reported); with no expire proc the
+// screen is brought up to date.
+void
+StrokeCentral::ExpireGroup(TUnitPublic** units)
+{
+	if (!gArbiter->fWaiting)
+	{
+		newton_try
+		{
+			if (fExpireProc == nil)
+				ExpireUsingCommand(units);
+			else
+			{
+				Rect bounds;
+				RefVar bundle(StrokeBundle(units, &bounds));
+				fExpireProc(*fCompressBundle, bundle);
+			}
+		}
+		newton_catch("evt.ex")
+		{
+			// DEVIATION: the ROM's ExceptionNotify is the application
+			// layer's (newt/Notebook.h), below which recognition sits
+			SafeExceptionNotify(CurrentException());
+		}
+		end_try;
+	}
+	if (fExpireProc == nil)
+	{
+		gApplication->fNewUndoBatch = true;
+		gRootView->Update(nil);
+	}
+	gRecognition.fAfterWriting = true;
+}
+
+
+// ROM 0x0014532c CompressGroup__13StrokeCentralFv
+// The group's strokes (the first fGroupCount expired strokes) given faces,
+// their ink taken off and the group expired; then every one let go and
+// the expired strokes emptied of them - a Throw on the way is passed on
+// after the letting go.
+void
+StrokeCentral::CompressGroup(void)
+{
+	TUnitPublic** units = (TUnitPublic**) operator new((fGroupCount + 1) * sizeof(TUnitPublic*));
+	if (units == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	for (ULong i = 0; i < fGroupCount; i++)
+		units[i] = nil;
+	unwind_protect
+	{
+		ULong i;
+		for (i = 0; i < fGroupCount; i++)
+		{
+			units[i] = new TUnitPublic(fExpiredStrokes->GetUnit(i), 0);
+			if (units[i] == nil)
+				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+			units[i]->Stroke()->InkOff(false);
+		}
+		units[i] = nil;
+		if (fGroupCount != 0)
+			ExpireGroup(units);
+	}
+	on_unwind
+	{
+		for (ULong i = 0; i < fGroupCount; i++)
+		{
+			TUnit* unit = fExpiredStrokes->GetUnit(i);
+			*(TUnit**) fExpiredStrokes->GetEntry(i) = nil;
+			unit->Dispose();
+			if (units[i] != nil)
+				delete units[i];
+		}
+		fExpiredStrokes->DeleteEntries(0, fGroupCount);
+		fExpiredStrokes->Compact();
+		fGroupCount = 0;
+		operator delete(units);
+	}
+	end_unwind;
 }
 
 
@@ -404,12 +578,12 @@ StrokeCentral::SaveRecognitionState(UChar* failed)
 	state->fLastDownTime = fLastDownTime;
 	state->fLastUpTime = fLastUpTime;
 	state->fDeferredStrokes = fDeferredStrokes;
-	state->fUnused24 = fUnused24;
+	state->fGroupCount = fGroupCount;
 	state->fExpiredStrokes = fExpiredStrokes;
 	state->fNextCompressTime = fNextCompressTime;
 	state->fCompressGroup = fCompressGroup;
 	state->fFlag38 = fFlag38;
-	state->fUnused3c = fUnused3c;
+	state->fExpireProc = fExpireProc;
 	state->fCompressBundle = fCompressBundle;
 	InitFields();
 	return state;
@@ -433,12 +607,12 @@ StrokeCentral::RestoreRecognitionState(StrokeCentralState* state)
 	fLastDownTime = state->fLastDownTime;
 	fLastUpTime = state->fLastUpTime;
 	fDeferredStrokes = state->fDeferredStrokes;
-	fUnused24 = state->fUnused24;
+	fGroupCount = state->fGroupCount;
 	fExpiredStrokes = state->fExpiredStrokes;
 	fNextCompressTime = state->fNextCompressTime;
 	fCompressGroup = state->fCompressGroup;
 	fFlag38 = state->fFlag38;
-	fUnused3c = state->fUnused3c;
+	fExpireProc = state->fExpireProc;
 	fCompressBundle = state->fCompressBundle;
 	delete state;
 }

@@ -1920,3 +1920,20 @@ distance shifted left two bits. So a shape up to four times further away
 than the one already found still wins, and with nothing found yet the limit
 is 0x200: the Ref of 128, read as 512 pixels. Kept, and commented, in
 `src/views/ShapeVerbs.cpp`.
+
+## Where one word of ink ends is decided by a little neural net
+
+Ink that nobody read is still cut into words, and the cutting is done by
+ParaGraph's word segmenter: every stroke is laid along a histogram of the
+line (a byte for every half pixel), the runs of empty columns become
+gaps, and each gap is put to a small trained net - eleven measurements of
+the gap and the line, through an 11x11 matrix and 120 Gaussian cells for
+each of "a space" and "not a space" - whose answer, with the writer's
+spacing setting, says whether the next stroke starts a new word.  The
+writing's slope it lays the strokes in by is learnt from their steep
+steps, a step down counting eight times as much as a step up.  And after
+all that, when a script asks `Recognize` to read strokes that turn out to
+be ink, the ROM groups them faithfully - and then drops them, because the
+word info they are wrapped in has no word and `AddWordInfo` keeps only
+those that do.  (`recognition/WordSegment.h`, `InkGroups.h`,
+`views/Rerecognize.cpp`.)

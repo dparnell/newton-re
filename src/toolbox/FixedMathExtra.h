@@ -26,6 +26,11 @@ Fixed	FixedLength(Fixed dx, Fixed dy);	// ROM 0x000bd87c FixedLength - no square
 Fixed	FixedRoundBy(Fixed value, Fixed unit);	// ROM 0x000bd904 FixedRoundBy - rounded to a multiple of unit
 }
 
+// a x b in 24.8 (the handwriting library's fixed format): the product of
+// the magnitudes shifted down by eight, rounded half up, the sign
+// restored; saturated when it does not fit
+long	FixMul32(long a, long b);	// ROM 0x000b1f14 FixMul32__FlT1
+
 Fixed	FixedASin(Fract x);		// ROM 0x00255158 FixedASin__Fl
 Fixed	FixedACos(Fract x);		// ROM 0x002551a4 FixedACos__Fl
 

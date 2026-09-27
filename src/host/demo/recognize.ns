@@ -11,6 +11,9 @@
 //
 //   Recognize([bundle], nil, nil)     the strokes, read in an area of
 //                                      their own: a correct info frame
+//   Recognize([bundle], {...}, nil)    ... where nothing may read them:
+//                                      grouped into ink, which the ROM
+//                                      then drops (nothing comes back)
 //   RecognizeInkWord(ink)              the same strokes packed into an
 //                                      ink word, read: its words
 //   RecognizeTextInStyles(frame, nil)  a text-and-styles frame holding
@@ -19,6 +22,12 @@
 //   RecognizePara(view, start, stop)   the ink word put into the
 //                                      paragraph after "ton" and read
 //                                      there: the text becomes "ton ton"
+//
+// Last, "ton" is written twice, well apart, on a view that recognises
+// nothing: the strokes expire, the word segmenter (recognition/
+// WordSegment.h) groups them into two words, and half a second after the
+// last one each word reaches the view as one piece of raw ink - its
+// viewRawInkScript prints how many strokes it was given.
 //
 // Each prints a line starting "recognize:"; ctest's host.NewtonRecognize
 // checks them.
@@ -111,6 +120,37 @@ findParagraph := func(v, prefix)
 firstWord := func(words)
   if words and Length(words) > 0 then words[0].word else "nothing";
 
+// "ton" written twice on a view that reads nothing: two pieces of ink
+inkOnly := func()
+  begin
+    local v := AddView(GetRoot(), {
+        viewClass: 74,
+        viewFlags: 1 + 0x200 + 0x400,		// visible, clickable, strokes allowed - and nothing read
+        viewBounds: {left: 20, top: 250, right: 300, bottom: 350},
+        viewFormat: 0x151,					// white fill, a thin frame
+        viewRawInkScript: func(strokes)
+          begin
+            Print("recognize: ink came back as a piece of " & Length(strokes.strokes) & " strokes");
+            true;
+          end});
+    v:Dirty();
+    AddDelayedCall(func() begin
+        local b := 320;
+        foreach dx in [0, 150] do
+          foreach s in ton do
+            begin
+              local moved := Clone(s);
+              for i := 0 to Length(moved) - 2 by 2 do
+                begin
+                  moved[i] := moved[i] + dx;
+                  moved[i + 1] := moved[i + 1] + (b - base);
+                end;
+              call stroke with (moved);
+            end;
+        IdleStrokes();
+      end, nil, 1000);
+  end;
+
 AddDelayedCall(func() begin
     foreach s in ton do call stroke with (s);
     AddDelayedCall(func() begin
@@ -126,6 +166,14 @@ AddDelayedCall(func() begin
             local ci := Recognize([bundle], nil, nil);
             Print("recognize: Recognize read " & (if ci and Length(ci.info) > 0
                                                   then call firstWord with (ci.info[0].words) else "nothing"));
+
+            // the same strokes where nothing may read them: they are
+            // grouped into ink, but the ROM's HandleBulkStrokes hands
+            // the ink to AddWordInfo, which keeps only word infos with a
+            // word - so nothing comes back (a ROM quirk kept)
+            local unread := Recognize([bundle], {doTextRecognition: nil, doShapeRecognition: nil}, nil);
+            Print("recognize: unread strokes came back as "
+                  & (if unread and Length(unread.info) > 0 then Length(unread.info) & " piece(s)" else "nothing"));
 
             local ink := StrokeBundleToInkWord(bundle);
             Print("recognize: RecognizeInkWord read " & call firstWord with (RecognizeInkWord(ink)));
@@ -148,6 +196,7 @@ AddDelayedCall(func() begin
             AddDelayedCall(func() begin
                 ScreenSnapshot("build/recognize.pgm");
                 Print("recognize: written build/recognize.pgm");
+                call inkOnly with ();
               end, nil, 2000);
           end, nil, 6000);
       end, nil, 3000);

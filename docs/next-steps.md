@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 103/103
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10813 citations, 0 bad;
-  5934 of 16671 functions (35.59%).
+- `analysis/coverage.py build/MP2x00US --check`: 10869 citations, 0 bad;
+  5986 of 16671 functions (35.91%).
 - `analysis/natives.py --unbound`: 352 of the ROM's 1326 natives
   are unanswered (table below).
 
@@ -66,9 +66,10 @@ verbs rather than recognition proper), in the order planned:
 
 1. ~~**Deferred recognition**~~ - DONE 2026-09-27 (`views/Rerecognize.h`,
    `docs/recognition/README.md`'s "Deferred recognition", ctest
-   `host.NewtonRecognize`).  Left of it: the grouping of unread strokes
-   into ink (`IGGroupAndCompressStrokes`, the CIC library), which is
-   also what `HandleExpiredStroke` waits on.
+   `host.NewtonRecognize`).  The grouping of unread strokes into ink is
+   DONE too (2026-09-28, `recognition/InkGroups.h` over ParaGraph's word
+   segmenter `WordSegment.h`; `HandleExpiredStroke` hands strokes to it);
+   `Recognize` still answers nothing for them, as the ROM's own does.
 2. DONE (2026-09-28, `docs/recognition/README.md`'s "The cursive
    recogniser and the letter styles"; the cursive engine's reading is
    NOT YET) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/

@@ -13,6 +13,7 @@
 #include "Controller.h"
 #include "UnitPublic.h"
 #include "StrokeCentral.h"
+#include "Arbiter.h"
 #include "Commands.h"
 #include "RootView.h"
 #include "Application.h"
@@ -298,19 +299,21 @@ UpdateStroke(TUnit* unit)
 
 // ROM 0x0019dad0 HandleExpiredStroke__FP5TUnit
 // A stroke no recogniser took: the after-writing state set; the stroke
-// goes to the stroke world's expired strokes (to be grouped into ink:
-// NOT YET RECONSTRUCTED: StrokeCentral::AddExpiredStroke), or, while the
-// arbiter is arbitrating for the whole screen (NOT YET: gArbiter), its
-// ink is just taken off.
+// goes to the stroke world's expired strokes to be grouped into ink, or,
+// while the arbiter is waiting on units not yet made, its ink is just
+// taken off.  An 'evt.ex' Throw is reported (anything else passed on).
 void
 HandleExpiredStroke(TUnit* unit)
 {
 	newton_try
 	{
 		gRecognition.fAfterWriting = true;
-		UpdateStroke(unit);
+		if (!gArbiter->fWaiting)
+			gStrokeWorld.AddExpiredStroke((TStrokeUnit*) unit);
+		else
+			UpdateStroke(unit);
 	}
-	newton_catch_all
+	newton_catch("evt.ex")
 	{
 		SafeExceptionNotify(CurrentException());
 	}

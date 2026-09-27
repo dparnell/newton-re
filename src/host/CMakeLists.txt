@@ -41,9 +41,9 @@ set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
 # same strokes read again through Recognize, RecognizeInkWord,
 # RecognizeTextInStyles and RecognizePara (needs the ROM image)
-add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 44 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recognize.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recognize.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
-                     PASS_REGULAR_EXPRESSION "Recognize read ton.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7")
+                     PASS_REGULAR_EXPRESSION "Recognize read ton.*unread strokes came back as nothing.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7.*ink came back as a piece of 4 strokes.*ink came back as a piece of 4 strokes")
 
 # the cursive recogniser's letter styles asked from NewtonScript
 # (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)
