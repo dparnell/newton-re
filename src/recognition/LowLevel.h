@@ -431,6 +431,9 @@ long	process_AN(low_type* low);									// ROM 0x002f9690 process_AN__FP8low_typ
 long	process_curves(low_type* low);								// ROM 0x002f9bc8 process_curves__FP8low_type
 long	lk_begin(low_type* low);									// ROM 0x002f8d68 lk_begin__FP8low_type - the elements given their codes; ==> 0, 1 for a failure
 
+// The i/u bottoms (LowAdjust.cpp).
+void	Adjust_I_U(low_type* low);									// ROM 0x00303038 Adjust_I_U__FP8low_type - a narrow bottom between two tops recoded round (8) or sharp (7)
+
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
 long	Filt(low_type* low, short dist2, short mode);				// ROM 0x002e1064 Filt__FP8low_typesT2 - the trace resampled a step of about the root of dist2 apart; ==> 0

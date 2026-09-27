@@ -1174,6 +1174,52 @@ TestCodes(void)
 }
 
 
+// Adjust_I_U (LowAdjust.cpp): a narrow bottom between two tops, coded
+// round (8) by process_curves, becomes sharp (7) when it is a V - straight
+// sides, a sharp turn across it - and stays round when it is a U.
+static long
+IUBottomCode(bool vee)
+{
+	TraceStart();
+	Pt(100, 100); Pt(101, 100); Pt(102, 100);					// 1..3 the first top
+	for (long s = 1; s <= 20; s++)								// 4..23 down and up
+	{
+		if (vee)
+			Pt((s <= 10) ? 102 + (5 * s) / 10 : 107 + (5 * (s - 10)) / 10, (s <= 10) ? 100 + 4 * s : 140 - 4 * (s - 10));
+		else
+		{
+			double t = 3.14159265358979 * s / 21;
+			Pt(102 + lround(10 - 10 * cos(t)), 100 + lround(40 * sin(t)));
+		}
+	}
+	Pt(122, 100); Pt(123, 100); Pt(124, 100);					// 24..26 the second top
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	InitSpecl(low, 400);
+	EXPECT(Mark(low, 0x10, 3, 1, 0, 1, 1, 1, -2) == 0);
+	EXPECT(Mark(low, 1, 3, 1, 0, 1, 3, 2, -2) == 0);
+	EXPECT(Mark(low, 3, 8, 9, 0, 12, 15, 13, -2) == 0);
+	EXPECT(Mark(low, 1, 3, 1, 0, 24, 26, 25, -2) == 0);
+	EXPECT(Mark(low, 0x20, 3, 1, 0, 26, 26, 26, -2) == 0);
+	Adjust_I_U(low);
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+		if (p->mark == 3)
+			return p->code;
+	return -1;
+}
+
+static void
+TestIU(void)
+{
+	long v = IUBottomCode(true);
+	long u = IUBottomCode(false);
+	fprintf(stderr, "i/u: a V's bottom %ld, a U's %ld\n", v, u);
+	EXPECT(v == 7);
+	EXPECT(u == 8);
+}
+
+
 int
 main()
 {
@@ -1197,6 +1243,7 @@ main()
 	TestSides();
 	TestCross();
 	TestCodes();
+	TestIU();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
