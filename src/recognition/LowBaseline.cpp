@@ -19,6 +19,7 @@
 
 #include "LowLevel.h"
 #include "ParaGraph.h"
+#include "XrDomains.h"
 
 
 // ROM 0x001bd73c sort_extr__FP4EXTRi
@@ -522,4 +523,312 @@ extract_num_extr(low_type* low, UByte kind, EXTR* extr, long* count)
 			*count = n;
 	}
 	return 0;
+}
+
+
+// ROM 0x001c0ee0 point_of_smooth_bord__FiT1P4EXTRP8low_typeT1
+// The line's height at point i: the extrema within w either side of it
+// (at most nine, the window's ends interpolated between the extrema that
+// straddle them), runs at the same x evened out, and the area under the
+// polyline divided by the window's width.
+long
+point_of_smooth_bord(long i, long n, EXTR* extr, low_type* low, long w)
+{
+	long P[11];				// the polyline's x, from index 1
+	long Q[11];				// and its y (ROM: ten words, so the last lands on P[0], which is never read)
+	long xi = low->fX[i];
+	long lo = xi - w;
+	long hi = xi + w;
+	long k = 0;
+	while (k < n && extr[k].x <= lo)
+		k++;
+	long first = k - 1;
+	while (k < n && extr[k].x < hi)
+		k++;
+	long cnt = k - first;
+	if (10 < cnt + 1)
+		cnt = 9;
+	P[1] = low->fBox.left;
+	if (low->fBox.left <= lo)
+		P[1] = lo;
+	if (first == -1)
+		Q[1] = extr[0].y;
+	if (n - 1 == first)
+		Q[1] = extr[n - 1].y;
+	if (first != -1 && n - 1 != first)
+	{
+		long y0 = extr[first].y;
+		long dx = extr[first + 1].x - extr[first].x;
+		if (dx < 1)
+			dx = 1;
+		Q[1] = y0 + (short) ((extr[first + 1].y - y0) * (lo - extr[first].x) / dx);
+	}
+	for (long m = 1; m < cnt; m++)
+	{
+		P[m + 1] = extr[first + m].x;
+		Q[m + 1] = extr[first + m].y;
+	}
+	long lastX = hi;
+	if (low->fBox.right < hi)
+		lastX = low->fBox.right;
+	P[cnt + 1] = lastX;
+	if (k == 0)
+		Q[cnt + 1] = extr[0].y;
+	if (k == n)
+		Q[cnt + 1] = extr[n - 1].y;
+	if (k != 0 && k != n)
+	{
+		long y1 = extr[k - 1].y;
+		long dx = extr[k].x - extr[k - 1].x;
+		if (dx < 1)
+			dx = 1;
+		Q[cnt + 1] = y1 + (short) ((extr[k].y - y1) * (hi - extr[k - 1].x) / dx);
+	}
+	// a run of points at one x: its two ends given the run's mean
+	long a = 0;
+	long b = a;
+	if (0 < cnt)
+	{
+		do
+		{
+			long c;
+			for ( ; ; )
+			{
+				c = b;
+				if (c + 1 <= cnt)
+				{
+					b = c + 1;
+					if (P[c + 2] == P[a + 1])
+						continue;
+				}
+				break;
+			}
+			if (a < c)
+			{
+				long sum = 0;
+				long len = c - a;
+				for (long m = 0; m <= len; m++)
+					sum = Q[a + m + 1] + sum;
+				long mean = sum / (len + 1);
+				Q[c + 1] = mean;
+				Q[a + 1] = mean;
+				a = c;
+			}
+			a++;
+			b = a;
+		} while (a < cnt);
+	}
+	long width = lastX - P[1];
+	long area = Q[1];
+	if (width != 0)
+	{
+		long acc = 0;
+		for (long m = 1; m <= cnt; m++)
+			acc = (P[m + 1] - P[m]) * (Q[m + 1] + Q[m]) + acc;
+		area = acc >> 1;
+	}
+	if (width < 1)
+		width = 1;
+	return (short) (area / width);
+}
+
+
+// ROM 0x001c11ec smooth_d_bord__FP4EXTRiP8low_typeT2Ps
+// The lower line under every point (0 at a pen-up) smoothed over w
+// from the bottoms; with none, the box's bottom (or rc's own line, once
+// it has been worked out).
+void
+smooth_d_bord(EXTR* extr, long n, low_type* low, long w, short* line)
+{
+	for (long i = 0; i < low->fII; i++)
+	{
+		if (low->fY[i] == -1)
+			line[i] = 0;
+		else if (n >= 1)
+			line[i] = point_of_smooth_bord(i, n, extr, low, w);
+		else if ((short) RCGetH(low->rc, 0xe8) < 0x32)
+			line[i] = low->fBox.bottom;
+		else
+			line[i] = RCGetH(low->rc, 0xe4);
+	}
+}
+
+
+// ROM 0x001c1308 smooth_u_bord__FP4EXTRiP8low_typeT2PsT5
+// The upper line over every point, smoothed over w from the tops; from
+// one top, the lower line moved up by that top's height; from none, the
+// box's top - or, for a word being read as a number, a third of the way
+// from the box's top to the lower line's highest point (or rc's own).
+void
+smooth_u_bord(EXTR* extr, long n, low_type* low, long w, short* line, short* base)
+{
+	short ii = low->fII;
+	if (n > 1)
+	{
+		for (long i = 0; i < low->fII; i++)
+			line[i] = (low->fY[i] == -1) ? 0 : point_of_smooth_bord(i, n, extr, low, w);
+	}
+	if (n == 1)
+	{
+		for (long i = 0; i < low->fII; i++)
+		{
+			if (low->fY[i] == -1)
+				line[i] = 0;
+			else
+				line[i] = (UShort) base[i] - ((UShort) base[extr[0].i] - (UShort) extr[0].y);
+		}
+	}
+	if (n != 0)
+		return;
+	if (RCGetH(low->rc, 0x94) != 0x10)
+	{
+		for (long i = 0; i < low->fII; i++)
+			line[i] = (low->fY[i] == -1) ? 0 : low->fBox.top;
+		return;
+	}
+	long least = 0x7fff;
+	for (long i = 0; i < ii; i++)
+	{
+		if (low->fY[i] != -1 && base[i] < least)
+			least = base[i];
+	}
+	for (long i = 0; i < low->fII; i++)
+	{
+		if (low->fY[i] == -1)
+			line[i] = 0;
+		else
+		{
+			long e6 = (short) RCGetH(low->rc, 0xe6);
+			if (0x31 < e6)
+				e6 = (short) RCGetH(low->rc, 0xe8);
+			if (e6 < 0x32)
+				line[i] = (short) ((low->fBox.top * 2 + 1) / 3) + (short) ((least + 1) / 3);
+			else
+				line[i] = (short) RCGetH(low->rc, 0xe4) - (short) RCGetH(low->rc, 0xe2);
+		}
+	}
+}
+
+
+// ROM 0x001bf8ac neibour_susp_extr__FP4EXTRiUcPsT2
+// Two neighbours that are both suspect - one sticking out (0x65 bottoms,
+// 0x66 tops) beside one near the line (0x67): the one further from the
+// average of the unsuspected ones is left suspect and the other put back
+// (for the tops, measured as heights over base, and a height of at least
+// lim decides it outright).  ==> 0, 1 for fewer than two unsuspected.
+long
+neibour_susp_extr(EXTR* extr, long n, UByte kind, short* base, long lim)
+{
+	long tag = 0;			// ROM BUG: unset for a kind other than 1 or 3 (never given one)
+	if (kind == 3)
+		tag = 0x65;
+	else if (kind == 1)
+		tag = 0x66;
+	long plain = 0;
+	long sum = 0;
+	long avg = 0;
+	long vCur = 0;			// (a register the ROM carries from one element to the next)
+	long vPrev = 0;
+	if (n <= 0)
+		return 1;
+	for (long i = 0; i < n; i++)
+		if (extr[i].susp != tag && extr[i].susp != 0x67)
+			plain++;
+	if (plain > 1)
+	{
+		for (long i = 0; i < n; i++)
+		{
+			if (extr[i].susp == tag || extr[i].susp == 0x67)
+				continue;
+			if (kind == 3)
+				vCur = extr[i].y;
+			else if (kind == 1)
+				vCur = base[extr[i].i] - extr[i].y;
+			sum += vCur;
+		}
+		avg = sum / plain;
+	}
+	if (plain <= 1)
+		return 1;
+	for (long i = 1; i < n; i++)
+	{
+		EXTR* cur = &extr[i];
+		EXTR* prev = &extr[i - 1];
+		if (!((cur->susp == tag && prev->susp == 0x67) || (cur->susp == 0x67 && prev->susp == tag)))
+			continue;
+		long j;
+		if (kind == 3)
+		{
+			vCur = cur->y;
+			vPrev = prev->y;
+		}
+		else if (kind == 1)
+		{
+			vCur = base[cur->i] - cur->y;
+			vPrev = base[prev->i] - prev->y;
+			if (lim > 0 && cur->susp == tag && vCur >= lim)
+			{
+				ret_to_line(extr, n, i, i - 1);
+				continue;
+			}
+			if (lim > 0 && prev->susp == tag && vPrev >= lim)
+			{
+				ret_to_line(extr, n, i, i);
+				continue;
+			}
+		}
+		if (HWRAbs(vCur - avg) >= HWRAbs(vPrev - avg))
+			j = i - 1;
+		else
+			j = i;
+		ret_to_line(extr, n, i, j);
+	}
+	return 0;
+}
+
+
+// ROM 0x001c17fc fill_i_point__FPsP8low_type
+// The points (not pen-ups) in order of x, by insertion: a point whose x
+// is already there is left out.  ==> how many.
+long
+fill_i_point(short* order, low_type* low)
+{
+	short* x = low->fX;
+	long cnt = 0;
+	long maxX = -1;
+	for (long i = 0; i < low->fII; i++)
+	{
+		if (low->fY[i] == -1)
+			continue;
+		long xv = x[i];
+		if (maxX < xv)
+		{
+			order[cnt] = i;
+			maxX = x[i];
+			cnt++;
+			continue;
+		}
+		for (long j = cnt - 1; j >= 0; j--)
+		{
+			long v = x[order[j]];
+			if (xv == v)
+				break;
+			if (xv > v)
+			{
+				for (long k = cnt; j + 1 < k; k--)
+					order[k] = order[k - 1];
+				order[j + 1] = i;
+				cnt++;
+				break;
+			}
+		}
+		if (x[i] < x[order[0]])
+		{
+			for (long k = cnt; 0 < k; k--)
+				order[k] = order[k - 1];
+			order[0] = i;
+			cnt++;
+		}
+	}
+	return cnt;
 }

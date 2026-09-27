@@ -213,6 +213,11 @@ long	sub_max_to_line(low_type* low, EXTR* extr, long* n, short* base, long lim);
 long	calc_ampl(EXTR e, short* y, UByte kind);					// ROM 0x001c0ab0 calc_ampl__F4EXTRPsUc
 long	is_defis(low_type* low, long nStrokes);						// ROM 0x001c4c4c is_defis__FP8low_typei
 long	del_tail_min(EXTR* extr, long* n, short* y, short* base, UByte flag);	// ROM 0x001c239c del_tail_min__FP4EXTRPiPsT3Uc - ==> 1
+long	point_of_smooth_bord(long i, long n, EXTR* extr, low_type* low, long w);	// ROM 0x001c0ee0 point_of_smooth_bord__FiT1P4EXTRP8low_typeT1 - the line's height at point i from the extrema within w of it
+void	smooth_d_bord(EXTR* extr, long n, low_type* low, long w, short* line);	// ROM 0x001c11ec smooth_d_bord__FP4EXTRiP8low_typeT2Ps
+void	smooth_u_bord(EXTR* extr, long n, low_type* low, long w, short* line, short* base);	// ROM 0x001c1308 smooth_u_bord__FP4EXTRiP8low_typeT2PsT5
+long	neibour_susp_extr(EXTR* extr, long n, UByte kind, short* base, long lim);	// ROM 0x001bf8ac neibour_susp_extr__FP4EXTRiUcPsT2 - ==> 0, 1 for fewer than two unsuspected
+long	fill_i_point(short* order, low_type* low);					// ROM 0x001c17fc fill_i_point__FPsP8low_type - the points in order of x; ==> how many
 long	extract_num_extr(low_type* low, UByte kind, EXTR* extr, long* count);	// ROM 0x001bdff0 extract_num_extr__FP8low_typeUcP4EXTRPi - ==> 0, 1 for more than 50
 
 // The filters.

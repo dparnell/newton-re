@@ -261,6 +261,55 @@ TestBaselinePieces(void)
 }
 
 
+static void
+TestSmoothLines(void)
+{
+	// a level stroke with its points out of order in x
+	TraceStart();
+	short xs[] = { 30, 10, 20, 50, 40, 20 };
+	for (long i = 0; i < 6; i++)
+		Pt(xs[i], 100);
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	short order[16];
+	long n = fill_i_point(order, low);
+	EXPECT(n == 5);				// the second point at x 20 left out
+	for (long i = 1; i < n; i++)
+		EXPECT(low->fX[order[i]] > low->fX[order[i - 1]]);
+
+	// a line through extrema all at one height is that height everywhere
+	EXTR e[3];
+	memset(e, 0, sizeof(e));
+	for (long i = 0; i < 3; i++)
+	{
+		e[i].x = 10 + 20 * i;
+		e[i].y = 100;
+	}
+	short line[16];
+	smooth_d_bord(e, 3, low, 15, line);
+	EXPECT(line[0] == 0 && line[7] == 0);
+	for (long i = 1; i <= 6; i++)
+		EXPECT(line[i] == 100);
+
+	// with no extrema the lower line is the box's bottom, the upper its top
+	smooth_d_bord(e, 0, low, 15, line);
+	EXPECT(line[3] == low->fBox.bottom && line[0] == 0);
+	short upper[16];
+	smooth_u_bord(e, 0, low, 15, upper, line);
+	EXPECT(upper[3] == low->fBox.top);
+
+	// one top: the lower line moved up by its height
+	e[0].i = 2;
+	e[0].y = 60;
+	short base[16];
+	for (long i = 0; i < 8; i++)
+		base[i] = 100 + i;
+	smooth_u_bord(e, 1, low, 15, upper, base);
+	EXPECT(upper[4] == 104 - (102 - 60));
+}
+
+
 int
 main()
 {
@@ -271,6 +320,7 @@ main()
 	TestFilters();
 	TestExtrema();
 	TestBaselinePieces();
+	TestSmoothLines();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
