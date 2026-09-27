@@ -53,7 +53,8 @@ tools/newton-rom/
     romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --natives -> src/frames/ROMNatives.cpp,
-                          --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots)
+                          --disasm NAME (bytecode disassembly), --object NAME (a ROM frame's slots),
+                          --binary-classes (the object area's binaries counted by class)
     packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files),
                           --doc docs/packages/rex-packages.md
     nsgrammar.py          the NewtonScript parser's yacc tables, tokens, rules and reserved words

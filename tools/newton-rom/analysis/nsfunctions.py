@@ -22,7 +22,9 @@ frames and the like), each named by the frame slot that holds it;
 --disasm prints a NewtonScript function's bytecode (Newton Formats, the
 instruction set of the NewtonScript interpreter, as TInterpreter::SlowRun
 0x002cc66c executes it); --object prints the slots of a ROM frame or array
-with each function's kind.  An object is named by the ROM's Ref symbol
+with each function's kind; --binary-classes counts the object area's
+binary objects by class, with their lengths (the formats an import has to
+translate for the host: frames/ObjectAreaImport.cpp).  An object is named by the ROM's Ref symbol
 (Rfoo or foo, whose word holds the ref), a built-in function's name, or
 0x address of the ref (a magic pointer is resolved through
 gROMMagicPointerTable); a function to disassemble may also be object.slot,
@@ -317,6 +319,9 @@ def main(argv=None) -> int:
     ap.add_argument("--natives", action="store_true", help="emit the native function table as C++")
     ap.add_argument("--object", action="append", default=[], help="print the slots of this ROM frame or array (a name or 0x address)")
     ap.add_argument("--disasm", action="append", default=[], help="disassemble this NewtonScript function (a built-in's name, object.slot or 0x address)")
+    ap.add_argument("--binary-classes", action="store_true",
+                    help="count the object area's binary objects by class (with their lengths) - which "
+                         "formats an import has to translate for the host")
     ap.add_argument("-o", "--output")
     args = ap.parse_args(argv)
 
@@ -370,6 +375,22 @@ def main(argv=None) -> int:
         ]
         count = emit(sorted(other_natives(rom), key=lambda p: (p[0].lower(), p[1])))
         out += ["};", "", "const long gROMMethodCount = %d;" % count, ""]
+    if args.binary_classes:
+        counts = {}
+        for ref in objects(rom):
+            if rom.flags(ref) & 1:
+                continue
+            c = rom.cls(ref)
+            cname = rom.symname(c) if rom.is_ptr(c) else rom.describe(c)
+            if cname == "symbol" or c == SYMBOL_CLASS:
+                continue
+            entry = counts.setdefault(cname or rom.describe(c), [0, set()])
+            entry[0] += 1
+            entry[1].add(rom.size(ref) - 12)
+        for cname, (n, lengths) in sorted(counts.items(), key=lambda p: -p[1][0]):
+            ls = sorted(lengths)
+            shown = ", ".join(str(x) for x in ls[:6]) + (" ..." if len(ls) > 6 else "")
+            out.append("%-24s %6d  lengths %s" % (cname, n, shown))
     for name in args.object:
         ref = resolve(rom, name)
         if ref is None or not rom.is_ptr(ref):

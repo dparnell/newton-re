@@ -5,6 +5,7 @@
 // built-in functions frame has its functions, and heap objects referring
 // to ROM objects survive a collection.
 
+#include "NewtQD.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "ROMImport.h"
@@ -124,6 +125,15 @@ main()
 	{
 		double d = CDouble(real);
 		EXPECT(d == d && fabs(d) < 1e30);
+	}
+	// a shape's rectangle is read as a Rect: its halfwords come across in
+	// the host's order (the first in the ROM is a 17 by 15 box at 3, 7)
+	RefVar box(GetFrameSlotRef(RefVar(TranslateROMRef(0x004db6cd)), RSSYMbounds));	// (a frame of the MP2x00 US ROM)
+	EXPECT(NOTNIL(box));
+	if (NOTNIL(box))
+	{
+		const Rect* r = (const Rect*) BinaryData(box);
+		EXPECT(r->top == 7 && r->left == 3 && r->bottom == 22 && r->right == 20);
 	}
 
 	// ROM objects are read-only, never in the heap, and refs to them are

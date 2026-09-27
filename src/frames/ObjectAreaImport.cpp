@@ -15,6 +15,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+// The binary classes the host reads as structures of halfwords - a
+// shape's rectangle (Rect), its points (Point), a polygon's or region's
+// data (Polygon, Region) and the recogniser's 'polygonShape (a verb, a
+// count and the points).  They are translated to the host's order as
+// strings and reals are; `analysis/nsfunctions.py --binary-classes` says
+// which classes the ROM's object area holds.  ('bits and 'mask are left
+// big-endian: qd/Pictures.h reads them that way.)
+static Boolean
+IsHalfwordShapeClass(const char* name)
+{
+	static const char* const kClasses[] = { "boundsrect", "rectangle", "oval", "roundrectangle", "line",
+											"polygonshape", "polygondata", "regiondata" };
+	for (size_t i = 0; i < sizeof(kClasses) / sizeof(kClasses[0]); i++)
+		if (strcasecmp(name, kClasses[i]) == 0)
+			return true;
+	return false;
+}
+
 
 TImportedObjectArea::TImportedObjectArea()
 {
@@ -229,6 +247,14 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 					UniChar* s = (UniChar*) ObjData(o);
 					for (long j = 0; j < length / 2; j++)
 						s[j] = GetBigEndianHalf((const unsigned char*) ObjData(o) + j * 2);
+				}
+				else if (className != nil && IsHalfwordShapeClass(className))
+				{
+					// the shapes the host reads as structs of shorts (Rect,
+					// Point, Polygon, Region): a halfword at a time
+					short* h = (short*) ObjData(o);
+					for (long j = 0; j < length / 2; j++)
+						h[j] = (short) GetBigEndianHalf((const unsigned char*) ObjData(o) + j * 2);
 				}
 			}
 		}
