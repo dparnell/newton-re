@@ -375,6 +375,25 @@ void	VertSticksSelector(low_type* low);							// ROM 0x0032da64 VertSticksSelect
 long	YFilter(low_type* low, _SDS_TYPE* piece, SPEC_TYPE* elem);	// ROM 0x0032bacc YFilter__FP8low_typeP9_SDS_TYPEP9SPEC_TYPE
 long	SPDClass(low_type* low, short kind, SPEC_TYPE* elem, _SDS_TYPE* head);	// ROM 0x0032f960 SPDClass__FP8low_typesP9SPEC_TYPEP9_SDS_TYPE - ==> 7 a stick, 0 not
 long	InStr(low_type* low, _SDS_TYPE* head, SPEC_TYPE* elem, short* heights);	// ROM 0x0032fd24 InStr__FP8low_typeP9_SDS_TYPEP9SPEC_TYPEPs - ==> 0, 1 for no room
+long	SpcElemFirstOccArr(low_type* low, short* flags, POINTS_GROUP* group, UByte mark);	// ROM 0x0032db0c SpcElemFirstOccArr__FP8low_typePsP12POINTS_GROUPUc - ==> the index, -2 none
+long	ApprHorStroke(low_type* low);								// ROM 0x0032c8a4 ApprHorStroke__FP8low_type - ==> the piece, -2 none
+long	InvTanDel(low_type* low, short a, short b);					// ROM 0x0032bd80 InvTanDel__FP8low_typesT2
+long	Oracle(low_type* low, PS_point_type* measures, long kind);	// ROM 0x0032be28 Oracle__FP8low_typeP13PS_point_type15_HAT_DENOM_TYPE
+long	SCutFiltr(low_type* low, short* heights, SPEC_TYPE* elem, PS_point_type* p, short* dist);	// ROM 0x0032ad1c SCutFiltr__FP8low_typePsP9SPEC_TYPEP13PS_point_typeT2
+long	RDFiltr(low_type* low, PS_point_type* measures, SPEC_TYPE* elem, PS_point_type* p);	// ROM 0x0032ae00 RDFiltr__FP8low_typeP13PS_point_typeP9SPEC_TYPET2
+long	LeFiltr(low_type* low, SPEC_TYPE* elem, short s);			// ROM 0x0032b494 LeFiltr__FP8low_typeP9SPEC_TYPEs
+long	LowStFiltr(low_type* low, short* heights, SPEC_TYPE* bar, PS_point_type* p, SPEC_TYPE* measures);	// ROM 0x0032aa38 LowStFiltr__FP8low_typePsP9SPEC_TYPEP13PS_point_typeT3
+long	HatDenAnal(low_type* low, SPEC_TYPE* bar, SPEC_TYPE* stroke);	// ROM 0x0032bfa0 HatDenAnal__FP8low_typeP9SPEC_TYPET2 - ==> 2 moved, 1 not
+long	ShiftsAnalyse(low_type* low, SPEC_TYPE* bar, SPEC_TYPE* stick, SPEC_TYPE* stroke);	// ROM 0x0032c484 ShiftsAnalyse__FP8low_typeP9SPEC_TYPEN22
+long	DrawCross(low_type* low, short* heights, PS_point_type* p, SPEC_TYPE* bar, SPEC_TYPE* measures);	// ROM 0x0032c68c DrawCross__FP8low_typePsP13PS_point_typeP9SPEC_TYPET4
+long	InsertBreakAfter(low_type* low, short marker, short at, PS_point_type* p);	// ROM 0x0032c184 InsertBreakAfter__FP8low_typesT2P13PS_point_type
+long	StrokeAnalyse(low_type* low, short* heights, SPEC_TYPE* bar, SPEC_TYPE* stroke, SPEC_TYPE* measures, ULong strict);	// ROM 0x0032b57c StrokeAnalyse__FP8low_typePsP9SPEC_TYPEN23Ui - ==> 7 a stick, 2 a hatch, 1 no room
+long	RMinCalc(low_type* low, short* heights, SPEC_TYPE* bar, SPEC_TYPE* measures, SPEC_TYPE* stroke, SPEC_TYPE* out);	// ROM 0x0032ae94 RMinCalc__FP8low_typePsP9SPEC_TYPEN33
+long	HatchureS(low_type* low, SPEC_TYPE* elem, short* heights);	// ROM 0x0032a14c HatchureS__FP8low_typeP9SPEC_TYPEPs - ==> 7 a stick, 2 a hatch, 0 neither, 1 no room
+void	FillCross(low_type* low, SPEC_TYPE* elem);				// ROM 0x00329cc4 FillCross__FP8low_typeP9SPEC_TYPE
+long	FantomSt(short* count, short* x, short* y, low_buffer* bufX, low_buffer* bufY, short iBeg, short iEnd, UByte mark);	// ROM 0x0032e78c FantomSt__FPsN21P9BUF_DESCRT4sT6Uc
+long	Recount(low_type* low);										// ROM 0x0032be74 Recount__FP8low_type
+long	Pict(low_type* low);										// ROM 0x003298d8 Pict__FP8low_type - ==> 0, 1 for no room
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

@@ -733,6 +733,81 @@ TestPictPieces(void)
 }
 
 
+// A word taken through BaselineAndScale and AnalyzeLowData as far as Pict
+// (the rest of AnalyzeLowData being NOT YET): three arches, a dash and a
+// dot above.  Pict marks the dash 7 (ParaGraph's straight stroke: a
+// level one - the trained tables allow nothing steep, and an upright
+// stroke from the word's top to the line never) and the dot 8, each put
+// in the list between a stroke start (0x10) and end (0x20) of its own,
+// and describes every stroke (a head, its pieces, a tail).
+static void
+TestPict(void)
+{
+	TraceStart();
+	long x = 100;
+	for (long a = 0; a < 3; a++)
+	{
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, 160 + (40 * s) / 10);
+		for (long s = 0; s < 10; s++, x += 2)
+			Pt(x, 200 - (40 * s) / 10);
+	}
+	Pt(x, 160);
+	PenUp();
+	for (long s = 0; s <= 20; s++)			// the dash, 40 long halfway up
+		Pt(230 + 2 * s, 180);
+	PenUp();
+	Pt(280, 120);							// the dot
+	Pt(281, 121);
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	// AnalyzeLowData's first steps
+	GetLowDataRect(low);
+	Errorprov(low);
+	EXPECT(PreFilt(10, low) == 0);
+	EXPECT(InitGroupsBorder(low, 1) == 0);
+	DefLineThresholds(low);
+	InitSpecl(low, 400);
+	Extr(low, 8, 10, 10, 4, 0, 7);
+	OperateSpeclArray(low);
+	EXPECT(Sort_specl(low->fSpecl, low->fLenSpecl) == 0);
+	EXPECT(InitGroupsBorder(low, 1) == 0);
+	long nGroups = low->fLenGroups;
+	EXPECT(nGroups == 3);
+	EXPECT(Pict(low) == 0);
+	long sticks = 0, dots = 0, heads = 0, tails = 0;
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+	{
+		fprintf(stderr, "pict: mark %#x code %d attr %d other %d points %d..%d (%d, %d)\n",
+				p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, p->ipoint0, p->ipoint1);
+		if (p->mark == 7)
+			sticks++;
+		if (p->mark == 8)
+			dots++;
+	}
+	for (long k = 0; k < control.lenSDS; k++)
+	{
+		if (control.pSDS[k].mark == 0 && control.pSDS[k].attr == 0x10)
+			heads++;
+		if (control.pSDS[k].mark == 0 && control.pSDS[k].attr == 0x20)
+			tails++;
+	}
+	fprintf(stderr, "pict: %ld sticks, %ld dots, %ld descriptions (%ld heads, %ld tails)\n",
+			sticks, dots, (long) control.lenSDS, heads, tails);
+	EXPECT(heads == nGroups && tails == nGroups);
+	EXPECT(sticks == 1 && dots == 1);
+	DestroySDS(low);
+	EXPECT(control.lenSDS == -2);
+}
+
+
 int
 main()
 {
@@ -750,6 +825,7 @@ main()
 	TestBaseline();
 	TestAnalyzePieces();
 	TestPictPieces();
+	TestPict();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

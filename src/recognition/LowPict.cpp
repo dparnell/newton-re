@@ -282,6 +282,37 @@ R_ClosestToLine(short* x, short* y, PS_point_type* p, POINTS_GROUP* group, short
 
 #pragma mark The stroke descriptions
 
+// ROM 0x0032f8bc CreateSDS__FP8low_types
+// Room for n stroke descriptions in the array fSDS (which the caller
+// provides) controls.  ==> whether there was the memory.
+Boolean
+CreateSDS(low_type* low, short n)
+{
+	_SDS_CONTROL_TYPE* control = low->fSDS;
+	control->pSDS = (_SDS_TYPE*) HWRMemoryAlloc(n * sizeof(_SDS_TYPE));	// (0x2c each, the same on the host)
+	if (control->pSDS == nil)
+		return false;
+	control->sizeSDS = n;
+	control->lenSDS = 0;
+	return true;
+}
+
+
+// ROM 0x0032f91c DestroySDS__FP8low_type
+// The array given back (the pointer left as it was) and marked destroyed.
+void
+DestroySDS(low_type* low)
+{
+	_SDS_CONTROL_TYPE* control = low->fSDS;
+	if (control == nil)
+		return;
+	if (control->pSDS != nil)
+		HWRMemoryFree((Ptr) control->pSDS);
+	control->sizeSDS = 0;
+	control->lenSDS = -2;
+}
+
+
 // ROM 0x0032f5e4 InitElementSDS__FP9_SDS_TYPE
 // ROM QUIRK: clears 0x28 bytes of the 0x2c - the last word is left as
 // it was (Init_SDS_Element clears the lot).
@@ -1528,4 +1559,1277 @@ InStr(low_type* low, _SDS_TYPE* head, SPEC_TYPE* elem, short* heights)
 			return 1;
 	}
 	return 0;
+}
+
+
+#pragma mark The hatches
+
+// ROM 0x0032db0c SpcElemFirstOccArr__FP8low_typePsP12POINTS_GROUPUc
+// The first element (from the array's second) of the mark given that
+// meets the piece of trace in group, and how it meets it in *flags:
+// 0x40 it covers the piece (with 8 when its point is inside), 0x20 it is
+// inside it; and with flags bit 1 asked for, 0x10 it runs past the
+// piece's end and 4 past its start (8 again for a point inside).  With
+// bit 0 asked for, a stroke's end (0x20) inside the piece stops the
+// search.  ==> its index, -2 for none (and at an element that covers
+// no points).
+long
+SpcElemFirstOccArr(low_type* low, short* flags, POINTS_GROUP* group, UByte mark)
+{
+	SPEC_TYPE* specl = low->fSpecl;
+	long n = low->fLenSpecl;
+	long a = group->iBeg;
+	long b = group->iEnd;
+	if (a > b)
+		return -2;
+	if (n <= 1)
+		return -2;
+	for (long i = 1; i < n; i = (short) (i + 1))
+	{
+		SPEC_TYPE* e = &specl[i];
+		long iBeg = e->iBeg;
+		if (iBeg <= 0)
+			return -2;
+		long iEnd = e->iEnd;
+		if (iEnd <= 0)
+			return -2;
+		UByte m = e->mark;
+		if (m == mark && iBeg <= a && iEnd >= b)
+		{
+			*flags = (short) (*flags | 0x40);
+			if (e->ipoint0 < a || e->ipoint0 > b)
+				return i;
+			*flags = (short) (*flags | 8);
+			return i;
+		}
+		if (m == mark && ((a <= iBeg && iBeg <= b) || (a <= iEnd && iEnd <= b)))
+		{
+			if (iBeg >= a && iEnd <= b)
+			{
+				*flags = (short) (*flags | 0x20);
+				return i;
+			}
+			if ((*flags & 2) != 0)
+			{
+				if (iBeg >= a)
+				{
+					*flags = (short) (*flags | 0x10);
+					if (b >= e->ipoint0)
+						*flags = (short) (*flags | 8);
+					return i;
+				}
+				if (iEnd <= b)
+				{
+					*flags = (short) (*flags | 4);
+					if (a <= e->ipoint0)
+						*flags = (short) (*flags | 8);
+					return i;
+				}
+			}
+		}
+		if ((*flags & 1) != 0 && m == 0x20 && iBeg >= a && iEnd <= b)
+			return -2;
+	}
+	return -2;
+}
+
+
+// ROM 0x0032c8a4 ApprHorStroke__FP8low_type
+// Which piece of the stroke being described might be a hatch: the first
+// piece that is not within a 27-point box of the stroke's start, or the
+// one after it, whichever is long (over 24), not too bent, going right
+// and within 45 degrees of level - the second when it reaches further
+// right.  ==> its index from the stroke's head, -2 for none.
+long
+ApprHorStroke(low_type* low)
+{
+	_SDS_CONTROL_TYPE* control = low->fSDS;
+	_SDS_TYPE* head = &control->pSDS[control->f02];
+	short* x = low->fX;
+	short* y = low->fY;
+	if (!(head->mark == 0 && head->attr == 0x10))
+		return -2;
+	long k = 1;
+	while (BoxSmallOK(head->iBeg, head[k].iEnd, x, y) && !(head[k].mark == 0 && head[k].attr == 0x20))
+		k = (short) (k + 1);
+	_SDS_TYPE* a = &head[k];
+	_SDS_TYPE* b = &head[k + 1];
+	Boolean aTail = (a->mark == 0 && a->attr == 0x20);
+	Boolean bTail = (b->mark == 0 && b->attr == 0x20);
+	long aOK = (!aTail && 0x18 < a->chord && a->crook < 0x41 && x[a->iBeg] < x[a->iEnd] && HWRAbs(a->slope) < 100) ? 1 : 0;
+	long bOK = (!aTail && !bTail && 0x18 < b->chord && b->crook < 0x14 && x[b->iBeg] < x[b->iEnd] && HWRAbs(b->slope) < 100) ? 1 : 0;
+	if (aOK == 1)
+	{
+		if (bOK == 0)
+			return k;
+		if (a->xMin + 10 < b->xMin)
+			return k;
+		if (a->xMax + 10 >= b->xMax)
+			return k;
+		return (short) (k + 1);
+	}
+	if (bOK == 1 && b->xMax > a->xMax)
+		return (short) (k + 1);
+	return -2;
+}
+
+
+// ROM 0x0032bd80 InvTanDel__FP8low_typesT2
+// Whether two slopes (hundredths) are far apart as angles: the tangent
+// of the angle between them over 60 hundredths (40 when rc says so), or
+// the lines near perpendicular.  ==> 1 far apart, 0 not.
+long
+InvTanDel(low_type* low, short a, short b)
+{
+	if (b >= 0x7fff)
+		return 0;
+	if (a >= 0x7fff)
+		return 1;
+	long d = a - b;
+	long t = LAdd(LMul(b, a), 10000) / 100;
+	if (HWRLAbs(t) < 100)
+		return 1;
+	long r = HWRLAbs(LMul(d, 100) / t);
+	long limit = ((RCGetH(low->rc, 0x90) & 0x800) == 0) ? 0x3c : 0x28;
+	return (r > limit) ? 1 : 0;
+}
+
+
+// ROM 0x0032be28 Oracle__FP8low_typeP13PS_point_type15_HAT_DENOM_TYPE
+// Whether both of a hatch's two measurements are over the limit for its
+// kind (6 for 3, 16 for 1, 22 for 2).
+long
+Oracle(low_type* /*low*/, PS_point_type* measures, long kind)
+{
+	long limit = (kind == 3) ? 6 : ((kind == 1) ? 0x10 : ((kind == 2) ? 0x16 : 0x7fff));
+	return (measures->y > limit && measures->x > limit) ? 1 : 0;
+}
+
+
+// ROM 0x0032ad1c SCutFiltr__FP8low_typePsP9SPEC_TYPEP13PS_point_typeT2
+// How far the crossing p is from the leftmost point of the piece in
+// elem, into *dist.  ==> 0 a low piece crossed near its start (under
+// 30), 1 otherwise.
+long
+SCutFiltr(low_type* low, short* heights, SPEC_TYPE* elem, PS_point_type* p, short* dist)
+{
+	short* x = low->fX;
+	short* y = low->fY;
+	long iBeg = elem->iBeg;
+	long iEnd = elem->iEnd;
+	short bottom, top;
+	RelHigh(y, iBeg, iEnd, heights, &bottom, &top);
+	long i = ixMin(iBeg, iEnd, x, y);
+	long dx = (short) (p->x - x[i]);
+	long dy = (short) (p->y - y[i]);
+	long d = HWRMathILSqrt(LAdd(LMul(dx, dx), LMul(dy, dy)));
+	*dist = (short) d;
+	return (top <= 3 && d < 0x1e) ? 0 : 1;
+}
+
+
+// ROM 0x0032ae00 RDFiltr__FP8low_typeP13PS_point_typeP9SPEC_TYPET2
+// Whether the second of measures is at least two fifths of the way from
+// the crossing p to the rightmost point of the piece in elem (and two
+// points on).
+long
+RDFiltr(low_type* low, PS_point_type* measures, SPEC_TYPE* elem, PS_point_type* p)
+{
+	short* x = low->fX;
+	short* y = low->fY;
+	long i = ixMax(elem->iBeg, elem->iEnd + 2, x, y);
+	long dx = p->x - x[i];
+	long dy = p->y - y[i];
+	long d = HWRMathILSqrt(LAdd(LMul(dx, dx), LMul(dy, dy)));
+	return (measures->y >= (d * 2 + 2) / 5) ? 1 : 0;
+}
+
+
+// ROM 0x0032b494 LeFiltr__FP8low_typeP9SPEC_TYPEs
+// Whether point s is within a turn (0x13) of the rest of the stroke
+// after elem, when elem goes down.  ==> 1 it is, 0 not.
+long
+LeFiltr(low_type* low, SPEC_TYPE* elem, short s)
+{
+	short* y = low->fY;
+	SPEC_TYPE* specl = low->fSpecl;
+	POINTS_GROUP* stroke = &low->fGroups[elem->other];
+	if (s == -2)
+		return 0;
+	if (y[elem->iEnd] <= y[elem->iBeg])
+		return 0;
+	POINTS_GROUP g = { (short) (elem->iEnd - 1), stroke->iEnd, { 0, 0, 0, 0 } };
+	short flags = 2;
+	long k = SpcElemFirstOccArr(low, &flags, &g, 0x13);
+	if (k == -2)
+		return 0;
+	SPEC_TYPE* e = &specl[k];
+	return (s <= e->iEnd && s >= e->iBeg) ? 1 : 0;
+}
+
+
+// ROM 0x0032aa38 LowStFiltr__FP8low_typePsP9SPEC_TYPEP13PS_point_typeT3
+// Whether the hatch bar goes on too far to be one: the part of the
+// stroke from where it turns before the bar to where it turns after it
+// reaches up high, or it starts well below a low top that the crossing
+// measures say is near.  ==> 1 it does (not a hatch), 0 not.
+long
+LowStFiltr(low_type* low, short* heights, SPEC_TYPE* bar, PS_point_type* /*p*/, SPEC_TYPE* measures)
+{
+	SPEC_TYPE* specl = low->fSpecl;
+	short* y = low->fY;
+	long grp = bar->other;
+	long iBeg = bar->iBeg;
+	long iEnd = bar->iEnd;
+	long near = measures->ipoint0;
+	long flagged = measures->attr;
+	short bottom, top;
+	RelHigh(y, iBeg, iEnd, heights, &bottom, &top);
+	if (grp == 1)
+	{
+		if (bottom > 3)
+			return 0;
+	}
+	else if (bottom > 4)
+		return 0;
+	POINTS_GROUP g = { (short) iBeg, low->fGroups[grp].iEnd, { 0, 0, 0, 0 } };
+	short flags;
+	long start, end;
+	long v = y[iBeg];
+	if (y[iEnd] > v)
+	{
+		flags = 2;
+		long k = SpcElemFirstOccArr(low, &flags, &g, 3);
+		if (k == -2)
+			return 1;
+		end = specl[k].ipoint0;
+	}
+	else if (y[iEnd] < v)
+	{
+		for (end = iBeg; y[end - 1] != -1 && y[end - 1] >= v; end--)
+			;
+	}
+	else
+		return 0;
+	v = y[iBeg];
+	if (y[iEnd] < v)
+	{
+		flags = 2;
+		long k = SpcElemFirstOccArr(low, &flags, &g, 1);
+		// ROM BUG: no top found reads the element two before the list's
+		// start; the host cannot, and takes it as the case above does
+		// (DEVIATION)
+		if (k == -2)
+			return 1;
+		start = specl[k].ipoint0;
+	}
+	else if (y[iEnd] > v)
+	{
+		for (start = iBeg; y[start - 1] != -1 && y[start - 1] <= v; start--)
+			;
+	}
+	else
+		return 0;
+	RelHigh(y, start, end, heights, &bottom, &top);
+	if (top >= 8)
+		return 1;
+	if (grp == 1 && bottom < 2)
+		return 0;
+	long i3 = measures->iEnd;
+	if (y[i3 + 1] != -1)
+		i3++;
+	long t = iyMin(measures->iBeg, i3, y);
+	if (!(y[t] < y[start] + 0x14 && near < 0x1e))
+		return 1;
+	return (flagged != 0) ? 1 : 0;
+}
+
+
+// ROM 0x0032bfa0 HatDenAnal__FP8low_typeP9SPEC_TYPET2
+// Where the hatch bar ends: the stroke's first right-hand turn after it
+// (0x33 or 0x23) more than 10 right of its start.  ==> 2 the bar's end
+// moved there, 1 none found.
+long
+HatDenAnal(low_type* low, SPEC_TYPE* bar, SPEC_TYPE* /*stroke*/)
+{
+	short* x = low->fX;
+	SPEC_TYPE* specl = low->fSpecl;
+	POINTS_GROUP g = { bar->ipoint1, bar->iEnd, { 0, 0, 0, 0 } };
+	long ends[2];
+	static const UByte kMarks[2] = { 0x33, 0x23 };
+	for (long t = 0; t < 2; t++)
+	{
+		short flags = 2;
+		long k = SpcElemFirstOccArr(low, &flags, &g, kMarks[t]);
+		long r = -2;
+		SPEC_TYPE* e = (k != -2) ? &specl[k] : nil;
+		if (e != nil && x[e->iEnd] > x[bar->iBeg] + 10)
+		{
+			if ((flags & 0x20) != 0)
+				r = e->ipoint0;
+			else if ((flags & 4) != 0)
+				r = e->iEnd;
+			else if ((flags & 0x10) != 0)
+				r = e->iBeg;
+		}
+		ends[t] = r;
+	}
+	long r = ends[1];
+	if (ends[0] != -2)
+	{
+		if (r == -2 || ends[0] < r)
+			r = ends[0];
+	}
+	else if (r == -2)
+		return 1;
+	bar->iEnd = (short) r;
+	return 2;
+}
+
+
+// ROM 0x0032c484 ShiftsAnalyse__FP8low_typeP9SPEC_TYPEN22
+// Whether the stroke has moved left of the hatch: the part before the
+// stick not left of the part after it, or where the bar turns (or its
+// higher end) not left of it.  ==> 1 it has, 0 not.
+long
+ShiftsAnalyse(low_type* low, SPEC_TYPE* bar, SPEC_TYPE* stick, SPEC_TYPE* stroke)
+{
+	short* y = low->fY;
+	SPEC_TYPE* specl = low->fSpecl;
+	short flags = 0;
+	POINTS_GROUP before = { stick->iBeg, stick->ipoint1, { 0, 0, 0, 0 } };
+	POINTS_GROUP after = { stick->iEnd, stroke->iEnd, { 0, 0, 0, 0 } };
+	if (IsAnythingShift(low, &before, &after, 0, 0) == 1)
+		return 1;
+	long grp = (short) GetGroupNumber(low, bar->iBeg);
+	Boolean down = (y[bar->iEnd] >= y[bar->iBeg]);
+	if (down)
+	{
+		before.iBeg = bar->ipoint1;
+		before.iEnd = low->fGroups[grp].iEnd;
+	}
+	else
+	{
+		before.iBeg = low->fGroups[grp].iBeg;
+		before.iEnd = bar->ipoint0;
+	}
+	flags = (short) (flags | 2);
+	long k = SpcElemFirstOccArr(low, &flags, &before, 3);
+	if (k != -2)
+		before.iBeg = before.iEnd = specl[k].ipoint0;
+	else if (down)
+		before.iBeg = before.iEnd = bar->iEnd;
+	else
+		before.iBeg = before.iEnd = bar->iBeg;
+	return IsAnythingShift(low, &before, &after, 1, 0);
+}
+
+
+// ROM 0x0032c68c DrawCross__FP8low_typePsP13PS_point_typeP9SPEC_TYPET4
+// Whether an upright line down from the bar's higher end (from 10 below
+// it to 20 above - 50 when rc says so) crosses the piece in measures,
+// its left end moved 5 (30) further left: a t's cross drawn as two
+// strokes.  If it does, the bar is pointed at that end and measures at
+// the points either side of the crossing; *p is the crossing either
+// way.  ==> 1 it crosses, 0 not.
+long
+DrawCross(low_type* low, short* heights, PS_point_type* p, SPEC_TYPE* bar, SPEC_TYPE* measures)
+{
+	short* y = low->fY;
+	short* x = low->fX;
+	long top;
+	if (y[bar->iEnd] > y[bar->iBeg])
+		top = bar->iBeg;
+	else if (y[bar->iEnd] < y[bar->iBeg])
+		top = bar->iEnd;
+	else
+		return 0;
+	short bottomBand, topBand;
+	RelHigh(y, top, top, heights, &bottomBand, &topBand);
+	if (bottomBand < 5)
+		return 0;
+	Boolean wide = (RCGetH(low->rc, 0x90) & 0x800) != 0;
+	long d = wide ? 0x1e : 5;
+	long up = wide ? 0x32 : 0x14;
+	long i1 = (short) ixMin(measures->iBeg, measures->iEnd, x, y);
+	long i2 = (short) ixMax(measures->iBeg, measures->iEnd, x, y);
+	long left = x[i1] - d;
+	if (left <= 0)
+		left = 0;
+	// (FindCrossPoint answers where the lines meet whether or not the
+	// pieces do; the host starts them nought)
+	short px = 0, py = 0;
+	long result = FindCrossPoint(x[top], (short) (y[top] + 10), x[top], (short) (y[top] - up), (short) left, y[i1], x[i2], y[i2], &px, &py);
+	if (result == 1)
+	{
+		bar->ipoint1 = (short) top;
+		bar->ipoint0 = (short) top;
+		measures->ipoint0 = (short) iClosestToXY(measures->iBeg, measures->iEnd, x, y, px, py);
+		long p0 = measures->ipoint0;
+		measures->ipoint1 = (short) ((p0 + 1 > measures->iEnd) ? p0 : p0 + 1);
+	}
+	p->x = px;
+	p->y = py;
+	return result;
+}
+
+
+// ROM 0x0032c184 InsertBreakAfter__FP8low_typesT2P13PS_point_type
+// A pen-up put into the trace after point at (the point after it
+// becomes the break, its x the marker given; the point after that is
+// moved a fifth of the way from p - or from the point replaced when p's
+// x is -2 - towards where it was), then the strokes found again and the
+// sticks that ran across the break cut at it (or dropped).  ==> 1, 0 when
+// the trace has a pen-up too near.
+long
+InsertBreakAfter(low_type* low, short marker, short at, PS_point_type* p)
+{
+	POINTS_GROUP* bars = low->fBars;
+	long nBars = low->fLenBars;
+	short* y = low->fY;
+	short* x = low->fX;
+	long result = 1;
+	long b1 = (short) (at + 1);
+	long b2 = (short) (at + 2);
+	if (y[at] == -1 || y[b2] == -1 || y[at + 3] == -1)
+		return 0;
+	long y2 = y[b2];
+	if (y[at + 1] == -1)
+		return 1;
+	long v;
+	if (p->x == -2)
+	{
+		v = y[b1];
+		y[b2] = (short) (v - (v + 2) / 5 + (y2 + 2) / 5);
+		v = x[b1];
+	}
+	else
+	{
+		v = p->y;
+		y[b2] = (short) (v - (v + 2) / 5 + (y2 + 2) / 5);
+		v = p->x;
+	}
+	x[b2] = (short) (v - (v + 2) / 5 + (x[b2] + 2) / 5);
+	y[b1] = -1;
+	x[b1] = marker;
+	if (InitGroupsBorder(low, 1) == 1)
+		return 0;
+	// ROM QUIRK: a stick taken out moves the rest down one, but the walk
+	// goes on by index over the old count - the one moved into its place
+	// is skipped, and the last is looked at twice
+	for (long k = 0; k < nBars; k++)
+	{
+		POINTS_GROUP* bar = &bars[k];
+		if (bar->iBeg > b1 || bar->iEnd < b1)
+			continue;
+		if (bar->iEnd > b2)
+		{
+			_SDS_TYPE sds;
+			short px, py;
+			memset(&sds, 0, sizeof(sds));		// (the ROM's is whatever was on the stack; every field read is set)
+			sds.iBeg = (short) b2;
+			sds.iEnd = bar->iEnd;
+			iMostFarDoubleSide(x, y, &sds, &px, &py, 1);
+			if (HWRAbs(sds.slope) > 0x5a && sds.crook < 0xc && sds.chord > 10)
+			{
+				bar->iBeg = (short) b2;
+				return result;
+			}
+		}
+		memmove(bar, bar + 1, (nBars - k - 1) * sizeof(POINTS_GROUP));
+		low->fLenBars = (short) (low->fLenBars - 1);
+	}
+	return result;
+}
+
+
+// ROM 0x0032b57c StrokeAnalyse__FP8low_typePsP9SPEC_TYPEN23Ui
+// What the stroke is once its hatch is taken off.  When enough of the
+// stroke goes on past the bar, low down, and the part up to the bar is
+// a fairly straight upright one, the rest is judged on its own: a dot
+// (the bar then running to the stroke's end) or a stick.  Otherwise the
+// bar and what follows it are judged as a stick (SPDClass, kind 1 when
+// nothing goes on past the bar) if the bar and the piece in measures
+// are far apart as angles.  ==> 7 a stick, 2 a hatch, 1 no room.
+long
+StrokeAnalyse(low_type* low, short* heights, SPEC_TYPE* bar, SPEC_TYPE* stroke, SPEC_TYPE* measures, ULong strict)
+{
+	short* y = low->fY;
+	short* x = low->fX;
+	long sBeg = stroke->iBeg;
+	long sEnd = stroke->iEnd;
+	long bBeg = bar->iBeg;
+	long bEnd = bar->iEnd;
+	long after = (short) (bEnd + 2);
+	_SDS_TYPE a[3];
+	_SDS_TYPE b[3];
+	SPEC_TYPE e;
+	short bottom, top, bottom2, top2, px, py;
+	long kind;
+	long r;
+	if (after >= sEnd)
+	{
+		bEnd = sEnd;
+		kind = 1;
+		goto judgeBar;
+	}
+	kind = 0;
+	RelHigh(y, after, sEnd, heights, &bottom, &top);
+	if (bottom > 4)
+		return 2;
+	RelHigh(y, bEnd, bEnd, heights, &bottom2, &top2);
+	if (bottom >= bottom2)
+		return 2;
+	if (!Init_SDS_Element(&a[0]) || !Init_SDS_Element(&a[1]) || !Init_SDS_Element(&a[2]))
+		return 1;
+	a[1].iBeg = (short) sBeg;
+	a[1].iEnd = (short) after;
+	iMostFarDoubleSide(x, y, &a[1], &px, &py, 1);
+	if (!(HWRAbs(a[1].slope) <= 100 && a[1].crook <= 0x2b))
+		return 2;
+	a[1].iBeg = (short) after;
+	a[1].iEnd = (short) sEnd;
+	iMostFarDoubleSide(x, y, &a[1], &px, &py, 1);
+	xMinMax(after, sEnd, x, y, &a[1].xMin, &a[1].xMax);
+	yMinMax(after, sEnd, y, &a[1].yMin, &a[1].yMax);
+	a[0].crook = 1;
+	a[0].share = 100;
+	a[0].xMin = a[1].xMin;
+	a[0].xMax = a[1].xMax;
+	a[0].yMin = a[1].yMin;
+	a[0].yMax = a[1].yMax;
+	InitSpeclElement(&e);
+	e.iBeg = (short) after;
+	e.iEnd = (short) sEnd;
+	e.code = (UByte) top;
+	e.attr = (UByte) bottom;
+	if (Dot(low, &e, a) == 8)
+	{
+		bar->iEnd = stroke->iEnd;
+		return 2;
+	}
+	if (SPDClass(low, 0, &e, a) == 7)
+		return 2;
+judgeBar:
+	if (!Init_SDS_Element(&a[0]) || !Init_SDS_Element(&a[1]) || !Init_SDS_Element(&a[2]))
+		return 1;
+	a[1].iBeg = (short) bBeg;
+	a[1].iEnd = (short) bEnd;
+	iMostFarDoubleSide(x, y, &a[1], &px, &py, 1);
+	xMinMax(sBeg, sEnd, x, y, &a[0].xMin, &a[0].xMax);
+	yMinMax(sBeg, sEnd, y, &a[0].yMin, &a[0].yMax);
+	a[0].crook = 1;
+	a[1].share = 100;
+	if (!Init_SDS_Element(&b[0]) || !Init_SDS_Element(&b[1]) || !Init_SDS_Element(&b[2]))
+		return 1;
+	b[1].iBeg = measures->iBeg;
+	b[1].iEnd = measures->iEnd;
+	iMostFarDoubleSide(x, y, &b[1], &px, &py, 1);
+	if (InvTanDel(low, b[1].slope, a[1].slope) == 1)
+	{
+		RelHigh(y, bBeg, bEnd, heights, &bottom, &top);
+		InitSpeclElement(&e);
+		e.iBeg = (short) sBeg;
+		e.iEnd = (short) bEnd;
+		e.code = (UByte) top;
+		e.attr = (UByte) bottom;
+		r = SPDClass(low, (short) kind, &e, a);
+		if (r != 7 && a[1].slope > 0x41)
+			r = 2;
+	}
+	else
+		r = 2;
+	if (stroke->iEnd == bEnd)
+	{
+		if (r == 7)
+			bar->iEnd = stroke->iEnd;
+		else
+			r = 2;
+	}
+	if (strict == 1 && r != 7)
+		r = 2;
+	return r;
+}
+
+
+// ROM 0x0032ae94 RMinCalc__FP8low_typePsP9SPEC_TYPEN33
+// How near the rest of the stroke, after the hatch bar, comes back to
+// the piece in measures: the kind of turn found after the bar into
+// out->iBeg (2 a loop back, 3 a turn, 4 none), the sideways distance of
+// the nearest approach into out->iEnd and the point in out->ipoint0.
+// ==> the nearest distance (0x7fff for none; 0 for a loop back in the
+// first stroke).
+long
+RMinCalc(low_type* low, short* /*heights*/, SPEC_TYPE* bar, SPEC_TYPE* measures, SPEC_TYPE* stroke, SPEC_TYPE* out)
+{
+	short* x = low->fX;
+	short* y = low->fY;
+	SPEC_TYPE* specl = low->fSpecl;
+	long grp = measures->other;
+	POINTS_GROUP* sgrp = &low->fGroups[grp];
+	short flags;
+	POINTS_GROUP g = { 0, 0, { 0, 0, 0, 0 } };
+	long kind, dist, dx;
+	// DEVIATION: the ROM leaves the point unset on one path below (it is
+	// then whatever was on the stack); the host has it -2, none
+	short point = -2;
+	long k, k3 = -2;
+	SPEC_TYPE* e3;
+	SPEC_TYPE* e11;
+	SPEC_TYPE* turn;
+	if (bar->iEnd + 1 >= stroke->iEnd)
+		goto none;
+	g.iBeg = (short) (bar->iEnd + 1);
+	g.iEnd = stroke->iEnd;
+	flags = 2;
+	k = SpcElemFirstOccArr(low, &flags, &g, 3);
+	if (k == -2)
+		goto none;
+	e3 = &specl[k];
+	g.iBeg = bar->ipoint1;
+	g.iEnd = e3->ipoint0;
+	flags = 2;
+	k = SpcElemFirstOccArr(low, &flags, &g, 1);
+	g.iBeg = (short) ((k != -2 && specl[k].iEnd + 1 > bar->iEnd + 1) ? specl[k].iEnd + 1 : bar->iEnd + 1);
+	g.iEnd = stroke->iEnd;
+	flags = 2;
+	k = SpcElemFirstOccArr(low, &flags, &g, 0x11);
+	e11 = (k != -2) ? &specl[k] : nil;
+	if (e11 == nil || (flags & 0x20) == 0 || (e11->iEnd > e3->iEnd && x[e11->ipoint0] > x[e3->iEnd]))
+	{
+		flags = 2;
+		g.iBeg = measures->iEnd;
+		g.iEnd = sgrp->iEnd;
+		k = SpcElemFirstOccArr(low, &flags, &g, 0x13);
+		point = (k == -2) ? -2 : specl[k].ipoint0;
+		dist = dx = 0x7fff;
+		kind = 4;
+		goto done;
+	}
+	turn = e11;
+	if (e11->iEnd + 1 < stroke->iEnd)
+	{
+		g.iBeg = (short) (e11->iEnd + 1);
+		g.iEnd = stroke->iEnd;
+		flags = 2;
+		k3 = SpcElemFirstOccArr(low, &flags, &g, 0x11);
+		if (k3 == -2)
+			kind = 3;
+		else
+		{
+			turn = &specl[k3];
+			if (x[e3->iBeg] < x[e3->iEnd])
+				kind = 3;
+			else
+				kind = (x[turn->ipoint0] <= x[e3->iEnd]) ? 2 : 3;
+		}
+	}
+	else
+		kind = 3;
+	{
+		PS_point_type pt;
+		short at, at2;
+		long t = iyMax(measures->ipoint0, sgrp->iEnd, y);
+		if (y[t] > y[turn->ipoint0])
+		{
+			pt.x = x[turn->ipoint0];
+			pt.y = y[turn->ipoint0];
+			if (y[measures->iEnd] < y[measures->iBeg])
+			{
+				g.iBeg = sgrp->iBeg;
+				g.iEnd = measures->ipoint0;
+			}
+			else
+			{
+				g.iBeg = measures->ipoint0;
+				g.iEnd = sgrp->iEnd;
+			}
+		}
+		else
+		{
+			pt.x = x[t];
+			pt.y = y[t];
+			g.iBeg = (short) (bar->iEnd + 1);
+			g.iEnd = stroke->iEnd;
+		}
+		dist = R_ClosestToLine(x, y, &pt, &g, &at);
+		dx = HWRAbs(pt.x - x[at]);
+		if (k3 != -2)
+		{
+			pt.x = x[e11->ipoint0];
+			pt.y = y[e11->ipoint0];
+			g.iBeg = measures->ipoint0;
+			g.iEnd = sgrp->iEnd;
+			long d2 = R_ClosestToLine(x, y, &pt, &g, &at2);
+			long dx2 = HWRAbs(pt.x - x[at2]);
+			point = at2;
+			if (dist > d2)
+			{
+				dist = d2;
+				dx = dx2;
+				at = at2;
+			}
+		}
+	}
+	goto done;
+none:
+	dist = dx = 0x7fff;
+	kind = 4;
+	point = -2;
+done:
+	out->ipoint0 = point;
+	out->iBeg = (short) kind;
+	out->iEnd = (short) dx;
+	if (grp == 0 && kind == 2)
+		dist = 0;
+	return dist;
+}
+
+
+// ROM 0x0032a14c HatchureS__FP8low_typeP9SPEC_TYPEPs
+// Whether the stroke elem covers has a hatch - the bar of a t or an f
+// drawn in one stroke with it, or a cross drawn over a stick of the
+// strokes just before (the upright sticks, fBars, from the last back, up
+// to five of them).  The piece ApprHorStroke picks as the bar must cross
+// a stick of this stroke or of the two before it (or reach it,
+// DrawCross), not start to its right, and be no part of a bigger shape
+// (the filters and Oracle); what is left of the stroke is then judged by
+// StrokeAnalyse.  A stick found this way marks the stroke 7 (pointing
+// at the stick); a hatch has its stroke cut after the bar (a pen-up put
+// in, InsertBreakAfter) and marked other = 2.  ==> 7 a stick, 2 a hatch
+// cut off, 0 neither, 1 no room.
+long
+HatchureS(low_type* low, SPEC_TYPE* elem, short* heights)
+{
+	POINTS_GROUP* bars = low->fBars;
+	long nBars = low->fLenBars;
+	_SDS_TYPE* head = &low->fSDS->pSDS[low->fSDS->f02];
+	short* x = low->fX;
+	short* y = low->fY;
+	long iBeg = elem->iBeg;
+	long iEnd = elem->iEnd;
+	long grp = elem->ipoint0;
+	long gBeg = low->fGroups[grp].iBeg;
+	long gEnd = low->fGroups[grp].iEnd;
+	long result = 0;
+	long found = 0;				// how the bar was found: 1 it crosses, 3 it crosses the rest of the stroke too
+	long end = -2;				// where the bar ends
+	long maxEnd = -2;			// the furthest the part of the stroke crossed reaches
+	long drawn = 0;				// DrawCross found the crossing (the last stick looked at)
+	long cut = 0;				// SCutFiltr: the bar crossed away from its start
+	long hp;
+	long hpBeg, hpEnd;
+	long count;
+	SPEC_TYPE bar;				// the hatch bar (M)
+	SPEC_TYPE stick;			// the stick it crosses (S)
+	PS_point_type p1, p2;
+	if (iBeg <= 2)
+		return 0;
+	if (gBeg == -2 || gEnd == -2)
+		return 0;
+	hp = ApprHorStroke(low);
+	if (hp == -2)
+		return 0;
+	hpBeg = head[hp].iBeg;
+	hpEnd = head[hp].iEnd;
+	if (InitSpeclElement(&bar) == 1)
+		return 1;
+	memset(&stick, 0, sizeof(stick));
+	p1.x = p1.y = p2.x = p2.y = 0;
+	count = 0;
+	for (long k = nBars - 1; k >= 0 && count < 5; k--)
+	{
+		drawn = 0;
+		POINTS_GROUP* s = &bars[k];
+		long sBeg = s->iBeg;
+		long sEnd = s->iEnd;
+		if (!(sEnd < hpBeg && sBeg < sEnd))
+			continue;
+		long g = (short) GetGroupNumber(low, sBeg);
+		if (!(g <= grp && grp - 2 <= g))
+			continue;
+		if (InitSpeclElement(&stick) == 1)
+			return 1;
+		POINTS_GROUP pg1 = { (short) sBeg, (short) sEnd, { 0, 0, 0, 0 } };
+		POINTS_GROUP pg2 = { (short) hpBeg, (short) hpEnd, { 0, 0, 0, 0 } };
+		bar.iBeg = (short) hpBeg;
+		bar.iEnd = (short) hpEnd;
+		stick.iBeg = (short) sBeg;
+		stick.iEnd = (short) sEnd;
+		stick.other = (UByte) g;
+		UByte how;
+		if (Find_Cross(low, &p1, &pg2, &pg1) == 0)
+		{
+			drawn = DrawCross(low, heights, &p1, &stick, &bar);
+			if (drawn == 0)
+				continue;
+		}
+		found = 1;
+		if (drawn == 0)
+		{
+			stick.ipoint0 = pg1.iBeg;
+			stick.ipoint1 = pg1.iEnd;
+			bar.ipoint0 = pg2.iBeg;
+			bar.ipoint1 = pg2.iEnd;
+			how = 0;
+		}
+		else
+		{
+			pg1.iBeg = stick.ipoint0;
+			pg1.iEnd = stick.ipoint1;
+			pg2.iBeg = bar.ipoint0;
+			pg2.iEnd = bar.ipoint1;
+			how = 1;
+		}
+		stick.attr = how;
+		bar.other = how;
+		short dist;
+		cut = SCutFiltr(low, heights, &bar, &p1, &dist);
+		SPEC_TYPE r;			// what the filters are told: the piece of the bar crossed, how far the crossing is from its start, LeFiltr's answer
+		memset(&r, 0, sizeof(r));
+		r.ipoint0 = dist;
+		if (ShiftsAnalyse(low, &stick, &bar, elem) == 1)
+			return 0;
+		if (g < grp)
+		{
+			POINTS_GROUP whole = { (short) iBeg, (short) iEnd, { 0, 0, 0, 0 } };
+			pg1.iBeg = (short) gBeg;
+			pg1.iEnd = (short) gEnd;
+			if (Box_Cover(low, &whole, &pg1) == 1)
+				continue;
+		}
+		found = HatDenAnal(low, &bar, elem);
+		hpEnd = bar.iEnd;
+		if (bar.iEnd > end)
+			end = bar.iEnd;
+		if (maxEnd < pg2.iEnd)
+			maxEnd = pg2.iEnd;
+		if (end < iEnd)
+		{
+			pg2.iBeg = (short) hpBeg;
+			pg2.iEnd = (short) end;
+			pg1.iBeg = (short) (end + 1);
+			pg1.iEnd = (short) iEnd;
+		}
+		r.iBeg = pg2.iBeg;
+		r.iEnd = pg2.iEnd;
+		count++;
+		if (end == -2)
+			continue;
+		if (end + 2 >= iEnd)
+			break;
+		pg2.iBeg = (short) (maxEnd - 1);
+		pg2.iEnd = (short) hpEnd;
+		pg1.iBeg = (short) (end + 1);
+		pg1.iEnd = (short) iEnd;
+		if (Find_Cross(low, &p2, &pg2, &pg1) == 1)
+		{
+			found = 3;
+			if (bar.iBeg >= bar.iEnd)
+				return 0;
+			if (bar.iBeg + 1 == bar.iEnd)
+				end = bar.iEnd;
+			else if (maxEnd == pg2.iEnd)
+			{
+				x[pg2.iBeg] = (short) ((p1.x + p2.x) >> 1);
+				y[pg2.iBeg] = (short) ((p1.y + p2.y) >> 1);
+				end = pg2.iBeg;
+			}
+			else
+				end = pg2.iEnd - 1;
+			bar.iEnd = (short) end;
+		}
+		else
+		{
+			p2.x = -2;
+			p2.y = -2;
+		}
+		if (end >= iEnd)
+			continue;
+		// the rest of the stroke must not cross back over the stroke
+		pg2.iBeg = (short) (end + 1);
+		pg2.iEnd = (short) iEnd;
+		pg1.iBeg = (short) gBeg;
+		pg1.iEnd = (short) gEnd;
+		PS_point_type p3;
+		if (Find_Cross(low, &p3, &pg2, &pg1) != 0)
+			return 0;
+		SPEC_TYPE out;
+		memset(&out, 0, sizeof(out));
+		PS_point_type q;
+		q.y = (short) RMinCalc(low, heights, &bar, &stick, elem, &out);
+		q.x = out.iEnd;
+		long le = LeFiltr(low, &stick, out.ipoint0);
+		r.attr = (UByte) le;
+		if (LowStFiltr(low, heights, &stick, &p1, &r) == 0)
+			return 0;
+		if (cut == 0 && le == 0)
+			return 0;
+		if (out.iBeg == 3 && le == 0 && found != 3 && RDFiltr(low, &q, &bar, &p1) == 0)
+			return 0;
+		if (Oracle(low, &q, found) == 0)
+			return 0;
+		break;
+	}
+	if (end == -2 || found == 0)
+		return result;
+	result = StrokeAnalyse(low, heights, &bar, elem, &stick, drawn);
+	if (result == 1)
+		return 1;
+	if (result == 2)
+		return 0;
+	if (result == 7)
+	{
+		if (elem->iEnd == bar.iEnd)
+			end = elem->iEnd;
+		elem->mark = 7;
+		elem->ipoint0 = stick.ipoint0;
+		elem->ipoint1 = stick.ipoint1;
+	}
+	if (bar.iEnd != elem->iEnd)
+	{
+		if (InsertBreakAfter(low, -4, (short) end, &p2) == 0)
+			return 1;
+	}
+	elem->other = 2;
+	elem->iEnd = (short) end;
+	return result;
+}
+
+
+#pragma mark Pict
+
+// ROM 0x00329cc4 FillCross__FP8low_typeP9SPEC_TYPE
+// Where the stick elem is crossed by the upright sticks of other strokes
+// (fBars): its ipoint0 and ipoint1 are the first points of the two steps
+// of the stick that are crossed (one crossing per stroke, the longer
+// stick of a stroke counting), or -2 when there are none, more than two
+// or two of very different heights.  A stick that is only a short part
+// of its stroke's length, bent, or not reaching over the stick, does not
+// count.
+void
+FillCross(low_type* low, SPEC_TYPE* elem)
+{
+	POINTS_GROUP* bars = low->fBars;
+	long nBars = low->fLenBars;
+	long lastGrp = -2;
+	short* y = low->fY;
+	short* x = low->fX;
+	POINTS_GROUP last = { 0, 0, { 0, 0, 0, 0 } };
+	long count = 0;
+	if (elem->other == 2 || elem->mark == 8)
+		return;
+	elem->ipoint1 = -2;
+	elem->ipoint0 = -2;
+	for (long k = 0; k < nBars; k++)
+	{
+		POINTS_GROUP pgE = { elem->iBeg, elem->iEnd, { 0, 0, 0, 0 } };
+		POINTS_GROUP b = bars[k];
+		if (!(b.iBeg < pgE.iBeg || b.iEnd > pgE.iEnd))
+			continue;
+		long sg = (short) GetGroupNumber(low, b.iBeg);
+		long gBeg = low->fGroups[sg].iBeg;
+		long gEnd = low->fGroups[sg].iEnd;
+		if (b.iEnd - b.iBeg + 1 < (gEnd - gBeg + 2) / 3)
+			continue;
+		if (HWRAbs(y[b.iEnd] - y[b.iBeg]) < 0x3c)
+		{
+			long d = (short) Distance8(x[b.iBeg], y[b.iBeg], x[b.iEnd], y[b.iEnd]);
+			long sum = 0;
+			for (long i = (short) gBeg; i < gEnd; i = (short) (i + 1))
+				sum = (short) (sum + Distance8(x[i], y[i], x[i + 1], y[i + 1]));
+			if (d < (sum >> 1))
+				continue;
+		}
+		if (HWRAbs(CurvMeasure(x, y, b.iBeg, b.iEnd, -1)) > 5)
+			continue;
+		PS_point_type p;
+		if (Find_Cross(low, &p, &pgE, &b) != 1)
+			continue;
+		long kBeg = bars[k].iBeg;
+		long kEnd = bars[k].iEnd;
+		long g2 = (short) GetGroupNumber(low, kBeg);
+		if (g2 == lastGrp)
+		{
+			if (kEnd - kBeg < last.iEnd - last.iBeg)
+				continue;
+			last = bars[k];
+			count--;
+		}
+		else
+		{
+			if (lastGrp != -2)
+			{
+				short lastYMin, lastYMax, yMin, yMax;
+				yMinMax(low->fGroups[lastGrp].iBeg, low->fGroups[lastGrp].iEnd, y, &lastYMin, &lastYMax);
+				yMinMax(gBeg, gEnd, y, &yMin, &yMax);
+				long h1 = lastYMax - lastYMin;
+				long h2 = yMax - yMin;
+				if (!(h1 >= (h2 >> 1) && h2 >= (h1 >> 1)))
+				{
+					elem->ipoint0 = -2;
+					elem->ipoint1 = -2;
+					return;
+				}
+			}
+			lastGrp = g2;
+			last = bars[k];
+		}
+		if (count == 0)
+			elem->ipoint0 = b.iBeg;
+		else if (count == 1)
+			elem->ipoint1 = b.iBeg;
+		else
+		{
+			elem->ipoint0 = -2;
+			elem->ipoint1 = -2;
+			return;
+		}
+		count++;
+	}
+}
+
+
+// ROM 0x0032e78c FantomSt__FPsN21P9BUF_DESCRT4sT6Uc
+// The points of a stick (7) or a dot (8) from iBeg to iEnd replaced in
+// the trace by a straight line: a stick's from its leftmost point to its
+// rightmost (its highest to its lowest when those are level), a dot's
+// from the top right of its box to the bottom left (which are written
+// into its two ends first).  The trace is rebuilt through the two
+// working buffers; *count is how many points it has.  ==> 0
+long
+FantomSt(short* count, short* x, short* y, low_buffer* bufX, low_buffer* bufY, short iBeg, short iEnd, UByte mark)
+{
+	long iB = iBeg;
+	long iE = iEnd;
+	short* nx = bufX->ptr;
+	short* ny = bufY->ptr;
+	if (iE - iB + 1 < 3)
+		return 0;
+	long n = *count;
+	long from = ixMin(iB, iE, x, y);
+	long xFrom = x[from];
+	long to = ixMax(iB, iE, x, y);
+	long lo, hi;
+	if (mark == 7)
+	{
+		if (x[to] == xFrom)
+		{
+			from = iYup_range(y, iB, iE);
+			to = iYdown_range(y, iB, iE);
+		}
+		if (from < to)
+		{
+			lo = from;
+			hi = to;
+		}
+		else
+		{
+			hi = from;
+			lo = to;
+		}
+	}
+	else
+	{
+		xMinMax(iB, iE, x, y, &x[iE], &x[iB]);
+		yMinMax(iB, iE, y, &y[iB], &y[iE]);
+		hi = iE;
+		lo = iB;
+	}
+	memset(nx, 0, bufX->size << 1);
+	memset(ny, 0, bufY->size << 1);
+	memcpy(nx, x, iB << 1);
+	memcpy(ny, y, iB << 1);
+	nx[iB] = x[lo];
+	ny[iB] = y[lo];
+	long xe = x[hi];
+	long ye = y[hi];
+	long dx = xe - nx[iB];
+	long dy = ye - ny[iB];
+	long len = HWRMathILSqrt(LAdd(LMul(dy, dy), LMul(dx, dx)));
+	long step = len / (iE - iB);
+	long x0 = nx[iB];
+	long y0 = ny[iB];
+	long t = step;
+	for (long i = iB; i < iE - 1; )
+	{
+		// DEVIATION: a line of no length is a division by nought, which
+		// the ROM's __rt_sdiv traps on; the host leaves the points at the
+		// start
+		long vx = (len != 0) ? LMul(t, dx) / len : 0;
+		i++;
+		nx[i] = (short) (vx + x0);
+		long vy = (len != 0) ? LMul(t, dy) / len : 0;
+		ny[i] = (short) (vy + y0);
+		t += step;
+	}
+	nx[iE] = (short) xe;
+	ny[iE] = (short) ye;
+	long rest = (n - iE) * 2;
+	memcpy(&nx[iE + 1], &x[iE + 1], rest);
+	memcpy(&ny[iE + 1], &y[iE + 1], rest);
+	long all = (n + 1) * 2;
+	memcpy(x, nx, all);
+	memcpy(y, ny, all);
+	return 0;
+}
+
+
+// ROM 0x0032be74 Recount__FP8low_type
+// The stroke descriptions' points taken back through the filter's map
+// (buffer 2) to the trace as it was given; a piece ending more than one
+// point before the next begins is taken to end halfway to it, and the
+// next to begin there.  ==> 0, 1 for no descriptions.
+long
+Recount(low_type* low)
+{
+	short* map = low->fBuffers[2].ptr;
+	_SDS_CONTROL_TYPE* control = low->fSDS;
+	_SDS_TYPE* all = control->pSDS;
+	long n = control->lenSDS;
+	long mid = -2;
+	Boolean carried = false;
+	if (all == nil)
+		return 1;
+	for (long k = 0; k < n; k++)
+	{
+		_SDS_TYPE* s = &all[k];
+		long a = s->iBeg;
+		long b = s->iEnd;
+		Boolean headOrTail = (s->mark == 0 && (s->attr == 0x10 || s->attr == 0x20));
+		if (!headOrTail)
+		{
+			long nextBeg = s[1].iBeg;
+			if (carried)
+				a = mid;
+			if (nextBeg - b > 1)
+			{
+				mid = (b + nextBeg) >> 1;
+				b = mid;
+				carried = true;
+			}
+			else
+				carried = false;
+		}
+		s->iBeg = map[a];
+		s->iEnd = map[b];
+		s->iA = map[s->iA];
+		s->iB = map[s->iB];
+		s->iMax = map[s->iMax];
+	}
+	return 0;
+}
+
+
+// ROM 0x003298d8 Pict__FP8low_type
+// The strokes looked at one by one against the line's heights: each is
+// described (StrElements) and judged a stick (7), a dot (8), a stick
+// with a hatch cut off (HatchureS: the rest of the stroke is judged as a
+// stroke of its own) or a letter's body with a crossing in it (InStr);
+// a stroke's arcs are found (SlashArcs), and a stick or a dot is drawn
+// straight in the trace (FantomSt) and put in the list between a stroke
+// start and end of its own, with where other strokes cross it
+// (FillCross).  The stroke descriptions are then taken back to the
+// trace as it was given (Recount).  ==> 0, 1 for no room.
+long
+Pict(low_type* low)
+{
+	short* x = low->fX;
+	short* y = low->fY;
+	POINTS_GROUP* groups = low->fGroups;
+	long nGroups = low->fLenGroups;
+	short heights[11];
+	SPEC_TYPE e;
+	long failed = 0;
+	short savedII = low->fII;
+	long f5c = low->f5c;
+	InitSpeclElement(&e);
+	BildHigh(low->fBox.top, low->fBox.bottom, heights);
+	// DEVIATION: room for 80 sticks of the host's size (the ROM's 0x3c0)
+	low->fBars = (POINTS_GROUP*) HWRMemoryAlloc(80 * sizeof(POINTS_GROUP));
+	if (low->fBars == nil)
+		failed = 1;
+	else
+		VertSticksSelector(low);
+	for (long i = 0; failed == 0 && i < nGroups; i++)
+	{
+		_SDS_TYPE* head = &low->fSDS->pSDS[low->fSDS->lenSDS];
+		long prev;
+		long cut;
+		if (e.other == 2)
+		{
+			prev = -2;
+			cut = 1;
+		}
+		else
+		{
+			cut = 0;
+			prev = (i <= 0) ? -2 : i - 1;
+		}
+		long gBeg = groups[i].iBeg;
+		long gEnd = groups[i].iEnd;
+		short bottom, top;
+		long r;
+		RelHigh(y, gBeg, gEnd, heights, &bottom, &top);
+		InitSpeclElement(&e);
+		e.iBeg = (short) gBeg;
+		e.iEnd = (short) gEnd;
+		e.ipoint0 = (short) prev;
+		e.ipoint1 = -2;
+		e.code = (UByte) top;
+		e.attr = (UByte) bottom;
+		e.mark = 0;
+		if (StrElements(low, &e, heights) == 1)
+			goto fail;
+		r = SPDClass(low, 2, &e, head);
+		if (r == 1)
+			goto fail;
+		if (r != 7)
+		{
+			r = Dot(low, &e, head);
+			if (r == 1)
+				goto fail;
+			if (r != 8 && cut != 1)
+			{
+				if (HatchureS(low, &e, heights) == 1)
+					goto fail;
+				if (e.other == 2)
+				{
+					if (InitGroupsBorder(low, 1) != 0)
+						goto fail;
+					nGroups = low->fLenGroups;
+				}
+				else if (InStr(low, head, &e, heights) == 1)
+					goto fail;
+			}
+		}
+		{
+			long m = e.mark;
+			if ((m == 0 || m == 5) && i < f5c && e.other != 2)
+				SlashArcs(low, gBeg, gEnd);
+			else if (m == 7 || m == 8)
+			{
+				FantomSt(&savedII, x, y, &low->fBuffers[0], &low->fBuffers[1], e.iBeg, e.iEnd, (UByte) m);
+				short at = e.iBeg;
+				if (Mark(low, 0x10, 0, 0, 0, at, at, at, at) == 1)
+					goto fail;
+				FillCross(low, &e);
+				if (MarkSpecl(low, &e) == 1)
+					goto fail;
+				at = e.iEnd;
+				if (Mark(low, 0x20, 0, 0, 0, at, at, at, at) == 1)
+					goto fail;
+			}
+		}
+		continue;
+	fail:
+		failed = 1;
+		break;
+	}
+	if (low->fBars != nil)
+		HWRMemoryFree((Ptr) low->fBars);
+	low->fII = savedII;
+	if (failed == 0)
+		Recount(low);
+	return failed;
 }
