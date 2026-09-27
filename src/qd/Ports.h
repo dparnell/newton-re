@@ -100,6 +100,8 @@ void		SetPixel(PixelMap* pm, long x, long y, long value);
 PatternHandle	GetStdPattern(GetPatSelector which);
 PatternHandle	MakeSimplePattern(long row0, long row1, long row2, long row3, long row4, long row5, long row6, long row7);
 PatternHandle	MakeSimplePattern(const char* rows);
+PatternHandle	MakeSimpleGrayPattern(const char* rows, ULong fg, ULong bg);	// ROM 0x0032840c MakeSimpleGrayPattern__FPlUlT2
+PatternHandle	GetStdGrayPattern(ULong red, ULong green, ULong blue);		// ROM 0x00328e90 GetStdGrayPattern__FUlN21
 void			DisposePattern(PatternHandle pattern);		// the standard ones stay
 PatternHandle	GetFgPattern(void);
 PatternHandle	GetBgPattern(void);

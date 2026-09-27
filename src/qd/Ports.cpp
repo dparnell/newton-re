@@ -11,6 +11,7 @@
 */
 
 #include "Ports.h"
+#include "ByteOrder.h"
 #include "OSErrors.h"
 #include "Frames.h"
 #include "NativeFunctions.h"
@@ -181,6 +182,132 @@ MakeSimplePattern(const char* rows)
 		pm->deviceRes.h = kDefaultDPI;
 		pm->grayTable = nil;
 		memcpy((char*) pm + kPatternPixelsOffset, rows, 8);
+	}
+	return pattern;
+}
+
+
+// the depth a gray pattern is made at: the port's, or the screen's for a
+// printer's port
+static long
+GrayPatternDepth(void)
+{
+	ULong flags = GetCurrentPort()->portBits.pixMapFlags;
+	if (flags & 0x300)
+		flags = qdGlobals.fScreenBits.pixMapFlags;
+	return flags & 0xff;
+}
+
+
+// the header of an 8x8 pattern of the depth, its rows after it
+static void
+InitGrayPattern(PixelMap* pm, long depth)
+{
+	pm->baseAddr = (Ptr) kPatternPixelsOffset;
+	pm->rowBytes = (short) depth;
+	SetRect(&pm->bounds, 0, 0, 8, 8);
+	pm->pixMapFlags = depth + kPixMapOffset;
+	pm->deviceRes.v = kDefaultDPI;
+	pm->deviceRes.h = kDefaultDPI;
+	pm->grayTable = nil;
+}
+
+
+// ROM 0x00328e90 GetStdGrayPattern__FUlN21
+// A solid pattern of the gray the colour comes to at the port's depth
+// (one bit: black for any gray but white).
+//
+// DEVIATION: the rows follow the host's PixelMap (kPatternPixelsOffset)
+// where the ROM's follow its 0x1c-byte one.
+PatternHandle
+GetStdGrayPattern(ULong red, ULong green, ULong blue)
+{
+	long depth = GrayPatternDepth();
+	long size = depth * 8;
+	PatternHandle pattern = (PatternHandle) NewHandle(size + kPatternPixelsOffset);
+	if (pattern != nil)
+	{
+		ULong gray = RGBtoGray(red, green, blue, 0x10, depth);
+		PixelMap* pm = *pattern;
+		InitGrayPattern(pm, depth);
+		UChar byte;
+		if (depth == 1)
+			byte = gray != 0 ? 0xff : 0;
+		else if (depth == 2)
+			byte = (UChar) ((gray << 6) | (gray << 4) | (gray << 2) | gray);
+		else if (depth == 4)
+			byte = (UChar) (gray | (gray << 4));
+		else
+			byte = 0;
+		UChar* p = (UChar*) pm + kPatternPixelsOffset;
+		for (long i = 0; i < size; i++)
+			p[i] = byte;
+	}
+	return pattern;
+}
+
+
+// ROM 0x0032840c MakeSimpleGrayPattern__FPlUlT2
+// An old eight-row pattern drawn in two grays: a set bit the foreground,
+// a clear one the background, at the port's depth - a plain one-bit
+// pattern when that is simply black on white.  (The rows are read as two
+// big-endian words, as the ARM loads them.)
+//
+// ROM QUIRK, kept: at a depth of eight the rows are left as the handle
+// was allocated.
+PatternHandle
+MakeSimpleGrayPattern(const char* rows, ULong fg, ULong bg)
+{
+	long depth = GrayPatternDepth();
+	if ((0xffffffffu >> (32 - depth)) == fg && bg == 0)
+		return MakeSimplePattern(rows);
+	PatternHandle pattern = (PatternHandle) NewHandle(depth * 8 + kPatternPixelsOffset);
+	if (pattern == nil)
+		return nil;
+	PixelMap* pm = *pattern;
+	InitGrayPattern(pm, depth);
+	UChar* dst = (UChar*) pm + kPatternPixelsOffset;
+	if (depth == 1)
+	{
+		BlockMove(rows, dst, 8);
+		return pattern;
+	}
+	ULong words[2] = { GetBigEndianWord(rows), GetBigEndianWord(rows + 4) };
+	ULong* word = words;
+	UChar fg4 = (UChar) (fg << 4);
+	UChar bg4 = (UChar) (bg << 4);
+	ULong bit = 0x80000000;
+	if (depth == 2)
+	{
+		for (long i = 0; i < 0x10; i++)
+		{
+			UChar b = (*word & bit) == 0 ? (UChar) (bg << 6) : (UChar) (fg << 6);
+			b |= (*word & (bit >> 1)) != 0 ? fg4 : bg4;
+			b |= (*word & (bit >> 2)) == 0 ? (UChar) (bg << 2) : (UChar) (fg << 2);
+			b |= (UChar) ((*word & (bit >> 3)) != 0 ? fg : bg);
+			*dst++ = b;
+			bit >>= 4;
+			if (bit == 0)
+			{
+				bit = 0x80000000;
+				word++;
+			}
+		}
+	}
+	else if (depth == 4)
+	{
+		for (long i = 0; i < 0x20; i++)
+		{
+			UChar b = (*word & bit) != 0 ? fg4 : bg4;
+			b |= (UChar) ((*word & (bit >> 1)) != 0 ? fg : bg);
+			*dst++ = b;
+			bit >>= 2;
+			if (bit == 0)
+			{
+				bit = 0x80000000;
+				word++;
+			}
+		}
 	}
 	return pattern;
 }

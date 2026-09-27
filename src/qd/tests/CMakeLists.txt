@@ -28,3 +28,7 @@ add_executable(test_Screen test_Screen.cpp)
 target_link_libraries(test_Screen PRIVATE qd hal_host_display)
 add_test(NAME qd.Screen COMMAND test_Screen ${CMAKE_BINARY_DIR}/test_Screen.pgm)
 set_tests_properties(qd.Screen PROPERTIES TIMEOUT 60)
+
+add_executable(test_PicPlay test_PicPlay.cpp)
+target_link_libraries(test_PicPlay PRIVATE qd)
+add_test(NAME qd.PicPlay COMMAND test_PicPlay)

@@ -46,6 +46,13 @@ and again after the recogniser has finished.
 
 The last run of work closed, in order:
 
+- **QuickDraw pictures played back** (`qd/PicPlay.h`, `docs/qd/README.md`,
+  "QuickDraw pictures played back"): `DrawPicture`, `ParsePicCodes` and
+  `GetPicBits` over the picture's own bytes, so the World Clock slip the
+  Assistant's "time in Paris" opens shows its world map; a picture shape's
+  frame is now read big-endian by `MakeShape`.  Text, curves, paths and the
+  picture turned into shapes are NOT YET.
+
 - **a meeting in the day view** (`views/MeetingView.h`, `docs/views/README.md`,
   "A meeting in the day view"): `TMeetingView`, `LayoutMeeting`,
   `GetMeetingTypeInfo`/`GetMeetingIcon`, so the Assistant's "schedule lunch

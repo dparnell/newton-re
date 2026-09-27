@@ -18,6 +18,8 @@
 #include "Polygons.h"
 #include "Text.h"
 #include "Pictures.h"
+#include "PicPlay.h"
+#include "ByteOrder.h"
 #include "Fonts.h"
 #include "RichString.h"
 #include "Frames.h"
@@ -628,8 +630,9 @@ SetPenPattern(TStyleSave* style)
 // style); a text shape drawn as a line of its font from its bounds'
 // left at its top plus the ascent, aligned across the bounds by the
 // justification, in the text pattern (else the fill's when filling); a
-// TextBox wrapped into its bounds by TextBox, clipped to them.  NOT YET
-// RECONSTRUCTED: 'picture shapes (QuickDraw pictures), ink, scaling.
+// TextBox wrapped into its bounds by TextBox, clipped to them; a picture
+// played into its bounds (qd/PicPlay.h's DrawPicture).  NOT YET
+// RECONSTRUCTED: ink, scaling.
 void
 DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 {
@@ -836,7 +839,33 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 		DisposeStyleRecord(&record);
 		return;
 	}
-	// 'picture, 'ink: NOT YET RECONSTRUCTED - nothing drawn
+	if (EQRef(cls, RSSYMpicture))
+	{
+		// the picture played into its box (qd/PicPlay.h) through a handle
+		// over the binary's bytes.  NOT YET RECONSTRUCTED: under a scaling
+		// transform the ROM forces the scaler and clips to its visible
+		// region first (TQDScaler); the box is drawn into as it is.
+		RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
+		Rect box;
+		GetBoundsRect(shape, &box, origin, style);
+		LockRef(data);
+		PicHandle picture = (PicHandle) NewFakeHandle(BinaryData(data), Length(data));
+		newton_try
+		{
+			DrawPicture(picture, &box, false);
+		}
+		newton_catch_all
+		{
+			DisposHandle((Handle) picture);
+			UnlockRef(data);
+			rethrow;
+		}
+		end_try;
+		DisposHandle((Handle) picture);
+		UnlockRef(data);
+		return;
+	}
+	// 'ink: NOT YET RECONSTRUCTED - nothing drawn
 }
 
 
@@ -1480,7 +1509,12 @@ FMakeShape(RefArg /*rcvr*/, RefArg obj)
 	}
 	else if (EQRef(cls, RSSYMpicture) && IsBinary(obj))
 	{
-		memmove(&bounds, BinaryData(obj) + 2, sizeof(Rect));
+		// the picture's frame, big-endian as the picture is
+		const unsigned char* frame = (const unsigned char*) BinaryData(obj) + 2;
+		bounds.top = (short) GetBigEndianHalf(frame);
+		bounds.left = (short) GetBigEndianHalf(frame + 2);
+		bounds.bottom = (short) GetBigEndianHalf(frame + 4);
+		bounds.right = (short) GetBigEndianHalf(frame + 6);
 		shape = Clone(RefVar(Rcanonicalpictureshape));
 		RefVar box(AllocateBinary(RSSYMboundsrect, sizeof(Rect)));
 		SetFrameSlot(shape, RSSYMbounds, box);

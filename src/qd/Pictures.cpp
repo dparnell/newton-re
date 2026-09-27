@@ -9,6 +9,7 @@
 */
 
 #include "Pictures.h"
+#include "PicPlay.h"
 #include "Rects.h"
 #include "Draw.h"
 #include "Frames.h"
@@ -360,19 +361,41 @@ Justify(Rect* r, const Rect& box, ULong justify)
 // in srcOr - a masked copy; a negative mode draws the mask itself in the
 // mode negated.
 //
-// NOT YET RECONSTRUCTED: 'picture binaries and shapes (DrawShape) -
-// nothing is drawn for them.  A 'picture binary is a QuickDraw picture,
-// played by DrawPicture(Picture**, Rect*, Boolean) (0x003337fc) over
-// ParsePicCodes (0x0033249c) and its opcode readers; the ROM's own
-// pictures include the world map the Time Zones application draws
-// (Rworldmapbitmap, a version 1 picture whose one opcode is a
-// PackBitsRect of a 360x179 bitmap), so that map is blank until the
-// picture player is here.
+// A 'picture binary is a QuickDraw picture: its frame (big-endian, at +2)
+// justified into the box and the picture played there (qd/PicPlay.h's
+// DrawPicture; the mode is not looked at).  The ROM's own pictures include
+// the world map the Time Zones application draws (Rworldmapbitmap, a
+// version 1 picture whose one opcode is a PackBitsRect of a 360x179
+// bitmap).
 void
 DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 {
 	if (IsBinary(picture))
+	{
+		if (!EQRef(ClassOf(picture), RSSYMpicture))
+			return;
+		LockRef(picture);
+		Ptr data = (Ptr) BinaryData(picture);
+		const unsigned char* frame = (const unsigned char*) data + 2;
+		Rect bounds;
+		bounds.top = (short) GetBigEndianHalf(frame);
+		bounds.left = (short) GetBigEndianHalf(frame + 2);
+		bounds.bottom = (short) GetBigEndianHalf(frame + 4);
+		bounds.right = (short) GetBigEndianHalf(frame + 6);
+		Justify(&bounds, box, justify);
+		newton_try
+		{
+			DrawPicture((PicHandle) &data, &bounds, false);
+		}
+		newton_catch_all
+		{
+			UnlockRef(picture);
+			rethrow;
+		}
+		end_try;
+		UnlockRef(picture);
 		return;
+	}
 	if (!IsFrame(picture))
 		return;
 	if (!IsInstance(picture, RSSYMbitmap) && !FrameHasSlotRef(picture, RSSYMbits) && !FrameHasSlotRef(picture, RSSYMcolordata))

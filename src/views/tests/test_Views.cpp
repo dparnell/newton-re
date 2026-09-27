@@ -32,6 +32,7 @@
 #include "ListView.h"
 #include "MeetingView.h"
 #include "SliderView.h"
+#include "PicPlay.h"
 #include <string>
 #include "Commands.h"
 #include "Keyboard.h"
@@ -6498,6 +6499,34 @@ TestMeetingView()
 }
 
 
+// A QuickDraw picture of the ROM's own: the World Clock's map
+// (Rworldmapbitmap, a version 1 picture of one PackBitsRect), its frame
+// read big-endian by MakeShape and the map played into a box through
+// DrawShape and qd/PicPlay.h.
+static void
+TestPicture()
+{
+	RefVar map(Rworldmapbitmap);
+	EXPECT(IsBinary(map) && EQ(RefVar(ClassOf(map)), RSSYMpicture));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(MakeSymbol("worldMapPic")), map);
+	Rect frame;
+	FromObject(RefVar(Eval("ShapeBounds(MakeShape(worldMapPic))")), frame);
+	EXPECT(frame.left == 0 && frame.top == 0 && frame.right == 360 && frame.bottom == 179);
+	// drawn at a third of its size: the land black, the sea white
+	Rect box;
+	SetRect(&box, 0, 0, 120, 60);
+	EraseRect(&box);
+	LockRef(map);
+	Ptr data = (Ptr) BinaryData(map);
+	DrawPicture((PicHandle) &data, &box, false);
+	UnlockRef(map);
+	long land = InkIn(0, 0, 120, 60);
+	EXPECT(land > 120 * 60 / 8 && land < 120 * 60 / 2);
+	gRootView->Dirty(nil);
+	Refresh();
+}
+
+
 int
 main()
 {
@@ -6649,6 +6678,7 @@ main()
 		TestHiliteStroke();
 		TestListView();
 		TestMeetingView();
+		TestPicture();
 	}
 	newton_catch_all
 	{

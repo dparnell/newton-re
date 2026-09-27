@@ -6,7 +6,8 @@
 # (Polygons.h), the region holders (RegionVars.h), fonts and styles
 # (Fonts.h: the 'sfnt' bitmap fonts of the font family frames), text drawn
 # and measured (Text.h), bitmap frames (Pictures.h), the screen pixel map
-# and its driver protocol (Screen.h); QuickDraw pictures to come.
+# and its driver protocol (Screen.h), QuickDraw pictures played back
+# (PicPlay.h).
 add_library(qd STATIC
     Rects.cpp
     Regions.cpp
@@ -18,6 +19,7 @@ add_library(qd STATIC
     Fonts.cpp
     Text.cpp
     Pictures.cpp
+    PicPlay.cpp
     Transform.cpp
     Screen.cpp
     ScreenNatives.cpp

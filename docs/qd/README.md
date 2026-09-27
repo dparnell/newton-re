@@ -396,9 +396,75 @@ one - outside it the answer is -1 - and the value comes from the bits
 (`PtInCPixelMap` 0x002af1fc).  The exception handler around it is the
 ROM's own: a picture that is not a bitmap throws out of `Init`, and a
 Throw is a longjmp, which would otherwise leave the `TPixelObj` holding
-the frame locked.  NOT YET: `'picture` binaries (QuickDraw pictures,
-`DrawPicture` 0x0030e270), shapes (`DrawShape` 0x000e0a68, `ShapeBounds`
-0x000e21cc), the colour tables as gray tables.
+the frame locked.  A `'picture` binary is a QuickDraw picture, played
+by `qd/PicPlay.h` (below).
+
+## QuickDraw pictures played back (`src/qd/PicPlay.h`)
+
+A `'picture` binary is a Macintosh QuickDraw picture kept exactly as it
+came, packed and big-endian: a size word, the frame at +2 (so not where
+the ARM's `Picture` struct, word-aligned, would put it), then opcodes.
+The ROM's own are the World Clock's world map (`Rworldmapbitmap`, a
+version 1 picture of one PackBitsRect of a 360 x 179 bitmap) and the
+clock, sun and moon icons.  `DrawShape` plays a picture shape into its
+bounds and `DrawPicture(RefArg...)` a binary into a justified box, both
+over `DrawPicture(PicHandle, Rect*, Boolean)` (ROM 0x003337fc), which:
+
+- maps the frame onto the destination (a negative scale - an empty
+  destination - draws nothing);
+- saves the whole port, then starts it with an **empty clip**, a black
+  pen, a white background, a one-pixel pen in patCopy and no pattern
+  offset - so a picture without a ClipRgn opcode draws nothing at all
+  (every real one starts with one, which is intersected with the clip
+  the caller had);
+- points `qdGlobals.fPicHandle`/`fPicOffset` at the bytes after the
+  frame, where `StdGetPic` (the port's `getPicProc`) reads from, and
+  calls `ParsePicCodes` (0x0033249c) until it answers 0;
+- puts the port back.
+
+`ParsePicCodes` reads one opcode - a byte in a version 1 picture, a word
+kept word-aligned in version 2 (0x02ff; any other version ends the
+picture) - and does what Apple's picture format says: the state opcodes
+(clip, patterns, pen, text state, Origin, the RGB colours turned into
+gray patterns by `GetStdGrayPattern`/`MakeSimpleGrayPattern` in
+`Ports.cpp`), lines, the rectangle family (the low three bits the verb,
+bit 3 "the same rectangle again"), polygons and regions (read by
+`GetPicHandle` into a handle two bytes bigger, the box at +4 where the
+ARM's structs keep it), comments, and the reserved ranges skipped by
+their lengths.  Bitmaps and pixel maps (0x90-0x9f) are `GetPicBits`
+(0x003346b4): it works out which rows of the source the destination's
+part inside the visible and clip regions needs, unpacks only those
+(`UnpackBits`, or `UnpackWords` for 16-bit pixels) into a temporary
+buffer and hands a pixel map over them to `CallBits`, which does the
+scaling.
+
+Things the ROM does that are worth knowing: an exception while
+`GetPicBits` reads the rows is swallowed (the picture simply ends) and
+the row buffer is then not given back; a destination with no height
+also ends the picture; and the reserved opcodes 0x6d-0x6f are read as
+eight bytes where Apple's format gives them four (kept).
+
+On top of Apple's opcodes the Newton has curves (0x0c80-0x0c84 and
+0x8088-0x808c, a curve read and mapped *twice* before `CallCurve`),
+paths (0x8190-0x8194) and styled text (0x81a0 options, 0x81a1 a style,
+0x81a2 the style runs, 0x81a3 the text, 0x81a4 the families of the
+styles that name theirs).
+
+DEVIATION: the host reads every word through `toolbox/ByteOrder.h`, and
+turns the halfwords of each rectangle, region and polygon read out of
+the picture into its own order.
+
+NOT YET RECONSTRUCTED: the text (0x28-0x2b and the Newton's
+0x81a0-0x81a4 are read and not drawn: `NewText`, `CallDrawText`,
+`DrawPicText`, `TextCleanup`), curves and paths (read, not drawn:
+`MapCurve`/`CallCurve`, `MapPaths`/`CallPaths`), pixel patterns of type
+1 (read, and the port keeps its pattern: `ConvertPixPat`'s converters),
+the picture turned into NewtonScript shapes (`DrawPicture`'s
+`toShapes`, the `OpcodeProcs` table, `storeShape`/`flushShape`/
+`MungeStyleFrame`), a picture drawn under a scaling transform
+(`TQDScaler`), and the recording side (`OpenPicture`, `ClosePicture`,
+`PutPic*`).  `test_PicPlay` plays hand-written pictures; `test_Views`'s
+`TestPicture` draws the ROM's world map.
 
 ### Making a bitmap and drawing into it
 
@@ -518,7 +584,7 @@ an orientation of 1.
 
 ## Not yet
 
-Arcs of less than a full turn, QuickDraw pictures and shapes,
+Arcs of less than a full turn, the text, curves and paths of pictures,
 `ScrollRect`, `ZoomRect`, the screen update task and the alert screen
 info, the per-task globals, `StretchBits` proper, the font cache, text layout
 (justification, wrapping), the `TQDLibraryDriver` protocol.

@@ -1,0 +1,1197 @@
+/*
+	File:		qd/PicPlay.cpp
+
+	Contains:	Playing a QuickDraw picture back.  See PicPlay.h.
+
+	Reconstructed from the MP2x00 US ROM; each function cites its origin.
+
+	DEVIATION: the picture's words are big-endian and the host reads them
+	with toolbox/ByteOrder.h - GetPicWord and GetPicLong assemble them,
+	and every Rect read whole out of the picture (the ROM's GetPicData of
+	eight bytes straight into a TRect) and every region or polygon
+	(GetPicHandle) has its halfwords turned round after it is read.
+*/
+
+#include "PicPlay.h"
+#include "Draw.h"
+#include "Rects.h"
+#include "Regions.h"
+#include "Shapes.h"
+#include "Polygons.h"
+#include "NewtonMemory.h"
+#include "NewtonExceptions.h"
+#include "objects.h"
+#include "OSErrors.h"
+#include "FixedMath.h"
+#include "ByteOrder.h"
+#include <string.h>
+
+// GetPicGrayTable's answer when there is no memory for the table
+const long kPicErrNoGrayTable = -7000;			// the ROM's 0xffffe4a8
+
+
+/*------------------------------------------------------------------------------
+	R e a d i n g   t h e   p i c t u r e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00334f68 StdGetPic
+// The next bytes of the picture being played (qdGlobals.fPicHandle, read
+// from fPicOffset on).
+extern "C" void
+StdGetPic(Ptr data, long count)
+{
+	BlockMove(*qdGlobals.fPicHandle + qdGlobals.fPicOffset, data, count);
+	qdGlobals.fPicOffset += count;
+}
+
+
+// ROM 0x00334498 GetPicData__FPcl
+// Through the port's getPicProc when it has procs.  (Host: a port whose
+// procs leave getPicProc nil gets the standard one; the ROM would call
+// through nil.)
+void
+GetPicData(char* data, long count)
+{
+	GrafPort* port = GetCurrentPort();
+	GetPicDataProc proc = (port->grafProcs != nil && port->grafProcs->getPicProc != nil) ? port->grafProcs->getPicProc : StdGetPic;
+	proc(data, count);
+}
+
+
+// ROM 0x00334450 GetPicDiscard__Fl
+// Bytes skipped, 64 at a time.
+void
+GetPicDiscard(long count)
+{
+	char buffer[64];
+	for (; (ULong) count > 0x40; count -= 0x40)
+		GetPicData(buffer, 0x40);
+	if (count != 0)
+		GetPicData(buffer, count);
+}
+
+
+// ROM 0x0033455c GetPicWord__Fv
+long
+GetPicWord(void)
+{
+	unsigned char bytes[2];
+	GetPicData((char*) bytes, 2);
+	return (short) GetBigEndianHalf(bytes);
+}
+
+
+// ROM 0x003345d4 GetPicLong__Fv
+long
+GetPicLong(void)
+{
+	unsigned char bytes[4];
+	GetPicData((char*) bytes, 4);
+	return (long) (Long32) GetBigEndianWord(bytes);
+}
+
+
+// ROM 0x003345f8 GetPicSByte__Fv
+long
+GetPicSByte(void)
+{
+	signed char byte;
+	GetPicData((char*) &byte, 1);
+	return byte;
+}
+
+
+// ROM 0x00334620 GetPicUByte__Fv
+long
+GetPicUByte(void)
+{
+	unsigned char byte;
+	GetPicData((char*) &byte, 1);
+	return byte;
+}
+
+
+// ROM 0x00334644 GetPicPoint__FP5Point
+// A point: v, then h.
+Point*
+GetPicPoint(Point* pt)
+{
+	pt->v = (short) GetPicWord();
+	pt->h = (short) GetPicWord();
+	return pt;
+}
+
+
+// host: a rectangle read whole (the ROM's GetPicData of eight bytes into
+// a TRect), its halfwords put into the host's order
+static void
+GetPicRect(Rect* r)
+{
+	unsigned char bytes[8];
+	GetPicData((char*) bytes, 8);
+	r->top = (short) GetBigEndianHalf(bytes);
+	r->left = (short) GetBigEndianHalf(bytes + 2);
+	r->bottom = (short) GetBigEndianHalf(bytes + 4);
+	r->right = (short) GetBigEndianHalf(bytes + 6);
+}
+
+
+// ROM 0x003344d8 GetPicHandle__FPPP10GenericRec
+// A region or polygon: its size word (the size in the picture, packed),
+// then the rest into a handle two bytes bigger, the box at +4 where the
+// ARM's structures keep it.  ==> 0 when it was read, 1 when there was no
+// memory.
+long
+GetPicHandle(Handle* h)
+{
+	long size = GetPicWord();
+	long total = size + 2;
+	*h = NewHandle(total);
+	if (*h != nil)
+	{
+		HLock(*h);
+		*(short*) **h = (short) total;
+		GetPicData(**h + 4, size - 2);
+		// DEVIATION: the box and the data are halfwords, big-endian in the
+		// picture
+		for (long i = 4; i + 1 < total; i += 2)
+			*(short*) (**h + i) = (short) GetBigEndianHalf(**h + i);
+		HUnlock(*h);
+		if (*h != nil)
+			return 0;
+	}
+	return 1;
+}
+
+
+// ROM 0x0033467c GetPicResvOpcode__FlUc
+// A reserved opcode's data skipped: a length word (count 2) or long
+// (count 4) read first when asked, else the count itself.
+long
+GetPicResvOpcode(long count, Boolean readCount)
+{
+	if (readCount)
+		count = count == 2 ? GetPicWord() : GetPicLong();
+	if (count != 0)
+		GetPicDiscard(count);
+	return 1;
+}
+
+
+// ROM 0x00334fb8 StdComment
+// A comment is only of use to a picture being recorded.  NOT YET
+// RECONSTRUCTED: the recording (PutPicOpcode, PutPicWord, PutPicData).
+extern "C" void
+StdComment(short /*kind*/, short /*size*/, Handle /*data*/)
+{
+	if (GetCurrentPort()->picSave == nil)
+		return;
+}
+
+
+// ROM 0x00334584 PicComment__FsT1PPc
+void
+PicComment(short kind, short size, Handle data)
+{
+	GrafPort* port = GetCurrentPort();
+	PicCommentProc proc = (port->grafProcs != nil && port->grafProcs->commentProc != nil) ? port->grafProcs->commentProc : StdComment;
+	proc(kind, size, data);
+}
+
+
+/*------------------------------------------------------------------------------
+	P a c k B i t s
+------------------------------------------------------------------------------*/
+
+// ROM 0x002aefc0 UnpackBits__FPPcT1l
+// A count byte n: 0..127, n+1 bytes as they are; -1..-127, the next byte
+// 1-n times; -128, nothing.
+void
+UnpackBits(char** src, char** dst, long count)
+{
+	char* d = *dst;
+	char* end = d + count;
+	char* s = *src;
+	while (d < end)
+	{
+		long n = (signed char) *s++;
+		if (n == -0x80)
+			continue;
+		if (n < 0)
+		{
+			n = 1 - n;
+			char value = *s++;
+			do
+				*d++ = value;
+			while (--n != 0);
+		}
+		else
+		{
+			n = n + 1;
+			do
+				*d++ = *s++;
+			while (--n != 0);
+		}
+	}
+	*src = s;
+	*dst = d;
+}
+
+
+// ROM 0x002af03c UnpackWords__FPPcT1l
+// The same, a unit being two bytes.
+void
+UnpackWords(char** src, char** dst, long count)
+{
+	char* d = *dst;
+	char* end = d + count;
+	char* s = *src;
+	while (d < end)
+	{
+		long n = (signed char) *s++;
+		if (n == -0x80)
+			continue;
+		if (n < 0)
+		{
+			n = 1 - n;
+			char hi = s[0];
+			char lo = s[1];
+			s += 2;
+			do
+			{
+				d[0] = hi;
+				d[1] = lo;
+				d += 2;
+			}
+			while (--n != 0);
+		}
+		else
+		{
+			n = n + 1;
+			do
+			{
+				d[0] = s[0];
+				d[1] = s[1];
+				d += 2;
+				s += 2;
+			}
+			while (--n != 0);
+		}
+	}
+	*src = s;
+	*dst = d;
+}
+
+
+/*------------------------------------------------------------------------------
+	P i x e l s
+------------------------------------------------------------------------------*/
+
+// ROM 0x00334398 GetPicGrayTable__FlPPUc
+// A pixel map's colour table made a gray table: the seed and flags
+// passed over, then each entry's RGB as a gray of the depth.  ==> 0, or
+// -7000 when there was no memory (the entries passed over).
+long
+GetPicGrayTable(long depth, UChar** table)
+{
+	GetPicLong();
+	GetPicWord();
+	long count = GetPicWord() + 1;
+	*table = (UChar*) QDNewTempPtr(count);
+	if (*table == nil)
+	{
+		GetPicDiscard(count * 8);
+		return kPicErrNoGrayTable;
+	}
+	for (long i = 0; i < count; i++)
+	{
+		GetPicWord();
+		ULong red = GetPicWord() & 0xffff;
+		ULong green = GetPicWord() & 0xffff;
+		ULong blue = GetPicWord() & 0xffff;
+		(*table)[i] = (UChar) RGBtoGray(red, green, blue, depth, depth);
+	}
+	return 0;
+}
+
+
+// ROM 0x00333dc0 GetPicPixPat__Fl
+// A pixel pattern (BkPixPat, PnPixPat, FillPixPat): type 2 is an old
+// pattern and an RGB, made a gray pattern of the port's depth; type 1 a
+// pattern and a pixel map of its own - its header, a colour table for an
+// indexed one, and the rows, unpacked as GetPicBits does.  ==> the
+// pattern, nil for anything else.
+//
+// NOT YET RECONSTRUCTED: the type 1 pattern itself - the ROM converts the
+// pixels to the screen's four bits (ConvertPixPat over ConvertIndex2/4,
+// ConvertIndex8to4, ConvertDirect16to4, ConvertDirect32to4...); here its
+// bytes are read and nil answered, so the port keeps the pattern it had.
+PatternHandle
+GetPicPixPat(long type)
+{
+	if (type == 2)
+	{
+		long depth = GetCurrentPort()->portBits.pixMapFlags & 0xff;
+		char rows[8];
+		GetPicData(rows, 8);
+		ULong red = GetPicWord() & 0xffff;
+		ULong green = GetPicWord() & 0xffff;
+		ULong blue = GetPicWord() & 0xffff;
+		ULong gray = RGBtoGray(red, green, blue, depth, depth);
+		return MakeSimpleGrayPattern(rows, gray, 0);
+	}
+	if (type != 1)
+		return nil;
+	long unpacked;
+	GetPicDiscard(8);
+	unsigned char header[0x32];
+	GetPicData((char*) header, 0x32);
+	long rowBytes = GetBigEndianHalf(header + 4) & 0x7fff;
+	unpacked = rowBytes < 8;
+	long pixelType = (short) GetBigEndianHalf(header + 0x1e);
+	long pixelSize = (short) GetBigEndianHalf(header + 0x20);
+	UChar* grayTable = nil;
+	if (pixelType == 0)
+	{
+		if (pixelSize != 1 && pixelSize != 2 && pixelSize != 4 && pixelSize != 8)
+			return nil;
+		if (GetPicGrayTable(pixelSize, &grayTable) != 0)
+			return nil;
+	}
+	else
+	{
+		if (pixelSize != 0x10 && pixelSize != 0x20)
+			return nil;
+		if (rowBytes >= 8)
+		{
+			switch ((short) GetBigEndianHalf(header + 0x10))
+			{
+			case 0:
+				break;
+			case 1:
+				unpacked = 1;
+				break;
+			case 2:
+				unpacked = 1;
+				rowBytes = (rowBytes * 3) >> 2;
+				break;
+			case 3:
+				unpacked = 3;
+				break;
+			case 4:
+				rowBytes = (rowBytes * 3) >> 2;
+				break;
+			default:
+				return nil;
+			}
+		}
+	}
+	long pad = (rowBytes & 3) != 0 ? 2 : 0;
+	long rows = (short) GetBigEndianHalf(header + 0xa) - (short) GetBigEndianHalf(header + 6);
+	if (unpacked == 1)
+	{
+		if (pad == 0)
+			GetPicDiscard(rows * (rowBytes + pad));
+		else
+			for (long n = rows; n > 0; n--)
+				GetPicDiscard(rowBytes);
+	}
+	else
+	{
+		for (long n = rows; n > 0; n--)
+			GetPicDiscard(rowBytes < 0xfb ? GetPicUByte() : GetPicWord());
+	}
+	if (grayTable != nil)
+		QDDisposeTempPtr(grayTable);
+	return nil;
+}
+
+
+// ROM 0x003346b4 GetPicBits__FlP7PicPlayPCPFT1T2P8GrafPort_v
+// BitsRect (0x90), BitsRgn (0x91), PackBitsRect (0x98), PackBitsRgn
+// (0x99), DirectBitsRect (0x9a), DirectBitsRgn (0x9b): a bitmap (row
+// bytes under 0x8000) or a pixel map (an indexed one with its colour
+// table made a gray table, or a direct one), its source and destination
+// rectangles, the mode, and for the odd ones a mask region; then the
+// rows, as they are or packed a row at a time.  Only the rows that the
+// destination's part inside the port's visible and clip regions needs
+// are unpacked: the source rectangle is cut down in proportion, the rest
+// passed over.  The pixels then go through CallBits.  ==> 1; 0 ends the
+// picture - no memory, a pixel map the Newton cannot draw, a destination
+// with no height, or an exception while the rows were read (which is
+// swallowed).
+long
+GetPicBits(long opcode, PicPlay* play, const OpcodeProc* procs)
+{
+	char* temp = nil;
+	long pixelSize = 1;
+	long unpacked = 0;
+	RgnHandle mask = nil;
+	void (*unpack)(char**, char**, long) = UnpackBits;
+	if ((opcode >= 0x92 && opcode <= 0x97) || (opcode >= 0x9c && opcode <= 0x9f))
+	{
+		GetPicResvOpcode(2, true);
+		return 1;
+	}
+	long byComponent = 0;
+	long noPad = 0;
+	long hasGray = 0;
+	if (opcode == 0x9a || opcode == 0x9b)
+		GetPicLong();
+	else if (opcode == 0x90 || opcode == 0x91)
+		unpacked = 1;
+	long word = GetPicWord();
+	long isPixMap = word & 0x8000;
+	long rowBytes = word & 0x7fff;
+	if (rowBytes < 8)
+		unpacked = 1;
+	PixelMap map;
+	memset(&map, 0, sizeof(map));
+	GetPicRect(&map.bounds);
+	UChar* grayTable = nil;
+	if (isPixMap)
+	{
+		GetPicDiscard(2);
+		long packType = GetPicWord();
+		GetPicDiscard(0xc);
+		long pixelType = GetPicWord();
+		pixelSize = GetPicWord();
+		if (pixelType == 0)
+		{
+			if (pixelSize != 1 && pixelSize != 2 && pixelSize != 4 && pixelSize != 8)
+				return 0;
+			GetPicDiscard(0x10);
+			if (GetPicGrayTable(pixelSize, &grayTable) != 0)
+				return 0;
+			hasGray = 1;
+			goto rows;
+		}
+		if (pixelSize != 0x10 && pixelSize != 0x20)
+			return 0;
+		GetPicWord();
+		GetPicWord();
+		if (rowBytes >= 8)
+		{
+			switch (packType)
+			{
+			case 0:
+				break;
+			case 1:
+				unpacked = 1;
+				break;
+			case 2:
+				noPad = 1;
+				unpacked = 1;
+				rowBytes = (rowBytes * 3) >> 2;
+				break;
+			case 3:
+				unpacked = 3;
+				unpack = UnpackWords;
+				break;
+			case 4:
+				byComponent = 1;
+				rowBytes = (rowBytes * 3) >> 2;
+				break;
+			default:
+				return 0;
+			}
+		}
+		GetPicDiscard(0xc);
+	}
+rows:
+	long pad = (rowBytes & 3) != 0 ? 2 : 0;
+	map.rowBytes = (short) rowBytes;
+	Rect srcRect, dstRect;
+	GetPicRect(&srcRect);
+	GetPicRect(&dstRect);
+	MapRect(&dstRect, &play->fFromRect, &play->fToRect);
+	long mode = GetPicWord();
+	if ((opcode & 1) != 0 && GetPicHandle((Handle*) &mask) != 0)
+	{
+		if (hasGray)
+			QDDisposeTempPtr(grayTable);
+		return 0;
+	}
+	if (mask != nil)
+		MapRgn(mask, &play->fFromRect, &play->fToRect);
+	GrafPort* port = GetCurrentPort();
+	Rect clipped;
+	RSect(&clipped, 3, &dstRect, &(*port->visRgn)->rgnBBox, &(*port->clipRgn)->rgnBBox);
+	long dstHeight = dstRect.bottom - dstRect.top;
+	if (dstHeight == 0)
+	{
+		if (mask != nil)
+			DisposHandle((Handle) mask);
+		if (hasGray)
+			QDDisposeTempPtr(grayTable);
+		return 0;
+	}
+	// the source cut down to the rows the clipped destination shows
+	long srcHeight = srcRect.bottom - srcRect.top;
+	srcRect.top = (short) (srcRect.top + (srcHeight * (clipped.top - dstRect.top) + (dstHeight >> 1)) / dstHeight);
+	srcRect.bottom = (short) (srcRect.bottom - (srcHeight * (dstRect.bottom - clipped.bottom) + (dstHeight >> 1)) / dstHeight);
+	long size = srcRect.bottom > srcRect.top ? (srcRect.bottom - srcRect.top) * (rowBytes + pad) : 0;
+	char* bits = (char*) QDNewTempPtr(size);
+	if (bits == nil)
+	{
+		if (mask != nil)
+			DisposHandle((Handle) mask);
+		if (hasGray)
+			QDDisposeTempPtr(grayTable);
+		return 0;
+	}
+	long rows = map.bounds.bottom - map.bounds.top;
+	long skip = srcRect.top - map.bounds.top;
+	if (skip < 0)
+		skip = 0;
+	map.bounds.top = srcRect.top;
+	map.bounds.bottom = srcRect.bottom;
+	dstRect.top = clipped.top;
+	dstRect.bottom = clipped.bottom;
+	char* lastRow = bits + size - rowBytes - pad;
+	Boolean threw = false;
+	newton_try
+	{
+		char* p = bits;
+		if (unpacked == 1)
+		{
+			if (pad != 0)
+			{
+				long step = rowBytes + pad;
+				for (long n = rows; n > 0; n--)
+				{
+					if ((ULong) p > (ULong) lastRow || skip-- > 0)
+						GetPicDiscard(rowBytes);
+					else
+					{
+						GetPicData(p, rowBytes);
+						p += step;
+					}
+				}
+			}
+			else
+			{
+				skip = rowBytes * skip;
+				GetPicDiscard(skip);
+				GetPicData(bits, size);
+				GetPicDiscard(rowBytes * rows - size - skip);
+			}
+		}
+		else if (rowBytes > 0xfa)
+		{
+			temp = (char*) QDNewTempPtr(rowBytes);
+			if (temp == nil)
+				Throw(exOutOfMemory, (void*) (long) kError_No_Memory, nil);
+			for (long n = rows; n > 0; n--)
+			{
+				GetPicData(temp, GetPicWord());
+				if ((ULong) p <= (ULong) lastRow && !(skip-- > 0))
+				{
+					char* src = temp;
+					unpack(&src, &p, rowBytes);
+					p += pad;
+				}
+			}
+		}
+		else
+		{
+			temp = (char*) QDNewTempPtr(0x100);
+			if (temp == nil)
+				Throw(exOutOfMemory, (void*) (long) kError_No_Memory, nil);
+			for (long n = rows; n > 0; n--)
+			{
+				GetPicData(temp, GetPicUByte());
+				if ((ULong) p <= (ULong) lastRow && !(skip-- > 0))
+				{
+					char* src = temp;
+					unpack(&src, &p, rowBytes);
+					p += pad;
+				}
+			}
+		}
+		map.rowBytes = (short) (map.rowBytes + pad);
+		map.pixMapFlags = pixelSize + kPixMapPtr;
+		if (hasGray)
+			map.pixMapFlags |= kPixMapGrayTable;
+		else
+		{
+			if (noPad)
+				map.pixMapFlags |= kPixMapNoPad;
+			if (byComponent)
+				map.pixMapFlags |= kPixMapByComponent;
+		}
+		map.deviceRes.v = kDefaultDPI;
+		map.deviceRes.h = kDefaultDPI;
+		map.baseAddr = bits;
+		map.grayTable = grayTable;
+		OpcodeProc proc = LookupOpcodeEntry(opcode, procs);
+		if (proc == nil)
+			CallBits(&map, &srcRect, &dstRect, mode, mask);
+		// else NOT YET: the picture turned into shapes
+	}
+	newton_catch_all
+	{
+		threw = true;
+	}
+	end_try;
+	// ROM BUG, kept: after an exception the row buffer is not given back
+	if (!threw && temp != nil)
+		QDDisposeTempPtr(temp);
+	QDDisposeTempPtr(bits);
+	if (hasGray)
+		QDDisposeTempPtr(grayTable);
+	if (threw)
+	{
+		if (mask != nil)
+			DisposHandle((Handle) mask);
+		return 0;
+	}
+	if (mask != nil)
+		DisposHandle((Handle) mask);
+	return 1;
+}
+
+
+/*------------------------------------------------------------------------------
+	P l a y i n g
+------------------------------------------------------------------------------*/
+
+// ROM 0x00332470 LookupOpcodeEntry__FUlPCPFlP7PicPlayP8GrafPort_v
+// The table's handler for the opcode's sixteen (0..0xf, and everything
+// from 0x100 on in the seventeenth); nil without a table.
+OpcodeProc
+LookupOpcodeEntry(ULong opcode, const OpcodeProc* procs)
+{
+	ULong group = (opcode & 0xffff) >> 4;
+	if (group > 0xf)
+		group = 0x10;
+	return procs != nil ? procs[group] : nil;
+}
+
+
+// the rectangle shapes (0x30 rect, 0x40 round rect, 0x50 oval, 0x60 arc):
+// the verbs are base..base+4 with the rectangle, base+8..base+0xc "the
+// same one again"
+static Boolean
+IsShapeVerb(long opcode, long base)
+{
+	return (opcode >= base && opcode <= base + 4) || (opcode >= base + 8 && opcode <= base + 0xc);
+}
+
+
+// ROM 0x0033249c ParsePicCodes__FP7PicPlayPCPFlT1P8GrafPort_v
+// One opcode played: a byte for a version 1 picture, a word (word aligned)
+// for version 2.  ==> 1 to go on, 0 at the end (0xff) or when the picture
+// cannot go on.
+long
+ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
+{
+	GrafPort* port = GetCurrentPort();
+	long result = 1;
+	ULong opcode;
+	if (play->fVersion == 1)
+		opcode = GetPicUByte();
+	else
+	{
+		if (qdGlobals.fPicOffset & 1)
+			GetPicUByte();
+		opcode = GetPicWord() & 0xffff;
+	}
+	GrafVerb verb = (GrafVerb) (opcode & 7);
+	Boolean same = (opcode & 8) != 0;
+	OpcodeProc proc = LookupOpcodeEntry(opcode, procs);
+	if (opcode == 0xff)
+	{
+		if (proc != nil)
+			proc(0xff, play, port);
+		return 0;
+	}
+	Rect* from = &play->fFromRect;
+	Rect* to = &play->fToRect;
+	if (opcode < 0x20)
+	{
+		if (proc != nil)
+			proc(-(long) opcode, play, port);
+		switch (opcode)
+		{
+		case 0x00:									// NOP
+			break;
+		case 0x01:									// ClipRgn
+		{
+			RgnHandle rgn;
+			if (GetPicHandle((Handle*) &rgn) != 0)
+			{
+				result = 0;
+				break;
+			}
+			CopyRgn(rgn, play->fPlayClip);
+			MapRgn(rgn, from, to);
+			SectRgn(rgn, play->fSavedClip, port->clipRgn);
+			DisposHandle((Handle) rgn);
+			break;
+		}
+		case 0x02:									// BkPat
+		case 0x09:									// PnPat
+		case 0x0a:									// FillPat
+		{
+			char rows[8];
+			GetPicData(rows, 8);
+			ULong fg = play->fFgGray;
+			ULong bg = play->fBgGray;
+			play->fFgGray = 0;
+			play->fBgGray = 0;
+			PatternHandle pattern = fg == 0 ? MakeSimplePattern(rows) : MakeSimpleGrayPattern(rows, fg, bg);
+			if (opcode == 0x02)
+			{
+				DisposePattern(port->bgPat);
+				port->bgPat = pattern;
+			}
+			else
+			{
+				DisposePattern(port->fgPat);
+				port->fgPat = pattern;
+			}
+			break;
+		}
+		case 0x03:									// TxFont
+			play->fTextFont = GetPicWord();
+			break;
+		case 0x04:									// TxFace
+			play->fTextFace = (short) GetPicUByte();
+			break;
+		case 0x05:									// TxMode
+			play->fTextMode = GetPicWord() & 0xffff;
+			break;
+		case 0x06:									// SpExtra
+			play->fSpaceExtra = GetPicLong();
+			break;
+		case 0x07:									// PnSize
+			ScalePt(GetPicPoint(&port->pnSize), from, to);
+			break;
+		case 0x08:									// PnMode
+			port->pnMode = (short) GetPicWord();
+			break;
+		case 0x0b:									// OvSize
+			ScalePt(GetPicPoint(&play->fOvalSize), from, to);
+			break;
+		case 0x0c:									// Origin
+		{
+			long dh = (short) GetPicWord();
+			long dv = (short) GetPicWord();
+			OffsetRect(from, dh, dv);
+			port->patAlign.v = (short) (port->patAlign.v + dv);
+			port->patAlign.h = (short) (port->patAlign.h + dh);
+			RgnHandle rgn = NewRgn();
+			CopyRgn(play->fPlayClip, rgn);
+			MapRgn(rgn, from, to);
+			SectRgn(rgn, play->fSavedClip, port->clipRgn);
+			DisposeRgn(rgn);
+			break;
+		}
+		case 0x0d:									// TxSize
+			play->fTextSize = (Fixed) ((ULong) GetPicWord() << 16);
+			break;
+		case 0x0e:									// FgColor
+		case 0x0f:									// BkColor
+			GetPicLong();
+			break;
+		case 0x10:									// TxRatio
+		{
+			Point numer, denom;
+			GetPicPoint(&numer);
+			GetPicPoint(&denom);
+			play->fTextHScale = FixedMultiply(play->fHScale, FixedDivide((Fixed) ((ULong) (unsigned short) numer.h << 16), (Fixed) ((ULong) (unsigned short) denom.h << 16)));
+			play->fTextVScale = FixedMultiply(play->fVScale, FixedDivide((Fixed) ((ULong) (unsigned short) numer.v << 16), (Fixed) ((ULong) (unsigned short) denom.v << 16)));
+			break;
+		}
+		case 0x11:									// Version
+		{
+			long first = (short) GetPicUByte();
+			if (first != 1)
+			{
+				long version = (short) (GetPicUByte() | (first << 8));
+				play->fVersion = version;
+				if (version != 0x2ff)
+					result = 0;
+			}
+			break;
+		}
+		case 0x12:									// BkPixPat
+		case 0x13:									// PnPixPat
+		case 0x14:									// FillPixPat
+		{
+			PatternHandle pattern = GetPicPixPat(GetPicWord());
+			if (pattern == nil)
+				break;
+			if (opcode == 0x12)
+			{
+				DisposePattern(port->bgPat);
+				port->bgPat = pattern;
+			}
+			else
+			{
+				DisposePattern(port->fgPat);
+				port->fgPat = pattern;
+			}
+			break;
+		}
+		case 0x15:									// PnLocHFrac
+		case 0x16:									// ChExtra
+			GetPicWord();
+			break;
+		case 0x1a:									// RGBFgCol
+		case 0x1b:									// RGBBkCol
+		case 0x1d:									// HiliteColor
+		case 0x1f:									// OpColor
+		{
+			ULong flags = port->portBits.pixMapFlags;
+			if (flags & 0x300)
+				flags = qdGlobals.fScreenBits.pixMapFlags;
+			long depth = flags & 0xff;
+			ULong red = GetPicWord() & 0xffff;
+			ULong green = GetPicWord() & 0xffff;
+			ULong blue = GetPicWord() & 0xffff;
+			ULong gray = RGBtoGray(red, green, blue, depth, depth);
+			PatternHandle pattern = GetStdGrayPattern(red, green, blue);
+			if (pattern != nil)
+			{
+				if (opcode == 0x1b)
+				{
+					play->fBgGray = gray;
+					DisposePattern(port->bgPat);
+					port->bgPat = pattern;
+				}
+				else
+				{
+					play->fFgGray = gray;
+					DisposePattern(port->fgPat);
+					port->fgPat = pattern;
+				}
+			}
+			break;
+		}
+		default:									// 0x17..0x19, 0x1c, 0x1e
+			break;
+		}
+		return result;
+	}
+
+	if (opcode <= 0x100)
+	{
+		ULong group = opcode & 0xfff0;
+		switch (group)
+		{
+		case 0x20:
+			if (opcode <= 0x23)
+			{
+				// Line (0x20), LineFrom (0x21), ShortLine (0x22),
+				// ShortLineFrom (0x23): from a point read or from where the
+				// last line ended, to a point read or a byte each way
+				if ((opcode & 1) == 0)
+					GetPicPoint(&port->pnLoc);
+				else
+					port->pnLoc = play->fLastPt;
+				Point end = port->pnLoc;
+				MapPt(&port->pnLoc, from, to);
+				if ((opcode & 2) == 0)
+					GetPicPoint(&end);
+				else
+				{
+					end.h = (short) (GetPicSByte() + end.h);
+					end.v = (short) (GetPicSByte() + end.v);
+				}
+				play->fLastPt = end;
+				MapPt(&end, from, to);
+				if (proc == nil)
+					LineTo(end.h, end.v);
+				// else NOT YET: the picture turned into shapes
+				return 1;
+			}
+			if (opcode >= 0x28 && opcode <= 0x2b)
+			{
+				// LongText, DHText, DVText, DHDVText: where the text goes,
+				// then a count and the characters.  NOT YET RECONSTRUCTED:
+				// the text drawn (NewText, CallDrawText) - it is read.
+				if (opcode == 0x28)
+					GetPicPoint(&play->fTextLoc);
+				else if (opcode == 0x29)
+					play->fTextLoc.h = (short) (GetPicUByte() + (unsigned short) play->fTextLoc.h);
+				else if (opcode == 0x2a)
+					play->fTextLoc.v = (short) (GetPicUByte() + (unsigned short) play->fTextLoc.v);
+				else
+				{
+					play->fTextLoc.h = (short) (GetPicUByte() + (unsigned short) play->fTextLoc.h);
+					play->fTextLoc.v = (short) (GetPicUByte() + (unsigned short) play->fTextLoc.v);
+				}
+				long count = GetPicUByte();
+				port->pnLoc = play->fTextLoc;
+				if (count != 0)
+					GetPicDiscard(count);
+				return 1;
+			}
+			return GetPicResvOpcode(2, true);
+
+		case 0x30:
+		case 0x40:
+		case 0x50:
+			if (IsShapeVerb(opcode, group))
+			{
+				if (!same)
+					GetPicRect(&play->fRect);
+				Rect r = play->fRect;
+				MapRect(&r, from, to);
+				if (proc == nil)
+				{
+					if (group == 0x30)
+						CallRect(verb, &r);
+					else if (group == 0x40)
+						CallRRect(verb, &r, play->fOvalSize.h, play->fOvalSize.v);
+					else
+						CallOval(verb, &r);
+				}
+				// else NOT YET: the picture turned into shapes
+				return 1;
+			}
+			if (!same)
+				GetPicDiscard(8);
+			return 1;
+
+		case 0x60:
+			if (IsShapeVerb(opcode, 0x60))
+			{
+				if (!same)
+					GetPicRect(&play->fRect);
+				Rect r = play->fRect;
+				MapRect(&r, from, to);
+				long startAngle = GetPicWord();
+				long arcAngle = GetPicWord();
+				if (proc == nil)
+					CallArc(verb, &r, startAngle, arcAngle);
+				return 1;
+			}
+			// ROM QUIRK, kept: the reserved 0x6d-0x6f are read as eight
+			// bytes where Apple's picture format gives them four
+			GetPicDiscard(same ? 8 : 0xc);
+			return 1;
+
+		case 0x70:
+			if (IsShapeVerb(opcode, 0x70))
+			{
+				PolyHandle poly;
+				if (GetPicHandle((Handle*) &poly) != 0)
+					return 0;
+				MapPoly(poly, from, to);
+				if (proc == nil)
+					CallPoly(verb, poly);
+				DisposHandle((Handle) poly);
+				return 1;
+			}
+			return GetPicResvOpcode(2, true);
+
+		case 0x80:
+			if (IsShapeVerb(opcode, 0x80))
+			{
+				RgnHandle rgn;
+				if (GetPicHandle((Handle*) &rgn) != 0)
+					return 0;
+				MapRgn(rgn, from, to);
+				if (proc == nil)
+					CallRgn(verb, rgn);
+				DisposHandle((Handle) rgn);
+				return 1;
+			}
+			return GetPicResvOpcode(2, true);
+
+		case 0x90:									// 0x90..0x9f
+			return GetPicBits(opcode, play, procs);
+
+		case 0xa0:
+			if (opcode > 0xa1)
+				return GetPicResvOpcode(2, true);
+			{
+				// ShortComment (0xa0), LongComment (0xa1)
+				long kind = GetPicWord();
+				if (verb == 0)
+				{
+					PicComment((short) kind, 0, nil);
+					return 1;
+				}
+				long size = GetPicWord();
+				Handle data = NewHandle(size);
+				if (data == nil)
+					return 0;
+				HLock(data);
+				GetPicData(*data, size);
+				HUnlock(data);
+				PicComment((short) kind, (short) size, data);
+				DisposHandle(data);
+				return 1;
+			}
+
+		case 0xd0:
+		case 0xe0:
+		case 0xf0:
+			return GetPicResvOpcode(4, true);
+
+		default:									// 0xb0..0xcf, 0x100: no data
+			return 1;
+		}
+	}
+
+	if (opcode < 0x8000)
+	{
+		if (opcode >= 0xc80 && opcode - 0xc80 <= 4)
+		{
+			// the Newton's curves.  NOT YET RECONSTRUCTED: MapCurve (the ROM
+			// maps the curve twice), CallCurve - the curve is read.
+			if (!same)
+				GetPicData(play->fCurve, 0x18);
+			return 1;
+		}
+		return GetPicResvOpcode((opcode >> 8) << 1, false);
+	}
+	if (opcode - 0x8000 >= 0x88 && opcode - 0x8000 <= 0x8c)
+	{
+		if (!same)
+			GetPicData(play->fCurve, 0x18);			// NOT YET: the curve drawn
+		return 1;
+	}
+	if (opcode - 0x8100 >= 0x90 && opcode - 0x8100 <= 0x94)
+	{
+		// the Newton's paths.  NOT YET RECONSTRUCTED: MapPaths, CallPaths.
+		long size = GetPicLong();
+		Handle paths = NewHandle(size);
+		if (paths == nil)
+			return 0;
+		HLock(paths);
+		GetPicData(*paths, size);
+		HUnlock(paths);
+		DisposHandle(paths);
+		return 1;
+	}
+	switch (opcode)
+	{
+	case 0x81a0:									// the text options
+		if (GetPicLong() != 0x1c)
+			return 0;
+		GetPicDiscard(0x1c);						// NOT YET: kept at +0x58
+		return 1;
+	case 0x81a1:									// the text style
+		if (GetPicLong() != 0x20)
+			return 0;
+		GetPicLong();
+		GetPicDiscard(0x1c);						// NOT YET: kept at +0x74
+		return 1;
+	case 0x81a2:									// the style runs
+	{
+		long size = GetPicLong();
+		long runs = GetPicUByte();
+		long styles = GetPicUByte();
+		play->fStyleCount = styles;
+		if (runs * 4 + styles * 0x20 + 2 != size)
+			return 0;
+		GetPicDiscard(runs * 4);
+		for (long i = 0; i < styles; i++)
+		{
+			ULong family = (ULong) GetPicLong();
+			// a family with 0x800000 set is named in 0x81a4
+			play->fInlineFamily[i] = (family & 0x800000) != 0;
+			GetPicDiscard(0x1c);
+		}
+		return 1;
+	}
+	case 0x81a3:									// the text itself
+	{
+		long size = GetPicLong();
+		GetPicWord();
+		GetPicDiscard(8);
+		play->fTextFlags = GetPicUByte();
+		long count = GetPicWord();
+		if (count + 0xd != size)
+			return 0;
+		GetPicDiscard(count);						// NOT YET: drawn (DrawPicText) unless flags 0x20 wait for 0x81a4
+		return 1;
+	}
+	case 0x81a4:									// the families the styles name
+	{
+		GetPicLong();
+		GetPicWord();
+		for (long i = 0; i < play->fStyleCount; i++)
+			if (play->fInlineFamily[i])
+				GetPicDiscard(GetPicWord());
+		return 1;									// NOT YET: the text drawn
+	}
+	default:
+		if (opcode >= 0x8100)
+			return GetPicResvOpcode(4, true);
+		return 1;
+	}
+}
+
+
+// ROM 0x003337fc DrawPicture__FPP7PictureP4RectUc
+// The picture played into the rectangle: its frame mapped onto it (a
+// negative scale draws nothing), the port set up and put back afterwards.
+//
+// NOT YET RECONSTRUCTED: the two text styles the ROM makes first (the
+// system font at 12 - SearchFont, MakeSimpleStyle, CopyStyle), the text
+// options it copies from 0x00380ca0, and toShapes - the picture answered
+// as NewtonScript shapes (the OpcodeProcs table); it is drawn instead.
+void
+DrawPicture(PicHandle picture, Rect* dstRect, Boolean /*toShapes*/)
+{
+	GrafPort* port = GetCurrentPort();
+	if (picture == nil)
+		return;
+	Rect frame;
+	const unsigned char* data = (const unsigned char*) *picture;
+	frame.top = (short) GetBigEndianHalf(data + 2);
+	frame.left = (short) GetBigEndianHalf(data + 4);
+	frame.bottom = (short) GetBigEndianHalf(data + 6);
+	frame.right = (short) GetBigEndianHalf(data + 8);
+	Fixed hScale = FixedDivide((Fixed) ((ULong) (dstRect->right - dstRect->left) << 16), (Fixed) ((ULong) (frame.right - frame.left) << 16));
+	Fixed vScale = FixedDivide((Fixed) ((ULong) (dstRect->bottom - dstRect->top) << 16), (Fixed) ((ULong) (frame.bottom - frame.top) << 16));
+	if (hScale < 0 || vScale < 0)
+		return;
+	PicPlay play;
+	memset(&play, 0, sizeof(play));
+	play.fToRect = *dstRect;
+	play.fFromRect = frame;
+	play.fHScale = hScale;
+	play.fVScale = vScale;
+	play.fTextHScale = hScale;
+	play.fTextVScale = vScale;
+	GrafPort saved = *port;
+	SetEmptyRect(&play.fRect);
+	play.fLastPt.h = 0;
+	play.fLastPt.v = 0;
+	play.fTextLoc.h = 0;
+	play.fTextLoc.v = 0;
+	play.fOvalSize.h = 0;
+	play.fOvalSize.v = 0;
+	play.fSavedClip = port->clipRgn;
+	play.fPlayClip = NewRgn();
+	play.fVersion = 1;
+	port->clipRgn = NewRgn();
+	SetFgPattern(stdPatterns[blackPat]);
+	SetBgPattern(stdPatterns[whitePat]);
+	port->pnLoc.h = 0;
+	port->pnLoc.v = 0;
+	port->pnSize.h = 1;
+	port->pnSize.v = 1;
+	port->pnMode = patCopy;
+	play.fTextSize = 0;
+	port->patAlign.v = 0;
+	port->patAlign.h = 0;
+	qdGlobals.fPicOffset = 10;
+	qdGlobals.fPicHandle = (Handle) picture;
+	while (ParsePicCodes(&play, nil) != 0)
+		;
+	DisposeRgn(play.fPlayClip);
+	DisposeRgn(port->clipRgn);
+	DisposePattern(port->fgPat);
+	DisposePattern(port->bgPat);
+	*port = saved;
+	qdGlobals.fPicHandle = nil;
+	qdGlobals.fPicOffset = 0;
+}
