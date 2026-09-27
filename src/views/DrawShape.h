@@ -111,6 +111,11 @@ void	DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style);			// RO
 // MakeLine, MakeWedge, MakePolygon, MakeRegion, MakeText, MakeTextBox,
 // ShapeBounds, OffsetShape, IsPrimShape
 void	RegisterShapeNatives(void);
+// the questions asked of shapes (views/ShapeVerbs.cpp): FindShape,
+// GetShapeInfo, MakeInk, StrokeInPicture - registered by RegisterShapeNatives
+void	RegisterShapeVerbNatives(void);
+Boolean	PointInShape(RefArg shape, const Point& pt, TStyleSave* style);				// ROM 0x000e15b8 PointInShape__FRC6RefVarRC6TPointP10TStyleSave
+Boolean	DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style);	// ROM 0x000e1be0 DoFindShape__FRC6RefVarRC6TPointR6RefVarP10TStyleSave
 // Whether the point is in the shape, and - for a list of shapes - which
 // of them.  `path` comes back with the index of the shape that was hit at
 // each level of the list, outermost last.

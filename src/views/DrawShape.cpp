@@ -523,12 +523,27 @@ GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style
 
 
 // ROM 0x000e148c WedgeBox__FP5TRectsT2
-// The box of the wedge of the oval in the box between the angles.  NOT
-// YET RECONSTRUCTED: the ROM's quadrant arithmetic - the whole oval's box
-// is answered (only whole turns are drawn, see DrawArc).
+// The box of a wedge of the oval in the box: the quarter of the box the
+// start angle falls in (0 is straight up, the angles going clockwise), cut
+// at the box's middle.
+//
+// ROM QUIRK: the arc is never looked at, so a wedge that runs on past its
+// first quarter is given only that quarter's box; and the quarters are
+// told apart by 90, 180 and 270 alone, so an angle outside 0..359 falls in
+// the first quarter below 0 and the last above 359.
 void
-WedgeBox(Rect* /*box*/, short /*startAngle*/, short /*arcAngle*/)
+WedgeBox(Rect* box, short startAngle, short /*arcAngle*/)
 {
+	short top = box->top, left = box->left, bottom = box->bottom, right = box->right;
+	Point mid = MidPoint(*box);
+	if (startAngle < 90)
+		SetRect(box, mid.h, top, right, mid.v);			// (SetRect: left, top, right, bottom)
+	else if (startAngle < 180)
+		SetRect(box, mid.h, mid.v, right, bottom);
+	else if (startAngle < 270)
+		SetRect(box, left, mid.v, mid.h, bottom);
+	else
+		SetRect(box, left, top, mid.h, mid.v);
 }
 
 
@@ -1765,6 +1780,7 @@ RegisterShapeNatives(void)
 	RegisterNativeFunction("FScaleShape", (void*) FScaleShape, 3);
 	RegisterNativeFunction("FMakeShape", (void*) FMakeShape, 1);
 	RegisterNativeFunction("FIsPrimShape", (void*) FIsPrimShape, 1);
+	RegisterShapeVerbNatives();
 }
 
 

@@ -59,6 +59,7 @@ void	Union(Rect* r, const Rect* other);							// ROM 0x001975c0 Union__5TRectFRC
 void	PinTo(Point* pt, const Rect* r);							// ROM 0x001978f0 PinTo__6TPointFRC5TRect - the point brought inside the rectangle (its right and bottom edges included)
 void	Flip(Rect* r);												// ROM 0x00197820 Flip__5TRectFv - the sides swapped where right is left of left or bottom above top
 long	CheapDistance(const Point& a, const Point& b);					// ROM 0x001991c4 CheapDistance__FRC6TPointT1 - the longer axis plus half the shorter
+long	DistanceFromLine(const Point& pt, const Point& a, const Point& b);	// ROM 0x00198f0c DistanceFromLine__6TPointCFRC6TPointT1 - roughly how far the point is from the line through a and b
 
 inline Point	MakePoint(long h, long v)		{ Point p; p.v = (short) v; p.h = (short) h; return p; }
 inline Point	MidPoint(const Rect& r)			{ return MakePoint((r.left + r.right) / 2, (r.top + r.bottom) / 2); }		// ROM 0x00197884 MidPoint__5TRectCFv

@@ -1031,6 +1031,38 @@ TestShapes()
 	EXPECT(RINT(Eval("ShapeBounds(OffsetShape(MakeRect(10, 10, 30, 20), 5, -3)).left")) == 15 && RINT(Eval("ShapeBounds(OffsetShape([MakeRect(10, 10, 30, 20)], 5, -3)[0]).top")) == 7);
 	EXPECT(RINT(Eval("ShapeBounds(OffsetShape(MakePolygon([0, 0, 10, 0, 5, 8]), 4, 4)).left")) == 4);
 	EXPECT(EQRef(ClassOf(Eval("MakeRegion(MakeRect(2, 2, 6, 6))")), RSSYMregion) && RINT(Eval("ShapeBounds(MakeRegion(MakeRect(2, 2, 6, 6))).right")) == 6);
+	// FindShape (views/ShapeVerbs.cpp): a hollow rectangle is found near its
+	// outline (a single shape answers a frame whose path is true) and not in
+	// its middle; in a list the path names the member; with a selection
+	// distance a point in a corner of the box names the corner
+	EXPECT(ISNIL(Eval("FindShape(MakeRect(10, 10, 60, 60), 35, 35, nil)")));
+	EXPECT(Eval("FindShape(MakeRect(10, 10, 60, 60), 11, 35, nil).path") == TRUEREF);
+	EXPECT(ISNIL(Eval("FindShape(MakeRect(10, 10, 60, 60), 11, 35, nil).vertex")));
+	EXPECT(ISNIL(Eval("FindShape(MakeRect(10, 10, 60, 60), 100, 35, nil)")));
+	EXPECT(RINT(Eval("FindShape([MakeRect(0, 0, 10, 10), MakeRect(100, 100, 120, 120)], 101, 110, nil).path[0]")) == 1);
+	EXPECT(RINT(Eval("Length(FindShape([MakeRect(0, 0, 10, 10), MakeRect(100, 100, 120, 120)], 101, 110, nil).path)")) == 1);
+	EXPECT(RINT(Eval("FindShape(MakeRect(10, 10, 60, 60), 8, 8, {selection: 3}).vertex")) == 0);
+	EXPECT(RINT(Eval("FindShape(MakeRect(10, 10, 60, 60), 61, 61, {selection: 3}).vertex")) == 2);
+	EXPECT(NOTNIL(Eval("FindShape(MakeLine(0, 0, 50, 50), 26, 24, nil)")) && ISNIL(Eval("FindShape(MakeLine(0, 0, 50, 50), 40, 10, nil)")));
+	EXPECT(NOTNIL(Eval("FindShape(MakeOval(0, 0, 40, 40), 20, 1, nil)")) && ISNIL(Eval("FindShape(MakeOval(0, 0, 40, 40), 20, 20, nil)")));
+	EXPECT(NOTNIL(Eval("FindShape(MakePolygon([0, 0, 40, 0, 20, 30]), 20, 1, nil)")) && ISNIL(Eval("FindShape(MakePolygon([0, 0, 40, 0, 20, 30]), 20, 12, nil)")));
+	// GetShapeInfo: the bounds, a line's ends, a text's string, a wedge's quarter
+	EXPECT(RINT(Eval("GetShapeInfo(MakeRect(10, 10, 30, 20)).bounds.right")) == 30);
+	EXPECT(RINT(Eval("GetShapeInfo(MakeLine(1, 2, 3, 4)).start.x")) == 1 && RINT(Eval("GetShapeInfo(MakeLine(1, 2, 3, 4)).stop.y")) == 4);
+	EXPECT(NOTNIL(Eval("StrEqual(GetShapeInfo(MakeText(\"Hi\", 0, 0, 40, 20)).text, \"Hi\")")));
+	EXPECT(RINT(Eval("GetShapeInfo(MakeWedge(0, 0, 40, 40, 100, 30)).bitsBounds.left")) == 20);
+	EXPECT(RINT(Eval("GetShapeInfo(MakeWedge(0, 0, 40, 40, 100, 30)).bitsBounds.top")) == 20);
+	EXPECT(RINT(Eval("GetShapeInfo(MakeWedge(0, 0, 40, 40, 300, 30)).bitsBounds.right")) == 20);
+	// MakeInk: the ink shape, drawn where it was made
+	// (both rectangles 'boundsRect binaries, as MakeRectShape makes them)
+	EXPECT(EQRef(ClassOf(Eval("MakeInk(SetClass(\"x\", 'ink), 5, 6, 25, 16).bounds")), Intern((char*) "boundsRect")));
+	Eval("inkShape := MakeInk(SetClass(\"x\", 'ink), 5, 6, 25, 16)");
+	EXPECT(EQRef(ClassOf(Eval("inkShape.originalBounds")), Intern((char*) "boundsRect")) && !EQRef(Eval("inkShape.originalBounds"), Eval("inkShape.bounds")));
+	{
+		RefVar box(Eval("inkShape.originalBounds"));
+		const Rect* r = (const Rect*) BinaryData(box);
+		EXPECT(r->left == 5 && r->top == 6 && r->right == 25 && r->bottom == 16);
+	}
 
 	// MakeBitmap makes an offscreen bitmap and DrawIntoBitmap draws into
 	// it (qd/Pictures.cpp, views/DrawShape.cpp)

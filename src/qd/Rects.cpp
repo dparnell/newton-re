@@ -7,6 +7,7 @@
 */
 
 #include "Rects.h"
+#include "NewtonExceptions.h"
 #include <stdarg.h>
 
 
@@ -312,6 +313,23 @@ CheapDistance(const Point& a, const Point& b)
 	if (dv < 0)
 		dv = -dv;
 	return (dh < dv) ? dv + (dh >> 1) : dh + (dv >> 1);
+}
+
+// ROM 0x00198f0c DistanceFromLine__6TPointCFRC6TPointT1
+// How far the point is from the line through a and b: the cross product of
+// a->pt and a->b over the line's length - measured the cheap way, so the
+// answer is only roughly the perpendicular distance.  A line of no length
+// divides by nought, which the ROM's __rt_sdiv throws as evt.ex.div0 (its
+// data the return address, nil here).
+long
+DistanceFromLine(const Point& pt, const Point& a, const Point& b)
+{
+	long length = CheapDistance(a, b);
+	long cross = (pt.v - a.v) * (b.h - a.h) - (b.v - a.v) * (pt.h - a.h);
+	if (length == 0)
+		Throw(exDivideByZero, nil, nil);
+	long d = cross / length;
+	return d < 0 ? -d : d;
 }
 
 // ROM 0x001976b0 Intersects__5TRectCFRC5TRect

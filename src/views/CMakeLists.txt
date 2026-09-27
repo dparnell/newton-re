@@ -36,6 +36,7 @@ add_library(views STATIC
     GaugeView.cpp
     PolygonView.cpp
     DrawShape.cpp
+    ShapeVerbs.cpp
     Commands.cpp
     Keyboard.cpp
     KeyboardView.cpp
