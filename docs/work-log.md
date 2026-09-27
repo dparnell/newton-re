@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: PictToShape - a picture turned into shapes
+
+- `PictToShape` (0x000dd6dc) over `DrawPicture`'s toShapes path: the
+  `OpcodeProcs` table and its eleven procs, `storeShape`/`flushShape`,
+  `MungeStyleFrame`, `StylesEqual`, `GetNSFont`/`StyleToNSFont`/
+  `GetNSPattern`, `FlushAnyInk`, `ImpossibleToDraw`, `MapFPoint`
+  (`views/PictureShapes.cpp`, `qd/PicPlay.cpp`; `docs/qd/README.md`'s "A
+  picture turned into shapes").  `ParsePicCodes` now fills the ROM's
+  `fProc*` fields and calls the procs where the ROM does (including the
+  second, positive call after a state opcode), keeps 0x81a1's style and
+  0x81a3's text for them, and `DrawPicture` answers the shapes.
+- The pattern forms both ways: `MakeNSPattern`, `MakeGrayPattern`,
+  `BlackOrWhitePat`, `MonochromePat`, `GrayToRGB` (`qd/Ports.h`), and
+  `GetPattern` reconstructed in full (packed colours, `'grayPattern`,
+  `'ditherPattern` frames; the host had only the standard patterns and
+  eight-row binaries).
+- `PicPlay` holds Refs now (the ROM's does), so `test_PicPlay` starts an
+  object heap.  The recognition area's natives are all answered.
+
 ## 2026-09-28: MungeShape and MungeBitmap
 
 - `views/ShapeVerbs.cpp`: `MungeShape`/`DoMungeShape` and the eight point

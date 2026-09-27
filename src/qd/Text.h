@@ -101,4 +101,9 @@ const UniChar*	SkipUpToTwoSpacesAndCR(const UniChar* text, const UniChar* end);
 
 void	RegisterTextNatives(void);		// StrFontWidth, FontAscent, FontDescent, FontLeading, FontHeight, TextBox, StrTruncate, StyledStrTruncate
 
+// the font natives the picture's shapes measure text with
+Ref		FFontAscent(RefArg rcvr, RefArg fontSpec);				// ROM 0x001eda9c FFontAscent__FRC6RefVarT1
+Ref		FFontDescent(RefArg rcvr, RefArg fontSpec);				// ROM 0x001edb0c FFontDescent__FRC6RefVarT1
+Ref		FStrFontWidth(RefArg rcvr, RefArg str, RefArg fontSpec);	// ROM 0x001f0230 FStrFontWidth__FRC6RefVarN21
+
 #endif	/* __TEXT_H */

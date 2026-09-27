@@ -12,10 +12,11 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 103/103
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 10898 citations, 0 bad;
-  6001 of 16671 functions (36.00%).
-- `analysis/natives.py --unbound`: 352 of the ROM's 1326 natives
-  are unanswered (table below).
+- `analysis/coverage.py build/MP2x00US --check`: 10926 citations, 0 bad;
+  6027 of 16671 functions (36.15%).
+- `analysis/natives.py --unbound`: 349 of the ROM's 1326 natives
+  are unanswered (table below); the recognition area's 116 are all
+  answered.
 
 ## What works
 
@@ -61,8 +62,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 The owner asked (2026-09-27) for the recognition system to be put to bed,
 then for the testing system.  What is left of recognition is its natives
-(`natives.py --unbound`, the recognition area: two left, both shape
-verbs rather than recognition proper), in the order planned:
+(`natives.py --unbound`, the recognition area: all 116 answered since
+2026-09-28), in the order planned:
 
 1. ~~**Deferred recognition**~~ - DONE 2026-09-27 (`views/Rerecognize.h`,
    `docs/recognition/README.md`'s "Deferred recognition", ctest
@@ -74,7 +75,7 @@ verbs rather than recognition proper), in the order planned:
    recogniser and the letter styles"; the cursive engine's reading is
    NOT YET - measured below) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
    `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
-3. DONE bar two (2026-09-28, `views/ShapeVerbs.cpp`,
+3. DONE (2026-09-28, `views/ShapeVerbs.cpp`,
    `docs/views/README.md`'s "Questions asked of shapes") **Shape verbs**:
    `MakeInk`, `FindShape`, `GetShapeInfo`, `StrokeInPicture`,
    `AnimateSimpleStroke` (and `WedgeBox`, a stub until now).  NOT YET:
@@ -82,22 +83,11 @@ verbs rather than recognition proper), in the order planned:
      `qd/MungeBitmap.cpp`, `toolbox/Matrix.h`; `MungeBitmap` too) bar
      `RotTiledBitmap` (a screen-sized bitmap turned in tiles out of a large
      binary on a store, over `TTile`).
-   - `PictToShape` (0x000dd6dc, 264 B, a wrapper): all the work is
-     `DrawPicture(pic, rect, toShapes)`'s shapes path, measured
-     2026-09-28 - `ParsePicCodes` hands each opcode to the proc the
-     `OpcodeProcs` table (0x00380a9c, 17 jump-table slots) names instead
-     of drawing: `EarlyPicCodes` 0x0033196c, `LinePicCodes` 0x00330108,
-     `RectPicCodes` 0x003303b4, `ArcPicCodes` 0x00330658, `PolyPicCodes`
-     0x00330798, `RegionPicCodes` 0x003309cc, `BitsPicCodes` 0x00330aa4,
-     `CommentPicCodes` 0x00330654, `HuhPicCodes` 0x00330f50,
-     `EOPPicCodes` 0x00330cc0, `XtndPicCodes` 0x00330cf0; under them
-     `storeShape` 0x00331804 / `flushShape` 0x00331754 (the shapes
-     gathered with a style frame each), `MungeStyleFrame` 0x0033113c,
-     `StylesEqual` 0x003314c8, `StyleToNSFont`/`GetNSFont`/
-     `GetNSPattern` 0x00330f54-0x0033113c - about 6 KB, 18 functions; the
-     `else NOT YET: the picture turned into shapes` sites in
-     `qd/PicPlay.cpp` are where they plug in, and `DrawPicture` must
-     answer the shapes (`docs/qd/README.md`).
+   - ~~`PictToShape`~~ DONE (2026-09-28, `views/PictureShapes.cpp` over
+     `DrawPicture`'s toShapes path, `docs/qd/README.md`'s "A picture
+     turned into shapes"; `GetPattern` now takes every pattern form and
+     `qd/Ports.h` has `MakeGrayPattern`/`MakeNSPattern`).  The picture's
+     text becomes text boxes but is still not *drawn* by DrawPicture.
 4. DONE (2026-09-28) `InkConvert` (over the codec's converter
    `ConvertData`, `ink/CICConvert.cpp`), `ConvertDictionaryData`,
    `MoveCorrectionInfo`/`AddUnit`/`HandleInkWord`; the boot's `UseWRec`
@@ -224,7 +214,7 @@ inside an area).  At 2026-09-27:
 | frames | 115 | natives.py's catch-all: a handful each across many areas |
 | testing | 38 | the test agent and the debug hooks |
 | packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
-| recognition | 2 | `MungeShape`, `PictToShape` (shape verbs, above) |
+| recognition | 0 | all answered (the cursive engine's reading is NOT YET behind them) |
 | books | 20 | the book reader and newspapers (`TLibrarian`) |
 | views | 17 | |
 | sound | 9 | the sound server |
@@ -263,9 +253,8 @@ The areas whose machinery exists are worth sweeping with `--ready`;
 - `ComputeParagraphHeight` 0x001ecfd0: its geometry is built on the
   stack through an unaligned `ldr` and is worth reading from the
   assembly rather than the decompiler.
-- The rest of the bitmap and shape verbs: `MakePict`, `PictToShape` (the
-  picture turned into shapes: `DrawPicture`'s other path), `MungeShape`,
-  `MungeBitmap` (`GetShapeInfo` and `FindShape` are done).  `GetBitmapInfo` also wants
+- The rest of the bitmap and shape verbs: `MakePict` (`PictToShape`,
+  `MungeShape`, `MungeBitmap`, `GetShapeInfo` and `FindShape` are done).  `GetBitmapInfo` also wants
   `GetBinaryStore`/`GetBinaryCompander`, which answer nil on a host
   because there are never large binaries.
 - `HiliteBlock` 0x00164d64 looks like a view native but is the book

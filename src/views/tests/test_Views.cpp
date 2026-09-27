@@ -6642,6 +6642,125 @@ TestPicture()
 }
 
 
+// A picture turned into shapes (PictToShape over DrawPicture's toShapes):
+// a hand-made version 1 picture - a rectangle painted and then framed, an
+// oval painted, two lines end to end and a framed triangle - comes back
+// as [style, rectangle, style, oval, style, polygon (the lines), polygon]
+// - the painted-and-framed rectangle one shape whose style has both a fill
+// and a pen, and no style again before the triangle, whose style frame is
+// equal to the lines' (StylesEqual: all integers); drawn with DrawShape the shapes put down the same
+// pixels as the picture drawn straight.  The ROM's world map (one packed
+// bitmap) comes back as a style and a bitmap that draws the same too.
+static void
+TestPictToShape()
+{
+	unsigned char pic[128];
+	long n = 2;
+	auto byte = [&](long b) { pic[n++] = (unsigned char) b; };
+	auto word = [&](long w) { PutBigEndianHalf(pic + n, (unsigned short) w); n += 2; };
+	auto rect = [&](long t, long l, long b, long r) { word(t); word(l); word(b); word(r); };
+	rect(0, 0, 40, 40);								// the frame
+	byte(0x11); byte(0x01);							// version 1
+	byte(0x01); word(10); rect(0, 0, 40, 40);		// ClipRgn
+	byte(0x31); rect(2, 2, 10, 20);					// PaintRect
+	byte(0x38);										// FrameSameRect
+	byte(0x51); rect(12, 2, 20, 12);				// PaintOval
+	byte(0x20); word(25); word(2); word(25); word(20);	// Line (v, h pairs): down the left
+	byte(0x21); word(35); word(20);					// LineFrom: along the bottom
+	byte(0x70); word(22); rect(22, 24, 38, 38);		// FramePoly: a triangle
+	word(22); word(24); word(38); word(24); word(22); word(38);
+	byte(0xff);
+	PutBigEndianHalf(pic, (unsigned short) n);
+	RefVar picture(AllocateBinary(RSSYMpicture, n));
+	memmove(BinaryData(picture), pic, n);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(MakeSymbol("testPic")), picture);
+	RefVar shapes(Eval("PictToShape(testPic, {left: 50, top: 0, right: 90, bottom: 40})"));
+	EXPECT(IsArray(shapes) && Length(shapes) == 7);
+	if (!IsArray(shapes) || Length(shapes) != 7)
+	{
+		fprintf(stderr, "PictToShape: %s, %ld\n", IsArray(shapes) ? "array" : "not an array", IsArray(shapes) ? Length(shapes) : (long) (Ref) shapes);
+		for (long i = 0; IsArray(shapes) && i < Length(shapes); i++)
+		{
+			RefVar item(GetArraySlotRef(shapes, i));
+			RefVar cls(ClassOf(item));
+			fprintf(stderr, "  %ld: %s\n", i, IsSymbol(cls) ? SymbolName(cls) : "?");
+		}
+		return;
+	}
+	EXPECT(IsFrame(RefVar(GetArraySlotRef(shapes, 0))));
+	EXPECT(EQ(RefVar(ClassOf(RefVar(GetArraySlotRef(shapes, 1)))), RSSYMrectangle));
+	RefVar style(GetArraySlotRef(shapes, 0));
+	EXPECT(RINT(RefVar(GetFrameSlotRef(style, RSSYMfillpattern))) == 5
+		&& RINT(RefVar(GetFrameSlotRef(style, RSSYMpenpattern))) == 5
+		&& RINT(RefVar(GetFrameSlotRef(style, RSSYMpensize))) == 1
+		&& RINT(RefVar(GetFrameSlotRef(style, RSSYMtransfermode))) == 0);
+	EXPECT(EQ(RefVar(ClassOf(RefVar(GetArraySlotRef(shapes, 3)))), RSSYMoval));
+	Rect bounds;
+	ShapeBounds(RefVar(GetArraySlotRef(shapes, 3)), &bounds);
+	EXPECT(bounds.left == 52 && bounds.top == 12 && bounds.right == 62 && bounds.bottom == 20);
+	RefVar lines(GetArraySlotRef(shapes, 5));
+	RefVar triangle(GetArraySlotRef(shapes, 6));
+	EXPECT(EQ(RefVar(ClassOf(lines)), RSSYMpolygon) && EQ(RefVar(ClassOf(triangle)), RSSYMpolygon));
+	ShapeBounds(lines, &bounds);
+	// (a polygon's bounds take in the pen below and to the right)
+	EXPECT(bounds.left == 52 && bounds.top == 25 && bounds.right == 71 && bounds.bottom == 36);
+	EXPECT(ISINT(RefVar(GetFrameSlotRef(RefVar(GetArraySlotRef(shapes, 4)), RSSYMpenpattern))));
+	// drawn: the picture straight at 0..40, the shapes at 50..90
+	Rect box;
+	SetRect(&box, 0, 0, 100, 40);
+	EraseRect(&box);
+	LockRef(picture);
+	Ptr data = (Ptr) BinaryData(picture);
+	SetRect(&box, 0, 0, 40, 40);
+	DrawPicture((PicHandle) &data, &box, false);
+	UnlockRef(picture);
+	DrawShape(shapes, RefVar(), MakePoint(0, 0));
+	long differ = 0, ink = 0;
+	for (long y = 0; y < 40; y++)
+		for (long x = 0; x < 40; x++)
+		{
+			ink += Pixel(x, y);
+			differ += Pixel(x, y) != Pixel(x + 50, y);
+		}
+	EXPECT(ink > 100);
+	EXPECT(differ == 0);
+	if (differ != 0)
+		fprintf(stderr, "PictToShape: %ld pixels differ\n", differ);
+
+	// the world map: a style and a bitmap, drawn as the picture is
+	shapes = Eval("PictToShape(worldMapPic, {left: 0, top: 40, right: 60, bottom: 70})");
+	EXPECT(IsArray(shapes) && Length(shapes) == 2);
+	if (IsArray(shapes) && Length(shapes) == 2)
+	{
+		EXPECT(EQ(RefVar(ClassOf(RefVar(GetArraySlotRef(shapes, 1)))), RSSYMbitmap)
+			|| IsFrame(RefVar(GetArraySlotRef(shapes, 1))));
+		RefVar map(Rworldmapbitmap);
+		SetRect(&box, 0, 0, 60, 70);
+		EraseRect(&box);
+		LockRef(map);
+		data = (Ptr) BinaryData(map);
+		SetRect(&box, 0, 0, 60, 30);
+		DrawPicture((PicHandle) &data, &box, false);
+		UnlockRef(map);
+		DrawShape(shapes, RefVar(), MakePoint(0, 0));
+		differ = 0;
+		ink = 0;
+		for (long y = 0; y < 30; y++)
+			for (long x = 0; x < 60; x++)
+			{
+				ink += Pixel(x, y);
+				differ += Pixel(x, y) != Pixel(x, y + 40);
+			}
+		EXPECT(ink > 60 * 30 / 8);
+		EXPECT(differ == 0);
+		if (differ != 0)
+			fprintf(stderr, "PictToShape: %ld pixels of the world map differ\n", differ);
+	}
+	gRootView->Dirty(nil);
+	Refresh();
+}
+
+
 // A default button that is no longer the key view's is dirtied once and
 // forgotten, not dirtied on every update (which kept the host repainting
 // the screen for ever under a popup, and looked like a hang).
@@ -6820,6 +6939,7 @@ main()
 		TestListView();
 		TestMeetingView();
 		TestPicture();
+		TestPictToShape();
 	}
 	newton_catch_all
 	{

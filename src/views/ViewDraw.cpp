@@ -66,37 +66,115 @@ DisposeFgPattern(void)
 
 // ROM 0x00197d2c GetPattern__FRC6RefVarPUcPPP8PixelMapUc
 // A pattern from its NewtonScript form: an integer is a standard pattern
-// index (1-5; a packed RGB with bit 28 NOT YET: a gray), a binary the
-// eight rows of a simple pattern.  NOT YET RECONSTRUCTED: the pattern
-// frames ({rgb, ...}) and 'grayPattern binaries.  ==> whether pattern was
-// set; owned says whether it must be disposed.
+// (1-5), or with bit 28 set a packed RGB colour made a gray; a
+// 'grayPattern binary is a pattern of grays (MakeGrayPattern), any other
+// binary the eight rows of a simple one; a 'ditherPattern frame is a
+// simple pattern (its pattern slot: a standard index or eight rows) drawn
+// in two grays, its foreground (black when it has none) and background
+// (white).  ==> whether pattern was set; owned says it must be disposed.
+//
+// ROM QUIRK, kept: an array answers wasOwned and leaves the pattern as it
+// was; so does any frame that is not a 'ditherPattern, which answers true
+// whenever *pattern is already set.
 Boolean
-GetPattern(RefArg spec, Boolean* owned, PatternHandle* pattern, Boolean /*wasOwned*/)
+GetPattern(RefArg spec, Boolean* owned, PatternHandle* pattern, Boolean wasOwned)
 {
+	Boolean result = wasOwned;
 	if (ISINT(spec))
 	{
 		long value = RVALUE(spec);
 		if (value <= 0)
 			return false;
-		if (value & 0x10000000)
-			return false;
 		if (*owned)
 			DisposePattern(*pattern);
-		*owned = false;
-		*pattern = GetStdPattern((GetPatSelector) (value - 1));
-		return *pattern != nil;
+		if ((value & 0x10000000) == 0)
+			*pattern = GetStdPattern((GetPatSelector) (UChar) (value - 1));
+		else
+		{
+			ULong red, green, blue;
+			UnpackRGBvalues((ULong) value, &red, &green, &blue);
+			*pattern = GetStdGrayPattern(red, green, blue);
+		}
 	}
-	if (IsFrame(spec) || IsArray(spec) || IsSymbol(spec))
-		return false;
-	if (Length(spec) < 8)
-		return false;
-	if (*owned)
-		DisposePattern(*pattern);
-	*pattern = MakeSimplePattern((const char*) BinaryData(spec));
-	if (*pattern == nil)
-		return false;
-	*owned = true;
-	return true;
+	else if (!IsFrame(spec))
+	{
+		if (!EQ(RefVar(ClassOf(spec)), RSSYMgraypattern))
+		{
+			if (IsArray(spec))
+				return wasOwned;
+			if (*owned)
+				DisposePattern(*pattern);
+			*pattern = MakeSimplePattern((const char*) BinaryData(spec));
+			if (*pattern != nil)
+			{
+				result = true;
+				*owned = true;
+			}
+			return result;
+		}
+		if (*owned)
+			DisposePattern(*pattern);
+		*pattern = MakeGrayPattern(spec);
+	}
+	else if (EQ(RefVar(ClassOf(spec)), RSSYMditherpattern))
+	{
+		long depth = 0;
+		GetGrafInfo(kGrafInfoDepth, &depth);
+		RefVar slot(GetFrameSlotRef(spec, RSSYMforeground));
+		ULong fg, bg;
+		ULong red, green, blue;
+		if (ISNIL(slot) || !ISINT(slot))
+			fg = 0xffffffffu >> ((0x20 - depth) & 0xff);
+		else
+		{
+			UnpackRGBvalues((ULong) RVALUE(slot), &red, &green, &blue);
+			fg = RGBtoGray(red, green, blue, depth, depth);
+		}
+		slot = GetFrameSlotRef(spec, RSSYMbackground);
+		if (ISNIL(slot) || !ISINT(slot))
+			bg = 0;
+		else
+		{
+			UnpackRGBvalues((ULong) RVALUE(slot), &red, &green, &blue);
+			bg = RGBtoGray(red, green, blue, depth, depth);
+		}
+		slot = GetFrameSlotRef(spec, RSSYMpattern);
+		if (ISNIL(slot))
+		{
+			// ROM QUIRK, kept: the foreground gray unpacked as though it
+			// were a packed colour
+			if (*owned)
+				DisposePattern(*pattern);
+			UnpackRGBvalues(fg, &red, &green, &blue);
+			*pattern = GetStdGrayPattern(red, green, blue);
+		}
+		else
+		{
+			PatternHandle simple;
+			if (ISINT(slot))
+			{
+				long which = RVALUE(slot) & 0xff;
+				simple = GetStdPattern((GetPatSelector) (which == 0 || which > 5 ? 4 : (UChar) (RVALUE(slot) - 1)));
+			}
+			else
+				simple = MakeSimplePattern((const char*) BinaryData(slot));
+			if (simple != nil)
+			{
+				if (*owned)
+					DisposePattern(*pattern);
+				HLock((Handle) simple);
+				*pattern = MakeSimpleGrayPattern((const char*) GetPixelMapBits(*simple), fg, bg);
+				HUnlock((Handle) simple);
+				DisposePattern(simple);
+			}
+		}
+	}
+	if (*pattern != nil)
+	{
+		result = true;
+		*owned = true;
+	}
+	return result;
 }
 
 

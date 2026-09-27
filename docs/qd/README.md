@@ -459,12 +459,68 @@ NOT YET RECONSTRUCTED: the text (0x28-0x2b and the Newton's
 `DrawPicText`, `TextCleanup`), curves and paths (read, not drawn:
 `MapCurve`/`CallCurve`, `MapPaths`/`CallPaths`), pixel patterns of type
 1 (read, and the port keeps its pattern: `ConvertPixPat`'s converters),
-the picture turned into NewtonScript shapes (`DrawPicture`'s
-`toShapes`, the `OpcodeProcs` table, `storeShape`/`flushShape`/
-`MungeStyleFrame`), a picture drawn under a scaling transform
-(`TQDScaler`), and the recording side (`OpenPicture`, `ClosePicture`,
-`PutPic*`).  `test_PicPlay` plays hand-written pictures; `test_Views`'s
-`TestPicture` draws the ROM's world map.
+a picture drawn under a scaling transform (`TQDScaler`), and the
+recording side (`OpenPicture`, `ClosePicture`, `PutPic*`).
+`test_PicPlay` plays hand-written pictures; `test_Views`'s `TestPicture`
+draws the ROM's world map.
+
+### A picture turned into shapes (`PictToShape`, `views/PictureShapes.cpp`)
+
+`DrawPicture(picture, rect, toShapes)` answers the picture as an array
+of NewtonScript shapes instead of drawing it.  The opcodes are played
+exactly as for drawing - the port set up the same, the clip, patterns
+and pen state followed, everything mapped onto the rectangle - but
+`ParsePicCodes` hands each drawing opcode, with what it read left mapped
+in the `PicPlay`'s `fProc*` fields, to the proc for its sixteen in the
+`OpcodeProcs` table (0x00380a9c; the seventeenth entry for everything
+from 0x100) instead of drawing it.  A state opcode under 0x20 calls its
+proc twice: negated before it is played, as it is afterwards.  The
+procs:
+
+- rectangles, round rectangles (the oval size's *width* as the corners'
+  diameter) and ovals: `MakeRect`/`MakeRoundRect`/`MakeOval`; arcs a
+  `MakeWedge`; polygons `MakePolygon` - one of two points a `MakeLine`;
+  regions `canonicalRegionShape` with a copy of the region; bitmaps a
+  `MakeBitmap` the destination's size with the unpacked rows copied
+  (scaled) into it and offset to the destination; text (0x28-0x2b and
+  the Newton's 0x81a3) a text box as wide as the text plus five, from the
+  font's ascent above the point to its descent below;
+- lines are not shapes one by one: lines that start where the last
+  ended are gathered into one open polygon (`fInkPoly`, an `OpenPoly`
+  the lines are drawn into) until something else comes along
+  (`FlushAnyInk`, which the state opcodes' negated call also runs);
+  lines with an empty pen, a pen mode of 0x17 or more, no length, or
+  wholly above and left of the origin are dropped.
+
+Every shape goes through `storeShape`: it waits in `fShape` with a style
+frame (`MungeStyleFrame`: a frame verb the pen pattern, pen width and
+mode; paint the fill pattern; erase the background pattern as the fill
+in mode 0; invert black in mode 2; fill the pen pattern in mode 8; a
+bitmap its mode; text its font, left justified in black; a mode over 7
+becomes 0).  A shape of the same class and bounds as the waiting one -
+not a bitmap - is not added: only its style goes into the waiting one's,
+so a rectangle painted and then framed is one rectangle with a fill and a
+pen.  When a shape does go in (`flushShape`), its style frame goes in
+front of it unless `StylesEqual` finds it the same as the style added
+last.  The end of the picture flushes the last one.  Patterns are what a
+script writes (`GetNSPattern`): 1 or 5 for all white or all black, a
+one-bit pattern's eight rows as a `'pattern`, one gray all over as a
+packed colour, else a `'grayPattern` of its pixels (the top half only
+when the bottom half repeats it) - which `views`' `GetPattern`, now
+reconstructed in full (the packed colours, `MakeGrayPattern`, the
+`'ditherPattern` frames), turns back.
+
+ROM quirks kept: `StylesEqual` finds two styles equal only when every
+slot is the same integer (or the same region) - a pattern binary or a
+font spec makes them differ, and so does being empty, so a style with a
+binary in it is repeated before every shape; the text style starts at a
+size of `0xc` (twelve sixty-five-thousandths, where its twin is made at
+`0xc0000`), so text before any TxSize is sized nought; the Newton's text
+waits for 0x81a4 when its flags say its families come later, and then
+never reaches the proc, so it is lost; and the text block 0x81a3 reads
+is never given back on this path.  `test_Views`'s `TestPictToShape`
+turns a hand-made picture and the world map into shapes and checks that
+`DrawShape` of them puts down exactly the picture's pixels.
 
 ### Making a bitmap and drawing into it
 

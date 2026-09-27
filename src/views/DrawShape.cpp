@@ -1149,7 +1149,7 @@ FDrawShape(RefArg rcvr, RefArg shape, RefArg style)
 
 
 // ROM 0x000dc894 FMakeRect
-static Ref
+Ref
 FMakeRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 {
 	return MakeRectShape(RSSYMrectangle, left, top, right, bottom);
@@ -1157,7 +1157,7 @@ FMakeRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 
 
 // ROM 0x000dda10 FMakeOval
-static Ref
+Ref
 FMakeOval(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 {
 	return MakeRectShape(RSSYMoval, left, top, right, bottom);
@@ -1166,7 +1166,7 @@ FMakeOval(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 
 // ROM 0x000e0dd0 FMakeRoundRect
 // A 12-byte 'roundRectangle: the rectangle and the corners' diameter.
-static Ref
+Ref
 FMakeRoundRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom, RefArg diameter)
 {
 	struct { Rect fRect; short fDiameter; short fPad; } data;
@@ -1184,7 +1184,7 @@ FMakeRoundRect(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bo
 
 // ROM 0x000de860 FMakeLine
 // An 8-byte 'line: {y1, x1, y2, x2} - a rectangle of the two ends.
-static Ref
+Ref
 FMakeLine(RefArg /*rcvr*/, RefArg x1, RefArg y1, RefArg x2, RefArg y2)
 {
 	Rect r;
@@ -1200,7 +1200,7 @@ FMakeLine(RefArg /*rcvr*/, RefArg x1, RefArg y1, RefArg x2, RefArg y2)
 
 // ROM 0x000e2b60 FMakeWedge
 // A 12-byte 'wedge: the oval's rectangle, the start angle and the arc.
-static Ref
+Ref
 FMakeWedge(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom, RefArg startAngle, RefArg arcAngle)
 {
 	struct { Rect fRect; short fStart; short fArc; } data;
@@ -1219,7 +1219,7 @@ FMakeWedge(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom
 // ROM 0x000e3a78 FMakePolygon
 // A 'polygon frame (canonicalPolygonShape) whose data is a Polygon of the
 // points [x0, y0, x1, y1, ...], its box their bounds.
-static Ref
+Ref
 FMakePolygon(RefArg /*rcvr*/, RefArg points)
 {
 	long count = Length(points) / 2;
@@ -1296,7 +1296,7 @@ FMakeText(RefArg /*rcvr*/, RefArg str, RefArg left, RefArg top, RefArg right, Re
 
 // ROM 0x000dd094 FMakeTextBox
 // The same with the data a 'textBox: wrapped into the bounds when drawn.
-static Ref
+Ref
 FMakeTextBox(RefArg /*rcvr*/, RefArg str, RefArg left, RefArg top, RefArg right, RefArg bottom)
 {
 	RefVar shape(Clone(RefVar(Rcanonicaltextshape)));
@@ -1781,6 +1781,7 @@ RegisterShapeNatives(void)
 	RegisterNativeFunction("FMakeShape", (void*) FMakeShape, 1);
 	RegisterNativeFunction("FIsPrimShape", (void*) FIsPrimShape, 1);
 	RegisterShapeVerbNatives();
+	RegisterPictureShapeNatives();
 }
 
 

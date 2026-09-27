@@ -727,7 +727,7 @@ FontSpecInfo(RefArg fontSpec, FontInfo* fontInfo)
 
 
 // ROM 0x001eda9c FFontAscent__FRC6RefVarT1
-static Ref
+Ref
 FFontAscent(RefArg /*rcvr*/, RefArg fontSpec)
 {
 	FontInfo fontInfo;
@@ -737,7 +737,7 @@ FFontAscent(RefArg /*rcvr*/, RefArg fontSpec)
 
 
 // ROM 0x001edb0c FFontDescent__FRC6RefVarT1
-static Ref
+Ref
 FFontDescent(RefArg /*rcvr*/, RefArg fontSpec)
 {
 	FontInfo fontInfo;
@@ -770,7 +770,7 @@ FFontHeight(RefArg /*rcvr*/, RefArg fontSpec)
 // ROM 0x001f0230 FStrFontWidth__FRC6RefVarN21
 // StrFontWidth(string, fontSpec): the string's width in the font, in
 // pixels (a rich string's ink NOT YET: its text is measured).
-static Ref
+Ref
 FStrFontWidth(RefArg /*rcvr*/, RefArg str, RefArg fontSpec)
 {
 	TRichString rich(str);

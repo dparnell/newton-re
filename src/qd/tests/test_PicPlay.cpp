@@ -3,13 +3,15 @@
 // version 1 picture with a clip, a painted rectangle and an unpacked
 // bitmap, the same scaled up, a packed bitmap, a line, the empty clip a
 // picture starts with, and a version 2 picture with its word opcodes.
-// Runs over a standalone kernel heap without ROM objects.
+// Runs over a standalone kernel heap and an object heap without ROM
+// objects.
 #include "PicPlay.h"
 #include "Draw.h"
 #include "Rects.h"
 #include "Regions.h"
 #include "ByteOrder.h"
 #include "NewtonMemory.h"
+#include "ObjectHeap.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -248,6 +250,7 @@ int
 main()
 {
 	InitHostStandaloneHeap();
+	InitObjects();					// (DrawPicture keeps its styles and shapes in Refs, as the ROM's does)
 	InitGraf();
 	gMap.baseAddr = (Ptr) gBits;
 	gMap.rowBytes = kSize / 8;

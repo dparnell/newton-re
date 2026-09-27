@@ -114,7 +114,16 @@ void	RegisterShapeNatives(void);
 // the questions asked of shapes (views/ShapeVerbs.cpp): FindShape,
 // GetShapeInfo, MakeInk, StrokeInPicture - registered by RegisterShapeNatives
 void	RegisterShapeVerbNatives(void);
+void	RegisterPictureShapeNatives(void);		// PictToShape (views/PictureShapes.cpp)
 Ref		FOffsetShape(RefArg rcvr, RefArg shape, RefArg dx, RefArg dy);				// ROM 0x000dda60 FOffsetShape
+Ref		FMakeRect(RefArg rcvr, RefArg left, RefArg top, RefArg right, RefArg bottom);	// ROM 0x000dc894 FMakeRect
+Ref		FMakeOval(RefArg rcvr, RefArg left, RefArg top, RefArg right, RefArg bottom);	// ROM 0x000dda10 FMakeOval
+Ref		FMakeRoundRect(RefArg rcvr, RefArg left, RefArg top, RefArg right, RefArg bottom, RefArg diameter);	// ROM 0x000e0dd0 FMakeRoundRect
+Ref		FMakeLine(RefArg rcvr, RefArg x1, RefArg y1, RefArg x2, RefArg y2);				// ROM 0x000de860 FMakeLine
+Ref		FMakeWedge(RefArg rcvr, RefArg left, RefArg top, RefArg right, RefArg bottom, RefArg startAngle, RefArg arcAngle);	// ROM 0x000e2b60 FMakeWedge
+Ref		FMakePolygon(RefArg rcvr, RefArg points);										// ROM 0x000e3a78 FMakePolygon
+Ref		FMakeTextBox(RefArg rcvr, RefArg str, RefArg left, RefArg top, RefArg right, RefArg bottom);	// ROM 0x000dd094 FMakeTextBox
+Ref		FPictToShape(RefArg rcvr, RefArg picture, RefArg bounds);						// ROM 0x000dd6dc FPictToShape (views/PictureShapes.cpp)
 Ref		FDrawIntoBitmap(RefArg rcvr, RefArg shape, RefArg styles, RefArg bitmap);	// ROM 0x0003eee0 FDrawIntoBitmap
 // turning and flipping a shape about (cx, cy) (views/ShapeVerbs.cpp)
 void	RotatePointR(Point* pt, short cx, short cy);		// ROM 0x000de6d8 RotatePointR__FP5PointsT2

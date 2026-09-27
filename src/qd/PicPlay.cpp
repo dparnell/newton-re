@@ -24,7 +24,12 @@
 #include "OSErrors.h"
 #include "FixedMath.h"
 #include "ByteOrder.h"
+#include "Unicode.h"
+#include "Fonts.h"
+#include "ObjHeader.h"
 #include <string.h>
+
+const OpcodeProc*	gOpcodeProcs = nil;		// ROM 0x00380a9c OpcodeProcs (set by views/PictureShapes.cpp)
 
 // GetPicGrayTable's answer when there is no memory for the table
 const long kPicErrNoGrayTable = -7000;			// the ROM's 0xffffe4a8
@@ -627,7 +632,14 @@ rows:
 		OpcodeProc proc = LookupOpcodeEntry(opcode, procs);
 		if (proc == nil)
 			CallBits(&map, &srcRect, &dstRect, mode, mask);
-		// else NOT YET: the picture turned into shapes
+		else
+		{
+			// the pixels as unpacked (only the rows that show), where they go
+			play->fProcMode = mode;
+			play->fProcRect = dstRect;
+			play->fProcBits = &map;
+			proc(opcode, play, GetCurrentPort());
+		}
 	}
 	newton_catch_all
 	{
@@ -755,6 +767,11 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		}
 		case 0x03:									// TxFont
 			play->fTextFont = GetPicWord();
+			// (host: the family is looked up only for the shapes, the one
+			//  reader of it while the text is NOT YET drawn - SearchFont
+			//  wants the fonts in vars, which a bare QuickDraw has not)
+			if (procs != nil)
+				play->fTextFamily = SearchFont(play->fTextFont, nil);
 			break;
 		case 0x04:									// TxFace
 			play->fTextFace = (short) GetPicUByte();
@@ -873,6 +890,8 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		default:									// 0x17..0x19, 0x1c, 0x1e
 			break;
 		}
+		if (proc != nil)
+			proc((long) opcode, play, port);			// and again once it is played
 		return result;
 	}
 
@@ -903,8 +922,12 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 				play->fLastPt = end;
 				MapPt(&end, from, to);
 				if (proc == nil)
+				{
 					LineTo(end.h, end.v);
-				// else NOT YET: the picture turned into shapes
+					return 1;
+				}
+				play->fProcPt = end;					// (the pen is where it starts)
+				proc((long) opcode, play, port);
 				return 1;
 			}
 			if (opcode >= 0x28 && opcode <= 0x2b)
@@ -925,8 +948,30 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 				}
 				long count = GetPicUByte();
 				port->pnLoc = play->fTextLoc;
-				if (count != 0)
-					GetPicDiscard(count);
+				if (count == 0)
+					return 1;
+				// DEVIATION: the ROM's 256 bytes are whatever its stack held,
+				// and the conversion runs to the first nought in them; the
+				// host's start clear, so it stops at the text's end
+				char chars[256];
+				UniChar text[0x11c];
+				memset(chars, 0, sizeof(chars));
+				GetPicData(chars, count);
+				FPoint loc;
+				loc.x = (Fixed) ((ULong) (unsigned short) play->fTextLoc.h << 16);
+				loc.y = (Fixed) ((ULong) (unsigned short) play->fTextLoc.v << 16);
+				ConvertToUnicode(chars, text, kMacRomanEncoding, 0x7fffffff);
+				MapFPoint(&loc, from, to);
+				// NOT YET RECONSTRUCTED: NewText at loc in the text style,
+				// and CallDrawText of it when there is no proc
+				if (proc != nil)
+				{
+					text[count] = 0;
+					play->fProcPt = play->fTextLoc;
+					MapPt(&play->fProcPt, from, to);
+					play->fProcText = text;
+					proc((long) opcode, play, port);
+				}
 				return 1;
 			}
 			return GetPicResvOpcode(2, true);
@@ -948,8 +993,10 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 						CallRRect(verb, &r, play->fOvalSize.h, play->fOvalSize.v);
 					else
 						CallOval(verb, &r);
+					return 1;
 				}
-				// else NOT YET: the picture turned into shapes
+				play->fProcRect = r;
+				proc((long) opcode, play, port);
 				return 1;
 			}
 			if (!same)
@@ -966,7 +1013,14 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 				long startAngle = GetPicWord();
 				long arcAngle = GetPicWord();
 				if (proc == nil)
+				{
 					CallArc(verb, &r, startAngle, arcAngle);
+					return 1;
+				}
+				play->fProcRect = r;
+				play->fProcArc = arcAngle;
+				play->fProcMode = startAngle;
+				proc((long) opcode, play, port);
 				return 1;
 			}
 			// ROM QUIRK, kept: the reserved 0x6d-0x6f are read as eight
@@ -983,6 +1037,11 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 				MapPoly(poly, from, to);
 				if (proc == nil)
 					CallPoly(verb, poly);
+				else
+				{
+					play->fProcHandle = (Handle) poly;
+					proc((long) opcode, play, port);
+				}
 				DisposHandle((Handle) poly);
 				return 1;
 			}
@@ -997,6 +1056,11 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 				MapRgn(rgn, from, to);
 				if (proc == nil)
 					CallRgn(verb, rgn);
+				else
+				{
+					play->fProcHandle = (Handle) rgn;
+					proc((long) opcode, play, port);
+				}
 				DisposHandle((Handle) rgn);
 				return 1;
 			}
@@ -1011,6 +1075,11 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 			{
 				// ShortComment (0xa0), LongComment (0xa1)
 				long kind = GetPicWord();
+				if (proc != nil)
+				{
+					play->fProcMode = kind;
+					proc((long) opcode, play, port);
+				}
 				if (verb == 0)
 				{
 					PicComment((short) kind, 0, nil);
@@ -1031,7 +1100,10 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		case 0xd0:
 		case 0xe0:
 		case 0xf0:
-			return GetPicResvOpcode(4, true);
+			if (proc != nil)
+				proc((long) opcode, play, port);
+			GetPicResvOpcode(4, true);
+			return 1;
 
 		default:									// 0xb0..0xcf, 0x100: no data
 			return 1;
@@ -1077,11 +1149,33 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		GetPicDiscard(0x1c);						// NOT YET: kept at +0x58
 		return 1;
 	case 0x81a1:									// the text style
+	{
 		if (GetPicLong() != 0x20)
 			return 0;
+		// the family: a Mac font id, or with 0x800000 set a ref
+		ULong family = (ULong) GetPicLong();
+		// (host: looked up only for the shapes, the one reader of this
+		//  style while the text is NOT YET drawn - see TxFont)
+		if (procs != nil)
+		{
+			if ((family & 0x800000) == 0)
+				play->fXStyle.fFontFamily = SearchFont(family, nil);
+			else
+				play->fXStyle.fFontFamily = (Ref) (family << 2);
+		}
+		play->fXStyle.fFontSize = (Fixed) GetPicLong();
+		play->fXStyle.fFontFace = GetPicLong();
 		GetPicLong();
-		GetPicDiscard(0x1c);						// NOT YET: kept at +0x74
+		play->fXStyle.fFontPattern = 0;				// (the ROM clears the word it read: an integer nought, not nil)
+		play->fXStyle.fTransferMode = GetPicLong();
+		play->fXStyle.fReserved14 = GetPicLong();
+		play->fXStyle.fReserved18 = GetPicLong();
+		// DEVIATION: the ROM keeps the picture's last word as the style's
+		// pattern handle; a word out of a picture is no host pointer
+		GetPicLong();
+		play->fXStyle.fPattern = nil;
 		return 1;
+	}
 	case 0x81a2:									// the style runs
 	{
 		long size = GetPicLong();
@@ -1103,13 +1197,33 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 	case 0x81a3:									// the text itself
 	{
 		long size = GetPicLong();
-		GetPicWord();
-		GetPicDiscard(8);
+		play->fXTextCount = GetPicWord();
+		play->fXTextLoc.x = (Fixed) GetPicLong();
+		play->fXTextLoc.y = (Fixed) GetPicLong();
+		MapFPoint(&play->fXTextLoc, from, to);
 		play->fTextFlags = GetPicUByte();
 		long count = GetPicWord();
 		if (count + 0xd != size)
 			return 0;
-		GetPicDiscard(count);						// NOT YET: drawn (DrawPicText) unless flags 0x20 wait for 0x81a4
+		if (proc == nil)
+		{
+			GetPicDiscard(count);					// NOT YET: drawn (DrawPicText, TextCleanup) unless flags 0x20 wait for 0x81a4
+			return 1;
+		}
+		// DEVIATION: two bytes more than the ROM's block, which the proc
+		// reads one character past; and the characters are big-endian in
+		// the picture, turned into the host's order
+		UniChar* text = (UniChar*) QDNewTempPtr(count + 2);
+		play->fXText = text;
+		if (text == nil)
+			return 0;
+		GetPicData((char*) text, count);
+		for (long i = 0; i < count / 2; i++)
+			text[i] = GetBigEndianHalf((const unsigned char*) &text[i]);
+		// ROM BUG, kept: with the procs the block is never given back
+		// (TextCleanup is only on the drawing side)
+		if ((play->fTextFlags & 0x20) == 0)
+			proc((long) opcode, play, port);
 		return 1;
 	}
 	case 0x81a4:									// the families the styles name
@@ -1119,11 +1233,13 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		for (long i = 0; i < play->fStyleCount; i++)
 			if (play->fInlineFamily[i])
 				GetPicDiscard(GetPicWord());
+		if (proc != nil)
+			proc((long) opcode, play, port);
 		return 1;									// NOT YET: the text drawn
 	}
 	default:
 		if (opcode >= 0x8100)
-			return GetPicResvOpcode(4, true);
+			GetPicResvOpcode(4, true);
 		return 1;
 	}
 }
@@ -1132,17 +1248,24 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 // ROM 0x003337fc DrawPicture__FPP7PictureP4RectUc
 // The picture played into the rectangle: its frame mapped onto it (a
 // negative scale draws nothing), the port set up and put back afterwards.
+// With toShapes nothing is drawn: the opcodes go to the OpcodeProcs, which
+// gather the shapes the picture is made of, and those are the answer.
 //
-// NOT YET RECONSTRUCTED: the two text styles the ROM makes first (the
-// system font at 12 - SearchFont, MakeSimpleStyle, CopyStyle), the text
-// options it copies from 0x00380ca0, and toShapes - the picture answered
-// as NewtonScript shapes (the OpcodeProcs table); it is drawn instead.
-void
-DrawPicture(PicHandle picture, Rect* dstRect, Boolean /*toShapes*/)
+// ROM QUIRK, kept: the text style starts in the system font at a size of
+// 0xc - twelve sixty-five-thousandths of a point, where the other style
+// is made at 0xc0000 - so text with no TxSize before it comes out at a
+// size of nought.
+//
+// NOT YET RECONSTRUCTED: the text options the ROM copies from 0x00380ca0
+// (the text is not drawn).  (Host: the two styles' families are looked up
+// only for the shapes, whose procs are their one reader while the text is
+// not drawn - SearchFont wants the fonts in vars.)
+Ref
+DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 {
 	GrafPort* port = GetCurrentPort();
 	if (picture == nil)
-		return;
+		return NILREF;
 	Rect frame;
 	const unsigned char* data = (const unsigned char*) *picture;
 	frame.top = (short) GetBigEndianHalf(data + 2);
@@ -1152,9 +1275,15 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean /*toShapes*/)
 	Fixed hScale = FixedDivide((Fixed) ((ULong) (dstRect->right - dstRect->left) << 16), (Fixed) ((ULong) (frame.right - frame.left) << 16));
 	Fixed vScale = FixedDivide((Fixed) ((ULong) (dstRect->bottom - dstRect->top) << 16), (Fixed) ((ULong) (frame.bottom - frame.top) << 16));
 	if (hScale < 0 || vScale < 0)
-		return;
+		return NILREF;
 	PicPlay play;
-	memset(&play, 0, sizeof(play));
+	if (toShapes)
+	{
+		RefVar systemFont(SearchFont(0, nil));
+		MakeSimpleStyle(&play.fXStyle, systemFont, 0xc0000, 0);
+		CopyStyle(&play.fXStyle);
+		play.fTextFamily = systemFont;
+	}
 	play.fToRect = *dstRect;
 	play.fFromRect = frame;
 	play.fHScale = hScale;
@@ -1180,12 +1309,20 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean /*toShapes*/)
 	port->pnSize.h = 1;
 	port->pnSize.v = 1;
 	port->pnMode = patCopy;
-	play.fTextSize = 0;
+	play.fTextSize = 0xc;
+	play.fSpaceExtra = 0;
 	port->patAlign.v = 0;
 	port->patAlign.h = 0;
 	qdGlobals.fPicOffset = 10;
 	qdGlobals.fPicHandle = (Handle) picture;
-	while (ParsePicCodes(&play, nil) != 0)
+	play.fShape = NILREF;
+	play.fStyle = NILREF;
+	play.fLastStyle = NILREF;
+	play.fShapes = NILREF;
+	play.fInkPoly = nil;
+	play.fFgGray = 0;
+	play.fBgGray = 0;
+	while (ParsePicCodes(&play, toShapes ? gOpcodeProcs : nil) != 0)
 		;
 	DisposeRgn(play.fPlayClip);
 	DisposeRgn(port->clipRgn);
@@ -1194,4 +1331,34 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean /*toShapes*/)
 	*port = saved;
 	qdGlobals.fPicHandle = nil;
 	qdGlobals.fPicOffset = 0;
+	if (play.fXStyle.fPattern != nil)
+		DisposePattern(play.fXStyle.fPattern);
+	return toShapes ? (Ref) play.fShapes : NILREF;
+}
+
+
+// ROM 0x00330068 ImpossibleToDraw__FP8GrafPort
+// Whether nothing the port drew would show: its clip is empty, or its pen
+// mode is 0x17.  A nil port is taken as one that can.
+Boolean
+ImpossibleToDraw(GrafPort* port)
+{
+	if (port == nil)
+		return false;
+	return EmptyRgn(port->clipRgn) || port->pnMode == 0x17;
+}
+
+
+// ROM 0x0033519c MapFPoint__FP6FPointP4RectT2
+// A 16.16 point mapped from one rectangle onto another: scaled by the
+// ratio of their sizes and moved by their corners.
+void
+MapFPoint(FPoint* pt, const Rect* src, const Rect* dst)
+{
+	Fixed hScale = FixedDivide(dst->right - dst->left, src->right - src->left);
+	Fixed vScale = FixedDivide(dst->bottom - dst->top, src->bottom - src->top);
+	Fixed x = FixedMultiply((Fixed) ((ULong32) pt->x - ((ULong32) (unsigned short) src->left << 16)), hScale);
+	Fixed y = FixedMultiply((Fixed) ((ULong32) pt->y - ((ULong32) (unsigned short) src->top << 16)), vScale);
+	pt->x = (Fixed) (ULong32) ((ULong32) x + ((ULong32) (unsigned short) dst->left << 16));
+	pt->y = (Fixed) (ULong32) ((ULong32) y + ((ULong32) (unsigned short) dst->top << 16));
 }

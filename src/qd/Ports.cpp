@@ -313,6 +313,200 @@ MakeSimpleGrayPattern(const char* rows, ULong fg, ULong bg)
 }
 
 
+// ROM 0x00328fc0 MakeGrayPattern__FRC6RefVar
+// A pattern out of a 'grayPattern binary: six bytes a pixel (red, green
+// and blue, big-endian sixteen bits each), eight pixels a row, the rows
+// used over again until there are eight; fewer than eight pixels make one
+// row, the pixels used over again along it.  Each pixel is the gray it
+// comes to at the port's depth.  None at all is black.
+//
+// ROM QUIRK, kept: at a depth of eight the rows are left as the handle was
+// allocated.
+PatternHandle
+MakeGrayPattern(RefArg spec)
+{
+	long depth = GrayPatternDepth();
+	long count = Length(spec) / 6;
+	if (count == 0)
+		return GetStdPattern(blackPat);
+	const UChar* src = (const UChar*) BinaryData(spec);
+	long rows = count / 8;
+	UChar row[48];
+	if (rows == 0)
+	{
+		for (long i = 0; i < 8; i++)
+			memmove(row + i * 6, src + (i % count) * 6, 6);
+		src = row;
+		rows = 1;
+	}
+	PatternHandle pattern = (PatternHandle) NewHandle(depth * 8 + kPatternPixelsOffset);
+	if (pattern == nil)
+		return GetStdPattern(blackPat);
+	PixelMap* pm = *pattern;
+	InitGrayPattern(pm, depth);
+	UChar* dst = (UChar*) pm + kPatternPixelsOffset;
+	const UChar* p = src;
+	long left = rows;
+	for (long r = 0; r < 8 && (depth == 1 || depth == 2 || depth == 4); r++)
+	{
+		long perByte = 8 / depth;
+		for (long b = 0; b < depth; b++)
+		{
+			UChar byte = 0;
+			for (long k = 0; k < perByte; k++, p += 6)
+			{
+				ULong gray = RGBtoGray(GetBigEndianHalf(p), GetBigEndianHalf(p + 2), GetBigEndianHalf(p + 4), 0x10, depth);
+				if (depth == 1)
+				{
+					if (gray != 0)
+						byte |= (UChar) (0x80 >> k);
+				}
+				else
+					byte |= (UChar) (gray << (8 - depth * (k + 1)));
+			}
+			*dst++ = byte;
+		}
+		if (--left == 0)
+		{
+			left = rows;
+			p = src;
+		}
+	}
+	return pattern;
+}
+
+
+// ROM 0x002bf0ac GrayToRGB__FUcPUlN22l
+// A gray at a depth as the colour it stands for: the same in all three,
+// white at nought.  (Every depth but two is taken as four.)
+void
+GrayToRGB(UChar gray, ULong* red, ULong* green, ULong* blue, long depth)
+{
+	ULong step = depth == 2 ? 0x5555 : 0x1111;
+	ULong value = (ULong) (ULong32) (0xffff - step * gray);
+	*red = value;
+	*green = value;
+	*blue = value;
+}
+
+
+// ROM 0x00328238 MakeNSPattern__FP8PixelMapl
+// The pattern as a script holds it: a one-bit one as an eight-byte
+// 'pattern binary of its rows, any other as a 'grayPattern binary of six
+// bytes a pixel (big-endian red, green and blue) for count bytes of its
+// pixels, each through the map's gray table when it has one.
+Ref
+MakeNSPattern(PixelMap* pm, long count)
+{
+	RefVar result;
+	UChar* src = (UChar*) GetPixelMapBits(pm);
+	long depth = pm->pixMapFlags & 0xff;
+	if (depth == 1)
+	{
+		result = AllocateBinary(RSSYMpattern, 8);
+		memmove(BinaryData(result), src, 8);
+		return result;
+	}
+	long perByte = depth == 4 ? 2 : 4;
+	result = AllocateBinary(RSSYMgraypattern, perByte * count * 6);
+	UChar* dst = (UChar*) BinaryData(result);
+	UChar* grayTable = pm->grayTable;
+	for (long i = 0; i < count; i++)
+	{
+		UChar byte = *src++;
+		UChar pixels[4] = { 0, 0, 0, 0 };
+		if (depth == 4)
+		{
+			pixels[0] = byte >> 4;
+			pixels[1] = byte & 0xf;
+		}
+		else if (depth == 2)
+		{
+			pixels[0] = byte >> 6;
+			pixels[1] = (byte & 0x30) >> 4;
+			pixels[2] = (byte & 0xc) >> 2;
+			pixels[3] = byte & 3;
+		}
+		// (ROM QUIRK, kept: at any other depth the pixels are nought)
+		for (long k = 0; k < perByte; k++)
+		{
+			UChar gray = pixels[k];
+			if (grayTable != nil)
+				gray = grayTable[gray];
+			ULong red, green, blue;
+			GrayToRGB(gray, &red, &green, &blue, depth);
+			PutBigEndianHalf(dst, (unsigned short) red);
+			PutBigEndianHalf(dst + 2, (unsigned short) green);
+			PutBigEndianHalf(dst + 4, (unsigned short) blue);
+			dst += 6;
+		}
+	}
+	return result;
+}
+
+
+// the pattern's pixel bytes, rowBytes times its height
+static long
+PatternBytes(const PixelMap* pm)
+{
+	return pm->rowBytes * (pm->bounds.bottom - pm->bounds.top);
+}
+
+
+// ROM 0x003286e8 BlackOrWhitePat__FPP8PixelMap
+// 1 when every byte of the pattern is 0xff, 2 when every one is nought,
+// else 0.
+long
+BlackOrWhitePat(PatternHandle pattern)
+{
+	PixelMap* pm = *pattern;
+	const UChar* p = (const UChar*) GetPixelMapBits(pm);
+	UChar first = *p++;
+	if (first != 0 && first != 0xff)
+		return 0;
+	for (long n = PatternBytes(pm) - 1; n > 0; n--)
+		if (*p++ != first)
+			return 0;
+	return first != 0 ? 1 : 2;
+}
+
+
+// ROM 0x00328768 MonochromePat__FPP8PixelMapPUl
+// Whether every pixel of the pattern is the same gray, which is answered
+// (the first pixel's, even when they differ).  Only depths 1, 2 and 4.
+Boolean
+MonochromePat(PatternHandle pattern, ULong* gray)
+{
+	PixelMap* pm = *pattern;
+	const UChar* p = (const UChar*) GetPixelMapBits(pm);
+	UChar first = *p++;
+	Boolean same;
+	switch ((*pattern)->pixMapFlags & 0xff)
+	{
+	case 1:
+		same = first == 0 || first == 0xff;
+		*gray = first & 1;
+		break;
+	case 2:
+		same = first == 0 || first == 0x55 || first == 0xaa || first == 0xff;
+		*gray = first & 3;
+		break;
+	case 4:
+		same = (first & 0xf) == (first >> 4);
+		*gray = first & 0xf;
+		break;
+	default:
+		return false;
+	}
+	if (!same)
+		return false;
+	for (long n = PatternBytes(pm) - 1; n > 0; n--)
+		if (*p++ != first)
+			return false;
+	return same;
+}
+
+
 // ROM 0x00328d64 CopyPattern__FPP8PixelMap
 // A copy of any pattern with its pixels inside the handle.
 static PatternHandle
