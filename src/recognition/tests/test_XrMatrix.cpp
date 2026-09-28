@@ -374,6 +374,84 @@ TestXrlv(void)
 }
 
 
+// Words made of the ideal xrs of their letters' first variants, read
+// the way the Notepad's field reads (capitals allowed, rc +0x1e 0x3f),
+// with the character set alone.
+static const char*
+ReadIdealWord(const char* word, char* text, long textSize)
+{
+	StartXrs();
+	AddXr(1, 0, 0, 0, 0, 8, 0x81);
+	for (const char* c = word; *c != 0; c++)
+	{
+		IdealXrs((UByte) *c, 0);
+		MarkLocation();
+	}
+	AddXr(1, 0, 0, 0, 0, 8, 0x81);
+	static PS_point_type points[3] = { { 10, 10 }, { 20, 20 }, { 30, 10 } };
+	RCSetH(&gRC, 0x00, 1);
+	RCSetH(&gRC, 0x02, 1);
+	RCSetH(&gRC, 0x08, 2);
+	RCSetH(&gRC, 0x10, 16);
+	RCSetH(&gRC, 0x14, 0x190);
+	RCSetH(&gRC, 0x16, 0);
+	RCSetH(&gRC, 0x1a, 0x64);
+	RCSetH(&gRC, 0x96, 3);
+	gRC.fTrace = points;
+	gRC.fAlphaCharset = "abcdefghijklmnopqrstuvwxyz";
+	RWG_type rwg;
+	rec_w_type readings[10];
+	memset(readings, 0, sizeof(readings));
+	long t = 0;
+	text[0] = 0;
+	if (xrw_algs(&gXr, readings, &rwg, &gRC) == 0 && rwg.rws != nil)
+	{
+		for (long i = 0; i < rwg.size && t < textSize - 2; i++)
+		{
+			RWS_type* e = &rwg.rws[i];
+			if (e->type == 1)
+				text[t++] = (char) e->sym;
+			else if (e->type == 4)
+				text[t++] = ' ';
+		}
+		text[t] = 0;
+	}
+	FreeRWGMem(&rwg);
+	return text;
+}
+
+static void
+TestIdealWords(void)
+{
+	static const char* words[] = { "ton", "on", "no", "mum", "to", "nun", "lo" };
+	for (long caps = 0; caps < 2; caps++)
+	{
+		RCSetH(&gRC, 0x1e, caps ? 0x3f : 5);
+		for (size_t w = 0; w < sizeof(words) / sizeof(words[0]); w++)
+		{
+			char text[128];
+			ReadIdealWord(words[w], text, sizeof(text));
+			fprintf(stderr, "  ideal '%s' (caps %s, %ld xrs) reads: %s\n", words[w], caps ? "0x3f" : "5", gXr.fLength, text);
+		}
+	}
+	RCSetH(&gRC, 0x1e, 5);
+	// the ideal xrs of each variant of a few letters, as type/height
+	for (const char* l = "notmuDOR"; *l != 0; l++)
+	{
+		UByte* d = Descriptor((UByte) *l);
+		for (long v = 0; d != nil && v < d[0]; v++)
+		{
+			StartXrs();
+			IdealXrs((UByte) *l, v);
+			fprintf(stderr, "  '%c' var %ld:", *l, v);
+			for (long i = 0; i < gXr.fLength; i++)
+				fprintf(stderr, " %02x/%d", gXrs[i].type, gXrs[i].height);
+			fprintf(stderr, "\n");
+		}
+	}
+}
+
+
 // The post-processing's rule interpreter (XrPostCalc.cpp) on queues made
 // by hand, then the answers of "lo" scored again by the ROM's own rules
 // (XrPostEval.cpp): the controls set so that they are scored at all (the
@@ -562,6 +640,7 @@ main()
 	TestLetters();
 	TestRules();
 	TestXrlv();
+	TestIdealWords();
 	TestPost();
 	if (failures == 0)
 		printf("test_XrMatrix: all passed\n");

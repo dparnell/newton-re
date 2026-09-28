@@ -48,12 +48,13 @@ set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
 # the cursive recogniser: the letter set made cursive and "ton" and "to"
 # written, the word segmenter handing each word to the reader
 # (GCTryToRecognize), its readings made into word units and the page
-# typing them - "For to" (the synthetic "ton" is read with a capital);
+# typing them - "ton to" ("For to" until FillSHR's bracketing xrs were
+# put in the ROM's order);
 # this also watches for the heap damage a too-small trigram header once did
 # here, which locked the machine up one run in three (needs the ROM image)
 add_test(NAME host.NewtonCursive COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
-                     PASS_REGULAR_EXPRESSION "low_level: 1[0-9] xrs:.*xrw_algs: graph of [0-9]+ symbols:[A-Za-z0-9| ]*on.*answers: \"For\".*word of strokes 0-3 [^:]*: 0.*low_level: [0-9]+ xrs:.*xrw_algs: graph of [0-9]+ symbols:to .*answers: \"to\".*word of strokes 0-2 [^:]*: 0.*the page reads \"For to\"")
+                     PASS_REGULAR_EXPRESSION "low_level: 1[0-9] xrs:.*xrw_algs: graph of [0-9]+ symbols:[A-Za-z0-9| ]*on.*answers: \"ton\".*word of strokes 0-3 [^:]*: 0.*low_level: [0-9]+ xrs:.*xrw_algs: graph of [0-9]+ symbols:to .*answers: \"to\".*word of strokes 0-2 [^:]*: 0.*the page reads \"ton to\"")
 
 # joined-up cursive (src/host/demo/cursive-joined.ns): five words each
 # written in one stroke with the cursive letter set; each must reach the

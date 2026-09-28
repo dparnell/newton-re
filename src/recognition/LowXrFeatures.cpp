@@ -275,6 +275,12 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 		m[i] = (UByte) GetXrMetrics(Xr(xr, i));
 	for (long i = 0; i < n; i++)
 	{
+		// the four xrs that bracket this one, the ROM's [sp+0x194],
+		// [sp+0x198], [sp+0x19c] and [sp+0x1a0] in that order (the fill
+		// below reads them as a word array from 0x194): the first pair
+		// measures the height before, the second pair the height after,
+		// and the shift is the second pair's run across less the first's
+		// - an extremum is { the one before, it, it, the one after }
 		long idx[4] = { 0, 0, 0, 0 };
 		UByte mi = m[i];
 		long h, s;
@@ -338,10 +344,10 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 				}
 			if (a > 0 && b > 0 && c > 0 && d > 0)
 			{
-				idx[3] = d;
+				idx[2] = d;
 				idx[0] = a;
 				idx[1] = b;
-				idx[2] = c;
+				idx[3] = c;
 			}
 		}
 		else if (mi & 2)
@@ -356,8 +362,8 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 			if (b > 0 && f > 0)
 			{
 				idx[0] = b;
-				idx[3] = i;
-				idx[2] = f;
+				idx[2] = i;
+				idx[3] = f;
 				idx[1] = i;
 			}
 		}
@@ -373,9 +379,9 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 			if (b > 0 && f > 0)
 			{
 				idx[0] = b;
-				idx[3] = i;
+				idx[2] = i;
 				idx[1] = i;
-				idx[2] = f;
+				idx[3] = f;
 			}
 		}
 		else if (mi & 0x20)
@@ -417,13 +423,13 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 			if (got)
 			{
 				idx[0] = up;
-				idx[3] = low2;
-				idx[2] = i;
+				idx[2] = low2;
+				idx[3] = i;
 				idx[1] = low2;
 			}
-			if (idx[2] > 0 && low2 > 0
-			 && XrGetH(Xr(xr, idx[2])->box + kXrTop) > XrGetH(Xr(xr, low2)->box + kXrTop))
-				idx[2] = idx[3];
+			if (idx[3] > 0 && low2 > 0
+			 && XrGetH(Xr(xr, idx[3])->box + kXrTop) > XrGetH(Xr(xr, low2)->box + kXrTop))
+				idx[3] = idx[2];
 		}
 		else if (mi & 0x10)
 		{
@@ -483,9 +489,9 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 			if (b > 0 && f > 0)
 			{
 				idx[0] = b;
-				idx[3] = i;
+				idx[2] = i;
 				idx[1] = i;
-				idx[2] = f;
+				idx[3] = f;
 			}
 		}
 		else
@@ -499,10 +505,10 @@ FillSHR(long slope, xrdata_type* xr, low_type* low)
 				}
 			if (b > 0 && f > 0)
 			{
-				idx[3] = f;
+				idx[2] = f;
 				idx[0] = b;
 				idx[1] = f;
-				idx[2] = i;
+				idx[3] = i;
 			}
 		}
 
