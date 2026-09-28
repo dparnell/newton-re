@@ -20,6 +20,8 @@
 #include "WordSegment.h"
 #include "toolbox/ByteOrder.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // an xr's first and last points, and its box (big-endian halfwords)
 static inline short	XrBeg(const xrd_el_type* el)		{ return XrGetH(el->begpoint); }
@@ -417,6 +419,18 @@ CalculateGroupResult(POST_PARAMS* pp, const UByte* rule, long floor)
 							* (uint32_t) (long) XrGetH(weights + XrGetH(rule + 0x16 + i * 2) * 2));
 		if (v < -floor)
 			v = -floor;
+		if (TracingCursive())
+		{
+			fprintf(stderr, "[cursive] post:   queue %ld (%d bytes, weight %d): %ld, error %#x", i, (UShort) XrGetH(rule + 2 + i * 2),
+					XrGetH(weights + XrGetH(rule + 0x16 + i * 2) * 2), v, (error[0] << 8) | error[1]);
+			if (getenv("NEWTON_TRACE_RULES") != nil)
+			{
+				fprintf(stderr, ":");
+				for (long k = 0; k < (UShort) XrGetH(rule + 2 + i * 2); k++)
+					fprintf(stderr, " %02x", queue[k]);
+			}
+			fprintf(stderr, "\n");
+		}
 		sum += v;
 		queue += (UShort) XrGetH(rule + 2 + i * 2);
 		pp->queues = (short) (pp->queues + 1);

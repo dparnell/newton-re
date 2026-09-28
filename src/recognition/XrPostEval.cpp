@@ -666,10 +666,12 @@ EvaluateCharQuality(POST_PARAMS* pp)
 		pp->isNext = 1;
 		result += CalculateGroupResult(pp, after, floor);
 	}
+	long rules = result;
 	if (queues != 0)
 		result = SDiv(result * 4, (long) queues);
+	long side = 0, boxes = 0;
 	if ((pp->flags & 4) != 0 && (RCGetH(pp->rc, 0x90) & 0x800) == 0)
-		result += EvaluateLetterUsingSideReasoning(OSToRec(rws[cur].realSym), pp) * 4;
+		result += (side = EvaluateLetterUsingSideReasoning(OSToRec(rws[cur].realSym), pp)) * 4;
 	if ((pp->flags & 1) != 0 && (RCGetH(pp->rc, 6) & 0xc) != 0)
 	{
 		short diacritics = 0;
@@ -677,7 +679,11 @@ EvaluateCharQuality(POST_PARAMS* pp)
 			result -= diacritics * 4;
 	}
 	if ((pp->flags & 4) != 0)
-		result += CalculateBoxes_Side_Result(c, prevChar, pp) * 4;
+		result += (boxes = CalculateBoxes_Side_Result(c, prevChar, pp)) * 4;
+	if (TracingCursive())
+		fprintf(stderr, "[cursive] post: '%c' after '%c', before '%c': rules %ld over %lu queues (%s%s%s), side %ld, boxes %ld\n",
+				c, prevChar == -1 ? '-' : prevChar, nextChar == -1 ? '-' : nextChar, rules, queues,
+				own != nil ? "own " : "", before != nil ? "before " : "", after != nil ? "after" : "", side, boxes);
 	ApplyChangePPDLetterInfo(pp);
 	return result;
 }

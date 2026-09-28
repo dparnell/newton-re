@@ -2039,3 +2039,23 @@ another load.  The traced twin gets one thing different: where the plain
 loop lets a tie go to the diagonal (`movle`), it lets it go to the skip
 (`movgt`), so the path the layout walks back is not always the one the
 score came from.  (`src/recognition/XrMatrix.cpp`; `test_XrMatrix`.)
+
+## A letter table that carries programs
+
+ParaGraph's letter table does not only describe what each letter looks
+like; next to its prototypes it ships, for most variants of most letters
+(373 of 374 in the U.S. ROM), a *program* that checks a reading of the
+letter after the fact.  Each is a handful of queues of bytecode for a
+fifteen-entry stack machine: push a constant or a field of one of the
+xrs the letter was read from, do arithmetic, compare *fuzzily* (less,
+greater and equal answer 0 to 20, not true or false) and call any of 74
+geometry functions - how much the trace between two points bends, where
+the sharpest corner is, the box of the letter or its neighbour, whether
+another letter of the answer is claiming the same xrs.  The weights are
+all negative and each queue is floored, so a rule can only take points
+away: every queue measures something that should *not* be true of a
+good letter.  One of an o's, decoded: 300 times (how far its right side
+comes back up plus how far its top has drifted right) over its height,
+fuzzily less than 150.  The rules only run to settle a close call between
+two good answers.  (`src/recognition/XrPostCalc.cpp`,
+`docs/recognition/README.md`, "The post-processing".)

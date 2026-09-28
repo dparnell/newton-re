@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 110/110
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 111/111
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11635 citations, 0 bad;
-  6658 of 16671 functions (39.94%).
+- `analysis/coverage.py build/MP2x00US --check`: 11769 citations, 0 bad;
+  6782 of 16671 functions (40.68%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -340,19 +340,31 @@ arbiter hands it to `TWordRecognizer`, and the page types it.
 answers and the page's text; `test_XrAnswers` the readings, the split
 information and the training data).  The rules' headers are walked too
 (`XrRules.cpp`: `PDFGetRule` and its address helpers, checked against
-the ROM's 87 characters' rules in `test_XrMatrix`).  Left of stage 4:
-`EvaluateAndSortAnswers` (0x00337ee8; `EvaluateAnswers`,
-`EvaluateCharQuality` and the rule interpreter `CalculateGroupResult`/
-`CalculateQueueResult` - a switch over the rule's bytes the decompiler
-cannot follow, to be read from the disassembly - and `CalculateFunction`,
-`CalculateBoxes_Side_Result`/`FindXrLetterBox`,
-`CheckDiacriticsDirections`/`AnalyseDiacriticsDirection`,
-`EvaluateWordUsingSideReasoning`, `EvaluateMissingCross`,
-`MakeRecWordsFromGraph`/`MakeNewPath`/`FillRecWordsElement`,
-`MergeTwoRecWordsSets`, `CheckDigitsLine`) - about 20 KB, which reworks
-each letter's +0x0b before the readings are made, so it can change which
-reading wins; and `ORCreateLearnInfo`/`Orto*` (only with rc +0xb2 bit 6,
-which the Notepad does not set).  Then the `Chunk*` digit reader (only
+the ROM's 87 characters' rules in `test_XrMatrix`).
+
+**Stage 4, round 10 (2026-09-28): the post-processing.**
+`EvaluateAndSortAnswers` is real (`XrPost.h`, `XrPostCalc.cpp`,
+`XrPostEval.cpp`; `docs/recognition/README.md`, "The post-processing"):
+the letter table's rules are little programs, and the stack machine that
+runs them (`CalculateQueueResult`, from the disassembly) and all 74
+functions of their `Functions` table are there, with `EvaluateCharQuality`,
+the side reasoning, the boxes, the missing crosses and `CheckDigitsLine`.
+It only scores close calls between good answers (the best at least rc
++0x100 = 60 and no more than rc +0x102 = 10 ahead), so `cursive.ns` reads
+as before; `test_XrMatrix` runs hand-made queues and the ROM's rules for
+an l and an o, and a joined-up demo (`src/host/demo/cursive-joined.ns`,
+ctest `host.NewtonCursiveJoined`) writes "on", "no", "mum", "to", "nun" in
+one stroke each: they read "OR", "bb", "maps", "to", "Rap" - "no" was the
+one scored, its o's rules sinking "Do"/"no" below "bb".  Left of stage 4:
+`CheckDiacriticsDirections`/`AnalyseDiacriticsDirection` (only for a
+French or German letter set, rc +6 bits 2-3), `MakeRecWordsFromGraph`/
+`MakeNewPath`/`FillRecWordsElement`/`MergeTwoRecWordsSets` (the readings
+of a fixed-string field's graph, rwg type 2), and `ORCreateLearnInfo`/
+`Orto*` (about 2 KB; only with rc +0xb2 bit 6, which the Notepad does not
+set).  Worth a look next: every answer of both demos starts with a
+capital ("For", "OR", "Do", "Rap") - decided in `xrlv`'s capitals
+handling before the post-processing, and suspicious enough to check
+against the disassembly.  Then the `Chunk*` digit reader (only
 for a field that allows numbers, rc +0xb6; 82 not done, about 146 KB),
 three or four rounds.  Why the synthetic "ton" comes out "For": the
 capitals are allowed (rc +0x1e = 0x3f, every word start) and the

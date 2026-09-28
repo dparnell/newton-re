@@ -1,0 +1,189 @@
+// Cursive, joined up: the words ParaGraph's cursive reader was made for -
+// each written in one stroke, the letters joined by their connecting
+// strokes, a t's bar added after the word - on the Notepad with a
+// cursive letter set.
+//
+//   NEWTON_TRACE_CURSIVE=1 build/host/host/newton --rom build/MP2x00US/rom.bin
+//       --display 320x480 --script src/host/demo/cursive-joined.ns --headless 70
+//
+// src/host/demo/cursive.ns writes printed letters, a stroke or two each,
+// which the cursive reader is not built for; these are drawn the way a
+// joined hand writes them (an entry stroke, the letters' bodies, the
+// joins, an exit stroke), with the synthetic pen - smooth arcs and
+// straight lines, so what the reader makes of them says as much about
+// the drawing as about the reader.  Each word is written on its own line
+// a few seconds apart, so the word segmenter hands it to the reader
+// alone; "[cursive] answers: ..." lines say what each was read as, and
+// the script prints each line of the page's text at the end (ctest
+// host.NewtonCursiveJoined).  build/cursive-joined.pgm is the page.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// One stroke: the pen put down on the first point, moved through the
+// rest, and lifted.
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+// every paragraph's text under a view, in order
+allText := func(v)
+  begin
+    local found := "";
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text) then
+      found := v.text & " / "
+    else
+      foreach child in v:ChildViewFrames() do
+        found := found & call allText with (child);
+    found;
+  end;
+
+// A word in joined-up hand, as one list of points: x-height h, from x on
+// the baseline.  Each letter carries on from where the last left off.
+// ==> [the points, the t's bars to write after it (a list of strokes)]
+joined := func(word, x, base)
+  begin
+    local h := 14;
+    local pts := [x, base - 2];
+    local bars := [];
+    local add := func(px, py) begin AddArraySlot(pts, px); AddArraySlot(pts, py); end;
+    // a straight run from the last point to (px, py) in n steps
+    local lineTo := func(px, py, n)
+      begin
+        local lx := pts[Length(pts) - 2];
+        local ly := pts[Length(pts) - 1];
+        for k := 1 to n do
+          call add with (lx + ((px - lx) * k) div n, ly + ((py - ly) * k) div n);
+      end;
+    // an arch over from (ax, base - h + 3) to (ax + w, base - h + 3)
+    local arch := func(ax, w)
+      begin
+        call add with (ax + w div 5, base - h + 1);
+        call add with (ax + (2 * w) div 5, base - h);
+        call add with (ax + (3 * w) div 5, base - h);
+        call add with (ax + (4 * w) div 5, base - h + 1);
+        call add with (ax + w, base - h + 3);
+      end;
+    for i := 0 to StrLen(word) - 1 do
+      begin
+        local c := word[i];
+        if c = $n then
+          begin
+            call lineTo with (x + 3, base - h, 4);		// up to the x-height
+            call lineTo with (x + 3, base, 5);			// the stem down
+            call lineTo with (x + 3, base - h + 4, 3);	// back up it
+            call arch with (x + 3, 8);
+            call lineTo with (x + 11, base, 4);			// down
+            call lineTo with (x + 14, base - 3, 2);		// the join
+            x := x + 14;
+          end
+        else if c = $m then
+          begin
+            call lineTo with (x + 3, base - h, 4);
+            call lineTo with (x + 3, base, 5);
+            call lineTo with (x + 3, base - h + 4, 3);
+            call arch with (x + 3, 7);
+            call lineTo with (x + 10, base, 4);
+            call lineTo with (x + 10, base - h + 4, 3);
+            call arch with (x + 10, 7);
+            call lineTo with (x + 17, base, 4);
+            call lineTo with (x + 20, base - 3, 2);
+            x := x + 20;
+          end
+        else if c = $u then
+          begin
+            call lineTo with (x + 2, base - h, 4);		// up
+            call lineTo with (x + 3, base - 4, 4);		// down into the cup
+            call add with (x + 5, base - 1);
+            call add with (x + 7, base);
+            call add with (x + 9, base - 2);
+            call lineTo with (x + 11, base - h, 4);		// up the other side
+            call lineTo with (x + 11, base, 5);			// and down it
+            call lineTo with (x + 14, base - 3, 2);
+            x := x + 14;
+          end
+        else if c = $o then
+          begin
+            // up to the top, anticlockwise round, closed at the top and
+            // out along it
+            call lineTo with (x + 7, base - h, 4);
+            local cs := [-50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+            local s := [87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+            for k := 0 to 11 do
+              call add with (x + 7 + (6 * cs[k]) div 100, base - 7 - (7 * s[k]) div 100);
+            call lineTo with (x + 14, base - h + 1, 3);
+            x := x + 14;
+          end
+        else if c = $t then
+          begin
+            call lineTo with (x + 4, base - 24, 6);		// up past the x-height
+            call lineTo with (x + 4, base - 2, 7);		// down
+            call add with (x + 6, base);
+            call lineTo with (x + 10, base - 4, 2);
+            AddArraySlot(bars, [x - 1, base - h, x + 3, base - h, x + 7, base - h, x + 10, base - h]);
+            x := x + 10;
+          end;
+      end;
+    [pts, bars];
+  end;
+
+// a word written: its stroke, then its bars
+write := func(word, x, base)
+  begin
+    local w := call joined with (word, x, base);
+    call stroke with (w[0]);
+    foreach bar in w[1] do call stroke with (bar);
+  end;
+
+words := [["on", 200], ["no", 250], ["mum", 300], ["to", 350], ["nun", 400]];
+AddDelayedCall(func() begin
+    SetUserConfig('letterSetSelection, 0);
+    ReadCursiveOptions();
+    Print("cursive-joined: the letter set is" && GetUserConfig('letterSetSelection));
+    local delay := 0;
+    foreach w in words do
+      begin
+        AddDelayedCall(func(word, base) begin
+            Print("cursive-joined: writing \"" & word & "\"");
+            call write with (word, 60, base);
+          end, [w[0], w[1]], delay);
+        delay := delay + 4000;
+      end;
+    AddDelayedCall(func() begin
+        IdleStrokes();
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/cursive-joined.pgm");
+            Print("cursive-joined: written build/cursive-joined.pgm");
+            Print("cursive-joined: the page reads \"" & call allText with (GetRoot()) & "\"");
+          end, nil, 6000);
+      end, nil, delay);
+  end, nil, 27000);
+Print("cursive-joined: the script is loaded");

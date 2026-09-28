@@ -55,6 +55,14 @@ add_test(NAME host.NewtonCursive COMMAND newton --rom ${NEWTON_ROM_BIN} --displa
 set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
                      PASS_REGULAR_EXPRESSION "low_level: 1[0-9] xrs:.*xrw_algs: graph of [0-9]+ symbols:[A-Za-z0-9| ]*on.*answers: \"For\".*word of strokes 0-3 [^:]*: 0.*low_level: [0-9]+ xrs:.*xrw_algs: graph of [0-9]+ symbols:to .*answers: \"to\".*word of strokes 0-2 [^:]*: 0.*the page reads \"For to\"")
 
+# joined-up cursive (src/host/demo/cursive-joined.ns): five words each
+# written in one stroke with the cursive letter set; each must reach the
+# reader and be answered (what they read as is recorded in
+# docs/recognition/README.md, "Joined-up writing"), "to" as "to"
+add_test(NAME host.NewtonCursiveJoined COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 70 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive-joined.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonCursiveJoined PROPERTIES TIMEOUT 240 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
+                     PASS_REGULAR_EXPRESSION "answers: \"[^\"]+\"/.*answers: \"[^\"]+\"/.*answers: \"[^\"]+\"/.*answers: \"to\"/.*answers: \"[^\"]+\"/.*the page reads")
+
 # the journal (testing/Journal.h): "ton" written while recording, the four
 # strokes played back into the tablet buffer and read again (needs the
 # ROM image)
