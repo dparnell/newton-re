@@ -16,6 +16,20 @@
 	0x44), and mark 0xa for the halves of a crossing that belongs to a
 	late stroke.
 
+	xt_st_zz (ROM 0x002af7ac) runs them in this order: conv_top_elem_to_ST;
+	find_umlaut (rc +6 bits 1-3); find_angstrem (rc +6 bit 3);
+	redirect_sticks (rc +4 not 1); FindDelayedStroke; placement_XT_ST;
+	FindDArcs; del_close_MAX_MIN (rc +0x94 = 0x10, rc +4 not 1);
+	SortXT_ST; placement_X; FindMisplacedParentheses; del_ZZ_HATCH;
+	CheckStrokesForDxTimeMatch; change_last_IU_height;
+	make_different_breaks; AdjustZZ_BegEnd; CheckSequenceOfElements.
+
+	NOT YET: xt_st_zz itself and FindDArcs with its group (the d's arcs:
+	FillBasicFeatures, PairWorthLookingAt, FillComplexFeatures,
+	FillCurvFeatures, CheckBackDArcs, CheckSZArcs, CheckDArcs,
+	KillHAtNewElem, ArrangeAnglesNearNew and their helpers, about 10 KB at
+	0x003015b8-0x00305a14), so none of this is called yet.
+
 	All of it was read from the disassembly.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
@@ -610,10 +624,11 @@ IsPartOfTrajectoryInside(low_type* low, SPEC_TYPE* a, SPEC_TYPE* b)
 
 
 // ROM 0x002b083c find_umlaut__FP8low_type
-// A stroke after the first made of a few small elements (at most five
-// that are not angles, half of them or fewer above band 3... every
-// element band 5 or lower) that crosses nothing, has nothing of the word
-// under it, and is not an ! or ? - two dots, an umlaut's: made one dot
+// A stroke after the first made of a few small elements high up (every
+// element band 5 or above, at most five that are not angles, and at
+// least half of those at band 3 or above) that crosses nothing, has
+// nothing of the word inside it, and is not an ! or ? - two dots, an
+// umlaut's: made one dot
 // element (0x10, other 2) over the whole stroke; when it is the first
 // stroke after a break, not if it is the second of two strokes of which
 // the first is higher (SecondHigherFirst).  ==> 0.

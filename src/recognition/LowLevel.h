@@ -628,8 +628,8 @@ long	GetCurSlope(long n, PS_point_type* trace);					// ROM 0x0027e8fc GetCurSlop
 long	FillSHR(long slope, xrdata_type* xr, low_type* low);		// ROM 0x0027ea0c FillSHR__FiP11xrdata_typeP8low_type - ==> 0, 1 for fewer than three
 long	FillOrients(long slope, xrdata_type* xr, low_type* low);	// ROM 0x0027f58c FillOrients__FiP11xrdata_typeP8low_type - ==> 0
 
-// xt_st_zz: the late strokes placed, the breaks weighed (LowXtSt.cpp).
-long	xt_st_zz(low_type* low);									// ROM 0x002af7ac xt_st_zz__FP8low_type - ==> 0
+// xt_st_zz's passes: the late strokes placed, the breaks weighed
+// (LowXtSt.cpp; xt_st_zz itself and FindDArcs's group are NOT YET).
 long	conv_top_elem_to_ST(low_type* low);							// ROM 0x002af89c conv_top_elem_to_ST__FP8low_type - ==> 0
 long	Placement_XT_CUTTED(SPEC_TYPE* e, low_type* low);			// ROM 0x002afa84 Placement_XT_CUTTED__FP9SPEC_TYPEP8low_type - ==> 0
 long	SortXT_ST(low_type* low);									// ROM 0x002afb9c SortXT_ST__FP8low_type - ==> 0
@@ -670,7 +670,6 @@ long	Placement_XT_With_HATCH(SPEC_TYPE* e, SPEC_TYPE* r, low_type* low);	// ROM 
 long	Placement_XT_WO_HATCH_AND_ST(SPEC_TYPE* e, low_type* low);	// ROM 0x002b46cc Placement_XT_WO_HATCH_AND_ST__FP9SPEC_TYPEP8low_type - ==> 0
 long	IsNearI(SPEC_TYPE* e);										// ROM 0x002d98c8 IsNearI__FP9SPEC_TYPE - the top of an i
 long	RestoreApostroph(low_type* low, SPEC_TYPE* e);				// ROM 0x002d8b38 RestoreApostroph__FP8low_typeP9SPEC_TYPE - ==> 1 an apostrophe
-long	FindDArcs(low_type* low);									// ROM 0x00302f00 FindDArcs__FP8low_type - ==> 0
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

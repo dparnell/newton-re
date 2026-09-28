@@ -9,6 +9,35 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive reader's lk_duga, and xt_st_zz but FindDArcs
+
+- **lk_duga** whole (`recognition/LowLkDuga.cpp`): `prevent_arcs`,
+  `conv_sticks_to_arcs`, `del_before_after_circles` and the loop
+  neighbours over `NxtPrvCircle_type` (15 functions), and
+  `delete_UD_before_DDL`; `cos_horizline`, `xHardOverlapRect`,
+  `yHardOverlapRect`, `HardOverlapRect` (`LowGeometry.cpp`), `brk_left`
+  (`LowSide.cpp`).  `TestLkDugaWhole`: the uou's o is left as its loop
+  0x22, the crossing lk_cross coded (too short a loop) taken out.
+- **xt_st_zz's passes** (`recognition/LowXtSt.cpp`, new): 50 functions,
+  about 30 KB, every one from the disassembly - the late strokes
+  (FindDelayedStroke, placement_XT_ST and its four placements, DoubleXT,
+  the quotes, punctuation, insert_drop, RestoreApostroph with four
+  unnamed helpers, IsNearI), find_umlaut, find_angstrem, placement_X,
+  FindMisplacedParentheses, the breaks (make_different_breaks,
+  GetDxBetweenStrokes, GetTraceBoxInsideYZone, CalcDistBetwXr),
+  del_close_MAX_MIN, redirect_sticks, CheckSequenceOfElements and the
+  rest.  `TestXtSt`.  NOT YET: `FindDArcs`'s group and `xt_st_zz` itself,
+  so none of it is called yet.
+- Worth knowing for what is left: the unaligned-halfword trap again -
+  `conv_top_elem_to_ST` works out a box's width and height by
+  subtracting two unaligned words, whose low halves are the right less
+  the left and the bottom less the top (the decompiler says the
+  heights); `RestoreApostroph`'s widening of the dot's box the same way
+  moves its left and right, not its top and bottom.  Several functions
+  here use the element after one in the specl array (its crossing
+  partner, or simply the next slot) as scratch: `insert_drop`,
+  `DoubleXT` (two after), `O_GU_To3Elements`.
+
 ## 2026-09-28: the cursive reader's first xr stream; colons; lk_cross
 
 - **exchange** (`recognition/LowExchange.cpp`): the special elements

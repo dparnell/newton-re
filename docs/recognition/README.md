@@ -2204,7 +2204,7 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
-### The low level (`recognition/LowLevel.h`, all but lk_duga and xt_st_zz done)
+### The low level (`recognition/LowLevel.h`, all but xt_st_zz's FindDArcs done)
 
 `low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
 in a `low_type` - a 0x9c-byte block on its stack holding the trace as
@@ -2541,11 +2541,69 @@ than 60 with no loop or arc beside it, as a small loop 0x1b at the top or
 0x17 at the bottom); `check_IUb_IDf_small` gives a stick the other height
 band when its neighbours, or its lean across the points about it, say so.
 
-NOT YET: the rest of `lk_duga` (`prevent_arcs`, `conv_sticks_to_arcs`,
-`del_before_after_circles` and the circle neighbours,
-`delete_UD_before_DDL`) and `xt_st_zz` (about 40
-KB: the t-bars, umlauts, quotes and punctuation,
-`make_different_breaks`, `FindDArcs`), and `low_level` wired into
+`lk_duga` itself is whole: `prevent_arcs` (with rc +0x92 = 2: a narrow
+end or top kept a stick, other set to 1), `arcs_processing`,
+`conv_sticks_to_arcs` (a stick starting or ending a stroke made an arc
+9..0xc when it runs level - a cosine of 0.85 with the horizontal,
+`cos_horizline` - and is long or bent, its point moved to the extremum
+across it; a flag that would also skip ones under 12 across is nought and
+never set), `del_before_after_circles` (the elements either side of each
+loop - an element marked 6 - handed round in a `NxtPrvCircle_type`:
+`check_before_circle` moves the loop's start back over a loop-like
+element before it and turns that element into a small loop or takes it
+out when it goes up (or down) into the loop (`UpElemBeforeCircle`,
+`DnElemBeforeCircle`, `Is_8` - the top of an 8 standing on the loop is
+spared); `check_after_circle` merges a closed loop after it, makes a
+0x21 of a top loop after it at least four fifths its size
+(`check_next_for_circle`), makes the second half of one letter a small
+loop (`check_next_for_common`, `change_circle_after`), folds an arc into
+the 0x21 before it and settles the stroke's last stick
+(`check_next_for_special`, `make_CDL_in_O_GU_f`); `O_GU_To3Elements`
+turns a bottom loop with a stick either side into one letter of three
+elements; `IsTipBefore`/`check_inside_circle` take out a tip that only
+starts the loop), `delete_CROSS_elements`, `check_IUb_IDf_small` and
+`delete_UD_before_DDL`.  ROM quirks kept: `check_next_for_circle`
+compares the band of the element it first found, not the one it now
+looks at, and measures that one's box to its ipoint1;
+`check_next_for_special` reads the byte after the loop's element in the
+array (its crossing partner's `other`) as the loop's own;
+`O_GU_To3Elements` with nothing after the loop makes the element after
+it in the array the new 0x1a.  `TestLkDugaWhole`.
+
+**xt_st_zz** (`LowXtSt.cpp`) is the strokes written out of order and the
+breaks: all of its passes but one are done - `conv_top_elem_to_ST`
+(short strokes high up made dots), `find_umlaut`, `find_angstrem`,
+`redirect_sticks`, `FindDelayedStroke` (a stroke lying left of
+everything before it by the step - a t's bar - made one late element
+0xd), `placement_XT_ST` (each late stroke and dot put after the letter
+it belongs to: `Placement_XT_CUTTED`, `DoubleXT` - a bar across two t's
+doubled -, `Placement_XT_With_HATCH` over its own crossings,
+`FindQuotes` with `PutLeadingQuotes`/`PutTrailingQuotes`,
+`Placement_XT_WO_HATCH_AND_ST` by distance across, `Put_XT_ST` and
+`punctuation`, which offers a high dot to `RestoreApostroph` and puts a
+break after punctuation with `insert_drop`), `del_close_MAX_MIN` (two
+tops, or two ends, that are one), `SortXT_ST`, `placement_X` (the second
+half of an x crossed out after the word), `FindMisplacedParentheses`,
+`del_ZZ_HATCH`, `CheckStrokesForDxTimeMatch` (a last stroke written far
+back left dropped), `change_last_IU_height`, `make_different_breaks`
+(each break's gap across the three bands of the line,
+`GetDxBetweenStrokes` over `GetTraceBoxInsideYZone`, compared with the
+step and with the other gaps: no break, a letter break 0x12, or a space
+0x14), `AdjustZZ_BegEnd` and `CheckSequenceOfElements`.  ROM quirks kept:
+`insert_drop` takes the element after its argument in the array as the
+new break rather than a free one; `RestoreApostroph` keeps the dot's
+squared length in a short; `punctuation` compares a late stroke's whole
+`attr` byte with 5; several flags in `Placement_XT_WO_HATCH_AND_ST` and
+`RestoreApostroph` are nought and never set, so their tests never pass.
+`TestXtSt`.
+
+NOT YET: `xt_st_zz` itself and `FindDArcs` with its group (the d's
+arcs: `FillBasicFeatures`, `PairWorthLookingAt`, `FillComplexFeatures`,
+`FillCurvFeatures`, `CheckBackDArcs`, `CheckSZArcs`, `CheckDArcs`,
+`KillHAtNewElem`, `ArrangeAnglesNearNew`, `SkipAnglesAndHMoves`,
+`CurvNonQuadr`, `CurvLikeSZ`, `CurvConsistent`, `LooksLikeSZ`,
+`iXmax_right`/`iXmin_right`; about 10 KB at 0x003015b8-0x00305a14, the
+SZD_FEATURES block they share), and `low_level` wired into
 `GCTryToRecognize`.
 
 **NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,

@@ -270,6 +270,29 @@ order is AnalyzeLowData's: `lk_begin`, `lk_cross`, `lk_duga`,
 `low_level` is whole; the reader after it (`xrw_algs`, the lexical
 search, the digit reader) perhaps seven or eight more.
 
+**Stage 2, round 6 (2026-09-28, commits 25a1bd7, 948b6e4, b04803c):**
+`lk_duga` whole (`LowLkDuga.cpp`: `prevent_arcs`,
+`conv_sticks_to_arcs`, `del_before_after_circles` and the fifteen
+circle-neighbour functions over `NxtPrvCircle_type`,
+`delete_UD_before_DDL`; `cos_horizline` and `x/y/HardOverlapRect` in
+`LowGeometry.cpp`; `TestLkDugaWhole` takes the uou through it), and of
+`xt_st_zz` (`LowXtSt.cpp`) everything but `FindDArcs`: 50 functions and
+about 30 KB - the late strokes found and placed, quotes, punctuation and
+`RestoreApostroph` (with four unnamed helpers), umlauts, angstroms, the
+crossed-out x, the parentheses, the breaks weighed
+(`make_different_breaks`, `GetDxBetweenStrokes`,
+`GetTraceBoxInsideYZone`), `del_close_MAX_MIN`, `CheckSequenceOfElements`
+(`TestXtSt`).  Left below `low_level`: `xt_st_zz` itself (240 bytes; its
+order is in `LowXtSt.cpp`'s header) and `FindDArcs`'s group (about 10 KB:
+`CheckSZArcs` and `CheckDArcs` are 2.9 KB each, the rest small; they
+share an `SZD_FEATURES` block of 0x44 bytes on the ROM's stack - +0 the
+low_type, +4/+8 the two elements looked at, +0xc a new element, +0x10..
++0x20 x, y, the initial x and y and the point map); then `low_level`
+and `AnalyzeLowData` themselves and the wiring into `GCTryToRecognize`.
+Estimate: one round for `FindDArcs`, `xt_st_zz` and the wiring; the
+reader above it (`xrw_algs`, the lexical search, the digit reader) about
+seven more.
+
 ## Then: the testing system
 
 The 38 `testing` natives (`docs/testing/README.md`); 32 are answered.
