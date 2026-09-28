@@ -154,8 +154,7 @@ ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 // about to go.
 // DEVIATION: the part the unit tables name is its imported area's first
 // object, and its package that area (Units.h).
-// NOT YET RECONSTRUCTED: a streamed source (Copy answers
-// kError_Call_Not_Implemented).
+// A streamed source's part is one flattened object, read by Copy (Expand).
 NewtonErr
 TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo* partInfo)
 {

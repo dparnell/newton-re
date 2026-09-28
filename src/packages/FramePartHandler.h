@@ -38,11 +38,12 @@
 				A part's units (its _ExportTable and _ImportTable) are
 				Units.h's.
 
-				NOT YET RECONSTRUCTED: a streamed source's
-				Copy/Expand (PartHandlers.h), and the other frames part
-				handlers the ROM registers: 'book (TBookPartHandler, over
-				the book reader's TLibrarian), 'dict (TDictPartHandler) and
-				'comm (TCommPartHandler).
+				A streamed source's frames part is read as one flattened
+				object (NSOF, Expand) through Copy's CPartPipe
+				(PartHandlers.h, PartPipe.h).
+
+				NOT YET RECONSTRUCTED: the 'book part handler
+				(TBookPartHandler, over the book reader's TLibrarian).
 
 	Reconstructed from the MP2x00 US ROM (0x000cb68c-0x000cbdcc,
 	0x000d118c-0x000d1744); each function cites its origin.

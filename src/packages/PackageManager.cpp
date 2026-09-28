@@ -19,6 +19,10 @@
 #include "Random.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
+#include "PartPipe.h"
+#include "RingBuffer.h"
+
+extern const ExceptionName exPipeException;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -336,16 +340,43 @@ TPackageEventHandler::GetUniquePackageId(void)
 // ROM 0x0015e3bc LoadProtocolCode__20TPackageEventHandlerFPPvR8PartInfo10SourceTypeRC10PartSource
 // A protocol part's code, where it can run from: a part in memory is used
 // where it lies unless it asks to be copied (autoCopy); a streamed part is
-// read into memory of the persistent heap.
-// NOT YET RECONSTRUCTED: the streamed source (a CPartPipe over the
-// sender's shared ring buffer, read with ReadChunk; a throw from it is
-// kError_Bad_Package): the host answers kError_Call_Not_Implemented.
+// read into memory of the persistent heap, through a CPartPipe of its own
+// over the sender's ring buffer (a pipe exception is kError_Bad_Package).
 NewtonErr
 TPackageEventHandler::LoadProtocolCode(void** classInfo, PartInfo& info, SourceType type, const PartSource& source)
 {
 	NewtonErr err = noErr;
 	if (!IsMemory(type))
-		return kError_Call_Not_Implemented;
+	{
+		CPartPipe pipe;
+		UChar eof = false;
+		CShadowRingBuffer* buffer = new CShadowRingBuffer;
+		if (buffer == nil)
+			err = MemError();
+		else
+		{
+			buffer->Init(source.stream.bufferId, 0, 0);
+			pipe.Init(source.stream.messagePortId, buffer, true);
+			SetPersistentHeap();
+			*classInfo = malloc(info.size);
+			err = MemError();
+			SetDefaultHeap();
+			if (*classInfo != nil)
+			{
+				newton_try
+				{
+					long count = info.size;
+					pipe.ReadChunk(*classInfo, count, eof);
+				}
+				newton_catch(exPipeException)
+				{
+					err = kError_Bad_Package;
+				}
+				end_try;
+			}
+		}
+		return err;
+	}
 	if (!info.autoCopy)
 		*classInfo = (void*) source.stream.bufferId;
 	else
@@ -473,9 +504,13 @@ done:
 // (and giving its id) - unless either version is 0, when the package
 // goes in beside it.  Should the package just installed be the
 // validation driver's own ("VPD..."), the driver is looked for again.
-// NOT YET RECONSTRUCTED: a streamed source (the sender's shared ring
-// buffer, CShadowRingBuffer, read through a CPartPipe): the host answers
-// kError_Call_Not_Implemented.
+// A streamed source is read through a CPartPipe over a shadow of the
+// sender's ring buffer (PartPipe.h), which is kept (fPipe, fBuffer) until
+// LoadNextPart has read the last part and closes it.
+// ROM BUG kept: when the stream's directory cannot be read the pipe is not
+// closed - the sender's 'pipe' world is left waiting, and the pipe and its
+// buffer stay in fPipe/fBuffer until the next streamed load takes their
+// places.
 void
 TPackageEventHandler::BeginLoadPackage(TPkBeginLoadEvent* event)
 {
@@ -489,11 +524,14 @@ TPackageEventHandler::BeginLoadPackage(TPkBeginLoadEvent* event)
 	long result;
 	if (!IsMemory(type))
 	{
-		fIter = nil;
-		result = kError_Call_Not_Implemented;
-		goto parts;
+		fBuffer = new CShadowRingBuffer;
+		fBuffer->Init(event->fSource.stream.bufferId, 0, 0);
+		fPipe = new CPartPipe;
+		fPipe->Init(event->fSource.stream.messagePortId, fBuffer, true);
+		fIter = new TPackageIterator(fPipe);
 	}
-	fIter = new TPackageIterator((void*) fSource.stream.bufferId);
+	else
+		fIter = new TPackageIterator((void*) fSource.stream.bufferId);
 	if (fIter == nil)
 		result = MemError();
 	else
@@ -593,9 +631,9 @@ parts:
 // its handlers told), success marks the package valid; a package for
 // dispatch only is removed again at once (its handlers not told: the
 // parts have done their work), and the iterator goes.
-// NOT YET RECONSTRUCTED: the streamed source's CPartPipe (SetStreamSize
-// before a part, SeekEOF after it, Close at the end), which the host
-// never has (BeginLoadPackage).
+// A streamed source's pipe is told each part's size before the part is
+// installed, reads past what its handler left of it afterwards, and is
+// closed (the sender's 'pipe' world finished) once the package is done.
 Boolean
 TPackageEventHandler::LoadNextPart(long* result, UChar* forDispatchOnly, UChar* patchInstalled)
 {
@@ -613,8 +651,11 @@ TPackageEventHandler::LoadNextPart(long* result, UChar* forDispatchOnly, UChar* 
 			fIter->GetPartInfo(fPartIndex, &info);
 			Ustrncpy(info.packageName, gHostPackageName, kMaxPackageNameSize);
 			info.packageName[kMaxPackageNameSize] = 0;
-			GetPartSize();
-			fSource.stream.bufferId = info.data;
+			long partSize = GetPartSize();
+			if (fPipe == nil)
+				fSource.stream.bufferId = info.data;
+			else
+				fPipe->SetStreamSize(partSize);
 			if (info.kind == kFrames && info.infoSize != 0 && !info.compressed && IsMemory(fPackage->fSourceType))
 			{
 				// ROM BUG: the info is copied to a buffer on the stack for as
@@ -638,6 +679,8 @@ TPackageEventHandler::LoadNextPart(long* result, UChar* forDispatchOnly, UChar* 
 				strcpy(name, ((TClassInfo*) classInfo)->ImplementationName());
 				RegisterLoadedCodeWithDebugger((void*) classInfo, name, packageId);
 			}
+			if (fPipe != nil)
+				fPipe->SeekEOF();		// whatever of the part its handler did not read
 			if (err == noErr)
 			{
 				SetPersistentHeap();
@@ -664,6 +707,15 @@ TPackageEventHandler::LoadNextPart(long* result, UChar* forDispatchOnly, UChar* 
 	{
 		*result = err;
 		return more;
+	}
+	if (fPipe != nil)
+	{
+		// the package read: the sender's 'pipe' world closed (the pipe owns
+		// the shadow ring buffer, which goes with it)
+		fPipe->Close();
+		delete fPipe;
+		fPipe = nil;
+		fBuffer = nil;
 	}
 	newton_try
 	{

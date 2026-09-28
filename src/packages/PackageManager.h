@@ -44,9 +44,11 @@
 				persistent heap (the 'prot' domain's, which keeps the
 				package list through a warm reboot) is the ordinary one.
 
-				NOT YET RECONSTRUCTED: TPackageLoader and the streamed
-				sources (a package read through a pipe: CShadowRingBuffer,
-				CPartPipe, TPipeApp), the validation driver's package check
+				A package can also be streamed in from a pipe
+				(PackageLoader.h, PartPipe.h): the manager reads it through a
+				CPartPipe over a shadow of the sender's ring buffer.
+
+				NOT YET RECONSTRUCTED: the validation driver's package check
 				(ValidatePackage; no TValidatePackageDriver is ever
 				registered on the host), system patches
 				(CheckAndInstallPatch), packages on a store (the ROM domain

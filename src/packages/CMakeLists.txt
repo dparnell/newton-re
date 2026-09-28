@@ -10,6 +10,8 @@ add_library(package_manager STATIC
     PackageManager.cpp
     PartHandlers.cpp
     PackagePipe.cpp
+    PartPipe.cpp
+    PackageLoader.cpp
 )
 target_link_libraries(package_manager PUBLIC newton_config utility os600_user protocols toolbox)
 target_include_directories(package_manager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

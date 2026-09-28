@@ -12,6 +12,8 @@
 #include "PackageManager.h"
 #include "AppWorld.h"
 #include "Pipes.h"
+#include "PartPipe.h"
+#include "RingBuffer.h"
 #include "UserPorts.h"
 #include "UserTasks.h"
 #include "NameServer.h"
@@ -148,16 +150,26 @@ TPartHandler::GetSourcePtr()
 
 // ROM 0x00181e38 Copy__12TPartHandlerFPv
 // The part's bytes copied to data: straight from memory (a throw is
-// kError_Unexpected_End_Of_Pkg_Part), or through Expand for a stream.
-// NOT YET RECONSTRUCTED: the stream (a CShadowRingBuffer and a CPartPipe
-// over the sender's shared buffer, handed to Expand): the host answers
-// kError_Call_Not_Implemented.
+// kError_Unexpected_End_Of_Pkg_Part), or for a stream through Expand, over
+// a CPartPipe and a shadow of the sender's ring buffer made for the call
+// (the pipe does not own the buffer; both go afterwards).
 NewtonErr
 TPartHandler::Copy(void* data)
 {
 	NewtonErr err = noErr;
 	if (!IsMemory(fSourceType))
-		return kError_Call_Not_Implemented;
+	{
+		CShadowRingBuffer* buffer = new CShadowRingBuffer;
+		CPartPipe* pipe = new CPartPipe;
+		buffer->Init(fSource.stream.bufferId, 0, 0);
+		pipe->Init(fSource.stream.messagePortId, buffer, false);
+		err = Expand(data, pipe, fPartInfo);
+		if (buffer != nil)
+			delete buffer;
+		if (pipe != nil)
+			delete pipe;
+		return err;
+	}
 	newton_try
 	{
 		BlockMove((void*) fSource.stream.bufferId, data, fPartInfo->size);

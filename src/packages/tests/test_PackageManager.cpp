@@ -29,6 +29,8 @@
 #include "PackageEvents.h"
 #include "PackageIterator.h"
 #include "PackagePipe.h"
+#include "PackageLoader.h"
+#include "ObjectStreamer.h"
 #include "PartHandlers.h"
 #include "FramePartHandler.h"
 #include "PackageStore.h"
@@ -414,6 +416,116 @@ TestManager(void)
 }
 
 
+/*------------------------------------------------------------------------------
+	S t r e a m e d
+------------------------------------------------------------------------------*/
+
+// A package of one 'form part, the part being a frame flattened (NSOF) -
+// the form a frames part takes when a package is streamed.  The package's
+// words are big-endian; its name is the only thing in the directory data.
+static UByte*
+StreamedPackage(const char* name, RefArg frame, ULong* packageSize)
+{
+	CTestPipe nsof(64);
+	{
+		TObjectWriter writer(frame, nsof, false);
+		writer.Write();
+	}
+	ULong partSize = nsof.fWriteBuffer->Position();
+	const ULong kHeader = 0x34, kEntry = 0x20;
+	ULong nameBytes = (strlen(name) + 1) * 2;
+	ULong directorySize = (kHeader + kEntry + nameBytes + 3) & ~3u;
+	ULong size = directorySize + partSize;
+	UByte* package = (UByte*) calloc(size, 1);
+	memcpy(package, "package1", 8);
+	PutBigEndianWord(package + 0x08, 'xxxx');
+	PutBigEndianWord(package + 0x0c, 0x10000000);				// (as the ROM's own NTK packages)
+	PutBigEndianWord(package + 0x10, 1);						// version
+	PutBigEndianWord(package + 0x14, 0);						// no copyright
+	PutBigEndianWord(package + 0x18, (0 << 16) | nameBytes);	// the name, at the start of the data
+	PutBigEndianWord(package + 0x1c, size);
+	PutBigEndianWord(package + 0x2c, directorySize);
+	PutBigEndianWord(package + 0x30, 1);						// parts
+	UByte* entry = package + kHeader;
+	PutBigEndianWord(entry + 0x00, 0);							// the part's offset from the directory's end
+	PutBigEndianWord(entry + 0x04, partSize);
+	PutBigEndianWord(entry + 0x08, partSize);
+	PutBigEndianWord(entry + 0x0c, 'form');
+	PutBigEndianWord(entry + 0x14, 0x81);						// frames, notify
+	UByte* data = package + kHeader + kEntry;
+	for (ULong i = 0; name[i] != 0; i++)
+		data[i * 2 + 1] = (UByte) name[i];
+	memcpy(package + directorySize, nsof.fWriteBuffer->fBuffer, partSize);
+	*packageSize = size;
+	return package;
+}
+
+
+// a package read from a pipe: the bytes written to a memory pipe and the
+// pipe handed to the loader, which streams them to the manager
+static NewtonErr
+StreamLoad(const void* package, ULong size, ULong* packageId)
+{
+	CTestPipe pipe(size);
+	pipe.WriteChunk(package, size, false);
+	pipe.Rewind();
+	*packageId = 0;
+	return LoadPackage(&pipe, packageId, false);
+}
+
+
+static void
+TestStreamed(void)
+{
+	// a protocol part streamed: its code read into memory through the
+	// manager's own pipe (LoadProtocolCode)
+	ULong screenBuffer = 0;
+	TPMIterator iter;
+	iter.Init();
+	for (; iter.More(); iter.NextPackage())
+		if (Same(iter.PackageName(), "ScreenBuffer"))
+			screenBuffer = iter.PackageId();
+	iter.Done();
+	EXPECT(screenBuffer != 0 && DeinstallPackage(screenBuffer) == noErr && Known(screenBuffer) == kError_No_Such_Package);
+	ULong streamedScreen = 0;
+	ULong screenSize = GetBigEndianWord(gROM + kScreenBuffer + 0x1c);
+	EXPECT(StreamLoad(gROM + kScreenBuffer, screenSize, &streamedScreen) == noErr && streamedScreen != 0);
+	EXPECT(Known(streamedScreen) == noErr);
+
+	// a frames part streamed: read as one flattened frame by its handler
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RefVar(Intern((char*) "title")), RefVar(MakeString("Streamed")));
+	SetFrameSlot(frame, RefVar(Intern((char*) "count")), RefVar(MAKEINT(42)));
+	ULong size = 0;
+	UByte* package = StreamedPackage("Streamed", frame, &size);
+	ULong streamed = 0;
+	long given = gGivenCount;
+	EXPECT(StreamLoad(package, size, &streamed) == noErr && streamed != 0);
+	Given* got = GivenFor(streamed);
+	EXPECT(gGivenCount == given + 1 && got != nil && got->fType == 'form' && got->fPartId.partIndex == 0);
+	if (got != nil)
+	{
+		RefVar read(*got->fFrame);
+		EXPECT(IsFrame(read) && RINT(GetFrameSlot(read, RefVar(Intern((char*) "count")))) == 42);
+		RefVar title(GetFrameSlot(read, RefVar(Intern((char*) "title"))));
+		EXPECT(IsString(title) && Length(title) == 18);
+	}
+	// the same package again from a stream: refused as already there (last,
+	// because the ROM leaves the sender's 'pipe' world waiting then)
+	EXPECT(DeinstallPackage(streamed) == noErr && got != nil && got->fRemoved);
+	ULong setup = 0, id = 0;
+	TPMIterator list;
+	list.Init();
+	for (; list.More(); list.NextPackage())
+		if (Same(list.PackageName(), "Setup"))
+			setup = list.PackageId();
+	list.Done();
+	ULong setupSize = GetBigEndianWord(gROM + kSetup + 0x1c);
+	EXPECT(setup != 0 && StreamLoad(gROM + kSetup, setupSize, &id) == kError_Package_Already_Exists && id == setup);
+	free(package);
+}
+
+
 // the test's own application world: part handlers for 'form and 'auto
 // (the test's) and 'soup (the package store's), then the tests run from
 // PreMain as the newt world loads the ROM's packages; loading forks the
@@ -445,6 +557,7 @@ public:
 		{
 			TestPackagePipe();
 			TestManager();
+			TestStreamed();
 		}
 		gDone = true;
 		return noErr;
