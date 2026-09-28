@@ -330,6 +330,54 @@ TestGroupAndRead(void)
 }
 
 
+/*--------------------------------------------------------------------
+	SetStrXrRC: one word of a configuration's strxrCommands.
+--------------------------------------------------------------------*/
+
+static ULong
+Command(ULong op, ULong which, ULong low)
+{
+	return (op << 25) | (which << 16) | (low & 0xffff);
+}
+
+
+static void
+TestSetStrXrRC(void)
+{
+	STRXRPARAM p;
+	memset(&p, 0, sizeof(p));
+	p.fControl = 0x000a0005;		// wait for 5 words, spacing 5
+	SetStrXrRC(Command(0, 0x02, 4), &p);			// set the letter style
+	EXPECT(p.fLetterStyle == 4);
+	SetStrXrRC(Command(4, 0x02, 3), &p);			// add
+	EXPECT(p.fLetterStyle == 7);
+	SetStrXrRC(Command(1, 0x17, 0x8000), &p);		// or into the flags
+	EXPECT(p.fFlags == 0x8000);
+	SetStrXrRC(Command(0, 0x1f, 0xfffe), &p);		// the base line, a long set as a signed short
+	EXPECT(p.fGeom[2] == -2);
+	SetStrXrRC(Command(0, 0x40, 7), &p);			// the letter spacing: the low half
+	EXPECT(p.fControl == 0x000a0007);
+	SetStrXrRC(Command(0, 0x42, 2), &p);			// the words to wait for, from bit 17
+	EXPECT(p.fControl == 0x00040007);
+	SetStrXrRC(Command(0, 0x41, 1), &p);			// read only at the end
+	EXPECT(p.fControl == 0x00050007);
+	SetStrXrRC(Command(0, 0x41, 0), &p);
+	EXPECT(p.fControl == 0x00040007);
+	SetStrXrRC(Command(0, 0x46, 9), &p);			// ROM QUIRK: 0x46 changes +0x54 too
+	EXPECT(p.fPrevBase[2] == 9 && p.fPrevBase[3] == 0);
+	// a byte by its ROM offset: +0x0f is fControl's lowest byte
+	SetStrXrRC((0 << 25) | (1 << 24) | (0x33 << 16) | 0x0f, &p);
+	EXPECT(p.fControl == 0x00040033);
+	// +0x40 is fLetterStyle's high byte
+	SetStrXrRC((1 << 25) | (1 << 24) | (0x01 << 16) | 0x40, &p);
+	EXPECT(p.fLetterStyle == 0x0107);
+	// an offset of 0x58 or more names no byte: the low half is then the operand of field 0 (none)
+	STRXRPARAM before = p;
+	SetStrXrRC((0 << 25) | (1 << 24) | (0x33 << 16) | 0x58, &p);
+	EXPECT(memcmp(&before, &p, sizeof(p)) == 0);
+}
+
+
 int
 main()
 {
@@ -340,6 +388,7 @@ main()
 	TestTraces();
 	TestBaseLine();
 	TestGroupAndRead();
+	TestSetStrXrRC();
 	if (failures == 0)
 		printf("test_WordDescriptors: all passed\n");
 	return failures == 0 ? 0 : 1;

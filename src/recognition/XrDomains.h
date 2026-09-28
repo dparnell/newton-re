@@ -180,6 +180,8 @@ ULong	PrintFieldType(ULong type);								// ROM 0x0024e64c PrintFieldType__FUl -
 // block and bits 16-23 the operand.  A recognition configuration's
 // `xrwCommands`/`strxrCommands` are arrays of these.
 void	SetXrWordRC(ULong command, XRWORDPARAM* param);			// ROM 0x00065dd4 SetXrWordRC__FUlP11XRWORDPARAM
+struct STRXRPARAM;
+void	SetStrXrRC(ULong command, STRXRPARAM* param);			// ROM 0x000651e4 SetStrXrRC__FUlP10STRXRPARAM - one word of a configuration's strxrCommands
 // *value = *value op operand: 0 =, 1 or, 2 and, 3 xor, 4 +, 5 -,
 // 6 reverse -, 7 *, 8 /, 9 reverse /.
 void	LongOperator(UByte op, long* value, long operand);		// ROM 0x0006555c LongOperator__FUcPll

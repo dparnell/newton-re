@@ -382,6 +382,158 @@ TStrXrDomain::SetParameters(Handle params)
 // The kind of field (the recogniser's flags: 1 words, 2 numbers, 4
 // upper-case, 8 punctuation, 0x10 phone, 0x20 letters, 0x40 cursive)
 // turned into what the domain reads it as.
+// A byte of the block at its ROM offset, changed in place.  The block's
+// fields are the host's own (the handle is pointer-sized), so the byte is
+// taken out of the field it falls in - numbered big-endian, as the ROM's
+// memory is - and put back.
+// DEVIATION: a byte of the letter table's handle (+0x04..+0x07) changes
+// nothing on the host (as XRWByte's pointers).
+static void
+StrXrByteOperator(STRXRPARAM* p, ULong at, UByte op, UByte operand)
+{
+	// kind: 0 a 16-bit field, 1 a long, 2 a ULong (both 32 bits in the ROM)
+	struct Field { ULong fAt; int fKind; void* fField; };
+	const Field fields[] =
+	{
+		{ 0x00, 0, &p->fFlags }, { 0x02, 0, &p->fFlags2 },
+		{ 0x08, 2, &p->fFieldType }, { 0x0c, 2, &p->fControl },
+		{ 0x10, 1, &p->fGeom[0] }, { 0x14, 1, &p->fGeom[1] }, { 0x18, 1, &p->fGeom[2] },
+		{ 0x1c, 1, &p->fGeom[3] }, { 0x20, 1, &p->fGeom[4] }, { 0x24, 1, &p->fGeom[5] },
+		{ 0x28, 1, &p->fGeom[6] },
+		{ 0x2c, 1, &p->fGrid[0] }, { 0x30, 1, &p->fGrid[1] }, { 0x34, 1, &p->fGrid[2] },
+		{ 0x38, 1, &p->fGrid[3] }, { 0x3c, 2, &p->fBoxHit },
+		{ 0x40, 0, &p->fLetterStyle }, { 0x42, 0, &p->fLanguage },
+		{ 0x44, 0, &p->fField44 }, { 0x46, 0, &p->fField46 },
+		{ 0x48, 2, &p->fField48 }, { 0x4c, 2, &p->fField4C },
+		{ 0x50, 0, &p->fPrevBase[0] }, { 0x52, 0, &p->fPrevBase[1] },
+		{ 0x54, 0, &p->fPrevBase[2] }, { 0x56, 0, &p->fPrevBase[3] },
+	};
+	for (const Field& f : fields)
+	{
+		ULong size = f.fKind == 0 ? 2 : 4;
+		if (at < f.fAt || at >= f.fAt + size)
+			continue;
+		uint32_t value = f.fKind == 0 ? *(UShort*) f.fField : f.fKind == 1 ? (uint32_t) *(long*) f.fField : (uint32_t) *(ULong*) f.fField;
+		UByte bytes[4];
+		for (ULong i = 0; i < size; i++)
+			bytes[i] = value >> (8 * (size - 1 - i));
+		RCUCharOperator(op, &bytes[at - f.fAt], operand);
+		value = 0;
+		for (ULong i = 0; i < size; i++)
+			value = (value << 8) | bytes[i];
+		if (f.fKind == 0)
+			*(UShort*) f.fField = value;
+		else if (f.fKind == 1)
+			*(long*) f.fField = (int32_t) value;
+		else
+			*(ULong*) f.fField = value;
+		return;
+	}
+}
+
+
+// A long field changed as a short: its low half taken as a signed short,
+// the operator applied, and the answer put back sign-extended (the ROM
+// stores the half big-endian on the stack, reads the word back and shifts
+// it down arithmetically).
+static void
+StrXrLongAsShort(long* field, UByte op, short operand)
+{
+	UByte half[2] = { (UByte) (*field >> 8), (UByte) *field };
+	RCShortOperator(op, half, operand);
+	*field = (short) ((half[0] << 8) | half[1]);
+}
+
+
+// ROM 0x000651e4 SetStrXrRC__FUlP10STRXRPARAM
+// One word of a recognition configuration's strxrCommands carried out: the
+// operator (bits 25-29: set, or, and, xor, add, subtract, ...) applied to
+// the field it names.  With bit 24 set and an offset under 0x58 in the low
+// half, the byte at that offset is changed by the command's byte (bits
+// 16-23); otherwise bits 16-23 name the field and the low half is the
+// operand (signed, but as it stands for the unsigned fields).
+void
+SetStrXrRC(ULong command, STRXRPARAM* param)
+{
+	UByte op = (command >> 25) & 0x1f;
+	UByte which = (command >> 16) & 0xff;
+	ULong low = command & 0xffff;
+	if (((command >> 24) & 1) == 1 && low < 0x58)
+	{
+		StrXrByteOperator(param, low, op, which);
+		return;
+	}
+	short sOperand = (short) low;
+	UByte half[2];
+	switch (which)
+	{
+	case 0x02:
+	case 0x03:
+	case 0x43:
+	case 0x44:
+	case 0x45:
+	case 0x46:
+		{
+			// ROM QUIRK: 0x45 and 0x46 both change +0x54 (fPrevBase[2]); +0x56
+			// has no command of its own
+			UShort* field = which == 0x02 ? &param->fLetterStyle : which == 0x03 ? &param->fLanguage
+						: which == 0x43 ? (UShort*) &param->fPrevBase[0] : which == 0x44 ? (UShort*) &param->fPrevBase[1]
+						: (UShort*) &param->fPrevBase[2];
+			half[0] = *field >> 8;
+			half[1] = *field;
+			RCShortOperator(op, half, sOperand);
+			*field = (half[0] << 8) | half[1];
+		}
+		break;
+	case 0x17:
+	case 0x18:
+	case 0x2a:
+		{
+			UShort* field = which == 0x17 ? &param->fFlags : which == 0x18 ? &param->fFlags2 : &param->fField44;
+			half[0] = *field >> 8;
+			half[1] = *field;
+			RCUShortOperator(op, half, low);
+			*field = (half[0] << 8) | half[1];
+		}
+		break;
+	case 0x1b:	StrXrLongAsShort(&param->fGeom[0], op, sOperand); break;
+	case 0x1d:	StrXrLongAsShort(&param->fGeom[1], op, sOperand); break;
+	case 0x1f:	StrXrLongAsShort(&param->fGeom[2], op, sOperand); break;
+	case 0x20:	StrXrLongAsShort(&param->fGeom[3], op, sOperand); break;
+	case 0x1c:	StrXrLongAsShort(&param->fGeom[4], op, sOperand); break;
+	case 0x1e:	StrXrLongAsShort(&param->fGeom[5], op, sOperand); break;
+	case 0x25:	StrXrLongAsShort(&param->fGeom[6], op, sOperand); break;
+	case 0x40:
+		// the writer's letter spacing, the low half of the control word
+		half[0] = param->fControl >> 8;
+		half[1] = param->fControl;
+		RCShortOperator(op, half, sOperand);
+		param->fControl = (param->fControl & 0xffff0000) | (UShort) ((half[0] << 8) | half[1]);
+		break;
+	case 0x41:
+		{
+			// read only at the end (no grouping while writing)
+			UByte flag = (param->fControl & 0x10000) != 0;
+			RCBooleanOperator(op, &flag, command & 0xff);
+			param->fControl = (param->fControl & ~(ULong) 0x10000) | (flag != 0 ? 0x10000 : 0);
+		}
+		break;
+	case 0x42:
+		{
+			// how many words to wait for, from bit 17
+			UShort words = (param->fControl >> 17) & 0xffff;
+			half[0] = words >> 8;
+			half[1] = words;
+			RCShortOperator(op, half, sOperand);
+			param->fControl = (param->fControl & 0x1ffff) | ((((ULong) ((half[0] << 8) | half[1])) << 17) & 0xfffe0000);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+
 long
 SetStrXrFieldType(ULong type, STRXRPARAM* param)
 {
@@ -568,9 +720,7 @@ TStrXrDomain::DomainParameter(ULong selector, ULong result, ULong info)
 		err = 0;
 		break;
 	case 0x20032:
-		// NOT YET RECONSTRUCTED: SetStrXrRC (0x000651e4), a field of the
-		// block changed by one word of a recognition configuration's
-		// strxrCommands
+		SetStrXrRC(result, p);
 		err = 0;
 		break;
 	case 0x20041:
