@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11904 citations, 0 bad;
-  6843 of 16671 functions (41.05%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 11939 citations, 0 bad;
+  6852 of 16671 functions (41.10%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
@@ -527,6 +527,26 @@ x, 7, #, 8 and % drawn and found).  Next: (c) `New_SearchDigit_V`
 `SignFromTwoSections` take its `tagLocalStuff`) - it is the one that
 reads a lone 1, which K leaves alone; then (d) and (e) as above.  Three
 or four more rounds.
+
+*Progress (2026-09-28, round 5)*: (c) is done - `New_SearchDigit_V` and
+all its statics (`recognition/ChunkSearchV.cpp`, 0x00296e04-0x0029bba8
+and 0x0028eb9c-0x0028fa14; `ComposeTrace`), and of (d) `SearchNumber`
+(`recognition/ChunkNumber.cpp`, with five statics from FindPound's range:
+0x002a3608 and 0x002a4608-0x002a4a34) and `FindPound`
+(`recognition/ChunkPound.cpp`); `test_Chunk`'s `TestSearchV`,
+`TestSearchNumber` (42, 10, 217 and 11 judged numbers after L, K, V and
+the second looks) and `TestFindPound`.  Left of (d): **`SearchDigit_S`**
+(0x00290ed8-0x00296e04, 24 KB): its top level marks every real chunk
+unused (f6C = 0), then runs 0x002926a0 over the writing's width, the
+per-chunk passes 0x0029634c and 0x00296470 over the unused chunks,
+0x00294fd0, 0x002950d4, 0x00291060, 0x002960d8 and 0x00293f7c over the
+whole - 45 unnamed statics in all, the largest 0x002924b4-0x00292ae8,
+0x002946d8 and 0x002953f8-0x00295d60; it is the searcher that reads the
+signs coded 13 (the bar `FindPound` builds on) and most of the other
+non-digit codes, so it is one round of its own.  Then the rest of
+`Digits` (its statics 0x002a09b0, 0x002a2758, 0x002a1a98, 0x0029e888,
+0x002a19ec, 0x0029ccd4, 0x002a2078, 0x0029fbcc, 0x002a0d74, 0x0029ffc8),
+`CutNumberInDigits`, and (e).  Three more rounds.
 
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3

@@ -10,6 +10,34 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the digit reader's chunk searcher, SearchNumber and FindPound
+
+- **`New_SearchDigit_V`** (`recognition/ChunkSearchV.cpp`, 0x00296e04 and
+  its thirteen unnamed statics, the five named ones at 0x0028eb9c-
+  0x0028fa14, `ComposeTrace`): each chunk asked by its class what it
+  starts - 1, 7, H, 2 from a line; 8, 1, 7, 9, 2 from a curve down; 0, 6,
+  9, 5, 7, 2, 8 from arcs and circles; 2, 5, 3 from an S; 3 from three
+  brackets; #, <, > and the other sign codes.  All from the disassembly.
+  ROM bugs kept: the horseshoe's bar read from the chunk `first` places
+  on; a direction taken from (x, x); a tail compared with half a circle's
+  width; a height from node `fKind`.  DEVIATION: a nil chunk's fields read
+  as nought (the ROM reads low memory).
+- **`SearchNumber`** (`recognition/ChunkNumber.cpp`, 0x002a28d0 and
+  twelve statics): the statistics over the digits the second looks wrote
+  out and the verdict over them.  ROM quirks kept: the too-wide mark is
+  overwritten at once by a milder one; the deleted-skipping walk answers
+  a deleted object at a list's end; the sign check with no stroke to
+  compare answers the caller's register.
+- **`FindPound`** (`recognition/ChunkPound.cpp`): a bar and the stroke
+  before it as a pound sign.  ROM bug kept: directions wrapped by 23.
+- `test_Chunk`: `TestSearchV` (a drawn 1, 0, 2, 3, 6, 7, 9, #, <, >),
+  `TestSearchNumber` (L, K, V and the second looks run as `Digits` runs
+  them: 42, 10, 217 and 11 numbers, a lone 2 and stepped 1s not),
+  `TestFindPound` (a drawn pound sign found - its base must be wavy: the
+  ROM wants the foot below the base's crest).
+- ctest 112/112; coverage 11939 citations, 0 bad; 6852 of 16671 functions
+  (41.10%).
+
 ## 2026-09-28: the digit reader's second looks and SearchDigit_K
 
 - **The second-look pass** (`recognition/ChunkSecondLook.cpp`, ROM

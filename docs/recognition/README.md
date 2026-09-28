@@ -3189,17 +3189,74 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   host they run into the sorted digits as on the stack, and stop at the
   end of the block - DEVIATION).
 
+- **`New_SearchDigit_V`** (`ChunkSearchV.cpp`, 0x00296e04-0x0029bba8 and
+  the named statics at 0x0028eb9c-0x0028fa14): each chunk that is not a pen
+  jump asked, by its class, what it starts - kept in a `tagLocalStuff` (the
+  chunk, the two before and after it in its stroke, the writing's height;
+  DEVIATION: sized from `sizeof`).  A stroke of four nodes with two lines
+  beside it is a **#** (the sign coded 71); two short sections a sign (23
+  or 24 - a `>` and a `<`); an upright line (class 300) a **1** on its own,
+  a 1 with its flag, a **7** (the hook before it its bar), a "H" (72), or
+  a **2** (a hook before and a tail after it closing round); a curve down
+  (subclass 502) an **8** (its end back at its hook's start), a 1, a 7 (its
+  last bracket turning back, or its bottom right of its top), a **9** from
+  the stroke two before, else a 2; an arc down (402) a **6** (an arc up
+  closing it) or 9 and a 2, the **0** or 9 of the circle `GetCircles`
+  found there, the horseshoe `DgtFromDnHorseshoe` (4, 5, 9), and signs 81
+  and 99; an arc (401) and a curve starting a short stroke (501)
+  `DgtFromAloneDnArc` (7, 9, 5, 2, 8); an S (702) a 2, 5 or **3**; three
+  brackets (1400) a 3; a grey 9 (class 2200) from `GreyDgtFromELink`.
+  `ComposeTrace` turns a run of nodes back into a trace for
+  `v_MostFarFromChord`.  ROM bugs kept: the horseshoe's bar is read from
+  the chunk `first` places after the one looked at (the index added to the
+  chunk's own address, not the array's; DEVIATION: past the array's end
+  the host takes it as not a line), a direction from (x, x), a circle's
+  tail compared with half its width, a curve's height measured from node
+  `fKind`.  DEVIATION: two tests read the chunk two after without asking
+  whether there is one, and the ROM reads a nil pointer's fields from low
+  memory; the host reads them as nought (`kNoChunk`).
+- **`SearchNumber`** (`ChunkNumber.cpp`, 0x002a28d0-0x002a3ef8 and five
+  statics from FindPound's range): whether the writing is a number, from
+  statistics over the digits the second looks wrote out (class 1900) -
+  digits and other codes counted by kind with the chunks they took, the
+  7s and 0s that run on, how heights, tops and bottoms step from one to
+  the next (0 steady, 1 a little, 2 much), characters too wide, small
+  strokes written below the one before - and a verdict weighing the
+  chunks the digits took against the rest, which any mark of 0x65 (101)
+  rules out; on the way signs coded 13 that are really part of a
+  neighbouring stroke are taken out (`CheckSignStroke`/`StrokeBeside`),
+  and with staff f54 set a line read as a 1 that another stroke crosses
+  (a t or f) makes it no number.  A number of nothing but 1s is ruled out
+  by any step in its bottoms or heights; a single digit is never a
+  number.  ROM quirks kept: a character wider than two and a half times
+  its height is marked 0x65 and at once remarked 2 (wider than twice), so
+  width alone never rules a number out; the walk that skips deleted
+  objects answers a deleted one at a list's end; with no other stroke to
+  look at, the sign check answers the caller's register (the last real
+  chunk) and "takes out" the digits of the stroke numbered by the
+  caller's r9 (a pointer, which no stroke index equals).
+- **`FindPound`** (`ChunkPound.cpp`, 0x002a3ef8-0x002a4608): a bar (a sign
+  coded 13) that is the last thing written, or in the second stroke, with
+  the stroke before it for a **pound sign** (value 1570): the stroke
+  falling steeply, turning left at a foot that lies below the crest of a
+  wavy base, the bar across its middle, up from its foot.  ROM bug kept: a
+  direction past the last is brought round by 23, not 24.
+
 `test_Chunk` draws the digits with a synthetic pen: a 5 with a separate
 bar and a 5 in one stroke and a $ are found by `SearchDigit_L` (the 2, 3,
 4, 7, 9 and 0 drawn there are other searchers' work), an unlifted 5 is
 turned from 3 to 5, a 4 laid over another digit is taken out;
 `TestSearchK` finds a 4, an x, a 7, a #, an 8 and a % (and no 1 - that
 is `New_SearchDigit_V`'s), and `TestSecondLookPass` checks the order and
-gaps written out and seven of the corrections.
+gaps written out and seven of the corrections; `TestSearchV` finds a
+drawn 1, 0, 2, 3, 6, 7, 9, #, < and >; `TestSearchNumber` runs L, K, V,
+`Check_4` and the second looks as `Digits` does and judges 42, 10, 217
+and 11 numbers and a lone 2 and stepped 1s not; `TestFindPound` finds a
+drawn pound sign (its bar laid in by hand).
 
-NOT YET: the other searchers (`New_SearchDigit_V` 20 KB with its
-`DgtFrom*`/`GreyDgtFromELink`/`SignFromTwoSections`, `SearchDigit_S` 24
-KB, `FindPound`, `SearchNumber`), `Digits` itself and its other statics
+NOT YET: `SearchDigit_S` (24 KB, 45 statics at 0x00290ed8-0x00296e04 -
+the searcher that reads the signs coded 13 and most of the other
+non-digit codes), `Digits` itself and its other statics
 (0x002a09b0, 0x002a2758, 0x002a1a98, 0x0029e888, 0x002a19ec, 0x0029ccd4,
 0x002a2078, 0x0029fbcc, 0x002a0d74, 0x0029ffc8), `CutNumberInDigits`,
 `ChunkProcessor` and the merging of the numbers read
