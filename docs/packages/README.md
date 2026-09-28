@@ -368,17 +368,100 @@ The large binaries a package on a store is kept in are there
 (`stores/LargeBinaries.h`, `docs/stores/README.md`'s "Large binaries"),
 so packages on a store are next.
 
+## Packages on a store (`src/packages/StorePackages.h`, `StorePackageNatives.cpp`, `src/stores/PackageObjects.cpp`)
+
+A package a user installs - from the Newton Connection, a card or a
+binary - is not kept in memory: it is stored as a **large object** on a
+store and executed from there.  `store:SuckPackageFromBinary(binary,
+params)` (and `RestorePackage`, `SuckPackageThruPipe` for a pipe) runs
+`StorePackage`, which makes the large object through `CreateLargeObject`
+with the name of a *store decompressor* - chosen by the package's flags:
+0x10000000 uncompressed (Simple), 0x02000000 Zippy, otherwise LZ, each
+with a `Reloc` variant when 0x04000000 says the package has native code;
+0x08000000 (XIP) wins.  The decompressor names are what `TLOPackageStore`
+(a `TLrgObjStore`) claims in its capability list, so it is what makes
+the object: `AllocatePackage` writes a `PackageRoot` (index table, the
+decompressor's name, its parameters, kind 1, `'paok'` last) and
+`TPackageIterator::Store` writes the package through a
+`TStorePackageWriter` a 0x400-byte page at a time.  Each page is a store
+object of its own, `[C relocation data][frame relocation header][the
+page, compressed]`:
+
+- the **C relocation data** (`TCRelocationGenerator`) - only for a package
+  with a relocation chunk: a 16-byte block header (reserved, the page's
+  entry count, the page size, the link address) and the page's word
+  offsets, padded to four;
+- the **frame relocation header** (`TFrameRelocationGenerator`, one
+  big-endian word): where the first whole object of a frames part begins
+  in the page (bits 22-31, in words), where the frames end (bits 12-21),
+  and - 0x800 - that the page starts with the rest of an object begun on
+  the page before (bits 9-10: how many of its header words came before,
+  0x100 slotted, 0x80 its last word padding); 0x40 says the part's
+  objects are aligned to four.  With it a page's pointer refs can be
+  moved to wherever the page is mapped, whichever page is read first.
+
+The pages are read back by the decompressor the root names, through
+`TStoreCompanderWrapper` (the compander the ROM domain manager maps a
+package with) - a page at a time on the MessagePad, relocated to its
+virtual address (`RelocateFramesInPage`, `TSimpleCRelocator`).
+DEVIATION: the host's domain manager reads a package whole and
+unrelocated (`kHostPageNotRelocated`, base 0 - which is also what the
+ROM's own `BackupPackage` reads pages as), because the host imports a
+frames part's objects from their package-relative words and runs no
+package code; relocating to another base is NOT YET.
+
+The large object is then wrapped as a `'package` large binary - the
+package's **pkgRef** - and handed to the ROM's NewtonScript
+`RegisterNewPackage(pkgRef, store, activate)`, which records it in the
+store's "Packages" soup and calls `ActivatePackage(pkgRef)`
+(`FInstallPackage`): the package manager installs it from its mapping as
+removable memory on a version 2 store device (`kStoreDeviceV2`), the
+domain manager is told its id (`kRDMSetPackageId`, so that
+`IdToStore`/`IdToVAddr`/`StoreToId` work), and the pkgRef goes on
+`vars.activePackageList`.  `DeActivatePackage` takes it out of use again.
+At boot `TNewtWorld::PreMain` calls `ActivateStorePackages` for the
+internal store, which walks the "Packages" soup and activates each
+entry's pkgRef (a card's are activated when it is mounted - the 'stor
+event, NOT YET) - so a package installed with `newton --store file
+--package x.pkg` is there at every later boot (`src/host/demo/packagestore.ns`,
+ctest `host.NewtonPackageStore`).  `PackageAvailable`/`PackageUnavailable`
+are the C++ equivalents over a store object; `DeallocatePackage` (which is
+also every large object's default delete) takes a package's objects back.
+
+The conversions: a **pid** is the package manager's id, a **pssid** the
+package's root object on its store, a **pkgRef** the large binary.
+`ObjectPid`, `ObjectPkgRef`, `PidToPkgRef`, `PssidToPkgRef`, `PssidToPid`
+convert through the domain manager (`VAddrToId`, `IdToVAddr`,
+`StoreToVAddr`, `StoreToId`) and `GetEntryFromLargeObjectVAddr` (the large
+binary mapped at an address - also the `client` of `CurrentImports` and
+`PendingImports`).  `GetPkgRefInfo`/`GetPkgInfoFromPssid` answer
+`canonicalPackageFrame` (`GetPkgInfoFromVAddr`), `PidToPackageLite`
+`canonicalPackageLiteFrame`; `GetPackages` adds `store` and `pssid` for a
+package on a store.  DEVIATIONS: `ObjectPid`/`ObjectPkgRef` of one of a
+package's frames answer nil (the host's frames live in an imported area,
+not in the mapping); in `GetPkgRefInfo`'s `parts` a protocol part's
+implementation name is nil (no class info to ask) and a frames part's
+top-level frame is its imported area's (nil until installed).
+
+Tested by `test_PackageManager`'s `TestOnStore` (Cardfile stored with the
+simple and the LZ decompressor, read back byte for byte, installed,
+taken away and installed again, backed up with `BackupPackage` and
+deleted) and `host.NewtonPackageStore`.
+
 ## Not yet
 
 - The `'book` part handler (`TBookPartHandler` over the book reader's
   `TLibrarian`).
 - An endpoint as a streamed source (`TEndpointPipe`, `SuckPackageFromEndpoint`:
   the comms area).
-- Packages on a store: the store side of the ROM domain manager (`IdToStore`,
-  `IdToVAddr`, `StoreToId`, `PackageAvailable`) and so the natives
-  over them - `ActivatePackage` (`FInstallPackage`), `DeActivatePackage`,
-  `ObjectPkgRef`, `PidToPkgRef`, `GetPkgRefInfo`, `PssidToPid`,
-  `SuckPackageFromBinary` and the rest.
+- Of packages on a store: relocating a page to a base other than the
+  host's (`RelocateFramesInPage`), XIP packages (`TXIPStoreCompander`,
+  `TXIPPackageStore`), the progress callback (`TLOCallback`),
+  `CreateFromCompressed` (`LODefCreateFromComp`), the patch package's
+  reboot, a card's 'stor event (`StorageCardInserted`/`MountStore`),
+  `SuckPackageOffDeskTop`, `RestoreSegmentedPackage`, `StopFrameSound`
+  before a package goes, and the 1.x packages (`Activate1.XPackage` and
+  the store's package directory).
 - The validation driver (`ValidatePackage`), system patches
   (`CheckAndInstallPatch`), backups, `SetCardReinsertReason`.
 
@@ -402,6 +485,21 @@ so packages on a store are next.
   blocks when it fails.
 - `TFormPartHandler::GetBackupInfo` leaves the caller's "needs backup" as
   it was.
+- `TCRelocationGenerator::GetRelocDataSizeForBlock`/`GetRelocDataForBlock`'s
+  end test compares the entry pointer plus the entries' size with the
+  entry pointer itself, so the walk never stops at the end of the entries
+  (the host stops there - a DEVIATION - since what follows is heap
+  rubbish on the MessagePad).
+- `TPackageIterator::Store` from memory copies every 1K piece of a part
+  from the part's start: the source is never advanced.
+- `AllocatePackage` (C++) loads the patch package without its relocation
+  chunk and reads the rest as if it began at the directory's end.
+- `NewPackage` (C++) leaves the store locked when the package will not
+  install or was the patch; a failed commit answers the unlock's noErr.
+- `AllocatePackage` (NewtonScript side) gives `RegisterNewPackage` the
+  default store for a nil store but stores the package through the nil
+  store's own slot.
+- `BackupPackage` maps a package it finds unmapped and never unmaps it.
 
 ## Two package formats, and where the difference shows
 

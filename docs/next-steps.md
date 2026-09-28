@@ -11,10 +11,10 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-29
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 119/119
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 121/121
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12270 citations, 0 bad;
-  7095 of 16671 functions (42.56%).
+- `analysis/coverage.py build/MP2x00US --check`: 12400 citations, 0 bad;
+  7211 of 16671 functions (43.25%).
 - `analysis/natives.py --unbound`: 1021 of the ROM's 1326 natives
   answered (77.0%; built-ins 790 of 869, prototype methods 231 of 457).
 
@@ -58,7 +58,9 @@ the way are all in `docs/work-log.md`.
 - **Packages are installed by the package manager**, the ROM's own at
   boot and one from a file with `newton --package file.pkg` or dropped
   onto the window; `packages.py build/MP2x00US --extract DIR --rename
-  Formulas=Formulas2` makes a loadable copy of a built-in one.
+  Formulas=Formulas2` makes a loadable copy of a built-in one.  A package
+  so installed is kept on the internal store, as on a MessagePad: with
+  `--store file` it is activated again at every later boot.
 - **The Newton's own test tools**: the journal records and plays back
   strokes, and the test agent runs a test manager on the machine
   (`src/host/demo/journal.ns`, `testagent.ns`; `docs/testing/README.md`).
@@ -103,13 +105,24 @@ need first:
    Still NOT YET of the object layer: `TLrgObjStore`, objects made from
    compressed streams (`LODefCreateFromComp`), `TPixelMapCompander`, the
    backup progress callback (`TLOCallback`).
-5. **Packages on a store** - **next (round 4)**.  `ActivatePackage`/`DeActivatePackage`
-   (`FInstallPackage`/`FDeinstallPackage`), `ObjectPid`, `ObjectPkgRef`,
-   `PidToPkgRef`, `PssidToPid`, `PssidToPkgRef`, `PidToPackageLite`, the
-   store's `RestorePackage`/`RestoreSegmentedPackage`,
-   `SuckPackageFromBinary`, `SuckPackageOffDeskTop`, `AllocatePackage`,
-   `StorePackage`, `WrapPackage`, `CPackageArchivalPipe`: about 45
-   functions, 6.7 KB above (4).
+5. ~~**Packages on a store**~~ - DONE (2026-09-29, `packages/StorePackages.h`,
+   `StorePackageNatives.cpp`, `stores/PackageObjects.cpp`;
+   `docs/packages/README.md`'s "Packages on a store"; `test_PackageManager`'s
+   `TestOnStore`, ctest `host.NewtonPackageStore`): `newton --store f
+   --package x.pkg` stores the package (store:SuckPackageFromBinary) and
+   the next boot activates it again.  Left of it: relocating a page to a
+   base (`RelocateFramesInPage`, not needed on the host), XIP packages,
+   the progress callback, `LODefCreateFromComp`, a card's 'stor event
+   (`StorageCardInserted`/`MountStore`), `SuckPackageOffDeskTop`,
+   `RestoreSegmentedPackage`, `SuckPackageFromEndpoint` (comms),
+   `CPackageArchivalPipe`, `StopFrameSound`.  Open question: with
+   `NEWTON_HEAPCHECK` set (even to a number so large that it never walks),
+   the boot's `ActivateStorePackages` gets `kError_Bad_ObjectId` (-10015)
+   from the `SendRPC` to the package manager in `InstallPackage` and the
+   stored package stays inactive; without it the same boot works.  The
+   heap walks find no damage; merely installing the hooks changes an
+   object id somewhere - look for a stale port or message id used from
+   `PreMain`'s task after the world has forked.
 6. **1.x packages** - `Activate1.XPackage`, `DeActivate1.XPackage`,
    `Remove1.XPackage`, `1.XPackageToVBO`, `PackageAvailable`/
    `PackageUnavailable`, the store's package directory: 27 functions,

@@ -9,6 +9,36 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: packages round 4 - packages on a store
+
+- **The store side** (`135a556`; `stores/PackageObjects.cpp`):
+  `DeallocatePackage`/`RemoveIndexTable`, `PackageAvailable`/
+  `PackageUnavailable`, `DeletePackage`, `IdToStore`/`IdToVAddr`/
+  `StoreToId`, the `TLrgObjStore` and `TStoreDecompressor` protocols,
+  `GetLOAllocator`; `InstallPackage` tells the domain manager a store
+  package's id.  Found on the way: `LODefaultDelete` is a branch to
+  `DeallocatePackage`, not the no-op it was first read as.
+- **Writing and reading** (`338308e`; `packages/StorePackages.h`): the C
+  and frame relocation generators, `TStorePackageWriter`,
+  `TPackageIterator::Store`, the six store decompressors,
+  `TStoreCompanderWrapper`, `TLOPackageStore`, `AllocatePackage`/
+  `NewPackage`, `BackupPackage`.  Host bug found: the domain manager read
+  a 0x20-byte large-object root from a package's 0x14-byte one.  A test
+  run after `TestStreamed` crashes in the 'pipe' world that test leaves
+  waiting, so `TestOnStore` runs before it.
+- **The NewtonScript side and the boot** (`d15dea5`;
+  `packages/StorePackageNatives.cpp`): `SuckPackageFromBinary`,
+  `RestorePackage`, `ActivatePackage`/`DeActivatePackage`, `ObjectPid`,
+  `ObjectPkgRef`, `PidToPkgRef`, `PssidToPkgRef`, `PssidToPid`,
+  `GetPkgRefInfo`, `GetPkgInfoFromPssid`, `PidToPackageLite`,
+  `IsProtocolPartInUse`, `IsPackage`, `GetPackages`' store slots, the
+  imports' `client`; `PreMain` activates the internal store's packages
+  (`FPenPos` over `PollTablet`, which `ActivateStorePackages` asks);
+  `newton --package` stores the package, so with `--store` it survives a
+  restart (ctest `host.NewtonPackageStore`).  A package's name is
+  big-endian UniChars on every host: `GetPkgRefInfo` converts it (the
+  first version answered "").
+
 ## 2026-09-29: packages round 3 - the large binaries
 
 - **Large binaries (VBOs)** (`2735709`; `stores/LargeBinaries.h`,

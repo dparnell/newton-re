@@ -719,8 +719,14 @@ the root, the chunk table or index and every block, the name and the
 parameters - a package's root and a large object's start the same way, and
 one function takes both back).  NOT YET: objects made from a
 compressed stream (`LODefCreateFromComp`), the backup progress callback
-(`TLOCallback`), a package kept as a large object, the XIP requests.
-`test_LargeObjects`.
+(`TLOCallback`), the XIP requests.  A package kept as a large object -
+its root a 0x14-byte `PackageRoot`, its pages read through a
+`TStoreDecompressor` - is `docs/packages/README.md`'s "Packages on a
+store"; the store side of it is `stores/PackageObjects.cpp`
+(`PackageAvailable`/`PackageUnavailable`, `DeletePackage`, `IdToStore`,
+`IdToVAddr`, `StoreToId`), and the host's domain manager maps one by
+reading every page through its decompressor and keeps the package id it
+was installed as (`kRDMSetPackageId`).  `test_LargeObjects`.
 
 ## Large binaries (`src/stores/LargeBinaries.h`, `Ephemerals.h`)
 

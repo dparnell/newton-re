@@ -2142,3 +2142,21 @@ the turned copy on the same store with the same compander and fills it a
 tile at a time (`TTile`), never holding the page in memory.  The comments
 in the reconstruction had called these "screen-sized"; the MP2x00's
 screen is 40 bytes by 480 rows.  (`qd/MungeBitmap.cpp`.)
+## Every page of a stored package knows where its objects begin
+
+A package installed from a card or the Connection is kept on a store in
+1K pages, each compressed on its own, and mapped into memory a page at a
+time as it is touched - so any page may be the first one read, and its
+frames objects must be made right (their pointer refs moved to where the
+package is now mapped) without looking at the page before.  The writer
+therefore walks the frames part's objects as it fills each page
+(`TFrameRelocationGenerator`) and puts one word in front of it: where the
+first whole object starts, where the frames end, and - when an object
+runs over from the previous page - how many of its header words were
+left behind, whether it is slotted (so the words that did arrive are
+refs) and whether its last word is padding.  Code pages get a list of
+the word offsets that hold addresses instead.  The generator that picks
+those entries out for each page has an end test that compares a pointer
+plus the entries' size with the same pointer, so it never ends: it walks
+on past the last entry until something in memory happens to look like an
+entry for a later page.  (`packages/StorePackages.cpp`.)
