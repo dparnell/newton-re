@@ -716,6 +716,25 @@ TestLineAndCircles(void)
 	EXPECT(CountClass(lo, 200) == 0);
 	LO_Destroy(lo);
 	Destruct(&staff);
+
+	// Check_4: a "4" (value 0x605) kept while it stands alone, taken out
+	// once another digit shares its chunks
+	TraceStart();
+	DrawFour(0, 0);
+	DrawTwo(20, 0);
+	EXPECT(Construct(&staff, "4 2 for Check_4"));
+	lo = LO_Create();
+	staff.fLO = lo;
+	tag_LOWOBJ* four = nil;
+	LO_PickDirectInd(lo, LO_Add(lo, staff.fNodes, 1300, 0, 4, 0x605, 1), &four);
+	LO_Add(lo, staff.fNodes, 1300, 5, staff.fNodeCount - 1, 1402, 1);
+	Check_4(&staff);
+	EXPECT(four != nil && four->fValue == 0x605);
+	LO_Add(lo, staff.fNodes, 1300, 0, 4, 1407, 1);
+	Check_4(&staff);
+	EXPECT(four != nil && four->fValue == 0xffff);
+	LO_Destroy(lo);
+	Destruct(&staff);
 }
 
 

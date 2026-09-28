@@ -343,6 +343,10 @@ long	CheckQIntersec(tag_wapx_type* n, long a, long b, long c, long d);							// 
 // (RecognizeZCCW: ==> 1).
 long	ThreeToFive(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count);		// ROM 0x0028fa14 ThreeToFive__FPvP9tag_CHUNKP13tag_wapx_typePiPP10tag_LOWOBJi
 long	RecognizeZCCW(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count);	// ROM 0x0028fd18 RecognizeZCCW__FPvP9tag_CHUNKP13tag_wapx_typePiPP10tag_LOWOBJi
+// The "4"s of value 0x605 among the digits found taken out again (value
+// 0xffff) when one is taller than twice the digits' mean height or shares
+// its chunks with another digit.
+void	Check_4(tag_CHUNK_STAFF* staff);								// ROM 0x0028d9d0 Check_4__FP15tag_CHUNK_STAFF
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 

@@ -861,3 +861,88 @@ RecognizeZCCW(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_
 	}
 	return 1;
 }
+
+
+#pragma mark - the 4s checked
+
+// ROM 0x0028db48 (unnamed) - whether a "4" (value 0x605) shares its chunks
+// with another digit found - any but a 1, and a 16 only when it is at
+// least a quarter of the mean height taller than the mean
+static long
+FourOverlapsDigit(tag_CHUNK_STAFF* staff, tag_LOWOBJ* four, long mean)
+{
+	void* lo = staff->fLO;
+	tag_wapx_type* n = staff->fNodes;
+	tag_CHUNK* chunks = staff->fChunks;
+	long found = 0;
+	tag_LOWOBJ* obj = nil;
+	ULong was = LO_GetWorkClassID(lo);
+	LO_SetWorkClass(lo, 0x514);
+	for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+	{
+		int32_t v = obj->fValue;
+		if (v == 0xffff || v == 0x605 || v == 0x52c)
+			continue;
+		ULong digit = (uint32_t) v % 100;
+		long m4 = LO_HowManyChunks(lo, four);
+		long fourFirst = LO_GetRealChunkInd(lo, chunks, n, four, 1);
+		long fourLast = LO_GetRealChunkInd(lo, chunks, n, four, m4);
+		long m = LO_HowManyChunks(lo, obj);
+		long first = LO_GetRealChunkInd(lo, chunks, n, obj, 1);
+		long last = LO_GetRealChunkInd(lo, chunks, n, obj, m);
+		if (last < fourFirst || first > fourLast)
+			continue;
+		if (digit == 1)
+			continue;
+		if (digit == 16 && (obj->fBottom - obj->fTop) - mean < mean / 4)
+			continue;
+		found = 1;
+		break;
+	}
+	LO_SetWorkClass(lo, was);
+	return found;
+}
+
+
+// ROM 0x0028d9d0 Check_4__FP15tag_CHUNK_STAFF
+// The "4"s of value 0x605 among the digits found (up to nine of them)
+// taken out again (value 0xffff) when one is taller than twice the mean
+// height of the digits 0-9 found, or shares its chunks with another digit
+// (FourOverlapsDigit).
+void
+Check_4(tag_CHUNK_STAFF* staff)
+{
+	void* lo = staff->fLO;
+	tag_LOWOBJ* fours[9];
+	long nFours = 0, nDigits = 0;
+	int32_t mean = 0;
+	tag_LOWOBJ* obj = nil;
+	ULong was = LO_GetWorkClassID(lo);
+	LO_SetWorkClass(lo, 0x514);
+	for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+	{
+		int32_t v = obj->fValue;
+		if (v == 0xffff)
+			continue;
+		if ((uint32_t) v % 100 <= 9)
+		{
+			mean += obj->fBottom - obj->fTop;
+			nDigits++;
+		}
+		if (v == 0x605)
+		{
+			if (nFours >= 9)
+				break;
+			fours[nFours++] = obj;
+		}
+	}
+	if (nDigits != 0)
+		mean = mean / (int32_t) nDigits;
+	for (long k = 0; k < nFours; k++)
+	{
+		if ((mean != 0 && fours[k]->fBottom - fours[k]->fTop > mean * 2)
+			|| FourOverlapsDigit(staff, fours[k], mean))
+			fours[k]->fValue = 0xffff;
+	}
+	LO_SetWorkClass(lo, was);
+}
