@@ -75,6 +75,7 @@ Ref		PtInPicture(RefArg x, RefArg y, RefArg picture, Boolean wantsPixel);	// ROM
 
 Ref		FPtInPicture(RefArg rcvr, RefArg x, RefArg y, RefArg picture);		// ROM 0x0003f3c0 FPtInPicture__FRC6RefVarN31
 Ref		FGetBitmapPixel(RefArg rcvr, RefArg x, RefArg y, RefArg picture);	// ROM 0x0003f3d8 FGetBitmapPixel__FRC6RefVarN31
+Ref		FGetBitmapInfo(RefArg rcvr, RefArg bitmap);								// ROM 0x00041d94 FGetBitmapInfo
 
 void	RegisterPictureNatives(void);
 

@@ -1,0 +1,20 @@
+// Large binaries (VBOs) on the booted machine: a bitmap made on the
+// internal store (MakeBitmap's store option - a 'pixels large binary),
+// and what GetBitmapInfo says about it.  A soup entry holding one is
+// test_LargeBinaries' job; this is the boot's side: the store companders
+// registered and the store answering "LOBJ".
+//
+//   NEWTON_HEAPCHECK=50 build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --display 320x480 --script src/host/demo/vbo.ns --headless 5
+//
+// (TPixelMapCompander, MakeBitmap's default for a store bitmap, is NOT
+// YET, so a compander is named.  GetLearningData is not asked: with no
+// big-learning database it runs into the ROM bug in SizeOfLearningData,
+// recognition/WordRecognizer.cpp.)
+
+AddDelayedCall(func() begin
+	local b := MakeBitmap(64, 64, {store: GetStores()[0], companderName: "TLZStoreCompander"});
+	local i := GetBitmapInfo(b);
+	Print({bitsVBO: IsVBO(i.bits), compander: i.compandername, onStore: i.store = GetStores()[0], rowbytes: i.rowbytes, bounds: i.bounds});
+	Print("vbo: done");
+end, [], 1000);

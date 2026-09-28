@@ -17,6 +17,8 @@
 #include "Words.h"				// gWordID, gEnabledLanguage, gSaveWordTrainingData
 #include "Locale.h"				// GetPreference, SetPreference
 #include "Frames.h"
+#include "Soups.h"				// GetStores
+#include "LargeBinaries.h"		// FLBAlloc
 #include "ObjectHeap.h"
 #include "Interpreter.h"		// NSCallGlobalFn
 #include "RSSymbols.h"
@@ -600,9 +602,7 @@ FSetLearningData(RefArg /*rcvr*/, RefArg data)
 
 // ROM 0x00167f24 FGetLearningData__FRC6RefVar
 // GetLearningData(): the orthographic database as a 'learningData
-// binary on the internal store.
-// NOT YET RECONSTRUCTED: large binaries on a store (FLBAlloc); the host
-// makes an ordinary binary.
+// large binary (a VBO) on the internal store - the first of GetStores().
 Ref
 FGetLearningData(RefArg /*rcvr*/)
 {
@@ -610,7 +610,8 @@ FGetLearningData(RefArg /*rcvr*/)
 	long size = SizeOfLearningData();
 	if (size != 0)
 	{
-		data = AllocateBinary(RSSYMlearningdata, size);
+		RefVar store(GetArraySlot(RefVar(GetStores()), 0));
+		data = FLBAlloc(store, RSSYMlearningdata, RefVar(MAKEINT(size)));
 		BlockMove(LearningDataPtr(), BinaryData(data), size);
 	}
 	return data;

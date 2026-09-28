@@ -78,7 +78,7 @@ Ref		FGetGlobals(RefArg rcvr);			// ROM 0x002b72b8 FGetGlobals
 // the sorted-array natives (ArrayNatives.cpp) other units call: BInsert(array, element, test, keyPath, uniqueOnly)
 Ref		FBInsert(RefArg rcvr, RefArg array, RefArg element, RefArg test, RefArg keyPath, RefArg uniqueOnly);
 
-// large binaries (NOT YET RECONSTRUCTED: never one; objects.h declares it under hasLargeObjects)
+// large binaries: an indirect binary whose procs are gLBProcs (stores/LargeBinaries.h fills them in)
 Boolean	IsLargeBinary(RefArg ref);
 
 #endif	/* __FRAMES_H */

@@ -4,6 +4,7 @@
 	Contains:	HostMountStores (HostStores.h).
 */
 
+#include "StoreCompander.h"
 #include "HostStores.h"
 
 #include "FactorySoups.h"
@@ -85,8 +86,15 @@ HostMountStores(void)
 		// TPackageStore for a package that carries a store part of its own.
 		// (newtonscript mounts a store without the OS running, and there is
 		// no registry then - nothing makes a store by name there either)
+		// ... and the store companders, which the ROM registers in
+		// InitializeStoreDecompressors 0x001fa9fc, called from
+		// RegisterROMDomainManager 0x001b0e30 in InitialKSRVTask (NOT YET
+		// RECONSTRUCTED): a large binary (a VBO) cannot be made without them.
 		if (gProtocolRegistry != nil)
+		{
 			RegisterStoreImplementations();
+			InitializeStoreCompanders();
+		}
 		InitQueries();
 
 		TStore* store = (TStore*) THostStore::ClassInfo()->New();

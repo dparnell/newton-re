@@ -19,6 +19,7 @@
 #include "NativeFunctions.h"
 #include "ByteOrder.h"
 #include "ROMConstants.h"
+#include "LargeBinaries.h"		// FLBAllocCompressed, FGetBinaryStore...
 #include <string.h>
 
 // the graphics exception (evt.ex.graf) for a picture that is not a bitmap
@@ -298,6 +299,7 @@ RegisterPictureNatives(void)
 {
 	RegisterNativeFunction("FPtInPicture__FRC6RefVarN31", (void*) FPtInPicture, 3);
 	RegisterNativeFunction("FGetBitmapPixel__FRC6RefVarN31", (void*) FGetBitmapPixel, 3);
+	RegisterNativeFunction("FGetBitmapInfo", (void*) FGetBitmapInfo, 1);
 }
 
 
@@ -434,25 +436,33 @@ DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 // ROM 0x000415a4 MakePixelsObject__FR5TRectlN32RC6RefVarN26
 // The binary itself: the header written over the front of it and the
 // rows left as they were allocated (nought).  With a store it is a large
-// binary instead, compressed by the named compander.
+// binary instead, compressed by the named compander - TPixelMapCompander
+// when none is named.  (TPixelMapCompander - LZ over the rows each
+// XORed with the one above, 0x1000-byte blocks - is NOT YET RECONSTRUCTED,
+// so on the host a store bitmap must name a compander of its own, e.g.
+// "TLZStoreCompander"; without one FLBAllocCompressed fails.)
 //
 // DEVIATION: the ROM's header is 0x1c bytes because a Newton pointer is
 // four; the host's PixelMap is larger, so the header is written as a
 // PixelMap and the offset is its own size.  A `'pixels` binary is cast
 // straight to a PixelMap wherever it is drawn (qd/Pictures.cpp), so it
 // must be in the host's layout, not the Newton's.
-//
-// NOT YET RECONSTRUCTED: the store arm (FLBAllocCompressed), which wants
-// the large binaries - there are never any on the host.
 Ref
 MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 				 long hRes, long vRes, RefArg store, RefArg compander, RefArg companderData)
 {
-	if (NOTNIL(store))
-		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadParameters, nil);
 	long header = (long) sizeof(PixelMap);
 	long size = header + rowBytes * (bounds.bottom - bounds.top);
-	RefVar object(AllocateBinary(RSSYMpixels, size));
+	RefVar object;
+	if (NOTNIL(store))
+	{
+		RefVar companderName(compander);
+		if (ISNIL(companderName))
+			companderName = MakeString("TPixelMapCompander");
+		object = FLBAllocCompressed(store, RSSYMpixels, RefVar(MAKEINT(size)), companderName, companderData);
+	}
+	else
+		object = AllocateBinary(RSSYMpixels, size);
 	PixelMap* map = (PixelMap*) BinaryData(object);
 	map->baseAddr = (Ptr) (intptr_t) header;
 	map->rowBytes = (short) rowBytes;
@@ -462,6 +472,69 @@ MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 	map->deviceRes.v = (short) vRes;
 	map->grayTable = nil;
 	return object;
+}
+
+
+// ROM 0x00041d94 FGetBitmapInfo
+// GetBitmapInfo(bitmap): what a bitmap shape is made of, in a clone of
+// canonicalBitmapInfo - the store and compander of its bits (when it has
+// any), the bits themselves, the bits' bounds, row bytes, depth, the
+// offset to the first row (a 'pixels binary's baseAddr, sixteen for the
+// old 'bits form) and the resolution [h, v]; then the shape's bounds (a
+// 'boundsRect binary, as MakeBitmap makes it), and every slot of the
+// shape but class, bounds and data copied across.
+Ref
+FGetBitmapInfo(RefArg /*rcvr*/, RefArg bitmap)
+{
+	RefVar shape(Clone(bitmap));
+	RefVar info(Clone(RefVar(Rcanonicalbitmapinfo)));
+	RefVar data(GetFrameSlotRef(shape, RSSYMdata));
+	Boolean isPixels = false;
+	if (NOTNIL(data))
+	{
+		isPixels = IsInstance(data, RSSYMpixels);
+		SetFrameSlot(info, RSSYMstore, RefVar(FGetBinaryStore(RefVar(NILREF), data)));
+		SetFrameSlot(info, RSSYMcompandername, RefVar(FGetBinaryCompander(RefVar(NILREF), data)));
+		SetFrameSlot(info, RSSYMcompanderdata, RefVar(FGetBinaryCompanderData(RefVar(NILREF), data)));
+	}
+	TPixelObj pixels;
+	newton_try
+	{
+		pixels.Init(bitmap);
+		PixelMap* pm = pixels.fPixels;
+		SetFrameSlot(info, RSSYMbits, RefVar(GetFrameSlotRef(shape, RSSYMdata)));
+		long scanOffset = isPixels ? (long) (intptr_t) pm->baseAddr : 0x10;
+		SetFrameSlot(info, RSSYMbitsbounds, RefVar(ToObject(pm->bounds)));
+		SetFrameSlot(info, RSSYMrowbytes, RefVar(MAKEINT(pm->rowBytes)));
+		SetFrameSlot(info, RSSYMdepth, RefVar(MAKEINT(pm->pixMapFlags & 0xff)));
+		SetFrameSlot(info, RSSYMscanoffset, RefVar(MAKEINT(scanOffset)));
+		RefVar resolution(AllocateArray(RSSYMresolution, 2));
+		SetArraySlotRef(resolution, 0, MAKEINT(pm->deviceRes.h));
+		SetArraySlotRef(resolution, 1, MAKEINT(pm->deviceRes.v));
+		SetFrameSlot(info, RSSYMresolution, resolution);
+	}
+	cleanup
+	{
+		pixels.~TPixelObj();
+	}
+	end_try;
+	RefVar bounds(GetFrameSlotRef(shape, RSSYMbounds));
+	SetFrameSlot(info, RSSYMbounds, RefVar(ToObject(*(Rect*) BinaryData(bounds))));
+	RemoveSlot(shape, RSSYMclass);
+	RemoveSlot(shape, RSSYMbounds);
+	RemoveSlot(shape, RSSYMdata);
+	if (NOTNIL(shape))
+	{
+		TObjectIterator* iter = NewTObjectIterator(shape);
+		for (; !iter->Done(); iter->Next())
+		{
+			RefVar tag(iter->Tag());
+			SetFrameSlot(info, tag, RefVar(iter->Value()));
+			RemoveSlot(shape, tag);
+		}
+		DeleteTObjectIterator(iter);
+	}
+	return info;
 }
 
 

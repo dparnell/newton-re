@@ -215,9 +215,8 @@ FGetPackageStores(RefArg /*rcvr*/)
 // ROM 0x00321ef8 IsPackage__FRC6RefVar
 // A package on a store, as a script holds it: a large binary of class
 // 'package whose bytes are a package and are a package on its store.
-// (Large binaries are NOT YET RECONSTRUCTED - IsLargeBinary answers false
-// on the host - so there are none: IsOnStoreAsPackage, which asks the ROM
-// domain manager, is never reached.)
+// (IsOnStoreAsPackage, which asks the ROM domain manager whether the large
+// object is a package, is NOT YET RECONSTRUCTED: packages kept on a store.)
 static Boolean
 IsPackage(RefArg obj)
 {

@@ -27,7 +27,7 @@ add_library(qd STATIC
     ScreenNatives.cpp
     RectNatives.cpp
 )
-target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols)
+target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols stores)
 target_include_directories(qd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

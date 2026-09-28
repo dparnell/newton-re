@@ -86,6 +86,9 @@ Boolean	RegisterLargeBinaryForDeclawing(const LBData* data);		// ROM 0x00101310 
 
 Ref		FLBAlloc(RefArg rcvr, RefArg theClass, RefArg length);		// ROM 0x00100234 FLBAlloc - store:NewVBO(class, length)
 Ref		FLBAllocCompressed(RefArg rcvr, RefArg theClass, RefArg length, RefArg companderName, RefArg companderData);	// ROM 0x000ffff4 FLBAllocCompressed - store:NewCompressedVBO(...)
+Ref		FGetBinaryStore(RefArg rcvr, RefArg obj);			// ROM 0x00100c04 FGetBinaryStore - GetVBOStore(obj)
+Ref		FGetBinaryCompander(RefArg rcvr, RefArg obj);		// ROM 0x00100c50 FGetBinaryCompander - GetVBOCompander(obj)
+Ref		FGetBinaryCompanderData(RefArg rcvr, RefArg obj);	// ROM 0x00100d00 FGetBinaryCompanderData
 void	RegisterLargeBinaryNatives(void);	// NewVBO, NewCompressedVBO, IsVBO, GetVBOStore, ... (LargeBinaries.cpp)
 
 #endif	/* __LARGEBINARIES_H */

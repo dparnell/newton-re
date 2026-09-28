@@ -23,7 +23,7 @@
 		8  string: length, class object; the text	9  precedent: index (long)
 		   goes to the text object
 		10 nil										11 small rect: 4 bytes (top, left, bottom, right)
-		12 large binary: id and size (NOT YET)
+		12 large binary: id and class (LargeBinaries.h)
 
 	A long is one byte 0..254 or 0xff and four bytes; every word is
 	big-endian, as the MessagePad writes it (the header's words and the

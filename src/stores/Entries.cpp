@@ -10,6 +10,8 @@
 #include "Entries.h"
 #include "Soups.h"
 #include "StoreObject.h"
+#include "LargeBinaries.h"
+#include "LargeObjects.h"
 #include "Frames.h"
 #include "Interpreter.h"
 #include "RSSymbols.h"
@@ -137,10 +139,9 @@ static const Ref kKilledObjectRef = MAKEIMMED(kImmedSpecial, 4);
 // when its store is still there (EntryValid), a large binary when its
 // pages are still mapped, and anything else simply is.  An
 // evt.ex.fr;type.ref exception carrying error -48201 - the object has
-// gone - is the answer nil rather than a throw.
-//
-// NOT YET RECONSTRUCTED: the large binaries, so IsLargeBinary is always
-// false and LargeObjectAddressIsValid is never asked.
+// gone - is the answer nil rather than a throw.  An object that itself
+// lies in a large object (NoTouchObjectPtr's flag: never on the host,
+// see ObjectHeap.cpp) is valid while that is mapped.
 Ref
 FIsValid(RefArg /*rcvr*/, RefArg obj)
 {
@@ -150,14 +151,13 @@ FIsValid(RefArg /*rcvr*/, RefArg obj)
 	newton_try
 	{
 		int isLargeObject = 0;
-		NoTouchObjectPtr(obj, &isLargeObject);
-		if (isLargeObject == 0)
-		{
-			if (IsSoupEntry(obj))
-				result = MAKEBOOLEAN(EntryValid(obj));
-			else if (IsLargeBinary(obj))
-				result = NILREF;		// (the ROM: LargeObjectAddressIsValid)
-		}
+		ObjHeader* o = NoTouchObjectPtr(obj, &isLargeObject);
+		if (isLargeObject != 0)
+			result = MAKEBOOLEAN(LargeObjectAddressIsValid((ULong) (uintptr_t) o));
+		else if (IsSoupEntry(obj))
+			result = MAKEBOOLEAN(EntryValid(obj));
+		else if (IsLargeBinary(obj))
+			result = MAKEBOOLEAN(LargeObjectAddressIsValid(LargeBinaryData(obj)->fAddress));
 	}
 	newton_catch(exFrames)
 	{

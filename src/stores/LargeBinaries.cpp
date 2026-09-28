@@ -674,7 +674,7 @@ FIsLargeBinary(RefArg /*rcvr*/, RefArg obj)
 // ROM 0x00100c04 FGetBinaryStore
 // GetVBOStore(obj): the store frame it lives on - the one of `gStores`
 // whose wrapper holds the same TStore - or nil.
-static Ref
+Ref
 FGetBinaryStore(RefArg /*rcvr*/, RefArg obj)
 {
 	if (!IsLargeBinary(obj))
@@ -698,7 +698,7 @@ FGetBinaryStore(RefArg /*rcvr*/, RefArg obj)
 // ROM 0x00100c50 FGetBinaryCompander
 // GetVBOCompander(obj): the name of the compander that packs it (at most
 // 256 characters - more is out of memory).
-static Ref
+Ref
 FGetBinaryCompander(RefArg /*rcvr*/, RefArg obj)
 {
 	if (!IsLargeBinary(obj))
@@ -720,7 +720,7 @@ FGetBinaryCompander(RefArg /*rcvr*/, RefArg obj)
 // ROM 0x00100d00 FGetBinaryCompanderData
 // GetVBOCompanderData(obj): the data that compander was made with, as a
 // binary of class 'none; nil when there is none.
-static Ref
+Ref
 FGetBinaryCompanderData(RefArg /*rcvr*/, RefArg obj)
 {
 	if (!IsLargeBinary(obj))
