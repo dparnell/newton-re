@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 108/108
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11425 citations, 0 bad;
-  6462 of 16671 functions (38.76%).
+- `analysis/coverage.py build/MP2x00US --check`: 11433 citations, 0 bad;
+  6470 of 16671 functions (38.81%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -239,7 +239,8 @@ order AnalyzeLowData calls them.  Revised estimate: about three more
 rounds for `low_level` (this round did about 25 KB, every function from
 the disassembly), and the whole reader perhaps ten.
 
-**Stage 2, round 5 (2026-09-28, commits edb3d06, 94c1eb6, 7e8b3df):**
+**Stage 2, round 5 (2026-09-28, commits edb3d06, 94c1eb6, 7e8b3df,
+44f6286):**
 `exchange` and `FillXrFeatures` (`LowExchange.cpp`, `LowXrFeatures.cpp`:
 the first xr stream - `test_LowLevel`'s `TestExchange` takes the "uou"
 through to breaks at each end, 5 upper and 4 lower extrema, points and
@@ -249,9 +250,18 @@ boxes inside the trace; `penlDefX`/`penlDefH`, `xr_type_merits`,
 moves a colon written last back between two u's), and `lk_cross`
 (`LowLkCross.cpp`, 32 functions: sticks, loops, the point-in-polygon
 test - `TestLkCross` codes the uou's o as a closed loop).  About 60
-functions and 42 KB.  Left below `low_level`: `lk_duga` (40 functions
-not done, about 16 KB: `arcs_processing`, `conv_sticks_to_arcs`, the
-circle neighbours) and `xt_st_zz` (67 not done, about 40 KB: the
+functions and 42 KB; and of `lk_duga` (`LowLkDuga.cpp`, `TestLkDuga`)
+the arc, loop and stick passes: `arcs_processing` (with `DyLimit`,
+`IsDx_Dy_in_arcs_OK`, `IsDx_Dy_in_tips_OK`, `IsTipOK`),
+`delete_CROSS_elements`/`ins_third_elem_in_circle` and
+`check_IUb_IDf_small`.  Left below `low_level`: the rest of `lk_duga` (30
+functions, about 11 KB: `lk_duga` itself, `prevent_arcs`,
+`conv_sticks_to_arcs` over `cos_horizline`, `del_before_after_circles`
+and the circle neighbours over the `NxtPrvCircle_type` block -
+`check_before_circle`, `check_after_circle`, `check_next_for_*`,
+`UpElemBeforeCircle`/`DnElemBeforeCircle`, `Is_8`, `O_GU_To3Elements`,
+`HardOverlapRect` - and `delete_UD_before_DDL`; the disassembly is
+0x002fa2f8-0x002fd920) and `xt_st_zz` (67 not done, about 40 KB: the
 t-bars, umlauts, quotes and punctuation, `make_different_breaks`,
 `FindDArcs`), then wiring `low_level` into `GCTryToRecognize` (the
 order is AnalyzeLowData's: `lk_begin`, `lk_cross`, `lk_duga`,

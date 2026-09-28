@@ -2528,8 +2528,22 @@ its direction, one of 32 (`FillOrients`, `GetVect`, `GetAngle` over
 `ratio_to_angle`).  `test_LowLevel`: `TestExchange` (the uou's xr
 stream), `TestRestore` (a colon moved between two u's), `TestLkCross`.
 
-NOT YET: `lk_duga` (about 16 KB: `arcs_processing`,
-`conv_sticks_to_arcs`, the circle neighbours) and `xt_st_zz` (about 40
+**lk_duga** (duga is Russian for an arc) is begun (`LowLkDuga.cpp`):
+`arcs_processing` folds a top (2, 3) or bottom (7, 8) that is only the
+tip of a stroke's start or end beside it into it - close in height
+(`DyLimit`: a quarter of the height to the nearest extremum of the other
+kind, at least 27, or no tip at all when a low top's bottom is only just
+below it), close across and narrow (`IsDx_Dy_in_arcs_OK`,
+`IsDx_Dy_in_tips_OK`, `IsTipOK`) - the end becoming an arc (9..0xc) or
+the extremum taking the end's mark; `delete_CROSS_elements` takes out the
+loops too short to be letters (`ins_third_elem_in_circle` keeps one taller
+than 60 with no loop or arc beside it, as a small loop 0x1b at the top or
+0x17 at the bottom); `check_IUb_IDf_small` gives a stick the other height
+band when its neighbours, or its lean across the points about it, say so.
+
+NOT YET: the rest of `lk_duga` (`prevent_arcs`, `conv_sticks_to_arcs`,
+`del_before_after_circles` and the circle neighbours,
+`delete_UD_before_DDL`) and `xt_st_zz` (about 40
 KB: the t-bars, umlauts, quotes and punctuation,
 `make_different_breaks`, `FindDArcs`), and `low_level` wired into
 `GCTryToRecognize`.

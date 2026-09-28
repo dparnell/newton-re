@@ -45,7 +45,16 @@ bugs and ROM bugs found on the way.
   runs from x = 1 to the point).  Two places read an element's array
   neighbour as its crossing partner (`SPEC_TYPE` + 1, as the ROM's +0x14
   and +0x16 loads do).
-- `test_LowLevel`: `TestExchange`, `TestRestore`, `TestLkCross`.
+- **lk_duga's first passes** (`LowLkDuga.cpp`): `arcs_processing` folds
+  an extremum that is only the tip of a stroke's end into it (the end
+  becomes an arc, 9..0xc, or the extremum takes the end's mark), over
+  `DyLimit`, `IsDx_Dy_in_arcs_OK`, `IsDx_Dy_in_tips_OK` and `IsTipOK`;
+  `delete_CROSS_elements` takes out the loops too short to be letters
+  (`ins_third_elem_in_circle` keeping a tall one as 0x1b or 0x17);
+  `check_IUb_IDf_small` sets a stick's band.  `lk_duga` itself and the
+  circle-neighbour passes are NOT YET.
+- `test_LowLevel`: `TestExchange`, `TestRestore`, `TestLkCross`,
+  `TestLkDuga`.
 
 ## 2026-09-28: the cursive reader's low level, round 4
 
