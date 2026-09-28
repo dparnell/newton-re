@@ -2643,20 +2643,128 @@ alone - `AnalyzeLowData` and `exchange`, and writes the slant back.
 the Notepad is cut into 13 xrs and "to" into 8 (`NEWTON_TRACE_CURSIVE=1`
 prints each xr's type and height), and the reader stops one layer up.
 
-**NOT YET RECONSTRUCTED**: the reading's other two layers (`xrw_algs` -
-the xrs matched against the letter table and the vocabularies into a word
-graph - and the `Chunk*` digit reader; docs/next-steps.md has their sizes
-and the plan), the answers made from the word graph
-(`EvaluateAndSortAnswers`, `MakeAndCombRecWordsFromWordGraph`,
-`FillRecwordSplitInfo`, `GCFillLearningHandle`), `SetStrXrRC` (a
-recognition configuration's `strxrCommands`), `GetTraceFromStrokes`'s use
-in `DoLearning`, `ORTraining`, and the base-line and grid geometry
-`ConfigureArea` hands the engine (`GetWordGeom`, `GetGridGeom`).  So a
-cursive letter set chosen on the host still reads nothing of its own:
-each word ends marked 0x400 (xrw_algs failing, -9) and its writing is kept
-as ink.  (With the letter set changed at run
-time, as `cursive.ns` does, the Notepad's existing areas still have
-Rosetta as well, which reads the words.)
+### The xr reader (`recognition/XrMatrix.h`, `XrReader.h`)
+
+`xrw_algs` (0x00362f08) is the layer above the low level: a word's xrs
+read into a *word graph* (`RWG_type`) - what the writing may say, as a
+list of symbols with, for each, the xrs it was read from.
+
+**The matrix** (`XrMatrix.h`, `xrcm_type`) is how one letter is matched
+against the xrs.  The letter table (the DTE, `ParaGraph.h`) says how each
+letter may be written: up to sixteen *variants*, each a string of up to
+twelve *prototype* xrs of 0x4c bytes - a skip penalty in byte 3, a flag
+in byte 2 (bit 7: this prototype only reads an xr next to a break), then
+nibble tables of what each xr type (64), height (16), shift (16), link
+(16) and direction (32) is worth at that point of the letter.  Matching
+is dynamic programming along the xr string: a *line* is a value per xr
+position, the best score of a path that has read so far and ends there;
+each prototype is one column, `CountXrAsm` turning the line before into
+the line after - at each position the best of skipping the xr (the
+position before, less the xr's penalty), skipping the prototype (the
+input less the prototype's penalty) and the diagonal (the input's
+position before, less 50, plus the sum of the five nibbles), a tie going
+to the diagonal.  `CountXrAsm` and `TCountXrAsm` are hand-written
+assembly in the ROM (0x0038cd38, 0x003ad244), transcribed register by
+register: the prototype's first word is rotated right by eight so its
+skip penalty is the top byte and its flag the bottom, and each xr's first
+eight bytes are read as two words so the table lookups are shifts of
+one register.  `TCountXrAsm` also writes how each cell was reached (1 the
+xr skipped, 2 the prototype, 3 the diagonal) - and breaks ties the other
+way, towards the earlier of the three.  A variant's lines are merged into
+the letter's, each variant charged twice its *vex* (how rarely the
+writer uses it, from the descriptor or, with the learning info, the
+writer's own); a letter is counted in the case it is written in and,
+when the field allows, the other (`CountLetter`); a word is counted
+letter by letter, each letter's out line cut to the stretch within 50 of
+its best position becoming the next one's input (`CountWord`).  With the
+trace (flag 4) the reading is walked back into a *layout*: which
+prototype of which variant read which xr (`CreateLayout`).  With rc +0x0a
+bit 0 the matrix remembers, for each break, where each letter read from it
+ended and what it added, and reads it from there again instead of
+counting it (`CountSym`'s cache - the reader turns this off).
+`test_XrMatrix` checks the inner loop's arithmetic by hand, and that each
+of six letters of the ROM's table reads the xrs its own prototypes read
+best (the type, height, shift, direction and link each gives most for)
+better than any other letter does - 'o' 144 against 'c' 115, 'm' 206
+against 'n' 159 - and "lo" better than "ol".
+
+**The Viterbi** (`xrlv`, `Xrlv.cpp`) reads the word along its
+*locations*: the xrs the low level marked as the last of a letter
+(`XrlvSetLocations`; with rc +0x0e = 1 only the first and last).  Each
+location keeps up to rc +0x10 *partial readings* (`xrlv_var_data_type`,
+100 bytes: the letters so far, what each added, each letter's variant
+and how many locations it spans, and where the dictionary walk allowing
+them has got to), in a *position block* - only as many blocks as a letter
+may reach ahead of a location (the most locations within seventeen xrs
+of any one), handed on from a location behind to one ahead as the read
+moves along.  From each location (`XrlvDevelopPos`) every reading is
+offered what may come next (`XrlvGetNextSymbols`):
+
+  - the vocabulary's next letters (`GF_VocSymbolSet`: each dictionary of
+    the area's chain the reading still allows walked to the word so far
+    with Airus's Verify and asked for what follows with NextSet9, whose
+    callback sets a character's bit in a 256-bit set and writes the
+    dictionary's state after it; `XrLex.cpp`), with their capitals at a
+    word's start when the field allows them;
+  - the lexical database's (a lexicon, whose nodes carry strings: Airus's
+    `AL_NextSet9`, reconstructed for this), each two cheaper;
+  - with no dictionary, the field's character set (`XrlvGetCharset`),
+    each letter weighed by the trigram table against the two before it;
+  - leading and ending punctuation.
+
+Each symbol is counted from the location once (`CountSym`, the result
+kept in a per-symbol cache for the location), and every location ahead
+that its out line reaches gets a new reading when the reading's score,
+plus what the letter read, less what a letter of its class costs after
+the one before (a 7x7 table: other, lower, upper, digit, dictionary word,
+math), what the xrs it skipped cost and what ending away from a break
+costs, beats that location's threshold (`XrlvDevelopCell`; a full
+location replaces its weakest reading).  At a break wide enough for a
+word gap a reading may also close its word and start another.  Before a
+location's readings go on they are sorted, trimmed to the beam
+(`XrlvSortXrlvPos`, `XrlvTrimXrlvPos`) and each last letter is checked
+against the line (`XrlvCHLXrlvPos`, 3.4 KB): its box, moved by the
+writing's slant (`GetBaseBord`), against the letter before's (do their
+bodies overlap where their variants' position nibbles say they should?),
+its height against the letters before (what the variants' size nibbles
+allow, halved when the boxes overlap little on the line), and its middle
+against the line's - up to eight off the score for each.  The last
+location's readings become the answers (`XrlvSortAns`: the score over
+the word's length, in thousandths, at most 2000; `XrlvCleanAns` drops
+duplicates) and the graph (`XrlvCreateRWG`: up to five answers within rc
++0x1a tens of the best, each letter a symbol with its xrs, variant, what
+it added and, for a dictionary word, its id), each symbol's xrs found
+again by reading the letter alone over them (`XrlvGetSymAliases`, a
+traced `CountWord`).  A field that expects one fixed string (rc +0xc0)
+skips all that: the string is the graph (`GetCMPAliases`, over
+`create_rwg_ppd`).  `test_XrMatrix` reads the ideal xrs of l and o with
+the character set alone as "lo" first, then "bo", "eo", "so", "lf".
+
+`GCTryToRecognize` calls it after the low level (with
+`SetMultiWordMarksWS`/`SetMultiWordMarksDash` first, which mark the
+breaks the segmenter was unsure of): with a cursive letter set,
+`cursive.ns`'s "to" comes out of the graph as "to" first, and "ton" as
+For, ER, Eon, FR, EN (`NEWTON_TRACE_CURSIVE=1` prints the graph).  Some
+ROM quirks kept: the line check takes the size of a single-letter word's
+imaginary letter before from a constant (0x2a5778) where only its being
+non-nought was meant; the check against the letter two back measures the
+overlap against the letter just before; a capital's penalty for the
+first letter of a word is booked against its last; the per-symbol cache
+runs a line longer than sixteen positions into the next symbol's entry.
+
+**NOT YET RECONSTRUCTED**: the answers made from the word graph
+(`EvaluateAndSortAnswers`, `MakeAndCombRecWordsFromWordGraph` - 60
+functions, about 24 KB, with a rule interpreter over the prototype data's
+PDF rules - then `FillRecwordSplitInfo`, `GCFillLearningHandle`), the
+`Chunk*` digit reader, `AL_NextSet` (Airus selector 8 for lexicons),
+`SetStrXrRC` (a recognition configuration's `strxrCommands`),
+`GetTraceFromStrokes`'s use in `DoLearning`, `ORTraining`, and the
+base-line and grid geometry `ConfigureArea` hands the engine
+(`GetWordGeom`, `GetGridGeom`).  So a cursive letter set chosen on the
+host still types nothing: after the graph the host answers -9 (the word
+marked 0x400) and the writing is kept as ink.  (With the letter set
+changed at run time, as `cursive.ns` does, the Notepad's existing areas
+still have Rosetta as well, which reads the words.)
 
 ## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
 

@@ -9,6 +9,41 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+
+## 2026-09-28: the cursive reader's xr reader (round 8)
+
+- **The matrix** (`recognition/XrMatrix.h`/`.cpp`): `xrcm_type` and its
+  lines, `CountWord`/`CountLetter`/`CountSym`/`CountVar`/
+  `MergeVarResults`, the trace (`TraceAlloc`, `TDwordAdvance`) and the
+  layout (`CreateLayout`), and the hand-written assembly column loops
+  `CountXrAsm`/`TCountXrAsm` (read with disasm.py: the prototype's first
+  word rotated by eight, the xr read as two words; the traced one breaks
+  ties the other way).  DEVIATION: the trace is carved on eight-byte
+  boundaries so the pointers in it are aligned.
+- **The Viterbi** (`Xrlv.cpp`): `xrlv` and every `Xrlv*` function;
+  `XrlvCHLXrlvPos` from the disassembly (its stack rectangles lost by the
+  decompiler).  ROM quirks kept: a constant (0x2a5778) standing for a
+  single-letter word's letter before, the two-back size check measuring
+  the overlap against the letter just before, a first letter's capital
+  penalty booked against the last, the symbol cache overrunning into the
+  next symbol's entry (DEVIATION: slack after the last).
+- **The dictionaries** (`XrLex.cpp`): `GF_VocOrLexSymbolSet`,
+  `Enum_fcn9CB`/`Lex_fcn9CB`, `GetWordAttributeAndID`,
+  `AssignDictionaries`; Airus gained `AEnum_NextSet9` (selector 9 routed)
+  and `AL_NextSet9`.
+- **The graph** (`XrWordGraph.cpp`): `xrw_algs`, `create_rwg_ppd(_node)`,
+  `GetCMPAliases`, `fill_RW_aliases`, `SortGraph`, `FreeRWGMem`,
+  `GetSymBox`, `GetBaseBord`; and `SetMultiWordMarksWS`/`Dash`
+  (`CursiveReader.cpp`).  `ParaGraph.cpp` gained `HWRStrChr`,
+  `HWRStrRev`, `IsPunct`, `GetVarRewcapAllow`, `GetVarPosSize`.
+- `GCTryToRecognize` now calls `xrw_algs`: `cursive.ns`'s "to" comes out
+  of the graph as "to" first.  The answers are NOT YET, so it still ends
+  as ink (-9).
+- Tests: `test_XrMatrix` (new), `host.NewtonCursive` checks both words'
+  graphs.  ctest 109/109; coverage 11599 citations, 0 bad, 6624 of 16671
+  functions (39.73%); open-apps: only the Sound Recorder fails;
+  `cursive.ns` clean under `NEWTON_HEAPCHECK=5` three runs out of three.
+
 ## 2026-09-28: the cursive reader's low level whole
 
 - `FindDArcs` and its group (`recognition/LowDArcs.cpp`, 17 functions,

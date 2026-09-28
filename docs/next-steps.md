@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 108/108
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 109/109
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11524 citations, 0 bad;
-  6556 of 16671 functions (39.33%).
+- `analysis/coverage.py build/MP2x00US --check`: 11599 citations, 0 bad;
+  6624 of 16671 functions (39.73%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -304,40 +304,46 @@ and `GCTryToRecognize` now calls `low_level`.  `test_LowLevel`'s
 xrs and "to" into 8 and the reader stops at `xrw_algs`, -9 (ctest
 `host.NewtonCursive` checks both; clean under `NEWTON_HEAPCHECK=5`).
 
-**Stage 3, the next piece: `xrw_algs`** (0x00362f08; after `low_level`
-succeeds, `GCTryToRecognize` runs `ChunkWriteParamCtx`/`ChunkPatchXrdata`
-- nothing to do with no chunk - then, for more than two xrs,
-`SetMultiWordMarksWS`/`SetMultiWordMarksDash` and `xrw_algs`, -9 when it
-fails).  Measured with `callgraph.py build/MP2x00US
-xrw_algs__FP11xrdata_typePA10_10rec_w_typeP8RWG_typeP7rc_type`: 84
-functions reached, **65 not done, about 28 KB** - a lower bound, because
-the vocabularies and the lexical database are walked through function
-pointers (`GF_VocSymbolSet`, `GF_LexDbSymbolSet` are 12-byte
-trampolines).  Its shape: `xrlv` (the xr-to-letters Viterbi over an
-`xrlv_data_type`: `XrlvAlloc`/`XrlvDealloc`, `XrlvDevelopPos` and
-`XrlvDevelopCell` growing the partial readings one xr position at a time,
-`XrlvGetNextSymbols` asking the dictionaries what may follow,
-`XrlvCHLXrlvPos` (3.4 KB, the biggest), `XrlvSortXrlvPos`/`TrimXrlvPos`,
-`XrlvCreateRWG` making the word graph `RWG_type`, `XrlvGetCharset`),
-over the xr matching matrix `xrcm_type` (`xrmatr_alloc`, `CountWord`,
-`CountLetter`, `CountSym`, `CountVar`, `MergeVarResults`, the trace
-layout `CreateLayout`/`TraceAlloc`, and two hand-written assembly inner
-loops, `CountXrAsm` and `TCountXrAsm`, 300-odd bytes each - read with
-`disasm.py`), and `GetCMPAliases`/`create_rwg_ppd` (the word graph's
-PPD aliases).  A plan: (1) `xrcm_type` and `CountLetter`/`CountWord` with
-the two assembly loops first, testable on their own - an xr stream from
-`low_level` matched against one letter of the DTE table already loaded
-(`ParaGraph.h`) should score the letter the stream was written as best;
-(2) `xrlv` and the word graph, testable by reading the uou (or "ton")
-against a one-word vocabulary; (3) then what makes answers out of the
-graph - `EvaluateAndSortAnswers`, `MakeAndCombRecWordsFromWordGraph`,
-`FillRecwordSplitInfo`, `GCFillLearningHandle`, `ORCreateLearnInfo`,
-`SetMultiWordMarksWS`/`Dash` (112 functions reached, 86 not done, about
-33 KB) - after which a cursive word is read.  The `Chunk*` digit reader
-(`ChunkAllocCtx` .. `ChunkCorrectByLexDB`: 96 reached, 82 not done, about
-146 KB with the library routines) is only entered for a field that allows
-numbers (rc +0xb6) and comes last.  Estimate: two rounds for `xrw_algs`,
-one or two for the answers; the digit reader three or four.
+**Stage 3 DONE, round 8 (2026-09-28, commits cfc92ea, 1f1ffc2, efe50d9):
+`xrw_algs` whole** - the matrix (`XrMatrix.h`: `xrcm_type`, `CountWord`,
+`CountLetter`, `CountSym`, `CountVar`, `MergeVarResults`, the trace and
+layout, and the two hand-written assembly loops `CountXrAsm`/`TCountXrAsm`
+transcribed register by register), the Viterbi (`Xrlv.cpp`: all of
+`xrlv`, `XrlvCHLXrlvPos` included), the dictionaries it asks what may come
+next (`XrLex.cpp`, over two new Airus routes: `AEnum_NextSet9` and the
+lexicon's `AL_NextSet9`), the word graph (`XrWordGraph.cpp`:
+`create_rwg_ppd`, `GetCMPAliases`, `fill_RW_aliases`, `SortGraph`,
+`GetSymBox`, `GetBaseBord`) and `SetMultiWordMarksWS`/`Dash`; tables from
+romtable.py (`XrReaderTables.cpp`).  `test_XrMatrix`: six letters of the
+ROM's table each read their own ideal xrs best, and `xrlv` reads the
+ideal xrs of l and o as "lo" first.  Wired into `GCTryToRecognize`: with
+a cursive letter set `cursive.ns`'s "to" comes out of the word graph as
+"to" first, "ton" as For/ER/Eon/FR/EN (`NEWTON_TRACE_CURSIVE=1`; ctest
+`host.NewtonCursive` checks both graphs; clean under
+`NEWTON_HEAPCHECK=5`).  The host still answers -9 after the graph.
+
+**Stage 4, the next piece: the answers** - `EvaluateAndSortAnswers`
+(0x00337ee8) and `MakeAndCombRecWordsFromWordGraph` (0x0019f644), which
+turn the word graph into the readings (`rec_w_type`) the descriptor gets.
+Measured with `callgraph.py build/MP2x00US
+EvaluateAndSortAnswers__FP10rec_w_typeP7rc_typeP11xrdata_typeP8RWG_type
+MakeAndCombRecWordsFromWordGraph__FP8RWG_typeP7rc_typeP11xrdata_typeP10rec_w_type`:
+82 reached, **60 not done, about 24 KB**.  Its shape: `EvaluateCharQuality`
+over a `_POST_PARAMS`, a rule interpreter over the prototype data's PDF
+rules (`PDFGetRule` and its address helpers, `CalculateGroupResult`,
+`CalculateQueueResult` with the `Calculate*` operators), the letters'
+boxes and sides (`CalculateBoxes_Side_Result`, `FindXrLetterBox`,
+`EvaluateLettersToXr`, `CheckDiacriticsDirections`/
+`AnalyseDiacriticsDirection` 2.2 KB), and `MakeRecWordsFromGraph`/
+`MakeNewPath`/`FillRecWordsElement` making the readings.  Then
+`FillRecwordSplitInfo`, `GCFillLearningHandle` and `ORCreateLearnInfo`
+(rc +0xb2 bit 6) - after which a cursive word is typed.  Estimate: one
+round for the answers, one for the rest and the checks against the demo;
+the `Chunk*` digit reader (only for a field that allows numbers, rc
++0xb6; 82 not done, about 146 KB) three or four more.  Two things to look
+at with the answers in: the graph's capitals (the first word's answers
+start with capitals although rc +0x1e asks for none) and whether the
+Notepad's field gives the reader its vocabularies (d->flags bit 0).
 
 ## Then: the testing system
 

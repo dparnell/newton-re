@@ -2017,3 +2017,25 @@ the reader then does with a mark 7 confirms it: it straightens it in the
 trace (`FantomSt`) and looks for the *upright* sticks that cross it
 (`FillCross` over `VertSticksSelector`'s list) - a t's bar and its stem.
 (`src/recognition/LowPict.cpp`; `test_LowLevel`'s `TestPict`.)
+
+## Reading handwriting with one register
+
+The cursive reader matches a letter against the writing by dynamic
+programming, and its innermost loop - one prototype xr against every
+position of the word - is the one piece of ParaGraph's engine written by
+hand in ARM assembly (`CountXrAsm`, 0x0038cd38, 308 bytes, and a twin
+that also records its choices).  It is built around the prototype's
+tables being *nibbles*: what each of 64 xr types, 16 heights, 16 shifts,
+16 links and 32 directions is worth, two to a byte, 0x4c bytes for the
+whole prototype.  The xr being read is loaded as two words, so its type,
+attribute, penalty and height are one register; `lsr #25` of it is the
+type's byte in the table and bit 24 says which half, and shifting the
+same register left by 24 and then by 8 brings the next field's index into
+the same position - five table lookups without ever unpacking the xr.
+The prototype's own first word is rotated right by eight on the way in,
+which puts the cost of skipping the prototype in the top byte and its
+"only next to a break" flag in the bottom one, both testable without
+another load.  The traced twin gets one thing different: where the plain
+loop lets a tie go to the diagonal (`movle`), it lets it go to the skip
+(`movgt`), so the path the layout walks back is not always the one the
+score came from.  (`src/recognition/XrMatrix.cpp`; `test_XrMatrix`.)
