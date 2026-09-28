@@ -39,6 +39,9 @@
 #ifndef __WORDSEGMENT_H
 #include "WordSegment.h"
 #endif
+#ifndef __XRREADER_H
+#include "XrReader.h"
+#endif
 
 struct rc_type;
 struct RcHandlesType;
@@ -68,11 +71,7 @@ struct xrdata_type
 	void*			fElements;		// +08
 };
 
-// The word graph the xr reader builds (0x14 bytes).
-struct RWG_type
-{
-	ULong			fWords[5];
-};
+// The word graph the xr reader builds is XrReader.h's RWG_type.
 
 long	GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGroupParmStruct* parm);	// ROM 0x000d635c GCTryToRecognize__FP13PS_point_typeP15GCWordDescrTypeP7rc_typeP17GCGroupParmStruct - ==> 0, -6 nothing to read, -7 no memory, -8 the low level failed, -9 the xr reader failed
 long	GCLockRecognitionData(rc_type* rc, RcHandlesType* saved);				// ROM 0x000d67f4 GCLockRecognitionData__FPvP13RcHandlesType - ==> 1, 0 for a failure (everything let go again)

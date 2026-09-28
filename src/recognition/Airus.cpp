@@ -1589,6 +1589,21 @@ AE8_NextSet9(AirusAParmBlock* parms)
 }
 
 
+// ROM 0x0002af18 AEnum_NextSet9__FP15AirusAParmBlock
+// The walk of what may follow, by the dictionary's kind.  NOT YET
+// RECONSTRUCTED: AE16_NextSet9 (a sixteen-bit dictionary answers
+// nothing to follow).
+void
+AEnum_NextSet9(AirusAParmBlock* parms)
+{
+	UByte kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	if (kind == kAirusKindEnum16 || kind == kAirusKindAL16)
+		parms->fResult = 1;
+	else
+		AE8_NextSet9(parms);
+}
+
+
 // ROM 0x0002af38 AE8_NextSetCB__FUlN31
 // The callback `AEnum_NextSet` uses: the characters written out one after
 // another into the caller's buffer, through a pointer the caller keeps.
@@ -2420,10 +2435,55 @@ AirusAL(ULong selector, AirusAParmBlock* parms)
 {
 	if (selector == kAirusVerify)
 		AL_Verify(parms);
-	// NOT YET RECONSTRUCTED: AL_NextSet 0x0002c214 and AL_NextSet9
-	// 0x0002c268, which walk the set of characters that may follow -
-	// what the corrector's completions are built from.
+	else if (selector == kAirusNextSet9)
+		AL_NextSet9(parms);
+	// NOT YET RECONSTRUCTED: AL_NextSet 0x0002c214 (selector 8: the next
+	// characters written into a string, over AL_NextSetCB and
+	// AL_FilterString) - what the corrector's completions are built from.
 	return parms->fResult;
+}
+
+
+// ROM 0x0002c268 AL_NextSet9__FP15AirusAParmBlock
+// What may follow the node reached (nought: the root): each child handed
+// to the block's walk callback - the child's character set, which in a
+// lexicon is a string rather than one character, the node with its flags
+// in the top two bits (bit 30 an attribute, bit 31 no children) and its
+// attribute.  ==> 0, 1 (the block's result too) for nothing to follow.
+long
+AL_NextSet9(AirusAParmBlock* parms)
+{
+	AL_Prep(parms);
+	long node = AE_Parms->fNode;
+	if (node == 0)
+		node = 2;
+	AE_Parms->fResult = 0;
+	const UByte* data = (const UByte*) AE_Parms->fData;
+	if (AE_Parms->fDataEnd != AE_Parms->fData + 2 && (data[node + 2] & 2) == 0)
+	{
+		if (AE_Parms->fNode != 0)
+			node = AL_FollowLeft(node);
+		for (;;)
+		{
+			data = (const UByte*) AE_Parms->fData;
+			ULong attribute = 0;
+			if ((data[node + 2] & 1) != 0)
+			{
+				AL_GetAttribute(node);
+				attribute = AE_Parms->fAttribute;
+			}
+			long set = (UShort) AL_SymbolOffset(node);
+			AE_Parms->fWalkProc(AE_Parms->fWalkContext, (ULong) (uintptr_t) (AE_Parms->fData + set),
+								(ULong) node | ((ULong) data[node + 2] << 30), attribute);
+			data = (const UByte*) AE_Parms->fData;
+			if ((data[node + 2] & 4) != 0)
+				break;
+			node = AE_Parms->fAttributeSize + node + ((data[node + 2] & 2) == 0 ? 5 : 3);
+		}
+		return 0;
+	}
+	AE_Parms->fResult = 1;
+	return 1;
 }
 
 
@@ -2673,8 +2733,10 @@ CallAirusANoLock(Handle dictionary, long selector)
 		case kAirusNextPrevious:
 			AEnum_NextPrevious(parms);
 			break;
+		case kAirusNextSet9:
+			AEnum_NextSet9(parms);
+			break;
 		default:
-			// NOT YET RECONSTRUCTED: NextSet9 0x0002af18
 			break;
 		}
 		break;

@@ -105,6 +105,8 @@ long	HWRStrLen(const char* s);							// ROM 0x000e6514 HWRStrLen__FPc
 char*	HWRStrCpy(char* dest, const char* src);				// ROM 0x000e6560 HWRStrCpy__FPcT1
 void	HWRStrCat(char* dest, const char* src);				// ROM 0x000e657c HWRStrCat__FPcT1
 char*	HWRStrrChr(char* s, int c);							// ROM 0x000e65e8 HWRStrrChr__FPci - the last c in s; nil for none (and for an empty s)
+char*	HWRStrChr(const char* s, int c);						// ROM 0x000e652c HWRStrChr__FPci - the first c in s; nil for none (and for c nought)
+void	HWRStrRev(char* s);									// ROM 0x000e65a0 HWRStrRev__FPc
 
 /*------------------------------------------------------------------------------
 	T h e   e n g i n e ' s   c h a r a c t e r   c l a s s e s
@@ -118,6 +120,7 @@ int		IsLower(int c);										// ROM 0x00283e84 IsLower
 int		IsAlpha(int c);										// ROM 0x00283f20 IsAlpha
 int		ToUpper(int c);										// ROM 0x00283f58 ToUpper
 int		ToLower(int c);										// ROM 0x00283fb0 ToLower
+int		IsPunct(int c);										// ROM 0x00283eb4 IsPunct
 
 // Which of the two tables of (Mac Roman code, the engine's own code)
 // pairs characters above 0x7e are translated through, and which letters
@@ -259,6 +262,8 @@ long	GetSymDescriptor(UByte sym, UByte variant, dte_sym_header_type** descriptor
 long	GetNumVarsOfChar(UByte c, DTIHeader* dti);			// ROM 0x00087eec GetNumVarsOfChar__FUcPv
 long	GetVarGroup(UByte c, UByte variant, DTIHeader* dti);	// ROM 0x00087b90 GetVarGroup__FUcT1Pv
 long	CheckVarActive(UByte c, UByte variant, UByte style, DTIHeader* dti);	// ROM 0x00087e84 CheckVarActive__FUcN21Pv
+long	GetVarRewcapAllow(UByte c, UByte variant, DTIHeader* dti);	// ROM 0x00087aa4 GetVarRewcapAllow__FUcT1Pv - 1 the variant may be capitalised, 0 not, -1 no such variant
+ULong	GetVarPosSize(UByte c, UByte variant, DTIHeader* dti);	// ROM 0x00087bf4 GetVarPosSize__FUcT1Pv - the descriptor's byte 1 << 16, the variant's position << 8 and its size; 0 for neither, 0xffffffff for no such variant
 long	GetVarVex(UByte c, UByte variant, DTIHeader* dti);	// ROM 0x0008801c GetVarVex__FUcT1Pv
 long	SetVarVex(UByte c, UByte variant, UByte vex, DTIHeader* dti);	// ROM 0x00088094 SetVarVex__FUcN21Pv
 long	SetVarCounter(UByte c, UByte variant, UByte count, DTIHeader* dti);	// ROM 0x00087b00 SetVarCounter__FUcN21Pv

@@ -4,6 +4,7 @@
 // the best each of a letter's prototypes can read - the letter they were
 // made from must read them best.
 #include "XrMatrix.h"
+#include "XrReader.h"
 #include "LowLevel.h"
 #include "CursiveReader.h"
 #include "XrDomains.h"
@@ -293,6 +294,84 @@ TestLetters(void)
 }
 
 
+/*--------------------------------------------------------------------
+	The Viterbi: a word of ideal xrs read with the character set alone.
+--------------------------------------------------------------------*/
+
+static void
+MarkLocation(void)
+{
+	gXrs[gXr.fLength - 1].attrib |= 1;
+}
+
+static void
+TestXrlv(void)
+{
+	// a break, then the ideal xrs of l and of o, each letter's last xr a
+	// location
+	StartXrs();
+	AddXr(1, 0, 0, 0, 0, 8, 0x81);
+	IdealXrs('l', 0);
+	MarkLocation();
+	IdealXrs('o', 0);
+	MarkLocation();
+	static PS_point_type points[3] = { { 10, 10 }, { 20, 20 }, { 30, 10 } };
+	RCSetH(&gRC, 0x00, 1);			// words
+	RCSetH(&gRC, 0x02, 1);			// letters only
+	RCSetH(&gRC, 0x08, 2);			// the character set, no dictionary
+	RCSetH(&gRC, 0x10, 16);			// sixteen readings a location
+	RCSetH(&gRC, 0x14, 0x190);		// a beam of 100
+	RCSetH(&gRC, 0x16, 0);
+	RCSetH(&gRC, 0x1a, 0x64);
+	RCSetH(&gRC, 0x1e, 5);
+	RCSetH(&gRC, 0x96, 3);
+	gRC.fTrace = points;
+	gRC.fAlphaCharset = "abcdefghijklmnopqrstuvwxyz";
+	RWG_type rwg;
+	rec_w_type readings[10];
+	memset(readings, 0, sizeof(readings));
+	EXPECT(xrw_algs(&gXr, readings, &rwg, &gRC) == 0);
+	EXPECT(rwg.type == 1 && rwg.size >= 2 && rwg.rws != nil && rwg.ppd != nil);
+	if (rwg.rws != nil)
+	{
+		// the answers, best first: symbols, 4 between answers
+		char text[128];
+		long t = 0;
+		for (long i = 0; i < rwg.size && t < 120; i++)
+		{
+			RWS_type* e = &rwg.rws[i];
+			if (e->type == 1)
+				text[t++] = (char) e->sym;
+			else if (e->type == 4)
+				text[t++] = ' ';
+		}
+		text[t] = 0;
+		fprintf(stderr, "  xrlv read l, o as: %s\n", text);
+		long first = rwg.rws[0].type == 2 ? 1 : 0;
+		EXPECT(rwg.rws[first].sym == 'l' && rwg.rws[first + 1].sym == 'o');
+		// each letter's xrs: l from the first xr, o after l's last
+		RWS_type* l = &rwg.rws[first];
+		RWS_type* o = &rwg.rws[first + 1];
+		fprintf(stderr, "  l: xrs %d+%d var %d weight %d; o: xrs %d+%d var %d weight %d\n",
+				l->xrStart, l->xrLen, l->var, l->weight, o->xrStart, o->xrLen, o->var, o->weight);
+		EXPECT(l->xrStart == 1 && o->xrStart == l->xrStart + l->xrLen);
+		EXPECT(o->xrStart + o->xrLen == gXr.fLength);
+		EXPECT(rwg.ppd[first].el[0][1] != 0);		// the xrs l was read from
+	}
+	FreeRWGMem(&rwg);
+
+	// a field with one fixed answer compares against it alone
+	strcpy((char*) RCByte(&gRC, 0xc0), "lo");
+	EXPECT(xrw_algs(&gXr, readings, &rwg, &gRC) == 0);
+	EXPECT(rwg.size == 2 && rwg.rws[0].sym == 'l' && rwg.rws[1].sym == 'o');
+	if (rwg.rws != nil && rwg.ppd != nil)
+		fprintf(stderr, "  fixed answer: l xrs %d+%d, o xrs %d+%d\n",
+				rwg.rws[0].xrStart, rwg.rws[0].xrLen, rwg.rws[1].xrStart, rwg.rws[1].xrLen);
+	FreeRWGMem(&rwg);
+	*RCByte(&gRC, 0xc0) = 0;
+}
+
+
 int
 main()
 {
@@ -306,6 +385,7 @@ main()
 	gObjectHeapSize = 0x200000;
 	InitObjects();
 	TestLetters();
+	TestXrlv();
 	if (failures == 0)
 		printf("test_XrMatrix: all passed\n");
 	return failures == 0 ? 0 : 1;

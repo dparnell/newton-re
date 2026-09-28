@@ -200,6 +200,37 @@ HWRStrrChr(char* s, int c)
 }
 
 
+// ROM 0x000e652c HWRStrChr__FPci
+char*
+HWRStrChr(const char* s, int c)
+{
+	c &= 0xff;
+	for (;; s++)
+	{
+		if ((UByte) *s == c)
+			return *s != 0 ? (char*) s : nil;
+		if (*s == 0)
+			return nil;
+	}
+}
+
+
+// ROM 0x000e65a0 HWRStrRev__FPc
+void
+HWRStrRev(char* s)
+{
+	char* end = s;
+	while (*end != 0)
+		end++;
+	for (long n = (end - s) >> 1; n > 0; n--)
+	{
+		char c = *s;
+		*s++ = *--end;
+		*end = c;
+	}
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   e n g i n e ' s   c h a r a c t e r   c l a s s e s
 ------------------------------------------------------------------------------*/
@@ -219,6 +250,15 @@ IsLower(int c)
 {
 	c &= 0xff;
 	return (_xctype[c] & 0x02) != 0;
+}
+
+
+// ROM 0x00283eb4 IsPunct
+int
+IsPunct(int c)
+{
+	c &= 0xff;
+	return (_xctype[c] & 0x10) != 0;
 }
 
 
@@ -968,6 +1008,57 @@ GetNumVarsOfChar(UByte c, DTIHeader* dti)
 	else
 		second = descriptor[0];
 	return first + second;
+}
+
+
+// ROM 0x00087aa4 GetVarRewcapAllow__FUcT1Pv
+// Whether the variant may stand for a capital (its group byte's bit 0
+// clear).
+long
+GetVarRewcapAllow(UByte c, UByte variant, DTIHeader* dti)
+{
+	dte_sym_header_type* descriptor;
+	long index = GetSymDescriptor(OSToRec(c), variant, &descriptor, dti);
+	if (index < 0)
+		return -1;
+	return (descriptor[index + 0x24] & 1) == 0 ? 1 : 0;
+}
+
+
+// ROM 0x00087bf4 GetVarPosSize__FUcT1Pv
+// Where the variant sits on the line and how tall it is (the
+// descriptor's bytes 0x34+v and 0x44+v), with the descriptor's byte 1:
+// the RAM table's descriptor when it has the character, else the ROM's
+// (the variant counted within the one table, unlike GetSymDescriptor).
+ULong
+GetVarPosSize(UByte c, UByte variant, DTIHeader* dti)
+{
+	if (dti == nil)
+		return 0xffffffff;
+	ULong sym = OSToRec(c) & 0xff;
+	UByte* descriptor = nil;
+	UByte* table = dti->fRAMDTEMainPtr;
+	ULong offset = 0;
+	if (table != nil)
+		offset = GetBigEndianWord(table + sym * 4);
+	if (table == nil || offset == 0 || (descriptor = table + offset) == nil)
+	{
+		table = dti->fDTEMain;
+		if (table != nil)
+			offset = GetBigEndianWord(table + sym * 4);
+		if (table == nil || offset == 0)
+			return 0xffffffff;
+		descriptor = table + offset;
+	}
+	if (descriptor != nil && variant < descriptor[0])
+	{
+		ULong r = 0;
+		ULong posSize = ((ULong) descriptor[variant + 0x44] << 8) | descriptor[variant + 0x34];
+		if (posSize != 0)
+			r = ((ULong) descriptor[1] << 16) | posSize;
+		return r;
+	}
+	return 0xffffffff;
 }
 
 
