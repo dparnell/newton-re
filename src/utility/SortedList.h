@@ -26,7 +26,7 @@ public:
 
 	// insertion keeps the order; the comparer's test item is set to the
 	// item being inserted
-	void			Insert(void* item);
+	NewtonErr		Insert(void* item);
 	Boolean			InsertUnique(void* item);
 
 	// searching: bisection with a tester that orders (the comparer);
@@ -34,7 +34,7 @@ public:
 	void*			Search(CItemTester* test, ArrayIndex& index);
 
 protected:
-	void			InsertDuplicate(ArrayIndex index, void* existingItem, void* newItem);
+	NewtonErr		InsertDuplicate(ArrayIndex index, void* existingItem, void* newItem);
 
 	CItemComparer*	fComparer;
 };

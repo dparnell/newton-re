@@ -94,6 +94,12 @@ add_test(NAME host.NewtonTestAgent COMMAND newton --rom ${NEWTON_ROM_BIN} --disp
 set_tests_properties(host.NewtonTestAgent PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "queue before activating is empty.*queued \"Test Case MSG: hello from the test\".*queued \"Test Case ERR: \tsomething went wrong\".*test a frame started in newt.*TotalSystemFree.*parameters 4:.*\"a frame\".*\"one\".*\"two three\".*\"four\".*debug\\(0\\) is a view.*is nil.*printed, not queued.*testagent: done")
 
+# the units the ROM's own packages export, as the unit natives see them
+# after the boot (packages/Units.h; needs the ROM image)
+add_test(NAME host.NewtonUnits COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 6 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/units.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonUnits PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "units: 7 exports.*units: cardfile 1.0 62 objects, 0 clients, 0 importers.*units: ConnectionInternal 1.1 39 objects.*units: setup 1.0 19 objects.*units: 0 import tables, 0 pending.*FulfillImportTable\\(nil\\) is true.*units: done")
+
 # the cursive recogniser's letter styles asked from NewtonScript
 # (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)
 add_test(NAME host.NewtonLetterStyles COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/letterstyles.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

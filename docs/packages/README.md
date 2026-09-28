@@ -227,16 +227,78 @@ the manager registers their class infos itself.  DEVIATION: their code
 is ARM, which the host cannot run, so the part goes in with no class
 info registered (`InstallPart`); the host has its own screen driver.
 
+## Units (`src/packages/Units.h`)
+
+A unit is a set of objects one package lends others.  A frames part may
+carry an `_ExportTable` - an array of `{name: 'someUnit, major, minor,
+objects: [...]}` - and an `_ImportTable` - an array of `{name, major,
+minor}`.  An imported object is written in the importer as a **magic
+pointer whose table is 2 + the unit's slot in the import table** and whose
+index is the object's in the unit's `objects`; tables 0 and 1 are the
+ROM's own (the ROM's magic pointer table, the globals).  Established from
+`ResolveImportRef` (0x000d0664), `InstallImportTable` and
+`RelocateFramesInPage` (0x000d1b50), which relocates a package's page
+word by word: a pointer ref gets the package's base added, a magic
+pointer goes to `ResolveImportRef`.
+
+- `TFramePartHandler::Install` records the units of every part that
+  exports some (`InstallExportTables`: `gMPExportList`, sorted by name,
+  ignoring the case of ASCII letters), including the ROM's own - five of
+  its parts export seven units (`cardfile`, `Connection`,
+  `ConnectionInternal`, `FormulasInternal`, `listView`, `ListView
+  private`, `setup`).  A part **outside the ROM** (at an address above
+  0x037fffff) also has its imports installed (`InstallImportTable`:
+  `gMPImportList`, sorted by the part's address) and its package's pages
+  flushed so that its refs are relocated against them; the ROM's own
+  parts that import (two do) never have them installed - they are
+  already resolved in the ROM.
+- An import slot takes the export of the same name and major version
+  with the **highest minor version at least the one asked for**; with
+  none, the slot is a pending import (`gMPPendingImports`), fulfilled by
+  the next matching export (`FulfillPendingImports`, which also flushes
+  the importer's pages).  An import ref with no unit behind it has its
+  top bit set - a magic pointer no table has, which throws
+  `kNSErrBadMagicPointer` when used.
+- `TFramePartHandler::Remove` takes a part's exports away
+  (`RemoveExportTables`: each importer's slot made pending again, its
+  pages flushed, and an array of `canonicalDeadImport` frames `{name,
+  major, minor, client: the importing part's frame}` handed to the
+  global `ReportDeadUnitImports`) and forgets its imports
+  (`RemoveImportTable`).
+- The natives: `CurrentExports()` (`{name, major, minor, refCount,
+  exportTable}` per unit), `CurrentImports()` (`{importTable, client}`),
+  `PendingImports()`, `FlushImports()`, `GetExportTableClients(objects)`,
+  `FulfillImportTable(importTable)` (nil: every pending import).
+- The ROM extension's side: `InitRExMagicPointerTables` (run by
+  `InitMagicPointerTables` at `InitObjects`) takes the extension's export
+  count from its `'fexp` entry (166 here) and, for an extension that
+  imports (`'fimp`: a count, then `{major, minor, -, count, name}`
+  records), makes the import table (magic pointer table 3 + 2 x its id)
+  and a pending import per record.  This ROM's extension has no `'fimp`.
+
+ROM bugs kept: `RegisterPendingImport` tests the import item, not the
+new pending import, for a failed allocation; `InstallImportTable` throws
+out-of-memory for a part already on the import list; neither
+`RemoveExportTables` nor `RemoveImportTable` frees its item (only the
+list entry goes); a part whose `InstallFrame` fails keeps its exports.
+
+DEVIATION (the host has no ROM domain, `Units.h`): the part the tables
+name is the part's imported host area's first object; its import refs
+are resolved all at once by `RelocateImportRefs` (the import-ref half of
+`RelocateFramesInPage`), which reads the untouched words out of the
+package's own bytes each time; and `FlushPackageCache` relocates that
+area again - where on the MessagePad a package outside the ROM domain
+(package base 0) is never relocated at all.
+
+`test_Units` builds an exporting and an importing part in the
+MessagePad's layout and installs and removes them in both orders;
+`src/host/demo/units.ns` (ctest `host.NewtonUnits`) lists the ROM's
+units after the boot.  A renamed copy of a built-in package installed
+with `newton --package` has its import table (`ConnectionInternal` 1.1,
+`Connection` 1.0) resolved against them.
+
 ## Not yet
 
-- **Units** (`InstallExportTables`, `InstallImportTable`,
-  `RemoveExportTables`, `RemoveImportTable` 0x000cfcd4-0x000d0758, and
-  the natives `CurrentExports`, `FulfillImportTable`, ...): five of the
-  ROM's frames parts carry an `_ExportTable` (two an `_ImportTable` too)
-  and are installed without them - a line on stderr says so at boot.
-  The ROM installs imports only for a package outside the ROM, so the
-  ROM's own parts lose nothing yet; a third-party package that imports a
-  ROM unit would.
 - The `'book`, `'dict` and `'comm` part handlers (`TBookPartHandler` over
   the book reader's `TLibrarian`, `TDictPartHandler`, `TCommPartHandler`).
 - Streamed sources: `TPackageLoader` (a package read through a pipe or an

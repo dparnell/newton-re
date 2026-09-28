@@ -2270,12 +2270,21 @@ PatchMagicPointerTable(void)
 { }
 
 
+// the ROM extensions' tables (packages/Units.h's InitRExMagicPointerTables:
+// DEVIATION, the frames library sits below the packages', which set it)
+void			(*gInitRExMagicPointerTables)(void) = nil;
+
+
 // ROM 0x0031c5f0 InitMagicPointerTables__Fv
-// NOT YET RECONSTRUCTED: InitRExMagicPointerTables (0x000d218c) reads the
-// REx export tables and resolves their imports (the ROM extension reader).
+// The ROM extensions' export counts and import tables, then the ROM's
+// table patched (a no-op in this ROM).
 void
 InitMagicPointerTables(void)
-{ }
+{
+	if (gInitRExMagicPointerTables != nil)
+		gInitRExMagicPointerTables();
+	PatchMagicPointerTable();
+}
 
 
 // ROM 0x0031c608 InitObjects__Fv

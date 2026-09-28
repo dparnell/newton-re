@@ -25,16 +25,16 @@ CSortedList::~CSortedList()
 
 
 // ROM 0x001e352c Insert__11CSortedListFPv
-void
+// ==> InsertAt's error.
+NewtonErr
 CSortedList::Insert(void* item)
 {
 	fComparer->SetTestItem(item);
 	ArrayIndex index;
 	void* existing = Search(fComparer, index);
 	if (existing == nil)
-		InsertAt(index, item);
-	else
-		InsertDuplicate(index, existing, item);
+		return InsertAt(index, item);
+	return InsertDuplicate(index, existing, item);
 }
 
 
@@ -54,11 +54,10 @@ CSortedList::InsertUnique(void* item)
 
 // ROM 0x001e35f0 InsertDuplicate__11CSortedListFlPvT2
 // An equal item is already there: the new one goes in front of it.
-void
+NewtonErr
 CSortedList::InsertDuplicate(ArrayIndex index, void* /*existingItem*/, void* newItem)
 {
-	void* element = newItem;
-	InsertElementsBefore(index, &element, 1);
+	return InsertAt(index, newItem);
 }
 
 

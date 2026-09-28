@@ -9,6 +9,46 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: packages - the plan, and units
+
+- **The plan for finishing packages**, sized with `callgraph.py`, in
+  `docs/next-steps.md` ("Now: finishing packages"): units, the `'dict`
+  and `'comm` handlers, streamed sources, then large binaries on a store
+  (which packages on a store, 1.x packages and most of the remaining
+  package natives stand on), the `'book` handler over the book reader,
+  and protocol parts (recorded, not portable).
+- **Units** (`packages/Units.h`, 0x000cf868-0x000d1038): the export and
+  import tables (`InstallExportTables`/`RemoveExportTables`,
+  `InstallImportTable`/`RemoveImportTable`, `InitMPTableRegistry`, the
+  comparers), the pending imports (`PkgPendingImport`/`RExPendingImport`,
+  `RegisterPendingImport` x2, `FulfillPendingImports`,
+  `RemovePendingImports`), `ResolveImportRef` - an import ref is a magic
+  pointer of table 2 + the unit's slot - `AllocateExportTable`/
+  `FreeExportTable`, `InitRExMagicPointerTables` (now run by
+  `InitMagicPointerTables` through a hook: frames sits below packages),
+  and the natives `CurrentExports`, `CurrentImports`, `PendingImports`,
+  `FlushImports`, `GetExportTableClients`, `FulfillImportTable`, plus the
+  trivial `BackupPatchPackage`/`RestorePatchPackage`.  The frame part
+  handler installs and removes them; the boot's "units are not
+  installed" line is gone and the ROM's five exporting parts register
+  seven units.  `CSortedList::Insert` answers its error, as the ROM's does.
+- DEVIATION: with no ROM domain, a part's import refs are resolved over
+  its imported host area (`RelocateImportRefs`, the import-ref half of
+  `RelocateFramesInPage`, reading the untouched words from the package's
+  bytes - `TImportedObjectArea` now keeps them, `fBytes`), and
+  `FlushPackageCache` relocates that area again.
+- ROM bugs kept: `RegisterPendingImport`'s allocation test looks at the
+  wrong pointer; `InstallImportTable` throws out-of-memory for a part
+  installed twice; the removed export and import items are never freed;
+  a part whose `InstallFrame` fails keeps its exports.
+- **Host bug found**: `RemoveFramesPart` gives the area's memory back,
+  and the next part imported can be given the same addresses, so the
+  find-offset cache answered a new frame's slots from a freed map (the
+  exporter's `_ExportTable` came back as its `_ImportTable`).  It now
+  clears the cache.  `test_Units` builds an exporting and an importing
+  part in the MessagePad's layout and installs and removes them in both
+  orders; ctest `host.NewtonUnits` lists the ROM's units.
+
 ## 2026-09-28: the recognition system's last pieces - status complete
 
 - **The orthographic learning** (`recognition/Ortho.h`, `Ortho.cpp`,

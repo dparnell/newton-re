@@ -17,6 +17,7 @@ target_include_directories(package_manager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(packages STATIC
     FramePartHandler.cpp
     ROMPackages.cpp
+    Units.cpp
 )
 # stores: a streamed frames part is read with a TObjectReader, and the
 # package natives answer the package stores

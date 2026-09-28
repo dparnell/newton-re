@@ -11,13 +11,13 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 114/114
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 116/116
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12096 citations, 0 bad;
-  6938 of 16671 functions (41.62%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 12126 citations, 0 bad;
+  6960 of 16671 functions (41.75%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
-- `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives are
-  unanswered (1008 answered, 76.0%; table below).
+- `analysis/natives.py --unbound`: 310 of the ROM's 1326 natives are
+  unanswered (1016 answered, 76.6%; table below).
 
 ## What works
 
@@ -72,17 +72,16 @@ yet done below the roots, and their bytes; a lower bound - indirect calls
 are not seen).  In order, what a third-party package and the ROM's own
 need first:
 
-1. **Units** - `InstallExportTables`/`RemoveExportTables`,
-   `InstallImportTable`/`RemoveImportTable`, `ResolveImportRef`, the
-   pending imports (`RegisterPendingImport` x2, `FulfillPendingImports`,
-   `RemovePendingImports`), the export tables' memory, `InitMPTableRegistry`,
-   `InitRExMagicPointerTables` and the natives `CurrentExports`,
-   `CurrentImports`, `PendingImports`, `FlushImports`,
-   `GetExportTableClients`, `FulfillImportTable`: 34 functions, 6.7 KB.
-   Five ROM parts carry `_ExportTable`s (two `_ImportTable`s) and are
-   installed without them today (a stderr line at boot).  With it:
-   `BackupPatchPackage` (answers nil) and `RestorePatchPackage` (answers
-   0) - 44 bytes, both trivial in this ROM.
+1. ~~**Units**~~ - DONE (2026-09-29, `packages/Units.h`,
+   `docs/packages/README.md`'s "Units"; `test_Units`, ctest
+   `host.NewtonUnits`): the export and import tables, the pending
+   imports, `ResolveImportRef` over the host's `RelocateImportRefs`,
+   `InitRExMagicPointerTables`, and the six unit natives; the ROM's five
+   exporting parts register their seven units at boot.  With it
+   `BackupPatchPackage` (nil) and `RestorePatchPackage` (0).  Left of it:
+   `GetEntryFromLargeObjectVAddr` (a package's store entry, which the
+   `client` slots of `CurrentImports`/`PendingImports` would carry - nil
+   until packages are on a store, (5)).
 2. **The `'dict` and `'comm` part handlers** - `TDictPartHandler`
    (`Install`/`Remove`/`Expand`, `AddDictionaries`, `FDisposeDictionary`:
    10 functions, 1.6 KB) and `TCommPartHandler` (`InstallFrame`/
@@ -278,7 +277,7 @@ inside an area).  At 2026-09-28:
 |---|---|---|
 | comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 106 | natives.py's catch-all: a handful each across many areas |
-| packages | 25 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
+| packages | 17 | packages on a store (the ROM domain manager, large binaries), 1.x packages |
 | books | 19 | the book reader and newspapers (`TLibrarian`) |
 | views | 12 | |
 | sound | 8 | the sound server |

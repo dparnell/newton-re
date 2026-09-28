@@ -8,3 +8,8 @@ target_link_libraries(test_PackageManager PRIVATE packages stores os600_kernel o
 target_compile_definitions(test_PackageManager PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME packages.PackageManager COMMAND test_PackageManager)
 set_tests_properties(packages.PackageManager PROPERTIES TIMEOUT 120)
+
+add_executable(test_Units test_Units.cpp)
+target_link_libraries(test_Units PRIVATE packages)
+target_compile_definitions(test_Units PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME packages.Units COMMAND test_Units)

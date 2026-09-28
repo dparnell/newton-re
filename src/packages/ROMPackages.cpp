@@ -23,6 +23,7 @@
 #include "NewtonExceptions.h"
 #include "NewtonDebug.h"
 #include "OSErrors.h"
+#include "Units.h"
 
 
 // ROM 0x0011ef10 GetRExConfigEntry
@@ -238,11 +239,34 @@ FIsPackage(RefArg /*rcvr*/, RefArg obj)
 }
 
 
+// ROM 0x001fbbf0 FBackupPatchPackage
+// No patch to back up in this ROM: nil (through a RefVar made of nil and
+// disposed of again).
+static Ref
+FBackupPatchPackage(RefArg /*rcvr*/)
+{
+	RefVar nothing(NILREF);
+	return nothing;
+}
+
+
+// ROM 0x001fbc14 FRestorePatchPackage
+// No patch to restore in this ROM: the ref 0 (the integer 0).
+static Ref
+FRestorePatchPackage(RefArg /*rcvr*/, RefArg /*package*/)
+{
+	return (Ref) 0;
+}
+
+
 void
 RegisterPackageNatives(void)
 {
+	RegisterNativeFunction("FBackupPatchPackage", (void*) FBackupPatchPackage, 0);
+	RegisterNativeFunction("FRestorePatchPackage", (void*) FRestorePatchPackage, 1);
 	RegisterNativeFunction("FGetPackages__FRC6RefVar", (void*) FGetPackages, 0);
 	RegisterNativeFunction("FPidToPackage", (void*) FPidToPackage, 1);
 	RegisterNativeFunction("FGetPackageStores", (void*) FGetPackageStores, 0);
 	RegisterNativeFunction("FIsPackage", (void*) FIsPackage, 1);
+	RegisterPackageUnitNatives();
 }

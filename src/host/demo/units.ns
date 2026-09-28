@@ -1,0 +1,29 @@
+// Units (packages/Units.h): the objects the ROM's own packages export,
+// as the unit natives see them once the machine has booted.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/units.ns --headless 6
+//
+// Five of the ROM's frames parts carry an _ExportTable, seven units in
+// all; InstallExportTables records them as each part is installed, and
+// CurrentExports answers them with how many import slots use each (none:
+// the ROM's parts only export - a part in the ROM never has its imports
+// installed).  GetExportTableClients asks the same of one unit's objects,
+// PendingImports what is waiting for a unit nobody exports yet, and
+// FulfillImportTable offers every export to every pending import.
+//
+// It prints lines starting "units:"; ctest's host.NewtonUnits checks them.
+
+AddDelayedCall(func()
+  begin
+    local exports := CurrentExports();
+    Print("units:" && NumberStr(Length(exports)) && "exports");
+    foreach e in exports do
+      Print("units:" && e.name && NumberStr(e.major) & "." & NumberStr(e.minor)
+            && NumberStr(Length(e.exportTable)) && "objects," && NumberStr(e.refCount) && "clients,"
+            && NumberStr(Length(GetExportTableClients(e.exportTable))) && "importers");
+    Print("units:" && NumberStr(Length(CurrentImports())) && "import tables," && NumberStr(Length(PendingImports())) && "pending");
+    Print("units: FulfillImportTable(nil) is" && (if FulfillImportTable(nil) then "true" else "nil"));
+    FlushImports();
+    Print("units: done");
+  end, nil, 2000);

@@ -67,6 +67,7 @@ public:
 	long		fCount;
 	ULong32		fBase;				// the source address of the first object
 	ULong32		fSize;
+	const unsigned char*	fBytes;	// the source bytes (they must outlive the area: a part's package is kept while it is installed)
 	OutsideRefTranslator	fOutside;
 	void*		fRefCon;
 };

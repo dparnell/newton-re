@@ -265,6 +265,7 @@ extern Ref			gROMSymbolTableRef;		// host: the ROM's symbol table once ROMImport
 const long			kMagicPointerTables = 10;
 extern Ref*			gMagicPointerTables[kMagicPointerTables];
 extern long			gMagicPointerTableCounts[kMagicPointerTables];
+extern void			(*gInitRExMagicPointerTables)(void);	// set by the packages (Units.h); InitMagicPointerTables runs it
 
 // the exception names the object system throws (user/ExceptionNames.cpp)
 extern const ExceptionName exFrames;						// "evt.ex.fr"

@@ -35,9 +35,10 @@
 				filled in from each part as the part is imported.  The area
 				is let go when the part is removed.
 
-				NOT YET RECONSTRUCTED: the unit tables (InstallExportTables,
-				InstallImportTable, RemoveExportTables, RemoveImportTable -
-				a part's _ExportTable and _ImportTable), a streamed source's
+				A part's units (its _ExportTable and _ImportTable) are
+				Units.h's.
+
+				NOT YET RECONSTRUCTED: a streamed source's
 				Copy/Expand (PartHandlers.h), and the other frames part
 				handlers the ROM registers: 'book (TBookPartHandler, over
 				the book reader's TLibrarian), 'dict (TDictPartHandler) and

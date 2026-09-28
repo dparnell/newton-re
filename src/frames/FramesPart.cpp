@@ -63,6 +63,11 @@ RemoveFramesPart(TImportedObjectArea* area)
 			*link = entry->fNext;
 			if (gHeap != nil && RegisterRangeForDeclawing((ULong) area->fArea, (ULong) area->fAreaEnd))
 				DeclawRefsInRegisteredRanges();
+			// the host gives the area's memory back, and the next part
+			// imported may be given the same addresses: a map the
+			// find-offset cache remembers would then answer for another
+			// map's slots (the ROM never reuses a package's range so soon)
+			FindOffsetCacheClear();
 			delete entry;
 			return;
 		}

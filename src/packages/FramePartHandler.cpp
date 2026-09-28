@@ -10,6 +10,7 @@
 #include "ROMPackages.h"
 #include "PackageIterator.h"
 #include "FramesPart.h"
+#include "Units.h"
 #include "ROMImport.h"
 #include "ROMExtension.h"
 #include "ObjectStreamer.h"
@@ -106,9 +107,9 @@ TranslateROMExports(ULong32 partAddress, ULong partSize, const TImportedObjectAr
 
 // A frames part in memory imported.  ==> the area, nil when its bytes are
 // not a run of objects (reported: the part is not installed, and nothing
-// else would say so).
+// else would say so); *inROMImage whether the part is one of the ROM's.
 static TImportedObjectArea*
-ImportPart(Ptr data, PartInfo* info)
+ImportPart(Ptr data, PartInfo* info, Boolean* inROMImage)
 {
 	ULong partOffset = 0;
 	const UByte* package = PackageContaining((const UByte*) data, &partOffset);
@@ -120,6 +121,7 @@ ImportPart(Ptr data, PartInfo* info)
 	ULong imageSize = 0;
 	const char* rom = (const char*) ROMImageBase(&imageSize);
 	Boolean inROM = rom != nil && data >= rom && data < rom + imageSize;
+	*inROMImage = inROM;
 	ULong32 refBase = inROM ? (ULong32) (data - rom) : (ULong32) partOffset;
 	TImportedObjectArea* area = ImportFramesPart(data, info->size, refBase, align);
 	if (area == nil)
@@ -142,11 +144,18 @@ ImportPart(Ptr data, PartInfo* info)
 // ROM 0x000d118c Install__17TFramePartHandlerFRC6PartId10SourceTypeP8PartInfo
 // The part's top-level frame found and handed to InstallFrame, with a
 // remove object made for it; kError_Bad_Package when there is no frame.
-// A part in memory is used where it lies (its unit tables installed)
-// unless it is NSOF ("streamed"), which is read out of it.
+// A part in memory is used where it lies unless it is NSOF ("streamed"),
+// which is read out of it: its _ExportTable's units are recorded, and a
+// part outside the ROM (at an address above 0x037fffff) has its
+// _ImportTable installed and its package's pages flushed, so that its
+// import refs are resolved (Units.h).
+// ROM BUG: when InstallFrame fails the units the part exports are not
+// taken back, and the export list keeps pointing into a part that is
+// about to go.
+// DEVIATION: the part the unit tables name is its imported area's first
+// object, and its package that area (Units.h).
 // NOT YET RECONSTRUCTED: a streamed source (Copy answers
-// kError_Call_Not_Implemented), and the unit tables: a part with an
-// _ExportTable or an _ImportTable is installed without them, and says so.
+// kError_Call_Not_Implemented).
 NewtonErr
 TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo* partInfo)
 {
@@ -175,7 +184,8 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 		}
 		else
 		{
-			area = ImportPart(data, partInfo);
+			Boolean inROM = false;
+			area = ImportPart(data, partInfo, &inROM);
 			if (area == nil)
 				return kError_Bad_Package;
 			frame = FramePartToplevelFrame(area->fArea);
@@ -184,14 +194,20 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 				RemoveFramesPart(area);
 				return kError_Bad_Package;
 			}
+			void* source = area->fArea;
 			RefVar exports(GetFrameSlotRef(frame, RSSYM_exporttable));
-			RefVar imports(GetFrameSlotRef(frame, RSSYM_importtable));
-			if (NOTNIL(exports) || NOTNIL(imports))
+			if (NOTNIL(exports))
+				InstallExportTables(exports, source);
+			if (!inROM)
 			{
-				fprintf(stderr, "[packages] NOT YET: a '%c%c%c%c part's units (%s%s) are not installed\n",
-						(char) (partInfo->type >> 24), (char) (partInfo->type >> 16), (char) (partInfo->type >> 8), (char) partInfo->type,
-						NOTNIL(exports) ? "exports" : "", NOTNIL(imports) ? " imports" : "");
-				fflush(stderr);
+				RefVar imports(GetFrameSlotRef(frame, RSSYM_importtable));
+				if (NOTNIL(imports))
+				{
+					ULong package = (ULong) area;
+					RegisterUnitArea(area);
+					InstallImportTable(package, imports, source, area->fAreaEnd - area->fArea);
+					FlushPackageCache(package);
+				}
 			}
 		}
 	}
@@ -236,16 +252,21 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 // The part taken out: its unit tables removed, its remove object handed
 // to RemoveFrame, the objects no longer referred to collected; any units
 // whose importers have now lost them reported (ReportDeadUnitImports).
-// NOT YET RECONSTRUCTED: RemoveExportTables and RemoveImportTable, so
-// there are never dead imports to report.
 NewtonErr
 TFramePartHandler::Remove(const PartId& partId, PartType partType, RemoveObjPtr removePtr)
 {
 	FramePartRemoveObject* removeObject = (FramePartRemoveObject*) removePtr;
 	RefVar removed;
 	RefVar deadImports;
-	removed = *removeObject->fObject;
 	TImportedObjectArea* area = removeObject->fArea;
+	if (removeObject->fData != nil)
+	{
+		// (the part the unit tables name: on the host its area's first object)
+		void* source = area != nil ? (void*) area->fArea : (void*) removeObject->fData;
+		deadImports = RemoveExportTables(source);
+		RemoveImportTable(source);
+	}
+	removed = *removeObject->fObject;
 	if (removeObject != nil)
 	{
 		delete removeObject->fObject;
@@ -259,6 +280,7 @@ TFramePartHandler::Remove(const PartId& partId, PartType partType, RemoveObjPtr 
 	if (area != nil)
 	{
 		removed = NILREF;
+		UnregisterUnitArea(area);
 		RemoveFramesPart(area);
 	}
 	if (NOTNIL(deadImports) && Length(deadImports) > 0)

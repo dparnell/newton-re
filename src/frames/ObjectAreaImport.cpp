@@ -42,6 +42,7 @@ TImportedObjectArea::TImportedObjectArea()
 	fCount = 0;
 	fBase = 0;
 	fSize = 0;
+	fBytes = nil;
 	fOutside = nil;
 	fRefCon = nil;
 }
@@ -128,6 +129,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 	Dispose();
 	fBase = base;
 	fSize = size;
+	fBytes = bytes;
 	fOutside = outside;
 	fRefCon = refCon;
 
