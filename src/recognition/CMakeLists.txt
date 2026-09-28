@@ -82,6 +82,7 @@ add_library(recognition STATIC
     Chunk.cpp
     ChunkTrace.cpp
     ChunkLowObj.cpp
+    ChunkConstruct.cpp
     ChunkTables.cpp
     XrMatrix.cpp
     XrWordGraph.cpp

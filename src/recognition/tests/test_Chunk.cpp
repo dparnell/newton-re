@@ -278,6 +278,94 @@ TestLowObjects(void)
 }
 
 
+/*--------------------------------------------------------------------
+	ChunkConstruct: the chunks, strokes, brackets and classes
+--------------------------------------------------------------------*/
+
+// the trace as it is drawn, through the turns and the polyline into a staff
+static bool
+Construct(tag_CHUNK_STAFF* staff, const char* what)
+{
+	memset(staff, 0, sizeof(*staff));
+	long height = 0;
+	if (ExtrWordTrace_V(gTrace, gCount, 7, &height) != 0)
+		return false;
+	staff->fTrace = gTrace;
+	staff->fTraceCount = (int32_t) gCount;
+	staff->fNodeCount = (int32_t) GetLineApprox(gTrace, gCount, 10, &staff->fNodes);
+	if (staff->fNodeCount <= 0)
+		return false;
+	long chunks = ChunkConstruct(staff);
+	if (gVerbose)
+	{
+		Dump(what, staff->fNodes, staff->fNodeCount);
+		printf("  %ld chunks, %d strokes, %d brackets, %d real\n", chunks, staff->fStrokeCount, staff->fBracketCount, staff->fRealCount);
+		for (long k = 0; k < staff->fChunkCount; k++)
+		{
+			tag_CHUNK* c = &staff->fChunks[k];
+			printf("  chunk %ld: nodes %d-%d kind %d dir %2d box (%d,%d)-(%d,%d) prev %d next %d real %d stroke %d class %d/%d brackets %d-%d\n",
+				k, c->fFrom, c->fTo, c->fKind, c->fDir, c->fLeft, c->fTop, c->fRight, c->fBottom, c->fPrev, c->fNext,
+				c->fRealIndex, c->fStroke, c->f74, c->f78, c->fFirstBracket, c->fLastBracket);
+		}
+		for (long k = 0; k < staff->fBracketCount; k++)
+		{
+			brack_type* b = &staff->fBrackets[k];
+			printf("  bracket %ld: chunk %d nodes %d-%d kind %d sign %2d l2 %d h2 %d\n", k, b->fChunk, b->fFrom, b->fTo, b->fKind, b->fSign, b->fLength2, b->fHeight2);
+		}
+	}
+	return chunks > 0;
+}
+
+static void
+Destruct(tag_CHUNK_STAFF* staff)
+{
+	ChunkDestroyData(staff);
+	EXPECT(staff->fChunks == nil && staff->fBrackets == nil && staff->fStrokes == nil && staff->fRealChunks == nil);
+	HWRMemoryFree((Ptr) staff->fNodes);
+}
+
+static void
+TestConstruct(void)
+{
+	tag_CHUNK_STAFF staff;
+
+	// a 4: two strokes; the first is two chunks (down the slant, then
+	// the bar), the jump between the strokes a chunk of its own
+	TraceStart();
+	DrawFour(0, 0);
+	EXPECT(Construct(&staff, "four"));
+	EXPECT(staff.fStrokeCount == 2);
+	long jumps = 0, real = 0;
+	for (long k = 0; k < staff.fChunkCount; k++)
+		if (staff.fChunks[k].fKind == 3)
+			jumps++;
+		else
+		{
+			EXPECT(staff.fChunks[k].fRealIndex == real);
+			EXPECT(staff.fRealChunks[real] == k);
+			real++;
+		}
+	EXPECT(jumps == 1 && real == staff.fRealCount);
+	// the upright is one straight line going down: class 300
+	tag_CHUNK* upright = &staff.fChunks[staff.fChunkCount - 1];
+	EXPECT(upright->fKind == 2 && upright->f74 == 300 && upright->fStroke == 1);
+	EXPECT(upright->fFirstBracket == upright->fLastBracket);
+	Destruct(&staff);
+
+	// a 2: one stroke; the hook over the top an arc
+	TraceStart();
+	DrawTwo(0, 5);
+	EXPECT(Construct(&staff, "two"));
+	EXPECT(staff.fStrokeCount == 1);
+	Boolean arc = false;
+	for (long k = 0; k < staff.fBracketCount; k++)
+		if (staff.fBrackets[k].fKind == 2)
+			arc = true;
+	EXPECT(arc);
+	Destruct(&staff);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -286,6 +374,7 @@ main(int argc, char** argv)
 	TestTurns();
 	TestApprox();
 	TestLowObjects();
+	TestConstruct();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

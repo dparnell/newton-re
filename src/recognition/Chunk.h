@@ -213,6 +213,91 @@ struct LOBlock
 	tag_LOWOBJ	fObjects[kLOMaxObjects];	// +1dc
 };
 
+// A box (ROM tag_BOX).
+struct tag_BOX
+{
+	int32_t		left, top, right, bottom;
+};
+
+// A bracket: a line (kind 1) or an arc (kind 2, turning fSign's way) a
+// chunk is drawn with - ROM brack_type, 0x1c bytes, no pointers.
+struct brack_type
+{
+	int32_t		fChunk;				// +00  (-1: dropped)
+	int32_t		fFrom;				// +04  the nodes
+	int32_t		fTo;				// +08
+	int32_t		fKind;				// +0c  0 one node, 1 a line, 2 an arc
+	int32_t		fSign;				// +10  SgnArc's
+	int32_t		fLength2;			// +14  L2Arc: the chord's length squared
+	int32_t		fHeight2;			// +18  H2Arc: the bulge squared
+};
+static_assert(sizeof(brack_type) == 0x1c, "a brack_type is 0x1c bytes, as in the ROM");
+
+// A stroke as the chunks make it (ROM tag_STK, 0x30 bytes, no pointers).
+struct tag_STK
+{
+	int32_t		fFirstChunk;		// +00
+	int32_t		fLastChunk;			// +04
+	int32_t		fTopNode;			// +08
+	int32_t		fRightNode;			// +0c
+	int32_t		fLeftNode;			// +10
+	int32_t		fBottomNode;		// +14
+	int32_t		fLeft;				// +18
+	int32_t		fTop;				// +1c
+	int32_t		fRight;				// +20
+	int32_t		fBottom;			// +24
+	int32_t		fWidth;				// +28
+	int32_t		fHeight;			// +2c
+};
+static_assert(sizeof(tag_STK) == 0x30, "a tag_STK is 0x30 bytes, as in the ROM");
+
+const long	kMaxChunks	= 100;
+
+// Everything the digit reader works from (ROM tag_CHUNK_STAFF, on
+// ChunkProcessor's stack).  DEVIATION: the host's layout is its own, its
+// pointers being wider; the ROM offsets are noted.
+struct tag_CHUNK_STAFF
+{
+	void*			fLO;			// +00  the list of low objects
+	tag_WORD_TRACE*	fTrace;			// +04
+	int32_t			fTraceCount;	// +08
+	tag_wapx_type*	fNodes;			// +0c  the polyline
+	int32_t			fNodeCount;		// +10
+	tag_CHUNK*		fChunks;		// +14
+	int32_t			fChunkCount;	// +18
+	tag_STK*		fStrokes;		// +1c
+	int32_t			fStrokeCount;	// +20
+	brack_type*		fBrackets;		// +24
+	int32_t			fBracketCount;	// +28
+	int32_t*		fRealChunks;	// +2c  the chunks that are not jumps
+	int32_t			fRealCount;		// +30
+	int32_t			f34;			// +34  100
+	int32_t			f38;			// +38  the brackets' room
+	int32_t			f3C;			// +3c  the real chunks' room
+	int32_t			f40[4];			// +40
+	int32_t			f50;			// +50  rc +4 bit 16
+	int32_t			f54;
+	int32_t			f58;
+	int32_t			f5C;			// +5c  0x18
+	UByte			fDigits[10];	// +60  per digit, the letter-table variants allowed (a bit each)
+};
+
+long	SgnArc(tag_wapx_type* nodes, long a, long b, long c);			// ROM 0x002a7cb0 SgnArc__FP13tag_wapx_typeiN22
+long	H2Arc(tag_wapx_type* nodes, long a, long b);						// ROM 0x002a7d18 H2Arc__FP13tag_wapx_typeiT2
+long	L2Arc(tag_wapx_type* nodes, long a, long b);						// ROM 0x002a7d9c L2Arc__FP13tag_wapx_typeiT2
+void	GetBox(tag_wapx_type* nodes, long a, long b, tag_BOX* box);		// ROM 0x002a7e24 GetBox__FP13tag_wapx_typeiT2P7tag_BOX
+long	CrossArcs(tag_wapx_type* nodes, long kind1, long a0, long a1, long kind2, long b0, long b1);	// ROM 0x002a7a84 CrossArcs__FP13tag_wapx_typeiN52
+long	PreservNextSgn(tag_wapx_type* nodes, brack_type* brackets, long i);	// ROM 0x002a7b2c PreservNextSgn__FP13tag_wapx_typeP10brack_typei
+long	GetAngleBetweenTwoDir(ULong a, ULong b);						// ROM 0x00286834 GetAngleBetweenTwoDir__FUiT1
+long	midL2Chunks(tag_CHUNK* chunks, long count);						// ROM 0x002a7dd0 midL2Chunks__FP9tag_CHUNKi
+long	ChunkFillMainData(tag_CHUNK* chunks, tag_wapx_type* nodes, long count);	// ROM 0x00287f60 ChunkFillMainData__FP9tag_CHUNKP13tag_wapx_typei
+long	ChunkMakeStrokes(tag_CHUNK* chunks, tag_wapx_type* nodes, long count, tag_STK** strokes, long* strokeCount);	// ROM 0x002884c8 ChunkMakeStrokes__FP9tag_CHUNKP13tag_wapx_typeiPP7tag_STKPi
+long	CreateRealChunkInd(tag_CHUNK* chunks, long count, int32_t** real);	// ROM 0x00287e7c CreateRealChunkInd__FP9tag_CHUNKiPPi
+long	ApxToBrackets(tag_wapx_type* nodes, tag_CHUNK* chunks, long count, brack_type** brackets);	// ROM 0x00286a54 ApxToBrackets__FP13tag_wapx_typeP9tag_CHUNKiPP10brack_type
+long	ApxToCLine(tag_wapx_type* nodes, brack_type* brackets, long count, tag_CHUNK* chunks, long chunkCount);	// ROM 0x00287aa8 ApxToCLine__FP13tag_wapx_typeP10brack_typeiP9tag_CHUNKT3
+long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
+long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
+
 void*	LO_Create(void);									// ROM 0x0029bba8 LO_Create__Fv
 long	LO_Destroy(void* list);								// ROM 0x0029bd88 LO_Destroy__FPv
 long	LO_Clear(void* list);								// ROM 0x0029bdac LO_Clear__FPv
