@@ -150,8 +150,7 @@ long	EvaluateWordUsingSideReasoning(const UByte* word, xrdata_type* xr);	// ROM 
 long	EvaluateLetterUsingSideReasoning(UByte c, POST_PARAMS* pp);		// ROM 0x00336934 EvaluateLetterUsingSideReasoning__FUcP12_POST_PARAMS
 long	EvaluateMissingCross(POST_PARAMS* pp, long from, long count);		// ROM 0x003373c8 EvaluateMissingCross__FP12_POST_PARAMSiT2
 long	CalculateBoxes_Side_Result(short c, short prev, POST_PARAMS* pp);	// ROM 0x0033b920 CalculateBoxes_Side_Result__FsT1P12_POST_PARAMS
-long	CheckDiacriticsDirections(POST_PARAMS* pp, rec_w_type* reading, xrdata_type* xr, short which, short* result);	// ROM 0x0007c9a0 CheckDiacriticsDirections__FP12_POST_PARAMSP10rec_w_typeP11xrdata_typesPs
-void	MergeTwoRecWordsSets(rec_w_type* to, rec_w_type* from);			// ROM 0x00337fa4 MergeTwoRecWordsSets__FP10rec_w_typeT1
+long	CheckDiacriticsDirections(POST_PARAMS* pp, rec_w_type* reading, xrdata_type* xr, short which, short* result);	// NOT YET (0x0007c9a0): answers nought
 long	CheckDigitsLine(rec_w_type* reading, xrdata_type* xr, short* result);	// ROM 0x002af648 CheckDigitsLine__FP10rec_w_typeP11xrdata_typePs
 
 // tables (XrPostTables.cpp, generated)

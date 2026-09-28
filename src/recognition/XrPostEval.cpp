@@ -396,8 +396,7 @@ CalculateBoxes_Side_Result(short c, short prev, POST_PARAMS* pp)
 }
 
 
-// ROM 0x0007c9a0 CheckDiacriticsDirections__FP12_POST_PARAMSP10rec_w_typeP11xrdata_typesPs
-// NOT YET RECONSTRUCTED: the directions of the strokes over letters that
+// NOT YET RECONSTRUCTED: CheckDiacriticsDirections (0x0007c9a0) - the directions of the strokes over letters that
 // carry diacritical marks (AnalyseDiacriticsDirection 0x0007c130,
 // CurvFromSquare, LengthOfTraj), which EvaluateCharQuality asks only for
 // a field whose language (rc +6) has bit 2 or 3 set - a French or German
@@ -819,16 +818,6 @@ CheckDigitsLine(rec_w_type* reading, xrdata_type* xr, short* result)
 }
 
 
-// ROM 0x00337fa4 MergeTwoRecWordsSets__FP10rec_w_typeT1
-// NOT YET RECONSTRUCTED: with MakeRecWordsFromGraph (0x003383c0),
-// FillRecWordsElement and MakeNewPath - the readings of a graph that is
-// not a list of answers (a field that expects a fixed string, rwg type 2)
-// made anew after the scoring; such a graph's readings are left as they
-// were.
-void
-MergeTwoRecWordsSets(rec_w_type*, rec_w_type*)
-{
-}
 
 
 // ROM 0x00337624 EvaluateAnswers__FP12_POST_PARAMSP10rec_w_typeP13POST_CONTROLSPUi
@@ -1035,7 +1024,8 @@ EvaluateAnswers(POST_PARAMS* pp, rec_w_type* readings, const UByte* controls, UL
 			// MergeTwoRecWordsSets - the readings of a graph that is not a
 			// list made from it twice (as it is, and with the digits' and
 			// + = %'s weights lowered by a hundred) and merged, then the
-			// word's side reasoning added to each; see MergeTwoRecWordsSets
+			// word's side reasoning added to each; such a graph's readings are
+			// left as they were
 		}
 		if (evaluate != 0 && readings != nil)
 		{
