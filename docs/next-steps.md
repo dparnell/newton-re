@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 111/111
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11767 citations, 0 bad;
-  6780 of 16671 functions (40.67%).
+- `analysis/coverage.py build/MP2x00US --check`: 11778 citations, 0 bad;
+  6791 of 16671 functions (40.74%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -386,6 +386,62 @@ store order is the thing to check: the rest of FillXrFeatures
 (FillOrients) agreed with ParaGraph's own later source where compared,
 and the published source (below) is the quickest way to find a
 suspect.
+
+**Round 12 (2026-09-28): the reader's leftovers.**  Done: `SetStrXrRC`
+(a configuration's `strxrCommands`, byte commands reaching the host's own
+fields by their ROM offsets); the readings of a graph of alternatives
+(`MakeRecWordsFromGraph`, `MakeNewPath`, `FillRecWordsElement`,
+`MergeTwoRecWordsSets` - a fixed-string field's graph, read twice, once
+for a number and once for a word, and merged); **learning** - `DoLearning`
+now hands the pen's trace (`GetTraceFromStrokes`, which was there all
+along; the NOT YET note named a wrong address) to the word domain, and a
+word info's unit id is read back right (`UnitID` read a host ULong out of
+two UniChars, so `DoIndexedLearning` found no recogniser and crashed):
+`cursive.ns` reads "ton" again with learning on, learns it, and the
+letter weights are no longer the defaults; and the digit reader's context
+(`Chunk.h`: `ChunkAllocCtx`, `ChunkCleanUp`, `IsChunkNumbers`,
+`ChunkModifyRC`/`ChunkRestoreRC`, `ChunkWriteParamCtx`), called where
+`GCTryToRecognize` calls them.  Left:
+- **The orthographic learning** (only with rc +0xb2 bit 6 / +0xb8 bit 3,
+  which the Notepad never sets): `ORCreateLearnInfo` over `OrtoCreate`,
+  `OrtoGetmem`/`OrtoCalcSize`/`OrtoResize`/`OrtoFasten`, `OrtoEntries`
+  (796 B, which the decompiler mangles - read the disassembly) and
+  `RemovePointAndSort` (0x00147548-0x00147d70, about 2.5 KB); and
+  `ORTraining` (a tail call into `OrtoTraining`, 0x00147e74) over
+  `LearnPartsCopy` and `TrainTrajectory` - a letter-shape database of its
+  own (`FillNwtSample` over `TraceToOdata`/`RjctAppr` and the DCT
+  (`FDCT4/8/16`, `IDCT...`), `AddToDataBase`, `SearchInDataBase` with
+  `FirstSearch`/`SecondSearch`, `Occam`, `SQRT32_ORTO`): 56 not done,
+  about 15 KB.  The `_LEARN_ARRAY_tag` block goes into the training data
+  ('ORTL'), so keep its bytes as the ROM lays them out (big-endian halves;
+  the pointer at +0x14 is only a cache, recomputed from +0x04 each time -
+  on the host leave it unused).  `ConfigureArea`'s base-line and grid
+  geometry is still NOT YET too.
+- **The digit reader** (below).
+
+**The digit reader, sized** (`callgraph.py build/MP2x00US ChunkAllocCtx
+ChunkProcessor ChunkModifyRC ChunkWriteParamCtx ChunkPatchXrdata
+ChunkRestoreRC ChunkSortAnswers ChunkCorrectByLexDB ChunkCleanUp
+--through-done`): 176 functions reached, **102 not done, about 150 KB**.
+`ChunkProcessor` (0x002a6b50, 2.6 KB) is the whole of it: the points made
+a `tag_WORD_TRACE`, `ExtrWordTrace_V` (its extrema) and `GetLineApprox`
+(a polyline approximation, `tag_wapx_type`, with `SetAllDirections`,
+`GetDirection`, `v_MostFarFromChord`, `v_QDistFromChord` - about 5 KB
+together), `ChunkConstruct` (the writing cut into chunks: `ApxToBrackets`,
+`ApxToCLine`, `ChunkFillMainData`, `ChunkMakeStrokes`, `LO_*` - the list
+of low objects), then **`Digits`** (24 KB) over the four digit searchers
+`SearchDigit_S` (24 KB), `SearchDigit_K` (17 KB), `SearchDigit_L` (3.7 KB)
+and `New_SearchDigit_V` (20 KB), `SearchNumber`, `FindPound` (the £ sign,
+6 KB), `RecognizeZCCW`, `GetCircles`, `Check_4`, `CutNumberInDigits`,
+`DefHeightsForNumber`, and after the xr reader `ChunkPatchXrdata` (1.2
+KB), `ChunkSortAnswers` (an unnamed sort at 0x002a4c04) and
+`ChunkCorrectByLexDB` (3.5 KB).  In that order, bottom up: (1) the trace,
+`ExtrWordTrace_V`, `GetLineApprox` and the `LO_*` list, each testable on
+a drawn digit; (2) `ChunkConstruct` and its helpers; (3) `Digits` with
+`SearchDigit_L` (the smallest searcher) first, then `_V`, `_K`, `_S`;
+(4) the rest, and `ChunkProcessor` itself wired in, with a demo writing
+"42" into a numbers field (rc +0xb6 is set by a field whose
+recognition flags allow numbers).  Four or five rounds.
 
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3
