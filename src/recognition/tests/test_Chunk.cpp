@@ -663,6 +663,198 @@ TestSecondLooks(void)
 	Destruct(&staff);
 }
 
+/*--------------------------------------------------------------------
+	Digits' second-look pass (DigitsSecondLooks, ROM 0x0029ce20)
+--------------------------------------------------------------------*/
+
+// a digit put in the list over one stroke's nodes
+static tag_LOWOBJ*
+DigitOverStroke(void* lo, tag_CHUNK_STAFF* staff, long stroke, long value, long extra = 1, long lastStroke = -1)
+{
+	long from = staff->fChunks[staff->fStrokes[stroke].fFirstChunk].fFrom;
+	long to = staff->fChunks[staff->fStrokes[lastStroke < 0 ? stroke : lastStroke].fLastChunk].fTo;
+	tag_LOWOBJ* o = nil;
+	LO_PickDirectInd(lo, LO_Add(lo, staff->fNodes, 1300, from, to, (ULong) value, extra), &o);
+	return o;
+}
+
+// the pass run with every variant allowed (unless given), the class-1900
+// objects it wrote out read back in order as their values
+static long
+SecondLooks(void* lo, tag_CHUNK_STAFF* staff, long* values, long max, const UByte* allowed = nil)
+{
+	UByte all[10];
+	memset(all, 0xff, sizeof(all));
+	tag_BOX box;
+	DefRectForChunks(staff->fChunks, staff->fNodes, 0, staff->fChunkCount - 1, &box);
+	long made = DigitsSecondLooks(lo, staff->fChunks, staff->fRealChunks, staff->fStrokes, staff->fStrokeCount,
+		staff->fNodes, allowed != nil ? allowed : all, box);
+	tag_LOWOBJ* obj = nil;
+	long k = 0;
+	if (LO_SetWorkClass(lo, 1900) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more && k < max; more = LO_PickNext(lo, &obj))
+			values[k++] = obj->fValue;
+	if (gVerbose)
+	{
+		printf("  second looks: %ld made:", made);
+		for (long i = 0; i < k; i++)
+			printf(" %ld", values[i]);
+		printf("\n");
+	}
+	EXPECT(k == made);
+	return made;
+}
+
+// a stroke straight from one point to another
+static void
+DrawLine(double x0, double y0, double x1, double y1)
+{
+	MoveTo(x0, y0);
+	LineTo(x1, y1);
+	StrokeEnd();
+}
+
+// a "<", 8 pixels wide and 12 high
+static void
+DrawLess(double x, double y)
+{
+	MoveTo(x + 8, y);
+	LineTo(x, y + 6);
+	LineTo(x + 8, y + 12);
+	StrokeEnd();
+}
+
+static void
+TestSecondLookPass(void)
+{
+	tag_CHUNK_STAFF staff;
+	long v[8];
+
+	// sorted by where they start, whatever order they were found in; a gap
+	// (class 1200) between them written out in its place, value 0xffff
+	TraceStart();
+	DrawOne(0, 0);
+	DrawFour(20, 0);
+	EXPECT(Construct(&staff, "1 4"));
+	void* lo = LO_Create();
+	DigitOverStroke(lo, &staff, 1, 1404);		// (the 4's first stroke only)
+	DigitOverStroke(lo, &staff, 0, 1381);
+	LO_Add(lo, staff.fNodes, 1200, 0, 0, 0, -1);
+	tag_LOWOBJ* gap = nil;
+	LO_SetWorkClass(lo, 1200);
+	LO_PickFirst(lo, &gap);
+	if (gap != nil)
+	{
+		gap->fLeft = 80;			// between the 1 (x 40) and the 4 (from x 160)
+		gap->fRight = 150;
+	}
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 3);
+	EXPECT(v[0] == 1381 && v[1] == 0xffff && v[2] == 1404);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// a "1" hanging low between two 4s is a comma; a shorter one a full stop
+	TraceStart();
+	DrawFour(0, 0);
+	DrawLine(17, 19, 17, 27);
+	DrawFour(22, 0);
+	EXPECT(Construct(&staff, "4 , 4"));
+	lo = LO_Create();
+	DigitOverStroke(lo, &staff, 0, 1404, 1, 1);
+	DigitOverStroke(lo, &staff, 2, 1301);
+	DigitOverStroke(lo, &staff, 3, 1404, 1, 4);
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 3);
+	EXPECT(v[0] == 1404 && v[1] == 1319 && v[2] == 1404);
+	LO_Destroy(lo);
+	Destruct(&staff);
+	TraceStart();
+	DrawFour(0, 0);
+	DrawLine(17, 19, 17, 24);
+	DrawFour(22, 0);
+	EXPECT(Construct(&staff, "4 . 4"));
+	lo = LO_Create();
+	DigitOverStroke(lo, &staff, 0, 1404, 1, 1);
+	DigitOverStroke(lo, &staff, 2, 1301);
+	DigitOverStroke(lo, &staff, 3, 1404, 1, 4);
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 3);
+	EXPECT(v[1] == 1314);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// a "1" slanting and taller than the digits beside it is a solidus
+	TraceStart();
+	DrawFour(0, 0);
+	DrawLine(30, -6, 20, 26);
+	EXPECT(Construct(&staff, "4 /"));
+	lo = LO_Create();
+	DigitOverStroke(lo, &staff, 0, 1404);
+	DigitOverStroke(lo, &staff, 2, 1301);
+	tag_CHUNK* slash = &staff.fChunks[staff.fStrokes[2].fFirstChunk];
+	if (gVerbose)
+		printf("  slash: class %d dir %d height %d\n", slash->f74, slash->fDir, slash->fHeight);
+	EXPECT(slash->f74 == 300 && slash->fDir >= 7 && slash->fDir <= 11);
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 2);
+	EXPECT(v[1] == 1316);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// a "-" high against the upright stroke before it, which is no digit,
+	// is its bar: taken out
+	TraceStart();
+	DrawLine(0, 0, 0, 20);
+	DrawLine(1, 1, 8, 1);
+	EXPECT(Construct(&staff, "| -"));
+	lo = LO_Create();
+	DigitOverStroke(lo, &staff, 1, 1313);
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 0);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// two "<"s side by side are one guillemet over both
+	TraceStart();
+	DrawLess(0, 4);
+	DrawLess(10, 4);
+	EXPECT(Construct(&staff, "< <"));
+	lo = LO_Create();
+	tag_LOWOBJ* first = DigitOverStroke(lo, &staff, 0, 1324);
+	tag_LOWOBJ* second = DigitOverStroke(lo, &staff, 1, 1324);
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 1);
+	EXPECT(v[0] == 1325 && first->fValue == 0xffff);
+	EXPECT(second->fFrom == first->fFrom && second->fLeft == first->fLeft);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// a 3 after an upright line through its bowl is a "B", made over both
+	TraceStart();
+	DrawLine(5, 0, 5, 20);
+	DrawThreeFlat(0, 0);
+	EXPECT(Construct(&staff, "| 3"));
+	lo = LO_Create();
+	DigitOverStroke(lo, &staff, 1, 1303);
+	EXPECT(SecondLooks(lo, &staff, v, 8) == 1);
+	EXPECT(v[0] == 1330);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// a 4 in two strokes whose upright ends lowest is the letter table's
+	// first variant: kept when the field allows it, taken out otherwise
+	UByte allowed[10];
+	memset(allowed, 0xff, sizeof(allowed));
+	for (int pass = 0; pass < 2; pass++)
+	{
+		allowed[4] = pass == 0 ? 0x01 : 0x02;
+		TraceStart();
+		DrawFour(0, 0);
+		EXPECT(Construct(&staff, "4 variant"));
+		lo = LO_Create();
+		long from = staff.fChunks[0].fFrom, to = staff.fChunks[staff.fChunkCount - 1].fTo;
+		LO_Add(lo, staff.fNodes, 1300, from, to, 1404, 1);
+		EXPECT(SecondLooks(lo, &staff, v, 8, allowed) == (pass == 0 ? 1 : 0));
+		LO_Destroy(lo);
+		Destruct(&staff);
+	}
+}
+
 static void
 TestLineAndCircles(void)
 {
@@ -750,6 +942,7 @@ main(int argc, char** argv)
 	TestLineAndCircles();
 	TestSearchL();
 	TestSecondLooks();
+	TestSecondLookPass();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

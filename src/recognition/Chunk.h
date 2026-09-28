@@ -347,6 +347,19 @@ long	RecognizeZCCW(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real,
 // 0xffff) when one is taller than twice the digits' mean height or shares
 // its chunks with another digit.
 void	Check_4(tag_CHUNK_STAFF* staff);								// ROM 0x0028d9d0 Check_4__FP15tag_CHUNK_STAFF
+// Digits' second looks (unnamed in the ROM, 0x0029ce20): the digits found
+// (class 1300, up to thirty) sorted left to right, twelve corrections made
+// to them by their neighbours (a low "1" a comma, a short comma a full
+// stop, a slanting "1" a solidus, a straight ")" with no "(" a "1", a "1"
+// before an unmatched ")" a "(", a 7 after a leftmost "(" a ")", two "<"s
+// a guillemet, a "-" that is the bar of the stroke before it dropped, a
+// 3/7/")" after an upright stroke a "B" or "D", a digit written as a
+// variant the field does not allow (allowed: the staff's fDigits)
+// dropped, ...), ThreeToFive and RecognizeZCCW run, and the digits and
+// the gaps between them (class 1200, placed by where they lie between
+// the digits and the box's ends) put in the list as class 1900 in order.
+// ==> how many objects that is (0 with no digits).
+long	DigitsSecondLooks(void* lo, tag_CHUNK* chunks, int32_t* real, tag_STK* strokes, long strokeCount, tag_wapx_type* nodes, const UByte* allowed, tag_BOX box);	// ROM 0x0029ce20 (unnamed)
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 
