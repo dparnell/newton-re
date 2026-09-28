@@ -871,6 +871,553 @@ bugs and ROM bugs found on the way.
   (`nsfunctions.py --binary-classes` lists the classes).
 - `Disasm(fn)`, a host function printing a script's bytecode.
 
+## Finishing the recognition system, as planned in next-steps.md (2026-09-27 to 2026-09-28)
+
+The plan and round-by-round progress that `docs/next-steps.md` carried
+while the recognition system was finished - the deferred recognition,
+the letter styles, the shape verbs, and the whole of ParaGraph's cursive
+and digit readers - moved here verbatim when it was done (each round also
+has its own entry above).  Its section headings are demoted one level.
+
+### Now: finishing the recognition system
+
+The owner asked (2026-09-27) for the recognition system to be put to bed,
+then for the testing system.  What is left of recognition is its natives
+(`natives.py --unbound`, the recognition area: all 116 answered since
+2026-09-28), in the order planned:
+
+1. ~~**Deferred recognition**~~ - DONE 2026-09-27 (`views/Rerecognize.h`,
+   `docs/recognition/README.md`'s "Deferred recognition", ctest
+   `host.NewtonRecognize`).  The grouping of unread strokes into ink is
+   DONE too (2026-09-28, `recognition/InkGroups.h` over ParaGraph's word
+   segmenter `WordSegment.h`; `HandleExpiredStroke` hands strokes to it);
+   `Recognize` still answers nothing for them, as the ROM's own does.
+2. DONE (2026-09-28, `docs/recognition/README.md`'s "The cursive
+   recogniser and the letter styles"; the cursive engine's reading is
+   NOT YET - measured below) **Letter styles**: `DoCursiveTraining`, `GetLetterWeights`/
+   `SetLetterWeights`, the letter-shape natives, `RosettaExtension`.
+3. DONE (2026-09-28, `views/ShapeVerbs.cpp`,
+   `docs/views/README.md`'s "Questions asked of shapes") **Shape verbs**:
+   `MakeInk`, `FindShape`, `GetShapeInfo`, `StrokeInPicture`,
+   `AnimateSimpleStroke` (and `WedgeBox`, a stub until now).  NOT YET:
+   - ~~`MungeShape`~~ DONE (2026-09-28, `views/ShapeVerbs.cpp`,
+     `qd/MungeBitmap.cpp`, `toolbox/Matrix.h`; `MungeBitmap` too) bar
+     `RotTiledBitmap` (a screen-sized bitmap turned in tiles out of a large
+     binary on a store, over `TTile`).
+   - ~~`PictToShape`~~ DONE (2026-09-28, `views/PictureShapes.cpp` over
+     `DrawPicture`'s toShapes path, `docs/qd/README.md`'s "A picture
+     turned into shapes"; `GetPattern` now takes every pattern form and
+     `qd/Ports.h` has `MakeGrayPattern`/`MakeNSPattern`).  The picture's
+     text becomes text boxes but is still not *drawn* by DrawPicture.
+4. DONE (2026-09-28) `InkConvert` (over the codec's converter
+   `ConvertData`, `ink/CICConvert.cpp`), `ConvertDictionaryData`,
+   `MoveCorrectionInfo`/`AddUnit`/`HandleInkWord`; the boot's `UseWRec`
+   choice was already made by `ReadCursiveOptions` (item 2).  NOT YET:
+   `TEditView::TrackDistort` 0x000a9634 (dragging a selected shape's
+   corner to distort it, which `MungeShape`'s neighbours would draw).
+
+#### The cursive reader (ParaGraph's xr engine), measured
+
+Measured 2026-09-28 with `analysis/callgraph.py build/MP2x00US
+GCTryToRecognize__FP13PS_point_typeP15GCWordDescrTypeP7rc_typeP17GCGroupParmStruct
+CallGroupAndClassify__FP12TStrXrDomainP10TStrXrUnitP11TStrokeUnitUiN24`:
+**715 functions reached, 663 not done, about 431 KB** - twice the whole
+of Rosetta - and a lower bound, since the domains' own `Classify` calls
+reach it through function pointers (`TStrXrDomain::Classify` is 56 bytes).
+The biggest pieces: a digit and number reader over "chunks" of writing
+(`Digits` 24 KB, `SearchDigit_S`/`_K`/`_L`/`New_SearchDigit_V` 17-24 KB
+each, `SearchNumber`, `FindPound`, `RecognizeZCCW` - about 110 KB
+together), the low-level feature extraction over `low_type`
+(`BaselineAndScale`, `transfrmN` 6.4 KB, `Extr`/`BigExtr`,
+`line_pos_mist`, `StrElements`), punctuation and apostrophes
+(`punctuation`, `RestoreApostroph`), and the lexical correction
+(`ChunkCorrectByLexDB`).  The word descriptors the GC layer keeps for it
+(`GCWordDescr*`, `GCWriteNewGroupResults`, the rest of
+`GCTryToRemoveLastWords`, `InkGroups.h`) come first.  A plan, in the
+order the reading reaches things: (1) the word descriptors and
+`GCTryToRecognize`'s own frame (`GCLockRecognitionData`,
+`GCFillBaseLineParameters`, `GCMergeLinesAndRemoveDash`); (2) the
+low-level layer (`low_type`: the trace cut into elements and
+extrema - the part once mistaken for Rosetta's feature extraction);
+(3) the xr matching against the DTE/PPD tables already loaded
+(`ParaGraph.h`); (4) the word search and the lexical DB; (5) the digit
+and number reader last, since it is a reader of its own inside the
+engine.  Like Rosetta it should sit behind the `TWRecognizer`-style seam
+so a modern cursive recogniser can replace it.  Until then a cursive
+letter set on the host reads nothing (its writing stays ink).
+
+**Stage 1 DONE (2026-09-28, commits 46030bd, 2a0b8be;
+`docs/recognition/README.md`'s "The way writing reaches the cursive
+reader"):** the word descriptors (`WordDescriptors.h`), `GCTryToRecognize`'s
+frame and the base line handed to the engine (`CursiveReader.h`:
+`GCFillBaseLineParameters`, `SetRCB`, `GCLockRecognitionData`), and the
+strokes-to-xrs domain that feeds it (`StrXrDomain.cpp`: `TStrXrDomain`,
+`TStrXrUnit`, `CallGroupAndClassify` and the rest of the GC layer,
+`WriteRecResults`/`GCWriteRW` making each word read a unit).  With a
+cursive letter set the writing is now grouped into words and each word
+reaches the reader; the reader answers -8 (the low level is NOT YET), so
+the word is kept as ink.  `test_WordDescriptors`;
+`src/host/demo/cursive.ns` with `NEWTON_TRACE_CURSIVE=1`.  Left of
+stage 1: `SetStrXrRC` (0x000651e4, a configuration's `strxrCommands`).
+
+The lock-up found on the way (`cursive.ns` stopping one run in three in
+the heap's compaction) was heap damage done at boot: `CreateTrigramHeader`
+asked for the ROM's 0x98 bytes and zeroed the host's 0xa8-byte header
+over the next block's header - fixed (2026-09-28, `docs/work-log.md`).
+The 'STXR' bisect only moved the heap's layout.  `cursive.ns` is now
+ctest `host.NewtonCursive` (18 of 18 runs clean, where 3 of 6 locked up).
+
+**Stage 2 sized** (callgraph.py, not-done functions below each root):
+`low_level` 389 functions, 213 KB (the trace cut into xrs: `low_type`,
+`BaselineAndScale`, `transfrmN`, `Extr`/`BigExtr`, `line_pos_mist`,
+`StrElements`, ...); `xrw_algs` 70, 29 KB (stage 3/4: the xr matching and
+the word graph); the `Chunk*` digit reader 72, 140 KB (stage 5).  Stage 2
+is itself several rounds; a first testable piece would be the trace's
+preprocessing and `BaselineAndScale` checked against a word of known
+shape, then `Extr` (the extrema) - each layer can be tested on its own
+because `low_level` writes an `xrdata_type` (0x18-byte elements) that
+can be printed and compared with what the letter shapes imply.
+
+**Stage 2 begun (2026-09-28, commits 9242531, 170373e, bdf5d96, 4334066,
+d8a649a; `docs/recognition/README.md`'s "The low level"):** the
+`low_type` state and its memory, the strokes, the filters (`Errorprov`,
+`PreFilt`, `Filt`, `PSProc`), the extremum finders (`Extr`, `BigExtr`,
+`DirectExtr`), the element list operations and about thirty of the
+base-line finder's pieces (`LowBaseline.cpp`) - 84 functions, about 24 KB,
+each checked by `test_LowLevel`.  Left below `low_level`: 305 functions,
+189 KB.  The next piece is the rest of `transfrmN` (32 functions, 38 KB:
+`classify_strokes`, `bord_correction`, `line_pos_mist`, the gap and
+glitch finders, `calc_med_heights`, `extract_all_extr` and the
+punctuation tests under it), which completes `BaselineAndScale` and
+gives the first check against a word of known shape; then
+`AnalyzeLowData`'s passes and `exchange`.  At this round's pace that is
+seven or eight more rounds for `low_level`, and the whole reader
+(`xrw_algs`, the lexical search, the digit reader) perhaps fifteen.
+Working notes: the decompiler mangles this code's signed-byte and
+two-result patterns (`__rt_sdiv` answers the quotient in r0 and the
+remainder in r1; a direction kept as two shorts shows as bytes), so each
+function's arithmetic is checked in the assembly (`analysis/disasm.py`),
+and a struct holding pointers (`SPEC_TYPE`, `EXTR`, `low_type`) is
+`sizeof`-allocated on the host.
+
+**Stage 2, round 2 (2026-09-28, commits b66b2ca, 3089d57, 65ba664):** the
+base-line finder is whole - `transfrmN` and the 32 functions below it
+(`LowPunct.cpp`, `LowGeometry.cpp`, `LowLine.cpp`, `LowClassify.cpp`,
+`LowBorders.cpp`) and `BaselineAndScale`, 38 functions and about 41 KB -
+and the first end-to-end check passes: synthetic arches 40 high on y = 200
+come back as a height of 40 on a lower border of 200, the trace rescaled
+to 0x2796..0x27e6 (`test_LowLevel`'s `TestBaseline`).  AnalyzeLowData's
+first seven passes are done too (`LowAnalyze.cpp`).  Left below
+`low_level`: 267 functions, 148 KB - the rest of `AnalyzeLowData` (`Pict`,
+the circle finder `Circle` with `work_with_circle`/`Orient00` and the back
+and forward circles, `angl`, `FindSideExtr`/`PostFindSideExtr`, `Cross`,
+the `lk_*` passes over sticks, circles and arcs, `Adjust_I_U`, `xt_st_zz`
+with its dozen helpers, `RestoreColons`) and `exchange` (the xrs written:
+`FillXrFeatures`, `AssignInputPenaltyAndStrict`, `check_xrdata`,
+`MarkXrAsLastInLetter`, `GetLinkBetweenThisAndNextXr`).  Revised estimate:
+at this round's pace (about 45 KB a round) three to four more rounds for
+`low_level`, and the whole reader perhaps twelve.
+
+**Stage 2, round 3 (2026-09-28, commits a95c376, d02ec5a, 87c4fa2):**
+`Pict` whole (`LowPict.cpp`: the stroke descriptions, the dashes, dots,
+hatches and crossings, `VertSticksSelector`'s upright sticks, `FantomSt`,
+`FillCross`, `Recount`; 59 functions, about 34 KB) and `angl`
+(`LowAngles.cpp`, 4 functions), with `CreateSDS`/`DestroySDS`.
+`test_LowLevel`'s `TestPict` takes a word through the base line and
+AnalyzeLowData's first steps into Pict (a dash marked 7, a dot 8, every
+stroke described); `TestAngles` finds a hairpin's corner.  Worth knowing
+for the rest: mark 7 is a *level* straight stroke, not an upright stick;
+the decompiler reads an unaligned `ldr` at a word + 2 as the halfword there
+when a `strb` of its low byte takes the halfword *before* it - check every
+such copy in the disassembly.  Left below `low_level`: 207 functions,
+115 KB - `Circle` (26 functions, 10 KB: `work_with_circle`, `Clash_my`,
+`circle_type` and the `is_*_circle` tests), `FindSideExtr` (8 KB), `Cross`
+(8 KB), the `lk_*` passes, `Adjust_I_U`, `xt_st_zz`, `RestoreColons`,
+`PostFindSideExtr`, and `exchange` (20 KB).  At this pace (about 36 KB a
+round) three more rounds for `low_level`; the whole reader perhaps eleven.
+
+**Stage 2, round 4 (2026-09-28, commits cd697fb, 12949ca, 6d79cb8,
+b20942c, 4462175, c65b08d):** `Circle` (`LowCircle.cpp`, 26 functions),
+`FindSideExtr` (`LowSide.cpp`, 10, two of them unnamed), `Cross`
+(`LowCross.cpp`, 6), `lk_begin` (`LowBegin.cpp`, 11) and `Adjust_I_U`
+(`LowAdjust.cpp`) - about 55 functions and 25 KB, each with a test in
+`test_LowLevel`; the `eps0`..`eps3` and `nbcut` tables and the rest of
+`const1` from romtable.py.  AnalyzeLowData now runs, by hand in the test,
+from the start through `lk_begin` and `Adjust_I_U`, and the cursive "uou"
+comes out coded (a start and end at tops, three tops, four bottoms, the
+o's crossings).  `low_level` is still not called.  Left below it: 157
+functions, 90 KB - `lk_cross` (`del_inside_circles`, `analize_sticks`,
+`analize_circles` and their helpers, about 12 KB), `lk_duga`
+(`arcs_processing`, `conv_sticks_to_arcs`, the circle neighbours, about
+10 KB), `xt_st_zz` (the t-bars, umlauts, quotes and punctuation,
+`make_different_breaks`, `FindDArcs`: the biggest, about 30 KB),
+`RestoreColons` (3 KB), `PostFindSideExtr` (3 KB), and `exchange` with
+`FillXrFeatures` (about 12 KB: its layout and the tables it needs are in
+`docs/recognition/README.md`'s low-level section).  The quickest route to
+a first xr stream is `exchange` next - the test can call it after
+`Adjust_I_U` without the passes in between - then the passes in the
+order AnalyzeLowData calls them.  Revised estimate: about three more
+rounds for `low_level` (this round did about 25 KB, every function from
+the disassembly), and the whole reader perhaps ten.
+
+**Stage 2, round 5 (2026-09-28, commits edb3d06, 94c1eb6, 7e8b3df,
+44f6286):**
+`exchange` and `FillXrFeatures` (`LowExchange.cpp`, `LowXrFeatures.cpp`:
+the first xr stream - `test_LowLevel`'s `TestExchange` takes the "uou"
+through to breaks at each end, 5 upper and 4 lower extrema, points and
+boxes inside the trace; `penlDefX`/`penlDefH`, `xr_type_merits`,
+`ratio_to_angle` and FillSHR's two limit tables from romtable.py),
+`RestoreColons` and `PostFindSideExtr` (`LowRestore.cpp`: `TestRestore`
+moves a colon written last back between two u's), and `lk_cross`
+(`LowLkCross.cpp`, 32 functions: sticks, loops, the point-in-polygon
+test - `TestLkCross` codes the uou's o as a closed loop).  About 60
+functions and 42 KB; and of `lk_duga` (`LowLkDuga.cpp`, `TestLkDuga`)
+the arc, loop and stick passes: `arcs_processing` (with `DyLimit`,
+`IsDx_Dy_in_arcs_OK`, `IsDx_Dy_in_tips_OK`, `IsTipOK`),
+`delete_CROSS_elements`/`ins_third_elem_in_circle` and
+`check_IUb_IDf_small`.  Left below `low_level`: the rest of `lk_duga` (30
+functions, about 11 KB: `lk_duga` itself, `prevent_arcs`,
+`conv_sticks_to_arcs` over `cos_horizline`, `del_before_after_circles`
+and the circle neighbours over the `NxtPrvCircle_type` block -
+`check_before_circle`, `check_after_circle`, `check_next_for_*`,
+`UpElemBeforeCircle`/`DnElemBeforeCircle`, `Is_8`, `O_GU_To3Elements`,
+`HardOverlapRect` - and `delete_UD_before_DDL`; the disassembly is
+0x002fa2f8-0x002fd920) and `xt_st_zz` (67 not done, about 40 KB: the
+t-bars, umlauts, quotes and punctuation, `make_different_breaks`,
+`FindDArcs`), then wiring `low_level` into `GCTryToRecognize` (the
+order is AnalyzeLowData's: `lk_begin`, `lk_cross`, `lk_duga`,
+`Adjust_I_U`, `xt_st_zz`, `RestoreColons`, `PostFindSideExtr`; then
+`exchange`).  Estimate: `lk_duga` one round, `xt_st_zz` one or two, then
+`low_level` is whole; the reader after it (`xrw_algs`, the lexical
+search, the digit reader) perhaps seven or eight more.
+
+**Stage 2, round 6 (2026-09-28, commits 25a1bd7, 948b6e4, b04803c):**
+`lk_duga` whole (`LowLkDuga.cpp`: `prevent_arcs`,
+`conv_sticks_to_arcs`, `del_before_after_circles` and the fifteen
+circle-neighbour functions over `NxtPrvCircle_type`,
+`delete_UD_before_DDL`; `cos_horizline` and `x/y/HardOverlapRect` in
+`LowGeometry.cpp`; `TestLkDugaWhole` takes the uou through it), and of
+`xt_st_zz` (`LowXtSt.cpp`) everything but `FindDArcs`: 50 functions and
+about 30 KB - the late strokes found and placed, quotes, punctuation and
+`RestoreApostroph` (with four unnamed helpers), umlauts, angstroms, the
+crossed-out x, the parentheses, the breaks weighed
+(`make_different_breaks`, `GetDxBetweenStrokes`,
+`GetTraceBoxInsideYZone`), `del_close_MAX_MIN`, `CheckSequenceOfElements`
+(`TestXtSt`).  Left below `low_level`: `xt_st_zz` itself (240 bytes; its
+order is in `LowXtSt.cpp`'s header) and `FindDArcs`'s group (about 10 KB:
+`CheckSZArcs` and `CheckDArcs` are 2.9 KB each, the rest small; they
+share an `SZD_FEATURES` block of 0x44 bytes on the ROM's stack - +0 the
+low_type, +4/+8 the two elements looked at, +0xc a new element, +0x10..
++0x20 x, y, the initial x and y and the point map); then `low_level`
+and `AnalyzeLowData` themselves and the wiring into `GCTryToRecognize`.
+Estimate: one round for `FindDArcs`, `xt_st_zz` and the wiring; the
+reader above it (`xrw_algs`, the lexical search, the digit reader) about
+seven more.
+
+**Stage 2 DONE, round 7 (2026-09-28, commit 548e364):** `FindDArcs` and
+its group (`LowDArcs.cpp`, 17 functions and about 10 KB, all from the
+disassembly: the S/Z and d-bowl finders over `SZD_FEATURES`), `xt_st_zz`
+itself, `AnalyzeLowData` and `low_level` - **the low level is whole** -
+and `GCTryToRecognize` now calls `low_level`.  `test_LowLevel`'s
+`TestDArcs` (an S gets its 0x23 element between the arcs) and
+`TestLowLevelWhole` (the uou from its trace to its 13 xrs through
+`low_level`); with a cursive letter set `cursive.ns` cuts "ton" into 13
+xrs and "to" into 8 and the reader stops at `xrw_algs`, -9 (ctest
+`host.NewtonCursive` checks both; clean under `NEWTON_HEAPCHECK=5`).
+
+**Stage 3 DONE, round 8 (2026-09-28, commits cfc92ea, 1f1ffc2, efe50d9):
+`xrw_algs` whole** - the matrix (`XrMatrix.h`: `xrcm_type`, `CountWord`,
+`CountLetter`, `CountSym`, `CountVar`, `MergeVarResults`, the trace and
+layout, and the two hand-written assembly loops `CountXrAsm`/`TCountXrAsm`
+transcribed register by register), the Viterbi (`Xrlv.cpp`: all of
+`xrlv`, `XrlvCHLXrlvPos` included), the dictionaries it asks what may come
+next (`XrLex.cpp`, over two new Airus routes: `AEnum_NextSet9` and the
+lexicon's `AL_NextSet9`), the word graph (`XrWordGraph.cpp`:
+`create_rwg_ppd`, `GetCMPAliases`, `fill_RW_aliases`, `SortGraph`,
+`GetSymBox`, `GetBaseBord`) and `SetMultiWordMarksWS`/`Dash`; tables from
+romtable.py (`XrReaderTables.cpp`).  `test_XrMatrix`: six letters of the
+ROM's table each read their own ideal xrs best, and `xrlv` reads the
+ideal xrs of l and o as "lo" first.  Wired into `GCTryToRecognize`: with
+a cursive letter set `cursive.ns`'s "to" comes out of the word graph as
+"to" first, "ton" as For/ER/Eon/FR/EN (`NEWTON_TRACE_CURSIVE=1`; ctest
+`host.NewtonCursive` checks both graphs; clean under
+`NEWTON_HEAPCHECK=5`).  The host still answers -9 after the graph.
+
+**Stage 4 begun, round 9 (2026-09-28): the answers, and the first
+cursive word typed.**  `MakeAndCombRecWordsFromWordGraph`/
+`MakeRecWordsFromWordGraph` (the graph made into readings, sorted, scaled
+and cut - `XrAnswers.cpp`), `FillRecwordSplitInfo` and its helpers (which
+strokes each word of a reading of several is: `connect_trajectory_and_*`,
+`AddStrokesOfSymbol`, `AttachLostStrokeToWord`, `FillSplitInfoFromRWG`),
+`GCFillLearningHandle` over `LHAddEntry`, and the word domain's own
+reading - `TXrWordDomain::Group`/`Classify`/`Reclassify`/`ClassifyXrWord`
+and `TXrWordUnit` - so an STXR unit becomes an 'XRWR' word unit, the
+arbiter hands it to `TWordRecognizer`, and the page types it.
+`cursive.ns` read **"For to"** then ("ton to" since FillSHR was put right,
+below; ctest `host.NewtonCursive` checks the
+answers and the page's text; `test_XrAnswers` the readings, the split
+information and the training data).  The rules' headers are walked too
+(`XrRules.cpp`: `PDFGetRule` and its address helpers, checked against
+the ROM's 87 characters' rules in `test_XrMatrix`).
+
+**Stage 4, round 10 (2026-09-28): the post-processing.**
+`EvaluateAndSortAnswers` is real (`XrPost.h`, `XrPostCalc.cpp`,
+`XrPostEval.cpp`; `docs/recognition/README.md`, "The post-processing"):
+the letter table's rules are little programs, and the stack machine that
+runs them (`CalculateQueueResult`, from the disassembly) and all 74
+functions of their `Functions` table are there, with `EvaluateCharQuality`,
+the side reasoning, the boxes, the missing crosses and `CheckDigitsLine`.
+It only scores close calls between good answers (the best at least rc
++0x100 = 60 and no more than rc +0x102 = 10 ahead), so `cursive.ns` reads
+as before; `test_XrMatrix` runs hand-made queues and the ROM's rules for
+an l and an o, and a joined-up demo (`src/host/demo/cursive-joined.ns`,
+ctest `host.NewtonCursiveJoined`) writes "on", "no", "mum", "to", "nun" in
+one stroke each: they read "OR", "bb", "maps", "to", "Rap" - "no" was the
+one scored, its o's rules sinking "Do"/"no" below "bb".  Left of stage 4:
+`CheckDiacriticsDirections`/`AnalyseDiacriticsDirection` (only for a
+French or German letter set, rc +6 bits 2-3), `MakeRecWordsFromGraph`/
+`MakeNewPath`/`FillRecWordsElement`/`MergeTwoRecWordsSets` (the readings
+of a fixed-string field's graph, rwg type 2), and `ORCreateLearnInfo`/
+`Orto*` (about 2 KB; only with rc +0xb2 bit 6, which the Notepad does not
+set).
+
+**Stage 4, round 11 (2026-09-28): the readings put right.**  The poor
+readings (and their capitals) were a port bug, found by isolating the
+stages (`docs/recognition/README.md`, "Joined-up writing"): words made of
+the letters' ideal xrs read as themselves with the Notepad's capitals
+allowed (`test_XrMatrix`'s `TestIdealWords`), so the matcher and `xrlv`
+were sound; the fault was **FillSHR**, whose four bracketing xrs had the
+last two swapped in all six cases, negating every shift class
+(`test_LowLevel`'s `TestFillSHR`).  Fixed: `cursive.ns` reads "ton to";
+with the demo's o drawn as a cursive o is (its join arriving at the top
+right), `cursive-joined.ns` reads "on" 82, "no" 90, "Mom" 67 ("mum"
+fifth), "to" 86, "nun" 76.  "mum" and "nun" then lose to the scrub
+gesture - their synthetic stems are retraced exactly, a zig-zag -
+and go down as ink words; `TestScrub` agrees with the ROM, so that is the
+drawing (`NEWTON_TRACE_ARBITER=1` prints each arbitration).  Left of
+stage 4 as above; then the `Chunk*` digit reader (only for a field that
+allows numbers, rc +0xb6; 82 not done, about 146 KB), three or four
+rounds.  Other stages might hold slips like FillSHR's - a transcribed
+store order is the thing to check: the rest of FillXrFeatures
+(FillOrients) agreed with ParaGraph's own later source where compared,
+and the published source (below) is the quickest way to find a
+suspect.
+
+**Round 12 (2026-09-28): the reader's leftovers.**  Done: `SetStrXrRC`
+(a configuration's `strxrCommands`, byte commands reaching the host's own
+fields by their ROM offsets); the readings of a graph of alternatives
+(`MakeRecWordsFromGraph`, `MakeNewPath`, `FillRecWordsElement`,
+`MergeTwoRecWordsSets` - a fixed-string field's graph, read twice, once
+for a number and once for a word, and merged); **learning** - `DoLearning`
+now hands the pen's trace (`GetTraceFromStrokes`, which was there all
+along; the NOT YET note named a wrong address) to the word domain, and a
+word info's unit id is read back right (`UnitID` read a host ULong out of
+two UniChars, so `DoIndexedLearning` found no recogniser and crashed):
+`cursive.ns` reads "ton" again with learning on, learns it, and the
+letter weights are no longer the defaults; and the digit reader's context
+(`Chunk.h`: `ChunkAllocCtx`, `ChunkCleanUp`, `IsChunkNumbers`,
+`ChunkModifyRC`/`ChunkRestoreRC`, `ChunkWriteParamCtx`), called where
+`GCTryToRecognize` calls them, and the first of its geometry
+(`v_MostFarFromChord`, `v_QDistFromChord`, `GetDirection` over
+`ChunkTables.cpp`).  Left:
+- **The orthographic learning** (only with rc +0xb2 bit 6 / +0xb8 bit 3,
+  which the Notepad never sets): `ORCreateLearnInfo` over `OrtoCreate`,
+  `OrtoGetmem`/`OrtoCalcSize`/`OrtoResize`/`OrtoFasten`, `OrtoEntries`
+  (796 B, which the decompiler mangles - read the disassembly) and
+  `RemovePointAndSort` (0x00147548-0x00147d70, about 2.5 KB); and
+  `ORTraining` (a tail call into `OrtoTraining`, 0x00147e74) over
+  `LearnPartsCopy` and `TrainTrajectory` - a letter-shape database of its
+  own (`FillNwtSample` over `TraceToOdata`/`RjctAppr` and the DCT
+  (`FDCT4/8/16`, `IDCT...`), `AddToDataBase`, `SearchInDataBase` with
+  `FirstSearch`/`SecondSearch`, `Occam`, `SQRT32_ORTO`): 56 not done,
+  about 15 KB.  The `_LEARN_ARRAY_tag` block goes into the training data
+  ('ORTL'), so keep its bytes as the ROM lays them out (big-endian halves;
+  the pointer at +0x14 is only a cache, recomputed from +0x04 each time -
+  on the host leave it unused).  (`ConfigureArea`'s base-line and grid
+  geometry is DONE, 2026-09-28: `ConfigFromFrame`, `GetWordGeom`,
+  `GetGridGeom`, the two `FromObject`s - and the STXR domain's geometry
+  selectors, which the host had copying the wrong way.)  **This is the
+  last of the recognition system that is NOT YET**, bar `AL_NextSet`
+  (Airus selector 8 for lexicons), `TEditView::TrackDistort`,
+  `RotTiledBitmap` and the French/German accent checks the US ROM never
+  reaches.
+- **The digit reader** (below).
+
+**The digit reader, sized** (`callgraph.py build/MP2x00US ChunkAllocCtx
+ChunkProcessor ChunkModifyRC ChunkWriteParamCtx ChunkPatchXrdata
+ChunkRestoreRC ChunkSortAnswers ChunkCorrectByLexDB ChunkCleanUp
+--through-done`): 176 functions reached, **102 not done, about 150 KB**.
+`ChunkProcessor` (0x002a6b50, 2.6 KB) is the whole of it: the points made
+a `tag_WORD_TRACE`, `ExtrWordTrace_V` (its extrema) and `GetLineApprox`
+(a polyline approximation, `tag_wapx_type`, with `SetAllDirections`,
+`GetDirection`, `v_MostFarFromChord`, `v_QDistFromChord` - about 5 KB
+together), `ChunkConstruct` (the writing cut into chunks: `ApxToBrackets`,
+`ApxToCLine`, `ChunkFillMainData`, `ChunkMakeStrokes`, `LO_*` - the list
+of low objects), then **`Digits`** (24 KB) over the four digit searchers
+`SearchDigit_S` (24 KB), `SearchDigit_K` (17 KB), `SearchDigit_L` (3.7 KB)
+and `New_SearchDigit_V` (20 KB), `SearchNumber`, `FindPound` (the £ sign,
+6 KB), `RecognizeZCCW`, `GetCircles`, `Check_4`, `CutNumberInDigits`,
+`DefHeightsForNumber`, and after the xr reader `ChunkPatchXrdata` (1.2
+KB), `ChunkSortAnswers` (an unnamed sort at 0x002a4c04) and
+`ChunkCorrectByLexDB` (3.5 KB).  In that order, bottom up: (1) the trace,
+`ExtrWordTrace_V`, `GetLineApprox` (with `SetAllDirections`; its
+`v_MostFarFromChord`, `v_QDistFromChord` and `GetDirection` are done) and
+the `LO_*` list (`LO_Create` is a 0x482c-byte block with a pointer at
++0x28 and 0x3c-byte objects from +0x1dc - a host layout of its own; the
+ROM's `LO_Destroy` frees it with an inlined `DisposHandle` of the handle
+`HWRMemoryAlloc` keeps in front of the block), each testable on a drawn
+digit; (2) `ChunkConstruct` and its helpers; (3) `Digits` with
+`SearchDigit_L` (the smallest searcher) first, then `_V`, `_K`, `_S`;
+(4) the rest, and `ChunkProcessor` itself wired in, with a demo writing
+"42" into a numbers field (rc +0xb6 is set by a field whose
+recognition flags allow numbers).  Four or five rounds.
+
+*Progress (2026-09-28)*: steps (1) and (2) are done -
+`recognition/ChunkTrace.cpp` (`ExtrWordTrace_V`, `GetLineApprox`,
+`SetAllDirections`), `ChunkLowObj.cpp` (all eleven `LO_*` and the free
+list), `ChunkConstruct.cpp` (`ChunkConstruct`/`ChunkDestroyData`,
+`ChunkFillMainData`, `ChunkMakeStrokes`, `ApxToBrackets` with its unnamed
+bracket maker, tidier (0x00286fb4) and hook dropper, `ApxToCLine` and
+the classes it gives a chunk (300 a line, 400 an arc, 500 mixed, 600
+two lines, 700 two arcs, 1400 more), the unnamed reclassing pass
+0x00285bc8 (from the disassembly - the decompiler garbles it),
+`CreateRealChunkInd`, the arc measures) and, of step (3), the two the
+searchers start from (`ChunkPutClassesToLO`, `DefRectForChunks`).
+`test_Chunk` draws a 4 and a 2 with a synthetic pen and checks the
+turns, the polyline, the chunks (the 4's bent stroke is class 600, its
+upright 300; the 2's hook an arc), the brackets and the list.  Left
+(`callgraph.py build/MP2x00US ChunkProcessor__FPvP13PS_point_typei
+--through-done`): 60 functions, about 124 KB.  **`SearchDigit_L` is not
+the small one it looks**: its body (0x0028ddb4-0x0028eb9c, ten unnamed
+statics, 3.5 KB) calls seven more unnamed statics that sit inside
+`RecognizeZCCW`'s extent (0x0028ffe8, 0x0029082c, 0x002909f0,
+0x00290c68, 0x00290de8 - which writes the digit found - and 0x00290e2c)
+and `DgtFromDnHorseshoe`'s (0x0028f17c), so it and `RecognizeZCCW`
+(4.5 KB) are one piece of about 8 KB; it also reads staff +0x40, which
+`Digits` sets.  So step (3) is better begun at `Digits` itself (read its
+top level first to see what it sets up and in what order it calls the
+searchers), then `RecognizeZCCW` with `SearchDigit_L`; then `_V`, `_K`,
+`_S`.  Three or four rounds.
+
+*Progress (2026-09-28, round 3)*: of step (3), `Digits`' top level has
+been read (its order: `DefHeightsForNumber`, `ChunkPutClassesToLO`,
+`GetCircles`, `SearchDigit_L`, `SearchDigit_K`, `New_SearchDigit_V`,
+`SearchDigit_S`, `FindPound`, `Check_4`, unnamed 0x002a09b0 and
+0x002a2758, `CutNumberInDigits`, the second-look pass 0x0029ce20, then
+with staff +0x50 clear 0x002a1a98, 0x0029e888, 0x002a19ec and
+`SearchNumber` until one answers, else 0x0029ccd4; then 0x002a2078,
+0x0029fbcc over a scratch block the size of the stroke count,
+0x002a0d74, the 0x834 class's objects copied out as (first point, last
+point) pairs for the caller, and 0x0029ffc8 deciding the answer's second
+bit), and these are done (`recognition/ChunkDigits.cpp`,
+`ChunkSearchL.cpp`, `test_Chunk`'s `TestLineAndCircles`, `TestSearchL`,
+`TestSecondLooks`): `DefHeightsForNumber` with its four statics,
+`GetCircles`, `SearchDigit_L` with its seventeen statics (the $, 2/7, 5
+with its bar, 4/9, 3/5/9 tests), the searchers' shared geometry
+(`direct_suits`, `distance_between_directions`, `take_next_point`,
+`take_prev_point`, `x_in_line`, `x_in_curve`, `cross_with_line`,
+`CheckQIntersec`/`XY`), `ThreeToFive`, `RecognizeZCCW` and `Check_4`.
+The `DgtFrom*`, `GreyDgtFromELink` and `SignFromTwoSections` statics
+that sit between them belong to `New_SearchDigit_V` (it is their only
+caller, and they take its `tagLocalStuff`), so they go with it.
+
+Next, in order: (a) the second-look pass 0x0029ce20 - it sorts up to
+thirty digits by their first node, runs twelve statics over the sorted
+array (0x0029d900, 0x0029dd6c, 0x0029dbd8, 0x0029d808, 0x0029e30c,
+0x0029e530, 0x0029e048, 0x0029d428, 0x0029e6bc, 0x0029eaac, 0x0029eeb4 -
+the largest, 870 instructions - and 0x002a0740), then `ThreeToFive` and
+`RecognizeZCCW`, then files the class-1200 objects between the digits
+and writes each digit and gap out as class 0x76c objects; about 2800
+instructions in all, and testable by laying digit objects over drawn
+writing as `TestSecondLooks` does; (b) `SearchDigit_K` (17 KB); (c)
+`New_SearchDigit_V` with its statics (20 KB + 3 KB); (d) `SearchDigit_S`
+(24 KB), `FindPound`, `SearchNumber` and the other statics `Digits` runs;
+(e) `ChunkProcessor` wired in, `ChunkPatchXrdata`, `ChunkSortAnswers`,
+`ChunkCorrectByLexDB`, and a demo writing "42" into a numbers field.
+About five more rounds.
+
+*Progress (2026-09-28, round 4)*: (a) and (b) are done -
+`recognition/ChunkSecondLook.cpp` (the second-look pass and all twelve
+statics, with the variant test 0x002a01dc under 0x002a0740;
+`DigitsSecondLooks` in `Chunk.h`) and `recognition/ChunkSearchK.cpp`
+(`SearchDigit_K` and its nineteen statics, `find_direct_forward`/
+`_backward`); `test_Chunk`'s `TestSecondLookPass` and `TestSearchK` (a 4,
+x, 7, #, 8 and % drawn and found).  Next: (c) `New_SearchDigit_V`
+(0x00296e04, 20 KB; its statics `DgtFromDnHorseshoe` 0x0028eb9c,
+`DgtFromUpCCWArc`, `DgtFromAloneDnCCWArc`, `GreyDgtFromELink`,
+`SignFromTwoSections` take its `tagLocalStuff`) - it is the one that
+reads a lone 1, which K leaves alone; then (d) and (e) as above.  Three
+or four more rounds.
+
+*Progress (2026-09-28, round 5)*: (c) is done - `New_SearchDigit_V` and
+all its statics (`recognition/ChunkSearchV.cpp`, 0x00296e04-0x0029bba8
+and 0x0028eb9c-0x0028fa14; `ComposeTrace`), and of (d) `SearchNumber`
+(`recognition/ChunkNumber.cpp`, with five statics from FindPound's range:
+0x002a3608 and 0x002a4608-0x002a4a34) and `FindPound`
+(`recognition/ChunkPound.cpp`); `test_Chunk`'s `TestSearchV`,
+`TestSearchNumber` (42, 10, 217 and 11 judged numbers after L, K, V and
+the second looks) and `TestFindPound`.  Left of (d): **`SearchDigit_S`**
+(0x00290ed8-0x00296e04, 24 KB): its top level marks every real chunk
+unused (f6C = 0), then runs 0x002926a0 over the writing's width, the
+per-chunk passes 0x0029634c and 0x00296470 over the unused chunks,
+0x00294fd0, 0x002950d4, 0x00291060, 0x002960d8 and 0x00293f7c over the
+whole - 45 unnamed statics in all, the largest 0x002924b4-0x00292ae8,
+0x002946d8 and 0x002953f8-0x00295d60; it is the searcher that reads the
+signs coded 13 (the bar `FindPound` builds on) and most of the other
+non-digit codes, so it is one round of its own.  Then the rest of
+`Digits` (its statics 0x002a09b0, 0x002a2758, 0x002a1a98, 0x0029e888,
+0x002a19ec, 0x0029ccd4, 0x002a2078, 0x0029fbcc, 0x002a0d74, 0x0029ffc8),
+`CutNumberInDigits`, and (e).  Three more rounds.
+
+*Progress (2026-09-28, round 6)*: (d) is done and of (e) `ChunkProcessor`
+- the digit reader is whole but for the merge.  `SearchDigit_S` and its
+45 statics (`recognition/ChunkSearchS.cpp`; `TestSearchS` reads a full
+stop, minus, colon, +, 5 and crossed 7 with their bars, both brackets,
+solidus, comma, 0, 6, 3, per cent sign and @ from drawn writing;
+`TestFindPound` now takes the bar from S instead of laying it in);
+`Digits` whole with every static and `CutNumberInDigits`
+(`recognition/ChunkDigitsMain.cpp`; `TestDigits`: 42, 10, 217, 11, 2, 5,
+1.1, (42) and 15 numbers, 1:1, "is" - a 1 and a one-stroke 5 - and digits
+beside a letter not); `ChunkProcessor` (`recognition/Chunk.cpp`;
+`TestProcessor` reads "42" and "10" from points as GCTryToRecognize will
+hand them over).  `DigitChar` moved to `Chunk.h` (the ROM writes the
+chain out eight times).
+
+**(e) DONE (2026-09-28, round 7) - the digit reader is whole and live.**
+The merge (`recognition/ChunkMerge.cpp`, all from the disassembly):
+`ChunkPatchXrdata` (the xrs cut down to the runs of strokes that are not
+digits, each ended by a break; two breaks and nothing more for a number
+alone, so the xr reader has nothing to read), `ChunkSortAnswers` over
+the unnamed sort 0x002a4c04 (the xr reader's letters - an o read as a 0,
+another letter as the first non-letter the other readings have there -
+put among the digits by where their boxes lie, 0x002a4a34 working the
+boxes out; brackets written the wrong way round, guillemets and
+"(ddd1"-style brackets settled; "d)" marked a list item) and
+`ChunkCorrectByLexDB` (the reading walked through the lexical database a
+character at a time, the confusable characters - 1 / ( ), 7 ), c ( 1, . ,
+- and so on - tried in turn with a 32-deep backtracking stack, 0x002a5414
+to 0x002a55bc and 0x002a7078-0x002a7168; then read again as a date with a
+'1' taken for a '/', against the ROM's days-per-month table
+`kChunkMonthDays` (romtable.py, 0x0037ae10, February 29), the long forms
+in place of the reading, the short ones as the second; then an x given a
+space before it).  `GCTryToRecognize` calls `ChunkProcessor` where the ROM
+does, and `FillRecwordSplitInfo`'s number branch (0x0019e9e8) is real.
+`TParagraphView::HandleWord`'s divide by an empty word's length now
+throws evt.ex.div0 as the ROM's `__rt_udiv` does (it had trapped on the
+host); nothing hands it an empty word now.  Tests: `test_Chunk`'s
+`TestMerge`, `test_XrAnswers`' number split, ctest `host.NewtonNumbers`.
+
+**A reference for the cursive reader**: PhatWare, who bought ParaGraph's
+recogniser, published a descendant of it under the GPL v3
+(https://github.com/phatware/WritePad-Handwriting-Recognition-Engine;
+`WindowsTools/NNLegacyTool/` is the oldest tree - LOW/, XRWS/, POST/).
+It is a later version and is not the ROM, so it is never transcribed:
+it names things (the xr types are its `X_...` codes, `LOW/STD/XR_NAMES.H`:
+0x14 `X_UD_F`, a forward lower arc; 0x0e `X_UU_B`; heights 1..13 from
+super-uplinear to super-underlinear) and says what a function is for,
+and where the ROM and the port disagree with it, the ROM's disassembly
+decides.  The FillSHR slip showed up as exactly such a disagreement.
+
 ## Earlier work (as recorded in next-steps.md before 2026-09-27)
 
 The last run of work closed, in order:
