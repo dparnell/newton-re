@@ -36,6 +36,53 @@ static inline void	SetBE(UByte* p, long v)			{ p[0] = (UByte) (v >> 8); p[1] = (
 
 #pragma mark - reading a word
 
+// ROM 0x000d6ad4 GCFillLearningHandle__FPUlUsP7rc_typeP13PS_point_typesP11xrdata_typeP8RWG_typeP10rec_w_typeT5PvUl
+// What the learning will be given about the word, as training data
+// entries, by the flags (rc +0xb2): 1 the parameters ('LDRC'), 2 the
+// trace ('TRAC'), 4 the xrs ('XRD_', with the one after the last when
+// there is room), 8 the graph's symbols ('RWS_') and 0x10 their xrs
+// ('RPPD'), 0x20 the readings ('RWRD'), 0x40 the orthographic learning's
+// information ('ORTL').
+void
+GCFillLearningHandle(Handle* learning, UShort flags, rc_type* rc, PS_point_type* trace, short points,
+					 xrdata_type* xr, RWG_type* rwg, rec_w_type* readings, short count, void* ortl, ULong ortlSize)
+{
+	Handle h = nil;
+	if (learning != nil)
+	{
+		h = *learning;
+		if ((flags & 1) != 0 && rc != nil)
+			// DEVIATION: the ROM copies its 0x10c-byte parameter block; the
+			// host's holds pointers, so it is copied by sizeof
+			LHAddEntry(&h, 'LDRC', '0001', 0, rc, sizeof(rc_type));
+		if ((flags & 2) != 0 && points != 0 && trace != nil)
+			LHAddEntry(&h, 'TRAC', '0001', 0, trace, points * sizeof(PS_point_type));
+		if ((flags & 4) != 0 && xr != nil)
+		{
+			long n = xr->fLength;
+			if (n < xr->fSize)
+				n++;
+			LHAddEntry(&h, 'XRD_', '0001', 0, xr->fElements, n * sizeof(xrd_el_type));
+		}
+		if ((flags & 8) != 0 && rwg != nil && rwg->rws != nil)
+			LHAddEntry(&h, 'RWS_', '0001', 0, rwg->rws, (rwg->size + 1) * sizeof(RWS_type));
+		if ((flags & 0x10) != 0 && rwg != nil && rwg->ppd != nil)
+			LHAddEntry(&h, 'RPPD', '0001', 0, rwg->ppd, (rwg->size + 1) * sizeof(RWG_PPD_type));
+		if ((flags & 0x20) != 0 && readings != nil)
+		{
+			ULong n = 0;
+			while (readings[n].fWord[0] != 0 && n < (ULong) count)
+				n++;
+			LHAddEntry(&h, 'RWRD', '0001', 0, readings, n * sizeof(rec_w_type));
+		}
+		if ((flags & 0x40) != 0 && ortl != nil && ortlSize != 0)
+			LHAddEntry(&h, 'ORTL', '0001', 0, ortl, ortlSize);
+	}
+	*learning = h;
+}
+
+
+
 // ROM 0x000d635c GCTryToRecognize__FP13PS_point_typeP15GCWordDescrTypeP7rc_typeP17GCGroupParmStruct
 // One word read.  With rc +0xb4 set only the word's first two points and
 // its last are read (and its info cleared).
@@ -47,6 +94,7 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 	Handle learning = nil;
 	void* chunk = nil;
 	void* ortl = nil;
+	ULong ortlSize = 0;
 	rec_w_type* readings = nil;
 	void* split = nil;
 	Boolean locked = false;
@@ -145,19 +193,43 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 							}
 							fprintf(stderr, "\n");
 						}
-						// NOT YET RECONSTRUCTED: the answers made of the graph -
-						// EvaluateAndSortAnswers (0x00337ee8),
-						// MakeAndCombRecWordsFromWordGraph (0x0019f644) and, with
-						// rc +0xb2 bit 6, ORCreateLearnInfo - then the block's
-						// rc +0x08 put back; after them ChunkRestoreRC,
-						// ChunkSortAnswers, ChunkCorrectByLexDB,
-						// FillRecwordSplitInfo and GCFillLearningHandle.  The
-						// host stops here: the word graph is made but no word is
-						// read, so it answers -9 as though xrw_algs had failed
+						// NOT YET RECONSTRUCTED: EvaluateAndSortAnswers
+						// (0x00337ee8), the answers' scores worked out again
+						// from how each letter sits against its neighbours
+						MakeAndCombRecWordsFromWordGraph(&rwg, rc, &xr, readings);
+						if ((RCGetH(rc, 0xb2) & 0x40) != 0)
+						{
+							// NOT YET RECONSTRUCTED: ORCreateLearnInfo
+							// (0x00148078), the orthographic learning's
+							// information about the word
+						}
 						RCSetH(rc, 0x08, saved8);
-						FreeRWGMem(&rwg);
 					}
-					err = -9;
+					// (ChunkRestoreRC, ChunkSortAnswers and ChunkCorrectByLexDB
+					// come here: with no chunk made - the digit reader being
+					// NOT YET - they do nothing)
+					split = FillRecwordSplitInfo(&xr, rc, &rwg, readings, chunk);
+					if (xr.fLength < xr.fSize)
+						memset((xrd_el_type*) xr.fElements + xr.fLength, 0, sizeof(xrd_el_type));
+					if (split == nil || ((UByte*) split)[0xf] == 1)
+					{
+						void* info = ortl;
+						ULong infoSize = ortlSize;
+						if (word->fMerged != 0)
+						{
+							info = nil;
+							infoSize = 0;
+						}
+						GCFillLearningHandle(&learning, RCGetH(rc, 0xb2), rc, nil, 0, &xr, &rwg, nil, 0, info, infoSize);
+					}
+					if (TracingCursive())
+					{
+						fprintf(stderr, "[cursive] answers:");
+						for (long i = 0; i < 10 && readings[i].fWord[0] != 0; i++)
+							fprintf(stderr, " \"%s\"/%d", (const char*) readings[i].fWord, readings[i].fWeight);
+						fprintf(stderr, " (rc +0xb2 %04x)\n", RCGetH(rc, 0xb2));
+					}
+					err = 0;
 					goto done;
 				}
 			}

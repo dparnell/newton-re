@@ -8,11 +8,14 @@
 // The words are grouped by ParaGraph's word segmenter into two word
 // descriptors and each is given to the reader (GCTryToRecognize): the
 // low level cuts it into xrs and xrw_algs reads them into a word graph
-// ("[cursive] xrw_algs: graph ..." - "to" comes out first for the second
-// word).  The answers made of the graph are NOT YET, so each word still
-// ends as ink: "[cursive] word of strokes ..." lines say how far it got
-// (ctest host.NewtonCursive looks for both words' graphs), and
-// build/cursive.pgm is the page.  Otherwise as src/host/demo/write.ns.
+// ("[cursive] xrw_algs: graph ..."), the graph is made into the readings
+// ("[cursive] answers: ..."), and the XRWR domain hands the best of them
+// to the page as a word unit, which types it: the page reads "For to" -
+// the synthetic "ton" is read as "For", its first letter a capital (see
+// docs/recognition/README.md, "The answers").  "[cursive] word of strokes
+// ..." lines say how far each word got, the script prints the page's
+// text (ctest host.NewtonCursive checks both), and build/cursive.pgm is
+// the page.  Otherwise as src/host/demo/write.ns.
 //
 // This run once locked up one time in three, in the heap's compaction:
 // CreateTrigramHeader asked for the ROM's 0x98 bytes and zeroed the
@@ -54,6 +57,20 @@ stroke := func(points)
     for i := 2 to Length(points) - 2 by 2 do
       PenMove(points[i], points[i + 1]);
     PenUp();
+  end;
+
+// the text of the first paragraph under a view whose text starts with
+// `prefix`
+findText := func(v, prefix)
+  begin
+    local found := nil;
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text) and StrPos(v.text, prefix, 0) = 0 then
+      found := v.text
+    else
+      foreach child in v:ChildViewFrames() do
+        if not found then
+          found := call findText with (child, prefix);
+    found;
   end;
 
 // An oval of `n` points, from the top going anticlockwise, as an o is
@@ -102,6 +119,7 @@ AddDelayedCall(func() begin
         AddDelayedCall(func() begin
             ScreenSnapshot("build/cursive.pgm");
             Print("cursive: written build/cursive.pgm");
+            Print("cursive: the page reads \"" & call findText with (GetRoot(), "") & "\"");
           end, nil, 6000);
       end, nil, 4500);
   end, nil, 27000);

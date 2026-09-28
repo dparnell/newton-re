@@ -120,3 +120,9 @@ add_executable(test_XrMatrix test_XrMatrix.cpp)
 target_link_libraries(test_XrMatrix PRIVATE recognition memory)
 target_compile_definitions(test_XrMatrix PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME recognition.XrMatrix COMMAND test_XrMatrix)
+
+# the cursive reader's answers: a word graph made into readings and a
+# reading of two words traced back to its strokes; the training data
+add_executable(test_XrAnswers test_XrAnswers.cpp)
+target_link_libraries(test_XrAnswers PRIVATE recognition memory)
+add_test(NAME recognition.XrAnswers COMMAND test_XrAnswers)

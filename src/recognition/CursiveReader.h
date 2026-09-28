@@ -73,6 +73,7 @@ struct xrdata_type
 
 // The word graph the xr reader builds is XrReader.h's RWG_type.
 
+void	GCFillLearningHandle(Handle* learning, UShort flags, rc_type* rc, PS_point_type* trace, short points, xrdata_type* xr, struct RWG_type* rwg, struct rec_w_type* readings, short count, void* ortl, ULong ortlSize);	// ROM 0x000d6ad4 GCFillLearningHandle__FPUlUsP7rc_typeP13PS_point_typesP11xrdata_typeP8RWG_typeP10rec_w_typeT5PvUl
 long	GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGroupParmStruct* parm);	// ROM 0x000d635c GCTryToRecognize__FP13PS_point_typeP15GCWordDescrTypeP7rc_typeP17GCGroupParmStruct - ==> 0, -6 nothing to read, -7 no memory, -8 the low level failed, -9 the xr reader failed
 long	GCLockRecognitionData(rc_type* rc, RcHandlesType* saved);				// ROM 0x000d67f4 GCLockRecognitionData__FPvP13RcHandlesType - ==> 1, 0 for a failure (everything let go again)
 void	GCUnlockRecognitionData(rc_type* rc, RcHandlesType* saved);				// ROM 0x000d6914 GCUnlockRecognitionData__FPvP13RcHandlesType

@@ -81,6 +81,9 @@
 #ifndef __WORDSEGMENT_H
 #include "WordSegment.h"
 #endif
+#ifndef __WORDUNIT_H
+#include "WordUnit.h"
+#endif
 
 class TStrXrUnit;
 class TXrWordDomain;
@@ -215,6 +218,7 @@ struct XrLearningRecord
 	long		fIndex;				// +0x0c
 };
 
+long	LHAddEntry(Handle* h, ULong id1, ULong id2, ULong id3, void* data, ULong size);	// ROM 0x001059b4 LHAddEntry__FPUlUlN22PvT2 - ==> 0, -2 no data, -4 already there, -1 no memory
 Ptr		LHLock(Handle h);										// ROM 0x00105bb8 LHLock__FUl
 long	LHUnLock(Handle h);										// ROM 0x00105bc8 LHUnLock__FUl
 // An entry of the training data found by its three ids ('****' for any).
@@ -350,13 +354,48 @@ public:
 };
 
 
-// Xrs to words.  NOT YET RECONSTRUCTED: the reading itself (Classify,
-// ClassifyXrWord, Reclassify, Group).
+// A word the cursive reader read (ROM 100 bytes): its readings as
+// interpretations, the STXR unit it was made of as its sub, the ink's
+// box and base line in tablet units, and what the learning is given.
+class TXrWordUnit : public TStdWordUnit
+{
+public:
+	static TXrWordUnit*	Make(TDomain* domain, ULong kind, TArray* areas);	// ROM 0x0024fb04 Make__11TXrWordUnitSFP7TDomainUlP6TArray
+	long				IXrWordUnit(TDomain* domain, ULong kind, TArray* areas);	// ROM 0x0024fb7c IXrWordUnit__11TXrWordUnitFP7TDomainUlP6TArray
+
+	virtual void		IDispose(void);							// ROM 0x0024fbb0 IDispose__11TXrWordUnitFv - the training data given back first
+	virtual void		GetWordBase(FPoint* left, FPoint* right, ULong index);	// ROM 0x0024fbe4 GetWordBase__11TXrWordUnitFP6FPointT1Ul - the base line the engine found, in pixels
+	virtual long		GetWordSlant(ULong index);				// ROM 0x0024fc58 GetWordSlant__11TXrWordUnitFUl
+	virtual long		GetWordSize(ULong index);				// ROM 0x0024fc64 GetWordSize__11TXrWordUnitFUl - the mean height of the two ends, in pixels
+	virtual Handle		GetTrainingData(long index);			// ROM 0x0024fcdc GetTrainingData__11TXrWordUnitFl - a copy of it
+	virtual void		DisposeTrainingData(Handle data);		// ROM 0x0024fd48 DisposeTrainingData__11TXrWordUnitFPPc
+
+	long				fLeft;			// +0x3c  (the STXR unit's +0x40..+0x60)
+	long				fRight;			// +0x40
+	long				fBase;			// +0x44
+	long				fBase2;			// +0x48
+	long				fHeight;		// +0x4c
+	long				fHeight2;		// +0x50
+	long				fSlant;			// +0x54
+	long				fField58;		// +0x58
+	long				fField5C;		// +0x5c
+	Handle				fLearning;		// +0x60  the training data (GCFillLearningHandle)
+};
+
+// Xrs to words: an STXR unit (a word the cursive reader has read) made
+// into a word unit whose interpretations are its readings.
 class TXrWordDomain : public TDomain
 {
 public:
 	static TXrWordDomain*	Make(TController* controller);		// ROM 0x0024dff4 Make__13TXrWordDomainSFP11TController
 	void				IXrWordDomain(TController* controller);	// ROM 0x0024e03c IXrWordDomain__13TXrWordDomainFP11TController
+
+	virtual void		Dispose(void);							// ROM 0x0024ea2c Dispose__13TXrWordDomainFv (nothing)
+	virtual void		Classify(TUnit* unit);					// ROM 0x0024ea30 Classify__13TXrWordDomainFP5TUnit
+	virtual void		Reclassify(TUnit* unit);				// ROM 0x0024eab4 Reclassify__13TXrWordDomainFP5TUnit
+	virtual long		Group(TUnit* unit, dInfoRec* info);		// ROM 0x0024eb28 Group__13TXrWordDomainFP5TUnitP8dInfoRec
+	void				ClassifyXrWord(TXrWordUnit* unit);		// ROM 0x0024e09c ClassifyXrWord__13TXrWordDomainFP11TXrWordUnit
+	void				TakeReadings(TXrWordUnit* unit);		// (the body ClassifyXrWord and Reclassify share)
 
 	virtual long		DomainParameter(ULong selector, ULong result, ULong info);	// ROM 0x0024ebfc DomainParameter__13TXrWordDomainFUlN21
 	virtual Boolean		SetParameters(Handle params);			// ROM 0x0024f79c SetParameters__13TXrWordDomainFPPc
@@ -392,6 +431,7 @@ long	GroupAndClassifyStrokes(PS_point_type* trace, short nPoints, rc_type* rc, G
 long	GCClassifyStrokes(GCWordDescrType* words, PS_point_type* trace, rc_type* rc, GCGroupParmStruct* parm, ULong* classified);	// ROM 0x000d546c GCClassifyStrokes__FP15GCWordDescrTypeP13PS_point_typeP7rc_typeP17GCGroupParmStructPUi
 void	WritePrevBaseLineToStrXrDomain(TStrXrDomain* domain, TStrXrUnit* unit);	// ROM 0x00065d48 WritePrevBaseLineToStrXrDomain__FP12TStrXrDomainP10TStrXrUnit
 long	SetStrXrFieldType(ULong type, STRXRPARAM* param);			// ROM 0x00220080 SetStrXrFieldType__FUlP10STRXRPARAM - ==> 0, -1 for no kind of field at all
+void	GetTraceFromStrXrUnit(TStrXrUnit* unit, PS_point_type** trace, short* nPoints);	// ROM 0x000651cc GetTraceFromStrXrUnit__FP10TStrXrUnitPP13PS_point_typePs - the unit's strokes as one trace (made, the caller frees it)
 void	SetUpChains(TXrWordDomain* domain, TUnit* unit);			// ROM 0x0024e650 SetUpChains__FP13TXrWordDomainP5TUnit - the area's dictionary chains given to the word domain
 void	AdjustRecParmStruct(TXrWordDomain* domain, rc_type* rc);	// ROM 0x0024e77c AdjustRecParmStruct__FP13TXrWordDomainP7rc_type
 

@@ -10,6 +10,12 @@
 #include "Areas.h"
 #include "Dictionaries.h"		// TDictChain
 #include "Recognizer.h"			// gLetterSetSelection, gRecognitionTimeout
+#include "StrokeQueue.h"			// gTabScale
+#include "InkGroups.h"
+#include "WordDescriptors.h"
+#include "CursiveReader.h"
+#include "NewtonMemory.h"
+#include "FixedMath.h"
 #include <string.h>
 
 extern const unsigned char	lpunct_charset[8];
@@ -365,6 +371,89 @@ SetXrWordRC(ULong command, XRWORDPARAM* param)
 	L e a r n i n g
 ------------------------------------------------------------------------------*/
 
+// ROM 0x001059b4 LHAddEntry__FPUlUlN22PvT2
+// An entry added to the training data (made when there is none): a new
+// block with room for one more entry header and the data after the
+// others', the old one copied into it (each offset moved along by the
+// header) and given back.  ==> 0; -2 for no data, -4 for an entry with
+// those ids already there, -1 for no memory.
+long
+LHAddEntry(Handle* h, ULong id1, ULong id2, ULong id3, void* data, ULong size)
+{
+	ULong32* old = nil;
+	Handle made = nil;
+	ULong32* last = nil;
+	long result;
+	if (data == nil || size == 0)
+		return -2;
+	ULong total;
+	ULong at;
+	if (*h == nil)
+	{
+		total = size + 0x18;
+		at = 0x18;
+	}
+	else
+	{
+		old = (ULong32*) LHLock(*h);
+		if (old == nil)
+			return -1;
+		result = LHFindEntry(old, id1, id2, id3, nil, nil);
+		if (result != -3)
+		{
+			if (result == 0)
+				result = -4;
+			goto fail;
+		}
+		last = old + old[0] * 5 - 4;
+		total = last[3] + last[4] + size + 0x14;
+		at = total - size;
+	}
+	made = HWRMemoryAllocHandle(total);
+	ULong32* words;
+	if (made == nil || (words = (ULong32*) LHLock(made)) == nil)
+	{
+		result = -1;
+		goto fail;
+	}
+	words[0] = 0;
+	if (old != nil)
+	{
+		ULong count = old[0];
+		memcpy((UByte*) words + count * 0x14 + 0x18, (UByte*) old + count * 0x14 + 4, last[3] + last[4] - count * 0x14 - 4);
+		words[0] = old[0];
+		for (ULong i = 0; i < old[0]; i++)
+		{
+			ULong32* from = old + 1 + i * 5;
+			ULong32* to = words + 1 + i * 5;
+			memcpy(to, from, 5 * sizeof(ULong32));
+			to[3] = from[3] + 0x14;
+		}
+		LHUnLock(*h);
+		HWRMemoryFreeHandle(*h);
+	}
+	{
+		words[0]++;
+		ULong32* entry = words + 1 + (words[0] - 1) * 5;
+		entry[0] = (ULong32) id1;
+		entry[1] = (ULong32) id2;
+		entry[2] = (ULong32) id3;
+		entry[3] = (ULong32) at;
+		entry[4] = (ULong32) size;
+		memcpy((UByte*) words + at, data, size);
+		LHUnLock(made);
+		*h = made;
+	}
+	return 0;
+fail:
+	if (old != nil && *h != nil)
+		LHUnLock(*h);
+	if (made != nil)
+		HWRMemoryFreeHandle(made);
+	return result;
+}
+
+
 // ROM 0x00105bb8 LHLock__FUl
 Ptr
 LHLock(Handle h)
@@ -653,6 +742,281 @@ TXrWordDomain::IXrWordDomain(TController* controller)
 	fDelay = 0;
 	AddPieceType(kStrXrDomainType);
 	controller->RegisterDomain(this);
+}
+
+
+// ROM 0x0024ea2c Dispose__13TXrWordDomainFv
+void
+TXrWordDomain::Dispose(void)
+{}
+
+
+// ROM 0x0024eb28 Group__13TXrWordDomainFP5TUnitP8dInfoRec
+// An STXR unit (a word the cursive reader has read, 0x8000000 while it
+// has not been) made the sub of a new word unit; one that is no use makes
+// a word unit that is none either.  ==> 1.
+long
+TXrWordDomain::Group(TUnit* unit, dInfoRec* /*info*/)
+{
+	if (!unit->TestFlags(0x08000000))
+	{
+		TArray* areas = unit->GetAreas();
+		TXrWordUnit* word = TXrWordUnit::Make(this, unit->fKind + 1, areas);
+		if (areas != nil)
+			areas->Dispose();
+		if (word == nil)
+			fController->SignalMemoryError();
+		else
+		{
+			word->AddSub(unit);
+			if (unit->TestFlags(kInvalidUnit))
+			{
+				word->SetFlags(kInvalidUnit);
+				word->EndSubs();
+			}
+			fController->NewGroup(word);
+		}
+	}
+	return 1;
+}
+
+
+// ROM 0x0024ea30 Classify__13TXrWordDomainFP5TUnit
+// The word unit given the readings of its STXR unit (a unit with none
+// is marked no use and closed), and handed to the controller as a piece
+// for the recognisers above - the ROM has NewClassification inlined here.
+void
+TXrWordDomain::Classify(TUnit* unit)
+{
+	if (!unit->TestFlags(kInvalidUnit))
+	{
+		SetUpChains(this, unit);
+		ClassifyXrWord((TXrWordUnit*) unit);
+		if (unit->InterpretationCount() == 0)
+		{
+			unit->SetFlags(kInvalidUnit);
+			((TSIUnit*) unit)->EndSubs();
+		}
+	}
+	fController->NewClassification(unit);
+}
+
+
+// ROM 0x0024eab4 Reclassify__13TXrWordDomainFP5TUnit
+// The readings thrown away, last first, with the training data, and
+// taken again from the STXR unit (which has read the ink again).
+void
+TXrWordDomain::Reclassify(TUnit* unit)
+{
+	SetUpChains(this, unit);
+	for (long i = unit->InterpretationCount() - 1; i >= 0; i--)
+		((TSIUnit*) unit)->DeleteInterpretation((ULong) i);
+	TXrWordUnit* word = (TXrWordUnit*) unit;
+	if (word->fLearning != nil)
+	{
+		HWRMemoryFreeHandle(word->fLearning);
+		word->fLearning = nil;
+	}
+	TakeReadings(word);
+}
+
+
+// ROM 0x0024e09c ClassifyXrWord__13TXrWordDomainFP11TXrWordUnit
+void
+TXrWordDomain::ClassifyXrWord(TXrWordUnit* unit)
+{
+	TakeReadings(unit);
+}
+
+
+// ClassifyXrWord's body, which the ROM writes out a second time in
+// Reclassify: each reading of the STXR unit (while it has a score) an
+// interpretation - its word, a score of ten times how far below 100 it
+// is (so nought is best, as the arbiter wants), and its dictionary
+// attribute as the label (-4 for none) - the ink's box and base line
+// taken over, and the training data (the readings, and by the domain's
+// flags the trace too).
+void
+TXrWordDomain::TakeReadings(TXrWordUnit* unit)
+{
+	PS_point_type* trace = nil;
+	short points = 0;
+	TStrXrUnit* xr = (TStrXrUnit*) unit->GetSub(0);
+	if (xr == nil || xr->fActive != 0 || xr->fWords == nil)
+		return;
+	rec_w_type* word = xr->fWords;
+	long count = xr->fWordCount;
+	for (long i = 0; i < count; i++, word++)
+	{
+		long weight = word->fWord[0] != 0 ? word->fWeight : 0;
+		if (word->fWord[0] == 0 || weight == 0 || unit->AddWordInterpretation() == -1)
+			break;
+		// (the index AddWordInterpretation answered is not used: the
+		// readings are taken in order, so it is i)
+		unit->SetCharWordString(i, (char*) word->fWord);
+		long score = 100 - word->fWeight;
+		if (score < 0)
+			score = -score;
+		unit->SetScore(i, score * 10);
+		long label = (short) ((word->fX4A[0] << 8) | word->fX4A[1]);
+		if (label < 0)
+			label = -4;
+		unit->SetLabel(i, label);
+	}
+	unit->fLeft = xr->fLeft;
+	unit->fRight = xr->fRight;
+	unit->fBase = xr->fBase;
+	unit->fBase2 = xr->fBase2;
+	unit->fHeight = xr->fHeight;
+	unit->fHeight2 = xr->fHeight2;
+	unit->fSlant = xr->fField58;
+	unit->fField58 = xr->fField5C;
+	unit->fField5C = xr->fField60;
+	unit->fLearning = xr->fLearning;
+	xr->fLearning = nil;
+	UShort flags = RCGetH(&fRC, 0xb2);
+	if ((flags & 2) != 0)
+	{
+		GetTraceFromStrXrUnit(xr, &trace, &points);
+		if (xr->fMerged != 0 && trace != nil)
+			GCMergeLinesAndRemoveDash(trace, &points, xr->fJoinX, xr->fJoinY, xr->fMerged, 0);
+	}
+	GCFillLearningHandle(&unit->fLearning, flags, nil, trace, points, nil, nil, xr->fWords, xr->fWordCount, nil, 0);
+	if (trace != nil)
+		HWRMemoryFree((Ptr) trace);
+}
+
+
+// ROM 0x000651cc GetTraceFromStrXrUnit__FP10TStrXrUnitPP13PS_point_typePs
+// The unit's strokes (its subs' strokes) put together into one trace.
+void
+GetTraceFromStrXrUnit(TStrXrUnit* unit, PS_point_type** trace, short* nPoints)
+{
+	TStroke* local[20];
+	*trace = nil;
+	ULong count = unit->SubCount();
+	TStroke** strokes = local;
+	// DEVIATION: the list is of host pointers, so a long one is sized by
+	// them
+	if (0x13 < count)
+		strokes = (TStroke**) HWRMemoryAlloc((count + 1) * sizeof(TStroke*));
+	if (strokes == nil)
+		return;
+	ULong i;
+	for (i = 0; i < count; i++)
+		strokes[i] = ((TStrokeUnit*) unit->GetSub(i))->fStroke;
+	strokes[i] = nil;
+	short nStrokes;
+	NewGetTraceFromStrokes(strokes, trace, &nStrokes, nPoints);
+	if (0x13 < count)
+		HWRMemoryFree((Ptr) strokes);
+}
+
+
+#pragma mark - the word unit
+
+// ROM 0x0024fb04 Make__11TXrWordUnitSFP7TDomainUlP6TArray
+TXrWordUnit*
+TXrWordUnit::Make(TDomain* domain, ULong kind, TArray* areas)
+{
+	TXrWordUnit* unit = new TXrWordUnit;
+	if (unit == nil)
+		return nil;
+	if (unit->IXrWordUnit(domain, kind, areas) != 0)
+	{
+		unit->Dispose();
+		return nil;
+	}
+	return unit;
+}
+
+
+// ROM 0x0024fb7c IXrWordUnit__11TXrWordUnitFP7TDomainUlP6TArray
+// A word unit of sixteen-byte interpretations, with no training data.
+long
+TXrWordUnit::IXrWordUnit(TDomain* domain, ULong kind, TArray* areas)
+{
+	// DEVIATION: the ROM's interpretations are 0x10 bytes; the host's hold
+	// pointers, so they are sized by sizeof
+	long err = IStdWordUnit(domain, kind, areas, sizeof(UnitInterpretation));
+	fLearning = nil;
+	return err;
+}
+
+
+// ROM 0x0024fbb0 IDispose__11TXrWordUnitFv
+void
+TXrWordUnit::IDispose(void)
+{
+	if (fLearning != nil)
+	{
+		HWRMemoryFreeHandle(fLearning);
+		fLearning = nil;
+	}
+	TStdWordUnit::IDispose();
+}
+
+
+static inline Fixed	TabletToFixed(long n)	{ return (Fixed) (int32_t) ((uint32_t) n << 16); }
+
+// ROM 0x0024fbe4 GetWordBase__11TXrWordUnitFP6FPointT1Ul
+void
+TXrWordUnit::GetWordBase(FPoint* left, FPoint* right, ULong /*index*/)
+{
+	left->y = FixedDivide(TabletToFixed(fBase), gTabScale.y);
+	left->x = FixedDivide(TabletToFixed(fLeft), gTabScale.x);
+	right->y = FixedDivide(TabletToFixed(fBase2), gTabScale.y);
+	right->x = FixedDivide(TabletToFixed(fRight), gTabScale.x);
+}
+
+
+// ROM 0x0024fc58 GetWordSlant__11TXrWordUnitFUl
+long
+TXrWordUnit::GetWordSlant(ULong /*index*/)
+{
+	return TabletToFixed(fSlant);
+}
+
+
+// ROM 0x0024fc64 GetWordSize__11TXrWordUnitFUl
+long
+TXrWordUnit::GetWordSize(ULong /*index*/)
+{
+	Fixed base = FixedDivide(TabletToFixed(fBase), gTabScale.y);
+	Fixed base2 = FixedDivide(TabletToFixed(fBase2), gTabScale.y);
+	Fixed height = FixedDivide(TabletToFixed(fHeight), gTabScale.y);
+	Fixed height2 = FixedDivide(TabletToFixed(fHeight2), gTabScale.y);
+	return ((base - height) + (base2 - height2)) >> 1;
+}
+
+
+// ROM 0x0024fcdc GetTrainingData__11TXrWordUnitFl
+Handle
+TXrWordUnit::GetTrainingData(long /*index*/)
+{
+	if (fLearning == nil)
+		return nil;
+	Size size = GetHandleSize(fLearning);
+	Handle copy = NewHandle(size);
+	if (copy != nil)
+	{
+		// (the ROM's LockHandle/UnlockHandle, which are HLock/HUnlock)
+		HLock(fLearning);
+		HLock(copy);
+		BlockMove(*fLearning, *copy, size);
+		HUnlock(fLearning);
+		HUnlock(copy);
+	}
+	return copy;
+}
+
+
+// ROM 0x0024fd48 DisposeTrainingData__11TXrWordUnitFPPc
+void
+TXrWordUnit::DisposeTrainingData(Handle data)
+{
+	if (data != nil)
+		DisposeHandle(data);
 }
 
 

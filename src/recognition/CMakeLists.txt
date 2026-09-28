@@ -81,6 +81,7 @@ add_library(recognition STATIC
     CursiveReader.cpp
     XrMatrix.cpp
     XrWordGraph.cpp
+    XrAnswers.cpp
     Xrlv.cpp
     XrLex.cpp
     XrReaderTables.cpp

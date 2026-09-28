@@ -799,20 +799,20 @@ with it the assistant goes on to its next page.
 
 `ChangeAttribute(word, attribute)` writes a word's attribute over where
 it lies (`AEnum_ChangeAttribute` 0x0002a7cc): the word is walked from the
-root a character at a time — across a row's siblings to find the
-character, then down to that node's children for the next — and the new
+root a character at a time â€” across a row's siblings to find the
+character, then down to that node's children for the next â€” and the new
 bytes replace the old ones in place, so nothing moves and the dictionary
 does not grow. It writes the bytes out by hand and has arms for the
 sizes 1, 2 and 4 only, so a dictionary with a *three*-byte attribute is
 left exactly as it was and the call still says it worked.
 `AttributeSize()` is `AttributeLength` (0x0002d37c): the size the
-dictionary declares, or — for the oldest writable kind, which had no
-place to declare one — 1.
+dictionary declares, or â€” for the oldest writable kind, which had no
+place to declare one â€” 1.
 
 `Register()` and `Unregister()` (0x0013eddc, 0x0013ef2c) put a frame's
 dictionary into `vars.dictionaries` and `gDictList` beside it with an id
 of its own (they are handed out from 200 up, well clear of the ROM's
-own), and take it out again — every entry after it having its index
+own), and take it out again â€” every entry after it having its index
 moved down one. Both end in `DictionariesChanged` (0x0013f084), which
 tells the Assistant's line to look for the custom dictionaries again and
 throws the recognition areas' cache away, because an area remembers the
@@ -825,13 +825,13 @@ dictionary back and takes the frame's `dict` slot away.
 back for each word. A **cursor** does the opposite: it *stands* on one
 word and is asked for the next or the previous, so a script can stop,
 look and carry on. That is harder than it sounds, because a dictionary
-is a trie — there is no "next word" to step to, only a shape to walk,
+is a trie â€” there is no "next word" to step to, only a shape to walk,
 and the walk has to be kept somewhere between calls.
 
 `TAirusIterator` (0x0002e260) keeps it in a stack of `charState`s, one
 per character of the word it stands on. Each state holds
 
-* the trie nodes reached at that character — up to **four** of them,
+* the trie nodes reached at that character â€” up to **four** of them,
   because a lookup may be running down a chain of dictionaries at once,
   and because two characters that sort the same (a letter and its
   capital) are followed as one; and
@@ -853,15 +853,15 @@ the end of the dictionary, and the word is cleared to say so.
 A word is found when one of the positions answers **1** (a prefix that
 carries an attribute) or **2** (a leaf). `ConstructResult` (0x0002dbe4)
 then copies the running word out and walks the stack back down writing
-the characters of the path that actually answered over it — because the
+the characters of the path that actually answered over it â€” because the
 running word holds whichever branch was taken last, and the answer may
-lie along another of the parallel ones — and verifies the whole word
+lie along another of the parallel ones â€” and verifies the whole word
 once more to read its attribute and the character that could follow.
 
 `Reset` (0x0002e38c) starts the walk: `BuildStateAtPrefix` puts one
 state at the end of a prefix already verified, and `BuildStateUpToPrefix`
 walks from the root to where the prefix would be, stopping at the first
-character that is not actually there — which leaves the cursor just
+character that is not actually there â€” which leaves the cursor just
 before it, so the next step answers the first word from there on.
 
 A script reaches all of this through a `protoDictionaryCursor` frame:
@@ -869,13 +869,13 @@ A script reaches all of this through a `protoDictionaryCursor` frame:
 remembers it in the dictionary's `cursors` array, `PrivateReset(word,
 exact, which)` puts it somewhere, `PrivateEntry(frame)` fills in the
 `word`, `attribute` and `terminalClass`, `Next()`/`prev()` step it and
-`PrivateDispose()` gives it back. `PrivateClone` is a muddle — see
+`PrivateDispose()` gives it back. `PrivateClone` is a muddle â€” see
 `docs/curiosities.md`.
 
 `AddDictionary(frame, custom)` is `Register()` for a frame that is not
 the receiver, and `GetDictionaryData(id)` / `SetDictionaryData(id,
 binary)` take a dictionary's bytes out as a `'dictdata` binary and put
-them back — which is how one travels to a soup or to the desktop. Only
+them back â€” which is how one travels to a soup or to the desktop. Only
 a dictionary in RAM may be asked: a ROM one is read where it lies and
 its Handle holds no bytes of its own, which is what the kind byte's
 "lock the Handle" bit distinguishes.
@@ -885,14 +885,14 @@ its Handle holds no bytes of its own, which is what the kind byte's
 Three things, and each of them is wanted by something that is itself not
 reconstructed:
 
-* **the sixteen-bit walkers** — `AE16_Verify` (0x0002b2cc),
+* **the sixteen-bit walkers** â€” `AE16_Verify` (0x0002b2cc),
   `AE16_NextSet9`, `AE16_NextSetCB`, the two-byte-character mirrors of
   the AE8 ones. Reading the kind byte of all 129 lexicons built into
   this ROM gives kinds 1 and 7 only, so **no dictionary in the MP2x00 US
   ROM is sixteen-bit**; they are there for a localisation that needs
   them. `AEnum_Verify` answers "no match" for a sixteen-bit dictionary
   until they are written.
-* **the completions walk** — `AEnum_FirstLast` (0x0002a1f4) and
+* **the completions walk** â€” `AEnum_FirstLast` (0x0002a1f4) and
   `AEnum_NextPrevious` (0x0002a244), selectors 5 and 6, which step
   through a dictionary a word at a time *without* a cursor object; the
   block's `fResult` carries the mode in rather than the answer out.
@@ -900,7 +900,7 @@ reconstructed:
   `NextCompletion` (0x0002d224), and those in turn are used only by
   `DynaCompress` (the Assistant's dynamic dictionary) and by
   `ConvertDictionaryData`.
-* **the random word generator** — `RandomCommonWord` (0x0013e640) over
+* **the random word generator** â€” `RandomCommonWord` (0x0013e640) over
   `GetDistributedWord`, `InitLetterPairs` and the `charWeights` table,
   which walks the trie choosing a weighted character at each step until
   it lands on a word. `GetRandomDictionaryWord` is its only native.
@@ -2752,19 +2752,91 @@ overlap against the letter just before; a capital's penalty for the
 first letter of a word is booked against its last; the per-symbol cache
 runs a line longer than sixteen positions into the next symbol's entry.
 
-**NOT YET RECONSTRUCTED**: the answers made from the word graph
-(`EvaluateAndSortAnswers`, `MakeAndCombRecWordsFromWordGraph` - 60
-functions, about 24 KB, with a rule interpreter over the prototype data's
-PDF rules - then `FillRecwordSplitInfo`, `GCFillLearningHandle`), the
-`Chunk*` digit reader, `AL_NextSet` (Airus selector 8 for lexicons),
-`SetStrXrRC` (a recognition configuration's `strxrCommands`),
-`GetTraceFromStrokes`'s use in `DoLearning`, `ORTraining`, and the
-base-line and grid geometry `ConfigureArea` hands the engine
-(`GetWordGeom`, `GetGridGeom`).  So a cursive letter set chosen on the
-host still types nothing: after the graph the host answers -9 (the word
-marked 0x400) and the writing is kept as ink.  (With the letter set
-changed at run time, as `cursive.ns` does, the Notepad's existing areas
-still have Rosetta as well, which reads the words.)
+### The answers (`recognition/XrAnswers.cpp`)
+
+After the graph, `GCTryToRecognize` turns it into the readings a word
+descriptor keeps (`rec_w_type`, 0x50 bytes: the word, each letter's
+variant and xr count, the score and the dictionary attribute) and says
+which strokes each word of them is.
+
+**The readings** (`MakeAndCombRecWordsFromWordGraph`, 0x0019f644, over
+`MakeRecWordsFromWordGraph`): each answer of a list-of-answers graph
+becomes a reading - its letters (at most 23), the graph's score for it
+(its first symbol's weight), its dictionary attribute (its last
+symbol's) - and, scaled against ten per xr less ten, the score is worked
+out again from the letters: what each added less what each was charged
+(+0x0b, which `EvaluateAndSortAnswers` fills in, and +0x0c), less the
+answer's penalty, times a thousand over the scale, plus ten times the
+answer's +0x08.  The readings are bubble-sorted best first, the graph put
+into the same order (`SortGraph`), the scores divided by ten and held to
+0..100, and the first reading that is more than rc +0x1a below the best,
+or below rc +0x16, is dropped with everything after it.  (The ROM's code
+has a flag it sets to one on entry and tests twice; with it clear a
+letter's +0x0b would have counted half and a field of the reading's +0x4c
+three times - both are dead.)
+
+**Which strokes each word is** (`FillRecwordSplitInfo`, 0x0019e6ec): a
+reading with spaces in it is several words, and the unit that carries it
+is later cut into them (`GCWriteRW`).  The split information
+(`RecwordSplitInfoType`, 0x5b bytes and one per stroke) holds, for each of
+the first five readings, a bit for each letter a word ends at, and each
+word's dictionary attribute (0xfd where the graph cut without a space);
+then how many strokes each word of the best reading has and which they
+are.  The best reading's letters are traced back to the stretches of the
+trace their xrs were made from (`connect_trajectory_and_answers`/
+`_letter`: a run of xrs between breaks is one stretch, a crossing mark -
+0x34, 0x36, 0x3a, 0x3b - one of its own, at most four a letter and 0x5b
+in all), each stretch to the strokes it runs through
+(`AddStrokesOfSymbol`, `GetStrokeNumber`), a stroke no word claimed going
+to the word whose box's middle is nearest its own
+(`AttachLostStrokeToWord`); the other readings' words come from the
+graph (`FillSplitInfoFromRWG` - ROM BUG, kept: it asks whether the symbol
+after a letter ends the answer by that symbol's `sym` where its `type`
+was meant).  A reading of one word needs none of that: the block just
+says one word.  When the letters cannot be traced the block is dropped
+and the low level's letter ends (xr attrib 4) cleared - and the stretches
+are not freed when a stroke turns out to belong to an earlier word, a
+ROM leak kept.
+
+**What the learning is given** (`GCFillLearningHandle`, 0x000d6ad4, over
+`LHAddEntry`, 0x001059b4): training data is a block of entries - a count,
+five words an entry (three ids, the data's offset and size), the data
+after - grown by one entry at a time into a new block; by the flags at rc
++0xb2 the parameters ('LDRC' - DEVIATION: the host's block, sized by
+sizeof), the trace ('TRAC'), the xrs ('XRD_'), the graph's symbols
+('RWS_') and their xrs ('RPPD'), the readings ('RWRD') and the
+orthographic learning's information ('ORTL').  The Notepad's words carry
+0x20, the readings, which the word domain adds.
+
+**The word domain** (`TXrWordDomain`, `TXrWordUnit`, `XrDomains.cpp`)
+takes an STXR unit the reader has read (`Group`: a new 'XRWR' word unit
+with the STXR unit as its sub, `TXrWordUnit`, 100 bytes over
+`TStdWordUnit`) and gives it the readings (`Classify`/`ClassifyXrWord`:
+each reading an interpretation - its word, a score of ten times how far
+it is below 100, its attribute as the label, -4 for none), the ink's box
+and base line (`GetWordBase`, `GetWordSize`, `GetWordSlant`, in tablet
+eighths turned into pixels) and the training data; then, as
+`NewClassification` (which the ROM has inlined here), a piece for the
+recognisers above - `TWordRecognizer`'s `HandleUnit` turns it into
+aeWord, and the page types it.  DEVIATION: the ROM's interpretations are
+0x10 bytes; the host's hold pointers and are sized by sizeof.
+
+With a cursive letter set `cursive.ns` now types what it wrote: the page
+reads "For to" (`NEWTON_TRACE_CURSIVE=1` prints each word's answers).
+The second word is read right; the first - the synthetic "ton" - comes
+out with a capital, "For" ahead of "ER", "Eon", "FR", "EN".
+
+**NOT YET RECONSTRUCTED**: `EvaluateAndSortAnswers` (0x00337ee8), which
+works the answers' letters over again before the readings are made (the
+prototype data's rules, each letter's box against its xrs, the
+diacritics, a word checked for being a line of digits) - so the letters'
++0x0b stays what `xrlv` left; `ORCreateLearnInfo` (the orthographic
+learning's information, only for a field with rc +0xb2 bit 6); the
+`Chunk*` digit reader (and FillRecwordSplitInfo's branch for its words);
+`AL_NextSet` (Airus selector 8 for lexicons); `SetStrXrRC` (a recognition
+configuration's `strxrCommands`); `GetTraceFromStrokes`'s use in
+`DoLearning`, `ORTraining`; and the base-line and grid geometry
+`ConfigureArea` hands the engine (`GetWordGeom`, `GetGridGeom`).
 
 ## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
 
@@ -2777,15 +2849,15 @@ beside it. Its layers, from the top:
 
 | | what | where |
 |---|---|---|
-| 1 | `TRosRecognizer` — the `TWRecognizer` implementation | 0x001b5bac–0x001b7120 |
-| 2 | `Rosetta*` — the fifteen calls the recogniser makes into the engine | 0x001b7120–0x001b8500 |
-| 3 | `WordRecog*` — the word recogniser | 0x00272728–0x002766c0 |
-| 4 | `CharBox*` — the boxed-character recogniser | 0x000561c8–0x00056a44 |
-| 5 | `SL*` — the stroke lists they work on | 0x001fff98–0x00201320 |
-| 6 | `low_type`/`EXTR`/`SPEC_TYPE` — the feature extraction and the classifier nets | 0x002a8090–0x0032fd24, and more |
+| 1 | `TRosRecognizer` â€” the `TWRecognizer` implementation | 0x001b5bacâ€“0x001b7120 |
+| 2 | `Rosetta*` â€” the fifteen calls the recogniser makes into the engine | 0x001b7120â€“0x001b8500 |
+| 3 | `WordRecog*` â€” the word recogniser | 0x00272728â€“0x002766c0 |
+| 4 | `CharBox*` â€” the boxed-character recogniser | 0x000561c8â€“0x00056a44 |
+| 5 | `SL*` â€” the stroke lists they work on | 0x001fff98â€“0x00201320 |
+| 6 | `low_type`/`EXTR`/`SPEC_TYPE` â€” the feature extraction and the classifier nets | 0x002a8090â€“0x0032fd24, and more |
 
 Everything at level 1 is the Newton's; everything from level 3 down is
-ParaGraph's, and the names are theirs — `neibour_susp_extr`,
+ParaGraph's, and the names are theirs â€” `neibour_susp_extr`,
 `is_umlyut`, `glitch_to_super_min`, `Errorprov`. Level 2 is the join,
 which is why `recognition/Rosetta.h` draws it explicitly: it is where a
 modern recogniser would be put in instead.
@@ -2836,8 +2908,8 @@ rest, and the group that was there is invalidated.
 **Ink.** Strokes the writer is *drawing* rather than writing go through
 `GroupInkStroke`, which tells the engine to group but to read nothing
 (`kRosettaDontClassify` = 1) and gathers them into the recogniser's own
-array of up to eighty. When the drawing ends — or eighty strokes have
-been gathered — the group is closed and handed back whole through
+array of up to eighty. When the drawing ends â€” or eighty strokes have
+been gathered â€” the group is closed and handed back whole through
 `EndInkStrokeGroup`.
 
 `FindBaseline` is the same trick with `kRosettaBaselineOnly`: the
@@ -2851,14 +2923,14 @@ what sort of field is being written in: a word of flags, a 256-bit set
 of the characters it allows, the line and the grid it is written on, up
 to five dictionaries handed over by hand, five characters read as other
 characters, and how far apart the letters are.
-`AreaInfoFillDefaults` fills it with *everything* — every character
+`AreaInfoFillDefaults` fills it with *everything* â€” every character
 allowed, nothing mapped.
 
 `AreaInfoConfigure` (0x001b62a8) reads a recognition configuration into
 it, and the dictionaries are the interesting part. Most of the ROM's
 lexicons stand for a **kind** of thing the engine knows how to read by
-itself — names, dates, times, numbers, punctuation, telephone numbers,
-addresses — so naming one of those only sets a flag and hands nothing
+itself â€” names, dates, times, numbers, punctuation, telephone numbers,
+addresses â€” so naming one of those only sets a flag and hands nothing
 over; the rest go into `fDicts`, at most five of them, and only if the
 locale's `rosIgnoreDicts` does not list them. A sixteen-bit dictionary
 is never handed over, because this engine reads bytes. The first
@@ -2897,29 +2969,29 @@ from them:
   scores together where one character stands for a pair. The
   *patternizers* above it (`NetPatternImage`, `NetPatternMulti`,
   `NetPatternHeight`, `NetPatternBase`, `NetPatternCapHeight`,
-  `NetPatternCount`, `NetPatternStrokePUD` — 0x00131f5c-0x00133c7c)
+  `NetPatternCount`, `NetPatternStrokePUD` â€” 0x00131f5c-0x00133c7c)
   are what turn strokes into those inputs: one per kind of thing the
   net is told about a piece of writing.
 * **`BPNetEvaluate` (0x0001a260) is hand-written assembly.** Its inner
   loop is unrolled four ways and entered through a computed jump
   (`(*(code*)(table + (n & 3) * 0x10))(...)`), which Ghidra's
-  decompiler cannot follow — it gives up at 0x0001a610 with "Could not
+  decompiler cannot follow â€” it gives up at 0x0001a610 with "Could not
   recover jumptable". Read it with `analysis/disasm.py`, not the
   decompiler.
 
 The bottom of it has been started: `toolbox/FixedGeometry.h` is the
-ten routines the engine measures with — points and rectangles in 16.16
+ten routines the engine measures with â€” points and rectangles in 16.16
 fixed point, because a stroke is sampled in eighths of a pixel and
 everything is scaled by the tablet's resolution. `OrFixedRect` is the
-one worth knowing: a destination that is not a rectangle yet — upside
-down, or four noughts — simply *becomes* the source, which is how a
+one worth knowing: a destination that is not a rectangle yet â€” upside
+down, or four noughts â€” simply *becomes* the source, which is how a
 bounding box is started from its first stroke without anyone having to
 say so, and an empty source is passed over, so an empty stroke does not
 drag a box down to the origin.
 
-Level 5 is done too. The Newton has a `TStroke` already — tablet
+Level 5 is done too. The Newton has a `TStroke` already â€” tablet
 samples packed into a handle, in eighths of a pixel, with the pen's
-timing — and the engine will not have it. It wants a stroke it can
+timing â€” and the engine will not have it. It wants a stroke it can
 scale, smooth, sort and measure without asking anyone, so
 `TRosRecognizer` copies every stroke into a `RosStroke` on the way down
 and the engine works on its own copy from then on
@@ -2936,21 +3008,21 @@ the strokes that came down. A `RosStrokeList` is a count, an array of
 those and the rectangle round the lot.
 
 Both `FindBounds` calls work the bounds out again only when what is
-there is **not a rectangle** — which is how a stroke whose points have
+there is **not a rectangle** â€” which is how a stroke whose points have
 been moved about says so. Whoever moves them leaves the rectangle
 invalid, and the next question re-measures. That is what
 `ValidFixedRect` is for, and it is why an empty rectangle has to count
 as valid.
 
 The engine's memory is all `NewNamedPtr` tagged `'RoCK'`, and its
-`free` is a branch to `DisposPtr` — the Newton's pointer heap, not the
+`free` is a branch to `DisposPtr` â€” the Newton's pointer heap, not the
 C library's.
 
 **Tidying a stroke.** The tablet reports the pen on a grid, so a slow
 stroke arrives as a staircase, and `StrokeDeQuantize` takes it off in
 passes of two steps. `StrokeSmooth` moves every point by `weight`/4 of
-its *second difference* — the point before, minus twice itself, plus
-the point after — leaving the two ends where they were; a negative
+its *second difference* â€” the point before, minus twice itself, plus
+the point after â€” leaving the two ends where they were; a negative
 weight therefore smooths and a positive one sharpens.
 `StrokeConstrain` then pulls every point back to within half a
 tolerance of where it really was. Smoothing moves the points, the
@@ -2958,13 +3030,13 @@ constraint says how far they may go, and each pass rounds the steps a
 little more without letting the stroke wander away from what was
 written. `StrokePreprocess` is what a stroke goes through before the
 engine looks at it: dequantised when asked, smoothed when asked, and
-always a copy — the caller's stroke is never the one handed back.
+always a copy â€” the caller's stroke is never the one handed back.
 
 **Keeping the pieces of a cut stroke together.** `StrokeSortFrags` is
 the sort the word recogniser uses once the engine has started cutting
 strokes up. When a stroke has been cut in two the pieces must not be
-separated, however their own middles fall — they are one piece of
-writing — so the array is first gathered into groups (a stroke whose
+separated, however their own middles fall â€” they are one piece of
+writing â€” so the array is first gathered into groups (a stroke whose
 `fJoinsNext` is set carries the one after it into the same group),
 each group is measured as a whole, and it is the *groups* that are
 sorted and written back out flat. Nothing at all is done unless the
@@ -2988,9 +3060,9 @@ added so that a long stroke cannot overflow.
 ### The word recogniser's state (`recognition/WordRecog.h`)
 
 Level 3 is where a piece of writing lives while it is being read, and
-all of it — the strokes coming in, the segments they are cut into, the
+all of it â€” the strokes coming in, the segments they are cut into, the
 readings coming out, and the running measurements of the hand that
-wrote them — is one flat block of **0x208 bytes**. There is exactly
+wrote them â€” is one flat block of **0x208 bytes**. There is exactly
 one, made when the engine wakes (`RosettaAwaken`) and destroyed when it
 sleeps, and every layer of the engine reaches into it at fixed byte
 offsets. `WordRecog` gives those offsets names as far as the evidence
@@ -2999,7 +3071,7 @@ far reads.
 
 It is made in two halves, and the split is the interesting part.
 `WordRecogNew` allocates the block and nils **exactly** the ten
-pointers `WordRecogDeallocate` gives back — nothing else, so the rest
+pointers `WordRecogDeallocate` gives back â€” nothing else, so the rest
 of the block is whatever was in the heap until `WordRecogCreate2`
 writes it. That is what makes a throw part way through making one safe:
 the handler deallocates, and deallocating touches only the ten fields
@@ -3013,14 +3085,14 @@ is left alone even if it thinks it is suspended.
 `RosettaAwaken` makes it with
 `WordRecogCreate2(nil, nil, RosettaCheckWords, 10, ROMGrammar, theNet, 1)`:
 **ten readings**, the engine's own grammar, and the strokes are the
-engine's to free. That last argument is the one to watch —
+engine's to free. That last argument is the one to watch â€”
 `WordRecogClearStrokes` gives a stroke back only if the recogniser owns
 them all *or* the stroke is a fragment the engine cut for itself; the
 rest belong to whoever handed them over.
 
 **The run.** `fRun` is twenty-two numbers describing the writing as it
 is being read: **nine Gaussians and four lengths**. Each Gaussian is a
-pair — the mean of what has been measured and the mean of its square,
+pair â€” the mean of what has been measured and the mean of its square,
 which is all a classifier needs for a distribution whose spread grows
 with its mean. One of the nine is how big a single stroke is; the other
 eight are four measurements (the gap in front of a stroke, that gap as
@@ -3040,25 +3112,25 @@ knows about your handwriting"). That is reproduced here, bug and all.
 `fSavedRun` is the copy to go back to.
 `WordRecogInvalRun` puts the run back as it was, `WordRecogSaveRun`
 keeps what has been learnt, and `WordRecogReset` fills the saved copy
-with ParaGraph's own starting values — every one of them the nominal
+with ParaGraph's own starting values â€” every one of them the nominal
 cap height (18.85 pixels) times a ratio, and the last five say so out
 loud, being the nominal ratio divided by a number of their own. What
 the engine learns into that run is in `docs/curiosities.md` under "The
 engine learns how tall you write, an eighth at a time".
 
 **The grammars.** `fGrammars` is a list of finite-state machines a word
-is read against, and `WordRecogSetContext` picks one **by name** —
+is read against, and `WordRecogSetContext` picks one **by name** â€”
 which is how a field asking to be read as a date or a telephone number
 gets one. The ROM has eight built in (`ROMGrammar`, 0x00366e0c):
 General, Date, Numbers&Money, Numbers, Phone, Time, Money and
 PostalCode. A reset asks for "General".
 
 **The readings.** `fWords` is `fWordCount` strings with a score each,
-and `fCheckWords` is who they go to — `RosettaCheckWords` at level 2,
+and `fCheckWords` is who they go to â€” `RosettaCheckWords` at level 2,
 which turns the raw scores into confidences out of a thousand and
 passes them up to `RosRecCheckWords`. When the engine has nothing at
-all, `WordRecogReturnWords` puts `FailureString` — four question
-marks — in the first slot with the worst score there is and says the
+all, `WordRecogReturnWords` puts `FailureString` â€” four question
+marks â€” in the first slot with the worst score there is and says the
 whole of the writing is covered by it, so the caller always gets an
 answer. The stroke count it passes up is not the one it was given:
 strokes the engine cut for itself do not count, because the layers
@@ -3071,21 +3143,21 @@ about its life. `RosettaInitialize` writes down the tablet's
 resolution and the Newton's callback and wakes the engine;
 `RosettaAwaken` makes the common info, a classifier with as many
 outputs as there are character classes (134, which `CharInitialize`
-answers) and the word recogniser over both — ten readings, the ROM's
+answers) and the word recogniser over both â€” ten readings, the ROM's
 own grammar, and the strokes are the engine's to free.
 
 `RosettaQuiesce` gives everything in hand back but leaves the engine
 standing: the word recogniser keeps its block, so everything pointing
 at it stays good, and `WordRecogResume` makes its arrays again when the
 next stroke comes down. `RosettaSleep` is what takes it down, and it
-gives the grammar context back only when the index is negative — which
+gives the grammar context back only when the index is negative â€” which
 is how a context the engine built for itself is told from one of the
 ROM's eight.
 
 `RosettaInitializeValues` is what a word starts from: reading again,
 the sentence forgotten, the writing in hand cleared and the boxed
 character recogniser given back. Whether the run is put back as it was
-saved turns on how well the *last* word was read — over 899 out of a
+saved turns on how well the *last* word was read â€” over 899 out of a
 thousand, the confidence `RosettaCheckWords` writes down each time.
 
 `RosettaVerifyWordSymbols` is a walk over `RosCI->fLegalUse`, and it
@@ -3097,19 +3169,19 @@ Latin-1 letters.
 ### The classifier (`recognition/BPNet.h`, `docs/recognition/bpnet.md`)
 
 At the bottom of reading a word is a back-propagation net, and it is
-fixed point and tiny — which is what let it run on a 162 MHz
+fixed point and tiny â€” which is what let it run on a 162 MHz
 StrongARM with no floating point at all. A unit's activation is one
 byte with 128 standing for nought; a weight is one byte biased by 128,
 so a unit accumulates `activation * (weight - 128)`; and the sigmoid is
-a 360-byte lookup table, `QSigLu`. There are 1002 units — 384 inputs,
-484 hidden and 134 outputs — in one byte array, worked out in order so
+a 360-byte lookup table, `QSigLu`. There are 1002 units â€” 384 inputs,
+484 hidden and 134 outputs â€” in one byte array, worked out in order so
 that a unit may read any unit before it.
 
 The connections are a *program* rather than a matrix: `newtConnects` is
 2392 words, each saying how many connections follow, how far back in
 the unit array they start, and whether to take more weight bytes; a
 word whose count is nought ends a unit and carries the next one's bias.
-There are 619 of those — 618 units and a terminator — which is one of
+There are 619 of those â€” 618 units and a terminator â€” which is one of
 the three checks that made the format readable (`test_Rosetta` asserts
 it).
 
@@ -3117,9 +3189,9 @@ it).
 tables, and `BPNetEvaluate` is reconstructed: the ROM's is 950 bytes of
 hand-written assembly, unrolled sixteen ways and entered through a
 computed jump, but what it *does* is a page of C. It is checked
-against three numbers the net writes down about itself — 618 units,
+against three numbers the net writes down about itself â€” 618 units,
 90,540 connections and a weight table whose last byte is the last one
-touched — all three of which fall out of walking the connection
+touched â€” all three of which fall out of walking the connection
 program and none of which are in it. `test_Rosetta` asserts them and
 then runs the net.
 
@@ -3129,7 +3201,7 @@ whole ROM mapped a **second** time, uncached
 (`g8MegContinuousTableStart`, ROM 0x100). Ninety-one kilobytes of
 weights streamed once would flush the StrongARM's entire data cache, so
 the engine reads the one thing it cannot reuse through a mapping that
-does not disturb it — a non-temporal load a decade before the
+does not disturb it â€” a non-temporal load a decade before the
 instruction existed. `docs/recognition/bpnet.md` has the MMU table and
 the rest, and `docs/curiosities.md` tells it as a story.
 
@@ -3139,8 +3211,8 @@ What turns a piece of writing into the classifier's 384 inputs. A
 **patternizer** knows how to measure one thing about a stroke list and
 where in the net's input array to put the answer; a **pattern** is one
 measurement it has taken. They are a little class system written in C
-— every object begins with a pointer to its type, and the type is a
-name, the size of an instance and eight entry points — and there are
+â€” every object begins with a pointer to its type, and the type is a
+name, the size of an instance and eight entry points â€” and there are
 seven kinds, named by the strings in the net's `inputType`.
 
 The ROM's own net has four input groups, and they come to exactly its
@@ -3173,7 +3245,7 @@ sub-pixels across, which is one cell of the grid.
 
 The scale is where the thought is. Each axis wants to fill the grid,
 but it is held to at most two and a half times life size and at most
-1.6 of what the line's own height would give — and then the two axes
+1.6 of what the line's own height would give â€” and then the two axes
 are held to within three times each other, which is what *Splat
 **Limited*** means: a lower-case `l` is not blown up into a
 letter-shaped smear, and an `m` is not squashed flat. With the scales
@@ -3181,7 +3253,7 @@ settled the writing is centred in the grid and drawn.
 
 **Where the pen went.** `StrokePUD` is the other 180 inputs, and it is
 the one that knows the writing is a *movement* rather than a shape.
-Every point of every stroke goes into four parallel arrays — where it
+Every point of every stroke goes into four parallel arrays â€” where it
 was, how far it is from the one before, and whether the pen was *down*
 getting there, because the first point of a stroke is a jump and not a
 stroke of the pen. The whole length is then divided into twenty equal
@@ -3190,19 +3262,19 @@ step where it has got to and which way it is going.
 
 A column of the grid is nine cells. Eight are the direction of
 travel, spread between two neighbouring buckets by how far between
-them it falls — and the buckets **wrap**, because a direction does.
+them it falls â€” and the buckets **wrap**, because a direction does.
 The ninth, the first, is how much of that step the pen was *up*: 255
 for a jump between strokes and nought for a stroke drawn on the paper.
 That is what the name says.
 
 The angle comes from `ApproxFixATan2Cycles`, which answers in
-*cycles* — a whole turn is 0x10000 — as a cubic in the smaller of the
+*cycles* â€” a whole turn is 0x10000 â€” as a cubic in the smaller of the
 two coordinates over the larger, with the octant added afterwards and
 no table at all.
 
 `test_NetPattern` draws a stroke down and a stroke across with a jump
 between them, and the pen row comes out as six steps down, seven up
-and six across — which is the two strokes and the jump, in the right
+and six across â€” which is the two strokes and the jump, in the right
 proportion.
 
 ### The bigram grammar (`recognition/ROMGrammar.cpp`)
@@ -3358,8 +3430,8 @@ What is in it:
 
 * `fCharParams`, eight numbers for every one of the 256 character
   codes. Table 1 is **how tall the character is as a fraction of the
-  cap height**, and it reads like one — 0.96 for `A`, 0.92 for `l`,
-  0.45 for `o`, 0.08 for a full stop — which is what
+  cap height**, and it reads like one â€” 0.96 for `A`, 0.92 for `l`,
+  0.45 for `o`, 0.08 for a full stop â€” which is what
   `WordRecogComputeCapHeight` divides the measured height by.
 * `fLegalNet` and `fLegalUse`, 256 bits each: which character codes
   exist, and which the engine may answer at the moment.
@@ -3370,15 +3442,15 @@ What is in it:
 * `fCompoundPart1`/`fCompoundPart2`: a character that is really two
   characters names them here, and `WordRecogNetEvaluate` scores it as
   the **product** of its two parts' net outputs.
-* `fCapCaseFlags`, `fCapAltCase1`, `fCapAltCase2` — the capitals hack:
+* `fCapCaseFlags`, `fCapAltCase1`, `fCapAltCase2` â€” the capitals hack:
   whether a character has a case at all, and the one or two characters
   it may be read as instead.
 * `fMinStrokeSize`, 4.5 pixels: under that a stroke has no shape worth
   talking about, and it is also the smallest cap height the engine will
   believe.
 
-The other layers the word recogniser leans on — the grammars, the
-segments, the classifier net and its patternizers — are declared in
+The other layers the word recogniser leans on â€” the grammars, the
+segments, the classifier net and its patternizers â€” are declared in
 `recognition/RosEngine.h` and are NOT YET; the seam is drawn there so
 that one layer of the engine can be written at a time.
 `BiGrammarsLoad` is the one that is not simply empty: the ROM's answers
@@ -3393,7 +3465,7 @@ reasoning about handwriting.
 `WordRecogStrokeType` says which way a stroke goes, if it goes any way
 at all: vertical if it is more than four times as tall as it is wide,
 horizontal if it is more than four times as wide as it is tall *and*
-short in its own right — no taller than a quarter of the engine's
+short in its own right â€” no taller than a quarter of the engine's
 small height. That second clause is the interesting one. A long
 shallow arc drawn large passes the ratio test but is not a horizontal
 stroke, because at that size a quarter of its height is still a
@@ -3402,7 +3474,7 @@ letter's worth of ink. A stroke whose longer side is under
 
 `WordRecogIsStrokeTooWide` measures it against what a letter of the
 hand being read should be (`fRun[21]`), scaled up when the writing has
-turned out bigger than the run expected — three parts of what the
+turned out bigger than the run expected â€” three parts of what the
 word has measured so far and one of its tallest stroke, against the
 small height the run holds. A piece the engine cut for itself is never
 too wide, whatever it measures, because pieces are not cut again.
@@ -3413,7 +3485,7 @@ does is the cross of a double-struck t, or a line drawn under a word,
 and has to be cut; one that runs through only one is part of that
 letter. Every stroke in hand is asked twice, once by its first two
 thirds and once by its last two thirds, because what matters is
-whether an **end** of it is vertical — the middle of a letter can go
+whether an **end** of it is vertical â€” the middle of a letter can go
 anywhere. The stroke not yet taken in is asked as well.
 
 `WordRecogStrokeNeedsFragmenting` puts the three together: too wide
@@ -3423,9 +3495,9 @@ only if it runs through two letters.
 
 **Taking a stroke in.** `WordRecogAddStroke2` (0x00274cf0) is both
 halves of the job. Told to close the word, it works the **baseline**
-out first — the mean height and the mean foot of every stroke in hand,
+out first â€” the mean height and the mean foot of every stroke in hand,
 answered as a box relative to its own top-left corner and scaled into
-seventy-seconds of an inch if the tablet's resolution is known — and
+seventy-seconds of an inch if the tablet's resolution is known â€” and
 then sorts the strokes, has the segment layer cut them into characters
 and hands them to `WordRecogAnalyzeWord`. (Or, when the engine has
 been told to group but not to read, answers the word `gROSsegOnly` and
@@ -3444,11 +3516,11 @@ and the segment side (`WRSeg*`).
 (Since done: the five deferred-recognition natives - `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord` and
 `RecognizeTextInStyles` - answer, below under "Deferred recognition".)
-Until then the eleven natives that ask for handwriting — `Recognize`,
+Until then the eleven natives that ask for handwriting â€” `Recognize`,
 `RecognizePara`, `RecognizePoly`, `RecognizeInkWord`,
 `RecognizeTextInStyles`, `DoCursiveTraining`,
 `UseTrainingDataForRecognition`, `GetLetterWeights`/`SetLetterWeights`
-and the letter-shape group — have nothing to answer with.
+and the letter-shape group â€” have nothing to answer with.
 `RosettaExtension` (0x001b6c3c) is the exception: it answers nil and
 always did.
 

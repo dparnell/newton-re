@@ -10,6 +10,35 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the cursive reader's answers - the first cursive word typed (round 9)
+
+- **The readings** (`recognition/XrAnswers.cpp`):
+  `MakeAndCombRecWordsFromWordGraph`/`MakeRecWordsFromWordGraph` - the
+  word graph made into readings, scored again from the letters, sorted
+  (the graph with them), scaled to 0..100 and cut (rc +0x1a, +0x16).
+- **Which strokes each word is**: `FillRecwordSplitInfo`,
+  `connect_trajectory_and_answers`/`_letter` (and the unnamed
+  0x002d48cc), `GetStrokeNumber`, `GetBegEndOfStroke`,
+  `AddStrokesOfSymbol`, `AttachLostStrokeToWord`, `FillSplitInfoFromRWG`.
+  ROM bugs kept: `FillSplitInfoFromRWG` tests the next symbol's `sym`
+  where its `type` was meant; the stretches leak when a stroke belongs
+  to an earlier word.
+- **Training data**: `LHAddEntry` (an entry added by making a new block)
+  and `GCFillLearningHandle`.  DEVIATION: the 'LDRC' entry is the host's
+  parameter block, sized by sizeof.
+- **The word domain reads**: `TXrWordDomain::Group`/`Classify`/
+  `Reclassify`/`ClassifyXrWord`/`Dispose`, `TXrWordUnit` (Make,
+  IXrWordUnit, IDispose, GetWordBase/Slant/Size, GetTrainingData,
+  DisposeTrainingData) and `GetTraceFromStrXrUnit`.  DEVIATION: a word
+  unit's interpretations sized by sizeof (the ROM's are 0x10 bytes) -
+  the first run with 0x10 read a stray handle in `SetWordBase`.
+- `GCTryToRecognize` goes on after the graph: readings, split
+  information, training data, and answers nought.  `cursive.ns` types
+  "For to"; `test_XrAnswers` (new) and ctest `host.NewtonCursive` check
+  it.  `EvaluateAndSortAnswers` is NOT YET.
+- `docs/recognition/README.md` had 88 cp1252 dashes in the middle of its
+  UTF-8 (an earlier edit's); they are UTF-8 again.
+
 ## 2026-09-28: the cursive reader's xr reader (round 8)
 
 - **The matrix** (`recognition/XrMatrix.h`/`.cpp`): `xrcm_type` and its

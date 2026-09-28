@@ -54,6 +54,7 @@
 #endif
 
 struct _RECT;
+struct xrd_el_type;
 struct rec_w_type;
 class TDictChain;
 
@@ -267,6 +268,33 @@ long	GetCMPAliases(xrdata_type* xr, RWG_type* rwg, const char* word, rc_type* rc
 long	SortGraph(int (*order)[10], RWG_type* rwg);							// ROM 0x00362d00 SortGraph__FPA10_iP8RWG_type - ==> 0, 1
 long	GetBaseBord(rc_type* rc);											// ROM 0x00363038 GetBaseBord__FP7rc_type - the writing's slant from the stroka data's histogram
 long	GetSymBox(UByte sym, long first, long end, xrdata_type* xr, _RECT* box);	// ROM 0x003630c8 GetSymBox__FUciT2P11xrdata_typeP5_RECT - ==> 0, 1 for no xrs
+
+// the answers (XrAnswers.cpp)
+void	MakeRecWordsFromWordGraph(RWG_type* rwg, rec_w_type* readings, long scale);	// ROM 0x00338158 MakeRecWordsFromWordGraph__FP8RWG_typeP10rec_w_typei
+void	MakeAndCombRecWordsFromWordGraph(RWG_type* rwg, rc_type* rc, xrdata_type* xr, rec_w_type* readings);	// ROM 0x0019f644 MakeAndCombRecWordsFromWordGraph__FP8RWG_typeP7rc_typeP11xrdata_typeP10rec_w_type
+// A stretch of the trace a letter was made from (ROM 4 bytes: two
+// big-endian halfwords, the first point and the last).
+struct Part_of_letter
+{
+	UByte		beg[2];
+	UByte		end[2];
+};
+
+// What connect_trajectory_and_answers answers (ROM 0x1c bytes).
+struct Osokin_output
+{
+	UByte			count[0x18];	// +00  how many stretches each letter has
+	Part_of_letter*	parts;			// +18  all of them, letter by letter (0x60)
+};
+
+long	connect_trajectory_and_letter(xrd_el_type* xr, short from, short to, short* count, Part_of_letter* parts);	// ROM 0x002d4aac connect_trajectory_and_letter__FP11xrd_el_typesT2PsP14Part_of_letter - ==> 0, 1 for more than four stretches
+long	connect_trajectory_and_answers(xrd_el_type* xr, rec_w_type* reading, Osokin_output* out);	// ROM 0x002d4908 connect_trajectory_and_answers__FP11xrd_el_typeP10rec_w_typeP13Osokin_output - ==> 0, 1
+long	GetStrokeNumber(long point, rc_type* rc);							// ROM 0x0019ee54 GetStrokeNumber__FiP7rc_type
+void	GetBegEndOfStroke(long stroke, rc_type* rc, long* beg, long* end);	// ROM 0x0019f0ec GetBegEndOfStroke__FiP7rc_typePiT3
+long	AddStrokesOfSymbol(long from, long to, long before, long word, rc_type* rc, UByte* split);	// ROM 0x0019ed6c AddStrokesOfSymbol__FiN31P7rc_typeP20RecwordSplitInfoType - ==> 1, 0
+void	AttachLostStrokeToWord(long stroke, rc_type* rc, UByte* split);		// ROM 0x0019eeb4 AttachLostStrokeToWord__FiP7rc_typeP20RecwordSplitInfoType
+void	FillSplitInfoFromRWG(xrdata_type* xr, RWG_type* rwg, UByte* split);	// ROM 0x0019ec18 FillSplitInfoFromRWG__FP11xrdata_typeP8RWG_typeP20RecwordSplitInfoType
+UByte*	FillRecwordSplitInfo(xrdata_type* xr, rc_type* rc, RWG_type* rwg, rec_w_type* readings, void* chunk);	// ROM 0x0019e6ec FillRecwordSplitInfo__FP11xrdata_typeP7rc_typeP8RWG_typeP10rec_w_typePv - the split information (the caller frees it), nil for none
 
 // the Viterbi (Xrlv.cpp)
 long	xrlv(xrdata_type* xr, RWG_type* rwg, rc_type* rc);					// ROM 0x0027ab60 xrlv__FP11xrdata_typeP8RWG_typeP7rc_type - ==> 0, 1

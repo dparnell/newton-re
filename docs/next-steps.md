@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 109/109
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 110/110
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11599 citations, 0 bad;
-  6624 of 16671 functions (39.73%).
+- `analysis/coverage.py build/MP2x00US --check`: 11626 citations, 0 bad;
+  6650 of 16671 functions (39.89%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -40,6 +40,10 @@ bugs found along the way - is `docs/work-log.md`.
   the route across the five areas is `docs/ink/README.md`'s "From the
   pen to ink on the page"), a double tap on a word opens the corrector
   (`src/host/demo/correct.ns`).
+- **Cursive writing is read** by ParaGraph's reader, with a cursive
+  letter set: `src/host/demo/cursive.ns` writes "ton" and "to" and the
+  page types "For to" (`NEWTON_TRACE_CURSIVE=1`; the answers'
+  re-evaluation and the digit reader are NOT YET - stage 4 below).
 - **Shapes are recognised** with the Notepad set to shapes
   (`src/host/demo/shapes.ns`, `snapping.ns`; `NEWTON_TRACE_SHAPES=1`).
 - **A selection can be made, dragged and resized** (`src/host/demo/drag.ns`),
@@ -322,28 +326,33 @@ a cursive letter set `cursive.ns`'s "to" comes out of the word graph as
 `host.NewtonCursive` checks both graphs; clean under
 `NEWTON_HEAPCHECK=5`).  The host still answers -9 after the graph.
 
-**Stage 4, the next piece: the answers** - `EvaluateAndSortAnswers`
-(0x00337ee8) and `MakeAndCombRecWordsFromWordGraph` (0x0019f644), which
-turn the word graph into the readings (`rec_w_type`) the descriptor gets.
-Measured with `callgraph.py build/MP2x00US
-EvaluateAndSortAnswers__FP10rec_w_typeP7rc_typeP11xrdata_typeP8RWG_type
-MakeAndCombRecWordsFromWordGraph__FP8RWG_typeP7rc_typeP11xrdata_typeP10rec_w_type`:
-82 reached, **60 not done, about 24 KB**.  Its shape: `EvaluateCharQuality`
-over a `_POST_PARAMS`, a rule interpreter over the prototype data's PDF
-rules (`PDFGetRule` and its address helpers, `CalculateGroupResult`,
-`CalculateQueueResult` with the `Calculate*` operators), the letters'
-boxes and sides (`CalculateBoxes_Side_Result`, `FindXrLetterBox`,
-`EvaluateLettersToXr`, `CheckDiacriticsDirections`/
-`AnalyseDiacriticsDirection` 2.2 KB), and `MakeRecWordsFromGraph`/
-`MakeNewPath`/`FillRecWordsElement` making the readings.  Then
-`FillRecwordSplitInfo`, `GCFillLearningHandle` and `ORCreateLearnInfo`
-(rc +0xb2 bit 6) - after which a cursive word is typed.  Estimate: one
-round for the answers, one for the rest and the checks against the demo;
-the `Chunk*` digit reader (only for a field that allows numbers, rc
-+0xb6; 82 not done, about 146 KB) three or four more.  Two things to look
-at with the answers in: the graph's capitals (the first word's answers
-start with capitals although rc +0x1e asks for none) and whether the
-Notepad's field gives the reader its vocabularies (d->flags bit 0).
+**Stage 4 begun, round 9 (2026-09-28): the answers, and the first
+cursive word typed.**  `MakeAndCombRecWordsFromWordGraph`/
+`MakeRecWordsFromWordGraph` (the graph made into readings, sorted, scaled
+and cut - `XrAnswers.cpp`), `FillRecwordSplitInfo` and its helpers (which
+strokes each word of a reading of several is: `connect_trajectory_and_*`,
+`AddStrokesOfSymbol`, `AttachLostStrokeToWord`, `FillSplitInfoFromRWG`),
+`GCFillLearningHandle` over `LHAddEntry`, and the word domain's own
+reading - `TXrWordDomain::Group`/`Classify`/`Reclassify`/`ClassifyXrWord`
+and `TXrWordUnit` - so an STXR unit becomes an 'XRWR' word unit, the
+arbiter hands it to `TWordRecognizer`, and the page types it.
+`cursive.ns` reads **"For to"** (ctest `host.NewtonCursive` checks the
+answers and the page's text; `test_XrAnswers` the readings, the split
+information and the training data).  Left of stage 4:
+`EvaluateAndSortAnswers` (0x00337ee8; `EvaluateAnswers`,
+`EvaluateCharQuality` and the rule interpreter `CalculateQueueResult`/
+`CalculateFunction`/`PDFGetRule` over the prototype data's rules,
+`CalculateBoxes_Side_Result`/`FindXrLetterBox`,
+`CheckDiacriticsDirections`/`AnalyseDiacriticsDirection`,
+`EvaluateWordUsingSideReasoning`, `EvaluateMissingCross`,
+`MakeRecWordsFromGraph`/`MakeNewPath`/`FillRecWordsElement`,
+`MergeTwoRecWordsSets`, `CheckDigitsLine`) - about 20 KB, which reworks
+each letter's +0x0b before the readings are made, so it can change which
+reading wins; and `ORCreateLearnInfo`/`Orto*` (only with rc +0xb2 bit 6,
+which the Notepad does not set).  Then the `Chunk*` digit reader (only
+for a field that allows numbers, rc +0xb6; 82 not done, about 146 KB),
+three or four rounds.  Why the synthetic "ton" comes out "For" is still
+to be looked into.
 
 ## Then: the testing system
 
