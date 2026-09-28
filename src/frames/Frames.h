@@ -80,6 +80,5 @@ Ref		FBInsert(RefArg rcvr, RefArg array, RefArg element, RefArg test, RefArg key
 
 // large binaries (NOT YET RECONSTRUCTED: never one; objects.h declares it under hasLargeObjects)
 Boolean	IsLargeBinary(RefArg ref);
-void	RegisterLargeBinaryNatives(void);	// the seven a script asks of one (Objects.cpp)
 
 #endif	/* __FRAMES_H */

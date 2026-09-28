@@ -118,8 +118,9 @@ long	EntryModTime(RefArg entry);
 
 /*------------------------------------------------------------------------------
 	E p h e m e r a l s
-	Large objects created and not yet committed (TEphemeralTracker: NOT YET
-	RECONSTRUCTED - a store without the large-object capability has none).
+	Large objects created and not yet committed: the store's
+	TEphemeralTracker (Ephemerals.h; a store without the large-object
+	capability has none).
 ------------------------------------------------------------------------------*/
 
 NewtonErr	SetupEphemeralTracker(RefArg storeObject, PSSId rootFrameId);

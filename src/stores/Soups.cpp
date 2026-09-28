@@ -26,6 +26,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "PackageStore.h"
+#include "LargeBinaries.h"
 #include "protocols/Protocols.h"
 #include <string.h>
 #include <new>
@@ -56,6 +57,7 @@ InitQueries(void)
 	gUnionSoups = MakeEntryCache();
 	InitPackageSoups();
 	InitEntries();
+	InitLargeObjects();		// DEVIATION: the ROM's InitExternal (0x002e0bc4) calls it; the host has no InitExternal
 	RegisterSoupNatives();
 	RegisterCursorNatives();
 	RegisterUnionSoupNatives();
@@ -108,6 +110,8 @@ static const PrototypeMethod gStoreMethods[] = {
 	{ "DeleteObject", (void*) StoreDeleteObject, 1 },
 	{ "SetObjectSize", (void*) StoreSetObjectSize, 2 },
 	{ "GetObjectSize", (void*) StoreGetObjectSize, 1 },
+	{ "NewVBO", (void*) FLBAlloc, 2 },
+	{ "NewCompressedVBO", (void*) FLBAllocCompressed, 4 },
 	{ nil, nil, 0 }
 };
 
@@ -389,19 +393,6 @@ StoreRemoveSortTable(RefArg /*storeObject*/, long /*sortId*/)
 { }
 
 
-// ROM 0x00100a24 LargeBinariesStoreRemoved__FP13TStoreWrapper
-// NOT YET RECONSTRUCTED: large binaries.
-void
-LargeBinariesStoreRemoved(TStoreWrapper* /*wrapper*/)
-{ }
-
-
-// ROM 0x001008a4 AbortLargeBinaries__FRC6RefVar
-void
-AbortLargeBinaries(RefArg /*entry*/)
-{ }
-
-
 // The soup name index of a store: a TSoupIndex over the persistent
 // frame's nameIndex info object, with the directory sorting table.
 void
@@ -673,7 +664,7 @@ ToObject(TStore* store)
 // ROM 0x00355360 KillStoreObject__FRC6RefVar
 // The store frame and its soups cut off from the store: _protos nilled,
 // the soups out of the union soups, their entries invalidated, their
-// cursors told (NOT YET), the large binaries told (NOT YET).
+// cursors told, the large binaries told (LargeBinariesStoreRemoved).
 void
 KillStoreObject(RefArg storeObject)
 {

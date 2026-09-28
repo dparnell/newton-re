@@ -15,6 +15,9 @@
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
+#include "LargeBinaries.h"
+#include "LargeObjects.h"
+#include <stdlib.h>
 #include <string.h>
 
 extern const ExceptionName exStoreError;
@@ -226,10 +229,24 @@ TObjectWriter::Prescan(void)
 	}
 	if ((flags & 3) == kObjFrame)
 	{
-		// a large binary: NOT YET RECONSTRUCTED (the tag, the class, the
-		// compress flag, three sizes and a reserved long, the compander's
-		// name and parameters, the stream) - counted as the unstreamable
-		// immediate the ROM writes for a large binary that is not one
+		if (IsLargeBinary(fObject))
+		{
+			// a large binary: the tag, the class, the compress flag and four
+			// longs, the compander's name and parameters, and the stream
+			LBData* lb = LargeBinaryData(fObject);
+			TStoreWrapper* wrapper = lb->GetStore();
+			fSize += 1;
+			PRESCEND(ClassOf(fObject));
+			fSize += 0x11;
+			long nameLength = 0, parametersSize = 0;
+			LOCompanderNameStrLen(wrapper->fStore, lb->fId, &nameLength);
+			LOCompanderParameterSize(wrapper->fStore, lb->fId, &parametersSize);
+			fSize += nameLength;
+			fSize += parametersSize;
+			fSize += LOSizeOfStream(wrapper->fStore, lb->fId, fCompressLargeBinaries);
+			return;
+		}
+		// any other indirect binary: the unstreamable immediate
 		fSize += 1;
 		fSize += 1;
 		return;
@@ -336,10 +353,67 @@ TObjectWriter::Scan(void)
 	}
 	if ((flags & 3) == kObjFrame)
 	{
-		// a large binary: NOT YET RECONSTRUCTED (kNSOFLargeBinary, the class,
-		// fCompressLargeBinaries, LOSizeOfStream, the compander's name and
-		// parameters, LOWrite); the ROM writes this for one that is not a
-		// large binary of the store's
+		if (IsLargeBinary(fObject))
+		{
+			// a large binary: the tag and the class; whether it goes
+			// compressed, the stream's size, the compander's name's length,
+			// its parameters' size and a nought; the name and the
+			// parameters; then the large object itself (LOWrite)
+			//
+			// ROM BUG kept: the name's and parameters' blocks are given back
+			// only when something throws
+			LBData* lb = LargeBinaryData(fObject);
+			TStoreWrapper* wrapper = lb->GetStore();
+			TStore* store = wrapper->fStore;
+			PSSId id = lb->fId;
+			long nameLength = 0, parametersSize = 0;
+			LOCompanderNameStrLen(store, id, &nameLength);
+			LOCompanderParameterSize(store, id, &parametersSize);
+			long streamSize = LOSizeOfStream(store, id, fCompressLargeBinaries);
+			char* name = nil;
+			if (nameLength != 0)
+			{
+				name = (char*) malloc(nameLength + 1);
+				if (name == nil)
+					Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+				LOCompanderName(store, id, name);
+			}
+			void* parameters = nil;
+			if (parametersSize != 0)
+			{
+				parameters = malloc(parametersSize);
+				if (parameters == nil)
+				{
+					free(name);
+					Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+				}
+				LOCompanderParameters(store, id, parameters);
+			}
+			newton_try
+			{
+				pipe << (UByte) kNSOFLargeBinary;
+				DESCEND(ClassOf(fObject));
+				pipe << (UByte) fCompressLargeBinaries;
+				pipe << streamSize;
+				pipe << nameLength;
+				pipe << parametersSize;
+				pipe << (long) 0;
+				if (name != nil)
+					pipe.WriteChunk(name, nameLength, false);
+				if (parameters != nil)
+					pipe.WriteChunk(parameters, parametersSize, false);
+				LOWrite(&pipe, store, id, fCompressLargeBinaries, nil);
+			}
+			newton_catch_all
+			{
+				free(name);
+				free(parameters);
+				rethrow;
+			}
+			end_try;
+			return;
+		}
+		// any other indirect binary cannot be streamed
 		pipe << (UByte) kNSOFImmediate;
 		LongToPipe(pipe, kUnstreamableRef);
 		return;
@@ -655,15 +729,71 @@ TObjectReader::ReadSmallRect(void)
 
 
 // ROM 0x00357b78 ReadLargeBinary__13TObjectReaderFv
-// NOT YET RECONSTRUCTED: the class, the compress flag, the stream size,
-// the compander name and parameter sizes, a reserved long, the name and
-// parameters, then CreateLargeObject from the stream on fStore
-// (kNSErrNoStoreForLargeBinary without one), mapped and wrapped.
+// A large binary: its place among the precedents kept (nil for now), the
+// class, the compress flag, the stream size, the compander's name's
+// length, its parameters' size and a reserved long, the name and the
+// parameters, then the large object made on fStore from the stream
+// (kNSErrNoStoreForLargeBinary without a store), mapped and wrapped - an
+// ephemeral until an entry takes it.
+//
+// ROM BUG kept: the name's and parameters' blocks are given back only
+// when something throws.  (A stream written compressed cannot be read
+// yet: CreateLargeObject's fromCompressed branch, LODefCreateFromComp, is
+// NOT YET.)
 Ref
 TObjectReader::ReadLargeBinary(void)
 {
+	RefVar obj;
 	if (fStore == nil)
 		Throw(exStoreError, (void*) kNSErrNoStoreForLargeBinary, nil);
-	Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);
-	return NILREF;
+	long precedent = fPrecedents->Append(RefVar(NILREF));
+	RefVar cls(Scan());
+	UByte compressed;
+	long streamSize, nameLength, parametersSize, reserved;
+	*fPipe >> compressed;
+	*fPipe >> streamSize;
+	*fPipe >> nameLength;
+	*fPipe >> parametersSize;
+	*fPipe >> reserved;
+	char* name = nil;
+	void* parameters = nil;
+	if (nameLength != 0 && (name = (char*) malloc(nameLength + 1)) == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	if (parametersSize != 0 && (parameters = malloc(parametersSize)) == nil)
+	{
+		free(name);
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	}
+	NewtonErr err;
+	ULong id;
+	newton_try
+	{
+		Boolean eof;
+		if (nameLength != 0)
+		{
+			fPipe->ReadChunk(name, nameLength, eof);
+			name[nameLength] = 0;
+		}
+		if (parametersSize != 0)
+			fPipe->ReadChunk(parameters, parametersSize, eof);
+		err = CreateLargeObject(&id, fStore, fPipe, streamSize, false, name, parameters, parametersSize, nil, compressed);
+	}
+	newton_catch_all
+	{
+		free(name);
+		free(parameters);
+		rethrow;
+	}
+	end_try;
+	if (err != noErr)
+		Throw(exFrames, (void*) (Long) err, nil);
+	ULong address;
+	if ((err = MapLargeObject(&address, fStore, id, false)) != noErr)
+	{
+		DeleteLargeObject(fStore, id);
+		Throw(exFrames, (void*) (Long) err, nil);
+	}
+	obj = WrapLargeObject(fStore, cls, id, address);
+	fPrecedents->Replace(precedent, obj);
+	return obj;
 }

@@ -1009,18 +1009,7 @@ CanCreateLargeObjectsOnStore(TStore* store)
 }
 
 
-// ROM 0x002db388 SetupEphemeralTracker__FRC6RefVarUl
-// The store's ephemeral (uncommitted large object) tracker: NOT YET
-// RECONSTRUCTED (TEphemeralTracker) - a store without the large-object
-// capability has none, which is what the ROM answers too.
-NewtonErr
-SetupEphemeralTracker(RefArg storeObject, PSSId /*rootFrameId*/)
-{
-	TStoreWrapper* wrapper = (TStoreWrapper*) GetFrameSlotRef(storeObject, RSSYMstore);
-	if (!CanCreateLargeObjectsOnStore(wrapper->Store()))
-		return kNSErrNoLargeObjectsOnStore;
-	return kNSErrNoLargeObjectsOnStore;
-}
+// (SetupEphemeralTracker and the tracker itself: Ephemerals.cpp)
 
 
 void

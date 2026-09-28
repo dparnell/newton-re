@@ -107,6 +107,7 @@
 
 // evt.ex.fr.store (the names are inferred from the uses; the DDK has none)
 #define kNSErrUnknownStoreVersion		(ERRBASE_FRAMES - 1)	// MakeStoreObject: the root object's signature is not 'WALY'
+#define kNSErrNoEphemeralTracker		(ERRBASE_FRAMES - 2)	// LBAllocCompressed/WrapLargeObject: the store keeps no ephemeral tracker - it cannot hold large binaries (0xffff447e)
 #define kNSErrNewerStoreVersion			(ERRBASE_FRAMES - 3)	// MakeStoreObject: the root object's version is past this ROM's
 #define kNSErrBadStoreObject			(ERRBASE_FRAMES - 5)	// TStoreObjectReader: a tag that is none of the format's
 #define kNSErrEntryStoreGone			(ERRBASE_FRAMES - 7)	// FollowFaultBlock: the entry's store is gone (the ROM's 0xffff4479)

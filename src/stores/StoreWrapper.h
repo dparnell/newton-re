@@ -35,7 +35,7 @@
 #include "NodeCache.h"
 #endif
 
-class TEphemeralTracker;		// NOT YET RECONSTRUCTED (ephemeral soup entries)
+class TEphemeralTracker;		// the store's uncommitted large objects (Ephemerals.h)
 
 
 // The store's root object: what MakeStoreObject writes and reads back.

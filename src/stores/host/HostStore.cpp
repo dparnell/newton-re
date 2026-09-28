@@ -26,7 +26,10 @@
 #include <stdio.h>
 
 
-PROTOCOL_CLASSINFO(THostStore, "TStore", "", 0, 0, nil)
+// "LOBJ": large objects can be made on it, as on the flash store it stands
+// in for (TFlashStore's signature is "LOBJ; rom ; sram; flsh") - so it
+// keeps an ephemeral tracker and holds large binaries
+PROTOCOL_CLASSINFO(THostStore, "TStore", "LOBJ", 0, 0, nil)
 
 const long kHostStoreInitialCapacity = 64;
 

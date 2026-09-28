@@ -80,7 +80,7 @@ class TObjectReader
 {
 public:
 				TObjectReader(CPipe& pipe);
-				TObjectReader(CPipe& pipe, RefArg storeOrSoup);	// the store large binaries go to (NOT YET)
+				TObjectReader(CPipe& pipe, RefArg storeOrSoup);	// the store large binaries go to
 				~TObjectReader();
 
 	void		SetPrecedentsForReading(void);
@@ -97,7 +97,7 @@ public:
 	Ref			ReadSymbol(void);
 	Ref			ReadPrecedent(void);
 	Ref			ReadSmallRect(void);
-	Ref			ReadLargeBinary(void);					// NOT YET RECONSTRUCTED
+	Ref			ReadLargeBinary(void);					// made on fStore
 
 	TPrecedentsForReading*	fPrecedents;	// +0x00
 	CPipe*		fPipe;						// +0x04

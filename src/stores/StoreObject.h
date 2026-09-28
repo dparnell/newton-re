@@ -266,7 +266,7 @@ public:
 	PSSId		Write(void);					// ==> the object's id
 	void		Prescan(void);					// the sizes: the stream's, the text's
 	void		Scan(void);						// the stream written
-	void		WriteLargeBinary(void);			// NOT YET RECONSTRUCTED
+	void		WriteLargeBinary(void);			// tag 12
 	void		NextHintChunk(void);
 
 	RefStruct	fRootObject;			// +0x000
@@ -301,7 +301,7 @@ public:
 
 	Ref			Read(void);						// the object, with _uniqueID and _modTime for an entry
 	Ref			Scan(void);
-	Boolean		EachLargeObjectDo(Boolean (*fn)(TStoreWrapper*, PSSId, long, void*), void* refCon);	// NOT YET
+	Boolean		EachLargeObjectDo(Boolean (*fn)(TStoreWrapper*, PSSId, long, void*), void* refCon);	// fn(wrapper, id, classRef, refCon) for each large binary; ==> true when fn stopped it
 
 	long		fUniqueId;				// +0x000
 	long		fModTime;				// +0x004

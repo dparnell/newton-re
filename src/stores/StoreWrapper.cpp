@@ -6,11 +6,14 @@
 				and map tables on a store.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
-	NOT YET RECONSTRUCTED: TEphemeralTracker (fEphemeralTracker stays nil,
-	its calls are skipped as the ROM skips them when it is nil).
+	The ephemeral tracker (Ephemerals.h) is driven from here: a lock
+	starts it afresh, an unlock flushes it and deletes what it put off, an
+	abort aborts it.  A store that cannot hold large objects has none, and
+	its calls are skipped as the ROM skips them.
 */
 
 #include "StoreWrapper.h"
+#include "Ephemerals.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "RSSymbols.h"
@@ -392,20 +395,22 @@ TStoreWrapper::~TStoreWrapper()
 		delete fMapTable;
 	if (fSymbolTable != nil)
 		delete fSymbolTable;
-	// NOT YET RECONSTRUCTED: delete fEphemeralTracker
+	if (fEphemeralTracker != nil)
+		delete fEphemeralTracker;
 }
 
 
 // ROM 0x00353b50 Dirty__13TStoreWrapperFv
-// A change begins: the store locked (committed by SparklingClean) and the
-// flush asked for.
+// A change begins: the flush asked for and, unless a change is under way
+// already, the store locked (committed by SparklingClean).
 void
 TStoreWrapper::Dirty(void)
 {
 	AskForFlush(true);
+	if (fIsDirty)
+		return;
 	fIsDirty = true;
-	// NOT YET RECONSTRUCTED: fEphemeralTracker->LockEphemerals()
-	fStore->LockStore();
+	LockStore();
 }
 
 
@@ -415,9 +420,14 @@ TStoreWrapper::Dirty(void)
 void
 TStoreWrapper::SparklingClean(void)
 {
+	if (!fIsDirty)
+		return;
 	fIsDirty = false;
-	// NOT YET RECONSTRUCTED: fEphemeralTracker->FlushEphemerals(), DeletePendingEphemerals()
+	if (fEphemeralTracker != nil)
+		fEphemeralTracker->FlushEphemerals();
 	fStore->UnlockStore();
+	if (fEphemeralTracker != nil && fEphemeralTracker->PendingCount() != 0 && !fStore->IsLocked())
+		fEphemeralTracker->DeletePendingEphemerals();
 }
 
 
@@ -425,7 +435,8 @@ TStoreWrapper::SparklingClean(void)
 NewtonErr
 TStoreWrapper::LockStore(void)
 {
-	// NOT YET RECONSTRUCTED: fEphemeralTracker->LockEphemerals()
+	if (fEphemeralTracker != nil)
+		fEphemeralTracker->LockEphemerals();
 	return fStore->LockStore();
 }
 
@@ -434,8 +445,12 @@ TStoreWrapper::LockStore(void)
 NewtonErr
 TStoreWrapper::UnlockStore(void)
 {
-	// NOT YET RECONSTRUCTED: fEphemeralTracker->FlushEphemerals(), DeletePendingEphemerals()
-	return fStore->UnlockStore();
+	if (fEphemeralTracker != nil)
+		fEphemeralTracker->FlushEphemerals();
+	NewtonErr err = fStore->UnlockStore();
+	if (fEphemeralTracker != nil && fEphemeralTracker->PendingCount() != 0 && !fStore->IsLocked())
+		fEphemeralTracker->DeletePendingEphemerals();
+	return err;
 }
 
 
@@ -444,7 +459,8 @@ TStoreWrapper::UnlockStore(void)
 NewtonErr
 TStoreWrapper::Abort(void)
 {
-	// NOT YET RECONSTRUCTED: fEphemeralTracker->AbortEphemerals()
+	if (fEphemeralTracker != nil)
+		fEphemeralTracker->AbortEphemerals();
 	fNodeCache.Clear();
 	NewtonErr err = fStore->Abort();
 	if (fMapTable != nil)

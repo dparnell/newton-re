@@ -5,13 +5,15 @@
 				and StorePermObject/LoadPermObject/DeletePermObject
 				(StoreObject.h): frames objects to and from store objects.
 
+	A large binary in an object is tag 12: its large object's id and its
+	class reference, big-endian words (LargeBinaries.h: the writer
+	duplicates one that lives on another store or with another entry and
+	commits it; the reader loads it through gLBCache, or only lists its id).
+
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
-	NOT YET RECONSTRUCTED: large binaries (tag 12: LoadLargeBinary,
-	DuplicateLargeBinary, CommitLargeBinary, FinalizeLargeObjectWrites,
-	ZapLargeBinaries) - a large binary in an object to write, or met in an
-	object read, throws kNSErrNativeNotReconstructed; the word hints
-	(TWordHintsHandler: GetNumHintChunks, SetHints) - objects are written
-	with no hint chunks, and read with any number.
+	NOT YET RECONSTRUCTED: the word hints (TWordHintsHandler:
+	GetNumHintChunks, SetHints) - objects are written with no hint chunks,
+	and read with any number.
 */
 
 #include "StoreObject.h"
@@ -23,6 +25,8 @@
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
+#include "LargeBinaries.h"
+#include "DynamicArray.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -40,13 +44,6 @@ int						gDefaultHintsHandlerId = 0;			// 0x0c1024e8
 // (TWordHintsHandler is NOT YET), so the hints are never written and
 // TestObjHints answers true for every entry - the text is read instead.
 THintsHandler*			gHintsHandlers[kNumHintsHandlers] = { nil, nil };
-
-
-static void
-NotYetLargeBinaries(void)
-{
-	Throw(exStoreError, (void*) (Long) kNSErrNativeNotReconstructed, nil);
-}
 
 
 /* -------------------------------------------------------------------------------
@@ -597,6 +594,8 @@ TStoreObjectWriter::~TStoreObjectWriter()
 {
 	if (fHeader != nil && fHeader != fPipe.GetDataPtr(0))
 		delete[] fHeader;
+	if (fLargeBinaries != nil)
+		delete fLargeBinaries;
 	if (fPrecedents == gPrecedentsForWriting)
 	{
 		gPrecedentsForWritingUsed = false;
@@ -799,12 +798,37 @@ TStoreObjectWriter::Scan(void)
 
 
 // ROM 0x002de248 WriteLargeBinary__18TStoreObjectWriterFv
-// NOT YET RECONSTRUCTED: tag 12, the large binary's store object id and
-// size, duplicated onto this store when it lives elsewhere.
+// Tag 12: the large binary's large object id and class reference.  One on
+// another store - or held by another entry, or by an entry while a new
+// object is being written - is duplicated onto this store first.  Its id
+// is listed (the ids this object holds, for FinalizeLargeObjectWrites),
+// the entry being written becomes its entry, and it is committed.  (The
+// two words big-endian, the MessagePad's order.)
 void
 TStoreObjectWriter::WriteLargeBinary(void)
 {
-	NotYetLargeBinaries();
+	RefVar obj(fObject);
+	fHasLargeBinaries = true;
+	fLargeBinaryIsString = IsInstance(obj, RSSYMstring);
+	fPipe << (UByte) kSOLargeBinary;
+	LBData* lb = LargeBinaryData(obj);
+	if (lb->GetStore() != fWrapper
+	|| (lb->fEntry != NILREF && (fObjectId == (PSSId) -1 || !lb->IsSameEntry(fRootObject))))
+	{
+		obj = DuplicateLargeBinary(obj, fWrapper);
+		lb = LargeBinaryData(obj);
+		fDuplicatedLargeBinary = true;
+	}
+	if (fLargeBinaries == nil)
+		fLargeBinaries = new CDynamicArray;
+	StorePSSId id = (StorePSSId) lb->fId;
+	fLargeBinaries->InsertElementsBefore(fLargeBinaries->GetArraySize(), &id, 1);
+	lb->fEntry = fRootObject;
+	UByte words[8];
+	PutBigEndianWord(words, (ULong32) lb->fId);
+	PutBigEndianWord(words + 4, (ULong32) lb->fClassRef);
+	fPipe.Write((char*) words, 8);
+	CommitLargeBinary(obj);
 }
 
 
@@ -1100,8 +1124,30 @@ TStoreObjectReader::Scan(void)
 			return obj;
 		}
 	case kSOLargeBinary:
-		NotYetLargeBinaries();
-		return NILREF;
+		{
+			// its id and class reference; with a list to fill, only the id
+			// is noted (and nil stands in for it), otherwise it is loaded
+			// and belongs to the entry being read
+			UByte words[8];
+			fPipe.Read((char*) words, 8);
+			PSSId id = GetBigEndianWord(words);
+			long classRef = (long) (Long32) GetBigEndianWord(words + 4);
+			RefVar lb;
+			if (fLargeBinaries == nil)
+			{
+				lb = LoadLargeBinary(fWrapper, id, classRef);
+				LargeBinaryData(lb)->fEntry = fEntry;
+			}
+			else
+			{
+				if (*fLargeBinaries == nil)
+					*fLargeBinaries = new CDynamicArray;
+				StorePSSId word = (StorePSSId) id;
+				(*fLargeBinaries)->InsertElementsBefore((*fLargeBinaries)->GetArraySize(), &word, 1);
+			}
+			fPrecedents->Append(lb);
+			return lb;
+		}
 	default:
 		Throw(exStoreError, (void*) (Long) kNSErrBadStoreObject, nil);
 	}
@@ -1111,7 +1157,7 @@ TStoreObjectReader::Scan(void)
 
 // ROM 0x002df104 EachLargeObjectDo__18TStoreObjectReaderFPFP13TStoreWrapperUllPv_UcPv
 // The stream skipped through, fn called with each large binary's id and
-// size (NOT YET RECONSTRUCTED: one is met).
+// class reference; ==> true as soon as fn does.
 Boolean
 TStoreObjectReader::EachLargeObjectDo(Boolean (*fn)(TStoreWrapper*, PSSId, long, void*), void* refCon)
 {
@@ -1177,8 +1223,8 @@ TStoreObjectReader::EachLargeObjectDo(Boolean (*fn)(TStoreWrapper*, PSSId, long,
 			UByte bytes[8];
 			fPipe.Read((char*) bytes, 8);
 			PSSId id = ((ULong) bytes[0] << 24) | ((ULong) bytes[1] << 16) | ((ULong) bytes[2] << 8) | bytes[3];
-			long size = (long) (Long32) (((ULong32) bytes[4] << 24) | ((ULong32) bytes[5] << 16) | ((ULong32) bytes[6] << 8) | bytes[7]);
-			return fn(fWrapper, id, size, refCon);
+			long classRef = (long) (Long32) (((ULong32) bytes[4] << 24) | ((ULong32) bytes[5] << 16) | ((ULong32) bytes[6] << 8) | bytes[7]);
+			return fn(fWrapper, id, classRef, refCon);
 		}
 	default:
 		Throw(exStoreError, (void*) (Long) kNSErrBadStoreObject, nil);
@@ -1326,7 +1372,7 @@ CopyPermObject(PSSId id, TStoreWrapper* from, TStoreWrapper* to)
 // obj written to the store as object id (-1: a new one, whose id comes
 // back in id); the store must be writable.
 void
-StorePermObject(RefArg obj, TStoreWrapper* wrapper, PSSId& id, CDynamicArray* /*largeBinaries*/, Boolean* duplicatedLargeBinary)
+StorePermObject(RefArg obj, TStoreWrapper* wrapper, PSSId& id, CDynamicArray* largeBinaries, Boolean* duplicatedLargeBinary)
 {
 	if (wrapper == nil)
 		Throw(exStoreError, (void*) (Long) kNSErrEntryStoreGone, nil);
@@ -1338,13 +1384,35 @@ StorePermObject(RefArg obj, TStoreWrapper* wrapper, PSSId& id, CDynamicArray* /*
 	id = writer.Write();
 	if (duplicatedLargeBinary != nil)
 		*duplicatedLargeBinary = writer.fDuplicatedLargeBinary;
-	// NOT YET RECONSTRUCTED: FinalizeLargeObjectWrites when the wrapper has an ephemeral tracker
+	if (wrapper->fEphemeralTracker != nil)
+		FinalizeLargeObjectWrites(wrapper, largeBinaries, writer.fLargeBinaries);
+}
+
+
+// ROM 0x002dfab0 ZapLargeObject__FP13TStoreWrapperUllPv
+// EachLargeObjectDo's callback for an object being deleted: its large
+// binary deleted (or made ephemeral again, while one is in memory).
+static Boolean
+ZapLargeObject(TStoreWrapper* wrapper, PSSId id, long /*classRef*/, void* /*refCon*/)
+{
+	DeleteLargeBinary(wrapper, id);
+	return false;
+}
+
+
+// ROM 0x002dfac8 ZapLargeBinaries__FP13TStoreWrapperUl
+// Every large binary store object id holds deleted.
+static void
+ZapLargeBinaries(TStoreWrapper* wrapper, PSSId id)
+{
+	TStoreObjectReader reader(wrapper, id, nil);
+	reader.EachLargeObjectDo(ZapLargeObject, nil);
 }
 
 
 // ROM 0x002dfb54 DeletePermObject__FP13TStoreWrapperUl
-// The store object and its text object deleted (and, NOT YET, its large
-// binaries zapped).
+// The store object and its text object deleted, and its large binaries
+// with it.
 void
 DeletePermObject(TStoreWrapper* wrapper, PSSId id)
 {
@@ -1353,7 +1421,7 @@ DeletePermObject(TStoreWrapper* wrapper, PSSId id)
 	StoreObjectHeader header;
 	header.ReadFrom(headerBytes);
 	if (header.fFlags & kSOFlagsHasLargeBinaries)
-		NotYetLargeBinaries();
+		ZapLargeBinaries(wrapper, id);
 	OSErrIf(wrapper->Store()->DeleteObject(id));
 	if (header.fTextBlockId != 0)
 		OSErrIf(wrapper->Store()->DeleteObject(header.fTextBlockId));
@@ -1501,14 +1569,34 @@ TestObjHints(const char* hints, long count, TStoreWrapper* wrapper, PSSId id)
 }
 
 
+// what WithPermObjectTextDo hands CallLargeObjectTextProc (on the ROM's
+// stack: the callback and its refCon)
+struct LargeObjectTextProc
+{
+	ObjTextProcPtr	fProc;
+	void*			fRefCon;
+};
+
+
 // ROM 0x002dff30 CallLargeObjectTextProc__FP13TStoreWrapperUllPv
 // A large binary of an entry offered to the text callback, but only when
-// it is a string.
-//
-// NOT YET RECONSTRUCTED: large binaries themselves (tag 12,
-// LoadLargeBinary) and TStoreObjectReader::EachLargeObjectDo, so nothing
-// reaches this; an entry with a long string in it is searched only over
-// the text object beside it.
+// it is a string.  DEVIATION: its characters are handed over as they lie
+// in its bytes, which on the host are the host's order - a large binary
+// is written through its data pointer by the program, not by the store's
+// writer, so there is no MessagePad order to turn round.
+static Boolean
+CallLargeObjectTextProc(TStoreWrapper* wrapper, PSSId id, long classRef, void* refCon)
+{
+	RefVar cls(wrapper->ReferenceToSymbol(classRef));
+	if (!IsSubclass(cls, RSSYMstring))
+		return false;
+	RefVar lb(LoadLargeBinary(wrapper, id, classRef));
+	LargeObjectTextProc* call = (LargeObjectTextProc*) refCon;
+	LockRef(lb);
+	Boolean stop = call->fProc((UniChar*) BinaryData(lb), (long) ((ULong) Length(lb) >> 1), call->fRefCon);
+	UnlockRef(lb);
+	return stop;
+}
 
 // ROM 0x002e0008 WithPermObjectTextDo__FP13TStoreWrapperUlPFPUslPv_UcPvPPv
 // All of an entry's text handed to a callback: first the text object
@@ -1554,7 +1642,11 @@ WithPermObjectTextDo(TStoreWrapper* wrapper, PSSId id, ObjTextProcPtr proc, void
 			return true;
 	}
 
-	// NOT YET RECONSTRUCTED: the entry's large binaries, which the ROM
-	// walks here when its flags say one of them is a string.
-	return false;
+	// then the entry's large binaries, when its flags say one of them is a
+	// string
+	if ((header.fFlags & kSOFlagsLargeBinaryIsString) == 0)
+		return false;
+	TStoreObjectReader reader(wrapper, id, nil);
+	LargeObjectTextProc call = { proc, refCon };
+	return reader.EachLargeObjectDo(CallLargeObjectTextProc, &call);
 }

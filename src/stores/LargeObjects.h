@@ -40,9 +40,9 @@
 				compander's own large-object store implements; none is
 				registered on the host, so the defaults are used),
 				LODefCreateFromComp/FillChunkArrayCompressed (an object
-				made from already-compressed blocks), duplicating
-				(DuplicateLargeObject over DuplicatePackageData), backups
-				(LODefaultBackup, TLOCallback), a package kept as a large
+				made from already-compressed blocks - so a large binary
+				streamed compressed cannot be read back yet), the progress
+				callback (TLOCallback), a package kept as a large
 				object (ObjectSize's package case, DeallocatePackage), the
 				XIP requests.
 
@@ -156,5 +156,20 @@ long		GetPagesSize(TStore* store, PSSId chunkArrayId);				// ROM 0x00102370 GetP
 NewtonErr	DeleteLargeObject(TStore* store, PSSId id);					// ROM 0x00103b3c DeleteLargeObject__FP6TStoreUl
 NewtonErr	LODeleteByProtocol(TStore* store, PSSId id);					// ROM 0x00103adc LODeleteByProtocol__FP6TStoreUl
 NewtonErr	LODefaultDelete(TStore* store, PSSId id);						// ROM 0x0010231c LODefaultDelete__FP6TStoreUl - nothing
+
+// The compander's parameters
+NewtonErr	LOCompanderParameterSize(TStore* store, PSSId id, long* size);	// ROM 0x001014bc LOCompanderParameterSize__FP6TStoreUlPl
+NewtonErr	LOCompanderParameters(TStore* store, PSSId id, void* parameters);	// ROM 0x00101530 LOCompanderParameters__FP6TStoreUlPv
+
+// Written to a pipe (the object streamer's large binaries)
+long		LOSizeOfStream(TStore* store, PSSId id, UChar compressed);		// ROM 0x00102d38 LOSizeOfStream__FP6TStoreUlUc
+NewtonErr	LOWrite(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback);	// ROM 0x00102e44 LOWrite__FP5CPipeP6TStoreUlUcP11TLOCallback
+long		LODefaultStreamSize(TStore* store, PSSId id, UChar compressed);	// ROM 0x001024fc LODefaultStreamSize__FP6TStoreUlUc
+NewtonErr	LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback);	// ROM 0x00102608 LODefaultBackup__FP5CPipeP6TStoreUlUcP11TLOCallback
+
+// Duplicating
+NewtonErr	DuplicateLargeObject(PSSId* newId, TStore* store, PSSId id, TStore* toStore);	// ROM 0x001035d4 DuplicateLargeObject__FPUlP6TStoreUlT2
+NewtonErr	LODefaultDuplicate(PSSId* newId, TStore* store, PSSId id, TStore* toStore);	// ROM 0x00102320 LODefaultDuplicate__FPUlP6TStoreUlT2 - flushed, then copied object by object
+NewtonErr	DuplicatePackageData(TStore* store, PSSId id, TStore* toStore, PSSId* newId, Boolean separately);	// ROM 0x0016245c DuplicatePackageData__FP6TStoreUlT1PUlUc
 
 #endif	/* __LARGEOBJECTS_H */

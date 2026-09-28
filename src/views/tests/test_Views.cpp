@@ -15,6 +15,7 @@
 #include "TextView.h"
 #include "ParagraphView.h"
 #include "Hilites.h"
+#include "LargeBinaries.h"
 #include "ContainerView.h"
 #include "EditView.h"
 #include "Ink.h"

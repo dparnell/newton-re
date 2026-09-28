@@ -85,8 +85,8 @@ const TSortingTable*	StoreGetDirSortTable(RefArg storeObject);	// NOT YET: nil
 void	InitNameIndex(TSoupIndex* index, RefArg storeObject);		// the store's soup name index
 void	StoreSaveSortTable(RefArg storeObject, long sortId);			// NOT YET
 void	StoreRemoveSortTable(RefArg storeObject, long sortId);			// NOT YET
-void	LargeBinariesStoreRemoved(TStoreWrapper* wrapper);				// NOT YET
-void	AbortLargeBinaries(RefArg entry);								// NOT YET
+void	LargeBinariesStoreRemoved(TStoreWrapper* wrapper);				// (LargeBinaries.cpp)
+void	AbortLargeBinaries(RefArg entry);								// (LargeBinaries.cpp)
 
 // the store frame's methods (the receiver is the store frame)
 Ref		StoreGetName(RefArg rcvr);

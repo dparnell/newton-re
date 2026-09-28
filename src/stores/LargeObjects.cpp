@@ -629,6 +629,425 @@ LOCompanderName(char** name, TStore* store, PSSId id)
 }
 
 
+// ROM 0x001014bc LOCompanderParameterSize__FP6TStoreUlPl
+// The size of the compander's parameters (0 when it was made with none).
+NewtonErr
+LOCompanderParameterSize(TStore* store, PSSId id, long* size)
+{
+	UByte root[0x14];
+	memset(root, 0, sizeof(root));
+	*size = 0;
+	NewtonErr err = store->Read(id, 0, (char*) root, 0x14);
+	PSSId paramsId = GetBigEndianWord(root + kLORootCompanderParams);
+	if (err == noErr && paramsId != 0)
+		err = store->GetObjectSize(paramsId, size);
+	return err;
+}
+
+
+// ROM 0x00101530 LOCompanderParameters__FP6TStoreUlPv
+// The compander's parameters, into parameters (LOCompanderParameterSize
+// bytes of room).
+NewtonErr
+LOCompanderParameters(TStore* store, PSSId id, void* parameters)
+{
+	UByte root[0x14];
+	memset(root, 0, sizeof(root));
+	long size;
+	NewtonErr err = store->Read(id, 0, (char*) root, 0x14);
+	PSSId paramsId = GetBigEndianWord(root + kLORootCompanderParams);
+	if (err == noErr && paramsId != 0 && (err = store->GetObjectSize(paramsId, &size)) == noErr)
+		err = store->Read(paramsId, 0, (char*) parameters, size);
+	return err;
+}
+
+
+/*------------------------------------------------------------------------------
+	W r i t i n g   o n e   t o   a   p i p e
+	(the object streamer's large binaries: the NSOF writer asks how many
+	bytes one will take and then has it written)
+------------------------------------------------------------------------------*/
+
+// ROM 0x00102d38 LOSizeOfStream__FP6TStoreUlUc
+// How many bytes LOWrite would write (compressed: as the blocks lie on the
+// store).  (No TLrgObjStore on the host: NewByName never finds one.)
+//
+// ROM BUG kept: a compander that is not registered answers an error with
+// the name's block not given back.
+long
+LOSizeOfStream(TStore* store, PSSId id, UChar compressed)
+{
+	char* name = nil;
+	NewtonErr err = LOCompanderName(&name, store, id);
+	if (err != noErr)
+		return 0;
+	if (ClassInfoByName("TStoreCompander", name) == nil)
+		return kError_Bad_Parameters;
+	free(name);
+	return LODefaultStreamSize(store, id, compressed);
+}
+
+
+// ROM 0x00102e44 LOWrite__FP5CPipeP6TStoreUlUcP11TLOCallback
+// The large object written to pipe (compressed: its blocks as they lie).
+// (No TLrgObjStore on the host.)  ROM BUG kept: as LOSizeOfStream, an
+// unregistered compander leaves the name's block behind.
+NewtonErr
+LOWrite(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback)
+{
+	char* name = nil;
+	NewtonErr err = LOCompanderName(&name, store, id);
+	if (err != noErr)
+	{
+		free(name);
+		return err;
+	}
+	if (ClassInfoByName("TStoreCompander", name) == nil)
+		return kError_Bad_Parameters;
+	free(name);
+	return LODefaultBackup(pipe, store, id, compressed, callback);
+}
+
+
+// ROM 0x001024fc LODefaultStreamSize__FP6TStoreUlUc
+// Uncompressed: the object's size (mapped read-only for the asking when it
+// was not mapped).  Compressed: the blocks as they lie on the store, a
+// size word before each, and two words in front (0 when the store cannot
+// say).
+long
+LODefaultStreamSize(TStore* store, PSSId id, UChar compressed)
+{
+	if (!compressed)
+	{
+		ULong address;
+		Boolean mapped = false;
+		if (StoreToVAddr(&address, store, id) != noErr)
+		{
+			if (MapLargeObject(&address, store, id, true) != noErr)
+				return 0;
+			mapped = true;
+		}
+		long size = ObjectSize(address);
+		if (mapped)
+			UnmapLargeObject(address);
+		return size;
+	}
+	UByte root[0x14];
+	memset(root, 0, sizeof(root));
+	long arraySize;
+	if (store->Read(id, 0, (char*) root, 0x14) != noErr
+	|| store->GetObjectSize(GetBigEndianWord(root + kLORootChunkArray), &arraySize) != noErr)
+		return 0;
+	return GetPagesSize(store, GetBigEndianWord(root + kLORootChunkArray)) + (long) (((ULong) arraySize >> 2) << 2) + 8;
+}
+
+
+// ROM 0x00102608 LODefaultBackup__FP5CPipeP6TStoreUlUcP11TLOCallback
+// The object written to pipe.  Uncompressed: its bytes (mapped read-only
+// for the writing when they were not).  Compressed: the root's flags word
+// and the object's size, then every block as it lies on the store with its
+// size before it (words big-endian; the progress callback is NOT YET).
+// A pipe exception becomes the answer.
+NewtonErr
+LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* /*callback*/)
+{
+	char* block = NewPtr(0x520);
+	NewtonErr err = MemError();
+	if (err != noErr)
+		return err;
+	ULong address;
+	Boolean mapped = false;
+	if ((err = StoreToVAddr(&address, store, id)) != noErr)
+	{
+		if ((err = MapLargeObject(&address, store, id, true)) != noErr)
+		{
+			DisposePtr(block);
+			return err;
+		}
+		mapped = true;
+	}
+	long size = ObjectSize(address);
+	if (!compressed)
+	{
+		newton_try
+		{
+			pipe->WriteChunk((const void*) address, size, false);
+		}
+		newton_catch(exPipeException)
+		{
+			err = (NewtonErr) (Long) CurrentException()->data;
+		}
+		end_try;
+	}
+	else
+	{
+		UByte root[0x14];
+		memset(root, 0, sizeof(root));
+		long arraySize;
+		if ((err = store->Read(id, 0, (char*) root, 0x14)) != noErr
+		|| (err = store->GetObjectSize(GetBigEndianWord(root + kLORootChunkArray), &arraySize)) != noErr)
+		{
+			DisposePtr(block);
+			return err;
+		}
+		long count = (long) ((ULong) arraySize >> 2);
+		newton_try
+		{
+			UByte word[4];
+			pipe->WriteChunk(root + kLORootFlags, 4, false);
+			PutBigEndianWord(word, (ULong32) size);
+			pipe->WriteChunk(word, 4, false);
+		}
+		newton_catch(exPipeException)
+		{
+			err = (NewtonErr) (Long) CurrentException()->data;
+		}
+		end_try;
+		if (err != noErr)
+		{
+			DisposePtr(block);
+			return err;
+		}
+		for (long i = 0; i < count; i++)
+		{
+			UByte idWord[4];
+			long blockSize;
+			if ((err = store->Read(GetBigEndianWord(root + kLORootChunkArray), i * 4, (char*) idWord, 4)) != noErr
+			|| (err = store->GetObjectSize(GetBigEndianWord(idWord), &blockSize)) != noErr
+			|| (err = store->Read(GetBigEndianWord(idWord), 0, block, blockSize)) != noErr)
+			{
+				DisposePtr(block);
+				return err;
+			}
+			newton_try
+			{
+				UByte word[4];
+				PutBigEndianWord(word, (ULong32) blockSize);
+				pipe->WriteChunk(word, 4, false);
+				pipe->WriteChunk(block, blockSize, false);
+			}
+			newton_catch(exPipeException)
+			{
+				err = (NewtonErr) (Long) CurrentException()->data;
+			}
+			end_try;
+			if (err != noErr)
+			{
+				DisposePtr(block);
+				return err;
+			}
+			// NOT YET RECONSTRUCTED: the progress callback (TLOCallback, told
+			// {size, bytes so far} each time its chunk's worth has gone);
+			// nothing on the host passes one
+		}
+	}
+	if (mapped)
+		UnmapLargeObject(address);
+	DisposePtr(block);
+	return err;
+}
+
+
+/*------------------------------------------------------------------------------
+	D u p l i c a t i n g
+------------------------------------------------------------------------------*/
+
+// ROM 0x001035d4 DuplicateLargeObject__FPUlP6TStoreUlT2
+// A copy of large object id of store, made on toStore; *newId its root.
+// (No TLrgObjStore on the host: GetLOAllocator never finds one, so the
+// default duplicator is used.)
+NewtonErr
+DuplicateLargeObject(PSSId* newId, TStore* store, PSSId id, TStore* toStore)
+{
+	return LODefaultDuplicate(newId, store, id, toStore);
+}
+
+
+// ROM 0x00102320 LODefaultDuplicate__FPUlP6TStoreUlT2
+// The object flushed, then its store objects copied one by one, each made
+// within the store's current transaction.
+NewtonErr
+LODefaultDuplicate(PSSId* newId, TStore* store, PSSId id, TStore* toStore)
+{
+	NewtonErr err = FlushLargeObject(store, id);
+	if (err != noErr)
+		return err;
+	return DuplicatePackageData(store, id, toStore, newId, true);
+}
+
+
+// ROM 0x001621ec (unnamed)
+// A new object on store, made within its current transaction when
+// separately (so SeparatelyAbort can take it back on its own).
+static NewtonErr
+NewPackageObject(TStore* store, long size, PSSId* id, Boolean separately)
+{
+	if (separately)
+		return store->NewWithinTransaction(size, id);
+	return store->NewObject(size, id);
+}
+
+
+// ROM 0x001621f8 CopyPackageData__FP11PackageRootP6TStoreT2Uc
+// The chunk array of the root and every block it names copied from store
+// to toStore (a block is at most 0x524 bytes: 0x400 compressed, and what a
+// compander adds); the root's chunk array id changed to the copy's.  On
+// failure, with separately, the objects made are taken back.  The chunk
+// array's ids are big-endian words, as on the MessagePad.
+static NewtonErr
+CopyPackageData(UByte* root, TStore* store, TStore* toStore, Boolean separately)
+{
+	ULong made = 0;
+	char* block = nil;
+	UByte* newIds = nil;
+	UByte* ids = nil;
+	PSSId newArrayId = 0;
+	long arraySize;
+	ULong count = 0;
+	NewtonErr err = store->GetObjectSize(GetBigEndianWord(root + kLORootChunkArray), &arraySize);
+	if (err == noErr && (err = NewPackageObject(toStore, arraySize, &newArrayId, separately)) == noErr)
+	{
+		count = (ULong) arraySize >> 2;
+		ids = (UByte*) NewPtr(count << 2);
+		err = MemError();
+		if (err == noErr)
+		{
+			newIds = (UByte*) NewPtr(count << 2);
+			err = MemError();
+			if (err == noErr
+			&& (err = store->Read(GetBigEndianWord(root + kLORootChunkArray), 0, (char*) ids, count << 2)) == noErr)
+			{
+				block = NewPtr(0x524);
+				for ( ; made < count; made++)
+				{
+					long size;
+					PSSId blockId = GetBigEndianWord(ids + made * 4);
+					if ((err = store->GetObjectSize(blockId, &size)) != noErr)
+						break;
+					if (size > 0x524)
+					{
+						err = kError_No_Memory;
+						break;
+					}
+					PSSId newBlockId;
+					if ((err = NewPackageObject(toStore, size, &newBlockId, separately)) != noErr
+					|| (err = store->Read(blockId, 0, block, size)) != noErr
+					|| (err = toStore->Write(newBlockId, 0, block, size)) != noErr)
+						break;
+					PutBigEndianWord(newIds + made * 4, (ULong32) newBlockId);
+				}
+				if (err == noErr && (err = toStore->Write(newArrayId, 0, (char*) newIds, count << 2)) == noErr)
+					PutBigEndianWord(root + kLORootChunkArray, (ULong32) newArrayId);
+			}
+		}
+	}
+	if (err != noErr && separately)
+	{
+		if (newArrayId != 0)
+			toStore->SeparatelyAbort(newArrayId);
+		for (ULong i = 0; i < made; i++)
+			if (toStore->SeparatelyAbort(GetBigEndianWord(newIds + i * 4)) != noErr)
+				break;
+	}
+	if (block != nil)
+		DisposePtr(block);
+	if (newIds != nil)
+		DisposePtr((Ptr) newIds);
+	if (ids != nil)
+		DisposePtr((Ptr) ids);
+	return err;
+}
+
+
+// ROM 0x0016245c DuplicatePackageData__FP6TStoreUlT1PUlUc
+// A copy of the large object (or package: kind 1) at id: its root, the
+// compander's name (written without its terminator, as the ROM does),
+// the compander's parameters and the blocks.  Not separately, the copy is
+// made under a lock of toStore of its own and an error aborts toStore;
+// separately, the objects made are taken back one by one.  ==> the new
+// root in *newId.
+NewtonErr
+DuplicatePackageData(TStore* store, PSSId id, TStore* toStore, PSSId* newId, Boolean separately)
+{
+	PSSId newRootId = 0, newParamsId = 0, newNameId = 0;
+	char* name = nil;
+	char* params = nil;
+	UByte root[kLargeObjectRootSize];
+	memset(root, 0, sizeof(root));
+	NewtonErr err = store->Read(id, 0, (char*) root, 0x14);
+	if (err == noErr)
+	{
+		ULong kind = GetBigEndianWord(root + kLORootFlags) & 0xffff;
+		Boolean largeObject = (kind == 2);
+		long rootSize = largeObject ? 0x20 : 0x14;
+		if (kind > 2)
+			err = kError_Bad_Package;
+		else if ((!largeObject || (err = store->Read(id, 0, (char*) root, 0x20)) == noErr))
+		{
+			long nameSize;
+			PSSId nameId = GetBigEndianWord(root + kLORootCompanderName);
+			if ((err = store->GetObjectSize(nameId, &nameSize)) == noErr)
+			{
+				name = NewPtr(nameSize + 1);
+				err = MemError();
+				if (err == noErr && (err = store->Read(nameId, 0, name, nameSize)) == noErr)
+				{
+					name[nameSize] = 0;
+					if (!separately)
+						toStore->LockStore();
+					if ((err = NewPackageObject(toStore, rootSize, &newRootId, separately)) == noErr
+					&& (err = NewPackageObject(toStore, strlen(name), &newNameId, separately)) == noErr
+					&& (err = toStore->Write(newNameId, 0, name, strlen(name))) == noErr)
+					{
+						PutBigEndianWord(root + kLORootCompanderName, (ULong32) newNameId);
+						PSSId paramsId = GetBigEndianWord(root + kLORootCompanderParams);
+						if (paramsId != 0)
+						{
+							long paramsSize;
+							if ((err = store->GetObjectSize(paramsId, &paramsSize)) == noErr)
+							{
+								params = NewPtr(paramsSize);
+								err = MemError();
+								if (err == noErr
+								&& (err = NewPackageObject(toStore, paramsSize, &newParamsId, separately)) == noErr
+								&& (err = store->Read(paramsId, 0, params, paramsSize)) == noErr
+								&& (err = toStore->Write(newParamsId, 0, params, paramsSize)) == noErr)
+									PutBigEndianWord(root + kLORootCompanderParams, (ULong32) newParamsId);
+							}
+						}
+						if (err == noErr
+						&& (err = CopyPackageData(root, store, toStore, separately)) == noErr
+						&& (err = toStore->Write(newRootId, 0, (char*) root, rootSize)) == noErr
+						&& !separately)
+							err = toStore->UnlockStore();
+					}
+				}
+			}
+		}
+	}
+	if (err != noErr)
+	{
+		if (separately)
+		{
+			if (newRootId != 0)
+				toStore->SeparatelyAbort(newRootId);
+			if (newParamsId != 0)
+				toStore->SeparatelyAbort(newParamsId);
+			if (newNameId != 0)
+				toStore->SeparatelyAbort(newNameId);
+		}
+		else
+			toStore->Abort();
+	}
+	if (name != nil)
+		DisposePtr(name);
+	if (params != nil)
+		DisposePtr(params);
+	*newId = newRootId;
+	return err;
+}
+
+
 // ROM 0x00102370 GetPagesSize__FP6TStoreUl
 // The block objects' sizes, together.
 long

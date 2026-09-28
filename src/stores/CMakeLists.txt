@@ -24,6 +24,8 @@ add_library(stores STATIC
 	StoreCompander.cpp
 	LargeObjects.cpp
 	host/HostLargeObjects.cpp
+	LargeBinaries.cpp
+	Ephemerals.cpp
 	PackageStorePartHandler.cpp
 )
 # package_manager: the package store's part handler (a TPartHandler)

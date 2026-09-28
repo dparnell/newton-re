@@ -32,3 +32,8 @@ target_link_libraries(test_LargeObjects PRIVATE stores os600_kernel os600_user)
 add_test(NAME stores.LargeObjects COMMAND test_LargeObjects)
 set_tests_properties(stores.LargeObjects PROPERTIES TIMEOUT 60)
 
+
+add_executable(test_LargeBinaries test_LargeBinaries.cpp)
+target_link_libraries(test_LargeBinaries PRIVATE stores os600_kernel os600_user)
+add_test(NAME stores.LargeBinaries COMMAND test_LargeBinaries)
+set_tests_properties(stores.LargeBinaries PROPERTIES TIMEOUT 60)

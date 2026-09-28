@@ -26,6 +26,7 @@
 #include "Rerecognize.h"
 #include "DrawShape.h"
 #include "Soups.h"
+#include "LargeBinaries.h"
 #include "Text.h"
 #include "Pictures.h"
 #include "Screen.h"
