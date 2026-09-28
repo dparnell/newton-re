@@ -23,6 +23,7 @@ add_library(stores STATIC
 	ObjectStreamer.cpp
 	StoreCompander.cpp
 	LargeObjects.cpp
+	PackageObjects.cpp
 	host/HostLargeObjects.cpp
 	LargeBinaries.cpp
 	Ephemerals.cpp

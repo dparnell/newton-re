@@ -170,9 +170,10 @@ TestLargeBinaries(void)
 	EXPECT(Holds(clone, 7000, 2));
 
 	// one no entry takes: on the store's list of ephemerals, and taken off it
-	// (deleted) when the store comes back.  (DeleteLargeObject's default,
-	// LODefaultDelete, does nothing in the ROM - a compander's own
-	// TLrgObjStore would take the blocks back - so its objects stay.)
+	// when the store comes back.  (Here the store is taken away before the
+	// list has been written back, so the orphan was never on the store's
+	// own list and stays; one on it would be deleted by DeleteLargeObject's
+	// default, LODefaultDelete - DeallocatePackage.)
 	RefVar orphan(Eval("theStore:NewCompressedVBO('orphan, 1234, nil, nil)"));
 	PSSId orphanId = LargeBinaryData(orphan)->fId;
 	EXPECT(ObjectExists(store, orphanId));
@@ -184,6 +185,7 @@ TestLargeBinaries(void)
 	storeObject = RegisterTStore(store);
 	wrapper = GetStoreWrapper(storeObject);
 	EXPECT(!wrapper->fEphemeralTracker->IsEphemeral(orphanId));
+	EXPECT(ObjectExists(store, orphanId));
 	SetGlobal("theStore", storeObject);
 	RefVar again(Eval("local c := Query(theStore:GetSoup(\"Samples\"), {}); c:Entry()"));
 	EXPECT(IsFaultBlock(again));

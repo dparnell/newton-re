@@ -30,6 +30,18 @@
 				    unmapped, as the ROM's abort ends the session;
 				  - unmap: the block let go (nothing written).
 
+				A package kept on a store (a root of kind 1) is mapped the
+				way TROMDomainManager1K::AddPackage (0x001add00) and
+				DecompressAndMap (0x001af024) do it, through the
+				TStoreDecompressor its root names (given the shared LZ
+				buffer when it is one of the LZ ones, else the root's
+				parameters): every 0x400-byte page of the index table read
+				in turn, as TStoreCompanderWrapper::Read does, at
+				kHostPageNotRelocated (StoreCompander.h) - the package's
+				bytes as they were written.  A package is read-only.  The
+				package manager's id for it (kRDMSetPackageId) answers the
+				package-id requests (5, 6, 7).
+
 				A different domain manager - a real one over an MMU - takes
 				the place of this file alone: LargeObjects.cpp talks to it
 				only through ROMDomainUserRequest.
@@ -53,7 +65,8 @@ struct MappedObject
 	PSSId				fId;
 	char*				fData;			// the object, whole
 	long				fSize;
-	TStoreCompander*	fCompander;
+	TStoreCompander*	fCompander;		// a large object's
+	TStoreDecompressor*	fDecompressor;	// a package's
 	ULong				fPackageId;
 	Boolean				fReadOnly;
 };
@@ -103,7 +116,48 @@ Forget(long index)
 	free(entry->fData);
 	if (entry->fCompander != nil)
 		entry->fCompander->Delete();
+	if (entry->fDecompressor != nil)
+		entry->fDecompressor->Delete();
 	gMapped[index] = gMapped[--gMappedCount];
+}
+
+
+// a package read whole, page by page, through the decompressor its root
+// names (AddPackage, then DecompressAndMap for every page)
+NewtonErr
+LoadPackage(MappedObject* entry, const UByte* root, char* name)
+{
+	TStore* store = entry->fStore;
+	ULong parameter = GetBigEndianWord(root + kLORootCompanderParams);
+	if (strcmp(name, "TLZStoreDecompressor") == 0 || strcmp(name, "TLZRelocStoreDecompressor") == 0)
+	{
+		char* buffer = nil;
+		GetSharedLZObjects(nil, nil, &buffer, nil);
+		parameter = (ULong) buffer;
+	}
+	entry->fDecompressor = TStoreDecompressor::New(name);
+	free(name);
+	if (entry->fDecompressor == nil)
+		return kError_Bad_Parameters;
+	NewtonErr err = entry->fDecompressor->Init(store, parameter);
+	if (err != noErr)
+		return err;
+	PSSId indexId = GetBigEndianWord(root + kLORootChunkArray);
+	long indexSize = 0;
+	if ((err = store->GetObjectSize(indexId, &indexSize)) != noErr)
+		return err;
+	entry->fReadOnly = true;
+	entry->fSize = (indexSize >> 2) << 10;
+	entry->fData = (char*) calloc(entry->fSize > 0 ? entry->fSize : 1, 1);
+	if (entry->fData == nil)
+		return kError_No_Memory;
+	for (long offset = 0; offset < entry->fSize && err == noErr; offset += kCompanderBlockSize)
+	{
+		UByte word[4];
+		if ((err = store->Read(indexId, (offset >> 10) << 2, (char*) word, 4)) == noErr)
+			err = entry->fDecompressor->Read(GetBigEndianWord(word), entry->fData + offset, kCompanderBlockSize, kHostPageNotRelocated);
+	}
+	return err;
 }
 
 
@@ -119,6 +173,8 @@ Load(MappedObject* entry)
 	char* name = nil;
 	if ((err = LOCompanderName(&name, entry->fStore, entry->fId)) != noErr)
 		return err;
+	if ((GetBigEndianWord(root + kLORootFlags) & 0xffff) == 1)
+		return LoadPackage(entry, root, name);
 	entry->fCompander = TStoreCompander::New(name);
 	free(name);
 	if (entry->fCompander == nil)
@@ -235,11 +291,13 @@ Commit(long index)
 	if (err == noErr)
 	{
 		JoinStoreTransaction(entry);
-		entry->fCompander->DoTransactionAgainst(2, 0);
+		if (entry->fCompander != nil)
+			entry->fCompander->DoTransactionAgainst(2, 0);
 	}
 	else
 	{
-		entry->fCompander->DoTransactionAgainst(1, 0);
+		if (entry->fCompander != nil)
+			entry->fCompander->DoTransactionAgainst(1, 0);
 		Forget(index);
 	}
 	return err;
@@ -249,7 +307,8 @@ Commit(long index)
 void
 Abort(long index)
 {
-	gMapped[index].fCompander->DoTransactionAgainst(1, 0);
+	if (gMapped[index].fCompander != nil)
+		gMapped[index].fCompander->DoTransactionAgainst(1, 0);
 	Forget(index);
 }
 
@@ -312,6 +371,23 @@ ROMDomainUserRequest(long selector, RDMParams* params)
 		if (index < 0)
 			return kError_No_Such_Package;
 		gMapped[index].fPackageId = params->fPackageId;
+		return noErr;
+
+	case kRDMIdToStore:
+	case kRDMIdToVAddr:
+		index = params->fPackageId != 0 ? FindPackage(params->fPackageId) : -1;
+		if (index < 0)
+			return kError_No_Such_Package;
+		params->fStore = gMapped[index].fStore;
+		params->fObjectId = gMapped[index].fId;
+		params->fAddress = (ULong) gMapped[index].fData;
+		return noErr;
+
+	case kRDMStoreToId:
+		index = FindObject(params->fStore, params->fObjectId);
+		if (index < 0 || gMapped[index].fPackageId == 0)
+			return kError_No_Such_Package;
+		params->fPackageId = gMapped[index].fPackageId;
 		return noErr;
 
 	case kRDMFlush:

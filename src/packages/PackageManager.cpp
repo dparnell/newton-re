@@ -21,6 +21,7 @@
 #include "OSErrors.h"
 #include "PartPipe.h"
 #include "RingBuffer.h"
+#include "LargeObjects.h"		// the ROM domain manager (a package on a store)
 
 extern const ExceptionName exPipeException;
 
@@ -1109,12 +1110,13 @@ DeregisterLoadedCodeWithDebugger(ULong /*packageId*/)
 // taking the manager's part events), the begin-load event sent under
 // gPackageSemaphore with the world's mutex let go meanwhile.  ==> the
 // manager's answer; the package's id (0 when it was only dispatched),
-// whether it was only dispatched, whether a patch went in.
-// NOT YET RECONSTRUCTED: a package on a store (store not nil) - the ROM
-// domain manager told the package is in use (its monitor's call 4).
+// whether it was only dispatched, whether a patch went in.  A package on a
+// store that went in (and not just for dispatch) is told to the ROM
+// domain manager by the id the manager gave it (kRDMSetPackageId), which
+// is how the store, the root and the address are found from the id later.
 NewtonErr
 InstallPackage(char* buffer, SourceType type, ULong* packageId, UChar* forDispatchOnly, UChar* patchInstalled,
-			   TStore* /*store*/, ULong /*storeId*/)
+			   TStore* store, ULong storeId)
 {
 	long err = ((TForkWorld*) GetGlobals())->Fork(nil);
 	if (err != noErr)
@@ -1131,6 +1133,14 @@ InstallPackage(char* buffer, SourceType type, ULong* packageId, UChar* forDispat
 	err = port.SendRPC(&replySize, &event, sizeof(event), &event, sizeof(event));
 	if (err == noErr)
 		err = event.fEventError;
+	if (err == noErr && store != nil && !event.fForDispatchOnly)
+	{
+		RDMParams params;
+		params.fStore = store;
+		params.fObjectId = storeId;
+		params.fPackageId = event.fPackageId;
+		err = ROMDomainUserRequest(kRDMSetPackageId, &params);
+	}
 	gPackageSemaphore->Release();
 	world->AcquireMutex();
 	if (!event.fForDispatchOnly)

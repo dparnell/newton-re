@@ -708,14 +708,16 @@ its store objects to the store's transaction; an abort throws the changes
 away and unmaps it, as the ROM's ends the session.
 
 ROM bugs kept: `InitializeChunkArray`'s clean-up after a failure aborts
-the same wrong entry each time; `LODefaultDelete` does nothing (so a
-deleted large binary's blocks stay on the store: only a compander's own
-`TLrgObjStore` would take them back); `LOWrite` leaks the compander's
+the same wrong entry each time; `LOWrite` leaks the compander's
 name when the compander is unknown.  Found on
 the way: the companders read a root's chunk-table id and the table's block
 ids as native words - now big-endian, as on the MessagePad.  Duplicating (`DuplicatePackageData`: the chunk array and every block
 copied, big-endian ids) and the streamed form (`LOWrite`, `LOSizeOfStream`,
-`LODefaultBackup`) are done.  NOT YET: `TLrgObjStore`, objects made from a
+`LODefaultBackup`) are done, and a large object is deleted by
+`LODefaultDelete`, which is `DeallocatePackage` (`stores/PackageObjects.cpp`:
+the root, the chunk table or index and every block, the name and the
+parameters - a package's root and a large object's start the same way, and
+one function takes both back).  NOT YET: objects made from a
 compressed stream (`LODefCreateFromComp`), the backup progress callback
 (`TLOCallback`), a package kept as a large object, the XIP requests.
 `test_LargeObjects`.

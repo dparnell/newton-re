@@ -36,15 +36,21 @@
 				compander, adding block objects to the chunk array when the
 				object has grown and updating the root's size.
 
-				NOT YET RECONSTRUCTED: TLrgObjStore (the protocol a
-				compander's own large-object store implements; none is
-				registered on the host, so the defaults are used),
-				LODefCreateFromComp/FillChunkArrayCompressed (an object
-				made from already-compressed blocks - so a large binary
-				streamed compressed cannot be read back yet), the progress
-				callback (TLOCallback), a package kept as a large
-				object (ObjectSize's package case, DeallocatePackage), the
-				XIP requests.
+				A large object whose compander is not a TStoreCompander
+				but is claimed by a TLrgObjStore (the protocol below,
+				found by the compander's name as a capability:
+				GetLOAllocator) is made, deleted, sized, streamed and
+				duplicated by that implementation instead - which is how
+				a package is kept on a store (TLOPackageStore,
+				packages/StorePackages.h: the root's kind is 1 and the
+				data is the package's pages, each compressed on its own).
+
+				NOT YET RECONSTRUCTED: LODefCreateFromComp/
+				FillChunkArrayCompressed (an object made from
+				already-compressed blocks - so a large binary streamed
+				compressed cannot be read back yet), the progress
+				callback (TLOCallback), the XIP requests
+				(TXIPPackageStore).
 
 	Reconstructed from the MP2x00 US ROM (0x001014bc-0x00103ccc,
 	0x00161f90); each function cites its origin.
@@ -96,6 +102,9 @@ enum
 	kRDMMap					= 1,		// store, id, read-only -> address
 	kRDMUnmap				= 2,		// by package id, address, or store and id -> store, id
 	kRDMSetPackageId		= 4,
+	kRDMIdToStore			= 5,		// package id -> store, id
+	kRDMStoreToId			= 6,		// store, id -> package id
+	kRDMIdToVAddr			= 7,		// package id -> address
 	kRDMFlush				= 9,		// by package id, store and id, or address
 	kRDMResize				= 10,		// address, size, offset -> address
 	kRDMAbort				= 11,		// address, or every object of a store
@@ -109,6 +118,34 @@ enum
 // The ROM domain manager's user monitor (TROMDomainManager1K::UserRequest,
 // reached with MonitorDispatchSWI).  ==> an error.
 NewtonErr	ROMDomainUserRequest(long selector, RDMParams* params);
+
+
+// The protocol a large object's own store implements (TLOPackageStore for
+// the packages); its implementations name the companders they take in
+// their capability lists.
+PROTOCOL TLrgObjStore : public TProtocol
+{
+public:
+	static TLrgObjStore*	New(char* implementation);		// ROM 0x00387404 New__12TLrgObjStoreSFPc
+	void			Delete();								// ROM 0x00387430 Delete__12TLrgObjStoreFv
+
+	VIRTUAL NewtonErr	Init() ENDVIRTUAL;					// ROM 0x0038744c Init__12TLrgObjStoreFv
+	VIRTUAL NewtonErr	Create(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly, char* compander, void* parameters,
+							   long parametersSize, TLOCallback* callback) ENDVIRTUAL;				// ROM 0x00387458 Create__12TLrgObjStoreFPUlP6TStoreP5CPipelUcPcPvT4P11TLOCallback
+	VIRTUAL NewtonErr	CreateFromCompressed(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly, char* compander, void* parameters,
+							   long parametersSize, TLOCallback* callback) ENDVIRTUAL;				// ROM 0x00387464 CreateFromCompressed__12TLrgObjStoreFPUlP6TStoreP5CPipelUcPcPvT4P11TLOCallback
+	VIRTUAL NewtonErr	DeleteObject(TStore* store, PSSId id) ENDVIRTUAL;						// ROM 0x00387470 DeleteObject__12TLrgObjStoreFP6TStoreUl
+	VIRTUAL NewtonErr	Duplicate(PSSId* newId, TStore* store, PSSId id, TStore* toStore) ENDVIRTUAL;	// ROM 0x0038747c Duplicate__12TLrgObjStoreFPUlP6TStoreUlT2
+	VIRTUAL NewtonErr	Resize(TStore* store, PSSId id, ULong size) ENDVIRTUAL;				// ROM 0x00387488 Resize__12TLrgObjStoreFP6TStoreUlT2
+	VIRTUAL long		StorageSize(TStore* store, PSSId id) ENDVIRTUAL;						// ROM 0x00387494 StorageSize__12TLrgObjStoreFP6TStoreUl
+	VIRTUAL long		SizeOfStream(TStore* store, PSSId id, UChar compressed) ENDVIRTUAL;	// ROM 0x003874a0 SizeOfStream__12TLrgObjStoreFP6TStoreUlUc
+	VIRTUAL NewtonErr	Backup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback) ENDVIRTUAL;	// ROM 0x003874ac Backup__12TLrgObjStoreFP5CPipeP6TStoreUlUcP11TLOCallback
+};
+
+// The TLrgObjStore that claims the object's compander (initialised), or nil
+// when a TStoreCompander of that name does the work.  ==> kError_Bad_Parameters
+// when neither knows the name.
+NewtonErr	GetLOAllocator(TStore* store, PSSId id, TLrgObjStore** allocator);	// ROM 0x0010389c GetLOAllocator__FP6TStoreUlPP12TLrgObjStore
 
 
 // Creating
@@ -155,7 +192,7 @@ long		GetPagesSize(TStore* store, PSSId chunkArrayId);				// ROM 0x00102370 GetP
 // Deleting
 NewtonErr	DeleteLargeObject(TStore* store, PSSId id);					// ROM 0x00103b3c DeleteLargeObject__FP6TStoreUl
 NewtonErr	LODeleteByProtocol(TStore* store, PSSId id);					// ROM 0x00103adc LODeleteByProtocol__FP6TStoreUl
-NewtonErr	LODefaultDelete(TStore* store, PSSId id);						// ROM 0x0010231c LODefaultDelete__FP6TStoreUl - nothing
+NewtonErr	LODefaultDelete(TStore* store, PSSId id);						// ROM 0x0010231c LODefaultDelete__FP6TStoreUl - DeallocatePackage
 
 // The compander's parameters
 NewtonErr	LOCompanderParameterSize(TStore* store, PSSId id, long* size);	// ROM 0x001014bc LOCompanderParameterSize__FP6TStoreUlPl
@@ -171,5 +208,19 @@ NewtonErr	LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed
 NewtonErr	DuplicateLargeObject(PSSId* newId, TStore* store, PSSId id, TStore* toStore);	// ROM 0x001035d4 DuplicateLargeObject__FPUlP6TStoreUlT2
 NewtonErr	LODefaultDuplicate(PSSId* newId, TStore* store, PSSId id, TStore* toStore);	// ROM 0x00102320 LODefaultDuplicate__FPUlP6TStoreUlT2 - flushed, then copied object by object
 NewtonErr	DuplicatePackageData(TStore* store, PSSId id, TStore* toStore, PSSId* newId, Boolean separately);	// ROM 0x0016245c DuplicatePackageData__FP6TStoreUlT1PUlUc
+
+
+// A package kept on a store (PackageObjects.cpp; the writing and reading of
+// its pages are packages/StorePackages.h): its root is a PackageRoot of
+// kind 1 whose chunk array is an *index table* of page objects.
+NewtonErr	RemoveIndexTable(TStore* store, PSSId indexId);				// ROM 0x001617f4 RemoveIndexTable__FP6TStoreUl - every page object and the table deleted
+NewtonErr	DeallocatePackage(TStore* store, PSSId rootId);				// ROM 0x001618ac DeallocatePackage__FP6TStoreUl - a package's (or a large object's) store objects deleted
+NewtonErr	PackageAvailable(TStore* store, PSSId rootId, ULong* packageId, UChar* forDispatchOnly, UChar* patchInstalled);	// ROM 0x00161ff4 PackageAvailable__FP6TStoreUlPUlPUcT4 - mapped and installed
+NewtonErr	PackageAvailable(TStore* store, PSSId rootId, ULong* packageId);	// ROM 0x001620f0 PackageAvailable__FP6TStoreUlPUl
+NewtonErr	PackageUnavailable(ULong packageId);							// ROM 0x00162160 PackageUnavailable__FUl - removed and unmapped
+NewtonErr	DeletePackage(ULong packageId);									// ROM 0x00161d30 DeletePackage__FUl
+NewtonErr	IdToStore(ULong packageId, TStore** store, PSSId* rootId);		// ROM 0x00161d88 IdToStore__FUlPP6TStorePUl
+NewtonErr	IdToVAddr(ULong packageId, ULong* address);						// ROM 0x00161e0c IdToVAddr__FUlPUl
+NewtonErr	StoreToId(TStore* store, PSSId rootId, ULong* packageId);		// ROM 0x00161e7c StoreToId__FP6TStoreUlPUl
 
 #endif	/* __LARGEOBJECTS_H */

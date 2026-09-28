@@ -23,13 +23,15 @@
 				first word is the chunk-table id), BlockSize, Read, Write,
 				DoTransactionAgainst and IsReadOnly.
 
-				NOT YET RECONSTRUCTED: the read-only decompressors
-				(TStoreDecompressor, TSimpleStoreDecompressor,
-				TLZStoreDecompressor, the Zippy and reloc variants) and
-				TStoreCompanderWrapper that drives them - they relocate the
-				NewtonScript frames in the expanded page
-				(RelocateFramesInPage, 0x000d1b50), which is a separate
-				unit; TXIPStoreCompander and TPixelMapCompander.
+				A package kept on a store is read a 0x400-byte page at a
+				time through a TStoreDecompressor (the interface below; the
+				implementations - simple, LZ, Zippy and their relocating
+				variants - and TStoreCompanderWrapper, the compander that
+				drives one, are packages/StorePackages.h, because a page
+				is relocated as it is read).
+
+				NOT YET RECONSTRUCTED: TXIPStoreCompander and
+				TPixelMapCompander.
 
 	The interface has no DDK header; it follows the dispatch tables
 	tools/newton-rom/analysis/classinfo.py decodes (docs/protocols/).
@@ -93,6 +95,35 @@ public:
 	VIRTUAL NewtonErr	Write(ULong offset, char* buffer, long count, ULong page) ENDVIRTUAL;					// ROM 0x003873c8 Write__15TStoreCompanderFUlPclT1
 	VIRTUAL void		DoTransactionAgainst(long arg, ULong page) ENDVIRTUAL;									// ROM 0x003873d4 DoTransactionAgainst__15TStoreCompanderFlUl
 	VIRTUAL Boolean		IsReadOnly() ENDVIRTUAL;																// ROM 0x003873e0 IsReadOnly__15TStoreCompanderFv
+};
+
+
+// ---------------------------------------------------------------------------
+//	The interface a package page reader implements: Init over the store
+//	(and, for the LZ ones, a scratch buffer), Read(page object, into,
+//	count, the address the page is mapped at - what it is relocated to).
+// ---------------------------------------------------------------------------
+
+// DEVIATION: the base the host's domain manager maps a package's pages at.
+// On the MessagePad a page is read at the address it is mapped to and
+// relocated there - its frames' pointer refs moved to that address and
+// their import refs resolved (RelocateFramesInPage), its code's words by
+// the relocation entries (TSimpleCRelocator).  The host imports a frames
+// part out of the package's own, package-relative words and resolves its
+// import refs itself (frames/FramesPart.h, packages/Units.h), and runs no
+// package code; so it maps a package with the pages exactly as they were
+// written, and this base - which no real mapping has - tells the
+// relocators to leave a page alone.
+const ULong kHostPageNotRelocated = 0;
+
+PROTOCOL TStoreDecompressor : public TProtocol
+{
+public:
+	static TStoreDecompressor*	New(const char* implementation);	// ROM 0x003872e4 New__18TStoreDecompressorSFPc
+	void			Delete();										// ROM 0x00387310 Delete__18TStoreDecompressorFv
+
+	VIRTUAL NewtonErr	Init(TStore* store, ULong parameter) ENDVIRTUAL;							// ROM 0x0038732c Init__18TStoreDecompressorFP6TStoreUl
+	VIRTUAL NewtonErr	Read(ULong pageId, char* buffer, long count, ULong baseAddress) ENDVIRTUAL;	// ROM 0x00387338 Read__18TStoreDecompressorFUlPclT1
 };
 
 

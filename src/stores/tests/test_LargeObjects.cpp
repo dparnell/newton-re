@@ -135,8 +135,19 @@ Scenario(const char* compander)
 	EXPECT(ObjectSize(address) == 4000 && data[0] == Pattern(0) && data[100] == Pattern(1100));
 	EXPECT(StorageSizeOfLargeObject(store, id) > 0);
 
-	// deleted: unmapped
+	// deleted: unmapped, and its store objects taken back (LODefaultDelete
+	// is DeallocatePackage: the chunk array and its blocks, then the root)
+	UByte rootBytes[kLargeObjectRootSize];
+	EXPECT(store->Read(id, 0, (char*) rootBytes, kLargeObjectRootSize) == noErr);
+	PSSId chunkArray = GetBigEndianWord(rootBytes + kLORootChunkArray);
+	UByte firstBlockWord[4];
+	EXPECT(store->Read(chunkArray, 0, (char*) firstBlockWord, 4) == noErr);
+	PSSId firstBlock = GetBigEndianWord(firstBlockWord);
 	EXPECT(DeleteLargeObject(store, id) == noErr && StoreToVAddr(&at, store, id) != noErr);
+	long gone = 0;
+	EXPECT(store->GetObjectSize(id, &gone) != noErr);
+	EXPECT(store->GetObjectSize(chunkArray, &gone) != noErr);
+	EXPECT(firstBlock == 0 || store->GetObjectSize(firstBlock, &gone) != noErr);
 
 	// filled from a pipe as it is made
 	const long kPiped = 2500;

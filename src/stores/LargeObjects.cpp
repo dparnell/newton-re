@@ -23,6 +23,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "AppWorld.h"			// TForkWorld (a pipe to read from forks)
+#include "PackageIterator.h"	// ObjectSize: a package's own size
 #include "UserTasks.h"			// GetGlobals
 
 #include <string.h>
@@ -249,7 +250,7 @@ CreateLargeObject(ULong* id, TStore* store, long size, char* compander, void* pa
 // one (TLrgObjStore), else the default way - as long as the compander is
 // known at all (kError_Bad_Parameters when it is not).  With a pipe to
 // read from, the world forks first.
-// NOT YET RECONSTRUCTED: TLrgObjStore, and made from compressed blocks
+// NOT YET RECONSTRUCTED: made from compressed blocks by the default way
 // (LODefCreateFromComp): the host answers kError_Call_Not_Implemented.
 NewtonErr
 CreateLargeObject(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly, char* compander, void* parameters, long parametersSize,
@@ -261,14 +262,73 @@ CreateLargeObject(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOn
 		if (err != noErr)
 			return err;
 	}
-	TProtocol* allocator = NewByName("TLrgObjStore", nil, compander);
-	if (allocator != nil)
-		return kError_Call_Not_Implemented;		// (never on the host: none is registered)
-	if (ClassInfoByName("TStoreCompander", compander) == nil)
-		return kError_Bad_Parameters;
-	if (fromCompressed)
-		return kError_Call_Not_Implemented;
-	return LODefaultCreate(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
+	TLrgObjStore* allocator = (TLrgObjStore*) NewByName("TLrgObjStore", nil, compander);
+	if (allocator == nil)
+	{
+		if (ClassInfoByName("TStoreCompander", compander) == nil)
+			return kError_Bad_Parameters;
+		if (fromCompressed)
+			return kError_Call_Not_Implemented;
+		return LODefaultCreate(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
+	}
+	NewtonErr err = allocator->Init();
+	if (err == noErr)
+	{
+		if (!fromCompressed)
+			err = allocator->Create(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
+		else
+			err = allocator->CreateFromCompressed(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
+	}
+	allocator->Delete();
+	return err;
+}
+
+
+// ROM 0x00387404 New__12TLrgObjStoreSFPc
+TLrgObjStore*
+TLrgObjStore::New(char* implementation)
+{
+	TLrgObjStore* p = (TLrgObjStore*) AllocInstanceByName("TLrgObjStore", implementation);
+	return p != nil ? (TLrgObjStore*) p->GlueNew() : nil;
+}
+
+
+// ROM 0x00387430 Delete__12TLrgObjStoreFv
+void
+TLrgObjStore::Delete()
+{
+	GlueDelete();
+}
+
+
+// ROM 0x0010389c GetLOAllocator__FP6TStoreUlPP12TLrgObjStore
+// The large-object store that claims the object's compander by name, made
+// and initialised (one that fails to initialise is given back, though
+// *allocator is left pointing at it - ROM BUG kept: the callers only look
+// at it when the answer is noErr); nil when the compander is a plain
+// TStoreCompander.  ROM BUG kept: when neither knows the name, the name's
+// block is not given back.
+NewtonErr
+GetLOAllocator(TStore* store, PSSId id, TLrgObjStore** allocator)
+{
+	*allocator = nil;
+	char* name = nil;
+	NewtonErr err = LOCompanderName(&name, store, id);
+	if (err != noErr)
+		return err;
+	*allocator = (TLrgObjStore*) NewByName("TLrgObjStore", nil, name);
+	if (*allocator == nil)
+	{
+		if (ClassInfoByName("TStoreCompander", name) == nil)
+			return kError_Bad_Parameters;
+		free(name);
+		return noErr;
+	}
+	err = (*allocator)->Init();
+	if (err != noErr)
+		(*allocator)->Delete();
+	free(name);
+	return err;
 }
 
 
@@ -461,17 +521,21 @@ VAddrToBase(ULong* base, ULong address)
 
 
 // ROM 0x001034f0 ObjectSize__FUl
-// The mapped object's size.
-// NOT YET RECONSTRUCTED: a package kept as a large object answers its
-// package's size (IsPackageHeader, TPackageIterator) - packages sit above
-// the stores here.
+// The mapped object's size - a package's own size when the object is a
+// package (its pages come to a whole number of 0x400 bytes).
 long
 ObjectSize(ULong address)
 {
 	RDMParams params;
 	params.fSize = 0;
 	params.fAddress = address;
-	ROMDomainUserRequest(kRDMInfo, &params);
+	NewtonErr err = ROMDomainUserRequest(kRDMInfo, &params);
+	if (err == noErr && params.fSize != 0 && IsPackageHeader((const void*) address, 0x34))
+	{
+		TPackageIterator iter((void*) address);
+		if (iter.Init() == noErr)
+			return (long) iter.PackageSize();
+	}
 	return params.fSize;
 }
 
@@ -554,22 +618,17 @@ long
 StorageSizeOfLargeObject(TStore* store, PSSId id)
 {
 	long size = 0;
+	TLrgObjStore* allocator = nil;
 	NewtonErr err = FlushLargeObject(store, id);
-	if (err == noErr)
+	if (err == noErr && (err = GetLOAllocator(store, id, &allocator)) == noErr)
 	{
-		// (GetLOAllocator: no TLrgObjStore on the host, so only whether the
-		// compander is known matters)
-		char* name = nil;
-		err = LOCompanderName(&name, store, id);
-		if (err == noErr)
-		{
-			if (ClassInfoByName("TStoreCompander", name) == nil)
-				err = kError_Bad_Parameters;
-			free(name);
-		}
-		if (err == noErr)
+		if (allocator == nil)
 			size = LODefaultStorageSize(store, id);
+		else
+			size = allocator->StorageSize(store, id);
 	}
+	if (allocator != nil)
+		allocator->Delete();
 	if (err != noErr)
 		Throw("evt.ex.abt", (void*) (Long) err, nil);
 	return size;
@@ -670,7 +729,7 @@ LOCompanderParameters(TStore* store, PSSId id, void* parameters)
 
 // ROM 0x00102d38 LOSizeOfStream__FP6TStoreUlUc
 // How many bytes LOWrite would write (compressed: as the blocks lie on the
-// store).  (No TLrgObjStore on the host: NewByName never finds one.)
+// store) - the object's own store's answer when it has one.
 //
 // ROM BUG kept: a compander that is not registered answers an error with
 // the name's block not given back.
@@ -678,34 +737,54 @@ long
 LOSizeOfStream(TStore* store, PSSId id, UChar compressed)
 {
 	char* name = nil;
+	long size = 0;
 	NewtonErr err = LOCompanderName(&name, store, id);
+	if (err == noErr)
+	{
+		TLrgObjStore* allocator = (TLrgObjStore*) NewByName("TLrgObjStore", nil, name);
+		if (allocator == nil)
+		{
+			if (ClassInfoByName("TStoreCompander", name) == nil)
+				return kError_Bad_Parameters;
+			free(name);
+			return LODefaultStreamSize(store, id, compressed);
+		}
+		if ((err = allocator->Init()) == noErr)
+			size = allocator->SizeOfStream(store, id, compressed);
+		allocator->Delete();
+	}
 	if (err != noErr)
-		return 0;
-	if (ClassInfoByName("TStoreCompander", name) == nil)
-		return kError_Bad_Parameters;
+		size = 0;
 	free(name);
-	return LODefaultStreamSize(store, id, compressed);
+	return size;
 }
 
 
 // ROM 0x00102e44 LOWrite__FP5CPipeP6TStoreUlUcP11TLOCallback
-// The large object written to pipe (compressed: its blocks as they lie).
-// (No TLrgObjStore on the host.)  ROM BUG kept: as LOSizeOfStream, an
+// The large object written to pipe (compressed: its blocks as they lie) -
+// by its own store when it has one.  ROM BUG kept: as LOSizeOfStream, an
 // unregistered compander leaves the name's block behind.
 NewtonErr
 LOWrite(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback)
 {
 	char* name = nil;
 	NewtonErr err = LOCompanderName(&name, store, id);
-	if (err != noErr)
+	if (err == noErr)
 	{
-		free(name);
-		return err;
+		TLrgObjStore* allocator = (TLrgObjStore*) NewByName("TLrgObjStore", nil, name);
+		if (allocator == nil)
+		{
+			if (ClassInfoByName("TStoreCompander", name) == nil)
+				return kError_Bad_Parameters;
+			free(name);
+			return LODefaultBackup(pipe, store, id, compressed, callback);
+		}
+		if ((err = allocator->Init()) == noErr)
+			err = allocator->Backup(pipe, store, id, compressed, callback);
+		allocator->Delete();
 	}
-	if (ClassInfoByName("TStoreCompander", name) == nil)
-		return kError_Bad_Parameters;
 	free(name);
-	return LODefaultBackup(pipe, store, id, compressed, callback);
+	return err;
 }
 
 
@@ -853,13 +932,24 @@ LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallb
 ------------------------------------------------------------------------------*/
 
 // ROM 0x001035d4 DuplicateLargeObject__FPUlP6TStoreUlT2
-// A copy of large object id of store, made on toStore; *newId its root.
-// (No TLrgObjStore on the host: GetLOAllocator never finds one, so the
-// default duplicator is used.)
+// A copy of large object id of store, made on toStore; *newId its root -
+// by the object's own store when it has one.
 NewtonErr
 DuplicateLargeObject(PSSId* newId, TStore* store, PSSId id, TStore* toStore)
 {
-	return LODefaultDuplicate(newId, store, id, toStore);
+	TLrgObjStore* allocator;
+	NewtonErr err = GetLOAllocator(store, id, &allocator);
+	if (err == noErr)
+	{
+		if (allocator == nil)
+			err = LODefaultDuplicate(newId, store, id, toStore);
+		else
+		{
+			err = allocator->Duplicate(newId, store, id, toStore);
+			allocator->Delete();
+		}
+	}
+	return err;
 }
 
 
@@ -1118,19 +1208,28 @@ DeleteLargeObject(TStore* store, PSSId id)
 
 
 // ROM 0x00103adc LODeleteByProtocol__FP6TStoreUl
-// (no TLrgObjStore on the host: GetLOAllocator never finds one)
+// The object deleted by its own store, or the default way.  (GetLOAllocator's
+// answer is not looked at: an unknown compander deletes the default way.)
 NewtonErr
 LODeleteByProtocol(TStore* store, PSSId id)
 {
-	return LODefaultDelete(store, id);
+	TLrgObjStore* allocator;
+	GetLOAllocator(store, id, &allocator);
+	if (allocator == nil)
+		return LODefaultDelete(store, id);
+	NewtonErr err = allocator->DeleteObject(store, id);
+	allocator->Delete();
+	return err;
 }
 
 
 // ROM 0x0010231c LODefaultDelete__FP6TStoreUl
-// Nothing: the ROM's is a return.  The store objects stay (a store's
-// objects are taken back when the entry that refers to them goes).
+// The object's store objects deleted: the ROM's is a branch to
+// DeallocatePackage, which takes a package's pages and a large object's
+// blocks back alike (an earlier reading of this function as an empty
+// return was wrong - the branch goes through the jump table).
 NewtonErr
-LODefaultDelete(TStore* /*store*/, PSSId /*id*/)
+LODefaultDelete(TStore* store, PSSId id)
 {
-	return noErr;
+	return DeallocatePackage(store, id);
 }

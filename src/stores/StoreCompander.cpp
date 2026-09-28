@@ -136,6 +136,23 @@ TStoreCompander::Delete()
 }
 
 
+// ROM 0x003872e4 New__18TStoreDecompressorSFPc
+TStoreDecompressor*
+TStoreDecompressor::New(const char* implementation)
+{
+	TStoreDecompressor* p = (TStoreDecompressor*) AllocInstanceByName("TStoreDecompressor", implementation);
+	return p != nil ? (TStoreDecompressor*) p->GlueNew() : nil;
+}
+
+
+// ROM 0x00387310 Delete__18TStoreDecompressorFv
+void
+TStoreDecompressor::Delete()
+{
+	GlueDelete();
+}
+
+
 // ---------------------------------------------------------------------------
 //	TSimpleStoreCompander - the blocks kept uncompressed.
 // ---------------------------------------------------------------------------

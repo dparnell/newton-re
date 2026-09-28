@@ -13,7 +13,10 @@ add_library(package_manager STATIC
     PartPipe.cpp
     PackageLoader.cpp
 )
+# stores: the ROM domain manager a package on a store is told to (the two
+# static libraries depend on each other)
 target_link_libraries(package_manager PUBLIC newton_config utility os600_user protocols toolbox)
+target_link_libraries(package_manager PRIVATE stores)
 target_include_directories(package_manager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(packages STATIC
