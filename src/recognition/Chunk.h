@@ -353,6 +353,11 @@ long	New_SearchDigit_V(void* lo, tag_WORD_TRACE* trace, long traceCount, tag_wap
 // Signs coded 13 that belong to a neighbouring stroke are taken out on
 // the way.  ==> 1 for a number.
 long	SearchNumber(tag_CHUNK_STAFF* staff);							// ROM 0x002a28d0 SearchNumber__FP15tag_CHUNK_STAFF
+// The pound signs: a sign coded 13 (a bar) that is the last thing
+// written, or in the second stroke, taken with the stroke before it - one
+// that falls steeply, turns left at its foot and runs out right, the bar
+// across its middle - for a pound sign (class 1300, value 1570, extra -1).  ==> 0.
+long	FindPound(tag_CHUNK_STAFF* staff);								// ROM 0x002a3ef8 FindPound__FP15tag_CHUNK_STAFF
 // The polyline's nodes from..to as a trace of their own between pen-ups.
 long	ComposeTrace(tag_wapx_type* n, long from, long to, tag_WORD_TRACE* trace);	// ROM 0x0029bac0 ComposeTrace__FP13tag_wapx_typeiT2P14tag_WORD_TRACE
 // The direction from node start to the first node after it take_next_point

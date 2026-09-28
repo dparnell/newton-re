@@ -1222,6 +1222,61 @@ TestSearchNumber(void)
 }
 
 
+/*--------------------------------------------------------------------
+	FindPound: a bar (a sign coded 13, laid in by hand: the searcher
+	that reads it is not reconstructed) and the stroke before it.
+--------------------------------------------------------------------*/
+
+// ==> how many pound signs FindPound put in (value 1570)
+static long
+Pounds(const char* what, bool barFirstStroke = false)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	// the bar: the last stroke's chunks
+	tag_STK* bar = &staff.fStrokes[barFirstStroke ? 0 : staff.fStrokeCount - 1];
+	LO_Add(lo, staff.fNodes, 1300, staff.fChunks[bar->fFirstChunk].fFrom, staff.fChunks[bar->fLastChunk].fTo, 1313, 0);
+	FindPound(&staff);
+	tag_LOWOBJ* obj = nil;
+	long k = 0;
+	if (LO_SetWorkClass(lo, 1300) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+			if (obj->fValue == 1570)
+				k++;
+	if (gVerbose)
+		printf("  %s: %ld pound signs\n", what, k);
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return k;
+}
+
+static void
+TestFindPound(void)
+{
+	// a pound sign: over the top from the right and down, a turn left at
+	// the foot and out along a wavy base (the foot must lie below the
+	// base's crest); then the bar across its middle
+	TraceStart();
+	MoveTo(13, 4); ArcTo(9, 5, 4, 20, 180); LineTo(5, 16); LineTo(1, 20); LineTo(8, 17); LineTo(15, 20); StrokeEnd();
+	DrawLine(1, 11, 10, 11);
+	EXPECT(Pounds("pound") == 1);
+	// the same body without the turn at its foot is no pound sign
+	TraceStart();
+	MoveTo(13, 4); ArcTo(9, 5, 4, 20, 180); LineTo(5, 20); StrokeEnd();
+	DrawLine(1, 11, 10, 11);
+	EXPECT(Pounds("no foot") == 0);
+	// nor with the bar across its top
+	TraceStart();
+	MoveTo(13, 4); ArcTo(9, 5, 4, 20, 180); LineTo(5, 16); LineTo(1, 20); LineTo(15, 20); StrokeEnd();
+	DrawLine(1, 2, 10, 2);
+	EXPECT(Pounds("bar at the top") == 0);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1238,6 +1293,7 @@ main(int argc, char** argv)
 	TestSearchK();
 	TestSearchV();
 	TestSearchNumber();
+	TestFindPound();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;
