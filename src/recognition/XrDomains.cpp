@@ -678,7 +678,15 @@ XRWDoLearning(ULong recordAddr, XRWORDPARAM* param)
 	{
 		const rec_w_type* word = (const rec_w_type*) ((UByte*) words + record->fIndex * 0x50);
 		if ((short) RCGetH(param, 0x22) != 0 && GetLearnInfoPtr((DTIHeader*) param->fDTI) != nil)
-			FlyLearn(param, word);
+		{
+			long learnt = FlyLearn(param, word);
+			if (TracingCursive())
+				fprintf(stderr, "[cursive] learning: \"%s\" (%ld points of trace) learnt on the fly: %s\n",
+						(const char*) word->fWord, record->fCount, learnt == 0 ? "the letter counters moved" : "nothing to learn");
+		}
+		else if (TracingCursive())
+			fprintf(stderr, "[cursive] learning: \"%s\" not learnt (learning %s, %s learning info)\n", (const char*) word->fWord,
+					(short) RCGetH(param, 0x22) != 0 ? "on" : "off", GetLearnInfoPtr((DTIHeader*) param->fDTI) != nil ? "with" : "no");
 		if ((RCGetH(param, 0xb8) & 8) != 0)
 		{
 			void* ortl;

@@ -28,12 +28,10 @@
 				word domain to ask it (`LIBeginWeights`, in
 				`LetterShapes.h`) and throws it away again.
 
-				NOT YET RECONSTRUCTED: the reading engine, so a cursive
-				letter set chosen on the host reads nothing; the parts of
-				`ConfigureArea` that set the engine's base and grid lines
-				(`FromObject` for a WordBaseInfo and a RecGridInfo,
-				`GetWordGeom`, `GetGridGeom`); and `GetTraceFromStrokes`,
-				without which `DoLearning` has nothing to learn from.
+				NOT YET RECONSTRUCTED: the parts of `ConfigureArea` that
+				set the engine's base and grid lines (`FromObject` for a
+				WordBaseInfo and a RecGridInfo, `GetWordGeom`,
+				`GetGridGeom`).
 
 	Reconstructed from the MP2x00 US ROM (0x00166efc-0x001686ec); each
 	function cites its origin.

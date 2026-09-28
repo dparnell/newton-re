@@ -233,7 +233,12 @@ UnitID(RefArg info)
 	RefVar id(GetFrameSlotRef(info, RSSYMunitid));
 	if (ISNIL(id))
 		return 0;
-	return *(const ULong*) BinaryData(id);
+	// (the ROM reads the string's first word, which on a big-endian
+	// machine is its first two characters - the unit's type as
+	// EncodeUnitID wrote it; read a character at a time on the host, whose
+	// word is neither four bytes nor big-endian)
+	const UniChar* chars = (const UniChar*) BinaryData(id);
+	return ((ULong) chars[0] << 16) | chars[1];
 }
 
 

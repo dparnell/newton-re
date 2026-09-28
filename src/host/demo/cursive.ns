@@ -15,7 +15,9 @@
 // docs/recognition/README.md, "Joined-up writing").  "[cursive] word of strokes
 // ..." lines say how far each word got, the script prints the page's
 // text (ctest host.NewtonCursive checks both), and build/cursive.pgm is
-// the page.  Otherwise as src/host/demo/write.ns.
+// the page.  Then "ton" is read again with learning on and learnt
+// ("[cursive] learning: ..."), and the letter weights are no longer the
+// defaults.  Otherwise as src/host/demo/write.ns.
 //
 // This run once locked up one time in three, in the heap's compaction:
 // CreateTrigramHeader asked for the ROM's 0x98 bytes and zeroed the
@@ -88,6 +90,50 @@ oval := func(cx, cy, rx, ry)
     pts;
   end;
 
+// Learning: with learning on (the Handwriting Settings' "learning"
+// check box), "ton"'s strokes read again (Recognize) keep their training
+// data, and the word info's Learn(0) - what picking a word in the
+// corrector does - hands the reading and the pen's trace
+// (GetTraceFromStrokes) to the word domain, which moves the letter
+// weights on the fly (FlyLearn): GetLetterWeights answers nil while they
+// are the letter set's defaults and the weights once learnt.
+yx := func(points)
+  begin
+    local out := [];
+    for i := 0 to Length(points) - 2 by 2 do
+      begin
+        AddArraySlot(out, points[i + 1]);
+        AddArraySlot(out, points[i]);
+      end;
+    out;
+  end;
+tonStrokes := nil;
+learn := func()
+  begin
+    SetUserConfig('learningEnabledOption, true);
+    ReadCursiveOptions();
+    local strokes := [];
+    foreach s in tonStrokes do AddArraySlot(strokes, call yx with (s));
+    local ci := Recognize([MakeStrokeBundle(strokes, 0)], nil, nil);
+    if ci and Length(ci.info) > 0 then
+      begin
+        local info := ci.info[0];
+        Print("cursive: read again as \"" & info.words[0].word & "\"");
+        local before := GetLetterWeights();
+        // (a word put on a page is marked as carrying its training data
+        // by the paragraph - SetOffsetInfo's flags; one read by Recognize
+        // is marked here)
+        if info.unitData then info:SetFlags(1);
+        Print("cursive: the word info " & (if info.unitData then "keeps" else "has no") & " training data");
+        info:Learn(0);
+        local after := GetLetterWeights();
+        Print("cursive: the letter weights " & (if before then "had been learnt" else "were the defaults")
+              & ", after learning " & (if after then "learnt" else "the defaults"));
+      end
+    else
+      Print("cursive: read again as nothing");
+  end;
+
 // "ton", on a baseline at y = 200, from x = 60 - the letter set made
 // cursive first
 AddDelayedCall(func() begin
@@ -95,15 +141,15 @@ AddDelayedCall(func() begin
     SetUserConfig('letterSetSelection, 0);
     ReadCursiveOptions();
     Print("cursive: the letter set is" && GetUserConfig('letterSetSelection));
-    // t: the stem, then the bar
-    call stroke with ([66, base - 24, 66, base - 18, 66, base - 12, 66, base - 6, 66, base]);
-    call stroke with ([60, base - 14, 64, base - 14, 68, base - 14, 72, base - 14]);
-    // o
-    call stroke with (call oval with (82, base - 7, 6, 7));
-    // n: down, back up, over the arch and down again
-    call stroke with ([94, base - 14, 94, base - 7, 94, base, 94, base - 7,
-                       95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
-                       104, base - 10, 104, base - 5, 104, base]);
+    // t: the stem, then the bar; o; n: down, back up, over the arch and
+    // down again
+    tonStrokes := [[66, base - 24, 66, base - 18, 66, base - 12, 66, base - 6, 66, base],
+                   [60, base - 14, 64, base - 14, 68, base - 14, 72, base - 14],
+                   call oval with (82, base - 7, 6, 7),
+                   [94, base - 14, 94, base - 7, 94, base, 94, base - 7,
+                    95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
+                    104, base - 10, 104, base - 5, 104, base]];
+    foreach s in tonStrokes do call stroke with (s);
     // "to", a word's gap further along the line, a little later - the
     // recogniser has put "ton" down by then
     AddDelayedCall(func() begin
@@ -120,6 +166,7 @@ AddDelayedCall(func() begin
             ScreenSnapshot("build/cursive.pgm");
             Print("cursive: written build/cursive.pgm");
             Print("cursive: the page reads \"" & call findText with (GetRoot(), "") & "\"");
+            call learn with ();
           end, nil, 6000);
       end, nil, 4500);
   end, nil, 27000);

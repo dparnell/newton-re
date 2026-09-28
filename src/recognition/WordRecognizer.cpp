@@ -24,6 +24,7 @@
 #include "NewtonGestalt.h"
 #include "KernelGlobals.h"		// gCurrentTask
 #include "Unicode.h"
+#include "InkGroups.h"			// GetTraceFromStrokes
 #include <string.h>
 
 // ROM 0x0c104d40 gUSE_GROUP_AND_CLASSIFY
@@ -215,10 +216,8 @@ TWordRecognizer::GetLearningData(TUnitPublic* unit)
 // ROM 0x00168528 DoLearning__15TWordRecognizerFRC6RefVarl
 // What the writer settled on - a word info frame's unit data and its
 // strokes - learnt by the word domain (selector 0x20010), for the
-// first five readings only.
-// NOT YET RECONSTRUCTED: GetTraceFromStrokes (0x0021ec00), the reading
-// engine's trace of the strokes; without it there is nothing to learn
-// from, so nothing is.
+// first five readings only - with the strokes as the reading engine's
+// trace (GetTraceFromStrokes) and how many points it has.
 void
 TWordRecognizer::DoLearning(RefArg data, long which)
 {
@@ -229,9 +228,10 @@ TWordRecognizer::DoLearning(RefArg data, long which)
 	TStroke** tstrokes;
 	if (NOTNIL(strokes) && NOTNIL(unitData) && (tstrokes = StrokeBundleToTStrokes(strokes)) != nil)
 	{
-		void* trace = nil;
+		PS_point_type* trace = nil;
+		short nStrokes = 0;
 		short count = 0;
-		// NOT YET: GetTraceFromStrokes(tstrokes, &trace, &count, ...)
+		GetTraceFromStrokes(tstrokes, &trace, &nStrokes, &count);
 		if (trace != nil)
 		{
 			long size = Length(unitData);
