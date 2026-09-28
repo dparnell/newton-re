@@ -9,15 +9,15 @@ here - this file says what is *not* done.  The history of how things got
 here, the plans of finished work and the host and ROM bugs found along
 the way are all in `docs/work-log.md`.
 
-## State at 2026-09-28
+## State at 2026-09-29
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 116/116
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12126 citations, 0 bad;
-  6960 of 16671 functions (41.75%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 12136 citations, 0 bad;
+  6970 of 16671 functions (41.81%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
-- `analysis/natives.py --unbound`: 310 of the ROM's 1326 natives are
-  unanswered (1016 answered, 76.6%; table below).
+- `analysis/natives.py --unbound`: 308 of the ROM's 1326 natives are
+  unanswered (1018 answered, 76.8%; table below).
 
 ## What works
 
@@ -160,9 +160,39 @@ could come next (not ranked; the owner chooses):
 
 ### Recognition
 
-**Complete** (2026-09-28; `docs/recognition/README.md`'s "Status:
-complete"; all 116 of its natives answered).  What remains is out of the
-U.S. ROM's reach, hardware, or waiting on another area:
+**Complete for what the built-in fields reach** (2026-09-28;
+`docs/recognition/README.md`'s "Status: complete").  The NOT YET sweep of
+2026-09-29 (`06c17ba`: 107 comments to 59, all genuine) found natives
+misfiled under frames: recognition is **118 of 125**, and it turned up
+gaps in code that is otherwise done.  **Left to do, reachable now:**
+
+- **Seven methods**: `PenPos` 0x001a0be0, `GetAlternatives` (FGetAlternates
+  0x00078a00) and `Extract` (FExtractRange 0x00079bd8) of the correction
+  info, `HandleUnit` 0x000af800, `HandleRawInk` 0x00171140,
+  `LookupCompletions` 0x0013f6e0, `VoteOnWordUnit` 0x001ee6f0
+  (`natives.py --unbound --area recognition`).
+- `ValidateWord`'s two questions (`Words.cpp`): the dictionary lookup of
+  the word and its variants (0x0008f098) and `WRecVerifyWordSymbols`
+  0x001444c8 - so every word validates as unknown.
+- `FindBaseline`'s first path (`Words.cpp`): `GetTraceFromStrokes` and
+  ParaGraph's `low_level` are there now, but it still takes the box path,
+  so an ink word's measurements come from its box.
+- `TWRecognizer::EndInkStrokeGroup`'s body (a heap switch and
+  `WRecEndInkStrokeGroup`, which exists now), and moving the engine into
+  a VM heap of its own (`NewVMHeap`/`DestroyVMHeap` exist; `CreateVMHeap`
+  does not).
+- `TArbiter::ArbitrateGraphicsWords` (a word that may have been drawn as a
+  shape) and the shape half of `ArbitrateEarly` - both empty, and
+  `TGeneralShapeUnit`, which they wait on, is there now.
+- `SafeExceptionNotify` prints where the ROM calls `ExceptionNotify`
+  (the notify slip): `ExceptionNotify` is in `newt/`, above recognition,
+  so it wants a hook - and it would put a slip up for every script error
+  in a unit handler, which changes what the demos see (the owner's call).
+- The waiting ink redrawn on a screen update (`UpdateCompressGroup`,
+  `UpdateStrokesInList`, `UpdateStroke` 0x001455bc-0x00145728) - the
+  inker's side, like `StrokeUpdate`.
+
+Out of the U.S. ROM's reach, hardware, or waiting on another area:
 
 - **Unreachable from this ROM**: the French/German accent checks
   (`CheckDiacriticsDirections` 0x0007c9a0, 684 B; `AnalyseDiacriticsDirection`,
@@ -176,19 +206,14 @@ U.S. ROM's reach, hardware, or waiting on another area:
   216-byte rows by 1146/2292/1152/2304 - the turned copy is built tile by
   tile in a large binary, so a heap bitmap of that size is left unturned)
   and `FLBAlloc` (`GetLearningData` makes an ordinary binary instead).
-- **Waiting on other areas**: the journal's replayed units
-  (`HandleReplayUnit`), `CreateVMHeap`, `WRecVerifyWordSymbols`,
-  `TController::NextIdleTime`, `SearchAllocateReturnCache`.
+- **Waiting on other areas**: the journal's replayed *units*
+  (`HandleReplayUnit`, `SetCaseAndTime` - the host journal replays
+  strokes), `CreateVMHeap`.
 - `HiliteTraced` (about 7.5 KB): selecting part of a shape by tracing
   along it, so `RemovePoints`' partial branch and command 0x44 are not
   done either - every polygon selection is the whole shape.
-- **Stale comments**: about 40 NOT YET comments in `src/recognition/` name
-  things since done (`BPNetEvaluate`, `ArbitrateGraphicsWords`,
-  `BuildChains`, ...); the citations are the real record.  Worth a sweep.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
-  `FramePaths`), which want the PostScript path machinery, and
-  `TWRecognizer::EndInkStrokeGroup` (the CIC library's
-  `WRecEndInkStrokeGroup`).
+  `FramePaths`), which want the PostScript path machinery.
 - **How well it reads.**  Rosetta: a perfectly round synthetic "c", as
   wide as an "o", comes back with every code under 0.6%, so the readings
   of a word with one in it all tie; the path from the classifier's input
@@ -277,7 +302,7 @@ inside an area).  At 2026-09-28:
 | area | how many | what is under them |
 |---|---|---|
 | comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
-| frames | 106 | natives.py's catch-all: a handful each across many areas |
+| frames | 97 | natives.py's catch-all: a handful each across many areas |
 | packages | 17 | packages on a store (the ROM domain manager, large binaries), 1.x packages |
 | books | 19 | the book reader and newspapers (`TLibrarian`) |
 | views | 12 | |
@@ -286,7 +311,8 @@ inside an area).  At 2026-09-28:
 | testing, intl | 6 each | testing: the serial debugging, Uriah, the IR sniffing |
 | qd | 5 | |
 | stores | 4 | large binaries on a store, store passwords |
-| recognition, assist | 0 | all answered |
+| recognition | 7 | methods of the unit and correction-info protos (above) |
+| assist | 0 | all answered |
 
 The areas whose machinery exists are worth sweeping with `--ready`.
 
