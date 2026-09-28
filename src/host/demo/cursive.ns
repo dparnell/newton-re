@@ -6,11 +6,13 @@
 //       --display 320x480 --script src/host/demo/cursive.ns --headless 50
 //
 // The words are grouped by ParaGraph's word segmenter into two word
-// descriptors and each is given to the reader (GCTryToRecognize).  The
-// reader's three layers are NOT YET, so each word ends as ink:
-// "[cursive] word of strokes ..." lines say how far it got (ctest
-// host.NewtonCursive looks for both), and build/cursive.pgm is the
-// page.  Otherwise as src/host/demo/write.ns.
+// descriptors and each is given to the reader (GCTryToRecognize): the
+// low level cuts it into xrs and xrw_algs reads them into a word graph
+// ("[cursive] xrw_algs: graph ..." - "to" comes out first for the second
+// word).  The answers made of the graph are NOT YET, so each word still
+// ends as ink: "[cursive] word of strokes ..." lines say how far it got
+// (ctest host.NewtonCursive looks for both words' graphs), and
+// build/cursive.pgm is the page.  Otherwise as src/host/demo/write.ns.
 //
 // This run once locked up one time in three, in the heap's compaction:
 // CreateTrigramHeader asked for the ROM's 0x98 bytes and zeroed the

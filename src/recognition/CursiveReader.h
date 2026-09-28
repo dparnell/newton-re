@@ -83,6 +83,8 @@ long	GCFillBaseLineParameters(short lineHeight, short baseLine, short newLine, s
 long	SetRCB(RCB_inpdata_type* inp, UByte* stroka);							// ROM 0x0019f2ac SetRCB__FP16RCB_inpdata_typeP11stroka_data
 long	GetInkBox(PS_point_type* trace, long n, UByte* rect);					// ROM 0x0019f50c GetInkBox__FP13PS_point_typeiP5_RECT - big-endian left, top, right, bottom; ==> 0, 1 (all nought) for too few points
 long	GetAvePos(PS_point_type* trace, long n);								// ROM 0x0019f5e0 GetAvePos__FP13PS_point_typei - the mean y of the points not pen-ups
+long	SetMultiWordMarksDash(xrdata_type* xr);							// ROM 0x0019e4a8 SetMultiWordMarksDash__FP11xrdata_type - ==> whether a colon was found between breaks
+long	SetMultiWordMarksWS(long limit, xrdata_type* xr, rc_type* rc);		// ROM 0x0019e520 SetMultiWordMarksWS__FiP11xrdata_typeP7rc_type - ==> whether a doubtful gap's break was marked
 long	AllocXrdata(xrdata_type* xr, long size);								// ROM 0x0019f878 AllocXrdata__FP11xrdata_typei - ==> 0, 1 for a failure (120 at most)
 void	FreeXrdata(xrdata_type* xr);											// ROM 0x0019f8e0 FreeXrdata__FP11xrdata_type
 long	LockLexicalDB(void* chain);												// ROM 0x00168a9c LockLexicalDB__FUl

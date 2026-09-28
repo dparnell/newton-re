@@ -113,16 +113,50 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 							fprintf(stderr, " %02x/%d", e[i].type, e[i].height);
 						fprintf(stderr, "\n");
 					}
-					// NOT YET RECONSTRUCTED: the rest - ChunkWriteParamCtx,
-					// ChunkPatchXrdata, and for more than two xrs
-					// SetMultiWordMarksWS/Dash and xrw_algs (0x00362f08,
-					// the xrs read into words: -9 when it fails),
-					// EvaluateAndSortAnswers,
-					// MakeAndCombRecWordsFromWordGraph, ORCreateLearnInfo;
-					// then ChunkRestoreRC, ChunkSortAnswers,
-					// ChunkCorrectByLexDB, FillRecwordSplitInfo and
-					// GCFillLearningHandle.  The host stops here with
-					// xrw_algs' failure.
+					// (ChunkWriteParamCtx and ChunkPatchXrdata come here: with
+					// no chunk made - the digit reader being NOT YET - both do
+					// nothing)
+					if (2 < xr.fLength)
+					{
+						UShort saved8 = RCGetH(rc, 0x08);
+						long ws = SetMultiWordMarksWS((short) RCGetH(rc, 0x28), &xr, rc);
+						long dash = SetMultiWordMarksDash(&xr);
+						UShort h8 = RCGetH(rc, 0x08);
+						if (dash + ws == 0)
+							h8 &= 0xffdf;
+						else
+							h8 |= 0x20;
+						RCSetH(rc, 0x08, h8);
+						if (xrw_algs(&xr, readings, &rwg, rc) != 0)
+						{
+							err = -9;
+							goto done;
+						}
+						if (TracingCursive())
+						{
+							fprintf(stderr, "[cursive] xrw_algs: graph of %ld symbols:", rwg.size);
+							for (long i = 0; i < rwg.size; i++)
+							{
+								RWS_type* e = &rwg.rws[i];
+								if (e->type == 1)
+									fprintf(stderr, "%c", e->sym);
+								else if (e->type == 4)
+									fprintf(stderr, " | ");
+							}
+							fprintf(stderr, "\n");
+						}
+						// NOT YET RECONSTRUCTED: the answers made of the graph -
+						// EvaluateAndSortAnswers (0x00337ee8),
+						// MakeAndCombRecWordsFromWordGraph (0x0019f644) and, with
+						// rc +0xb2 bit 6, ORCreateLearnInfo - then the block's
+						// rc +0x08 put back; after them ChunkRestoreRC,
+						// ChunkSortAnswers, ChunkCorrectByLexDB,
+						// FillRecwordSplitInfo and GCFillLearningHandle.  The
+						// host stops here: the word graph is made but no word is
+						// read, so it answers -9 as though xrw_algs had failed
+						RCSetH(rc, 0x08, saved8);
+						FreeRWGMem(&rwg);
+					}
 					err = -9;
 					goto done;
 				}
@@ -406,6 +440,97 @@ GetAvePos(PS_point_type* trace, long n)
 			return sum / count;
 	}
 	return 0;
+}
+
+
+// ROM 0x0019e4a8 SetMultiWordMarksDash__FP11xrdata_type
+// A colon between two breaks is a word gap on both sides: the breaks'
+// penalties set to 6 and 8.  ==> whether there was one.
+long
+SetMultiWordMarksDash(xrdata_type* xr)
+{
+	long found = 0;
+	long n = xr->fLength;
+	xrd_el_type* el = (xrd_el_type*) xr->fElements;
+	for (long i = 1; i < n - 4; i++)
+	{
+		UByte t = el[i].type;
+		if ((t == 1 || t == 2) && el[i + 1].type == ':' && (el[i + 2].type == 1 || el[i + 2].type == 2))
+		{
+			el[i].penalty = 6;
+			el[i + 2].penalty = 8;
+			found = 1;
+		}
+	}
+	return found;
+}
+
+
+// ROM 0x0019e520 SetMultiWordMarksWS__FiP11xrdata_typeP7rc_type
+// The gaps inside the word the segmenter was unsure of (the word info's
+// strokes, each with how sure it was that a space follows, within
+// `limit` of nought): the break that ends the stroke - the one whose box
+// takes in the stroke's rightmost x, or that starts at its last point -
+// has its penalty set by how sure: 9 (a space, 70 or more), 10, 11, 12,
+// 13 (surely none, below -70).  ==> whether any break was found.
+long
+SetMultiWordMarksWS(long limit, xrdata_type* xr, rc_type* rc)
+{
+	long found = 0;
+	long n = xr->fLength;
+	xrd_el_type* el = (xrd_el_type*) xr->fElements;
+	PS_point_type* trace = (PS_point_type*) rc->fTrace;
+	ws_word_info_type* info = (ws_word_info_type*) rc->fWordInfo;
+	if (info == nil)
+		return 0;
+	long points = (short) RCGetH(rc, 0x96);
+	for (long w = 0; w < 8; w++)
+	{
+		UByte stroke = info->fStrokes[w];
+		if (stroke == 0 || limit < HWRAbs(info->fSure[w]))
+			continue;
+		ULong count = 1;
+		for (long pt = 1; pt < points; pt++)
+		{
+			if (trace[pt].y >= 0)
+				continue;
+			if (count != stroke)
+			{
+				count++;
+				continue;
+			}
+			// the pen-up that ends the stroke
+			long best = 0;
+			for (long i = 1; i < n - 1; i++)
+			{
+				UByte t = el[i].type;
+				if (!(t == 1 || t == 3 || t == 4 || t == 2 || t == 5))
+					continue;
+				long x = 0;
+				for (long u = pt - 1; u > 0 && trace[u].y >= 0; u--)
+					if (x < trace[u].x)
+						x = trace[u].x;
+				if ((XrGetH(el[i].box + kXrLeft) <= x && x <= XrGetH(el[i].box + kXrRight))
+				 || pt - 1 == XrGetH(el[i].begpoint))
+				{
+					found = 1;
+					best = i;
+				}
+			}
+			SByte sure = info->fSure[w];
+			UByte code = sure < 'F' ? 1 : 0;
+			if (sure < 0x1e)
+				code = 2;
+			if (sure < -0x1e)
+				code = 3;
+			if (sure < -0x46)
+				code = 4;
+			if (best != 0)
+				el[best].penalty = (UByte) (code + 9);
+			break;
+		}
+	}
+	return found;
 }
 
 
