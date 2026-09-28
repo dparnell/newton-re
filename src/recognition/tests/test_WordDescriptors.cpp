@@ -419,6 +419,31 @@ TestChunkContext(void)
 }
 
 
+// The digit reader's chord measures (Chunk.h).
+static void
+TestChunkChords(void)
+{
+	EXPECT(v_QDistFromChord(0, 0, 10, 0, 5, 3) == 9);
+	EXPECT(v_QDistFromChord(0, 0, 10, 0, 5, -4) == 16);
+	EXPECT(v_QDistFromChord(0, 0, 0, 10, 7, 2) == 49);
+	EXPECT(v_QDistFromChord(1, 1, 1, 1, 4, 5) == 25);			// a chord of no length
+	EXPECT(v_QDistFromChord(0, 0, 3, 4, 3, 4) == 0);			// on the line
+
+	tag_WORD_TRACE arch[5] = { {0, 0, 0, 0}, {5, 2, 0, 0}, {10, 5, 0, 0}, {15, 2, 0, 0}, {20, 0, 0, 0} };
+	EXPECT(v_MostFarFromChord(arch, 0, 4) == 2);
+	// a flat top: the middle of the run
+	tag_WORD_TRACE flat[5] = { {0, 0, 0, 0}, {5, 5, 0, 0}, {10, 5, 0, 0}, {15, 5, 0, 0}, {20, 0, 0, 0} };
+	EXPECT(v_MostFarFromChord(flat, 0, 4) == 2);
+	// a pen-up breaks the run: the first of the flat points stays
+	tag_WORD_TRACE broken[6] = { {0, 0, 0, 0}, {5, 5, 0, 0}, {0, -1, 0, 0}, {10, 5, 0, 0}, {15, 5, 0, 0}, {20, 0, 0, 0} };
+	EXPECT(v_MostFarFromChord(broken, 0, 5) == 1);
+	// nothing off the line: the points at nought count as a flat run from
+	// the chord's start (its middle answered, one point on)
+	tag_WORD_TRACE line[3] = { {0, 0, 0, 0}, {5, 0, 0, 0}, {10, 0, 0, 0} };
+	EXPECT(v_MostFarFromChord(line, 0, 2) == 1);
+}
+
+
 int
 main()
 {
@@ -431,6 +456,7 @@ main()
 	TestGroupAndRead();
 	TestSetStrXrRC();
 	TestChunkContext();
+	TestChunkChords();
 	if (failures == 0)
 		printf("test_WordDescriptors: all passed\n");
 	return failures == 0 ? 0 : 1;

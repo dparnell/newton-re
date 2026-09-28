@@ -5,7 +5,8 @@
 				and the configuration it changes (see Chunk.h).
 
 	Written by:	ParaGraph; reconstructed from the MP2x00 US ROM
-				(0x002a6404-0x002a6650); each function cites its origin.
+				(0x0028686c-0x00286a54, 0x002a6404-0x002a6650); each
+				function cites its origin.
 */
 
 #include "Chunk.h"
@@ -130,4 +131,116 @@ ChunkWriteParamCtx(void* ctx, rc_type* rc, xrdata_type* xr, rec_w_type* readings
 	c->fXr = xr;
 	c->fReadings = readings;
 	return &c->fReadings;
+}
+
+
+#pragma mark - the trace
+
+// 32-bit arithmetic as the ARM does it, wrapping
+static inline int32_t	Mul32(int32_t a, int32_t b)		{ return (int32_t) ((uint32_t) a * (uint32_t) b); }
+static inline int32_t	Add32(int32_t a, int32_t b)		{ return (int32_t) ((uint32_t) a + (uint32_t) b); }
+static inline int32_t	Sub32(int32_t a, int32_t b)		{ return (int32_t) ((uint32_t) a - (uint32_t) b); }
+
+
+// ROM 0x0028686c v_MostFarFromChord__FP14tag_WORD_TRACEiT2
+// The point from i1+1 to i2 furthest from the line through i1 and i2
+// (the distance as the cross product, unscaled); a pen-up is skipped and
+// breaks a run.  A later point as far as the furthest so far, straight
+// after it, moves the answer on one point every second such point, so a
+// flat run answers its middle.  ==> its index; i1 when none is further
+// than nought.
+// DEVIATION: the ROM keeps the every-second-point toggle in r5 without
+// setting it first, so a first point at distance nought reads whatever
+// the caller left there; the host starts it at nought.
+long
+v_MostFarFromChord(tag_WORD_TRACE* trace, long i1, long i2)
+{
+	int32_t dx = trace[i2].x - trace[i1].x;
+	int32_t dy = trace[i2].y - trace[i1].y;
+	int32_t c = Sub32(Mul32(dy, trace[i1].x), Mul32(dx, trace[i1].y));
+	int32_t best = 0;
+	long at = i1;
+	Boolean following = true;
+	Boolean toggle = false;
+	for (long i = i1 + 1; i <= i2; i++)
+	{
+		if (trace[i].y == -1)
+		{
+			following = false;
+			continue;
+		}
+		int32_t d = Add32(Sub32(Mul32(dx, trace[i].y), Mul32(dy, trace[i].x)), c);
+		if (d < 0)
+			d = Sub32(0, d);
+		if (d > best)
+		{
+			best = d;
+			at = i;
+			toggle = false;
+			following = true;
+		}
+		else if (following && d == best)
+		{
+			if (toggle)
+			{
+				at++;
+				toggle = false;
+			}
+			else
+				toggle = true;
+		}
+		else
+			following = false;
+	}
+	return at;
+}
+
+
+// ROM 0x0028694c v_QDistFromChord__FiN51
+// The square of the distance of (x, y) from the line through (x1, y1) and
+// (x2, y2) - |p|^2 less the square of its projection on the chord,
+// dot^2/len2 - with the quotient and the remainder of dot/len2 taken
+// apart so the products stay in 32 bits: a remainder too big to square is
+// halved, and the length quartered, until it is small enough (or the
+// length is down to 64), and then the remainder's part is worked out one
+// way or the other.  A chord of no length answers the square of the
+// distance from its point.
+long
+v_QDistFromChord(long x1, long y1, long x2, long y2, long x, long y)
+{
+	int32_t dx = (int32_t) (x - x1);
+	int32_t dy = (int32_t) (y - y1);
+	int32_t cx = (int32_t) (x2 - x1);
+	int32_t cy = (int32_t) (y2 - y1);
+	if (x1 == x2 && y1 == y2)
+		return Add32(Mul32(dx, dx), Mul32(dy, dy));
+	int32_t dot = Add32(Mul32(cx, dx), Mul32(cy, dy));
+	int32_t len2 = Add32(Mul32(cx, cx), Mul32(cy, cy));
+	int32_t q = dot / len2;
+	int32_t rem = dot % len2;
+	int32_t absRem = rem < 0 ? -rem : rem;
+	int32_t t;
+	if (absRem <= 0x7fff)
+		t = Sub32(0, Mul32(rem, rem)) / len2;
+	else
+	{
+		int32_t r = absRem;
+		int32_t l = len2;
+		while (r >= 0x7fff && l > 0x40)
+		{
+			r >>= 1;
+			l = (l + 2) >> 2;
+		}
+		if (l > 0x40)
+			t = Sub32(0, Mul32(r, r)) / l;
+		else
+			t = Mul32(r, -(r + (l >> 1)) / l);
+		if (rem < 0)
+			t = -t;
+	}
+	int32_t result = Add32(Mul32(dy, dy), t);
+	result = Sub32(result, Mul32(q, dot));
+	result = Add32(Mul32(dx, dx), result);
+	result = Sub32(result, Mul32(rem, q));
+	return result;
 }

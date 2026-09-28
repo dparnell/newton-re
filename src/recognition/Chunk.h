@@ -54,6 +54,25 @@ struct ChunkCtx
 	rec_w_type*		fReadings;		// +44
 };
 
+// A point of the digit reader's own trace (ROM tag_WORD_TRACE, 8 bytes, no
+// pointers): the point, y -1 for a pen-up, then what ExtrWordTrace_V
+// marks it as.
+struct tag_WORD_TRACE
+{
+	short		x;					// +00
+	short		y;					// +02  -1: the pen was lifted
+	short		f4;
+	short		f6;
+};
+static_assert(sizeof(tag_WORD_TRACE) == 8, "a tag_WORD_TRACE is 8 bytes, as in the ROM");
+
+// The point between i1 and i2 furthest from the chord between them (a
+// pen-up breaks a run; the middle of a run of equally far points).
+long	v_MostFarFromChord(tag_WORD_TRACE* trace, long i1, long i2);	// ROM 0x0028686c v_MostFarFromChord__FP14tag_WORD_TRACEiT2
+// The square of (x, y)'s distance from the segment's line, worked out in
+// 32-bit integers without overflowing where it can help it.
+long	v_QDistFromChord(long x1, long y1, long x2, long y2, long x, long y);	// ROM 0x0028694c v_QDistFromChord__FiN51
+
 void	ChunkAllocCtx(void** ctx, rc_type* rc);			// ROM 0x002a65ec ChunkAllocCtx__FPPvP7rc_type
 void	ChunkCleanUp(void** ctx);							// ROM 0x002a6404 ChunkCleanUp__FPPv - its three blocks and itself given back, *ctx nil
 long	IsChunkNumbers(void* ctx);							// ROM 0x002a65cc IsChunkNumbers__FPv
