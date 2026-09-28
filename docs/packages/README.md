@@ -297,10 +297,41 @@ units after the boot.  A renamed copy of a built-in package installed
 with `newton --package` has its import table (`ConnectionInternal` 1.1,
 `Connection` 1.0) resolved against them.
 
+## The `'dict` and `'comm` part handlers
+
+The newt world registers five part handlers, in this order (`TNewtWorld::
+MainConstructor` 0x0030d20c): `'form`, `'book`, `'dict`, `'auto`, `'comm`.
+
+- **`'dict`** (`recognition/DictPartHandler.h`, `TDictPartHandler`, a
+  plain `TPartHandler`): the part is a frames part whose top-level frame
+  is `{dictionaries: {dictionaryList: [...]}}`.  Each frame of the list is
+  copied into the heap - its slot names made the heap's own symbols - and
+  registered with `AddDictionary` (a frame with a non-nil `custom` slot is
+  registered with the *symbol* `'custom` as its custom slot, not the
+  slot's value), printed on the REP as `Dict-` and the frame, and its
+  `dictID` kept for `Remove`, which disposes of each
+  (`FDisposeDictionary`: unregistered and its Airus dictionary closed).
+  A part with an empty list is refused (`kError_Bad_Package`).  DEVIATION:
+  the part is imported into a host area first (`ImportPackagePart`,
+  shared with the frame part handler) and the area kept until the part is
+  removed.  `test_Dictionaries` registers and disposes of a dictionary the
+  way the handler does.
+- **`'comm`** (`FramePartHandler.h`, `TCommPartHandler`, an `'auto` part
+  handler): a part whose frame has `configurations` has them registered
+  with the global `RegCommConfigArray` before it is installed as an
+  `'auto` part is.  ROM bugs kept: the `'auto` installation's answer is
+  thrown away (only the configurations' error is answered), and
+  `RemoveFrame` looks for `configurations` in the *remove object* - a
+  `canonicalFramePartSavedObject`, `{partFrame, packageStyle,
+  removeCookie}` - so `UnRegCommConfigArray` is never called.
+  `test_Units` checks both.
+
+Neither kind of part is in this ROM's extension.
+
 ## Not yet
 
-- The `'book`, `'dict` and `'comm` part handlers (`TBookPartHandler` over
-  the book reader's `TLibrarian`, `TDictPartHandler`, `TCommPartHandler`).
+- The `'book` part handler (`TBookPartHandler` over the book reader's
+  `TLibrarian`).
 - Streamed sources: `TPackageLoader` (a package read through a pipe or an
   endpoint), `CPartPipe`/`CShadowRingBuffer` on the manager's side,
   `TPipeApp`.  The manager answers `kError_Call_Not_Implemented` for one.

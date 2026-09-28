@@ -108,8 +108,8 @@ TranslateROMExports(ULong32 partAddress, ULong partSize, const TImportedObjectAr
 // A frames part in memory imported.  ==> the area, nil when its bytes are
 // not a run of objects (reported: the part is not installed, and nothing
 // else would say so); *inROMImage whether the part is one of the ROM's.
-static TImportedObjectArea*
-ImportPart(Ptr data, PartInfo* info, Boolean* inROMImage)
+TImportedObjectArea*
+ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 {
 	ULong partOffset = 0;
 	const UByte* package = PackageContaining((const UByte*) data, &partOffset);
@@ -185,7 +185,7 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 		else
 		{
 			Boolean inROM = false;
-			area = ImportPart(data, partInfo, &inROM);
+			area = ImportPackagePart(data, partInfo, &inROM);
 			if (area == nil)
 				return kError_Bad_Package;
 			frame = FramePartToplevelFrame(area->fArea);
@@ -471,4 +471,71 @@ NewtonErr
 TAutoScriptPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartType /*partType*/)
 {
 	return RemovePart(RSSYMauto, partId, removeObject);
+}
+
+
+/*------------------------------------------------------------------------------
+	T C o m m P a r t H a n d l e r
+------------------------------------------------------------------------------*/
+
+// ROM 0x0013a5d8 InstallFrame__16TCommPartHandlerFRC6RefVarRC6PartId10SourceTypeP8PartInfo
+// The part's `configurations`, if it has some, registered with the global
+// RegCommConfigArray (an evt.ex.fr becomes the answer), then the part
+// installed as an 'auto part is.
+// ROM BUG: what the 'auto part's installation answers is thrown away -
+// only the configurations' error (none, usually) is answered.
+NewtonErr
+TCommPartHandler::InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo)
+{
+	NewtonErr err = noErr;
+	RefVar configurations(GetFrameSlotRef(frame, RSSYMconfigurations));
+	if (NOTNIL(configurations))
+	{
+		RefVar args(MakeArray(1));
+		SetArraySlotRef(args, 0, configurations);
+		newton_try
+		{
+			RefVar fn(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMregcommconfigarray));
+			DoBlock(fn, args);
+		}
+		newton_catch(exFrames)
+		{
+			err = FramesException(CurrentException());
+		}
+		end_try;
+	}
+	TAutoScriptPartHandler::InstallFrame(frame, partId, sourceType, partInfo);
+	return err;
+}
+
+
+// ROM 0x0013a760 RemoveFrame__16TCommPartHandlerFRC6RefVarRC6PartIdUl
+// The configurations unregistered (the global UnRegCommConfigArray), then
+// the part removed as an 'auto part is.
+// ROM BUG: the configurations are looked for in the remove object - a
+// canonicalFramePartSavedObject, {partFrame, packageStyle, removeCookie} -
+// rather than in the part's frame, so they are never unregistered.  And
+// as in InstallFrame, the 'auto part's answer is thrown away.
+NewtonErr
+TCommPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartType partType)
+{
+	NewtonErr err = noErr;
+	RefVar configurations(GetFrameSlotRef(removeObject, RSSYMconfigurations));
+	if (NOTNIL(configurations))
+	{
+		RefVar args(MakeArray(1));
+		SetArraySlotRef(args, 0, configurations);
+		newton_try
+		{
+			RefVar fn(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMunregcommconfigarray));
+			DoBlock(fn, args);
+		}
+		newton_catch(exFrames)
+		{
+			err = FramesException(CurrentException());
+		}
+		end_try;
+	}
+	TAutoScriptPartHandler::RemoveFrame(removeObject, partId, partType);
+	return err;
 }

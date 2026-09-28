@@ -135,6 +135,7 @@ add_library(recognition STATIC
     Airus.cpp
     AirusIterator.cpp
     Dictionaries.cpp
+    DictPartHandler.cpp
     RandomWords.cpp
     RandomWordTables.cpp
     ROMDictionaryData.cpp
@@ -153,5 +154,5 @@ add_library(recognition STATIC
 target_include_directories(recognition PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # (the strokes tell the root view what to redraw; the views track strokes:
 # the two static libraries depend on each other)
-target_link_libraries(recognition PUBLIC frames qd views testing)
+target_link_libraries(recognition PUBLIC frames qd views testing packages)
 add_subdirectory(tests)

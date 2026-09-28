@@ -107,6 +107,23 @@ public:
 };
 
 
+// 'comm: an 'auto part whose frame may carry `configurations` - comm
+// configurations registered (the global RegCommConfigArray) before the
+// part is installed, and unregistered (UnRegCommConfigArray) when it goes
+class TCommPartHandler : public TAutoScriptPartHandler
+{
+public:
+	virtual	NewtonErr	InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo);
+	virtual	NewtonErr	RemoveFrame(RefArg removeObject, const PartId& partId, PartType partType);
+};
+
+
+// host (DEVIATION, above): a frames part in memory imported into a host
+// object area - nil when its bytes are not a run of objects (reported);
+// *inROMImage whether it is one of the ROM's.  (The 'dict part handler's
+// part is one too.)
+TImportedObjectArea*	ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage);
+
 // the part described to NewtonScript and handed to (taken from) the
 // global InstallPart (RemovePart); an evt.ex.fr becomes its error
 NewtonErr	InstallPart(RefArg partType, RefArg partFrame, const PartId& partId, SourceType type, PartInfo* info, RefArg removeObject);

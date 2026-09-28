@@ -15,6 +15,8 @@
 */
 
 #include "Units.h"
+#include "FramePartHandler.h"
+#include "Interpreter.h"
 #include "SortedList.h"
 #include "FramesPart.h"
 #include "ObjectAreaImport.h"
@@ -338,6 +340,94 @@ TestResolve(void)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   ' c o m m   p a r t   h a n d l e r
+------------------------------------------------------------------------------*/
+
+// stand-ins for the globals the handler calls
+static long gRegistered = 0, gRegisteredLength = 0, gUnregistered = 0, gInstalled = 0, gRemoved = 0;
+
+static Ref
+StubRegCommConfigArray(RefArg /*rcvr*/, RefArg configurations)
+{
+	gRegistered++;
+	gRegisteredLength = Length(configurations);
+	return NILREF;
+}
+
+static Ref
+StubUnRegCommConfigArray(RefArg /*rcvr*/, RefArg /*configurations*/)
+{
+	gUnregistered++;
+	return NILREF;
+}
+
+static Ref
+StubInstallPart(RefArg /*rcvr*/, RefArg /*installInfo*/)
+{
+	gInstalled++;
+	return MAKEINT(7);
+}
+
+static Ref
+StubRemovePart(RefArg /*rcvr*/, RefArg /*removeInfo*/, RefArg /*cookie*/)
+{
+	gRemoved++;
+	return NILREF;
+}
+
+// the handler with the remove object Install would have made for it
+class TTestCommPartHandler : public TCommPartHandler
+{
+public:
+	void	Prime()
+	{
+		fRemoveObject = new FramePartRemoveObject;
+		fRemoveObject->fObject = new RefStruct(NILREF);
+		fRemoveObject->fData = nil;
+		fRemoveObject->fArea = nil;
+	}
+	Ref		SavedObject()	{ return *fRemoveObject->fObject; }
+};
+
+
+static void
+TestCommPartHandler(void)
+{
+	RefVar functions(gFunctionFrame);
+	SetFrameSlot(functions, RSSYMregcommconfigarray, RefVar(MakeCFunction((void*) StubRegCommConfigArray, 1, nil)));
+	SetFrameSlot(functions, RSSYMunregcommconfigarray, RefVar(MakeCFunction((void*) StubUnRegCommConfigArray, 1, nil)));
+	SetFrameSlot(functions, RSSYMinstallpart, RefVar(MakeCFunction((void*) StubInstallPart, 1, nil)));
+	SetFrameSlot(functions, RSSYMremovepart, RefVar(MakeCFunction((void*) StubRemovePart, 2, nil)));
+
+	// (never destroyed: a part handler unregisters from the package
+	// manager, which is not running here)
+	TTestCommPartHandler& handler = *new TTestCommPartHandler;
+	handler.Prime();
+	RefVar frame(AllocateFrame());
+	RefVar configurations(MakeArray(2));
+	SetFrameSlot(frame, RSSYMconfigurations, configurations);
+	ExtendedPartInfo info;
+	memset(&info, 0, sizeof(info));
+	SourceType source = { kFixedMemory, kNoDevice, 0, 0 };
+	PartId partId = { 1, 0 };
+
+	// installed: the configurations registered, then the part as an 'auto part
+	EXPECT(handler.InstallFrame(frame, partId, source, &info) == noErr);
+	EXPECT(gRegistered == 1 && gRegisteredLength == 2 && gInstalled == 1);
+	// removed: the configurations looked for in the remove object, which has
+	// none (the ROM's bug) - so never unregistered - and the part removed
+	RefVar saved(handler.SavedObject());
+	EXPECT(IsFrame(saved) && ISNIL(GetFrameSlotRef(saved, RSSYMconfigurations)));
+	EXPECT(handler.RemoveFrame(saved, partId, 'comm') == noErr);
+	EXPECT(gUnregistered == 0 && gRemoved == 1);
+	// a remove object that did have them would unregister them
+	SetFrameSlot(saved, RSSYMconfigurations, configurations);
+	EXPECT(handler.RemoveFrame(saved, partId, 'comm') == noErr);
+	EXPECT(gUnregistered == 1 && gRemoved == 2);
+}
+
+
 int
 main()
 {
@@ -354,6 +444,7 @@ main()
 
 	TestResolve();
 	TestUnits();
+	TestCommPartHandler();
 	if (failures == 0)
 		printf("test_Units: all passed\n");
 	return failures != 0;

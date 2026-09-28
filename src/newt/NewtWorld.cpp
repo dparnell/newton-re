@@ -28,6 +28,7 @@
 #include "Loader.h"
 #include "ROMPackages.h"
 #include "FramePartHandler.h"
+#include "DictPartHandler.h"
 #include "Soups.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"
@@ -189,8 +190,8 @@ TNewtWorld::ForkSwitch(Boolean in)
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
 // name, InitTranslators, NTKInit, REPInit/ResetREPIdler, InitExternal,
-// the 'book, 'dict and 'comm part handlers (TBookPartHandler over the
-// book reader's TLibrarian, TDictPartHandler, TCommPartHandler), HandleCardEvents,
+// the 'book part handler (TBookPartHandler over the book reader's
+// TLibrarian), HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
 // AllocateEarlyStuff (the sort tables).
 long
@@ -241,11 +242,16 @@ TNewtWorld::MainConstructor()
 	fHandler->InitIdler((TTimeout) 0, 0, false);
 	gApplication = new TARMNotebook;
 	gApplication->Constructor();
-	// the frames part handlers, whose parts come to this world
+	// the part handlers whose parts come to this world ('book, over the
+	// book reader, is NOT YET)
 	TPartHandler* handler = new TFormPartHandler;
 	handler->Init('form');
+	handler = new TDictPartHandler;
+	handler->Init('dict');
 	handler = new TAutoScriptPartHandler;
 	handler->Init('auto');
+	handler = new TCommPartHandler;
+	handler->Init('comm');
 	StartDrawing(nil, nil);
 	return noErr;
 }

@@ -82,11 +82,12 @@ need first:
    `GetEntryFromLargeObjectVAddr` (a package's store entry, which the
    `client` slots of `CurrentImports`/`PendingImports` would carry - nil
    until packages are on a store, (5)).
-2. **The `'dict` and `'comm` part handlers** - `TDictPartHandler`
-   (`Install`/`Remove`/`Expand`, `AddDictionaries`, `FDisposeDictionary`:
-   10 functions, 1.6 KB) and `TCommPartHandler` (`InstallFrame`/
-   `RemoveFrame`: 3 functions, 0.8 KB).  Registered at boot next to
-   'form and 'auto.
+2. ~~**The `'dict` and `'comm` part handlers**~~ - DONE (2026-09-29,
+   `recognition/DictPartHandler.h`, `packages/FramePartHandler.h`'s
+   `TCommPartHandler`; `docs/packages/README.md`): registered at boot in
+   the ROM's order ('form, 'dict, 'auto, 'comm - 'book waits on (7)).
+   Tested at the function level (`test_Dictionaries`, `test_Units`); no
+   package with either part was to hand to install whole.
 3. **Streamed sources** - `TPackageLoader` (`Load`, `Done`,
    `cPackageLoad`), `CPartPipe` (`ReadChunk`, `Underflow`, ...),
    `TPipeApp`, `TPackageLoaderEventHandler`: about 20 functions, 2.5 KB of

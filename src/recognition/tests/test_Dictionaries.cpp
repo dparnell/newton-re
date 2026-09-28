@@ -30,6 +30,9 @@
 #include "Ports.h"
 #include "NativeFunctions.h"
 #include "ROMConstants.h"
+#include "DictPartHandler.h"
+#include "REPTranslators.h"
+#include "OSErrors.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -712,6 +715,47 @@ main()
 		// the dictionary given back: the frame no longer has one
 		EXPECT(NOTNIL(RefVar(FAirusDispose(frame))));
 		EXPECT(ISNIL(RefVar(GetFrameSlotRef(frame, RSSYMdict))));
+	}
+
+	// ---- a 'dict package part's dictionaries (DictPartHandler.h) ----
+	{
+		if (gREPout == nil)
+			HostInitREP(stdout, nil);
+		// the part's frame: {dictionaries: {dictionaryList: [a dictionary]}}
+		RefVar dict(AllocateFrame());
+		EXPECT(RINT(RefVar(FAirusNew(dict, RefVar(MAKEINT(kAirusKindEnumRAM | kAirusLockedBit)),
+									 RefVar(MAKEINT(1))))) == 0);
+		EXPECT(RINT(RefVar(FAirusAddWord(dict, RefVar(MakeString("wombat")), RefVar(MAKEINT(2))))) == 0);
+		RefVar dictionaries(AllocateFrame());
+		RefVar dictList(MakeArray(1));
+		SetArraySlot(dictList, 0, dict);
+		SetFrameSlot(dictionaries, RSSYMdictionarylist, dictList);
+		RefVar part(AllocateFrame());
+		SetFrameSlot(part, RSSYMdictionaries, dictionaries);
+
+		// installed: registered as a copy of the frame, its id kept
+		// (never destroyed: a part handler unregisters from the package
+		// manager, which is not running here)
+		TDictPartHandler& handler = *new TDictPartHandler;
+		long before = gDictList->Count();
+		RefVar ids(MakeArray(0));
+		EXPECT(handler.AddDictionaries(part, ids) == noErr);
+		EXPECT(Length(ids) == 1 && gDictList->Count() == before + 1);
+		RefVar id(GetArraySlotRef(ids, 0));
+		RefVar registered(FindDictionaryFrame((ULong) RINT(id)));
+		EXPECT(IsFrame(registered) && !EQRef(registered, dict));			// a copy
+		RefVar found(AllocateFrame());
+		EXPECT(RINT(RefVar(FAirusLookupWord(registered, RefVar(MakeString("wombat")), found))) == kAirusIsWord);
+		EXPECT(ISNIL(RefVar(GetFrameSlotRef(registered, RSSYMcustom))));
+
+		// removed: taken out of the list again
+		EXPECT(NOTNIL(RefVar(FDisposeDictionary(RefVar(NILREF), id))));
+		EXPECT(gDictList->Count() == before);
+		EXPECT(ISNIL(RefVar(FDisposeDictionary(RefVar(NILREF), id))));		// no longer there
+
+		// a part with no dictionaries is refused
+		SetFrameSlot(dictionaries, RSSYMdictionarylist, RefVar(MakeArray(0)));
+		EXPECT(handler.AddDictionaries(part, ids) == kError_Bad_Package);
 	}
 
 	if (failures == 0)

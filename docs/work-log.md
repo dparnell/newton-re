@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the 'dict and 'comm part handlers
+
+- **`TDictPartHandler`** (`recognition/DictPartHandler.h`, 0x0008fa44,
+  0x0008fd5c-0x00090284): a 'dict part's dictionaryList copied into the
+  heap and registered with `AddDictionary`, the ids kept, and disposed of
+  again on removal (`FDisposeDictionary`); `Expand` for a streamed part.
+  DEVIATION: the part imported into a host area first (the frame part
+  handler's import, now `ImportPackagePart`) and kept until removal.
+- **`TCommPartHandler`** (`packages/FramePartHandler.h`, 0x0013a5d8,
+  0x0013a760): an 'auto part whose configurations are registered with
+  `RegCommConfigArray`.  ROM bugs kept: the 'auto installation's answer is
+  dropped, and `RemoveFrame` looks for the configurations in the remove
+  object, which never has them, so they are never unregistered.
+- The newt world registers both in the ROM's order (`'form`, `'dict`,
+  `'auto`, `'comm`; `'book` NOT YET).  `recognition` now links `packages`.
+  `test_Dictionaries` and `test_Units` test them at the function level.
+
 ## 2026-09-29: packages - the plan, and units
 
 - **The plan for finishing packages**, sized with `callgraph.py`, in
