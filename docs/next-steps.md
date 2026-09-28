@@ -405,7 +405,13 @@ perhaps for the code generation step 1 has to reproduce, if a NewtonScript
 compiler is among the tools it runs - to be checked.  It is an outside
 tool: if it becomes part of the process it must be vendored or fetched by
 a documented script, per the project's rule that every tool lives in the
-repository and is reproducible.
+repository and is reproducible.  A second, older option the owner also
+pointed at: Kelvin Sherlock's **mpw** (https://github.com/ksherlock/mpw),
+a "Macintosh Programmer's Workshop (mpw) compatibility layer" - a 68k
+emulator with the MPW toolbox calls, which its README says runs "only [on]
+OS X 10.8+ with case-insensitive HFS+" and does not name the Newton tools;
+mosrun is the one aimed at them and runs on Windows too, so it is the
+first to try, with mpw as a second opinion where a tool misbehaves.
 
 ## The natives still unanswered
 
