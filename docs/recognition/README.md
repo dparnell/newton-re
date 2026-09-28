@@ -2824,7 +2824,18 @@ aeWord, and the page types it.  DEVIATION: the ROM's interpretations are
 With a cursive letter set `cursive.ns` now types what it wrote: the page
 reads "For to" (`NEWTON_TRACE_CURSIVE=1` prints each word's answers).
 The second word is read right; the first - the synthetic "ton" - comes
-out with a capital, "For" ahead of "ER", "Eon", "FR", "EN".
+out with a capital, "For" ahead of "ER", "Eon", "FR", "EN".  That is not
+the capitals flags going wrong: the Notepad's field has rc +0x1e = 0x3f
+(`SetXrWordFieldType` gives a letter set of style 1 all six bits), and
+bit 8 lets *every* word start with a capital, bit 2 the first; and the
+reader has what it should - rc +0x08 = 0x0f (the vocabulary, the
+character set, the trigrams and the lexical database) and one vocabulary
+(`NEWTON_TRACE_CURSIVE` prints all three).  "ton" is simply not among the
+five answers `xrlv` leaves in the graph, so it is decided before anything
+still NOT YET runs - `EvaluateAndSortAnswers` only re-scores the answers
+in the graph and could reorder them, never add one.  Whether the machine
+itself would read these synthetic strokes as "For" cannot be checked
+without one; everything from the strokes to the graph is transcribed.
 
 **NOT YET RECONSTRUCTED**: `EvaluateAndSortAnswers` (0x00337ee8), which
 works the answers' letters over again before the readings are made (the

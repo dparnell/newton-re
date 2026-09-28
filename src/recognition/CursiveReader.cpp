@@ -227,7 +227,12 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 						fprintf(stderr, "[cursive] answers:");
 						for (long i = 0; i < 10 && readings[i].fWord[0] != 0; i++)
 							fprintf(stderr, " \"%s\"/%d", (const char*) readings[i].fWord, readings[i].fWeight);
-						fprintf(stderr, " (rc +0xb2 %04x)\n", RCGetH(rc, 0xb2));
+						int vocs = 0;
+						for (int v = 0; v < 15; v++)
+							if (rc->fVocs[v] != nil)
+								vocs++;
+						fprintf(stderr, " (rc +0x08 %04x, +0x1e %04x, +0xb2 %04x; %d vocabularies)\n",
+								RCGetH(rc, 0x08), RCGetH(rc, 0x1e), RCGetH(rc, 0xb2), vocs);
 					}
 					err = 0;
 					goto done;

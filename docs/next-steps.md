@@ -351,8 +351,11 @@ each letter's +0x0b before the readings are made, so it can change which
 reading wins; and `ORCreateLearnInfo`/`Orto*` (only with rc +0xb2 bit 6,
 which the Notepad does not set).  Then the `Chunk*` digit reader (only
 for a field that allows numbers, rc +0xb6; 82 not done, about 146 KB),
-three or four rounds.  Why the synthetic "ton" comes out "For" is still
-to be looked into.
+three or four rounds.  Why the synthetic "ton" comes out "For": the
+capitals are allowed (rc +0x1e = 0x3f, every word start) and the
+vocabularies are there (rc +0x08 = 0x0f, one vocabulary), but "ton" is
+not among the five answers `xrlv` puts in the graph - decided before any
+NOT YET code runs (`docs/recognition/README.md`, "The answers").
 
 ## Then: the testing system
 
