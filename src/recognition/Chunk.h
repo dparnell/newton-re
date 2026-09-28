@@ -73,6 +73,12 @@ long	v_MostFarFromChord(tag_WORD_TRACE* trace, long i1, long i2);	// ROM 0x00286
 // 32-bit integers without overflowing where it can help it.
 long	v_QDistFromChord(long x1, long y1, long x2, long y2, long x, long y);	// ROM 0x0028694c v_QDistFromChord__FiN51
 
+// The direction from (x1, y1) to (x2, y2) (y growing downwards) in
+// twenty-four fifteen-degree steps counted anticlockwise from straight up:
+// 0 and 23 either side of up, 5 and 6 of left, 11 and 12 of down, 17 and
+// 18 of right.
+long	GetDirection(long x1, long y1, long x2, long y2);		// ROM 0x0028646c GetDirection__FiN31
+
 void	ChunkAllocCtx(void** ctx, rc_type* rc);			// ROM 0x002a65ec ChunkAllocCtx__FPPvP7rc_type
 void	ChunkCleanUp(void** ctx);							// ROM 0x002a6404 ChunkCleanUp__FPPv - its three blocks and itself given back, *ctx nil
 long	IsChunkNumbers(void* ctx);							// ROM 0x002a65cc IsChunkNumbers__FPv

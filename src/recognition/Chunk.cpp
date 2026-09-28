@@ -5,12 +5,15 @@
 				and the configuration it changes (see Chunk.h).
 
 	Written by:	ParaGraph; reconstructed from the MP2x00 US ROM
-				(0x0028686c-0x00286a54, 0x002a6404-0x002a6650); each
+				(0x0028646c-0x00286a54, 0x002a6404-0x002a6650); each
 				function cites its origin.
 */
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree
+
+extern const int	kChunkSin[4];		// ChunkTables.cpp (generated): sin 0, 15, 30, 45 degrees x 10000
+extern const int	kChunkCos[4];		// and their cosines
 
 // ROM 0x002a65ec ChunkAllocCtx__FPPvP7rc_type
 // A context for reading a word: nothing found yet, the configuration it
@@ -243,4 +246,65 @@ v_QDistFromChord(long x1, long y1, long x2, long y2, long x, long y)
 	result = Add32(Mul32(dx, dx), result);
 	result = Sub32(result, Mul32(rem, q));
 	return result;
+}
+
+
+// ROM 0x0028646c GetDirection__FiN31
+// The direction from (x1, y1) to (x2, y2), y turned to grow upwards, in
+// fifteen-degree steps (0-23): the octant first, by the signs of the two
+// differences and which is the larger, then which of the octant's three
+// fifteen-degree slices the ratio of the smaller to the larger falls in
+// (compared as products against the sines and cosines of 15 and 30
+// degrees, so there is no division), counted forwards or backwards as the
+// octant runs.  A zero step is 17.
+long
+GetDirection(long x1, long y1, long x2, long y2)
+{
+	int32_t dx = (int32_t) (x2 - x1);
+	int32_t dy = -(int32_t) (y2 - y1);
+	int32_t a, b;			// the two sides compared
+	long octant;
+	if (dx > 0 && dy >= 0)
+	{
+		a = dx; b = dy;
+		octant = dx <= dy ? 2 : 1;
+	}
+	else if (dx <= 0 && dy > 0)
+	{
+		a = -dx; b = dy;
+		octant = -dx >= dy ? 4 : 3;
+	}
+	else if (dx < 0 && dy <= 0)
+	{
+		a = -dx; b = -dy;
+		octant = -dx <= -dy ? 6 : 5;
+	}
+	else
+	{
+		a = dx; b = -dy;
+		octant = -dy <= dx ? 8 : 7;
+	}
+	int32_t small = a <= b ? a : b;
+	int32_t large = a <= b ? b : a;
+	short k = 0;
+	for ( ; k < 2; k = (short) (k + 1))
+	{
+		if (Mul32(large, kChunkSin[k]) > Mul32(small, kChunkCos[k]))
+			continue;
+		if (Mul32(small, kChunkCos[k + 1]) > Mul32(large, kChunkSin[k + 1]))
+			continue;
+		break;
+	}
+	switch (octant)
+	{
+	case 1:	return k + 0x12;
+	case 2:	return 0x17 - k;
+	case 3:	return k;
+	case 4:	return 5 - k;
+	case 5:	return k + 6;
+	case 6:	return 0xb - k;
+	case 7:	return k + 0xc;
+	case 8:	return 0x11 - k;
+	default: return 0xffff;
+	}
 }

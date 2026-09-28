@@ -120,6 +120,11 @@ GENERATED = [
                      "kXrToLetters1@0x0c1056cc:cstr:3", "kXrToLetters1Tail@0x0c1056d8:u8:4",
                      "kLettersToXr@0x0c1056dc:cstr:3", "kLettersToXrTail@0x0c1056e8:u8:4",
                      "-o", "src/recognition/XrPostTables.cpp"]),
+    # the digit reader's sines and cosines of 0, 15, 30 and 45 degrees
+    # (GetDirection copies them from two unnamed tables)
+    ("chunk",
+     "romtable.py", ["{build}", "kChunkSin@0x0037add4:i32:4", "kChunkCos@0x0037ade4:i32:4",
+                     "-o", "src/recognition/ChunkTables.cpp"]),
     ("mmumap",
      "mmumap.py", ["{build}", "--doc", "docs/memory/mmu-map.md"]),
     ("factorysoups",

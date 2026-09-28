@@ -80,6 +80,7 @@ add_library(recognition STATIC
     LowTables.cpp
     CursiveReader.cpp
     Chunk.cpp
+    ChunkTables.cpp
     XrMatrix.cpp
     XrWordGraph.cpp
     XrAnswers.cpp

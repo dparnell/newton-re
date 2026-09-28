@@ -441,6 +441,18 @@ TestChunkChords(void)
 	// the chord's start (its middle answered, one point on)
 	tag_WORD_TRACE line[3] = { {0, 0, 0, 0}, {5, 0, 0, 0}, {10, 0, 0, 0} };
 	EXPECT(v_MostFarFromChord(line, 0, 2) == 1);
+
+	// directions, y growing downwards
+	EXPECT(GetDirection(0, 0, 0, -10) == 0);		// up (just left of it)
+	EXPECT(GetDirection(0, 0, 1, -10) == 23);		// up, a little right
+	EXPECT(GetDirection(0, 0, -10, 0) == 6);		// left (straight left is in the octant below it)
+	EXPECT(GetDirection(0, 0, -10, 1) == 6);		// left, a little down
+	EXPECT(GetDirection(0, 0, 0, 10) == 12);		// down (in the octant to its right)
+	EXPECT(GetDirection(0, 0, 10, 0) == 18);		// right (in the octant above it)
+	EXPECT(GetDirection(0, 0, 10, -1) == 18);		// right, a little up
+	EXPECT(GetDirection(0, 0, 10, -10) == 21);		// 45 degrees up and right: octant 2's last slice
+	EXPECT(GetDirection(0, 0, 10, -4) == 19);		// 22 degrees: the middle slice
+	EXPECT(GetDirection(3, 3, 3, 3) == 17);			// no step at all
 }
 
 
