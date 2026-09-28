@@ -2996,13 +2996,80 @@ unclaimed, and they go down as ink words (the page's text holds 0x1a, the
 paragraph's ink-word character, for each).  Whether a MessagePad takes a
 joined "mum" for a scrub too cannot be checked without one.
 
+### A graph of alternatives (`MakeRecWordsFromGraph`, in `XrAnswers.cpp`)
+
+A graph that is not a list of answers - a fixed-string field's - is one
+answer some of whose letters are groups of alternatives: a type 2 symbol
+opens a group, a type 4 one comes between two alternatives, a type 3 one
+closes it, and an alternative is one symbol or two in a row (the two
+given the mean of their scores).  `MakeRecWordsFromGraph` first sorts each
+group best first *in the graph itself* (a bubble sort that moves one- and
+two-symbol alternatives about round the type 4 symbols), makes the first
+reading of every group's best (scored as the mean of its letters'), and
+then up to nine more, each the change of one letter of an earlier reading
+to the next alternative down that loses least and makes a reading not
+yet made (`MakeNewPath`); `FillRecWordsElement` puts each symbol in with
+its variant (top bit set for a letter read in another case) and span.
+`EvaluateAnswers` makes these readings twice - from a copy with every
+letter's score lowered by a hundred (what a number would read as) and
+from the graph with the digits' and `+ = %`'s lowered (a word's) - and
+`MergeTwoRecWordsSets` merges them best first, no word twice.  ROM bug
+kept: a letter the reader read as a *different* letter clears the
+reading's first variant and span, not its own (`test_XrAnswers`).
+
+### Learning (`TWordRecognizer::DoLearning`, `XRWDoLearning`)
+
+A reading the writer settles on (a word picked in the corrector, which
+the ROM's `ReplaceWord` script does with the word info's `Learn`) reaches
+`DoIndexedLearning`, which finds the recogniser by the word info's unit
+id and hands it the word info; the word recogniser turns the strokes into
+the engine's trace (`GetTraceFromStrokes`) and gives the word domain the
+unit's training data (the 'RWRD' readings `GCFillLearningHandle` kept),
+the trace and which reading it was (selector 0x20010).  With learning on
+(rc +0x22, from the user configuration's `learningEnabledOption` through
+selector 0x20033) `FlyLearn` moves the letter counters: the variant each
+letter was read as is set back to nought, the others counted up, and the
+letter states follow - which is what `GetLetterWeights` then answers.
+Only an entry carrying training data (word info flag 1, which the
+paragraph sets through `SetOffsetInfo` when it puts the word on the page)
+has anything to teach.  `cursive.ns` reads "ton" again with learning on,
+calls `Learn(0)`, and the letter weights stop being the defaults
+(`NEWTON_TRACE_CURSIVE` prints `[cursive] learning: ...`).  Host bug found
+on the way: `UnitID` read a host ULong out of the unit id, which
+`EncodeUnitID` writes as two UniChars.
+
+### The digit reader (`recognition/Chunk.h`, begun)
+
+In a field that allows numbers (rc +0xb6) ParaGraph's "chunk" reader
+reads first: `ChunkProcessor` makes a trace of its own (`tag_WORD_TRACE`,
+8 bytes a point), its extrema (`ExtrWordTrace_V`) and a polyline
+approximation (`GetLineApprox`), cuts it into chunks (`ChunkConstruct`)
+and reads the digits (`Digits` over four searchers); when it found a
+number, `ChunkModifyRC` narrows the configuration to digits for the xr
+reader and `ChunkRestoreRC` puts it back after (ROM bug kept: rc +0x92,
+which the numbers-alone way sets, is not put back).  Done: the context
+and the configuration (`ChunkAllocCtx`, `ChunkCleanUp`, `IsChunkNumbers`,
+`ChunkModifyRC`/`ChunkRestoreRC`, `ChunkWriteParamCtx`, called where
+`GCTryToRecognize` calls them) and the first of its geometry -
+`v_MostFarFromChord` (the point furthest from a chord; a flat run answers
+its middle), `v_QDistFromChord` (the squared distance, the projection's
+quotient and remainder taken apart to stay in 32 bits) and `GetDirection`
+(twenty-four fifteen-degree directions counted anticlockwise from up, by
+octant and then by products against the sines and cosines of 15 and 30
+degrees - `ChunkTables.cpp`, generated).  `test_WordDescriptors`'s
+`TestChunkContext`/`TestChunkChords`.  The rest (about 100 functions,
+146 KB) is NOT YET; without `ChunkProcessor` no number is found, so the
+context goes straight back, as the ROM does for a word that is not a
+number.  The plan is in `docs/next-steps.md`.
+
 **NOT YET RECONSTRUCTED** (the rest of the reader): `ORCreateLearnInfo`
-(the orthographic learning's information, only for a field with rc +0xb2
-bit 6); the `Chunk*` digit reader (and FillRecwordSplitInfo's branch for
-its words); `AL_NextSet` (Airus selector 8 for lexicons); `SetStrXrRC` (a
-recognition configuration's `strxrCommands`); `GetTraceFromStrokes`'s use
-in `DoLearning`, `ORTraining`; and the base-line and grid geometry
-`ConfigureArea` hands the engine (`GetWordGeom`, `GetGridGeom`).
+and `ORTraining` - the orthographic learning (only for a field with rc
++0xb2 bit 6 / +0xb8 bit 3, which the Notepad never sets; about 2.5 KB for
+the learn array and 15 KB for the letter-shape database `TrainTrajectory`
+trains - `docs/next-steps.md`); the rest of the digit reader (above) and
+FillRecwordSplitInfo's branch for its words; `AL_NextSet` (Airus selector
+8 for lexicons); and the base-line and grid geometry `ConfigureArea` hands
+the engine (`GetWordGeom`, `GetGridGeom`).
 
 ## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
 

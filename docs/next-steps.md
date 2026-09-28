@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 111/111
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11778 citations, 0 bad;
-  6791 of 16671 functions (40.74%).
+- `analysis/coverage.py build/MP2x00US --check`: 11783 citations, 0 bad;
+  6794 of 16671 functions (40.75%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -401,7 +401,9 @@ two UniChars, so `DoIndexedLearning` found no recogniser and crashed):
 letter weights are no longer the defaults; and the digit reader's context
 (`Chunk.h`: `ChunkAllocCtx`, `ChunkCleanUp`, `IsChunkNumbers`,
 `ChunkModifyRC`/`ChunkRestoreRC`, `ChunkWriteParamCtx`), called where
-`GCTryToRecognize` calls them.  Left:
+`GCTryToRecognize` calls them, and the first of its geometry
+(`v_MostFarFromChord`, `v_QDistFromChord`, `GetDirection` over
+`ChunkTables.cpp`).  Left:
 - **The orthographic learning** (only with rc +0xb2 bit 6 / +0xb8 bit 3,
   which the Notepad never sets): `ORCreateLearnInfo` over `OrtoCreate`,
   `OrtoGetmem`/`OrtoCalcSize`/`OrtoResize`/`OrtoFasten`, `OrtoEntries`
@@ -436,8 +438,13 @@ and `New_SearchDigit_V` (20 KB), `SearchNumber`, `FindPound` (the £ sign,
 `DefHeightsForNumber`, and after the xr reader `ChunkPatchXrdata` (1.2
 KB), `ChunkSortAnswers` (an unnamed sort at 0x002a4c04) and
 `ChunkCorrectByLexDB` (3.5 KB).  In that order, bottom up: (1) the trace,
-`ExtrWordTrace_V`, `GetLineApprox` and the `LO_*` list, each testable on
-a drawn digit; (2) `ChunkConstruct` and its helpers; (3) `Digits` with
+`ExtrWordTrace_V`, `GetLineApprox` (with `SetAllDirections`; its
+`v_MostFarFromChord`, `v_QDistFromChord` and `GetDirection` are done) and
+the `LO_*` list (`LO_Create` is a 0x482c-byte block with a pointer at
++0x28 and 0x3c-byte objects from +0x1dc - a host layout of its own; the
+ROM's `LO_Destroy` frees it with an inlined `DisposHandle` of the handle
+`HWRMemoryAlloc` keeps in front of the block), each testable on a drawn
+digit; (2) `ChunkConstruct` and its helpers; (3) `Digits` with
 `SearchDigit_L` (the smallest searcher) first, then `_V`, `_K`, `_S`;
 (4) the rest, and `ChunkProcessor` itself wired in, with a demo writing
 "42" into a numbers field (rc +0xb6 is set by a field whose

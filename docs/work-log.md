@@ -10,6 +10,32 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the cursive reader's leftovers; the digit reader begun
+
+- `SetStrXrRC`: a recognition configuration's `strxrCommands` carried out
+  on the strokes-to-xrs block (byte commands reach the host's own fields
+  by their ROM offsets; ROM quirk kept: commands 0x45 and 0x46 both name
+  +0x54).
+- The readings of a graph of alternatives (a fixed-string field's):
+  `MakeRecWordsFromGraph`, `MakeNewPath`, `FillRecWordsElement`,
+  `MergeTwoRecWordsSets`, and `EvaluateAnswers`' two passes (a number's
+  readings and a word's) merged - all from the disassembly; ROM bug kept:
+  a letter read as another clears the reading's first variant.
+- Learning: `TWordRecognizer::DoLearning` hands the pen's trace
+  (`GetTraceFromStrokes`, there all along - the NOT YET named a wrong
+  address) to the word domain; host bug fixed: `UnitID` read a host ULong
+  out of a unit id written as two UniChars, so `DoIndexedLearning` found
+  no recogniser and crashed.  `cursive.ns` now learns "ton" and the
+  letter weights move (ctest `host.NewtonCursive`).
+- The digit reader sized (102 functions, 150 KB) and planned
+  (`docs/next-steps.md`), and begun: its context and the configuration it
+  narrows (`Chunk.h`; ROM bug kept: `ChunkRestoreRC` leaves rc +0x92), and
+  `v_MostFarFromChord`, `v_QDistFromChord`, `GetDirection` (sines and
+  cosines generated into `ChunkTables.cpp`).
+- Deferred: the orthographic learning (`ORCreateLearnInfo`/`ORTraining`,
+  about 17 KB with its letter-shape database), which the Notepad never
+  reaches.
+
 ## 2026-09-28: the cursive readings put right (round 11)
 
 - **Port bug: FillSHR's bracketing xrs** (`recognition/LowXrFeatures.cpp`,
