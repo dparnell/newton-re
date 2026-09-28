@@ -16,6 +16,7 @@
 #include "UserBoot.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "ByteOrder.h"
 #include "host/TaskRuntime.h"
 
 #include <stdio.h>
@@ -68,12 +69,12 @@ MakeCompressedStore(TStore* store)
 	{
 		PSSId blockId = 0;
 		EXPECT(store->NewObject((long) 0, &blockId) == noErr);
-		table[i] = blockId;
+		PutBigEndianWord((UByte*) &table[i], (ULong32) blockId);	// (a store's words are big-endian)
 	}
 	PSSId chunkTableId = 0;
 	EXPECT(store->NewObject((char*) table, sizeof(table), &chunkTableId) == noErr);
 	PackageRoot root;
-	root.fChunkTableId = chunkTableId;
+	PutBigEndianWord((UByte*) &root.fChunkTableId, (ULong32) chunkTableId);
 	PSSId rootId = 0;
 	EXPECT(store->NewObject((char*) &root, sizeof(PackageRoot), &rootId) == noErr);
 	return rootId;

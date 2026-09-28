@@ -14,6 +14,7 @@
 */
 
 #include "StoreCompander.h"
+#include "ByteOrder.h"
 #include "Compression.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
@@ -168,7 +169,7 @@ TSimpleStoreCompander::Init(TStore* store, ULong rootId, ULong /*arg3*/, UChar r
 	fReadOnly = readOnly;
 	PackageRoot root;
 	store->Read(rootId, 0, (char*) &root, sizeof(PackageRoot));
-	fChunkTableId = root.fChunkTableId;
+	fChunkTableId = GetBigEndianWord((const UByte*) &root.fChunkTableId);	// (a big-endian word on the store)
 	return noErr;
 }
 
@@ -187,6 +188,7 @@ TSimpleStoreCompander::Read(ULong offset, char* buffer, long count, ULong /*page
 {
 	StorePSSId blockId = 0;
 	NewtonErr err = fStore->Read(fChunkTableId, (offset >> 10) << 2, (char*) &blockId, 4);
+	blockId = GetBigEndianWord((const UByte*) &blockId);		// (the chunk table's words are big-endian)
 	if (err == noErr)
 	{
 		long objectSize = 0;
@@ -213,6 +215,7 @@ TSimpleStoreCompander::Write(ULong offset, char* buffer, long count, ULong /*pag
 {
 	StorePSSId blockId = 0;
 	NewtonErr err = fStore->Read(fChunkTableId, (offset >> 10) << 2, (char*) &blockId, 4);
+	blockId = GetBigEndianWord((const UByte*) &blockId);		// (the chunk table's words are big-endian)
 	if (err == noErr)
 		err = fStore->ReplaceObject(blockId, buffer, count);
 	return err;
@@ -296,7 +299,7 @@ TLZStoreCompander::Init(TStore* store, ULong rootId, ULong /*arg3*/, UChar /*rea
 	}
 	PackageRoot root;
 	NewtonErr err = store->Read(fRootId, 0, (char*) &root, sizeof(PackageRoot));
-	fChunkTableId = root.fChunkTableId;
+	fChunkTableId = GetBigEndianWord((const UByte*) &root.fChunkTableId);	// (a big-endian word on the store)
 	return err;
 }
 
@@ -316,6 +319,7 @@ TLZStoreCompander::Read(ULong offset, char* buffer, long count, ULong /*page*/)
 	StorePSSId blockId = 0;
 	ULong outSize = count;
 	NewtonErr err = fStore->Read(fChunkTableId, (offset >> 10) << 2, (char*) &blockId, 4);
+	blockId = GetBigEndianWord((const UByte*) &blockId);		// (the chunk table's words are big-endian)
 	if (err == noErr)
 	{
 		long objectSize = 0;
@@ -343,6 +347,7 @@ TLZStoreCompander::Write(ULong offset, char* buffer, long count, ULong /*page*/)
 	StorePSSId blockId = 0;
 	ULong compressedSize = count;
 	NewtonErr err = fStore->Read(fChunkTableId, (offset >> 10) << 2, (char*) &blockId, 4);
+	blockId = GetBigEndianWord((const UByte*) &blockId);		// (the chunk table's words are big-endian)
 	if (err == noErr)
 	{
 		err = fCompressor->Compress(&compressedSize, fBuffer, kLZCompanderBufferSize, buffer, compressedSize);
