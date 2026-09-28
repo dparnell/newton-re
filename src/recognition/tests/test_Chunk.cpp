@@ -1141,6 +1141,87 @@ TestSearchV(void)
 }
 
 
+/*--------------------------------------------------------------------
+	SearchNumber: the verdict, after the searchers Digits runs (those
+	reconstructed: L, K, V, Check_4) and its second looks.
+--------------------------------------------------------------------*/
+
+// ==> SearchNumber's answer, *digits the digits the second looks wrote out
+static long
+IsNumber(const char* what, long* digits = nil, long* count = nil)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	memset(staff.fDigits, 0xff, sizeof(staff.fDigits));
+	DefHeightsForNumber(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	SearchDigit_L(&staff);
+	SearchDigit_K(&staff);
+	tag_BOX box = { 0x7fff, 0x7fff, -0x7fff, -0x7fff };
+	for (long k = 0; k < staff.fNodeCount; k++)
+	{
+		tag_wapx_type* nd = &staff.fNodes[k];
+		if (nd->x < box.left) box.left = nd->x;
+		if (nd->x > box.right) box.right = nd->x;
+		if (nd->y < box.top) box.top = nd->y;
+		if (nd->y > box.bottom) box.bottom = nd->y;
+	}
+	New_SearchDigit_V(lo, staff.fTrace, staff.fTraceCount, staff.fNodes, staff.fChunks, staff.fBrackets,
+					  staff.fRealChunks, staff.fChunkCount, staff.fRealCount, box, staff.fStrokes, staff.fStrokeCount, staff.fHeight);
+	Check_4(&staff);
+	DigitsSecondLooks(lo, staff.fChunks, staff.fRealChunks, staff.fStrokes, staff.fStrokeCount, staff.fNodes, staff.fDigits, box);
+	long answer = SearchNumber(&staff);
+	tag_LOWOBJ* obj = nil;
+	long k = 0;
+	if (LO_SetWorkClass(lo, 1900) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+			if (obj->fValue != 0xffff && (ULong) obj->fValue % 100 <= 9)
+			{
+				if (digits != nil && k < 8)
+					digits[k] = (long) ((ULong) obj->fValue % 100);
+				k++;
+			}
+	if (count != nil)
+		*count = k;
+	if (gVerbose)
+		printf("  %s: %ld digits, a number: %ld\n", what, k, answer);
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return answer;
+}
+
+static void
+TestSearchNumber(void)
+{
+	long d[8], n = 0;
+	// 42: K reads the 4, V the 2
+	TraceStart(); DrawFour(0, 0); DrawTwo(22, 0);
+	EXPECT(IsNumber("42", d, &n) == 1 && n == 2 && d[0] == 4 && d[1] == 2);
+	// 10: V reads both
+	TraceStart(); DrawOne(0, 0); DrawZero(14, 0);
+	EXPECT(IsNumber("10", d, &n) == 1 && n == 2 && d[0] == 1 && d[1] == 0);
+	// 2 1 7
+	TraceStart(); DrawTwo(0, 0); DrawOne(18, 0); MoveTo(30, 5); LineTo(43, 0); LineTo(39, 20); StrokeEnd();
+	EXPECT(IsNumber("217", d, &n) == 1 && n == 3 && d[0] == 2 && d[1] == 1 && d[2] == 7);
+	// one digit alone is not judged a number
+	TraceStart(); DrawTwo(0, 0);
+	EXPECT(IsNumber("2", d, &n) == 0 && n == 1);
+	// a 1 and a 0 whose bottoms step by more than half their height: the
+	// step only marks it irregular (2), which a 1 and a 0 survive...
+	TraceStart(); DrawOne(0, 0); DrawZero(14, 14);
+	EXPECT(IsNumber("1 0 stepped", d, &n) == 1);
+	// ...but a number of nothing but 1s does not
+	TraceStart(); DrawOne(0, 0); DrawOne(14, 14);
+	EXPECT(IsNumber("1 1 stepped", d, &n) == 0 && n == 2);
+	TraceStart(); DrawOne(0, 0); DrawOne(14, 0);
+	EXPECT(IsNumber("11", d, &n) == 1 && n == 2);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1156,6 +1237,7 @@ main(int argc, char** argv)
 	TestSecondLookPass();
 	TestSearchK();
 	TestSearchV();
+	TestSearchNumber();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

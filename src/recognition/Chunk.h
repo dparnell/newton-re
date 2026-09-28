@@ -345,6 +345,14 @@ long	SearchDigit_K(tag_CHUNK_STAFF* staff);							// ROM 0x00289604 SearchDigit_
 // #, 72 H, 81, 99, 23, 24), a grey 9 as class 2200.  ==> -1.
 long	New_SearchDigit_V(void* lo, tag_WORD_TRACE* trace, long traceCount, tag_wapx_type* n, tag_CHUNK* chunks, brack_type* brackets,
 						  int32_t* real, long chunkCount, long realCount, tag_BOX box, tag_STK* strokes, long strokeCount, long height);	// ROM 0x00296e04 New_SearchDigit_V__FPvP14tag_WORD_TRACEiP13tag_wapx_typeP9tag_CHUNKP10brack_typePiN237tag_BOXP7tag_STKN23
+// Whether the writing is a number, judged from the digits the second looks
+// wrote out (class 1900): how many digits and other codes there are and
+// how many chunks they took, how their heights, tops and bottoms step from
+// one to the next, and (with staff f54 set, the chunks' f6C marked with
+// what each was read as) whether a line read as a 1 is a letter's stem.
+// Signs coded 13 that belong to a neighbouring stroke are taken out on
+// the way.  ==> 1 for a number.
+long	SearchNumber(tag_CHUNK_STAFF* staff);							// ROM 0x002a28d0 SearchNumber__FP15tag_CHUNK_STAFF
 // The polyline's nodes from..to as a trace of their own between pen-ups.
 long	ComposeTrace(tag_wapx_type* n, long from, long to, tag_WORD_TRACE* trace);	// ROM 0x0029bac0 ComposeTrace__FP13tag_wapx_typeiT2P14tag_WORD_TRACE
 // The direction from node start to the first node after it take_next_point
