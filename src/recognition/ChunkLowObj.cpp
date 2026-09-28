@@ -46,7 +46,7 @@ ClassRecord(LOBlock* lo, ULong classID)
 }
 
 
-// ROM 0x0029bb44 (unnamed: LO_Create's and LO_Clear's)
+// ROM 0x0029bb44 (unnamed) - LO_Create's and LO_Clear's
 // The objects made into one free list, doubly linked, in order.
 static void
 LOInitFreeList(LOBlock* lo, tag_LOWOBJ* objects)
