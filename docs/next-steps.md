@@ -11,13 +11,13 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 113/113
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 114/114
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12020 citations, 0 bad;
-  6864 of 16671 functions (41.17%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 12096 citations, 0 bad;
+  6938 of 16671 functions (41.62%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives are
-  unanswered (table below).
+  unanswered (1008 answered, 76.0%; table below).
 
 ## What works
 
@@ -87,9 +87,14 @@ could come next (not ranked; the owner chooses):
     packages on a store (the ROM domain manager, large binaries), which
     the remaining package natives (`ActivatePackage`, `ObjectPkgRef`, ...)
     stand on.
-- **The comms stack**: 121 unanswered natives - endpoints, CCL, AppleTalk,
-  IR, NTK and the desktop connection.  The test server's link and the IR
-  sniffing (below) wait on it.
+- **The comms stack**: 120 unanswered natives - endpoints, CCL, AppleTalk,
+  IR, NTK and the desktop connection.  The test server's link, the IR
+  sniffing and fax reception (the only real source of the fax-page bitmaps
+  `RotTiledBitmap` turns) wait on it.
+- **Large binaries on a store** (virtual binary objects): unblocks
+  `RotTiledBitmap`, `FLBAlloc` and training data kept on a store, the
+  text engine's `TXNewtStreamFactory`, `GetBitmapInfo`, and packages on a
+  store.
 - **The text engine**: `TXRun` and `TXRunRange`, then `TXRulerRange`
   (below).
 - **Drawing speed**: the blitter and the lines work a pixel at a time
@@ -107,20 +112,31 @@ could come next (not ranked; the owner chooses):
 
 ### Recognition
 
-The recognition system is finished for everything the ROM's own fields
-reach (`docs/recognition/README.md`; all 116 of its natives answered).
-Still open:
+**Complete** (2026-09-28; `docs/recognition/README.md`'s "Status:
+complete"; all 116 of its natives answered).  What remains is out of the
+U.S. ROM's reach, hardware, or waiting on another area:
 
-- **Being finished now** (2026-09-28): `TEditView::TrackDistort`
-  0x000a9634 (a selected shape's corner dragged to distort it; it waits
-  on the polygon hilites, `TPolygonView`'s `MakeHilite`, so no view
-  answers `ClickOptions` bit 2 yet), `RotTiledBitmap` (a screen-sized
-  bitmap turned in tiles out of a large binary on a store, over `TTile`)
-  and the French/German accent checks (`CheckDiacriticsDirections`
-  0x0007c9a0, `AnalyseDiacriticsDirection`; only a French or German
-  letter set reaches them).
-- The sixteen-bit Airus walkers (no dictionary in this ROM is sixteen-bit;
-  `docs/recognition/README.md`, "What is left of the engine").
+- **Unreachable from this ROM**: the French/German accent checks
+  (`CheckDiacriticsDirections` 0x0007c9a0, 684 B; `AnalyseDiacriticsDirection`,
+  2160 B; two helpers - only a French or German letter set asks for them,
+  so they answer 0, no penalty), and the sixteen-bit Airus walkers
+  (`AE16_*`, `AL16_NextSet*`; no dictionary in this ROM is sixteen-bit).
+- **Hardware**: the inker task (`TInker`, `InkerOff`, `TBCWakeUpInker`)
+  and `CheckTabletHWCalibration`.
+- **Waiting on large binaries on a store** (see the candidates):
+  `RotTiledBitmap` (the four sizes `Tilable` looks for are *fax pages*,
+  216-byte rows by 1146/2292/1152/2304 - the turned copy is built tile by
+  tile in a large binary, so a heap bitmap of that size is left unturned)
+  and `FLBAlloc` (`GetLearningData` makes an ordinary binary instead).
+- **Waiting on other areas**: the journal's replayed units
+  (`HandleReplayUnit`), `CreateVMHeap`, `WRecVerifyWordSymbols`,
+  `TController::NextIdleTime`, `SearchAllocateReturnCache`.
+- `HiliteTraced` (about 7.5 KB): selecting part of a shape by tracing
+  along it, so `RemovePoints`' partial branch and command 0x44 are not
+  done either - every polygon selection is the whole shape.
+- **Stale comments**: about 40 NOT YET comments in `src/recognition/` name
+  things since done (`BPNetEvaluate`, `ArbitrateGraphicsWords`,
+  `BuildChains`, ...); the citations are the real record.  Worth a sweep.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
   `FramePaths`), which want the PostScript path machinery, and
   `TWRecognizer::EndInkStrokeGroup` (the CIC library's
@@ -212,17 +228,17 @@ inside an area).  At 2026-09-28:
 
 | area | how many | what is under them |
 |---|---|---|
-| comms | 121 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
-| frames | 115 | natives.py's catch-all: a handful each across many areas |
-| packages | 26 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
-| books | 20 | the book reader and newspapers (`TLibrarian`) |
-| views | 17 | |
-| sound | 9 | the sound server |
-| system | 8 | |
-| qd, intl | 7 each | |
-| testing | 6 | the serial debugging, Uriah, the IR sniffing |
-| stores | 5 | large binaries on a store, store passwords |
-| recognition | 0 | all answered |
+| comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
+| frames | 106 | natives.py's catch-all: a handful each across many areas |
+| packages | 25 | units, packages on a store (the ROM domain manager, large binaries), 1.x packages |
+| books | 19 | the book reader and newspapers (`TLibrarian`) |
+| views | 12 | |
+| sound | 8 | the sound server |
+| system | 7 | |
+| testing, intl | 6 each | testing: the serial debugging, Uriah, the IR sniffing |
+| qd | 5 | |
+| stores | 4 | large binaries on a store, store passwords |
+| recognition, assist | 0 | all answered |
 
 The areas whose machinery exists are worth sweeping with `--ready`.
 
