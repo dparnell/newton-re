@@ -2204,7 +2204,7 @@ at the low level (-8).  `test_WordDescriptors` covers the list, the
 joining, the traces, the base line and two words through the segmenter
 into the reader.
 
-### The low level (`recognition/LowLevel.h`, all but xt_st_zz's FindDArcs done)
+### The low level (`recognition/LowLevel.h`, done)
 
 `low_level` (0x0034ea74) is what cuts a word's trace into xrs.  It works
 in a `low_type` - a 0x9c-byte block on its stack holding the trace as
@@ -2597,23 +2597,64 @@ squared length in a short; `punctuation` compares a late stroke's whole
 `RestoreApostroph` are nought and never set, so their tests never pass.
 `TestXtSt`.
 
-NOT YET: `xt_st_zz` itself and `FindDArcs` with its group (the d's
-arcs: `FillBasicFeatures`, `PairWorthLookingAt`, `FillComplexFeatures`,
-`FillCurvFeatures`, `CheckBackDArcs`, `CheckSZArcs`, `CheckDArcs`,
-`KillHAtNewElem`, `ArrangeAnglesNearNew`, `SkipAnglesAndHMoves`,
-`CurvNonQuadr`, `CurvLikeSZ`, `CurvConsistent`, `LooksLikeSZ`,
-`iXmax_right`/`iXmin_right`; about 10 KB at 0x003015b8-0x00305a14, the
-SZD_FEATURES block they share), and `low_level` wired into
-`GCTryToRecognize`.
+**FindDArcs** (`LowDArcs.cpp`) is the last of xt_st_zz's element finders:
+every element and the next one past the angles and horizontal moves
+(`SkipAnglesAndHMoves`) that do not overlap, an upper one no lower than
+band 7 followed by a lower one, is described in an `SZD_FEATURES` block
+(on the ROM's stack; `LowLevel.h` gives its 0x44 bytes): the pieces of
+the initial trace each covers, the three points the pair turns at (i1 the
+first's top a quarter of the way along, i2 the second's bottom, i0 where
+they meet - half way, or the bottom of a gulf to the right), each arc's
+point furthest from its chord, and each arc's bend as `CurvNonQuadr`
+measures it - the area the trace closes with its chord in hundredths of
+the chord's length squared, at most 1000, signed by the side it bows to.
+Bends the opposite ways round are an S or a Z (`CheckSZArcs`): when they
+are consistent along each arc (`CurvConsistent`: no S inside either),
+within eight times of each other and strong enough, with the far points
+out to the side, a new element goes between the two - code 0x24 (the top
+arc bowing right) or 0x23 (left), band 7, its `other` 4 or 2 when the
+bends are strong, weighed by how alike they are - and an upper or lower
+stick whose piece is really wide becomes the arc it is (9/0xa, 0xc/0xb).
+Bends the same way round, or a stroke that goes right, back and right
+again before it comes down (`CheckBackDArcs`), are a d's bowl
+(`CheckDArcs`): an element 0x25 (bowing right) or 0x26 between them
+when the whole bends with them, and the sticks either side made arcs when
+their pieces are wider than tall or follow a late stroke; `SideExtr`
+vetoes the upper one when the lower bends out to the right.  The angles
+and horizontal moves inside the new element are then moved before it or
+taken out (`ArrangeAnglesNearNew`, `KillHAtNewElem`).  One of
+`CheckDArcs`' box measurements reads the widths through word loads two
+bytes past the word boundary, which take the halfword before the one
+named: the offsets say bottom and top, the values are right and left.
+`test_LowLevel`'s `TestDArcs` writes an S and gets its 0x23 element.
 
-**NOT YET RECONSTRUCTED**: the reading's three layers (`low_level`,
-`xrw_algs`, the `Chunk*` digit reader - docs/next-steps.md has their
-sizes and the plan), `SetStrXrRC` (a recognition configuration's
-`strxrCommands`), `GetTraceFromStrokes`'s use in `DoLearning`,
-`ORTraining`, and the base-line and grid geometry `ConfigureArea` hands
-the engine (`GetWordGeom`, `GetGridGeom`).  So a cursive letter set chosen
-on the host still reads nothing of its own: each word ends marked 0x200
-and its writing is kept as ink.  (With the letter set changed at run
+**low_level whole.**  `xt_st_zz` runs its passes in the order
+`LowXtSt.cpp`'s header gives; `AnalyzeLowData` (`LowLevel.cpp`) runs the
+filters, `Extr`, `Pict`, the refiltering, the slant (`measure_slope`;
+nought in a numbers field or when rc +0x90 bit 0 says so), `Circle`,
+`angl`, `FindSideExtr`, `Cross`, `lk_begin`, `lk_cross`, `lk_duga`,
+`Adjust_I_U`, `xt_st_zz`, `RestoreColons` and `PostFindSideExtr`; and
+`low_level` (0x0034ea74) makes the state on its stack (the `low_type` and
+the `_SDS_CONTROL_TYPE`), takes the slant from rc +0xac, runs
+`BaselineAndScale`, then - unless rc +0x90 bit 6 asks for the base line
+alone - `AnalyzeLowData` and `exchange`, and writes the slant back.
+`TestLowLevelWhole` takes the uou from its trace to its 13 xrs.
+`GCTryToRecognize` calls it: with a cursive letter set, "ton" written on
+the Notepad is cut into 13 xrs and "to" into 8 (`NEWTON_TRACE_CURSIVE=1`
+prints each xr's type and height), and the reader stops one layer up.
+
+**NOT YET RECONSTRUCTED**: the reading's other two layers (`xrw_algs` -
+the xrs matched against the letter table and the vocabularies into a word
+graph - and the `Chunk*` digit reader; docs/next-steps.md has their sizes
+and the plan), the answers made from the word graph
+(`EvaluateAndSortAnswers`, `MakeAndCombRecWordsFromWordGraph`,
+`FillRecwordSplitInfo`, `GCFillLearningHandle`), `SetStrXrRC` (a
+recognition configuration's `strxrCommands`), `GetTraceFromStrokes`'s use
+in `DoLearning`, `ORTraining`, and the base-line and grid geometry
+`ConfigureArea` hands the engine (`GetWordGeom`, `GetGridGeom`).  So a
+cursive letter set chosen on the host still reads nothing of its own:
+each word ends marked 0x400 (xrw_algs failing, -9) and its writing is kept
+as ink.  (With the letter set changed at run
 time, as `cursive.ns` does, the Notepad's existing areas still have
 Rosetta as well, which reads the words.)
 

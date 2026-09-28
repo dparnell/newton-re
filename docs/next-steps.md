@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 108/108
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11433 citations, 0 bad;
-  6470 of 16671 functions (38.81%).
+- `analysis/coverage.py build/MP2x00US --check`: 11524 citations, 0 bad;
+  6556 of 16671 functions (39.33%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -292,6 +292,52 @@ and `AnalyzeLowData` themselves and the wiring into `GCTryToRecognize`.
 Estimate: one round for `FindDArcs`, `xt_st_zz` and the wiring; the
 reader above it (`xrw_algs`, the lexical search, the digit reader) about
 seven more.
+
+**Stage 2 DONE, round 7 (2026-09-28, commit 548e364):** `FindDArcs` and
+its group (`LowDArcs.cpp`, 17 functions and about 10 KB, all from the
+disassembly: the S/Z and d-bowl finders over `SZD_FEATURES`), `xt_st_zz`
+itself, `AnalyzeLowData` and `low_level` - **the low level is whole** -
+and `GCTryToRecognize` now calls `low_level`.  `test_LowLevel`'s
+`TestDArcs` (an S gets its 0x23 element between the arcs) and
+`TestLowLevelWhole` (the uou from its trace to its 13 xrs through
+`low_level`); with a cursive letter set `cursive.ns` cuts "ton" into 13
+xrs and "to" into 8 and the reader stops at `xrw_algs`, -9 (ctest
+`host.NewtonCursive` checks both; clean under `NEWTON_HEAPCHECK=5`).
+
+**Stage 3, the next piece: `xrw_algs`** (0x00362f08; after `low_level`
+succeeds, `GCTryToRecognize` runs `ChunkWriteParamCtx`/`ChunkPatchXrdata`
+- nothing to do with no chunk - then, for more than two xrs,
+`SetMultiWordMarksWS`/`SetMultiWordMarksDash` and `xrw_algs`, -9 when it
+fails).  Measured with `callgraph.py build/MP2x00US
+xrw_algs__FP11xrdata_typePA10_10rec_w_typeP8RWG_typeP7rc_type`: 84
+functions reached, **65 not done, about 28 KB** - a lower bound, because
+the vocabularies and the lexical database are walked through function
+pointers (`GF_VocSymbolSet`, `GF_LexDbSymbolSet` are 12-byte
+trampolines).  Its shape: `xrlv` (the xr-to-letters Viterbi over an
+`xrlv_data_type`: `XrlvAlloc`/`XrlvDealloc`, `XrlvDevelopPos` and
+`XrlvDevelopCell` growing the partial readings one xr position at a time,
+`XrlvGetNextSymbols` asking the dictionaries what may follow,
+`XrlvCHLXrlvPos` (3.4 KB, the biggest), `XrlvSortXrlvPos`/`TrimXrlvPos`,
+`XrlvCreateRWG` making the word graph `RWG_type`, `XrlvGetCharset`),
+over the xr matching matrix `xrcm_type` (`xrmatr_alloc`, `CountWord`,
+`CountLetter`, `CountSym`, `CountVar`, `MergeVarResults`, the trace
+layout `CreateLayout`/`TraceAlloc`, and two hand-written assembly inner
+loops, `CountXrAsm` and `TCountXrAsm`, 300-odd bytes each - read with
+`disasm.py`), and `GetCMPAliases`/`create_rwg_ppd` (the word graph's
+PPD aliases).  A plan: (1) `xrcm_type` and `CountLetter`/`CountWord` with
+the two assembly loops first, testable on their own - an xr stream from
+`low_level` matched against one letter of the DTE table already loaded
+(`ParaGraph.h`) should score the letter the stream was written as best;
+(2) `xrlv` and the word graph, testable by reading the uou (or "ton")
+against a one-word vocabulary; (3) then what makes answers out of the
+graph - `EvaluateAndSortAnswers`, `MakeAndCombRecWordsFromWordGraph`,
+`FillRecwordSplitInfo`, `GCFillLearningHandle`, `ORCreateLearnInfo`,
+`SetMultiWordMarksWS`/`Dash` (112 functions reached, 86 not done, about
+33 KB) - after which a cursive word is read.  The `Chunk*` digit reader
+(`ChunkAllocCtx` .. `ChunkCorrectByLexDB`: 96 reached, 82 not done, about
+146 KB with the library routines) is only entered for a field that allows
+numbers (rc +0xb6) and comes last.  Estimate: two rounds for `xrw_algs`,
+one or two for the answers; the digit reader three or four.
 
 ## Then: the testing system
 

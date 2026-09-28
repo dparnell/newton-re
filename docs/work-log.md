@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the cursive reader's low level whole
+
+- `FindDArcs` and its group (`recognition/LowDArcs.cpp`, 17 functions,
+  from the disassembly): an upper element and the lower one after it
+  described in an `SZD_FEATURES` block and judged an S or a Z
+  (`CheckSZArcs`: a new element 0x23/0x24 between the arcs) or the sides
+  of a d's bowl (`CheckDArcs`, `CheckBackDArcs`: 0x25/0x26), the sticks
+  either side turned into arcs.  `CheckDArcs` reads two box widths
+  through unaligned loads that take the halfword before the one named.
+- `xt_st_zz`, `AnalyzeLowData` and `low_level` themselves: the low level
+  is whole, and `GCTryToRecognize` calls it.  With a cursive letter set
+  "ton" is cut into 13 xrs and "to" into 8; the reader stops at
+  `xrw_algs` (-9, the word marked 0x400).  `test_LowLevel`'s `TestDArcs`
+  and `TestLowLevelWhole`; `test_WordDescriptors` and ctest
+  `host.NewtonCursive` now expect -9; six runs under `NEWTON_HEAPCHECK=5`
+  clean.  Stage 3 (`xrw_algs`, 65 functions and about 28 KB not done)
+  sized and planned in `docs/next-steps.md`.
+
 ## 2026-09-28: the cursive reader's lk_duga, and xt_st_zz but FindDArcs
 
 - **lk_duga** whole (`recognition/LowLkDuga.cpp`): `prevent_arcs`,
