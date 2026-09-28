@@ -64,6 +64,66 @@ the way are all in `docs/work-log.md`.
   strokes, and the test agent runs a test manager on the machine
   (`src/host/demo/journal.ns`, `testagent.ns`; `docs/testing/README.md`).
 
+## Now: finishing packages
+
+The owner asked (2026-09-29) to finish packages (`docs/packages/README.md`).
+Sized with `analysis/callgraph.py build/MP2x00US <roots>` (functions not
+yet done below the roots, and their bytes; a lower bound - indirect calls
+are not seen).  In order, what a third-party package and the ROM's own
+need first:
+
+1. **Units** - `InstallExportTables`/`RemoveExportTables`,
+   `InstallImportTable`/`RemoveImportTable`, `ResolveImportRef`, the
+   pending imports (`RegisterPendingImport` x2, `FulfillPendingImports`,
+   `RemovePendingImports`), the export tables' memory, `InitMPTableRegistry`,
+   `InitRExMagicPointerTables` and the natives `CurrentExports`,
+   `CurrentImports`, `PendingImports`, `FlushImports`,
+   `GetExportTableClients`, `FulfillImportTable`: 34 functions, 6.7 KB.
+   Five ROM parts carry `_ExportTable`s (two `_ImportTable`s) and are
+   installed without them today (a stderr line at boot).  With it:
+   `BackupPatchPackage` (answers nil) and `RestorePatchPackage` (answers
+   0) - 44 bytes, both trivial in this ROM.
+2. **The `'dict` and `'comm` part handlers** - `TDictPartHandler`
+   (`Install`/`Remove`/`Expand`, `AddDictionaries`, `FDisposeDictionary`:
+   10 functions, 1.6 KB) and `TCommPartHandler` (`InstallFrame`/
+   `RemoveFrame`: 3 functions, 0.8 KB).  Registered at boot next to
+   'form and 'auto.
+3. **Streamed sources** - `TPackageLoader` (`Load`, `Done`,
+   `cPackageLoad`), `CPartPipe` (`ReadChunk`, `Underflow`, ...),
+   `TPipeApp`, `TPackageLoaderEventHandler`: about 20 functions, 2.5 KB of
+   its own; a package read from a pipe rather than a block of memory.  Its
+   endpoint side (`TEndpointPipe`, `SuckPackageFromEndpoint`) waits on the
+   comms area.
+4. **Large binaries on a store** (virtual binary objects; see the
+   candidates below) - **everything else in packages stands on it**:
+   the large-object layer (`CreateLargeObject`, `WrapLargeObject`,
+   `MapLargeObject`, `LODefaultCreate`, the chunk arrays: 33 functions,
+   5 KB) and the ROM domain manager, the kernel's paging monitor that
+   maps a store object into virtual memory and executes a package in
+   place from flash (`TROMDomainManager1K`, the XIP calls - about 60
+   functions; on the host a DEVIATION, the object read whole into memory,
+   is the likely shape).  So it should come before (5) and (6).
+5. **Packages on a store** - `ActivatePackage`/`DeActivatePackage`
+   (`FInstallPackage`/`FDeinstallPackage`), `ObjectPid`, `ObjectPkgRef`,
+   `PidToPkgRef`, `PssidToPid`, `PssidToPkgRef`, `PidToPackageLite`, the
+   store's `RestorePackage`/`RestoreSegmentedPackage`,
+   `SuckPackageFromBinary`, `SuckPackageOffDeskTop`, `AllocatePackage`,
+   `StorePackage`, `WrapPackage`, `CPackageArchivalPipe`: about 45
+   functions, 6.7 KB above (4).
+6. **1.x packages** - `Activate1.XPackage`, `DeActivate1.XPackage`,
+   `Remove1.XPackage`, `1.XPackageToVBO`, `PackageAvailable`/
+   `PackageUnavailable`, the store's package directory: 27 functions,
+   3.6 KB, over (4).
+7. **The `'book` part handler** over the book reader - the handler and
+   `TLibrarian::BookAvailable`/`BookRemoved` are 11 functions, 5.6 KB, but
+   they stand on the book reader itself (`TLibrarian`, 49 methods; the
+   19 `books` natives), a subsystem of its own.  The ROM's help book is
+   refused for want of it.
+8. **Protocol parts' class info** - a `'code`-kind part is raw ARM code
+   registering protocol implementations (the ROM's ScreenBuffer and
+   ScreenDrivers packages).  The host cannot run it; recorded, not ported
+   (the host has its own screen driver).
+
 ## Candidates for the next piece of work
 
 The owner's order - the package manager, host package loading, the
@@ -75,18 +135,6 @@ could come next (not ranked; the owner chooses):
   (the one built-in application that does not open: `FSoundOpen`), the pen
   clicks, alarms and button sounds.  The codecs are done
   (`docs/sound/README.md`).
-- **Packages, what is left** (`docs/packages/README.md`):
-  - **Units**: five ROM parts carry `_ExportTable`s (two `_ImportTable`s),
-    installed without them (a stderr line at boot); a third-party package
-    importing a ROM unit needs `InstallExportTables`/`InstallImportTable`
-    0x000cfcd4-0x000d0758 and the unit natives.
-  - The `'book` part handler (the help book is refused for want of it)
-    over the book reader (`TLibrarian`, 20 natives), then `'dict` and
-    `'comm`.
-  - Streamed sources (`TPackageLoader`, `CPartPipe`, `TPipeApp`) and
-    packages on a store (the ROM domain manager, large binaries), which
-    the remaining package natives (`ActivatePackage`, `ObjectPkgRef`, ...)
-    stand on.
 - **The comms stack**: 120 unanswered natives - endpoints, CCL, AppleTalk,
   IR, NTK and the desktop connection.  The test server's link, the IR
   sniffing and fax reception (the only real source of the fax-page bitmaps
