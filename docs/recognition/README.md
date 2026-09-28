@@ -7,7 +7,7 @@ reconstruction in `src/recognition/`.  How each fact was established is
 stated with it; the reconstruction cites the ROM function each of its
 functions comes from.
 
-## Status: complete (2026-09-28)
+## Status: complete for the built-in fields (2026-09-28; revised 2026-09-29)
 
 Everything the machine does between the pen and the views is
 reconstructed and running on the host: the tablet buffer and the stroke
@@ -23,6 +23,15 @@ Notepad (`write.ns`, `cursive.ns`, `numbers.ns`, `shapes.ns`,
 
 What is left, and why:
 
+* **Reachable, still to do** (found by the NOT YET sweep of 2026-09-29;
+  `docs/next-steps.md` lists them with addresses): seven prototype
+  methods (`PenPos`, `GetAlternatives`, `Extract`, `HandleUnit`,
+  `HandleRawInk`, `LookupCompletions`, `VoteOnWordUnit` - recognition's
+  natives are 118 of 125, not all), `ValidateWord`'s dictionary and symbol
+  checks, `FindBaseline`'s first path over `low_level`,
+  `TWRecognizer::EndInkStrokeGroup`'s body, the arbiter's
+  `ArbitrateGraphicsWords` and the shape half of `ArbitrateEarly`, and
+  `SafeExceptionNotify`'s call to `ExceptionNotify`.
 * **Unreachable from the U.S. ROM**: `CheckDiacriticsDirections`
   (0x0007c9a0) and `AnalyseDiacriticsDirection` - about 3.2 KB asked only
   for a French or German letter set - and the sixteen-bit dictionary walks
