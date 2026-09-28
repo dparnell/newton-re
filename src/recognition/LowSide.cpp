@@ -35,6 +35,17 @@ brk_right(short* y, long i, long j)
 }
 
 
+// ROM 0x00305ffc brk_left__FPsiT2
+// The last pen-up from i back to j, or j - 1 for none.
+long
+brk_left(short* y, long i, long j)
+{
+	while (i >= j && y[i] != -1)
+		i--;
+	return i;
+}
+
+
 // ROM 0x00307820 TriangleSquare__FPsT1iN23
 // The signed area of the triangle of points a, b and c (in that order
 // along the trace, none of them a pen-up); 0 otherwise.

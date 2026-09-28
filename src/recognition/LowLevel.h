@@ -412,6 +412,7 @@ long	Circle(low_type* low);										// ROM 0x002bc5b8 Circle__FP8low_type - the
 
 // The side extrema (LowSide.cpp).
 long	brk_right(short* y, long i, long j);						// ROM 0x00305fd4 brk_right__FPsiT2 - the first pen-up from i to j, j + 1 for none
+long	brk_left(short* y, long i, long j);							// ROM 0x00305ffc brk_left__FPsiT2 - the last pen-up from i back to j, j - 1 for none
 long	TriangleSquare(short* x, short* y, long a, long b, long c);	// ROM 0x00307820 TriangleSquare__FPsT1iN23 - the signed area of triangle a, b, c
 long	ClosedSquare(short* x, short* y, long i, long j, short* flag);	// ROM 0x00307744 ClosedSquare__FPsT1iT3T1 - the area the trace from i to j closes with its chord
 long	IsTriangledPath(short* x, short* y, long i, long j, long k);	// ROM 0x00306524 IsTriangledPath__FPsT1iN23
@@ -626,6 +627,49 @@ long	FillXrFeatures(xrdata_type* xr, low_type* low);				// ROM 0x0027e880 FillXr
 long	GetCurSlope(long n, PS_point_type* trace);					// ROM 0x0027e8fc GetCurSlope__FiP13PS_point_type - the writing's slant in hundredths
 long	FillSHR(long slope, xrdata_type* xr, low_type* low);		// ROM 0x0027ea0c FillSHR__FiP11xrdata_typeP8low_type - ==> 0, 1 for fewer than three
 long	FillOrients(long slope, xrdata_type* xr, low_type* low);	// ROM 0x0027f58c FillOrients__FiP11xrdata_typeP8low_type - ==> 0
+
+// xt_st_zz: the late strokes placed, the breaks weighed (LowXtSt.cpp).
+long	xt_st_zz(low_type* low);									// ROM 0x002af7ac xt_st_zz__FP8low_type - ==> 0
+long	conv_top_elem_to_ST(low_type* low);							// ROM 0x002af89c conv_top_elem_to_ST__FP8low_type - ==> 0
+long	Placement_XT_CUTTED(SPEC_TYPE* e, low_type* low);			// ROM 0x002afa84 Placement_XT_CUTTED__FP9SPEC_TYPEP8low_type - ==> 0
+long	SortXT_ST(low_type* low);									// ROM 0x002afb9c SortXT_ST__FP8low_type - ==> 0
+long	GetStrokeWhichBelongsToRestricted(SPEC_TYPE* e, low_type* low, short* beg, short* end);	// ROM 0x002afce4 GetStrokeWhichBelongsToRestricted__FP9SPEC_TYPEP8low_typePsT3 - ==> 0
+long	FindDelayedStroke(low_type* low);							// ROM 0x002afda4 FindDelayedStroke__FP8low_type - ==> 0
+long	CheckStrokesForDxTimeMatch(low_type* low);					// ROM 0x002affdc CheckStrokesForDxTimeMatch__FP8low_type - ==> 0
+long	placement_X(low_type* low);									// ROM 0x002b0298 placement_X__FP8low_type - ==> 0
+long	FindMisplacedParentheses(low_type* low);					// ROM 0x002b05a8 FindMisplacedParentheses__FP8low_type - ==> 0
+long	find_CROSS(low_type* low, short iBeg, short iEnd, SPEC_TYPE** cross);	// ROM 0x002b0780 find_CROSS__FP8low_typesT2PP9SPEC_TYPE - ==> 1 found
+long	find_umlaut(low_type* low);									// ROM 0x002b083c find_umlaut__FP8low_type - ==> 0
+long	IsPartOfTrajectoryInside(low_type* low, SPEC_TYPE* a, SPEC_TYPE* b);	// ROM 0x002b0b24 IsPartOfTrajectoryInside__FP8low_typeP9SPEC_TYPET2
+long	CalcDistBetwXr(short* x, short* y, long a0, long a1, long b0, long b1, short* flag);	// ROM 0x0030857c CalcDistBetwXr__FPsT1iN33T1
+long	del_close_MAX_MIN(low_type* low);							// ROM 0x002b0ca0 del_close_MAX_MIN__FP8low_type - ==> 0
+long	IsExclamationOrQuestionSign(low_type* low, SPEC_TYPE* a, SPEC_TYPE* b);	// ROM 0x002b12dc IsExclamationOrQuestionSign__FP8low_typeP9SPEC_TYPET2
+long	del_ZZ_HATCH(SPEC_TYPE* head);								// ROM 0x002b13dc del_ZZ_HATCH__FP9SPEC_TYPE - ==> 0
+long	punctuation(low_type* low, SPEC_TYPE* start, SPEC_TYPE* e);	// ROM 0x002b1494 punctuation__FP8low_typeP9SPEC_TYPET2 - ==> 1 punctuation
+void	insert_drop(SPEC_TYPE* e, low_type* low);					// ROM 0x002b19a8 insert_drop__FP9SPEC_TYPEP8low_type
+long	FindQuotes(SPEC_TYPE* e, low_type* low);					// ROM 0x002b1a48 FindQuotes__FP9SPEC_TYPEP8low_type - ==> 1 a quote
+void	PutLeadingQuotes(low_type* low, SPEC_TYPE* a, SPEC_TYPE* b);	// ROM 0x002b1eb0 PutLeadingQuotes__FP8low_typeP9SPEC_TYPET2
+void	PutTrailingQuotes(low_type* low, SPEC_TYPE* a);				// ROM 0x002b1f14 PutTrailingQuotes__FP8low_typeP9SPEC_TYPE
+long	IsStick(SPEC_TYPE* a, SPEC_TYPE* b);						// ROM 0x002b1fcc IsStick__FP9SPEC_TYPET1
+long	is_X_crossing_XT(SPEC_TYPE* e, low_type* low, UByte* next);	// ROM 0x002b2040 is_X_crossing_XT__FP9SPEC_TYPEP8low_typePUc
+void	change_last_IU_height(low_type* low);						// ROM 0x002b230c change_last_IU_height__FP8low_type
+long	placement_XT_ST(low_type* low);								// ROM 0x002b241c placement_XT_ST__FP8low_type - ==> 0
+long	make_different_breaks(low_type* low);						// ROM 0x002b26b8 make_different_breaks__FP8low_type - ==> 0
+long	GetTraceBoxInsideYZone(short* x, short* y, long iBeg, long iEnd, short yTop, short yBottom, _RECT* box, short* iRight, short* iLeft, short* iBottom, short* iTop);	// ROM 0x00308050 GetTraceBoxInsideYZone__FPsT1iT3sT5P5_RECTN41 - ==> 0 for none in the zone
+long	GetDxBetweenStrokes(low_type* low, long a0, long a1, long b0, long b1);	// ROM 0x002b2df0 GetDxBetweenStrokes__FP8low_typeiN32
+long	SecondHigherFirst(low_type* low, SPEC_TYPE* brk, SPEC_TYPE* a, SPEC_TYPE* b, long a0, long a1, long b0, long b1);	// ROM 0x002b348c SecondHigherFirst__FP8low_typeP9SPEC_TYPEN22iN35
+long	AdjustZZ_BegEnd(low_type* low);								// ROM 0x002b377c AdjustZZ_BegEnd__FP8low_type - ==> 0
+void	redirect_sticks(low_type* low);								// ROM 0x002b3900 redirect_sticks__FP8low_type
+long	find_angstrem(low_type* low);								// ROM 0x002b3ac0 find_angstrem__FP8low_type - ==> 0
+long	CheckSequenceOfElements(low_type* low);						// ROM 0x002b3e4c CheckSequenceOfElements__FP8low_type - ==> 0
+long	iClosestToY(short* y, long i, long j, short v);				// ROM 0x0030769c iClosestToY__FPsiT2s - ==> -1 for none
+long	Put_XT_ST(low_type* low, SPEC_TYPE* best, SPEC_TYPE* e, ULong found);	// ROM 0x002b4fbc Put_XT_ST__FP8low_typeP9SPEC_TYPET2Ui - ==> 0
+SPEC_TYPE*	FindClosestUpperElement(SPEC_TYPE* head, short i);		// ROM 0x002b4634 FindClosestUpperElement__FP9SPEC_TYPEs
+long	DoubleXT(SPEC_TYPE* e, low_type* low);						// ROM 0x002b44e8 DoubleXT__FP9SPEC_TYPEP8low_type - ==> 1 doubled
+long	Placement_XT_With_HATCH(SPEC_TYPE* e, SPEC_TYPE* r, low_type* low);	// ROM 0x002b4060 Placement_XT_With_HATCH__FP9SPEC_TYPET1P8low_type - ==> 0
+long	Placement_XT_WO_HATCH_AND_ST(SPEC_TYPE* e, low_type* low);	// ROM 0x002b46cc Placement_XT_WO_HATCH_AND_ST__FP9SPEC_TYPEP8low_type - ==> 0
+long	RestoreApostroph(low_type* low, SPEC_TYPE* e);				// ROM 0x002d8b38 RestoreApostroph__FP8low_typeP9SPEC_TYPE - ==> 1 an apostrophe
+long	FindDArcs(low_type* low);									// ROM 0x00302f00 FindDArcs__FP8low_type - ==> 0
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out
