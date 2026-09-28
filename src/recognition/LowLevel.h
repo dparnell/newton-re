@@ -484,6 +484,16 @@ long	analize_sticks(low_type* low);								// ROM 0x002cbe54 analize_sticks__FP8
 long	analize_circles(low_type* low);								// ROM 0x002cca44 analize_circles__FP8low_type - ==> 0
 long	lk_cross(low_type* low);									// ROM 0x002ca074 lk_cross__FP8low_type - ==> 0
 
+// lk_duga's passes (LowLkDuga.cpp; lk_duga itself is NOT YET).
+long	IsDx_Dy_in_arcs_OK(SPEC_TYPE* e, SPEC_TYPE* t, long lim, short* x, short* y);	// ROM 0x002fb96c IsDx_Dy_in_arcs_OK__FP9SPEC_TYPET1iPsT4
+long	IsDx_Dy_in_tips_OK(SPEC_TYPE* e, SPEC_TYPE* t, long lim, short* x, short* y);	// ROM 0x002fc7c8 IsDx_Dy_in_tips_OK__FP9SPEC_TYPET1iPsT4
+long	IsTipOK(SPEC_TYPE* e, SPEC_TYPE* t, short* x);				// ROM 0x002fc8d8 IsTipOK__FP9SPEC_TYPET1Ps
+long	DyLimit(low_type* low, SPEC_TYPE* e, SPEC_TYPE* a, SPEC_TYPE* b, SPEC_TYPE* c, long k);	// ROM 0x002fc954 DyLimit__FP8low_typeP9SPEC_TYPEN32i - ==> the limit, -1 for no tip
+long	arcs_processing(low_type* low);								// ROM 0x002fa358 arcs_processing__FP8low_type - ==> 0
+long	ins_third_elem_in_circle(SPEC_TYPE* e, low_type* low);		// ROM 0x002fab84 ins_third_elem_in_circle__FP9SPEC_TYPEP8low_type
+long	delete_CROSS_elements(low_type* low);						// ROM 0x002fab00 delete_CROSS_elements__FP8low_type - ==> 0
+long	check_IUb_IDf_small(low_type* low);							// ROM 0x002fae80 check_IUb_IDf_small__FP8low_type - ==> 0
+
 // The colons and the side bends found late (LowRestore.cpp).
 void	AdjustBegEndWithoutPoint(SPEC_TYPE* e);						// ROM 0x00305044 AdjustBegEndWithoutPoint__FP9SPEC_TYPE
 Boolean	LooksLikeIAndPoint(SPEC_TYPE* dot, long p, short dx, short* x, short* y);	// ROM 0x00304964 LooksLikeIAndPoint__FP9SPEC_TYPEisPsT4

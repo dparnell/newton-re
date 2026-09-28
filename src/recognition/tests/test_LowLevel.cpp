@@ -1441,6 +1441,55 @@ TestLkCross(void)
 }
 
 
+// lk_duga's passes (LowLkDuga.cpp): a top just after a stroke's start,
+// as high and close across, is folded into the start (it takes the
+// start's mark and is marked 0x10); a short closed loop is taken out; a
+// low stick between two low bottoms is given the high band.
+static void
+TestLkDuga(void)
+{
+	TraceStart();
+	Pt(100, 100); Pt(101, 99); Pt(102, 99); Pt(103, 100);		// 1..4 the start and a top beside it
+	for (long s = 1; s <= 20; s++)								// 5..24 down and up
+		Pt(103 + s, (s <= 10) ? 100 + 4 * s : 140 - 4 * (s - 10));
+	Pt(124, 100); Pt(125, 100);									// 25..26
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	InitSpecl(low, 400);
+	EXPECT(Mark(low, 0x10, 3, 1, 0, 1, 1, 1, -2) == 0);
+	EXPECT(Mark(low, 1, 3, 1, 0, 2, 3, 2, -2) == 0);
+	EXPECT(Mark(low, 3, 7, 9, 0, 14, 16, 15, -2) == 0);
+	EXPECT(Mark(low, 1, 5, 1, 0, 20, 22, 21, -2) == 0);			// (code 5: a closed loop, too short to keep)
+	EXPECT(Mark(low, 0x20, 3, 1, 0, 26, 26, 26, -2) == 0);
+	SPEC_TYPE* start = low->fSpecl->next;
+	SPEC_TYPE* top = start->next;
+	EXPECT(IsTipOK(top, start, low->fX) == 1);
+	EXPECT(DyLimit(low, top, start, nil, top->next, 0x1b) >= 0x1b);
+	EXPECT(IsDx_Dy_in_tips_OK(top, start, 0x1b, low->fX, low->fY) == 1);
+	EXPECT(arcs_processing(low) == 0);
+	EXPECT(low->fSpecl->next == top && top->mark == 0x10 && top->code == 3 && (top->other & 0x10));
+	EXPECT(top->iBeg == 2);
+	EXPECT(delete_CROSS_elements(low) == 0);
+	long loops = 0;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next)
+		if (p->code == 5)
+			loops++;
+	EXPECT(loops == 0);
+
+	// a low stick (3) between two low bottoms given the high band
+	InitSpecl(low, 400);
+	EXPECT(Mark(low, 0x10, 3, 1, 0, 1, 1, 1, -2) == 0);
+	EXPECT(Mark(low, 3, 8, 0x29, 0, 5, 7, 6, -2) == 0);
+	EXPECT(Mark(low, 9, 3, 0x25, 0, 10, 12, 11, -2) == 0);
+	EXPECT(Mark(low, 3, 8, 0x29, 0, 14, 16, 15, -2) == 0);
+	EXPECT(Mark(low, 0x20, 3, 1, 0, 26, 26, 26, -2) == 0);
+	EXPECT(check_IUb_IDf_small(low) == 0);
+	SPEC_TYPE* stick = low->fSpecl->next->next->next;
+	EXPECT(stick->mark == 9 && (stick->attr & 0x30) == 0x10);
+}
+
+
 int
 main()
 {
@@ -1468,6 +1517,7 @@ main()
 	TestExchange();
 	TestRestore();
 	TestLkCross();
+	TestLkDuga();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
