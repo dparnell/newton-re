@@ -36,6 +36,15 @@ bugs and ROM bugs found on the way.
   information, training data, and answers nought.  `cursive.ns` types
   "For to"; `test_XrAnswers` (new) and ctest `host.NewtonCursive` check
   it.  `EvaluateAndSortAnswers` is NOT YET.
+- **The rules' whereabouts** (`recognition/XrRules.cpp`): `PDFGetRule`,
+  `PDFGetCharAddress`/`VarAddress`/`ConnectionAddress`/`RuleAddress`,
+  `PDFReturnNumberOfBits`/`Index`/`BitNumber`; `pdfMaskArray` from
+  romtable.py (`XrRulesTables.cpp`, in regenerate.py).  The ROM's rules:
+  87 characters, 374 variants, 63 connections.
+- Why the synthetic "ton" reads "For": the capitals flags allow a capital
+  at every word start (rc +0x1e = 0x3f) and the vocabulary is there (rc
+  +0x08 = 0x0f); "ton" is not among `xrlv`'s five answers - decided before
+  the NOT YET re-scoring.  The cursive trace prints the flags.
 - `docs/recognition/README.md` had 88 cp1252 dashes in the middle of its
   UTF-8 (an earlier edit's); they are UTF-8 again.
 

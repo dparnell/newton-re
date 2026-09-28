@@ -372,6 +372,62 @@ TestXrlv(void)
 }
 
 
+// The prototype data's rules (XrRules.cpp): the bit-set arithmetic by
+// hand, then the ROM's own rules walked - every character the main header
+// names has a header, every variant its character's header names has one,
+// and the rules found are inside the table.
+static void
+TestRules(void)
+{
+	UByte bits[2] = { 0xa0, 0x81 };		// bits 0, 2, 8 and 15
+	EXPECT(PDFReturnNumberOfBits(bits, 2) == 4);
+	EXPECT(PDFReturnIndex(bits, 0) == 0);
+	EXPECT(PDFReturnIndex(bits, 2) == 1);
+	EXPECT(PDFReturnIndex(bits, 8) == 2);
+	EXPECT(PDFReturnIndex(bits, 15) == 3);
+	EXPECT(PDFReturnBitNumber(bits, 15) == 3);
+	EXPECT(PDFReturnBitNumber(bits, 1) == -1);
+	if (gDTI == nil || gDTI->fPDFPtr == nil)
+	{
+		EXPECT(gDTI != nil && gDTI->fPDFPtr != nil);
+		return;
+	}
+	const UByte* main = ((PDFHeader*) gDTI->fPDFPtr)->fSection0;
+	long chars = 0, vars = 0, own = 0, connected = 0;
+	for (short c = 0; c < 256; c++)
+	{
+		const UByte* ch = PDFGetCharAddress(main, c);
+		if (PDFReturnBitNumber(main + 0x10, c) == -1)
+		{
+			EXPECT(ch == nil);
+			continue;
+		}
+		chars++;
+		EXPECT(ch != nil);
+		for (short v = 0; v < 32 && ch != nil; v++)
+		{
+			if (PDFReturnBitNumber(ch + 4, v) == -1)
+				continue;
+			vars++;
+			const UByte* var = PDFGetVarAddress(ch, v);
+			EXPECT(var != nil);
+			const UByte* rule;
+			if (PDFGetRule(main, c, v, -1, -1, &rule))
+			{
+				own++;
+				EXPECT(rule > var);
+			}
+			for (short n = 0; n < 256 && var != nil; n++)
+				if (PDFGetConnectionAddress(var, n) != nil)
+					connected++;
+		}
+	}
+	fprintf(stderr, "  rules: %ld characters, %ld variants (%ld with a rule of their own), %ld connections\n",
+			chars, vars, own, connected);
+	EXPECT(0 < chars && chars <= vars);
+}
+
+
 int
 main()
 {
@@ -385,6 +441,7 @@ main()
 	gObjectHeapSize = 0x200000;
 	InitObjects();
 	TestLetters();
+	TestRules();
 	TestXrlv();
 	if (failures == 0)
 		printf("test_XrMatrix: all passed\n");

@@ -109,6 +109,8 @@ GENERATED = [
      "bpnet.py", ["{build}", "-o", "src/recognition/BPNetTables.cpp"]),
     ("render",
      "render.py", ["{build}", "-o", "src/recognition/RenderTables.cpp"]),
+    ("xrrules",
+     "romtable.py", ["{build}", "pdfMaskArray:u8:8", "-o", "src/recognition/XrRulesTables.cpp"]),
     ("mmumap",
      "mmumap.py", ["{build}", "--doc", "docs/memory/mmu-map.md"]),
     ("factorysoups",

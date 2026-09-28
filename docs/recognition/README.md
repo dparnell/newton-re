@@ -2837,7 +2837,23 @@ in the graph and could reorder them, never add one.  Whether the machine
 itself would read these synthetic strokes as "For" cannot be checked
 without one; everything from the strokes to the graph is transcribed.
 
-**NOT YET RECONSTRUCTED**: `EvaluateAndSortAnswers` (0x00337ee8), which
+**The rules' whereabouts** (`recognition/XrRules.cpp`, the first piece
+of `EvaluateAndSortAnswers`): the prototype data (the letter table's PDF
+part, `CreatePDFHeader`) keeps a rule for a character's variant, and for
+that variant next to another character, behind three levels of header -
+each a bit set of which children there are (numbered from the top bit of
+the first byte, `pdfMaskArray`) and the offsets of those there are, in
+bit order, a child's slot being the number of set bits before its own
+(`PDFReturnIndex`/`PDFReturnBitNumber`).  The main header has a bit per
+character code (+0x10) and the characters' offsets (+0x30); a character's,
+a bit per variant (+4) and their offsets (+8); a variant's, a bit per
+neighbouring character (+4), whether it has a rule of its own (+0x24) and
+the connections' offsets (+0x28) - its own rule inline after them; a
+connection's, a bit per rule and their offsets.  `PDFGetRule` walks
+them.  `test_XrMatrix` walks the ROM's own: 87 characters, 374 variants
+(373 with a rule of their own) and 63 connections.
+
+**NOT YET RECONSTRUCTED**: the rest of `EvaluateAndSortAnswers` (0x00337ee8), which
 works the answers' letters over again before the readings are made (the
 prototype data's rules, each letter's box against its xrs, the
 diacritics, a word checked for being a line of digits) - so the letters'

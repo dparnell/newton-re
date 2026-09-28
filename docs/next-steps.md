@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 110/110
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11626 citations, 0 bad;
-  6650 of 16671 functions (39.89%).
+- `analysis/coverage.py build/MP2x00US --check`: 11635 citations, 0 bad;
+  6658 of 16671 functions (39.94%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -338,10 +338,13 @@ and `TXrWordUnit` - so an STXR unit becomes an 'XRWR' word unit, the
 arbiter hands it to `TWordRecognizer`, and the page types it.
 `cursive.ns` reads **"For to"** (ctest `host.NewtonCursive` checks the
 answers and the page's text; `test_XrAnswers` the readings, the split
-information and the training data).  Left of stage 4:
+information and the training data).  The rules' headers are walked too
+(`XrRules.cpp`: `PDFGetRule` and its address helpers, checked against
+the ROM's 87 characters' rules in `test_XrMatrix`).  Left of stage 4:
 `EvaluateAndSortAnswers` (0x00337ee8; `EvaluateAnswers`,
-`EvaluateCharQuality` and the rule interpreter `CalculateQueueResult`/
-`CalculateFunction`/`PDFGetRule` over the prototype data's rules,
+`EvaluateCharQuality` and the rule interpreter `CalculateGroupResult`/
+`CalculateQueueResult` - a switch over the rule's bytes the decompiler
+cannot follow, to be read from the disassembly - and `CalculateFunction`,
 `CalculateBoxes_Side_Result`/`FindXrLetterBox`,
 `CheckDiacriticsDirections`/`AnalyseDiacriticsDirection`,
 `EvaluateWordUsingSideReasoning`, `EvaluateMissingCross`,

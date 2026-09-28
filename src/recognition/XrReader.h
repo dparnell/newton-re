@@ -329,6 +329,17 @@ long	GF_VocOrLexSymbolSet(lex_data_type* lex, fw_buf_type* buf, long lexical, TD
 long	GF_VocSymbolSet(lex_data_type* lex, fw_buf_type* buf);				// ROM 0x00168f30 GF_VocSymbolSet__FP13lex_data_typePA256_11fw_buf_type
 long	GF_LexDbSymbolSet(lex_data_type* lex, fw_buf_type* buf);			// ROM 0x00168f3c GF_LexDbSymbolSet__FP13lex_data_typePA256_11fw_buf_type
 
+// the prototype data's rules (XrRules.cpp)
+long	PDFReturnNumberOfBits(const UByte* bits, short bytes);			// ROM 0x00329540 PDFReturnNumberOfBits__FPUcs
+long	PDFReturnIndex(const UByte* bits, short bit);					// ROM 0x003295b0 PDFReturnIndex__FPUcs - the set bits before it
+long	PDFReturnBitNumber(const UByte* bits, short bit);				// ROM 0x00329440 PDFReturnBitNumber__FPUcs - its slot, -1 when not set
+const UByte*	PDFGetCharAddress(const UByte* main, short c);			// ROM 0x0032934c PDFGetCharAddress__FP15PDF_MAIN_HEADERs
+const UByte*	PDFGetVarAddress(const UByte* ch, short var);			// ROM 0x00329498 PDFGetVarAddress__FP15PDF_CHAR_HEADERs
+const UByte*	PDFGetConnectionAddress(const UByte* var, short c);	// ROM 0x003294d0 PDFGetConnectionAddress__FP14PDF_VAR_HEADERs
+const UByte*	PDFGetRuleAddress(const UByte* connection, short rule);	// ROM 0x00329508 PDFGetRuleAddress__FP21PDF_CONNECTION_HEADERs
+Boolean	PDFGetRule(const UByte* main, short c, short var, short connection, short rule, const UByte** found);	// ROM 0x00329384 PDFGetRule__FP15PDF_MAIN_HEADERsN32PP15PDF_RULE_HEADER
+extern const unsigned char	pdfMaskArray[8];		// XrRulesTables.cpp (generated): a bit's mask, from the top bit
+
 // tables (XrReaderTables.cpp, generated)
 extern const unsigned char	triads_mapping[256];		// a character's number in the trigram table (0: none)
 extern const unsigned char	DiacriticsLetter[52];		// the letters that carry a diacritical mark
