@@ -222,7 +222,9 @@ public:
 	void			GetPartInfo(ULong partIndex, PartInfo* const info);
 	ULong			ProcessorTypeOfPart(ULong partIndex);
 	ULong			GetPartDataOffset(ULong partIndex)	{ return TPrivatePackageIterator::GetPartDataOffset(partIndex); }	// ROM 0x0015cd30 GetPartDataOffset__16TPackageIteratorFUl - forwards to TPrivatePackageIterator
-	// NOT YET RECONSTRUCTED: Store(TStore*, ULong, TCallbackCompressor*, TLOCallback*) - the package as a large object on a store
+	// the package written to a store's index table (StorePackages.cpp)
+	NewtonErr		Store(class TStore* store, ULong indexId, class TCallbackCompressor* compressor);	// ROM 0x0015c88c Store__16TPackageIteratorFP6TStoreUlP19TCallbackCompressor
+	NewtonErr		Store(class TStore* store, ULong indexId, class TCallbackCompressor* compressor, class TLOCallback* callback);	// ROM 0x0015c8b0 Store__16TPackageIteratorFP6TStoreUlP19TCallbackCompressorP11TLOCallback
 
 	Boolean			fFromPipe;				// +0x20
 	CPipe*			fPipe;					// +0x24

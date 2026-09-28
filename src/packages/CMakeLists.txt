@@ -23,6 +23,7 @@ add_library(packages STATIC
     FramePartHandler.cpp
     ROMPackages.cpp
     Units.cpp
+    StorePackages.cpp
 )
 # stores: a streamed frames part is read with a TObjectReader, and the
 # package natives answer the package stores

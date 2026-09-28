@@ -4,7 +4,7 @@
 	Contains:	HostMountStores (HostStores.h).
 */
 
-#include "StoreCompander.h"
+#include "StorePackages.h"
 #include "HostStores.h"
 
 #include "FactorySoups.h"
@@ -93,7 +93,7 @@ HostMountStores(void)
 		if (gProtocolRegistry != nil)
 		{
 			RegisterStoreImplementations();
-			InitializeStoreCompanders();
+			InitializeStoreDecompressors();
 		}
 		InitQueries();
 

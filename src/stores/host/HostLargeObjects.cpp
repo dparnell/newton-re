@@ -167,7 +167,11 @@ Load(MappedObject* entry)
 {
 	UByte root[kLargeObjectRootSize];
 	memset(root, 0, sizeof(root));
-	NewtonErr err = entry->fStore->Read(entry->fId, 0, (char*) root, kLargeObjectRootSize);
+	// (a package's root is only a PackageRoot, 0x14 bytes)
+	long rootSize = 0;
+	NewtonErr err = entry->fStore->GetObjectSize(entry->fId, &rootSize);
+	if (err == noErr)
+		err = entry->fStore->Read(entry->fId, 0, (char*) root, rootSize < kLargeObjectRootSize ? rootSize : kLargeObjectRootSize);
 	if (err != noErr)
 		return err;
 	char* name = nil;

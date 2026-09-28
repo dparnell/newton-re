@@ -34,6 +34,8 @@
 #include "PartHandlers.h"
 #include "FramePartHandler.h"
 #include "PackageStore.h"
+#include "StorePackages.h"
+#include "host/HostStore.h"
 #include "Soups.h"
 #include "Compression.h"
 #include "Frames.h"
@@ -526,6 +528,110 @@ TestStreamed(void)
 }
 
 
+// A package kept on a store (StorePackages.h): Cardfile, as NTK writes it,
+// stored through TLOPackageStore with each of two decompressors, mapped
+// back byte for byte (bar the modify date Store sets), installed from
+// the store, taken out of use and installed again (as at the next boot),
+// written out by BackupPackage, and deleted.
+static void
+StoreScenario(const char* decompressor, const UByte* ntk, ULong size)
+{
+	TStore* store = (TStore*) THostStore::ClassInfo()->New();
+	EXPECT(store != nil && store->Init(nil, 0x100000, 0, 0, kStoreIsInternal, nil) == noErr);
+	if (store == nil)
+		return;
+	store->Format();
+	TLrgObjStore* allocator = (TLrgObjStore*) NewByName("TLrgObjStore", nil, decompressor);
+	EXPECT(allocator != nil);
+	if (allocator == nil)
+		return;
+	CTestPipe pipe(size + 16);
+	pipe.WriteChunk(ntk, size, false);
+	pipe.Rewind();
+	ULong id = 0;
+	EXPECT(allocator->Create(&id, store, &pipe, 0, true, (char*) decompressor, nil, 0, nil) == noErr && id != 0);
+	allocator->Delete();
+	EXPECT(PackageAllocationOk(store, id) && IsOnStoreAsPackage(store, id));
+	char* name = nil;
+	EXPECT(LOCompanderName(&name, store, id) == noErr && name != nil && strcmp(name, decompressor) == 0);
+	free(name);
+
+	// read back
+	ULong address = 0;
+	NewtonErr mapErr = MapLargeObject(&address, store, id, true);
+	EXPECT(mapErr == noErr && address != 0);
+	if (address != 0)
+	{
+		const UByte* mapped = (const UByte*) address;
+		EXPECT(memcmp(mapped, ntk, 0x24) == 0 && memcmp(mapped + 0x28, ntk + 0x28, size - 0x28) == 0);
+		EXPECT(ObjectSize(address) == size);
+		EXPECT(UnmapLargeObject(address) == noErr);
+	}
+
+	// installed from the store, taken away, installed again
+	ULong packageId = 0;
+	long given = gGivenCount;
+	EXPECT(PackageAvailable(store, id, &packageId) == noErr && packageId != 0);
+	EXPECT(Known(packageId) == noErr && gGivenCount == given + 1);
+	TStore* whose = nil;
+	PSSId whoseId = 0;
+	ULong at = 0, pid = 0;
+	EXPECT(IdToStore(packageId, &whose, &whoseId) == noErr && whose == store && whoseId == id);
+	EXPECT(StoreToId(store, id, &pid) == noErr && pid == packageId);
+	EXPECT(IdToVAddr(packageId, &at) == noErr && at != 0 && VAddrToId(&pid, at) == noErr && pid == packageId);
+	EXPECT(PackageUnavailable(packageId) == noErr && Known(packageId) == kError_No_Such_Package);
+	Given* got = GivenFor(packageId);
+	EXPECT(got != nil && got->fRemoved);
+	ULong again = 0;
+	EXPECT(PackageAvailable(store, id, &again) == noErr && again != 0 && Known(again) == noErr);
+
+	// written out as the package itself
+	CTestPipe out(0x1000);
+	TLrgObjStore* backup = (TLrgObjStore*) NewByName("TLrgObjStore", nil, decompressor);
+	EXPECT(backup != nil && backup->Backup(&out, store, id, false, nil) == noErr);
+	if (backup != nil)
+		backup->Delete();
+	out.Rewind();
+	UByte* copy = (UByte*) malloc(size);
+	long count = (long) size;
+	Boolean eof = false;
+	out.ReadChunk(copy, count, eof);
+	EXPECT(count == (long) size && memcmp(copy, ntk, 0x24) == 0 && memcmp(copy + 0x28, ntk + 0x28, size - 0x28) == 0);
+	free(copy);
+
+	// deleted: taken out of use and off the store
+	EXPECT(DeletePackage(again) == noErr && Known(again) == kError_No_Such_Package);
+	long gone = 0;
+	EXPECT(store->GetObjectSize(id, &gone) != noErr);
+	store->Delete();
+}
+
+
+static void
+TestOnStore(void)
+{
+	ULong cardfile = 0;
+	TPMIterator iter;
+	iter.Init();
+	for (; iter.More(); iter.NextPackage())
+		if (Same(iter.PackageName(), "Cardfile"))
+			cardfile = iter.PackageId();
+	iter.Done();
+	if (cardfile != 0)
+		EXPECT(DeinstallPackage(cardfile) == noErr);
+	InitializeStoreDecompressors();
+	UByte* ntk = AsNTKWritesIt(kCardfile);
+	ULong size = GetBigEndianWord(ntk + 0x1c);
+	// (flagged uncompressed, it would be stored by the simple one whatever
+	// was asked for)
+	EXPECT((GetBigEndianWord(ntk + 0x0c) & 0x10000000) != 0);
+	StoreScenario("TSimpleStoreDecompressor", ntk, size);
+	PutBigEndianWord(ntk + 0x0c, GetBigEndianWord(ntk + 0x0c) & ~0x10000000);
+	StoreScenario("TLZStoreDecompressor", ntk, size);
+	free(ntk);
+}
+
+
 // the test's own application world: part handlers for 'form and 'auto
 // (the test's) and 'soup (the package store's), then the tests run from
 // PreMain as the newt world loads the ROM's packages; loading forks the
@@ -557,6 +663,7 @@ public:
 		{
 			TestPackagePipe();
 			TestManager();
+			TestOnStore();
 			TestStreamed();
 		}
 		gDone = true;
@@ -579,9 +686,60 @@ Scenario(void)
 }
 
 
+#ifdef _WIN32
+#define NOGDI
+#include <windows.h>
+// Where a fault happened, relative to the executable, and the return
+// addresses on the stack above it - to be looked up in the link map.
+static LONG CALLBACK
+OnException(EXCEPTION_POINTERS* info)
+{
+	if (info->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
+		return EXCEPTION_CONTINUE_SEARCH;
+	uintptr_t base = (uintptr_t) GetModuleHandleA(nil);
+	typedef BOOL (WINAPI *InitProc)(HANDLE, const char*, BOOL);
+	typedef BOOL (WINAPI *FromAddrProc)(HANDLE, DWORD64, DWORD64*, void*);
+	HMODULE help = LoadLibraryA("dbghelp.dll");
+	InitProc init = help ? (InitProc) GetProcAddress(help, "SymInitialize") : nil;
+	FromAddrProc from = help ? (FromAddrProc) GetProcAddress(help, "SymFromAddr") : nil;
+	HANDLE process = GetCurrentProcess();
+	if (init != nil)
+		init(process, nil, TRUE);
+	static unsigned char buffer[sizeof(DWORD) * 32 + 512];
+	fprintf(stderr, "fault at %p\n", info->ExceptionRecord->ExceptionAddress);
+	uintptr_t* sp = (uintptr_t*) info->ContextRecord->Rsp;
+	uintptr_t addrs[401];
+	addrs[0] = (uintptr_t) info->ExceptionRecord->ExceptionAddress;
+	long n = 1;
+	for (int i = 0; i < 400; i++)
+		if (sp[i] > base && sp[i] < base + 0x2000000)
+			addrs[n++] = sp[i];
+	for (long i = 0; i < n; i++)
+	{
+		memset(buffer, 0, sizeof(buffer));
+		ULONG* sym = (ULONG*) buffer;
+		sym[0] = 88;						// SizeOfStruct of SYMBOL_INFO
+		sym[20] = 256;						// MaxNameLen
+		DWORD64 displacement = 0;
+		if (from != nil && from(process, (DWORD64) addrs[i], &displacement, buffer))
+			fprintf(stderr, "  %s+0x%llx\n", (const char*) (buffer + 84),
+					(unsigned long long) displacement);
+		else
+			fprintf(stderr, "  +0x%llx (err %lu)\n", (unsigned long long) (addrs[i] - base),
+					(unsigned long) GetLastError());
+	}
+	fflush(stderr);
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif
+
+
 int
 main()
 {
+#ifdef _WIN32
+	AddVectoredExceptionHandler(1, OnException);
+#endif
 	gHostKernelServicesTask = Scenario;
 	OsBoot();
 	if (failures == 0)
