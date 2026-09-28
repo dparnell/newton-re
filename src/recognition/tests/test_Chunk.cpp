@@ -1172,10 +1172,10 @@ IsNumber(const char* what, long* digits = nil, long* count = nil)
 	}
 	New_SearchDigit_V(lo, staff.fTrace, staff.fTraceCount, staff.fNodes, staff.fChunks, staff.fBrackets,
 					  staff.fRealChunks, staff.fChunkCount, staff.fRealCount, box, staff.fStrokes, staff.fStrokeCount, staff.fHeight);
-	// (SearchDigit_S and FindPound come here in Digits, but without the
-	// statics after Check_4 that Digits runs before its second looks -
-	// 0x002a09b0, 0x002a2758, CutNumberInDigits - a 0 both V and S read is
-	// written out twice, so they are left out until those are done)
+	// (SearchDigit_S and FindPound come here in Digits, and after Check_4
+	// the statics that take the doubtful digits out - a 0 both V and S read
+	// would otherwise be written out twice; this harness is SearchNumber's
+	// own, the pieces before it in their order - TestDigits runs the whole)
 	Check_4(&staff);
 	DigitsSecondLooks(lo, staff.fChunks, staff.fRealChunks, staff.fStrokes, staff.fStrokeCount, staff.fNodes, staff.fDigits, box);
 	long answer = SearchNumber(&staff);
@@ -1417,6 +1417,123 @@ TestSearchS(void)
 }
 
 
+/*--------------------------------------------------------------------
+	Digits: the whole of it - the searchers, the doubtful digits taken
+	out, the cells, the second looks and the verdict.
+--------------------------------------------------------------------*/
+
+// ==> Digits' answer; *text the characters it handed back, *runs how many
+// runs of other strokes
+static long
+ReadNumber(const char* what, char* text = nil, long* runs = nil, bool show = false)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	memset(staff.fDigits, 0xff, sizeof(staff.fDigits));
+	staff.f5C = 0x18;
+	tag_BOX box = { 0x7fff, 0x7fff, -0x7fff, -0x7fff };
+	for (long k = 0; k < staff.fNodeCount; k++)
+	{
+		tag_wapx_type* nd = &staff.fNodes[k];
+		if (nd->x < box.left) box.left = nd->x;
+		if (nd->x > box.right) box.right = nd->x;
+		if (nd->y < box.top) box.top = nd->y;
+		if (nd->y > box.bottom) box.bottom = nd->y;
+	}
+	tagNumBox numbox[0x19];
+	memset(numbox, 0, sizeof(numbox));
+	int32_t* pairs = nil;
+	int32_t count = 0;
+	long answer = Digits(&staff, box, staff.fHeight, numbox, &pairs, &count);
+	char buf[0x20];
+	long k = 0;
+	for (; k < 0x18 && numbox[k].fChar != 0; k++)
+		buf[k] = (char) numbox[k].fChar;
+	buf[k] = 0;
+	if (text != nil)
+		strcpy(text, buf);
+	if (runs != nil)
+		*runs = count;
+	if (gVerbose || show)
+		printf("  Digits %s: answer %ld, \"%s\", %d runs\n", what, answer, buf, count);
+	if (pairs != nil)
+		HWRMemoryFree((Ptr) pairs);
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return answer;
+}
+
+// how many cells CutNumberInDigits cuts the writing into
+static long
+Cells(const char* what)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	long cells = CutNumberInDigits(&staff);
+	EXPECT(CountClass(lo, 1200) == cells);
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return cells;
+}
+
+static void
+TestDigits(void)
+{
+	char t[0x20];
+	long runs = -1;
+	// numbers: 3 is a number with nothing else written about it
+	TraceStart(); DrawFour(0, 0); DrawTwo(22, 0);
+	EXPECT(ReadNumber("42", t, &runs) == 3 && strcmp(t, "42") == 0 && runs == 0);
+	// the 0 V and S both read is written out once (the overlapping digit
+	// taken out)
+	TraceStart(); DrawOne(0, 0); DrawZero(14, 0);
+	EXPECT(ReadNumber("10", t) == 3 && strcmp(t, "10") == 0);
+	TraceStart(); DrawTwo(0, 0); DrawOne(18, 0); MoveTo(30, 5); LineTo(43, 0); LineTo(39, 20); StrokeEnd();
+	EXPECT(ReadNumber("217", t) == 3 && strcmp(t, "217") == 0);
+	TraceStart(); DrawOne(0, 0); DrawOne(14, 0);
+	EXPECT(ReadNumber("11", t) == 3 && strcmp(t, "11") == 0);
+	// a lone digit written its usual way (a 2 in one stroke, a 5 in two)
+	TraceStart(); DrawTwo(0, 0);
+	EXPECT(ReadNumber("2", t) == 3 && strcmp(t, "2") == 0);
+	TraceStart(); DrawFive(0, 0);
+	EXPECT(ReadNumber("5", t) == 3 && strcmp(t, "5") == 0);
+	TraceStart(); DrawOne(0, 0); DrawLine(12, 19, 13, 20); DrawOne(18, 0);
+	EXPECT(ReadNumber("1.1", t) == 3 && strcmp(t, "1.1") == 0);
+	// an area code in brackets
+	TraceStart(); MoveTo(10, -3); ArcTo(20, 10, 16, 125, 235); StrokeEnd(); DrawFour(12, 0); DrawTwo(30, 0); MoveTo(46, -3); ArcTo(36, 10, 16, 55, -55); StrokeEnd();
+	EXPECT(ReadNumber("(42)", t) == 3 && strcmp(t, "(42)") == 0);
+	// a colon among the digits: not a number
+	TraceStart(); DrawOne(0, 0); DrawLine(12, 6, 13, 7); DrawLine(12, 17, 13, 18); DrawOne(18, 0);
+	EXPECT(ReadNumber("1:1", t) == 0 && strcmp(t, "1:1") == 0);
+	// a 1 and a 5 is a number when the 5's bar is a stroke of its own...
+	TraceStart(); DrawOne(0, 0); DrawFive(12, 0);
+	EXPECT(ReadNumber("15", t) == 3 && strcmp(t, "15") == 0);
+	// ...and the word "is" when the 5 is written in one stroke
+	TraceStart(); DrawOne(0, 0); DrawFiveOne(12, 0);
+	EXPECT(ReadNumber("1 5-in-one", t) == 0 && strcmp(t, "15") == 0);
+	// a stroke that is no digit, after the number or before it: not a
+	// number, and the stroke handed back as a run
+	TraceStart(); DrawFour(0, 0); DrawTwo(22, 0); MoveTo(40, 8); LineTo(43, 20); LineTo(46, 10); LineTo(49, 20); LineTo(52, 8); StrokeEnd();
+	EXPECT(ReadNumber("42w", t, &runs) == 0 && strcmp(t, "42") == 0 && runs == 1);
+	TraceStart(); MoveTo(0, 8); LineTo(3, 20); LineTo(6, 10); LineTo(9, 20); LineTo(12, 8); StrokeEnd(); DrawFour(20, 0); DrawTwo(42, 0);
+	EXPECT(ReadNumber("w42", t, &runs) == 0 && strcmp(t, "42") == 0 && runs == 1);
+
+	// the cells: the 4's two strokes one cell (the upright overlaps the
+	// slant), the 2 another
+	TraceStart(); DrawFour(0, 0); DrawTwo(22, 0);
+	EXPECT(Cells("42") == 2);
+	TraceStart(); DrawOne(0, 0); DrawOne(14, 0); DrawOne(28, 0);
+	EXPECT(Cells("111") == 3);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1435,6 +1552,7 @@ main(int argc, char** argv)
 	TestSearchNumber();
 	TestFindPound();
 	TestSearchS();
+	TestDigits();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

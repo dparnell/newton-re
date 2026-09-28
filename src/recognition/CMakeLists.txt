@@ -87,6 +87,7 @@ add_library(recognition STATIC
     ChunkSearchL.cpp
     ChunkSearchK.cpp
     ChunkSearchS.cpp
+    ChunkDigitsMain.cpp
     ChunkSearchV.cpp
     ChunkNumber.cpp
     ChunkPound.cpp

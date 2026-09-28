@@ -402,6 +402,94 @@ void	Check_4(tag_CHUNK_STAFF* staff);								// ROM 0x0028d9d0 Check_4__FP15tag_
 // the digits and the box's ends) put in the list as class 1900 in order.
 // ==> how many objects that is (0 with no digits).
 long	DigitsSecondLooks(void* lo, tag_CHUNK* chunks, int32_t* real, tag_STK* strokes, long strokeCount, tag_wapx_type* nodes, const UByte* allowed, tag_BOX box);	// ROM 0x0029ce20 (unnamed)
+// The character a digit's code stands for (0 for none): 0-9 the digits,
+// then ( ) + - . : / % = , @ $ ' > < and the two guillemets (10-26), B and
+// D (30, 31), and the codes some searchers give a digit written another
+// way (41 and 44 a 4, 51 a 5, 81 a 1, 91 and 99 a 9, 69 an x, 70 the
+// pound sign, 71 #, 72 the yen sign) - Mac Roman.  Not a function in the
+// ROM: the same chain of comparisons is written out at 0x0029d428,
+// 0x0029e888, 0x0029ffc8, 0x002a01dc, 0x002a0740, 0x002a0d74, 0x002a1a98
+// and 0x002a2078.
+inline UByte
+DigitChar(ULong d)
+{
+	if (d <= 9)
+		return (UByte) (d + '0');
+	switch (d)
+	{
+	case 10:	return '(';
+	case 11:	return ')';
+	case 12:	return '+';
+	case 13:	return '-';
+	case 14:	return '.';
+	case 15:	return ':';
+	case 16:	return '/';
+	case 17:	return '%';
+	case 18:	return '=';
+	case 19:	return ',';
+	case 20:	return '@';
+	case 21:	return '$';
+	case 22:	return '\'';
+	case 23:	return '>';
+	case 24:	return '<';
+	case 25:	return 0xc7;		// Mac Roman: the opening guillemet
+	case 26:	return 0xc8;		// the closing one
+	case 30:	return 'B';
+	case 31:	return 'D';
+	case 41: case 44:	return '4';
+	case 51:	return '5';
+	case 69:	return 'x';
+	case 70:	return 0xa3;		// the pound sign
+	case 71:	return '#';
+	case 72:	return 0xb4;		// the yen sign
+	case 81:	return '1';
+	case 91: case 99:	return '9';
+	}
+	return 0;
+}
+
+// What Digits hands back for each character of a number it read (ROM
+// tagNumBox, 0x20 bytes, no pointers): the character and an alternative
+// ('&' for an 8 that may be one), the box, and three halfwords kept
+// big-endian as the ROM writes them a byte at a time - the height of a 1 or
+// a solidus, and the first and last trace points.
+struct tagNumBox
+{
+	UByte		fChar;				// +00  (0 ends the list)
+	UByte		fAlt;				// +01
+	UByte		f02[2];
+	int32_t		fLeft;				// +04
+	int32_t		fTop;				// +08
+	int32_t		fRight;				// +0c
+	int32_t		fBottom;			// +10
+	int32_t		f14;
+	UByte		fHeight[2];			// +18  big-endian
+	UByte		fFirstPoint[2];		// +1a  big-endian
+	UByte		fLastPoint[2];		// +1c  big-endian
+	UByte		f1E[2];
+};
+static_assert(sizeof(tagNumBox) == 0x20, "a tagNumBox is 0x20 bytes, as in the ROM");
+
+// The digits and signs in the writing (ChunkProcessor's second step, over
+// the staff ChunkConstruct made): every searcher run, the doubtful ones
+// taken out (the statics 0x002a09b0 and 0x002a2758), the number cut into
+// cells (CutNumberInDigits), the second looks, then the verdict - an
+// area code in brackets, a lone digit written its usual way, a lone #, or
+// SearchNumber's; with staff f50 set only digits that are written their
+// usual way.  numbox gets the characters (up to max - 1 of them, ended by
+// a 0 when the writing is a number), *out a block of (first point, last
+// point) pairs for the runs of strokes that are not digits (class 2100),
+// *count how many (nil and 0 with none).  ==> 1 a number, 3 a number with
+// no such runs, 0 not one (a colon among the digits is not a number).
+// height is New_SearchDigit_V's last argument.
+long	Digits(tag_CHUNK_STAFF* staff, tag_BOX box, long height, tagNumBox* numbox, int32_t** out, int32_t* count);	// ROM 0x0029c94c Digits__FP15tag_CHUNK_STAFF7tag_BOXiP9tagNumBoxPPvPi
+// The real chunks cut into cells of up to three strokes, a stroke joining
+// the cell before it when it overlaps it, starts close to it, or stands
+// tall and narrow over it - each cell put in as class 1200 (value 0,
+// extra -1), the gaps the second looks place between digits.  ==> how
+// many cells.
+long	CutNumberInDigits(tag_CHUNK_STAFF* staff);						// ROM 0x002a75b0 CutNumberInDigits__FP15tag_CHUNK_STAFF
+
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 

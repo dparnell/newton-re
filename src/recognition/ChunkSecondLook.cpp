@@ -38,48 +38,6 @@ DigitOf(const tag_LOWOBJ* obj)
 }
 
 
-// The character a digit stands for (0 for none).  Not a function in the
-// ROM: the same chain of comparisons is written out in three places
-// (0x0029d428, 0x002a01dc and 0x002a0740).
-static UByte
-DigitChar(ULong d)
-{
-	if (d <= 9)
-		return (UByte) (d + '0');
-	switch (d)
-	{
-	case 10:	return '(';
-	case 11:	return ')';
-	case 12:	return '+';
-	case 13:	return '-';
-	case 14:	return '.';
-	case 15:	return ':';
-	case 16:	return '/';
-	case 17:	return '%';
-	case 18:	return '=';
-	case 19:	return ',';
-	case 20:	return '@';
-	case 21:	return '$';
-	case 22:	return '\'';
-	case 23:	return '>';
-	case 24:	return '<';
-	case 25:	return 0xc7;		// Mac Roman: the opening guillemet
-	case 26:	return 0xc8;		// the closing one
-	case 30:	return 'B';
-	case 31:	return 'D';
-	case 41: case 44:	return '4';
-	case 51:	return '5';
-	case 69:	return 'x';
-	case 70:	return 0xa3;		// the pound sign
-	case 71:	return '#';
-	case 72:	return 0xb4;		// the yen sign
-	case 81:	return '1';
-	case 91: case 99:	return '9';
-	}
-	return 0;
-}
-
-
 // The digits taken out (value 0xffff) dropped from the array, the rest
 // moved up, the end cleared, *count the ones left.  Not a function in the
 // ROM: written out at the end of five of the twelve.
