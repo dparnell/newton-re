@@ -85,6 +85,16 @@ InFramesPartArea(Ref r)
 }
 
 
+TImportedObjectArea*
+FindFramesPart(const void* part)
+{
+	for (FramesPartArea* p = gFramesParts; p != nil; p = p->fNext)
+		if (p->fArea.fBytes == (const unsigned char*) part)
+			return &p->fArea;
+	return nil;
+}
+
+
 // ROM 0x000d1744 FramePartToplevelFrame__FPv
 // The frame in the array the part begins with (the array's GC word must
 // be clear: a real object, not a page of something else); nil otherwise.

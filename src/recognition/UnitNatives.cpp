@@ -641,9 +641,29 @@ FPrepRecConfig(RefArg rcvr, RefArg config)
 }
 
 
+// ROM 0x001a0be0 FPenPos
+// PenPos(): where the pen is, as a point {x, y} (the Fixed coordinates
+// rounded), while it is down; nil when it is up.
+static Ref
+FPenPos(RefArg /*rcvr*/)
+{
+	long x, y;
+	ULong pressure;
+	Boolean penUp = true;
+	PollTablet(&x, &y, &pressure, &penUp);
+	if (penUp)
+		return NILREF;
+	RefVar point(Clone(Rcanonicalpoint));
+	SetFrameSlot(point, RSSYMx, RefVar(MAKEINT((short) ((ULong) (x + 0x8000) >> 16))));
+	SetFrameSlot(point, RSSYMy, RefVar(MAKEINT((short) ((ULong) (y + 0x8000) >> 16))));
+	return point;
+}
+
+
 void
 RegisterUnitNatives(void)
 {
+	RegisterNativeFunction("FPenPos", (void*) FPenPos, 0);
 	RegisterNativeFunction("FSetInkerPenSize__FRC6RefVarT1", (void*) FSetInkerPenSize, 1);
 	RegisterWordNatives();
 	RegisterNativeFunction("FGetCalibration__FRC6RefVar", (void*) FGetCalibration, 0);

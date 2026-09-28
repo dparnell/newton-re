@@ -1,0 +1,33 @@
+// A package kept on the internal store (packages/StorePackages.h): run
+// after a boot that installed one - `newton --store file --package
+// Formulas2.pkg`, which stores it with store:SuckPackageFromBinary - this
+// boot found it in the store's "Packages" soup and activated it again
+// (TNewtWorld::PreMain's ActivateStorePackages), as a MessagePad does
+// after a restart.  Then what a script can ask of it, and deactivating
+// and activating it by hand.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --erase --store tmp/p.store \
+//       --package build/host/host/packages/Formulas2.pkg --headless 5
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --store tmp/p.store \
+//       --script src/host/demo/packagestore.ns --headless 5
+
+AddDelayedCall(func() begin
+	local onStore := func(title) begin
+		local found := nil;
+		foreach p in GetPackages() do if p.store and StrEqual(p.title, title) then found := p;
+		found
+	end;
+	local p := call onStore with ("Formulas2");
+	Print({afterRestart: p <> nil, pssid: p.pssid, onInternal: p.store = GetStores()[0]});
+	local pkgRef := PssidToPkgRef(p.pssid, p.store);
+	local info := GetPkgRefInfo(pkgRef);
+	Print({isPackage: IsPackage(pkgRef), title: info.title, sameId: info.id = p.id,
+	       pid: ObjectPid(pkgRef) = p.id, pidToPkgRef: PidToPkgRef(p.id) = pkgRef,
+	       pssidToPid: PssidToPid(p.pssid, p.store) = p.id, parts: info.parttypes,
+	       lite: PidToPackageLite(p.id).pssid = p.pssid});
+	DeActivatePackage(pkgRef);
+	Print({deactivated: call onStore with ("Formulas2") = nil});
+	local id := ActivatePackage(pkgRef);
+	Print({activatedAgain: (call onStore with ("Formulas2")).id = id});
+	Print("packagestore: done");
+end, [], 1000);

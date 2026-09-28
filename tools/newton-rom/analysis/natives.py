@@ -154,7 +154,7 @@ AREAS = OrderedDict((
                 r'|^FInsertTabletSample|BypassTablet'),
     ('assist', r'^DS|^IA|^Lex|Phrase|^Utter|Template|^Favor|Phone(Index|String|Sym)'
                r'|^GetRelevantTemplates|^StringToFrameMapper|^GuessAddressee'),
-    ('packages', r'Package|^FPid|^FPssid|^FObjectPid|^FObjectPkgRef|Import|Export'),
+    ('packages', r'Package|^FPid|^FPssid|^FObjectPid|^FObjectPkgRef|Import|Export|Pkg'),
     ('stores', r'^FLB|^Store|Soup|Cursor|^FGetBinary|^FIsLargeBinary|VBO'),
     ('recognition', r'Recogni|^FWRec|Stroke|^FUnit|Gesture|Letter|Shape|Dict'
                     r'|^FAirus|Training|Correct|WordInfo|^FCleanString|InkWord'

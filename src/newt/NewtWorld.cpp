@@ -277,8 +277,8 @@ TNewtWorld::TheMain()
 // then on the fork runs the event loop, and this task ends when PreMain
 // does.
 // NOT YET RECONSTRUCTED: the
-// reboot reason (the gestalt), activateStorePackages, the card events,
-// the boot test script, the 'aliv event.
+// reboot reason (the gestalt), the card events, the boot test script, the
+// 'aliv event.
 long
 TNewtWorld::PreMain()
 {
@@ -293,6 +293,11 @@ TNewtWorld::PreMain()
 	RefVar soup(StoreGetSoup(store, RefVar(Rextrassoupname)));
 	SoupSetInfo(soup, RSSYMextrasstate, RSSYMinitialized);
 	gApplication->Run();
+	// the packages kept on the internal store activated (the ROM's
+	// ActivateStorePackages walks its "Packages" soup)
+	RefVar stores(GetStores());
+	RefVar internal(GetArraySlotRef(stores, 0));
+	NSCallGlobalFn(RSSYMactivatestorepackages, internal);
 	if (gNewtHostPreMain != nil)		// host: the program's globals (HostInstallPackageGlobal)
 		gNewtHostPreMain();
 	if (gNewtBootTestScript != nil)		// (the ROM: a "bootTestScript" file, with the REP's output to files)

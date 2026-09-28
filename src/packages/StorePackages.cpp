@@ -52,6 +52,22 @@ RelocatePage(FrameRelocationHeader* /*header*/, char* page, ULong base, TCReloca
 // The patch package's name (the ROM's initialised global at 0x0c1016e4,
 // pointing at the UniChars at 0x0016108c).
 const UniChar kPatchPackageName[] = { 'P', 'a', 't', 'c', 'h', 0 };
+
+// Whether the package's name (big-endian UniChars, as a package keeps them
+// on every host) is the patch package's.
+Boolean
+IsPatchPackageName(const UniChar* bigEndian)
+{
+	const UByte* bytes = (const UByte*) bigEndian;
+	for (long i = 0; ; i++)
+	{
+		UniChar c = GetBigEndianHalf(bytes + 2 * i);
+		if (c != kPatchPackageName[i])
+			return false;
+		if (c == 0)
+			return true;
+	}
+}
 }
 
 
@@ -1400,7 +1416,7 @@ AllocatePackage(CPipe* pipe, TStore* store, PSSId rootId, char* decompressor, vo
 		err = iter.Init();
 		if (err == noErr)
 		{
-			if (Ustrcmp(iter.PackageName(), kPatchPackageName) == 0)
+			if (IsPatchPackageName(iter.PackageName()))		// (the ROM's Ustrcmp)
 			{
 				RefVar binary(AllocateBinary(RSSYMbinary, (long) iter.PackageSize()));
 				char* buffer = BinaryData(binary);

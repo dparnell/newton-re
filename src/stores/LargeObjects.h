@@ -177,6 +177,7 @@ NewtonErr	VAddrToId(ULong* packageId, ULong address);					// ROM 0x00103a04 VAdd
 NewtonErr	VAddrToBase(ULong* base, ULong address);						// ROM 0x00103a70 VAddrToBase__FPUlUl
 long		ObjectSize(ULong address);										// ROM 0x001034f0 ObjectSize__FUl
 Boolean		IsOnStoreAsPackage(TStore* store, PSSId id);					// ROM 0x00103470 IsOnStoreAsPackage__FP6TStoreUl
+Boolean		IsOnStoreAsPackage(ULong address);								// ROM 0x001032c8 IsOnStoreAsPackage__FUl - the large object mapped there
 Boolean		LargeObjectAddressIsValid(ULong address);						// ROM 0x00103660 LargeObjectAddressIsValid__FUl
 Boolean		LargeObjectIsDirty(ULong address);							// ROM 0x001036cc LargeObjectIsDirty__FUl
 Boolean		LargeObjectIsReadOnly(ULong address);						// ROM 0x00103730 LargeObjectIsReadOnly__FUl

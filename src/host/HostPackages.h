@@ -15,11 +15,13 @@
 				event (TRunScriptEvent) naming the root view's variable
 				`hostPackages` and its method `Install`, with the file's
 				bytes as the argument, which is how the ROM's own tools run
-				a script inside the world.  `Install` copies the bytes into
-				a block of their own (the package executes in place, so the
-				block is never given back while it is installed) and loads
-				them through the package manager exactly as a package in
-				memory is loaded (LoadPackage, a kFixedMemory source).
+				a script inside the world.  `Install` stores the package on
+				the default store as a package arriving from the Newton
+				Connection is stored (store:SuckPackageFromBinary,
+				packages/StorePackages.h): a large object on the store,
+				recorded in its "Packages" soup and activated - and so
+				activated again at every boot after this one when the
+				store is kept in a file (--store).
 
 				`hostPackages` is made by HostInstallPackageGlobal, which
 				the world's PreMain runs through gNewtHostPreMain once the

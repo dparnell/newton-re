@@ -25,10 +25,11 @@
 	file away first and starts again at the Setup assistant, which is what
 	holding the power switch down through a reset does on the machine.
 
-	--package installs a package once the machine is up, through the
-	package manager as one arriving in memory is installed (as many as
-	wanted, in order); a .pkg file dropped onto the window is installed
-	the same way (host/HostPackages.h).
+	--package installs a package once the machine is up, onto the internal
+	store as one arriving from the Newton Connection is (as many as wanted,
+	in order), so with --store it is activated again at every boot after;
+	a .pkg file dropped onto the window is installed the same way
+	(host/HostPackages.h).
 */
 
 #include "NewtWorld.h"

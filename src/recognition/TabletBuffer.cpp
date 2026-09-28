@@ -9,6 +9,7 @@
 #include "TabletBuffer.h"
 #include "GestaltSources.h"
 #include "NewtonTime.h"
+#include "hal/Atomic.h"
 
 ULong	gTabData = 0;						// ROM 0x0c107390 gTabData
 ULong	gTabletInkerIndex = 0;				// (0x0c10445c)
@@ -234,6 +235,31 @@ TBCPollTablet(long* x, long* y, ULong* pressure, Boolean* penUp)
 		err = kTabletNoNewSample;
 	else
 		gTBCPollReady = false;
+	return err;
+}
+
+
+// ROM 0x00250748 PollTablet__FPlT1PUlPUc
+// TBCPollTablet's answer with interrupts masked meanwhile.
+long
+PollTablet(long* x, long* y, ULong* pressure, Boolean* penUp)
+{
+	long err = 0;
+	EnterAtomic();
+	ULong sample = gTBCPollSample;
+	if (x != nil)
+		*x = (sample & 0xfffc0000) >> 5;
+	if (y != nil)
+		*y = (sample & 0x3fff0) << 9;
+	if (pressure != nil)
+		*pressure = sample & 0xf;
+	if (penUp != nil)
+		*penUp = gTBCPenUp;
+	if (!gTBCPollReady)
+		err = kTabletNoNewSample;
+	else
+		gTBCPollReady = false;
+	ExitAtomic();
 	return err;
 }
 

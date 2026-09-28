@@ -123,6 +123,24 @@ if(Python3_FOUND)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+    # a package kept on the internal store survives a restart: installed
+    # (store:SuckPackageFromBinary) on a fresh store file, then found in the
+    # store's "Packages" soup and activated at the next boot
+    # (packages/StorePackages.h, demo/packagestore.ns)
+    add_test(NAME host.NewtonPackageStore.install
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+                     --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonPackageStore.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
+                         FIXTURES_SETUP host_package_store
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+    add_test(NAME host.NewtonPackageStore
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+                     --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/packagestore.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonPackageStore PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
+                         PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*title: \"Formulas2\".*deactivated: TRUE.*activatedAgain: TRUE.*packagestore: done"
+                         FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
 endif()
 
 # a large binary (VBO) made on the booted machine's internal store

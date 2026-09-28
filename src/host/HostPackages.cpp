@@ -22,6 +22,10 @@
 #include "NameServer.h"
 #include "NewtonMemory.h"
 #include "RootView.h"
+#include "StorePackages.h"
+#include "RSSymbols.h"
+#include "NewtonExceptions.h"
+#include "OSErrors.h"
 #include <atomic>				// (<mutex> and <string> bring in libc++'s locale support, which intl/Locale.h shadows)
 
 // the files not yet sent: a small ring of copied names, taken and put
@@ -76,26 +80,35 @@ HostWindowFileDropped(const char* path)
 }
 
 
-// hostPackages:Install(bytes): the package in the binary loaded through the
-// package manager from a block of its own.  ==> its id, or the error.
+// hostPackages:Install(bytes): the package in the binary stored on the
+// default store and activated, as a package arriving from the Newton
+// Connection is (store:SuckPackageFromBinary, then the ROM's
+// RegisterNewPackage: recorded in the store's "Packages" soup, so it is
+// activated again whenever the store is mounted - with --store, at every
+// boot after this one).  ==> its id, or the error.
 static Ref
 FHostInstallPackage(RefArg /*rcvr*/, RefArg bytes)
 {
 	if (!IsBinary(bytes))
 		return MAKEINT(kError_Bad_Parameters);
-	long size = Length(bytes);
-	Ptr block = NewPtr(size);
-	if (block == nil)
-		return MAKEINT(kError_No_Memory);
-	memmove(block, BinaryData(bytes), size);
-	SourceType type = { kFixedMemory, kNoDevice, 0, 0 };
-	ULong packageId = 0;
-	NewtonErr err = LoadPackage(block, type, &packageId);
-	if (err != noErr)
+	volatile NewtonErr err = noErr;
+	RefVar pkgRef;
+	newton_try
 	{
-		DisposPtr(block);
-		return MAKEINT(err);
+		RefVar store(NSCallGlobalFn(RSSYMgetdefaultstore));
+		RefVar none;
+		pkgRef = FSuckPackageFromBinary(store, bytes, none);
 	}
+	newton_catch_all
+	{
+		err = (NewtonErr) (long) (Long) _info.exception.data;
+	}
+	end_try;
+	if (err != noErr)
+		return MAKEINT(err);
+	ULong packageId = 0;
+	if (ISNIL(pkgRef) || VAddrToId(&packageId, (ULong) BinaryData(pkgRef)) != noErr || packageId == 0)
+		return MAKEINT(kError_Bad_Package);
 	return MAKEINT((long) packageId);
 }
 

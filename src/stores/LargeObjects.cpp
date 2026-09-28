@@ -554,6 +554,18 @@ IsOnStoreAsPackage(TStore* store, PSSId id)
 }
 
 
+// ROM 0x001032c8 IsOnStoreAsPackage__FUl
+Boolean
+IsOnStoreAsPackage(ULong address)
+{
+	TStore* store;
+	ULong id;
+	if (VAddrToStore(&store, &id, address) != noErr)
+		return false;
+	return IsOnStoreAsPackage(store, id);
+}
+
+
 // ROM 0x00103660 LargeObjectAddressIsValid__FUl
 Boolean
 LargeObjectAddressIsValid(ULong address)

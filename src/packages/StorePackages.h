@@ -74,6 +74,7 @@
 #ifndef __LARGEOBJECTS_H
 #include "LargeObjects.h"
 #endif
+#include "Frames.h"
 #ifndef __PACKAGEITERATOR_H
 #include "PackageIterator.h"
 #endif
@@ -373,5 +374,22 @@ NewtonErr	NewPackage(CPipe* pipe, TStore* store, PSSId rootId, ULong* packageId,
 // The decompressors, the wrapper, the companders and TLOPackageStore
 // registered, and the shared LZ decompressor made.
 void		InitializeStoreDecompressors(void);			// ROM 0x001fa9fc InitializeStoreDecompressors__Fv
+
+
+/*------------------------------------------------------------------------------
+	T h e   N e w t o n S c r i p t   s i d e   (StorePackageNatives.cpp)
+------------------------------------------------------------------------------*/
+
+NewtonErr	StorePackage(CPipe* pipe, TStore* store, TLOCallback* callback, ULong* id);	// ROM 0x003215f8 StorePackage__FP5CPipeP6TStoreP11TLOCallbackPUl
+Ref			WrapPackage(ULong id, TStore* store);										// ROM 0x0032180c WrapPackage__FUlP6TStore
+Ref			AllocatePackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequency, int activate);	// ROM 0x003218f4 AllocatePackage__FP5CPipeRC6RefVarT2Uli
+Ref			AllocatePackage(CPipe* pipe, RefArg storeObject, RefArg parameters);	// ROM 0x00321a6c AllocatePackage__FP5CPipeRC6RefVarT2
+Ref			SuckPackageThruPipe(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequency, int activate);	// ROM 0x00321234 SuckPackageThruPipe__FP5CPipeRC6RefVarT2Uli
+Ref			SuckPackageThruPipe(CPipe* pipe, RefArg storeObject, RefArg parameters);	// ROM 0x00321258 SuckPackageThruPipe__FP5CPipeRC6RefVarT2
+NewtonErr	NewPackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequency);	// ROM 0x0032125c NewPackage__FP5CPipeRC6RefVarT2Ul
+Ref			GetPkgInfoFromVAddr(ULong address);										// ROM 0x003220a4 GetPkgInfoFromVAddr__FUl
+Boolean		IsPackage(RefArg obj);													// ROM 0x00321ef8 IsPackage__FRC6RefVar (ROMPackages.cpp)
+Ref			FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters);	// store:SuckPackageFromBinary
+void		RegisterStorePackageNatives(void);
 
 #endif	/* __STOREPACKAGES_H */

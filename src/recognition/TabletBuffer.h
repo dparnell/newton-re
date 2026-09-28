@@ -72,6 +72,7 @@ void	TBCFlushInkerBuffer(void);						// ROM 0x00250648 TBCFlushInkerBuffer__Fv -
 void	TBCSetTabletPolling(Boolean polling);			// ROM 0x00250270 TBCSetTabletPolling__FUc
 void	SetTabletPolling(Boolean polling);				// ROM 0x00250740 SetTabletPolling__FUc
 Boolean	TBCGetTabletPolling(void);						// ROM 0x00250260 TBCGetTabletPolling__Fv
+long	PollTablet(long* x, long* y, ULong* pressure, Boolean* penUp);		// ROM 0x00250748 PollTablet__FPlT1PUlPUc - TBCPollTablet, atomically
 long	TBCPollTablet(long* x, long* y, ULong* pressure, Boolean* penUp);	// ROM 0x00250288 TBCPollTablet__FPlT1PUlPUc - the last sample in polling mode; ==> 0, or -56007 when there is none new
 
 // the inker's side

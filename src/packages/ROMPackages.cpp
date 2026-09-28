@@ -24,6 +24,8 @@
 #include "NewtonDebug.h"
 #include "OSErrors.h"
 #include "Units.h"
+#include "StorePackages.h"
+#include "Soups.h"
 
 
 // ROM 0x0011ef10 GetRExConfigEntry
@@ -135,10 +137,7 @@ LoadHighROMFramesPackages(void)
 // One package as a script sees it: a clone of the ROM's
 // canonicalTPMIteratorPackageFrame with what the package manager says
 // about it.
-// NOT YET RECONSTRUCTED: IdToStore (the ROM domain manager), which adds
-// the `store` and `pssid` slots for a package that lives on a store.  The
-// packages loaded so far are in memory, on no store, and the ROM leaves
-// both slots out for those too.
+// A package that lives on a store has its `store` and `pssid` too.
 static Ref
 IteratorToPackageFrame(TPMIterator* iter)
 {
@@ -149,6 +148,13 @@ IteratorToPackageFrame(TPMIterator* iter)
 	SetFrameSlot(frame, RSSYMversion, RefVar(MAKEINT(iter->fVersion)));
 	SetFrameSlot(frame, RSSYMtimestamp, RefVar(MAKEINT(iter->fModifyDate)));
 	SetFrameSlot(frame, RSSYMcopyprotection, RefVar(MAKEBOOLEAN(iter->IsCopyProtected())));
+	TStore* store;
+	PSSId id;
+	if (IdToStore(iter->PackageId(), &store, &id) == noErr)
+	{
+		SetFrameSlot(frame, RSSYMstore, RefVar(ToObject(store)));
+		SetFrameSlot(frame, RSSYMpssid, RefVar(MAKEINT(id)));
+	}
 	return frame;
 }
 
@@ -215,9 +221,7 @@ FGetPackageStores(RefArg /*rcvr*/)
 // ROM 0x00321ef8 IsPackage__FRC6RefVar
 // A package on a store, as a script holds it: a large binary of class
 // 'package whose bytes are a package and are a package on its store.
-// (IsOnStoreAsPackage, which asks the ROM domain manager whether the large
-// object is a package, is NOT YET RECONSTRUCTED: packages kept on a store.)
-static Boolean
+Boolean
 IsPackage(RefArg obj)
 {
 	if (!IsLargeBinary(obj))
@@ -226,7 +230,7 @@ IsPackage(RefArg obj)
 		return false;
 	if (!IsPackageHeader(BinaryData(obj), Length(obj)))
 		return false;
-	return false;		// NOT YET RECONSTRUCTED: IsOnStoreAsPackage
+	return IsOnStoreAsPackage((ULong) BinaryData(obj));
 }
 
 
@@ -268,4 +272,5 @@ RegisterPackageNatives(void)
 	RegisterNativeFunction("FGetPackageStores", (void*) FGetPackageStores, 0);
 	RegisterNativeFunction("FIsPackage", (void*) FIsPackage, 1);
 	RegisterPackageUnitNatives();
+	RegisterStorePackageNatives();
 }

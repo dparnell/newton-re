@@ -23,6 +23,8 @@
 #include "ByteOrder.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "LargeObjects.h"
+#include "LargeBinaries.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -732,14 +734,22 @@ InitRExMagicPointerTables(void)
 	N a t i v e s
 ------------------------------------------------------------------------------*/
 
-// NOT YET RECONSTRUCTED: GetEntryFromLargeObjectVAddr (0x00100b70), the
-// store entry of the package a large-object address lies in.  No package
-// on the host lies in a large object, and the ROM's answer for one that
-// does not is nil.
+// The store entry of the package an import came from: the ROM hands the
+// package's address to GetEntryFromLargeObjectVAddr, which answers the
+// large binary (the package's pkgRef) mapped there - nil for a package
+// that is not on a store.  DEVIATION: the host's import names the part's
+// imported area (see TFramePartHandler::Install), so the address is that
+// of the bytes it was imported from, taken back to the start of the large
+// object they lie in.
 static Ref
-PackageEntryOf(ULong /*package*/)
+PackageEntryOf(ULong package)
 {
-	return NILREF;
+	if (package == 0)
+		return NILREF;
+	ULong base;
+	if (VAddrToBase(&base, (ULong) ((TImportedObjectArea*) package)->fBytes) != noErr)
+		return NILREF;
+	return GetEntryFromLargeObjectVAddr(base);
 }
 
 
