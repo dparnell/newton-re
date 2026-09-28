@@ -328,15 +328,51 @@ MainConstructor` 0x0030d20c): `'form`, `'book`, `'dict`, `'auto`, `'comm`.
 
 Neither kind of part is in this ROM's extension.
 
+## Streamed sources (`src/packages/PackageLoader.h`, `PartPipe.h`)
+
+A package can come in through a pipe rather than a block of memory
+(`LoadPackage(CPipe*, ...)`, 0x0015d4e0/0x0015d5fc).  The caller's world
+forks, takes `gPackageSemaphore` and puts up a `TPackageLoaderEventHandler`;
+for a stream (`TPackageLoader::Load`) it makes a 0x100-byte `CRingBuffer`,
+hands its memory out as a shared-memory object (`MakeShared`) and starts the
+`'pipe'` application world (`TPipeApp`, a task of its own with 6000 bytes of
+stack), whose `TPipeEventHandler` copies the source pipe into the ring
+buffer when asked.  The `TPkBeginLoadEvent`'s source is the ring buffer's
+shared memory and the `'pipe'` world's port.
+
+The manager reads through a `CPartPipe` over a `CShadowRingBuffer` of that
+memory (`BeginLoadPackage`; `LoadProtocolCode` and `TPartHandler::Copy`
+make their own): a read that empties the ring buffer sends the `'pipe'`
+world a `TPipeEvent` (1, underflow - an RPC answered once the bytes are
+in) and moves the shadow's put offset on.  `LoadNextPart` tells it each
+part's size first (0, set size), reads past what the handler left of the
+part afterwards (2, seek EOF), and closes it when the package is done (3,
+close: the world's loop ends).  A frames part arrives as one flattened
+object (NSOF, `TFramePartHandler::Expand`) - so a package made for memory,
+its frames part in object layout, cannot be streamed; `newton --package`
+loads from memory.
+
+ROM bugs kept: a stream whose directory cannot be read (or whose package
+is refused) is never closed - its `'pipe'` world waits, the name stays
+registered, and the pipe stays in the handler until the next streamed
+load; a ring buffer that cannot be made answers noErr; a source that fails
+in the middle of a seek-to-EOF sends the loop round once more with a
+negative count.  NOT YET: an endpoint as the source (`TEndpointPipe`).
+
+`test_PackageManager`'s `TestStreamed` streams ScreenBuffer (its protocol
+part's code read through the manager's own pipe), a package of one NSOF
+`'form` part built in the test (the handler gets the frame), and Setup
+again (refused as already there).
+
 ## Not yet
 
 - The `'book` part handler (`TBookPartHandler` over the book reader's
   `TLibrarian`).
-- Streamed sources: `TPackageLoader` (a package read through a pipe or an
-  endpoint), `CPartPipe`/`CShadowRingBuffer` on the manager's side,
-  `TPipeApp`.  The manager answers `kError_Call_Not_Implemented` for one.
-- Packages on a store: the ROM domain manager (`IdToStore`, `IdToVAddr`,
-  `StoreToId`, `PackageAvailable`, large binaries), and so the natives
+- An endpoint as a streamed source (`TEndpointPipe`, `SuckPackageFromEndpoint`:
+  the comms area).
+- Packages on a store: the store side of the ROM domain manager (`IdToStore`,
+  `IdToVAddr`, `StoreToId`, `PackageAvailable`), the large binaries (the
+  large objects under them are `stores/LargeObjects.h`), and so the natives
   over them - `ActivatePackage` (`FInstallPackage`), `DeActivatePackage`,
   `ObjectPkgRef`, `PidToPkgRef`, `GetPkgRefInfo`, `PssidToPid`,
   `SuckPackageFromBinary` and the rest.

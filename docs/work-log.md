@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: packages round 2 - streamed sources and large objects
+
+- **Streamed package sources** (`5b665c9`; `packages/PackageLoader.h`,
+  `PartPipe.h`): `TPackageLoader` and `cPackageLoad`, the `'pipe'` world
+  (`TPipeApp`, `TPipeEventHandler`, `TPipeEvent`), `CPartPipe`, and the
+  manager's stream branches in `BeginLoadPackage`, `LoadNextPart`,
+  `LoadProtocolCode` and `TPartHandler::Copy`.  A streamed frames part is
+  one NSOF object.  `test_PackageManager`'s `TestStreamed`.
+- **The store companders read big-endian** (`a93d860`): a root's
+  chunk-table id and the table's block ids were read as native words.
+- **Large objects** (`6b06f94`; `stores/LargeObjects.h`,
+  `stores/host/HostLargeObjects.cpp`): the large-object layer over a host
+  ROM domain manager that keeps each mapped object whole
+  (DEVIATION).  `test_LargeObjects`.  The large binaries on top of it
+  (`LBData` and the rest) are round 3.
+
 ## 2026-09-29: the 'dict and 'comm part handlers
 
 - **`TDictPartHandler`** (`recognition/DictPartHandler.h`, 0x0008fa44,

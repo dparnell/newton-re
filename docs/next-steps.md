@@ -11,10 +11,10 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-29
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 116/116
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 117/117
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12136 citations, 0 bad;
-  6970 of 16671 functions (41.81%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 12210 citations, 0 bad;
+  7044 of 16671 functions (42.25%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 308 of the ROM's 1326 natives are
   unanswered (1018 answered, 76.8%; table below).
@@ -88,14 +88,32 @@ need first:
    the ROM's order ('form, 'dict, 'auto, 'comm - 'book waits on (7)).
    Tested at the function level (`test_Dictionaries`, `test_Units`); no
    package with either part was to hand to install whole.
-3. **Streamed sources** - `TPackageLoader` (`Load`, `Done`,
-   `cPackageLoad`), `CPartPipe` (`ReadChunk`, `Underflow`, ...),
-   `TPipeApp`, `TPackageLoaderEventHandler`: about 20 functions, 2.5 KB of
-   its own; a package read from a pipe rather than a block of memory.  Its
-   endpoint side (`TEndpointPipe`, `SuckPackageFromEndpoint`) waits on the
-   comms area.
-4. **Large binaries on a store** (virtual binary objects; see the
-   candidates below) - **everything else in packages stands on it**:
+3. ~~**Streamed sources**~~ - DONE (2026-09-29, `packages/PackageLoader.h`,
+   `PartPipe.h`; `docs/packages/README.md`'s "Streamed sources";
+   `test_PackageManager`'s `TestStreamed`): `TPackageLoader`, the 'pipe'
+   world (`TPipeApp`, `TPipeEventHandler`), `CPartPipe` and the manager's
+   stream branches.  A streamed frames part is one flattened (NSOF)
+   object, so an ordinary .pkg cannot be streamed - `newton --package`
+   stays on the memory path.  Its endpoint side (`TEndpointPipe`,
+   `SuckPackageFromEndpoint`) waits on the comms area.
+4. **Large binaries on a store** - the large-object layer is DONE
+   (2026-09-29, `stores/LargeObjects.h` over the host's ROM domain
+   manager `stores/host/HostLargeObjects.cpp`; `docs/stores/README.md`'s
+   "Large objects"; `test_LargeObjects`).  **Next (round 3): the large
+   binaries themselves** - `LBData` and its indirect-binary procs
+   (`LBLength`, `LBDataPtr`, `LBSetLength`, `LBClone`, `LBDestroy`,
+   `LBSetClass`, `LBMark`, `LBUpdate`, 0x000fff5c-0x001013e4),
+   `AllocateLargeBinary`, `WrapLargeObject`, the cache (`gLBCache`,
+   `Find/Load/Duplicate/DeleteLargeBinary`), commit/abort
+   (`CommitLargeBinary`, `AbortLargeBinaries`, `FinalizeLargeObjectWrites`,
+   the store wrapper's `TEphemeralTracker`), the store object format's tag
+   12 (`TStoreObjectWriter::WriteLargeBinary`, `LoadLargeBinary`), and the
+   natives (`FLBAlloc`, `FLBAllocCompressed`, `FLBRollback`,
+   `FLBClearCache`, `FGetBinaryStore`/`Compander`/`CompanderData`/
+   `StoredSize`, `IsVBO`).  Still NOT YET of the object layer:
+   `TLrgObjStore`, made from compressed blocks, duplicating, backups.
+   The original sizing, for the record -
+   **everything else in packages stands on it**:
    the large-object layer (`CreateLargeObject`, `WrapLargeObject`,
    `MapLargeObject`, `LODefaultCreate`, the chunk arrays: 33 functions,
    5 KB) and the ROM domain manager, the kernel's paging monitor that

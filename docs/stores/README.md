@@ -678,6 +678,44 @@ they relocate the NewtonScript frames of an expanded package page
 (`RelocateFramesInPage`, 0x000d2ca4), a separate unit; the Zippy and reloc
 variants, `TXIPStoreCompander` and `TPixelMapCompander`.
 
+## Large objects (`src/stores/LargeObjects.h`)
+
+What a large binary (a VBO) and a package on a store are made of: data kept
+as fixed 0x400-byte blocks behind a store compander, mapped into memory to
+be read and written.  On the store a large object is a `LargeObjectRoot`
+(0x20 bytes, big-endian words): the chunk array (one block object id per
+0x400 bytes), the compander's name (a C string object;
+TSimpleStoreCompander by default), its parameters, flags (the kind, 2, in
+the low half; 0x10000 when made writable), `'paok'` once complete
+(`PackageAllocationOk`), and the size.  `LODefaultCreate` makes one
+(`InitializeChunkArray`: an empty block object per 0x400 bytes, all in
+separate transactions) and `FillChunkArray` fills it from a pipe through
+the compander.
+
+Mapping, unmapping, resizing, flushing, committing and aborting are
+requests to the ROM domain manager (`RDMParams`: store, id, address,
+package id, size, offset, read-only, dirty; `TROMDomainManager1K::
+UserRequest`'s selectors - 1 map, 2 unmap, 9 flush, 10 resize, 11 abort,
+12 commit, 13 information, 14 address, 15 the object at an address, 16
+end session).  On the MessagePad the domain manager is a kernel monitor
+that maps an object into virtual memory and pages its blocks in on a
+fault.  DEVIATION: the host's (`stores/host/HostLargeObjects.cpp`, reached
+only through `ROMDomainUserRequest`) keeps a mapped object whole in a host
+block read through its compander; a resize may move it; every writable
+object is taken to be dirty, so a flush or commit writes it all back
+(growing the chunk array and updating the root's size), and a commit hands
+its store objects to the store's transaction; an abort throws the changes
+away and unmaps it, as the ROM's ends the session.
+
+ROM bugs kept: `InitializeChunkArray`'s clean-up after a failure aborts
+the same wrong entry each time; `LODefaultDelete` does nothing.  Found on
+the way: the companders read a root's chunk-table id and the table's block
+ids as native words - now big-endian, as on the MessagePad.  NOT YET:
+`TLrgObjStore`, objects made from compressed blocks, duplicating
+(`DuplicatePackageData`), backups (`TLOCallback`), a package kept as a
+large object, the XIP requests - and the large binaries built on all this
+(`LBData`, next).  `test_LargeObjects`.
+
 ## Not yet
 
 Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
