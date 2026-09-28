@@ -392,6 +392,21 @@ used on the next run.  The pieces, roughly in order:
 Until then the ROM image stays how the reconstruction is checked against
 the original; new run-time dependencies on it are to be avoided or noted.
 
+A lead the owner pointed at (2026-09-28), to look into when this track
+starts: **mosrun** (https://github.com/MatthiasWM/mosrun) - "short for
+'MacOS runtime environment', a program that runs m68k based MPW tools on
+Mac OS X, Linux, and MSWindows", a minimal Mac OS 7.6 and a 68020
+emulator whose main purpose is "to run the Apple Newton developer tools,
+such as the cross compiler and the Rex builder, natively and as part of a
+build chain" (ARM6asm, ARMLink, Rex).  Apple's own tools running on the
+host could serve as an oracle for the builder (step 3: a ROM extension
+made by Apple's Rex builder to compare ours against, byte for byte) and
+perhaps for the code generation step 1 has to reproduce, if a NewtonScript
+compiler is among the tools it runs - to be checked.  It is an outside
+tool: if it becomes part of the process it must be vendored or fetched by
+a documented script, per the project's rule that every tool lives in the
+repository and is reproducible.
+
 ## The natives still unanswered
 
 `python tools/newton-rom/analysis/natives.py --unbound` lists them by
