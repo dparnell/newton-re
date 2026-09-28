@@ -28,10 +28,13 @@
 				word domain to ask it (`LIBeginWeights`, in
 				`LetterShapes.h`) and throws it away again.
 
-				NOT YET RECONSTRUCTED: the parts of `ConfigureArea` that
-				set the engine's base and grid lines (`FromObject` for a
-				WordBaseInfo and a RecGridInfo, `GetWordGeom`,
-				`GetGridGeom`).
+				An area's configuration reaches the engine through
+				`ConfigFromFrame`: the field type, the letter spacing, the
+				language, the speed and the dictionaries, and - when the
+				field has them - the lines its writing stands on
+				(rcBaseInfo, `GetWordGeom`) and a grid of boxes to write a
+				letter in each (rcGridInfo, `GetGridGeom`), both handed to
+				the 'STXR' domain.
 
 	Reconstructed from the MP2x00 US ROM (0x00166efc-0x001686ec); each
 	function cites its origin.
@@ -59,6 +62,7 @@ public:
 	virtual void		WakeUp(void);							// ROM 0x00168430 WakeUp__15TWordRecognizerFv
 	virtual void		BuildConfig(RefArg config, TView* view, ULong flags);	// ROM 0x0016700c BuildConfig__15TWordRecognizerFRC6RefVarP5TViewUl - nothing
 	virtual long		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x00168000 ConfigureArea__15TWordRecognizerFP8TRecAreaRC6RefVar
+	long				ConfigFromFrame(TRecArea* area, RefArg config);	// ROM 0x00167158 ConfigFromFrame__15TWordRecognizerFP8TRecAreaRC6RefVar
 	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x001677b0 HandleUnit__15TWordRecognizerFP11TUnitPublic
 	virtual Ref			GetLearningData(TUnitPublic* unit);		// ROM 0x00168464 GetLearningData__15TWordRecognizerFP11TUnitPublic
 	virtual void		DoLearning(RefArg data, long which);	// ROM 0x00168528 DoLearning__15TWordRecognizerFRC6RefVarl
@@ -72,6 +76,17 @@ public:
 };
 
 void	InstallWordRecognizer(TRecognitionManager* manager);	// ROM 0x00166efc InstallWordRecognizer__FP19TRecognitionManager
+
+// The engine's word geometry (ROM WORD_GEOM, seven words) out of a field's
+// base line: 10, 100, the base line twice and the small letters' top twice
+// in the tablet's units (gTabScale.y, eighths of a pixel), 0.
+struct WordBaseInfo;
+struct RecGridInfo;
+void	GetWordGeom(long geom[7], const WordBaseInfo* info);		// ROM 0x001686ec GetWordGeom__FP9WORD_GEOMP12WordBaseInfo
+// The engine's grid (ROM WORD_BASELINE, four 16.16 numbers) out of a
+// field's boxes: the left and top of the first, and those plus the
+// spacing - the box origin and the step to the next.
+void	GetGridGeom(long grid[4], const RecGridInfo* info);		// ROM 0x00167010 GetGridGeom__FP13WORD_BASELINEP11RecGridInfo
 
 // The word domain set up the way an area's configuration asks: its
 // speed and field type, the single-letter/learning/orthographic switches

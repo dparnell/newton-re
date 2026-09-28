@@ -163,4 +163,27 @@ void	PurgeAreaCache(void);							// ROM 0x0003485c PurgeAreaCache__Fv - every ar
 // An integer slot of a frame, or nought when it has none.
 long	GetNonNilInt(RefArg frame, RefArg slot);			// ROM 0x00035524 GetNonNilInt__FRC6RefVarT1
 
+// The lines a field's writing stands on, out of a configuration's
+// rcBaseInfo frame (ROM WordBaseInfo, 8 bytes of big-endian halfwords).
+struct WordBaseInfo
+{
+	UByte		base[2];			// +0  the base line
+	UByte		smallHeight[2];		// +2  how far above it the small letters reach
+	UByte		bigHeight[2];		// +4  the capitals
+	UByte		descent[2];			// +6
+};
+// A field's grid of boxes, one letter to each, out of a configuration's
+// rcGridInfo frame (ROM RecGridInfo, 12 bytes of big-endian halfwords).
+struct RecGridInfo
+{
+	UByte		boxTop[2];			// +0
+	UByte		boxBottom[2];		// +2
+	UByte		ySpace[2];			// +4
+	UByte		boxLeft[2];			// +6
+	UByte		boxRight[2];		// +8
+	UByte		xSpace[2];			// +a
+};
+void	FromObject(RefArg frame, WordBaseInfo* info);		// ROM 0x00035830 FromObject__FRC6RefVarP12WordBaseInfo
+void	FromObject(RefArg frame, RecGridInfo* info);		// ROM 0x0003598c FromObject__FRC6RefVarP11RecGridInfo
+
 #endif	/* __AREAS_H */

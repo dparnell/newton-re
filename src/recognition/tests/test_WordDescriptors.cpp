@@ -14,6 +14,8 @@
 #include "XrDomains.h"
 #include "ParaGraph.h"
 #include "Chunk.h"
+#include "Areas.h"				// WordBaseInfo, RecGridInfo
+#include "WordRecognizer.h"		// GetWordGeom, GetGridGeom
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -380,6 +382,43 @@ TestSetStrXrRC(void)
 
 
 /*--------------------------------------------------------------------
+	A field's base line and grid (ConfigFromFrame): the engine's word
+	geometry and grid out of them, and the 'STXR' domain told them with
+	0x2000c and 0x2000e and asked them back with 0x2000b and 0x2000d.
+--------------------------------------------------------------------*/
+
+static void
+TestGeometry(void)
+{
+	// a base line at 100, small letters 20 above it: in the tablet's
+	// eighths of a pixel (gTabScale.y, 8.0)
+	WordBaseInfo base = { { 0, 100 }, { 0, 20 }, { 0, 30 }, { 0, 8 } };
+	long geom[7];
+	GetWordGeom(geom, &base);
+	EXPECT(geom[0] == 10 && geom[1] == 100 && geom[2] == 800 && geom[3] == 800);
+	EXPECT(geom[4] == 640 && geom[5] == 640 && geom[6] == 0);
+	// boxes from (5, 10), 24 across and 32 down to the next
+	RecGridInfo boxes = { { 0, 10 }, { 0, 40 }, { 0, 32 }, { 0, 5 }, { 0, 25 }, { 0, 24 } };
+	long grid[4];
+	GetGridGeom(grid, &boxes);
+	EXPECT(grid[0] == (5 << 16) && grid[1] == (10 << 16) && grid[2] == (29 << 16) && grid[3] == (42 << 16));
+	TStrXrDomain* domain = new TStrXrDomain;
+	Handle h = NewHandle(sizeof(STRXRPARAM));
+	memset(*h, 0, sizeof(STRXRPARAM));
+	EXPECT(domain->DomainParameter(0x2000c, (ULong) geom, (ULong) h) == 0);
+	EXPECT(domain->DomainParameter(0x2000e, (ULong) grid, (ULong) h) == 0);
+	STRXRPARAM* p = (STRXRPARAM*) *h;
+	EXPECT(p->fGeom[2] == 800 && p->fGeom[4] == 640 && p->fGrid[2] == (29 << 16));
+	long geomBack[7] = { 0 };
+	long gridBack[4] = { 0 };
+	EXPECT(domain->DomainParameter(0x2000b, (ULong) geomBack, (ULong) h) == 0);
+	EXPECT(domain->DomainParameter(0x2000d, (ULong) gridBack, (ULong) h) == 0);
+	EXPECT(memcmp(geomBack, geom, sizeof(geom)) == 0 && memcmp(gridBack, grid, sizeof(grid)) == 0);
+	DisposHandle(h);
+}
+
+
+/*--------------------------------------------------------------------
 	The digit reader's context and the configuration it narrows while
 	a number is read (Chunk.h).
 --------------------------------------------------------------------*/
@@ -467,6 +506,7 @@ main()
 	TestBaseLine();
 	TestGroupAndRead();
 	TestSetStrXrRC();
+	TestGeometry();
 	TestChunkContext();
 	TestChunkChords();
 	if (failures == 0)

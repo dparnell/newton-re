@@ -12,6 +12,7 @@
 #include "Recognizer.h"
 #include "RecConfig.h"
 #include "ROMConstants.h"
+#include "RSSymbols.h"
 #include "UnitPublic.h"
 #include "RootView.h"
 #include "OSErrors.h"
@@ -724,4 +725,43 @@ GetNonNilInt(RefArg frame, RefArg slot)
 	if (ISNIL(value))
 		return 0;
 	return RINT(value);
+}
+
+
+// a big-endian halfword kept whole, and one of which the ROM keeps only
+// the low byte
+static inline void	SetBEHalf(UByte* p, long v)			{ p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
+static inline void	SetBEHalfLowByte(UByte* p, long v)	{ v &= 0xff; p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
+
+
+// ROM 0x00035830 FromObject__FRC6RefVarP12WordBaseInfo
+// An rcBaseInfo frame's base, smallHeight, bigHeight and descent (nought
+// for a slot it has not got).
+// ROM BUG, kept: the three heights keep only their low byte - each is
+// masked with 0xff before its high byte is taken - so a height of 256 or
+// more comes out as that less a multiple of 256.
+void
+FromObject(RefArg frame, WordBaseInfo* info)
+{
+	SetBEHalf(info->base, GetNonNilInt(frame, RefVar(RSSYMbase)));
+	SetBEHalfLowByte(info->smallHeight, GetNonNilInt(frame, RefVar(RSSYMsmallheight)));
+	SetBEHalfLowByte(info->bigHeight, GetNonNilInt(frame, RefVar(RSSYMbigheight)));
+	SetBEHalfLowByte(info->descent, GetNonNilInt(frame, RefVar(RSSYMdescent)));
+}
+
+
+// ROM 0x0003598c FromObject__FRC6RefVarP11RecGridInfo
+// An rcGridInfo frame's boxLeft, boxRight, xSpace, boxTop, boxBottom and
+// ySpace (nought for a slot it has not got).
+// ROM BUG, kept: the two spacings keep only their low byte, as the heights
+// above do.
+void
+FromObject(RefArg frame, RecGridInfo* info)
+{
+	SetBEHalf(info->boxLeft, GetNonNilInt(frame, RefVar(RSSYMboxleft)));
+	SetBEHalf(info->boxRight, GetNonNilInt(frame, RefVar(RSSYMboxright)));
+	SetBEHalfLowByte(info->xSpace, GetNonNilInt(frame, RefVar(RSSYMxspace)));
+	SetBEHalf(info->boxTop, GetNonNilInt(frame, RefVar(RSSYMboxtop)));
+	SetBEHalf(info->boxBottom, GetNonNilInt(frame, RefVar(RSSYMboxbottom)));
+	SetBEHalfLowByte(info->ySpace, GetNonNilInt(frame, RefVar(RSSYMyspace)));
 }

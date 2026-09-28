@@ -277,6 +277,33 @@ main()
 	EXPECT(gEnabledLanguage == 1);
 
 
+	// ---- FromObject: a field's base line and grid frames ----
+	// (ROM BUG kept: the heights and the spacings keep only their low byte)
+	{
+		RefVar base(AllocateFrame());
+		SetFrameSlot(base, RSSYMbase, RefVar(MAKEINT(300)));
+		SetFrameSlot(base, RSSYMsmallheight, RefVar(MAKEINT(20)));
+		SetFrameSlot(base, RSSYMbigheight, RefVar(MAKEINT(0x123)));		// comes out 0x23
+		WordBaseInfo info;
+		memset(&info, 0xaa, sizeof(info));
+		FromObject(base, &info);
+		EXPECT(info.base[0] == 0x01 && info.base[1] == 0x2c);
+		EXPECT(info.smallHeight[0] == 0 && info.smallHeight[1] == 20);
+		EXPECT(info.bigHeight[0] == 0 && info.bigHeight[1] == 0x23);
+		EXPECT(info.descent[0] == 0 && info.descent[1] == 0);				// no slot: nought
+		RefVar grid(AllocateFrame());
+		SetFrameSlot(grid, RSSYMboxleft, RefVar(MAKEINT(0x105)));
+		SetFrameSlot(grid, RSSYMboxtop, RefVar(MAKEINT(10)));
+		SetFrameSlot(grid, RSSYMxspace, RefVar(MAKEINT(0x118)));			// comes out 0x18
+		SetFrameSlot(grid, RSSYMyspace, RefVar(MAKEINT(32)));
+		RecGridInfo boxes;
+		memset(&boxes, 0xaa, sizeof(boxes));
+		FromObject(grid, &boxes);
+		EXPECT(boxes.boxLeft[0] == 0x01 && boxes.boxLeft[1] == 0x05);
+		EXPECT(boxes.xSpace[0] == 0 && boxes.xSpace[1] == 0x18);
+		EXPECT(boxes.boxTop[1] == 10 && boxes.ySpace[1] == 32 && boxes.boxRight[1] == 0 && boxes.boxBottom[1] == 0);
+	}
+
 	printf("test_RecConfig: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;
 }

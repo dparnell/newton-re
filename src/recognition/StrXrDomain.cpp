@@ -658,20 +658,23 @@ TStrXrDomain::DomainParameter(ULong selector, ULong result, ULong info)
 		if (err == 0)
 			p->fFieldType = result;
 		break;
+	// (0x2000b and 0x2000d answer the geometry and the grid, 0x2000c and
+	// 0x2000e set them: the ROM's memcpy takes the destination first -
+	// ConfigFromFrame sets both with 0x2000c and 0x2000e)
 	case 0x2000b:
-		memcpy(p->fGeom, (void*) result, sizeof(p->fGeom));
-		err = 0;
-		break;
-	case 0x2000c:
 		memcpy((void*) result, p->fGeom, sizeof(p->fGeom));
 		err = 0;
 		break;
+	case 0x2000c:
+		memcpy(p->fGeom, (void*) result, sizeof(p->fGeom));
+		err = 0;
+		break;
 	case 0x2000d:
-		memcpy(p->fGrid, (void*) result, sizeof(p->fGrid));
+		memcpy((void*) result, p->fGrid, sizeof(p->fGrid));
 		err = 0;
 		break;
 	case 0x2000e:
-		memcpy((void*) result, p->fGrid, sizeof(p->fGrid));
+		memcpy(p->fGrid, (void*) result, sizeof(p->fGrid));
 		err = 0;
 		break;
 	case 0x20014:

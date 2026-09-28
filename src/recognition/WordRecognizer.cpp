@@ -25,6 +25,8 @@
 #include "KernelGlobals.h"		// gCurrentTask
 #include "Unicode.h"
 #include "InkGroups.h"			// GetTraceFromStrokes
+#include "StrokeQueue.h"		// gTabScale
+#include "FixedMath.h"
 #include <string.h>
 
 // ROM 0x0c104d40 gUSE_GROUP_AND_CLASSIFY
@@ -143,26 +145,85 @@ TWordRecognizer::FieldType(RefArg config)
 
 
 // ROM 0x00168000 ConfigureArea__15TWordRecognizerFP8TRecAreaRC6RefVar
-// The area's parameter blocks for both domains filled in from its
-// configuration: the strokes-to-xrs one's field type, letter spacing and
-// language and its own commands, then the word one's speed, switches,
-// dictionary chains and commands.  (lineAtATime is read first, whether
-// or not the area runs the domain.)
-// NOT YET RECONSTRUCTED: a configuration's `rcBaseInfo` and `rcGridInfo`
-// (the lines the writing stands on, and a grid of boxes) turned into the
-// engine's WORD_GEOM and WORD_BASELINE (FromObject, GetWordGeom
-// 0x001686ec, GetGridGeom 0x00167010) - they are not handed on.
+// lineAtATime read (whether or not the area runs the domain), then the
+// rest is ConfigFromFrame's.
 long
 TWordRecognizer::ConfigureArea(TRecArea* area, RefArg config)
 {
 	gUSE_GROUP_AND_CLASSIFY = NOTNIL(RefVar(GetPreference(RSSYMlineatatime)));
+	return ConfigFromFrame(area, config);
+}
+
+
+// ROM 0x001686ec GetWordGeom__FP9WORD_GEOMP12WordBaseInfo
+void
+GetWordGeom(long geom[7], const WordBaseInfo* info)
+{
+	geom[0] = 10;
+	geom[1] = 100;
+	Fixed base = (Fixed) (((ULong) ((info->base[0] << 8) | info->base[1])) << 16);
+	ULong line = (ULong) ((FixedMultiply(base, gTabScale.y) + 0x8000) >> 16) & 0xffff;
+	geom[2] = (long) line;
+	geom[3] = (long) line;
+	Fixed small = (Fixed) (((ULong) ((info->smallHeight[0] << 8) | info->smallHeight[1])) << 16);
+	long top = (long) line - (long) ((ULong) ((FixedMultiply(small, gTabScale.y) + 0x8000) >> 16) & 0xffff);
+	geom[4] = top;
+	geom[5] = top;
+	geom[6] = 0;
+}
+
+
+// ROM 0x00167010 GetGridGeom__FP13WORD_BASELINEP11RecGridInfo
+void
+GetGridGeom(long grid[4], const RecGridInfo* info)
+{
+	ULong left = (info->boxLeft[0] << 8) | info->boxLeft[1];
+	ULong top = (info->boxTop[0] << 8) | info->boxTop[1];
+	ULong xSpace = (info->xSpace[0] << 8) | info->xSpace[1];
+	ULong ySpace = (info->ySpace[0] << 8) | info->ySpace[1];
+	grid[0] = (long) (left << 16);
+	grid[2] = (long) ((left + xSpace) << 16);
+	grid[1] = (long) (top << 16);
+	grid[3] = (long) ((ySpace + top) << 16);
+}
+
+
+// ROM 0x00167158 ConfigFromFrame__15TWordRecognizerFP8TRecAreaRC6RefVar
+// The area's parameter blocks for both domains filled in from its
+// configuration: the strokes-to-xrs one's base line and grid (when the
+// field has an rcBaseInfo, and an rcGridInfo with a spacing), field type,
+// letter spacing and language and its own commands, then the word one's
+// speed, switches, dictionary chains and commands.
+long
+TWordRecognizer::ConfigFromFrame(TRecArea* area, RefArg config)
+{
 	if (!DomainOn(area, ID()))
 		return 0;
 	ULong mask = RINT(RefVar(GetVariable(config, RSSYMinputmask, nil, 0)));
 	ULong type = FieldType(config);
 	TDomain* strXr = fStrXrDomain;
 	Handle strXrInfo = area->GetInfoFor(kStrXrDomainType, true);
-	// (NOT YET: rcBaseInfo -> 0x2000b, rcGridInfo -> 0x2000e)
+	RefVar geomInfo(GetProtoVariable(config, RSSYMrcbaseinfo, nil));
+	if (NOTNIL(geomInfo))
+	{
+		WordBaseInfo base;
+		FromObject(geomInfo, &base);
+		long geom[7];
+		GetWordGeom(geom, &base);
+		strXr->DomainParameter(0x2000c, (ULong) geom, (ULong) strXrInfo);
+	}
+	geomInfo = GetProtoVariable(config, RSSYMrcgridinfo, nil);
+	if (NOTNIL(geomInfo))
+	{
+		RecGridInfo boxes;
+		FromObject(geomInfo, &boxes);
+		if (((boxes.xSpace[0] << 8) | boxes.xSpace[1]) != 0 || ((boxes.ySpace[0] << 8) | boxes.ySpace[1]) != 0)
+		{
+			long grid[4];
+			GetGridGeom(grid, &boxes);
+			strXr->DomainParameter(0x2000e, (ULong) grid, (ULong) strXrInfo);
+		}
+	}
 	if (NOTNIL(RefVar(GetProtoVariable(config, RSSYMrcsingleletters, nil))))
 		type = (type & ~8) | 0x20;
 	strXr->DomainParameter(0x20006, type, (ULong) strXrInfo);
