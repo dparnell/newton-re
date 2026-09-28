@@ -11,7 +11,9 @@
 #include "TabletBuffer.h"
 #include "Unit.h"
 #include "FixedMath.h"
+#include "NewtonGestalt.h"		// TUGestalt (SetupDistances)
 #include <stdio.h>
+#include <stdint.h>
 
 static StrokeQueue	sQ;								// ROM 0x0c106d84 sQ - the queue gStrokeQ points to
 StrokeQueue*	gStrokeQ = &sQ;						// ROM 0x0c10189c gStrokeQ
@@ -350,14 +352,31 @@ CheckHiliteState(TStroke* stroke, StrokeHiliteState* last, StrokeHiliteState* st
 
 // ROM 0x001fefa8 SetupDistances__Fv
 // The distances scaled to the screen: 4, 6 and 6 points at the screen's
-// resolution (NOT YET RECONSTRUCTED: the gestalt's screen resolution -
-// 100 dpi, the MP2100's), and the ticks a sample takes (60 over 80
-// samples a second: three quarters of a tick).
+// resolution (the system gestalt's, its two axes averaged), and the ticks
+// a sample takes (60 over 80 samples a second: three quarters of a tick).
+//
+// The ROM reads the resolution's two halfwords as one aligned and one
+// unaligned word and adds them, keeping the low half of the sum: the
+// average is ((v + h) & 0xffff) as a 16.16 value, halved rounding towards
+// nought.
+//
+// DEVIATION: the ROM does not look at the gestalt's answer; a host with no
+// kernel running (the unit tests) gets none, and is given the MP2100's
+// 100 dpi instead of whatever was on the stack.
 void
 SetupDistances(void)
 {
-	long dpi = 100;
-	Fixed pixelsPerPoint = FixedDivide((Fixed) dpi << 16, 72 << 16);
+	TUGestalt gestalt;
+	TGestaltSystemInfo info;
+	long v = 100, h = 100;
+	if (gestalt.Gestalt(kGestalt_SystemInfo, &info, sizeof(info)) == noErr)
+	{
+		v = info.fScreenResolution.v;
+		h = info.fScreenResolution.h;
+	}
+	int32_t sum = (int32_t) ((uint32_t) ((v + h) & 0xffff) << 16);
+	Fixed dpi = (Fixed) ((sum + (int32_t) ((uint32_t) sum >> 31)) >> 1);
+	Fixed pixelsPerPoint = FixedDivide(dpi, 72 << 16);
 	gHiliteDistance = (UShort) ((FixedMultiply(pixelsPerPoint, 4 << 16) + 0x8000) >> 16);
 	gMaxTapSize = (UShort) ((FixedMultiply(pixelsPerPoint, 6 << 16) + 0x8000) >> 16);
 	gDoubleTapDistance = (UShort) ((FixedMultiply(pixelsPerPoint, 6 << 16) + 0x8000) >> 16);

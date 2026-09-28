@@ -3,9 +3,9 @@
 
 	Contains:	The patternizers - see NetPattern.h.
 
-	The framework, the composite and the five scalars.  The two that do
-	the real work, `ImageSplatLimited` and `StrokePUD`, are NOT YET and
-	their type records name entry points that are not there yet.
+	The framework, the composite, the five scalars, and the two that do
+	the real work: `ImageSplatLimited` (the writing drawn into a 14x14
+	picture) and `StrokePUD` (the pen-up/down grid).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its
 	origin.

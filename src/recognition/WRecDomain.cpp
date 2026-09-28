@@ -10,9 +10,10 @@
 				the recogniser is put to sleep rather than asked anything
 				else.
 
-				DEVIATION: the host has one heap.  NewVMHeap, SetHeap and
-				DestroyVMHeap are NOT YET, so the engine runs in the
-				ordinary heap and only the exception handler is left.
+				DEVIATION: the engine runs in the ordinary heap and only
+				the exception handler is left (the VM heaps are in
+				memory/MemoryManager.cpp now; moving the engine into one
+				is NOT YET - WRecDomain.h).
 				Where the ROM gives the recogniser back by destroying the
 				heap it lived in, this deletes it.
 */
@@ -145,8 +146,10 @@ TWRecognizer::EndSubs(TWRecUnit* group)
 
 
 // ROM 0x0026e074 EndInkStrokeGroup__12TWRecognizerFPP11TStrokeUnit
-// NOT YET RECONSTRUCTED: WRecEndInkStrokeGroup, which is what closes a
-// run of strokes the engine has decided are ink rather than writing.
+// NOT YET RECONSTRUCTED: the body - the heap switched to the recogniser
+// task's default heap and WRecEndInkStrokeGroup (InkGroups.h, now there)
+// called, which closes a run of strokes the engine has decided are ink
+// rather than writing.
 void
 TWRecognizer::EndInkStrokeGroup(TStrokeUnit** /*strokes*/)
 {

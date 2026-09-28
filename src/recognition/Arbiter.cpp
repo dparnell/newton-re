@@ -70,9 +70,10 @@ UnitInClass(ULong type, ULong classType)
 
 
 // ROM 0x0020830c SetCaseAndTime__FP6TArrayUl
-// NOT YET RECONSTRUCTED: the journal's replay, which marks each replayed
+// NOT YET RECONSTRUCTED: the journal's replay of *units* (as opposed to
+// strokes, which testing/Journal.h replays), which marks each replayed
 // winner with the recognition case the session was recorded under and
-// the time it happened at.  Nothing replays on the host.
+// the time it happened at.  Nothing replays units on the host.
 void
 SetCaseAndTime(TArray* /*winners*/, ULong /*time*/)
 { }
@@ -425,8 +426,9 @@ GetRecognitionCase(TRecArea* area)
 // over a single stroke that nothing else was written with, or a general
 // shape large enough to be meant as one.
 //
-// NOT YET RECONSTRUCTED: the general-shape half, which needs
-// TGeneralShapeUnit; a shape never decides early here.
+// NOT YET RECONSTRUCTED: the general-shape half (TGeneralShapeUnit is
+// there now, in ShapeDomain.h - it is this half that is still to be
+// transcribed); a shape never decides early here.
 Boolean
 ArbitrateEarly(BestMatch* match)
 {

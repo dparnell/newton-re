@@ -19,10 +19,11 @@
 				the stroke's ink off the screen (the inker, NOT YET: the
 				inked rectangle is invalidated) - 0x14 bytes.
 
+				Rotate and Scale go through toolbox/Matrix.h.
+
 				NOT YET RECONSTRUCTED: the inker (Draw, InkOff's InkerOff),
-				Rotate and Scale (the matrix utilities), the stroke semaphore
-				between the inker task and the recogniser (AcquireStroke:
-				the host has one task).
+				the stroke semaphore between the inker task and the
+				recogniser (AcquireStroke: the host has one task).
 
 	Reconstructed from the MP2x00 US ROM (0x0022212c-0x00223038,
 	0x00145728-0x00145b5c, 0x001a3658-0x001a3fa0); each function cites its

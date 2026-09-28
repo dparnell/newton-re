@@ -22,8 +22,9 @@
 				one is overridden: the handle has to be given back as a
 				handle.
 
-	NOT YET RECONSTRUCTED: the training data (GetTrainingData answers
-	nothing, as the base's does), and the Dump methods.
+	GetTrainingData answers nothing, as the ROM's does (the training
+	data is the word info frame, TUnitPublic's).  NOT YET RECONSTRUCTED:
+	the Dump methods (TMsg).
 
 	Reconstructed from the MP2x00 US ROM (0x0021f67c-0x0021fc78,
 	0x0026e810-0x0026e8e8); each function cites its origin.

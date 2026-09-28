@@ -3,11 +3,14 @@
 
 	Contains:	The Airus dictionary engine's container (Airus.h): a
 				dictionary made, its bytes grown and shifted, and the
-				selector call everything else goes through.
+				selector call everything else goes through; and the
+				walkers - the enumerated dictionaries' (AEnum_*, AE8_*)
+				and the ROM lexicons' (AL_*, AL16_Verify).
 
-				NOT YET RECONSTRUCTED: the walkers themselves - AL, AL16
-				and the two lexicon walkers, AL and AL16, which look a
-				word up in the dictionaries built into the ROM.
+				NOT YET RECONSTRUCTED: the sixteen-bit walks other than
+				AL16_Verify (AE16_Verify, AE16_NextSet9/AE16_NextSetCB,
+				AL16_NextSet, AL16_NextSet9) - no dictionary in this ROM
+				is sixteen-bit, so nothing reaches them.
 */
 
 #include "Airus.h"

@@ -75,16 +75,15 @@ ULong	CheckCapAttributes(const UniChar* word);	// ROM 0x0008ec34 CheckCapAttribu
 // the dictionaries the words are looked up in: vars.dictionaries, a
 // frame each, told apart by their dictID
 // the word recogniser's own id, 'WREC when it is the one reading; 0
-// while it is NOT YET RECONSTRUCTED
+// while none is
 // The dictionaries, as the word list asks them: LookupWord answers
 // where the word was found, -1 for nowhere, and ExpandWord answers
 // the word as it would be written out in full (a handle, the
-// caller's to dispose), nil when there is nothing to expand.  Both
-// are NOT YET: with no dictionaries nothing is found and nothing
-// expands.
+// caller's to dispose), nil when there is nothing to expand
+// (Dictionaries.cpp, Learning.cpp).
 class TRecArea;
 class TDictChain;
-void	BuildChains(TDictChain** chains, RefArg config);		// ROM 0x0013d808 BuildChains__FPP10TDictChainRC6RefVar (NOT YET: no chains)
+void	BuildChains(TDictChain** chains, RefArg config);		// ROM 0x0013d808 BuildChains__FPP10TDictChainRC6RefVar (Dictionaries.cpp)
 
 long	LookupWord(const UniChar* word, ULong* where);		// ROM 0x0013f4f4 LookupWord__FPUsPUl (recognition/Dictionaries.cpp)
 

@@ -53,8 +53,8 @@ WordListAt(WordTailRef ref)
 
 
 // The free-list link, which the ROM writes over the first word of a
-// word list while it is free.  (Nothing takes one off the list yet:
-// `SearchAllocateReturnCache` is NOT YET.)
+// word list while it is free.  (The search takes one off when it keeps a
+// finished word's readings - Search.cpp, SearchSegwordRememberNBest.)
 // DEVIATION: a host pointer is eight bytes rather than four, so it
 // covers `fRefCount`, `fCount` and four bytes of `fField04` - none of
 // which mean anything while the entry is on the free list.

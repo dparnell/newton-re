@@ -517,6 +517,20 @@ MakeStringArray(TWordList* list)
 }
 
 
+// ROM 0x001a09e8 MakeScoreArray__FP9TWordList
+// A word list's scores as an array of integers, in the same order as
+// MakeStringArray's words.
+Ref
+MakeScoreArray(TWordList* list)
+{
+	long count = list->Count();
+	RefVar result(MakeArray(count));
+	for (long i = 0; i < count; i++)
+		SetArraySlot(result, i, RefVar(MAKEINT(list->Score(i))));
+	return result;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   t r y   s t r i n g ,   f r o m   a   s c r i p t
 ------------------------------------------------------------------------------*/

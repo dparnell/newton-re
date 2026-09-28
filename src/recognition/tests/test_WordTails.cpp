@@ -16,8 +16,8 @@ static int failures = 0;
 // A character put on the front of a reading: a cell taken off the free
 // list - another table asked for only when it is empty - pointed at
 // what was there, and the old tail's count raised.  (The search's own
-// `SearchDoVStepFromNode` does this; it is NOT YET, so the test does it
-// by hand.)
+// `SearchDoVStepFromNode` does this; the test does it by hand to look at
+// each step.)
 //
 // Note that the empty tail is *not* given a reference: `WordTailAddRef`
 // would take it down the cell path and look in table 127.  That is the

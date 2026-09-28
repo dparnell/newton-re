@@ -736,7 +736,7 @@ TestPictPieces(void)
 
 
 // A word taken through BaselineAndScale and AnalyzeLowData as far as Pict
-// (the rest of AnalyzeLowData being NOT YET): three arches, a dash and a
+// (TestLowLevelWhole goes the whole way): three arches, a dash and a
 // dot above.  Pict marks the dash 7 (ParaGraph's straight stroke: a
 // level one - the trained tables allow nothing steep, and an upright
 // stroke from the word's top to the line never) and the dot 8, each put

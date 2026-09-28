@@ -29,8 +29,7 @@
 				0x44, TClickUnit 0x34, TClickEventUnit 0x40.
 
 				NOT YET RECONSTRUCTED: the Dump methods (TMsg, the debugging
-				message buffer), the controller's next-event time that
-				AddSub and EndSubs lower (TController is NOT YET).
+				message buffer).
 
 	Reconstructed from the MP2x00 US ROM (0x0022ca94-0x0022ced0,
 	0x0022dea4-0x0022e600, 0x0021ca70-0x0021dbd0, 0x00220f28-0x00220fa8,

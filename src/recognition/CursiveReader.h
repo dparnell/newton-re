@@ -19,13 +19,9 @@
 				reader (`xrw_algs`: the xrs matched against the letter
 				table's prototypes, words out of the vocabularies) - and
 				what it read written into the word's descriptor
-				(`GCWDWriteRecResults`).
-
-				NOT YET RECONSTRUCTED: the three layers of the reading
-				(about 420KB of the ROM, docs/next-steps.md has the plan):
-				on the host the low level answers failure, so every word
-				is marked 0x200 (the low level failed) and the writing is
-				kept as ink.
+				(`GCWDWriteRecResults`).  The three layers are in
+				`Chunk.h`, `LowLevel.h` and `XrReader.h`
+				(`docs/recognition/README.md`).
 
 	Reconstructed from the MP2x00 US ROM (0x000d635c-0x000d6ad4,
 	0x000d6e84-0x000d7030, 0x00168a9c-0x00168aec, 0x00168fe8-0x00169058,

@@ -10,15 +10,23 @@
 #include "Unit.h"
 #include "Areas.h"
 #include "Domain.h"
+#include "Controller.h"		// gController
 #include <string.h>
 
-// NOT YET RECONSTRUCTED: the controller.  AddSub and EndSubs lower its
-// next-event time (TController +0x20) to the unit's expiry so the delayed
-// unit is arbitrated on time; the host has no controller yet.
+// What AddSub and EndSubs both end with (inline in the ROM): the
+// controller's classify pass (TController +0x20, fClassifyTime) brought
+// forward to the unit's expiry, now plus its delay, so the delayed unit
+// is classified on time.
+//
+// DEVIATION: the ROM reads gController without looking - a unit is only
+// ever made while recognition runs; the host's unit tests make units
+// with no controller.
 static void
 NoteUnitExpiry(TUnit* unit)
 {
-	(void) (GetTicks() + unit->fDelay);
+	ULong expiry = GetTicks() + unit->fDelay;
+	if (gController != nil && expiry < gController->fClassifyTime)
+		gController->fClassifyTime = expiry;
 }
 
 

@@ -131,9 +131,9 @@ OpenLocaleLexicon(RefArg slot, Handle* where)
 // walks (`dictType` under 2, or 4, the exceptions); the rest are
 // described but never built.
 //
-// NOT YET RECONSTRUCTED: `gTrie`, which would be dictionary 32 if that
-// descriptor had no `romDictID` - it has one, so this ROM never takes
-// that path.
+// NOT YET RECONSTRUCTED (unreachable): dictionary 32 made from `gTrie`
+// (assist/Lexicon.h) when its descriptor has no `romDictID` - this ROM's
+// has one, so that path is never taken.
 void
 InitDictionaries(void)
 {
@@ -160,7 +160,7 @@ InitDictionaries(void)
 		{
 			if (id == kUserDictionary || id == kExpandDictionary || id == kAutoAddDictionary)
 				dictionary = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 1);
-			// NOT YET RECONSTRUCTED: gTrie, which is dictionary 32
+			// NOT YET RECONSTRUCTED (unreachable, above): dictionary 32 from gTrie
 		}
 		else
 		{
@@ -944,20 +944,6 @@ FAirusUnregisterDictionary(RefArg rcvr)
 }
 
 
-// ROM 0x0007d484 DumpDict__FRC6RefVar
-// DumpDict(): the Assistant's dynamic dictionary frame, whatever it
-// holds.  The ROM's function ignores its argument and answers that one
-// global.
-//
-// NOT YET RECONSTRUCTED: gDynaDictionaryFrame, which the Assistant's
-// lexical side fills in; nil until there is one.
-static Ref
-FDumpDict(RefArg /*rcvr*/)
-{
-	return NILREF;
-}
-
-
 // ROM 0x0008ecdc DecodeRecognitionWord__FPUsUl
 // A word's capitals put back from its attribute: 0x40 says the whole word
 // is in capitals, 0x80 its first letter only (an old dictionary kept the
@@ -1078,7 +1064,6 @@ RegisterDictionaryNatives(void)
 {
 	RegisterNativeFunction("FAirusResult", (void*) FAirusResult, 0);
 	RegisterNativeFunction("FConvertDictionaryData", (void*) FConvertDictionaryData, 1);
-	RegisterNativeFunction("DumpDict__FRC6RefVar", (void*) FDumpDict, 0);
 	RegisterNativeFunction("FAirusRegisterDictionary", (void*) FAirusRegisterDictionary, 0);
 	RegisterNativeFunction("FAirusUnregisterDictionary", (void*) FAirusUnregisterDictionary, 0);
 	RegisterNativeFunction("FAddDictionary__FRC6RefVarN21", (void*) FAddDictionary, 2);

@@ -24,14 +24,21 @@
 				under it (ExpireUsingCommand), or a stroke bundle to the
 				fExpireProc a caller set (Recognize's HandleBulkStrokes);
 				ExpireAll settles whatever is waiting, half a second after
-				the last stroke (IdleCompress).  NOT YET RECONSTRUCTED: the
-				deferred strokes.  The ROM's StrokeCentral is 0x44 bytes.
+				the last stroke (IdleCompress).  AddDeferredStroke keeps a
+				stroke put off for later (nothing in the stroke world reads
+				them back; they are saved and restored with its state).
+				The ROM's StrokeCentral is 0x44 bytes.
 
-				NOT YET RECONSTRUCTED: TController - DEVIATION: with no
-				controller the host hands every click and click-event unit
-				straight to HandleUnit (as the ROM does for the units the
-				controller calls externally arbitrated) and disposes the
-				units itself; the journal.
+				Each new click unit goes to the controller
+				(NewClassification); one the controller calls externally
+				arbitrated is handed straight to the unit handler as well,
+				as the ROM does.  Finished strokes are recorded for the
+				journal (testing/Journal.h).
+
+				NOT YET RECONSTRUCTED: the waiting ink redrawn when part of
+				the screen is updated - UpdateCompressGroup 0x001455bc,
+				UpdateStrokesInList 0x00145564, UpdateStroke 0x001456a0
+				(the inker's side, like StrokeQueue.h's StrokeUpdate).
 
 	Reconstructed from the MP2x00 US ROM (0x001447c4-0x00144cac,
 	0x00144d40-0x00144df8, 0x00145644-0x001456a0, 0x00145e10-0x00145f78);
@@ -94,7 +101,7 @@ public:
 	ULong				fGroupCount;		// +0x24  how many of the expired strokes are the group being compressed
 	TUnitList*			fExpiredStrokes;	// +0x28
 	TTime				fNextCompressTime;	// +0x2c
-	Handle				fCompressGroup;		// +0x34  (NOT YET)
+	Handle				fCompressGroup;		// +0x34  the ink grouping's state (IGGroupAndCompressStrokes)
 	Boolean				fFlag38;			// +0x38
 	void				(*fExpireProc)(RefArg, RefArg);	// +0x3c  what a group of expired strokes is handed to as a stroke bundle (ExpireGroup; nil: the view under it, as ink): Recognize's HandleBulkStrokes
 	RefStruct*			fCompressBundle;	// +0x40  ... with this as its first argument

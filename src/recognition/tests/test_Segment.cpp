@@ -698,7 +698,7 @@ main()
 		SegmentQuiesce();			// twice is no trouble
 		SegmentDestroy(nil);
 		SegmentInit(nil);
-		// the cutting itself is NOT YET
+		// nothing to cut: no segments (the cutting itself is tested above)
 		EXPECT(SegmentChars(0, nil, 0, nil, 0, nil) == 0);
 	}
 

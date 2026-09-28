@@ -37,7 +37,7 @@
 
 				NOT YET RECONSTRUCTED: `ArbitrateGraphicsWords` (a word
 				drawn as a shape), the shape half of `ArbitrateEarly`, and
-				`SetCaseAndTime` (the journal's replay).
+				`SetCaseAndTime` (the journal's replay of units).
 
 	Reconstructed from the MP2x00 US ROM (0x00206bf0-0x00208ea0); each
 	function cites its origin.
@@ -121,7 +121,7 @@ enum
 	kLastTypeNumber		= 3
 };
 
-void		SetCaseAndTime(TArray* winners, ULong time);	// ROM 0x0020830c SetCaseAndTime__FP6TArrayUl (NOT YET: the journal's replay)
+void		SetCaseAndTime(TArray* winners, ULong time);	// ROM 0x0020830c SetCaseAndTime__FP6TArrayUl (NOT YET: the journal's replay of units)
 
 extern long	gLastType;									// ROM 0x0c104c64 gLastType - what was recognised last: 1 a shape, 2 a word, 3 a number
 

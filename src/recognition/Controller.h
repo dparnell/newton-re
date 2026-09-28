@@ -36,9 +36,9 @@
 				soon as it is made, which is how a click reaches the view
 				while the pen is still down.
 
-				NOT YET RECONSTRUCTED: the
-				per-area recognition of `RecognizeInArea` (re-recognising
-				the strokes of an existing area) and `BuildGTypes`.
+				`RecognizeInArea` re-recognises strokes in an area of the
+				caller's own (the deferred recognition, views/Rerecognize.h),
+				and `BuildGTypes` works out the domains an area must run.
 
 	Reconstructed from the MP2x00 US ROM (0x00209e84-0x0020c7a0); each
 	function cites its origin.

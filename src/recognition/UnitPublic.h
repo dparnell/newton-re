@@ -14,14 +14,6 @@
 				frame and base line; the shape units' polygons.  The ROM's
 				TUnitPublic is 0x3c bytes.
 
-				NOT YET RECONSTRUCTED: the word side (MakeWordList,
-				ExtractWords, Word, Words, WordScore, WordInfo, SetWordBase,
-				Strokes, TrainingData: TWordList, the dictionaries), the
-				shape side (CleanShape, ShapeType:
-				TGeneralShapeUnit), the arbiter's whole-screen mode that FindView looks
-				at (gArbiter), and EndTime's controller stroke (the unit's
-				own end time is used).
-
 	Reconstructed from the MP2x00 US ROM (0x0022ced0-0x0022dd60); each
 	function cites its origin.
 */
@@ -72,9 +64,8 @@ public:
 
 	Handle				RoughShape(void);						// ROM 0x0022d198 RoughShape__11TUnitPublicFv - the first stroke as a polygon, made once
 
-	// NOT YET RECONSTRUCTED
-	Handle				CleanShape(void);						// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv
-	ULong				ShapeType(void);						// ROM 0x0022d234 ShapeType__11TUnitPublicFv
+	Handle				CleanShape(void);						// ROM 0x0022d1d8 CleanShape__11TUnitPublicFv - a shape unit's fitted shape as a polygon, made once
+	ULong				ShapeType(void);						// ROM 0x0022d234 ShapeType__11TUnitPublicFv - a shape unit's label, 0 for any other unit
 
 	TUnit*				fUnit;			// +0x00
 	TWordList*			fWordList;		// +0x04

@@ -12,9 +12,9 @@
 				lies in; its last area is the merged one.  The ROM's
 				TRecArea is 0x30 bytes.
 
-				NOT YET RECONSTRUCTED: the area cache (gAreaCache: the areas
-				built for the views hit, InitAreas/GetAreasHit) and the
-				dictionary chains.
+				The area cache (gAreaCache: the areas built for the views
+				hit, InitAreas/GetAreasHit) and the dictionary chains
+				(BuildChains, Dictionaries.h) are here too.
 
 	Reconstructed from the MP2x00 US ROM (0x0021c1ac-0x0021c7c4); each
 	function cites its origin.
@@ -106,7 +106,7 @@ public:
 	long				fArbitrateNow;	// +0x14  how many of its types are arbitrated at once (arbitrate time 1)
 	TTypeAssoc*			fTypes;			// +0x18  the unit types the recognisers take, with the handler each is answered through
 	TTypeAssoc*			fDomains;		// +0x1c  the domains to run, with their parameter blocks (BuildGTypes)
-	TDictChain*			fDictionaries[kAreaDictChains];	// +0x20  the word recogniser's chains (BuildChains; the dictionaries are NOT YET)
+	TDictChain*			fDictionaries[kAreaDictChains];	// +0x20  the word recogniser's chains (BuildChains)
 	ULong				fViewId;		// +0x2c  the view's id (TView::fId)
 };
 
@@ -127,10 +127,8 @@ public:
 };
 
 // The areas built for the views the pen has been over, kept so that the
-// next stroke in the same view does not have to build them again.
-//
-// NOT YET RECONSTRUCTED: everything that fills it (InitAreas,
-// GetAreasHit); with nothing in it there is nothing to purge either.
+// next stroke in the same view does not have to build them again
+// (InitAreas makes it, GetAreasHit fills it, PurgeAreaCache empties it).
 extern TArray*	gAreaCache;								// ROM 0x0c1008a0 gAreaCache
 
 // An area of its own for reading again writing that is already on a view,

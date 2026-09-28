@@ -23,12 +23,8 @@
 				The GC layer (`GCGroupStrokes` and its helpers) is shared
 				with the cursive recogniser, which calls it with *word
 				descriptors* to keep the words it has read in step with
-				the segmenter; the ink grouping calls it without, and
-				NOT YET RECONSTRUCTED are the word descriptors themselves
-				(`GCWordDescr*`, `GCWriteNewGroupResults`,
-				`GCSortWordDescByStrokesOrder`, `GCRecSegmentSetGroupFlags`,
-				`GCGroupResultsCopyFlags`), which only that recogniser's
-				reading reaches.
+				the segmenter; the ink grouping calls it without.  The
+				word descriptors themselves are `WordDescriptors.h`.
 
 	Reconstructed from the MP2x00 US ROM (0x000ea554-0x000eb360,
 	0x000d55c4-0x000d5cc0, 0x000d83a0-0x000d84f8, 0x0006583c-0x00065b2c,

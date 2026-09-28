@@ -14,6 +14,8 @@
 #include "ViewFlags.h"
 #include "Rects.h"
 #include "StrokeCentral.h"
+#include "Controller.h"		// gController (EndTime)
+#include "Arbiter.h"		// gArbiter (FindView)
 #include "WordList.h"
 #include "WordUnit.h"
 #include "WordInfo.h"
@@ -57,7 +59,8 @@ TUnitPublic::~TUnitPublic()
 		DisposHandle(fCleanShape);		// (the ROM: KillPoly)
 	if (fRoughShape != nil)
 		DisposHandle(fRoughShape);
-	// NOT YET RECONSTRUCTED: TWordList
+	if (fWordList != nil)
+		delete fWordList;
 	DisposeRefHandle(fWordInfo);
 }
 
@@ -79,13 +82,19 @@ TUnitPublic::StartTime(void)
 
 
 // ROM 0x0022da68 EndTime__11TUnitPublicFv
-// The end of the last stroke the unit covers.
-// NOT YET RECONSTRUCTED: the controller's stroke unit at fMaxStroke (its
-// start plus its duration); the unit's own end time serves the host.
+// The end of the last stroke the unit covers: the controller's stroke
+// piece at the unit's fMaxStroke, its start plus its duration.
+//
+// DEVIATION: the ROM reads the piece without looking; the host falls
+// back on the unit's own end time when the controller no longer has it
+// (a unit tested on its own, or one whose strokes have expired).
 ULong
 TUnitPublic::EndTime(void)
 {
-	return fUnit->EndTime();
+	TUnit* stroke = gController != nil ? gController->GetIndexedStroke(fUnit->fMaxStroke) : nil;
+	if (stroke == nil)
+		return fUnit->EndTime();
+	return stroke->fStartTime + stroke->fDuration;
 }
 
 
@@ -159,21 +168,27 @@ TUnitPublic::Stroke(void)
 // The view under the unit with the flags: the one found last is answered
 // when it was found with the same flags; otherwise the view under the
 // centre of the bounds, and failing that the closest within 10 pixels
-// each way.  While the arbiter is arbitrating for the whole screen
-// (NOT YET RECONSTRUCTED: gArbiter) the view under the screen's centre
-// is taken instead.
+// each way.  While the arbiter has an entry waiting on units not yet made
+// (its +0x21) the view under the middle of the root view is taken
+// instead, with the flags 0x1fffe00 (every view that takes anything).
 TView*
 TUnitPublic::FindView(ULong flags)
 {
 	if (fViewHit != nil && fViewHitFlags == flags)
 		return fViewHit;
-	Rect bounds;
-	Bounds(&bounds);
-	TView* view = gRootView->FindView(MidPoint(bounds), flags, nil);
-	if (view == nil)
+	TView* view;
+	if (gArbiter != nil && gArbiter->fWaiting)		// (DEVIATION: the ROM always has an arbiter here; a host test may not)
+		view = gRootView->FindView(MidPoint(gRootView->viewBounds), 0x1fffe00, nil);
+	else
 	{
-		Point slop = MakePoint(10, 10);
-		view = gRootView->FindView(MidPoint(bounds), flags, &slop);
+		Rect bounds;
+		Bounds(&bounds);
+		view = gRootView->FindView(MidPoint(bounds), flags, nil);
+		if (view == nil)
+		{
+			Point slop = MakePoint(10, 10);
+			view = gRootView->FindView(MidPoint(bounds), flags, &slop);
+		}
 	}
 	SetViewHit(view, flags);
 	return view;
@@ -376,11 +391,8 @@ TUnitPublic::GestureAngle(void)
 // none at all gets one empty reading scoring 1000 - which is what a
 // unit that was never read comes to, and what makes it ink.
 //
-// (NOT YET: `LookupWord` and `ExpandWord` are the dictionaries', which
-//  are NOT YET - see Words.cpp.  With no dictionary nothing is found,
-//  so every ordinary word falls through to the second pass and no
-//  variants are offered; the same readings come out, in the order a
-//  machine with an empty dictionary would put them.)
+// (`LookupWord` and `ExpandWord` are the dictionaries', Dictionaries.h
+//  and Learning.h.)
 TWordList*
 TUnitPublic::MakeWordList(Boolean raw, Boolean tryString)
 {

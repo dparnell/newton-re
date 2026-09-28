@@ -34,8 +34,11 @@ static TUnit*	gUnitBeingHandled = nil;		// (the ROM's word at 0x0c103f8c) the un
 // The exception shown to the user (ExceptionNotify) with a handler round
 // it, so that a failure in the showing is dropped.
 //
-// NOT YET RECONSTRUCTED: ExceptionNotify, which puts the notify slip up.
-// The host prints it instead, and prints what it is carrying with it: one
+// NOT YET: the call to ExceptionNotify, which puts the notify slip up.
+// ExceptionNotify itself is reconstructed (newt/Notebook.h), but the
+// application layer sits above this library, so reaching it wants a hook
+// the newt world sets.  The host prints the exception instead, and
+// prints what it is carrying with it: one
 // of the object system's exceptions holds either a frame saying what went
 // wrong (the names that end in type.ref.frame) or an error code, and
 // without either the name alone says almost nothing - every mistake a ROM

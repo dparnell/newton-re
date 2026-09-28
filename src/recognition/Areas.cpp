@@ -24,8 +24,7 @@
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0021c1ac Make__8TRecAreaSFUlT1
-// An area for a view's recognition flags; nothing in it yet.
-// NOT YET RECONSTRUCTED: the two TTypeAssocs it is made with.
+// An area for a view's recognition flags, with its two (empty) TTypeAssocs.
 TRecArea*
 TRecArea::Make(ULong viewFlags, ULong flags)
 {
@@ -456,7 +455,7 @@ void
 PurgeAreaCache(void)
 {
 	if (gAreaCache == nil)
-		return;		// (NOT YET RECONSTRUCTED: nothing builds the cache, so it is always this)
+		return;		// (before InitAreas has made it)
 	for (ULong i = 0; i < (ULong) gAreaCache->Count(); i++)
 	{
 		TRecArea** entry = (TRecArea**) gAreaCache->GetEntry(i);
@@ -591,7 +590,7 @@ FindMatchingArea(TView* view, ULong inputMask)
 	}
 	if (found == nil)
 	{
-		gRecognition.fUnitHandler = HandleUnit;		// (the journal's HandleReplayUnit is NOT YET)
+		gRecognition.fUnitHandler = HandleUnit;		// (NOT YET RECONSTRUCTED: the journal's replayed units, HandleReplayUnit - the host journal replays strokes only)
 		found = MakeArea(gController, view, inputMask);
 		if (found == nil)
 			return nil;

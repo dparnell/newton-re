@@ -1065,7 +1065,7 @@ TRecognitionManager::RemoveClickView(TView* view)
 
 // ROM 0x0019e35c Idle__19TRecognitionManagerFv
 // When started: the strokes idled, the stroke world's ink compressed, the
-// controller idled (NOT YET RECONSTRUCTED: TController::Idle).
+// controller idled.
 long
 TRecognitionManager::Idle(void)
 {
@@ -1081,15 +1081,31 @@ TRecognitionManager::Idle(void)
 
 // ROM 0x0019e394 NextIdle__19TRecognitionManagerFv
 // When to idle next: when started, the stroke world's compress time, or
-// the controller's next idle time (in milliseconds from now) when that
-// is earlier (NOT YET RECONSTRUCTED: TController::NextIdleTime - none);
-// zero when there is nothing to wait for.
+// the controller's next idle time (TController::NextIdleTime, in
+// milliseconds from now) when that is earlier or there is no compress
+// time; the compress time alone (zero for never) when the controller
+// has nothing to wait for.
+//
+// ROM QUIRK kept: when recognition is not started the milliseconds are
+// left at -1 and still turned into a time, so the answer is a
+// millisecond *ago* rather than zero - an idle asked for at once.
 TTime
 TRecognitionManager::NextIdle(void)
 {
-	TTime next(0);
-	if (fLevel != 0)
+	static const Int64 kZero = { 0, 0 };		// the ROM's zeroTime
+	TTime next;
+	next.time = kZero;
+	long ms = -1;
+	if (fLevel >= 1)
+	{
 		next = fStrokeWorld->fNextCompressTime;
+		ms = gController->NextIdleTime();
+		if (ms == -1)
+			return next;
+	}
+	TTime soon = TimeFromNow(ms * kMilliseconds);
+	if (CompCompare(&next.time, &kZero) == 0 || CompCompare(&soon.time, &next.time) < 0)
+		return soon;
 	return next;
 }
 

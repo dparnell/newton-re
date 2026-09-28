@@ -314,7 +314,8 @@ TestGroupAndRead(void)
 		EXPECT((first->fFlags & 4) != 0 && (second->fFlags & 4) != 0);	// the end of the writing: both to be read
 
 		// read: the frame runs and the low level cuts the word into xrs;
-		// on the host the reader stops at xrw_algs (NOT YET), -9
+		// the xr reader then answers -9 for this test's word (the whole
+		// reading is tested with the demos: host.NewtonCursive)
 		rc_type rc;
 		memset(&rc, 0, sizeof(rc));
 		EXPECT(GCTryToRecognize(gTrace, first, &rc, &parm) == -9);

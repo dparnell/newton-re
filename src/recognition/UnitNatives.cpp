@@ -7,14 +7,14 @@
 				stroke's face a TStrokePublic (StrokeFromRef).  GetPoint,
 				GetPointsArray/XY, StrokeDone, StrokeBounds, InkOn/InkOff,
 				CountUnitStrokes, GetUnitStartTime/EndTime/DownTime/UpTime,
-				GestureType.  RegisterUnitNatives binds them.
+				GestureType, the word functions (GetWordArray,
+				GetScoreArray, GetTrainingData, ...), the calibration and
+				ink-pen functions.  RegisterUnitNatives binds them.  The
+				stroke bundle functions are StrokeBundle.cpp, the ink ones
+				ink/InkShapes.cpp.
 
-				NOT YET RECONSTRUCTED: GesturePoint and CountGesturePoints
-				(the gesture unit's points), the stroke bundle functions
-				(GetStroke, CountStrokes, GetStrokePoint..., MakeStrokeBundle,
-				CompressStrokes, ExpandInk, the ink of the paragraphs),
-				StrokesAfterUnit (the controller), the word functions
-				(GetWordArray, GetScoreArray, GetTrainingData...).
+				NOT YET RECONSTRUCTED: the inker's side of the calibration
+				and the pen size (below), and PenPos (0x001a0be0).
 
 	Reconstructed from the MP2x00 US ROM (0x001ea300-0x001ea36c,
 	0x0019fc50-0x001a3a10); each function cites its origin.
@@ -497,6 +497,40 @@ FFinishRecognizing(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x001a0a68 FGetWordArray__FRC6RefVarT1
+// GetWordArray(unit): a word unit's readings as an array of strings (nil
+// for a unit with no word list).  The list is the unit's own, handed over
+// (TUnitPublic::Words), so it is given back once read.
+static Ref
+FGetWordArray(RefArg /*rcvr*/, RefArg unit)
+{
+	RefVar result;
+	TWordList* list = UnitFromRef(unit)->Words();
+	if (list != nil)
+	{
+		result = MakeStringArray(list);
+		delete list;
+	}
+	return result;
+}
+
+
+// ROM 0x001a0b28 FGetScoreArray__FRC6RefVarT1
+// GetScoreArray(unit): the same readings' scores, in the same order.
+static Ref
+FGetScoreArray(RefArg /*rcvr*/, RefArg unit)
+{
+	RefVar result;
+	TWordList* list = UnitFromRef(unit)->Words();
+	if (list != nil)
+	{
+		result = MakeScoreArray(list);
+		delete list;
+	}
+	return result;
+}
+
+
 // ROM 0x001a0bc4 FGetTrainingData__FRC6RefVarT1
 // GetTrainingData(unit): the same frame WordUnitToWordInfo answers.
 // The ROM's two functions are the same code; the training data a
@@ -645,6 +679,8 @@ RegisterUnitNatives(void)
 	RegisterNativeFunction("FInkOffUnHobbled", (void*) FInkOffUnHobbled, 1);
 	RegisterNativeFunction("FBlockStrokes", (void*) FBlockStrokes, 0);
 	RegisterNativeFunction("FUnblockStrokes", (void*) FUnblockStrokes, 0);
+	RegisterNativeFunction("FGetWordArray__FRC6RefVarT1", (void*) FGetWordArray, 1);
+	RegisterNativeFunction("FGetScoreArray__FRC6RefVarT1", (void*) FGetScoreArray, 1);
 	RegisterNativeFunction("FFlushStrokes", (void*) FFlushStrokes, 0);
 	RegisterNativeFunction("FPurgeAreaCache", (void*) FPurgeAreaCache, 0);
 	RegisterNativeFunction("FRecSettingsChanged", (void*) FRecSettingsChanged, 0);

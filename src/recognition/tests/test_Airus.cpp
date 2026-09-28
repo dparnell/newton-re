@@ -1,8 +1,8 @@
 // Airus test (recognition/Airus.h): the dictionary container - one made
 // and what its first two bytes say about it, the block's pointers kept
 // right when the Handle moves, the data grown, slid and read.  The
-// walkers themselves are NOT YET, so the selector call is only checked
-// for the two that clear the error.
+// walkers are tested with the dictionaries (test_Dictionaries); here the
+// selector call is only checked for the two that clear the error.
 #include "Airus.h"
 #include "AirusIterator.h"
 #include "memory/host/KernelHeap.h"

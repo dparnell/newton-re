@@ -10,8 +10,8 @@
 # bring the pen's points in as strokes; the stroke world (StrokeCentral.h)
 # makes clicks of them and the unit handler (HandleUnit.cpp) posts the
 # commands to the views.  The controller (Controller.h) groups, classifies
-# and arbitrates them through the domains; the arbiter's deciding and the
-# domains above the stroke domain are NOT YET.  Over frames (the units and strokes are handed to NewtonScript
+# and arbitrates them through the domains (gestures, shapes, and both word
+# recognisers - Rosetta and ParaGraph's cursive and digit readers).  Over frames (the units and strokes are handed to NewtonScript
 # as address refs) and qd.
 add_library(recognition STATIC
     RecObject.cpp

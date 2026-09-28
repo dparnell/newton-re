@@ -3,9 +3,9 @@
 
 	Contains:	The handwriting engine's classifier net - see BPNet.h.
 
-	Making one, hanging its unit array off it and giving it back.  The
-	net itself - `BPNetEvaluate` - is NOT YET; what has been read out
-	of its assembly so far is `docs/recognition/bpnet.md`.
+	Making one, hanging its unit array off it, giving it back, and the
+	net itself - `BPNetEvaluate` (its assembly written up in
+	`docs/recognition/bpnet.md`).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its
 	origin.

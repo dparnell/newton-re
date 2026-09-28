@@ -160,7 +160,13 @@ AREAS = OrderedDict((
                     r'|^FAirus|Training|Correct|WordInfo|^FCleanString|InkWord'
                     r'|^FMakeInk|^FInkConvert|^FCalcInkBounds|^FExpandUnit'
                     r'|^FAddWordInfo|^FAddUnitInfo|TryString|^FMatchedChar'
-                    r'|^FModalRecognition|^FRosettaExtension|^FScanNextWord'),
+                    r'|^FModalRecognition|^FRosettaExtension|^FScanNextWord'
+                    # methods of the unit and correction-info protos whose
+                    # names say nothing (their ROM addresses sit among the
+                    # recognition system's)
+                    r'|^FGetWordArray|^FGetScoreArray|^FPenPos|^FGetAlternates'
+                    r'|^FExtractRange$|^FHandleUnit|^FHandleRawInk'
+                    r'|^FLookupCompletions|^FVoteOnWordUnit'),
     ('views', r'^FView|View|Caret|Hilite|Clipboard|KeyCommand|Popup|^FTie'
               r'|Paragraph|^FInsert|^FSetFont|^FGetFont|^FMakeCompactFont'
               r'|^FChangeStyles|^FDrawInto|^FGetEditArray|^FGetRangeText'),

@@ -197,8 +197,8 @@ void	RCBooleanOperator(UByte op, UByte* field, UByte operand);	// ROM 0x0006571c
 
 // What the engine records of a word it read, in the training data a
 // cursive unit keeps: the word, and for each letter which variant it was
-// read as (bit 7: in the other case).  Written by the reading engine,
-// which is NOT YET.
+// read as (bit 7: in the other case).  Written by the reading engine
+// (XrAnswers.cpp).
 struct rec_w_type
 {
 	UByte		fWord[0x18];		// +0x00

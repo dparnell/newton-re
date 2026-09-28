@@ -1,7 +1,7 @@
 // The handwriting engine's word recogniser (recognition/WordRecog.h):
 // the block a piece of writing is read in, and its life.  The grammar
-// and the engine's common info are handed in by this test, because the
-// ROM's own (`ROMGrammar`, `RosCI`) are NOT YET.
+// and the engine's common info are handed in by this test, so that it
+// does not depend on the ROM's own (`ROMGrammar`, `RosCI`).
 #include "WordRecog.h"
 #include "FixedGeometry.h"
 #include "RosEngine.h"

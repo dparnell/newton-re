@@ -38,10 +38,9 @@
 				the terminator - and the weights they call for come to
 				the 91,124 bytes of `bpWeight`.
 
-	The layers above it - the patternizers, the segment layer and the
-	feature extraction - are NOT YET, so nothing has inputs to give it
-	yet; the evaluator itself is here, and `docs/recognition/bpnet.md`
-	writes up the assembly it came out of.
+	The patternizers that fill its inputs are `NetPattern.h`;
+	`docs/recognition/bpnet.md` writes up the assembly the evaluator came
+	out of.
 
 	Reconstructed from the MP2x00 US ROM (0x0001a260, 0x0003b14c-
 	0x0003b298); each function cites its origin.

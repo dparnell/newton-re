@@ -20,14 +20,11 @@
 				bounds, and the views clicked last.  The ROM's TRecognizer is
 				0x20 bytes, TRecognitionManager 0x40.
 
-				NOT YET RECONSTRUCTED: TRecognitionManager::Init's stroke
-				world, controller, arbiter and areas (StrokeCentral,
-				TController, TArbiter, InitAreas), the gesture, stroke, shape
-				and word recognisers (their domains), the recognisers'
-				EnableArea (TRecArea::AddAType) and the click recogniser's
-				HandleUnit (the area cache: OtherViewInUse, ClicksOnlyArea);
-				the host installs the click and click-event recognisers and
-				the root domain.
+				TRecognitionManager::Init makes the stroke world, the
+				controller, the arbiter and the areas, and installs the
+				recognisers for the level asked for - clicks, gestures,
+				shapes and the two word recognisers (Rosetta, and
+				ParaGraph's cursive one, chosen by the letter set).
 
 	Reconstructed from the MP2x00 US ROM (0x001437b4-0x0014454c,
 	0x0019de84-0x0019dfa4, 0x0019d438-0x0019d6a4, 0x0019e124-0x0019e3c4);
@@ -75,7 +72,7 @@ public:
 	virtual void		WakeUp(void);							// ROM 0x001437fc WakeUp__11TRecognizerFv (+0x2c)
 	virtual ULong		ArbitrateTime(void);					// ROM 0x00143800 ArbitrateTime__11TRecognizerFv (+0x30)
 	virtual void		BuildConfig(RefArg config, TView* view, ULong flags);	// ROM 0x00143814 BuildConfig__11TRecognizerFRC6RefVarP5TViewUl (+0x34: nothing)
-	virtual long		EnableArea(TRecArea* area, RefArg config);	// ROM 0x00143818 EnableArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x38: NOT YET - the type added to the area when the config's inputMask enables it)
+	virtual long		EnableArea(TRecArea* area, RefArg config);	// ROM 0x00143818 EnableArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x38: the type added to the area when the config's inputMask enables it)
 	virtual long		ConfigureArea(TRecArea* area, RefArg config);	// ROM 0x001438c4 ConfigureArea__11TRecognizerFP8TRecAreaRC6RefVar (+0x3c: 0)
 	virtual ULong		HandleUnit(TUnitPublic* unit);			// ROM 0x00144520 HandleUnit__11TRecognizerFP11TUnitPublic (+0x40: ==> the command)
 	virtual Ref			GetLearningData(TUnitPublic* unit);		// ROM 0x00143964 GetLearningData__11TRecognizerFP11TUnitPublic (+0x44: nil)
@@ -173,7 +170,7 @@ extern long		gRecognitionLetterSpacing;	// how close letters may be (nine less w
 extern Boolean	gUseBigTrainingData;		// the learning keeps more about each word
 
 void	InstallWRecRecognizer(TRecognitionManager* manager);	// ROM 0x00144094 InstallWRecRecognizer__FP19TRecognitionManager
-void	RegisterWRec(void);									// ROM 0x001b5bb4 RegisterWRec__Fv (NOT YET: the ROM's own engine)
+void	RegisterWRec(void);									// ROM 0x001b5bb4 RegisterWRec__Fv (NOT YET: the CIC library's engine; the host registers Rosetta, RegisterRosettaWRec)
 
 // What a word unit that has won its arbitration comes to: a tap, a
 // word, or one of the two ink commands.  The Airus word recogniser
@@ -208,10 +205,10 @@ public:
 	void				SetNextClick(ULong time);				// ROM 0x0019d654 SetNextClick__19TRecognitionManagerFUl - the ignoring dropped unless the time is within a second of its end
 	void				SaveClickView(TView* view);				// ROM 0x0019d678 SaveClickView__19TRecognitionManagerFP5TView
 	void				RemoveClickView(TView* view);			// ROM 0x0019d688 RemoveClickView__19TRecognitionManagerFP5TView
-	long				Idle(void);								// ROM 0x0019e35c Idle__19TRecognitionManagerFv - the strokes idled, the ink compressed (the controller's idle NOT YET)
+	long				Idle(void);								// ROM 0x0019e35c Idle__19TRecognitionManagerFv - the strokes idled, the ink compressed, the controller idled
 	struct RecognitionState*	SaveRecognitionState(UChar* failed);	// ROM 0x0019e21c SaveRecognitionState__19TRecognitionManagerFPUc - what is being recognised put aside (a modal dialog's fork starts afresh); failed: no room
 	void				RestoreRecognitionState(struct RecognitionState* state);	// ROM 0x0019e2e0 RestoreRecognitionState__19TRecognitionManagerFUl - ... and put back
-	TTime				NextIdle(void);							// ROM 0x0019e394 NextIdle__19TRecognitionManagerFv - when to idle next: the earlier of the stroke world's compress time and the controller's next time (NOT YET); zero for never
+	TTime				NextIdle(void);							// ROM 0x0019e394 NextIdle__19TRecognitionManagerFv - when to idle next: the earlier of the stroke world's compress time and the controller's next time; zero for never
 
 	UChar				fLevel;				// +0x00
 	StrokeCentral*		fStrokeWorld;		// +0x04
@@ -249,6 +246,6 @@ void	InstallEventRecognizer(TRecognitionManager* manager);	// ROM 0x00143bb0 Ins
 void	InstallGestureRecognizer(TRecognitionManager* manager);	// ROM 0x00143970 InstallGestureRecognizer__FP19TRecognitionManager
 Boolean	OnlyStrokeWritten(TStrokeUnit* unit);				// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit - no other stroke is in hand and none followed this one
 Boolean	OtherViewInUse(TView* view);						// ROM 0x00036960 OtherViewInUse__FP5TView - somebody else's writing is still in hand
-Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit (NOT YET: false)
+Boolean	ClicksOnlyArea(TUnit* unit);						// ROM 0x000369e8 ClicksOnlyArea__FP5TUnit - whether the unit's area takes only clicks
 
 #endif	/* __RECOGNIZER_H */

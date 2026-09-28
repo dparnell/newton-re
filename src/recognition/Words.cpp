@@ -3,14 +3,12 @@
 
 	Contains:	Word validation (Words.h).
 
-	NOT YET RECONSTRUCTED: the dictionaries themselves
-	(LookupWordOrVariant 0x0008f098 and everything under it), so no word is
-	ever found and ValidateWord answers "the dictionaries do not have it"
-	for all of them - which is what a machine whose user dictionary is
-	empty says about a person's name anyway, and which is the answer that
-	lets LookupWord hand the word back.  WRecVerifyWordSymbols 0x001444c8
-	asks the word recogniser's domain, which is NOT YET: with no domain the
-	ROM lets the word through, and so does this.  StripRecognitionWord's
+	NOT YET RECONSTRUCTED: ValidateWord's two questions to the rest of the
+	recognition system, which the dictionaries and the word recogniser
+	could now answer - the lookup of the word and its variants
+	(0x0008f098; the dictionaries themselves are Dictionaries.h) and
+	WRecVerifyWordSymbols 0x001444c8.  Until they are wired in no word is
+	found and nothing is objected to.  StripRecognitionWord's
 	gEnabledLanguage and gWordID are the word recogniser's too.
 */
 
@@ -180,10 +178,8 @@ CheckCapAttributes(const UniChar* word)
 
 	The word sources are frames in `vars.dictionaries`, each with a
 	`dictID` of its own; a script asks for one by that id.  What is in
-	them, and the looking up itself, is NOT YET RECONSTRUCTED
-	(InitDictionaries 0x0013de2c and everything under it), so the list is
-	empty and every id answers nil - which is what a machine that has
-	loaded no dictionary answers too.
+	them, and the looking up itself, is Dictionaries.h (InitDictionaries
+	and everything under it).
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0c101848 gEnabledLanguage
@@ -191,8 +187,8 @@ long	gEnabledLanguage = 1;
 
 
 // ROM 0x0c101844 gWordID
-// DEVIATION: the word recogniser is NOT YET RECONSTRUCTED, so nothing
-// ever sets this and the system is told the recogniser is not reading.
+// The word recogniser's unit type while one is installed (Recognizer.cpp),
+// 0 while none is.
 ULong	gWordID = 0;
 
 
@@ -608,10 +604,10 @@ FValidateWord(RefArg /*rcvr*/, RefArg word, RefArg /*options*/)
 		flags |= kWordStartsUpper;
 	if ((caps & kCapAllUpper) != 0)
 		flags |= kWordIsAllCaps;
-	// NOT YET RECONSTRUCTED: LookupWordOrVariant 0x0008f098, the word and
-	// the variants of it looked up in the dictionaries - it answers which
+	// NOT YET RECONSTRUCTED: the call at 0x0008f098, the word and the
+	// variants of it looked up in the dictionaries - it answers which
 	// variant it found (-1 for none) and the variant's capitalisation
-	// joins the word's.  With no dictionaries nothing is ever found.
+	// joins the word's.  Until it is wired in nothing is found.
 	long found = -1;
 	ULong variantCaps = caps;
 	if (found != -1)
@@ -628,8 +624,9 @@ FValidateWord(RefArg /*rcvr*/, RefArg word, RefArg /*options*/)
 		flags |= kWordHasSpaces;
 	if (!HasChars(text))
 		flags |= kWordHasNoLetters;
-	// NOT YET RECONSTRUCTED: WRecVerifyWordSymbols 0x001444c8 - with no
-	// word recogniser domain the ROM finds nothing to object to
+	// NOT YET RECONSTRUCTED: WRecVerifyWordSymbols 0x001444c8, the word
+	// recogniser asked whether it could write the word's symbols; until it
+	// is, nothing is objected to (the ROM's answer with no recogniser)
 	if ((flags & kWordIsNotAWord) != 0)
 		flags |= kWordKnownOrBad;
 	if ((flags & kWordFoundOtherCase) != 0)
@@ -720,9 +717,10 @@ RegisterWordNatives(void)
 // A box with no width, or none with no height, is given one, because
 // nothing downstream divides by nought happily.
 //
-// NOT YET RECONSTRUCTED: GetTraceFromStrokes and low_level - the CIC
-// handwriting library's feature extractor, which is what would read the
-// word - so this always takes the second path.
+// NOT YET RECONSTRUCTED: the first path.  What it needs is there now -
+// GetTraceFromStrokes (InkGroups.h) and ParaGraph's `low_level`
+// (LowLevel.h) - but this still always takes the second path, so an ink
+// word's measurements come from its box.
 long
 FindBaseline(TStroke** strokes, Point* out)
 {
@@ -774,6 +772,5 @@ WRecFindBaseline(TStroke** strokes, Point* out)
 	return FindBaseline(strokes, out);
 }
 // ROM 0x0c101864 gSaveWordTrainingData
-// Set by ReadDomainOptions out of the "learning enabled" preference,
-// which is NOT YET: nothing is kept.
+// Set out of the "learning enabled" preference (Recognizer.cpp).
 Boolean	gSaveWordTrainingData = false;

@@ -3,14 +3,11 @@
 
 	Contains:	The engine's other layers - see RosEngine.h.
 
-	Two of them are real: `CharInitialize`/`RSfRcl`, which make and
-	give back the common info out of the ROM's own template, and
-	`BiGrammarsLoad`, which answers the ROM's own bigram grammar.  The
-	rest are NOT YET; the destroyers do nothing, which is safe because
-	nothing makes the objects they would give back.
-
-	The work below this file, in the order it wants doing, is in
-	`docs/recognition/README.md` under "The Rosetta engine".
+	The common info (`CharInitialize`/`RSfRcl`, out of the ROM's own
+	template), the bigram grammar (`BiGrammarsLoad` and its allocation,
+	slices, cloning and `BiGrammarModifyContext`), and the letter
+	measurements and adjustments (`CharGetAvgBoxBHW`, `CharModifyProbs`)
+	- `docs/recognition/README.md`, "The Rosetta engine".
 */
 
 #include "RosEngine.h"
