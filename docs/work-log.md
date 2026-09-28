@@ -9,6 +9,36 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: packages round 3 - the large binaries
+
+- **Large binaries (VBOs)** (`2735709`; `stores/LargeBinaries.h`,
+  `stores/Ephemerals.h`): `LBData` and its eight indirect-binary procs,
+  `AllocateLargeBinary`, `WrapLargeObject`, the entry cache `gLBCache`,
+  `Load`/`Duplicate`/`DeleteLargeBinary`, commit and abort through the
+  store wrapper's `TEphemeralTracker`, the store object format's tag 12,
+  NSOF's large binaries (and `LOWrite`, `LOSizeOfStream`,
+  `LODefaultBackup`, `LODefaultStreamSize`, `DuplicatePackageData` under
+  them), and the natives (`NewVBO`, `NewCompressedVBO`, `IsVBO`,
+  `GetVBOStore`, `GetVBOCompander`, `GetVBOCompanderData`,
+  `GetVBOStoredSize`, `ClearVBOCache`, `VBOUndoChanges`).  `THostStore`
+  answers "LOBJ".  Host bugs found: `TStoreWrapper::Dirty` and
+  `SparklingClean` did not return early as the ROM's do (Dirty now locks
+  the store, SparklingClean flushes the ephemerals).  The test's one
+  surprise was its own: an `LBData*` kept across an allocation is stale
+  once the heap compacts.  `test_LargeBinaries`.
+- **The consumers** (`01ec11f`): `GetBitmapInfo`, `MakeBitmap`'s store
+  option, `GetLearningData`'s VBO, `IsValid` of a large binary.  The
+  booted host never registered the store companders (the ROM does it in
+  `RegisterROMDomainManager`, NOT YET) - `HostMountStores` does now.
+  ctest `host.NewtonVBO`.
+- **An older store file still opens.**  A store written by the build
+  before `a93d860` (`newton --store`, walked through the Setup
+  assistant) boots on the new build with its user and fourteen soups, a
+  VBO can be added to it (the `'ephemerals` list is made on first use)
+  and is read back on the next boot.  `a93d860` changed only the
+  companders' words, and no host store held compander data before the
+  large objects - so nothing on an older file is read differently.
+
 ## 2026-09-29: packages round 2 - streamed sources and large objects
 
 - **Streamed package sources** (`5b665c9`; `packages/PackageLoader.h`,

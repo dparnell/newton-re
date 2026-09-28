@@ -178,7 +178,7 @@ size), the hint chunks (the word hints soup queries test with
 | 9 | a precedent (an object already written) | its index |
 | 10 | nil | |
 | 11 | a small rect (`{top, left, bottom, right}` 0..255) | 4 bytes |
-| 12 | a large binary | id, size (NOT YET) |
+| 12 | a large binary | its id and its class (4 bytes each) |
 
 A long is one byte for 0..254, else 0xff and four bytes; every word is
 big-endian, the MessagePad's order (the host converts the header's words
@@ -708,20 +708,75 @@ its store objects to the store's transaction; an abort throws the changes
 away and unmaps it, as the ROM's ends the session.
 
 ROM bugs kept: `InitializeChunkArray`'s clean-up after a failure aborts
-the same wrong entry each time; `LODefaultDelete` does nothing.  Found on
+the same wrong entry each time; `LODefaultDelete` does nothing (so a
+deleted large binary's blocks stay on the store: only a compander's own
+`TLrgObjStore` would take them back); `LOWrite` leaks the compander's
+name when the compander is unknown.  Found on
 the way: the companders read a root's chunk-table id and the table's block
-ids as native words - now big-endian, as on the MessagePad.  NOT YET:
-`TLrgObjStore`, objects made from compressed blocks, duplicating
-(`DuplicatePackageData`), backups (`TLOCallback`), a package kept as a
-large object, the XIP requests - and the large binaries built on all this
-(`LBData`, next).  `test_LargeObjects`.
+ids as native words - now big-endian, as on the MessagePad.  Duplicating (`DuplicatePackageData`: the chunk array and every block
+copied, big-endian ids) and the streamed form (`LOWrite`, `LOSizeOfStream`,
+`LODefaultBackup`) are done.  NOT YET: `TLrgObjStore`, objects made from a
+compressed stream (`LODefCreateFromComp`), the backup progress callback
+(`TLOCallback`), a package kept as a large object, the XIP requests.
+`test_LargeObjects`.
+
+## Large binaries (`src/stores/LargeBinaries.h`, `Ephemerals.h`)
+
+A large binary (a *virtual binary object*, VBO) is an indirect binary
+whose procs are `gLBProcs` and whose data is an `LBData`: the length, the
+large object's id, the entry it belongs to, its class, the address it is
+mapped at (0 until someone reads it) and its store (an index into the
+unnamed table of store wrappers at 0x0c1010c4).  `IsLargeBinary` is just
+that procs test.  The procs map the object on demand (`LBDataPtr`),
+resize it (`LBSetLength`, through `ResizeLargeObject`), and copy it
+(`LBClone`: a new large object on the same store).  A script makes one
+with `store:NewVBO(class, length)` or `NewCompressedVBO(class, length,
+companderName, companderData)`.
+
+Until an entry holds it, a new large binary is *ephemeral*: the store
+wrapper's `TEphemeralTracker` (0x1c bytes) keeps its id on a list - a
+store object of big-endian ids named by the store's `'ephemerals` slot -
+and a store mounted with ids still on that list deletes them (a VBO made
+and never saved is not left behind).  Writing an entry takes the id off
+(`CommitLargeBinary`, from the writer's tag 12); a large binary another
+entry or another store owns is duplicated first.  Reading an entry back
+wraps the object again (`LoadLargeBinary`), found first in `gLBCache`, a
+weak array of the large binaries in memory.  An abort
+(`AbortLargeBinaries`, `VBOUndoChanges`) throws the changes away; a store
+unmounted leaves its large binaries unmapped with no store
+(`LargeBinariesStoreRemoved`).  In NSOF a large binary is streamed whole
+(`LOWrite`) and read back into a new large object.
+
+The store wrapper drives the tracker: `LockStore` locks it, `UnlockStore`
+flushes, `Abort` aborts, and - fixed on the way, they did not before -
+`Dirty` returns at once when already dirty and otherwise locks the store,
+`SparklingClean` returns at once when not dirty and otherwise flushes and
+unlocks.  Only a store that answers `"LOBJ"` has a tracker; `THostStore`
+does (the ROM's `TFlashStore` answers `"LOBJ; rom ; sram; flsh"`).
+`InitLargeObjects` (the ROM's, from `InitExternal`) is called from
+`InitQueries` on the host (DEVIATION: layering).
+
+ROM bugs kept: `GetVBOStoredSize` never checks it was given a large
+binary, nor does `VBOUndoChanges` (`FLBRollback`) - there the host answers
+nil for anything else rather than read past an ordinary binary
+(DEVIATION); NSOF's reader leaks the compander name and parameters it
+read.  A consumer's ROM bug worth
+knowing: `SizeOfLearningData` answers the handle word less than nought
+when there is no big-learning database, so `GetLearningData` then asks
+for a VBO of nearly the whole address space - only ever asked with one.
+`test_LargeBinaries` (in a TAppWorld: the package store part handler
+`InitQueries` registers wants a world's port): a VBO made in an entry,
+written, read back after the store is unmounted and mounted again,
+resized, rolled back, cloned, streamed, an orphan dropped from the
+ephemerals on remount, an LZ-compressed one, the entry deleted.  ctest
+`host.NewtonVBO` makes one on the booted machine (`MakeBitmap` with a
+store, `GetBitmapInfo`).
 
 ## Not yet
 
-Large binaries (`LoadLargeBinary`, `DuplicateLargeBinary`,
-`CommitLargeBinary`, `LBData`, `IsLargeBinary`), the word hints
+The word hints
 (`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
-and `text`), `TEphemeralTracker`, a sorting table kept on the store
+and `text`), a sorting table kept on the store
 (`StoreSaveSortTable`/`StoreRemoveSortTable`, so only the registered tables
 - `frames/SortTables.h` - can be named by a `sortId`) and `secOrder`,
 the XMit methods and `XmitSoupChangeNow` (the soup change broadcasts), the

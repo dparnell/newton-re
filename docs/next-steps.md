@@ -11,13 +11,12 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-29
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 117/117
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 119/119
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12210 citations, 0 bad;
-  7044 of 16671 functions (42.25%) - the digit reader's statics are
-  unnamed, so they add citations and not functions.
-- `analysis/natives.py --unbound`: 308 of the ROM's 1326 natives are
-  unanswered (1018 answered, 76.8%; table below).
+- `analysis/coverage.py build/MP2x00US --check`: 12270 citations, 0 bad;
+  7095 of 16671 functions (42.56%).
+- `analysis/natives.py --unbound`: 1021 of the ROM's 1326 natives
+  answered (77.0%; built-ins 790 of 869, prototype methods 231 of 457).
 
 ## What works
 
@@ -96,32 +95,15 @@ need first:
    object, so an ordinary .pkg cannot be streamed - `newton --package`
    stays on the memory path.  Its endpoint side (`TEndpointPipe`,
    `SuckPackageFromEndpoint`) waits on the comms area.
-4. **Large binaries on a store** - the large-object layer is DONE
-   (2026-09-29, `stores/LargeObjects.h` over the host's ROM domain
-   manager `stores/host/HostLargeObjects.cpp`; `docs/stores/README.md`'s
-   "Large objects"; `test_LargeObjects`).  **Next (round 3): the large
-   binaries themselves** - `LBData` and its indirect-binary procs
-   (`LBLength`, `LBDataPtr`, `LBSetLength`, `LBClone`, `LBDestroy`,
-   `LBSetClass`, `LBMark`, `LBUpdate`, 0x000fff5c-0x001013e4),
-   `AllocateLargeBinary`, `WrapLargeObject`, the cache (`gLBCache`,
-   `Find/Load/Duplicate/DeleteLargeBinary`), commit/abort
-   (`CommitLargeBinary`, `AbortLargeBinaries`, `FinalizeLargeObjectWrites`,
-   the store wrapper's `TEphemeralTracker`), the store object format's tag
-   12 (`TStoreObjectWriter::WriteLargeBinary`, `LoadLargeBinary`), and the
-   natives (`FLBAlloc`, `FLBAllocCompressed`, `FLBRollback`,
-   `FLBClearCache`, `FGetBinaryStore`/`Compander`/`CompanderData`/
-   `StoredSize`, `IsVBO`).  Still NOT YET of the object layer:
-   `TLrgObjStore`, made from compressed blocks, duplicating, backups.
-   The original sizing, for the record -
-   **everything else in packages stands on it**:
-   the large-object layer (`CreateLargeObject`, `WrapLargeObject`,
-   `MapLargeObject`, `LODefaultCreate`, the chunk arrays: 33 functions,
-   5 KB) and the ROM domain manager, the kernel's paging monitor that
-   maps a store object into virtual memory and executes a package in
-   place from flash (`TROMDomainManager1K`, the XIP calls - about 60
-   functions; on the host a DEVIATION, the object read whole into memory,
-   is the likely shape).  So it should come before (5) and (6).
-5. **Packages on a store** - `ActivatePackage`/`DeActivatePackage`
+4. ~~**Large binaries on a store**~~ - DONE (2026-09-29; the
+   large-object layer `stores/LargeObjects.h`, the large binaries
+   `stores/LargeBinaries.h`, the ephemerals `stores/Ephemerals.h`;
+   `docs/stores/README.md`'s "Large objects" and "Large binaries";
+   `test_LargeObjects`, `test_LargeBinaries`, ctest `host.NewtonVBO`).
+   Still NOT YET of the object layer: `TLrgObjStore`, objects made from
+   compressed streams (`LODefCreateFromComp`), `TPixelMapCompander`, the
+   backup progress callback (`TLOCallback`).
+5. **Packages on a store** - **next (round 4)**.  `ActivatePackage`/`DeActivatePackage`
    (`FInstallPackage`/`FDeinstallPackage`), `ObjectPid`, `ObjectPkgRef`,
    `PidToPkgRef`, `PssidToPid`, `PssidToPkgRef`, `PidToPackageLite`, the
    store's `RestorePackage`/`RestoreSegmentedPackage`,
@@ -157,10 +139,11 @@ could come next (not ranked; the owner chooses):
   IR, NTK and the desktop connection.  The test server's link, the IR
   sniffing and fax reception (the only real source of the fax-page bitmaps
   `RotTiledBitmap` turns) wait on it.
-- **Large binaries on a store** (virtual binary objects): unblocks
-  `RotTiledBitmap`, `FLBAlloc` and training data kept on a store, the
-  text engine's `TXNewtStreamFactory`, `GetBitmapInfo`, and packages on a
-  store.
+- **Now reachable over the large binaries**: the text engine's
+  `TXNewtStreamFactory` (a compressed large binary for a stream above 4K),
+  `TPixelMapCompander` (the default compander of a store bitmap), and
+  `RotTiledBitmap` (only a fax page reaches it, so it still waits on the
+  comms stack).
 - **The text engine**: `TXRun` and `TXRunRange`, then `TXRulerRange`
   (below).
 - **Drawing speed**: the blitter and the lines work a pixel at a time
@@ -215,11 +198,11 @@ Out of the U.S. ROM's reach, hardware, or waiting on another area:
   (`AE16_*`, `AL16_NextSet*`; no dictionary in this ROM is sixteen-bit).
 - **Hardware**: the inker task (`TInker`, `InkerOff`, `TBCWakeUpInker`)
   and `CheckTabletHWCalibration`.
-- **Waiting on large binaries on a store** (see the candidates):
-  `RotTiledBitmap` (the four sizes `Tilable` looks for are *fax pages*,
-  216-byte rows by 1146/2292/1152/2304 - the turned copy is built tile by
-  tile in a large binary, so a heap bitmap of that size is left unturned)
-  and `FLBAlloc` (`GetLearningData` makes an ordinary binary instead).
+- **Waiting on fax reception** (the comms stack): `RotTiledBitmap` (the
+  four sizes `Tilable` looks for are *fax pages*, 216-byte rows by
+  1146/2292/1152/2304 - the turned copy is built tile by tile in a large
+  binary; the large binaries are there now, but nothing makes such a
+  page).
 - **Waiting on other areas**: the journal's replayed *units*
   (`HandleReplayUnit`, `SetCaseAndTime` - the host journal replays
   strokes), `CreateVMHeap`.
@@ -268,9 +251,7 @@ Out of the U.S. ROM's reach, hardware, or waiting on another area:
 - `ComputeParagraphHeight` 0x001ecfd0: its geometry is built on the
   stack through an unaligned `ldr` and is worth reading from the
   assembly rather than the decompiler.
-- `MakePict`.  `GetBitmapInfo` also wants `GetBinaryStore`/
-  `GetBinaryCompander`, which answer nil on a host because there are
-  never large binaries.
+- `MakePict`.
 - `HiliteBlock` 0x00164d64 looks like a view native but is the book
   reader's: it wants `TLibrarian` and the page frames.
 - `natives.py --unbound --ready` picks out the ones whose ROM function is

@@ -364,6 +364,10 @@ part's code read through the manager's own pipe), a package of one NSOF
 `'form` part built in the test (the handler gets the frame), and Setup
 again (refused as already there).
 
+The large binaries a package on a store is kept in are there
+(`stores/LargeBinaries.h`, `docs/stores/README.md`'s "Large binaries"),
+so packages on a store are next.
+
 ## Not yet
 
 - The `'book` part handler (`TBookPartHandler` over the book reader's
@@ -371,8 +375,7 @@ again (refused as already there).
 - An endpoint as a streamed source (`TEndpointPipe`, `SuckPackageFromEndpoint`:
   the comms area).
 - Packages on a store: the store side of the ROM domain manager (`IdToStore`,
-  `IdToVAddr`, `StoreToId`, `PackageAvailable`), the large binaries (the
-  large objects under them are `stores/LargeObjects.h`), and so the natives
+  `IdToVAddr`, `StoreToId`, `PackageAvailable`) and so the natives
   over them - `ActivatePackage` (`FInstallPackage`), `DeActivatePackage`,
   `ObjectPkgRef`, `PidToPkgRef`, `GetPkgRefInfo`, `PssidToPid`,
   `SuckPackageFromBinary` and the rest.
