@@ -3057,10 +3057,60 @@ quotient and remainder taken apart to stay in 32 bits) and `GetDirection`
 (twenty-four fifteen-degree directions counted anticlockwise from up, by
 octant and then by products against the sines and cosines of 15 and 30
 degrees - `ChunkTables.cpp`, generated).  `test_WordDescriptors`'s
-`TestChunkContext`/`TestChunkChords`.  The rest (about 100 functions,
-146 KB) is NOT YET; without `ChunkProcessor` no number is found, so the
-context goes straight back, as the ROM does for a word that is not a
-number.  The plan is in `docs/next-steps.md`.
+`TestChunkContext`/`TestChunkChords`.
+
+What the searchers work from is done too (`test_Chunk` draws a 4 and a 2
+with a synthetic pen, in eighths of a pixel as the tablet gives them, and
+follows them through):
+
+- **The trace's turns** (`ChunkTrace.cpp`: `ExtrWordTrace_V`).  Each
+  stroke's box first, and the height of the stroke one past the middle of
+  them sorted by height (ROM quirk: one past, not the middle); then, a
+  stroke at a time, a run from each turn until the pen has moved a
+  seventh of that height, when the run's start is marked a turn at the
+  bottom (`kTraceLow`, the pen went up from it) or the top
+  (`kTraceHigh`), and a turn looked for where the next point goes back.
+  The flags are the word at +4 of each 8-byte point.
+- **The polyline** (`GetLineApprox`, `SetAllDirections`).  A pen-up marks
+  the points either side as a stroke's end and start; the marked points
+  are listed and each segment between two inside a stroke is split at
+  its furthest point while that is far enough off the chord (up to fifty
+  nodes a segment, two hundred passes, two hundred nodes).  Each node
+  (`tag_wapx_type`, 0x1c bytes) gets the direction in and out; a turn of
+  120 degrees or more is a corner, its two directions packed in a word.
+- **The chunks** (`ChunkConstruct.cpp`).  `ChunkFillMainData` cuts the
+  polyline at its segments into `tag_CHUNK`s (0x94 bytes: ends, box and
+  the nodes of its extremes, chord and bulge, up or down, links to the
+  chunks of its stroke) with a chunk of kind 3 for each jump between
+  strokes, and tells each node its chunk; `ChunkMakeStrokes` makes the
+  strokes; `ApxToBrackets` draws each chunk with *brackets* - lines and
+  arcs, cut where the turn changes sign or at a corner, then tidied
+  until nothing changes (a flat arc becomes a line, a bracket small
+  against the mean chunk is run into its neighbour, arcs are run on
+  through a join that keeps the turn) and the hooks at the strokes' ends
+  dropped - and `ApxToCLine` classes each chunk by its brackets: 300 a
+  line, 400 an arc, 500 an arc and a line (or arcs turning apart), 600
+  two lines, 700 two arcs turning one way, 1400 anything else, the
+  subclass saying which way it turns; an unnamed pass after it (0x00285bc8,
+  read from the disassembly - the decompiler loses it) makes a tail - a
+  piece much shorter than the chunk beside it - a line, and counts how far
+  the turns along a curve keep one way from each end.
+- **The list of low objects** (`ChunkLowObj.cpp`, `LO_*`): three hundred
+  objects over a free list, in twenty classes (100..800, 1100..2200) each
+  a linked list with a cursor, one class "worked in" at a time;
+  `ChunkPutClassesToLO` puts each chunk in as its class, and the
+  searchers add what they find.  ROM bugs kept: `LO_Add` with no object
+  free answers -1 having switched the class worked in, and
+  `LO_GetRealChunkInd`'s count inside a group starts too high, so it
+  answers the object's last chunk.
+
+The searchers themselves (`Digits`, `SearchDigit_L/_V/_K/_S`,
+`RecognizeZCCW`, `SearchNumber`, `FindPound`, ...), `ChunkProcessor` and
+the merging of the numbers read (`ChunkPatchXrdata`, `ChunkSortAnswers`,
+`ChunkCorrectByLexDB`) are NOT YET (about 60 functions, 124 KB); without
+`ChunkProcessor` no number is found, so the context goes straight back,
+as the ROM does for a word that is not a number.  The plan is in
+`docs/next-steps.md`.
 
 **NOT YET RECONSTRUCTED** (the rest of the reader): `ORCreateLearnInfo`
 and `ORTraining` - the orthographic learning (only for a field with rc

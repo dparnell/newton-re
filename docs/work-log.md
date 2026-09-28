@@ -10,6 +10,29 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the digit reader's chunks
+
+- The cursive reader's digit reader, steps (1) and (2) of its plan and
+  the start of (3): the trace's turns (`ExtrWordTrace_V`) and polyline
+  (`GetLineApprox`, `SetAllDirections`) in `recognition/ChunkTrace.cpp`;
+  the list of low objects (`LO_*`) in `ChunkLowObj.cpp`; `ChunkConstruct`
+  and everything under it - chunks, strokes, brackets, the chunk classes,
+  the unnamed reclassing pass (from the disassembly) - plus
+  `ChunkPutClassesToLO` and `DefRectForChunks` in `ChunkConstruct.cpp`.
+  `tag_WORD_TRACE`'s +4 is a word of flags (it had been two shorts);
+  `tag_wapx_type`, `tag_CHUNK`, `brack_type`, `tag_STK` keep the ROM's
+  layouts, `LOBlock` and `tag_CHUNK_STAFF` are host layouts (pointers).
+  ROM quirks and bugs kept: the "median" height one past the middle, a
+  dead order check, a split clearing the wrong node's first flag,
+  `LO_Add` losing the class worked in when full, `LO_GetRealChunkInd`'s
+  group count, `DefRectForChunks` writing four words through a `_RECT`
+  (the low level's `_RECT` is four halfwords: two types of one name).
+  The ROM's `memcpy` copies top-down only when the source is below, so
+  the brackets' removal is a `memmove`.  `test_Chunk` (new) draws a 4
+  and a 2.  Found: `SearchDigit_L` is not small - it calls seven statics
+  inside `RecognizeZCCW`'s and `DgtFromDnHorseshoe`'s extents, and reads
+  staff +0x40, which `Digits` sets - so step (3) starts at `Digits`.
+
 ## 2026-09-28: the cursive reader's leftovers; the digit reader begun
 
 - `SetStrXrRC`: a recognition configuration's `strxrCommands` carried out

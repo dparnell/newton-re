@@ -450,6 +450,33 @@ digit; (2) `ChunkConstruct` and its helpers; (3) `Digits` with
 "42" into a numbers field (rc +0xb6 is set by a field whose
 recognition flags allow numbers).  Four or five rounds.
 
+*Progress (2026-09-28)*: steps (1) and (2) are done -
+`recognition/ChunkTrace.cpp` (`ExtrWordTrace_V`, `GetLineApprox`,
+`SetAllDirections`), `ChunkLowObj.cpp` (all eleven `LO_*` and the free
+list), `ChunkConstruct.cpp` (`ChunkConstruct`/`ChunkDestroyData`,
+`ChunkFillMainData`, `ChunkMakeStrokes`, `ApxToBrackets` with its unnamed
+bracket maker, tidier (0x00286fb4) and hook dropper, `ApxToCLine` and
+the classes it gives a chunk (300 a line, 400 an arc, 500 mixed, 600
+two lines, 700 two arcs, 1400 more), the unnamed reclassing pass
+0x00285bc8 (from the disassembly - the decompiler garbles it),
+`CreateRealChunkInd`, the arc measures) and, of step (3), the two the
+searchers start from (`ChunkPutClassesToLO`, `DefRectForChunks`).
+`test_Chunk` draws a 4 and a 2 with a synthetic pen and checks the
+turns, the polyline, the chunks (the 4's bent stroke is class 600, its
+upright 300; the 2's hook an arc), the brackets and the list.  Left
+(`callgraph.py build/MP2x00US ChunkProcessor__FPvP13PS_point_typei
+--through-done`): 60 functions, about 124 KB.  **`SearchDigit_L` is not
+the small one it looks**: its body (0x0028ddb4-0x0028eb9c, ten unnamed
+statics, 3.5 KB) calls seven more unnamed statics that sit inside
+`RecognizeZCCW`'s extent (0x0028ffe8, 0x0029082c, 0x002909f0,
+0x00290c68, 0x00290de8 - which writes the digit found - and 0x00290e2c)
+and `DgtFromDnHorseshoe`'s (0x0028f17c), so it and `RecognizeZCCW`
+(4.5 KB) are one piece of about 8 KB; it also reads staff +0x40, which
+`Digits` sets.  So step (3) is better begun at `Digits` itself (read its
+top level first to see what it sets up and in what order it calls the
+searchers), then `RecognizeZCCW` with `SearchDigit_L`; then `_V`, `_K`,
+`_S`.  Three or four rounds.
+
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3
 (https://github.com/phatware/WritePad-Handwriting-Recognition-Engine;
