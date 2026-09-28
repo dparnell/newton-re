@@ -3149,17 +3149,60 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   8 whose closing line misses its start a 0), with `CheckQIntersec`/`XY`;
   `Check_4` (the "4"s of value 0x605 taken out when too tall or sharing
   chunks with another digit).
+- **`SearchDigit_K`** (`ChunkSearchK.cpp`, 0x00289604-0x0028d9d0): the
+  digits made of lines and arcs, value 1500 + the digit.  A **#** first
+  (four strokes of a few chunks, two level and two upright, each level one
+  crossing each upright one, the uprights parallel and apart); then each
+  line (class 300) of one chunk: in the first two, an **x** of two
+  strokes (level tops and bottoms, the left one going down to the right
+  and the right one to the left; the 4s over the same nodes are taken
+  out); a **4** in three ways - in one stroke without lifting the pen, with
+  its slant just before the upright, or as a bar and a left side found in
+  the stroke after the upright (`BarStroke`) or before it (`UprightStart`)
+  - of value 4, or 41 when its top is open; failing that a **7** (a stem
+  continuing a bar that runs right, 17..20 steps against the stem, or with
+  a cross-bar), failing that a **per cent sign** (a slash between two
+  small rings).  Each arc (class 400) flat enough is tried as a 4, and
+  each curve (class 500) not a stroke of its own as an **8** (paired with
+  its taller neighbour, the two crossing).  ROM quirks kept: the ring test's
+  "chunk before the arcs" is the first arc itself; the arcs' flatness test
+  reads the first bracket however many there are; the 4 of value 44 the
+  code writes out is never made.  Under it `find_direct_forward` and
+  `find_direct_backward`, the direction to the first node far enough
+  along.
+- **The second-look pass** (`ChunkSecondLook.cpp`, 0x0029ce20 and the
+  twelve statics it runs, 0x0029d428-0x0029fbcc and 0x002a01dc/0x002a0740):
+  the digits found (up to thirty) sorted left to right and corrected by
+  their neighbours - a low "1" between two digits a comma and a comma
+  shorter than three tenths of its neighbour a full stop, a slanting "1"
+  taller than the rest a solidus, a straight short ")" with no "(" a 1, a
+  "1" before an unmatched ")" a "(", a 7 after a leftmost "(" a ")", two
+  "<"s a guillemet, a "-" that is the bar of the stroke before dropped, a
+  3/7/")" after an upright through its bowl a "B" or "D", 0s, 1s, 2s, 5s
+  and 9s dropped for the unused strokes beside them, and each digit's
+  letter-table variant (`DigitVariant`) checked against the field's
+  `fDigits` - then `ThreeToFive` and `RecognizeZCCW`, and the digits and
+  the gaps between them (class 1200) written out in order as class 1900.
+  ROM quirks kept: the solidus test stops the pass at a lone "1" with
+  nothing to measure it against; the last digit is never counted as a 2;
+  nothing bounds the gaps kept to the room the ROM gives them (on the
+  host they run into the sorted digits as on the stack, and stop at the
+  end of the block - DEVIATION).
 
 `test_Chunk` draws the digits with a synthetic pen: a 5 with a separate
 bar and a 5 in one stroke and a $ are found by `SearchDigit_L` (the 2, 3,
 4, 7, 9 and 0 drawn there are other searchers' work), an unlifted 5 is
-turned from 3 to 5, a 4 laid over another digit is taken out.
+turned from 3 to 5, a 4 laid over another digit is taken out;
+`TestSearchK` finds a 4, an x, a 7, a #, an 8 and a % (and no 1 - that
+is `New_SearchDigit_V`'s), and `TestSecondLookPass` checks the order and
+gaps written out and seven of the corrections.
 
-NOT YET: the other searchers (`SearchDigit_K` 17 KB, `New_SearchDigit_V`
-20 KB with its `DgtFrom*`/`GreyDgtFromELink`/`SignFromTwoSections`,
-`SearchDigit_S` 24 KB, `FindPound`, `SearchNumber`), `Digits`' own statics
-(the second-look pass 0x0029ce20 and the twelve it runs, about 2800
-lines of assembly), `ChunkProcessor` and the merging of the numbers read
+NOT YET: the other searchers (`New_SearchDigit_V` 20 KB with its
+`DgtFrom*`/`GreyDgtFromELink`/`SignFromTwoSections`, `SearchDigit_S` 24
+KB, `FindPound`, `SearchNumber`), `Digits` itself and its other statics
+(0x002a09b0, 0x002a2758, 0x002a1a98, 0x0029e888, 0x002a19ec, 0x0029ccd4,
+0x002a2078, 0x0029fbcc, 0x002a0d74, 0x0029ffc8), `CutNumberInDigits`,
+`ChunkProcessor` and the merging of the numbers read
 (`ChunkPatchXrdata`, `ChunkSortAnswers`, `ChunkCorrectByLexDB`); without
 `ChunkProcessor` no number is found, so the context goes straight back,
 as the ROM does for a word that is not a number.  The plan is in

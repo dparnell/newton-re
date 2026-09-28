@@ -10,6 +10,31 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the digit reader's second looks and SearchDigit_K
+
+- **The second-look pass** (`recognition/ChunkSecondLook.cpp`, ROM
+  0x0029ce20, the twelve statics it runs and the variant test
+  0x002a01dc): the digits found sorted left to right, corrected by their
+  neighbours (commas, full stops, solidi, brackets, guillemets, B and D,
+  the bars of other strokes, digits the unused strokes beside them rule
+  out, variants the field does not allow), then ThreeToFive and
+  RecognizeZCCW, the digits and gaps written out as class 1900.  All from
+  the disassembly - the decompiler lost the two stack arrays the pass
+  keeps its digits in and the argument order of the twelve.
+- **`SearchDigit_K`** (`recognition/ChunkSearchK.cpp`, 0x00289604-
+  0x0028d9d0, twenty functions, and `find_direct_forward`/`_backward`):
+  #, x, the 4 in three ways, 7, %, 8.  The statics' names are ours (the
+  ROM has none): what each one recognises was read out of its tests.
+- ROM quirks kept: the solidus test ends the whole second-look pass at a
+  lone "1"; the last digit is never counted among the 2s; the ring test's
+  "chunk before" is the first arc; the arcs' flatness loop reads one
+  bracket; the 4 of value 44 is never made; nothing bounds the gaps the
+  pass keeps (DEVIATION: the host stops at the end of the ROM's block).
+- `test_Chunk`: `TestSecondLookPass` (order, gaps, seven corrections) and
+  `TestSearchK` (a 4, x, 7, #, 8, % drawn and found; a 7 is found only
+  with its bar 17..20 steps against its stem, as a hand writes it).
+- ctest 112/112; coverage 11904 citations, 0 bad.
+
 ## 2026-09-28: the digit reader's first searcher
 
 - `Digits`' top level read; done under it (all from the disassembly,

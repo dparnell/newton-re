@@ -12,8 +12,9 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11868 citations, 0 bad;
-  6840 of 16671 functions (41.03%).
+- `analysis/coverage.py build/MP2x00US --check`: 11904 citations, 0 bad;
+  6843 of 16671 functions (41.05%) - the digit reader's statics are
+  unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -513,6 +514,19 @@ writing as `TestSecondLooks` does; (b) `SearchDigit_K` (17 KB); (c)
 (e) `ChunkProcessor` wired in, `ChunkPatchXrdata`, `ChunkSortAnswers`,
 `ChunkCorrectByLexDB`, and a demo writing "42" into a numbers field.
 About five more rounds.
+
+*Progress (2026-09-28, round 4)*: (a) and (b) are done -
+`recognition/ChunkSecondLook.cpp` (the second-look pass and all twelve
+statics, with the variant test 0x002a01dc under 0x002a0740;
+`DigitsSecondLooks` in `Chunk.h`) and `recognition/ChunkSearchK.cpp`
+(`SearchDigit_K` and its nineteen statics, `find_direct_forward`/
+`_backward`); `test_Chunk`'s `TestSecondLookPass` and `TestSearchK` (a 4,
+x, 7, #, 8 and % drawn and found).  Next: (c) `New_SearchDigit_V`
+(0x00296e04, 20 KB; its statics `DgtFromDnHorseshoe` 0x0028eb9c,
+`DgtFromUpCCWArc`, `DgtFromAloneDnCCWArc`, `GreyDgtFromELink`,
+`SignFromTwoSections` take its `tagLocalStuff`) - it is the one that
+reads a lone 1, which K leaves alone; then (d) and (e) as above.  Three
+or four more rounds.
 
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3
