@@ -8,6 +8,7 @@
 */
 
 #include "CursiveReader.h"
+#include "Chunk.h"
 #include "XrPost.h"
 #include "WordDescriptors.h"
 #include "InkGroups.h"
@@ -143,12 +144,23 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 				if (GCLockRecognitionData(rc, &saved) != 0)
 				{
 					locked = true;
-					// NOT YET RECONSTRUCTED: with rc +0xb6 set (the field
-					// allows numbers) the digit and number reader goes
-					// first - ChunkAllocCtx, ChunkProcessor, and when it
-					// found numbers ChunkModifyRC (0x002a5620-0x002a70c0);
-					// without it the chunk stays nil, as it does in a
-					// field that has no numbers
+					// with rc +0xb6 set (the field allows numbers) the digit
+					// and number reader goes first, and when it found
+					// numbers the configuration is narrowed to them for the
+					// xr reader; otherwise its context goes straight back
+					if (*RCByte(rc, 0xb6) != 0)
+					{
+						ChunkAllocCtx(&chunk, rc);
+						// NOT YET RECONSTRUCTED: ChunkProcessor(chunk, points,
+						// n) (0x002a6b50, Chunk.h) - without it no number is
+						// ever found
+						if (IsChunkNumbers(chunk) != 0)
+							ChunkModifyRC(chunk, rc);
+						else
+							ChunkCleanUp(&chunk);
+					}
+					else
+						chunk = nil;
 					if (low_level(points, &xr, rc) != 0)
 					{
 						err = -8;
@@ -162,9 +174,10 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 							fprintf(stderr, " %02x/%d", e[i].type, e[i].height);
 						fprintf(stderr, "\n");
 					}
-					// (ChunkWriteParamCtx and ChunkPatchXrdata come here: with
-					// no chunk made - the digit reader being NOT YET - both do
-					// nothing)
+					ChunkWriteParamCtx(chunk, rc, &xr, readings);
+					// NOT YET RECONSTRUCTED: ChunkPatchXrdata(chunk)
+					// (0x002a6680); the chunk is always nil here while the
+					// processor is NOT YET, when it does nothing
 					if (2 < xr.fLength)
 					{
 						UShort saved8 = RCGetH(rc, 0x08);
@@ -204,9 +217,10 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 						}
 						RCSetH(rc, 0x08, saved8);
 					}
-					// (ChunkRestoreRC, ChunkSortAnswers and ChunkCorrectByLexDB
-					// come here: with no chunk made - the digit reader being
-					// NOT YET - they do nothing)
+					ChunkRestoreRC(chunk, rc);
+					// NOT YET RECONSTRUCTED: ChunkSortAnswers(chunk) and
+					// ChunkCorrectByLexDB(chunk) (0x002a6650, 0x002a5620) -
+					// with no chunk they do nothing
 					split = FillRecwordSplitInfo(&xr, rc, &rwg, readings, chunk);
 					if (xr.fLength < xr.fSize)
 						memset((xrd_el_type*) xr.fElements + xr.fLength, 0, sizeof(xrd_el_type));
@@ -255,11 +269,11 @@ done:
 	GCWDWriteRecResults(word, rc, readings, learning, err, split, 0);
 	if (split != nil)
 		HWRMemoryFree((Ptr) split);
-	// NOT YET RECONSTRUCTED: ORLArrayDelete(&ortl), ChunkRestoreRC(chunk,
-	// rc) and ChunkCleanUp(&chunk) - with nothing made (ortl and chunk nil)
-	// there is nothing for them to do
+	// NOT YET RECONSTRUCTED: ORLArrayDelete(&ortl) - with no orthographic
+	// learning info made (ortl nil) there is nothing for it to do
 	(void) ortl;
-	(void) chunk;
+	ChunkRestoreRC(chunk, rc);
+	ChunkCleanUp(&chunk);
 	GCFreeRwgMem(&rwg);
 	if (err != 0 && learning != nil)
 	{

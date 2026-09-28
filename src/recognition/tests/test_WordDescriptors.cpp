@@ -13,6 +13,7 @@
 #include "InkGroups.h"
 #include "XrDomains.h"
 #include "ParaGraph.h"
+#include "Chunk.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -378,6 +379,46 @@ TestSetStrXrRC(void)
 }
 
 
+/*--------------------------------------------------------------------
+	The digit reader's context and the configuration it narrows while
+	a number is read (Chunk.h).
+--------------------------------------------------------------------*/
+
+static void
+TestChunkContext(void)
+{
+	rc_type rc;
+	memset(&rc, 0, sizeof(rc));
+	RCSetH(&rc, 0x00, 0x1111);
+	RCSetH(&rc, 0x02, 0x2222);
+	RCSetH(&rc, 0x08, 0x00ff);
+	RCSetH(&rc, 0x0a, 0x4444);
+	RCSetH(&rc, 0x90, 0x5555);
+	void* chunk = nil;
+	ChunkAllocCtx(&chunk, &rc);
+	EXPECT(chunk != nil && IsChunkNumbers(chunk) == 0);
+	ChunkModifyRC(chunk, &rc);						// no numbers found: nothing changes
+	EXPECT(RCGetH(&rc, 0x02) == 0x2222);
+	((ChunkCtx*) chunk)->fNumbers = 1;				// as the processor would
+	ChunkModifyRC(chunk, &rc);
+	EXPECT(RCGetH(&rc, 0x02) == 0x3f && RCGetH(&rc, 0x90) == 0x422 && RCGetH(&rc, 0x08) == 0x00fa && RCGetH(&rc, 0x0a) == 2);
+	ChunkRestoreRC(chunk, &rc);
+	EXPECT(RCGetH(&rc, 0x00) == 0x1111 && RCGetH(&rc, 0x02) == 0x2222 && RCGetH(&rc, 0x08) == 0x00ff
+		&& RCGetH(&rc, 0x0a) == 0x4444 && RCGetH(&rc, 0x90) == 0x5555);
+	// numbers alone: +0x90 0x62 and +0x92 one - which is not put back (ROM bug)
+	((ChunkCtx*) chunk)->fNumbersOnly = 1;
+	ChunkModifyRC(chunk, &rc);
+	EXPECT(RCGetH(&rc, 0x90) == 0x62 && RCGetH(&rc, 0x92) == 1 && RCGetH(&rc, 0x08) == 0x00ff);
+	ChunkRestoreRC(chunk, &rc);
+	EXPECT(RCGetH(&rc, 0x90) == 0x5555 && RCGetH(&rc, 0x92) == 1);
+	rec_w_type readings[1];
+	EXPECT(ChunkWriteParamCtx(chunk, &rc, nil, readings) == &((ChunkCtx*) chunk)->fReadings);
+	EXPECT(ChunkWriteParamCtx(nil, &rc, nil, readings) == nil);
+	ChunkCleanUp(&chunk);
+	EXPECT(chunk == nil);
+}
+
+
 int
 main()
 {
@@ -389,6 +430,7 @@ main()
 	TestBaseLine();
 	TestGroupAndRead();
 	TestSetStrXrRC();
+	TestChunkContext();
 	if (failures == 0)
 		printf("test_WordDescriptors: all passed\n");
 	return failures == 0 ? 0 : 1;
