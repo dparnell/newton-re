@@ -3262,9 +3262,9 @@ TEditView::DropDone(void)
 	The pen pressed on a page's selection (HiliteClick).  On the gray
 	border of a selection that can be resized it resizes the selected
 	children (TrackScale, and CleanupData when the pen did not move); on a
-	corner of a selected polygon it would reshape it (TrackDistort, NOT
-	YET: no view answers ClickOptions bit 2 until the polygon hilites are
-	reconstructed); anywhere else on the selection it drags it.
+	corner of a selected shape of straight sides (ClickOptions bit 4) it
+	drags the corner (TrackDistort); anywhere else on the selection it
+	drags it.
 ------------------------------------------------------------------------------*/
 
 // ROM 0x000a370c ClipBoxToBox__FP5TRectPC5TRect
@@ -3340,12 +3340,9 @@ TEditView::HiliteClick(TStrokePublic* stroke)
 			return true;
 		}
 	}
-	if ((options & 4) != 0 && (fFlags & vWriteProtected) == 0)
-	{
-		// NOT YET RECONSTRUCTED: TrackDistort (ROM 0x000a9634), a corner
-		// of a selected polygon dragged - only a polygon's hilite answers
-		// this bit, and they are NOT YET
-	}
+	if ((options & 4) != 0 && (fFlags & vWriteProtected) == 0
+		&& TrackDistort(pt, stroke, bounds))
+		return true;
 	if ((options & 1) == 0)
 		return false;
 	if (!resizable && !PointInHilite(pt))
@@ -3560,6 +3557,211 @@ TEditView::TrackScale(Point pt, TStrokePublic* stroke, const Rect& selected)
 		}
 	}
 	return moved;
+}
+
+
+// ROM 0x000a9634 TrackDistort__9TEditViewF6TPointP13TStrokePublicRC5TRect
+// A corner of a selected shape dragged.  The pen has to have gone down
+// within eight pixels (CheapDistance) of a corner of a selection that
+// takes it (a child answering ClickOptions bit 4 - a TPolygonView of
+// straight sides), and up to four corners go together, where selected
+// shapes share one.  Each such shape is first diced (TDataView::
+// DiceHilited: the selection copied into a new view and the old one
+// removed, which is a whole shape here), and the corners are then found
+// again on the new views.  As the pen moves - onto the square grid when
+// the page has one, and never off the page - the corners follow it and
+// the hilites are drawn, over the screen as it was without them, into the
+// box the moved hilites cover.  When the pen is lifted each corner goes to
+// its shape as command 0x43 (the point's index and where it went on the
+// page).  ==> whether a corner was under the pen.  (`bounds`, the
+// selection's, is not looked at.)
+//
+// (the ROM first tells the busy box a drag is being tracked -
+//  BusyBoxSend 0x37 - which the views layer cannot reach from here)
+Boolean
+TEditView::TrackDistort(Point pt, TStrokePublic* stroke, const Rect& /*bounds*/)
+{
+	struct Corner
+	{
+		TPolygonHilite*	hilite;		// +0x00
+		TView*			view;		// +0x04
+		long			index;		// +0x08  of the point in the hilite's shape
+		Point			topLeft;	// +0x0c  the view's
+		Point			orig;		// +0x10  the point where it was
+		Point			cur;		// +0x14  and where it is now
+		Point*			at;			// +0x18  the point in the hilite's shape
+	};
+	Corner corners[4];
+	long n = 0;
+
+	// the shapes with a corner under the pen: the first corner of each
+	// notes the view, the rest of its corners nil
+	{
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			long found = 0;
+			HiliteLoop hilites(child);
+			while (hilites.Next())
+			{
+				if ((child->ClickOptions() & 4) == 0)
+					continue;
+				TPolygonHilite* hilite = (TPolygonHilite*) hilites.fCurrent;
+				Point topLeft;
+				topLeft.v = child->viewBounds.top;
+				topLeft.h = child->viewBounds.left;
+				Rect r = hilite->fBounds;
+				OffsetRect(&r, topLeft.h, topLeft.v);
+				InsetRect(&r, -8, -8);
+				if (!PtInRect(pt, &r))
+					continue;
+				Point* p = hilite->fShape->fPoints;
+				for (long i = 0; i < hilite->fShape->fCount; i++, p++)
+				{
+					Point corner;
+					corner.v = (short) (p->v + topLeft.v);
+					corner.h = (short) (p->h + topLeft.h);
+					if (n < 4 && CheapDistance(corner, pt) < 8)
+					{
+						corners[n++].view = (found++ == 0) ? child : nil;
+					}
+				}
+			}
+		}
+	}
+	if (n == 0)
+		return false;
+
+	stroke->InkOff(true);
+	for (long i = 0; i < n; i++)
+	{
+		TView* view = corners[i].view;
+		if (view != nil)
+		{
+			Point none;
+			none.h = none.v = 0;
+			((TDataView*) view)->DiceHilited(RefVar(view->FirstHilite()), this, none, false);
+		}
+	}
+
+	// the corners again, on the diced shapes
+	n = 0;
+	{
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			HiliteLoop hilites(child);
+			while (hilites.Next())
+			{
+				if ((child->ClickOptions() & 4) == 0
+				 || !child->IsCompletelyHilited(hilites.fHilite))
+					continue;
+				TPolygonHilite* hilite = (TPolygonHilite*) hilites.fCurrent;
+				Point topLeft;
+				topLeft.v = child->viewBounds.top;
+				topLeft.h = child->viewBounds.left;
+				Rect r = hilite->fBounds;
+				OffsetRect(&r, topLeft.h, topLeft.v);
+				InsetRect(&r, -8, -8);
+				if (!PtInRect(pt, &r))
+					continue;
+				Point* p = hilite->fShape->fPoints;
+				for (long i = 0; i < hilite->fShape->fCount; i++, p++)
+				{
+					Point corner;
+					corner.v = (short) (p->v + topLeft.v);
+					corner.h = (short) (p->h + topLeft.h);
+					if (n < 4 && CheapDistance(corner, pt) < 8)
+					{
+						Corner& c = corners[n++];
+						c.topLeft = topLeft;
+						c.orig = *p;
+						c.cur = *p;
+						c.hilite = hilite;
+						c.view = child;
+						c.index = i;
+						c.at = p;
+					}
+				}
+			}
+		}
+	}
+
+	Rect page = viewBounds;
+	Point lastPt;
+	lastPt.v = -32768;
+	lastPt.h = 0;
+	DragBits bits(this, nil, false);
+	Point spacing;
+	Boolean gridded = IsGridded(RefVar(RSSYMsquaregrid), &spacing);
+	TRegion visRgn(SetupVisRgn());
+	TRegionVar vis(visRgn);
+	unwind_protect
+	{
+		while (!stroke->Done())
+		{
+			Point pen = stroke->FinalPoint();
+			if (gridded)
+				AlignPtToGrid(&pen, spacing);
+			PinTo(&pen, &page);
+			if (pen.h != lastPt.h || pen.v != lastPt.v)
+			{
+				Rect r;
+				StartGathering(&r);
+				GlobalHiliteBounds(&r);
+				for (long i = 0; i < n; i++)
+				{
+					Corner& c = corners[i];
+					c.cur.h = (short) (c.orig.h + pen.h - pt.h);
+					c.cur.v = (short) (c.orig.v + pen.v - pt.v);
+					if (gridded)
+						AlignPtToGrid(&c.cur, spacing);
+					*c.at = c.cur;
+					c.hilite->UpdateBounds();
+					Rect moved = c.hilite->fBounds;
+					OffsetRect(&moved, c.topLeft.h, c.topLeft.v);
+					Union(&r, &moved);
+				}
+				InsetRect(&r, -8, -8);
+				bits.fDataBits.SetPort();
+				EraseRect(&r);
+				DrawHiliting();
+				bits.fDataBits.RestorePort();
+				StartDrawing(nil, nil);
+				bits.fBackground.Draw(r, r, srcCopy, nil);
+				bits.fDataBits.Draw(r, r, srcXor, nil);
+				StopDrawing(nil, nil);
+				lastPt = pen;
+			}
+			else
+				Wait(1);
+		}
+	}
+	on_unwind
+	{
+		// the port's visible region put back, a Throw or not
+		GrafPort* port;
+		GetPort(&port);
+		CopyRgn(vis, port->visRgn);
+	}
+	end_unwind;
+	PenNormal();
+
+	for (long i = 0; i < n; i++)
+	{
+		Corner& c = corners[i];
+		Point where;
+		where.h = (short) (c.cur.h + c.topLeft.h);
+		where.v = (short) (c.cur.v + c.topLeft.v);
+		RefVar cmd(MakeCommand(0x43, c.view, 0x8000000));
+		CommandSetIndexParameter(cmd, 1, (Long) (((ULong) (unsigned short) where.v << 16) | (unsigned short) where.h));
+		CommandSetIndexParameter(cmd, 0, c.index);
+		gApplication->DispatchCommand(cmd);
+	}
+	gRootView->fDirtyFlag = true;
+	return true;
 }
 
 

@@ -3772,11 +3772,12 @@ TView::ContentsOrigin(void)
 
 
 // ROM 0x00263da4 LocalOrigin__5TViewCFv
-// The bounds' top left relative to the contents' origin.
+// The bounds' top left relative to the parent's contents' origin - where
+// the view is in the coordinates its viewBounds slot is written in.
 Point
 TView::LocalOrigin(void) const
 {
-	Point origin = ((TView*) this)->ContentsOrigin();
+	Point origin = fParent->ContentsOrigin();
 	return MakePoint(viewBounds.left - origin.h, viewBounds.top - origin.v);
 }
 

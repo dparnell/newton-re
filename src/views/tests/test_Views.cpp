@@ -6274,6 +6274,120 @@ TestSelectionClicks()
 }
 
 
+// A shape's selection (TPolygonHilite) and a corner of it dragged with the
+// pen (TEditView::TrackDistort, reached through HiliteClick): the shape is
+// diced into a copy of itself, the corner follows the pen, and the copy's
+// point is moved by command 0x43 when the pen is lifted.
+static void
+TestDistort()
+{
+	// the arithmetic first: how far along a segment the pen is
+	Point a = MakePoint(0, 0), b = MakePoint(30, 0);
+	EXPECT(LineHitRatio(MakePoint(15, 2), a, b, 16) == 0x8000);
+	EXPECT(LineHitRatio(MakePoint(15, 20), a, b, 16) == (Fixed) 0x80000000);
+	EXPECT(LineHitRatio(MakePoint(-10, 0), a, b, 16) == 0x5555);		// (before the start: measured from it all the same)
+	EXPECT(LineHitRatio(MakePoint(2, 15), a, MakePoint(0, 30), 16) == 0x8000);
+	EXPECT(LessOrEq(0, 0, 3, 0x10000) && LessOrEq(0, 0x8000, 1, 0x10000) && !LessOrEq(2, 0, 1, 0x10000));
+
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	screenWidth = kWidth;
+	screenHeight = kHeight;
+	TView* page = ViewOf("ctxDP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
+	EXPECT(page != nil);
+	if (page == nil)
+		return;
+	Point tri[4];
+	tri[0] = MakePoint(0, 0);
+	tri[1] = MakePoint(30, 0);
+	tri[2] = MakePoint(0, 20);
+	tri[3] = MakePoint(0, 0);
+	Rect box;
+	SetRect(&box, 40, 20, 71, 41);
+	RefVar form(MakePolygonForm(tri, 4, 5, box, 1));
+	SetFrameSlot(form, RSSYMviewclass, RefVar(MAKEINT(clPolygonView)));
+	SetFrameSlot(form, RSSYMviewflags, RefVar(MAKEINT(1 + 0x200 + 0x800 + 8)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "distortForm")), form);
+	TPolygonView* poly = (TPolygonView*) ViewOf("ctxDG := AddView(ctxDP, distortForm)");
+	EXPECT(poly != nil && poly->ClassID() == clPolygonView);
+	if (poly == nil)
+		return;
+	Refresh();
+	EXPECT(Pixel(55, 18) == 0);
+
+	// part of the top side selected: from half way along it to its end
+	poly->MakeHilite(0, 0x8000, 1, 0x10000);
+	RefVar hiliteRef(poly->FirstHilite());
+	EXPECT(NOTNIL(hiliteRef));
+	TPolygonHilite* hilite = (TPolygonHilite*) RefToAddress(hiliteRef);
+	EXPECT(hilite->fShape->fCount == 2 && hilite->fShape->fVerb == 5);
+	EXPECT(hilite->fShape->fPoints[0].h == 15 && hilite->fShape->fPoints[0].v == 0);
+	EXPECT(hilite->fShape->fPoints[1].h == 30 && hilite->fShape->fPoints[1].v == 0);
+	EXPECT(!poly->IsCompletelyHilited(hiliteRef) && poly->ClickOptions() == 5);
+	EXPECT(hilite->Encloses(MakePoint(20, 3)) && !hilite->Encloses(MakePoint(20, 19)));
+
+	// the whole of it: the points as they are, the box round them grown by
+	// four (and four more at the bottom right); corners may be dragged
+	poly->HiliteAll();
+	gRootView->fHiliter = page;
+	hiliteRef = poly->FirstHilite();
+	hilite = (TPolygonHilite*) RefToAddress(hiliteRef);
+	EXPECT(Length(RefVar(poly->Hilites())) == 1);
+	EXPECT(hilite->fShape->fCount == 4 && hilite->fShape->fVerb == 5);
+	EXPECT(hilite->fFirst == 0 && hilite->fLast == 3 && hilite->fFirstPart == 0 && hilite->fLastPart == 0x10000);
+	EXPECT(poly->IsCompletelyHilited(hiliteRef) && poly->ClickOptions() == 7);
+	EXPECT(hilite->fBounds.left == -4 && hilite->fBounds.top == -4);
+	Rect sel;
+	SetRect(&sel, 0, 0, 0, 0);
+	sel.top = -32768;
+	sel.bottom = -32768;
+	EXPECT(page->GlobalHiliteBounds(&sel) == 5);		// (a tapped selection is not resized: fClickOptions)
+	EXPECT(sel.left == 36 && sel.top == 16);
+	// the hiliting: a thick black line along the sides
+	Refresh();
+	EXPECT(Pixel(55, 18) != 0);
+
+	// the corner at the top right dragged ten pixels right and down
+	long x = 70, y = 20;
+	HostAdvanceClock(kSeconds);
+	HostTabletQueuePenDown(x, y, 0);
+	for (long step = 2; step <= 10; step += 2)
+		HostTabletQueuePenMove(x + step, y + step);
+	HostTabletQueuePenMove(x + 10, y + 10);
+	HostTabletQueuePenMove(x + 10, y + 10);
+	HostTabletQueuePenUp(0);
+	HostTabletPump();
+	gRecognition.Idle();
+
+	// the shape was diced into a copy (the old view gone) and the copy's
+	// corner moved
+	EXPECT(page->fChildren->Count() == 1);
+	TView* child = page->fChildren->Count() > 0 ? (TView*) page->fChildren->At(0) : nil;
+	EXPECT(child != nil && child->ClassID() == clPolygonView);
+	if (child == nil || child->ClassID() != clPolygonView)
+		return;
+	TPolygonView* moved = (TPolygonView*) child;
+	RefVar points(moved->Points());
+	PolygonShape* shape = (PolygonShape*) BinaryData(points);
+	EXPECT(shape->fCount == 4);
+	EXPECT(moved->viewBounds.left == 40 && moved->viewBounds.top == 20);
+	EXPECT(shape->fPoints[1].h == 40 && shape->fPoints[1].v == 10);
+	EXPECT(shape->fPoints[0].h == 0 && shape->fPoints[2].v == 20);
+	EXPECT(moved->Hilited());
+
+	// drawn without the selection: the new side from (40, 20) to (80, 30)
+	moved->RemoveAllHilites();
+	gRootView->fHiliter = nil;
+	Eval("GetRoot():Dirty()");
+	Refresh();
+	EXPECT(Pixel(60, 25) != 0 || Pixel(60, 24) != 0 || Pixel(60, 26) != 0);
+	EXPECT(Pixel(80, 30) != 0);
+	EXPECT(Pixel(65, 20) == 0);				// the old top side gone
+	Eval("RemoveView(GetRoot(), ctxDP)");
+	Refresh();
+}
+
+
 // A view put on the root while a modal dialog is up waits to be shown
 // until the dialog goes (ModalSafeShow), unless it is marked safe to show
 // over one; a view inside another is shown at once.
@@ -6990,6 +7104,7 @@ main()
 		TestEditViewDrop();
 		TestParagraphDrop();
 		TestSelectionClicks();
+		TestDistort();
 		TestModalSafeShow();
 		TestEditCommands();
 		TestPolygons();

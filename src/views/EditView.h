@@ -26,7 +26,7 @@
 	recogniser drives (HandleInk, HandleShape, HandleCaret,
 	HandleLineGesture, Scrub, PlaybackInk, and the geometry
 	AddNewParagraph uses for a written word), the selection (SetSelection,
-	GetSelection), drag and drop, TrackScale and TrackDistort, most of the
+	GetSelection), drag and drop, most of the
 	commands (RealDoCommand answers the keys and the tap) and the drawing
 	of the resize border itself (DrawResizeBorder, TRect::Scale over
 	gEditViewTransform).
@@ -85,6 +85,7 @@ public:
 	void			GetDragInfo(TDragInfo* dragInfo, Boolean copy);
 	Boolean			HiliteClick(TStrokePublic* stroke);		// ROM 0x000aabb0 HiliteClick__9TEditViewFP13TStrokePublic
 	Boolean			TrackScale(Point pt, TStrokePublic* stroke, const Rect& selected);	// ROM 0x000a7b18 TrackScale__9TEditViewF6TPointP13TStrokePublicRC5TRect
+	Boolean			TrackDistort(Point pt, TStrokePublic* stroke, const Rect& bounds);	// ROM 0x000a9634 TrackDistort__9TEditViewF6TPointP13TStrokePublicRC5TRect - a selected shape's corners dragged
 	void			CleanupData(void);						// ROM 0x000aafcc CleanupData__9TEditViewFv
 	void			DiceHilited(void);						// ROM 0x000a9560 DiceHilited__9TEditViewFv	// ROM 0x000a8c78 GetDragInfo__9TEditViewFP9TDragInfoUc - the selected children's drag items
 	Boolean			HasHilitedChildren(long atLeast, TView** first);	// ROM 0x000a4170 HasHilitedChildren__9TEditViewFlPP5TView

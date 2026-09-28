@@ -1517,10 +1517,47 @@ on the border that does not move joins the selected paragraphs into the
 first (`CleanupData` 0x000aafcc, the paragraph's own 0x0017e83c making
 its tabs and returns single spaces).
 
-NOT YET: `TrackDistort` 0x000a9634, a selected polygon reshaped by a
-corner - only a polygon's hilite answers `ClickOptions` bit 2, and the
-polygon hilites are not reconstructed.  (Tested by `test_Views`:
-`TestEditViewDrop`, `TestParagraphDrop`, `TestSelectionClicks`; and
+A press within eight pixels of a corner of a selected shape of straight
+sides (a child answering `ClickOptions` bit 4) drags the corner instead
+(`TrackDistort` 0x000a9634).  Up to four corners go together, where
+selected shapes share one.  Each such shape is first diced - the whole
+selection copied into a new view by `TPolygonView::AddHilited` and the
+old view removed through `aeRemoveData` - and the corners are found again
+on the copies; as the pen moves (onto a square grid, never off the page)
+each corner follows it inside the hilite's own copy of the points, and
+the page's hiliting is drawn into the drag bits over the screen as it was
+without the selection.  When the pen lifts each corner goes to its shape
+as command 0x43 (the point's index, and where it went as a page point),
+which moves the view's point and the hilite's, turns a rectangle, square
+or diamond into a plain closed polygon, and fits the view round its
+points again (`TPolygonView::UpdateBounds`).  There is no undo of it.
+
+The polygon selection itself (`TPolygonHilite`, 0x24 bytes) is its own
+copy of the points it covers: from point `fFirst`, `fFirstPart` of the
+way along the segment after it (16.16), to point `fLast`, `fLastPart`
+along the one before it, with its own verb and pen.  `MakeHilite` moves
+the two ends along their segments and gives a partial selection an open
+line's verb (5, a curve's 7, an arc's 13); `HiliteAll` is the whole
+shape, `MakeInkHilite` ink.  `ClickOptions` answers 1, +2 when the whole
+shape is selected, +4 for straight sides (so the page's `fClickOptions`
+mask of ~2 for a tapped selection leaves 5).  `Encloses` finds the pen
+within sixteen pixels of a side (`LineHitRatio`, how far along the
+segment's longer axis).  It is drawn in two passes: a thick black line
+over what is selected (`DrawHiliteLine` along each side, an eight-pixel
+arc over an oval, a round rectangle round ink), then a white dot on each
+corner.  NOT YET: `HiliteTraced` 0x0018fa3c (part of a shape selected by
+tracing along it, with about 7.5 KB of segment and snapping geometry
+under it), so a selection is always a whole shape, and with it the
+partial branch of `RemovePoints` and command 0x44 that undoes it.
+
+`TView::LocalOrigin` is where a view is in the coordinates its
+`viewBounds` slot is written in - the parent's contents origin taken off
+its bounds.  (The host had been taking its own contents origin, which
+comes to the scroll origin; a partly selected paragraph diced by
+`AddHilited` was placed as if the paragraph were at the page's top left.)
+
+(Tested by `test_Views`: `TestEditViewDrop`, `TestParagraphDrop`,
+`TestSelectionClicks`, `TestDistort`; and
 `src/host/demo/drag.ns` drags a word written on the Notepad, with
 `PacePen(true)` feeding the pen a sample a tick.)
 
@@ -1643,9 +1680,8 @@ beside the first joins it: `src/host/demo/write.ns` leaves "ton to".
 drawn as a polyline, an oval or arc in its box, or ink).
 
 NOT YET: `PlaybackInk`, `SetSelection`/`GetSelection`,
-drag and drop, `TrackScale`/`TrackDistort`, `GetValue`/`SetValue` and the
-drawing of the resize border itself (`DrawResizeBorder`, `TRect::Scale`
-over `gEditViewTransform`).
+`GetValue`/`SetValue`.  (Drag and drop, `TrackScale`, `TrackDistort` and
+the resize border are described above.)
 
 ## How the machine's own views get on screen
 

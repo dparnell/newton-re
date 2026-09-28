@@ -50,6 +50,8 @@ public:
 	// The selected part of the view made a view of its own on the page:
 	// ==> that view (a plain data view answers itself - the whole of it
 	// is what is selected).
+	// the view drawn clipped to what is selected in it (vtable +0x88)
+	virtual void	DrawHilitedData(void);								// ROM 0x000a31d8 DrawHilitedData__9TDataViewFv
 	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);	// ROM 0x000a31b8 AddHilited__9TDataViewFRC6RefVarP9TEditView (vtable +0x130)
 	// declared in the vtable's order, which starts at +0x13c
 	virtual TView*	GetHiliteView(void);								// ROM 0x000a31bc GetHiliteView__9TDataViewFv (vtable +0x13c)

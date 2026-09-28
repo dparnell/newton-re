@@ -7,6 +7,10 @@
 */
 
 #include "DataView.h"
+#include "Hilites.h"
+#include "RegionVars.h"
+#include "Regions.h"
+#include "Ports.h"
 
 
 // ROM 0x000a2fc0 ClassID__9TDataViewCFv
@@ -40,6 +44,36 @@ long
 TDataView::HandleLineGesture(long /*angle*/, Point& /*from*/, Point& /*to*/)
 {
 	return 0;
+}
+
+
+// ROM 0x000a31d8 DrawHilitedData__9TDataViewFv
+// What is selected, drawn: the view drawn again clipped to each hilite's
+// area in turn (a paragraph's selected characters); a view with nothing
+// selected is drawn whole, with its frame.
+void
+TDataView::DrawHilitedData(void)
+{
+	if (!Hilited())
+	{
+		Rect bounds;
+		OuterBounds(&bounds);
+		Draw(bounds, false);
+		return;
+	}
+	TRegionVar savedClip;
+	GetClip(savedClip);
+	Rect bounds = viewBounds;
+	TRegionVar area;
+	HiliteLoop loop(this);
+	while (loop.Next())
+	{
+		loop.fCurrent->Area(area);
+		OffsetRgn(area, viewBounds.left, viewBounds.top);
+		SetClip(area);
+		RealDraw(bounds);
+	}
+	SetClip(savedClip);
 }
 
 
