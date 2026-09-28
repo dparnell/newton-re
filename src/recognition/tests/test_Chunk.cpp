@@ -1019,6 +1019,128 @@ TestLineAndCircles(void)
 }
 
 
+/*--------------------------------------------------------------------
+	New_SearchDigit_V: the chunks asked one by one what they start.
+--------------------------------------------------------------------*/
+
+// the digits V found (class 1300, value 1300 + the digit or the sign's
+// code, the extra saying which test) and the grey ones (class 2200), run
+// as Digits runs it after the other searchers' preparation - with the
+// writing's box and, for the height Digits is given, the line's
+static long
+SearchV(const char* what, long* digits, long max, long* grey = nil)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	tag_BOX box = { 0x7fff, 0x7fff, -0x7fff, -0x7fff };
+	for (long k = 0; k < staff.fNodeCount; k++)
+	{
+		tag_wapx_type* nd = &staff.fNodes[k];
+		if (nd->x < box.left) box.left = nd->x;
+		if (nd->x > box.right) box.right = nd->x;
+		if (nd->y < box.top) box.top = nd->y;
+		if (nd->y > box.bottom) box.bottom = nd->y;
+	}
+	New_SearchDigit_V(lo, staff.fTrace, staff.fTraceCount, staff.fNodes, staff.fChunks, staff.fBrackets,
+					  staff.fRealChunks, staff.fChunkCount, staff.fRealCount, box, staff.fStrokes, staff.fStrokeCount, staff.fHeight);
+	tag_LOWOBJ* obj = nil;
+	long k = 0;
+	if (LO_SetWorkClass(lo, 1300) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more && k < max; more = LO_PickNext(lo, &obj))
+			digits[k++] = (obj->fValue - 1300) + ((obj->fExtra & 0xff) << 8);
+	long g = 0;
+	if (LO_SetWorkClass(lo, 2200) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+			g++;
+	if (grey != nil)
+		*grey = g;
+	if (gVerbose)
+	{
+		printf("  %s: %ld found:", what, k);
+		for (long i = 0; i < k; i++)
+			printf(" %ld(test %ld)", digits[i] & 0xff, digits[i] >> 8);
+		printf("  grey %ld\n", g);
+	}
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return k;
+}
+
+static void
+TestSearchV(void)
+{
+	long d[8];
+	// ComposeTrace: the nodes between pen-ups, their flags untouched
+	tag_wapx_type nodes[4] = { };
+	for (long k = 0; k < 4; k++)
+	{
+		nodes[k].x = (int32_t) (10 * k);
+		nodes[k].y = (int32_t) (100 + k);
+	}
+	tag_WORD_TRACE t[6];
+	for (long k = 0; k < 6; k++)
+	{
+		t[k].x = 7; t[k].y = 7; t[k].fFlags = 0x55;
+	}
+	EXPECT(ComposeTrace(nodes, 1, 2, t) == 1);
+	EXPECT(t[0].x == -1 && t[0].y == -1 && t[1].x == 10 && t[1].y == 101 && t[2].x == 20 && t[2].y == 102
+		&& t[3].x == -1 && t[3].y == -1 && t[1].fFlags == 0x55 && t[4].x == 7);
+
+	// (d[k] is the value less 1300 - the digit or the sign's code - with
+	// the test that found it in the second byte)
+	TraceStart(); DrawOne(0, 0);
+	EXPECT(SearchV("1", d, 8) == 1 && d[0] == (1 | 26 << 8));			// a 1 on its own
+	TraceStart(); DrawZero(0, 0);
+	EXPECT(SearchV("0", d, 8) == 1 && d[0] == (0 | 25 << 8));			// from its circle
+	TraceStart(); DrawTwo(0, 0);
+	EXPECT(SearchV("2", d, 8) == 1 && d[0] == (2 | 11 << 8));			// a curve down with its foot
+	TraceStart(); DrawTwoFlat(0, 0);
+	EXPECT(SearchV("2 flat", d, 8) == 1 && d[0] == (2 | 11 << 8));
+	TraceStart(); DrawThreeFlat(0, 0);
+	EXPECT(SearchV("3", d, 8) == 1 && d[0] == (3 | 3 << 8));			// an S
+	TraceStart(); MoveTo(2, 2); ArcTo(7, 5, 5, 150, -90); ArcTo(7, 15, 5, 90, -180); StrokeEnd();
+	EXPECT(SearchV("3b", d, 8) == 1 && d[0] == (3 | 3 << 8));
+	TraceStart(); DrawNine(0, 0);
+	EXPECT(SearchV("9", d, 8) == 1 && d[0] == (9 | 30 << 8));			// the horseshoe
+	TraceStart(); MoveTo(0, 5); LineTo(13, 0); LineTo(9, 20); StrokeEnd();
+	EXPECT(SearchV("7", d, 8) == 1 && d[0] == (7 | 28 << 8));			// the bar a hook before the upright
+	TraceStart(); MoveTo(1, 0); LineTo(13, 0); LineTo(4, 20); StrokeEnd();
+	EXPECT(SearchV("7b", d, 8) == 1 && d[0] == (7 | 20 << 8));			// an arc on its own
+	TraceStart(); MoveTo(1, 5); LineTo(6, 0); LineTo(6, 20); StrokeEnd();
+	EXPECT(SearchV("1 flag", d, 8) == 1 && d[0] == (7 | 28 << 8));		// a flag steep enough to be a 7's bar
+	TraceStart(); MoveTo(10, 0); LineTo(2, 12); ArcTo(7, 15, 5, 180, 420); StrokeEnd();
+	EXPECT(SearchV("6", d, 8) == 1 && d[0] == (6 | 12 << 8));			// an arc down closed by an arc up
+	TraceStart(); MoveTo(10, 0); ArcTo(10, 13, 8, 90, 180); ArcTo(7, 15, 5, 180, 430); StrokeEnd();
+	EXPECT(SearchV("6b", d, 8) == 1 && d[0] == (6 | 12 << 8));			// a curve down, then the same
+	// the signs of two sections
+	TraceStart(); MoveTo(14, 0); LineTo(0, 8); LineTo(14, 16); StrokeEnd();
+	EXPECT(SearchV("<", d, 8) == 1 && d[0] == 24);
+	TraceStart(); MoveTo(0, 0); LineTo(14, 8); LineTo(0, 16); StrokeEnd();
+	EXPECT(SearchV(">", d, 8) == 2 && d[0] == 23 && d[1] == (7 | 20 << 8));	// (and a 7 of it)
+	// a # of a zigzag and two lines (and a 1 of each line)
+	TraceStart(); DrawLine(4, 0, 3, 20); DrawLine(11, 0, 10, 20); MoveTo(0, 6); LineTo(15, 6); LineTo(0, 14); LineTo(15, 14); StrokeEnd();
+	EXPECT(SearchV("#", d, 8) == 3 && d[0] == (1 | 26 << 8) && d[1] == (1 | 26 << 8) && d[2] == 71);
+	// what the other searchers read: a 4 is K's (V sees only its upright),
+	// a 5 is L's, an 8 is K's, a line across is nobody's here
+	TraceStart(); DrawFour(0, 0);
+	EXPECT(SearchV("4", d, 8) == 1 && d[0] == (1 | 26 << 8));
+	TraceStart(); DrawFive(0, 0);
+	EXPECT(SearchV("5", d, 8) == 0);
+	TraceStart(); DrawFiveOne(0, 0);
+	EXPECT(SearchV("5 one", d, 8) == 0);
+	TraceStart(); MoveTo(12, 3); ArcTo(7, 5, 5, 25, 180); LineTo(12, 15); ArcTo(7, 15, 5, 0, -180); LineTo(12, 3); StrokeEnd();
+	EXPECT(SearchV("8", d, 8) == 0);
+	TraceStart(); DrawLine(0, 10, 14, 10);
+	EXPECT(SearchV("-", d, 8) == 0);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1033,6 +1155,7 @@ main(int argc, char** argv)
 	TestSecondLooks();
 	TestSecondLookPass();
 	TestSearchK();
+	TestSearchV();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

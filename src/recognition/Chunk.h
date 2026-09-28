@@ -336,6 +336,17 @@ long	SearchDigit_L(tag_CHUNK_STAFF* staff);							// ROM 0x0028dd18 SearchDigit_
 // x, # and % - put in the list of low objects as class 1300, value 1500 +
 // the digit.  ==> the last 8's test's answer, -1 with no curve to try.
 long	SearchDigit_K(tag_CHUNK_STAFF* staff);							// ROM 0x00289604 SearchDigit_K__FP15tag_CHUNK_STAFF
+// The digits and signs found chunk by chunk: each chunk that is not a pen
+// jump asked, by its class, what it starts - an upright line (300) a 1, a
+// 7 or an "H"; a curve down (500) an 8, 1, 7, 9 or 2; an arc (400) a 0 or 9
+// from its circle, a 6, 9, 5, 7, 2 or 8; an S (700) a 2, 5 or 3; three
+// brackets (1400) a 3; two short sections a sign - put in the list of low
+// objects as class 1300, value 1300 + the digit (or the sign's code: 71
+// #, 72 H, 81, 99, 23, 24), a grey 9 as class 2200.  ==> -1.
+long	New_SearchDigit_V(void* lo, tag_WORD_TRACE* trace, long traceCount, tag_wapx_type* n, tag_CHUNK* chunks, brack_type* brackets,
+						  int32_t* real, long chunkCount, long realCount, tag_BOX box, tag_STK* strokes, long strokeCount, long height);	// ROM 0x00296e04 New_SearchDigit_V__FPvP14tag_WORD_TRACEiP13tag_wapx_typeP9tag_CHUNKP10brack_typePiN237tag_BOXP7tag_STKN23
+// The polyline's nodes from..to as a trace of their own between pen-ups.
+long	ComposeTrace(tag_wapx_type* n, long from, long to, tag_WORD_TRACE* trace);	// ROM 0x0029bac0 ComposeTrace__FP13tag_wapx_typeiT2P14tag_WORD_TRACE
 // The direction from node start to the first node after it take_next_point
 // finds (the node before end with none); to node start from the first
 // before it take_prev_point finds (the first node with none).
