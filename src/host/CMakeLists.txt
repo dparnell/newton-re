@@ -52,7 +52,7 @@ set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
 # here, which locked the machine up one run in three (needs the ROM image)
 add_test(NAME host.NewtonCursive COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
-                     PASS_REGULAR_EXPRESSION "word of strokes 0-3 [^:]*: -8.*word of strokes 0-2 [^:]*: -8")
+                     PASS_REGULAR_EXPRESSION "low_level: 1[0-9] xrs:.*word of strokes 0-3 [^:]*: -9.*low_level: [0-9]+ xrs:.*word of strokes 0-2 [^:]*: -9")
 
 # the journal (testing/Journal.h): "ton" written while recording, the four
 # strokes played back into the tablet buffer and read again (needs the

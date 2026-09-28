@@ -24,11 +24,7 @@
 	CheckStrokesForDxTimeMatch; change_last_IU_height;
 	make_different_breaks; AdjustZZ_BegEnd; CheckSequenceOfElements.
 
-	NOT YET: xt_st_zz itself and FindDArcs with its group (the d's arcs:
-	FillBasicFeatures, PairWorthLookingAt, FillComplexFeatures,
-	FillCurvFeatures, CheckBackDArcs, CheckSZArcs, CheckDArcs,
-	KillHAtNewElem, ArrangeAnglesNearNew and their helpers, about 10 KB at
-	0x003015b8-0x00305a14), so none of this is called yet.
+	FindDArcs and its group are LowDArcs.cpp.
 
 	All of it was read from the disassembly.
 
@@ -60,6 +56,41 @@ static inline Boolean
 Overlaps(SPEC_TYPE* a, SPEC_TYPE* b)
 {
 	return a->iEnd >= b->iBeg && b->iEnd >= a->iBeg;
+}
+
+
+// ROM 0x002af7ac xt_st_zz__FP8low_type
+// The passes in the order the header lists them: the umlauts and angstroms
+// only when the field has the letters (rc +6), the sticks redirected and
+// the close maxima and minima taken out only for writing that is not all
+// capitals (rc +4 not 1; the latter only in a field that is not ordinary
+// text, rc +0x94 0x10).  ==> 0.
+long
+xt_st_zz(low_type* low)
+{
+	SPEC_TYPE* head = low->fSpecl;
+	conv_top_elem_to_ST(low);
+	if ((RCGetH(low->rc, 6) & 0xe) != 0)
+		find_umlaut(low);
+	if ((RCGetH(low->rc, 6) & 8) != 0)
+		find_angstrem(low);
+	if ((short) RCGetH(low->rc, 4) != 1)
+		redirect_sticks(low);
+	FindDelayedStroke(low);
+	placement_XT_ST(low);
+	FindDArcs(low);
+	if (RCGetH(low->rc, 0x94) == 0x10 && (short) RCGetH(low->rc, 4) != 1)
+		del_close_MAX_MIN(low);
+	SortXT_ST(low);
+	placement_X(low);
+	FindMisplacedParentheses(low);
+	del_ZZ_HATCH(head);
+	CheckStrokesForDxTimeMatch(low);
+	change_last_IU_height(low);
+	make_different_breaks(low);
+	AdjustZZ_BegEnd(low);
+	CheckSequenceOfElements(low);
+	return 0;
 }
 
 

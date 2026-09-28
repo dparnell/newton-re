@@ -13,6 +13,7 @@
 #include "XrDomains.h"
 #include "ParaGraph.h"
 #include "Dictionaries.h"
+#include "LowLevel.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -97,17 +98,32 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 					// allows numbers) the digit and number reader goes
 					// first - ChunkAllocCtx, ChunkProcessor, and when it
 					// found numbers ChunkModifyRC (0x002a5620-0x002a70c0);
-					// then low_level (0x0034ea74), the trace cut into
-					// xrs, and after it ChunkWriteParamCtx,
-					// ChunkPatchXrdata, SetMultiWordMarksWS/Dash, xrw_algs
-					// (0x00362f08, -9 when it fails),
+					// without it the chunk stays nil, as it does in a
+					// field that has no numbers
+					if (low_level(points, &xr, rc) != 0)
+					{
+						err = -8;
+						goto done;
+					}
+					if (TracingCursive())
+					{
+						fprintf(stderr, "[cursive] low_level: %ld xrs:", xr.fLength);
+						xrd_el_type* e = (xrd_el_type*) xr.fElements;
+						for (long i = 0; i < xr.fLength; i++)
+							fprintf(stderr, " %02x/%d", e[i].type, e[i].height);
+						fprintf(stderr, "\n");
+					}
+					// NOT YET RECONSTRUCTED: the rest - ChunkWriteParamCtx,
+					// ChunkPatchXrdata, and for more than two xrs
+					// SetMultiWordMarksWS/Dash and xrw_algs (0x00362f08,
+					// the xrs read into words: -9 when it fails),
 					// EvaluateAndSortAnswers,
-					// MakeAndCombRecWordsFromWordGraph, ORCreateLearnInfo,
-					// ChunkRestoreRC, ChunkSortAnswers,
+					// MakeAndCombRecWordsFromWordGraph, ORCreateLearnInfo;
+					// then ChunkRestoreRC, ChunkSortAnswers,
 					// ChunkCorrectByLexDB, FillRecwordSplitInfo and
-					// GCFillLearningHandle.  On the host the low level
-					// answers failure.
-					err = -8;
+					// GCFillLearningHandle.  The host stops here with
+					// xrw_algs' failure.
+					err = -9;
 					goto done;
 				}
 			}

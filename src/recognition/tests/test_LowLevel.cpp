@@ -1592,6 +1592,141 @@ TestLkDugaWhole(void)
 }
 
 
+// Prints the special elements (for the tests' output).
+static void
+DumpSpecl(const char* tag, low_type* low)
+{
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+		fprintf(stderr, "%s: mark %#x code %#x attr %#x other %d points %d..%d (%d, %d)\n",
+				tag, p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, p->ipoint0, p->ipoint1);
+}
+
+
+// FindDArcs's helpers (LowDArcs.cpp): an arc's bend is signed by the side
+// it bows to and 0 for a straight line; two bends the opposite ways round
+// are an S; iXmax_right/iXmin_right walk to the furthest point right or
+// left.  Then an S written from its top right, round to the left, across
+// and round to the right to finish at its bottom left: FindDArcs puts an
+// element between its two arcs (0x23 or 0x24, band 7).
+static void
+TestDArcs(void)
+{
+	short lx[] = { 0, 10, 20, 30, 40 };
+	short ly[] = { 0, 0, 0, 0, 0 };
+	EXPECT(CurvNonQuadr(lx, ly, 0, 4) == 0 && CurvNonQuadr(lx, ly, 2, 2) == 0);
+	short ax[] = { 0, 10, 20, 30, 40, 0 };
+	short ay[] = { 0, 10, 14, 10, 0, -1 };
+	short bx[] = { 0, 10, 20, 30, 40, 0 };
+	short by[] = { 0, -10, -14, -10, 0, -1 };
+	long ca = CurvNonQuadr(ax, ay, 0, 4);
+	long cb = CurvNonQuadr(bx, by, 0, 4);
+	fprintf(stderr, "darcs: arc bends %ld and %ld\n", ca, cb);
+	EXPECT(ca != 0 && cb == -ca);
+	EXPECT(CurvLikeSZ(20, -20, 8) && CurvLikeSZ(-20, 20, 8) && !CurvLikeSZ(20, 20, 8) && !CurvLikeSZ(5, -20, 8));
+	short zx[] = { 0, 10, 20, 15, 10, 30, 0 };
+	short zy[] = { 0, 1, 2, 3, 4, 5, -1 };
+	EXPECT(iXmax_right(zx, zy, 0, 5) == 2);		// stops once it comes back more than 5
+	EXPECT(iXmin_right(zx, zy, 2, 5) == 4);		// and the other way
+
+	// an S, 80 tall, its top arc bowing left and its bottom one right
+	TraceStart();
+	for (long s = 0; s <= 20; s++)
+	{
+		double t = 3.14159265358979 * (0.25 + 1.25 * s / 20);	// from the top right round the left
+		Pt(200 + (long) lround(25 * cos(t)), 180 - (long) lround(20 * sin(t)));
+	}
+	for (long s = 1; s <= 20; s++)
+	{
+		double t = 3.14159265358979 * (0.5 - 1.25 * s / 20);	// and round the right to the bottom left
+		Pt(200 + (long) lround(25 * cos(t)), 220 - (long) lround(20 * sin(t)));
+	}
+	PenUp();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 8));
+	Adjust_I_U(low);
+	DumpSpecl("s before", low);
+	EXPECT(FindDArcs(low) == 0);
+	DumpSpecl("s after", low);
+	long szs = 0;
+	for (SPEC_TYPE* p = low->fSpecl; p != nil; p = p->next)
+		if (p->code == 0x23 || p->code == 0x24)
+		{
+			szs++;
+			EXPECT((p->attr & 0xf) == 7);
+			EXPECT(p->prev != nil && IsUpperElem(p->prev));
+		}
+	EXPECT(szs == 1);
+	DestroySDS(low);
+}
+
+
+// The low level whole (low_level): the uou from its trace to its xrs -
+// breaks at each end, and the tops and bottoms of its letters between -
+// with the slant written back to rc +0xac; and a trace of two points
+// refused.
+static void
+TestLowLevelWhole(void)
+{
+	Uou();
+	rc_type rc;
+	memset(&rc, 0, sizeof(rc));
+	RCSetH(&rc, 0x96, gCount);
+	RCSetH(&rc, 0x90, 0x10);
+	RCSetH(&rc, 0xac, 0x1234);
+	xrdata_type xr;
+	static xrd_el_type elements[kXrMaxElements];
+	memset(elements, 0, sizeof(elements));
+	xr.fLength = 99;
+	xr.fSize = kXrMaxElements;
+	xr.fElements = elements;
+	EXPECT(low_level(gTrace, &xr, &rc) == 0);
+	long n = xr.fLength;
+	long uppers = 0, lowers = 0, breaks = 0;
+	for (long i = 0; i < n; i++)
+	{
+		xrd_el_type* e = &elements[i];
+		long m = GetXrMetrics(e);
+		fprintf(stderr, "low_level xr %2ld: type %#04x attrib %#04x height %2d shift %2d orient %2d points %d..%d\n",
+				i, e->type, e->attrib, e->height, e->shift, e->orient, XrGetH(e->begpoint), XrGetH(e->endpoint));
+		EXPECT(XrGetH(e->begpoint) >= 0 && XrGetH(e->endpoint) < gCount);
+		if (X_IsBreak(e))
+			breaks++;
+		if (m & 2)
+			uppers++;
+		if (m & 1)
+			lowers++;
+	}
+	fprintf(stderr, "low_level: %ld xrs, %ld breaks, %ld upper, %ld lower, slant %d\n",
+			n, breaks, uppers, lowers, (short) RCGetH(&rc, 0xac));
+	EXPECT(n >= 10 && n < kXrMaxElements);
+	EXPECT(X_IsBreak(&elements[0]) && X_IsBreak(&elements[n - 1]));
+	EXPECT(uppers >= 4 && lowers >= 3);
+	EXPECT((short) RCGetH(&rc, 0xac) != 0x1234);			// the slant measured and written back
+
+	// the base line alone (rc +0x90 bit 6): no xrs
+	Uou();
+	RCSetH(&rc, 0x96, gCount);
+	RCSetH(&rc, 0x90, 0x50);
+	xr.fLength = 99;
+	EXPECT(low_level(gTrace, &xr, &rc) == 0 && xr.fLength == 0);
+
+	// too short to be anything
+	TraceStart();
+	Pt(10, 10);
+	RCSetH(&rc, 0x96, gCount);
+	xr.fLength = 99;
+	EXPECT(low_level(gTrace, &xr, &rc) == 1 && xr.fLength == 99);
+}
+
+
+
 // xt_st_zz's passes (LowXtSt.cpp): the helpers on their own; a t's bar
 // written after the word and to the left of it found to be a late stroke
 // (FindDelayedStroke); two strokes' gap measured across the bands of the
@@ -1709,6 +1844,8 @@ main()
 	TestLkDuga();
 	TestLkDugaWhole();
 	TestXtSt();
+	TestDArcs();
+	TestLowLevelWhole();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

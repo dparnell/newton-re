@@ -204,6 +204,7 @@ void	GetLowDataRect(low_type* low);								// ROM 0x0034e968 GetLowDataRect__FP8
 long	LowAlloc(short** block, short nBuffers, short bufferSize, low_type* low);	// ROM 0x00305a28 LowAlloc__FPPssT2P8low_type - ==> 0, 1 for no room
 void	low_dealloc(short** block);									// ROM 0x00306f74 low_dealloc__FPPs
 void	SetXYToInitial(low_type* low);								// ROM 0x00305a14 SetXYToInitial__FP8low_type
+long	AnalyzeLowData(low_type* low, PS_point_type* trace);		// ROM 0x0034ed54 AnalyzeLowData__FP8low_typeP13PS_point_type - the special elements found and coded; ==> 0, 1 for a failure
 long	BaselineAndScale(low_type* low);							// ROM 0x0034eba0 BaselineAndScale__FP8low_type - the trace filtered, its extrema found and the base line found; ==> 0, 1 for a failure
 long	transfrmN(low_type* low);									// ROM 0x001baaf8 transfrmN__FP8low_type - the base-line finder: the borders found, the trace rescaled to them; ==> 0, 1 for a failure
 extern const short	const1[26];										// the engine's constants: [0] the filter's scale (10), [5] the default extremum step (8), [13] how far apart two points of one stroke must be to cross (8)
@@ -629,7 +630,8 @@ long	FillSHR(long slope, xrdata_type* xr, low_type* low);		// ROM 0x0027ea0c Fil
 long	FillOrients(long slope, xrdata_type* xr, low_type* low);	// ROM 0x0027f58c FillOrients__FiP11xrdata_typeP8low_type - ==> 0
 
 // xt_st_zz's passes: the late strokes placed, the breaks weighed
-// (LowXtSt.cpp; xt_st_zz itself and FindDArcs's group are NOT YET).
+// (LowXtSt.cpp).
+long	xt_st_zz(low_type* low);									// ROM 0x002af7ac xt_st_zz__FP8low_type - ==> 0
 long	conv_top_elem_to_ST(low_type* low);							// ROM 0x002af89c conv_top_elem_to_ST__FP8low_type - ==> 0
 long	Placement_XT_CUTTED(SPEC_TYPE* e, low_type* low);			// ROM 0x002afa84 Placement_XT_CUTTED__FP9SPEC_TYPEP8low_type - ==> 0
 long	SortXT_ST(low_type* low);									// ROM 0x002afb9c SortXT_ST__FP8low_type - ==> 0
@@ -670,6 +672,55 @@ long	Placement_XT_With_HATCH(SPEC_TYPE* e, SPEC_TYPE* r, low_type* low);	// ROM 
 long	Placement_XT_WO_HATCH_AND_ST(SPEC_TYPE* e, low_type* low);	// ROM 0x002b46cc Placement_XT_WO_HATCH_AND_ST__FP9SPEC_TYPEP8low_type - ==> 0
 long	IsNearI(SPEC_TYPE* e);										// ROM 0x002d98c8 IsNearI__FP9SPEC_TYPE - the top of an i
 long	RestoreApostroph(low_type* low, SPEC_TYPE* e);				// ROM 0x002d8b38 RestoreApostroph__FP8low_typeP9SPEC_TYPE - ==> 1 an apostrophe
+
+// FindDArcs: the arcs of an S or a Z, and a d's bowl, found between an
+// upper element and the lower one after it (LowDArcs.cpp).  The ROM keeps
+// the pair's description on FindDArcs' stack (0x44 bytes); the offsets are
+// the ROM's.
+struct SZD_FEATURES
+{
+	low_type*		low;			// +00
+	SPEC_TYPE*		e1;				// +04  the upper element
+	SPEC_TYPE*		e2;				// +08  and the lower one after it
+	SPEC_TYPE*		fNew;			// +0c  the element put between them, if any
+	short*			x;				// +10
+	short*			y;				// +14
+	short*			xInit;			// +18
+	short*			yInit;			// +1c
+	short*			map;			// +20  buffer 2: a point's index in the initial trace
+	short			band1;			// +24  e1's height band
+	short			band2;			// +26
+	short			iBeg1;			// +28  the initial trace e1 covers
+	short			iEnd1;			// +2a
+	short			iBeg2;			// +2c  and e2
+	short			iEnd2;			// +2e
+	short			i0;				// +30  where the two arcs meet
+	short			i1;				// +32  the first's top
+	short			i2;				// +34  the second's bottom
+	short			far1;			// +36  each arc's point furthest from its chord
+	short			far2;			// +38
+	short			curv1;			// +3a  each arc's bend (CurvNonQuadr)
+	short			curv2;			// +3c
+	short			dev;			// +3e  how far i0 is to the side of the line from e1's start to e2's end
+	long			back;			// +40  1 when CheckBackDArcs found the stroke going back on itself
+};
+SPEC_TYPE*	SkipAnglesAndHMoves(SPEC_TYPE* e);						// ROM 0x003015b8 SkipAnglesAndHMoves__FP9SPEC_TYPE
+long	CurvNonQuadr(short* x, short* y, long i, long j);			// ROM 0x003015fc CurvNonQuadr__FPsT1iT3 - the bend in hundredths, signed, at most 1000
+long	iXmax_right(short* x, short* y, long i, long dx);			// ROM 0x003071c8 iXmax_right__FPsT1iT3
+long	iXmin_right(short* x, short* y, long i, long dx);			// ROM 0x0030722c iXmin_right__FPsT1iT3
+Boolean	CurvLikeSZ(short a, short b, short t);						// ROM 0x00305930 CurvLikeSZ__FsN21
+Boolean	LooksLikeSZ(short* x, short* y, long i, long j);			// ROM 0x003053f8 LooksLikeSZ__FPsT1iT3
+Boolean	CurvConsistent(short* x, short* y, long i, long j, short* map);	// ROM 0x00305984 CurvConsistent__FPsT1iT3T1
+long	FillBasicFeatures(SZD_FEATURES* f, low_type* low);			// ROM 0x0030431c FillBasicFeatures__FP12SZD_FEATURESP8low_type
+long	PairWorthLookingAt(SZD_FEATURES* f);						// ROM 0x003050dc PairWorthLookingAt__FP12SZD_FEATURES
+long	FillCurvFeatures(SZD_FEATURES* f);							// ROM 0x003051a4 FillCurvFeatures__FP12SZD_FEATURES
+long	FillComplexFeatures(SZD_FEATURES* f);						// ROM 0x00305474 FillComplexFeatures__FP12SZD_FEATURES
+long	CheckBackDArcs(SZD_FEATURES* f);							// ROM 0x003056a0 CheckBackDArcs__FP12SZD_FEATURES
+long	CheckSZArcs(SZD_FEATURES* f);								// ROM 0x003016b8 CheckSZArcs__FP12SZD_FEATURES
+long	CheckDArcs(SZD_FEATURES* f);								// ROM 0x0030222c CheckDArcs__FP12SZD_FEATURES
+void	ArrangeAnglesNearNew(SZD_FEATURES* f);						// ROM 0x00302d74 ArrangeAnglesNearNew__FP12SZD_FEATURES
+void	KillHAtNewElem(SZD_FEATURES* f);							// ROM 0x00302ed0 KillHAtNewElem__FP12SZD_FEATURES
+long	FindDArcs(low_type* low);									// ROM 0x00302f00 FindDArcs__FP8low_type - ==> 0
 
 // The filters.
 void	Errorprov(low_type* low);									// ROM 0x002e0f1c Errorprov__FP8low_type - a pen-up that follows a pen-up taken out

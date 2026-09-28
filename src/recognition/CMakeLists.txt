@@ -76,6 +76,7 @@ add_library(recognition STATIC
     LowLkCross.cpp
     LowLkDuga.cpp
     LowXtSt.cpp
+    LowDArcs.cpp
     LowTables.cpp
     CursiveReader.cpp
     StrXrDomain.cpp

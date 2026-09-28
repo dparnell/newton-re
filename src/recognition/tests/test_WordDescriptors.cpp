@@ -310,11 +310,12 @@ TestGroupAndRead(void)
 		EXPECT(second->fFirst == 4 && second->fLast == 7);
 		EXPECT((first->fFlags & 4) != 0 && (second->fFlags & 4) != 0);	// the end of the writing: both to be read
 
-		// read: the frame runs, and on the host the low level fails
+		// read: the frame runs and the low level cuts the word into xrs;
+		// on the host the reader stops at xrw_algs (NOT YET), -9
 		rc_type rc;
 		memset(&rc, 0, sizeof(rc));
-		EXPECT(GCTryToRecognize(gTrace, first, &rc, &parm) == -8);
-		EXPECT((first->fFlags & 0x200) != 0);
+		EXPECT(GCTryToRecognize(gTrace, first, &rc, &parm) == -9);
+		EXPECT((first->fFlags & 0x400) != 0);			// (0x200 is the low level failing, 0x400 xrw_algs)
 		EXPECT(rc.fWordInfo == nil);
 		EXPECT(RCGetH(&rc, 0x96) > 2);				// the word's points handed to the engine
 		EXPECT(RCGetH(&rc, 0xd8 + 4) > RCGetH(&rc, 0xd8));	// its ink box

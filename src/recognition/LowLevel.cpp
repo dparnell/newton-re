@@ -10,7 +10,115 @@
 #include "LowLevel.h"
 #include "XrDomains.h"
 #include "ParaGraph.h"
+#include "CursiveReader.h"
 #include <string.h>
+
+
+/*------------------------------------------------------------------------------
+	T h e   l o w   l e v e l
+------------------------------------------------------------------------------*/
+
+// ROM 0x0034ea74 low_level__FP13PS_point_typeP11xrdata_typeP7rc_type
+// One word's trace (pen-ups at each end and between its strokes, rc +0x96
+// points) cut into xrs: its state made, the base line found and the trace
+// rescaled to it (BaselineAndScale), and - unless rc +0x90 bit 6 asks for
+// the base line alone - the special elements found (AnalyzeLowData) and
+// written out as the xrs (exchange).  The writing's slant is taken from rc
+// +0xac and written back there.  ==> 0, 1 for a failure (or a trace of
+// fewer than three points, for which nothing is done).
+long
+low_level(PS_point_type* trace, xrdata_type* xr, rc_type* rc)
+{
+	long result = 1;
+	short* block = nil;
+	low_type low;
+	_SDS_CONTROL_TYPE sds;					// (the ROM keeps both on its stack)
+	if ((short) RCGetH(rc, 0x96) < 3)
+		return 1;
+	xr->fLength = 0;
+	if (PrepareLowData(&low, trace, rc, &block))
+	{
+		SetXYToInitial(&low);
+		FillLowDataTrace(&low, trace);
+		GetLowDataRect(&low);
+		low.fSlope = RCGetH(low.rc, 0xac);
+		if (BaselineAndScale(&low) == 0)
+		{
+			Boolean done = false;
+			if ((RCGetH(rc, 0x90) & 0x40) != 0)
+				done = true;
+			else
+			{
+				low.fSDS = &sds;
+				if (CreateSDS(&low, 200)
+				 && AnalyzeLowData(&low, trace) == 0
+				 && exchange(&low, xr) == 0)
+					done = true;
+			}
+			if (done)
+			{
+				RCSetH(low.rc, 0xac, low.fSlope);
+				result = 0;
+			}
+		}
+	}
+	DestroySDS(&low);
+	low_dealloc(&block);
+	DeallocSpecl(&low.fSpecl);
+	return result;
+}
+
+
+// ROM 0x0034ed54 AnalyzeLowData__FP8low_typeP13PS_point_type
+// The special elements found in the rescaled trace: the trace filtered
+// again, its extrema (Extr), the strokes described and the sticks, dots
+// and hatches found (Pict), refiltered at the reader's step and its
+// extrema found again; the slant measured (none for the numbers field or
+// when rc +0x90 bit 0 says so); the loops (Circle), the corners (angl),
+// the bends at the sides (FindSideExtr) and the crossings (Cross); then
+// every element given its code (lk_begin) and the passes over the
+// crossings, the arcs, the i's and u's and the strokes written out of order
+// (lk_cross, lk_duga, Adjust_I_U, xt_st_zz), the colons (RestoreColons)
+// and the bends again (PostFindSideExtr).  ==> 0, 1 for a failure.
+long
+AnalyzeLowData(low_type* low, PS_point_type* trace)
+{
+	GetLowDataRect(low);
+	Errorprov(low);
+	if (PreFilt(const1[0], low) != 0 || InitGroupsBorder(low, 1) != 0)
+		return 1;
+	DefLineThresholds(low);
+	InitSpecl(low, 400);
+	Extr(low, const1[5], const1[6], const1[6], const1[5] >> 1, 0, 7);
+	OperateSpeclArray(low);
+	if (Sort_specl(low->fSpecl, low->fLenSpecl) != 0
+	 || InitGroupsBorder(low, 1) != 0
+	 || Pict(low) != 0)
+		return 1;
+	Surgeon(low);
+	if (Filt(low, const1[0], 1) != 0 || InitGroupsBorder(low, 1) != 0)
+		return 1;
+	trace_to_xy(low->fXInitial, low->fYInitial, (short) RCGetH(low->rc, 0x96), trace);
+	if (Extr(low, const1[5], -2, -2, -2, 5, 2) != 0)
+		return 1;
+	if ((RCGetH(low->rc, 0x90) & 1) != 0 || RCGetH(low->rc, 0x92) == 2)
+		low->fSlope = 0;
+	else
+		low->fSlope = (short) measure_slope(low);
+	if (Circle(low) != 0
+	 || angl(low) != 0
+	 || FindSideExtr(low) == 0
+	 || Cross(low) != 0
+	 || Clear_specl(low->fSpecl, low->fLenSpecl) != 0
+	 || lk_begin(low) != 0)
+		return 1;
+	lk_cross(low);
+	lk_duga(low);
+	Adjust_I_U(low);
+	if (xt_st_zz(low) != 0 || RestoreColons(low) != 0 || PostFindSideExtr(low) == 0)
+		return 1;
+	return 0;
+}
 
 
 /*------------------------------------------------------------------------------
