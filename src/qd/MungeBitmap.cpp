@@ -14,12 +14,23 @@
 				options frame's `callback` is told how far a half turn has
 				got, in percent.
 
-				NOT YET RECONSTRUCTED: a bitmap the size of the whole
-				screen is turned a tile at a time out of a large binary on
-				a store (RotTiledBitmap 0x00040b54, over TTile - and the
-				VAddrToStore/FlushLargeObject calls that keep a large
-				binary's bits in step in RotBitmap180); the host's bitmaps
-				are never on a store.
+				NOT YET RECONSTRUCTED: a quarter turn of a fax page
+				(Tilable) is RotTiledBitmap 0x00040b54, over TTile
+				(0x002540c0; RotateTilesR 0x00254668, RotateTilesL
+				0x00254bac): the turned copy is made on the
+				same store and with the same compander as the page's own
+				large binary (FGetBinaryStore, FGetBinaryCompander,
+				FGetBinaryCompanderData into MakePixelsObject) and filled a
+				tile at a time, so a page is never all in memory at once -
+				and the VAddrToStore/FlushLargeObject calls that keep a
+				large binary's bits in step in RotBitmap180.  Nothing in
+				the host reaches it: MakePixelsObject's store arm
+				(FLBAllocCompressed) is NOT YET and there are no large
+				binaries (IsLargeBinary answers false), and the fax
+				receiver that makes such pages is part of the comms stack,
+				which is NOT YET.  Only a script's own heap bitmap of
+				exactly a fax page's size gets there, and it is left as it
+				was.
 
 	Reconstructed from the MP2x00 US ROM (0x0003f764-0x00040b54,
 	0x00040ee0); each function cites its origin.
@@ -48,8 +59,10 @@ static inline long	ColumnsOf(const PixelMap* pm)	{ return pm->bounds.right - pm-
 
 
 // ROM 0x00040ee0 Tilable__FP8PixelMap
-// Whether the bitmap is the size of the whole screen (in one of the four
-// sizes the machine's screens come to), and so is turned a tile at a time.
+// Whether the bitmap is a fax page, and so is turned a tile at a time: the
+// four sizes are 216-byte rows (1728 pixels, a G3 fax line) by 1146,
+// 2292, 1152 or 2304 rows - standard and fine resolution, two page
+// lengths.  (Not the screen: the MP2x00's is 40 bytes by 480 rows.)
 Boolean
 Tilable(PixelMap* pm)
 {

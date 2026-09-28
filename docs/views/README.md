@@ -2243,8 +2243,17 @@ done - with three quirks kept: the rows' padding ends up at their start,
 a few bytes in the middle are left when the size is not a multiple of
 sixteen, and a bitmap under sixteen bytes is not turned at all.
 `test_Views` turns and flips a 10 x 3 bitmap pixel by pixel.  NOT YET: a
-screen-sized bitmap (`Tilable`) is turned a tile at a time out of a
-large binary on a store (`RotTiledBitmap`, `TTile`).
+quarter turn of a fax page - `Tilable`'s four sizes are 216-byte rows
+(1728 pixels, a G3 fax line) by 1146, 2292, 1152 or 2304 rows, not the
+screen as was once written here - is `RotTiledBitmap` 0x00040b54 over
+`TTile`, which makes the turned copy on the same store and with the same
+compander as the page's own large binary and fills it a tile at a time.
+It is not reconstructed because nothing in the host reaches it: large
+binaries are NOT YET (`IsLargeBinary` answers false, and
+`MakePixelsObject`'s store arm throws), and the fax receiver that makes
+the pages belongs to the comms stack, which is NOT YET too.  A script's
+own heap bitmap of exactly a fax page's size is the only way in, and it
+is left unturned.
 
 ## The outline list (`views/ListView.h`)
 
