@@ -10,10 +10,10 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 111/111
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11783 citations, 0 bad;
-  6794 of 16671 functions (40.75%).
+- `analysis/coverage.py build/MP2x00US --check`: 11828 citations, 0 bad;
+  6825 of 16671 functions (40.94%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
