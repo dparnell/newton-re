@@ -17,7 +17,7 @@
 	dropped.
 
 	Reconstructed from the MP2x00 US ROM (0x0019f644-0x0019f874,
-	0x00338158-0x003383c0); each function cites its origin.
+	0x00337fa4-0x00338d34); each function cites its origin.
 */
 
 #include "XrReader.h"
@@ -109,6 +109,348 @@ MakeRecWordsFromWordGraph(RWG_type* rwg, rec_w_type* readings, long scale)
 		}
 		i = (short) (i + 1);
 	}
+}
+
+
+#pragma mark - the readings of a graph of alternatives
+
+// A graph that is not a list of answers is one answer in which some
+// letters are groups of alternatives: a type 2 symbol opens a group, a
+// type 4 one comes between two alternatives and a type 3 one closes it;
+// an alternative is one symbol, or two in a row (a letter the reader saw
+// as two).  Everything else is a letter of its own.  Its readings are the
+// paths through it: the first takes each group's best alternative, and
+// each after it changes one letter of an earlier path to the next
+// alternative down, choosing the change that loses least.
+
+static inline Boolean	IsTwoSymbols(const RWS_type* rws, long e)	{ return rws[e + 1].type == 1; }
+// the alternative after the one starting at e (past e's symbols and the type 4 between)
+static inline long		NextAlternative(const RWS_type* rws, long e)	{ return e + (IsTwoSymbols(rws, e) ? 3 : 2); }
+
+
+// ROM 0x00338acc FillRecWordsElement__FP10rec_w_typeP8RWS_typesN23
+// The symbol e put into a reading as its letter at pos, with the variant
+// it was read as and the xrs it spans - unless the reader read it as a
+// different letter (another case is the same letter), when the variant and
+// span are left out; a symbol read in another case has its variant's top
+// bit set.
+// ROM BUG: a letter read as a different one clears the variant and span of
+// the reading's *first* letter (+0x18, +0x30), not of the letter at pos.
+void
+FillRecWordsElement(rec_w_type* readings, RWS_type* rws, short reading, short pos, short e)
+{
+	rec_w_type* rw = &readings[reading];
+	rw->fWord[pos] = rws[e].sym;
+	if (ToLower(rws[e].sym) != ToLower(rws[e].realSym))
+	{
+		rw->fVariants[0] = 0;
+		rw->fX30[0] = 0;
+		return;
+	}
+	rw->fVariants[pos] = rws[e].var;
+	rw->fX30[pos] = rws[e].xrLen;
+	if (rws[e].sym != rws[e].realSym)
+		rw->fVariants[pos] |= 0x80;
+}
+
+
+// ROM 0x00338b6c MakeNewPath__FP8RWS_typePA24_UcUsN23PsT6
+// The letter of path `from` best changed to its next alternative down so
+// as to make a path not yet among the first `count`: the one whose change
+// loses least score (ties to the first).  Only a letter that is a group's
+// alternative with another after it may change.  ==> whether there was
+// one; *pos the letter, *loss what it loses.
+Boolean
+MakeNewPath(RWS_type* rws, UByte (*paths)[24], UShort groups, UShort count, UShort from, short* pos, short* loss)
+{
+	*pos = -1;
+	*loss = 30000;
+	for (short i = 0; i < (short) groups; i = (short) (i + 1))
+	{
+		short e = paths[from][i];
+		if (e == 0)
+			continue;
+		if (rws[e - 1].type != 2 && rws[e - 1].type != 4)
+			continue;
+		short alt;
+		if (IsTwoSymbols(rws, e))
+		{
+			if (rws[e + 2].type == 3)
+				continue;
+			alt = (short) (e + 3);
+		}
+		else
+		{
+			if (rws[e + 1].type == 3)
+				continue;
+			alt = (short) (e + 2);
+		}
+		// is the changed path one there is already?
+		Boolean known = false;
+		for (short j = 0; j < (short) count && !known; j = (short) (j + 1))
+		{
+			Boolean same = true;
+			for (short k = 0; k < (short) groups; k = (short) (k + 1))
+			{
+				if (k != i ? paths[from][k] != paths[j][k] : paths[j][k] != alt)
+				{
+					same = false;
+					break;
+				}
+			}
+			known = same;
+		}
+		if (known)
+			continue;
+		long diff = (long) rws[e].weight - (long) rws[alt].weight;
+		if (diff < *loss)
+		{
+			*loss = (short) diff;
+			*pos = i;
+		}
+	}
+	return *pos != -1;
+}
+
+
+// A path's score: the mean of its letters' (DEVIATION: with no letters the
+// ROM divides by nought, which traps on the ARM; the host answers nought).
+static inline short		PathScore(UShort sum, UShort groups)	{ return (short) (groups != 0 ? (ULong) sum / groups : 0); }
+
+
+// ROM 0x003383c0 MakeRecWordsFromGraph__FP8RWS_typeUsP10rec_w_typePUcPA13_15RWG_PPD_el_type
+// The readings of a graph of alternatives (above), at most ten, into
+// `readings`; `paths` (ten of twenty-four bytes) keeps each reading's
+// choice per letter.  Each group's alternatives are first put best first
+// in the graph itself, and the two symbols of an alternative made of two
+// given the mean of their scores.
+void
+MakeRecWordsFromGraph(RWS_type* rws, UShort size, rec_w_type* readings, UByte* pathBytes, void* ppd)
+{
+	(void) ppd;
+	if (readings == nil || pathBytes == nil)
+		return;
+	UByte (*paths)[24] = (UByte (*)[24]) pathBytes;
+	UByte first[0x18];
+	UByte count[0x18];
+	memset(first, 0, sizeof(first));
+	memset(count, 0, sizeof(count));	// (the ROM leaves these as the stack had them; each is set before it is read)
+	UShort groups = 0;
+	Boolean inAlternatives = false;
+	for (UShort i = 0; i < size; i++)
+	{
+		if (groups >= 0x18)
+			break;		// DEVIATION: the ROM goes on writing past its 24-byte tables (a word has fewer letters)
+		switch (rws[i].type)
+		{
+		case 1:
+			if (first[groups] == 0)
+			{
+				first[groups] = i;
+				count[groups] = 0;
+			}
+			if (inAlternatives)
+			{
+				if (rws[i - 1].type == 1)
+					break;						// the second symbol of an alternative of two
+				count[groups]++;
+				if (rws[i + 1].type == 1)
+				{
+					rws[i].weight = (UByte) (((long) rws[i].weight + rws[i + 1].weight) / 2);
+					rws[i + 1].weight = rws[i].weight;
+				}
+			}
+			else
+			{
+				count[groups]++;
+				groups++;
+			}
+			break;
+		case 2:
+			inAlternatives = true;
+			break;
+		case 3:
+			inAlternatives = false;
+			groups++;
+			break;
+		default:
+			break;
+		}
+	}
+	// each group's alternatives sorted best first (a bubble sort, the
+	// alternatives moved about in the graph with the type 4 symbols
+	// between them kept in place)
+	for (UShort g = 0; g < groups; g++)
+	{
+		Boolean sorted;
+		do
+		{
+			sorted = true;
+			short pos = first[g];
+			for (UShort j = 0; (long) count[g] - 1 > (long) j; j++)
+			{
+				Boolean two = IsTwoSymbols(rws, pos);
+				short next = (short) (pos + (two ? 3 : 2));
+				if (rws[pos].weight < rws[next].weight)
+				{
+					Boolean nextTwo = IsTwoSymbols(rws, next);
+					RWS_type old[5];
+					memcpy(old, &rws[pos], (two && nextTwo ? 5 : two || nextTwo ? 4 : 3) * sizeof(RWS_type));
+					if (two && nextTwo)
+					{
+						rws[pos] = old[3];
+						rws[pos + 1] = old[4];
+						rws[pos + 3] = old[0];
+						rws[pos + 4] = old[1];
+					}
+					else if (two)
+					{
+						rws[pos] = old[3];
+						rws[pos + 1] = old[2];
+						rws[pos + 2] = old[0];
+						rws[pos + 3] = old[1];
+						next = (short) (next - 1);
+					}
+					else if (nextTwo)
+					{
+						rws[pos] = old[2];
+						rws[pos + 1] = old[3];
+						rws[pos + 2] = old[1];
+						rws[pos + 3] = old[0];
+						next = (short) (next + 1);
+					}
+					else
+					{
+						rws[pos] = old[2];
+						rws[pos + 2] = old[0];
+					}
+					sorted = false;
+				}
+				pos = next;
+			}
+		} while (!sorted);
+	}
+	// the first reading: every group's best
+	UShort sum = 0;
+	short letter = 0;
+	for (UShort g = 0; g < groups; g++, letter = (short) (letter + 1))
+	{
+		short e = first[g];
+		paths[0][g] = (UByte) e;
+		sum = (UShort) (sum + rws[e].weight);
+		FillRecWordsElement(readings, rws, 0, letter, e);
+		if (e > 0 && (rws[e - 1].type == 2 || rws[e - 1].type == 4) && IsTwoSymbols(rws, e))
+		{
+			letter = (short) (letter + 1);
+			FillRecWordsElement(readings, rws, 0, letter, (short) (e + 1));
+		}
+	}
+	readings[0].fWord[letter] = 0;
+	readings[0].fWeight = PathScore(sum, groups);
+	readings[1].fWord[0] = 0;
+	// then each reading after it, the best change of an earlier one
+	UShort made = 1;
+	Boolean done;
+	do
+	{
+		done = true;
+		short bestFrom = -1;
+		short bestSum = 0;
+		short bestPos = 0;
+		for (UShort j = 0; j < made; j++)
+		{
+			short pos, loss;
+			if (!MakeNewPath(rws, paths, groups, made, j, &pos, &loss))
+				continue;
+			short total = 0;
+			for (UShort g = 0; g < groups; g++)
+			{
+				UShort e = paths[j][g];
+				if (g == (UShort) pos)
+					e = (UShort) NextAlternative(rws, e);
+				total = (short) (total + rws[e].weight);
+			}
+			if (total > bestSum)
+			{
+				bestSum = total;
+				bestFrom = (short) j;
+				bestPos = pos;
+				done = false;
+			}
+		}
+		if (bestFrom == -1)
+			break;
+		UShort pathSum = 0;
+		letter = 0;
+		for (UShort g = 0; g < groups; g++, letter = (short) (letter + 1))
+		{
+			UByte e = g == (UShort) bestPos ? (UByte) NextAlternative(rws, paths[bestFrom][g]) : paths[bestFrom][g];
+			paths[made][g] = e;
+			pathSum = (UShort) (pathSum + rws[e].weight);
+			FillRecWordsElement(readings, rws, made, letter, e);
+			if (e > 0 && (rws[e - 1].type == 2 || rws[e - 1].type == 4) && IsTwoSymbols(rws, e))
+			{
+				letter = (short) (letter + 1);
+				FillRecWordsElement(readings, rws, made, letter, (short) (e + 1));
+			}
+		}
+		readings[made].fWord[letter] = 0;
+		readings[made].fWeight = PathScore(pathSum, groups);
+		if (made + 1 < 10)
+			readings[made + 1].fWord[0] = 0;
+		made++;
+	} while (made != 10 && !done);
+}
+
+
+// ROM 0x00337fa4 MergeTwoRecWordsSets__FP10rec_w_typeT1
+// Two sets of ten readings merged into the first, best score first (ties
+// to the first set), a reading whose word is already there left out.  A
+// reading scored below nought is never taken.
+// DEVIATION: the ROM runs on past a set's tenth reading when so many are
+// left out that one set is used up (reading whatever follows it); the host
+// takes a set's eleventh reading as empty.  The ROM copies the ten back
+// whether or not they were filled, which on the host is what memset left.
+void
+MergeTwoRecWordsSets(rec_w_type* into, rec_w_type* other)
+{
+	rec_w_type merged[10];
+	memset(merged, 0, sizeof(merged));
+	rec_w_type* sets[2] = { into, other };
+	short next[2] = { 0, 0 };
+	for (short n = 0; n < 10; n = (short) (n + 1))
+	{
+		merged[n].fWord[0] = 0;
+		long best = -1;
+		short fromSet = 0;
+		for (short s = 0; s < 2; s = (short) (s + 1))
+		{
+			if (next[s] >= 10)
+				continue;
+			rec_w_type* rw = &sets[s][next[s]];
+			if (rw->fWord[0] != 0 && rw->fWeight > best)
+			{
+				best = rw->fWeight;
+				fromSet = s;
+			}
+		}
+		if (best == -1)
+			break;
+		rec_w_type* rw = &sets[fromSet][next[fromSet]];
+		Boolean known = false;
+		for (short k = 0; k < n; k = (short) (k + 1))
+			if (HWRStrCmp((const char*) merged[k].fWord, (const char*) rw->fWord) == 0)
+			{
+				known = true;
+				break;
+			}
+		if (known)
+			n = (short) (n - 1);
+		else
+			merged[n] = *rw;
+		next[fromSet]++;
+	}
+	memcpy(into, merged, sizeof(merged));
 }
 
 

@@ -271,6 +271,13 @@ long	GetSymBox(UByte sym, long first, long end, xrdata_type* xr, _RECT* box);	//
 
 // the answers (XrAnswers.cpp)
 void	MakeRecWordsFromWordGraph(RWG_type* rwg, rec_w_type* readings, long scale);	// ROM 0x00338158 MakeRecWordsFromWordGraph__FP8RWG_typeP10rec_w_typei
+// The readings of a graph of alternatives (not a list of answers): the
+// best path and up to nine more, each the least costly change of an
+// earlier one; `paths` is ten rows of 24 bytes (XrAnswers.cpp).
+void	MakeRecWordsFromGraph(RWS_type* rws, UShort size, rec_w_type* readings, UByte* paths, void* ppd);	// ROM 0x003383c0 MakeRecWordsFromGraph__FP8RWS_typeUsP10rec_w_typePUcPA13_15RWG_PPD_el_type
+void	FillRecWordsElement(rec_w_type* readings, RWS_type* rws, short reading, short pos, short e);	// ROM 0x00338acc FillRecWordsElement__FP10rec_w_typeP8RWS_typesN23
+Boolean	MakeNewPath(RWS_type* rws, UByte (*paths)[24], UShort groups, UShort count, UShort from, short* pos, short* loss);	// ROM 0x00338b6c MakeNewPath__FP8RWS_typePA24_UcUsN23PsT6
+void	MergeTwoRecWordsSets(rec_w_type* into, rec_w_type* other);	// ROM 0x00337fa4 MergeTwoRecWordsSets__FP10rec_w_typeT1 - ten and ten into the first ten, best first, no word twice
 void	MakeAndCombRecWordsFromWordGraph(RWG_type* rwg, rc_type* rc, xrdata_type* xr, rec_w_type* readings);	// ROM 0x0019f644 MakeAndCombRecWordsFromWordGraph__FP8RWG_typeP7rc_typeP11xrdata_typeP10rec_w_type
 // A stretch of the trace a letter was made from (ROM 4 bytes: two
 // big-endian halfwords, the first point and the last).

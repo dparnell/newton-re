@@ -1020,12 +1020,45 @@ EvaluateAnswers(POST_PARAMS* pp, rec_w_type* readings, const UByte* controls, UL
 		}
 		else if (readings != nil)
 		{
-			// NOT YET RECONSTRUCTED: MakeRecWordsFromGraph (0x003383c0) and
-			// MergeTwoRecWordsSets - the readings of a graph that is not a
-			// list made from it twice (as it is, and with the digits' and
-			// + = %'s weights lowered by a hundred) and merged, then the
-			// word's side reasoning added to each; such a graph's readings are
-			// left as they were
+			// a graph of alternatives: its readings made twice and merged -
+			// once from a copy with every letter's score lowered by a hundred
+			// (the readings a number would have), once from the graph itself
+			// with the digits' and + = %'s lowered instead (a word's)
+			RWS_type* rws = rwg->rws;
+			rec_w_type numbers[10];
+			numbers[0].fWord[0] = 0;
+			RWS_type* copy = (RWS_type*) HWRMemoryAlloc((rwg->size + 1) * sizeof(RWS_type));
+			if (copy != nil)
+			{
+				for (long i = 0; i <= rwg->size; i = (short) (i + 1))
+				{
+					copy[i] = rws[i];
+					if (rws[i].type == 1)
+					{
+						UByte c = rws[i].sym;
+						if ((__ctype[c] & 0x20) != 0 || HWRStrChr("+=%", OSToRec(c)) != nil)
+						{
+							short w = (short) (rws[i].weight - 100);
+							rws[i].weight = w <= 0 ? 1 : (UByte) w;
+						}
+					}
+					if (copy[i].type == 1 && IsAlpha(copy[i].sym))
+					{
+						short w = (short) (copy[i].weight - 100);
+						copy[i].weight = w <= 0 ? 1 : (UByte) w;
+					}
+				}
+				memset(numbers, 0, sizeof(numbers));
+				MakeRecWordsFromGraph(copy, (UShort) rwg->size, numbers, (UByte*) alist, ppd);
+				HWRMemoryFree((Ptr) copy);
+			}
+			memset(readings, 0, 10 * sizeof(rec_w_type));
+			MakeRecWordsFromGraph(rws, (UShort) rwg->size, readings, (UByte*) alist, ppd);
+			if (numbers[0].fWord[0] != 0)
+				MergeTwoRecWordsSets(readings, numbers);
+			if (evaluate != 0 && (pp->flags & 8) != 0)
+				for (long r = 0; r < 10 && readings[r].fWord[0] != 0; r = (short) (r + 1))
+					readings[r].fWeight = (short) (EvaluateWordUsingSideReasoning(readings[r].fWord, xr) + (UShort) readings[r].fWeight);
 		}
 		if (evaluate != 0 && readings != nil)
 		{

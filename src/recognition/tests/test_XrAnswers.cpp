@@ -203,6 +203,83 @@ TestTrainingData(void)
 }
 
 
+// A graph of alternatives: "c", then o or a, then "t".  The group is put
+// best first in the graph, the first reading takes the best of each ("cot"
+// 240 / 3 = 80), the next changes the letter that loses least ("cat" 230 /
+// 3 = 76), and there are no more.
+static void
+TestGraphOfAlternatives(void)
+{
+	RWS_type rws[8] = {
+		Sym('c', 1, 80), Sym(0, 2), Sym('a', 1, 60), Sym(0, 4), Sym('o', 1, 70), Sym(0, 3), Sym('t', 1, 90), Sym(0, 0),
+	};
+	rec_w_type readings[10];
+	UByte paths[10][24];
+	memset(readings, 0, sizeof(readings));
+	MakeRecWordsFromGraph(rws, 7, readings, &paths[0][0], nil);
+	EXPECT(rws[2].sym == 'o' && rws[4].sym == 'a');		// sorted in the graph
+	EXPECT(strcmp((const char*) readings[0].fWord, "cot") == 0 && readings[0].fWeight == 80);
+	EXPECT(strcmp((const char*) readings[1].fWord, "cat") == 0 && readings[1].fWeight == 76);
+	EXPECT(readings[2].fWord[0] == 0);
+	EXPECT(paths[0][0] == 0 && paths[0][1] == 2 && paths[0][2] == 6);
+	EXPECT(paths[1][1] == 4);
+
+	// an alternative of two symbols ("rn" for an m): both given the mean of
+	// their scores, and the pair moved as one
+	RWS_type two[7] = {
+		Sym(0, 2), Sym('m', 1, 50), Sym(0, 4), Sym('r', 1, 60), Sym('n', 1, 80), Sym(0, 3), Sym(0, 0),
+	};
+	memset(readings, 0, sizeof(readings));
+	MakeRecWordsFromGraph(two, 6, readings, &paths[0][0], nil);
+	EXPECT(two[1].sym == 'r' && two[2].sym == 'n' && two[3].type == 4 && two[4].sym == 'm');
+	EXPECT(two[1].weight == 70 && two[2].weight == 70);
+	EXPECT(strcmp((const char*) readings[0].fWord, "rn") == 0 && readings[0].fWeight == 70);
+	EXPECT(strcmp((const char*) readings[1].fWord, "m") == 0 && readings[1].fWeight == 50);
+	EXPECT(readings[2].fWord[0] == 0);
+
+	// a letter read in another case has its variant's top bit set; one
+	// read as another letter clears the reading's first variant and span
+	// (ROM BUG: not its own)
+	RWS_type sym[2] = { Sym('A', 1, 50), Sym('x', 1, 50) };
+	sym[0].realSym = 'a';
+	sym[0].var = 3;
+	sym[1].realSym = 'y';
+	memset(readings, 0, sizeof(readings));
+	readings[0].fVariants[0] = 9;
+	readings[0].fVariants[1] = 9;
+	FillRecWordsElement(readings, sym, 0, 1, 0);
+	EXPECT(readings[0].fWord[1] == 'A' && readings[0].fVariants[1] == 0x83);
+	FillRecWordsElement(readings, sym, 0, 2, 1);
+	EXPECT(readings[0].fWord[2] == 'x' && readings[0].fVariants[0] == 0 && readings[0].fVariants[2] == 0);
+}
+
+
+// Two sets of readings merged, best first, the same word only once.
+static void
+TestMergeReadings(void)
+{
+	rec_w_type a[10], b[10];
+	memset(a, 0, sizeof(a));
+	memset(b, 0, sizeof(b));
+	strcpy((char*) a[0].fWord, "cot");	a[0].fWeight = 80;
+	strcpy((char*) a[1].fWord, "cat");	a[1].fWeight = 76;
+	strcpy((char*) b[0].fWord, "cat");	b[0].fWeight = 90;
+	strcpy((char*) b[1].fWord, "c0t");	b[1].fWeight = 50;
+	MergeTwoRecWordsSets(a, b);
+	EXPECT(strcmp((const char*) a[0].fWord, "cat") == 0 && a[0].fWeight == 90);
+	EXPECT(strcmp((const char*) a[1].fWord, "cot") == 0 && a[1].fWeight == 80);
+	EXPECT(strcmp((const char*) a[2].fWord, "c0t") == 0 && a[2].fWeight == 50);
+	EXPECT(a[3].fWord[0] == 0);
+	// a tie goes to the first set
+	memset(a, 0, sizeof(a));
+	memset(b, 0, sizeof(b));
+	strcpy((char*) a[0].fWord, "one");	a[0].fWeight = 60;
+	strcpy((char*) b[0].fWord, "two");	b[0].fWeight = 60;
+	MergeTwoRecWordsSets(a, b);
+	EXPECT(strcmp((const char*) a[0].fWord, "one") == 0 && strcmp((const char*) a[1].fWord, "two") == 0);
+}
+
+
 int
 main()
 {
@@ -210,6 +287,8 @@ main()
 	TestReadings();
 	TestSplit();
 	TestTrainingData();
+	TestGraphOfAlternatives();
+	TestMergeReadings();
 	if (failures == 0)
 		printf("test_XrAnswers: all passed\n");
 	return failures == 0 ? 0 : 1;
