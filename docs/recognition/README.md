@@ -7,6 +7,42 @@ reconstruction in `src/recognition/`.  How each fact was established is
 stated with it; the reconstruction cites the ROM function each of its
 functions comes from.
 
+## Status: complete (2026-09-28)
+
+Everything the machine does between the pen and the views is
+reconstructed and running on the host: the tablet buffer and the stroke
+world, the controller, areas and arbiter, the click, gesture, shape and
+word domains, both word recognisers - Rosetta for printing (the
+classifier, the segmenter and the Viterbi search) and ParaGraph's
+cursive reader (the low level, the xr reader, the post-processing, the
+digit reader and the orthographic learning) - the dictionaries and the
+Airus engine, the correction information, deferred recognition, the
+corrector and ink grouping.  The demos write, correct and learn on the
+Notepad (`write.ns`, `cursive.ns`, `numbers.ns`, `shapes.ns`,
+`correct.ns`, `recognize.ns`, ...), with ctests over each.
+
+What is left, and why:
+
+* **Unreachable from the U.S. ROM**: `CheckDiacriticsDirections`
+  (0x0007c9a0) and `AnalyseDiacriticsDirection` - about 3.2 KB asked only
+  for a French or German letter set - and the sixteen-bit dictionary walks
+  (`AE16_Verify`, `AE16_NextSet9`, `AL16_NextSet`/`AL16_NextSet9`),
+  which only a UniChar dictionary would use; the machine's are all eight-bit.
+* **Below the recogniser, in hardware**: the inker task (`TInker`,
+  `InkerOff`, `TBCWakeUpInker`) and the tablet driver's calibration
+  (`CheckTabletHWCalibration`); the host's `hal/host/HostTablet.h` and
+  its inker stand-in feed the same tablet buffer.
+* **Waiting on other areas**: the journal's replayed units
+  (`HandleReplayUnit`), large binaries on a store (`FLBAlloc`, where
+  training data would go), `CreateVMHeap` (the engine runs in the
+  ordinary heap - DEVIATION), `WRecVerifyWordSymbols`,
+  `TController::NextIdleTime` and `SearchAllocateReturnCache`.
+
+The sections below are in the order the work was done, and many say
+NOT YET of something a later section finished; the same holds for the
+older comments in `src/recognition/`.  What the code cites
+(`analysis/coverage.py`) is the record of what is done.
+
 ## What the ROM has
 
 The recogniser is a set of classes over its own object base
@@ -1498,8 +1534,9 @@ handed to `HandleBulkStrokes`, which puts them in the correct info as a
 word info with no words - and `AddWordInfo` keeps only word infos with a
 word, so they are dropped and `Recognize` answers nothing for them.  That
 is the ROM's own behaviour (the disassembly of both is plain), kept as a
-quirk; the demo checks it.  NOT YET RECONSTRUCTED: the polygon view's other commands
-(`TPolygonView::RealDoCommand` answers 0x19 only); the paragraph's
+quirk; the demo checks it.  NOT YET RECONSTRUCTED: the polygon view's
+0x32 (the double tap's reading of its ink) and 0x44 (`TPolygonView::RealDoCommand`
+answers 0x19, and 0x43 and 0x4b for its selection - `docs/views/README.md`); the paragraph's
 `ProcessStyles` and `FixupDropData`, the other callers of
 `RecognizePara`/`RecognizeTextInStyles`.  A ROM bug kept (latent):
 `RecognizeTextInStyles` reads the text through a pointer taken before the
@@ -2935,12 +2972,13 @@ take are whatever the registers held (the host passes nought); an xr
 field of a letter that is neither the rule's neighbour nor missing reads
 the last one found.
 
-NOT YET: `CheckDiacriticsDirections` (0x0007c9a0, over
-`AnalyseDiacriticsDirection`), asked only for a letter set whose
-language (rc +6) has bit 2 or 3 - French or German - which the U.S.
-ROM's never do; and `MakeRecWordsFromGraph`/`MergeTwoRecWordsSets`, the
-readings of a graph that is not a list (a field expecting one fixed
-string), which are left as they were.
+NOT YET, deliberately: `CheckDiacriticsDirections` (0x0007c9a0, 684
+bytes, over `AnalyseDiacriticsDirection` 0x0007c130 - 2160 bytes -,
+`CurvFromSquare` and `LengthOfTraj`: about 3.2 KB), asked only for a
+letter set whose language (rc +6) has bit 2 or 3 - French or German -
+which the U.S. ROM's never do, so nothing can reach it; it answers
+nought.  (`MakeRecWordsFromGraph`/`MergeTwoRecWordsSets`, once listed
+here, are done - "A graph of alternatives" below.)
 
 What it does to the demos: `cursive.ns`'s two words are not scored - each
 is too far ahead of the next - so they read as the graph has them ("ton",
@@ -3398,12 +3436,58 @@ x rule inserts they run one behind, as they do in the ROM.
 `src/host/demo/numbers.ns` writes "42", "10" and "217" with the cursive
 letter set: the page reads "42 10 217" (ctest `host.NewtonNumbers`).
 
-**NOT YET RECONSTRUCTED** (the rest of the reader): `ORCreateLearnInfo`
-and `ORTraining` - the orthographic learning (only for a field with rc
-+0xb2 bit 6 / +0xb8 bit 3, which the Notepad never sets; about 2.5 KB for
-the learn array and 15 KB for the letter-shape database `TrainTrajectory`
-trains - `docs/next-steps.md`); and `AL_NextSet` (Airus selector
-8 for lexicons).
+### The orthographic learning (`recognition/Ortho.h`, `Ortho.cpp`, `OrthoDB.cpp`)
+
+When a field asks for it (rc +0xb2 bit 6, which the domain parameter
+0x20037 sets together with rc +0xb8 bit 3 - `SetUserConfig('bigLearningEnabled,
+true)` does it for the Notepad, as `cursive.ns` shows) the reader records,
+for every word it reads, which xrs each letter of its word graph came
+from and so which stretches of the pen's trace made it: a *learn array*
+(`ORCreateLearnInfo` over `OrtoCreate`/`OrtoEntries`, called from
+`GCTryToRecognize` where the ROM calls it) that goes into the word's
+training data as its 'ORTL' entry.  It is a big-endian block - its size,
+where the parts start, the maximum entries and parts, the number of
+runs of symbols the graph had, the entries and parts in use, then four
+bytes an entry (first part, last part, graph symbol, character) and the
+parts after them.  When the writer settles on a reading
+(`XRWDoLearning`) `ORTraining` walks the array for the run of letters
+that spells the word and trains each letter's own points into a
+database of letter shapes (`TrainTrajectory`).
+
+The database is 0x6000 bytes, big-endian too: a header (0x71 at +0, the
+number of classes at +6, its size at +8, the bytes in use at +0xc), then
+12-byte *classes* (a letter written with so many strokes, and where its
+samples are) and 20-byte *samples* (the letter, its class, and fourteen
+bytes of shape).  A shape is the letter's trace normalised to its box
+(`TraceToOdata`), resampled at sixteen points evenly along its length
+(`ResetParam`, `Repar`), put through a sixteen-point DCT each way
+(`FDCT16`, over the `_2C16` cosine table from `romtable.py`), the first
+seven coefficients after the constant kept for x and for y, normalised to
+unit length and brought into a byte each.  Training looks the sample up
+(`SearchInDataBase`: every sample within a box of the new one, widened
+until something is found, then again within the square root of the best
+distance, gathered per letter into an answer list), and *Occam* decides
+whether it is worth keeping - it is added when the nearest letter is
+another one, or this one only just nearer than the next.  ROM bug kept:
+`Occam` reads the first entry of an answer list that may be empty.
+DEVIATION: the ROM's `SDiv` by nought answers whatever the divide
+routine leaves; the host answers nought.  The learn array's +0x14 is a
+cached pointer to its parts, which a host pointer does not fit in; the
+host leaves it nought and works the parts out each time, as `OrtoTraining`
+does itself.  `test_Ortho` checks the DCT (a constant and a ramp, there
+and back), a letter made a sample (the same whatever its size), the
+database's adding, searching and Occam's verdicts with hand-made o's, c's
+and l's, and a learn array built from a word graph of "to" and trained;
+a live `cursive.ns` run makes a 21-entry, 4-part learn array and trains
+the database to three classes (`NEWTON_TRACE_CURSIVE=1` prints both;
+ctest `host.NewtonCursive` looks for the lines).
+
+`AL_NextSet` (0x0002c214, Airus selector 8 for a lexicon) answers the
+characters that may come next after the node reached, as one string in
+the block's word buffer: each child's character set (a string, in a
+lexicon) run together by `AL_NextSetCB`, terminated, and each character
+then kept once (`AL_FilterString`).  `test_Airus` walks a small lexicon
+with it.
 
 A field's own lines reach the engine through
 `TWordRecognizer::ConfigFromFrame` (which `ConfigureArea` tail-calls

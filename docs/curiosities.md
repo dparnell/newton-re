@@ -2107,3 +2107,38 @@ that does anything.  Whatever variable was meant (the gap between the two
 boxes, most likely) was lost somewhere between ParaGraph's source and the
 compiler; the reconstruction keeps the call as it is
 (`recognition/ChunkDigits.cpp`, `JoinOverlappingBoxes`).
+
+
+## The Newton keeps your letters as cosine transforms
+
+When a field asks for it (`bigLearningEnabled`), ParaGraph's cursive
+reader learns what *your* letters look like, and the way it keeps them is
+the idea behind JPEG.  Each letter the writer settles on is taken out of
+the trace (`LearnPartsCopy`), scaled to its box, resampled at sixteen
+points evenly spaced along its length, and each of x and y put through a
+sixteen-point discrete cosine transform (`FDCT16` at ROM 0x0007a3e8,
+over the `_2C16` cosine table at 0x0037415c; `recognition/OrthoDB.cpp`).  The
+constant term - where the letter is - is thrown away, the next seven
+coefficients of each axis are kept, the fourteen normalised to unit length
+and rounded into a byte each.  A letter of any size and any number of
+points becomes fourteen bytes, and two letters are compared by the
+distance between their fourteen numbers: the low frequencies are the
+letter's overall shape, and the wobbles of the pen are in the ones left
+out.  The database holds up to 32 of these per letter and stroke count in
+24 KB, and *Occam* - the name is ParaGraph's - only keeps a new one when
+it would change an answer: when the nearest letter to it is a different
+one, or the right one only just.
+
+## The bitmap rotator has a special case for fax pages
+
+`MungeBitmap` turns a bitmap a quarter turn in memory, 32 columns by 8
+rows at a time - except when `Tilable` (ROM 0x00040ee0) says the bitmap
+is one of four exact sizes: 0x3c6f0, 0x78de0, 0x3cc00 or 0x79800 bytes.
+They are all rows of 216 bytes - 1728 pixels, the width of a Group 3
+fax line - by 1146, 2292, 1152 or 2304 rows: a fax page at standard and
+fine resolution, in two page lengths.  A received fax lives in a large
+binary on a store, far too big for the heap, so `RotTiledBitmap` makes
+the turned copy on the same store with the same compander and fills it a
+tile at a time (`TTile`), never holding the page in memory.  The comments
+in the reconstruction had called these "screen-sized"; the MP2x00's
+screen is 40 bytes by 480 rows.  (`qd/MungeBitmap.cpp`.)

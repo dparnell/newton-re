@@ -9,6 +9,51 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the recognition system's last pieces - status complete
+
+- **The orthographic learning** (`recognition/Ortho.h`, `Ortho.cpp`,
+  `OrthoDB.cpp`, `OrthoTables.cpp` from romtable.py's `_2C16`; commit
+  c7d5594): `ORCreateLearnInfo` records which stretches of the trace
+  made each letter of a word read (the big-endian learn array, 'ORTL' in
+  the training data), and `ORTraining` - from `XRWDoLearning` - trains the
+  letters of the word the writer settled on into the 0x6000-byte
+  letter-shape database (`TrainTrajectory`: the trace normalised,
+  resampled at sixteen points, `FDCT16` each way, fourteen bytes kept;
+  `SearchInDataBase`, `Occam`, `AddToDataBase`).  ROM bug kept: `Occam`
+  reads an empty answer list's first entry.  DEVIATION: `SDiv` by nought
+  answers nought; the learn array's cached parts pointer is left nought.
+  (Beware `Repar`: its loop is a do-while the ROM runs fourteen times for
+  sixteen points - a for loop comes out one short.)  `cursive.ns` turns
+  `bigLearningEnabled` on, and a live run makes a 21-entry learn array and
+  trains three classes (ctest `host.NewtonCursive` checks the trace);
+  `test_Ortho`.
+- **`AL_NextSet`** (Airus selector 8 for lexicons, with `AL_NextSetCB`;
+  commit 4c43df9): what may follow a node as one string, each character
+  once.  `test_Airus`.
+- **`TEditView::TrackDistort`** over the polygon selection (commit
+  915145e): `TPolygonHilite` (the selection's own copy of its points,
+  `MakeHilite`/`MakeInkHilite`/`HiliteAll`, `ClickOptions` 1/+2/+4,
+  `Encloses` over `LineHitRatio`, the two-pass `DrawHilites`,
+  `DeleteHilited`, `AddHilited`, `UpdateBounds`, `SetPenSize`), commands
+  0x43 (a point moved) and 0x4b (the pen size), and
+  `TDataView::DrawHilitedData`.  A corner pressed in `HiliteClick` dices
+  the shape into a copy, drags the corner and sends 0x43 when the pen
+  lifts.  Host bug fixed: `TView::LocalOrigin` took the view's own
+  contents origin where the ROM takes the parent's (a partly selected
+  paragraph was diced to the wrong place).  `test_Views`' `TestDistort`.
+  NOT YET: `HiliteTraced` (a traced part of a shape, ~7.5 KB), and with
+  it the partial `RemovePoints` and command 0x44.
+- **`RotTiledBitmap`** recorded rather than reconstructed (commit
+  7b38433): `Tilable`'s sizes are fax pages (216-byte rows by 1146, 2292,
+  1152 or 2304), not the screen as the comments had it; the tile turn
+  works on a large binary on a store with its compander, and the host
+  has neither large binaries nor a fax receiver.
+- **The French/German accent checks** (`CheckDiacriticsDirections`,
+  `AnalyseDiacriticsDirection`, about 3.2 KB) left: only a French or
+  German letter set asks for them.
+- `docs/recognition/README.md` now opens with the system's status and
+  the short list of what is left and why.
+
 ## 2026-09-28: a field's base line and grid reach the cursive engine
 
 - `TWordRecognizer::ConfigFromFrame` (0x00167158) split out of

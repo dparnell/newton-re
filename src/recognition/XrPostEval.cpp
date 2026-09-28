@@ -396,12 +396,16 @@ CalculateBoxes_Side_Result(short c, short prev, POST_PARAMS* pp)
 }
 
 
-// NOT YET RECONSTRUCTED: CheckDiacriticsDirections (0x0007c9a0) - the directions of the strokes over letters that
-// carry diacritical marks (AnalyseDiacriticsDirection 0x0007c130,
-// CurvFromSquare, LengthOfTraj), which EvaluateCharQuality asks only for
-// a field whose language (rc +6) has bit 2 or 3 set - a French or German
-// letter set; the U.S. ROM's letter sets have neither, so it is never
-// reached from here.  Answers nought (nothing to charge).
+// NOT YET RECONSTRUCTED: CheckDiacriticsDirections (0x0007c9a0, 684
+// bytes) - the directions of the strokes over letters that carry
+// diacritical marks, over AnalyseDiacriticsDirection (0x0007c130, 2160
+// bytes, thirteen arguments), CurvFromSquare (0x003078b0) and
+// LengthOfTraj (0x003079b0): about 3.2 KB in all.  EvaluateCharQuality
+// asks for it only for a field whose language (rc +6) has bit 2 or 3 set
+// - a French or German letter set - and the U.S. ROM's letter sets have
+// neither, so nothing in this reconstruction can reach it; it was left
+// rather than transcribed untestable against a real case.  Answers
+// nought (nothing to charge).
 long
 CheckDiacriticsDirections(POST_PARAMS*, rec_w_type*, xrdata_type*, short, short* result)
 {
