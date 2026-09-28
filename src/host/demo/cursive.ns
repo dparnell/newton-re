@@ -111,6 +111,12 @@ tonStrokes := nil;
 learn := func()
   begin
     SetUserConfig('learningEnabledOption, true);
+    // (with the "big" learning on too, the reader also ties each letter
+    // of the word to the trace - its orthographic learn array, 'ORTL' -
+    // and learning trains the letters' shapes into the orthographic
+    // database: "[cursive] orthographic learn array" and "[cursive]
+    // learning: ... trained into the orthographic database")
+    SetUserConfig('bigLearningEnabled, true);
     ReadCursiveOptions();
     local strokes := [];
     foreach s in tonStrokes do AddArraySlot(strokes, call yx with (s));

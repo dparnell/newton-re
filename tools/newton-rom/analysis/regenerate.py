@@ -126,6 +126,10 @@ GENERATED = [
      "romtable.py", ["{build}", "kChunkSin@0x0037add4:i32:4", "kChunkCos@0x0037ade4:i32:4",
                      "kChunkMonthDays@0x0037ae10:i16:14",
                      "-o", "src/recognition/ChunkTables.cpp"]),
+    # the orthographic learning's sixteen-point inverse DCT's last
+    # butterflies (1/(2 cos) as a whole and a fraction byte)
+    ("ortho",
+     "romtable.py", ["{build}", "_2C16:i32:8", "-o", "src/recognition/OrthoTables.cpp"]),
     ("mmumap",
      "mmumap.py", ["{build}", "--doc", "docs/memory/mmu-map.md"]),
     ("factorysoups",

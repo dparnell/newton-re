@@ -100,6 +100,9 @@ add_library(recognition STATIC
     XrPostCalc.cpp
     XrPostEval.cpp
     XrPostTables.cpp
+    Ortho.cpp
+    OrthoDB.cpp
+    OrthoTables.cpp
     XrRules.cpp
     XrRulesTables.cpp
     Xrlv.cpp

@@ -13,6 +13,8 @@
 #include "ROMConstants.h"
 #include "NativeFunctions.h"
 #include "ByteOrder.h"
+#include "Ortho.h"
+#include "XrReader.h"		// __ctype
 #include <string.h>
 
 extern const unsigned char	alpha_charset_eng[28];
@@ -268,6 +270,16 @@ IsAlpha(int c)
 {
 	c &= 0xff;
 	return IsUpper(c) || IsLower(c);
+}
+
+
+// ROM 0x00283ee4 IsAlnum
+// A letter, or a digit by the C library's classes.
+int
+IsAlnum(int c)
+{
+	c &= 0xff;
+	return IsAlpha(c) || (__ctype[c] & 0x20) != 0;
 }
 
 
@@ -851,17 +863,12 @@ ORGetDBSize(void)
 
 
 // ROM 0x0014806c ORInitDB__FPvUl
+// (a tail call into the database's own InitDataBase, Ortho.h)
 void
 ORInitDB(void* db, ULong size)
 {
-	if (db == nil)
-		return;
-	memset(db, 0, size);
-	((ULong32*) db)[0] = 0x71;
-	((UByte*) db)[7] = 0;
-	((UByte*) db)[6] = 0;
-	((ULong32*) db)[2] = size;
-	((ULong32*) db)[3] = 0x10;
+	if (db != nil)
+		InitDataBase(db, size);
 }
 
 

@@ -6,6 +6,7 @@
 */
 
 #include "XrDomains.h"
+#include "Ortho.h"
 #include "Controller.h"
 #include "Areas.h"
 #include "Dictionaries.h"		// TDictChain
@@ -16,6 +17,7 @@
 #include "CursiveReader.h"
 #include "NewtonMemory.h"
 #include "FixedMath.h"
+#include "ByteOrder.h"
 #include <string.h>
 
 extern const unsigned char	lpunct_charset[8];
@@ -657,8 +659,6 @@ GetMinGroupVex(UByte c, UByte variant, rc_type* rc)
 // in its training data) moves the learning info on the fly, and with
 // orthographic learning on the pen's trace trains the letter shapes
 // ('ORTL').
-// NOT YET RECONSTRUCTED: ORTraining (0x00147d70), which trains the
-// reading engine's trajectories.
 long
 XRWDoLearning(ULong recordAddr, XRWORDPARAM* param)
 {
@@ -693,7 +693,11 @@ XRWDoLearning(ULong recordAddr, XRWORDPARAM* param)
 			if (LHFindEntry(data, 'ORTL', '0001', 0, &ortl, nil) == 0
 			&&  ortl != nil && record->fTrace != nil && record->fCount > 2)
 			{
-				// NOT YET: ORTraining(param->fOrtho, record->fTrace, word, ortl)
+				ORTraining(param->fOrtho, (const PS_point_type*) record->fTrace, word, ortl);
+				if (TracingCursive() && param->fOrtho != nil)
+					fprintf(stderr, "[cursive] learning: \"%s\" trained into the orthographic database: %d classes, %lu bytes used\n",
+							(const char*) word->fWord, GetBigEndianHalf((UByte*) param->fOrtho + kOrtoDBClasses),
+							(unsigned long) GetBigEndianWord((UByte*) param->fOrtho + kOrtoDBUsed));
 			}
 		}
 		result = 0;

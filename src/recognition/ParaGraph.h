@@ -118,6 +118,7 @@ void	HWRStrRev(char* s);									// ROM 0x000e65a0 HWRStrRev__FPc
 int		IsUpper(int c);										// ROM 0x00283e54 IsUpper
 int		IsLower(int c);										// ROM 0x00283e84 IsLower
 int		IsAlpha(int c);										// ROM 0x00283f20 IsAlpha
+int		IsAlnum(int c);										// ROM 0x00283ee4 IsAlnum
 int		ToUpper(int c);										// ROM 0x00283f58 ToUpper
 int		ToLower(int c);										// ROM 0x00283fb0 ToLower
 int		IsPunct(int c);										// ROM 0x00283eb4 IsPunct

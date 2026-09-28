@@ -16,6 +16,8 @@
 #include "ParaGraph.h"
 #include "Dictionaries.h"
 #include "LowLevel.h"
+#include "Ortho.h"
+#include "ByteOrder.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -207,9 +209,11 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 						MakeAndCombRecWordsFromWordGraph(&rwg, rc, &xr, readings);
 						if ((RCGetH(rc, 0xb2) & 0x40) != 0)
 						{
-							// NOT YET RECONSTRUCTED: ORCreateLearnInfo
-							// (0x00148078), the orthographic learning's
-							// information about the word
+							ORCreateLearnInfo(&xr, &rwg, &ortl, &ortlSize);
+							if (TracingCursive() && ortl != nil)
+								fprintf(stderr, "[cursive] orthographic learn array: %d entries, %d parts (%lu bytes)\n",
+										GetBigEndianHalf((UByte*) ortl + kOrtoEntries), GetBigEndianHalf((UByte*) ortl + kOrtoParts),
+										(unsigned long) ortlSize);
 						}
 						RCSetH(rc, 0x08, saved8);
 					}
@@ -264,9 +268,7 @@ done:
 	GCWDWriteRecResults(word, rc, readings, learning, err, split, 0);
 	if (split != nil)
 		HWRMemoryFree((Ptr) split);
-	// NOT YET RECONSTRUCTED: ORLArrayDelete(&ortl) - with no orthographic
-	// learning info made (ortl nil) there is nothing for it to do
-	(void) ortl;
+	ORLArrayDelete(&ortl);
 	ChunkRestoreRC(chunk, rc);
 	ChunkCleanUp(&chunk);
 	GCFreeRwgMem(&rwg);

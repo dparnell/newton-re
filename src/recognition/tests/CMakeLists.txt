@@ -129,3 +129,9 @@ add_test(NAME recognition.XrAnswers COMMAND test_XrAnswers)
 add_executable(test_Chunk test_Chunk.cpp)
 target_link_libraries(test_Chunk PRIVATE recognition)
 add_test(NAME recognition.Chunk COMMAND test_Chunk)
+
+# the orthographic learning: the DCT, a letter's sample, the letter-shape
+# database, a word's learn array and its training
+add_executable(test_Ortho test_Ortho.cpp)
+target_link_libraries(test_Ortho PRIVATE recognition memory)
+add_test(NAME recognition.Ortho COMMAND test_Ortho)
