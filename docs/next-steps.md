@@ -10,15 +10,15 @@ bugs found along the way - is `docs/work-log.md`.
 
 ## State at 2026-09-28
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 113/113
   (`intl.Dates` fails about one run in ten: it reads the real clock).
   (`packages.PackageIterator`'s intermittent failure, 2026-09-28, was the
   test, not the port: the ROM's `TPackageIterator` never looks at a
   pipe's eof, so a package cut short is verified out of whatever malloc
   left - a ROM bug, now commented in `ComputeSizeOfEntriesAndData`, and
   the test's case replaced by a deterministic bad-processor directory.)
-- `analysis/coverage.py build/MP2x00US --check`: 12003 citations, 0 bad;
-  6856 of 16671 functions (41.13%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 12015 citations, 0 bad;
+  6859 of 16671 functions (41.14%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
@@ -50,7 +50,12 @@ bugs found along the way - is `docs/work-log.md`.
   letter set: `src/host/demo/cursive.ns` writes "ton" and "to" and the
   page types "ton to"; joined-up words (`cursive-joined.ns`) read "on",
   "no", "to", "nun" first (`NEWTON_TRACE_CURSIVE=1`,
-  `NEWTON_TRACE_ARBITER=1`; the digit reader is NOT YET - stage 4 below).
+  `NEWTON_TRACE_ARBITER=1`).
+- **Written numbers are read** by ParaGraph's digit reader, which goes
+  first in a field that allows numbers: `src/host/demo/numbers.ns`
+  writes "42", "10" and "217" with the cursive letter set and the page
+  types "42 10 217"; "217" is offered as the date "2/7" as well (ctest
+  `host.NewtonNumbers`).
 - **Shapes are recognised** with the Notepad set to shapes
   (`src/host/demo/shapes.ns`, `snapping.ns`; `NEWTON_TRACE_SHAPES=1`).
 - **A selection can be made, dragged and resized** (`src/host/demo/drag.ns`),
@@ -565,19 +570,31 @@ solidus, comma, 0, 6, 3, per cent sign and @ from drawn writing;
 beside a letter not); `ChunkProcessor` (`recognition/Chunk.cpp`;
 `TestProcessor` reads "42" and "10" from points as GCTryToRecognize will
 hand them over).  `DigitChar` moved to `Chunk.h` (the ROM writes the
-chain out eight times).  **Left of (e) - the merge**: `ChunkPatchXrdata`
-(0x002a6680-0x002a6b50, 1.2 KB, with the small FUN_002a7078/70ec/713c
-after ChunkProcessor that copy a tagNumBox into a reading),
-`ChunkSortAnswers` (0x002a6650, over the sort 0x002a4c04-0x002a5620,
-2.6 KB) and `ChunkCorrectByLexDB` (0x002a5620-0x002a6404, 3.5 KB), about
-7 KB; then `ChunkProcessor` is called from `GCTryToRecognize` (the place
-is marked NOT YET there).  It is not called yet on purpose: once it finds
-a number, `ChunkModifyRC` narrows the configuration to numbers alone and
-the low level makes no xrs at all (tried: "42" and "10" written on the
-Notepad with the cursive letter set were found as numbers, "low_level: 0
-xrs", no answers), so without the merge a written number reaches the page
-as an empty word and `TParagraphView::HandleWord` divides by its length.
-One round.
+chain out eight times).
+
+**(e) DONE (2026-09-28, round 7) - the digit reader is whole and live.**
+The merge (`recognition/ChunkMerge.cpp`, all from the disassembly):
+`ChunkPatchXrdata` (the xrs cut down to the runs of strokes that are not
+digits, each ended by a break; two breaks and nothing more for a number
+alone, so the xr reader has nothing to read), `ChunkSortAnswers` over
+the unnamed sort 0x002a4c04 (the xr reader's letters - an o read as a 0,
+another letter as the first non-letter the other readings have there -
+put among the digits by where their boxes lie, 0x002a4a34 working the
+boxes out; brackets written the wrong way round, guillemets and
+"(ddd1"-style brackets settled; "d)" marked a list item) and
+`ChunkCorrectByLexDB` (the reading walked through the lexical database a
+character at a time, the confusable characters - 1 / ( ), 7 ), c ( 1, . ,
+- and so on - tried in turn with a 32-deep backtracking stack, 0x002a5414
+to 0x002a55bc and 0x002a7078-0x002a7168; then read again as a date with a
+'1' taken for a '/', against the ROM's days-per-month table
+`kChunkMonthDays` (romtable.py, 0x0037ae10, February 29), the long forms
+in place of the reading, the short ones as the second; then an x given a
+space before it).  `GCTryToRecognize` calls `ChunkProcessor` where the ROM
+does, and `FillRecwordSplitInfo`'s number branch (0x0019e9e8) is real.
+`TParagraphView::HandleWord`'s divide by an empty word's length now
+throws evt.ex.div0 as the ROM's `__rt_udiv` does (it had trapped on the
+host); nothing hands it an empty word now.  Tests: `test_Chunk`'s
+`TestMerge`, `test_XrAnswers`' number split, ctest `host.NewtonNumbers`.
 
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3

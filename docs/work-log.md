@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: the digit reader's merge - written numbers read
+
+- `recognition/ChunkMerge.cpp`: `ChunkPatchXrdata`, `ChunkSortAnswers`
+  (over the unnamed sort 0x002a4c04 and the letter boxes 0x002a4a34) and
+  `ChunkCorrectByLexDB` (the lexical-database walk with its confusable
+  characters and backtracking stack, 0x002a5414-0x002a55bc and
+  0x002a7078-0x002a7168; the date check over `kChunkMonthDays`,
+  romtable.py 0x0037ae10; the x rule), all from the disassembly.
+  `GCTryToRecognize` now calls `ChunkProcessor`; `FillRecwordSplitInfo`'s
+  number branch (0x0019e9e8) is real.  `src/host/demo/numbers.ns`: "42",
+  "10", "217" written with the cursive letter set, the page reads "42 10
+  217" and "217" is offered as "2/7" (ctest `host.NewtonNumbers`).
+- `TParagraphView::HandleWord` divided by an empty word's length, which
+  trapped on the host; the ROM's `__rt_udiv` throws evt.ex.div0
+  (0x0038cb54), so the host now throws too.  The empty word came from the
+  cursive reader before the merge existed; nothing produces one now.
+- `packages.PackageIterator`'s intermittent failure was its test: the
+  ROM's `TPackageIterator` never looks at a pipe's eof, so a package cut
+  short is verified out of uninitialised memory (ROM bug, commented); the
+  case is now a deterministic bad-processor directory.
 
 ## 2026-09-28: SearchDigit_S, Digits whole, CutNumberInDigits, ChunkProcessor
 

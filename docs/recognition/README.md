@@ -3038,7 +3038,7 @@ calls `Learn(0)`, and the letter weights stop being the defaults
 on the way: `UnitID` read a host ULong out of the unit id, which
 `EncodeUnitID` writes as two UniChars.
 
-### The digit reader (`recognition/Chunk.h`, begun)
+### The digit reader (`recognition/Chunk.h`)
 
 In a field that allows numbers (rc +0xb6) ParaGraph's "chunk" reader
 reads first: `ChunkProcessor` makes a trace of its own (`tag_WORD_TRACE`,
@@ -3338,21 +3338,71 @@ written out once), 217, 11, 2, 5, 1.1, (42) and 15 are numbers, 1:1, "is"
 and digits beside a letter are not; `TestProcessor` reads "42" and "10"
 from points as `GCTryToRecognize` hands them over.
 
-NOT YET: the merging of the numbers read into the readings -
-`ChunkPatchXrdata` (0x002a6680, 1.2 KB), `ChunkSortAnswers` (over the
-sort at 0x002a4c04, 2.6 KB) and `ChunkCorrectByLexDB` (0x002a5620, 3.5
-KB).  `ChunkProcessor` is not called from `GCTryToRecognize` until they
-are: once it finds a number `ChunkModifyRC` narrows the configuration to
-numbers alone and the low level makes no xrs at all, so the readings can
-only come from them, and without them a written number would reach the
-page as an empty word.  The plan is in `docs/next-steps.md`.
+#### The merge (`recognition/ChunkMerge.cpp`)
+
+What the digit reader found becomes the word's readings in three steps
+around the xr reader, all read from the disassembly (the decompiler takes
+the sort's registers for code pointers):
+
+- **`ChunkPatchXrdata`**, after the low level: the xrs are cut down to
+  what is not a digit.  For a number alone that is nothing - two breaks
+  (the first xr made a break of height 7), so the xr reader, which wants
+  three xrs, reads nothing (`ChunkModifyRC` has already narrowed the
+  configuration so that the low level makes none).  Otherwise each run of
+  strokes the processor found not to be digits (its point pairs) keeps
+  the xrs that lie in it or across its ends, the runs ended by breaks
+  that carry the height, shift and orientation of the next xr, so that
+  the xr reader reads the letters beside the number as words of their
+  own.
+- **`ChunkSortAnswers`**, over an unnamed sort (0x002a4c04): the digits
+  and whatever the xr reader read put together in writing order.  Each
+  letter's box is worked out from the xrs it was read from (0x002a4a34),
+  a letter other than an x is read as a digit where it can be (an o as a
+  0, anything else as the first non-letter the other readings have in
+  that place - the reading as it was becoming the second), and each is
+  put among the digits where its middle falls (a comma or full stop by
+  its left side).  A '(' ')' pair written the wrong way round before the
+  first character is turned about, a lone '«' with two '>'s after it (or
+  a ')' and a '>') becomes '«...»' and the other way round, and a
+  bracketed four-digit run gets its brackets ("(ddd1" is "(ddd)").  The
+  first reading is then the characters, weight 100, and the second the
+  alternatives, weight 90.  "1)" or "12)" is taken for a list item and
+  left alone by the check that follows.
+- **`ChunkCorrectByLexDB`**: the reading walked through the lexical
+  database a character at a time.  Each character has its confusable
+  alternatives, itself first (0x002a5414: 1 as / ( ), 7 as ), c and C as
+  ( 1, Z r z as 2, ( as 1 /, ) as / 7, / as 1 ( ), . as , -, , as ., ' as
+  -); each is tried against what the database says may follow, and when
+  none fits the walk goes back to the last character that had another to
+  try (a stack of 32 choices, 0x002a5574/0x002a55bc, growing down and
+  quietly dropping what does not fit).  A walk that ends on a whole word
+  of the database makes that word the reading (weight 100, its id and
+  attribute at +0x4a/+0x4c), the reading as written the second (50);
+  one that runs out of choices leaves the reading at 99 and id -3.  Then
+  a reading as long as the number is tried as a date with a '1' read for
+  a '/': d1d, d1dd and dd1d, dd1dd, d1d1dd, d1dd1dd and dd1d1dd, dd1dd1dd
+  - the month 1 to 12, the day within the month by the ROM's table
+  (`kChunkMonthDays`, 0x0037ae10, generated: February has 29), the year
+  0 to 99.  Where a form reads both ways ("1111"), the heights of the
+  second and third characters decide which '1' is the slash.  The long
+  forms go in place of the first reading (the others move down, ten
+  lighter each), the short ones as the second - "217" is offered as
+  "2/7".  Last, a reading with one x, not at its start, gets a space
+  before it.
+
+`GCTryToRecognize` calls `ChunkProcessor` where the ROM does, and
+`FillRecwordSplitInfo` splits a number's words by the digit boxes of their
+characters (0x0019e9e8) - which can only come from the x rule, and which
+counts the boxes by the characters of the reading, so after the space the
+x rule inserts they run one behind, as they do in the ROM.
+`src/host/demo/numbers.ns` writes "42", "10" and "217" with the cursive
+letter set: the page reads "42 10 217" (ctest `host.NewtonNumbers`).
 
 **NOT YET RECONSTRUCTED** (the rest of the reader): `ORCreateLearnInfo`
 and `ORTraining` - the orthographic learning (only for a field with rc
 +0xb2 bit 6 / +0xb8 bit 3, which the Notepad never sets; about 2.5 KB for
 the learn array and 15 KB for the letter-shape database `TrainTrajectory`
-trains - `docs/next-steps.md`); the rest of the digit reader (above) and
-FillRecwordSplitInfo's branch for its words; `AL_NextSet` (Airus selector
+trains - `docs/next-steps.md`); `AL_NextSet` (Airus selector
 8 for lexicons); and the base-line and grid geometry `ConfigureArea` hands
 the engine (`GetWordGeom`, `GetGridGeom`).
 
