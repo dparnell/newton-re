@@ -311,6 +311,27 @@ void	DefHeightsForNumber(tag_CHUNK_STAFF* staff);					// ROM 0x002853ec DefHeigh
 // objects as class 200, each one's object kept in the chunk it starts at
 // (f7C).  ==> 1.
 long	GetCircles(tag_CHUNK_STAFF* staff);								// ROM 0x00288d4c GetCircles__FP15tag_CHUNK_STAFF
+// The searchers' geometry.  direct_suits: whether a direction lies from lo
+// round to hi (wrapping past straight up when hi is below lo);
+// distance_between_directions: the steps between two, the short way;
+// take_next_point/take_prev_point: the first node after (before) start
+// further from it than the limits across, up or down, or in all (0: no
+// limit; none at all takes the first node), -1 for none; x_in_line: where
+// a line is at a height (-1 when it is level); x_in_curve: where a chunk's
+// polyline is; cross_with_line: whether a segment crosses a chunk.
+long	direct_suits(long dir, long lo, long hi);						// ROM 0x002a7fd0 direct_suits__FiN21
+long	distance_between_directions(long a, long b);					// ROM 0x002a83d8 distance_between_directions__FiT1
+long	take_next_point(tag_wapx_type* n, long end, long start, long dx, long dy, long sum);	// ROM 0x002a7868 take_next_point__FP13tag_wapx_typeiN42
+long	take_prev_point(tag_wapx_type* n, long start, long dx, long dy, long sum);				// ROM 0x002a7980 take_prev_point__FP13tag_wapx_typeiN32
+long	x_in_line(long x1, long y1, long x2, long y2, long y);			// ROM 0x002a82a4 x_in_line__FiN41
+long	x_in_curve(tag_wapx_type* n, tag_CHUNK* c, long y);				// ROM 0x002a8174 x_in_curve__FP13tag_wapx_typeP9tag_CHUNKi
+long	cross_with_line(tag_wapx_type* n, tag_CHUNK* c, long x1, long y1, long x2, long y2);	// ROM 0x002a82f4 cross_with_line__FP13tag_wapx_typeP9tag_CHUNKiN33
+
+// The digits whose main stroke is a curve down and round (a chunk of
+// class 500, value 501) - 2, 3, 4, 5, 7, 9 and the $ - put in the list of
+// low objects as class 1300, value 1400 + the digit (0x15 for $), extra 1
+// found whole, 2 with a separate bar, 3 from a bar.  ==> 1.
+long	SearchDigit_L(tag_CHUNK_STAFF* staff);							// ROM 0x0028dd18 SearchDigit_L__FP15tag_CHUNK_STAFF
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 

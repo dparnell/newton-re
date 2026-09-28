@@ -432,6 +432,152 @@ CountClass(void* lo, ULong cls)
 	return n;
 }
 
+// a 5: down the left, round the bowl, then the bar as a stroke of its own
+static void
+DrawFive(double x, double y)
+{
+	MoveTo(x + 2, y);
+	LineTo(x + 1, y + 9);
+	ArcTo(x + 7, y + 14, 6, 120, -150);
+	StrokeEnd();
+	MoveTo(x + 2, y);
+	LineTo(x + 13, y);
+	StrokeEnd();
+}
+
+// a 9: the loop anticlockwise from the right, then the tail down
+static void
+DrawNine(double x, double y)
+{
+	MoveTo(x + 12, y + 3);
+	EllipseTo(x + 7, y + 6, 6, 6, 30, 390);
+	LineTo(x + 12, y + 20);
+	StrokeEnd();
+}
+
+// the digits the searchers found: class 1300, value 1400 + the digit
+static long
+Digits1300(void* lo, long* digits, long max)
+{
+	tag_LOWOBJ* obj = nil;
+	long k = 0;
+	if (LO_SetWorkClass(lo, 1300) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more && k < max; more = LO_PickNext(lo, &obj))
+			digits[k++] = obj->fValue - 1400 + (obj->fExtra << 8);
+	return k;
+}
+
+static long
+SearchL(const char* what, long* digits, long max)
+{
+	tag_CHUNK_STAFF staff;
+	long found = 0;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	SearchDigit_L(&staff);
+	found = Digits1300(lo, digits, max);
+	if (gVerbose)
+	{
+		printf("  %s: %ld digits:", what, found);
+		for (long k = 0; k < found; k++)
+			printf(" %ld(kind %ld)", digits[k] & 0xff, digits[k] >> 8);
+		printf("\n");
+	}
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return found;
+}
+
+// a 2 started at its top left, so its first chunk goes down all the way
+static void
+DrawTwoFlat(double x, double y)
+{
+	MoveTo(x + 1, y + 3);
+	ArcTo(x + 7, y + 6, 6, 155, -30);
+	LineTo(x, y + 20);
+	LineTo(x + 14, y + 20);
+	StrokeEnd();
+}
+
+// a 3 started at its top left, one stroke down round both bowls
+static void
+DrawThreeFlat(double x, double y)
+{
+	MoveTo(x + 1, y + 2);
+	ArcTo(x + 7, y + 5, 5, 150, -90);
+	ArcTo(x + 7, y + 15, 5, 90, -160);
+	StrokeEnd();
+}
+
+// a 5 in one stroke: the bar right to left, down, round the bowl
+static void
+DrawFiveOne(double x, double y)
+{
+	MoveTo(x + 13, y);
+	LineTo(x + 2, y);
+	LineTo(x + 1, y + 9);
+	ArcTo(x + 7, y + 14, 6, 120, -150);
+	StrokeEnd();
+}
+
+// a 7 whose bar and stem are one curve down
+static void
+DrawSevenOne(double x, double y)
+{
+	MoveTo(x, y + 1);
+	LineTo(x + 13, y);
+	LineTo(x + 9, y + 8);
+	LineTo(x + 5, y + 20);
+	StrokeEnd();
+}
+
+// a $: an S from its top right down round to its bottom left, then the
+// upright through it
+static void
+DrawDollar(double x, double y)
+{
+	MoveTo(x + 12, y + 4);
+	ArcTo(x + 7, y + 6, 5, 25, 270);
+	ArcTo(x + 7, y + 16, 5, 90, -155);
+	StrokeEnd();
+	MoveTo(x + 7, y - 2);
+	LineTo(x + 7, y + 23);
+	StrokeEnd();
+}
+
+static void
+TestSearchL(void)
+{
+	// SearchDigit_L starts from a chunk that is a curve down and round
+	// (class 500, value 501): the 5, the $ - whose S is one
+	long d[8];
+	// a 5 with its bar a stroke of its own: found with the bar (kind 2)
+	TraceStart();
+	DrawFive(0, 0);
+	EXPECT(SearchL("5", d, 8) == 1 && d[0] == (5 | 2 << 8));
+	// a 5 in one stroke: read from its curve, the bar its start (kind 3)
+	TraceStart();
+	DrawFiveOne(0, 0);
+	EXPECT(SearchL("5 one", d, 8) == 1 && d[0] == (5 | 3 << 8));
+	// a $: the S with an upright through it, found whole (0x15, kind 1)
+	TraceStart();
+	DrawDollar(0, 0);
+	EXPECT(SearchL("$", d, 8) == 1 && d[0] == (0x15 | 1 << 8));
+	// a 2 whose body turns the other way (value 502), a 3 of two arcs
+	// (class 700), a 4, a 7 and a 9 are other searchers' work
+	TraceStart(); DrawTwoFlat(0, 0); EXPECT(SearchL("2 flat", d, 8) == 0);
+	TraceStart(); DrawThreeFlat(0, 0); EXPECT(SearchL("3 flat", d, 8) == 0);
+	TraceStart(); DrawFour(0, 0); EXPECT(SearchL("4", d, 8) == 0);
+	TraceStart(); DrawSevenOne(0, 0); EXPECT(SearchL("7 one", d, 8) == 0);
+	TraceStart(); DrawNine(0, 0); EXPECT(SearchL("9", d, 8) == 0);
+	TraceStart(); DrawZero(0, 0); EXPECT(SearchL("0", d, 8) == 0);
+}
+
 static void
 TestLineAndCircles(void)
 {
@@ -498,6 +644,7 @@ main(int argc, char** argv)
 	TestLowObjects();
 	TestConstruct();
 	TestLineAndCircles();
+	TestSearchL();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

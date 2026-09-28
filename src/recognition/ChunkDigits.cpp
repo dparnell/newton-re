@@ -23,6 +23,199 @@
 #include <string.h>
 
 
+#pragma mark - the searchers' geometry
+
+// ROM 0x002a7fd0 direct_suits__FiN21
+// Whether a direction lies from lo round to hi (anticlockwise; when hi is
+// below lo the range wraps past straight up).
+long
+direct_suits(long dir, long lo, long hi)
+{
+	if (hi > lo)
+		return lo <= dir && dir <= hi;
+	if (hi < lo)
+		return dir >= lo || dir <= hi;
+	return dir == lo;
+}
+
+
+// ROM 0x002a83d8 distance_between_directions__FiT1
+// How many steps apart two directions are, the short way round (0..12).
+long
+distance_between_directions(long a, long b)
+{
+	long d = HWRAbs(a - b);
+	if (d > 12)
+		d = 24 - d;
+	return d;
+}
+
+
+// The test take_next_point and take_prev_point make of a node dx across
+// and dy up or down from where they started: past both limits when both
+// are given, past the one given, or further in all than sum; with no
+// limit at all the first node is taken.
+static bool
+PastLimits(long ax, long ay, long dx, long dy, long sum)
+{
+	if (dx != 0)
+	{
+		if (dy != 0 && ax > dx && ay > dy)
+			return true;
+		if (dy == 0)
+		{
+			if (ax > dx)
+				return true;
+			goto summed;
+		}
+	}
+	if (dy != 0 && dx == 0 && ay > dy)
+		return true;
+summed:
+	if (sum != 0)
+	{
+		if (ax + ay > sum)
+			return true;
+		if (sum >= 1)
+			return false;
+	}
+	return !(dx >= 1 || dy >= 1);
+}
+
+
+// ROM 0x002a7868 take_next_point__FP13tag_wapx_typeiN42
+// The first node after start (up to end, not including it) further from
+// start than the limits (PastLimits).  ==> it, -1 for none.
+long
+take_next_point(tag_wapx_type* n, long end, long start, long dx, long dy, long sum)
+{
+	int32_t x0 = n[start].x, y0 = n[start].y;
+	for (long k = start + 1; k < end; k++)
+	{
+		long ax = HWRAbs(n[k].x - x0);
+		long ay = HWRAbs(n[k].y - y0);
+		if (PastLimits(ax, ay, dx, dy, sum))
+			return k;
+	}
+	return -1;
+}
+
+
+// ROM 0x002a7980 take_prev_point__FP13tag_wapx_typeiN32
+// The same looking back from start to node 0.
+long
+take_prev_point(tag_wapx_type* n, long start, long dx, long dy, long sum)
+{
+	int32_t x0 = n[start].x, y0 = n[start].y;
+	for (long k = start - 1; k >= 0; k--)
+	{
+		long ax = HWRAbs(n[k].x - x0);
+		long ay = HWRAbs(n[k].y - y0);
+		if (PastLimits(ax, ay, dx, dy, sum))
+			return k;
+	}
+	return -1;
+}
+
+
+// ROM 0x002a82a4 x_in_line__FiN41
+// Where the line through (x1, y1) and (x2, y2) is at height y: x1 when the
+// line is upright or y is y1's, -1 when it is level.
+long
+x_in_line(long x1, long y1, long x2, long y2, long y)
+{
+	if (x2 == x1 || y == y1)
+		return x1;
+	if (y2 == y1)
+		return -1;
+	return (int32_t) ((x2 - x1) * (y - y1)) / (int32_t) (y2 - y1) + x1;
+}
+
+
+// ROM 0x002a8174 x_in_curve__FP13tag_wapx_typeP9tag_CHUNKi
+// Where a chunk's polyline is at height y: between the first two nodes
+// either side of it (the x of a node exactly at it), or when it never
+// gets there the x of its top end if that is below y, else of its bottom.
+long
+x_in_curve(tag_wapx_type* n, tag_CHUNK* c, long y)
+{
+	long top, bottom;
+	if (c->fY0 <= c->fY1)
+	{
+		bottom = c->fTo;
+		top = c->fFrom;
+	}
+	else
+	{
+		bottom = c->fFrom;
+		top = c->fTo;
+	}
+	long prev = -1, found = -1;
+	for (long k = c->fFrom; k <= c->fTo; k++)
+	{
+		int32_t yk = n[k].y;
+		if (yk == y)
+			return n[k].x;
+		if (prev != -1)
+		{
+			if ((yk > y && n[prev].y < y) || (yk < y && n[prev].y > y))
+			{
+				found = k;
+				break;
+			}
+		}
+		prev = k;
+	}
+	if (found == -1)
+	{
+		if (n[top].y > y)
+			return n[top].x;
+		return n[bottom].x;
+	}
+	long lower, upper;
+	if (n[prev].y <= n[found].y)
+	{
+		lower = found;
+		upper = prev;
+	}
+	else
+	{
+		lower = prev;
+		upper = found;
+	}
+	return x_in_line(n[upper].x, n[upper].y, n[lower].x, n[lower].y, y);
+}
+
+
+// ROM 0x002a82f4 cross_with_line__FP13tag_wapx_typeP9tag_CHUNKiN33
+// Whether the segment (x1, y1)-(x2, y2) crosses the chunk's polyline: for
+// each of its steps that reaches the segment's height, where the segment
+// is at the step's middle height lies within the step's span across.
+long
+cross_with_line(tag_wapx_type* n, tag_CHUNK* c, long x1, long y1, long x2, long y2)
+{
+	for (long k = c->fFrom; k < c->fTo; k++)
+	{
+		int32_t ya = n[k].y, yb = n[k + 1].y;
+		int32_t yMax = ya <= yb ? yb : ya;
+		int32_t yMin = ya >= yb ? yb : ya;
+		if (yMin > y1 && yMin > y2)
+			continue;
+		if (yMax < y1 && yMax < y2)
+			continue;
+		int32_t xa = n[k].x, xb = n[k + 1].x;
+		int32_t xMax = xa <= xb ? xb : xa;
+		int32_t xMin = xa >= xb ? xb : xa;
+		long x = x_in_line(x1, y1, x2, y2, (ya + yb) / 2);
+		if (x > xMax)
+			continue;
+		if (x >= xMin)
+			return 1;
+	}
+	return 0;
+}
+
+
 #pragma mark - the line
 
 // ROM 0x00285508 (unnamed) - the strokes' boxes copied into an array of
