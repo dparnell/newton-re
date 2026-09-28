@@ -55,6 +55,10 @@ def c_string(rom: bytes, addr: int) -> str:
     end = rom.index(b"\0", addr)
     text = rom[addr:end].decode("latin-1")
     escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+    # any other byte outside printable ASCII as a three-digit octal escape,
+    # so the literal holds the ROM's bytes whatever the source file's
+    # encoding (an octal escape, unlike \x, cannot run on into what follows)
+    escaped = "".join(c if 0x20 <= ord(c) < 0x7f else "\\%03o" % ord(c) for c in escaped)
     return '"' + escaped + '"'
 
 

@@ -5,6 +5,8 @@
 // made from must read them best.
 #include "XrMatrix.h"
 #include "XrReader.h"
+#include "XrPost.h"
+#include "WordSegment.h"
 #include "LowLevel.h"
 #include "CursiveReader.h"
 #include "XrDomains.h"
@@ -372,6 +374,123 @@ TestXrlv(void)
 }
 
 
+// The post-processing's rule interpreter (XrPostCalc.cpp) on queues made
+// by hand, then the answers of "lo" scored again by the ROM's own rules
+// (XrPostEval.cpp): the controls set so that they are scored at all (the
+// ROM leaves an answer alone that is under the field's first control, or
+// ahead of the next by more than its second).
+static void
+TestPost(void)
+{
+	POST_PARAMS pp;
+	memset(&pp, 0, sizeof(pp));
+	pp.pdf = (PDFHeader*) gDTI->fPDFPtr;
+	pp.rc = &gRC;
+	pp.xr = &gXr;
+	intptr_t stack[15];
+	pp.stack = stack;
+	pp.stackBytes = 0x3c;
+	UByte err[2];
+	// push 5, push 3, add
+	static const UByte add[] = { 0x0b, 5, 0x0b, 3, 0x0c, 0, 0 };
+	EXPECT(CalculateQueueResult(&pp, add, err) == 8 && err[1] == 0);
+	// push -7 (four bytes), the table's function 0 (CalculateAbs)
+	static const UByte abs7[] = { 0x09, 0xff, 0xff, 0xff, 0xf9, 0x0e, 0, 0 };
+	EXPECT(CalculateQueueResult(&pp, abs7, err) == 7 && err[1] == 0);
+	// the fuzzy comparisons answer 0..20: 10 less than 20 is 10 + 10/5
+	static const UByte less[] = { 0x0b, 10, 0x0b, 20, 0x0c, 6, 0 };
+	EXPECT(CalculateQueueResult(&pp, less, err) == 12);
+	static const UByte equal[] = { 0x0b, 10, 0x0b, 10, 0x0c, 8, 0 };
+	EXPECT(CalculateQueueResult(&pp, equal, err) == 20);
+	// a division by nought answers 10000
+	static const UByte div0[] = { 0x0b, 9, 0x0b, 0, 0x0c, 3, 0 };
+	EXPECT(CalculateQueueResult(&pp, div0, err) == 10000);
+	// min of 4 and 9 (function 30, two arguments)
+	static const UByte min49[] = { 0x0b, 4, 0x0b, 9, 0x0e, 30, 0 };
+	EXPECT(CalculateQueueResult(&pp, min49, err) == 4);
+	// variable 3 set to 42 (57) and read back (58): 42 + 42
+	static const UByte vars[] = { 0x0b, 3, 0x0b, 42, 0x0e, 57, 0x0b, 3, 0x0e, 58, 0x0c, 0, 0 };
+	EXPECT(CalculateQueueResult(&pp, vars, err) == 84 && pp.vars[3] == 42);
+	// an unknown bytecode and a full stack both end the queue with nought
+	static const UByte bad[] = { 0x01, 0 };
+	EXPECT(CalculateQueueResult(&pp, bad, err) == 0 && err[1] == 0xf);
+	UByte full[32];
+	for (long i = 0; i < 15; i++)
+	{
+		full[i * 2] = 0x0b;
+		full[i * 2 + 1] = 1;
+	}
+	full[30] = 0;
+	EXPECT(CalculateQueueResult(&pp, full, err) == 0 && err[1] == 0x10);
+
+	// "lo" read, a point for each xr, and every answer scored
+	StartXrs();
+	AddXr(1, 0, 0, 0, 0, 8, 0x81);
+	IdealXrs('l', 0);
+	MarkLocation();
+	IdealXrs('o', 0);
+	MarkLocation();
+	static PS_point_type points[kXrMaxElements];
+	for (long i = 0; i < gXr.fLength; i++)
+	{
+		XrSetH(gXrs[i].begpoint, i);
+		XrSetH(gXrs[i].endpoint, i);
+		XrSetH(gXrs[i].box + kXrLeft, i * 10);
+		XrSetH(gXrs[i].box + kXrRight, i * 10 + 5);
+		XrSetH(gXrs[i].box + kXrTop, 10);
+		XrSetH(gXrs[i].box + kXrBottom, 30);
+		points[i].x = (short) (i * 10);
+		points[i].y = (short) ((i & 1) ? 30 : 10);
+	}
+	RCSetH(&gRC, 0x96, (UShort) gXr.fLength);
+	gRC.fTrace = points;
+	RWG_type rwg;
+	rec_w_type readings[10];
+	memset(readings, 0, sizeof(readings));
+	EXPECT(xrw_algs(&gXr, readings, &rwg, &gRC) == 0);
+	XrSetH(RCByte(&gRC, 0x100), 0);				// any answer is sure enough to be scored
+	XrSetH(RCByte(&gRC, 0x102), 0x7fff);		// however far ahead
+	*RCByte(&gRC, 0xaf) = 1;
+	if (rwg.rws != nil)
+	{
+		// the letters' rules run by hand first: l and o have rules of
+		// their own, so queues are run
+		long first = rwg.rws[0].type == 2 ? 1 : 0;
+		memset(&pp, 0, sizeof(pp));
+		pp.pdf = (PDFHeader*) gDTI->fPDFPtr;
+		pp.rc = &gRC;
+		pp.xr = &gXr;
+		pp.rwg = &rwg;
+		pp.rws = rwg.rws;
+		pp.ppd = rwg.ppd;
+		pp.stack = stack;
+		pp.stackBytes = 0x3c;
+		pp.flags = 0xf;
+		pp.competeOn = 1;
+		pp.nPoints = (short) gXr.fLength;
+		short xy[2 * kXrMaxElements];
+		pp.x = xy;
+		pp.y = xy + pp.nPoints;
+		trace_to_xy(pp.x, pp.y, pp.nPoints, points);
+		long queues = 0;
+		for (long i = first; i < first + 2; i++)
+		{
+			pp.cur = (short) i;
+			long q = EvaluateCharQuality(&pp);
+			fprintf(stderr, "  post: '%c' scores %ld over %d queues\n", rwg.rws[i].sym, q, pp.queues);
+			queues += pp.queues;
+		}
+		EXPECT(queues > 0);
+		// then the whole of it: the graph is left as type 4
+		EvaluateAndSortAnswers(readings, &gRC, &gXr, &rwg);
+		EXPECT(rwg.type == 4);
+		fprintf(stderr, "  post: first answer %s weight %d; l f0b %d, o f0b %d\n", readings[0].fWord, readings[0].fWeight,
+				(SByte) rwg.rws[first].f0b, (SByte) rwg.rws[first + 1].f0b);
+	}
+	FreeRWGMem(&rwg);
+}
+
+
 // The prototype data's rules (XrRules.cpp): the bit-set arithmetic by
 // hand, then the ROM's own rules walked - every character the main header
 // names has a header, every variant its character's header names has one,
@@ -443,6 +562,7 @@ main()
 	TestLetters();
 	TestRules();
 	TestXrlv();
+	TestPost();
 	if (failures == 0)
 		printf("test_XrMatrix: all passed\n");
 	return failures == 0 ? 0 : 1;

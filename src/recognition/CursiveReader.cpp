@@ -8,6 +8,7 @@
 */
 
 #include "CursiveReader.h"
+#include "XrPost.h"
 #include "WordDescriptors.h"
 #include "InkGroups.h"
 #include "XrDomains.h"
@@ -21,7 +22,7 @@
 // HOST ONLY: with NEWTON_TRACE_CURSIVE set in the environment, each word
 // the cursive reader is given (its strokes and points) and what came of
 // it is printed on stderr.
-static Boolean
+Boolean
 TracingCursive(void)
 {
 	static int tracing = -1;
@@ -193,9 +194,7 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 							}
 							fprintf(stderr, "\n");
 						}
-						// NOT YET RECONSTRUCTED: EvaluateAndSortAnswers
-						// (0x00337ee8), the answers' scores worked out again
-						// from how each letter sits against its neighbours
+						EvaluateAndSortAnswers(readings, rc, &xr, &rwg);
 						MakeAndCombRecWordsFromWordGraph(&rwg, rc, &xr, readings);
 						if ((RCGetH(rc, 0xb2) & 0x40) != 0)
 						{

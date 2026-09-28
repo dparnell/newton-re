@@ -111,6 +111,15 @@ GENERATED = [
      "render.py", ["{build}", "-o", "src/recognition/RenderTables.cpp"]),
     ("xrrules",
      "romtable.py", ["{build}", "pdfMaskArray:u8:8", "-o", "src/recognition/XrRulesTables.cpp"]),
+    # the rule interpreter's function table and the side-reasoning tables
+    # (three 16-byte structs in the initialised RAM area, by address: the
+    # debug symbols do not name them)
+    ("xrpost",
+     "romtable.py", ["{build}", "Functions:i32:666", "RD_N_PP_FUNCTIONS:i32:1", "globalSizeArray:i32:16",
+                     "kXrToLetters0@0x0c1056bc:cstr:3", "kXrToLetters0Tail@0x0c1056c8:u8:4",
+                     "kXrToLetters1@0x0c1056cc:cstr:3", "kXrToLetters1Tail@0x0c1056d8:u8:4",
+                     "kLettersToXr@0x0c1056dc:cstr:3", "kLettersToXrTail@0x0c1056e8:u8:4",
+                     "-o", "src/recognition/XrPostTables.cpp"]),
     ("mmumap",
      "mmumap.py", ["{build}", "--doc", "docs/memory/mmu-map.md"]),
     ("factorysoups",

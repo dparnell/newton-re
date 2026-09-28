@@ -93,5 +93,6 @@ long	UnlockLexicalDB(void* chain);											// ROM 0x00168ac4 UnlockLexicalDB__
 long	LockVocabularies(void* vocs);											// ROM 0x00168fe8 LockVocabularies__FPv - ==> 0, 1 for nil
 long	UnlockVocabularies(void* vocs);											// ROM 0x00169020 UnlockVocabularies__FPv
 long	triads_lock(TrigramHeader* header);										// ROM 0x0021c120 triads_lock__FPv - ==> 0, 1 for a failure
+Boolean	TracingCursive(void);													// host: NEWTON_TRACE_CURSIVE is set
 
 #endif	/* __CURSIVEREADER_H */

@@ -82,6 +82,9 @@ add_library(recognition STATIC
     XrMatrix.cpp
     XrWordGraph.cpp
     XrAnswers.cpp
+    XrPostCalc.cpp
+    XrPostEval.cpp
+    XrPostTables.cpp
     XrRules.cpp
     XrRulesTables.cpp
     Xrlv.cpp
