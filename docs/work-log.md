@@ -10,6 +10,28 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the digit reader's first searcher
+
+- `Digits`' top level read; done under it (all from the disassembly,
+  `recognition/ChunkDigits.cpp`, `ChunkSearchL.cpp`): the writing's line
+  (`DefHeightsForNumber` - each chunk's ends placed 60/45/30 in bytes at
+  +0x44/+0x50 of what had looked like two words), the circles
+  (`GetCircles`), `SearchDigit_L` and its seventeen statics (a $, a 2 or
+  7, a 5 with its bar, a 4 or 9, a 3, 5 or 9), the geometry the
+  searchers share, and the second looks `ThreeToFive`, `RecognizeZCCW`
+  and `Check_4`.  A digit found is a class-1300 object, value 1400 + the
+  digit.
+- ROM bugs kept: `HWRAbs(0)` in the box joiner (no boxes are ever
+  joined); the 4 test that asks a direction and throws the answer away;
+  the $ test that compares a boolean with an eighth of the height;
+  `ThreeToFive` not forgetting its turns between digits.
+- The decompiler dropped arguments to several divisions (`__rt_sdiv(6)`),
+  read `__rt_sdiv`'s quotient as its remainder once more, and lost
+  `HWRAbs`'s argument; every function here was read from the assembly.
+- `test_Chunk`: a 0 has one circle; a 5 with a separate bar, a 5 in one
+  stroke and a $ are found; an unlifted 5 is turned from 3 to 5; a 4 laid
+  over another digit is taken out.
+
 ## 2026-09-28: the digit reader's chunks
 
 - The cursive reader's digit reader, steps (1) and (2) of its plan and

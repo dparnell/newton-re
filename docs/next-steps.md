@@ -12,8 +12,8 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11828 citations, 0 bad;
-  6825 of 16671 functions (40.94%).
+- `analysis/coverage.py build/MP2x00US --check`: 11868 citations, 0 bad;
+  6840 of 16671 functions (41.03%).
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
   answered.
@@ -476,6 +476,43 @@ and `DgtFromDnHorseshoe`'s (0x0028f17c), so it and `RecognizeZCCW`
 top level first to see what it sets up and in what order it calls the
 searchers), then `RecognizeZCCW` with `SearchDigit_L`; then `_V`, `_K`,
 `_S`.  Three or four rounds.
+
+*Progress (2026-09-28, round 3)*: of step (3), `Digits`' top level has
+been read (its order: `DefHeightsForNumber`, `ChunkPutClassesToLO`,
+`GetCircles`, `SearchDigit_L`, `SearchDigit_K`, `New_SearchDigit_V`,
+`SearchDigit_S`, `FindPound`, `Check_4`, unnamed 0x002a09b0 and
+0x002a2758, `CutNumberInDigits`, the second-look pass 0x0029ce20, then
+with staff +0x50 clear 0x002a1a98, 0x0029e888, 0x002a19ec and
+`SearchNumber` until one answers, else 0x0029ccd4; then 0x002a2078,
+0x0029fbcc over a scratch block the size of the stroke count,
+0x002a0d74, the 0x834 class's objects copied out as (first point, last
+point) pairs for the caller, and 0x0029ffc8 deciding the answer's second
+bit), and these are done (`recognition/ChunkDigits.cpp`,
+`ChunkSearchL.cpp`, `test_Chunk`'s `TestLineAndCircles`, `TestSearchL`,
+`TestSecondLooks`): `DefHeightsForNumber` with its four statics,
+`GetCircles`, `SearchDigit_L` with its seventeen statics (the $, 2/7, 5
+with its bar, 4/9, 3/5/9 tests), the searchers' shared geometry
+(`direct_suits`, `distance_between_directions`, `take_next_point`,
+`take_prev_point`, `x_in_line`, `x_in_curve`, `cross_with_line`,
+`CheckQIntersec`/`XY`), `ThreeToFive`, `RecognizeZCCW` and `Check_4`.
+The `DgtFrom*`, `GreyDgtFromELink` and `SignFromTwoSections` statics
+that sit between them belong to `New_SearchDigit_V` (it is their only
+caller, and they take its `tagLocalStuff`), so they go with it.
+
+Next, in order: (a) the second-look pass 0x0029ce20 - it sorts up to
+thirty digits by their first node, runs twelve statics over the sorted
+array (0x0029d900, 0x0029dd6c, 0x0029dbd8, 0x0029d808, 0x0029e30c,
+0x0029e530, 0x0029e048, 0x0029d428, 0x0029e6bc, 0x0029eaac, 0x0029eeb4 -
+the largest, 870 instructions - and 0x002a0740), then `ThreeToFive` and
+`RecognizeZCCW`, then files the class-1200 objects between the digits
+and writes each digit and gap out as class 0x76c objects; about 2800
+instructions in all, and testable by laying digit objects over drawn
+writing as `TestSecondLooks` does; (b) `SearchDigit_K` (17 KB); (c)
+`New_SearchDigit_V` with its statics (20 KB + 3 KB); (d) `SearchDigit_S`
+(24 KB), `FindPound`, `SearchNumber` and the other statics `Digits` runs;
+(e) `ChunkProcessor` wired in, `ChunkPatchXrdata`, `ChunkSortAnswers`,
+`ChunkCorrectByLexDB`, and a demo writing "42" into a numbers field.
+About five more rounds.
 
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3

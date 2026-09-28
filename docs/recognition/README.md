@@ -3104,10 +3104,63 @@ follows them through):
   `LO_GetRealChunkInd`'s count inside a group starts too high, so it
   answers the object's last chunk.
 
-The searchers themselves (`Digits`, `SearchDigit_L/_V/_K/_S`,
-`RecognizeZCCW`, `SearchNumber`, `FindPound`, ...), `ChunkProcessor` and
-the merging of the numbers read (`ChunkPatchXrdata`, `ChunkSortAnswers`,
-`ChunkCorrectByLexDB`) are NOT YET (about 60 functions, 124 KB); without
+`Digits` (0x0029c94c) is the searchers' driver: the writing's line
+(`DefHeightsForNumber`), the chunks put in the list as their classes, the
+circles (`GetCircles`), then `SearchDigit_L`, `_K`, `New_SearchDigit_V`,
+`_S`, `FindPound`, `Check_4`, two unnamed passes, `CutNumberInDigits`, a
+second look at everything found (0x0029ce20), `SearchNumber` and friends,
+and a digest of the result.  A digit found is an object of class 1300 in
+the list, its value 1400 + the digit (1300 + the digit once a second look
+has changed it; 0x15 is the $, 0xffff a digit taken out again) and its
+extra how it was found.  Done so far (`ChunkDigits.cpp`,
+`ChunkSearchL.cpp`, all from the disassembly):
+
+- **The line** (`DefHeightsForNumber`): the strokes' boxes, the small ones
+  dropped or joined to the nearer neighbour, their mean top and bottom
+  (the staff's `fTopLine`, `fBottomLine`, `fHeight`), and each chunk's ends
+  placed in it - 60 above the middle half, 45 in it, 30 below (the byte
+  fields `fZoneStart`/`fZoneEnd`, +0x44/+0x50: the ROM stores a byte there
+  in the middle of what looked like a word).  ROM bug kept: the test that
+  would join two overlapping boxes is `HWRAbs(0) * 3 > height` - the
+  argument a register set to nought - so none ever is.
+- **The circles** (`GetCircles`): a chunk going down (an arc) and the next
+  coming back up, the taller between two thirds and four thirds of the
+  line, turning more than eleven steps (sixteen when its ends are apart),
+  with the neighbours that carry the turn on counted in and the shapes of
+  a 2, 3 or 6 turned away - class 200, its object kept in the chunk
+  (`f7C`).  A 0 gives one, a 1 or a 4 none.
+- **`SearchDigit_L`**: each curve-down chunk (class 500, value 501) tried
+  as a digit's main stroke - a $ (an S with an upright through it, near the
+  writing's ends), a 2 or 7 (first turn near the top and well right, the
+  line to it heading right), a 5 with its bar as a stroke of its own or
+  beside it, a 4 or 9 (the upright and its foot, then which way the start
+  heads), a 3, 5 or 9 (a corner at the first turn well above the bottom
+  makes a 9); a chunk that does not go down may be a 5's bar.  ROM quirks
+  kept: the 4 test asks a direction and throws the answer away; the $'s
+  test of the chunk after it compares a boolean with an eighth of the
+  height; the 2/7 test writes `*from` before it may still refuse.  Under it
+  the searchers' geometry, shared with the others: `direct_suits`,
+  `distance_between_directions`, `take_next_point`/`take_prev_point`,
+  `x_in_line`, `x_in_curve`, `cross_with_line`.
+- **Second looks**: `ThreeToFive` (a 3 whose writing turns back sharply at
+  its left - a 5 whose bar was not lifted - becomes 1305; ROM bug kept: the
+  two turns it finds are not forgotten between digits), `RecognizeZCCW` (a
+  curve down that turns the other way then an arc up: a 2 becomes a 6, an
+  8 whose closing line misses its start a 0), with `CheckQIntersec`/`XY`;
+  `Check_4` (the "4"s of value 0x605 taken out when too tall or sharing
+  chunks with another digit).
+
+`test_Chunk` draws the digits with a synthetic pen: a 5 with a separate
+bar and a 5 in one stroke and a $ are found by `SearchDigit_L` (the 2, 3,
+4, 7, 9 and 0 drawn there are other searchers' work), an unlifted 5 is
+turned from 3 to 5, a 4 laid over another digit is taken out.
+
+NOT YET: the other searchers (`SearchDigit_K` 17 KB, `New_SearchDigit_V`
+20 KB with its `DgtFrom*`/`GreyDgtFromELink`/`SignFromTwoSections`,
+`SearchDigit_S` 24 KB, `FindPound`, `SearchNumber`), `Digits`' own statics
+(the second-look pass 0x0029ce20 and the twelve it runs, about 2800
+lines of assembly), `ChunkProcessor` and the merging of the numbers read
+(`ChunkPatchXrdata`, `ChunkSortAnswers`, `ChunkCorrectByLexDB`); without
 `ChunkProcessor` no number is found, so the context goes straight back,
 as the ROM does for a word that is not a number.  The plan is in
 `docs/next-steps.md`.
