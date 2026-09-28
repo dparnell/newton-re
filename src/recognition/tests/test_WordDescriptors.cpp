@@ -429,17 +429,17 @@ TestChunkChords(void)
 	EXPECT(v_QDistFromChord(1, 1, 1, 1, 4, 5) == 25);			// a chord of no length
 	EXPECT(v_QDistFromChord(0, 0, 3, 4, 3, 4) == 0);			// on the line
 
-	tag_WORD_TRACE arch[5] = { {0, 0, 0, 0}, {5, 2, 0, 0}, {10, 5, 0, 0}, {15, 2, 0, 0}, {20, 0, 0, 0} };
+	tag_WORD_TRACE arch[5] = { {0, 0, 0}, {5, 2, 0}, {10, 5, 0}, {15, 2, 0}, {20, 0, 0} };
 	EXPECT(v_MostFarFromChord(arch, 0, 4) == 2);
 	// a flat top: the middle of the run
-	tag_WORD_TRACE flat[5] = { {0, 0, 0, 0}, {5, 5, 0, 0}, {10, 5, 0, 0}, {15, 5, 0, 0}, {20, 0, 0, 0} };
+	tag_WORD_TRACE flat[5] = { {0, 0, 0}, {5, 5, 0}, {10, 5, 0}, {15, 5, 0}, {20, 0, 0} };
 	EXPECT(v_MostFarFromChord(flat, 0, 4) == 2);
 	// a pen-up breaks the run: the first of the flat points stays
-	tag_WORD_TRACE broken[6] = { {0, 0, 0, 0}, {5, 5, 0, 0}, {0, -1, 0, 0}, {10, 5, 0, 0}, {15, 5, 0, 0}, {20, 0, 0, 0} };
+	tag_WORD_TRACE broken[6] = { {0, 0, 0}, {5, 5, 0}, {0, -1, 0}, {10, 5, 0}, {15, 5, 0}, {20, 0, 0} };
 	EXPECT(v_MostFarFromChord(broken, 0, 5) == 1);
 	// nothing off the line: the points at nought count as a flat run from
 	// the chord's start (its middle answered, one point on)
-	tag_WORD_TRACE line[3] = { {0, 0, 0, 0}, {5, 0, 0, 0}, {10, 0, 0, 0} };
+	tag_WORD_TRACE line[3] = { {0, 0, 0}, {5, 0, 0}, {10, 0, 0} };
 	EXPECT(v_MostFarFromChord(line, 0, 2) == 1);
 
 	// directions, y growing downwards
