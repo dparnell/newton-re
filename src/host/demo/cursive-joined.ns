@@ -132,11 +132,14 @@ joined := func(word, x, base)
           end
         else if c = $o then
           begin
-            // up to the top, anticlockwise round, closed at the top and
-            // out along it
-            call lineTo with (x + 7, base - h, 4);
-            local cs := [-50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
-            local s := [87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+            // up to the top on the right, where a join arrives, then
+            // anticlockwise over the top and right round, closed where it
+            // began and out along the top (drawn at first from the top
+            // centre straight down the left, which left the o no top arc
+            // for the reader to find)
+            call lineTo with (x + 10, base - 13, 4);
+            local cs := [0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50];
+            local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87];
             for k := 0 to 11 do
               call add with (x + 7 + (6 * cs[k]) div 100, base - 7 - (7 * s[k]) div 100);
             call lineTo with (x + 14, base - h + 1, 3);

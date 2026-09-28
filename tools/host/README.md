@@ -85,6 +85,19 @@ one that is stuck:
     NEWTON_TRACE_UPDATE=1 build/host/host/newton ... 2> updates.log
     grep "\[update\]" updates.log | cut -d' ' -f2 | sort | uniq -c | sort -rn | head
 
+## NEWTON_TRACE_ARBITER
+
+Set in the environment of `newton`, it prints each arbitration the
+recognition arbiter makes (`src/recognition/Arbiter.cpp`): the area's
+recognition case, every unit gathered over the same strokes with its best
+interpretation's score (nought is best) and the units that won:
+
+    [arbiter] case 1: gathered 'XRWR'/330 'SCRB'/0; won 'SCRB'/0
+
+That is how to tell why writing that was read still went down as ink: a
+word unit that loses leaves its strokes unclaimed, and they expire as ink
+(here a cursive "mum" lost to a scrub gesture).
+
 ## NEWTON_HEAPCHECK
 
 Heap damage shows up long after it is done - a lock-up in compaction, a

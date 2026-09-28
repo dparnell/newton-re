@@ -10,6 +10,40 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: the cursive readings put right (round 11)
+
+- **Port bug: FillSHR's bracketing xrs** (`recognition/LowXrFeatures.cpp`,
+  ROM 0x0027ea0c).  The ROM stores the four xrs that bracket each xr at
+  `[sp+0x194]`, `0x198`, `0x19c`, `0x1a0` and reads them back as an array;
+  the port had assigned the last two the other way round in all six
+  cases.  The height classes were unaffected (absolute differences) but
+  every shift class was negated.  Fixed; `test_LowLevel`'s `TestFillSHR`
+  pins it (a maximum between two minima: height 9, shift 11 - the old
+  order gave 4).  The printed-stroke `cursive.ns` now reads "ton to" (was
+  "For to").
+- **How it was isolated**: `test_XrMatrix`'s `TestIdealWords` reads
+  "ton", "on", "no", "mum", "to", "nun", "lo" made of their letters'
+  ideal xrs, capitals allowed (the Notepad's rc +0x1e 0x3f) and not -
+  each reads as itself first, so the matcher, `xrlv` and the capitals
+  were sound.  `SetXrWordFieldType`'s capitals and exchange's
+  element-to-xr switch were checked against the disassembly case by case
+  and agree; FillSHR did not.  PhatWare's GPL release of a descendant of
+  ParaGraph's recogniser (`docs/next-steps.md`, "A reference for the
+  cursive reader") named the xr types and showed the disagreement - it is
+  a reference for meaning only, never transcribed.
+- **The joined-up demo's o** now arrives at its top right and goes over
+  the top, as a cursive o does (it went up to the top centre and straight
+  down the left, leaving no top arc): `cursive-joined.ns` reads "on" 82,
+  "no" 90, "Mom" 67 ("mum" fifth), "to" 86, "nun" 76 (were "OR", "bb",
+  "maps", "to", "Rap").
+- **"mum" and "nun" lose to the scrub gesture**: their synthetic stems
+  are retraced exactly, three or more alternating turns over 110 degrees;
+  `TestScrub`/`ValidTurnSequence` agree with the ROM, so it is the
+  drawing; the scrubs erase nothing and the strokes go down as ink words
+  (0x1a in the paragraph's text).  New host trace `NEWTON_TRACE_ARBITER`
+  (`tools/host/README.md`) prints each arbitration's units, scores and
+  winner.
+
 ## 2026-09-28: the cursive reader's post-processing (round 10)
 
 - `EvaluateAndSortAnswers` (0x00337ee8) real (`recognition/XrPost.h`,

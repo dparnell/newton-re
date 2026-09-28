@@ -2822,20 +2822,15 @@ aeWord, and the page types it.  DEVIATION: the ROM's interpretations are
 0x10 bytes; the host's hold pointers and are sized by sizeof.
 
 With a cursive letter set `cursive.ns` now types what it wrote: the page
-reads "For to" (`NEWTON_TRACE_CURSIVE=1` prints each word's answers).
-The second word is read right; the first - the synthetic "ton" - comes
-out with a capital, "For" ahead of "ER", "Eon", "FR", "EN".  That is not
-the capitals flags going wrong: the Notepad's field has rc +0x1e = 0x3f
-(`SetXrWordFieldType` gives a letter set of style 1 all six bits), and
-bit 8 lets *every* word start with a capital, bit 2 the first; and the
-reader has what it should - rc +0x08 = 0x0f (the vocabulary, the
-character set, the trigrams and the lexical database) and one vocabulary
-(`NEWTON_TRACE_CURSIVE` prints all three).  "ton" is simply not among the
-five answers `xrlv` leaves in the graph, so it is decided before anything
-still NOT YET runs - `EvaluateAndSortAnswers` only re-scores the answers
-in the graph and could reorder them, never add one.  Whether the machine
-itself would read these synthetic strokes as "For" cannot be checked
-without one; everything from the strokes to the graph is transcribed.
+reads **"ton to"** (`NEWTON_TRACE_CURSIVE=1` prints each word's answers:
+"ton" 85 ahead of "tor", "For", "for", "Ion"; "to" 84).  It read "For to"
+until FillSHR's shift classes were put right (below, "Joined-up
+writing"): with them negated "ton" was not among the five answers `xrlv`
+left in the graph at all.  The capitals were never the cause - the
+Notepad's field has rc +0x1e = 0x3f (`SetXrWordFieldType` gives a letter
+set of style 1 all six bits, checked against the disassembly), and words
+made of the letters' ideal xrs read as themselves, in lower case, with
+those capitals allowed (`test_XrMatrix`'s `TestIdealWords`).
 
 **The rules' whereabouts** (`recognition/XrRules.cpp`, the first piece
 of `EvaluateAndSortAnswers`): the prototype data (the letter table's PDF
@@ -2947,8 +2942,9 @@ ROM's never do; and `MakeRecWordsFromGraph`/`MergeTwoRecWordsSets`, the
 readings of a graph that is not a list (a field expecting one fixed
 string), which are left as they were.
 
-What it does to the demos: `cursive.ns`'s two words are not scored - "For"
-is under 60 and "to" is 16 ahead of "Fo" - so they read as before.
+What it does to the demos: `cursive.ns`'s two words are not scored - each
+is too far ahead of the next - so they read as the graph has them ("ton",
+once FillSHR was right; "For" before).
 `test_XrMatrix` runs queues made by hand and the ROM's rules for an l and
 an o.
 
@@ -2957,19 +2953,48 @@ an o.
 the demo draws words the way one is written - one stroke, an entry
 stroke, the letters' bodies, the joins, an exit, a t's bar after - with
 smooth arcs and straight lines: "on", "no", "mum", "to" and "nun".  They
-read as "OR", "bb", "maps", "to" and "Rap".  "no" is the one that is
-scored: its answers were "Do" 62, "no" 52, "Bo", "bb", "Db", and every
-o's own rule charged it 160 (three of its five queues at their floor),
-so "bb" won.  The low level cuts each word into a plausible number of
-xrs (12 for "on", 20 for "mum") and the answers keep the words' shapes
-(three humps for "mum" reading as "maps"), and "to", two letters and a
-bar, is read right; the drawing is crude - arcs of a few points, the
-letters' heights uniform - and the answers are mostly capitalised at the
-start the way `cursive.ns`'s "For" is, which is decided in `xrlv`, before
-any of this.  Whether a MessagePad would read these strokes the same
-cannot be checked without one; the rules' bytecode decodes cleanly by
-hand, which is the best evidence the interpreter reads it as the ROM
-does.
+read as **"on" (82), "no" (90), "Mom" (67, "mum" fifth), "to" (86) and
+"nun" (76)**.  Two things were in the way, and the story of finding them
+is the way to look for the next:
+
+- **A port bug in FillSHR** (`LowXrFeatures.cpp`).  The ROM keeps the four
+  xrs that bracket an xr at `[sp+0x194]`..`[sp+0x1a0]` and the fill reads
+  them back as an array from 0x194; the port had put the last two the
+  wrong way round in every one of its six cases - an extremum was
+  { the one before, it, the one after, it } where the ROM has { the one
+  before, it, it, the one after }.  The height classes came out the same
+  (both heights are absolute differences) but every shift class was
+  measured across the wrong pair, which is to say negated: an n leaning
+  right looked like one leaning left.  With that fixed the printed-stroke
+  demo reads "ton to" (it had read "For to") and the joined "no", "to"
+  and "nun" came first.  `test_LowLevel`'s `TestFillSHR` pins it on xrs
+  made by hand (a maximum between two minima: height class 9, shift 11;
+  the old order gave 4).  How it was found: words made of the letters'
+  *ideal* xrs (`test_XrMatrix`'s `TestIdealWords`: the xr each prototype
+  gives most for) read as themselves first, capitals allowed or not - so
+  the matcher, `xrlv` and the capital handling were sound and the fault
+  was in the xrs; `SetXrWordFieldType`'s capitals (rc +0x1e 0x3f for the
+  Notepad) and exchange's element-to-xr switch checked out against the
+  disassembly case by case; FillSHR did not.
+- **The drawing of the o.**  The demo's o went up to the top centre and
+  straight down the left, so it had no top arc for the reader to find
+  ("on" came back "OR"); a cursive o's join arrives at its top right and
+  goes over the top first, and drawn so it reads "on" (82, "or" 71).
+
+"mum" and "nun" are read but **lose their arbitration to the scrub
+gesture** (`NEWTON_TRACE_ARBITER=1` prints each arbitration: `'XRWR'/330
+'SCRB'/0; won 'SCRB'`): the arbiter takes the lowest score and a scrub
+scores nought.  The demo's m and n go down the stem and straight back up
+it, arches of a few whole pixels on letters fourteen high, which makes
+three or more turns of over 110 degrees that alternate - a zig-zag, which
+is what `TestScrub` looks for.  `TestScrub` and `ValidTurnSequence` agree
+with the ROM (the corner counts, the 110 and 170 degree limits, the half
+turn that makes a loop, the spread of the turns), so this is the drawing:
+rounder arches drawn with the pen in whole pixels do not change it.  With
+nothing to erase under them the scrubs do nothing, the strokes expire
+unclaimed, and they go down as ink words (the page's text holds 0x1a, the
+paragraph's ink-word character, for each).  Whether a MessagePad takes a
+joined "mum" for a scrub too cannot be checked without one.
 
 **NOT YET RECONSTRUCTED** (the rest of the reader): `ORCreateLearnInfo`
 (the orthographic learning's information, only for a field with rc +0xb2

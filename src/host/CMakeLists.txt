@@ -59,10 +59,14 @@ set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWT
 # joined-up cursive (src/host/demo/cursive-joined.ns): five words each
 # written in one stroke with the cursive letter set; each must reach the
 # reader and be answered (what they read as is recorded in
-# docs/recognition/README.md, "Joined-up writing"), "to" as "to"
+# docs/recognition/README.md, "Joined-up writing") - "on", "no", "to"
+# and "nun" first, "mum" as "Mom" - and "mum" and "nun" lose their
+# arbitration to the scrub gesture (their synthetic stems are retraced
+# exactly, a zig-zag TestScrub takes) and go down as ink words: the page
+# reads "on no ~ to ~" (0x1a being the paragraph's ink-word character)
 add_test(NAME host.NewtonCursiveJoined COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 70 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive-joined.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCursiveJoined PROPERTIES TIMEOUT 240 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
-                     PASS_REGULAR_EXPRESSION "answers: \"[^\"]+\"/.*answers: \"[^\"]+\"/.*answers: \"[^\"]+\"/.*answers: \"to\"/.*answers: \"[^\"]+\"/.*the page reads")
+                     PASS_REGULAR_EXPRESSION "answers: \"on\"/.*answers: \"no\"/.*answers: \"Mom\"/.*answers: \"to\"/.*answers: \"nun\"/.*the page reads \"on no . to . / \"")
 
 # the journal (testing/Journal.h): "ton" written while recording, the four
 # strokes played back into the tablet buffer and read again (needs the

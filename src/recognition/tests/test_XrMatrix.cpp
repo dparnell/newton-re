@@ -375,8 +375,10 @@ TestXrlv(void)
 
 
 // Words made of the ideal xrs of their letters' first variants, read
-// the way the Notepad's field reads (capitals allowed, rc +0x1e 0x3f),
-// with the character set alone.
+// the way the Notepad's field reads (capitals allowed, rc +0x1e 0x3f) and
+// with capitals only as written (5), with the character set alone: each
+// reads as itself first - so a reading that comes back capitalised is the
+// xrs' doing, not the matcher's or xrlv's capital handling.
 static const char*
 ReadIdealWord(const char* word, char* text, long textSize)
 {
@@ -432,23 +434,12 @@ TestIdealWords(void)
 			char text[128];
 			ReadIdealWord(words[w], text, sizeof(text));
 			fprintf(stderr, "  ideal '%s' (caps %s, %ld xrs) reads: %s\n", words[w], caps ? "0x3f" : "5", gXr.fLength, text);
+			// the word itself first, in lower case, capitals allowed or not
+			size_t len = strlen(words[w]);
+			EXPECT(strncmp(text, words[w], len) == 0 && (text[len] == ' ' || text[len] == 0));
 		}
 	}
 	RCSetH(&gRC, 0x1e, 5);
-	// the ideal xrs of each variant of a few letters, as type/height
-	for (const char* l = "notmuDOR"; *l != 0; l++)
-	{
-		UByte* d = Descriptor((UByte) *l);
-		for (long v = 0; d != nil && v < d[0]; v++)
-		{
-			StartXrs();
-			IdealXrs((UByte) *l, v);
-			fprintf(stderr, "  '%c' var %ld:", *l, v);
-			for (long i = 0; i < gXr.fLength; i++)
-				fprintf(stderr, " %02x/%d", gXrs[i].type, gXrs[i].height);
-			fprintf(stderr, "\n");
-		}
-	}
 }
 
 

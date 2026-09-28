@@ -10,9 +10,9 @@
 // low level cuts it into xrs and xrw_algs reads them into a word graph
 // ("[cursive] xrw_algs: graph ..."), the graph is made into the readings
 // ("[cursive] answers: ..."), and the XRWR domain hands the best of them
-// to the page as a word unit, which types it: the page reads "For to" -
-// the synthetic "ton" is read as "For", its first letter a capital (see
-// docs/recognition/README.md, "The answers").  "[cursive] word of strokes
+// to the page as a word unit, which types it: the page reads "ton to"
+// ("For to" until FillSHR's shift classes were put right - see
+// docs/recognition/README.md, "Joined-up writing").  "[cursive] word of strokes
 // ..." lines say how far each word got, the script prints the page's
 // text (ctest host.NewtonCursive checks both), and build/cursive.pgm is
 // the page.  Otherwise as src/host/demo/write.ns.

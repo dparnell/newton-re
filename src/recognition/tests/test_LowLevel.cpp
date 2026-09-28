@@ -1814,10 +1814,51 @@ TestXtSt(void)
 }
 
 
+// FillSHR on xrs made by hand: a break, a minimum at x 0, a maximum at x
+// 10 twenty higher, a minimum at x 30 and a break.  The ROM brackets the
+// maximum as { the minimum before, it, it, the minimum after } (its
+// [sp+0x194..0x1a0]): the heights before and after are both 20 (class
+// 9: a ratio of 100 is under 111), and with no slant the shift is
+// ((30 - 10) - (0 - 10)) * 100 / 20 = 150, class 11 (under 210).  With the
+// last two slots the wrong way round, as the port once had them, the
+// shift came to -50: class 4.
+static void
+TestFillSHR(void)
+{
+	static PS_point_type trace[8] = { { 0, -1 }, { 0, 40 }, { 10, 20 }, { 30, 40 }, { 30, -1 } };
+	xrd_el_type els[6];
+	memset(els, 0, sizeof(els));
+	UByte types[5] = { 1, 0x13, 0x06, 0x13, 1 };
+	for (long i = 0; i < 5; i++)
+	{
+		els[i].type = types[i];
+		XrSetH(els[i].hotpoint, i < 4 ? i : 0);
+		XrSetH(els[i].begpoint, i);
+		XrSetH(els[i].endpoint, i);
+		XrSetH(els[i].box + kXrLeft, trace[i].x);
+		XrSetH(els[i].box + kXrRight, trace[i].x);
+		XrSetH(els[i].box + kXrTop, trace[i].y);
+		XrSetH(els[i].box + kXrBottom, trace[i].y);
+	}
+	xrdata_type xr;
+	xr.fLength = 5;
+	xr.fSize = 6;
+	xr.fElements = els;
+	low_type low;
+	memset(&low, 0, sizeof(low));
+	low.fTrace = trace;
+	EXPECT(FillSHR(0, &xr, &low) == 0);
+	fprintf(stderr, "  FillSHR: the maximum's height class %d, shift class %d\n", els[2].height, els[2].shift);
+	EXPECT(els[2].height == 9);
+	EXPECT(els[2].shift == 11);
+}
+
+
 int
 main()
 {
 	InitHostStandaloneHeap();
+	TestFillSHR();
 	TestRoots();
 	TestStrokes();
 	TestErrorprov();

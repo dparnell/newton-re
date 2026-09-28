@@ -42,8 +42,9 @@ bugs found along the way - is `docs/work-log.md`.
   (`src/host/demo/correct.ns`).
 - **Cursive writing is read** by ParaGraph's reader, with a cursive
   letter set: `src/host/demo/cursive.ns` writes "ton" and "to" and the
-  page types "For to" (`NEWTON_TRACE_CURSIVE=1`; the answers'
-  re-evaluation and the digit reader are NOT YET - stage 4 below).
+  page types "ton to"; joined-up words (`cursive-joined.ns`) read "on",
+  "no", "to", "nun" first (`NEWTON_TRACE_CURSIVE=1`,
+  `NEWTON_TRACE_ARBITER=1`; the digit reader is NOT YET - stage 4 below).
 - **Shapes are recognised** with the Notepad set to shapes
   (`src/host/demo/shapes.ns`, `snapping.ns`; `NEWTON_TRACE_SHAPES=1`).
 - **A selection can be made, dragged and resized** (`src/host/demo/drag.ns`),
@@ -336,7 +337,8 @@ strokes each word of a reading of several is: `connect_trajectory_and_*`,
 reading - `TXrWordDomain::Group`/`Classify`/`Reclassify`/`ClassifyXrWord`
 and `TXrWordUnit` - so an STXR unit becomes an 'XRWR' word unit, the
 arbiter hands it to `TWordRecognizer`, and the page types it.
-`cursive.ns` reads **"For to"** (ctest `host.NewtonCursive` checks the
+`cursive.ns` read **"For to"** then ("ton to" since FillSHR was put right,
+below; ctest `host.NewtonCursive` checks the
 answers and the page's text; `test_XrAnswers` the readings, the split
 information and the training data).  The rules' headers are walked too
 (`XrRules.cpp`: `PDFGetRule` and its address helpers, checked against
@@ -361,16 +363,40 @@ French or German letter set, rc +6 bits 2-3), `MakeRecWordsFromGraph`/
 `MakeNewPath`/`FillRecWordsElement`/`MergeTwoRecWordsSets` (the readings
 of a fixed-string field's graph, rwg type 2), and `ORCreateLearnInfo`/
 `Orto*` (about 2 KB; only with rc +0xb2 bit 6, which the Notepad does not
-set).  Worth a look next: every answer of both demos starts with a
-capital ("For", "OR", "Do", "Rap") - decided in `xrlv`'s capitals
-handling before the post-processing, and suspicious enough to check
-against the disassembly.  Then the `Chunk*` digit reader (only
-for a field that allows numbers, rc +0xb6; 82 not done, about 146 KB),
-three or four rounds.  Why the synthetic "ton" comes out "For": the
-capitals are allowed (rc +0x1e = 0x3f, every word start) and the
-vocabularies are there (rc +0x08 = 0x0f, one vocabulary), but "ton" is
-not among the five answers `xrlv` puts in the graph - decided before any
-NOT YET code runs (`docs/recognition/README.md`, "The answers").
+set).
+
+**Stage 4, round 11 (2026-09-28): the readings put right.**  The poor
+readings (and their capitals) were a port bug, found by isolating the
+stages (`docs/recognition/README.md`, "Joined-up writing"): words made of
+the letters' ideal xrs read as themselves with the Notepad's capitals
+allowed (`test_XrMatrix`'s `TestIdealWords`), so the matcher and `xrlv`
+were sound; the fault was **FillSHR**, whose four bracketing xrs had the
+last two swapped in all six cases, negating every shift class
+(`test_LowLevel`'s `TestFillSHR`).  Fixed: `cursive.ns` reads "ton to";
+with the demo's o drawn as a cursive o is (its join arriving at the top
+right), `cursive-joined.ns` reads "on" 82, "no" 90, "Mom" 67 ("mum"
+fifth), "to" 86, "nun" 76.  "mum" and "nun" then lose to the scrub
+gesture - their synthetic stems are retraced exactly, a zig-zag -
+and go down as ink words; `TestScrub` agrees with the ROM, so that is the
+drawing (`NEWTON_TRACE_ARBITER=1` prints each arbitration).  Left of
+stage 4 as above; then the `Chunk*` digit reader (only for a field that
+allows numbers, rc +0xb6; 82 not done, about 146 KB), three or four
+rounds.  Other stages might hold slips like FillSHR's - a transcribed
+store order is the thing to check: the rest of FillXrFeatures
+(FillOrients) agreed with ParaGraph's own later source where compared,
+and the published source (below) is the quickest way to find a
+suspect.
+
+**A reference for the cursive reader**: PhatWare, who bought ParaGraph's
+recogniser, published a descendant of it under the GPL v3
+(https://github.com/phatware/WritePad-Handwriting-Recognition-Engine;
+`WindowsTools/NNLegacyTool/` is the oldest tree - LOW/, XRWS/, POST/).
+It is a later version and is not the ROM, so it is never transcribed:
+it names things (the xr types are its `X_...` codes, `LOW/STD/XR_NAMES.H`:
+0x14 `X_UD_F`, a forward lower arc; 0x0e `X_UU_B`; heights 1..13 from
+super-uplinear to super-underlinear) and says what a function is for,
+and where the ROM and the port disagree with it, the ROM's disassembly
+decides.  The FillSHR slip showed up as exactly such a disagreement.
 
 ## Then: the testing system
 

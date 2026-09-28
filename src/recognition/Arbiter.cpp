@@ -11,6 +11,9 @@
 #include "Domain.h"
 #include "Recognizer.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 long	gLastType = 0;						// ROM 0x0c104c64 gLastType
 
 TArbiter*	gArbiter = nil;					// ROM 0x0c101880 gArbiter
@@ -446,6 +449,40 @@ TArbiter::ArbitrateGraphicsWords(TArray* /*gathered*/)
 { }
 
 
+// HOST ONLY: with NEWTON_TRACE_ARBITER set in the environment, each
+// arbitration prints the area's case (GetRecognitionCase), the types of
+// the units gathered over the same strokes (each with its best
+// interpretation's score, nought best) and those that won - which is
+// how to tell why writing that was read still went down as ink (a word
+// unit that never won leaves its strokes unclaimed, and they expire as
+// ink).
+static void
+TraceArbitration(long recCase, TArray* gathered, TArray* winners)
+{
+	static int tracing = -1;
+	if (tracing < 0)
+		tracing = getenv("NEWTON_TRACE_ARBITER") != nil ? 1 : 0;
+	if (!tracing)
+		return;
+	TArray* lists[2] = { gathered, winners };
+	fprintf(stderr, "[arbiter] case %ld:", recCase);
+	for (long l = 0; l < 2; l++)
+	{
+		fprintf(stderr, l == 0 ? " gathered" : "; won");
+		TArrayIterator iter;
+		BestMatch* entry = (BestMatch*) lists[l]->GetIterator(&iter);
+		for (ULong i = 0; i < (ULong) iter.fCount; i++, entry = (BestMatch*) iter.GetNext())
+		{
+			ULong t = entry->fUnit->fType;
+			TSIUnit* unit = (TSIUnit*) entry->fUnit;
+			fprintf(stderr, " '%c%c%c%c'/%ld", (char) (t >> 24), (char) (t >> 16), (char) (t >> 8), (char) t,
+					unit->GetScore(unit->GetBestInterpretation()));
+		}
+	}
+	fprintf(stderr, "\n");
+}
+
+
 // ROM 0x00207118 ArbitrateUnits__8TArbiterFP8TRecArea
 // Which of the units gathered over the same strokes wins.  The rule
 // depends on what the area takes (GetRecognitionCase): with a scrub among
@@ -530,6 +567,7 @@ TArbiter::ArbitrateUnits(TRecArea* area)
 		}
 	}
 
+	TraceArbitration(GetRecognitionCase(area), Gathered(), Winners());
 	if (Winners()->Count() != 0)
 		return true;
 
