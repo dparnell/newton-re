@@ -702,3 +702,162 @@ GetCircles(tag_CHUNK_STAFF* staff)
 	}
 	return 1;
 }
+
+
+#pragma mark - after the searchers
+
+// ROM 0x002a7eac (unnamed) - which side of the line through (x1, y1) and
+// (x2, y2) the point (x, y) is on: 1, -1, or 0 on it
+static long
+SideOfLine(long x1, long y1, long x2, long y2, long x, long y)
+{
+	int32_t d = (int32_t) ((x - x1) * (y2 - y1)) - (int32_t) ((x2 - x1) * (y - y1));
+	if (d > 0)
+		return 1;
+	return d >= 0 ? 0 : -1;
+}
+
+
+// ROM 0x002a7ee8 CheckQIntersecXY__FiN71
+// Whether the segments (x1, y1)-(x2, y2) and (x3, y3)-(x4, y4) meet (their
+// ends not strictly on the same side of each other's line).
+long
+CheckQIntersecXY(long x1, long y1, long x2, long y2, long x3, long y3, long x4, long y4)
+{
+	long s1 = SideOfLine(x1, y1, x2, y2, x3, y3);
+	long s2 = SideOfLine(x1, y1, x2, y2, x4, y4);
+	if (s1 * s2 > 0)
+		return 0;
+	long t1 = SideOfLine(x3, y3, x4, y4, x1, y1);
+	long t2 = SideOfLine(x3, y3, x4, y4, x2, y2);
+	return t1 * t2 <= 0 ? 1 : 0;
+}
+
+
+// ROM 0x002a8020 CheckQIntersec__FP13tag_wapx_typeiN32
+// Whether the segments between nodes a-b and c-d meet.
+long
+CheckQIntersec(tag_wapx_type* n, long a, long b, long c, long d)
+{
+	return CheckQIntersecXY(n[a].x, n[a].y, n[b].x, n[b].y, n[c].x, n[c].y, n[d].x, n[d].y);
+}
+
+
+// ROM 0x0028fa14 ThreeToFive__FPvP9tag_CHUNKP13tag_wapx_typePiPP10tag_LOWOBJi
+// The 3s that are 5s: a 3 (value 1300 + 3 mod 100) whose writing turns
+// back at its right and then at its left again, the left turn sharp (more
+// than four steps) and the right one hardly a turn at all, or one of two
+// steps whose line back points at the start, and the left turn left of
+// the start - a 5 whose bar was not lifted - becomes 1305.  ROM BUG: the
+// two turns found are not forgotten between one digit and the next, so a
+// 3 that has neither is judged by the last one's.  ==> 0 with no digits,
+// else 1.
+long
+ThreeToFive(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count)
+{
+	long right = -1, left = -1;
+	if (count == 0)
+		return 0;
+	for (long k = 0; k < count; k++)
+	{
+		tag_LOWOBJ* obj = objs[k];
+		if (obj->fValue == 0xffff)
+			continue;
+		if ((uint32_t) (obj->fValue - 1300) % 100 != 3)
+			continue;
+		long m = LO_HowManyChunks(lo, obj);
+		long a0 = chunks[real[LO_GetRealChunkInd(lo, chunks, n, obj, 1)]].fFrom;
+		long last = chunks[real[LO_GetRealChunkInd(lo, chunks, n, obj, m)]].fTo - 1;
+		for (long i = a0 + 1; i <= last; i++)
+			if (n[i - 1].x < n[i].x && n[i + 1].x < n[i].x)
+			{
+				right = i;
+				break;
+			}
+		if (right == -1)
+			continue;
+		for (long i = right + 1; i <= last; i++)
+			if (n[i - 1].x > n[i].x && n[i + 1].x > n[i].x)
+			{
+				left = i;
+				break;
+			}
+		if (left == -1)
+			continue;
+		long d1 = GetDirection(n[left].x, n[left].y, n[left + 1].x, n[left + 1].y);
+		long d2 = GetDirection(n[left].x, n[left].y, n[left - 1].x, n[left - 1].y);
+		long turnLeft = GetAngleBetweenTwoDir(d1, d2);
+		if (turnLeft < 3)
+			continue;
+		long e1 = GetDirection(n[right].x, n[right].y, n[right - 1].x, n[right - 1].y);
+		long e2 = GetDirection(n[right].x, n[right].y, n[right + 1].x, n[right + 1].y);
+		long turnRight = GetAngleBetweenTwoDir(e1, e2);
+		if (turnLeft > 4 && turnRight < 2)
+		{
+			if (turnRight < 1 || n[left].x < n[a0].x)
+				obj->fValue = 0x519;
+		}
+		if (turnLeft > 4 && turnRight == 2 && a0 + 1 != right && n[left].x < n[a0].x)
+		{
+			long f = GetDirection(n[right].x, n[right].y, n[a0].x, n[a0].y);
+			if (GetAngleBetweenTwoDir(f, e2) < 1)
+				obj->fValue = 0x519;
+		}
+	}
+	return 1;
+}
+
+
+// ROM 0x0028fd18 RecognizeZCCW__FPvP9tag_CHUNKP13tag_wapx_typePiPP10tag_LOWOBJi
+// The digits of two chunks - one going down that turns the other way
+// (value 502), then an arc up (402) - looked at again: wide on the right
+// and starting away from its leftmost point, with the first chunk twice
+// the second's height, it is a 6 (1306); an 8 whose closing line does not
+// cross its start, or crosses it far from where it began, is a 0 (1300);
+// a 2 narrower than the arc is tall a 6.  ==> 1.
+long
+RecognizeZCCW(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count)
+{
+	for (long k = 0; k < count; k++)
+	{
+		tag_LOWOBJ* obj = objs[k];
+		long m = LO_HowManyChunks(lo, obj);
+		long i0 = real[LO_GetRealChunkInd(lo, chunks, n, obj, 1)];
+		long i1 = real[LO_GetRealChunkInd(lo, chunks, n, obj, m)];
+		if (i0 + 1 != i1)
+			continue;
+		tag_CHUNK* c0 = &chunks[i0];
+		tag_CHUNK* c1 = &chunks[i1];
+		if (!(c0->fKind == 2 && c0->f78 == 502 && c1->f78 == 402 && c0->fPrev == -1 && c1->fNext == -1))
+			continue;
+		int32_t w = c1->fRight - c0->fLeft;
+		if ((c1->fRight - c1->fX0) * 3 > w && (c1->fRight - c1->fX1) * 3 > w
+			&& c0->fLeftNode != c0->fFrom && c0->fHeight > c1->fHeight * 2)
+		{
+			obj->fValue = 0x51a;
+			continue;
+		}
+		if ((uint32_t) (obj->fValue - 1300) % 100 == 8 && c1->fHeight * 3 > c0->fHeight * 2)
+		{
+			long a = c0->fTo - c0->f91;
+			long b = c0->fFrom + c0->f90;
+			if (!CheckQIntersec(n, c1->fRightNode, c1->fTo, a, b))
+			{
+				obj->fValue = 0x514;
+				continue;
+			}
+			int32_t x1 = c1->fX1, y1 = c1->fY1;
+			int32_t xa = n[a].x, ya = n[a].y;
+			int32_t da = (x1 - xa) * (x1 - xa) + (y1 - ya) * (y1 - ya);
+			int32_t d0 = (x1 - c0->fX0) * (x1 - c0->fX0) + (y1 - c0->fY0) * (y1 - c0->fY0);
+			if (d0 * 9 > da * 4 && xa - x1 > 0 && c1->fRight - n[b].x > (xa - x1) * 3)
+			{
+				obj->fValue = 0x514;
+				continue;
+			}
+		}
+		if ((uint32_t) (obj->fValue - 1300) % 100 == 2 && w * 7 < c1->fHeight * 10)
+			obj->fValue = 0x51a;
+	}
+	return 1;
+}

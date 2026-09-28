@@ -332,6 +332,17 @@ long	cross_with_line(tag_wapx_type* n, tag_CHUNK* c, long x1, long y1, long x2, 
 // low objects as class 1300, value 1400 + the digit (0x15 for $), extra 1
 // found whole, 2 with a separate bar, 3 from a bar.  ==> 1.
 long	SearchDigit_L(tag_CHUNK_STAFF* staff);							// ROM 0x0028dd18 SearchDigit_L__FP15tag_CHUNK_STAFF
+// Whether two segments meet (their ends, and nodes a-b and c-d's).
+long	CheckQIntersecXY(long x1, long y1, long x2, long y2, long x3, long y3, long x4, long y4);	// ROM 0x002a7ee8 CheckQIntersecXY__FiN71
+long	CheckQIntersec(tag_wapx_type* n, long a, long b, long c, long d);							// ROM 0x002a8020 CheckQIntersec__FP13tag_wapx_typeiN32
+// Digits' second looks at the digits found (count objects of class 1300,
+// value 1300 + the digit mod 100): a 3 that turns back sharply at its
+// left - a 5 whose bar was not lifted - made 1305 (ThreeToFive: ==> 0
+// with no digits, else 1); a curve down that turns the other way and an
+// arc up made a 6, or an 8 whose closing line misses its start a 0
+// (RecognizeZCCW: ==> 1).
+long	ThreeToFive(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count);		// ROM 0x0028fa14 ThreeToFive__FPvP9tag_CHUNKP13tag_wapx_typePiPP10tag_LOWOBJi
+long	RecognizeZCCW(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count);	// ROM 0x0028fd18 RecognizeZCCW__FPvP9tag_CHUNKP13tag_wapx_typePiPP10tag_LOWOBJi
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 

@@ -550,6 +550,40 @@ DrawDollar(double x, double y)
 	StrokeEnd();
 }
 
+// a 5 whose bar is written first and the pen brought back along it
+static void
+DrawFiveBarBack(double x, double y)
+{
+	MoveTo(x + 2, y);
+	LineTo(x + 13, y);
+	LineTo(x + 2, y + 1);
+	LineTo(x + 1, y + 9);
+	ArcTo(x + 7, y + 14, 6, 120, -150);
+	StrokeEnd();
+}
+
+// a 6: from the top right down the left, round the bottom and up into the
+// loop
+static void
+DrawSix(double x, double y)
+{
+	MoveTo(x + 12, y + 3);
+	ArcTo(x + 7, y + 6, 5, 35, 180);
+	LineTo(x + 2, y + 15);
+	ArcTo(x + 7, y + 15, 5, 180, 450);
+	StrokeEnd();
+}
+
+// a digit put in the list by hand over the whole of the writing
+static tag_LOWOBJ*
+DigitOver(void* lo, tag_CHUNK_STAFF* staff, long value)
+{
+	long obj = LO_Add(lo, staff->fNodes, 1300, 0, staff->fNodeCount - 1, (ULong) value, 1);
+	tag_LOWOBJ* o = nil;
+	LO_PickDirectInd(lo, obj, &o);
+	return o;
+}
+
 static void
 TestSearchL(void)
 {
@@ -576,6 +610,57 @@ TestSearchL(void)
 	TraceStart(); DrawSevenOne(0, 0); EXPECT(SearchL("7 one", d, 8) == 0);
 	TraceStart(); DrawNine(0, 0); EXPECT(SearchL("9", d, 8) == 0);
 	TraceStart(); DrawZero(0, 0); EXPECT(SearchL("0", d, 8) == 0);
+}
+
+
+static void
+TestSecondLooks(void)
+{
+	tag_CHUNK_STAFF staff;
+	// crossing segments
+	EXPECT(CheckQIntersecXY(0, 0, 10, 10, 0, 10, 10, 0) == 1);
+	EXPECT(CheckQIntersecXY(0, 0, 10, 0, 0, 5, 10, 5) == 0);
+	EXPECT(CheckQIntersecXY(0, 0, 10, 10, 5, 5, 20, 0) == 1);		// touching counts
+
+	TraceStart();
+	DrawFiveBarBack(0, 0);
+	EXPECT(Construct(&staff, "5 bar back"));
+	void* lo = LO_Create();
+	tag_LOWOBJ* obj = DigitOver(lo, &staff, 1403);
+	EXPECT(obj != nil);
+	if (obj != nil)
+	{
+		EXPECT(ThreeToFive(lo, staff.fChunks, staff.fNodes, staff.fRealChunks, &obj, 1) == 1);
+		EXPECT(obj->fValue == 0x519);		// the 3 is a 5 whose bar was not lifted
+		if (gVerbose)
+			printf("  5 bar back as a 3: value %d\n", obj->fValue);
+	}
+	EXPECT(ThreeToFive(lo, staff.fChunks, staff.fNodes, staff.fRealChunks, &obj, 0) == 0);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	TraceStart();
+	DrawSix(0, 0);
+	EXPECT(Construct(&staff, "6"));
+	lo = LO_Create();
+	// its first chunk is a plain arc down: RecognizeZCCW leaves it be
+	obj = DigitOver(lo, &staff, 1402);
+	EXPECT(RecognizeZCCW(lo, staff.fChunks, staff.fNodes, staff.fRealChunks, &obj, 1) == 1 && obj->fValue == 1402);
+	// taken as a curve that turns the other way (value 502), a 2 over it
+	// narrower than the arc up is tall becomes a 6; a 3 stays
+	EXPECT(staff.fChunkCount == 2 && staff.fChunks[0].f78 == 402 && staff.fChunks[1].f78 == 402);
+	staff.fChunks[0].f78 = 502;
+	tag_LOWOBJ* three = DigitOver(lo, &staff, 1403);
+	EXPECT(RecognizeZCCW(lo, staff.fChunks, staff.fNodes, staff.fRealChunks, &three, 1) == 1 && three->fValue == 1403);
+	if (obj != nil)
+	{
+		EXPECT(RecognizeZCCW(lo, staff.fChunks, staff.fNodes, staff.fRealChunks, &obj, 1) == 1);
+		EXPECT(obj->fValue == 0x51a);
+		if (gVerbose)
+			printf("  6 as a 2: value %d\n", obj->fValue);
+	}
+	LO_Destroy(lo);
+	Destruct(&staff);
 }
 
 static void
@@ -645,6 +730,7 @@ main(int argc, char** argv)
 	TestConstruct();
 	TestLineAndCircles();
 	TestSearchL();
+	TestSecondLooks();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;
