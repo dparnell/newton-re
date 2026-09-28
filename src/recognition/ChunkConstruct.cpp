@@ -1236,3 +1236,58 @@ ChunkDestroyData(tag_CHUNK_STAFF* staff)
 	staff->fRealCount = 0;
 	return 1;
 }
+
+
+#pragma mark - what the searchers start from
+
+// ROM 0x00287d48 ChunkPutClassesToLO__FPvP13tag_wapx_typeP9tag_CHUNKi
+// Each chunk that is not a jump put in the list of low objects as its
+// class (f74, subclass f78 the object's value) over its nodes, the
+// object's index kept in f70 (-1 for a jump).  ==> how many were put.
+long
+ChunkPutClassesToLO(void* lo, tag_wapx_type* n, tag_CHUNK* chunks, long count)
+{
+	long put = 0;
+	for (long k = 0; k < count; k++)
+	{
+		tag_CHUNK* c = &chunks[k];
+		if (c->fKind == 3)
+			c->f70 = -1;
+		else
+		{
+			c->f70 = (int32_t) LO_Add(lo, n, (ULong) c->f74, c->fFrom, c->fTo, (ULong) c->f78, -1);
+			put++;
+		}
+	}
+	return put;
+}
+
+
+// ROM 0x00287de0 DefRectForChunks__FP9tag_CHUNKP13tag_wapx_typeiT3P5_RECT
+// The box round the nodes from chunk first's start to chunk last's end.
+// ROM QUIRK: its type is named _RECT, but it writes four words - not the
+// four halfwords of the low level's _RECT (LowLevel.h): ParaGraph's
+// sources had two types of that name; the host takes a tag_BOX.
+long
+DefRectForChunks(tag_CHUNK* chunks, tag_wapx_type* n, long first, long last, tag_BOX* r)
+{
+	long k = chunks[first].fFrom;
+	int32_t left = n[k].x, right = left;
+	int32_t top = n[k].y, bottom = top;
+	for (k++; k <= chunks[last].fTo; k++)
+	{
+		if (n[k].x < left)
+			left = n[k].x;
+		else if (n[k].x > right)
+			right = n[k].x;
+		if (n[k].y < top)
+			top = n[k].y;
+		else if (n[k].y > bottom)
+			bottom = n[k].y;
+	}
+	r->left = left;
+	r->top = top;
+	r->right = right;
+	r->bottom = bottom;
+	return 1;
+}

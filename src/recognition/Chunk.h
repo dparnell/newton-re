@@ -295,6 +295,8 @@ long	ChunkMakeStrokes(tag_CHUNK* chunks, tag_wapx_type* nodes, long count, tag_S
 long	CreateRealChunkInd(tag_CHUNK* chunks, long count, int32_t** real);	// ROM 0x00287e7c CreateRealChunkInd__FP9tag_CHUNKiPPi
 long	ApxToBrackets(tag_wapx_type* nodes, tag_CHUNK* chunks, long count, brack_type** brackets);	// ROM 0x00286a54 ApxToBrackets__FP13tag_wapx_typeP9tag_CHUNKiPP10brack_type
 long	ApxToCLine(tag_wapx_type* nodes, brack_type* brackets, long count, tag_CHUNK* chunks, long chunkCount);	// ROM 0x00287aa8 ApxToCLine__FP13tag_wapx_typeP10brack_typeiP9tag_CHUNKT3
+long	ChunkPutClassesToLO(void* lo, tag_wapx_type* nodes, tag_CHUNK* chunks, long count);	// ROM 0x00287d48 ChunkPutClassesToLO__FPvP13tag_wapx_typeP9tag_CHUNKi
+long	DefRectForChunks(tag_CHUNK* chunks, tag_wapx_type* nodes, long first, long last, tag_BOX* r);	// ROM 0x00287de0 DefRectForChunks__FP9tag_CHUNKP13tag_wapx_typeiT3P5_RECT
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 

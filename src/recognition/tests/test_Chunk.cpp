@@ -350,6 +350,23 @@ TestConstruct(void)
 	tag_CHUNK* upright = &staff.fChunks[staff.fChunkCount - 1];
 	EXPECT(upright->fKind == 2 && upright->f74 == 300 && upright->fStroke == 1);
 	EXPECT(upright->fFirstBracket == upright->fLastBracket);
+	// the chunks put in the list of low objects by their classes
+	void* lo = LO_Create();
+	EXPECT(ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount) == 2);
+	LOBlock* block = (LOBlock*) lo;
+	EXPECT(block->fClasses[2].fCount == 1 && block->fClasses[5].fCount == 1);	// 300 and 600
+	EXPECT(staff.fChunks[1].f70 == -1 && upright->f70 == 1);
+	tag_LOWOBJ* obj = nil;
+	EXPECT(LO_SetWorkClass(lo, 300) == 1 && LO_PickFirst(lo, &obj) == 1);
+	if (obj != nil)
+	{
+		EXPECT(obj->fValue == 301 && obj->fChunks == 1);
+		EXPECT(staff.fRealChunks[LO_GetRealChunkInd(lo, staff.fChunks, staff.fNodes, obj, 1)] == staff.fChunkCount - 1);
+	}
+	LO_Destroy(lo);
+	tag_BOX r;
+	EXPECT(DefRectForChunks(staff.fChunks, staff.fNodes, 0, staff.fChunkCount - 1, &r) == 1);
+	EXPECT(r.left == 0 && r.top == 0 && r.right == 112 && r.bottom == 160);
 	Destruct(&staff);
 
 	// a 2: one stroke; the hook over the top an arc
