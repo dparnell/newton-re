@@ -79,6 +79,7 @@ add_library(recognition STATIC
     LowDArcs.cpp
     LowTables.cpp
     CursiveReader.cpp
+    XrMatrix.cpp
     StrXrDomain.cpp
     Fragment.cpp
     FragmentTables.cpp
