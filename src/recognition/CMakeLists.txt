@@ -81,6 +81,7 @@ add_library(recognition STATIC
     CursiveReader.cpp
     Chunk.cpp
     ChunkTrace.cpp
+    ChunkLowObj.cpp
     ChunkTables.cpp
     XrMatrix.cpp
     XrWordGraph.cpp

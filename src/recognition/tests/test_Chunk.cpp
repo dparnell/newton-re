@@ -215,6 +215,69 @@ TestApprox(void)
 }
 
 
+/*--------------------------------------------------------------------
+	LO_*: the list of low objects
+--------------------------------------------------------------------*/
+
+static void
+TestLowObjects(void)
+{
+	// five nodes in two chunks (1, 1, 1 continuing into 2, 2)
+	tag_wapx_type nodes[5];
+	memset(nodes, 0, sizeof(nodes));
+	const int32_t xs[5] = { 10, 20, 30, 25, 5 }, ys[5] = { 0, 40, 10, 50, 5 }, chunk[5] = { 1, 1, -1, 2, 2 };
+	for (long k = 0; k < 5; k++)
+	{
+		nodes[k].fIndex = (int32_t) (k * 10);
+		nodes[k].x = xs[k];
+		nodes[k].y = ys[k];
+		nodes[k].f18 = chunk[k];
+	}
+	tag_CHUNK chunks[2];
+	memset(chunks, 0, sizeof(chunks));
+	chunks[0].fRealIndex = 7;
+	chunks[1].fRealIndex = 8;
+
+	void* lo = LO_Create();
+	EXPECT(lo != nil);
+	if (lo == nil)
+		return;
+	EXPECT(LO_Clear(lo) == 1);
+	EXPECT(LO_Add(lo, nodes, 300, 0, 4, 11, 22) == 0);
+	EXPECT(LO_Add(lo, nodes, 300, 1, 2, 12, 23) == 1);
+	EXPECT(LO_Add(lo, nodes, 1900, 3, 4, 13, 24) == 2);
+	EXPECT(LO_Add(lo, nodes, 999, 3, 4, 13, 24) == -1);		// not a class
+	LOBlock* block = (LOBlock*) lo;
+	EXPECT(block->fCount == 3 && block->fFree == 297);
+	EXPECT(block->fClasses[2].fCount == 2 && block->fClasses[16].fCount == 1);
+
+	tag_LOWOBJ* obj = nil;
+	EXPECT(LO_PickFirst(lo, &obj) == 0 && obj == nil);			// no class worked in yet
+	EXPECT(LO_SetWorkClass(lo, 300) == 1 && LO_GetWorkClassID(lo) == 300);
+	EXPECT(LO_PickFirst(lo, &obj) == 1 && obj != nil);
+	if (obj != nil)
+	{
+		EXPECT(obj->fChunks == 2);								// nodes 0..4: chunks 1 and 2
+		EXPECT(obj->fLeft == 5 && obj->fRight == 30 && obj->fTop == 0 && obj->fBottom == 50);
+		EXPECT(obj->fFirstPoint == 0 && obj->fLastPoint == 40 && obj->fValue == 11 && obj->fExtra == 22);
+		EXPECT(LO_HowManyChunks(lo, obj) == 2);
+		EXPECT(LO_GetRealChunkInd(lo, chunks, nodes, obj, 1) == 7);
+		EXPECT(LO_GetRealChunkInd(lo, chunks, nodes, obj, 2) == 8);
+		EXPECT(LO_GetRealChunkInd(lo, chunks, nodes, obj, 3) == -1);
+	}
+	EXPECT(LO_PickNext(lo, &obj) == 1 && obj != nil && obj->fFrom == 1 && obj->fChunks == 1);
+	EXPECT(LO_PickNext(lo, &obj) == 0 && obj == nil);
+	EXPECT(LO_SetWorkClass(lo, 1900) == 1);
+	EXPECT(LO_PickFirst(lo, &obj) == 1 && obj != nil && obj->fClass == 1900);
+	// a node chunk-less at the start of its span (negative) is not counted
+	if (obj != nil)
+		EXPECT(obj->fChunks == 1);
+	EXPECT(LO_PickDirectInd(lo, 1, &obj) == 1 && obj->fFrom == 1);
+	EXPECT(LO_PickDirectInd(lo, 3, &obj) == 0 && obj == nil);
+	EXPECT(LO_Destroy(lo) == 1);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -222,6 +285,7 @@ main(int argc, char** argv)
 	InitHostStandaloneHeap();
 	TestTurns();
 	TestApprox();
+	TestLowObjects();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

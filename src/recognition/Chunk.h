@@ -105,6 +105,126 @@ enum
 	kApxCorner		= 0x40			// the direction turns by 120 degrees or more (SetAllDirections)
 };
 
+// A chunk: a piece of the polyline between two marked points (a stroke's
+// start or end, a turn at the top or bottom), or the pen's jump between
+// two strokes (kind 3) - ROM tag_CHUNK, 0x94 bytes, no pointers.  A
+// polyline node's f18 is the chunk it belongs to, from one (negative at
+// the last node of a chunk the next one continues from).
+struct tag_CHUNK
+{
+	int32_t		fFrom;				// +00  the first node
+	int32_t		fTo;				// +04  the last
+	int32_t		fKind;				// +08  1 it goes up, 2 down, 3 the jump between strokes
+	int32_t		f0C;
+	UByte		fDir;				// +10  GetDirection from its start to its end
+	UByte		f11[3];
+	int32_t		fLeft;				// +14
+	int32_t		fTop;				// +18
+	int32_t		fRight;				// +1c
+	int32_t		fBottom;			// +20
+	int32_t		fTopNode;			// +24  the nodes the extremes are at
+	int32_t		fRightNode;			// +28
+	int32_t		fLeftNode;			// +2c
+	int32_t		fBottomNode;		// +30
+	int32_t		fWidth;				// +34
+	int32_t		fHeight;			// +38
+	int32_t		fX0, fY0;			// +3c  its start
+	int32_t		f44;
+	int32_t		fX1, fY1;			// +48  its end
+	int32_t		f50;
+	int32_t		fMidX, fMidY;		// +54  the node its segment was first split at (-1: none)
+	int32_t		fLength2;			// +5c  the square of the chord's length
+	int32_t		fBulge;				// +60  the square of the middle node's distance from the chord
+	int32_t		fPrev;				// +64  the chunk this one continues (-1: a stroke's first)
+	int32_t		fNext;				// +68  the one that continues it, plus one (-1: a stroke's last)
+	int32_t		f6C;
+	int32_t		f70;
+	int32_t		f74;
+	int32_t		f78;
+	int32_t		f7C;
+	int32_t		fRealIndex;			// +80  its number among the chunks that are not jumps
+	int32_t		fFirstBracket;		// +84  its brackets (ApxToBrackets)
+	int32_t		fLastBracket;		// +88
+	int32_t		fStroke;			// +8c  the stroke it is in (ChunkMakeStrokes)
+	UByte		f90;
+	UByte		f91;
+	UByte		f92[2];
+};
+static_assert(sizeof(tag_CHUNK) == 0x94, "a tag_CHUNK is 0x94 bytes, as in the ROM");
+
+// An object the digit searchers found (ROM tag_LOWOBJ, 0x3c bytes, no
+// pointers): what class it is, the nodes it spans and their box, and its
+// links in its class's list (or the free list).
+struct tag_LOWOBJ
+{
+	int32_t		fClass;				// +00  the class id (100..800, 1100..2200)
+	UByte		fGroupCount;		// +04  the objects after it in its group
+	UByte		fGroupIndex;		// +05  its place in a group
+	UByte		fChunks;			// +06  the chunks its nodes run through
+	UByte		f07;
+	int32_t		fFrom;				// +08  the first node
+	int32_t		fTo;				// +0c  the last
+	int32_t		fFirstPoint;		// +10  their trace points
+	int32_t		fLastPoint;			// +14
+	int32_t		fLeft;				// +18
+	int32_t		fTop;				// +1c
+	int32_t		fRight;				// +20
+	int32_t		fBottom;			// +24
+	int32_t		fValue;				// +28
+	int32_t		fPrev;				// +2c
+	int32_t		fNext;				// +30
+	int32_t		fExtra;				// +34
+	int32_t		f38;
+};
+static_assert(sizeof(tag_LOWOBJ) == 0x3c, "a tag_LOWOBJ is 0x3c bytes, as in the ROM");
+
+// A class's list: how many, the first and last, and a cursor.
+struct LOClassRec
+{
+	int32_t		fCount;
+	int32_t		fFirst;
+	int32_t		fLast;
+	int32_t		fCur;
+	int32_t		fCurN;
+};
+
+const long	kLOMaxObjects	= 300;
+
+// The list of low objects (the ROM's 0x482c-byte block).  DEVIATION: the
+// host's layout is its own, the two pointers (+0x24, +0x28) being wider;
+// the ROM offsets are noted.
+struct LOBlock
+{
+	int32_t		fCount;				// +00  the objects taken
+	int32_t		f04;
+	int32_t		fClass;				// +08  the class worked in
+	LOClassRec	fWork;				// +0c  its record, taken out
+	int32_t		fGroup;				// +20  numbering a group (0: not)
+	tag_LOWOBJ*	fGroupObj;			// +24  the group's last object
+	Ptr			fData;				// +28  800 bytes
+	int32_t		f2C;
+	int32_t		fFree;				// +30
+	int32_t		fFreeHead;			// +34
+	int32_t		fFreeTail;			// +38
+	int32_t		f3C;				// +3c  (the free head, again)
+	int32_t		f40;
+	LOClassRec	fClasses[20];		// +44  100, 200, ... 800, 1100, ... 2200
+	int32_t		f1D4, f1D8;
+	tag_LOWOBJ	fObjects[kLOMaxObjects];	// +1dc
+};
+
+void*	LO_Create(void);									// ROM 0x0029bba8 LO_Create__Fv
+long	LO_Destroy(void* list);								// ROM 0x0029bd88 LO_Destroy__FPv
+long	LO_Clear(void* list);								// ROM 0x0029bdac LO_Clear__FPv
+long	LO_Add(void* list, tag_wapx_type* nodes, ULong classID, long from, long to, ULong value, long extra);	// ROM 0x0029be08 LO_Add__FPvP13tag_wapx_typeUiiT4T3T4
+long	LO_SetWorkClass(void* list, ULong classID);			// ROM 0x0029c374 LO_SetWorkClass__FPvUi
+ULong	LO_GetWorkClassID(void* list);						// ROM 0x0029c7fc LO_GetWorkClassID__FPv
+long	LO_PickFirst(void* list, tag_LOWOBJ** obj);			// ROM 0x0029c804 LO_PickFirst__FPvPP10tag_LOWOBJ
+long	LO_PickNext(void* list, tag_LOWOBJ** obj);			// ROM 0x0029c84c LO_PickNext__FPvPP10tag_LOWOBJ
+long	LO_PickDirectInd(void* list, long index, tag_LOWOBJ** obj);	// ROM 0x0029c910 LO_PickDirectInd__FPviPP10tag_LOWOBJ
+long	LO_HowManyChunks(void* list, tag_LOWOBJ* obj);		// ROM 0x0029bc2c LO_HowManyChunks__FPvP10tag_LOWOBJ
+long	LO_GetRealChunkInd(void* list, tag_CHUNK* chunks, tag_wapx_type* nodes, tag_LOWOBJ* obj, long n);	// ROM 0x0029bc74 LO_GetRealChunkInd__FPvP9tag_CHUNKP13tag_wapx_typeP10tag_LOWOBJi
+
 // The turns of the trace marked (kTraceLow/kTraceHigh), each stroke's
 // first point and the turns the pen makes by more than *height (the
 // height of the stroke half way up the strokes sorted by height) over
