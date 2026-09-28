@@ -31,6 +31,7 @@
 #include "XrDomains.h"
 
 struct xrdata_type;
+struct PS_point_type;
 
 // The chunk reader's context (ROM 0x48 bytes; DEVIATION: sizeof on the
 // host, whose pointers are wider).
@@ -537,5 +538,9 @@ long	IsChunkNumbers(void* ctx);							// ROM 0x002a65cc IsChunkNumbers__FPv
 void	ChunkModifyRC(void* ctx, rc_type* rc);				// ROM 0x002a6464 ChunkModifyRC__FPvP7rc_type
 void	ChunkRestoreRC(void* ctx, rc_type* rc);				// ROM 0x002a654c ChunkRestoreRC__FPvP7rc_type
 void*	ChunkWriteParamCtx(void* ctx, rc_type* rc, xrdata_type* xr, rec_w_type* readings);	// ROM 0x002a65dc ChunkWriteParamCtx__FPvP7rc_typeP11xrdata_typeP10rec_w_type - ==> &fReadings
+// The digit and number reader run over the writing's n points: Digits over
+// the reader's own trace, what it found kept in the context (IsChunkNumbers
+// says whether it was a number).
+void	ChunkProcessor(void* ctx, PS_point_type* points, long n);		// ROM 0x002a6b50 ChunkProcessor__FPvP13PS_point_typei
 
 #endif	/* __CHUNK_H */

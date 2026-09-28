@@ -3252,18 +3252,100 @@ gaps written out and seven of the corrections; `TestSearchV` finds a
 drawn 1, 0, 2, 3, 6, 7, 9, #, < and >; `TestSearchNumber` runs L, K, V,
 `Check_4` and the second looks as `Digits` does and judges 42, 10, 217
 and 11 numbers and a lone 2 and stepped 1s not; `TestFindPound` finds a
-drawn pound sign (its bar laid in by hand).
+drawn pound sign, its bar the minus `SearchDigit_S` reads.
 
-NOT YET: `SearchDigit_S` (24 KB, 45 statics at 0x00290ed8-0x00296e04 -
-the searcher that reads the signs coded 13 and most of the other
-non-digit codes), `Digits` itself and its other statics
-(0x002a09b0, 0x002a2758, 0x002a1a98, 0x0029e888, 0x002a19ec, 0x0029ccd4,
-0x002a2078, 0x0029fbcc, 0x002a0d74, 0x0029ffc8), `CutNumberInDigits`,
-`ChunkProcessor` and the merging of the numbers read
-(`ChunkPatchXrdata`, `ChunkSortAnswers`, `ChunkCorrectByLexDB`); without
-`ChunkProcessor` no number is found, so the context goes straight back,
-as the ROM does for a word that is not a number.  The plan is in
-`docs/next-steps.md`.
+- **`SearchDigit_S`** (`ChunkSearchS.cpp`, 0x00290ed8-0x00296e04, 45
+  unnamed statics, all from the disassembly): the searcher of the signs,
+  the small marks and the digits of arcs, value 1600 + the code.  It marks
+  every chunk unused (`f6C`) and runs an **arcs pass** first (each arc
+  going down with what follows it in its stroke: a **0** from two arcs of
+  a size, a **6** or **8** from a tall arc and a smaller one - which one
+  by where the second's top is - a **9** read backwards, a **per cent
+  sign** when a slash and a matching ring are the strokes either side, a
+  grey 8, class 2200, from three stacked arcs), then **chunk by chunk**
+  over what is left: an **@** (three to six chunks ending in two arcs
+  round the outside), a **(** and a **)** (at least as tall as the line,
+  narrow, with a tiny hook at most), a **9** (a short arc up and a taller
+  one after it), a **bar** - short and wide - which with the stroke before
+  or after it is a **5**'s bar, a crossed **7**'s, a **+** (the upright
+  through its middle) or a **minus**, and otherwise a bar kept for later
+  (class 1600, 1613), and a **3**.  Then the **small marks** by chunk: a
+  dot kept for later (1600, 1614), a **comma**, a **solidus** (taller by a
+  quarter than the strokes either side, each wholly to its side).  The
+  writing's line is worked out again from the digits found, and four
+  passes settle the marks kept for later: two marks stacked are an **8**,
+  a per cent sign or a **colon**; a bar a **minus** or a **full stop** by
+  its width against its neighbours; a small ring low a full stop and one
+  half the line tall a **0**; a dot low a **full stop**.  Its chunks are
+  marked 10 (13 for an arc read with the one before it).  ROM quirks kept:
+  `HWRAbs(0)` in the arc-pair span tests (so only a chunk under four high
+  skips the end test); two tests of a 9's tail demand a foot at least a
+  third and at most a sixth of the span below the loop at once, which
+  almost never is; the three-chunk @ asks for a chunk *kind* of 701,
+  which no kind is; the minus found after the other stroke is never put
+  in; two passes return at once leaving the list's work class
+  unrestored; a digit put in whole is given the digit again as its extra
+  (the callers load the character from beside their code - '@', '9',
+  '3' - and it is never read).
+- **`Digits`** whole (`ChunkDigitsMain.cpp`, 0x0029c94c and its statics):
+  after the searchers, **the doubtful digits taken out** - a 7 whose
+  neighbour crosses its middle is put in again with that stroke (a
+  crossed 7), a 1 with a stroke across or over it and a 2, solidus or 81
+  lying under another stroke's middle third or cut by it go
+  (0x002a1320), and of digits one inside another or overlapping, the one
+  that does not belong (0x002a0b38); S's doubtful 3s and wide dots too
+  (0x002a2758) - then **`CutNumberInDigits`** (0x002a75b0): the real
+  chunks gathered into strokes and the strokes into cells of up to three,
+  a stroke joining the cell when it overlaps it by two fifths of its
+  width, starts near where the stroke before began, or stands tall and
+  narrow over its end (0x002a7168), each cell put in as class 1200 - the
+  gaps the second looks place between the digits.  After the second
+  looks, **the verdict**: with staff f50 set only digits written their
+  usual way count (0x0029ccd4); otherwise an **area code in brackets**
+  ("(" digits ")", the brackets together a half to a fifth of the width -
+  0x002a1a98), a **lone #** (0x0029e888), a **lone digit written its
+  usual way** (a 2, 3, 6, 7, 8 or 9 in one stroke, a 0, 1, 4 or 5 in two
+  - 0x002a19ec/0x002a1e98), or `SearchNumber`.  The characters are handed
+  back as `tagNumBox`es (0x002a2078: the character and an alternative -
+  '&' for an 8 that starts going up - the box, and the height and trace
+  points as big-endian halfwords), each stroke filed as a digit's (class
+  2000) or into a run of other strokes (class 2100, handed back as point
+  pairs - 0x0029fbcc), and the number thrown out again when its digits
+  spell a **word the reader is known to take for a number** (0x002a0d74:
+  a 1 and a one-stroke 5 is "is", 9009/9004/900 "good"/"goo", 7. 7- .7,
+  9// and more) or hold a **colon** (0x0029ffc8).  The answer is 1 a
+  number, 3 a number with nothing else written, 0 none.  ROM quirks kept:
+  the bracket test counts brackets from the entry *after* the one it has
+  just filled, which is stack garbage (DEVIATION: nought on the host), and
+  a code of 400 or more keeps the character before it, the first one's
+  being a register (DEVIATION: nought); three verdict passes return
+  leaving the work class unrestored.  `DigitChar`, the chain from code to
+  character the ROM writes out eight times over, is one function in
+  `Chunk.h`.
+- **`ChunkProcessor`** (`Chunk.cpp`, 0x002a6b50): in a field allowing
+  numbers, the letter table asked which variants of each digit the field
+  allows (`GetVariantState`, when it uses the learning info), the points
+  copied into the reader's own trace (scaled down to under 200 high), the
+  trace's turns, polyline and chunks, and `Digits`; the context keeps the
+  characters, the runs, the scale and the verdict.  In a field of kind 1
+  with flags 2 a lone digit is the answer whatever `Digits` said.
+
+`TestSearchS` reads a full stop, minus, colon, +, 5 and crossed 7 with
+their bars, both brackets, solidus, comma, 0, 6, 3, per cent sign and @
+from drawn writing (and no 9 or 1: those are the other searchers');
+`TestDigits` runs the whole of `Digits` - 42, 10 (the 0 V and S both read
+written out once), 217, 11, 2, 5, 1.1, (42) and 15 are numbers, 1:1, "is"
+and digits beside a letter are not; `TestProcessor` reads "42" and "10"
+from points as `GCTryToRecognize` hands them over.
+
+NOT YET: the merging of the numbers read into the readings -
+`ChunkPatchXrdata` (0x002a6680, 1.2 KB), `ChunkSortAnswers` (over the
+sort at 0x002a4c04, 2.6 KB) and `ChunkCorrectByLexDB` (0x002a5620, 3.5
+KB).  `ChunkProcessor` is not called from `GCTryToRecognize` until they
+are: once it finds a number `ChunkModifyRC` narrows the configuration to
+numbers alone and the low level makes no xrs at all, so the readings can
+only come from them, and without them a written number would reach the
+page as an empty word.  The plan is in `docs/next-steps.md`.
 
 **NOT YET RECONSTRUCTED** (the rest of the reader): `ORCreateLearnInfo`
 and `ORTraining` - the orthographic learning (only for a field with rc

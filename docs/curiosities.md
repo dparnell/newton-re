@@ -10,6 +10,36 @@ where it lives, so you can go and read it.
 
 ---
 
+## The digit reader knows "good" is not 9009
+
+ParaGraph's digit and number reader runs first in any field that allows
+numbers, and handwriting is full of letters that look like digits. So after
+all its geometry has decided the writing is a number, `Digits` asks one more
+question (the unnamed static at ROM 0x002a0d74, reconstructed as
+`LooksLikeAWord` in `recognition/ChunkDigitsMain.cpp`). It spells out the
+characters it read, at most four, and checks them against a short list of
+words it is known to misread as numbers.
+
+- **"is"**: a 1 followed by a 5 written in one stroke. A 5 whose bar is a
+  stroke of its own is a real 5, but a looping one is an s.
+- **"good"**: 9009 and 9004. The 9s are g's and the 0s are o's; a d read
+  as a 4 is the other spelling.
+- **"goo"**: 900 with other strokes beside it.
+- **"gas"**: 995 with one run of other strokes. This needs the 5 to be
+  looping as well.
+- **Question marks**: 7., .7, 7-, 7.- and similar.
+- **"g//" and "g//1"**: 9// and friends.
+
+Two full stops in adjacent chunks also count, and that test returns at once
+without putting the object list's class back.
+
+The per cent sign is caught from the other side. `SearchDigit_S` reads a
+ring, a slash and a ring as `%` only when the slash runs from the first
+ring's foot to the second's top and across both
+(`recognition/ChunkSearchS.cpp`, `S_PercentSlash`).
+
+---
+
 ## `mov pc,lr` is not an empty method
 
 `TDataView::GetTextView` (ROM 0x000a31c0) and `TDataView::GetHiliteView`
@@ -1034,8 +1064,8 @@ Only the chunks whose length is *not* the default are named, each by a
 (0x00232704) walks the pairs and gives every chunk up to the next named
 one the default length.
 
-The effect is that a document which has just been typed — every chunk
-filled to 512 characters except the last — has a chunk table of exactly
+The effect is that a document which has just been typed ï¿½ every chunk
+filled to 512 characters except the last ï¿½ has a chunk table of exactly
 six bytes: the count, the last chunk's length and index, and the
 terminator. It stays that small no matter how long the document is. A
 document that has been edited for a while pays two bytes per ragged
@@ -1066,7 +1096,7 @@ TXTab::Set(int position, char kind, unsigned char fill)
 ```
 
 A tab stop carries the character that the run of space up to it is
-filled with, and it is normally nought — a blank. The one exception is
+filled with, and it is normally nought ï¿½ a blank. The one exception is
 a **decimal-point** tab that nobody gave a fill character to: it gets a
 full stop.
 
@@ -1079,7 +1109,7 @@ choice. It is one line of code standing in for a whole preference.
 The script side never offers the fill character at all:
 `TabKindSymbolToNum` reads `'left`, `'center`, `'decimalPoint` and
 `'right` out of a tab frame, and `FromObject` then calls `Set(position,
-kind, 0)` — always nought. So *every* decimal tab a script makes has a
+kind, 0)` ï¿½ always nought. So *every* decimal tab a script makes has a
 dotted leader, and nothing a script can say will change it.
 
 *`src/text/TXRuler.cpp`.*
@@ -1104,7 +1134,7 @@ FAirusIteratorClone(RefArg rcvr)
 }
 ```
 
-The frame is cloned, a copy of the iterator is made — and then the
+The frame is cloned, a copy of the iterator is made ï¿½ and then the
 copy's `cursor` slot is filled in from the *original's* slot. The
 iterator that was just built is never stored anywhere, so it leaks; the
 two frames share one cursor, and stepping either of them steps both.
@@ -1151,15 +1181,15 @@ Errorprov               conv_top_elem_to_ST     RestoreApostroph
 
 `neibour` for *neighbour*, `umlyut` for *umlaut*, `Errorprov` for an
 error provider: this is English written by Russian speakers, and the
-engine is ParaGraph International's Calligrapher — the company Stepan
+engine is ParaGraph International's Calligrapher ï¿½ the company Stepan
 Pachikov founded in Moscow, whose recogniser replaced Apple's own in
 NewtonOS 2.0 and is the reason the second-generation MessagePads could
 read printing at all.
 
 The join between the two is visible in the code as well as in the
-names. Everything above `Rosetta*` is written in Apple's house style —
+names. Everything above `Rosetta*` is written in Apple's house style ï¿½
 `TRosRecognizer::AllocateAndConvertStrokeForRosetta`, capitals and
-`f`-prefixed fields — and everything below it is plain C with
+`f`-prefixed fields ï¿½ and everything below it is plain C with
 underscores and abbreviations that run out of vowels
 (`extract_num_extr`, `str_com`, `xt_st_zz`). The boundary is one file
 thick.
@@ -1183,7 +1213,7 @@ The word recogniser has to know how tall a capital letter is in the
 hand it is reading, because nearly everything else it measures is a
 fraction of that: how far apart the letters are, how far a descender
 goes below the line, how big a dot has to be before it is a dot. It
-starts with a number ParaGraph trained — 18.85 pixels — and then
+starts with a number ParaGraph trained ï¿½ 18.85 pixels ï¿½ and then
 learns yours, from every word it manages to read.
 
 `WordRecogComputeCapHeight` (0x00274818) is the whole of it, and it is
@@ -1191,7 +1221,7 @@ four lines of arithmetic. Take the word just read. Look up a nominal
 width for each of its characters in the engine's own table and average
 them. Divide the width the writing actually took by that average, and
 what comes out is how tall a capital must be for those characters at
-that size. Then — and this is the nice part — believe an eighth of it:
+that size. Then ï¿½ and this is the nice part ï¿½ believe an eighth of it:
 
 ```
 	fRun[20] = 0.875 * fRun[20] + 0.125 * estimate;
@@ -1201,7 +1231,7 @@ So one word nudges the estimate and ten words move it properly, which
 means a single misreading cannot send the engine off. It will not
 believe an estimate smaller than the floor in its common info at all,
 nor one more than two and a half times what it already had, and a word
-it could not read — `FailureString`, four question marks — teaches it
+it could not read ï¿½ `FailureString`, four question marks ï¿½ teaches it
 nothing.
 
 The measurement runs backwards through the recogniser, which is what
@@ -1225,7 +1255,7 @@ the classifier needs to score a new measurement.
 
 You can read it straight out of the starting values `WordRecogReset`
 writes. The first pair is 18.85 and 421.98; 18.85 squared is 355.3, so
-the rest is 66.7, and the square root of that is 8.17 — which is
+the rest is 66.7, and the square root of that is 8.17 ï¿½ which is
 almost exactly the constant `WordRecogAddStroke2` multiplies by when it
 works that second number out again. The same holds for all nine: 6.22
 and 54.28 (spread 3.95), 23.10 and 643.0 (spread 10.47), 14.69 and
@@ -1236,15 +1266,15 @@ What the nine are is neater still. One of them is how big a single
 stroke is. The other eight are **four measurements times two
 situations**: the gap in front of a stroke, that gap as a fraction of
 how big the writing is, and both of those again in the direction the
-writing runs — each with one distribution for a gap *inside* a letter
+writing runs ï¿½ each with one distribution for a gap *inside* a letter
 and another for a gap *between* letters. The caller says which by
 handing in a number between nought and one; under 0.4 the gap counts as
 within, over 0.6 as between, and in the band in the middle it is not
 counted at all, because the engine would rather learn nothing than
 learn the wrong thing.
 
-Each is learnt an eighth at a time — seven parts of what was there and
-one of what was just measured — and then held inside a quarter either
+Each is learnt an eighth at a time ï¿½ seven parts of what was there and
+one of what was just measured ï¿½ and then held inside a quarter either
 side of what ParaGraph trained (double and half, for the stroke size).
 So the engine bends towards your hand without ever being able to be
 argued a long way from the hand it was taught on.
@@ -1268,8 +1298,8 @@ reads a word against, and a field asks for one by name: General, Date,
 Numbers&Money, Numbers, Phone, Time, Money, PostalCode. That much you
 could guess. What is in one is the surprise.
 
-A grammar is a list of **kinds of word** — 46 of them across the eight
-— and a kind of word is a *lexicon*: `numbers`, `money`, `hyphen`,
+A grammar is a list of **kinds of word** ï¿½ 46 of them across the eight
+ï¿½ and a kind of word is a *lexicon*: `numbers`, `money`, `hyphen`,
 `endpunct`, `closequote`, `daymonth`, `Prefixes`, `Suffixes`,
 `WorldPhone`, `FunnyPhone`, `SpellCheckIgnore`, `wordlike`. Each names
 one of the 129 dictionaries built into the ROM, carries a score for
@@ -1288,12 +1318,12 @@ LexicalSymbols
 ```
 
 A lower score is better, so after a hyphen, going back to a telephone
-number costs **nothing at all** — which is exactly the shape of
+number costs **nothing at all** ï¿½ which is exactly the shape of
 555-1234, and why writing a telephone number into a phone field reads
 so much better than writing it into a note.
 
 Two more things it says out loud. `endpunct` and `closequote` score
-0x7ffe — 32766, the engine's "never" — for being the *first* kind of
+0x7ffe ï¿½ 32766, the engine's "never" ï¿½ for being the *first* kind of
 word, so a full stop can never begin a piece of writing, though it may
 happily follow one and even follow itself. And the General grammar
 holds six kinds called `~user`, `~null1` ... `~null5` whose dictionary
@@ -1330,14 +1360,14 @@ The answer is in the MMU table the machine starts from,
 VA 0x03500000  <-  PA 0x00000000   8192 KB   flags 0x802
 ```
 
-— the whole ROM mapped a **second** time, with the cacheable and
+ï¿½ the whole ROM mapped a **second** time, with the cacheable and
 bufferable bits clear. Everything else reads the ROM through the
 cached mapping at 0x00100000; the net reads its weights through the
 uncached alias of the same bytes.
 
 Why bother? The StrongARM SA-110 has a sixteen-kilobyte data cache.
 Streaming ninety-one kilobytes of weights through it, once, in order,
-never looking at any of them twice, would evict everything — including
+never looking at any of them twice, would evict everything ï¿½ including
 the unit array and the connection program, which are read constantly
 and *do* want to be cached. So the engine reads the one thing it
 cannot reuse through a mapping that does not disturb the cache at all.
@@ -1382,8 +1412,8 @@ a letter-shaped smear and an `m` squashed flat, and the net would be
 shown two things that look alike and mean nothing.
 
 **The second group knows that writing is a movement.** `StrokePUD`
-divides the whole length of the writing — every stroke, and the jumps
-between them — into twenty equal steps, and walks it at a steady
+divides the whole length of the writing ï¿½ every stroke, and the jumps
+between them ï¿½ into twenty equal steps, and walks it at a steady
 speed. At each step it writes down which of eight directions the pen
 is going (spread between two neighbouring buckets, which *wrap*,
 because a direction does) and one more number: how much of that step
@@ -1391,7 +1421,7 @@ the pen was **up**.
 
 So the Newton is not reading a picture of your writing. It is reading a
 picture of your writing *and a recording of the gesture that made it*,
-including the bits where you lifted the pen — which is why it can tell
+including the bits where you lifted the pen ï¿½ which is why it can tell
 a hand-drawn `5` from an `S`, and why writing the same shape in a
 different order reads differently.
 

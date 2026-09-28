@@ -10,6 +10,39 @@ work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
 
+## 2026-09-28: SearchDigit_S, Digits whole, CutNumberInDigits, ChunkProcessor
+
+- **`SearchDigit_S`** (`recognition/ChunkSearchS.cpp`, 0x00290ed8, 45
+  unnamed statics, all from the disassembly): the arcs pass, chunk by
+  chunk (@, brackets, 9, the bars - 5 and crossed 7 with a bar, +, minus -
+  and 3), the small marks (dot, comma, solidus), and the passes that
+  settle the marks kept for later (stacked marks: 8, per cent, colon;
+  bars; rings; dots).  `TestSearchS` draws each and checks what is read;
+  `TestFindPound` now takes its bar from S.  The 7 with a bar is the
+  crossed 7: a bar at the top of the stem is refused (the stem's foot
+  must be 20-70% below the bar's end) and read as a minus.
+- **`Digits`** (0x0029c94c) with all its statics and
+  **`CutNumberInDigits`** (0x002a75b0) (`recognition/ChunkDigitsMain.cpp`):
+  the doubtful digits taken out (which is what writes a 0 V and S both
+  read out once - running S in the number test before these were done
+  wrote "100"), the cells, the verdicts (area code in brackets, lone #,
+  lone digit written its usual way, SearchNumber), the tagNumBoxes, the
+  runs of other strokes, and the words taken for numbers ("is", "good").
+  `TestDigits`.
+- **`ChunkProcessor`** (0x002a6b50, `recognition/Chunk.cpp`), tested
+  directly (`TestProcessor`) and **not yet called**: wired in, "42" and
+  "10" written on the Notepad with the cursive letter set were found as
+  numbers, but the narrowed configuration leaves the low level no xrs
+  and the merge that makes the readings (`ChunkPatchXrdata`,
+  `ChunkSortAnswers`, `ChunkCorrectByLexDB`) is NOT YET, so the empty
+  word crashed `TParagraphView::HandleWord` (a divide by the word's
+  length).  The call stays out until the merge is in.
+- ROM quirks kept, the notable ones: `HWRAbs(0)` again (S's span tests),
+  a pair of bounds no positive span meets (S's 9 tail), a subclass
+  compared with a chunk kind (the three-chunk @), the bracket counter
+  reading the stack entry after the one it filled (DEVIATION: nought).
+
+
 ## 2026-09-28: the digit reader's chunk searcher, SearchNumber and FindPound
 
 - **`New_SearchDigit_V`** (`recognition/ChunkSearchV.cpp`, 0x00296e04 and

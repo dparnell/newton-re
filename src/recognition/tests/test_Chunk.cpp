@@ -5,6 +5,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"
+#include "WordSegment.h"		// PS_point_type
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -1534,6 +1535,76 @@ TestDigits(void)
 }
 
 
+/*--------------------------------------------------------------------
+	ChunkProcessor: the reader run from a word's points, as
+	GCTryToRecognize will run it, over a configuration that allows
+	numbers (rc +0xb6).
+--------------------------------------------------------------------*/
+
+// ==> IsChunkNumbers' answer, *text the characters it kept
+static long
+Process(const char* what, char* text, long* only = nil)
+{
+	static PS_point_type points[4096];
+	for (long k = 0; k < gCount; k++)
+	{
+		points[k].x = gTrace[k].x;
+		points[k].y = gTrace[k].y;
+	}
+	rc_type rc;
+	memset(&rc, 0, sizeof(rc));
+	*RCByte(&rc, 0xb6) = 1;
+	void* ctx = nil;
+	ChunkAllocCtx(&ctx, &rc);
+	EXPECT(ctx != nil);
+	if (ctx == nil)
+		return -1;
+	ChunkProcessor(ctx, points, gCount);
+	long numbers = IsChunkNumbers(ctx);
+	ChunkCtx* c = (ChunkCtx*) ctx;
+	tagNumBox* nb = (tagNumBox*) c->fData2;
+	long k = 0;
+	for (; nb != nil && k < 0x18 && nb[k].fChar != 0; k++)
+		text[k] = (char) nb[k].fChar;
+	text[k] = 0;
+	if (only != nil)
+		*only = c->fNumbersOnly;
+	EXPECT(c->f10 == 1);			// (under 200 high: not scaled)
+	if (gVerbose)
+		printf("  Process %s: numbers %ld, \"%s\"\n", what, numbers, text);
+	ChunkCleanUp(&ctx);
+	EXPECT(ctx == nil);
+	return numbers;
+}
+
+static void
+TestProcessor(void)
+{
+	char t[0x20];
+	long only = -1;
+	TraceStart(); DrawFour(0, 0); DrawTwo(22, 0);
+	EXPECT(Process("42", t, &only) == 1 && strcmp(t, "42") == 0 && only == 1);
+	TraceStart(); DrawOne(0, 0); DrawZero(14, 0);
+	EXPECT(Process("10", t) == 1 && strcmp(t, "10") == 0);
+	// a number beside a stroke that is no digit: not one
+	TraceStart(); DrawFour(0, 0); DrawTwo(22, 0); MoveTo(40, 8); LineTo(43, 20); LineTo(46, 10); LineTo(49, 20); LineTo(52, 8); StrokeEnd();
+	EXPECT(Process("42w", t) == 0);
+	// a field that does not allow numbers: the reader does nothing
+	{
+		rc_type rc;
+		memset(&rc, 0, sizeof(rc));
+		void* ctx = nil;
+		ChunkAllocCtx(&ctx, &rc);
+		PS_point_type points[1];
+		points[0].x = 0;
+		points[0].y = 0;
+		ChunkProcessor(ctx, points, 1);
+		EXPECT(IsChunkNumbers(ctx) == 0 && ((ChunkCtx*) ctx)->fData2 == nil);
+		ChunkCleanUp(&ctx);
+	}
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1553,6 +1624,7 @@ main(int argc, char** argv)
 	TestFindPound();
 	TestSearchS();
 	TestDigits();
+	TestProcessor();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

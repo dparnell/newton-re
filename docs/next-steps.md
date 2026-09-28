@@ -12,8 +12,16 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 11939 citations, 0 bad;
-  6852 of 16671 functions (41.10%) - the digit reader's statics are
+  **`packages.PackageIterator` fails intermittently** (4 runs in 5 on
+  2026-09-28, after the digit reader's last round, which does not touch
+  the package code - so most likely a heap layout that changed with the
+  binaries): its last case, a pipe that runs dry 64 bytes into the
+  directory, should make `TPackageIterator::Init` fail, and sometimes it
+  answers noErr - an uninitialised read somewhere on the pipe path
+  (`ReadFromPipe` over the test's pipe, or the new'd directory);
+  not investigated.
+- `analysis/coverage.py build/MP2x00US --check`: 12003 citations, 0 bad;
+  6856 of 16671 functions (41.13%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
@@ -547,6 +555,32 @@ non-digit codes, so it is one round of its own.  Then the rest of
 `Digits` (its statics 0x002a09b0, 0x002a2758, 0x002a1a98, 0x0029e888,
 0x002a19ec, 0x0029ccd4, 0x002a2078, 0x0029fbcc, 0x002a0d74, 0x0029ffc8),
 `CutNumberInDigits`, and (e).  Three more rounds.
+
+*Progress (2026-09-28, round 6)*: (d) is done and of (e) `ChunkProcessor`
+- the digit reader is whole but for the merge.  `SearchDigit_S` and its
+45 statics (`recognition/ChunkSearchS.cpp`; `TestSearchS` reads a full
+stop, minus, colon, +, 5 and crossed 7 with their bars, both brackets,
+solidus, comma, 0, 6, 3, per cent sign and @ from drawn writing;
+`TestFindPound` now takes the bar from S instead of laying it in);
+`Digits` whole with every static and `CutNumberInDigits`
+(`recognition/ChunkDigitsMain.cpp`; `TestDigits`: 42, 10, 217, 11, 2, 5,
+1.1, (42) and 15 numbers, 1:1, "is" - a 1 and a one-stroke 5 - and digits
+beside a letter not); `ChunkProcessor` (`recognition/Chunk.cpp`;
+`TestProcessor` reads "42" and "10" from points as GCTryToRecognize will
+hand them over).  `DigitChar` moved to `Chunk.h` (the ROM writes the
+chain out eight times).  **Left of (e) - the merge**: `ChunkPatchXrdata`
+(0x002a6680-0x002a6b50, 1.2 KB, with the small FUN_002a7078/70ec/713c
+after ChunkProcessor that copy a tagNumBox into a reading),
+`ChunkSortAnswers` (0x002a6650, over the sort 0x002a4c04-0x002a5620,
+2.6 KB) and `ChunkCorrectByLexDB` (0x002a5620-0x002a6404, 3.5 KB), about
+7 KB; then `ChunkProcessor` is called from `GCTryToRecognize` (the place
+is marked NOT YET there).  It is not called yet on purpose: once it finds
+a number, `ChunkModifyRC` narrows the configuration to numbers alone and
+the low level makes no xrs at all (tried: "42" and "10" written on the
+Notepad with the cursive letter set were found as numbers, "low_level: 0
+xrs", no answers), so without the merge a written number reaches the page
+as an empty word and `TParagraphView::HandleWord` divides by its length.
+One round.
 
 **A reference for the cursive reader**: PhatWare, who bought ParaGraph's
 recogniser, published a descendant of it under the GPL v3

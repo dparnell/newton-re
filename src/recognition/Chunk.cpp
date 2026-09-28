@@ -10,7 +10,9 @@
 */
 
 #include "Chunk.h"
-#include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree
+#include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree, GetVariantState
+#include "WordSegment.h"	// PS_point_type
+#include <string.h>
 
 extern const int	kChunkSin[4];		// ChunkTables.cpp (generated): sin 0, 15, 30, 45 degrees x 10000
 extern const int	kChunkCos[4];		// and their cosines
@@ -134,6 +136,163 @@ ChunkWriteParamCtx(void* ctx, rc_type* rc, xrdata_type* xr, rec_w_type* readings
 	c->fXr = xr;
 	c->fReadings = readings;
 	return &c->fReadings;
+}
+
+
+// ROM 0x002a6b50 ChunkProcessor__FPvP13PS_point_typei
+// The digit and number reader run over the writing (the n points, a pen-up
+// y -1), in a field that allows numbers (rc +0xb6): the variants each digit
+// may be written in taken from the letter table when the field uses the
+// learning info (rc +0x24), the points copied to a trace of the reader's
+// own (scaled down to under 200 high), turned into a polyline and chunks,
+// and Digits asked.  The characters it read are kept (fData2, 0x18 of
+// them), the runs of strokes that are not digits (fData, f04), the scale
+// (f10), whether it was a number (fNumbers) and nothing but one
+// (fNumbersOnly), and whether an 8 might be an '&' (f28).  In a field of
+// kind 1 with flags 2, a lone digit is the answer whatever Digits said.
+void
+ChunkProcessor(void* ctx, PS_point_type* points, long n)
+{
+	ChunkCtx* c = (ChunkCtx*) ctx;
+	void* lo = nil;
+	tag_WORD_TRACE* trace = nil;
+	tag_wapx_type* nodes = nil;
+	long height = 0;
+	if (c == nil)
+		return;
+	rc_type* rc = c->fRC;
+	if (*RCByte(rc, 0xb6) == 0)
+		return;
+	tag_CHUNK_STAFF staff;
+	memset(&staff, 0, sizeof(staff));
+	memset(staff.fDigits, 0xff, sizeof(staff.fDigits));
+	if (RCGetH(rc, 0x24) != 0)
+	{
+		for (long d = 0; d < 10; d++)
+		{
+			UByte ch = (UByte) (d + '0');
+			for (long v = 0; v < 4; v++)
+			{
+				UByte bit = (UByte) (1 << v);
+				short state = (short) GetVariantState(ch, (UByte) v, (UByte) (short) RCGetH(rc, 0x04), (DTIHeader*) rc->fDTI);
+				if (state == -1 || state == 7)
+					staff.fDigits[d] &= ~bit;
+			}
+		}
+	}
+	staff.f50 = (RCGetH(rc, 0x04) & 1) != 0 ? 1 : 0;		// (bit 16 of the word at +4)
+	staff.f54 = 0;
+	tagNumBox* numbox = (tagNumBox*) HWRMemoryAlloc(0x300);
+	if (numbox != nil)
+	{
+		memset(numbox, 0, 0x300);
+		c->fData2 = numbox;
+		staff.f5C = 0x18;
+		lo = LO_Create();
+	}
+	if (lo != nil)
+	{
+		LO_Clear(lo);
+		staff.fLO = lo;
+		if (n >= 3)
+			trace = (tag_WORD_TRACE*) HWRMemoryAlloc(n * 8);
+	}
+	if (trace != nil)
+	{
+		memset(trace, 0, n * 8);
+		for (long i = 0; i < n; i++)
+		{
+			if (points[i].x != -1 && points[i].y != -1)
+			{
+				trace[i].x = points[i].x;
+				trace[i].y = points[i].y;
+			}
+			else
+				trace[i].y = -1;
+		}
+		// the box, from the second point (the first is the pen-up the
+		// trace starts with)
+		long minX = trace[1].x, maxX = trace[1].x;
+		long minY = trace[1].y, maxY = trace[1].y;
+		for (long i = 1; i < n; i++)
+		{
+			if (trace[i].y == -1)
+				continue;
+			long x = trace[i].x;
+			if (x < minX)
+				minX = x;
+			else if (x > maxX)
+				maxX = x;
+			long y = trace[i].y;
+			if (y < minY)
+				minY = y;
+			else if (y > maxY)
+				maxY = y;
+		}
+		long scale = (maxY - minY) / 200;
+		if (scale > 1)
+		{
+			maxX = maxX / scale;
+			minX = minX / scale;
+			minY = minY / scale;
+			maxY = maxY / scale;
+			for (long i = 0; i < n; i++)
+			{
+				if (trace[i].y == -1)
+					continue;
+				trace[i].x = (short) (trace[i].x / scale);
+				trace[i].y = (short) (trace[i].y / scale);
+			}
+		}
+		if (scale < 1)
+			scale = 1;
+		c->f10 = scale;
+		staff.fTrace = trace;
+		staff.fTraceCount = (int32_t) n;
+		long count;
+		if (ExtrWordTrace_V(trace, n, 7, &height) >= 0
+			&& (count = GetLineApprox(trace, n, 10, &nodes)) > 0)
+		{
+			staff.fNodeCount = (int32_t) count;
+			staff.fNodes = nodes;
+			if (ChunkConstruct(&staff) > 0)
+			{
+				tag_BOX box = { (int32_t) minX, (int32_t) minY, (int32_t) maxX, (int32_t) maxY };
+				int32_t* pairs = nil;
+				int32_t runs = 0;
+				long answer = Digits(&staff, box, height, numbox, &pairs, &runs);
+				c->fData = pairs;
+				c->f04 = runs;
+				if (RCGetH(rc, 0x0e) == 1 && RCGetH(rc, 0x02) == 2)
+				{
+					UByte ch = numbox[0].fChar;
+					if (((LOBlock*) lo)->fClasses[18].fCount == 0 && ((LOBlock*) lo)->fClasses[16].fCount == 1
+						&& ch >= '0' && ch <= '9')			// (the C library's ctype: a digit)
+						answer = 1;
+					else
+						answer = 0;
+				}
+				if ((answer & 2) != 0)
+				{
+					c->fNumbers = 1;
+					c->fNumbersOnly = 1;
+				}
+				else
+				{
+					c->fNumbers = answer != 0 ? 1 : 0;
+					c->fNumbersOnly = 0;
+				}
+				c->f28 = staff.f58;
+			}
+		}
+	}
+	ChunkDestroyData(&staff);
+	if (nodes != nil)
+		HWRMemoryFree((Ptr) nodes);
+	if (trace != nil)
+		HWRMemoryFree((Ptr) trace);
+	if (lo != nil)
+		LO_Destroy(lo);
 }
 
 
