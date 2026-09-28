@@ -17,8 +17,8 @@ bugs found along the way - is `docs/work-log.md`.
   pipe's eof, so a package cut short is verified out of whatever malloc
   left - a ROM bug, now commented in `ComputeSizeOfEntriesAndData`, and
   the test's case replaced by a deterministic bad-processor directory.)
-- `analysis/coverage.py build/MP2x00US --check`: 12015 citations, 0 bad;
-  6859 of 16671 functions (41.14%) - the digit reader's statics are
+- `analysis/coverage.py build/MP2x00US --check`: 12020 citations, 0 bad;
+  6864 of 16671 functions (41.17%) - the digit reader's statics are
   unnamed, so they add citations and not functions.
 - `analysis/natives.py --unbound`: 318 of the ROM's 1326 natives
   are unanswered (table below); the recognition area's 116 are all
@@ -428,8 +428,14 @@ letter weights are no longer the defaults; and the digit reader's context
   about 15 KB.  The `_LEARN_ARRAY_tag` block goes into the training data
   ('ORTL'), so keep its bytes as the ROM lays them out (big-endian halves;
   the pointer at +0x14 is only a cache, recomputed from +0x04 each time -
-  on the host leave it unused).  `ConfigureArea`'s base-line and grid
-  geometry is still NOT YET too.
+  on the host leave it unused).  (`ConfigureArea`'s base-line and grid
+  geometry is DONE, 2026-09-28: `ConfigFromFrame`, `GetWordGeom`,
+  `GetGridGeom`, the two `FromObject`s - and the STXR domain's geometry
+  selectors, which the host had copying the wrong way.)  **This is the
+  last of the recognition system that is NOT YET**, bar `AL_NextSet`
+  (Airus selector 8 for lexicons), `TEditView::TrackDistort`,
+  `RotTiledBitmap` and the French/German accent checks the US ROM never
+  reaches.
 - **The digit reader** (below).
 
 **The digit reader, sized** (`callgraph.py build/MP2x00US ChunkAllocCtx

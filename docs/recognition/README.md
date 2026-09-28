@@ -3402,9 +3402,24 @@ letter set: the page reads "42 10 217" (ctest `host.NewtonNumbers`).
 and `ORTraining` - the orthographic learning (only for a field with rc
 +0xb2 bit 6 / +0xb8 bit 3, which the Notepad never sets; about 2.5 KB for
 the learn array and 15 KB for the letter-shape database `TrainTrajectory`
-trains - `docs/next-steps.md`); `AL_NextSet` (Airus selector
-8 for lexicons); and the base-line and grid geometry `ConfigureArea` hands
-the engine (`GetWordGeom`, `GetGridGeom`).
+trains - `docs/next-steps.md`); and `AL_NextSet` (Airus selector
+8 for lexicons).
+
+A field's own lines reach the engine through
+`TWordRecognizer::ConfigFromFrame` (which `ConfigureArea` tail-calls
+after reading lineAtATime): a configuration's `rcBaseInfo` frame (base,
+smallHeight, bigHeight, descent - `FromObject`) becomes the 'STXR'
+domain's word geometry (`GetWordGeom`: 10, 100, the base line twice and
+the small letters' top twice, in the tablet's eighths of a pixel by
+`gTabScale.y`), and an `rcGridInfo` frame with a spacing (boxLeft,
+boxRight, xSpace, boxTop, boxBottom, ySpace) its grid (`GetGridGeom`:
+the first box's corner and the step to the next, 16.16), which is what
+boxed grouping reads.  ROM bug kept: `FromObject` masks the heights and
+the spacings with 0xff before taking their high byte, so each keeps only
+its low byte.  The domain's selectors are 0x2000b/0x2000d to ask the
+geometry and grid and 0x2000c/0x2000e to set them (the host had the pairs
+the wrong way round until ConfigFromFrame used them - the ROM's memcpy
+takes the destination first).
 
 ## The Rosetta engine (`recognition/RosRecognizer.h`, `Rosetta.h`)
 

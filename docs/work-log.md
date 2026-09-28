@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-28: a field's base line and grid reach the cursive engine
+
+- `TWordRecognizer::ConfigFromFrame` (0x00167158) split out of
+  `ConfigureArea` as the ROM has it, now handing the 'STXR' domain a
+  configuration's `rcBaseInfo` (`FromObject` 0x00035830, `GetWordGeom`
+  0x001686ec over `gTabScale.y`) and `rcGridInfo` (`FromObject`
+  0x0003598c, `GetGridGeom` 0x00167010).  ROM bug kept: the heights and
+  spacings keep only their low byte.
+- Host bug fixed: the STXR domain's selectors 0x2000b/0x2000c and
+  0x2000d/0x2000e copied the wrong way round (the ROM's memcpy takes the
+  destination first; b and d answer, c and e set).  Tests:
+  `test_WordDescriptors`' `TestGeometry`, `test_RecConfig`'s FromObject.
+
 ## 2026-09-28: the digit reader's merge - written numbers read
 
 - `recognition/ChunkMerge.cpp`: `ChunkPatchXrdata`, `ChunkSortAnswers`
