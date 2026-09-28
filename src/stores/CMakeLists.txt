@@ -22,6 +22,8 @@ add_library(stores STATIC
 	CopyEntries.cpp
 	ObjectStreamer.cpp
 	StoreCompander.cpp
+	LargeObjects.cpp
+	host/HostLargeObjects.cpp
 	PackageStorePartHandler.cpp
 )
 # package_manager: the package store's part handler (a TPartHandler)
