@@ -855,6 +855,95 @@ TestSecondLookPass(void)
 	}
 }
 
+/*--------------------------------------------------------------------
+	SearchDigit_K: the digits of lines and arcs
+--------------------------------------------------------------------*/
+
+// the digits SearchDigit_K found: class 1300, value 1500 + the digit, with
+// the extra saying how
+static long
+SearchK(const char* what, long* digits, long max)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	SearchDigit_K(&staff);
+	tag_LOWOBJ* obj = nil;
+	long k = 0;
+	if (LO_SetWorkClass(lo, 1300) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more && k < max; more = LO_PickNext(lo, &obj))
+			if (obj->fValue != 0xffff)
+				digits[k++] = (obj->fValue - 1500) + ((obj->fExtra & 0xff) << 8);
+	if (gVerbose)
+	{
+		printf("  %s: %ld digits:", what, k);
+		for (long i = 0; i < k; i++)
+			printf(" %ld(extra %ld)", digits[i] & 0xff, digits[i] >> 8);
+		printf("\n");
+	}
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return k;
+}
+
+static void
+TestSearchK(void)
+{
+	long d[8];
+	// a 4: the slant and bar in one stroke, the upright a stroke of its own
+	TraceStart();
+	DrawFour(0, 0);
+	EXPECT(SearchK("4", d, 8) == 1 && d[0] == (4 | 1 << 8));		// a 4, the letter table's first shape
+	// an x: two strokes crossing
+	TraceStart();
+	DrawLine(0, 0, 14, 20);
+	DrawLine(14, 0, 0, 20);
+	EXPECT(SearchK("x", d, 8) == 1 && d[0] == (69 | 9 << 8));
+	// a 7 with a sharp corner, its bar rising a little as a hand makes it
+	TraceStart();
+	MoveTo(0, 5);
+	LineTo(13, 0);
+	LineTo(9, 20);
+	StrokeEnd();
+	EXPECT(SearchK("7", d, 8) == 1 && d[0] == (7 | 6 << 8));
+	// a #
+	TraceStart();
+	DrawLine(4, 0, 3, 20);
+	DrawLine(11, 0, 10, 20);
+	DrawLine(0, 6, 15, 6);
+	DrawLine(0, 14, 15, 14);
+	EXPECT(SearchK("#", d, 8) == 1 && d[0] == (71 | 0xff << 8));		// (extra -1)
+	// an 8 in one stroke: down round the top loop to the right, across and
+	// round the bottom loop, back up to the start
+	TraceStart();
+	MoveTo(12, 3);
+	ArcTo(7, 5, 5, 25, 180);
+	LineTo(12, 15);
+	ArcTo(7, 15, 5, 0, -180);
+	LineTo(12, 3);
+	StrokeEnd();
+	EXPECT(SearchK("8", d, 8) == 1 && d[0] == (8 | 5 << 8));
+	// a per cent sign: a small ring, the slash, a small ring
+	TraceStart();
+	MoveTo(3, 1);
+	EllipseTo(3, 4, 3, 3, 90, 450);
+	StrokeEnd();
+	DrawLine(13, 0, 3, 20);
+	MoveTo(13, 16);
+	EllipseTo(13, 19, 3, 3, 90, 450);
+	StrokeEnd();
+	EXPECT(SearchK("%", d, 8) == 1 && d[0] == (17 | 7 << 8));
+	// a 1 on its own is not this searcher's
+	TraceStart();
+	DrawOne(0, 0);
+	EXPECT(SearchK("1", d, 8) == 0);
+}
+
 static void
 TestLineAndCircles(void)
 {
@@ -943,6 +1032,7 @@ main(int argc, char** argv)
 	TestSearchL();
 	TestSecondLooks();
 	TestSecondLookPass();
+	TestSearchK();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

@@ -332,6 +332,15 @@ long	cross_with_line(tag_wapx_type* n, tag_CHUNK* c, long x1, long y1, long x2, 
 // low objects as class 1300, value 1400 + the digit (0x15 for $), extra 1
 // found whole, 2 with a separate bar, 3 from a bar.  ==> 1.
 long	SearchDigit_L(tag_CHUNK_STAFF* staff);							// ROM 0x0028dd18 SearchDigit_L__FP15tag_CHUNK_STAFF
+// The digits made of lines and arcs - 1, 4 (41 with an open top), 7, 8,
+// x, # and % - put in the list of low objects as class 1300, value 1500 +
+// the digit.  ==> the last 8's test's answer, -1 with no curve to try.
+long	SearchDigit_K(tag_CHUNK_STAFF* staff);							// ROM 0x00289604 SearchDigit_K__FP15tag_CHUNK_STAFF
+// The direction from node start to the first node after it take_next_point
+// finds (the node before end with none); to node start from the first
+// before it take_prev_point finds (the first node with none).
+long	find_direct_forward(tag_wapx_type* n, long end, long start, long dx, long dy, long sum);	// ROM 0x002a8090 find_direct_forward__FP13tag_wapx_typeiN42
+long	find_direct_backward(tag_wapx_type* n, long start, long dx, long dy, long sum);				// ROM 0x002a810c find_direct_backward__FP13tag_wapx_typeiN32
 // Whether two segments meet (their ends, and nodes a-b and c-d's).
 long	CheckQIntersecXY(long x1, long y1, long x2, long y2, long x3, long y3, long x4, long y4);	// ROM 0x002a7ee8 CheckQIntersecXY__FiN71
 long	CheckQIntersec(tag_wapx_type* n, long a, long b, long c, long d);							// ROM 0x002a8020 CheckQIntersec__FP13tag_wapx_typeiN32
