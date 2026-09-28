@@ -12,14 +12,11 @@ bugs found along the way - is `docs/work-log.md`.
 
 - `cmake --build build/host` clean, `ctest --test-dir build/host` 112/112
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-  **`packages.PackageIterator` fails intermittently** (4 runs in 5 on
-  2026-09-28, after the digit reader's last round, which does not touch
-  the package code - so most likely a heap layout that changed with the
-  binaries): its last case, a pipe that runs dry 64 bytes into the
-  directory, should make `TPackageIterator::Init` fail, and sometimes it
-  answers noErr - an uninitialised read somewhere on the pipe path
-  (`ReadFromPipe` over the test's pipe, or the new'd directory);
-  not investigated.
+  (`packages.PackageIterator`'s intermittent failure, 2026-09-28, was the
+  test, not the port: the ROM's `TPackageIterator` never looks at a
+  pipe's eof, so a package cut short is verified out of whatever malloc
+  left - a ROM bug, now commented in `ComputeSizeOfEntriesAndData`, and
+  the test's case replaced by a deterministic bad-processor directory.)
 - `analysis/coverage.py build/MP2x00US --check`: 12003 citations, 0 bad;
   6856 of 16671 functions (41.13%) - the digit reader's statics are
   unnamed, so they add citations and not functions.

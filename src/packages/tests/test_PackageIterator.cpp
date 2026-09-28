@@ -171,12 +171,18 @@ TestPipe()
 	EXPECT(info.kind == kProtocol && info.type == 0 && info.size == 4172 && info.autoLoad);
 	EXPECT(info.data == 176);										// a pipe source: the offset
 	EXPECT(pipe.ReadPosition() == 176);								// the directory has been consumed; the parts follow
-	// a pipe that runs dry in the directory
-	CTestPipe shortPipe(64);
-	shortPipe.WriteChunk(gPackages[7], 0x40, false);
-	shortPipe.Rewind();
-	TPackageIterator shortIt(&shortPipe);
-	EXPECT(shortIt.Init() != noErr && shortIt.fDirectory == nil);
+	// a directory that fails verification (a processor the machine does
+	// not have) is refused and disposed.  (A pipe that runs dry in the
+	// directory is not a test case: the ROM does not notice, and verifies
+	// whatever the heap held - see ComputeSizeOfEntriesAndData.)
+	UByte bad[176];
+	memcpy(bad, gPackages[7], sizeof(bad));
+	bad[14] = (bad[14] & 0x0f) | 0x20;				// the flags word (+12) under kPackageProcessorMask: processor 0x2000
+	CTestPipe badPipe(sizeof(bad));
+	badPipe.WriteChunk(bad, sizeof(bad), false);
+	badPipe.Rewind();
+	TPackageIterator badIt(&badPipe);
+	EXPECT(badIt.Init() == kError_Bad_Package && badIt.fDirectory == nil);
 }
 
 

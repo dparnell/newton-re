@@ -416,6 +416,11 @@ TPackageIterator::ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& dataSiz
 {
 	if (!fFromPipe)
 		return TPrivatePackageIterator::ComputeSizeOfEntriesAndData(entriesSize, dataSize);
+	// ROM BUG kept: a pipe that runs dry is not noticed - ReadChunk answers
+	// eof rather than throwing, and nothing here (nor in Init's header read)
+	// looks at it - so what was not read stays as malloc left it, and
+	// VerifyPackage judges that: a short package is refused or accepted by
+	// whatever the heap held (on the machine as on the host)
 	fParts = (PartEntry*) malloc(entriesSize);
 	if (fParts == nil)
 		return kError_No_Memory;
