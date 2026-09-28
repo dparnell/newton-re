@@ -133,6 +133,27 @@ TestALLexicon(void)
 	EXPECT(LookUpAL(&block, "c") == kAirusNoMatch);
 	EXPECT(LookUpAL(&block, "bee") == kAirusNoMatch);
 
+	// what may follow, as one string (selector 8): at the root the two
+	// first letters; under "a" the two that go on from it; under "at"
+	// nothing (and the answer says so)
+	block.fNode = 0;
+	EXPECT(AirusAL(kAirusNextSet, &block) == 0 && strcmp(buffer, "ab") == 0);
+	LookUpAL(&block, "a");
+	EXPECT(AirusAL(kAirusNextSet, &block) == 0 && strcmp(buffer, "tn") == 0);
+	LookUpAL(&block, "at");
+	EXPECT(AirusAL(kAirusNextSet, &block) == 1 && buffer[0] == 0);
+	// a character in more than one child's set comes out once
+	{
+		char out[32];
+		UByte* at = (UByte*) out;
+		AL_NextSetCB(&at, (ULong) (uintptr_t) "eo", 0, 0);
+		AL_NextSetCB(&at, (ULong) (uintptr_t) "oa", 0, 0);
+		*at = 0;
+		EXPECT(strcmp(out, "eooa") == 0);
+		AL_FilterString(out);
+		EXPECT(strcmp(out, "eoa") == 0);
+	}
+
 	// an empty dictionary answers nothing to everything
 	AirusAParmBlock empty;
 	memset(&empty, 0, sizeof(empty));

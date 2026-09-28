@@ -2435,12 +2435,43 @@ AirusAL(ULong selector, AirusAParmBlock* parms)
 {
 	if (selector == kAirusVerify)
 		AL_Verify(parms);
+	else if (selector == kAirusNextSet)
+		AL_NextSet(parms);
 	else if (selector == kAirusNextSet9)
 		AL_NextSet9(parms);
-	// NOT YET RECONSTRUCTED: AL_NextSet 0x0002c214 (selector 8: the next
-	// characters written into a string, over AL_NextSetCB and
-	// AL_FilterString) - what the corrector's completions are built from.
 	return parms->fResult;
+}
+
+
+// ROM 0x0002c1e8 AL_NextSetCB__FUlN31
+// The callback AL_NextSet uses: a child's character set (a string, in a
+// lexicon) copied out after the ones before it, through a pointer the
+// caller keeps - no terminator, the next one going straight after.
+void
+AL_NextSetCB(void* context, ULong set, ULong /*node*/, ULong /*attribute*/)
+{
+	UByte** where = (UByte**) context;
+	UByte* out = *where;
+	for (const UByte* s = (const UByte*) (uintptr_t) set; *s != 0; s++)
+		*out++ = *s;
+	*where = out;
+}
+
+
+// ROM 0x0002c214 AL_NextSet__FP15AirusAParmBlock
+// The characters that may follow the node reached, as one string in the
+// block's word buffer: every child's set run together, terminated, and
+// each character kept once (AL_FilterString).  ==> AL_NextSet9's answer.
+long
+AL_NextSet(AirusAParmBlock* parms)
+{
+	UByte* out = parms->fWord;
+	parms->fWalkContext = &out;
+	parms->fWalkProc = AL_NextSetCB;
+	long result = AL_NextSet9(parms);
+	*out = 0;
+	AL_FilterString((char*) parms->fWord);
+	return result;
 }
 
 

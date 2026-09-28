@@ -235,6 +235,8 @@ long	AEnum_NextPrevious(AirusAParmBlock* parms);			// ROM 0x0002a244 AEnum_NextP
 long	AirusAL(ULong selector, AirusAParmBlock* parms);		// ROM 0x0002bdf4 AirusAL__FUlP15AirusAParmBlock
 long	AirusAL16(ULong selector, AirusAParmBlock* parms);	// ROM 0x0002b790 AirusAL16__FUlP15AirusAParmBlock
 long	AL_NextSet9(AirusAParmBlock* parms);				// ROM 0x0002c268 AL_NextSet9__FP15AirusAParmBlock - what may follow the node, each child's character string to the walk callback
+long	AL_NextSet(AirusAParmBlock* parms);					// ROM 0x0002c214 AL_NextSet__FP15AirusAParmBlock - selector 8: what may follow, as one string, each character once
+void	AL_NextSetCB(void* context, ULong set, ULong node, ULong attribute);	// ROM 0x0002c1e8 AL_NextSetCB__FUlN31
 void	AEnum_NextSet9(AirusAParmBlock* parms);				// ROM 0x0002af18 AEnum_NextSet9__FP15AirusAParmBlock
 void	AL_Verify(AirusAParmBlock* parms);					// ROM 0x0002bf78 AL_Verify__FP15AirusAParmBlock
 void	AL16_Verify(AirusAParmBlock* parms);				// ROM 0x0002b918 AL16_Verify__FP15AirusAParmBlock
