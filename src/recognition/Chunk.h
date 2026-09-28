@@ -336,6 +336,15 @@ long	SearchDigit_L(tag_CHUNK_STAFF* staff);							// ROM 0x0028dd18 SearchDigit_
 // x, # and % - put in the list of low objects as class 1300, value 1500 +
 // the digit.  ==> the last 8's test's answer, -1 with no curve to try.
 long	SearchDigit_K(tag_CHUNK_STAFF* staff);							// ROM 0x00289604 SearchDigit_K__FP15tag_CHUNK_STAFF
+// The signs and small marks, and the digits made of arcs: a full stop,
+// comma, colon, solidus, "(", ")", "@", minus, + and per cent sign, a 0, 3,
+// 5 or 7 with its bar, 6, 8 and 9 - put in the list of low objects as
+// class 1300, value 1600 + the digit or the sign's code (a grey 8 as class
+// 2200), the marks it was not sure of first as class 1600 (1600 a small
+// ring, 1613 a bar, 1614 a dot) and settled afterwards.  The chunks it
+// used are marked in their f6C (10; 13 for an arc read with the one before
+// it).  ==> 0.
+long	SearchDigit_S(tag_CHUNK_STAFF* staff);							// ROM 0x00290ed8 SearchDigit_S__FP15tag_CHUNK_STAFF
 // The digits and signs found chunk by chunk: each chunk that is not a pen
 // jump asked, by its class, what it starts - an upright line (300) a 1, a
 // 7 or an "H"; a curve down (500) an 8, 1, 7, 9 or 2; an arc (400) a 0 or 9

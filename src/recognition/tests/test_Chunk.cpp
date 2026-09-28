@@ -1172,6 +1172,10 @@ IsNumber(const char* what, long* digits = nil, long* count = nil)
 	}
 	New_SearchDigit_V(lo, staff.fTrace, staff.fTraceCount, staff.fNodes, staff.fChunks, staff.fBrackets,
 					  staff.fRealChunks, staff.fChunkCount, staff.fRealCount, box, staff.fStrokes, staff.fStrokeCount, staff.fHeight);
+	// (SearchDigit_S and FindPound come here in Digits, but without the
+	// statics after Check_4 that Digits runs before its second looks -
+	// 0x002a09b0, 0x002a2758, CutNumberInDigits - a 0 both V and S read is
+	// written out twice, so they are left out until those are done)
 	Check_4(&staff);
 	DigitsSecondLooks(lo, staff.fChunks, staff.fRealChunks, staff.fStrokes, staff.fStrokeCount, staff.fNodes, staff.fDigits, box);
 	long answer = SearchNumber(&staff);
@@ -1223,13 +1227,13 @@ TestSearchNumber(void)
 
 
 /*--------------------------------------------------------------------
-	FindPound: a bar (a sign coded 13, laid in by hand: the searcher
-	that reads it is not reconstructed) and the stroke before it.
+	FindPound: a bar (a sign coded 13, as SearchDigit_S reads it) and
+	the stroke before it.
 --------------------------------------------------------------------*/
 
 // ==> how many pound signs FindPound put in (value 1570)
 static long
-Pounds(const char* what, bool barFirstStroke = false)
+Pounds(const char* what)
 {
 	tag_CHUNK_STAFF staff;
 	if (!Construct(&staff, what))
@@ -1237,11 +1241,18 @@ Pounds(const char* what, bool barFirstStroke = false)
 	void* lo = LO_Create();
 	staff.fLO = lo;
 	DefHeightsForNumber(&staff);
-	// the bar: the last stroke's chunks
-	tag_STK* bar = &staff.fStrokes[barFirstStroke ? 0 : staff.fStrokeCount - 1];
-	LO_Add(lo, staff.fNodes, 1300, staff.fChunks[bar->fFirstChunk].fFrom, staff.fChunks[bar->fLastChunk].fTo, 1313, 0);
-	FindPound(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	SearchDigit_S(&staff);
+	// the bar is the minus S read: class 1300, value 1613
+	long bars = 0;
 	tag_LOWOBJ* obj = nil;
+	if (LO_SetWorkClass(lo, 1300) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+			if (obj->fValue == 1613)
+				bars++;
+	EXPECT(bars == 1);
+	FindPound(&staff);
 	long k = 0;
 	if (LO_SetWorkClass(lo, 1300) == 1)
 		for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
@@ -1277,6 +1288,135 @@ TestFindPound(void)
 }
 
 
+/*--------------------------------------------------------------------
+	SearchDigit_S: the signs, the small marks and the digits of arcs.
+--------------------------------------------------------------------*/
+
+// What SearchDigit_S put in, still standing, of classes 1300, 1600 and
+// 2200: { class, value, extra }.  ==> how many.
+struct SFound { long cls, value, extra; };
+
+static long
+SearchS(const char* what, SFound* found, long max)
+{
+	tag_CHUNK_STAFF staff;
+	if (!Construct(&staff, what))
+		return -1;
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	EXPECT(SearchDigit_S(&staff) == 0);
+	long k = 0;
+	static const ULong kClasses[] = { 1300, 1600, 2200 };
+	for (long c = 0; c < 3; c++)
+	{
+		tag_LOWOBJ* obj = nil;
+		if (LO_SetWorkClass(lo, kClasses[c]) == 1)
+			for (long more = LO_PickFirst(lo, &obj); more && k < max; more = LO_PickNext(lo, &obj))
+				if (obj->fValue != 0xffff)
+				{
+					found[k].cls = (long) kClasses[c];
+					found[k].value = obj->fValue;
+					found[k].extra = obj->fExtra;
+					k++;
+				}
+	}
+	if (gVerbose)
+	{
+		printf("  S %s: %ld:", what, k);
+		for (long i = 0; i < k; i++)
+			printf(" %ld/%ld(extra %#lx)", found[i].cls, found[i].value, found[i].extra & 0xffff);
+		printf("\n");
+	}
+	LO_Destroy(lo);
+	Destruct(&staff);
+	return k;
+}
+
+// SearchS found exactly one thing, class 1300 value 1600 + code, this extra
+static bool
+ReadsAs(const char* what, long code, long extra)
+{
+	SFound f[8];
+	long k = SearchS(what, f, 8);
+	return k == 1 && f[0].cls == 1300 && f[0].value == 1600 + code && f[0].extra == extra;
+}
+
+static void
+TestSearchS(void)
+{
+	SFound f[8];
+	// a dot low between two 1s: a small mark (class 1600, 1614) settled
+	// as a full stop by the dots pass
+	TraceStart(); DrawOne(0, 0); DrawLine(12, 19, 13, 20); DrawOne(18, 0);
+	EXPECT(ReadsAs("1.1", 14, 1));
+	// a bar between two 1s: a bar for later (class 1600, 1613), judged a
+	// minus (extra 3) by the bars pass
+	TraceStart(); DrawOne(0, 0); DrawLine(12, 10, 20, 10); DrawOne(24, 0);
+	EXPECT(ReadsAs("1-1", 13, 3));
+	// two dots one above the other: a colon
+	TraceStart(); DrawOne(0, 0); DrawLine(12, 6, 13, 7); DrawLine(12, 17, 13, 18); DrawOne(18, 0);
+	EXPECT(ReadsAs("1:1", 15, 1));
+	// an upright and a bar across it: a + when the upright is the first
+	// thing written...
+	TraceStart(); DrawLine(7, 3, 7, 17); DrawLine(0, 10, 14, 10);
+	EXPECT(ReadsAs("+", 12, 0x23));
+	// ...otherwise only the bar, as a minus (S_Bar's quirk)
+	TraceStart(); DrawOne(-14, 0); DrawLine(7, 3, 7, 17); DrawLine(0, 10, 14, 10);
+	EXPECT(ReadsAs("1+", 13, 0x23));
+	// a 5 whose bar is a stroke of its own
+	TraceStart(); DrawFive(0, 0);
+	EXPECT(ReadsAs("5", 5, 0x21));
+	// a 7 crossed in the middle (its stem an arc after the top)
+	TraceStart(); MoveTo(0, 5); LineTo(13, 0); LineTo(9, 20); StrokeEnd(); DrawLine(4, 11, 16, 11);
+	EXPECT(ReadsAs("7 crossed", 7, 0x23));
+	// a 7's bar at its top is not a crossbar (the stem's foot must be 20
+	// to 70 per cent below the bar's end): it is read as a minus
+	TraceStart(); MoveTo(10, 0); LineTo(13, 1); LineTo(5, 20); StrokeEnd(); DrawLine(0, 0, 13, 0);
+	EXPECT(ReadsAs("7 barred at the top", 13, 3));
+	// brackets taller than the line: a ( (there must be more than three
+	// real chunks) and a ) after a stroke of its height
+	TraceStart(); DrawOne(0, 0); MoveTo(20, -3); ArcTo(30, 10, 16, 125, 235); StrokeEnd(); DrawOne(24, 0); DrawOne(34, 0);
+	EXPECT(ReadsAs("1(11", 10, 0x20));
+	TraceStart(); DrawOne(0, 0); MoveTo(10, -3); ArcTo(0, 10, 16, 55, -55); StrokeEnd();
+	EXPECT(ReadsAs("1)", 11, 0x20));
+	// a bracket no taller than the line is not one
+	TraceStart(); DrawOne(0, 0); MoveTo(10, 0); ArcTo(2, 10, 10, 60, -60); StrokeEnd();
+	EXPECT(SearchS("1) short", f, 8) == 0);
+	// a solidus, taller by a quarter than the 1s either side
+	TraceStart(); DrawOne(0, 0); DrawLine(20, -3, 10, 23); DrawOne(24, 0);
+	EXPECT(ReadsAs("1/1", 16, 0x1c));
+	// a stroke as tall as they are is not
+	TraceStart(); DrawOne(0, 0); DrawLine(20, 0, 10, 20); DrawOne(24, 0);
+	EXPECT(SearchS("1/1 short", f, 8) == 0);
+	// a comma: a small stroke low, reaching below the line
+	TraceStart(); DrawOne(0, 0); DrawLine(12, 18, 10, 24); DrawOne(18, 0);
+	EXPECT(ReadsAs("1,1", 19, 0x19));
+	// the arcs pass: a 0, a 6 (one arc down the left, then the bowl), a 3
+	TraceStart(); DrawZero(0, 0);
+	EXPECT(ReadsAs("0", 0, 1));
+	TraceStart(); MoveTo(11.1, 2.2); ArcTo(13, 13, 11, 100, 260); EllipseTo(13, 17.5, 5, 5.5, 270, 540); StrokeEnd();
+	EXPECT(ReadsAs("6", 6, 1));
+	TraceStart(); MoveTo(1, 2); ArcTo(7, 5, 5, 150, -90); ArcTo(7, 15, 5, 90, -160); StrokeEnd();
+	EXPECT(ReadsAs("3", 3, 3));		// (S_PutChunks: the extra is the digit again)
+	// a per cent sign: ring, slash, ring - the first ring a 0 and the
+	// second, with the slash and the first, the sign
+	TraceStart(); MoveTo(3, 1); EllipseTo(3, 4, 3, 3, 90, 450); StrokeEnd(); DrawLine(13, 0, 3, 20); MoveTo(13, 16); EllipseTo(13, 19, 3, 3, 90, 450); StrokeEnd();
+	EXPECT(SearchS("%", f, 8) == 2 && f[0].value == 1600 && f[1].value == 1617);
+	// an @: a small ring and a big one round it in one stroke
+	TraceStart(); MoveTo(12, 8); EllipseTo(9, 10, 3, 3, 0, 360); LineTo(13, 13); ArcTo(10, 10, 9, -30, 330); StrokeEnd();
+	EXPECT(ReadsAs("@", 20, 20));
+	// a 9 is not this searcher's (a loop and a straight tail: the other
+	// searchers read it), nor a 1
+	TraceStart(); DrawNine(0, 0);
+	EXPECT(SearchS("9", f, 8) == 0);
+	TraceStart(); DrawOne(0, 0);
+	EXPECT(SearchS("1", f, 8) == 0);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1294,6 +1434,7 @@ main(int argc, char** argv)
 	TestSearchV();
 	TestSearchNumber();
 	TestFindPound();
+	TestSearchS();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;
