@@ -92,6 +92,7 @@ add_library(recognition STATIC
     ChunkNumber.cpp
     ChunkPound.cpp
     ChunkSecondLook.cpp
+    ChunkMerge.cpp
     ChunkTables.cpp
     XrMatrix.cpp
     XrWordGraph.cpp

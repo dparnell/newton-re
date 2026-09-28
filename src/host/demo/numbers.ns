@@ -1,0 +1,197 @@
+// Numbers: with a cursive letter set, "42", "10" and "217" written on the
+// Notepad, which allows numbers, so ParaGraph's digit reader goes first.
+//
+//   NEWTON_TRACE_CURSIVE=1 build/host/host/newton --rom build/MP2x00US/rom.bin
+//       --display 320x480 --script src/host/demo/numbers.ns --headless 50
+//
+// Each word goes to the reader (GCTryToRecognize); the digit reader
+// (ChunkProcessor) finds a number, the configuration is narrowed to
+// digits (ChunkModifyRC), the xrs are cut down to what is not a digit -
+// nothing, for a number alone (ChunkPatchXrdata) - and the digits become
+// the first reading (ChunkSortAnswers), which the lexical database is
+// asked about (ChunkCorrectByLexDB).  The page then shows the numbers
+// typed; the script prints its text (ctest host.NewtonNumbers checks it)
+// and build/numbers.pgm is the page.  The digits are drawn as test_Chunk
+// draws them, twenty pixels high.  Otherwise as src/host/demo/cursive.ns.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+// One stroke: the pen put down on the first point, moved through the
+// rest, and lifted.
+written217 := nil;					// the strokes of "217", when recording
+stroke := func(points)
+  begin
+    if written217 then AddArraySlot(written217, Clone(points));
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+// the text of the first paragraph under a view whose text starts with
+// `prefix`
+findText := func(v, prefix)
+  begin
+    local found := nil;
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text) and StrPos(v.text, prefix, 0) = 0 then
+      found := v.text
+    else
+      foreach child in v:ChildViewFrames() do
+        if not found then
+          found := call findText with (child, prefix);
+    found;
+  end;
+
+// (y, x) pairs, as a stroke bundle takes them
+yx := func(points)
+  begin
+    local out := [];
+    for i := 0 to Length(points) - 2 by 2 do
+      begin
+        AddArraySlot(out, points[i + 1]);
+        AddArraySlot(out, points[i]);
+      end;
+    out;
+  end;
+
+// Points along a line, a point every two pixels or so, the first left out
+// (it is where the pen already is).
+lineTo := func(pts, x0, y0, x1, y1)
+  begin
+    local dx := x1 - x0;
+    local dy := y1 - y0;
+    local n := Max(Abs(dx), Abs(dy)) div 2;
+    if n < 1 then n := 1;
+    for k := 1 to n do
+      begin
+        AddArraySlot(pts, x0 + (dx * k) div n);
+        AddArraySlot(pts, y0 + (dy * k) div n);
+      end;
+    pts;
+  end;
+
+// Points round an ellipse about (cx, cy) from step a to step b (steps of
+// fifteen degrees, anticlockwise with y up; b may be less than a), the
+// first left out.  (Cosines and sines times a hundred, worked out once.)
+cosT := [100, 97, 87, 71, 50, 26, 0, -26, -50, -71, -87, -97, -100, -97, -87, -71, -50, -26, 0, 26, 50, 71, 87, 97];
+sinT := [0, 26, 50, 71, 87, 97, 100, 97, 87, 71, 50, 26, 0, -26, -50, -71, -87, -97, -100, -97, -87, -71, -50, -26];
+arcTo := func(pts, cx, cy, rx, ry, a, b)
+  begin
+    local dir := if b < a then -1 else 1;
+    for k := a + dir to b by dir do
+      begin
+        local i := k mod 24;
+        if i < 0 then i := i + 24;
+        AddArraySlot(pts, cx + (rx * cosT[i]) div 100);
+        AddArraySlot(pts, cy - (ry * sinT[i]) div 100);
+      end;
+    pts;
+  end;
+
+// the digits, top left at (x, y), twenty high, as test_Chunk draws them
+four := func(x, y)
+  begin
+    local a := [x + 10, y];
+    call lineTo with (a, x + 10, y, x, y + 13);
+    call lineTo with (a, x, y + 13, x + 14, y + 13);
+    call stroke with (a);
+    call stroke with (call lineTo with ([x + 10, y], x + 10, y, x + 10, y + 20));
+  end;
+two := func(x, y)
+  begin
+    // the hook over the top (from 165 degrees round to -30), the diagonal
+    // down to the left, the foot
+    local a := [x + 1, y + 4];
+    call arcTo with (a, x + 7, y + 6, 6, 6, 11, -2);
+    call lineTo with (a, x + 12, y + 9, x, y + 20);
+    call lineTo with (a, x, y + 20, x + 14, y + 20);
+    call stroke with (a);
+  end;
+one := func(x, y)
+  begin
+    call stroke with (call lineTo with ([x + 5, y], x + 5, y, x + 5, y + 20));
+  end;
+seven := func(x, y)
+  begin
+    local a := [x, y + 1];
+    call lineTo with (a, x, y + 1, x + 13, y);
+    call lineTo with (a, x + 13, y, x + 9, y + 8);
+    call lineTo with (a, x + 9, y + 8, x + 5, y + 20);
+    call stroke with (a);
+  end;
+zero := func(x, y)
+  begin
+    call stroke with (call arcTo with ([x + 7, y], x + 7, y + 10, 7, 10, 6, 30));
+  end;
+
+// "42" on a baseline at y = 200 from x = 60, the letter set made cursive
+// first; "10" and "217" further along, a little later each
+AddDelayedCall(func() begin
+    local top := 180;
+    SetUserConfig('letterSetSelection, 0);
+    ReadCursiveOptions();
+    Print("numbers: the letter set is" && GetUserConfig('letterSetSelection));
+    call four with (60, top);
+    call two with (82, top);
+    AddDelayedCall(func() begin
+        call one with (140, top);
+        call zero with (154, top);
+      end, nil, 3000);
+    AddDelayedCall(func() begin
+        written217 := [];
+        call two with (210, top);
+        call one with (228, top);
+        call seven with (242, top);
+      end, nil, 6000);
+    // "217" read again (Recognize) to see all its readings: the digit
+    // reader's date check offers "2/7" after it
+    readAgain := func()
+      begin
+        local strokes := [];
+        foreach s in written217 do AddArraySlot(strokes, call yx with (s));
+        local ci := Recognize([MakeStrokeBundle(strokes, 0)], nil, nil);
+        if ci and Length(ci.info) > 0 then
+          begin
+            local words := "";
+            foreach w in ci.info[0].words do words := words && w.word;
+            Print("numbers: 217 read again as" & words);
+          end
+        else
+          Print("numbers: 217 read again as nothing");
+      end;
+    AddDelayedCall(func() begin
+        IdleStrokes();
+        AddDelayedCall(func() begin
+            ScreenSnapshot("build/numbers.pgm");
+            Print("numbers: written build/numbers.pgm");
+            Print("numbers: the page reads \"" & call findText with (GetRoot(), "") & "\"");
+            call readAgain with ();
+          end, nil, 6000);
+      end, nil, 7500);
+  end, nil, 27000);
+Print("numbers: the script is loaded");

@@ -124,6 +124,7 @@ GENERATED = [
     # (GetDirection copies them from two unnamed tables)
     ("chunk",
      "romtable.py", ["{build}", "kChunkSin@0x0037add4:i32:4", "kChunkCos@0x0037ade4:i32:4",
+                     "kChunkMonthDays@0x0037ae10:i16:14",
                      "-o", "src/recognition/ChunkTables.cpp"]),
     ("mmumap",
      "mmumap.py", ["{build}", "--doc", "docs/memory/mmu-map.md"]),

@@ -6,6 +6,7 @@
 #include "LowLevel.h"
 #include "CursiveReader.h"
 #include "XrDomains.h"
+#include "Chunk.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -162,6 +163,48 @@ TestSplit(void)
 		EXPECT(split[0x10] == 5 && split[0x11] == 6);
 		EXPECT((els[1].attrib & 4) != 0 && (els[3].attrib & 4) != 0);
 		HWRMemoryFree((Ptr) split);
+	}
+	// a number the digit reader read, in two words ("1 22" - as the x rule
+	// in ChunkCorrectByLexDB makes them): each word takes the strokes of
+	// its characters' digit boxes (the space has none, so the boxes run on
+	// one behind), and every reading's word ends are marked
+	{
+		void* ctx = nil;
+		ChunkAllocCtx(&ctx, &rc);
+		ChunkCtx* c = (ChunkCtx*) ctx;
+		tagNumBox* nb = (tagNumBox*) HWRMemoryAlloc(0x300);
+		memset(nb, 0, 0x300);
+		nb[0].fChar = '1';
+		XrSetH(nb[0].fFirstPoint, 1);
+		XrSetH(nb[0].fLastPoint, 3);
+		for (long k = 1; k <= 2; k++)
+		{
+			nb[k].fChar = '2';
+			XrSetH(nb[k].fFirstPoint, 5);
+			XrSetH(nb[k].fLastPoint, 7);
+		}
+		c->fData2 = nb;
+		c->fNumbers = 1;
+		rec_w_type number[10];
+		memset(number, 0, sizeof(number));
+		strcpy((char*) number[0].fWord, "1 22");
+		number[0].fX4A[1] = 7;
+		strcpy((char*) number[1].fWord, "1 2");
+		for (long i = 0; i < 5; i++)
+			els[i].attrib = 0;
+		split = FillRecwordSplitInfo(&xr, &rc, &rwg, number, c);
+		EXPECT(split != nil);
+		if (split != nil)
+		{
+			EXPECT(split[0xf] == 2);
+			EXPECT(split[0] == 0x09 && split[3] == 0x09);	// both readings' ends at 0 and 3
+			EXPECT(split[0x4c] == 1 && split[0x4d] == 1);
+			EXPECT(split[0x58] == 1 && split[0x59] == 2);
+			EXPECT(split[0x10] == 7 && split[0x11] == 7 && split[0x1c] == 0);
+			EXPECT((els[4].attrib & 4) != 0 && (els[1].attrib & 4) == 0);	// only the last xr marked
+			HWRMemoryFree((Ptr) split);
+		}
+		ChunkCleanUp(&ctx);
 	}
 	// a stroke's number and extent
 	EXPECT(GetStrokeNumber(2, &rc) == 1);

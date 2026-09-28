@@ -56,6 +56,15 @@ add_test(NAME host.NewtonCursive COMMAND newton --rom ${NEWTON_ROM_BIN} --displa
 set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
                      PASS_REGULAR_EXPRESSION "low_level: 1[0-9] xrs:.*xrw_algs: graph of [0-9]+ symbols:[A-Za-z0-9| ]*on.*answers: \"ton\".*word of strokes 0-3 [^:]*: 0.*low_level: [0-9]+ xrs:.*xrw_algs: graph of [0-9]+ symbols:to .*answers: \"to\".*word of strokes 0-2 [^:]*: 0.*the page reads \"ton to\".*the letter weights were the defaults, after learning learnt")
 
+# numbers (src/host/demo/numbers.ns): "42", "10" and "217" written with the
+# cursive letter set on the Notepad, which allows numbers - the digit
+# reader finds each a number alone (no xrs left for the xr reader), the
+# merge makes the digits the reading, and the page shows them typed; "217"
+# read again is offered as the date "2/7" too
+add_test(NAME host.NewtonNumbers COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/numbers.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonNumbers PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
+                     PASS_REGULAR_EXPRESSION "low_level: 0 xrs:.*answers: \"42\"/100.*answers: \"10\"/100.*answers: \"217\"/100 \"2/7\"/90.*the page reads \"42 10 217\".*217 read again as 217 2/7")
+
 # joined-up cursive (src/host/demo/cursive-joined.ns): five words each
 # written in one stroke with the cursive letter set; each must reach the
 # reader and be answered (what they read as is recorded in

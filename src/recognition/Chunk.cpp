@@ -36,9 +36,9 @@ ChunkAllocCtx(void** ctx, rc_type* rc)
 	c->fNumbersOnly = 0;
 	c->f1C = 0;
 	c->fModified = 0;
-	c->f24 = 0;
-	c->f28 = 0;
-	c->f2C = 0;
+	c->fAlternative = 0;
+	c->fAmpersand = 0;
+	c->fListItem = 0;
 	c->fRC = rc;
 	c->fXr = nil;
 	c->fReadings = nil;
@@ -148,7 +148,7 @@ ChunkWriteParamCtx(void* ctx, rc_type* rc, xrdata_type* xr, rec_w_type* readings
 // and Digits asked.  The characters it read are kept (fData2, 0x18 of
 // them), the runs of strokes that are not digits (fData, f04), the scale
 // (f10), whether it was a number (fNumbers) and nothing but one
-// (fNumbersOnly), and whether an 8 might be an '&' (f28).  In a field of
+// (fNumbersOnly), and whether an 8 might be an '&' (fAmpersand).  In a field of
 // kind 1 with flags 2, a lone digit is the answer whatever Digits said.
 void
 ChunkProcessor(void* ctx, PS_point_type* points, long n)
@@ -282,7 +282,7 @@ ChunkProcessor(void* ctx, PS_point_type* points, long n)
 					c->fNumbers = answer != 0 ? 1 : 0;
 					c->fNumbersOnly = 0;
 				}
-				c->f28 = staff.f58;
+				c->fAmpersand = staff.f58;
 			}
 		}
 	}

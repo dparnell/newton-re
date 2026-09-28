@@ -24,6 +24,7 @@
 #include "XrDomains.h"
 #include "CursiveReader.h"
 #include "LowLevel.h"
+#include "Chunk.h"			// ChunkCtx, tagNumBox: a number's words
 
 #include <string.h>
 
@@ -938,12 +939,32 @@ FillRecwordSplitInfo(xrdata_type* xr, rc_type* rc, RWG_type* rwg, rec_w_type* re
 			if (split[0xf] == 1)
 				return split;
 			long claimed;
-			if (chunk != nil)
+			if (chunk != nil && ((ChunkCtx*) chunk)->fNumbers != 0)
 			{
-				// NOT YET RECONSTRUCTED: the digit reader's words (the chunk's
-				// +0x14 and +0x08, 0x0019e9e8-0x0019eb64) - the chunk is
-				// always nil while the digit reader is not reconstructed
+				// a number read by the digit reader: its characters are the
+				// digit reader's, one box each (ChunkSortAnswers), so each word
+				// takes the strokes of its characters' boxes, and every
+				// reading's word ends are marked (and its +0x4a's low byte
+				// kept for each word)
+				const tagNumBox* nb = (const tagNumBox*) ((ChunkCtx*) chunk)->fData2;
 				claimed = 0;
+				long next = 0;
+				for (long w = 1; w <= words; w++)
+				{
+					long end = ends[w - 1];
+					for (long r = 0; r < 5 && readings[r].fWord[0] != 0; r++)
+					{
+						split[r * 3 + (end >> 3)] |= (UByte) (1 << (end & 7));
+						split[0xf + r * 0xc + w] = readings[r].fX4A[1];
+					}
+					for (; next <= end; next++)
+						if (AddStrokesOfSymbol(XrGetH(nb[next].fFirstPoint), XrGetH(nb[next].fLastPoint), claimed, w - 1, rc, split) == 0)
+							goto failed;
+					next = end + 1;
+					claimed += split[0x4c + w - 1];
+				}
+				if (xr->fLength != 0)
+					elements[xr->fLength - 1].attrib |= 4;
 			}
 			else
 			{

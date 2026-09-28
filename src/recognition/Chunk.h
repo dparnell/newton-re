@@ -17,12 +17,10 @@
 	xr reader; after it `ChunkRestoreRC` puts it back, `ChunkSortAnswers`
 	and `ChunkCorrectByLexDB` merge the number readings in.
 
-	NOT YET RECONSTRUCTED: `ChunkProcessor` and most of what is under it
-	(about 100 functions, 146 KB - docs/next-steps.md has the plan),
-	`ChunkPatchXrdata`, `ChunkSortAnswers` and `ChunkCorrectByLexDB`.
-	Without the processor no number is ever found, so GCTryToRecognize
-	gives the context back straight away, as the ROM does for a word that
-	is not a number.
+	The whole of it is reconstructed: the processor and the searchers
+	(Chunk*.cpp), and the merge (`ChunkPatchXrdata`, `ChunkSortAnswers`,
+	`ChunkCorrectByLexDB`: ChunkMerge.cpp), which GCTryToRecognize calls
+	where the ROM does.
 */
 
 #ifndef __CHUNK_H
@@ -41,14 +39,14 @@ struct ChunkCtx
 	long			f04;
 	void*			fData2;			// +08  (given back)
 	void*			fData3;			// +0c  (given back)
-	long			f10;
+	long			f10;			// +10  the scale the points were divided by (ChunkProcessor)
 	long			fNumbers;		// +14  whether the processor found numbers (IsChunkNumbers)
 	long			fNumbersOnly;	// +18  the writing is numbers alone (ChunkModifyRC's second way)
 	long			f1C;
 	long			fModified;		// +20  the configuration changed (ChunkModifyRC), to be put back
-	long			f24;
-	long			f28;
-	long			f2C;
+	long			fAlternative;	// +24  a second reading was made (the sort: letters read as digits, or an 8 that may be an '&')
+	long			fAmpersand;		// +28  an 8 read that may be an '&' (the staff's +0x58)
+	long			fListItem;		// +2c  the number is a list's "1)" (the sort; ChunkCorrectByLexDB then leaves it)
 	UShort			fSaved[5];		// +30  rc +0x02, +0x08, +0x0a, +0x00, +0x90 as they were
 	rc_type*		fRC;			// +3c
 	xrdata_type*	fXr;			// +40
@@ -542,5 +540,16 @@ void*	ChunkWriteParamCtx(void* ctx, rc_type* rc, xrdata_type* xr, rec_w_type* re
 // the reader's own trace, what it found kept in the context (IsChunkNumbers
 // says whether it was a number).
 void	ChunkProcessor(void* ctx, PS_point_type* points, long n);		// ROM 0x002a6b50 ChunkProcessor__FPvP13PS_point_typei
+// With a number found, the xrs cut down to the strokes that are not
+// digits (two breaks and nothing else for a number alone), so the xr
+// reader reads only those (ChunkMerge.cpp).
+void	ChunkPatchXrdata(void* ctx);						// ROM 0x002a6680 ChunkPatchXrdata__FPv
+// With a number found, the digits and what the xr reader read put
+// together in writing order as the first reading.  ==> 1, 0 with none.
+long	ChunkSortAnswers(void* ctx);						// ROM 0x002a6650 ChunkSortAnswers__FPv
+// With a number found, the first reading checked against the lexical
+// database (confusable characters tried in turn), read again as a date
+// where a '1' may have been a '/', and an x given a space before it.
+void	ChunkCorrectByLexDB(void* ctx);						// ROM 0x002a5620 ChunkCorrectByLexDB__FPv
 
 #endif	/* __CHUNK_H */

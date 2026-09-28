@@ -151,17 +151,7 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 					if (*RCByte(rc, 0xb6) != 0)
 					{
 						ChunkAllocCtx(&chunk, rc);
-						// NOT YET: ChunkProcessor(chunk, points, n) (Chunk.h),
-						// which is reconstructed (test_Chunk's TestProcessor
-						// reads "42" and "10"), is not called yet: when it
-						// finds a number ChunkModifyRC narrows the
-						// configuration to numbers alone, the low level then
-						// makes no xrs, and the readings come from
-						// ChunkPatchXrdata, ChunkSortAnswers (over 0x002a4c04)
-						// and ChunkCorrectByLexDB below - not yet
-						// reconstructed, so a number would reach the page as
-						// an empty word (TParagraphView::HandleWord divides by
-						// its length).  With them it goes in here.
+						ChunkProcessor(chunk, points, (short) RCGetH(rc, 0x96));
 						if (IsChunkNumbers(chunk) != 0)
 							ChunkModifyRC(chunk, rc);
 						else
@@ -183,9 +173,7 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 						fprintf(stderr, "\n");
 					}
 					ChunkWriteParamCtx(chunk, rc, &xr, readings);
-					// NOT YET RECONSTRUCTED: ChunkPatchXrdata(chunk)
-					// (0x002a6680); the chunk is always nil here while the
-					// processor is NOT YET, when it does nothing
+					ChunkPatchXrdata(chunk);
 					if (2 < xr.fLength)
 					{
 						UShort saved8 = RCGetH(rc, 0x08);
@@ -226,9 +214,8 @@ GCTryToRecognize(PS_point_type* trace, GCWordDescrType* word, rc_type* rc, GCGro
 						RCSetH(rc, 0x08, saved8);
 					}
 					ChunkRestoreRC(chunk, rc);
-					// NOT YET RECONSTRUCTED: ChunkSortAnswers(chunk) and
-					// ChunkCorrectByLexDB(chunk) (0x002a6650, 0x002a5620) -
-					// with no chunk they do nothing
+					ChunkSortAnswers(chunk);
+					ChunkCorrectByLexDB(chunk);
 					split = FillRecwordSplitInfo(&xr, rc, &rwg, readings, chunk);
 					if (xr.fLength < xr.fSize)
 						memset((xrd_el_type*) xr.fElements + xr.fLength, 0, sizeof(xrd_el_type));

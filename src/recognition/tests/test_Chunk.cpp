@@ -6,6 +6,8 @@
 #include "Chunk.h"
 #include "ParaGraph.h"
 #include "WordSegment.h"		// PS_point_type
+#include "CursiveReader.h"	// xrdata_type
+#include "LowLevel.h"		// xrd_el_type
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -1605,6 +1607,161 @@ TestProcessor(void)
 }
 
 
+/*--------------------------------------------------------------------
+	The merge: the xrs cut down (ChunkPatchXrdata), the digits and the
+	xr reader's letters put together (ChunkSortAnswers), and the lexical
+	database's check (ChunkCorrectByLexDB) with no database.
+--------------------------------------------------------------------*/
+
+// a context as ChunkProcessor and ChunkWriteParamCtx leave it, over the
+// digits `chars` (one box each, 14 wide, 20 apart) and ten empty readings
+static ChunkCtx*
+MergeContext(const char* chars, long numbersOnly, rc_type* rc, xrdata_type* xr, rec_w_type* readings)
+{
+	void* ctx = nil;
+	ChunkAllocCtx(&ctx, rc);
+	ChunkCtx* c = (ChunkCtx*) ctx;
+	tagNumBox* nb = (tagNumBox*) HWRMemoryAlloc(0x300);
+	memset(nb, 0, 0x300);
+	for (long i = 0; chars[i] != 0; i++)
+	{
+		nb[i].fChar = (UByte) chars[i];
+		nb[i].fLeft = (int32_t) (i * 20);
+		nb[i].fRight = (int32_t) (i * 20 + 14);
+		nb[i].fTop = 0;
+		nb[i].fBottom = 20;
+	}
+	c->fData2 = nb;
+	c->f10 = 1;
+	c->fNumbers = 1;
+	c->fNumbersOnly = numbersOnly;
+	memset(readings, 0, 10 * sizeof(rec_w_type));
+	ChunkWriteParamCtx(c, rc, xr, readings);
+	return c;
+}
+
+// an xr of type t over points from..to and the box left..right, 0..20 high
+static void
+SetXr(xrd_el_type* e, UByte t, long from, long to, long left, long right)
+{
+	memset(e, 0, sizeof(*e));
+	e->type = t;
+	e->height = 5;
+	e->orient = 3;
+	XrSetH(e->begpoint, from);
+	XrSetH(e->endpoint, to);
+	XrSetH(&e->box[kXrLeft], left);
+	XrSetH(&e->box[kXrTop], 0);
+	XrSetH(&e->box[kXrRight], right);
+	XrSetH(&e->box[kXrBottom], 20);
+}
+
+static void
+TestMerge(void)
+{
+	rc_type rc;
+	memset(&rc, 0, sizeof(rc));
+	*RCByte(&rc, 0xb6) = 1;
+	rec_w_type readings[10];
+	xrdata_type xr = { 0, 0, nil };
+	EXPECT(AllocXrdata(&xr, 0x78) == 0);
+	xrd_el_type* e = (xrd_el_type*) xr.fElements;
+
+	// a number alone: two breaks and nothing more for the xr reader, and
+	// the digits the reading (weight 100); with no lexical database the
+	// check marks it no word of one (-3)
+	ChunkCtx* c = MergeContext("42", 1, &rc, &xr, readings);
+	SetXr(&e[0], 1, 0, 0, 0, 0);
+	SetXr(&e[1], 0x10, 1, 5, 0, 14);
+	xr.fLength = 2;
+	ChunkPatchXrdata(c);
+	EXPECT(e[0].type == 1 && e[0].height == 7 && e[1].type == 1 && e[1].height == 7 && e[2].type == 0);
+	EXPECT(xr.fLength == 2);						// (the length is left as it was)
+	EXPECT(ChunkSortAnswers(c) == 1);
+	EXPECT(strcmp((const char*) readings[0].fWord, "42") == 0 && readings[0].fWeight == 100);
+	EXPECT(readings[1].fWord[0] == 0);				// no alternative
+	ChunkCorrectByLexDB(c);
+	EXPECT(readings[0].fX4A[0] == 0xff && readings[0].fX4A[1] == 0xfd && readings[1].fWord[0] == 0);
+	void* ctx = c;
+	ChunkCleanUp(&ctx);
+
+	// no number found: none of the three does anything
+	c = MergeContext("", 0, &rc, &xr, readings);
+	c->fNumbers = 0;
+	HWRStrCpy((char*) readings[0].fWord, "ton");
+	EXPECT(ChunkSortAnswers(c) == 0 && strcmp((const char*) readings[0].fWord, "ton") == 0);
+	ctx = c;
+	ChunkCleanUp(&ctx);
+
+	// a number among other writing: the xrs of the run of points 10..20
+	// (the strokes that are not digits) kept between breaks, the others
+	// dropped
+	c = MergeContext("42", 0, &rc, &xr, readings);
+	static int32_t pairs[2] = { 10, 20 };
+	c->fData = HWRMemoryAlloc(sizeof(pairs));
+	memcpy(c->fData, pairs, sizeof(pairs));
+	c->f04 = 1;
+	SetXr(&e[0], 1, 0, 0, 0, 0);
+	SetXr(&e[1], 0x10, 1, 5, 0, 14);				// a digit's: dropped
+	SetXr(&e[2], 0x12, 10, 14, 40, 44);				// in the run
+	SetXr(&e[3], 0x14, 14, 20, 44, 50);				// in the run
+	SetXr(&e[4], 0x10, 21, 25, 60, 70);				// after it
+	SetXr(&e[5], 1, 25, 25, 0, 0);					// the last, never looked at
+	e[5].height = 9;
+	xr.fLength = 6;
+	ChunkPatchXrdata(c);
+	EXPECT(xr.fLength == 4);
+	EXPECT(e[0].type == 1 && e[1].type == 0x12 && e[2].type == 0x14 && e[3].type == 1);
+	EXPECT(e[3].height == 5 && e[3].link == 6);		// the break after the run: the next xr's height, link 6
+	EXPECT((e[1].attrib & 0x80) != 0 && (e[2].attrib & 0x80) != 0);	// next to a break
+
+	// ... and the xr reader's "o," put among the digits by where its
+	// letters lie: the o (read as a 0) after the 4, the comma after the 2
+	HWRStrCpy((char*) readings[0].fWord, "o,");
+	readings[0].fX30[0] = 1;
+	readings[0].fX30[1] = 1;
+	SetXr(&e[0], 1, 0, 0, 0, 0);
+	SetXr(&e[1], 0x10, 10, 14, 15, 19);				// the o, between the 4 (0-14) and the 2 (20-34)
+	SetXr(&e[2], 0x2d, 15, 16, 36, 38);				// the comma, right of the 2
+	xr.fLength = 3;
+	EXPECT(ChunkSortAnswers(c) == 1);
+	EXPECT(strcmp((const char*) readings[0].fWord, "402,") == 0 && readings[0].fWeight == 100);
+	EXPECT(c->fAlternative == 1 && readings[1].fWeight == 90);
+	EXPECT(readings[1].fWord[1] == 'o');			// the letter as it was read
+	ctx = c;
+	ChunkCleanUp(&ctx);
+
+	// the sort's fixes over a number alone: "(1231" becomes "(123)"; a
+	// '(' ')' pair written the wrong way round before the first moves to
+	// the front; "1)" is a list item
+	c = MergeContext("(1231", 1, &rc, &xr, readings);
+	EXPECT(ChunkSortAnswers(c) == 1 && strcmp((const char*) readings[0].fWord, "(123)") == 0);
+	ctx = c;
+	ChunkCleanUp(&ctx);
+	c = MergeContext("1)", 1, &rc, &xr, readings);
+	ChunkSortAnswers(c);
+	EXPECT(c->fListItem == 1);
+	HWRStrCpy((char*) readings[1].fWord, "x");
+	ChunkCorrectByLexDB(c);							// (a list item: left alone)
+	EXPECT(strcmp((const char*) readings[1].fWord, "x") == 0);
+	ctx = c;
+	ChunkCleanUp(&ctx);
+	c = MergeContext("5()", 1, &rc, &xr, readings);
+	((tagNumBox*) c->fData2)[1].fLeft = -10;		// the '(' written further left than the 5
+	ChunkSortAnswers(c);
+	EXPECT(strcmp((const char*) readings[0].fWord, "(5)") == 0);
+	ctx = c;
+	ChunkCleanUp(&ctx);
+	// a lone '«' and two '>' after it: one '»'
+	c = MergeContext("\xc7" "12>>", 1, &rc, &xr, readings);
+	ChunkSortAnswers(c);
+	EXPECT(strcmp((const char*) readings[0].fWord, "\xc7" "12\xc8") == 0);
+	ctx = c;
+	ChunkCleanUp(&ctx);
+	FreeXrdata(&xr);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -1625,6 +1782,7 @@ main(int argc, char** argv)
 	TestSearchS();
 	TestDigits();
 	TestProcessor();
+	TestMerge();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

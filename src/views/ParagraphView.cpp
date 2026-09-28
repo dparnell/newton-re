@@ -3721,7 +3721,15 @@ TParagraphView::HandleWord(const UniChar* text, ULong length, const Rect& box,
 	if (text[0] == kInkWordChar)
 		slack = 100;
 	else
+	{
+		// (an empty word is divided by as the ROM's __rt_udiv does it: it
+		// throws evt.ex.div0 rather than trapping.  The recognisers never
+		// hand one over - the cursive reader did until the digit reader's
+		// merge, ChunkSortAnswers, was there to fill in a number's reading)
+		if (length == 0)
+			Throw(exDivideByZero, nil, nil);
 		slack = (short) (6 * (((ULong) (short) (box.right - box.left)) / length));
+	}
 	AddMarginsToBounds(&room);
 	room.right = (short) (room.right + slack);
 
