@@ -92,6 +92,40 @@ DrawTwo(double x, double y)
 	StrokeEnd();
 }
 
+// an ellipse about (cx, cy) from angle a to b, as ArcTo
+static void
+EllipseTo(double cx, double cy, double rx, double ry, double a, double b)
+{
+	const double kRad = 3.14159265358979323846 / 180;
+	long steps = (long) ceil(fabs(b - a) * kRad * (rx > ry ? rx : ry));
+	for (long i = 1; i <= steps; i++)
+	{
+		double t = (a + (b - a) * i / steps) * kRad;
+		gPenX = cx + rx * cos(t);
+		gPenY = cy - ry * sin(t);
+		Pt(gPenX, gPenY);
+	}
+}
+
+// a 0, 20 pixels high: from the top anticlockwise, down the left and back
+// up the right to where it started
+static void
+DrawZero(double x, double y)
+{
+	MoveTo(x + 7, y);
+	EllipseTo(x + 7, y + 10, 7, 10, 90, 450);
+	StrokeEnd();
+}
+
+// a 1: one stroke straight down
+static void
+DrawOne(double x, double y)
+{
+	MoveTo(x + 5, y);
+	LineTo(x + 5, y + 20);
+	StrokeEnd();
+}
+
 static void
 Dump(const char* what, tag_wapx_type* nodes, long n)
 {
@@ -383,6 +417,77 @@ TestConstruct(void)
 }
 
 
+/*--------------------------------------------------------------------
+	Digits' first passes: the line, the circles
+--------------------------------------------------------------------*/
+
+static long
+CountClass(void* lo, ULong cls)
+{
+	tag_LOWOBJ* obj = nil;
+	long n = 0;
+	if (LO_SetWorkClass(lo, cls) == 1)
+		for (long more = LO_PickFirst(lo, &obj); more; more = LO_PickNext(lo, &obj))
+			n++;
+	return n;
+}
+
+static void
+TestLineAndCircles(void)
+{
+	tag_CHUNK_STAFF staff;
+
+	// a 4 and a 2 side by side, both 20 pixels (160 eighths) high from y 0
+	TraceStart();
+	DrawFour(0, 0);
+	DrawTwo(20, 0);
+	EXPECT(Construct(&staff, "four two"));
+	DefHeightsForNumber(&staff);
+	if (gVerbose)
+		printf("  line: top %d bottom %d height %d\n", staff.fTopLine, staff.fBottomLine, staff.fHeight);
+	EXPECT(staff.fTopLine >= 0 && staff.fTopLine <= 8);
+	EXPECT(staff.fBottomLine >= 152 && staff.fBottomLine <= 160);
+	EXPECT(staff.fHeight == staff.fBottomLine - staff.fTopLine);
+	// the 4's upright starts at the top of the line and ends at its foot
+	tag_CHUNK* upright = &staff.fChunks[2];
+	EXPECT(upright->fKind == 2 && upright->fPrev == -1);
+	EXPECT(upright->fZoneStart == 60 && upright->fZoneEnd == 30);
+	Destruct(&staff);
+
+	// a 0 is a circle, class 200, from the chunk going down
+	TraceStart();
+	DrawZero(0, 0);
+	EXPECT(Construct(&staff, "zero"));
+	void* lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	EXPECT(ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount) > 0);
+	EXPECT(GetCircles(&staff) == 1);
+	EXPECT(CountClass(lo, 200) == 1);
+	long circles = 0;
+	for (long k = 0; k < staff.fChunkCount; k++)
+		if (staff.fChunks[k].f7C >= 0)
+			circles++;
+	EXPECT(circles == 1);
+	LO_Destroy(lo);
+	Destruct(&staff);
+
+	// neither a 1 nor a 4 has one
+	TraceStart();
+	DrawOne(0, 0);
+	DrawFour(12, 0);
+	EXPECT(Construct(&staff, "one four"));
+	lo = LO_Create();
+	staff.fLO = lo;
+	DefHeightsForNumber(&staff);
+	ChunkPutClassesToLO(lo, staff.fNodes, staff.fChunks, staff.fChunkCount);
+	GetCircles(&staff);
+	EXPECT(CountClass(lo, 200) == 0);
+	LO_Destroy(lo);
+	Destruct(&staff);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -392,6 +497,7 @@ main(int argc, char** argv)
 	TestApprox();
 	TestLowObjects();
 	TestConstruct();
+	TestLineAndCircles();
 	if (failures == 0)
 		printf("test_Chunk: all passed\n");
 	return failures == 0 ? 0 : 1;

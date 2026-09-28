@@ -17,7 +17,7 @@
 	xr reader; after it `ChunkRestoreRC` puts it back, `ChunkSortAnswers`
 	and `ChunkCorrectByLexDB` merge the number readings in.
 
-	NOT YET RECONSTRUCTED: `ChunkProcessor` and everything under it
+	NOT YET RECONSTRUCTED: `ChunkProcessor` and most of what is under it
 	(about 100 functions, 146 KB - docs/next-steps.md has the plan),
 	`ChunkPatchXrdata`, `ChunkSortAnswers` and `ChunkCorrectByLexDB`.
 	Without the processor no number is ever found, so GCTryToRecognize
@@ -129,9 +129,11 @@ struct tag_CHUNK
 	int32_t		fWidth;				// +34
 	int32_t		fHeight;			// +38
 	int32_t		fX0, fY0;			// +3c  its start
-	int32_t		f44;
+	UByte		fZoneStart;			// +44  where its start is in the line: 60 above the middle half, 45 in it, 30 below (DefHeightsForNumber; only a stroke's first chunk)
+	UByte		f45[3];
 	int32_t		fX1, fY1;			// +48  its end
-	int32_t		f50;
+	UByte		fZoneEnd;			// +50  where its end is
+	UByte		f51[3];
 	int32_t		fMidX, fMidY;		// +54  the node its segment was first split at (-1: none)
 	int32_t		fLength2;			// +5c  the square of the chord's length
 	int32_t		fBulge;				// +60  the square of the middle node's distance from the chord
@@ -141,7 +143,7 @@ struct tag_CHUNK
 	int32_t		f70;
 	int32_t		f74;
 	int32_t		f78;
-	int32_t		f7C;
+	int32_t		f7C;				// +7c  the circle GetCircles found starting here (its object; -1 none)
 	int32_t		fRealIndex;			// +80  its number among the chunks that are not jumps
 	int32_t		fFirstBracket;		// +84  its brackets (ApxToBrackets)
 	int32_t		fLastBracket;		// +88
@@ -274,7 +276,10 @@ struct tag_CHUNK_STAFF
 	int32_t			f34;			// +34  100
 	int32_t			f38;			// +38  the brackets' room
 	int32_t			f3C;			// +3c  the real chunks' room
-	int32_t			f40[4];			// +40
+	int32_t			fHeight;		// +40  the writing's height: fBottomLine - fTopLine (DefHeightsForNumber)
+	int32_t			fTopLine;		// +44  the mean top of the strokes' boxes
+	int32_t			fBottomLine;	// +48  the mean bottom
+	int32_t			f4C;
 	int32_t			f50;			// +50  rc +4 bit 16
 	int32_t			f54;
 	int32_t			f58;
@@ -297,6 +302,15 @@ long	ApxToBrackets(tag_wapx_type* nodes, tag_CHUNK* chunks, long count, brack_ty
 long	ApxToCLine(tag_wapx_type* nodes, brack_type* brackets, long count, tag_CHUNK* chunks, long chunkCount);	// ROM 0x00287aa8 ApxToCLine__FP13tag_wapx_typeP10brack_typeiP9tag_CHUNKT3
 long	ChunkPutClassesToLO(void* lo, tag_wapx_type* nodes, tag_CHUNK* chunks, long count);	// ROM 0x00287d48 ChunkPutClassesToLO__FPvP13tag_wapx_typeP9tag_CHUNKi
 long	DefRectForChunks(tag_CHUNK* chunks, tag_wapx_type* nodes, long first, long last, tag_BOX* r);	// ROM 0x00287de0 DefRectForChunks__FP9tag_CHUNKP13tag_wapx_typeiT3P5_RECT
+// The writing's line: the staff's fTopLine, fBottomLine and fHeight (the
+// mean top and bottom of the strokes' boxes, the small ones dropped or
+// joined to a neighbour) and each chunk's ends placed in it (fZoneStart,
+// fZoneEnd).
+void	DefHeightsForNumber(tag_CHUNK_STAFF* staff);					// ROM 0x002853ec DefHeightsForNumber__FP15tag_CHUNK_STAFF
+// The circles (an 0, the loop of a 6, 8 or 9) put in the list of low
+// objects as class 200, each one's object kept in the chunk it starts at
+// (f7C).  ==> 1.
+long	GetCircles(tag_CHUNK_STAFF* staff);								// ROM 0x00288d4c GetCircles__FP15tag_CHUNK_STAFF
 long	ChunkConstruct(tag_CHUNK_STAFF* staff);							// ROM 0x00285a64 ChunkConstruct__FP15tag_CHUNK_STAFF
 long	ChunkDestroyData(tag_CHUNK_STAFF* staff);						// ROM 0x00286eb8 ChunkDestroyData__FP15tag_CHUNK_STAFF
 
