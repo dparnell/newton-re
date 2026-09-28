@@ -668,6 +668,7 @@ SPEC_TYPE*	FindClosestUpperElement(SPEC_TYPE* head, short i);		// ROM 0x002b4634
 long	DoubleXT(SPEC_TYPE* e, low_type* low);						// ROM 0x002b44e8 DoubleXT__FP9SPEC_TYPEP8low_type - ==> 1 doubled
 long	Placement_XT_With_HATCH(SPEC_TYPE* e, SPEC_TYPE* r, low_type* low);	// ROM 0x002b4060 Placement_XT_With_HATCH__FP9SPEC_TYPET1P8low_type - ==> 0
 long	Placement_XT_WO_HATCH_AND_ST(SPEC_TYPE* e, low_type* low);	// ROM 0x002b46cc Placement_XT_WO_HATCH_AND_ST__FP9SPEC_TYPEP8low_type - ==> 0
+long	IsNearI(SPEC_TYPE* e);										// ROM 0x002d98c8 IsNearI__FP9SPEC_TYPE - the top of an i
 long	RestoreApostroph(low_type* low, SPEC_TYPE* e);				// ROM 0x002d8b38 RestoreApostroph__FP8low_typeP9SPEC_TYPE - ==> 1 an apostrophe
 long	FindDArcs(low_type* low);									// ROM 0x00302f00 FindDArcs__FP8low_type - ==> 0
 

@@ -2799,3 +2799,449 @@ put:
 	Put_XT_ST(low, best, e, found);
 	return 0;
 }
+
+
+// ROM 0x002d89b0 (unnamed) - after TEWorldClient::DispatchPacket
+// Whether an element may stand beside an apostrophe: an upper element
+// (not a stroke's end low down, band 7 or more), or a loop 0x1f/0x20 high
+// up (band under 7).
+static long
+ApostropheNeighbour(SPEC_TYPE* e)
+{
+	if (IsUpperElem(e))
+	{
+		if (e->mark != 0x20)
+			return 1;
+		return (e->attr & 0xf) <= 6 ? 1 : 0;
+	}
+	if ((e->code == 0x20 || e->code == 0x1f) && (e->attr & 0xf) < 7)
+		return 1;
+	return 0;
+}
+
+
+// ROM 0x002d8ab4 (unnamed) - after TEWorldClient::DispatchPacket
+// The first such neighbour after e; nil for none.
+static SPEC_TYPE*
+NextApostropheNeighbour(SPEC_TYPE* e)
+{
+	if (e->next == nil)
+		return nil;
+	do
+	{
+		e = e->next;
+		if (ApostropheNeighbour(e))
+			return e;
+	}
+	while (e->next != nil);
+	return nil;
+}
+
+
+// ROM 0x002d8afc (unnamed) - after TEWorldClient::DispatchPacket
+// The first such neighbour from e back; nil for none.
+static SPEC_TYPE*
+PrevApostropheNeighbour(SPEC_TYPE* e)
+{
+	for (; e != nil; e = e->prev)
+		if (ApostropheNeighbour(e))
+			return e;
+	return nil;
+}
+
+
+// ROM 0x002d8a1c (unnamed) - after TEWorldClient::DispatchPacket
+// e about to be moved out from between two breaks (or a break and an
+// element): a break that ended where e began made to end where the
+// element after e begins, one that began where e ended made to begin
+// where the element before e ends.
+static void
+CloseUpAround(SPEC_TYPE* e)
+{
+	SPEC_TYPE* p = e->prev;
+	SPEC_TYPE* n = e->next;
+	if (p == nil || n == nil)
+		return;
+	if (IsBreakCode(p->code) && p->iEnd == e->iBeg)
+		p->iEnd = n->iBeg;
+	if (IsBreakCode(n->code) && n->iBeg == e->iEnd)
+		n->iBeg = p->iEnd;
+}
+
+
+// ROM 0x002d94dc (unnamed) - in RestoreApostroph
+// The letter element nearest a dot e across (its end, start or middle),
+// then the place after the letter it belongs to - the last neighbour to
+// the left of the dot, back to the break before, or on to the one after
+// (*nearBreak 0 when a break was met first).  With move, the dot is put
+// there between two breaks (0x14 marked 0x44, other 2), made where they
+// are not.  ==> the element it goes after; nil for none.
+static SPEC_TYPE*
+PlaceApostrophe(low_type* low, SPEC_TYPE* e, long move, short* nearBreak)
+{
+	short* x = low->fX;
+	short* y = low->fY;
+	long xe = x[(e->iBeg + e->iEnd) >> 1];
+	SPEC_TYPE* best = nil;
+	long bestDist = 0x7fff;
+	Boolean right = false;
+	for (SPEC_TYPE* r = low->fSpecl->next; r != nil; r = r->next)
+	{
+		if (r == e || !ApostropheNeighbour(r))
+			continue;
+		long xi;
+		if (r->prev == nil)
+		{
+			if (r->next == nil || y[r->iEnd] == -1)
+				return nil;
+			xi = x[r->iEnd];
+		}
+		else if (r->next == nil)
+		{
+			if (y[r->iBeg] == -1)
+				return nil;
+			xi = x[r->iBeg];
+		}
+		else
+		{
+			if (y[r->iBeg] == -1 || y[r->iEnd] == -1)
+				return nil;
+			if (IsBreakCode(r->code) && x[r->iBeg] >= x[r->iEnd])
+				xi = x[r->iBeg];
+			else
+				xi = x[(r->iBeg + r->iEnd) >> 1];
+		}
+		short d = (short) (xi - xe);
+		Boolean isRight = d > 0;
+		if (d < 0)
+			d = (short) -d;
+		if (d < bestDist)
+		{
+			best = r;
+			bestDist = d;
+			right = isRight;
+		}
+	}
+	if (best == nil)
+		return nil;
+	SPEC_TYPE* r = best;
+	if (right && r->prev != nil)
+		r = r->prev;
+	*nearBreak = 1;
+	for (;;)
+	{
+		if (ApostropheNeighbour(r) && x[(r->iBeg + r->iEnd) >> 1] < xe)
+			break;
+		if (r->prev != nil)
+			r = r->prev;
+		if (low->fSpecl == r || IsBreakCode(r->code))
+		{
+			*nearBreak = 0;
+			goto found;
+		}
+		if (r == nil)
+			goto found;
+	}
+	if (r->next != nil)
+	{
+		for (;;)
+		{
+			SPEC_TYPE* n = r->next;
+			if (ApostropheNeighbour(n) && x[(n->iBeg + n->iEnd) >> 1] > xe)
+				break;
+			n = r->next;
+			if (IsBreakCode(n->code))
+			{
+				*nearBreak = 0;
+				break;
+			}
+			r = n;
+			if (n->next == nil)
+				break;
+		}
+	}
+found:
+	if (move == 0)
+		return r;
+	if (!IsBreakCode(r->code))
+	{
+		SPEC_TYPE* b = NewSPECLElem(low);
+		if (b == nil)
+			return nil;
+		Insert2ndAfter1st(r, b);
+		b->iEnd = r->iEnd;
+		b->iBeg = r->iEnd;
+		r = b;
+	}
+	r->code = 0x14;
+	r->mark = 0x44;
+	r->other = 2;
+	r->attr = (r->attr & ~0xf) | 7;
+	CloseUpAround(e);
+	Move2ndAfter1st(r, e);
+	if (e->iBeg > r->iBeg)
+		r->iEnd = e->iBeg;
+	SPEC_TYPE* n = e->next;
+	if (n == nil)
+		return r;
+	if (!IsBreakCode(n->code))
+	{
+		SPEC_TYPE* b = NewSPECLElem(low);
+		if (b == nil)
+			return nil;
+		Insert2ndAfter1st(e, b);
+	}
+	n = e->next;
+	n->code = 0x14;
+	n->mark = 0x44;
+	n->other = 2;
+	n->attr = (n->attr & ~0xf) | 7;
+	n->iEnd = e->iEnd;
+	n->iBeg = e->iEnd;
+	return r;
+}
+
+
+// ROM 0x002d98c8 IsNearI__FP9SPEC_TYPE
+// Whether e is the top of an i: a stick up (3, a top, start or crossing
+// top) or an arc after a 0x13 break, followed (angles skipped) by a
+// stroke's end coming down.
+long
+IsNearI(SPEC_TYPE* e)
+{
+	if (e == nil)
+		return 0;
+	if (e->code == 3)
+	{
+		if (!(e->mark == 1 || e->mark == 0x10 || e->mark == 9))
+			return 0;
+	}
+	else if (e->code == 9)
+	{
+		if (e->prev == nil || e->prev->code != 0x13)
+			return 0;
+	}
+	else
+		return 0;
+	SPEC_TYPE* r = SkipAnglesAfter(e);
+	if (r != nil && (r->code == 7 || r->code == 0xc) && r->mark == 0x20)
+		return 1;
+	return 0;
+}
+
+
+// ROM 0x002d8b38 RestoreApostroph__FP8low_typeP9SPEC_TYPE
+// Whether a dot e high in the line (at or above 0x27b1) is an apostrophe
+// rather than an i's dot: the letters either side of it (the nearest
+// neighbours left and right, PlaceApostrophe) found, then its length and
+// slope weighed against how high it sits, whether it stands clear over
+// the letters, whether it slants like an apostrophe, and whether an i
+// under it would want it; an apostrophe is moved between two breaks after
+// the letter to its left.  ==> 1 when it was.
+//
+// ROM QUIRKS: the squared length is kept in a short, so a long stroke
+// wraps; two tests also want a flag that is nought and never set, so they
+// never pass.
+long
+RestoreApostroph(low_type* low, SPEC_TYPE* e)
+{
+	short* x = low->fX;
+	short* y = low->fY;
+	short* xInit = low->fXInitial;
+	short* map = low->fBuffers[2].ptr;
+	const long never = 0;			// (the ROM's frame +0: set to 0 and never again)
+	long quotes = 0;				// +0x14
+	long leftClear = 1;				// +0x8: nothing of the letters under it on the left
+	long rightClear = 1;			// +0x4
+	if (e->code != 0x10)
+		return 0;
+	long iBeg = e->iBeg;
+	long iEnd = e->iEnd;
+	long mid = (iBeg + iEnd) >> 1;
+	long xe = x[mid];
+	if (y[mid] - 0x2780 > 0x31)
+		return 0;
+	short bottom = (short) (y[iBeg] > y[iEnd] ? y[iBeg] : y[iEnd]);
+	short nearBreak = 0;
+	SPEC_TYPE* start = PlaceApostrophe(low, e, 0, &nearBreak);
+	if (start == nil)
+		return 0;
+	SPEC_TYPE* rightN = NextApostropheNeighbour(start);
+	SPEC_TYPE* leftN = PrevApostropheNeighbour(start);
+	for (short k = -10; ; )
+	{
+		if (rightN == nil)
+			return 0;
+		if (leftN == nil)
+			break;
+		long xl = x[(leftN->iBeg + leftN->iEnd) >> 1];
+		long xr = x[(rightN->iBeg + rightN->iEnd) >> 1];
+		if (xl <= xr)
+			break;
+		short dl = (short) (xl - xe);
+		short dr = (short) (xr - xe);
+		short al = dl < 0 ? (short) -dl : dl;
+		short ar = dr < 0 ? (short) -dr : dr;
+		short nearer = (al >= ar) ? dr : dl;
+		if (nearer < 0)
+			rightN = NextApostropheNeighbour(rightN);
+		else
+			leftN = PrevApostropheNeighbour(leftN->prev);
+		k = (short) (k + 1);
+		if (k == 0)
+			break;
+	}
+	if (rightN == nil || leftN == nil)
+		return 0;
+	_RECT box;
+	GetTraceBox(x, y, iBeg, iEnd, &box);
+	long half = (box.right - box.left) / 2;
+	short reach = (short) (half + 5);
+	short cx = (short) (half + box.left);
+	long lo = cx - reach;
+	long hi = cx + reach;
+	for (short i = leftN->iBeg; rightN->iEnd > i; i++)
+	{
+		long xi = x[i];
+		if (xi < lo || xi > hi)
+			continue;
+		if (i >= iBeg && i <= iEnd)
+			continue;
+		if (xi > cx)
+			rightClear = 0;
+		else
+			leftClear = 0;
+	}
+	long a = rightN->iBeg, b = rightN->iEnd;
+	GetTraceBox(x, y, a < b ? a : b, a < b ? b : a, &box);
+	long belowRight = bottom > box.top ? 1 : 0;			// +0x10
+	a = leftN->iBeg; b = leftN->iEnd;
+	GetTraceBox(x, y, a < b ? a : b, a < b ? b : a, &box);
+	SPEC_TYPE* p = leftN->prev;
+	if (p != nil && p->prev != nil)
+	{
+		SPEC_TYPE* pp = p->prev;
+		quotes = 0;
+		if (p->code == 0xd && pp->code == 0xd && !(pp->prev != nil && pp->prev->code == 0xd))
+		{
+			long hp = p->attr & 0xf;
+			long hpp = pp->attr & 0xf;
+			if (!(hp > 5 && hp < 9) && !(hpp > 5 && hpp < 9))
+				quotes = 1;
+		}
+	}
+	long belowLeft = (bottom > box.top || quotes) ? 1 : 0;	// +0xc
+	if (!belowRight && !belowLeft && !leftClear && !rightClear)
+		return 0;
+	long between = (belowRight && belowLeft) ? 1 : 0;		// +0x20
+	if (!between && nearBreak != 0)
+		return 0;
+	short dx = (short) ((UShort) x[iBeg] - (UShort) x[iEnd]);
+	if (dx < 0)
+		dx = (short) -dx;
+	long y0 = y[iBeg];
+	long y1 = y[iEnd];
+	short dy = (short) (y0 - y1);
+	if (dy < 0)
+		dy = (short) -dy;
+	short len2 = (short) LAdd(LMul(dx, dx), LMul(dy, dy));
+	long v = 0x27e6 - bottom;
+	long q = (v + 2) / 4;
+	long tall = (LMul(q, q) < len2) ? 1 : 0;				// +0x18
+	long xb = xInit[map[iBeg]];
+	long xn = xInit[map[iEnd]];
+	long slant = (y0 < y1) ? (xb < xn ? 1 : 0) : (xb > xn ? 1 : 0);	// +0x1c
+	if (between || (leftClear && rightClear))
+	{
+		long w = (v + 8) / 16;
+		if (LMul(w, w) > len2)
+			return 0;
+		if (between)
+			goto wide;
+	}
+	else
+	{
+		long div = quotes ? 0xa : 6;
+		long t = (v + (div >> 1)) / div;
+		if (LMul(t, t) > len2)
+			return 0;
+	}
+	if (tall || (leftClear && rightClear))
+	{
+	wide:
+		if ((15 + 10 * dx) / 30 > dy)
+			return 0;
+	}
+	else
+	{
+		if ((7 + 10 * dx) / 15 > dy)
+			return 0;
+	}
+	if (slant != 0 || between == 0)
+	{
+		if (leftClear && (11 * dx + 5) / 10 > dy)
+			return 0;
+	}
+	if (!between)
+	{
+		Boolean nearI = (!belowLeft && IsNearI(leftN)) || (!belowRight && IsNearI(rightN));
+		if (nearI)
+		{
+			long ok = 1;
+			Boolean skip = false;
+			if (!belowLeft && IsNearI(leftN) && leftN->prev != nil && leftN->prev->code == 0xd)
+			{
+				ok = 0;
+				skip = true;
+			}
+			if (!skip && !belowRight && IsNearI(rightN) && rightN->prev->code == 0xd)
+				ok = 0;
+			if (skip || !belowLeft)
+			{
+				if (IsNearI(leftN) && leftClear && never)
+					ok = 0;
+			}
+			if (belowRight || !(IsNearI(rightN) && rightClear && never))
+			{
+				for (SPEC_TYPE* r = low->fSpecl->next; r != nil; r = r->next)
+				{
+					if (r->code != 0x10 || r == e)
+						continue;
+					long from, to;
+					if (!belowLeft && IsNearI(leftN))
+					{
+						long xl = x[leftN->iBeg];
+						from = xl - (xe - xl);
+						to = xe;
+					}
+					else
+					{
+						long xr = x[rightN->iBeg];
+						from = xe;
+						to = xr + (xr - xe);
+					}
+					long xq = x[(r->iBeg + r->iEnd) >> 1];
+					if (xq > from && xq < to)
+						ok = 0;
+				}
+				if (ok)
+					return 0;
+			}
+		}
+	}
+	GetTraceBox(x, y, iBeg, iEnd, &box);
+	box.left -= 2;
+	box.right += 2;
+	for (short i = leftN->iBeg; rightN->iEnd > i; i++)
+	{
+		long xi = x[i];
+		if (xi < box.left || xi > box.right)
+			continue;
+		if (i >= iBeg && i <= iEnd)
+			continue;
+		if (y[i] < box.bottom)
+			return 0;
+	}
+	PlaceApostrophe(low, e, 1, &nearBreak);
+	return 1;
+}

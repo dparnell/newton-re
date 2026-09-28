@@ -1592,6 +1592,93 @@ TestLkDugaWhole(void)
 }
 
 
+// xt_st_zz's passes (LowXtSt.cpp): the helpers on their own; a t's bar
+// written after the word and to the left of it found to be a late stroke
+// (FindDelayedStroke); two strokes' gap measured across the bands of the
+// line (GetDxBetweenStrokes); side-by-side elements made one
+// (CheckSequenceOfElements); a break marked 0x44 beside another dropped
+// (del_ZZ_HATCH).
+static void
+TestXtSt(void)
+{
+	short yy[6] = { -1, 30, 20, 10, 25, -1 };
+	EXPECT(iClosestToY(yy, 1, 4, 22) == 2);
+	EXPECT(iClosestToY(yy, 0, 4, 22) == -1);
+	short cx[12], cy[12];
+	for (long i = 0; i < 12; i++)
+	{
+		cx[i] = (short) (10 * i);
+		cy[i] = (short) (i < 6 ? 0x27a0 : 0x27d0);
+	}
+	short flag = 5;
+	EXPECT(CalcDistBetwXr(cx, cy, 0, 4, 6, 10, &flag) == Distance8(40, 0x27a0, 60, 0x27d0) && flag == 0);
+	_RECT box;
+	short r, l, b, t;
+	EXPECT(GetTraceBoxInsideYZone(cx, cy, 0, 11, 0x27c0, 0x27e0, &box, &r, &l, &b, &t) == 1);
+	EXPECT(box.left == 60 && box.right == 110 && l == 6 && r == 11);
+	EXPECT(GetTraceBoxInsideYZone(cx, cy, 0, 11, 0x2700, 0x2710, &box, &r, &l, &b, &t) == 0 && r == -1);
+
+	// a word stroke from x 100 to 140, then a short level stroke at x 80..90
+	// written after it: the bar of a t crossed later
+	TraceStart();
+	for (long s = 0; s < 20; s++)
+		Pt(100 + 2 * s, (s & 1) ? 0x27d0 : 0x27a0);			// 1..20
+	PenUp();													// 21
+	for (long s = 0; s < 6; s++)
+		Pt(80 + 2 * s, 0x27b0);									// 22..27
+	PenUp();
+	{
+		LowFixture f;
+		low_type* low = &f.low;
+		low->fStep = 10;
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 0x10, 3, 5, 0, 1, 1, 1, -2) == 0);
+		EXPECT(Mark(low, 3, 7, 9, 0, 9, 11, 10, -2) == 0);
+		EXPECT(Mark(low, 0x20, 7, 9, 0, 20, 20, 20, -2) == 0);
+		EXPECT(Mark(low, 0, 0x12, 0, 0, 20, 22, -2, -2) == 0);
+		EXPECT(Mark(low, 0x10, 3, 5, 0, 22, 22, 22, -2) == 0);
+		EXPECT(Mark(low, 0x20, 7, 5, 0, 27, 27, 27, -2) == 0);
+		EXPECT(FindDelayedStroke(low) == 0);
+		SPEC_TYPE* late = low->fSpecl->next->next->next->next->next;
+		EXPECT(late->code == 0xd && late->iBeg == 22 && late->iEnd == 27 && late->next == nil);
+		// the gap across: the word reaches furthest right in the bottom
+		// band (138) and next in the top one (136); the bar lies in the
+		// top band alone, so it is measured against the word's top band
+		// (the slant nought) - negative, the bar lying to the left
+		low->fSlope = 0;
+		EXPECT(GetDxBetweenStrokes(low, 1, 20, 22, 27) == 80 - 136);
+	}
+
+	TraceStart();
+	for (long s = 0; s < 10; s++)
+		Pt(100 + s, 0x27a0);
+	PenUp();
+	{
+		LowFixture f;
+		low_type* low = &f.low;
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 1, 0x16, 5, 0, 1, 3, 2, -2) == 0);
+		EXPECT(Mark(low, 1, 0x16, 5, 0, 4, 6, 5, -2) == 0);
+		EXPECT(Mark(low, 1, 0x17, 5, 0, 6, 7, 6, -2) == 0);
+		EXPECT(Mark(low, 1, 0x17, 5, 0, 8, 9, 8, -2) == 0);
+		EXPECT(CheckSequenceOfElements(low) == 0);
+		SPEC_TYPE* a = low->fSpecl->next;
+		EXPECT(a->code == 0x16 && a->iBeg == 4 && a->next->code == 0x17 && a->next->iBeg == 6 && a->next->next == nil);
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 0x44, 0x13, 7, 0, 1, 2, -2, -2) == 0);
+		EXPECT(Mark(low, 0, 0x12, 7, 0, 2, 3, -2, -2) == 0);
+		EXPECT(Mark(low, 1, 3, 5, 0, 4, 6, 5, -2) == 0);
+		EXPECT(del_ZZ_HATCH(low->fSpecl) == 0);
+		EXPECT(low->fSpecl->next->code == 0x12 && low->fSpecl->next->next->code == 3);
+		// the top of an i: a stick up followed by a stroke's end coming down
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 0x10, 3, 5, 0, 1, 2, 1, -2) == 0);
+		EXPECT(Mark(low, 0x20, 7, 9, 0, 8, 9, 9, -2) == 0);
+		EXPECT(IsNearI(low->fSpecl->next) == 1 && IsNearI(low->fSpecl->next->next) == 0);
+	}
+}
+
+
 int
 main()
 {
@@ -1621,6 +1708,7 @@ main()
 	TestLkCross();
 	TestLkDuga();
 	TestLkDugaWhole();
+	TestXtSt();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;
