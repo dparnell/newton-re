@@ -287,6 +287,10 @@ long	QDistFromChord(long ax, long ay, long bx, long by, long px, long py);	// RO
 long	is_cross(short xa, short ya, short xb, short yb, short xc, short yc, short xd, short yd);	// ROM 0x003060c8 is_cross__FsN71 - whether segments AB and CD cross
 long	FindCrossPoint(short xa, short ya, short xb, short yb, short xc, short yc, short xd, short yd, short* px, short* py);	// ROM 0x003061dc FindCrossPoint__FsN71PsT9 - where lines AB and CD meet; ==> whether on both segments
 long	cos_pointvect(long xa, long ya, long xb, long yb, long xc, long yc, long xd, long yd);	// ROM 0x00307ad8 cos_pointvect__FiN71 - the cosine between AB and CD in hundredths
+long	cos_horizline(long i, long j, short* x, short* y);		// ROM 0x00307c18 cos_horizline__FiT1PsT3 - the cosine of the trace from i to j with the horizontal
+long	xHardOverlapRect(_RECT* a, _RECT* b, ULong strict);			// ROM 0x00307eb0 xHardOverlapRect__FP5_RECTT1Ui
+long	yHardOverlapRect(_RECT* a, _RECT* b, ULong strict);			// ROM 0x00307f60 yHardOverlapRect__FP5_RECTT1Ui
+long	HardOverlapRect(_RECT* a, _RECT* b, ULong strict);			// ROM 0x00308008 HardOverlapRect__FP5_RECTT1Ui
 
 // The stroke classifier's tests (LowPunct.cpp).
 long	extract_all_extr(low_type* low, UByte kind, EXTR* extr, long* all, long* count, short* shift);	// ROM 0x001bc434 extract_all_extr__FP8low_typeUcP4EXTRPiT4Ps - ==> 0, 1 for more than 50
@@ -484,7 +488,42 @@ long	analize_sticks(low_type* low);								// ROM 0x002cbe54 analize_sticks__FP8
 long	analize_circles(low_type* low);								// ROM 0x002cca44 analize_circles__FP8low_type - ==> 0
 long	lk_cross(low_type* low);									// ROM 0x002ca074 lk_cross__FP8low_type - ==> 0
 
-// lk_duga's passes (LowLkDuga.cpp; lk_duga itself is NOT YET).
+// lk_duga's passes (LowLkDuga.cpp).  NxtPrvCircle_type is what the
+// passes over a loop's neighbours share (ROM 0x18 bytes; it holds
+// pointers, so it is cleared by its host size).
+struct NxtPrvCircle_type
+{
+	SPEC_TYPE*		e;				// +00  the loop
+	SPEC_TYPE**		pNext;			// +04  the element after it (the caller's variable)
+	SPEC_TYPE**		pPrev;			// +08  and before it
+	low_type*		low;			// +0c
+	UByte*			pHeight;		// +10  the loop's height band (the caller's byte)
+	UByte			band;			// +14  its band (attr & 0x30)
+	UByte			n21;			// +15  the 0x21s inside it (other 0x40) before it
+	UByte			n22;			// +16  and the 0x22s
+};
+long	lk_duga(low_type* low);										// ROM 0x002fa2f8 lk_duga__FP8low_type - ==> 0
+void	prevent_arcs(low_type* low);								// ROM 0x002fd3a8 prevent_arcs__FP8low_type
+long	conv_sticks_to_arcs(low_type* low);							// ROM 0x002fcbb8 conv_sticks_to_arcs__FP8low_type - ==> 0
+long	delete_UD_before_DDL(low_type* low);						// ROM 0x002fc70c delete_UD_before_DDL__FP8low_type - ==> 0
+long	del_before_after_circles(low_type* low);					// ROM 0x002fd474 del_before_after_circles__FP8low_type - ==> 0
+void	make_CDL_in_O_GU_f(SPEC_TYPE* e, SPEC_TYPE* n, UByte band);	// ROM 0x002fc764 make_CDL_in_O_GU_f__FP9SPEC_TYPET1Uc
+SPEC_TYPE*	del_prv_and_shift(SPEC_TYPE* e);						// ROM 0x002fb3e0 del_prv_and_shift__FP9SPEC_TYPE - ==> the element before
+long	check_inside_circle(SPEC_TYPE* e, SPEC_TYPE* t, low_type* low);	// ROM 0x002fd7ac check_inside_circle__FP9SPEC_TYPET1P8low_type
+long	change_circle_before(NxtPrvCircle_type* s, UByte h);		// ROM 0x002fb148 change_circle_before__FP17NxtPrvCircle_typeUc
+long	change_and_del_before_circle(NxtPrvCircle_type* s, UByte h);	// ROM 0x002fb29c change_and_del_before_circle__FP17NxtPrvCircle_typeUc
+long	Is_8(short* x, short* y, SPEC_TYPE* a, SPEC_TYPE* b);		// ROM 0x002fb70c Is_8__FPsT1P9SPEC_TYPET3
+long	UpElemBeforeCircle(NxtPrvCircle_type* s, UByte h);			// ROM 0x002fb3fc UpElemBeforeCircle__FP17NxtPrvCircle_typeUc
+long	DnElemBeforeCircle(NxtPrvCircle_type* s, UByte h);			// ROM 0x002fb7f0 DnElemBeforeCircle__FP17NxtPrvCircle_typeUc
+long	check_before_circle(NxtPrvCircle_type* s);					// ROM 0x002fb108 check_before_circle__FP17NxtPrvCircle_type - ==> 0
+long	check_after_circle(NxtPrvCircle_type* s);					// ROM 0x002fbaec check_after_circle__FP17NxtPrvCircle_type - ==> 0
+long	check_next_for_circle(NxtPrvCircle_type* s);				// ROM 0x002fbb48 check_next_for_circle__FP17NxtPrvCircle_type - ==> 0
+long	check_next_for_common(NxtPrvCircle_type* s);				// ROM 0x002fbdec check_next_for_common__FP17NxtPrvCircle_type - ==> 0
+long	change_circle_after(NxtPrvCircle_type* s, UByte nBand, UByte nh);	// ROM 0x002fbfb4 change_circle_after__FP17NxtPrvCircle_typeUcT2
+long	check_next_for_special(NxtPrvCircle_type* s);				// ROM 0x002fc0a4 check_next_for_special__FP17NxtPrvCircle_type - ==> 0
+long	check_before_after_GU(NxtPrvCircle_type* s);				// ROM 0x002fc414 check_before_after_GU__FP17NxtPrvCircle_type - ==> 0
+long	O_GU_To3Elements(NxtPrvCircle_type* s);						// ROM 0x002fc538 O_GU_To3Elements__FP17NxtPrvCircle_type - ==> 1 when done
+long	IsTipBefore(NxtPrvCircle_type* s);							// ROM 0x002fba20 IsTipBefore__FP17NxtPrvCircle_type
 long	IsDx_Dy_in_arcs_OK(SPEC_TYPE* e, SPEC_TYPE* t, long lim, short* x, short* y);	// ROM 0x002fb96c IsDx_Dy_in_arcs_OK__FP9SPEC_TYPET1iPsT4
 long	IsDx_Dy_in_tips_OK(SPEC_TYPE* e, SPEC_TYPE* t, long lim, short* x, short* y);	// ROM 0x002fc7c8 IsDx_Dy_in_tips_OK__FP9SPEC_TYPET1iPsT4
 long	IsTipOK(SPEC_TYPE* e, SPEC_TYPE* t, short* x);				// ROM 0x002fc8d8 IsTipOK__FP9SPEC_TYPET1Ps

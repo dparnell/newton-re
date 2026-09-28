@@ -882,6 +882,8 @@ AnalyzeSteps(low_type* low, long upTo)
 		return false;
 	if (upTo >= 7 && lk_cross(low) != 0)
 		return false;
+	if (upTo >= 8 && lk_duga(low) != 0)
+		return false;
 	return true;
 }
 
@@ -1490,6 +1492,106 @@ TestLkDuga(void)
 }
 
 
+// The rest of lk_duga (LowLkDuga.cpp) and the geometry it uses: the box
+// overlaps; a level stick starting a stroke made an arc and a top that
+// starts one going right made an arc over it straight away; a narrow top
+// kept a stick by prevent_arcs; and the "uou" through lk_duga as
+// AnalyzeLowData runs it, the o left as its loop and every element still
+// coded.
+static void
+TestLkDugaWhole(void)
+{
+	_RECT a = { 0, 0, 10, 10 }, b = { 5, 5, 15, 15 }, c = { 20, 0, 30, 10 }, in = { 2, 2, 8, 8 };
+	EXPECT(xHardOverlapRect(&a, &in, 1) == 1);					// one inside the other
+	EXPECT(xHardOverlapRect(&a, &b, 0) == 0);					// only the edges overlap: neither middle inside
+	EXPECT(xHardOverlapRect(&a, &c, 0) == 0 && HardOverlapRect(&a, &c, 0) == 0);
+	_RECT d = { 4, 4, 14, 14 };
+	EXPECT(xHardOverlapRect(&a, &d, 0) == 1 && yHardOverlapRect(&a, &d, 0) == 1 && HardOverlapRect(&a, &d, 1) == 1);
+	short hx[3] = { 0, 10, 0 }, hy[3] = { 0, 0, 10 };
+	EXPECT(cos_horizline(0, 1, hx, hy) == 100 && cos_horizline(0, 2, hx, hy) == 0);
+
+	// a start (0x10) that is a stick 7 drawn level to the left, twelve
+	// points long: an arc 0xc (high) from its rightmost point; and a start
+	// that is a top 3 going right by 20: an arc 0xa at once
+	TraceStart();
+	for (long s = 0; s < 12; s++)
+		Pt(130 - 2 * s, 100);									// 1..12
+	for (long s = 1; s <= 10; s++)
+		Pt(108, 100 + 4 * s);									// 13..22
+	PenUp();
+	{
+		LowFixture f;
+		low_type* low = &f.low;
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 0x10, 7, 5, 0, 1, 12, 1, -2) == 0);
+		EXPECT(Mark(low, 0x20, 3, 5, 0, 22, 22, 22, -2) == 0);
+		EXPECT(conv_sticks_to_arcs(low) == 0);
+		SPEC_TYPE* e = low->fSpecl->next;
+		EXPECT(e->code == 0xc && (e->attr & 0x30) == 0x10 && e->iBeg == 1 && e->ipoint0 == 1);
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 0x10, 3, 5, 0, 12, 1, 12, -2) == 0);	// (x[12] - x[1] = -22: not going right)
+		EXPECT(Mark(low, 0x10, 3, 5, 0, 1, 1, 1, -2) == 0);		// one point: dx 0, left alone
+		EXPECT(conv_sticks_to_arcs(low) == 0);
+		EXPECT(low->fSpecl->next->next->code == 3);
+	}
+	TraceStart();
+	for (long s = 0; s < 12; s++)
+		Pt(100 + 2 * s, 100);									// 1..12, going right
+	PenUp();
+	{
+		LowFixture f;
+		low_type* low = &f.low;
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 0x10, 3, 5, 0, 12, 1, 12, -2) == 0);	// a start at x 122 finishing at x 100: dx 22
+		SPEC_TYPE* e = low->fSpecl->next;
+		EXPECT(conv_sticks_to_arcs(low) == 0);
+		EXPECT(e->code == 0xa && (e->attr & 0x30) == 0x20);
+		// prevent_arcs: a narrow top marked 1 kept a stick
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 1, 2, 5, 0, 1, 3, 2, -2) == 0);
+		EXPECT(Mark(low, 1, 2, 5, 0, 1, 12, 2, -2) == 0);		// (22 across: left alone)
+		prevent_arcs(low);
+		SPEC_TYPE* t = low->fSpecl->next;
+		EXPECT(t->code == 3 && t->other == 1 && t->next->code == 2);
+		// delete_UD_before_DDL
+		InitSpecl(low, 400);
+		EXPECT(Mark(low, 3, 8, 0x15, 0, 1, 3, 2, -2) == 0);
+		EXPECT(Mark(low, 1, 0x1c, 0x15, 0, 4, 6, 5, -2) == 0);
+		EXPECT(delete_UD_before_DDL(low) == 0);
+		EXPECT(low->fSpecl->next->code == 0x1c);
+	}
+
+	Uou();
+	LowFixture f;
+	low_type* low = &f.low;
+	RCSetH(low->rc, 0x90, 0x10);
+	EXPECT(BaselineAndScale(low) == 0);
+	_SDS_CONTROL_TYPE control;
+	memset(&control, 0, sizeof(control));
+	low->fSDS = &control;
+	EXPECT(CreateSDS(low, 200));
+	EXPECT(AnalyzeSteps(low, 8));
+	long loops = 0, crossings = 0, uncoded = 0, n = 0;
+	for (SPEC_TYPE* p = low->fSpecl->next; p != nil; p = p->next, n++)
+	{
+		fprintf(stderr, "lk_duga: mark %#x code %#x attr %#x other %#x points %d..%d (%d, %d)\n",
+				p->mark, p->code, p->attr, p->other, p->iBeg, p->iEnd, p->ipoint0, p->ipoint1);
+		if (p->code == 0)
+			uncoded++;
+		if (p->code == 0x22)
+			loops++;
+		if (p->code == 5)
+			crossings++;
+		EXPECT(p->next == nil || p->next->prev == p);
+	}
+	fprintf(stderr, "lk_duga: %ld elements, %ld loops, %ld crossings\n", n, loops, crossings);
+	// the o is left as its loop 0x22 (the crossing 5 lk_cross coded, too
+	// short to be kept, taken out by delete_CROSS_elements)
+	EXPECT(uncoded == 0 && loops == 1 && crossings == 0 && n >= 7);
+	DestroySDS(low);
+}
+
+
 int
 main()
 {
@@ -1518,6 +1620,7 @@ main()
 	TestRestore();
 	TestLkCross();
 	TestLkDuga();
+	TestLkDugaWhole();
 	if (failures == 0)
 		printf("test_LowLevel: all passed\n");
 	return failures == 0 ? 0 : 1;

@@ -174,3 +174,72 @@ cos_pointvect(long xa, long ya, long xb, long yb, long xc, long yc, long xd, lon
 		return LMul(dot, 100) / len;
 	return 0;
 }
+
+
+// ROM 0x00307c18 cos_horizline__FiT1PsT3
+// The cosine (hundredths) between the trace from point i to point j and
+// the horizontal.
+long
+cos_horizline(long i, long j, short* x, short* y)
+{
+	long xi = x[i];
+	long yi = y[i];
+	return cos_pointvect(xi, yi, x[j], y[j], xi, yi, xi + 10, yi);
+}
+
+
+// ROM 0x00307eb0 xHardOverlapRect__FP5_RECTT1Ui
+// Whether two boxes overlap across: one inside the other (or across it),
+// or - with strict nought - either's middle strictly between the other's
+// sides, with strict set both.
+long
+xHardOverlapRect(_RECT* a, _RECT* b, ULong strict)
+{
+	Boolean rightIn = a->right <= b->right;
+	Boolean leftIn = a->left >= b->left;
+	if (rightIn == leftIn)
+		return 1;
+	short midA = (short) ((a->right + a->left) >> 1);
+	short midB = (short) ((b->right + b->left) >> 1);
+	if (midA > b->left && b->right > midA)
+	{
+		if (strict == 0)
+			return 1;
+	}
+	else if (strict != 0)
+		return 0;
+	return (midB > a->left && a->right > midB) ? 1 : 0;
+}
+
+
+// ROM 0x00307f60 yHardOverlapRect__FP5_RECTT1Ui
+// The same down.
+long
+yHardOverlapRect(_RECT* a, _RECT* b, ULong strict)
+{
+	Boolean topIn = a->top >= b->top;
+	Boolean bottomIn = a->bottom <= b->bottom;
+	if (topIn == bottomIn)
+		return 1;
+	short midA = (short) ((a->top + a->bottom) >> 1);
+	short midB = (short) ((b->top + b->bottom) >> 1);
+	if (b->top < midA && b->bottom > midA)
+	{
+		if (strict == 0)
+			return 1;
+	}
+	else if (strict != 0)
+		return 0;
+	return (a->top < midB && a->bottom > midB) ? 1 : 0;
+}
+
+
+// ROM 0x00308008 HardOverlapRect__FP5_RECTT1Ui
+// Whether two boxes overlap both ways.
+long
+HardOverlapRect(_RECT* a, _RECT* b, ULong strict)
+{
+	if (xHardOverlapRect(a, b, strict) != 0 && yHardOverlapRect(a, b, strict) != 0)
+		return 1;
+	return 0;
+}
