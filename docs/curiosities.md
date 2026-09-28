@@ -2059,3 +2059,21 @@ comes back up plus how far its top has drifted right) over its height,
 fuzzily less than 150.  The rules only run to settle a close call between
 two good answers.  (`src/recognition/XrPostCalc.cpp`,
 `docs/recognition/README.md`, "The post-processing".)
+
+## The absolute value of nought
+
+The digit reader starts by working out the line the digits sit on from
+the boxes of the strokes (`DefHeightsForNumber`, ROM 0x002853ec).  Before
+it averages them, a helper (0x00285554) is meant to join a stroke's box to
+the one before when the two overlap across the line and are close enough
+in height - two pieces of one digit written with a lift between them.
+The test for "close enough" is `HWRAbs(0) * 3 > height`: the argument
+passed is a register the function set to nought at its start and never
+loaded (`mov r9,#0x0` ... `mov r0,r9; bl HWRAbs`).  Three times the
+absolute value of nought is never more than a height, so the join never
+happens, on any Newton, and every stroke's box is averaged on its own -
+the next helper, which drops or joins the *small* boxes, is the only one
+that does anything.  Whatever variable was meant (the gap between the two
+boxes, most likely) was lost somewhere between ParaGraph's source and the
+compiler; the reconstruction keeps the call as it is
+(`recognition/ChunkDigits.cpp`, `JoinOverlappingBoxes`).
