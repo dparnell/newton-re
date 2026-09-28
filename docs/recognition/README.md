@@ -29,9 +29,11 @@ What is left, and why:
   `HandleRawInk`, `LookupCompletions`, `VoteOnWordUnit` - recognition's
   natives are 118 of 125, not all), `ValidateWord`'s dictionary and symbol
   checks, `FindBaseline`'s first path over `low_level`,
-  `TWRecognizer::EndInkStrokeGroup`'s body, the arbiter's
-  `ArbitrateGraphicsWords` and the shape half of `ArbitrateEarly`, and
-  `SafeExceptionNotify`'s call to `ExceptionNotify`.
+  `TWRecognizer::EndInkStrokeGroup`'s body, and the arbiter's
+  `ArbitrateGraphicsWords` and the shape half of `ArbitrateEarly`.
+  (`SafeExceptionNotify` prints to stderr where the ROM puts a notify slip
+  up - a DEVIATION the owner chose, 2026-09-29, to keep script errors easy
+  to see.)
 * **Unreachable from the U.S. ROM**: `CheckDiacriticsDirections`
   (0x0007c9a0) and `AnalyseDiacriticsDirection` - about 3.2 KB asked only
   for a French or German letter set - and the sixteen-bit dictionary walks

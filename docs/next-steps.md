@@ -184,10 +184,6 @@ gaps in code that is otherwise done.  **Left to do, reachable now:**
 - `TArbiter::ArbitrateGraphicsWords` (a word that may have been drawn as a
   shape) and the shape half of `ArbitrateEarly` - both empty, and
   `TGeneralShapeUnit`, which they wait on, is there now.
-- `SafeExceptionNotify` prints where the ROM calls `ExceptionNotify`
-  (the notify slip): `ExceptionNotify` is in `newt/`, above recognition,
-  so it wants a hook - and it would put a slip up for every script error
-  in a unit handler, which changes what the demos see (the owner's call).
 - The waiting ink redrawn on a screen update (`UpdateCompressGroup`,
   `UpdateStrokesInList`, `UpdateStroke` 0x001455bc-0x00145728) - the
   inker's side, like `StrokeUpdate`.

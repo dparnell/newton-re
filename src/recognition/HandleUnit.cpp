@@ -34,11 +34,13 @@ static TUnit*	gUnitBeingHandled = nil;		// (the ROM's word at 0x0c103f8c) the un
 // The exception shown to the user (ExceptionNotify) with a handler round
 // it, so that a failure in the showing is dropped.
 //
-// NOT YET: the call to ExceptionNotify, which puts the notify slip up.
-// ExceptionNotify itself is reconstructed (newt/Notebook.h), but the
-// application layer sits above this library, so reaching it wants a hook
-// the newt world sets.  The host prints the exception instead, and
-// prints what it is carrying with it: one
+// DEVIATION (the owner's choice, 2026-09-29): the ROM calls
+// ExceptionNotify here, which puts the notify slip up; the host prints the
+// exception to stderr instead, where it is easy to see while the
+// reconstruction is being worked on.  (ExceptionNotify itself is
+// reconstructed, newt/Notebook.h, but sits above this library, so the
+// ROM's behaviour would want a hook the newt world sets.)  It prints what
+// the exception is carrying with it: one
 // of the object system's exceptions holds either a frame saying what went
 // wrong (the names that end in type.ref.frame) or an error code, and
 // without either the name alone says almost nothing - every mistake a ROM
