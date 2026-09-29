@@ -17,15 +17,20 @@
 				task never waits in the host where the scheduler cannot see
 				it.
 
-				The options it answers are the NIE's (their layout is the
-				NIE API's, the data big-endian as a script packs it):
+				The options it answers are the NIE's, laid out as the NIE's own
+				native code lays them out (its option constructors in
+				inetenbl.pkg's protocol parts, read with
+				tools/newton-rom/analysis/pkgdisasm.py - docs/comms/README.md
+				has the addresses), the data big-endian:
 
-				'itrs  the remote TCP socket: four address bytes, a 2-byte port
-				'ilpt  the local port: a 2-byte port
-				'itsv  the transport service: a long, kInetTransportTCP (only
-				       TCP is served)
-				'ilid  the link id: a long (accepted; the host's link is
-				       always up)
+				'itrs  the remote TCP socket, 8 bytes: the address (a long),
+				       the port (2 bytes), 2 bytes of padding
+				'ilpt  the local port, 4 bytes: the port (2 bytes), a byte the
+				       NIE sets to 1 by default (its meaning unknown), padding
+				'itsv  the transport service, a long: 1 TCP, 2 UDP (only TCP
+				       is served)
+				'ilid  the link id, a long, -1 by default (accepted; the
+				       host's link is always up)
 
 				Anything else goes to TCommTool (the passive claim, the
 				service id, the transport info) and then to nobody.

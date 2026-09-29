@@ -64,7 +64,7 @@ struct TInetRemoteSocket : public TOption
 	TInetRemoteSocket(uint32_t address, uint16_t port) : TOption(kOptionType)
 	{
 		SetAsOption(kInetRemoteSocketOption);
-		SetLength(6);
+		SetLength(8);		// the NIE's layout: the address, the port, two bytes of padding
 		fData[0] = address >> 24;
 		fData[1] = address >> 16;
 		fData[2] = address >> 8;

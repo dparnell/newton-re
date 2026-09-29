@@ -60,6 +60,8 @@ tools/newton-rom/
                           --binary-classes (the object area's binaries counted by class)
     packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files;
                           --relocatable, --rename OLD=NEW for loadable copies), --doc docs/packages/rex-packages.md
+    pkgdisasm.py          the ARM code of a package's protocol parts (capstone): --list, --part N [--start --end],
+                          --find LABEL (every four-character literal, with the code that loads it)
     protousers.py         the ROM's own users of a proto: BUILD @n [--view-class N] [--packages DIR] lists the
                           ROM frames whose _proto is it (or whose viewClass is N) and searches the extracted
                           packages for its magic pointer (how protoTXView was found to have none)

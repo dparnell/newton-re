@@ -1,2 +1,3 @@
 libclang==18.1.1
 # pyghidra is installed from the wheels bundled with Ghidra, see README.md
+capstone==5.0.9	# analysis/pkgdisasm.py: the ARM code of a package's protocol parts

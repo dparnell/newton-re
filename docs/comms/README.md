@@ -104,16 +104,23 @@ Newton scheduler cannot see it.
 
 ### The NIE's endpoint options
 
-The host tool answers the NIE's options with the data a script packs
-(big-endian, as on the device).  Their layout is the NIE API's as far as it
-is known here and wants checking against a real NIE application:
+The host tool answers the NIE's options with the layout the NIE's own
+native code gives them.  None of the NIE's NewtonScript builds them (a
+client application does; no application in `fixtures/` does), so the
+evidence is the ARM code of `inetenbl.pkg`'s protocol parts, read with
+`tools/newton-rom/analysis/pkgdisasm.py fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg --find <label>`
+(offsets are within the part; the data starts at +0xc, after the 12-byte
+header; everything big-endian):
 
-| label | data | |
-|-------|------|-|
-| `itrs` | 4 address bytes, a 2-byte port | the remote TCP socket (connect) |
-| `ilpt` | a 2-byte port | the local port (listen) |
-| `itsv` | a long | the transport service (TCP is served; the value taken for TCP, 1, is a guess) |
-| `ilid` | a long | the link id (accepted, not used) |
+| label | length | data | evidence |
+|-------|--------|------|----------|
+| `itrs` | 8 | the address (a long), the port (2 bytes), 2 bytes of padding | its constructor, part 4 +0x52c4 (allocates 0x14, length 8, clears the long at +0xc and the bytes at +0x10/+0x11); part 4 +0x22b4 fills one in: the port's high byte at +0x10, low at +0x11, the address word at +0xc |
+| `ilpt` | 4 | the port (2 bytes), a byte set to 1 by default (meaning not established), padding | constructors part 4 +0x5274 and part 10 +0x2b30; part 4 +0x221c writes the port high byte first at +0xc |
+| `itsv` | 4 | a long: 1 is TCP, 2 is UDP | constructors part 4 +0x51b0 and part 10 +0x2a74 (default 0); the tool's option handler, part 4 +0x934, accepts only 1 and 2; the DNS tool (part 10), which resolves over UDP, calls its endpoint set-up (+0x2d48) with 2 (+0x1838), which it stores into the `itsv` option (+0x2df4) - so 2 is UDP and 1 TCP |
+| `ilid` | 4 | the link id, a long, -1 by default | constructor part 10 +0x2ad0 |
+
+Part 4 is `PInetToolCE` (an endpoint's connection end) and part 10 is
+`TDNSTool` (`pkgdisasm.py --list`, `classinfo.py --package`).
 
 ## Host format of an option
 
