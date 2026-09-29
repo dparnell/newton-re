@@ -41,8 +41,14 @@
 				it has no answer for processed with a result of -2 (part 10
 				+0x173c).  The host fills the first short with the query
 				type and leaves the second nought and the longs nought
-				(the host's resolver says nothing of a record's life); a
-				name is written as far as the record's data has room.
+				(the host's resolver says nothing of a record's life).  An answered
+				record is replaced in the request by one whose data holds the
+				whole answer, as the NIE's own tool replaces it (part 10
+				+0x15c4: TOptionArray::RemoveOptionAt, then InsertVarOptionAt -
+				the calls at +0x463c and +0x4604, read from their arguments;
+				the request's option array is the client's own, which grows),
+				so the names come back whole though the domain manager asks
+				with empty strings.
 
 				A name that is not found answers -60791 in the 'dnsq's
 				result (the NIE's "The host name you requested wasn't

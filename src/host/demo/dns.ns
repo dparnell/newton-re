@@ -28,10 +28,10 @@ dns:Instantiate(dns, [
 Print("dns: instantiated, state " & dns:State());
 
 // one query: 'dnsq then four 'rrcd, as ProcessNextQuery builds them
-// (the NIE asks with empty strings for the record's names, which leaves a
-// name no room; the host writes what fits - so the reverse lookup here
-// asks with room for one, where the NIE's own tool makes the room)
-query := func(queryType, address, name, room) begin
+// (the records ask for the names with empty strings, as the NIE's domain
+// manager does; the service replaces each record with one that holds the
+// whole answer)
+query := func(queryType, address, name) begin
 	local options := [
 		{label: "dnsq", type: 'option, opCode: 1024, form: 'template,
 		 data: {arglist: ["dnst", 0, 1, address, queryType, StrLen(name), name],
@@ -39,7 +39,7 @@ query := func(queryType, address, name, room) begin
 	for i := 1 to 4 do
 		AddArraySlot(options,
 			{label: "rrcd", type: 'option, opCode: 1024, form: 'template,
-			 data: {arglist: [0, 0, [0, 0, 0, 0], [0, 0, 0, 0], 0, 0, "", room],
+			 data: {arglist: [0, 0, [0, 0, 0, 0], [0, 0, 0, 0], 0, 0, "", ""],
 			        typeList: ['struct, 'short, 'short, ['array, 'byte, 4], ['array, 'byte, 4],
 			                   'ulong, 'ulong, ['array, 'char, 0], ['array, 'char, 0]]}});
 	local answered := dns:Option(options, nil);
@@ -55,9 +55,9 @@ query := func(queryType, address, name, room) begin
 			end;
 end;
 
-call query with (1, [0, 0, 0, 0], "localhost", "");
-call query with (12, [127, 0, 0, 1], "", "................................................................");
-call query with (1, [0, 0, 0, 0], "no-such-host.invalid", "");
+call query with (1, [0, 0, 0, 0], "localhost");
+call query with (12, [127, 0, 0, 1], "");
+call query with (1, [0, 0, 0, 0], "no-such-host.invalid");
 
 dns:Dispose();
 Print("dns: done");

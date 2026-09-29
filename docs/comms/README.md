@@ -160,10 +160,14 @@ The host's `THostDNSService` (`serv` = `dnst`) starts a `THostDNSTool`
 (`comms/host/HostDNSTool.h`) that answers the query at once through the
 host's resolver (`HostResolveName`, `HostResolveAddress`): an address
 query fills a record per address (target name the query's name), a name
-query one record (the result name).  NOT YET: the names in a record - the
-NIE asks with empty strings, which leave a name three bytes, and its own
-tool makes room through a call not yet identified (part 10 +0x4604, the
-NTK glue into the ROM); the host writes what fits.  The script's `'sid '`
+query one record (the result name).  An answered record is replaced by
+one holding the whole answer, as the NIE's own tool does (part 10 +0x15c4
+calls, through its NTK glue, +0x463c and +0x4604 - `TOptionArray::RemoveOptionAt`
+and `InsertVarOptionAt`, identified by their arguments: the array, the
+record's index, then a header, the data and its length); a query's option
+array is the client's own (the request is not "outside"), so it grows and
+the names come back whole although the domain manager asks with empty
+strings.  The script's `'sid '`
 data is the device's two big-endian longs; the translators turn it into
 the host's `TCMOServiceIdentifier` and back (DEVIATION).  Demo:
 `src/host/demo/dns.ns`, ctest `host.NewtonDNS`.
@@ -255,5 +259,5 @@ to nought, which is no timeout at all; the host tool re-arms it in
 | marshalling out (`MarshalArguments`: a script's `{arglist, typelist}` into bytes, in the MessagePad's byte order) | done: `frames/MarshalOut.cpp`, `test_Marshalling` (the NIE's `itrs` data) |
 | the frame translators: `PFrameSink`/`PFrameSource`, `PScriptDataOut`/`In` (a value by its form - string, char, number as a big-endian long, bytes, binary, template), `POptionDataOut`/`In` (option frames to a `TOptionArray` and back; a `'service` frame becomes a `'sid '` option naming it), `GetDataForm`, `InitTranslators` | done: `comms/Translators.h` (library `comms_script`), `test_Translators`.  NOT YET: reading a `'template` back goes through `ConstructReturnValue`, which cannot read an `'array` field and reads words in the host's order while the bytes are the device's; the six flatten/stream translators `InitTranslators` also registers |
 | the NewtonScript endpoint: `TNewScriptEndpointClient` (protoBasicEndpoint, @383) and its 22 `CINew*`/`CIRequestsPending` natives - requests synchronous or queued with their callbacks, output by form, the input spec (form, termination by byteCount/endSequence/useEOP, filter, target, rcvOptions, partialScript), inputScript and completionScript, exceptions to the endpoint's exceptionHandler | done: `comms/NewScriptEndpoint.h`, registered by `RegisterCommsNatives`; the newt world starts the comm manager and the host services (DEVIATION: the ROM's loader does); **M3** passes - `src/host/demo/echo.ns` (ctest `host.NewtonEcho`, `newton --tcp-echo port` runs the echo server, `comms/host/HostEchoServer.h`).  NOT YET: the 'frame form (PFlattenPtr/PUnFlattenPtr), the modem navigator, protoStreamingEndpoint (`TStreamingEndpointClient`, `CIS*`) |
-| the DNS service (**M4**, `dnst`): `THostDNSService`/`THostDNSTool` answering the NIE's `dnsq`/`rrcd` requests through the host's resolver | done: `comms/host/HostDNSTool.h`, ctest `host.NewtonDNS`; NOT YET: the record's names beyond the room the request left, the NIE's own domain manager (its protoFSM engine is native-compiled) |
+| the DNS service (**M4**, `dnst`): `THostDNSService`/`THostDNSTool` answering the NIE's `dnsq`/`rrcd` requests through the host's resolver | done: `comms/host/HostDNSTool.h`, ctest `host.NewtonDNS`; NOT YET: the NIE's own domain manager (its protoFSM engine is native-compiled) |
 | the link controller (**M4**, `ictl`), `TEndpointPipe` | NOT YET |
