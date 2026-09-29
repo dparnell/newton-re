@@ -21,6 +21,7 @@ add_library(stores STATIC
 	Tags.cpp
 	CopyEntries.cpp
 	ObjectStreamer.cpp
+	RefPipe.cpp
 	StoreCompander.cpp
 	PixelMapCompander.cpp
 	LargeObjects.cpp

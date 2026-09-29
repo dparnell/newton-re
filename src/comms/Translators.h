@@ -36,10 +36,16 @@
 				on its stack; its fields are named here (FrameSinkParms,
 				FrameSourceParms, OptionDataParms) with the ROM's offsets.
 
+				And the flatteners, a value as NSOF (stores/ObjectStreamer.h)
+				and back: PFlattenPtr into a new block (after a header), and
+				PUnFlattenPtr out of one; PFlattenRef into a new binary (in
+				the heap or a large binary on a store), and PUnFlattenRef out
+				of one (functions refused when asked).
+
 				InitTranslators puts them in the protocol registry, as the
-				ROM's does (its other six - PFlattenPtr, PUnFlattenPtr,
-				PFlattenRef, PUnFlattenRef, PStreamInRef, PStreamOutRef - NOT
-				YET).
+				ROM's does (NOT YET: PStreamInRef and PStreamOutRef, NSOF
+				read from and written to an endpoint through a
+				TEndpointPipe).
 
 	Reconstructed from the MP2x00 US ROM (0x00139e40, 0x0014b9f4-0x0014c49c,
 	0x001cd534-0x001cdf00, 0x00256220, 0x00389f18-0x00389fd4); each
@@ -151,6 +157,39 @@ struct OptionDataParms
 };
 
 
+// PFlattenPtr's context: the value, whether the block is a Handle, and how
+// many bytes to leave in front of the stream
+struct FlattenPtrParms
+{
+	RefVar		fValue;			// +0x00
+	Boolean		fUseHandle;		// +0x04
+	long		fHeaderSize;	// +0x08
+};
+
+// PUnFlattenPtr's: the stream's bytes and the store large binaries go to
+struct UnflattenPtrParms
+{
+	void*		fData;			// +0x00
+	long		fLength;		// +0x04
+	RefVar		fStore;			// +0x08
+};
+
+// PFlattenRef's: the value, and the store the binary goes on (nil: the heap)
+struct FlattenRefParms
+{
+	RefVar		fValue;			// +0x00
+	RefVar		fStore;			// +0x04
+};
+
+// PUnFlattenRef's: the binary, the store, and whether functions are refused
+struct UnflattenRefParms
+{
+	RefVar		fBinary;		// +0x00
+	RefVar		fStore;			// +0x04
+	Boolean		fNoFunctions;	// +0x08
+};
+
+
 /* -------------------------------------------------------------------------------
 	The implementations
 ------------------------------------------------------------------------------- */
@@ -202,6 +241,43 @@ public:
 	long			ConvertFromOptionArray(RefArg frame, TOptionArray* options, PFrameSource* source);
 	long			ConvertFromOption(RefArg frame, TOption* option, PFrameSource* source);
 	Ref				ParseInput(PFrameSource* source, FormType form, long length, UByte* data, RefArg typelist, long* error);
+};
+
+
+PROTOCOL PFlattenPtr : public PFrameSink
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PFlattenPtr);
+	PFlattenPtr*	New();
+	void			Delete();
+	void*			Translate(void* context, PipeCallBack* callback);	// context: FlattenPtrParms
+};
+
+PROTOCOL PUnFlattenPtr : public PFrameSource
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PUnFlattenPtr);
+	PUnFlattenPtr*	New();
+	void			Delete();
+	Ref				Translate(void* context, PipeCallBack* callback);	// context: UnflattenPtrParms
+};
+
+PROTOCOL PFlattenRef : public PFrameSink
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PFlattenRef);
+	PFlattenRef*	New();
+	void			Delete();
+	void*			Translate(void* context, PipeCallBack* callback);	// context: FlattenRefParms ==> the binary, as a Ref
+};
+
+PROTOCOL PUnFlattenRef : public PFrameSource
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PUnFlattenRef);
+	PUnFlattenRef*	New();
+	void			Delete();
+	Ref				Translate(void* context, PipeCallBack* callback);	// context: UnflattenRefParms
 };
 
 

@@ -26,6 +26,6 @@ add_library(comms_script STATIC
 )
 # newt: ExceptionNotify and CheckForDeferredActions; views: the root view
 # brought up to date after an endpoint event
-target_link_libraries(comms_script PUBLIC comms frames views newt)
+target_link_libraries(comms_script PUBLIC comms frames stores views newt)
 
 add_subdirectory(tests)

@@ -19,6 +19,8 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "toolbox/ByteOrder.h"
+#include "ObjectStreamer.h"
+#include "RefPipe.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -798,18 +800,180 @@ POptionDataIn::ParseInput(PFrameSource* source, FormType form, long length, UByt
 
 
 /* -------------------------------------------------------------------------------
+	The flatteners
+------------------------------------------------------------------------------- */
+
+PROTOCOL_IMPL_SOURCE_MACRO(PFlattenPtr)
+PROTOCOL_CLASSINFO(PFlattenPtr, "PFrameSink", "", 0, 0, nil)	// ROM 0x0038a010 ClassInfo__11PFlattenPtrSFv
+
+// ROM 0x000caf08 New__11PFlattenPtrFv
+PFlattenPtr*	PFlattenPtr::New()			{ return this; }
+// ROM 0x000caf0c Delete__11PFlattenPtrFv
+void			PFlattenPtr::Delete()		{ }
+
+
+// ROM 0x000caf10 Translate__11PFlattenPtrFPvP12PipeCallBack
+// The value as NSOF in a new block (a Ptr, or a Handle), fHeaderSize bytes
+// in front of it.  ROM QUIRK: with any header at all the stream starts at
+// offset 4, whatever the header's size.  DEVIATION: the block is NewPtr'd
+// where the ROM mallocs (the host's malloc is not the pointer heap, and
+// the block's users ask GetPtrSize of it).
+void*
+PFlattenPtr::Translate(void* context, PipeCallBack* callback)
+{
+	FlattenPtrParms* parms = (FlattenPtrParms*) context;
+	if (parms == nil)
+		return nil;
+	Ptr block = nil;
+	Handle blockHandle = nil;
+	CPtrPipe pipe;
+	TObjectWriter writer(parms->fValue, pipe, false);
+	long size = parms->fHeaderSize + writer.Size();
+	if (!parms->fUseHandle)
+	{
+		block = NewPtr(size);
+		if (block == nil)
+			Throw(exTranslatorException, (void*) (Long) MemError(), nil);
+	}
+	else
+	{
+		blockHandle = NewHandle(size);
+		if (blockHandle == nil)
+			Throw(exTranslatorException, (void*) (Long) MemError(), nil);
+		HLock(blockHandle);
+		block = *blockHandle;
+	}
+	pipe.Init(block, size, false, callback);
+	if (parms->fHeaderSize > 0)
+		pipe.WriteSeek(4, kSeekFromBeginningPos);
+	newton_try
+	{
+		writer.Write();
+	}
+	newton_catch_all
+	{
+		if (blockHandle == nil)
+		{
+			if (block != nil)
+				DisposPtr(block);
+		}
+		else
+			DisposHandle(blockHandle);
+		rethrow;
+	}
+	end_try;
+	if (blockHandle != nil)
+	{
+		HUnlock(blockHandle);
+		return blockHandle;
+	}
+	return block;
+}
+
+
+PROTOCOL_IMPL_SOURCE_MACRO(PUnFlattenPtr)
+PROTOCOL_CLASSINFO(PUnFlattenPtr, "PFrameSource", "", 0, 0, nil)	// ROM 0x0038a088 ClassInfo__13PUnFlattenPtrSFv
+
+// ROM 0x00256910 New__13PUnFlattenPtrFv
+PUnFlattenPtr*	PUnFlattenPtr::New()		{ return this; }
+// ROM 0x00256914 Delete__13PUnFlattenPtrFv
+void			PUnFlattenPtr::Delete()		{ }
+
+
+// ROM 0x00256918 Translate__13PUnFlattenPtrFPvP12PipeCallBack
+// A value read back out of an NSOF block.
+Ref
+PUnFlattenPtr::Translate(void* context, PipeCallBack* callback)
+{
+	UnflattenPtrParms* parms = (UnflattenPtrParms*) context;
+	RefVar result;
+	if (parms != nil)
+	{
+		CPtrPipe pipe;
+		pipe.Init(parms->fData, parms->fLength, false, callback);
+		TObjectReader reader(pipe, parms->fStore);
+		result = reader.Read();
+	}
+	return result;
+}
+
+
+PROTOCOL_IMPL_SOURCE_MACRO(PFlattenRef)
+PROTOCOL_CLASSINFO(PFlattenRef, "PFrameSink", "", 0, 0, nil)	// ROM 0x0038a104 ClassInfo__11PFlattenRefSFv
+
+// ROM 0x000cb0d4 New__11PFlattenRefFv
+PFlattenRef*	PFlattenRef::New()			{ return this; }
+// ROM 0x000cb0d8 Delete__11PFlattenRefFv
+void			PFlattenRef::Delete()		{ }
+
+
+// ROM 0x000cb0dc Translate__11PFlattenRefFPvP12PipeCallBack
+// The value as NSOF in a new binary (on the store, if there is one); the
+// answer is the binary's Ref.
+void*
+PFlattenRef::Translate(void* context, PipeCallBack* callback)
+{
+	FlattenRefParms* parms = (FlattenRefParms*) context;
+	RefVar result;
+	if (parms != nil)
+	{
+		CRefPipe pipe;
+		TObjectWriter writer(parms->fValue, pipe, false);
+		long size = writer.Size();
+		pipe.InitSink(size, parms->fStore, callback);
+		writer.Write();
+		result = pipe.fBinary;
+	}
+	return (void*) (Ref) result;
+}
+
+
+PROTOCOL_IMPL_SOURCE_MACRO(PUnFlattenRef)
+PROTOCOL_CLASSINFO(PUnFlattenRef, "PFrameSource", "", 0, 0, nil)	// ROM 0x0038a17c ClassInfo__13PUnFlattenRefSFv
+
+// ROM 0x002569c4 New__13PUnFlattenRefFv
+PUnFlattenRef*	PUnFlattenRef::New()		{ return this; }
+// ROM 0x002569c8 Delete__13PUnFlattenRefFv
+void			PUnFlattenRef::Delete()		{ }
+
+
+// ROM 0x002569cc Translate__13PUnFlattenRefFPvP12PipeCallBack
+// A value read back out of an NSOF binary (functions refused when asked).
+Ref
+PUnFlattenRef::Translate(void* context, PipeCallBack* callback)
+{
+	UnflattenRefParms* parms = (UnflattenRefParms*) context;
+	RefVar result;
+	if (parms != nil)
+	{
+		CRefPipe pipe;
+		pipe.InitSource(parms->fBinary, callback);
+		TObjectReader reader(pipe, parms->fStore);
+		if (parms->fNoFunctions)
+			reader.SetAllowFunctions(false);
+		result = reader.Read();
+	}
+	return result;
+}
+
+
+/* -------------------------------------------------------------------------------
 	InitTranslators
 ------------------------------------------------------------------------------- */
 
 // ROM 0x00256220 InitTranslators__Fv
 // The translators into the protocol registry.
-// NOT YET: PFlattenPtr, PUnFlattenPtr, PFlattenRef, PUnFlattenRef,
-// PStreamInRef and PStreamOutRef, which the ROM registers first.
+// NOT YET: PStreamInRef and PStreamOutRef (between PUnFlattenRef and
+// PScriptDataIn in the ROM's order).
 void
 InitTranslators(void)
 {
 	if (gProtocolRegistry == nil)
 		return;
+	PFlattenPtr::ClassInfo()->Register();
+	PUnFlattenPtr::ClassInfo()->Register();
+	PFlattenRef::ClassInfo()->Register();
+	PUnFlattenRef::ClassInfo()->Register();
 	PScriptDataIn::ClassInfo()->Register();
 	PScriptDataOut::ClassInfo()->Register();
 	POptionDataIn::ClassInfo()->Register();

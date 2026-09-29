@@ -281,6 +281,53 @@ TestOptions(void)
 }
 
 
+static void
+TestFlatten(void)
+{
+	RefVar value(Eval("{name: \"flat\", list: [1, 2, 3], sub: {x: 1.5}}"));
+
+	// into a block after a four-byte header, and back
+	PFlattenPtr* out = (PFlattenPtr*) PFlattenPtr::ClassInfo()->New();
+	PUnFlattenPtr* in = (PUnFlattenPtr*) PUnFlattenPtr::ClassInfo()->New();
+	FlattenPtrParms parms;
+	parms.fValue = value;
+	parms.fUseHandle = false;
+	parms.fHeaderSize = 4;
+	Ptr block = (Ptr) out->Translate(&parms, nil);
+	EXPECT(block != nil && GetPtrSize(block) > 4 && (UByte) block[4] == 2);		// NSOF version 2 after the header
+	if (block != nil)
+	{
+		UnflattenPtrParms back;
+		back.fData = block + 4;
+		back.fLength = GetPtrSize(block) - 4;
+		back.fStore = NILREF;
+		RefVar copy(in->Translate(&back, nil));
+		EXPECT(IsFrame(copy) && RINT(GetArraySlotRef(RefVar(GetFrameSlot(copy, SYMBOL("list"))), 2)) == 3);
+		DisposPtr(block);
+	}
+
+	// into a binary, and back; functions refused when asked
+	PFlattenRef* refOut = (PFlattenRef*) PFlattenRef::ClassInfo()->New();
+	PUnFlattenRef* refIn = (PUnFlattenRef*) PUnFlattenRef::ClassInfo()->New();
+	FlattenRefParms refParms;
+	refParms.fValue = value;
+	refParms.fStore = NILREF;
+	RefVar binary((Ref) (uintptr_t) refOut->Translate(&refParms, nil));
+	EXPECT(IsBinary(binary) && Length(binary) > 1);
+	UnflattenRefParms refBack;
+	refBack.fBinary = binary;
+	refBack.fStore = NILREF;
+	refBack.fNoFunctions = false;
+	RefVar copy(refIn->Translate(&refBack, nil));
+	EXPECT(IsFrame(copy) && IsString(RefVar(GetFrameSlot(copy, SYMBOL("name")))));
+
+	out->Delete();
+	in->Delete();
+	refOut->Delete();
+	refIn->Delete();
+}
+
+
 int
 main()
 {
@@ -296,6 +343,7 @@ main()
 	TestForms();
 	TestScriptData();
 	TestOptions();
+	TestFlatten();
 
 	printf("test_Translators: %s\n", failures == 0 ? "all passed" : "FAILED");
 	return failures != 0;

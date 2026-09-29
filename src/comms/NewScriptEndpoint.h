@@ -22,7 +22,7 @@
 				to the endpoint's exceptionHandler, or is thrown.
 
 				Output converts the data by its form (PScriptDataOut, or
-				the flattener for a 'frame - NOT YET) and sends it;
+				the flattener for a 'frame) and sends it;
 				SetInputSpec describes what a script wants to receive -
 				the form, a termination (byteCount, endSequence, useEOP),
 				a filter (byte substitutions, seven-bit), a target (a
@@ -39,8 +39,7 @@
 
 	Reconstructed from the MP2x00 US ROM (0x00133c84-0x0013930c); each
 	function cites its origin.  NOT YET: TStreamingEndpointClient and the
-	CIS... natives (protoStreamingEndpoint), the 'frame form (PFlattenPtr/
-	PUnFlattenPtr), the modem navigator.  docs/comms/README.md.
+	CIS... natives (protoStreamingEndpoint), the modem navigator.  docs/comms/README.md.
 */
 
 #ifndef __COMMS_NEWSCRIPTENDPOINT_H
@@ -188,8 +187,8 @@ public:
 	PFrameSource*		fOptionsIn;			// +0xc0  POptionDataIn
 	PFrameSink*			fDataOut;			// +0xc4  PScriptDataOut
 	PFrameSource*		fDataIn;			// +0xc8  PScriptDataIn
-	PFrameSink*			fFlattenOut;		// +0xcc  PFlattenPtr (NOT YET)
-	PFrameSource*		fUnflattenIn;		// +0xd0  PUnFlattenPtr (NOT YET)
+	PFrameSink*			fFlattenOut;		// +0xcc  PFlattenPtr
+	PFrameSource*		fUnflattenIn;		// +0xd0  PUnFlattenPtr
 };
 
 Boolean		IsRaw(RefArg obj);

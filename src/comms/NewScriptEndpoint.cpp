@@ -943,8 +943,6 @@ done:
 
 // ROM 0x00135778 OutputFrame__24TNewScriptEndpointClientFRC6RefVarUcUlT3P12TOptionArray
 // A frame flattened (PFlattenPtr), its length in the first word.
-// NOT YET: PFlattenPtr is not reconstructed, so NewByName answers nil and
-// this answers the memory error, as the ROM would without it.
 NewtonErr
 TNewScriptEndpointClient::OutputFrame(RefArg data, Boolean sync, ULong flags, TTimeout timeout, TOptionArray* options)
 {
@@ -966,7 +964,7 @@ TNewScriptEndpointClient::OutputFrame(RefArg data, Boolean sync, ULong flags, TT
 	}
 	newton_try
 	{
-		struct { RefVar fValue; Boolean fUseHandle; long fHeaderSize; } parms;
+		FlattenPtrParms parms;
 		parms.fValue = data;
 		parms.fUseHandle = false;
 		parms.fHeaderSize = 4;
@@ -1990,7 +1988,7 @@ TNewScriptEndpointClient::GetPartialData(long* error)
 
 // ROM 0x001383ac ParseInput__24TNewScriptEndpointClientF8FormTypelT2PUcRC6RefVarPl
 // Bytes as a value of the form, through PScriptDataIn (a 'frame through
-// PUnFlattenPtr - NOT YET, so the memory error).
+// PUnFlattenPtr).
 Ref
 TNewScriptEndpointClient::ParseInput(FormType form, long encoding, long length, UByte* data, RefArg target, long* error)
 {
@@ -2014,10 +2012,10 @@ TNewScriptEndpointClient::ParseInput(FormType form, long encoding, long length, 
 		}
 		newton_try
 		{
-			struct { UByte* fData; long fLength; RefVar fValue; } parms;
+			UnflattenPtrParms parms;
 			parms.fData = data;
 			parms.fLength = length;
-			parms.fValue = NILREF;
+			parms.fStore = NILREF;
 			result = fUnflattenIn->Translate(&parms, nil);
 		}
 		newton_catch(exTranslatorException)

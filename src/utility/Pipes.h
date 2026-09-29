@@ -175,4 +175,43 @@ public:
 	virtual void	Underflow(long count, Boolean& eof);
 };
 
+
+/*------------------------------------------------------------------------------
+	C P t r P i p e
+	A pipe over one block of memory, read and written from one position (the
+	flatten translators' - comms/Translators.h): a chunk that does not fit
+	in what is left throws eOverflow writing, eUnderflow reading; Overflow
+	and Underflow throw the same.  (0x18 bytes in the ROM.)
+------------------------------------------------------------------------------*/
+
+class CPtrPipe : public CPipe
+{
+public:
+					CPtrPipe();
+	virtual			~CPtrPipe();
+
+	void			Init(long size, PipeCallBack* callback);								// a block of its own
+	void			Init(void* data, long size, Boolean ownsData, PipeCallBack* callback);
+
+	virtual long	ReadSeek(long offset, int mode);
+	virtual long	ReadPosition(void) const;
+	virtual long	WriteSeek(long offset, int mode);
+	virtual long	WritePosition(void) const;
+	virtual void	ReadChunk(void* data, long& count, Boolean& eof);
+	virtual void	WriteChunk(const void* data, long count, Boolean flush);
+	virtual void	FlushRead(void);
+	virtual void	FlushWrite(void);
+	virtual void	Reset(void);
+	virtual void	Overflow(void);
+	virtual void	Underflow(long count, Boolean& eof);
+
+	long			Seek(long offset, int mode);
+
+	char*			fData;			// +0x04
+	long			fPosition;		// +0x08
+	long			fSize;			// +0x0c
+	PipeCallBack*	fCallback;		// +0x10
+	Boolean			fOwnsData;		// +0x14
+};
+
 #endif	/* __PIPES_H */

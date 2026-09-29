@@ -11,6 +11,8 @@
 #include "UCErrors.h"
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
+#include <string.h>
+#include <stdlib.h>
 
 extern const ExceptionName exPipeException;
 
@@ -577,4 +579,173 @@ void
 MemoryPipe::Underflow(long /*count*/, Boolean& eof)
 {
 	eof = false;
+}
+
+
+/*------------------------------------------------------------------------------
+	C P t r P i p e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00195518 __ct__8CPtrPipeFv
+CPtrPipe::CPtrPipe()
+{
+	fData = nil;
+	fPosition = 0;
+	fSize = 0;
+	fCallback = nil;
+	fOwnsData = false;
+}
+
+
+// ROM 0x00195570 __dt__8CPtrPipeFv
+CPtrPipe::~CPtrPipe()
+{
+	if (fOwnsData)
+		free(fData);
+}
+
+
+// ROM 0x001955c0 ReadPosition__8CPtrPipeCFv
+long
+CPtrPipe::ReadPosition(void) const
+{
+	return fPosition;
+}
+
+
+// ROM 0x001955c8 WritePosition__8CPtrPipeCFv
+long
+CPtrPipe::WritePosition(void) const
+{
+	return fPosition;
+}
+
+
+// ROM 0x001955d0 Overflow__8CPtrPipeFv
+void
+CPtrPipe::Overflow(void)
+{
+	Throw(exPipeException, (void*) eOverflow, nil);
+}
+
+
+// ROM 0x001955ec Underflow__8CPtrPipeFlRUc
+void
+CPtrPipe::Underflow(long count, Boolean& eof)
+{
+	Throw(exPipeException, (void*) eUnderflow, nil);
+}
+
+
+// ROM 0x00195608 FlushRead__8CPtrPipeFv
+void
+CPtrPipe::FlushRead(void)
+{ }
+
+
+// ROM 0x0019560c FlushWrite__8CPtrPipeFv
+void
+CPtrPipe::FlushWrite(void)
+{ }
+
+
+// ROM 0x00195610 Init__8CPtrPipeFlP12PipeCallBack
+// A block of size bytes of its own (freed with the pipe).
+void
+CPtrPipe::Init(long size, PipeCallBack* callback)
+{
+	if (size < 1)
+		Throw(exPipeException, (void*) eBadSize, nil);
+	void* data = malloc(size);
+	if (data == nil)
+		Throw(exPipeException, (void*) (Long) MemError(), nil);
+	Init(data, size, true, callback);
+}
+
+
+// ROM 0x00195690 Init__8CPtrPipeFPvlUcP12PipeCallBack
+void
+CPtrPipe::Init(void* data, long size, Boolean ownsData, PipeCallBack* callback)
+{
+	fData = (char*) data;
+	fPosition = 0;
+	fSize = size;
+	fOwnsData = ownsData;
+	fCallback = callback;
+}
+
+
+// ROM 0x001956b4 Reset__8CPtrPipeFv
+void
+CPtrPipe::Reset(void)
+{
+	fPosition = 0;
+}
+
+
+// ROM 0x001956c0 ReadChunk__8CPtrPipeFPvRlRUc
+// count bytes (all of them, or eUnderflow).
+void
+CPtrPipe::ReadChunk(void* data, long& count, Boolean& eof)
+{
+	eof = false;
+	if (fSize - fPosition < count)
+		Throw(exPipeException, (void*) eUnderflow, nil);
+	memcpy(data, fData + fPosition, count);
+	fPosition += count;
+}
+
+
+// ROM 0x00195740 WriteChunk__8CPtrPipeFPvlUc
+void
+CPtrPipe::WriteChunk(const void* data, long count, Boolean flush)
+{
+	if (fSize - fPosition < count)
+		Throw(exPipeException, (void*) eOverflow, nil);
+	memcpy(fData + fPosition, data, count);
+	fPosition += count;
+}
+
+
+// ROM 0x001957b0 Seek__8CPtrPipeFli
+// (A mode that is none of the three leaves the position where it was.)
+long
+CPtrPipe::Seek(long offset, int mode)
+{
+	if (offset == 0)
+	{
+		if (mode == kSeekFromBeginningPos)
+			offset = 0;
+		else if (mode == kSeekFromEndPos)
+			offset = fSize;
+		else
+			return fPosition;
+	}
+	else if (mode != kSeekFromBeginningPos)
+	{
+		if (mode == kSeekFromCurrentPos)
+			offset = fPosition + offset;
+		else if (mode == kSeekFromEndPos)
+			offset = fSize - offset;
+		else
+			return fPosition;
+	}
+	fPosition = offset;
+	return fPosition;
+}
+
+
+// ROM 0x00195808 ReadSeek__8CPtrPipeFli
+long
+CPtrPipe::ReadSeek(long offset, int mode)
+{
+	return Seek(offset, mode);
+}
+
+
+// ROM 0x0019580c WriteSeek__8CPtrPipeFli
+long
+CPtrPipe::WriteSeek(long offset, int mode)
+{
+	return Seek(offset, mode);
 }

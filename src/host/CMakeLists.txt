@@ -302,7 +302,7 @@ set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
 # (--tcp-echo), written and read back synchronously and asynchronously
 add_test(NAME host.NewtonEcho COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
-                     PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
+                     PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: frame bonjour 4 Array.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
 
 # the NIE's DNS protocol ('sid ' naming 'dnst, a 'dnsq query and 'rrcd
 # records) answered by the host's DNS service over the host's resolver
