@@ -33,9 +33,14 @@
 
 				The 39 protoTXView methods are TXViewNatives.cpp.
 
-				NOT YET: the ruler bar (TXRulerUI, ShowRuler), the scrub and
-				caret gestures, the pages (TXPageFrames) and TXVBOChars
-				(the text on a store) - each marked where it would be.
+				Drag and drop and the clipboard: the selection leaves as drag
+				items ('text runs and pictures), comes in as a frame of text
+				and styles; a scrub deletes what it covers and a caret gesture
+				puts a space or a return in, or takes a character out.
+
+				NOT YET: the ruler bar (TXRulerUI, ShowRuler), the pages
+				(TXPageFrames) and TXVBOChars (the text on a store) - each
+				marked where it would be.
 
 	Reconstructed from the MP2x00 US ROM (0x0024659c-0x0024dff4); each
 	function cites its origin.
@@ -147,6 +152,11 @@ public:
 	Boolean			CheckDrag(TXNewtPen* pen);						// ROM 0x002483ec CheckDrag__6TXViewFP9TXNewtPen
 	long			HandleCaretGesture(TUnitPublic* unit);			// ROM 0x00246a34 HandleCaretGesture__6TXViewFP11TUnitPublic
 	long			Scrub(TUnitPublic* unit);						// ROM 0x002496c8 Scrub__6TXViewFP11TUnitPublic
+	Boolean			GetIntersectedLines(const Rect& r, long* first, long* last);	// ROM 0x00249884 GetIntersectedLines__6TXViewFRC5TRectPlT2
+	long			GetBestCoveredLine(Rect* r, long first, long last, long* coverage);	// ROM 0x00246644 GetBestCoveredLine__6TXViewFP5TRectlT2Pl
+	long			GetBestCoveredLine(Rect* r, long* coverage);	// ROM 0x002466fc GetBestCoveredLine__6TXViewFP5TRectPl
+	Boolean			IsLinesScrub(const Rect& r, long first, long last, TXOffsetRange* range);	// ROM 0x00246754 IsLinesScrub__6TXViewFRC5TRectlT2P13TXOffsetRange
+	Boolean			IsCharOrWordsScrub(const Rect& r, long first, long last, TXOffsetRange* range);	// ROM 0x0024683c IsCharOrWordsScrub__6TXViewFRC5TRectlT2P13TXOffsetRange
 	void			Scroll(TXLongPoint* d);							// ROM 0x0024bd0c Scroll__6TXViewFP11TXLongPoint
 	void			GetScrollValues(TXLongPoint* scrolled);			// ROM 0x0024bd74 GetScrollValues__6TXViewFP11TXLongPoint
 

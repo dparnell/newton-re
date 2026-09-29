@@ -46,6 +46,7 @@
 #include "Bits.h"
 #include "Draw.h"
 #include "Shapes.h"
+#include "Animate.h"
 #include "Objects.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
@@ -700,25 +701,8 @@ TXView::RulerClick(TXNewtPen* /*pen*/)
 }
 
 
-// ROM 0x00246a34 HandleCaretGesture__6TXViewFP11TUnitPublic
-// NOT YET RECONSTRUCTED: a caret gesture opening space in the text - the
-// gesture goes on to TView.
-long
-TXView::HandleCaretGesture(TUnitPublic* /*unit*/)
-{
-	return 0;
-}
 
 
-// ROM 0x002496c8 Scrub__6TXViewFP11TUnitPublic
-// NOT YET RECONSTRUCTED: the scrub deleting the characters, words or
-// lines under it (IsLinesScrub, IsCharOrWordsScrub) - the gesture goes on
-// to TView.
-long
-TXView::Scrub(TUnitPublic* /*unit*/)
-{
-	return 0;
-}
 
 
 // ROM 0x0024bd0c Scroll__6TXViewFP11TXLongPoint
@@ -2715,4 +2699,272 @@ TXNewtPasteCommand::DoMainAction(void)
 	}
 	end_try;
 	return err;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   g e s t u r e s
+	A scrub over the text deletes what it covers - the selection when it
+	is on it, whole lines when it covers them, else the characters or
+	words it spans - with a poof; a caret gesture puts a space in (up), a
+	return (the slanted one) or takes a character out (down).
+------------------------------------------------------------------------------*/
+
+// ROM 0x00249884 GetIntersectedLines__6TXViewFRC5TRectPlT2
+// The lines a rectangle crosses, in the frame its bottom right corner is
+// in.  ==> whether there are any.
+Boolean
+TXView::GetIntersectedLines(const Rect& r, long* first, long* last)
+{
+	TXFrames* frames = fText->fDisplay->fFrames;
+	Point corner;
+	corner.v = r.bottom;
+	corner.h = r.right;
+	unsigned char outside;
+	long frame = frames->PointToFrame(corner, &outside);
+	TXArray bands(sizeof(TXSectLine), 0);
+	Rect rect = r;
+	long count;
+	Boolean found = frames->SectLines(&rect, frame, first, &count, &bands);
+	if (found && count != 0)
+		*last = *first + count - 1;
+	return found && count != 0;
+}
+
+
+// ROM 0x00246644 GetBestCoveredLine__6TXViewFP5TRectlT2Pl
+// Read from the assembly.  Of lines first to last, the one the rectangle
+// covers most of; the rectangle comes back with that line's top and
+// bottom, `*coverage` with how much (-1: none looked at).
+// ROM BUG: with no lines to look at, the answer is whatever the register
+// held; the host answers -1.
+long
+TXView::GetBestCoveredLine(Rect* r, long first, long last, long* coverage)
+{
+	TXFrames* frames = fText->fDisplay->fFrames;
+	*coverage = -1;
+	Rect best = *r;
+	long line = -1;
+	for (long i = first; i <= last; i++)
+	{
+		Rect bounds;
+		frames->GetLineBounds(i, &bounds);
+		long covered = CoveredBy(&bounds, r);
+		if (covered > *coverage)
+		{
+			*coverage = covered;
+			best.top = bounds.top;
+			best.bottom = bounds.bottom;
+			line = i;
+		}
+	}
+	*r = best;
+	return line;
+}
+
+
+// ROM 0x002466fc GetBestCoveredLine__6TXViewFP5TRectPl
+long
+TXView::GetBestCoveredLine(Rect* r, long* coverage)
+{
+	long first, last;
+	if (!GetIntersectedLines(*r, &first, &last))
+		return -1;
+	return GetBestCoveredLine(r, first, last, coverage);
+}
+
+
+// ROM 0x00246754 IsLinesScrub__6TXViewFRC5TRectlT2P13TXOffsetRange
+// Read from the assembly.  The run of lines the scrub covers at least 30
+// per cent of, as a range of characters.
+Boolean
+TXView::IsLinesScrub(const Rect& r, long first, long last, TXOffsetRange* range)
+{
+	TXFrames* frames = fText->fDisplay->fFrames;
+	long count = 0;
+	long start = first;
+	for (long line = first; line <= last; line++)
+	{
+		Rect bounds;
+		frames->GetLineBounds(line, &bounds);
+		if (CoveredBy(&bounds, &r) >= 0x1e)
+		{
+			if (count++ == 0)
+				start = line;
+		}
+		else if (count != 0)
+			break;
+	}
+	if (count > 0)
+	{
+		fText->fFormatter->GetLineRange(start, range);
+		TXOffsetRange lastLine;
+		fText->fFormatter->GetLineRange(start + count - 1, &lastLine);
+		range->fEnd = lastLine.fEnd;
+		return true;
+	}
+	return false;
+}
+
+
+// ROM 0x0024683c IsCharOrWordsScrub__6TXViewFRC5TRectlT2P13TXOffsetRange
+// Read from the assembly.  On the line the scrub covers most: a narrow
+// one (5 pixels or less) takes the character at its left end; a wider one
+// the words from the one under its left end to the one under its right
+// end, a word the scrub covers less than half of left out.
+Boolean
+TXView::IsCharOrWordsScrub(const Rect& r, long first, long last, TXOffsetRange* range)
+{
+	Rect line = r;
+	long coverage;
+	GetBestCoveredLine(&line, first, last, &coverage);
+	Point pt;
+	pt.v = line.top;
+	pt.h = line.left;
+	if ((short) (r.right - r.left) <= 5)
+	{
+		unsigned char outside, past;
+		fText->fDisplay->PointToChar(pt, range, &outside, &past);
+		if (outside == 0 && range->fEnd.fOffset == range->fStart.fOffset
+		 && range->fStart.fOffset < fText->fChars->Count())
+		{
+			range->fEnd.fOffset = range->fEnd.fOffset + 1;
+			return true;
+		}
+		return false;
+	}
+	unsigned char outside, past;
+	TXOffsetRange left;
+	fText->PointToWord(pt, &left, &outside, &past);
+	Rect bounds;
+	fText->GetRangeBounds(left, &bounds);
+	if (CoveredBy(&bounds, &line) < 0x32)
+		left.fStart = left.fEnd;
+	pt.h = line.right;
+	TXOffsetRange right;
+	fText->PointToWord(pt, &right, &outside, &past);
+	fText->GetRangeBounds(right, &bounds);
+	if (CoveredBy(&bounds, &line) < 0x32)
+		right.fEnd = right.fStart;
+	if (left.fStart.fOffset < right.fEnd.fOffset)
+	{
+		range->fStart = left.fStart;
+		range->fEnd = right.fEnd;
+		return true;
+	}
+	return false;
+}
+
+
+// ROM 0x002496c8 Scrub__6TXViewFP11TUnitPublic
+long
+TXView::Scrub(TUnitPublic* unit)
+{
+	if (fReadOnly)
+		return 0;
+	Rect bounds;
+	unit->Bounds(&bounds);
+	TXOffsetRange range;
+	fText->fHilite->GetHiliteRange(&range);
+	long hit = 0;
+	Boolean onSelection = false;
+	if (range.fEnd.fOffset != range.fStart.fOffset)
+	{
+		RgnHandle rgn = fText->fHilite->GetHiliteRgn(false, false);
+		onSelection = RectInRgn(&bounds, rgn);
+		if (onSelection)
+			bounds = (**rgn).rgnBBox;
+		DisposeRgn(rgn);
+		if (onSelection)
+			hit = 1;
+	}
+	if (!onSelection)
+	{
+		long first, last;
+		if (!GetIntersectedLines(bounds, &first, &last))
+			return 0;
+		hit = (IsLinesScrub(bounds, first, last, &range) || IsCharOrWordsScrub(bounds, first, last, &range)) ? 1 : 0;
+	}
+	if (hit != 0)
+	{
+		TXReplaceParams nothing;
+		unit->Stroke()->InkOff(false);
+		TAnimate poof;
+		poof.SetupPoofEffect(this, bounds);
+		poof.DoEffect(RefVar(Rpoof));
+		NewReplaceTextCommand(range, &nothing);
+	}
+	return hit;
+}
+
+
+// ROM 0x00246a34 HandleCaretGesture__6TXViewFP11TUnitPublic
+// Read from the assembly.  An upward caret puts a space in where it
+// points; a downward one takes out the character there (or the run of
+// spaces it is in); the slanted one (135 degrees) puts a return in at the
+// right end of the line it covers most (a run of spaces there replaced).
+long
+TXView::HandleCaretGesture(TUnitPublic* unit)
+{
+	if (fReadOnly)
+		return 0;
+	long type = unit->CaretType();
+	long angle = unit->GestureAngle();
+	Boolean wordSpace = false;
+	UniChar c = 0;
+	long n;
+	Point pt;
+	if (type == 2)
+	{
+		if (angle == 0)
+		{
+			pt = unit->GesturePoint(1);
+			c = 0x20;
+			n = 1;
+		}
+		else if (angle == 0xb4)
+		{
+			pt = unit->GesturePoint(0);
+			n = 0;
+			wordSpace = true;
+		}
+		else
+			return 0;
+	}
+	else if (type == 6 && angle == 0x87)
+	{
+		Rect bounds;
+		unit->Bounds(&bounds);
+		long coverage;
+		if (GetBestCoveredLine(&bounds, &coverage) == -1)
+			return 0;
+		pt.v = bounds.top;
+		pt.h = bounds.right;
+		c = 0x0d;
+		n = 1;
+		wordSpace = true;
+	}
+	else
+		return 0;
+	TXOffsetRange range;
+	unsigned char outside, past;
+	fText->fDisplay->PointToChar(pt, &range, &outside, &past);
+	if (range.fStart.fOffset < 0 || range.fEnd.fOffset != range.fStart.fOffset)
+		return 0;
+	if (wordSpace && range.fStart.fOffset < fText->fChars->Count())
+	{
+		UniChar here = fText->fChars->GetChar(range.fStart.fOffset);
+		if (fText->IsWordSpace(here))
+		{
+			range.fStart.fAtStart = false;
+			fText->CharToWord(range.fStart.fOffset, range.fStart.fAtStart, &range, 1);
+		}
+	}
+	if (n == 0 && range.fEnd.fOffset == range.fStart.fOffset)
+		return 0;
+	TXTextDescriptor text;
+	text.Set(&c, n);
+	TXReplaceParams params(text);
+	NewReplaceTextCommand(range, &params);
+	return 1;
 }

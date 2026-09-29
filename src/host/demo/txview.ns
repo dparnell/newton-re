@@ -4,13 +4,14 @@
 // from the repository root:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --headless 8 --script src/host/demo/txview.ns
+//       --headless 14 --script src/host/demo/txview.ns
 //   build/venv/Scripts/python tools/imaging/pgm2png.py build/txview-1.pgm build/txview-1.png
 //
 // build/txview-1.pgm: the text as put in and typed into, the typed word in
 // bold (the caret at the end having scrolled the text up); build/txview-2.pgm:
 // the same scrolled back to the start; build/txview-3.pgm: "hello" cut to a
-// clipping (its icon at the screen's left edge) and pasted at the start.  Each check
+// clipping (its icon at the screen's left edge) and pasted at the start;
+// build/txview-4.pgm: "hello" and the next word scrubbed out with the pen.  Each check
 // prints "txview: FAILED ..." when it does not hold (the ctest looks for
 // that), and the last line says how the view came out.
 //
@@ -22,7 +23,7 @@ typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
 AddDelayedCall(func() begin
 	tx := AddView(GetRoot(), {
 		_proto: @826,						// protoTXView
-		viewFlags: 1,
+		viewFlags: 0x0A01,					// visible, clickable, gestures
 		viewBounds: {left: 20, top: 220, right: 300, bottom: 262},
 		viewFormat: 0x151,					// white fill, a one-pixel frame
 		viewFont: 0x2800 });				// espy 10
@@ -76,6 +77,25 @@ AddDelayedCall(func() begin
 		if not StrEqual(pasted, "hello") then Print("txview: FAILED - pasted \"" & pasted & "\"");
 		RefreshViews();
 		ScreenSnapshot("build/txview-3.pgm");
+		// "hello" scrubbed out with the pen: back and forth across it
+		AddDelayedCall(func() begin
+			local pts := [];
+			for k := 0 to 7 do
+				begin
+				AddArraySlot(pts, if k mod 2 = 0 then 18 else 60);
+				AddArraySlot(pts, 224 + k * 2);
+				end;
+			PenDown(pts[0], pts[1]);
+			for i := 2 to Length(pts) - 2 by 2 do PenMove(pts[i], pts[i + 1]);
+			PenUp();
+			AddDelayedCall(func() begin
+				local after := tx:GetRangeData({first: 0, last: 3}, 'text);
+				if StrEqual(after, "hel") then Print("txview: FAILED - the scrub left \"" & after & "\"");
+				RefreshViews();
+				ScreenSnapshot("build/txview-4.pgm");
+				Print("txview: scrubbed to " & tx:GetCountCharacters() & " characters");
+			  end, nil, 4000);
+		  end, nil, 500);
 		Print("txview: " & tx:GetCountCharacters() & " characters, " & height.first & "-" & height.last & " the last line, scrolled from " & before.y & " to " & scrolled.y);
 	  end, nil, 1500);
   end, nil, 2500);								// after the boot
