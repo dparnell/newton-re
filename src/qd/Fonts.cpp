@@ -714,6 +714,7 @@ SearchFont(long macFontID, const UniChar* name)
 // (Fonts.h says why).
 FontInkOpenProc	gInkOpenFont = nil;
 FontInkParmsProc	gInkFontParms = nil;
+FontColorPatternProc	gFontColorPattern = nil;
 FontInkSetParmsProc	gInkSetFontParms = nil;
 
 
@@ -1113,9 +1114,11 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 		style->fFontSize = ToFixed(RINT(GetFrameSlotRef(fontSpec, RSSYMsize)));
 		style->fFontFace = RINT(GetFrameSlotRef(fontSpec, RSSYMface));
 		RefVar color(GetFrameSlotRef(fontSpec, RSSYMcolor));
-		if ((Ref) color != NILREF)
+		PatternHandle pattern;
+		if ((Ref) color != NILREF && gFontColorPattern != nil && gFontColorPattern(color, &pattern))
 		{
-			// NOT YET RECONSTRUCTED: GetPattern (a color as a gray pattern)
+			style->fPattern = pattern;
+			style->fFontPattern = AddressToRef(pattern);
 		}
 	}
 	if ((Ref) style->fFontFamily == NILREF)

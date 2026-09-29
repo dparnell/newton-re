@@ -1220,6 +1220,19 @@ TestShapes()
 		EXPECT(lit == 112);					// the frame and its pen doubled too
 		UnlockRef(data);
 	}
+	// text in a font whose color is a gray: the slab knocked out in a
+	// checkerboard on a one-bit map (MakeGrayText), so the H's stems
+	// alternate
+	Eval("bmText := MakeBitmap(40, 20, nil)");
+	Eval("DrawIntoBitmap(MakeText(\"H\", 2, 2, 30, 18), {font: {family: 'espy, face: 0, size: 12, color: 3}}, bmText)");
+	{
+		RefVar data(Eval("bmText.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		EXPECT(GetPixel(pm, 2, 6) != 0 && GetPixel(pm, 2, 7) == 0 && GetPixel(pm, 2, 8) != 0 && GetPixel(pm, 8, 12) != 0);
+		EXPECT(GetPixel(pm, 3, 9) != 0 && GetPixel(pm, 4, 9) == 0 && GetPixel(pm, 5, 9) != 0 && GetPixel(pm, 2, 9) == 0);
+		UnlockRef(data);
+	}
 	Eval("DrawIntoBitmap(MakeRect(2, 3, 12, 9), {fillPattern: 5}, bm)");
 	{
 		RefVar data(Eval("bm.data"));

@@ -1953,9 +1953,23 @@ FArrayToPoints(RefArg /*rcvr*/, RefArg array)
 }
 
 
+// (host) What CreateTextStyleRecord asks GetPattern for a font spec's
+// color: a pattern the style owns.  (Host: the pattern starts nil, where
+// the ROM hands GetPattern an unset word - which an array color answers
+// true with, leaving it unset.)
+static Boolean
+FontColorPattern(RefArg color, PatternHandle* pattern)
+{
+	Boolean owned = false;
+	*pattern = nil;
+	return GetPattern(color, &owned, pattern, true) && *pattern != nil;
+}
+
+
 void
 RegisterShapeNatives(void)
 {
+	gFontColorPattern = FontColorPattern;
 	RegisterNativeFunction("FDrawShape", (void*) FDrawShape, 2);
 	RegisterNativeFunction("FDrawIntoBitmap", (void*) FDrawIntoBitmap, 3);
 	RegisterNativeFunction("FViewIntoBitmap", (void*) FViewIntoBitmap, 3);

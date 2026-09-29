@@ -167,6 +167,13 @@ extern FontInkParmsProc	gInkFontParms;
 typedef Boolean	(*FontInkSetParmsProc)(RefArg fontSpec, RefArg parms, Ref* outSpec);
 extern FontInkSetParmsProc	gInkSetFontParms;
 
+// A font spec's `color` made a pattern (the ROM's CreateTextStyleRecord
+// calls the views' GetPattern 0x00197d2c straight out; DEVIATION: the
+// views sit above QuickDraw here, so they register it -
+// views/DrawShape.cpp's RegisterShapeNatives).  ==> whether it made one.
+typedef Boolean	(*FontColorPatternProc)(RefArg color, PatternHandle* pattern);
+extern FontColorPatternProc	gFontColorPattern;
+
 // the font engine
 long		FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face);	// ==> the strike's size, 16.16 (0: no font); face left with what must be synthesised
 Ref			ChooseStrike(long face, RefArg fontFamily, long* faceUsed);				// the 'sfnt' for the face
