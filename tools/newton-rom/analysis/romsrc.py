@@ -1212,8 +1212,12 @@ class Builder:
 			return
 		if self.newtonscript is None:
 			raise ValueError("the tree has functions: the builder needs --newtonscript to compile them")
-		records = os.path.join(self.src, ".records.txt")
-		compiled = os.path.join(self.src, ".compiled.txt")
+		# (the working files in a directory of their own: the tree may be the
+		# committed one, which a build must leave as it is)
+		import tempfile
+		work = tempfile.mkdtemp(prefix="romsrc-build")
+		records = os.path.join(work, "records.txt")
+		compiled = os.path.join(work, "compiled.txt")
 		by_id = {}
 		with open(records, "w", encoding="utf-8", newline="\n") as out:
 			for n, v in enumerate(found):
@@ -1224,7 +1228,7 @@ class Builder:
 				head, body = text.split("\n", 1)
 				out.write("@@ %x%s\n%s" % (n, " names" if head.endswith(" names") else "", body))
 				by_id[n] = v
-		env = dict(os.environ, NEWTON_ROM=os.path.join(self.src, "no-rom-image"))
+		env = dict(os.environ, NEWTON_ROM=os.path.join(work, "no-rom-image"))
 		result = subprocess.run([nd.newtonscript_path(self.newtonscript), "--compile-records", records, compiled], env=env,
 								stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 		if result.returncode != 0:
@@ -1242,6 +1246,8 @@ class Builder:
 				i += 3
 			else:
 				i += 1
+		import shutil
+		shutil.rmtree(work, ignore_errors=True)
 		if by_id:
 			raise ValueError("%d functions came back uncompiled" % len(by_id))
 

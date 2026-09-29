@@ -277,9 +277,30 @@ What it is not yet:
 
 ## Where the tree lives
 
-**Decision: the tree is generated at build time, not committed, until it
-is a tree worth editing.** What is committed now is the tools, the
-ctest, and the `romsrc` make target.
+**The tree is committed, as `romsrc/` (2026-09-30).** The owner decided
+so once the three conditions below held. It was extracted once, at the
+commit that added it, and is now the source: the extractor is not run
+over it again. `romsrc/README.md` says how to edit it, build it and boot
+from it.
+
+- The build uses the committed tree:
+  - the `romsrc` target builds `<build>/romsrc-objects.bin` from it;
+  - `host.ROMSourceBuild` does the same as the fixture for
+    `host.NewtonNoROM`, `host.NewtonNoROMSameScreen` and the edit tests,
+    which copy it.
+- `host.ROMSourceRoundTrip` still tests the extractor, by extracting
+  afresh into the build directory (the `romsrc-extract` target does the
+  same by hand).
+- `host.ROMSourceCommitted` says whether the committed tree still builds
+  byte for byte the ROM's. It passes as committed. After an intentional
+  edit it only reports that the tree has left the ROM, and it is to be
+  retired then.
+- `.gitattributes` keeps its resources binary and its `.ns`/`.tsv` LF on
+  every system.
+- It is 7696 files, 20 MB on disk.
+
+What follows is the reasoning from before, when the tree was generated
+at build time:
 
 - **Size.** A generated tree is about 19 MB on disk in some 6,500 files. Each
   re-extraction after a tool change would rewrite most of it, so every

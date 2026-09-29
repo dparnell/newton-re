@@ -467,30 +467,30 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NSDecompileRoundTrip PROPERTIES TIMEOUT 300)
 
-    # the ROM-free track's step 2 (docs/rom-free/README.md): the object area
-    # written as source (tools/newton-rom/analysis/romsrc.py) and built back
-    # out of it, byte for byte the ROM's - the functions compiled from their
-    # decompiled source by newtonscript, with no ROM image
+    # the extractor itself (the ROM-free track's step 2,
+    # docs/rom-free/README.md): the ROM written as source afresh, into the
+    # build directory - never over the committed tree - and built back, byte
+    # for byte the ROM's
     add_test(NAME host.ROMSourceRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     roundtrip ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-test
-                     --newtonscript $<TARGET_FILE:newtonscript> --objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin
+                     roundtrip ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-extracted
+                     --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300 FIXTURES_SETUP romsrc_objects)
+    set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
 
-    # the ROM-free track's step 3: the OS booted on the object file built from
-    # the ROM source tree, with no ROM image anywhere it could be found
-    add_test(NAME host.NewtonNoROM
-             COMMAND newton --objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin --headless 3
-                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+    # whether the committed tree (romsrc/) still builds byte for byte the
+    # ROM's.  It does as committed; once someone edits romsrc/ on purpose it
+    # says only that the tree has left the ROM (romsrc/README.md)
+    add_test(NAME host.ROMSourceCommitted
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     build ${CMAKE_SOURCE_DIR}/../romsrc --check ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}
+                     --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonNoROM PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
-                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
-                         PASS_REGULAR_EXPRESSION "the world is up.*written build/newton-demo.pgm")
+    set_tests_properties(host.ROMSourceCommitted PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "identical to the ROM's")
 
-    # ... and it draws exactly what the boot on the ROM image draws (the
-    # Setup assistant's Welcome, out of the ROM extension the object file
-    # carries), pixel for pixel (tools/host/samescreen.py)
+    # the OS booted from the committed tree draws exactly what the boot on the
+    # ROM image draws (the Setup assistant's Welcome, out of the ROM extension
+    # the object file carries), pixel for pixel (tools/host/samescreen.py)
     add_test(NAME host.NewtonNoROMSameScreen
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/samescreen.py
                      --newton $<TARGET_FILE:newton> --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
@@ -499,17 +499,6 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonNoROMSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
-
-    # the test of editability: a string near the area's start lengthened in a
-    # copy of the tree, the copy built laid out afresh (nearly every object
-    # moves), and the OS booted on it draws the same Setup screen
-    add_test(NAME host.ROMSourceEdit
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     edit-test ${CMAKE_BINARY_DIR}/romsrc-test -o ${CMAKE_BINARY_DIR}/romsrc-edited
-                     --objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin --newtonscript $<TARGET_FILE:newtonscript>
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceEdit PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED romsrc_objects
-                         FIXTURES_SETUP romsrc_edited PASS_REGULAR_EXPRESSION "edited .*moved")
     add_test(NAME host.NewtonEditedSameScreen
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/samescreen.py
                      --newton $<TARGET_FILE:newton> --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
@@ -518,7 +507,61 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEditedSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_edited
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
-    # ... and the edit is there: the slot edit-test added, holding a new frame
+
+    # `cmake --build <dir> --target romsrc-extract`: the ROM written as source
+    # afresh into the build directory (the extractor is not run over romsrc/)
+    add_custom_target(romsrc-extract
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     extract ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-extracted
+                     --newtonscript $<TARGET_FILE:newtonscript>
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+             COMMENT "Writing the ROM as source afresh into ${CMAKE_BINARY_DIR}/romsrc-extracted")
+endif()
+
+# The ROM source tree committed as romsrc/ (romsrc/README.md): what the OS
+# boots from with no ROM image.  None of this needs the ROM or its
+# extraction - only Python and the host's newtonscript, which compiles the
+# tree's functions.
+if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
+    # `cmake --build <dir> --target romsrc`: the object file built from the
+    # committed tree, laid out afresh (an edited tree builds as it is)
+    add_custom_target(romsrc
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     build ${CMAKE_SOURCE_DIR}/../romsrc --relayout -o ${CMAKE_BINARY_DIR}/romsrc-objects.bin
+                     --newtonscript $<TARGET_FILE:newtonscript>
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+             DEPENDS newtonscript
+             COMMENT "Building ${CMAKE_BINARY_DIR}/romsrc-objects.bin from romsrc/")
+
+    # the same, as the fixture the boots below use
+    add_test(NAME host.ROMSourceBuild
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     build ${CMAKE_SOURCE_DIR}/../romsrc --relayout -o ${CMAKE_BINARY_DIR}/romsrc-objects.bin
+                     --newtonscript $<TARGET_FILE:newtonscript>
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceBuild PROPERTIES TIMEOUT 300 FIXTURES_SETUP romsrc_objects)
+
+    # the ROM-free track's step 3: the OS booted on the object file built from
+    # the committed tree, with no ROM image anywhere it could be found
+    add_test(NAME host.NewtonNoROM
+             COMMAND newton --objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin --headless 3
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonNoROM PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
+                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
+                         PASS_REGULAR_EXPRESSION "the world is up.*written build/newton-demo.pgm")
+
+    # the test of editability: a copy of the committed tree edited (a string
+    # near the area's start and one in the first package lengthened, a slot
+    # holding a new frame added), built laid out afresh, the edit read back
+    # and the OS booted on it (host.NewtonEditedSameScreen, above)
+    add_test(NAME host.ROMSourceEdit
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     edit-test ${CMAKE_SOURCE_DIR}/../romsrc -o ${CMAKE_BINARY_DIR}/romsrc-edited
+                     --objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin --newtonscript $<TARGET_FILE:newtonscript>
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceEdit PROPERTIES TIMEOUT 300
+                         FIXTURES_SETUP romsrc_edited PASS_REGULAR_EXPRESSION "edited .*moved")
     add_test(NAME host.ROMSourceEditValue
              COMMAND newtonscript --objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin
                      -e "Print(ROMConstant(\"canonicalInkShape\").romsrcEdited.romsrcNote)"
@@ -526,13 +569,4 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     set_tests_properties(host.ROMSourceEditValue PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED romsrc_edited
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
                          PASS_REGULAR_EXPRESSION "added by edit-test")
-
-    # `cmake --build <dir> --target romsrc`: the source tree, generated into
-    # the build directory (it is not kept in the repository yet - why is
-    # docs/rom-free/README.md's "Where the tree lives")
-    add_custom_target(romsrc
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     extract ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
-             COMMENT "Writing the ROM's object area as source into ${CMAKE_BINARY_DIR}/romsrc")
 endif()
