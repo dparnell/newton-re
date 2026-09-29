@@ -361,12 +361,15 @@ class Decompiled:
 					derive(n.result, bases, "|result")
 		positions = list(range(first, first + self.num_locals))
 		free = [p for p in positions if p not in derived]
-		if any(b not in free for bases, _ in derived.values() for b in bases):
+		# (a loop over a variable an inner function closes over: its name is
+		# known, and so is its part of the hidden name's sum)
+		fixed = {b: upper_sum(b) for bases, _ in derived.values() for b in bases if isinstance(b, str)}
+		if any(b not in free and b not in fixed for bases, _ in derived.values() for b in bases):
 			raise DecompileError("a loop over a variable not on the stack in the sorted order")
 		GOLD = 0x9E3779B9
 		low = 400				# every sum from here on makes a name (name_with_sum)
 		sum_range = range(low, low + 2400)
-		sums = {}
+		sums = dict(fixed)
 		budget = [400000]
 		count = len(positions)
 
@@ -417,8 +420,115 @@ class Decompiled:
 			return False
 
 		if not place(0) or not consistent():
-			raise DecompileError("no names found in the sorted order")
+			# (the search gives up where a loop's hidden names are pinned
+			# close together: the greedy way, which solves for them)
+			sums = self.greedy_sorted_sums(positions, derived, fixed)
+			if sums is None:
+				raise DecompileError("no names found in the sorted order")
 		self.chosen_names = {p: name_with_sum(sums[p], p) for p in free}
+
+	def greedy_sorted_sums(self, positions, derived, fixed):
+		"""The quick way to names in the sorted order: position by position,
+		each undetermined one given a sum that keeps every position
+		determined so far in order.  The variable chosen is its own sum or,
+		for a hidden local, its loop variable's (a foreach over a slot and a
+		value: both), which fixes the loop's other hidden names with it -
+		their hashes are the variable's plus a constant, mod 2^32.  Of the
+		first choices that work (by the position's hash, smallest first),
+		the one whose highest determined hash is lowest is taken, which
+		leaves the most room for the positions still to come.  The sums go
+		up to 20000 (a name of some 220 letters: the lexer takes 253), for a narrow gap
+		between two fixed hidden names.  None when it gets stuck (the search
+		in choose_sorted_names is tried then)."""
+		GOLD = 0x9E3779B9
+		MASK = 0xffffffff
+		low = 400
+		sums = dict(fixed)
+		by_hash = sorted(((s * GOLD) & MASK, s) for s in range(low, low + 19600))	# (a name of 250 letters at most: the lexer's limit, 'Symbol too big')
+		hashes = [h for h, _ in by_hash]
+
+		def ascending(offset, above):
+			"""The sums s in order of (hash(s) + offset) mod 2^32, from the
+			first above `above` (a rotation of by_hash)."""
+			n = len(by_hash)
+			start = bisect.bisect_left(hashes, (-offset) & MASK)
+			for i in range(n):
+				h, s = by_hash[(start + i) % n]
+				v = (h + offset) & MASK
+				if v > above:
+					yield v, s
+
+		def key_of(p):
+			if p in derived:
+				bases, suffix = derived[p]
+				if any(b not in sums for b in bases):
+					return None
+				return sum(sums[b] for b in bases) + upper_sum(suffix)
+			return sums.get(p)
+
+		def known_hashes():
+			known = [(p, key_of(p)) for p in positions]
+			return [(p, k, (k * GOLD) & MASK) for p, k in known if k is not None]
+
+		def valid():
+			known = known_hashes()
+			for (p1, _, h1), (p2, _, h2) in zip(known, known[1:]):
+				if h2 - h1 < p2 - p1:				# (in order, with room for the positions between)
+					return False
+			return len({k for _, k, _ in known}) == len(known)
+
+		prev = -1
+		for p in positions:
+			k = key_of(p)
+			if k is None:
+				if p in derived:
+					bases, suffix = derived[p]
+					unknown = [b for b in bases if b not in sums]
+				else:
+					bases, suffix, unknown = [p], "", [p]
+				if len(unknown) > 2:
+					return None
+				firsts = [None]
+				if len(unknown) == 2:
+					# (spread over the hashes above: the slot's must leave room
+					# below it for the hidden local that comes first)
+					above = [s for _, s in ascending(0, prev)]
+					firsts = above[::max(1, len(above) // 200)]
+				b = unknown[-1]
+				options = []
+				for first_sum in firsts:
+					if first_sum is not None:
+						sums[unknown[0]] = first_sum
+					rest = sum(sums[x] for x in bases if x != b) + upper_sum(suffix)
+					tried = 0
+					for h, s in ascending((rest * GOLD) & MASK, prev):
+						sums[b] = s
+						if valid():
+							options.append((max(x for _, _, x in known_hashes()), h, first_sum, s))
+							break
+						del sums[b]
+						tried += 1
+						if tried > 4000:
+							break
+					sums.pop(b, None)
+					if first_sum is not None:
+						del sums[unknown[0]]
+					if len(options) >= 40:
+						break
+				if not options:
+					if os.environ.get("NSDECOMPILE_TRACE_NAMES"):
+						print("sorted names: stuck at position %d (prev %#x)" % (p, prev), file=sys.stderr)
+					return None
+				_, _, first_sum, s = min(options)
+				if first_sum is not None:
+					sums[unknown[0]] = first_sum
+				sums[b] = s
+				k = key_of(p)
+			h = (k * GOLD) & MASK
+			if h <= prev:
+				return None
+			prev = h
+		return sums
 
 	def symbol(self, ref):
 		name = self.rom.symname(ref)

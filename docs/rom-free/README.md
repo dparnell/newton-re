@@ -426,8 +426,8 @@ still byte for byte the ROM's.
 
 | Package | Objects | Functions as source | Kept as bytecode |
 |---|---|---|---|
-| Cardfile | 3445 | 334 | 2 |
-| Connection | 3059 | 416 | 1 |
+| Cardfile | 3445 | 336 | 0 |
+| Connection | 3059 | 417 | 0 |
 | FaxViewer | 666 | 77 | 0 |
 | Formulas | 1188 | 125 | 0 |
 | help book | 834 | (no functions) | |
@@ -445,7 +445,22 @@ still byte for byte the ROM's.
     tree's `bytecode.tsv`.
 
   In the object area all 5480 pass. In the packages:
-  - 3 do not decompile: corner cases of the sorted variable order;
+  - **every function is source.** The last 3 (2 in Cardfile, 1 in
+    Connection) had loops whose hidden locals the sorted order pins close
+    together:
+    - a foreach's `val|iter` just before its variable, with `|index` just
+      after and `|result` further on;
+    - a foreach over a slot and a value, neither named yet;
+    - a loop over a variable an inner function closes over, whose name is
+      therefore fixed.
+
+    `greedy_sorted_sums` solves these when the search gives up. It goes
+    position by position: each loop variable is chosen to fix its hidden
+    names together, since their hashes differ from the variable's by
+    constants mod 2^32. Of the choices that work, it keeps the one that
+    leaves the most room above. Names are kept under the lexer's 253
+    letters ("Symbol too big"). The committed tree's two package trees
+    were brought up to date with it; nothing else in it changed.
   - **ListView was built with debugging information, and now round-trips
     too.** Every one of its functions has a sixth slot, `DebuggerInfo`:
     nil, or a `'dbg1` array that holds
