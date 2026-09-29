@@ -9,6 +9,7 @@ add_library(thirdparty_nie STATIC
     ProtoFSMClone.cpp
     ProtoFSMLoop.cpp
     ProtoFSMObjectToString.cpp
+    ProtoFSMPrinter.cpp
     NIENatives.cpp
 )
 target_link_libraries(thirdparty_nie PUBLIC frames)

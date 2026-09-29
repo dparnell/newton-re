@@ -534,6 +534,57 @@ TestObjectToString(void)
 	// exceptions become a message
 	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('boom), \"<exception occurred>\")")));
 	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('mem), \"<insufficient memory>\")")));
+
+	// the package's own printer (0x14649), its literals as NewtonScript source
+	static const char* const kPrinterLits[] = {
+		"'IsValid", "\"<invalid object reference>\"", "'IsMagicPtr", "\"@+\"", "'refOf",
+		"'Array", "'IsFunction", "'GetFunctionArgCount", "\"func(^0 arg^?1|s|)\"", "'ParamStr",
+		"'IsFrame", "'backList", "'|=|", "'LSearch", "'backIndex",
+		"\"<\"", "\">\"", "\"{<\"", "\"> \"", "'maxDepth",
+		"\"+\"", "'maxLength", "\"...\"", "\": \"", "'_parent",
+		"'runParent", "'_proto", "'runProto", "\"<ignored>, \"", "'f",
+		"'p", "\"}\"", "'IsArray", "\"<\"", "\">\"",
+		"\"[<\"", "\"> \"", "\": \"", "\"+\"", "\"...\"",
+		"\"]\"", "'IsString", "'IsSymbol", "'IsInteger", "\"+\"",
+		"\"\"", "'NumberStr", "'IsNumber", "\"+\"", "\"\"",
+		"'floatFormat", "'FormattedNumberStr", "'IsImmediate", "\"nil\"", "\"true\"",
+		"'SPrintObject", "'IsBinary", "\"<\"", "\", length \"", "\">\"",
+		"\", \"", "'stringer" };
+	static const char* const kNone[] = { "x" };
+	RefVar printer(NativeFunction(0x8898, 2, kNone, 1));
+	RefVar printerLits(MakeArray(62));
+	for (long i = 0; i < 62; i++)
+		SetArraySlot(printerLits, i, RefVar(Eval(kPrinterLits[i])));
+	SetFrameSlot(RefVar(GetArraySlot(printer, 3)), RefVar(Sym("_literals")), printerLits);
+	SetArraySlot(lits, 20, printer);
+	// (the ROM's FIsValid, 0x0031e09c, is not reconstructed yet: every
+	// object here is valid)
+	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("IsValid")), RefVar(Eval("func(x) true")));
+	Eval("printed := call objToString with ({a: 1, b: \"x\", c: [2, 'y], d: {_parent: 'hidden}, e: nil})");
+	RefVar printed(Eval("printed"));
+	if (IsString(printed))
+	{
+		const UniChar* u = (const UniChar*) BinaryData(printed);
+		printf("  ObjectToString: ");
+		for (long i = 0; u[i] != 0 && i < 200; i++)
+			putchar(u[i] < 128 ? (int) u[i] : '?');
+		printf("\n");
+	}
+	EXPECT(NOTNIL(Eval("StrEqual(printed, \"{<1> a: +1, b: \\\"x\\\", c: [<2> +2, 'y], d: {<3> _parent: <ignored>}, e: nil}\")")));
+	// a frame met again is printed as its index in the back list
+	Eval("cyc := {a: 1}; cyc.me := cyc");
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with (cyc), \"{<1> a: +1, me: <1>}\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('sym), \"'sym\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with (-3), \"-3\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with (true), \"true\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with (func(a, b) a), \"func(2 args)\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with (func(a) a), \"func(1 arg)\")")));
+	// printDepth: deeper frames only by reference
+	Eval("printDepth := 0");
+	EXPECT(NOTNIL(Eval("BeginsWith(call objToString with ({a: {b: 1}}), \"{<1> a: {<2> +\")")));
+	Eval("printDepth := nil; printLength := 1");
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ([1, 2, 3]), \"[<1> +1, ...]\")")));
+	Eval("printLength := nil");
 }
 
 
@@ -573,7 +624,7 @@ main()
 	{
 		static const struct { ULong offset; long numArgs; } kAll[] = {
 			{ 0x29ec, 3 }, { 0x2ff8, 1 }, { 0x7a1c, 1 }, { 0x7b78, 1 }, { 0x7dc0, 2 }, { 0x7ef0, 1 },
-			{ 0x8004, 1 }, { 0x8124, 2 }, { 0x8670, 2 }, { 0xc498, 2 }, { 0xd4cc, 2 },
+			{ 0x8004, 1 }, { 0x8124, 2 }, { 0x8898, 3 }, { 0x8670, 2 }, { 0xc498, 2 }, { 0xd4cc, 2 },
 			{ 0xd5e4, 1 }, { 0xdbdc, 1 }, { 0xde38, 2 }, { 0xe43c, 1 }, { 0xe65c, 3 }, { 0xe808, 4 }, { 0xe9f0, 3 } };
 		for (size_t i = 0; i < sizeof(kAll) / sizeof(kAll[0]); i++)
 		{

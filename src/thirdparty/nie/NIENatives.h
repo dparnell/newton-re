@@ -49,6 +49,7 @@ Ref		NIEDoEventLoop(RefArg rcvr, RefArg closure);
 
 // the printer (ProtoFSMObjectToString.cpp)
 Ref		NIEObjectToString(RefArg rcvr, RefArg obj, RefArg closure);
+Ref		NIEObjectPrinter(RefArg rcvr, RefArg x, RefArg depth, RefArg closure);
 
 void	RegisterNIENatives(void);
 
