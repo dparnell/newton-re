@@ -363,12 +363,12 @@ TNSDebugAPI::SetTempValue(long index, long tempIndex, RefArg value)
 
 
 // ROM 0x002d30e8 Return__11TNSDebugAPIFlRC6RefVar
-// NOT YET RECONSTRUCTED: unwinding the interpreter to call index with a
-// value (the ROM throws exFrames kNSErrBadArgs... through the handlers).
+// Returning from a call on the stack with a value was never written: the
+// ROM only throws exFrames -48215, "not implemented".
 void
 TNSDebugAPI::Return(long /*index*/, RefArg /*value*/)
 {
-	Throw(exFrames, (void*) kNSErrNativeNotReconstructed, nil);
+	Throw(exFrames, (void*) kNSErrNotImplemented, nil);
 }
 
 

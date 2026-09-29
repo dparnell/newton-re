@@ -32,6 +32,7 @@
 #define kNSErrFramesObjectPtrOfNil		(ERRBASE_FRAMES - 212)	// TFramesObjectPtr made from NILREF
 #define kNSErrUnassignedFramesObjectPtr	(ERRBASE_FRAMES - 213)	// TFramesObjectPtr used while NILREF
 #define kNSErrObjectReadOnly			(ERRBASE_FRAMES - 214)	// writing an object with kObjReadOnly set
+#define kNSErrNotImplemented			(ERRBASE_FRAMES - 215)	// "function not implemented" (TNSDebugAPI::Return throws it)
 #define kNSErrOutOfObjectMemory			(ERRBASE_FRAMES - 216)	// the object heap is full even after a GC
 #define kNSErrNegativeLength			(ERRBASE_FRAMES - 218)	// AllocateBinary/Array/SetLength with a negative length
 #define kNSErrOutOfRange				(ERRBASE_FRAMES - 219)	// a length past the object size field's range

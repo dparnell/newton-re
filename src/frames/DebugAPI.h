@@ -49,7 +49,7 @@ public:
 	long		NumTemps(long index);
 	Ref			TempValue(long index, long tempIndex);
 	void		SetTempValue(long index, long tempIndex, RefArg value);
-	void		Return(long index, RefArg value);	// NOT YET RECONSTRUCTED
+	void		Return(long index, RefArg value);	// throws -48215, "not implemented", as the ROM does
 
 	TInterpreter*	fInterpreter;		// +0x00
 };

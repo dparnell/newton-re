@@ -452,6 +452,13 @@ TestDebugAPI()
 		EXPECT(threw);
 		gInterpreter->fValueStack.Reset(0);
 	}
+	// TNSDebugAPI::Return: never implemented, it throws -48215
+	{
+		Boolean threw = false;
+		TNSDebugAPI api(gInterpreter);
+		newton_try { api.Return(0, RefVar(NILREF)); } newton_catch_all { threw = (long) (Long) _info.exception.data == kNSErrNotImplemented; } end_try;
+		EXPECT(threw);
+	}
 }
 
 
